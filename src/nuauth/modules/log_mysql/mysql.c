@@ -156,16 +156,13 @@ G_MODULE_EXPORT gint user_packet_logs (connection *element, int state){
           }
       }
       else if ((element->tracking_hdrs).protocol == IPPROTO_UDP){
-          struct in_addr ipone, iptwo;
           int Result;
-          ipone.s_addr=ntohl((element->tracking_hdrs).saddr);
-          iptwo.s_addr=ntohl((element->tracking_hdrs).daddr);
           if (snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,start_timestamp) 
-              VALUES (%u,%u,'%s','%s',%u,%u,%lu);",
+              VALUES (%u,%u,%lu,%lu,%u,%u,%lu);",
               mysql_table_name,
               (element->user_id),
-              inet_ntoa(ipone),
-              inet_ntoa(iptwo),
+              (element->tracking_hdrs).saddr,
+              (element->tracking_hdrs).daddr,
               (element->tracking_hdrs).source,
               (element->tracking_hdrs).dest,
               element->timestamp
