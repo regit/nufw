@@ -221,8 +221,8 @@ connection * userpckt_decode(char* dgram,int dgramsiz){
       /* get user datas : password, groups (filled in) */
       connexion->user_groups = (*module_user_check) (userid,passwd);
       if (connexion->user_groups == NULL) {
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
-	  g_message("ldap_user_check return bad\n");
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
+	  g_message("user_check return bad\n");
 	free_connection(connexion);
 	return NULL;
       }
