@@ -1,3 +1,7 @@
+0.8.2 (2004/07/30)
+	- user logging level is finally taken into account
+	- connectio hash code optimisation
+	- some man pages and docs
 0.8.1b (2004/07/20)
 	- correct nuclient.h header
 0.8.1 (2004/07/14)
