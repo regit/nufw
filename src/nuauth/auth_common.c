@@ -215,18 +215,37 @@ connection * search_and_fill (connection * pckt) {
                 g_assert("Should not have this");
             }
             break;
+            /* PREVIOUS : group 0 treatment */
+            /* NOW :  try to have a small conntrack */
           case STATE_DONE:
-            g_assert(pckt->state==STATE_USERPCKT);
-            ((connection *)element)->user_id = pckt->user_id;
-            // going to log
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-                g_message("Need only cleaning\n");
-            // user logging 
-            log_user_packet(*(connection *)element,((connection *)element)->decision);
-            // House work
-            conn_cl_delete(element);
-            free_connection(pckt);
-            return NULL;           
+            switch  (pckt->state){
+              case STATE_USERPCKT:
+                ((connection *)element)->user_id = pckt->user_id;
+                // going to log
+                if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+                    g_message("Need only cleaning\n");
+                // user logging 
+                log_user_packet(*(connection *)element,((connection *)element)->decision);
+                // House work
+#if 0
+                conn_cl_delete(element);
+                free_connection(pckt);
+#endif
+                return NULL;
+              case STATE_AUTHREQ:
+                if (pckt->packet_id != NULL ){
+                    struct auth_answer aanswer ={ element->decision , element->user_id } ;
+                    u_int32_t packetid=element->packet_id;
+                    UNLOCK_CONN(element);
+                    g_slist_foreach(packetid,
+                        (GFunc) send_auth_response,
+            UNLOCK_CONN(element);
+                        &aanswer
+                        );
+                    
+                }
+                return NULL;           
+            }
           default:
             g_assert("Should have badly done");
         }
@@ -520,9 +539,14 @@ gint take_decision(connection * element) {
             } else {
                 log_user_packet(*element,STATE_DROP);
             }
+            /* new conntrack system ? */
+#if 0
             if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
                 g_message("Freeing element\n");
             conn_cl_delete(element);
+#endif
+
+            UNLOCK_CONN(element);
         } else {
             if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
                 g_message("only change state\n");
@@ -538,7 +562,13 @@ gint take_decision(connection * element) {
                 &aanswer);
             /* log user packet */
             log_user_packet(*element,STATE_DROP);
+
+            /* new conntrack system ? */
+#if 0
             conn_cl_delete(element);
+#endif
+
+            UNLOCK_CONN(element);
         } else {
             if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
                 g_message ("Unable to decide on packet\n");
