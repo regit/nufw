@@ -21,7 +21,7 @@ if [ -f /etc/default/nufw ] ; then
 	. /etc/default/nufw
 fi
 
-if [ "$NUFW_START" !="yes" ]; then
+if [ "$NUFW_START" != "yes" ]; then
   exit 0
 fi
 
