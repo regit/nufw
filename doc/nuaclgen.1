@@ -31,9 +31,6 @@ Issues usage details and exits.
 \fB-A \fIAcl DN\fB \fR
 Add an acl in the ldap tree with dn \fIAcl DN\fR
 .TP
-\fB-L -g\fIGroup ID\fB \fR
-List Acls for the \fIGroup ID\fR group
-.TP
 \fB-sa \fINetwork\fB \fR
 Specify source network for the acl, with network of the form : aaa.bbb.ccc.ddd[/ee]. Default value : 0.0.0.0/0
 .TP
@@ -54,6 +51,9 @@ Specify decision for the Acl. Has to be ACCEPT or DROP.
 .TP
 \fB-g \fIGroups list\fB \fR
 Specify the user group on which Acl apply. Must be of the form : Group1[,Group2[,...]]
+.TP
+\fB-L -g \fIGroup ID\fB \fR
+List Acls for the \fIGroup ID\fR group
 .SH "SEE ALSO"
 .PP
 nufw(1)
@@ -61,8 +61,8 @@ nufw(1)
 nuauth(1)
 .SH "AUTHOR"
 .PP
-Nuauth was designed and coded by Eric Leblond, aka Regit (<vincent@gryzor.com>) , and Vincent
-Deffontaines, aka gryzor (<eric@regit.org>). Original idea in 2001, while working on NSM Ldap
+Nuauth was designed and coded by Eric Leblond, aka Regit (<eric@regit.org>) , and Vincent
+Deffontaines, aka gryzor (<vincent@gryzor.com>). Original idea in 2001, while working on NSM Ldap
 support.
 .PP
 This manual page was written by Eric Leblond

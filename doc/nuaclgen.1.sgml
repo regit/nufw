@@ -109,14 +109,7 @@ manpage.1: manpage.sgml
           <para>Add an acl in the ldap tree with dn <replaceable>Acl DN</replaceable></para>
         </listitem>
       </varlistentry>
-      <varlistentry>
-        <term><option>-L -g<replaceable>Group ID</replaceable></option>
-        </term>
-        <listitem>
-          <para>List Acls for the <replaceable>Group ID</replaceable> group</para>
-        </listitem>
-      </varlistentry>
-      <varlistentry>
+          <varlistentry>
         <term><option>-sa <replaceable>Network</replaceable></option>
         </term>
         <listitem>
@@ -165,6 +158,14 @@ manpage.1: manpage.sgml
           <para>Specify the user group on which Acl apply. Must be of the form : Group1[,Group2[,...]]</para>
         </listitem>
       </varlistentry>
+  <varlistentry>
+        <term><option>-L -g <replaceable>Group ID</replaceable></option>
+        </term>
+        <listitem>
+          <para>List Acls for the <replaceable>Group ID</replaceable> group</para>
+        </listitem>
+      </varlistentry>
+
     </variablelist>
   </refsect1>
   <refsect1>
@@ -174,8 +175,8 @@ manpage.1: manpage.sgml
   </refsect1>
   <refsect1>
     <title>AUTHOR</title>
-    <para>Nuauth was designed and coded by Eric Leblond, aka Regit (&dhemail2;) , and Vincent
-    Deffontaines, aka gryzor (&dhemail;). Original idea in 2001, while working on NSM Ldap
+    <para>Nuauth was designed and coded by Eric Leblond, aka Regit (&dhemail;) , and Vincent
+    Deffontaines, aka gryzor (&dhemail2;). Original idea in 2001, while working on NSM Ldap
     support.</para>
 
     <para>This manual page was written by &dhusername;</para>
