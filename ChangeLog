@@ -1,3 +1,16 @@
+0.6.2 (2004/01/05)
+        - correct bug on user packet parsing
+        - "clean" rewrite of search_and_fill function
+        - packet timeout is checked now
+0.6.1 (2003/12/09) :
+        - Correct bug on acl DROP
+        - Clean lock system
+        - NuFW send Control message when needed
+0.6.0 (2003/12/02):
+        - Mysql and PostgreSQL users activity logging fully functionnal and
+          tested
+        - Updated Config file so it suits all possible features
+        - Debugged some problems on ACL checking
 0.5.4 (2003/11/19)
 	- nuauth conntrack modification
         - config file stuffs
