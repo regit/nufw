@@ -5,10 +5,6 @@ Description: Should nufw daemon be started at boot time?
  Choose "True" if you want Nufw to be automatically started at boot time.
  If you choose "False" you can start nufw by hand, by running /usr/sbin/nufw
  with appropriate options.
-Description-fr: Lancer le démon nufw au démarrage de la machine?
- Si vous choisissez la valeur "Oui", Nufw sera démarré au moment du boot de la machine.
- Sinon, vous pourrez toujours démarrer nufw au moyen du binaire /usr/sbin/nufw,
- avec les options de votre choix.
 
 Template: nufw/verbosity
 Type: select
@@ -18,11 +14,6 @@ Description: Nufw daemon verbosity level
  The more "v"s are passed at nufw startup, the more verbose daemon logs will be.
  A good production value is "vv", increase it to get more details in case of
  problems.
-Description-fr: Degré de verbosité du démon Nufw
- Plus le nombre de "v" passés à nufw est grand, plus grand sera le nombre
- d'informations envoyées dans les fichiers journaux par nufw. La valeur la
- meilleure pour les systèmes en production est "vv" ; à augmenter en cas de
- problèmes à diagnostiquer.
 
 Template: nufw/listen_address
 Type: string
@@ -36,16 +27,6 @@ Description: Nufw listening address
  adresses, but it can be done specifiing "0.0.0.0".
  .
  Please input an IP address of this system. Default value is "127.0.0.1"
-Description-fr: Adresse de nufw
- Nufw doit s'attacher à une adresse IP, afin de recevoir des données de la part du
- démon Nuauth. C'est cette adresse que vous devez spécifier ici.
- La valeur par défaut (127.0.0.1) est correcte si le démon nuauth tourne sur la
- même machine que nufw, sinon il est conseillé de spécifier l'adresse IP de
- votre réseau interne (où le démon nuauth devrait se trouver). Il est
- déconseillé d'écouter sur une adresse publique. Il est également possible
- d'écouter sur toutes les adresses du systèmes, en précisant ici "0.0.0.0".
- .
- Une adresse IP doit être précisée ici. Valeur par défaut : 127.0.0.1.
 
 Template: nufw/listen_port
 Type: string
@@ -58,13 +39,6 @@ Description: Nufw listening port
  if you change this.
  .
  Please input a numeric port number.
-Description-fr: Port de nufw
- Nufw doit s'attacher à un port UDP, afin de recevoir des données de la part du
- démon Nuauth. C'est ce port que vous devez spécifier ici.
- La valeur par défaut (4129) semble adaptée à la plupart des configurations ; si
- vous la modifiez, pensez à paramétrer nuauth en conséquence.
- .
- Un numéro de port doit être précisé ici.
 
 Template: nufw/nuauth_address
 Default: 127.0.0.1
@@ -73,12 +47,6 @@ Description: Nuauth daemon IP address
  This is the IP address where the Nuauth daemon can be reached. If you run nufw
  and nuauth on the same box, leave it at default value of 127.0.0.1.
  Else enter an IP address.
-Description-fr: Adresse IP du démon nuauth
- L'adresse IP où l'on peut joindre le démon nuauth doit être paramétrée ici. Si
- nufw et nuauth tournent sur la même machine, la valeur par défaut (127.0.0.1)
- est la bonne.
- .
- Une adresse IP doit être précisée ici .
 
 Template: nufw/nuauth_port
 Type: string
@@ -87,12 +55,6 @@ Description: Nuauth daemon port
  This must be the port number nuauth is configured to listen on your
  installation. On most installations, the default value of 4128 will be correct.
  Please input a numeric port number.
-Description-fr: Port du démon Nuauth
- Le port UDP où le démon nuauth est à l'écoute. Ce port sera utilisé par nufw
- pour parler au démon nuauth. Il est probable que la valeur par défaut (4128)
- est correcte pour votre installation.
- .
- Un numéro de port doit être précisé ici.
 
 Template: nufw/timeout
 Type: string
@@ -102,13 +64,6 @@ Description: Nufw timeout delay
  received, and has remained unauthenticated. You probably don't need to tune
  this parameter, except if your queues are really full. Default value is 15.
  Please enter a number (which will be interpreted as seconds).
-Description-fr: Délai d'expiration de nufw
- C'est le temps (en secondes) après lequel nufw doit "oublier" l'existence d'un
- paquet IP reçu, si aucune authentification n'a été reçue pour ce paquet. Vous
- n'avez certainement pas besoin de modifier cette valeur, à moins que vos queues
- soient vraiment souvent pleines.
- .
- Un nombre est attendu ici.
 
 Template: nufw/tracksize
 Type: string
@@ -116,7 +71,3 @@ Default: 1000
 Description: Nufw Tracksize
  This parameter is suitable for most configs, and should be changed only if you
  know what you are doing. Default value : 1000
-Description-fr: Taille de piste Nufw
- La valeur par défaut de ce paramètre est correcte pour la plupart des
- configurations, et ne devrait pas être modifiée, à moins que vous ne sachiez
- exactement ce que vous faîtes! Valeur par défaut : 1000
