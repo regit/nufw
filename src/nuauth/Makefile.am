@@ -1,6 +1,6 @@
 
 AM_CPPFLAGS = -O2 -Wall -Werror-implicit-function-declaration
-INCLUDES = $(GLIB_CFLAGS)
+INCLUDES = $(GLIB_CFLAGS) -Iinclude/
 
 sbin_PROGRAMS = nuauth
 
