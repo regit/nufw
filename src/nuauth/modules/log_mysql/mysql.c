@@ -68,7 +68,7 @@ g_module_check_init(GModule *module){
   mysql_request_timeout=*(int *)(vpointer?vpointer:&mysql_request_timeout);
 
   /* init thread private stuff */
-  mysql_priv = g_private_new (g_free);
+  /* mysql_priv = g_private_new (g_free); */
 
   return NULL;
 }
@@ -88,11 +88,12 @@ G_MODULE_EXPORT MYSQL* mysql_conn_init(void){
       return NULL;
   }
   // Set MYSQL object properties
-  if (mysql_options(ld,MYSQL_OPT_CONNECT_TIMEOUT,mysql_conninfo) != 0)
+ /* if (mysql_options(ld,MYSQL_OPT_CONNECT_TIMEOUT,mysql_conninfo) != 0)
       if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
           g_warning("mysql options setting failed : %s\n",mysql_error(ld));
-  
-  if (!mysql_real_connect(ld,mysql_server_addr,mysql_user,mysql_passwd,mysql_db_name,mysql_server_port,NULL,0)) {
+  */
+
+  if (!mysql_real_connect(ld,mysql_server,mysql_user,mysql_passwd,mysql_db_name,mysql_server_port,NULL,0)) {
       if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
           g_warning("mysql connection failed : %s\n",mysql_error(ld));
       return NULL;
@@ -101,7 +102,6 @@ G_MODULE_EXPORT MYSQL* mysql_conn_init(void){
 }
 
 G_MODULE_EXPORT gint user_packet_logs (connection *element, int state){
-    MYSQL *ld = g_private_get (mysql_priv);
   char request[512];
   if (ld == NULL){
     ld=mysql_conn_init();
