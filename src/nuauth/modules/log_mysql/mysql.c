@@ -79,7 +79,6 @@ g_module_check_init(GModule *module){
 
 G_MODULE_EXPORT MYSQL* mysql_conn_init(void){
   MYSQL *ld = NULL;
-  int mysql_status,err,version=3;
 
   /* init connection */
   if (mysql_init(ld) == NULL) {
@@ -102,13 +101,14 @@ G_MODULE_EXPORT MYSQL* mysql_conn_init(void){
 }
 
 G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
+  MYSQL *ld = g_private_get (mysql_priv);
   char request[512];
   if (ld == NULL){
     ld=mysql_conn_init();
     if (ld == NULL){
       if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
           g_warning("Can not initiate MYSQL conn\n");
-      return NULL;
+      return -1;
     }
     g_private_set(mysql_priv,ld);
   }
@@ -134,8 +134,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
           //
           int Result;
           (element.tracking_hdrs).saddr;
-          if (snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,start_timestamp) 
-              VALUES (%u,%u,%lu,%lu,%u,%u,%lu)",
+          if (snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,start_timestamp) VALUES (%u,%u,%lu,%lu,%u,%u,%lu)",
               mysql_table_name,
               (element.user_id),
               (element.tracking_hdrs).saddr,
@@ -157,8 +156,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
       }
       else if ((element.tracking_hdrs).protocol == IPPROTO_UDP){
           int Result;
-          if (snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,start_timestamp) 
-              VALUES (%u,%u,%lu,%lu,%u,%u,%lu);",
+          if (snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,start_timestamp) VALUES (%u,%u,%lu,%lu,%u,%u,%lu)",
               mysql_table_name,
               (element.user_id),
               (element.tracking_hdrs).saddr,
@@ -183,8 +181,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
           int Result;
           (element.tracking_hdrs).saddr;
           (element.tracking_hdrs).daddr;
-          if (snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,start_timestamp) 
-              VALUES (%u,%u,%lu,%lu,%lu);",
+          if (snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,start_timestamp) VALUES (%u,%u,%lu,%lu,%lu)",
               mysql_table_name,
               (element.user_id),
               (element.tracking_hdrs).saddr,

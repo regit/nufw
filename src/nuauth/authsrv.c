@@ -322,8 +322,6 @@ int main(int argc,char * argv[]) {
         nufw_srv.sin_addr.s_addr = INADDR_ANY;
     }
 
-    printf("Client adress : *%s*, NUFW address : *%s*\n",nuauth_client_listen_addr, nuauth_nufw_listen_addr);
-
     /* Initialize glib thread system */
     g_thread_init(NULL);
 
