@@ -241,16 +241,17 @@ Description-fr: Journalisation de l'activité utilisateurs
   - 4 : journaliser tous les paquets
  Valeur par défaut : 1
 
-Template: nuauth/users_logs_backend
+Template: nuauth/user_logs_module
 Type: select
-Choices: syslog
+Choices: syslog, mysql, pgsql
 Default: syslog
-Description: Users log backend
- Choose the media users activity will be logged into. For now only syslog is
- provided.
+Description: Users logs module
+ Choose the media users activity will be logged into. It is advised you log
+ users activity into a database.
 Description-fr: Media de journalisation de l'activité utilisateurs
- Choisissez où l'activité utilisateurs doit être journalisée. Pour l'instant,
- seul syslog est utilisable.
+ Choisissez où l'activité utilisateurs doit être journalisée. La meilleure
+ solution est probablement de journaliser les activités des utilisateurs dans
+ une base SQL.
 
 Template: nuauth/ldap_server_addr
 Type: string
@@ -336,3 +337,118 @@ Description-fr: Décision à prendre quand les groupes sont en désaccord
  l'utilisateur dans ces cas. Si vous choisissez 0, l'accès à une ressource
  par un utilisateur sera donc accepté dès qu'un des groupes dont l'utilisateur
  fait partie permet cet accès.
+
+Template: nuauth/mysql_server_addr
+Type: string
+Default: 127.0.0.1
+Description: MySQL Server Address
+ Please enter IP address (or DNS name) of your Mysql server.
+Description-fr: Adresse du server MySQL
+ Veuillez préciser l'adresse IP (ou nom DNS) de votre serveur Mysql
+
+Template: nuauth/mysql_server_port
+Type: string
+Default: 3306
+Description: Mysql Server port
+ Please enter TCP port of your Mysql server.
+Description-fr: Port du serveur MySQL
+  Veuillez préciser le port TCP de votre serveur Mysql
+
+Template: nuauth/mysql_db_name
+Type: string
+Default: nufw
+Description: Mysql Database Name
+ Please enter the database name to use to connect to MYSQL server
+Description-fr: Base de donnée Mysql
+ Veuillez préciser le nom de la base à utiliser sur le server Mysql
+
+Template: nuauth/mysql_table_name
+Type: string
+Default: nufw
+Description: Mysql table name
+ Please enter the table name to use to connect to MYSQL server
+Description-fr: Nom de la table Mysql
+ Veuillez préciser le nom de la table à utiliser sur le server Mysql
+
+Template: nuauth/mysql_user
+Type: string
+Default: foo
+Description: Mysql username
+ Please enter the username to use to connect to MYSQL server
+Description-fr: Nom d'utilisateur Mysql
+ Veuillez préciser le nom d'utilisateur à spécifier à la
+ connection au server Mysql
+
+Template: nuauth/mysql_passwd
+Type: password
+Description: Mysql Password
+ Please enter the password to use to connect to MYSQL server
+Description-fr: Mot de passe Mysql
+ Veuillez préciser le mot de passe à spécifier à la
+ connection au server Mysql
+
+Template: nuauth/mysql_request_timeout
+Type: string
+Default: 1
+Description: Mysql Request timeout
+  Please enter the timeout (in seconds) for connections to the MYSQL server
+Description-fr: Délai d'expiration Mysql
+ Veuillez préciser le délai d'expiration de la connection au server Mysql
+
+Template: nuauth/pgsql_server_addr
+Type: string
+Default: 127.0.0.1
+Description: PostgreSQL server address
+ Please enter IP address (or DNS name) of your PostgreSQL server.
+Description-fr: Adresse du serveur PostgreSQL
+ Veuillez préciser l'adresse IP (ou nom DNS) de votre serveur
+ PostgreSQL
+
+Template: nuauth/pgsql_server_port
+Type: string
+Default: 5432
+Description: PostgreSQL server port
+ Please enter TCP port of your PostgreSQL server.
+Description-fr: Port du serveur PostgreSQL
+ Veuillez préciser le port TCP de votre serveur PostgreSQL
+
+Template: nuauth/pgsql_db_name
+Type: string
+Default: nufw
+Description: PostgreSQL database name
+ Please enter the database name to use to connect to PostgreSQL server
+Description-fr: Nom de la base de données PostgreSQL
+ Veuillez préciser le nom de la base à utiliser sur le server PostgreSQL
+
+Template: nuauth/pgsql_table_name
+Type: string
+Default: nufw
+Description: PostgreSQL table name
+ Please enter the table name to use to connect to PostgreSQL server
+Description-fr: nom de la table PostgreSQL
+ Veuillez préciser le nom de la table à utiliser sur le server PostgreSQL
+
+Template: nuauth/pgsql_user
+Type: string
+Default: foo
+Description: PostgreSQL username
+ Please enter the username to use to connect to PostgreSQL server
+Description-fr: Nom d'utilisateur PostgreSQL
+ Veuillez préciser le nom d'utilisateur à spécifier à la
+ connection au server PostgreSQL
+
+Template: nuauth/pgsql_passwd
+Type: password
+Description: PostgreSQL password
+ Please enter the password to use to connect to PostgreSQL server
+Description-fr: Mot de passe PostgreSQL
+ Veuillez préciser le mot de passe à spécifier à la
+ connection au server PostgreSQL
+
+Template: nuauth/pgsql_request_timeout
+Type: string
+Default: 1
+Description: PostgreSQL timeout
+ Please enter the timeout (in seconds) for connections to the PostgreSQL server
+Description-fr: Délai d'expiration pour PostgreSQL
+ Veuillez préciser le délai d'expiration de la connection au serveur PostgreSQL

@@ -1,3 +1,9 @@
+nufw (0.6.1-1) unstable; urgency=low
+
+  * Upstream changed to 0.6.1
+
+ -- Vincent Deffontaines <vincent@gryzor.com>  Mon, 22 Dec 2003 15:55:24 +0100
+
 nufw (0.5.4-1) unstable; urgency=low
 
   * Initial Release.

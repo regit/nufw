@@ -35,7 +35,7 @@ config.status: configure
 	dh_testdir
 	# Add here commands to configure the package.
 	#CFLAGS=$(CFLAGS) 
-	./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --prefix=/usr --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info --localstatedir=/var --sysconfdir=/etc/nufw/
+	./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --prefix=/usr --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info --localstatedir=/var --sysconfdir=/etc/nufw/ --with-mysql-log --with-pgsql-log
 
 
 #Architecture 
@@ -92,6 +92,7 @@ clean:
 	rm -f build-nutcpc-stamp build-nufw-stamp build-nuauth-stamp build-nuauth-utils-stamp #CONFIGURE-STAMP#
 
 	# Add here commands to clean up after the build process.
+	rm config.sub config.guess||/bin/true
 	-$(MAKE) distclean
 ifneq "$(wildcard /usr/share/misc/config.sub)" ""
 	cp -f /usr/share/misc/config.sub config.sub
@@ -142,6 +143,8 @@ install-nuauth-utils:
 	#INSTALLDOC#
 	#$(MAKE) install DESTDIR=$(CURDIR)/debian/nuauth-utils
 	dh_install -pnuauth-utils scripts/nuaclgen usr/bin/
+	dh_install -pnuauth-utils scripts/nutop usr/bin/
+	dh_install -m 600 -pnuauth-utils conf/nuaclgen.conf etc/nufw/
 	
 install-nutcpc:
 	dh_testdir -pnutcpc

@@ -10,3 +10,5 @@ Bug : nuauth debconf interface asks for a user nuauth should run as ; if
 specified user does not exist, debconf WILL fail.
 
  -- Vincent Deffontaines <vincent@gryzor.com>, Thu, 13 Nov 2003 13:03:54 +0100
+
+ WARNING - THESE DEBIAN PACKAGES ARE STILL EXPERIMENTAL
