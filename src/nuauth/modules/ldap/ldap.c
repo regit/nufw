@@ -21,25 +21,23 @@
 #include <auth_ldap.h>
 
 
-//#ifndef _LDAPVARS
-//#define _LDAPVARS
 confparams ldap_nuauth_vars[] = {
   { "ldap_server_addr" , G_TOKEN_STRING, 0 , LDAP_SERVER },
   { "ldap_server_port" ,G_TOKEN_INT , LDAP_SERVER_PORT,NULL },
+  { "ldap_base_dn" , G_TOKEN_STRING , 0 ,LDAP_BASE},
   { "ldap_users_base_dn" , G_TOKEN_STRING , 0 ,LDAP_BASE},
   { "ldap_acls_base_dn" , G_TOKEN_STRING , 0 ,LDAP_BASE},
   { "ldap_bind_dn" , G_TOKEN_STRING , 0 ,LDAP_USER},
   { "ldap_bind_password" , G_TOKEN_STRING , 0, LDAP_CRED },
   { "ldap_request_timeout" , G_TOKEN_INT , LDAP_REQUEST_TIMEOUT , NULL }
 };
-//#endif 
-
 
 /* Init ldap system */
 G_MODULE_EXPORT gchar* 
 g_module_check_init(GModule *module){
-  char *configfile=DEFAULT_CONF_FILE; 
+  char *configfile=DEFAULT_CONF_FILE;
   gpointer vpointer; 
+  char *ldap_base_dn=LDAP_BASE;
 
   /* init global variables */
   binddn=LDAP_USER;
@@ -48,6 +46,7 @@ g_module_check_init(GModule *module){
   ldap_server_port=LDAP_SERVER_PORT;
   ldap_users_base_dn=LDAP_BASE;
   ldap_acls_base_dn=LDAP_BASE;
+
   /* parse conf file */
   parse_conffile(configfile,sizeof(ldap_nuauth_vars)/sizeof(confparams),ldap_nuauth_vars);
   /* set variables */
@@ -57,10 +56,18 @@ g_module_check_init(GModule *module){
   ldap_server_port=*(int *)(vpointer?vpointer:&ldap_server_port);
   vpointer=get_confvar_value(ldap_nuauth_vars,sizeof(ldap_nuauth_vars)/sizeof(confparams),"ldap_bind_dn");
   binddn=(char *)(vpointer?vpointer:binddn);
+  vpointer=get_confvar_value(ldap_nuauth_vars,sizeof(ldap_nuauth_vars)/sizeof(confparams),"ldap_base_dn");
+  ldap_base_dn=(char *)(vpointer?vpointer:ldap_base_dn);
   vpointer=get_confvar_value(ldap_nuauth_vars,sizeof(ldap_nuauth_vars)/sizeof(confparams),"ldap_users_base_dn");
   ldap_users_base_dn=(char *)(vpointer?vpointer:ldap_users_base_dn);
   vpointer=get_confvar_value(ldap_nuauth_vars,sizeof(ldap_nuauth_vars)/sizeof(confparams),"ldap_acls_base_dn");
   ldap_acls_base_dn=(char *)(vpointer?vpointer:ldap_acls_base_dn);
+
+  if (! strcmp(ldap_acls_base_dn,LDAP_BASE) )
+    ldap_acls_base_dn=ldap_base_dn;
+  if (! strcmp(ldap_users_base_dn,LDAP_BASE) )
+    ldap_users_base_dn=ldap_base_dn;
+
   vpointer=get_confvar_value(ldap_nuauth_vars,sizeof(ldap_nuauth_vars)/sizeof(confparams),"ldap_bind_password");
   bindpasswd=(char *)(vpointer?vpointer:bindpasswd);
   ldap_request_timeout=LDAP_REQUEST_TIMEOUT;
