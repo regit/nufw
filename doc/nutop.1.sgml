@@ -68,6 +68,7 @@ manpage.1: manpage.sgml
       <arg><option>-c <replaceable>config file</replaceable></option></arg>
       <arg><option>-delay <replaceable>refresh delay (seconds)</replaceable></option></arg>
       <arg><option>-line <replaceable>number of lines to display</replaceable></option></arg>
+      <arg><option>-version <replaceable> 1/2</replaceable></option></arg>
       <arg><option>-databasetype <replaceable> mysql/pgsql</replaceable></option></arg>
       <arg><option>-host <replaceable>db host</replaceable></option></arg>
       <arg><option>-user <replaceable>db username</replaceable></option></arg>
@@ -127,6 +128,14 @@ manpage.1: manpage.sgml
         </term>
         <listitem>
           <para>Number of lines to display. Default : 20</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>-version <replaceable>1/2</replaceable></option>
+        </term>
+        <listitem>
+          <para>NuFW SQL protocol version to use. Most probably you want 2.
+          Version 1 remains for compatibility with older versions only.</para>
         </listitem>
       </varlistentry>
       <varlistentry>

@@ -68,7 +68,7 @@
 	  dnentry=g_scanner_get_next_token (scanner); 
 	  switch (dnentry){
 	  case G_TOKEN_STRING :
-	    /* test if element want a string */
+	    /* test if element wants a string */
 	    if (current_symbol->value_type == G_TOKEN_STRING){
 	      current_symbol->v_char=strdup(scanner->value.v_string);
 	    } else {
@@ -79,7 +79,7 @@
 	    }
 	    break;
 	  case G_TOKEN_INT :
-	    /* test if element want a string */
+	    /* test if element wants an integer */
 	    if (current_symbol->value_type == G_TOKEN_INT){
 	      current_symbol->v_int=scanner->value.v_int;
 	    } else {

@@ -115,6 +115,7 @@ G_MODULE_EXPORT PGconn *pgsql_conn_init(void){
     strncat(pgsql_conninfo,pgsql_passwd,strlen(pgsql_passwd));
     strncat(pgsql_conninfo,"' connect_timeout=",18);
     strncat(pgsql_conninfo,timeout,strlen(timeout));
+    strcat(pgsql_conninfo,"'");
     /* strcat(pgsql_conninfo," sslmode='");
        strcat(pgsql_conninfo,pgsql_ssl); 
        strcat(pgsql_conninfo,"'"); */
@@ -223,7 +224,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
                 return -1;
             }
 	    } else {
-if (snprintf(request,511,"INSERT INTO %s (username,user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,state,oob_prefix) VALUES (%s,%u,%lu,%u,'%s','%s',%u,%u,%hu,'ACCEPT');",
+if (snprintf(request,511,"INSERT INTO %s (username,user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,state,oob_prefix) VALUES ('%s',%u,%lu,%u,'%s','%s',%u,%u,%hu,'ACCEPT');",
                   pgsql_table_name,
 		  element.username,
                   (element.user_id),

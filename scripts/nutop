@@ -3,7 +3,7 @@
 #
 # nutop : top like interface to Nufw User Connection tracking.
 #
-# Copyright(C) 2003 Eric Leblond <eric@regit.org>
+# Copyright(C) 2003-2004 Eric Leblond <eric@regit.org>
 #		     Vincent Deffontaines <vincent@gryzor.com>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -44,6 +44,7 @@ sub Print_Usage()
   print "\t-line\t\t\tNumbers of user lines to output (default : 20)\n";
   print "\t-help\t\t\tDisplay this help message and exit\n";
   print "DATABASE RELATED OPTIONS\n";
+  print "\t-version\t\tNuFW protocol version. 'Normal' is 2, use 1 for old version\n";
   print "\t-databasetype\t\tdatabase choice (pgsql or mysql) default is pgsql)\n";
   print "\t-host\t\t\tdatabase adress (IP or name) default is 127.0.0.1)\n";
   print "\t-user\t\t\tdatabase username (default is \'nufw\')\n";
@@ -71,6 +72,7 @@ my %config = ('databasetype' => 'pgsql',
               'tablename' => 'nufw',
               'delay' => 2,
               'line' => 20,
+              'version' => 2,
               ); #This hash contains all configuration variables
 
 my %tmpconfig; #yucks, getopt can only be called once
@@ -83,6 +85,7 @@ GetOptions( "c=s" => \$config{'configfile'},
             "tablename=s" => \$tmpconfig{'tablename'},
             "delay=i" => \$tmpconfig{'delay'},
             "line=i" => \$tmpconfig{'line'},
+            "version=i" => \$tmpconfig{'version'},
             "help" => \$tmpconfig{'help'},
 );
 
@@ -141,6 +144,11 @@ foreach my $key(keys %tmpconfig)
     require DBD::Pg;
     defined ($config{'port'}) or $config{'port'} = 5432;
   }
+  if (($config{'version'}!=1) and ($config{'version'}!=2))
+  {
+    $error++;
+    print STDERR "E: version must be either 1 or 2\n";
+  }
 #All for now, maybe I (or you?)'ll find some more to check
   if ($error > 0)
   {
@@ -160,21 +168,42 @@ my $dbh;
   $dbh = DBI->connect($datasource, $config{'user'}, $config{'pass'}) or die $DBI::errstr;
 }
 
+my @state=('DROP','OPEN','ESTAB','CLOSE');
+my @delays=(1,5,15,60);
+my $delayswitch=-1;
+
 my @connection_query=();
+push @connection_query,'username' if $config{'version'} == 2;
 $config{'databasetype'} =~ /mysql/ and
-@connection_query=('user_id','ip_saddr','ip_daddr','tcp_sport','tcp_dport','DATE_FORMAT(start_timestamp,\'%D %M %Y %H:%I:%S\')','state');
+push @connection_query,('user_id','ip_saddr','ip_daddr','tcp_sport','tcp_dport','DATE_FORMAT(start_timestamp,\'%D %M %Y %H:%I:%S\')','state');
 $config{'databasetype'} =~ /pgsql/ and
-@connection_query=('user_id','ip_saddr','ip_daddr','tcp_sport','tcp_dport','start_timestamp','state');
-my %connection_query_info=(user_id=>["User",6],ip_saddr=>["Source IP",17],ip_daddr=>["Destination IP",17],ip_protocol=>["Proto",7],oob_time_sec=>["Open Time",11], tcp_sport=>["Sport",8], tcp_dport=>["Dport",8],id=>["Id Packet",12],'DATE_FORMAT(start_timestamp,\'%D %M %Y %H:%I:%S\')'=>["Start Time", 30],start_timestamp=>["Start Time",13],state=>["State",6]); 
+push @connection_query,('user_id','ip_saddr','ip_daddr','tcp_sport','tcp_dport','start_timestamp','state');
+my %connection_query_info=(number=>["Number",12],username=>["Name",12],user_id=>["ID",6],ip_saddr=>["Source IP",17],ip_daddr=>["Destination IP",17],ip_protocol=>["Proto",7],oob_time_sec=>["Open Time",11], tcp_sport=>["Sport",8], tcp_dport=>["Dport",8],id=>["Id Packet",12],'DATE_FORMAT(start_timestamp,\'%D %M %Y %H:%I:%S\')'=>["Start Time", 30],start_timestamp=>["Start Time",13],state=>["State",6]); 
 
-#my $gal_query="select ".join (',' ,@connection_query) ." from ".
-my $gal_query="select ".join (',' ,@connection_query) ." from ".
-  $config{'tablename'}." where ip_protocol=6 order by oob_time_sec DESC,oob_time_usec DESC limit 0,".$config{'line'};
+my @users_query=();
+push @users_query,'username' if $config{'version'} == 2;
+push @users_query,('user_id','state');
+
+
+my $gal_query="select ".join (',' ,@connection_query) ." from ".$config{'tablename'};
 $config{'databasetype'} =~ /pgsql/ and 
-  $gal_query="select ".join (',' ,@connection_query) ." from ".
-  $config{'tablename'}." where ip_protocol=6 order by oob_time_sec DESC,oob_time_usec DESC LIMIT ".$config{'line'};
-#  $config{'tablename'}." where state=2 and ip_protocol=6 order by oob_time_sec DESC,oob_time_usec DESC LIMIT ".$config{'line'};
+  $gal_query="select ".join (',' ,@connection_query) ." from ". $config{'tablename'};
 
+my $time_cond_query = " order by oob_time_sec DESC,oob_time_usec DESC limit 0,".$config{'line'};
+$config{'databasetype'} =~ /pgsql/ and
+  $time_cond_query=" order by oob_time_sec DESC,oob_time_usec DESC LIMIT ".$config{'line'};
+
+my $users_cond_query_start="SELECT ".join (',',@users_query).",COUNT(*) AS number from ".$config{'tablename'};
+my $users_cond_query_end=" GROUP BY user_id,state ORDER BY number DESC LIMIT 0,".$config{'line'};
+
+$config{'databasetype'} =~ /pgsql/ and
+  $users_cond_query_end=" LIMIT ".$config{'line'};
+
+my $tcp_cond_query=" ip_protocol=6";
+my $udp_cond_query=" ip_protocol=17";
+
+my $time_users_cond_start = " start_timestamp > date_add(now(),interval -";
+my $time_users_cond_end = " minute)";
 
 initscr();
 
@@ -188,6 +217,9 @@ halfdelay(10*$config{'delay'});
 #init_pair(4,COLOR_BLUE,COLOR_BLACK);
 #init_pair(1,COLOR_RED,COLOR_BLACK);
 
+my $mode = 'time';
+my $proto = 'tcp';
+
 while (1)
 {
   my $count = 1; my $hpos=0;
@@ -197,13 +229,45 @@ while (1)
   foreach (@times){
     length == 1 and s/^/0/;
   }
+  clear();
   addstr(0,7,$times[0].":".$times[1].":".$times[2]);
+  addstr(0,19,"Sorted by ".$mode);
+  $mode eq 'users' and addstr(0,37,"(last ".$delays[$delayswitch]." min)");
+  addstr(0,54,"protocol :".$proto);
   eval {attron(A_REVERSE) };
 #  eval {attron(A_BOLD) };
   addstr($count,0," "x90);
-  my $sth = $dbh->prepare($gal_query);
+  my $query = $gal_query;
+  $mode eq 'users' and $query=$users_cond_query_start.' WHERE'.$time_users_cond_start.$delays[$delayswitch].$time_users_cond_end;
+  if ($proto eq 'tcp') 
+  {
+    if ($mode eq 'time')
+    {
+      $query=$query.' WHERE'.$tcp_cond_query;
+    }else{
+      $query=$query.' AND'.$tcp_cond_query;
+    }
+  }
+  if ($proto eq 'udp')
+  {
+    if ($mode eq 'time')
+    {
+      $query=$query.' WHERE'.$udp_cond_query;
+    }else{
+      $query=$query.' AND'.$udp_cond_query;
+    }
+  }
+  $mode eq 'time' and $query=$query.$time_cond_query;
+  $mode eq 'users' and $query=$query.$users_cond_query_end;
+  my $sth = $dbh->prepare($query);
+  my @display = @connection_query;
+  if ($mode eq 'users')
+  {
+    @display = @users_query;
+    push @display,'number';
+  }
   if ( $sth->execute) {
-    foreach my $field ( @connection_query ){
+    foreach my $field ( @display ){
        addstr($count, $hpos, @{$connection_query_info{$field}}[0]);
        $hpos+=@{$connection_query_info{$field}}[1];
     }
@@ -215,15 +279,20 @@ while (1)
 #      set_color_fg(COLOR_YELLOW);
 #      color_set($row[6]+1,undef);
       foreach my $attr (@row){
-        if (($config{'databasetype'} =~ /mysql/) and ($connection_query[$col] =~/^(?:ip_saddr|ip_daddr)$/)) {
+        if (($config{'databasetype'} =~ /mysql/) and ($display[$col] =~/^(?:ip_saddr|ip_daddr)$/)) {
           addstr($count, $hpos, long2ip($attr));
 #	  print long2ip($attr)."\t";
         } else {
           #if (not defined $attr){print "DEBUG : PROBLEME AVEC l'attribut $col\n";}
-          defined $attr and addstr($count, $hpos, $attr);
+          if (($display[$col] eq 'state') and (defined $state[$attr]))
+          {
+            defined $attr and addstr($count, $hpos, $state[$attr]);
+          }else{
+            defined $attr and addstr($count, $hpos, $attr);
+          }
 #	  print $attr."\t";
         }
-        $hpos += @{$connection_query_info{$connection_query[$col]}}[1];
+        $hpos += @{$connection_query_info{$display[$col]}}[1];
 #        color_set(0);
       $col++;
     }
@@ -236,6 +305,32 @@ while (1)
   {
     endwin();
     exit 0;
+  }
+  $in eq 't' and $mode='time';
+  if ($in eq 'u') 
+  {
+    $delayswitch++;
+    $mode='users';
+    $delayswitch > $#delays and $delayswitch = 0;
+  }
+  $in eq 'T' and $proto='tcp';
+  $in eq 'U' and $proto='udp';
+  $in eq 'A' and $proto='all';
+  if ($in eq 'f')
+  {
+    $in = '';
+    addstr(0,64,"FROZEN VIEW");
+    my $loop = 1;
+    while ($loop)
+    {
+      $in = getch();
+      $in eq 'f' and $loop=0;
+      if ($in eq 'q')
+      {
+        endwin();
+        exit 0;
+      }
+    }
   }
 }
 

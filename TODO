@@ -12,3 +12,6 @@
 
 #Modules
 - libdb -> load all in cache and close the file straight away
+
+URGENT : in at least log_mysql module :
+Make the timestamp logs coherent. It is a BIG mess
