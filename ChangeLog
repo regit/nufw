@@ -1,6 +1,7 @@
 0.7 (2004/03/31)
         - SSL encryption between client and server
-        - coorect handle of a limit case on reemission
+        - correct handle of a limit case on reemission
+        - optimisation of ldap module
 0.6.5 (2004/03/11)
         - correct problem with bad packets
         - optimisation of hash related code
