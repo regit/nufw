@@ -13,6 +13,7 @@ if [ ! -e $CONFIGFILE ]; then
         echo "NUFW_START=" >> $CONFIGFILE
         echo "NUFW_VERBOSITY=" >> $CONFIGFILE
         echo "NUFW_LISTEN_UDP_PORT=" >> $CONFIGFILE
+        echo "NUFW_LISTEN_ADDRESS=" >> $CONFIGFILE
         echo "NUFW_NUAUTH_ADDRESS=" >> $CONFIGFILE
         echo "NUFW_NUAUTH_UDP_PORT=" >> $CONFIGFILE
         echo "NUFW_TIMEOUT=" >> $CONFIGFILE
@@ -30,6 +31,8 @@ db_get nufw/verbosity
 NUFW_VERBOSITY="$RET"
 db_get nufw/listen_port
 NUFW_LISTEN_UDP_PORT="$RET"
+db_get nufw/listen_address
+NUFW_LISTEN_ADDRESS="$RET"
 db_get nufw/nuauth_address
 NUFW_NUAUTH_ADDRESS="$RET"
 db_get nufw/nuauth_port
@@ -43,6 +46,7 @@ cp -a -f $CONFIGFILE $CONFIGFILE.tmp
 sed -e "s/^ *NUFW_START=.*/NUFW_START=\"$NUFW_START\"/" \
  -e "s/^ *NUFW_VERBOSITY=.*/NUFW_VERBOSITY=\"$NUFW_VERBOSITY\"/" \
  -e "s/^ *NUFW_LISTEN_UDP_PORT=.*/NUFW_LISTEN_UDP_PORT=\"$NUFW_LISTEN_UDP_PORT\"/" \
+ -e "s/^ *NUFW_LISTEN_ADDRESS=.*/NUFW_LISTEN_ADDRESS=\"$NUFW_LISTEN_ADDRESS\"/" \
  -e "s/^ *NUFW_NUAUTH_ADDRESS=.*/NUFW_NUAUTH_ADDRESS=\"$NUFW_NUAUTH_ADDRESS\"/" \
  -e "s/^ *NUFW_NUAUTH_UDP_PORT=.*/NUFW_NUAUTH_UDP_PORT=\"$NUFW_NUAUTH_UDP_PORT\"/" \
  -e "s/^ *NUFW_TIMEOUT=.*/NUFW_TIMEOUT=\"$NUFW_TIMEOUT\"/" \

@@ -24,6 +24,29 @@ Description-fr: Degré de verbosité du démon Nufw
  meilleure pour les systèmes en production est "vv" ; à augmenter en cas de
  problèmes à diagnostiquer.
 
+Template: nufw/listen_address
+Type: string
+Default: 127.0.0.1
+Description: Nufw listening address
+ Nufw needs to bind to one IP address, to communicate with nuauth daemon.
+ This is not an option, an address must always be listening.
+ It is suggested to have it listening only on needed addresses, which means
+ "127.0.0.1" is nuauth is installed on the same system as nufw, or an internal
+ IP address in most cases. It is not advised to have nufw listen on all
+ adresses, but it can be done specifiing "0.0.0.0".
+ .
+ Please input an IP address of this system. Default value is "127.0.0.1"
+Description-fr: Adresse de nufw
+ Nufw doit s'attacher à une adresse IP, afin de recevoir des données de la part du
+ démon Nuauth. C'est cette adresse que vous devez spécifier ici.
+ La valeur par défaut (127.0.0.1) est correcte si le démon nuauth tourne sur la
+ même machine que nufw, sinon il est conseillé de spécifier l'adresse IP de
+ votre réseau interne (où le démon nuauth devrait se trouver). Il est
+ déconseillé d'écouter sur une adresse publique. Il est également possible
+ d'écouter sur toutes les adresses du systèmes, en précisant ici "0.0.0.0".
+ .
+ Une adresse IP doit être précisée ici. Valeur par défaut : 127.0.0.1.
+
 Template: nufw/listen_port
 Type: string
 Default: 4129
