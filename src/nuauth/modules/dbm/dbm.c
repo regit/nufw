@@ -92,30 +92,29 @@ g_module_check_init(GModule *module){
  * Initialize dbm file access
  */
 
-G_MODULE_EXPORT GDBM_FILE *dbm_file_init(void){
-  GDBM_FILE dbf,*dbf_ptr;
+
+GDBM_FILE dbm_file_init(void){
+  GDBM_FILE dbf;
 
   /* init connection */
   if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
 	  g_message("We are entering dbm_file_init()\n");
   dbf = gdbm_open(users_file,DBM_BLOCK_SIZE,DBM_FILE_ACCESS_MODE,DBM_FILE_MODE,DBM_FATAL_FUNCTION);
-  dbf_ptr = &dbf;
   if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-	  g_message("dbm_file_init : file should be open now()\n");
+    g_message("dbm_file_init : file should be open now()\n");
   if(dbf == NULL) {
     if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
       g_warning("dbm init error\n");
-    dbf_ptr=NULL;
-    g_private_set(dbm_priv,dbf_ptr);
     return NULL;
   }
+  
   if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
 	  g_message("We are leaving dbm_file_init()\n");
-  return dbf_ptr;
+  return dbf;
 }
 
 G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
-  GDBM_FILE *dbf = g_private_get (dbm_priv);
+  GDBM_FILE dbf = g_private_get (dbm_priv);
   datum dbm_key, dbm_data;
   struct dbm_data_struct return_data;
 
@@ -125,6 +124,7 @@ G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
     /* dbm init has not been done yet*/
     if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
 	    g_message("calling dbm_file_init() now\n");
+
     dbf = dbm_file_init();
     g_private_set(dbm_priv,dbf);
     if (dbf == NULL){
@@ -153,7 +153,7 @@ G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
 	  g_message("user id is %s, size %i\n",dbm_key.dptr,dbm_key.dsize);
  
   //Check key exists before trying to fetch its value
-  if (! gdbm_exists(*dbf,dbm_key))
+  if (! gdbm_exists(dbf,dbm_key))
   {
 	  if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_AUTH))
 		  g_message("no key \"%s, size %i\" could be found in database\n",dbm_key.dptr,dbm_key.dsize);
@@ -161,7 +161,7 @@ G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
   }
   if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_AUTH))
 	  g_message("key %s, size %i was found. good\n",dbm_key.dptr,dbm_key.dsize);
-  dbm_data = gdbm_fetch(*dbf,dbm_key);
+  dbm_data = gdbm_fetch(dbf,dbm_key);
   if (dbm_data.dptr == NULL)
   {
 	  if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
