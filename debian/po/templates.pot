@@ -1,0 +1,1129 @@
+#
+#    Translators, if you are not familiar with the PO format, gettext
+#    documentation is worth reading, especially sections dedicated to
+#    this format, e.g. by running:
+#         info -n '(gettext)PO Files'
+#         info -n '(gettext)Header Entry'
+#
+#    Some information specific to po-debconf are available at
+#            /usr/share/doc/po-debconf/README-trans
+#         or http://www.debian.org/intl/l10n/po-debconf/README-trans
+#
+#    Developers do not need to manually edit POT or PO files.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2004-07-21 18:54+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Type: boolean
+#. Description
+#: ../nuauth.templates:4
+msgid "Should nuauth daemon be started at boot time?"
+msgstr ""
+
+#. Type: boolean
+#. Description
+#: ../nuauth.templates:4
+msgid ""
+"Choose \"True\" if you want Nuauth to be automatically started at boot time. "
+"If you choose \"False\" you can start nuauth by hand, by running /usr/sbin/"
+"nuauth with appropriate options."
+msgstr ""
+
+#. Type: select
+#. Choices
+#: ../nuauth.templates:11 ../nufw.templates:11
+msgid "v, vv, vvv, vvvv, vvvvv, vvvvvv, vvvvvvv, vvvvvvvv"
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../nuauth.templates:13
+msgid "Nuauth daemon verbosity level"
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../nuauth.templates:13
+msgid ""
+"The more \"v\"s are passed at nuauth startup, the more verbose daemon logs "
+"will be. A good production value is \"vv\", increase it to get more details "
+"in case of problems."
+msgstr ""
+
+#. Type: string
+#. Default
+#: ../nuauth.templates:20
+msgid "nobody"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:21
+msgid "Nuauth user"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:21
+msgid ""
+"Nuauth doesn't need root (uid 0) privileges to run. It can prefectly run as "
+"under an unprivileged user ID, which is very much recommended. Beware you "
+"MUST enter a username that actually exists on this machine at this time - it "
+"is time to create it now if you wish, which is probably the best idea. The "
+"directory /var/run/nuauth will be owned by that user."
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:21
+msgid "Please input an existing username on this system"
+msgstr ""
+
+#. Type: string
+#. Default
+#: ../nuauth.templates:32
+msgid "0.0.0.0"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:33
+msgid "Nuauth client listening address"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:33
+msgid ""
+"Address nuauth should listen on for clients. This is useful if this machine "
+"owns several interfaces, and you want nuauth to only bind on one of them. "
+"Leave the default value \"0.0.0.0\" if you want nuauth to listen on all "
+"interfaces."
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:33
+msgid "Please enter an IP address of this system or \"0.0.0.0\""
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:44
+msgid "Nuauth nufw listening address"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:44
+msgid ""
+"Address nuauth should listen on for nufw packets. This is useful if this "
+"machine owns several interfaces, and you want nuauth to only bind on one of "
+"them. Leave the default value \"0.0.0.0\" if you want nuauth to listen on "
+"all interfaces (not advised)."
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:44
+msgid ""
+"Please enter an IP address of this system or \"0.0.0.0\". Default value : "
+"\"127.0.0.1\""
+msgstr ""
+
+#. Type: string
+#. Default
+#: ../nuauth.templates:55 ../nufw.templates:33
+msgid "4129"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:56
+msgid "Nuauth gateway listening port"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:56
+msgid ""
+"Nuauth needs to bind to an UDP port, to communicate with the nufw daemon. "
+"This is not an option, a port must always be listening. It is suggested you "
+"leave it at its default value (4129), which is very good for everyone (or "
+"nearly). Don't forget to reconfigure your nufw installation, if you change "
+"this."
+msgstr ""
+
+#. Type: string
+#. Default
+#: ../nuauth.templates:67
+msgid "4130"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:68
+msgid "Nuauth users listening port"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:68
+msgid ""
+"Nuauth needs to bind to an UDP port, to communicate with clients (users) "
+"that authenticate.  This is not an option, a port must always be listening. "
+"It is suggested you leave it at its default value (4130), which is very good "
+"for everyone (or nearly). Don't forget to reconfigure your clients "
+"installations, if you change this."
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:68 ../nufw.templates:34
+msgid "Please input a numeric port number."
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:80
+msgid "Nufw daemon IP address"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:80
+msgid ""
+"This is the IP address where the Nufw daemon can be reached. If you run nufw "
+"and nuauth on the same box, leave it at default value of 127.0.0.1. Else "
+"enter an IP address."
+msgstr ""
+
+#. Type: string
+#. Default
+#: ../nuauth.templates:87 ../nufw.templates:53
+msgid "4128"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:88
+msgid "Nufw daemon port"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:88
+msgid ""
+"This must be the port number nufw is configured to listen on your "
+"installation. On most installations, the default value of 4128 will be "
+"correct. Please input a numeric port number."
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:96
+msgid "Nuauth priority"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:96
+msgid ""
+"This is the priority associated with nuauth's answers. Change this parameter "
+"only if you know what you are doing. Default value : 1."
+msgstr ""
+
+#. Type: string
+#. Default
+#: ../nuauth.templates:102
+msgid "5"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:103
+msgid "Nuauth timeout delay"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:103
+msgid ""
+"This is the delay -in seconds- Nuauth should drop authentication packets "
+"from its \"conntrack\" when they match no actual packet. The default value "
+"of 5 looks like a good one."
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:103
+msgid "Please specify a number here."
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:113
+msgid "Nuauth user request threads number"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:113
+msgid ""
+"This is the number of threads nuauth will run to deal with users requests. "
+"Change this parameter only if needed. Default value : 10."
+msgstr ""
+
+#. Type: string
+#. Default
+#: ../nuauth.templates:119
+msgid "10"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:120
+msgid "Nuauth gateway request threads number"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:120
+msgid ""
+"This is the number of threads nuauth will run to deal with requests from "
+"Nufw. Change this parameter only if needed. Default value : 10."
+msgstr ""
+
+#. Type: select
+#. Choices
+#: ../nuauth.templates:126
+msgid "libldap, libdbm"
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../nuauth.templates:128
+msgid "User check module"
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../nuauth.templates:128
+msgid ""
+"Here are possible plugins, which are ways of authenticating users of your "
+"network. You must choose one, which will be used by nuauth to check user/"
+"group relationships."
+msgstr ""
+
+#. Type: select
+#. Choices
+#: ../nuauth.templates:135
+msgid "libldap"
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../nuauth.templates:137
+msgid "ACL check module"
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../nuauth.templates:137
+msgid ""
+"Here are possible plugins for ACLs definitions. One single of them must be "
+"chosen. For now the choice is easy, as only \"libldap\" is available ;-)"
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../nuauth.templates:145
+msgid "SSL communications with clients"
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../nuauth.templates:145
+msgid ""
+"If you set this to 1, only SSL encrypted authentications will be accepted "
+"from clients. If you set this to 0, a hash will be used. It is strongly "
+"advised to use SSL encryption, which is the default."
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:153
+msgid "SSL key for clients communication"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:153
+msgid ""
+"Please enter the full path of the private key that will be used for clients "
+"communications."
+msgstr ""
+
+#. Type: password
+#. Default
+#: ../nuauth.templates:159
+msgid "/etc/nufw/nuauth.pem"
+msgstr ""
+
+#. Type: password
+#. Description
+#: ../nuauth.templates:160
+msgid "Password of the SSL key for clients communication"
+msgstr ""
+
+#. Type: password
+#. Description
+#: ../nuauth.templates:160
+msgid ""
+"Please enter password to use with specified key. Keep empty if there is no "
+"password. Please be aware that your password cannot contain the slash \"/\" "
+"character when set from debconf (it can contain it if you edit config file "
+"by hand)."
+msgstr ""
+
+#. Type: select
+#. Choices
+#: ../nuauth.templates:168
+msgid "0, 1, 2, 4"
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../nuauth.templates:170
+msgid "Users activity logging"
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../nuauth.templates:170
+msgid ""
+"How to log users activity:\n"
+" - 0 : no log at all\n"
+" - 1 : log new user\n"
+" - 2 : log rejected packets\n"
+" - 4 : log all packets\n"
+"Default value : 1"
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../nuauth.templates:182
+msgid "Whether to sync users logs"
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../nuauth.templates:182
+msgid ""
+"Syncing users logs makes activities overall slower, but guarantees users "
+"logs (for instance, in SQL database) exist before the network packet is "
+"passed through. It is advised to set this option if you setup nuauth for "
+"SSO.\n"
+" - 0 : no sync\n"
+" - 1 : sync\n"
+"Default value : 1"
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../nuauth.templates:195
+msgid "Whether to update logs automatically for consistency"
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../nuauth.templates:195
+msgid ""
+"If set to 1, whenever a connection already in conntrack (for TCP or UDP, "
+"same source IP, same source port) will be opened, existing connections that "
+"might already exist in our conntrack will be closed. If set to 0, no such "
+"update will be performed. The Safe option is to use 1. Setting this to 0 may "
+"cause SSO modules to refuse some connections, in some rare cases.\n"
+" - 0 : no update\n"
+" - 1 : strict update of existing 'old' connections\n"
+"Default value : 1"
+msgstr ""
+
+#. Type: select
+#. Choices
+#: ../nuauth.templates:207
+msgid "syslog, mysql, pgsql"
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../nuauth.templates:209
+msgid "Users logs module"
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../nuauth.templates:209
+msgid ""
+"Choose the media users activity will be logged into. It is advised you log "
+"users activity into a database."
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:216
+msgid "LDAP server address"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:216
+msgid "Please enter the IP address of the LDAP server"
+msgstr ""
+
+#. Type: string
+#. Default
+#: ../nuauth.templates:221
+msgid "389"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:222
+msgid "LDAP server port"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:222
+msgid ""
+"Please enter the TCP port number of the LDAP server 389 is standard non "
+"encrypted LDAP port. If you set 636 as port, LDAP SSL will be used."
+msgstr ""
+
+#. Type: string
+#. Default
+#: ../nuauth.templates:228
+msgid "cn=admin,dc=yourdomain,dc=com"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:229
+msgid "LDAP dn to bind ldap connection to"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:229
+msgid "Please enter the dn you want LDAP connections to bind to"
+msgstr ""
+
+#. Type: password
+#. Description
+#: ../nuauth.templates:234
+msgid "LDAP password to use"
+msgstr ""
+
+#. Type: password
+#. Description
+#: ../nuauth.templates:234
+msgid ""
+"Please enter password that should be used to connect to the LDAP server. You "
+"will not be able to read password on the screen as you type it."
+msgstr ""
+
+#. Type: string
+#. Default
+#: ../nuauth.templates:240
+msgid "4"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:241
+msgid "LDAP request timeout"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:241
+msgid ""
+"Time after which LDAP connection will be considered to be lost when no reply "
+"is received."
+msgstr ""
+
+#. Type: string
+#. Default
+#: ../nuauth.templates:247
+msgid "dc=yourdomain,dc=com"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:248
+msgid "Base DN for LDAP search requests"
+msgstr ""
+
+#. Type: string
+#. Default
+#: ../nuauth.templates:252
+msgid "dc=acls,dc=yourdomain,dc=com"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:253
+msgid "Base DN for ACL search requests"
+msgstr ""
+
+#. Type: string
+#. Default
+#: ../nuauth.templates:257
+msgid "dc=users,dc=yourdomain,dc=com"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:258
+msgid "Base DN for users search requests"
+msgstr ""
+
+#. Type: string
+#. Default
+#: ../nuauth.templates:262
+msgid "/etc/nufw/users.dbm"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:263
+msgid "DBM file with users/groups definition"
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../nuauth.templates:269
+msgid "Decision to accept when groups disagree"
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../nuauth.templates:269
+msgid ""
+"When a user is member of several groups, it can happen that some groups "
+"grant access for a connection, and others deny it. If you choose 1 here, "
+"connection will be denied in those cases. If you choose 0, connection will "
+"be granted as soon as one group user is member of grants the right to "
+"connect."
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:279
+msgid "MySQL Server Address"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:279
+msgid "Please enter IP address (or DNS name) of your Mysql server."
+msgstr ""
+
+#. Type: string
+#. Default
+#: ../nuauth.templates:284
+msgid "3306"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:285
+msgid "Mysql Server port"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:285
+msgid "Please enter TCP port of your Mysql server."
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:291
+msgid "Mysql Database Name"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:291
+msgid "Please enter the database name to use to connect to MYSQL server"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:297
+msgid "Mysql table name"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:297
+msgid "Please enter the table name to use to connect to MYSQL server"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:303
+msgid "Mysql username"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:303
+msgid "Please enter the username to use to connect to MYSQL server"
+msgstr ""
+
+#. Type: password
+#. Description
+#: ../nuauth.templates:308
+msgid "Mysql Password"
+msgstr ""
+
+#. Type: password
+#. Description
+#: ../nuauth.templates:308
+msgid "Please enter the password to use to connect to MYSQL server"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:314
+msgid "Mysql Request timeout"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:314
+msgid ""
+" Please enter the timeout (in seconds) for connections to the MYSQL server"
+msgstr ""
+
+#. Type: select
+#. Choices
+#: ../nuauth.templates:319
+msgid "0, 1"
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../nuauth.templates:321
+msgid "Use SSL for Mysql connections"
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../nuauth.templates:321
+msgid ""
+" Set this to 1 to wrap MySQL connections in SSL, or 0 if you don't want\n"
+"to."
+msgstr ""
+
+#. Type: string
+#. Default
+#: ../nuauth.templates:327
+msgid "/etc/nufw/ssl/mysql.key"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:328
+msgid "Private Key used for Mysql SSL connections"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:328
+msgid ""
+" Please specify the absolute filename of the private key to use for Mysql\n"
+" connections."
+msgstr ""
+
+#. Type: string
+#. Default
+#: ../nuauth.templates:334
+msgid "/etc/nufw/ssl/mysql.cert"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:335
+msgid "Public Certificate used for Mysql SSL connections"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:335
+msgid ""
+" Please specify the absolute filename of the public certificate to use for\n"
+"Mysql\n"
+" connections."
+msgstr ""
+
+#. Type: string
+#. Default
+#: ../nuauth.templates:342
+msgid "/etc/nufw/ssl/mysql.ca"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:343
+msgid "Certificate Authority file used for Mysql SSL connections"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:343
+msgid ""
+" Please specify the absolute filename of the certificate authority file to\n"
+"use for Mysql\n"
+" connections. EMPTY THIS IF YOU DON'T INTEND TO USE ANY."
+msgstr ""
+
+#. Type: string
+#. Default
+#: ../nuauth.templates:350
+msgid "/etc/nufw/ssl/mysql.cas/"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:351
+msgid "Certificate Authority files directory used for Mysql SSL connections"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:351
+msgid ""
+" Please specify the absolute directory containing certificate authority\n"
+"files\n"
+" to use (in PEM format) for Mysql connections. EMPTY THIS IF YOU DON'T\n"
+"INTEND\n"
+" TO USE ANY. You must enter a directory name here."
+msgstr ""
+
+#. Type: string
+#. Default
+#: ../nuauth.templates:360
+msgid "ALL:!ADH:+RC4:@STRENGTH"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:361
+msgid "SSL cypher to use for Mysql SSL connections"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:361
+msgid ""
+" Enter the SSL cypher you want to use for Mysql SSL connections. For most\n"
+"sites\n"
+" the default (ALL:!ADH:+RC4:@STRENGTH) is a good value. See openssl (1)\n"
+"for\n"
+" details."
+msgstr ""
+
+#. Type: string
+#. Default
+#: ../nuauth.templates:370 ../nufw.templates:45
+msgid "127.0.0.1"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:371
+msgid "PostgreSQL server address"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:371
+msgid "Please enter IP address (or DNS name) of your PostgreSQL server."
+msgstr ""
+
+#. Type: string
+#. Default
+#: ../nuauth.templates:376
+msgid "5432"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:377
+msgid "PostgreSQL server port"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:377
+msgid "Please enter TCP port of your PostgreSQL server."
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:383
+msgid "PostgreSQL database name"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:383
+msgid "Please enter the database name to use to connect to PostgreSQL server"
+msgstr ""
+
+#. Type: string
+#. Default
+#: ../nuauth.templates:388
+msgid "nufw"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:389
+msgid "PostgreSQL table name"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:389
+msgid "Please enter the table name to use to connect to PostgreSQL server"
+msgstr ""
+
+#. Type: string
+#. Default
+#: ../nuauth.templates:394
+msgid "foo"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:395
+msgid "PostgreSQL username"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:395
+msgid "Please enter the username to use to connect to PostgreSQL server"
+msgstr ""
+
+#. Type: password
+#. Description
+#: ../nuauth.templates:400
+msgid "PostgreSQL password"
+msgstr ""
+
+#. Type: password
+#. Description
+#: ../nuauth.templates:400
+msgid "Please enter the password to use to connect to PostgreSQL server"
+msgstr ""
+
+#. Type: string
+#. Default
+#: ../nuauth.templates:405
+msgid "1"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:406
+msgid "PostgreSQL timeout"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:406
+msgid ""
+"Please enter the timeout (in seconds) for connections to the PostgreSQL "
+"server"
+msgstr ""
+
+#. Type: Select
+#. Default
+#: ../nuauth.templates:413
+msgid "prefer"
+msgstr ""
+
+#. Type: Select
+#. Description
+#: ../nuauth.templates:414
+msgid "PostgreSQL SSL wrapping"
+msgstr ""
+
+#. Type: Select
+#. Description
+#: ../nuauth.templates:414
+msgid ""
+"Whether to use SSL to wrap pgsql connections. Disallow prevents use of SSL, "
+"prefer attempts to use SSL, then fall backs to unencrypted operations if it "
+"fails, allow attemps to use unencrypted mode, then fallbacks to SSL if it "
+"fails, require forces the use of SSL."
+msgstr ""
+
+#. Type: boolean
+#. Description
+#: ../nufw.templates:4
+msgid "Should nufw daemon be started at boot time?"
+msgstr ""
+
+#. Type: boolean
+#. Description
+#: ../nufw.templates:4
+msgid ""
+"Choose \"True\" if you want Nufw to be automatically started at boot time. "
+"If you choose \"False\" you can start nufw by hand, by running /usr/sbin/"
+"nufw with appropriate options."
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../nufw.templates:13
+msgid "Nufw daemon verbosity level"
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../nufw.templates:13
+msgid ""
+"The more \"v\"s are passed at nufw startup, the more verbose daemon logs "
+"will be. A good production value is \"vv\", increase it to get more details "
+"in case of problems."
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nufw.templates:21
+msgid "Nufw listening address"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nufw.templates:21
+msgid ""
+"Nufw needs to bind to one IP address, to communicate with nuauth daemon. "
+"This is not an option, an address must always be listening. It is suggested "
+"to have it listening only on needed addresses, which means \"127.0.0.1\" is "
+"nuauth is installed on the same system as nufw, or an internal IP address in "
+"most cases. It is not advised to have nufw listen on all adresses, but it "
+"can be done specifiing \"0.0.0.0\"."
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nufw.templates:21
+msgid ""
+"Please input an IP address of this system. Default value is \"127.0.0.1\""
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nufw.templates:34
+msgid "Nufw listening port"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nufw.templates:34
+msgid ""
+"Nufw needs to bind to an UDP port, to communicate with nuauth daemon. This "
+"is not an option, a port must always be listening. It is suggested you leave "
+"it at its default value (4129), which is very good for everyone (or nearly). "
+"Don't forget to reconfigure your nuauth installation, if you change this."
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nufw.templates:46
+msgid "Nuauth daemon IP address"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nufw.templates:46
+msgid ""
+"This is the IP address where the Nuauth daemon can be reached. If you run "
+"nufw and nuauth on the same box, leave it at default value of 127.0.0.1. "
+"Else enter an IP address."
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nufw.templates:54
+msgid "Nuauth daemon port"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nufw.templates:54
+msgid ""
+"This must be the port number nuauth is configured to listen on your "
+"installation. On most installations, the default value of 4128 will be "
+"correct. Please input a numeric port number."
+msgstr ""
+
+#. Type: string
+#. Default
+#: ../nufw.templates:61
+msgid "15"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nufw.templates:62
+msgid "Nufw timeout delay"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nufw.templates:62
+msgid ""
+"This is the delay Nufw should \"forget\" about an IP packet that has been "
+"received, and has remained unauthenticated. You probably don't need to tune "
+"this parameter, except if your queues are really full. Default value is 15. "
+"Please enter a number (which will be interpreted as seconds)."
+msgstr ""
+
+#. Type: string
+#. Default
+#: ../nufw.templates:70
+msgid "1000"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nufw.templates:71
+msgid "Nufw Tracksize"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nufw.templates:71
+msgid ""
+"This parameter is suitable for most configs, and should be changed only if "
+"you know what you are doing. Default value : 1000"
+msgstr ""
