@@ -340,7 +340,7 @@ G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
 
 /* user_check_v2 is same thing as user_check  but we get username instead of userid */
 
-G_MODULE_EXPORT GSList * user_check_v2 (char * username,char *passwd,int *userid){
+G_MODULE_EXPORT GSList * user_check_v2 (connection * connexion,auth_field * packet_auth_field){
   char filter[LDAP_QUERY_SIZE];
   LDAP *ld = g_private_get (ldap_priv);
   LDAPMessage * res , *result;
@@ -360,7 +360,7 @@ G_MODULE_EXPORT GSList * user_check_v2 (char * username,char *passwd,int *userid
 	return NULL;
     }
   }
-  if (snprintf(filter,LDAP_QUERY_SIZE-1,"(&(objectClass=NuAccount)(cn=%s))",username) >= (LDAP_QUERY_SIZE-1)){
+  if (snprintf(filter,LDAP_QUERY_SIZE-1,"(&(objectClass=NuAccount)(cn=%s))",connexion->username) >= (LDAP_QUERY_SIZE-1)){
     if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
        g_warning ("LDAP query too big (more than %d bytes)\n",LDAP_QUERY_SIZE);
      return NULL;
@@ -392,7 +392,7 @@ G_MODULE_EXPORT GSList * user_check_v2 (char * username,char *passwd,int *userid
      result = ldap_first_entry(ld,res);
      if (result == NULL ){
        if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_AUTH))
-	 g_message("Can not get entry for %d\n",userid);
+	 g_message("Can not get entry for %s\n",connexion->username);
        ldap_msgfree(res);
        return NULL;
      }
@@ -406,36 +406,38 @@ G_MODULE_EXPORT GSList * user_check_v2 (char * username,char *passwd,int *userid
        walker++;
      }
      ldap_value_free(attrs_array);
-     /* get password */
-     attrs_array = ldap_get_values(ld, result, "userPassword");
-     attrs_array_len = ldap_count_values(attrs_array);
-     if (attrs_array_len == 0){
-       if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
-         g_message ("what ! no password found!\n");
-     } else {
-       sscanf(*attrs_array,"%127s",passwd);
-       if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_AUTH))
-	 g_message("reading password\n");
+     switch (packet_auth_field->type){
+	     case MD5_AUTH:
+		     /* get password */
+		     attrs_array = ldap_get_values(ld, result, "userPassword");
+		     attrs_array_len = ldap_count_values(attrs_array);
+		     if (attrs_array_len == 0){
+			     if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
+				     g_message ("what ! no password found!\n");
+		     } else {
+				(packet_auth_field->md5_datas)->password = *attrs_array;
+			     if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_AUTH))
+				     g_message("reading password\n");
+		     }
+		     ldap_value_free(attrs_array);
+		     /* get userid */
+		     attrs_array = ldap_get_values(ld, result, "uid");
+		     attrs_array_len = ldap_count_values(attrs_array);
+		     if (attrs_array_len == 0){
+			     if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
+				     g_message ("what ! no uid found!\n");
+		     } else {
+			     sscanf(*attrs_array,"%ld",&(connexion->user_id));
+			     if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_AUTH))
+				     g_message("reading uid\n");
+		     }
+		     ldap_value_free(attrs_array);
      }
-     ldap_value_free(attrs_array);
-     /* get userid */
-     attrs_array = ldap_get_values(ld, result, "cn");
-     attrs_array_len = ldap_count_values(attrs_array);
-     if (attrs_array_len == 0){
-       if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
-         g_message ("what ! no cn found!\n");
-     } else {
-       sscanf(*attrs_array,"%d",userid);
-       if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_AUTH))
-	 g_message("reading cn\n");
-     }
-     ldap_value_free(attrs_array);
-
      ldap_msgfree(res);
      return outelt;
    } else {
      if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_AUTH))
-       g_message("No or too many users found with userid %d\n",userid);
+       g_message("No or too many users found with username %s\n",connexion->username);
      ldap_msgfree(res);
      return NULL;
    }

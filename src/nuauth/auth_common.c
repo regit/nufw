@@ -311,6 +311,8 @@ int free_connection(connection * conn){
             g_slist_free (conn->user_groups);
         if (conn->packet_id != NULL )
             g_slist_free (conn->packet_id);
+        if (conn->username != NULL)
+            g_free(conn->username);
         g_free(conn);
     return 1;
 }

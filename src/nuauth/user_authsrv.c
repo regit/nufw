@@ -23,19 +23,6 @@
 #include <crypt.h>
 #include <sys/time.h>
 
-typedef struct _auth_params {
-	char auth_type;
-	void * params;
-} auth_params;
-
-struct md5_params {
-	long u_packet_id;
-	char * password;
-};
-
-struct null_params {
-};
-
 #if 0
 struct up_datas {
     u_int32_t ip_client;
@@ -362,7 +349,7 @@ void user_check_and_decide (gpointer userdata, gpointer data){
 }
 
 connection * userpckt_decode(char* dgram,int dgramsiz){
-    long u_packet_id;
+    long u_packet_id=0;
     char *pointer;
     connection* connexion;
     char passwd[128];
@@ -373,6 +360,7 @@ connection * userpckt_decode(char* dgram,int dgramsiz){
     char *result;
     u_int16_t firstf,lastf;
     struct crypt_data * crypt_internal_datas=g_private_get (crypt_priv);
+    auth_field * packet_auth_field;
     /* decode dgram */
     switch (*dgram) {
       case 0x1:
@@ -515,7 +503,6 @@ connection * userpckt_decode(char* dgram,int dgramsiz){
                     /* acl part is NULL */
                     connexion->packet_id=NULL;
                     connexion->acl_groups=NULL;
-                    /* Tadaaa */
                     return connexion;
                 } else {
                     if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
@@ -525,27 +512,20 @@ connection * userpckt_decode(char* dgram,int dgramsiz){
                 }
             }
         }
-#if 0
+        /* Let's work on Protocol version 2 */
       case 0x2:
         if ( *(dgram+1) == USER_REQUEST) {
             u_int16_t total_len=0; 
             char * payload=dgram;
             /* allocate connection */
             connexion = g_new0( connection,1);
-            if (connexion == NULL){
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_USER)){
-                    g_message("Can not allocate connexion\n");
-                }
-                return NULL;
-            }
 
-            /* mini init struct */
-            connexion->lock=NULL;
             /* parse packet */
             pointer=dgram+2;
             total_len=*(u_int16_t *)(pointer);
-            if (total_len > dgram_siz){
+            if (total_len > dgramsiz){
                 /* big oops */
+                g_free(connexion);
                 return NULL;
             } 
 
@@ -567,18 +547,18 @@ connection * userpckt_decode(char* dgram,int dgramsiz){
                     u_int8_t field_flag=*(u_int8_t *)(pointer+1);
                     char * field_datas=pointer+4;
                     /* treat following field type */
-                    switch (field_type){
+			switch (field_type) {
                       case PACKET_FIELD:
 			      /* fill IP headers */
-                        parse_packet_field(field_datas,connexion);
+                        parse_packet_field(field_datas,field_flag,field_length,connexion);
                         break;
                       case USERNAME_FIELD:
                         /* we need to fill userid and password */
-                        parse_username_field(field_datas,connexion,password);
+                        parse_username_field(field_datas,field_flag,field_length,connexion);
                         break;
                       case AUTHENTICATION_FIELD:
 			/* we get packet_id timestamp */
-                        parse_authentication_field(field_datas,connexion,packet_id);
+                        packet_auth_field = parse_authentication_field(field_datas,field_flag,field_length);
                         break;
                       default:
                         if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
@@ -595,9 +575,16 @@ connection * userpckt_decode(char* dgram,int dgramsiz){
                 }
                 pointer+=field_length;
             }
+            /* check if paquet is complete */
+                if ((connexion->timestamp)&&(connexion->username!=NULL)&&(packet_auth_field!=NULL)){
+                        if (! get_user_datas(connexion,packet_auth_field))
+                            return NULL;
+                } else {
+                        return NULL;
+                }
+            
             /* check authentication */
-            /* if ( check_md5_sig(connection * connexion,u_int16_t u_packet_id,char *passwd )){ */
-            if ( check_authentication(connection * connexion,auth_params * pckt_params)){
+            if ( check_authentication(connexion,packet_auth_field)){
                 /* set some default on connexion */
                 if (check_fill_user_counters(connexion->user_id,connexion->timestamp,u_packet_id,connexion->tracking_hdrs.saddr)){	
                     /* first reset timestamp to now */
@@ -606,7 +593,7 @@ connection * userpckt_decode(char* dgram,int dgramsiz){
                     /* acl part is NULL */
                     connexion->packet_id=NULL;
                     connexion->acl_groups=NULL;
-                    /* Tadaaa */
+		    free_auth_field(packet_auth_field);
                     return connexion;
                 } else {
                     if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
@@ -614,18 +601,20 @@ connection * userpckt_decode(char* dgram,int dgramsiz){
                     free_connection(connexion);
                     return NULL;
                 }
-            }
+            } else {
+                    free_connection(connexion);
+		    free_auth_field(packet_auth_field);
+                    return NULL;
+	    }
         }
-#endif
     }
     /* FIXME : free dgram see over */
     return NULL;
 }
 
 
-#if 0
 /* parse packet field */
-void * parse_packet_field(char* pointer,connection * connexion,int length){
+void * parse_packet_field(char* pointer, u_int8_t flag ,connection * connexion,int length){
 
     connexion->tracking_hdrs.saddr=(*(u_int32_t * )(pointer));
     pointer+=sizeof (u_int32_t);
@@ -665,26 +654,69 @@ void * parse_packet_field(char* pointer,connection * connexion,int length){
 }
 
 /* parse username field */
-void * parse_username_field(char * dgram, connection * connexion,int length){ 
-    /* get user datas : password, groups (filled in) */
-    connexion->user_groups = (*module_user_check_v2) (connexion->user_id,passwd);
+void * parse_username_field(char * dgram, u_int8_t flag, int length ,connection * connexion){ 
+    connexion->username = g_strndup(dgram,length);
+   return NULL;
+
+
+}
+
+int get_user_datas(connection *connexion,auth_field* packet_auth_field){
+    /* get user datas : groups (filled in), auth_field (password if md5) */
+    connexion->user_groups = (*module_user_check_v2) (connexion,packet_auth_field);
     if (connexion->user_groups == NULL) {
         if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
             g_message("user_check return bad\n");
         free_connection(connexion);
-        return NULL;
+        return 0;
     }
-    return NULL;
+    return -1;
 }
+
+
 
 /* parse authentication field */
 
-void * parse_authentication_field(char * dgram, connection * connexion,int length){ 
-
-    return NULL;
+auth_field * parse_authentication_field(char * dgram,  u_int8_t flag ,int length){ 
+	auth_field * packet_auth_field=NULL;
+	switch (flag) {
+		case MD5_AUTH:
+			packet_auth_field=g_new0(auth_field,1);
+			packet_auth_field->type=MD5_AUTH;
+			packet_auth_field->md5_datas=g_new0(md5_auth_field,1);
+			(packet_auth_field->md5_datas)->u_packet_id=*(long*)dgram;
+			dgram+=sizeof(long);
+			g_strlcpy((packet_auth_field->md5_datas)->md5sum,dgram,34);
+			return packet_auth_field;
+          	default:
+                if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
+                	g_message("Unknown authentication type");
+		return NULL;
+	}
+    return packet_auth_field;
 }
+
+
+int check_authentication(connection * connexion,auth_field * packet_auth_field ){
+        switch (packet_auth_field->type) {
+          case  MD5_AUTH:
+                return check_md5_sig(connexion,packet_auth_field->md5_datas); 
+          default:
+                if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
+                	g_message("Unknown authentication type");
+		return 0;
+        break;
+        }
+}
+
 /* check md5 sig */
-int check_md5_sig(connection * connexion,u_int16_t u_packet_id,char *passwd ){
+int check_md5_sig(connection * connexion,md5_auth_field * authdatas ){
+    struct in_addr oneip;
+    char onaip[16];
+    char md5datas[512];
+    char *result;
+    u_int16_t firstf,lastf;
+    struct crypt_data * crypt_internal_datas=g_private_get (crypt_priv);
     /* construct md5datas */
     oneip.s_addr=htonl(connexion->tracking_hdrs.saddr);
     strncpy(onaip,inet_ntoa(oneip),16);
@@ -705,8 +737,8 @@ int check_md5_sig(connection * connexion,u_int16_t u_packet_id,char *passwd ){
         inet_ntoa(oneip),
         lastf,
         connexion->timestamp,
-        u_packet_id,
-        passwd);
+        authdatas->u_packet_id,
+        authdatas->password);
 
     /* initialisation stuff */
     if (crypt_internal_datas == NULL){
@@ -716,19 +748,23 @@ int check_md5_sig(connection * connexion,u_int16_t u_packet_id,char *passwd ){
             g_message("Initiating crypt internal structure");
     }
     /* crypt datas */
-    result = crypt_r(md5datas,usermd5datas,crypt_internal_datas);
+    result = crypt_r(md5datas,authdatas->md5sum,crypt_internal_datas);
     /* compare the two crypted datas */
-    if ( strcmp (result, usermd5datas) != 0 ) {
+    if ( strcmp (result, authdatas->md5sum) != 0 ) {
         /* bad sig dropping user packet ! */
         if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_USER))
-            g_message("wrong md5 sig for packet %s \n",usermd5datas);
-        free(usermd5datas);
-        free_connection(connexion);
+            g_message("wrong md5 sig for packet %s \n",authdatas->md5sum);
         return 0; 
     } else {
-        free(usermd5datas);
         return 1;
     }
 }
 
-#endif
+void free_auth_field(auth_field * field){
+	switch (field->type){
+		case MD5_AUTH:
+			g_free(field->md5_datas);
+			g_free(field);
+	}	
+}
+

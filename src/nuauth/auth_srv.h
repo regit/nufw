@@ -1,7 +1,8 @@
-/* $Id: auth_srv.h,v 1.35 2004/06/10 09:44:14 regit Exp $ */
+/* $Id: auth_srv.h,v 1.36 2004/06/17 22:36:11 regit Exp $ */
 
 /*
-** Copyright(C) 2003 Eric Leblond <eric@regit.org>
+** Copyright(C) 2003,2004 INL
+** Written by Eric Leblond <regit@inl.fr>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -168,21 +169,12 @@ int nuauth_log_users_sync;
 int nuauth_prio_to_nok;
 struct sockaddr_in adr_srv, client_srv, nufw_srv;
 
-
-/*
- * TODO : switch to dyn size array
- */
-
 struct acl_group {
   GSList * groups;
   char answer;
 };
 
-
-
 GSList * ALLGROUP;
-
-
 
 struct acl_group DUMMYACL ;
 GSList * DUMMYACLS;
@@ -212,6 +204,25 @@ struct auth_answer {
   u_int8_t answer;
   u_int16_t user_id;
 };
+
+/* authentication structures */
+
+
+typedef struct _md5_auth_field {
+    char md5sum[34];
+    long u_packet_id;
+    char * password;
+} md5_auth_field;
+
+
+typedef struct _auth_field {
+    u_int8_t type;
+    /* a pointer on each type (md5 for now) */
+    md5_auth_field * md5_datas;
+} auth_field;
+
+
+
 
 /*
  * Functions
@@ -258,6 +269,15 @@ void* user_authsrv();
 void* ssl_user_authsrv();
 connection * userpckt_decode(char* dgram,int dgramsiz);
 void user_check_and_decide (gpointer userdata ,gpointer data);
+void * parse_packet_field(char* pointer, u_int8_t flag ,connection * connexion,int length);
+void * parse_username_field(char * dgram, u_int8_t flag, int length ,connection * connexion);
+int get_user_datas(connection *connexion,auth_field* packet_auth_field);
+auth_field * parse_authentication_field(char * dgram,  u_int8_t flag ,int length);
+int check_authentication(connection * connexion,auth_field * packet_auth_field );
+int check_md5_sig(connection * connexion,md5_auth_field * authdatas );
+void free_auth_field(auth_field * field);
+
+
 
 /* garbage ;-) */
  void bail (const char *on_what);
@@ -285,5 +305,5 @@ GPrivate* pgsql_priv; /* private pointer for pgsql database access */
 GPrivate* mysql_priv; /* private pointer for mysql database access */
 GSList * (*module_acl_check) (connection* element);
 GSList * (*module_user_check) (u_int16_t userid,char *passwd);
-GSList * (*module_user_check_v2) (char * username,char *passwd,int * userid);
+GSList * (*module_user_check_v2) (connection * connexion,auth_field * packet_auth_field);
 int init_ldap_system(void);
