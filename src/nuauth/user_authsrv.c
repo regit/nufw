@@ -778,10 +778,10 @@ int check_md5_sig(connection * connexion,md5_auth_field * authdatas ){
 void free_auth_field(auth_field * field){
     switch (field->type){
       case MD5_AUTH:
+        if ((field->md5_datas)->password)
+            g_free((field->md5_datas)->password);
         if (field->md5_datas)
             g_free(field->md5_datas);
-        if ((field->md5_datas)->password)
-            g_free(field->password);
         g_free(field);
     }	
 }
