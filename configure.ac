@@ -15,6 +15,8 @@ AC_PROG_INSTALL
 # Checks for libraries.
 
 AC_CHECK_LIB([ipq], [ipq_message_type])
+# check if we have a version of libipq supporting mark
+AC_CHECK_LIB([ldap],[ipq_set_vwmark],AC_DEFUN([HAVE_LIBIPQ_MARK],[1]),AC_MSG_ERROR([libipq has no support for mark]))
 
 AC_CHECK_LIB([pthread], [pthread_mutex_init])
 # TODO : ldap check
