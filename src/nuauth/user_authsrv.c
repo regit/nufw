@@ -104,12 +104,13 @@ treat_user_request (int c){
 
 	/* copy packet datas */
 	buf=g_new0(char,64);
-	if ( SSL_read(rx,buf,63) ){
-		g_message("pushing request\n");
+	if ( SSL_read(rx,buf,63) > 0 ){
 		g_thread_pool_push (user_checkers,
 				buf,	
 				NULL
 				);
+	} else {
+		return EOF;
 	}
 	return 1;
 }
@@ -243,7 +244,6 @@ void* ssl_user_authsrv(){
 				berr_exit("SSL accept error");
 
 			client[c]=ssl;
-			g_message("Incoming user request !\n");
 
 			if ( c+1 > mx )
 				mx = c + 1;
@@ -262,7 +262,6 @@ void* ssl_user_authsrv(){
 			if ( c == sck_inet )
 				continue;
 			if ( FD_ISSET(c,&wk_set) ) {
-				g_message("user request going !\n");
 				if (treat_user_request(c) == EOF) {
 					FD_CLR(c,&rx_set);
 				}

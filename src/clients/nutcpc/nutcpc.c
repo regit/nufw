@@ -31,7 +31,7 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: nutcpc.c,v 1.15 2004/03/23 22:59:05 regit Exp $
+ * $Id: nutcpc.c,v 1.16 2004/03/24 00:02:27 regit Exp $
  */
 
 #include <arpa/inet.h>
@@ -132,9 +132,11 @@ void panic(const char *fmt, ...){
 }
 
 void exit_clean(){
-	printf ( "Exiting as requested\n");
 	/* Restore terminal (can be superflu). */
 	(void) tcsetattr (fileno (stdin), TCSAFLUSH, &orig);
+	/* if we are in ssl mode, shutdown SSL */
+	if (ssl_on)
+		SSL_shutdown(ssl);
 	exit(0);
 }
 
@@ -421,7 +423,6 @@ int send_user_pckt(conn_t* c){
 	}
 
 	if (ssl_on){
-		printf ("SSL send\n");
 		SSL_write(ssl,datas,pointer-datas);
 	} else {
 		if (sendto(sck_user_request,
