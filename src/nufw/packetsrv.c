@@ -55,7 +55,8 @@ void* packetsrv(){
             if (log_engine == LOG_TO_SYSLOG) {
               syslog(SYSLOG_FACILITY(DEBUG_LEVEL_MESSAGE),"Got error message from libipq : %d",ipq_get_msgerr(buffer));
             }else {
-	      printf("[%i] Got error message from libipq : %d\n",getpid(),ipq_get_msgerr(buffer));
+	      printf("[%i] libipq error : %s\n",getpid(),ipq_errstr());
+	      /* printf("[%i] Got error message from libipq : %d\n",getpid(),ipq_get_msgerr(buffer)); */
 	    }
 	  }
 	} else {
