@@ -1,3 +1,5 @@
+0.8.1b (2004/07/20)
+	- correct nuclient.h header
 0.8.1 (2004/07/14)
 	- client library
 	- little code and packaging cleaning
