@@ -52,8 +52,8 @@ unsigned long padd (packet_idl *current){
         printf ("[%i] Queue full, dropping element\n",getpid());
       }
     }
-  IPQ_SET_VERDICT(packets_list_start->id,NF_DROP);
-    psuppress (NULL,packets_list_start);
+  IPQ_SET_VERDICT(current->id,NF_DROP);
+  return 0;
   }
 
   packets_list_length++;

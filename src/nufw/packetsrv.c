@@ -91,11 +91,10 @@ void* packetsrv(){
 	    /* unlock datas */
 	    pthread_mutex_unlock(&packets_list_mutex);
 
-	    if (pcktid && (msg_p->packet_id != pcktid)){
-	      IPQ_SET_VERDICT( msg_p->packet_id, NF_DROP);
-	    }
+	    if (pcktid){
 	    /* send an auth request packet */
 	    auth_request_send(AUTH_REQUEST,msg_p->packet_id,msg_p->payload,msg_p->data_len,msg_p->timestamp_sec);
+	    }
             }
           } else {
             if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
