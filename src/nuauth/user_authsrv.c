@@ -47,10 +47,12 @@ void user_check_and_decide (gpointer userdata, gpointer data)
 	g_free(userdata);
 	/* if OK search and fill */
 	if ( conn_elt != NULL ) {
+#ifdef DEBUG_ENABLE
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)){
 			g_message("User : ");
 			print_connection(conn_elt,NULL);
 		}
+#endif
 		g_async_queue_push (connexions_queue,conn_elt);
 	}
 #ifdef DEBUG_ENABLE
