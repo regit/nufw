@@ -409,7 +409,7 @@ void clean_connections_list (){
     //  static GStaticMutex insert_mutex = G_STATIC_MUTEX_INIT;
 
     if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-        g_message("Start cleaning of connection");
+        g_message("Start cleaning of connection older than %d seconds",packet_timeout);
     g_static_mutex_lock (&insert_mutex);
     /* go through table and  stock keys associated to old packets */
     g_hash_table_foreach(conn_list,get_old_conn,GINT_TO_POINTER(current_timestamp));
