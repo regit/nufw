@@ -117,7 +117,7 @@ G_MODULE_EXPORT LDAP* ldap_conn_init(void){
 
 G_MODULE_EXPORT GSList* acl_check (connection* element){
   GSList * g_list = NULL;
-  char filter[512];
+  char filter[LDAP_QUERY_SIZE];
   char ** attrs_array, ** walker;
   int attrs_array_len,i,group;
   struct timeval timeout;
@@ -138,7 +138,7 @@ G_MODULE_EXPORT GSList* acl_check (connection* element){
   }
   /* contruct filter */
   if ((element->tracking_hdrs).protocol == IPPROTO_TCP || (element->tracking_hdrs).protocol == IPPROTO_UDP ){
-    snprintf(filter,511,
+    if (snprintf(filter,LDAP_QUERY_SIZE-1,
 	     "(&(objectClass=NuAccessControlList)(SrcIPStart<=%lu)(SrcIPEnd>=%lu)(DstIPStart<=%lu)(DstIPEnd>=%lu)(Proto=%d)(SrcPortStart<=%d)(SrcPortEnd>=%d)(DstPortStart<=%d)(DstPortEnd>=%d))",
 	     (long unsigned int)(element->tracking_hdrs).saddr,
 	     (long unsigned int)(element->tracking_hdrs).saddr,
@@ -149,9 +149,13 @@ G_MODULE_EXPORT GSList* acl_check (connection* element){
 	     (element->tracking_hdrs).source,
 	     (element->tracking_hdrs).dest,
 	     (element->tracking_hdrs).dest
-	     );
+	     ) >= (LDAP_QUERY_SIZE -1)){
+        if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
+          g_warning ("LDAP query too big (more than %d bytes)\n",LDAP_QUERY_SIZE);
+        return NULL;
+    }
   } else if ((element->tracking_hdrs).protocol == IPPROTO_ICMP ) {
-    snprintf(filter,511,
+    if (snprintf(filter,LDAP_QUERY_SIZE-1,
 	     "(&(objectClass=AccessControlList)(SrcIPStart<=%lu)(SrcIPEnd>=%lu)(DstIPStart<=%lu)(DstIPEnd>=%lu)(Proto=%d)(SrcPortStart<=%d)(SrcPortEnd>=%d)(DstPortStart<=%d)(DstPortEnd>=%d))",
 	     (long unsigned int)(element->tracking_hdrs).saddr,
 	     (long unsigned int)(element->tracking_hdrs).saddr,
@@ -162,7 +166,11 @@ G_MODULE_EXPORT GSList* acl_check (connection* element){
 	     (element->tracking_hdrs).type,
 	     (element->tracking_hdrs).code,
 	     (element->tracking_hdrs).code
-	     ); 
+	     ) >= (LDAP_QUERY_SIZE-1)){
+        if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
+          g_warning ("LDAP query too big (more than %d bytes)\n",LDAP_QUERY_SIZE);
+        return NULL;
+    }
   }
 
   /* send query and wait result */
@@ -224,7 +232,7 @@ G_MODULE_EXPORT GSList* acl_check (connection* element){
 
 /* TODO return List */
 G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
-  char filter[512];
+  char filter[LDAP_QUERY_SIZE];
   LDAP *ld = g_private_get (ldap_priv);
   LDAPMessage * res , *result;
   char ** attrs_array, ** walker;
@@ -243,7 +251,11 @@ G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
 	return -1;
     }
   }
-  snprintf(filter,511,"(&(objectClass=NuAccount)(uidNumber=%d))",userid);
+  if (snprintf(filter,LDAP_QUERY_SIZE-1,"(&(objectClass=NuAccount)(uidNumber=%d))",userid) >= (LDAP_QUERY_SIZE-1)){
+    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
+       g_warning ("LDAP query too big (more than %d bytes)\n",LDAP_QUERY_SIZE);
+     return NULL;
+  }
   
   /* send query and wait result */
   timeout.tv_sec = ldap_request_timeout;

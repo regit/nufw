@@ -6,7 +6,7 @@ plugindir = $(libdir)/nuauth/modules
 
 plugin_LTLIBRARIES = libpgsql.la
 
-libldap_la_SOURCES = pgsql.c
+libpgsql_la_SOURCES = pgsql.c
 
 
 LIBS = $(GLIB_LIBS) -lpgsql

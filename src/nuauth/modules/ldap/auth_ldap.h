@@ -1,4 +1,4 @@
-/* $Id: auth_ldap.h,v 1.1 2003/09/21 23:10:06 regit Exp $ */
+/* $Id: auth_ldap.h,v 1.2 2003/11/25 22:24:51 gryzor Exp $ */
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
@@ -29,6 +29,9 @@
 #define LDAP_CRED "mypassword" 
 #define LDAP_REQUEST_TIMEOUT 10
 #define LDAP_BASE "dc=nufw,dc=org"
+
+//Maximum size of a LDAP query
+#define LDAP_QUERY_SIZE 512
 
 int ldap_request_timeout;
 char * binddn;
