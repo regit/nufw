@@ -1,5 +1,5 @@
 #Change to "yes" for Nufw to be started
-NUAUTH_START="no"
+NUAUTH_START="true"
 
 #Add "v"s so nufw gets more verbose
 NUAUTH_VERBOSITY="vv"
