@@ -1,6 +1,6 @@
 /*
  * Copyright(C) 2004 INL http://www.inl.fr/
- ** written by  Eric Leblond <eric@inl.fr>
+ ** written by  Eric Leblond <regit@inl.fr>
  **             Vincent Deffontaines <vincent@inl.fr>
  **
  ** This program is free software; you can redistribute it and/or modify
@@ -23,6 +23,8 @@
 #include <crypt.h>
 #include <sys/time.h>
 
+#if 0
+
 typedef struct _auth_params {
 	char auth_type;
 	void * params;
@@ -36,12 +38,18 @@ struct md5_params {
 struct null_params {
 };
 
-#if 0
 struct up_datas {
     u_int32_t ip_client;
     char * dgram;
 };
 #endif
+
+/*
+ * user_authsrv :
+ * socket server for user client packet
+ * Argument : None
+ * Return : None
+ */
 
 void* user_authsrv(){
     int z;
@@ -53,7 +61,7 @@ void* user_authsrv(){
     struct up_datas userdatas;
 #endif
 
-    //open the socket
+    /* open the socket */
     sck_inet = socket (AF_INET,SOCK_DGRAM,0);
 
     if (sck_inet == -1)
@@ -93,7 +101,6 @@ void* user_authsrv(){
         {
             g_warning("user_pckt recvfrom()");
             continue;
-            // exit(-1); /*useless*/
         }
         /* copy packet datas */
         datas=g_new0(char,z);
@@ -109,6 +116,12 @@ void* user_authsrv(){
     return NULL;
 }
 
+/* 
+ * treat_user_request :
+ * get RX paquet from a SSL client connection and send it to user authentication threads
+ * Argument : SSL RX packet
+ * Return : 1 if read done, EOF if read complete
+ */
 static int
 treat_user_request (SSL* rx){
     char * buf;
@@ -129,6 +142,13 @@ treat_user_request (SSL* rx){
 
 int sck_inet;
 
+/*
+ * ssl_nuauth_cleanup :
+ * cleaning when receiving exit signal
+ * Argument : signal
+ * Return : None
+ */
+
 void ssl_nuauth_cleanup( int signal ) {
     /* close socket */
     close(sck_inet);
@@ -137,7 +157,10 @@ void ssl_nuauth_cleanup( int signal ) {
 }
 
 /*
+ * ssl_user_authsrv :
  * SSL user packet server
+ * Argument : None
+ * Return : None
  */
 
 void* ssl_user_authsrv(){
@@ -339,7 +362,13 @@ void* ssl_user_authsrv(){
     return NULL;
 }
 
-
+/*
+ * user_check_and_decide :
+ * get user datagram and goes till inclusion (or decision) on packet
+ * Argument 1 : datagram
+ * Argument 2 : unused
+ * Return : None
+ */
 
 void user_check_and_decide (gpointer userdata, gpointer data){
     connection * conn_elt=NULL;
@@ -360,6 +389,14 @@ void user_check_and_decide (gpointer userdata, gpointer data){
     if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
         g_message("leaving user_check\n");
 }
+
+/*
+ * userpckt_decode :
+ * decode user dgram packet and fill a connection with datas
+ * Argument 1 : datagram
+ * Argument 2 : size of datagram
+ * Return : pointer to newly allocated connection
+ */
 
 connection * userpckt_decode(char* dgram,int dgramsiz){
     long u_packet_id;
@@ -618,6 +655,5 @@ connection * userpckt_decode(char* dgram,int dgramsiz){
         }
 #endif
     }
-    /* FIXME : free dgram see over */
     return NULL;
 }

@@ -23,12 +23,16 @@
 
 
 
-/* taken a conf file and a hash 
- * fill the hash with corresponding values
+
+/* parse_conffile :
+ * taken a conf file and hash containing options, fill the hash with options values.
+ * Argument 1 : filename
+ * Argument 2 : size of the array
+ * Argument 3 : pointer to a hash containing options
+ * Return : 1 if OK, 0 otherwise
  */
-
-
-int parse_conffile(char * filename,gint array_size,confparams* symbols) {
+ 
+ int parse_conffile(char * filename,gint array_size,confparams* symbols) {
   GScanner*  scanner;
   GTokenType dnentry=G_TOKEN_NONE;
   int fd,i;
@@ -71,7 +75,7 @@ int parse_conffile(char * filename,gint array_size,confparams* symbols) {
 	      g_warning("Bad argument value for %s at %u",
 			current_symbol->name,scanner->line);
 	      g_scanner_destroy (scanner);
-	      return -1;
+	      return 0;
 	    }
 	    break;
 	  case G_TOKEN_INT :
@@ -82,7 +86,7 @@ int parse_conffile(char * filename,gint array_size,confparams* symbols) {
 	      g_warning("Bad argument value for %s at %u",
 			current_symbol->name,scanner->line);
 	      g_scanner_destroy (scanner);
-	      return -1;
+	      return 0;
 	    }
 	    break;
 	  default :
@@ -96,8 +100,18 @@ int parse_conffile(char * filename,gint array_size,confparams* symbols) {
   }
   g_scanner_destroy (scanner);
   close(fd);
-  return 0;
+  return 1;
 }
+
+
+/*
+ * get_confvar_value :
+ * fetch value of an option and return a pointer to it
+ * Argument 1 : option hash
+ * Argument 2 : size of hash
+ * Argument 3 : name of param to get
+ * Return : pointer to param
+ */
 
 gpointer get_confvar_value(confparams* symbols,gint array_size,gchar * confparam){
   gpointer value=NULL;

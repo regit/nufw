@@ -24,9 +24,10 @@
  */
 
 /*
- * Fill in acl_groups of a connection
- * return status
- * If no acl is found fill it with NULL
+ * external_acl_groups :
+ * Fill in acl_groups of a connection by calling external module
+ * Argument : a connection
+ * Return : 1 if OK, 0 otherwise
  */
 
 int external_acl_groups (connection * element){

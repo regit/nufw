@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2003-2004 Eric Leblond <eric@inl.fr>
+ ** Copyright(C) 2003-2004 Eric Leblond <regit@inl.fr>
  **                        INL http://www.inl.fr/
  **
  ** This program is free software; you can redistribute it and/or modify
@@ -24,9 +24,15 @@
 #include <netinet/ip_icmp.h> 
 
 #include <errno.h>
+
 /* 
- * return offset to next type of headers 
+ * get_ip_headers :
+ * fill ip related part of the connexion tracking header
+ * Argument 1 : a connection
+ * Argument 2 : pointer to packet datas
+ * Return : offset to next type of headers 
  */
+
 int get_ip_headers(connection *connexion,char * dgram){
     struct iphdr * iphdrs = (struct iphdr *) dgram;
     /* check IP version */
@@ -40,6 +46,14 @@ int get_ip_headers(connection *connexion,char * dgram){
     return 0;
 }
 
+/* 
+ * get_udp_headers :
+ * fill udp related part of the connexion tracking header
+ * Argument 1 : a connection
+ * Argument 2 : pointer to packet datas
+ * Return : 0
+ */
+
 int get_udp_headers(connection *connexion, char * dgram){
     struct udphdr * udphdrs=(struct udphdr *)dgram;
     connexion->tracking_hdrs.source=htons(udphdrs->source);
@@ -48,6 +62,15 @@ int get_udp_headers(connection *connexion, char * dgram){
     connexion->tracking_hdrs.code=0;
     return 0;
 }
+
+
+/* 
+ * get_tcp_headers :
+ * fill tcp related part of the connexion tracking header
+ * Argument 1 : a connection
+ * Argument 2 : pointer to packet datas
+ * Return : STATE of the packet
+ */
 
 int get_tcp_headers(connection *connexion, char * dgram){
     struct tcphdr * tcphdrs=(struct tcphdr *) dgram;
@@ -70,6 +93,15 @@ int get_tcp_headers(connection *connexion, char * dgram){
     return -1;
 }
 
+/* 
+ * get_icmp_headers :
+ * fill icmp related part of the connexion tracking header
+ * Argument 1 : a connection
+ * Argument 2 : pointer to packet datas
+ * Return : 0
+ */
+
+
 int get_icmp_headers(connection *connexion, char * dgram){
     struct icmphdr * icmphdrs= (struct icmphdr *)dgram;
     connexion->tracking_hdrs.source=0;
@@ -78,6 +110,13 @@ int get_icmp_headers(connection *connexion, char * dgram){
     connexion->tracking_hdrs.code=icmphdrs->code;
     return 0;
 }
+
+/*
+ * packet_authsrv
+ * socket server for Nufw gateway packet
+ * Argument : None
+ * Return : None
+ */
 
 void* packet_authsrv(){
     int z;
@@ -150,9 +189,11 @@ void* packet_authsrv(){
 }
 
 /*
+ * ack_check_and_decide :
  * Treat a connection from insertion to decision 
- * Arg : a connection 
- * Return : 
+ * Argument 1 : a connection 
+ * Argument 2 : unused
+ * Return : None
  */
 
 void acl_check_and_decide (gpointer userdata, gpointer data){
@@ -189,6 +230,14 @@ void acl_check_and_decide (gpointer userdata, gpointer data){
         g_message("leaving acl_check\n");
 }
 
+
+/*
+ * authpckt_decode :
+ * decode a dgram packet from gateway and create a connection with it
+ * Argument 1 : pointer to dgram
+ * Argument 2 : dgram size
+ * Return : pointer to allocated connection
+ */
 
 connection*  authpckt_decode(char * dgram, int  dgramsiz){
     int offset; 

@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2003-2004 Eric Leblond <eric@inl.fr>
+ ** Copyright(C) 2003-2004 Eric Leblond <regit@inl.fr>
  **		     Vincent Deffontaines <vincent@gryzor.com>
  **                  INL http://www.inl.fr/
  **
@@ -35,7 +35,13 @@ inline char change_state(connection *elt, char state){
     return  elt->state;
 }
 
-  guint
+/*
+ * Function used for connection hash 
+ * Params : Ipv4header of a connection 
+ * Return : the associated key
+*/
+
+inline  guint
 hash_connection(gconstpointer headers)
 {
   //  tracking *tracking_hdrs = (tracking *)headers;
@@ -46,6 +52,11 @@ hash_connection(gconstpointer headers)
         32));
 }
 
+/*
+ * Find if two connections are equal
+ * Params : two ip headers
+ * Return : TRUE is ip headers are equal, FALSE otherwise
+ */
 
 gboolean compare_connection(gconstpointer tracking_hdrs1, gconstpointer tracking_hdrs2){
     /* compare IPheaders */
@@ -93,8 +104,9 @@ gboolean compare_connection(gconstpointer tracking_hdrs1, gconstpointer tracking
 
 /* 
  * Try to insert a connection in Struct
- * Argument : a connection
- * Return : pointer to the connection list element
+ * Fetch datas in connections queue
+ * Argument : None
+ * Return : None
  */
 
 void search_and_fill () {
@@ -115,7 +127,6 @@ void search_and_fill () {
             g_hash_table_insert (conn_list,
                 &(pckt->tracking_hdrs),
                 pckt);
-            /* as we append the new one is at the end */
             g_static_mutex_unlock (&insert_mutex);
         } else { 
             switch (((connection *)element)->state){
@@ -211,9 +222,10 @@ void search_and_fill () {
 
 /*
  * print connection
+ * Debug  function used to print ip headers of 
+ * received packets
  */
 
-/* TODO : restore lock after DEBUG's done */
 gint print_connection(gpointer data,gpointer userdata){
     struct in_addr src,dest;
     connection * conn=(connection *) data;
@@ -242,6 +254,9 @@ gint free_struct(gpointer data,gpointer userdata){
 
 /*
  * Send auth response to the gateway
+ * Argument 1 : packet_id
+ * Argument 2 : answer
+ * Return : None
  */
 
 void send_auth_response(gpointer data, gpointer userdata){
@@ -292,7 +307,11 @@ void send_auth_response(gpointer data, gpointer userdata){
 }
 
 
-
+/* free_connection
+ * free structure associated to a connection
+ * Argument : A connection
+ * Return 1
+ */
 int free_connection(connection * conn){
     GSList *acllist;
     g_assert (conn != NULL );
@@ -320,6 +339,12 @@ int free_connection(connection * conn){
 }
 
 
+/* conn_cl_delete :
+ * remove a connection from connection hash
+ * and free it
+ * Argument : a connection
+ * Return : 1 if succeeded, 0 otherwise
+ */
 
 int conn_cl_delete(gconstpointer conn) {
     g_assert (conn != NULL);
@@ -337,6 +362,15 @@ int conn_cl_delete(gconstpointer conn) {
 
 GSList * old_conn_list;
 
+/*
+ * get_old_conn
+ * test if a a  connection is old and add it to the list of old connections
+ * Argument 1 :  key in hash of the connection
+ * Argument 2 : pointer to the connection
+ * Argument 3 : current timestamp
+ * Return : None
+ */
+
 void  get_old_conn (gpointer key,
     gpointer value,
     gpointer user_data){
@@ -346,9 +380,16 @@ void  get_old_conn (gpointer key,
     }
 }
 
+
+/*
+ * conn_key_delete :
+ * delete a element given its key 
+ * Argument : a key
+ * Return : 1 if element suppressed, 0 otherwise
+ */
+
 int conn_key_delete(gconstpointer key) {
     connection* element = (connection*)g_hash_table_lookup ( conn_list,key);
-    /* test for lock */
     if (element){
             /* need to log drop of packet if it is a nufw packet */
             if (element->state == STATE_AUTHREQ) {
@@ -360,9 +401,15 @@ int conn_key_delete(gconstpointer key) {
     return 0;
 }
 
+/*
+ * clean_connections_list :
+ * find old element in connection hash and delete them
+ * Argument : None
+ * Return : None
+ */
 
 void clean_connections_list (){
-    int conn_list_size=g_hash_table_size(conn_list);
+    int conn_list_size=g_hash_table_size(conn_list); /* not acccurate but we don't abuse of the lock */
     long current_timestamp=time(NULL);
     old_conn_list=NULL;
 
@@ -387,6 +434,14 @@ void clean_connections_list (){
     if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
         g_message("Cleaning of connections done");
 }
+
+
+/*
+ * take_decision :
+ * find answer for a connection and send it
+ * Argument : a connection
+ * Return : 1
+ */
 
 gint take_decision(connection * element) {
     GSList * parcours=NULL;
@@ -464,6 +519,13 @@ gint take_decision(connection * element) {
     return 1;
 }
 
+/* 
+ * apply_decision :
+ * log and send answer for a given connection
+ * Argument : a connection
+ * Return : 1
+ */
+
 gint apply_decision(connection element){
 	int answer=element.decision;
         struct auth_answer aanswer ={ answer , element.user_id } ;
@@ -485,6 +547,14 @@ gint apply_decision(connection element){
         }
 	return 1;
 }
+
+/*
+ * decisions_queue_work :
+ * interface for apply_decision compliant with queue system
+ * Argument 1  : a connection
+ * Argument 2 : unused
+ * Return : None
+ */
 
 void decisions_queue_work (gpointer userdata, gpointer data){
     connection* element=(connection *)userdata;

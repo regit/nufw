@@ -2,7 +2,7 @@
  * libnuclient - TCP/IP connection auth client library.
  *
  * Copyright 2004 - INL
- * 	written by Eric Leblond <eric.leblond@inl.fr>
+ * 	written by Eric Leblond <regit@inl.fr>
  *
  * Idea taken from tcpspy, a TCP/IP connection monitor.
  *
@@ -31,8 +31,8 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: libnuclient.c,v 1.18 2004/03/28 17:58:19 regit Exp $
  */
+
 #include "nuclient.h"
 
 static int ct_init (conntable_t **ct);
@@ -42,8 +42,6 @@ static int ct_find (conntable_t *ct, conn_t *c);
 static int ct_read (NuAuth * session,conntable_t *ct);
 static int ct_free (conntable_t *ct);
 static int compare (NuAuth *session,conntable_t *old, conntable_t *new);
-
-
 
 static void panic(const char *fmt, ...){
 	printf("error\n");

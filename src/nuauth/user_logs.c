@@ -20,6 +20,15 @@
 #include <auth_srv.h>
 #include <time.h>
 
+/*
+ * check_fill_user_counters :
+ * Maintain user list and take care of detecting old packets (possibly spoofed)
+ * Argument 1 : user id
+ * Argument 2 : packet timestamp
+ * Argument 3 : IP
+ * Return : 1 if OK, 0 otherwise (old packet)
+ */
+
 int check_fill_user_counters(u_int16_t userid,long u_time,unsigned long packet_id,u_int32_t ip){
 	user_datas * currentuser=NULL;
 
@@ -60,8 +69,8 @@ int check_fill_user_counters(u_int16_t userid,long u_time,unsigned long packet_i
 			currentuser->last_packet_id=packet_id;
 			currentuser->last_packet_timestamp=time(NULL);
 			g_mutex_unlock(currentuser->lock);
-                        //Vincent moved this after mutex unlock, so the mutex be
-                        //freed earlier :)
+			/* Vincent moved this after mutex unlock, so the mutex be
+			   freed earlier :) */
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)) {
 				g_message("updating user %d\n",userid);
 			}
@@ -71,18 +80,44 @@ int check_fill_user_counters(u_int16_t userid,long u_time,unsigned long packet_i
 	return 0;
 }
 
-	void print_id( gpointer id, gpointer value, gpointer user_data) {
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
-			g_message("%u ",(unsigned int)id);
-	}
 
-	void print_users_list(){
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
-		{
-			g_message("users list : ");
-		}
-		g_hash_table_foreach(users_hash,(GHFunc)print_id,NULL);
+/*
+ * print_id :
+ * print id of user (used by print_user_list)
+ * Argument 1 : Id of user
+ * Argument 2 : Unused
+ * Argument 3 : Unused
+ * Return : None
+ */
+
+void print_id( gpointer id, gpointer value, gpointer user_data) {
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
+		g_message("%u ",(unsigned int)id);
+}
+
+
+/*
+ * print_users_list :
+ * print list of user id
+ * Argument : None
+ * Return : None
+ */
+
+void print_users_list(){
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
+	{
+		g_message("users list : ");
 	}
+	g_hash_table_foreach(users_hash,(GHFunc)print_id,NULL);
+}
+
+/*
+ * log_new_user :
+ * print log message about new user on IP
+ * Argument 1 : user id
+ * Argument 2 : ip
+ * Return : None
+ */
 
 void log_new_user(int id,u_int32_t ip){
 	struct in_addr oneip;
@@ -96,6 +131,14 @@ void log_new_user(int id,u_int32_t ip){
 struct Conn_State { 
 	connection conn;
 	int state;};
+
+/*
+ * log_user_packet :
+ * log user packet or by a direct call to log module or by sending log 
+ * message to logger thread pool
+ * Argument 1 : connection
+ * Argument 2 : state of the connection
+ */
 
 void log_user_packet (connection element,int state){
 	struct Conn_State conn_state= { element, state};
@@ -114,6 +157,15 @@ void log_user_packet (connection element,int state){
 	}
 	/* end */
 }
+
+
+/*
+ * real_log_user_packet :
+ * interface to logging module function for thread pool worker
+ * Argument 1 : struct Conn_State
+ * Argument 2 : unused 
+ * Return : None
+ */
 
 void real_log_user_packet (gpointer userdata, gpointer data){
 	(*module_user_logs) (
