@@ -130,7 +130,7 @@ install-nuauth:
 	#cd src/nuauth/
 	$(MAKE) -C $(CURDIR)/src/nuauth/ install DESTDIR=$(CURDIR)/debian/nuauth
 #	dh_install -pnuauth
-	dh_install -pnuauth conf/nuauth.conf etc/nuauth
+	dh_install -pnuauth conf/nuauth.conf etc/nufw
 	
 install-nuauth-utils:
 	dh_testdir -pnuauth-utils
