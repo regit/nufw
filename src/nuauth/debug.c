@@ -19,95 +19,23 @@
 
 #include <debug.h>
 #include <syslog.h>
+#include <math.h>
 
-void process_g_fatal (const gchar *log_domain, GLogLevelFlags log_level, const gchar *message, gpointer user_data)
+/* sweet formula : GLIB_LOG_LEVEL=2^SYSLOG_LOG_LEVEL */
+void process_g_syslog (const gchar *log_domain, GLogLevelFlags log_level, const gchar *message, gpointer user_data)
 {
-	syslog(LOG_FACILITY||LOG_ALERT,message);
+  int syslog_level;
+  syslog_level = rint(log(log_level)/log(2));
+  syslog(LOG_FACILITY || syslog_level,message);
 }
 
-void process_g_critical (const gchar *log_domain, GLogLevelFlags log_level, const gchar *message, gpointer user_data)
-{
-	syslog(LOG_FACILITY||LOG_CRIT,message);
-}
-
-void process_g_warning (const gchar *log_domain, GLogLevelFlags log_level, const gchar *message, gpointer user_data)
-{
-	syslog(LOG_FACILITY||LOG_WARNING,message);
-}
-
-void process_g_message (const gchar *log_domain, GLogLevelFlags log_level, const gchar *message, gpointer user_data)
-{
-	syslog(LOG_FACILITY||LOG_NOTICE,message);
-}
-
-void process_g_info (const gchar *log_domain, GLogLevelFlags log_level, const gchar *message, gpointer user_data)
-{
-	syslog(LOG_FACILITY||LOG_INFO,message);
-}
-
-void process_g_debug (const gchar *log_domain, GLogLevelFlags log_level, const gchar *message, gpointer user_data)
-{
-	syslog(LOG_FACILITY||LOG_DEBUG,message);
-}
-
-void set_each_glib_handler (const gchar *log_domain, GLogLevelFlags log_level, const gchar *message, gpointer user_data)
-{
-	switch (log_level)
-	{
-	 case G_LOG_FLAG_FATAL :
-	   syslog(LOG_FACILITY||LOG_ALERT,message);
-	   return;
-	 case G_LOG_FLAG_FATAL|G_LOG_LEVEL_ERROR :
-	   syslog(LOG_FACILITY||LOG_ALERT,message);
-	   return;
-	 case G_LOG_LEVEL_ERROR :
-	   syslog(LOG_FACILITY||LOG_ALERT,message);
-	   return;
-	 case G_LOG_FLAG_RECURSION :
-	   syslog(LOG_FACILITY||LOG_ALERT,message);
-	   return;
-	 case G_LOG_LEVEL_MASK :
-	   syslog(LOG_FACILITY||LOG_ALERT,message);
-	   return;
-	 case G_LOG_LEVEL_CRITICAL :
-	   syslog(LOG_FACILITY||LOG_CRIT,message);
-	   return;
-	 case G_LOG_LEVEL_WARNING :
-	   syslog(LOG_FACILITY||LOG_WARNING,message);
-	   return;
-	 case G_LOG_LEVEL_MESSAGE :
-	   syslog(LOG_FACILITY||LOG_NOTICE,message);
-	   return;
-	 case G_LOG_LEVEL_INFO :
-	   syslog(LOG_FACILITY||LOG_INFO,message);
-	   return;
-	 case G_LOG_LEVEL_DEBUG :
-	   syslog(LOG_FACILITY||LOG_DEBUG,message);
-	   return;
-	 }
-		 
-}
 int set_glib_loghandlers()
 {
 	int error=0;
-	g_log_set_handler(NULL,G_LOG_FLAG_FATAL|G_LOG_LEVEL_ERROR,set_each_glib_handler,NULL);
-	g_log_set_handler(NULL,G_LOG_LEVEL_CRITICAL,set_each_glib_handler,NULL);
-	g_log_set_handler(NULL,G_LOG_LEVEL_WARNING,set_each_glib_handler,NULL); 
-	g_log_set_handler(NULL,G_LOG_LEVEL_MESSAGE,set_each_glib_handler,NULL);
-	g_log_set_handler(NULL,G_LOG_LEVEL_INFO,set_each_glib_handler,NULL);
-	g_log_set_handler(NULL,G_LOG_LEVEL_DEBUG,set_each_glib_handler,NULL);
-	return error;
-}
 
-int old_set_glib_loghandlers()
-{
-	int error=0;
-	g_log_set_handler(NULL,G_LOG_FLAG_FATAL|G_LOG_LEVEL_ERROR,process_g_fatal,NULL);
-	g_log_set_handler(NULL,G_LOG_LEVEL_CRITICAL,process_g_critical,NULL);
-	g_log_set_handler(NULL,G_LOG_LEVEL_WARNING,process_g_warning,NULL); 
-	g_log_set_handler(NULL,G_LOG_LEVEL_MESSAGE,process_g_message,NULL);
-	g_log_set_handler(NULL,G_LOG_LEVEL_INFO,process_g_info,NULL);
-	g_log_set_handler(NULL,G_LOG_LEVEL_DEBUG,process_g_debug,NULL);
+	openlog("nuauth",LOG_CONS||LOG_PID,LOG_DAEMON);
+	g_log_set_handler (NULL, G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL
+                     | G_LOG_FLAG_RECURSION, process_g_syslog, NULL);
 	return error;
 }
 

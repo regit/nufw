@@ -123,7 +123,7 @@ if (daemonize == 1) {
 	}
   }
 
- openlog("nuauth",LOG_CONS||LOG_PID,LOG_DAEMON);
+
  set_glib_loghandlers();
 
 }
