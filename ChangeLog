@@ -1,3 +1,9 @@
+0.6.5 (2004/03/11)
+        - correct problem with bad packets
+        - optimisation of hash related code
+        - warning suppression
+        - LDAP and mysql with SSL support
+        - nutcpc improved
 0.6.4 (2004/01/09)
         - correct locking problems
         - don't exit on socket read problem
