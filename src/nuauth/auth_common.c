@@ -189,7 +189,7 @@ void search_and_fill () {
                     if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
                         g_message("Adding a packet_id to a connexion\n");
                     ((connection *)element)->packet_id =
-                      g_slist_prepend(((connection *)element)->packet_id, GINT_TO_POINTER((pckt->packet_id)->data));
+                      g_slist_prepend(((connection *)element)->packet_id, GUINT_TO_POINTER((pckt->packet_id)->data));
                     free_connection(pckt);
                     /* and return */
                     break;
@@ -393,12 +393,12 @@ gint take_decision(connection * element) {
     /* first check if we have found acl */
     if ( element->acl_groups == NULL ){
         answer = NOK;
+#if 0
         if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
             g_message("Did not find a ACL. Will drop Packet !\n");
         }
         if (element->packet_id != NULL ){
             struct auth_answer aanswer ={ answer , element->user_id } ;
-            element->decision=answer;
             g_slist_foreach(element->packet_id,
                 (GFunc) send_auth_response,
                 &aanswer
@@ -416,6 +416,7 @@ gint take_decision(connection * element) {
             /* only change state */
             change_state(element,STATE_DONE);
         }
+#endif
     } else {
         int start_test,stop_test;
         if (nuauth_prio_to_nok == 1){
@@ -456,7 +457,14 @@ gint take_decision(connection * element) {
             }
         }
     }
+       
+    element->decision=answer;
 
+    apply_decision(*element);
+
+    element->state = STATE_DONE;
+
+#if 0
     /* send response  if packet's ready */
 
     if (element->state == STATE_READY || answer == OK ) {
@@ -469,7 +477,6 @@ gint take_decision(connection * element) {
             &aanswer
             );
         /* backup decision */
-        element->decision=answer;
         /* delete element */
         if (element->state == STATE_READY ){
             /* log user packet */
@@ -504,6 +511,28 @@ gint take_decision(connection * element) {
                 g_message ("Unable to decide on packet\n");
         }
     }
+#endif
+    element->packet_id=NULL;
+    conn_cl_delete(element);
     return 1;
+}
+
+gint apply_decision(connection element){
+	int answer=element.decision;
+            struct auth_answer aanswer ={ NOK , element->user_id } ;
+
+         if (answer == OK){
+                log_user_packet(element,STATE_OPEN);
+            } else {
+                log_user_packet(element,STATE_DROP);
+            }
+            g_slist_foreach(element.packet_id,
+                send_auth_response,
+                &aanswer);
+	    /* free packet_id */
+
+        if (element.packet_id != NULL )
+            g_slist_free (element.packet_id);
+	return 1;
 }
 

@@ -23,6 +23,19 @@
 #include <crypt.h>
 #include <sys/time.h>
 
+typedef struct _auth_params {
+	char auth_type;
+	void * params;
+} auth_params;
+
+struct md5_params {
+	long u_packet_id;
+	char * password;
+};
+
+struct null_params {
+};
+
 #if 0
 struct up_datas {
     u_int32_t ip_client;
@@ -330,8 +343,6 @@ void* ssl_user_authsrv(){
 
 void user_check_and_decide (gpointer userdata, gpointer data){
     connection * conn_elt=NULL;
-    connection * element;
-
 
     if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
         g_message("entering user_check\n");
@@ -342,28 +353,6 @@ void user_check_and_decide (gpointer userdata, gpointer data){
     /* if OK search and fill */
     if ( conn_elt != NULL ) {
         g_async_queue_push (connexions_queue,conn_elt);
-#if 0
-        element = search_and_fill (conn_elt);
-        // element is locked by search_and_fill
-        if ( element != NULL ) {
-            /* check state of the packet */
-            if ( ((connection *)element)->state >= STATE_READY ){
-                /* packet ready to processing */
-                /* get acls */
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-                    g_message("trying to decide after userpckt\n"); 
-                take_decision(element);
-            } else {
-                UNLOCK_CONN(element);
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-                    g_message("User packet before auth packet\n");
-            }
-        } else {
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
-                g_message("Unwanted user packet\n");
-        }
-
-#endif
     } else {
         if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
             g_message("User packet decoding failed\n");
@@ -397,8 +386,6 @@ connection * userpckt_decode(char* dgram,int dgramsiz){
                 return NULL;
             }
 
-            /* mini init struct */
-            connexion->lock=NULL;
             /* parse packet */
             pointer=dgram+2;
             connexion->user_id=*(u_int16_t *)(pointer);
@@ -580,14 +567,16 @@ connection * userpckt_decode(char* dgram,int dgramsiz){
                     /* treat following field type */
                     switch (field_type){
                       case PACKET_FIELD:
+			      /* fill IP headers */
                         parse_packet_field(field_datas,connexion);
                         break;
                       case USERNAME_FIELD:
-                        /* we need to get password and userid */
-                        parse_username_field(field_datas,connexion);
+                        /* we need to fill userid and password */
+                        parse_username_field(field_datas,connexion,password);
                         break;
                       case AUTHENTICATION_FIELD:
-                        parse_authentication_field(field_datas,connexion);
+			/* we get packet_id timestamp */
+                        parse_authentication_field(field_datas,connexion,packet_id);
                         break;
                       default:
                         if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
@@ -605,7 +594,8 @@ connection * userpckt_decode(char* dgram,int dgramsiz){
                 pointer+=field_length;
             }
             /* check authentication */
-            if ( check_md5_sig(connection * connexion,u_int16_t u_packet_id,char *passwd )){
+            /* if ( check_md5_sig(connection * connexion,u_int16_t u_packet_id,char *passwd )){ */
+            if ( check_authentication(connection * connexion,auth_params * pckt_params)){
                 /* set some default on connexion */
                 if (check_fill_user_counters(connexion->user_id,connexion->timestamp,u_packet_id,connexion->tracking_hdrs.saddr)){	
                     /* first reset timestamp to now */

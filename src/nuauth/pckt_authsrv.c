@@ -155,7 +155,6 @@ void* packet_authsrv(){
  */
 
 void acl_check_and_decide (gpointer userdata, gpointer data){
-    connection * element=NULL;
     connection * conn_elt = userdata;
 
     if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET))
@@ -172,26 +171,6 @@ void acl_check_and_decide (gpointer userdata, gpointer data){
             }
             /* search and fill */
         g_async_queue_push (connexions_queue,conn_elt);
-#if 0
-            element = search_and_fill (conn_elt);
-            if (element != NULL) {
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)){
-                    g_message("new entry at %p\n",element);
-                }
-                /* in case we get the lock but lock is on empty packet */
-                if ( element == NULL ) return;
-                if (element->state == STATE_READY) {
-			take_decision(element);
-		} else {
-			/* not ready only release lock */
-			UNLOCK_CONN(element);
-		}
-            } else {
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET))
-                    g_message("element is NULL\n");
-                return;
-            }
-#endif
         } else {
             /* no acl found so packet has to be dropped */
             struct auth_answer aanswer ={ NOK , conn_elt->user_id } ;
@@ -203,26 +182,6 @@ void acl_check_and_decide (gpointer userdata, gpointer data){
             conn_elt->state=STATE_DONE;
             /* search and fill */
         g_async_queue_push (connexions_queue,conn_elt);
-#if 0
-            element = search_and_fill (conn_elt);
-            if (element) {
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)){
-                    g_message("element bad but exist : %p\n",element);
-                }
-                /* if we don't wait for the user packet we free the connection */
-		if (element->state == STATE_READY) {
-			log_user_packet(*element,STATE_DROP);
-			if ( ! conn_cl_delete( element)) {
-				if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-					g_warning("connection cleaning failed at __FILE__:__LINE__\n");
-			}
-                } else {
-                    element->state=STATE_DONE;
-                    element->decision=STATE_DROP;
-                    UNLOCK_CONN(element);
-                }
-            }
-#endif
         }
     }
     if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET))
@@ -248,8 +207,6 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz){
                 }
                 return NULL;
             }
-            /* mini init struct */
-            connexion->lock = NULL;
             /* parse packet */
             pointer=dgram+2;
             connexion->id_srv=*(u_int16_t *)(pointer);

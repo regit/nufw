@@ -1,4 +1,4 @@
-/* $Id: auth_srv.h,v 1.33 2004/05/20 22:37:50 regit Exp $ */
+/* $Id: auth_srv.h,v 1.34 2004/06/10 07:26:55 regit Exp $ */
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
@@ -39,8 +39,6 @@
 #include <config.h>
 /* NUFW Protocol */
 #include <proto.h>
-/* NUFW hash */
-/* #include <nuhash.h>*/
 
 /*debug functions*/
 #include <debug.h>
@@ -126,7 +124,9 @@ typedef struct Connection {
   /* tracking test */
   tracking tracking_hdrs;
   u_int16_t id_srv;
+  /* user params */
   u_int16_t user_id;
+  char * username;
   /* generic list to stock acl related groups */
   GSList * acl_groups;
   // auth stuff 
@@ -135,13 +135,8 @@ typedef struct Connection {
   char state;
   /* decision on packet */
   char decision;
-  /* exclusion mutex to protect during access */
-  GMutex * lock;
 } connection;
 
-#define TRYLOCK_CONN(ARG1) if (((connection *)ARG1)->lock != NULL) { g_mutex_trylock(((connection *)ARG1)->lock); } else { g_message("trying lock NULL\n"); };
-#define LOCK_CONN(ARG1) if (((connection *)ARG1)->lock != NULL) { g_mutex_lock(((connection *)ARG1)->lock); } else { g_message("trying lock NULL\n"); };
-#define UNLOCK_CONN(ARG1) if (((connection *)ARG1)->lock != NULL) g_mutex_unlock(((connection *)ARG1)->lock);
 
 GSList * busy_mutex_list;
 GSList * free_mutex_list;
