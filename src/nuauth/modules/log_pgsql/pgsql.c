@@ -94,6 +94,7 @@ G_MODULE_EXPORT PGconn *pgsql_conn_init(void){
       strlen(port) + strlen(timeout) +
       strlen("hostaddr='' port= dbname='' user='' password='' connect_timeout= sslmode='' ") + 1, 
       sizeof(char));
+  if (pgsql_conninfo == NULL){return NULL;}
   //Build string we will pass to PQconnectdb
   strcat(pgsql_conninfo,"hostaddr='");
   strcat(pgsql_conninfo,pgsql_server);
@@ -119,6 +120,8 @@ G_MODULE_EXPORT PGconn *pgsql_conn_init(void){
   if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
       g_message("...");
   pgsql_status=PQstatus(ld);
+
+  free(pgsql_conninfo);
   
   if(pgsql_status != CONNECTION_OK) {
     if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
