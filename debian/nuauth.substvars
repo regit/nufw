@@ -1,2 +1,2 @@
 misc:Depends=debconf (>= 0.5)
-shlibs:Depends=libc6 (>= 2.3.2.ds1-4), libgdbm3, libglib2.0-0 (>= 2.2.3), libldap2 (>= 2.1.17-1), libmysqlclient12, libpq3 (>= 7.3.1)
+shlibs:Depends=libc6 (>= 2.3.2.ds1-4), libgdbm3, libglib2.0-0 (>= 2.2.3), libldap2 (>= 2.1.17-1)

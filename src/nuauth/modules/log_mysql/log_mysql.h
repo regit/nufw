@@ -1,4 +1,4 @@
-/* $Id: log_mysql.h,v 1.3 2003/11/26 23:11:04 regit Exp $ */
+/* $Id: log_mysql.h,v 1.4 2004/01/13 23:19:41 gryzor Exp $ */
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
@@ -31,6 +31,14 @@
 #define MYSQL_TABLE_NAME "nufw-logs" 
 #define MYSQL_REQUEST_TIMEOUT 10
 
+//SSL options
+#define MYSQL_USE_SSL 1 //use ssl by default
+#define MYSQL_SSL_KEYFILE NULL
+#define MYSQL_SSL_CERTFILE NULL
+#define MYSQL_SSL_CA      NULL
+#define MYSQL_SSL_CAPATH  NULL
+#define MYSQL_SSL_CIPHER "ALL:!ADH:+RC4:@STRENGTH"
+
 int mysql_request_timeout;
 char * mysql_user;
 char * mysql_passwd;
@@ -38,3 +46,9 @@ char * mysql_server;
 char * mysql_db_name;
 char * mysql_table_name;
 int mysql_server_port;
+int mysql_use_ssl;
+char * mysql_ssl_keyfile;
+char * mysql_ssl_certfile;
+char * mysql_ssl_ca;
+char * mysql_ssl_capath;
+char * mysql_ssl_cipher;

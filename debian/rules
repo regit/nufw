@@ -138,31 +138,12 @@ install-nuauth:
 	dh_testroot -pnuauth
 	dh_clean -k -pnuauth
 	dh_installdirs -pnuauth
-	# Add here commands to install the arch part of the package into
-	# debian/nufw.
-	#INSTALLDOC#
-	dh_installman -pnuauth doc/nuauth.1
-	#cd src/nuauth/
-	$(MAKE) -C $(CURDIR)/src/nuauth/ install DESTDIR=$(CURDIR)/debian/nuauth
-#	dh_install -pnuauth
-	dh_install -pnuauth conf/nuauth.conf etc/nufw
 
-install-nuauth-log-mysql:
 	dh_testdir -pnuauth-log-mysql
 	dh_testroot -pnuauth-log-mysql
 	dh_clean -k -pnuauth-log-mysql
 	dh_installdirs -pnuauth-log-mysql
-	# Add here commands to install the arch part of the package into
-	# debian/nufw.
-	#INSTALLDOC#
-	#dh_installman -pnuauth doc/nuauth.1
-	#cd src/nuauth/
-	#$(MAKE) -C $(CURDIR)/src/nuauth/ install DESTDIR=$(CURDIR)/debian/nuauth
-#	dh_install -pnuauth
-	#dh_install -pnuauth conf/nuauth.conf etc/nufw
-	mv $(CURDIR)/debian/nuauth/usr/lib/nuauth/modules/libmysql* $(CURDIR)/debian/nuauth-log-mysql/usr/lib/nuauth/modules/
-	
-install-nuauth-log-pgsql:
+
 	dh_testdir -pnuauth-log-pgsql
 	dh_testroot -pnuauth-log-pgsql
 	dh_clean -k -pnuauth-log-pgsql
@@ -170,12 +151,41 @@ install-nuauth-log-pgsql:
 	# Add here commands to install the arch part of the package into
 	# debian/nufw.
 	#INSTALLDOC#
+	dh_installman -pnuauth doc/nuauth.1
+	#cd src/nuauth/
+	$(MAKE) -C $(CURDIR)/src/nuauth/ install DESTDIR=$(CURDIR)/debian/nuauth
+	mv $(CURDIR)/debian/nuauth/usr/lib/nuauth/modules/libpgsql* $(CURDIR)/debian/nuauth-log-pgsql/usr/lib/nuauth/modules/
+	mv $(CURDIR)/debian/nuauth/usr/lib/nuauth/modules/libmysql* $(CURDIR)/debian/nuauth-log-mysql/usr/lib/nuauth/modules/
+#	dh_install -pnuauth
+	dh_install -pnuauth conf/nuauth.conf etc/nufw
+
+install-nuauth-log-mysql:
+	#dh_testdir -pnuauth-log-mysql
+	#dh_testroot -pnuauth-log-mysql
+	#dh_clean -k -pnuauth-log-mysql
+	#dh_installdirs -pnuauth-log-mysql
+	# Add here commands to install the arch part of the package into
+	# debian/nufw.
+	#INSTALLDOC#
 	#dh_installman -pnuauth doc/nuauth.1
 	#cd src/nuauth/
 	#$(MAKE) -C $(CURDIR)/src/nuauth/ install DESTDIR=$(CURDIR)/debian/nuauth
 #	dh_install -pnuauth
 	#dh_install -pnuauth conf/nuauth.conf etc/nufw
-	mv $(CURDIR)/debian/nuauth/usr/lib/nuauth/modules/libpgsql* $(CURDIR)/debian/nuauth-log-pgsql/usr/lib/nuauth/modules/
+	
+install-nuauth-log-pgsql:
+	#dh_testdir -pnuauth-log-pgsql
+	#dh_testroot -pnuauth-log-pgsql
+	#dh_clean -k -pnuauth-log-pgsql
+	#dh_installdirs -pnuauth-log-pgsql
+	# Add here commands to install the arch part of the package into
+	# debian/nufw.
+	#INSTALLDOC#
+	#dh_installman -pnuauth doc/nuauth.1
+	#cd src/nuauth/
+	#$(MAKE) -C $(CURDIR)/src/nuauth/ install DESTDIR=$(CURDIR)/debian/nuauth
+#	dh_install -pnuauth
+	#dh_install -pnuauth conf/nuauth.conf etc/nufw
 	
 	
 install-nuauth-utils:

@@ -1,8 +1,10 @@
 nufw (0.6.4-1) unstable; urgency=low
 
   * New upstream version
+  * Splitted debian nuauth packages into 3, so that modules support is ...
+    modular
 
- -- Eric Leblond <eric@regit.org>  Wed,  7 Jan 2004 23:49:34 +0100
+ -- Vincent Deffontaines <vincent@gryzor.com>  Wed,  7 Jan 2004 23:49:34 +0100
 
 nufw (0.6.3-1) unstable; urgency=low
 

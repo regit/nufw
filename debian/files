@@ -1,6 +1,6 @@
-nufw_0.6.3-2_i386.deb net optional
-nuauth_0.6.3-2_i386.deb net optional
-nuauth-utils_0.6.3-2_i386.deb net optional
-nutcpc_0.6.3-2_i386.deb net optional
-nuauth-log-mysql_0.6.3-2_i386.deb net optional
-nuauth-log-pgsql_0.6.3-2_i386.deb net optional
+nufw_0.6.4-1_i386.deb net optional
+nuauth_0.6.4-1_i386.deb net optional
+nuauth-utils_0.6.4-1_i386.deb net optional
+nutcpc_0.6.4-1_i386.deb net optional
+nuauth-log-mysql_0.6.4-1_i386.deb net optional
+nuauth-log-pgsql_0.6.4-1_i386.deb net optional

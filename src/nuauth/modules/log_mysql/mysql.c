@@ -30,7 +30,13 @@ confparams mysql_nuauth_vars[] = {
   { "mysql_passwd" , G_TOKEN_STRING , 0 ,MYSQL_PASSWD},
   { "mysql_db_name" , G_TOKEN_STRING , 0 ,MYSQL_DB_NAME},
   { "mysql_table_name" , G_TOKEN_STRING , 0 ,MYSQL_TABLE_NAME},
-  { "mysql_request_timeout" , G_TOKEN_INT , MYSQL_REQUEST_TIMEOUT , NULL }
+  { "mysql_request_timeout" , G_TOKEN_INT , MYSQL_REQUEST_TIMEOUT , NULL },
+  { "mysql_use_ssl" , G_TOKEN_INT , MYSQL_USE_SSL, NULL},
+  { "mysql_ssl_keyfile" , G_TOKEN_STRING , 0, MYSQL_SSL_KEYFILE},
+  { "mysql_ssl_certfile" , G_TOKEN_STRING , 0, MYSQL_SSL_CERTFILE},
+  { "mysql_ssl_ca" , G_TOKEN_STRING , 0, MYSQL_SSL_CA},
+  { "mysql_ssl_capath" , G_TOKEN_STRING , 0, MYSQL_SSL_CAPATH},
+  { "mysql_ssl_cipher" , G_TOKEN_STRING , 0, MYSQL_SSL_CIPHER}
 };
 
 /* Init mysql system */
@@ -48,6 +54,12 @@ g_module_check_init(GModule *module){
   mysql_db_name=MYSQL_DB_NAME;
   mysql_table_name=MYSQL_TABLE_NAME;
   mysql_request_timeout=MYSQL_REQUEST_TIMEOUT;
+  mysql_use_ssl=MYSQL_USE_SSL;
+  mysql_ssl_keyfile=MYSQL_SSL_KEYFILE;
+  mysql_ssl_certfile=MYSQL_SSL_CERTFILE;
+  mysql_ssl_ca=MYSQL_SSL_CA;
+  mysql_ssl_capath=MYSQL_SSL_CAPATH;
+  mysql_ssl_cipher=MYSQL_SSL_CIPHER;
 
   /* parse conf file */
   parse_conffile(configfile,sizeof(mysql_nuauth_vars)/sizeof(confparams),mysql_nuauth_vars);
@@ -67,12 +79,26 @@ g_module_check_init(GModule *module){
   vpointer=get_confvar_value(mysql_nuauth_vars,sizeof(mysql_nuauth_vars)/sizeof(confparams),"mysql_request_timeout");
   mysql_request_timeout=*(int *)(vpointer?vpointer:&mysql_request_timeout);
 
+  vpointer=get_confvar_value(mysql_nuauth_vars,sizeof(mysql_nuauth_vars)/sizeof(confparams),"mysql_use_ssl");
+  mysql_use_ssl=*(int *)(vpointer?vpointer:&mysql_use_ssl);
+  vpointer=get_confvar_value(mysql_nuauth_vars,sizeof(mysql_nuauth_vars)/sizeof(confparams),"mysql_ssl_keyfile");
+  mysql_ssl_keyfile=(char *)(vpointer?vpointer:mysql_ssl_keyfile);
+  vpointer=get_confvar_value(mysql_nuauth_vars,sizeof(mysql_nuauth_vars)/sizeof(confparams),"mysql_ssl_certfile");
+  mysql_ssl_certfile=(char *)(vpointer?vpointer:mysql_ssl_certfile);
+  vpointer=get_confvar_value(mysql_nuauth_vars,sizeof(mysql_nuauth_vars)/sizeof(confparams),"mysql_ssl_ca");
+  mysql_ssl_ca=(char *)(vpointer?vpointer:mysql_ssl_ca);
+  vpointer=get_confvar_value(mysql_nuauth_vars,sizeof(mysql_nuauth_vars)/sizeof(confparams),"mysql_ssl_capath");
+  mysql_ssl_capath=(char *)(vpointer?vpointer:mysql_ssl_capath);
+  vpointer=get_confvar_value(mysql_nuauth_vars,sizeof(mysql_nuauth_vars)/sizeof(confparams),"mysql_ssl_cipher");
+  mysql_ssl_cipher=(char *)(vpointer?vpointer:mysql_ssl_cipher);
+
   /* init thread private stuff */
   mysql_priv = g_private_new (g_free); 
       if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
                 g_message("mysql part of the config file is parsed\n");
   return NULL;
 }
+
 
 /* 
  * Initialize connection to mysql server
@@ -88,6 +114,9 @@ G_MODULE_EXPORT MYSQL* mysql_conn_init(void){
           g_warning("mysql init error : %s\n",strerror(errno));
       return NULL;
   }
+  /* Set SSL options, if configured to do so */
+  if (mysql_use_ssl)
+    mysql_ssl_set(ld,mysql_ssl_keyfile,mysql_ssl_certfile,mysql_ssl_ca,mysql_ssl_capath,mysql_ssl_cipher);
   // Set MYSQL object properties
  /* if (mysql_options(ld,MYSQL_OPT_CONNECT_TIMEOUT,mysql_conninfo) != 0)
       if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
