@@ -1,3 +1,4 @@
+0.8.6 (2004/12/04)
 	- dropped packet get out printed DROP
 	- correctly answer to nufw when no ACL found
 0.8.5 (2004/08/25)

@@ -1,3 +1,9 @@
+nufw (0.8.6-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Eric Leblond <eric@regit.org>  Sat,  4 Dec 2004 11:07:09 +0100
+
 nufw (0.8.2-1) unstable; urgency=low
 
   * Initial upload in Debian. Thanks to Vincent Deffontaines for packaging the
