@@ -292,7 +292,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
                     g_warning("Can not update Data : %s\n",PQerrorMessage(ld));
                 return -1;
             }
-            if (PQntuples(Result) >= 1){
+            if (PQcmdTuples(ld) >= 1){
                 return 0;
             }else{
                 if (update_status <2){
@@ -336,7 +336,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
                     g_warning("Can not update Data : %s\n",PQerrorMessage(ld));
                 return -1;
               }
-              if (PQntuples(Result) >=1){
+              if (PQcmdTuples(ld) >=1){
                 return 0;
               }else{
                 if (update_status <2){
