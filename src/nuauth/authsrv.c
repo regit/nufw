@@ -307,8 +307,8 @@ int main(int argc,char * argv[]) {
         g_error("unable to load module %s in %s",nuauth_user_logs_module,MODULE_PATH);
     }
 
-    if (!g_module_symbol (auth_module, "user_packet_logs", 
-          (gpointer*)&module_user_logs))
+    if (!g_module_symbol (logs_module, "user_packet_logs", 
+          (gpointer*) &module_user_logs))
     {
         g_error ("Unable to load user logs function\n");
     }

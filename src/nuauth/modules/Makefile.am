@@ -1,1 +1,1 @@
-SUBDIRS = ldap dbm log_pgsql
+SUBDIRS = ldap dbm log_pgsql log_syslog

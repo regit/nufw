@@ -1,4 +1,4 @@
-/* $Id: log_mysql.h,v 1.2 2003/11/25 12:56:40 gryzor Exp $ */
+/* $Id: log_mysql.h,v 1.3 2003/11/26 23:11:04 regit Exp $ */
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
@@ -18,7 +18,7 @@
 */
 
 #include <sys/time.h>
-#include <mysql.h>
+#include <mysql/mysql.h>
 
 
 #define MYSQL_SERVER "127.0.0.1"

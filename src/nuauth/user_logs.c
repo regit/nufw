@@ -97,7 +97,7 @@ void log_user_packet (connection element,int state){
   
   /* feed thread pool */
   g_thread_pool_push(user_loggers,
-		     &conn_state,
+		     g_memdup(&conn_state,sizeof(conn_state)),
 		     NULL);
   /* end */
 }
@@ -107,4 +107,6 @@ void real_log_user_packet (gpointer userdata, gpointer data){
 		       ((struct Conn_State *)userdata)->conn, 
 		       ((struct Conn_State *)userdata)->state
 		       );
+  /* free userdata */
+  g_free(userdata);
 }
