@@ -17,6 +17,12 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+
+// SSL notes :
+/* the client cert needs to go in 
+ *                $HOME/.postgresql/root.crt see the comments at the top of 
+ *                               src/interfaces/libpq/fe-secure.c */
+
 #include <auth_srv.h>
 #include <log_pgsql.h>
 #include <string.h>
