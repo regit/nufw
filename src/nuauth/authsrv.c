@@ -753,7 +753,7 @@ int main(int argc,char * argv[])
 		}
 		if (nuauth_push){
 			if (tls_push){
-				message=g_new0(struct tls_message,1);
+				struct tls_message * message=g_new0(struct tls_message,1);
 				message->type=REFRESH_CLIENTS;
 				/* ask to purge client request expired due to timeout */
 				g_async_queue_push (tls_push,message);

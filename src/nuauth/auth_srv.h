@@ -358,8 +358,8 @@ struct cache_init_datas {
 	GHashTable*  hash;
 	void (*delete_elt)(gpointer,gpointer);
 	void* (*duplicate_key)(gpointer);
-	void* (*free_key)(gpointer);
-	gboolean (*equal_key)(gpointer,gpointer);
+	void (*free_key)(gpointer);
+	gboolean (*equal_key)(gconstpointer,gconstpointer);
 };
 
 
@@ -505,8 +505,8 @@ struct audit_struct{
   GThreadPool *loggers;
   GHashTable *conn_list;
   GHashTable *aclcache;
-  unsigned long cache_req_nb;
-  unsigned long cache_hit_nb;
+  gint cache_req_nb;
+  gint cache_hit_nb;
 };
 
 struct audit_struct *myaudit;

@@ -15,7 +15,7 @@ void process_poll(int signum)
   if (nuauth_acl_cache){
   g_message("AUDIT :  acls cache : - contains %d elements",
             (g_hash_table_size(myaudit->aclcache)));
-  g_message("AUDIT :               - %lu/%lu hits/requests",
+  g_message("AUDIT :               - %u/%u hits/requests",
             myaudit->cache_hit_nb,
             myaudit->cache_req_nb);
   }

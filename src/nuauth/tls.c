@@ -104,8 +104,9 @@ int userdb_checkpass(sasl_conn_t *conn,
 	}
 
 	if ((* module_user_check)(user,pass,passlen,&uid,&groups)==SASL_OK){
+		guint tuid=uid;
 		g_private_set(group_priv,groups);
-		g_private_set(user_priv,GUINT_TO_POINTER(uid));
+		g_private_set(user_priv,GUINT_TO_POINTER(tuid));
 		/* we're done */
 		return SASL_OK;    
 	}

@@ -27,7 +27,7 @@ GSList * getugroups (char *username, gid_t gid);
 
 typedef struct _auth_pam_userinfo {
 	char* name;
-	char* pw;
+	const char* pw;
 } auth_pam_userinfo;
 
 /**

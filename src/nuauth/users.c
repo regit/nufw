@@ -117,7 +117,7 @@ void get_users_from_cache (connection* conn_elt)
 		rmessage->reply_queue=NULL;
 #ifdef DEBUG_ENABLE
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET))
-			g_message("[user cache] answering for key %s\n",rmessage->key);
+			g_message("[user cache] answering for key %p\n",rmessage->key);
 #endif
 		/* reply to the cache */
 		g_async_queue_push(user_cache->queue,rmessage);

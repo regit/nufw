@@ -310,7 +310,7 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz)
 				connexion->packet_id=g_slist_append(connexion->packet_id, GUINT_TO_POINTER(*(uint32_t * )pointer));
 #ifdef DEBUG_ENABLE
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_PACKET)) {
-					g_message("Working on  %lu\n",(uint32_t)GPOINTER_TO_UINT(connexion->packet_id->data));
+					g_message("Working on  %u\n",(uint32_t)GPOINTER_TO_UINT(connexion->packet_id->data));
 				}
 #endif
 				pointer+=sizeof (uint32_t);
