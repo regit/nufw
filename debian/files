@@ -1,7 +1,7 @@
-nufw_0.8.1-2_i386.deb net optional
-nuauth_0.8.1-2_i386.deb net optional
-nuauth-log-mysql_0.8.1-2_i386.deb net optional
-nuauth-log-pgsql_0.8.1-2_i386.deb net optional
-nutcpc_0.8.1-2_i386.deb net optional
-nuauth-utils_0.8.1-2_i386.deb net optional
-libnuclient_0.8.1-2_i386.deb net optional
+nufw_0.8.2-1_i386.deb net optional
+nuauth_0.8.2-1_i386.deb net optional
+nuauth-log-mysql_0.8.2-1_i386.deb net optional
+nuauth-log-pgsql_0.8.2-1_i386.deb net optional
+nutcpc_0.8.2-1_i386.deb net optional
+nuauth-utils_0.8.2-1_i386.deb net optional
+libnuclient_0.8.2-1_i386.deb net optional

@@ -128,6 +128,8 @@ int auth_request_send(uint8_t type,unsigned long packet_id,char* payload,int dat
   int auth_len,total_data_len=512;
   uint8_t version=PROTO_VERSION;
   
+  if (timestamp == 0)
+     timestamp=time(NULL); 
   memset(datas,0,sizeof datas);
   memcpy(datas,&version,sizeof version);
   pointer=datas+sizeof version;

@@ -1,3 +1,6 @@
+0.8.4 (2004/08/17)
+	- Turn around a libipq bug, that would get log timestamps to be 0 when
+	connections are QUEUED in INPUT or OUTPUT chains.
 0.8.3 (2004/08/16)
 	- correction of bugs in the SQL logging modules. The first UPDATE was
 	incorrect and could lead to severe insecurity.
