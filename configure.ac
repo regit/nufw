@@ -44,7 +44,8 @@ AC_FUNC_STAT
 AC_CHECK_FUNCS([gethostbyname memset socket strcasecmp strspn])
 
 # check if we have a version of libipq supporting mark
-AC_CHECK_FUNC([ipq],[ipq_set_vwmark],AC_DEFINE_UNQUOTED([HAVE_LIBIPQ_MARK],[1],[libipq has support for mark]),AC_MSG_RESULT([libipq has no support for mark]))
+#AC_CHECK_FUNC([ipq],[ipq_set_vwmark],AC_DEFINE_UNQUOTED([HAVE_LIBIPQ_MARK],[1],[libipq has support for mark]),AC_MSG_RESULT([libipq has no support for mark]))
+AC_CHECK_LIB([ipq], [ipq_set_vwmark],AC_DEFINE_UNQUOTED([HAVE_LIBIPQ_MARK],[1],[libipq has support for mark]),AC_MSG_RESULT([libipq has no support for mark]))
 
 
 #Configure database support, depending on user input
