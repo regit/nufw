@@ -96,7 +96,7 @@ G_MODULE_EXPORT PGconn *pgsql_conn_init(void){
       sizeof(char));
   if (pgsql_conninfo == NULL){return NULL;}
   //Build string we will pass to PQconnectdb
-  strcat(pgsql_conninfo,"hostaddr=");
+  strcpy(pgsql_conninfo,"hostaddr=");
   strcat(pgsql_conninfo,pgsql_server);
   strcat(pgsql_conninfo," port=");
   strcat(pgsql_conninfo,port);
