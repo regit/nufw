@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.2 2003/08/29 18:23:13 regit Exp $ */
+/* $Id: main.c,v 1.3 2003/09/07 14:03:21 regit Exp $ */
 
 /*
 ** Copyright (C) 2002 Eric Leblond <eric@regit.org>
@@ -156,13 +156,12 @@ if (daemonize == 1) {
   /* control stuff */
   pckt_tx=pckt_rx=0;
   for(;;){
-    /* search in list till packet are younger than PACKET_TIMEOUT */
-    /* cleaned=pdestroy_timeout (packets_list_start,&packets_list_length); */
+     pthread_mutex_lock(&packets_list_mutex);
+     clean_old_packets ();
+     pthread_mutex_unlock(&packets_list_mutex);
     if (debug) {
       fprintf(stdout,"rx : %d, tx : %d, track_size : %d, start_list : %p\n",pckt_rx,pckt_tx,packets_list_length,packets_list_start);
     }
-      
-    sleep(10);	
-	
+    sleep(5);	
   }
 }

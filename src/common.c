@@ -1,4 +1,4 @@
-/* $Id: common.c,v 1.2 2003/09/01 21:21:44 regit Exp $ */
+/* $Id: common.c,v 1.3 2003/09/07 14:03:21 regit Exp $ */
 
 /*
 **
@@ -61,7 +61,11 @@ unsigned long padd (unsigned long packet_id,long timestamp){
   packets_list_length++;
   current->next=NULL;
   current->id=packet_id;
-  current->timestamp=time(NULL);
+  if (timestamp == 0){
+    current->timestamp=time(NULL);
+  } else {
+    current->timestamp=timestamp;
+  }
   if ( packets_list_end != NULL )
     packets_list_end->next=current;
   packets_list_end = current;
@@ -102,3 +106,24 @@ int psearch_and_destroy (unsigned long packet_id){
   return 0;
 }
 
+int clean_old_packets (){
+  packet_idl *packets_list=packets_list_start,* previous=NULL;
+  int timestamp=time(NULL);
+
+  while (packets_list != NULL) {
+    /* we want to suppress first element if it is too old */
+    if ( timestamp - packets_list->timestamp  > PACKET_TIMEOUT)
+      {
+	IPQ_SET_VERDICT(packets_list->id,NF_DROP);
+	if (debug){
+	  printf("dropped  : %lu\n",packets_list->id);
+	}
+	psuppress (previous,packets_list);
+	packets_list=packets_list_start;
+	previous=NULL;
+      }  else {
+	packets_list=NULL;
+      }
+  }
+  return 0;
+}

@@ -1,4 +1,4 @@
-/* $Id: structure.h,v 1.2 2003/09/01 21:21:44 regit Exp $ */
+/* $Id: structure.h,v 1.3 2003/09/07 14:03:21 regit Exp $ */
 
 /*
 ** Copyright (C) 2002, Éric Leblond <eric@regit.org>
@@ -109,4 +109,4 @@ int auth_packet_to_decision(char* dgram);
 
 unsigned long padd (unsigned long packet_id,long timestamp);
 int psearch_and_destroy (unsigned long packet_id);
-
+int clean_old_packets ();
