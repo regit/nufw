@@ -28,7 +28,7 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: nutcpc.c,v 1.2 2003/08/26 06:47:48 regit Exp $
+ * $Id: nutcpc.c,v 1.3 2003/08/27 21:14:55 regit Exp $
  */
 
 #include <arpa/inet.h>
@@ -61,11 +61,15 @@
 #ifndef CONNTABLE_BUCKETS
 #define CONNTABLE_BUCKETS 5003
 #endif
-
-static int stopped = 0, showprocs = 0;
+#define NUAUTH_IP "192.168.1.1"
+static int stopped = 0;
 
 int sck_user_request;
+unsigned long userid;
+uid_t localuserid;
+
 struct sockaddr_in adr_srv;
+
 
 /*
  * This structure holds everything we need to know about a connection. We
@@ -95,7 +99,6 @@ static int ct_add (conntable_t *ct, conn_t *c);
 static int ct_find (conntable_t *ct, conn_t *c);
 static int ct_read (conntable_t *ct);
 static int ct_free (conntable_t *ct);
-static void huntinode (ino_t i, char *buf, size_t bufsize);
 static void compare (conntable_t *old, conntable_t *new);
 
 
@@ -220,9 +223,10 @@ static int ct_read (conntable_t *ct)
 			continue;
 		}
 		if ((c.ino == 0) || (st != TCP_SYN_SENT)) continue;
-		if (showprocs != 0)
-			huntinode ((ino_t) c.ino, c.exe, sizeof (c.exe));
-
+		/* Check if it's the good user */
+		if (c.uid != localuserid) {
+		  continue;
+		}
 		if (ct_add (ct, &c) == 0)
 			return 0;
 	}
@@ -256,79 +260,7 @@ static int ct_free (conntable_t *ct)
 	return 1;
 }
 
-/*
- * huntinode ()
- *
- * Find names processes using an inode and put them in a buffer.
- */
-static void huntinode (ino_t i, char *buf, size_t bufsize)
-{
-	DIR *procdir;
-	struct dirent *procent;
-	
-	assert (buf != NULL);
-	*buf = '\0';
 
-	if ((procdir = opendir ("/proc")) == NULL)
-		panic ("/proc: %s", strerror (errno));
-	while ((procent = readdir (procdir)) != NULL) {
-		char fdbuf[PATH_MAX];
-		DIR *fddir;
-		struct dirent *fdent;
-
-		/*
-		 * No test needed for "." and ".." since they don't begin
-		 * with digits.
-		 */
-		if (! isdigit (*procent->d_name))
-			continue;
-		
-		snprintf (fdbuf, sizeof (fdbuf), "/proc/%s/fd", 
-				procent->d_name);
-		
-		/*
-		 * We're don't always run as root, we may get EPERM here,
-		 * ignore it.
-		 */
-		if ((fddir = opendir (fdbuf)) == NULL)
-			continue;
-
-		while ((fdent = readdir (fddir)) != NULL) {
-			int len;
-			char lnkbuf[PATH_MAX], lnktgt[PATH_MAX];
-			char exebuf[PATH_MAX], exetgt[PATH_MAX];
-			ino_t this_ino;
-			
-			if (! isdigit (*fdent->d_name))
-				continue;
-			snprintf (lnkbuf, sizeof (lnkbuf), "%s/%s", fdbuf, 
-					fdent->d_name);
-			len = readlink (lnkbuf, lnktgt, sizeof (lnktgt) - 1);
-			if (len < 0)
-				continue;
-			lnktgt[len] = '\0';
-			if (sscanf (lnktgt, "socket:[%lu]", &this_ino) != 1)
-				continue;
-			if (this_ino != i)
-				continue;
-
-			snprintf (exebuf, sizeof (exebuf), "/proc/%s/exe", 
-					procent->d_name);
-			len = readlink (exebuf, exetgt, sizeof (exetgt) - 1);
-			if (len < 0)
-				continue;
-			exetgt[len] = '\0';
-
-			strncpy (buf, exetgt, bufsize);
-			buf[bufsize - 1] = '\0';
-		}
-
-		closedir (fddir);
-	}
-	closedir (procdir);
-}
-
-int debug;
 /*
  * send_user_pckt
 */
@@ -339,6 +271,7 @@ int send_user_pckt(conn_t* c){
   u_int8_t proto_version=0x1,answer_type=0x3;
   char datas[512];
   char *pointer;
+  int debug=1;
 
   memset(datas,0,sizeof datas);
   memcpy(datas,&proto_version,sizeof proto_version);
@@ -346,7 +279,7 @@ int send_user_pckt(conn_t* c){
   memcpy(pointer,&answer_type,sizeof answer_type);
   pointer+=sizeof answer_type;
   /*  id user authsrv */
-  t_int16=c->uid;
+  t_int16=userid;
   memcpy(pointer,&t_int16,sizeof(u_int16_t));
   pointer+=sizeof(u_int16_t);
   /* saddr */
@@ -415,7 +348,7 @@ static void compare (conntable_t *old, conntable_t *new)
 static void usage (void)
 {
 	fprintf (stderr, "usage: nutcpc [-dp]  [-I interval] "
-			"[-U user]  [-F facility]\n");
+			"[-U userid ]  [-H nuauth_srv]\n");
 	exit (EXIT_FAILURE);
 }
 
@@ -425,27 +358,20 @@ int firstrule = 1;
 int main (int argc, char *argv[])
 {
 	conntable_t old, new;
-	unsigned long interval = 1000;
+	unsigned long interval = 100;
 	int ch;
-	uid_t dropuser = -1;
-	gid_t dropgroup = -1, defgroup = -1;
-	
-	debug = 0;
-	
-
-	/* create UDP stuff */
-	 sck_user_request = socket (AF_INET,SOCK_DGRAM,0);
-  
-	 adr_srv.sin_family= AF_INET;
-	 adr_srv.sin_port=htons(4130);
-	 adr_srv.sin_addr.s_addr=inet_addr("192.168.1.1");
+	char srv_addr[512]=NUAUTH_IP;
+	int debug = 0;
 	
 	/*
 	 * Parse our arguments.
 	 */
 	opterr = 0;
-	while ((ch = getopt (argc, argv, "de:I:U:u:w:i:f:F:")) != -1) {
+	while ((ch = getopt (argc, argv, "dH:I:U:")) != -1) {
 		switch (ch) {
+		case 'H':
+		  strncpy(srv_addr,optarg,512);
+		  break;
 		case 'd':
 		  debug = 1;
 		  break;
@@ -457,72 +383,23 @@ int main (int argc, char *argv[])
 		  }
 		  break;
 		case 'U':
-				{
-				struct passwd *pw;
-				
-				if (isdigit (*optarg)) {
-					dropuser = atoi (optarg);
-					pw = getpwuid (atoi (optarg));
-				} else {
-					if ((pw = getpwnam (optarg)) == NULL) {
-						fprintf (stderr, "nutcpc: user `%s' unknown\n", optarg);
-						exit (EXIT_FAILURE);
-					}
-					dropuser = pw->pw_uid;
-				}
-				
-				/*
-				 * Use the gid from the password file entry if
-				 * possible, as a default.
-				 */
-				if (pw != NULL)
-					defgroup = pw->pw_gid;
-				else
-					defgroup = (gid_t) -1;
-				
-				}
-				break;
-			case 'G':
-				if (isdigit (*optarg))
-					dropgroup = atoi (optarg);
-				else {
-					struct group *gr;
-
-					if ((gr = getgrnam (optarg)) == NULL) {
-						fprintf (stderr, "nutcpc: group `%s' unknown\n", optarg);
-						exit (EXIT_FAILURE);
-					}
-					dropgroup = gr->gr_gid;
-				}	
-				break;
-				case 'u': case 'w': case 'i':
-				fprintf (stderr, "nutcpc: -%c option is obsolete\n", ch);
-				/* fall through to usage message */
-			default:
-				usage();
+		  sscanf(optarg,"%lu",&userid);
+		  break;
+		default:
+		  usage();
 		}
 	}
 
-	argc -= optind;
-	argv += optind;
+	/* read password */
 
-	/*
-	 * Become an unprivileged user for safety purposes if requested.
-	 */
-	if ((dropgroup == (uid_t) -1) && (defgroup != (uid_t) -1))
-		dropgroup = defgroup;
-	if (dropgroup != (gid_t) -1) {
-		if (setgid (dropgroup) < 0) {
-			fprintf (stderr, "nutcpc: setgid: %s\n", strerror (errno));
-			exit (EXIT_FAILURE);
-		}
-	}
-	if (dropuser != (uid_t) -1) {
-		if (setuid (dropuser) < 0) {
-			fprintf (stderr, "nutcpc: setuid: %s\n", strerror (errno));
-			exit (EXIT_FAILURE);
-		}
-	}
+	/* create UDP stuff */
+	 sck_user_request = socket (AF_INET,SOCK_DGRAM,0);
+	 adr_srv.sin_family= AF_INET;
+	 adr_srv.sin_port=htons(4130);
+	 adr_srv.sin_addr.s_addr=inet_addr(srv_addr);
+
+	 /* TODO get user local id */
+	 localuserid=getuid();
 
 	/*
 	 * Become a daemon by double-forking and detaching completely from
@@ -565,9 +442,6 @@ int main (int argc, char *argv[])
 	/*
 	 * Initialisation's done, start watching for connections.
 	 */
-
-	if (debug == 0)
-
 
 	if (ct_init (&old) == 0) panic ("ct_init failed");
 	if (ct_read (&old) == 0) panic ("ct_read failed");
