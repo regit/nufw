@@ -218,13 +218,15 @@ G_MODULE_EXPORT GSList* ldap_acl_check (connection* element){
   return NULL;
 }
 
-G_MODULE_EXPORT gint ldap_user_check (connection * element,u_int16_t userid,char *passwd){
+/* TODO return List */
+G_MODULE_EXPORT GSList * ldap_user_check (connection * element,u_int16_t userid,char *passwd){
   char filter[512];
   LDAP *ld = g_private_get (ldap_priv);
   LDAPMessage * res , *result;
   char ** attrs_array, ** walker;
   int attrs_array_len,i,group,err;
   struct timeval timeout;
+  GSList * outelt=NULL;
 
 
   if (ld == NULL){
@@ -265,7 +267,7 @@ G_MODULE_EXPORT gint ldap_user_check (connection * element,u_int16_t userid,char
        if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_AUTH))
 	 g_message("Can not get entry for %d\n",userid);
        free_connection(element);
-       return -1;
+       return NULL;
      }
      /* build groups  list */
      attrs_array = ldap_get_values(ld, result, "Group");
@@ -273,7 +275,7 @@ G_MODULE_EXPORT gint ldap_user_check (connection * element,u_int16_t userid,char
      walker = attrs_array;
      for(i=0; i<attrs_array_len; i++){
        sscanf(*walker,"%d",&group);
-       element->user_groups = g_slist_prepend(element->user_groups, GINT_TO_POINTER(group));
+       outelt = g_slist_prepend(outelt, GINT_TO_POINTER(group));
        walker++;
      }
      ldap_value_free(attrs_array);
@@ -294,7 +296,7 @@ G_MODULE_EXPORT gint ldap_user_check (connection * element,u_int16_t userid,char
      if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_AUTH))
        g_message("No or too many users found with userid %d\n",userid);
      free_connection(element);
-     return -1;
+     return NULL;
    }
   ldap_msgfree(res);
   return 0;

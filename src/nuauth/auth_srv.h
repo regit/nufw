@@ -1,4 +1,4 @@
-/* $Id: auth_srv.h,v 1.9 2003/09/24 07:34:04 regit Exp $ */
+/* $Id: auth_srv.h,v 1.10 2003/09/24 18:59:46 regit Exp $ */
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
@@ -238,6 +238,6 @@ GModule * auth_module;
 GPrivate* ldap_priv; /* private pointer to ldap connection */
 GSList * (*module_acl_check) (connection* element);
 //LDAP* ldap_conn_init(void);
-gint (*module_user_check) (connection * element,u_int16_t userid,char *passwd);
+GSList * (*module_user_check) (connection * element,u_int16_t userid,char *passwd);
 int init_ldap_system(void);
 

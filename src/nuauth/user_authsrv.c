@@ -217,14 +217,14 @@ connection * userpckt_decode(char* dgram,int dgramsiz){
 	}
 
       /* get user datas : password, groups (filled in) */
-      //#if USE_LDAP
-      if ( (*module_user_check) (connexion,userid,passwd) != 0){
+      connexion->user_groups = (*module_user_check) (connexion,userid,passwd);
+      if (connexion->user_groups == NULL) {
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
 	  g_message("ldap_user_check return bad\n");
 	g_free(connexion);
 	return NULL;
       }
-      //#endif
+
 
       /*
        * check MD5 crypt 
@@ -297,8 +297,6 @@ connection * userpckt_decode(char* dgram,int dgramsiz){
 	}
       }
     }
-
-
   }
   /* FIXME : free dgram see over */
   return NULL;
