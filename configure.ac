@@ -19,6 +19,8 @@ AC_CHECK_LIB([ipq], [ipq_message_type])
 AC_CHECK_LIB([pthread], [pthread_mutex_init])
 # TODO : ldap check
 AC_CHECK_LIB([ldap],[ldap_simple_bind_s],AC_DEFUN([HAVE_LIBRARY_LDAP],[1]),AC_MSG_ERROR([ldap library needed for authentication]))
+# TODO : dbm check
+AC_CHECK_LIB([gdbm],[gdbm_fetch],AC_DEFUN([HAVE_LIBRARY_GDBM],[1]),AC_MSG_ERROR([dbm library needed for authentication]))
 AC_CHECK_LIB([crypt], [crypt])
 
 # glib stuff
@@ -41,6 +43,7 @@ AC_CONFIG_FILES([Makefile
                  src/nuauth/Makefile
 		 src/nuauth/modules/Makefile
   		 src/nuauth/modules/ldap/Makefile
+  		 src/nuauth/modules/dbm/Makefile
 		 src/clients/Makefile
 		 src/clients/nutcpc/Makefile
 		 src/nufw/Makefile

@@ -1,1 +1,1 @@
-SUBDIRS = ldap
+SUBDIRS = ldap dbm
