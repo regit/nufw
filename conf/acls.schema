@@ -66,9 +66,13 @@ attributetype ( 18.3.6.1.1.18.1.10 NAME 'Group'
 
 # TODO : time datas
 
-objectclass ( 18.3.6.1.1.18.2.1 NAME 'AccessControlList'
+objectclass ( 18.3.6.1.1.18.2.1 NAME 'NuAccessControlList'
 	DESC 'An IP Acl'
 	MUST (cn $ SrcIPStart $ SrcIPEnd $ DstIPStart $ DstIPEnd $ Decision )
 	MAY (Proto $ SrcPortStart $ SrcPortEnd $ DstPortStart $ DstPortEnd $ Group $ description  ) )
 
 
+objectclass ( 18.3.6.1.1.18.2.2 NAME 'NuAccount' SUP top AUXILIARY
+	DESC 'Abstraction of an account with POSIX attributes'
+	MUST ( cn $ uid $ uidNumber $ Group $ homeDirectory )
+	MAY ( userPassword $ loginShell $ gecos $ description ) )
