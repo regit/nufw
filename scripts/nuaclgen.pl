@@ -52,9 +52,9 @@ sub construct_addr_range {
   my ($range, $src , $dst);
   
   $range=shift;
-  if ($range=~m#([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})/([0-9]{1,2})#){
+  if ($range=~m#([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})/([0-9]{1,2})#) {
     return (convert_addr($1),convert_addr($1)+2**(32-$2)-1)
-  } elsif ( $range=~m/[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/ ){
+  } elsif ( $range=~m/[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/ ) {
     my $ip=convert_addr($range);
     return ($ip,$ip);
   } else {
@@ -64,7 +64,7 @@ sub construct_addr_range {
 
 sub construct_port_range {
   my @range =  split /:/ , shift;
-  if (scalar @range == 2){
+  if (scalar @range == 2) {
     return @range;
   } elsif (scalar @range == 1) {
     return ($range[0], $range[0]);
@@ -73,40 +73,99 @@ sub construct_port_range {
   }
 }
 
-$result = GetOptions("saddr=s" => \$saddr,
+$result = GetOptions("help" => \$help,
+		     "saddr=s" => \$saddr,
 		     "daddr=s" => \$daddr,
 		     "proto=i" => \$proto,
 		     "sport=i" => \$sport,
 		     "dport=i" => \$dport,
 		     "jump=s" => \$decision,
 		     "groups=s" => \$groups,
-		     "Aclname=s" => \$aclname
+		     "Aclname=s" => \$aclname,
+		     "List" => \$list,
 		    );
 
-if ($result == 0){
+if ($result == 0) {
   die "Error parsing options\n";
 }
-if (not defined($saddr)){
+
+if ($help) {
+  print "nuaclgen.pl -A [ACLDN] [-sa NETWORK1] [-da NETWORK2] [-p PROTONUMBER] [--sport P1[:P2]] [--dport P3[:P4]] -j [ACCEPT|DROP] -g [GROUPLIST] : add an acl
+nuaclgen.pl -L -g [Id Group] : list acl(s) for a group.
+SYNTAX :
+\t- NETWORK : aaa.bbb.ccc.ddd[/ee]
+\t- GROUPSLIST : gid1[,gid2,gid3]
+\t- PORTRANGE: NNNN[:MMMM]
+";
+exit;
+}
+
+
+if (not defined($saddr)) {
   $saddr="0.0.0.0/0";
 } 
 ($acl{"SrcIpStart"},$acl{"SrcIpEnd"})=construct_addr_range($saddr);
 
-if (not defined($daddr)){
+if (not defined($daddr)) {
   $daddr="0.0.0.0/0";
 }
 ($acl{"DstIpStart"},$acl{"DstIpEnd"})=construct_addr_range($daddr);
 
-if (not defined($sport)){
+if (not defined($sport)) {
   $sport="0:65536";
 }
 ($acl{"SrcPortStart"},$acl{"SrcPortEnd"})=construct_port_range($sport);
 
-if (not defined($dport)){
+if (not defined($dport)) {
   $dport="0:65536";
 }
 ($acl{"DstPortStart"},$acl{"DstPortEnd"})=construct_port_range($dport);
 
-if (not defined($decision)){
+
+
+if (not defined($proto)) {
+  $acl{"Proto"}=[6,17];
+} else {
+  $acl{"Proto"}=$proto;
+}
+
+
+if (not defined($groups)) {
+  die "No group(s) given\n";
+} else {
+  if ($groups=~m/,/) {
+    $acl{"Group"}= [split /,/ , $groups];
+  } else {
+    $acl{"Group"}= $groups;
+  }
+
+}
+
+
+$acl{"objectclass"}  = [ "top", "NuAccessControlList" ];
+
+
+
+
+
+#foreach $item (keys %acl) {
+#  print $item.": ".$acl{$item}."\n";
+#}
+
+#do ldap connect
+$ldap = Net::LDAP->new($ldap_host)  or die $@;;
+# bind to a directory with dn and password
+$result = $ldap->bind ( $username,
+			password => $password
+		      )  or die $@;
+$result->code && warn "failed to bind: ", $result->error;
+
+# look for Add mode
+if (not defined($aclname)) {
+  $exit_code = "No Acl Name given, Aborting\n";
+} else {
+$aclname=~m/^cn=(\w+),.*/ and $acl{"cn"}=$1;
+if (not defined($decision)) {
   die "No decision given\n";
 } else {
   if ($decision eq "ACCEPT") {
@@ -115,52 +174,30 @@ if (not defined($decision)){
     $acl{"Decision"}=0;
   }
 }
+  print "Adding $aclname\n";
+  $result = $ldap->add( $aclname,
+			attr => [%acl ]) ;
 
-if (not defined($proto)){
-  $acl{"Proto"}=[6,17];
+  $result->code && warn "failed to add entry: ", $result->error or print "done\n";
+
+  $ldap->unbind;		# take down session
+  exit;
+}
+
+if (defined ($list)) {
+#  $filter="(&(objectClass=NuAccessControlList)(SrcIPStart<=%lu)(SrcIPEnd>=%lu)(DstIPStart<=%lu)(DstIPEnd>=%lu)(Proto=%d)(SrcPortStart<=%d)(SrcPortEnd>=%d)(DstPortStart<=%d)(DstPortEnd>=%d))";
+  $filter = "(&(objectClass=NuAccessControlList)(Group=".$acl{"Group"}."))";
+  $results = $ldap->search( # perform a search
+		base   => "dc=regit,dc=org",
+		filter => $filter,
+	       );
+  foreach $entry ($results->all_entries) { $entry->dump; }
+
+  $ldap->unbind;		# take down session
+  exit;
 } else {
-  $acl{"Proto"}=$proto;
+  $exit_code = "No List mode";
 }
-
-
-if (not defined($groups)){
-  die "No group(s) given\n";
-} else {
-  if ($groups=~m/,/) {
-    $acl{"Group"}= [split /,/ , $groups];
-  } else {
-     $acl{"Group"}= $groups;
-}
-
-}
-
-
-$acl{"objectclass"}  = [ "top", "NuAccessControlList" ];
-
-if (not defined($aclname)){
-  die "No Acl Name given, Aborting\n";
-} 
-
-$aclname=~m/^cn=(\w+),.*/ and $acl{"cn"}=$1;
-
-#foreach $item (keys %acl) {
-#  print $item.": ".$acl{$item}."\n";
-#}
-
-#do ldap add
-$ldap = Net::LDAP->new($ldap_host)  or die $@;;
-# bind to a directory with dn and password
-$result = $ldap->bind ( $username,
-	      password => $password
-	    )  or die $@;
- $result->code && warn "failed to bind: ", $result->error;
-print "Adding $aclname\n";
-$result = $ldap->add( $aclname,
-		      attr => [%acl ]) ;
-
-$result->code && warn "failed to add entry: ", $result->error or print "done\n";
-
-$ldap->unbind;  # take down session
 
 
 
