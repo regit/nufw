@@ -95,7 +95,7 @@ void* user_authsrv(){
   return NULL;
 }
 
-void user_check (gpointer userdata, gpointer data){
+void user_check_and_decide (gpointer userdata, gpointer data){
   connection * conn_elt=NULL;
   connection * element;
 

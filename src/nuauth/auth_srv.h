@@ -1,4 +1,4 @@
-/* $Id: auth_srv.h,v 1.13 2003/09/29 17:06:20 regit Exp $ */
+/* $Id: auth_srv.h,v 1.14 2003/09/29 20:52:35 regit Exp $ */
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
@@ -60,7 +60,7 @@
 #define HOSTNAME_SIZE 128
 #define PACKET_TIMEOUT 15
 #define DEFAULT_AUTH_MODULE "libldap"
-#define MODULE_PATH MODULE_DIR "nuauth/modules/"
+#define MODULE_PATH MODULE_DIR "/nuauth/modules/"
 /* define the number of threads that will do user check */
 #define NB_USERCHECK 10
 /* define the number of threads that will check acls  */
@@ -218,7 +218,7 @@ int external_acl_groups (connection * element);
 
 void* packet_authsrv();
 connection*  authpckt_decode(char * , int);
-void acl_check (gpointer userdata , gpointer data);
+void acl_check_and_decide (gpointer userdata , gpointer data);
 
 /*
  * From user_authsrv.c
@@ -226,7 +226,7 @@ void acl_check (gpointer userdata , gpointer data);
 
 void* user_authsrv();
 connection * userpckt_decode(char* dgram,int dgramsiz);
-void user_check (gpointer userdata ,gpointer data);
+void user_check_and_decide (gpointer userdata ,gpointer data);
 
 /* garbage ;-) */
  void bail (const char *on_what);

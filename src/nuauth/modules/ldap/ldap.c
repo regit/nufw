@@ -41,10 +41,7 @@ g_module_check_init(GModule *module){
   char *configfile=DEFAULT_CONF_FILE; 
   gpointer vpointer; 
 
-
-
   /* init global variables */
-  
   binddn=LDAP_USER;
   bindpasswd=LDAP_CRED;
   ldap_server=LDAP_SERVER;
@@ -111,7 +108,7 @@ G_MODULE_EXPORT LDAP* ldap_conn_init(void){
   return ld;
 }
 
-G_MODULE_EXPORT GSList* ldap_acl_check (connection* element){
+G_MODULE_EXPORT GSList* acl_check (connection* element){
   GSList * g_list = NULL;
   char filter[512];
   char ** attrs_array, ** walker;
@@ -219,7 +216,7 @@ G_MODULE_EXPORT GSList* ldap_acl_check (connection* element){
 }
 
 /* TODO return List */
-G_MODULE_EXPORT GSList * ldap_user_check (u_int16_t userid,char *passwd){
+G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
   char filter[512];
   LDAP *ld = g_private_get (ldap_priv);
   LDAPMessage * res , *result;

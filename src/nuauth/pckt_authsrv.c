@@ -140,7 +140,7 @@ void* packet_authsrv(){
  * Return : 
  */
 
-void acl_check (gpointer userdata, gpointer data){
+void acl_check_and_decide (gpointer userdata, gpointer data){
   connection * element;
   connection * conn_elt = userdata;
 

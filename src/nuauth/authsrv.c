@@ -202,18 +202,22 @@ if (daemonize == 1) {
   module_acl_check=NULL;
   module_user_check=NULL;
 
-  auth_module=g_module_open (g_module_build_path("/usr/local/lib/nuauth/modules/",
+  auth_module=g_module_open (g_module_build_path(MODULE_PATH,
 						 nuauth_auth_module)
 			     ,0);
-  if (!g_module_symbol (auth_module, "ldap_acl_check", 
+  if (auth_module == NULL){
+    g_error("unable to load module %s in %s",nuauth_auth_module,MODULE_PATH);
+  }
+  
+  if (!g_module_symbol (auth_module, "acl_check", 
 			(gpointer*)&module_acl_check))
     {
-      g_warning ("Unable to load acl function\n");
+      g_error ("Unable to load acl check function\n");
     }
-   if (!g_module_symbol (auth_module, "ldap_user_check", 
+   if (!g_module_symbol (auth_module, "user_check", 
 			(gpointer*)&module_user_check))
     {
-      g_warning ("Unable to load user function\n");
+      g_error ("Unable to load user check function\n");
     }
 
   /* internal Use */
@@ -246,14 +250,14 @@ if (daemonize == 1) {
 
   /* create pckt workers */
 
-  acl_checkers = g_thread_pool_new  ((GFunc) acl_check,
+  acl_checkers = g_thread_pool_new  ((GFunc) acl_check_and_decide,
 				     NULL,
 				     nbacl_check,
 				     TRUE,
 				     NULL);
 
   /* create user worker */
-  user_checkers = g_thread_pool_new  ((GFunc) user_check,
+  user_checkers = g_thread_pool_new  ((GFunc) user_check_and_decide,
 				     NULL,
 				     nbuser_check,
 				     TRUE,
@@ -266,7 +270,6 @@ if (daemonize == 1) {
       g_message("%u unassigned task(s) and %d connection(s)\n",
 		g_thread_pool_unprocessed(user_checkers),
 		g_hash_table_size(conn_list));  
-      //	print_users_list();
      }
     sleep(2);	
   }
