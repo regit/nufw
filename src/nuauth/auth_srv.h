@@ -1,4 +1,4 @@
-/* $Id: auth_srv.h,v 1.29 2004/03/20 00:38:59 regit Exp $ */
+/* $Id: auth_srv.h,v 1.30 2004/03/24 23:24:23 regit Exp $ */
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
@@ -34,8 +34,6 @@
 
 /* SSL */
 #include "../include/ssl.h"
-#define KEYFILE CONFIG_DIR "/nuauth.pem"
-#define PASSWORD "password"
 
 /* config dependant */
 #include <config.h>
@@ -76,6 +74,11 @@
 #define NB_USERCHECK 10
 /* define the number of threads that will check acls  */
 #define NB_ACLCHECK 10
+
+/* SSL stuffs */
+#define NUAUTH_USE_SSL 0
+#define NUAUTH_KEYFILE CONFIG_DIR "/nuauth.pem"
+#define NUAUTH_KEY_PASSWD "password"
 
 /* Start internal */
 
@@ -282,6 +285,6 @@ GSList * (*module_acl_check) (connection* element);
 GSList * (*module_user_check) (u_int16_t userid,char *passwd);
 int init_ldap_system(void);
 
-/* PROV */
+/* SSL */
 #define MAX_CLIENTD 256
 SSL* client[MAX_CLIENTD];

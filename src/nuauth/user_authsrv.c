@@ -129,12 +129,28 @@ void* ssl_user_authsrv(){
 	SSL* ssl;
 	SSL_CTX* ctx;
 	BIO* sbio;
+        gpointer vpointer;
+        char *configfile=DEFAULT_CONF_FILE;
+        char* nuauth_ssl_key=NUAUTH_KEYFILE;
+        char* nuauth_ssl_key_passwd=NUAUTH_KEY_PASSWD;
+        confparams nuauth_ssl_vars[] = {
+                { "nuauth_ssl_key" , G_TOKEN_STRING , 0, NUAUTH_KEYFILE },
+                { "nuauth_ssl_key_passwd" , G_TOKEN_STRING , 0, NUAUTH_KEY_PASSWD }
+        };
 #if 0
 	struct up_datas userdatas;
 #endif
-
+        /* get config file setup */
+        /* parse conf file */
+        parse_conffile(configfile,sizeof(nuauth_ssl_vars)/sizeof(confparams),nuauth_ssl_vars);
+        /* set variable value from config file */
+        vpointer=get_confvar_value(nuauth_ssl_vars,sizeof(nuauth_ssl_vars)/sizeof(confparams),"nuauth_ssl_key");
+        nuauth_ssl_key=(char*)(vpointer?vpointer:nuauth_ssl_key);
+        vpointer=get_confvar_value(nuauth_ssl_vars,sizeof(nuauth_ssl_vars)/sizeof(confparams),"nuauth_ssl_key_passwd");
+        nuauth_ssl_key_passwd=(char*)(vpointer?vpointer:nuauth_ssl_key_passwd);
+   
 	/* Build our SSL context*/
-	ctx=initialize_ctx(KEYFILE,PASSWORD);
+	ctx=initialize_ctx(nuauth_ssl_key,nuauth_ssl_key_passwd);
 	/* TODO */
 	//load_dh_params(ctx,DHFILE);
 	//open the socket

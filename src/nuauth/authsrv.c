@@ -36,7 +36,8 @@ confparams nuauth_vars[] = {
     { "nuauth_user_check_module" , G_TOKEN_STRING , 1, NULL },
     { "nuauth_acl_check_module" , G_TOKEN_STRING , 1, NULL },
     { "nuauth_user_logs_module" , G_TOKEN_STRING , 1, NULL },
-    { "nuauth_prio_to_nok" , G_TOKEN_INT , 1, NULL }
+    { "nuauth_prio_to_nok" , G_TOKEN_INT , 1, NULL },
+    { "nuauth_use_ssl" , G_TOKEN_INT , NUAUTH_USE_SSL, NULL },
 };
 #endif 
 
@@ -69,6 +70,7 @@ int main(int argc,char * argv[]) {
     char * nuauth_acl_check_module=DEFAULT_AUTH_MODULE;
     char * nuauth_user_check_module=DEFAULT_AUTH_MODULE;
     char * nuauth_user_logs_module=DEFAULT_LOGS_MODULE;
+    char nuauth_use_ssl;
     gpointer vpointer;
     pid_t pidf;
     struct hostent *nufw_list_srv, *client_list_srv;
@@ -80,8 +82,8 @@ int main(int argc,char * argv[]) {
     userpckt_port = USERPCKT_PORT; 
     packet_timeout = PACKET_TIMEOUT;
     nuauth_prio_to_nok= PRIO_TO_NOK;
-    //    strncpy(client_listen_address,CLIENT_LISTEN_ADDR,HOSTNAME_SIZE);
-    //    strncpy(nufw_listen_address,NUFW_LISTEN_ADDR,HOSTNAME_SIZE);
+    nuauth_use_ssl = NUAUTH_USE_SSL;
+
     /* 
      * Minimum debug_level value is 2 -> for 1) fatal and 2) critical messages to always
      * be outputed
@@ -127,6 +129,9 @@ int main(int argc,char * argv[]) {
 
     vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_packet_timeout");
     packet_timeout=*(int*)(vpointer?vpointer:&packet_timeout);
+
+    vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_use_ssl");
+    nuauth_use_ssl=*(int*)(vpointer?vpointer:&nuauth_use_ssl);
 
     /*parse options */
     while((option = getopt ( argc, argv, options_list)) != -1 ){
@@ -395,14 +400,15 @@ int main(int argc,char * argv[]) {
     if (! auth_server )
         exit(1);
 
-    /* create thread for ssl  auth server */
-   ssl_auth_server = g_thread_create ( ssl_user_authsrv,
-        NULL,
-        FALSE,
-        NULL);
-    if (! ssl_auth_server )
-        exit(1);
-
+    if (nuauth_use_ssl){
+        /* create thread for ssl  auth server */
+        ssl_auth_server = g_thread_create ( ssl_user_authsrv,
+            NULL,
+            FALSE,
+            NULL);
+        if (! ssl_auth_server )
+            exit(1);
+    }
 
 
     /* private data for crypt */
