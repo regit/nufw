@@ -37,6 +37,17 @@ o ACL ordering
     generation is the applied one. In case two or more ACLs apply, the most
     restrictive of these ACLs is applied. This implies a recursive parsing of
     ACLs everytime a decision must be made.
+  - Group hierarchy. This is the chosen way. Groups can be set relative
+    priorities, and the decision is the one of the highest priority group if a
+    conflict arizes. In case two groups with same priority present conflicting
+    decisions, the connection will be refused.
+    The way to set priorities to Groups is something like :
+     <prio group="101">
+      <prio group="102"></prio>
+     </prio>
+    The above example results in group 102 having a higher priority than group
+    101. In case a connection matches both groups, and their decisions are
+    conflictual, the decision linked to group 102 will be used.
 
 o Abstraction à la Nagios
 -------------------------
