@@ -17,6 +17,7 @@
 */
 
 #include <auth_srv.h>
+#include <syslog.h>
 
 
 int main(int argc,char * argv[]) {
@@ -32,8 +33,6 @@ int main(int argc,char * argv[]) {
   char gwsrv_addr[HOSTNAME_SIZE]=GWSRV_ADDR;
   pid_t pidf;
 
-
-
   /* initialize variables */
 
   authreq_port = AUTHREQ_PORT;
@@ -42,7 +41,11 @@ int main(int argc,char * argv[]) {
   packet_timeout = PACKET_TIMEOUT;
   track_size = TRACK_SIZE;
   strncpy(authreq_addr,AUTHREQ_ADDR,HOSTNAME_SIZE);
-  debug=DEBUG;
+  /*debug=DEBUG;*/
+  /*Minimum debug value is 2 -> for 1) fatal and 2) critical messages to always
+   * be outputed*/
+  debug_level=0;
+  debug_areas=DEFAULT_DEBUG_AREAS;
  
 
   /*parse options */
@@ -52,8 +55,8 @@ int main(int argc,char * argv[]) {
       fprintf (stdout, "authsrv (version %s)\n",version);
       return 1;
     case 'v' :
-      fprintf (stdout, "Debug should be On\n");
-      debug=1;
+      /*fprintf (stdout, "Debug should be On (++)\n");*/
+      debug_level+=1;
       break;
       /* port we listen for auth answer */
     case 'l' :
@@ -88,11 +91,25 @@ int main(int argc,char * argv[]) {
       return 1;
     }
   }
+  if (daemonize == 1)
+  {
+  	openlog("nuauth",LOG_CONS||LOG_PID,LOG_DAEMON);
+  	set_glib_loghandlers();
+  }
+
+  /* debug cannot be above 10 */
+  if (debug_level > MAX_DEBUG_LEVEL)
+	  debug_level=MAX_DEBUG_LEVEL;
+  if (debug_level < MIN_DEBUG_LEVEL)
+	  debug_level=MIN_DEBUG_LEVEL;
+  printf ("debug_level :%i\n",debug_level);
+  if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN))
+  	g_message("debug_level is %i\n",debug_level);
 
 if (daemonize == 1) {
   if ((pidf = fork()) < 0){
-  	printf("Unable to fork\n");
-	exit (-1);
+  	g_error("Unable to fork\n");
+	exit (-1); /* this should be useless !! */
   } else {
  	 if (pidf > 0) {
 		exit(0);
@@ -190,7 +207,7 @@ if (daemonize == 1) {
   /* admin task */
   for(;;){
     clean_connections_list();
-     if (debug){
+     if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_MAIN)){
       g_message("%d : %u unassigned task(s) and %d connection(s)\n",getpid(),
 		g_thread_pool_unprocessed(user_checkers),
 		g_hash_table_size(conn_list));  

@@ -1,4 +1,4 @@
-/* $Id: auth_srv.h,v 1.1 2003/09/15 21:56:15 gryzor Exp $ */
+/* $Id: auth_srv.h,v 1.2 2003/09/17 16:41:27 gryzor Exp $ */
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
@@ -48,7 +48,6 @@
 
 #define DUMMY 0
 #define USE_LDAP 1
-#define DEBUG 0
 #define AUTHREQ_ADDR "192.168.1.1"
 #define GWSRV_ADDR "192.168.1.1"
 #define GWSRV_PORT 4128
@@ -137,7 +136,9 @@ GThreadPool* acl_checkers;
 
 int packet_timeout;
 int authpckt_port;
-int debug;
+int debug; /* This will disapear*/
+int debug_level;
+int debug_areas;
 struct sockaddr_in adr_srv;
 
 
