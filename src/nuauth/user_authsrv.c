@@ -173,6 +173,7 @@ void* ssl_user_authsrv(){
 
 	/* init fd_set */
 	FD_ZERO(&rx_set);
+	FD_ZERO(&wk_set);
 	FD_SET(sck_inet,&rx_set);
 	mx=sck_inet+1;
 
@@ -263,6 +264,7 @@ void* ssl_user_authsrv(){
 				continue;
 			if ( FD_ISSET(c,&wk_set) ) {
 				if (treat_user_request(c) == EOF) {
+					SSL_shutdown(client[c]);
 					FD_CLR(c,&rx_set);
 				}
 			}

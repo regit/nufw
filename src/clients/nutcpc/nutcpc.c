@@ -31,7 +31,7 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: nutcpc.c,v 1.16 2004/03/24 00:02:27 regit Exp $
+ * $Id: nutcpc.c,v 1.17 2004/03/24 00:56:43 regit Exp $
  */
 
 #include <arpa/inet.h>
@@ -135,7 +135,7 @@ void exit_clean(){
 	/* Restore terminal (can be superflu). */
 	(void) tcsetattr (fileno (stdin), TCSAFLUSH, &orig);
 	/* if we are in ssl mode, shutdown SSL */
-	if (ssl_on)
+	if (ssl_on && ssl)
 		SSL_shutdown(ssl);
 	exit(0);
 }
@@ -560,6 +560,11 @@ int main (int argc, char *argv[])
 		char keyfile[256]; 
 		/* compute patch keyfile */
 		snprintf(keyfile,255,"%s/.nufw/" KEYFILE,getenv("HOME"));
+		/* test if key exists */
+		if (access(keyfile,R_OK)){
+			printf("Can not open keyfile : %s\n",keyfile);
+			exit( -1);
+		}
 		/* Build our SSL context*/
 		ctx=initialize_ctx(keyfile,PASSWORD);
 
