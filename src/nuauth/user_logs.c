@@ -22,10 +22,7 @@
 
 int check_fill_user_counters(u_int16_t userid,long u_time,unsigned long packet_id,u_int32_t ip){
   user_datas * currentuser=NULL;
-  /* lookup users */
-  if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
-    g_message("looking for %d\n",userid);
-	
+
   currentuser=g_hash_table_lookup(users_hash,userid);
   if (currentuser == NULL){
     /* failure so create user */

@@ -267,7 +267,7 @@ connection * userpckt_decode(char* dgram,int dgramsiz){
       if ( strcmp (result, usermd5datas) != 0 ) {
 	/* bad sig dropping user packet ! */
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_USER))
-	  g_message("wrong md5 sig for packet %s\n",usermd5datas);
+	  g_message("wrong md5 sig for packet %s \n",usermd5datas);
 	free(usermd5datas);
 	free_connection(connexion);
 	return NULL;

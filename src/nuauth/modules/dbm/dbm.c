@@ -118,12 +118,15 @@ GDBM_FILE dbm_file_init(void){
   return dbf;
 }
 
+/*
+ * User Check
+ */
+
 G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
   GDBM_FILE dbf = g_private_get (dbm_priv);
   datum dbm_key, dbm_data;
-  struct dbm_data_struct effective_data, *return_data;
+  struct dbm_data_struct return_data;
 
-  return_data = &effective_data;
   if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
 	  g_message("We are entering dbm_user_check()\n");
   if (dbf == NULL){
@@ -182,19 +185,18 @@ G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
   }*/
   if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_AUTH))
 	  g_message("Data shall now be analysed : %s\n",dbm_data.dptr);
-  if (analyse_dbm_char(dbm_data.dptr,return_data) != 0)
+  if (analyse_dbm_char(dbm_data.dptr,&return_data) != 0)
   {
     if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
 	    g_message("A problem occured when analysing data for key %s, size %i\n",dbm_key.dptr, dbm_key.dsize);
     return NULL;
   }
-  if (return_data->outelt == NULL )
+  if (return_data.outelt == NULL )
   {
 	  if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
 		  g_warning("inconsistency in database? unable to parse data for key %s (size %i)\n",dbm_key.dptr,dbm_key.dsize);
 	  return NULL;
   }
-  passwd = (char *) malloc(strlen(return_data->passwd )+1);
-  strncpy(passwd,(return_data->passwd),strlen(return_data->passwd)+1);
-  return (return_data->outelt);
+  strncpy(passwd ,return_data.passwd,128);
+  return (return_data.outelt);
 }
