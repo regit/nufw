@@ -28,7 +28,7 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: nutcpc.c,v 1.6 2003/09/06 12:32:04 regit Exp $
+ * $Id: nutcpc.c,v 1.7 2003/09/08 06:19:56 regit Exp $
  */
 
 #include <arpa/inet.h>
@@ -432,12 +432,13 @@ int main (int argc, char *argv[])
 	int debug = 0;
 	int random_file;
 	char random_seed;
+	char id_is_set=0;
 
 	/*
 	 * Parse our arguments.
 	 */
 	opterr = 0;
-	while ((ch = getopt (argc, argv, "dH:I:U:")) != -1) {
+	while ((ch = getopt (argc, argv, "du:H:I:U:")) != -1) {
 		switch (ch) {
 		case 'H':
 		  strncpy(srv_addr,optarg,512);
@@ -454,6 +455,10 @@ int main (int argc, char *argv[])
 		  break;
 		case 'U':
 		  sscanf(optarg,"%lu",&userid);
+		  break;
+		case 'u':
+		  sscanf(optarg,"%u",&localuserid);
+		  id_is_set=1;
 		  break;
 		default:
 		  usage();
@@ -476,7 +481,8 @@ int main (int argc, char *argv[])
 	 adr_srv.sin_addr.s_addr=inet_addr(srv_addr);
 
 	 /* TODO get user local id */
-	 localuserid=getuid();
+	 if (! id_is_set)
+	   localuserid=getuid();
 
 	/*
 	 * Become a daemon by double-forking and detaching completely from
