@@ -155,7 +155,7 @@ int main(int argc,char * argv[]) {
             /* port we listen for auth answer */
           case 'l' :
             sscanf(optarg,"%d",&value);
-            printf("Listen on UDP port for user packet %d\n",value);
+            printf("Waiting for user packets on UDP port %d\n",value);
             userpckt_port=value;
             break;
             /* Adress we listen for NUFW originating packets */
@@ -181,13 +181,13 @@ int main(int argc,char * argv[]) {
             /* destination port */
           case 'p' :
             sscanf(optarg,"%d",&value);
-            printf("Auth Answer sent to gw on port %d\n",value);
+            printf("Auth answers sent to gw on port %d\n",value);
             gwsrv_port=value;
             break;
             /* destination IP */
           case 'd' :
             strncpy(gwsrv_addr,optarg,HOSTNAME_SIZE);
-            printf("Sending Auth Answer to gw at %s\n",gwsrv_addr);
+            printf("Sending Auth answers to gw at %s\n",gwsrv_addr);
             break;
             /* packet timeout */
           case 't' :
@@ -237,7 +237,7 @@ int main(int argc,char * argv[]) {
                 fscanf (pf, "%d", &pidv) == 1 &&
                 kill (pidv, 0) == 0 ) {
                 fclose (pf);
-                printf ("nuauth already running. Aborting!\n");
+                printf ("pid file exists. Is nuauth already running? Aborting!\n");
                 exit(-1);
             }
 
@@ -315,7 +315,7 @@ int main(int argc,char * argv[]) {
 
     if (client_srv.sin_addr.s_addr == INADDR_NONE ){
         if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN))
-            g_warning("Bad Address was passed with \"-C\" parameter. Ignored.");
+            g_warning("Bad Address was passed with \"-C\" parameter. Ignored. Using INADDR_ANY instead!");
         client_srv.sin_addr.s_addr = INADDR_ANY;
     }
 
@@ -329,7 +329,7 @@ int main(int argc,char * argv[]) {
 
     if (nufw_srv.sin_addr.s_addr == INADDR_NONE ){
         if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN))
-            g_warning("Bad Address was passed with \"-L\" parameter. Ignored.");
+            g_warning("Bad Address was passed with \"-L\" parameter. Ignored. Using INADDR_ANY instead!");
         nufw_srv.sin_addr.s_addr = INADDR_ANY;
     }
 
@@ -351,7 +351,7 @@ int main(int argc,char * argv[]) {
     if (!g_module_symbol (auth_module, "user_check", 
           (gpointer*) &module_user_check))
     {
-        g_error ("Unable to load user check function\n");
+        g_error ("Unable to load user checking function\n");
     }
     if ( strcmp(nuauth_user_check_module,nuauth_acl_check_module)){
         auth_module = g_module_open (g_module_build_path(MODULE_PATH,
@@ -365,7 +365,7 @@ int main(int argc,char * argv[]) {
     if (!g_module_symbol (auth_module, "acl_check", 
           (gpointer*)&module_acl_check))
     {
-        g_error ("Unable to load acl check function\n");
+        g_error ("Unable to load acl checking function\n");
     }
 
 
@@ -379,7 +379,7 @@ int main(int argc,char * argv[]) {
     if (!g_module_symbol (logs_module, "user_packet_logs", 
           (gpointer*) &module_user_logs))
     {
-        g_error ("Unable to load user logs function\n");
+        g_error ("Unable to load user logging function\n");
     }
 
 

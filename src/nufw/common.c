@@ -4,6 +4,7 @@
 **
 ** Written by Eric Leblond <eric@regit.org>
 **	      Vincent Deffontaines <vincent@gryzor.com>
+** Copyright 2002 - 2004 INL http://www.inl.fr/
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -47,9 +48,9 @@ unsigned long padd (packet_idl *current){
     /* suppress first element */
     if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_MAIN)){
       if (log_engine == LOG_TO_SYSLOG) {
-        syslog(SYSLOG_FACILITY(DEBUG_LEVEL_MESSAGE),"Queue full, dropping element");
+        syslog(SYSLOG_FACILITY(DEBUG_LEVEL_MESSAGE),"Queue is full, dropping element");
       }else {
-        printf ("[%i] Queue full, dropping element\n",getpid());
+        printf ("[%i] Queue is full, dropping element\n",getpid());
       }
     }
   IPQ_SET_VERDICT(current->id,NF_DROP);

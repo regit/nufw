@@ -1,8 +1,9 @@
 /* $Id: main.c,v 1.21 2004/02/10 16:09:15 regit Exp $ */
 
 /*
- ** Copyright (C) 2002 Eric Leblond <eric@regit.org>
+ ** Copyright (C) 2002 - 2004 Eric Leblond <eric@regit.org>
  **		      Vincent Deffontaines <vincent@gryzor.com>
+ **                   INL http://www.inl.fr/
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -87,7 +88,7 @@ int main(int argc,char * argv[]){
             /* port we listen for auth answer */
           case 'l' :
             sscanf(optarg,"%d",&value);
-            printf("Listen on UDP port %d\n",value);
+            printf("Listening on UDP port %d\n",value);
             authsrv_port=value;
             break;
             /* Listening adress */
@@ -98,7 +99,7 @@ int main(int argc,char * argv[]){
             /* destination port */
           case 'p' :
             sscanf(optarg,"%d",&value);
-            printf("Auth request send to port %d\n",value);
+            printf("Auth requests sent to port %d\n",value);
             authreq_port=value;
             break;
             /* destination IP */
@@ -154,7 +155,7 @@ int main(int argc,char * argv[]){
                 fscanf (pf, "%d", &pidv) == 1 &&
                 kill (pidv, 0) == 0 ) {
                 fclose (pf);
-                printf ("nufw already running. Aborting!\n");
+                printf ("pid file exists. Is nufw already running? Aborting!\n");
                 exit(-1);
             }
 
@@ -163,7 +164,7 @@ int main(int argc,char * argv[]){
         }
 
         if ((pidf = fork()) < 0){
-            syslog(SYSLOG_FACILITY(DEBUG_LEVEL_FATAL),"Unable to fork\n");
+            syslog(SYSLOG_FACILITY(DEBUG_LEVEL_FATAL),"Unable to fork. Aborting\n");
             exit (-1);
         } else {
             /* parent */
@@ -224,9 +225,9 @@ int main(int argc,char * argv[]){
     if (adr_srv.sin_addr.s_addr == INADDR_NONE )
         if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
             if (log_engine == LOG_TO_SYSLOG){
-                syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"Bad Address.");
+                syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"Bad Address in configuration for adr_srv");
             }else{
-                printf("[%d] Bad Address.",getpid());
+                printf("[%d] Bad Address in configuration for adr_srv",getpid());
             }
         }
 
@@ -237,9 +238,9 @@ int main(int argc,char * argv[]){
     if (list_srv.sin_addr.s_addr == INADDR_NONE )
         if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
             if (log_engine == LOG_TO_SYSLOG){
-                syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"Bad Address.");
+                syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"Bad Listening Address in configuration");
             }else{
-                printf("[%d] Bad Listening Address.",getpid());
+                printf("[%d] Bad Listening Address in configuration",getpid());
             }
         }
       list_srv.sin_addr.s_addr = INADDR_ANY;
@@ -257,9 +258,9 @@ int main(int argc,char * argv[]){
     else {
         if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
             if (log_engine == LOG_TO_SYSLOG){
-                syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"Can not create ipq handle");
+                syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"Could not create ipq handle");
             }else{
-                printf("[%d] Can not create ipq handle\n",getpid());
+                printf("[%d] Could not create ipq handle\n",getpid());
             }
         }
     }

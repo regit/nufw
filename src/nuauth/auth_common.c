@@ -1,6 +1,7 @@
 /*
  ** Copyright(C) 2003-2004 Eric Leblond <eric@inl.fr>
  **		     Vincent Deffontaines <vincent@gryzor.com>
+ **                  INL http://www.inl.fr/
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -122,7 +123,7 @@ void search_and_fill () {
                 switch (pckt->state){
                   case  STATE_AUTHREQ:
                     if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-                        g_message("Adding a packet_id to a connexion\n");
+                        g_message("Adding a packet_id to a connection\n");
                     ((connection *)element)->packet_id =
                       g_slist_prepend(((connection *)element)->packet_id, GINT_TO_POINTER((pckt->packet_id)->data));
                     free_connection(pckt);
@@ -130,7 +131,7 @@ void search_and_fill () {
                     break;
                   case STATE_USERPCKT:
                     if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-                        g_message("Fill user datas\n");
+                        g_message("Filling user data\n");
                     ((connection *)element)->user_groups = pckt->user_groups;
                     ((connection *)element)->user_id = pckt->user_id;
                     ((connection *)element)->username = pckt->username;
@@ -147,7 +148,7 @@ void search_and_fill () {
                 switch (pckt->state){
                   case  STATE_AUTHREQ:
                     if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-                        g_message("Fill acl datas\n");
+                        g_message("Filling acl data\n");
                     ((connection *)element)->acl_groups = pckt->acl_groups;
                     ((connection *)element)->packet_id = pckt->packet_id;
 
@@ -158,16 +159,16 @@ void search_and_fill () {
                     break;
                   case STATE_USERPCKT:
                     if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-                        g_message("Duplicate user packet\n");
+                        g_message("Found a duplicate user packet\n");
                     free_connection(pckt);
                     break;
                   default:
-                    g_assert("Should not have this\n");
+                    g_assert("Should not have this. Email Nufw developpers!\n");
                 }
                 break;
               case STATE_DONE:
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-                    g_warning("Element in state DONE and receive packet state %d\n",
+                    g_warning("Element is in state DONE, but we received packet state %d\n",
                         pckt->state);
                 /* if pckt is a nufw request respond with correct decision */
                 switch (pckt->state){
@@ -184,13 +185,13 @@ void search_and_fill () {
                 break;
               case STATE_READY:
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-                    g_warning("Element in state %d and receive packet state %d\n",
+                    g_warning("Element is in state %d but we received packet state %d\n",
                         ((connection *)element)->state,
                         pckt->state);
                 switch (pckt->state){
                   case  STATE_AUTHREQ:
                     if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-                        g_message("Adding a packet_id to a connexion\n");
+                        g_message("Adding a packet_id to a connection\n");
                     ((connection *)element)->packet_id =
                       g_slist_prepend(((connection *)element)->packet_id, GUINT_TO_POINTER((pckt->packet_id)->data));
                     free_connection(pckt);
@@ -235,7 +236,7 @@ gint print_connection(gpointer data,gpointer userdata){
 gint free_struct(gpointer data,gpointer userdata){
     g_free((struct acl_group *)data);
     if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-        g_message("Free acl_groups at %p\n",data);
+        g_message("Freeing acl_groups at %p\n",data);
     return 1;
 }
 
@@ -366,16 +367,16 @@ void clean_connections_list (){
     old_conn_list=NULL;
 
     if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-        g_message("Start cleaning of connection older than %d seconds",packet_timeout);
+        g_message("Starting cleaning of connections older than %d seconds",packet_timeout);
     g_static_mutex_lock (&insert_mutex);
     /* go through table and  stock keys associated to old packets */
     g_hash_table_foreach(conn_list,get_old_conn,GINT_TO_POINTER(current_timestamp));
     if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-        g_message("Finish searching old connections");
+        g_message("Finished searching for old connections");
     /* go through stocked keys to suppres old element */
     g_slist_foreach(old_conn_list,(GFunc)conn_key_delete,NULL);
     if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-        g_message("Finish to delete old connections");
+        g_message("Finished deleting old connections");
     /* work is done we release lock */
     g_static_mutex_unlock (&insert_mutex);
     if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)) {
@@ -384,7 +385,7 @@ void clean_connections_list (){
             g_message("%d connection(s) suppressed from list\n",conn_list_size-conn_list_size_now);
     }
     if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-        g_message("Cleaning of connections finished");
+        g_message("Cleaning of connections done");
 }
 
 gint take_decision(connection * element) {
@@ -432,7 +433,7 @@ gint take_decision(connection * element) {
                 }
             } else {
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-                    g_warning("Empty acl bad things ...");
+                    g_warning("Empty acl : bad things ...");
                 answer=NOK;
                 test=OK;
             }

@@ -1,6 +1,7 @@
 /*
  ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
- **		     Vincent Deffontaines <vincent@gryzor.com>
+ **		      Vincent Deffontaines <vincent@gryzor.com>
+ **                   INL http://www.inl.fr/
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -44,7 +45,7 @@ int check_fill_user_counters(u_int16_t userid,long u_time,unsigned long packet_i
 		if ( (u_time < currentuser->last_packet_time) ) {
 			/* if packet is older than timeout there can be problem */
 			if ( currentuser->last_packet_time - u_time >= packet_timeout) {
-				g_warning("Packet for user %d is really too old",userid);
+				g_warning("Packet for user %d is really too old (timeout is %d)",userid,packet_timeout);
 				return 0;
 			}
 		}
@@ -54,14 +55,16 @@ int check_fill_user_counters(u_int16_t userid,long u_time,unsigned long packet_i
 			}
 		} 
 		if (g_mutex_trylock(currentuser->lock)){
-			if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)) {
-				g_message("updating  user %d\n",userid);
-			}
 			currentuser->ip=ip;
 			currentuser->last_packet_time=u_time;
 			currentuser->last_packet_id=packet_id;
 			currentuser->last_packet_timestamp=time(NULL);
 			g_mutex_unlock(currentuser->lock);
+                        //Vincent moved this after mutex unlock, so the mutex be
+                        //freed earlier :)
+			if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)) {
+				g_message("updating user %d\n",userid);
+			}
 		}
 		return 1;
 	}

@@ -1,5 +1,6 @@
 /*
  ** Copyright(C) 2003-2004 Eric Leblond <eric@inl.fr>
+ **                        INL http://www.inl.fr/
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -112,7 +113,7 @@ void* packet_authsrv(){
         exit (-1); /*useless*/
     }
     if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_PACKET)){
-        g_message("Pckt Server Listening\n");
+        g_message("Packt Server now Listening\n");
     }
     for(;;){
         len_inet = sizeof addr_clnt;
@@ -134,7 +135,7 @@ void* packet_authsrv(){
         if (current_conn == NULL){
             if ( *(dgram+1) != AUTH_CONTROL )
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_PACKET)){
-                    g_message("Can't parse packet, that's bad !\n");
+                    g_message("Can't parse packet, this IS bad !\n");
                 }
         } else {
             /* gonna feed the birds */
@@ -161,13 +162,13 @@ void acl_check_and_decide (gpointer userdata, gpointer data){
         g_message("entering acl_check\n");
     if (conn_elt == NULL){
         if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_PACKET)){
-            g_message("That's not good : elt is NULL\n");
+            g_message("This is no good : elt is NULL\n");
         }
     } else {
         /* external check of acl */
         if (external_acl_groups(conn_elt)) {
             if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)){
-                g_message("Going to search entry\n");
+                g_message("We are about to search entry\n");
             }
             /* search and fill */
         g_async_queue_push (connexions_queue,conn_elt);

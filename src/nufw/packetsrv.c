@@ -1,9 +1,9 @@
 /* $Id: packetsrv.c,v 1.8 2003/12/23 15:58:44 uid68721 Exp $ */
 
 /*
-** Copyright (C) 2002-2003 Eric Leblond <eric@regit.org>
+** Copyright (C) 2002-2004 Eric Leblond <eric@regit.org>
 **		      Vincent Deffontaines <vincent@gryzor.com>
-**
+**                    INL http://www.inl.fr/
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
 ** the Free Software Foundation, version 2 of the License.
@@ -99,9 +99,9 @@ void* packetsrv(){
           } else {
             if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
               if (log_engine == LOG_TO_SYSLOG) {
-                syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"non IP packet Dropping");
+                syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"Dropping non-IP packet");
               }else {
-	        printf ("[%i] non IP packet Dropping\n",getpid());
+	        printf ("[%i] Dropping non-IP packet\n",getpid());
  	      }
 	    }
 	    IPQ_SET_VERDICT(msg_p->packet_id, NF_DROP);
@@ -111,9 +111,9 @@ void* packetsrv(){
     } else {
       if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
         if (log_engine == LOG_TO_SYSLOG) {
-          syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"BUFSIZ too small, size = %d",size);
+          syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"BUFSIZ too small, (size == %d)",size);
         }else {
-          printf("[%i] BUFSIZ too small, size = %d\n",getpid(),size);
+          printf("[%i] BUFSIZ too small, (size == %d)\n",getpid(),size);
         }
       }
     }
@@ -160,9 +160,9 @@ int auth_request_send(uint8_t type,unsigned long packet_id,char* payload,int dat
 
     if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
       if (log_engine == LOG_TO_SYSLOG) {
-        syslog(SYSLOG_FACILITY(DEBUG_LEVEL_WARNING),"NON IP packet dropping");
+        syslog(SYSLOG_FACILITY(DEBUG_LEVEL_WARNING),"Dropping non-IP packet");
       }else {
-        printf ("[%i] NON IP packet dropping\n",getpid());
+        printf ("[%i] Dropping non-IP packet\n",getpid());
       }
     }
   }
@@ -184,9 +184,9 @@ int auth_request_send(uint8_t type,unsigned long packet_id,char* payload,int dat
 
   if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
     if (log_engine == LOG_TO_SYSLOG) {
-      syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"failure when sending");
+      syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"sendto() failure when sending request");
     }else {
-      printf ("[%i] failure when sending\n",getpid());
+      printf ("[%i] sendto() failure when sending request\n",getpid());
     }
   }
   return 1;

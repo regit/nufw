@@ -1,5 +1,5 @@
 /*
- * Copyright(C) 2004 INL
+ * Copyright(C) 2004 INL http://www.inl.fr/
  ** written by  Eric Leblond <eric@inl.fr>
  **             Vincent Deffontaines <vincent@inl.fr>
  **
@@ -450,7 +450,7 @@ connection * userpckt_decode(char* dgram,int dgramsiz){
             connexion->user_groups = (*module_user_check) (connexion,passwd);
             if (connexion->user_groups == NULL) {
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
-                    g_message("user_check return bad\n");
+                    g_message("user_check return is bad\n");
                 free_connection(connexion);
                 return NULL;
             }
