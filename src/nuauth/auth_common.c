@@ -229,19 +229,19 @@ connection * search_and_fill (connection * pckt) {
                 // House work
 #if 0
                 conn_cl_delete(element);
-                free_connection(pckt);
 #endif
+                free_connection(pckt);
                 return NULL;
               case STATE_AUTHREQ:
-                if (pckt->packet_id != NULL ){
+                if (pckt->packet_id != 0 ){
                     struct auth_answer aanswer = { element->decision , element->user_id } ;
-                    u_int32_t packetid = element->packet_id;
+                    u_int32_t packetid = pckt->packet_id;
                     UNLOCK_CONN(element);
                     g_slist_foreach(packetid,
                         (GFunc) send_auth_response,
                         &aanswer
                         );
-                    
+                free_connection(pckt);
                 }
                 return NULL;           
             }
