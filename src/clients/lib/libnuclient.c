@@ -37,6 +37,7 @@
 
 #define DH_BITS 1024
 #define PACKET_SIZE 1512
+#define REQUEST_CERT 0
 
 //#include <stdlib.h>
 #include <sys/utsname.h>
@@ -1111,8 +1112,11 @@ NuAuth* nu_client_init2(
 	}
 	/* test if key exists */
 	if (access(keyfile,R_OK)){
+            keyfile=NULL;
+#if REQUEST_CERT
 		errno=EBADF;
 		return NULL;
+#endif
 	}
 
 	if (! certfile){
@@ -1121,8 +1125,11 @@ NuAuth* nu_client_init2(
 	}
 	/* test if cert exists */
 	if (access(certfile,R_OK)){
+                certfile=NULL;
+#if REQUEST_CERT
 		errno=EBADF;
 		return NULL;
+#endif
 	}
 
 	gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);
@@ -1132,13 +1139,15 @@ NuAuth* nu_client_init2(
 	gnutls_certificate_allocate_credentials(&xcred);
 	/* sets the trusted cas file
 	*/
+#if REQUEST_CERT
 	gnutls_certificate_set_x509_trust_file(xcred, certfile, GNUTLS_X509_FMT_PEM);
-
-	ret = gnutls_certificate_set_x509_key_file(xcred, certfile, keyfile, GNUTLS_X509_FMT_PEM);
-	if (ret <0){
-		printf("problem with keyfile : %s\n",gnutls_strerror(ret));
-	}
-
+#endif
+        if (certfile && keyfile){
+            ret = gnutls_certificate_set_x509_key_file(xcred, certfile, keyfile, GNUTLS_X509_FMT_PEM);
+            if (ret <0){
+                printf("problem with keyfile : %s\n",gnutls_strerror(ret));
+            }
+        }
 	generate_dh_params();
 	gnutls_certificate_set_dh_params( xcred, dh_params);
 
