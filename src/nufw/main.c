@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.9 2003/11/01 15:33:52 regit Exp $ */
+/* $Id: main.c,v 1.10 2003/11/06 21:53:06 regit Exp $ */
 
 /*
 ** Copyright (C) 2002 Eric Leblond <eric@regit.org>
@@ -30,8 +30,21 @@
 #include <netdb.h>
 #include <structure.h>
 #include <debug.h>
+#include <signal.h>
 #include <syslog.h>
+#include <errno.h>
 
+
+#define NUFW_PID_FILE "/var/run/nufw.pid"
+
+void nufw_cleanup( int signal ) {
+  /* destroy netlink handle */
+  ipq_destroy_handle(hndl);
+  /* destroy pid file */
+  unlink(NUFW_PID_FILE);
+  /* exit */
+  exit(0);
+}
 
 int main(int argc,char * argv[]){
   pthread_t pckt_server,auth_server;
@@ -103,7 +116,7 @@ int main(int argc,char * argv[]){
       nufw_set_mark=1;
       break;
     case 'h' :
-      fprintf (stdout ,"PACKAGE [-hVv[v[v[v[v[v[v[v[v[v]]]]]]]]]] [-l local_port] [-d remote_addr] [-p remote_port]  [-t packet_timeout] [-T track_size] [-I id_server]\n\
+      fprintf (stdout ,"PACKAGE [-hVv[v[v[v[v[v[v[v[v[v]]]]]]]]]] [-l local_port] [-d remote_addr] [-p remote_port]  [-t packet_timeout] [-T track_size]\n\
 \t-h : display this help and exit\n\
 \t-V : display version and exit\n\
 \t-D : daemonize\n\
@@ -122,6 +135,7 @@ int main(int argc,char * argv[]){
 /* Daemon code */
 if (daemonize == 1) {
   int i;
+  struct sigaction action;
 
   if ((pidf = fork()) < 0){
   	syslog(SYSLOG_FACILITY(DEBUG_LEVEL_FATAL),"Unable to fork\n");
@@ -129,7 +143,12 @@ if (daemonize == 1) {
   } else {
   	/* parent */
  	 if (pidf > 0) {
-		exit(0);
+	   FILE* pf;
+	   if ((pf = fopen (NUFW_PID_FILE, "w")) != NULL) {
+             fprintf (pf, "%d\n", (int)pidf);
+	     fclose (pf);
+	   }
+	   exit(0);
 	}
   }
 
@@ -140,7 +159,16 @@ if (daemonize == 1) {
   for (i = 0; i < FOPEN_MAX ; i++){
     close(i);
   }
+  /* intercept SIGTERM */
+  action.sa_handler = nufw_cleanup;
+  sigemptyset( & (action.sa_mask));
+  action.sa_flags = 0;
+  if ( sigaction(SIGTERM, & action , NULL ) != 0) {
+    g_message("Erreur %d \n",errno);
+    exit(1);
+  }
 
+  /* set log engine */
   log_engine = LOG_TO_SYSLOG;
 }
   
