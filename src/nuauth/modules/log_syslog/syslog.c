@@ -49,6 +49,18 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
     strncpy(dest_addr,inet_ntoa(oneip),16);
 
     if ( ((element.tracking_hdrs).protocol == IPPROTO_TCP) || ((element.tracking_hdrs).protocol == IPPROTO_UDP) ) {
+        if (state==STATE_ESTABLISHED){
+        g_message("%s[%u] %ld : SRC=%s DST=%s PROTO=%d SPT=%u DPT=%u",
+            str_state,
+            element.user_id,
+            element.timestamp,
+            dest_addr,
+            source_addr,
+            (element.tracking_hdrs).protocol,
+            (element.tracking_hdrs).dest,
+            (element.tracking_hdrs).source
+            );
+        } else {
         g_message("%s[%u] %ld : SRC=%s DST=%s PROTO=%d SPT=%u DPT=%u",
             str_state,
             element.user_id,
@@ -59,6 +71,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
             (element.tracking_hdrs).source,
             (element.tracking_hdrs).dest
             );
+        }
     } else {
         g_message("[%u] %ld : SRC=%s DST=%s PROTO=%d",
             str_state,
