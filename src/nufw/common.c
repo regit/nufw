@@ -43,7 +43,7 @@ int psuppress (packet_idl * previous,packet_idl * current){
    return : pointer to last element
 */
 unsigned long padd (packet_idl *current){
-  if (track_size - packets_list_length < 10){
+  if (track_size < packets_list_length ){
     /* suppress first element */
     if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_MAIN)){
       if (log_engine == LOG_TO_SYSLOG) {
@@ -52,6 +52,7 @@ unsigned long padd (packet_idl *current){
         printf ("[%i] Queue full, dropping element\n",getpid());
       }
     }
+  IPQ_SET_VERDICT(packets_list_start->id,NF_DROP);
     psuppress (NULL,packets_list_start);
   }
 
@@ -89,7 +90,7 @@ int psearch_and_destroy (unsigned long packet_id,unsigned long * nfmark){
       return 1;
     } else 
       /* we want to suppress first element if it is too old */
-      if ( timestamp - packets_list->timestamp  > PACKET_TIMEOUT)
+      if ( timestamp - packets_list->timestamp  > packet_timeout)
 	{
 	  /* TODO : find a better place, does not satisfy me */
 	  IPQ_SET_VERDICT(packets_list->id,NF_DROP);
@@ -117,7 +118,7 @@ int clean_old_packets (){
 
   while (packets_list != NULL) {
     /* we want to suppress first element if it is too old */
-    if ( timestamp - packets_list->timestamp  > PACKET_TIMEOUT)
+    if ( timestamp - packets_list->timestamp  > packet_timeout)
       {
 	IPQ_SET_VERDICT(packets_list->id,NF_DROP);
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
