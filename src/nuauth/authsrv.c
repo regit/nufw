@@ -221,10 +221,10 @@ if (daemonize == 1) {
 
   if ( strcmp(nuauth_user_check_module,nuauth_acl_check_module)){
     auth_module = g_module_open (g_module_build_path(MODULE_PATH,
-						     nuauth_user_check_module)
+						     nuauth_acl_check_module)
 				 ,0);
     if (auth_module == NULL){
-      g_error("unable to load module %s in %s",nuauth_user_check_module,MODULE_PATH);
+      g_error("unable to load module %s in %s",nuauth_acl_check_module,MODULE_PATH);
     }
   }
 
