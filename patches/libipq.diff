@@ -1,0 +1,76 @@
+diff -ru iptables-1.2.8.orig/include/libipq/libipq.h iptables-1.2.8/include/libipq/libipq.h
+--- iptables-1.2.8.orig/include/libipq/libipq.h	2003-10-16 01:53:08.000000000 +0200
++++ iptables-1.2.8/include/libipq/libipq.h	2003-10-16 23:47:35.000000000 +0200
+@@ -79,6 +79,13 @@
+                     size_t data_len,
+                     unsigned char *buf);
+ 
++int ipq_set_vwmark(const struct ipq_handle *h,
++                    ipq_id_t id,
++                    unsigned int verdict,
++                    unsigned long nfmark,
++                    size_t data_len,
++                    unsigned char *buf);
++
+ int ipq_ctl(const struct ipq_handle *h, int request, ...);
+ 
+ char *ipq_errstr(void);
+Les fichiers binaires iptables-1.2.8.orig/libipq/libipq.a et iptables-1.2.8/libipq/libipq.a sont différents.
+diff -ru iptables-1.2.8.orig/libipq/libipq.c iptables-1.2.8/libipq/libipq.c
+--- iptables-1.2.8.orig/libipq/libipq.c	2003-10-16 01:58:46.000000000 +0200
++++ iptables-1.2.8/libipq/libipq.c	2003-10-16 23:33:10.000000000 +0200
+@@ -348,6 +348,54 @@
+ 	return ipq_netlink_sendmsg(h, &msg, 0);
+ }
+ 
++int ipq_set_vwmark(const struct ipq_handle *h,
++                    ipq_id_t id,
++                    unsigned int verdict,
++                    unsigned long nfmark,
++                    size_t data_len,
++                    unsigned char *buf)
++{
++	unsigned char nvecs;
++	size_t tlen;
++	struct nlmsghdr nlh;
++	ipq_peer_msg_t pm;
++	struct iovec iov[3];
++	struct msghdr msg;
++
++	memset(&nlh, 0, sizeof(nlh));
++	nlh.nlmsg_flags = NLM_F_REQUEST;
++	nlh.nlmsg_type = IPQM_VWMARK;
++	nlh.nlmsg_pid = h->local.nl_pid;
++	memset(&pm, 0, sizeof(pm));
++	pm.msg.vwmark.value = verdict;
++	pm.msg.vwmark.id = id;
++	pm.msg.vwmark.data_len = data_len;
++	pm.msg.vwmark.nfmark = nfmark;
++	iov[0].iov_base = &nlh;
++	iov[0].iov_len = sizeof(nlh);
++	iov[1].iov_base = &pm;
++	iov[1].iov_len = sizeof(pm);
++	tlen = sizeof(nlh) + sizeof(pm);
++	nvecs = 2;
++	if (data_len && buf) {
++		iov[2].iov_base = buf;
++		iov[2].iov_len = data_len;
++		tlen += data_len;
++		nvecs++;
++	}
++	msg.msg_name = (void *)&h->peer;
++	msg.msg_namelen = sizeof(h->peer);
++	msg.msg_iov = iov;
++	msg.msg_iovlen = nvecs;
++	msg.msg_control = NULL;
++	msg.msg_controllen = 0;
++	msg.msg_flags = 0;
++	nlh.nlmsg_len = tlen;
++	return ipq_netlink_sendmsg(h, &msg, 0);
++}
++
++
++
+ /* Not implemented yet */
+ int ipq_ctl(const struct ipq_handle *h, int request, ...)
+ {
