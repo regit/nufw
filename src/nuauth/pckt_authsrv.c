@@ -57,11 +57,14 @@ int get_tcp_headers(connection *connexion, char * dgram){
   connexion->tracking_hdrs.code=0;
   /* test if fin ack or syn */
   /* if fin ack return 0 end of connection */
-  if (tcphdrs->fin)
-      return 0;
+  if (tcphdrs->fin || tcphdrs->rst )
+      return STATE_CLOSE;
       /* if syn return 1 */
   if (tcphdrs->syn)
-        return 1;
+      if (tcphdrs->ack)
+        return STATE_ESTABLISHED;
+        else
+            return STATE_OPEN;
   return -1;
 }
 
@@ -236,15 +239,21 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz){
 	switch (connexion->tracking_hdrs.protocol) {
 	case IPPROTO_TCP:
           switch (get_tcp_headers(connexion, pointer)){
-            case 1:
+            case STATE_OPEN:
               break; 
-            case 0:
+            case STATE_CLOSE:
 	      if (msg_type == AUTH_CLOSE ){
-		log_user_packet(*connexion,0);
+		log_user_packet(*connexion,STATE_CLOSE);
 		return NULL;
 	      }
               break;
-            case -1:
+            case STATE_ESTABLISHED:
+	      if (msg_type == AUTH_CLOSE ){
+		log_user_packet(*connexion,STATE_ESTABLISHED);
+		return NULL;
+	      }
+              break;
+            default:
 	      if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))
 		g_warning ("Can't parse TCP headers\n");
 	      free_connection(connexion);
