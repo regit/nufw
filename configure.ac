@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
-AC_INIT(NuFW, 0.2-pre4, nufw-devel@nongnu.org)
+AC_INIT(NuFW, 0.3, nufw-devel@nongnu.org)
 AC_CONFIG_SRCDIR([src/main.c])
 AM_CONFIG_HEADER([src/include/config.h])
 
@@ -12,12 +12,13 @@ AC_PROG_CC
 
 
 # Checks for libraries.
-# FIXME: Replace `main' with a function in `-lipq':
+
 AC_CHECK_LIB([ipq], [ipq_message_type])
-# FIXME: Replace `main' with a function in `-lpthread':
+
 AC_CHECK_LIB([pthread], [pthread_mutex_init])
 # TODO : ldap check
-#AC_CHECK_LIB([ldap],[ldap_simple_bind_s],AC_DEFUN([HAVE_LIBRARY_LDAP],[1]),AC_MSG_ERROR([ldap library needed for authentication]))
+AC_CHECK_LIB([ldap],[ldap_simple_bind_s],AC_DEFUN([HAVE_LIBRARY_LDAP],[1]),AC_MSG_ERROR([ldap library needed for authentication]))
+#AC_CHECK_LIB([ldap], [ldap_init])
 
 
 # glib stuff
@@ -37,7 +38,9 @@ AC_CHECK_FUNCS([gethostbyname memset socket strcasecmp strspn])
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile
-                 src/authsrv/Makefile])
+                 src/authsrv/Makefile
+		 src/clients/Makefile
+		 src/clients/nutcpc/Makefile])
 
 AM_INIT_AUTOMAKE
 AC_OUTPUT

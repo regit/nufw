@@ -1,10 +1,9 @@
 
-AM_CPPFLAGS = -Wall
+AM_CPPFLAGS = -O2 -Wall
 
-SUBDIRS =authsrv
-bin_PROGRAMS =nufw
+SUBDIRS = authsrv clients
+bin_PROGRAMS = nufw
 
-
-# nufw_srv 
-nufw_SOURCES =authsrv.c  common.c  main.c  packetsrv.c  proto.h  structure.h
-
+# nufw
+nufw_SOURCES = authsrv.c  common.c  main.c  packetsrv.c  proto.h  structure.h
+LIBS = -lipq -lpthread
