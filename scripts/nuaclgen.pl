@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl 
 ###################################################################################
 #
 # nuaclgen.pl : insertion of ACls in the Nu Ldap tree.
@@ -27,12 +27,12 @@ $Getopt::Long::ignorecase=0;
 
 my %acl_hash;
 
-my $ldap_host;
-my $username;
-my $password;
+#my $ldap_host;
+#my $username;
+#my $password;
 # include conf variables
-require("/etc/nufw/nuaclgen.conf");
-
+require("/etc/nufw/nuaclgen.conf") or die "Can not find config file";
+#print "maman " .$ldap_host ."\n";
 
 
 sub convert_addr {
@@ -74,6 +74,16 @@ sub construct_port_range {
   } else {
     return "OOPs";
   }
+}
+
+sub todotquad {
+  $ip=shift;
+  $stringip=$ip%256;
+  for ($i=0;$i<3;$i++){
+    $ip=($ip-$ip%256)/256;
+    $stringip= $ip%256 .".".$stringip;
+  }
+  return $stringip;
 }
 
 $result = GetOptions("help" => \$help,
@@ -147,10 +157,6 @@ if (not defined($groups)) {
 
 $acl{"objectclass"}  = [ "top", "NuAccessControlList" ];
 
-
-
-
-
 #foreach $item (keys %acl) {
 #  print $item.": ".$acl{$item}."\n";
 #}
@@ -188,20 +194,29 @@ if (not defined($decision)) {
 }
 
 if (defined ($list)) {
-#  $filter="(&(objectClass=NuAccessControlList)(SrcIPStart<=%lu)(SrcIPEnd>=%lu)(DstIPStart<=%lu)(DstIPEnd>=%lu)(Proto=%d)(SrcPortStart<=%d)(SrcPortEnd>=%d)(DstPortStart<=%d)(DstPortEnd>=%d))";
   $filter = "(&(objectClass=NuAccessControlList)(Group=".$acl{"Group"}."))";
   $results = $ldap->search( # perform a search
 		base   => "dc=regit,dc=org",
 		filter => $filter,
 	       );
-  foreach $entry ($results->all_entries) { $entry->dump; }
+  foreach $entry ($results->all_entries) { 
+   # $entry->dump;
+    # print source address
+    $sad = todotquad($entry->get_value("SrcIpStart"));
+    $sad .="-". todotquad($entry->get_value("SrcIpEnd"));
+    # print dest address
+    $dad = todotquad($entry->get_value("DstIpStart"));
+    $dad .="-". todotquad($entry->get_value("DstIpEnd"));
+    # print source port
+    $sport = $entry->get_value("SrcPortStart").":".$entry->get_value("SrcPortEnd");
+    # print dest port
+    $dport = $entry->get_value("DstPortStart").":".$entry->get_value("DstPortEnd");
+    # print groups
+    print "src : $sad $sport dst : $dad $dport\n";
+  }
 
   $ldap->unbind;		# take down session
   exit;
 } else {
   $exit_code = "No List mode";
 }
-
-
-
-
