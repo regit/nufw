@@ -27,6 +27,9 @@ $Getopt::Long::ignorecase=0;
 
 my %acl_hash;
 
+my $ldap_host;
+my $username;
+my $password;
 # include conf variables
 require("/etc/nufw/nuaclgen.conf");
 
