@@ -1,0 +1,77 @@
+ACLs design
+-----------
+
+This document aims at describing the way ACLs can be designed, and how they can
+follow an "order relationship" (?) in Nuauth.
+This document aims at being an abstract, above any implementation such as LDAP
+or XML, and allowing full compatibility of Nufw ACLs scheme regardless of the chosen 
+implementation.
+
+o ACL definition
+----------------
+
+  Acls are [possibly] defined by
+  - SrcIPStart
+  - SrcIPEnd
+  - DstIPStart
+  - DstIPEnd
+  - SrcPortStart
+  - SrcPortEnd
+  - DstPortStart
+  - DstPortEnd
+  - Time of day }
+  - Day of week } These need to be more precisely documented, this is fuzzy.
+  - Group ID(s) and decision(s)
+  - internal event, such as "this user has logged in before today"
+  - external event, such as "the sun is shining now"
+
+o ACL ordering
+--------------
+  
+  Possible ways of ordering ACLs:
+  - first seen matches (this is not appliable to LDAP, where no order is
+    guaranteed in server's answers)
+  - ACls are given a weight, heaviest ACL is applied. In case two or more apply,
+    the most restrictive decision of these ACLs is applied.
+  - ACL hierarchy. Acls can be set as children of another ACL, the youngest
+    generation is the applied one. In case two or more ACLs apply, the most
+    restrictive of these ACLs is applied. This implies a recursive parsing of
+    ACLs everytime a decision must be made.
+
+o Abstraction à la Nagios
+-------------------------
+
+  Generic and often used schemes must be extractible, as for instance for working
+  hours. This example is formal, and isnt claimed to work verbatim !
+
+  #Define working hours as : monday to friday, 9am to 5pm.
+  <StartWeekDay day="monday">
+   <EndWeekDay day="friday">
+    <StartTime time="32400"> #32400 seconds after midnight is 9am
+     <Endtime time="61200">  #61200 seconds after midnight is 5pm
+      <ACLName>WorkingHours</ACLName>
+     </Endtime>
+    </Starttime>
+   </EndWeekDay>
+  </StartWeekDay>
+
+  Then, to allow group 101 browsing the web at working hours, and deny that to
+  group 102:
+
+  <UDAcl ACLName="WorkingHours">
+   <Protocol proto="tcp">
+    <DstPortStart port="80">
+     <DstPortEnd port="80">
+      <SrcPortStart port="1025">
+       <Group decision="allow">101</Group>
+       <Group decision="reject">102</Group>
+      </SrcPortStart>
+     </DstPortEnd>
+    </DstPortStart>
+   </Protocol>
+  </UDAcl>
+
+  TODO : Add an LDAP example too.
+  TODO : Deal with user's vacation times.
+  TODO : expiration of users accounts, though this is not ACL-related.
+   
