@@ -123,7 +123,7 @@ void log_new_user(int id,u_int32_t ip){
 	struct in_addr oneip;
 
 	oneip.s_addr=ntohl(ip);
-	if ( nuauth_log_users % 2 ){
+	if ( nuauth_log_users & 1 ){
 		g_message("New user with id %d on %s",id,inet_ntoa(oneip));
 	}
 }
@@ -145,11 +145,20 @@ void log_user_packet (connection element,int state){
 
 
 	if ((nuauth_log_users_sync) && (state == STATE_OPEN) ){
+            if ( nuauth_log_users &  8 ){
 		(*module_user_logs) (
 				     element, 
 				     state
 				    );
+            }
 	} else {
+            if (
+                ((nuauth_log_users & 2) && (state == STATE_OPEN)) 
+                || 
+                ((nuauth_log_users & 4) && (state == STATE_DROP)) 
+                || 
+                (nuauth_log_users & 8) 
+               )
 		/* feed thread pool */
 		g_thread_pool_push(user_loggers,
 				g_memdup(&conn_state,sizeof(conn_state)),
