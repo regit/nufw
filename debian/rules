@@ -52,7 +52,6 @@ build-libnuclient: build-libnuclient-stamp
 
 build-nutcpc-stamp:  config.status
 	# Add here commands to compile the nutcpc package.
-	#cd src/clients/nutcpc/
 	$(MAKE) -C $(CURDIR)/src/lib/
 	$(MAKE) -C $(CURDIR)/src/clients/nutcpc/
 	touch build-nutcpc-stamp
