@@ -1,4 +1,4 @@
-/* $Id: authsrv.c,v 1.1 2003/08/25 19:16:38 regit Exp $ */
+/* $Id: authsrv.c,v 1.2 2003/08/27 21:53:29 regit Exp $ */
 
 
 /*
@@ -97,14 +97,14 @@ int auth_packet_to_decision(char* dgram){
 	if ( *(dgram+4) == OK ) {
 	  /* TODO : test on return */
 	  if (debug){
-	    printf ("Accepting\n");
+	    printf ("Accepting %lu\n",packet_id);
 	  }
 	  IPQ_SET_VERDICT(packet_id, NF_ACCEPT);
 	  pckt_tx++;
 	  return 1;
 	} else {
 	   if (debug){
-	    printf ("Rejecting\n");
+	    printf ("Rejecting %lu\n",packet_id);
 	  }
 	  IPQ_SET_VERDICT(packet_id, NF_DROP);
 	  return 0;
