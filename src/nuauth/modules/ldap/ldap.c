@@ -317,8 +317,14 @@ G_MODULE_EXPORT GSList * user_check (connection * connexion,char *passwd){
      ldap_value_free(attrs_array);
      /* get username */
      attrs_array = ldap_get_values(ld, result, "cn");
-     /* duplicate string to username */
-     connexion->username=g_strndup(attrs_array,USERNAMESIZE);
+         attrs_array_len = ldap_count_values(attrs_array);
+     if (attrs_array_len == 0){
+       if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
+         g_message ("what ! no username found !\n");
+     } else {
+        /* duplicate string to username */
+        connexion->username=g_strndup(*attrs_array,USERNAMESIZE);
+     }
      ldap_value_free(attrs_array);
      /* get password */
      attrs_array = ldap_get_values(ld, result, "userPassword");

@@ -133,6 +133,7 @@ void search_and_fill () {
                         g_message("Fill user datas\n");
                     ((connection *)element)->user_groups = pckt->user_groups;
                     ((connection *)element)->user_id = pckt->user_id;
+                    ((connection *)element)->username = pckt->username;
                         g_free(pckt);
                     /* change STATE */
 
@@ -447,6 +448,8 @@ gint take_decision(connection * element) {
         /* need to free acl and user group */
          copy_of_element->acl_groups=NULL;
          copy_of_element->user_groups=NULL;
+         copy_of_element->username=element->username;
+         element->username = NULL;
          /* push element to decision workers */
          g_thread_pool_push (decisions_workers,
                         copy_of_element,
@@ -487,5 +490,6 @@ void decisions_queue_work (gpointer userdata, gpointer data){
 
     apply_decision( * element);
 
+    g_free(element->username);
     g_free(element);
 }
