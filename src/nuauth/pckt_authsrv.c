@@ -104,7 +104,6 @@ void* packet_authsrv(){
 	    len_inet);
   if (z == -1)
   {
-    perror(NULL);
     g_error ("pckt bind() : \n");
     exit (-1); /*useless*/
   }
