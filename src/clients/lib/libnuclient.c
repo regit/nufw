@@ -364,19 +364,24 @@ NuAuth* nu_client_init(char *username,unsigned long userid,char * password, char
 	session->ssl=NULL;
 	session->protocol = protocol;
 	switch (protocol){
-	case 1:
-		session->username=NULL;
-		session->userid=userid;
-		break;
-	case 2:
-		session->username=strdup(username);
-		session->userid=0;
+		case 1:
+			session->username=NULL;
+			session->userid=userid;
+			break;
+		case 2:
+			session->username=strdup(username);
+			session->userid=0;
+			break;
+		default:
+			return NULL;
 	}
-		
+
+	if (! password)
+		return NULL;
 	session->password=strdup(password);
 	/* initiate packet number */
 	session->packet_id=0;
-	
+
 	/* init random */
 	random_file =  open("/dev/random",O_RDONLY);
 	if ( read(random_file,&random_seed, 1) == 1){
@@ -386,6 +391,9 @@ NuAuth* nu_client_init(char *username,unsigned long userid,char * password, char
 	(session->adr_srv).sin_family= AF_INET;
 	(session->adr_srv).sin_port=htons(port);
 	(session->adr_srv).sin_addr.s_addr=inet_addr(hostname);
+	if ( 	(session->adr_srv).sin_addr.s_addr == INADDR_NONE) {
+		return NULL;
+	}
 	/* create socket stuff */
 	if (ssl_on){
 		char keyfile[256]; 
@@ -422,7 +430,7 @@ NuAuth* nu_client_init(char *username,unsigned long userid,char * password, char
 
 
 	/* TODO get user local id */
-		session->localuserid=getuid();
+	session->localuserid=getuid();
 
 	/*
 	 * Initialisation's done, start watching for connections.
