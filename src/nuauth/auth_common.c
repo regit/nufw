@@ -117,7 +117,7 @@ connection * search_and_fill (connection * pckt) {
   g_static_mutex_lock (&insert_mutex);
   char has_changed_state=0;
 
-  if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_MAIN))
+  if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
     g_message("starting search and fill\n");
   g_assert(pckt != NULL);
   element = (connection *) g_hash_table_lookup(conn_list,&(pckt->tracking_hdrs));
