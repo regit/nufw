@@ -187,7 +187,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
             strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
             strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
             if (nuauth_log_users_strict){
-                if (snprintf(request,511,"UPDATE %s SET end_timestamp=%lu, state=%hu WHERE (ip_saddr='%s' and ip_daddr='%s' and tcp_sport=%u and tcp_dport=%u and (state=2 or state=3))",
+                if (snprintf(request,511,"UPDATE %s SET end_timestamp=%lu, state=%hu WHERE (ip_saddr='%s' and ip_daddr='%s' and tcp_sport=%u and tcp_dport=%u and (state=1 or state=2))",
                   pgsql_table_name,
                   element.timestamp,
                   STATE_CLOSE,

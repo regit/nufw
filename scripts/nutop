@@ -205,6 +205,11 @@ my $udp_cond_query=" ip_protocol=17";
 my $time_users_cond_start = " start_timestamp > date_add(now(),interval -";
 my $time_users_cond_end = " minute)";
 
+if ($config{'databasetype'} =~ /pgsql/)
+{
+  $time_users_cond_start = " start_timestamp";
+}
+
 initscr();
 
 noecho();

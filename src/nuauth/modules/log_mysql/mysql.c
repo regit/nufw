@@ -168,9 +168,9 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
             
             if (nuauth_log_users_strict){
             /* need to update table to suppress double field */
-                     if (snprintf(request,511,"UPDATE %s SET state=%hu,end_timestamp=FROM_UNIXTIME(%lu) WHERE (ip_daddr=%lu AND ip_saddr=%lu AND tcp_dport=%u AND tcp_sport=%u AND (state=2 OR state=3))",
+                     if (snprintf(request,511,"UPDATE %s SET state=%hu,end_timestamp=FROM_UNIXTIME(%lu) WHERE (ip_daddr=%lu AND ip_saddr=%lu AND tcp_dport=%u AND tcp_sport=%u AND (state=1 OR state=2))",
                       mysql_table_name,
-                      STATE_ESTABLISHED,
+                      STATE_CLOSE,
                       element.timestamp,
                       (long unsigned int)(element.tracking_hdrs).saddr,
                       (long unsigned int)(element.tracking_hdrs).daddr,
