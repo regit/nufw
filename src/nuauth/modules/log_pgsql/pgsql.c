@@ -118,6 +118,43 @@ G_MODULE_EXPORT PGSQL* pgsql_conn_init(void){
   return ld;
 }
 
+
+G_MODULE_EXPORT gint user_packet_logs (connection *element, int state){
+  PGConn *ld = g_private_get (pgsql_priv);
+  char request[512];
+  if (ld == NULL){
+    ld=pgsql_conn_init();
+    if (ld == NULL){
+      if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+          g_warning("Can not initiate PGSQL conn\n");
+      return NULL;
+    }
+    g_private_set(pgsql_priv,ld);
+  }
+  /* contruct request */
+  if (state == 1){
+      if ((element->tracking_hdrs).protocol == IPPROTO_TCP){
+          //
+          // FIELD          IN NUAUTH STRUCTURE               IN ULOG
+          //user_id               u_int16_t                   integer
+          //ip_protocol           u_int8_t                    smallint        2 bytes
+          //ip_saddr              u_int32_t                   inet            12 or 24 bytes (ipv4 or ipv6)
+          //ip_daddr              u_int32_t                   inet
+          //tcp_sport             u_int16_t                   integer         4 bytes
+          //tcp_dport             u_int16_t                   integer
+          //udp_sport             u_int16_t                   integer
+          //udp_dport             u_int16_t                   integer
+          //icmp_type             u_int8_t                    smallint        2 bytes
+          //icmp_code             u_int8_t                    smallint        2 bytes
+          //start_timestamp       long                        bigint          8 bytes
+          //end_timestamp         long                        bigint
+          //
+          //
+          //
+          snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport) VALUES (%d,%hu,,,,,,,,),element->user_id,"
+}
+
+
 G_MODULE_EXPORT GSList* acl_check (connection* element){
   GSList * g_list = NULL;
   char filter[512];
