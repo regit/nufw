@@ -44,8 +44,6 @@ inline char change_state(connection *elt, char state){
 inline  guint
 hash_connection(gconstpointer headers)
 {
-  //  tracking *tracking_hdrs = (tracking *)headers;
-
   return (jhash_3words(((tracking *)headers)->saddr,
         (((tracking *)headers)->daddr ^ ((tracking *)headers)->protocol),
         (((tracking *)headers)->dest | ((tracking *)headers)->source << 16),
@@ -60,9 +58,7 @@ hash_connection(gconstpointer headers)
 
 gboolean compare_connection(gconstpointer tracking_hdrs1, gconstpointer tracking_hdrs2){
     /* compare IPheaders */
-    if ( ( ((tracking *) tracking_hdrs1)->daddr ==
-          ((tracking *) tracking_hdrs2)->daddr ) &&
-        ( ((tracking *) tracking_hdrs1)->saddr ==
+    if (        ( ((tracking *) tracking_hdrs1)->saddr ==
           ((tracking *) tracking_hdrs2)->saddr ) ){
 
         /* compare proto */
@@ -72,11 +68,14 @@ gboolean compare_connection(gconstpointer tracking_hdrs1, gconstpointer tracking
             /* compare proto headers */
             switch ( ((tracking *) tracking_hdrs1)->protocol) {
               case IPPROTO_TCP:
-                if ( ( ((tracking *) tracking_hdrs1)->dest ==
-                      ((tracking *) tracking_hdrs2)->dest )   &&
-                    ( ((tracking *) tracking_hdrs1)->source ==
-                      ((tracking *) tracking_hdrs2)->source ) ){
-
+                if ( ( ((tracking *) tracking_hdrs1)->source ==
+                      ((tracking *) tracking_hdrs2)->source )
+                    &&
+                    ( ((tracking *) tracking_hdrs1)->dest ==
+                      ((tracking *) tracking_hdrs2)->dest )   
+                     ){
+                if ( ((tracking *) tracking_hdrs1)->daddr ==
+                  ((tracking *) tracking_hdrs2)->daddr ) 
                     return TRUE;
 
                 }
@@ -86,6 +85,9 @@ gboolean compare_connection(gconstpointer tracking_hdrs1, gconstpointer tracking
                       ((tracking *)tracking_hdrs2)->dest )   &&
                     ( ((tracking *)tracking_hdrs1)->source ==
                       ((tracking *)tracking_hdrs2)->source ) ){
+
+                if ( ((tracking *) tracking_hdrs1)->daddr ==
+                  ((tracking *) tracking_hdrs2)->daddr ) 
                     return TRUE;
                 }
                 break;
@@ -94,6 +96,8 @@ gboolean compare_connection(gconstpointer tracking_hdrs1, gconstpointer tracking
                       ((tracking *)tracking_hdrs2)->type )   &&
                     ( ((tracking *)tracking_hdrs1)->code ==
                       ((tracking *)tracking_hdrs2)->code ) ){
+                if ( ((tracking *) tracking_hdrs1)->daddr ==
+                  ((tracking *) tracking_hdrs2)->daddr ) 
                     return TRUE;
                 }
             }
