@@ -39,7 +39,6 @@ G_MODULE_EXPORT gchar*
 g_module_check_init(GModule *module){
   char *configfile=DEFAULT_CONF_FILE;
   gpointer vpointer; 
-  //char *ldap_base_dn=LDAP_BASE;
 
   /* init global variables */
   pgsql_user=PGSQL_USER;
@@ -85,6 +84,7 @@ G_MODULE_EXPORT PGconn *pgsql_conn_init(void){
   char *pgsql_conninfo;
   int pgsql_status; //,err,version=3;
   char *port,*timeout, *server_port;
+  
   sprintf(port,"%d",pgsql_server_port);
   sprintf(timeout,"%d",pgsql_request_timeout);
   sprintf(server_port,"%d",pgsql_server_port);
@@ -111,7 +111,13 @@ G_MODULE_EXPORT PGconn *pgsql_conn_init(void){
   strcat(pgsql_conninfo,pgsql_ssl);
   strcat(pgsql_conninfo,"'");
   /* init connection */
+  if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
+      g_message("Going to init pgsql connection ");
+      
   ld = PQconnectdb(pgsql_conninfo);
+
+  if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
+      g_message("...");
   pgsql_status=PQstatus(ld);
   
   if(pgsql_status != CONNECTION_OK) {
@@ -119,6 +125,9 @@ G_MODULE_EXPORT PGconn *pgsql_conn_init(void){
       g_warning("pgsql init error : %s\n",strerror(errno));
     return NULL;
   }
+
+  if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
+      g_message("done");
   return ld;
 }
 
