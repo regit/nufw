@@ -34,6 +34,7 @@
 #include <signal.h>
 #include <syslog.h>
 #include <errno.h>
+#include <sys/types.h>
 
 
 #define NUFW_PID_FILE  LOCAL_STATE_DIR "/run/nufw.pid"
@@ -139,6 +140,12 @@ int main(int argc,char * argv[]){
             return 1;
         }
     }
+    if (getuid())
+    {
+        printf("nufw must be run as root! Sorry\n");
+        return 1;
+    }
+    
 
     /* Daemon code */
     if (daemonize == 1) {
