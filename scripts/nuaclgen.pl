@@ -212,7 +212,13 @@ if (defined ($list)) {
     # print dest port
     $dport = $entry->get_value("DstPortStart").":".$entry->get_value("DstPortEnd");
     # print groups
-    print "src : $sad $sport dst : $dad $dport\n";
+    ($dec)=$entry->get_value("Decision");
+    if ($dec){
+      $dec="ACCEPT";
+    } else {
+      $dec="DROP";
+    }
+    print "src : $sad $sport dst : $dad $dport $dec\n";
   }
 
   $ldap->unbind;		# take down session
