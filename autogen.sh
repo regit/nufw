@@ -1,6 +1,6 @@
 #!/bin/bash
 
-libtoolize --force
+libtoolize --force --automake
 aclocal -I macros/
 autoheader
 autoconf
