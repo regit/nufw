@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.16 2003/11/07 19:08:11 regit Exp $ */
+/* $Id: main.c,v 1.17 2003/11/07 19:18:20 regit Exp $ */
 
 /*
  ** Copyright (C) 2002 Eric Leblond <eric@regit.org>
@@ -35,7 +35,6 @@
 #include <errno.h>
 
 
-//#define NUFW_PID_FILE  "/var/run/nufw.pid"
 #define NUFW_PID_FILE  LOCAL_STATE_DIR "/run/nufw.pid"
 
 void nufw_cleanup( int signal ) {
@@ -155,8 +154,6 @@ int main(int argc,char * argv[]){
             if (pf != NULL)
                 fclose (pf);
         }
-
-	printf("PID file : " NUFW_PID_FILE " \n");
 
         if ((pidf = fork()) < 0){
             syslog(SYSLOG_FACILITY(DEBUG_LEVEL_FATAL),"Unable to fork\n");
