@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.1 2003/09/15 22:20:29 gryzor Exp $ */
+/* $Id: main.c,v 1.2 2003/09/18 20:59:52 gryzor Exp $ */
 
 /*
 ** Copyright (C) 2002 Eric Leblond <eric@regit.org>
@@ -28,6 +28,7 @@
 #include <pthread.h>
 #include <netdb.h>
 #include <structure.h>
+#include <debug.h>
 
 
 int main(int argc,char * argv[]){
@@ -42,6 +43,7 @@ int main(int argc,char * argv[]){
 
   /* initialize variables */
 
+  log_engine = 1; /* default is to send debug messages to stdout + stderr */
   authreq_port = AUTHREQ_PORT;
   authsrv_port = AUTHSRV_PORT;
   packet_timeout = PACKET_TIMEOUT;
@@ -110,8 +112,12 @@ if (daemonize == 1) {
 		exit(0);
 	}
   }
+  log_engine = 2;
 }
   
+  init_log_engine();
+
+  nufw_log("Log engine should be initialized",DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN);
   /* create socket for sending auth request */
   sck_auth_request = socket (AF_INET,SOCK_DGRAM,0);
     
