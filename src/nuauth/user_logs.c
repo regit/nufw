@@ -42,6 +42,7 @@ int check_fill_user_counters(u_int16_t userid,long u_time,unsigned long packet_i
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER)) {
 			g_message("new user %d\n",userid);
 		}
+		log_new_user(userid);
 		return 1;
 	} else {
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER)) {
@@ -75,4 +76,9 @@ void print_users_list(){
 	  g_message("users list : ");
 	}
   	g_hash_table_foreach(users_hash,(GHFunc)print_id,NULL);
+}
+
+void log_new_user(int id){
+  if ( nuauth_log_users % 2 )
+    g_message("New user with id %d",id);
 }

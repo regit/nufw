@@ -29,7 +29,8 @@ confparams nuauth_vars[] = {
   { "nuauth_prio" , G_TOKEN_INT , PRIO , NULL},
   { "nuauth_packet_timeout" , G_TOKEN_INT , PACKET_TIMEOUT, NULL },
   { "nuauth_number_usercheckers" , G_TOKEN_INT , NB_USERCHECK, NULL},
-  { "nuauth_number_aclcheckers" , G_TOKEN_INT , NB_ACLCHECK, NULL }
+  { "nuauth_number_aclcheckers" , G_TOKEN_INT , NB_ACLCHECK, NULL },
+  { "nuauth_log_users" , G_TOKEN_INT , 1, NULL },
 };
 #endif 
 
@@ -80,7 +81,8 @@ int main(int argc,char * argv[]) {
   nbuser_check=*(int*)(vpointer?vpointer:&nbuser_check);
   vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_number_aclcheckers");
   nbacl_check=*(int*)(vpointer?vpointer:&nbacl_check);
- 
+  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_log_users");
+  nuauth_log_users=*(int*)(vpointer?vpointer:&nuauth_log_users);
 
 
   /*parse options */

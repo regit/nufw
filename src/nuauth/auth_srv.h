@@ -1,4 +1,4 @@
-/* $Id: auth_srv.h,v 1.5 2003/09/21 08:02:51 regit Exp $ */
+/* $Id: auth_srv.h,v 1.6 2003/09/21 14:31:06 regit Exp $ */
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
@@ -139,6 +139,7 @@ int authpckt_port;
 int debug; /* This will disapear*/
 int debug_level;
 int debug_areas;
+int nuauth_log_users;
 struct sockaddr_in adr_srv;
 
 
@@ -230,7 +231,7 @@ void user_check (gpointer userdata ,gpointer data);
  
 int check_fill_user_counters(u_int16_t userid,long time,unsigned long packet_id,u_int32_t ip);
 void print_users_list();
-
+void log_new_user(int id);
 /*
  * LDAP stuff
  */
