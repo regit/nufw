@@ -271,7 +271,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
               iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
               strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
               strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
-              if (snprintf(request,511,"UPDATE %s SET state=%lu, start_timestamp=%lu WHERE (ip_daddr='%s' and ip_saddr='%s' and tcp_dport=%u and tcp_sport=%u and state=%hu);",
+              if (snprintf(request,511,"UPDATE %s SET state=%hu, start_timestamp=%lu WHERE (ip_daddr='%s' and ip_saddr='%s' and tcp_dport=%u and tcp_sport=%u and state=%hu);",
                   pgsql_table_name,
                   STATE_ESTABLISHED,
                   element.timestamp,

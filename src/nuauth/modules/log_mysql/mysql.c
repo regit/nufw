@@ -173,8 +173,8 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
 		   (element.user_id),
 		   element.timestamp,
 		   (element.tracking_hdrs).protocol,
-		   (element.tracking_hdrs).saddr,
-		   (element.tracking_hdrs).daddr,
+		   (long unsigned int)(element.tracking_hdrs).saddr,
+		   (long unsigned int)(element.tracking_hdrs).daddr,
 		   (element.tracking_hdrs).source,
 		   (element.tracking_hdrs).dest,
 		   STATE_OPEN
@@ -196,8 +196,8 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
 		   (element.user_id),
 		   element.timestamp,
 		   (element.tracking_hdrs).protocol,
-		   (element.tracking_hdrs).saddr,
-		   (element.tracking_hdrs).daddr,
+		   (long unsigned int)(element.tracking_hdrs).saddr,
+		   (long unsigned int)(element.tracking_hdrs).daddr,
 		   (element.tracking_hdrs).source,
 		   (element.tracking_hdrs).dest,
 		   STATE_OPEN
@@ -220,8 +220,8 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
 		   (element.user_id),
 		   element.timestamp,
 		   (element.tracking_hdrs).protocol,
-		   (element.tracking_hdrs).saddr,
-		   (element.tracking_hdrs).daddr,
+		   (long unsigned int)(element.tracking_hdrs).saddr,
+		   (long unsigned int)(element.tracking_hdrs).daddr,
 		   STATE_OPEN
 		   ) >= 511){
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
@@ -242,13 +242,13 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
       int update_status = 0;
       while (update_status < 2){
 	update_status++;
-	if (snprintf(request,511,"UPDATE %s SET state=%lu,start_timestamp=FROM_UNIXTIME(%lu) WHERE (ip_daddr=%lu AND ip_saddr=%lu AND tcp_dport=%u AND tcp_sport=%u AND state=%hu)",
+	if (snprintf(request,511,"UPDATE %s SET state=%hu,start_timestamp=FROM_UNIXTIME(%lu) WHERE (ip_daddr=%lu AND ip_saddr=%lu AND tcp_dport=%u AND tcp_sport=%u AND state=%hu)",
 
 		     mysql_table_name,
 		     STATE_ESTABLISHED,
 		     element.timestamp,
-		     (element.tracking_hdrs).saddr,
-		     (element.tracking_hdrs).daddr,
+		     (long unsigned int)(element.tracking_hdrs).saddr,
+		     (long unsigned int)(element.tracking_hdrs).daddr,
 		     (element.tracking_hdrs).source,
 		     (element.tracking_hdrs).dest,
 		     STATE_OPEN
@@ -287,8 +287,8 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
 		     mysql_table_name,
 		     element.timestamp,
 		     STATE_CLOSE,
-		     (element.tracking_hdrs).saddr,
-		     (element.tracking_hdrs).daddr,
+		     (long unsigned int)(element.tracking_hdrs).saddr,
+		     (long unsigned int)(element.tracking_hdrs).daddr,
 		     (element.tracking_hdrs).source,
 		     (element.tracking_hdrs).dest,
 		     STATE_ESTABLISHED
@@ -325,8 +325,8 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
 		   (element.user_id),
 		   element.timestamp,
 		   (element.tracking_hdrs).protocol,
-		   (element.tracking_hdrs).saddr,
-		   (element.tracking_hdrs).daddr,
+		   (long unsigned int)(element.tracking_hdrs).saddr,
+		   (long unsigned int)(element.tracking_hdrs).daddr,
 		   (element.tracking_hdrs).source,
 		   (element.tracking_hdrs).dest,
 		   STATE_DROP
@@ -348,8 +348,8 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
 		   (element.user_id),
 		   element.timestamp,
 		   (element.tracking_hdrs).protocol,
-		   (element.tracking_hdrs).saddr,
-		   (element.tracking_hdrs).daddr,
+		   (long unsigned int)(element.tracking_hdrs).saddr,
+		   (long unsigned int)(element.tracking_hdrs).daddr,
 		   (element.tracking_hdrs).source,
 		   (element.tracking_hdrs).dest,
 		   STATE_DROP
@@ -372,8 +372,8 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
 		   (element.user_id),
 		   element.timestamp,
 		   (element.tracking_hdrs).protocol,
-		   (element.tracking_hdrs).saddr,
-		   (element.tracking_hdrs).daddr,
+		   (long unsigned int) (element.tracking_hdrs).saddr,
+		   (long unsigned int) (element.tracking_hdrs).daddr,
 		   STATE_DROP
 		   ) >= 511){
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))

@@ -1,6 +1,7 @@
 
 /*
- ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
+ ** Copyright(C) 2004 INL
+ ** Written by Eric Leblond <eric@regit.org>
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -123,10 +124,10 @@ int main(int argc,char * argv[]) {
     nuauth_user_logs_module=(char*)(vpointer?vpointer:nuauth_user_logs_module);
 
     vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_number_loggers");
-    nuauth_number_loggers=*(int*)(vpointer?vpointer:nuauth_number_loggers);
+    nuauth_number_loggers=*(int*)(vpointer?vpointer:&nuauth_number_loggers);
 
     vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_packet_timeout");
-    packet_timeout=*(int*)(vpointer?vpointer:packet_timeout);
+    packet_timeout=*(int*)(vpointer?vpointer:&packet_timeout);
 
     /*parse options */
     while((option = getopt ( argc, argv, options_list)) != -1 ){
@@ -335,7 +336,7 @@ int main(int argc,char * argv[]) {
     }
 
     if (!g_module_symbol (auth_module, "user_check", 
-          (gpointer*)&module_user_check))
+          (gpointer*) &module_user_check))
     {
         g_error ("Unable to load user check function\n");
     }
