@@ -1,3 +1,9 @@
+0.8.3 (2004/08/16)
+	- correction of bugs in the SQL logging modules. The first UPDATE was
+	incorrect and could lead to severe insecurity.
+	- corrected a stupid bug in postgresql log module, that would totally
+	prevent it from working.
+	- LICENCE updates : added an exeption for openssl related code.
 0.8.2 (2004/07/30)
 	- user logging level is finally taken into account
 	- connectio hash code optimisation
