@@ -1,5 +1,9 @@
-1.0.2
+1.0.2 (2005/03/29)
 	- add nuauth_number_loggers in config file
+	- nufw can now verify nuauth server certificates (specify ca with -a
+	  to do so)
+	- structure.h is now in the nufw directory as it is only used by it
+	- nuauth certificat check is now more strict
 1.0.1 (2005/03/16)
 	- log strict was not implemented strictly, this is now really strict
 	- small patch applied to cleanly compile on mipsel (thanks to Florian

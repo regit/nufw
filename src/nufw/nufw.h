@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <structure.h>
+#include "structure.h"
 #include <nufw_debug.h>
 #include <signal.h>
 
@@ -10,7 +10,7 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-
+/* redhat like hack */
 #ifdef HAVE_LIBIPQ_LIBIPQ_H 
 #include <libipq/libipq.h>
 #else
@@ -20,6 +20,7 @@
 #error "libipq needed for NuFW compilation"
 #endif
 #endif
+
 
 
 #include <gnutls/gnutls.h>

@@ -28,14 +28,6 @@
 #include <netinet/tcp.h>
 #include <netinet/udp.h>
 #include <arpa/inet.h>
-/* redhat like hack */
-#ifdef HAVE_LIBIPQ_LIBIPQ_H 
-#include <libipq/libipq.h>
-#else
-#ifdef HAVE_LIBIPQ_H
-#include <libipq.h>
-#endif
-#endif
 #include <linux/netfilter.h>
 #include <time.h>
 #include "config.h"
@@ -59,6 +51,7 @@
 
 char *cert_file;
 char *key_file;
+char *ca_file;
 
 char authreq_addr[HOSTNAME_SIZE];
 char listen_addr[HOSTNAME_SIZE];

@@ -644,7 +644,7 @@ int tls_connect(int c,gnutls_session** session_ptr){
 	if (nuauth_tls_request_cert==GNUTLS_CERT_REQUIRE){
 		/* certicate verification */
 		ret = gnutls_certificate_verify_peers(*session);
-		if (ret <0){
+		if (ret != 0){
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
 				g_message("Certificate verification failed : %s",gnutls_strerror(ret));
 			}
