@@ -57,7 +57,6 @@ int main(int argc,char * argv[]) {
     case 'v' :
       /*fprintf (stdout, "Debug should be On (++)\n");*/
       debug_level+=1;
-      debug=1;
       break;
       /* port we listen for auth answer */
     case 'l' :
