@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
-AC_INIT(NuFW, 0.6.5, nufw-devel@nongnu.org)
+AC_INIT(NuFW, 0.7, nufw-devel@nongnu.org)
 AC_CONFIG_SRCDIR([src/nufw/main.c])
 AM_CONFIG_HEADER([src/include/config.h])
 
@@ -24,7 +24,9 @@ AC_CHECK_LIB([ldap],[ldap_simple_bind_s],AC_DEFUN([HAVE_LIBRARY_LDAP],[1]),AC_MS
 AC_CHECK_LIB([gdbm],[gdbm_fetch],AC_DEFUN([HAVE_LIBRARY_GDBM],[1]),AC_MSG_ERROR([dbm library needed for authentication]))
 AC_CHECK_LIB([crypt], [crypt])
 # for gdbm module
-#AC_CHECK_LIB([gdbm], [gdbm_open])
+AC_CHECK_LIB([gdbm], [gdbm_open])
+#
+AC_CHECK_LIB([ssl], [SSL_write])
 
 # glib stuff
 AM_PATH_GLIB_2_0(2.0.0, , AC_MSG_ERROR([glib is required in order to compile nuauth]),[gthread gmodule])
@@ -61,6 +63,7 @@ AM_CONDITIONAL(USE_PGSQL_LOG, test x$enable_pgsql_log = xyes)
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile
+                 src/lib/Makefile
                  src/nuauth/Makefile
 		 src/nuauth/modules/Makefile
   		 src/nuauth/modules/ldap/Makefile
