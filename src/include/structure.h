@@ -1,4 +1,4 @@
-/* $Id: structure.h,v 1.4 2003/09/14 21:29:38 gryzor Exp $ */
+/* $Id: structure.h,v 1.5 2003/10/16 22:04:14 regit Exp $ */
 
 /*
 ** Copyright (C) 2002, Éric Leblond <eric@regit.org>
@@ -52,6 +52,7 @@ int packet_timeout;
 int track_size;
 u_int16_t id_srv;
 int debug;
+int nufw_set_mark;
 
 
 
@@ -76,6 +77,7 @@ pthread_mutex_t hndl_mutex;
 
 /* do some define to add mutex usage */
 #define	IPQ_SET_VERDICT(PACKETID, DECISION) ipq_set_verdict(hndl, PACKETID, DECISION,0,NULL)
+#define	IPQ_SET_VWMARK(PACKETID, DECISION,NFMARK) ipq_set_vwmark(hndl, PACKETID, DECISION,NFMARK,0,NULL)
 
 
 //global variable :
