@@ -1,3 +1,6 @@
+0.6.4 (2004/01/09)
+        - correct locking problems
+        - don't exit on socket read problem
 0.6.3 (2004/01/07)
         - change syslog log module output for established packet
         - give a nutop.conf example
