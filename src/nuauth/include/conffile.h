@@ -17,7 +17,7 @@
 
 #include <config.h>
 
-#define DEFAULT_CONF_FILE   CONFIG_DIR "nuauth.conf"
+#define DEFAULT_CONF_FILE   CONFIG_DIR "/nuauth.conf"
 
 typedef struct Conf_Params
 {
