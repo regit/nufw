@@ -90,7 +90,6 @@ build-nuauth-utils-stamp:  config.status
 
 build-libnuclient-stamp:  config.status
 	# Add here commands to compile the nuauth package.
-	#cd src/nuauth/
 	$(MAKE) -C $(CURDIR)/src/lib/
 	$(MAKE) -C $(CURDIR)/src/clients/lib/
 	touch build-libnuclient-stamp
