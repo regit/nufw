@@ -92,7 +92,7 @@ clean:
 	rm -f build-nutcpc-stamp build-nufw-stamp build-nuauth-stamp build-nuauth-utils-stamp #CONFIGURE-STAMP#
 
 	# Add here commands to clean up after the build process.
-	rm config.sub config.guess||/bin/true
+	rm config.sub config.guess missing||/bin/true
 	-$(MAKE) distclean
 ifneq "$(wildcard /usr/share/misc/config.sub)" ""
 	cp -f /usr/share/misc/config.sub config.sub

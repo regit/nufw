@@ -1,3 +1,9 @@
+nufw (0.6.2-1) unstable; urgency=low
+
+  * Upstream changed to 0.6.2
+
+ -- Vincent Deffontaines <vincent@gryzor.com>  Sun,  4 Jan 2004 23:42:57 +0100
+
 nufw (0.6.1-1) unstable; urgency=low
 
   * Upstream changed to 0.6.1
