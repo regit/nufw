@@ -29,40 +29,45 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
     struct in_addr oneip;
 
     /* contruct request */
-    if (((element.tracking_hdrs).protocol == IPPROTO_TCP)){
-      if (state == 1){
+    switch (state) {
+      case STATE_OPEN:
         str_state="Open ";
-      } else {
+        break;
+      case STATE_CLOSE:
         str_state="Close ";
-      } 
-    } else 
-      str_state="";
+        break;
+      case STATE_ESTABLISHED:
+        str_state="Established ";
+        break;
+      case STATE_DROP:
+          str_state="Drop ";
+
+    } 
     oneip.s_addr=htonl((element.tracking_hdrs).saddr);
     strncpy(source_addr,inet_ntoa(oneip),16);
     oneip.s_addr=htonl((element.tracking_hdrs).daddr);
     strncpy(dest_addr,inet_ntoa(oneip),16);
 
     if ( ((element.tracking_hdrs).protocol == IPPROTO_TCP) || ((element.tracking_hdrs).protocol == IPPROTO_UDP) ) {
-        /* IN=ppp0 OUT= MAC= SRC=62.211.193.37 DST=62.212.98.117 LEN=48 TOS=00 PREC=0x00 TTL=116 ID=43292 CE DF PROTO=TCP SPT=3048 DPT=135 SEQ=140209238 ACK=0 WINDOW=16384 SYN URGP=0 */
         g_message("%s[%u] %ld : SRC=%s DST=%s PROTO=%d SPT=%u DPT=%u",
-		  str_state,
-		  element.user_id,
-		  element.timestamp,
-		  source_addr,
-		  dest_addr,
-		  (element.tracking_hdrs).protocol,
-		  (element.tracking_hdrs).source,
-		  (element.tracking_hdrs).dest
-		  );
+            str_state,
+            element.user_id,
+            element.timestamp,
+            source_addr,
+            dest_addr,
+            (element.tracking_hdrs).protocol,
+            (element.tracking_hdrs).source,
+            (element.tracking_hdrs).dest
+            );
     } else {
-      g_message("[%u] %ld : SRC=%s DST=%s PROTO=%d",
-		str_state,
-		element.user_id,
-		element.timestamp,
-		source_addr,
-		dest_addr,
-		(element.tracking_hdrs).protocol
-		);
+        g_message("[%u] %ld : SRC=%s DST=%s PROTO=%d",
+            str_state,
+            element.user_id,
+            element.timestamp,
+            source_addr,
+            dest_addr,
+            (element.tracking_hdrs).protocol
+            );
     }
 }
 
