@@ -1,3 +1,5 @@
+0.8.5 (2004/08/25)
+	- nuauth : Fixes a bug on multiple SSL connection close from clients.
 	- nutop : much better time display for postgresql
 	- libnuclient : perform a gethostbyname() on host. 
 	- Check UID is 0 at nufw startup. Exit if not.
