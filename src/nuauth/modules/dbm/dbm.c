@@ -91,13 +91,13 @@ g_module_check_init(GModule *module){
  * Initialize dbm file access
  */
 
-G_MODULE_EXPORT GDBM_FILE dbm_file_init(void){
-  GDBM_FILE dbf = NULL;
+G_MODULE_EXPORT GDBM_FILE *dbm_file_init(void){
+  GDBM_FILE *dbf = NULL;
 
   /* init connection */
   if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
 	  g_message("We are entering dbm_file_init()\n");
-  dbf = gdbm_open(users_file,DBM_BLOCK_SIZE,DBM_FILE_ACCESS_MODE,DBM_FILE_MODE,DBM_FATAL_FUNCTION);
+  *dbf = gdbm_open(users_file,DBM_BLOCK_SIZE,DBM_FILE_ACCESS_MODE,DBM_FILE_MODE,DBM_FATAL_FUNCTION);
   if(dbf == NULL) {
     if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
       g_warning("dbm init error\n");
@@ -106,11 +106,11 @@ G_MODULE_EXPORT GDBM_FILE dbm_file_init(void){
   }
   if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
 	  g_message("We are leaving dbm_file_init()\n");
-  return dbf;
+  return *dbf;
 }
 
 G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
-  GDBM_FILE dbf = g_private_get (ldap_priv);
+  GDBM_FILE *dbf = g_private_get (ldap_priv);
   datum dbm_key, dbm_data;
   struct dbm_data_struct return_data;
 
@@ -118,7 +118,7 @@ G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
   if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
 	  g_message("We are entering user_check()\n");
     /* init ldap has never been done */
-    dbf = dbm_file_init();
+    *dbf = dbm_file_init();
     g_private_set(dbm_priv,dbf);
     if (dbf == NULL){
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_AUTH))
@@ -139,13 +139,13 @@ G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
 	  g_message("user id is %s, size %i\n",dbm_key.dptr,dbm_key.dsize);
  
   //Check key exists before trying to fetch its value
-  if (! gdbm_exists(dbf,dbm_key))
+  if (! gdbm_exists(*dbf,dbm_key))
   {
 	  if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_AUTH))
 		  g_message("no key \"%s, size %i\" could be found in database\n",dbm_key.dptr,dbm_key.dsize);
 	  return NULL;
   }
-  dbm_data = gdbm_fetch(dbf,dbm_key);
+  dbm_data = gdbm_fetch(*dbf,dbm_key);
   if (dbm_data.dptr == NULL)
   {
 	  if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
