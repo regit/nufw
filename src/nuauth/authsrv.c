@@ -17,20 +17,35 @@
 */
 
 #include <auth_srv.h>
-#include <syslog.h>
 
+#ifndef _NUAUTHVARS
+#define _NUAUTHVARS
+confparams nuauth_vars[] = {
+  { "nuauth_addr" ,  G_TOKEN_STRING, 0 , AUTHREQ_ADDR },
+  { "nuauth_gw_packet_port" , G_TOKEN_INT , AUTHREQ_PORT,NULL },
+  { "nuauth_user_packet_port" , G_TOKEN_INT , AUTHREQ_PORT ,NULL},
+  { "nufw_gw_addr" , G_TOKEN_STRING , 0, GWSRV_ADDR },
+  { "nufw_gw_port" , G_TOKEN_INT , GWSRV_PORT, NULL },
+  { "nuauth_prio" , G_TOKEN_INT , PRIO , NULL},
+  { "nuauth_packet_timeout" , G_TOKEN_INT , PACKET_TIMEOUT, NULL },
+  { "nuauth_number_usercheckers" , G_TOKEN_INT , NB_USERCHECK, NULL},
+  { "nuauth_number_aclcheckers" , G_TOKEN_INT , NB_ACLCHECK, NULL }
+};
+#endif 
 
 int main(int argc,char * argv[]) {
-  static GStaticMutex insert_mutex = G_STATIC_MUTEX_INIT;
   GThread * pckt_server, * auth_server;
   /* option */
   char * options_list = "DhVvl:d:p:t:T:";
   int option,daemonize = 0;
   int value;
-  int track_size;
-  char authreq_addr[HOSTNAME_SIZE];
+  char* authreq_addr=AUTHREQ_ADDR;
   char* version=VERSION;
-  char gwsrv_addr[HOSTNAME_SIZE]=GWSRV_ADDR;
+  char* gwsrv_addr=GWSRV_ADDR;
+  char *configfile=DEFAULT_CONF_FILE;
+  int nbacl_check=NB_ACLCHECK;
+  int nbuser_check=NB_USERCHECK;
+  gpointer vpointer;
   pid_t pidf;
 
   /* initialize variables */
@@ -39,20 +54,38 @@ int main(int argc,char * argv[]) {
   gwsrv_port = GWSRV_PORT;
   userpckt_port = USERPCKT_PORT; 
   packet_timeout = PACKET_TIMEOUT;
-  track_size = TRACK_SIZE;
-  strncpy(authreq_addr,AUTHREQ_ADDR,HOSTNAME_SIZE);
-  /* debug=DEBUG; */
-  /*Minimum debug_level value is 2 -> for 1) fatal and 2) critical messages to always
-   * be outputed*/
+
+  /* 
+   * Minimum debug_level value is 2 -> for 1) fatal and 2) critical messages to always
+   * be outputed
+   */
   debug_level=0;
   debug_areas=DEFAULT_DEBUG_AREAS;
  
+  /* parse conf file */
+  parse_conffile(configfile,sizeof(nuauth_vars)/sizeof(confparams),nuauth_vars);
+  /* set variable value from config file */
 
+  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_addr");
+  authreq_addr=(char *)(vpointer?vpointer:authreq_addr);
+  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nufw_gw_addr");
+  gwsrv_addr=(char*)(vpointer?vpointer:gwsrv_addr);
+  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_gw_packet_port");
+  authreq_port=*(int*)(vpointer?vpointer:&authreq_port);
+  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nufw_gw_port");
+  gwsrv_port=*(int*)(vpointer?vpointer:&gwsrv_port);
+  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_user_packet_port");
+  userpckt_port=*(int*)(vpointer?vpointer:&userpckt_port);
+  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_number_usercheckers");
+  nbuser_check=*(int*)(vpointer?vpointer:&nbuser_check);
+  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_number_aclcheckers");
+  nbacl_check=*(int*)(vpointer?vpointer:&nbacl_check);
+ 
   /*parse options */
   while((option = getopt ( argc, argv, options_list)) != -1 ){
     switch (option){
     case 'V' :
-      fprintf (stdout, "authsrv (version %s)\n",version);
+      fprintf (stdout, "nuauth (version %s)\n",version);
       return 1;
     case 'v' :
       /*fprintf (stdout, "Debug should be On (++)\n");*/
@@ -61,38 +94,34 @@ int main(int argc,char * argv[]) {
       /* port we listen for auth answer */
     case 'l' :
       sscanf(optarg,"%d",&value);
-      printf("Listen on UDP port %d\n",value);
+      printf("Listen on UDP port for user packet %d\n",value);
       userpckt_port=value;
       break;
       /* destination port */
     case 'p' :
       sscanf(optarg,"%d",&value);
-      printf("Auth Answer sent to port %d\n",value);
+      printf("Auth Answer sent to gw on port %d\n",value);
       gwsrv_port=value;
       break;
       /* destination IP */
     case 'd' :
       strncpy(gwsrv_addr,optarg,HOSTNAME_SIZE);
-      printf("Sending Auth Answer to %s\n",gwsrv_addr);
+      printf("Sending Auth Answer to gw at %s\n",gwsrv_addr);
       break;
       /* packet timeout */
     case 't' :
       sscanf(optarg,"%d",&packet_timeout);
       break;
       /* max size of packet list */
-    case 'T' :
-      sscanf(optarg,"%d",&track_size);
-      break;
     case 'D' :
       daemonize=1;
       break;
     case 'h' :
-      fprintf (stdout ,"authsrv [-hDVv[v[v[v[v[v[v[v[v]]]]]]]]]] [-l local_port] [-d remote_addr] [-p remote_port]  [-t packet_timeout] [-T track_size]\n");
+      fprintf (stdout ,"nuauth [-hDVv[v[v[v[v[v[v[v[v]]]]]]]]] [-l user_packet_port] [-d nufw_gw_addr] [-p nufw_gw_port]  [-t packet_timeout]\n");
       return 1;
     }
   }
-
-
+    
   /* debug cannot be above 10 */
   if (debug_level > MAX_DEBUG_LEVEL)
 	  debug_level=MAX_DEBUG_LEVEL;
@@ -191,14 +220,14 @@ if (daemonize == 1) {
 
   acl_checkers = g_thread_pool_new  ((GFunc) acl_check,
 				     NULL,
-				     NB_ACLCHECK,
+				     nbacl_check,
 				     TRUE,
 				     NULL);
 
   /* create user worker */
   user_checkers = g_thread_pool_new  ((GFunc) user_check,
 				     NULL,
-				     NB_USERCHECK,
+				     nbuser_check,
 				     TRUE,
 				     NULL);
 

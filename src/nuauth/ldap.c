@@ -20,6 +20,17 @@
 #include <auth_srv.h>
 #include <auth_ldap.h>
 
+#ifndef _LDAPVARS
+#define _LDAPVARS
+confparams ldap_nuauth_vars[] = {
+  { "ldap_server_addr" ,  G_TOKEN_STRING, 0 , AUTHREQ_ADDR },
+  { "ldap_server_port" , G_TOKEN_INT , AUTHREQ_PORT,NULL },
+  { "ldap_base_dn" , G_TOKEN_INT , 0 ,NULL},
+  { "ldap_bind_dn" , G_TOKEN_INT , 0 ,NULL},
+  { "ldap_bind_password" , G_TOKEN_STRING , 0, NULL },
+  { "ldap_request_timeout" , G_TOKEN_INT , 0 , NULL }
+};
+#endif 
 
 /* 
  * Initialize connection to ldap server

@@ -1,4 +1,4 @@
-/* $Id: auth_srv.h,v 1.3 2003/09/18 19:27:50 regit Exp $ */
+/* $Id: auth_srv.h,v 1.4 2003/09/20 21:39:48 regit Exp $ */
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
@@ -41,6 +41,8 @@
 /*debug functions*/
 #include <debug.h>
 
+/* config file related */
+#include <conffile.h>
 
 /*
  * declare some global variables and do some definitions
@@ -53,11 +55,9 @@
 #define GWSRV_PORT 4128
 #define AUTHREQ_PORT 4129
 #define USERPCKT_PORT 4130
-#define TRACK_SIZE 1024
-#define ID_SERVER 12345
 #define PRIO 1
 #define HOSTNAME_SIZE 128
-#define PACKET_TIMEOUT 15;
+#define PACKET_TIMEOUT 15
 
 /* define the number of threads that will do user check */
 #define NB_USERCHECK 10
@@ -173,24 +173,6 @@ typedef struct User_Datas {
 } user_datas;
 
 GHashTable * users_hash;
-
-/* 
- * config file related
- */
-
-#if 0
-typedef struct Conf_Params
-{
-  gchar *name;
-  guint token;
-} confparams
-
-const confparams symbols[] = {
-  { "debug_level", 180 },
-  { "user_packet_port",181},
-   { "user_packet_port",182},
-};
-#endif
 
 /* internal for crypt */
 GPrivate* crypt_priv;
