@@ -5,5 +5,5 @@
 
 
 # User auth srv
-- finish ...
 - create and maintain a list : user->IP to filter user packet ("anti-DOS")
+- use id server and authgw

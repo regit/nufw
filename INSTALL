@@ -16,3 +16,8 @@ You will also have to launch one authorisation server
 For the moment only one  : nuauth is provided
 nuauth -h will give you a usage message.
 
+To use nufw you will have to run a client for each user.
+For the moment only nutcpc is provided.
+
+You will find more information on :
+	http://www.nufw.org
