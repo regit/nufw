@@ -1,4 +1,4 @@
-/* $Id: auth_dbm.h,v 1.2 2003/09/30 20:27:30 regit Exp $ */
+/* $Id: auth_dbm.h,v 1.3 2003/09/30 22:33:28 gryzor Exp $ */
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
@@ -24,15 +24,17 @@
 #define DBM_USERS_FILE "/etc/nuauth/nuauth_users.dbm"
 //DBM_BLOCK_SIZE is useless (ignored on file reads, and file is ALWAYS read
 #define DBM_BLOCK_SIZE 512
-#define DBM_FILE_ACCESS_MODE "GDBM_READER"
+#define DBM_FILE_ACCESS_MODE GDBM_READER
 //DBM_FILE_MODE is ignored on read too
-#define DBM_FILE_MODE "00777"
+#define DBM_FILE_MODE 777
 #define DBM_FATAL_FUNCTION 0
 
 
-typedef struct { 
+struct dbm_data_struct{ 
 	char *passwd;
 	GSList *outelt;
-} dbm_data_struct;
+};
 	
 struct dbm_data_struct analyse_dbm_char(char *data);
+
+char * users_file;

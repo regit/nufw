@@ -36,10 +36,12 @@ struct dbm_data_struct analyse_dbm_char(char *data)
 	{
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
 			g_warning("Could not malloc for tmpchar\n");
-		return NULL;
+		myresult.outelt = NULL; //useless here ; set for clarity
+		return myresult;
 	}
 	strncpy(tmpchar,data,strlen(data) +1);
-	while (data=strchr(tmpchar,32)) // 32 is ASCII code for space " "
+	data=strchr(tmpchar,32);
+	while (data != NULL ) // 32 is ASCII code for space " "
 	{
 		if  (i==0)
 		{
@@ -55,6 +57,7 @@ struct dbm_data_struct analyse_dbm_char(char *data)
 			free (tmp2);
 		}
 		tmpchar = data++;
+		data=strchr(tmpchar,32);
 	}
 	return (myresult);
 }
@@ -73,7 +76,7 @@ g_module_check_init(GModule *module){
   /* parse conf file */
   parse_conffile(configfile,sizeof(dbm_nuauth_vars)/sizeof(confparams),dbm_nuauth_vars);
   /* set variables */
-  vpointer=get_confvar_value(ldap_nuauth_vars,sizeof(ldap_nuauth_vars)/sizeof(confparams),"dbm_users_file");
+  vpointer=get_confvar_value(dbm_nuauth_vars,sizeof(dbm_nuauth_vars)/sizeof(confparams),"dbm_users_file");
   users_file=(char *)(vpointer?vpointer:users_file);
 
   /* init thread private stuff */
@@ -86,15 +89,14 @@ g_module_check_init(GModule *module){
  * Initialize dbm file access
  */
 
-G_MODULE_EXPORT LDAP* dbm_file_init(void){
+G_MODULE_EXPORT GDBM_FILE dbm_file_init(void){
   GDBM_FILE dbf = NULL;
-  int err;
 
   /* init connection */
   dbf = gdbm_open(users_file,DBM_BLOCK_SIZE,DBM_FILE_ACCESS_MODE,DBM_FILE_MODE,DBM_FATAL_FUNCTION);
   if(dbf == NULL) {
     if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-      g_warning("dbm init error : %s\n",gdbm_strerror ( errno ));
+      g_warning("dbm init error\n");
     g_private_set(dbm_priv,dbf);
     return NULL;
   }
@@ -214,12 +216,7 @@ G_MODULE_EXPORT GSList* ldap_acl_check (connection* element){
 G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
   GDBM_FILE dbf = g_private_get (ldap_priv);
   datum dbm_key, dbm_data;
-
-  char ** attrs_array, ** walker;
-  int attrs_array_len,i,group,err;
-  struct timeval timeout;
   struct dbm_data_struct return_data;
-  GSList * outelt=NULL;
 
   if (dbf == NULL){
     /* init ldap has never been done */
@@ -228,7 +225,7 @@ G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
     if (dbf == NULL){
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_AUTH))
 		g_message("Can't access DBM database\n");
-	return -1;
+	return NULL;
     }
   }
   //Initialize our data structure
@@ -251,7 +248,7 @@ G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
 	  return NULL;
   }
   dbm_data = gdbm_fetch(dbf,dbm_key);
-  if (dbm_data == NULL)
+  if (dbm_data.dptr == NULL)
   {
 	  if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
 		  g_message("key \"%s, size %i\" exists in database, but cannot be fetched ?!\n",dbm_key.dptr,dbm_key.dsize);
@@ -264,6 +261,12 @@ G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
 	  return NULL;
   }
   return_data = analyse_dbm_char(dbm_data.dptr);
+  if (return_data.outelt == NULL )
+  {
+	  if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
+		  g_message("inconsistency in database? unable to parse data for key %s (size %i)\n",dbm_key.dptr,dbm_key.dsize);
+	  return NULL;
+  }
   if (strcmp ( passwd , return_data.passwd ) == 0 )
 	  return (return_data.outelt);
   return NULL;
