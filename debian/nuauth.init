@@ -41,13 +41,13 @@ set -e
 case "$1" in
   start)
 	echo -n "Starting $DESC: "
-	su $NUAUTH_USER -m -c start-stop-daemon --start --quiet --pidfile /var/run/$NAME/$NAME.pid \
+	start-stop-daemon --start --quiet --pidfile /var/run/$NAME/$NAME.pid \
 		--chuid $NUAUTH_USER --exec $DAEMON -- $DAEMON_OPTS
 	echo "$NAME."
 	;;
   stop)
 	echo -n "Stopping $DESC: "
-	start-stop-daemon --stop --quiet --pidfile /var/run/$NAME.pid \
+	start-stop-daemon --stop --quiet --pidfile /var/run/$NAME/$NAME.pid \
 		--exec $DAEMON
 	echo "$NAME."
 	;;
@@ -71,10 +71,10 @@ case "$1" in
 	#
 	echo -n "Restarting $DESC: "
 	start-stop-daemon --stop --quiet --pidfile \
-		/var/run/$NAME.pid --exec $DAEMON
+		/var/run/$NAME/$NAME.pid --exec $DAEMON
 	sleep 1
 	start-stop-daemon --start --quiet --pidfile \
-		/var/run/$NAME.pid --exec $DAEMON -- $DAEMON_OPTS
+		/var/run/$NAME/$NAME.pid --exec $DAEMON -- $DAEMON_OPTS
 	echo "$NAME."
 	;;
   *)
