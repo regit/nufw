@@ -145,6 +145,7 @@ install-nuauth-utils:
 	dh_install -pnuauth-utils scripts/nuaclgen usr/bin/
 	dh_install -pnuauth-utils scripts/nutop usr/bin/
 	dh_install -m 600 -pnuauth-utils conf/nuaclgen.conf etc/nufw/
+	dh_install -m 600 -pnuauth-utils conf/nutop.conf etc/nufw/
 	
 install-nutcpc:
 	dh_testdir -pnutcpc
