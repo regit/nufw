@@ -137,9 +137,10 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
           //
           int Result;
 
-          if (snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,start_timestamp) VALUES (%u,%u,%lu,%lu,%u,%u,FROM_UNIXTIME(%lu))",
+          if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,start_timestamp) VALUES (%u,%lu,%u,%lu,%lu,%u,%u,FROM_UNIXTIME(%lu))",
               mysql_table_name,
               (element.user_id),
+              element.timestamp,
               (element.tracking_hdrs).protocol,
               (element.tracking_hdrs).saddr,
               (element.tracking_hdrs).daddr,
@@ -160,9 +161,10 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
       }
       else if ((element.tracking_hdrs).protocol == IPPROTO_UDP){
           int Result;
-          if (snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,start_timestamp) VALUES (%u,%u,%lu,%lu,%u,%u,FROM_UNIXTIME(%lu))",
+          if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,start_timestamp) VALUES (%u,%lu,%u,%lu,%lu,%u,%u,FROM_UNIXTIME(%lu))",
               mysql_table_name,
               (element.user_id),
+              element.timestamp,
               (element.tracking_hdrs).protocol,
               (element.tracking_hdrs).saddr,
               (element.tracking_hdrs).daddr,
@@ -184,9 +186,10 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
       }
       else {
           int Result;
-          if (snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,start_timestamp) VALUES (%u,%u,%lu,%lu,FROM_UNIXTIME(%lu))",
+          if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,start_timestamp) VALUES (%u,%lu,%u,%lu,%lu,FROM_UNIXTIME(%lu))",
               mysql_table_name,
               (element.user_id),
+              element.timestamp,
               (element.tracking_hdrs).protocol,
               (element.tracking_hdrs).saddr,
               (element.tracking_hdrs).daddr,
