@@ -430,9 +430,11 @@ void send_auth_response(gpointer data, gpointer userdata){
 			}
 		}
 	}
+#ifdef DEBUG_ENABLE
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
 		g_message("done\n");
 	}
+#endif
 }
 
 

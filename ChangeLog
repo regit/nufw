@@ -1,5 +1,6 @@
 1.0.3
 	- cleanly get out of sasl negotiation
+	- suppress a useless debug message
 1.0.2 (2005/03/29)
 	- add nuauth_number_loggers in config file
 	- nufw can now verify nuauth server certificates (specify ca file with -a

@@ -231,6 +231,12 @@ treat_user_request (user_session * c_session)
 						);
 			}
 		} else {
+			if (datas->sysname)
+				g_free(datas->sysname);
+			if (datas->release)
+				g_free(datas->release);
+			if (datas->version)
+				g_free(datas->version);
 			g_free(datas->buf);
 			g_free(datas->userid);
 			g_slist_free(datas->groups);
@@ -743,8 +749,8 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 #endif
 			/* get rid of client */
 			gnutls_bye(*(c_session->tls),GNUTLS_SHUT_WR);
-			close(c);
 			gnutls_deinit(*(c_session->tls)); 
+			close(c);
 			g_free(c_session->tls);
 			g_free(c_session);
 		}
