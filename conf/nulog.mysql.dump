@@ -1,8 +1,8 @@
--- MySQL dump 9.09
+-- MySQL dump 9.11
 --
 -- Host: localhost    Database: nulog
 -- ------------------------------------------------------
--- Server version	4.0.16-log
+-- Server version	4.0.20-log
 
 --
 -- Table structure for table `cache_task`
@@ -110,6 +110,7 @@ CREATE TABLE ulog (
   start_timestamp datetime default NULL,
   end_timestamp datetime default NULL,
   state smallint(6) default NULL,
+  username varchar(30) default NULL,
   UNIQUE KEY id (id),
   KEY index_id (id),
   KEY timestamp (timestamp),
