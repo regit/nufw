@@ -281,6 +281,26 @@ Description-fr: Journalisation de l'activité utilisateurs
   - 4 : journaliser tous les paquets
  Valeur par défaut : 1
 
+Template: nuauth/log_users_sync
+Type: select
+Choices: 0, 1
+Default: 1
+Description: Whether to sync users logs
+ Syncing users logs makes activities overall slower, but guarantees users logs
+ (for instance, in SQL database) exist before the network packet is passed
+ through. It is advised to set this option if you setup nuauth for SSO.
+  - 0 : no sync
+  - 1 : sync
+ Default value : 1
+Description-fr: Synchronisation des journaux
+ La synchronisation des journaux garantit qu'un paquet autorisé sera
+ effectivement journalisé avant d'être accepté. Cette option rend les accès
+ réseaux légerement plus lents, et est probablement souhaitée dans le cadre
+ d'une configuration en SSO.
+  - 0 : pas de synchronisation
+  - 1 : synchronisation active
+ Valeur par défaut : 1
+
 Template: nuauth/user_logs_module
 Type: select
 Choices: syslog, mysql, pgsql

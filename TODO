@@ -1,5 +1,8 @@
 # Partial TODO List
 
+- nuauth : display or log a clever message if user sets SSL and certificate is
+  unavailable. Else it is pretty hard to diagnose.
+
 # gw pckt srv
 - use PRIO (set option and decide for packet when as high as needed)
 

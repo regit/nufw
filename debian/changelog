@@ -1,3 +1,10 @@
+nufw (0.7.1-1) unstable; urgency=low
+
+  * New upstream version. Fixes some bug that would rarely memleak nuauth.
+    Adds the SQL sync option.
+
+ -- Vincent Deffontaines <vincent@gryzor.com>  Fri, 11 Jun 2004 18:08:19 +0200
+
 nufw (0.7.0-1) unstable; urgency=low
 
   * New upstream version. 0.7.0 is the first release with SSL connections all

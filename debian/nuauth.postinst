@@ -37,6 +37,7 @@ if [ ! -e $CONFIGFILE2 ]; then
         echo "nuauth_ssl_key=" >> $CONFIGFILE2
         echo "nuauth_ssl_key_passwd=" >> $CONFIGFILE2
         echo "nuauth_log_users=" >> $CONFIGFILE2
+        echo "nuauth_log_users_sync=" >> $CONFIGFILE2
         echo "nuauth_user_logs_module=" >> $CONFIGFILE2
         echo "ldap_server_addr=" >> $CONFIGFILE2
         echo "ldap_server_port=" >> $CONFIGFILE2
@@ -113,6 +114,8 @@ db_get nuauth/number_aclcheckers
 nuauth_number_aclcheckers="$RET"
 db_get nuauth/log_users
 nuauth_log_users="$RET"
+db_get nuauth/log_users_sync
+nuauth_log_users_sync="$RET"
 db_get nuauth/user_logs_module
 user_logs_module="$RET"
 db_get nuauth/user_check_module
@@ -205,6 +208,7 @@ sed -e "s/^ *nuauth_client_listen_addr=.*/nuauth_client_listen_addr=\"$nuauth_cl
  -e "sµ^ *nuauth_ssl_key=.*µnuauth_ssl_key=\"$nuauth_ssl_key\"µ" \
  -e "s/^ *nuauth_ssl_key_passwd=.*/nuauth_ssl_key_passwd=\"$nuauth_ssl_key_passwd\"/" \
  -e "s/^ *nuauth_log_users=.*/nuauth_log_users=$nuauth_log_users/" \
+ -e "s/^ *nuauth_log_users_sync=.*/nuauth_log_users_sync=$nuauth_log_users_sync/" \
  -e "s/^ *nuauth_user_logs_module=.*/nuauth_user_logs_module=\"$user_logs_module\"/" \
  -e "s/^ *ldap_server_addr=.*/ldap_server_addr=\"$ldap_server_addr\"/" \
  -e "s/^ *ldap_server_port=.*/ldap_server_port=$ldap_server_port/" \
