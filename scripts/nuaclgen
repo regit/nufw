@@ -268,7 +268,10 @@ if (defined ($list)) {
     # print source port
     $sport = $entry->get_value("SrcPortStart").":".$entry->get_value("SrcPortEnd");
     # print dest port
+    $dport = $entry->get_value("DstPort");
+    if (! $dport){
     $dport = $entry->get_value("DstPortStart").":".$entry->get_value("DstPortEnd");
+    }
     # print groups
     ($dec)=$entry->get_value("Decision");
     # OSname
