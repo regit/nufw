@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.10 2003/11/06 21:53:06 regit Exp $ */
+/* $Id: main.c,v 1.11 2003/11/06 22:00:17 gryzor Exp $ */
 
 /*
 ** Copyright (C) 2002 Eric Leblond <eric@regit.org>
@@ -164,7 +164,7 @@ if (daemonize == 1) {
   sigemptyset( & (action.sa_mask));
   action.sa_flags = 0;
   if ( sigaction(SIGTERM, & action , NULL ) != 0) {
-    g_message("Erreur %d \n",errno);
+    printf("Erreur %d \n",errno);
     exit(1);
   }
 
