@@ -23,7 +23,7 @@
 int check_fill_user_counters(u_int16_t userid,long u_time,unsigned long packet_id,u_int32_t ip){
   user_datas * currentuser=NULL;
 
-  currentuser=g_hash_table_lookup(users_hash,userid);
+  currentuser=g_hash_table_lookup(users_hash,(void*)((unsigned long int)userid));
   if (currentuser == NULL){
     /* failure so create user */
     if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER)) {
@@ -35,7 +35,7 @@ int check_fill_user_counters(u_int16_t userid,long u_time,unsigned long packet_i
     currentuser->last_packet_id=packet_id;
     currentuser->last_packet_timestamp=time(NULL);
     currentuser->lock=g_mutex_new();
-    g_hash_table_insert(users_hash,userid,currentuser);
+    g_hash_table_insert(users_hash,(void*)((unsigned long int)userid),currentuser);
     log_new_user(userid,ip);
     return 1;
   } else {
