@@ -96,21 +96,21 @@ G_MODULE_EXPORT PGconn *pgsql_conn_init(void){
       sizeof(char));
   if (pgsql_conninfo == NULL){return NULL;}
   //Build string we will pass to PQconnectdb
-  strcat(pgsql_conninfo,"hostaddr='");
+  strcat(pgsql_conninfo,"hostaddr=");
   strcat(pgsql_conninfo,pgsql_server);
-  strcat(pgsql_conninfo,"' port=");
+  strcat(pgsql_conninfo," port=");
   strcat(pgsql_conninfo,port);
-  strcat(pgsql_conninfo," dbname='");
+  strcat(pgsql_conninfo," dbname=");
   strcat(pgsql_conninfo,pgsql_db_name);
-  strcat(pgsql_conninfo,"' user='");
+  strcat(pgsql_conninfo," user=");
   strcat(pgsql_conninfo,pgsql_user);
-  strcat(pgsql_conninfo,"' password='");
+  strcat(pgsql_conninfo," password=");
   strcat(pgsql_conninfo,pgsql_passwd);
-  strcat(pgsql_conninfo,"' connect_timeout=");
+  strcat(pgsql_conninfo," connect_timeout=");
   strcat(pgsql_conninfo,timeout);
-  strcat(pgsql_conninfo," sslmode='");
+  strcat(pgsql_conninfo," sslmode=");
   strcat(pgsql_conninfo,pgsql_ssl);
-  strcat(pgsql_conninfo,"'");
+//  strcat(pgsql_conninfo,"'");
   /* init connection */
   if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
       g_message("Going to init pgsql connection ");
