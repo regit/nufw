@@ -41,8 +41,8 @@ int main(int argc,char * argv[]) {
   packet_timeout = PACKET_TIMEOUT;
   track_size = TRACK_SIZE;
   strncpy(authreq_addr,AUTHREQ_ADDR,HOSTNAME_SIZE);
-  /*debug=DEBUG;*/
-  /*Minimum debug value is 2 -> for 1) fatal and 2) critical messages to always
+  /* debug=DEBUG; */
+  /*Minimum debug_level value is 2 -> for 1) fatal and 2) critical messages to always
    * be outputed*/
   debug_level=0;
   debug_areas=DEFAULT_DEBUG_AREAS;
@@ -67,7 +67,7 @@ int main(int argc,char * argv[]) {
       /* destination port */
     case 'p' :
       sscanf(optarg,"%d",&value);
-      printf("Auth Answer send to port %d\n",value);
+      printf("Auth Answer sent to port %d\n",value);
       gwsrv_port=value;
       break;
       /* destination IP */
@@ -87,7 +87,7 @@ int main(int argc,char * argv[]) {
       daemonize=1;
       break;
     case 'h' :
-      fprintf (stdout ,"authsrv [-hDVv] [-l local_port] [-d remote_addr] [-p remote_port]  [-t packet_timeout] [-T track_size]\n");
+      fprintf (stdout ,"authsrv [-hDVv[v[v[v[v[v[v[v[v]]]]]]]]]] [-l local_port] [-d remote_addr] [-p remote_port]  [-t packet_timeout] [-T track_size]\n");
       return 1;
     }
   }

@@ -91,11 +91,10 @@ int auth_packet_to_decision(char* dgram){
       if (sandf){
 	if ( *(dgram+4) == OK ) {
 	  /* TODO : test on return */
-	  /*if (debug){
+	  if (debug){
 	    printf ("Accepting %lu\n",packet_id);
 	  }
-	  */
-	  /*nufw_debug(1,1,"Accepting\n");*/
+	  
 	  IPQ_SET_VERDICT(packet_id, NF_ACCEPT);
 	  pckt_tx++;
 	  return 1;
