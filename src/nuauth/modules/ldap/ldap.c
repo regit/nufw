@@ -176,9 +176,6 @@ G_MODULE_EXPORT GSList* acl_check (connection* element){
   /* send query and wait result */
   timeout.tv_sec = ldap_request_timeout;
   timeout.tv_usec = 0;
-  /* TODO : just get group and decision */
-  /* if (debug)
-     printf("Filter : %s\n",filter); */
     
   err =  ldap_search_st(ld, ldap_acls_base_dn, LDAP_SCOPE_SUBTREE,filter,NULL,0,
 			&timeout,
@@ -204,7 +201,9 @@ G_MODULE_EXPORT GSList* acl_check (connection* element){
 	g_list = g_slist_prepend(g_list,this_acl);
 	/* get decision */
 	attrs_array=ldap_get_values(ld, result, "Decision");
-	sscanf(*attrs_array,"%c",&(this_acl->answer));
+	sscanf(*attrs_array,"%d",&(this_acl->answer));
+        if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_AUTH))
+                g_message("Acl found with decision %d\n",this_acl->answer);
 	ldap_value_free(attrs_array);
 	/* build groups  list */
 	attrs_array = ldap_get_values(ld, result, "Group");
@@ -218,8 +217,6 @@ G_MODULE_EXPORT GSList* acl_check (connection* element){
 	ldap_value_free(attrs_array);
 	result = ldap_next_entry(ld,result);
       }
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_AUTH))
-      g_message("acl group at %p\n",g_list);
     ldap_msgfree (res);
     return g_list;
   } else {
