@@ -9,3 +9,4 @@
 - use id server and authgw
 - down ldap timeout to less than packet timeout
 - do a ldap bind
+- correct bug in auth reponse (foreach seems to crash)
