@@ -28,7 +28,7 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: nutcpc.c,v 1.7 2003/09/08 06:19:56 regit Exp $
+ * $Id: nutcpc.c,v 1.8 2003/09/09 05:49:53 regit Exp $
  */
 
 #include <arpa/inet.h>
@@ -78,6 +78,7 @@ uid_t localuserid;
 
 struct sockaddr_in adr_srv;
 char *password;
+unsigned long packet_id;
 
 /*
  * This structure holds everything we need to know about a connection. We
@@ -292,7 +293,6 @@ int send_user_pckt(conn_t* c){
     "./0123456789ABCDEFGHIJKLMNOPQRST"
     "UVWXYZabcdefghijklmnopqrstuvwxyz";
   int i;
-  long random_number=random();
  
 
 
@@ -329,8 +329,8 @@ int send_user_pckt(conn_t* c){
   pointer+=sizeof t_int16;
   memcpy(pointer,&timestamp,sizeof timestamp);
   pointer+=sizeof timestamp;
-  memcpy(pointer,&random_number,sizeof random_number);
-  pointer+=sizeof random_number;
+  memcpy(pointer,&packet_id,sizeof packet_id);
+  pointer+=sizeof packet_id;
 
   /* construct the md5sum */
   /* first md5 datas */
@@ -344,9 +344,10 @@ int send_user_pckt(conn_t* c){
 	   inet_ntoa(oneip),
 	   c->rmtp,
 	   timestamp,
-	   random_number,
+	   packet_id,
 	   password);
 
+  packet_id++;
   /* then the salt */
   /* Generate a (not very) random seed.  
      You should do it better than this... */
@@ -465,6 +466,8 @@ int main (int argc, char *argv[])
 		}
 	}
 	
+	/* initiate packet number */
+	packet_id=0;
 	/* read password */
 	password=NULL;
 	//my_getpass(password,32,stdin);
