@@ -194,11 +194,7 @@ G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
 		  g_warning("inconsistency in database? unable to parse data for key %s (size %i)\n",dbm_key.dptr,dbm_key.dsize);
 	  return NULL;
   }
-  if (strcmp ( passwd , return_data->passwd ) == 0 )
-  {
-	  if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_AUTH))
-		  g_message("Correct auth received for user %s\n",dbm_key.dptr);
-	  return (return_data->outelt);
-  }
-  return NULL;
+  passwd = (char *) malloc(strlen(return_data->passwd )+1);
+  strncpy(passwd,(return_data->passwd),strlen(return_data->passwd)+1);
+  return (return_data->outelt);
 }
