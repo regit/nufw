@@ -1,0 +1,74 @@
+attributetype ( 18.3.6.1.1.18.1.0 NAME 'SrcIPStart'
+	DESC 'An integer defining the beginning of an IP src scope'
+	EQUALITY integerMatch
+	ORDERING integerOrderingMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 SINGLE-VALUE)
+
+
+attributetype ( 18.3.6.1.1.18.1.1 NAME 'SrcIPEnd'
+	DESC 'An integer defining the end of an IP src scope'
+	EQUALITY integerMatch
+	ORDERING integerOrderingMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 SINGLE-VALUE)
+
+attributetype ( 18.3.6.1.1.18.1.2 NAME 'DstIPStart'
+	DESC 'An integer defining the start of an IP dst scope'
+	EQUALITY integerMatch
+	ORDERING integerOrderingMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 SINGLE-VALUE)
+
+	
+attributetype ( 18.3.6.1.1.18.1.3 NAME 'DstIPEnd'
+	DESC 'An integer defining the end of an IP dst scope'
+	EQUALITY integerMatch
+	ORDERING integerOrderingMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 SINGLE-VALUE)
+
+attributetype ( 18.3.6.1.1.18.1.4 NAME 'SrcPortStart'
+	DESC 'An integer defining the start of a Port src scope'
+	EQUALITY integerMatch
+	ORDERING integerOrderingMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 SINGLE-VALUE)
+
+attributetype ( 18.3.6.1.1.18.1.5 NAME 'SrcPortEnd'
+	DESC 'An integer defining the end of a Port dst scope'
+	EQUALITY integerMatch
+	ORDERING integerOrderingMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 SINGLE-VALUE)
+
+
+attributetype ( 18.3.6.1.1.18.1.6 NAME 'DstPortStart'
+	DESC 'An integer defining the start of a Port dst scope'
+	EQUALITY integerMatch
+	ORDERING integerOrderingMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 SINGLE-VALUE)
+
+attributetype ( 18.3.6.1.1.18.1.7 NAME 'DstPortEnd'
+	DESC 'An integer defining the end of a Port dst scope'
+	EQUALITY integerMatch
+	ORDERING integerOrderingMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 SINGLE-VALUE)
+
+attributetype ( 18.3.6.1.1.18.1.8 NAME 'Proto'
+	DESC 'An integer defining the IP protocol'
+	EQUALITY integerMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.27)
+
+attributetype ( 18.3.6.1.1.18.1.9 NAME 'Decision'
+	DESC 'An integer defining the ACL Decision'
+	EQUALITY integerMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 SINGLE-VALUE)
+
+attributetype ( 18.3.6.1.1.18.1.10 NAME 'Group'
+	DESC 'An integer defining a group id'
+	EQUALITY integerMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.27)
+
+# TODO : time datas
+
+objectclass ( 18.3.6.1.1.18.2.1 NAME 'AccessControlList'
+	DESC 'An IP Acl'
+	MUST (cn $ SrcIPStart $ SrcIPEnd $ DstIPStart $ DstIPEnd $ Decision )
+	MAY (Proto $ SrcPortStart $ SrcPortEnd $ DstPortStart $ DstPortEnd $ Group $ description  ) )
+
+

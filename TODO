@@ -1,0 +1,9 @@
+# Partial TODO List
+
+# gw pckt srv
+- use PRIO (set option and decide for packet when as high as needed)
+
+
+# User auth srv
+- finish ...
+- create and maintain a list : user->IP to filter user packet ("anti-DOS")

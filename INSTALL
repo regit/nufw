@@ -1,0 +1,18 @@
+Prerequisites :
+- libipq (in iptables-dev on deban)
+- automake1.7 to execute cleanly autogen.sh 
+- libldap for the provided auth server
+
+To compile, use the standard :
+./autogen.sh
+./configure
+make
+make install
+
+Next, you will have to run (as root) nufw.
+nufw -h will give you a usage message.
+
+You will also have to launch one authorisation server
+For the moment only one  : nuauth is provided
+nuauth -h will give you a usage message.
+
