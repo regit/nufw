@@ -1,4 +1,4 @@
-/* $Id: auth_srv.h,v 1.23 2003/11/28 17:03:22 gryzor Exp $ */
+/* $Id: auth_srv.h,v 1.24 2003/11/29 17:44:41 regit Exp $ */
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
@@ -64,7 +64,8 @@
 #define HOSTNAME_SIZE 128
 #define PACKET_TIMEOUT 15
 #define DEFAULT_AUTH_MODULE "libldap"
-#define DEFAULT_LOGS_MODULE "libsyslog"
+//#define DEFAULT_LOGS_MODULE "libsyslog"
+#define DEFAULT_LOGS_MODULE "libpgsql"
 #define MODULE_PATH MODULE_DIR "/nuauth/modules/"
 /* define the number of threads that will do user check */
 #define NB_USERCHECK 10
@@ -82,6 +83,7 @@
 
 #define STATE_OPEN 0x1
 #define STATE_CLOSE 0x0
+#define STATE_DROP 0x2
 
 #define ALL_GROUPS 0
 

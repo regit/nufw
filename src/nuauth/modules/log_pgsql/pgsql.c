@@ -177,9 +177,10 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
           iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
           strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
           strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
-          if (snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,start_timestamp) VALUES (%u,%u,'%s','%s',%u,%u,%lu);",
+          if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,start_timestamp) VALUES (%u,%lu,%u,'%s','%s',%u,%u,%lu);",
               pgsql_table_name,
               (element.user_id),
+              element.timestamp,
               (element.tracking_hdrs).protocol,
               tmp_inet1,
               tmp_inet2,
@@ -213,9 +214,10 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
           iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
           strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
           strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
-          if (snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,start_timestamp) VALUES (%u,%u,'%s','%s',%u,%u,%lu);",
+          if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,start_timestamp) VALUES (%u,%lu,%u,'%s','%s',%u,%u,%lu);",
               pgsql_table_name,
               (element.user_id),
+              element.timestamp,
               (element.tracking_hdrs).protocol,
               tmp_inet1,
               tmp_inet2,
@@ -243,9 +245,10 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
           iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
           strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
           strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
-          if (snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,start_timestamp) VALUES (%u,%u,'%s','%s',%lu);",
+          if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,start_timestamp) VALUES (%u,%lu,%u,'%s','%s',%lu);",
               pgsql_table_name,
               (element.user_id),
+              element.timestamp,
               (element.tracking_hdrs).protocol,
               tmp_inet1,
               tmp_inet2,

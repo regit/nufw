@@ -461,6 +461,7 @@ gint take_decision(connection * element) {
             start_test=NOK;
             stop_test=OK;
         }
+#if 0
         /* for each acl with NOK next OK  */
         for (test = start_test; test != stop_test  ; test = stop_test ) {
             for  ( parcours = element->acl_groups; 
@@ -478,6 +479,28 @@ gint take_decision(connection * element) {
                 }
             }
         }
+#endif
+        test=NODECIDE;
+            for  ( parcours = element->acl_groups; 
+                ( parcours != NULL  && test == NODECIDE ); 
+                parcours = g_slist_next(parcours) ) {
+                /* for each user  group */
+                for ( user_group = element->user_groups;
+                    user_group != NULL && test == NODECIDE;
+                    user_group =  g_slist_next(user_group)) {
+                    /* search user group in acl_groups */
+                    if (g_slist_find(((struct acl_group *)(parcours->data))->groups,(gconstpointer)user_group->data)) {
+                        answer = ((struct acl_group *)(parcours->data))->answer ;
+                        if (nuauth_prio_to_nok == 1)
+                            if (answer == NOK)
+                                test=OK;
+                        else 
+                            if (answer == OK)
+                                test=OK;
+                    }
+                }
+            }
+        
     }
 
     /* send response if no one has changed state if packet's ready */
@@ -506,7 +529,11 @@ gint take_decision(connection * element) {
     } else {
         if (element->state == STATE_READY){
             struct auth_answer aanswer ={ NOK , element->user_id } ;
+
             send_auth_response(element->packet_id,&aanswer);
+
+            /* log user packet */
+            log_user_packet(*element,STATE_DROP);
             conn_cl_delete(element);
         } else {
             if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))

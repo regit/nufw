@@ -12,10 +12,6 @@ libmysql_la_SOURCES = mysql.c
 
 LIBS = $(GLIB_LIBS) -lmysqlclient
 
-else
-
-LIBS = $(GLIB_LIBS)
-
 endif
 
 
