@@ -82,10 +82,10 @@ gint  release_individual_mutex(GMutex * mutex){
 }
 
 
-guint
+  guint
 hash_connection(gconstpointer headers)
 {
-//  tracking *tracking_hdrs = (tracking *)headers;
+  //  tracking *tracking_hdrs = (tracking *)headers;
 
   return (jhash_3words(((tracking *)headers)->saddr,
         (((tracking *)headers)->daddr ^ ((tracking *)headers)->protocol),
@@ -214,7 +214,27 @@ connection * search_and_fill (connection * pckt) {
                 g_assert("Should not have this");
             }
             break;
-          default:
+          case STATE_DONE:
+            if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
+                g_warning("Element in state DONE and receive packet state %d\n",
+                    pckt->state);
+            /* if pckt is a nufw request respond with correct decision */
+            switch (pckt->state){
+              case  STATE_AUTHREQ:
+                { struct auth_answer aanswer ={ element->decision , element->user_id } ;
+                    g_slist_foreach(pckt->packet_id,
+                        (GFunc) send_auth_response,
+                        &aanswer
+                        );
+                }
+                UNLOCK_CONN(element);
+                free_connection(pckt);
+            }
+          case STATE_READY:
+            if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
+                g_warning("Element in state %d and receive packet state %d\n",
+                    ((connection *)element)->state,
+                    pckt->state);
             switch (pckt->state){
               case  STATE_AUTHREQ:
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
@@ -231,13 +251,7 @@ connection * search_and_fill (connection * pckt) {
                 // going to log
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
                     g_message("Need only cleaning\n");
-                // user logging 
-                log_user_packet(*(connection *)element,((connection *)element)->decision);
-                // House work
-                if (!conn_cl_delete(element)) {
-                        if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-                                g_warning("connection cleaning failed at %s:%d\n",__FILE__,__LINE__);
-                }
+                UNLOCK_CONN(element);
                 free_connection(pckt);
                 return NULL;           
             }
@@ -390,7 +404,7 @@ int conn_cl_delete(gconstpointer conn) {
     }
     /* free global hash */
     g_static_mutex_unlock (&insert_mutex);
-   /* free isolated structure */ 
+    /* free isolated structure */ 
     free_connection((connection *)conn);
     return 1;
 }
@@ -477,10 +491,10 @@ gint take_decision(connection * element) {
         if (element->state == STATE_READY ){
             // log user
             log_user_packet(*element,element->decision);
-        if ( ! conn_cl_delete( element)) {
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-                                g_warning("connection cleaning failed at %s:%d\n",__FILE__,__LINE__);
-                }
+            if ( ! conn_cl_delete( element)) {
+                if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
+                    g_warning("connection cleaning failed at %s:%d\n",__FILE__,__LINE__);
+            }
 
         } else {
             /* only change state */
@@ -551,10 +565,10 @@ gint take_decision(connection * element) {
             }
             if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
                 g_message("Freeing element\n");
-       if ( ! conn_cl_delete( element)) {
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-                                g_warning("connection cleaning failed at %s:%d\n", __FILE__, __LINE__);
-                }
+            if ( ! conn_cl_delete( element)) {
+                if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
+                    g_warning("connection cleaning failed at %s:%d\n", __FILE__, __LINE__);
+            }
         } else {
             if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
                 g_message("only change state\n");
