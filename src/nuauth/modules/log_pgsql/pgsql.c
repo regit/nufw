@@ -121,18 +121,19 @@ G_MODULE_EXPORT PGconn *pgsql_conn_init(void){
       g_message("...");
   pgsql_status=PQstatus(ld);
 
-  free(pgsql_conninfo);
   
   if(pgsql_status != CONNECTION_OK) {
     if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
       g_warning("pgsql init error : %s\n",strerror(errno));
   if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
       g_message("connection : %s",pgsql_conninfo);
+      free(pgsql_conninfo);
     return NULL;
   }
 
   if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
       g_message("done");
+  free(pgsql_conninfo);
   return ld;
 }
 
