@@ -234,12 +234,11 @@ connection * search_and_fill (connection * pckt) {
                 return NULL;
               case STATE_AUTHREQ:
                 if (pckt->packet_id != NULL ){
-                    struct auth_answer aanswer ={ element->decision , element->user_id } ;
-                    u_int32_t packetid=element->packet_id;
+                    struct auth_answer aanswer = { element->decision , element->user_id } ;
+                    u_int32_t packetid = element->packet_id;
                     UNLOCK_CONN(element);
                     g_slist_foreach(packetid,
                         (GFunc) send_auth_response,
-            UNLOCK_CONN(element);
                         &aanswer
                         );
                     
@@ -408,6 +407,8 @@ int conn_key_delete(gconstpointer key) {
         if ( g_mutex_trylock(element->lock)) {
             /* need to log drop of packet if it is a nufw packet */
             if (element->state == STATE_AUTHREQ) {
+                if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
+                    g_message("Log dropping packet");
                 log_user_packet(*element,STATE_DROP); 
             }
             g_hash_table_remove (conn_list,key);
