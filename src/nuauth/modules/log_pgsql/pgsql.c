@@ -264,6 +264,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
             }
             return 0;
         }
+        return 0;
       case STATE_ESTABLISHED:
         if ((element.tracking_hdrs).protocol == IPPROTO_TCP){
             int update_status = 0;
