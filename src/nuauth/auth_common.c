@@ -247,9 +247,6 @@ connection * search_and_fill (connection * pckt) {
                 /* and return */
                 return NULL;
               case STATE_USERPCKT:
-                g_assert(pckt->state==STATE_USERPCKT);
-                ((connection *)element)->user_id = pckt->user_id;
-                // going to log
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
                     g_message("Need only cleaning\n");
                 UNLOCK_CONN(element);
