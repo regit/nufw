@@ -211,7 +211,10 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
       break;
     case STATE_ESTABLISHED: 
       if ((element.tracking_hdrs).protocol == IPPROTO_TCP){
-          if (snprintf(request,511,"UPDATE %s SET state=%lu WHERE (ip_daddr=%lu AND ip_saddr=%lu AND tcp_dport=%u AND tcp_sport=%u AND STATE=%hu)",
+          int update_status = 0;
+          while (update_status < 2){
+            update_status++;
+            if (snprintf(request,511,"UPDATE %s SET state=%lu WHERE (ip_daddr=%lu AND ip_saddr=%lu AND tcp_dport=%u AND tcp_sport=%u AND STATE=%hu)",
 
               mysql_table_name,
               STATE_ESTABLISHED,
@@ -220,19 +223,30 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
               (element.tracking_hdrs).source,
               (element.tracking_hdrs).dest,
               STATE_OPEN
-          ) >= 511){
+            ) >= 511){
               if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                   g_warning("Building mysql update query, the 511 limit was reached!\n");
               return -1;
-          }
-          Result = mysql_real_query(ld, request, strlen(request));
-          if (Result != 0){
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-              g_warning("Can not update Data : %s\n",mysql_error(ld));
-            return -1;
+            }
+            Result = mysql_real_query(ld, request, strlen(request));
+            if (Result != 0){
+              if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+                g_warning("Can not update Data : %s\n",mysql_error(ld));
+              return -1;
+           }
+            if (mysql_affected_rows(ld) >= 1){
+                return 0;
+            }else{
+                if (update_status <2){
+                  usleep(33333); //Sleep for 1/3 sec
+                }else{
+                    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
+                        g_warning("Tried to update MYSQL entry twice, looks like data to update wasn't inserted\n");
+                }
+            }
           }
           return 0;
-      }
+        }
       break;
     case STATE_CLOSE: 
       if ((element.tracking_hdrs).protocol == IPPROTO_TCP){
