@@ -22,6 +22,7 @@
 #define _NUAUTHVARS
 confparams nuauth_vars[] = {
     { "nuauth_client_listen_addr" ,  G_TOKEN_STRING, 0 , AUTHREQ_CLIENT_LISTEN_ADDR },
+    { "nuauth_protocol_version" ,  G_TOKEN_INT, NUAUTH_DEFAULT_PROTOCOL , NULL },
     { "nuauth_nufw_listen_addr" ,  G_TOKEN_STRING, 0 , AUTHREQ_NUFW_LISTEN_ADDR },
     { "nuauth_gw_packet_port" , G_TOKEN_INT , AUTHREQ_PORT,NULL },
     { "nuauth_user_packet_port" , G_TOKEN_INT , AUTHREQ_PORT ,NULL},
@@ -137,6 +138,9 @@ int main(int argc,char * argv[]) {
 
     vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_use_ssl");
     nuauth_use_ssl=*(int*)(vpointer?vpointer:&nuauth_use_ssl);
+
+    vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_protocol_version");
+    nuauth_protocol_version=*(int*)(vpointer?vpointer:&nuauth_protocol_version);
 
     /*parse options */
     while((option = getopt ( argc, argv, options_list)) != -1 ){
@@ -288,8 +292,14 @@ int main(int argc,char * argv[]) {
         NULL,
         (GDestroyNotify) free_connection); 
     /* initiate user hash */
-    users_hash = g_hash_table_new (NULL, NULL);
-
+    switch (nuauth_protocol_version){
+      case 1:
+                users_hash = g_hash_table_new (NULL, 
+                                NULL);
+      case 2:
+                users_hash = g_hash_table_new (g_str_hash(), 
+                                g_str_equal());
+    }
 
     /* create srv addr for sending auth answer*/
     adr_srv.sin_family= AF_INET;

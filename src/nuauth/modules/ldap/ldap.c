@@ -77,6 +77,8 @@ g_module_check_init(GModule *module){
   /* init thread private stuff */
   ldap_priv = g_private_new (g_free);
 
+      )
+  
   return NULL;
 }
 

@@ -364,248 +364,261 @@ connection * userpckt_decode(char* dgram,int dgramsiz){
     /* decode dgram */
     switch (*dgram) {
       case 0x1:
-        if ( *(dgram+1) == USER_REQUEST) {
-            /* allocate connection */
-            connexion = g_new0( connection,1);
-            connexion->acl_groups=NULL;
-            connexion->user_groups=NULL;
-            if (connexion == NULL){
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_USER)){
-                    g_message("Can not allocate connexion\n");
+        if (nuauth_protocol_version == 1){
+            if ( *(dgram+1) == USER_REQUEST) {
+                /* allocate connection */
+                connexion = g_new0( connection,1);
+                connexion->acl_groups=NULL;
+                connexion->user_groups=NULL;
+                if (connexion == NULL){
+                    if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_USER)){
+                        g_message("Can not allocate connexion\n");
+                    }
+                    return NULL;
                 }
-                return NULL;
-            }
 
-            /* parse packet */
-            pointer=dgram+2;
-            connexion->user_id=*(u_int16_t *)(pointer);
-            pointer+=sizeof (u_int16_t);
-            connexion->tracking_hdrs.saddr=(*(u_int32_t * )(pointer));
+                /* parse packet */
+                pointer=dgram+2;
+                connexion->user_id=*(u_int16_t *)(pointer);
+                pointer+=sizeof (u_int16_t);
+                connexion->tracking_hdrs.saddr=(*(u_int32_t * )(pointer));
 #if 0
-            if ( connexion->tracking_hdrs.saddr != ntohl(addr_clnt) ){
-                g_warning("client addr (%lu) != source addr (%lu) !\n",connexion->tracking_hdrs.saddr, addr_clnt);
-                return NULL;
-            } 
+                if ( connexion->tracking_hdrs.saddr != ntohl(addr_clnt) ){
+                    g_warning("client addr (%lu) != source addr (%lu) !\n",connexion->tracking_hdrs.saddr, addr_clnt);
+                    return NULL;
+                } 
 #endif
-            pointer+=sizeof (u_int32_t);
-            connexion->tracking_hdrs.daddr=(*(u_int32_t * )(pointer));
-            pointer+=sizeof (u_int32_t);
-            connexion->tracking_hdrs.protocol=*(u_int8_t *)(pointer);
-            pointer+= sizeof (u_int8_t);
-            /* PROV : swap FLAGS as no client use it ...*/
-            pointer+=3 * sizeof (u_int8_t);
-            switch (connexion->tracking_hdrs.protocol) {
-              case IPPROTO_TCP:
-                connexion->tracking_hdrs.source=(*(u_int16_t *)pointer);
-                pointer+=sizeof (u_int16_t);
-                connexion->tracking_hdrs.dest=(*(u_int16_t *)pointer);
-                pointer+=sizeof (u_int16_t);
-                connexion->tracking_hdrs.type=0;
-                connexion->tracking_hdrs.code=0;
-                break;
-              case IPPROTO_UDP:
-                connexion->tracking_hdrs.source=(*(u_int16_t *)pointer);
-                pointer+=sizeof (u_int16_t);
-                connexion->tracking_hdrs.dest=(*(u_int16_t *)pointer);
-                pointer+=sizeof (u_int16_t);
-                connexion->tracking_hdrs.type=0;
-                connexion->tracking_hdrs.code=0;
-                break;
-              case IPPROTO_ICMP:
-                connexion->tracking_hdrs.source=0;
-                connexion->tracking_hdrs.dest=0;
-                connexion->tracking_hdrs.type=*(u_int8_t *)(pointer);
-                pointer+=sizeof(u_int8_t);
-                connexion->tracking_hdrs.code=*(u_int8_t *)(pointer);
-                pointer+=3;
-                break;
-            }
-            /* get timestamp */
-            connexion->timestamp=*(long *)(pointer);
-            pointer+=sizeof(long);
-            /* get random number */
-            u_packet_id=*(long *)(pointer);
-            pointer+=sizeof(long);
-            /* get user md5datas */
-            usermd5datas=strndup(pointer,34);
+                pointer+=sizeof (u_int32_t);
+                connexion->tracking_hdrs.daddr=(*(u_int32_t * )(pointer));
+                pointer+=sizeof (u_int32_t);
+                connexion->tracking_hdrs.protocol=*(u_int8_t *)(pointer);
+                pointer+= sizeof (u_int8_t);
+                /* PROV : swap FLAGS as no client use it ...*/
+                pointer+=3 * sizeof (u_int8_t);
+                switch (connexion->tracking_hdrs.protocol) {
+                  case IPPROTO_TCP:
+                    connexion->tracking_hdrs.source=(*(u_int16_t *)pointer);
+                    pointer+=sizeof (u_int16_t);
+                    connexion->tracking_hdrs.dest=(*(u_int16_t *)pointer);
+                    pointer+=sizeof (u_int16_t);
+                    connexion->tracking_hdrs.type=0;
+                    connexion->tracking_hdrs.code=0;
+                    break;
+                  case IPPROTO_UDP:
+                    connexion->tracking_hdrs.source=(*(u_int16_t *)pointer);
+                    pointer+=sizeof (u_int16_t);
+                    connexion->tracking_hdrs.dest=(*(u_int16_t *)pointer);
+                    pointer+=sizeof (u_int16_t);
+                    connexion->tracking_hdrs.type=0;
+                    connexion->tracking_hdrs.code=0;
+                    break;
+                  case IPPROTO_ICMP:
+                    connexion->tracking_hdrs.source=0;
+                    connexion->tracking_hdrs.dest=0;
+                    connexion->tracking_hdrs.type=*(u_int8_t *)(pointer);
+                    pointer+=sizeof(u_int8_t);
+                    connexion->tracking_hdrs.code=*(u_int8_t *)(pointer);
+                    pointer+=3;
+                    break;
+                }
+                /* get timestamp */
+                connexion->timestamp=*(long *)(pointer);
+                pointer+=sizeof(long);
+                /* get random number */
+                u_packet_id=*(long *)(pointer);
+                pointer+=sizeof(long);
+                /* get user md5datas */
+                usermd5datas=strndup(pointer,34);
 
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)){
-                g_message("User "); 
-                print_connection(connexion,NULL);
-            }
+                if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)){
+                    g_message("User "); 
+                    print_connection(connexion,NULL);
+                }
 
-            /* get user datas : password, groups (filled in) */
-            connexion->user_groups = (*module_user_check) (connexion->user_id,passwd);
-            if (connexion->user_groups == NULL) {
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
-                    g_message("user_check return bad\n");
-                free_connection(connexion);
-                return NULL;
-            }
-
-            /*
-             * check MD5 crypt 
-             */
-
-            /* construct md5datas */
-            oneip.s_addr=htonl(connexion->tracking_hdrs.saddr);
-            strncpy(onaip,inet_ntoa(oneip),16);
-            oneip.s_addr=htonl(connexion->tracking_hdrs.daddr);
-
-            if (connexion->tracking_hdrs.protocol != IPPROTO_ICMP) {
-                firstf=connexion->tracking_hdrs.source;
-                lastf=connexion->tracking_hdrs.dest;
-            } else {
-                firstf=connexion->tracking_hdrs.type;
-                lastf=connexion->tracking_hdrs.code;
-            }
-
-            snprintf(md5datas,512,
-                "%s%u%s%u%ld%ld%s",
-                onaip,
-                firstf,
-                inet_ntoa(oneip),
-                lastf,
-                connexion->timestamp,
-                u_packet_id,
-                passwd);
-
-            /* initialisation stuff */
-            if (crypt_internal_datas == NULL){
-                crypt_internal_datas=g_new0(struct crypt_data,1);
-                g_private_set(crypt_priv,crypt_internal_datas);
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
-                    g_message("Initiating crypt internal structure");
-            }
-            /* crypt datas */
-            result = crypt_r(md5datas,usermd5datas,crypt_internal_datas);
-            /* compare the two crypted datas */
-            if ( strcmp (result, usermd5datas) != 0 ) {
-                /* bad sig dropping user packet ! */
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_USER))
-                    g_message("wrong md5 sig for packet %s \n",usermd5datas);
-                free(usermd5datas);
-                free_connection(connexion);
-                return NULL;
-            } else {
-                free(usermd5datas);
-                /* 
-                 * md5 done !
-                 */
-
-                /* Is it a try to spoof MD5 ? */
-
-                /* set some default on connexion */
-                if (check_fill_user_counters(connexion->user_id,connexion->timestamp,u_packet_id,connexion->tracking_hdrs.saddr)){	
-                    /* first reset timestamp to now */
-                    connexion->timestamp=time(NULL);
-                    connexion->state=STATE_USERPCKT;
-                    /* acl part is NULL */
-                    connexion->packet_id=NULL;
-                    connexion->acl_groups=NULL;
-                    return connexion;
-                } else {
+                /* get user datas : password, groups (filled in) */
+                connexion->user_groups = (*module_user_check) (connexion->user_id,passwd);
+                if (connexion->user_groups == NULL) {
                     if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
-                        g_message("Bad user packet\n");
+                        g_message("user_check return bad\n");
                     free_connection(connexion);
                     return NULL;
                 }
+
+                /*
+                 * check MD5 crypt 
+                 */
+
+                /* construct md5datas */
+                oneip.s_addr=htonl(connexion->tracking_hdrs.saddr);
+                strncpy(onaip,inet_ntoa(oneip),16);
+                oneip.s_addr=htonl(connexion->tracking_hdrs.daddr);
+
+                if (connexion->tracking_hdrs.protocol != IPPROTO_ICMP) {
+                    firstf=connexion->tracking_hdrs.source;
+                    lastf=connexion->tracking_hdrs.dest;
+                } else {
+                    firstf=connexion->tracking_hdrs.type;
+                    lastf=connexion->tracking_hdrs.code;
+                }
+
+                snprintf(md5datas,512,
+                    "%s%u%s%u%ld%ld%s",
+                    onaip,
+                    firstf,
+                    inet_ntoa(oneip),
+                    lastf,
+                    connexion->timestamp,
+                    u_packet_id,
+                    passwd);
+
+                /* initialisation stuff */
+                if (crypt_internal_datas == NULL){
+                    crypt_internal_datas=g_new0(struct crypt_data,1);
+                    g_private_set(crypt_priv,crypt_internal_datas);
+                    if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
+                        g_message("Initiating crypt internal structure");
+                }
+                /* crypt datas */
+                result = crypt_r(md5datas,usermd5datas,crypt_internal_datas);
+                /* compare the two crypted datas */
+                if ( strcmp (result, usermd5datas) != 0 ) {
+                    /* bad sig dropping user packet ! */
+                    if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_USER))
+                        g_message("wrong md5 sig for packet %s \n",usermd5datas);
+                    free(usermd5datas);
+                    free_connection(connexion);
+                    return NULL;
+                } else {
+                    free(usermd5datas);
+                    /* 
+                     * md5 done !
+                     */
+
+                    /* Is it a try to spoof MD5 ? */
+
+                    /* set some default on connexion */
+                    if (check_fill_user_counters(connexion->user_id,connexion->timestamp,u_packet_id,connexion->tracking_hdrs.saddr)){	
+                        /* first reset timestamp to now */
+                        connexion->timestamp=time(NULL);
+                        connexion->state=STATE_USERPCKT;
+                        /* acl part is NULL */
+                        connexion->packet_id=NULL;
+                        connexion->acl_groups=NULL;
+                        return connexion;
+                    } else {
+                        if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
+                            g_message("Bad user packet\n");
+                        free_connection(connexion);
+                        return NULL;
+                    }
+                }
             }
+        } else {
+            if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
+                g_message("Bad version packet, protocol version 1\n");
+            return NULL; 
         }
         /* Let's work on Protocol version 2 */
       case 0x2:
-        if ( *(dgram+1) == USER_REQUEST) {
-            u_int16_t total_len=0; 
-            char * payload=dgram;
-            /* allocate connection */
-            connexion = g_new0( connection,1);
 
-            /* parse packet */
-            pointer=dgram+2;
-            total_len=*(u_int16_t *)(pointer);
-            if (total_len > dgramsiz){
-                /* big oops */
-                g_free(connexion);
-                return NULL;
-            } 
+        if (nuauth_protocol_version == 2){
+            if ( *(dgram+1) == USER_REQUEST) {
+                u_int16_t total_len=0; 
+                char * payload=dgram;
+                /* allocate connection */
+                connexion = g_new0( connection,1);
 
-            pointer+=sizeof (u_int16_t);
+                /* parse packet */
+                pointer=dgram+2;
+                total_len=*(u_int16_t *)(pointer);
+                if (total_len > dgramsiz){
+                    /* big oops */
+                    g_free(connexion);
+                    return NULL;
+                } 
+
+                pointer+=sizeof (u_int16_t);
 #if 0
-            if ( connexion->tracking_hdrs.saddr != ntohl(addr_clnt) ){
-                g_warning("client addr (%lu) != source addr (%lu) !\n",connexion->tracking_hdrs.saddr, addr_clnt);
-                return NULL;
-            } 
+                if ( connexion->tracking_hdrs.saddr != ntohl(addr_clnt) ){
+                    g_warning("client addr (%lu) != source addr (%lu) !\n",connexion->tracking_hdrs.saddr, addr_clnt);
+                    return NULL;
+                } 
 #endif
 
-            /* iter on Field till we're inferior to total length */
-            while (pointer - dgram < total_len){ 
-                int field_length=*(u_int16_t *)(pointer+2);
-                /* check if field length is coherent with respect to total length */
-                if (pointer - dgram + field_length <= total_len) {
-                    /* get field_type field_flag */
-                    u_int8_t field_type=*(u_int8_t *)(pointer);
-                    u_int8_t field_flag=*(u_int8_t *)(pointer+1);
-                    char * field_datas=pointer+4;
-                    /* treat following field type */
-			switch (field_type) {
-                      case PACKET_FIELD:
-			      /* fill IP headers */
-                        parse_packet_field(field_datas,field_flag,field_length,connexion);
-                        break;
-                      case USERNAME_FIELD:
-                        /* we need to fill userid and password */
-                        parse_username_field(field_datas,field_flag,field_length,connexion);
-                        break;
-                      case AUTHENTICATION_FIELD:
-			/* we get packet_id timestamp */
-                        packet_auth_field = parse_authentication_field(field_datas,field_flag,field_length);
-                        break;
-                      default:
+                /* iter on Field till we're inferior to total length */
+                while (pointer - dgram < total_len){ 
+                    int field_length=*(u_int16_t *)(pointer+2);
+                    /* check if field length is coherent with respect to total length */
+                    if (pointer - dgram + field_length <= total_len) {
+                        /* get field_type field_flag */
+                        u_int8_t field_type=*(u_int8_t *)(pointer);
+                        u_int8_t field_flag=*(u_int8_t *)(pointer+1);
+                        char * field_datas=pointer+4;
+                        /* treat following field type */
+                        switch (field_type) {
+                          case PACKET_FIELD:
+                            /* fill IP headers */
+                            parse_packet_field(field_datas,field_flag,field_length,connexion);
+                            break;
+                          case USERNAME_FIELD:
+                            /* we need to fill userid and password */
+                            parse_username_field(field_datas,field_flag,field_length,connexion);
+                            break;
+                          case AUTHENTICATION_FIELD:
+                            /* we get packet_id timestamp */
+                            packet_auth_field = parse_authentication_field(field_datas,field_flag,field_length);
+                            break;
+                          default:
+                            if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
+                                g_message("Bad user packet, unknown field type\n");
+                            free_connection(connexion);
+                            return NULL;
+                            break;
+                        }
+                    } else {
                         if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
-                            g_message("Bad user packet, unknown field type\n");
+                            g_message("Bad user packet, announced length is wrong\n");
                         free_connection(connexion);
                         return NULL;
-                        break;
+                    }
+                    pointer+=field_length;
+                }
+                /* check if paquet is complete */
+                if ((connexion->timestamp)&&(connexion->username!=NULL)&&(packet_auth_field!=NULL)){
+                    if (! get_user_datas(connexion,packet_auth_field))
+                        return NULL;
+                } else {
+                    return NULL;
+                }
+
+                /* check authentication */
+                if ( check_authentication(connexion,packet_auth_field)){
+                    /* set some default on connexion */
+                    if (check_fill_user_counters(connexion->user_id,connexion->timestamp,u_packet_id,connexion->tracking_hdrs.saddr)){	
+                        /* first reset timestamp to now */
+                        connexion->timestamp=time(NULL);
+                        connexion->state=STATE_USERPCKT;
+                        /* acl part is NULL */
+                        connexion->packet_id=NULL;
+                        connexion->acl_groups=NULL;
+                        free_auth_field(packet_auth_field);
+                        return connexion;
+                    } else {
+                        if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
+                            g_message("Bad user packet\n");
+                        free_connection(connexion);
+                        return NULL;
                     }
                 } else {
-                    if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
-                        g_message("Bad user packet, announced length is wrong\n");
                     free_connection(connexion);
+                    free_auth_field(packet_auth_field);
                     return NULL;
                 }
-                pointer+=field_length;
             }
-            /* check if paquet is complete */
-                if ((connexion->timestamp)&&(connexion->username!=NULL)&&(packet_auth_field!=NULL)){
-                        if (! get_user_datas(connexion,packet_auth_field))
-                            return NULL;
-                } else {
-                        return NULL;
-                }
-            
-            /* check authentication */
-            if ( check_authentication(connexion,packet_auth_field)){
-                /* set some default on connexion */
-                if (check_fill_user_counters(connexion->user_id,connexion->timestamp,u_packet_id,connexion->tracking_hdrs.saddr)){	
-                    /* first reset timestamp to now */
-                    connexion->timestamp=time(NULL);
-                    connexion->state=STATE_USERPCKT;
-                    /* acl part is NULL */
-                    connexion->packet_id=NULL;
-                    connexion->acl_groups=NULL;
-		    free_auth_field(packet_auth_field);
-                    return connexion;
-                } else {
-                    if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
-                        g_message("Bad user packet\n");
-                    free_connection(connexion);
-                    return NULL;
-                }
-            } else {
-                    free_connection(connexion);
-		    free_auth_field(packet_auth_field);
-                    return NULL;
-	    }
+        } else {
+            if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
+                g_message("Bad version packet, protocol version 1\n");
+            return NULL; 
         }
     }
     /* FIXME : free dgram see over */
@@ -656,12 +669,14 @@ void * parse_packet_field(char* pointer, u_int8_t flag ,connection * connexion,i
 /* parse username field */
 void * parse_username_field(char * dgram, u_int8_t flag, int length ,connection * connexion){ 
     connexion->username = g_strndup(dgram,length);
-   return NULL;
+    return NULL;
 
 
 }
 
 int get_user_datas(connection *connexion,auth_field* packet_auth_field){
+    /* check if user is in the cache */
+    
     /* get user datas : groups (filled in), auth_field (password if md5) */
     connexion->user_groups = (*module_user_check_v2) (connexion,packet_auth_field);
     if (connexion->user_groups == NULL) {
@@ -678,35 +693,35 @@ int get_user_datas(connection *connexion,auth_field* packet_auth_field){
 /* parse authentication field */
 
 auth_field * parse_authentication_field(char * dgram,  u_int8_t flag ,int length){ 
-	auth_field * packet_auth_field=NULL;
-	switch (flag) {
-		case MD5_AUTH:
-			packet_auth_field=g_new0(auth_field,1);
-			packet_auth_field->type=MD5_AUTH;
-			packet_auth_field->md5_datas=g_new0(md5_auth_field,1);
-			(packet_auth_field->md5_datas)->u_packet_id=*(long*)dgram;
-			dgram+=sizeof(long);
-			g_strlcpy((packet_auth_field->md5_datas)->md5sum,dgram,34);
-			return packet_auth_field;
-          	default:
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
-                	g_message("Unknown authentication type");
-		return NULL;
-	}
+    auth_field * packet_auth_field=NULL;
+    switch (flag) {
+      case MD5_AUTH:
+        packet_auth_field=g_new0(auth_field,1);
+        packet_auth_field->type=MD5_AUTH;
+        packet_auth_field->md5_datas=g_new0(md5_auth_field,1);
+        (packet_auth_field->md5_datas)->u_packet_id=*(long*)dgram;
+        dgram+=sizeof(long);
+        g_strlcpy((packet_auth_field->md5_datas)->md5sum,dgram,34);
+        return packet_auth_field;
+      default:
+        if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
+            g_message("Unknown authentication type");
+        return NULL;
+    }
     return packet_auth_field;
 }
 
 
 int check_authentication(connection * connexion,auth_field * packet_auth_field ){
-        switch (packet_auth_field->type) {
-          case  MD5_AUTH:
-                return check_md5_sig(connexion,packet_auth_field->md5_datas); 
-          default:
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
-                	g_message("Unknown authentication type");
-		return 0;
+    switch (packet_auth_field->type) {
+      case  MD5_AUTH:
+        return check_md5_sig(connexion,packet_auth_field->md5_datas); 
+      default:
+        if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
+            g_message("Unknown authentication type");
+        return 0;
         break;
-        }
+    }
 }
 
 /* check md5 sig */
@@ -761,13 +776,13 @@ int check_md5_sig(connection * connexion,md5_auth_field * authdatas ){
 }
 
 void free_auth_field(auth_field * field){
-	switch (field->type){
-		case MD5_AUTH:
-                        if (field->md5_datas)
-			        g_free(field->md5_datas);
-                        if ((field->md5_datas)->password)
-                                g_free(field->password);
-			g_free(field);
-	}	
+    switch (field->type){
+      case MD5_AUTH:
+        if (field->md5_datas)
+            g_free(field->md5_datas);
+        if ((field->md5_datas)->password)
+            g_free(field->password);
+        g_free(field);
+    }	
 }
 

@@ -54,6 +54,7 @@
 #define DUMMY 0
 #define USE_LDAP 0
 #define AUTHREQ_CLIENT_LISTEN_ADDR "0.0.0.0"
+#define NUAUTH_DEFAULT_PROTOCOL 2
 #define AUTHREQ_NUFW_LISTEN_ADDR "127.0.0.1"
 #define GWSRV_ADDR "127.0.0.1"
 //#define CLIENT_LISTEN_ADDR "0.0.0.0"
@@ -166,6 +167,7 @@ int debug_level;
 int debug_areas;
 int nuauth_log_users;
 int nuauth_log_users_sync;
+int nuauth_protocol_version;
 int nuauth_prio_to_nok;
 struct sockaddr_in adr_srv, client_srv, nufw_srv;
 
@@ -190,6 +192,7 @@ typedef struct User_Datas {
 	long last_packet_time;
 	unsigned long last_packet_id;
 	long last_packet_timestamp;
+        user_auth_datas *
 	GMutex * lock;
 } user_datas;
 
