@@ -179,7 +179,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
             iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
             strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
             strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
-            if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,start_timestamp,state,'oob_prefix') VALUES (%u,%lu,%u,'%s','%s',%u,%u,%lu,%hu,'ACCEPT');",
+            if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,start_timestamp,state,oob_prefix) VALUES (%u,%lu,%u,'%s','%s',%u,%u,%lu,%hu,'ACCEPT');",
                   pgsql_table_name,
                   (element.user_id),
                   element.timestamp,
