@@ -150,6 +150,9 @@ int main(int argc,char * argv[]) {
 
 
 if (daemonize == 1) {
+  int i;
+
+  
   if ((pidf = fork()) < 0){
   	g_error("Unable to fork\n");
 	exit (-1); /* this should be useless !! */
@@ -159,21 +162,15 @@ if (daemonize == 1) {
 	}
   }
 
- setsid();
+  chdir("/");
+  
+  setsid();
 
-
- if ((pidf = fork()) < 0){
-  	printf("Unable to fork\n");
-	exit (-1);
-  } else {
- 	 if (pidf > 0) {
-		exit(0);
-	}
-  }
-
-
- set_glib_loghandlers();
-
+  set_glib_loghandlers();
+ 
+ for (i = 0; i < FOPEN_MAX ; i++){
+   close(i);
+ }
 }
 
  signal(SIGPIPE,SIG_IGN);

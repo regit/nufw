@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.6 2003/10/02 20:05:04 gryzor Exp $ */
+/* $Id: main.c,v 1.7 2003/10/03 20:53:00 regit Exp $ */
 
 /*
 ** Copyright (C) 2002 Eric Leblond <eric@regit.org>
@@ -117,6 +117,8 @@ int main(int argc,char * argv[]){
 
 /* Daemon code */
 if (daemonize == 1) {
+  int i;
+
   if ((pidf = fork()) < 0){
   	syslog(SYSLOG_FACILITY(DEBUG_LEVEL_FATAL),"Unable to fork\n");
 	exit (-1);
@@ -126,6 +128,15 @@ if (daemonize == 1) {
 		exit(0);
 	}
   }
+
+  chdir("/");
+
+  setsid();
+
+  for (i = 0; i < FOPEN_MAX ; i++){
+    close(i);
+  }
+
   log_engine = LOG_TO_SYSLOG;
 }
   
