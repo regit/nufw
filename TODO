@@ -8,7 +8,6 @@
 - use id server and authgw
 - down ldap timeout to less than packet timeout
 - set packet timeout to less than proto timeout
-- finish user activity logging
 - deal with reload signals
 
 #Modules
