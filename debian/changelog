@@ -1,3 +1,10 @@
+nufw (0.7.0-1) unstable; urgency=low
+
+  * New upstream version. 0.7.0 is the first release with SSL connections all
+    the way.
+
+ -- Vincent Deffontaines <vincent@gryzor.com>  Tue, 30 Mar 2004 21:18:37 +0200
+
 nufw (0.6.5-1) unstable; urgency=low
 
   * New upstream version

@@ -222,6 +222,46 @@ Description-fr: Module de vérification d'ACL
  bon fonctionnement de la plateforme. Pour l'instant le choix en est plutôt
  facile, puisque seul un module "libldap" est fonctionnel ;-)
 
+Template: nuauth/use_ssl
+Type: select
+Choices: 0, 1
+Default: 1
+Description: SSL communications with clients
+ If you set this to 1, only SSL encrypted authentications will be accepted from
+ clients. If you set this to 0, a hash will be used. It is strongly advised to
+ use SSL encryption, which is the default.
+Description-fr: Communications SSL avec les clients
+ Si cette valeur est positionnée à 1, les communications avec les postes clients
+ seront encryptées sur SSL. Dans le cas contraire, un simple hash sera utilisé
+ pour l'identification, ce qui peut laisser la porte ouverte à certaines
+ attaques. Il est fortement conseillé d'utiliser SSL, et c'est d'ailleurs
+ l'option par défaut.
+
+Template: nuauth_ssl_key
+Type: string
+Default: /etc/nufw/nuauth.pem
+Description: SSL key for clients communication
+ Please enter the full path of the private key that will be used for clients
+ communications.
+Description-fr: Clé SSL
+ Veuillez saisir le chemin complet vers la clé privée à utiliser
+ pour les communications avec les postes clients.
+
+Template: nuauth_ssl_key_passwd
+Type: password
+Default: /etc/nufw/nuauth.pem
+Description: Password of the SSL key for clients communication
+ Please enter password to use with specified key. Keep empty if there is no
+ password. Please be aware that your password cannot contain the slash "/"
+ character when set from debconf (it can contain it if you edit config file by
+ hand).
+Description-fr: Mot de passe de la clé SSL.
+ Veuillez saisir le mot de passe associé à la clé SSL. Laissez ce champ vide si
+ la clé n'est pas protégée par un mot de passe. Attention, ce mot de passe ne
+ doit pas contenir le caractère "/" slash quand il est positionné avec debconf.
+ Vous pouvez néanmoins y insérer un slash à la main, dans le fichier de
+ configuration.
+
 Template: nuauth/log_users
 Type: select
 Choices: 0, 1, 2, 4

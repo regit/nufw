@@ -33,6 +33,9 @@ if [ ! -e $CONFIGFILE2 ]; then
         echo "nuauth_number_aclcheckers=" >> $CONFIGFILE2
         echo "nuauth_user_check_module=" >> $CONFIGFILE2
         echo "nuauth_acl_check_module=" >> $CONFIGFILE2
+        echo "nuauth_use_ssl=" >> $CONFIGFILE2
+        echo "nuauth_ssl_key=" >> $CONFIGFILE2
+        echo "nuauth_ssl_key_passwd=" >> $CONFIGFILE2
         echo "nuauth_log_users=" >> $CONFIGFILE2
         echo "nuauth_user_logs_module=" >> $CONFIGFILE2
         echo "ldap_server_addr=" >> $CONFIGFILE2
@@ -130,6 +133,12 @@ db_get nuauth/ldap_users_base_dn
 ldap_users_base_dn="$RET"
 db_get nuauth/acl_check_module
 nuauth_acl_check_module="$RET"
+db_get nuauth/use_ssl
+nuauth_use_ssl="$RET"
+db_get nuauth/ssl_key
+nuauth_ssl_key="$RET"
+db_get nuauth/ssl_key_passwd
+nuauth_ssl_key_passwd="$RET"
 db_get nuauth/ldap_acls_base_dn
 ldap_acls_base_dn="$RET"
 db_get nuauth/dbm_users_file
@@ -192,6 +201,9 @@ sed -e "s/^ *nuauth_client_listen_addr=.*/nuauth_client_listen_addr=\"$nuauth_cl
  -e "s/^ *nuauth_number_aclcheckers=.*/nuauth_number_aclcheckers=$nuauth_number_aclcheckers/" \
  -e "s/^ *nuauth_user_check_module=.*/nuauth_user_check_module=\"$nuauth_user_check_module\"/" \
  -e "s/^ *nuauth_acl_check_module=.*/nuauth_acl_check_module=\"$nuauth_acl_check_module\"/" \
+ -e "s/^ *nuauth_use_ssl=.*/nuauth_use_ssl=\"$nuauth_use_ssl\"/" \
+ -e "sµ^ *nuauth_ssl_key=.*µnuauth_ssl_key=\"$nuauth_ssl_key\"µ" \
+ -e "s/^ *nuauth_ssl_key_passwd=.*/nuauth_ssl_key_passwd=\"$nuauth_ssl_key_passwd\"/" \
  -e "s/^ *nuauth_log_users=.*/nuauth_log_users=$nuauth_log_users/" \
  -e "s/^ *nuauth_user_logs_module=.*/nuauth_user_logs_module=\"$user_logs_module\"/" \
  -e "s/^ *ldap_server_addr=.*/ldap_server_addr=\"$ldap_server_addr\"/" \
