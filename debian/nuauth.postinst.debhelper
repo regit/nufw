@@ -2,9 +2,9 @@
 if [ -x "/etc/init.d/nuauth" ]; then
 	update-rc.d nuauth defaults >/dev/null
 	if [ -x /usr/sbin/invoke-rc.d ]; then
-		invoke-rc.d nuauth start
+		invoke-rc.d nuauth start || exit 0
 	else
-		/etc/init.d/nuauth start
+		/etc/init.d/nuauth start || exit 0
 	fi
 fi
 # End automatically added section

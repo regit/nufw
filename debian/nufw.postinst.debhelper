@@ -2,9 +2,9 @@
 if [ -x "/etc/init.d/nufw" ]; then
 	update-rc.d nufw defaults >/dev/null
 	if [ -x /usr/sbin/invoke-rc.d ]; then
-		invoke-rc.d nufw start
+		invoke-rc.d nufw start || exit 0
 	else
-		/etc/init.d/nufw start
+		/etc/init.d/nufw start || exit 0
 	fi
 fi
 # End automatically added section

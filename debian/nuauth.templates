@@ -301,6 +301,32 @@ Description-fr: Synchronisation des journaux
   - 1 : synchronisation active
  Valeur par défaut : 1
 
+Template: nuauth/log_users_strict
+Type: select
+Choices: 0, 1
+Default: 1
+Description: Whether to update logs automatically for consistency
+ If set to 1, whenever a connection already in conntrack (for TCP or UDP, 
+ same source IP, same source port) will be opened, existing connections that
+ might already exist in our conntrack will be closed. If set to 0, no such
+ update will be performed. The Safe option is to use 1.
+ Setting this to 0 may cause SSO modules to refuse some connections, in some
+ rare cases.
+  - 0 : no update
+  - 1 : strict update of existing 'old' connections
+ Default value : 1
+Description-fr: Mise à jour automatique du journal de connections
+  Cette option contrôle la mise à jour automatique du suivi de connections : si
+  une nouvelle connection est créée, et qu'elle correspond aux mêmes paramètres
+  (pour tcp et udp, ip source, port source) qu'une connection déja existante,
+  l'"ancienne" connection est automatiquement fermée dans la table de suivi. La
+  bonne méthode ici est d'activer cette option. Si la valeur choisie ici est de
+  0, des doublons pourront être trouvés dans la table de suivi, et certains
+  modules SSO refuseront certaines connections, dans certains cas (rares).
+  - 0 : pas de de mise à jour des anciennes connections
+  - 1 : mise à jour stricte des connections anciennes
+ Valeur par défaut : 1
+
 Template: nuauth/user_logs_module
 Type: select
 Choices: syslog, mysql, pgsql

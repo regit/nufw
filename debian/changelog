@@ -1,3 +1,11 @@
+nufw (0.8.0-1) unstable; urgency=low
+
+  * New upstream version. Adds the strict logs update option, together with
+    some scaling bugfix, that would cause nuauth to grow heavily on some
+    particular [DoS] conditions.
+
+ -- Vincent Deffontaines <vincent@gryzor.com>  Mon,  5 Jul 2004 21:23:13 +0200
+
 nufw (0.7.1-1) unstable; urgency=low
 
   * New upstream version. Fixes some bug that would rarely memleak nuauth.
