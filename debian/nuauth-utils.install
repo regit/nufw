@@ -1,0 +1,4 @@
+etc/nufw/nuaclgen.conf
+etc/nufw/nutop.conf
+usr/bin/nuaclgen
+usr/bin/nutop
