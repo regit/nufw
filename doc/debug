@@ -1,0 +1,33 @@
+How to control Debugging on Nufw - Vincent Deffontaines 2003
+
+This document is a draft, written before any implementation, to fix what is
+goind to be done.
+
+Two variables are defined to control debugging :
+DEBUG_LEVEL and DEBUG_AREAS
+
+
+DEBUG_LEVEL can be set by the use of "-v" switches; its value is equal to the
+number of "v"s added to 2, and can grow up to 10. If more "v"s should be passed on command
+line, they would simply be ignored.
+DEBUG_LEVEL controls the verbosity of debug messages, the higher it is, the more
+details will be contained in debug messages.
+The minimum value for this parameter is 2, "1" is for [fatal] errors, "2" is for
+critical messages. Those will always be reported.
+
+
+
+DEBUG_AREAS defines which components of Nufw should be sent debug messages
+about. If you are debugging the authentcating part of nufw at DEBUG_LEVEL 8, you
+probably don't really care about debug messages from the ipq interface part.
+DEBUG_AREAS must be calculated as the sum of these :
+1	
+2	
+4	
+8	
+16	
+32	
+64	
+
+
+These 2 variables, properly set, should help debugging in details.
