@@ -185,6 +185,27 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
             iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
             strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
             strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
+            if (nuauth_log_users_strict){
+                if (snprintf(request,511,"UPDATE %s SET end_timestamp=%lu, state=%hu WHERE (ip_saddr='%s' and ip_daddr='%s' and tcp_sport=%u and tcp_dport=%u and (state=2 or state=3))",
+                  pgsql_table_name,
+                  element.timestamp,
+                  STATE_CLOSE,
+                  tmp_inet1,
+                  tmp_inet2,
+                  (element.tracking_hdrs).source,
+                  (element.tracking_hdrs).dest
+                  ) >= 511){
+                if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+                    g_warning("Building pgsql update query, the 511 limit was reached!\n");
+                return -1;
+              }
+              Result = PQexec(ld, request);
+              if (!Result == PGRES_TUPLES_OK){
+                if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+                    g_warning("Can not update Data : %s\n",PQerrorMessage(ld));
+                return -1;
+              }
+            }
 	    if ((nuauth_log_users_sync) && (element.username == NULL)) {
             if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,state,oob_prefix) VALUES (%u,%lu,%u,'%s','%s',%u,%u,%hu,'ACCEPT');",
                   pgsql_table_name,

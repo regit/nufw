@@ -165,9 +165,33 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
             //icmp_code             u_int8_t                    TINYINT UNSIGNED    
             //start_timestamp       long                        BIGINT UNSIGNED       8 bytes
             //end_timestamp         long                        BIGINT UNSIGNED 
-            //
-            //
-            //
+            
+            if (nuauth_log_users_strict){
+            /* need to update table to suppress double field */
+                     if (snprintf(request,511,"UPDATE %s SET state=%hu,stop_timestamp=FROM_UNIXTIME(%lu) WHERE (ip_daddr=%lu AND ip_saddr=%lu AND tcp_dport=%u AND tcp_sport=%u AND (state=2 OR state=3))",
+                      mysql_table_name,
+                      STATE_ESTABLISHED,
+                      element.timestamp,
+                      (long unsigned int)(element.tracking_hdrs).saddr,
+                      (long unsigned int)(element.tracking_hdrs).daddr,
+                      (element.tracking_hdrs).source,
+                      (element.tracking_hdrs).dest
+                      ) >= 511){
+                    if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+                        g_warning("Building mysql update query, the 511 limit was reached!\n");
+                    return -1;
+                }
+
+            Result = mysql_real_query(ld, request, strlen(request));
+            if (Result != 0){
+                if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+                    g_warning("Can not update Data : %s\n",mysql_error(ld));
+                return -1;
+            }
+
+              
+            }
+            
             if ((nuauth_log_users_sync ) && (element.username != NULL)) {
                 if (snprintf(request,511,"INSERT INTO %s (username,user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,state,oob_prefix) VALUES ('%s',%u,%lu,%u,%lu,%lu,%u,%u,%hu,'ACCEPT')",
                       mysql_table_name,

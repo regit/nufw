@@ -167,6 +167,7 @@ int debug_level;
 int debug_areas;
 int nuauth_log_users;
 int nuauth_log_users_sync;
+int nuauth_log_users_strict;
 int nuauth_prio_to_nok;
 struct sockaddr_in adr_srv, client_srv, nufw_srv;
 

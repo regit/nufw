@@ -34,6 +34,7 @@ confparams nuauth_vars[] = {
     { "nuauth_number_loggers" , G_TOKEN_INT , NB_ACLCHECK, NULL },
     { "nuauth_log_users" , G_TOKEN_INT , 1, NULL },
     { "nuauth_log_users_sync" , G_TOKEN_INT , 0, NULL },
+    { "nuauth_log_users_strict" , G_TOKEN_INT , 1, NULL },
     { "nuauth_user_check_module" , G_TOKEN_STRING , 1, NULL },
     { "nuauth_acl_check_module" , G_TOKEN_STRING , 1, NULL },
     { "nuauth_user_logs_module" , G_TOKEN_STRING , 1, NULL },
@@ -117,6 +118,9 @@ int main(int argc,char * argv[]) {
 
     vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_log_users_sync");
     nuauth_log_users_sync=*(int*)(vpointer?vpointer:&nuauth_log_users_sync);
+
+    vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_log_users_strict");
+    nuauth_log_users_strict=*(int*)(vpointer?vpointer:&nuauth_log_users_strict);
 
     vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_user_check_module");
     nuauth_user_check_module=(char*)(vpointer?vpointer:nuauth_user_check_module);
