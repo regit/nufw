@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.15 2003/11/07 11:14:10 gryzor Exp $ */
+/* $Id: main.c,v 1.16 2003/11/07 19:08:11 regit Exp $ */
 
 /*
  ** Copyright (C) 2002 Eric Leblond <eric@regit.org>
@@ -140,13 +140,10 @@ int main(int argc,char * argv[]){
         FILE* pf;
 
         if (access (NUFW_PID_FILE, R_OK) == 0) {
-	  printf ("nufw already running. Aborting!\n");
-	  exit(-1);
             /* Check if the existing process is still alive. */
             pid_t pidv;
 
             pf = fopen (NUFW_PID_FILE, "r");
-	    printf ("nufw merde\n");
             if (pf != NULL &&
                 fscanf (pf, "%d", &pidv) == 1 &&
                 kill (pidv, 0) == 0 ) {
