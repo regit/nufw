@@ -101,7 +101,8 @@ G_MODULE_EXPORT LDAP* dbm_file_init(void){
   return dbf;
 }
 
-/*G_MODULE_EXPORT GSList* ldap_acl_check (connection* element){
+#if 0
+G_MODULE_EXPORT GSList* ldap_acl_check (connection* element){
   GSList * g_list = NULL;
   char filter[512];
   char ** attrs_array, ** walker;
@@ -206,13 +207,14 @@ G_MODULE_EXPORT LDAP* dbm_file_init(void){
     ldap_msgfree (res);
   }
   return NULL;
-}*/
+}
 
-G_MODULE_EXPORT GSList * dbm_user_check (u_int16_t userid,char *passwd){
+#endif
+
+G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
   GDBM_FILE dbf = g_private_get (ldap_priv);
   datum dbm_key, dbm_data;
 
-  LDAPMessage * res , *result;
   char ** attrs_array, ** walker;
   int attrs_array_len,i,group,err;
   struct timeval timeout;

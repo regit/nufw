@@ -1,4 +1,4 @@
-/* $Id: auth_dbm.h,v 1.1 2003/09/30 14:51:53 gryzor Exp $ */
+/* $Id: auth_dbm.h,v 1.2 2003/09/30 20:27:30 regit Exp $ */
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
@@ -30,9 +30,9 @@
 #define DBM_FATAL_FUNCTION 0
 
 
-typedef { 
+typedef struct { 
 	char *passwd;
 	GSList *outelt;
-}struct dbm_data_struct;
+} dbm_data_struct;
 	
 struct dbm_data_struct analyse_dbm_char(char *data);
