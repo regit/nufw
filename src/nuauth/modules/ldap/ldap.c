@@ -97,6 +97,14 @@ G_MODULE_EXPORT LDAP* ldap_conn_init(void){
   }
   if (ldap_set_option(ld, LDAP_OPT_PROTOCOL_VERSION,
                                    &version) == LDAP_OPT_SUCCESS) {
+      /* Goes to ssl if needed */
+#ifdef LDAP_OPT_X_TLS
+      if (ldap_server_port ==  LDAPS_PORT){
+        int tls_option;
+        tls_option = LDAP_OPT_X_TLS_TRY;
+        ldap_set_option(ld, LDAP_OPT_X_TLS, (void *)&tls_option);
+      }
+#endif /* LDAP_OPT_X_TLS */
     err = ldap_bind_s(ld, binddn, bindpasswd,LDAP_AUTH_SIMPLE);
   if ( err !=  LDAP_SUCCESS ){
     if (err == LDAP_SERVER_DOWN ){
@@ -183,6 +191,8 @@ G_MODULE_EXPORT GSList* acl_check (connection* element){
   if ( err !=  LDAP_SUCCESS ) {
     if (err == LDAP_SERVER_DOWN ){
       /* we lost connection, so disable current one */
+        if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
+                g_warning ("disabling current connection");
       ldap_unbind(ld);
       ld=NULL;
       g_private_set(ldap_priv,ld);
@@ -201,7 +211,7 @@ G_MODULE_EXPORT GSList* acl_check (connection* element){
       this_acl->groups=NULL;
 	/* get decision */
 	attrs_array=ldap_get_values(ld, result, "Decision");
-	sscanf(*attrs_array,"%d",&(this_acl->answer));
+	sscanf(*attrs_array,"%d",(int *)&(this_acl->answer));
         if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_AUTH))
                 g_message("Acl found with decision %d\n",this_acl->answer);
 	ldap_value_free(attrs_array);
@@ -270,6 +280,8 @@ G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
   if ( err !=  LDAP_SUCCESS ) {
 	if (err == LDAP_SERVER_DOWN ){
     	  /* we lost connection, so disable current one */
+        if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
+                g_warning ("disabling current connection");
      	 ldap_unbind(ld);
      	 ld=NULL;
     	  g_private_set(ldap_priv,ld);
