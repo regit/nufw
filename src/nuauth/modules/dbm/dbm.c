@@ -125,7 +125,8 @@ GDBM_FILE dbm_file_init(void){
  * User Check
  */
 
-G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
+G_MODULE_EXPORT GSList * user_check (connection *connexion,char *passwd){
+  u_int16_t userid=connexion->user_id;
   GDBM_FILE dbf = g_private_get (dbm_priv);
   datum dbm_key, dbm_data;
   struct dbm_data_struct return_data;

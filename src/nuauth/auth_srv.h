@@ -95,6 +95,8 @@
 
 #define ALL_GROUPS 0
 
+#define USERNAMESIZE 30
+
 /* Sockets related */
 char client_listen_address[HOSTNAME_SIZE];
 char nufw_listen_address[HOSTNAME_SIZE];
@@ -120,10 +122,10 @@ typedef struct Connection {
   // netfilter stuff
   GSList * packet_id; /* netfilter number */
   long timestamp;             /* Packet arrival time (seconds) */
+  u_int16_t id_srv;
   // IPV4  stuffs (headers)
   /* tracking test */
   tracking tracking_hdrs;
-  u_int16_t id_srv;
   /* user params */
   u_int16_t user_id;
   char * username;
@@ -284,6 +286,5 @@ GPrivate* dbm_priv; /* private pointer for dbm file access */
 GPrivate* pgsql_priv; /* private pointer for pgsql database access */
 GPrivate* mysql_priv; /* private pointer for mysql database access */
 GSList * (*module_acl_check) (connection* element);
-GSList * (*module_user_check) (u_int16_t userid,char *passwd);
-GSList * (*module_user_check_v2) (char * username,char *passwd,int * userid);
+GSList * (*module_user_check) (connection* connexion,char *passwd);
 int init_ldap_system(void);

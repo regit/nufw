@@ -248,7 +248,8 @@ G_MODULE_EXPORT GSList* acl_check (connection* element){
   return NULL;
 }
 
-G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
+G_MODULE_EXPORT GSList * user_check (connection * connexion,char *passwd){
+  u_int16_t userid=connexion->user_id;
   char filter[LDAP_QUERY_SIZE];
   LDAP *ld = g_private_get (ldap_priv);
   LDAPMessage * res , *result;
@@ -314,123 +315,23 @@ G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
        walker++;
      }
      ldap_value_free(attrs_array);
-     /* get password */
-     attrs_array = ldap_get_values(ld, result, "userPassword");
-     attrs_array_len = ldap_count_values(attrs_array);
-     if (attrs_array_len == 0){
-       if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
-         g_message ("what ! no password found!\n");
-     } else {
-       sscanf(*attrs_array,"%127s",passwd);
-       if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_AUTH))
-	 g_message("reading password\n");
-     }
-     ldap_value_free(attrs_array);
-     ldap_msgfree(res);
-     return outelt;
-   } else {
-     if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_AUTH))
-       g_message("No or too many users found with userid %d\n",userid);
-     ldap_msgfree(res);
-     return NULL;
-   }
-  ldap_msgfree(res);
-  return NULL;
-}
-
-/* user_check_v2 is same thing as user_check  but we get username instead of userid */
-
-G_MODULE_EXPORT GSList * user_check_v2 (char * username,char *passwd,int *userid){
-  char filter[LDAP_QUERY_SIZE];
-  LDAP *ld = g_private_get (ldap_priv);
-  LDAPMessage * res , *result;
-  char ** attrs_array, ** walker;
-  int attrs_array_len,i,group,err;
-  struct timeval timeout;
-  GSList * outelt=NULL;
-
-
-  if (ld == NULL){
-    /* init ldap has never been done */
-    ld = ldap_conn_init();
-    g_private_set(ldap_priv,ld);
-    if (ld == NULL){
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_AUTH))
-		g_message("Can't initiate LDAP conn\n");
-	return NULL;
-    }
-  }
-  if (snprintf(filter,LDAP_QUERY_SIZE-1,"(&(objectClass=NuAccount)(cn=%s))",username) >= (LDAP_QUERY_SIZE-1)){
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-       g_warning ("LDAP query too big (more than %d bytes)\n",LDAP_QUERY_SIZE);
-     return NULL;
-  }
-  
-  /* send query and wait result */
-  timeout.tv_sec = ldap_request_timeout;
-  timeout.tv_usec = 0;
-  /* TODO : just get group and decision */
-  err =  ldap_search_st(ld, ldap_users_base_dn, LDAP_SCOPE_SUBTREE,filter,NULL,0,
-			&timeout,
-			&res) ;
-  if ( err !=  LDAP_SUCCESS ) {
-	if (err == LDAP_SERVER_DOWN ){
-    	  /* we lost connection, so disable current one */
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-                g_warning ("disabling current connection");
-     	 ldap_unbind(ld);
-     	 ld=NULL;
-    	  g_private_set(ldap_priv,ld);
-   	 }
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
-      g_warning ("invalid return of ldap_search_st : %s\n",ldap_err2string(err));
-    return NULL;
-  }
-
-   if (ldap_count_entries(ld,res) == 1) {
-     /* parse result to feed a user_list */
-     result = ldap_first_entry(ld,res);
-     if (result == NULL ){
-       if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_AUTH))
-	 g_message("Can not get entry for %d\n",userid);
-       ldap_msgfree(res);
-       return NULL;
-     }
-     /* build groups  list */
-     attrs_array = ldap_get_values(ld, result, "Group");
-     attrs_array_len = ldap_count_values(attrs_array);
-     walker = attrs_array;
-     for(i=0; i<attrs_array_len; i++){
-       sscanf(*walker,"%d",&group);
-       outelt = g_slist_prepend(outelt, GINT_TO_POINTER(group));
-       walker++;
-     }
-     ldap_value_free(attrs_array);
-     /* get password */
-     attrs_array = ldap_get_values(ld, result, "userPassword");
-     attrs_array_len = ldap_count_values(attrs_array);
-     if (attrs_array_len == 0){
-       if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
-         g_message ("what ! no password found!\n");
-     } else {
-       sscanf(*attrs_array,"%127s",passwd);
-       if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_AUTH))
-	 g_message("reading password\n");
-     }
-     ldap_value_free(attrs_array);
-     /* get userid */
+     /* get username */
      attrs_array = ldap_get_values(ld, result, "cn");
+     /* duplicate string to username */
+     connexion->username=g_strndup(attrs_array,USERNAMESIZE);
+     ldap_value_free(attrs_array);
+     /* get password */
+     attrs_array = ldap_get_values(ld, result, "userPassword");
      attrs_array_len = ldap_count_values(attrs_array);
      if (attrs_array_len == 0){
        if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
-         g_message ("what ! no cn found!\n");
+         g_message ("what ! no password found!\n");
      } else {
-       sscanf(*attrs_array,"%d",userid);
+       sscanf(*attrs_array,"%127s",passwd);
        if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_AUTH))
-	 g_message("reading cn\n");
+	 g_message("reading password\n");
      }
      ldap_value_free(attrs_array);
-
      ldap_msgfree(res);
      return outelt;
    } else {
@@ -442,3 +343,5 @@ G_MODULE_EXPORT GSList * user_check_v2 (char * username,char *passwd,int *userid
   ldap_msgfree(res);
   return NULL;
 }
+
+
