@@ -217,14 +217,13 @@ connection * userpckt_decode(char* dgram,int dgramsiz){
 	}
 
       /* get user datas : password, groups (filled in) */
-      connexion->user_groups = (*module_user_check) (connexion,userid,passwd);
+      connexion->user_groups = (*module_user_check) (userid,passwd);
       if (connexion->user_groups == NULL) {
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
 	  g_message("ldap_user_check return bad\n");
 	g_free(connexion);
 	return NULL;
       }
-
 
       /*
        * check MD5 crypt 

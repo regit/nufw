@@ -1,4 +1,4 @@
-/* $Id: auth_srv.h,v 1.12 2003/09/27 21:17:13 regit Exp $ */
+/* $Id: auth_srv.h,v 1.13 2003/09/29 17:06:20 regit Exp $ */
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
@@ -247,7 +247,6 @@ void log_new_user(int id,u_int32_t ip);
 GModule * auth_module;
 GPrivate* ldap_priv; /* private pointer to ldap connection */
 GSList * (*module_acl_check) (connection* element);
-//LDAP* ldap_conn_init(void);
-GSList * (*module_user_check) (connection * element,u_int16_t userid,char *passwd);
+GSList * (*module_user_check) (u_int16_t userid,char *passwd);
 int init_ldap_system(void);
 
