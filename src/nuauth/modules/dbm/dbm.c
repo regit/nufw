@@ -19,6 +19,7 @@
 
 #include <auth_srv.h>
 #include <auth_dbm.h>
+#include <math.h>
 
 
 confparams dbm_nuauth_vars[] = {
@@ -92,33 +93,39 @@ g_module_check_init(GModule *module){
  */
 
 G_MODULE_EXPORT GDBM_FILE *dbm_file_init(void){
-  GDBM_FILE *dbf = NULL;
+  GDBM_FILE dbf,*dbf_ptr;
 
   /* init connection */
   if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
 	  g_message("We are entering dbm_file_init()\n");
-  *dbf = gdbm_open(users_file,DBM_BLOCK_SIZE,DBM_FILE_ACCESS_MODE,DBM_FILE_MODE,DBM_FATAL_FUNCTION);
+  dbf = gdbm_open(users_file,DBM_BLOCK_SIZE,DBM_FILE_ACCESS_MODE,DBM_FILE_MODE,DBM_FATAL_FUNCTION);
+  dbf_ptr = &dbf;
+  if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+	  g_message("dbm_file_init : file should be open now()\n");
   if(dbf == NULL) {
     if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
       g_warning("dbm init error\n");
-    g_private_set(dbm_priv,dbf);
+    dbf_ptr=NULL;
+    g_private_set(dbm_priv,dbf_ptr);
     return NULL;
   }
   if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
 	  g_message("We are leaving dbm_file_init()\n");
-  return *dbf;
+  return dbf_ptr;
 }
 
 G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
-  GDBM_FILE *dbf = g_private_get (ldap_priv);
+  GDBM_FILE *dbf = g_private_get (dbm_priv);
   datum dbm_key, dbm_data;
   struct dbm_data_struct return_data;
 
-  if (dbf == NULL){
   if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-	  g_message("We are entering user_check()\n");
-    /* init ldap has never been done */
-    *dbf = dbm_file_init();
+	  g_message("We are entering dbm_user_check()\n");
+  if (dbf == NULL){
+    /* dbm init has not been done yet*/
+    if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+	    g_message("calling dbm_file_init() now\n");
+    dbf = dbm_file_init();
     g_private_set(dbm_priv,dbf);
     if (dbf == NULL){
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_AUTH))
@@ -127,6 +134,11 @@ G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
     }
   }
   //Initialize our data structure
+  if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_AUTH))
+	  g_message("Initializing our data structure, with %hi\n",userid);
+  dbm_key.dptr = (char *) malloc (sizeof(rint(log(userid)/log(10)))+1);
+  if (dbm_key.dptr == NULL)
+	  g_error("Could not malloc()\n");
   if (sprintf(dbm_key.dptr,"%hi",userid) <= 0)
   {
 	  if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
@@ -134,6 +146,8 @@ G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
   	  return NULL;
   }
   dbm_key.dsize = strlen(dbm_key.dptr);
+  if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_AUTH))
+	  g_message("data structure now initialized");
   
   if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_AUTH))
 	  g_message("user id is %s, size %i\n",dbm_key.dptr,dbm_key.dsize);
@@ -145,6 +159,8 @@ G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
 		  g_message("no key \"%s, size %i\" could be found in database\n",dbm_key.dptr,dbm_key.dsize);
 	  return NULL;
   }
+  if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_AUTH))
+	  g_message("key %s, size %i was found. good\n",dbm_key.dptr,dbm_key.dsize);
   dbm_data = gdbm_fetch(*dbf,dbm_key);
   if (dbm_data.dptr == NULL)
   {
