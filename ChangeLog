@@ -1,3 +1,5 @@
+0.8 (2004/07/02)
+	- username logging in SQL database when log sync is enable
 0.7.1 (2004/06/14)
         - add option for SSO feature : log before granted packet
         - major code cleaning
