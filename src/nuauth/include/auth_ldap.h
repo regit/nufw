@@ -1,4 +1,4 @@
-/* $Id: auth_ldap.h,v 1.3 2003/09/14 21:29:38 gryzor Exp $ */
+/* $Id: auth_ldap.h,v 1.1 2003/09/16 15:53:57 gryzor Exp $ */
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
