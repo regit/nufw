@@ -12,7 +12,7 @@ Description: a per-user firewalling daemon that interfers with libipq.
  NuFW is an authenticating gateway, which means that connections are
  authenticated before being forwarded through the gateway.  Classical packet
  filtering systems disregard the identity of the user who may be attempting to
- access the network, instead caring only about the originating IP adresses.
+ access the network, instead caring only about the originating IP addresses.
  .
  Nufw is the daemon that receives some network packets through the QUEUE
  netfilter rule.  Informations about those packets are forwarded to the 
@@ -28,7 +28,7 @@ Description: Nuauth is the authentication daemon from the nufw package
  NuFW is an authenticating gateway, which means that connections are
  authenticated before being forwarded through the gateway.  Classical packet
  filtering systems disregard the identity of the user who may be attempting to
- access the network, instead caring only about the originating IP adresses.
+ access the network, instead caring only about the originating IP addresses.
  .
  Nuauth lays on a user database, and an ACL system (which can reside in an LDAP
  directory, or XML/DBM solutions, etc.
@@ -44,7 +44,7 @@ Description: Module for nuauth logging into mysql databases.
  NuFW is an authenticating gateway, which means that connections are
  authenticated before being forwarded through the gateway.  Classical packet
  filtering systems disregard the identity of the user who may be attempting to
- access the network, instead caring only about the originating IP adresses.
+ access the network, instead caring only about the originating IP addresses.
  .
  This package adds support for nuauth logging users activity into a Mysql
  database. You can use this for an SSO solution, too.
@@ -58,7 +58,7 @@ Description: Module for nuauth logging into PostgreSQL databases.
  NuFW is an authenticating gateway, which means that connections are
  authenticated before being forwarded through the gateway.  Classical packet
  filtering systems disregard the identity of the user who may be attempting to
- access the network, instead caring only about the originating IP adresses.
+ access the network, instead caring only about the originating IP addresses.
  .
  This package adds support for nuauth logging users activity into a postgreSQL
  database. You can use this for an SSO solution, too.
@@ -70,7 +70,7 @@ Description: a linux client for the nufw authentication gateway system
  NuFW is an authenticating gateway, which means that connections are
  authenticated before being forwarded through the gateway.  Classical packet
  filtering systems disregard the identity of the user who may be attempting to
- access the network, instead caring only about the originating IP adresses.
+ access the network, instead caring only about the originating IP addresses.
  .
  nutcpc is the GNU/Linux client for the nufw authentication gateway.
  when network traffic leaves the machine, nutcpc deals with it and sends
@@ -83,7 +83,7 @@ Description: Set of tools useful to nuauth admin
  NuFW is an authenticating gateway, which means that connections are
  authenticated before being forwarded through the gateway.  Classical packet
  filtering systems disregard the identity of the user who may be attempting to
- access the network, instead caring only about the originating IP adresses.
+ access the network, instead caring only about the originating IP addresses.
  .
  nuaclgen is a perl script that helps generate LDAP ACLs for use with nuauth,
  the nufw auth daemon.
@@ -95,7 +95,7 @@ Description: client library for nufw authentication
  NuFW is an authenticating gateway, which means that connections are
  authenticated before being forwarded through the gateway.  Classical packet
  filtering systems disregard the identity of the user who may be attempting to
- access the network, instead caring only about the originating IP adresses.
+ access the network, instead caring only about the originating IP addresses.
  .
  This library provides a convenient system to build NuFW authentication client.
 
@@ -106,6 +106,6 @@ Description: client library header for nufw authentication
  NuFW is an authenticating gateway, which means that connections are
  authenticated before being forwarded through the gateway.  Classical packet
  filtering systems disregard the identity of the user who may be attempting to
- access the network, instead caring only about the originating IP adresses.
+ access the network, instead caring only about the originating IP addresses.
  .
  This library provides a convenient system to build NuFW authentication client.
