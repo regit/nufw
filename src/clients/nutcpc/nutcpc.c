@@ -31,7 +31,7 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: nutcpc.c,v 1.14 2004/03/23 20:36:04 regit Exp $
+ * $Id: nutcpc.c,v 1.15 2004/03/23 22:59:05 regit Exp $
  */
 
 #include <arpa/inet.h>
@@ -92,7 +92,7 @@ int ssl_on;
 SSL_CTX *ctx;
 SSL *ssl;
 static int s_server_session_id_context ;
-#define KEYFILE "client.pem"
+#define KEYFILE "key.pem"
 #define PASSWORD "password"
 
 
@@ -556,8 +556,11 @@ int main (int argc, char *argv[])
 	adr_srv.sin_addr.s_addr=inet_addr(srv_addr);
 	/* create socket stuff */
 	if (ssl_on){
+		char keyfile[256]; 
+		/* compute patch keyfile */
+		snprintf(keyfile,255,"%s/.nufw/" KEYFILE,getenv("HOME"));
 		/* Build our SSL context*/
-		ctx=initialize_ctx(KEYFILE,PASSWORD);
+		ctx=initialize_ctx(keyfile,PASSWORD);
 
 		SSL_CTX_set_session_id_context(ctx,
 				(void*)&s_server_session_id_context,

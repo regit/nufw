@@ -74,10 +74,13 @@ SSL_CTX *initialize_ctx(keyfile,password)
       keyfile,SSL_FILETYPE_PEM)))
       berr_exit("Can't read key file");
 
+#if 0
     /* Load the CAs we trust*/
     if(!(SSL_CTX_load_verify_locations(ctx,
       CA_LIST,0)))
       berr_exit("Can't read CA list");
+#endif
+
 #if (OPENSSL_VERSION_NUMBER < 0x00905100L)
     SSL_CTX_set_verify_depth(ctx,1);
 #endif
