@@ -4,6 +4,7 @@
 #define AUTH_REQUEST 0x1
 #define AUTH_ANSWER 0x2
 #define USER_REQUEST 0x3
+#define AUTH_CLOSE 0x4
 
 #define NOK 0
 #define OK 1

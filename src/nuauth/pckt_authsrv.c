@@ -126,9 +126,10 @@ void* packet_authsrv(){
     /* decode packet and create connection */
     current_conn = authpckt_decode(dgram, sizeof dgram);
     if (current_conn == NULL){
-      if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_PACKET)){
-	g_message("Can't parse packet, that's bad !\n");
-      }
+      if ( *(dgram+1) != AUTH_CLOSE )
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_PACKET)){
+	  g_message("Can't parse packet, that's bad !\n");
+	}
     } else {
       /* gonna feed the birds */
       current_conn->state = STATE_AUTHREQ;
@@ -199,11 +200,13 @@ void acl_check_and_decide (gpointer userdata, gpointer data){
 connection*  authpckt_decode(char * dgram, int  dgramsiz){
   int offset; 
   char *pointer;
+  u_int8_t msg_type;
   connection*  connexion = NULL;
 
   switch (*dgram) {
   case 0x1:
-    if ( *(dgram+1) == AUTH_REQUEST) {
+    msg_type=*(dgram+1);
+      if ( (msg_type == AUTH_REQUEST) || (msg_type == AUTH_CLOSE) ) {
       /* allocate connection */
       connexion = g_new0( connection,1);
       if (connexion == NULL){
@@ -235,13 +238,16 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz){
             case 1:
               break; 
             case 0:
-	      log_user_packet(*connexion,0);
+	      if (msg_type == AUTH_CLOSE ){
+		log_user_packet(*connexion,0);
+		return NULL;
+	      }
               break;
             case -1:
-	         if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))
-	                  g_warning ("Can't parse TCP headers\n");
-	        free_connection(connexion);
-	        return NULL;
+	      if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))
+		g_warning ("Can't parse TCP headers\n");
+	      free_connection(connexion);
+	      return NULL;
           }
 	  break;
 	case IPPROTO_UDP:

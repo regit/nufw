@@ -1,4 +1,4 @@
-/* $Id: packetsrv.c,v 1.4 2003/10/21 23:06:05 regit Exp $ */
+/* $Id: packetsrv.c,v 1.5 2003/11/25 20:02:20 regit Exp $ */
 
 /*
 ** Copyright (C) 2002 Eric Leblond <eric@regit.org>
@@ -22,6 +22,22 @@
 #include <structure.h>
 #include <debug.h>
 
+/* 
+ * return offset to next type of headers 
+ */
+int look_for_fin_flags(char* dgram){
+  struct iphdr * iphdrs = (struct iphdr *) dgram;
+  /* check IP version */
+  if (iphdrs->version == 4){
+    if (iphdrs->protocol == IPPROTO_TCP){
+      struct tcphdr * tcphdrs=(struct tcphdr *) (dgram+4*iphdrs->ihl);
+      if (tcphdrs->fin){
+	return 1;
+      }
+    }
+  }
+  return 0;
+}
 
 void* packetsrv(){
   unsigned char buffer[BUFSIZ];
@@ -47,6 +63,11 @@ void* packetsrv(){
 	    pckt_rx++ ;
 	    /* printf("Working on IP packet\n"); */
 	    msg_p = ipq_get_packet(buffer);
+	    /* need to parse to see if it's an end connection packet */
+	    if (look_for_fin_flags(msg_p->payload)){
+	      auth_request_send(AUTH_CLOSE,msg_p->packet_id,msg_p->payload,msg_p->data_len,msg_p->timestamp_sec);
+	      IPQ_SET_VERDICT( msg_p->packet_id,NF_ACCEPT);
+	    }
 	    current=calloc(1,sizeof( packet_idl));
 	    if (current == NULL){
 	      if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_MAIN)){
@@ -74,7 +95,7 @@ void* packetsrv(){
 	      IPQ_SET_VERDICT( msg_p->packet_id, NF_DROP);
 	    }
 	    /* send an auth request packet */
-	    auth_request_send(msg_p->packet_id,msg_p->payload,msg_p->data_len,msg_p->timestamp_sec);
+	    auth_request_send(AUTH_REQUEST,msg_p->packet_id,msg_p->payload,msg_p->data_len,msg_p->timestamp_sec);
 	  } else {
             if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
               if (log_engine == LOG_TO_SYSLOG) {
@@ -100,11 +121,11 @@ void* packetsrv(){
   ipq_destroy_handle( hndl );  
 }   
 
-int auth_request_send(unsigned long packet_id,char* payload,int data_len,long timestamp){
+int auth_request_send(uint8_t type,unsigned long packet_id,char* payload,int data_len,long timestamp){
   char datas[512];
   char *pointer;
   int auth_len,total_data_len=512;
-  uint8_t version=PROTO_VERSION,type=AUTH_REQUEST;
+  uint8_t version=PROTO_VERSION;
   
   memset(datas,0,sizeof datas);
   memcpy(datas,&version,sizeof version);

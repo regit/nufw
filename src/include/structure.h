@@ -1,4 +1,4 @@
-/* $Id: structure.h,v 1.6 2003/10/28 07:23:56 regit Exp $ */
+/* $Id: structure.h,v 1.7 2003/11/25 20:02:20 regit Exp $ */
 
 /*
 ** Copyright (C) 2002, Éric Leblond <eric@regit.org>
@@ -104,7 +104,7 @@ void* packetsrv();
 void* authsrv();
 
 /* send an auth request packet given a payload (raw packet) */
-int auth_request_send(unsigned long packet_id, char* payload,int data_len,long timestamp);
+int auth_request_send(u_int8_t type,unsigned long packet_id, char* payload,int data_len,long timestamp);
 /* take decision given a auth answer packet payload */
 int auth_packet_to_decision(char* dgram);
 
