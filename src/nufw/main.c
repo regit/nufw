@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.20 2003/11/30 22:59:06 regit Exp $ */
+/* $Id: main.c,v 1.21 2004/02/10 16:09:15 regit Exp $ */
 
 /*
  ** Copyright (C) 2002 Eric Leblond <eric@regit.org>
@@ -55,6 +55,7 @@ int main(int argc,char * argv[]){
     int value;
     unsigned int ident_srv;
     char* version=VERSION;
+    pid_t pidf;
 
     /* initialize variables */
 
@@ -69,7 +70,6 @@ int main(int argc,char * argv[]){
     debug=DEBUG; /* this shall disapear */
     debug_level=0;
     debug_areas=DEFAULT_DEBUG_AREAS;
-    pid_t pidf;
 
     /*parse options */
     while((option = getopt ( argc, argv, options_list)) != -1 ){
