@@ -8,9 +8,6 @@
 
 
 # User auth srv
-- use id server and authgw
-- down ldap timeout to less than packet timeout
-- set packet timeout to less than proto timeout
 - deal with reload signals
 
 #Modules

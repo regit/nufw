@@ -19,5 +19,11 @@ nuauth -h will give you a usage message.
 To use nufw you will have to run a client for each user.
 For the moment only nutcpc is provided.
 
-You will find more information on :
+You will find more informations on :
 	http://www.nufw.org
+
+SQL Logging :
+
+If you use SQL Logging and SSO features, you may wish to increase performance 
+of SQL queries by putting closed connections in a different SQL table by using or a script 
+(cron task ?) or a trigger.
