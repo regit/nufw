@@ -8,5 +8,5 @@
 - use id server and authgw
 - down ldap timeout to less than packet timeout
 - set packet timeout to less than proto timeout
-- do a ldap bind
-- initiate crypt_r has required
+- config file
+- plugin structure for external auth module
