@@ -205,9 +205,12 @@ void acl_check_and_decide (gpointer userdata, gpointer data){
                     g_message("element bad but exist : %p\n",element);
                 }
                 /* if we don't wait for the user packet we free the connection */
-                if (element->state == STATE_READY) {
-                    log_user_packet(*element,STATE_DROP);
-                    conn_cl_delete(element);
+		if (element->state == STATE_READY) {
+			log_user_packet(*element,STATE_DROP);
+			if ( ! conn_cl_delete( element)) {
+				if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
+					g_warning("connection cleaning failed at __FILE__:__LINE__\n");
+			}
                 } else {
                     element->state=STATE_DONE;
                     element->decision=STATE_DROP;

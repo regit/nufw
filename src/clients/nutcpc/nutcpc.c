@@ -31,7 +31,7 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: nutcpc.c,v 1.17 2004/03/24 00:56:43 regit Exp $
+ * $Id: nutcpc.c,v 1.18 2004/03/28 17:58:19 regit Exp $
  */
 
 #include <arpa/inet.h>
@@ -423,7 +423,10 @@ int send_user_pckt(conn_t* c){
 	}
 
 	if (ssl_on){
-		SSL_write(ssl,datas,pointer-datas);
+		if( ! SSL_write(ssl,datas,pointer-datas)){
+			printf("write failed\n");
+			exit(0);
+		}
 	} else {
 		if (sendto(sck_user_request,
 					datas,

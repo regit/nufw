@@ -379,12 +379,17 @@ int free_connection(connection * conn){
 int conn_cl_delete(gconstpointer conn) {
     g_assert (conn != NULL);
 
+    /* acquire lock on total hash */
+    g_static_mutex_lock (&insert_mutex);
     if (!  g_hash_table_steal (conn_list,
           &(((connection *)conn)->tracking_hdrs)) ){
         if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
             g_warning("Removal of conn in hash failed\n");
         return 0;
     }
+    /* free global hash */
+    g_static_mutex_unlock (&insert_mutex);
+   /* free isolated structure */ 
     free_connection((connection *)conn);
     return 1;
 }
@@ -471,12 +476,11 @@ gint take_decision(connection * element) {
         if (element->state == STATE_READY ){
             // log user
             log_user_packet(*element,element->decision);
-        if ( ! conn_cl_delete( element)) {
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-                                g_warning("connection cleaning failed at __FILE__:__LINE__\n");
-                }
-
-        } else {
+	    if ( ! conn_cl_delete( element)) {
+		    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
+			    g_warning("connection cleaning failed at __FILE__:__LINE__\n");
+	    }
+	} else {
             /* only change state */
             change_state(element,STATE_DONE);
             UNLOCK_CONN(element);
@@ -545,12 +549,12 @@ gint take_decision(connection * element) {
             }
             if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
                 g_message("Freeing element\n");
-       if ( ! conn_cl_delete( element)) {
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-                                g_warning("connection cleaning failed at __FILE__:__LINE__\n");
-                }
-        } else {
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
+	    if ( ! conn_cl_delete( element)) {
+		    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
+			    g_warning("connection cleaning failed at __FILE__:__LINE__\n");
+	    }
+	} else {
+		if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
                 g_message("only change state\n");
             change_state(element,STATE_DONE);
             element->decision=STATE_OPEN;
