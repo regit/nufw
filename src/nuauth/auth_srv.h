@@ -1,4 +1,4 @@
-/* $Id: auth_srv.h,v 1.31 2004/03/25 20:37:04 regit Exp $ */
+/* $Id: auth_srv.h,v 1.32 2004/05/20 21:33:03 regit Exp $ */
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
@@ -160,6 +160,8 @@ GThreadPool* user_checkers;
 GThreadPool* acl_checkers;
 GThreadPool* user_loggers;
 
+GAsyncQueue* connexions_queue;
+
 int packet_timeout;
 int authpckt_port;
 int debug; /* This will disapear*/
@@ -222,7 +224,7 @@ struct auth_answer {
  * From auth_common.c
  */
 
-connection * search_and_fill (connection * );
+void search_and_fill ();
 
 gboolean compare_connection(gconstpointer conn1, gconstpointer conn2);
 void send_auth_response(gpointer data, gpointer userdata);
@@ -284,4 +286,5 @@ GPrivate* pgsql_priv; /* private pointer for pgsql database access */
 GPrivate* mysql_priv; /* private pointer for mysql database access */
 GSList * (*module_acl_check) (connection* element);
 GSList * (*module_user_check) (u_int16_t userid,char *passwd);
+GSList * (*module_user_check_v2) (char * username,char *passwd,int * userid);
 int init_ldap_system(void);

@@ -54,7 +54,7 @@ void nuauth_cleanup( int signal ) {
 
 
 int main(int argc,char * argv[]) {
-    GThread * pckt_server, * auth_server, *ssl_auth_server;
+    GThread * pckt_server, * auth_server, *ssl_auth_server, *search_and_fill_worker;
     /* option */
     char * options_list = "DhVvl:L:C:d:p:t:T:";
     int option,daemonize = 0;
@@ -331,6 +331,7 @@ int main(int argc,char * argv[]) {
 
     module_acl_check=NULL;
     module_user_check=NULL;
+    module_user_check_v2=NULL;
 
     auth_module=g_module_open (g_module_build_path(MODULE_PATH,
           nuauth_user_check_module)
@@ -344,6 +345,13 @@ int main(int argc,char * argv[]) {
     {
         g_error ("Unable to load user check function\n");
     }
+#if 0
+    if (!g_module_symbol (auth_module, "user_check_v2", 
+          (gpointer*) &module_user_check_v2))
+    {
+        g_error ("Unable to load user check function\n");
+    }
+#endif
 
     if ( strcmp(nuauth_user_check_module,nuauth_acl_check_module)){
         auth_module = g_module_open (g_module_build_path(MODULE_PATH,
@@ -398,6 +406,19 @@ int main(int argc,char * argv[]) {
         FALSE,
         NULL);
     if (! auth_server )
+        exit(1);
+
+    /* create thread for search_and_fill thread */
+    search_and_fill_worker = g_thread_create ( search_and_fill,
+                NULL,
+                FALSE,
+                NULL);
+    if (! search_and_fill_worker )
+          exit(1);
+       
+    /* create queue */
+    connexions_queue = g_async_queue_new();
+    if (!connexions_queue)
         exit(1);
 
     if (nuauth_use_ssl){

@@ -1,6 +1,5 @@
-
 /*
- ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
+ ** Copyright(C) 2003-2004 Eric Leblond <eric@inl.fr>
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -172,6 +171,8 @@ void acl_check_and_decide (gpointer userdata, gpointer data){
                 g_message("Going to search entry\n");
             }
             /* search and fill */
+        g_async_queue_push (connexions_queue,conn_elt);
+#if 0
             element = search_and_fill (conn_elt);
             if (element != NULL) {
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)){
@@ -189,6 +190,7 @@ void acl_check_and_decide (gpointer userdata, gpointer data){
                     g_message("element is NULL\n");
                 return;
             }
+#endif
         } else {
             /* no acl found so packet has to be dropped */
             struct auth_answer aanswer ={ NOK , conn_elt->user_id } ;
@@ -199,6 +201,8 @@ void acl_check_and_decide (gpointer userdata, gpointer data){
             send_auth_response(GUINT_TO_POINTER(conn_elt->packet_id),&aanswer);
             conn_elt->state=STATE_DONE;
             /* search and fill */
+        g_async_queue_push (connexions_queue,conn_elt);
+#if 0
             element = search_and_fill (conn_elt);
             if (element) {
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)){
@@ -217,6 +221,7 @@ void acl_check_and_decide (gpointer userdata, gpointer data){
                     UNLOCK_CONN(element);
                 }
             }
+#endif
         }
     }
     if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET))
