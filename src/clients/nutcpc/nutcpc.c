@@ -640,7 +640,6 @@ int main (int argc, char *argv[])
 	 */
 
 	if (ct_init (&old) == 0) panic ("ct_init failed");
-	if (ct_read (&old) == 0) panic ("ct_read failed");
 
 	while (stopped == 0) {
 		struct timeval tv1, tv2;

@@ -158,11 +158,12 @@ void log_user_packet (connection element,int state){
                 ((nuauth_log_users & 4) && (state == STATE_OPEN)) 
                 || 
                 (nuauth_log_users & 8) 
-               )
+               ) {
 		/* feed thread pool */
 		g_thread_pool_push(user_loggers,
 				g_memdup(&conn_state,sizeof(conn_state)),
 				NULL);
+            }
 	}
 	/* end */
 }

@@ -443,7 +443,6 @@ NuAuth* nu_client_init(char *username,unsigned long userid,char * password, char
 
 	/* alloc ct */
 	if (ct_init (&(session->ct)) == 0) panic ("ct_init failed");
-	if (ct_read (session,session->ct) == 0) panic ("ct_read failed");
 	return session;
 }
 
