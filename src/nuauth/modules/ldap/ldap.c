@@ -257,7 +257,7 @@ G_MODULE_EXPORT GSList * ldap_user_check (connection * element,u_int16_t userid,
    	 }
     if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
       g_message ("invalid return of ldap_search_st : %s\n",ldap_err2string(err));
-    return -1;
+    return NULL;
   }
 
    if (ldap_count_entries(ld,res) == 1) {
@@ -291,7 +291,7 @@ G_MODULE_EXPORT GSList * ldap_user_check (connection * element,u_int16_t userid,
 	 g_message("reading password\n");
      }
      ldap_value_free(attrs_array);
-
+     return outelt;
    } else {
      if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_AUTH))
        g_message("No or too many users found with userid %d\n",userid);

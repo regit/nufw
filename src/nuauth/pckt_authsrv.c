@@ -172,7 +172,7 @@ void acl_check (gpointer userdata, gpointer data){
       	take_decision(element);
       } else {
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))
-	  g_message("Something Wrong : element is NULL\n");
+	  g_warning("Something Wrong : element is NULL\n");
       }
     } else {
       /* no acl found so packet has to be dropped */

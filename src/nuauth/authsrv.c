@@ -167,7 +167,13 @@ if (daemonize == 1) {
  signal(SIGPIPE,SIG_IGN);
 
   /* initialize packets list */
+#if 0
  conn_list = g_hash_table_new_full (g_int_hash, //(GHashFunc)hash_connection,
+				    compare_connection
+				    ,NULL,
+				    (GDestroyNotify) lock_and_free_connection); 
+#endif
+ conn_list = g_hash_table_new_full ((GHashFunc)hash_connection,
 				    compare_connection
 				    ,NULL,
 				    (GDestroyNotify) lock_and_free_connection); 

@@ -18,6 +18,7 @@
 */
 
 #include <auth_srv.h>
+#include <jhash.h>
 
 void bail (const char *on_what){
   perror(on_what);
@@ -49,17 +50,17 @@ inline char get_state(connection *elt){
 }
 
 
-#if 0
 guint
-hash_connection(gconstpointer conn_p)
+hash_connection(gconstpointer headers)
 {
-  connection * conn = (connection *)conn_p;
-  return (jhash_3words((conn->tracking_hdrs).saddr,
-	                     ((conn->tracking_hdrs).daddr ^ (conn->tracking_hdrs).protocol),
-	                     ((conn->tracking_hdrs).dest | ((conn->tracking_hdrs).source << 16)),
+  tracking *tracking_hdrs = (tracking *)headers;
+  
+  return (jhash_3words(tracking_hdrs->saddr,
+	                     (tracking_hdrs->daddr ^ tracking_hdrs->protocol),
+	                     (tracking_hdrs->dest | tracking_hdrs->source << 16),
 	                     32));
 }
-#endif
+
 
 gboolean compare_connection(gconstpointer tracking_hdrs1, gconstpointer tracking_hdrs2){
   /* compare IPheaders */
@@ -143,7 +144,7 @@ connection * search_and_fill (connection * pckt) {
 	g_message("need only cleaning\n");
       conn_cl_delete(element);
       free_connection(pckt);
-      return NULL ;
+      return NULL;
     }
 
     if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
@@ -202,7 +203,7 @@ gint print_connection(gpointer data,gpointer userdata){
   dest.s_addr = ntohl(conn->tracking_hdrs.daddr);
   if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
   {
-    gchar firstfield=strdup(inet_ntoa(src));
+    gchar* firstfield=strdup(inet_ntoa(src));
     g_message( "Connection : src=%s dst=%s proto=%u", firstfield, inet_ntoa(dest),
 	       conn->tracking_hdrs.protocol);
     if (conn->tracking_hdrs.protocol == IPPROTO_TCP){
