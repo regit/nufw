@@ -1,0 +1,120 @@
+.\" $Header: /aolnet/dev/src/CVS/sgml/docbook-to-man/cmd/docbook-to-man.sh,v 1.1.1.1 1998/11/13 21:31:59 db3l Exp $
+.\"
+.\"	transcript compatibility for postscript use.
+.\"
+.\"	synopsis:  .P! <file.ps>
+.\"
+.de P!
+.fl
+\!!1 setgray
+.fl
+\\&.\"
+.fl
+\!!0 setgray
+.fl			\" force out current output buffer
+\!!save /psv exch def currentpoint translate 0 0 moveto
+\!!/showpage{}def
+.fl			\" prolog
+.sy sed -e 's/^/!/' \\$1\" bring in postscript file
+\!!psv restore
+.
+.de pF
+.ie     \\*(f1 .ds f1 \\n(.f
+.el .ie \\*(f2 .ds f2 \\n(.f
+.el .ie \\*(f3 .ds f3 \\n(.f
+.el .ie \\*(f4 .ds f4 \\n(.f
+.el .tm ? font overflow
+.ft \\$1
+..
+.de fP
+.ie     !\\*(f4 \{\
+.	ft \\*(f4
+.	ds f4\"
+'	br \}
+.el .ie !\\*(f3 \{\
+.	ft \\*(f3
+.	ds f3\"
+'	br \}
+.el .ie !\\*(f2 \{\
+.	ft \\*(f2
+.	ds f2\"
+'	br \}
+.el .ie !\\*(f1 \{\
+.	ft \\*(f1
+.	ds f1\"
+'	br \}
+.el .tm ? font underflow
+..
+.ds f1\"
+.ds f2\"
+.ds f3\"
+.ds f4\"
+'\" t 
+.ta 8n 16n 24n 32n 40n 48n 56n 64n 72n  
+.TH "NUFW" "1" 
+.SH "NAME" 
+nutop \(em display top NUFW Users 
+.SH "SYNOPSIS" 
+.PP 
+\fBnutop\fR [\fB-help\fP]  [\fB-c \fIconfig file\fR\fP]  [\fB-delay \fIrefresh delay (seconds)\fR\fP]  [\fB-line \fInumber of lines to display\fR\fP]  [\fB-databasetype \fI mysql/pgsql\fR\fP]  [\fB-host \fIdb host\fR\fP]  [\fB-user \fIdb username\fR\fP]  [\fB-pass \fIdb password\fR\fP]  [\fB-databasename \fIdb database name\fR\fP]  [\fB-tablename \fIdb table\fR\fP]  [\fB-port \fIdb port\fR\fP]  
+.SH "DESCRIPTION" 
+.PP 
+This manual page documents the 
+\fBnutop\fR command. 
+.PP 
+Nutop is to be used by administrators willing to view users activity 
+on a NuFW server, in real time. The display is designed to look a lot like 
+the well known top command, as far as general layout is concerned. 
+.PP 
+The defaulkt configuration file (containing SQL connections 
+parameters) is located at /etc/nufw/nutop.conf. If decided to 
+customize it to their needs, care should be taken about file permissions 
+on that file, as it might let any user of the system access to the NuFW 
+connection tracking database. 
+.PP 
+Original packaging and informations and help can be found from http://www.nufw.org/ 
+.SH "OPTIONS" 
+.IP "\fB-help\fP         " 10 
+Issues usage details and exits. 
+.IP "\fB-c \fIconfig file\fR\fP         " 10 
+Specifies config file to read SQL parameters from. Default is 
+/etc/nufw/nutop.conf 
+.IP "\fB-delay \fInumber\fR\fP         " 10 
+Specifies a rate to refresh display. This parameter is 
+interpeted as a number of seconds. Default is 2s. 
+.IP "\fB-line \fInumber\fR\fP         " 10 
+Number of lines to display. Default : 20 
+.IP "\fB-databasetype \fImysql/pgsql\fR\fP         " 10 
+Type of database to connect to. Default is pgsql. This setting 
+also sets the default port setting. 
+.IP "\fB-host \fIhostname/IP\fR\fP         " 10 
+IP address or FQDN of database we connect to.  Default value : 127.0.0.1 
+.IP "\fB-user \fIusername\fR\fP         " 10 
+Database username to connect as. Default is "nufw" 
+.IP "\fB-pass \fIpassword\fR\fP         " 10 
+Password to use to connect to database. 
+.IP "\fB-databasename \fIname of database\fR\fP         " 10 
+Name of database we connect to. Default is "nufw" 
+.IP "\fB-tablename \fIname of table\fR\fP         " 10 
+Name of SQL table to use for queries. Default is "nufw" 
+.IP "\fB-port \fITCP port\fR\fP         " 10 
+TCP numeric port to use for database connection. Default is 3306 
+if databasetype is mysql, 5432 if pgsql. 
+.SH "SEE ALSO" 
+.PP 
+nuauth(1), nufw(1) 
+.SH "AUTHOR" 
+.PP 
+Nufw was designed and coded by Eric Leblond, aka Regit (eric@inl.fr) , and Vincent 
+Deffontaines, aka gryzor (vincent@inl.fr). Original idea in 2001, while working on NSM Ldap 
+support. 
+.PP 
+This manual page was written by Vincent Deffontaines 
+.PP 
+Permission is 
+granted to copy, distribute and/or modify this document under 
+the terms of the GNU Free Documentation 
+License, Version 2 as published by the Free 
+Software Foundation; with no Invariant Sections, no Front-Cover 
+Texts and no Back-Cover Texts. 
+.\" created by instant / docbook-to-man, Fri 30 Jul 2004, 10:37 
