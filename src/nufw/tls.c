@@ -5,15 +5,13 @@ gnutls_session * tls_connect()
   gnutls_session* tls_session;
   gnutls_certificate_credentials xcred;
 #if USE_X509
-  const int cert_type_priority[3] = { GNUTLS_CRT_X509, 
-      GNUTLS_CRT_OPENPGP, 0 };
+  const int cert_type_priority[3] = { GNUTLS_CRT_X509, 0 };
 #endif
   int tls_socket,ret;
+#if USE_X509
   /* compute patch key_file */
-  if (!key_file)
-  {
-      //snprintf(key_file,FILENAME_SIZE,CONFIG_DIR "/" KEYFILE);
-      key_file=(char *)malloc(strlen(CONFIG_DIR)+strlen(KEYFILE)+2);
+  if (!key_file) {
+      key_file=(char*)calloc(strlen(CONFIG_DIR)+strlen(KEYFILE)+2,sizeof(char));
       if (!key_file)
       {
           if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
@@ -30,10 +28,10 @@ gnutls_session * tls_connect()
       strcat(key_file,"/");
       strcat(key_file,KEYFILE);
   }
-  if (!cert_file)
-  {
-      //snprintf(cert_file,FILENAME_SIZE,CONFIG_DIR "/" CERTFILE);
-      cert_file=(char *)malloc(strlen(CONFIG_DIR)+strlen(CERTFILE)+2);
+                  syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"key_file!");
+                  syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"cert_file ?");
+  if (!cert_file) {
+      cert_file=(char*)calloc(strlen(CONFIG_DIR)+strlen(CERTFILE)+2,sizeof(char));
       if (!cert_file)
       {
           if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
@@ -49,6 +47,7 @@ gnutls_session * tls_connect()
       strcat(cert_file,"/");
       strcat(cert_file,CERTFILE);
   }
+                  syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"cert_file!");
   /* test if key exists */
   if (access(key_file,R_OK)){
       if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
@@ -70,7 +69,6 @@ gnutls_session * tls_connect()
       }
       return NULL;
   }
-#if USE_X509
   /* X509 stuff */
   gnutls_certificate_allocate_credentials(&xcred);
 
@@ -113,6 +111,7 @@ gnutls_session * tls_connect()
       gnutls_perror(ret);
       return NULL;
   } else {
+#if USE_X509
       if (ca_file){
           /* we need to verify received certificates */
           if( gnutls_certificate_verify_peers(*tls_session) !=0){
@@ -126,6 +125,7 @@ gnutls_session * tls_connect()
               return NULL;
           }
       }
+#endif
       return tls_session;
   }
 }

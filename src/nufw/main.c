@@ -316,7 +316,6 @@ int main(int argc,char * argv[]){
     if (nufw_use_tls){
         tls.session=NULL;
         tls.active=0;
-
         gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);
         gnutls_global_init();
     }

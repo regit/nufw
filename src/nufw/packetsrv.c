@@ -176,7 +176,6 @@ int auth_request_send(uint8_t type,unsigned long packet_id,char* payload,int dat
             }
         }
     }
-#endif
 
 
     if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
@@ -186,16 +185,17 @@ int auth_request_send(uint8_t type,unsigned long packet_id,char* payload,int dat
             printf("[%i] Sending request for %lu\n",getpid(),packet_id);
         }
     }
+#endif
     if (nufw_use_tls){
         /* negotiate TLS connection if needed */
-       if (!tls.session){
-     if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
-        if (log_engine == LOG_TO_SYSLOG) {
-            syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"Trying TLS connection");
-        }else {
-            printf("[%i] Trying TLS connection\n",getpid());
-        }
-    }
+	    if (!tls.session){
+		    if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
+			    if (log_engine == LOG_TO_SYSLOG) {
+				    syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"Not connected, trying TLS connection");
+			    }else {
+				    printf("[%i] Not connected, trying TLS connection\n",getpid());
+			    }
+		    }
             tls.session = tls_connect();
         }
         if (tls.session){

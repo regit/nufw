@@ -228,7 +228,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
             strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
             if (nuauth_log_users_strict){
                 char *my_timestamp;
-                my_timestamp=(char *)malloc(26);
+                my_timestamp=(char *)calloc(26,sizeof(char));
                 if (my_timestamp == NULL)
                 {
                   g_warning("Can not malloc for my_timestamp");
@@ -400,7 +400,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
             int update_status = 0;
             while (update_status < 2){
               char *my_timestamp;
-              my_timestamp=(char *)malloc(26);
+              my_timestamp=(char *)calloc(26,sizeof(char));
               if (my_timestamp == NULL)
               {
                 g_warning("Can not malloc for my_timestamp");
@@ -454,7 +454,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
             int update_status = 0;
             while (update_status < 2){
               char *my_timestamp;
-              my_timestamp=(char *)malloc(26);
+              my_timestamp=(char *)calloc(26,sizeof(char));
               if (my_timestamp == NULL)
               {
                 g_warning("Can not malloc for my_timestamp");

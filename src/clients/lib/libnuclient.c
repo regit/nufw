@@ -90,10 +90,10 @@ int nu_get_usersecret(sasl_conn_t *conn __attribute__((unused)),
 	}
 	if(!psecret) return SASL_BADPARAM;
 	if (! session->password){
-		*psecret = malloc(sizeof(sasl_secret_t) );
+		*psecret = (char*)calloc(1,sizeof(sasl_secret_t) );
 		(*psecret)->len = 0;
 	} else {
-		*psecret = malloc(sizeof(sasl_secret_t) + strlen(session->password));
+		*psecret = (char*)calloc(sizeof(sasl_secret_t) + strlen(session->password),sizeof(char));
 		(*psecret)->len = strlen(session->password);
 	}
 	strcpy((*psecret)->data, session->password);
@@ -252,7 +252,7 @@ static int tcptable_add (conntable_t *ct, conn_t *c)
 	assert (c != NULL);
 #endif
 
-	newc = (conn_t *) malloc (sizeof (conn_t));
+	newc = (conn_t *) calloc (1,sizeof (conn_t));
 	if (!newc) {
 		panic ("memory exhausted");	
 	}

@@ -1,3 +1,9 @@
+nufw (1.0.2-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Eric Leblond <regit@inl.fr>  Tue, 29 Mar 2005 07:16:56 +0200
+
 nufw (1.0.1-1) unstable; urgency=low
 
   * New upstream release.

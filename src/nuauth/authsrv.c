@@ -246,7 +246,7 @@ int main(int argc,char * argv[])
 			case 'L' :
 				// strncpy(nufw_listen_address,optarg,HOSTNAME_SIZE);
 				g_free(nuauth_nufw_listen_addr);
-				nuauth_nufw_listen_addr = (char *)malloc(HOSTNAME_SIZE);
+				nuauth_nufw_listen_addr = (char *)calloc(HOSTNAME_SIZE,sizeof(char));
 				if (nuauth_nufw_listen_addr == NULL){return -1;}
 				strncpy(nuauth_nufw_listen_addr,optarg,HOSTNAME_SIZE);
 				printf("Waiting for Nufw daemon packets on %s\n",nuauth_nufw_listen_addr);
@@ -256,7 +256,7 @@ int main(int argc,char * argv[])
 			case 'C' :
 				//strncpy(client_listen_address,optarg,HOSTNAME_SIZE);
 				g_free(nuauth_client_listen_addr);
-				nuauth_client_listen_addr = (char *)malloc(HOSTNAME_SIZE);
+				nuauth_client_listen_addr = (char *)calloc(HOSTNAME_SIZE,sizeof(char));
 				if (nuauth_client_listen_addr == NULL){return -1;}
 				strncpy(nuauth_client_listen_addr,optarg,HOSTNAME_SIZE);
 				printf("Waiting for clients auth packets on %s\n",nuauth_client_listen_addr);

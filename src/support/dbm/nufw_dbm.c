@@ -85,7 +85,7 @@ void fatal_e(char *msg)
 void pass_and_gids(char *passwd, char *gids, char **result)
 {
   char *tmp;
-  *result = (char *)malloc(strlen(passwd) + strlen(gids) +3 );
+  *result = (char *)calloc(strlen(passwd) + strlen(gids) +3 ,sizeof(char));
   if (*result == NULL)
       fatal_e("Could not malloc!");
   sprintf(*result,"%s ",passwd);
@@ -167,7 +167,7 @@ int passwd_crypt(int pass_crypt,char **pass)
    crypted=gcry_md_read(hd,algo);
    sasl_encode64(crypted,strlen(crypted),decoded,30,&len);
    free(*pass);
-   *pass = (char *)malloc(35*sizeof(char));
+   *pass = (char *)calloc(35,sizeof(char));
    if (*pass == NULL)
        fatal_e("Could not malloc");
    sprintf(*pass,"%s%s",prestring,decoded);
@@ -416,7 +416,7 @@ int main(int argc, char *argv[])
             fatal_e("prompt_password error");
         pass=strtok(pass,"\n");
         passwd_crypt(pass_crypt,&pass);
-        insert.dptr=(char *)malloc(sizeof(char)*(strlen(pass)+strlen(chaine)+1));
+        insert.dptr=(char *)calloc(sizeof(char)*(strlen(pass)+strlen(chaine)+1),sizeof(char));
         if (insert.dptr == NULL)
             fatal_e("Could not malloc!");
         sprintf(insert.dptr,"%s%s",pass,chaine);
