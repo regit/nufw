@@ -42,10 +42,17 @@ int check_fill_user_counters(u_int16_t userid,long u_time,unsigned long packet_i
     if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER)) {
       g_message("found user %d\n",userid);
     }
-    if ( (u_time < currentuser->last_packet_time) || ((u_time == currentuser->last_packet_time) && (packet_id <= currentuser->last_packet_id))  ){
-       if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER)) {
-	 g_message("no increasing packet counter for user %d\n",userid);
-       }
+    if ( (u_time < currentuser->last_packet_time) ) {
+      /* if packet is older than timeout there can be problem */
+      if ( u_time - currentuser->last_packet_time >= packet_timeout) {
+	g_warning("Packet for user %d is really to old",userid);
+	return 0;
+      }
+    }
+    if (((u_time == currentuser->last_packet_time) && (packet_id <= currentuser->last_packet_id))  ){
+      if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER)) {
+	g_message("non increasing packet counter for user %d\n",userid);
+      }
     } 
     if (g_mutex_trylock(currentuser->lock)){
       currentuser->ip=ip;
