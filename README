@@ -1,1 +1,17 @@
 See INSTALL for the moment ;-)
+
+SSL usage :
+
+NuAuth :
+A key for nuauth can be created wth the following command :
+openssl req -new -x509 -nodes -days 365 -out nuauth.pem -keyout nuauth.pem
+By default nuauth search the certificate : CONFIGDIR/nuauth.pem
+
+NuTcpc :
+nutcpc wait for a key in the file : 
+        $HOME/.nufw/key.pem
+to create one you can use :
+mkdir ~/.nufw/
+cd ~/.nufw/
+openssl req -new -x509 -nodes -days 365 -out key.pem -keyout key.pem
+cd -
