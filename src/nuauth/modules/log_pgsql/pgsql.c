@@ -97,18 +97,18 @@ G_MODULE_EXPORT PGconn *pgsql_conn_init(void){
         sizeof(char));
     if (pgsql_conninfo == NULL){return NULL;}
     //Build string we will pass to PQconnectdb
-    strcat(pgsql_conninfo,"host='");
-    strcat(pgsql_conninfo,pgsql_server);
-    strcat(pgsql_conninfo,"' port=");
-    strcat(pgsql_conninfo,port);
-    strcat(pgsql_conninfo," dbname='");
-    strcat(pgsql_conninfo,pgsql_db_name);
-    strcat(pgsql_conninfo,"' user='");
-    strcat(pgsql_conninfo,pgsql_user);
-    strcat(pgsql_conninfo,"' password='");
-    strcat(pgsql_conninfo,pgsql_passwd);
-    strcat(pgsql_conninfo,"' connect_timeout=");
-    strcat(pgsql_conninfo,timeout);
+    strncat(pgsql_conninfo,"host='",6);
+    strncat(pgsql_conninfo,pgsql_server,strlen(pgsql_server));
+    strncat(pgsql_conninfo,"' port=",7);
+    strncat(pgsql_conninfo,port,strlen(pgsql_conninfo));
+    strncat(pgsql_conninfo," dbname='",9);
+    strncat(pgsql_conninfo,pgsql_db_name,strlen(pgsql_db_name));
+    strncat(pgsql_conninfo,"' user='",8);
+    strncat(pgsql_conninfo,pgsql_user,strlen(pgsql_user));
+    strncat(pgsql_conninfo,"' password='",12);
+    strncat(pgsql_conninfo,pgsql_passwd,strlen(pgsql_passwd));
+    strncat(pgsql_conninfo,"' connect_timeout=",18);
+    strncat(pgsql_conninfo,timeout,strlen(timeout));
     /* strcat(pgsql_conninfo," sslmode='");
        strcat(pgsql_conninfo,pgsql_ssl); 
        strcat(pgsql_conninfo,"'"); */
