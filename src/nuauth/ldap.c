@@ -1,6 +1,7 @@
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
+**		     Vincent Deffontaines <vincent@gryzor.com>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,8 +32,8 @@ LDAP* ldap_conn_init(void){
   char * bindpasswd=LDAP_CRED;
   ld = ldap_init(LDAP_SERVER,LDAP_PORT);
   if(!ld) {
-    if (debug)
-      g_warning("%d : ldap init error\n",getpid());
+    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
+      g_warning("ldap init error\n");
     return NULL;
   }
 
@@ -47,8 +48,8 @@ LDAP* ldap_conn_init(void){
       g_private_set(ldap_priv,ld);
       return NULL;
     } 
-    if (debug){
-      g_message("%d : ldap bind error : %s \n",getpid(),ldap_err2string(err));
+    if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_AUTH)){
+      g_message("ldap bind error : %s \n",ldap_err2string(err));
     }
     return NULL;
   }
@@ -71,8 +72,8 @@ GSList * ldap_acl_check (connection* element){
     /* init ldap has never been done */
     ld = ldap_conn_init();
     if (ld == NULL) {
-	if (debug)
-		g_message("%d : Can not initiate LDAP conn\n",getpid());
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_AUTH))
+		g_message("Can not initiate LDAP conn\n");
 	return NULL;
     }
     g_private_set(ldap_priv,ld);
@@ -123,8 +124,8 @@ GSList * ldap_acl_check (connection* element){
       ld=NULL;
       g_private_set(ldap_priv,ld);
     }
-    if (debug)
-      g_warning ("%d : invalid return of ldap_search_st : %s\n",getpid(),ldap_err2string(err));
+    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
+      g_warning ("invalid return from ldap_search_st : %s\n",ldap_err2string(err));
     return NULL;
   }
   /* parse result to feed a group_list */
@@ -151,13 +152,13 @@ GSList * ldap_acl_check (connection* element){
 	ldap_value_free(attrs_array);
 	result = ldap_next_entry(ld,result);
       }
-    if (debug)
-      g_message("%d : acl group at %p\n",getpid(),g_list);
+    if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_AUTH))
+      g_message("acl group at %p\n",g_list);
     ldap_msgfree (res);
     return g_list;
   } else {
-    if (debug)
-      g_message("%d : Argh no acl found\n",getpid());
+    if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_AUTH))
+      g_message("Argh no acl found\n");
     ldap_msgfree (res);
   }
   return NULL;
@@ -177,8 +178,8 @@ gint ldap_user_check (connection * element,u_int16_t userid,char *passwd){
     ld = ldap_conn_init();
     g_private_set(ldap_priv,ld);
     if (ld == NULL){
-	if (debug)
-		g_message("%d : Can't initiate LDAP conn\n",getpid());
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_AUTH))
+		g_message("Can't initiate LDAP conn\n");
 	return -1;
     }
   }
@@ -199,8 +200,8 @@ gint ldap_user_check (connection * element,u_int16_t userid,char *passwd){
      	 ld=NULL;
     	  g_private_set(ldap_priv,ld);
    	 }
-    if (debug)
-      g_message ("%d : invalid return of ldap_search_st : %s\n",getpid(),ldap_err2string(err));
+    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
+      g_message ("invalid return of ldap_search_st : %s\n",ldap_err2string(err));
     return -1;
   }
 
@@ -208,7 +209,7 @@ gint ldap_user_check (connection * element,u_int16_t userid,char *passwd){
      /* parse result to feed a user_list */
      result = ldap_first_entry(ld,res);
      if (result == NULL ){
-       if (debug)
+       if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_AUTH))
 	 g_message("Can not get entry for %d\n",userid);
        free_connection(element);
        return -1;
@@ -227,17 +228,18 @@ gint ldap_user_check (connection * element,u_int16_t userid,char *passwd){
      attrs_array = ldap_get_values(ld, result, "userPassword");
      attrs_array_len = ldap_count_values(attrs_array);
      if (attrs_array_len == 0){
-       g_message ("%d : what ! no password found!\n",getpid());
+       if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
+         g_message ("what ! no password found!\n");
      } else {
        sscanf(*attrs_array,"%s",passwd);
-       if (debug)
-	 g_message("%d : reading password\n",getpid());
+       if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_AUTH))
+	 g_message("reading password\n");
      }
      ldap_value_free(attrs_array);
 
    } else {
-     if (debug)
-       g_message("%d : No or too much user found with userid %d\n",getpid(),userid);
+     if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_AUTH))
+       g_message("No or too many users found with userid %d\n",userid);
      free_connection(element);
      return -1;
    }

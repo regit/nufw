@@ -98,7 +98,6 @@ int main(int argc,char * argv[]) {
 	  debug_level=MAX_DEBUG_LEVEL;
   if (debug_level < MIN_DEBUG_LEVEL)
 	  debug_level=MIN_DEBUG_LEVEL;
-  printf ("debug_level :%i\n",debug_level);
   if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN))
   	g_message("debug_level is %i\n",debug_level);
 

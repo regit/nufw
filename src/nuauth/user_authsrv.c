@@ -1,6 +1,7 @@
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
+**		     Vincent Deffontaines <vincent@gryzor.com>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -42,7 +43,10 @@ void* user_authsrv(){
   sck_inet = socket (AF_INET,SOCK_DGRAM,0);
 
   if (sck_inet == -1)
-    bail("socket()");
+  {
+    g_error("socket()");
+    exit(-1);
+  }
 	
   memset(&addr_inet,0,sizeof addr_inet);
 
@@ -56,7 +60,10 @@ void* user_authsrv(){
 	    (struct sockaddr *)&addr_inet,
 	    len_inet);
   if (z == -1)
-    bail ("user bind()");
+  {
+    g_error ("user bind()");
+    exit(-1);
+  }
 
 	
   for(;;){
@@ -68,7 +75,10 @@ void* user_authsrv(){
 		 (struct sockaddr *)&addr_clnt,
 		 &len_inet);
     if (z<0)
-      bail("recvfrom()");
+    {
+      g_error("recvfrom()");
+      exit(-1); /*useless*/
+    }
 #if 0
     /* prepare data */
     userdatas.dgram=dgram;
@@ -90,8 +100,8 @@ void user_check (gpointer userdata, gpointer data){
   connection * element;
 
 
-  if (debug)
-    g_message("%d : entering user_check\n",getpid());
+  if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
+    g_message("entering user_check\n");
   conn_elt = userpckt_decode((char *)userdata, 
 			     512);
   /* if OK search and fill */
@@ -102,25 +112,25 @@ void user_check (gpointer userdata, gpointer data){
       if ( element == NULL ) return;
       /* check state of the packet */
       if ( ((connection *)element)->state == STATE_READY ){
-	if (debug)
-	  g_message("%d : trying to decide after userpckt\n",getpid()); 
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
+	  g_message("trying to decide after userpckt\n"); 
 	take_decision(element);
       } else {
 	UNLOCK_CONN(element);
-	if (debug)
-	  g_message("%d : User packet before auth packet\n",getpid());
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
+	  g_message("User packet before auth packet\n");
       }
     } else {
-      if (debug)
-	g_message("%d : Unwanted user packet\n",getpid());
+      if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
+	g_message("Unwanted user packet\n");
     }
   } else {
-    if (debug)
-      g_message("%d : User packet decoding failed\n",getpid());
+    if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
+      g_message("User packet decoding failed\n");
   }
 
-  if (debug)
-   g_message("%d : leaving user_check\n",getpid());
+  if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
+   g_message("leaving user_check\n");
 }
 
 connection * userpckt_decode(char* dgram,int dgramsiz){
@@ -144,7 +154,7 @@ connection * userpckt_decode(char* dgram,int dgramsiz){
       /* allocate connection */
       connexion = g_new0( connection,1);
       if (connexion == NULL){
-	if (debug){
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_USER)){
 	  g_message("Can not allocate connexion\n");
 	}
 	return NULL;
@@ -202,16 +212,16 @@ connection * userpckt_decode(char* dgram,int dgramsiz){
       /* get user md5datas */
       usermd5datas=pointer;
 
-      if (debug){
-	  g_message("%d : User ",getpid()); 
+      if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)){
+	  g_message("User "); 
 	  print_connection(connexion,NULL);
 	}
 
       /* get user datas : password, groups (filled in) */
 #if USE_LDAP
       if ( ldap_user_check (connexion,userid,passwd) != 0){
-	if (debug)
-	  g_message("%d : ldap_user_check return bad\n",getpid());
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
+	  g_message("ldap_user_check return bad\n");
 	g_free(connexion);
 	return NULL;
       }
@@ -253,8 +263,8 @@ connection * userpckt_decode(char* dgram,int dgramsiz){
       /* compare the two crypted datas */
       if ( strcmp (result, usermd5datas) != 0 ) {
 	/* bad sig dropping user packet ! */
-	if (debug)
-	  g_message("%d : wrong md5 sig for packet %s\n",getpid(),usermd5datas);
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_USER))
+	  g_message("wrong md5 sig for packet %s\n",usermd5datas);
 	free_connection(connexion);
 	return NULL;
       } else {
@@ -276,8 +286,8 @@ connection * userpckt_decode(char* dgram,int dgramsiz){
 	/* Tadaaa */
 	return connexion;
 	} else {
-		if (debug)
-	  		g_message("%d : non increasing counters for packet\n",getpid());
+		if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
+	  		g_message("non increasing counters for packet\n");
 		free_connection(connexion);
 		return NULL;
 	}

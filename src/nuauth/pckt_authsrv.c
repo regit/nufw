@@ -78,7 +78,10 @@ void* packet_authsrv(){
   sck_inet = socket (AF_INET,SOCK_DGRAM,0);
 
   if (sck_inet == -1)
-    bail("socket()");
+  {
+    g_error("socket()");
+    exit (-1); /*useless*/
+  }
 	
   memset(&addr_inet,0,sizeof addr_inet);
 
@@ -92,8 +95,11 @@ void* packet_authsrv(){
 	    (struct sockaddr *)&addr_inet,
 	    len_inet);
   if (z == -1)
-    bail ("pckt bind()");
-  if (debug){
+  {
+    g_error ("pckt bind()");
+    exit (-1); /*useless*/
+  }
+  if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_PACKET)){
     g_message("Pckt Server Listening\n");
   }
   for(;;){
@@ -105,12 +111,15 @@ void* packet_authsrv(){
 		 (struct sockaddr *)&addr_clnt,
 		 &len_inet);
     if (z<0)
-      bail("recvfrom()");
+    {
+      g_error("recvfrom()");
+      exit (-1); /*useless*/
+    }
     //	pckt_rx++;
     /* decode packet and create connection */
     current_conn = authpckt_decode(dgram, sizeof dgram);
     if (current_conn == NULL){
-      if (debug){
+      if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_PACKET)){
 	g_message("Can't parse packet, that's bad !\n");
       }
     } else {
@@ -135,22 +144,22 @@ void acl_check (gpointer userdata, gpointer data){
   connection * element;
   connection * conn_elt = userdata;
 
-  if (debug)
-    g_message("%d : entering acl_check\n",getpid());
+  if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET))
+    g_message("entering acl_check\n");
   if (conn_elt == NULL){
-    if (debug){
-      g_message("that's not well elt is NULL\n");
+    if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_PACKET)){
+      g_message("that's not good : elt is NULL\n");
     }
   } else {
     /* external check of acl */
     if (external_acl_groups(conn_elt)) {
-      if (debug){
-	g_message("%d : Going to search entry\n",getpid());
+      if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)){
+	g_message("Going to search entry\n");
       }
       /* search and fill */
       element = search_and_fill (conn_elt);
-      if (debug){
-	g_message("%d : new entry at %p\n",getpid(),element);
+      if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)){
+	g_message("new entry at %p\n",element);
       }
       if (element != NULL) {
 	LOCK_CONN(element);
@@ -162,7 +171,7 @@ void acl_check (gpointer userdata, gpointer data){
        	*/
       	take_decision(element);
       } else {
-	if (debug)
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))
 	  g_message("Something Wrong : element is NULL\n");
       }
     } else {
@@ -175,8 +184,8 @@ void acl_check (gpointer userdata, gpointer data){
 	change_state(conn_elt,STATE_DONE);
     }
   }
-  if (debug)
-    g_message("%d : leaving acl_check\n",getpid());
+  if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET))
+    g_message("leaving acl_check\n");
 }
 
 
@@ -191,7 +200,7 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz){
       /* allocate connection */
       connexion = g_new0( connection,1);
       if (connexion == NULL){
-	if (debug){
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_PACKET)){
 	  g_message("Can not allocate connexion\n");
 	}
 	return NULL;
@@ -202,8 +211,8 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz){
       pointer+=2;
       connexion->packet_id=NULL;
       connexion->packet_id=g_slist_append(connexion->packet_id, GUINT_TO_POINTER(*(unsigned long * )pointer));
-      if (debug) {
-	g_message("%d : Working on  %lu\n",getpid(),(long unsigned int)GPOINTER_TO_UINT(connexion->packet_id->data));
+      if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_PACKET)) {
+	g_message("Working on  %lu\n",(long unsigned int)GPOINTER_TO_UINT(connexion->packet_id->data));
       }
       pointer+=sizeof (unsigned long);
       connexion->timestamp=*( long * )(pointer);
@@ -216,21 +225,21 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz){
 	switch (connexion->tracking_hdrs.protocol) {
 	case IPPROTO_TCP:
 	  if ( get_tcp_headers(connexion, pointer)){
-	    if (debug)
+	    if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_PACKET))
 	      g_message ("Can't parse TCP headers\n");
 	    return NULL;
 	  }
 	  break;
 	case IPPROTO_UDP:
 	  if ( get_udp_headers(connexion, pointer) ){
-	    if (debug)
+	    if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_PACKET))
 	      g_message ("Can't parse UDP headers\n");
 	    return NULL;
 	  }
 	  break;
 	case IPPROTO_ICMP:
 	  if ( get_icmp_headers(connexion, pointer)){
-	    if (debug)
+	    if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_PACKET))
 	      g_message ("Can't parse ICMP headers\n");
 	    return NULL;
 	  }
@@ -238,7 +247,7 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz){
 	}
       }
       else {
-	if (debug)
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_PACKET))
 	  g_message ("Can't parse IP headers\n");
 	return NULL;
       }
@@ -247,13 +256,13 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz){
       if ( connexion->timestamp == 0 ){
 	      connexion->timestamp=time(NULL);
       }
-      if (debug){
+      if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)){
 	      g_message("Packet : ");
 	      print_connection(connexion,NULL);
       }
       return connexion;
     } else {
-      if (debug) {
+      if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)) {
 	g_message("Not for us\n");
       }
       return NULL;

@@ -1,6 +1,7 @@
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
+**		     Vincent Deffontaines <vincent@gryzor.com>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,14 +23,14 @@
 int check_fill_user_counters(u_int16_t userid,long u_time,unsigned long packet_id,u_int32_t ip){
 	user_datas * currentuser=NULL;
 	/* lookup users */
-	if (debug) {
-		g_message("%d : looking for %d\n",getpid(),userid);
-	}
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
+		g_message("looking for %d\n",userid);
+	
 	currentuser=g_hash_table_lookup(users_hash,userid);
 	if (currentuser == NULL){
 		/* failure so create user */
-		if (debug) {
-			g_message("%d : creating new user %d\n",getpid(),userid);
+		if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER)) {
+			g_message("creating new user %d\n",userid);
 		}
 		currentuser = g_new0(user_datas,1);
 		currentuser->ip=ip;
@@ -38,13 +39,13 @@ int check_fill_user_counters(u_int16_t userid,long u_time,unsigned long packet_i
 		currentuser->last_packet_timestamp=time(NULL);
 		currentuser->lock=g_mutex_new();
 		g_hash_table_insert(users_hash,userid,currentuser);
-		if (debug) {
-			g_message("%d : new user %d\n",getpid(),userid);
+		if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER)) {
+			g_message("new user %d\n",userid);
 		}
 		return 1;
 	} else {
-		if (debug) {
-			g_message("%d : found user %d\n",getpid(),userid);
+		if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER)) {
+			g_message("found user %d\n",userid);
 		}
 		if ( (u_time < currentuser->last_packet_time) || ((u_time == currentuser->last_packet_time) && (packet_id <= currentuser->last_packet_id))  ){
 			return 0;
@@ -64,10 +65,14 @@ int check_fill_user_counters(u_int16_t userid,long u_time,unsigned long packet_i
 }
 
 void print_id( gpointer id, gpointer value, gpointer user_data) {
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
 	g_message("%u ",id);
 }
 
 void print_users_list(){
-	g_message("users list : ");
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
+	{
+	  g_message("users list : ");
+	}
   	g_hash_table_foreach(users_hash,(GHFunc)print_id,NULL);
 }
