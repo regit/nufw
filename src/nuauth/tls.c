@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2004-2005 INL
+ ** Copyright(C) 2004,2005 INL
  ** written by  Eric Leblond <regit@inl.fr>
  **             Vincent Deffontaines <gryzor@inl.fr>
  **
@@ -604,8 +604,11 @@ int sasl_user_check(user_session* c_session)
 				g_free(dec_buf);
 			}
 		}
+                /* sasl connection is not used anymore */
+                sasl_dispose(&conn);
 		return SASL_OK;
 	} else 
+                sasl_dispose(&conn);
 		return ret;
 }
 
