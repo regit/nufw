@@ -266,8 +266,12 @@ Type: string
 Default: 389
 Description: LDAP server port
  Please enter the TCP port number of the LDAP server
+ 389 is standard non encrypted LDAP port.
+ If you set 636 as port, LDAP SSL will be used.
 Description-fr: Port du serveur LDAP
  Veuillez entrer le numéro de port du serveur LDAP
+ Le port non encrypté LDAP est 389. Si vous spécifiez 636, les connections LDAP
+ se feront en SSL.
 
 Template: nuauth/ldap_bind_dn
 Type: string
