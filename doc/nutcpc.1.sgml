@@ -1,0 +1,176 @@
+<!doctype refentry PUBLIC "-//OASIS//DTD DocBook V4.1//EN" [
+
+<!-- Process this file with docbook-to-man to generate an nroff manual
+     page: `docbook-to-man manpage.sgml > manpage.1'.  You may view
+     the manual page with: `docbook-to-man manpage.sgml | nroff -man |
+     less'.  A typical entry in a Makefile or Makefile.am is:
+
+manpage.1: manpage.sgml
+	docbook-to-man $< > $@
+
+    
+	The docbook-to-man binary is found in the docbook-to-man package.
+	Please remember that if you create the nroff version in one of the
+	debian/rules file targets (such as build), you will need to include
+	docbook-to-man in your Build-Depends control field.
+
+  -->
+
+  <!-- Fill in your name for FIRSTNAME and SURNAME. -->
+  <!ENTITY dhfirstname "<firstname>Eric</firstname>">
+  <!ENTITY dhsurname   "<surname>Leblond</surname>">
+  <!-- Please adjust the date whenever revising the manpage. -->
+  <!ENTITY dhdate      "<date>july 29, 2004</date>">
+  <!-- SECTION should be 1-8, maybe w/ subsection other parameters are
+       allowed: see man(7), man(1). -->
+  <!ENTITY dhsection   "<manvolnum>1</manvolnum>">
+  <!ENTITY dhemail2     "<email>vincent@gryzor.com</email>">
+  <!ENTITY dhemail    "<email>eric@regit.org</email>">
+  <!ENTITY dhusername  "Eric Leblond">
+  <!ENTITY dhucpackage "<refentrytitle>nutcpc</refentrytitle>">
+  <!ENTITY dhpackage   "nutcpc">
+
+  <!ENTITY gnu         "<acronym>GNU</acronym>">
+  <!ENTITY gpl         "&gnu; <acronym>GPL</acronym>">
+
+]>
+
+<refentry>
+  <refentryinfo>
+    <address>
+      &dhemail;
+    </address>
+    <author>
+      &dhfirstname;
+      &dhsurname;
+    </author>
+    <copyright>
+      <year>2004</year>
+      <holder>&dhusername;</holder>
+    </copyright>
+    &dhdate;
+  </refentryinfo>
+  <refmeta>
+    &dhucpackage;
+
+    &dhsection;
+  </refmeta>
+  <refnamediv>
+    <refname>&dhpackage;</refname>
+
+    <refpurpose>NUFW console-mode client</refpurpose>
+  </refnamediv>
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>&dhpackage;</command>
+      <arg>-d </arg>
+      <arg>-S </arg>
+      <arg>-h </arg>
+       <arg><option>-H <replaceable>Nuauth  IP</replaceable></option></arg>
+       <arg><option>-U <replaceable>UserID</replaceable></option></arg>
+       <arg><option>-I <replaceable>Interval</replaceable></option></arg>
+       <arg><option>-u <replaceable>Local UserID </replaceable></option></arg>
+       
+    </cmdsynopsis>
+  </refsynopsisdiv>
+  <refsect1>
+    <title>DESCRIPTION</title>
+
+    <para>This manual page documents the
+      <command>&dhpackage;</command> command.</para>
+
+      <para>&dhpackage; is a console-mode client for the the NUFW authenticating firewall. It sends
+      authentication packets to the nuauth server.
+       </para>
+
+      <para>Original packaging and informations and help can be found from http://www.nufw.org/</para>
+
+  </refsect1>
+  <refsect1>
+    <title>OPTIONS</title>
+
+    <variablelist>
+      <varlistentry>
+        <term><option>-h</option>
+        </term>
+        <listitem>
+          <para>Issues usage details and exits.</para>
+        </listitem>
+      </varlistentry>
+     <varlistentry>
+        <term><option>-d</option>
+        </term>
+        <listitem>
+          <para>Debug mode, don't go into background.</para>
+        </listitem>
+      </varlistentry>
+     <varlistentry>
+        <term><option>-S</option>
+        </term>
+        <listitem>
+          <para>Use SSL to connect to nuauth server.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>-H <replaceable>Nuauth IP</replaceable></option>
+        </term>
+        <listitem>
+          <para>send authentication packet  to <replaceable>Nuauth IP</replaceable>.</para>
+        </listitem>
+      </varlistentry>
+          <varlistentry>
+        <term><option>-U <replaceable>User ID</replaceable></option>
+        </term>
+        <listitem>
+          <para>Set nufw userid to <replaceable>User ID</replaceable>.</para>
+        </listitem>
+      </varlistentry>
+   <varlistentry>
+        <term><option>-u <replaceable>local user id</replaceable></option>
+        </term>
+        <listitem>
+          <para>Authenticate local user identified by <replaceable>local user id</replaceable> instead of user running &dhpackage;.</para>
+        </listitem>
+      </varlistentry>
+   </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>SEE ALSO</title>
+    <para>nufw(1)</para>
+    <para>nuauth(1)</para>
+  </refsect1>
+  <refsect1>
+    <title>AUTHOR</title>
+    <para>Nuauth was designed and coded by Eric Leblond, aka Regit (&dhemail;) , and Vincent
+    Deffontaines, aka gryzor (&dhemail2;). Original idea in 2001, while working on NSM Ldap
+    support.</para>
+
+    <para>This manual page was written by &dhusername;</para>
+      <para>Permission is
+      granted to copy, distribute and/or modify this document under
+      the terms of the &gnu; Free Documentation
+      License, Version 2 as published by the Free
+      Software Foundation; with no Invariant Sections, no Front-Cover
+      Texts and no Back-Cover Texts.</para>
+
+  </refsect1>
+</refentry>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:2
+sgml-indent-data:t
+sgml-parent-document:nil
+sgml-default-dtd-file:nil
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+-->
+
+
