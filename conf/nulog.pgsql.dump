@@ -1,0 +1,112 @@
+--
+-- PostgreSQL database dump
+--
+
+\connect - postgres
+
+SET search_path = public, pg_catalog;
+
+--
+-- TOC entry 2 (OID 16986)
+-- Name: seq_ulog; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE seq_ulog
+    START 1
+    INCREMENT 1
+    MAXVALUE 9223372036854775807
+    MINVALUE 1
+    CACHE 1;
+
+
+--
+-- TOC entry 4 (OID 16986)
+-- Name: seq_ulog; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE seq_ulog FROM PUBLIC;
+
+
+--
+-- TOC entry 5 (OID 16988)
+-- Name: ulog; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE ulog (
+    id integer DEFAULT nextval('seq_ulog'::text) NOT NULL,
+    user_id integer,
+    oob_prefix character varying(32),
+    oob_time_sec integer,
+    oob_time_usec integer,
+    oob_mark bigint,
+    oob_in character varying(32),
+    oob_out character varying(32),
+    raw_mac character varying(80),
+    raw_pktlen bigint,
+    ip_ihl smallint,
+    ip_tos smallint,
+    ip_totlen integer,
+    ip_id integer,
+    ip_fragoff integer,
+    ip_ttl smallint,
+    ip_protocol smallint,
+    ip_csum integer,
+    ip_saddr inet,
+    ip_daddr inet,
+    tcp_sport integer,
+    tcp_dport integer,
+    tcp_seq bigint,
+    tcp_ackseq bigint,
+    tcp_urg boolean,
+    tcp_ack boolean,
+    tcp_psh boolean,
+    tcp_rst boolean,
+    tcp_syn boolean,
+    tcp_fin boolean,
+    tcp_window integer,
+    tcp_urgp integer,
+    udp_sport integer,
+    udp_dport integer,
+    udp_len integer,
+    icmp_type smallint,
+    icmp_code smallint,
+    icmp_echoid integer,
+    icmp_echoseq integer,
+    icmp_gateway bigint,
+    icmp_fragmtu integer,
+    pwsniff_user character varying(30),
+    pwsniff_pass character varying(30),
+    ahesp_spi smallint,
+    local_time bigint,
+    local_hostname character varying(40),
+    start_timestamp bigint,
+    end_timestamp bigint,
+    state smallint
+);
+
+
+--
+-- TOC entry 6 (OID 16988)
+-- Name: ulog; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE ulog FROM PUBLIC;
+
+
+--
+-- Data for TOC entry 7 (OID 16988)
+-- Name: ulog; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY ulog (id, user_id, oob_prefix, oob_time_sec, oob_time_usec, oob_mark, oob_in, oob_out, raw_mac, raw_pktlen, ip_ihl, ip_tos, ip_totlen, ip_id, ip_fragoff, ip_ttl, ip_protocol, ip_csum, ip_saddr, ip_daddr, tcp_sport, tcp_dport, tcp_seq, tcp_ackseq, tcp_urg, tcp_ack, tcp_psh, tcp_rst, tcp_syn, tcp_fin, tcp_window, tcp_urgp, udp_sport, udp_dport, udp_len, icmp_type, icmp_code, icmp_echoid, icmp_echoseq, icmp_gateway, icmp_fragmtu, pwsniff_user, pwsniff_pass, ahesp_spi, local_time, local_hostname, start_timestamp, end_timestamp, state) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3 (OID 16986)
+-- Name: seq_ulog; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval ('seq_ulog', 36, true);
+
+
