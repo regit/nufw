@@ -1,0 +1,90 @@
+Oct 09 2003
+ Vincent Deffontaines
+
+This document describes structure and constraints about the structure of XMLed
+data for nufw's ACLs definitions.
+
+
+Orders of directives does not matter, exept proto must be specified before ports
+or types.
+
+Order of directives can (and should) be optimized by the rules generator.
+
+o All possible directives :
+--------------------------
+
+<proto [icmp/tcp/udp]>  </proto [icmp/tcp/udp]>
+<srcipstart ip>         </srcipstart ip>
+<srcipend ip>           </srcipend ip>
+<dstipstart ip>         </dstipstart ip>
+<dstipend ip>           </dstipend ip>
+#TCP and UDP specific
+<srcportstart port>     </srcportstart port>
+<srcportend port>       </srcportend port>
+<dstportstart port>     </dstportstart port>
+<dstportend port>       </dstportend port>
+#end of TCP and UDP specific
+#ICMP specific
+<icmptype [type]>       </icmptype [type]>
+#end ICMP specific
+<daystart [days]>       </daystart [days]>
+<dayend [days]>         </dayend [days]>
+#days = monday + tuesday + etc. where monday = 1, tuesday = 2, wednesday = 4, etc.)
+<timestart [time]>      </timestart [time]>
+<timeend   [time]>      </timeend [time]>
+#time = number of seconds since midnight
+<Group GroupID,...></Group>
+#The only needed directive.
+
+
+
+o Rules :
+--------
+Not all directives need to be specified
+The two following examples are stricly equivalent :
+
+<proto tcp>
+ <dstportstart 1>
+  <dstportend 1024>
+   <timestart 32400> #9 am
+    <timeend 61200>  # 5 pm
+     <Groups 101,102></Groups>  #Allow these groups' members to perform a connection in specified conditions
+    </timeend 61200>
+   </timestart 32400>
+  </dstportend 1024>
+ </dstportstart 1>
+</proto tcp>
+
+
+<timestart 32400> #9 am
+ <timeend 61200>  # 5 pm
+  <proto tcp>
+   <dstportstart 1>
+    <dstportend 1024>
+     <Groups 101,102></Groups>  #Allow these groups' members to perform a connection in specified conditions
+    </dstportend 1024>
+   </dstportstart 1>
+  </proto tcp>
+ </timeend 61200>
+</timestart 32400>
+
+
+Another example :
+<timestart 32400> #9 am
+ <timeend 61200>  # 5 pm
+  <proto tcp>
+   <dstportstart 1>
+    <dstportend 1024>
+     <Groups 101,102></Groups>  #Allow these groups' members to perform a connection to TCP ports 1-1024
+    </dstportend 1024>
+   </dstportstart 1>
+  </proto tcp>
+  <proto udp>
+   <dstportstart 53>
+    <dstportend 53>
+     <Groups 101,102></Groups>  #Allow these groups' members to perform a connection to UDP port 53
+    </dstportend 53>
+   </dstportstart 53>
+  </proto udp>
+ </timeend 61200>
+</timestart 32400>
