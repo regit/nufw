@@ -33,7 +33,8 @@ confparams nuauth_vars[] = {
     { "nuauth_log_users" , G_TOKEN_INT , 1, NULL },
     { "nuauth_user_check_module" , G_TOKEN_STRING , 1, NULL },
     { "nuauth_acl_check_module" , G_TOKEN_STRING , 1, NULL },
-    { "nuauth_user_logs_module" , G_TOKEN_STRING , 1, NULL }
+    { "nuauth_user_logs_module" , G_TOKEN_STRING , 1, NULL },
+    { "nuauth_prio_to_nok" , G_TOKEN_INT , 1, NULL }
 };
 #endif 
 
@@ -73,7 +74,7 @@ int main(int argc,char * argv[]) {
     gwsrv_port = GWSRV_PORT;
     userpckt_port = USERPCKT_PORT; 
     packet_timeout = PACKET_TIMEOUT;
-
+    nuauth_prio_to_nok= PRIO_TO_NOK;
     /* 
      * Minimum debug_level value is 2 -> for 1) fatal and 2) critical messages to always
      * be outputed
@@ -105,6 +106,10 @@ int main(int argc,char * argv[]) {
     nuauth_user_check_module=(char*)(vpointer?vpointer:nuauth_user_check_module);
     vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_acl_check_module");
     nuauth_acl_check_module=(char*)(vpointer?vpointer:nuauth_acl_check_module);
+
+    vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_prio_to_nok");
+    nuauth_prio_to_nok=*(int*)(vpointer?vpointer:&nuauth_prio_to_nok);
+
     vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_user_logs_module");
     nuauth_user_logs_module=(char*)(vpointer?vpointer:nuauth_user_logs_module);
 

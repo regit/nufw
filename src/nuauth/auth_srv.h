@@ -1,4 +1,4 @@
-/* $Id: auth_srv.h,v 1.18 2003/11/24 19:28:07 regit Exp $ */
+/* $Id: auth_srv.h,v 1.19 2003/11/24 21:12:29 regit Exp $ */
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
@@ -57,6 +57,7 @@
 #define AUTHREQ_PORT 4129
 #define USERPCKT_PORT 4130
 #define PRIO 1
+#define PRIO_TO_NOK 1
 #define HOSTNAME_SIZE 128
 #define PACKET_TIMEOUT 15
 #define DEFAULT_AUTH_MODULE "libldap"
@@ -142,6 +143,7 @@ int debug; /* This will disapear*/
 int debug_level;
 int debug_areas;
 int nuauth_log_users;
+int nuauth_prio_to_nok;
 struct sockaddr_in adr_srv;
 
 

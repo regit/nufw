@@ -54,7 +54,14 @@ int get_tcp_headers(connection *connexion, char * dgram){
   connexion->tracking_hdrs.dest=htons(tcphdrs->dest);
   connexion->tracking_hdrs.type=0;
   connexion->tracking_hdrs.code=0;
-  return 0;
+  /* test if fin ack or syn */
+  /* if fin ack return 0 end of connection */
+  if (tcphdrs->fin)
+      return 0;
+      /* if syn return 1 */
+  if (tcphdrs->syn)
+        return 1;
+  return -1;
 }
 
 int get_icmp_headers(connection *connexion, char * dgram){
@@ -224,12 +231,18 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz){
 	/* get saddr and daddr */
 	switch (connexion->tracking_hdrs.protocol) {
 	case IPPROTO_TCP:
-	  if ( get_tcp_headers(connexion, pointer)){
-	    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))
-	      g_warning ("Can't parse TCP headers\n");
-	    free_connection(connexion);
-	    return NULL;
-	  }
+          switch (get_tcp_headers(connexion, pointer)){
+            case 1:
+              break; 
+            case 0:
+	      (*module_user_logs)(connexion,0);
+              break;
+            case -1:
+	         if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))
+	                  g_warning ("Can't parse TCP headers\n");
+	        free_connection(connexion);
+	        return NULL;
+          }
 	  break;
 	case IPPROTO_UDP:
 	  if ( get_udp_headers(connexion, pointer) ){

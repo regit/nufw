@@ -452,9 +452,17 @@ gint take_decision(connection * element) {
       change_state(element,STATE_DONE);
       UNLOCK_CONN(element);
     }
-  } else { 
+  } else {
+    int start_test,stop_test;
+    if (nuauth_prio_to_nok == 1){
+      start_test=OK;
+      stop_test=NOK;
+    } else {
+      start_test=NOK;
+      stop_test=OK;
+    }
     /* for each acl with NOK next OK  */
-    for (test = OK; test != NOK  ; test = NOK   ) {
+    for (test = start_test; test != stop_test  ; test = stop_test ) {
       for  ( parcours = element->acl_groups; 
 	     ( parcours != NULL  && answer == NODECIDE ); 
 	     parcours = g_slist_next(parcours) ) {
@@ -463,7 +471,7 @@ gint take_decision(connection * element) {
 	      user_group != NULL && answer == NODECIDE;
 	      user_group =  g_slist_next(user_group)) {
 	  /* search user group in acl_groups */
-	  if (g_slist_find(( (struct acl_group *)(parcours->data)   )->groups,(gconstpointer) user_group->data)) {
+	  if (g_slist_find(((struct acl_group *)(parcours->data))->groups,(gconstpointer)user_group->data)) {
 	    answer = test ;
 	    break;
 	  }
