@@ -97,10 +97,8 @@ void* user_authsrv(){
 }
 
 static int
-treat_user_request (int c){
+treat_user_request (SSL* rx){
 	char * buf;
-	SSL *rx = client[c];
-
 
 	/* copy packet datas */
 	buf=g_new0(char,64);
@@ -116,9 +114,21 @@ treat_user_request (int c){
 }
 
 
+int sck_inet;
+
+void ssl_nuauth_cleanup( int signal ) {
+    /* close socket */
+    close(sck_inet);
+    /* exit */
+    exit(0);
+}
+
+
+
+
 void* ssl_user_authsrv(){
 	int z;
-	int sck_inet;
+        struct sigaction action;
 	struct sockaddr_in addr_inet,addr_clnt;
 	int len_inet;
 	int mx,n,c,r;
@@ -135,8 +145,11 @@ void* ssl_user_authsrv(){
         char* nuauth_ssl_key_passwd=NUAUTH_KEY_PASSWD;
         confparams nuauth_ssl_vars[] = {
                 { "nuauth_ssl_key" , G_TOKEN_STRING , 0, NUAUTH_KEYFILE },
-                { "nuauth_ssl_key_passwd" , G_TOKEN_STRING , 0, NUAUTH_KEY_PASSWD }
+                { "nuauth_ssl_key_passwd" , G_TOKEN_STRING , 0, NUAUTH_KEY_PASSWD },
+                { "nuauth_ssl_max_clients" , G_TOKEN_INT ,NUAUTH_SSL_MAX_CLIENTS, NULL }
         };
+        GArray* client;
+        int nuauth_ssl_max_clients=NUAUTH_SSL_MAX_CLIENTS;
 #if 0
 	struct up_datas userdatas;
 #endif
@@ -148,11 +161,27 @@ void* ssl_user_authsrv(){
         nuauth_ssl_key=(char*)(vpointer?vpointer:nuauth_ssl_key);
         vpointer=get_confvar_value(nuauth_ssl_vars,sizeof(nuauth_ssl_vars)/sizeof(confparams),"nuauth_ssl_key_passwd");
         nuauth_ssl_key_passwd=(char*)(vpointer?vpointer:nuauth_ssl_key_passwd);
-   
+        vpointer=get_confvar_value(nuauth_ssl_vars,sizeof(nuauth_ssl_vars)/sizeof(confparams),"nuauth_ssl_max_clients");
+        nuauth_ssl_max_clients=*(int*)(vpointer?vpointer:&nuauth_ssl_max_clients);
+  
+        /* build array client */
+        client = g_array_new (FALSE, TRUE, sizeof (SSL*)); 
+        client = g_array_set_size(client,nuauth_ssl_max_clients);
 	/* Build our SSL context*/
 	ctx=initialize_ctx(nuauth_ssl_key,nuauth_ssl_key_passwd);
 	/* TODO */
 	//load_dh_params(ctx,DHFILE);
+        //
+        //
+        /* intercept SIGTERM */
+        action.sa_handler = ssl_nuauth_cleanup;
+        sigemptyset( & (action.sa_mask));
+        action.sa_flags = 0;
+        if ( sigaction( SIGTERM, & action , NULL ) != 0) {
+            printf("Error\n");
+            exit(1);
+        }
+
 	//open the socket
 	sck_inet = socket (AF_INET,SOCK_STREAM,0);
 
@@ -235,7 +264,7 @@ void* ssl_user_authsrv(){
 			if (c == -1)
 				g_warning("accept");
 
-			if ( c >= MAX_CLIENTD ) {
+			if ( c >= nuauth_ssl_max_clients) {
 				close(c);
 				continue;
 			}
@@ -260,7 +289,7 @@ void* ssl_user_authsrv(){
 			if((r=SSL_accept(ssl)<=0))
 				berr_exit("SSL accept error");
 
-			client[c]=ssl;
+			g_array_insert_val(client,c,ssl);
 
 			if ( c+1 > mx )
 				mx = c + 1;
@@ -279,8 +308,8 @@ void* ssl_user_authsrv(){
 			if ( c == sck_inet )
 				continue;
 			if ( FD_ISSET(c,&wk_set) ) {
-				if (treat_user_request(c) == EOF) {
-					SSL_shutdown(client[c]);
+				if (treat_user_request((SSL*)g_array_index (client , SSL*, c)) == EOF) {
+					SSL_shutdown((SSL*)g_array_index (client , SSL*, c));
 					FD_CLR(c,&rx_set);
 				}
 			}
