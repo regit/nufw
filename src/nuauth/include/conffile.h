@@ -15,8 +15,9 @@
 ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+#include <config.h>
 
-#define DEFAULT_CONF_FILE "/etc/nufw/nuauth.conf"
+#define DEFAULT_CONF_FILE   CONFIG_DIR "nuauth.conf"
 
 typedef struct Conf_Params
 {

@@ -118,7 +118,7 @@ int auth_packet_to_decision(char* dgram){
       } else {
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
           if (log_engine == LOG_TO_SYSLOG) {
-	    syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"Packet without a known ID :-(");
+	    syslog(SYSLOG_FACILITY(DEBUG_LEVEL_WARNING),"Packet without a known ID :-(");
 	  }else{
 	    printf("[%i] Packet without a known ID :-(\n",getpid());
 	  }

@@ -198,20 +198,19 @@ connection * search_and_fill (connection * pckt) {
 gint print_connection(gpointer data,gpointer userdata){
   struct in_addr src,dest;
   connection * conn=(connection *) data;
-  //  LOCK_CONN(conn);
   src.s_addr = ntohl(conn->tracking_hdrs.saddr);
   dest.s_addr = ntohl(conn->tracking_hdrs.daddr);
   if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
   {
-    g_message( "Connection :\n\tsrc=%s", inet_ntoa(src));
-    g_message(" dst=%s proto=%u\n\t", inet_ntoa(dest),
-	 conn->tracking_hdrs.protocol);
+    gchar firstfield=strdup(inet_ntoa(src));
+    g_message( "Connection : src=%s dst=%s proto=%u", firstfield, inet_ntoa(dest),
+	       conn->tracking_hdrs.protocol);
     if (conn->tracking_hdrs.protocol == IPPROTO_TCP){
       g_message("sport=%d dport=%d\n", conn->tracking_hdrs.source,
 	   conn->tracking_hdrs.dest);
     }
+    g_free(firstfield);
   }
-  //UNLOCK_CONN(conn);
   return 1;
 }
 

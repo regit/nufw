@@ -1,6 +1,6 @@
 SUBDIRS = modules
 
-AM_CPPFLAGS = -O2 -Wall -Werror-implicit-function-declaration
+AM_CPPFLAGS = -O2 -Wall -Werror-implicit-function-declaration -DCONFIG_DIR=\"$(sysconfdir)\" -DMODULE_DIR=\"$(libdir)\"
 INCLUDES = $(GLIB_CFLAGS) -Iinclude/
 
 sbin_PROGRAMS = nuauth

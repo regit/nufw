@@ -1,4 +1,4 @@
-/* $Id: packetsrv.c,v 1.2 2003/09/23 23:09:37 gryzor Exp $ */
+/* $Id: packetsrv.c,v 1.3 2003/09/24 07:34:04 regit Exp $ */
 
 /*
 ** Copyright (C) 2002 Eric Leblond <eric@regit.org>
@@ -126,7 +126,7 @@ int auth_request_send(unsigned long packet_id,char* payload,int data_len,long ti
 
     if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
       if (log_engine == LOG_TO_SYSLOG) {
-        syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"NON IP packet dropping");
+        syslog(SYSLOG_FACILITY(DEBUG_LEVEL_WARNING),"NON IP packet dropping");
       }else {
         printf ("[%i] NON IP packet dropping\n",getpid());
       }
@@ -136,7 +136,7 @@ int auth_request_send(unsigned long packet_id,char* payload,int data_len,long ti
 
   if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
     if (log_engine == LOG_TO_SYSLOG) {
-      syslog(SYSLOG_FACILITY(DEBUG_LEVEL_INFO),"Sending request for %lu",packet_id);
+      syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"Sending request for %lu",packet_id);
     }else {
       printf("[%i] Sending request for %lu\n",getpid(),packet_id);
     }
@@ -150,7 +150,7 @@ int auth_request_send(unsigned long packet_id,char* payload,int data_len,long ti
 
   if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
     if (log_engine == LOG_TO_SYSLOG) {
-      syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"failure when sending");
+      syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"failure when sending");
     }else {
       printf ("[%i] failure when sending\n",getpid());
     }

@@ -1,4 +1,4 @@
-/* $Id: auth_srv.h,v 1.8 2003/09/22 23:29:41 regit Exp $ */
+/* $Id: auth_srv.h,v 1.9 2003/09/24 07:34:04 regit Exp $ */
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
@@ -60,7 +60,7 @@
 #define HOSTNAME_SIZE 128
 #define PACKET_TIMEOUT 15
 #define DEFAULT_AUTH_MODULE "libldap"
-#define MODULE_PATH "/usr/local/lib/nuauth/modules/"
+#define MODULE_PATH MODULE_DIR "nuauth/modules/"
 /* define the number of threads that will do user check */
 #define NB_USERCHECK 10
 /* define the number of threads that will check acls  */
@@ -76,7 +76,6 @@
 #define STATE_DONE 0x4
 
 #define ALL_GROUPS 0
-
 
 /* Sockets related */
 int authreq_port;
