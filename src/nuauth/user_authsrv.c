@@ -335,6 +335,7 @@ void* ssl_user_authsrv(){
          * copy rx set to working set 
          */
 
+        FD_ZERO(&wk_set);
         for (z=0;z<mx;++z){
             if (FD_ISSET(z,&rx_set))
                 FD_SET(z,&wk_set);
