@@ -1,10 +1,11 @@
+/* $Id: auth_ldap.h,v 1.1 2003/09/21 23:10:06 regit Exp $ */
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
-** the Free Software Foundation, version 2 of the License.
+** the Free Software Foundation; version 2 of the License.
 **
 ** This program is distributed in the hope that it will be useful,
 ** but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -14,32 +15,25 @@
 ** You should have received a copy of the GNU General Public License
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-*/	
+*/
 
-#include <auth_srv.h>
+#include <sys/time.h>
+#include <ldap.h>
 
-/*
- * check packet contained in element against
- * an external base (ldap,radius,...)
- */
 
-/*
- * Fill in acl_groups of a connection
- * return status
- * If no acl is found fill it with NULL
- */
+#define LDAP_SERVER "127.0.0.1"
+#define LDAP_SERVER_PORT 389
+/*#define LDAP_USER NULL
+#define LDAP_CRED NULL */
+#define LDAP_USER "cn=admin,dc=nufw,dc=org"
+#define LDAP_CRED "mypassword" 
+#define LDAP_REQUEST_TIMEOUT 10
+#define LDAP_BASE "dc=nufw,dc=org"
 
-int external_acl_groups (connection * element){
-  GSList * acl_groups=NULL;
-
-  /* query external authority */
-
-  acl_groups = (*module_acl_check) (element);
-
-  if (acl_groups != NULL){
-  	element->acl_groups=acl_groups;
-	return 1;
-  }
-  return 0;
-}
-
+int ldap_request_timeout;
+char * binddn;
+char * bindpasswd;
+char * ldap_server;
+char* ldap_acls_base_dn;
+char* ldap_users_base_dn;
+int ldap_server_port;

@@ -79,6 +79,7 @@ void print_users_list(){
 }
 
 void log_new_user(int id){
-  if ( nuauth_log_users % 2 )
+  if ( nuauth_log_users % 2 ){
     g_message("New user with id %d",id);
+  }
 }

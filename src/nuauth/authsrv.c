@@ -188,6 +188,23 @@ if (daemonize == 1) {
   /* Initialize glib thread system */
   g_thread_init(NULL);
 
+ /* external auth module loading */
+  
+  module_acl_check=NULL;
+  module_user_check=NULL;
+
+  auth_module=g_module_open ("modules/ldap/libldap.la",0);
+  if (!g_module_symbol (auth_module, "ldap_acl_check", 
+			(gpointer*)&module_acl_check))
+    {
+      g_warning ("Unable to load acl function\n");
+    }
+   if (!g_module_symbol (auth_module, "ldap_user_check", 
+			(gpointer*)&module_user_check))
+    {
+      g_warning ("Unable to load user function\n");
+    }
+
   /* internal Use */
   ALLGROUP=NULL;
   ALLGROUP=g_slist_prepend(ALLGROUP, GINT_TO_POINTER(0) );
@@ -212,13 +229,7 @@ if (daemonize == 1) {
   if (! auth_server )
     exit(1);
  
-#if USE_LDAP
-  /* create a private object to point at ldap connection */
-  ldap_priv = g_private_new (g_free);
-  /* initialize ldap system by getting conf variables */
-  init_ldap_system();
-#endif
-
+ 
   /* private data for crypt */
   crypt_priv = g_private_new (g_free);
 

@@ -218,14 +218,14 @@ connection * userpckt_decode(char* dgram,int dgramsiz){
 	}
 
       /* get user datas : password, groups (filled in) */
-#if USE_LDAP
-      if ( ldap_user_check (connexion,userid,passwd) != 0){
+      //#if USE_LDAP
+      if ( (*module_user_check) (connexion,userid,passwd) != 0){
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
 	  g_message("ldap_user_check return bad\n");
 	g_free(connexion);
 	return NULL;
       }
-#endif
+      //#endif
 
       /*
        * check MD5 crypt 

@@ -1,4 +1,4 @@
-/* $Id: auth_srv.h,v 1.6 2003/09/21 14:31:06 regit Exp $ */
+/* $Id: auth_srv.h,v 1.7 2003/09/21 23:10:06 regit Exp $ */
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
@@ -19,6 +19,7 @@
 
 /* Use glib to treat data structures */
 #include <glib.h>
+#include <gmodule.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -49,7 +50,7 @@
  */
 
 #define DUMMY 0
-#define USE_LDAP 1
+#define USE_LDAP 0
 #define AUTHREQ_ADDR "192.168.1.1"
 #define GWSRV_ADDR "192.168.1.1"
 #define GWSRV_PORT 4128
@@ -65,10 +66,6 @@
 #define NB_ACLCHECK 10
 
 /* Start internal */
-
-#if USE_LDAP
-#include <ldap.h>
-#endif
 
 /* internal auth srv */
 #define STATE_NONE 0x0
@@ -232,14 +229,15 @@ void user_check (gpointer userdata ,gpointer data);
 int check_fill_user_counters(u_int16_t userid,long time,unsigned long packet_id,u_int32_t ip);
 void print_users_list();
 void log_new_user(int id);
+
 /*
- * LDAP stuff
+ * External auth  stuff
  */
 
-#if USE_LDAP
+GModule * auth_module;
 GPrivate* ldap_priv; /* private pointer to ldap connection */
-GSList * ldap_acl_check (connection* element);
-LDAP* ldap_conn_init(void);
-gint ldap_user_check (connection * element,u_int16_t userid,char *passwd);
+GSList * (*module_acl_check) (connection* element);
+//LDAP* ldap_conn_init(void);
+gint (*module_user_check) (connection * element,u_int16_t userid,char *passwd);
 int init_ldap_system(void);
-#endif
+
