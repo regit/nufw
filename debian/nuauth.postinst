@@ -201,7 +201,7 @@ sed -e "s/^ *nuauth_client_listen_addr=.*/nuauth_client_listen_addr=\"$nuauth_cl
  -e "s/^ *nuauth_number_aclcheckers=.*/nuauth_number_aclcheckers=$nuauth_number_aclcheckers/" \
  -e "s/^ *nuauth_user_check_module=.*/nuauth_user_check_module=\"$nuauth_user_check_module\"/" \
  -e "s/^ *nuauth_acl_check_module=.*/nuauth_acl_check_module=\"$nuauth_acl_check_module\"/" \
- -e "s/^ *nuauth_use_ssl=.*/nuauth_use_ssl=\"$nuauth_use_ssl\"/" \
+ -e "s/^ *nuauth_use_ssl=.*/nuauth_use_ssl=$nuauth_use_ssl/" \
  -e "sµ^ *nuauth_ssl_key=.*µnuauth_ssl_key=\"$nuauth_ssl_key\"µ" \
  -e "s/^ *nuauth_ssl_key_passwd=.*/nuauth_ssl_key_passwd=\"$nuauth_ssl_key_passwd\"/" \
  -e "s/^ *nuauth_log_users=.*/nuauth_log_users=$nuauth_log_users/" \
@@ -223,11 +223,11 @@ sed -e "s/^ *nuauth_client_listen_addr=.*/nuauth_client_listen_addr=\"$nuauth_cl
  -e "s/^ *mysql_passwd=.*/mysql_passwd=\"$mysql_passwd\"/" \
  -e "s/^ *mysql_request_timeout=.*/mysql_request_timeout=$mysql_request_timeout/" \
  -e "s/^ *mysql_use_ssl=.*/mysql_use_ssl=$mysql_use_ssl/" \
- -e "sµ^ *mysql_ssl_keyfile=.*µmysql_ssl_keyfile=$mysql_ssl_keyfileµ" \
- -e "sµ^ *mysql_ssl_certfile=.*µmysql_ssl_certfile=$mysql_ssl_certfileµ" \
- -e "sµ^ *mysql_ssl_ca=.*µmysql_ssl_ca=$mysql_ssl_caµ" \
- -e "sµ^ *mysql_ssl_capath=.*µmysql_ssl_capath=$mysql_ssl_capathµ" \
- -e "s/^ *mysql_ssl_cypher=.*/mysql_ssl_cypher=$mysql_ssl_cypher/" \
+ -e "sµ^ *mysql_ssl_keyfile=.*µmysql_ssl_keyfile=\"$mysql_ssl_keyfile\"µ" \
+ -e "sµ^ *mysql_ssl_certfile=.*µmysql_ssl_certfile=\"$mysql_ssl_certfile\"µ" \
+ -e "sµ^ *mysql_ssl_ca=.*µmysql_ssl_ca=\"$mysql_ssl_ca\"µ" \
+ -e "sµ^ *mysql_ssl_capath=.*µmysql_ssl_capath=\"$mysql_ssl_capath\"µ" \
+ -e "s/^ *mysql_ssl_cypher=.*/mysql_ssl_cypher=\"$mysql_ssl_cypher\"/" \
  -e "s/^ *pgsql_server_addr=.*/pgsql_server_addr=\"$pgsql_server_addr\"/" \
  -e "s/^ *pgsql_server_port=.*/pgsql_server_port=$pgsql_server_port/" \
  -e "s/^ *pgsql_db_name=.*/pgsql_db_name=\"$pgsql_db_name\"/" \

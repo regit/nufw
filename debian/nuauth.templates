@@ -237,7 +237,7 @@ Description-fr: Communications SSL avec les clients
  attaques. Il est fortement conseillé d'utiliser SSL, et c'est d'ailleurs
  l'option par défaut.
 
-Template: nuauth_ssl_key
+Template: nuauth/ssl_key
 Type: string
 Default: /etc/nufw/nuauth.pem
 Description: SSL key for clients communication
@@ -247,7 +247,7 @@ Description-fr: Clé SSL
  Veuillez saisir le chemin complet vers la clé privée à utiliser
  pour les communications avec les postes clients.
 
-Template: nuauth_ssl_key_passwd
+Template: nuauth/ssl_key_passwd
 Type: password
 Default: /etc/nufw/nuauth.pem
 Description: Password of the SSL key for clients communication
