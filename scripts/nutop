@@ -1,0 +1,241 @@
+#!/usr/bin/perl -w
+###################################################################################
+#
+# nutop : top like interface to Nufw User Connection tracking.
+#
+# Copyright(C) 2003 Eric Leblond <eric@regit.org>
+#		     Vincent Deffontaines <vincent@gryzor.com>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, version 2 of the License.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+###################################################################################
+
+use strict;
+use Getopt::Long;
+use Time::localtime;
+#Parsing works this way : very first, we parse the "-c" parameter which may
+#specify a config file other than the default.
+#then we look in config file
+#Parameters are set from there
+#Then we parse parameters on command line, and they override any parameter set
+#in config file.
+
+use DBI;
+use DBI::DBD; #Just to test everything is okay
+use Curses;
+use Data::Dumper;
+
+sub Print_Usage()
+{
+  print "$0 : display top network activity per user\n";
+  print "GENERAL OPTIONS\n";
+  print "\t-c\t\t\tconfig file name (default is /etc/nufw/nutop.conf)\n";
+  print "\t-delay\t\t\tDelay for refresh (in seconds) (default : 2)\n";
+  print "\t-line\t\t\tNumbers of user lines to output (default : 20)\n";
+  print "\t-help\t\t\tDisplay this help message and exit\n";
+  print "DATABASE RELATED OPTIONS\n";
+  print "\t-databasetype\t\tdatabase choice (pgsql or mysql) default is pgsql)\n";
+  print "\t-host\t\t\tdatabase adress (IP or name) default is 127.0.0.1)\n";
+  print "\t-user\t\t\tdatabase username (default is \'nufw\')\n";
+  print "\t-pass\t\t\tdatabase password (no default)\n";
+  print "\t-databasename\t\tdatabase to use (default is \'nufw\')\n";
+  print "\t-tablename\t\ttable to use (default is \'nufw\')\n";
+  print "\t-port\t\t\tTCP port to use (default is 3306/5432 for mysql/pgsql respectively)\n";
+}
+
+sub long2ip{
+  my (@octets,$i,$ip_number,$ip_number_display,$number_convert,$ip_address);
+  $ip_number_display = $ip_number = shift;
+  chomp($ip_number);
+		for($i = 3; $i >= 0; $i--) {
+		  $octets[$i] = ($ip_number & 0xFF);
+		  $ip_number >>= 8;
+		}
+return join('.', @octets);
+}
+
+my %config = ('databasetype' => 'pgsql',
+              'host' => '127.0.0.1',
+              'user' => 'nufw',
+              'databasename' => 'nufw',
+              'tablename' => 'nufw',
+              'delay' => 2,
+              'line' => 20,
+              ); #This hash contains all configuration variables
+
+my %tmpconfig; #yucks, getopt can only be called once
+GetOptions( "c=s" => \$config{'configfile'},
+            "databasetype=s" => \$tmpconfig{'databasetype'},
+            "host=s" => \$tmpconfig{'host'},
+            "user=s" => \$tmpconfig{'user'},
+            "pass=s" => \$tmpconfig{'pass'},
+            "databasename=s" => \$tmpconfig{'databasename'},
+            "tablename=s" => \$tmpconfig{'tablename'},
+            "delay=i" => \$tmpconfig{'delay'},
+            "line=i" => \$tmpconfig{'line'},
+            "help" => \$tmpconfig{'help'},
+);
+
+if (defined($tmpconfig{'help'}))
+{
+  Print_Usage;
+  exit 0;
+}
+
+defined $config{'configfile'} or $config{'configfile'} = '/etc/nufw/nutop.conf';
+open (FILE,$config{'configfile'}) or print STDERR "Could not open file : ".$config{'configfile'}."\n";
+
+
+sub Parse_Config_File($)
+{
+  my $config_hash = shift @_;
+  my $linecnt = 0;
+  while (my $line = <FILE>)
+  {
+    $linecnt++;
+    $line =~ /^#/ and next;
+    $line =~ /^$/ and next;
+    unless ($line =~ /^(\S+)\s*=\s*(.*)$/)
+    {
+      print STDERR "Warning : config file line $linecnt : strange data got ignored\n";
+      next;
+    }
+    $$config_hash{$1} = $2;
+  }
+  return %$config_hash; 
+}
+
+
+%config = Parse_Config_File(\%config);
+foreach my $key(keys %tmpconfig)
+{
+  defined $tmpconfig{$key} and $config{$key} = $tmpconfig{$key};
+}
+
+
+
+#Lets check input now
+{
+  my $error = 0;
+  unless ($config{'databasetype'} =~ /^(?:mysql|pgsql)$/)
+  {
+    $error ++;
+    print STDERR "E: databasetype seems to be set to something I don't understand.\n";
+  }
+  if ($config{'databasetype'} =~ /mysql/)
+  {
+    require DBD::mysql;
+    defined ($config{'port'}) or $config{'port'} = 3306;
+  }elsif ($config{'databasetype'} =~ /pgsql/)
+  {
+    require DBD::Pg;
+    defined ($config{'port'}) or $config{'port'} = 5432;
+  }
+#All for now, maybe I (or you?)'ll find some more to check
+  if ($error > 0)
+  {
+    Print_Usage;
+    exit 1;
+  }
+}
+
+#Now we prepare connection to our database
+my $dbh;
+{
+  my $datasource;
+  $config{'databasetype'} =~ /mysql/ and 
+    $datasource = "dbi:mysql:database=".$config{'databasename'}.";host=".$config{'host'}.";port=".$config{'port'};
+  $config{'databasetype'} =~ /pgsql/ and 
+    $datasource = "dbi:Pg:dbname=".$config{'databasename'}.";host=".$config{'host'}.";port=".$config{'port'};
+  $dbh = DBI->connect($datasource, $config{'user'}, $config{'pass'}) or die $DBI::errstr;
+}
+
+my @connection_query=();
+$config{'databasetype'} =~ /mysql/ and
+@connection_query=('user_id','ip_saddr','ip_daddr','tcp_sport','tcp_dport','DATE_FORMAT(start_timestamp,\'%D %M %Y %H:%I:%S\')','state');
+$config{'databasetype'} =~ /pgsql/ and
+@connection_query=('user_id','ip_saddr','ip_daddr','tcp_sport','tcp_dport','start_timestamp','state');
+my %connection_query_info=(user_id=>["User",6],ip_saddr=>["Source IP",17],ip_daddr=>["Destination IP",17],ip_protocol=>["Proto",7],oob_time_sec=>["Open Time",11], tcp_sport=>["Sport",8], tcp_dport=>["Dport",8],id=>["Id Packet",12],'DATE_FORMAT(start_timestamp,\'%D %M %Y %H:%I:%S\')'=>["Start Time", 30],start_timestamp=>["Start Time",13],state=>["State",6]); 
+
+#my $gal_query="select ".join (',' ,@connection_query) ." from ".
+my $gal_query="select ".join (',' ,@connection_query) ." from ".
+  $config{'tablename'}." where ip_protocol=6 order by oob_time_sec DESC,oob_time_usec DESC limit 0,".$config{'line'};
+$config{'databasetype'} =~ /pgsql/ and 
+  $gal_query="select ".join (',' ,@connection_query) ." from ".
+  $config{'tablename'}." where ip_protocol=6 order by oob_time_sec DESC,oob_time_usec DESC LIMIT ".$config{'line'};
+#  $config{'tablename'}." where state=2 and ip_protocol=6 order by oob_time_sec DESC,oob_time_usec DESC LIMIT ".$config{'line'};
+
+
+initscr();
+
+noecho();
+#cbreak();
+halfdelay(10*$config{'delay'});
+
+#start_color;
+#init_pair(2,COLOR_YELLOW,COLOR_BLACK);
+#init_pair(3,COLOR_GREEN,COLOR_BLACK);
+#init_pair(4,COLOR_BLUE,COLOR_BLACK);
+#init_pair(1,COLOR_RED,COLOR_BLACK);
+
+while (1)
+{
+  my $count = 1; my $hpos=0;
+  addstr(0,0,'nulog');
+  my $time = localtime;
+  my @times = ($time->hour,$time->min,$time->sec);
+  foreach (@times){
+    length == 1 and s/^/0/;
+  }
+  addstr(0,7,$times[0].":".$times[1].":".$times[2]);
+  eval {attron(A_REVERSE) };
+#  eval {attron(A_BOLD) };
+  addstr($count,0," "x90);
+  my $sth = $dbh->prepare($gal_query);
+  if ( $sth->execute) {
+    foreach my $field ( @connection_query ){
+       addstr($count, $hpos, @{$connection_query_info{$field}}[0]);
+       $hpos+=@{$connection_query_info{$field}}[1];
+    }
+    eval {attrset(A_NORMAL) };
+    while ( my @row = $sth->fetchrow_array ) {
+      my $col=0;
+      $hpos=0;
+      $count ++;
+#      set_color_fg(COLOR_YELLOW);
+#      color_set($row[6]+1,undef);
+      foreach my $attr (@row){
+        if (($config{'databasetype'} =~ /mysql/) and ($connection_query[$col] =~/^(?:ip_saddr|ip_daddr)$/)) {
+          addstr($count, $hpos, long2ip($attr));
+#	  print long2ip($attr)."\t";
+        } else {
+          #if (not defined $attr){print "DEBUG : PROBLEME AVEC l'attribut $col\n";}
+          defined $attr and addstr($count, $hpos, $attr);
+#	  print $attr."\t";
+        }
+        $hpos += @{$connection_query_info{$connection_query[$col]}}[1];
+#        color_set(0);
+      $col++;
+    }
+#    print "\n";
+    }
+  }
+  refresh;
+  my $in = getch();
+  if ($in eq 'q')
+  {
+    endwin();
+    exit 0;
+  }
+}
+
