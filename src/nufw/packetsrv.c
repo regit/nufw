@@ -1,7 +1,8 @@
-/* $Id: packetsrv.c,v 1.1 2003/09/15 22:20:29 gryzor Exp $ */
+/* $Id: packetsrv.c,v 1.2 2003/09/23 23:09:37 gryzor Exp $ */
 
 /*
 ** Copyright (C) 2002 Eric Leblond <eric@regit.org>
+**		      Vincent Deffontaines <vincent@gryzor.com>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -19,6 +20,7 @@
 
 #include <string.h>
 #include <structure.h>
+#include <debug.h>
 
 
 void* packetsrv(){
@@ -36,9 +38,13 @@ void* packetsrv(){
       //  printf("packetsrv at work\n");
       if (size < BUFSIZ ){
 	if (ipq_message_type(buffer) == NLMSG_ERROR ){
-#if DEBUG
-	  printf("Got error message\n");
-#endif 
+          if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_MAIN)){
+            if (log_engine == LOG_TO_SYSLOG) {
+              syslog(SYSLOG_FACILITY(DEBUG_LEVEL_MESSAGE),"Got error message");
+            }else {
+	      printf("[%i] Got error message\n",getpid());
+	    }
+	  }
 	} else {
 	  if ( ipq_message_type (buffer) == IPQM_PACKET ) {
 	    pckt_rx++ ;
@@ -56,17 +62,26 @@ void* packetsrv(){
 	    /* send an auth request packet */
 	    auth_request_send(msg_p->packet_id,msg_p->payload,msg_p->data_len,msg_p->timestamp_sec);
 	  } else {
-#if DEBUG
-	    printf ("non IP packet Dropping");
-#endif
+            if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
+              if (log_engine == LOG_TO_SYSLOG) {
+                syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"non IP packet Dropping");
+              }else {
+
+	        printf ("[%i] non IP packet Dropping\n",getpid());
+ 	      }
+	    }
 	    IPQ_SET_VERDICT(msg_p->packet_id, NF_DROP);
 	  }
 	}
       }
     } else {
-#if DEBUG
-      printf("BUFSIZ too small, size = %d\n",size);
-#endif
+      if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
+        if (log_engine == LOG_TO_SYSLOG) {
+          syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"BUFSIZ too small, size = %d",size);
+        }else {
+          printf("[%i] BUFSIZ too small, size = %d\n",getpid(),size);
+        }
+      }
     }
   }
   ipq_destroy_handle( hndl );  
@@ -97,16 +112,34 @@ int auth_request_send(unsigned long packet_id,char* payload,int data_len,long ti
       memcpy(pointer,payload,data_len);
       total_data_len=data_len+auth_len;
     } else {
-      printf("Very long packet : truncating !\n");
+      if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
+        if (log_engine == LOG_TO_SYSLOG) {
+          syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"Very long packet : truncating !");
+        }else {
+          printf("[%i] Very long packet : truncating !\n",getpid());
+	}
+      }
       memcpy(pointer,payload,511-auth_len);
     }
 
   } else {
-    printf ("NON IP packet dropping\n");
+
+    if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
+      if (log_engine == LOG_TO_SYSLOG) {
+        syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"NON IP packet dropping");
+      }else {
+        printf ("[%i] NON IP packet dropping\n",getpid());
+      }
+    }
   }
   
-  if (debug){
-    printf("Sending request for %lu\n",packet_id);
+
+  if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
+    if (log_engine == LOG_TO_SYSLOG) {
+      syslog(SYSLOG_FACILITY(DEBUG_LEVEL_INFO),"Sending request for %lu",packet_id);
+    }else {
+      printf("[%i] Sending request for %lu\n",getpid(),packet_id);
+    }
   }
   if (sendto(sck_auth_request,
 	     datas,
@@ -114,6 +147,13 @@ int auth_request_send(unsigned long packet_id,char* payload,int data_len,long ti
 	     0,
 	     (struct sockaddr *)&adr_srv,
 	     sizeof adr_srv) < 0)
-    printf ("failure when sending\n");
+
+  if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
+    if (log_engine == LOG_TO_SYSLOG) {
+      syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"failure when sending");
+    }else {
+      printf ("[%i] failure when sending\n",getpid());
+    }
+  }
   return 1;
 }

@@ -1,8 +1,9 @@
-/* $Id: common.c,v 1.1 2003/09/15 22:20:29 gryzor Exp $ */
+/* $Id: common.c,v 1.2 2003/09/23 23:09:37 gryzor Exp $ */
 
 /*
 **
 ** Written by Eric Leblond <eric@regit.org>
+**	      Vincent Deffontaines <vincent@gryzor.com>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,6 +21,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <structure.h>
+#include <debug.h>
 
 
 /* datas stuffs */
@@ -45,16 +47,24 @@ unsigned long padd (unsigned long packet_id,long timestamp){
   packet_idl *current=NULL;
   if (track_size - packets_list_length < 10){
     /* suppress first element */
-    if (debug){
-      printf("Queue full, dropping element\n");
+    if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_MAIN)){
+      if (log_engine == LOG_TO_SYSLOG) {
+        syslog(SYSLOG_FACILITY(DEBUG_LEVEL_MESSAGE),"Queue full, dropping element");
+      }else {
+        printf ("[%i] Queue full, dropping element\n",getpid());
+      }
     }
     psuppress (NULL,packets_list_start);
   }
   current=calloc(1,sizeof( packet_idl));
   if (current == NULL){
-    if (debug){ 
-      printf("Can not allocate packet_id\n");
-    } 
+    if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_MAIN)){
+      if (log_engine == LOG_TO_SYSLOG) {
+        syslog(SYSLOG_FACILITY(DEBUG_LEVEL_MESSAGE),"Can not allocate packet_id");
+      }else {
+        printf("[%i] Can not allocate packet_id\n",getpid());
+      } 
+    }
     return 0;
   }
   packets_list_length++;
@@ -91,8 +101,12 @@ int psearch_and_destroy (unsigned long packet_id){
 	{
 	  /* TODO : find a better place, does not satisfy me */
 	  IPQ_SET_VERDICT(packets_list->id,NF_DROP);
-	  if (debug){
-	    printf("dropped  : %lu\n",packets_list->id);
+	  if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
+	    if (log_engine == LOG_TO_SYSLOG) {
+              syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"dropped : %lu",packets_list->id);
+            }else {
+	    printf("[%i] dropped  : %lu\n",getpid(),packets_list->id);
+	    }
 	  }
 	  psuppress (previous,packets_list);
 	  packets_list=packets_list_start;
@@ -114,8 +128,12 @@ int clean_old_packets (){
     if ( timestamp - packets_list->timestamp  > PACKET_TIMEOUT)
       {
 	IPQ_SET_VERDICT(packets_list->id,NF_DROP);
-	if (debug){
-	  printf("dropped  : %lu\n",packets_list->id);
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
+	  if (log_engine == LOG_TO_SYSLOG) {
+            syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"dropped : %lu",packets_list->id);
+          }else {
+	    printf("[%i] dropped  : %lu\n",getpid(),packets_list->id);
+	  }
 	}
 	psuppress (previous,packets_list);
 	packets_list=packets_list_start;

@@ -1,6 +1,7 @@
 
 /*
 ** Copyright (C) 2002, Éric Leblond <eric@regit.org>
+**		       Vincent Deffontaines <vincent@gryzor.com>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -18,7 +19,6 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <syslog.h>
 #include <string.h>
 #include <structure.h>
 #include <debug.h>
@@ -93,12 +93,13 @@ int auth_packet_to_decision(char* dgram){
       if (sandf){
 	if ( *(dgram+4) == OK ) {
 	  /* TODO : test on return */
-	  if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
+	  if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
 	    if (log_engine == LOG_TO_SYSLOG) {
               syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"Accepting %lu",packet_id);
             }else {
 	      printf ("[%i] Accepting %lu\n",getpid(),packet_id);
 	    }
+	  }
 	  
 	  IPQ_SET_VERDICT(packet_id, NF_ACCEPT);
 	  pckt_tx++;

@@ -1,7 +1,8 @@
-/* $Id: main.c,v 1.4 2003/09/23 21:48:06 gryzor Exp $ */
+/* $Id: main.c,v 1.5 2003/09/23 23:09:37 gryzor Exp $ */
 
 /*
 ** Copyright (C) 2002 Eric Leblond <eric@regit.org>
+**		      Vincent Deffontaines <vincent@gryzor.com>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -125,11 +126,13 @@ if (daemonize == 1) {
   sck_auth_request = socket (AF_INET,SOCK_DGRAM,0);
     
   if (sck_auth_request == -1)
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN))
-	if (log_engine == LOG_TO_SYSLOG)
+    if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
+	if (log_engine == LOG_TO_SYSLOG){
 	  syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"socket()");
-	else
+	}else{
         printf("[%d] socket()",getpid());
+	}
+    }
 
      
   memset(&adr_srv,0,sizeof adr_srv);
@@ -141,11 +144,13 @@ if (daemonize == 1) {
   adr_srv.sin_addr=*(struct in_addr *)authreq_srv->h_addr;
 
   if (adr_srv.sin_addr.s_addr == INADDR_NONE )
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN))
-	if (log_engine == LOG_TO_SYSLOG)
+    if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
+	if (log_engine == LOG_TO_SYSLOG){
 	  syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"Bad Address.");
-	else
-	printf("[%d] Bad Address.",getpid());
+	}else{
+	  printf("[%d] Bad Address.",getpid());
+	}
+     }
     
   packets_list_start=NULL;
   packets_list_end=NULL;
@@ -158,11 +163,13 @@ if (daemonize == 1) {
   if (hndl)
     ipq_set_mode(hndl, IPQ_COPY_PACKET,BUFSIZ);  
   else {
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN))
-      if (log_engine == LOG_TO_SYSLOG)
+    if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
+      if (log_engine == LOG_TO_SYSLOG){
         syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"Can not create ipq handle");
-      else
+      }else{
         printf("[%d] Can not create ipq handle\n",getpid());
+      }
+    }
   }
 
   /* create thread for packet server */
@@ -180,9 +187,14 @@ if (daemonize == 1) {
      pthread_mutex_lock(&packets_list_mutex);
      clean_old_packets ();
      pthread_mutex_unlock(&packets_list_mutex);
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)) {
-      /*nufw_("rx : %d, tx : %d, track_size : %d, start_list : %p\n",pckt_rx,pckt_tx,packets_list_length,packets_list_start);*/
+    if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
+      if (log_engine == LOG_TO_SYSLOG){
+        syslog(SYSLOG_FACILITY(DEBUG_LEVEL_INFO),"rx : %d, tx : %d, track_size : %d, start_list : %p",pckt_rx,pckt_tx,packets_list_length,packets_list_start);
+      }else{
+        printf("[%i] rx : %d, tx : %d, track_size : %d, start_list : %p\n",getpid(),pckt_rx,pckt_tx,packets_list_length,packets_list_start);
+      }
     }
+    
     sleep(5);	
   }
 }

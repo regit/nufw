@@ -1,3 +1,5 @@
+#include <syslog.h>
+
 // DEBUG_LEVEL's value is 1 to 8
 
 #define DEBUG_LEVEL_FATAL		1
