@@ -55,6 +55,9 @@ int check_fill_user_counters(u_int16_t userid,long u_time,unsigned long packet_i
       }
     } 
     if (g_mutex_trylock(currentuser->lock)){
+      if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)) {
+	g_message("updating  user %d\n",userid);
+      }
       currentuser->ip=ip;
       currentuser->last_packet_time=u_time;
       currentuser->last_packet_id=packet_id;

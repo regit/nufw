@@ -174,39 +174,49 @@ connection * search_and_fill (connection * pckt) {
         /*  switch to element lock */
         LOCK_CONN(element);
 
-        if  ( ((connection *)element)->state != STATE_DONE )  {
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-                g_message("Filling connection\n");
-            /* first check if we've only adding a packet_id */
-            if ( ((connection *)element)->packet_id !=NULL && ( pckt->packet_id != NULL) ) {
-                /* append id */
+        switch (((connection *)element)->state){
+          case STATE_AUTHREQ:
+            switch (pckt->state){
+              case  STATE_AUTHREQ:
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
                     g_message("Adding a packet_id to a connexion\n");
                 ((connection *)element)->packet_id =
                   g_slist_prepend(((connection *)element)->packet_id, GINT_TO_POINTER((pckt->packet_id)->data));
+                UNLOCK_CONN(element);
                 free_connection(pckt);
                 /* and return */
-                return element;
-            } else {
-                if ( (((connection *)element)->acl_groups == NULL)&& ( pckt->state == STATE_AUTHREQ  )) {
-                    if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-                        g_message("Fill acl datas\n");
-                    ((connection *)element)->acl_groups = pckt->acl_groups;
-                    ((connection *)element)->packet_id = pckt->packet_id;
-                } else { 
-                    if ( (((connection *)element)->user_groups == ALLGROUP) && (pckt->state == STATE_USERPCKT)) {
-                        if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-                            g_message("Fill user datas\n");
-                        ((connection *)element)->user_groups = pckt->user_groups;
-                        ((connection *)element)->user_id = pckt->user_id;
-                    }
-                }
+                return NULL;
+              case STATE_USERPCKT:
+                if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+                    g_message("Fill user datas\n");
+                ((connection *)element)->user_groups = pckt->user_groups;
+                ((connection *)element)->user_id = pckt->user_id;
+                /* change STATE */
+                change_state(((connection *)element),STATE_READY);
+                break;
             }
-            /* change STATE */
-            change_state(((connection *)element),((connection *)element)->state+pckt->state);
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-                g_message("Elt state : %d\n",((connection *)element)->state);
-        } else {
+            break;
+          case STATE_USERPCKT:
+            switch (pckt->state){
+              case  STATE_AUTHREQ:
+                if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+                    g_message("Fill acl datas\n");
+                ((connection *)element)->acl_groups = pckt->acl_groups;
+                ((connection *)element)->packet_id = pckt->packet_id;
+                change_state(((connection *)element),STATE_READY);
+                break;
+              case STATE_USERPCKT:
+                UNLOCK_CONN(element);
+                if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+                    g_message("Duplicate user packet\n");
+                free_connection(pckt);
+                return NULL;
+              default:
+                g_assert("Should not have this");
+            }
+            break;
+          case STATE_DONE:
+            g_assert(pckt->state==STATE_USERPCKT);
             ((connection *)element)->user_id = pckt->user_id;
             // going to log
             if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
@@ -216,7 +226,9 @@ connection * search_and_fill (connection * pckt) {
             // House work
             conn_cl_delete(element);
             free_connection(pckt);
-            return NULL;
+            return NULL;           
+          default:
+            g_assert("Should have badly done");
         }
         /* release memory used by pckt 
          * not using free_connection to do a complete free
@@ -403,7 +415,7 @@ void clean_connections_list (){
     g_hash_table_foreach(conn_list,get_old_conn,GINT_TO_POINTER(current_timestamp));
     g_static_mutex_unlock (&insert_mutex);
     if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-        g_message("Found old connections");
+        g_message("Finish searching old connections");
     /* go through stocked keys to suppres old element */
     g_slist_foreach(old_conn_list,(GFunc)conn_key_delete,NULL);
     if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)) {

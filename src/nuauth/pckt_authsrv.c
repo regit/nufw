@@ -162,7 +162,7 @@ void acl_check_and_decide (gpointer userdata, gpointer data){
         g_message("entering acl_check\n");
     if (conn_elt == NULL){
         if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_PACKET)){
-            g_message("that's not good : elt is NULL\n");
+            g_message("That's not good : elt is NULL\n");
         }
     } else {
         /* external check of acl */
@@ -172,11 +172,10 @@ void acl_check_and_decide (gpointer userdata, gpointer data){
             }
             /* search and fill */
             element = search_and_fill (conn_elt);
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)){
-                g_message("new entry at %p\n",element);
-            }
             if (element != NULL) {
-                //LOCK_CONN(element);
+                if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)){
+                    g_message("new entry at %p\n",element);
+                }
                 /* in case we get the lock but lock is on empty packet */
                 if ( element == NULL ) return;
                 /* search if ALL in acl group list 
@@ -185,8 +184,9 @@ void acl_check_and_decide (gpointer userdata, gpointer data){
                  */
                 take_decision(element);
             } else {
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))
-                    g_warning("Something Wrong : element is NULL\n");
+                if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET))
+                    g_message("element is NULL\n");
+                return;
             }
         } else {
             /* no acl found so packet has to be dropped */
