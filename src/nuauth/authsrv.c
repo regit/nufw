@@ -1,4 +1,3 @@
-
 /*
  ** Copyright(C) 2004 INL
  ** Written by Eric Leblond <eric@regit.org>
