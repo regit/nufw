@@ -268,7 +268,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
           ipone.s_addr=ntohl((element.tracking_hdrs).saddr);
           iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
           tmp_inet=inet_ntoa(ipone);
-          if (snprintf(request,511,"UPDATE %s SET end_timestamp=%lu WHERE (ip_saddr='%s',ip_daddr='%s',tcp_sport=%u,tcp_dport=%u,end_timestamp IS NULL);",
+          if (snprintf(request,511,"UPDATE %s SET end_timestamp=%lu WHERE (ip_saddr='%s' and ip_daddr='%s' and tcp_sport=%u and tcp_dport=%u and end_timestamp IS NULL);",
               pgsql_table_name,
               element.timestamp,
               tmp_inet,
