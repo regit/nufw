@@ -1,4 +1,3 @@
-
 /*
  ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
  **		     Vincent Deffontaines <vincent@gryzor.com>
@@ -235,7 +234,10 @@ connection * search_and_fill (connection * pckt) {
                 // user logging 
                 log_user_packet(*(connection *)element,((connection *)element)->decision);
                 // House work
-                conn_cl_delete(element);
+                if (!conn_cl_delete(element)) {
+                        if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
+                                g_warning("connection cleaning failed at __FILE__:__LINE__\n");
+                }
                 free_connection(pckt);
                 return NULL;           
             }
@@ -469,7 +471,11 @@ gint take_decision(connection * element) {
         if (element->state == STATE_READY ){
             // log user
             log_user_packet(*element,element->decision);
-            conn_cl_delete( element);
+        if ( ! conn_cl_delete( element)) {
+    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
+                                g_warning("connection cleaning failed at __FILE__:__LINE__\n");
+                }
+
         } else {
             /* only change state */
             change_state(element,STATE_DONE);
@@ -539,7 +545,10 @@ gint take_decision(connection * element) {
             }
             if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
                 g_message("Freeing element\n");
-            conn_cl_delete(element);
+       if ( ! conn_cl_delete( element)) {
+    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
+                                g_warning("connection cleaning failed at __FILE__:__LINE__\n");
+                }
         } else {
             if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
                 g_message("only change state\n");
