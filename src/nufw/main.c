@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.17 2003/11/07 19:18:20 regit Exp $ */
+/* $Id: main.c,v 1.18 2003/11/08 01:08:07 regit Exp $ */
 
 /*
  ** Copyright (C) 2002 Eric Leblond <eric@regit.org>
@@ -164,7 +164,10 @@ int main(int argc,char * argv[]){
                 if ((pf = fopen (NUFW_PID_FILE, "w")) != NULL) {
                     fprintf (pf, "%d\n", (int)pidf);
                     fclose (pf);
-                } 
+                } else {
+                        printf ("Dying, can not create PID file : " NUFW_PID_FILE "\n"); 
+                        exit(-1);
+                }
                 exit(0);
             }
         }

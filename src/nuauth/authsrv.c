@@ -184,7 +184,6 @@ int main(int argc,char * argv[]) {
         }
 
 
-
         if ((pidf = fork()) < 0){
             g_error("Unable to fork\n");
             exit (-1); /* this should be useless !! */
@@ -193,7 +192,10 @@ int main(int argc,char * argv[]) {
                 if ((pf = fopen (NUAUTH_PID_FILE, "w")) != NULL) {
                     fprintf (pf, "%d\n", (int)pidf);
                     fclose (pf);
-                } 
+                } else {
+                        printf ("Dying, can not create PID file : " NUAUTH_PID_FILE "\n"); 
+                        exit(-1);
+                }
                 exit(0);
             }
         }
