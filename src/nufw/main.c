@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.5 2003/09/23 23:09:37 gryzor Exp $ */
+/* $Id: main.c,v 1.6 2003/10/02 20:05:04 gryzor Exp $ */
 
 /*
 ** Copyright (C) 2002 Eric Leblond <eric@regit.org>
@@ -100,7 +100,17 @@ int main(int argc,char * argv[]){
       id_srv=ident_srv;
       break;
     case 'h' :
-      fprintf (stdout ,"PACKAGE [-hVv[v[v[v[v[v[v[v[v[v]]]]]]]]]] [-l local_port] [-d remote_addr] [-p remote_port]  [-t packet_timeout] [-T track_size] [-I id_server]\n");
+      fprintf (stdout ,"PACKAGE [-hVv[v[v[v[v[v[v[v[v[v]]]]]]]]]] [-l local_port] [-d remote_addr] [-p remote_port]  [-t packet_timeout] [-T track_size] [-I id_server]\n\
+\t-h : display this help and exit\n\
+\t-V : display version and exit\n\
+\t-v : increase debug level (+1 for each 'v') (max useful number : 10)\n\
+\t-l : specify listening UDP port (default : 4129)\n\
+\t-d : remote address we send auth requests to (adress of the nuauth server)\n\
+\t-p : remote port we send auth requests to (UDP port nuauth server listens on) (default : 4128)\n\
+\t-t : timeout to forget about packets when they don't match (default : 15 s)\n\
+\t-T : track size (default : 1000)\n\
+\t-I : server ID (default : 12345)\n");
+
       return 1;
     }
   }

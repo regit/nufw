@@ -21,12 +21,23 @@
 #include <auth_dbm.h>
 #include <math.h>
 
+/*TODO : add a gdbm_close() routine somewhere - Same for ldap (and any module
+ * too), probably...*/
+
 
 confparams dbm_nuauth_vars[] = {
   { "dbm_users_file" , G_TOKEN_STRING, 0 , DBM_USERS_FILE }
 };
 
 int analyse_dbm_char(char *datas, struct dbm_data_struct *mystruct)
+//IN : char containing, space separated, in this order (it MUST end with a
+//space, else last group isnt read): 
+//	password group1 group2 ... group N
+//OUT : the data string gets scrambled over, it shouldnt be used anymore after
+//	call this function. The structure gets filled with password and groups.
+/*TODO : limit the size of acceptable password, and groups. Even if this there
+ * should not be any buffer overflow with this, those should probably never
+ * exceed a well-chosen value*/
 {
   char *tmpchar=NULL;
   char *data=NULL;

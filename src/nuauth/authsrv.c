@@ -127,7 +127,15 @@ int main(int argc,char * argv[]) {
       daemonize=1;
       break;
     case 'h' :
-      fprintf (stdout ,"nuauth [-hDVv[v[v[v[v[v[v[v[v]]]]]]]]] [-l user_packet_port] [-d nufw_gw_addr] [-p nufw_gw_port]  [-t packet_timeout]\n");
+      fprintf (stdout ,"nuauth [-hDVv[v[v[v[v[v[v[v[v]]]]]]]]] [-l user_packet_port] [-d nufw_gw_addr] [-p nufw_gw_port]  [-t packet_timeout]\n\
+\t-h : display this help and exit\n\
+\t-D : run as a daemon, send debug messages to syslog (else stdout/stderr)\n\
+\t-V : display version and exit\n\
+\t-v : increase debug level (+1 for each 'v') (max useful number : 10)\n\
+\t-l : specify listening UDP port (this port waits for clients, not nuauth) (default : 4130)\n\
+\t-d : (remote) address of the nufw (gateway) server\n\
+\t-p : (remote) port we use to send responses to nufw server(default : 4128)\n\
+\t-t : timeout to forget about packets when they don't match (default : 15 s)\n");
       return 1;
     }
   }
