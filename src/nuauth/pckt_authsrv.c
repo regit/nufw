@@ -235,7 +235,7 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz){
             case 1:
               break; 
             case 0:
-	      (*module_user_logs)(connexion,0);
+	      log_user_packet(*connexion,0);
               break;
             case -1:
 	         if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))

@@ -358,6 +358,13 @@ int main(int argc,char * argv[]) {
         TRUE,
         NULL);
 
+    user_loggers = g_thread_pool_new  ((GFunc)  real_log_user_packet,
+        NULL,
+				       nbuser_check,		       
+				       //        nbuser_loggers,
+        TRUE,
+        NULL);
+
     /* admin task */
     for(;;){
         clean_connections_list();

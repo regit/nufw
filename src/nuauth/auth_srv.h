@@ -1,4 +1,4 @@
-/* $Id: auth_srv.h,v 1.19 2003/11/24 21:12:29 regit Exp $ */
+/* $Id: auth_srv.h,v 1.20 2003/11/24 21:56:54 regit Exp $ */
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
@@ -136,6 +136,7 @@ GStaticMutex insert_mutex;
 
 GThreadPool* user_checkers;
 GThreadPool* acl_checkers;
+GThreadPool* user_loggers;
 
 int packet_timeout;
 int authpckt_port;
@@ -246,7 +247,9 @@ int check_fill_user_counters(u_int16_t userid,long time,unsigned long packet_id,
 void print_users_list();
 void log_new_user(int id,u_int32_t ip);
 GModule * logs_module;
-int (*module_user_logs) (connection* element, int state);
+void log_user_packet (connection element,int state);
+void real_log_user_packet (gpointer userdata, gpointer data);
+int (*module_user_logs) (connection element, int state);
 /*
  * External auth  stuff
  */

@@ -87,3 +87,24 @@ void log_new_user(int id,u_int32_t ip){
     g_message("New user with id %d on %s",id,inet_ntoa(oneip));
   }
 }
+
+struct Conn_State { 
+  connection conn;
+  int state;};
+
+void log_user_packet (connection element,int state){
+  struct Conn_State conn_state= { element, state};
+  
+  /* feed thread pool */
+  g_thread_pool_push(user_loggers,
+		     &conn_state,
+		     NULL);
+  /* end */
+}
+
+void real_log_user_packet (gpointer userdata, gpointer data){
+  (*module_user_logs) (
+		       ((struct Conn_State *)userdata)->conn, 
+		       ((struct Conn_State *)userdata)->state
+		       );
+}
