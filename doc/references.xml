@@ -1,0 +1,599 @@
+<?xml version='1.0'?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+               "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
+<book><title>NuFW reference manual</title>
+  <bookinfo>
+    <author>
+      <firstname>Eric</firstname>
+      <surname>Leblond</surname>
+      <email>regit@inl.fr</email>
+    </author>
+    <copyright>
+      <year>2005</year>
+      <holder>INL</holder>
+    </copyright>
+    <revhistory>
+ <revision>
+	<revnumber>0.2</revnumber>
+	<date>2005/03/17</date>
+	<revdescription>
+	  <para>Add nuauth_number_loggers</para>
+	</revdescription>
+      </revision>
+      <revision>
+	<revnumber>0.1</revnumber>
+	<date>2005/03/09</date>
+	<revdescription>
+	  <para>Initial release</para>
+	</revdescription>
+      </revision>
+    </revhistory>
+  </bookinfo>
+  <chapter><title>nufw configuration</title>
+    <para>
+the nufw server has no configuration file as it as only a restricted set of options :
+<screen>
+nufw [-hVv[v[v[v[v[v[v[v[v[v]]]]]]]]]] [-l local_port] [-L local_addr] [-d remote_addr] [-p remote_port]  [-t packet_timeout] [-T track_size]</screen>
+<itemizedlist>
+<listitem><para>-h : display this help and exit</para>	</listitem>
+ <listitem><para>-v : increase verbosity (maximum 9)</para>
+	</listitem>
+ <listitem><para>-V : display version and exit</para>
+	</listitem>
+  <listitem><para>-D : daemonize</para>
+	</listitem>
+  <listitem><para>-k : Use specified file as key file</para>
+	</listitem>
+  <listitem><para>-c : Use specified file as cert file</para>
+	</listitem>
+  <listitem><para>-U : use UDP unencrypted communication with nuauth server</para>
+	</listitem>
+  <listitem><para>-v : increase debug level (+1 for each 'v') (max useful number : 10)</para>
+	</listitem>
+  <listitem><para>-m : mark packet with userid</para>
+	</listitem>
+  <listitem><para>-l : specify listening UDP port (default : 4129)</para>
+	</listitem>
+    <listitem><para>-L : specify listening address (default : 127.0.0.1)</para>
+	</listitem>
+   <listitem><para>-d : remote address we send auth requests to (adress of the nuauth server) (default : 127.0.0.1)</para>
+	</listitem>
+   <listitem><para>-p : remote port we send auth requests to (UDP port nuauth server listens on) (default : 4128)</para>
+	</listitem>
+   <listitem><para>-t : timeout to forget about packets when they don't match (default : 15 s)</para>
+	</listitem>
+   <listitem><para>-T : track size (default : 1000)</para>
+	</listitem>
+      </itemizedlist>
+
+
+</para>
+  </chapter>
+  <chapter><title>nuauth configuration</title>
+    <section><title>network related parameters</title>
+      <section><title>General options</title>
+	<section><title>nuauth_client_listen_addr</title>
+	  <para>
+The IP address where nuauth listens to clients requests.
+</para>
+  <para>Default: <computeroutput>nuauth_client_listen_addr="0.0.0.0"</computeroutput>
+</para>
+	</section>
+	<section><title>nuauth_user_packet_port</title>
+	  <para>
+The port where nuauth waits for user authentication packet.
+</para>
+<para>Default: <computeroutput>nuauth_user_packet_port=4130</computeroutput>
+</para>
+	</section>
+	<section><title>nuauth_nufw_listen_addr</title>
+	  <para>
+The IP address where nuauth listens to nufw packets.
+</para>
+<para>Default: <computeroutput>nuauth_nufw_listen_addr="127.0.0.1"</computeroutput>
+</para>
+	</section>
+	<section><title>nuauth_gw_packet_port</title>
+	  <para>
+The port where nuauth waits for nufw gateway requests.
+</para>
+<para>Default: <computeroutput>nuauth_gw_packet_port=4129</computeroutput>
+</para>
+	</section>
+
+	<section><title>nufw_gw_addr</title>
+<para>
+A list of IP address authorized to connect as nufw firewall
+on the nuauth server. For example :
+<computeroutput>nufw_gw_addr="192.168.75.1 192.168.75.254"</computeroutput>
+</para>
+<para>Default: <computeroutput>nufw_gw_addr="127.0.0.1"</computeroutput>
+</para>
+	</section>
+
+      </section>
+      <section><title>TLS options</title>
+	<section><title>nuauth_tls_key</title>
+	  <para>
+ This is the complete filename of server private key used for TLS negotiation
+with the clients and nufw servers.
+</para>
+<para>Default: <computeroutput>nuauth_tls_key="CONFIGDIR/nuauth-key.pem"</computeroutput>
+</para>
+	</section>
+	<section><title>nuauth_tls_key_passwd</title><para>
+ Put here the password for private key. <remark>This is currently not supported.</remark>
+</para>
+<para>Default: <computeroutput>nuauth_tls_key_passwd="passwd"</computeroutput>
+</para>
+	</section>
+	<section><title>nuauth_tls_cert</title>
+	  <para>
+ This variable is the complete path to server certificate.
+</para>
+<para>Default: <computeroutput>nuauth_tls_cert="/etc/nufw/nuauth-cert.pem"</computeroutput>
+</para>
+	</section>
+	<section><title>nuauth_tls_cacert</title>
+	  <para>
+ The complete path to the certificate authority file.
+</para>
+<para>Default: <computeroutput>nuauth_tls_cacert="/etc/nufw/NuFW-cacert.pem"</computeroutput>
+</para>
+	</section>
+	<section><title>nuauth_tls_crl</title>
+	  <para>
+The complete filename of the authority certificate
+ revocation list.</para>
+ <para>The default is  none.</para>
+	</section>
+	<section><title>nuauth_tls_request_cert</title><para>
+This variable if set to 1 force verification of clients certificate against
+the certificate define in <varname>nuauth_tls_cert</varname>.
+A client can only connect if the certificate is signed. In this case, nuauth
+try to check if the username provided with the certificat is known.
+If this is the case, the user is authenticated. If the user is not known, 
+authentication by password is done. 
+</para>
+<para>Default: <computeroutput>nuauth_tls_request_cert=0</computeroutput>
+</para>
+	</section>
+      </section>
+    </section>
+    <section><title>modules choice</title>
+      <section><title>nuauth_user_check_module</title>
+	<para>
+This variable is used by nuauth to choose the authentication module for user. It has to be chosen in :
+<itemizedlist>
+<listitem><para>ldap : user credentials are store on a LDAP server</para>
+	    </listitem>
+<listitem><para>dbm : user credentials are store in a gdbm </para>
+	    </listitem>
+<listitem><para>plaintext  : user credentials are stored in a text file</para>
+	    </listitem>
+<listitem><para>system : authentication is done against PAM and groups are system groups. This provides
+ a convenient way to use nss features and/or pam-modules</para>
+	    </listitem>
+	  </itemizedlist>
+</para>
+<para>Default: <computeroutput>nuauth_user_check_module="libdbm"</computeroutput>
+</para>
+      </section>
+      <section><title>nuauth_acl_check_module</title>
+	<para>
+Choose here the acl checking  module. It has 
+ to be choozen in :
+<itemizedlist>
+<listitem><para>libldap: Acls are stored on an LDAP tree whith a specific schema. This module enables
+dynamic acls and network administration of them.</para>
+	    </listitem>
+<listitem><para>plaintext: This module stores acls in a plain text file. This is easy to manage for small rules set,
+ but nuauth has to be restarted to
+have modification to the file taken into account.</para>
+	    </listitem>
+	  </itemizedlist>
+
+</para><para>Default: <computeroutput>nuauth_acl_check_module="libplaintext"</computeroutput>
+</para>
+      </section>
+      <section><title>nuauth_ip_authentication_module</title>
+	<para>
+A fallback authentication module can be used to employ other authentication methods.
+Currently, only an ident based module is available.
+</para><para>Default: <computeroutput>nuauth_ip_authentication_module="libipauthident"</computeroutput>
+</para>
+      </section>
+      <section><title>nuauth_user_logs_module</title>
+	<para>
+ User activities logging method is done via a module. It can be choose between syslog and SQL modules.
+Only SQL modules permit to evolve to a SSO system. Acceptable values for this parameter are :
+<itemizedlist>
+<listitem><para>mysql</para>
+	    </listitem>
+<listitem><para>pgsql</para>
+	    </listitem>
+<listitem><para>syslog</para>
+	    </listitem>
+	  </itemizedlist>
+</para><para>Default: <computeroutput>nuauth_user_logs_module="syslog"</computeroutput>
+</para>
+      </section>
+    </section>
+    <section><title>Underlying options of nuauth</title>
+<section><title>nuauth_prio_to_nok</title>
+<para>
+What to do when several groups user is member of disagree about access rights
+</para><para>Default: <computeroutput>nuauth_prio_to_nok=1</computeroutput>
+</para>
+      </section>
+<section><title>nuauth_push_to_client</title>
+<para>
+ Client can work with two modes :
+<itemizedlist>
+<listitem><para>POLL : client check each time interval if it need to send a packet (traffic economy for WAN)</para>
+	    </listitem>
+<listitem><para>PUSH : nuauth warn client that they may need to send authentication packet (better response time on LAN)</para>
+	    </listitem>
+	  </itemizedlist>
+</para>
+<para>Default: <computeroutput>nuauth_push_to_client=1</computeroutput>
+</para>
+      </section>
+<section><title>nuauth_do_ip_authentication</title>
+<para>
+ Do we use fallback mode when no client are found<footnote><para>When no client is known on the IP from which a packet is coming
+the fallback method is used.</para>
+	  </footnote> ?
+ <remark><varname>nuauth_push_to_client</varname> has to be set to <option>1</option> if you choose to enable it.</remark>
+</para><para>Default: <computeroutput>nuauth_do_ip_authentication=1</computeroutput>
+</para>
+      </section>
+<section><title>nuauth_multi_users</title>
+<para>
+This option, which need to be simultaneously set with <option>nuauth_multi_servers</option>,
+create a trust relationship with a set of servers identified by a credentials and some IP addresses.
+This well-defined server can use a special extension of the nufw protocol to authenticate many users
+inside a single TLS session. The nuauth server trust the server about the usernames sent over this encrypted session.
+This could be useful for trusted, massively multiusers, systems.
+</para>
+<para>
+For example : 
+<screen>nuauth_multi_users="ntadmin"</screen>
+</para>
+<para>Default: <computeroutput>none</computeroutput></para>
+      </section>
+<section><title>nuauth_multi_servers</title>
+<para>
+This set the list of trusted multiusers server IPs.
+For example : 
+<screen>nuauth_multi_servers="192.168.33.135 192.168.75.4"</screen>
+
+</para><para>Default: <computeroutput>none</computeroutput></para>
+
+      </section>
+
+
+
+    </section>
+    <section><title>Tuning options</title>
+<section><title>nuauth_packet_timeout</title>
+      <para>
+ This is the time in second to keep packet in the nuauth internal connection tracking.
+</para><para>Default: <computeroutput>nuauth_packet_timeout=15</computeroutput>
+</para>
+      </section>
+<section><title>nuauth_datas_persistance</title>
+<para>
+ A cache is implemented for acl (and/or user) datas. 
+It permits to speed thing up by decreasing the number of request to external 
+system. This variable set the datas persistence in cache (in second).
+</para><para>Default: <computeroutput>nuauth_datas_persistance=300</computeroutput>
+</para>
+      </section>
+<section><title>nuauth_number_usercheckers</title>
+<para>
+A pool of threads is used to work on client authentication.
+This variable set the  number of threads used for this task.
+</para><para>Default: <computeroutput>nuauth_number_usercheckers=3</computeroutput>
+</para>
+	</section>
+<section><title>nuauth_number_aclcheckers</title>
+<para>
+A pool of threads is used to do acl checking against external authority
+and to treat gateway request.
+ This variable set the number of threads to work on gateway requests.
+</para><para>Default: <computeroutput>nuauth_number_aclcheckers=10</computeroutput>
+</para>
+	  </section>
+<section><title>nuauth_number_loggers</title>
+<para>
+A pool of threads is used to do logging. You mau need to adjust 
+it to the capability of the database server.
+ </para><para>Default: <computeroutput>nuauth_number_loggers=10</computeroutput>
+</para>
+	  </section>
+<section><title>nuauth_number_authcheckers</title>
+<para>
+A pool of threads is used to do TLS and SASL negotiation with users.
+ This set the number of threads used for this task. 
+</para><para>Default: <computeroutput>nuauth_number_authcheckers=5</computeroutput>
+</para>
+	    </section>
+<section><title>nuauth_number_ipauthcheckers</title>
+<para>
+ This set the number of threads working for ip authentication.
+</para><para>Default: <computeroutput>nuauth_number_ipauthcheckers=5</computeroutput>
+</para>
+	      </section>
+<section><title>nuauth_tls_max_clients</title>
+<para>
+ This set the maximum number of a simultaneously connected
+ nufw authentication clients.
+</para><para>Default: <computeroutput>nuauth_tls_max_clients=256</computeroutput>
+</para>
+		</section>
+<section><title>nuauth_tls_max_servers</title>
+<para>
+ This set the maximum number of simultaneously connected
+ nufw servers.
+</para><para>Default: <computeroutput>nuauth_tls_max_servers=8</computeroutput>
+</para>
+		  </section>
+    </section>
+    <section><title>Logging options</title>
+
+<section><title>nuauth_log_users</title>
+      <para>
+This variable decide the level of verbosity of user activities logging.
+ The log level is the sum of values :
+<itemizedlist>
+<listitem><para>0: no log at all</para>
+	    </listitem>
+<listitem><para>1: log new user (in syslog)</para>
+	    </listitem>
+<listitem><para>2: log rejected packets</para>
+	    </listitem>
+<listitem><para>4: log accepted packets</para>
+	    </listitem>
+<listitem><para>8: do complete session tracking
+ <footnote><para>complete session tracking need special iptables
+ rules, described in documentation</para>
+		</footnote>
+</para>
+	    </listitem></itemizedlist>
+
+</para><para>Default: <computeroutput>nuauth_log_users=0</computeroutput>
+</para>
+      </section>
+
+	<section><title>nuauth_log_users_sync</title>
+	  <para>This controls whether the users logging is absolutely safe. The access is
+ logged before granted.</para>
+	<remark> This is necessary if SQL backend is used for SSO.</remark>
+<para>Default: <computeroutput>nuauth_log_users_sync=1</computeroutput></para>
+      </section>
+
+	<section><title>nuauth_log_users_strict</title>
+<para>This option is set to <option>1</option> cause nuauth to do an update of log entries
+of database to avoid accidental double connections before inserting new connection.</para>
+
+<remark>Do not disable it by changing it to <option>0</option> if you want strict security
+ when using sso modules.</remark>
+
+<para>Default: <computeroutput>nuauth_log_users_strict=1</computeroutput>
+</para>
+	</section>
+      </section>
+  </chapter>
+  <chapter><title>Modules configuration</title>
+    <section><title>Plaintext</title>
+      <section><title>plaintext_userfile</title>
+<para>Default: <computeroutput>plaintext_userfile="/etc/nufw/users.nufw"</computeroutput></para>
+      </section>
+      <section><title>plaintext_aclfile</title>
+<para>Default: <computeroutput>plaintext_aclfile="/etc/nufw/acls.nufw"</computeroutput></para>
+      </section>
+    </section>
+    <section><title>DBM</title>
+      <section><title>dbm_users_file</title>
+<para>This set the name of the file containing the users credentials. Use <command>nufw_dbm</command> to modify or add entries.</para>
+<para>Default: <computeroutput>dbm_users_file="/etc/nufw/users-gdbm.nufw"</computeroutput></para>
+      </section>
+
+    </section>
+    <section><title>ldap</title>
+      <section><title>ldap_server_addr</title>
+      <para>
+This set the address of the ldap server which contains the acls and/or the users credentials.
+</para>
+<para>Default: <computeroutput>ldap_server_addr="127.0.0.1"</computeroutput></para>
+      </section>
+
+      <section><title>ldap_server_port</title>
+	<para>This set the port of the ldap server.</para>
+<para>Default: <computeroutput>ldap_server_port=389</computeroutput>
+</para>      </section>
+      <section><title>ldap_bind_dn</title><para>
+ This set the bind dn of the ldap connection. 
+</para><para>Default: <computeroutput>ldap_bind_dn="cn=admin,dc=nufw,dc=org"</computeroutput>
+</para>
+      </section>
+      <section><title>ldap_bind_password</title>
+	<para>This set the password used to bind to the ldap connection. 
+</para><para>Default: <computeroutput>ldap_bind_password="mypassword"</computeroutput>
+</para>
+      </section>
+      <section><title>ldap_filter_type</title>
+	<para>This set the  ldap request type.
+<itemizedlist><listitem><para>set to 1: request on DstPort is done with equality. This is
+the fastest version. In case a range of ports has to be set, a better idea could be
+to use application filtering.</para>
+	    </listitem>
+<listitem><para>set to 0: request on DstPort is done with range.
+ The range can be more simple to administrate, but performance is lower.</para>
+	    </listitem>
+	  </itemizedlist>
+</para><para>Default: <computeroutput>ldap_filter_type=1</computeroutput>
+</para>
+      </section>
+      <section><title>ldap_request_timeout</title>
+	<para>
+ This set the timeout of ldap request.
+</para><para>Default: <computeroutput>ldap_request_timeout=4</computeroutput>
+</para>
+      </section>
+      <section><title>ldap_basedn</title><para>
+This parameters set the  base dn for search request. This is the
+ default for ldap_acls_base_dn,ldap_users_base_dn  if they are not set.
+</para><para>Default: <computeroutput>ldap_basedn="dc=nufw,dc=org"</computeroutput>
+</para>
+      </section>
+      <section><title>ldap_acls_base_dn</title><para>
+This is the  base dn for acl search request.
+</para><para>Default: <computeroutput>ldap_acls_base_dn="dc=acls,dc=nufw,dc=org"</computeroutput>
+</para>
+      </section>
+      <section><title>ldap_users_base_dn</title><para>
+ This is the base dn for user search request.
+</para><para>Default: <computeroutput>ldap_users_base_dn="ou=people,dc=nufw,dc=org"</computeroutput>
+</para>
+      </section>
+      
+    </section>
+
+    <section><title>mysql log</title>
+      <section><title>mysql_server_addr</title>
+	<para>
+This parameter set MySql server address.
+</para><para>Default: <computeroutput>mysql_server_addr="127.0.0.1"</computeroutput>
+</para>
+      </section>
+      <section><title>mysql_server_port</title><para>
+This set the Mysql server port.
+</para><para>Default: <computeroutput>mysql_server_port=3306</computeroutput>
+</para>
+      </section>
+      <section><title>mysql_user</title>
+	<para>
+This parameter set the name of the user used to log on MySQL server. 
+</para><para>Default: <computeroutput>mysql_user="myuser"</computeroutput>
+</para>
+      </section>
+      <section><title>mysql_passwd</title><para>
+This set the MySQL password, associated with username.
+</para><para>Default: <computeroutput>mysql_passwd="secret"</computeroutput>
+</para>
+      </section>
+      <section><title>mysql_db_name</title><para>
+This is the name of MySQL database to connect to.
+</para><para>Default: <computeroutput>mysql_db_name="nufw"</computeroutput>
+</para>
+      </section>
+      <section><title>mysql_table_name</title><para>
+This set the name of table to connect to. It must belong to the chosen database.
+The specified user must have rights on this table
+</para><para>Default: <computeroutput>mysql_table_name="ulog"</computeroutput>
+</para>
+      </section>
+      <section><title>mysql_request_timeout</title><para>T
+This set the time in seconds we consider connection to the database to be lost if we have no
+answer.
+</para><para>Default: <computeroutput>mysql_request_timeout=5</computeroutput>
+</para>
+      </section>
+      <section><title>mysql_use_ssl</title><para>
+Set <varname>mysql_use_ssl</varname> to <option>1</option> to use SSL, else other ssl options will be ignored
+</para><para>Default: <computeroutput>mysql_use_ssl=0</computeroutput>
+</para>
+      </section>
+      <section><title>mysql_ssl_keyfile</title><para>
+Set <varname>mysql_ssl_keyfile</varname> to the full path of the file containing your PRIVATE key.
+<remark>This must be set if you want to use ssl, as default value is NULL.</remark>
+</para><para>Default: <computeroutput>mysql_ssl_keyfile="/etc/nufw/ssl/mysql.key"</computeroutput>
+</para>
+      </section>
+      <section><title>mysql_ssl_certfile</title>
+	<para>
+Set <varname>mysql_ssl_certfile</varname> to the full path of the file containing your PUBLIC certificate
+<remark>This must be set if you want to use ssl, as default value is NULL.</remark>
+</para><para>Default: <computeroutput>mysql_ssl_certfile="/etc/nufw/ssl/mysql.cert"</computeroutput>
+</para>
+      </section>
+      <section><title>mysql_ssl_ca</title>
+	<para>
+Set <varname>mysql_ssl_ca</varname> to the full path of the file containing your CA (Certificate Authority) file.
+<remark>Unset this field if you don't want to use a CA.</remark>
+</para><para>Default: <computeroutput>mysql_ssl_ca="/etc/nufw/ssl/mysql.ca"</computeroutput>
+</para>
+      </section>
+      <section><title>mysql_ssl_capath</title><para>
+Set <varname>mysql_ssl_capath</varname> to the full path of a DIRECTORY containing your CA
+Certificate Authority) files, in PEM format
+<remark>Unset this field if you don't want to use CAs.</remark>
+</para><para>Default: <computeroutput>mysql_ssl_capath="/etc/nufw/ssl/mysql.cas/"</computeroutput>
+</para>
+      </section>
+      <section><title>mysql_ssl_cipher</title><para>
+Set <varname>mysql_ssl_cipher</varname> to the list of ciphers you wish to use for Mysql
+connections. A complete cipher list on your system should be available if you
+issue "openssl ciphers"
+The default value here is "ALL:!ADH:+RC4:@STRENGTH", which is OpenSSL default,
+and means "Use any but give RC4 the lowest priority"
+For more info see : http://www.mkssoftware.com/docs/man1/openssl_ciphers.1.asp
+</para><para>Default: <computeroutput>mysql_ssl_cipher="ALL:!ADH:+RC4:@STRENGTH"</computeroutput>
+</para>
+      </section>
+    </section>
+    <section><title>pgsql log</title>
+      <section><title>pgsql_server_addr</title>
+	<para>
+This parameter set the PGSql server address.
+</para><para>Default: <computeroutput>pgsql_server_addr="127.0.0.1"</computeroutput>
+</para>
+      </section>
+      <section><title>pgsql_server_port</title><para>
+This set the port to used to connect to the PGsql  server.
+</para><para>Default: <computeroutput>pgsql_server_port=5432</computeroutput>
+</para>
+      </section>
+      <section><title>pgsql_user</title>
+	<para>
+This parameter set the login of the PGsql user.
+</para><para>Default: <computeroutput>pgsql_user="myuser"</computeroutput>
+</para>
+      </section>
+      <section><title>pgsql_passwd</title>
+	<para>
+This set the PGsql password, associated with username of the database.
+</para><para>Default: <computeroutput>pgsql_passwd="secret"</computeroutput>
+</para>
+      </section>
+      <section><title>pgsql_ssl</title>
+	<para>
+This set whether to use SSL or not. (this parameter is ignored for now)
+</para><para>Default: <computeroutput>pgsql_ssl="prefer"</computeroutput>
+</para>
+      </section>
+      <section><title>pgsql_db_name</title>
+	<para>
+This is the name of PGsql database to connect to
+</para><para>Default: <computeroutput>pgsql_db_name="nufw"</computeroutput>
+</para>
+      </section>
+      <section><title>pgsql_table_name</title>
+	<para>
+This set the name of the table  to connect to. It must belong to the chosen database. 
+The specified user must have rights on this table.
+</para><para>Default: <computeroutput>pgsql_table_name="ulog"</computeroutput>
+</para>
+      </section>
+      <section><title>pgsql_request_timeout</title><para>
+This is the time in seconds after which  the connection to the database is 
+assumed to be lost if we have no answer.
+</para><para>Default: <computeroutput>pgsql_request_timeout=5</computeroutput>
+</para>
+      </section>
+    </section>
+  </chapter>
+</book>
+
