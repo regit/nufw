@@ -125,8 +125,9 @@ void* packet_authsrv(){
             &len_inet);
         if (z<0)
         {
-            g_error("recvfrom()");
-            exit (-1); /*useless*/
+            g_warning("pckt recvfrom()");
+            continue;
+            //exit (-1); /*useless*/
         }
         //	pckt_rx++;
         /* decode packet and create connection */

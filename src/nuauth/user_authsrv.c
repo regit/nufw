@@ -77,8 +77,9 @@ void* user_authsrv(){
 		 &len_inet);
     if (z<0)
     {
-      g_error("recvfrom()");
-      exit(-1); /*useless*/
+      g_warning("user_pckt recvfrom()");
+      continue;
+     // exit(-1); /*useless*/
     }
 #if 0
     /* prepare data */
@@ -108,6 +109,8 @@ void user_check_and_decide (gpointer userdata, gpointer data){
     g_message("entering user_check\n");
   conn_elt = userpckt_decode((char *)userdata, 
 			     512);
+  /* free userdata, packet is parsed now */
+  g_free(userdata);
   /* if OK search and fill */
   if ( conn_elt != NULL ) {
     element = search_and_fill (conn_elt);
@@ -134,7 +137,6 @@ void user_check_and_decide (gpointer userdata, gpointer data){
 
   if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
    g_message("leaving user_check\n");
-  g_free(userdata);
 }
 
 connection * userpckt_decode(char* dgram,int dgramsiz){

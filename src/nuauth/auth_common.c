@@ -167,7 +167,7 @@ connection * search_and_fill (connection * pckt) {
         g_static_mutex_unlock (&insert_mutex);
         return pckt;
     } else { 
-        /* TODO : possible race condition */
+        /* FIXME : possible race condition */
         /* try lock ? */
         /*  release global lock */
         g_static_mutex_unlock (&insert_mutex);
@@ -215,20 +215,30 @@ connection * search_and_fill (connection * pckt) {
                 g_assert("Should not have this");
             }
             break;
-          case STATE_DONE:
-            g_assert(pckt->state==STATE_USERPCKT);
-            ((connection *)element)->user_id = pckt->user_id;
-            // going to log
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-                g_message("Need only cleaning\n");
-            // user logging 
-            log_user_packet(*(connection *)element,((connection *)element)->decision);
-            // House work
-            conn_cl_delete(element);
-            free_connection(pckt);
-            return NULL;           
           default:
-            g_assert("Should have badly done");
+            switch (pckt->state){
+              case  STATE_AUTHREQ:
+                if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
+                    g_message("Adding a packet_id to a connexion\n");
+                ((connection *)element)->packet_id =
+                  g_slist_prepend(((connection *)element)->packet_id, GINT_TO_POINTER((pckt->packet_id)->data));
+                UNLOCK_CONN(element);
+                free_connection(pckt);
+                /* and return */
+                return NULL;
+              case STATE_USERPCKT:
+                g_assert(pckt->state==STATE_USERPCKT);
+                ((connection *)element)->user_id = pckt->user_id;
+                // going to log
+                if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+                    g_message("Need only cleaning\n");
+                // user logging 
+                log_user_packet(*(connection *)element,((connection *)element)->decision);
+                // House work
+                conn_cl_delete(element);
+                free_connection(pckt);
+                return NULL;           
+            }
         }
         /* release memory used by pckt 
          * not using free_connection to do a complete free
@@ -332,26 +342,32 @@ int free_connection(connection * conn){
     GSList *acllist;
     GMutex * connmutex=conn->lock;
     g_assert (conn != NULL );
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
-        if (conn->packet_id != NULL)
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN))
-                g_message("freeing connection %p with %lu\n",conn,(long unsigned int)GPOINTER_TO_UINT(conn->packet_id->data));
-    }
-    acllist=conn->acl_groups;
-    if ( (acllist  != DUMMYACLS) && (acllist  != NULL) ){
-        g_slist_foreach(acllist,(GFunc) free_struct,NULL);
-        g_slist_free (acllist);
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-            g_message ("acl_groups freed %p\n",acllist);
-    }
-    if ( conn->user_groups != ALLGROUP )
-        g_slist_free (conn->user_groups);
-    if (conn->packet_id != NULL )
-        g_slist_free (conn->packet_id);
-    g_free(conn);
-    if (connmutex) {
+
+    if (connmutex)
         g_mutex_unlock(connmutex);
-        release_individual_mutex(connmutex);
+    /* if a thread has the lock it take it */
+    if ((connmutex==NULL) || g_mutex_trylock(connmutex)){
+        if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
+            if (conn->packet_id != NULL)
+                if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN))
+                    g_message("freeing connection %p with %lu\n",conn,(long unsigned int)GPOINTER_TO_UINT(conn->packet_id->data));
+        }
+        acllist=conn->acl_groups;
+        if ( (acllist  != DUMMYACLS) && (acllist  != NULL) ){
+            g_slist_foreach(acllist,(GFunc) free_struct,NULL);
+            g_slist_free (acllist);
+            if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
+                g_message ("acl_groups freed %p\n",acllist);
+        }
+        if ( conn->user_groups != ALLGROUP )
+            g_slist_free (conn->user_groups);
+        if (conn->packet_id != NULL )
+            g_slist_free (conn->packet_id);
+        g_free(conn);
+        if (connmutex) {
+            g_mutex_unlock(connmutex);
+            release_individual_mutex(connmutex);
+        }
     }
     return 1;
 }
@@ -413,11 +429,12 @@ void clean_connections_list (){
     g_static_mutex_lock (&insert_mutex);
     /* go through table and  stock keys associated to old packets */
     g_hash_table_foreach(conn_list,get_old_conn,GINT_TO_POINTER(current_timestamp));
-    g_static_mutex_unlock (&insert_mutex);
     if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
         g_message("Finish searching old connections");
     /* go through stocked keys to suppres old element */
     g_slist_foreach(old_conn_list,(GFunc)conn_key_delete,NULL);
+    /* work is done we release lock */
+    g_static_mutex_unlock (&insert_mutex);
     if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)) {
         int conn_list_size_now=g_hash_table_size(conn_list);
         if (conn_list_size_now != conn_list_size)
