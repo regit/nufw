@@ -211,7 +211,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
       break;
     case STATE_ESTABLISHED: 
       if ((element.tracking_hdrs).protocol == IPPROTO_TCP){
-          if (snprintf(request,511,"UPDATE %s SET state=%lu WHERE (ip_saddr=%lu AND ip_daddr=%lu AND tcp_sport=%u AND tcp_dport=%u AND STATE=%hu)",
+          if (snprintf(request,511,"UPDATE %s SET state=%lu WHERE (ip_daddr=%lu AND ip_saddr=%lu AND tcp_dport=%u AND tcp_sport=%u AND STATE=%hu)",
 
               mysql_table_name,
               STATE_ESTABLISHED,
