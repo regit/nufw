@@ -1,4 +1,4 @@
-/* $Id: structure.h,v 1.1 2003/08/25 19:19:14 regit Exp $ */
+/* $Id: structure.h,v 1.2 2003/09/01 21:21:44 regit Exp $ */
 
 /*
 ** Copyright (C) 2002, Éric Leblond <eric@regit.org>
@@ -39,7 +39,7 @@
 #define AUTHREQ_ADDR   "192.168.1.1"
 #define AUTHSRV_PORT 4128
 #define AUTHREQ_PORT 4129
-#define TRACK_SIZE 1024
+#define TRACK_SIZE 1000
 #define ID_SERVER 12345
 #define PACKET_TIMEOUT 15
 #define PRIO 1

@@ -1,4 +1,4 @@
-/* $Id: common.c,v 1.1 2003/08/25 19:16:38 regit Exp $ */
+/* $Id: common.c,v 1.2 2003/09/01 21:21:44 regit Exp $ */
 
 /*
 **
@@ -44,7 +44,7 @@ int psuppress (packet_idl * previous,packet_idl * current){
 unsigned long padd (unsigned long packet_id,long timestamp){
   unsigned long pcktid=packet_id;
   packet_idl *current=NULL;
-  if (track_size - packets_list_length == 1){
+  if (track_size - packets_list_length < 10){
     /* suppress first element */
     if (debug){
       printf("Queue full, dropping element\n");
