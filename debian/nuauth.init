@@ -26,7 +26,7 @@ if [ "$NUAUTH_START" != "true" ]; then
 fi
 
 if [ ! "$NUAUTH_VERBOSITY" ]; then
-  NUAUTH_VERBOSITY="-vv"
+  NUAUTH_VERBOSITY="vv"
 fi
 
 if [ ! "$NUAUTH_USER" ]; then
@@ -34,7 +34,7 @@ if [ ! "$NUAUTH_USER" ]; then
   NUAUTH_USEUSER="nobody"
 fi
 
-DAEMON_OPTS="-D $NUAUTH_VERBOSITY"
+DAEMON_OPTS="-D -$NUAUTH_VERBOSITY"
 
 set -e
 
