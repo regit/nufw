@@ -46,6 +46,10 @@ nufw [-hVv[v[v[v[v[v[v[v[v[v]]]]]]]]]] [-l local_port] [-L local_addr] [-d remot
 	</listitem>
   <listitem><para>-c : Use specified file as cert file</para>
 	</listitem>
+	</listitem>
+  <listitem><para>-a : Use specified file as ca file (strict check on server certificate is done if activated)</para>
+	</listitem>
+
   <listitem><para>-U : use UDP unencrypted communication with nuauth server</para>
 	</listitem>
   <listitem><para>-v : increase debug level (+1 for each 'v') (max useful number : 10)</para>
