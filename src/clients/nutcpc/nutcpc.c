@@ -28,7 +28,7 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: nutcpc.c,v 1.9 2003/09/22 23:29:41 regit Exp $
+ * $Id: nutcpc.c,v 1.10 2004/03/11 20:05:40 regit Exp $
  */
 
 #include <arpa/inet.h>
@@ -93,8 +93,6 @@ typedef struct conn {
 	unsigned long uid;
 	unsigned long ino;
 
-	char exe[PATH_MAX];
-	
 	struct conn *next;
 } conn_t;
 
@@ -338,12 +336,12 @@ int send_user_pckt(conn_t* c){
   strncpy(onaip,inet_ntoa(oneip),16);
   oneip.s_addr=(c->rmt);
   snprintf(md5datas,512,
-	   "%s%u%s%u%ld%ld%s",
+	   "%s%u%s%u%lu%ld%s",
 	   onaip,
 	   c->lclp,
 	   inet_ntoa(oneip),
 	   c->rmtp,
-	   timestamp,
+	   (unsigned long int) timestamp,
 	   packet_id,
 	   password);
 
@@ -558,6 +556,7 @@ int main (int argc, char *argv[])
 		}
 
 		usleep (interval * 1000);
+                printf("essai\n");
 	}
 
 	if (ct_free (&old) == 0) panic ("ct_free failed");
