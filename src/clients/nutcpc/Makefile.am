@@ -4,5 +4,5 @@ bin_PROGRAMS = nutcpc
 
 # nutcpc
 nutcpc_SOURCES = nutcpc.c
-LIBS = 
+LIBS = -lcrypt
 

@@ -1,4 +1,4 @@
-/* $Id: authsrv.c,v 1.2 2003/08/27 21:53:29 regit Exp $ */
+/* $Id: authsrv.c,v 1.3 2003/08/29 18:02:37 regit Exp $ */
 
 
 /*
@@ -70,9 +70,6 @@ void* authsrv(){
     if (z<0)
       bail("recvfrom()");
     //	pckt_rx++;
-    if (debug){
-      printf("received :%s.\n",dgram);
-    }
     // decode packet
     auth_packet_to_decision(dgram);
   }

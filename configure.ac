@@ -19,7 +19,7 @@ AC_CHECK_LIB([pthread], [pthread_mutex_init])
 # TODO : ldap check
 AC_CHECK_LIB([ldap],[ldap_simple_bind_s],AC_DEFUN([HAVE_LIBRARY_LDAP],[1]),AC_MSG_ERROR([ldap library needed for authentication]))
 #AC_CHECK_LIB([ldap], [ldap_init])
-
+AC_CHECK_LIB([crypt], [crypt])
 
 # glib stuff
 AM_PATH_GLIB_2_0(2.0.0, , AC_MSG_ERROR([glib is required in order to compile authsrv]),[gthread])

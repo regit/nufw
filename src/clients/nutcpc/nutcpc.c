@@ -28,7 +28,7 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: nutcpc.c,v 1.3 2003/08/27 21:14:55 regit Exp $
+ * $Id: nutcpc.c,v 1.4 2003/08/29 18:02:37 regit Exp $
  */
 
 #include <arpa/inet.h>
@@ -44,6 +44,7 @@
 #include <pwd.h>
 #include <signal.h>
 #include <stdarg.h>
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -53,6 +54,11 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <termios.h>
+#include <time.h>
+#define _XOPEN_SOURCE
+#include <unistd.h>
+#include <crypt.h>
 
 /*
  * Defaults for compile-time settings. Descriptions of these are in
@@ -69,7 +75,7 @@ unsigned long userid;
 uid_t localuserid;
 
 struct sockaddr_in adr_srv;
-
+char *password;
 
 /*
  * This structure holds everything we need to know about a connection. We
@@ -106,6 +112,7 @@ void panic(const char *fmt, ...){
   printf("error\n");
   exit(-1);
 }
+
 
 /*
  * ct_init ()
@@ -270,8 +277,23 @@ int send_user_pckt(conn_t* c){
   u_int32_t t_int32=0;
   u_int8_t proto_version=0x1,answer_type=0x3;
   char datas[512];
+  char md5datas[512];
   char *pointer;
   int debug=1;
+  struct in_addr oneip;
+  char onaip[13];
+  char* md5sigs;
+  u_int32_t  timestamp=time(NULL);
+  unsigned long seed[2];
+  char salt[] = "$1$........";
+  const char *const seedchars = 
+    "./0123456789ABCDEFGHIJKLMNOPQRST"
+    "UVWXYZabcdefghijklmnopqrstuvwxyz";
+  int i;
+  
+ 
+
+
 
   memset(datas,0,sizeof datas);
   memcpy(datas,&proto_version,sizeof proto_version);
@@ -303,19 +325,61 @@ int send_user_pckt(conn_t* c){
   t_int16=c->rmtp;
   memcpy(pointer,&t_int16,sizeof t_int16);
   pointer+=sizeof t_int16;
+  memcpy(pointer,&timestamp,sizeof timestamp);
+  pointer+=sizeof timestamp;
+
+
+  /* construct the md5sum */
+  /* first md5 datas */
+  oneip.s_addr=(c->lcl);
+  strncpy(onaip,inet_ntoa(oneip),12);
+  oneip.s_addr=(c->rmt);
+  snprintf(md5datas,512,
+	   "%s%u%s%u%u%s",
+	   onaip,
+	   c->lclp,
+	   inet_ntoa(oneip),
+	   c->rmtp,
+	   timestamp,
+	   password);
+
+  /* then the salt */
+  /* Generate a (not very) random seed.  
+     You should do it better than this... */
+  seed[0] = time(NULL);
+  seed[1] = getpid() ^ (seed[0] >> 14 & 0x30000);
+  
+  /* Turn it into printable characters from `seedchars'. */
+  for (i = 0; i < 8; i++)
+    salt[3+i] = seedchars[(seed[i/5] >> (i%5)*6) & 0x3f];
+
+  /* next crypt */
+  md5sigs=crypt(md5datas,salt);
+  
+  /* complete message */
+  memcpy(pointer,md5sigs,34);
+  pointer+=34;
+
+  /* and send it */
+
   if (debug) {
-    printf("Sending user request\n");
+    printf("Sending user request ");
+    oneip.s_addr=(c->lcl);
+    printf("%s:%u->",inet_ntoa(oneip),c->lclp);
+    oneip.s_addr=(c->rmt);
+    printf("%s:%u ...",inet_ntoa(oneip),c->rmtp);
     fflush(stdout);
   }
+
   if (sendto(sck_user_request,
 	     datas,
 	     pointer-datas,
 	     0,
 	     (struct sockaddr *)&adr_srv,
 	     sizeof adr_srv) < 0)
-    printf ("failure when sending\n");
+    printf (" failure when sending\n");
   if (debug){
-    printf("done\n");
+    printf(" done\n");
   }
   return 1;
 }
@@ -391,7 +455,9 @@ int main (int argc, char *argv[])
 	}
 
 	/* read password */
-
+	password=NULL;
+	//my_getpass(password,32,stdin);
+	password = getpass("Enter password : ");
 	/* create UDP stuff */
 	 sck_user_request = socket (AF_INET,SOCK_DGRAM,0);
 	 adr_srv.sin_family= AF_INET;
