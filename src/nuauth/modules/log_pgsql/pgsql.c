@@ -172,11 +172,11 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
           //
           struct in_addr ipone, iptwo;
           PGresult *Result;
-          char *tmp_inet1, *tmp_inet2;;
+          char tmp_inet1[41], tmp_inet2[41];
           ipone.s_addr=ntohl((element.tracking_hdrs).saddr);
           iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
-          tmp_inet1=inet_ntoa(ipone);
-          tmp_inet2=inet_ntoa(iptwo);
+          strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
+          strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
           if (snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,start_timestamp) VALUES (%u,%u,'%s','%s',%u,%u,%lu);",
               pgsql_table_name,
               (element.user_id),
@@ -208,11 +208,11 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
       else if ((element.tracking_hdrs).protocol == IPPROTO_UDP){
           struct in_addr ipone, iptwo;
           PGresult *Result;
-          char *tmp_inet1, *tmp_inet2;;
+          char tmp_inet1[41], tmp_inet2[41];
           ipone.s_addr=ntohl((element.tracking_hdrs).saddr);
           iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
-          tmp_inet1=inet_ntoa(ipone);
-          tmp_inet2=inet_ntoa(iptwo);
+          strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
+          strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
           if (snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,start_timestamp) VALUES (%u,%u,'%s','%s',%u,%u,%lu);",
               pgsql_table_name,
               (element.user_id),
@@ -238,11 +238,11 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
       else {
           struct in_addr ipone, iptwo;
           PGresult *Result;
-          char *tmp_inet1, *tmp_inet2;
+          char tmp_inet1[41], tmp_inet2[41];
           ipone.s_addr=ntohl((element.tracking_hdrs).saddr);
           iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
-          tmp_inet1=inet_ntoa(ipone);
-          tmp_inet2=inet_ntoa(iptwo);
+          strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
+          strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
           if (snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,start_timestamp) VALUES (%u,%u,'%s','%s',%lu);",
               pgsql_table_name,
               (element.user_id),
@@ -267,11 +267,11 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
       if ((element.tracking_hdrs).protocol == IPPROTO_TCP){
           struct in_addr ipone, iptwo;
           PGresult *Result;
-          char *tmp_inet1, *tmp_inet2;
+          char tmp_inet1[41], tmp_inet2[41];
           ipone.s_addr=ntohl((element.tracking_hdrs).saddr);
           iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
-          tmp_inet1=inet_ntoa(ipone);
-          tmp_inet2=inet_ntoa(iptwo);
+          strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
+          strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
           if (snprintf(request,511,"UPDATE %s SET end_timestamp=%lu WHERE (ip_saddr='%s' and ip_daddr='%s' and tcp_sport=%u and tcp_dport=%u and end_timestamp IS NULL);",
               pgsql_table_name,
               element.timestamp,
