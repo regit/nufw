@@ -37,6 +37,55 @@ inline char change_state(connection *elt, char state){
 }
 
 /* 
+ * Get individal mutex
+ */
+GMutex * get_individual_mutex(){
+  static GStaticMutex free_mutex_mutex = G_STATIC_MUTEX_INIT;
+  static GStaticMutex busy_mutex_mutex = G_STATIC_MUTEX_INIT;
+  GMutex * cmutex=NULL;
+
+  g_static_mutex_lock(&free_mutex_mutex);
+  /* get first free mutex */
+  if ( free_mutex_list != NULL ){
+    cmutex=(GMutex *)(free_mutex_list->data);
+    free_mutex_list= g_slist_next(free_mutex_list);
+  } else {
+    /* allocate mutex */
+    cmutex=g_mutex_new();
+  }
+  g_static_mutex_unlock(&free_mutex_mutex);
+  /* add it to the list of busy mutex */
+  g_static_mutex_lock(&busy_mutex_mutex);
+  busy_mutex_list=g_slist_prepend(busy_mutex_list,cmutex);
+   g_static_mutex_unlock(&busy_mutex_mutex);
+  /* return it */
+  return cmutex;
+}
+
+
+/*
+ * Release individual mutex
+ */
+
+gint  release_individual_mutex(GMutex * mutex){
+  static GStaticMutex free_mutex_mutex = G_STATIC_MUTEX_INIT;
+  static GStaticMutex busy_mutex_mutex = G_STATIC_MUTEX_INIT;
+  /* search for mutex in busy list and suppress it of the list */
+  if (mutex == NULL) {
+    return -1;
+  } else {
+    g_static_mutex_lock(&busy_mutex_mutex);
+    busy_mutex_list = g_slist_remove(busy_mutex_list,mutex);
+    g_static_mutex_unlock(&busy_mutex_mutex);
+    /* add the mutex to the free list */
+    g_static_mutex_lock(&free_mutex_mutex);
+    free_mutex_list = g_slist_prepend(free_mutex_list,mutex);
+    g_static_mutex_unlock(&free_mutex_mutex);
+  }
+  return 0;
+}
+
+/* 
  *  get state with lock
  */
 
@@ -56,9 +105,9 @@ hash_connection(gconstpointer headers)
   tracking *tracking_hdrs = (tracking *)headers;
   
   return (jhash_3words(tracking_hdrs->saddr,
-	                     (tracking_hdrs->daddr ^ tracking_hdrs->protocol),
-	                     (tracking_hdrs->dest | tracking_hdrs->source << 16),
-	                     32));
+		       (tracking_hdrs->daddr ^ tracking_hdrs->protocol),
+		       (tracking_hdrs->dest | tracking_hdrs->source << 16),
+		       32));
 }
 
 
@@ -123,8 +172,8 @@ connection * search_and_fill (connection * pckt) {
   g_assert(pckt != NULL);
   element = (connection *) g_hash_table_lookup(conn_list,&(pckt->tracking_hdrs));
   if (element == NULL) {
-    /* need to create Mutex */
-    pckt->lock = g_mutex_new();
+    /* need to get a individual Mutex */
+    pckt->lock = get_individual_mutex();
     g_assert(pckt->lock != NULL);	  
     if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
       g_message("Creating new element\n");
@@ -132,7 +181,7 @@ connection * search_and_fill (connection * pckt) {
 			 &(pckt->tracking_hdrs),
 			 pckt);
     /* as we append the new one is at the end */
-     g_static_mutex_unlock (&insert_mutex);
+    g_static_mutex_unlock (&insert_mutex);
     return pckt;
   } else {
     /* release global lock */
@@ -160,20 +209,20 @@ connection * search_and_fill (connection * pckt) {
       /* and return */
       return element;
     } else {
-    	if ( (((connection *)element)->acl_groups == NULL)&& ( pckt->state == STATE_AUTHREQ  )) {
-      if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-	g_message("Fill acl datas\n");
-      ((connection *)element)->acl_groups = pckt->acl_groups;
-      ((connection *)element)->packet_id = pckt->packet_id;
-      has_changed_state=1;
-    } else { 
-  	  if ( (((connection *)element)->user_groups == ALLGROUP) && (pckt->state == STATE_USERPCKT)) {
-	    	  if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-			g_message("Fill user datas\n");
-    		  ((connection *)element)->user_groups = pckt->user_groups;
-		  has_changed_state=1;
+      if ( (((connection *)element)->acl_groups == NULL)&& ( pckt->state == STATE_AUTHREQ  )) {
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+	  g_message("Fill acl datas\n");
+	((connection *)element)->acl_groups = pckt->acl_groups;
+	((connection *)element)->packet_id = pckt->packet_id;
+	has_changed_state=1;
+      } else { 
+	if ( (((connection *)element)->user_groups == ALLGROUP) && (pckt->state == STATE_USERPCKT)) {
+	  if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+	    g_message("Fill user datas\n");
+	  ((connection *)element)->user_groups = pckt->user_groups;
+	  has_changed_state=1;
     	}
-    	}
+      }
     }
     /* change STATE */
     if ( (((connection *)element)->state != STATE_DONE) && (has_changed_state == 1 )) {
@@ -202,16 +251,16 @@ gint print_connection(gpointer data,gpointer userdata){
   src.s_addr = ntohl(conn->tracking_hdrs.saddr);
   dest.s_addr = ntohl(conn->tracking_hdrs.daddr);
   if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-  {
-    gchar* firstfield=strdup(inet_ntoa(src));
-    g_message( "Connection : src=%s dst=%s proto=%u", firstfield, inet_ntoa(dest),
-	       conn->tracking_hdrs.protocol);
-    if (conn->tracking_hdrs.protocol == IPPROTO_TCP){
-      g_message("sport=%d dport=%d\n", conn->tracking_hdrs.source,
-	   conn->tracking_hdrs.dest);
+    {
+      gchar* firstfield=strdup(inet_ntoa(src));
+      g_message( "Connection : src=%s dst=%s proto=%u", firstfield, inet_ntoa(dest),
+		 conn->tracking_hdrs.protocol);
+      if (conn->tracking_hdrs.protocol == IPPROTO_TCP){
+	g_message("sport=%d dport=%d\n", conn->tracking_hdrs.source,
+		  conn->tracking_hdrs.dest);
+      }
+      g_free(firstfield);
     }
-    g_free(firstfield);
-  }
   return 1;
 }
 
@@ -281,7 +330,7 @@ void send_auth_response(gpointer data, gpointer userdata){
 
 int free_connection(connection * conn){
   GSList *acllist;
-
+  GMutex * connmutex=conn->lock;
   g_assert (conn != NULL );
   if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
     if (conn->packet_id != NULL)
@@ -299,20 +348,25 @@ int free_connection(connection * conn){
     g_slist_free (conn->user_groups);
   if (conn->packet_id != NULL )
     g_slist_free (conn->packet_id);
-  UNLOCK_CONN(conn);
   g_free(conn);
+  g_mutex_unlock(connmutex);
+  release_individual_mutex(connmutex);
   return 1;
 }
 
-/*
- * 
- */
-int lock_and_free_connection (connection * conn) {
-  GMutex * connlock=conn->lock;
-  int freereturn=0;
-  freereturn = free_connection(conn);
-  g_mutex_free(connlock);
-  return freereturn;
+
+
+int conn_cl_delete(gconstpointer conn) {
+  g_assert (conn != NULL);
+
+  if (!  g_hash_table_steal (conn_list,
+			     &(((connection *)conn)->tracking_hdrs)) ){
+    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
+      g_warning("Removal of conn in hash failed\n");
+    return 0;
+  }
+  free_connection((connection *)conn);
+  return 1;
 }
 
 GSList * old_conn_list;
@@ -324,19 +378,6 @@ void  get_old_conn (gpointer key,
   if ( current_timestamp - ((connection *)value)->timestamp > packet_timeout) {
     old_conn_list = (gpointer) g_slist_prepend( old_conn_list,key);
   }
-}
-
-int conn_cl_delete(gconstpointer conn) {
-  g_assert (conn != NULL);
-
-  if (!  g_hash_table_steal (conn_list,
-			      &(((connection *)conn)->tracking_hdrs)) ){
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-      g_warning("Removal of conn in hash failed\n");
-    return 0;
-  }
-  free_connection((connection *)conn);
-  return 1;
 }
 
 int conn_key_delete(gconstpointer key) {
@@ -358,21 +399,24 @@ int conn_key_delete(gconstpointer key) {
 void clean_connections_list (){
   int conn_list_size=g_hash_table_size(conn_list);
   long current_timestamp=time(NULL);
-
   old_conn_list=NULL;
   //  static GStaticMutex insert_mutex = G_STATIC_MUTEX_INIT;
+
+  if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
+    g_message("Start cleaning of connection finished");
   g_static_mutex_lock (&insert_mutex);
   /* go through table and  stock keys associated to old packets */
   g_hash_table_foreach(conn_list,get_old_conn,GINT_TO_POINTER(current_timestamp));
   g_static_mutex_unlock (&insert_mutex);
   /* go through stocked keys to suppres old element */
   g_slist_foreach(old_conn_list,(GFunc)conn_key_delete,NULL);
-  if (debug) {
+   if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)) {
     int conn_list_size_now=g_hash_table_size(conn_list);
     if (conn_list_size_now != conn_list_size)
-      if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN))
       g_message("%d connection(s) suppressed from list\n",conn_list_size-conn_list_size_now);
   }
+ if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
+    g_message("Cleaning of connections finished");
 }
 
 gint take_decision(connection * element) {

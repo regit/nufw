@@ -1,4 +1,4 @@
-/* $Id: auth_srv.h,v 1.15 2003/09/30 12:20:29 regit Exp $ */
+/* $Id: auth_srv.h,v 1.16 2003/09/30 20:00:38 regit Exp $ */
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
@@ -118,6 +118,9 @@ typedef struct Connection {
 #define TRYLOCK_CONN(ARG1) if (((connection *)ARG1)->lock != NULL) { g_mutex_trylock(((connection *)ARG1)->lock); } else { g_message("trying lock NULL\n"); };
 #define LOCK_CONN(ARG1) if (((connection *)ARG1)->lock != NULL) { g_mutex_lock(((connection *)ARG1)->lock); } else { g_message("trying lock NULL\n"); };
 #define UNLOCK_CONN(ARG1) if (((connection *)ARG1)->lock != NULL) g_mutex_unlock(((connection *)ARG1)->lock);
+
+GSList * busy_mutex_list;
+GSList * free_mutex_list;
 
 /*
  * Keep connection in a List

@@ -174,12 +174,12 @@ if (daemonize == 1) {
  conn_list = g_hash_table_new_full (g_int_hash, //(GHashFunc)hash_connection,
 				    compare_connection
 				    ,NULL,
-				    (GDestroyNotify) lock_and_free_connection); 
+				    (GDestroyNotify) free_connection); 
 #endif
  conn_list = g_hash_table_new_full ((GHashFunc)hash_connection,
 				    compare_connection
 				    ,NULL,
-				    (GDestroyNotify) lock_and_free_connection); 
+				    (GDestroyNotify) free_connection); 
  /* initiate user hash */
  users_hash = g_hash_table_new (NULL, NULL);
 
@@ -240,7 +240,8 @@ if (daemonize == 1) {
   DUMMYACL.groups = ALLGROUP;
   DUMMYACL.answer = OK;
   DUMMYACLS = g_slist_prepend(NULL,&DUMMYACL);
-
+  free_mutex_list=NULL;
+  busy_mutex_list=NULL;
   /* create thread for packet server */
   pckt_server = g_thread_create ( packet_authsrv,
 				 NULL,
@@ -280,9 +281,12 @@ if (daemonize == 1) {
   for(;;){
     clean_connections_list();
      if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_MAIN)){
-      g_message("%u unassigned task(s) and %d connection(s)\n",
+      g_message("%u unassigned task(s), %d connection(s), and %d/%d free/busy mutex(es) \n",
 		g_thread_pool_unprocessed(user_checkers),
-		g_hash_table_size(conn_list));  
+		g_hash_table_size(conn_list),
+		g_slist_length(free_mutex_list),
+		g_slist_length(busy_mutex_list)
+		);  
      }
     sleep(2);	
   }
