@@ -1,6 +1,6 @@
 # PGSQL log plugin
 
-if USE_PGSQL
+if USE_PGSQL_LOG
 
 AM_CPPFLAGS = -O2 -Wall -Werror-implicit-function-declaration -DCONFIG_DIR=\"$(sysconfdir)\" -DMODULE_DIR=\"$(libdir)\"
 INCLUDES = $(GLIB_CFLAGS) -I../../ -I../../include/ -I/usr/include/postgresql/

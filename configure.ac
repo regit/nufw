@@ -46,18 +46,18 @@ AC_CHECK_FUNC([ipq],[ipq_set_vwmark],AC_DEFINE_UNQUOTED([HAVE_LIBIPQ_MARK],[1],[
 
 
 #Configure database support, depending on user input
-AC_ARG_WITH(mysql, [--with-mysql  support user activity logging in Mysql database], enable_mysql="yes", enable_mysql="")
-AC_ARG_WITH(pgsql, [--with-pgsql  support user activity logging in PostgreSQL database], enable_pgsql="yes", enable_pgsql="")
+AC_ARG_WITH(mysql, [--with-mysql-log  support user activity logging in Mysql database], enable_mysql_log="yes", enable_mysql_log="")
+AC_ARG_WITH(pgsql, [--with-pgsql-log  support user activity logging in PostgreSQL database], enable_pgsql_log="yes", enable_pgsql_log="")
 
-if test "$enable_mysql" = yes; then
+if test "$enable_mysql_log" = yes; then
   AC_CHECK_LIB([mysqlclient],[mysql_real_connect],AC_DEFUN([HAVE_LIBRARY_MYSQL],[1]),AC_MSG_ERROR([mysql library needed if selected]))
 fi
-AM_CONDITIONAL(USE_MYSQL, test x$enable_mysql = xyes)
+AM_CONDITIONAL(USE_MYSQL_LOG, test x$enable_mysql_log = xyes)
   
-if test "$enable_pgsql" = yes; then
+if test "$enable_pgsql_log" = yes; then
   AC_CHECK_LIB([pq],[PQconnectdb],AC_DEFUN([HAVE_LIBRARY_PGSQL],[1]),AC_MSG_ERROR([libpq library needed if PostgreSQL support selected]))
 fi
-AM_CONDITIONAL(USE_PGSQL, test x$enable_pgsql = xyes)
+AM_CONDITIONAL(USE_PGSQL_LOG, test x$enable_pgsql_log = xyes)
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile
