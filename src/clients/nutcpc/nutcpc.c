@@ -28,7 +28,7 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: nutcpc.c,v 1.4 2003/08/29 18:02:37 regit Exp $
+ * $Id: nutcpc.c,v 1.5 2003/08/31 21:43:32 regit Exp $
  */
 
 #include <arpa/inet.h>
@@ -281,7 +281,7 @@ int send_user_pckt(conn_t* c){
   char *pointer;
   int debug=1;
   struct in_addr oneip;
-  char onaip[13];
+  char onaip[16];
   char* md5sigs;
   u_int32_t  timestamp=time(NULL);
   unsigned long seed[2];
@@ -332,7 +332,7 @@ int send_user_pckt(conn_t* c){
   /* construct the md5sum */
   /* first md5 datas */
   oneip.s_addr=(c->lcl);
-  strncpy(onaip,inet_ntoa(oneip),12);
+  strncpy(onaip,inet_ntoa(oneip),16);
   oneip.s_addr=(c->rmt);
   snprintf(md5datas,512,
 	   "%s%u%s%u%u%s",
