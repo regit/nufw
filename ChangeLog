@@ -1,3 +1,6 @@
+0.7.1 (2004/06/14)
+        - add option for SSO feature : log before granted packet
+        - major code cleaning
 0.7 (2004/03/31)
         - SSL encryption between client and server
         - correct handle of a limit case on reemission
