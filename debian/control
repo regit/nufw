@@ -2,7 +2,7 @@ Source: nufw
 Section: net
 Priority: optional
 Maintainer: Vincent Deffontaines <vincent@gryzor.com>
-Build-Depends: debhelper (>= 4.0.0)
+Build-Depends: debhelper (>= 4.0.0),automake1.7, libldap2-dev, libgdbm-dev, libglib2.0-dev, libmysqlclient-dev, postgresql-dev, iptables-dev
 Standards-Version: 3.6.0
 
 Package: nufw
