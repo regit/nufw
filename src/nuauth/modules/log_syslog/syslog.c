@@ -41,6 +41,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
         break;
       case STATE_DROP:
           str_state="Drop ";
+	  break;
     default:
       str_state="Unknown ";
     } 
