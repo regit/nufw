@@ -422,7 +422,7 @@ int main(int argc,char * argv[]) {
 
     /* admin task */
     for(;;){
-//        clean_connections_list();
+        clean_connections_list();
         if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_MAIN)){
             g_message("%u unassigned task(s), %d connection(s), and %d/%d free/busy mutex(es) \n",
                 g_thread_pool_unprocessed(user_checkers),
@@ -431,7 +431,7 @@ int main(int argc,char * argv[]) {
                 g_slist_length(busy_mutex_list)
                 );  
         }
-        sleep(1);	
+        sleep(2);	
     }
 
 }
