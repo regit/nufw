@@ -23,14 +23,50 @@
 #ifndef _LDAPVARS
 #define _LDAPVARS
 confparams ldap_nuauth_vars[] = {
-  { "ldap_server_addr" ,  G_TOKEN_STRING, 0 , AUTHREQ_ADDR },
-  { "ldap_server_port" , G_TOKEN_INT , AUTHREQ_PORT,NULL },
-  { "ldap_base_dn" , G_TOKEN_INT , 0 ,NULL},
-  { "ldap_bind_dn" , G_TOKEN_INT , 0 ,NULL},
-  { "ldap_bind_password" , G_TOKEN_STRING , 0, NULL },
-  { "ldap_request_timeout" , G_TOKEN_INT , 0 , NULL }
+  { "ldap_server_addr" , G_TOKEN_STRING, 0 , LDAP_SERVER },
+  { "ldap_server_port" ,G_TOKEN_INT , LDAP_SERVER_PORT,NULL },
+  { "ldap_users_base_dn" , G_TOKEN_STRING , 0 ,LDAP_BASE},
+  { "ldap_acls_base_dn" , G_TOKEN_STRING , 0 ,LDAP_BASE},
+  { "ldap_bind_dn" , G_TOKEN_STRING , 0 ,LDAP_USER},
+  { "ldap_bind_password" , G_TOKEN_STRING , 0, LDAP_CRED },
+  { "ldap_request_timeout" , G_TOKEN_INT , LDAP_REQUEST_TIMEOUT , NULL }
 };
 #endif 
+
+
+/* Init ldap system */
+int init_ldap_system(){
+  char *configfile=DEFAULT_CONF_FILE; 
+  gpointer vpointer; 
+  /* init global variables */
+  
+  binddn=LDAP_USER;
+  bindpasswd=LDAP_CRED;
+  ldap_server=LDAP_SERVER;
+  ldap_server_port=LDAP_SERVER_PORT;
+  ldap_users_base_dn=LDAP_BASE;
+  ldap_acls_base_dn=LDAP_BASE;
+  /* parse conf file */
+  parse_conffile(configfile,sizeof(ldap_nuauth_vars)/sizeof(confparams),ldap_nuauth_vars);
+  /* set variables */
+  vpointer=get_confvar_value(ldap_nuauth_vars,sizeof(ldap_nuauth_vars)/sizeof(confparams),"ldap_server_addr");
+  ldap_server=(char *)(vpointer?vpointer:ldap_server);
+  vpointer=get_confvar_value(ldap_nuauth_vars,sizeof(ldap_nuauth_vars)/sizeof(confparams),"ldap_server_port");
+  ldap_server_port=*(int *)(vpointer?vpointer:&ldap_server_port);
+  vpointer=get_confvar_value(ldap_nuauth_vars,sizeof(ldap_nuauth_vars)/sizeof(confparams),"ldap_bind_dn");
+  binddn=(char *)(vpointer?vpointer:binddn);
+  vpointer=get_confvar_value(ldap_nuauth_vars,sizeof(ldap_nuauth_vars)/sizeof(confparams),"ldap_users_base_dn");
+  ldap_users_base_dn=(char *)(vpointer?vpointer:ldap_users_base_dn);
+  vpointer=get_confvar_value(ldap_nuauth_vars,sizeof(ldap_nuauth_vars)/sizeof(confparams),"ldap_acls_base_dn");
+  ldap_acls_base_dn=(char *)(vpointer?vpointer:ldap_acls_base_dn);
+  vpointer=get_confvar_value(ldap_nuauth_vars,sizeof(ldap_nuauth_vars)/sizeof(confparams),"ldap_bind_password");
+  bindpasswd=(char *)(vpointer?vpointer:bindpasswd);
+  ldap_request_timeout=LDAP_REQUEST_TIMEOUT;
+  vpointer=get_confvar_value(ldap_nuauth_vars,sizeof(ldap_nuauth_vars)/sizeof(confparams),"ldap_request_timeout");
+  ldap_request_timeout=*(int *)(vpointer?vpointer:&ldap_request_timeout);
+
+  return 1;
+}
 
 /* 
  * Initialize connection to ldap server
@@ -39,15 +75,14 @@ confparams ldap_nuauth_vars[] = {
 LDAP* ldap_conn_init(void){
   LDAP* ld = NULL;
   int err,version=3;
-  char * binddn=LDAP_USER;
-  char * bindpasswd=LDAP_CRED;
-  ld = ldap_init(LDAP_SERVER,LDAP_PORT);
+
+  /* init connection */
+  ld = ldap_init(ldap_server,ldap_server_port);
   if(!ld) {
     if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
       g_warning("ldap init error\n");
     return NULL;
   }
-
   if (ldap_set_option(ld, LDAP_OPT_PROTOCOL_VERSION,
                                    &version) == LDAP_OPT_SUCCESS) {
     err = ldap_bind_s(ld, binddn, bindpasswd,LDAP_AUTH_SIMPLE);
@@ -119,13 +154,13 @@ GSList * ldap_acl_check (connection* element){
   }
 
   /* send query and wait result */
-  timeout.tv_sec = LDAP_REQUEST_TIMEOUT;
+  timeout.tv_sec = ldap_request_timeout;
   timeout.tv_usec = 0;
   /* TODO : just get group and decision */
   /* if (debug)
      printf("Filter : %s\n",filter); */
     
-  err =  ldap_search_st(ld, LDAP_BASE, LDAP_SCOPE_SUBTREE,filter,NULL,0,
+  err =  ldap_search_st(ld, ldap_acls_base_dn, LDAP_SCOPE_SUBTREE,filter,NULL,0,
 			&timeout,
 			&res) ;
   if ( err !=  LDAP_SUCCESS ) {
@@ -197,11 +232,10 @@ gint ldap_user_check (connection * element,u_int16_t userid,char *passwd){
   snprintf(filter,511,"(&(objectClass=NuAccount)(uidNumber=%d))",userid);
   
   /* send query and wait result */
-  timeout.tv_sec = LDAP_REQUEST_TIMEOUT;
+  timeout.tv_sec = ldap_request_timeout;
   timeout.tv_usec = 0;
   /* TODO : just get group and decision */
-  
-  err =  ldap_search_st(ld, LDAP_BASE, LDAP_SCOPE_SUBTREE,filter,NULL,0,
+  err =  ldap_search_st(ld, ldap_users_base_dn, LDAP_SCOPE_SUBTREE,filter,NULL,0,
 			&timeout,
 			&res) ;
   if ( err !=  LDAP_SUCCESS ) {

@@ -1,4 +1,4 @@
-/* $Id: auth_srv.h,v 1.4 2003/09/20 21:39:48 regit Exp $ */
+/* $Id: auth_srv.h,v 1.5 2003/09/21 08:02:51 regit Exp $ */
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
@@ -240,4 +240,5 @@ GPrivate* ldap_priv; /* private pointer to ldap connection */
 GSList * ldap_acl_check (connection* element);
 LDAP* ldap_conn_init(void);
 gint ldap_user_check (connection * element,u_int16_t userid,char *passwd);
+int init_ldap_system(void);
 #endif

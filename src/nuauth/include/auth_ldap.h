@@ -1,4 +1,4 @@
-/* $Id: auth_ldap.h,v 1.2 2003/09/20 21:39:48 regit Exp $ */
+/* $Id: auth_ldap.h,v 1.3 2003/09/21 08:02:51 regit Exp $ */
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
@@ -22,10 +22,18 @@
 
 
 #define LDAP_SERVER "127.0.0.1"
+#define LDAP_SERVER_PORT 389
 /*#define LDAP_USER NULL
 #define LDAP_CRED NULL */
-#define LDAP_USER "cn=admin,dc=regit,dc=org"
+#define LDAP_USER "cn=admin,dc=nufw,dc=org"
 #define LDAP_CRED "mypassword" 
 #define LDAP_REQUEST_TIMEOUT 10
-#define LDAP_BASE "dc=regit,dc=org"
+#define LDAP_BASE "dc=nufw,dc=org"
 
+int ldap_request_timeout;
+char * binddn;
+char * bindpasswd;
+char * ldap_server;
+char* ldap_acls_base_dn;
+char* ldap_users_base_dn;
+int ldap_server_port;

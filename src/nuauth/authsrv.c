@@ -81,6 +81,8 @@ int main(int argc,char * argv[]) {
   vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_number_aclcheckers");
   nbacl_check=*(int*)(vpointer?vpointer:&nbacl_check);
  
+
+
   /*parse options */
   while((option = getopt ( argc, argv, options_list)) != -1 ){
     switch (option){
@@ -211,6 +213,8 @@ if (daemonize == 1) {
 #if USE_LDAP
   /* create a private object to point at ldap connection */
   ldap_priv = g_private_new (g_free);
+  /* initialize ldap system by getting conf variables */
+  init_ldap_system();
 #endif
 
   /* private data for crypt */

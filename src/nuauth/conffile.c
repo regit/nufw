@@ -27,11 +27,12 @@
  */
 
 
-int parse_conffile(char * filename,gint array_size,confparams symbols[6]) {
+int parse_conffile(char * filename,gint array_size,confparams* symbols) {
   GScanner*  scanner;
   GTokenType dnentry=G_TOKEN_NONE;
-  gpointer value;
   int fd,i;
+  gboolean done;
+  confparams* current_symbol=NULL;
 
   scanner=g_scanner_new(NULL);
   fd=open(filename,O_RDONLY);
@@ -39,35 +40,45 @@ int parse_conffile(char * filename,gint array_size,confparams symbols[6]) {
     g_error("Can not open config file : %s",filename);
   g_scanner_input_file(scanner,fd);
   for (i = 0; i < array_size; i++)
-    g_scanner_scope_add_symbol (scanner, 0, symbols[i].name, GINT_TO_POINTER (symbols[i].token));
-  for (i = 0; i < array_size; i++){
-    value = g_scanner_scope_lookup_symbol(scanner,0,symbols[i].name);
-    if (value == NULL){
-      g_warning("Did not find %s in confif file\n",symbols[i].name);
-    } else {
-      dnentry=g_scanner_get_next_token (scanner); 
-      if (dnentry == G_TOKEN_SYMBOL){
+    g_scanner_scope_add_symbol (scanner, 0, symbols[i].name, GINT_TO_POINTER (i));
+
+  done = FALSE;
+  while (!done){
+    dnentry=g_scanner_get_next_token (scanner);
+    if (dnentry == G_TOKEN_EOF){
+      done=TRUE;
+      break;
+    }
+    if (dnentry == G_TOKEN_SYMBOL){
+      current_symbol=NULL;
+      for (i = 0; i < array_size; i++){
+	if (i == GPOINTER_TO_INT(scanner->value.v_symbol)){
+	  current_symbol=symbols+i;
+	  break;
+	}
+      }
+      if (current_symbol != NULL){
 	dnentry=g_scanner_get_next_token (scanner); 
 	if (dnentry ==  G_TOKEN_EQUAL_SIGN){ 
 	  dnentry=g_scanner_get_next_token (scanner); 
 	  switch (dnentry){
 	  case G_TOKEN_STRING :
 	    /* test if element want a string */
-	    if (symbols[i].token == G_TOKEN_STRING){
-	      symbols[i].v_char=strdup(scanner->value.v_string);
+	    if (current_symbol->value_type == G_TOKEN_STRING){
+	      current_symbol->v_char=strdup(scanner->value.v_string);
 	    } else {
 	      g_warning("Bad argument value for %s at %u",
-			symbols[i].name,scanner->line);
+			current_symbol->name,scanner->line);
 	      return -1;
 	    }
 	    break;
 	  case G_TOKEN_INT :
 	    /* test if element want a string */
-	    if (symbols[i].token == G_TOKEN_INT){
-	      symbols[i].v_int=scanner->value.v_int;
+	    if (current_symbol->value_type == G_TOKEN_INT){
+	      current_symbol->v_int=scanner->value.v_int;
 	    } else {
 	      g_warning("Bad argument value for %s at %u",
-			symbols[i].name,scanner->line);
+			current_symbol->name,scanner->line);
 	      return -1;
 	    }
 	    break;
@@ -75,20 +86,24 @@ int parse_conffile(char * filename,gint array_size,confparams symbols[6]) {
 	    g_warning("Bad argument !\n");
 	  }
 	}
+      } else {
+	g_warning("Did not find a symbol at %d,%d",scanner->line,scanner->position);
       }
     }
   }
+  g_scanner_destroy (scanner);
+  close(fd);
   return 0;
 }
 
-gpointer get_confvar_value(confparams symbols[],gint array_size,gchar * confparam){
+gpointer get_confvar_value(confparams* symbols,gint array_size,gchar * confparam){
   gpointer value=NULL;
   int i;
   int token_type;
   /* go through symbol table */
   for (i = 0; i < array_size; i++){
     if (! strcmp(symbols[i].name,confparam) ){
-      token_type = symbols[i].token;
+      token_type = symbols[i].value_type;
       switch ( token_type ){
       case G_TOKEN_STRING :
 	value=symbols[i].v_char;
