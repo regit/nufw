@@ -103,19 +103,19 @@ int auth_packet_to_decision(char* dgram){
 	      printf ("[%i] Accepting %lu\n",getpid(),packet_id);
 	    }
 	  }
-//#ifdef HAVE_LIBIPQ_MARK
-//          if (nufw_set_mark) {
-//	    if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
-//	      if (log_engine == LOG_TO_SYSLOG) {
-//		syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"Marking packet with %d",*(u_int16_t *)(dgram+2));
-//	      }else {
-//		printf("[%i] Marking packet with %d!\n",getpid(),*(u_int16_t *)(dgram+2));
-//	      }
-//	    }
+#ifdef HAVE_LIBIPQ_MARK
+          if (nufw_set_mark) {
+	    if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
+	      if (log_engine == LOG_TO_SYSLOG) {
+		syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"Marking packet with %d",*(u_int16_t *)(dgram+2));
+	      }else {
+		printf("[%i] Marking packet with %d!\n",getpid(),*(u_int16_t *)(dgram+2));
+	      }
+    }
 	    /* we put the userid mark at the end of the mark, not changing the 16 first big bits */
-//	      IPQ_SET_VWMARK(packet_id, NF_ACCEPT,(*(u_int16_t *)(dgram+2) & 0xffff ) | (nfmark & 0xffff0000 )); 
-//          } else 
-//#endif
+	      IPQ_SET_VWMARK(packet_id, NF_ACCEPT,(*(u_int16_t *)(dgram+2) & 0xffff ) | (nfmark & 0xffff0000 )); 
+          } else 
+#endif
 	        IPQ_SET_VERDICT(packet_id, NF_ACCEPT);
           
 	  pckt_tx++;
