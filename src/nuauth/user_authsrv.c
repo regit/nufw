@@ -81,11 +81,6 @@ void* user_authsrv(){
       continue;
      // exit(-1); /*useless*/
     }
-#if 0
-    /* prepare data */
-    userdatas.dgram=dgram;
-    userdatas.ip_client=addr_clnt.sin_addr.s_addr;
-#endif
     /* copy packet datas */
     datas=g_new0(char,z);
     memcpy(datas,dgram,z);
@@ -165,6 +160,9 @@ connection * userpckt_decode(char* dgram,int dgramsiz){
 	}
 	return NULL;
       }
+
+      /* mini init struct */
+      connexion->lock=NULL;
       /* parse packet */
       pointer=dgram+2;
       connexion->user_id=*(u_int16_t *)(pointer);

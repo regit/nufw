@@ -239,6 +239,8 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz){
                 }
                 return NULL;
             }
+            /* mini init struct */
+            connexion->lock = NULL;
             /* parse packet */
             pointer=dgram+2;
             connexion->id_srv=*(u_int16_t *)(pointer);
