@@ -305,7 +305,7 @@ G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
        if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
          g_message ("what ! no password found!\n");
      } else {
-       sscanf(*attrs_array,"%s",passwd);
+       sscanf(*attrs_array,"%127s",passwd);
        if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_AUTH))
 	 g_message("reading password\n");
      }

@@ -156,7 +156,7 @@ G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
     return NULL;
   }
   
-  if (sprintf(dptr,"%hi",userid) <= 0) {
+  if (snprintf(dptr,sizeof(char *)*(rint(log(userid)/log(10))+1),"%hi",userid) <= 0) {
     if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
       g_message("Could not convert userid %hi\n",userid);
     g_free(dptr);
