@@ -9,4 +9,4 @@
 - down ldap timeout to less than packet timeout
 - set packet timeout to less than proto timeout
 - finish user activity logging
-- plugin structure for external auth module
+
