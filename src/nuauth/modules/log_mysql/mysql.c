@@ -169,7 +169,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
             //
             //
             if ((nuauth_log_users_sync ) && (element.username != NULL)) {
-                if (snprintf(request,511,"INSERT INTO %s (username,user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,state,oob_prefix) VALUES (%s,%u,%lu,%u,%lu,%lu,%u,%u,%hu,'ACCEPT')",
+                if (snprintf(request,511,"INSERT INTO %s (username,user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,state,oob_prefix) VALUES ('%s',%u,%lu,%u,%lu,%lu,%u,%u,%hu,'ACCEPT')",
                       mysql_table_name,
                       element.username,
                       (element.user_id),
