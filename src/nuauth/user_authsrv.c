@@ -67,6 +67,7 @@ void* user_authsrv(){
 
 	
   for(;;){
+      char *datas;
     len_inet = sizeof addr_clnt;
     z = recvfrom(sck_inet,
 		 dgram,
@@ -84,9 +85,12 @@ void* user_authsrv(){
     userdatas.dgram=dgram;
     userdatas.ip_client=addr_clnt.sin_addr.s_addr;
 #endif
-    /* send packet to thread */
+    /* copy packet datas */
+    datas=g_new0(char,z);
+    memcpy(datas,dgram,z);
+    /* and send packet to thread */
     g_thread_pool_push (user_checkers,
-		dgram,	
+		datas,	
 			NULL
 			);
   }
@@ -131,6 +135,7 @@ void user_check_and_decide (gpointer userdata, gpointer data){
 
   if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
    g_message("leaving user_check\n");
+  g_free(userdata);
 }
 
 connection * userpckt_decode(char* dgram,int dgramsiz){
