@@ -1,6 +1,3 @@
-#ifndef _common_h
-#define _common_h
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -15,12 +12,6 @@
 #include <string.h>
 
 #include <openssl/ssl.h>
-
-#define CA_LIST "root.pem"
-#define HOST	"localhost"
-#define RANDOM  "random.pem"
-#define PORT	4433
-#define BUFSIZZ 1024
 
 extern BIO *bio_err;
 int berr_exit (char *string);
