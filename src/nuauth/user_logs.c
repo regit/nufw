@@ -71,7 +71,7 @@ int check_fill_user_counters(u_int16_t userid,long u_time,unsigned long packet_i
 
 void print_id( gpointer id, gpointer value, gpointer user_data) {
   if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
-    g_message("%u ",id);
+    g_message("%u ",(unsigned int)id);
 }
 
 void print_users_list(){

@@ -94,8 +94,8 @@ g_module_check_init(GModule *module){
 
   /* init thread private stuff */
   mysql_priv = g_private_new (g_free); 
-      if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-                g_message("mysql part of the config file is parsed\n");
+  if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
+    g_message("mysql part of the config file is parsed\n");
   return NULL;
 }
 
@@ -108,25 +108,25 @@ G_MODULE_EXPORT MYSQL* mysql_conn_init(void){
   MYSQL *ld = NULL;
 
   /* init connection */
-        ld = mysql_init(ld);     
+  ld = mysql_init(ld);     
   if (ld == NULL) {
-      if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-          g_warning("mysql init error : %s\n",strerror(errno));
-      return NULL;
+    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
+      g_warning("mysql init error : %s\n",strerror(errno));
+    return NULL;
   }
   /* Set SSL options, if configured to do so */
   if (mysql_use_ssl)
     mysql_ssl_set(ld,mysql_ssl_keyfile,mysql_ssl_certfile,mysql_ssl_ca,mysql_ssl_capath,mysql_ssl_cipher);
   // Set MYSQL object properties
- /* if (mysql_options(ld,MYSQL_OPT_CONNECT_TIMEOUT,mysql_conninfo) != 0)
-      if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-          g_warning("mysql options setting failed : %s\n",mysql_error(ld));
+  /* if (mysql_options(ld,MYSQL_OPT_CONNECT_TIMEOUT,mysql_conninfo) != 0)
+     if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
+     g_warning("mysql options setting failed : %s\n",mysql_error(ld));
   */
 
   if (!mysql_real_connect(ld,mysql_server,mysql_user,mysql_passwd,mysql_db_name,mysql_server_port,NULL,0)) {
-      if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-          g_warning("mysql connection failed : %s\n",mysql_error(ld));
-      return NULL;
+    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
+      g_warning("mysql connection failed : %s\n",mysql_error(ld));
+    return NULL;
   }
   return ld;
 }
@@ -134,12 +134,12 @@ G_MODULE_EXPORT MYSQL* mysql_conn_init(void){
 G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
   MYSQL *ld = g_private_get (mysql_priv);
   char request[512];
-         int Result;
+  int Result;
   if (ld == NULL){
     ld=mysql_conn_init();
     if (ld == NULL){
       if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-          g_warning("Can not initiate MYSQL conn\n");
+	g_warning("Can not initiate MYSQL conn\n");
       return -1;
     }
     g_private_set(mysql_priv,ld);
@@ -147,249 +147,249 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
 
   /* contruct request */
   switch (state) {
-    case STATE_OPEN:
-      switch ((element.tracking_hdrs).protocol){
-        case IPPROTO_TCP:
+  case STATE_OPEN:
+    switch ((element.tracking_hdrs).protocol){
+    case IPPROTO_TCP:
 
-          //
-          // FIELD          IN NUAUTH STRUCTURE               IN ULOG
-          //user_id               u_int16_t                   SMALLINT UNSIGNED     2 bytes
-          //ip_protocol           u_int8_t                    TINYINT UNSIGNED      1 byte
-          //ip_saddr              u_int32_t                   INT UNSIGNED          4 bytes
-          //ip_daddr              u_int32_t                   INT UNSIGNED
-          //tcp_sport             u_int16_t                   SMALLINT UNSIGNED 
-          //tcp_dport             u_int16_t                   SMALLINT UNSIGNED
-          //udp_sport             u_int16_t                   SMALLINT UNSIGNED
-          //udp_dport             u_int16_t                   SMALLINT UNSIGNED
-          //icmp_type             u_int8_t                    TINYINT UNSIGNED        
-          //icmp_code             u_int8_t                    TINYINT UNSIGNED    
-          //start_timestamp       long                        BIGINT UNSIGNED       8 bytes
-          //end_timestamp         long                        BIGINT UNSIGNED 
-          //
-          //
-          //
-          if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,state,oob_prefix) VALUES (%u,%lu,%u,%lu,%lu,%u,%u,%hu,'ACCEPT')",
-              mysql_table_name,
-              (element.user_id),
-              element.timestamp,
-              (element.tracking_hdrs).protocol,
-              (element.tracking_hdrs).saddr,
-              (element.tracking_hdrs).daddr,
-              (element.tracking_hdrs).source,
-              (element.tracking_hdrs).dest,
-              STATE_OPEN
-          ) >= 511){
-              if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-                  g_warning("Building mysql insert query, the 511 limit was reached!\n");
-              return -1;
-          }
-          Result = mysql_real_query(ld, request, strlen(request));
-          if (Result != 0){
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-              g_warning("Can not insert Data : %s\n",mysql_error(ld));
-            return -1;
-          }
-          break;
-        case IPPROTO_UDP:
-          if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,state,oob_prefix) VALUES (%u,%lu,%u,%lu,%lu,%u,%u,%hu,'ACCEPT')",
-              mysql_table_name,
-              (element.user_id),
-              element.timestamp,
-              (element.tracking_hdrs).protocol,
-              (element.tracking_hdrs).saddr,
-              (element.tracking_hdrs).daddr,
-              (element.tracking_hdrs).source,
-              (element.tracking_hdrs).dest,
-              STATE_OPEN
-          ) >= 511){
-              if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-                  g_warning("Building mysql insert query, the 511 limit was reached!\n");
-              return -1;
-          }
-          Result = mysql_real_query(ld, request, strlen(request));
-          if (Result != 0){
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-              g_warning("Can not insert Data : %s\n",mysql_error(ld));
-            return -1;
-          }
-          return 0;
-          break;
-        default:
-          if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,state,oob_prefix) VALUES (%u,%lu,%u,%lu,%lu,%hu,'ACCEPT')",
-              mysql_table_name,
-              (element.user_id),
-              element.timestamp,
-              (element.tracking_hdrs).protocol,
-              (element.tracking_hdrs).saddr,
-              (element.tracking_hdrs).daddr,
-              STATE_OPEN
-          ) >= 511){
-              if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-                  g_warning("Building mysql insert query, the 511 limit was reached!\n");
-              return -1;
-          }
-          Result = mysql_real_query(ld, request,strlen(request));
-          if (Result != 0){
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-              g_warning("Can not insert Data : %s\n",mysql_error(ld));
-            return -1;
-          }
-          return 0;
+      //
+      // FIELD          IN NUAUTH STRUCTURE               IN ULOG
+      //user_id               u_int16_t                   SMALLINT UNSIGNED     2 bytes
+      //ip_protocol           u_int8_t                    TINYINT UNSIGNED      1 byte
+      //ip_saddr              u_int32_t                   INT UNSIGNED          4 bytes
+      //ip_daddr              u_int32_t                   INT UNSIGNED
+      //tcp_sport             u_int16_t                   SMALLINT UNSIGNED 
+      //tcp_dport             u_int16_t                   SMALLINT UNSIGNED
+      //udp_sport             u_int16_t                   SMALLINT UNSIGNED
+      //udp_dport             u_int16_t                   SMALLINT UNSIGNED
+      //icmp_type             u_int8_t                    TINYINT UNSIGNED        
+      //icmp_code             u_int8_t                    TINYINT UNSIGNED    
+      //start_timestamp       long                        BIGINT UNSIGNED       8 bytes
+      //end_timestamp         long                        BIGINT UNSIGNED 
+      //
+      //
+      //
+      if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,state,oob_prefix) VALUES (%u,%lu,%u,%lu,%lu,%u,%u,%hu,'ACCEPT')",
+		   mysql_table_name,
+		   (element.user_id),
+		   element.timestamp,
+		   (element.tracking_hdrs).protocol,
+		   (element.tracking_hdrs).saddr,
+		   (element.tracking_hdrs).daddr,
+		   (element.tracking_hdrs).source,
+		   (element.tracking_hdrs).dest,
+		   STATE_OPEN
+		   ) >= 511){
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+	  g_warning("Building mysql insert query, the 511 limit was reached!\n");
+	return -1;
+      }
+      Result = mysql_real_query(ld, request, strlen(request));
+      if (Result != 0){
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+	  g_warning("Can not insert Data : %s\n",mysql_error(ld));
+	return -1;
       }
       break;
-    case STATE_ESTABLISHED: 
-      if ((element.tracking_hdrs).protocol == IPPROTO_TCP){
-          int update_status = 0;
-          while (update_status < 2){
-            update_status++;
-            if (snprintf(request,511,"UPDATE %s SET state=%lu,start_timestamp=FROM_UNIXTIME(%lu) WHERE (ip_daddr=%lu AND ip_saddr=%lu AND tcp_dport=%u AND tcp_sport=%u AND state=%hu)",
-
-              mysql_table_name,
-              STATE_ESTABLISHED,
-              element.timestamp,
-              (element.tracking_hdrs).saddr,
-              (element.tracking_hdrs).daddr,
-              (element.tracking_hdrs).source,
-              (element.tracking_hdrs).dest,
-              STATE_OPEN
-            ) >= 511){
-              if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-                  g_warning("Building mysql update query, the 511 limit was reached!\n");
-              return -1;
-            }
-            Result = mysql_real_query(ld, request, strlen(request));
-            if (Result != 0){
-              if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-                g_warning("Can not update Data : %s\n",mysql_error(ld));
-              return -1;
-           }
-            if (mysql_affected_rows(ld) >= 1){
-                return 0;
-            }else{
-                if (update_status <2){
-                  usleep(33333); //Sleep for 1/3 sec
-                }else{
-                    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-                        g_warning("Tried to update MYSQL entry twice, looks like data to update wasn't inserted\n");
-                }
-            }
-          }
-          return 0;
-        }
-      break;
-    case STATE_CLOSE: 
-      if ((element.tracking_hdrs).protocol == IPPROTO_TCP){
-          int update_status = 0;
-          while (update_status < 2){
-            update_status++;
-            if (snprintf(request,511,"UPDATE %s SET end_timestamp=FROM_UNIXTIME(%lu), state=%hu WHERE (ip_saddr=%lu AND ip_daddr=%lu AND tcp_sport=%u AND tcp_dport=%u AND state=%hu)",
-
-              mysql_table_name,
-              element.timestamp,
-              STATE_CLOSE,
-              (element.tracking_hdrs).saddr,
-              (element.tracking_hdrs).daddr,
-              (element.tracking_hdrs).source,
-              (element.tracking_hdrs).dest,
-              STATE_ESTABLISHED
-            ) >= 511){
-              if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-                  g_warning("Building mysql update query, the 511 limit was reached!\n");
-              return -1;
-            }
-            Result = mysql_real_query(ld, request, strlen(request));
-            if (Result != 0){
-              if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-                g_warning("Can not update Data : %s\n",mysql_error(ld));
-              return -1;
-            }
-            if (mysql_affected_rows(ld) >= 1){
-                return 0;
-            }else{
-                if (update_status <2){
-                  usleep(66666); //Sleep for 2/3 sec
-                }else{
-                    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-                        g_warning("Tried to update MYSQL entry twice, looks like data to update wasn't inserted\n");
-                }
-            }
-          }
-         return 0;
+    case IPPROTO_UDP:
+      if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,state,oob_prefix) VALUES (%u,%lu,%u,%lu,%lu,%u,%u,%hu,'ACCEPT')",
+		   mysql_table_name,
+		   (element.user_id),
+		   element.timestamp,
+		   (element.tracking_hdrs).protocol,
+		   (element.tracking_hdrs).saddr,
+		   (element.tracking_hdrs).daddr,
+		   (element.tracking_hdrs).source,
+		   (element.tracking_hdrs).dest,
+		   STATE_OPEN
+		   ) >= 511){
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+	  g_warning("Building mysql insert query, the 511 limit was reached!\n");
+	return -1;
       }
-      break;
-    case STATE_DROP:
-       switch ((element.tracking_hdrs).protocol){
-        case IPPROTO_TCP:
-          if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,state,oob_prefix) VALUES (%u,%lu,%u,%lu,%lu,%u,%u,%hu,'DROP')",
-              mysql_table_name,
-              (element.user_id),
-              element.timestamp,
-              (element.tracking_hdrs).protocol,
-              (element.tracking_hdrs).saddr,
-              (element.tracking_hdrs).daddr,
-              (element.tracking_hdrs).source,
-              (element.tracking_hdrs).dest,
-              STATE_DROP
-          ) >= 511){
-              if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-                  g_warning("Building mysql insert query, the 511 limit was reached!\n");
-              return -1;
-          }
-          Result = mysql_real_query(ld, request, strlen(request));
-          if (Result != 0){
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-              g_warning("Can not insert Data : %s\n",mysql_error(ld));
-            return -1;
-          }
-          break;
-        case IPPROTO_UDP:
-          if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,state,oob_prefix) VALUES (%u,%lu,%u,%lu,%lu,%u,%u,%hu,'DROP')",
-              mysql_table_name,
-              (element.user_id),
-              element.timestamp,
-              (element.tracking_hdrs).protocol,
-              (element.tracking_hdrs).saddr,
-              (element.tracking_hdrs).daddr,
-              (element.tracking_hdrs).source,
-              (element.tracking_hdrs).dest,
-              STATE_DROP
-          ) >= 511){
-              if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-                  g_warning("Building mysql insert query, the 511 limit was reached!\n");
-              return -1;
-          }
-          Result = mysql_real_query(ld, request, strlen(request));
-          if (Result != 0){
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-              g_warning("Can not insert Data : %s\n",mysql_error(ld));
-            return -1;
-          }
-          return 0;
-          break;
-        default:
-          if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,state,oob_prefix) VALUES (%u,%lu,%u,%lu,%lu,%hu,'DROP')",
-              mysql_table_name,
-              (element.user_id),
-              element.timestamp,
-              (element.tracking_hdrs).protocol,
-              (element.tracking_hdrs).saddr,
-              (element.tracking_hdrs).daddr,
-              STATE_DROP
-          ) >= 511){
-              if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-                  g_warning("Building mysql insert query, the 511 limit was reached!\n");
-              return -1;
-          }
-          Result = mysql_real_query(ld, request,strlen(request));
-          if (Result != 0){
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-              g_warning("Can not insert Data : %s\n",mysql_error(ld));
-            return -1;
-          }
-          return 0;
+      Result = mysql_real_query(ld, request, strlen(request));
+      if (Result != 0){
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+	  g_warning("Can not insert Data : %s\n",mysql_error(ld));
+	return -1;
       }
+      return 0;
       break;
+    default:
+      if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,state,oob_prefix) VALUES (%u,%lu,%u,%lu,%lu,%hu,'ACCEPT')",
+		   mysql_table_name,
+		   (element.user_id),
+		   element.timestamp,
+		   (element.tracking_hdrs).protocol,
+		   (element.tracking_hdrs).saddr,
+		   (element.tracking_hdrs).daddr,
+		   STATE_OPEN
+		   ) >= 511){
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+	  g_warning("Building mysql insert query, the 511 limit was reached!\n");
+	return -1;
+      }
+      Result = mysql_real_query(ld, request,strlen(request));
+      if (Result != 0){
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+	  g_warning("Can not insert Data : %s\n",mysql_error(ld));
+	return -1;
+      }
+      return 0;
     }
+    break;
+  case STATE_ESTABLISHED: 
+    if ((element.tracking_hdrs).protocol == IPPROTO_TCP){
+      int update_status = 0;
+      while (update_status < 2){
+	update_status++;
+	if (snprintf(request,511,"UPDATE %s SET state=%lu,start_timestamp=FROM_UNIXTIME(%lu) WHERE (ip_daddr=%lu AND ip_saddr=%lu AND tcp_dport=%u AND tcp_sport=%u AND state=%hu)",
+
+		     mysql_table_name,
+		     STATE_ESTABLISHED,
+		     element.timestamp,
+		     (element.tracking_hdrs).saddr,
+		     (element.tracking_hdrs).daddr,
+		     (element.tracking_hdrs).source,
+		     (element.tracking_hdrs).dest,
+		     STATE_OPEN
+		     ) >= 511){
+	  if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+	    g_warning("Building mysql update query, the 511 limit was reached!\n");
+	  return -1;
+	}
+	Result = mysql_real_query(ld, request, strlen(request));
+	if (Result != 0){
+	  if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+	    g_warning("Can not update Data : %s\n",mysql_error(ld));
+	  return -1;
+	}
+	if (mysql_affected_rows(ld) >= 1){
+	  return 0;
+	}else{
+	  if (update_status <2){
+	    usleep(33333); //Sleep for 1/3 sec
+	  }else{
+	    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
+	      g_warning("Tried to update MYSQL entry twice, looks like data to update wasn't inserted\n");
+	  }
+	}
+      }
+      return 0;
+    }
+    break;
+  case STATE_CLOSE: 
+    if ((element.tracking_hdrs).protocol == IPPROTO_TCP){
+      int update_status = 0;
+      while (update_status < 2){
+	update_status++;
+	if (snprintf(request,511,"UPDATE %s SET end_timestamp=FROM_UNIXTIME(%lu), state=%hu WHERE (ip_saddr=%lu AND ip_daddr=%lu AND tcp_sport=%u AND tcp_dport=%u AND state=%hu)",
+
+		     mysql_table_name,
+		     element.timestamp,
+		     STATE_CLOSE,
+		     (element.tracking_hdrs).saddr,
+		     (element.tracking_hdrs).daddr,
+		     (element.tracking_hdrs).source,
+		     (element.tracking_hdrs).dest,
+		     STATE_ESTABLISHED
+		     ) >= 511){
+	  if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+	    g_warning("Building mysql update query, the 511 limit was reached!\n");
+	  return -1;
+	}
+	Result = mysql_real_query(ld, request, strlen(request));
+	if (Result != 0){
+	  if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+	    g_warning("Can not update Data : %s\n",mysql_error(ld));
+	  return -1;
+	}
+	if (mysql_affected_rows(ld) >= 1){
+	  return 0;
+	}else{
+	  if (update_status <2){
+	    usleep(66666); //Sleep for 2/3 sec
+	  }else{
+	    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
+	      g_warning("Tried to update MYSQL entry twice, looks like data to update wasn't inserted\n");
+	  }
+	}
+      }
+      return 0;
+    }
+    break;
+  case STATE_DROP:
+    switch ((element.tracking_hdrs).protocol){
+    case IPPROTO_TCP:
+      if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,state,oob_prefix) VALUES (%u,%lu,%u,%lu,%lu,%u,%u,%hu,'DROP')",
+		   mysql_table_name,
+		   (element.user_id),
+		   element.timestamp,
+		   (element.tracking_hdrs).protocol,
+		   (element.tracking_hdrs).saddr,
+		   (element.tracking_hdrs).daddr,
+		   (element.tracking_hdrs).source,
+		   (element.tracking_hdrs).dest,
+		   STATE_DROP
+		   ) >= 511){
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+	  g_warning("Building mysql insert query, the 511 limit was reached!\n");
+	return -1;
+      }
+      Result = mysql_real_query(ld, request, strlen(request));
+      if (Result != 0){
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+	  g_warning("Can not insert Data : %s\n",mysql_error(ld));
+	return -1;
+      }
+      break;
+    case IPPROTO_UDP:
+      if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,state,oob_prefix) VALUES (%u,%lu,%u,%lu,%lu,%u,%u,%hu,'DROP')",
+		   mysql_table_name,
+		   (element.user_id),
+		   element.timestamp,
+		   (element.tracking_hdrs).protocol,
+		   (element.tracking_hdrs).saddr,
+		   (element.tracking_hdrs).daddr,
+		   (element.tracking_hdrs).source,
+		   (element.tracking_hdrs).dest,
+		   STATE_DROP
+		   ) >= 511){
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+	  g_warning("Building mysql insert query, the 511 limit was reached!\n");
+	return -1;
+      }
+      Result = mysql_real_query(ld, request, strlen(request));
+      if (Result != 0){
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+	  g_warning("Can not insert Data : %s\n",mysql_error(ld));
+	return -1;
+      }
+      return 0;
+      break;
+    default:
+      if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,state,oob_prefix) VALUES (%u,%lu,%u,%lu,%lu,%hu,'DROP')",
+		   mysql_table_name,
+		   (element.user_id),
+		   element.timestamp,
+		   (element.tracking_hdrs).protocol,
+		   (element.tracking_hdrs).saddr,
+		   (element.tracking_hdrs).daddr,
+		   STATE_DROP
+		   ) >= 511){
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+	  g_warning("Building mysql insert query, the 511 limit was reached!\n");
+	return -1;
+      }
+      Result = mysql_real_query(ld, request,strlen(request));
+      if (Result != 0){
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+	  g_warning("Can not insert Data : %s\n",mysql_error(ld));
+	return -1;
+      }
+      return 0;
+    }
+    break;
+  }
   return 0;
 }
 

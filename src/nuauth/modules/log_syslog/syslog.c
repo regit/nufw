@@ -41,7 +41,8 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
         break;
       case STATE_DROP:
           str_state="Drop ";
-
+    default:
+      str_state="Unknown ";
     } 
     oneip.s_addr=htonl((element.tracking_hdrs).saddr);
     strncpy(source_addr,inet_ntoa(oneip),16);
@@ -73,7 +74,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
             );
         }
     } else {
-        g_message("[%u] %ld : SRC=%s DST=%s PROTO=%d",
+        g_message("%s[%u] %ld : SRC=%s DST=%s PROTO=%d",
             str_state,
             element.user_id,
             element.timestamp,
@@ -82,5 +83,6 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
             (element.tracking_hdrs).protocol
             );
     }
+    return 0;
 }
 
