@@ -22,6 +22,8 @@ AC_CHECK_LIB([ldap],[ldap_simple_bind_s],AC_DEFUN([HAVE_LIBRARY_LDAP],[1]),AC_MS
 # TODO : dbm check
 AC_CHECK_LIB([gdbm],[gdbm_fetch],AC_DEFUN([HAVE_LIBRARY_GDBM],[1]),AC_MSG_ERROR([dbm library needed for authentication]))
 AC_CHECK_LIB([crypt], [crypt])
+# for gdbm module
+AC_CHECK_LIB([gdbm], [gdbm_open])
 
 # glib stuff
 AM_PATH_GLIB_2_0(2.0.0, , AC_MSG_ERROR([glib is required in order to compile authsrv]),[gthread gmodule])
