@@ -141,7 +141,7 @@ install-nuauth-utils:
 	# debian/nufw.
 	#INSTALLDOC#
 	#$(MAKE) install DESTDIR=$(CURDIR)/debian/nuauth-utils
-	dh_install -pnuauth-utils scripts/nuaclgen.pl usr/bin/
+	dh_install -pnuauth-utils scripts/nuaclgen usr/bin/
 	
 install-nutcpc:
 	dh_testdir -pnutcpc
