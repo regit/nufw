@@ -1,4 +1,4 @@
-/* $Id: structure.h,v 1.5 2003/10/16 22:04:14 regit Exp $ */
+/* $Id: structure.h,v 1.6 2003/10/28 07:23:56 regit Exp $ */
 
 /*
 ** Copyright (C) 2002, Éric Leblond <eric@regit.org>
@@ -60,7 +60,10 @@ int nufw_set_mark;
 /* TODO use a kind of HASH */
 typedef struct Packet_Ids {
   unsigned long id;
-  long timestamp; 
+  long timestamp;
+#ifdef HAVE_LIBIPQ_MARK
+  unsigned long nfmark;
+#endif
   struct Packet_Ids * next;
 } packet_idl;
 
@@ -108,6 +111,6 @@ int auth_packet_to_decision(char* dgram);
 
 /* common */
 
-unsigned long padd (unsigned long packet_id,long timestamp);
-int psearch_and_destroy (unsigned long packet_id);
+unsigned long padd ( packet_idl * packet);
+int psearch_and_destroy (unsigned long packet_id,unsigned long * mark);
 int clean_old_packets ();

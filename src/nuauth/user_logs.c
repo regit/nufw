@@ -43,19 +43,19 @@ int check_fill_user_counters(u_int16_t userid,long u_time,unsigned long packet_i
       g_message("found user %d\n",userid);
     }
     if ( (u_time < currentuser->last_packet_time) || ((u_time == currentuser->last_packet_time) && (packet_id <= currentuser->last_packet_id))  ){
-      return 0;
-    } else {
-      if (g_mutex_trylock(currentuser->lock)){
-	currentuser->ip=ip;
-	currentuser->last_packet_time=u_time;
-	currentuser->last_packet_id=packet_id;
-	currentuser->last_packet_timestamp=time(NULL);
-	g_mutex_unlock(currentuser->lock);
-      }
-      return 1;
+       if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER)) {
+	 g_message("no increasing packet counter for user %d\n",userid);
+       }
+    } 
+    if (g_mutex_trylock(currentuser->lock)){
+      currentuser->ip=ip;
+      currentuser->last_packet_time=u_time;
+      currentuser->last_packet_id=packet_id;
+      currentuser->last_packet_timestamp=time(NULL);
+      g_mutex_unlock(currentuser->lock);
     }
+    return 1;
   }
-	
   return 0;
 }
 

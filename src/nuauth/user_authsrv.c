@@ -290,7 +290,7 @@ connection * userpckt_decode(char* dgram,int dgramsiz){
 	  return connexion;
 	} else {
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
-	  		g_message("non increasing counters for packet\n");
+	  		g_message("Bad user packet\n");
 		free_connection(connexion);
 		return NULL;
 	}

@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
-AC_INIT(NuFW, 0.5.1, nufw-devel@nongnu.org)
+AC_INIT(NuFW, 0.5.3, nufw-devel@nongnu.org)
 AC_CONFIG_SRCDIR([src/nufw/main.c])
 AM_CONFIG_HEADER([src/include/config.h])
 
@@ -14,9 +14,8 @@ AC_PROG_INSTALL
 
 # Checks for libraries.
 
-AC_CHECK_LIB([ipq], [ipq_message_type])
-# check if we have a version of libipq supporting mark
-AC_CHECK_LIB([ldap],[ipq_set_vwmark],AC_DEFUN([HAVE_LIBIPQ_MARK],[1]),AC_MSG_ERROR([libipq has no support for mark]))
+
+AC_CHECK_LIB([ipq], [ipq_message_type],AC_DEFUN([HAVE_LIBRARY_IPQ],[1]))
 
 AC_CHECK_LIB([pthread], [pthread_mutex_init])
 # TODO : ldap check
@@ -25,10 +24,10 @@ AC_CHECK_LIB([ldap],[ldap_simple_bind_s],AC_DEFUN([HAVE_LIBRARY_LDAP],[1]),AC_MS
 AC_CHECK_LIB([gdbm],[gdbm_fetch],AC_DEFUN([HAVE_LIBRARY_GDBM],[1]),AC_MSG_ERROR([dbm library needed for authentication]))
 AC_CHECK_LIB([crypt], [crypt])
 # for gdbm module
-AC_CHECK_LIB([gdbm], [gdbm_open])
+#AC_CHECK_LIB([gdbm], [gdbm_open])
 
 # glib stuff
-AM_PATH_GLIB_2_0(2.0.0, , AC_MSG_ERROR([glib is required in order to compile authsrv]),[gthread gmodule])
+AM_PATH_GLIB_2_0(2.0.0, , AC_MSG_ERROR([glib is required in order to compile nuauth]),[gthread gmodule])
 
 # Checks for header files.
 AC_HEADER_STDC
@@ -41,6 +40,9 @@ AC_C_CONST
 AC_FUNC_MALLOC
 AC_FUNC_STAT
 AC_CHECK_FUNCS([gethostbyname memset socket strcasecmp strspn])
+
+# check if we have a version of libipq supporting mark
+AC_CHECK_FUNC([ipq],[ipq_set_vwmark],AC_DEFINE_UNQUOTED([HAVE_LIBIPQ_MARK],[1],[libipq support for mark]),AC_MSG_RESULT([libipq has no support for mark]))
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile

@@ -1,3 +1,7 @@
+0.5.3 (2003/10/29)
+	- nuauth conntrack modification
+0.5.2 (2003/10/20)
+	- added capability to mark packet with userid 
 0.5.1 (2003/10/02)
 	- new GDBM user check modules
 	- external modules structure fixed
