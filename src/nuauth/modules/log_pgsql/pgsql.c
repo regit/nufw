@@ -85,9 +85,9 @@ G_MODULE_EXPORT PGconn *pgsql_conn_init(void){
   int pgsql_status; //,err,version=3;
   char port[15],timeout[15],server_port[15];
 
-  if (snprintf(14,port,"%d",pgsql_server_port)>=14){return NULL;}
-  if (snprintf(14,timeout,"%d",pgsql_request_timeout)>=14){return NULL};
-  if (snprintf(14,server_port,"%d",pgsql_server_port)>=14){return NULL};
+  if (snprintf(port,14,"%d",pgsql_server_port) >= 14){return NULL;}
+  if (snprintf(timeout,14,"%d",pgsql_request_timeout) >= 14){return NULL;};
+  if (snprintf(server_port,14,"%d",pgsql_server_port) >= 14){return NULL;};
 
   pgsql_conninfo = (char *)calloc(strlen(pgsql_user) + strlen(pgsql_passwd) + 
       strlen(pgsql_server) + strlen(pgsql_ssl) + strlen(server_port) + strlen(pgsql_db_name) +
@@ -123,6 +123,8 @@ G_MODULE_EXPORT PGconn *pgsql_conn_init(void){
   if(pgsql_status != CONNECTION_OK) {
     if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
       g_warning("pgsql init error : %s\n",strerror(errno));
+  if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
+      g_message("connection : %s",pgsql_conninfo);
     return NULL;
   }
 
