@@ -386,12 +386,6 @@ NuAuth* nu_client_init(char *username,unsigned long userid,char * password, char
 	if ( read(random_file,&random_seed, 1) == 1){
 		srandom(random_seed);
 	}
-        host = (struct hostent *)malloc(sizeof(struct hostent));
-        if (host == NULL)
-        {
-            fprintf(stderr, "*** Could not malloc()\n");
-            exit(EXIT_FAILURE);
-        }
         host = gethostbyname(hostname);
         if (host == NULL)
         {
@@ -401,8 +395,7 @@ NuAuth* nu_client_init(char *username,unsigned long userid,char * password, char
 
 	(session->adr_srv).sin_family= AF_INET;
 	(session->adr_srv).sin_port=htons(port);
-	(session->adr_srv).sin_addr.s_addr=inet_addr(host->h_addr_list[0]);
-        free(host);
+	(session->adr_srv).sin_addr=*(struct in_addr *)host->h_addr_list[0];
 	if ( 	(session->adr_srv).sin_addr.s_addr == INADDR_NONE) {
 		return NULL;
 	}
