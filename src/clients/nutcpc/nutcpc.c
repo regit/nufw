@@ -28,7 +28,7 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: nutcpc.c,v 1.5 2003/08/31 21:43:32 regit Exp $
+ * $Id: nutcpc.c,v 1.6 2003/09/06 12:32:04 regit Exp $
  */
 
 #include <arpa/inet.h>
@@ -59,6 +59,8 @@
 #define _XOPEN_SOURCE
 #include <unistd.h>
 #include <crypt.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 /*
  * Defaults for compile-time settings. Descriptions of these are in
@@ -290,7 +292,7 @@ int send_user_pckt(conn_t* c){
     "./0123456789ABCDEFGHIJKLMNOPQRST"
     "UVWXYZabcdefghijklmnopqrstuvwxyz";
   int i;
-  
+  long random_number=random();
  
 
 
@@ -327,7 +329,8 @@ int send_user_pckt(conn_t* c){
   pointer+=sizeof t_int16;
   memcpy(pointer,&timestamp,sizeof timestamp);
   pointer+=sizeof timestamp;
-
+  memcpy(pointer,&random_number,sizeof random_number);
+  pointer+=sizeof random_number;
 
   /* construct the md5sum */
   /* first md5 datas */
@@ -335,12 +338,13 @@ int send_user_pckt(conn_t* c){
   strncpy(onaip,inet_ntoa(oneip),16);
   oneip.s_addr=(c->rmt);
   snprintf(md5datas,512,
-	   "%s%u%s%u%u%s",
+	   "%s%u%s%u%ld%ld%s",
 	   onaip,
 	   c->lclp,
 	   inet_ntoa(oneip),
 	   c->rmtp,
 	   timestamp,
+	   random_number,
 	   password);
 
   /* then the salt */
@@ -426,7 +430,9 @@ int main (int argc, char *argv[])
 	int ch;
 	char srv_addr[512]=NUAUTH_IP;
 	int debug = 0;
-	
+	int random_file;
+	char random_seed;
+
 	/*
 	 * Parse our arguments.
 	 */
@@ -453,11 +459,16 @@ int main (int argc, char *argv[])
 		  usage();
 		}
 	}
-
+	
 	/* read password */
 	password=NULL;
 	//my_getpass(password,32,stdin);
 	password = getpass("Enter password : ");
+	/* init random */
+	random_file =  open("/dev/random",O_RDONLY);
+	if ( read(random_file,&random_seed, 1) == 1){
+	  srandom(random_seed);
+	}
 	/* create UDP stuff */
 	 sck_user_request = socket (AF_INET,SOCK_DGRAM,0);
 	 adr_srv.sin_family= AF_INET;
