@@ -1,0 +1,12 @@
+nufw for Debian
+---------------
+
+nufw and nuauth packages provide a full-featured debconf interface, which should
+prevent you from editing config files by hand.
+However, nufw startup options can be found at /etc/default/nufw
+Nuauth startup options at /etc/default/nuauth, config file at /etc/nuauth/nuauth.conf
+
+Bug : nuauth debconf interface asks for a user nuauth should run as ; if
+specified user does not exist, debconf WILL fail.
+
+ -- Vincent Deffontaines <vincent@gryzor.com>, Thu, 13 Nov 2003 13:03:54 +0100

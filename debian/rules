@@ -1,0 +1,233 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+# Sample debian/rules that uses debhelper.
+# GNU copyright 1997 to 1999 by Joey Hess.
+#
+# Modified to make a template file for a multi-binary package with separated
+# build-arch and build-indep targets  by Bill Allombert 2001
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+# This has to be exported to make some magic below work.
+export DH_VERBOSE=1
+export DH_OPTIONS
+
+# These are used for cross-compiling and for saving the configure script
+# from having to guess our platform (since we know it already)
+DEB_HOST_GNU_TYPE   ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+DEB_BUILD_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
+
+
+CFLAGS = -Wall -g
+#CFLAGS = -Wall
+
+ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
+	CFLAGS += -O0
+else
+	CFLAGS += -O2
+endif
+ifeq (,$(findstring nostrip,$(DEB_BUILD_OPTIONS)))
+	INSTALL_PROGRAM += -s
+endif
+
+config.status: configure
+	dh_testdir
+	# Add here commands to configure the package.
+	#CFLAGS=$(CFLAGS) 
+	./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --prefix=/usr --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info --localstatedir=/var --sysconfdir=/etc
+
+
+#Architecture 
+#build: build-arch build-indep
+build: build-nufw build-nuauth build-nutcpc build-nuauth-utils
+
+build-nufw: build-nufw-stamp
+build-nuauth: build-nuauth-stamp
+build-nuauth-utils: build-nuauth-utils-stamp
+build-nutcpc: build-nutcpc-stamp
+
+build-nutcpc-stamp:  config.status
+	# Add here commands to compile the nutcpc package.
+	#cd src/clients/nutcpc/
+	$(MAKE) -C $(CURDIR)/src/clients/nutcpc/
+	touch build-nutcpc-stamp
+
+build-nuauth-stamp:  config.status
+	# Add here commands to compile the nuauth package.
+	#cd src/nuauth/
+	$(MAKE) -C $(CURDIR)/src/nuauth/
+	touch build-nuauth-stamp
+	
+build-nufw-stamp:  config.status
+	# Add here commands to compile the nufw package.
+	#cd src/nufw/
+	$(MAKE) -C $(CURDIR)/src/nufw/
+	touch build-nufw-stamp
+	
+build-nuauth-utils-stamp:  config.status
+	# Add here commands to compile the nuauth-utils package.
+	
+	#$(MAKE)
+	touch build-nuauth-utils-stamp
+
+#build-arch: build-arch-stamp
+#build-arch-stamp:  config.status
+
+	# Add here commands to compile the arch part of the package.
+	#$(MAKE) 
+#	touch build-arch-stamp
+
+#build-indep: build-indep-stamp
+#build-indep-stamp:  config.status
+
+	# Add here commands to compile the indep part of the package.
+	#$(MAKE) doc
+#	touch build-indep-stamp
+
+clean:
+	dh_testdir
+	dh_testroot
+#	rm -f build-arch-stamp build-indep-stamp #CONFIGURE-STAMP#
+	rm -f build-nutcpc-stamp build-nufw-stamp build-nuauth-stamp build-nuauth-utils-stamp #CONFIGURE-STAMP#
+
+	# Add here commands to clean up after the build process.
+	-$(MAKE) distclean
+ifneq "$(wildcard /usr/share/misc/config.sub)" ""
+	cp -f /usr/share/misc/config.sub config.sub
+endif
+ifneq "$(wildcard /usr/share/misc/config.guess)" ""
+	cp -f /usr/share/misc/config.guess config.guess
+endif
+
+
+	dh_clean 
+
+install: install-nufw install-nuauth install-nuauth-utils install-nutcpc
+
+install-nufw:
+	dh_testdir -pnufw
+	dh_testroot -pnufw
+	dh_clean -k -pnufw
+	dh_installdirs -pnufw
+	# Add here commands to install the arch part of the package into
+	# debian/nufw.
+	#INSTALLDOC#
+	dh_installman -pnufw doc/nufw.1
+	#cd src/nufw/
+	$(MAKE) -C $(CURDIR)/src/nufw/ install DESTDIR=$(CURDIR)/debian/nufw
+#	dh_install -pnufw
+
+install-nuauth:
+	dh_testdir -pnuauth
+	dh_testroot -pnuauth
+	dh_clean -k -pnuauth
+	dh_installdirs -pnuauth
+	# Add here commands to install the arch part of the package into
+	# debian/nufw.
+	#INSTALLDOC#
+	dh_installman -pnuauth doc/nuauth.1
+	#cd src/nuauth/
+	$(MAKE) -C $(CURDIR)/src/nuauth/ install DESTDIR=$(CURDIR)/debian/nuauth
+#	dh_install -pnuauth
+	dh_install -pnuauth conf/nuauth.conf etc/nuauth
+	
+install-nuauth-utils:
+	dh_testdir -pnuauth-utils
+	dh_testroot -pnuauth-utils
+	dh_clean -k -pnuauth-utils
+	dh_installdirs -pnuauth-utils
+	# Add here commands to install the arch part of the package into
+	# debian/nufw.
+	#INSTALLDOC#
+	#$(MAKE) install DESTDIR=$(CURDIR)/debian/nuauth-utils
+	dh_install -pnuauth-utils scripts/nuaclgen.pl usr/bin/
+	
+install-nutcpc:
+	dh_testdir -pnutcpc
+	dh_testroot -pnutcpc
+	dh_clean -k -pnutcpc
+	dh_installdirs -pnutcpc
+	# Add here commands to install the arch part of the package into
+	# debian/nufw.
+	#INSTALLDOC#
+	#cd src/clients/nutcpc/
+	$(MAKE) -C $(CURDIR)/src/clients/nutcpc/ install DESTDIR=$(CURDIR)/debian/nutcpc
+#	dh_install -pnutcpc
+
+#install-indep:
+#	dh_testdir
+#	dh_testroot
+#	dh_clean -k -i 
+#	dh_installdirs -i
+
+	# Add here commands to install the indep part of the package into
+	# debian/<package>-doc.
+	#INSTALLDOC#
+
+#	dh_install -i
+
+#install-arch:
+#	dh_testdir
+#	dh_testroot
+#	dh_clean -k -s 
+#	dh_installdirs -s
+
+	# Add here commands to install the arch part of the package into 
+	# debian/tmp.
+#	$(MAKE) install DESTDIR=$(CURDIR)/debian/nufw
+
+#	dh_install -s
+# Must not depend on anything. This is to be called by
+# binary-nufw/binary-nuauth/binary-nuauth-utils/binary-nutcpc
+# in another 'make' thread.
+binary-common:
+	dh_testdir
+	dh_testroot
+	dh_installchangelogs ChangeLog
+	dh_installdocs
+	dh_installexamples
+#	dh_installmenu
+	dh_installdebconf	
+#	dh_installlogrotate	
+#	dh_installemacsen
+#	dh_installpam
+#	dh_installmime
+	dh_installinit
+#	dh_installcron
+#	dh_installinfo
+	dh_installman
+	dh_link
+	dh_strip
+	dh_compress 
+	dh_fixperms
+#	dh_perl
+#	dh_python
+	dh_makeshlibs
+	dh_installdeb
+	dh_shlibdeps
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+# Build architecture independant packages using the common target.
+#binary-indep: build-indep install-indep
+#	$(MAKE) -f debian/rules DH_OPTIONS=-i binary-common
+
+# Build architecture dependant packages using the common target.
+#binary-arch: build-arch install-arch
+#	$(MAKE) -f debian/rules DH_OPTIONS=-a binary-common
+
+binary-nufw: build-nufw install-nufw
+	$(MAKE) -f debian/rules DH_OPTIONS=-pnufw binary-common
+
+binary-nuauth: build-nuauth install-nuauth
+	$(MAKE) -f debian/rules DH_OPTIONS=-pnuauth binary-common
+
+binary-nuauth-utils: build-nuauth-utils install-nuauth-utils
+	$(MAKE) -f debian/rules DH_OPTIONS=-pnuauth-utils binary-common
+
+binary-nutcpc: build-nutcpc install-nutcpc
+	$(MAKE) -f debian/rules DH_OPTIONS=-pnutcpc binary-common
+
+binary: binary-nufw binary-nuauth binary-nuauth-utils binary-nutcpc
+.PHONY: build clean binary-nufw binary-nuauth binary-nuauth-utils binary-nutcpc binary install install-nufw install-nuauth install-nuauth-utils install-nutcpc
