@@ -1,4 +1,5 @@
 1.0.1
+	- log strict was not implemented strictly, this is now really strict
 	- small patch applied to cleanly compile on mipsel (thanks to Florian
 	Fainelli)
 1.0.0 (2005/03/08)

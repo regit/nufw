@@ -190,7 +190,7 @@ static gchar* generate_appname(gchar *Name)
 G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
     PGconn *ld = g_private_get (pgsql_priv);
     char request[LONG_REQUEST_SIZE];
-    struct in_addr ipone, iptwo;
+    struct in_addr ipone,iptwo;
     PGresult *Result;
     char tmp_inet1[41], tmp_inet2[41];
     if (ld == NULL){
@@ -225,9 +225,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
             //
             //
             ipone.s_addr=ntohl((element.tracking_hdrs).saddr);
-            iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
             strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
-            strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
             if (nuauth_log_users_strict){
                 char *my_timestamp;
                 my_timestamp=(char *)malloc(26);
@@ -237,14 +235,12 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
                   return -1;
                 }
                 epoch_to_char(element.timestamp,&my_timestamp);
-                if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET end_timestamp=%s, state=%hu WHERE (ip_saddr='%s' and ip_daddr='%s' and tcp_sport=%u and tcp_dport=%u and (state=1 or state=2))",
+                if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET end_timestamp=%s, state=%hu WHERE (ip_saddr='%s' and tcp_sport=%u and (state=1 or state=2))",
                   pgsql_table_name,
                   my_timestamp,
                   STATE_CLOSE,
                   tmp_inet1,
-                  tmp_inet2,
-                  (element.tracking_hdrs).source,
-                  (element.tracking_hdrs).dest
+                  (element.tracking_hdrs).source
                   ) >= SHORT_REQUEST_SIZE-1){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                     g_warning("Building pgsql update query, the SHORT_REQUEST_SIZE limit was reached!\n");
