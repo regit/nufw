@@ -8,5 +8,5 @@
 - create and maintain a list : user->IP to filter user packet ("anti-DOS")
 - use id server and authgw
 - down ldap timeout to less than packet timeout
+- set packet timeout to less than proto timeout
 - do a ldap bind
-- correct bug in auth reponse (foreach seems to crash)
