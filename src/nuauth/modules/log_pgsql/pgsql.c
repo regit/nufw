@@ -80,16 +80,17 @@ g_module_check_init(GModule *module){
  * Initialize connection to pgsql server
  */
 
-G_MODULE_EXPORT PGSQL* pgsql_conn_init(void){
+G_MODULE_EXPORT PGconn *pgsql_conn_init(void){
   PGconn *ld = NULL;
   char *pgsql_conninfo;
-  int pgsql_status,err,version=3;
-  char *port,*timeout;
+  int pgsql_status; //,err,version=3;
+  char *port,*timeout, *server_port;
   sprintf(port,"%d",pgsql_server_port);
   sprintf(timeout,"%d",pgsql_request_timeout);
+  sprintf(server_port,"%d",pgsql_server_port);
 
   pgsql_conninfo = (char *)calloc(strlen(pgsql_user) + strlen(pgsql_passwd) + 
-      strlen(pgsql_server) + strlen(pgsql_ssl) + strlen(pgsql_server_port) + strlen(pgsql_db_name) +
+      strlen(pgsql_server) + strlen(pgsql_ssl) + strlen(server_port) + strlen(pgsql_db_name) +
       strlen(port) + strlen(timeout) +
       strlen("hostaddr='' port= dbname='' user='' password='' connect_timeout= sslmode='' ") + 1, 
       sizeof(char));
@@ -111,7 +112,7 @@ G_MODULE_EXPORT PGSQL* pgsql_conn_init(void){
   strcat(pgsql_conninfo,"'");
   /* init connection */
   ld = PQconnectdb(pgsql_conninfo);
-  pgsql_status=PQStatus(ld);
+  pgsql_status=PQstatus(ld);
   
   if(pgsql_status != CONNECTION_OK) {
     if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
@@ -123,14 +124,14 @@ G_MODULE_EXPORT PGSQL* pgsql_conn_init(void){
 
 
 G_MODULE_EXPORT gint user_packet_logs (connection *element, int state){
-  PGConn *ld = g_private_get (pgsql_priv);
+  PGconn *ld = g_private_get (pgsql_priv);
   char request[512];
   if (ld == NULL){
     ld=pgsql_conn_init();
     if (ld == NULL){
       if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
           g_warning("Can not initiate PGSQL conn\n");
-      return NULL;
+      return -1;
     }
     g_private_set(pgsql_priv,ld);
   }
@@ -158,10 +159,10 @@ G_MODULE_EXPORT gint user_packet_logs (connection *element, int state){
           PGresult *Result;
           ipone.s_addr=ntohl((element->tracking_hdrs).saddr);
           iptwo.s_addr=ntohl((element->tracking_hdrs).daddr);
-          if (snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,start_timestamp) 
-              VALUES (%u,%u,'%s','%s',%u,%u,%lu);",
+          if (snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,start_timestamp) VALUES (%u,%u,'%s','%s',%u,%u,%lu);",
               pgsql_table_name,
               (element->user_id),
+              (element->tracking_hdrs).protocol,
               inet_ntoa(ipone),
               inet_ntoa(iptwo),
               (element->tracking_hdrs).source,
@@ -185,10 +186,10 @@ G_MODULE_EXPORT gint user_packet_logs (connection *element, int state){
           PGresult *Result;
           ipone.s_addr=ntohl((element->tracking_hdrs).saddr);
           iptwo.s_addr=ntohl((element->tracking_hdrs).daddr);
-          if (snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,start_timestamp) 
-              VALUES (%u,%u,'%s','%s',%u,%u,%lu);",
+          if (snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,start_timestamp) VALUES (%u,%u,'%s','%s',%u,%u,%lu);",
               pgsql_table_name,
               (element->user_id),
+              (element->tracking_hdrs).protocol,
               inet_ntoa(ipone),
               inet_ntoa(iptwo),
               (element->tracking_hdrs).source,
@@ -212,10 +213,10 @@ G_MODULE_EXPORT gint user_packet_logs (connection *element, int state){
           PGresult *Result;
           ipone.s_addr=ntohl((element->tracking_hdrs).saddr);
           iptwo.s_addr=ntohl((element->tracking_hdrs).daddr);
-          if (snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,start_timestamp) 
-              VALUES (%u,%u,'%s','%s',%lu);",
+          if (snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,start_timestamp) VALUES (%u,%u,'%s','%s',%lu);",
               pgsql_table_name,
               (element->user_id),
+              (element->tracking_hdrs).protocol,
               inet_ntoa(ipone),
               inet_ntoa(iptwo),
               element->timestamp
@@ -258,6 +259,10 @@ G_MODULE_EXPORT gint user_packet_logs (connection *element, int state){
           }
           return 0;
       }
+      //Nothing will be done...
+      return 0;
     }
+  //This return is just here to please GCC, will never be reached
+  return 0;
 }
 

@@ -1,4 +1,4 @@
-/* $Id: log_pgsql.h,v 1.2 2003/11/24 21:08:49 gryzor Exp $ */
+/* $Id: log_pgsql.h,v 1.3 2003/11/26 00:10:24 gryzor Exp $ */
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
@@ -18,7 +18,7 @@
 */
 
 #include <sys/time.h>
-#include <lilbpq.h>
+#include <libpq-fe.h>
 
 
 #define PGSQL_SERVER "127.0.0.1"

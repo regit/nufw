@@ -1,4 +1,4 @@
-/* $Id: auth_srv.h,v 1.20 2003/11/24 21:56:54 regit Exp $ */
+/* $Id: auth_srv.h,v 1.21 2003/11/26 00:10:23 gryzor Exp $ */
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
@@ -257,6 +257,8 @@ int (*module_user_logs) (connection element, int state);
 GModule * auth_module;
 GPrivate* ldap_priv; /* private pointer to ldap connection */
 GPrivate* dbm_priv; /* private pointer for dbm file access */
+GPrivate* pgsql_priv; /* private pointer for pgsql database access */
+GPrivate* mysql_priv; /* private pointer for mysql database access */
 GSList * (*module_acl_check) (connection* element);
 GSList * (*module_user_check) (u_int16_t userid,char *passwd);
 int init_ldap_system(void);
