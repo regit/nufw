@@ -109,9 +109,11 @@ void user_check_and_decide (gpointer userdata, gpointer data){
     element = search_and_fill (conn_elt);
     if ( element != NULL ) {
       LOCK_CONN(element);
-      if ( element == NULL ) return;
+      if ( element == NULL ) {
+	return;
+      }
       /* check state of the packet */
-      if ( ((connection *)element)->state == STATE_READY ){
+      if ( ((connection *)element)->state >= STATE_READY ){
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
 	  g_message("trying to decide after userpckt\n"); 
 	take_decision(element);

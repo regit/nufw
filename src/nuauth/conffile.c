@@ -69,6 +69,7 @@ int parse_conffile(char * filename,gint array_size,confparams* symbols) {
 	    } else {
 	      g_warning("Bad argument value for %s at %u",
 			current_symbol->name,scanner->line);
+	      g_scanner_destroy (scanner);
 	      return -1;
 	    }
 	    break;
@@ -79,6 +80,7 @@ int parse_conffile(char * filename,gint array_size,confparams* symbols) {
 	    } else {
 	      g_warning("Bad argument value for %s at %u",
 			current_symbol->name,scanner->line);
+	      g_scanner_destroy (scanner);
 	      return -1;
 	    }
 	    break;

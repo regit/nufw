@@ -283,10 +283,11 @@ int free_connection(connection * conn){
   GSList *acllist;
 
   g_assert (conn != NULL );
-  if (debug)
+  if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
     if (conn->packet_id != NULL)
       if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN))
         g_message("freeing connection %p with %lu\n",conn,(long unsigned int)GPOINTER_TO_UINT(conn->packet_id->data));
+  }
   acllist=conn->acl_groups;
   if ( (acllist  != DUMMYACLS) && (acllist  != NULL) ){
     g_slist_foreach(conn->acl_groups,(GFunc) free_struct,NULL);
@@ -303,18 +304,15 @@ int free_connection(connection * conn){
   return 1;
 }
 
-/* try to lock, if it fails this is because something is working on it so 
- * it should not be destroyed now
+/*
+ * 
  */
 int lock_and_free_connection (connection * conn) {
   GMutex * connlock=conn->lock;
   int freereturn=0;
-  if ( g_mutex_trylock(connlock) ){
-    freereturn = free_connection(conn);
-    g_mutex_free(connlock);
-    return freereturn;
-  }
-  return 0;
+  freereturn = free_connection(conn);
+  g_mutex_free(connlock);
+  return freereturn;
 }
 
 GSList * old_conn_list;
@@ -330,12 +328,14 @@ void  get_old_conn (gpointer key,
 
 int conn_cl_delete(gconstpointer conn) {
   g_assert (conn != NULL);
-  if (!  g_hash_table_remove (conn_list,
+
+  if (!  g_hash_table_steal (conn_list,
 			      &(((connection *)conn)->tracking_hdrs)) ){
     if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
       g_warning("Removal of conn in hash failed\n");
     return 0;
   }
+  free_connection((connection *)conn);
   return 1;
 }
 
@@ -436,9 +436,12 @@ gint take_decision(connection * element) {
 		    );
     /* delete element */
     if (element->state == STATE_READY ){
+      if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+	g_message("Freeing element\n");
       conn_cl_delete(element);
     } else {
-      /* only change state */
+      if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
+	g_message("only change state\n");
       change_state(element,STATE_DONE);
       UNLOCK_CONN(element);
     }

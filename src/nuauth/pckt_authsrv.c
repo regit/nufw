@@ -225,30 +225,34 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz){
 	switch (connexion->tracking_hdrs.protocol) {
 	case IPPROTO_TCP:
 	  if ( get_tcp_headers(connexion, pointer)){
-	    if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_PACKET))
-	      g_message ("Can't parse TCP headers\n");
+	    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))
+	      g_warning ("Can't parse TCP headers\n");
+	    free_connection(connexion);
 	    return NULL;
 	  }
 	  break;
 	case IPPROTO_UDP:
 	  if ( get_udp_headers(connexion, pointer) ){
-	    if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_PACKET))
-	      g_message ("Can't parse UDP headers\n");
+	    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))
+	      g_warning ("Can't parse UDP headers\n");
+	    free_connection(connexion);
 	    return NULL;
 	  }
 	  break;
 	case IPPROTO_ICMP:
 	  if ( get_icmp_headers(connexion, pointer)){
-	    if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_PACKET))
+	    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))
 	      g_message ("Can't parse ICMP headers\n");
+	    free_connection(connexion);
 	    return NULL;
 	  }
 	  break;
 	}
       }
       else {
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_PACKET))
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))
 	  g_message ("Can't parse IP headers\n");
+	free_connection(connexion);
 	return NULL;
       }
       connexion->user_groups = ALLGROUP;
@@ -265,6 +269,7 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz){
       if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)) {
 	g_message("Not for us\n");
       }
+      
       return NULL;
     }
   }
