@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.2 2003/09/18 20:59:52 gryzor Exp $ */
+/* $Id: main.c,v 1.3 2003/09/18 21:25:28 gryzor Exp $ */
 
 /*
 ** Copyright (C) 2002 Eric Leblond <eric@regit.org>
@@ -43,7 +43,7 @@ int main(int argc,char * argv[]){
 
   /* initialize variables */
 
-  log_engine = 1; /* default is to send debug messages to stdout + stderr */
+  log_engine = LOG_TO_STD; /* default is to send debug messages to stdout + stderr */
   authreq_port = AUTHREQ_PORT;
   authsrv_port = AUTHSRV_PORT;
   packet_timeout = PACKET_TIMEOUT;
@@ -112,7 +112,7 @@ if (daemonize == 1) {
 		exit(0);
 	}
   }
-  log_engine = 2;
+  log_engine = LOG_TO_SYSLOG;
 }
   
   init_log_engine();

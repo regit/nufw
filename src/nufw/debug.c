@@ -7,7 +7,7 @@
 int nufw_log(char *message,int debug_level,int debug_area)
 {
   /* log_engine is a global integer, value is 1 for stdout/stderr, 2 for syslog */
-  if (log_engine == 1)
+  if (log_engine == LOG_TO_STD)
   {
     if (debug_level >= DEBUG_LEVEL_SERIOUS_MESSAGE) /*Use stdout*/
     {
@@ -20,7 +20,7 @@ int nufw_log(char *message,int debug_level,int debug_area)
       fprintf(stderr,message);
       return (0);
     }
-  }else if (log_engine == 2)
+  }else if (log_engine == LOG_TO_SYSLOG)
   {
     switch (debug_level){
       case DEBUG_LEVEL_FATAL :
@@ -61,7 +61,7 @@ int nufw_log(char *message,int debug_level,int debug_area)
 
 void init_log_engine()
 {
-  if (log_engine == 2)
+  if (log_engine == LOG_TO_SYSLOG)
     openlog(LOG_ID,SYSLOG_OPTS,LOG_FACILITY);
 }
 

@@ -31,6 +31,9 @@
 
 #define LOG_ID "nufw"
 
+#define LOG_TO_STD	1
+#define LOG_TO_SYSLOG	2
+
 int log_engine;
 
 void init_log_engine();
