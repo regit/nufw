@@ -106,4 +106,4 @@ typedef struct _NuAuth {
 
 NuAuth* nu_client_init(char *username,unsigned long userid,char * password, char * hostname, unsigned int port,char protocol,char ssl_on);
 int	nu_client_check(NuAuth * session);
-void nu_exit_clean(NuAuth * session);
+void nu_client_free(NuAuth *session);
