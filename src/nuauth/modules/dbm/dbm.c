@@ -104,6 +104,8 @@ G_MODULE_EXPORT GDBM_FILE dbm_file_init(void){
     g_private_set(dbm_priv,dbf);
     return NULL;
   }
+  if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+	  g_message("We are leaving dbm_file_init()\n");
   return dbf;
 }
 
@@ -113,6 +115,8 @@ G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
   struct dbm_data_struct return_data;
 
   if (dbf == NULL){
+  if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+	  g_message("We are entering user_check()\n");
     /* init ldap has never been done */
     dbf = dbm_file_init();
     g_private_set(dbm_priv,dbf);
