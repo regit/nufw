@@ -147,14 +147,19 @@ G_MODULE_EXPORT GSList* acl_check (connection* element){
   /* contruct filter */
   if ((element->tracking_hdrs).protocol == IPPROTO_TCP || (element->tracking_hdrs).protocol == IPPROTO_UDP ){
     if (snprintf(filter,LDAP_QUERY_SIZE-1,
+#if USE_SOURCE_PORT
 	     "(&(objectClass=NuAccessControlList)(SrcIPStart<=%lu)(SrcIPEnd>=%lu)(DstIPStart<=%lu)(DstIPEnd>=%lu)(Proto=%d)(SrcPortStart<=%d)(SrcPortEnd>=%d)(DstPortStart<=%d)(DstPortEnd>=%d))",
+#endif 
+	     "(&(objectClass=NuAccessControlList)(SrcIPStart<=%lu)(SrcIPEnd>=%lu)(DstIPStart<=%lu)(DstIPEnd>=%lu)(Proto=%d)(DstPortStart<=%d)(DstPortEnd>=%d))",
 	     (long unsigned int)(element->tracking_hdrs).saddr,
 	     (long unsigned int)(element->tracking_hdrs).saddr,
 	     (long unsigned int)(element->tracking_hdrs).daddr,
 	     (long unsigned int)(element->tracking_hdrs).daddr,
 	     (element->tracking_hdrs).protocol,
+#if USE_SOURCE_PORT
 	     (element->tracking_hdrs).source,
 	     (element->tracking_hdrs).source,
+#endif
 	     (element->tracking_hdrs).dest,
 	     (element->tracking_hdrs).dest
 	     ) >= (LDAP_QUERY_SIZE -1)){
