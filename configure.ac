@@ -20,7 +20,7 @@ AC_CHECK_LIB([ipq], [ipq_message_type], have_ipq="yes", have_ipq="")
 
 if test "$have_ipq" = "yes"; then
 # check if we have a version of libipq supporting mark
-AC_ARG_WITH(user-mark, [--with-user-mark  support user mark on NuFW firewall], enable_user_mark="yes", enable_user_mark="")
+AC_ARG_WITH(user-mark, [--with-user-mark  Support user mark on NuFW firewall], enable_user_mark="yes", enable_user_mark="")
 if test "$enable_user_mark" = "yes"; then
         AC_CHECK_LIB([ipq], [ipq_set_vwmark],AC_DEFINE_UNQUOTED([HAVE_LIBIPQ_MARK],[1],[libipq has support for mark]),AC_MSG_RESULT([libipq has no support for mark]))
 fi
@@ -56,10 +56,10 @@ AM_CONDITIONAL(USE_USER_MARK, test x$enable_user_mark = xyes)
 
 
 #Configure database support, depending on user input
-AC_ARG_WITH(mysql-log, [--with-mysql-log  support user activity logging in Mysql database], enable_mysql_log="yes", enable_mysql_log="")
-AC_ARG_WITH(pgsql-log, [--with-pgsql-log  support user activity logging in PostgreSQL database], enable_pgsql_log="yes", enable_pgsql_log="")
+AC_ARG_WITH(mysql-log, [--with-mysql-log  Support user activity logging in Mysql database], enable_mysql_log="yes", enable_mysql_log="")
+AC_ARG_WITH(pgsql-log, [--with-pgsql-log  Support user activity logging in PostgreSQL database], enable_pgsql_log="yes", enable_pgsql_log="")
 
-AC_ARG_WITH(system-auth, [--with-system-auth  support PAM+NSS authentication], enable_system_auth="yes", enable_system_auth="")
+AC_ARG_WITH(system-auth, [--with-system-auth  Support PAM+NSS authentication], enable_system_auth="yes", enable_system_auth="")
 
 AC_ARG_WITH(ldap,   [--with-ldap  Support LDAP directory for users and acl lookup],ldap="yes", ldap="")
 AC_ARG_WITH(gdbm,   [--with-gdbm  Support gdbm users lookup],gdbm="yes", gdbm="")

@@ -705,7 +705,6 @@ int main(int argc,char * argv[])
 
 
 	act.sa_handler=&process_poll;
-	act.sa_restorer = NULL;
 	act.sa_flags = SIGPOLL;
 	if (sigaction(SIGPOLL,&act,NULL) == -1){
 		printf("could not set signal");
@@ -713,7 +712,6 @@ int main(int argc,char * argv[])
 	}
 
 	act.sa_handler=&process_usr1;
-	act.sa_restorer = NULL;
 	act.sa_flags = SIGUSR1;
 
 	if (sigaction(SIGUSR1,&act,NULL) == -1){
@@ -722,7 +720,6 @@ int main(int argc,char * argv[])
 	}
 
 	act.sa_handler=&process_usr2;
-	act.sa_restorer = NULL;
 	act.sa_flags = SIGUSR2;
 
 	if (sigaction(SIGUSR2,&act,NULL) == -1){
