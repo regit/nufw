@@ -189,12 +189,18 @@ G_MODULE_EXPORT gint user_packet_logs (connection *element, int state){
                   g_warning("Building pgsql insert query, the 511 limit was reached!\n");
               return -1;
           }
-
+        if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
+            g_message("Doing %s ...",request);
+            
           Result = PQexec(ld, request);
+          
           if (!Result == PGRES_TUPLES_OK){
             if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
               g_warning("Can not insert Data : %s\n",PQerrorMessage(ld));
             return -1;
+          } else {
+               if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
+            g_message("done\n");
           }
       }
       else if ((element->tracking_hdrs).protocol == IPPROTO_UDP){
