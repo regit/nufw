@@ -2,7 +2,7 @@ Source: nufw
 Section: net
 Priority: optional
 Maintainer: Vincent Deffontaines <vincent@gryzor.com>
-Build-Depends: debhelper (>= 4.0.0),automake1.7, libldap2-dev, libgdbm-dev, libglib2.0-dev, libmysqlclient-dev, postgresql-dev, iptables-dev
+Build-Depends: debhelper (>= 4.0.0), automake1.7, libldap2-dev, libgdbm-dev, libglib2.0-dev, libmysqlclient-dev, postgresql-dev, iptables-dev
 Standards-Version: 3.6.0
 
 Package: nufw
@@ -57,3 +57,15 @@ Depends: ${shlibs:Depends}
 Description: Set of tools useful to nuauth admin
  nuaclgen is a perl script that helps generate LDAP ACLs for use with nuauth,
  the nufw auth daemon.
+
+Package: libnuclient
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: client library for nufw authentication
+ This library provides a convenient system to build NuFW authentication client.
+
+Package: libnuclient-dev
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: client library header for nufw authentication
+ This library provides a convenient system to build NuFW authentication client.

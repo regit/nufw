@@ -7,4 +7,4 @@ libnuclient_la_SOURCES = libnuclient.c
 include_HEADERS = nuclient.h
 
 
-LIBS = -lcrypt -lssl ../../lib/libcssl.a 
+LIBS = -lcrypt -lssl -static ../../lib/libcssl.a 
