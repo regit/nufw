@@ -54,13 +54,6 @@ sed -e "s/^ *NUFW_START=.*/NUFW_START=\"$NUFW_START\"/" \
   < $CONFIGFILE > $CONFIGFILE.tmp
 mv -f $CONFIGFILE.tmp $CONFIGFILE
 
-# Automatically added by dh_installinit
-if [ -x "/etc/init.d/nufw" ]; then
-	update-rc.d nufw defaults >/dev/null
-	if [ -x /usr/sbin/invoke-rc.d ]; then
-		invoke-rc.d nufw start
-	else
-		/etc/init.d/nufw start
-	fi
-fi
-# End automatically added section
+#DEBHELPER#
+
+exit 0

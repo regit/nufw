@@ -1,6 +1,6 @@
 Template: nufw/start_at_boot
 Type: boolean
-Default: True
+Default: true
 _Description: Should nufw daemon be started at boot time?
  Choose "True" if you want Nufw to be automatically started at boot time.
  If you choose "False" you can start nufw by hand, by running

@@ -8,7 +8,7 @@ Standards-Version: 3.6.0
 Package: nufw
 Architecture: any
 Depends: ${shlibs:Depends}, debconf
-Description: a per-user firewalling daemon that interfers with libipq.
+Description: a per-user firewalling daemon that interfers with libipq
  NuFW is an authenticating gateway, which means that connections are
  authenticated before being forwarded through the gateway.  Classical packet
  filtering systems disregard the identity of the user who may be attempting to
@@ -22,9 +22,8 @@ Description: a per-user firewalling daemon that interfers with libipq.
 Package: nuauth
 Architecture: any
 Depends: ${shlibs:Depends}, debconf, libmysqlclient12, libpq3
-Build-Depends: libmysqlclient-dev, postgresql-dev
 Recommends: nuauth-utils
-Description: Nuauth is the authentication daemon from the nufw package
+Description: The authentication daemon from the nufw package
  NuFW is an authenticating gateway, which means that connections are
  authenticated before being forwarded through the gateway.  Classical packet
  filtering systems disregard the identity of the user who may be attempting to
@@ -37,10 +36,10 @@ Description: Nuauth is the authentication daemon from the nufw package
 
 Package: nuauth-log-mysql
 Architecture: any
-Depends: ${shlibs:Depends}, debconf, libmysqlclient12, libpq3, nuauth
+Depends: ${shlibs:Depends}, debconf, nuauth
 Conflicts: nuauth-log-pgsql
 Recommends: nuauth-utils
-Description: Module for nuauth logging into mysql databases.
+Description: Module for nuauth logging into mysql databases
  NuFW is an authenticating gateway, which means that connections are
  authenticated before being forwarded through the gateway.  Classical packet
  filtering systems disregard the identity of the user who may be attempting to
@@ -51,10 +50,10 @@ Description: Module for nuauth logging into mysql databases.
 
 Package: nuauth-log-pgsql
 Architecture: any
-Depends: ${shlibs:Depends}, debconf, libmysqlclient12, libpq3, nuauth
+Depends: ${shlibs:Depends}, debconf, nuauth
 Conflicts: nuauth-log-mysql
 Recommends: nuauth-utils
-Description: Module for nuauth logging into PostgreSQL databases.
+Description: Module for nuauth logging into PostgreSQL databases
  NuFW is an authenticating gateway, which means that connections are
  authenticated before being forwarded through the gateway.  Classical packet
  filtering systems disregard the identity of the user who may be attempting to
@@ -92,17 +91,6 @@ Package: libnuclient
 Architecture: any
 Depends: ${shlibs:Depends}
 Description: client library for nufw authentication
- NuFW is an authenticating gateway, which means that connections are
- authenticated before being forwarded through the gateway.  Classical packet
- filtering systems disregard the identity of the user who may be attempting to
- access the network, instead caring only about the originating IP addresses.
- .
- This library provides a convenient system to build NuFW authentication client.
-
-Package: libnuclient-dev
-Architecture: any
-Depends: ${shlibs:Depends}
-Description: client library header for nufw authentication
  NuFW is an authenticating gateway, which means that connections are
  authenticated before being forwarded through the gateway.  Classical packet
  filtering systems disregard the identity of the user who may be attempting to

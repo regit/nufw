@@ -1,1 +1,0 @@
-/etc/nufw/nuauth.conf

@@ -5,6 +5,8 @@ nufw (0.8.2-1) unstable; urgency=low
   (closes: #258746)
   * Update Description in debian/control. Thanks to Brandon Robinson.
   * Switch to gettext for the debconf templates.
+  * Change the way of packaging.
+  * Correct minor policy violations.
 
  -- Jean-Michel Kelbert <kelbert@debian.org>  Fri, 30 Jul 2004 13:41:25 +0200
 

@@ -1,6 +1,6 @@
 Template: nuauth/start_at_boot
 Type: boolean
-Default: True
+Default: true
 _Description: Should nuauth daemon be started at boot time?
  Choose "True" if you want Nuauth to be automatically started at boot time.
  If you choose "False" you can start nuauth by hand, by running
@@ -408,7 +408,7 @@ _Description: PostgreSQL timeout
  server
 
 Template: nuauth/pgsql_ssl
-Type: Select
+Type: select
 Choices: disallow, prefer, allow, require
 _Default: prefer
 _Description: PostgreSQL SSL wrapping

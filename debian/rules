@@ -2,16 +2,10 @@
 # -*- makefile -*-
 # Sample debian/rules that uses debhelper.
 # GNU copyright 1997 to 1999 by Joey Hess.
-#
-# Modified to make a template file for a multi-binary package with separated
-# build-arch and build-indep targets  by Bill Allombert 2001
 
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
-# This has to be exported to make some magic below work.
-export DH_VERBOSE=1
-export DH_OPTIONS
 
 # These are used for cross-compiling and for saving the configure script
 # from having to guess our platform (since we know it already)
@@ -20,7 +14,6 @@ DEB_BUILD_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
 
 
 CFLAGS = -Wall -g
-#CFLAGS = -Wall
 
 ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
 	CFLAGS += -O0
@@ -34,307 +27,87 @@ endif
 config.status: configure
 	dh_testdir
 	# Add here commands to configure the package.
-	#CFLAGS=$(CFLAGS) 
-	./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --prefix=/usr --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info --localstatedir=/var --sysconfdir=/etc/nufw/ --with-mysql-log --with-pgsql-log
+	CFLAGS="$(CFLAGS)" ./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --prefix=/usr --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info --localstatedir=/var --sysconfdir=/etc/nufw/ --with-mysql-log --with-pgsql-log 
 
+build: build-stamp
 
-#Architecture 
-#build: build-arch build-indep
-build: build-nufw build-nuauth build-nutcpc build-nuauth-utils build-nuauth-log-mysql build-nuauth-log-pgsql build-libnuclient
+build-stamp:  config.status
+	dh_testdir
 
-build-nufw: build-nufw-stamp
-build-nuauth: build-nuauth-stamp
-build-nuauth-log-mysql: build-nuauth-log-mysql-stamp
-build-nuauth-log-pgsql: build-nuauth-log-pgsql-stamp
-build-nuauth-utils: build-nuauth-utils-stamp
-build-nutcpc: build-nutcpc-stamp
-build-libnuclient: build-libnuclient-stamp
+	# Add here commands to compile the package.
+	$(MAKE)
+	#/usr/bin/docbook-to-man debian/nufw.sgml > nufw.1
 
-build-nutcpc-stamp:  config.status
-	# Add here commands to compile the nutcpc package.
-	$(MAKE) -C $(CURDIR)/src/lib/
-	$(MAKE) -C $(CURDIR)/src/clients/nutcpc/
-	touch build-nutcpc-stamp
-
-build-nuauth-stamp:  config.status
-	# Add here commands to compile the nuauth package.
-	#cd src/nuauth/
-	$(MAKE) -C $(CURDIR)/src/lib/
-	$(MAKE) -C $(CURDIR)/src/nuauth/
-	touch build-nuauth-stamp
-
-build-nuauth-log-mysql-stamp:  config.status
-	# Add here commands to compile the nuauth package.
-	#cd src/nuauth/
-	#$(MAKE) -C $(CURDIR)/src/nuauth/
-	touch build-nuauth-stamp-log-mysql
-
-build-nuauth-log-pgsql-stamp:  config.status
-	# Add here commands to compile the nuauth package.
-	#cd src/nuauth/
-	#$(MAKE) -C $(CURDIR)/src/nuauth/
-	touch build-nuauth-stamp-log-pgsql
-	
-build-nufw-stamp:  config.status
-	# Add here commands to compile the nufw package.
-	#cd src/nufw/
-	$(MAKE) -C $(CURDIR)/src/nufw/
-	touch build-nufw-stamp
-	
-build-nuauth-utils-stamp:  config.status
-	# Add here commands to compile the nuauth-utils package.
-	
-	#$(MAKE)
-	touch build-nuauth-utils-stamp
-
-build-libnuclient-stamp:  config.status
-	# Add here commands to compile the nuauth package.
-	$(MAKE) -C $(CURDIR)/src/lib/
-	$(MAKE) -C $(CURDIR)/src/clients/lib/
-	touch build-libnuclient-stamp
-
-#build-arch: build-arch-stamp
-#build-arch-stamp:  config.status
-
-	# Add here commands to compile the arch part of the package.
-	#$(MAKE) 
-#	touch build-arch-stamp
-
-#build-indep: build-indep-stamp
-#build-indep-stamp:  config.status
-
-	# Add here commands to compile the indep part of the package.
-	#$(MAKE) doc
-#	touch build-indep-stamp
+	touch build-stamp
 
 clean:
 	dh_testdir
 	dh_testroot
-#	rm -f build-arch-stamp build-indep-stamp #CONFIGURE-STAMP#
-	rm -f build-nutcpc-stamp build-nufw-stamp build-nuauth-stamp build-nuauth-utils-stamp build-nuauth-log-mysql-stamp build-nuauth-log-pgsql-stamp  build-libnuclient-stamp #CONFIGURE-STAMP#
+	rm -f build-stamp 
 
 	# Add here commands to clean up after the build process.
-	rm config.sub config.guess missing||/bin/true
 	-$(MAKE) distclean
-ifneq "$(wildcard /usr/share/misc/config.sub)" ""
-	cp -f /usr/share/misc/config.sub config.sub
-endif
-ifneq "$(wildcard /usr/share/misc/config.guess)" ""
-	cp -f /usr/share/misc/config.guess config.guess
-endif
-
 
 	dh_clean 
 
-install: install-nufw install-nuauth install-nuauth-utils install-nutcpc install-nuauth-log-mysql install-nuauth-log-pgsql install-libnuclient install-libnuclient-dev
+install: build
+	dh_testdir
+	dh_testroot
+	dh_clean -k 
+	dh_installdirs
 
-install-nufw:
-	dh_testdir -pnufw
-	dh_testroot -pnufw
-	dh_clean -k -pnufw
-	dh_installdirs -pnufw
-	# Add here commands to install the arch part of the package into
-	# debian/nufw.
-	#INSTALLDOC#
-	dh_installman -pnufw doc/nufw.1
-	#cd src/nufw/
-	$(MAKE) -C $(CURDIR)/src/nufw/ install DESTDIR=$(CURDIR)/debian/nufw
-#	dh_install -pnufw
+	# Add here commands to install the package into debian/nufw.
+	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp/
+	mkdir -p $(CURDIR)/debian/tmp/etc/nufw/
 
-install-nuauth:
-	dh_testdir -pnuauth
-	dh_testroot -pnuauth
-	dh_clean -k -pnuauth
-	dh_installdirs -pnuauth
+	cp $(CURDIR)/conf/nuauth.conf $(CURDIR)/debian/tmp/etc/nufw/
+	cp $(CURDIR)/conf/nuaclgen.conf $(CURDIR)/debian/tmp/etc/nufw/
+	cp $(CURDIR)/conf/nutop.conf $(CURDIR)/debian/tmp/etc/nufw/
+	cp $(CURDIR)/scripts/nuaclgen $(CURDIR)/debian/tmp/usr/bin
+	cp $(CURDIR)/scripts/nutop $(CURDIR)/debian/tmp/usr/bin
+#	cp $(CURDIR)/conf/nufw.init $(CURDIR)/debian/tmp/etc/init.d/nufw
+#	cp $(CURDIR)/conf/nuauth $(CURDIR)/debian/tmp/etc/init.d/nuauth
+#	chmod 755 $(CURDIR)/debian/tmp/etc/init.d/*
 
-	dh_testdir -pnuauth-log-mysql
-	dh_testroot -pnuauth-log-mysql
-	dh_clean -k -pnuauth-log-mysql
-	dh_installdirs -pnuauth-log-mysql
 
-	dh_testdir -pnuauth-log-pgsql
-	dh_testroot -pnuauth-log-pgsql
-	dh_clean -k -pnuauth-log-pgsql
-	dh_installdirs -pnuauth-log-pgsql
-	# Add here commands to install the arch part of the package into
-	# debian/nufw.
-	#INSTALLDOC#
-	dh_installman -pnuauth doc/nuauth.1
-	#cd src/nuauth/
-	$(MAKE) -C $(CURDIR)/src/nuauth/ install DESTDIR=$(CURDIR)/debian/nuauth
-	mv $(CURDIR)/debian/nuauth/usr/lib/nuauth/modules/libpgsql* $(CURDIR)/debian/nuauth-log-pgsql/usr/lib/nuauth/modules/
-	mv $(CURDIR)/debian/nuauth/usr/lib/nuauth/modules/libmysql* $(CURDIR)/debian/nuauth-log-mysql/usr/lib/nuauth/modules/
-#	dh_install -pnuauth
-	dh_install -pnuauth conf/nuauth.conf etc/nufw
+# Build architecture-independent files here.
+binary-indep: build install
+# We have nothing to do by default.
 
-install-nuauth-log-mysql:
-	#dh_testdir -pnuauth-log-mysql
-	#dh_testroot -pnuauth-log-mysql
-	#dh_clean -k -pnuauth-log-mysql
-	#dh_installdirs -pnuauth-log-mysql
-	# Add here commands to install the arch part of the package into
-	# debian/nufw.
-	#INSTALLDOC#
-	#dh_installman -pnuauth doc/nuauth.1
-	#cd src/nuauth/
-	#$(MAKE) -C $(CURDIR)/src/nuauth/ install DESTDIR=$(CURDIR)/debian/nuauth
-#	dh_install -pnuauth
-	#dh_install -pnuauth conf/nuauth.conf etc/nufw
-	
-install-nuauth-log-pgsql:
-	#dh_testdir -pnuauth-log-pgsql
-	#dh_testroot -pnuauth-log-pgsql
-	#dh_clean -k -pnuauth-log-pgsql
-	#dh_installdirs -pnuauth-log-pgsql
-	# Add here commands to install the arch part of the package into
-	# debian/nufw.
-	#INSTALLDOC#
-	#dh_installman -pnuauth doc/nuauth.1
-	#cd src/nuauth/
-	#$(MAKE) -C $(CURDIR)/src/nuauth/ install DESTDIR=$(CURDIR)/debian/nuauth
-#	dh_install -pnuauth
-	#dh_install -pnuauth conf/nuauth.conf etc/nufw
-	
-	
-install-nuauth-utils:
-	dh_testdir -pnuauth-utils
-	dh_testroot -pnuauth-utils
-	dh_clean -k -pnuauth-utils
-	dh_installdirs -pnuauth-utils
-	# Add here commands to install the arch part of the package into
-	# debian/nufw.
-	#INSTALLDOC#
-	#$(MAKE) install DESTDIR=$(CURDIR)/debian/nuauth-utils
-	dh_install -pnuauth-utils scripts/nuaclgen usr/bin/
-	dh_install -pnuauth-utils scripts/nutop usr/bin/
-	dh_install -m 600 -pnuauth-utils conf/nuaclgen.conf etc/nufw/
-	dh_install -m 600 -pnuauth-utils conf/nutop.conf etc/nufw/
-	
-install-nutcpc:
-	dh_testdir -pnutcpc
-	dh_testroot -pnutcpc
-	dh_clean -k -pnutcpc
-	dh_installdirs -pnutcpc
-	# Add here commands to install the arch part of the package into
-	# debian/nufw.
-	#INSTALLDOC#
-	#cd src/clients/nutcpc/
-	$(MAKE) -C $(CURDIR)/src/clients/nutcpc/ install DESTDIR=$(CURDIR)/debian/nutcpc
-#	dh_install -pnutcpc
-
-install-libnuclient:
-	dh_testdir -plibnuclient
-	dh_testroot -plibnuclient
-	dh_clean -k -plibnuclient
-	dh_installdirs -plibnuclient
-	# Add here commands to install the arch part of the package into
-	# debian/nufw.
-	#INSTALLDOC#
-	#dh_installman -pnuauth doc/nuauth.1
-	#cd src/nuauth/
-	#$(MAKE) -C $(CURDIR)/src/nuauth/ install DESTDIR=$(CURDIR)/debian/nuauth
-#	dh_install -pnuauth
-	$(MAKE) -C $(CURDIR)/src/clients/lib/ install DESTDIR=$(CURDIR)/debian/libnuclient
-	#dh_install -pnuauth conf/nuauth.conf etc/nufw
-
-install-libnuclient-dev:
-	#dh_testdir -pnuauth-log-pgsql
-	#dh_testroot -pnuauth-log-pgsql
-	#dh_clean -k -pnuauth-log-pgsql
-	#dh_installdirs -pnuauth-log-pgsql
-	# Add here commands to install the arch part of the package into
-	# debian/nufw.
-	#INSTALLDOC#
-	dh_installman -plibnuclient-dev doc/libnuclient.1
-	#cd src/nuauth/
-	#$(MAKE) -C $(CURDIR)/src/nuauth/ install DESTDIR=$(CURDIR)/debian/nuauth
-#	dh_install -pnuauth
-	mv $(CURDIR)/debian/clients/lib/nuclient.h $(CURDIR)/debian/libnuclient-dev/usr/include/
-	#dh_install -pnuauth conf/nuauth.conf etc/nufw
-	
-
-#install-indep:
-#	dh_testdir
-#	dh_testroot
-#	dh_clean -k -i 
-#	dh_installdirs -i
-
-	# Add here commands to install the indep part of the package into
-	# debian/<package>-doc.
-	#INSTALLDOC#
-
-#	dh_install -i
-
-#install-arch:
-#	dh_testdir
-#	dh_testroot
-#	dh_clean -k -s 
-#	dh_installdirs -s
-
-	# Add here commands to install the arch part of the package into 
-	# debian/tmp.
-#	$(MAKE) install DESTDIR=$(CURDIR)/debian/nufw
-
-#	dh_install -s
-# Must not depend on anything. This is to be called by
-# binary-nufw/binary-nuauth/binary-nuauth-utils/binary-nutcpc
-# in another 'make' thread.
-binary-common:
+# Build architecture-dependent files here.
+binary-arch: build install
 	dh_testdir
 	dh_testroot
 	dh_installchangelogs ChangeLog
 	dh_installdocs
 	dh_installexamples
+	dh_install --sourcedir=debian/tmp
 #	dh_installmenu
 	dh_installdebconf	
-#	dh_installlogrotate	
+#	dh_installlogrotate
 #	dh_installemacsen
 #	dh_installpam
 #	dh_installmime
-	dh_installinit
+	dh_installinit --no-start -u"start 40 S . stop 89 0 6 ."
 #	dh_installcron
 #	dh_installinfo
-	dh_installman
+	dh_installman -pnufw doc/nufw.1
+	dh_installman -pnuauth doc/nuauth.1
+	dh_installman -pnutcpc doc/nutcpc.1
+	dh_installman -pnuauth-utils doc/nuaclgen.1
+	dh_installman -pnuauth-utils doc/nutop.1
 	dh_link
 	dh_strip
-	dh_compress 
+	dh_compress
 	dh_fixperms
 #	dh_perl
 #	dh_python
-	dh_makeshlibs
+	dh_makeshlibs -n
 	dh_installdeb
 	dh_shlibdeps
 	dh_gencontrol
 	dh_md5sums
 	dh_builddeb
-# Build architecture independant packages using the common target.
-#binary-indep: build-indep install-indep
-#	$(MAKE) -f debian/rules DH_OPTIONS=-i binary-common
 
-# Build architecture dependant packages using the common target.
-#binary-arch: build-arch install-arch
-#	$(MAKE) -f debian/rules DH_OPTIONS=-a binary-common
-
-binary-nufw: build-nufw install-nufw
-	$(MAKE) -f debian/rules DH_OPTIONS=-pnufw binary-common
-
-binary-nuauth: build-nuauth install-nuauth
-	$(MAKE) -f debian/rules DH_OPTIONS=-pnuauth binary-common
-
-binary-nuauth-log-mysql: build-nuauth-log-mysql install-nuauth-log-mysql
-	$(MAKE) -f debian/rules DH_OPTIONS=-pnuauth-log-mysql binary-common
-
-binary-nuauth-log-pgsql: build-nuauth-log-pgsql install-nuauth-log-pgsql
-	$(MAKE) -f debian/rules DH_OPTIONS=-pnuauth-log-pgsql binary-common
-
-binary-nuauth-utils: build-nuauth-utils install-nuauth-utils
-	$(MAKE) -f debian/rules DH_OPTIONS=-pnuauth-utils binary-common
-
-binary-nutcpc: build-nutcpc install-nutcpc
-	$(MAKE) -f debian/rules DH_OPTIONS=-pnutcpc binary-common
-
-binary-libnuclient: build-libnuclient install-libnuclient
-	$(MAKE) -f debian/rules DH_OPTIONS=-plibnuclient binary-common
-
-binary: binary-nufw binary-nuauth binary-nuauth-utils binary-nutcpc binary-nuauth-log-mysql binary-nuauth-log-pgsql binary-libnuclient
-.PHONY: build clean binary-nufw binary-nuauth binary-nuauth-utils binary-nuauth-log-mysql binary-nuauth-log-pgsql binary-nutcpc binary-libnuclient binary install install-nufw install-nuauth install-nuauth-utils install-nutcpc install-nuauth-log-mysql install-nuauth-log-pgsql install-libnuclient
+binary: binary-indep binary-arch
+.PHONY: build clean binary-indep binary-arch binary install 
