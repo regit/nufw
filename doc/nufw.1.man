@@ -1,4 +1,4 @@
-...\" $Header: /var/tmp/nufw/nufw/doc/nufw.1.man,v 1.1 2003/10/02 20:07:39 gryzor Exp $
+...\" $Header: /cvsroot/nufw/nufw/doc/nufw.1.man,v 1.1 2003/10/02 20:07:39 gryzor Exp $
 ...\"
 ...\"	transcript compatibility for postscript use.
 ...\"
