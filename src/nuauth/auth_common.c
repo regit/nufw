@@ -117,7 +117,7 @@ connection * search_and_fill (connection * pckt) {
   char has_changed_state=0;
 
   if (debug)
-    printf("%d : starting search and fill\n",getpid());
+    g_message("%d : starting search and fill\n",getpid());
   g_assert(pckt != NULL);
   element = (connection *) g_hash_table_lookup(conn_list,&(pckt->tracking_hdrs));
   if (element == NULL) {
@@ -125,7 +125,7 @@ connection * search_and_fill (connection * pckt) {
     pckt->lock = g_mutex_new();
     g_assert(pckt->lock != NULL);	  
     if (debug)
-      printf("%d : creating new element\n",getpid());
+      g_message("%d : creating new element\n",getpid());
     g_hash_table_insert (conn_list,
 			 &(pckt->tracking_hdrs),
 			 pckt);
@@ -139,19 +139,19 @@ connection * search_and_fill (connection * pckt) {
     LOCK_CONN(element);
     if (element->state == STATE_DONE) {
       if (debug)
-	printf("%d : need only cleaning\n",getpid());
+	g_message("%d : need only cleaning\n",getpid());
       conn_cl_delete(element);
       free_connection(pckt);
       return NULL ;
     }
 
     if (debug)
-      printf("%d : filling connection\n",getpid());
+      g_message("%d : filling connection\n",getpid());
     /* first check if we've only adding a packet_id */
     if ( ((connection *)element)->packet_id !=NULL && ( pckt->packet_id != NULL) ) {
       /* append id */
       if (debug)
-	printf("%d : adding a packet_id to a connexion\n",getpid());
+	g_message("%d : adding a packet_id to a connexion\n",getpid());
       ((connection *)element)->packet_id =
 	g_slist_prepend(((connection *)element)->packet_id, GINT_TO_POINTER((pckt->packet_id)->data));
       UNLOCK_CONN(element);
@@ -160,14 +160,14 @@ connection * search_and_fill (connection * pckt) {
     } else {
     	if ( (((connection *)element)->acl_groups == NULL)&& ( pckt->state == STATE_AUTHREQ  )) {
       if (debug)
-	printf("%d : Fill acl datas\n",getpid());
+	g_message("%d : Fill acl datas\n",getpid());
       ((connection *)element)->acl_groups = pckt->acl_groups;
       ((connection *)element)->packet_id = pckt->packet_id;
       has_changed_state=1;
     } else { 
   	  if ( (((connection *)element)->user_groups == ALLGROUP) && (pckt->state == STATE_USERPCKT)) {
 	    	  if (debug)
-			printf("%d : Fill user datas\n",getpid());
+			g_message("%d : Fill user datas\n",getpid());
     		  ((connection *)element)->user_groups = pckt->user_groups;
 		  has_changed_state=1;
     	}
@@ -177,7 +177,7 @@ connection * search_and_fill (connection * pckt) {
     if ( (((connection *)element)->state != STATE_DONE) && (has_changed_state == 1 )) {
       change_state(((connection *)element),((connection *)element)->state+pckt->state);
       if (debug)
-	printf("%d : elt state : %d\n",getpid(),((connection *)element)->state);
+	g_message("%d : elt state : %d\n",getpid(),((connection *)element)->state);
     }
     UNLOCK_CONN(element);
     /* release memory used by pckt 
@@ -200,13 +200,13 @@ gint print_connection(gpointer data,gpointer userdata){
   //  LOCK_CONN(conn);
   src.s_addr = ntohl(conn->tracking_hdrs.saddr);
   dest.s_addr = ntohl(conn->tracking_hdrs.daddr);
-  printf( "Connection :\n\tsrc=%s",
+  g_message( "Connection :\n\tsrc=%s",
 	  inet_ntoa(src));
-  printf(" dst=%s proto=%u\n\t",
+  g_message(" dst=%s proto=%u\n\t",
 	 inet_ntoa(dest),
 	 conn->tracking_hdrs.protocol);
   if (conn->tracking_hdrs.protocol == IPPROTO_TCP){
-    printf("sport=%d dport=%d\n",
+    g_message("sport=%d dport=%d\n",
 	   conn->tracking_hdrs.source,
 	   conn->tracking_hdrs.dest);
   }
@@ -217,7 +217,7 @@ gint print_connection(gpointer data,gpointer userdata){
 gint free_struct(gpointer data,gpointer userdata){
   g_free((struct acl_group *)data);
   if (debug)
-    printf("%d : free acl_groups at %p\n",getpid(),data);
+    g_message("%d : free acl_groups at %p\n",getpid(),data);
   return 1;
 }
 
@@ -257,7 +257,7 @@ void send_auth_response(gpointer data, gpointer userdata){
   pointer+=sizeof (packet_id);
   
   if (debug) {
-    printf("%d : Sending auth answer %d for %lu on %d ... ",getpid(),answer,packet_id,sck_auth_request);
+    g_message("%d : Sending auth answer %d for %lu on %d ... ",getpid(),answer,packet_id,sck_auth_request);
     fflush(stdout);
   }
   if (sendto(sck_auth_request,
@@ -270,7 +270,7 @@ void send_auth_response(gpointer data, gpointer userdata){
   }
   close(sck_auth_request);
   if (debug){
-    printf("done\n");
+    g_message("done\n");
   }
 }
 
@@ -282,13 +282,13 @@ int free_connection(connection * conn){
   g_assert (conn != NULL );
   if (debug)
     if (conn->packet_id != NULL)
-      printf("%d : freeing connection %p with %lu\n",getpid(),conn,(long unsigned int)GPOINTER_TO_UINT(conn->packet_id->data));
+      g_message("%d : freeing connection %p with %lu\n",getpid(),conn,(long unsigned int)GPOINTER_TO_UINT(conn->packet_id->data));
   acllist=conn->acl_groups;
   if ( (acllist  != DUMMYACLS) && (acllist  != NULL) ){
     g_slist_foreach(conn->acl_groups,(GFunc) free_struct,NULL);
     g_slist_free (acllist);
     if (debug)
-      printf ("%d : acl_groups freed %p\n",getpid(),acllist);
+      g_message ("%d : acl_groups freed %p\n",getpid(),acllist);
   }
   if ( conn->user_groups != ALLGROUP )
     g_slist_free (conn->user_groups);
@@ -374,12 +374,12 @@ gint take_decision(connection * element) {
   char init_state = get_state(element);
   
   if (debug)
-    printf("%d : Try to take decision on %p\n",getpid(),element);
+    g_message("%d : Try to take decision on %p\n",getpid(),element);
   /* first check if we have found acl */
   if ( element->acl_groups == NULL ){
     answer = NOK;
     if (debug){
-      printf("%d : Did not find a ACL. Will drop Packet !\n",getpid());
+      g_message("%d : Did not find a ACL. Will drop Packet !\n",getpid());
     }
     if (element->packet_id != NULL )
       g_slist_foreach(element->packet_id,
@@ -418,7 +418,7 @@ gint take_decision(connection * element) {
  
   if (element->state == init_state && (element->state == STATE_READY || answer == OK )) {
     if (debug)
-      printf("%d : Proceed to decision %d for packet_id at %p\n",getpid(),answer,element->packet_id);
+      g_message("%d : Proceed to decision %d for packet_id at %p\n",getpid(),answer,element->packet_id);
     g_slist_foreach(element->packet_id,
 		    (GFunc) send_auth_response,
 		    GINT_TO_POINTER(answer)
@@ -437,7 +437,7 @@ gint take_decision(connection * element) {
       conn_cl_delete(element);
     } else {
       if (debug)
-	printf ("%d : Why did you bother me ?\n",getpid());
+	g_message ("%d : Why did you bother me ?\n",getpid());
       UNLOCK_CONN(element);
     }
   }

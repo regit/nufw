@@ -48,7 +48,7 @@ LDAP* ldap_conn_init(void){
       return NULL;
     } 
     if (debug){
-      printf("%d : ldap bind error : %s \n",getpid(),ldap_err2string(err));
+      g_message("%d : ldap bind error : %s \n",getpid(),ldap_err2string(err));
     }
     return NULL;
   }
@@ -72,7 +72,7 @@ GSList * ldap_acl_check (connection* element){
     ld = ldap_conn_init();
     if (ld == NULL) {
 	if (debug)
-		printf("%d : Can not initiate LDAP conn\n",getpid());
+		g_message("%d : Can not initiate LDAP conn\n",getpid());
 	return NULL;
     }
     g_private_set(ldap_priv,ld);
@@ -152,12 +152,12 @@ GSList * ldap_acl_check (connection* element){
 	result = ldap_next_entry(ld,result);
       }
     if (debug)
-      printf("%d : acl group at %p\n",getpid(),g_list);
+      g_message("%d : acl group at %p\n",getpid(),g_list);
     ldap_msgfree (res);
     return g_list;
   } else {
     if (debug)
-      printf("%d : Argh no acl found\n",getpid());
+      g_message("%d : Argh no acl found\n",getpid());
     ldap_msgfree (res);
   }
   return NULL;
@@ -178,7 +178,7 @@ gint ldap_user_check (connection * element,u_int16_t userid,char *passwd){
     g_private_set(ldap_priv,ld);
     if (ld == NULL){
 	if (debug)
-		printf("%d : Can't initiate LDAP conn\n",getpid());
+		g_message("%d : Can't initiate LDAP conn\n",getpid());
 	return -1;
     }
   }
@@ -200,7 +200,7 @@ gint ldap_user_check (connection * element,u_int16_t userid,char *passwd){
     	  g_private_set(ldap_priv,ld);
    	 }
     if (debug)
-      printf ("%d : invalid return of ldap_search_st : %s\n",getpid(),ldap_err2string(err));
+      g_message ("%d : invalid return of ldap_search_st : %s\n",getpid(),ldap_err2string(err));
     return -1;
   }
 
@@ -209,7 +209,7 @@ gint ldap_user_check (connection * element,u_int16_t userid,char *passwd){
      result = ldap_first_entry(ld,res);
      if (result == NULL ){
        if (debug)
-	 printf("Can not get entry for %d\n",userid);
+	 g_message("Can not get entry for %d\n",userid);
        free_connection(element);
        return -1;
      }
@@ -227,17 +227,17 @@ gint ldap_user_check (connection * element,u_int16_t userid,char *passwd){
      attrs_array = ldap_get_values(ld, result, "userPassword");
      attrs_array_len = ldap_count_values(attrs_array);
      if (attrs_array_len == 0){
-       printf ("%d : what ! no password found!\n",getpid());
+       g_message ("%d : what ! no password found!\n",getpid());
      } else {
        sscanf(*attrs_array,"%s",passwd);
        if (debug)
-	 printf("%d : reading password\n",getpid());
+	 g_message("%d : reading password\n",getpid());
      }
      ldap_value_free(attrs_array);
 
    } else {
      if (debug)
-       printf("%d : No or too much user found with userid %d\n",getpid(),userid);
+       g_message("%d : No or too much user found with userid %d\n",getpid(),userid);
      free_connection(element);
      return -1;
    }

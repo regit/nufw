@@ -23,13 +23,13 @@ int check_fill_user_counters(u_int16_t userid,long u_time,unsigned long packet_i
 	user_datas * currentuser=NULL;
 	/* lookup users */
 	if (debug) {
-		printf("%d : looking for %d\n",getpid(),userid);
+		g_message("%d : looking for %d\n",getpid(),userid);
 	}
 	currentuser=g_hash_table_lookup(users_hash,userid);
 	if (currentuser == NULL){
 		/* failure so create user */
 		if (debug) {
-			printf("%d : creating new user %d\n",getpid(),userid);
+			g_message("%d : creating new user %d\n",getpid(),userid);
 		}
 		currentuser = g_new0(user_datas,1);
 		currentuser->ip=ip;
@@ -39,12 +39,12 @@ int check_fill_user_counters(u_int16_t userid,long u_time,unsigned long packet_i
 		currentuser->lock=g_mutex_new();
 		g_hash_table_insert(users_hash,userid,currentuser);
 		if (debug) {
-			printf("%d : new user %d\n",getpid(),userid);
+			g_message("%d : new user %d\n",getpid(),userid);
 		}
 		return 1;
 	} else {
 		if (debug) {
-			printf("%d : found user %d\n",getpid(),userid);
+			g_message("%d : found user %d\n",getpid(),userid);
 		}
 		if ( (u_time < currentuser->last_packet_time) || ((u_time == currentuser->last_packet_time) && (packet_id <= currentuser->last_packet_id))  ){
 			return 0;
@@ -64,11 +64,10 @@ int check_fill_user_counters(u_int16_t userid,long u_time,unsigned long packet_i
 }
 
 void print_id( gpointer id, gpointer value, gpointer user_data) {
-	printf("%u ",id);
+	g_message("%u ",id);
 }
 
 void print_users_list(){
-	printf("users list : ");
+	g_message("users list : ");
   	g_hash_table_foreach(users_hash,(GHFunc)print_id,NULL);
-  	printf(".\n");
 }

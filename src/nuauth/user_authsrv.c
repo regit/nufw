@@ -91,7 +91,7 @@ void user_check (gpointer userdata, gpointer data){
 
 
   if (debug)
-    printf("%d : entering user_check\n",getpid());
+    g_message("%d : entering user_check\n",getpid());
   conn_elt = userpckt_decode((char *)userdata, 
 			     512);
   /* if OK search and fill */
@@ -103,24 +103,24 @@ void user_check (gpointer userdata, gpointer data){
       /* check state of the packet */
       if ( ((connection *)element)->state == STATE_READY ){
 	if (debug)
-	  printf("%d : trying to decide after userpckt\n",getpid()); 
+	  g_message("%d : trying to decide after userpckt\n",getpid()); 
 	take_decision(element);
       } else {
 	UNLOCK_CONN(element);
 	if (debug)
-	  printf("%d : User packet before auth packet\n",getpid());
+	  g_message("%d : User packet before auth packet\n",getpid());
       }
     } else {
       if (debug)
-	printf("%d : Unwanted user packet\n",getpid());
+	g_message("%d : Unwanted user packet\n",getpid());
     }
   } else {
     if (debug)
-      printf("%d : User packet decoding failed\n",getpid());
+      g_message("%d : User packet decoding failed\n",getpid());
   }
 
   if (debug)
-   printf("%d : leaving user_check\n",getpid());
+   g_message("%d : leaving user_check\n",getpid());
 }
 
 connection * userpckt_decode(char* dgram,int dgramsiz){
@@ -145,7 +145,7 @@ connection * userpckt_decode(char* dgram,int dgramsiz){
       connexion = g_new0( connection,1);
       if (connexion == NULL){
 	if (debug){
-	  printf("Can not allocate connexion\n");
+	  g_message("Can not allocate connexion\n");
 	}
 	return NULL;
       }
@@ -203,7 +203,7 @@ connection * userpckt_decode(char* dgram,int dgramsiz){
       usermd5datas=pointer;
 
       if (debug){
-	  printf("%d : User ",getpid()); 
+	  g_message("%d : User ",getpid()); 
 	  print_connection(connexion,NULL);
 	}
 
@@ -211,7 +211,7 @@ connection * userpckt_decode(char* dgram,int dgramsiz){
 #if USE_LDAP
       if ( ldap_user_check (connexion,userid,passwd) != 0){
 	if (debug)
-	  printf("%d : ldap_user_check return bad\n",getpid());
+	  g_message("%d : ldap_user_check return bad\n",getpid());
 	g_free(connexion);
 	return NULL;
       }
@@ -254,7 +254,7 @@ connection * userpckt_decode(char* dgram,int dgramsiz){
       if ( strcmp (result, usermd5datas) != 0 ) {
 	/* bad sig dropping user packet ! */
 	if (debug)
-	  printf("%d : wrong md5 sig for packet %s\n",getpid(),usermd5datas);
+	  g_message("%d : wrong md5 sig for packet %s\n",getpid(),usermd5datas);
 	free_connection(connexion);
 	return NULL;
       } else {
@@ -277,7 +277,7 @@ connection * userpckt_decode(char* dgram,int dgramsiz){
 	return connexion;
 	} else {
 		if (debug)
-	  		printf("%d : non increasing counters for packet\n",getpid());
+	  		g_message("%d : non increasing counters for packet\n",getpid());
 		free_connection(connexion);
 		return NULL;
 	}

@@ -57,6 +57,7 @@ int main(int argc,char * argv[]) {
     case 'v' :
       /*fprintf (stdout, "Debug should be On (++)\n");*/
       debug_level+=1;
+      debug=1;
       break;
       /* port we listen for auth answer */
     case 'l' :
@@ -91,11 +92,7 @@ int main(int argc,char * argv[]) {
       return 1;
     }
   }
-  if (daemonize == 1)
-  {
-  	openlog("nuauth",LOG_CONS||LOG_PID,LOG_DAEMON);
-  	set_glib_loghandlers();
-  }
+
 
   /* debug cannot be above 10 */
   if (debug_level > MAX_DEBUG_LEVEL)
@@ -127,6 +124,9 @@ if (daemonize == 1) {
 		exit(0);
 	}
   }
+
+ openlog("nuauth",LOG_CONS||LOG_PID,LOG_DAEMON);
+ set_glib_loghandlers();
 
 }
 
@@ -211,7 +211,7 @@ if (daemonize == 1) {
       g_message("%d : %u unassigned task(s) and %d connection(s)\n",getpid(),
 		g_thread_pool_unprocessed(user_checkers),
 		g_hash_table_size(conn_list));  
-    	print_users_list();
+      //	print_users_list();
      }
     sleep(2);	
   }

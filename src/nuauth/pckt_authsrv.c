@@ -94,7 +94,7 @@ void* packet_authsrv(){
   if (z == -1)
     bail ("pckt bind()");
   if (debug){
-    printf("Pckt Server Listening\n");
+    g_message("Pckt Server Listening\n");
   }
   for(;;){
     len_inet = sizeof addr_clnt;
@@ -111,7 +111,7 @@ void* packet_authsrv(){
     current_conn = authpckt_decode(dgram, sizeof dgram);
     if (current_conn == NULL){
       if (debug){
-	printf("Can't parse packet, that's bad !\n");
+	g_message("Can't parse packet, that's bad !\n");
       }
     } else {
       /* gonna feed the birds */
@@ -136,21 +136,21 @@ void acl_check (gpointer userdata, gpointer data){
   connection * conn_elt = userdata;
 
   if (debug)
-    printf("%d : entering acl_check\n",getpid());
+    g_message("%d : entering acl_check\n",getpid());
   if (conn_elt == NULL){
     if (debug){
-      printf("that's not well elt is NULL\n");
+      g_message("that's not well elt is NULL\n");
     }
   } else {
     /* external check of acl */
     if (external_acl_groups(conn_elt)) {
       if (debug){
-	printf("%d : Going to search entry\n",getpid());
+	g_message("%d : Going to search entry\n",getpid());
       }
       /* search and fill */
       element = search_and_fill (conn_elt);
       if (debug){
-	printf("%d : new entry at %p\n",getpid(),element);
+	g_message("%d : new entry at %p\n",getpid(),element);
       }
       if (element != NULL) {
 	LOCK_CONN(element);
@@ -163,7 +163,7 @@ void acl_check (gpointer userdata, gpointer data){
       	take_decision(element);
       } else {
 	if (debug)
-	  printf("Something Wrong : element is NULL\n");
+	  g_message("Something Wrong : element is NULL\n");
       }
     } else {
       /* no acl found so packet has to be dropped */
@@ -176,7 +176,7 @@ void acl_check (gpointer userdata, gpointer data){
     }
   }
   if (debug)
-    printf("%d : leaving acl_check\n",getpid());
+    g_message("%d : leaving acl_check\n",getpid());
 }
 
 
@@ -192,7 +192,7 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz){
       connexion = g_new0( connection,1);
       if (connexion == NULL){
 	if (debug){
-	  printf("Can not allocate connexion\n");
+	  g_message("Can not allocate connexion\n");
 	}
 	return NULL;
       }
@@ -203,7 +203,7 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz){
       connexion->packet_id=NULL;
       connexion->packet_id=g_slist_append(connexion->packet_id, GUINT_TO_POINTER(*(unsigned long * )pointer));
       if (debug) {
-	printf("%d : Working on  %lu\n",getpid(),(long unsigned int)GPOINTER_TO_UINT(connexion->packet_id->data));
+	g_message("%d : Working on  %lu\n",getpid(),(long unsigned int)GPOINTER_TO_UINT(connexion->packet_id->data));
       }
       pointer+=sizeof (unsigned long);
       connexion->timestamp=*( long * )(pointer);
@@ -217,21 +217,21 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz){
 	case IPPROTO_TCP:
 	  if ( get_tcp_headers(connexion, pointer)){
 	    if (debug)
-	      printf ("Can't parse TCP headers\n");
+	      g_message ("Can't parse TCP headers\n");
 	    return NULL;
 	  }
 	  break;
 	case IPPROTO_UDP:
 	  if ( get_udp_headers(connexion, pointer) ){
 	    if (debug)
-	      printf ("Can't parse UDP headers\n");
+	      g_message ("Can't parse UDP headers\n");
 	    return NULL;
 	  }
 	  break;
 	case IPPROTO_ICMP:
 	  if ( get_icmp_headers(connexion, pointer)){
 	    if (debug)
-	      printf ("Can't parse ICMP headers\n");
+	      g_message ("Can't parse ICMP headers\n");
 	    return NULL;
 	  }
 	  break;
@@ -239,7 +239,7 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz){
       }
       else {
 	if (debug)
-	  printf ("Can't parse IP headers\n");
+	  g_message ("Can't parse IP headers\n");
 	return NULL;
       }
       connexion->user_groups = ALLGROUP;
@@ -248,13 +248,13 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz){
 	      connexion->timestamp=time(NULL);
       }
       if (debug){
-	      printf("%d Packet : ",getpid());
+	      g_message("Packet : ");
 	      print_connection(connexion,NULL);
       }
       return connexion;
     } else {
       if (debug) {
-	printf("Not for us\n");
+	g_message("Not for us\n");
       }
       return NULL;
     }
