@@ -385,6 +385,7 @@ int conn_cl_delete(gconstpointer conn) {
           &(((connection *)conn)->tracking_hdrs)) ){
         if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
             g_warning("Removal of conn in hash failed\n");
+        g_static_mutex_unlock (&insert_mutex);
         return 0;
     }
     /* free global hash */
