@@ -44,7 +44,7 @@ int check_fill_user_counters(u_int16_t userid,long u_time,unsigned long packet_i
     }
     if ( (u_time < currentuser->last_packet_time) ) {
       /* if packet is older than timeout there can be problem */
-      if ( u_time - currentuser->last_packet_time >= packet_timeout) {
+      if ( currentuser->last_packet_time - u_time >= packet_timeout) {
 	g_warning("Packet for user %d is really to old",userid);
 	return 0;
       }
