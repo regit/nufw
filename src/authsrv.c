@@ -1,5 +1,3 @@
-/* $Id: authsrv.c,v 1.5 2003/09/15 21:41:21 gryzor Exp $ */
-
 
 /*
 ** Copyright (C) 2002, Éric Leblond <eric@regit.org>
