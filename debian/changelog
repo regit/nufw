@@ -3,7 +3,8 @@ nufw (0.8.1-2) unstable; urgency=low
   * Initial upload in Debian. Thanks to Vincent Deffontaines for packaging the
     package before me.
   (closes: #258746)
-  * Update Description in debian/control. Thanks to Brandon Robinson
+  * Update Description in debian/control. Thanks to Brandon Robinson.
+  * Switch to gettext for the debconf templates.
 
  -- Jean-Michel Kelbert <kelbert@debian.org>  Wed, 21 Jul 2004 18:29:25 +0200
 
