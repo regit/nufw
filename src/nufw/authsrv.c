@@ -100,8 +100,12 @@ int auth_packet_to_decision(char* dgram){
 	      printf ("[%i] Accepting %lu\n",getpid(),packet_id);
 	    }
 	  }
-	  
-	  IPQ_SET_VERDICT(packet_id, NF_ACCEPT);
+          if (nufw_set_mark) {
+              printf("Marking packet with %d!\n",*(u_int16_t *)(dgram+2));
+	        IPQ_SET_VWMARK(packet_id, NF_ACCEPT,*(u_int16_t *)(dgram+2),0xffff); 
+          } else {
+	        IPQ_SET_VERDICT(packet_id, NF_ACCEPT);
+          }
 	  pckt_tx++;
 	  return 1;
 	} else {
