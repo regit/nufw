@@ -27,7 +27,7 @@ confparams mysql_nuauth_vars[] = {
   { "mysql_server_addr" , G_TOKEN_STRING, 0 , MYSQL_SERVER },
   { "mysql_server_port" ,G_TOKEN_INT , MYSQL_SERVER_PORT,NULL },
   { "mysql_user" , G_TOKEN_STRING , 0 ,MYSQL_USER},
-  { "mysql_password" , G_TOKEN_STRING , 0 ,MYSQL_PASSWD},
+  { "mysql_passwd" , G_TOKEN_STRING , 0 ,MYSQL_PASSWD},
   { "mysql_db_name" , G_TOKEN_STRING , 0 ,MYSQL_DB_NAME},
   { "mysql_table_name" , G_TOKEN_STRING , 0 ,MYSQL_TABLE_NAME},
   { "mysql_request_timeout" , G_TOKEN_INT , MYSQL_REQUEST_TIMEOUT , NULL }
@@ -68,8 +68,9 @@ g_module_check_init(GModule *module){
   mysql_request_timeout=*(int *)(vpointer?vpointer:&mysql_request_timeout);
 
   /* init thread private stuff */
-  /* mysql_priv = g_private_new (g_free); */
-
+  mysql_priv = g_private_new (g_free); 
+      if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
+                g_message("mysql part of the config file is parsed\n");
   return NULL;
 }
 
@@ -81,7 +82,8 @@ G_MODULE_EXPORT MYSQL* mysql_conn_init(void){
   MYSQL *ld = NULL;
 
   /* init connection */
-  if (mysql_init(ld) == NULL) {
+        ld = mysql_init(ld);     
+  if (ld == NULL) {
       if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
           g_warning("mysql init error : %s\n",strerror(errno));
       return NULL;
@@ -115,6 +117,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
   /* contruct request */
   if (state == 1){
       if ((element.tracking_hdrs).protocol == IPPROTO_TCP){
+
           //
           // FIELD          IN NUAUTH STRUCTURE               IN ULOG
           //user_id               u_int16_t                   SMALLINT UNSIGNED     2 bytes
@@ -133,10 +136,11 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
           //
           //
           int Result;
-          (element.tracking_hdrs).saddr;
-          if (snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,start_timestamp) VALUES (%u,%u,%lu,%lu,%u,%u,%lu)",
+
+          if (snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,start_timestamp) VALUES (%u,%u,%lu,%lu,%u,%u,FROM_UNIXTIME(%lu))",
               mysql_table_name,
               (element.user_id),
+              (element.tracking_hdrs).protocol,
               (element.tracking_hdrs).saddr,
               (element.tracking_hdrs).daddr,
               (element.tracking_hdrs).source,
@@ -156,9 +160,10 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
       }
       else if ((element.tracking_hdrs).protocol == IPPROTO_UDP){
           int Result;
-          if (snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,start_timestamp) VALUES (%u,%u,%lu,%lu,%u,%u,%lu)",
+          if (snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,start_timestamp) VALUES (%u,%u,%lu,%lu,%u,%u,FROM_UNIXTIME(%lu))",
               mysql_table_name,
               (element.user_id),
+              (element.tracking_hdrs).protocol,
               (element.tracking_hdrs).saddr,
               (element.tracking_hdrs).daddr,
               (element.tracking_hdrs).source,
@@ -179,11 +184,10 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
       }
       else {
           int Result;
-          (element.tracking_hdrs).saddr;
-          (element.tracking_hdrs).daddr;
-          if (snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,start_timestamp) VALUES (%u,%u,%lu,%lu,%lu)",
+          if (snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,start_timestamp) VALUES (%u,%u,%lu,%lu,FROM_UNIXTIME(%lu))",
               mysql_table_name,
               (element.user_id),
+              (element.tracking_hdrs).protocol,
               (element.tracking_hdrs).saddr,
               (element.tracking_hdrs).daddr,
               element.timestamp
@@ -200,10 +204,10 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
           }
           return 0;
       }
-    }else if (state == 0){
+    } else if (state == 0){
       if ((element.tracking_hdrs).protocol == IPPROTO_TCP){
           int Result;
-          if (snprintf(request,511,"UPDATE %s SET end_timestamp=%lu WHERE (ip_saddr=%lu AND ip_daddr=%lu AND tcp_sport=%u AND tcp_dport=%u AND end_timestamp IS NULL)",
+          if (snprintf(request,511,"UPDATE %s SET end_timestamp=FROM_UNIXTIME(%lu) WHERE (ip_saddr=%lu AND ip_daddr=%lu AND tcp_sport=%u AND tcp_dport=%u AND end_timestamp IS NULL)",
 
               mysql_table_name,
               element.timestamp,
@@ -225,6 +229,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
           return 0;
       }
     }
+  return 0;
 }
 
 G_MODULE_EXPORT gint log_sql_disconnect(void){
