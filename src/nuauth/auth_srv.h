@@ -193,7 +193,6 @@ typedef struct User_Datas {
 	unsigned long last_packet_id;
 	long last_packet_timestamp;
         user_auth_datas *
-	GMutex * lock;
 } user_datas;
 
 GHashTable * users_hash;
