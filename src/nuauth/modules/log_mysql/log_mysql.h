@@ -1,4 +1,4 @@
-/* $Id: log_mysql.h,v 1.1 2003/11/23 18:02:03 gryzor Exp $ */
+/* $Id: log_mysql.h,v 1.2 2003/11/25 12:56:40 gryzor Exp $ */
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
@@ -28,10 +28,13 @@
 #define MYSQL_USER "nufw"
 #define MYSQL_PASSWD "mypassword" 
 #define MYSQL_DB_NAME "nufw" 
+#define MYSQL_TABLE_NAME "nufw-logs" 
 #define MYSQL_REQUEST_TIMEOUT 10
 
 int mysql_request_timeout;
 char * mysql_user;
 char * mysql_passwd;
 char * mysql_server;
+char * mysql_db_name;
+char * mysql_table_name;
 int mysql_server_port;

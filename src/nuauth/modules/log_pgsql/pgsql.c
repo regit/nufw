@@ -77,7 +77,7 @@ g_module_check_init(GModule *module){
 }
 
 /* 
- * Initialize connection to ldap server
+ * Initialize connection to pgsql server
  */
 
 G_MODULE_EXPORT PGSQL* pgsql_conn_init(void){
@@ -158,7 +158,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection *element, int state){
           PGresult *Result;
           ipone.s_addr=ntohl((element->tracking_hdrs).saddr);
           iptwo.s_addr=ntohl((element->tracking_hdrs).daddr);
-          snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,start_timestamp) 
+          if (snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,start_timestamp) 
               VALUES (%u,%u,'%s','%s',%u,%u,%lu);",
               pgsql_table_name,
               (element->user_id),
@@ -167,9 +167,14 @@ G_MODULE_EXPORT gint user_packet_logs (connection *element, int state){
               (element->tracking_hdrs).source,
               (element->tracking_hdrs).dest,
               element->timestamp
-          );
+          ) >= 511){
+              if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+                  g_warning("Building pgsql insert query, the 511 limit was reached!\n");
+              return -1;
+          }
+
           Result = PQexec(ld, request);
-          if (i!Result == PGRES_TUPLES_OK){
+          if (!Result == PGRES_TUPLES_OK){
             if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
               g_warning("Can not insert Data : %s\n",PQerrorMessage(ld));
             return -1;
@@ -180,7 +185,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection *element, int state){
           PGresult *Result;
           ipone.s_addr=ntohl((element->tracking_hdrs).saddr);
           iptwo.s_addr=ntohl((element->tracking_hdrs).daddr);
-          snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,start_timestamp) 
+          if (snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,start_timestamp) 
               VALUES (%u,%u,'%s','%s',%u,%u,%lu);",
               pgsql_table_name,
               (element->user_id),
@@ -189,9 +194,13 @@ G_MODULE_EXPORT gint user_packet_logs (connection *element, int state){
               (element->tracking_hdrs).source,
               (element->tracking_hdrs).dest,
               element->timestamp
-          );
+          ) >= 511 ){
+              if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+                  g_warning("Building pgsql insert query, the 511 limit was reached!\n");
+              return -1;
+          }
           Result = PQexec(ld, request);
-          if (i!Result == PGRES_TUPLES_OK){
+          if (!Result == PGRES_TUPLES_OK){
             if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
               g_warning("Can not insert Data : %s\n",PQerrorMessage(ld));
             return -1;
@@ -203,16 +212,20 @@ G_MODULE_EXPORT gint user_packet_logs (connection *element, int state){
           PGresult *Result;
           ipone.s_addr=ntohl((element->tracking_hdrs).saddr);
           iptwo.s_addr=ntohl((element->tracking_hdrs).daddr);
-          snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,start_timestamp) 
+          if (snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,start_timestamp) 
               VALUES (%u,%u,'%s','%s',%lu);",
               pgsql_table_name,
               (element->user_id),
               inet_ntoa(ipone),
               inet_ntoa(iptwo),
               element->timestamp
-          );
+          ) >= 511){
+              if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+                  g_warning("Building pgsql insert query, the 511 limit was reached!\n");
+              return -1;
+          }
           Result = PQexec(ld, request);
-          if (i!Result == PGRES_TUPLES_OK){
+          if (!Result == PGRES_TUPLES_OK){
             if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
               g_warning("Can not insert Data : %s\n",PQerrorMessage(ld));
             return -1;
@@ -225,16 +238,20 @@ G_MODULE_EXPORT gint user_packet_logs (connection *element, int state){
           PGresult *Result;
           ipone.s_addr=ntohl((element->tracking_hdrs).saddr);
           iptwo.s_addr=ntohl((element->tracking_hdrs).daddr);
-          snprintf(request,511,"UPDATE %s SET end_timestamp=%lu WHERE (ip_saddr='%s',ip_daddr='%s',tcp_sport=%u,tcp_dport=%u,end_timestamp=NULL);",
+          if (snprintf(request,511,"UPDATE %s SET end_timestamp=%lu WHERE (ip_saddr='%s',ip_daddr='%s',tcp_sport=%u,tcp_dport=%u,end_timestamp=NULL);",
               pgsql_table_name,
               element->timestamp,
               inet_ntoa(ipone),
               inet_ntoa(iptwo),
               (element->tracking_hdrs).source,
               (element->tracking_hdrs).dest
-          );
+          ) >= 511){
+              if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+                  g_warning("Building pgsql update query, the 511 limit was reached!\n");
+              return -1;
+          }
           Result = PQexec(ld, request);
-          if (i!Result == PGRES_TUPLES_OK){
+          if (!Result == PGRES_TUPLES_OK){
             if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
               g_warning("Can not update Data : %s\n",PQerrorMessage(ld));
             return -1;

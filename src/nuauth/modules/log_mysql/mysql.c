@@ -29,10 +29,11 @@ confparams mysql_nuauth_vars[] = {
   { "mysql_user" , G_TOKEN_STRING , 0 ,MYSQL_USER},
   { "mysql_password" , G_TOKEN_STRING , 0 ,MYSQL_PASSWD},
   { "mysql_db_name" , G_TOKEN_STRING , 0 ,MYSQL_DB_NAME},
+  { "mysql_table_name" , G_TOKEN_STRING , 0 ,MYSQL_TABLE_NAME},
   { "mysql_request_timeout" , G_TOKEN_INT , MYSQL_REQUEST_TIMEOUT , NULL }
 };
 
-/* Init pgsql system */
+/* Init mysql system */
 G_MODULE_EXPORT gchar* 
 g_module_check_init(GModule *module){
   char *configfile=DEFAULT_CONF_FILE;
@@ -45,6 +46,7 @@ g_module_check_init(GModule *module){
   mysql_server=MYSQL_SERVER;
   mysql_server_port=MYSQL_SERVER_PORT;
   mysql_db_name=MYSQL_DB_NAME;
+  mysql_table_name=MYSQL_TABLE_NAME;
   mysql_request_timeout=MYSQL_REQUEST_TIMEOUT;
 
   /* parse conf file */
@@ -60,6 +62,8 @@ g_module_check_init(GModule *module){
   mysql_passwd=(char *)(vpointer?vpointer:mysql_passwd);
   vpointer=get_confvar_value(mysql_nuauth_vars,sizeof(mysql_nuauth_vars)/sizeof(confparams),"mysql_db_name");
   mysql_db_name=(char *)(vpointer?vpointer:mysql_db_name);
+  vpointer=get_confvar_value(mysql_nuauth_vars,sizeof(mysql_nuauth_vars)/sizeof(confparams),"mysql_table_name");
+  mysql_table_name=(char *)(vpointer?vpointer:mysql_table_name);
   vpointer=get_confvar_value(mysql_nuauth_vars,sizeof(mysql_nuauth_vars)/sizeof(confparams),"mysql_request_timeout");
   mysql_request_timeout=*(int *)(vpointer?vpointer:&mysql_request_timeout);
 
@@ -70,7 +74,7 @@ g_module_check_init(GModule *module){
 }
 
 /* 
- * Initialize connection to ldap server
+ * Initialize connection to mysql server
  */
 
 G_MODULE_EXPORT MYSQL* mysql_conn_init(void){
@@ -88,7 +92,7 @@ G_MODULE_EXPORT MYSQL* mysql_conn_init(void){
       if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
           g_warning("mysql options setting failed : %s\n",mysql_error(ld));
   
-  if (!mysql_real_connect(mysql,mysql_server_addr,mysql_user,mysql_passwd,mysql_db_name,mysql_server_port,NULL,0)) {
+  if (!mysql_real_connect(ld,mysql_server_addr,mysql_user,mysql_passwd,mysql_db_name,mysql_server_port,NULL,0)) {
       if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
           g_warning("mysql connection failed : %s\n",mysql_error(ld));
       return NULL;
@@ -96,194 +100,135 @@ G_MODULE_EXPORT MYSQL* mysql_conn_init(void){
   return ld;
 }
 
-G_MODULE_EXPORT GSList* acl_check (connection* element){
-  GSList * g_list = NULL;
-  char filter[512];
-  char ** attrs_array, ** walker;
-  int attrs_array_len,i,group;
-  struct timeval timeout;
-  struct acl_group * this_acl;
-  LDAPMessage * res , *result;
-  int err;
-  LDAP *ld = g_private_get (ldap_priv);
-
+G_MODULE_EXPORT gint user_packet_logs (connection *element, int state){
+    MYSQL *ld = g_private_get (mysql_priv);
+  char request[512];
   if (ld == NULL){
-    /* init ldap has never been done */
-    ld = ldap_conn_init();
-    if (ld == NULL) {
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_AUTH))
-		g_warning("Can not initiate LDAP conn\n");
-	return NULL;
-    }
-    g_private_set(ldap_priv,ld);
-  }
-  /* contruct filter */
-  if ((element->tracking_hdrs).protocol == IPPROTO_TCP || (element->tracking_hdrs).protocol == IPPROTO_UDP ){
-    snprintf(filter,511,
-	     "(&(objectClass=NuAccessControlList)(SrcIPStart<=%lu)(SrcIPEnd>=%lu)(DstIPStart<=%lu)(DstIPEnd>=%lu)(Proto=%d)(SrcPortStart<=%d)(SrcPortEnd>=%d)(DstPortStart<=%d)(DstPortEnd>=%d))",
-	     (long unsigned int)(element->tracking_hdrs).saddr,
-	     (long unsigned int)(element->tracking_hdrs).saddr,
-	     (long unsigned int)(element->tracking_hdrs).daddr,
-	     (long unsigned int)(element->tracking_hdrs).daddr,
-	     (element->tracking_hdrs).protocol,
-	     (element->tracking_hdrs).source,
-	     (element->tracking_hdrs).source,
-	     (element->tracking_hdrs).dest,
-	     (element->tracking_hdrs).dest
-	     );
-  } else if ((element->tracking_hdrs).protocol == IPPROTO_ICMP ) {
-    snprintf(filter,511,
-	     "(&(objectClass=AccessControlList)(SrcIPStart<=%lu)(SrcIPEnd>=%lu)(DstIPStart<=%lu)(DstIPEnd>=%lu)(Proto=%d)(SrcPortStart<=%d)(SrcPortEnd>=%d)(DstPortStart<=%d)(DstPortEnd>=%d))",
-	     (long unsigned int)(element->tracking_hdrs).saddr,
-	     (long unsigned int)(element->tracking_hdrs).saddr,
-	     (long unsigned int)(element->tracking_hdrs).daddr,
-	     (long unsigned int)(element->tracking_hdrs).daddr,
-	     (element->tracking_hdrs).protocol,
-	     (element->tracking_hdrs).type,
-	     (element->tracking_hdrs).type,
-	     (element->tracking_hdrs).code,
-	     (element->tracking_hdrs).code
-	     ); 
-  }
-
-  /* send query and wait result */
-  timeout.tv_sec = ldap_request_timeout;
-  timeout.tv_usec = 0;
-  /* TODO : just get group and decision */
-  /* if (debug)
-     printf("Filter : %s\n",filter); */
-    
-  err =  ldap_search_st(ld, ldap_acls_base_dn, LDAP_SCOPE_SUBTREE,filter,NULL,0,
-			&timeout,
-			&res) ;
-  if ( err !=  LDAP_SUCCESS ) {
-    if (err == LDAP_SERVER_DOWN ){
-      /* we lost connection, so disable current one */
-      ldap_unbind(ld);
-      ld=NULL;
-      g_private_set(ldap_priv,ld);
-    }
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-      g_warning ("invalid return from ldap_search_st : %s\n",ldap_err2string(err));
-    return NULL;
-  }
-  /* parse result to feed a group_list */
-  if (ldap_count_entries(ld,res) >= 1) {
-    result = ldap_first_entry(ld,res);
-    while ( result ) {
-      /* allocate a new acl_group */
-      this_acl=g_new0(struct acl_group,1);
-      this_acl->groups=NULL;
-	g_list = g_slist_prepend(g_list,this_acl);
-	/* get decision */
-	attrs_array=ldap_get_values(ld, result, "Decision");
-	sscanf(*attrs_array,"%c",&(this_acl->answer));
-	ldap_value_free(attrs_array);
-	/* build groups  list */
-	attrs_array = ldap_get_values(ld, result, "Group");
-	attrs_array_len = ldap_count_values(attrs_array);
-	walker = attrs_array;
-	for(i=0; i<attrs_array_len; i++){
-	  sscanf(*walker,"%d",&group);
-	  this_acl->groups = g_slist_prepend(this_acl->groups, GINT_TO_POINTER(group));
-	  walker++;
-	}
-	ldap_value_free(attrs_array);
-	result = ldap_next_entry(ld,result);
-      }
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_AUTH))
-      g_message("acl group at %p\n",g_list);
-    ldap_msgfree (res);
-    return g_list;
-  } else {
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_AUTH))
-      g_message("No acl found\n");
-    ldap_msgfree (res);
-  }
-  return NULL;
-}
-
-/* TODO return List */
-G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
-  char filter[512];
-  LDAP *ld = g_private_get (ldap_priv);
-  LDAPMessage * res , *result;
-  char ** attrs_array, ** walker;
-  int attrs_array_len,i,group,err;
-  struct timeval timeout;
-  GSList * outelt=NULL;
-
-
-  if (ld == NULL){
-    /* init ldap has never been done */
-    ld = ldap_conn_init();
-    g_private_set(ldap_priv,ld);
+    ld=mysql_conn_init();
     if (ld == NULL){
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_AUTH))
-		g_message("Can't initiate LDAP conn\n");
-	return -1;
+      if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+          g_warning("Can not initiate MYSQL conn\n");
+      return NULL;
     }
+    g_private_set(mysql_priv,ld);
   }
-  snprintf(filter,511,"(&(objectClass=NuAccount)(uidNumber=%d))",userid);
-  
-  /* send query and wait result */
-  timeout.tv_sec = ldap_request_timeout;
-  timeout.tv_usec = 0;
-  /* TODO : just get group and decision */
-  err =  ldap_search_st(ld, ldap_users_base_dn, LDAP_SCOPE_SUBTREE,filter,NULL,0,
-			&timeout,
-			&res) ;
-  if ( err !=  LDAP_SUCCESS ) {
-	if (err == LDAP_SERVER_DOWN ){
-    	  /* we lost connection, so disable current one */
-     	 ldap_unbind(ld);
-     	 ld=NULL;
-    	  g_private_set(ldap_priv,ld);
-   	 }
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
-      g_warning ("invalid return of ldap_search_st : %s\n",ldap_err2string(err));
-    return NULL;
-  }
-
-   if (ldap_count_entries(ld,res) == 1) {
-     /* parse result to feed a user_list */
-     result = ldap_first_entry(ld,res);
-     if (result == NULL ){
-       if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_AUTH))
-	 g_message("Can not get entry for %d\n",userid);
-       ldap_msgfree(res);
-       return NULL;
-     }
-     /* build groups  list */
-     attrs_array = ldap_get_values(ld, result, "Group");
-     attrs_array_len = ldap_count_values(attrs_array);
-     walker = attrs_array;
-     for(i=0; i<attrs_array_len; i++){
-       sscanf(*walker,"%d",&group);
-       outelt = g_slist_prepend(outelt, GINT_TO_POINTER(group));
-       walker++;
-     }
-     ldap_value_free(attrs_array);
-     /* get password */
-     attrs_array = ldap_get_values(ld, result, "userPassword");
-     attrs_array_len = ldap_count_values(attrs_array);
-     if (attrs_array_len == 0){
-       if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
-         g_message ("what ! no password found!\n");
-     } else {
-       sscanf(*attrs_array,"%s",passwd);
-       if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_AUTH))
-	 g_message("reading password\n");
-     }
-     ldap_value_free(attrs_array);
-     ldap_msgfree(res);
-     return outelt;
-   } else {
-     if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_AUTH))
-       g_message("No or too many users found with userid %d\n",userid);
-     ldap_msgfree(res);
-     return NULL;
-   }
-  ldap_msgfree(res);
-  return 0;
+  /* contruct request */
+  if (state == 1){
+      if ((element->tracking_hdrs).protocol == IPPROTO_TCP){
+          //
+          // FIELD          IN NUAUTH STRUCTURE               IN ULOG
+          //user_id               u_int16_t                   SMALLINT UNSIGNED     2 bytes
+          //ip_protocol           u_int8_t                    TINYINT UNSIGNED      1 byte
+          //ip_saddr              u_int32_t                   INT UNSIGNED          4 bytes
+          //ip_daddr              u_int32_t                   INT UNSIGNED
+          //tcp_sport             u_int16_t                   SMALLINT UNSIGNED 
+          //tcp_dport             u_int16_t                   SMALLINT UNSIGNED
+          //udp_sport             u_int16_t                   SMALLINT UNSIGNED
+          //udp_dport             u_int16_t                   SMALLINT UNSIGNED
+          //icmp_type             u_int8_t                    TINYINT UNSIGNED        
+          //icmp_code             u_int8_t                    TINYINT UNSIGNED    
+          //start_timestamp       long                        BIGINT UNSIGNED       8 bytes
+          //end_timestamp         long                        BIGINT UNSIGNED 
+          //
+          //
+          //
+          int Result;
+          (element->tracking_hdrs).saddr;
+          if (snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,start_timestamp) 
+              VALUES (%u,%u,%lu,%lu,%u,%u,%lu)",
+              mysql_table_name,
+              (element->user_id),
+              (element->tracking_hdrs).saddr,
+              (element->tracking_hdrs).daddr,
+              (element->tracking_hdrs).source,
+              (element->tracking_hdrs).dest,
+              element->timestamp
+          ) >= 511){
+              if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+                  g_warning("Building mysql insert query, the 511 limit was reached!\n");
+              return -1;
+          }
+          Result = mysql_real_query(ld, request, strlen(request));
+          if (Result != 0){
+            if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+              g_warning("Can not insert Data : %s\n",mysql_error(ld));
+            return -1;
+          }
+      }
+      else if ((element->tracking_hdrs).protocol == IPPROTO_UDP){
+          struct in_addr ipone, iptwo;
+          int Result;
+          ipone.s_addr=ntohl((element->tracking_hdrs).saddr);
+          iptwo.s_addr=ntohl((element->tracking_hdrs).daddr);
+          if (snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,start_timestamp) 
+              VALUES (%u,%u,'%s','%s',%u,%u,%lu);",
+              mysql_table_name,
+              (element->user_id),
+              inet_ntoa(ipone),
+              inet_ntoa(iptwo),
+              (element->tracking_hdrs).source,
+              (element->tracking_hdrs).dest,
+              element->timestamp
+          ) >= 511){
+              if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+                  g_warning("Building mysql insert query, the 511 limit was reached!\n");
+              return -1;
+          }
+          Result = mysql_real_query(ld, request, strlen(request));
+          if (Result != 0){
+            if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+              g_warning("Can not insert Data : %s\n",mysql_error(ld));
+            return -1;
+          }
+          return 0;
+      }
+      else {
+          int Result;
+          (element->tracking_hdrs).saddr;
+          (element->tracking_hdrs).daddr;
+          if (snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,start_timestamp) 
+              VALUES (%u,%u,%lu,%lu,%lu);",
+              mysql_table_name,
+              (element->user_id),
+              (element->tracking_hdrs).saddr,
+              (element->tracking_hdrs).daddr,
+              element->timestamp
+          ) >= 511){
+              if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+                  g_warning("Building mysql insert query, the 511 limit was reached!\n");
+              return -1;
+          }
+          Result = mysql_real_query(ld, request,strlen(request));
+          if (Result != 0){
+            if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+              g_warning("Can not insert Data : %s\n",mysql_error(ld));
+            return -1;
+          }
+          return 0;
+      }
+    }else if (state == 0){
+      if ((element->tracking_hdrs).protocol == IPPROTO_TCP){
+          int Result;
+          if (snprintf(request,511,"UPDATE %s SET end_timestamp=%lu WHERE (ip_saddr=%lu,ip_daddr=%lu,tcp_sport=%u,tcp_dport=%u,end_timestamp=NULL)",
+              mysql_table_name,
+              element->timestamp,
+              (element->tracking_hdrs).saddr,
+              (element->tracking_hdrs).daddr,
+              (element->tracking_hdrs).source,
+              (element->tracking_hdrs).dest
+          ) >= 511){
+              if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+                  g_warning("Building mysql update query, the 511 limit was reached!\n");
+              return -1;
+          }
+          Result = mysql_real_query(ld, request, strlen(request));
+          if (Result != 0){
+            if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+              g_warning("Can not update Data : %s\n",mysql_error(ld));
+            return -1;
+          }
+          return 0;
+      }
+    }
 }
+
