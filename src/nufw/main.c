@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.13 2003/11/06 23:25:16 regit Exp $ */
+/* $Id: main.c,v 1.14 2003/11/07 08:22:52 regit Exp $ */
 
 /*
  ** Copyright (C) 2002 Eric Leblond <eric@regit.org>
@@ -35,6 +35,7 @@
 #include <errno.h>
 
 
+//#define NUFW_PID_FILE  "/var/run/nufw.pid"
 #define NUFW_PID_FILE  LOCALE_STATE_DIR "/run/nufw.pid"
 
 void nufw_cleanup( int signal ) {
@@ -139,12 +140,13 @@ int main(int argc,char * argv[]){
         FILE* pf;
 
         if (access (NUFW_PID_FILE, R_OK) == 0) {
-
+	  printf ("nufw already running. Aborting!\n");
+	  exit(-1);
             /* Check if the existing process is still alive. */
             pid_t pidv;
 
             pf = fopen (NUFW_PID_FILE, "r");
-
+	    printf ("nufw merde\n");
             if (pf != NULL &&
                 fscanf (pf, "%d", &pidv) == 1 &&
                 kill (pidv, 0) == 0 ) {
@@ -157,6 +159,8 @@ int main(int argc,char * argv[]){
                 fclose (pf);
         }
 
+	printf("PID file : " NUFW_PID_FILE " \n");
+
         if ((pidf = fork()) < 0){
             syslog(SYSLOG_FACILITY(DEBUG_LEVEL_FATAL),"Unable to fork\n");
             exit (-1);
@@ -166,7 +170,7 @@ int main(int argc,char * argv[]){
                 if ((pf = fopen (NUFW_PID_FILE, "w")) != NULL) {
                     fprintf (pf, "%d\n", (int)pidf);
                     fclose (pf);
-                }
+                } 
                 exit(0);
             }
         }
@@ -183,7 +187,7 @@ int main(int argc,char * argv[]){
         sigemptyset( & (action.sa_mask));
         action.sa_flags = 0;
         if ( sigaction(SIGTERM, & action , NULL ) != 0) {
-            printf("Erreur %d \n",errno);
+            printf("Error %d \n",errno);
             exit(1);
         }
 
