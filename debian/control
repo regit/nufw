@@ -2,7 +2,7 @@ Source: nufw
 Section: net
 Priority: optional
 Maintainer: Jean-Michel Kelbert <kelbert@debian.org> 
-Build-Depends: debhelper (>= 4.1.16),po-debconf, automake1.7, libldap2-dev, libgdbm-dev, libglib2.0-dev, libmysqlclient-dev, postgresql-dev, iptables-dev
+Build-Depends: debhelper (>= 4.1.16),po-debconf, automake1.7, libldap2-dev, libgdbm-dev, libglib2.0-dev, libmysqlclient-dev, postgresql-dev, iptables-dev, libtool
 Standards-Version: 3.6.0
 
 Package: nufw
