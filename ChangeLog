@@ -1,6 +1,7 @@
 1.0.0 (2005/03/08)
-	- add tags DEBUG_ENABLE to speed up things and configure
-	option --with-debug
+	- add tags DEBUG_ENABLE to speed up things
+	- add configure	option --with-debug
+	- suppress some compilation warnings
 	- remove useless AC_DEFUN in configure.ac
 1.0.0-rc2 (2005/03/01)
 	- works on autoconf to solve excessive linking 
