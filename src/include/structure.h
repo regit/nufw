@@ -1,4 +1,4 @@
-/* $Id: structure.h,v 1.7 2003/11/25 20:02:20 regit Exp $ */
+/* $Id: structure.h,v 1.8 2003/11/28 13:10:23 gryzor Exp $ */
 
 /*
 ** Copyright (C) 2002, Éric Leblond <eric@regit.org>
@@ -35,7 +35,8 @@
 #include "proto.h"
 
 #define DEBUG 0
-#define AUTHREQ_ADDR   "192.168.1.1"
+#define AUTHREQ_ADDR  "127.0.0.1"
+#define LISTEN_ADDR   "127.0.0.1"
 #define AUTHSRV_PORT 4128
 #define AUTHREQ_PORT 4129
 #define TRACK_SIZE 1000
@@ -46,6 +47,7 @@
 
 
 char authreq_addr[HOSTNAME_SIZE];
+char listen_addr[HOSTNAME_SIZE];
 u_int16_t authreq_port;
 u_int16_t authsrv_port;
 int packet_timeout;
@@ -88,7 +90,7 @@ int pckt_tx,pckt_rx ;
 
 /* socket number to send auth request */
 int sck_auth_request;
-struct sockaddr_in adr_srv;
+struct sockaddr_in adr_srv, list_srv;
 
 
 /* 

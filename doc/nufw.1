@@ -1,9 +1,9 @@
-...\" $Header: /var/tmp/nufw/nufw/doc/nufw.1,v 1.1 2003/11/18 13:00:47 gryzor Exp $
-...\"
-...\"	transcript compatibility for postscript use.
-...\"
-...\"	synopsis:  .P! <file.ps>
-...\"
+.\" $Header: /var/tmp/nufw/nufw/doc/nufw.1,v 1.2 2003/11/28 13:10:22 gryzor Exp $
+.\"
+.\"	transcript compatibility for postscript use.
+.\"
+.\"	synopsis:  .P! <file.ps>
+.\"
 .de P!
 .fl
 \!!1 setgray
@@ -56,7 +56,7 @@
 nufw \(em NUFW User filtering gateway server 
 .SH "SYNOPSIS" 
 .PP 
-\fBnufw\fR [\fB-h\fP]  [\fB-V\fP]  [\fB-v[v...]\fP]  [\fB-l \fI(local) port\fR\fP]  [\fB-d \fIaddress\fR\fP]  [\fB-p \fI(remote) port\fR\fP]  [\fB-t \fItimeout\fR\fP]  [\fB-T \fItrack_size\fR\fP]  [\fB-I \fIServerID\fR\fP]  
+\fBnufw\fR [\fB-h\fP]  [\fB-V\fP]  [\fB-v[v...]\fP]  [\fB-l \fI(local) port\fR\fP]  [\fB-L \fI(local) address\fR\fP]  [\fB-d \fIaddress\fR\fP]  [\fB-p \fI(remote) port\fR\fP]  [\fB-t \fItimeout\fR\fP]  [\fB-T \fItrack_size\fR\fP]  [\fB-I \fIServerID\fR\fP]  
 .SH "DESCRIPTION" 
 .PP 
 This manual page documents the 
@@ -87,6 +87,12 @@ of them increases the debug level by one. Default debug level is 2, max is 10.
 .IP "\fB-l \fIport\fR\fP         " 10 
 Specifies UDP port to listen on. Nuauth server must be setup to 
 send data to that port. Default value : 4129 
+.IP "\fB-L \fIaddress\fR\fP         " 10 
+Specifies IP address to listen on. Nuauth server must be setup to 
+send data to that address. Default value : 127.0.0.1 
+.IP "" 10 
+It is advised to avoid having nufw listening on all adresses, 
+and setup only an internal adress (or 127.0.0.1) 
 .IP "\fB-d \fIaddress\fR\fP         " 10 
 Network address of the nuauth server. 
 .IP "\fB-p \fIport\fR\fP         " 10 
@@ -117,4 +123,4 @@ the terms of the GNU Free Documentation
 License, Version 2 as published by the Free 
 Software Foundation; with no Invariant Sections, no Front-Cover 
 Texts and no Back-Cover Texts. 
-...\" created by instant / docbook-to-man, Thu 02 Oct 2003, 19:09 
+.\" created by instant / docbook-to-man, Fri 28 Nov 2003, 14:10 

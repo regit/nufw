@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.18 2003/11/08 01:08:07 regit Exp $ */
+/* $Id: main.c,v 1.19 2003/11/28 13:10:23 gryzor Exp $ */
 
 /*
  ** Copyright (C) 2002 Eric Leblond <eric@regit.org>
@@ -48,9 +48,9 @@ void nufw_cleanup( int signal ) {
 
 int main(int argc,char * argv[]){
     pthread_t pckt_server,auth_server;
-    struct hostent *authreq_srv;
+    struct hostent *authreq_srv, *listenaddr_srv;
     /* option */
-    char * options_list = "DhVvml:d:p:t:T:";
+    char * options_list = "DhVvml:L:d:p:t:T:";
     int option,daemonize = 0;
     int value;
     unsigned int ident_srv;
@@ -65,6 +65,7 @@ int main(int argc,char * argv[]){
     track_size = TRACK_SIZE;
     id_srv = ID_SERVER;
     strncpy(authreq_addr,AUTHREQ_ADDR,HOSTNAME_SIZE);
+    strncpy(listen_addr,LISTEN_ADDR,HOSTNAME_SIZE);
     debug=DEBUG; /* this shall disapear */
     debug_level=0;
     debug_areas=DEFAULT_DEBUG_AREAS;
@@ -88,6 +89,11 @@ int main(int argc,char * argv[]){
             sscanf(optarg,"%d",&value);
             printf("Listen on UDP port %d\n",value);
             authsrv_port=value;
+            break;
+            /* Listening adress */
+          case 'L' :
+            strncpy(listen_addr,optarg,HOSTNAME_SIZE);
+            printf("Listening on address %s\n",listen_addr);
             break;
             /* destination port */
           case 'p' :
@@ -116,14 +122,15 @@ int main(int argc,char * argv[]){
             nufw_set_mark=1;
             break;
           case 'h' :
-            fprintf (stdout ,"PACKAGE [-hVv[v[v[v[v[v[v[v[v[v]]]]]]]]]] [-l local_port] [-d remote_addr] [-p remote_port]  [-t packet_timeout] [-T track_size]\n\
+            fprintf (stdout ,"PACKAGE [-hVv[v[v[v[v[v[v[v[v[v]]]]]]]]]] [-l local_port] [-L local_addr] [-d remote_addr] [-p remote_port]  [-t packet_timeout] [-T track_size]\n\
                 \t-h : display this help and exit\n\
                 \t-V : display version and exit\n\
                 \t-D : daemonize\n\
                 \t-v : increase debug level (+1 for each 'v') (max useful number : 10)\n\
                 \t-m : mark packet with userid\n\
                 \t-l : specify listening UDP port (default : 4129)\n\
-                \t-d : remote address we send auth requests to (adress of the nuauth server)\n\
+                \t-L : specify listening address (default : 127.0.0.1)\n\
+                \t-d : remote address we send auth requests to (adress of the nuauth server) (default : 127.0.0.1)\n\
                 \t-p : remote port we send auth requests to (UDP port nuauth server listens on) (default : 4128)\n\
                 \t-t : timeout to forget about packets when they don't match (default : 15 s)\n\
                 \t-T : track size (default : 1000)\n");
@@ -224,6 +231,20 @@ int main(int argc,char * argv[]){
                 printf("[%d] Bad Address.",getpid());
             }
         }
+
+    memset(&list_srv,0,sizeof list_srv);
+    listenaddr_srv=gethostbyname(listen_addr);
+    list_srv.sin_addr=*(struct in_addr *)listenaddr_srv->h_addr;
+
+    if (list_srv.sin_addr.s_addr == INADDR_NONE )
+//        if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
+//            if (log_engine == LOG_TO_SYSLOG){
+//                syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"Bad Address.");
+//            }else{
+//                printf("[%d] Bad Listening Address.",getpid());
+//            }
+//        }
+      list_srv.sin_addr.s_addr = INADDR_ANY;
 
     packets_list_start=NULL;
     packets_list_end=NULL;

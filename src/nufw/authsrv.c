@@ -48,7 +48,7 @@ void* authsrv(){
 
   addr_inet.sin_family= AF_INET;
   addr_inet.sin_port=htons(authsrv_port);
-  addr_inet.sin_addr.s_addr=INADDR_ANY;
+  addr_inet.sin_addr.s_addr=list_srv.sin_addr.s_addr;
 
   len_inet = sizeof addr_inet;
 
