@@ -355,6 +355,7 @@ NuAuth* nu_client_init(char *username,unsigned long userid,char * password, char
 	BIO *sbio;
 	SSL_CTX* ctx;
 	NuAuth * session;
+        struct hostent *host;
 
 	session=(NuAuth*) calloc(1,sizeof(NuAuth));
 
@@ -385,10 +386,23 @@ NuAuth* nu_client_init(char *username,unsigned long userid,char * password, char
 	if ( read(random_file,&random_seed, 1) == 1){
 		srandom(random_seed);
 	}
+        host = (struct hostent *)malloc(sizeof(struct hostent));
+        if (host == NULL)
+        {
+            fprintf(stderr, "*** Could not malloc()\n");
+            exit(EXIT_FAILURE);
+        }
+        host = gethostbyname(hostname);
+        if (host == NULL)
+        {
+            fprintf(stderr, "*** An error occured when resolving the provided hostname\n");
+            exit(EXIT_FAILURE);
+        }
 
 	(session->adr_srv).sin_family= AF_INET;
 	(session->adr_srv).sin_port=htons(port);
-	(session->adr_srv).sin_addr.s_addr=inet_addr(hostname);
+	(session->adr_srv).sin_addr.s_addr=inet_addr(host->h_addr_list[0]);
+        free(host);
 	if ( 	(session->adr_srv).sin_addr.s_addr == INADDR_NONE) {
 		return NULL;
 	}

@@ -1,3 +1,4 @@
+	- Check UID is 0 at nufw startup. Exit if not.
 0.8.4 (2004/08/17)
 	- Turn around a libipq bug, that would get log timestamps to be 0 when
 	connections are QUEUED in INPUT or OUTPUT chains.
