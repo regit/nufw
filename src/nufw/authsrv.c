@@ -18,8 +18,10 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <syslog.h>
 #include <string.h>
 #include <structure.h>
+#include <debug.h>
 
 
 static void 
@@ -91,28 +93,43 @@ int auth_packet_to_decision(char* dgram){
       if (sandf){
 	if ( *(dgram+4) == OK ) {
 	  /* TODO : test on return */
-	  if (debug){
-	    printf ("Accepting %lu\n",packet_id);
-	  }
+	  if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
+	    if (log_engine == LOG_TO_SYSLOG) {
+              syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"Accepting %lu",packet_id);
+            }else {
+	      printf ("[%i] Accepting %lu\n",getpid(),packet_id);
+	    }
 	  
 	  IPQ_SET_VERDICT(packet_id, NF_ACCEPT);
 	  pckt_tx++;
 	  return 1;
 	} else {
-	   if (debug){
-	    printf ("Rejecting %lu\n",packet_id);
+	   if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
+	     if (log_engine == LOG_TO_SYSLOG) {
+	       syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"Rejecting %lu",packet_id);
+	     }else{
+	       printf ("[%i] Rejecting %lu\n",getpid(),packet_id);
+	     }
 	  }
 	  IPQ_SET_VERDICT(packet_id, NF_DROP);
 	  return 0;
 	}
       } else {
-	if (debug) {
-	  fprintf(stdout,"Packet without a known ID :-(\n");
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
+          if (log_engine == LOG_TO_SYSLOG) {
+	    syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"Packet without a known ID :-(");
+	  }else{
+	    printf("[%i] Packet without a known ID :-(\n",getpid());
+	  }
 	}
       }
     } else {
-      if (debug) {
-	fprintf(stdout,"Type %d for packet %lu (not for me)\n",*(dgram+1),*(unsigned long * )(dgram+4));
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
+	  if (log_engine == LOG_TO_SYSLOG) {
+	    syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"Type %d for packet %lu (not for me)",*(dgram+1),*(unsigned long * )(dgram+4));
+	  }else{
+	    printf("[%i] Type %d for packet %lu (not for me)\n",getpid(),*(dgram+1),*(unsigned long * )(dgram+4));
+	  }
       }
     }
     break;

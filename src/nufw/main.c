@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.3 2003/09/18 21:25:28 gryzor Exp $ */
+/* $Id: main.c,v 1.4 2003/09/23 21:48:06 gryzor Exp $ */
 
 /*
 ** Copyright (C) 2002 Eric Leblond <eric@regit.org>
@@ -29,6 +29,7 @@
 #include <netdb.h>
 #include <structure.h>
 #include <debug.h>
+#include <syslog.h>
 
 
 int main(int argc,char * argv[]){
@@ -50,7 +51,9 @@ int main(int argc,char * argv[]){
   track_size = TRACK_SIZE;
   id_srv = ID_SERVER;
   strncpy(authreq_addr,AUTHREQ_ADDR,HOSTNAME_SIZE);
-  debug=DEBUG;
+  debug=DEBUG; /* this shall disapear */
+  debug_level=0;
+  debug_areas=DEFAULT_DEBUG_AREAS;
   pid_t pidf;
 
   /*parse options */
@@ -63,8 +66,8 @@ int main(int argc,char * argv[]){
       daemonize = 1;
       break;
     case 'v' :
-      fprintf (stdout, "Debug should be On\n");
-      debug=1;
+      /*fprintf (stdout, "Debug should be On\n");*/
+      debug_level+=1;
       break;
       /* port we listen for auth answer */
     case 'l' :
@@ -96,7 +99,7 @@ int main(int argc,char * argv[]){
       id_srv=ident_srv;
       break;
     case 'h' :
-      fprintf (stdout ,"PACKAGE [-hVv] [-l local_port] [-d remote_addr] [-p remote_port]  [-t packet_timeout] [-T track_size] [-I id_server]\n");
+      fprintf (stdout ,"PACKAGE [-hVv[v[v[v[v[v[v[v[v[v]]]]]]]]]] [-l local_port] [-d remote_addr] [-p remote_port]  [-t packet_timeout] [-T track_size] [-I id_server]\n");
       return 1;
     }
   }
@@ -104,7 +107,7 @@ int main(int argc,char * argv[]){
 /* Daemon code */
 if (daemonize == 1) {
   if ((pidf = fork()) < 0){
-  	printf("Unable to fork\n");
+  	syslog(SYSLOG_FACILITY(DEBUG_LEVEL_FATAL),"Unable to fork\n");
 	exit (-1);
   } else {
   	/* parent */
@@ -116,13 +119,18 @@ if (daemonize == 1) {
 }
   
   init_log_engine();
-
-  nufw_log("Log engine should be initialized",DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN);
+  if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN))
+	syslog (SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"tamere\n");
   /* create socket for sending auth request */
   sck_auth_request = socket (AF_INET,SOCK_DGRAM,0);
     
   if (sck_auth_request == -1)
-    printf("socket()");
+    if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN))
+	if (log_engine == LOG_TO_SYSLOG)
+	  syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"socket()");
+	else
+        printf("[%d] socket()",getpid());
+
      
   memset(&adr_srv,0,sizeof adr_srv);
 
@@ -133,7 +141,11 @@ if (daemonize == 1) {
   adr_srv.sin_addr=*(struct in_addr *)authreq_srv->h_addr;
 
   if (adr_srv.sin_addr.s_addr == INADDR_NONE )
-    fprintf(stdout,"Bad Address.");
+    if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN))
+	if (log_engine == LOG_TO_SYSLOG)
+	  syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"Bad Address.");
+	else
+	printf("[%d] Bad Address.",getpid());
     
   packets_list_start=NULL;
   packets_list_end=NULL;
@@ -146,7 +158,11 @@ if (daemonize == 1) {
   if (hndl)
     ipq_set_mode(hndl, IPQ_COPY_PACKET,BUFSIZ);  
   else {
-    fprintf (stderr,"Can not create ipq handle\n");
+    if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN))
+      if (log_engine == LOG_TO_SYSLOG)
+        syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"Can not create ipq handle");
+      else
+        printf("[%d] Can not create ipq handle\n",getpid());
   }
 
   /* create thread for packet server */
@@ -164,8 +180,8 @@ if (daemonize == 1) {
      pthread_mutex_lock(&packets_list_mutex);
      clean_old_packets ();
      pthread_mutex_unlock(&packets_list_mutex);
-    if (debug) {
-      fprintf(stdout,"rx : %d, tx : %d, track_size : %d, start_list : %p\n",pckt_rx,pckt_tx,packets_list_length,packets_list_start);
+    if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)) {
+      /*nufw_("rx : %d, tx : %d, track_size : %d, start_list : %p\n",pckt_rx,pckt_tx,packets_list_length,packets_list_start);*/
     }
     sleep(5);	
   }
