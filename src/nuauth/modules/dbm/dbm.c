@@ -53,7 +53,7 @@ int analyse_dbm_char(char *data, struct dbm_data_struct *mystruct)
 			strncpy(mystruct->passwd + (data-tmpchar),"\0",1);
 		}else{
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-				g_message("ExtractIng a group we found...");
+				g_message("Extracting a group we found...");
 			tmp2 = (char *) malloc (data-tmpchar);
 			strncpy(tmp2,tmpchar,(data-tmpchar));
 			strncpy(tmp2 + (data-tmpchar),"\0",1);
@@ -195,6 +195,10 @@ G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
 	  return NULL;
   }
   if (strcmp ( passwd , return_data->passwd ) == 0 )
+  {
+	  if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_AUTH))
+		  g_message("Correct auth received for user %s\n",dbm_key.dptr);
 	  return (return_data->outelt);
+  }
   return NULL;
 }
