@@ -1,4 +1,4 @@
-/* $Id: packetsrv.c,v 1.6 2003/11/25 21:08:31 regit Exp $ */
+/* $Id: packetsrv.c,v 1.7 2003/11/30 22:59:06 regit Exp $ */
 
 /*
 ** Copyright (C) 2002 Eric Leblond <eric@regit.org>
@@ -25,13 +25,13 @@
 /* 
  * return offset to next type of headers 
  */
-int look_for_fin_flags(char* dgram){
+int look_for_flags(char* dgram){
   struct iphdr * iphdrs = (struct iphdr *) dgram;
   /* check IP version */
   if (iphdrs->version == 4){
     if (iphdrs->protocol == IPPROTO_TCP){
       struct tcphdr * tcphdrs=(struct tcphdr *) (dgram+4*iphdrs->ihl);
-      if (tcphdrs->fin){
+      if (tcphdrs->fin || tcphdrs->ack){
 	return 1;
       }
     }
@@ -64,8 +64,8 @@ void* packetsrv(){
 	    /* printf("Working on IP packet\n"); */
 	    msg_p = ipq_get_packet(buffer);
 	    /* need to parse to see if it's an end connection packet */
-	    if (look_for_fin_flags(msg_p->payload)){
-	      auth_request_send(AUTH_CLOSE,msg_p->packet_id,msg_p->payload,msg_p->data_len,msg_p->timestamp_sec);
+	    if (look_for_flags(msg_p->payload)){
+	      auth_request_send(AUTH_CONTROL,msg_p->packet_id,msg_p->payload,msg_p->data_len,msg_p->timestamp_sec);
 	      IPQ_SET_VERDICT( msg_p->packet_id,NF_ACCEPT);
 	    } else {
 	    current=calloc(1,sizeof( packet_idl));

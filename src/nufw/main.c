@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.19 2003/11/28 13:10:23 gryzor Exp $ */
+/* $Id: main.c,v 1.20 2003/11/30 22:59:06 regit Exp $ */
 
 /*
  ** Copyright (C) 2002 Eric Leblond <eric@regit.org>
@@ -200,8 +200,6 @@ int main(int argc,char * argv[]){
     }
 
     init_log_engine();
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN))
-        syslog (SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"tamere\n");
     /* create socket for sending auth request */
     sck_auth_request = socket (AF_INET,SOCK_DGRAM,0);
 
@@ -237,13 +235,13 @@ int main(int argc,char * argv[]){
     list_srv.sin_addr=*(struct in_addr *)listenaddr_srv->h_addr;
 
     if (list_srv.sin_addr.s_addr == INADDR_NONE )
-//        if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
-//            if (log_engine == LOG_TO_SYSLOG){
-//                syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"Bad Address.");
-//            }else{
-//                printf("[%d] Bad Listening Address.",getpid());
-//            }
-//        }
+        if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
+            if (log_engine == LOG_TO_SYSLOG){
+                syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"Bad Address.");
+            }else{
+                printf("[%d] Bad Listening Address.",getpid());
+            }
+        }
       list_srv.sin_addr.s_addr = INADDR_ANY;
 
     packets_list_start=NULL;

@@ -132,7 +132,7 @@ void* packet_authsrv(){
         /* decode packet and create connection */
         current_conn = authpckt_decode(dgram, sizeof dgram);
         if (current_conn == NULL){
-            if ( *(dgram+1) != AUTH_CLOSE )
+            if ( *(dgram+1) != AUTH_CONTROL )
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_PACKET)){
                     g_message("Can't parse packet, that's bad !\n");
                 }
@@ -212,7 +212,7 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz){
     switch (*dgram) {
       case 0x1:
         msg_type=*(dgram+1);
-        if ( (msg_type == AUTH_REQUEST) || (msg_type == AUTH_CLOSE) ) {
+        if ( (msg_type == AUTH_REQUEST) || (msg_type == AUTH_CONTROL) ) {
             /* allocate connection */
             connexion = g_new0( connection,1);
             if (connexion == NULL){
@@ -244,13 +244,13 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz){
                       case STATE_OPEN:
                         break; 
                       case STATE_CLOSE:
-                        if (msg_type == AUTH_CLOSE ){
+                        if (msg_type == AUTH_CONTROL ){
                             log_user_packet(*connexion,STATE_CLOSE);
                             return NULL;
                         }
                         break;
                       case STATE_ESTABLISHED:
-                        if (msg_type == AUTH_CLOSE ){
+                        if (msg_type == AUTH_CONTROL ){
                             log_user_packet(*connexion,STATE_ESTABLISHED);
                             return NULL;
                         }
