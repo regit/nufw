@@ -155,7 +155,7 @@ void* packet_authsrv(){
  */
 
 void acl_check_and_decide (gpointer userdata, gpointer data){
-    connection * element;
+    connection * element=NULL;
     connection * conn_elt = userdata;
 
     if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET))
@@ -176,7 +176,7 @@ void acl_check_and_decide (gpointer userdata, gpointer data){
                 g_message("new entry at %p\n",element);
             }
             if (element != NULL) {
-                LOCK_CONN(element);
+                //LOCK_CONN(element);
                 /* in case we get the lock but lock is on empty packet */
                 if ( element == NULL ) return;
                 /* search if ALL in acl group list 
@@ -190,12 +190,29 @@ void acl_check_and_decide (gpointer userdata, gpointer data){
             }
         } else {
             /* no acl found so packet has to be dropped */
-            send_auth_response(GUINT_TO_POINTER(conn_elt->packet_id),NOK);
-            /* if we don't wait for the user packet we free the connection */
-            if (conn_elt->state == STATE_READY)
-                free_connection(conn_elt);
-            else
-                change_state(conn_elt,STATE_DONE);
+            struct auth_answer aanswer ={ NOK , conn_elt->user_id } ;
+
+            if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)){
+                g_message("No ACL, packet dropped %p\n",conn_elt);
+            }
+            send_auth_response(GUINT_TO_POINTER(conn_elt->packet_id),&aanswer);
+            conn_elt->state=STATE_DONE;
+            /* search and fill */
+            element = search_and_fill (conn_elt);
+            if (element) {
+                if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)){
+                    g_message("element bad but exist : %p\n",element);
+                }
+                /* if we don't wait for the user packet we free the connection */
+                if (element->state == STATE_READY) {
+                    log_user_packet(*element,STATE_DROP);
+                    conn_cl_delete(element);
+                } else {
+                    element->state=STATE_DONE;
+                    element->decision=STATE_DROP;
+                    UNLOCK_CONN(element);
+                }
+            }
         }
     }
     if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET))

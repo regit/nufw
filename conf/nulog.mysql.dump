@@ -116,6 +116,7 @@ CREATE TABLE ulog (
   KEY ip_saddr (ip_saddr),
   KEY udp_dport (udp_dport),
   KEY tcp_dport (tcp_dport),
-  KEY oob_time_sec (oob_time_sec)
+  KEY oob_time_sec (oob_time_sec),
+  KEY state (state)
 ) TYPE=MyISAM;
 

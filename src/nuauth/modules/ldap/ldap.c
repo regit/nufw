@@ -197,8 +197,8 @@ G_MODULE_EXPORT GSList* acl_check (connection* element){
     while ( result ) {
       /* allocate a new acl_group */
       this_acl=g_new0(struct acl_group,1);
+      g_assert(this_acl);
       this_acl->groups=NULL;
-	g_list = g_slist_prepend(g_list,this_acl);
 	/* get decision */
 	attrs_array=ldap_get_values(ld, result, "Decision");
 	sscanf(*attrs_array,"%d",&(this_acl->answer));
@@ -216,6 +216,12 @@ G_MODULE_EXPORT GSList* acl_check (connection* element){
 	}
 	ldap_value_free(attrs_array);
 	result = ldap_next_entry(ld,result);
+	/* add when acl is filled */
+	if (this_acl->groups !=NULL){
+	  g_list = g_slist_prepend(g_list,this_acl);
+	} else {
+	  g_free(this_acl);
+	}
       }
     ldap_msgfree (res);
     return g_list;
@@ -245,7 +251,7 @@ G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
     if (ld == NULL){
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_AUTH))
 		g_message("Can't initiate LDAP conn\n");
-	return -1;
+	return NULL;
     }
   }
   if (snprintf(filter,LDAP_QUERY_SIZE-1,"(&(objectClass=NuAccount)(uidNumber=%d))",userid) >= (LDAP_QUERY_SIZE-1)){
@@ -313,5 +319,5 @@ G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
      return NULL;
    }
   ldap_msgfree(res);
-  return 0;
+  return NULL;
 }

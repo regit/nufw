@@ -29,10 +29,7 @@ void bail (const char *on_what){
  */
 
 inline char change_state(connection *elt, char state){
-    static GStaticMutex state_mutex = G_STATIC_MUTEX_INIT;
-    g_static_mutex_lock (&state_mutex);
     elt->state = state;
-    g_static_mutex_unlock (&state_mutex);
     return  elt->state;
 }
 
@@ -83,19 +80,6 @@ gint  release_individual_mutex(GMutex * mutex){
         g_static_mutex_unlock(&free_mutex_mutex);
     }
     return 0;
-}
-
-/* 
- *  get state with lock
- */
-
-inline char get_state(connection *elt){
-    //  static GStaticMutex state_mutex = G_STATIC_MUTEX_INIT;
-    char state;
-    //g_static_mutex_lock (&state_mutex);
-    state = elt->state;
-    //g_static_mutex_unlock (&state_mutex);
-    return  state;
 }
 
 
@@ -165,16 +149,15 @@ connection * search_and_fill (connection * pckt) {
     connection * element = NULL;
     /* search pckt */
     g_static_mutex_lock (&insert_mutex);
-    char has_changed_state=0;
 
     if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
         g_message("Starting search and fill\n");
-    g_assert(pckt != NULL);
     element = (connection *) g_hash_table_lookup(conn_list,&(pckt->tracking_hdrs));
     if (element == NULL) {
         /* need to get a individual Mutex */
         pckt->lock = get_individual_mutex();
-        g_assert(pckt->lock != NULL);	  
+        g_assert(pckt->lock != NULL);	
+        LOCK_CONN(pckt);  
         if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
             g_message("Creating new element\n");
         g_hash_table_insert (conn_list,
@@ -183,55 +166,58 @@ connection * search_and_fill (connection * pckt) {
         /* as we append the new one is at the end */
         g_static_mutex_unlock (&insert_mutex);
         return pckt;
-    } else {
-        /* release global lock */
+    } else { 
+        /* TODO : possible race condition */
+        /* try lock ? */
+        /*  release global lock */
         g_static_mutex_unlock (&insert_mutex);
-        /* and switch to element lock */
+        /*  switch to element lock */
         LOCK_CONN(element);
-        if (element->state == STATE_DONE) {
+
+        if  ( ((connection *)element)->state != STATE_DONE )  {
+            if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
+                g_message("Filling connection\n");
+            /* first check if we've only adding a packet_id */
+            if ( ((connection *)element)->packet_id !=NULL && ( pckt->packet_id != NULL) ) {
+                /* append id */
+                if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
+                    g_message("Adding a packet_id to a connexion\n");
+                ((connection *)element)->packet_id =
+                  g_slist_prepend(((connection *)element)->packet_id, GINT_TO_POINTER((pckt->packet_id)->data));
+                free_connection(pckt);
+                /* and return */
+                return element;
+            } else {
+                if ( (((connection *)element)->acl_groups == NULL)&& ( pckt->state == STATE_AUTHREQ  )) {
+                    if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+                        g_message("Fill acl datas\n");
+                    ((connection *)element)->acl_groups = pckt->acl_groups;
+                    ((connection *)element)->packet_id = pckt->packet_id;
+                } else { 
+                    if ( (((connection *)element)->user_groups == ALLGROUP) && (pckt->state == STATE_USERPCKT)) {
+                        if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+                            g_message("Fill user datas\n");
+                        ((connection *)element)->user_groups = pckt->user_groups;
+                        ((connection *)element)->user_id = pckt->user_id;
+                    }
+                }
+            }
+            /* change STATE */
+            change_state(((connection *)element),((connection *)element)->state+pckt->state);
+            if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+                g_message("Elt state : %d\n",((connection *)element)->state);
+        } else {
+            ((connection *)element)->user_id = pckt->user_id;
+            // going to log
             if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
                 g_message("Need only cleaning\n");
+            // user logging 
+            log_user_packet(*(connection *)element,((connection *)element)->decision);
+            // House work
             conn_cl_delete(element);
             free_connection(pckt);
             return NULL;
         }
-
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-            g_message("Filling connection\n");
-        /* first check if we've only adding a packet_id */
-        if ( ((connection *)element)->packet_id !=NULL && ( pckt->packet_id != NULL) ) {
-            /* append id */
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-                g_message("Adding a packet_id to a connexion\n");
-            ((connection *)element)->packet_id =
-              g_slist_prepend(((connection *)element)->packet_id, GINT_TO_POINTER((pckt->packet_id)->data));
-            UNLOCK_CONN(element);
-            /* and return */
-            return element;
-        } else {
-            if ( (((connection *)element)->acl_groups == NULL)&& ( pckt->state == STATE_AUTHREQ  )) {
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-                    g_message("Fill acl datas\n");
-                ((connection *)element)->acl_groups = pckt->acl_groups;
-                ((connection *)element)->packet_id = pckt->packet_id;
-                has_changed_state=1;
-            } else { 
-                if ( (((connection *)element)->user_groups == ALLGROUP) && (pckt->state == STATE_USERPCKT)) {
-                    if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-                        g_message("Fill user datas\n");
-                    ((connection *)element)->user_groups = pckt->user_groups;
-                    ((connection *)element)->user_id = pckt->user_id;
-                    has_changed_state=1;
-                }
-            }
-        }
-        /* change STATE */
-        if ( (((connection *)element)->state != STATE_DONE) && (has_changed_state == 1 )) {
-            change_state(((connection *)element),((connection *)element)->state+pckt->state);
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-                g_message("Elt state : %d\n",((connection *)element)->state);
-        }
-        UNLOCK_CONN(element);
         /* release memory used by pckt 
          * not using free_connection to do a complete free
          *because we have to keep the GSList
@@ -389,6 +375,10 @@ int conn_key_delete(gconstpointer key) {
     /* test for lock */
     if (element){
         if ( g_mutex_trylock(element->lock)) {
+            /* need to log drop of packet if it is a nufw packet */
+            if (element->state == STATE_AUTHREQ) {
+                log_user_packet(*element,STATE_DROP); 
+            }
             g_hash_table_remove (conn_list,key);
             return 1;
         } else {
@@ -407,11 +397,13 @@ void clean_connections_list (){
     //  static GStaticMutex insert_mutex = G_STATIC_MUTEX_INIT;
 
     if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-        g_message("Start cleaning of connection finished");
+        g_message("Start cleaning of connection");
     g_static_mutex_lock (&insert_mutex);
     /* go through table and  stock keys associated to old packets */
     g_hash_table_foreach(conn_list,get_old_conn,GINT_TO_POINTER(current_timestamp));
     g_static_mutex_unlock (&insert_mutex);
+    if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
+        g_message("Found old connections");
     /* go through stocked keys to suppres old element */
     g_slist_foreach(old_conn_list,(GFunc)conn_key_delete,NULL);
     if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)) {
@@ -428,7 +420,6 @@ gint take_decision(connection * element) {
     int answer = NODECIDE;
     char test;
     GSList * user_group=element->user_groups;
-    char init_state = get_state(element);
 
     if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
         g_message("Trying to take decision on %p\n",element);
@@ -440,12 +431,15 @@ gint take_decision(connection * element) {
         }
         if (element->packet_id != NULL ){
             struct auth_answer aanswer ={ answer , element->user_id } ;
+            element->decision=answer;
             g_slist_foreach(element->packet_id,
                 (GFunc) send_auth_response,
                 &aanswer
                 );
         }
         if (element->state == STATE_READY ){
+            // log user
+            log_user_packet(*element,element->decision);
             conn_cl_delete( element);
         } else {
             /* only change state */
@@ -461,65 +455,58 @@ gint take_decision(connection * element) {
             start_test=NOK;
             stop_test=OK;
         }
-#if 0
-        /* for each acl with NOK next OK  */
-        for (test = start_test; test != stop_test  ; test = stop_test ) {
-            for  ( parcours = element->acl_groups; 
-                ( parcours != NULL  && answer == NODECIDE ); 
-                parcours = g_slist_next(parcours) ) {
-                /* for each user  group */
-                for ( user_group = element->user_groups;
-                    user_group != NULL && answer == NODECIDE;
-                    user_group =  g_slist_next(user_group)) {
-                    /* search user group in acl_groups */
-                    if (g_slist_find(((struct acl_group *)(parcours->data))->groups,(gconstpointer)user_group->data)) {
-                        answer = test ;
-                        break;
-                    }
-                }
-            }
-        }
-#endif
         test=NODECIDE;
-            for  ( parcours = element->acl_groups; 
-                ( parcours != NULL  && test == NODECIDE ); 
-                parcours = g_slist_next(parcours) ) {
-                /* for each user  group */
+        for  ( parcours = element->acl_groups; 
+            ( parcours != NULL  && test == NODECIDE ); 
+            parcours = g_slist_next(parcours) ) {
+            /* for each user  group */
+
+            if (parcours->data != NULL) {
                 for ( user_group = element->user_groups;
                     user_group != NULL && test == NODECIDE;
                     user_group =  g_slist_next(user_group)) {
                     /* search user group in acl_groups */
+                    g_assert(((struct acl_group *)(parcours->data))->groups);
                     if (g_slist_find(((struct acl_group *)(parcours->data))->groups,(gconstpointer)user_group->data)) {
                         answer = ((struct acl_group *)(parcours->data))->answer ;
-                        if (nuauth_prio_to_nok == 1)
+                        if (nuauth_prio_to_nok == 1){
                             if (answer == NOK)
                                 test=OK;
-                        else 
+                        } else {
                             if (answer == OK)
                                 test=OK;
+                        }
                     }
                 }
+            } else {
+                if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
+                    g_warning("Empty acl bad things ...");
+                answer=NOK;
+                test=OK;
             }
-        
+        }
     }
 
-    /* send response if no one has changed state if packet's ready */
+    /* send response  if packet's ready */
 
-    if (element->state == init_state && (element->state == STATE_READY || answer == OK )) {
+    if (element->state == STATE_READY || answer == OK ) {
         struct auth_answer aanswer ={ answer , element->user_id } ;
         if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
             g_message("Proceed to decision %d for packet_id %p (user %x)\n",answer,element->packet_id,element->user_id);
+        /* send packet */
         g_slist_foreach(element->packet_id,
             (GFunc) send_auth_response,
             &aanswer
             );
+        /* backup decision */
+        element->decision=answer;
         /* delete element */
         if (element->state == STATE_READY ){
             /* log user packet */
             if (answer == OK){
                 log_user_packet(*element,STATE_OPEN);
             } else {
-                 log_user_packet(*element,STATE_DROP);
+                log_user_packet(*element,STATE_DROP);
             }
             if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
                 g_message("Freeing element\n");
@@ -528,14 +515,15 @@ gint take_decision(connection * element) {
             if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
                 g_message("only change state\n");
             change_state(element,STATE_DONE);
+            element->decision=STATE_OPEN;
             UNLOCK_CONN(element);
         }
     } else {
         if (element->state == STATE_READY){
             struct auth_answer aanswer ={ NOK , element->user_id } ;
-
-            send_auth_response(element->packet_id,&aanswer);
-
+            g_slist_foreach(element->packet_id,
+                send_auth_response,
+                &aanswer);
             /* log user packet */
             log_user_packet(*element,STATE_DROP);
             conn_cl_delete(element);

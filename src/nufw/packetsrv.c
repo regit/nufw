@@ -1,7 +1,7 @@
-/* $Id: packetsrv.c,v 1.7 2003/11/30 22:59:06 regit Exp $ */
+/* $Id: packetsrv.c,v 1.8 2003/12/23 15:58:44 uid68721 Exp $ */
 
 /*
-** Copyright (C) 2002 Eric Leblond <eric@regit.org>
+** Copyright (C) 2002-2003 Eric Leblond <eric@regit.org>
 **		      Vincent Deffontaines <vincent@gryzor.com>
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -31,7 +31,7 @@ int look_for_flags(char* dgram){
   if (iphdrs->version == 4){
     if (iphdrs->protocol == IPPROTO_TCP){
       struct tcphdr * tcphdrs=(struct tcphdr *) (dgram+4*iphdrs->ihl);
-      if (tcphdrs->fin || tcphdrs->ack){
+      if (tcphdrs->fin || tcphdrs->ack || tcphdrs->rst ){
 	return 1;
       }
     }

@@ -270,12 +270,6 @@ int main(int argc,char * argv[]) {
     signal(SIGPIPE,SIG_IGN);
 
     /* initialize packets list */
-#if 0
-    conn_list = g_hash_table_new_full (g_int_hash, //(GHashFunc)hash_connection,
-        compare_connection
-        ,NULL,
-        (GDestroyNotify) free_connection); 
-#endif
     conn_list = g_hash_table_new_full ((GHashFunc)hash_connection,
         compare_connection
         ,NULL,
@@ -378,7 +372,7 @@ int main(int argc,char * argv[]) {
     ALLGROUP=g_slist_prepend(ALLGROUP, GINT_TO_POINTER(0) );
 
     DUMMYACL.groups = ALLGROUP;
-    DUMMYACL.answer = OK;
+    DUMMYACL.answer = NOK;
     DUMMYACLS = g_slist_prepend(NULL,&DUMMYACL);
     free_mutex_list=NULL;
     busy_mutex_list=NULL;
@@ -413,9 +407,9 @@ int main(int argc,char * argv[]) {
     /* create user worker */
     user_checkers = g_thread_pool_new  ((GFunc) user_check_and_decide,
         NULL,
-        nbuser_check,
-        TRUE,
-        NULL);
+       nbuser_check,
+      TRUE,
+       NULL);
 
     user_loggers = g_thread_pool_new  ((GFunc)  real_log_user_packet,
         NULL,

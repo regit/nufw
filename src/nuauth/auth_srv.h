@@ -1,4 +1,4 @@
-/* $Id: auth_srv.h,v 1.26 2003/11/30 21:30:15 regit Exp $ */
+/* $Id: auth_srv.h,v 1.27 2003/12/23 15:58:44 uid68721 Exp $ */
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
@@ -124,6 +124,8 @@ typedef struct Connection {
   GSList * user_groups;
   /* state */
   char state;
+  /* decision on packet */
+  char decision;
   /* exclusion mutex to protect during access */
   GMutex * lock;
 } connection;

@@ -107,11 +107,8 @@ void user_check_and_decide (gpointer userdata, gpointer data){
   /* if OK search and fill */
   if ( conn_elt != NULL ) {
     element = search_and_fill (conn_elt);
+    // element is locked by search_and_fill
     if ( element != NULL ) {
-      LOCK_CONN(element);
-      if ( element == NULL ) {
-	return;
-      }
       /* check state of the packet */
       if ( ((connection *)element)->state >= STATE_READY ){
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
@@ -125,6 +122,7 @@ void user_check_and_decide (gpointer userdata, gpointer data){
     } else {
       if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
 	g_message("Unwanted user packet\n");
+      return;
     }
   } else {
     if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
