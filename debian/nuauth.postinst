@@ -26,6 +26,7 @@ if [ ! -e $CONFIGFILE2 ]; then
         echo "nufw_gw_addr=" >> $CONFIGFILE2
         echo "nufw_gw_port=" >> $CONFIGFILE2
         echo "nuauth_prio=" >> $CONFIGFILE2
+        echo "nuauth_prio_to_nok=" >> $CONFIGFILE2
         echo "nuauth_packet_timeout=" >> $CONFIGFILE2
         echo "nuauth_number_usercheckers=" >> $CONFIGFILE2
         echo "nuauth_number_aclcheckers=" >> $CONFIGFILE2
@@ -75,6 +76,8 @@ db_get nuauth/nufw_gw_port
 nufw_gw_port="$RET"
 db_get nuauth/prio
 nuauth_prio="$RET"
+db_get nuauth/prio_to_nok
+nuauth_prio_to_nok="$RET"
 db_get nuauth/packet_timeout
 nuauth_packet_timeout="$RET"
 db_get nuauth/number_usercheckers
@@ -115,6 +118,7 @@ sed -e "s/^ *nuauth_addr=.*/nuauth_addr=\"$nuauth_addr\"/" \
  -e "s/^ *nufw_gw_addr=.*/nufw_gw_addr=\"$nufw_gw_addr\"/" \
  -e "s/^ *nufw_gw_port=.*/nufw_gw_port=\"$nufw_gw_port\"/" \
  -e "s/^ *nuauth_prio=.*/nuauth_prio=\"$nuauth_prio\"/" \
+ -e "s/^ *nuauth_prio_to_nok=.*/nuauth_prio_to_nok=\"$nuauth_prio_to_nok\"/" \
  -e "s/^ *nuauth_packet_timeout=.*/nuauth_packet_timeout=\"$nuauth_packet_timeout\"/" \
  -e "s/^ *nuauth_number_usercheckers=.*/nuauth_number_usercheckers=\"$nuauth_number_usercheckers\"/" \
  -e "s/^ *nuauth_number_aclcheckers=.*/nuauth_number_aclcheckers=\"$nuauth_number_aclcheckers\"/" \
@@ -134,7 +138,7 @@ sed -e "s/^ *nuauth_addr=.*/nuauth_addr=\"$nuauth_addr\"/" \
   < $CONFIGFILE2 > $CONFIGFILE2.tmp
 mv -f $CONFIGFILE2.tmp $CONFIGFILE2
 
-if grep -q -e "^$NUAUTH_USER" /etc/passwd
+if grep -q -e "^$NUAUTH_USER:" /etc/passwd
 then
   chown $NUAUTH_USER /var/run/nuauth/
 else
