@@ -81,6 +81,8 @@ g_module_check_init(GModule *module){
 
   /* init thread private stuff */
   dbm_priv = g_private_new (g_free);
+  if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+	  g_message("We are leaving g_module_check_init()\n");
 
   return NULL;
 }
@@ -93,6 +95,8 @@ G_MODULE_EXPORT GDBM_FILE dbm_file_init(void){
   GDBM_FILE dbf = NULL;
 
   /* init connection */
+  if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+	  g_message("We are entering dbm_file_init()\n");
   dbf = gdbm_open(users_file,DBM_BLOCK_SIZE,DBM_FILE_ACCESS_MODE,DBM_FILE_MODE,DBM_FATAL_FUNCTION);
   if(dbf == NULL) {
     if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
