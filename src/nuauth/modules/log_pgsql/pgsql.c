@@ -128,6 +128,7 @@ G_MODULE_EXPORT PGconn *pgsql_conn_init(void){
   if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
       g_message("connection : %s",pgsql_conninfo);
       free(pgsql_conninfo);
+      PQfinish(ld);
     return NULL;
   }
   if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
@@ -137,7 +138,7 @@ G_MODULE_EXPORT PGconn *pgsql_conn_init(void){
 }
 
 
-G_MODULE_EXPORT gint user_packet_logs (connection *element, int state){
+G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
   PGconn *ld = g_private_get (pgsql_priv);
   char request[512];
   if (ld == NULL){
@@ -151,7 +152,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection *element, int state){
   }
   /* contruct request */
   if (state == 1){
-      if ((element->tracking_hdrs).protocol == IPPROTO_TCP){
+      if ((element.tracking_hdrs).protocol == IPPROTO_TCP){
           //
           // FIELD          IN NUAUTH STRUCTURE               IN ULOG
           //user_id               u_int16_t                   integer
@@ -172,18 +173,18 @@ G_MODULE_EXPORT gint user_packet_logs (connection *element, int state){
           struct in_addr ipone, iptwo;
           PGresult *Result;
           char *tmp_inet;
-          ipone.s_addr=ntohl((element->tracking_hdrs).saddr);
-          iptwo.s_addr=ntohl((element->tracking_hdrs).daddr);
+          ipone.s_addr=ntohl((element.tracking_hdrs).saddr);
+          iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
           tmp_inet=inet_ntoa(ipone);
           if (snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,start_timestamp) VALUES (%u,%u,'%s','%s',%u,%u,%lu);",
               pgsql_table_name,
-              (element->user_id),
-              (element->tracking_hdrs).protocol,
+              (element.user_id),
+              (element.tracking_hdrs).protocol,
               tmp_inet,
               inet_ntoa(iptwo),
-              (element->tracking_hdrs).source,
-              (element->tracking_hdrs).dest,
-              element->timestamp
+              (element.tracking_hdrs).source,
+              (element.tracking_hdrs).dest,
+              element.timestamp
           ) >= 511){
               if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                   g_warning("Building pgsql insert query, the 511 limit was reached!\n");
@@ -203,22 +204,22 @@ G_MODULE_EXPORT gint user_packet_logs (connection *element, int state){
             g_message("done\n");
           }
       }
-      else if ((element->tracking_hdrs).protocol == IPPROTO_UDP){
+      else if ((element.tracking_hdrs).protocol == IPPROTO_UDP){
           struct in_addr ipone, iptwo;
           PGresult *Result;
           char *tmp_inet;
-          ipone.s_addr=ntohl((element->tracking_hdrs).saddr);
-          iptwo.s_addr=ntohl((element->tracking_hdrs).daddr);
+          ipone.s_addr=ntohl((element.tracking_hdrs).saddr);
+          iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
           tmp_inet=inet_ntoa(ipone);
           if (snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,start_timestamp) VALUES (%u,%u,'%s','%s',%u,%u,%lu);",
               pgsql_table_name,
-              (element->user_id),
-              (element->tracking_hdrs).protocol,
+              (element.user_id),
+              (element.tracking_hdrs).protocol,
               tmp_inet,
               inet_ntoa(iptwo),
-              (element->tracking_hdrs).source,
-              (element->tracking_hdrs).dest,
-              element->timestamp
+              (element.tracking_hdrs).source,
+              (element.tracking_hdrs).dest,
+              element.timestamp
           ) >= 511 ){
               if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                   g_warning("Building pgsql insert query, the 511 limit was reached!\n");
@@ -236,16 +237,16 @@ G_MODULE_EXPORT gint user_packet_logs (connection *element, int state){
           struct in_addr ipone, iptwo;
           PGresult *Result;
           char *tmp_inet;
-          ipone.s_addr=ntohl((element->tracking_hdrs).saddr);
-          iptwo.s_addr=ntohl((element->tracking_hdrs).daddr);
+          ipone.s_addr=ntohl((element.tracking_hdrs).saddr);
+          iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
           tmp_inet=inet_ntoa(ipone);
           if (snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,start_timestamp) VALUES (%u,%u,'%s','%s',%lu);",
               pgsql_table_name,
-              (element->user_id),
-              (element->tracking_hdrs).protocol,
+              (element.user_id),
+              (element.tracking_hdrs).protocol,
               tmp_inet,
               inet_ntoa(iptwo),
-              element->timestamp
+              element.timestamp
           ) >= 511){
               if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                   g_warning("Building pgsql insert query, the 511 limit was reached!\n");
@@ -260,20 +261,20 @@ G_MODULE_EXPORT gint user_packet_logs (connection *element, int state){
           return 0;
       }
     }else if (state == 0){
-      if ((element->tracking_hdrs).protocol == IPPROTO_TCP){
+      if ((element.tracking_hdrs).protocol == IPPROTO_TCP){
           struct in_addr ipone, iptwo;
           PGresult *Result;
           char *tmp_inet;
-          ipone.s_addr=ntohl((element->tracking_hdrs).saddr);
-          iptwo.s_addr=ntohl((element->tracking_hdrs).daddr);
+          ipone.s_addr=ntohl((element.tracking_hdrs).saddr);
+          iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
           tmp_inet=inet_ntoa(ipone);
           if (snprintf(request,511,"UPDATE %s SET end_timestamp=%lu WHERE (ip_saddr='%s',ip_daddr='%s',tcp_sport=%u,tcp_dport=%u,end_timestamp=NULL);",
               pgsql_table_name,
-              element->timestamp,
+              element.timestamp,
               tmp_inet,
               inet_ntoa(iptwo),
-              (element->tracking_hdrs).source,
-              (element->tracking_hdrs).dest
+              (element.tracking_hdrs).source,
+              (element.tracking_hdrs).dest
           ) >= 511){
               if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                   g_warning("Building pgsql update query, the 511 limit was reached!\n");
@@ -294,3 +295,8 @@ G_MODULE_EXPORT gint user_packet_logs (connection *element, int state){
   return 0;
 }
 
+G_MODULE_EXPORT gint log_sql_disconnect(void){
+  PGconn *ld = g_private_get (pgsql_priv);
+  PQfinish(ld);
+  return 0;
+}

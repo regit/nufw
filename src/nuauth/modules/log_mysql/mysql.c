@@ -101,7 +101,7 @@ G_MODULE_EXPORT MYSQL* mysql_conn_init(void){
   return ld;
 }
 
-G_MODULE_EXPORT gint user_packet_logs (connection *element, int state){
+G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
   char request[512];
   if (ld == NULL){
     ld=mysql_conn_init();
@@ -114,7 +114,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection *element, int state){
   }
   /* contruct request */
   if (state == 1){
-      if ((element->tracking_hdrs).protocol == IPPROTO_TCP){
+      if ((element.tracking_hdrs).protocol == IPPROTO_TCP){
           //
           // FIELD          IN NUAUTH STRUCTURE               IN ULOG
           //user_id               u_int16_t                   SMALLINT UNSIGNED     2 bytes
@@ -133,16 +133,16 @@ G_MODULE_EXPORT gint user_packet_logs (connection *element, int state){
           //
           //
           int Result;
-          (element->tracking_hdrs).saddr;
+          (element.tracking_hdrs).saddr;
           if (snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,start_timestamp) 
               VALUES (%u,%u,%lu,%lu,%u,%u,%lu)",
               mysql_table_name,
-              (element->user_id),
-              (element->tracking_hdrs).saddr,
-              (element->tracking_hdrs).daddr,
-              (element->tracking_hdrs).source,
-              (element->tracking_hdrs).dest,
-              element->timestamp
+              (element.user_id),
+              (element.tracking_hdrs).saddr,
+              (element.tracking_hdrs).daddr,
+              (element.tracking_hdrs).source,
+              (element.tracking_hdrs).dest,
+              element.timestamp
           ) >= 511){
               if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                   g_warning("Building mysql insert query, the 511 limit was reached!\n");
@@ -155,17 +155,17 @@ G_MODULE_EXPORT gint user_packet_logs (connection *element, int state){
             return -1;
           }
       }
-      else if ((element->tracking_hdrs).protocol == IPPROTO_UDP){
+      else if ((element.tracking_hdrs).protocol == IPPROTO_UDP){
           int Result;
           if (snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,start_timestamp) 
               VALUES (%u,%u,%lu,%lu,%u,%u,%lu);",
               mysql_table_name,
-              (element->user_id),
-              (element->tracking_hdrs).saddr,
-              (element->tracking_hdrs).daddr,
-              (element->tracking_hdrs).source,
-              (element->tracking_hdrs).dest,
-              element->timestamp
+              (element.user_id),
+              (element.tracking_hdrs).saddr,
+              (element.tracking_hdrs).daddr,
+              (element.tracking_hdrs).source,
+              (element.tracking_hdrs).dest,
+              element.timestamp
           ) >= 511){
               if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                   g_warning("Building mysql insert query, the 511 limit was reached!\n");
@@ -181,15 +181,15 @@ G_MODULE_EXPORT gint user_packet_logs (connection *element, int state){
       }
       else {
           int Result;
-          (element->tracking_hdrs).saddr;
-          (element->tracking_hdrs).daddr;
+          (element.tracking_hdrs).saddr;
+          (element.tracking_hdrs).daddr;
           if (snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,start_timestamp) 
               VALUES (%u,%u,%lu,%lu,%lu);",
               mysql_table_name,
-              (element->user_id),
-              (element->tracking_hdrs).saddr,
-              (element->tracking_hdrs).daddr,
-              element->timestamp
+              (element.user_id),
+              (element.tracking_hdrs).saddr,
+              (element.tracking_hdrs).daddr,
+              element.timestamp
           ) >= 511){
               if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                   g_warning("Building mysql insert query, the 511 limit was reached!\n");
@@ -204,15 +204,15 @@ G_MODULE_EXPORT gint user_packet_logs (connection *element, int state){
           return 0;
       }
     }else if (state == 0){
-      if ((element->tracking_hdrs).protocol == IPPROTO_TCP){
+      if ((element.tracking_hdrs).protocol == IPPROTO_TCP){
           int Result;
           if (snprintf(request,511,"UPDATE %s SET end_timestamp=%lu WHERE (ip_saddr=%lu,ip_daddr=%lu,tcp_sport=%u,tcp_dport=%u,end_timestamp=NULL)",
               mysql_table_name,
-              element->timestamp,
-              (element->tracking_hdrs).saddr,
-              (element->tracking_hdrs).daddr,
-              (element->tracking_hdrs).source,
-              (element->tracking_hdrs).dest
+              element.timestamp,
+              (element.tracking_hdrs).saddr,
+              (element.tracking_hdrs).daddr,
+              (element.tracking_hdrs).source,
+              (element.tracking_hdrs).dest
           ) >= 511){
               if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                   g_warning("Building mysql update query, the 511 limit was reached!\n");
@@ -229,3 +229,8 @@ G_MODULE_EXPORT gint user_packet_logs (connection *element, int state){
     }
 }
 
+G_MODULE_EXPORT gint log_sql_disconnect(void){
+  MYSQL *ld = g_private_get (mysql_priv);
+  mysql_close(ld);
+  return 0;
+}
