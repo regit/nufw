@@ -26,6 +26,3 @@ void destroy_ctx(SSL_CTX *ctx);
 #endif
 #endif
 
-#endif
-
-
