@@ -153,9 +153,9 @@ void log_user_packet (connection element,int state){
             }
 	} else {
             if (
-                ((nuauth_log_users & 2) && (state == STATE_OPEN)) 
+                ((nuauth_log_users & 2) && (state == STATE_DROP)) 
                 || 
-                ((nuauth_log_users & 4) && (state == STATE_DROP)) 
+                ((nuauth_log_users & 4) && (state == STATE_OPEN)) 
                 || 
                 (nuauth_log_users & 8) 
                )
