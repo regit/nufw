@@ -90,11 +90,11 @@ gint  release_individual_mutex(GMutex * mutex){
  */
 
 inline char get_state(connection *elt){
-  static GStaticMutex state_mutex = G_STATIC_MUTEX_INIT;
+  //  static GStaticMutex state_mutex = G_STATIC_MUTEX_INIT;
   char state;
-  g_static_mutex_lock (&state_mutex);
+  //g_static_mutex_lock (&state_mutex);
   state = elt->state;
-  g_static_mutex_unlock (&state_mutex);
+  //g_static_mutex_unlock (&state_mutex);
   return  state;
 }
 
@@ -349,7 +349,7 @@ int free_connection(connection * conn){
   if (conn->packet_id != NULL )
     g_slist_free (conn->packet_id);
   g_free(conn);
-  g_mutex_unlock(connmutex);
+  if (connmutex) g_mutex_unlock(connmutex);
   release_individual_mutex(connmutex);
   return 1;
 }
