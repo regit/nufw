@@ -1,2 +1,2 @@
 
-SUBDIRS = nuauth nufw clients
+SUBDIRS = lib nuauth nufw clients
