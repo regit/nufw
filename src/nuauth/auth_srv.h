@@ -1,4 +1,4 @@
-/* $Id: auth_srv.h,v 1.17 2003/09/30 22:33:28 gryzor Exp $ */
+/* $Id: auth_srv.h,v 1.18 2003/11/24 19:28:07 regit Exp $ */
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
@@ -60,6 +60,7 @@
 #define HOSTNAME_SIZE 128
 #define PACKET_TIMEOUT 15
 #define DEFAULT_AUTH_MODULE "libldap"
+#define DEFAULT_LOGS_MODULE "libmysql"
 #define MODULE_PATH MODULE_DIR "/nuauth/modules/"
 /* define the number of threads that will do user check */
 #define NB_USERCHECK 10
@@ -242,7 +243,8 @@ void user_check_and_decide (gpointer userdata ,gpointer data);
 int check_fill_user_counters(u_int16_t userid,long time,unsigned long packet_id,u_int32_t ip);
 void print_users_list();
 void log_new_user(int id,u_int32_t ip);
-
+GModule * logs_module;
+int (*module_user_logs) (connection* element, int state);
 /*
  * External auth  stuff
  */

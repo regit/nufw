@@ -32,7 +32,8 @@ confparams nuauth_vars[] = {
     { "nuauth_number_aclcheckers" , G_TOKEN_INT , NB_ACLCHECK, NULL },
     { "nuauth_log_users" , G_TOKEN_INT , 1, NULL },
     { "nuauth_user_check_module" , G_TOKEN_STRING , 1, NULL },
-    { "nuauth_acl_check_module" , G_TOKEN_STRING , 1, NULL }
+    { "nuauth_acl_check_module" , G_TOKEN_STRING , 1, NULL },
+    { "nuauth_user_logs_module" , G_TOKEN_STRING , 1, NULL }
 };
 #endif 
 
@@ -62,6 +63,7 @@ int main(int argc,char * argv[]) {
     int nbuser_check=NB_USERCHECK;
     char * nuauth_acl_check_module=DEFAULT_AUTH_MODULE;
     char * nuauth_user_check_module=DEFAULT_AUTH_MODULE;
+    char * nuauth_user_logs_module=DEFAULT_LOGS_MODULE;
     gpointer vpointer;
     pid_t pidf;
 
@@ -103,6 +105,10 @@ int main(int argc,char * argv[]) {
     nuauth_user_check_module=(char*)(vpointer?vpointer:nuauth_user_check_module);
     vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_acl_check_module");
     nuauth_acl_check_module=(char*)(vpointer?vpointer:nuauth_acl_check_module);
+    vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_user_logs_module");
+    nuauth_user_logs_module=(char*)(vpointer?vpointer:nuauth_user_logs_module);
+
+
     /*parse options */
     while((option = getopt ( argc, argv, options_list)) != -1 ){
         switch (option){
@@ -287,6 +293,21 @@ int main(int argc,char * argv[]) {
     {
         g_error ("Unable to load acl check function\n");
     }
+
+
+    logs_module=g_module_open (g_module_build_path(MODULE_PATH,
+          nuauth_user_logs_module)
+        ,0);
+    if (logs_module == NULL){
+        g_error("unable to load module %s in %s",nuauth_user_logs_module,MODULE_PATH);
+    }
+
+    if (!g_module_symbol (auth_module, "user_packet_logs", 
+          (gpointer*)&module_user_logs))
+    {
+        g_error ("Unable to load user logs function\n");
+    }
+
 
     /* internal Use */
     ALLGROUP=NULL;
