@@ -103,116 +103,6 @@ G_MODULE_EXPORT GDBM_FILE dbm_file_init(void){
   return dbf;
 }
 
-#if 0
-G_MODULE_EXPORT GSList* ldap_acl_check (connection* element){
-  GSList * g_list = NULL;
-  char filter[512];
-  char ** attrs_array, ** walker;
-  int attrs_array_len,i,group;
-  struct timeval timeout;
-  struct acl_group * this_acl;
-  LDAPMessage * res , *result;
-  int err;
-  LDAP *ld = g_private_get (ldap_priv);
-
-  if (ld == NULL){
-    // init ldap has never been done 
-    ld = ldap_conn_init();
-    if (ld == NULL) {
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_AUTH))
-		g_warning("Can not initiate LDAP conn\n");
-	return NULL;
-    }
-    g_private_set(ldap_priv,ld);
-  }
-  // contruct filter 
-  if ((element->tracking_hdrs).protocol == IPPROTO_TCP || (element->tracking_hdrs).protocol == IPPROTO_UDP ){
-    snprintf(filter,511,
-	     "(&(objectClass=NuAccessControlList)(SrcIPStart<=%lu)(SrcIPEnd>=%lu)(DstIPStart<=%lu)(DstIPEnd>=%lu)(Proto=%d)(SrcPortStart<=%d)(SrcPortEnd>=%d)(DstPortStart<=%d)(DstPortEnd>=%d))",
-	     (long unsigned int)(element->tracking_hdrs).saddr,
-	     (long unsigned int)(element->tracking_hdrs).saddr,
-	     (long unsigned int)(element->tracking_hdrs).daddr,
-	     (long unsigned int)(element->tracking_hdrs).daddr,
-	     (element->tracking_hdrs).protocol,
-	     (element->tracking_hdrs).source,
-	     (element->tracking_hdrs).source,
-	     (element->tracking_hdrs).dest,
-	     (element->tracking_hdrs).dest
-	     );
-  } else if ((element->tracking_hdrs).protocol == IPPROTO_ICMP ) {
-    snprintf(filter,511,
-	     "(&(objectClass=AccessControlList)(SrcIPStart<=%lu)(SrcIPEnd>=%lu)(DstIPStart<=%lu)(DstIPEnd>=%lu)(Proto=%d)(SrcPortStart<=%d)(SrcPortEnd>=%d)(DstPortStart<=%d)(DstPortEnd>=%d))",
-	     (long unsigned int)(element->tracking_hdrs).saddr,
-	     (long unsigned int)(element->tracking_hdrs).saddr,
-	     (long unsigned int)(element->tracking_hdrs).daddr,
-	     (long unsigned int)(element->tracking_hdrs).daddr,
-	     (element->tracking_hdrs).protocol,
-	     (element->tracking_hdrs).type,
-	     (element->tracking_hdrs).type,
-	     (element->tracking_hdrs).code,
-	     (element->tracking_hdrs).code
-	     ); 
-  }
-
-  // send query and wait result 
-  timeout.tv_sec = ldap_request_timeout;
-  timeout.tv_usec = 0;
-  // TODO : just get group and decision 
-  // if (debug)
-  //   printf("Filter : %s\n",filter); 
-    
-  err =  ldap_search_st(ld, ldap_acls_base_dn, LDAP_SCOPE_SUBTREE,filter,NULL,0,
-			&timeout,
-			&res) ;
-  if ( err !=  LDAP_SUCCESS ) {
-    if (err == LDAP_SERVER_DOWN ){
-      // we lost connection, so disable current one 
-      ldap_unbind(ld);
-      ld=NULL;
-      g_private_set(ldap_priv,ld);
-    }
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-      g_warning ("invalid return from ldap_search_st : %s\n",ldap_err2string(err));
-    return NULL;
-  }
-  // parse result to feed a group_list 
-  if (ldap_count_entries(ld,res) >= 1) {
-    result = ldap_first_entry(ld,res);
-    while ( result ) {
-      // allocate a new acl_group 
-      this_acl=g_new0(struct acl_group,1);
-      this_acl->groups=NULL;
-	g_list = g_slist_prepend(g_list,this_acl);
-	// get decision 
-	attrs_array=ldap_get_values(ld, result, "Decision");
-	sscanf(*attrs_array,"%c",&(this_acl->answer));
-	ldap_value_free(attrs_array);
-	// build groups  list 
-	attrs_array = ldap_get_values(ld, result, "Group");
-	attrs_array_len = ldap_count_values(attrs_array);
-	walker = attrs_array;
-	for(i=0; i<attrs_array_len; i++){
-	  sscanf(*walker,"%d",&group);
-	  this_acl->groups = g_slist_prepend(this_acl->groups, GINT_TO_POINTER(group));
-	  walker++;
-	}
-	ldap_value_free(attrs_array);
-	result = ldap_next_entry(ld,result);
-      }
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_AUTH))
-      g_message("acl group at %p\n",g_list);
-    ldap_msgfree (res);
-    return g_list;
-  } else {
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_AUTH))
-      g_message("No acl found\n");
-    ldap_msgfree (res);
-  }
-  return NULL;
-}
-
-#endif
-
 G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
   GDBM_FILE dbf = g_private_get (ldap_priv);
   datum dbm_key, dbm_data;
@@ -251,20 +141,20 @@ G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
   if (dbm_data.dptr == NULL)
   {
 	  if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
-		  g_message("key \"%s, size %i\" exists in database, but cannot be fetched ?!\n",dbm_key.dptr,dbm_key.dsize);
+		  g_warning("key \"%s, size %i\" exists in database, but cannot be fetched ?!\n",dbm_key.dptr,dbm_key.dsize);
 	  return NULL;
   }
   if (strlen(dbm_data.dptr) != dbm_data.dsize)
   {
 	  if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
-		  g_message("inconsistency in database? advertized data size is not actual size for key %s (size %i)\n",dbm_key.dptr,dbm_key.dsize);
+		  g_warning("inconsistency in database? advertized data size is not actual size for key %s (size %i)\n",dbm_key.dptr,dbm_key.dsize);
 	  return NULL;
   }
   return_data = analyse_dbm_char(dbm_data.dptr);
   if (return_data.outelt == NULL )
   {
 	  if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
-		  g_message("inconsistency in database? unable to parse data for key %s (size %i)\n",dbm_key.dptr,dbm_key.dsize);
+		  g_warning("inconsistency in database? unable to parse data for key %s (size %i)\n",dbm_key.dptr,dbm_key.dsize);
 	  return NULL;
   }
   if (strcmp ( passwd , return_data.passwd ) == 0 )

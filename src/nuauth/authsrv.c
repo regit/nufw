@@ -139,7 +139,7 @@ int main(int argc,char * argv[]) {
 	  debug_level=MIN_DEBUG_LEVEL;
   if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN))
   	g_message("debug_level is %i\n",debug_level);
-  debug_level=DEBUG_LEVEL_INFO;
+
 
 if (daemonize == 1) {
   if ((pidf = fork()) < 0){
