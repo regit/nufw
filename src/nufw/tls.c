@@ -28,8 +28,6 @@ gnutls_session * tls_connect()
       strcat(key_file,"/");
       strcat(key_file,KEYFILE);
   }
-                  syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"key_file!");
-                  syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"cert_file ?");
   if (!cert_file) {
       cert_file=(char*)calloc(strlen(CONFIG_DIR)+strlen(CERTFILE)+2,sizeof(char));
       if (!cert_file)
@@ -47,7 +45,6 @@ gnutls_session * tls_connect()
       strcat(cert_file,"/");
       strcat(cert_file,CERTFILE);
   }
-                  syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"cert_file!");
   /* test if key exists */
   if (access(key_file,R_OK)){
       if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
