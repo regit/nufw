@@ -395,6 +395,71 @@ Description: Mysql Request timeout
 Description-fr: Délai d'expiration Mysql
  Veuillez préciser le délai d'expiration de la connection au server Mysql
 
+Template: nuauth/mysql_use_ssl
+Type: select
+Choices: 0, 1
+Default: 1
+Description: Use SSL for Mysql connections
+  Set this to 1 to wrap MySQL connections in SSL, or 0 if you don't want to.
+Description-fr: Mysql sur SSL
+  Choisissez 1 pour utiliser l'encryption SSL sur les connections Mysql, sinon 0.
+
+Template: nuauth/mysql_ssl_keyfile
+Type: string
+Default: /etc/nufw/ssl/mysql.key
+Description: Private Key used for Mysql SSL connections
+  Please specify the absolute filename of the private key to use for Mysql
+  connections.
+Description-fr: Clé privée à utiliser pour les connections Mysql/SSL
+  Veuillez saisir le chemin et nom du fichier contenant la clé privée SSL à
+  utiliser pour les connections SSL.
+
+Template: nuauth/mysql_ssl_certfile
+Type: string
+Default: /etc/nufw/ssl/mysql.cert
+Description: Public Certificate used for Mysql SSL connections
+  Please specify the absolute filename of the public certificate to use for Mysql
+  connections.
+Description-fr: Certificat public à utiliser pour les connections Mysql/SSL
+  Veuillez saisir le chemin et nom du fichier contenant le certificat public SSL à
+  utiliser pour les connections SSL.
+
+Template: nuauth/mysql_ssl_ca
+Type: string
+Default: /etc/nufw/ssl/mysql.ca
+Description: Certificate Authority file used for Mysql SSL connections
+  Please specify the absolute filename of the certificate authority file to use for Mysql
+  connections. EMPTY THIS IF YOU DON'T INTEND TO USE ANY.
+Description-fr: Fichier de l'autorité de certification à utiliser pour les connections Mysql/SSL
+  Veuillez saisir le chemin et nom du fichier contenant le fichier de l'autorité
+  de certification à utiliser pour les connections SSL. VEUILLEZ VIDER CE CHAMP
+  SI VOUS N'EN DISPOSEZ PAS.
+
+Template: nuauth/mysql_ssl_capath
+Type: string
+Default: /etc/nufw/ssl/mysql.cas/
+Description: Certificate Authority files directory used for Mysql SSL connections
+  Please specify the absolute directory containing certificate authority files
+  to use (in PEM format) for Mysql connections. EMPTY THIS IF YOU DON'T INTEND
+  TO USE ANY. You must enter a directory name here.
+Description-fr: Répertoire de fichiers de l'autorité de certification à utiliser pour les connections Mysql/SSL
+  Veuillez saisir le chemin contenant les fichiers de l'autorité
+  de certification à utiliser pour les connections SSL. VEUILLEZ VIDER CE CHAMP
+  SI VOUS N'EN DISPOSEZ PAS. Un répertoire est attendu, pas un fichier.
+
+Template: nuauth/mysql_ssl_cypher
+Type: string
+Default: ALL:!ADH:+RC4:@STRENGTH
+Description: SSL cypher to use for Mysql SSL connections
+  Enter the SSL cypher you want to use for Mysql SSL connections. For most sites
+  the default (ALL:!ADH:+RC4:@STRENGTH) is a good value. See openssl (1) for
+  details.
+Description-fr: Chiffre SSL à utiliser pour les connections Mysql.
+  Veuillez saisir le chiffre à utiliser pour les connections Mysql/ssl. Dans la
+  plupart des configurations le chiffre par défaut (ALL:!ADH:+RC4:@STRENGTH) est un bon choix. Voir
+  openssl (1) pour plus d'informations.
+
+
 Template: nuauth/pgsql_server_addr
 Type: string
 Default: 127.0.0.1
@@ -452,3 +517,18 @@ Description: PostgreSQL timeout
  Please enter the timeout (in seconds) for connections to the PostgreSQL server
 Description-fr: Délai d'expiration pour PostgreSQL
  Veuillez préciser le délai d'expiration de la connection au serveur PostgreSQL
+
+Template: nuauth/pgsql_ssl
+Type: Select
+Choices: disallow, prefer, allow, require
+Default: prefer
+Description: PostgreSQL SSL wrapping
+ Whether to use SSL to wrap pgsql connections. Disallow prevents use of SSL,
+ prefer attempts to use SSL, then fall backs to unencrypted operations if it
+ fails, allow attemps to use unencrypted mode, then fallbacks to SSL if it
+ fails, require forces the use of SSL.
+Description-fr: Utilisation de SSL pour les connections PostgreSQL
+ Disallow : pas de SSL
+ Prefer : essaye d'utiliser SSL, sinon la connection est en clair.
+ Allow : essaye d'utiliser une connection en clair, sinon SSL.
+ Require : force l'utilisation d'une connection sur SSL.

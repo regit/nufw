@@ -51,6 +51,12 @@ if [ ! -e $CONFIGFILE2 ]; then
         echo "mysql_user" >> $CONFIGFILE2
         echo "mysql_passwd" >> $CONFIGFILE2
         echo "mysql_request_timeout" >> $CONFIGFILE2
+        echo "mysql_use_ssl" >> $CONFIGFILE2
+        echo "mysql_ssl_keyfile" >> $CONFIGFILE2
+        echo "mysql_ssl_certfile" >> $CONFIGFILE2
+        echo "mysql_ssl_ca" >> $CONFIGFILE2
+        echo "mysql_ssl_capath" >> $CONFIGFILE2
+        echo "mysql_ssl_cypher" >> $CONFIGFILE2
         echo "pgsql_server_addr" >> $CONFIGFILE2
         echo "pgsql_server_port" >> $CONFIGFILE2
         echo "pgsql_db_name" >> $CONFIGFILE2
@@ -58,6 +64,7 @@ if [ ! -e $CONFIGFILE2 ]; then
         echo "pgsql_user" >> $CONFIGFILE2
         echo "pgsql_passwd" >> $CONFIGFILE2
         echo "pgsql_request_timeout" >> $CONFIGFILE2
+        echo "pgsql_ssl" >> $CONFIGFILE2
 fi
 # Substitue les valeurs par celles dans la base
 # de donnes de debconf. Il y a ici quelques
@@ -141,7 +148,20 @@ db_get nuauth/mysql_passwd
 mysql_passwd="$RET"
 db_get nuauth/mysql_request_timeout
 mysql_request_timeout="$RET"
+db_get nuauth/mysql_use_ssl
+mysql_use_ssl="$RET"
+db_get nuauth/mysql_ssl_keyfile
+mysql_ssl_keyfile="$RET"
+db_get nuauth/mysql_ssl_certfile
+mysql_ssl_certfile="$RET"
+db_get nuauth/mysql_ssl_ca
+mysql_ssl_ca="$RET"
+db_get nuauth/mysql_ssl_capath
+mysql_ssl_capath="$RET"
+db_get nuauth/mysql_ssl_cypher
+mysql_ssl_cypher="$RET"
 db_get nuauth/pgsql_server_addr
+
 pgsql_server_addr="$RET"
 db_get nuauth/pgsql_server_port
 pgsql_server_port="$RET"
@@ -155,6 +175,8 @@ db_get nuauth/pgsql_passwd
 pgsql_passwd="$RET"
 db_get nuauth/pgsql_request_timeout
 pgsql_request_timeout="$RET"
+db_get nuauth/pgsql_ssl
+pgsql_ssl="$RET"
 cp -a -f $CONFIGFILE2 $CONFIGFILE2.tmp
 
 sed -e "s/^ *nuauth_client_listen_addr=.*/nuauth_client_listen_addr=\"$nuauth_client_listen_addr\"/" \
@@ -188,6 +210,12 @@ sed -e "s/^ *nuauth_client_listen_addr=.*/nuauth_client_listen_addr=\"$nuauth_cl
  -e "s/^ *mysql_user=.*/mysql_user=\"$mysql_user\"/" \
  -e "s/^ *mysql_passwd=.*/mysql_passwd=\"$mysql_passwd\"/" \
  -e "s/^ *mysql_request_timeout=.*/mysql_request_timeout=$mysql_request_timeout/" \
+ -e "s/^ *mysql_use_ssl=.*/mysql_use_ssl=$mysql_use_ssl/" \
+ -e "sµ^ *mysql_ssl_keyfile=.*µmysql_ssl_keyfile=$mysql_ssl_keyfileµ" \
+ -e "sµ^ *mysql_ssl_certfile=.*µmysql_ssl_certfile=$mysql_ssl_certfileµ" \
+ -e "sµ^ *mysql_ssl_ca=.*µmysql_ssl_ca=$mysql_ssl_caµ" \
+ -e "sµ^ *mysql_ssl_capath=.*µmysql_ssl_capath=$mysql_ssl_capathµ" \
+ -e "s/^ *mysql_ssl_cypher=.*/mysql_ssl_cypher=$mysql_ssl_cypher/" \
  -e "s/^ *pgsql_server_addr=.*/pgsql_server_addr=\"$pgsql_server_addr\"/" \
  -e "s/^ *pgsql_server_port=.*/pgsql_server_port=$pgsql_server_port/" \
  -e "s/^ *pgsql_db_name=.*/pgsql_db_name=\"$pgsql_db_name\"/" \
@@ -195,6 +223,7 @@ sed -e "s/^ *nuauth_client_listen_addr=.*/nuauth_client_listen_addr=\"$nuauth_cl
  -e "s/^ *pgsql_user=.*/pgsql_user=\"$pgsql_user\"/" \
  -e "s/^ *pgsql_passwd=.*/pgsql_passwd=\"$pgsql_passwd\"/" \
  -e "s/^ *pgsql_request_timeout=.*/pgsql_request_timeout=$pgsql_request_timeout/" \
+ -e "s/^ *pgsql_ssl=.*/pgsql_ssl=$pgsql_ssl/" \
   < $CONFIGFILE2 > $CONFIGFILE2.tmp
 mv -f $CONFIGFILE2.tmp $CONFIGFILE2
 

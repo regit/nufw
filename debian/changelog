@@ -1,7 +1,8 @@
 nufw (0.6.5-1) unstable; urgency=low
+
   * New upstream version
 
- -- Eric Leblond <eric@inl.fr>  Wed,  11 Mar 2004 23:49:34 +0100
+ -- Vincent Deffontaines <vincent@gryzor.com>  Sun, 14 Mar 2004 18:52:38 +0100
 
 nufw (0.6.4-1) unstable; urgency=low
 
