@@ -2,9 +2,9 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
-AC_INIT(NuFW, 0.8.0, nufw-devel@nongnu.org)
+AC_INIT(NuFW, 0.8.1, nufw-devel@nongnu.org)
 AC_CONFIG_SRCDIR([src/nufw/main.c])
-AM_CONFIG_HEADER([src/include/config.h])
+AM_CONFIG_HEADER(src/include/config.h)
 
 # Checks for programs.
 AC_PROG_CC
@@ -44,7 +44,6 @@ AC_FUNC_STAT
 AC_CHECK_FUNCS([gethostbyname memset socket strcasecmp strspn])
 
 # check if we have a version of libipq supporting mark
-#AC_CHECK_FUNC([ipq],[ipq_set_vwmark],AC_DEFINE_UNQUOTED([HAVE_LIBIPQ_MARK],[1],[libipq has support for mark]),AC_MSG_RESULT([libipq has no support for mark]))
 AC_CHECK_LIB([ipq], [ipq_set_vwmark],AC_DEFINE_UNQUOTED([HAVE_LIBIPQ_MARK],[1],[libipq has support for mark]),AC_MSG_RESULT([libipq has no support for mark]))
 
 
@@ -74,6 +73,7 @@ AC_CONFIG_FILES([Makefile
   		 src/nuauth/modules/log_syslog/Makefile
 		 src/clients/Makefile
 		 src/clients/nutcpc/Makefile
+		 src/clients/lib/Makefile
 		 src/nufw/Makefile
 		 ])
 
