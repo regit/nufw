@@ -115,6 +115,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
     }
     g_private_set(mysql_priv,ld);
   }
+
   /* contruct request */
   switch (state) {
     case STATE_OPEN:
@@ -300,7 +301,6 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
           return 0;
       }
       break;
-
     }
   return 0;
 }

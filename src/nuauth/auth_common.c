@@ -516,7 +516,11 @@ gint take_decision(connection * element) {
         /* delete element */
         if (element->state == STATE_READY ){
             /* log user packet */
-            log_user_packet(*element,STATE_OPEN);
+            if (answer == OK){
+                log_user_packet(*element,STATE_OPEN);
+            } else {
+                 log_user_packet(*element,STATE_DROP);
+            }
             if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
                 g_message("Freeing element\n");
             conn_cl_delete(element);
