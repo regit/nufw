@@ -16,7 +16,14 @@ gnutls_session * tls_connect()
       key_file=(char *)malloc(strlen(CONFIG_DIR)+strlen(KEYFILE)+2);
       if (!key_file)
       {
-          fprintf(stderr,"Couldn't malloc for key_file!");
+          if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
+              if (log_engine == LOG_TO_SYSLOG) {
+                  syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"Couldn't malloc for key_file!");
+              }else {
+                  printf("[%i] Couldn't malloc for key_file!\n",getpid());
+              }
+          }
+
           return NULL;
       }
       strcat(key_file,CONFIG_DIR);
@@ -29,7 +36,13 @@ gnutls_session * tls_connect()
       cert_file=(char *)malloc(strlen(CONFIG_DIR)+strlen(CERTFILE)+2);
       if (!cert_file)
       {
-          fprintf(stderr,"Couldn't malloc for cert_file!");
+          if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
+              if (log_engine == LOG_TO_SYSLOG) {
+                  syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"Couldn't malloc for cert_file!");
+              }else {
+                  printf("[%i] Couldn't malloc for cert_file!\n",getpid());
+              }
+          }
           return NULL;
       }
       strcat(cert_file,CONFIG_DIR);
