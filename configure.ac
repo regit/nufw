@@ -19,7 +19,6 @@ AC_CHECK_HEADERS([libipq/libipq.h libipq.h])
 AC_CHECK_LIB([ipq], [ipq_message_type], have_ipq="yes", have_ipq="")
 
 if test "$have_ipq" = "yes"; then
-	AC_DEFUN([HAVE_LIBRARY_IPQ],[1])
 # check if we have a version of libipq supporting mark
 AC_ARG_WITH(user-mark, [--with-user-mark  support user mark on NuFW firewall], enable_user_mark="yes", enable_user_mark="")
 if test "$enable_user_mark" = "yes"; then
@@ -69,32 +68,32 @@ AC_ARG_WITH(ident,   [--with-ident  Support ident users authentication],ident="y
 AC_ARG_WITH(debug,   [--with-debug Add development debug message],debug="yes", debug="")
 
 if test "$enable_system_auth" = "yes"; then
-  AC_CHECK_LIB([pam],[pam_start],AC_DEFUN([HAVE_LIBRARY_PAM],[1]),AC_MSG_ERROR([PAM library needed for system authentication]))
+  AC_CHECK_LIB([pam],[pam_start],,AC_MSG_ERROR([PAM library needed for system authentication]))
 fi
 AM_CONDITIONAL(USE_SYSTEM_AUTH, test x$enable_system_auth = xyes)
 
 if test "${ldap}" = "yes"; then
-  AC_CHECK_LIB([ldap],[ldap_simple_bind_s],AC_DEFUN([HAVE_LIBRARY_LDAP],[1]),AC_MSG_ERROR([ldap library needed for authentication]))
+  AC_CHECK_LIB([ldap],[ldap_simple_bind_s],,AC_MSG_ERROR([ldap library needed for authentication]))
 fi
 AM_CONDITIONAL(USE_LDAP, test x$ldap = xyes)
 
 if test "${gdbm}" = "yes"; then
-  AC_CHECK_LIB([gdbm],[gdbm_fetch],AC_DEFUN([HAVE_LIBRARY_GDBM],[1]),AC_MSG_ERROR([dbm library needed for authentication]))
+  AC_CHECK_LIB([gdbm],[gdbm_fetch],,AC_MSG_ERROR([dbm library needed for authentication]))
 fi
 AM_CONDITIONAL(USE_GDBM, test x$gdbm = xyes)
 
 if test "${ident}" = "yes"; then
-  AC_CHECK_LIB([ident],[id_open],AC_DEFUN([HAVE_LIBRARY_IDENT],[1]),AC_MSG_ERROR([ident library needed for ident user authentication]))
+  AC_CHECK_LIB([ident],[id_open],,AC_MSG_ERROR([ident library needed for ident user authentication]))
 fi
 AM_CONDITIONAL(USE_IDENT, test x$ident = xyes)
 
 if test "$enable_mysql_log" = "yes"; then
-  AC_CHECK_LIB([mysqlclient],[mysql_real_connect],AC_DEFUN([HAVE_LIBRARY_MYSQL],[1]),AC_MSG_ERROR([mysqlclient library needed if selected]))
+  AC_CHECK_LIB([mysqlclient],[mysql_real_connect],,AC_MSG_ERROR([mysqlclient library needed if selected]))
 fi
 AM_CONDITIONAL(USE_MYSQL_LOG, test x$enable_mysql_log = xyes)
   
 if test "$enable_pgsql_log" = "yes"; then
-  AC_CHECK_LIB([pq],[PQconnectdb],AC_DEFUN([HAVE_LIBRARY_PGSQL],[1]),AC_MSG_ERROR([libpq library needed if PostgreSQL support selected]))
+  AC_CHECK_LIB([pq],[PQconnectdb],,AC_MSG_ERROR([libpq library needed if PostgreSQL support selected]))
 fi
 AM_CONDITIONAL(USE_PGSQL_LOG, test x$enable_pgsql_log = xyes)
 
