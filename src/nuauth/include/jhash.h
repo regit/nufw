@@ -1,6 +1,3 @@
-#ifndef _LINUX_JHASH_H
-#define _LINUX_JHASH_H
-
 /* jhash.h: Jenkins hash support.
  *
  * Copyright (C) 1996 Bob Jenkins (bob_jenkins@burtleburtle.net)
@@ -47,7 +44,7 @@
  * NOTE: In partilar the "c += length; __jhash_mix(a,b,c);" normally
  *       done at the end is not done here.
  */
-static u32 jhash_3words(u32 a, u32 b, u32 c, u32 initval)
+static inline u32 jhash_3words(u32 a, u32 b, u32 c, u32 initval)
 {
 	a += JHASH_GOLDEN_RATIO;
 	b += JHASH_GOLDEN_RATIO;
@@ -57,5 +54,3 @@ static u32 jhash_3words(u32 a, u32 b, u32 c, u32 initval)
 	
 	return c;
 }
-
-#endif /* _LINUX_JHASH_H */

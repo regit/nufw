@@ -1,4 +1,4 @@
-/* $Id: auth_srv.h,v 1.10 2003/09/24 18:59:46 regit Exp $ */
+/* $Id: auth_srv.h,v 1.11 2003/09/27 19:41:39 regit Exp $ */
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
@@ -104,6 +104,7 @@ typedef struct Connection {
   /* tracking test */
   tracking tracking_hdrs;
   u_int16_t id_srv;
+  u_int16_t user_id;
   /* generic list to stock acl related groups */
   GSList * acl_groups;
   // auth stuff 
@@ -149,6 +150,8 @@ struct acl_group {
   char answer;
 };
 
+
+
 GSList * ALLGROUP;
 
 
@@ -174,6 +177,13 @@ GHashTable * users_hash;
 
 /* internal for crypt */
 GPrivate* crypt_priv;
+
+/* internal for send_auth_response */
+
+struct auth_answer {
+  u_int8_t answer;
+  u_int16_t user_id;
+};
 
 /*
  * Functions
