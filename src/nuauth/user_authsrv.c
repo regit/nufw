@@ -118,6 +118,8 @@ void user_check_and_decide (gpointer userdata, gpointer data){
     if ( element != NULL ) {
       /* check state of the packet */
       if ( ((connection *)element)->state >= STATE_READY ){
+          /* packet ready to processing */
+          /* get acls */
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
 	  g_message("trying to decide after userpckt\n"); 
 	take_decision(element);

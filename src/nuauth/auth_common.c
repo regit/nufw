@@ -83,24 +83,24 @@ gint  release_individual_mutex(GMutex * mutex){
 }
 
 
-  guint
+guint
 hash_connection(gconstpointer headers)
 {
-  tracking *tracking_hdrs = (tracking *)headers;
+//  tracking *tracking_hdrs = (tracking *)headers;
 
-  return (jhash_3words(tracking_hdrs->saddr,
-        (tracking_hdrs->daddr ^ tracking_hdrs->protocol),
-        (tracking_hdrs->dest | tracking_hdrs->source << 16),
+  return (jhash_3words(((tracking *)headers)->saddr,
+        (((tracking *)headers)->daddr ^ ((tracking *)headers)->protocol),
+        (((tracking *)headers)->dest | ((tracking *)headers)->source << 16),
         32));
 }
 
 
 gboolean compare_connection(gconstpointer tracking_hdrs1, gconstpointer tracking_hdrs2){
     /* compare IPheaders */
-    if ( ( ((tracking *) tracking_hdrs1)->saddr ==
-          ((tracking *) tracking_hdrs2)->saddr ) &&
-        ( ((tracking *) tracking_hdrs1)->daddr ==
-          ((tracking *) tracking_hdrs2)->daddr ) ){
+    if ( ( ((tracking *) tracking_hdrs1)->daddr ==
+          ((tracking *) tracking_hdrs2)->daddr ) &&
+        ( ((tracking *) tracking_hdrs1)->saddr ==
+          ((tracking *) tracking_hdrs2)->saddr ) ){
 
         /* compare proto */
         if (((tracking *) tracking_hdrs1)->protocol ==
@@ -109,20 +109,20 @@ gboolean compare_connection(gconstpointer tracking_hdrs1, gconstpointer tracking
             /* compare proto headers */
             switch ( ((tracking *) tracking_hdrs1)->protocol) {
               case IPPROTO_TCP:
-                if ( ( ((tracking *) tracking_hdrs1)->source ==
-                      ((tracking *) tracking_hdrs2)->source )   &&
-                    ( ((tracking *) tracking_hdrs1)->dest ==
-                      ((tracking *) tracking_hdrs2)->dest ) ){
+                if ( ( ((tracking *) tracking_hdrs1)->dest ==
+                      ((tracking *) tracking_hdrs2)->dest )   &&
+                    ( ((tracking *) tracking_hdrs1)->source ==
+                      ((tracking *) tracking_hdrs2)->source ) ){
 
                     return TRUE;
 
                 }
                 break;
               case IPPROTO_UDP:
-                if ( ( ((tracking *)tracking_hdrs1)->source ==
-                      ((tracking *)tracking_hdrs2)->source )   &&
-                    ( ((tracking *)tracking_hdrs1)->dest ==
-                      ((tracking *)tracking_hdrs2)->dest ) ){
+                if ( ( ((tracking *)tracking_hdrs1)->dest ==
+                      ((tracking *)tracking_hdrs2)->dest )   &&
+                    ( ((tracking *)tracking_hdrs1)->source ==
+                      ((tracking *)tracking_hdrs2)->source ) ){
                     return TRUE;
                 }
                 break;

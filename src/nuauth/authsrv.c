@@ -274,8 +274,8 @@ int main(int argc,char * argv[]) {
 
     /* initialize packets list */
     conn_list = g_hash_table_new_full ((GHashFunc)hash_connection,
-        compare_connection
-        ,NULL,
+        compare_connection,
+        NULL,
         (GDestroyNotify) free_connection); 
     /* initiate user hash */
     users_hash = g_hash_table_new (NULL, NULL);
