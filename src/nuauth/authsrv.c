@@ -206,7 +206,7 @@ if (daemonize == 1) {
   for(;;){
     clean_connections_list();
      if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_MAIN)){
-      g_message("%d : %u unassigned task(s) and %d connection(s)\n",getpid(),
+      g_message("%u unassigned task(s) and %d connection(s)\n",
 		g_thread_pool_unprocessed(user_checkers),
 		g_hash_table_size(conn_list));  
       //	print_users_list();
