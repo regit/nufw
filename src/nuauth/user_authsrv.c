@@ -136,7 +136,6 @@ void user_check_and_decide (gpointer userdata, gpointer data){
 }
 
 connection * userpckt_decode(char* dgram,int dgramsiz){
-  u_int16_t userid;
   long u_packet_id;
   char *pointer;
   connection* connexion;
@@ -162,7 +161,7 @@ connection * userpckt_decode(char* dgram,int dgramsiz){
       }
       /* parse packet */
       pointer=dgram+2;
-      userid=*(u_int16_t *)(pointer);
+      connexion->user_id=*(u_int16_t *)(pointer);
       pointer+=sizeof (u_int16_t);
       connexion->tracking_hdrs.saddr=(*(u_int32_t * )(pointer));
 #if 0
@@ -219,7 +218,7 @@ connection * userpckt_decode(char* dgram,int dgramsiz){
 	}
 
       /* get user datas : password, groups (filled in) */
-      connexion->user_groups = (*module_user_check) (userid,passwd);
+      connexion->user_groups = (*module_user_check) (connexion->user_id,passwd);
       if (connexion->user_groups == NULL) {
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
 	  g_message("user_check return bad\n");
@@ -280,7 +279,7 @@ connection * userpckt_decode(char* dgram,int dgramsiz){
 	 /* Is it a try to spoof MD5 ? */
 	      
 	/* set some default on connexion */
-	if (check_fill_user_counters(userid,connexion->timestamp,u_packet_id,connexion->tracking_hdrs.saddr)){	
+	if (check_fill_user_counters(connexion->user_id,connexion->timestamp,u_packet_id,connexion->tracking_hdrs.saddr)){	
 	  /* first reset timestamp to now */
 	  connexion->timestamp=time(NULL);
 	  connexion->state=STATE_USERPCKT;

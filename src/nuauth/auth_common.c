@@ -220,6 +220,7 @@ connection * search_and_fill (connection * pckt) {
 	  if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
 	    g_message("Fill user datas\n");
 	  ((connection *)element)->user_groups = pckt->user_groups;
+	  ((connection *)element)->user_id = pckt->user_id;
 	  has_changed_state=1;
     	}
       }
@@ -476,7 +477,7 @@ gint take_decision(connection * element) {
   if (element->state == init_state && (element->state == STATE_READY || answer == OK )) {
     struct auth_answer aanswer ={ answer , element->user_id } ;
     if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-      g_message("Proceed to decision %d for packet_id at %p\n",answer,element->packet_id);
+      g_message("Proceed to decision %d for packet_id %p (user %x)\n",answer,element->packet_id,element->user_id);
     g_slist_foreach(element->packet_id,
 		    (GFunc) send_auth_response,
 		    &aanswer
