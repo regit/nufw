@@ -126,7 +126,6 @@ void user_check_and_decide (gpointer userdata, gpointer data){
     } else {
       if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
 	g_message("Unwanted user packet\n");
-      return;
     }
   } else {
     if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
