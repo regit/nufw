@@ -168,6 +168,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
       //
       //
       //
+	    if ((! nuauth_log_users_sync) || (element.username == NULL)) {
       if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,state,oob_prefix) VALUES (%u,%lu,%u,%lu,%lu,%u,%u,%hu,'ACCEPT')",
 		   mysql_table_name,
 		   (element.user_id),
@@ -183,6 +184,23 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
 	  g_warning("Building mysql insert query, the 511 limit was reached!\n");
 	return -1;
       }
+	    } else {
+ if (snprintf(request,511,"INSERT INTO %s (username,user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,state,oob_prefix) VALUES (%s,%u,%lu,%u,%lu,%lu,%u,%u,%hu,'ACCEPT')",
+		   mysql_table_name,
+		   element.username,
+		   (element.user_id),
+		   element.timestamp,
+		   (element.tracking_hdrs).protocol,
+		   (long unsigned int)(element.tracking_hdrs).saddr,
+		   (long unsigned int)(element.tracking_hdrs).daddr,
+		   (element.tracking_hdrs).source,
+		   (element.tracking_hdrs).dest,
+		   STATE_OPEN
+		   ) >= 511){
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+	  g_warning("Building mysql insert query, the 511 limit was reached!\n");
+	return -1;
+	    }
       Result = mysql_real_query(ld, request, strlen(request));
       if (Result != 0){
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))

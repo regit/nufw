@@ -185,6 +185,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
             iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
             strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
             strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
+	    if ((nuauth_log_users_sync) && (element.username == NULL)) {
             if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,state,oob_prefix) VALUES (%u,%lu,%u,'%s','%s',%u,%u,%hu,'ACCEPT');",
                   pgsql_table_name,
                   (element.user_id),
@@ -200,6 +201,25 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
                     g_warning("Building pgsql insert query, the 511 limit was reached!\n");
                 return -1;
             }
+	    } else {
+if (snprintf(request,511,"INSERT INTO %s (username,user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,state,oob_prefix) VALUES (%s,%u,%lu,%u,'%s','%s',%u,%u,%hu,'ACCEPT');",
+                  pgsql_table_name,
+		  element.username,
+                  (element.user_id),
+                  element.timestamp,
+                  (element.tracking_hdrs).protocol,
+                  tmp_inet1,
+                  tmp_inet2,
+                  (element.tracking_hdrs).source,
+                  (element.tracking_hdrs).dest,
+                  STATE_OPEN
+                  ) >= 511){
+                if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+                    g_warning("Building pgsql insert query, the 511 limit was reached!\n");
+                return -1;
+            }
+
+	    }
             if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
                 g_message("Doing %s ...",request);
 
