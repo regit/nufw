@@ -423,13 +423,16 @@ int main(int argc,char * argv[]) {
     /* admin task */
     for(;;){
         clean_connections_list();
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_MAIN)){
-            g_message("%u unassigned task(s), %d connection(s), and %d/%d free/busy mutex(es) \n",
+       if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
+        if (g_thread_pool_unprocessed(user_checkers) || g_thread_pool_unprocessed(acl_checkers)){
+            g_message("%u user/%u acl unassigned task(s), %d connection(s), and %d/%d free/busy mutex(es) \n",
                 g_thread_pool_unprocessed(user_checkers),
+                g_thread_pool_unprocessed(acl_checkers),
                 g_hash_table_size(conn_list),
                 g_slist_length(free_mutex_list),
                 g_slist_length(busy_mutex_list)
                 );  
+        }
         }
         sleep(2);	
     }
