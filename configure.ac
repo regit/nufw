@@ -66,6 +66,8 @@ AC_ARG_WITH(ldap,   [--with-ldap  Support LDAP directory for users and acl looku
 AC_ARG_WITH(gdbm,   [--with-gdbm  Support gdbm users lookup],gdbm="yes", gdbm="")
 AC_ARG_WITH(ident,   [--with-ident  Support ident users authentication],ident="yes", ident="")
 
+AC_ARG_WITH(debug,   [--with-debug Add development debug message],debug="yes", debug="")
+
 if test "$enable_system_auth" = "yes"; then
   AC_CHECK_LIB([pam],[pam_start],AC_DEFUN([HAVE_LIBRARY_PAM],[1]),AC_MSG_ERROR([PAM library needed for system authentication]))
 fi
@@ -96,6 +98,9 @@ if test "$enable_pgsql_log" = "yes"; then
 fi
 AM_CONDITIONAL(USE_PGSQL_LOG, test x$enable_pgsql_log = xyes)
 
+if test "${debug}" = "yes"; then
+	AC_DEFINE_UNQUOTED([DEBUG_ENABLE],[1],[Will comile development debug message])
+fi
 
 AC_CONFIG_FILES([Makefile
                 doc/Makefile
@@ -121,6 +126,10 @@ AC_CONFIG_FILES([Makefile
 AM_INIT_AUTOMAKE(1.9)
 
 AC_OUTPUT
+
+if test "$debug"; then
+	AC_MSG_NOTICE([Compiling with developement debug support])
+fi
 
 if test "$have_ipq" = ""; then
 	AC_MSG_NOTICE([nufw daemon WON'T be compiled: libipq not present])
