@@ -26,46 +26,37 @@ confparams dbm_nuauth_vars[] = {
   { "dbm_users_file" , G_TOKEN_STRING, 0 , DBM_USERS_FILE }
 };
 
-int analyse_dbm_char(char *data, struct dbm_data_struct *mystruct)
+int analyse_dbm_char(char *datas, struct dbm_data_struct *mystruct)
 {
   char *tmpchar=NULL;
-  char *inittmp=NULL;
-  char *tmp2=NULL;
+  char *data=NULL;
   int i=0;//stupid counter
 
-  tmpchar = g_new0(char,strlen(data) +1);
-  if (tmpchar == NULL)  {
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-      g_warning("Could not malloc for tmpchar\n");
-    return -1;
-  }
-  inittmp=tmpchar;
   mystruct->outelt = NULL;
-  strncpy(tmpchar,data,strlen(data) +1);
+  tmpchar=datas;
   data=strchr(tmpchar,32);
   while (data != NULL ) { // 32 is ASCII code for space " "
     if  (i==0) {
       if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
 	g_message("Extracting password...");
       i++;
-      mystruct->passwd = (char *) malloc (data-tmpchar);
-      strncpy(mystruct->passwd,tmpchar,(data-tmpchar));
-      strncpy(mystruct->passwd + (data-tmpchar),"\0",1);
+      strncpy(mystruct->passwd,tmpchar,data-tmpchar);
+      (mystruct->passwd)[data-tmpchar]=0;
     } else {
       if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
 	g_message("Extracting a group we found...");
-      tmp2 = g_new0 (char ,data-tmpchar);
-      strncpy(tmp2,tmpchar,(data-tmpchar));
-      strncpy(tmp2 + (data-tmpchar),"\0",1);
-      mystruct->outelt = g_slist_prepend(mystruct->outelt, GINT_TO_POINTER(atoi(tmp2)));
+      //tmp2 = g_new0 (char ,data-tmpchar);
+      //strncpy(tmp2,tmpchar,(data-tmpchar));
+      //strncpy(tmp2 + (data-tmpchar),"\0",1);
+      *data=0;
+      mystruct->outelt = g_slist_prepend(mystruct->outelt, GINT_TO_POINTER(atoi(tmpchar)));
       if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-	g_message("got *%s*\n",tmp2);
-      g_free (tmp2);
+	g_message("got *%s*\n",tmpchar);
+      //g_free (tmp2);
     }
     tmpchar = ++data;
     data=strchr(tmpchar,32);
   }
-  g_free(inittmp);
   return 0;
 }
 
@@ -127,6 +118,7 @@ G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
   GDBM_FILE dbf = g_private_get (dbm_priv);
   datum dbm_key, dbm_data;
   struct dbm_data_struct return_data;
+  char* dptr;
 
   if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
     g_message("We are entering dbm_user_check()\n");
@@ -146,19 +138,22 @@ G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
   //Initialize our data structure
   if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_AUTH))
     g_message("Initializing our data structure, with %hi\n",userid);
-  dbm_key.dptr = g_new0(char,rint(log(userid)/log(10))+1);
-  if (dbm_key.dptr == NULL){
+
+  dptr = g_new0(char,rint(log(userid)/log(10))+1);
+  if (dptr == NULL){
     g_error("Could not malloc()\n");
     return NULL;
   }
-
-  if (sprintf(dbm_key.dptr,"%hi",userid) <= 0) {
+  
+  if (sprintf(dptr,"%hi",userid) <= 0) {
     if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
       g_message("Could not convert userid %hi\n",userid);
-    g_free(dbm_key.dptr);
+    g_free(dptr);
     return NULL;
   }
-  dbm_key.dsize = strlen(dbm_key.dptr);
+  dbm_key.dsize = strlen(dptr);
+  dbm_key.dptr=dptr;
+
   if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_AUTH))
     g_message("data structure now initialized");
   
@@ -170,7 +165,7 @@ G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
     {
       if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_AUTH))
 	g_message("no key \"%s, size %i\" could be found in database\n",dbm_key.dptr,dbm_key.dsize);
-      g_free(dbm_key.dptr);
+      g_free(dptr);
       return NULL;
     }
 
@@ -182,9 +177,10 @@ G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
     {
       if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
 	g_warning("key \"%s, size %i\" exists in database, but cannot be fetched ?!\n",dbm_key.dptr,dbm_key.dsize);
-      g_free(dbm_key.dptr);
+      g_free(dptr);
       return NULL;
     }
+  g_free(dptr);
 #if 0
   if (strlen(dbm_data.dptr) != dbm_data.dsize)
     {
@@ -196,21 +192,22 @@ G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
 
   if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_AUTH))
     g_message("Data shall now be analysed : %s\n",dbm_data.dptr);
+
+  return_data.passwd=passwd;
   if (analyse_dbm_char(dbm_data.dptr,&return_data) != 0)
     {
       if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
 	g_message("A problem occured when analysing data for key %s, size %i\n",dbm_key.dptr, dbm_key.dsize);
-      g_free(dbm_key.dptr);
+      //g_free(dptr);
       return NULL;
     }
   if (return_data.outelt == NULL )
     {
       if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
 	g_warning("inconsistency in database? unable to parse data for key %s (size %i)\n",dbm_key.dptr,dbm_key.dsize);
-      g_free(dbm_key.dptr);
+      //  g_free(dptr);
       return NULL;
     }
-  strncpy(passwd ,return_data.passwd,128);
-  g_free(dbm_key.dptr);
+  g_free(dbm_data.dptr);
   return (return_data.outelt);
 }
