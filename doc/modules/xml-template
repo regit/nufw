@@ -13,27 +13,27 @@ Order of directives can (and should) be optimized by the rules generator.
 o All possible directives :
 --------------------------
 
-<proto [icmp/tcp/udp]>  </proto [icmp/tcp/udp]>
-<srcipstart ip>         </srcipstart ip>
-<srcipend ip>           </srcipend ip>
-<dstipstart ip>         </dstipstart ip>
-<dstipend ip>           </dstipend ip>
+<protocol proto="[icmp/tcp/udp]">  </protocol proto="[icmp/tcp/udp]">
+<srcipstart ip="[ip]">         </srcipstart ip="[ip]">
+<srcipend ip="[ip]">           </srcipend ip="[ip]">
+<dstipstart ip="[ip]">         </dstipstart ip="[ip]">
+<dstipend ip="[ip]">           </dstipend ip="[ip]">
 #TCP and UDP specific
-<srcportstart port>     </srcportstart port>
-<srcportend port>       </srcportend port>
-<dstportstart port>     </dstportstart port>
-<dstportend port>       </dstportend port>
+<srcportstart port="[port]">     </srcportstart port="[port]">
+<srcportend port="[port]">       </srcportend port="[port]">
+<dstportstart port="[port]">     </dstportstart port="[port]">
+<dstportend port="[port]">       </dstportend port="[port]">
 #end of TCP and UDP specific
 #ICMP specific
-<icmptype [type]>       </icmptype [type]>
+<icmptype type="[type]">       </icmptype type="[type]">
 #end ICMP specific
-<daystart [days]>       </daystart [days]>
-<dayend [days]>         </dayend [days]>
+<daystart days="[days]">       </daystart days="[days]">
+<dayend days="[days]">         </dayend days="[days]">
 #days = monday + tuesday + etc. where monday = 1, tuesday = 2, wednesday = 4, etc.)
-<timestart [time]>      </timestart [time]>
-<timeend   [time]>      </timeend [time]>
+<timestart time="[time]">      </timestart time="[time]">
+<timeend   time="[time]">      </timeend time="[time]">
 #time = number of seconds since midnight
-<Group GroupID,...></Group>
+<Group>GroupID</Group>
 #The only needed directive.
 
 
@@ -43,48 +43,53 @@ o Rules :
 Not all directives need to be specified
 The two following examples are stricly equivalent :
 
-<proto tcp>
- <dstportstart 1>
-  <dstportend 1024>
-   <timestart 32400> #9 am
-    <timeend 61200>  # 5 pm
-     <Groups 101,102></Groups>  #Allow these groups' members to perform a connection in specified conditions
-    </timeend 61200>
-   </timestart 32400>
-  </dstportend 1024>
- </dstportstart 1>
-</proto tcp>
+<protocol proto="tcp">
+ <dstportstart port="1">
+  <dstportend port="1024">
+   <timestart time="32400"> #9 am
+    <timeend time="61200">  # 5 pm
+     <Group>101</Group>  #Allow these groups' members to perform a connection in specified conditions
+     <Group>102</Group>
+    </timeend time="61200">
+   </timestart time="32400">
+  </dstportend port="1024">
+ </dstportstart port="1">
+</protocol proto="tcp">
 
 
-<timestart 32400> #9 am
- <timeend 61200>  # 5 pm
-  <proto tcp>
-   <dstportstart 1>
-    <dstportend 1024>
-     <Groups 101,102></Groups>  #Allow these groups' members to perform a connection in specified conditions
-    </dstportend 1024>
-   </dstportstart 1>
-  </proto tcp>
- </timeend 61200>
-</timestart 32400>
+<timestart time="32400"> #9 am
+ <timeend time="61200">  # 5 pm
+  <protocol proto="tcp">
+   <dstportstart port="1">
+    <dstportend port="1024">
+     <Group>101</Group>  #Allow these groups' members to perform a connection in specified conditions
+     <Group>102</Group>
+    </dstportend port="1024">
+   </dstportstart port="1">
+  </protocol proto="tcp">
+ </timeend time="61200">
+</timestart time="32400">
 
 
 Another example :
-<timestart 32400> #9 am
- <timeend 61200>  # 5 pm
-  <proto tcp>
-   <dstportstart 1>
-    <dstportend 1024>
-     <Groups 101,102></Groups>  #Allow these groups' members to perform a connection to TCP ports 1-1024
-    </dstportend 1024>
-   </dstportstart 1>
-  </proto tcp>
-  <proto udp>
-   <dstportstart 53>
-    <dstportend 53>
-     <Groups 101,102></Groups>  #Allow these groups' members to perform a connection to UDP port 53
-    </dstportend 53>
-   </dstportstart 53>
-  </proto udp>
- </timeend 61200>
-</timestart 32400>
+<timestart time="32400"> #9 am
+ <timeend time"61200">  # 5 pm
+  <protocol proto="tcp">
+   <dstportstart port="1">
+    <dstportend port="1024">
+     <Group>101</Group>
+     <Group>102</Group>  #Allow these groups' members to perform a connection to TCP ports 1-1024
+    </dstportend port="1024">
+   </dstportstart port="1">
+  </protocol proto="tcp">
+  <protocol proto="udp">
+   <dstportstart port="53">
+    <dstportend port="53">
+     <Group>101</Group>  #Allow these groups' members to perform a connection to UDP port 53
+     <Group>102</Group>
+    </dstportend port="53">
+   </dstportstart port="53">
+  </protocol proto="udp">
+ </timeend time="61200">
+</timestart time="32400">
+
