@@ -31,7 +31,8 @@ confparams nuauth_vars[] = {
   { "nuauth_number_usercheckers" , G_TOKEN_INT , NB_USERCHECK, NULL},
   { "nuauth_number_aclcheckers" , G_TOKEN_INT , NB_ACLCHECK, NULL },
   { "nuauth_log_users" , G_TOKEN_INT , 1, NULL },
-  { "nuauth_auth_module" , G_TOKEN_STRING , 1, NULL },
+  { "nuauth_user_check_module" , G_TOKEN_STRING , 1, NULL },
+  { "nuauth_acl_check_module" , G_TOKEN_STRING , 1, NULL }
 };
 #endif 
 
@@ -47,7 +48,8 @@ int main(int argc,char * argv[]) {
   char *configfile=DEFAULT_CONF_FILE;
   int nbacl_check=NB_ACLCHECK;
   int nbuser_check=NB_USERCHECK;
-  char * nuauth_auth_module=DEFAULT_AUTH_MODULE;
+  char * nuauth_acl_check_module=DEFAULT_AUTH_MODULE;
+  char * nuauth_user_check_module=DEFAULT_AUTH_MODULE;
   gpointer vpointer;
   pid_t pidf;
 
@@ -85,9 +87,10 @@ int main(int argc,char * argv[]) {
   nbacl_check=*(int*)(vpointer?vpointer:&nbacl_check);
   vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_log_users");
   nuauth_log_users=*(int*)(vpointer?vpointer:&nuauth_log_users);
-  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_auth_module");
-  nuauth_auth_module=(char*)(vpointer?vpointer:nuauth_auth_module);
-  
+  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_user_check_module");
+  nuauth_user_check_module=(char*)(vpointer?vpointer:nuauth_user_check_module);
+  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_acl_check_module");
+  nuauth_acl_check_module=(char*)(vpointer?vpointer:nuauth_acl_check_module);
   /*parse options */
   while((option = getopt ( argc, argv, options_list)) != -1 ){
     switch (option){
@@ -203,21 +206,31 @@ if (daemonize == 1) {
   module_user_check=NULL;
 
   auth_module=g_module_open (g_module_build_path(MODULE_PATH,
-						 nuauth_auth_module)
+						 nuauth_user_check_module)
 			     ,0);
   if (auth_module == NULL){
-    g_error("unable to load module %s in %s",nuauth_auth_module,MODULE_PATH);
+    g_error("unable to load module %s in %s",nuauth_user_check_module,MODULE_PATH);
   }
   
+  if (!g_module_symbol (auth_module, "user_check", 
+			(gpointer*)&module_user_check))
+    {
+      g_error ("Unable to load user check function\n");
+    }
+
+  if ( strcmp(nuauth_user_check_module,nuauth_acl_check_module)){
+    auth_module = g_module_open (g_module_build_path(MODULE_PATH,
+						     nuauth_user_check_module)
+				 ,0);
+    if (auth_module == NULL){
+      g_error("unable to load module %s in %s",nuauth_user_check_module,MODULE_PATH);
+    }
+  }
+
   if (!g_module_symbol (auth_module, "acl_check", 
 			(gpointer*)&module_acl_check))
     {
       g_error ("Unable to load acl check function\n");
-    }
-   if (!g_module_symbol (auth_module, "user_check", 
-			(gpointer*)&module_user_check))
-    {
-      g_error ("Unable to load user check function\n");
     }
 
   /* internal Use */
