@@ -236,7 +236,7 @@ connection * search_and_fill (connection * pckt) {
                 // House work
                 if (!conn_cl_delete(element)) {
                         if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-                                g_warning("connection cleaning failed at __FILE__:__LINE__\n");
+                                g_warning("connection cleaning failed at %s:%d\n",__FILE__,__LINE__);
                 }
                 free_connection(pckt);
                 return NULL;           
@@ -476,11 +476,12 @@ gint take_decision(connection * element) {
         if (element->state == STATE_READY ){
             // log user
             log_user_packet(*element,element->decision);
-	    if ( ! conn_cl_delete( element)) {
-		    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-			    g_warning("connection cleaning failed at __FILE__:__LINE__\n");
-	    }
-	} else {
+        if ( ! conn_cl_delete( element)) {
+    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
+                                g_warning("connection cleaning failed at %s:%d\n",__FILE__,__LINE__);
+                }
+
+        } else {
             /* only change state */
             change_state(element,STATE_DONE);
             UNLOCK_CONN(element);
@@ -549,12 +550,12 @@ gint take_decision(connection * element) {
             }
             if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
                 g_message("Freeing element\n");
-	    if ( ! conn_cl_delete( element)) {
-		    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-			    g_warning("connection cleaning failed at __FILE__:__LINE__\n");
-	    }
-	} else {
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
+       if ( ! conn_cl_delete( element)) {
+    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
+                                g_warning("connection cleaning failed at %s:%d\n", __FILE__, __LINE__);
+                }
+        } else {
+            if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
                 g_message("only change state\n");
             change_state(element,STATE_DONE);
             element->decision=STATE_OPEN;
