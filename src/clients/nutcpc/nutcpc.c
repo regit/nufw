@@ -469,7 +469,7 @@ static void compare (conntable_t *old, conntable_t *new)
 
 static void usage (void)
 {
-	fprintf (stderr, "usage: nutcpc [-dpS]  [-I interval] "
+	fprintf (stderr, "usage: nutcpc [-dS]  [-I interval] "
 			"[-U userid ]  [-u local_id] [-H nuauth_srv]\n");
 	exit (EXIT_FAILURE);
 }
