@@ -1,4 +1,4 @@
-/* $Id: auth_dbm.h,v 1.3 2003/09/30 22:33:28 gryzor Exp $ */
+/* $Id: auth_dbm.h,v 1.4 2003/10/01 18:34:23 gryzor Exp $ */
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
@@ -35,6 +35,6 @@ struct dbm_data_struct{
 	GSList *outelt;
 };
 	
-struct dbm_data_struct analyse_dbm_char(char *data);
+int analyse_dbm_char(char *data, struct dbm_data_struct *mystruct);
 
 char * users_file;

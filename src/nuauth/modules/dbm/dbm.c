@@ -26,19 +26,18 @@ confparams dbm_nuauth_vars[] = {
   { "dbm_users_file" , G_TOKEN_STRING, 0 , DBM_USERS_FILE }
 };
 
-struct dbm_data_struct analyse_dbm_char(char *data)
+int analyse_dbm_char(char *data, struct dbm_data_struct *mystruct)
 {
 	char *tmpchar, *tmp2;
-	struct dbm_data_struct myresult;
 	int i=0;//stupid counter
+
 	tmpchar = (char *) malloc (strlen(data) +1);
-	myresult.outelt = NULL;
+	mystruct->outelt = NULL;
 	if (tmpchar == NULL)
 	{
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
 			g_warning("Could not malloc for tmpchar\n");
-		myresult.outelt = NULL; //useless here ; set for clarity
-		return myresult;
+		return -1;
 	}
 	strncpy(tmpchar,data,strlen(data) +1);
 	data=strchr(tmpchar,32);
@@ -46,21 +45,27 @@ struct dbm_data_struct analyse_dbm_char(char *data)
 	{
 		if  (i==0)
 		{
+			if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+				g_message("Extracting password...");
 			i++;
-			myresult.passwd = (char *) malloc (data-tmpchar);
-			strncpy(myresult.passwd,tmpchar,(data-tmpchar)-1);
-			strncpy(myresult.passwd + (data-tmpchar),"\0",1);
+			mystruct->passwd = (char *) malloc (data-tmpchar);
+			strncpy(mystruct->passwd,tmpchar,(data-tmpchar));
+			strncpy(mystruct->passwd + (data-tmpchar),"\0",1);
 		}else{
+			if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+				g_message("ExtractIng a group we found...");
 			tmp2 = (char *) malloc (data-tmpchar);
-			strncpy(tmp2,tmpchar,(data-tmpchar)-1);
+			strncpy(tmp2,tmpchar,(data-tmpchar));
 			strncpy(tmp2 + (data-tmpchar),"\0",1);
-			myresult.outelt = g_slist_prepend(myresult.outelt, GINT_TO_POINTER(atoi(tmp2)));
+			mystruct->outelt = g_slist_prepend(mystruct->outelt, GINT_TO_POINTER(atoi(tmp2)));
+			if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+				g_message("got *%s*\n",tmp2);
 			free (tmp2);
 		}
-		tmpchar = data++;
+		tmpchar = ++data;
 		data=strchr(tmpchar,32);
 	}
-	return (myresult);
+	return 0;
 }
 
 
@@ -116,8 +121,9 @@ GDBM_FILE dbm_file_init(void){
 G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
   GDBM_FILE dbf = g_private_get (dbm_priv);
   datum dbm_key, dbm_data;
-  struct dbm_data_struct return_data;
+  struct dbm_data_struct effective_data, *return_data;
 
+  return_data = &effective_data;
   if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
 	  g_message("We are entering dbm_user_check()\n");
   if (dbf == NULL){
@@ -168,20 +174,27 @@ G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
 		  g_warning("key \"%s, size %i\" exists in database, but cannot be fetched ?!\n",dbm_key.dptr,dbm_key.dsize);
 	  return NULL;
   }
-  if (strlen(dbm_data.dptr) != dbm_data.dsize)
+/*  if (strlen(dbm_data.dptr) != dbm_data.dsize)
   {
 	  if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
-		  g_warning("inconsistency in database? advertized data size is not actual size for key %s (size %i)\n",dbm_key.dptr,dbm_key.dsize);
+		  g_warning("inconsistency in database? advertized data size is not actual size for key %s (data size %i), found size %i\n",dbm_key.dptr,dbm_data.dsize,strlen(dbm_data.dptr));
 	  return NULL;
+  }*/
+  if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_AUTH))
+	  g_message("Data shall now be analysed : %s\n",dbm_data.dptr);
+  if (analyse_dbm_char(dbm_data.dptr,return_data) != 0)
+  {
+    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
+	    g_message("A problem occured when analysing data for key %s, size %i\n",dbm_key.dptr, dbm_key.dsize);
+    return NULL;
   }
-  return_data = analyse_dbm_char(dbm_data.dptr);
-  if (return_data.outelt == NULL )
+  if (return_data->outelt == NULL )
   {
 	  if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
 		  g_warning("inconsistency in database? unable to parse data for key %s (size %i)\n",dbm_key.dptr,dbm_key.dsize);
 	  return NULL;
   }
-  if (strcmp ( passwd , return_data.passwd ) == 0 )
-	  return (return_data.outelt);
+  if (strcmp ( passwd , return_data->passwd ) == 0 )
+	  return (return_data->outelt);
   return NULL;
 }
