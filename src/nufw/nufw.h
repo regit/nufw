@@ -46,6 +46,7 @@ GCRY_THREAD_OPTION_PTHREAD_IMPL;
 struct nuauth_conn {
         gnutls_session * session;
         unsigned char active;
+        int socket;
 };
 
 struct nuauth_conn tls;
