@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.1 2003/08/25 19:16:38 regit Exp $ */
+/* $Id: main.c,v 1.2 2003/08/29 18:23:13 regit Exp $ */
 
 /*
 ** Copyright (C) 2002 Eric Leblond <eric@regit.org>
@@ -38,6 +38,7 @@ int main(int argc,char * argv[]){
   char * options_list = "DhVvl:d:p:t:T:";
   int option,daemonize = 0;
   int value;
+  unsigned int ident_srv;
   char* version=VERSION;
 
   /* initialize variables */
@@ -90,7 +91,8 @@ int main(int argc,char * argv[]){
       sscanf(optarg,"%d",&track_size);
       break;
     case 'I' :
-      sscanf(optarg,"%d",&id_srv);
+      sscanf(optarg,"%ud",&ident_srv);
+      id_srv=ident_srv;
       break;
     case 'h' :
       fprintf (stdout ,"PACKAGE [-hVv] [-l local_port] [-d remote_addr] [-p remote_port]  [-t packet_timeout] [-T track_size] [-I id_server]\n");
