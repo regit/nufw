@@ -1,4 +1,4 @@
-/* $Id: auth_srv.h,v 1.28 2004/03/18 01:16:18 regit Exp $ */
+/* $Id: auth_srv.h,v 1.29 2004/03/20 00:38:59 regit Exp $ */
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
@@ -31,6 +31,11 @@
 #include <arpa/inet.h>
 #include <time.h>
 #include <signal.h>
+
+/* SSL */
+#include "../include/ssl.h"
+#define KEYFILE CONFIG_DIR "/nuauth.pem"
+#define PASSWORD "password"
 
 /* config dependant */
 #include <config.h>
@@ -279,4 +284,4 @@ int init_ldap_system(void);
 
 /* PROV */
 #define MAX_CLIENTD 256
-FILE* client[MAX_CLIENTD];
+SSL* client[MAX_CLIENTD];

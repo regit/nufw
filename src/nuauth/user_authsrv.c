@@ -99,12 +99,12 @@ void* user_authsrv(){
 static int
 treat_user_request (int c){
 	char * buf;
-	FILE *rx = client[c];
+	SSL *rx = client[c];
 
 
 	/* copy packet datas */
 	buf=g_new0(char,64);
-	if ( fread(buf,sizeof(char),63,rx) ){
+	if ( SSL_read(rx,buf,63) ){
 		g_message("pushing request\n");
 		g_thread_pool_push (user_checkers,
 				buf,	
@@ -120,14 +120,22 @@ void* ssl_user_authsrv(){
 	int sck_inet;
 	struct sockaddr_in addr_inet,addr_clnt;
 	int len_inet;
-	int mx,n,c;
+	int mx,n,c,r;
 	fd_set rx_set; /* read set */
 	fd_set wk_set; /* working set */
 	struct timeval tv;
+	FILE* c_stream;
+	SSL* ssl;
+	SSL_CTX* ctx;
+	BIO* sbio;
 #if 0
 	struct up_datas userdatas;
 #endif
 
+	/* Build our SSL context*/
+	ctx=initialize_ctx(KEYFILE,PASSWORD);
+	/* TODO */
+	//load_dh_params(ctx,DHFILE);
 	//open the socket
 	sck_inet = socket (AF_INET,SOCK_STREAM,0);
 
@@ -218,21 +226,25 @@ void* ssl_user_authsrv(){
 			 * create stream
 			 */
 
-			client[c] = fdopen(c,"r");
-			if ( !client[c] ) {
+			c_stream = fdopen(c,"r");
+			if ( !c_stream ) {
 				close(c);
 				continue;
 			}
 
 			/*
-			 * TODO
-			 * new client stuff
-			 * TODO
+			 * Initiate SSL for this client
 			 */
+			sbio=BIO_new_socket(c,BIO_NOCLOSE);
+			ssl=SSL_new(ctx);
+			SSL_set_bio(ssl,sbio,sbio);
 
+			if((r=SSL_accept(ssl)<=0))
+				berr_exit("SSL accept error");
 
+			client[c]=ssl;
 			g_message("Incoming user request !\n");
-		
+
 			if ( c+1 > mx )
 				mx = c + 1;
 
@@ -262,9 +274,9 @@ void* ssl_user_authsrv(){
 				c = mx -1 )
 			mx = c;
 	}
-close(sck_inet);
+	close(sck_inet);
 
-return NULL;
+	return NULL;
 }
 
 
