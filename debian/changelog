@@ -1,3 +1,10 @@
+nufw (0.8.1-1) unstable; urgency=low
+
+  * New upstream version. Adds a paquet for libnuclient, the client
+  authentication library.
+
+ -- Vincent Deffontaines <vincent@gryzor.com>  Mon,  19 Jul 2004 21:23:13 +0200
+
 nufw (0.8.0-1) unstable; urgency=low
 
   * New upstream version. Adds the strict logs update option, together with
