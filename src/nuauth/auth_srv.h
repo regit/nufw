@@ -1,4 +1,4 @@
-/* $Id: auth_srv.h,v 1.32 2004/05/20 21:33:03 regit Exp $ */
+/* $Id: auth_srv.h,v 1.33 2004/05/20 22:37:50 regit Exp $ */
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
@@ -227,6 +227,7 @@ struct auth_answer {
 void search_and_fill ();
 
 gboolean compare_connection(gconstpointer conn1, gconstpointer conn2);
+int sck_auth_reply;
 void send_auth_response(gpointer data, gpointer userdata);
 int conn_cl_delete(gconstpointer conn);
 char change_state(connection *elt, char state);

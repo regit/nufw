@@ -421,6 +421,12 @@ int main(int argc,char * argv[]) {
     if (!connexions_queue)
         exit(1);
 
+    /* create socket for auth reply */
+    sck_auth_reply = socket (PF_INET,SOCK_DGRAM,0);
+    if (sck_auth_reply == -1){
+	exit(1);
+    }
+
     if (nuauth_use_ssl){
         /* create thread for ssl  auth server */
         ssl_auth_server = g_thread_create ( ssl_user_authsrv,

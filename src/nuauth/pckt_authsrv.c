@@ -180,11 +180,12 @@ void acl_check_and_decide (gpointer userdata, gpointer data){
                 }
                 /* in case we get the lock but lock is on empty packet */
                 if ( element == NULL ) return;
-                /* search if ALL in acl group list 
-                 * This is a answer speed against overhead in CPU
-                 * because check is done twice (one looking for ALLGROUP one when packet is ready)
-                 */
-                take_decision(element);
+                if (element->state == STATE_READY) {
+			take_decision(element);
+		} else {
+			/* not ready only release lock */
+			UNLOCK_CONN(element);
+		}
             } else {
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET))
                     g_message("element is NULL\n");

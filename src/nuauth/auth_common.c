@@ -32,56 +32,6 @@ inline char change_state(connection *elt, char state){
     return  elt->state;
 }
 
-/* 
- * Get individal mutex
- */
-GMutex * get_individual_mutex(){
-    static GStaticMutex free_mutex_mutex = G_STATIC_MUTEX_INIT;
-    static GStaticMutex busy_mutex_mutex = G_STATIC_MUTEX_INIT;
-    GMutex * cmutex=NULL;
-
-    g_static_mutex_lock(&free_mutex_mutex);
-    /* get first free mutex */
-    if ( free_mutex_list != NULL ){
-        cmutex=(GMutex *)(free_mutex_list->data);
-        free_mutex_list= g_slist_next(free_mutex_list);
-    } else {
-        /* allocate mutex */
-        cmutex=g_mutex_new();
-    }
-    g_static_mutex_unlock(&free_mutex_mutex);
-    /* add it to the list of busy mutex */
-    g_static_mutex_lock(&busy_mutex_mutex);
-    busy_mutex_list=g_slist_prepend(busy_mutex_list,cmutex);
-    g_static_mutex_unlock(&busy_mutex_mutex);
-    /* return it */
-    return cmutex;
-}
-
-
-/*
- * Release individual mutex
- */
-
-gint  release_individual_mutex(GMutex * mutex){
-    static GStaticMutex free_mutex_mutex = G_STATIC_MUTEX_INIT;
-    static GStaticMutex busy_mutex_mutex = G_STATIC_MUTEX_INIT;
-    /* search for mutex in busy list and suppress it of the list */
-    if (mutex == NULL) {
-        return -1;
-    } else {
-        g_static_mutex_lock(&busy_mutex_mutex);
-        busy_mutex_list = g_slist_remove(busy_mutex_list,mutex);
-        g_static_mutex_unlock(&busy_mutex_mutex);
-        /* add the mutex to the free list */
-        g_static_mutex_lock(&free_mutex_mutex);
-        free_mutex_list = g_slist_prepend(free_mutex_list,mutex);
-        g_static_mutex_unlock(&free_mutex_mutex);
-    }
-    return 0;
-}
-
-
   guint
 hash_connection(gconstpointer headers)
 {
@@ -297,9 +247,6 @@ void send_auth_response(gpointer data, gpointer userdata){
     uint8_t proto_version=PROTO_VERSION,answer_type=AUTH_ANSWER;
     char datas[512];
     char *pointer;
-    int sck_auth_request;
-    sck_auth_request = socket (PF_INET,SOCK_DGRAM,0);
-
 
     /* for each packet_id send a response */
 
@@ -322,10 +269,10 @@ void send_auth_response(gpointer data, gpointer userdata){
     pointer+=sizeof (packet_id);
 
     if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)) {
-        g_message("Sending auth answer %d for %lu on %d ... ",answer,packet_id,sck_auth_request);
+        g_message("Sending auth answer %d for %lu on %d ... ",answer,packet_id,sck_auth_reply);
         fflush(stdout);
     }
-    if (sendto(sck_auth_request,
+    if (sendto(sck_auth_reply,
           datas,
           pointer-datas,
           MSG_DONTWAIT,
@@ -334,7 +281,6 @@ void send_auth_response(gpointer data, gpointer userdata){
         if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
             g_warning("failure when sending auth response\n");
     }
-    close(sck_auth_request);
     if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
         g_message("done\n");
     }
@@ -344,13 +290,8 @@ void send_auth_response(gpointer data, gpointer userdata){
 
 int free_connection(connection * conn){
     GSList *acllist;
-    GMutex * connmutex=conn->lock;
     g_assert (conn != NULL );
 
-    if (connmutex)
-        g_mutex_unlock(connmutex);
-    /* if a thread has the lock it take it */
-    if ((connmutex==NULL) || g_mutex_trylock(connmutex)){
         if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
             if (conn->packet_id != NULL)
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN))
@@ -368,11 +309,6 @@ int free_connection(connection * conn){
         if (conn->packet_id != NULL )
             g_slist_free (conn->packet_id);
         g_free(conn);
-        if (connmutex) {
-            g_mutex_unlock(connmutex);
-            release_individual_mutex(connmutex);
-        }
-    }
     return 1;
 }
 
@@ -381,17 +317,12 @@ int free_connection(connection * conn){
 int conn_cl_delete(gconstpointer conn) {
     g_assert (conn != NULL);
 
-    /* acquire lock on hash */
-    //g_static_mutex_lock (&insert_mutex);
     if (!  g_hash_table_steal (conn_list,
           &(((connection *)conn)->tracking_hdrs)) ){
         if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
             g_warning("Removal of conn in hash failed\n");
-        //g_static_mutex_unlock (&insert_mutex);
         return 0;
     }
-    /* free global hash */
-    //g_static_mutex_unlock (&insert_mutex);
     /* free isolated structure */ 
     free_connection((connection *)conn);
     return 1;
@@ -412,17 +343,12 @@ int conn_key_delete(gconstpointer key) {
     connection* element = (connection*)g_hash_table_lookup ( conn_list,key);
     /* test for lock */
     if (element){
-        if ( g_mutex_trylock(element->lock)) {
             /* need to log drop of packet if it is a nufw packet */
             if (element->state == STATE_AUTHREQ) {
                 log_user_packet(*element,STATE_DROP); 
             }
             g_hash_table_remove (conn_list,key);
             return 1;
-        } else {
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-                g_message("element locked\n");
-        }
     }
     return 0;
 }
@@ -442,6 +368,8 @@ void clean_connections_list (){
         g_message("Finish searching old connections");
     /* go through stocked keys to suppres old element */
     g_slist_foreach(old_conn_list,(GFunc)conn_key_delete,NULL);
+    if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
+        g_message("Finish to delete old connections");
     /* work is done we release lock */
     g_static_mutex_unlock (&insert_mutex);
     if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)) {
