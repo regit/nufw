@@ -5,5 +5,5 @@ SUBDIRS = authsrv clients
 sbin_PROGRAMS = nufw
 
 # nufw
-nufw_SOURCES = authsrv.c  common.c  main.c  packetsrv.c  proto.h  structure.h
+nufw_SOURCES = authsrv.c  common.c  main.c  packetsrv.c  proto.h  structure.h  debug.c
 LIBS = -lipq -lpthread

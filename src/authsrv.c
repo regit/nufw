@@ -1,4 +1,4 @@
-/* $Id: authsrv.c,v 1.4 2003/09/14 21:29:38 gryzor Exp $ */
+/* $Id: authsrv.c,v 1.5 2003/09/15 21:41:21 gryzor Exp $ */
 
 
 /*
@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <structure.h>
+
 
 static void 
 bail (const char *on_what){
@@ -92,9 +93,11 @@ int auth_packet_to_decision(char* dgram){
       if (sandf){
 	if ( *(dgram+4) == OK ) {
 	  /* TODO : test on return */
-	  if (debug){
+	  /*if (debug){
 	    printf ("Accepting %lu\n",packet_id);
 	  }
+	  */
+	  nufw_debug(1,1,"Accepting\n");
 	  IPQ_SET_VERDICT(packet_id, NF_ACCEPT);
 	  pckt_tx++;
 	  return 1;
