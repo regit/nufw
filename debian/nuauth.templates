@@ -297,23 +297,24 @@ Description-fr: DN de base pour les recherches LDAP d'utilisateurs
 
 Template: nuauth/dbm_users_file
 Type: string
-Default: /etc/nuauth/users.dbm
+Default: /etc/nufw/users.dbm
 Description: DBM file with users/groups definition
 Description-fr: Fichier DBM contenant les définitions utilisateurs/groupes
 
-Template: nuauth/nuauth_prio_to_nok
-Type: boolean
-Default: true
+Template: nuauth/prio_to_nok
+Type: select
+Choices: 0, 1
+Default: 1
 Description: Decision to accept when groups disagree
  When a user is member of several groups, it can happen that some groups grant
- access for a connection, and others deny it. If you choose 'True' here,
- connection will be denied in those cases. If you choose 'False', connection
+ access for a connection, and others deny it. If you choose 1 here,
+ connection will be denied in those cases. If you choose 0, connection
  will be granted as soon as one group user is member of grants the right to
  connect.
 Description-fr: Décision à prendre quand les groupes sont en désaccord
  Il arrivera, si un utilisateur est membre de plusieurs groupes, que, pour une
  connection demandée par cet utilisateur, certains groupes acceptent et d'autres
- refusent l'accès. Si vous choisissez 'Oui' ici, l'accès sera refusé à
- l'utilisateur dans ces cas. Si vous choisissez 'Non', l'accès à une ressource
+ refusent l'accès. Si vous choisissez 1 ici, l'accès sera refusé à
+ l'utilisateur dans ces cas. Si vous choisissez 0, l'accès à une ressource
  par un utilisateur sera donc accepté dès qu'un des groupes dont l'utilisateur
  fait partie permet cet accès.

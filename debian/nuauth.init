@@ -73,8 +73,8 @@ case "$1" in
 	start-stop-daemon --stop --quiet --pidfile \
 		/var/run/$NAME/$NAME.pid --exec $DAEMON
 	sleep 1
-	start-stop-daemon --start --quiet --pidfile \
-		/var/run/$NAME/$NAME.pid --exec $DAEMON -- $DAEMON_OPTS
+	start-stop-daemon --start --quiet --pidfile /var/run/$NAME/$NAME.pid \
+                --chuid $NUAUTH_USER --exec $DAEMON -- $DAEMON_OPTS
 	echo "$NAME."
 	;;
   *)

@@ -83,11 +83,11 @@ G_MODULE_EXPORT PGconn *pgsql_conn_init(void){
   PGconn *ld = NULL;
   char *pgsql_conninfo;
   int pgsql_status; //,err,version=3;
-  char *port,*timeout, *server_port;
-  
-  sprintf(port,"%d",pgsql_server_port);
-  sprintf(timeout,"%d",pgsql_request_timeout);
-  sprintf(server_port,"%d",pgsql_server_port);
+  char port[15],timeout[15],server_port[15];
+
+  if (snprintf(14,port,"%d",pgsql_server_port)>=14){return NULL;}
+  if (snprintf(14,timeout,"%d",pgsql_request_timeout)>=14){return NULL};
+  if (snprintf(14,server_port,"%d",pgsql_server_port)>=14){return NULL};
 
   pgsql_conninfo = (char *)calloc(strlen(pgsql_user) + strlen(pgsql_passwd) + 
       strlen(pgsql_server) + strlen(pgsql_ssl) + strlen(server_port) + strlen(pgsql_db_name) +

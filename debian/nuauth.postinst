@@ -57,7 +57,7 @@ db_get nuauth/user
 NUAUTH_USER="$RET"
 
 cp -a -f $CONFIGFILE1 $CONFIGFILE1.tmp
-#  -e "s/^ *BAR=.*/BAR=\"$BAR\"/" \
+
 sed -e "s/^ *NUAUTH_START=.*/NUAUTH_START=\"$NUAUTH_START\"/" \
  -e "s/^ *NUAUTH_VERBOSITY=.*/NUAUTH_VERBOSITY=\"$NUAUTH_VERBOSITY\"/" \
  -e "s/^ *NUAUTH_USER=.*/NUAUTH_USER=\"$NUAUTH_USER\"/" \
@@ -111,26 +111,26 @@ ldap_acls_base_dn="$RET"
 db_get nuauth/dbm_users_file
 dbm_users_file="$RET"
 cp -a -f $CONFIGFILE2 $CONFIGFILE2.tmp
-#  -e "s/^ *BAR=.*/BAR=\"$BAR\"/" \
+
 sed -e "s/^ *nuauth_addr=.*/nuauth_addr=\"$nuauth_addr\"/" \
- -e "s/^ *nuauth_gw_packet_port=.*/nuauth_gw_packet_port=\"$nuauth_gw_packet_port\"/" \
- -e "s/^ *nuauth_user_packet_port=.*/nuauth_user_packet_port=\"$nuauth_user_packet_port\"/" \
+ -e "s/^ *nuauth_gw_packet_port=.*/nuauth_gw_packet_port=$nuauth_gw_packet_port/" \
+ -e "s/^ *nuauth_user_packet_port=.*/nuauth_user_packet_port=$nuauth_user_packet_port/" \
  -e "s/^ *nufw_gw_addr=.*/nufw_gw_addr=\"$nufw_gw_addr\"/" \
- -e "s/^ *nufw_gw_port=.*/nufw_gw_port=\"$nufw_gw_port\"/" \
- -e "s/^ *nuauth_prio=.*/nuauth_prio=\"$nuauth_prio\"/" \
- -e "s/^ *nuauth_prio_to_nok=.*/nuauth_prio_to_nok=\"$nuauth_prio_to_nok\"/" \
- -e "s/^ *nuauth_packet_timeout=.*/nuauth_packet_timeout=\"$nuauth_packet_timeout\"/" \
- -e "s/^ *nuauth_number_usercheckers=.*/nuauth_number_usercheckers=\"$nuauth_number_usercheckers\"/" \
- -e "s/^ *nuauth_number_aclcheckers=.*/nuauth_number_aclcheckers=\"$nuauth_number_aclcheckers\"/" \
+ -e "s/^ *nufw_gw_port=.*/nufw_gw_port=$nufw_gw_port/" \
+ -e "s/^ *nuauth_prio=.*/nuauth_prio=$nuauth_prio/" \
+ -e "s/^ *nuauth_prio_to_nok=.*/nuauth_prio_to_nok=$nuauth_prio_to_nok/" \
+ -e "s/^ *nuauth_packet_timeout=.*/nuauth_packet_timeout=$nuauth_packet_timeout/" \
+ -e "s/^ *nuauth_number_usercheckers=.*/nuauth_number_usercheckers=$nuauth_number_usercheckers/" \
+ -e "s/^ *nuauth_number_aclcheckers=.*/nuauth_number_aclcheckers=$nuauth_number_aclcheckers/" \
  -e "s/^ *nuauth_user_check_module=.*/nuauth_user_check_module=\"$nuauth_user_check_module\"/" \
  -e "s/^ *nuauth_acl_check_module=.*/nuauth_acl_check_module=\"$nuauth_acl_check_module\"/" \
- -e "s/^ *nuauth_log_users=.*/nuauth_log_users=\"$nuauth_log_users\"/" \
+ -e "s/^ *nuauth_log_users=.*/nuauth_log_users=$nuauth_log_users/" \
  -e "s/^ *users_logs_backend=.*/users_logs_backend=\"$users_logs_backend\"/" \
  -e "s/^ *ldap_server_addr=.*/ldap_server_addr=\"$ldap_server_addr\"/" \
- -e "s/^ *ldap_server_port=.*/ldap_server_port=\"$ldap_server_port\"/" \
+ -e "s/^ *ldap_server_port=.*/ldap_server_port=$ldap_server_port/" \
  -e "s/^ *ldap_bind_dn=.*/ldap_bind_dn=\"$ldap_bind_dn\"/" \
  -e "s/^ *ldap_bind_password=.*/ldap_bind_password=\"$ldap_bind_password\"/" \
- -e "s/^ *ldap_request_timeout=.*/ldap_request_timeout=\"$ldap_request_timeout\"/" \
+ -e "s/^ *ldap_request_timeout=.*/ldap_request_timeout=$ldap_request_timeout/" \
  -e "s/^ *ldap_basedn=.*/ldap_basedn=\"$ldap_basedn\"/" \
  -e "s/^ *ldap_acls_base_dn=.*/ldap_acls_base_dn=\"$ldap_acls_base_dn\"/" \
  -e "s/^ *ldap_users_base_dn=.*/ldap_users_base_dn=\"$ldap_users_base_dn\"/" \
@@ -145,6 +145,7 @@ else
   echo "FATAL : User \"$NUAUTH_USER\" does not exist, but is supposed to run nuath"
   exit -1
 fi
+
 
 # Automatically added by dh_installinit
 if [ -x "/etc/init.d/nuauth" ]; then
