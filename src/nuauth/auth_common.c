@@ -244,6 +244,7 @@ connection * search_and_fill (connection * pckt) {
 /*
  * print connection
  */
+
 /* TODO : restore lock after DEBUG's done */
 gint print_connection(gpointer data,gpointer userdata){
   struct in_addr src,dest;
@@ -339,7 +340,7 @@ int free_connection(connection * conn){
   }
   acllist=conn->acl_groups;
   if ( (acllist  != DUMMYACLS) && (acllist  != NULL) ){
-    g_slist_foreach(conn->acl_groups,(GFunc) free_struct,NULL);
+    g_slist_foreach(acllist,(GFunc) free_struct,NULL);
     g_slist_free (acllist);
     if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
       g_message ("acl_groups freed %p\n",acllist);
@@ -349,8 +350,10 @@ int free_connection(connection * conn){
   if (conn->packet_id != NULL )
     g_slist_free (conn->packet_id);
   g_free(conn);
-  if (connmutex) g_mutex_unlock(connmutex);
-  release_individual_mutex(connmutex);
+  if (connmutex) {
+    g_mutex_unlock(connmutex);
+    release_individual_mutex(connmutex);
+  }
   return 1;
 }
 

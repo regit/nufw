@@ -200,7 +200,7 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz){
       /* allocate connection */
       connexion = g_new0( connection,1);
       if (connexion == NULL){
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_PACKET)){
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET)){
 	  g_message("Can not allocate connexion\n");
 	}
 	return NULL;
@@ -247,6 +247,9 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz){
 	    return NULL;
 	  }
 	  break;
+	default:
+	  free_connection(connexion);
+	  return NULL;
 	}
       }
       else {
