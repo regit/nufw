@@ -156,9 +156,6 @@ if (not defined($groups)) {
 
 $acl{"objectclass"}  = [ "top", "NuAccessControlList" ];
 
-#foreach $item (keys %acl) {
-#  print $item.": ".$acl{$item}."\n";
-#}
 
 #do ldap connect
 $ldap = Net::LDAP->new($ldap_host)  or die $@;;
