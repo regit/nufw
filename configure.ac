@@ -10,6 +10,7 @@ AM_CONFIG_HEADER([src/include/config.h])
 AC_PROG_CC
 
 AC_PROG_LIBTOOL
+AC_PROG_INSTALL
 
 # Checks for libraries.
 
