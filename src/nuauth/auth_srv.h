@@ -1,4 +1,4 @@
-/* $Id: auth_srv.h,v 1.25 2003/11/30 21:05:24 regit Exp $ */
+/* $Id: auth_srv.h,v 1.26 2003/11/30 21:30:15 regit Exp $ */
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
@@ -81,10 +81,10 @@
 #define STATE_READY 0x3
 #define STATE_DONE 0x4
 
+#define STATE_DROP 0x0
 #define STATE_OPEN 0x1
-#define STATE_CLOSE 0x0
-#define STATE_ESTABLISHED 0x3
-#define STATE_DROP 0x2
+#define STATE_ESTABLISHED 0x2
+#define STATE_CLOSE 0x3
 
 #define ALL_GROUPS 0
 
