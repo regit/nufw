@@ -45,15 +45,26 @@ o Abstraction à la Nagios
   hours. This example is formal, and isnt claimed to work verbatim !
 
   #Define working hours as : monday to friday, 9am to 5pm.
-  <StartWeekDay day="monday">
-   <EndWeekDay day="friday">
-    <StartTime time="32400"> #32400 seconds after midnight is 9am
-     <Endtime time="61200">  #61200 seconds after midnight is 5pm
-      <ACLName>WorkingHours</ACLName>
-     </Endtime>
-    </Starttime>
-   </EndWeekDay>
-  </StartWeekDay>
+	 <Period name="WorkingHours">
+	  	 <StartTime>
+			<item type="weekday">monday</item>
+			<item type="secday">32400</time>
+		 </StartTime>
+     		<EndTime>
+       			<item type="weekday">friday</item>
+       			<item type="secday">61200</item>  #61200 seconds after midnight is 5pm
+     		</EndTime>
+	 </Period>
+
+  #Define day light :
+	<Period name="Daylight">
+		<StartTime>
+			<item type="hour">08</item>
+		</StartTime>
+		<EndTime>
+			<item type="hour">18</item>
+		</EndTime>
+	</Period>
 
   Then, to allow group 101 browsing the web at working hours, and deny that to
   group 102:
