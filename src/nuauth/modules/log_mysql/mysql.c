@@ -216,7 +216,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
           int update_status = 0;
           while (update_status < 2){
             update_status++;
-            if (snprintf(request,511,"UPDATE %s SET state=%lu WHERE (ip_daddr=%lu AND ip_saddr=%lu AND tcp_dport=%u AND tcp_sport=%u AND STATE=%hu)",
+            if (snprintf(request,511,"UPDATE %s SET state=%lu WHERE (ip_daddr=%lu AND ip_saddr=%lu AND tcp_dport=%u AND tcp_sport=%u AND state=%hu)",
 
               mysql_table_name,
               STATE_ESTABLISHED,
