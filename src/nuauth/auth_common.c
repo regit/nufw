@@ -211,7 +211,7 @@ connection * search_and_fill (connection * pckt) {
                 free_connection(pckt);
                 return NULL;
               default:
-                g_assert("Should not have this");
+                g_assert("Should not have this\n");
             }
             break;
           case STATE_DONE:
@@ -229,6 +229,7 @@ connection * search_and_fill (connection * pckt) {
                 }
                 UNLOCK_CONN(element);
                 free_connection(pckt);
+                return NULL;
             }
           case STATE_READY:
             if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
