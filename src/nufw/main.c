@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.14 2003/11/07 08:22:52 regit Exp $ */
+/* $Id: main.c,v 1.15 2003/11/07 11:14:10 gryzor Exp $ */
 
 /*
  ** Copyright (C) 2002 Eric Leblond <eric@regit.org>
@@ -36,7 +36,7 @@
 
 
 //#define NUFW_PID_FILE  "/var/run/nufw.pid"
-#define NUFW_PID_FILE  LOCALE_STATE_DIR "/run/nufw.pid"
+#define NUFW_PID_FILE  LOCAL_STATE_DIR "/run/nufw.pid"
 
 void nufw_cleanup( int signal ) {
     /* destroy netlink handle */

@@ -1,5 +1,5 @@
 
-AM_CPPFLAGS = -O2 -Wall -DLOCALE_STATE_DIR="$(localstatedir)"
+AM_CPPFLAGS = -O2 -Wall -DLOCAL_STATE_DIR=\"$(localstatedir)\"
 
 sbin_PROGRAMS = nufw
 
