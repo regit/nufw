@@ -203,7 +203,8 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
     }else if (state == 0){
       if ((element.tracking_hdrs).protocol == IPPROTO_TCP){
           int Result;
-          if (snprintf(request,511,"UPDATE %s SET end_timestamp=%lu WHERE (ip_saddr=%lu,ip_daddr=%lu,tcp_sport=%u,tcp_dport=%u,end_timestamp=NULL)",
+          if (snprintf(request,511,"UPDATE %s SET end_timestamp=%lu WHERE (ip_saddr=%lu AND ip_daddr=%lu AND tcp_sport=%u AND tcp_dport=%u AND end_timestamp IS NULL)",
+
               mysql_table_name,
               element.timestamp,
               (element.tracking_hdrs).saddr,
