@@ -31,7 +31,7 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: nutcpc.c,v 1.13 2004/03/20 00:38:09 regit Exp $
+ * $Id: nutcpc.c,v 1.14 2004/03/23 20:36:04 regit Exp $
  */
 
 #include <arpa/inet.h>
@@ -82,6 +82,7 @@ unsigned long userid;
 uid_t localuserid;
 
 struct sockaddr_in adr_srv;
+const struct sockaddr *adr_srv_gen=(struct sockaddr*)&adr_srv;
 char *password;
 unsigned long packet_id;
 struct termios orig;
@@ -464,7 +465,7 @@ static void compare (conntable_t *old, conntable_t *new)
 
 static void usage (void)
 {
-	fprintf (stderr, "usage: nutcpc [-dpTS]  [-I interval] "
+	fprintf (stderr, "usage: nutcpc [-dpS]  [-I interval] "
 			"[-U userid ]  [-u local_id] [-H nuauth_srv]\n");
 	exit (EXIT_FAILURE);
 }
@@ -566,7 +567,7 @@ int main (int argc, char *argv[])
 		/* connect */
 		if (sck_user_request == -1)
 			exit(-1);
-		connect(sck_user_request,&adr_srv,(int)sizeof(adr_srv)); 
+		connect(sck_user_request,adr_srv_gen,sizeof(adr_srv)); 
 
 
 		/* Connect the SSL socket */
