@@ -156,7 +156,7 @@ G_MODULE_EXPORT GSList* acl_check (connection* element){
     }
   } else if ((element->tracking_hdrs).protocol == IPPROTO_ICMP ) {
     if (snprintf(filter,LDAP_QUERY_SIZE-1,
-	     "(&(objectClass=AccessControlList)(SrcIPStart<=%lu)(SrcIPEnd>=%lu)(DstIPStart<=%lu)(DstIPEnd>=%lu)(Proto=%d)(SrcPortStart<=%d)(SrcPortEnd>=%d)(DstPortStart<=%d)(DstPortEnd>=%d))",
+	     "(&(objectClass=NuAccessControlList)(SrcIPStart<=%lu)(SrcIPEnd>=%lu)(DstIPStart<=%lu)(DstIPEnd>=%lu)(Proto=%d)(SrcPortStart<=%d)(SrcPortEnd>=%d)(DstPortStart<=%d)(DstPortEnd>=%d))",
 	     (long unsigned int)(element->tracking_hdrs).saddr,
 	     (long unsigned int)(element->tracking_hdrs).saddr,
 	     (long unsigned int)(element->tracking_hdrs).daddr,
