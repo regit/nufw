@@ -1,4 +1,4 @@
-/* $Id: auth_srv.h,v 1.22 2003/11/26 23:11:04 regit Exp $ */
+/* $Id: auth_srv.h,v 1.23 2003/11/28 17:03:22 gryzor Exp $ */
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
@@ -51,8 +51,11 @@
 
 #define DUMMY 0
 #define USE_LDAP 0
-#define AUTHREQ_ADDR "192.168.1.1"
-#define GWSRV_ADDR "192.168.1.1"
+#define AUTHREQ_CLIENT_LISTEN_ADDR "0.0.0.0"
+#define AUTHREQ_NUFW_LISTEN_ADDR "127.0.0.1"
+#define GWSRV_ADDR "127.0.0.1"
+//#define CLIENT_LISTEN_ADDR "0.0.0.0"
+//#define NUFW_LISTEN_ADDR "127.0.0.1"
 #define GWSRV_PORT 4128
 #define AUTHREQ_PORT 4129
 #define USERPCKT_PORT 4130
@@ -83,6 +86,8 @@
 #define ALL_GROUPS 0
 
 /* Sockets related */
+char client_listen_address[HOSTNAME_SIZE];
+char nufw_listen_address[HOSTNAME_SIZE];
 int authreq_port;
 int  gwsrv_port , userpckt_port;
 
@@ -148,7 +153,7 @@ int debug_level;
 int debug_areas;
 int nuauth_log_users;
 int nuauth_prio_to_nok;
-struct sockaddr_in adr_srv;
+struct sockaddr_in adr_srv, client_srv, nufw_srv;
 
 
 /*

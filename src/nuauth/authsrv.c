@@ -21,7 +21,8 @@
 #ifndef _NUAUTHVARS
 #define _NUAUTHVARS
 confparams nuauth_vars[] = {
-    { "nuauth_addr" ,  G_TOKEN_STRING, 0 , AUTHREQ_ADDR },
+    { "nuauth_client_listen_addr" ,  G_TOKEN_STRING, 0 , AUTHREQ_CLIENT_LISTEN_ADDR },
+    { "nuauth_nufw_listen_addr" ,  G_TOKEN_STRING, 0 , AUTHREQ_NUFW_LISTEN_ADDR },
     { "nuauth_gw_packet_port" , G_TOKEN_INT , AUTHREQ_PORT,NULL },
     { "nuauth_user_packet_port" , G_TOKEN_INT , AUTHREQ_PORT ,NULL},
     { "nufw_gw_addr" , G_TOKEN_STRING , 0, GWSRV_ADDR },
@@ -53,10 +54,11 @@ void nuauth_cleanup( int signal ) {
 int main(int argc,char * argv[]) {
     GThread * pckt_server, * auth_server;
     /* option */
-    char * options_list = "DhVvl:d:p:t:T:";
+    char * options_list = "DhVvl:L:C:d:p:t:T:";
     int option,daemonize = 0;
     int value;
-    char* authreq_addr=AUTHREQ_ADDR;
+    char* nuauth_client_listen_addr=AUTHREQ_CLIENT_LISTEN_ADDR;
+    char* nuauth_nufw_listen_addr=AUTHREQ_NUFW_LISTEN_ADDR;
     char* version=VERSION;
     char* gwsrv_addr=GWSRV_ADDR;
     char *configfile=DEFAULT_CONF_FILE;
@@ -67,6 +69,7 @@ int main(int argc,char * argv[]) {
     char * nuauth_user_logs_module=DEFAULT_LOGS_MODULE;
     gpointer vpointer;
     pid_t pidf;
+    struct hostent *nufw_list_srv, *client_list_srv;
 
     /* initialize variables */
 
@@ -75,6 +78,8 @@ int main(int argc,char * argv[]) {
     userpckt_port = USERPCKT_PORT; 
     packet_timeout = PACKET_TIMEOUT;
     nuauth_prio_to_nok= PRIO_TO_NOK;
+//    strncpy(client_listen_address,CLIENT_LISTEN_ADDR,HOSTNAME_SIZE);
+//    strncpy(nufw_listen_address,NUFW_LISTEN_ADDR,HOSTNAME_SIZE);
     /* 
      * Minimum debug_level value is 2 -> for 1) fatal and 2) critical messages to always
      * be outputed
@@ -86,8 +91,10 @@ int main(int argc,char * argv[]) {
     parse_conffile(configfile,sizeof(nuauth_vars)/sizeof(confparams),nuauth_vars);
     /* set variable value from config file */
 
-    vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_addr");
-    authreq_addr=(char *)(vpointer?vpointer:authreq_addr);
+    vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_client_listen_addr");
+    nuauth_client_listen_addr=(char *)(vpointer?vpointer:nuauth_client_listen_addr);
+    vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_nufw_listen_addr");
+    nuauth_nufw_listen_addr=(char *)(vpointer?vpointer:nuauth_nufw_listen_addr);
     vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nufw_gw_addr");
     gwsrv_addr=(char*)(vpointer?vpointer:gwsrv_addr);
     vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_gw_packet_port");
@@ -130,6 +137,26 @@ int main(int argc,char * argv[]) {
             printf("Listen on UDP port for user packet %d\n",value);
             userpckt_port=value;
             break;
+            /* Adress we listen for NUFW originating packets */
+          case 'L' :
+           // strncpy(nufw_listen_address,optarg,HOSTNAME_SIZE);
+            free(nuauth_nufw_listen_addr);
+            nuauth_nufw_listen_addr = (char *)malloc(HOSTNAME_SIZE);
+            if (nuauth_nufw_listen_addr == NULL){return -1;}
+            strncpy(nuauth_nufw_listen_addr,optarg,HOSTNAME_SIZE);
+            printf("Waiting for Nufw daemon packets on %s\n",nuauth_nufw_listen_addr);
+            //printf("Waiting for Nufw daemon packets on %s\n",nufw_listen_address);
+            break;
+            /* Adress we listen for NUFW originating packets */
+          case 'C' :
+            //strncpy(client_listen_address,optarg,HOSTNAME_SIZE);
+            free(nuauth_client_listen_addr);
+            nuauth_client_listen_addr = (char *)malloc(HOSTNAME_SIZE);
+            if (nuauth_client_listen_addr == NULL){return -1;}
+            strncpy(nuauth_client_listen_addr,optarg,HOSTNAME_SIZE);
+            printf("Waiting for clients auth packets on %s\n",nuauth_client_listen_addr);
+            //printf("Waiting for clients auth packets on %s\n",client_listen_address);
+            break;
             /* destination port */
           case 'p' :
             sscanf(optarg,"%d",&value);
@@ -150,12 +177,15 @@ int main(int argc,char * argv[]) {
             daemonize=1;
             break;
           case 'h' :
-            fprintf (stdout ,"nuauth [-hDVv[v[v[v[v[v[v[v[v]]]]]]]]] [-l user_packet_port] [-d nufw_gw_addr] [-p nufw_gw_port]  [-t packet_timeout]\n\
+            fprintf (stdout ,"nuauth [-hDVv[v[v[v[v[v[v[v[v]]]]]]]]] [-l user_packet_port] [-C local_addr] [-L local_addr] \n\
+                \t\t[-d nufw_gw_addr] [-p nufw_gw_port]  [-t packet_timeout]\n\
                 \t-h : display this help and exit\n\
                 \t-D : run as a daemon, send debug messages to syslog (else stdout/stderr)\n\
                 \t-V : display version and exit\n\
                 \t-v : increase debug level (+1 for each 'v') (max useful number : 10)\n\
                 \t-l : specify listening UDP port (this port waits for clients, not nuauth) (default : 4130)\n\
+                \t-L : specify NUFW listening IP address (local) (this address waits for nufw data) (default : 127.0.0.1)\n\
+                \t-C : specify clients listening IP address (local) (this address waits for clients auth) (default : 0.0.0.0)\n\
                 \t-d : (remote) address of the nufw (gateway) server\n\
                 \t-p : (remote) port we use to send responses to nufw server(default : 4128)\n\
                 \t-t : timeout to forget about packets when they don't match (default : 15 s)\n");
@@ -260,8 +290,35 @@ int main(int argc,char * argv[]) {
         exit(-1);
     }
     /* socket ready */
+    //listening adress for clients requests
+    memset(&client_srv,0,sizeof client_srv);
 
+    /* hostname conversion */
+    //client_list_srv=gethostbyname(client_listen_address);
+    client_list_srv=gethostbyname(nuauth_client_listen_addr);
+    client_srv.sin_addr=*(struct in_addr *)client_list_srv->h_addr;
 
+    if (client_srv.sin_addr.s_addr == INADDR_NONE ){
+      if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN))
+        g_warning("Bad Address was passed with \"-C\" parameter. Ignored.");
+      client_srv.sin_addr.s_addr = INADDR_ANY;
+    }
+
+    // INIT adress for listening to nufw
+    memset(&nufw_srv,0,sizeof nufw_srv);
+
+    /* hostname conversion */
+    //nufw_list_srv=gethostbyname(nufw_listen_address);
+    nufw_list_srv=gethostbyname(nuauth_nufw_listen_addr);
+    nufw_srv.sin_addr=*(struct in_addr *)nufw_list_srv->h_addr;
+
+    if (nufw_srv.sin_addr.s_addr == INADDR_NONE ){
+      if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN))
+        g_warning("Bad Address was passed with \"-L\" parameter. Ignored.");
+      nufw_srv.sin_addr.s_addr = INADDR_ANY;
+    }
+
+    printf("Client adress : *%s*, NUFW address : *%s*\n",nuauth_client_listen_addr, nuauth_nufw_listen_addr);
 
     /* Initialize glib thread system */
     g_thread_init(NULL);

@@ -23,6 +23,7 @@
 #include <netinet/udp.h>
 #include <netinet/ip_icmp.h> 
 
+#include <errno.h>
 /* 
  * return offset to next type of headers 
  */
@@ -94,7 +95,7 @@ void* packet_authsrv(){
 
   addr_inet.sin_family= AF_INET;
   addr_inet.sin_port=htons(authreq_port);
-  addr_inet.sin_addr.s_addr=INADDR_ANY;
+  addr_inet.sin_addr.s_addr=nufw_srv.sin_addr.s_addr;
 
   len_inet = sizeof addr_inet;
 
@@ -103,7 +104,8 @@ void* packet_authsrv(){
 	    len_inet);
   if (z == -1)
   {
-    g_error ("pckt bind()");
+    perror(NULL);
+    g_error ("pckt bind() : \n");
     exit (-1); /*useless*/
   }
   if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_PACKET)){

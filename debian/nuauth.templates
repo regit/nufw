@@ -45,23 +45,41 @@ Description-fr: Utilisateur nuauth
  .
  Veuillez entrer un nom d'utilisateur valide sur ce système.
 
-Template:nuauth/addr
+Template:nuauth/client_listen_addr
 Type: string
 Default: 0.0.0.0
-Description: Nuauth listening address
- Address nuauth should listen on. This is useful if this machine owns several
+Description: Nuauth client listening address
+ Address nuauth should listen on for clients. This is useful if this machine owns several
  interfaces, and you want nuauth to only bind on one of them. Leave the default
  value "0.0.0.0" if you want nuauth to listen on all interfaces.
  .
  Please enter an IP address of this system or "0.0.0.0"
-Description-fr: Adresse d'écoute de Nuauth
- Adresse sur laquelle Nuauth doit écouter. Ce paramètre est utile si cette
+Description-fr: Adresse d'écoute clients de Nuauth
+ Adresse sur laquelle Nuauth doit attendre les requêtes utilisateurs. Ce paramètre est utile si cette
  machine dispose de plusieurs interfaces, et que vous voulez que le démon nuauth
  ne se mette à l'écoute que sur l'une d'entre elles. La valeur par défaut
  "0.0.0.0" est correcte si vous souhaitez que nuauth écoute sur toutes les
  interfaces de la machine.
  .
  Veuillez entrer une adresse IP de cette machine, ou "0.0.0.0"
+
+Template:nuauth/nufw_listen_addr
+Type: string
+Default: 127.0.0.1
+Description: Nuauth nufw listening address
+ Address nuauth should listen on for nufw packets. This is useful if this machine owns several
+ interfaces, and you want nuauth to only bind on one of them. Leave the default
+ value "0.0.0.0" if you want nuauth to listen on all interfaces (not advised).
+ .
+ Please enter an IP address of this system or "0.0.0.0". Default value : "127.0.0.1"
+Description-fr: Adresse d'écoute nufw de Nuauth
+ Adresse sur laquelle Nuauth doit attendre les paquets de la part du démon nufw. Ce paramètre est utile si cette
+ machine dispose de plusieurs interfaces, et que vous voulez que le démon nuauth
+ ne se mette à l'écoute que sur l'une d'entre elles. La valeur par défaut
+ "0.0.0.0" est correcte si vous souhaitez que nuauth écoute sur toutes les
+ interfaces de la machine, mais pas conseillée.
+ .
+ Veuillez entrer une adresse IP de cette machine, ou "0.0.0.0". Valeur par défaut : "127.0.0.1"
 
 Template: nuauth/gw_packet_port
 Type: string
