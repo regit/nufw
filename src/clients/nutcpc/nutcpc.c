@@ -28,7 +28,7 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: nutcpc.c,v 1.1 2003/08/25 21:41:46 regit Exp $
+ * $Id: nutcpc.c,v 1.2 2003/08/26 06:47:48 regit Exp $
  */
 
 #include <arpa/inet.h>
@@ -328,7 +328,7 @@ static void huntinode (ino_t i, char *buf, size_t bufsize)
 	closedir (procdir);
 }
 
-int debug=1;
+int debug;
 /*
  * send_user_pckt
 */
@@ -429,7 +429,8 @@ int main (int argc, char *argv[])
 	int ch;
 	uid_t dropuser = -1;
 	gid_t dropgroup = -1, defgroup = -1;
-	int debug = 0;
+	
+	debug = 0;
 	
 
 	/* create UDP stuff */
@@ -596,7 +597,7 @@ int main (int argc, char *argv[])
 			slow_warn = 1;
 		}
 
-		usleep (interval * 100);
+		usleep (interval * 1000);
 	}
 
 	if (ct_free (&old) == 0) panic ("ct_free failed");
