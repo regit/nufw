@@ -32,7 +32,6 @@ my %acl_hash;
 #my $password;
 # include conf variables
 require("/etc/nufw/nuaclgen.conf") or die "Can not find config file";
-#print "maman " .$ldap_host ."\n";
 
 
 sub convert_addr {
