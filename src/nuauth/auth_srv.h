@@ -1,4 +1,4 @@
-/* $Id: auth_srv.h,v 1.27 2003/12/23 15:58:44 uid68721 Exp $ */
+/* $Id: auth_srv.h,v 1.28 2004/03/18 01:16:18 regit Exp $ */
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
@@ -245,6 +245,7 @@ void acl_check_and_decide (gpointer userdata , gpointer data);
  */
 
 void* user_authsrv();
+void* ssl_user_authsrv();
 connection * userpckt_decode(char* dgram,int dgramsiz);
 void user_check_and_decide (gpointer userdata ,gpointer data);
 
@@ -276,3 +277,6 @@ GSList * (*module_acl_check) (connection* element);
 GSList * (*module_user_check) (u_int16_t userid,char *passwd);
 int init_ldap_system(void);
 
+/* PROV */
+#define MAX_CLIENTD 256
+FILE* client[MAX_CLIENTD];

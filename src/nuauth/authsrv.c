@@ -53,7 +53,7 @@ void nuauth_cleanup( int signal ) {
 
 
 int main(int argc,char * argv[]) {
-    GThread * pckt_server, * auth_server;
+    GThread * pckt_server, * auth_server, *ssl_auth_server;
     /* option */
     char * options_list = "DhVvl:L:C:d:p:t:T:";
     int option,daemonize = 0;
@@ -394,6 +394,15 @@ int main(int argc,char * argv[]) {
         NULL);
     if (! auth_server )
         exit(1);
+
+    /* create thread for ssl  auth server */
+   ssl_auth_server = g_thread_create ( ssl_user_authsrv,
+        NULL,
+        FALSE,
+        NULL);
+    if (! ssl_auth_server )
+        exit(1);
+
 
 
     /* private data for crypt */

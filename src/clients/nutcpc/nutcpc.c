@@ -28,7 +28,7 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: nutcpc.c,v 1.11 2004/03/11 21:24:14 regit Exp $
+ * $Id: nutcpc.c,v 1.12 2004/03/18 01:16:17 regit Exp $
  */
 
 #include <arpa/inet.h>
@@ -81,6 +81,9 @@ struct sockaddr_in adr_srv;
 char *password;
 unsigned long packet_id;
 struct termios orig;
+
+
+int tcp_on;
 
 /*
  * This structure holds everything we need to know about a connection. We
@@ -405,6 +408,12 @@ int send_user_pckt(conn_t* c){
         fflush(stdout);
     }
 
+    if (tcp_on) {
+	write(sck_user_request,datas,pointer-datas);
+    if (debug){
+        printf("%d sent\n",pointer-datas);
+    }
+    } else {
     if (sendto(sck_user_request,
           datas,
           pointer-datas,
@@ -412,6 +421,7 @@ int send_user_pckt(conn_t* c){
           (struct sockaddr *)&adr_srv,
           sizeof adr_srv) < 0)
         printf (" failure when sending\n");
+    }
     if (debug){
         printf(" done\n");
     }
@@ -466,11 +476,12 @@ int main (int argc, char *argv[])
   struct sigaction action;
   int password_size;
 
+  tcp_on=0;
   /*
    * Parse our arguments.
    */
   opterr = 0;
-  while ((ch = getopt (argc, argv, "du:H:I:U:")) != -1) {
+  while ((ch = getopt (argc, argv, "du:H:I:U:T")) != -1) {
       switch (ch) {
         case 'H':
           strncpy(srv_addr,optarg,512);
@@ -492,6 +503,9 @@ int main (int argc, char *argv[])
           sscanf(optarg,"%u",&localuserid);
           id_is_set=1;
           break;
+	case 'T':
+	  tcp_on=1;
+	  break;
         default:
           usage();
       }
@@ -524,11 +538,21 @@ int main (int argc, char *argv[])
   if ( read(random_file,&random_seed, 1) == 1){
       srandom(random_seed);
   }
-  /* create UDP stuff */
-  sck_user_request = socket (AF_INET,SOCK_DGRAM,0);
+
   adr_srv.sin_family= AF_INET;
   adr_srv.sin_port=htons(4130);
   adr_srv.sin_addr.s_addr=inet_addr(srv_addr);
+  /* create socket stuff */
+  if (tcp_on) {
+  	sck_user_request = socket (AF_INET,SOCK_STREAM,0);
+	/* connect */
+	if (sck_user_request == -1)
+		exit(-1);
+	connect(sck_user_request,&adr_srv,(int)sizeof(adr_srv)); 
+  } else {
+  	sck_user_request = socket (AF_INET,SOCK_DGRAM,0);
+  }
+
 
   /* TODO get user local id */
   if (! id_is_set)

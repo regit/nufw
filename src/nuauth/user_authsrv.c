@@ -1,312 +1,486 @@
-
 /*
-** Copyright(C) 2003 Eric Leblond <eric@regit.org>
-**		     Vincent Deffontaines <vincent@gryzor.com>
-**
-** This program is free software; you can redistribute it and/or modify
-** it under the terms of the GNU General Public License as published by
-** the Free Software Foundation, version 2 of the License.
-**
-** This program is distributed in the hope that it will be useful,
-** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-** GNU General Public License for more details.
-**
-** You should have received a copy of the GNU General Public License
-** along with this program; if not, write to the Free Software
-** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-*/
+ * Copyright(C) 2004 INL
+ ** written by  Eric Leblond <eric@inl.fr>
+ **             Vincent Deffontaines <vincent@inl.fr>
+ **
+ ** This program is free software; you can redistribute it and/or modify
+ ** it under the terms of the GNU General Public License as published by
+ ** the Free Software Foundation, version 2 of the License.
+ **
+ ** This program is distributed in the hope that it will be useful,
+ ** but WITHOUT ANY WARRANTY; without even the implied warranty of
+ ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ ** GNU General Public License for more details.
+ **
+ ** You should have received a copy of the GNU General Public License
+ ** along with this program; if not, write to the Free Software
+ ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
 
 #define _GNU_SOURCE
 #include <auth_srv.h>
 #include <proto.h>
 #include <crypt.h>
+#include <sys/time.h>
 
 #if 0
 struct up_datas {
-  u_int32_t ip_client;
-  char * dgram;
-  };
+	u_int32_t ip_client;
+	char * dgram;
+};
 #endif
 
 void* user_authsrv(){
-  int z;
-  int sck_inet;
-  struct sockaddr_in addr_inet,addr_clnt;
-  int len_inet;
-  char dgram[512];
+	int z;
+	int sck_inet;
+	struct sockaddr_in addr_inet,addr_clnt;
+	int len_inet;
+	char dgram[512];
 #if 0
-  struct up_datas userdatas;
+	struct up_datas userdatas;
 #endif
 
-  //open the socket
-  sck_inet = socket (AF_INET,SOCK_DGRAM,0);
+	//open the socket
+	sck_inet = socket (AF_INET,SOCK_DGRAM,0);
 
-  if (sck_inet == -1)
-  {
-    g_error("socket()");
-    exit(-1);
-  }
-	
-  memset(&addr_inet,0,sizeof addr_inet);
+	if (sck_inet == -1)
+	{
+		g_error("socket()");
+		exit(-1);
+	}
 
-  addr_inet.sin_family= AF_INET;
-  addr_inet.sin_port=htons(userpckt_port);
-  addr_inet.sin_addr.s_addr=client_srv.sin_addr.s_addr;
+	memset(&addr_inet,0,sizeof addr_inet);
 
-  len_inet = sizeof addr_inet;
+	addr_inet.sin_family= AF_INET;
+	addr_inet.sin_port=htons(userpckt_port);
+	addr_inet.sin_addr.s_addr=client_srv.sin_addr.s_addr;
 
-  z = bind (sck_inet,
-	    (struct sockaddr *)&addr_inet,
-	    len_inet);
-  if (z == -1)
-  {
-    g_error ("user bind()");
-    exit(-1);
-  }
+	len_inet = sizeof addr_inet;
 
-	
-  for(;;){
-      char *datas;
-    len_inet = sizeof addr_clnt;
-    z = recvfrom(sck_inet,
-		 dgram,
-		 sizeof dgram,
-		 0,
-		 (struct sockaddr *)&addr_clnt,
-		 &len_inet);
-    if (z<0)
-    {
-      g_warning("user_pckt recvfrom()");
-      continue;
-     // exit(-1); /*useless*/
-    }
-    /* copy packet datas */
-    datas=g_new0(char,z);
-    memcpy(datas,dgram,z);
-    /* and send packet to thread */
-    g_thread_pool_push (user_checkers,
-		datas,	
-			NULL
-			);
-  }
-  close(sck_inet);
+	z = bind (sck_inet,
+			(struct sockaddr *)&addr_inet,
+			len_inet);
+	if (z == -1)
+	{
+		g_error ("user bind()");
+		exit(-1);
+	}
 
-  return NULL;
+
+	for(;;){
+		char *datas;
+		len_inet = sizeof addr_clnt;
+		z = recvfrom(sck_inet,
+				dgram,
+				sizeof dgram,
+				0,
+				(struct sockaddr *)&addr_clnt,
+				&len_inet);
+		if (z<0)
+		{
+			g_warning("user_pckt recvfrom()");
+			continue;
+			// exit(-1); /*useless*/
+		}
+		/* copy packet datas */
+		datas=g_new0(char,z);
+		memcpy(datas,dgram,z);
+		/* and send packet to thread */
+		g_thread_pool_push (user_checkers,
+				datas,	
+				NULL
+				);
+	}
+	close(sck_inet);
+
+	return NULL;
 }
 
+static int
+treat_user_request (int c){
+	char * buf;
+	FILE *rx = client[c];
+
+
+	/* copy packet datas */
+	buf=g_new0(char,64);
+	if ( fread(buf,sizeof(char),63,rx) ){
+		g_message("pushing request\n");
+		g_thread_pool_push (user_checkers,
+				buf,	
+				NULL
+				);
+	}
+	return 1;
+}
+
+
+void* ssl_user_authsrv(){
+	int z;
+	int sck_inet;
+	struct sockaddr_in addr_inet,addr_clnt;
+	int len_inet;
+	int mx,n,c;
+	fd_set rx_set; /* read set */
+	fd_set wk_set; /* working set */
+	struct timeval tv;
+#if 0
+	struct up_datas userdatas;
+#endif
+
+	//open the socket
+	sck_inet = socket (AF_INET,SOCK_STREAM,0);
+
+	if (sck_inet == -1)
+	{
+		g_error("socket()");
+		exit(-1);
+	}
+
+	memset(&addr_inet,0,sizeof addr_inet);
+
+	addr_inet.sin_family= AF_INET;
+	addr_inet.sin_port=htons(userpckt_port);
+	addr_inet.sin_addr.s_addr=client_srv.sin_addr.s_addr;
+
+	len_inet = sizeof addr_inet;
+
+	z = bind (sck_inet,
+			(struct sockaddr *)&addr_inet,
+			len_inet);
+	if (z == -1)
+	{
+		g_error ("user bind()");
+		exit(-1);
+	}
+
+	/* Listen ! */
+	z = listen(sck_inet,20);
+	if (z == -1)
+	{
+		g_error ("user listen()");
+		exit(-1);
+	}
+
+	/* init fd_set */
+	FD_ZERO(&rx_set);
+	FD_SET(sck_inet,&rx_set);
+	mx=sck_inet+1;
+
+	for(;;){
+
+		/*
+		 * copy rx set to working set 
+		 */
+
+		for (z=0;z<mx;++z){
+			if (FD_ISSET(z,&rx_set))
+				FD_SET(z,&wk_set);
+		}
+
+		/*
+		 * define timeout 
+		 */
+
+		tv.tv_sec=2;
+		tv.tv_usec=30000;
+
+		n=select(mx,&wk_set,NULL,NULL,&tv);
+
+		if (n == -1) {
+			g_warning("select\n");
+			exit(1);
+		} else if (!n) {
+			continue;
+		}
+
+		/*
+		 * Check if a connect has occured
+		 */
+
+		if (FD_ISSET(sck_inet,&wk_set) ){
+			/*
+			 * Wait for a connect
+			 */
+			len_inet = sizeof addr_clnt;
+			c = accept (sck_inet,
+					(struct sockaddr *)&addr_clnt,
+					&len_inet);
+			if (c == -1)
+				g_warning("accept");
+
+			if ( c >= MAX_CLIENTD ) {
+				close(c);
+				continue;
+			}
+
+			/*
+			 * create stream
+			 */
+
+			client[c] = fdopen(c,"r");
+			if ( !client[c] ) {
+				close(c);
+				continue;
+			}
+
+			/*
+			 * TODO
+			 * new client stuff
+			 * TODO
+			 */
+
+
+			g_message("Incoming user request !\n");
+		
+			if ( c+1 > mx )
+				mx = c + 1;
+
+			/*
+			 * change FD_SET
+			 */
+
+			FD_SET(c,&rx_set);
+		}
+
+		/*
+		 * check for client activity
+		 */
+		for ( c=0; c<mx; ++c) {
+			if ( c == sck_inet )
+				continue;
+			if ( FD_ISSET(c,&wk_set) ) {
+				g_message("user request going !\n");
+				if (treat_user_request(c) == EOF) {
+					FD_CLR(c,&rx_set);
+				}
+			}
+		}
+
+		for ( c = mx - 1;
+				c >= 0 && !FD_ISSET(c,&rx_set);
+				c = mx -1 )
+			mx = c;
+	}
+close(sck_inet);
+
+return NULL;
+}
+
+
+
 void user_check_and_decide (gpointer userdata, gpointer data){
-  connection * conn_elt=NULL;
-  connection * element;
+	connection * conn_elt=NULL;
+	connection * element;
 
 
-  if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-    g_message("entering user_check\n");
-  conn_elt = userpckt_decode((char *)userdata, 
-			     512);
-  /* free userdata, packet is parsed now */
-  g_free(userdata);
-  /* if OK search and fill */
-  if ( conn_elt != NULL ) {
-    element = search_and_fill (conn_elt);
-    // element is locked by search_and_fill
-    if ( element != NULL ) {
-      /* check state of the packet */
-      if ( ((connection *)element)->state >= STATE_READY ){
-          /* packet ready to processing */
-          /* get acls */
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-	  g_message("trying to decide after userpckt\n"); 
-	take_decision(element);
-      } else {
-	UNLOCK_CONN(element);
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-	  g_message("User packet before auth packet\n");
-      }
-    } else {
-      if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
-	g_message("Unwanted user packet\n");
-    }
-  } else {
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
-      g_message("User packet decoding failed\n");
-  }
+		g_message("entering user_check\n");
+	conn_elt = userpckt_decode((char *)userdata, 
+			512);
+	/* free userdata, packet is parsed now */
+	g_free(userdata);
+	/* if OK search and fill */
+	if ( conn_elt != NULL ) {
+		element = search_and_fill (conn_elt);
+		// element is locked by search_and_fill
+		if ( element != NULL ) {
+			/* check state of the packet */
+			if ( ((connection *)element)->state >= STATE_READY ){
+				/* packet ready to processing */
+				/* get acls */
+				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
+					g_message("trying to decide after userpckt\n"); 
+				take_decision(element);
+			} else {
+				UNLOCK_CONN(element);
+				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
+					g_message("User packet before auth packet\n");
+			}
+		} else {
+			if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
+				g_message("Unwanted user packet\n");
+		}
+	} else {
+		if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
+			g_message("User packet decoding failed\n");
+	}
 
-  if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-   g_message("leaving user_check\n");
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
+		g_message("leaving user_check\n");
 }
 
 connection * userpckt_decode(char* dgram,int dgramsiz){
-  long u_packet_id;
-  char *pointer;
-  connection* connexion;
-  char passwd[128];
-  char md5datas[512];
-  char *usermd5datas;
-  struct in_addr oneip;
-  char onaip[16];
-  char *result;
-  u_int16_t firstf,lastf;
-  struct crypt_data * crypt_internal_datas=g_private_get (crypt_priv);
-  /* decode dgram */
-  switch (*dgram) {
-  case 0x1:
-    if ( *(dgram+1) == USER_REQUEST) {
-      /* allocate connection */
-      connexion = g_new0( connection,1);
-      if (connexion == NULL){
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_USER)){
-	  g_message("Can not allocate connexion\n");
-	}
-	return NULL;
-      }
+	long u_packet_id;
+	char *pointer;
+	connection* connexion;
+	char passwd[128];
+	char md5datas[512];
+	char *usermd5datas;
+	struct in_addr oneip;
+	char onaip[16];
+	char *result;
+	u_int16_t firstf,lastf;
+	struct crypt_data * crypt_internal_datas=g_private_get (crypt_priv);
+	/* decode dgram */
+	switch (*dgram) {
+		case 0x1:
+			if ( *(dgram+1) == USER_REQUEST) {
+				/* allocate connection */
+				connexion = g_new0( connection,1);
+				if (connexion == NULL){
+					if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_USER)){
+						g_message("Can not allocate connexion\n");
+					}
+					return NULL;
+				}
 
-      /* mini init struct */
-      connexion->lock=NULL;
-      /* parse packet */
-      pointer=dgram+2;
-      connexion->user_id=*(u_int16_t *)(pointer);
-      pointer+=sizeof (u_int16_t);
-      connexion->tracking_hdrs.saddr=(*(u_int32_t * )(pointer));
+				/* mini init struct */
+				connexion->lock=NULL;
+				/* parse packet */
+				pointer=dgram+2;
+				connexion->user_id=*(u_int16_t *)(pointer);
+				pointer+=sizeof (u_int16_t);
+				connexion->tracking_hdrs.saddr=(*(u_int32_t * )(pointer));
 #if 0
-      if ( connexion->tracking_hdrs.saddr != ntohl(addr_clnt) ){
-	g_warning("client addr (%lu) != source addr (%lu) !\n",connexion->tracking_hdrs.saddr, addr_clnt);
-	return NULL;
-      } 
+				if ( connexion->tracking_hdrs.saddr != ntohl(addr_clnt) ){
+					g_warning("client addr (%lu) != source addr (%lu) !\n",connexion->tracking_hdrs.saddr, addr_clnt);
+					return NULL;
+				} 
 #endif
-      pointer+=sizeof (u_int32_t);
-      connexion->tracking_hdrs.daddr=(*(u_int32_t * )(pointer));
-      pointer+=sizeof (u_int32_t);
-      connexion->tracking_hdrs.protocol=*(u_int8_t *)(pointer);
-      pointer+= sizeof (u_int8_t);
-      /* PROV : swap FLAGS as no client use it ...*/
-      pointer+=3 * sizeof (u_int8_t);
-      switch (connexion->tracking_hdrs.protocol) {
-      case IPPROTO_TCP:
-	connexion->tracking_hdrs.source=(*(u_int16_t *)pointer);
-	pointer+=sizeof (u_int16_t);
-	connexion->tracking_hdrs.dest=(*(u_int16_t *)pointer);
-	pointer+=sizeof (u_int16_t);
-	connexion->tracking_hdrs.type=0;
-	connexion->tracking_hdrs.code=0;
-	break;
-      case IPPROTO_UDP:
-	connexion->tracking_hdrs.source=(*(u_int16_t *)pointer);
-	pointer+=sizeof (u_int16_t);
-	connexion->tracking_hdrs.dest=(*(u_int16_t *)pointer);
-	pointer+=sizeof (u_int16_t);
-	connexion->tracking_hdrs.type=0;
-	connexion->tracking_hdrs.code=0;
-	break;
-      case IPPROTO_ICMP:
-	connexion->tracking_hdrs.source=0;
-	connexion->tracking_hdrs.dest=0;
-	connexion->tracking_hdrs.type=*(u_int8_t *)(pointer);
-	pointer+=sizeof(u_int8_t);
-	connexion->tracking_hdrs.code=*(u_int8_t *)(pointer);
-	pointer+=3;
-	break;
-      }
-      /* get timestamp */
-      connexion->timestamp=*(long *)(pointer);
-      pointer+=sizeof(long);
-      /* get random number */
-      u_packet_id=*(long *)(pointer);
-      pointer+=sizeof(long);
-      /* get user md5datas */
-      usermd5datas=strndup(pointer,34);
+				pointer+=sizeof (u_int32_t);
+				connexion->tracking_hdrs.daddr=(*(u_int32_t * )(pointer));
+				pointer+=sizeof (u_int32_t);
+				connexion->tracking_hdrs.protocol=*(u_int8_t *)(pointer);
+				pointer+= sizeof (u_int8_t);
+				/* PROV : swap FLAGS as no client use it ...*/
+				pointer+=3 * sizeof (u_int8_t);
+				switch (connexion->tracking_hdrs.protocol) {
+					case IPPROTO_TCP:
+						connexion->tracking_hdrs.source=(*(u_int16_t *)pointer);
+						pointer+=sizeof (u_int16_t);
+						connexion->tracking_hdrs.dest=(*(u_int16_t *)pointer);
+						pointer+=sizeof (u_int16_t);
+						connexion->tracking_hdrs.type=0;
+						connexion->tracking_hdrs.code=0;
+						break;
+					case IPPROTO_UDP:
+						connexion->tracking_hdrs.source=(*(u_int16_t *)pointer);
+						pointer+=sizeof (u_int16_t);
+						connexion->tracking_hdrs.dest=(*(u_int16_t *)pointer);
+						pointer+=sizeof (u_int16_t);
+						connexion->tracking_hdrs.type=0;
+						connexion->tracking_hdrs.code=0;
+						break;
+					case IPPROTO_ICMP:
+						connexion->tracking_hdrs.source=0;
+						connexion->tracking_hdrs.dest=0;
+						connexion->tracking_hdrs.type=*(u_int8_t *)(pointer);
+						pointer+=sizeof(u_int8_t);
+						connexion->tracking_hdrs.code=*(u_int8_t *)(pointer);
+						pointer+=3;
+						break;
+				}
+				/* get timestamp */
+				connexion->timestamp=*(long *)(pointer);
+				pointer+=sizeof(long);
+				/* get random number */
+				u_packet_id=*(long *)(pointer);
+				pointer+=sizeof(long);
+				/* get user md5datas */
+				usermd5datas=strndup(pointer,34);
 
-      if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)){
-	  g_message("User "); 
-	  print_connection(connexion,NULL);
+				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)){
+					g_message("User "); 
+					print_connection(connexion,NULL);
+				}
+
+				/* get user datas : password, groups (filled in) */
+				connexion->user_groups = (*module_user_check) (connexion->user_id,passwd);
+				if (connexion->user_groups == NULL) {
+					if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
+						g_message("user_check return bad\n");
+					free_connection(connexion);
+					return NULL;
+				}
+
+				/*
+				 * check MD5 crypt 
+				 */
+
+				/* construct md5datas */
+				oneip.s_addr=htonl(connexion->tracking_hdrs.saddr);
+				strncpy(onaip,inet_ntoa(oneip),16);
+				oneip.s_addr=htonl(connexion->tracking_hdrs.daddr);
+
+				if (connexion->tracking_hdrs.protocol != IPPROTO_ICMP) {
+					firstf=connexion->tracking_hdrs.source;
+					lastf=connexion->tracking_hdrs.dest;
+				} else {
+					firstf=connexion->tracking_hdrs.type;
+					lastf=connexion->tracking_hdrs.code;
+				}
+
+				snprintf(md5datas,512,
+						"%s%u%s%u%ld%ld%s",
+						onaip,
+						firstf,
+						inet_ntoa(oneip),
+						lastf,
+						connexion->timestamp,
+						u_packet_id,
+						passwd);
+
+				/* initialisation stuff */
+				if (crypt_internal_datas == NULL){
+					crypt_internal_datas=g_new0(struct crypt_data,1);
+					g_private_set(crypt_priv,crypt_internal_datas);
+					if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
+						g_message("Initiating crypt internal structure");
+				}
+				/* crypt datas */
+				result = crypt_r(md5datas,usermd5datas,crypt_internal_datas);
+				/* compare the two crypted datas */
+				if ( strcmp (result, usermd5datas) != 0 ) {
+					/* bad sig dropping user packet ! */
+					if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_USER))
+						g_message("wrong md5 sig for packet %s \n",usermd5datas);
+					free(usermd5datas);
+					free_connection(connexion);
+					return NULL;
+				} else {
+					free(usermd5datas);
+					/* 
+					 * md5 done !
+					 */
+
+					/* Is it a try to spoof MD5 ? */
+
+					/* set some default on connexion */
+					if (check_fill_user_counters(connexion->user_id,connexion->timestamp,u_packet_id,connexion->tracking_hdrs.saddr)){	
+						/* first reset timestamp to now */
+						connexion->timestamp=time(NULL);
+						connexion->state=STATE_USERPCKT;
+						/* acl part is NULL */
+						connexion->packet_id=NULL;
+						connexion->acl_groups=NULL;
+						/* Tadaaa */
+						return connexion;
+					} else {
+						if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
+							g_message("Bad user packet\n");
+						free_connection(connexion);
+						return NULL;
+					}
+				}
+			}
 	}
-
-      /* get user datas : password, groups (filled in) */
-      connexion->user_groups = (*module_user_check) (connexion->user_id,passwd);
-      if (connexion->user_groups == NULL) {
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
-	  g_message("user_check return bad\n");
-	free_connection(connexion);
+	/* FIXME : free dgram see over */
 	return NULL;
-      }
-
-      /*
-       * check MD5 crypt 
-       */
-      
-      /* construct md5datas */
-      oneip.s_addr=htonl(connexion->tracking_hdrs.saddr);
-      strncpy(onaip,inet_ntoa(oneip),16);
-      oneip.s_addr=htonl(connexion->tracking_hdrs.daddr);
-
-      if (connexion->tracking_hdrs.protocol != IPPROTO_ICMP) {
-	firstf=connexion->tracking_hdrs.source;
-	lastf=connexion->tracking_hdrs.dest;
-      } else {
-	firstf=connexion->tracking_hdrs.type;
-	lastf=connexion->tracking_hdrs.code;
-      }
-
-      snprintf(md5datas,512,
-	       "%s%u%s%u%ld%ld%s",
-	       onaip,
-	       firstf,
-	       inet_ntoa(oneip),
-	       lastf,
-	       connexion->timestamp,
-	       u_packet_id,
-	       passwd);
-     
-      /* initialisation stuff */
-      if (crypt_internal_datas == NULL){
-	crypt_internal_datas=g_new0(struct crypt_data,1);
-	g_private_set(crypt_priv,crypt_internal_datas);
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
-	  g_message("Initiating crypt internal structure");
-      }
-      /* crypt datas */
-      result = crypt_r(md5datas,usermd5datas,crypt_internal_datas);
-      /* compare the two crypted datas */
-      if ( strcmp (result, usermd5datas) != 0 ) {
-	/* bad sig dropping user packet ! */
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_USER))
-	  g_message("wrong md5 sig for packet %s \n",usermd5datas);
-	free(usermd5datas);
-	free_connection(connexion);
-	return NULL;
-      } else {
-	free(usermd5datas);
-	/* 
-	 * md5 done !
-	 */
-
-	 /* Is it a try to spoof MD5 ? */
-	      
-	/* set some default on connexion */
-	if (check_fill_user_counters(connexion->user_id,connexion->timestamp,u_packet_id,connexion->tracking_hdrs.saddr)){	
-	  /* first reset timestamp to now */
-	  connexion->timestamp=time(NULL);
-	  connexion->state=STATE_USERPCKT;
-	  /* acl part is NULL */
-	  connexion->packet_id=NULL;
-	  connexion->acl_groups=NULL;
-	  /* Tadaaa */
-	  return connexion;
-	} else {
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
-	  		g_message("Bad user packet\n");
-		free_connection(connexion);
-		return NULL;
-	}
-      }
-    }
-  }
-  /* FIXME : free dgram see over */
-  return NULL;
 }
 
 
 
 
-  
-  
+
+
