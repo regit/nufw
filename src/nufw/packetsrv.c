@@ -1,4 +1,4 @@
-/* $Id: packetsrv.c,v 1.5 2003/11/25 20:02:20 regit Exp $ */
+/* $Id: packetsrv.c,v 1.6 2003/11/25 21:08:31 regit Exp $ */
 
 /*
 ** Copyright (C) 2002 Eric Leblond <eric@regit.org>
@@ -67,13 +67,13 @@ void* packetsrv(){
 	    if (look_for_fin_flags(msg_p->payload)){
 	      auth_request_send(AUTH_CLOSE,msg_p->packet_id,msg_p->payload,msg_p->data_len,msg_p->timestamp_sec);
 	      IPQ_SET_VERDICT( msg_p->packet_id,NF_ACCEPT);
-	    }
+	    } else {
 	    current=calloc(1,sizeof( packet_idl));
 	    if (current == NULL){
 	      if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_MAIN)){
 		if (log_engine == LOG_TO_SYSLOG) {
 		  syslog(SYSLOG_FACILITY(DEBUG_LEVEL_MESSAGE),"Can not allocate packet_id");
-		}else {
+		} else {
 		  printf("[%i] Can not allocate packet_id\n",getpid());
 		} 
 	      }
@@ -96,7 +96,8 @@ void* packetsrv(){
 	    }
 	    /* send an auth request packet */
 	    auth_request_send(AUTH_REQUEST,msg_p->packet_id,msg_p->payload,msg_p->data_len,msg_p->timestamp_sec);
-	  } else {
+            }
+          } else {
             if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
               if (log_engine == LOG_TO_SYSLOG) {
                 syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"non IP packet Dropping");
