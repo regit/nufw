@@ -186,7 +186,7 @@ connection * search_and_fill (connection * pckt) {
      * not using free_connection to do a complete free
      *because we have to keep the GSList
      */
-    free(pckt);
+    g_free(pckt);
     return element;
   }
   return NULL;
@@ -330,8 +330,12 @@ void  get_old_conn (gpointer key,
 
 int conn_cl_delete(gconstpointer conn) {
   g_assert (conn != NULL);
-  g_hash_table_remove (conn_list,
-				&(((connection *)conn)->tracking_hdrs));
+  if (!  g_hash_table_remove (conn_list,
+			      &(((connection *)conn)->tracking_hdrs)) ){
+    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
+      g_warning("Removal of conn in hash failed\n");
+    return 0;
+  }
   return 1;
 }
 

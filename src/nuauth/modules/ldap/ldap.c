@@ -253,7 +253,7 @@ G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
     	  g_private_set(ldap_priv,ld);
    	 }
     if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
-      g_message ("invalid return of ldap_search_st : %s\n",ldap_err2string(err));
+      g_warning ("invalid return of ldap_search_st : %s\n",ldap_err2string(err));
     return NULL;
   }
 
@@ -263,7 +263,7 @@ G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
      if (result == NULL ){
        if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_AUTH))
 	 g_message("Can not get entry for %d\n",userid);
-       //       free_connection(element);
+       ldap_msgfree(res);
        return NULL;
      }
      /* build groups  list */
@@ -288,11 +288,12 @@ G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
 	 g_message("reading password\n");
      }
      ldap_value_free(attrs_array);
+     ldap_msgfree(res);
      return outelt;
    } else {
      if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_AUTH))
        g_message("No or too many users found with userid %d\n",userid);
-     //     free_connection(element);
+     ldap_msgfree(res);
      return NULL;
    }
   ldap_msgfree(res);

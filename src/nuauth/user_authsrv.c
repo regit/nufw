@@ -221,7 +221,7 @@ connection * userpckt_decode(char* dgram,int dgramsiz){
       if (connexion->user_groups == NULL) {
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
 	  g_message("ldap_user_check return bad\n");
-	g_free(connexion);
+	free_connection(connexion);
 	return NULL;
       }
 
