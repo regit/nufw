@@ -49,7 +49,7 @@ LDAP* ldap_conn_init(void){
       return NULL;
     } 
     if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_AUTH)){
-      g_message("ldap bind error : %s \n",ldap_err2string(err));
+      g_warning("ldap bind error : %s \n",ldap_err2string(err));
     }
     return NULL;
   }
@@ -73,7 +73,7 @@ GSList * ldap_acl_check (connection* element){
     ld = ldap_conn_init();
     if (ld == NULL) {
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_AUTH))
-		g_message("Can not initiate LDAP conn\n");
+		g_warning("Can not initiate LDAP conn\n");
 	return NULL;
     }
     g_private_set(ldap_priv,ld);
@@ -158,7 +158,7 @@ GSList * ldap_acl_check (connection* element){
     return g_list;
   } else {
     if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_AUTH))
-      g_message("Argh no acl found\n");
+      g_message("No acl found\n");
     ldap_msgfree (res);
   }
   return NULL;

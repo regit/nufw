@@ -1,4 +1,4 @@
-/* $Id: auth_srv.h,v 1.2 2003/09/17 16:41:27 gryzor Exp $ */
+/* $Id: auth_srv.h,v 1.3 2003/09/18 19:27:50 regit Exp $ */
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
@@ -174,6 +174,23 @@ typedef struct User_Datas {
 
 GHashTable * users_hash;
 
+/* 
+ * config file related
+ */
+
+#if 0
+typedef struct Conf_Params
+{
+  gchar *name;
+  guint token;
+} confparams
+
+const confparams symbols[] = {
+  { "debug_level", 180 },
+  { "user_packet_port",181},
+   { "user_packet_port",182},
+};
+#endif
 
 /* internal for crypt */
 GPrivate* crypt_priv;

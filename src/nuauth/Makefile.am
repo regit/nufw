@@ -9,4 +9,4 @@ sbin_PROGRAMS = nuauth
 nuauth_SOURCES = authsrv.c pckt_authsrv.c user_authsrv.c  auth_common.c\
 	check_acls.c ldap.c user_logs.c debug.c
 #ldap.c
-LIBS = $(GLIB_LIBS) -lldap -lcrypt
+LIBS = $(GLIB_LIBS) -lldap -lcrypt -lm
