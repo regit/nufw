@@ -1,5 +1,9 @@
+0.8.1 (2004/07/14)
+	- client library
+	- little code and packaging cleaning
 0.8 (2004/07/02)
 	- username logging in SQL database when log sync is enable
+	- security fix on nufw
 0.7.1 (2004/06/14)
         - add option for SSO feature : log before granted packet
         - major code cleaning
