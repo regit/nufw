@@ -1,7 +1,7 @@
 /*
  * libnuclient - TCP/IP connection auth client library.
  *
- * Copyright 2004 - INL
+ * Copyright 2004,2005 - INL
  *	written by Eric Leblond <regit@inl.fr>
  *	           Vincent Deffontaines <vincent@inl.fr>
  *
@@ -815,9 +815,17 @@ NuAuth* nu_client_init(char *username, unsigned long userid, char *password,
                     /* Added by gryzor after getting confused with weird
                      * messages, when no cert is present*/
                         printf("\nSorry, cannot read key file %s\n",keyfile);
-			errno=EBADF;
-			return NULL;
+			keyfile[0]=0;
 		}
+		/* test if key exists */
+		if (access(certfile,R_OK)){
+                    /* Added by gryzor after getting confused with weird
+                     * messages, when no cert is present*/
+                        printf("\nSorry, cannot read key file %s\n",keyfile);
+			certfile[0]=0;
+		}
+
+
 
 		gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);
 		gnutls_global_init();
@@ -828,9 +836,11 @@ NuAuth* nu_client_init(char *username, unsigned long userid, char *password,
 		*/
 		gnutls_certificate_set_x509_trust_file(xcred, certfile, GNUTLS_X509_FMT_PEM);
 
+		if ( certfile[0] && keyfile[0]){
 		ret = gnutls_certificate_set_x509_key_file(xcred, certfile, keyfile, GNUTLS_X509_FMT_PEM);
 		if (ret <0){
-			printf("problem with keyfile : %s\n",gnutls_strerror(ret));
+			printf("problem with X509 file : %s\n",gnutls_strerror(ret));
+		}
 		}
 
 		generate_dh_params();
