@@ -220,7 +220,9 @@ void acl_check_and_decide (gpointer userdata, gpointer data){
             if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)){
                 g_message("No ACL, packet dropped %p\n",conn_elt);
             }
-            send_auth_response(GUINT_TO_POINTER(conn_elt->packet_id),&aanswer);
+            send_auth_response(GUINT_TO_POINTER(conn_elt->packet_id->data),&aanswer);
+	    /* we can get rid of packet_id because we have send an answer */
+	    conn_elt->packet_id=g_slist_remove(conn_elt->packet_id,conn_elt->packet_id->data);
             conn_elt->state=STATE_DONE;
             /* search and fill */
         g_async_queue_push (connexions_queue,conn_elt);
