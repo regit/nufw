@@ -280,15 +280,14 @@ connection * userpckt_decode(char* dgram,int dgramsiz){
 	      
 	/* set some default on connexion */
 	if (check_fill_user_counters(userid,connexion->timestamp,u_packet_id,connexion->tracking_hdrs.saddr)){	
-	/* first reset timestamp to now */
-	connexion->timestamp=time(NULL);
-	connexion->state=STATE_USERPCKT;
-	/* acl part is NULL */
-	connexion->packet_id=NULL;
-	connexion->acl_groups=NULL;
-	
-	/* Tadaaa */
-	return connexion;
+	  /* first reset timestamp to now */
+	  connexion->timestamp=time(NULL);
+	  connexion->state=STATE_USERPCKT;
+	  /* acl part is NULL */
+	  connexion->packet_id=NULL;
+	  connexion->acl_groups=NULL;
+	  /* Tadaaa */
+	  return connexion;
 	} else {
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
 	  		g_message("non increasing counters for packet\n");

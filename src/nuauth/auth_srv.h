@@ -1,4 +1,4 @@
-/* $Id: auth_srv.h,v 1.11 2003/09/27 19:41:39 regit Exp $ */
+/* $Id: auth_srv.h,v 1.12 2003/09/27 21:17:13 regit Exp $ */
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
@@ -238,7 +238,7 @@ void user_check (gpointer userdata ,gpointer data);
  
 int check_fill_user_counters(u_int16_t userid,long time,unsigned long packet_id,u_int32_t ip);
 void print_users_list();
-void log_new_user(int id);
+void log_new_user(int id,u_int32_t ip);
 
 /*
  * External auth  stuff

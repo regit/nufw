@@ -21,65 +21,65 @@
 #include <time.h>
 
 int check_fill_user_counters(u_int16_t userid,long u_time,unsigned long packet_id,u_int32_t ip){
-	user_datas * currentuser=NULL;
-	/* lookup users */
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
-		g_message("looking for %d\n",userid);
+  user_datas * currentuser=NULL;
+  /* lookup users */
+  if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
+    g_message("looking for %d\n",userid);
 	
-	currentuser=g_hash_table_lookup(users_hash,userid);
-	if (currentuser == NULL){
-		/* failure so create user */
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER)) {
-			g_message("creating new user %d\n",userid);
-		}
-		currentuser = g_new0(user_datas,1);
-		currentuser->ip=ip;
-		currentuser->last_packet_time=u_time;
-		currentuser->last_packet_id=packet_id;
-		currentuser->last_packet_timestamp=time(NULL);
-		currentuser->lock=g_mutex_new();
-		g_hash_table_insert(users_hash,userid,currentuser);
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER)) {
-			g_message("new user %d\n",userid);
-		}
-		log_new_user(userid);
-		return 1;
-	} else {
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER)) {
-			g_message("found user %d\n",userid);
-		}
-		if ( (u_time < currentuser->last_packet_time) || ((u_time == currentuser->last_packet_time) && (packet_id <= currentuser->last_packet_id))  ){
-			return 0;
-		} else {
-			if (g_mutex_trylock(currentuser->lock)){
-				currentuser->ip=ip;
-				currentuser->last_packet_time=u_time;
-				currentuser->last_packet_id=packet_id;
-				currentuser->last_packet_timestamp=time(NULL);
-				g_mutex_unlock(currentuser->lock);
-			}
-			return 1;
-		}
-	}
+  currentuser=g_hash_table_lookup(users_hash,userid);
+  if (currentuser == NULL){
+    /* failure so create user */
+    if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER)) {
+      g_message("creating new user %d\n",userid);
+    }
+    currentuser = g_new0(user_datas,1);
+    currentuser->ip=ip;
+    currentuser->last_packet_time=u_time;
+    currentuser->last_packet_id=packet_id;
+    currentuser->last_packet_timestamp=time(NULL);
+    currentuser->lock=g_mutex_new();
+    g_hash_table_insert(users_hash,userid,currentuser);
+    log_new_user(userid,ip);
+    return 1;
+  } else {
+    if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER)) {
+      g_message("found user %d\n",userid);
+    }
+    if ( (u_time < currentuser->last_packet_time) || ((u_time == currentuser->last_packet_time) && (packet_id <= currentuser->last_packet_id))  ){
+      return 0;
+    } else {
+      if (g_mutex_trylock(currentuser->lock)){
+	currentuser->ip=ip;
+	currentuser->last_packet_time=u_time;
+	currentuser->last_packet_id=packet_id;
+	currentuser->last_packet_timestamp=time(NULL);
+	g_mutex_unlock(currentuser->lock);
+      }
+      return 1;
+    }
+  }
 	
-	return 0;
+  return 0;
 }
 
 void print_id( gpointer id, gpointer value, gpointer user_data) {
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
-	g_message("%u ",id);
+  if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
+    g_message("%u ",id);
 }
 
 void print_users_list(){
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
-	{
-	  g_message("users list : ");
-	}
-  	g_hash_table_foreach(users_hash,(GHFunc)print_id,NULL);
+  if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
+    {
+      g_message("users list : ");
+    }
+  g_hash_table_foreach(users_hash,(GHFunc)print_id,NULL);
 }
 
-void log_new_user(int id){
+void log_new_user(int id,u_int32_t ip){
+  struct in_addr oneip;
+
+  oneip.s_addr=ntohl(ip);
   if ( nuauth_log_users % 2 ){
-    g_message("New user with id %d",id);
+    g_message("New user with id %d on %s",id,inet_ntoa(oneip));
   }
 }
