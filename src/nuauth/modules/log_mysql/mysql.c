@@ -139,7 +139,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
           //
           //
           //
-          if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,start_timestamp,state) VALUES (%u,%lu,%u,%lu,%lu,%u,%u,FROM_UNIXTIME(%lu),%hu)",
+          if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,start_timestamp,state,oob_prefix) VALUES (%u,%lu,%u,%lu,%lu,%u,%u,FROM_UNIXTIME(%lu),%hu,'ACCEPT')",
               mysql_table_name,
               (element.user_id),
               element.timestamp,
@@ -163,7 +163,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
           }
           break;
         case IPPROTO_UDP:
-          if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,start_timestamp,oob_prefix) VALUES (%u,%lu,%u,%lu,%lu,%u,%u,FROM_UNIXTIME(%lu),'ACCEPT')",
+          if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,start_timestamp,state,oob_prefix) VALUES (%u,%lu,%u,%lu,%lu,%u,%u,FROM_UNIXTIME(%lu),%hu,'ACCEPT')",
               mysql_table_name,
               (element.user_id),
               element.timestamp,
@@ -172,7 +172,8 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
               (element.tracking_hdrs).daddr,
               (element.tracking_hdrs).source,
               (element.tracking_hdrs).dest,
-              element.timestamp
+              element.timestamp,
+              STATE_OPEN
           ) >= 511){
               if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                   g_warning("Building mysql insert query, the 511 limit was reached!\n");
@@ -187,14 +188,15 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
           return 0;
           break;
         default:
-          if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,start_timestamp,oob_prefix) VALUES (%u,%lu,%u,%lu,%lu,FROM_UNIXTIME(%lu),'ACCEPT')",
+          if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,start_timestamp,state,oob_prefix) VALUES (%u,%lu,%u,%lu,%lu,FROM_UNIXTIME(%lu),%hu,'ACCEPT')",
               mysql_table_name,
               (element.user_id),
               element.timestamp,
               (element.tracking_hdrs).protocol,
               (element.tracking_hdrs).saddr,
               (element.tracking_hdrs).daddr,
-              element.timestamp
+              element.timestamp,
+              STATE_OPEN
           ) >= 511){
               if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                   g_warning("Building mysql insert query, the 511 limit was reached!\n");
@@ -253,7 +255,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
           int update_status = 0;
           while (update_status < 2){
             update_status++;
-            if (snprintf(request,511,"UPDATE %s SET end_timestamp=FROM_UNIXTIME(%lu), state=%hu WHERE (ip_saddr=%lu AND ip_daddr=%lu AND tcp_sport=%u AND tcp_dport=%u AND STATE=%hu)",
+            if (snprintf(request,511,"UPDATE %s SET end_timestamp=FROM_UNIXTIME(%lu), state=%hu WHERE (ip_saddr=%lu AND ip_daddr=%lu AND tcp_sport=%u AND tcp_dport=%u AND state=%hu)",
 
               mysql_table_name,
               element.timestamp,
@@ -291,7 +293,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
     case STATE_DROP:
        switch ((element.tracking_hdrs).protocol){
         case IPPROTO_TCP:
-          if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,oob_prefix) VALUES (%u,%lu,%u,%lu,%lu,%u,%u,'DROP')",
+          if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,state,oob_prefix) VALUES (%u,%lu,%u,%lu,%lu,%u,%u,%hu,'DROP')",
               mysql_table_name,
               (element.user_id),
               element.timestamp,
@@ -299,7 +301,8 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
               (element.tracking_hdrs).saddr,
               (element.tracking_hdrs).daddr,
               (element.tracking_hdrs).source,
-              (element.tracking_hdrs).dest
+              (element.tracking_hdrs).dest,
+              STATE_DROP
           ) >= 511){
               if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                   g_warning("Building mysql insert query, the 511 limit was reached!\n");
@@ -313,7 +316,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
           }
           break;
         case IPPROTO_UDP:
-          if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,oob_prefix) VALUES (%u,%lu,%u,%lu,%lu,%u,%u,'DROP')",
+          if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,state,oob_prefix) VALUES (%u,%lu,%u,%lu,%lu,%u,%u,%hu,'DROP')",
               mysql_table_name,
               (element.user_id),
               element.timestamp,
@@ -321,7 +324,8 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
               (element.tracking_hdrs).saddr,
               (element.tracking_hdrs).daddr,
               (element.tracking_hdrs).source,
-              (element.tracking_hdrs).dest
+              (element.tracking_hdrs).dest,
+              STATE_DROP
           ) >= 511){
               if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                   g_warning("Building mysql insert query, the 511 limit was reached!\n");
@@ -336,13 +340,14 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
           return 0;
           break;
         default:
-          if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,oob_prefix) VALUES (%u,%lu,%u,%lu,%lu,'DROP')",
+          if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,state,oob_prefix) VALUES (%u,%lu,%u,%lu,%lu,%hu,'DROP')",
               mysql_table_name,
               (element.user_id),
               element.timestamp,
               (element.tracking_hdrs).protocol,
               (element.tracking_hdrs).saddr,
-              (element.tracking_hdrs).daddr
+              (element.tracking_hdrs).daddr,
+              STATE_DROP
           ) >= 511){
               if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                   g_warning("Building mysql insert query, the 511 limit was reached!\n");
