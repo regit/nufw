@@ -242,19 +242,15 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz){
                   case IPPROTO_TCP:
                     switch (get_tcp_headers(connexion, pointer)){
                       case STATE_OPEN:
-                        g_message("open");
                         break; 
                       case STATE_CLOSE:
-                        g_message("close");
                         if (msg_type == AUTH_CLOSE ){
                             log_user_packet(*connexion,STATE_CLOSE);
                             return NULL;
                         }
                         break;
                       case STATE_ESTABLISHED:
-                        g_message("establish work");
                         if (msg_type == AUTH_CLOSE ){
-                                g_message("ien cours");
                             log_user_packet(*connexion,STATE_ESTABLISHED);
                             return NULL;
                         }
