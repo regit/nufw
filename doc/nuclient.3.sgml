@@ -1,0 +1,140 @@
+<!doctype refentry PUBLIC "-//OASIS//DTD DocBook V4.1//EN" [
+
+<!-- Process this file with docbook-to-man to generate an nroff manual
+     page: `docbook-to-man manpage.sgml > manpage.1'.  You may view
+     the manual page with: `docbook-to-man manpage.sgml | nroff -man |
+     less'.  A typical entry in a Makefile or Makefile.am is:
+
+manpage.1: manpage.sgml
+	docbook-to-man $< > $@
+
+    
+	The docbook-to-man binary is found in the docbook-to-man package.
+	Please remember that if you create the nroff version in one of the
+	debian/rules file targets (such as build), you will need to include
+	docbook-to-man in your Build-Depends control field.
+
+  -->
+
+  <!-- Fill in your name for FIRSTNAME and SURNAME. -->
+  <!ENTITY dhfirstname "<firstname>Eric</firstname>">
+  <!ENTITY dhsurname   "<surname>Leblond</surname>">
+  <!-- Please adjust the date whenever revising the manpage. -->
+  <!ENTITY dhdate      "<date>july 18, 2004</date>">
+  <!-- SECTION should be 1-8, maybe w/ subsection other parameters are
+       allowed: see man(7), man(1). -->
+  <!ENTITY dhsection   "<manvolnum>3</manvolnum>">
+  <!ENTITY dhemail     "<email>regit@inl.fr</email>">
+  <!ENTITY dhemail2    "<email>vincent@inl.fr</email>">
+  <!ENTITY dhusername  "Eric Leblond">
+  <!ENTITY dhucpackage "<refentrytitle>libnuclient</refentrytitle>">
+  <!ENTITY dhpackage   "libnuclient">
+
+  <!ENTITY gnu         "<acronym>GNU</acronym>">
+  <!ENTITY gpl         "&gnu; <acronym>GPL</acronym>">
+
+]>
+
+<refentry>
+  <refentryinfo>
+    <address>
+      &dhemail;
+    </address>
+    <author>
+      &dhfirstname;
+      &dhsurname;
+    </author>
+    <copyright>
+      <year>2004</year>
+      <holder>&dhusername;</holder>
+    </copyright>
+    &dhdate;
+  </refentryinfo>
+  <refmeta>
+    &dhucpackage;
+
+    &dhsection;
+  </refmeta>
+  <refnamediv>
+    <refname>&dhpackage;</refname>
+
+    <refpurpose>NUFW client authentication library</refpurpose>
+  </refnamediv>
+  <refsynopsisdiv>
+    <cmdsynopsis>
+    <command>
+#include "nuclient.h"
+
+NuAuth* nu_client_init(char *username,unsigned long userid,char * password, char * hostname, unsigned int port,char protocol,char ssl_on);
+
+int	nu_client_check(NuAuth * session);
+
+void nu_client_free(NuAuth *session);
+</command>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+  <refsect1>
+    <title>DESCRIPTION</title>
+
+    <para>This manual page documents the
+      <command>&dhpackage;</command> library.</para>
+
+<para>Use <command>nu_client_init</command> to initialize a authentication session. Then call <command>nu_client_check</command> at 
+regular interval to send authentication packet to the gateway (if needed). When you're finished, call <command>nu_client_free</command>
+to free the session.</para>
+      <para>Original packaging and informations and help can be found from http://www.nufw.org/</para>
+
+  </refsect1>
+  <refsect1>
+    <title>RETURN VALUE</title>
+<para>
+<command>nu_client_init</command> returns an authentication session usable by <command>nu_client_check</command> or <command>nu_client_free</command>.
+</para>
+<para>
+<command>nu_client_check</command> returns the number of packets authenticated to the nuauth server during the call.
+</para>
+  </refsect1>
+  <refsect1>
+    <title>ERRORS</title>
+    <para><command>nu_client_init</command> return NULL it a problem occur during initiation</para>
+  </refsect1>
+
+  <refsect1>
+    <title>SEE ALSO</title>
+    <para>nuauth(1)</para>
+  </refsect1>
+  <refsect1>
+    <title>AUTHOR</title>
+    <para>Nufw was designed and coded by Eric Leblond, aka Regit (&dhemail;) , and Vincent
+    Deffontaines, aka gryzor (&dhemail2;). Original idea in 2001, while working on NSM Ldap
+    support.</para>
+
+    <para>This manual page was written by &dhusername;</para>
+      <para>Permission is
+      granted to copy, distribute and/or modify this document under
+      the terms of the &gnu; Free Documentation
+      License, Version 2 as published by the Free
+      Software Foundation; with no Invariant Sections, no Front-Cover
+      Texts and no Back-Cover Texts.</para>
+
+  </refsect1>
+</refentry>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:2
+sgml-indent-data:t
+sgml-parent-document:nil
+sgml-default-dtd-file:nil
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+-->
+
+
