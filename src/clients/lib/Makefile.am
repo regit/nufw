@@ -3,8 +3,8 @@ AM_CPPFLAGS = -O2 -Wall -Werror-implicit-function-declaration -DCONFIG_DIR=\"$(s
 lib_LTLIBRARIES = libnuclient.la
 
 # libnuclient
-libnuclient_la_SOURCES = libnuclient.c 
+libnuclient_la_SOURCES = libnuclient.c ../../lib/ssl.c
 include_HEADERS = nuclient.h
 
 
-LIBS = -lcrypt -lssl -static ../../lib/libcssl.a 
+LIBS = -lcrypt -lssl

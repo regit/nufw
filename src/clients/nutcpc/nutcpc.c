@@ -2,7 +2,7 @@
  * nutcpc.c - TCP/IP connection auth client.
  *
  * Copyright 2004 - INL
- * 	written by Eric Leblond eric.leblond@inl.fr
+ * 	written by Eric Leblond <eric.leblond@inl.fr>
  *
  * This file is based of tcpspy, a TCP/IP connection monitor.
  *
@@ -621,7 +621,7 @@ int main (int argc, char *argv[])
 					strerror (errno));
 			exit (EXIT_FAILURE);
 		} else if (p != 0) {
-			fprintf (stderr, "nutcpc 0.1 started (pid %d)\n", 
+			fprintf (stderr, "nutcpc started (pid %d)\n", 
 					(int) p);
 			exit (EXIT_SUCCESS);
 		}
