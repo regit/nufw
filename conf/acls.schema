@@ -73,6 +73,6 @@ objectclass ( 18.3.6.1.1.18.2.1 NAME 'NuAccessControlList'
 
 
 objectclass ( 18.3.6.1.1.18.2.2 NAME 'NuAccount' SUP top AUXILIARY
-	DESC 'Abstraction of an account with POSIX attributes'
-	MUST ( cn $ uid $ uidNumber $ Group $ homeDirectory )
-	MAY ( userPassword $ loginShell $ gecos $ description ) )
+	DESC 'Abstraction of an account with Nufw attributes'
+	MUST ( cn $ uid $ uidNumber $ Group  )
+	MAY ( userPassword $ loginShell $ gecos $ description $ homeDirectory)  )
