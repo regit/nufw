@@ -25,6 +25,24 @@ Description: Nuauth is the authentication daemon from the nufw package
  Nuauth receives requests from nufw, and auth packets from users' clients,
  and sends decision to the nufw daemon.
 
+Package: nuauth-log-mysql
+Architecture: any
+Depends: ${shlibs:Depends}, debconf, libmysqlclient12, libpq3, nuauth
+Conflicts: nuauth-log-pgsql
+Recommends: nuauth-utils
+Description: Module for nuauth logging into mysql databases.
+ This package adds support for nuauth logging users activity into a Mysql
+ database. You can use this for an SSO solution, too.
+
+Package: nuauth-log-pgsql
+Architecture: any
+Depends: ${shlibs:Depends}, debconf, libmysqlclient12, libpq3, nuauth
+Conflicts: nuauth-log-mysql
+Recommends: nuauth-utils
+Description: Module for nuauth logging into PostgreSQL databases.
+ This package adds support for nuauth logging users activity into a postgreSQL
+ database. You can use this for an SSO solution, too.
+
 Package: nutcpc
 Architecture: any
 Depends: ${shlibs:Depends}
