@@ -98,10 +98,18 @@ struct Conn_State {
 void log_user_packet (connection element,int state){
   struct Conn_State conn_state= { element, state};
   
-  /* feed thread pool */
-  g_thread_pool_push(user_loggers,
+
+    if ((nuauth_log_users_sync) && (state == STATE_OPEN) ){
+        (*module_user_logs) (
+                             element, 
+                                  state
+                            );
+    } else {
+         /* feed thread pool */
+         g_thread_pool_push(user_loggers,
 		     g_memdup(&conn_state,sizeof(conn_state)),
 		     NULL);
+    }
   /* end */
 }
 

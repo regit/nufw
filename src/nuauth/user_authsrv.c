@@ -379,6 +379,8 @@ connection * userpckt_decode(char* dgram,int dgramsiz){
         if ( *(dgram+1) == USER_REQUEST) {
             /* allocate connection */
             connexion = g_new0( connection,1);
+            connexion->acl_groups=NULL;
+            connexion->user_groups=NULL;
             if (connexion == NULL){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_USER)){
                     g_message("Can not allocate connexion\n");

@@ -33,6 +33,7 @@ confparams nuauth_vars[] = {
     { "nuauth_number_aclcheckers" , G_TOKEN_INT , NB_ACLCHECK, NULL },
     { "nuauth_number_loggers" , G_TOKEN_INT , NB_ACLCHECK, NULL },
     { "nuauth_log_users" , G_TOKEN_INT , 1, NULL },
+    { "nuauth_log_users_sync" , G_TOKEN_INT , 0, NULL },
     { "nuauth_user_check_module" , G_TOKEN_STRING , 1, NULL },
     { "nuauth_acl_check_module" , G_TOKEN_STRING , 1, NULL },
     { "nuauth_user_logs_module" , G_TOKEN_STRING , 1, NULL },
@@ -113,6 +114,10 @@ int main(int argc,char * argv[]) {
     nbacl_check=*(int*)(vpointer?vpointer:&nbacl_check);
     vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_log_users");
     nuauth_log_users=*(int*)(vpointer?vpointer:&nuauth_log_users);
+
+    vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_log_users_sync");
+    nuauth_log_users_sync=*(int*)(vpointer?vpointer:&nuauth_log_users_sync);
+
     vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_user_check_module");
     nuauth_user_check_module=(char*)(vpointer?vpointer:nuauth_user_check_module);
     vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_acl_check_module");
@@ -456,11 +461,24 @@ int main(int argc,char * argv[]) {
       TRUE,
        NULL);
 
-    user_loggers = g_thread_pool_new  ((GFunc)  real_log_user_packet,
+user_loggers = g_thread_pool_new  ((GFunc)  real_log_user_packet,
         NULL,
         nuauth_number_loggers,
         TRUE,
         NULL);
+
+if ( nuauth_log_users_sync ){
+        decisions_workers = g_thread_pool_new  ((GFunc)  decisions_queue_work,
+        NULL,
+        nuauth_number_loggers,
+        TRUE,
+        NULL);
+
+}
+
+
+
+    
 
     /* admin task */
     for(;;){

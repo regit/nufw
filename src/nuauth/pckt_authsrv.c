@@ -211,6 +211,8 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz){
             pointer=dgram+2;
             connexion->id_srv=*(u_int16_t *)(pointer);
             pointer+=2;
+            connexion->acl_groups=NULL;
+            connexion->user_groups=NULL;
             connexion->packet_id=NULL;
             connexion->packet_id=g_slist_append(connexion->packet_id, GUINT_TO_POINTER(*(unsigned long * )pointer));
             if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_PACKET)) {

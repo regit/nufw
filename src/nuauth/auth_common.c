@@ -19,6 +19,8 @@
 #include <auth_srv.h>
 #include <jhash.h>
 
+static gint apply_decision(connection element);
+
 void bail (const char *on_what){
     perror(on_what);
     exit(1);
@@ -305,7 +307,7 @@ int free_connection(connection * conn){
             if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
                 g_message ("acl_groups freed %p\n",acllist);
         }
-        if ( conn->user_groups != ALLGROUP )
+        if ( (conn->user_groups != ALLGROUP)  && (conn->user_groups != NULL))
             g_slist_free (conn->user_groups);
         if (conn->packet_id != NULL )
             g_slist_free (conn->packet_id);
@@ -393,30 +395,6 @@ gint take_decision(connection * element) {
     /* first check if we have found acl */
     if ( element->acl_groups == NULL ){
         answer = NOK;
-#if 0
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
-            g_message("Did not find a ACL. Will drop Packet !\n");
-        }
-        if (element->packet_id != NULL ){
-            struct auth_answer aanswer ={ answer , element->user_id } ;
-            g_slist_foreach(element->packet_id,
-                (GFunc) send_auth_response,
-                &aanswer
-                );
-        }
-        if (element->state == STATE_READY ){
-            // log user
-            log_user_packet(*element,element->decision);
-            if ( ! conn_cl_delete( element)) {
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-                    g_warning("connection cleaning failed at %s:%d\n",__FILE__,__LINE__);
-            }
-
-        } else {
-            /* only change state */
-            change_state(element,STATE_DONE);
-        }
-#endif
     } else {
         int start_test,stop_test;
         if (nuauth_prio_to_nok == 1){
@@ -460,58 +438,21 @@ gint take_decision(connection * element) {
        
     element->decision=answer;
 
-    apply_decision(*element);
-
-    element->state = STATE_DONE;
-
-#if 0
-    /* send response  if packet's ready */
-
-    if (element->state == STATE_READY || answer == OK ) {
-        struct auth_answer aanswer ={ answer , element->user_id } ;
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-            g_message("Proceed to decision %d for packet_id %p (user %x)\n",answer,element->packet_id,element->user_id);
-        /* send packet */
-        g_slist_foreach(element->packet_id,
-            (GFunc) send_auth_response,
-            &aanswer
-            );
-        /* backup decision */
-        /* delete element */
-        if (element->state == STATE_READY ){
-            /* log user packet */
-            if (answer == OK){
-                log_user_packet(*element,STATE_OPEN);
-            } else {
-                log_user_packet(*element,STATE_DROP);
-            }
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-                g_message("Freeing element\n");
-            if ( ! conn_cl_delete( element)) {
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-                    g_warning("connection cleaning failed at %s:%d\n", __FILE__, __LINE__);
-            }
-        } else {
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-                g_message("only change state\n");
-            change_state(element,STATE_DONE);
-            element->decision=STATE_OPEN;
-        }
+    if (nuauth_log_users_sync) {
+        /* copy current element */
+        connection * copy_of_element=(connection *)g_memdup(element,sizeof(connection));
+       
+        /* need to free acl and user group */
+         copy_of_element->acl_groups=NULL;
+         copy_of_element->user_groups=NULL;
+         /* push element to decision workers */
+         g_thread_pool_push (decisions_workers,
+                        copy_of_element,
+                        NULL);
     } else {
-        if (element->state == STATE_READY){
-            struct auth_answer aanswer ={ NOK , element->user_id } ;
-            g_slist_foreach(element->packet_id,
-                send_auth_response,
-                &aanswer);
-            /* log user packet */
-            log_user_packet(*element,STATE_DROP);
-            conn_cl_delete(element);
-        } else {
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-                g_message ("Unable to decide on packet\n");
-        }
+        apply_decision(*element);
     }
-#endif
+    
     element->packet_id=NULL;
     conn_cl_delete(element);
     return 1;
@@ -519,20 +460,30 @@ gint take_decision(connection * element) {
 
 gint apply_decision(connection element){
 	int answer=element.decision;
-            struct auth_answer aanswer ={ NOK , element->user_id } ;
+        struct auth_answer aanswer ={ answer , element.user_id } ;
 
          if (answer == OK){
                 log_user_packet(element,STATE_OPEN);
             } else {
                 log_user_packet(element,STATE_DROP);
             }
+
             g_slist_foreach(element.packet_id,
                 send_auth_response,
                 &aanswer);
 	    /* free packet_id */
 
-        if (element.packet_id != NULL )
+        if (element.packet_id != NULL ){
             g_slist_free (element.packet_id);
+            element.packet_id=NULL;
+        }
 	return 1;
 }
 
+void decisions_queue_work (gpointer userdata, gpointer data){
+    connection* element=(connection *)userdata;
+
+    apply_decision( * element);
+
+    g_free(element);
+}

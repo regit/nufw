@@ -1,4 +1,4 @@
-/* $Id: auth_srv.h,v 1.34 2004/06/10 07:26:55 regit Exp $ */
+/* $Id: auth_srv.h,v 1.35 2004/06/10 09:44:14 regit Exp $ */
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
@@ -154,6 +154,7 @@ GStaticMutex insert_mutex;
 GThreadPool* user_checkers;
 GThreadPool* acl_checkers;
 GThreadPool* user_loggers;
+GThreadPool* decisions_workers;
 
 GAsyncQueue* connexions_queue;
 
@@ -163,6 +164,7 @@ int debug; /* This will disapear*/
 int debug_level;
 int debug_areas;
 int nuauth_log_users;
+int nuauth_log_users_sync;
 int nuauth_prio_to_nok;
 struct sockaddr_in adr_srv, client_srv, nufw_srv;
 
@@ -233,6 +235,7 @@ int free_connection(connection * conn);
 int lock_and_free_connection(connection * conn);
 void clean_connections_list ();
 guint hash_connection(gconstpointer conn_p);
+void decisions_queue_work (gpointer userdata, gpointer data);
 /*
  * From check_acls.c
  */
