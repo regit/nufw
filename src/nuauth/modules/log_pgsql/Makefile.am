@@ -10,11 +10,10 @@ plugin_LTLIBRARIES = libpgsql.la
 
 libpgsql_la_SOURCES = pgsql.c
 
-LIBS = $(GLIB_LIBS) -lpq
+libpgsql_la_LIBADD = -lpq
 
-else
-
-LIBS = $(GLIB_LIBS)
+libpgsql.la: $(libpgsql_la_OBJECTS) $(libpgsql_la_DEPENDENCIES) 
+	$(LINK) $(am_libpgsql_la_rpath) $(libpgsql_la_LDFLAGS) $(libpgsql_la_OBJECTS) $(libpgsql_la_LIBADD)
 
 endif
 

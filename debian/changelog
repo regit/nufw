@@ -1,14 +1,36 @@
-nufw (0.8.6-1) unstable; urgency=low
+nufw (1.0-1) unstable; urgency=low
 
-  * New upstream release
+  * New upstream release.
+  * Add --with-system-auth to configure in debian/rules to support PAM+NSS
+    authentication.
+  * Add --with-ldap to support LDAP directory for users and acl lookup.
+  * Add --with-gdbm to support gdbm users lookup.
+  * Add --with-ident to support support ident users authentication.
+  * Add libgcrypt11-dev, libgnutls11-dev, libident-dev, libpam-dev to
+    Build-Depends.
+  * Add postrm and preinst for nuauth.
 
- -- Eric Leblond <eric@regit.org>  Sat,  4 Dec 2004 11:07:09 +0100
+ -- Jean-Michel Kelbert <kelbert@debian.org>  Tue, 22 Feb 2005 22:53:22 +0100
 
-nufw (0.8.2-1) unstable; urgency=low
+nufw (0.8.5-3) unstable; urgency=low
 
+  * Change debian/copyright to reflect changes made by upstreams to the
+    license.
   * Initial upload in Debian. Thanks to Vincent Deffontaines for packaging the
     package before me.
   (closes: #258746)
+
+ -- Jean-Michel Kelbert <kelbert@debian.org>  Mon, 20 Dec 2004 22:23:16 +0100
+
+nufw (0.8.5-1) unstable; urgency=low
+
+  * New upstream release.
+  * Upstream add an exception to the GPL which allows linking with OpenSSL.
+
+ -- Jean-Michel Kelbert <kelbert@debian.org>  Wed,  1 Sep 2004 23:03:10 +0200
+
+nufw (0.8.2-1) unstable; urgency=low
+
   * Update Description in debian/control. Thanks to Brandon Robinson.
   * Switch to gettext for the debconf templates.
   * Change the way of packaging.

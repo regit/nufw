@@ -1,7 +1,8 @@
 /* $Id: log_pgsql.h,v 1.3 2003/11/26 00:10:24 gryzor Exp $ */
 
 /*
-** Copyright(C) 2003 Eric Leblond <eric@regit.org>
+** Copyright(C) 2003 - 2004 Eric Leblond <eric@regit.org>
+**                          Vincent Deffontaines <vincent@inl.fr>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,6 +32,12 @@
 #define PGSQL_DB_NAME "nufw" 
 #define PGSQL_REQUEST_TIMEOUT 10
 #define PGSQL_TABLE_NAME "nufw_logs"
+
+#define OSNAME_MAX_SIZE 64
+#define APPNAME_MAX_SIZE 256
+
+#define SHORT_REQUEST_SIZE 512
+#define LONG_REQUEST_SIZE 1024
 
 int pgsql_request_timeout;
 char * pgsql_user;

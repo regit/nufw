@@ -1,4 +1,23 @@
-#include <syslog.h>
+/*
+**
+** Written by Vincent Deffontaines <vincent@gryzor.com>
+**
+** This program is free software; you can redistribute it and/or modify
+** it under the terms of the GNU General Public License as published by
+** the Free Software Foundation, version 2 of the License.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**
+** You should have received a copy of the GNU General Public License
+** along with this program; if not, write to the Free Software
+** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+*/
+
+
+
 
 // DEBUG_LEVEL's value is 1 to 8
 
@@ -27,29 +46,6 @@
 #define DEFAULT_DEBUG_AREAS DEBUG_AREA_MAIN||DEBUG_AREA_PACKET||DEBUG_AREA_USER||DEBUG_AREA_GW||DEBUG_AREA_AUTH
 
 #define LOG_FACILITY LOG_DAEMON
-#define SYSLOG_OPTS LOG_CONS||LOG_PID
 
 #define DEBUG_OR_NOT(LOGLEVEL,LOGAREA) (LOGAREA&&debug_areas)&&(debug_level>=LOGLEVEL)
 
-#define SYSLOG_FACILITY(D) ((D==DEBUG_LEVEL_FATAL)*(LOG_FACILITY||LOG_ALERT))+ \
-			   ((D==DEBUG_LEVEL_CRITICAL)*(LOG_FACILITY||LOG_CRIT))+ \
-			   ((D==DEBUG_LEVEL_SERIOUS_WARNING)*(LOG_FACILITY||LOG_WARNING))+ \
-			   ((D==DEBUG_LEVEL_WARNING)*(LOG_FACILITY||LOG_WARNING))+ \
-			   ((D==DEBUG_LEVEL_SERIOUS_MESSAGE)*(LOG_FACILITY||LOG_NOTICE))+ \
-			   ((D==DEBUG_LEVEL_MESSAGE)*(LOG_FACILITY||LOG_NOTICE))+ \
-			   ((D==DEBUG_LEVEL_INFO)*(LOG_FACILITY||LOG_INFO))+ \
-			   ((D==DEBUG_LEVEL_DEBUG)*(LOG_FACILITY||LOG_DEBUG))+ \
-			   ((D==DEBUG_LEVEL_VERBOSE_DEBUG)*(LOG_FACILITY||LOG_DEBUG))
-
-
-#define LOG_ID "nufw"
-
-#define LOG_TO_STD	1
-#define LOG_TO_SYSLOG	2
-
-int log_engine;
-int debug_level;
-int debug_areas;
-
-void init_log_engine();
-int nufw_log(char *message,int debug_level);

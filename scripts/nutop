@@ -22,8 +22,7 @@
 
 use strict;
 use Getopt::Long;
-#use Time::localtime;
-
+use Time::localtime;
 #Parsing works this way : very first, we parse the "-c" parameter which may
 #specify a config file other than the default.
 #then we look in config file
@@ -116,7 +115,6 @@ sub Parse_Config_File($)
     }
     $$config_hash{$1} = $2;
   }
-  close FILE;
   return %$config_hash; 
 }
 
@@ -180,8 +178,7 @@ $config{'databasetype'} =~ /mysql/ and
 push @connection_query,('user_id','ip_saddr','ip_daddr','tcp_sport','tcp_dport','DATE_FORMAT(start_timestamp,\'%D %M %Y %H:%I:%S\')','state');
 $config{'databasetype'} =~ /pgsql/ and
 push @connection_query,('user_id','ip_saddr','ip_daddr','tcp_sport','tcp_dport','start_timestamp','state');
-my
-%connection_query_info=(number=>["Number",12],username=>["Name",12],user_id=>["ID",6],ip_saddr=>["Source IP",17],ip_daddr=>["Destination IP",17],ip_protocol=>["Proto",7],oob_time_sec=>["Open Time",11], tcp_sport=>["Sport",8], tcp_dport=>["Dport",8],id=>["Id Packet",12],'DATE_FORMAT(start_timestamp,\'%D %M %Y %H:%I:%S\')'=>["Start Time", 30],start_timestamp=>["Start Time",21],state=>["State",6]); 
+my %connection_query_info=(number=>["Number",12],username=>["Name",12],user_id=>["ID",6],ip_saddr=>["Source IP",17],ip_daddr=>["Destination IP",17],ip_protocol=>["Proto",7],oob_time_sec=>["Open Time",11], tcp_sport=>["Sport",8], tcp_dport=>["Dport",8],id=>["Id Packet",12],'DATE_FORMAT(start_timestamp,\'%D %M %Y %H:%I:%S\')'=>["Start Time", 30],start_timestamp=>["Start Time",13],state=>["State",6]); 
 
 my @users_query=();
 push @users_query,'username' if $config{'version'} == 2;
@@ -232,8 +229,8 @@ while (1)
 {
   my $count = 1; my $hpos=0;
   addstr(0,0,'nulog');
-  my @time = localtime;
-  my @times = ($time[2],$time[1],$time[0]);
+  my $time = localtime;
+  my @times = ($time->hour,$time->min,$time->sec);
   foreach (@times){
     length == 1 and s/^/0/;
   }
@@ -280,7 +277,6 @@ while (1)
        $hpos+=@{$connection_query_info{$field}}[1];
     }
     eval {attrset(A_NORMAL) };
-    my @days = ('Sun','Mon','Tue','Thu','Fri','Sat');
     while ( my @row = $sth->fetchrow_array ) {
       my $col=0;
       $hpos=0;
@@ -288,20 +284,7 @@ while (1)
 #      set_color_fg(COLOR_YELLOW);
 #      color_set($row[6]+1,undef);
       foreach my $attr (@row){
-        if (($config{'databasetype'} =~ /pgsql/) and ($display[$col] eq 'start_timestamp'))
-        {
-          if (defined $attr)
-          {
-            my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime $attr;
-            $sec=~/^.$/ and $sec='0'.$sec;
-            $min=~/^.$/ and $min='0'.$min;
-            $hour=~/^.$/ and $hour='0'.$hour;
-            $mon=~/^.$/ and $mon='0'.$mon;
-            $mday=~/^.$/ and $mday='0'.$mday;
-            addstr($count, $hpos, "$hour:$min:$sec $days[$wday] $mon $mday");
-          }
-        }elsif (($config{'databasetype'} =~ /mysql/) and ($display[$col] =~/^(?:ip_saddr|ip_daddr)$/)) 
-        {
+        if (($config{'databasetype'} =~ /mysql/) and ($display[$col] =~/^(?:ip_saddr|ip_daddr)$/)) {
           addstr($count, $hpos, long2ip($attr));
 #	  print long2ip($attr)."\t";
         } else {
@@ -341,7 +324,7 @@ while (1)
   if ($in eq 'f')
   {
     $in = '';
-    addstr(0,68,"FROZEN VIEW");
+    addstr(0,64,"FROZEN VIEW");
     my $loop = 1;
     while ($loop)
     {

@@ -4,7 +4,7 @@
 **
 ** Written by Eric Leblond <eric@regit.org>
 **	      Vincent Deffontaines <vincent@gryzor.com>
-** Copyright 2002 - 2004 INL http://www.inl.fr/
+** Copyright 2002 - 2005 INL http://www.inl.fr/
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <structure.h>
-#include <debug.h>
+#include <nufw_debug.h>
 
 
 /* datas stuffs */
@@ -46,7 +46,7 @@ int psuppress (packet_idl * previous,packet_idl * current){
 unsigned long padd (packet_idl *current){
   if (track_size < packets_list_length ){
     /* suppress first element */
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_MAIN)){
+    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
       if (log_engine == LOG_TO_SYSLOG) {
         syslog(SYSLOG_FACILITY(DEBUG_LEVEL_MESSAGE),"Queue is full, dropping element");
       }else {
@@ -95,6 +95,7 @@ int psearch_and_destroy (unsigned long packet_id,unsigned long * nfmark){
 	{
 	  /* TODO : find a better place, does not satisfy me */
 	  IPQ_SET_VERDICT(packets_list->id,NF_DROP);
+#ifdef DEBUG_ENABLE
 	  if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
 	    if (log_engine == LOG_TO_SYSLOG) {
               syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"dropped : %lu",packets_list->id);
@@ -102,6 +103,7 @@ int psearch_and_destroy (unsigned long packet_id,unsigned long * nfmark){
 	    printf("[%i] dropped  : %lu\n",getpid(),packets_list->id);
 	    }
 	  }
+#endif
 	  psuppress (previous,packets_list);
 	  packets_list=packets_list_start;
 	  previous=NULL;
@@ -122,6 +124,7 @@ int clean_old_packets (){
     if ( timestamp - packets_list->timestamp  > packet_timeout)
       {
 	IPQ_SET_VERDICT(packets_list->id,NF_DROP);
+#ifdef DEBUG_ENABLE
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
 	  if (log_engine == LOG_TO_SYSLOG) {
             syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"dropped : %lu",packets_list->id);
@@ -129,6 +132,7 @@ int clean_old_packets (){
 	    printf("[%i] dropped  : %lu\n",getpid(),packets_list->id);
 	  }
 	}
+#endif
 	psuppress (previous,packets_list);
 	packets_list=packets_list_start;
 	previous=NULL;
@@ -138,3 +142,11 @@ int clean_old_packets (){
   }
   return 0;
 }
+
+#ifdef GRYZOR_HACKS
+int send_icmp_unreach(char *dgram){
+    //First thing we do, let's build the packet to send
+    //sendmsg();
+    sendto(raw_sock);
+}
+#endif

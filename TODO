@@ -1,10 +1,13 @@
 # Partial TODO List
 
+- nuauth : cache : configurable max number of cached entries
+                   configurable max number of cached entries per protocol?
+
+
 - nuauth : display or log a clever message if user sets SSL and certificate is
   unavailable. Else it is pretty hard to diagnose.
 
-# gw pckt srv
-- use PRIO (set option and decide for packet when as high as needed)
+- nuauth : check for simultaneous login of same user
 
 
 # User auth srv
@@ -13,5 +16,8 @@
 #Modules
 - libdb -> load all in cache and close the file straight away
 
-URGENT : in at least log_mysql module :
-Make the timestamp logs coherent. It is a BIG mess
+#Modelizing
+- Build groups not only for users, but also for applications, OSes
+
+# TLS
+password protected certificat support

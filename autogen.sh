@@ -4,4 +4,4 @@ libtoolize --force --automake
 aclocal -I macros/
 autoheader
 autoconf
-automake -a
+automake -a --copy

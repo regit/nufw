@@ -29,12 +29,12 @@
 #define DBM_FILE_MODE 777
 #define DBM_FATAL_FUNCTION 0
 
-
 struct dbm_data_struct{ 
 	char *passwd;
+	uint16_t uid;
 	GSList *outelt;
 };
-	
+
 int analyse_dbm_char(char *data, struct dbm_data_struct *mystruct);
 
 char * users_file;

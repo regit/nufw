@@ -23,9 +23,9 @@
  * an external base (ldap,radius,...)
  */
 
-/*
- * external_acl_groups :
- * Fill in acl_groups of a connection by calling external module
+/**
+ * Fill in acl_groups of a connection by calling external module.
+ * 
  * Argument : a connection
  * Return : 1 if OK, 0 otherwise
  */
@@ -37,8 +37,8 @@ int external_acl_groups (connection * element){
 
   acl_groups = (*module_acl_check) (element);
 
+  element->acl_groups=acl_groups;
   if (acl_groups != NULL){
-  	element->acl_groups=acl_groups;
 	return 1;
   }
   return 0;

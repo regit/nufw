@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <debug.h>
+#include <nufw_debug.h>
 #include <syslog.h>
 #include <sys/types.h>
 #include <unistd.h>

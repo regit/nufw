@@ -2,7 +2,7 @@ Source: nufw
 Section: net
 Priority: optional
 Maintainer: Jean-Michel Kelbert <kelbert@debian.org> 
-Build-Depends: debhelper (>= 4.1.16),po-debconf, automake1.7, libldap2-dev, libgdbm-dev, libglib2.0-dev, libmysqlclient-dev, postgresql-dev, iptables-dev, libtool
+Build-Depends: debhelper (>= 4.1.16),po-debconf, automake1.9, libldap2-dev, libgdbm-dev, libglib2.0-dev, libmysqlclient-dev, postgresql-dev, iptables-dev, libtool, libident-dev, libgnutls11-dev, libsasl2-dev, libpam0g-dev
 Standards-Version: 3.6.0
 
 Package: nufw
@@ -21,7 +21,7 @@ Description: a per-user firewalling daemon that interfers with libipq
 
 Package: nuauth
 Architecture: any
-Depends: ${shlibs:Depends}, debconf, libmysqlclient12, libpq3
+Depends: ${shlibs:Depends}, debconf, libsasl2-modules
 Recommends: nuauth-utils
 Description: The authentication daemon from the nufw package
  NuFW is an authenticating gateway, which means that connections are
@@ -33,6 +33,23 @@ Description: The authentication daemon from the nufw package
  directory, or XML/DBM solutions, etc.
  Nuauth receives requests from nufw, and auth packets from users' clients,
  and sends decision to the nufw daemon.
+
+Package: nuauth-extra
+Architecture: any
+Depends: ${shlibs:Depends}, debconf, nuauth
+Recommends: nuauth-utils
+Description: The authentication daemon from the nufw package
+ NuFW is an authenticating gateway, which means that connections are
+ authenticated before being forwarded through the gateway.  Classical packet
+ filtering systems disregard the identity of the user who may be attempting to
+ access the network, instead caring only about the originating IP addresses.
+ .
+ Nuauth lays on a user database, and an ACL system (which can reside in an LDAP
+ directory, or XML/DBM solutions, etc.
+ Nuauth receives requests from nufw, and auth packets from users' clients,
+ and sends decision to the nufw daemon.
+ .
+ Nuauth-extra provides extra modules for nuauth.
 
 Package: nuauth-log-mysql
 Architecture: any
@@ -89,7 +106,7 @@ Description: Set of tools useful to nuauth admin
 
 Package: libnuclient
 Architecture: any
-Depends: ${shlibs:Depends}
+Depends: ${shlibs:Depends}, libsasl2-modules
 Description: client library for nufw authentication
  NuFW is an authenticating gateway, which means that connections are
  authenticated before being forwarded through the gateway.  Classical packet

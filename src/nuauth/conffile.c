@@ -24,8 +24,9 @@
 
 
 
-/* parse_conffile :
+/**
  * taken a conf file and hash containing options, fill the hash with options values.
+ * 
  * Argument 1 : filename
  * Argument 2 : size of the array
  * Argument 3 : pointer to a hash containing options
@@ -68,9 +69,9 @@
 	  dnentry=g_scanner_get_next_token (scanner); 
 	  switch (dnentry){
 	  case G_TOKEN_STRING :
-	    /* test if element wants a string */
+	    /* test if element want a string */
 	    if (current_symbol->value_type == G_TOKEN_STRING){
-	      current_symbol->v_char=strdup(scanner->value.v_string);
+	      current_symbol->v_char=g_strdup(scanner->value.v_string);
 	    } else {
 	      g_warning("Bad argument value for %s at %u",
 			current_symbol->name,scanner->line);
@@ -79,7 +80,7 @@
 	    }
 	    break;
 	  case G_TOKEN_INT :
-	    /* test if element wants an integer */
+	    /* test if element want a string */
 	    if (current_symbol->value_type == G_TOKEN_INT){
 	      current_symbol->v_int=scanner->value.v_int;
 	    } else {
@@ -104,9 +105,9 @@
 }
 
 
-/*
- * get_confvar_value :
- * fetch value of an option and return a pointer to it
+/**
+ * fetch value of an option and return a pointer to it.
+ * 
  * Argument 1 : option hash
  * Argument 2 : size of hash
  * Argument 3 : name of param to get

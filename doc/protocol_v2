@@ -1,0 +1,71 @@
+Prerequisites :
+
+Passwords : have to be stored crypted on server side
+Username must replace userid
+we want to be able to replace password stuff by SSL certificate
+
+Constraints :
+crypted password implies challenge from server to client ???
+client configuration is on server side, so server must give configuration to client
+optimization of network usage : more than one packet is authenticatd in one authentication packet.
+
+We CLAIM :  every exchanges are done in an SSL tunnel.
+
+Hence we have the following messages :
+
+Authentification : TLS handled
+
+Packet structure :
+
+Control message :
+
+1    8	           12          16	    24	   32
+|        	   |	        |	    |	   |
+Proto|Msg Type     | Msg option | packet length 
+
+must be able to define a group containing :
+	IPV4(V6) params
+	Extended packet informations :
+		- OS
+		- application
+		- ...
+
+
+1    8	      12	 16	    24	   32
+|    |	                 |	    |	   |
+Proto|Msg Type  |# packets| payload length 
+
+packet id	    | packet length
+Field type|option   | field length |
+Field ...
+Field ... | PADDING
+
+Field type|option   | field length |
+Field ...
+Field ... | PADDING
+packet id	    | packet length
+
+
+Fields types :
+
+IPV4 address : 1   Option : None ?    Field length : 32+4*32 = 5*32 = 160
+	source address
+	destination address
+Protocol           | Flags| FUSE 
+Src Port 	   | Dst Port   |
+
+IPV6 address : 2
+
+Application : 3
+	general : liste de champ en mode charactère séparé par des ';' string encodé base 64
+	Option : 1 -> 'chemin complet appli' 
+	Option : 2 -> 'chemin complet appli';MD5sig
+
+OS : 4
+	(envoyé uniquement  avec le premier message de la connexion pour efficacité)
+	general : liste de champ en mode charactère séparé par des ';'
+	Option : 1 -> 'nom';'version'
+	
+Considerations :
+With a MTU of 1500 we should be able to put 1500/192-2 ~ 5 packets
+benchmark  need to be done to see if it is cool ;-)

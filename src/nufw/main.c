@@ -1,7 +1,7 @@
 /* $Id: main.c,v 1.21 2004/02/10 16:09:15 regit Exp $ */
 
 /*
- ** Copyright (C) 2002 - 2004 Eric Leblond <eric@regit.org>
+ ** Copyright (C) 2002 - 2005 Eric Leblond <eric@regit.org>
  **		      Vincent Deffontaines <vincent@gryzor.com>
  **                   INL http://www.inl.fr/
  **
@@ -19,18 +19,11 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-
-
+#include "nufw.h"
 #include <linux/netfilter.h>
-#include <libipq/libipq.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <unistd.h>
 #include <pthread.h>
 #include <netdb.h>
-#include <structure.h>
-#include <debug.h>
 #include <signal.h>
 #include <syslog.h>
 #include <errno.h>
@@ -52,12 +45,14 @@ int main(int argc,char * argv[]){
     pthread_t pckt_server,auth_server;
     struct hostent *authreq_srv, *listenaddr_srv;
     /* option */
-    char * options_list = "DhVvml:L:d:p:t:T:";
+    char * options_list = "UDhVvmc:k:l:L:d:p:t:T:";
     int option,daemonize = 0;
     int value;
     unsigned int ident_srv;
-    char* version=VERSION;
+    char* version=PACKAGE_VERSION;
     pid_t pidf;
+
+    struct sigaction act;
 
     /* initialize variables */
 
@@ -67,6 +62,9 @@ int main(int argc,char * argv[]){
     packet_timeout = PACKET_TIMEOUT;
     track_size = TRACK_SIZE;
     id_srv = ID_SERVER;
+    nufw_use_tls=1;
+    cert_file=NULL;
+    key_file=NULL;
     strncpy(authreq_addr,AUTHREQ_ADDR,HOSTNAME_SIZE);
     strncpy(listen_addr,LISTEN_ADDR,HOSTNAME_SIZE);
     debug=DEBUG; /* this shall disapear */
@@ -76,8 +74,22 @@ int main(int argc,char * argv[]){
     /*parse options */
     while((option = getopt ( argc, argv, options_list)) != -1 ){
         switch (option){
+          case 'k' :
+            key_file=strdup(optarg);
+            if (key_file == NULL){
+                fprintf(stderr, "Couldn't malloc! Exiting");
+                exit(1);
+            }
+            break;
+          case 'c' :
+            cert_file=strdup(optarg);
+            if (cert_file == NULL){
+                fprintf(stderr, "Couldn't malloc! Exiting");
+                exit(1);
+            }
+            break;
           case 'V' :
-            fprintf (stdout, "PACKAGE (version %s)\n",version);
+            fprintf (stdout, "%s (version %s)\n",PACKAGE_NAME,version);
             return 1;
           case 'D' :
             daemonize = 1;
@@ -123,19 +135,25 @@ int main(int argc,char * argv[]){
           case 'm':
             nufw_set_mark=1;
             break;
+	  case 'U':
+            nufw_use_tls=0;
+            break;
           case 'h' :
-            fprintf (stdout ,"PACKAGE [-hVv[v[v[v[v[v[v[v[v[v]]]]]]]]]] [-l local_port] [-L local_addr] [-d remote_addr] [-p remote_port]  [-t packet_timeout] [-T track_size]\n\
-                \t-h : display this help and exit\n\
-                \t-V : display version and exit\n\
-                \t-D : daemonize\n\
-                \t-v : increase debug level (+1 for each 'v') (max useful number : 10)\n\
-                \t-m : mark packet with userid\n\
-                \t-l : specify listening UDP port (default : 4129)\n\
-                \t-L : specify listening address (default : 127.0.0.1)\n\
-                \t-d : remote address we send auth requests to (adress of the nuauth server) (default : 127.0.0.1)\n\
-                \t-p : remote port we send auth requests to (UDP port nuauth server listens on) (default : 4128)\n\
-                \t-t : timeout to forget about packets when they don't match (default : 15 s)\n\
-                \t-T : track size (default : 1000)\n");
+            fprintf (stdout ,"%s [-hVv[v[v[v[v[v[v[v[v[v]]]]]]]]]] [-l local_port] [-L local_addr] [-d remote_addr] [-p remote_port]  [-t packet_timeout] [-T track_size]\n\
+\t-h : display this help and exit\n\
+\t-V : display version and exit\n\
+\t-D : daemonize\n\
+\t-k : Use specified file as key file\n\
+\t-c : USe specified file as cert file\n\
+\t-U : use UDP unencrypted communication with nuauth server\n\
+\t-v : increase debug level (+1 for each 'v') (max useful number : 10)\n\
+\t-m : mark packet with userid\n\
+\t-l : specify listening UDP port (default : 4129)\n\
+\t-L : specify listening address (default : 127.0.0.1)\n\
+\t-d : remote address we send auth requests to (adress of the nuauth server) (default : 127.0.0.1)\n\
+\t-p : remote port we send auth requests to (UDP port nuauth server listens on) (default : 4128)\n\
+\t-t : timeout to forget about packets when they don't match (default : 15 s)\n\
+\t-T : track size (default : 1000)\n",PACKAGE_TARNAME);
 
             return 1;
         }
@@ -145,7 +163,6 @@ int main(int argc,char * argv[]){
         printf("nufw must be run as root! Sorry\n");
         return 1;
     }
-    
 
     /* Daemon code */
     if (daemonize == 1) {
@@ -180,8 +197,8 @@ int main(int argc,char * argv[]){
                     fprintf (pf, "%d\n", (int)pidf);
                     fclose (pf);
                 } else {
-                        printf ("Dying, can not create PID file : " NUFW_PID_FILE "\n"); 
-                        exit(-1);
+                    printf ("Dying, can not create PID file : " NUFW_PID_FILE "\n"); 
+                    exit(-1);
                 }
                 exit(0);
             }
@@ -207,6 +224,8 @@ int main(int argc,char * argv[]){
         log_engine = LOG_TO_SYSLOG;
     }
 
+    signal(SIGPIPE,SIG_IGN);
+
     init_log_engine();
     /* create socket for sending auth request */
     sck_auth_request = socket (AF_INET,SOCK_DGRAM,0);
@@ -219,6 +238,19 @@ int main(int argc,char * argv[]){
                 printf("[%d] socket()",getpid());
             }
         }
+
+#ifdef GRYZOR_HACKS
+    /* create socket for sending ICMP messages */
+    raw_sock = socket(PF_INET, SOCK_RAW, 1);
+    if (raw_sock == -1)
+        if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
+            if (log_engine == LOG_TO_SYSLOG){
+                syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"socket() on raw_sock");
+            }else{
+                printf("[%d] socket() on raw_sock",getpid());
+            }
+        }
+#endif
 
 
     memset(&adr_srv,0,sizeof adr_srv);
@@ -237,21 +269,21 @@ int main(int argc,char * argv[]){
                 printf("[%d] Bad Address in configuration for adr_srv",getpid());
             }
         }
+    if (nufw_use_tls == 0){
+        memset(&list_srv,0,sizeof list_srv);
+        listenaddr_srv=gethostbyname(listen_addr);
+        list_srv.sin_addr=*(struct in_addr *)listenaddr_srv->h_addr;
 
-    memset(&list_srv,0,sizeof list_srv);
-    listenaddr_srv=gethostbyname(listen_addr);
-    list_srv.sin_addr=*(struct in_addr *)listenaddr_srv->h_addr;
-
-    if (list_srv.sin_addr.s_addr == INADDR_NONE )
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
-            if (log_engine == LOG_TO_SYSLOG){
-                syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"Bad Listening Address in configuration");
-            }else{
-                printf("[%d] Bad Listening Address in configuration",getpid());
+        if (list_srv.sin_addr.s_addr == INADDR_NONE )
+            if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
+                if (log_engine == LOG_TO_SYSLOG){
+                    syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"Bad Listening Address in configuration");
+                }else{
+                    printf("[%d] Bad Listening Address in configuration",getpid());
+                }
             }
-        }
-      list_srv.sin_addr.s_addr = INADDR_ANY;
-
+        list_srv.sin_addr.s_addr = INADDR_ANY;
+    }
     packets_list_start=NULL;
     packets_list_end=NULL;
     packets_list_length=0;
@@ -272,12 +304,46 @@ int main(int argc,char * argv[]){
         }
     }
 
+    if (nufw_use_tls){
+        tls.session=NULL;
+        tls.active=0;
+
+        gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);
+        gnutls_global_init();
+    }
     /* create thread for packet server */
     if (pthread_create(&pckt_server,NULL,packetsrv,NULL) == EAGAIN){
         exit(1);
     }
     /* create thread for auth server */
     if (pthread_create(&auth_server,NULL,authsrv,NULL) == EAGAIN){
+        exit(1);
+    }
+
+    act.sa_handler = &process_usr1;
+    act.sa_restorer = NULL;
+    act.sa_flags = SIGUSR1;
+    if (sigaction(SIGUSR1,&act,NULL) == -1)
+    {
+        printf("Could not set signal USR1");
+        exit(1);
+    }
+
+    act.sa_handler = &process_usr2;
+    act.sa_restorer = NULL;
+    act.sa_flags = SIGUSR2;
+    if (sigaction(SIGUSR2,&act,NULL) == -1)
+    {
+        printf("Could not set signal USR2");
+        exit(1);
+    }
+
+    act.sa_handler = &process_poll;
+    act.sa_restorer = NULL;
+    act.sa_flags = SIGPOLL;
+    if (sigaction(SIGPOLL,&act,NULL) == -1)
+    {
+        printf("Could not set signal POLL");
         exit(1);
     }
 

@@ -7,6 +7,11 @@ sbin_PROGRAMS = nuauth
 
 #authsrv
 nuauth_SOURCES = authsrv.c pckt_authsrv.c user_authsrv.c  auth_common.c\
-	check_acls.c user_logs.c debug.c conffile.c
+	check_acls.c user_logs.c debug.c conffile.c tls.c gcrypt.c cache.c acls.c audit.c ip_auth.c \
+	x509_parsing.c parsing.c users.c
 
-LIBS = $(GLIB_LIBS)  -lcrypt -lm -lssl ../lib/libcssl.a
+nuauth_LDADD = $(GLIB_LIBS)  -lcrypt -lm -lgnutls -lsasl2
+
+nuauth$(EXEEXT): $(nuauth_OBJECTS) $(nuauth_DEPENDENCIES) 
+	@rm -f nuauth$(EXEEXT)
+	$(LINK) $(nuauth_LDFLAGS) $(nuauth_OBJECTS) $(nuauth_LDADD)

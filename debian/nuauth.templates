@@ -17,15 +17,9 @@ _Description: Nuauth daemon verbosity level
 
 Template: nuauth/user
 Type: string
-_Default: nobody
-_Description: Nuauth user
- Nuauth doesn't need root (uid 0) privileges to run. It can prefectly run
- as under an unprivileged user ID, which is very much recommended. Beware
- you MUST enter a username that actually exists on this machine at this
- time - it is time to create it now if you wish, which is probably the best
- idea. The directory /var/run/nuauth will be owned by that user.
- .
- Please input an existing username on this system
+_Default: nuauth
+_Description: User that runs Nuauth
+ Name of the user that will run nuauth, please use a low-privileged user.
 
 Template: nuauth/client_listen_addr
 Type: string

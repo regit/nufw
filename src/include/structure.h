@@ -28,8 +28,16 @@
 #include <netinet/tcp.h>
 #include <netinet/udp.h>
 #include <arpa/inet.h>
+/* redhat like hack */
+#ifdef HAVE_LIBIPQ_LIBIPQ_H 
 #include <libipq/libipq.h>
+#else
+#ifdef HAVE_LIBIPQ_H
+#include <libipq.h>
+#endif
+#endif
 #include <linux/netfilter.h>
+#include <time.h>
 #include "config.h"
 
 #include "proto.h"
@@ -43,8 +51,14 @@
 #define ID_SERVER 12345
 #define PACKET_TIMEOUT 15
 #define PRIO 1
-#define HOSTNAME_SIZE 128
+#define HOSTNAME_SIZE 256
+#define FILENAME_SIZE 256
+#define CERT_FILE
+#define KEY_FILE
 
+
+char *cert_file;
+char *key_file;
 
 char authreq_addr[HOSTNAME_SIZE];
 char listen_addr[HOSTNAME_SIZE];
@@ -88,31 +102,6 @@ pthread_mutex_t hndl_mutex;
 //global variable :
 int pckt_tx,pckt_rx ;
 
-/* socket number to send auth request */
-int sck_auth_request;
-struct sockaddr_in adr_srv, list_srv;
 
 
-/* 
- * all functions 
- */
 
-// IP packet catcher
-
-void* packetsrv();
-
-// IP auth server
-
-void* authsrv();
-
-/* send an auth request packet given a payload (raw packet) */
-int auth_request_send(u_int8_t type,unsigned long packet_id, char* payload,int data_len,long timestamp);
-/* take decision given a auth answer packet payload */
-int auth_packet_to_decision(char* dgram);
-
-
-/* common */
-
-unsigned long padd ( packet_idl * packet);
-int psearch_and_destroy (unsigned long packet_id,unsigned long * mark);
-int clean_old_packets ();

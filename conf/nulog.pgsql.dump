@@ -79,9 +79,12 @@ CREATE TABLE ulog (
     ahesp_spi smallint,
     local_time bigint,
     local_hostname character varying(40),
-    start_timestamp timestamp,
-    end_timestamp timestamp,
-    state smallint
+    start_timestamp bigint,
+    end_timestamp bigint,
+    state smallint,
+    username character varying(30),
+    client_os character varying(128),
+    client_app character varying(128)
 );
 
 

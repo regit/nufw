@@ -1,0 +1,6 @@
+Protocol v2 :
+	application and OS information transfert
+	
+Idea and perspective :
+Write a match module which does nothing but log one packet of each connection every Dt interval (5min 
+for example). This will allow to close long session easily.

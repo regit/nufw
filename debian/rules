@@ -27,7 +27,7 @@ endif
 config.status: configure
 	dh_testdir
 	# Add here commands to configure the package.
-	CFLAGS="$(CFLAGS)" ./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --prefix=/usr --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info --localstatedir=/var --sysconfdir=/etc/nufw/ --with-mysql-log --with-pgsql-log 
+	CFLAGS="$(CFLAGS)" ./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --prefix=/usr --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info --localstatedir=/var --sysconfdir=/etc/nufw/ --with-mysql-log --with-pgsql-log --with-system-auth --with-ldap --with-gdbm --with-ident
 
 build: build-stamp
 
@@ -92,6 +92,7 @@ binary-arch: build install
 #	dh_installcron
 #	dh_installinfo
 	dh_installman -pnufw doc/nufw.1
+	dh_installman -pnufw doc/nufw_dbm.1
 	dh_installman -pnuauth doc/nuauth.1
 	dh_installman -pnutcpc doc/nutcpc.1
 	dh_installman -pnuauth-utils doc/nuaclgen.1

@@ -1,7 +1,13 @@
 Prerequisites :
-- libipq (in iptables-dev on deban)
+- libipq (in iptables-dev on debian)
 - automake1.7 to execute cleanly autogen.sh 
 - libldap for the provided auth server
+- glib
+- libsasl2 (cyrus)
+- libgnutls
+- libgcrypt
+- libpam-dev for system authentication module
+- libident-dev for ident external authentication module
 
 To compile, use the standard :
 ./autogen.sh
@@ -12,8 +18,8 @@ make install
 Next, you will have to run (as root) nufw.
 nufw -h will give you a usage message.
 
-You will also have to launch one authorisation server
-For the moment only one  : nuauth is provided
+You will also have to launch the authorisation server : 
+nuauth is provided
 nuauth -h will give you a usage message.
 
 To use nufw you will have to run a client for each user.
@@ -27,3 +33,8 @@ SQL Logging :
 If you use SQL Logging and SSO features, you may wish to increase performance 
 of SQL queries by putting closed connections in a different SQL table by using or a script 
 (cron task ?) or a trigger.
+
+Quick Testing :
+
+See http://www.nufw.org/testing.html
+

@@ -1,0 +1,108 @@
+Cache is for protocol v2 only
+authentication is done once (at the beginning or after inactivity timeout ..) by SSL session
+cache access are done through a queue maintained by a dedicated thread
+cache thread answers to query via a private queue on which the query sthread listen to.
+	If return is NULL then query has to be done on db : unavailable datas or datas need a refresh
+	If return is not NULL then this a pointer to our datas
+If query thread receive NULL, it queries db and send a message to cache thread with the result of his query.
+when datas are no more used, thread send a message to warn the cache thread
+when the cache thread find that a ressource has 0 access it look if it needs to be freed.
+Periodically main thred sends a message to ask a cleaning of ressources.
+
+Thus we have the following messages :
+get key
+send key datas
+update all
+
+User : (in fact Alternative at bottom is implemented) 
+	public :
+		groups list
+	private : 
+		old datas : chained list of pointer (keep trace of used datas to to a clean refresh when they are of no use)
+		create_timestamp
+		refresh_timestamp
+		nb_of_uses
+		refreshing
+	
+Acl :
+	public : decisions list
+	private : 
+		old datas : chained list of pointer (keep trace of used datas to to a clean refresh when they are of no use)
+		create_timestamp
+		refresh_timestamp
+		nb_of_uses
+		refreshing
+	
+generic cache system :
+	base element :
+		"public" : pointer
+		obscure : 
+		create_timestamp
+		refresh_timestamp
+		nb_of_uses
+		refreshing
+global structure :
+	using hash
+|
+|-key => chained list of element (only first is significative and used in return)
+|
+| ...
+
+cache thread algorithm :
+
+while (get_queue){
+	switch (  message ){
+		GET key :
+			if (datas is refreshing){
+				push request to local queue;
+			}
+			if (data need refresh){
+				set refreshing bit;
+				return NULL to asking thread;
+			}
+			if (datas is not here){
+				create NULL datas with key and refreshing set;
+				return NULL to asking thread;
+			}
+			if (datas is here){
+				increase usage count;
+				return datas to asking thread;
+			}
+		PUT key datas :
+			if (datas is refreshing){
+				ok proceed;
+				remove refreshing tag;
+				loop through local queues and answer to concern thread;
+			} else {
+				What's the fuck !
+			}
+		FREE key pointer :
+			if (pointer is pointer to current datas, first element of datas){
+				decrease usage count;
+			}
+			if (pointer is one pointer from old datas){
+				decrease usage count;
+				free datas if (usage count is 0)
+			}
+
+		UPDATE ALL :
+			loop trough key, delete datas where usage count is NULL and refresh time exceeded (suppress entry from hash)
+	}
+}
+
+current code modification :
+
+	ask cache before doing request
+	wait answer from cache (timeout, setting of an async queue per thread)
+	send a PUT message when request is done
+	send a FREE message when we free connection
+
+USER cache :
+	each user is identified by his SSL fd.
+	so we link 
+	SSL fd     -> 	userid 
+			List of groups
+	Modification of user are local :
+		A user got a few modification only, if never of its group list
+		A reconnect can be done easily if necesary
+		

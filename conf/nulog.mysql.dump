@@ -111,6 +111,8 @@ CREATE TABLE ulog (
   end_timestamp datetime default NULL,
   state smallint(6) default NULL,
   username varchar(30) default NULL,
+  client_os varchar(128) default NULL,
+  client_app varchar(128) default NULL,
   UNIQUE KEY id (id),
   KEY index_id (id),
   KEY timestamp (timestamp),

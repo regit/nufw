@@ -102,7 +102,8 @@ to free the session.</para>
 <command>nu_client_init</command> returns an authentication session usable by <command>nu_client_check</command> or <command>nu_client_free</command>.
 </para>
 <para>
-<command>nu_client_check</command> returns the number of packets authenticated to the nuauth server during the call.
+<command>nu_client_check</command> returns the number of packets authenticated to the nuauth server during the call. It returns -1 if
+an error occur when sending authentication packet. Applications MUST considered that the session is unusable when they receive this error.
 </para>
   </refsect1>
   <refsect1>

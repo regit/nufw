@@ -39,6 +39,12 @@
 #define MYSQL_SSL_CAPATH  NULL
 #define MYSQL_SSL_CIPHER "ALL:!ADH:+RC4:@STRENGTH"
 
+#define OSNAME_MAX_SIZE 64
+#define APPNAME_MAX_SIZE 256
+
+#define SHORT_REQUEST_SIZE 512
+#define LONG_REQUEST_SIZE 1024
+
 int mysql_request_timeout;
 char * mysql_user;
 char * mysql_passwd;

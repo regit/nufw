@@ -1,20 +1,78 @@
-0.8.6 (2004/12/04)
-	- dropped packet get out printed DROP
-	- correctly answer to nufw when no ACL found
-0.8.5 (2004/08/25)
-	- nuauth : Fixes a bug on multiple SSL connection close from clients.
-	- nutop : much better time display for postgresql
-	- libnuclient : perform a gethostbyname() on host. 
-	- Check UID is 0 at nufw startup. Exit if not.
-0.8.4 (2004/08/17)
-	- Turn around a libipq bug, that would get log timestamps to be 0 when
-	connections are QUEUED in INPUT or OUTPUT chains.
-0.8.3 (2004/08/16)
-	- correction of bugs in the SQL logging modules. The first UPDATE was
-	incorrect and could lead to severe insecurity.
-	- corrected a stupid bug in postgresql log module, that would totally
-	prevent it from working.
-	- LICENCE updates : added an exeption for openssl related code.
+1.0.0 (2005/03/08)
+	- DEBUG_ENABLE
+1.0.0-rc2 (2005/03/01)
+	- works on autoconf to solve excessive linking 
+	- nufw answer correctly to -V and -h
+	- nufw compilation is not done if libipq is not present
+	- authentication by certs now fallback to password based
+	authentication to support generic certs
+	- nuauth tls server for nufw now correctly handles violent disconnect
+	- nuauth tls server for client handles better network problem
+1.0.0-rc1  (2005/02/16)
+	- get around bug link with g_message
+	- initial 64bit port
+	- code cleaning
+	- nutcpc : support renegociation
+	- logging : restore user numeric support
+	- pam compilation is now optional
+	- plaintext : 64 bit port
+	- logging : finish app and os logging
+	- nuauth : add support for multiusers client
+	- libnuclient : correct packet generation code
+	- rework cache code and make it optionnal
+0.9.6 (2004/12/14)
+	- mysql and postgresql log module updates  : added username where
+	missing, now supporting the client_os and client_app SQL fields. See
+	doc/MIGRATING-TO-0.9.6 for upgrade instructions.
+	- ident module fix
+	- ldap module : schema change and appname and osname
+	- nuaclgen : switch to use equality schema by default
+	- SQL logging : application name and osname support
+	- TLS : certificat verification support
+	- TLS : complete option management
+	- certificate authentication (SASL EXTERNAL mechanism)
+	- system authentication module (pam+system)
+	- nu_client_init2 : use callbacks with sasl and tls
+0.9.5 (2004/10/20)
+	- infrastructure for ip authentication
+	- ident module for ip authentication (experimental, does not work when
+	nuauth is in daemon mode)
+	- ipq.h problem with redhat solved
+	- fix bugs related to acl check when ready
+	- configure.ac modification for module support
+	- user check module now receive user@domain
+	- plaintext module : use lists of ports (or ports ranges) in the plaintext ACLs
+	- plaintext module : Add multiple IP addresses (or subnet) in a same rule.
+0.9.4 (2004/10/04)
+	- new push system : after having received packet, nuauth warns clients
+	on a concerned computer that they need to check if they have emit a packet.
+	- use private datas in queue system for cache answer
+0.9.3 (2004/09/23)
+	- libnuclient : reconnect is automatic
+	- libnuclient : better error handling via errno
+	- nufw : signal handling for verbosity
+	- nuauth : application filtering support (modules : plaintext)
+	- nuauth : OS filtering support (modules : plaintext)
+0.9.2 (2004/09/08)
+	- change unused field id_gw to a packet_length field in nufw->nuauth
+	packet. 
+	- libnuclient works correctly now (nuapplet and nutcpc are ok)
+	- nufw_gw_addr is now a list : first entry is udp server AND all
+	entries are authorized nufw servers
+	- more strict on cache usage accounting (atomic operation)
+	- intercept sigpipe on nufw
+0.9.1 (2004/09/02)
+	- nuauth : now outputs some information (through g_message) when receiving signal POLL
+	- nuauth : signal USR1 increases log level, USR2 decreases it.
+	- client datas are now stored in a hash (this solve a bug on connect)
+	- include necessary Makefile.am in the doc directory
+	- TLS exchange between nufw and nuauth
+	- multiple nufws per nuauth
+0.9.0 (2004/08/26)
+	- protocol 2
+	- use TLS+SASL
+	- cache system for acl
+	- per connection datas for user
 0.8.2 (2004/07/30)
 	- user logging level is finally taken into account
 	- connectio hash code optimisation

@@ -3,7 +3,7 @@
 #
 # nuaclgen.pl : insertion of ACls in the Nu Ldap tree.
 #
-# Copyright(C) 2003 Eric Leblond <eric@regit.org>
+# Copyright(C) 2003,2005 Eric Leblond <eric@regit.org>
 #		     Vincent Deffontaines <vincent@gryzor.com>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -27,9 +27,6 @@ $Getopt::Long::ignorecase=0;
 
 my %acl_hash;
 
-#my $ldap_host;
-#my $username;
-#my $password;
 # include conf variables
 require("/etc/nufw/nuaclgen.conf") or die "Can not find config file";
 
@@ -78,23 +75,33 @@ sub construct_port_range {
 sub todotquad {
   $ip=shift;
   $stringip=$ip%256;
-  for ($i=0;$i<3;$i++){
+  for ($i=0;$i<3;$i++) {
     $ip=($ip-$ip%256)/256;
     $stringip= $ip%256 .".".$stringip;
   }
   return $stringip;
 }
 
+my $separator = ",";
+
 $result = GetOptions("help" => \$help,
+		     "Schema" => \$schema,
 		     "saddr=s" => \$saddr,
 		     "daddr=s" => \$daddr,
 		     "proto=i" => \$proto,
-		     "sport=i" => \$sport,
-		     "dport=i" => \$dport,
+		     "sport=s" => \$sport,
+		     "dport=s" => \$dport,
 		     "jump=s" => \$decision,
 		     "groups=s" => \$groups,
 		     "Aclname=s" => \$aclname,
+		     "OsName=s" => \$osname,
+		     "OsVersion=s" => \$osversion,
+		     "OsRelease=s" => \$osrelease,
+		     "AppName=s" => \$appname,
+		     "AppSig=s" => \$appsig,
+                     "Separator" => \$separator,
 		     "List" => \$list,
+		     "Delete=s" => \$delete,
 		    );
 
 if ($result == 0) {
@@ -102,16 +109,57 @@ if ($result == 0) {
 }
 
 if ($help) {
-  print "nuaclgen.pl -A [ACLDN] [-sa NETWORK1] [-da NETWORK2] [-p PROTONUMBER] [--sport P1[:P2]] [--dport P3[:P4]] -j [ACCEPT|DROP] -g [GROUPLIST] : add an acl
-nuaclgen.pl -L -g [Id Group] : list acl(s) for a group.
+  print "nuaclgen [-S (eq|ineq)] -Aclname [ACLDN] [-sa NETWORK1] [-da NETWORK2] [-p PROTONUMBER]
+        [--sport P1[:P2]] [--dport P3[:P4]] -j [ACCEPT|DROP] -g [GROUPLIST]
+        [--OsName N1,N2... [--OsVersion V1,V2...] [--OsRelease R1,R2...]]
+        [--AppName N1,N2... [--AppSig S1,S2...]] : add an acl
+nuaclgen -L -g [Id Group] : list acl(s) for a group.
+nuaclgen --Delete dn : delete this dn ACL
 SYNTAX :
 \t- NETWORK : aaa.bbb.ccc.ddd[/ee]
 \t- GROUPSLIST : gid1[,gid2,gid3]
 \t- PORTRANGE: NNNN[:MMMM]
 ";
-exit;
+  exit;
+}
+if ((defined $aclname)+(defined $list)+defined($delete) > 1)
+{
+  die "Sorry, one mode allowed at a time only!";
 }
 
+if (defined $delete)
+{
+  $mybase=$basedn;
+  chomp $mybase;
+  if ($delete!~/.*$mybase$/){
+    print "basedn : $mybase\n";
+    print "delete : $delete\n";
+    die "Sorry, not allowed to delete that cn. It's not in the ACL base!";
+  }
+}else{
+
+
+  if (not defined($groups)) {
+    die "No group(s) given\n";
+  } else {
+    if ($groups=~m/,/) {
+      $acl{"Group"}= [split /,/ , $groups];
+    } else {
+      $acl{"Group"}= $groups;
+    }
+  }
+}
+
+#do ldap connect
+$ldap = Net::LDAP->new($ldap_host)  or die $@;;
+# bind to a directory with dn and password
+$result = $ldap->bind ( $username,
+			password => $password
+		      )  or die $@;
+$result->code && warn "failed to bind: ", $result->error;
+
+
+if ($aclname){ 
 
 if (not defined($saddr)) {
   $saddr="0.0.0.0/0";
@@ -128,10 +176,7 @@ if (not defined($sport)) {
 }
 ($acl{"SrcPortStart"},$acl{"SrcPortEnd"})=construct_port_range($sport);
 
-if (not defined($dport)) {
-  $dport="0:65536";
-}
-($acl{"DstPortStart"},$acl{"DstPortEnd"})=construct_port_range($dport);
+
 
 
 
@@ -142,43 +187,58 @@ if (not defined($proto)) {
 }
 
 
-if (not defined($groups)) {
-  die "No group(s) given\n";
-} else {
-  if ($groups=~m/,/) {
-    $acl{"Group"}= [split /,/ , $groups];
-  } else {
-    $acl{"Group"}= $groups;
-  }
 
+if (not defined($Schema) or $Schema eq 'eq') {
+  if (not defined($dport)) {
+    die "Equality schema specified, destination port needed";
+  } else {
+    # split by comma
+    @dports=split(/,/,$dport);
+    $acl{"DstPort"}=\@dports;
+  }
+} else {
+  if (not defined($dport)) {
+    $dport="0:65536";
+  }
+  ($acl{"DstPortStart"},$acl{"DstPortEnd"})=construct_port_range($dport);
 }
 
-
 $acl{"objectclass"}  = [ "top", "NuAccessControlList" ];
-
-
-#do ldap connect
-$ldap = Net::LDAP->new($ldap_host)  or die $@;;
-# bind to a directory with dn and password
-$result = $ldap->bind ( $username,
-			password => $password
-		      )  or die $@;
-$result->code && warn "failed to bind: ", $result->error;
+if (defined $osname){
+  my @os = split(/$separator/,$osname);
+  $acl{"OsName"}=\@os;
+  if (defined $osversion){
+    my @ver= split(/$separator/,$osversion);
+    $acl{"OsVersion"}=\@ver;
+  }
+  if (defined $osrelease){
+    my @rel= split(/$separator/,$osrelease);
+    $acl{"OsVersion"}=\@rel;
+  }
+}
+if (defined $appname){
+  my @app= split(/$separator/,$appname);
+  $acl{"AppName"}=\@app;
+  if (defined $appsig){
+    my @sig= split(/$separator/,$appsig);
+    $acl{"AppSig"}=\@sig;
+  }
+}
 
 # look for Add mode
 if (not defined($aclname)) {
   $exit_code = "No Acl Name given, Aborting\n";
 } else {
-$aclname=~m/^cn=(\w+),.*/ and $acl{"cn"}=$1;
-if (not defined($decision)) {
-  die "No decision given\n";
-} else {
-  if ($decision eq "ACCEPT") {
-    $acl{"Decision"}=1;
+  $aclname=~m/^cn=(\w+),.*/ and $acl{"cn"}=$1;
+  if (not defined($decision)) {
+    die "No decision given\n";
   } else {
-    $acl{"Decision"}=0;
+    if ($decision eq "ACCEPT") {
+      $acl{"Decision"}=1;
+    } else {
+      $acl{"Decision"}=0;
+    }
   }
-}
   print "Adding $aclname\n";
   $result = $ldap->add( $aclname,
 			attr => [%acl ]) ;
@@ -188,15 +248,17 @@ if (not defined($decision)) {
   $ldap->unbind;		# take down session
   exit;
 }
+}
 
 if (defined ($list)) {
   $filter = "(&(objectClass=NuAccessControlList)(Group=".$acl{"Group"}."))";
-  $results = $ldap->search( # perform a search
-		base   => "dc=regit,dc=org",
-		filter => $filter,
-	       );
+  $results = $ldap->search(	# perform a search
+			   base   => $basedn,
+			   filter => $filter,
+			  );
   foreach $entry ($results->all_entries) { 
-   # $entry->dump;
+    $dn=$entry->dn;
+    # $entry->dump;
     # print source address
     $sad = todotquad($entry->get_value("SrcIpStart"));
     $sad .="-". todotquad($entry->get_value("SrcIpEnd"));
@@ -209,16 +271,29 @@ if (defined ($list)) {
     $dport = $entry->get_value("DstPortStart").":".$entry->get_value("DstPortEnd");
     # print groups
     ($dec)=$entry->get_value("Decision");
-    if ($dec){
+    # OSname
+    $osname=$entry->get_value("OsName");
+    $osversion=$entry->get_value("OsVersion");
+    $osrelease=$entry->get_value("OsRelease");
+    $appname=$entry->get_value("AppName");
+    $appsig=$entry->get_value("AppSig");
+    if ($dec) {
       $dec="ACCEPT";
     } else {
       $dec="DROP";
     }
-    print "src : $sad $sport dst : $dad $dport $dec\n";
+    print "dn: $dn src : $sad $sport dst : $dad $dport OS: $osname $osversion $osrelease App: $appname $appsig $$dec\n";
   }
 
   $ldap->unbind;		# take down session
   exit;
-} else {
+} 
+if (defined ($delete)) {
+  $results = $ldap->delete($delete);
+  $results->code && warn "failed to delete entry: ", $results->error ;
+  $ldap->unbind;		# take down session
+  exit;
+
+}else {
   $exit_code = "No List mode";
 }

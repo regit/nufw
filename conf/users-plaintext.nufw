@@ -1,0 +1,13 @@
+
+# ACLs file for the plaintext module
+#
+
+# Format
+# username:passwd:uid:gid[,gid...]
+#
+# Note: account is disabled if passwd is "*" or "!"
+#
+
+user:imauser:1:102
+admin:iadmin:2:100,102
+suadmin:suroot:3:103

@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
-AC_INIT(NuFW, 0.8.5, nufw-devel@nongnu.org)
+AC_INIT(NuFW, 1.0, nufw-devel@nongnu.org)
 AC_CONFIG_SRCDIR([src/nufw/main.c])
 AM_CONFIG_HEADER(src/include/config.h)
 
@@ -15,18 +15,24 @@ AC_PROG_INSTALL
 # Checks for libraries.
 
 
-AC_CHECK_LIB([ipq], [ipq_message_type],AC_DEFUN([HAVE_LIBRARY_IPQ],[1]))
+AC_CHECK_HEADERS([libipq/libipq.h libipq.h])
+AC_CHECK_LIB([ipq], [ipq_message_type], have_ipq="yes", have_ipq="")
+
+if test "$have_ipq" = "yes"; then
+	AC_DEFUN([HAVE_LIBRARY_IPQ],[1])
+# check if we have a version of libipq supporting mark
+AC_ARG_WITH(user-mark, [--with-user-mark  support user mark on NuFW firewall], enable_user_mark="yes", enable_user_mark="")
+if test "$enable_user_mark" = "yes"; then
+        AC_CHECK_LIB([ipq], [ipq_set_vwmark],AC_DEFINE_UNQUOTED([HAVE_LIBIPQ_MARK],[1],[libipq has support for mark]),AC_MSG_RESULT([libipq has no support for mark]))
+fi
+
+
+fi
+
+AM_CONDITIONAL(HAVE_LIBIPQ,test x$have_ipq = xyes)
+
 
 AC_CHECK_LIB([pthread], [pthread_mutex_init])
-# TODO : ldap check
-AC_CHECK_LIB([ldap],[ldap_simple_bind_s],AC_DEFUN([HAVE_LIBRARY_LDAP],[1]),AC_MSG_ERROR([ldap library needed for authentication]))
-# TODO : dbm check
-AC_CHECK_LIB([gdbm],[gdbm_fetch],AC_DEFUN([HAVE_LIBRARY_GDBM],[1]),AC_MSG_ERROR([dbm library needed for authentication]))
-AC_CHECK_LIB([crypt], [crypt])
-# for gdbm module
-AC_CHECK_LIB([gdbm], [gdbm_open])
-#
-AC_CHECK_LIB([ssl], [SSL_write])
 
 # glib stuff
 AM_PATH_GLIB_2_0(2.0.0, , AC_MSG_ERROR([glib is required in order to compile nuauth]),[gthread gmodule])
@@ -43,13 +49,42 @@ AC_FUNC_MALLOC
 AC_FUNC_STAT
 AC_CHECK_FUNCS([gethostbyname memset socket strcasecmp strspn])
 
-# check if we have a version of libipq supporting mark
-AC_CHECK_LIB([ipq], [ipq_set_vwmark],AC_DEFINE_UNQUOTED([HAVE_LIBIPQ_MARK],[1],[libipq has support for mark]),AC_MSG_RESULT([libipq has no support for mark]))
+AC_CHECK_LIB([gcrypt], [gcry_md_open],AC_DEFUN([HAVE_LIBRARY_GCRYPT],[1]),AC_MSG_ERROR([gcrypt library needed for encryption]))
+AC_CHECK_LIB([gnutls], [gnutls_init],AC_DEFUN([HAVE_LIBRARY_GNUTLS],[1]),AC_MSG_ERROR([gnutls library needed for encryption]))
+AC_CHECK_LIB([sasl2],[sasl_server_init],AC_DEFUN([HAVE_LIBRARY_SASL2],[1]),AC_MSG_ERROR([sasl library needed for authentication]))
+        
+AM_CONDITIONAL(USE_USER_MARK, test x$enable_user_mark = xyes)
 
 
 #Configure database support, depending on user input
 AC_ARG_WITH(mysql-log, [--with-mysql-log  support user activity logging in Mysql database], enable_mysql_log="yes", enable_mysql_log="")
 AC_ARG_WITH(pgsql-log, [--with-pgsql-log  support user activity logging in PostgreSQL database], enable_pgsql_log="yes", enable_pgsql_log="")
+
+AC_ARG_WITH(system-auth, [--with-system-auth  support PAM+NSS authentication], enable_system_auth="yes", enable_system_auth="")
+
+AC_ARG_WITH(ldap,   [--with-ldap  Support LDAP directory for users and acl lookup],ldap="yes", ldap="")
+AC_ARG_WITH(gdbm,   [--with-gdbm  Support gdbm users lookup],gdbm="yes", gdbm="")
+AC_ARG_WITH(ident,   [--with-ident  Support ident users authentication],ident="yes", ident="")
+
+if test "$enable_system_auth" = "yes"; then
+  AC_CHECK_LIB([pam],[pam_start],AC_DEFUN([HAVE_LIBRARY_PAM],[1]),AC_MSG_ERROR([PAM library needed for system authentication]))
+fi
+AM_CONDITIONAL(USE_SYSTEM_AUTH, test x$enable_system_auth = xyes)
+
+if test "${ldap}" = "yes"; then
+  AC_CHECK_LIB([ldap],[ldap_simple_bind_s],AC_DEFUN([HAVE_LIBRARY_LDAP],[1]),AC_MSG_ERROR([ldap library needed for authentication]))
+fi
+AM_CONDITIONAL(USE_LDAP, test x$ldap = xyes)
+
+if test "${gdbm}" = "yes"; then
+  AC_CHECK_LIB([gdbm],[gdbm_fetch],AC_DEFUN([HAVE_LIBRARY_GDBM],[1]),AC_MSG_ERROR([dbm library needed for authentication]))
+fi
+AM_CONDITIONAL(USE_GDBM, test x$gdbm = xyes)
+
+if test "${ident}" = "yes"; then
+  AC_CHECK_LIB([ident],[id_open],AC_DEFUN([HAVE_LIBRARY_IDENT],[1]),AC_MSG_ERROR([ident library needed for ident user authentication]))
+fi
+AM_CONDITIONAL(USE_IDENT, test x$ident = xyes)
 
 if test "$enable_mysql_log" = "yes"; then
   AC_CHECK_LIB([mysqlclient],[mysql_real_connect],AC_DEFUN([HAVE_LIBRARY_MYSQL],[1]),AC_MSG_ERROR([mysqlclient library needed if selected]))
@@ -61,21 +96,64 @@ if test "$enable_pgsql_log" = "yes"; then
 fi
 AM_CONDITIONAL(USE_PGSQL_LOG, test x$enable_pgsql_log = xyes)
 
+
 AC_CONFIG_FILES([Makefile
+                doc/Makefile
                  src/Makefile
-                 src/lib/Makefile
                  src/nuauth/Makefile
 		 src/nuauth/modules/Makefile
   		 src/nuauth/modules/ldap/Makefile
   		 src/nuauth/modules/dbm/Makefile
+  		 src/nuauth/modules/plaintext/Makefile
+  		 src/nuauth/modules/system/Makefile
   		 src/nuauth/modules/log_pgsql/Makefile
   		 src/nuauth/modules/log_mysql/Makefile
   		 src/nuauth/modules/log_syslog/Makefile
+		 src/nuauth/modules/ipauth_ident/Makefile
 		 src/clients/Makefile
-		 src/clients/nutcpc/Makefile
 		 src/clients/lib/Makefile
+		 src/clients/nutcpc/Makefile
 		 src/nufw/Makefile
+                 src/support/Makefile
+                 src/support/dbm/Makefile
 		 ])
 
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE(1.9)
+
 AC_OUTPUT
+
+if test "$have_ipq" = ""; then
+	AC_MSG_NOTICE([nufw daemon WON'T be compiled: libipq not present])
+else
+	if test "$enable_user_mark" = "yes"; then
+		AC_MSG_NOTICE([nufw will be compiled with user mark support])
+	fi
+fi
+
+if test "$enable_system_auth" = "yes"; then
+	AC_MSG_NOTICE([Compiling module system auth])
+fi
+
+if test "${ldap}" = "yes"; then
+	AC_MSG_NOTICE([Compiling module ldap])
+fi
+
+if test "${gdbm}" = "yes"; then
+	AC_MSG_NOTICE([Compiling module dbm])
+fi
+
+if test "${ident}" = "yes"; then
+	AC_MSG_NOTICE([Compiling fallback module ident])
+fi
+
+if test "${enable_mysql_log}" = "yes"; then
+	AC_MSG_NOTICE([Compiling mysql log module])
+fi
+
+if test "${enable_pgsql_log}" = "yes"; then
+	AC_MSG_NOTICE([Compiling pgsql log module])
+fi
+
+
+
+

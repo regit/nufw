@@ -1,6 +1,6 @@
 
 /*
- ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
+ ** Copyright(C) 2003-2004 Eric Leblond <eric@regit.org>
  **		     Vincent Deffontaines <vincent@gryzor.com>
  **
  ** This program is free software; you can redistribute it and/or modify
@@ -28,6 +28,7 @@
 #include <string.h>
 #include <errno.h>
 
+#include <time.h>
 
 confparams pgsql_nuauth_vars[] = {
     { "pgsql_server_addr" , G_TOKEN_STRING, 0 , PGSQL_SERVER },
@@ -40,6 +41,13 @@ confparams pgsql_nuauth_vars[] = {
     { "pgsql_request_timeout" , G_TOKEN_INT , PGSQL_REQUEST_TIMEOUT , NULL }
 };
 
+G_MODULE_EXPORT gchar* 
+g_module_unload(void)
+{
+    PGconn *ld = g_private_get (pgsql_priv);
+    PQfinish(ld);
+    return NULL;
+}
 /* Init pgsql system */
 G_MODULE_EXPORT gchar* 
 g_module_check_init(GModule *module){
@@ -82,6 +90,19 @@ g_module_check_init(GModule *module){
     return NULL;
 }
 
+/* In : time in seconds from epoch
+ * Out : char* containing acceptable input to POstgresql. Must be allocated with at least 26 bytes*/
+void epoch_to_char(long unsigned int i, char **value)
+{
+  struct tm *time;
+  time = (struct tm *)malloc(sizeof(struct tm));
+  gmtime_r(&i,time);
+  asctime_r(time,*value);
+  free(time);
+}
+
+
+
 /* 
  * Initialize connection to pgsql server
  */
@@ -115,7 +136,6 @@ G_MODULE_EXPORT PGconn *pgsql_conn_init(void){
     strncat(pgsql_conninfo,pgsql_passwd,strlen(pgsql_passwd));
     strncat(pgsql_conninfo,"' connect_timeout=",18);
     strncat(pgsql_conninfo,timeout,strlen(timeout));
-    strcat(pgsql_conninfo,"'");
     /* strcat(pgsql_conninfo," sslmode='");
        strcat(pgsql_conninfo,pgsql_ssl); 
        strcat(pgsql_conninfo,"'"); */
@@ -144,10 +164,32 @@ G_MODULE_EXPORT PGconn *pgsql_conn_init(void){
     return ld;
 }
 
+static gchar * generate_osname(gchar *Name,gchar *Version,gchar *Release)
+{
+  if (Name && Release && Version){
+    if ((strlen(Name)+strlen(Release)+strlen(Version)+3) > OSNAME_MAX_SIZE)
+      return g_strdup("");
+  }else
+      return g_strdup("");
+  return g_strjoin("-",Name,Version,Release);
+}
+
+static gchar* generate_appname(gchar *Name)
+{ 
+  if (!Name)
+    return g_strdup("");
+  if ((strlen(Name)+1) > APPNAME_MAX_SIZE)
+  {
+      return g_strdup("");
+  }
+  return g_strdup(Name);
+}
+
+
 
 G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
     PGconn *ld = g_private_get (pgsql_priv);
-    char request[512];
+    char request[LONG_REQUEST_SIZE];
     struct in_addr ipone, iptwo;
     PGresult *Result;
     char tmp_inet1[41], tmp_inet2[41];
@@ -187,19 +229,29 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
             strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
             strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
             if (nuauth_log_users_strict){
-                if (snprintf(request,511,"UPDATE %s SET end_timestamp=%lu, state=%hu WHERE (ip_saddr='%s' and ip_daddr='%s' and tcp_sport=%u and tcp_dport=%u and (state=1 or state=2))",
+                char *my_timestamp;
+                my_timestamp=(char *)malloc(26);
+                if (my_timestamp == NULL)
+                {
+                  g_warning("Can not malloc for my_timestamp");
+                  return -1;
+                }
+                epoch_to_char(element.timestamp,&my_timestamp);
+                if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET end_timestamp=%s, state=%hu WHERE (ip_saddr='%s' and ip_daddr='%s' and tcp_sport=%u and tcp_dport=%u and (state=1 or state=2))",
                   pgsql_table_name,
-                  element.timestamp,
+                  my_timestamp,
                   STATE_CLOSE,
                   tmp_inet1,
                   tmp_inet2,
                   (element.tracking_hdrs).source,
                   (element.tracking_hdrs).dest
-                  ) >= 511){
+                  ) >= SHORT_REQUEST_SIZE-1){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-                    g_warning("Building pgsql update query, the 511 limit was reached!\n");
+                    g_warning("Building pgsql update query, the SHORT_REQUEST_SIZE limit was reached!\n");
+                free(my_timestamp);
                 return -1;
               }
+              free(my_timestamp);
               Result = PQexec(ld, request);
               if (!Result == PGRES_TUPLES_OK){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
@@ -207,9 +259,14 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
                 return -1;
               }
             }
-	    if ((nuauth_log_users_sync) && (element.username == NULL)) {
-            if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,state,oob_prefix) VALUES (%u,%lu,%u,'%s','%s',%u,%u,%hu,'ACCEPT');",
+	    if (element.username != NULL) { 
+                gchar* OSFullname;
+                gchar* AppFullname;
+                OSFullname = generate_osname(element.sysname,element.version,element.release);
+                AppFullname = generate_appname(element.appname); /*Just a size check actually*/
+                if (snprintf(request,LONG_REQUEST_SIZE-1,"INSERT INTO %s (username,user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,state,oob_prefix,client_os,client_app) VALUES ('%s',%u,%lu,%u,'%s','%s',%u,%u,%hu,'ACCEPT','%s','%s');",
                   pgsql_table_name,
+                  element.username,
                   (element.user_id),
                   element.timestamp,
                   (element.tracking_hdrs).protocol,
@@ -217,16 +274,21 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
                   tmp_inet2,
                   (element.tracking_hdrs).source,
                   (element.tracking_hdrs).dest,
-                  STATE_OPEN
-                  ) >= 511){
+                  STATE_OPEN,
+                  OSFullname,
+                  AppFullname
+                  ) >= LONG_REQUEST_SIZE-1){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-                    g_warning("Building pgsql insert query, the 511 limit was reached!\n");
+                    g_warning("Building pgsql insert query, the LONG_REQUEST_SIZE limit was reached!\n");
+	g_free(OSFullname);
+		g_free(AppFullname);
                 return -1;
             }
+		g_free(OSFullname);
+		g_free(AppFullname);
 	    } else {
-if (snprintf(request,511,"INSERT INTO %s (username,user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,state,oob_prefix) VALUES ('%s',%u,%lu,%u,'%s','%s',%u,%u,%hu,'ACCEPT');",
+              if (snprintf(request,SHORT_REQUEST_SIZE-1,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,state,oob_prefix) VALUES (%u,%lu,%u,'%s','%s',%u,%u,%hu,'ACCEPT');", 
                   pgsql_table_name,
-		  element.username,
                   (element.user_id),
                   element.timestamp,
                   (element.tracking_hdrs).protocol,
@@ -235,9 +297,10 @@ if (snprintf(request,511,"INSERT INTO %s (username,user_id,oob_time_sec,ip_proto
                   (element.tracking_hdrs).source,
                   (element.tracking_hdrs).dest,
                   STATE_OPEN
-                  ) >= 511){
+                  ) >= SHORT_REQUEST_SIZE-1){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-                    g_warning("Building pgsql insert query, the 511 limit was reached!\n");
+                    g_warning("Building pgsql insert query, the SHORT_REQUEST_SIZE limit was reached!\n");
+
                 return -1;
             }
 
@@ -257,12 +320,18 @@ if (snprintf(request,511,"INSERT INTO %s (username,user_id,oob_time_sec,ip_proto
             }
             break;
           case IPPROTO_UDP:
+          {
+            gchar* OSFullname;
+            gchar* AppFullname;
+            OSFullname = generate_osname(element.sysname,element.version,element.release);
+            AppFullname = generate_appname(element.appname); /*Just a size check actually*/
             ipone.s_addr=ntohl((element.tracking_hdrs).saddr);
             iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
             strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
             strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
-            if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,state,oob_prefix) VALUES (%u,%lu,%u,'%s','%s',%u,%u,%hu,'ACCEPT');",
+            if (snprintf(request,LONG_REQUEST_SIZE-1,"INSERT INTO %s (username,user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,state,oob_prefix,client_os,client_app) VALUES ('%s',%u,%lu,%u,'%s','%s',%u,%u,%hu,'ACCEPT','%s','%s');", //TODO : Add a check about username being NULL
                   pgsql_table_name,
+                  element.username,
                   (element.user_id),
                   element.timestamp,
                   (element.tracking_hdrs).protocol,
@@ -270,12 +339,18 @@ if (snprintf(request,511,"INSERT INTO %s (username,user_id,oob_time_sec,ip_proto
                   tmp_inet2,
                   (element.tracking_hdrs).source,
                   (element.tracking_hdrs).dest,
-                  STATE_OPEN
-                  ) >= 511 ){
+                  STATE_OPEN,
+                  OSFullname,
+                  AppFullname
+                  ) >= LONG_REQUEST_SIZE-1 ){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-                    g_warning("Building pgsql insert query, the 511 limit was reached!\n");
+                    g_warning("Building pgsql insert query, the LONG_REQUEST_SIZE limit was reached!\n");
+	g_free(OSFullname);
+		g_free(AppFullname);
                 return -1;
             }
+	    	g_free(OSFullname);
+		g_free(AppFullname);
             Result = PQexec(ld, request);
             if (!Result == PGRES_TUPLES_OK){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
@@ -283,24 +358,37 @@ if (snprintf(request,511,"INSERT INTO %s (username,user_id,oob_time_sec,ip_proto
                 return -1;
             }
             return 0;
+          }
           default:
+          {
+            gchar* OSFullname;
+            gchar* AppFullname;
+            OSFullname = generate_osname(element.sysname,element.version,element.release);
+            AppFullname = generate_appname(element.appname); /*Just a size check actually*/
             ipone.s_addr=ntohl((element.tracking_hdrs).saddr);
             iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
             strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
             strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
-            if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,state,oob_prefix) VALUES (%u,%lu,%u,'%s','%s',%hu,'ACCEPT');",
+            if (snprintf(request,LONG_REQUEST_SIZE-1,"INSERT INTO %s (username,user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,state,oob_prefix,client_os,client_app) VALUES ('%s',%u,%lu,%u,'%s','%s',%hu,'ACCEPT','%s','%s');", //TODO : username NULL?
                   pgsql_table_name,
+                  element.username,
                   (element.user_id),
                   element.timestamp,
                   (element.tracking_hdrs).protocol,
                   tmp_inet1,
                   tmp_inet2,
-                  STATE_OPEN
-                  ) >= 511){
+                  STATE_OPEN,
+                  OSFullname,
+                  AppFullname
+                  ) >= LONG_REQUEST_SIZE-1){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-                    g_warning("Building pgsql insert query, the 511 limit was reached!\n");
+                    g_warning("Building pgsql insert query, the LONG_REQUEST_SIZE limit was reached!\n");
+	g_free(OSFullname);
+		g_free(AppFullname);
                 return -1;
             }
+	g_free(OSFullname);
+		g_free(AppFullname);
             Result = PQexec(ld, request);
             if (!Result == PGRES_TUPLES_OK){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
@@ -308,31 +396,42 @@ if (snprintf(request,511,"INSERT INTO %s (username,user_id,oob_time_sec,ip_proto
                 return -1;
             }
             return 0;
+          }
         }
-        return 0;
+        break;
       case STATE_ESTABLISHED:
         if ((element.tracking_hdrs).protocol == IPPROTO_TCP){
             int update_status = 0;
             while (update_status < 2){
+              char *my_timestamp;
+              my_timestamp=(char *)malloc(26);
+              if (my_timestamp == NULL)
+              {
+                g_warning("Can not malloc for my_timestamp");
+                return -1;
+              }
+              epoch_to_char(element.timestamp,&my_timestamp);
               update_status++;
               ipone.s_addr=ntohl((element.tracking_hdrs).saddr);
               iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
               strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
               strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
-              if (snprintf(request,511,"UPDATE %s SET state=%hu, start_timestamp=%lu WHERE (ip_daddr='%s' and ip_saddr='%s' and tcp_dport=%u and tcp_sport=%u and state=%hu);",
+              if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET state=%hu, start_timestamp=%s WHERE (ip_daddr='%s' and ip_saddr='%s' and tcp_dport=%u and tcp_sport=%u and state=%hu);",
                   pgsql_table_name,
                   STATE_ESTABLISHED,
-                  element.timestamp,
+                  my_timestamp,
                   tmp_inet1,
                   tmp_inet2,
                   (element.tracking_hdrs).source,
                   (element.tracking_hdrs).dest,
                   STATE_OPEN
-                  ) >= 511){
+                  ) >= SHORT_REQUEST_SIZE-1){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-                    g_warning("Building pgsql update query, the 511 limit was reached!\n");
+                    g_warning("Building pgsql update query, the SHORT_REQUEST_SIZE limit was reached!\n");
+                free(my_timestamp);
                 return -1;
             }
+            free(my_timestamp);
             Result = PQexec(ld, request);
             if (!Result == PGRES_TUPLES_OK){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
@@ -358,25 +457,35 @@ if (snprintf(request,511,"INSERT INTO %s (username,user_id,oob_time_sec,ip_proto
         if ((element.tracking_hdrs).protocol == IPPROTO_TCP){
             int update_status = 0;
             while (update_status < 2){
+              char *my_timestamp;
+              my_timestamp=(char *)malloc(26);
+              if (my_timestamp == NULL)
+              {
+                g_warning("Can not malloc for my_timestamp");
+                return -1;
+              }
+              epoch_to_char(element.timestamp,&my_timestamp);
               update_status++;
               ipone.s_addr=ntohl((element.tracking_hdrs).saddr);
               iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
               strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
               strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
-              if (snprintf(request,511,"UPDATE %s SET end_timestamp=%lu, state=%hu WHERE (ip_saddr='%s' and ip_daddr='%s' and tcp_sport=%u and tcp_dport=%u and state=%hu);",
+              if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET end_timestamp=%s, state=%hu WHERE (ip_saddr='%s' and ip_daddr='%s' and tcp_sport=%u and tcp_dport=%u and state=%hu);",
                   pgsql_table_name,
-                  element.timestamp,
+                  my_timestamp,
                   STATE_CLOSE,
                   tmp_inet1,
                   tmp_inet2,
                   (element.tracking_hdrs).source,
                   (element.tracking_hdrs).dest,
                   STATE_ESTABLISHED
-                  ) >= 511){
+                  ) >= SHORT_REQUEST_SIZE-1){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-                    g_warning("Building pgsql update query, the 511 limit was reached!\n");
+                    g_warning("Building pgsql update query, the SHORT_REQUEST_SIZE limit was reached!\n");
+                free(my_timestamp);
                 return -1;
               }
+              free(my_timestamp);
               Result = PQexec(ld, request);
               if (!Result == PGRES_TUPLES_OK){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
@@ -401,12 +510,18 @@ if (snprintf(request,511,"INSERT INTO %s (username,user_id,oob_time_sec,ip_proto
       case STATE_DROP:
         switch ((element.tracking_hdrs).protocol) {
           case IPPROTO_TCP:
+          {
+            gchar* OSFullname;
+            gchar* AppFullname;
+            OSFullname = generate_osname(element.sysname,element.version,element.release);
+            AppFullname = generate_appname(element.appname); /*Just a size check actually*/
             ipone.s_addr=ntohl((element.tracking_hdrs).saddr);
             iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
             strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
             strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
-            if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,state,oob_prefix) VALUES (%u,%lu,%u,'%s','%s',%u,%u,%hu,'DROP');",
+            if (snprintf(request,LONG_REQUEST_SIZE-1,"INSERT INTO %s (username,user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,state,oob_prefix,client_os,client_app) VALUES ('%s',%u,%lu,%u,'%s','%s',%u,%u,%hu,'DROP','%s','%s');",//TODO : username NULL?
                   pgsql_table_name,
+                  element.username,
                   (element.user_id),
                   element.timestamp,
                   (element.tracking_hdrs).protocol,
@@ -414,26 +529,39 @@ if (snprintf(request,511,"INSERT INTO %s (username,user_id,oob_time_sec,ip_proto
                   tmp_inet2,
                   (element.tracking_hdrs).source,
                   (element.tracking_hdrs).dest,
-                  STATE_DROP
-                  ) >= 511 ){
+                  STATE_DROP,
+                  OSFullname,
+                  AppFullname
+                  ) >= LONG_REQUEST_SIZE-1 ){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-                    g_warning("Building pgsql insert query, the 511 limit was reached!\n");
+                    g_warning("Building pgsql insert query, the LONG_REQUEST_SIZE limit was reached!\n");
+	g_free(OSFullname);
+		g_free(AppFullname);
                 return -1;
             }
+	g_free(OSFullname);
+		g_free(AppFullname);
             Result = PQexec(ld, request);
             if (!Result == PGRES_TUPLES_OK){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                     g_warning("Can not insert Data : %s\n",PQerrorMessage(ld));
                 return -1;
             }
-            return 0;
+            break;
+          }
           case IPPROTO_UDP:
-   ipone.s_addr=ntohl((element.tracking_hdrs).saddr);
+          {
+            gchar* OSFullname;
+            gchar* AppFullname;
+            OSFullname = generate_osname(element.sysname,element.version,element.release);
+            AppFullname = generate_appname(element.appname); /*Just a size check actually*/
+            ipone.s_addr=ntohl((element.tracking_hdrs).saddr);
             iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
             strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
             strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
-            if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,state,oob_prefix) VALUES (%u,%lu,%u,'%s','%s',%u,%u,%hu,'DROP');",
+            if (snprintf(request,LONG_REQUEST_SIZE-1,"INSERT INTO %s (username,user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,state,oob_prefix,client_os,client_app) VALUES ('%s',%u,%lu,%u,'%s','%s',%u,%u,%hu,'DROP','%s','%s');", //TODO : username NULL?
                   pgsql_table_name,
+                  element.username,
                   (element.user_id),
                   element.timestamp,
                   (element.tracking_hdrs).protocol,
@@ -441,12 +569,18 @@ if (snprintf(request,511,"INSERT INTO %s (username,user_id,oob_time_sec,ip_proto
                   tmp_inet2,
                   (element.tracking_hdrs).source,
                   (element.tracking_hdrs).dest,
-                  STATE_DROP
-                  ) >= 511 ){
+                  STATE_DROP,
+                  OSFullname,
+                  AppFullname
+                  ) >= LONG_REQUEST_SIZE-1 ){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-                    g_warning("Building pgsql insert query, the 511 limit was reached!\n");
+                    g_warning("Building pgsql insert query, the LONG_REQUEST_SIZE limit was reached!\n");
+	g_free(OSFullname);
+		g_free(AppFullname);
                 return -1;
             }
+	g_free(OSFullname);
+		g_free(AppFullname);
             Result = PQexec(ld, request);
             if (!Result == PGRES_TUPLES_OK){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
@@ -454,25 +588,39 @@ if (snprintf(request,511,"INSERT INTO %s (username,user_id,oob_time_sec,ip_proto
                 return -1;
             }
             return 0;
+            break;
+          }
           default:
+          {
+            gchar* OSFullname;
+            gchar* AppFullname;
+            OSFullname = generate_osname(element.sysname,element.version,element.release);
+            AppFullname = generate_appname(element.appname); /*Just a size check actually*/
             ipone.s_addr=ntohl((element.tracking_hdrs).saddr);
             iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
             strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
             strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
-            if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,state,oob_prefix) VALUES (%u,%lu,%u,'%s','%s',%lu,%hu,'DROP');",
+            if (snprintf(request,LONG_REQUEST_SIZE-1,"INSERT INTO %s (username,user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,state,oob_prefix,client_os,client_app) VALUES ('%s',%u,%lu,%u,'%s','%s',%lu,%hu,'DROP','%s','%s');", //TODO : username NULL?
                   pgsql_table_name,
+                  element.username,
                   (element.user_id),
                   element.timestamp,
                   (element.tracking_hdrs).protocol,
                   tmp_inet1,
                   tmp_inet2,
                   element.timestamp,
-                  STATE_DROP
-                  ) >= 511){
+                  STATE_DROP,
+                  OSFullname,
+                  AppFullname
+                  ) >= LONG_REQUEST_SIZE-1){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-                    g_warning("Building pgsql insert query, the 511 limit was reached!\n");
+                    g_warning("Building pgsql insert query, the LONG_REQUEST_SIZE limit was reached!\n");
+	g_free(OSFullname);
+		g_free(AppFullname);
                 return -1;
             }
+	g_free(OSFullname);
+		g_free(AppFullname);
             Result = PQexec(ld, request);
             if (!Result == PGRES_TUPLES_OK){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
@@ -480,7 +628,9 @@ if (snprintf(request,511,"INSERT INTO %s (username,user_id,oob_time_sec,ip_proto
                 return -1;
             }
             return 0;
+          }
         }
+        break;
     }
     //This return is just here to please GCC, will never be reached
     return 0;

@@ -1,5 +1,5 @@
 /*
- * Copyright(C) 2004 INL http://www.inl.fr/
+ * Copyright(C) 2004-2005 INL http://www.inl.fr/
  ** written by  Eric Leblond <regit@inl.fr>
  **             Vincent Deffontaines <vincent@inl.fr>
  **
@@ -15,716 +15,294 @@
  ** You should have received a copy of the GNU General Public License
  ** along with this program; if not, write to the Free Software
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
- **
- **
- ** In addition, as a special exception, the copyright holders give
- ** permission to link the code of portions of this program with the
- ** OpenSSL library under certain conditions as described in each
- ** individual source file, and distribute linked combinations
- ** including the two.
- ** You must obey the GNU General Public License in all respects
- ** for all of the code used other than OpenSSL.  If you modify
- ** file(s) with this exception, you may extend this exception to your
- ** version of the file(s), but you are not obligated to do so.  If you
- ** do not wish to do so, delete this exception statement from your
- ** version.  If you delete this exception statement from all source
- ** files in the program, then also delete it here.
- **
- */
-
-
- /* ====================================================================
- * Copyright (c) 1998-2001 The OpenSSL Project.  All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer. 
- *
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in
- *    the documentation and/or other materials provided with the
- *    distribution.
- *
- * 3. All advertising materials mentioning features or use of this
- *    software must display the following acknowledgment:
- *    "This product includes software developed by the OpenSSL Project
- *    for use in the OpenSSL Toolkit. (http://www.openssl.org/)"
- *
- * 4. The names "OpenSSL Toolkit" and "OpenSSL Project" must not be used to
- *    endorse or promote products derived from this software without
- *    prior written permission. For written permission, please contact
- *    openssl-core@openssl.org.
- *
- * 5. Products derived from this software may not be called "OpenSSL"
- *    nor may "OpenSSL" appear in their names without prior written
- *    permission of the OpenSSL Project.
- *
- * 6. Redistributions of any form whatsoever must retain the following
- *    acknowledgment:
- *    "This product includes software developed by the OpenSSL Project
- *    for use in the OpenSSL Toolkit (http://www.openssl.org/)"
- *
- * THIS SOFTWARE IS PROVIDED BY THE OpenSSL PROJECT ``AS IS'' AND ANY
- * EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE OpenSSL PROJECT OR
- * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
- * ====================================================================
- *
- * This product includes cryptographic software written by Eric Young
- * (eay@cryptsoft.com).  This product includes software written by Tim
- * Hudson (tjh@cryptsoft.com).
- *
  */
 
 #define _GNU_SOURCE
 #include <auth_srv.h>
-#include <proto.h>
 #include <crypt.h>
 #include <sys/time.h>
-
-#if 0
-
-typedef struct _auth_params {
-	char auth_type;
-	void * params;
-} auth_params;
-
-struct md5_params {
-	long u_packet_id;
-	char * password;
-};
-
-struct null_params {
-};
-
-struct up_datas {
-    u_int32_t ip_client;
-    char * dgram;
-};
-#endif
-
-/*
- * user_authsrv :
- * socket server for user client packet
- * Argument : None
- * Return : None
- */
-
-void* user_authsrv(){
-    int z;
-    int sck_inet;
-    struct sockaddr_in addr_inet,addr_clnt;
-    int len_inet;
-    char dgram[512];
-#if 0
-    struct up_datas userdatas;
-#endif
-
-    /* open the socket */
-    sck_inet = socket (AF_INET,SOCK_DGRAM,0);
-
-    if (sck_inet == -1)
-    {
-        g_error("socket()");
-        exit(-1);
-    }
-
-    memset(&addr_inet,0,sizeof addr_inet);
-
-    addr_inet.sin_family= AF_INET;
-    addr_inet.sin_port=htons(userpckt_port);
-    addr_inet.sin_addr.s_addr=client_srv.sin_addr.s_addr;
-
-    len_inet = sizeof addr_inet;
-
-    z = bind (sck_inet,
-        (struct sockaddr *)&addr_inet,
-        len_inet);
-    if (z == -1)
-    {
-        g_error ("user bind()");
-        exit(-1);
-    }
-
-
-    for(;;){
-        char *datas;
-        len_inet = sizeof addr_clnt;
-        z = recvfrom(sck_inet,
-            dgram,
-            sizeof dgram,
-            0,
-            (struct sockaddr *)&addr_clnt,
-            &len_inet);
-        if (z<0)
-        {
-            g_warning("user_pckt recvfrom()");
-            continue;
-        }
-        /* copy packet datas */
-        datas=g_new0(char,z);
-        memcpy(datas,dgram,z);
-        /* and send packet to thread */
-        g_thread_pool_push (user_checkers,
-            datas,	
-            NULL
-            );
-    }
-    close(sck_inet);
-
-    return NULL;
-}
-
-/* 
- * treat_user_request :
- * get RX paquet from a SSL client connection and send it to user authentication threads
- * Argument : SSL RX packet
- * Return : 1 if read done, EOF if read complete
- */
-static int
-treat_user_request (SSL* rx){
-    char * buf;
-
-    /* copy packet datas */
-    buf=g_new0(char,64);
-    if ( SSL_read(rx,buf,63) > 0 ){
-        g_thread_pool_push (user_checkers,
-            buf,	
-            NULL
-            );
-    } else {
-        return EOF;
-    }
-    return 1;
-}
+#include <sasl/saslutil.h>
 
 
 int sck_inet;
 
-/*
- * ssl_nuauth_cleanup :
- * cleaning when receiving exit signal
- * Argument : signal
- * Return : None
+/**
+ * get user datas (containing datagram) and goes till inclusion (or decision) on packet.
+ *
+ * - Argument 1 : datagram
+ * - Argument 2 : unused
+ * - Return : None
  */
 
-void ssl_nuauth_cleanup( int signal ) {
-    /* close socket */
-    close(sck_inet);
-    /* exit */
-    exit(0);
+void user_check_and_decide (gpointer userdata, gpointer data)
+{
+	connection * conn_elt=NULL;
+#ifdef DEBUG_ENABLE
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
+		g_message("entering user_check\n");
+#endif
+	conn_elt = userpckt_decode(userdata, BUFSIZE );
+	/* free userdata, packet is parsed now */
+	g_free(((struct buffer_read *)userdata)->buf);
+	g_free(userdata);
+	/* if OK search and fill */
+	if ( conn_elt != NULL ) {
+		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)){
+			g_message("User : ");
+			print_connection(conn_elt,NULL);
+		}
+		g_async_queue_push (connexions_queue,conn_elt);
+	}
+#ifdef DEBUG_ENABLE
+	else {
+		if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
+			g_message("User packet decoding failed\n");
+	}
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
+		g_message("leaving user_check\n");
+#endif
 }
 
-/*
- * ssl_user_authsrv :
- * SSL user packet server
- * Argument : None
- * Return : None
+/**
+ *decode user dgram packet and fill a connection with datas.
+ *
+ * - Argument 1 : datagram
+ * - Argument 2 : size of datagram
+ * - Return : pointer to newly allocated connection
  */
 
-void* ssl_user_authsrv(){
-    int z;
-    struct sigaction action;
-    struct sockaddr_in addr_inet,addr_clnt;
-    int len_inet;
-    int mx,n,c,r;
-    fd_set rx_set; /* read set */
-    fd_set wk_set; /* working set */
-    struct timeval tv;
-    FILE* c_stream;
-    SSL* ssl;
-    SSL_CTX* ctx;
-    BIO* sbio;
-    gpointer vpointer;
-    char *configfile=DEFAULT_CONF_FILE;
-    char* nuauth_ssl_key=NUAUTH_KEYFILE;
-    char* nuauth_ssl_key_passwd=NUAUTH_KEY_PASSWD;
-    confparams nuauth_ssl_vars[] = {
-        { "nuauth_ssl_key" , G_TOKEN_STRING , 0, NUAUTH_KEYFILE },
-        { "nuauth_ssl_key_passwd" , G_TOKEN_STRING , 0, NUAUTH_KEY_PASSWD },
-        { "nuauth_ssl_max_clients" , G_TOKEN_INT ,NUAUTH_SSL_MAX_CLIENTS, NULL }
-    };
-    GArray* client;
-    int nuauth_ssl_max_clients=NUAUTH_SSL_MAX_CLIENTS;
-#if 0
-    struct up_datas userdatas;
+connection * userpckt_decode(struct buffer_read * datas,int dgramsiz)
+{
+	char * dgram = datas->buf;
+	connection* connexion=NULL;
+	struct nuv2_header* header=(struct nuv2_header*)dgram;
+	gboolean multiclient_ok=FALSE;
+
+
+	/* decode dgram */
+	switch (header->proto) {
+		case 0x2:
+			{
+				if (header->msg_type == USER_REQUEST){
+					char* start=dgram+4;
+					connexion = g_new0( connection,1);
+					connexion->acl_groups=NULL;
+					connexion->user_groups=NULL;
+					connexion->appname=NULL;
+					connexion->appmd5=NULL;
+					connexion->username=NULL;
+					connexion->cacheduserdatas=NULL;
+
+					while (start<dgram+header->length){
+						struct nuv2_authreq* authreq=(struct nuv2_authreq* )start;
+						char *req_start=start;
+						req_start+=4;
+						while(req_start-start<authreq->packet_length){
+							struct nuv2_authfield* field=(struct nuv2_authfield* )req_start;
+							switch (field->type) {
+								case IPV4_FIELD:
+									{
+										struct nuv2_authfield_ipv4 * ipfield=(struct nuv2_authfield_ipv4 * )req_start; 
+
+										connexion->tracking_hdrs.saddr=ipfield->src;
+										connexion->tracking_hdrs.daddr=ipfield->dst;
+										connexion->tracking_hdrs.protocol=ipfield->proto;
+
+#ifdef DEBUG_ENABLE
+										if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
+											g_message("got IPV4 field");
 #endif
-    /* get config file setup */
-    /* parse conf file */
-    parse_conffile(configfile,sizeof(nuauth_ssl_vars)/sizeof(confparams),nuauth_ssl_vars);
-    /* set variable value from config file */
-    vpointer=get_confvar_value(nuauth_ssl_vars,sizeof(nuauth_ssl_vars)/sizeof(confparams),"nuauth_ssl_key");
-    nuauth_ssl_key=(char*)(vpointer?vpointer:nuauth_ssl_key);
-    vpointer=get_confvar_value(nuauth_ssl_vars,sizeof(nuauth_ssl_vars)/sizeof(confparams),"nuauth_ssl_key_passwd");
-    nuauth_ssl_key_passwd=(char*)(vpointer?vpointer:nuauth_ssl_key_passwd);
-    vpointer=get_confvar_value(nuauth_ssl_vars,sizeof(nuauth_ssl_vars)/sizeof(confparams),"nuauth_ssl_max_clients");
-    nuauth_ssl_max_clients=*(int*)(vpointer?vpointer:&nuauth_ssl_max_clients);
-
-    /* build array client */
-    client = g_array_new (FALSE, TRUE, sizeof (SSL*)); 
-    client = g_array_set_size(client,nuauth_ssl_max_clients);
-    /* Build our SSL context*/
-    ctx=initialize_ctx(nuauth_ssl_key,nuauth_ssl_key_passwd);
-    /* TODO */
-    //load_dh_params(ctx,DHFILE);
-    //
-    //
-    /* intercept SIGTERM */
-    action.sa_handler = ssl_nuauth_cleanup;
-    sigemptyset( & (action.sa_mask));
-    action.sa_flags = 0;
-    if ( sigaction( SIGTERM, & action , NULL ) != 0) {
-        printf("Error\n");
-        exit(1);
-    }
-
-    //open the socket
-    sck_inet = socket (AF_INET,SOCK_STREAM,0);
-
-    if (sck_inet == -1)
-    {
-        g_error("socket()");
-        exit(-1);
-    }
-
-    memset(&addr_inet,0,sizeof addr_inet);
-
-    addr_inet.sin_family= AF_INET;
-    addr_inet.sin_port=htons(userpckt_port);
-    addr_inet.sin_addr.s_addr=client_srv.sin_addr.s_addr;
-
-    len_inet = sizeof addr_inet;
-
-    z = bind (sck_inet,
-        (struct sockaddr *)&addr_inet,
-        len_inet);
-    if (z == -1)
-    {
-        g_error ("user bind()");
-        exit(-1);
-    }
-
-    /* Listen ! */
-    z = listen(sck_inet,20);
-    if (z == -1)
-    {
-        g_error ("user listen()");
-        exit(-1);
-    }
-
-    /* init fd_set */
-    FD_ZERO(&rx_set);
-    FD_ZERO(&wk_set);
-    FD_SET(sck_inet,&rx_set);
-    mx=sck_inet+1;
-
-    for(;;){
-
-        /*
-         * copy rx set to working set 
-         */
-
-        FD_ZERO(&wk_set);
-        for (z=0;z<mx;++z){
-            if (FD_ISSET(z,&rx_set))
-                FD_SET(z,&wk_set);
-        }
-
-        /*
-         * define timeout 
-         */
-
-        tv.tv_sec=2;
-        tv.tv_usec=30000;
-
-        n=select(mx,&wk_set,NULL,NULL,&tv);
-
-        if (n == -1) {
-            g_warning("select\n");
-            exit(1);
-        } else if (!n) {
-            continue;
-        }
-
-        /*
-         * Check if a connect has occured
-         */
-
-        if (FD_ISSET(sck_inet,&wk_set) ){
-            /*
-             * Wait for a connect
-             */
-            len_inet = sizeof addr_clnt;
-            c = accept (sck_inet,
-                (struct sockaddr *)&addr_clnt,
-                &len_inet);
-            if (c == -1)
-                g_warning("accept");
-
-            if ( c >= nuauth_ssl_max_clients) {
-                close(c);
-                continue;
-            }
-
-            /*
-             * create stream
-             */
-
-            c_stream = fdopen(c,"r");
-            if ( !c_stream ) {
-                close(c);
-                continue;
-            }
-
-            /*
-             * Initiate SSL for this client
-             */
-            sbio=BIO_new_socket(c,BIO_NOCLOSE);
-            ssl=SSL_new(ctx);
-            SSL_set_bio(ssl,sbio,sbio);
-
-            if((r=SSL_accept(ssl)<=0))
-                berr_exit("SSL accept error");
-
-            g_array_insert_val(client,c,ssl);
-
-            if ( c+1 > mx )
-                mx = c + 1;
-
-            /*
-             * change FD_SET
-             */
-
-            FD_SET(c,&rx_set);
-        }
-
-        /*
-         * check for client activity
-         */
-        for ( c=0; c<mx; ++c) {
-            if ( c == sck_inet )
-                continue;
-            if ( FD_ISSET(c,&wk_set) ) {
-                if (treat_user_request((SSL*)g_array_index (client , SSL*, c)) == EOF) {
-                    SSL_shutdown((SSL*)g_array_index (client , SSL*, c));
-                    FD_CLR(c,&rx_set);
-                }
-            }
-        }
-
-        for ( c = mx - 1;
-            c >= 0 && !FD_ISSET(c,&rx_set);
-            c = mx -1 )
-            mx = c;
-    }
-    close(sck_inet);
-
-    return NULL;
-}
-
-/*
- * user_check_and_decide :
- * get user datagram and goes till inclusion (or decision) on packet
- * Argument 1 : datagram
- * Argument 2 : unused
- * Return : None
- */
-
-void user_check_and_decide (gpointer userdata, gpointer data){
-    connection * conn_elt=NULL;
-
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-        g_message("entering user_check\n");
-    conn_elt = userpckt_decode((char *)userdata, 
-        512);
-    /* free userdata, packet is parsed now */
-    g_free(userdata);
-    /* if OK search and fill */
-    if ( conn_elt != NULL ) {
-        g_async_queue_push (connexions_queue,conn_elt);
-    } else {
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
-            g_message("User packet decoding failed\n");
-    }
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-        g_message("leaving user_check\n");
-}
-
-/*
- * userpckt_decode :
- * decode user dgram packet and fill a connection with datas
- * Argument 1 : datagram
- * Argument 2 : size of datagram
- * Return : pointer to newly allocated connection
- */
-
-connection * userpckt_decode(char* dgram,int dgramsiz){
-    long u_packet_id;
-    char *pointer;
-    connection* connexion;
-    char passwd[128];
-    char md5datas[512];
-    char *usermd5datas;
-    struct in_addr oneip;
-    char onaip[16];
-    char *result;
-    u_int16_t firstf,lastf;
-    struct crypt_data * crypt_internal_datas=g_private_get (crypt_priv);
-    /* decode dgram */
-    switch (*dgram) {
-      case 0x1:
-        if ( *(dgram+1) == USER_REQUEST) {
-            /* allocate connection */
-            connexion = g_new0( connection,1);
-            connexion->acl_groups=NULL;
-            connexion->user_groups=NULL;
-            if (connexion == NULL){
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_USER)){
-                    g_message("Can not allocate connexion\n");
-                }
-                return NULL;
-            }
-
-            /* parse packet */
-            pointer=dgram+2;
-            connexion->user_id=*(u_int16_t *)(pointer);
-            pointer+=sizeof (u_int16_t);
-            connexion->tracking_hdrs.saddr=(*(u_int32_t * )(pointer));
-#if 0
-            if ( connexion->tracking_hdrs.saddr != ntohl(addr_clnt) ){
-                g_warning("client addr (%lu) != source addr (%lu) !\n",connexion->tracking_hdrs.saddr, addr_clnt);
-                return NULL;
-            } 
+										switch (connexion->tracking_hdrs.protocol) {
+											case IPPROTO_TCP:
+												connexion->tracking_hdrs.source=ipfield->sport;
+												connexion->tracking_hdrs.dest=ipfield->dport;
+												connexion->tracking_hdrs.type=0;
+												connexion->tracking_hdrs.code=0;
+												break;
+											case IPPROTO_UDP:
+												connexion->tracking_hdrs.source=ipfield->sport;
+												connexion->tracking_hdrs.dest=ipfield->dport;
+												connexion->tracking_hdrs.type=0;
+												connexion->tracking_hdrs.code=0;
+												break;
+											case IPPROTO_ICMP:
+												connexion->tracking_hdrs.source=0;
+												connexion->tracking_hdrs.dest=0;
+												connexion->tracking_hdrs.type=ipfield->sport;
+												connexion->tracking_hdrs.code=ipfield->dport;
+												break;
+										}
+									}
+									break;
+								case APP_FIELD:
+									{
+										struct nuv2_authfield_app * appfield=(struct nuv2_authfield_app* )req_start; 
+#ifdef DEBUG_ENABLE
+										if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
+											g_message("got APP field");
 #endif
-            pointer+=sizeof (u_int32_t);
-            connexion->tracking_hdrs.daddr=(*(u_int32_t * )(pointer));
-            pointer+=sizeof (u_int32_t);
-            connexion->tracking_hdrs.protocol=*(u_int8_t *)(pointer);
-            pointer+= sizeof (u_int8_t);
-            /* PROV : swap FLAGS as no client use it ...*/
-            pointer+=3 * sizeof (u_int8_t);
-            switch (connexion->tracking_hdrs.protocol) {
-              case IPPROTO_TCP:
-                connexion->tracking_hdrs.source=(*(u_int16_t *)pointer);
-                pointer+=sizeof (u_int16_t);
-                connexion->tracking_hdrs.dest=(*(u_int16_t *)pointer);
-                pointer+=sizeof (u_int16_t);
-                connexion->tracking_hdrs.type=0;
-                connexion->tracking_hdrs.code=0;
-                break;
-              case IPPROTO_UDP:
-                connexion->tracking_hdrs.source=(*(u_int16_t *)pointer);
-                pointer+=sizeof (u_int16_t);
-                connexion->tracking_hdrs.dest=(*(u_int16_t *)pointer);
-                pointer+=sizeof (u_int16_t);
-                connexion->tracking_hdrs.type=0;
-                connexion->tracking_hdrs.code=0;
-                break;
-              case IPPROTO_ICMP:
-                connexion->tracking_hdrs.source=0;
-                connexion->tracking_hdrs.dest=0;
-                connexion->tracking_hdrs.type=*(u_int8_t *)(pointer);
-                pointer+=sizeof(u_int8_t);
-                connexion->tracking_hdrs.code=*(u_int8_t *)(pointer);
-                pointer+=3;
-                break;
-            }
-            /* get timestamp */
-            connexion->timestamp=*(long *)(pointer);
-            pointer+=sizeof(long);
-            /* get random number */
-            u_packet_id=*(long *)(pointer);
-            pointer+=sizeof(long);
-            /* get user md5datas */
-            usermd5datas=strndup(pointer,34);
+										switch (appfield->option) {
+											default:
+												{
+													unsigned int len=appfield->length-4;
+													unsigned int reallen=0;
+													gchar* dec_appname=NULL;
 
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)){
-                g_message("User "); 
-                print_connection(connexion,NULL);
-            }
+													if (8*len > 2048){
+														/* it is reaaally long, we ignore packet (too lasy to kill client) */
+														if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
+															g_warning("user packet announced a too long app name\n");
+														free_connection(connexion);
+														return NULL;
+													}
+													dec_appname =	g_new0(gchar,8*len);
+													if (sasl_decode64((char*)appfield+4,len, dec_appname,8*len,&reallen) 
+															==
+															SASL_BUFOVER) {
+														dec_appname=g_try_realloc(dec_appname,reallen+1);
+														if (dec_appname)
+															sasl_decode64((char*)appfield+4,len, dec_appname,reallen,&reallen) ;
+													} else {
+														dec_appname=g_try_realloc(dec_appname,reallen+1);
+													}
+													dec_appname[reallen]=0;
 
-            /* get user datas : password, groups (filled in) */
-            connexion->user_groups = (*module_user_check) (connexion,passwd);
-            if (connexion->user_groups == NULL) {
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
-                    g_message("user_check return is bad\n");
-                free_connection(connexion);
-                return NULL;
-            }
+													if (dec_appname != NULL)
+													{
+														connexion->appname= string_escape(dec_appname);
+														if (connexion->appname == NULL)
+															if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
+																g_warning("user packet received an invalid app name\n");
+													}else
+														connexion->appname=NULL;
+													g_free(dec_appname);
+													connexion->appmd5=NULL;
 
-            /*
-             * check MD5 crypt 
-             */
+												}
 
-            /* construct md5datas */
-            oneip.s_addr=htonl(connexion->tracking_hdrs.saddr);
-            strncpy(onaip,inet_ntoa(oneip),16);
-            oneip.s_addr=htonl(connexion->tracking_hdrs.daddr);
-
-            if (connexion->tracking_hdrs.protocol != IPPROTO_ICMP) {
-                firstf=connexion->tracking_hdrs.source;
-                lastf=connexion->tracking_hdrs.dest;
-            } else {
-                firstf=connexion->tracking_hdrs.type;
-                lastf=connexion->tracking_hdrs.code;
-            }
-
-            snprintf(md5datas,512,
-                "%s%u%s%u%ld%ld%s",
-                onaip,
-                firstf,
-                inet_ntoa(oneip),
-                lastf,
-                connexion->timestamp,
-                u_packet_id,
-                passwd);
-
-            /* initialisation stuff */
-            if (crypt_internal_datas == NULL){
-                crypt_internal_datas=g_new0(struct crypt_data,1);
-                g_private_set(crypt_priv,crypt_internal_datas);
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
-                    g_message("Initiating crypt internal structure");
-            }
-            /* crypt datas */
-            result = crypt_r(md5datas,usermd5datas,crypt_internal_datas);
-            /* compare the two crypted datas */
-            if ( strcmp (result, usermd5datas) != 0 ) {
-                /* bad sig dropping user packet ! */
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_USER))
-                    g_message("wrong md5 sig for packet %s \n",usermd5datas);
-                free(usermd5datas);
-                free_connection(connexion);
-                return NULL;
-            } else {
-                free(usermd5datas);
-                /* 
-                 * md5 done !
-                 */
-
-                /* Is it a try to spoof MD5 ? */
-
-                /* set some default on connexion */
-                if (check_fill_user_counters(connexion->user_id,connexion->timestamp,u_packet_id,connexion->tracking_hdrs.saddr)){	
-                    /* first reset timestamp to now */
-                    connexion->timestamp=time(NULL);
-                    connexion->state=STATE_USERPCKT;
-                    /* acl part is NULL */
-                    connexion->packet_id=NULL;
-                    connexion->acl_groups=NULL;
-                    /* Tadaaa */
-                    return connexion;
-                } else {
-                    if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
-                        g_message("Bad user packet\n");
-                    free_connection(connexion);
-                    return NULL;
-                }
-            }
-        }
-#if 0
-      case 0x2:
-        if ( *(dgram+1) == USER_REQUEST) {
-            u_int16_t total_len=0; 
-            char * payload=dgram;
-            /* allocate connection */
-            connexion = g_new0( connection,1);
-            if (connexion == NULL){
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_USER)){
-                    g_message("Can not allocate connexion\n");
-                }
-                return NULL;
-            }
-
-            /* mini init struct */
-            connexion->lock=NULL;
-            /* parse packet */
-            pointer=dgram+2;
-            total_len=*(u_int16_t *)(pointer);
-            if (total_len > dgram_siz){
-                /* big oops */
-                return NULL;
-            } 
-
-            pointer+=sizeof (u_int16_t);
-#if 0
-            if ( connexion->tracking_hdrs.saddr != ntohl(addr_clnt) ){
-                g_warning("client addr (%lu) != source addr (%lu) !\n",connexion->tracking_hdrs.saddr, addr_clnt);
-                return NULL;
-            } 
+										}
+									}
+									break;
+								case USERNAME_FIELD:
+									{
+										struct nuv2_authfield_username * usernamefield=(struct nuv2_authfield_username* )req_start; 
+#ifdef DEBUG_ENABLE
+										if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
+											g_message("got Username field");
 #endif
+										if (header->option == 0x1) {
+											switch (usernamefield->option) {
+												default:
+													{
+														unsigned int len=usernamefield->length-4;
+														unsigned int reallen=0;
+														gchar* dec_fieldname=NULL;
 
-            /* iter on Field till we're inferior to total length */
-            while (pointer - dgram < total_len){ 
-                int field_length=*(u_int16_t *)(pointer+2);
-                /* check if field length is coherent with respect to total length */
-                if (pointer - dgram + field_length <= total_len) {
-                    /* get field_type field_flag */
-                    u_int8_t field_type=*(u_int8_t *)(pointer);
-                    u_int8_t field_flag=*(u_int8_t *)(pointer+1);
-                    char * field_datas=pointer+4;
-                    /* treat following field type */
-                    switch (field_type){
-                      case PACKET_FIELD:
-			      /* fill IP headers */
-                        parse_packet_field(field_datas,connexion);
-                        break;
-                      case USERNAME_FIELD:
-                        /* we need to fill userid and password */
-                        parse_username_field(field_datas,connexion,password);
-                        break;
-                      case AUTHENTICATION_FIELD:
-			/* we get packet_id timestamp */
-                        parse_authentication_field(field_datas,connexion,packet_id);
-                        break;
-                      default:
-                        if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
-                            g_message("Bad user packet, unknown field type\n");
-                        free_connection(connexion);
-                        return NULL;
-                        break;
-                    }
-                } else {
-                    if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
-                        g_message("Bad user packet, announced length is wrong\n");
-                    free_connection(connexion);
-                    return NULL;
-                }
-                pointer+=field_length;
-            }
-            /* check authentication */
-            /* if ( check_md5_sig(connection * connexion,u_int16_t u_packet_id,char *passwd )){ */
-            if ( check_authentication(connection * connexion,auth_params * pckt_params)){
-                /* set some default on connexion */
-                if (check_fill_user_counters(connexion->user_id,connexion->timestamp,u_packet_id,connexion->tracking_hdrs.saddr)){	
-                    /* first reset timestamp to now */
-                    connexion->timestamp=time(NULL);
-                    connexion->state=STATE_USERPCKT;
-                    /* acl part is NULL */
-                    connexion->packet_id=NULL;
-                    connexion->acl_groups=NULL;
-                    /* Tadaaa */
-                    return connexion;
-                } else {
-                    if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
-                        g_message("Bad user packet\n");
-                    free_connection(connexion);
-                    return NULL;
-                }
-            }
-        }
-#endif
-    }
-    return NULL;
+														if (8*len > 2048){
+															/* it is reaaally long, we ignore packet (too lasy to kill client) */
+															if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
+																g_warning("user packet announced a too long user name\n");
+															free_connection(connexion);
+															return NULL;
+														}
+														dec_fieldname =	g_new0(gchar,8*len);
+														if (sasl_decode64((char*)usernamefield+4,len, dec_fieldname,8*len,&reallen) 
+																==
+																SASL_BUFOVER) {
+															dec_fieldname=g_try_realloc(dec_fieldname,reallen+1);
+															if (dec_fieldname)
+																sasl_decode64((char*)usernamefield+4,len, dec_fieldname,reallen,&reallen) ;
+														} else {
+															dec_fieldname=g_try_realloc(dec_fieldname,reallen+1);
+														}
+														dec_fieldname[reallen]=0;
+
+														if (dec_fieldname != NULL)
+														{
+															connexion->username= string_escape(dec_fieldname);
+															if (connexion->username == NULL)
+																if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
+																	g_warning("user packet received an invalid username\n");
+														}else {
+															g_free(dec_fieldname);
+															free_connection(connexion);
+															if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER)){
+																g_message("rejected packet, invalid username field");
+															}
+															return NULL;
+														}
+														g_free(dec_fieldname);
+													}
+											}
+											multiclient_ok=TRUE;
+										} else {
+											/* should not be here */
+											free_connection(connexion);
+											if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER)){
+												g_message("not multiuser client but sent username field");
+											}
+											return NULL;
+										}
+
+									}
+									break;
+								default:
+									if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
+										g_message("unknown field type : %d",field->type);
+									free_connection(connexion);
+									return NULL;
+							}
+							req_start+=field->length;
+						}
+						start+=authreq->packet_length;
+					}
+				}
+				/* here all packet related information are filled-in */
+				if (connexion->username == NULL){	
+					connexion->username=datas->userid;
+				}
+				connexion->user_id=datas->uid;
+				connexion->user_groups = datas->groups;
+				connexion->sysname=datas->sysname;
+				connexion->release=datas->release;
+				connexion->version=datas->version;
+				if (connexion->user_groups == NULL) {
+					if ((header->option == 0x1) && multiclient_ok) {
+						if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
+							g_message("Get users info");
+						/* group is not fill in multi users mode
+						 * need to be done now */
+						if ( nuauth_user_cache ){
+							get_users_from_cache(connexion);
+						} else {
+            						if ((*module_user_check)(connexion->username,NULL,0,&(connexion->user_id),&(connexion->user_groups))!=SASL_OK){
+								  if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_PACKET)){
+						                    g_message("User not found");
+                						}
+
+							}
+						}
+					} else {
+						if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
+							g_message("User_check return is bad");
+						free_connection(connexion);
+						return NULL;
+					}
+				}
+				/* first reset timestamp to now */
+				connexion->timestamp=time(NULL);
+				connexion->state=STATE_USERPCKT;
+				/* acl part is NULL */
+				connexion->packet_id=NULL;
+				connexion->acl_groups=NULL;
+
+				/* Tadaaa */
+				return connexion;
+			}
+		default:
+			if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
+				g_message("unsupported protocol");
+
+	}
+	return NULL;
 }

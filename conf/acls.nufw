@@ -1,0 +1,90 @@
+
+# ACLs file for the plaintext module
+#
+
+# Each ACL begins with an identifier [ACLname]
+# [Sample ACL]
+# decision=1            # decision if the rule matches (default: 0)
+# gid=100,101           # which groups are concerned
+# gid=103               # several lines can be used
+# proto=6               # TCP (only 1 proto allowed per ACL, of course)
+# SrcIP=10.10.0.1       # Source IP, equivalent to 10.10.0.1/32
+# SrcPort=1024-65535    # List of source ports (a single port is ok)
+# DstIP=10.10.0.5       # Destination IP address
+# DstIP=10.10.0.8, 10.10.1.0/24 # There can be several IP addresses/lines
+# DstPort=5150-5153     # List of destination ports
+# DstPort=22,25         # There can be several lines
+#
+## * Note: ports (SrcPort, DstPort) are optional.  If none is specified,
+##   any port can match the ACL.
+#
+#
+## * Application filtering
+#  App=/usr/bin/perl
+## * Application filtering with checksum
+#  App=/usr/bin/perl ; 77bfd8adecec9cd4fb941cabb8f7877b
+## * Several apps can be given
+#  App=/usr/bin/ssh
+#
+#
+## * OS checking
+#  OS = Linux
+## * You can give the kernel release...
+#  OS = Linux ; 2.6.8
+## * ... and the kernel version:
+#  OS = Linux ; 2.6.8 ; #3 Fri Aug 27 20:37:38 CEST 2004
+## * (Several OS can be given)
+#
+#
+
+
+
+# Sample test declaration
+
+[ssh]
+decision=1 
+gid=100
+proto=6
+SrcIP=0.0.0.0/0
+SrcPort=1024-65535
+DstIP=0.0.0.0/0
+DstPort=22
+App=/usr/bin/ssh
+OS=Linux
+
+[web]
+decision=1 
+gid=102
+proto=6
+SrcIP=0.0.0.0/0
+SrcPort=1024-65535
+DstIP=0.0.0.0/0
+DstPort=80
+
+[web 2]
+decision=1 
+gid=102
+proto=6
+SrcIP=0.0.0.0/0
+SrcPort=1024-65535
+DstIP=0.0.0.0/0
+DstPort=443
+
+[ftp]
+decision=1 
+gid=102,103
+proto=6
+SrcIP=0.0.0.0/0
+SrcPort=1024-65535
+DstIP=0.0.0.0/0
+DstPort=21
+
+[full]
+decision=1 
+gid=103
+proto=6
+SrcIP=0.0.0.0/0
+SrcPort=1024-65535
+DstIP=0.0.0.0/0
+
+

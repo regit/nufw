@@ -1,1 +1,1 @@
-SUBDIRS = nutcpc lib
+SUBDIRS = lib nutcpc

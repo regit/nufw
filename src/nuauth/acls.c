@@ -1,0 +1,321 @@
+/* 
+ ** Copyright(C) 2004,2005 INL
+ ** Written by Eric Leblond <regit@inl.fr>
+ **
+ ** This program is free software; you can redistribute it and/or modify
+ ** it under the terms of the GNU General Public License as published by
+ ** the Free Software Foundation, version 2 of the License.
+ **
+ ** This program is distributed in the hope that it will be useful,
+ ** but WITHOUT ANY WARRANTY; without even the implied warranty of
+ ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ ** GNU General Public License for more details.
+ **
+ ** You should have received a copy of the GNU General Public License
+ ** along with this program; if not, write to the Free Software
+ ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
+
+#include <auth_srv.h>
+#include <jhash.h>
+#include "cache.h"
+
+/**
+ * identify a acl in the cache
+ */
+struct acl_key {
+	tracking* acl_tracking;
+	/** operating system name. */
+	gchar * sysname;
+	/** operating system release. */
+	gchar * release;
+	/** operating system version. */
+	gchar * version;
+	/** application name.
+	 *
+	 * application full path
+	 */
+	gchar * appname;
+	/** application md5sum.
+	 *
+	 * md5sum of the binary which send the packet
+	 */
+	gchar * appmd5;
+};
+
+/**
+ * Function used for connection hash.
+ * 
+ * Params : a "struct acl_key"
+ * Return : the associated key
+ */
+
+inline  guint hash_acl(gconstpointer key)
+{
+	tracking* headers=((struct acl_key*)key)->acl_tracking;
+	return (jhash_3words(headers->saddr,
+				(headers->daddr ^ headers->protocol),
+				(headers->dest << 16),
+				32));
+}
+
+/**
+ * Internal string comparison function
+ */
+
+gint nstrcmp(gchar* a,gchar* b){
+	if (a == NULL ) {
+		if (b==NULL)
+			return FALSE;
+		else
+			return TRUE;
+	} else {
+		if (b)	
+			return strcmp(a,b);
+		else
+			return TRUE;
+	}
+}
+
+
+/**
+ * Find if two acls decision are equal.
+ * 
+ * Params : two ip headers
+ * Return : TRUE is ip headers are equal, FALSE otherwise
+ */
+
+gboolean compare_tracking(gconstpointer tracking_hdrs1, gconstpointer tracking_hdrs2){
+	/* compare IPheaders */
+	if (        ( ((tracking *) tracking_hdrs1)->saddr ==
+				((tracking *) tracking_hdrs2)->saddr ) ){
+
+		/* compare proto */
+		if (((tracking *) tracking_hdrs1)->protocol ==
+				((tracking *) tracking_hdrs2)->protocol) {
+
+			/* compare proto headers */
+			switch ( ((tracking *) tracking_hdrs1)->protocol) {
+				case IPPROTO_TCP:
+					if (  ((tracking *) tracking_hdrs1)->dest ==
+							((tracking *) tracking_hdrs2)->dest 
+					   ){
+						if ( ((tracking *) tracking_hdrs1)->daddr ==
+								((tracking *) tracking_hdrs2)->daddr ) 
+							return TRUE;
+
+					}
+					break;
+				case IPPROTO_UDP:
+					if (  ((tracking *)tracking_hdrs1)->dest ==
+							((tracking *)tracking_hdrs2)->dest ){
+
+						if ( ((tracking *) tracking_hdrs1)->daddr ==
+								((tracking *) tracking_hdrs2)->daddr ) 
+							return TRUE;
+					}
+					break;
+				case IPPROTO_ICMP:
+					if ( ( ((tracking *)tracking_hdrs1)->type ==
+								((tracking *)tracking_hdrs2)->type )   &&
+							( ((tracking *)tracking_hdrs1)->code ==
+							  ((tracking *)tracking_hdrs2)->code ) ){
+						if ( ((tracking *) tracking_hdrs1)->daddr ==
+								((tracking *) tracking_hdrs2)->daddr ) 
+							return TRUE;
+					}
+					break;
+			}
+		}
+	}
+	return FALSE;
+}
+
+gboolean compare_acls(gconstpointer acl_key1, gconstpointer acl_key2){
+	if (compare_tracking((( struct acl_key*)acl_key1)->acl_tracking,((struct acl_key*) ((struct acl_key*)acl_key2))->acl_tracking)){
+		if (nstrcmp(((struct acl_key*)acl_key1)->appname,((struct acl_key*)acl_key2)->appname))
+			return FALSE;
+		if (nstrcmp(((struct acl_key*)acl_key1)->appmd5,((struct acl_key*)acl_key2)->appmd5))
+			return FALSE;
+		if (nstrcmp(((struct acl_key*)acl_key1)->sysname,((struct acl_key*)acl_key2)->sysname))
+			return FALSE;
+		if (nstrcmp(((struct acl_key*)acl_key1)->release,((struct acl_key*)acl_key2)->release))
+			return FALSE;
+		if (nstrcmp(((struct acl_key*)acl_key1)->version,((struct acl_key*)acl_key2)->version))
+			return FALSE;
+		return TRUE;
+	}
+	return FALSE;
+}
+
+void free_acl_key(gpointer datas)
+{
+	struct acl_key * kdatas=(struct acl_key*)datas;
+	g_free(kdatas->acl_tracking);
+	if (kdatas->sysname)
+		g_free(kdatas->sysname);
+	if (kdatas->release)
+		g_free(kdatas->release);
+	if (kdatas->version)
+		g_free(kdatas->version);
+	if (kdatas->appname)
+		g_free(kdatas->appname);
+	if (kdatas->appmd5)
+		g_free(kdatas->appmd5);
+
+	g_free(kdatas);
+}
+
+void free_acl_group(gpointer data,gpointer userdata){
+	if (data){
+		g_slist_free(((struct acl_group*)(data))->groups);
+		g_free(data);
+	}
+}
+
+
+void free_acl_struct(gpointer data,gpointer userdata){
+	if (data){
+		g_slist_foreach((GSList*)data,(GFunc) free_acl_group,NULL);
+		g_slist_free((GSList*)data);
+	}
+}
+
+/**
+ * destroy function for acl cache datas.
+ * hash value is a gslist of entry
+ */
+void free_acl_cache(gpointer datas)
+{
+	GSList * dataslist=((struct cache_element *)datas)->datas;
+	if ( dataslist  != NULL ){
+		g_slist_foreach(dataslist,(GFunc) free_cache_elt,free_acl_struct);
+		g_slist_free (dataslist);
+	}
+	g_free(datas);
+}
+
+struct acl_key* acl_create_key(connection *kdatas)
+{
+	struct acl_key * key=g_new0(struct acl_key,1);
+	key->acl_tracking=&(kdatas->tracking_hdrs);
+	key->sysname=kdatas->sysname;
+	key->release=kdatas->release;
+	key->version=kdatas->version;
+	key->appname=kdatas->appname;
+	key->appmd5=kdatas->appmd5;
+	return key;
+}
+
+gpointer acl_create_and_alloc_key(connection* kdatas)
+{
+	struct acl_key key;
+	key.acl_tracking=&(kdatas->tracking_hdrs);
+	key.sysname=kdatas->sysname;
+	key.release=kdatas->release;
+	key.version=kdatas->version;
+	key.appname=kdatas->appname;
+	key.appmd5=kdatas->appmd5;
+	return acl_duplicate_key(&key);
+}
+
+
+gpointer acl_duplicate_key(gpointer datas)
+{
+	struct acl_key * key=g_new0(struct acl_key,1);
+	struct acl_key * kdatas=(struct acl_key*)datas;
+	tracking* ktracking=g_new0(tracking,1);
+	memcpy(ktracking,kdatas->acl_tracking,sizeof( tracking));
+	key->acl_tracking=ktracking;
+	if(kdatas->sysname){
+		key->sysname=g_strdup(kdatas->sysname);
+	} else
+		key->sysname=NULL;
+	if(kdatas->release)
+		key->release=g_strdup(kdatas->release);
+	else
+		key->release=NULL;
+	if(kdatas->version)
+		key->version=g_strdup(kdatas->version);
+	else
+		key->version=NULL;
+	if(kdatas->appname)
+		key->appname=g_strdup(kdatas->appname);
+	else
+		key->appname=NULL;
+	if(kdatas->appmd5)
+		key->appmd5=g_strdup(kdatas->appmd5);
+	else
+		key->appmd5=NULL;
+	return key;
+}
+
+/**
+ * ask the acl cache information about a received packet.
+ *
+ */
+void get_acls_from_cache (connection* conn_elt)
+{
+	struct cache_message message;
+	/* Going to ask to the cache */
+	/* prepare message */
+	message.type=CACHE_GET;
+	message.key=acl_create_key(conn_elt);
+	message.datas=NULL;
+	message.reply_queue=g_private_get(aclqueue);
+	if (message.reply_queue==NULL){
+		message.reply_queue=g_async_queue_new();
+		g_private_set(aclqueue,message.reply_queue);
+	}
+	/* send message */
+#ifdef DEBUG_ENABLE
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET))
+		g_message("[acl cache] going to send cache request\n");
+#endif
+	g_async_queue_push (acl_cache->queue,&message);
+	/* lock */
+	g_atomic_int_inc(&(myaudit->cache_req_nb));
+	/*release */
+#ifdef DEBUG_ENABLE
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET))
+		g_message("[acl cache] request sent\n");
+#endif
+	/* wait for answer */
+	conn_elt->acl_groups=g_async_queue_pop(message.reply_queue);
+
+	if (conn_elt->acl_groups == null_queue_datas){
+		conn_elt->acl_groups=NULL;
+	} 
+#ifdef DEBUG_ENABLE
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET))
+		g_message("[acl cache] check if answer is NULL");
+#endif
+	if (conn_elt->acl_groups==null_message){
+		struct cache_message * rmessage;
+		/* cache wants an update 
+		 * external check of acl */
+		external_acl_groups(conn_elt);
+
+#ifdef DEBUG_ENABLE
+		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)){
+			g_message("[acl cache] We are about to search entry\n");
+		}
+#endif
+		rmessage = g_new0(struct cache_message,1);
+		rmessage->type = CACHE_PUT;
+		rmessage->key = acl_duplicate_key(message.key);
+		rmessage->datas = conn_elt->acl_groups;
+		rmessage->reply_queue = NULL;
+#ifdef DEBUG_ENABLE
+		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET))
+			g_message("[acl cache] answering for key %p\n",rmessage->key);
+#endif
+		/* reply to the cache */
+		g_async_queue_push(acl_cache->queue,rmessage);
+	} else {
+		g_atomic_int_inc(&(myaudit->cache_hit_nb));
+	}
+	/* free initial key */
+	g_free(message.key);
+}
+

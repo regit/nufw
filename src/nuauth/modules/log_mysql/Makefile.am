@@ -10,7 +10,10 @@ plugin_LTLIBRARIES = libmysql.la
 
 libmysql_la_SOURCES = mysql.c
 
-LIBS = $(GLIB_LIBS) -lmysqlclient
+libmysql_la_LIBADD = -lmysqlclient
+
+libmysql.la: $(libmysql_la_OBJECTS) $(libmysql_la_DEPENDENCIES) 
+	$(LINK) $(am_libmysql_la_rpath) $(libmysql_la_LDFLAGS) $(libmysql_la_OBJECTS) $(libmysql_la_LIBADD)
 
 endif
 
