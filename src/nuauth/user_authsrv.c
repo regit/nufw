@@ -123,8 +123,9 @@ void ssl_nuauth_cleanup( int signal ) {
     exit(0);
 }
 
-
-
+/*
+ * SSL user packet server
+ */
 
 void* ssl_user_authsrv(){
 	int z;
