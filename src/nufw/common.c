@@ -1,4 +1,4 @@
-/* $Id: common.c,v 1.2 2003/09/23 23:09:37 gryzor Exp $ */
+/* $Id: common.c,v 1.3 2003/10/21 23:06:05 regit Exp $ */
 
 /*
 **
@@ -42,9 +42,7 @@ int psuppress (packet_idl * previous,packet_idl * current){
    then we also suppress the first element which is the older
    return : pointer to last element
 */
-unsigned long padd (unsigned long packet_id,long timestamp){
-  unsigned long pcktid=packet_id;
-  packet_idl *current=NULL;
+unsigned long padd (packet_idl *current){
   if (track_size - packets_list_length < 10){
     /* suppress first element */
     if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_MAIN)){
@@ -56,43 +54,37 @@ unsigned long padd (unsigned long packet_id,long timestamp){
     }
     psuppress (NULL,packets_list_start);
   }
-  current=calloc(1,sizeof( packet_idl));
-  if (current == NULL){
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_MAIN)){
-      if (log_engine == LOG_TO_SYSLOG) {
-        syslog(SYSLOG_FACILITY(DEBUG_LEVEL_MESSAGE),"Can not allocate packet_id");
-      }else {
-        printf("[%i] Can not allocate packet_id\n",getpid());
-      } 
-    }
-    return 0;
-  }
+
   packets_list_length++;
   current->next=NULL;
-  current->id=packet_id;
-  if (timestamp == 0){
+
+  if (current->timestamp == 0){
     current->timestamp=time(NULL);
-  } else {
-    current->timestamp=timestamp;
-  }
+  } 
+
   if ( packets_list_end != NULL )
     packets_list_end->next=current;
   packets_list_end = current;
   if ( packets_list_start == NULL)
     packets_list_start = current;
-  return pcktid;
+  return current->id;
 }
 
 
 /* called by authsrv */
 
-/* search an entry, create it if not exists, suppress it if exists*/
-int psearch_and_destroy (unsigned long packet_id){
+/* search an entry, create it if not exists, suppress it if exists
+   return mark if libipq is allright
+*/
+int psearch_and_destroy (unsigned long packet_id,unsigned long * nfmark){
   packet_idl *packets_list=packets_list_start,* previous=NULL;
   int timestamp=time(NULL);
 
   while (packets_list != NULL) {
     if ( packets_list->id == packet_id){
+#ifdef HAVE_LIBIPQ_MARK
+      *nfmark=packets_list->nfmark;
+#endif
       psuppress (previous,packets_list);
       return 1;
     } else 

@@ -1,4 +1,4 @@
-/* $Id: packetsrv.c,v 1.3 2003/09/24 07:34:04 regit Exp $ */
+/* $Id: packetsrv.c,v 1.4 2003/10/21 23:06:05 regit Exp $ */
 
 /*
 ** Copyright (C) 2002 Eric Leblond <eric@regit.org>
@@ -28,14 +28,11 @@ void* packetsrv(){
   int size;
   unsigned long pcktid;
   ipq_packet_msg_t *msg_p = NULL ;
-
+  packet_idl * current;
  
   for (;;){
-    //printf ("Waiting packet !\n");
     size = ipq_read(hndl,buffer,sizeof(buffer),0);
-    
     if (size != -1){
-      //  printf("packetsrv at work\n");
       if (size < BUFSIZ ){
 	if (ipq_message_type(buffer) == NLMSG_ERROR ){
           if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_MAIN)){
@@ -48,14 +45,31 @@ void* packetsrv(){
 	} else {
 	  if ( ipq_message_type (buffer) == IPQM_PACKET ) {
 	    pckt_rx++ ;
-	    //printf("Working on IP packet\n");
+	    /* printf("Working on IP packet\n"); */
 	    msg_p = ipq_get_packet(buffer);
+	    current=calloc(1,sizeof( packet_idl));
+	    if (current == NULL){
+	      if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_MAIN)){
+		if (log_engine == LOG_TO_SYSLOG) {
+		  syslog(SYSLOG_FACILITY(DEBUG_LEVEL_MESSAGE),"Can not allocate packet_id");
+		}else {
+		  printf("[%i] Can not allocate packet_id\n",getpid());
+		} 
+	      }
+	      return 0;
+	    }
+	    current->id=msg_p->packet_id;
+#ifdef HAVE_LIBIPQ_MARK
+	    current->nfmark=msg_p->mark;
+#endif
+	    current->timestamp=msg_p->timestamp_sec;
 	    /* lock packet list mutex */
 	    pthread_mutex_lock(&packets_list_mutex);
 	    /* Adding packet to list  */
-	    pcktid=padd(msg_p->packet_id,msg_p->timestamp_sec);
+	    pcktid=padd(current);
 	    /* unlock datas */
 	    pthread_mutex_unlock(&packets_list_mutex);
+
 	    if (pcktid && (msg_p->packet_id != pcktid)){
 	      IPQ_SET_VERDICT( msg_p->packet_id, NF_DROP);
 	    }
@@ -66,7 +80,6 @@ void* packetsrv(){
               if (log_engine == LOG_TO_SYSLOG) {
                 syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"non IP packet Dropping");
               }else {
-
 	        printf ("[%i] non IP packet Dropping\n",getpid());
  	      }
 	    }
