@@ -3,7 +3,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT(NuFW, 0.4, nufw-devel@nongnu.org)
-AC_CONFIG_SRCDIR([src/main.c])
+AC_CONFIG_SRCDIR([src/nufw/main.c])
 AM_CONFIG_HEADER([src/include/config.h])
 
 # Checks for programs.
@@ -38,8 +38,9 @@ AC_CHECK_FUNCS([gethostbyname memset socket strcasecmp strspn])
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile
-                 src/authsrv/Makefile
+                 src/nuauth/Makefile
 		 src/clients/Makefile
+		 src/nufw/Makefile
 		 src/clients/nutcpc/Makefile])
 
 AM_INIT_AUTOMAKE
