@@ -61,17 +61,28 @@ manpage.1: manpage.sgml
     <refpurpose>NUFW client authentication library</refpurpose>
   </refnamediv>
   <refsynopsisdiv>
-    <cmdsynopsis>
-    <command>
-#include "nuclient.h"
-
-NuAuth* nu_client_init(char *username,unsigned long userid,char * password, char * hostname, unsigned int port,char protocol,char ssl_on);
-
-int	nu_client_check(NuAuth * session);
-
-void nu_client_free(NuAuth *session);
-</command>
-    </cmdsynopsis>
+    <funcsynopsis>
+    <FUNCSYNOPSISINFO>#include &lt;nuclient.h></FUNCSYNOPSISINFO>
+<funcprototype>
+<FUNCDEF>NuAuth * <FUNCTION>nu_client_init</FUNCTION></FUNCDEF>
+    <PARAMDEF>const char *<PARAMETER>nptr</PARAMETER></PARAMDEF>
+<PARAMDEF> char *<PARAMETER>username</PARAMETER></PARAMDEF>
+<PARAMDEF> unsigned long<PARAMETER> userid</PARAMETER></PARAMDEF>
+<PARAMDEF> char *<PARAMETER> password</PARAMETER></PARAMDEF>
+<PARAMDEF> char *<PARAMETER> hostname</PARAMETER></PARAMDEF>
+<PARAMDEF> unsigned int<PARAMETER> port</PARAMETER></PARAMDEF>
+<PARAMDEF> char<PARAMETER> protocol</PARAMETER></PARAMDEF>
+<PARAMDEF> char<PARAMETER> ssl_on</PARAMETER></PARAMDEF>
+</funcprototype>
+<funcprototype>
+<FUNCDEF>int <FUNCTION>nu_client_check</FUNCTION></FUNCDEF>
+ <PARAMDEF>NuAuth *<PARAMETER> session</PARAMETER></PARAMDEF>
+</funcprototype>
+<funcprototype>
+<FUNCDEF>void<FUNCTION> nu_client_free</FUNCTION></FUNCDEF>
+<PARAMDEF>NuAuth *<PARAMETER>session</PARAMETER></PARAMDEF>
+</funcprototype>
+    </funcsynopsis>
   </refsynopsisdiv>
   <refsect1>
     <title>DESCRIPTION</title>
