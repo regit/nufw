@@ -402,7 +402,7 @@ NuAuth* nu_client_init(char *username,unsigned long userid,char * password, char
 		/* test if key exists */
 		if (access(keyfile,R_OK)){
 			printf("Can not open keyfile : %s\n",keyfile);
-			exit( -1);
+			return NULL;
 		}
 		/* Build our SSL context*/
 		ctx=initialize_ctx(keyfile,PASSWORD);
@@ -413,8 +413,8 @@ NuAuth* nu_client_init(char *username,unsigned long userid,char * password, char
 
 		session->socket = socket (AF_INET,SOCK_STREAM,0);
 		/* connect */
-		if (session->socket == -1)
-			exit(-1);
+		if (session->socket <= 0)
+			return NULL;
 		connect(session->socket,(struct sockaddr *)(&session->adr_srv),sizeof(session->adr_srv)); 
 
 
