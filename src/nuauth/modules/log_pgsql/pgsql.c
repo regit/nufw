@@ -27,7 +27,7 @@ confparams pgsql_nuauth_vars[] = {
   { "pgsql_server_addr" , G_TOKEN_STRING, 0 , PGSQL_SERVER },
   { "pgsql_server_port" ,G_TOKEN_INT , PGSQL_SERVER_PORT,NULL },
   { "pgsql_user" , G_TOKEN_STRING , 0 ,PGSQL_USER},
-  { "pgsql_password" , G_TOKEN_STRING , 0 ,PGSQL_PASSWD},
+  { "pgsql_passwd" , G_TOKEN_STRING , 0 ,PGSQL_PASSWD},
   { "pgsql_ssl" , G_TOKEN_STRING , 0 ,PGSQL_SSL},
   { "pgsql_db_name" , G_TOKEN_STRING , 0 ,PGSQL_DB_NAME},
   { "pgsql_table_name" , G_TOKEN_STRING , 0 ,PGSQL_TABLE_NAME},
@@ -60,6 +60,7 @@ g_module_check_init(GModule *module){
   pgsql_user=(char *)(vpointer?vpointer:pgsql_user);
   vpointer=get_confvar_value(pgsql_nuauth_vars,sizeof(pgsql_nuauth_vars)/sizeof(confparams),"pgsql_passwd");
   pgsql_passwd=(char *)(vpointer?vpointer:pgsql_passwd);
+  
   vpointer=get_confvar_value(pgsql_nuauth_vars,sizeof(pgsql_nuauth_vars)/sizeof(confparams),"pgsql_ssl");
   pgsql_ssl=(char *)(vpointer?vpointer:pgsql_ssl);
   vpointer=get_confvar_value(pgsql_nuauth_vars,sizeof(pgsql_nuauth_vars)/sizeof(confparams),"pgsql_db_name");
@@ -96,21 +97,21 @@ G_MODULE_EXPORT PGconn *pgsql_conn_init(void){
       sizeof(char));
   if (pgsql_conninfo == NULL){return NULL;}
   //Build string we will pass to PQconnectdb
-  strcpy(pgsql_conninfo,"hostaddr=");
+  strcat(pgsql_conninfo,"host='");
   strcat(pgsql_conninfo,pgsql_server);
-  strcat(pgsql_conninfo," port=");
+  strcat(pgsql_conninfo,"' port=");
   strcat(pgsql_conninfo,port);
-  strcat(pgsql_conninfo," dbname=");
+  strcat(pgsql_conninfo," dbname='");
   strcat(pgsql_conninfo,pgsql_db_name);
-  strcat(pgsql_conninfo," user=");
+  strcat(pgsql_conninfo,"' user='");
   strcat(pgsql_conninfo,pgsql_user);
-  strcat(pgsql_conninfo," password=");
+  strcat(pgsql_conninfo,"' password='");
   strcat(pgsql_conninfo,pgsql_passwd);
-  strcat(pgsql_conninfo," connect_timeout=");
+  strcat(pgsql_conninfo,"' connect_timeout=");
   strcat(pgsql_conninfo,timeout);
-  strcat(pgsql_conninfo," sslmode=");
-  strcat(pgsql_conninfo,pgsql_ssl);
-//  strcat(pgsql_conninfo,"'");
+ /* strcat(pgsql_conninfo," sslmode='");
+  strcat(pgsql_conninfo,pgsql_ssl); 
+  strcat(pgsql_conninfo,"'"); */
   /* init connection */
   if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
       g_message("Going to init pgsql connection ");
@@ -121,7 +122,6 @@ G_MODULE_EXPORT PGconn *pgsql_conn_init(void){
       g_message("...");
   pgsql_status=PQstatus(ld);
 
-  
   if(pgsql_status != CONNECTION_OK) {
     if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
       g_warning("pgsql init error : %s\n",strerror(errno));
@@ -130,7 +130,6 @@ G_MODULE_EXPORT PGconn *pgsql_conn_init(void){
       free(pgsql_conninfo);
     return NULL;
   }
-
   if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
       g_message("done");
   free(pgsql_conninfo);
