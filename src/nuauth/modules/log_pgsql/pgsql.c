@@ -179,7 +179,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
             iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
             strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
             strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
-            if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,start_timestamp,state,oob_prefix) VALUES (%u,%lu,%u,'%s','%s',%u,%u,%lu,%hu,'ACCEPT');",
+            if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,state,oob_prefix) VALUES (%u,%lu,%u,'%s','%s',%u,%u,%hu,'ACCEPT');",
                   pgsql_table_name,
                   (element.user_id),
                   element.timestamp,
@@ -188,7 +188,6 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
                   tmp_inet2,
                   (element.tracking_hdrs).source,
                   (element.tracking_hdrs).dest,
-                  element.timestamp,
                   STATE_OPEN
                   ) >= 511){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
@@ -214,7 +213,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
             iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
             strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
             strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
-            if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,start_timestamp,state,oob_prefix) VALUES (%u,%lu,%u,'%s','%s',%u,%u,%lu,%hu,'ACCEPT');",
+            if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,state,oob_prefix) VALUES (%u,%lu,%u,'%s','%s',%u,%u,%hu,'ACCEPT');",
                   pgsql_table_name,
                   (element.user_id),
                   element.timestamp,
@@ -223,7 +222,6 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
                   tmp_inet2,
                   (element.tracking_hdrs).source,
                   (element.tracking_hdrs).dest,
-                  element.timestamp,
                   STATE_OPEN
                   ) >= 511 ){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
@@ -242,14 +240,13 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
             iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
             strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
             strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
-            if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,start_timestamp,state,oob_prefix) VALUES (%u,%lu,%u,'%s','%s',%lu,%hu,'ACCEPT');",
+            if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,state,oob_prefix) VALUES (%u,%lu,%u,'%s','%s',%hu,'ACCEPT');",
                   pgsql_table_name,
                   (element.user_id),
                   element.timestamp,
                   (element.tracking_hdrs).protocol,
                   tmp_inet1,
                   tmp_inet2,
-                  element.timestamp,
                   STATE_OPEN
                   ) >= 511){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
@@ -274,9 +271,10 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
               iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
               strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
               strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
-              if (snprintf(request,511,"UPDATE %s SET state=%lu WHERE (ip_daddr='%s' and ip_saddr='%s' and tcp_dport=%u and tcp_sport=%u and state=%hu);",
+              if (snprintf(request,511,"UPDATE %s SET state=%lu, start_timestamp=%lu WHERE (ip_daddr='%s' and ip_saddr='%s' and tcp_dport=%u and tcp_sport=%u and state=%hu);",
                   pgsql_table_name,
                   STATE_ESTABLISHED,
+                  element.timestamp,
                   tmp_inet1,
                   tmp_inet2,
                   (element.tracking_hdrs).source,
@@ -359,7 +357,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
             iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
             strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
             strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
-            if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,state,oob_prefix,start_timestamp) VALUES (%u,%lu,%u,'%s','%s',%u,%u,%hu,'DROP',%lu);",
+            if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,state,oob_prefix) VALUES (%u,%lu,%u,'%s','%s',%u,%u,%hu,'DROP');",
                   pgsql_table_name,
                   (element.user_id),
                   element.timestamp,
@@ -368,8 +366,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
                   tmp_inet2,
                   (element.tracking_hdrs).source,
                   (element.tracking_hdrs).dest,
-                  STATE_DROP,
-                  element.timestamp
+                  STATE_DROP
                   ) >= 511 ){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                     g_warning("Building pgsql insert query, the 511 limit was reached!\n");
@@ -387,7 +384,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
             iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
             strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
             strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
-            if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,state,oob_prefix,start_timestamp) VALUES (%u,%lu,%u,'%s','%s',%u,%u,%hu,'DROP',%lu);",
+            if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,state,oob_prefix) VALUES (%u,%lu,%u,'%s','%s',%u,%u,%hu,'DROP');",
                   pgsql_table_name,
                   (element.user_id),
                   element.timestamp,
@@ -396,8 +393,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
                   tmp_inet2,
                   (element.tracking_hdrs).source,
                   (element.tracking_hdrs).dest,
-                  STATE_DROP,
-                  element.timestamp
+                  STATE_DROP
                   ) >= 511 ){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                     g_warning("Building pgsql insert query, the 511 limit was reached!\n");
@@ -415,7 +411,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
             iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
             strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
             strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
-            if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,state,oob_prefix,start_timestamp) VALUES (%u,%lu,%u,'%s','%s',%lu,%hu,'DROP',%lu);",
+            if (snprintf(request,511,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,state,oob_prefix) VALUES (%u,%lu,%u,'%s','%s',%lu,%hu,'DROP');",
                   pgsql_table_name,
                   (element.user_id),
                   element.timestamp,
@@ -423,8 +419,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
                   tmp_inet1,
                   tmp_inet2,
                   element.timestamp,
-                  STATE_DROP,
-                  element.timestamp
+                  STATE_DROP
                   ) >= 511){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                     g_warning("Building pgsql insert query, the 511 limit was reached!\n");
