@@ -53,9 +53,9 @@ void* packetsrv(){
 	if (ipq_message_type(buffer) == NLMSG_ERROR ){
           if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_MAIN)){
             if (log_engine == LOG_TO_SYSLOG) {
-              syslog(SYSLOG_FACILITY(DEBUG_LEVEL_MESSAGE),"Got error message");
+              syslog(SYSLOG_FACILITY(DEBUG_LEVEL_MESSAGE),"Got error message from libipq : %d",ipq_get_msgerr(buffer));
             }else {
-	      printf("[%i] Got error message\n",getpid());
+	      printf("[%i] Got error message from libipq : %d\n",getpid(),ipq_get_msgerr(buffer));
 	    }
 	  }
 	} else {
