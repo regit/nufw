@@ -28,7 +28,7 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: nutcpc.c,v 1.8 2003/09/09 05:49:53 regit Exp $
+ * $Id: nutcpc.c,v 1.9 2003/09/22 23:29:41 regit Exp $
  */
 
 #include <arpa/inet.h>
@@ -360,10 +360,9 @@ int send_user_pckt(conn_t* c){
 
   /* next crypt */
   md5sigs=crypt(md5datas,salt);
-  
   /* complete message */
-  memcpy(pointer,md5sigs,34);
-  pointer+=34;
+  memcpy(pointer,md5sigs,35);
+  pointer+=35;
 
   /* and send it */
 
@@ -373,6 +372,7 @@ int send_user_pckt(conn_t* c){
     printf("%s:%u->",inet_ntoa(oneip),c->lclp);
     oneip.s_addr=(c->rmt);
     printf("%s:%u ...",inet_ntoa(oneip),c->rmtp);
+    printf("%d %s ....",strlen(md5sigs),md5sigs);
     fflush(stdout);
   }
 
@@ -417,7 +417,7 @@ static void compare (conntable_t *old, conntable_t *new)
 static void usage (void)
 {
 	fprintf (stderr, "usage: nutcpc [-dp]  [-I interval] "
-			"[-U userid ]  [-H nuauth_srv]\n");
+			"[-U userid ]  [-u local_id] [-H nuauth_srv]\n");
 	exit (EXIT_FAILURE);
 }
 

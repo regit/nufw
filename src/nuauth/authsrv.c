@@ -31,6 +31,7 @@ confparams nuauth_vars[] = {
   { "nuauth_number_usercheckers" , G_TOKEN_INT , NB_USERCHECK, NULL},
   { "nuauth_number_aclcheckers" , G_TOKEN_INT , NB_ACLCHECK, NULL },
   { "nuauth_log_users" , G_TOKEN_INT , 1, NULL },
+  { "nuauth_auth_module" , G_TOKEN_STRING , 1, NULL },
 };
 #endif 
 
@@ -46,6 +47,7 @@ int main(int argc,char * argv[]) {
   char *configfile=DEFAULT_CONF_FILE;
   int nbacl_check=NB_ACLCHECK;
   int nbuser_check=NB_USERCHECK;
+  char * nuauth_auth_module=DEFAULT_AUTH_MODULE;
   gpointer vpointer;
   pid_t pidf;
 
@@ -83,8 +85,9 @@ int main(int argc,char * argv[]) {
   nbacl_check=*(int*)(vpointer?vpointer:&nbacl_check);
   vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_log_users");
   nuauth_log_users=*(int*)(vpointer?vpointer:&nuauth_log_users);
-
-
+  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_auth_module");
+  nuauth_auth_module=(char*)(vpointer?vpointer:nuauth_auth_module);
+  
   /*parse options */
   while((option = getopt ( argc, argv, options_list)) != -1 ){
     switch (option){
@@ -193,7 +196,9 @@ if (daemonize == 1) {
   module_acl_check=NULL;
   module_user_check=NULL;
 
-  auth_module=g_module_open ("modules/ldap/libldap.la",0);
+  auth_module=g_module_open (g_module_build_path("/usr/local/lib/nuauth/modules/",
+						 nuauth_auth_module)
+			     ,0);
   if (!g_module_symbol (auth_module, "ldap_acl_check", 
 			(gpointer*)&module_acl_check))
     {

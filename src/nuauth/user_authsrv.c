@@ -146,7 +146,6 @@ connection * userpckt_decode(char* dgram,int dgramsiz){
   char *result;
   u_int16_t firstf,lastf;
   struct crypt_data * crypt_internal_datas=g_private_get (crypt_priv);
-
   /* decode dgram */
   switch (*dgram) {
   case 0x1:
@@ -210,7 +209,7 @@ connection * userpckt_decode(char* dgram,int dgramsiz){
       u_packet_id=*(long *)(pointer);
       pointer+=sizeof(long);
       /* get user md5datas */
-      usermd5datas=pointer;
+      usermd5datas=strndup(pointer,34);
 
       if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)){
 	  g_message("User "); 
@@ -253,10 +252,13 @@ connection * userpckt_decode(char* dgram,int dgramsiz){
 	       connexion->timestamp,
 	       u_packet_id,
 	       passwd);
+     
       /* initialisation stuff */
       if (crypt_internal_datas == NULL){
 	crypt_internal_datas=g_new0(struct crypt_data,1);
 	g_private_set(crypt_priv,crypt_internal_datas);
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
+	  g_message("Initiating crypt internal structure");
       }
       /* crypt datas */
       result = crypt_r(md5datas,usermd5datas,crypt_internal_datas);
@@ -265,9 +267,11 @@ connection * userpckt_decode(char* dgram,int dgramsiz){
 	/* bad sig dropping user packet ! */
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_USER))
 	  g_message("wrong md5 sig for packet %s\n",usermd5datas);
+	free(usermd5datas);
 	free_connection(connexion);
 	return NULL;
       } else {
+	free(usermd5datas);
 	/* 
 	 * md5 done !
 	 */
