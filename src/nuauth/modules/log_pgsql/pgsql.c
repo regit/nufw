@@ -30,6 +30,7 @@ confparams pgsql_nuauth_vars[] = {
   { "pgsql_password" , G_TOKEN_STRING , 0 ,PGSQL_PASSWD},
   { "pgsql_ssl" , G_TOKEN_STRING , 0 ,PGSQL_SSL},
   { "pgsql_db_name" , G_TOKEN_STRING , 0 ,PGSQL_DB_NAME},
+  { "pgsql_table_name" , G_TOKEN_STRING , 0 ,PGSQL_TABLE_NAME},
   { "pgsql_request_timeout" , G_TOKEN_INT , PGSQL_REQUEST_TIMEOUT , NULL }
 };
 
@@ -64,6 +65,8 @@ g_module_check_init(GModule *module){
   pgsql_ssl=(char *)(vpointer?vpointer:pgsql_ssl);
   vpointer=get_confvar_value(pgsql_nuauth_vars,sizeof(pgsql_nuauth_vars)/sizeof(confparams),"pgsql_db_name");
   pgsql_db_name=(char *)(vpointer?vpointer:pgsql_db_name);
+  vpointer=get_confvar_value(pgsql_nuauth_vars,sizeof(pgsql_nuauth_vars)/sizeof(confparams),"pgsql_table_name");
+  pgsql_table_name=(char *)(vpointer?vpointer:pgsql_table_name);
   vpointer=get_confvar_value(pgsql_nuauth_vars,sizeof(pgsql_nuauth_vars)/sizeof(confparams),"pgsql_request_timeout");
   pgsql_request_timeout=*(int *)(vpointer?vpointer:&pgsql_request_timeout);
 
@@ -151,198 +154,93 @@ G_MODULE_EXPORT gint user_packet_logs (connection *element, int state){
           //
           //
           //
-          snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport) VALUES (%d,%hu,,,,,,,,),element->user_id,"
-}
-
-
-G_MODULE_EXPORT GSList* acl_check (connection* element){
-  GSList * g_list = NULL;
-  char filter[512];
-  char ** attrs_array, ** walker;
-  int attrs_array_len,i,group;
-  struct timeval timeout;
-  struct acl_group * this_acl;
-  LDAPMessage * res , *result;
-  int err;
-  LDAP *ld = g_private_get (ldap_priv);
-
-  if (ld == NULL){
-    /* init ldap has never been done */
-    ld = ldap_conn_init();
-    if (ld == NULL) {
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_AUTH))
-		g_warning("Can not initiate LDAP conn\n");
-	return NULL;
-    }
-    g_private_set(ldap_priv,ld);
-  }
-  /* contruct filter */
-  if ((element->tracking_hdrs).protocol == IPPROTO_TCP || (element->tracking_hdrs).protocol == IPPROTO_UDP ){
-    snprintf(filter,511,
-	     "(&(objectClass=NuAccessControlList)(SrcIPStart<=%lu)(SrcIPEnd>=%lu)(DstIPStart<=%lu)(DstIPEnd>=%lu)(Proto=%d)(SrcPortStart<=%d)(SrcPortEnd>=%d)(DstPortStart<=%d)(DstPortEnd>=%d))",
-	     (long unsigned int)(element->tracking_hdrs).saddr,
-	     (long unsigned int)(element->tracking_hdrs).saddr,
-	     (long unsigned int)(element->tracking_hdrs).daddr,
-	     (long unsigned int)(element->tracking_hdrs).daddr,
-	     (element->tracking_hdrs).protocol,
-	     (element->tracking_hdrs).source,
-	     (element->tracking_hdrs).source,
-	     (element->tracking_hdrs).dest,
-	     (element->tracking_hdrs).dest
-	     );
-  } else if ((element->tracking_hdrs).protocol == IPPROTO_ICMP ) {
-    snprintf(filter,511,
-	     "(&(objectClass=AccessControlList)(SrcIPStart<=%lu)(SrcIPEnd>=%lu)(DstIPStart<=%lu)(DstIPEnd>=%lu)(Proto=%d)(SrcPortStart<=%d)(SrcPortEnd>=%d)(DstPortStart<=%d)(DstPortEnd>=%d))",
-	     (long unsigned int)(element->tracking_hdrs).saddr,
-	     (long unsigned int)(element->tracking_hdrs).saddr,
-	     (long unsigned int)(element->tracking_hdrs).daddr,
-	     (long unsigned int)(element->tracking_hdrs).daddr,
-	     (element->tracking_hdrs).protocol,
-	     (element->tracking_hdrs).type,
-	     (element->tracking_hdrs).type,
-	     (element->tracking_hdrs).code,
-	     (element->tracking_hdrs).code
-	     ); 
-  }
-
-  /* send query and wait result */
-  timeout.tv_sec = ldap_request_timeout;
-  timeout.tv_usec = 0;
-  /* TODO : just get group and decision */
-  /* if (debug)
-     printf("Filter : %s\n",filter); */
-    
-  err =  ldap_search_st(ld, ldap_acls_base_dn, LDAP_SCOPE_SUBTREE,filter,NULL,0,
-			&timeout,
-			&res) ;
-  if ( err !=  LDAP_SUCCESS ) {
-    if (err == LDAP_SERVER_DOWN ){
-      /* we lost connection, so disable current one */
-      ldap_unbind(ld);
-      ld=NULL;
-      g_private_set(ldap_priv,ld);
-    }
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-      g_warning ("invalid return from ldap_search_st : %s\n",ldap_err2string(err));
-    return NULL;
-  }
-  /* parse result to feed a group_list */
-  if (ldap_count_entries(ld,res) >= 1) {
-    result = ldap_first_entry(ld,res);
-    while ( result ) {
-      /* allocate a new acl_group */
-      this_acl=g_new0(struct acl_group,1);
-      this_acl->groups=NULL;
-	g_list = g_slist_prepend(g_list,this_acl);
-	/* get decision */
-	attrs_array=ldap_get_values(ld, result, "Decision");
-	sscanf(*attrs_array,"%c",&(this_acl->answer));
-	ldap_value_free(attrs_array);
-	/* build groups  list */
-	attrs_array = ldap_get_values(ld, result, "Group");
-	attrs_array_len = ldap_count_values(attrs_array);
-	walker = attrs_array;
-	for(i=0; i<attrs_array_len; i++){
-	  sscanf(*walker,"%d",&group);
-	  this_acl->groups = g_slist_prepend(this_acl->groups, GINT_TO_POINTER(group));
-	  walker++;
-	}
-	ldap_value_free(attrs_array);
-	result = ldap_next_entry(ld,result);
+          struct in_addr ipone, iptwo;
+          PGresult *Result;
+          ipone.s_addr=ntohl((element->tracking_hdrs).saddr);
+          iptwo.s_addr=ntohl((element->tracking_hdrs).daddr);
+          snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,start_timestamp) 
+              VALUES (%u,%u,'%s','%s',%u,%u,%lu);",
+              pgsql_table_name,
+              (element->user_id),
+              inet_ntoa(ipone),
+              inet_ntoa(iptwo),
+              (element->tracking_hdrs).source,
+              (element->tracking_hdrs).dest,
+              element->timestamp
+          );
+          Result = PQexec(ld, request);
+          if (i!Result == PGRES_TUPLES_OK){
+            if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+              g_warning("Can not insert Data : %s\n",PQerrorMessage(ld));
+            return -1;
+          }
       }
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_AUTH))
-      g_message("acl group at %p\n",g_list);
-    ldap_msgfree (res);
-    return g_list;
-  } else {
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_AUTH))
-      g_message("No acl found\n");
-    ldap_msgfree (res);
-  }
-  return NULL;
-}
-
-/* TODO return List */
-G_MODULE_EXPORT GSList * user_check (u_int16_t userid,char *passwd){
-  char filter[512];
-  LDAP *ld = g_private_get (ldap_priv);
-  LDAPMessage * res , *result;
-  char ** attrs_array, ** walker;
-  int attrs_array_len,i,group,err;
-  struct timeval timeout;
-  GSList * outelt=NULL;
-
-
-  if (ld == NULL){
-    /* init ldap has never been done */
-    ld = ldap_conn_init();
-    g_private_set(ldap_priv,ld);
-    if (ld == NULL){
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_AUTH))
-		g_message("Can't initiate LDAP conn\n");
-	return -1;
+      else if ((element->tracking_hdrs).protocol == IPPROTO_UDP){
+          struct in_addr ipone, iptwo;
+          PGresult *Result;
+          ipone.s_addr=ntohl((element->tracking_hdrs).saddr);
+          iptwo.s_addr=ntohl((element->tracking_hdrs).daddr);
+          snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,start_timestamp) 
+              VALUES (%u,%u,'%s','%s',%u,%u,%lu);",
+              pgsql_table_name,
+              (element->user_id),
+              inet_ntoa(ipone),
+              inet_ntoa(iptwo),
+              (element->tracking_hdrs).source,
+              (element->tracking_hdrs).dest,
+              element->timestamp
+          );
+          Result = PQexec(ld, request);
+          if (i!Result == PGRES_TUPLES_OK){
+            if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+              g_warning("Can not insert Data : %s\n",PQerrorMessage(ld));
+            return -1;
+          }
+          return 0;
+      }
+      else {
+          struct in_addr ipone, iptwo;
+          PGresult *Result;
+          ipone.s_addr=ntohl((element->tracking_hdrs).saddr);
+          iptwo.s_addr=ntohl((element->tracking_hdrs).daddr);
+          snprintf(request,511,"INSERT INTO %s (user_id,ip_protocol,ip_saddr,ip_daddr,start_timestamp) 
+              VALUES (%u,%u,'%s','%s',%lu);",
+              pgsql_table_name,
+              (element->user_id),
+              inet_ntoa(ipone),
+              inet_ntoa(iptwo),
+              element->timestamp
+          );
+          Result = PQexec(ld, request);
+          if (i!Result == PGRES_TUPLES_OK){
+            if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+              g_warning("Can not insert Data : %s\n",PQerrorMessage(ld));
+            return -1;
+          }
+          return 0;
+      }
+    }else if (state == 0){
+      if ((element->tracking_hdrs).protocol == IPPROTO_TCP){
+          struct in_addr ipone, iptwo;
+          PGresult *Result;
+          ipone.s_addr=ntohl((element->tracking_hdrs).saddr);
+          iptwo.s_addr=ntohl((element->tracking_hdrs).daddr);
+          snprintf(request,511,"UPDATE %s SET end_timestamp=%lu WHERE (ip_saddr='%s',ip_daddr='%s',tcp_sport=%u,tcp_dport=%u,end_timestamp=NULL);",
+              pgsql_table_name,
+              element->timestamp,
+              inet_ntoa(ipone),
+              inet_ntoa(iptwo),
+              (element->tracking_hdrs).source,
+              (element->tracking_hdrs).dest
+          );
+          Result = PQexec(ld, request);
+          if (i!Result == PGRES_TUPLES_OK){
+            if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+              g_warning("Can not update Data : %s\n",PQerrorMessage(ld));
+            return -1;
+          }
+          return 0;
+      }
     }
-  }
-  snprintf(filter,511,"(&(objectClass=NuAccount)(uidNumber=%d))",userid);
-  
-  /* send query and wait result */
-  timeout.tv_sec = ldap_request_timeout;
-  timeout.tv_usec = 0;
-  /* TODO : just get group and decision */
-  err =  ldap_search_st(ld, ldap_users_base_dn, LDAP_SCOPE_SUBTREE,filter,NULL,0,
-			&timeout,
-			&res) ;
-  if ( err !=  LDAP_SUCCESS ) {
-	if (err == LDAP_SERVER_DOWN ){
-    	  /* we lost connection, so disable current one */
-     	 ldap_unbind(ld);
-     	 ld=NULL;
-    	  g_private_set(ldap_priv,ld);
-   	 }
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
-      g_warning ("invalid return of ldap_search_st : %s\n",ldap_err2string(err));
-    return NULL;
-  }
-
-   if (ldap_count_entries(ld,res) == 1) {
-     /* parse result to feed a user_list */
-     result = ldap_first_entry(ld,res);
-     if (result == NULL ){
-       if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_AUTH))
-	 g_message("Can not get entry for %d\n",userid);
-       ldap_msgfree(res);
-       return NULL;
-     }
-     /* build groups  list */
-     attrs_array = ldap_get_values(ld, result, "Group");
-     attrs_array_len = ldap_count_values(attrs_array);
-     walker = attrs_array;
-     for(i=0; i<attrs_array_len; i++){
-       sscanf(*walker,"%d",&group);
-       outelt = g_slist_prepend(outelt, GINT_TO_POINTER(group));
-       walker++;
-     }
-     ldap_value_free(attrs_array);
-     /* get password */
-     attrs_array = ldap_get_values(ld, result, "userPassword");
-     attrs_array_len = ldap_count_values(attrs_array);
-     if (attrs_array_len == 0){
-       if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
-         g_message ("what ! no password found!\n");
-     } else {
-       sscanf(*attrs_array,"%s",passwd);
-       if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_AUTH))
-	 g_message("reading password\n");
-     }
-     ldap_value_free(attrs_array);
-     ldap_msgfree(res);
-     return outelt;
-   } else {
-     if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_AUTH))
-       g_message("No or too many users found with userid %d\n",userid);
-     ldap_msgfree(res);
-     return NULL;
-   }
-  ldap_msgfree(res);
-  return 0;
 }
+

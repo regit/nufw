@@ -1,4 +1,4 @@
-/* $Id: log_pgsql.h,v 1.1 2003/11/23 18:02:04 gryzor Exp $ */
+/* $Id: log_pgsql.h,v 1.2 2003/11/24 21:08:49 gryzor Exp $ */
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
@@ -30,10 +30,13 @@
 #define PGSQL_SSL "prefer"
 #define PGSQL_DB_NAME "nufw" 
 #define PGSQL_REQUEST_TIMEOUT 10
+#define PGSQL_TABLE_NAME "nufw_logs"
 
 int pgsql_request_timeout;
 char * pgsql_user;
 char * pgsql_passwd;
 char * pgsql_server;
 char * pgsql_ssl;
+char * pgsql_db_name;
+char * pgsql_table_name;
 int pgsql_server_port;
