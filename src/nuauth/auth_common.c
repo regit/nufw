@@ -178,6 +178,7 @@ void search_and_fill () {
                     free_connection(pckt);
                     break;
                 }
+                break;
               case STATE_READY:
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
                     g_warning("Element in state %d and receive packet state %d\n",
