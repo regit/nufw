@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <debug.h>
 #include <syslog.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 int nufw_log(char *message,int debug_level,int debug_area)
 {
@@ -54,6 +56,7 @@ int nufw_log(char *message,int debug_level,int debug_area)
     fprintf (stderr,message);
     return 1;
   }
+  return 0;
 }
 
 void init_log_engine()
