@@ -1,4 +1,4 @@
-/* $Id: auth_ldap.h,v 1.1 2003/08/25 19:19:14 regit Exp $ */
+/* $Id: auth_ldap.h,v 1.2 2003/08/30 21:30:14 regit Exp $ */
 
 /*
 ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
@@ -28,5 +28,5 @@
 #define LDAP_USER "cn=admin,dc=regit,dc=org"
 #define LDAP_CRED "tadadaa" 
 #define LDAP_REQUEST_TIMEOUT 10
+#define LDAP_BASE "dc=regit,dc=org"
 
-//LDAP * ld;
