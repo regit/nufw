@@ -186,13 +186,25 @@ GSList * DUMMYACLS;
  * user datas
  */
 
+/* definition of user auth datas */
+
+typedef struct _md5_user_auth_datas {
+        char * password;
+} md5_user_auth_datas;
+
+typedef struct _user_auth_datas {
+    u_int8_t type;
+    md5_user_auth_datas * md5_datas;
+} user_auth_datas;
+
 typedef struct User_Datas {
 	u_int32_t ip;
 	long first_pckt_timestamp;
 	long last_packet_time;
 	unsigned long last_packet_id;
 	long last_packet_timestamp;
-        user_auth_datas *
+        /* needed for auth cache */
+        user_auth_datas *authdatas;
 } user_datas;
 
 GHashTable * users_hash;
@@ -213,7 +225,6 @@ struct auth_answer {
 typedef struct _md5_auth_field {
     char md5sum[34];
     long u_packet_id;
-    char * password;
 } md5_auth_field;
 
 
@@ -221,6 +232,7 @@ typedef struct _auth_field {
     u_int8_t type;
     /* a pointer on each type (md5 for now) */
     md5_auth_field * md5_datas;
+    md5_user_auth_datas *  user_md5_datas;
 } auth_field;
 
 
