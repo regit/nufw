@@ -1,6 +1,9 @@
-1.0.3
+1.0.3 (2005/04/11)
 	- cleanly get out of sasl negotiation
 	- suppress a useless debug message
+	- client lib now does not require certificates when nu_client_init is
+	  called (nuapplet case)
+	- add a check of mysql ssl function existence in configure
 1.0.2 (2005/03/29)
 	- add nuauth_number_loggers in config file
 	- nufw can now verify nuauth server certificates (specify ca file with -a

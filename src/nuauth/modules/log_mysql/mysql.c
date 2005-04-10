@@ -121,15 +121,19 @@ G_MODULE_EXPORT MYSQL* mysql_conn_init(void){
 			g_warning("mysql init error : %s\n",strerror(errno));
 		return NULL;
 	}
+#if HAVE_MYSQL_SSL
 	/* Set SSL options, if configured to do so */
-	//    if (mysql_use_ssl)
-	//   mysql_ssl_set(ld,mysql_ssl_keyfile,mysql_ssl_certfile,mysql_ssl_ca,mysql_ssl_capath,mysql_ssl_cipher);
+	if (mysql_use_ssl)
+	 mysql_ssl_set(ld,mysql_ssl_keyfile,mysql_ssl_certfile,mysql_ssl_ca,mysql_ssl_capath,mysql_ssl_cipher);
+#endif
+#if 0
 	// Set MYSQL object properties
-	/* if (mysql_options(ld,MYSQL_OPT_CONNECT_TIMEOUT,mysql_conninfo) != 0)
-	   if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-	   g_warning("mysql options setting failed : %s\n",mysql_error(ld));
-	   */
-
+	 if (mysql_options(ld,MYSQL_OPT_CONNECT_TIMEOUT,mysql_conninfo) != 0){
+	   if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)) {
+	         g_warning("mysql options setting failed : %s\n",mysql_error(ld));
+           }
+         }
+#endif
 	if (!mysql_real_connect(ld,mysql_server,mysql_user,mysql_passwd,mysql_db_name,mysql_server_port,NULL,0)) {
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
 			g_warning("mysql connection failed : %s\n",mysql_error(ld));

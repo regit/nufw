@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
-AC_INIT(NuFW, 1.0.2, nufw-devel@nongnu.org)
+AC_INIT(NuFW, 1.0.3, nufw-devel@nongnu.org)
 AC_CONFIG_SRCDIR([src/nufw/main.c])
 AM_CONFIG_HEADER(src/include/config.h)
 
@@ -89,6 +89,7 @@ AM_CONDITIONAL(USE_IDENT, test x$ident = xyes)
 
 if test "$enable_mysql_log" = "yes"; then
   AC_CHECK_LIB([mysqlclient],[mysql_real_connect],,AC_MSG_ERROR([mysqlclient library needed if selected]))
+  AC_CHECK_LIB([mysqlclient],[mysql_ssl_set],AC_DEFINE_UNQUOTED([HAVE_MYSQL_SSL],[1],[Will compile mysql log module with ssl support]),AC_MSG_NOTICE([mysqlclient has no ssl support]))
 fi
 AM_CONDITIONAL(USE_MYSQL_LOG, test x$enable_mysql_log = xyes)
   
@@ -98,7 +99,7 @@ fi
 AM_CONDITIONAL(USE_PGSQL_LOG, test x$enable_pgsql_log = xyes)
 
 if test "${debug}" = "yes"; then
-	AC_DEFINE_UNQUOTED([DEBUG_ENABLE],[1],[Will comile development debug message])
+	AC_DEFINE_UNQUOTED([DEBUG_ENABLE],[1],[Will compile development debug message])
 fi
 
 AC_CONFIG_FILES([Makefile
