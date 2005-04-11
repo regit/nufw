@@ -173,7 +173,7 @@ void search_and_fill () {
 						case STATE_USERPCKT:
 #ifdef DEBUG_ENABLE
 							if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-								g_message("Filling user data\n");
+								g_message("Filling user data for %s\n",pckt->username);
 #endif
 							((connection *)element)->user_groups = pckt->user_groups;
 							((connection *)element)->user_id = pckt->user_id;
@@ -627,11 +627,9 @@ gint take_decision(connection * element) {
 	char test;
 	GSList * user_group=element->user_groups;
 
-
-		
 #ifdef DEBUG_ENABLE
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-		g_message("Trying to take decision on %p for %s\n",element,element->username);
+		g_message("Trying to take decision on %p\n",element); 
 #endif
 	/* first check if we have found acl */
 	if ( element->acl_groups == NULL ){

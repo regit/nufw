@@ -133,7 +133,9 @@ void clean_session(user_session * c_session){
 	gnutls_deinit(
 			*(c_session->tls)	
 		     );
-	//g_free(c_session->userid);
+	if (c_session->userid){
+		g_free(c_session->userid);
+	}
 	g_slist_free(c_session->groups);
 	g_free(c_session);
 
@@ -211,6 +213,7 @@ treat_user_request (user_session * c_session)
 			datas->release=g_strdup(c_session->release);
 		if (c_session->version)
 			datas->version=g_strdup(c_session->version);
+
 		/* copy packet datas */
 		datas->buf=g_new0(char,BUFSIZE);
 		read_size = gnutls_record_recv(*(c_session->tls),datas->buf,BUFSIZE);
@@ -376,9 +379,20 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 
 		memset(buf,0,sizeof buf);
 		len = gnutls_record_recv(session, buf, sizeof buf);
-		if (len < 0) {
-			//printf("client disconnected\n");
-			return -1;
+		if (len <= 0) {
+#ifdef DEBUG_ENABLE
+			if (!len){
+				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
+					g_message("Client disconnected during sasl negotiation\n");
+				}
+			} else {
+				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
+					g_message("TLS error during sasl negotiation\n");
+				}
+			}
+
+#endif
+			return SASL_FAIL;
 		}
 
 		r = sasl_server_step(conn, buf, len, &data, &len);
@@ -401,7 +415,7 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 			}
 #endif
 		gnutls_record_send(session,"N", 1); /* send NO to client */
-		return SASL_BADPARAM;
+		return SASL_BADAUTH;
 	}
 
 
@@ -409,7 +423,9 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 		external_auth=TRUE;
 
 	if (external_auth == FALSE){
-		ret = sasl_getprop(conn, SASL_USERNAME, (const void **)	&(c_session->userid));
+		char * tempname=NULL;
+		ret = sasl_getprop(conn, SASL_USERNAME, (const void **)	&(tempname));
+		c_session->userid=g_strdup(tempname);
 	}
 	if (ret != SASL_OK)
 		g_warning("get user");
@@ -534,13 +550,14 @@ int sasl_user_check(user_session* c_session)
 #endif
 
 		/* recv OS datas from client */
-		if ( gnutls_record_recv(*(c_session->tls),buf,sizeof buf) < 0){
+		if ( gnutls_record_recv(*(c_session->tls),buf,sizeof buf) <= 0){
 			/* allo houston */
 #ifdef DEBUG_ENABLE
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
 				g_message("error when receiving user OS");	
 			}
 #endif
+			sasl_dispose(&conn);
 			return SASL_BADAUTH;
 		} else {
 			int len;
@@ -555,6 +572,7 @@ int sasl_user_check(user_session* c_session)
 					if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
 						g_warning("error osfield is too long, announced %d",osfield->length);	
 					}
+					sasl_dispose(&conn);
 					return SASL_BADAUTH;
 				}
 				dec_buf = g_new0( gchar ,dec_buf_size);
@@ -613,9 +631,10 @@ int sasl_user_check(user_session* c_session)
                 /* sasl connection is not used anymore */
                 sasl_dispose(&conn);
 		return SASL_OK;
-	} else 
+	} else {
                 sasl_dispose(&conn);
 		return ret;
+	}
 }
 
 void socket_close(gpointer data)
@@ -657,6 +676,8 @@ int tls_connect(int c,gnutls_session** session_ptr){
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
 				g_message("Certificate verification failed : %s",gnutls_strerror(ret));
 			}
+			close(c);
+			gnutls_deinit(*session);
 			return SASL_BADPARAM;
 		}
 	}
@@ -749,8 +770,8 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 #endif
 			/* get rid of client */
 			gnutls_bye(*(c_session->tls),GNUTLS_SHUT_WR);
-			gnutls_deinit(*(c_session->tls)); 
 			close(c);
+			gnutls_deinit(*(c_session->tls)); 
 			g_free(c_session->tls);
 			g_free(c_session);
 		}
