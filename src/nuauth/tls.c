@@ -213,7 +213,6 @@ treat_user_request (user_session * c_session)
 			datas->release=g_strdup(c_session->release);
 		if (c_session->version)
 			datas->version=g_strdup(c_session->version);
-
 		/* copy packet datas */
 		datas->buf=g_new0(char,BUFSIZE);
 		read_size = gnutls_record_recv(*(c_session->tls),datas->buf,BUFSIZE);
@@ -305,8 +304,8 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 			g_message("client didn't choose mechanism\n");
 			g_message("received : %s.\n",chosenmech);
 		}
-		gnutls_record_send(session,"N", 1); /* send NO to client */
-		return SASL_BADPARAM; 
+	//	gnutls_record_send(session,"N", 1); /* send NO to client */
+		return SASL_FAIL; 
 	} 
 #ifdef DEBUG_ENABLE
 	else {
@@ -325,6 +324,9 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 	memset(buf,0,sizeof buf);
 	len = gnutls_record_recv(session, buf, sizeof(buf));
 	if(len != 1) {
+		if (len<=0){
+			return SASL_FAIL;
+		}
 #ifdef DEBUG_ENABLE
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
 			g_message("didn't receive first-sent parameter correctly");
@@ -392,6 +394,7 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 			}
 
 #endif
+
 			return SASL_FAIL;
 		}
 
@@ -535,7 +538,7 @@ int sasl_user_check(user_session* c_session)
 	} else {
 		ret = mysasl_negotiate(c_session, conn);
 	}
-	if (ret == SASL_OK ){
+	if ( ret == SASL_OK ) {
 		char *remoteip=NULL;
 		struct in_addr remote_inaddr;
 		remote_inaddr.s_addr=c_session->addr;
@@ -691,6 +694,7 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 {
 	gnutls_session * session;
 	user_session* c_session;
+	int ret;
 	int c = ((struct client_connection*)userdata)->socket;
 
 	if (tls_connect(c,&session) != SASL_BADPARAM){
@@ -731,7 +735,10 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 				}
 			}
 		}
-		if (sasl_user_check(c_session) == SASL_OK){
+		ret = sasl_user_check(c_session);
+		switch (ret){
+			case SASL_OK:
+				{
 			struct nuv2_srv_message msg;
 			if (nuauth_push) {
 				struct tls_message* message=g_new0(struct tls_message,1);
@@ -762,7 +769,15 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 				g_message("Tell we need to work on %d\n",c);
 #endif
 			g_async_queue_push(mx_queue,GINT_TO_POINTER(c));
-		} else {
+		} 
+				break;
+			case SASL_FAIL:
+			close(c);
+			gnutls_deinit(*(c_session->tls)); 
+			g_free(c_session->tls);
+			g_free(c_session);
+				break;
+			default:
 
 #ifdef DEBUG_ENABLE
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
