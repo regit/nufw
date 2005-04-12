@@ -300,12 +300,16 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 	memset(chosenmech,0,sizeof chosenmech);
 	len = gnutls_record_recv(session, chosenmech, sizeof chosenmech);
 	if (len <= 0) {
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
-			g_message("client didn't choose mechanism\n");
-			g_message("received : %s.\n",chosenmech);
+		if (len==0){
+			if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
+				g_message("client didn't choose mechanism\n");
+				g_message("received : %s.\n",chosenmech);
+			}
+			gnutls_record_send(session,"N", 1); /* send NO to client */
+			return SASL_BADPARAM;
+		} else {
+			return SASL_FAIL; 
 		}
-	//	gnutls_record_send(session,"N", 1); /* send NO to client */
-		return SASL_FAIL; 
 	} 
 #ifdef DEBUG_ENABLE
 	else {
@@ -338,6 +342,9 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 	if(buf[0] == 'Y') {
 		/* receive initial response (if any) */
 		len = gnutls_record_recv(session, buf, sizeof(buf));
+		if (len<0){
+			return SASL_FAIL;
+		}
 		/* start libsasl negotiation */
 		r = sasl_server_start(conn, 
 				chosenmech, 
@@ -382,8 +389,8 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 		memset(buf,0,sizeof buf);
 		len = gnutls_record_recv(session, buf, sizeof buf);
 		if (len <= 0) {
-#ifdef DEBUG_ENABLE
 			if (!len){
+#ifdef DEBUG_ENABLE
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
 					g_message("Client disconnected during sasl negotiation\n");
 				}
@@ -553,7 +560,8 @@ int sasl_user_check(user_session* c_session)
 #endif
 
 		/* recv OS datas from client */
-		if ( gnutls_record_recv(*(c_session->tls),buf,sizeof buf) <= 0){
+		ret  = gnutls_record_recv(*(c_session->tls),buf,sizeof buf) ;
+		if (ret  <= 0){
 			/* allo houston */
 #ifdef DEBUG_ENABLE
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
@@ -561,7 +569,7 @@ int sasl_user_check(user_session* c_session)
 			}
 #endif
 			sasl_dispose(&conn);
-			return SASL_BADAUTH;
+			return SASL_FAIL;
 		} else {
 			int len;
 			struct nuv2_authfield* osfield;
