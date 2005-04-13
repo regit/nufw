@@ -480,7 +480,7 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 
 	return SASL_OK;
 }
-}
+
 
 /**
  * realize user negotiation from after TLS to the end. 
