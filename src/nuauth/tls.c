@@ -204,6 +204,10 @@ treat_user_request (user_session * c_session)
 			datas->groups=NULL;
 		} else {
 			datas->userid = g_strdup(c_session->userid);
+#ifdef DEBUG_ENABLE
+		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+			g_message("Packet from user %s\n",datas->userid );
+#endif
 			datas->uid = c_session->uid;
 			datas->groups = g_slist_copy (c_session->groups);
 		}
@@ -219,6 +223,11 @@ treat_user_request (user_session * c_session)
 		if ( read_size> 0 ){
 			struct nuv2_header* pbuf=(struct nuv2_header* )datas->buf;
 			/* get header to check if we need to get more datas */
+#ifdef DEBUG_ENABLE
+		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+			g_message("Packet size is %d\n",pbuf->length );
+#endif
+
 			if (pbuf->proto==2 && pbuf->length> read_size && pbuf->length<1800 ){
 				/* we realloc and get what we miss */
 				datas->buf=g_realloc(datas->buf,pbuf->length);
@@ -227,12 +236,28 @@ treat_user_request (user_session * c_session)
 			/* check authorization if we're facing a multi user packet */ 
 			if ( (pbuf->option == 0x0) ||
 					((pbuf->option == 0x1) && c_session->multiusers)) {
+
+#ifdef DEBUG_ENABLE
+		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+			g_message("Pushing packet to user_checker");
+#endif
 				g_thread_pool_push (user_checkers,
 						datas,	
 						NULL
 						);
+			} else {
+#ifdef DEBUG_ENABLE
+		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+			g_message("Bad packet, option of header is not set");
+#endif
+
 			}
 		} else {
+#ifdef DEBUG_ENABLE
+		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+			g_message("Receive error from user %s\n",datas->userid );
+#endif
+
 			if (datas->sysname)
 				g_free(datas->sysname);
 			if (datas->release)

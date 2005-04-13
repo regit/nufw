@@ -49,7 +49,7 @@ void user_check_and_decide (gpointer userdata, gpointer data)
 	if ( conn_elt != NULL ) {
 #ifdef DEBUG_ENABLE
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)){
-			g_message("User : ");
+			g_message("User : %s",conn_elt->username);
 			print_connection(conn_elt,NULL);
 		}
 #endif
