@@ -15,19 +15,6 @@
 ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#include <gcrypt.h>
-#ifdef G_THREADS_IMPL_POSIX
-//#warning "this may be a source of problems"
-#include <pthread.h>
-#ifndef GCRY_THREAD
-#define GCRY_THREAD 1
-GCRY_THREAD_OPTION_PTHREAD_IMPL;
-#endif
-#else
-#error "Code need to be written to have gcrypt support other threading type"
-#endif
-
-
 
 #define KEYFILE "privkey.pem"
 #define CERTFILE "cacert.pem"

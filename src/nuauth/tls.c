@@ -480,6 +480,7 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 
 	return SASL_OK;
 }
+}
 
 /**
  * realize user negotiation from after TLS to the end. 
@@ -663,6 +664,11 @@ int tls_connect(int c,gnutls_session** session_ptr){
 
 	gnutls_transport_set_ptr( *session, (gnutls_transport_ptr)c);
 
+#ifdef DEBUG_ENABLE
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
+		g_message("NuFW TLS Handshaking\n");
+	}
+#endif
 	ret = gnutls_handshake( *session);
 	if (ret < 0) {
 		close(c);
@@ -1003,6 +1009,10 @@ void* tls_user_authsrv()
 
 	for(;;){
 
+#ifdef DEBUG_ENABLE
+		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
+			g_message("mx is %d\n",mx);
+#endif
 		/* try to get new file descriptor to update set */
 		c_pop=g_async_queue_try_pop (mx_queue);
 
@@ -1026,6 +1036,11 @@ void* tls_user_authsrv()
 		/*
 		 * copy rx set to working set 
 		 */
+ 
+#ifdef DEBUG_ENABLE
+			if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
+				g_message("copy rx set");
+#endif
 		FD_ZERO(&wk_set);
 		for (z=0;z<mx;++z){
 			if (FD_ISSET(z,&tls_rx_set))
