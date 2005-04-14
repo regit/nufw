@@ -814,13 +814,16 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 		} 
 				break;
 			case SASL_FAIL:
+#ifdef DEBUG_ENABLE
+			if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
+				g_message("Crash on user side, closing socket");
+#endif
 			close(c);
 			gnutls_deinit(*(c_session->tls)); 
 			g_free(c_session->tls);
 			g_free(c_session);
 				break;
 			default:
-
 #ifdef DEBUG_ENABLE
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
 				g_message("Problem with user, closing socket");
