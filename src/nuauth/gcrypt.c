@@ -16,6 +16,7 @@
  */
 #include <auth_srv.h>
 #include <tls.h>
+#include <gcrypt.h>
 #include <sasl/saslutil.h>
 
 /**

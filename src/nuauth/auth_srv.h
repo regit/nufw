@@ -34,18 +34,6 @@
 /* config dependant */
 #include <config.h>
 
-#include <gcrypt.h>
-#ifdef G_THREADS_IMPL_POSIX
-//#warning "this may be a source of problems"
-#include <pthread.h>
-#ifndef GCRY_THREAD
-#define GCRY_THREAD 1
-GCRY_THREAD_OPTION_PTHREAD_IMPL;
-#endif
-#else
-#error "Code need to be written to have gcrypt support other threading type"
-#endif
-
 
 
 #include <gnutls/gnutls.h>
