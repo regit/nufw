@@ -307,10 +307,11 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 #endif  
 		r = sasl_listmech(conn, NULL, "(",",",")",
 				&data, &len, &count);
-		if (r != SASL_OK) 
+		if (r != SASL_OK) {
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
 				g_warning("generating mechanism list");
 			}
+		}
 
 #if 0
 	}
@@ -414,8 +415,8 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 		memset(buf,0,sizeof buf);
 		len = gnutls_record_recv(session, buf, sizeof buf);
 		if (len <= 0) {
-			if (!len){
 #ifdef DEBUG_ENABLE
+			if (!len){
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
 					g_message("Client disconnected during sasl negotiation\n");
 				}
@@ -504,7 +505,9 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 	//g_message( "negotiation complete\n");
 
 	return SASL_OK;
+	
 }
+
 
 
 /**

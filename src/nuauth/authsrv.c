@@ -637,25 +637,6 @@ int main(int argc,char * argv[])
 	/* initi credential */
 	create_x509_credentials();
 
-	/* create thread for tsl  auth server */
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-		g_message("Create tls authentication server thread");
-	tls_auth_server = g_thread_create ( tls_user_authsrv,
-			NULL,
-			FALSE,
-			NULL);
-	if (! tls_auth_server )
-		exit(1);
-
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-		g_message("Create tls nufw server thread");
-	tls_nufw_server = g_thread_create ( tls_nufw_authsrv,
-			NULL,
-			FALSE,
-			NULL);
-	if (! tls_nufw_server )
-		exit(1);
-
 
 
 	/* private data for crypt */
@@ -700,6 +681,25 @@ int main(int argc,char * argv[])
 				NULL);
 	}
 
+
+	/* create thread for tsl  auth server */
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+		g_message("Create tls authentication server thread");
+	tls_auth_server = g_thread_create ( tls_user_authsrv,
+			NULL,
+			FALSE,
+			NULL);
+	if (! tls_auth_server )
+		exit(1);
+
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+		g_message("Create tls nufw server thread");
+	tls_nufw_server = g_thread_create ( tls_nufw_authsrv,
+			NULL,
+			FALSE,
+			NULL);
+	if (! tls_nufw_server )
+		exit(1);
 
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
 		g_message("Threads system started");
