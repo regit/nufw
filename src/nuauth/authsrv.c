@@ -18,6 +18,7 @@
 
 #include <auth_srv.h>
 #include <gcrypt.h>
+#if 0
 #ifdef G_THREADS_IMPL_POSIX
 //#warning "this may be a source of problems"
 #include <pthread.h>
@@ -28,7 +29,7 @@ GCRY_THREAD_OPTION_PTHREAD_IMPL;
 #else
 #error "Code need to be written to have gcrypt support other threading type"
 #endif
-
+#endif
 
 #include <tls.h>
 
@@ -64,6 +65,43 @@ confparams nuauth_vars[] = {
 	{ "nuauth_user_cache" , G_TOKEN_INT , 0,NULL },
 };
 #endif 
+
+/* gcrypt init function */
+static int gcry_gthread_mutex_init (void **priv)			      
+{									      
+	GMutex* lock = g_mutex_new();
+	if (!lock)								      
+		return ENOMEM;							      
+	*priv = lock;							      
+	return 0;								      
+}									      
+
+static int gcry_gthread_mutex_destroy (void **lock)			      
+{ 
+	g_mutex_free (*lock);
+	return 0; 
+}
+
+static int gcry_gthread_mutex_lock (void **lock)			      
+{ 
+	g_mutex_lock(*lock);
+	return 0;
+}				      
+
+static int gcry_gthread_mutex_unlock (void **lock)			      
+{ 
+	g_mutex_unlock(*lock);
+	return 0;
+}				      
+
+static struct gcry_thread_cbs gcry_threads_gthread =			      
+{
+	GCRY_THREAD_OPTION_USER, NULL,					      
+	gcry_gthread_mutex_init, gcry_gthread_mutex_destroy,			      
+	gcry_gthread_mutex_lock, gcry_gthread_mutex_unlock 
+};
+
+
 
 
 #define NUAUTH_PID_FILE  LOCAL_STATE_DIR "/run/nuauth/nuauth.pid"
@@ -145,14 +183,17 @@ int main(int argc,char * argv[])
 	debug_areas=DEFAULT_DEBUG_AREAS;
 
 
-	gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);
+       	/* Initialize glib thread system */
+	g_thread_init(NULL);
+
+        /* init gcrypt and gnutls */
+        gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_gthread);
 	gnutls_global_init();
 	/* initi credential */
 	create_x509_credentials();
 
 
-	/* Initialize glib thread system */
-	g_thread_init(NULL);
+
 
 
 	/*vtable=g_new(GMemVTable, 1);
