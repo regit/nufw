@@ -144,8 +144,16 @@ int main(int argc,char * argv[])
 	debug_level=0;
 	debug_areas=DEFAULT_DEBUG_AREAS;
 
+
+	gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);
+	gnutls_global_init();
+	/* initi credential */
+	create_x509_credentials();
+
+
 	/* Initialize glib thread system */
 	g_thread_init(NULL);
+
 
 	/*vtable=g_new(GMemVTable, 1);
 	  vtable->malloc=&(malloc);
@@ -630,13 +638,6 @@ int main(int argc,char * argv[])
 	if (sck_auth_reply == -1){
 		exit(1);
 	}
-
-
-	gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);
-	gnutls_global_init();
-	/* initi credential */
-	create_x509_credentials();
-
 
 
 	/* private data for crypt */
