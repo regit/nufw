@@ -29,6 +29,8 @@
  *
  */
 
+#define USE_PROTOCOL_1 0
+
 #include "nuclient.h"
 #include <sasl/saslutil.h>
 #include <proto.h>
@@ -481,21 +483,24 @@ int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn)
  */
 static int send_user_pckt(NuAuth * session,conn_t* c)
 {
+#if USE_PROTCCOL_1
 	char t_int8=0;
 	u_int16_t t_int16=0;
 	u_int32_t t_int32=0;
 	u_int8_t proto_version=0x1,answer_type=0x3;
-	char datas[PACKET_SIZE];
-	/* TODO : look if we don't override datas */
-	char *pointer=NULL;
 	struct in_addr oneip;
 	char onaip[16];
 	char* md5sigs;
 	u_int32_t  timestamp=time(NULL);
+#endif
+	char datas[PACKET_SIZE];
+	/* TODO : look if we don't override datas */
+	char *pointer=NULL;
 	char *enc_appname=NULL;
 
 	memset(datas,0,sizeof datas);
 	switch (session->protocol){
+#if USE_PROTOCOL_1
 		case 1:
 			{
 				char md5datas[512];
@@ -573,6 +578,7 @@ static int send_user_pckt(NuAuth * session,conn_t* c)
 				pointer+=35;
 			}
 			break;
+#endif
 		case 2:
 			{
 				struct nuv2_header header;

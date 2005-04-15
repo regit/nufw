@@ -31,7 +31,7 @@ fi
 AM_CONDITIONAL(HAVE_LIBIPQ,test x$have_ipq = xyes)
 
 
-AC_CHECK_LIB([pthread], [pthread_mutex_init])
+#AC_CHECK_LIB([pthread], [pthread_mutex_init])
 
 # glib stuff
 AM_PATH_GLIB_2_0(2.0.0, , AC_MSG_ERROR([glib is required in order to compile nuauth]),[gthread gmodule])
@@ -48,9 +48,9 @@ AC_FUNC_MALLOC
 AC_FUNC_STAT
 AC_CHECK_FUNCS([gethostbyname memset socket strcasecmp strspn])
 
-AC_CHECK_LIB([gcrypt], [gcry_md_open],AC_DEFUN([HAVE_LIBRARY_GCRYPT],[1]),AC_MSG_ERROR([gcrypt library needed for encryption]))
-AC_CHECK_LIB([gnutls], [gnutls_init],AC_DEFUN([HAVE_LIBRARY_GNUTLS],[1]),AC_MSG_ERROR([gnutls library needed for encryption]))
-AC_CHECK_LIB([sasl2],[sasl_server_init],AC_DEFUN([HAVE_LIBRARY_SASL2],[1]),AC_MSG_ERROR([sasl library needed for authentication]))
+AC_CHECK_LIB([gcrypt], [gcry_md_open],AC_DEFINE_UNQUOTED([HAVE_LIBRARY_GCRYPT],[1]),AC_MSG_ERROR([gcrypt library needed for encryption]))
+AC_CHECK_LIB([gnutls], [gnutls_init],AC_DEFINE_UNQUOTED([HAVE_LIBRARY_GNUTLS],[1]),AC_MSG_ERROR([gnutls library needed for encryption]))
+AC_CHECK_LIB([sasl2],[sasl_server_init],AC_DEFINE_UNQUOTED([HAVE_LIBRARY_SASL2],[1]),AC_MSG_ERROR([sasl library needed for authentication]))
         
 AM_CONDITIONAL(USE_USER_MARK, test x$enable_user_mark = xyes)
 

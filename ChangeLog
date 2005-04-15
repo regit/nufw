@@ -1,4 +1,4 @@
-1.0.3 (2005/04/12)
+1.0.3 (2005/04/14)
 	- cleanly get out of sasl negotiation
 	- suppress a useless debug message
 	- client lib now does not require certificates when nu_client_init is
