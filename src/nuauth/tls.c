@@ -292,6 +292,7 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 	gnutls_session session=*(c_session->tls);
 	gboolean external_auth=FALSE;
 	struct in_addr remote_inaddr;
+        ssize_t record_send;
 
 	remote_inaddr.s_addr=c_session->addr;
 #if 0
@@ -311,6 +312,7 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
 				g_warning("generating mechanism list");
 			}
+                        return SASL_BADPARAM;
 		}
 
 #if 0
@@ -321,7 +323,13 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 		g_message("%d mechanisms : %s\n", count,data);
 #endif
 	/* send capability list to client */
-	gnutls_record_send(session, data, len);
+	record_send = gnutls_record_send(session, data, len);
+        if (( record_send == NUTLS_E_INTERRUPTED ) || ( record_send == GNUTLS_E_AGAIN))
+               record_send = gnutls_record_send(session, data, len);
+        if (record_send<0) 
+        {
+              return SASL_FAIL;
+        }
 
 	memset(chosenmech,0,sizeof chosenmech);
 	len = gnutls_record_recv(session, chosenmech, sizeof chosenmech);
@@ -338,10 +346,8 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 		}
 	} 
 #ifdef DEBUG_ENABLE
-	else {
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-			g_message("client choose mechanism %s\n",chosenmech);
-	}
+        if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+	      g_message("client choose mechanism %s\n",chosenmech);
 #endif
 #if MECH_CHOICE
 	if (mech && strcasecmp(mech, chosenmech)) {
@@ -383,8 +389,12 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
 			g_message("start with no msg");
 #endif
-		r = sasl_server_start(conn, chosenmech, NULL, 0,
-				&data, &len);
+		r = sasl_server_start(conn, 
+                                chosenmech, 
+                                NULL, 
+                                0,
+				&data, 
+                                &len);
 	}
 
 
@@ -394,21 +404,29 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 			g_warning("error %d",r);
 		}
 		ret = sasl_getprop(conn, SASL_USERNAME, (const void **)	&(c_session->userid));
-
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
+                if (ret == SASL_OK){
+		  if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN))
 			g_warning("%s is a badguy",c_session->userid);
-		}
-		gnutls_record_send(session,"N", 1); /* send NO to client */
+                }else{
+		  if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN))
+			g_warning("unidentified badguy(?)");
+                }
+		if (gnutls_record_send(session,"N", 1)<=0) /* send NO to client */
+                    return SASL_FAIL;
 		return SASL_BADPARAM;
 	}
 
 	while (r == SASL_CONTINUE) {
 		if (data) {
-			gnutls_record_send(session,"C", 1); /* send CONTINUE to client */
-			gnutls_record_send(session, data, len);
+			if (gnutls_record_send(session,"C", 1)<=0) /* send CONTINUE to client */
+                            return SASL_FAIL;
+			if (gnutls_record_send(session, data, len)<0)
+                            return SASL_FAIL;
 		} else {
-			gnutls_record_send(session,"C", 1); /* send CONTINUE to client */
-			gnutls_record_send(session, "", 0);
+			if (gnutls_record_send(session,"C", 1)<=0) /* send CONTINUE to client */
+                            return SASL_FAIL;
+			if (gnutls_record_send(session, "", 0)<0)
+                            return SASL_FAIL;
 		}
 
 
@@ -427,7 +445,6 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 			}
 
 #endif
-
 			return SASL_FAIL;
 		}
 
@@ -439,7 +456,8 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 				g_message("\n%s\n", sasl_errdetail(conn));
 			}
 #endif
-			gnutls_record_send(session,"N", 1); /* send NO to client */
+			if (gnutls_record_send(session,"N", 1)<=0) /* send NO to client */
+                            return SASL_FAIL;
 			return SASL_BADPARAM;
 		}
 	}
@@ -450,7 +468,8 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 		g_warning("incorrect authentication");
 			}
 #endif
-		gnutls_record_send(session,"N", 1); /* send NO to client */
+		if (gnutls_record_send(session,"N", 1)<=0) /* send NO to client */
+                    return SASL_FAIL;
 		return SASL_BADAUTH;
 	}
 
@@ -461,10 +480,15 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 	if (external_auth == FALSE){
 		char * tempname=NULL;
 		ret = sasl_getprop(conn, SASL_USERNAME, (const void **)	&(tempname));
-		c_session->userid=g_strdup(tempname);
+	        if (ret != SASL_OK){
+		  g_warning("get user failed");
+                  return SASL_FAIL;
+                }else{
+		  c_session->userid=g_strdup(tempname);
+                }
 	}
-	if (ret != SASL_OK)
-		g_warning("get user");
+//	if (ret != SASL_OK)
+//		g_warning("get user failed");
 
 	/* check on multi user capability */
 	if ( check_inaddr_in_array(remote_inaddr,nuauth_multi_servers_array)){
@@ -472,11 +496,12 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 		if (check_string_in_array(stripped_user,nuauth_multi_users_array)) {
 			c_session->multiusers=TRUE;
 		} else {
-			gnutls_record_send(session,"N", 1); /* send NO to client */
 #ifdef DEBUG_ENABLE
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
 				g_message("%s users on multi server %s\n", c_session->userid,inet_ntoa(remote_inaddr));
 #endif
+			if (gnutls_record_send(session,"N", 1)<=0) /* send NO to client */
+                            return SASL_FAIL;
 		}
 		g_free(stripped_user);
 	} else {
@@ -488,6 +513,11 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 	if (external_auth == FALSE){
 		c_session->groups=g_private_get(group_priv);
 		c_session->uid=GPOINTER_TO_UINT(g_private_get(user_priv));
+                if (c_session->uid == 0) 
+                {
+		    if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN))
+			g_message("Couldn't get user ID!");	
+                }
 		if (c_session->groups == NULL){
 			if((*module_user_check)(c_session->userid,NULL,0,&(c_session->uid),&(c_session->groups))!=SASL_OK){
 #ifdef DEBUG_ENABLE
@@ -501,7 +531,8 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 		}
 	}
 
-	gnutls_record_send(session,"O", 1); /* send YES to client */
+	if (gnutls_record_send(session,"O", 1)) /* send YES to client */
+            return SASL_FAIL;
 	//g_message( "negotiation complete\n");
 
 	return SASL_OK;
@@ -601,6 +632,7 @@ int sasl_user_check(user_session* c_session)
 			return SASL_FAIL;
 		} else {
 			int len;
+                        int decode;
 			struct nuv2_authfield* osfield;
 			gchar*	dec_buf=NULL;
 			gchar** os_strings;
@@ -616,38 +648,78 @@ int sasl_user_check(user_session* c_session)
 					return SASL_BADAUTH;
 				}
 				dec_buf = g_new0( gchar ,dec_buf_size);
-				if ( sasl_decode64(buf+4,osfield->length -4,dec_buf, dec_buf_size,&len)
-						==
-						SASL_BUFOVER){
+                                decode = sasl_decode64(buf+4,osfield->length -4,dec_buf, dec_buf_size,&len);
+                                switch (decode){
+                                  case SASL_BUFOVER:{
+                                        if (len > 1024)
+                                        {
+                                            sasl_dispose(&conn);
+                                            g_free(dec_buf);
+                                            return SASL_BADAUTH;
+                                        }
 					dec_buf=g_try_realloc(dec_buf,len);
-					if (dec_buf)
-						sasl_decode64(buf+4,osfield->length -4,
-								dec_buf,len,&len);
-				}
+					if (dec_buf){
+                                                if (sasl_decode64(buf+4,osfield->length -4,
+								dec_buf,len,&len) != SASL_OK){
+                                                    sasl_dispose(&conn);
+                                                    g_free(dec_buf);
+                                                    return SASL_BADAUTH;
+                                                }
+                                                    
+                                        }else{
+                                            sasl_dispose(&conn);
+                                            g_free(dec_buf);
+                                            return SASL_BADAUTH;
+                                        }
+                                        break;
+				  }
+                                  case SASL_OK:{
+                                                   break;
+                                               }
+                                  default:{
+                                              sasl_dispose(&conn);
+                                              g_free(dec_buf);
+                                              return SASL_BADAUTH;
+                                          }
+                                }
+                                              
+
 				/* should always be true for the moment */
 				if (osfield->option == OS_SRV){
 					os_strings=g_strsplit(dec_buf,";",3);
 					if (os_strings[0] && (strlen(os_strings[1]) < 128) ){
 						c_session->sysname=string_escape(os_strings[0]);
-						if (c_session->sysname==NULL)
+						if (c_session->sysname==NULL){
 							if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
 								g_warning("received sysname contains invalid characters");	
+                                                        sasl_dispose(&conn);
+                                                        g_free(dec_buf);
+                                                        return SASL_BADAUTH;
+                                                }
 					} else {
 						c_session->sysname=g_strdup(UNKNOWN_STRING);
 					}
 					if (os_strings[1] && (strlen(os_strings[1]) < 128) )   {
 						c_session->release=string_escape(os_strings[1]);
-						if (c_session->release==NULL)
+						if (c_session->release==NULL){
 							if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
 								g_warning("received release contains invalid characters");	
+                                                        sasl_dispose(&conn);
+                                                        g_free(dec_buf);
+                                                        return SASL_BADAUTH;
+                                                }
 					} else {
 						c_session->release=g_strdup(UNKNOWN_STRING);
 					}
 					if (os_strings[2] && (strlen(os_strings[2]) < 128) )  {
 						c_session->version=string_escape(os_strings[2]);
-						if (c_session->version==NULL)
+						if (c_session->version==NULL){
 							if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
 								g_warning("received version contains invalid characters");	
+                                                        sasl_dispose(&conn);
+                                                        g_free(dec_buf);
+                                                        return SASL_BADAUTH;
+                                                }
 					} else {
 						c_session->version=g_strdup(UNKNOWN_STRING);
 					}
