@@ -165,8 +165,7 @@ gnutls_session* initialize_tls_session()
 	if (gnutls_credentials_set(*session, GNUTLS_CRD_CERTIFICATE, x509_cred)<0)
             return NULL;
 	/* request client certificate if any.  */
-	if (gnutls_certificate_server_set_request( *session,nuauth_tls_request_cert)<0)
-            return NULL;
+	gnutls_certificate_server_set_request( *session,nuauth_tls_request_cert);
 
 	gnutls_dh_set_prime_bits( *session, DH_BITS);
 
@@ -787,7 +786,7 @@ int tls_connect(int c,gnutls_session** session_ptr){
 	session=*(session_ptr);
 #ifdef DEBUG_ENABLE
         if (session==NULL)
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
+            if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN))
                 g_message("NuFW TLS Init failure (initialize_tls_session())\n");
 #endif
 	gnutls_transport_set_ptr( *session, (gnutls_transport_ptr)c);
