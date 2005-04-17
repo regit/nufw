@@ -147,19 +147,26 @@ gnutls_session* initialize_tls_session()
 	const int cert_type_priority[3] = { GNUTLS_CRT_X509, 0 };
 
 	session = g_new0(gnutls_session,1);
+        if (session == NULL)
+            return NULL;
 
-	gnutls_init(session, GNUTLS_SERVER);
+	if (gnutls_init(session, GNUTLS_SERVER) != 0)
+            return NULL;
 
 	/* avoid calling all the priority functions, since the defaults
 	 * are adequate.
 	 */
-	gnutls_set_default_priority( *session);   
+	if (gnutls_set_default_priority( *session)<0)
+            return NULL;
 
-	gnutls_certificate_type_set_priority(*session, cert_type_priority);
+	if (gnutls_certificate_type_set_priority(*session, cert_type_priority)<0)
+            return NULL;
 
-	gnutls_credentials_set(*session, GNUTLS_CRD_CERTIFICATE, x509_cred);
+	if (gnutls_credentials_set(*session, GNUTLS_CRD_CERTIFICATE, x509_cred)<0)
+            return NULL;
 	/* request client certificate if any.  */
-	gnutls_certificate_server_set_request( *session,nuauth_tls_request_cert);
+	if (gnutls_certificate_server_set_request( *session,nuauth_tls_request_cert)<0)
+            return NULL;
 
 	gnutls_dh_set_prime_bits( *session, DH_BITS);
 
@@ -176,8 +183,10 @@ static int generate_dh_params(void)
 	 * once a day, once a week or once a month. Depending on the
 	 * security requirements.
 	 */
-	gnutls_dh_params_init( &dh_params);
-	gnutls_dh_params_generate2( dh_params, DH_BITS);
+	if (gnutls_dh_params_init( &dh_params)<0)
+            return -1;
+	if (gnutls_dh_params_generate2( dh_params, DH_BITS)<0)
+            return -1;
 
 	return 0;
 }
@@ -186,7 +195,7 @@ static int generate_dh_params(void)
  * get RX paquet from a TLS client connection and send it to user authentication threads.
  *
  * - Argument : SSL RX packet
- * - Return : 1 if read done, EOF if read complete
+ * - Return : 1 if read done, EOF if read complete, -1 on error
  */
 	static int
 treat_user_request (user_session * c_session)
@@ -196,6 +205,8 @@ treat_user_request (user_session * c_session)
 
 	if (c_session != NULL){
 		datas=g_new0(struct buffer_read,1);
+                if (datas==NULL)
+                  return -1;
 		datas->socket=0;
 		datas->tls=c_session->tls;
 		if (c_session->multiusers) {
@@ -211,14 +222,25 @@ treat_user_request (user_session * c_session)
 			datas->uid = c_session->uid;
 			datas->groups = g_slist_copy (c_session->groups);
 		}
-		if (c_session->sysname)
+		if (c_session->sysname){
 			datas->sysname=g_strdup(c_session->sysname);
-		if (c_session->release)
+                        if (datas->sysname == NULL)
+                            return -1;
+                }
+		if (c_session->release){
 			datas->release=g_strdup(c_session->release);
-		if (c_session->version)
+                        if (datas->release == NULL)
+                            return -1;
+                }
+		if (c_session->version){
 			datas->version=g_strdup(c_session->version);
+                        if (datas->version == NULL)
+                            return -1;
+                }
 		/* copy packet datas */
 		datas->buf=g_new0(char,BUFSIZE);
+                if (datas->buf == NULL)
+                    return -1;
 		read_size = gnutls_record_recv(*(c_session->tls),datas->buf,BUFSIZE);
 		if ( read_size> 0 ){
 			struct nuv2_header* pbuf=(struct nuv2_header* )datas->buf;
@@ -231,7 +253,8 @@ treat_user_request (user_session * c_session)
 			if (pbuf->proto==2 && pbuf->length> read_size && pbuf->length<1800 ){
 				/* we realloc and get what we miss */
 				datas->buf=g_realloc(datas->buf,pbuf->length);
-				gnutls_record_recv(*(c_session->tls),datas->buf+BUFSIZE,read_size-pbuf->length);
+				if (gnutls_record_recv(*(c_session->tls),datas->buf+BUFSIZE,read_size-pbuf->length)<0)
+                                    return -1;
 			}
 			/* check authorization if we're facing a multi user packet */ 
 			if ( (pbuf->option == 0x0) ||
@@ -250,11 +273,11 @@ treat_user_request (user_session * c_session)
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
 					g_message("Bad packet, option of header is not set");
 #endif
-
 			}
 		} else {
 #ifdef DEBUG_ENABLE
-			if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+                        if (read_size <0) //FIXME : Gryzor added this test, but is unsure
+			  if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
 				g_message("Receive error from user %s\n",datas->userid );
 #endif
 
@@ -330,7 +353,8 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
 				g_message("client didn't choose mechanism\n");
 			}
-			gnutls_record_send(session,"N", 1); /* send NO to client */
+			if (gnutls_record_send(session,"N", 1) <= 0) /* send NO to client */
+                            return SASL_FAIL;
 			return SASL_BADPARAM;
 		} else {
 
@@ -355,7 +379,8 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
 			g_message("didn't receive first-sent parameter correctly");
 #endif
-		gnutls_record_send(session,"N", 1); /* send NO to client */
+		if (gnutls_record_send(session,"N", 1) <= 0) /* send NO to client */
+                    return SASL_FAIL;
 		return SASL_BADPARAM;
 	}
 
@@ -439,7 +464,6 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 					g_message("TLS error during sasl negotiation\n");
 				}
 			}
-
 #endif
 			return SASL_FAIL;
 		}
@@ -452,7 +476,7 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 				g_message("\n%s\n", sasl_errdetail(conn));
 			}
 #endif
-			if (gnutls_record_send(session,"N", 1)<=0) /* send NO to client */
+			if (gnutls_record_send(session,"N", 1) <= 0) /* send NO to client */
 				return SASL_FAIL;
 			return SASL_BADPARAM;
 		}
@@ -465,7 +489,7 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 			g_warning("incorrect authentication");
 		}
 #endif
-		if (gnutls_record_send(session,"N", 1)<=0) /* send NO to client */
+		if (gnutls_record_send(session,"N", 1) <= 0) /* send NO to client */
 			return SASL_FAIL;
 		return SASL_BADAUTH;
 	}
@@ -606,7 +630,7 @@ int sasl_user_check(user_session* c_session)
 		char *remoteip=NULL;
 		struct in_addr remote_inaddr;
 		remote_inaddr.s_addr=c_session->addr;
-		remoteip=inet_ntoa(remote_inaddr);
+		remoteip=inet_ntoa(remote_inaddr); //FIXME Gryzor : this function is NOT thread safe ??? See inet_ntop(3)
 		log_new_user(c_session->userid,remoteip);
 #ifdef DEBUG_ENABLE
 		if (c_session->multiusers){
@@ -761,7 +785,11 @@ int tls_connect(int c,gnutls_session** session_ptr){
 	gnutls_session* session;
 	*(session_ptr) = initialize_tls_session();
 	session=*(session_ptr);
-
+#ifdef DEBUG_ENABLE
+        if (session==NULL)
+            if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
+                g_message("NuFW TLS Init failure (initialize_tls_session())\n");
+#endif
 	gnutls_transport_set_ptr( *session, (gnutls_transport_ptr)c);
 
 #ifdef DEBUG_ENABLE
@@ -924,6 +952,7 @@ void create_x509_credentials(){
 	char *configfile=DEFAULT_CONF_FILE;
 	gpointer vpointer;
 	int ret;
+        int dh_params;
 	confparams nuauth_tls_vars[] = {
 		{ "nuauth_tls_key" , G_TOKEN_STRING , 0, NUAUTH_KEYFILE },
 		{ "nuauth_tls_cert" , G_TOKEN_STRING , 0, NUAUTH_KEYFILE },
@@ -990,7 +1019,13 @@ void create_x509_credentials(){
 		gnutls_certificate_set_x509_crl_file(x509_cred, nuauth_tls_crl, 
 				GNUTLS_X509_FMT_PEM);
 	}
-	generate_dh_params();
+	dh_params = generate_dh_params();
+#ifdef DEBUG_ENABLE
+        if (dh_params < 0)
+            if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
+                g_message("generate_dh_params() failed\n");
+#endif
+
 
 	gnutls_certificate_set_dh_params( x509_cred, dh_params);
 }
@@ -1215,12 +1250,14 @@ void* tls_user_authsrv()
 				continue;
 			if ( FD_ISSET(c,&wk_set) ) {
 				user_session * c_session;
+                                int u_request;
 #ifdef DEBUG_ENABLE
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
 					g_message("activity on %d\n",c);
 #endif
 				c_session = g_hash_table_lookup(client ,GINT_TO_POINTER(c));
-				if (treat_user_request( c_session ) == EOF) {
+                                u_request = treat_user_request( c_session );
+				if (u_request == EOF) {
 #ifdef DEBUG_ENABLE
 					if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
 						g_message("client disconnect on %d\n",c);
@@ -1237,7 +1274,12 @@ void* tls_user_authsrv()
 						g_hash_table_remove(client,GINT_TO_POINTER(c));
 						g_static_mutex_unlock (&client_mutex);
 					}
-				}
+				}else if (u_request < 0) {
+#ifdef DEBUG_ENABLE
+					if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
+						g_message("treat_user_request() failure\n");
+#endif
+                                }
 			}
 		}
 
