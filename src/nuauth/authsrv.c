@@ -183,13 +183,17 @@ int main(int argc,char * argv[])
 	debug_areas=DEFAULT_DEBUG_AREAS;
 
 
-       	/* Initialize glib thread system */
-	g_thread_init(NULL);
 
         /* init gcrypt and gnutls */
         gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_gthread);
+
+       	/* Initialize glib thread system */
+	g_thread_init(NULL);
+
         //Gryzor adding this
         gcry_check_version("1.0");
+        gcry_control( GCRYCTL_INIT_SECMEM, 16384, 0 );
+        gcry_control( GCRYCT_DISABLE_SECMEM_WARN );
 	gnutls_global_init();
 	/* initi credential */
 	create_x509_credentials();
