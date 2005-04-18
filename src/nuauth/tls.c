@@ -809,8 +809,18 @@ int tls_connect(int c,gnutls_session** session_ptr){
 	}
 #endif
 	ret = gnutls_handshake( *session);
+#ifdef DEBUG_ENABLE
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
+		g_message("gnutls_handshake() was just called\n");
+	}
+#endif
         while ((ret == GNUTLS_E_AGAIN) || (ret == GNUTLS_E_INTERRUPTED))
         {
+#ifdef DEBUG_ENABLE
+	    if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
+		  g_message("gnutls_handshake() was just called again\n");
+	    }
+#endif
             ret = gnutls_handshake( *session);
             count++;
             if (count>100)
