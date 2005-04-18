@@ -423,11 +423,15 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 		}
 		ret = sasl_getprop(conn, SASL_USERNAME, (const void **)	&(c_session->userid));
 		if (ret == SASL_OK){
-			if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN))
-				g_warning("%s is a badguy",c_session->userid);
+			if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
+                                inet_ntop( AF_INET, &remote_inaddr, addresse, INET_ADDRSTRLEN);
+				g_warning("%s at %s is a badguy",c_session->userid,addresse);
+                        }
 		}else{
-			if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN))
-				g_warning("unidentified badguy(?)");
+			if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
+                                inet_ntop( AF_INET, &remote_inaddr, addresse, INET_ADDRSTRLEN);
+				g_warning("unidentified badguy(?) from %s",addresse);
+                        }
 		}
 		if (gnutls_record_send(session,"N", 1)<=0) /* send NO to client */
 			return SASL_FAIL;
