@@ -315,6 +315,7 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 	gboolean external_auth=FALSE;
 	struct in_addr remote_inaddr;
 	ssize_t record_send;
+        char addresse[INET_ADDRSTRLEN+1];
 
 	remote_inaddr.s_addr=c_session->addr;
 
@@ -517,8 +518,11 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 			c_session->multiusers=TRUE;
 		} else {
 #ifdef DEBUG_ENABLE
-			if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-				g_message("%s users on multi server %s\n", c_session->userid,inet_ntoa(remote_inaddr));
+			if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
+                              inet_ntop( AF_INET, remote_inaddr, addresse, INET_ADDRSTRLEN);
+			      g_message("%s users on multi server %s\n", c_session->userid,addresse);
+			      //g_message("%s users on multi server %s\n", c_session->userid,inet_ntoa(remote_inaddr));
+                        }
 #endif
 			if (gnutls_record_send(session,"N", 1)<=0) /* send NO to client */
 				return SASL_FAIL;
@@ -626,11 +630,12 @@ int sasl_user_check(user_session* c_session)
 		ret = mysasl_negotiate(c_session, conn);
 	}
 	if ( ret == SASL_OK ) {
-		char *remoteip=NULL;
+		//char *remoteip=NULL;
 		struct in_addr remote_inaddr;
 		remote_inaddr.s_addr=c_session->addr;
-		remoteip=inet_ntoa(remote_inaddr); //FIXME Gryzor : this function is NOT thread safe ??? See inet_ntop(3)
-		log_new_user(c_session->userid,remoteip);
+                inet_ntop( AF_INET, remote_inaddr, addresse, INET_ADDRSTRLEN);
+//		remoteip=inet_ntoa(remote_inaddr); //FIXME Gryzor : this function is NOT thread safe ??? See inet_ntop(3)
+		log_new_user(c_session->userid,addresse);
 #ifdef DEBUG_ENABLE
 		if (c_session->multiusers){
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
