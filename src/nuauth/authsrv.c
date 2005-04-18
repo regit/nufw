@@ -188,6 +188,8 @@ int main(int argc,char * argv[])
 
         /* init gcrypt and gnutls */
         gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_gthread);
+        //Gryzor adding this
+        gcry_check_version();
 	gnutls_global_init();
 	/* initi credential */
 	create_x509_credentials();
