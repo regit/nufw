@@ -524,7 +524,7 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 			      //g_message("%s users on multi server %s\n", c_session->userid,inet_ntoa(remote_inaddr));
                         }
 #endif
-			if (gnutls_record_send(session,"N", 1)<=0) /* send NO to client */
+			if (gnutls_record_send(session,"N", 1) <= 0) /* send NO to client */
 				return SASL_FAIL;
 		}
 		g_free(stripped_user);
@@ -549,13 +549,14 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 					g_message("error when searching user groups");	
 				}
 #endif
-				gnutls_record_send(session,"N", 1); /* send NO to client */
+				if (gnutls_record_send(session,"N", 1) <= 0) /* send NO to client */
+                                    return SASL_FAIL;
 				return SASL_BADAUTH;
 			}
 		}
 	}
 
-	if (gnutls_record_send(session,"O", 1)<=0) /* send YES to client */
+	if (gnutls_record_send(session,"O", 1) <= 0) /* send YES to client */
 		return SASL_FAIL;
 	//g_message( "negotiation complete\n");
 
@@ -595,7 +596,7 @@ int sasl_user_check(user_session* c_session)
 				callbacks, 0, &conn);
 	}
 	if (ret != SASL_OK) {
-		g_warning("allocating connection state");
+		g_warning("allocating connection state - failure at sasl_server_new()");
 	}
 
 	secprops.min_ssf = 0;
@@ -787,6 +788,7 @@ void socket_close(gpointer data)
  */
 int tls_connect(int c,gnutls_session** session_ptr){
 	int ret;
+        int count=0;
 	gnutls_session* session;
 	*(session_ptr) = initialize_tls_session();
 	session=*(session_ptr);
@@ -803,6 +805,21 @@ int tls_connect(int c,gnutls_session** session_ptr){
 	}
 #endif
 	ret = gnutls_handshake( *session);
+        while ((ret == GNUTLS_E_AGAIN) || (ret == GNUTLS_E_INTERRUPTED))
+        {
+            ret = gnutls_handshake( *session);
+            count++;
+            if (count>100)
+                break;
+        }
+        if ((count>1) && ((ret == GNUTLS_E_GOT_APPLICATION_DATA) || (ret == GNUTLS_E_WARNING_ALERT_RECEIVED)))
+        {
+#ifdef DEBUG_ENABLE
+            if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
+                g_message("NuFW TLS Handshake : needed several calls and returned a nonfatal error. Trying to continue..");
+            }
+#endif
+        }else
 	if (ret < 0) {
 		close(c);
 		gnutls_deinit(*session);
@@ -854,7 +871,7 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 		c_session->req_needed=TRUE;
 		c_session->userid=NULL;
 		g_free(userdata);
-		if (nuauth_tls_request_cert==GNUTLS_CERT_REQUIRE) 
+		if (nuauth_tls_request_cert == GNUTLS_CERT_REQUIRE) 
 		{
 			gchar* username=NULL;
 			/* need to parse the certificate to see if it is a sufficient credential */
@@ -909,7 +926,17 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 					}
 					msg.length=0;
 					/* send mode to client */
-					gnutls_record_send(*(c_session->tls),&msg,sizeof(msg));
+					if (gnutls_record_send(*(c_session->tls),&msg,sizeof(msg)) < 0){ //FIXME : gryzor added this if() which must be checked
+#ifdef DEBUG_ENABLE
+                                            if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
+                                              g_message("Argh. gnutls_record_send() failure");
+#endif
+                                            close(c);
+                                            gnutls_deinit(*(c_session->tls));
+                                            g_free(c_session->tls);
+                                            g_free(c_session);
+                                            break;
+                                        }
 
 #ifdef DEBUG_ENABLE
 					if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
@@ -935,8 +962,16 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 #endif
 				/* get rid of client */
 				gnutls_bye(*(c_session->tls),GNUTLS_SHUT_WR);
+#ifdef DEBUG_ENABLE
+				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
+					g_message("gnutls_bye() was called");
+#endif
 				close(c);
 				gnutls_deinit(*(c_session->tls)); 
+#ifdef DEBUG_ENABLE
+				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
+					g_message("gnutls_deinit() was called");
+#endif
 				g_free(c_session->tls);
 				g_free(c_session);
 		}
