@@ -519,7 +519,7 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 		} else {
 #ifdef DEBUG_ENABLE
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
-                              inet_ntop( AF_INET, remote_inaddr, addresse, INET_ADDRSTRLEN);
+                              inet_ntop( AF_INET, &remote_inaddr, addresse, INET_ADDRSTRLEN);
 			      g_message("%s users on multi server %s\n", c_session->userid,addresse);
 			      //g_message("%s users on multi server %s\n", c_session->userid,inet_ntoa(remote_inaddr));
                         }
@@ -578,6 +578,7 @@ int sasl_user_check(user_session* c_session)
 	sasl_security_properties_t secprops;
 	gboolean external_auth=FALSE;
 	char buf[1024];
+        char addresse[INET_ADDRSTRLEN+1];
 #if FAIT_BEAU
 	char *groups=NULL;
 #endif
