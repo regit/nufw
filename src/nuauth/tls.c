@@ -634,7 +634,7 @@ int sasl_user_check(user_session* c_session)
 		//char *remoteip=NULL;
 		struct in_addr remote_inaddr;
 		remote_inaddr.s_addr=c_session->addr;
-                inet_ntop( AF_INET, remote_inaddr, addresse, INET_ADDRSTRLEN);
+                inet_ntop( AF_INET, &remote_inaddr, addresse, INET_ADDRSTRLEN);
 //		remoteip=inet_ntoa(remote_inaddr); //FIXME Gryzor : this function is NOT thread safe ??? See inet_ntop(3)
 		log_new_user(c_session->userid,addresse);
 #ifdef DEBUG_ENABLE
