@@ -127,19 +127,45 @@ static sasl_callback_t external_callbacks[] = {
 };
 
 void clean_session(user_session * c_session){
+#if TRY_DEBUG
 	gnutls_bye(
 			*(c_session->tls)	
 			, GNUTLS_SHUT_RDWR);
+#endif
 	gnutls_deinit(
 			*(c_session->tls)	
 		     );
+	g_free(c_session->tls);
 	if (c_session->userid){
 		g_free(c_session->userid);
 	}
 	g_slist_free(c_session->groups);
 	g_free(c_session);
-
 }
+
+/* strictly close a tls session
+ * nothing to care about client */
+
+int close_tls_session(int c,gnutls_session* session){
+	close(c);
+	gnutls_deinit(*session);
+#ifdef DEBUG_ENABLE
+				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
+					g_message("gnutls_deinit() was called");
+#endif
+	g_free(session);
+}
+/** cleanly end a tls session */
+int cleanly_close_tls_session(int c,gnutls_session* session){
+	gnutls_bye(*session,GNUTLS_SHUT_WR);
+#ifdef DEBUG_ENABLE
+				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
+					g_message("gnutls_bye() was called");
+#endif
+	return close_tls_session(c,session);
+}
+
+
 
 gnutls_session* initialize_tls_session()
 {
@@ -823,7 +849,7 @@ int tls_connect(int c,gnutls_session** session_ptr){
 #endif
             ret = gnutls_handshake( *session);
             count++;
-            if (count>100)
+            if (count>10)
                 break;
         }
         if ((count>1) && ((ret == GNUTLS_E_GOT_APPLICATION_DATA) || (ret == GNUTLS_E_WARNING_ALERT_RECEIVED)))
@@ -835,8 +861,7 @@ int tls_connect(int c,gnutls_session** session_ptr){
 #endif
         }else
 	if (ret < 0) {
-		close(c);
-		gnutls_deinit(*session);
+		close_tls_session(c,session);
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
 			g_message("NuFW TLS Handshake has failed (%s)\n\n",
 					gnutls_strerror(ret)) ; 
@@ -857,8 +882,7 @@ int tls_connect(int c,gnutls_session** session_ptr){
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
 				g_message("Certificate verification failed : %s",gnutls_strerror(ret));
 			}
-			close(c);
-			gnutls_deinit(*session);
+			close_tls_session(c,session);
 			return SASL_BADPARAM;
 		}
 	}
@@ -945,9 +969,7 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
                                             if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
                                               g_message("Argh. gnutls_record_send() failure");
 #endif
-                                            close(c);
-                                            gnutls_deinit(*(c_session->tls));
-                                            g_free(c_session->tls);
+					    close_tls_session(c,c_session->tls);
                                             g_free(c_session);
                                             break;
                                         }
@@ -964,9 +986,8 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
 					g_message("Crash on user side, closing socket");
 #endif
-				close(c);
-				gnutls_deinit(*(c_session->tls)); 
-				g_free(c_session->tls);
+
+				close_tls_session(c,c_session->tls);
 				g_free(c_session);
 				break;
 			default:
@@ -975,18 +996,7 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 					g_message("Problem with user, closing socket");
 #endif
 				/* get rid of client */
-				gnutls_bye(*(c_session->tls),GNUTLS_SHUT_WR);
-#ifdef DEBUG_ENABLE
-				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-					g_message("gnutls_bye() was called");
-#endif
-				close(c);
-				gnutls_deinit(*(c_session->tls)); 
-#ifdef DEBUG_ENABLE
-				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-					g_message("gnutls_deinit() was called");
-#endif
-				g_free(c_session->tls);
+				cleanly_close_tls_session(c,c_session->tls);
 				g_free(c_session);
 		}
 	}
@@ -1411,6 +1421,7 @@ void clean_nufw_session(nufw_session * c_session){
 	gnutls_deinit(
 			*(c_session->tls)	
 		     );
+	g_free(c_session->tls);
 }
 
 
@@ -1805,6 +1816,7 @@ void push_worker ()
 			case INSERT_CLIENT:
 				{
 					struct tls_insert_data* datas=message->datas;
+					/* FIXME regarde si pas bizarre */
 					g_hash_table_insert(client,GINT_TO_POINTER(datas->socket),datas->data);
 				}
 				break;
