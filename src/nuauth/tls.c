@@ -148,12 +148,13 @@ void clean_session(user_session * c_session){
 
 int close_tls_session(int c,gnutls_session* session){
 	close(c);
-	gnutls_deinit(*session);
+	gnutls_deinit(*session); /* TODO check output */
 #ifdef DEBUG_ENABLE
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
 					g_message("gnutls_deinit() was called");
 #endif
 	g_free(session);
+	return 1;
 }
 /** cleanly end a tls session */
 int cleanly_close_tls_session(int c,gnutls_session* session){
@@ -301,7 +302,7 @@ treat_user_request (user_session * c_session)
 			}
 		} else {
 #ifdef DEBUG_ENABLE
-                        if (read_size <0) //FIXME : Gryzor added this test, but is unsure
+                        if (read_size <0) 
 			  if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
 				g_message("Receive error from user %s\n",datas->userid );
 #endif
@@ -662,11 +663,9 @@ int sasl_user_check(user_session* c_session)
 		ret = mysasl_negotiate(c_session, conn);
 	}
 	if ( ret == SASL_OK ) {
-		//char *remoteip=NULL;
 		struct in_addr remote_inaddr;
 		remote_inaddr.s_addr=c_session->addr;
                 inet_ntop( AF_INET, &remote_inaddr, addresse, INET_ADDRSTRLEN);
-//		remoteip=inet_ntoa(remote_inaddr); //FIXME Gryzor : this function is NOT thread safe ??? See inet_ntop(3)
 		log_new_user(c_session->userid,addresse);
 #ifdef DEBUG_ENABLE
 		if (c_session->multiusers){
@@ -952,7 +951,7 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 						g_async_queue_push(tls_push,message);
 					} else {
 						g_static_mutex_lock (&client_mutex);
-						g_hash_table_insert(client,GINT_TO_POINTER(c),c_session);
+						g_hash_table_insert(client_conn_hash,GINT_TO_POINTER(c),c_session);
 						g_static_mutex_unlock (&client_mutex);
 					}
 					/* unlock hash client */
@@ -964,7 +963,7 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 					}
 					msg.length=0;
 					/* send mode to client */
-					if (gnutls_record_send(*(c_session->tls),&msg,sizeof(msg)) < 0){ //FIXME : gryzor added this if() which must be checked
+					if (gnutls_record_send(*(c_session->tls),&msg,sizeof(msg)) < 0){ 
 #ifdef DEBUG_ENABLE
                                             if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
                                               g_message("Argh. gnutls_record_send() failure");
@@ -1133,7 +1132,7 @@ void* tls_user_authsrv()
 	nuauth_number_authcheckers=*(int*)(vpointer?vpointer:&nuauth_number_authcheckers);
 
 	/* build client hash */
-	client = g_hash_table_new_full(
+	client_conn_hash = g_hash_table_new_full(
 			NULL,
 			NULL,
 			(GDestroyNotify) socket_close,
@@ -1319,7 +1318,12 @@ void* tls_user_authsrv()
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
 					g_message("activity on %d\n",c);
 #endif
-				c_session = g_hash_table_lookup(client ,GINT_TO_POINTER(c));
+				
+				/* we lock here but can do other thing on hash as it is not destructive 
+				 * in push mode modification of hash are done in push_worker */
+				g_static_mutex_lock (&client_mutex);
+				c_session = g_hash_table_lookup(client_conn_hash ,GINT_TO_POINTER(c));
+				g_static_mutex_unlock (&client_mutex);
                                 u_request = treat_user_request( c_session );
 				if (u_request == EOF) {
 #ifdef DEBUG_ENABLE
@@ -1335,7 +1339,7 @@ void* tls_user_authsrv()
 						g_async_queue_push(tls_push,message);
 					} else {
 						g_static_mutex_lock (&client_mutex);
-						g_hash_table_remove(client,GINT_TO_POINTER(c));
+						g_hash_table_remove(client_conn_hash,GINT_TO_POINTER(c));
 						g_static_mutex_unlock (&client_mutex);
 					}
 				}else if (u_request < 0) {
@@ -1764,6 +1768,10 @@ void  warn_client (gpointer key, gpointer value, gpointer user_data)
 
 /**
  * dequeue addr that need to do a check.
+ * 
+ * lock is only needed when modifications are done
+ * because when this thread work (push mode) it's the only one
+ * who can modify the hash
  */
 void push_worker () 
 {
@@ -1787,7 +1795,7 @@ void push_worker ()
 					global_msg->addr=((tracking *)message->datas)->saddr;
 					global_msg->found = FALSE;
 					/* search in client array */
-					g_hash_table_foreach (client, warn_client, global_msg);
+					g_hash_table_foreach (client_conn_hash, warn_client, global_msg);
 					/* do we have found something */
 					if (global_msg->addr != INADDR_ANY){
 						if (global_msg->found == FALSE ){
@@ -1809,19 +1817,20 @@ void push_worker ()
 			case FREE_CLIENT:
 				{
 					g_static_mutex_lock (&client_mutex);
-					g_hash_table_remove(client,message->datas);
+					g_hash_table_remove(client_conn_hash,message->datas);
 					g_static_mutex_unlock (&client_mutex);
 				}
 				break;
 			case INSERT_CLIENT:
 				{
 					struct tls_insert_data* datas=message->datas;
-					/* FIXME regarde si pas bizarre */
-					g_hash_table_insert(client,GINT_TO_POINTER(datas->socket),datas->data);
+					g_static_mutex_lock (&client_mutex);
+					g_hash_table_insert(client_conn_hash,GINT_TO_POINTER(datas->socket),datas->data);
+					g_static_mutex_unlock (&client_mutex);
 				}
 				break;
 			case REFRESH_CLIENTS:
-				g_hash_table_foreach (client, refresh_client, NULL);
+				g_hash_table_foreach (client_conn_hash, refresh_client, NULL);
 				break;
 			default:
 				g_message("lost");

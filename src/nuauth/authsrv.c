@@ -121,7 +121,7 @@ void nuauth_cleanup( int signal ) {
 		g_message("caught interrupt, cleaning");
 	g_hash_table_destroy(nufw_servers);
 	/* free client hash */
-	g_hash_table_destroy(client);
+	g_hash_table_destroy(client_conn_hash);
 	/* destroy pid file */
 	unlink(NUAUTH_PID_FILE);
 	/* exit */

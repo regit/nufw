@@ -519,7 +519,7 @@ void process_poll(int signum);
 
 /* END AUDIT */
 
-GHashTable* client;
+GHashTable* client_conn_hash;
 
 void create_x509_credentials();
 void* tls_nufw_authsrv();
