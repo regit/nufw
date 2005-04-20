@@ -113,6 +113,7 @@ static struct gcry_thread_cbs gcry_threads_gthread =
  * Return : None
  */
 void nuauth_cleanup( int signal ) {
+	int i;
 	/* clean gnutls */
 	gnutls_global_deinit();
 	g_free(myaudit);
@@ -122,6 +123,12 @@ void nuauth_cleanup( int signal ) {
 	g_hash_table_destroy(nufw_servers);
 	/* free client hash */
 	g_hash_table_destroy(client_conn_hash);
+	/* close all file */
+	for(i=0;i<=65535;i++){
+		if (shutdown(i,SHUT_RDWR) == ENOTSOCK){
+			close(i);
+		}
+	}
 	/* destroy pid file */
 	unlink(NUAUTH_PID_FILE);
 	/* exit */
