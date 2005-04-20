@@ -23,6 +23,8 @@
 #include <pwd.h>
 #include <security/pam_appl.h>
 
+GStaticMutex pam_mutex;
+
 GSList * getugroups (char *username, gid_t gid);
 
 typedef struct _auth_pam_userinfo {
@@ -106,7 +108,9 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass
 
 		userinfo.name=user;
 		userinfo.pw=pass;
-		
+
+		g_static_mutex_lock (&pam_mutex);
+
 		ret = pam_start("nuauth", user, &conv_info, &pamh);
 		if (ret != PAM_SUCCESS){
 			g_error("Can not initiate pam, dying");
@@ -121,6 +125,9 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass
 			return SASL_BADAUTH;
 		}
 		pam_end(pamh,PAM_DATA_SILENT);
+		
+		g_static_mutex_unlock (&pam_mutex);
+
 	}
 
 

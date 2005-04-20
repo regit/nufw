@@ -191,9 +191,10 @@ int main(int argc,char * argv[])
 	g_thread_init(NULL);
 
         //Gryzor adding this
-        gcry_check_version("1.0");
-        gcry_control( GCRYCTL_INIT_SECMEM, 16384, 0 );
-        gcry_control( GCRYCT_DISABLE_SECMEM_WARN );
+       /* gcry_check_version("1.0");
+        gcry_control( GCRYCTL_INIT_SECMEM, 131072, 0 );
+        gcry_control( GCRYCTL_DISABLE_SECMEM_WARN );
+	*/
 	gnutls_global_init();
 	/* initi credential */
 	create_x509_credentials();
