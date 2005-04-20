@@ -130,8 +130,10 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass
 		g_static_mutex_unlock (&pam_mutex);
 
 	}
-
-
+#ifdef WINBIND_HACK
+	/* User need to be pass in upper case to winbind */
+	g_strup(user);
+#endif
 	ret = getpwnam_r(user, &result_buf, buffer, 512, &result_bufp);
 	if (ret || (! result_bufp)){
 		return SASL_BADAUTH;
