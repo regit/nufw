@@ -171,7 +171,9 @@ int cleanly_close_tls_session(int c,gnutls_session* session){
 gnutls_session* initialize_tls_session()
 {
 	gnutls_session* session;
-	const int cert_type_priority[3] = { GNUTLS_CRT_X509, 0 };
+#if 0
+	const int cert_type_priority[2] = { GNUTLS_CRT_X509, 0 };
+#endif
 
 	session = g_new0(gnutls_session,1);
         if (session == NULL)
@@ -186,8 +188,10 @@ gnutls_session* initialize_tls_session()
 	if (gnutls_set_default_priority( *session)<0)
             return NULL;
 
+#if 0
 	if (gnutls_certificate_type_set_priority(*session, cert_type_priority)<0)
             return NULL;
+#endif
 
 	if (gnutls_credentials_set(*session, GNUTLS_CRD_CERTIFICATE, x509_cred)<0)
             return NULL;

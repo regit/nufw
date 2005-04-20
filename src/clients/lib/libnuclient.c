@@ -738,7 +738,7 @@ NuAuth* nu_client_init(char *username, unsigned long userid, char *password,
 	gnutls_certificate_credentials xcred;
 	conntable_t *new;
 	int ret;
-	const int cert_type_priority[3] = { GNUTLS_CRT_X509,  0 };
+	const int cert_type_priority[2] = { GNUTLS_CRT_X509,  0 };
 	//const int cert_type_priority[3] = { GNUTLS_CRT_X509, GNUTLS_CRT_OPENPGP, 0 };
 	struct hostent *host;
 	NuAuth * session;
