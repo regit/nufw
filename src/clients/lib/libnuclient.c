@@ -738,7 +738,9 @@ NuAuth* nu_client_init(char *username, unsigned long userid, char *password,
 	gnutls_certificate_credentials xcred;
 	conntable_t *new;
 	int ret;
+#if 0
 	const int cert_type_priority[2] = { GNUTLS_CRT_X509,  0 };
+#endif
 	//const int cert_type_priority[3] = { GNUTLS_CRT_X509, GNUTLS_CRT_OPENPGP, 0 };
 	struct hostent *host;
 	NuAuth * session;
@@ -859,7 +861,9 @@ NuAuth* nu_client_init(char *username, unsigned long userid, char *password,
 		gnutls_init(session->tls, GNUTLS_CLIENT);
 
 		gnutls_set_default_priority(*(session->tls));
+#if 0
 		gnutls_certificate_type_set_priority(*(session->tls), cert_type_priority);
+#endif
 		/* put the x509 credentials to the current session */
 		gnutls_credentials_set(*(session->tls), GNUTLS_CRD_CERTIFICATE, xcred);
 
