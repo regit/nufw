@@ -1166,10 +1166,11 @@ void* tls_user_authsrv()
 	}
 #endif
 
+	/* FIXME chose not that ! */
 	tls_sasl_worker = g_thread_pool_new  ((GFunc) tls_sasl_connect,
 			NULL,
-			nuauth_number_authcheckers,
-			TRUE,
+			nuauth_tls_max_clients,
+			FALSE,
 			NULL);
 	/* open the socket */
 	sck_inet = socket (AF_INET,SOCK_STREAM,0);
