@@ -273,13 +273,13 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
                   STATE_OPEN,
                   OSFullname,
                   AppFullname
-                  ) >= LONG_REQUEST_SIZE-1){
+                  ) >= LONG_REQUEST_SIZE-1 ) {
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                     g_warning("Building pgsql insert query, the LONG_REQUEST_SIZE limit was reached!\n");
 	g_free(OSFullname);
 		g_free(AppFullname);
                 return -1;
-            }
+            	}
 		g_free(OSFullname);
 		g_free(AppFullname);
 	    } else {
@@ -515,6 +515,9 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
             iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
             strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
             strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
+	    if (element.username == NULL){
+			element.username="No User Given";
+	    }
             if (snprintf(request,LONG_REQUEST_SIZE-1,"INSERT INTO %s (username,user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,state,oob_prefix,client_os,client_app) VALUES ('%s',%u,%lu,%u,'%s','%s',%u,%u,%hu,'DROP','%s','%s');",//TODO : username NULL?
                   pgsql_table_name,
                   element.username,
@@ -555,6 +558,9 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
             iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
             strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
             strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
+	    if (element.username == NULL){
+			element.username="No User Given";
+	    }
             if (snprintf(request,LONG_REQUEST_SIZE-1,"INSERT INTO %s (username,user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,state,oob_prefix,client_os,client_app) VALUES ('%s',%u,%lu,%u,'%s','%s',%u,%u,%hu,'DROP','%s','%s');", //TODO : username NULL?
                   pgsql_table_name,
                   element.username,
