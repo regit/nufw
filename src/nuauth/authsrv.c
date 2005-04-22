@@ -190,6 +190,7 @@ int main(int argc,char * argv[])
 
        	/* Initialize glib thread system */
 	g_thread_init(NULL);
+	g_thread_pool_set_max_unused_threads (5);
 
         //Gryzor adding this
        /* gcry_check_version("1.0");
