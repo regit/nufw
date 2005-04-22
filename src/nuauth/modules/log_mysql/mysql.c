@@ -481,9 +481,8 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
 							g_free(AppFullname);
 						} else {
 							if (snprintf(request,LONG_REQUEST_SIZE-1,
-										"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,state,oob_prefix) VALUES (%u,%lu,%u,%lu,%lu,%u,%u,%hu,'DROP')", 
+										"INSERT INTO %s (oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,state,oob_prefix) VALUES (%lu,%u,%lu,%lu,%u,%u,%hu,'UNAUTHENTICATED DROP')", 
 										mysql_table_name,
-										(element.user_id),
 										element.timestamp,
 										(element.tracking_hdrs).protocol,
 										(long unsigned int)(element.tracking_hdrs).saddr,
@@ -511,7 +510,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
 						OSFullname = generate_osname(element.sysname,element.version,element.release);
 						AppFullname = generate_appname(element.appname); /*Just a size check actually*/
 						if (element.username){
-							if (snprintf(request,LONG_REQUEST_SIZE-1,"INSERT INTO %s (username,user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,state,oob_prefix,client_os,client_app) VALUES ('%s',%u,%lu,%u,%lu,%lu,%u,%u,%hu,'DROP','%s','%s')", //TODO : username NULL? 
+							if (snprintf(request,LONG_REQUEST_SIZE-1,"INSERT INTO %s (username,user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,state,oob_prefix,client_os,client_app) VALUES ('%s',%u,%lu,%u,%lu,%lu,%u,%u,%hu,'DROP','%s','%s')", 
 										mysql_table_name,
 										element.username,
 										(element.user_id),
@@ -542,7 +541,29 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
 
 							return 0;
 							break;
+						} else {
+							if (snprintf(request,LONG_REQUEST_SIZE-1,
+										"INSERT INTO %s (oob_time_sec,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,state,oob_prefix) VALUES (%lu,%u,%lu,%lu,%u,%u,%hu,'UNAUTHENTICATED DROP')", 
+										mysql_table_name,
+										element.timestamp,
+										(element.tracking_hdrs).protocol,
+										(long unsigned int)(element.tracking_hdrs).saddr,
+										(long unsigned int)(element.tracking_hdrs).daddr,
+										(element.tracking_hdrs).source,
+										(element.tracking_hdrs).dest,
+										STATE_DROP) >= (LONG_REQUEST_SIZE-1)){
+								if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+									g_warning("Building mysql insert query, the LONG_REQUEST_SIZE limit was reached!\n");
+								return -1;
+							}
+							Result = mysql_real_query(ld, request, strlen(request));
+							if (Result != 0){
+								if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+									g_warning("Can not insert Data : %s\n",mysql_error(ld));
+								return -1;
+							}
 						}
+						break;
 					}
 				default:
 					{
