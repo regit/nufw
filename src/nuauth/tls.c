@@ -153,7 +153,16 @@ int close_tls_session(int c,gnutls_session* session){
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
 					g_message("gnutls_deinit() was called");
 #endif
+                                //Gryzor saw a crash occur here.
+#ifdef DEBUG_ENABLE
+				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
+					g_message("before g_free()");
+#endif
 	g_free(session);
+#ifdef DEBUG_ENABLE
+				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
+					g_message("after g_free()");
+#endif
 	return 1;
 }
 /** cleanly end a tls session */
@@ -376,6 +385,8 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 	{
 		return SASL_FAIL;
 	}
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+		g_message("Now we know record_send >= 0");
 
 	memset(chosenmech,0,sizeof chosenmech);
 	len = gnutls_record_recv(session, chosenmech, sizeof chosenmech);
@@ -452,6 +463,7 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
 			g_warning("sasl negotiation error: %d",r);
 		}
+		g_message("data : %s",data);
 		ret = sasl_getprop(conn, SASL_USERNAME, (const void **)	&(c_session->userid));
 		if (ret == SASL_OK){
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
@@ -826,6 +838,10 @@ int tls_connect(int c,gnutls_session** session_ptr){
 	*(session_ptr) = initialize_tls_session();
 	session=*(session_ptr);
 #ifdef DEBUG_ENABLE
+	if (session_ptr == NULL)
+            if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN))
+                g_message("NuFW TLS Init failure (session_ptr is NULL)\n");
+
         if (session==NULL)
             if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN))
                 g_message("NuFW TLS Init failure (initialize_tls_session())\n");
@@ -837,7 +853,9 @@ int tls_connect(int c,gnutls_session** session_ptr){
 		g_message("NuFW TLS Handshaking\n");
 	}
 #endif
+	g_static_mutex_lock (&gnutls_handshake_mutex);
 	ret = gnutls_handshake( *session);
+	g_static_mutex_unlock (&gnutls_handshake_mutex);
 #ifdef DEBUG_ENABLE
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
 		g_message("gnutls_handshake() was just called\n");
@@ -850,7 +868,9 @@ int tls_connect(int c,gnutls_session** session_ptr){
 		  g_message("gnutls_handshake() was just called again\n");
 	    }
 #endif
+	    g_static_mutex_lock (&gnutls_handshake_mutex);
             ret = gnutls_handshake( *session);
+	    g_static_mutex_unlock (&gnutls_handshake_mutex);
             count++;
             if (count>10)
                 break;
@@ -1019,7 +1039,8 @@ void create_x509_credentials(){
 	char *configfile=DEFAULT_CONF_FILE;
 	gpointer vpointer;
 	int ret;
-        int dh_params;
+        //gnutls_dh_params dh_params;
+        int int_dh_params;
 	confparams nuauth_tls_vars[] = {
 		{ "nuauth_tls_key" , G_TOKEN_STRING , 0, NUAUTH_KEYFILE },
 		{ "nuauth_tls_cert" , G_TOKEN_STRING , 0, NUAUTH_KEYFILE },
@@ -1086,14 +1107,15 @@ void create_x509_credentials(){
 		gnutls_certificate_set_x509_crl_file(x509_cred, nuauth_tls_crl, 
 				GNUTLS_X509_FMT_PEM);
 	}
-	dh_params = generate_dh_params();
+	int_dh_params = generate_dh_params();
 #ifdef DEBUG_ENABLE
-        if (dh_params < 0)
+        if (int_dh_params < 0)
             if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
                 g_message("generate_dh_params() failed\n");
 #endif
 
 
+	//Gryzor doesnt understand wht dh_params is passed as 2nd argument, where a gnutls_dh_params_t structure is awaited
 	gnutls_certificate_set_dh_params( x509_cred, dh_params);
 }
 
@@ -1800,7 +1822,9 @@ void push_worker ()
 					global_msg->addr=((tracking *)message->datas)->saddr;
 					global_msg->found = FALSE;
 					/* search in client array */
+					g_static_mutex_lock (&client_mutex);
 					g_hash_table_foreach (client_conn_hash, warn_client, global_msg);
+					g_static_mutex_unlock (&client_mutex);
 					/* do we have found something */
 					if (global_msg->addr != INADDR_ANY){
 						if (global_msg->found == FALSE ){
@@ -1835,7 +1859,9 @@ void push_worker ()
 				}
 				break;
 			case REFRESH_CLIENTS:
+					g_static_mutex_lock (&client_mutex);
 				g_hash_table_foreach (client_conn_hash, refresh_client, NULL);
+					g_static_mutex_unlock (&client_mutex);
 				break;
 			default:
 				g_message("lost");

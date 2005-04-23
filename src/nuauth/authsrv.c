@@ -18,6 +18,7 @@
 
 #include <auth_srv.h>
 #include <gcrypt.h>
+#include <sasl/saslutil.h>
 #if 0
 #ifdef G_THREADS_IMPL_POSIX
 //#warning "this may be a source of problems"
@@ -66,6 +67,41 @@ confparams nuauth_vars[] = {
 };
 #endif 
 
+/*sasl init function*/
+void *sasl_gthread_mutex_init(void)
+{
+	GMutex* lock = g_mutex_new();
+//	if (!lock)								      
+//		return ENOMEM;							      
+	return lock;
+//	return 0;								      
+}
+
+int sasl_gthread_mutex_lock(void *lock)
+{
+	g_mutex_lock(lock);
+	return 0;
+}
+
+int sasl_gthread_mutex_unlock(void *lock)
+{
+	g_mutex_unlock(lock);
+	return 0;
+}
+
+void sasl_gthread_mutex_free(void *lock)
+{
+	g_mutex_free(lock);
+}
+
+void our_sasl_init(void){
+	sasl_set_mutex(sasl_gthread_mutex_init, 
+			sasl_gthread_mutex_lock, 
+			sasl_gthread_mutex_unlock, 
+			sasl_gthread_mutex_free);
+}
+
+
 /* gcrypt init function */
 static int gcry_gthread_mutex_init (void **priv)			      
 {									      
@@ -100,6 +136,47 @@ static struct gcry_thread_cbs gcry_threads_gthread =
 	gcry_gthread_mutex_init, gcry_gthread_mutex_destroy,			      
 	gcry_gthread_mutex_lock, gcry_gthread_mutex_unlock 
 };
+
+//sasl_set_mutex();
+
+/* sasl init functions */
+#if 0
+static void *sasl_mutex_new(void)
+{
+  /* got to return something; NULL => failure */
+  return sasl_alloc(1);
+}
+
+int sasl_mutex_lock(void *mutex)
+{
+  return 0;
+}
+
+int sasl_mutex_unlock(void *mutex)
+{
+  return 0;
+}
+
+void sasl_mutex_dispose(void *mutex)
+{
+  sasl_free(mutex);
+}
+
+sasl_mutex_utils_t _sasl_mutex_utils={
+  &sasl_mutex_new,
+  &sasl_mutex_lock,
+  &sasl_mutex_unlock,
+  &sasl_mutex_dispose
+};
+
+#endif
+//{
+//  _sasl_mutex_utils.new=n;
+//  _sasl_mutex_utils.lock=l;
+//  _sasl_mutex_utils.unlock=u;
+//  _sasl_mutex_utils.dispose=d;
+//}
+
 
 
 
@@ -183,9 +260,11 @@ int main(int argc,char * argv[])
 	debug_level=0;
 	debug_areas=DEFAULT_DEBUG_AREAS;
 
+	our_sasl_init();
 
 
         /* init gcrypt and gnutls */
+//        gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_gthread);
         gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_gthread);
 
        	/* Initialize glib thread system */
@@ -200,8 +279,6 @@ int main(int argc,char * argv[])
 	gnutls_global_init();
 	/* initi credential */
 	create_x509_credentials();
-
-
 
 
 
@@ -661,7 +738,7 @@ int main(int argc,char * argv[])
 	/* fill empty header to be able to run push_control */
 	empty_header.saddr=INADDR_ANY;
 	/* create thread for client request sender */
-	tls_pusher = g_thread_create ( push_worker,
+	tls_pusher = g_thread_create ( (GThreadFunc)push_worker,
 			NULL,
 			FALSE,
 			NULL);

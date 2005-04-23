@@ -201,6 +201,10 @@ GStaticMutex insert_mutex;
 /** global lock for client hash. */
 GStaticMutex client_mutex;
 
+/**Gryzor's global lock for gnutls_handshake */
+GStaticMutex gnutls_handshake_mutex;
+
+
 /**
  * pool of thread which treat user packet.
  */
