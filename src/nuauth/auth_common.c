@@ -121,8 +121,16 @@ void search_and_fill () {
 	connection * element = NULL;
 	connection * pckt = NULL;
 
-	g_async_queue_ref (connexions_queue);
-	g_async_queue_ref (tls_push);
+	if (!g_async_queue_ref (connexions_queue))
+        {
+            g_message("Cannot g_async_queue_ref on connexions_queue!");
+            exit(-1);
+        }
+	if (!g_async_queue_ref (tls_push))
+        {
+            g_message("Cannot g_async_queue_ref on tls_push!");
+            exit(-1);
+        }
 	/* wait for message */
 	while ( (pckt = g_async_queue_pop(connexions_queue)) ) {
 		/* search pckt */

@@ -71,8 +71,8 @@ confparams nuauth_vars[] = {
 void *sasl_gthread_mutex_init(void)
 {
 	GMutex* lock = g_mutex_new();
-//	if (!lock)								      
-//		return ENOMEM;							      
+	if (!lock)								      
+		return NULL;							      
 	return lock;
 //	return 0;								      
 }
@@ -103,7 +103,7 @@ void our_sasl_init(void){
 
 
 /* gcrypt init function */
-static int gcry_gthread_mutex_init (void **priv)			      
+static int gcry_gthread_mutex_init (void **priv)			     //to check 
 {									      
 	GMutex* lock = g_mutex_new();
 	if (!lock)								      
@@ -260,16 +260,16 @@ int main(int argc,char * argv[])
 	debug_level=0;
 	debug_areas=DEFAULT_DEBUG_AREAS;
 
-	our_sasl_init();
 
 
         /* init gcrypt and gnutls */
 //        gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_gthread);
-        gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_gthread);
 
        	/* Initialize glib thread system */
 	g_thread_init(NULL);
+	our_sasl_init();
 	g_thread_pool_set_max_unused_threads (5);
+        gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_gthread);
 
         //Gryzor adding this
        /* gcry_check_version("1.0");
@@ -280,6 +280,9 @@ int main(int argc,char * argv[])
 	/* initi credential */
 	create_x509_credentials();
 
+	tls_push = g_async_queue_new ();
+	if (!tls_push)
+		exit(1);
 
 
 	/*vtable=g_new(GMemVTable, 1);
