@@ -1221,8 +1221,8 @@ void create_x509_credentials(){
 
 
 	//Gryzor doesnt understand wht dh_params is passed as 2nd argument, where a gnutls_dh_params_t structure is awaited
-	gnutls_certificate_set_dh_params( x509_cred, 0);
-	//gnutls_certificate_set_dh_params( x509_cred, dh_params);
+//	gnutls_certificate_set_dh_params( x509_cred, 0);
+	gnutls_certificate_set_dh_params( x509_cred, dh_params);
 }
 
 /**
