@@ -60,13 +60,21 @@ static const char *group_prop[]={SASL_USER_GROUPS,NULL};
 
 GPrivate* group_priv;
 GPrivate* user_priv;
+GPrivate* result_mech;
+
+
+/* where using private datas to avoid over allocating */
 
 int external_get_opt(void *context, const char *plugin_name,
 		const char *option,
 		const char **result, unsigned *len)
 {
 	if (! strcmp(option,"mech_list")){
-		*result=strdup("external");
+		*result=g_private_get(result_mech);
+		if (*result == NULL){
+			*result=g_strdup("external");
+			g_private_set(result_mech,result);
+		}
 	}
 	return SASL_OK;
 }
@@ -76,7 +84,11 @@ int internal_get_opt(void *context, const char *plugin_name,
 		const char **result, unsigned *len)
 {
 	if (! strcmp(option,"mech_list")){
-		*result=strdup("plain");
+		*result=g_private_get(result_mech);
+		if (*result == NULL){
+			*result=g_strdup("plain");
+			g_private_set(result_mech,result);
+		}
 	}
 	return SASL_OK;
 }
@@ -1271,6 +1283,7 @@ void* tls_user_authsrv()
 			(GDestroyNotify) clean_session
 			);
 
+	g_private_new(result_mech);
 
 	/* initialize SASL */
 	ret = sasl_server_init(callbacks, "nuauth");
