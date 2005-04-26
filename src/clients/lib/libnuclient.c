@@ -483,16 +483,6 @@ int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn)
  */
 static int send_user_pckt(NuAuth * session,conn_t* c)
 {
-#if USE_PROTCCOL_1
-	char t_int8=0;
-	u_int16_t t_int16=0;
-	u_int32_t t_int32=0;
-	u_int8_t proto_version=0x1,answer_type=0x3;
-	struct in_addr oneip;
-	char onaip[16];
-	char* md5sigs;
-	u_int32_t  timestamp=time(NULL);
-#endif
 	char datas[PACKET_SIZE];
 	/* TODO : look if we don't override datas */
 	char *pointer=NULL;
@@ -500,85 +490,6 @@ static int send_user_pckt(NuAuth * session,conn_t* c)
 
 	memset(datas,0,sizeof datas);
 	switch (session->protocol){
-#if USE_PROTOCOL_1
-		case 1:
-			{
-				char md5datas[512];
-				unsigned long seed[2];
-				char salt[] = "$1$........";
-				const char *const seedchars = 
-					"./0123456789ABCDEFGHIJKLMNOPQRST"
-					"UVWXYZabcdefghijklmnopqrstuvwxyz";
-				int i;
-
-				memcpy(datas,&(session->protocol),sizeof session->protocol);
-				pointer=datas+sizeof proto_version;
-				memcpy(pointer,&answer_type,sizeof answer_type);
-				pointer+=sizeof answer_type;
-				/*  id user authsrv */
-				t_int16=session->userid;
-				memcpy(pointer,&t_int16,sizeof(u_int16_t));
-				pointer+=sizeof(u_int16_t);
-				/* saddr */
-				t_int32=htonl(c->lcl);
-				memcpy(pointer,&t_int32,sizeof(u_int32_t));
-				pointer+=sizeof (u_int32_t) ;
-				/* daddr */
-				t_int32=htonl(c->rmt);
-				memcpy(pointer,&t_int32,sizeof(u_int32_t));
-				pointer+=sizeof(u_int32_t);
-				/* protocol */
-				t_int8=0x6;
-				memcpy(pointer,&t_int8,sizeof t_int8);
-				pointer+=sizeof t_int8;
-				pointer+=3;
-				/* sport */
-				t_int16=c->lclp;
-				memcpy(pointer,&t_int16,sizeof t_int16);
-				pointer+=sizeof t_int16;
-				/* dport */
-				t_int16=c->rmtp;
-				memcpy(pointer,&t_int16,sizeof t_int16);
-				pointer+=sizeof t_int16;
-				memcpy(pointer,&timestamp,sizeof timestamp);
-				pointer+=sizeof timestamp;
-				memcpy(pointer,&(session->packet_id),sizeof (session->packet_id));
-				pointer+=sizeof (session->packet_id);
-
-				/* construct the md5sum */
-				/* first md5 datas */
-				oneip.s_addr=(c->lcl);
-				strncpy(onaip,inet_ntoa(oneip),16);
-				oneip.s_addr=(c->rmt);
-				snprintf(md5datas,512,
-						"%s%u%s%u%lu%ld%s",
-						onaip,
-						c->lclp,
-						inet_ntoa(oneip),
-						c->rmtp,
-						(unsigned long int) timestamp,
-						session->packet_id,
-						session->password);
-
-				session->packet_id++;
-				/* then the salt */
-				/* Generate a (not very) random seed.  
-				   You should do it better than this... */
-				seed[0] = time(NULL);
-				seed[1] = getpid() ^ (seed[0] >> 14 & 0x30000);
-
-				/* Turn it into printable characters from `seedchars'. */
-				for (i = 0; i < 8; i++)
-					salt[3+i] = seedchars[(seed[i/5] >> (i%5)*6) & 0x3f];
-
-				/* next crypt */
-				md5sigs=crypt(md5datas,salt);
-				/* complete message */
-				memcpy(pointer,md5sigs,35);
-				pointer+=35;
-			}
-			break;
-#endif
 		case 2:
 			{
 				struct nuv2_header header;
