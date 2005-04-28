@@ -61,6 +61,5 @@ void external_ip_auth(gpointer userdata, gpointer data)
 		g_async_queue_push (connexions_queue,connexion);
             } 
         } 
-        g_message("gryzor AA");
         g_free(userdata);
 }

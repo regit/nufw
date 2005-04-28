@@ -133,26 +133,20 @@ void clean_session(user_session * c_session)
 {
 	if (c_session->tls)
 		{
-			g_message("Preparing g_free 1");
 			gnutls_deinit(
 					*(c_session->tls)	
 				     );
-			g_message("g_free 1");
 			g_free(c_session->tls);
 		}
 		if (c_session->userid){
-			g_message("g_free 2 : %s",c_session->userid);
 			g_free(c_session->userid);
 		}
 		if (c_session->groups){
-			g_message("g_slist_free 1");
 			g_slist_free(c_session->groups);
 		}
 
 		if (c_session){
-			g_message("g_free 3");
 			g_free(c_session); //GRYZOR : keeps crashing if this g_free is commented out
-			g_message("after g_free 3");
 		}
 	}
 
@@ -180,9 +174,7 @@ void hash_clean_session(user_session * c_session){
 #endif
 		//Gryzor saw a crash occur here.
 		if (session){
-			g_message("g_free 4");
 			g_free(session);
-			g_message("after g_free 4");
 		}
 		return 1;
 	}
@@ -211,7 +203,6 @@ gnutls_session* initialize_tls_session()
 
 	if (gnutls_init(session, GNUTLS_SERVER) != 0)
 	{
-		g_message("gfree a");
 		g_free(session);
 		return NULL;
 	}
@@ -221,7 +212,6 @@ gnutls_session* initialize_tls_session()
 	 */
 	if (gnutls_set_default_priority( *session)<0)
 	{
-		g_message("gfree b");
 		g_free(session);
 		return NULL;
 	}
@@ -233,7 +223,6 @@ gnutls_session* initialize_tls_session()
 
 	if (gnutls_credentials_set(*session, GNUTLS_CRD_CERTIFICATE, x509_cred)<0)
 	{
-		g_message("gfree c");
 		g_free(session);
 		return NULL;
 	}
@@ -350,28 +339,21 @@ treat_user_request (user_session * c_session)
 #ifdef DEBUG_ENABLE
 			if (read_size <0) 
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-					g_message("Receive error from user %s\n",datas->userid );
+					g_message("Received error from user %s\n",datas->userid );
 #endif
 
 			if (datas->sysname){
-				g_message("g_free 7");
 				g_free(datas->sysname);
 			}
 			if (datas->release){
-				g_message("g_free 8");
 				g_free(datas->release);
 			}
 			if (datas->version){
-				g_message("g_free 9");
 				g_free(datas->version);
 			}
-			g_message("g_free 10");
 			g_free(datas->buf);
-			g_message("g_free 11");
 			g_free(datas->userid);
-			g_message("g_free 12");
 			g_slist_free(datas->groups);
-			g_message("g_free 13");
 			g_free(datas);
 			return EOF;
 		}
@@ -419,7 +401,7 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 	if (( record_send == GNUTLS_E_INTERRUPTED ) || ( record_send == GNUTLS_E_AGAIN)){
 #ifdef DEBUG_ENABLE
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
-			g_message("sasl nego : need to resent packet");
+			g_message("sasl nego : need to resend packet");
 		}
 #endif
 		record_send = gnutls_record_send(session, data, len);
@@ -428,8 +410,10 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 	{
 		return SASL_FAIL;
 	}
+#ifdef DEBUG_ENABLE
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
 		g_message("Now we know record_send >= 0");
+#endif
 
 	memset(chosenmech,0,sizeof chosenmech);
 	len = gnutls_record_recv(session, chosenmech, sizeof chosenmech);
@@ -507,7 +491,6 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
 			g_warning("sasl negotiation error: %d",r);
 		}
-		g_message("data : %s",data);
 		ret = sasl_getprop(conn, SASL_USERNAME, (const void **)	&(user_name));
 		c_session->userid = g_strdup(user_name);
 		//		ret = sasl_getprop(conn, SASL_USERNAME, (const void **)	&(c_session->userid));
@@ -620,7 +603,6 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 			if (gnutls_record_send(session,"N", 1) <= 0) /* send NO to client */
 				return SASL_FAIL;
 		}
-		g_message("g_free 14");
 		g_free(stripped_user);
 	} else {
 		c_session->multiusers=FALSE;
@@ -775,7 +757,6 @@ int sasl_user_check(user_session* c_session)
 							if (len > 1024)//if1b1
 							{
 								//								  sasl_dispose(&conn);
-								g_message("g_free 15");
 								g_free(dec_buf);
 								return SASL_BADAUTH;
 							}
@@ -784,14 +765,12 @@ int sasl_user_check(user_session* c_session)
 								if (sasl_decode64(buf+4,osfield->length -4,
 											dec_buf,len,&len) != SASL_OK){
 									//									  sasl_dispose(&conn);
-									g_message("g_free 16");
 									g_free(dec_buf);
 									return SASL_BADAUTH;
 								}
 
 							}else{
 								//								  sasl_dispose(&conn);
-								g_message("g_free 17");
 								g_free(dec_buf);
 								return SASL_BADAUTH;
 							}
@@ -804,7 +783,6 @@ int sasl_user_check(user_session* c_session)
 					default:
 						{
 							//						sasl_dispose(&conn);
-							g_message("g_free 18");
 							g_free(dec_buf);
 							return SASL_BADAUTH;
 						}
@@ -820,7 +798,6 @@ int sasl_user_check(user_session* c_session)
 							if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
 								g_warning("received sysname contains invalid characters");	
 							//						sasl_dispose(&conn);
-							g_message("g_free 19");
 							g_free(dec_buf);
 							return SASL_BADAUTH;
 						}
@@ -833,7 +810,6 @@ int sasl_user_check(user_session* c_session)
 							if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
 								g_warning("received release contains invalid characters");	
 							//						sasl_dispose(&conn);
-							g_message("g_free 20");
 							g_free(dec_buf);
 							return SASL_BADAUTH;
 						}
@@ -846,7 +822,6 @@ int sasl_user_check(user_session* c_session)
 							if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
 								g_warning("received version contains invalid characters");	
 							//						sasl_dispose(&conn);
-							g_message("g_free 21");
 							g_free(dec_buf);
 							return SASL_BADAUTH;
 						}
@@ -867,10 +842,10 @@ int sasl_user_check(user_session* c_session)
 					}
 					g_strfreev(os_strings);
 				}else{
+				  if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
 					g_message("osfield->option is not OS_SRV ?!");
 
 				}
-				g_message("g_free 22");
 				g_free(dec_buf);
 			}
 		}
@@ -924,18 +899,8 @@ int tls_connect(int c,gnutls_session** session_ptr){
 	//
 	ret = gnutls_handshake( *session);
 	//	g_static_mutex_unlock (&gnutls_handshake_mutex);
-#ifdef DEBUG_ENABLE
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
-		g_message("gnutls_handshake() was just called\n");
-	}
-#endif
 	while ((ret == GNUTLS_E_AGAIN) || (ret == GNUTLS_E_INTERRUPTED))
 	{
-#ifdef DEBUG_ENABLE
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
-			g_message("gnutls_handshake() was just called again\n");
-		}
-#endif
 		//	    g_static_mutex_lock (&gnutls_handshake_mutex);
 		ret = gnutls_handshake( *session);
 		//	    g_static_mutex_unlock (&gnutls_handshake_mutex);
@@ -999,7 +964,6 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 		c_session->last_req.tv_usec=0;
 		c_session->req_needed=TRUE;
 		c_session->userid=NULL;
-		g_message("g_free 22b");
 		g_free(userdata);
 		if (nuauth_tls_request_cert == GNUTLS_CERT_REQUIRE) 
 		{
@@ -1023,7 +987,6 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 					c_session->groups=NULL;
 					c_session->uid=0;
 					/* we free username as it is not a good one */
-					g_message("g_free 23");
 					g_free(username);
 				} else {
 					c_session->userid=username;
@@ -1070,14 +1033,9 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 #endif
 						if (nuauth_push){
 							close_tls_session(c,c_session->tls);
-							//                        g_message("g_free 24");
-							//                                            g_free(c_session); //Not needed
-							//                                            anymore!
 							//                                            close(c);
 							c_session->tls=NULL;
-							//						g_static_mutex_lock (&client_mutex);
 							clean_session(c_session);
-							//						g_static_mutex_unlock (&client_mutex);
 							break;
 						}else{
 							g_static_mutex_lock (&client_mutex);
@@ -1089,7 +1047,7 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 
 #ifdef DEBUG_ENABLE
 					if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-						g_message("Tell we need to work on %d\n",c);
+						g_message("Says we need to work on %d\n",c);
 #endif
 					g_async_queue_push(mx_queue,GINT_TO_POINTER(c));
 					break;
@@ -1102,13 +1060,8 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 #endif
 
 					close_tls_session(c,c_session->tls);
-					//                        g_message("g_free 25");
-					//				g_free(c_session);
-					//				close(c);
 					c_session->tls=NULL;
-					//						g_static_mutex_lock (&client_mutex);
 					clean_session(c_session);
-					//						g_static_mutex_unlock (&client_mutex);
 					break;
 				}
 			default:
@@ -1120,20 +1073,12 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 					/* get rid of client */
 					//cleanly_close_tls_session(c,c_session->tls);
 					close_tls_session(c,c_session->tls);
-					//mangled by GRYZOR
-					//                              close(c);
 					c_session->tls=NULL;
-					//						g_static_mutex_lock (&client_mutex);
 					clean_session(c_session);
-					//						g_static_mutex_unlock (&client_mutex);
-					//                        g_message("g_free 26");
-					//				g_free(c_session);
-					//                        g_message("g_free 26 done");
 				}
 		}
 		//GRYZOR added this and wonders if it is a good idea!
 	}else{
-		g_message("g_free gryzor 1");
 		g_free(userdata);
 	}
 }
@@ -1549,13 +1494,11 @@ treat_nufw_request (nufw_session * c_session)
 						NULL);
 			}
 		} else {
-			g_message("gryzor 2");
 			g_free(dgram);
 			g_atomic_int_dec_and_test(&(c_session->usage));
 			return EOF;
 		}
 	}
-	g_message("gryzor 3");
 	g_free(dgram);
 	return 1;
 }
@@ -1576,7 +1519,6 @@ void clean_nufw_session(nufw_session * c_session){
 		gnutls_deinit(
 				*(c_session->tls)	
 			     );
-		g_message("g_free 28");
 		g_free(c_session->tls);
 	} else {
 
@@ -1975,12 +1917,10 @@ void push_worker ()
 										message->datas,
 										NULL);
 							} else {
-								g_message("gryzor 4");
 								g_free(message->datas);
 							}
 						} else {
 							/* free header */
-							g_message("gryzor 5");
 							g_free(message->datas);
 						}
 					}
@@ -2011,8 +1951,6 @@ void push_worker ()
 			default:
 				g_message("lost");
 		}
-		g_message("gryzor 6");
 		g_free(message);
-		g_message("end gryzor 6");
 	}
 }

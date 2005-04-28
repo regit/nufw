@@ -24,6 +24,7 @@
 static gint apply_decision(connection element);
 
 void bail (const char *on_what){
+    //GRYZOR minor note : Is this really thread safe? ;)
 	perror(on_what);
 	exit(1);
 }
@@ -32,8 +33,11 @@ void bail (const char *on_what){
  */
 
 inline char change_state(connection *elt, char state){
-	elt->state = state;
-	return  elt->state;
+        if (elt != NULL){
+        	elt->state = state;
+	        return  elt->state;
+        }
+        return NULL;
 }
 
 /**
@@ -60,6 +64,8 @@ hash_connection(gconstpointer headers)
  */
 
 gboolean compare_connection(gconstpointer tracking_hdrs1, gconstpointer tracking_hdrs2){
+      /* Note from Gryzor : this might be optimized by comparing daddr first? 
+       * daddr may have greater chances of being different when working on connections from a LAN*/
 	/* compare IPheaders */
 	if (        ( ((tracking *) tracking_hdrs1)->saddr ==
 				((tracking *) tracking_hdrs2)->saddr ) ){
@@ -119,6 +125,7 @@ gboolean compare_connection(gconstpointer tracking_hdrs1, gconstpointer tracking
 
 void search_and_fill () {
 	connection * element = NULL;
+        //GRYZOR warning : it seems we g_free() on pckt only on some conditions in this function
 	connection * pckt = NULL;
 
 	if (!g_async_queue_ref (connexions_queue))
@@ -153,6 +160,12 @@ void search_and_fill () {
 				/* push data to sender */
 				if (pckt->state == STATE_AUTHREQ){
 					struct tls_message *message=g_new0(struct tls_message,1);
+                                        if (!message){
+                                            //GRYZOR asks if we should clean conn_list since we filled it before
+                                            if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_USER))
+                                                g_message("Couldn't g_new0(). No more memory?");
+                                            return;
+                                        }
 #ifdef DEBUG_ENABLE
 					if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
 						g_message("need to warn client");
@@ -162,7 +175,12 @@ void search_and_fill () {
 					message->datas=g_memdup(&(pckt->tracking_hdrs),sizeof(tracking));
 					if (message->datas){
 						g_async_queue_push (tls_push, message);
-					}
+					}else{
+                                            //GRYZOR asks if we should clean conn_list since we filled it before
+                                            if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_USER))
+                                                g_message("g_memdup returned NULL");
+                                            return;
+                                        }
 				}
 			}
 		} else { 
@@ -259,7 +277,7 @@ void search_and_fill () {
 							free_connection(pckt);
 							break;
 						default:
-							g_warning("Should not have this. Email Nufw developpers!\n");
+							g_warning("Should not have this. Please email Nufw developpers!\n");
 					}
 					break;
 				case STATE_DONE:
@@ -278,7 +296,7 @@ void search_and_fill () {
 							free_connection(pckt);
 							break;
 						default:
-							g_warning("Should not have this. Email Nufw developpers!\n");
+							g_warning("Should not have this. Please email Nufw developpers!\n");
 					}
 					break;
 				case STATE_COMPLETING:
@@ -295,7 +313,7 @@ void search_and_fill () {
 						case  STATE_AUTHREQ:
 #ifdef DEBUG_ENABLE
 							if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-								g_message("Adding a packet_id to a completing  connection\n");
+								g_message("Adding a packet_id to a completing connection\n");
 #endif
 							((connection *)element)->packet_id =
 								g_slist_prepend(((connection *)element)->packet_id, GINT_TO_POINTER((pckt->packet_id)->data));
@@ -304,7 +322,7 @@ void search_and_fill () {
 							break;
 						default:
 							if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-								g_message("Should not be there\n");
+								g_message("Should not be here. Please email Nufw developpers!\n");
 
 					}
 					break;
@@ -353,6 +371,10 @@ gint print_connection(gpointer data,gpointer userdata){
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
 	{
 		gchar* firstfield=strdup(inet_ntoa(src));
+                if (! firstfield){
+                    g_message("Couldn't strdup(). No more memory?");
+                    return -1;
+                }
 		g_message( "Connection : src=%s dst=%s proto=%u", firstfield, inet_ntoa(dest),
 				conn->tracking_hdrs.protocol);
 		if (conn->tracking_hdrs.protocol == IPPROTO_TCP){
@@ -484,15 +506,21 @@ int free_connection(connection * conn){
 	if (conn->cacheduserdatas){
 		if(conn->username){
 			struct cache_message * message=g_new0(struct cache_message,1);
+                        if (!message){
+                            if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN))
+                                g_warning("Could not g_new0(). No more memory?");
+                            //GRYZOR should we do something special here?
+                        }else{
 #ifdef DEBUG_ENABLE
-			if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
+			  if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
 				g_message("Sending free to user cache");
-			}
+			  }
 #endif
-			message->key=g_strdup(conn->username);
-			message->type=CACHE_FREE;
-			message->datas=conn->cacheduserdatas;
-			g_async_queue_push(user_cache->queue,message);
+			  message->key=g_strdup(conn->username);
+			  message->type=CACHE_FREE;
+			  message->datas=conn->cacheduserdatas;
+			  g_async_queue_push(user_cache->queue,message);
+                        }
 		} 
 #ifdef DEBUG_ENABLE
 		else {
@@ -506,23 +534,23 @@ int free_connection(connection * conn){
 			/* free ressource */
 			g_slist_free (conn->user_groups);
 		}
-		if (conn->username != NULL)
+//		if (conn->username != NULL)
 			g_free(conn->username);
 	}
 	if (conn->packet_id != NULL )
 		g_slist_free (conn->packet_id);
 
-	if (conn->appname != NULL)
+//	if (conn->appname != NULL)
 		g_free(conn->appname);
 
-	if (conn->appmd5 != NULL)
+//	if (conn->appmd5 != NULL)
 		g_free(conn->appmd5);
 
-	if (conn->sysname != NULL)
+//	if (conn->sysname != NULL)
 		g_free(conn->sysname);
-	if (conn->release != NULL)
+//	if (conn->release != NULL)
 		g_free(conn->release);
-	if (conn->version != NULL)
+//	if (conn->version != NULL)
 		g_free(conn->version);
 
 	g_free(conn);
@@ -600,7 +628,7 @@ int conn_key_delete(gconstpointer key) {
 }
 
 /**
- * find old element in connection hash and delete them.
+ * find old elements in connection hash and delete them.
  *
  * Argument : None
  * Return : None
@@ -628,6 +656,7 @@ void clean_connections_list (){
  * 
  * Argument : a connection
  * Return : 1
+ * Return : -1 if parameter is NULL
  */
 
 gint take_decision(connection * element) {
@@ -640,6 +669,10 @@ gint take_decision(connection * element) {
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
 		g_message("Trying to take decision on %p\n",element); 
 #endif
+        /*even firster we check if we have an actual element*/
+        if (element == NULL)
+            return -1;
+
 	/* first check if we have found acl */
 	if ( element->acl_groups == NULL ){
 		answer = NOK;
@@ -775,7 +808,8 @@ void decisions_queue_work (gpointer userdata, gpointer data){
 
 	apply_decision( * element);
 
-	g_free(element->username);
+        if (element)
+	  g_free(element->username);
 	g_free(element);
 }
 

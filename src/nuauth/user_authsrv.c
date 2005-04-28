@@ -43,9 +43,7 @@ void user_check_and_decide (gpointer userdata, gpointer data)
 #endif
 	conn_elt = userpckt_decode(userdata, BUFSIZE );
 	/* free userdata, packet is parsed now */
-        g_message("gfree foobar 1");
 	g_free(((struct buffer_read *)userdata)->buf);
-        g_message("gfree foobar 2");
 	g_free(userdata);
 	/* if OK search and fill */
 	if ( conn_elt != NULL ) {
@@ -177,9 +175,9 @@ connection * userpckt_decode(struct buffer_read * datas,int dgramsiz)
 														if (connexion->appname == NULL)
 															if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
 																g_warning("user packet received an invalid app name\n");
-													}else
+													}else{
 														connexion->appname=NULL;
-        g_message("gfree foobar 3");
+                                                                                                        }
 													g_free(dec_appname);
 													connexion->appmd5=NULL;
 
@@ -229,7 +227,6 @@ connection * userpckt_decode(struct buffer_read * datas,int dgramsiz)
 																if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
 																	g_warning("user packet received an invalid username\n");
 														}else {
-        g_message("gfree foobar 4");
 															g_free(dec_fieldname);
 															free_connection(connexion);
 															if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER)){
@@ -237,7 +234,6 @@ connection * userpckt_decode(struct buffer_read * datas,int dgramsiz)
 															}
 															return NULL;
 														}
-        g_message("gfree foobar 5");
 														g_free(dec_fieldname);
 													}
 											}

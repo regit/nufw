@@ -755,7 +755,7 @@ int main(int argc,char * argv[])
 
 	/* create thread for search_and_fill thread */
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-		g_message("Create search_and_fill thread");
+		g_message("Creating search_and_fill thread");
 	search_and_fill_worker = g_thread_create ( (GThreadFunc) search_and_fill,
 			NULL,
 			FALSE,
@@ -776,7 +776,7 @@ int main(int argc,char * argv[])
 	/* create pckt workers */
 
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-		g_message("Create acl checkers");
+		g_message("Creating %d acl checkers",nbacl_check);
 	acl_checkers = g_thread_pool_new  ((GFunc) acl_check_and_decide,
 			NULL,
 			nbacl_check,
@@ -786,7 +786,7 @@ int main(int argc,char * argv[])
 	/* create user worker */
 
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-		g_message("Create user checkers");
+		g_message("Creating %d user checkers",nbuser_check);
 	user_checkers = g_thread_pool_new  ((GFunc) user_check_and_decide,
 			NULL,
 			nbuser_check,
@@ -795,7 +795,7 @@ int main(int argc,char * argv[])
 
 
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-		g_message("Create user loggers");
+		g_message("Creating %d user loggers", nuauth_number_loggers);
 	user_loggers = g_thread_pool_new  ((GFunc)  real_log_user_packet,
 			NULL,
 			nuauth_number_loggers,
@@ -804,9 +804,10 @@ int main(int argc,char * argv[])
 
 	if ( nuauth_log_users_sync ){
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-			g_message("Create decision workers");
+			g_message("Creating %d decision workers", nuauth_number_loggers);
 		decisions_workers = g_thread_pool_new  ((GFunc)  decisions_queue_work,
 				NULL,
+                                //GRYZOR THIS IS WEIRD
 				nuauth_number_loggers,
 				TRUE,
 				NULL);
@@ -815,7 +816,7 @@ int main(int argc,char * argv[])
 
 	/* create thread for tsl  auth server */
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-		g_message("Create tls authentication server thread");
+		g_message("Creating tls authentication server thread");
 	tls_auth_server = g_thread_create ( tls_user_authsrv,
 			NULL,
 			FALSE,
@@ -824,7 +825,7 @@ int main(int argc,char * argv[])
 		exit(1);
 
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-		g_message("Create tls nufw server thread");
+		g_message("Creating tls nufw server thread");
 	tls_nufw_server = g_thread_create ( tls_nufw_authsrv,
 			NULL,
 			FALSE,
