@@ -487,6 +487,11 @@ int free_connection(connection * conn){
 		}
 	}
 #endif
+	/* log if necessary (only state authreq) with user log module */
+	if (conn->state == STATE_AUTHREQ){
+		/* copy message */
+		log_user_packet(*conn,STATE_DROP);
+	}
 	/* 
 	 * tell cache we don't use the ressource anymore
 	 */
