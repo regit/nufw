@@ -3,8 +3,8 @@
 
 AC_PREREQ(2.57)
 AC_INIT(NuFW, 1.0.3, nufw-devel@nongnu.org)
-AM_CONFIG_HEADER([src/include/config.h.in:src/include/config.h])
-AC_CONFIG_SRCDIR([src/nufw/main.c])
+AM_CONFIG_HEADER([src/include/config.h])
+AC_CONFIG_SRCDIR([src/nufw/])
 
 # Checks for programs.
 AC_PROG_CC
@@ -48,9 +48,9 @@ AC_FUNC_MALLOC
 AC_FUNC_STAT
 AC_CHECK_FUNCS([gethostbyname memset socket strcasecmp strspn])
 
-AC_CHECK_LIB([gcrypt], [gcry_md_open],AC_DEFINE([HAVE_LIBRARY_GCRYPT],[1]),AC_MSG_ERROR([gcrypt library needed for encryption]))
-AC_CHECK_LIB([gnutls], [gnutls_init],AC_DEFINE([HAVE_LIBRARY_GNUTLS],[1]),AC_MSG_ERROR([gnutls library needed for encryption]))
-AC_CHECK_LIB([sasl2],[sasl_server_init],AC_DEFINE([HAVE_LIBRARY_SASL2],[1]),AC_MSG_ERROR([sasl library needed for authentication]))
+AC_CHECK_LIB([gcrypt], [gcry_md_open],AC_DEFINE([HAVE_LIBRARY_GCRYPT],[1],[Gcrypt lib flag]),AC_MSG_ERROR([gcrypt library needed for encryption]))
+AC_CHECK_LIB([gnutls], [gnutls_init],AC_DEFINE([HAVE_LIBRARY_GNUTLS],[1],[Gnutls lib flag]),AC_MSG_ERROR([gnutls library needed for encryption]))
+AC_CHECK_LIB([sasl2],[sasl_server_init],AC_DEFINE([HAVE_LIBRARY_SASL2],[1],[SASLlib flag]),AC_MSG_ERROR([sasl library needed for authentication]))
         
 AM_CONDITIONAL(USE_USER_MARK, test x$enable_user_mark = xyes)
 
