@@ -746,7 +746,6 @@ int sasl_user_check(user_session* c_session)
 					if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
 						g_warning("error osfield is too long, announced %d",osfield->length);	
 					}
-					//				sasl_dispose(&conn);
 					return SASL_BADAUTH;
 				}
 				dec_buf = g_new0( gchar ,dec_buf_size);
@@ -756,7 +755,6 @@ int sasl_user_check(user_session* c_session)
 						{
 							if (len > 1024)//if1b1
 							{
-								//								  sasl_dispose(&conn);
 								g_free(dec_buf);
 								return SASL_BADAUTH;
 							}
@@ -764,13 +762,11 @@ int sasl_user_check(user_session* c_session)
 							if (dec_buf){//if1b2
 								if (sasl_decode64(buf+4,osfield->length -4,
 											dec_buf,len,&len) != SASL_OK){
-									//									  sasl_dispose(&conn);
 									g_free(dec_buf);
 									return SASL_BADAUTH;
 								}
 
 							}else{
-								//								  sasl_dispose(&conn);
 								g_free(dec_buf);
 								return SASL_BADAUTH;
 							}
@@ -782,7 +778,6 @@ int sasl_user_check(user_session* c_session)
 						}
 					default:
 						{
-							//						sasl_dispose(&conn);
 							g_free(dec_buf);
 							return SASL_BADAUTH;
 						}
@@ -797,7 +792,6 @@ int sasl_user_check(user_session* c_session)
 						if (c_session->sysname==NULL){//if1c1a
 							if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
 								g_warning("received sysname contains invalid characters");	
-							//						sasl_dispose(&conn);
 							g_free(dec_buf);
 							return SASL_BADAUTH;
 						}
@@ -809,7 +803,6 @@ int sasl_user_check(user_session* c_session)
 						if (c_session->release==NULL){//if1c2a
 							if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
 								g_warning("received release contains invalid characters");	
-							//						sasl_dispose(&conn);
 							g_free(dec_buf);
 							return SASL_BADAUTH;
 						}
@@ -821,7 +814,6 @@ int sasl_user_check(user_session* c_session)
 						if (c_session->version==NULL){//if1c3a
 							if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
 								g_warning("received version contains invalid characters");	
-							//						sasl_dispose(&conn);
 							g_free(dec_buf);
 							return SASL_BADAUTH;
 						}
@@ -850,21 +842,12 @@ int sasl_user_check(user_session* c_session)
 			}
 		}
 		/* sasl connection is not used anymore */
-		//	sasl_dispose(&conn);
 		return SASL_OK;
 	} else {
-		//	sasl_dispose(&conn);
 		return ret;
 	}
 }
-#if 0
-void socket_close(gpointer data)
-{
-	if (close(GPOINTER_TO_INT(data)))
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-			g_message("close_tls_session : close() failed!");
-}
-#endif
+
 /**
  * realize tls connection.
  */
