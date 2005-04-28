@@ -1,6 +1,6 @@
 1.0.3 (2005/04/29)
 	- cleanly get out of sasl negotiation
-	- suppress a useless debug message
+	- suppress useless debug messages
 	- client lib now does not require certificates when nu_client_init is
 	  called (nuapplet case)
 	- add a check of mysql ssl function existence in configure

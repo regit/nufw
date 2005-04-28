@@ -1566,6 +1566,7 @@ void* tls_nufw_authsrv()
   int sck_inet;
   int n,c;
   int mx;
+  gint option_value;
   fd_set tls_rx_set; /* read set */
   fd_set wk_set; /* working set */
   struct timeval tv;
@@ -1613,6 +1614,15 @@ void* tls_nufw_authsrv()
       g_warning("socket() failed, exiting");
       exit(-1);
   }
+
+  option_value=1;
+  setsockopt (
+      sck_inet,
+      SOL_SOCKET,
+      SO_REUSEADDR,
+      &option_value,
+      sizeof(option_value));
+
 
   memset(&addr_inet,0,sizeof addr_inet);
 
