@@ -78,10 +78,13 @@ void* authsrv(){
 			if (tls.active){
 				ret= gnutls_record_recv(*tls.session,dgram,sizeof dgram);
 				if (ret<=0){
+					int socket_tls;
 					/* TODO : find when it is really necessary */
 					/* houston we've got a problem */
 				//	if ( ret == GNUTLS_A_CLOSE_NOTIFY){
 						gnutls_bye(*tls.session,GNUTLS_SHUT_RDWR);
+						socket_tls=(int)gnutls_transport_get_ptr(*tls.session);
+						close(socket_tls);
 						gnutls_deinit(*tls.session);
 						tls.active=0;
 						free(tls.session);
