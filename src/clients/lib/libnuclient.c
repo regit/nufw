@@ -879,8 +879,8 @@ NuAuth* nu_client_init(char *username, unsigned long userid, char *password,
 			}
 			osfield.type=OS_FIELD;
 			osfield.option=OS_SRV;
+			buf=alloca(4+actuallen);
 			osfield.length=htons(4+actuallen);
-			buf=alloca(osfield.length);
 			pointer = buf ;
 			memcpy(buf,&osfield,sizeof osfield);
 			pointer+=sizeof osfield;
