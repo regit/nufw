@@ -60,6 +60,8 @@ static const char *group_prop[]={SASL_USER_GROUPS,NULL};
 
 GPrivate* group_priv;
 GPrivate* user_priv;
+gchar * mech_string_internal;
+gchar * mech_string_external;
 
 
 /* where using private datas to avoid over allocating */
@@ -69,17 +71,16 @@ int external_get_opt(void *context, const char *plugin_name,
 		const char **result, unsigned *len)
 {
 	if (! strcmp(option,"mech_list")){
-		*result=g_strdup("external");
+		*result=mech_string_external;
 	}
 	return SASL_OK;
 }
-
 int internal_get_opt(void *context, const char *plugin_name,
 		const char *option,
 		const char **result, unsigned *len)
 {
 	if (! strcmp(option,"mech_list")){
-		*result=g_strdup("plain");
+		*result=mech_string_internal;
 	}
 	return SASL_OK;
 }
@@ -1184,7 +1185,6 @@ void* tls_user_authsrv()
 	gpointer vpointer;
 	char *configfile=DEFAULT_CONF_FILE;
 	gpointer c_pop;
-
 	confparams nuauth_tls_vars[] = {
 		{ "nuauth_tls_max_clients" , G_TOKEN_INT ,NUAUTH_SSL_MAX_CLIENTS, NULL },
 		{ "nuauth_number_authcheckers" , G_TOKEN_INT ,NB_AUTHCHECK, NULL }
@@ -1198,6 +1198,9 @@ void* tls_user_authsrv()
 	nuauth_tls_max_clients=*(int*)(vpointer?vpointer:&nuauth_tls_max_clients);
 	vpointer=get_confvar_value(nuauth_tls_vars,sizeof(nuauth_tls_vars)/sizeof(confparams),"nuauth_number_authcheckers");
 	nuauth_number_authcheckers=*(int*)(vpointer?vpointer:&nuauth_number_authcheckers);
+
+        mech_string_internal=g_strdup("plain");
+        mech_string_external=g_strdup("external");
 
 	/* build client hash */
 	client_conn_hash = g_hash_table_new_full(
