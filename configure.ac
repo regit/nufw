@@ -3,8 +3,8 @@
 
 AC_PREREQ(2.57)
 AC_INIT(NuFW, 1.0.3, nufw-devel@nongnu.org)
+AM_CONFIG_HEADER([src/include/config.h.in:src/include/config.h])
 AC_CONFIG_SRCDIR([src/nufw/main.c])
-AM_CONFIG_HEADER(src/include/config.h)
 
 # Checks for programs.
 AC_PROG_CC
