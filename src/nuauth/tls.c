@@ -901,7 +901,7 @@ int tls_connect(int c,gnutls_session** session_ptr){
 	}else
 		if (ret < 0) {
 			close_tls_session(c,session);
-			if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
+			if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
 				g_message("NuFW TLS Handshake has failed (%s)\n\n",
 						gnutls_strerror(ret)) ; 
 			}
