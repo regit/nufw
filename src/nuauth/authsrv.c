@@ -190,7 +190,6 @@ sasl_mutex_utils_t _sasl_mutex_utils={
  * Return : None
  */
 void nuauth_cleanup( int signal ) {
-	int i;
 	/* clean gnutls */
 	gnutls_global_deinit();
 	g_free(myaudit);
@@ -823,7 +822,6 @@ int main(int argc,char * argv[])
 			NULL);
 	if (! tls_auth_server )
 		exit(1);
-
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
 		g_message("Creating tls nufw server thread");
 	tls_nufw_server = g_thread_create ( tls_nufw_authsrv,

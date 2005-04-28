@@ -393,8 +393,10 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
 						if (update_status <2){
 							usleep(33333); //Sleep for 1/3 sec
 						}else{
+#ifdef DEBUG_ENABLE
 							if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
 								g_warning("Tried to update MYSQL entry twice, looks like data to update wasn't inserted\n");
+#endif
 						}
 					}
 				}
@@ -433,8 +435,10 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
 						if (update_status <2){
 							usleep(66666); //Sleep for 2/3 sec
 						}else{
+#ifdef DEBUG_ENABLE
 							if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
 								g_warning("Tried to update MYSQL entry twice, looks like data to update wasn't inserted\n");
+#endif
 						}
 					}
 				}
