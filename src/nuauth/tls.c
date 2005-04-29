@@ -1384,7 +1384,6 @@ void* tls_user_authsrv()
 
               if ( c+1 > mx )
                   mx = c + 1;
-
               /* Set KEEP ALIVE on connection */
               setsockopt (
                   c,
@@ -1392,7 +1391,6 @@ void* tls_user_authsrv()
                   SO_KEEPALIVE,
                   &option_value,
                   sizeof(option_value));
-
               /* give the connection to a separate thread */
 
 

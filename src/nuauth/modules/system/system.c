@@ -32,6 +32,34 @@ typedef struct _auth_pam_userinfo {
 	const char* pw;
 } auth_pam_userinfo;
 
+gint system_convert_username_to_uppercase;
+confparams system_nuauth_vars[] = {
+  { "system_convert_username_to_uppercase", G_TOKEN_INT, 0, 0 }
+};
+
+
+
+/* Init module system */
+G_MODULE_EXPORT gchar* g_module_check_init(GModule *module)
+{
+  gpointer vpointer;
+
+  system_convert_username_to_uppercase=0;
+  // parse conf file
+  parse_conffile(DEFAULT_CONF_FILE,
+          sizeof(system_nuauth_vars)/sizeof(confparams),
+          system_nuauth_vars);
+  // set variables
+  vpointer = get_confvar_value(system_nuauth_vars,
+          sizeof(system_nuauth_vars)/sizeof(confparams),
+          "system_convert_username_to_uppercase");
+  system_convert_username_to_uppercase = *(int *)(vpointer?vpointer:system_convert_username_to_uppercase);
+
+  return NULL;
+}
+
+
+
 /**
  * auth_pam_talker: supply authentication information to PAM when asked
  *
@@ -100,6 +128,11 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass
 	if (! user)
 		return SASL_BADAUTH;
 
+        if (system_convert_username_to_uppercase){
+	/* User need to be pass in upper case to winbind */
+	  g_strup(user);
+        }
+
 	if (pass != NULL) {
 		auth_pam_userinfo userinfo;
 		pam_handle_t *pamh;
@@ -130,10 +163,6 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass
 		g_static_mutex_unlock (&pam_mutex);
 
 	}
-#ifdef WINBIND_HACK
-	/* User need to be pass in upper case to winbind */
-	g_strup(user);
-#endif
 	ret = getpwnam_r(user, &result_buf, buffer, 512, &result_bufp);
 	if (ret || (! result_bufp)){
 		return SASL_BADAUTH;
