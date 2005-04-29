@@ -4,7 +4,7 @@
 	- client lib now does not require certificates when nu_client_init is
 	  called (nuapplet case)
 	- add a check of mysql ssl function existence in configure
-	- clean tls and sasl initiation code
+	- clean tls and sasl related code
 	- add mutex in pam module because pam_winbind is not thread safe
 	- correct MySQL and Pgsql log modules to log unauthenticated drop
 	- solve restart problem by setting option SO_REUSEADDR on socket
