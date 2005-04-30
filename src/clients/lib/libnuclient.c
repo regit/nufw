@@ -863,6 +863,7 @@ NuAuth* nu_client_init(char *username, unsigned long userid, char *password,
 			char *oses;
 			int stringlen;
 			int actuallen;
+                        int osfield_length;
 			char* enc_oses;
 			char * pointer, *buf;
 			struct nuv2_authfield osfield;
@@ -879,16 +880,17 @@ NuAuth* nu_client_init(char *username, unsigned long userid, char *password,
 			}
 			osfield.type=OS_FIELD;
 			osfield.option=OS_SRV;
-			buf=alloca(4+actuallen);
-			osfield.length=htons(4+actuallen);
+                        osfield_length=4+actuallen;
+			osfield.length=htons(osfield_length);
+			buf=alloca(osfield_length);
 			pointer = buf ;
 			memcpy(buf,&osfield,sizeof osfield);
 			pointer+=sizeof osfield;
 			memcpy(pointer,enc_oses,actuallen);
-			gnutls_record_send(*(session->tls),buf,osfield.length);
+			gnutls_record_send(*(session->tls),buf,osfield_length);
 
 			/* wait for message of server about mode */
-			if (gnutls_record_recv(*(session->tls),buf,osfield.length)<=0){
+			if (gnutls_record_recv(*(session->tls),buf,osfield_length)<=0){
 				/* TODO : houston we've got a problem */
 			} else {
 				if (*buf == SRV_TYPE) {
