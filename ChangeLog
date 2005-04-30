@@ -9,8 +9,9 @@
 	- correct MySQL and Pgsql log modules to log unauthenticated drop
 	- solve restart problem by setting option SO_REUSEADDR on socket
 	- add KEEPALIVE on connection socket to detect dead connections
-	- add system_convert_username_to_uppercase to have username convert
+	- add system_convert_username_to_uppercase option to have username convert
 	automatically to uppercase if needed
+	- should fix an endianess problem on PPC (for client lib)
 1.0.2 (2005/03/29)
 	- add nuauth_number_loggers in config file
 	- nufw can now verify nuauth server certificates (specify ca file with -a
