@@ -429,7 +429,7 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
       } else {
 
           if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
-              g_message("ssal nego : tls crash");
+              g_message("sasl nego : tls crash");
           }
           return SASL_FAIL; 
       }
@@ -731,7 +731,6 @@ int sasl_user_check(user_session* c_session)
               g_message("error when receiving user OS");	
           }
 #endif
-          //			sasl_dispose(&conn);
           return SASL_FAIL;
       } else {
           int len;
@@ -783,7 +782,6 @@ int sasl_user_check(user_session* c_session)
                       return SASL_BADAUTH;
                   }
               }
-
 
               /* should always be true for the moment */
               if (osfield->option == OS_SRV){ //if1c
@@ -879,15 +877,10 @@ int tls_connect(int c,gnutls_session** session_ptr){
         g_message("NuFW TLS Handshaking\n");
     }
 #endif
-    //	g_static_mutex_lock (&gnutls_handshake_mutex);
-    //
     ret = gnutls_handshake( *session);
-    //	g_static_mutex_unlock (&gnutls_handshake_mutex);
     while ((ret == GNUTLS_E_AGAIN) || (ret == GNUTLS_E_INTERRUPTED))
     {
-        //	    g_static_mutex_lock (&gnutls_handshake_mutex);
         ret = gnutls_handshake( *session);
-        //	    g_static_mutex_unlock (&gnutls_handshake_mutex);
         count++;
         if (count>10)
             break;
@@ -1061,7 +1054,6 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
               clean_session(c_session);
           }
       }
-      //GRYZOR added this and wonders if it is a good idea!
   }else{
       g_free(userdata);
   }
@@ -1725,9 +1717,6 @@ void* tls_nufw_authsrv()
               FD_SET(c,&tls_rx_set);
               if ( c+1 > mx )
                   mx = c + 1;
-              //			GRYZOR commented out two lines : close(c) is already called if tls_connect() fails!
-              //			} else {
-              //				close(c);
       }
       }
 
