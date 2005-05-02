@@ -14,6 +14,13 @@
     </copyright>
     <revhistory>
  <revision>
+	<revnumber>0.3</revnumber>
+	<date>2005/05/02</date>
+	<revdescription>
+	  <para>Add new option from 1.0.3</para>
+	</revdescription>
+      </revision>
+      <revision>
 	<revnumber>0.2</revnumber>
 	<date>2005/03/17</date>
 	<revdescription>
@@ -45,7 +52,6 @@ nufw [-hVv[v[v[v[v[v[v[v[v[v]]]]]]]]]] [-l local_port] [-L local_addr] [-d remot
   <listitem><para>-k : Use specified file as key file</para>
 	</listitem>
   <listitem><para>-c : Use specified file as cert file</para>
-	</listitem>
 	</listitem>
   <listitem><para>-a : Use specified file as ca file (strict check on server certificate is done if activated)</para>
 	</listitem>
