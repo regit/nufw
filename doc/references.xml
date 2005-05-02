@@ -392,12 +392,24 @@ of database to avoid accidental double connections before inserting new connecti
   <chapter><title>Modules configuration</title>
     <section><title>Plaintext</title>
       <section><title>plaintext_userfile</title>
+      <para>This option is used to select the file used to store the credentials of the users.</para>
 <para>Default: <computeroutput>plaintext_userfile="/etc/nufw/users.nufw"</computeroutput></para>
       </section>
       <section><title>plaintext_aclfile</title>
+      <para>This option is used to select the file used to store the credentials of the access lists.</para>
 <para>Default: <computeroutput>plaintext_aclfile="/etc/nufw/acls.nufw"</computeroutput></para>
       </section>
     </section>
+   <section><title>ssytem</title>
+      <section><title>system_convert_username_to_uppercase</title>
+<para>This option can be used to convert username to uppercase before authentication.
+You can set it to 1 if needed.
+</para>
+<para>Default: <computeroutput>system_convert_username_to_uppercase=0</computeroutput></para>
+      </section>
+
+    </section>
+
     <section><title>DBM</title>
       <section><title>dbm_users_file</title>
 <para>This set the name of the file containing the users credentials. Use <command>nufw_dbm</command> to modify or add entries.</para>
