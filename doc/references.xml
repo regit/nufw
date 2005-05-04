@@ -300,6 +300,13 @@ system. This variable set the datas persistence in cache (in second).
 </para><para>Default: <computeroutput>nuauth_datas_persistance=300</computeroutput>
 </para>
       </section>
+<section><title>nuauth_auth_nego_timeout</title>
+<para>
+This option set the delay after which a authentication failed and it forcibly interrupt.
+</para><para>Default: <computeroutput>nuauth_auth_nego_timeout=30</computeroutput>
+</para>
+      </section>
+
 <section><title>nuauth_number_usercheckers</title>
 <para>
 A pool of threads is used to work on client authentication.
