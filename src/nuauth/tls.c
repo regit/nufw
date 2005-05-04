@@ -1126,6 +1126,7 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 				}
 		}
 	}else{
+		remove_socket_from_pre_client_list(c);
 		g_free(userdata);
 	}
 }
