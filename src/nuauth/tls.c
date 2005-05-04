@@ -173,7 +173,7 @@ void  pre_client_check(){
 
 #ifdef DEBUG_ENABLE
 					if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)){
-						g_message("closing socket due to timeout %d\n",((struct pre_client_elt*)(client_runner->data))->socket);
+						g_message("closing socket %d due to timeout\n",((struct pre_client_elt*)(client_runner->data))->socket);
 					}
 #endif
 					shutdown(((struct pre_client_elt*)(client_runner->data))->socket,SHUT_RDWR);
