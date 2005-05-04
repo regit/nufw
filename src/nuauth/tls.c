@@ -1107,6 +1107,7 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 						g_message("Crash on user side, closing socket");
 #endif
 
+					remove_socket_from_pre_client_list(c);
 					close_tls_session(c,c_session->tls);
 					c_session->tls=NULL;
 					clean_session(c_session);
@@ -1119,16 +1120,15 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 						g_message("Problem with user, closing socket");
 #endif
 					/* get rid of client */
-					//cleanly_close_tls_session(c,c_session->tls);
 					close_tls_session(c,c_session->tls);
 					c_session->tls=NULL;
 					clean_session(c_session);
 				}
 		}
 	}else{
-		remove_socket_from_pre_client_list(c);
 		g_free(userdata);
 	}
+	remove_socket_from_pre_client_list(c);
 }
 
 /**
