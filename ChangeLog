@@ -1,3 +1,5 @@
+1.0.4 (2005/05/04)
+	- tls_sasl_worker number of thread is set from a variable now.
 1.0.3 (2005/04/29)
 	- cleanly get out of sasl negotiation
 	- suppress useless debug messages

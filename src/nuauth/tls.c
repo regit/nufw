@@ -62,6 +62,8 @@ GPrivate* group_priv;
 GPrivate* user_priv;
 gchar * mech_string_internal;
 gchar * mech_string_external;
+GSList* pre_client_list;
+GStaticMutex pre_client_list_mutex;
 
 
 /* where using private datas to avoid over allocating */
@@ -129,6 +131,41 @@ static sasl_callback_t external_callbacks[] = {
     { SASL_CB_SERVER_USERDB_CHECKPASS, &userdb_checkpass,NULL}, 
     { SASL_CB_LIST_END, NULL, NULL }
 };
+
+struct pre_client_elt {
+	int socket;
+	time_t validity;
+};
+
+void  pre_client_check(){
+	GSList * client_runner=NULL;
+	time_t current_timestamp;
+	for(;;){
+		current_timestamp=time(NULL);
+
+		/* lock client list */
+                g_static_mutex_lock (&pre_client_list_mutex);
+		/* iter on pre_client_list */
+		for(client_runner=pre_client_list;client_runner;client_runner=client_runner->next){
+			/* if entry older than delay then close socket */
+			if (client_runner->data){
+			if ( ((struct pre_client_elt*)(client_runner->data))->validity < current_timestamp){
+          if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)){
+              g_message("closing socket due to timeout %d\n",((struct pre_client_elt*)(client_runner->data))->socket);
+			}
+				shutdown(((struct pre_client_elt*)(client_runner->data))->socket,SHUT_RDWR);
+				g_free(client_runner->data);
+				client_runner->data=NULL;
+			} 
+			}
+		}
+		g_slist_remove_all(client_runner,NULL);
+		/* unlock client list */
+                 g_static_mutex_unlock (&pre_client_list_mutex);
+		/* sleep */
+		 sleep(1);
+	}
+}
 
 void clean_session(user_session * c_session)
 {
@@ -321,6 +358,7 @@ treat_user_request (user_session * c_session)
           /* check authorization if we're facing a multi user packet */ 
           if ( (pbuf->option == 0x0) ||
               ((pbuf->option == 0x1) && c_session->multiusers)) {
+
 
 #ifdef DEBUG_ENABLE
               if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
@@ -878,6 +916,12 @@ int tls_connect(int c,gnutls_session** session_ptr){
     }
 #endif
     ret = gnutls_handshake( *session);
+
+#ifdef DEBUG_ENABLE
+    if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
+        g_message("NuFW TLS Handshaked\n");
+    }
+#endif
     while ((ret == GNUTLS_E_AGAIN) || (ret == GNUTLS_E_INTERRUPTED))
     {
         ret = gnutls_handshake( *session);
@@ -1178,6 +1222,7 @@ void* tls_user_authsrv()
   char *configfile=DEFAULT_CONF_FILE;
   gpointer c_pop;
   gint option_value;
+  GThread * pre_client_thread;
   confparams nuauth_tls_vars[] = {
       { "nuauth_tls_max_clients" , G_TOKEN_INT ,NUAUTH_SSL_MAX_CLIENTS, NULL },
       { "nuauth_number_authcheckers" , G_TOKEN_INT ,NB_AUTHCHECK, NULL }
@@ -1225,10 +1270,18 @@ void* tls_user_authsrv()
   }
 #endif
 
-  /* FIXME chose not that ! */
+ pre_client_list=NULL;
+ pre_client_thread = g_thread_create ( (GThreadFunc) pre_client_check,
+				NULL,
+				FALSE,
+				NULL);
+ if (! pre_client_thread )
+	exit(1);
+ 
+
   tls_sasl_worker = g_thread_pool_new  ((GFunc) tls_sasl_connect,
       NULL,
-      10,
+      nuauth_number_authcheckers,
       TRUE,
       NULL);
   /* open the socket */
@@ -1289,11 +1342,6 @@ void* tls_user_authsrv()
   mx_queue=g_async_queue_new ();
 
   for(;;){
-
-#ifdef DEBUG_ENABLE
-      if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-          g_message("mx is %d\n",mx);
-#endif
       /* try to get new file descriptor to update set */
       c_pop=g_async_queue_try_pop (mx_queue);
 
@@ -1318,10 +1366,6 @@ void* tls_user_authsrv()
        * copy rx set to working set 
        */
 
-#ifdef DEBUG_ENABLE
-      if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-          g_message("copy rx set");
-#endif
       FD_ZERO(&wk_set);
       for (z=0;z<mx;++z){
           if (FD_ISSET(z,&tls_rx_set))
@@ -1371,6 +1415,7 @@ void* tls_user_authsrv()
               continue;
           } else {
               struct client_connection* current_client_conn=g_new0(struct client_connection,1);
+	      struct pre_client_elt* new_pre_client;
               current_client_conn->socket=c;
               memcpy(&current_client_conn->addr,&addr_clnt,sizeof(struct sockaddr_in));
 
@@ -1385,7 +1430,15 @@ void* tls_user_authsrv()
                   sizeof(option_value));
               /* give the connection to a separate thread */
 
+	      /*  add element to pre_client 
+		  create pre_client_elt */
+		new_pre_client = g_new0(struct pre_client_elt,1);
+		new_pre_client->socket = c;
+		new_pre_client->validity = time(NULL) + 10;
 
+                g_static_mutex_lock (&pre_client_list_mutex);
+		pre_client_list=g_slist_prepend(pre_client_list,new_pre_client);
+                 g_static_mutex_unlock (&pre_client_list_mutex);
               g_thread_pool_push (tls_sasl_worker,
                   current_client_conn,	
                   NULL
@@ -1448,10 +1501,6 @@ void* tls_user_authsrv()
 #endif
           mx = c;
       }
-#ifdef DEBUG_ENABLE
-      if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-          g_message("mx set to %d\n",mx);
-#endif
   }
 
 
