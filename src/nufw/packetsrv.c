@@ -201,6 +201,7 @@ int auth_request_send(uint8_t type,unsigned long packet_id,char* payload,int dat
         if (tls.session){
             /* send packet */
             if (!gnutls_record_send(*(tls.session),datas,total_data_len)){
+		int socket_tls;
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
                     if (log_engine == LOG_TO_SYSLOG) {
                         syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"tls send failure when sending request");
@@ -208,9 +209,10 @@ int auth_request_send(uint8_t type,unsigned long packet_id,char* payload,int dat
                         printf ("[%i] tls send failure when sending request\n",getpid());
                     }
                 }
-                gnutls_deinit(*tls.session);
-                tls.session=NULL;
                 tls.active=0;
+		gnutls_bye(*tls.session,GNUTLS_SHUT_WR);
+		socket_tls=(int)gnutls_transport_get_ptr(*tls.session);
+		shutdown(socket_tls,SHUT_RDWR);
             } else {
                 tls.active=1;
             }
