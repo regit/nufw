@@ -79,19 +79,16 @@ void* authsrv(){
 				ret= gnutls_record_recv(*tls.session,dgram,sizeof dgram);
 				if (ret<=0){
 					int socket_tls;
-					/* TODO : find when it is really necessary */
-					/* houston we've got a problem */
-				//	if ( ret == GNUTLS_A_CLOSE_NOTIFY){
                                         if (tls.active){
+						tls.active=0;
 					        gnutls_bye(*tls.session,GNUTLS_SHUT_WR);
 					        socket_tls=(int)gnutls_transport_get_ptr(*tls.session);
 					        shutdown(socket_tls,SHUT_RDWR);
                                         }
 					gnutls_deinit(*tls.session);
-					tls.active=0;
 					free(tls.session);
 					tls.session=NULL;
-				//	}
+					pthread_cond_signal(session_cond);
 				} else {
 					auth_packet_to_decision(dgram);
 				}

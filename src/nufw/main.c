@@ -319,6 +319,11 @@ int main(int argc,char * argv[]){
         gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);
         gnutls_global_init();
     }
+/* create condition for tls session transition phase */
+    session_cond=(pthread_cond_t *)calloc(sizeof(pthread_cond_t),1);
+    pthread_cond_init(session_cond,NULL);
+    session_mutex=(pthread_mutex_t *)calloc(sizeof(pthread_mutex_t),1);
+    pthread_mutex_init(session_mutex ,NULL);
     /* create thread for packet server */
     if (pthread_create(&pckt_server,NULL,packetsrv,NULL) == EAGAIN){
         exit(1);

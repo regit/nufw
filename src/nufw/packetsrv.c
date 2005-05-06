@@ -209,10 +209,14 @@ int auth_request_send(uint8_t type,unsigned long packet_id,char* payload,int dat
                         printf ("[%i] tls send failure when sending request\n",getpid());
                     }
                 }
-                tls.active=0;
-		gnutls_bye(*tls.session,GNUTLS_SHUT_WR);
-		socket_tls=(int)gnutls_transport_get_ptr(*tls.session);
-		shutdown(socket_tls,SHUT_RDWR);
+		pthread_mutex_lock(session_mutex);
+		if (tls.active){
+                	tls.active=0;
+			gnutls_bye(*tls.session,GNUTLS_SHUT_WR);
+			socket_tls=(int)gnutls_transport_get_ptr(*tls.session);
+			shutdown(socket_tls,SHUT_RDWR);
+		}
+		pthread_cond_wait(session_cond,session_mutex);
             } else {
                 tls.active=1;
             }

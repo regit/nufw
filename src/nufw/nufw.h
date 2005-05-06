@@ -52,6 +52,8 @@ struct nuauth_conn {
 struct nuauth_conn tls;
 int nufw_use_tls;
 gnutls_session * tls_connect( );
+pthread_cond_t *session_cond;
+pthread_mutex_t *session_mutex;
 
 /* socket number to send auth request */
 int sck_auth_request;
