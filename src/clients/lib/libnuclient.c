@@ -195,7 +195,7 @@ static void recv_message(NuAuth* session){
 				}
 			} else {
 				if( *dgram==SRV_REQUIRED_PACKET ){
-					/* introduce a delay to not DOS our own client */
+					/* TODO ? introduce a delay to not DOS our own client */
 					/* we act */
 					nu_client_real_check(session);
 				} else {
@@ -1173,8 +1173,8 @@ NuAuth* nu_client_init2(
 	   sasl_setprop(conn, SASL_SEC_PROPS, &secprops); */
 
 	ret = mysasl_negotiate(*(session->tls), conn);
+	sasl_done();
 	if (ret != SASL_OK) {
-		sasl_done();
 		nu_exit_clean(session);
 		errno=EACCES;
 		return NULL;
@@ -1191,8 +1191,8 @@ NuAuth* nu_client_init2(
 		uname(&info);
 		/* build packet */
 		stringlen=strlen(info.sysname)+strlen(info.release)+strlen(info.version)+3;
-		oses=calloc(stringlen,sizeof( char));
-		enc_oses=calloc(4*stringlen,sizeof( char));
+		oses=alloca(stringlen);
+		enc_oses=alloca(4*stringlen);
 		snprintf(oses,stringlen,"%s;%s;%s",info.sysname, info.release, info.version);
 		if (sasl_encode64(oses,strlen(oses),enc_oses,4*stringlen,&actuallen) == SASL_BUFOVER){
 			enc_oses=realloc(enc_oses,actuallen);
@@ -1210,7 +1210,9 @@ NuAuth* nu_client_init2(
 
 		/* wait for message of server about mode */
 		if (gnutls_record_recv(*(session->tls),buf,osfield.length)<=0){
-			/* TODO : houston we've got a problem */
+			nu_exit_clean(session);
+			errno=EACCES;
+			return NULL;
 		} else {
 			if (*buf == SRV_TYPE) {
 				session->mode=*(buf+1);
