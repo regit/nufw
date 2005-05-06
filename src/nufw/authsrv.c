@@ -79,6 +79,16 @@ void* authsrv(){
 				ret= gnutls_record_recv(*tls.session,dgram,sizeof dgram);
 				if (ret<=0){
 					int socket_tls;
+#ifdef DEBUG_ENABLE
+						if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
+							if (log_engine == LOG_TO_SYSLOG) {
+								syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"gnutls recv failure");
+							}else {
+								printf ("[%i] gnutls recv failure\n",getpid());
+							}
+						}
+#endif
+					pthread_mutex_lock(session_mutex);
                                         if (tls.active){
 						tls.active=0;
 					        gnutls_bye(*tls.session,GNUTLS_SHUT_WR);
@@ -88,6 +98,7 @@ void* authsrv(){
 					gnutls_deinit(*tls.session);
 					free(tls.session);
 					tls.session=NULL;
+					pthread_mutex_unlock(session_mutex);
 					pthread_cond_signal(session_cond);
 				} else {
 					auth_packet_to_decision(dgram);
