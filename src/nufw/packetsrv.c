@@ -197,6 +197,10 @@ int auth_request_send(uint8_t type,unsigned long packet_id,char* payload,int dat
 			    }
 		    }
             tls.session = tls_connect();
+
+	    if (tls.session){
+		pthread_cond_signal(session_cond);
+	    }
         }
         if (tls.session){
             /* send packet */
@@ -212,7 +216,7 @@ int auth_request_send(uint8_t type,unsigned long packet_id,char* payload,int dat
 		pthread_mutex_lock(session_mutex);
 		if (tls.active){
                 	tls.active=0;
-			gnutls_bye(*tls.session,GNUTLS_SHUT_WR);
+		//	gnutls_bye(*tls.session,GNUTLS_SHUT_WR);
 			socket_tls=(int)gnutls_transport_get_ptr(*tls.session);
 			shutdown(socket_tls,SHUT_RDWR);
 		}

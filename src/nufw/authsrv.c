@@ -1,6 +1,5 @@
-
 /*
- ** Copyright (C) 2002-2004, Éric Leblond <eric@regit.org>
+ ** Copyright (C) 2002-2005, Éric Leblond <eric@regit.org>
  **		       Vincent Deffontaines <vincent@gryzor.com>
  **                      INL http://www.inl.fr/
  **
@@ -77,10 +76,10 @@ void* authsrv(){
 			/* if session is defined */
 			if (tls.active){
 				ret= gnutls_record_recv(*tls.session,dgram,sizeof dgram);
-				if (ret<=0){
+				if (ret<0){
 					int socket_tls;
 #ifdef DEBUG_ENABLE
-						if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
+						if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
 							if (log_engine == LOG_TO_SYSLOG) {
 								syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"gnutls recv failure");
 							}else {
@@ -98,11 +97,12 @@ void* authsrv(){
 					gnutls_deinit(*tls.session);
 					free(tls.session);
 					tls.session=NULL;
-					pthread_mutex_unlock(session_mutex);
 					pthread_cond_signal(session_cond);
+					pthread_cond_wait(session_cond,session_mutex);
 				} else {
 					auth_packet_to_decision(dgram);
 				}
+				memset(dgram,0,512);
 			} else {
 				/* else sleep a moment */
 				sleep(1);
