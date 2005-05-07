@@ -77,6 +77,8 @@ void* authsrv(){
 			if (tls.active){
 				ret= gnutls_record_recv(*tls.session,dgram,sizeof dgram);
 				if (ret<0){
+
+				if ( gnutls_error_is_fatal(ret) ){
 					int socket_tls;
 #ifdef DEBUG_ENABLE
 					if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
@@ -100,6 +102,7 @@ void* authsrv(){
 					tls.session=NULL;
 					pthread_cond_signal(session_destroyed_cond);
 					pthread_cond_wait(session_active_cond,session_destroyed_mutex);
+				}
 				} else {
 					auth_packet_to_decision(dgram);
 				}
