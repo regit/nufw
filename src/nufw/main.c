@@ -30,6 +30,8 @@
 #include <sys/types.h>
 
 
+GCRY_THREAD_OPTION_PTHREAD_IMPL;
+
 #define NUFW_PID_FILE  LOCAL_STATE_DIR "/run/nufw.pid"
 
 void nufw_cleanup( int signal ) {
@@ -320,10 +322,14 @@ int main(int argc,char * argv[]){
         gnutls_global_init();
     }
 /* create condition for tls session transition phase */
-    session_cond=(pthread_cond_t *)calloc(sizeof(pthread_cond_t),1);
-    pthread_cond_init(session_cond,NULL);
-    session_mutex=(pthread_mutex_t *)calloc(sizeof(pthread_mutex_t),1);
-    pthread_mutex_init(session_mutex ,NULL);
+    session_destroyed_cond=(pthread_cond_t *)calloc(sizeof(pthread_cond_t),1);
+    pthread_cond_init(session_destroyed_cond,NULL);
+    session_active_cond=(pthread_cond_t *)calloc(sizeof(pthread_cond_t),1);
+    pthread_cond_init(session_active_cond,NULL);
+    session_destroyed_mutex=(pthread_mutex_t *)calloc(sizeof(pthread_mutex_t),1);
+    pthread_mutex_init(session_destroyed_mutex ,NULL);
+    session_active_mutex=(pthread_mutex_t *)calloc(sizeof(pthread_mutex_t),1);
+    pthread_mutex_init(session_active_mutex ,NULL);
     /* create thread for packet server */
     if (pthread_create(&pckt_server,NULL,packetsrv,NULL) == EAGAIN){
         exit(1);

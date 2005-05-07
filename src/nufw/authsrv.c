@@ -35,25 +35,25 @@ void* authsrv(){
 	char dgram[512];
 
 	if (!nufw_use_tls){
-	//open the socket
-	sck_inet = socket (AF_INET,SOCK_DGRAM,0);
+		//open the socket
+		sck_inet = socket (AF_INET,SOCK_DGRAM,0);
 
-	if (sck_inet == -1)
-		bail("socket()");
+		if (sck_inet == -1)
+			bail("socket()");
 
-	memset(&addr_inet,0,sizeof addr_inet);
+		memset(&addr_inet,0,sizeof addr_inet);
 
-	addr_inet.sin_family= AF_INET;
-	addr_inet.sin_port=htons(authsrv_port);
-	addr_inet.sin_addr.s_addr=list_srv.sin_addr.s_addr;
+		addr_inet.sin_family= AF_INET;
+		addr_inet.sin_port=htons(authsrv_port);
+		addr_inet.sin_addr.s_addr=list_srv.sin_addr.s_addr;
 
-	len_inet = sizeof addr_inet;
+		len_inet = sizeof addr_inet;
 
-	z = bind (sck_inet,
-			(struct sockaddr *)&addr_inet,
-			len_inet);
-	if (z == -1)
-		bail ("bind()");
+		z = bind (sck_inet,
+				(struct sockaddr *)&addr_inet,
+				len_inet);
+		if (z == -1)
+			bail ("bind()");
 
 		for(;;){
 			len_inet = sizeof addr_clnt;
@@ -70,7 +70,7 @@ void* authsrv(){
 			auth_packet_to_decision(dgram);
 		}
 
-	close(sck_inet);
+		close(sck_inet);
 	} else {
 		for(;;){
 			/* if session is defined */
@@ -79,26 +79,27 @@ void* authsrv(){
 				if (ret<0){
 					int socket_tls;
 #ifdef DEBUG_ENABLE
-						if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
-							if (log_engine == LOG_TO_SYSLOG) {
-								syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"gnutls recv failure");
-							}else {
-								printf ("[%i] gnutls recv failure\n",getpid());
-							}
+					if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
+						if (log_engine == LOG_TO_SYSLOG) {
+							syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"gnutls recv failure");
+						}else {
+							printf ("[%i] gnutls recv failure\n",getpid());
 						}
+					}
 #endif
-					pthread_mutex_lock(session_mutex);
-                                        if (tls.active){
+					pthread_mutex_lock(session_active_mutex);
+					if (tls.active){
 						tls.active=0;
-					        gnutls_bye(*tls.session,GNUTLS_SHUT_WR);
-					        socket_tls=(int)gnutls_transport_get_ptr(*tls.session);
-					        shutdown(socket_tls,SHUT_RDWR);
-                                        }
+						//gnutls_bye(*tls.session,GNUTLS_SHUT_WR);
+						socket_tls=(int)gnutls_transport_get_ptr(*tls.session);
+						shutdown(socket_tls,SHUT_RDWR);
+					}
+					pthread_mutex_unlock(session_active_mutex);
 					gnutls_deinit(*tls.session);
 					free(tls.session);
 					tls.session=NULL;
-					pthread_cond_signal(session_cond);
-					pthread_cond_wait(session_cond,session_mutex);
+					pthread_cond_signal(session_destroyed_cond);
+					pthread_cond_wait(session_active_cond,session_destroyed_mutex);
 				} else {
 					auth_packet_to_decision(dgram);
 				}
@@ -159,7 +160,7 @@ int auth_packet_to_decision(char* dgram){
 						pckt_tx++;
 						return 1;
 #ifdef GRYZOR_HACKS
-                                        }else if( *(dgram+4) == NOK_REJ){ //Packet is rejected, ie dropped and ICMP signalized
+					}else if( *(dgram+4) == NOK_REJ){ //Packet is rejected, ie dropped and ICMP signalized
 						if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
 							if (log_engine == LOG_TO_SYSLOG) {
 								syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"Rejecting %lu",packet_id);
@@ -168,7 +169,7 @@ int auth_packet_to_decision(char* dgram){
 							}
 						}
 						IPQ_SET_VERDICT(packet_id, NF_DROP);
-                                                send_icmp_unreach(dgram);
+						send_icmp_unreach(dgram);
 						return 0;
 #endif
 					} else {
