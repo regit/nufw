@@ -1,6 +1,8 @@
-1.0.4 (2005/05/04)
+1.0.4 (2005/05/09)
 	- tls_sasl_worker number of thread is set from a variable now.
 	- timeout on authentication negotiation can now be set
+	- nufw : tls session ending and restart is now treaded correctly
+	- libnuclient : handle an error case as it should be
 1.0.3 (2005/04/29)
 	- cleanly get out of sasl negotiation
 	- suppress useless debug messages

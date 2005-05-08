@@ -38,7 +38,7 @@
 #include "proc.h"
 
 #define DH_BITS 1024
-#define PACKET_SIZE 1512
+#define PACKET_SIZE 1482
 #define REQUEST_CERT 0
 
 //#include <stdlib.h>
@@ -166,7 +166,7 @@ static void nu_exit_clean(NuAuth * session)
 			free(session->tls);
 		}
 		if (session->socket>0){
-			close(session->socket);
+			shutdown(session->socket,SHUT_RDWR);
 			session->socket=0;
 		}
 		if (session->username){
@@ -177,7 +177,6 @@ static void nu_exit_clean(NuAuth * session)
 		}
 		free(session);
 	}
-	sasl_done();
 	gnutls_global_deinit();	
 }
 
@@ -188,7 +187,7 @@ static void recv_message(NuAuth* session){
 		if (conn_on && session){
 			ret= gnutls_record_recv(*session->tls,dgram,sizeof dgram);
 			if (ret<0){
-				if ( gnutls_alert_get ( *session->tls) == GNUTLS_A_CLOSE_NOTIFY){
+				if ( gnutls_error_is_fatal(ret) ){
 					nu_exit_clean(session);
 					conn_on=0;
 					return;
@@ -559,7 +558,13 @@ static int send_user_pckt(NuAuth * session,conn_t* c)
 					pointer+=sizeof(struct nuv2_authfield_ipv4);
 					memcpy(pointer,&appfield,4);
 					pointer+=4;
-					memcpy(pointer,appfield.datas,len);
+					if (len < (PACKET_SIZE + datas - pointer)){
+						memcpy(pointer,appfield.datas,len);
+					} else {
+						if (enc_appname)
+							free(enc_appname);
+						return 1;
+					}
 					pointer+=len;
 				} else {
 					if (enc_appname)
@@ -567,6 +572,9 @@ static int send_user_pckt(NuAuth * session,conn_t* c)
 					return 1;
 				}
 			}
+			break;
+		default:
+			return 1;
 	}
 
 	/* and send it */
@@ -575,15 +583,7 @@ static int send_user_pckt(NuAuth * session,conn_t* c)
 			printf("write failed\n");
 			return 0;
 		}
-	} else {
-		if (sendto(session->socket,
-					datas,
-					pointer-datas,
-					0,
-					(struct sockaddr *)(& session->adr_srv),
-					sizeof (session->adr_srv)) < 0)
-			printf (" failure when sending\n");
-	}
+	} 
 	if (enc_appname)
 		free(enc_appname);
 	return 1;
@@ -852,8 +852,8 @@ NuAuth* nu_client_init(char *username, unsigned long userid, char *password,
 		   sasl_setprop(conn, SASL_SEC_PROPS, &secprops); */
 
 		ret = mysasl_negotiate(*(session->tls), conn);
+		sasl_done();
 		if (ret != SASL_OK) {
-			sasl_done();
 			nu_exit_clean(session);
 			errno=EACCES;
 			return NULL;
@@ -871,7 +871,7 @@ NuAuth* nu_client_init(char *username, unsigned long userid, char *password,
 			uname(&info);
 			/* build packet */
 			stringlen=strlen(info.sysname)+strlen(info.release)+strlen(info.version)+3;
-			oses=calloc(stringlen,sizeof( char));
+			oses=alloca(stringlen);
 			enc_oses=calloc(4*stringlen,sizeof( char));
 			snprintf(oses,stringlen,"%s;%s;%s",info.sysname, info.release, info.version);
 			if (sasl_encode64(oses,strlen(oses),enc_oses,4*stringlen,&actuallen) == SASL_BUFOVER){
@@ -887,6 +887,7 @@ NuAuth* nu_client_init(char *username, unsigned long userid, char *password,
 			memcpy(buf,&osfield,sizeof osfield);
 			pointer+=sizeof osfield;
 			memcpy(pointer,enc_oses,actuallen);
+			free(enc_oses);
 			gnutls_record_send(*(session->tls),buf,osfield_length);
 
 			/* wait for message of server about mode */
@@ -1192,7 +1193,7 @@ NuAuth* nu_client_init2(
 		/* build packet */
 		stringlen=strlen(info.sysname)+strlen(info.release)+strlen(info.version)+3;
 		oses=alloca(stringlen);
-		enc_oses=alloca(4*stringlen);
+		enc_oses=calloc(4*stringlen,sizeof(char));
 		snprintf(oses,stringlen,"%s;%s;%s",info.sysname, info.release, info.version);
 		if (sasl_encode64(oses,strlen(oses),enc_oses,4*stringlen,&actuallen) == SASL_BUFOVER){
 			enc_oses=realloc(enc_oses,actuallen);
@@ -1206,6 +1207,7 @@ NuAuth* nu_client_init2(
 		memcpy(buf,&osfield,sizeof osfield);
 		pointer+=sizeof osfield;
 		memcpy(pointer,enc_oses,actuallen);
+		free(enc_oses);
 		gnutls_record_send(*(session->tls),buf,osfield.length);
 
 		/* wait for message of server about mode */
