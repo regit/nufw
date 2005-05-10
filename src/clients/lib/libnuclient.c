@@ -177,6 +177,7 @@ static void nu_exit_clean(NuAuth * session)
 		}
 		free(session);
 	}
+	sasl_done();
 	gnutls_global_deinit();	
 }
 
