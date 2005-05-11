@@ -68,7 +68,11 @@ void log_user_packet (connection element,int state){
                ) {
 		/* feed thread pool */
 		conn_state_copy=g_memdup(&conn_state,sizeof(conn_state));
-	    	conn_state_copy->conn.username= g_strdup(conn_state.conn.username);
+                if (nuauth_log_users_without_realm){
+             	        conn_state_copy->conn.username = get_rid_of_domain(conn_state.conn.username);
+                } else {
+	    	        conn_state_copy->conn.username = g_strdup(conn_state.conn.username);
+                }
 		g_thread_pool_push(user_loggers,
 				conn_state_copy,
 				NULL);
