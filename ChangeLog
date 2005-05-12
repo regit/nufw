@@ -1,3 +1,6 @@
+1.0.5 (2005/05/12)
+	- added nuauth_log_users_without_realm : remove realm from username
+	before logging
 1.0.4 (2005/05/09)
 	- tls_sasl_worker number of thread is set from a variable now.
 	- timeout on authentication negotiation can now be set

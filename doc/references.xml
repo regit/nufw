@@ -391,7 +391,7 @@ This variable decide the level of verbosity of user activities logging.
       </section>
 
 	<section><title>nuauth_log_users_strict</title>
-<para>This option is set to <option>1</option> cause nuauth to do an update of log entries
+<para>This option if set to <option>1</option> causes nuauth to do an update of log entries
 of database to avoid accidental double connections before inserting new connection.</para>
 
 <remark>Do not disable it by changing it to <option>0</option> if you want strict security
@@ -400,6 +400,14 @@ of database to avoid accidental double connections before inserting new connecti
 <para>Default: <computeroutput>nuauth_log_users_strict=1</computeroutput>
 </para>
 	</section>
+<section><title>nuauth_log_users_without_realm</title>
+<para>This option if set to <option>1</option> causes nuauth to  remove the realm from the
+username before logging.</para>
+
+<para>Default: <computeroutput>nuauth_log_users_without_realm=1</computeroutput>
+</para>
+	</section>
+
       </section>
   </chapter>
   <chapter><title>Modules configuration</title>
