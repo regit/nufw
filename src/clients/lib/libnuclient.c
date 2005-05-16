@@ -322,7 +322,7 @@ static int tcptable_read (NuAuth* session, conntable_t *ct)
 		unsigned long st;
 		int seen = 0;
 		if (sscanf (buf, "%*d: %lx:%x %lx:%x %lx %*x:%*x %*x:%*x %x %lu %*d %lu",
-					&c.lcl, &c.lclp, &c.rmt, &c.rmtp, &st, &c.retransmit, &c.uid, &c.ino) != 7)
+					&c.lcl, &c.lclp, &c.rmt, &c.rmtp, &st, &c.retransmit, &c.uid, &c.ino) != 8)
 			continue;
 
 		if ((c.ino == 0) || (st != TCP_SYN_SENT))
