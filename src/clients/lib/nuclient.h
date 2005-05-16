@@ -74,6 +74,7 @@ typedef struct conn {
 	unsigned int rmtp;
 	unsigned long uid;
 	unsigned long ino;
+	unsigned int retransmit;
 
 	struct conn *next;
 } conn_t;

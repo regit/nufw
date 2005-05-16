@@ -48,7 +48,7 @@
 static int tcptable_init (conntable_t **ct);
 static int tcptable_hash (conn_t *c);
 static int tcptable_add (conntable_t *ct, conn_t *c);
-static int tcptable_find (conntable_t *ct, conn_t *c);
+static conn_t * tcptable_find (conntable_t *ct, conn_t *c);
 static int tcptable_read (NuAuth * session,conntable_t *ct);
 static int tcptable_free (conntable_t *ct);
 static int compare (NuAuth *session,conntable_t *old, conntable_t *new);
@@ -260,7 +260,6 @@ static int tcptable_add (conntable_t *ct, conn_t *c)
 	}
 
 	memcpy (newc, c, sizeof (conn_t));
-
 	bi = tcptable_hash (c);
 	old = ct->buckets[bi];
 	ct->buckets[bi] = newc;
@@ -272,9 +271,9 @@ static int tcptable_add (conntable_t *ct, conn_t *c)
 /*
  * tcptable_find ()
  * 
- * Find a connection in a table, return nonzero if found, zero otherwise.
+ * Find a connection in a table, return connection if found, NULL otherwise.
  */
-static int tcptable_find (conntable_t *ct, conn_t *c)
+static conn_t* tcptable_find (conntable_t *ct, conn_t *c)
 {
 	conn_t *bucket;
 #if DEBUG
@@ -287,12 +286,12 @@ static int tcptable_find (conntable_t *ct, conn_t *c)
 				(c->rmt == bucket->rmt) && (c->rmtp == bucket->rmtp) &&
 				(c->lcl == bucket->lcl) && (c->lclp == bucket->lclp) 
 		   ) {
-			return 1;
+			return bucket;
 		}
 		bucket = bucket->next;
 	}
 
-	return 0;
+	return NULL;
 }
 
 /*
@@ -322,8 +321,8 @@ static int tcptable_read (NuAuth* session, conntable_t *ct)
 	while (fgets (buf, sizeof (buf), fp) != NULL) {
 		unsigned long st;
 		int seen = 0;
-		if (sscanf (buf, "%*d: %lx:%x %lx:%x %lx %*x:%*x %*x:%*x %*x %lu %*d %lu",
-					&c.lcl, &c.lclp, &c.rmt, &c.rmtp, &st, &c.uid, &c.ino) != 7)
+		if (sscanf (buf, "%*d: %lx:%x %lx:%x %lx %*x:%*x %*x:%*x %x %lu %*d %lu",
+					&c.lcl, &c.lclp, &c.rmt, &c.rmtp, &st, &c.retransmit, &c.uid, &c.ino) != 7)
 			continue;
 
 		if ((c.ino == 0) || (st != TCP_SYN_SENT))
@@ -605,14 +604,25 @@ static int compare (NuAuth * session,conntable_t *old, conntable_t *new)
 
 	for (i = 0; i < CONNTABLE_BUCKETS; i++) {
 		conn_t *bucket;
+		conn_t *same_bucket;
 
 		bucket = new->buckets[i];
 		while (bucket != NULL) {
-			if (tcptable_find (old, bucket) == 0)
+			same_bucket = tcptable_find (old, bucket) ;
+		if (same_bucket == NULL){
 				if (send_user_pckt (session,bucket) != 1){
 					/* error sending */
 					return -1;
 				}
+			} else {
+				/* compare values of retransmit */
+				if (bucket->retransmit > same_bucket->retransmit){
+					if (send_user_pckt (session,bucket) != 1){
+						/* error sending */
+						return -1;
+					}
+				}
+			}
 			bucket = bucket->next;
 		}
 	}
