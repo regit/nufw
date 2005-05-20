@@ -1,3 +1,7 @@
+1.0.6 (2005/06/01)
+	- libnuclient : add copyright in nuclient.h
+	- libnuclient : add code for integration of libnuclient in C++ project
+	- nutcpc : add -V flag to print version
 1.0.5 (2005/05/16)
 	- added nuauth_log_users_without_realm : remove realm from username
 	before logging

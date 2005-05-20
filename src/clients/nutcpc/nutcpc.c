@@ -1,7 +1,7 @@
 /*
  * nutcpc.c - TCP/IP connection auth client.
  *
- * Copyright 2004 - INL
+ * Copyright 2004,2005 - INL
  * 	written by Eric Leblond <eric.leblond@inl.fr>
  **
  ** This program is free software; you can redistribute it and/or modify
@@ -19,6 +19,7 @@
  */
 
 #include "../lib/nuclient.h"
+#define NUTCPC_VERSION "0.4"
 
 #define MAX_RETRY_TIME 30
 
@@ -29,7 +30,30 @@ void panic(const char *fmt, ...){
 	exit(-1);
 }
 
+char* getrunpid(){
+	return strdup("/tmp/nutcpc.eric");	
+}
+
+void exit_nutcpc(){
+	pid_t pid;
+	FILE* FD;
+	char* runpid;
+	/* 
+	get pid filename : TMPDIR/nutcpc.USERNAME
+	*/
+	runpid=getrunpid();
+	FD = fopen(runpid,"r");
+	fscanf(FD,"%d",&pid);
+	fclose(FD);
+	kill(pid,SIGTERM);
+	   /*
+	    * */
+	exit(0);
+}
+
 void exit_clean(){
+	char* runpid=getrunpid();
+	unlink(runpid);
 	/* Restore terminal (can be superflu). */
 	(void) tcsetattr (fileno (stdin), TCSAFLUSH, &orig);
 	exit(0);
@@ -98,7 +122,7 @@ char * get_username()
 
 static void usage (void)
 {
-	fprintf (stderr, "usage: nutcpc [-d]  [-I interval] "
+	fprintf (stderr, "usage: nutcpc [-dV]  [-I interval] "
 			"[-U userid ]  [-u local_id] [-H nuauth_srv]\n");
 	exit (EXIT_FAILURE);
 }
@@ -117,13 +141,14 @@ int main (int argc, char *argv[])
 	NuAuth *session;
 	int userid;
 	int tempo=1;
+	char* runpid="/tmp/nutcpc.eric";
 
 	/*
 	 * Parse our arguments.
 	 */
 	username=NULL;
 	opterr = 0;
-	while ((ch = getopt (argc, argv, "du:H:I:U:p:")) != -1) {
+	while ((ch = getopt (argc, argv, "kdVu:H:I:U:p:")) != -1) {
 		switch (ch) {
 			case 'H':
 				strncpy(srv_addr,optarg,512);
@@ -142,12 +167,26 @@ int main (int argc, char *argv[])
 				sscanf(optarg,"%u",&userid);
 				username=strdup(optarg);
 				break;
+			case 'k':
+				exit_nutcpc();
+				break;
+			case 'V':
+				printf("nutcpc (version " NUTCPC_VERSION ")\n");
+				exit(0);
 			case 'p':
 				sscanf(optarg,"%u",&port);
 			default:
 				usage();
 		}
 	}
+
+	if (debug == 0){
+	if (! access(runpid,R_OK)){
+			printf("lock file found, not starting, please check %s\n",runpid);
+			exit(EXIT_FAILURE);
+		}
+	}
+
 
 	/* signal management */
 	action.sa_handler = exit_clean;
@@ -197,7 +236,8 @@ int main (int argc, char *argv[])
 
 	if (debug == 0) {
 		pid_t p;
-		/* 1st fork */
+
+			/* 1st fork */
 		p = fork();
 		if (p < 0) {
 			fprintf (stderr, "nutcpc: fork: %s\n",
@@ -212,8 +252,12 @@ int main (int argc, char *argv[])
 					strerror (errno));
 			exit (EXIT_FAILURE);
 		} else if (p != 0) {
+			FILE* RunD;
 			fprintf (stderr, "nutcpc started (pid %d)\n", 
 					(int) p);
+			RunD=fopen(runpid,"w");
+			fprintf(RunD,"%d",p);
+			fclose(RunD);
 			exit (EXIT_SUCCESS);
 		}
 		ioctl (STDIN_FILENO, TIOCNOTTY, NULL);
@@ -223,8 +267,9 @@ int main (int argc, char *argv[])
 		setpgid (0, 0);
 		chdir ("/");
 	} else
-		fprintf (stderr, "nutcpc 0.3 started (debug)\n");
+		fprintf (stderr, "nutcpc " NUTCPC_VERSION " started (debug)\n");
 
+	
 	for (;;) {
 		usleep (interval * 1000);
 		if (session == NULL){
