@@ -24,7 +24,6 @@
 static gint apply_decision(connection element);
 
 void bail (const char *on_what){
-    //GRYZOR minor note : Is this really thread safe? ;)
 	perror(on_what);
 	exit(1);
 }
@@ -320,8 +319,13 @@ void search_and_fill () {
 							free_connection(pckt);
 							/* and return */
 							break;
-						default:
+						case STATE_USERPCKT:
 							if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
+								g_message("User packet in state completing\n");
+							free_connection(pckt);
+							break;
+						default:
+							if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
 								g_message("Should not be here. Please email Nufw developpers!\n");
 
 					}
