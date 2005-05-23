@@ -54,6 +54,26 @@ sub Print_Usage()
   print "\t-port\t\t\tTCP port to use (default is 3306/5432 for mysql/pgsql respectively)\n";
 }
 
+my $modified_conf=0;
+my %config = ('databasetype' => 'pgsql',
+              'host' => '127.0.0.1',
+              'user' => 'nufw',
+              'databasename' => 'nufw',
+              'tablename' => 'nufw',
+              'delay' => 2,
+              'line' => 20,
+              'version' => 2,
+              ); #This hash contains all configuration variables
+
+sub die_politely($)
+{
+  my $mess = shift @_;
+  print STDERR $mess."\n";
+  print STDERR "Maybe you need to configure this program in ".$config{"configfile"}.  "?\n";
+  print STDERR "or run me with \"--help\"\n";
+  exit(-1);
+}
+
 sub long2ip{
   my (@octets,$i,$ip_number,$ip_number_display,$number_convert,$ip_address);
   $ip_number_display = $ip_number = shift;
@@ -65,15 +85,6 @@ sub long2ip{
 return join('.', @octets);
 }
 
-my %config = ('databasetype' => 'pgsql',
-              'host' => '127.0.0.1',
-              'user' => 'nufw',
-              'databasename' => 'nufw',
-              'tablename' => 'nufw',
-              'delay' => 2,
-              'line' => 20,
-              'version' => 2,
-              ); #This hash contains all configuration variables
 
 my %tmpconfig; #yucks, getopt can only be called once
 GetOptions( "c=s" => \$config{'configfile'},
@@ -96,36 +107,45 @@ if (defined($tmpconfig{'help'}))
 }
 
 defined $config{'configfile'} or $config{'configfile'} = '/etc/nufw/nutop.conf';
-open (FILE,$config{'configfile'}) or print STDERR "Could not open file : ".$config{'configfile'}."\n";
-
-
-sub Parse_Config_File($)
+if (stat($config{'configfile'}))
 {
-  my $config_hash = shift @_;
-  my $linecnt = 0;
-  while (my $line = <FILE>)
+  open (FILE,$config{'configfile'}) or print STDERR "Could not open file : ".$config{'configfile'}."\n";
+
+
+  sub Parse_Config_File($)
   {
-    $linecnt++;
-    $line =~ /^#/ and next;
-    $line =~ /^$/ and next;
-    unless ($line =~ /^(\S+)\s*=\s*(.*)$/)
+    my $config_hash = shift @_;
+    my $linecnt = 0;
+    while (my $line = <FILE>)
     {
-      print STDERR "Warning : config file line $linecnt : strange data got ignored\n";
-      next;
+      $linecnt++;
+      $line =~ /^#/ and next;
+      $line =~ /^$/ and next;
+      unless ($line =~ /^(\S+)\s*=\s*(.*)$/)
+      {
+        print STDERR "Warning : config file line $linecnt : strange data got ignored\n";
+        next;
+      }
+      $$config_hash{$1} = $2;
+      $modified_conf++;
     }
-    $$config_hash{$1} = $2;
+    return %$config_hash; 
   }
-  return %$config_hash; 
+  %config = Parse_Config_File(\%config);
 }
-
-
-%config = Parse_Config_File(\%config);
 foreach my $key(keys %tmpconfig)
 {
-  defined $tmpconfig{$key} and $config{$key} = $tmpconfig{$key};
+  if (defined $tmpconfig{$key}){
+    $config{$key} = $tmpconfig{$key};
+    $modified_conf++;
+  }
 }
 
 
+if (!$modified_conf)
+{
+  die_politely ("No given parameter, nothing in config file");
+}
 
 #Lets check input now
 {
@@ -157,6 +177,8 @@ foreach my $key(keys %tmpconfig)
   }
 }
 
+
+
 #Now we prepare connection to our database
 my $dbh;
 {
@@ -165,7 +187,7 @@ my $dbh;
     $datasource = "dbi:mysql:database=".$config{'databasename'}.";host=".$config{'host'}.";port=".$config{'port'};
   $config{'databasetype'} =~ /pgsql/ and 
     $datasource = "dbi:Pg:dbname=".$config{'databasename'}.";host=".$config{'host'}.";port=".$config{'port'};
-  $dbh = DBI->connect($datasource, $config{'user'}, $config{'pass'}) or die $DBI::errstr;
+  $dbh = DBI->connect($datasource, $config{'user'}, $config{'pass'}) or die_politely($DBI::errstr);
 }
 
 my @state=('DROP','OPEN','ESTAB','CLOSE');
