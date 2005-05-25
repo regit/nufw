@@ -1982,11 +1982,7 @@ void push_worker ()
 	global_msg->msg.option=0;
 	global_msg->msg.length=4;
 
-	if (!g_async_queue_ref (tls_push))
-	{
-		g_message("tls.c Couldn't g_async_queue_ref on tls_push");
-		exit(-1);
-	}
+	g_async_queue_ref (tls_push);
 
 	/* wait for message */
 	while ( ( message = g_async_queue_pop(tls_push))  ) {
