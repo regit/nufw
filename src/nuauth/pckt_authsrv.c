@@ -248,7 +248,7 @@ void acl_check_and_decide (gpointer userdata, gpointer data)
 				}
 #endif
 				send_auth_response(GUINT_TO_POINTER(conn_elt->packet_id->data),&aanswer);
-				/* we can get rid of packet_id because we have send an answer */
+				/* we can get rid of packet_id because we have sent an answer */
 				conn_elt->packet_id=g_slist_remove(conn_elt->packet_id,conn_elt->packet_id->data);
 				conn_elt->state=STATE_DONE;
 			}

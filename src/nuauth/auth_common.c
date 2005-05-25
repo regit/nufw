@@ -127,16 +127,8 @@ void search_and_fill () {
         //GRYZOR warning : it seems we g_free() on pckt only on some conditions in this function
 	connection * pckt = NULL;
 
-	if (!g_async_queue_ref (connexions_queue))
-        {
-            g_message("Cannot g_async_queue_ref on connexions_queue!");
-            exit(-1);
-        }
-	if (!g_async_queue_ref (tls_push))
-        {
-            g_message("Cannot g_async_queue_ref on tls_push!");
-            exit(-1);
-        }
+	g_async_queue_ref (connexions_queue);
+	g_async_queue_ref (tls_push);
 	/* wait for message */
 	while ( (pckt = g_async_queue_pop(connexions_queue)) ) {
 		/* search pckt */
