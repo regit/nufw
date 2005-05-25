@@ -90,7 +90,7 @@ char* get_password()
 	int password_size=32;
 	if (password == NULL){
 		passwd=(char *)calloc(32,sizeof( char));
-		printf("Enter passphrase : ");
+		printf("Enter password : ");
 		my_getpass(&passwd,&password_size);
 		if (strlen(passwd)<password_size) {
 			passwd[strlen(passwd)-1]=0;
