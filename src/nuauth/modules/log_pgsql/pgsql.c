@@ -116,7 +116,6 @@ G_MODULE_EXPORT PGconn *pgsql_conn_init(void){
     if (snprintf(port,14,"%d",pgsql_server_port) >= 14){return NULL;}
     if (snprintf(timeout,14,"%d",pgsql_request_timeout) >= 14){return NULL;};
     if (snprintf(server_port,14,"%d",pgsql_server_port) >= 14){return NULL;};
-
     pgsql_conninfo = (char *)calloc(strlen(pgsql_user) + strlen(pgsql_passwd) + 
         strlen(pgsql_server) + strlen(pgsql_ssl) + strlen(server_port) + strlen(pgsql_db_name) +
         strlen(port) + strlen(timeout) +
@@ -140,6 +139,15 @@ G_MODULE_EXPORT PGconn *pgsql_conn_init(void){
        strcat(pgsql_conninfo,pgsql_ssl); 
        strcat(pgsql_conninfo,"'"); */
     /* init connection */
+#if OTHER_CHOICE
+    pgsql_conninfo=g_strjoin(" ","host='",pgsql_server,
+		    "' port=",port,
+		    " dbname='", pgsql_db_name,
+		    "' user='",pgsql_user,
+		    "' password='",pgsql_passwd,
+		    "' connect_timeout=",timeout);
+#endif
+		    
     if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
         g_message("Going to init pgsql connection ");
 
@@ -159,7 +167,7 @@ G_MODULE_EXPORT PGconn *pgsql_conn_init(void){
         return NULL;
     }
     if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-        g_message("done");
+        g_message("Pgsql init done");
     free(pgsql_conninfo);
     return ld;
 }
@@ -312,7 +320,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
                 return -1;
             } else {
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-                    g_message("done\n");
+                    g_message("Request done\n");
             }
             break;
           case IPPROTO_UDP:
