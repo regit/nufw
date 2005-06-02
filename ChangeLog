@@ -6,7 +6,8 @@
 	  void functions)
 	- nuauth : solve problem whith pgsql log module in
 	nuauth_log_users_strict mode
-	- libnucliet : add TCP_KEEPALIVE option on socket
+	- libnuclient : add TCP_KEEPALIVE option on socket
+	- nutcpc : add -k option to kill current nutcpc
 1.0.5 (2005/05/16)
 	- added nuauth_log_users_without_realm : remove realm from username
 	before logging
