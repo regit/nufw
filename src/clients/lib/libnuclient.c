@@ -743,7 +743,7 @@ NuAuth* nu_client_init(char *username, unsigned long userid, char *password,
 		/* test if key exists */
 		if (access(keyfile,R_OK)){
                     /* Added by gryzor after getting confused with weird
-                     * messages, when no cert is present*/
+                     * messages, when no cert is present */
                         printf("\nSorry, cannot read key file %s\n",keyfile);
 			keyfile[0]=0;
 		}
@@ -999,6 +999,7 @@ NuAuth* nu_client_init2(
 	gnutls_certificate_credentials xcred;
 	conntable_t *new;
 	int ret;
+	int option_value;
 	const int cert_type_priority[3] = { GNUTLS_CRT_X509,  0 };
 	struct hostent *host;
 	/* create socket stuff */
@@ -1114,6 +1115,14 @@ NuAuth* nu_client_init2(
 		errno=EADDRNOTAVAIL;	
 		return NULL;
 	}
+	option_value=1;
+	setsockopt (
+			session->socket,
+			SOL_SOCKET,
+			SO_KEEPALIVE,
+			&option_value,
+			sizeof(option_value));
+
 
 	if ( connect(session->socket,(struct sockaddr *)(&session->adr_srv),sizeof(session->adr_srv)) == -1){
 		nu_exit_clean(session);
