@@ -90,19 +90,6 @@ g_module_check_init(GModule *module){
     return NULL;
 }
 
-/* In : time in seconds from epoch
- * Out : char* containing acceptable input to POstgresql. Must be allocated with at least 26 bytes*/
-void epoch_to_char(long unsigned int i, char **value)
-{
-  struct tm *time;
-  time = (struct tm *)malloc(sizeof(struct tm));
-  gmtime_r(&i,time);
-  asctime_r(time,*value);
-  free(time);
-}
-
-
-
 /* 
  * Initialize connection to pgsql server
  */
@@ -235,27 +222,17 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
             ipone.s_addr=ntohl((element.tracking_hdrs).saddr);
             strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
             if (nuauth_log_users_strict){
-                char *my_timestamp;
-                my_timestamp=(char *)calloc(26,sizeof(char));
-                if (my_timestamp == NULL)
-                {
-                  g_warning("Can not malloc for my_timestamp");
-                  return -1;
-                }
-                epoch_to_char(element.timestamp,&my_timestamp);
-                if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET end_timestamp='%s', state=%hu WHERE (ip_saddr='%s' and tcp_sport=%u and (state=1 or state=2))",
+                if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET end_timestamp=%lu, state=%hu WHERE (ip_saddr='%s' and tcp_sport=%u and (state=1 or state=2))",
                   pgsql_table_name,
-                  my_timestamp,
+                  element.timestamp,
                   STATE_CLOSE,
                   tmp_inet1,
                   (element.tracking_hdrs).source
                   ) >= SHORT_REQUEST_SIZE-1){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                     g_warning("Building pgsql update query, the SHORT_REQUEST_SIZE limit was reached!\n");
-                free(my_timestamp);
                 return -1;
               }
-              free(my_timestamp);
               Result = PQexec(ld, request);
               if (!Result == PGRES_TUPLES_OK){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
@@ -407,23 +384,15 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
         if ((element.tracking_hdrs).protocol == IPPROTO_TCP){
             int update_status = 0;
             while (update_status < 2){
-              char *my_timestamp;
-              my_timestamp=(char *)calloc(26,sizeof(char));
-              if (my_timestamp == NULL)
-              {
-                g_warning("Can not malloc for my_timestamp");
-                return -1;
-              }
-              epoch_to_char(element.timestamp,&my_timestamp);
               update_status++;
               ipone.s_addr=ntohl((element.tracking_hdrs).saddr);
               iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
               strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
               strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
-              if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET state=%hu, start_timestamp='%s' WHERE (ip_daddr='%s' and ip_saddr='%s' and tcp_dport=%u and tcp_sport=%u and state=%hu);",
+              if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET state=%hu, start_timestamp=%lu WHERE (ip_daddr='%s' and ip_saddr='%s' and tcp_dport=%u and tcp_sport=%u and state=%hu);",
                   pgsql_table_name,
                   STATE_ESTABLISHED,
-                  my_timestamp,
+                  element.timestamp,
                   tmp_inet1,
                   tmp_inet2,
                   (element.tracking_hdrs).source,
@@ -432,10 +401,8 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
                   ) >= SHORT_REQUEST_SIZE-1){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                     g_warning("Building pgsql update query, the SHORT_REQUEST_SIZE limit was reached!\n");
-                free(my_timestamp);
                 return -1;
             }
-            free(my_timestamp);
             Result = PQexec(ld, request);
             if (!Result == PGRES_TUPLES_OK){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
@@ -463,22 +430,14 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
         if ((element.tracking_hdrs).protocol == IPPROTO_TCP){
             int update_status = 0;
             while (update_status < 2){
-              char *my_timestamp;
-              my_timestamp=(char *)calloc(26,sizeof(char));
-              if (my_timestamp == NULL)
-              {
-                g_warning("Can not malloc for my_timestamp");
-                return -1;
-              }
-              epoch_to_char(element.timestamp,&my_timestamp);
               update_status++;
               ipone.s_addr=ntohl((element.tracking_hdrs).saddr);
               iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
               strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
               strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
-              if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET end_timestamp='%s', state=%hu WHERE (ip_saddr='%s' and ip_daddr='%s' and tcp_sport=%u and tcp_dport=%u and state=%hu);",
+              if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET end_timestamp=%lu, state=%hu WHERE (ip_saddr='%s' and ip_daddr='%s' and tcp_sport=%u and tcp_dport=%u and state=%hu);",
                   pgsql_table_name,
-                  my_timestamp,
+                  element.timestamp,
                   STATE_CLOSE,
                   tmp_inet1,
                   tmp_inet2,
@@ -488,10 +447,8 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
                   ) >= SHORT_REQUEST_SIZE-1){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                     g_warning("Building pgsql update query, the SHORT_REQUEST_SIZE limit was reached!\n");
-                free(my_timestamp);
                 return -1;
               }
-              free(my_timestamp);
               Result = PQexec(ld, request);
               if (!Result == PGRES_TUPLES_OK){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
