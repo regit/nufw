@@ -1,7 +1,8 @@
 
 /*
- ** Copyright(C) 2003-2004 Eric Leblond <eric@regit.org>
+ ** Copyright(C) 2003-2005 Eric Leblond <eric@regit.org>
  **		     Vincent Deffontaines <vincent@gryzor.com>
+ **                   INL
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -234,13 +235,15 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
                 return -1;
               }
               Result = PQexec(ld, request);
-              if (!Result == PGRES_TUPLES_OK){
+              if (!Result || PQresultStatus(Result) != PGRES_TUPLES_OK){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                     g_warning("Can not update Data : %s\n",PQerrorMessage(ld));
+                PQclear(Result);
                 return -1;
               } else {
 		PQclear(Result);
 	      }
+              PQclear(Result);
             }
 	    if (element.username != NULL) { 
                 gchar* OSFullname;
@@ -293,12 +296,13 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
 
             Result = PQexec(ld, request);
 
-            if (!Result == PGRES_TUPLES_OK){
+            if (!Result || PQresultStatus(Result) != PGRES_TUPLES_OK){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                     g_warning("Can not insert Data : %s\n",PQerrorMessage(ld));
+                PQclear(Result);
                 return -1;
             } else {
-		    PQclear(Result);
+		PQclear(Result);
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
                     g_message("Request done\n");
             }
@@ -336,12 +340,13 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
 	    	g_free(OSFullname);
 		g_free(AppFullname);
             Result = PQexec(ld, request);
-            if (!Result == PGRES_TUPLES_OK){
+            if (!Result || PQresultStatus(Result) != PGRES_TUPLES_OK){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                     g_warning("Can not insert Data : %s\n",PQerrorMessage(ld));
+                PQclear(Result);
                 return -1;
             }
-	   PQclear(Result);
+            PQclear(Result);
             return 0;
           }
           default:
@@ -375,12 +380,13 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
 	g_free(OSFullname);
 		g_free(AppFullname);
             Result = PQexec(ld, request);
-            if (!Result == PGRES_TUPLES_OK){
+            if (!Result || PQresultStatus(Result) != PGRES_TUPLES_OK){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                     g_warning("Can not insert Data : %s\n",PQerrorMessage(ld));
+                PQclear(Result);
                 return -1;
             }
-	   PQclear(Result);
+            PQclear(Result);
             return 0;
           }
         }
@@ -409,9 +415,10 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
                 return -1;
             }
             Result = PQexec(ld, request);
-            if (!Result == PGRES_TUPLES_OK){
+            if (!Result || PQresultStatus(Result) != PGRES_TUPLES_OK){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                     g_warning("Can not update Data : %s\n",PQerrorMessage(ld));
+                PQclear(Result);
                 return -1;
             }
             if (atoi(PQcmdTuples(Result)) >= 1){
@@ -426,6 +433,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
                         g_warning("Tried to update PGSQL entry twice, looks like data to update wasn't inserted\n");
 #endif
                 }
+            PQclear(Result);
             }
           }
           return 0;
@@ -456,12 +464,14 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
                 return -1;
               }
               Result = PQexec(ld, request);
-              if (!Result == PGRES_TUPLES_OK){
+              if (!Result || PQresultStatus(Result) != PGRES_TUPLES_OK){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                     g_warning("Can not update Data : %s\n",PQerrorMessage(ld));
+                PQclear(Result);
                 return -1;
               }
               if (atoi(PQcmdTuples(Result)) >=1){
+                PQclear(Result);
                 return 0;
               }else{
                 if (update_status <2){
@@ -472,6 +482,8 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
                         g_warning("Tried to update PGSQL entry twice, looks like data to update wasn't inserted\n");
 #endif
                 }
+
+                PQclear(Result);
               }
             }
           return 0;
@@ -516,11 +528,13 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
 	g_free(OSFullname);
 		g_free(AppFullname);
             Result = PQexec(ld, request);
-            if (!Result == PGRES_TUPLES_OK){
+            if (!Result || PQresultStatus(Result) != PGRES_TUPLES_OK){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                     g_warning("Can not insert Data : %s\n",PQerrorMessage(ld));
+                PQclear(Result);
                 return -1;
             }
+            PQclear(Result);
             break;
           }
           case IPPROTO_UDP:
@@ -559,11 +573,13 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
 	g_free(OSFullname);
 		g_free(AppFullname);
             Result = PQexec(ld, request);
-            if (!Result == PGRES_TUPLES_OK){
+            if (!Result || PQresultStatus(Result) != PGRES_TUPLES_OK){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                     g_warning("Can not insert Data : %s\n",PQerrorMessage(ld));
+                PQclear(Result);
                 return -1;
             }
+            PQclear(Result);
             return 0;
             break;
           }
@@ -599,11 +615,13 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
 	g_free(OSFullname);
 		g_free(AppFullname);
             Result = PQexec(ld, request);
-            if (!Result == PGRES_TUPLES_OK){
+            if (!Result || PQresultStatus(Result) != PGRES_TUPLES_OK){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                     g_warning("Can not insert Data : %s\n",PQerrorMessage(ld));
+                PQclear(Result);
                 return -1;
             }
+            PQclear(Result);
             return 0;
           }
         }
