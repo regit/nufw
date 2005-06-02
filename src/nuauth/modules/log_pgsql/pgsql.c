@@ -243,7 +243,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
                   return -1;
                 }
                 epoch_to_char(element.timestamp,&my_timestamp);
-                if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET end_timestamp=%s, state=%hu WHERE (ip_saddr='%s' and tcp_sport=%u and (state=1 or state=2))",
+                if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET end_timestamp='%s', state=%hu WHERE (ip_saddr='%s' and tcp_sport=%u and (state=1 or state=2))",
                   pgsql_table_name,
                   my_timestamp,
                   STATE_CLOSE,
@@ -420,7 +420,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
               iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
               strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
               strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
-              if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET state=%hu, start_timestamp=%s WHERE (ip_daddr='%s' and ip_saddr='%s' and tcp_dport=%u and tcp_sport=%u and state=%hu);",
+              if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET state=%hu, start_timestamp='%s' WHERE (ip_daddr='%s' and ip_saddr='%s' and tcp_dport=%u and tcp_sport=%u and state=%hu);",
                   pgsql_table_name,
                   STATE_ESTABLISHED,
                   my_timestamp,
@@ -476,7 +476,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
               iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
               strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
               strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
-              if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET end_timestamp=%s, state=%hu WHERE (ip_saddr='%s' and ip_daddr='%s' and tcp_sport=%u and tcp_dport=%u and state=%hu);",
+              if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET end_timestamp='%s', state=%hu WHERE (ip_saddr='%s' and ip_daddr='%s' and tcp_sport=%u and tcp_dport=%u and state=%hu);",
                   pgsql_table_name,
                   my_timestamp,
                   STATE_CLOSE,
