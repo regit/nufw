@@ -19,7 +19,7 @@
  */
 
 #include "../lib/nuclient.h"
-#define NUTCPC_VERSION "0.4"
+#define NUTCPC_VERSION "0.5"
 
 #define MAX_RETRY_TIME 30
 
@@ -30,30 +30,39 @@ void panic(const char *fmt, ...){
 	exit(-1);
 }
 
-char* getrunpid(){
-	return strdup("/tmp/nutcpc.eric");	
+char * computerunpid(){
+	char path_dir[254];
+	snprintf(path_dir,254,"%s/.nufw",getenv("HOME"));
+	if (access(path_dir,R_OK)){
+		mkdir(path_dir,S_IRWXU);
+	}
+	snprintf(path_dir,254,"%s/.nufw/.nutcpc",getenv("HOME"));
+	return strdup(path_dir);
 }
 
 void exit_nutcpc(){
 	pid_t pid;
 	FILE* FD;
-	char* runpid;
-	/* 
-	get pid filename : TMPDIR/nutcpc.USERNAME
-	*/
-	runpid=getrunpid();
-	FD = fopen(runpid,"r");
-	fscanf(FD,"%d",&pid);
-	fclose(FD);
-	kill(pid,SIGTERM);
-	   /*
-	    * */
-	exit(0);
+	char* runpid=computerunpid();
+	if (runpid){
+		FD = fopen(runpid,"r");
+		if (FD){
+		fscanf(FD,"%d",&pid);
+		fclose(FD);
+		kill(pid,SIGTERM);
+		} else {
+		printf("No nutcpc seems to be running (no lock file found)\n");
+	}
+
+		/*
+		 * */
+	}	exit(0);
 }
 
 void exit_clean(){
-	char* runpid=getrunpid();
+	char* runpid=computerunpid();
 	unlink(runpid);
+	free(runpid);
 	/* Restore terminal (can be superflu). */
 	(void) tcsetattr (fileno (stdin), TCSAFLUSH, &orig);
 	exit(0);
@@ -122,8 +131,8 @@ char * get_username()
 
 static void usage (void)
 {
-	fprintf (stderr, "usage: nutcpc [-dV]  [-I interval] "
-			"[-U userid ]  [-u local_id] [-H nuauth_srv]\n");
+	fprintf (stderr, "usage: nutcpc [-kdV]  [-I interval] "
+			"[-U userid ] [-H nuauth_srv]\n");
 	exit (EXIT_FAILURE);
 }
 
@@ -141,7 +150,7 @@ int main (int argc, char *argv[])
 	NuAuth *session;
 	int userid;
 	int tempo=1;
-	char* runpid="/tmp/nutcpc.eric";
+	char* runpid=computerunpid();
 
 	/*
 	 * Parse our arguments.
@@ -181,7 +190,8 @@ int main (int argc, char *argv[])
 	}
 
 	if (debug == 0){
-	if (! access(runpid,R_OK)){
+		if (! access(runpid,R_OK)){
+			free(runpid);
 			printf("lock file found, not starting, please check %s\n",runpid);
 			exit(EXIT_FAILURE);
 		}
@@ -220,11 +230,11 @@ int main (int argc, char *argv[])
 	} else {
 		/* store username and password */
 		if (session->username){
-		username=strdup(session->username);
+			username=strdup(session->username);
 		} else 
 			username=NULL;
 		if (session->password){
-		password=strdup(session->password);
+			password=strdup(session->password);
 		} else 
 			password=NULL;
 	}
@@ -237,7 +247,7 @@ int main (int argc, char *argv[])
 	if (debug == 0) {
 		pid_t p;
 
-			/* 1st fork */
+		/* 1st fork */
 		p = fork();
 		if (p < 0) {
 			fprintf (stderr, "nutcpc: fork: %s\n",
@@ -256,6 +266,7 @@ int main (int argc, char *argv[])
 			fprintf (stderr, "nutcpc started (pid %d)\n", 
 					(int) p);
 			RunD=fopen(runpid,"w");
+			free(runpid);
 			fprintf(RunD,"%d",p);
 			fclose(RunD);
 			exit (EXIT_SUCCESS);
@@ -269,7 +280,7 @@ int main (int argc, char *argv[])
 	} else
 		fprintf (stderr, "nutcpc " NUTCPC_VERSION " started (debug)\n");
 
-	
+
 	for (;;) {
 		usleep (interval * 1000);
 		if (session == NULL){
