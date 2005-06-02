@@ -238,7 +238,9 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                     g_warning("Can not update Data : %s\n",PQerrorMessage(ld));
                 return -1;
-              }
+              } else {
+		PQclear(Result);
+	      }
             }
 	    if (element.username != NULL) { 
                 gchar* OSFullname;
@@ -296,6 +298,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
                     g_warning("Can not insert Data : %s\n",PQerrorMessage(ld));
                 return -1;
             } else {
+		    PQclear(Result);
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
                     g_message("Request done\n");
             }
@@ -338,6 +341,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
                     g_warning("Can not insert Data : %s\n",PQerrorMessage(ld));
                 return -1;
             }
+	   PQclear(Result);
             return 0;
           }
           default:
@@ -376,6 +380,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
                     g_warning("Can not insert Data : %s\n",PQerrorMessage(ld));
                 return -1;
             }
+	   PQclear(Result);
             return 0;
           }
         }
@@ -410,6 +415,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
                 return -1;
             }
             if (atoi(PQcmdTuples(Result)) >= 1){
+	   	PQclear(Result);
                 return 0;
             }else{
                 if (update_status <2){
