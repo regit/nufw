@@ -235,7 +235,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
                 return -1;
               }
               Result = PQexec(ld, request);
-              if (!Result || PQresultStatus(Result) != PGRES_TUPLES_OK){
+              if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                     g_warning("Can not update Data : %s\n",PQerrorMessage(ld));
                 PQclear(Result);
@@ -296,7 +296,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
 
             Result = PQexec(ld, request);
 
-            if (!Result || PQresultStatus(Result) != PGRES_TUPLES_OK){
+            if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                     g_warning("Can not insert Data : %s\n",PQerrorMessage(ld));
                 PQclear(Result);
@@ -340,7 +340,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
 	    	g_free(OSFullname);
 		g_free(AppFullname);
             Result = PQexec(ld, request);
-            if (!Result || PQresultStatus(Result) != PGRES_TUPLES_OK){
+            if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                     g_warning("Can not insert Data : %s\n",PQerrorMessage(ld));
                 PQclear(Result);
@@ -380,7 +380,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
 	g_free(OSFullname);
 		g_free(AppFullname);
             Result = PQexec(ld, request);
-            if (!Result || PQresultStatus(Result) != PGRES_TUPLES_OK){
+            if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                     g_warning("Can not insert Data : %s\n",PQerrorMessage(ld));
                 PQclear(Result);
@@ -415,7 +415,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
                 return -1;
             }
             Result = PQexec(ld, request);
-            if (!Result || PQresultStatus(Result) != PGRES_TUPLES_OK){
+            if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                     g_warning("Can not update Data : %s\n",PQerrorMessage(ld));
                 PQclear(Result);
@@ -464,7 +464,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
                 return -1;
               }
               Result = PQexec(ld, request);
-              if (!Result || PQresultStatus(Result) != PGRES_TUPLES_OK){
+              if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                     g_warning("Can not update Data : %s\n",PQerrorMessage(ld));
                 PQclear(Result);
@@ -528,7 +528,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
 	g_free(OSFullname);
 		g_free(AppFullname);
             Result = PQexec(ld, request);
-            if (!Result || PQresultStatus(Result) != PGRES_TUPLES_OK){
+            if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                     g_warning("Can not insert Data : %s\n",PQerrorMessage(ld));
                 PQclear(Result);
@@ -573,7 +573,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
 	g_free(OSFullname);
 		g_free(AppFullname);
             Result = PQexec(ld, request);
-            if (!Result || PQresultStatus(Result) != PGRES_TUPLES_OK){
+            if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                     g_warning("Can not insert Data : %s\n",PQerrorMessage(ld));
                 PQclear(Result);
@@ -615,7 +615,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
 	g_free(OSFullname);
 		g_free(AppFullname);
             Result = PQexec(ld, request);
-            if (!Result || PQresultStatus(Result) != PGRES_TUPLES_OK){
+            if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                     g_warning("Can not insert Data : %s\n",PQerrorMessage(ld));
                 PQclear(Result);
