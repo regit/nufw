@@ -266,7 +266,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
                   ) >= LONG_REQUEST_SIZE-1 ) {
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                     g_warning("Building pgsql insert query, the LONG_REQUEST_SIZE limit was reached!\n");
-	g_free(OSFullname);
+	        g_free(OSFullname);
 		g_free(AppFullname);
                 return -1;
             	}
@@ -333,12 +333,12 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
                   ) >= LONG_REQUEST_SIZE-1 ){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                     g_warning("Building pgsql insert query, the LONG_REQUEST_SIZE limit was reached!\n");
-	g_free(OSFullname);
+	        g_free(OSFullname);
 		g_free(AppFullname);
                 return -1;
             }
-	    	g_free(OSFullname);
-		g_free(AppFullname);
+	    g_free(OSFullname);
+	    g_free(AppFullname);
             Result = PQexec(ld, request);
             if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
@@ -373,12 +373,12 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
                   ) >= LONG_REQUEST_SIZE-1){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                     g_warning("Building pgsql insert query, the LONG_REQUEST_SIZE limit was reached!\n");
-	g_free(OSFullname);
+	        g_free(OSFullname);
 		g_free(AppFullname);
                 return -1;
             }
-	g_free(OSFullname);
-		g_free(AppFullname);
+	    g_free(OSFullname);
+	    g_free(AppFullname);
             Result = PQexec(ld, request);
             if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
@@ -521,12 +521,12 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
                   ) >= LONG_REQUEST_SIZE-1 ){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                     g_warning("Building pgsql insert query, the LONG_REQUEST_SIZE limit was reached!\n");
-	g_free(OSFullname);
+	        g_free(OSFullname);
 		g_free(AppFullname);
                 return -1;
             }
-	g_free(OSFullname);
-		g_free(AppFullname);
+	    g_free(OSFullname);
+	    g_free(AppFullname);
             Result = PQexec(ld, request);
             if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
@@ -566,12 +566,12 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
                   ) >= LONG_REQUEST_SIZE-1 ){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                     g_warning("Building pgsql insert query, the LONG_REQUEST_SIZE limit was reached!\n");
-	g_free(OSFullname);
+	        g_free(OSFullname);
 		g_free(AppFullname);
                 return -1;
             }
-	g_free(OSFullname);
-		g_free(AppFullname);
+	    g_free(OSFullname);
+	    g_free(AppFullname);
             Result = PQexec(ld, request);
             if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
@@ -608,12 +608,12 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
                   ) >= LONG_REQUEST_SIZE-1){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                     g_warning("Building pgsql insert query, the LONG_REQUEST_SIZE limit was reached!\n");
-	g_free(OSFullname);
+	        g_free(OSFullname);
 		g_free(AppFullname);
                 return -1;
             }
-	g_free(OSFullname);
-		g_free(AppFullname);
+	    g_free(OSFullname);
+	    g_free(AppFullname);
             Result = PQexec(ld, request);
             if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
