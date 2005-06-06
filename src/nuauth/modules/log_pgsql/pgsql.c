@@ -243,7 +243,6 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
               } else {
 		PQclear(Result);
 	      }
-              PQclear(Result);
             }
 	    if (element.username != NULL) { 
                 gchar* OSFullname;

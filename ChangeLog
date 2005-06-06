@@ -1,3 +1,5 @@
+1.0.7 (2005/06/07)
+	- nuauth : remove a double free in postgresql module
 1.0.6 (2005/06/02)
 	- libnuclient : add copyright in nuclient.h
 	- libnuclient : add code for integration of libnuclient in C++ project
