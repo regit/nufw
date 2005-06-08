@@ -2,7 +2,7 @@ nufw (1.0.7-1) unstable; urgency=low
 
   * new upstream release
 
- -- Regit <regit@profy.inl.fr>  Wed,  8 Jun 2005 09:46:42 +0200
+ -- Eric Leblond <regit@inl.fr>  Wed,  8 Jun 2005 09:46:42 +0200
 
 nufw (1.0.6-1) unstable; urgency=low
 
