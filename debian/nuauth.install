@@ -1,3 +1,4 @@
+etc/nufw/nuauth.conf
 usr/sbin/nuauth
 usr/lib/nuauth/modules/libldap.so.0.0.0
 usr/lib/nuauth/modules/libldap.la
