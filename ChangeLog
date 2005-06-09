@@ -1,3 +1,5 @@
+1.0.8 (2005/06/10)
+	- nutcpc : suppress useless opening of /dev/random in nu_client_init2
 1.0.7 (2005/06/07)
 	- nuauth : remove a double free in postgresql module
 1.0.6 (2005/06/02)

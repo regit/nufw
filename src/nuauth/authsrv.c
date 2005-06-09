@@ -845,7 +845,7 @@ int main(int argc,char * argv[])
 	myaudit->loggers = user_loggers;
 	myaudit->conn_list = conn_list;
 	if (nuauth_acl_cache){
-	myaudit->aclcache = acl_cache->hash;
+		myaudit->aclcache = acl_cache->hash;
 	}
 	myaudit->cache_req_nb = 0;
 	myaudit->cache_hit_nb = 0;
