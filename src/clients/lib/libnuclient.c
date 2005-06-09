@@ -994,8 +994,6 @@ NuAuth* nu_client_init2(
 		void* username_callback,void * passwd_callback, void* tlscred_callback
 		)
 {
-	int random_file;
-	char random_seed;
 	gnutls_certificate_credentials xcred;
 	conntable_t *new;
 	int ret;
@@ -1027,12 +1025,6 @@ NuAuth* nu_client_init2(
 	session->protocol = 2;
 	/* initiate packet number */
 	session->packet_id=0;
-
-	/* init random */
-	random_file =  open("/dev/random",O_RDONLY);
-	if ( read(random_file,&random_seed, 1) == 1){
-		srandom(random_seed);
-	}
 
 	host = gethostbyname(hostname);
 	if (host == NULL)
