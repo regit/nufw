@@ -229,6 +229,7 @@ if (defined $appname){
 if (not defined($aclname)) {
   $exit_code = "No Acl Name given, Aborting\n";
 } else {
+  $aclname=~/^[a-z][A-Z][0,9],=_\s*$/ or die "Sorry, bad characters in Acl name";
   $aclname=~m/^cn=(\w+),.*/ and $acl{"cn"}=$1;
   if (not defined($decision)) {
     die "No decision given\n";
