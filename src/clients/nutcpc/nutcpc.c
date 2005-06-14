@@ -191,8 +191,8 @@ int main (int argc, char *argv[])
 
 	if (debug == 0){
 		if (! access(runpid,R_OK)){
-			free(runpid);
 			printf("lock file found, not starting, please check %s\n",runpid);
+			free(runpid);
 			exit(EXIT_FAILURE);
 		}
 	}
