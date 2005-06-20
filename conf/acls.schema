@@ -4,7 +4,6 @@ attributetype ( 18.3.6.1.1.18.1.0 NAME 'SrcIPStart'
 	ORDERING integerOrderingMatch
         SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 SINGLE-VALUE)
 
-
 attributetype ( 18.3.6.1.1.18.1.1 NAME 'SrcIPEnd'
 	DESC 'An integer defining the end of an IP src scope'
 	EQUALITY integerMatch
@@ -103,13 +102,16 @@ attributetype ( 18.3.6.1.1.18.1.17 NAME 'SrcPort'
 	EQUALITY integerMatch
         SYNTAX 1.3.6.1.4.1.1466.115.121.1.27)
 
-# TODO : time datas
+attributetype ( 18.3.6.1.1.18.1.18 NAME 'TimeRange'
+	DESC 'Name of Time Range to apply'
+	EQUALITY caseIgnoreMatch
+	SUBSTR caseIgnoreSubstringsMatch
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{256})
 
 objectclass ( 18.3.6.1.1.18.2.1 NAME 'NuAccessControlList'
 	DESC 'An IP Acl'
 	MUST (cn $ SrcIPStart $ SrcIPEnd $ DstIPStart $ DstIPEnd $ Decision )
 	MAY (Proto $ SrcPortStart $ SrcPortEnd $ DstPortStart $ DstPortEnd $ DstPort $ SrcPort  $ OsName $ OsVersion $ OsRelease $ AppName $ AppSig $ Group $ description  ) )
-
 
 objectclass ( 18.3.6.1.1.18.2.2 NAME 'NuAccount' SUP top AUXILIARY
 	DESC 'Abstraction of an account with Nufw attributes'

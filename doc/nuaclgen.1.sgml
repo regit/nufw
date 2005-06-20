@@ -63,19 +63,34 @@ manpage.1: manpage.sgml
   <refsynopsisdiv>
     <cmdsynopsis>
       <command>&dhpackage;</command>
-       <arg><option>-A <replaceable>ACLDN</replaceable></option></arg>
-       <arg><option>-sa <replaceable>NETWORK1</replaceable></option></arg>
-       <arg><option>-da <replaceable>NETWORK2</replaceable></option></arg>
-       <arg><option>-p <replaceable>PROTONUMBER</replaceable></option></arg>
+       <arg><option>--Schema <replaceable>eq|ineq</replaceable></option></arg>
+       <arg><option>--Aclname <replaceable>ACLDN</replaceable></option></arg>
+       <arg><option>--saddr <replaceable>NETWORK1</replaceable></option></arg>
+       <arg><option>--daddr <replaceable>NETWORK2</replaceable></option></arg>
+       <arg><option>--proto <replaceable>PROTONUMBER</replaceable></option></arg>
        <arg><option>--sport <replaceable>P1[:P2]</replaceable></option></arg>
        <arg><option>--dport <replaceable>P3[:P4]</replaceable></option></arg>
-       <arg><option>-j <replaceable>[ACCEPT|DROP]</replaceable></option></arg>
-       <arg><option>-g <replaceable>GROUPLIST</replaceable></option></arg> 
+       <arg><option>--OsName <replaceable>OSNAME</replaceable></option></arg>
+       <arg><option>--OsVersion <replaceable>OSVERSION</replaceable></option></arg>
+       <arg><option>--OsRelease <replaceable>OSRELEASE</replaceable></option></arg>
+       <arg><option>--AppName <replaceable>APPLICATION NAME</replaceable></option></arg>
+       <arg><option>--AppSig <replaceable>APPLICATION SIGNATURE</replaceable></option></arg>
+       <arg><option>--Separator <replaceable>SEPARATOR</replaceable></option></arg>
+       <arg><option>--jump <replaceable>[ACCEPT|DROP]</replaceable></option></arg>
+       <arg><option>--groups <replaceable>GROUPLIST</replaceable></option></arg> 
     </cmdsynopsis>
     <cmdsynopsis>
       <command>&dhpackage;</command>
-         <arg><option>-L</option></arg>
-         <arg><option>-g <replaceable>Id Group</replaceable></option></arg>
+         <arg><option>--List</option></arg>
+         <arg><option>--groups <replaceable>Id Group</replaceable></option></arg>
+    </cmdsynopsis>
+    <cmdsynopsis>
+      <command>&dhpackage;</command>
+         <arg><option>--Delete </option><replaceable>DN</replaceable></arg>
+    </cmdsynopsis>
+    <cmdsynopsis>
+      <command>&dhpackage;</command>
+         <arg><option>--help</option></arg>
     </cmdsynopsis>
   </refsynopsisdiv>
   <refsect1>
@@ -96,35 +111,36 @@ manpage.1: manpage.sgml
 
     <variablelist>
       <varlistentry>
-        <term><option>-h</option>
+        <term><option>--Schema <replaceable>eq|ineq</replaceable></option>
         </term>
         <listitem>
-          <para>Issues usage details and exits.</para>
+          <para>Use equality schema or not (Equality schema requires dport be
+          specified, and is the default.</para>
         </listitem>
       </varlistentry>
       <varlistentry>
-        <term><option>-A <replaceable>Acl DN</replaceable></option>
+        <term><option>--AclName <replaceable>Acl DN</replaceable></option>
         </term>
         <listitem>
           <para>Add an acl in the ldap tree with dn <replaceable>Acl DN</replaceable></para>
         </listitem>
       </varlistentry>
           <varlistentry>
-        <term><option>-sa <replaceable>Network</replaceable></option>
+        <term><option>--saddr <replaceable>Network</replaceable></option>
         </term>
         <listitem>
           <para>Specify source network for the acl, with network of the form : aaa.bbb.ccc.ddd[/ee]. Default value : 0.0.0.0/0</para>
         </listitem>
       </varlistentry>
    <varlistentry>
-        <term><option>-da <replaceable>Network</replaceable></option>
+        <term><option>--daddr <replaceable>Network</replaceable></option>
         </term>
         <listitem>
           <para>Specify destination network for the acl, with network of the form : aaa.bbb.ccc.ddd[/ee]. Default value : 0.0.0.0/0</para>
         </listitem>
       </varlistentry>
    <varlistentry>
-        <term><option>-p <replaceable>Protocol number</replaceable></option>
+        <term><option>--proto <replaceable>Protocol number</replaceable></option>
         </term>
         <listitem>
           <para>Specify protocol type for the acl</para>
@@ -145,25 +161,39 @@ manpage.1: manpage.sgml
         </listitem>
       </varlistentry>
    <varlistentry>
-        <term><option>-j <replaceable>Decision</replaceable></option>
+        <term><option>--jump <replaceable>Decision</replaceable></option>
         </term>
         <listitem>
           <para>Specify decision for the Acl. Has to be ACCEPT or DROP.</para>
         </listitem>
       </varlistentry>
       <varlistentry>
-        <term><option>-g <replaceable>Groups list</replaceable></option>
+        <term><option>--groups <replaceable>Groups list</replaceable></option>
         </term>
         <listitem>
-          <para>Specify the user group on which Acl apply. Must be of the form : Group1[,Group2[,...]]</para>
+          <para>Specify the user group(s) on which Acl apply. Must be of the form : Group1[,Group2[,...]]</para>
         </listitem>
       </varlistentry>
   <varlistentry>
-        <term><option>-L -g <replaceable>Group ID</replaceable></option>
+        <term><option>--List --group <replaceable>Group ID</replaceable></option>
         </term>
         <listitem>
           <para>List Acls for the <replaceable>Group ID</replaceable> group</para>
         </listitem>
+  <varlistentry>
+        <term><option>--Delete <replaceable>Dn</replaceable></option>
+        </term>
+        <listitem>
+          <para>Deletes the Acl stored in the provided Dn</para>
+        </listitem>
+      </varlistentry>
+  <varlistentry>
+        <term><option>--help</option>
+        </term>
+        <listitem>
+          <para>Displays a brief resume of available options and quits</para>
+        </listitem>
+      </varlistentry>
       </varlistentry>
 
     </variablelist>
@@ -179,7 +209,8 @@ manpage.1: manpage.sgml
     Deffontaines, aka gryzor (&dhemail2;). Original idea in 2001, while working on NSM Ldap
     support.</para>
 
-    <para>This manual page was written by &dhusername;</para>
+    <para>This manual page was written by &dhusername; and copyrighted by INL
+    (2003-2005)</para>
       <para>Permission is
       granted to copy, distribute and/or modify this document under
       the terms of the &gnu; Free Documentation

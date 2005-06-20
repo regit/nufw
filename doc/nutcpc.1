@@ -3,13 +3,13 @@
 .\" <http://shell.ipoline.com/~elmert/comp/docbook2X/> 
 .\" Please send any bug reports, improvements, comments, patches, 
 .\" etc. to Steve Cheng <steve@ggi-project.org>.
-.TH "NUTCPC" "1" "30 juillet 2004" "" ""
+.TH "NUTCPC" "1" "18 juin 2005" "" ""
 
 .SH NAME
-nutcpc \- NUFW console-mode client
+nutcpc \- NUFW console-mode client for GNU/Linux systems
 .SH SYNOPSIS
 
-\fBnutcpc\fR [ \fB-d \fR ] [ \fB-S \fR ] [ \fB-h \fR ] [ \fB-H \fINuauth  IP\fB\fR ] [ \fB-U \fIUserID\fB\fR ] [ \fB-I \fIInterval\fB\fR ] [ \fB-u \fILocal UserID \fB\fR ]
+\fBnutcpc\fR [ \fB-d \fR ] [ \fB-S \fR ] [ \fB-k \fR ] [ \fB-V \fR ] [ \fB-h \fR ] [ \fB-H \fINuauth IP\fB\fR ] [ \fB-p \fINuauth port \fB\fR ] [ \fB-U \fIUserID\fB\fR ] [ \fB-I \fIInterval\fB\fR ]
 
 .SH "DESCRIPTION"
 .PP
@@ -25,20 +25,27 @@ Original packaging and informations and help can be found from http://www.nufw.o
 \fB-h \fR
 Issues usage details and exits.
 .TP
+\fB-V \fR
+Issues program version and exits.
+.TP
 \fB-d \fR
 Debug mode, don't go into background.
 .TP
 \fB-S \fR
 Use SSL to connect to nuauth server.
 .TP
+\fB-k \fR
+Before starting, kill existing instances of the program running
+on our local userID.
+.TP
 \fB-H \fINuauth IP\fB \fR
-send authentication packet  to \fINuauth IP\fR.
+send authentication packet  to \fINuauth IP\fR\&.
+.TP
+\fB-p \fINuauth port\fB \fR
+send authentication packet  to \fINuauth port\fR\&.
 .TP
 \fB-U \fIUser ID\fB \fR
-Set nufw userid to \fIUser ID\fR.
-.TP
-\fB-u \fIlocal user id\fB \fR
-Authenticate local user identified by \fIlocal user id\fR instead of user running nutcpc.
+Set nufw userid to \fIUser ID\fR\&.
 .SH "SEE ALSO"
 .PP
 nufw(1)

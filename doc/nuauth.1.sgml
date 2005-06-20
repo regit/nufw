@@ -27,7 +27,7 @@ manpage.1: manpage.sgml
   <!ENTITY dhemail     "<email>vincent@gryzor.com</email>">
   <!ENTITY dhemail2    "<email>eric@regit.org</email>">
   <!ENTITY dhusername  "Vincent Deffontaines">
-  <!ENTITY dhucpackage "<refentrytitle>NUAUTH</refentrytitle>">
+  <!ENTITY dhucpackage "<refentrytitle>nuauth</refentrytitle>">
   <!ENTITY dhpackage   "nuauth">
 
   <!ENTITY gnu         "<acronym>GNU</acronym>">
@@ -45,7 +45,7 @@ manpage.1: manpage.sgml
       &dhsurname;
     </author>
     <copyright>
-      <year>2003</year>
+      <year>2003-2005</year>
       <holder>&dhusername;</holder>
     </copyright>
     &dhdate;
@@ -67,10 +67,13 @@ manpage.1: manpage.sgml
       <arg><option>-h</option></arg>
       <arg><option>-V</option></arg>
       <arg><option>-v[v...]</option></arg>
-      <arg><option>-l <replaceable>(local) port</replaceable></option></arg>
-      <arg><option>-d <replaceable>address</replaceable></option></arg>
-      <arg><option>-p <replaceable>(remote) port</replaceable></option></arg>
+      <arg><option>-l <replaceable>(local, for clients) port</replaceable></option></arg>
+      <arg><option>-C <replaceable>(local, for clients) address</replaceable></option></arg>
+      <arg><option>-L <replaceable>(local, for nufw) address</replaceable></option></arg>
+      <arg><option>-d <replaceable>(nufw) address(es)</replaceable></option></arg>
+      <arg><option>-p <replaceable>(nufw) port (deprecated)</replaceable></option></arg>
       <arg><option>-t <replaceable>timeout</replaceable></option></arg>
+      <arg><option>-D</option></arg>
 
     </cmdsynopsis>
   </refsynopsisdiv>
@@ -85,14 +88,14 @@ manpage.1: manpage.sgml
       client program (nutcpc), installed on the client's station, sends an
       authentication packet(2) to nuauth. The gateway's firewall queues the
       packet(1) and sends informations about it directly to the nuauth server. 
-      Nuauth's job is to analyse both packets(1) and (2), and checks user owns 
+      Nuauth's job is to analyse both packets(1) and (2), and check user owns 
       the right to initialize the connection (s)he has tried to. If Nuauth finds 
       so, Nuauth sends authorization to Nufw to accept the packet(1) through, 
-      and the connection gets initialized. If not, the connection is either 
-      Rejected or Dropped, depending on the chosen configuration.</para>
+      and the connection gets initialized. If not, the connection is Dropped.</para>
 
       <para>Nuauth can use a backend LDAP server for user and groups
       definitions, as well as Access Lists associated with those groups.
+      Interface to Users/Groups database can also be performed through PAM/NSS.
       An option is also to store the user database in DBM files. It should be
       noted that dynamic modifications of the users base can currently 
       only be performed if an LDAP database is used.</para>
@@ -121,28 +124,45 @@ manpage.1: manpage.sgml
         <term><option>-v</option>
         </term>
         <listitem>
-          <para>Increases debug level. Multiple switches are accepted and each
-	  of them increases the debug level by one. Default debug level is 2, max is 10.</para>
+          <para>Increases verbosity level. Multiple switches are accepted and each
+	  of them increases the verbosity level by one. Default verbosity level is 2, max is 10.</para>
         </listitem>
       </varlistentry>
       <varlistentry>
         <term><option>-l <replaceable>port</replaceable></option>
         </term>
         <listitem>
-          <para>Specifies UDP port to listen on for clients.  Default value : 4130</para>
+          <para>Specifies TCP port to listen on for clients.  Default value : 4130</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>-L <replaceable>address</replaceable></option>
+        </term>
+        <listitem>
+          <para>Address to listen on for NuFW packets. Default : 127.0.0.1</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>-C <replaceable>address</replaceable></option>
+        </term>
+        <listitem>
+          <para>Address to listen on for clients packets. Default : 0.0.0.0</para>
         </listitem>
       </varlistentry>
       <varlistentry>
         <term><option>-d <replaceable>address</replaceable></option>
         </term>
         <listitem>
-          <para>Network address of the nufw (gateway) server.</para>
+          <para>Network address of the nufw (gateway) servers. Only NuFW servers
+          at those addresses will be allowed to talk to nuauth.</para>
         </listitem>
       </varlistentry>
       <varlistentry>
         <term><option>-p <replaceable>port</replaceable></option>
         </term>
         <listitem>
+          <para>This option is DEPRECATED and was in use only in v1 of the
+          protocol, which was proof of concept, non-encrypted.</para>
           <para>Specifies UDP port to send data to when addressing the nufw
 	  (gateway) server. Nufw server must be setup to
 	  listen on that port. Default value : 4128</para>
@@ -154,6 +174,13 @@ manpage.1: manpage.sgml
         <listitem>
           <para>Specifies timeout to forget packets not identified, and
 	  identification packets matching nothing.  Default value : 15 s.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>-D</option>
+        </term>
+        <listitem>
+          <para>Run as a daemon.</para>
         </listitem>
       </varlistentry>
     </variablelist>

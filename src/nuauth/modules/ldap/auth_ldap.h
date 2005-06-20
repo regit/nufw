@@ -38,6 +38,7 @@ char * binddn;
 char * bindpasswd;
 char * ldap_server;
 char* ldap_acls_base_dn;
+char* ldap_acls_timerange_base_dn;
 char* ldap_users_base_dn;
 int ldap_server_port;
 int ldap_filter_type;

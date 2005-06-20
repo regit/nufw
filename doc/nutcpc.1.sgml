@@ -45,7 +45,7 @@ manpage.1: manpage.sgml
       &dhsurname;
     </author>
     <copyright>
-      <year>2004</year>
+      <year>2004-2005</year>
       <holder>&dhusername;</holder>
     </copyright>
     &dhdate;
@@ -58,18 +58,21 @@ manpage.1: manpage.sgml
   <refnamediv>
     <refname>&dhpackage;</refname>
 
-    <refpurpose>NUFW console-mode client</refpurpose>
+    <refpurpose>NUFW console-mode client for GNU/Linux systems</refpurpose>
   </refnamediv>
   <refsynopsisdiv>
     <cmdsynopsis>
       <command>&dhpackage;</command>
       <arg>-d </arg>
       <arg>-S </arg>
+      <arg>-k </arg>
+      <arg>-V </arg>
       <arg>-h </arg>
-       <arg><option>-H <replaceable>Nuauth  IP</replaceable></option></arg>
+       <arg><option>-H <replaceable>Nuauth IP</replaceable></option></arg>
+       <arg><option>-p <replaceable>Nuauth port </replaceable></option></arg>
        <arg><option>-U <replaceable>UserID</replaceable></option></arg>
        <arg><option>-I <replaceable>Interval</replaceable></option></arg>
-       <arg><option>-u <replaceable>Local UserID </replaceable></option></arg>
+<!--       <arg><option>-u <replaceable>Local UserID </replaceable></option></arg> -->
        
     </cmdsynopsis>
   </refsynopsisdiv>
@@ -97,6 +100,13 @@ manpage.1: manpage.sgml
           <para>Issues usage details and exits.</para>
         </listitem>
       </varlistentry>
+      <varlistentry>
+        <term><option>-V</option>
+        </term>
+        <listitem>
+          <para>Issues program version and exits.</para>
+        </listitem>
+      </varlistentry>
      <varlistentry>
         <term><option>-d</option>
         </term>
@@ -111,11 +121,26 @@ manpage.1: manpage.sgml
           <para>Use SSL to connect to nuauth server.</para>
         </listitem>
       </varlistentry>
+     <varlistentry>
+        <term><option>-k</option>
+        </term>
+        <listitem>
+          <para>Before starting, kill existing instances of the program running
+          on our local userID.</para>
+        </listitem>
+      </varlistentry>
       <varlistentry>
         <term><option>-H <replaceable>Nuauth IP</replaceable></option>
         </term>
         <listitem>
           <para>send authentication packet  to <replaceable>Nuauth IP</replaceable>.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>-p <replaceable>Nuauth port</replaceable></option>
+        </term>
+        <listitem>
+          <para>send authentication packet  to <replaceable>Nuauth port</replaceable>.</para>
         </listitem>
       </varlistentry>
           <varlistentry>
@@ -125,13 +150,13 @@ manpage.1: manpage.sgml
           <para>Set nufw userid to <replaceable>User ID</replaceable>.</para>
         </listitem>
       </varlistentry>
-   <varlistentry>
+<!--   <varlistentry>
         <term><option>-u <replaceable>local user id</replaceable></option>
         </term>
         <listitem>
           <para>Authenticate local user identified by <replaceable>local user id</replaceable> instead of user running &dhpackage;.</para>
         </listitem>
-      </varlistentry>
+      </varlistentry> -->
    </variablelist>
   </refsect1>
   <refsect1>

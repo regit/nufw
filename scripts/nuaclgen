@@ -109,8 +109,8 @@ if ($result == 0) {
 }
 
 if ($help) {
-  print "nuaclgen [-S (eq|ineq)] -Aclname [ACLDN] [-sa NETWORK1] [-da NETWORK2] [-p PROTONUMBER]
-        [--sport P1[:P2]] [--dport P3[:P4]] -j [ACCEPT|DROP] -g [GROUPLIST]
+  print "nuaclgen [-S (eq|ineq)] --Aclname [ACLDN] [--saddr NETWORK1] [--daddr NETWORK2] [--proto PROTONUMBER]
+        [--sport P1[:P2]] [--dport P3[:P4]] --jump [ACCEPT|DROP] --groups [GROUPLIST]
         [--OsName N1,N2... [--OsVersion V1,V2...] [--OsRelease R1,R2...]]
         [--AppName N1,N2... [--AppSig S1,S2...]] : add an acl
 nuaclgen -L -g [Id Group] : list acl(s) for a group.
@@ -172,7 +172,7 @@ if (not defined($daddr)) {
 ($acl{"DstIpStart"},$acl{"DstIpEnd"})=construct_addr_range($daddr);
 
 if (not defined($sport)) {
-  $sport="0:65536";
+  $sport="0:65535";
 }
 ($acl{"SrcPortStart"},$acl{"SrcPortEnd"})=construct_port_range($sport);
 
@@ -198,7 +198,7 @@ if (not defined($Schema) or $Schema eq 'eq') {
   }
 } else {
   if (not defined($dport)) {
-    $dport="0:65536";
+    $dport="0:65535";
   }
   ($acl{"DstPortStart"},$acl{"DstPortEnd"})=construct_port_range($dport);
 }

@@ -393,7 +393,7 @@ int main(int argc,char * argv[])
 				/* port we listen for auth answer */
 			case 'l' :
 				sscanf(optarg,"%d",&value);
-				printf("Waiting for user packets on UDP port %d\n",value);
+				printf("Waiting for user packets on TCP port %d\n",value);
 				userpckt_port=value;
 				break;
 				/* Adress we listen for NUFW originating packets */
@@ -417,7 +417,7 @@ int main(int argc,char * argv[])
 				//printf("Waiting for clients auth packets on %s\n",client_listen_address);
 				break;
 				/* destination port */
-			case 'p' :
+			case 'p' : //DEPRECATED
 				sscanf(optarg,"%d",&value);
 				printf("Auth answers sent to gw on port %d\n",value);
 				gwsrv_port=value;
@@ -441,11 +441,11 @@ int main(int argc,char * argv[])
 						\t-D : run as a daemon, send debug messages to syslog (else stdout/stderr)\n\
 						\t-V : display version and exit\n\
 						\t-v : increase debug level (+1 for each 'v') (max useful number : 10)\n\
-						\t-l : specify listening UDP port (this port waits for clients, not nuauth) (default : 4130)\n\
+						\t-l : specify listening TCP port (this port waits for clients) (default : 4130)\n\
 						\t-L : specify NUFW listening IP address (local) (this address waits for nufw data) (default : 127.0.0.1)\n\
 						\t-C : specify clients listening IP address (local) (this address waits for clients auth) (default : 0.0.0.0)\n\
 						\t-d : (remote) address of the nufw (gateway) server\n\
-						\t-p : (remote) port we use to send responses to nufw server(default : 4128)\n\
+						\t-p : THIS OPTION IS DEPRECATED \n\t\t(remote) port we use to send responses to nufw server(default : 4128)\n\
 						\t-t : timeout to forget about packets when they don't match (default : 15 s)\n");
 				return 1;
 		}

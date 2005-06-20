@@ -27,7 +27,7 @@ manpage.1: manpage.sgml
   <!ENTITY dhemail     "<email>vincent@gryzor.com</email>">
   <!ENTITY dhemail2    "<email>eric@regit.org</email>">
   <!ENTITY dhusername  "Vincent Deffontaines">
-  <!ENTITY dhucpackage "<refentrytitle>NUFW</refentrytitle>">
+  <!ENTITY dhucpackage "<refentrytitle>nufw</refentrytitle>">
   <!ENTITY dhpackage   "nufw">
 
   <!ENTITY gnu         "<acronym>GNU</acronym>">
@@ -66,9 +66,15 @@ manpage.1: manpage.sgml
 
       <arg><option>-h</option></arg>
       <arg><option>-V</option></arg>
+      <arg><option>-D</option></arg>
+      <arg><option>-m</option></arg>
+      <arg><option>-U</option></arg>
       <arg><option>-v[v...]</option></arg>
-      <arg><option>-l <replaceable>(local) port</replaceable></option></arg>
-      <arg><option>-L <replaceable>(local) address</replaceable></option></arg>
+      <arg><option>-k <replaceable>keyfile</replaceable></option></arg>
+      <arg><option>-c <replaceable>certfile</replaceable></option></arg>
+      <arg><option>-a <replaceable>cafile</replaceable></option></arg>
+<!--      <arg><option>-l <replaceable>(local) port</replaceable></option></arg>-->
+<!--      <arg><option>-L <replaceable>(local) address</replaceable></option></arg>-->
       <arg><option>-d <replaceable>address</replaceable></option></arg>
       <arg><option>-p <replaceable>(remote) port</replaceable></option></arg>
       <arg><option>-t <replaceable>timeout</replaceable></option></arg>
@@ -83,9 +89,9 @@ manpage.1: manpage.sgml
     <para>This manual page documents the
       <command>&dhpackage;</command> command.</para>
 
-      <para>Nufw is the minimalist server, designed to run on the gateway(s) of
-      the network. Nufw is designed to run in conjunction with nuauth, the
-      authenticating server. Nufw receives network packets from the local
+      <para>nufw is the minimalist server, designed to run on the gateway(s) of
+      the network. nufw is designed to run in conjunction with nuauth, the
+      authenticating server. nufw receives network packets from the local
       firewall (on Linux 2.4 and 2.6, this is set up with the help of '-j QUEUE'
       netfilter target), and synchronizes with a nuauth server to check packet is
       authorized to travel through the gateway.</para>
@@ -116,6 +122,29 @@ manpage.1: manpage.sgml
         </listitem>
       </varlistentry>
       <varlistentry>
+        <term><option>-D</option>
+        </term>
+        <listitem>
+          <para>Run as a daemon.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>-U</option>
+        </term>
+        <listitem>
+          <para>Use UDP, unencrypted protocol for communication with the nuauth
+          server. This is NOT recommended.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>-m</option>
+        </term>
+        <listitem>
+          <para>Mark packets with UserID. This requires the wvmark POM patch
+          applied to netfilter, and is necessary for per user QoS or routing.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
         <term><option>-v</option>
         </term>
         <listitem>
@@ -123,7 +152,7 @@ manpage.1: manpage.sgml
 	  of them increases the debug level by one. Default debug level is 2, max is 10.</para>
         </listitem>
       </varlistentry>
-      <varlistentry>
+<!--      <varlistentry>
         <term><option>-l <replaceable>port</replaceable></option>
         </term>
         <listitem>
@@ -140,6 +169,28 @@ manpage.1: manpage.sgml
           <para>It is advised to avoid having nufw listening on all adresses,
           and setup only an internal adress (or 127.0.0.1)</para>
         </listitem>
+      </varlistentry>-->
+      <varlistentry>
+        <term><option>-k <replaceable>keyfile</replaceable></option>
+        </term>
+        <listitem>
+          <para>Use specified file as SSL (private) key file.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>-c <replaceable>certfile</replaceable></option>
+        </term>
+        <listitem>
+          <para>Use specified file as SSL (public) certificate file.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>-a <replaceable>cafile</replaceable></option>
+        </term>
+        <listitem>
+          <para>Use specified file as SSL certificate authority file. This
+          parameter is optional.</para>
+        </listitem>
       </varlistentry>
       <varlistentry>
         <term><option>-d <replaceable>address</replaceable></option>
@@ -152,7 +203,7 @@ manpage.1: manpage.sgml
         <term><option>-p <replaceable>port</replaceable></option>
         </term>
         <listitem>
-          <para>Specifies UDP port to send data to when addressing the nuauth
+          <para>Specifies TCP port to send data to when addressing the nuauth
 	  server. Nuauth server must be setup to
 	  listen on that port. Default value : 4128</para>
         </listitem>

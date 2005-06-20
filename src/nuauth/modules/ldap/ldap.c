@@ -27,6 +27,7 @@ confparams ldap_nuauth_vars[] = {
 	{ "ldap_base_dn" , G_TOKEN_STRING , 0 ,LDAP_BASE},
 	{ "ldap_users_base_dn" , G_TOKEN_STRING , 0 ,LDAP_BASE},
 	{ "ldap_acls_base_dn" , G_TOKEN_STRING , 0 ,LDAP_BASE},
+	{ "ldap_acls_timerange_base_dn" , G_TOKEN_STRING , 0 ,LDAP_BASE},
 	{ "ldap_bind_dn" , G_TOKEN_STRING , 0 ,LDAP_USER},
 	{ "ldap_bind_password" , G_TOKEN_STRING , 0, LDAP_CRED },
 	{ "ldap_request_timeout" , G_TOKEN_INT , LDAP_REQUEST_TIMEOUT , NULL },
@@ -50,6 +51,7 @@ g_module_check_init(GModule *module)
 	ldap_server_port=LDAP_SERVER_PORT;
 	ldap_users_base_dn=LDAP_BASE;
 	ldap_acls_base_dn=LDAP_BASE;
+	ldap_acls_timerange_base_dn=LDAP_BASE;
 	ldap_filter_type=1;
 
 	/* parse conf file */

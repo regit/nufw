@@ -3,16 +3,22 @@
 .\" <http://shell.ipoline.com/~elmert/comp/docbook2X/> 
 .\" Please send any bug reports, improvements, comments, patches, 
 .\" etc. to Steve Cheng <steve@ggi-project.org>.
-.TH "NUACLGEN" "1" "30 juillet 2004" "" ""
+.TH "NUACLGEN" "1" "18 juin 2005" "" ""
 
 .SH NAME
 nuaclgen \- NUFW acl generator
 .SH SYNOPSIS
 
-\fBnuaclgen\fR [ \fB-A \fIACLDN\fB\fR ] [ \fB-sa \fINETWORK1\fB\fR ] [ \fB-da \fINETWORK2\fB\fR ] [ \fB-p \fIPROTONUMBER\fB\fR ] [ \fB--sport \fIP1[:P2]\fB\fR ] [ \fB--dport \fIP3[:P4]\fB\fR ] [ \fB-j \fI[ACCEPT|DROP]\fB\fR ] [ \fB-g \fIGROUPLIST\fB\fR ]
+\fBnuaclgen\fR [ \fB--Schema \fIeq|ineq\fB\fR ] [ \fB--Aclname \fIACLDN\fB\fR ] [ \fB--saddr \fINETWORK1\fB\fR ] [ \fB--daddr \fINETWORK2\fB\fR ] [ \fB--proto \fIPROTONUMBER\fB\fR ] [ \fB--sport \fIP1[:P2]\fB\fR ] [ \fB--dport \fIP3[:P4]\fB\fR ] [ \fB--OsName \fIOSNAME\fB\fR ] [ \fB--OsVersion \fIOSVERSION\fB\fR ] [ \fB--OsRelease \fIOSRELEASE\fB\fR ] [ \fB--AppName \fIAPPLICATION NAME\fB\fR ] [ \fB--AppSig \fIAPPLICATION SIGNATURE\fB\fR ] [ \fB--Separator \fISEPARATOR\fB\fR ] [ \fB--jump \fI[ACCEPT|DROP]\fB\fR ] [ \fB--groups \fIGROUPLIST\fB\fR ]
 
 
-\fBnuaclgen\fR [ \fB-L\fR ] [ \fB-g \fIId Group\fB\fR ]
+\fBnuaclgen\fR [ \fB--List\fR ] [ \fB--groups \fIId Group\fB\fR ]
+
+
+\fBnuaclgen\fR [ \fB--Delete \fIDN\fB\fR ]
+
+
+\fBnuaclgen\fR [ \fB--help\fR ]
 
 .SH "DESCRIPTION"
 .PP
@@ -25,19 +31,20 @@ for the ldap backend of Nuauth, the authentication server of the NUFW package.
 Original packaging and informations and help can be found from http://www.nufw.org/
 .SH "OPTIONS"
 .TP
-\fB-h \fR
-Issues usage details and exits.
+\fB--Schema \fIeq|ineq\fB \fR
+Use equality schema or not (Equality schema requires dport be
+specified, and is the default.
 .TP
-\fB-A \fIAcl DN\fB \fR
+\fB--AclName \fIAcl DN\fB \fR
 Add an acl in the ldap tree with dn \fIAcl DN\fR
 .TP
-\fB-sa \fINetwork\fB \fR
+\fB--saddr \fINetwork\fB \fR
 Specify source network for the acl, with network of the form : aaa.bbb.ccc.ddd[/ee]. Default value : 0.0.0.0/0
 .TP
-\fB-da \fINetwork\fB \fR
+\fB--daddr \fINetwork\fB \fR
 Specify destination network for the acl, with network of the form : aaa.bbb.ccc.ddd[/ee]. Default value : 0.0.0.0/0
 .TP
-\fB-p \fIProtocol number\fB \fR
+\fB--proto \fIProtocol number\fB \fR
 Specify protocol type for the acl
 .TP
 \fB--sport \fISource port\fB \fR
@@ -46,14 +53,20 @@ Specify source port(s) for the Acl. NNNN:MMMM can be used to specify a port rang
 \fB--dport \fIDestination port\fB \fR
 Specify destination port(s) for the Acl. NNNN:MMMM can be used to specify a port range.
 .TP
-\fB-j \fIDecision\fB \fR
+\fB--jump \fIDecision\fB \fR
 Specify decision for the Acl. Has to be ACCEPT or DROP.
 .TP
-\fB-g \fIGroups list\fB \fR
-Specify the user group on which Acl apply. Must be of the form : Group1[,Group2[,...]]
+\fB--groups \fIGroups list\fB \fR
+Specify the user group(s) on which Acl apply. Must be of the form : Group1[,Group2[,...]]
 .TP
-\fB-L -g \fIGroup ID\fB \fR
+\fB--List --group \fIGroup ID\fB \fR
 List Acls for the \fIGroup ID\fR group
+.TP
+\fB--Delete \fIDn\fB \fR
+Deletes the Acl stored in the provided Dn
+.TP
+\fB--help \fR
+Displays a brief resume of available options and quits
 .SH "SEE ALSO"
 .PP
 nufw(1)
@@ -65,7 +78,8 @@ Nuauth was designed and coded by Eric Leblond, aka Regit (<eric@regit.org>) , an
 Deffontaines, aka gryzor (<vincent@gryzor.com>). Original idea in 2001, while working on NSM Ldap
 support.
 .PP
-This manual page was written by Eric Leblond
+This manual page was written by Eric Leblond and copyrighted by INL
+(2003-2005)
 .PP
 Permission is
 granted to copy, distribute and/or modify this document under

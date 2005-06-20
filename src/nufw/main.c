@@ -159,10 +159,10 @@ int main(int argc,char * argv[]){
 \t-U : use UDP unencrypted communication with nuauth server\n\
 \t-v : increase debug level (+1 for each 'v') (max useful number : 10)\n\
 \t-m : mark packet with userid\n\
-\t-l : specify listening UDP port (default : 4129)\n\
-\t-L : specify listening address (default : 127.0.0.1)\n\
+\t-l : (DEPRECATED OPTION) specify listening UDP port (default : 4129)\n\
+\t-L : (DEPRECATED OPTION) specify listening address (default : 127.0.0.1)\n\
 \t-d : remote address we send auth requests to (adress of the nuauth server) (default : 127.0.0.1)\n\
-\t-p : remote port we send auth requests to (UDP port nuauth server listens on) (default : 4128)\n\
+\t-p : remote port we send auth requests to (TCP port nuauth server listens on) (default : 4128)\n\
 \t-t : timeout to forget about packets when they don't match (default : 15 s)\n\
 \t-T : track size (default : 1000)\n",PACKAGE_TARNAME);
 
