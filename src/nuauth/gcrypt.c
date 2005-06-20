@@ -1,5 +1,6 @@
 /*
  ** Copyright(C) 2004 Eric Leblond <regit@inl.fr>
+ **              2005 : deal with seeded/unseeded cases. Patch from Julian Reich <jreich@epplehaus.de>
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -30,12 +31,12 @@ int verify_user_password(const char* given,const char* ours){
     char **splitted_secret; 
     int algo=0;
 
-    if (g_str_has_prefix(ours,"{")){
+    if (g_str_has_prefix(ours,"{")) {
         splitted_secret=g_strsplit    (ours, "}", 2);
         if (splitted_secret == NULL) //We received an empty string
             return SASL_BADAUTH;
 
-        if (strncmp("{",splitted_secret[0],1)) {// Not starting with "{" means this is plaintext
+        if (strncmp("{",splitted_secret[0],1)) { // Not starting with "{" means this is plaintext
             if (strcmp(given,splitted_secret[0])){
                 g_strfreev(splitted_secret);
                 return SASL_BADAUTH;
@@ -45,17 +46,26 @@ int verify_user_password(const char* given,const char* ours){
                 return SASL_OK;
             }
         }
-
-        if (!(strcmp("{SSHA",splitted_secret[0]))) // SHA1
+	
+	int seeded = 0;
+	
+        if (!(strcmp("{SSHA",splitted_secret[0]))) {      // SHA1 (seeded)
             algo = GCRY_MD_SHA1;
-        else if (!(strcmp("{SMD5",splitted_secret[0]))) // MD5
-            algo = GCRY_MD_MD5;
-        else if (!(strcmp("{SHA1",splitted_secret[0]))){ // SHA1
-            algo = GCRY_MD_SHA1;
+            seeded = 1;
         }
+        else if (!(strcmp("{SMD5",splitted_secret[0]))) { // MD5 (seeded)
+            algo = GCRY_MD_MD5;
+            seeded = 1;
+        }
+        else if (!(strcmp("{SHA1",splitted_secret[0]))) // SHA1
+            algo = GCRY_MD_SHA1;
+        else if (!(strcmp("{SHA",splitted_secret[0])))  // SHA1
+            algo = GCRY_MD_SHA1;
+        else if (!(strcmp("{MD5",splitted_secret[0])))  // MD5
+            algo = GCRY_MD_MD5;
         else {
-        	if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-            		g_message("verify_user_password() : Unsupported hash algorithm\n");
+            if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
+                g_message("verify_user_password() : Unsupported hash algorithm\n");
             g_strfreev(splitted_secret);
             return SASL_BADAUTH;
         }
@@ -63,26 +73,92 @@ int verify_user_password(const char* given,const char* ours){
 
         gcry_md_open (&hd, algo,0);
         gcry_md_write(hd,given,strlen(given));
+	
+	if ((algo == GCRY_MD_SHA1) && seeded) {
+            char temp[24];
+            int len;
+
+            if (sasl_decode64(splitted_secret[1],strlen(splitted_secret[1]),temp,24,&len) != SASL_OK){
+              if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN))
+                g_message("sasl_decode64 failed in gcrypt.c, where seeded SHA1 is used");
+              return(SASL_BADAUTH);
+            }
+            gcry_md_write(hd,temp+20,4);
+	}
+	else if ((algo == GCRY_MD_MD5) && seeded) {
+            char temp[20];
+            int len;
+
+	    if (sasl_decode64(splitted_secret[1],strlen(splitted_secret[1]),temp,20,&len) != SASL_OK){
+              if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN))
+                g_message("sasl_decode64 failed in gcrypt.c, where seeded MD5 is used");
+              return(SASL_BADAUTH);
+            }
+            gcry_md_write(hd,temp+16,4);
+        }
+	
         res=gcry_md_read(hd,algo);
         sasl_encode64(res,strlen(res),decoded,50,&len);
+
 #ifdef DEBUG_ENABLE
         if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-            g_message("given %s, hash %s, decoded %s, stored : %s\n",given,res,decoded,ours);
+            g_message("given %s, hash %s, decoded %s, stored : %s",given,res,decoded,ours);
 #endif
-        if (!strcmp(decoded,splitted_secret[1])){
+
+	if (!seeded && !strcmp(decoded,splitted_secret[1])) {
+#ifdef DEBUG_ENABLE
+            if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+                g_message("%s == %s\n",decoded,splitted_secret[1]);
+#endif
+
             g_strfreev(splitted_secret);
             return SASL_OK;
-        } else {
+        }
+        else if (seeded && (algo == GCRY_MD_SHA1) && !memcmp(decoded,splitted_secret[1],20)) {
+#ifdef DEBUG_ENABLE
+            if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)) {
+                char temp_decoded[21];
+                char temp_stored[21];
+
+                snprintf(temp_decoded,20,"%s",decoded);
+                snprintf(temp_stored,20,"%s",splitted_secret[1]);
+
+                g_message("%s == %s (first 20 chars)\n",temp_decoded,temp_stored);
+            }
+#endif
+
+            g_strfreev(splitted_secret);
+            return SASL_OK;
+        }
+        else if (seeded && (algo == GCRY_MD_MD5) && !memcmp(decoded,splitted_secret[1],16)) {
+#ifdef DEBUG_ENABLE
+            if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)) {
+                char temp_decoded[17];
+                char temp_stored[17];
+
+                snprintf(temp_decoded,16,"%s",decoded);
+                snprintf(temp_stored,16,"%s",splitted_secret[1]);
+
+                g_message("%s == %s (first 16 chars)\n",temp_decoded,temp_stored);
+            }
+#endif
+
+            g_strfreev(splitted_secret);
+            return SASL_OK;
+        }
+        else {
+            if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)) {
+              g_message("given != stored\n");
+
             g_strfreev(splitted_secret);
             return SASL_BADAUTH;
         }
     } else {
         if (!strcmp(given,ours)){
             return SASL_OK;
-        } else {
+        }
+        else {
             return SASL_BADAUTH;
         }
-
     }
 }
-
