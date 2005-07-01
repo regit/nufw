@@ -1,10 +1,14 @@
 #define PROTO_VERSION 1
 #define AUTHREQ_OFFSET 12
 
+/**
+ * Message type : stored on 4 bits
+ */
 #define AUTH_REQUEST 0x1
 #define AUTH_ANSWER 0x2
 #define USER_REQUEST 0x3
 #define AUTH_CONTROL 0x4
+#define USER_HELLO 0x5
 
 #define NOK 0
 #define OK 1
