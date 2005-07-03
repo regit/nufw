@@ -476,6 +476,24 @@ int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn)
 	return EXIT_FAILURE;
 }
 
+static int send_hello_pckt(NuAuth * session){
+	struct nuv2_header header;
+
+	/* fill struct */
+	header.proto=0x2;
+	header.msg_type=USER_HELLO;
+	header.option=0;
+	header.length=sizeof(struct nuv2_header);
+		
+	/*  send it */
+	if(session->tls){
+		if( gnutls_record_send(*(session->tls),&header,header.length)<=0){
+			printf("write failed at %s:%d\n",__FILE__,__LINE__);
+			return 0;
+		}
+	} 
+	return 1;
+}
 
 /*
  * send_user_pckt
@@ -655,8 +673,6 @@ static int generate_dh_params(void) {
 NuAuth* nu_client_init(char *username, unsigned long userid, char *password,
 		const char *hostname, unsigned int port, char protocol, char ssl_on)
 {
-	int random_file;
-	char random_seed;
 	gnutls_certificate_credentials xcred;
 	conntable_t *new;
 	int ret;
@@ -707,12 +723,6 @@ NuAuth* nu_client_init(char *username, unsigned long userid, char *password,
 	session->password=strdup(password);
 	/* initiate packet number */
 	session->packet_id=0;
-
-	/* init random */
-	random_file =  open("/dev/random",O_RDONLY);
-	if ( read(random_file,&random_seed, 1) == 1){
-		srandom(random_seed);
-	}
 
 	host = gethostbyname(hostname);
 	if (host == NULL)
@@ -960,10 +970,6 @@ static int nu_client_real_check(NuAuth * session)
 
 int nu_client_check(NuAuth * session)
 {
-	//	conntable_t *new;
-	int nb_packets=0;
-	//char buf[512];
-
 	if (conn_on == 0 ){
 		errno=ECONNRESET;
 		return -1;
@@ -978,8 +984,13 @@ int nu_client_check(NuAuth * session)
 
 	if (session->mode == SRV_TYPE_POLL) {
 		return	nu_client_real_check(session);
-	}	
-	return nb_packets;
+	}
+#if 0
+	else {
+		send_hello_pckt(session);
+	}
+#endif
+	return 0;
 }
 
 void nu_client_free(NuAuth *session)
