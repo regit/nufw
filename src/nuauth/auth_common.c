@@ -31,12 +31,10 @@ void bail (const char *on_what){
  * Args : a connection and a state
  */
 
-inline char change_state(connection *elt, char state){
+inline void change_state(connection *elt, char state){
         if (elt != NULL){
         	elt->state = state;
-	        return  elt->state;
         }
-        return NULL;
 }
 
 /**
@@ -837,3 +835,26 @@ gchar *string_escape(gchar *orig)
 		return NULL;
 	return g_strescape(orig,"");
 }
+
+void free_buffer_read(struct buffer_read* datas){
+	if (datas->sysname){
+		g_free(datas->sysname);
+	}
+	if (datas->release){
+		g_free(datas->release);
+	}
+	if (datas->version){
+		g_free(datas->version);
+	}
+	if (datas->buf){
+		g_free(datas->buf);
+	}
+	if (datas->userid){
+		g_free(datas->userid);
+	}
+	if (datas->groups){
+		g_slist_free(datas->groups);
+	}
+	g_free(datas);
+}
+

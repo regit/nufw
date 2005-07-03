@@ -149,6 +149,7 @@ int verify_user_password(const char* given,const char* ours){
         else {
             if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)) {
               g_message("given != stored\n");
+	    }
 
             g_strfreev(splitted_secret);
             return SASL_BADAUTH;

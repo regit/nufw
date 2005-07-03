@@ -24,7 +24,7 @@
 #include <sasl/saslutil.h>
 
 
-int sck_inet;
+static connection * userpckt_decode(struct buffer_read * datas);
 
 /**
  * get user datas (containing datagram) and goes till inclusion (or decision) on packet.
@@ -41,25 +41,26 @@ void user_check_and_decide (gpointer userdata, gpointer data)
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
 		g_message("entering user_check\n");
 #endif
-	conn_elt = userpckt_decode(userdata, BUFSIZE );
-	/* free userdata, packet is parsed now */
-	g_free(((struct buffer_read *)userdata)->buf);
-	g_free(userdata);
+	conn_elt = userpckt_decode(userdata);
 	/* if OK search and fill */
 	if ( conn_elt != NULL ) {
 #ifdef DEBUG_ENABLE
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)){
+		if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_PACKET)){
 			g_message("User : %s",conn_elt->username);
 			print_connection(conn_elt,NULL);
 		}
 #endif
 		g_async_queue_push (connexions_queue,conn_elt);
+		/* free userdata, packet is parsed now */
+		g_free(((struct buffer_read *)userdata)->buf);
+		g_free(userdata);
+	}
+	else {
+		if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER)){
+			g_message("User packet decoding failed\n");
+		}
 	}
 #ifdef DEBUG_ENABLE
-	else {
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
-			g_message("User packet decoding failed\n");
-	}
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
 		g_message("leaving user_check\n");
 #endif
@@ -73,7 +74,7 @@ void user_check_and_decide (gpointer userdata, gpointer data)
  * - Return : pointer to newly allocated connection
  */
 
-connection * userpckt_decode(struct buffer_read * datas,int dgramsiz)
+static connection * userpckt_decode(struct buffer_read * datas)
 {
 	char * dgram = datas->buf;
 	connection* connexion=NULL;
@@ -156,6 +157,7 @@ connection * userpckt_decode(struct buffer_read * datas,int dgramsiz)
 																if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
 																	g_warning("user packet announced a too long app name\n");
 																free_connection(connexion);
+																free_buffer_read(datas);
 																return NULL;
 															}
 															dec_appname =	g_new0(gchar,8*len);
@@ -207,6 +209,7 @@ connection * userpckt_decode(struct buffer_read * datas,int dgramsiz)
 																	if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
 																		g_warning("user packet announced a too long user name\n");
 																	free_connection(connexion);
+																	free_buffer_read(datas);
 																	return NULL;
 																}
 																dec_fieldname =	g_new0(gchar,8*len);
@@ -233,6 +236,7 @@ connection * userpckt_decode(struct buffer_read * datas,int dgramsiz)
 																	if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER)){
 																		g_message("rejected packet, invalid username field");
 																	}
+																	free_buffer_read(datas);
 																	return NULL;
 																}
 																g_free(dec_fieldname);
@@ -245,6 +249,7 @@ connection * userpckt_decode(struct buffer_read * datas,int dgramsiz)
 													if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER)){
 														g_message("not multiuser client but sent username field");
 													}
+													free_buffer_read(datas);
 													return NULL;
 												}
 
@@ -254,6 +259,7 @@ connection * userpckt_decode(struct buffer_read * datas,int dgramsiz)
 											if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
 												g_message("unknown field type : %d",field->type);
 											free_connection(connexion);
+											free_buffer_read(datas);
 											return NULL;
 									}
 									req_start+=field->length;
@@ -301,21 +307,20 @@ connection * userpckt_decode(struct buffer_read * datas,int dgramsiz)
 
 							/* Tadaaa */
 							return connexion;
-						} 
-						break;
-					case USER_HELLO:
+						}
 						break;
 					default:
-						if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
-							g_message("unsupported message sent by user");
-
+						free_buffer_read(datas);
+						if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER)){
+							g_message("unsupported message type");
+						}
 				}
-			}
-			break;
-		default:
-			if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
-				g_message("unsupported protocol sent by user");
+				default:
+				free_buffer_read(datas);
+				if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
+					g_message("unsupported protocol");
 
+			}
+			return NULL;
 	}
-	return NULL;
 }

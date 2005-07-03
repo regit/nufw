@@ -138,7 +138,6 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass
 		pam_handle_t *pamh;
 		struct pam_conv conv_info = {&auth_pam_talker, &userinfo };
 
-
 		userinfo.name=user;
 		userinfo.pw=pass;
 

@@ -297,7 +297,6 @@ gboolean compare_connection(gconstpointer conn1, gconstpointer conn2);
 int sck_auth_reply;
 void send_auth_response(gpointer data, gpointer userdata);
 int conn_cl_delete(gconstpointer conn);
-char change_state(connection *elt, char state);
 inline char get_state(connection *elt);
 gint take_decision(connection * element);
 gint print_connection(gpointer data,gpointer userdata);
@@ -483,6 +482,7 @@ struct buffer_read {
         char* buf;
 };
 
+void free_buffer_read(struct buffer_read* datas);
 
 #define BUFSIZE 1024
 
@@ -494,7 +494,6 @@ void* tls_user_authsrv();
 
 void push_worker () ;
 
-connection * userpckt_decode(struct buffer_read* dgram,int dgramsiz);
 void user_check_and_decide (gpointer userdata ,gpointer data);
 
 /* garbage ;-) */
