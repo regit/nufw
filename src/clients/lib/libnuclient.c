@@ -40,6 +40,7 @@
 #define DH_BITS 1024
 #define PACKET_SIZE 1482
 #define REQUEST_CERT 0
+#define SENT_TEST_INTERVAL 30
 
 //#include <stdlib.h>
 #include <sys/utsname.h>
@@ -60,6 +61,7 @@ int track_size;
 int track_place;
 int conn_on;
 int recv_started;
+int timestamp_last_sent;
 
 /* callbacks we support */
 int nu_getrealm(void *context __attribute__((unused)), int id,
@@ -505,6 +507,7 @@ static int send_user_pckt(NuAuth * session,conn_t* c)
 	char *pointer=NULL;
 	char *enc_appname=NULL;
 
+	timestamp_last_sent=time(NULL);
 	memset(datas,0,sizeof datas);
 	switch (session->protocol){
 		case 2:
@@ -985,11 +988,12 @@ int nu_client_check(NuAuth * session)
 	if (session->mode == SRV_TYPE_POLL) {
 		return	nu_client_real_check(session);
 	}
-#if 0
 	else {
-		send_hello_pckt(session);
+		if ((time(NULL) - timestamp_last_sent) > SENT_TEST_INTERVAL){
+			send_hello_pckt(session);
+			timestamp_last_sent=time(NULL);
+		}
 	}
-#endif
 	return 0;
 }
 
@@ -1259,6 +1263,7 @@ NuAuth* nu_client_init2(
 	/* set init variable */	
 	conn_on =1;
 	recv_started=0;
+	timestamp_last_sent=time(NULL);
 	return session;
 
 }

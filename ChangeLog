@@ -1,3 +1,8 @@
+1.0.9 (2005/07/04)
+	- NuFW : added a USER_HELLO message to be able to detect broken
+	connnection really fast.
+	- NuFW : Documentation update
+	- nuauth : user packet decoding code cleanup
 1.0.8 (2005/06/10)
 	- nutcpc : suppress useless opening of /dev/random in nu_client_init2
 1.0.7 (2005/06/07)
