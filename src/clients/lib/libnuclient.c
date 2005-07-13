@@ -178,6 +178,7 @@ static void nu_exit_clean(NuAuth * session)
 			free(session->password);
 		}
 		free(session);
+		session=NULL;
 	}
 	sasl_done();
 	gnutls_global_deinit();	
@@ -191,8 +192,9 @@ static void recv_message(NuAuth* session){
 			ret= gnutls_record_recv(*session->tls,dgram,sizeof dgram);
 			if (ret<0){
 				if ( gnutls_error_is_fatal(ret) ){
-					nu_exit_clean(session);
-					conn_on=0;
+					if (conn_on){
+						nu_exit_clean(session);
+					}
 					return;
 				}
 			} else {
@@ -990,7 +992,9 @@ int nu_client_check(NuAuth * session)
 	}
 	else {
 		if ((time(NULL) - timestamp_last_sent) > SENT_TEST_INTERVAL){
-			send_hello_pckt(session);
+			if (! send_hello_pckt(session)){
+				nu_exit_clean(session);	
+			}
 			timestamp_last_sent=time(NULL);
 		}
 	}
@@ -1018,6 +1022,7 @@ NuAuth* nu_client_init2(
 	/* create socket stuff */
 	sasl_conn_t *conn;
 	NuAuth * session;
+	struct sigaction no_action;
 
 	session=(NuAuth*) calloc(1,sizeof(NuAuth));
 	session->username_callback=username_callback;
@@ -1114,6 +1119,15 @@ NuAuth* nu_client_init2(
 	gnutls_certificate_type_set_priority(*(session->tls), cert_type_priority);
 	/* put the x509 credentials to the current session */
 	gnutls_credentials_set(*(session->tls), GNUTLS_CRD_CERTIFICATE, xcred);
+
+	no_action.sa_handler = SIG_IGN;
+	sigemptyset( & (no_action.sa_mask));
+	no_action.sa_flags = 0;
+	if ( sigaction( SIGPIPE, & no_action , NULL ) != 0) {
+		printf("Error setting \n");
+		exit(1);
+	}
+	
 
 	session->socket = socket (AF_INET,SOCK_STREAM,0);
 	/* connect */
