@@ -7,16 +7,6 @@ A key for nuauth can be created wth the following command :
 openssl req -new -x509 -nodes -days 365 -out nuauth.pem -keyout nuauth.pem
 By default nuauth searches the certificate : CONFIGDIR/nuauth.pem
 
-NuTcpc :
-nutcpc looks for a key in the file : 
-        $HOME/.nufw/key.pem
-to create one you can use :
-mkdir ~/.nufw/
-chmod 700 ~/.nufw/
-cd ~/.nufw/
-openssl req -new -x509 -nodes -days 365 -out key.pem -keyout key.pem
-cd -
-
 Legal Notice due to cyrus SASL usage :
 
  This product includes software developed by Computing Services
