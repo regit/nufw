@@ -1,4 +1,4 @@
-1.0.10 (2005/07/13)
+1.0.10, "Michel Rocard" release (2005/07/13)
 	- libnuclient : ignore SIGPIPE to avoid crash when HELLO packet can
 	not be sent
 1.0.9 (2005/07/04)
