@@ -804,7 +804,7 @@ int sasl_user_check(user_session* c_session)
 #endif
 			return SASL_FAIL;
 		} else {
-			int len;
+			unsigned int len;
 			int decode;
 			struct nuv2_authfield* osfield;
 			gchar*	dec_buf=NULL;
@@ -1249,7 +1249,7 @@ void* tls_user_authsrv()
 	//struct sigaction action;
 	struct sockaddr_in addr_inet,addr_clnt;
 	GThreadPool* tls_sasl_worker;
-	int len_inet;
+	unsigned int len_inet;
 	int sck_inet;
 	int n,c,ret;
 	int mx;
@@ -1273,11 +1273,11 @@ void* tls_user_authsrv()
 	/* parse conf file */
 	parse_conffile(configfile,sizeof(nuauth_tls_vars)/sizeof(confparams),nuauth_tls_vars);
 	vpointer=get_confvar_value(nuauth_tls_vars,sizeof(nuauth_tls_vars)/sizeof(confparams),"nuauth_tls_max_clients");
-	nuauth_tls_max_clients=*(int*)(vpointer?vpointer:&nuauth_tls_max_clients);
+	nuauth_tls_max_clients=*(int*)(vpointer); //?vpointer:&nuauth_tls_max_clients);
 	vpointer=get_confvar_value(nuauth_tls_vars,sizeof(nuauth_tls_vars)/sizeof(confparams),"nuauth_number_authcheckers");
-	nuauth_number_authcheckers=*(int*)(vpointer?vpointer:&nuauth_number_authcheckers);
+	nuauth_number_authcheckers=*(int*)(vpointer);//?vpointer:&nuauth_number_authcheckers);
 	vpointer=get_confvar_value(nuauth_tls_vars,sizeof(nuauth_tls_vars)/sizeof(confparams),"nuauth_auth_nego_timeout");
-	nuauth_auth_nego_timeout=*(int*)(vpointer?vpointer:&nuauth_auth_nego_timeout);
+	nuauth_auth_nego_timeout=*(int*)(vpointer);//?vpointer:&nuauth_auth_nego_timeout);
 
 	mech_string_internal=g_strdup("plain");
 	mech_string_external=g_strdup("external");
@@ -1355,6 +1355,7 @@ void* tls_user_authsrv()
 
 	addr_inet.sin_family= AF_INET;
 	addr_inet.sin_port=htons(userpckt_port);
+//	addr_inet.sin_port=userpckt_port;
 	addr_inet.sin_addr.s_addr=client_srv.sin_addr.s_addr;
 
 	len_inet = sizeof addr_inet;
@@ -1364,7 +1365,7 @@ void* tls_user_authsrv()
 			len_inet);
 	if (z == -1)
 	{
-		g_warning ("user bind() failed on port %d, exiting",userpckt_port);
+		g_warning ("user bind() failed to %s:%d at %s:%d, exiting",inet_ntoa(addr_inet.sin_addr),userpckt_port,__FILE__,__LINE__);
 		exit(-1);
 	}
 
@@ -1643,7 +1644,7 @@ void* tls_nufw_authsrv()
 	int z;
 	//struct sigaction action;
 	struct sockaddr_in addr_inet,addr_clnt;
-	int len_inet;
+	unsigned int len_inet;
 	int sck_inet;
 	int n,c;
 	int mx;
@@ -1711,14 +1712,12 @@ void* tls_nufw_authsrv()
 	addr_inet.sin_port=htons(authreq_port);
 	addr_inet.sin_addr.s_addr=nufw_srv.sin_addr.s_addr;
 
-	len_inet = sizeof addr_inet;
-
 	z = bind (sck_inet,
 			(struct sockaddr *)&addr_inet,
-			len_inet);
+			sizeof addr_inet);
 	if (z == -1)
 	{
-		g_warning ("nufw bind() failed on port %d, exiting",authreq_port);
+		g_warning ("nufw bind() failed to %s:%d, exiting",inet_ntoa(addr_inet.sin_addr),authreq_port);
 		exit(-1);
 	}
 

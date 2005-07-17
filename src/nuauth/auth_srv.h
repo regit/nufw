@@ -64,24 +64,24 @@
 #define USE_LDAP 0
 #define AUTHREQ_CLIENT_LISTEN_ADDR "0.0.0.0"
 #define AUTHREQ_NUFW_LISTEN_ADDR "127.0.0.1"
-#define GWSRV_ADDR "127.0.0.1"
-//#define CLIENT_LISTEN_ADDR "0.0.0.0"
-//#define NUFW_LISTEN_ADDR "127.0.0.1"
-#define GWSRV_PORT 4128
 #define AUTHREQ_PORT 4129
 #define USERPCKT_PORT 4130
+#define GWSRV_ADDR "127.0.0.1"
 #define PRIO 1
 #define PRIO_TO_NOK 1
 #define HOSTNAME_SIZE 128
 #define PACKET_TIMEOUT 15
-#define DEFAULT_AUTH_MODULE "libldap"
+#define DEFAULT_USERAUTH_MODULE "libsystem"
+#define DEFAULT_ACLS_MODULE "libplaintext"
 #define DEFAULT_LOGS_MODULE "libsyslog"
-#define DEFAULT_IPAUTH_MODULE "libident";
+#define DEFAULT_IPAUTH_MODULE "libident"
 #define MODULE_PATH MODULE_DIR "/nuauth/modules/"
 /* define the number of threads that will do user check */
 #define NB_USERCHECK 10
 /* define the number of threads that will check acls  */
 #define NB_ACLCHECK 10
+/* define the number of threads that will log  */
+#define NB_LOGGERS 3
 
 /* SSL stuffs */
 #define NUAUTH_KEYFILE CONFIG_DIR "/nuauth-key.pem"
