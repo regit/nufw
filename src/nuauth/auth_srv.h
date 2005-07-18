@@ -85,7 +85,8 @@
 
 /* SSL stuffs */
 #define NUAUTH_KEYFILE CONFIG_DIR "/nuauth-key.pem"
-#define NUAUTH_KEY_PASSWD "password"
+#define NUAUTH_CERTFILE CONFIG_DIR "/nuauth-cert.pem"
+#define NUAUTH_CACERTFILE CONFIG_DIR "/NuFW-cacert.pem"
 #define NUAUTH_SSL_MAX_CLIENTS 256
 
 /* Start internal */

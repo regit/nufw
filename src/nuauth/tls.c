@@ -1147,10 +1147,10 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
  */
 
 void create_x509_credentials(){
-	char* nuauth_tls_key=NUAUTH_KEYFILE;
-	char* nuauth_tls_cert=NUAUTH_KEYFILE;
-	char* nuauth_tls_cacert=NUAUTH_KEYFILE;
-	char* nuauth_tls_key_passwd=NUAUTH_KEY_PASSWD;
+	char* nuauth_tls_key=NULL;
+	char* nuauth_tls_cert=NULL;
+	char* nuauth_tls_cacert=NULL;
+	char* nuauth_tls_key_passwd=NULL;
 	char* nuauth_tls_crl=NULL;
 	char *configfile=DEFAULT_CONF_FILE;
 	gpointer vpointer;
@@ -1158,33 +1158,33 @@ void create_x509_credentials(){
 	//gnutls_dh_params dh_params;
 	int int_dh_params;
 	confparams nuauth_tls_vars[] = {
-		{ "nuauth_tls_key" , G_TOKEN_STRING , 0, NUAUTH_KEYFILE },
-		{ "nuauth_tls_cert" , G_TOKEN_STRING , 0, NUAUTH_KEYFILE },
-		{ "nuauth_tls_cacert" , G_TOKEN_STRING , 0, NUAUTH_KEYFILE },
+		{ "nuauth_tls_key" , G_TOKEN_STRING , 0, g_strdup(NUAUTH_KEYFILE) },
+		{ "nuauth_tls_cert" , G_TOKEN_STRING , 0, g_strdup(NUAUTH_CERTFILE) },
+		{ "nuauth_tls_cacert" , G_TOKEN_STRING , 0, g_strdup(NUAUTH_CACERTFILE) },
 		{ "nuauth_tls_crl" , G_TOKEN_STRING , 0, NULL },
-		{ "nuauth_tls_key_passwd" , G_TOKEN_STRING , 0, NUAUTH_KEY_PASSWD },
-		{ "nuauth_tls_request_cert" , G_TOKEN_INT ,TRUE, NULL }
+		{ "nuauth_tls_key_passwd" , G_TOKEN_STRING , 0, NULL },
+		{ "nuauth_tls_request_cert" , G_TOKEN_INT ,FALSE, NULL }
 	};
 	parse_conffile(configfile,sizeof(nuauth_tls_vars)/sizeof(confparams),nuauth_tls_vars);
 	/* set variable value from config file */
 	vpointer=get_confvar_value(nuauth_tls_vars,sizeof(nuauth_tls_vars)/sizeof(confparams),"nuauth_tls_key");
-	nuauth_tls_key=(char*)(vpointer?vpointer:nuauth_tls_key);
+	nuauth_tls_key=(char*)(vpointer);//?vpointer:nuauth_tls_key);
 
 	vpointer=get_confvar_value(nuauth_tls_vars,sizeof(nuauth_tls_vars)/sizeof(confparams),"nuauth_tls_cert");
-	nuauth_tls_cert=(char*)(vpointer?vpointer:nuauth_tls_cert);
+	nuauth_tls_cert=(char*)(vpointer);//?vpointer:nuauth_tls_cert);
 
 	vpointer=get_confvar_value(nuauth_tls_vars,sizeof(nuauth_tls_vars)/sizeof(confparams),"nuauth_tls_cacert");
-	nuauth_tls_cacert=(char*)(vpointer?vpointer:nuauth_tls_cacert);
+	nuauth_tls_cacert=(char*)(vpointer);//?vpointer:nuauth_tls_cacert);
 
 	vpointer=get_confvar_value(nuauth_tls_vars,sizeof(nuauth_tls_vars)/sizeof(confparams),"nuauth_tls_crl");
-	nuauth_tls_crl=(char*)(vpointer?vpointer:nuauth_tls_crl);
+	nuauth_tls_crl=(char*)(vpointer);//?vpointer:nuauth_tls_crl);
 
 	vpointer=get_confvar_value(nuauth_tls_vars,sizeof(nuauth_tls_vars)/sizeof(confparams),"nuauth_tls_key_passwd");
-	nuauth_tls_key_passwd=(char*)(vpointer?vpointer:nuauth_tls_key_passwd);
+	nuauth_tls_key_passwd=(char*)(vpointer);//?vpointer:nuauth_tls_key_passwd);
 
 	nuauth_tls_request_cert=TRUE;
 	vpointer=get_confvar_value(nuauth_tls_vars,sizeof(nuauth_tls_vars)/sizeof(confparams),"nuauth_tls_request_cert");
-	nuauth_tls_request_cert=*(int*)(vpointer?vpointer:&nuauth_tls_request_cert);
+	nuauth_tls_request_cert=*(int*)(vpointer);//?vpointer:&nuauth_tls_request_cert);
 	if (nuauth_tls_request_cert == TRUE){
 		nuauth_tls_request_cert=GNUTLS_CERT_REQUIRE;
 	} else {
@@ -1216,12 +1216,20 @@ void create_x509_credentials(){
 			g_message("TLS require cert from client");
 	}
 #endif
+	if (nuauth_tls_key){
+		g_free(nuauth_tls_key);
+	}
+
+	if (nuauth_tls_cert){
+		g_free(nuauth_tls_cert);
+	}
 
 	if (nuauth_tls_crl){
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
 			g_message("certificate revocation list : %s\n",nuauth_tls_crl);
 		gnutls_certificate_set_x509_crl_file(x509_cred, nuauth_tls_crl, 
 				GNUTLS_X509_FMT_PEM);
+		g_free(nuauth_tls_crl);
 	}
 	int_dh_params = generate_dh_params();
 #ifdef DEBUG_ENABLE
