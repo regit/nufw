@@ -492,7 +492,9 @@ static int send_hello_pckt(NuAuth * session){
 	/*  send it */
 	if(session->tls){
 		if( gnutls_record_send(*(session->tls),&header,header.length)<=0){
+#if DEBUG_ENABLE
 			printf("write failed at %s:%d\n",__FILE__,__LINE__);
+#endif 
 			return 0;
 		}
 	} 
