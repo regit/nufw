@@ -1168,23 +1168,22 @@ void create_x509_credentials(){
 	parse_conffile(configfile,sizeof(nuauth_tls_vars)/sizeof(confparams),nuauth_tls_vars);
 	/* set variable value from config file */
 	vpointer=get_confvar_value(nuauth_tls_vars,sizeof(nuauth_tls_vars)/sizeof(confparams),"nuauth_tls_key");
-	nuauth_tls_key=(char*)(vpointer);//?vpointer:nuauth_tls_key);
+	nuauth_tls_key=(char*)(vpointer);
 
 	vpointer=get_confvar_value(nuauth_tls_vars,sizeof(nuauth_tls_vars)/sizeof(confparams),"nuauth_tls_cert");
-	nuauth_tls_cert=(char*)(vpointer);//?vpointer:nuauth_tls_cert);
+	nuauth_tls_cert=(char*)(vpointer);
 
 	vpointer=get_confvar_value(nuauth_tls_vars,sizeof(nuauth_tls_vars)/sizeof(confparams),"nuauth_tls_cacert");
-	nuauth_tls_cacert=(char*)(vpointer);//?vpointer:nuauth_tls_cacert);
+	nuauth_tls_cacert=(char*)(vpointer);
 
 	vpointer=get_confvar_value(nuauth_tls_vars,sizeof(nuauth_tls_vars)/sizeof(confparams),"nuauth_tls_crl");
-	nuauth_tls_crl=(char*)(vpointer);//?vpointer:nuauth_tls_crl);
+	nuauth_tls_crl=(char*)(vpointer);
 
 	vpointer=get_confvar_value(nuauth_tls_vars,sizeof(nuauth_tls_vars)/sizeof(confparams),"nuauth_tls_key_passwd");
-	nuauth_tls_key_passwd=(char*)(vpointer);//?vpointer:nuauth_tls_key_passwd);
+	nuauth_tls_key_passwd=(char*)(vpointer);
 
-	nuauth_tls_request_cert=TRUE;
 	vpointer=get_confvar_value(nuauth_tls_vars,sizeof(nuauth_tls_vars)/sizeof(confparams),"nuauth_tls_request_cert");
-	nuauth_tls_request_cert=*(int*)(vpointer);//?vpointer:&nuauth_tls_request_cert);
+	nuauth_tls_request_cert=*(int*)(vpointer);
 	if (nuauth_tls_request_cert == TRUE){
 		nuauth_tls_request_cert=GNUTLS_CERT_REQUIRE;
 	} else {
