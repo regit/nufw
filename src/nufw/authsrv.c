@@ -127,7 +127,7 @@ int auth_packet_to_decision(char* dgram){
 				packet_id=*(unsigned long *)(dgram+8);
 				/* lock mutex */
 				pthread_mutex_lock(&packets_list_mutex);
-				/* sarch and destroy packet by packet_id */
+				/* search and destroy packet by packet_id */
 				sandf=psearch_and_destroy (packet_id,&nfmark);
 				pthread_mutex_unlock(&packets_list_mutex);
 

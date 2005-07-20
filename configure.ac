@@ -34,7 +34,7 @@ AM_CONDITIONAL(HAVE_LIBIPQ,test x$have_ipq = xyes)
 #AC_CHECK_LIB([pthread], [pthread_mutex_init])
 
 # glib stuff
-AM_PATH_GLIB_2_0(2.0.0, , AC_MSG_ERROR([glib is required in order to compile nuauth]),[gthread gmodule])
+AM_PATH_GLIB_2_0(2.4.0, , AC_MSG_ERROR([glib is required in order to compile nuauth]),[gthread gmodule])
 
 # Checks for header files.
 AC_HEADER_STDC

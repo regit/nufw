@@ -47,7 +47,7 @@ int main(int argc,char * argv[]){
     pthread_t pckt_server,auth_server;
     struct hostent *authreq_srv, *listenaddr_srv;
     /* option */
-    char * options_list = "UDhVvmc:k:a:l:L:d:p:t:T:";
+    char * options_list = "UDhVvmc:k:a:n:l:L:d:p:t:T:";
     int option,daemonize = 0;
     int value;
     unsigned int ident_srv;
@@ -68,6 +68,7 @@ int main(int argc,char * argv[]){
     cert_file=NULL;
     key_file=NULL;
     ca_file=NULL;
+    nuauth_cert_dn=NULL;
     strncpy(authreq_addr,AUTHREQ_ADDR,HOSTNAME_SIZE);
     strncpy(listen_addr,LISTEN_ADDR,HOSTNAME_SIZE);
     debug=DEBUG; /* this shall disapear */
@@ -94,6 +95,13 @@ int main(int argc,char * argv[]){
         case 'a' :
             ca_file=strdup(optarg);
             if (ca_file == NULL){
+                fprintf(stderr, "Couldn't malloc! Exiting");
+                exit(1);
+            }
+            break;
+    case 'n' :
+            nuauth_cert_dn=strdup(optarg);
+            if (nuauth_cert_dn == NULL){
                 fprintf(stderr, "Couldn't malloc! Exiting");
                 exit(1);
             }
@@ -156,6 +164,7 @@ int main(int argc,char * argv[]){
 \t-k : use specified file as key file\n\
 \t-c : use specified file as cert file\n\
 \t-a : use specified file as ca file (strict checking is done if selected) (default: none)\n\
+\t-n : use specified string as the needed DN of nuauth (inforce certificate checking) (default: none)\n\
 \t-U : use UDP unencrypted communication with nuauth server\n\
 \t-v : increase debug level (+1 for each 'v') (max useful number : 10)\n\
 \t-m : mark packet with userid\n\

@@ -7,9 +7,8 @@
  */
 gchar* parse_x509_certificate_info(gnutls_session session)
 {
-   char dn[128];
+   char dn[DN_LENGTH];
    size_t size;
-   unsigned int algo, bits;
    time_t expiration_time, activation_time;
    const gnutls_datum *cert_list;
    int cert_list_size = 0;
@@ -40,19 +39,20 @@ gchar* parse_x509_certificate_info(gnutls_session session)
       g_message("Certificate info:\n");
 	}
 
-      expiration_time = gnutls_x509_crt_get_expiration_time( cert);
-      activation_time = gnutls_x509_crt_get_activation_time( cert);
+      expiration_time = gnutls_x509_crt_get_expiration_time(cert);
+      activation_time = gnutls_x509_crt_get_activation_time(cert);
 
         if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
       g_message("\tCertificate is valid since: %s", ctime(&activation_time));
       g_message("\tCertificate expires: %s", ctime(&expiration_time));
 	}
       /* verify date */
+	if (expiration_time<time(NULL)){
+		return NULL;
+	}
 
       /* Extract some of the public key algorithm's parameters
        */
-      algo =
-          gnutls_x509_crt_get_pk_algorithm(cert, &bits);
 
       size = sizeof(dn);
       gnutls_x509_crt_get_issuer_dn( cert, dn, &size);
@@ -68,7 +68,7 @@ gchar* parse_x509_certificate_info(gnutls_session session)
       }
 
       /* parse DN and extract username is there is one */
-      pointer=g_strrstr_len(dn,127,",CN=");
+      pointer=g_strrstr_len(dn,DN_LENGTH-1,",CN=");
       if (pointer){
 	char* string_end=NULL;
 	pointer+=4;

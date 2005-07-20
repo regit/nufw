@@ -91,7 +91,24 @@ void* packetsrv(){
 
 							if (pcktid){
 								/* send an auth request packet */
-								auth_request_send(AUTH_REQUEST,msg_p->packet_id,msg_p->payload,msg_p->data_len);
+								if (auth_request_send(AUTH_REQUEST,msg_p->packet_id,msg_p->payload,msg_p->data_len)){
+									int sandf=0;
+									/* we fail to send the packet so we free packet related to current */
+									pthread_mutex_lock(&packets_list_mutex);
+									/* search and destroy packet by packet_id */
+									sandf = psearch_and_destroy (msg_p->packet_id,&msg_p->mark);
+									pthread_mutex_unlock(&packets_list_mutex);
+
+									if (!sandf){
+										if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
+											if (log_engine == LOG_TO_SYSLOG) {
+												syslog(SYSLOG_FACILITY(DEBUG_LEVEL_WARNING),"Packet could not be removed : %lu",msg_p->packet_id);
+											}else{
+												printf("[%i] Packet could not be removed : %lu\n",getpid(),msg_p->packet_id);
+											}
+										}
+									}
+								}
 							}
 						}
 					} else {
@@ -134,19 +151,19 @@ int auth_request_send(uint8_t type,unsigned long packet_id,char* payload,int dat
 
 	timestamp = time(NULL);
 
-	memset(datas,0,sizeof datas);
-	memcpy(datas,&version,sizeof version);
-	pointer=datas+sizeof version;
-	memcpy(pointer,&type,sizeof type);
-	pointer+=sizeof type;
-	memcpy(pointer,&dataslen,sizeof dataslen);
-	pointer+=sizeof dataslen;
-	memcpy(pointer,&packet_id,sizeof packet_id);
-	pointer+=sizeof packet_id;
-	memcpy(pointer,&timestamp,sizeof timestamp);
-	pointer+=sizeof timestamp;
-	auth_len=pointer-datas;
 	if ( ((struct iphdr *)payload)->version == 4) {
+		memset(datas,0,sizeof datas);
+		memcpy(datas,&version,sizeof version);
+		pointer=datas+sizeof version;
+		memcpy(pointer,&type,sizeof type);
+		pointer+=sizeof type;
+		memcpy(pointer,&dataslen,sizeof dataslen);
+		pointer+=sizeof dataslen;
+		memcpy(pointer,&packet_id,sizeof packet_id);
+		pointer+=sizeof packet_id;
+		memcpy(pointer,&timestamp,sizeof timestamp);
+		pointer+=sizeof timestamp;
+		auth_len=pointer-datas;
 
 		/* memcpy header to datas + offset */
 		if (data_len<512-auth_len) {
@@ -165,9 +182,8 @@ int auth_request_send(uint8_t type,unsigned long packet_id,char* payload,int dat
 			memcpy(pointer,payload,511-auth_len);
 		}
 
-	} 
+	} else {
 #ifdef DEBUG_ENABLE
-	else {
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
 			if (log_engine == LOG_TO_SYSLOG) {
 				syslog(SYSLOG_FACILITY(DEBUG_LEVEL_WARNING),"Dropping non-IP packet");
@@ -175,9 +191,12 @@ int auth_request_send(uint8_t type,unsigned long packet_id,char* payload,int dat
 				printf ("[%i] Dropping non-IP packet\n",getpid());
 			}
 		}
+#endif
+		return 1;
 	}
 
 
+#ifdef DEBUG_ENABLE
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
 		if (log_engine == LOG_TO_SYSLOG) {
 			syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"Sending request for %lu",packet_id);

@@ -52,6 +52,7 @@
 char *cert_file;
 char *key_file;
 char *ca_file;
+char *nuauth_cert_dn;
 
 char authreq_addr[HOSTNAME_SIZE];
 char listen_addr[HOSTNAME_SIZE];
