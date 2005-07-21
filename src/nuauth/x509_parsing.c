@@ -1,6 +1,8 @@
 #include <auth_srv.h>
 #include <gnutls/x509.h>
 
+#define DN_LENGTH 256
+
 /**
  *  This function parse information about this session's peer
  * certificate and return username of peer.
@@ -11,7 +13,7 @@ gchar* parse_x509_certificate_info(gnutls_session session)
    size_t size;
    time_t expiration_time, activation_time;
    const gnutls_datum *cert_list;
-   int cert_list_size = 0;
+   unsigned int cert_list_size = 0;
    gnutls_x509_crt cert;
    char* username=NULL;
    char* pointer=NULL;
