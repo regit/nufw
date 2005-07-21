@@ -91,7 +91,7 @@ void* packetsrv(){
 
 							if (pcktid){
 								/* send an auth request packet */
-								if (auth_request_send(AUTH_REQUEST,msg_p->packet_id,msg_p->payload,msg_p->data_len)){
+								if (! auth_request_send(AUTH_REQUEST,msg_p->packet_id,msg_p->payload,msg_p->data_len)){
 									int sandf=0;
 									/* we fail to send the packet so we free packet related to current */
 									pthread_mutex_lock(&packets_list_mutex);
@@ -112,7 +112,6 @@ void* packetsrv(){
 							}
 						}
 					} else {
-#ifdef DEBUG_ENABLE
 						if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
 							if (log_engine == LOG_TO_SYSLOG) {
 								syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"Dropping non-IP packet");
@@ -120,14 +119,11 @@ void* packetsrv(){
 								printf ("[%i] Dropping non-IP packet\n",getpid());
 							}
 						}
-#endif
 						IPQ_SET_VERDICT(msg_p->packet_id, NF_DROP);
 					}
 				}
 			}
-		} 
-#ifdef DEBUG_ENABLE
-		else {
+		} else {
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
 				if (log_engine == LOG_TO_SYSLOG) {
 					syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"BUFSIZ too small, (size == %d)",size);
@@ -136,7 +132,6 @@ void* packetsrv(){
 				}
 			}
 		}
-#endif
 	}
 	ipq_destroy_handle( hndl );  
 }   
@@ -192,7 +187,7 @@ int auth_request_send(uint8_t type,unsigned long packet_id,char* payload,int dat
 			}
 		}
 #endif
-		return 1;
+		return 0;
 	}
 
 
@@ -248,6 +243,7 @@ int auth_request_send(uint8_t type,unsigned long packet_id,char* payload,int dat
 					shutdown(socket_tls,SHUT_RDWR);
 				}
 				pthread_cond_wait(session_destroyed_cond,session_active_mutex);
+				return 0;
 			} else {
 				tls.active=1;
 			}
@@ -267,6 +263,7 @@ int auth_request_send(uint8_t type,unsigned long packet_id,char* payload,int dat
 					printf ("[%i] sendto() failure when sending request\n",getpid());
 				}
 			}
+		return 0;
 	}
 	return 1;
 }
