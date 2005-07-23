@@ -909,6 +909,8 @@ int sasl_user_check(user_session* c_session)
 
 				}
 				g_free(dec_buf);
+			} else {
+				return SASL_FAIL;
 			}
 		}
 		/* sasl connection is not used anymore */
