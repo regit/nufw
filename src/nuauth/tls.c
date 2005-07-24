@@ -811,7 +811,13 @@ int sasl_user_check(user_session* c_session)
 			gchar** os_strings;
 			osfield=(struct nuv2_authfield*)buf;
 			if (osfield->type == OS_FIELD) { //if1
+#ifdef WORDS_BIGENDIAN	
+				int dec_buf_size;
+				osfield->length=swap16(osfield->length);
+				dec_buf_size = osfield->length *8 - 32;
+#else
 				int dec_buf_size = osfield->length *8 - 32;
+#endif
 				if ( dec_buf_size > 1024 ) { //if1a
 					/* it's a joke it's far too long */
 					if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){

@@ -97,19 +97,37 @@ static connection * userpckt_decode(struct buffer_read * datas)
 							connexion->username=NULL;
 							connexion->cacheduserdatas=NULL;
 
+#ifdef WORDS_BIGENDIAN	
+							header->length=swap16(header->length);
+#endif
+
 							while (start<dgram+header->length){
 								struct nuv2_authreq* authreq=(struct nuv2_authreq* )start;
 								char *req_start=start;
 								req_start+=4;
+
+#ifdef WORDS_BIGENDIAN	
+							authreq->packet_length=swap16(authreq->packet_length);
+#endif
 								while(req_start-start<authreq->packet_length){
 									struct nuv2_authfield* field=(struct nuv2_authfield* )req_start;
+
+#ifdef WORDS_BIGENDIAN	
+									field->length=swap16(field->length);
+#endif
 									switch (field->type) {
 										case IPV4_FIELD:
 											{
 												struct nuv2_authfield_ipv4 * ipfield=(struct nuv2_authfield_ipv4 * )req_start; 
 
+
+#ifdef WORDS_BIGENDIAN	
+												connexion->tracking_hdrs.saddr=swap32(ipfield->src);
+												connexion->tracking_hdrs.daddr=swap32(ipfield->dst);
+#else
 												connexion->tracking_hdrs.saddr=ipfield->src;
 												connexion->tracking_hdrs.daddr=ipfield->dst;
+#endif
 												connexion->tracking_hdrs.protocol=ipfield->proto;
 
 #ifdef DEBUG_ENABLE
@@ -118,14 +136,26 @@ static connection * userpckt_decode(struct buffer_read * datas)
 #endif
 												switch (connexion->tracking_hdrs.protocol) {
 													case IPPROTO_TCP:
+
+#ifdef WORDS_BIGENDIAN	
+														connexion->tracking_hdrs.source=swap16(ipfield->sport);
+														connexion->tracking_hdrs.dest=swap16(ipfield->dport);
+#else
 														connexion->tracking_hdrs.source=ipfield->sport;
 														connexion->tracking_hdrs.dest=ipfield->dport;
+#endif
 														connexion->tracking_hdrs.type=0;
 														connexion->tracking_hdrs.code=0;
 														break;
 													case IPPROTO_UDP:
+#ifdef WORDS_BIGENDIAN	
+														connexion->tracking_hdrs.source=swap16(ipfield->sport);
+														connexion->tracking_hdrs.dest=swap16(ipfield->dport);
+#else
 														connexion->tracking_hdrs.source=ipfield->sport;
 														connexion->tracking_hdrs.dest=ipfield->dport;
+#endif
+
 														connexion->tracking_hdrs.type=0;
 														connexion->tracking_hdrs.code=0;
 														break;
@@ -148,9 +178,16 @@ static connection * userpckt_decode(struct buffer_read * datas)
 												switch (appfield->option) {
 													default:
 														{
-															unsigned int len=appfield->length-4;
 															unsigned int reallen=0;
 															gchar* dec_appname=NULL;
+#ifdef WORDS_BIGENDIAN	
+															unsigned int len;
+															//appfield->length=swap16(appfield->length);
+															len=appfield->length-4;
+															
+#else
+															unsigned int len=appfield->length-4;
+#endif
 
 															if (8*len > 2048){
 																/* it is reaaally long, we ignore packet (too lasy to kill client) */
@@ -200,10 +237,16 @@ static connection * userpckt_decode(struct buffer_read * datas)
 													switch (usernamefield->option) {
 														default:
 															{
-																unsigned int len=usernamefield->length-4;
 																unsigned int reallen=0;
 																gchar* dec_fieldname=NULL;
 
+#ifdef WORDS_BIGENDIAN	
+																unsigned int len;
+																usernamefield->length=swap16(usernamefield->length);
+																len=usernamefield->length-4;
+#else
+																unsigned int len=usernamefield->length-4;
+#endif
 																if (8*len > 2048){
 																	/* it is reaaally long, we ignore packet (too lasy to kill client) */
 																	if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
