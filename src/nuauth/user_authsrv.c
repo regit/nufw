@@ -321,7 +321,6 @@ static connection * userpckt_decode(struct buffer_read * datas)
 			free_buffer_read(datas);
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
 				g_message("unsupported protocol");
-
-
+			return NULL;
 	}
 }
