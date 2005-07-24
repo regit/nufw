@@ -90,6 +90,8 @@ GCRY_THREAD_OPTION_PTHREAD_IMPL;
 #include <gnutls/gnutls.h>
 #include <sasl/sasl.h>
 
+#include <config.h>
+
 #ifndef CONNTABLE_BUCKETS
 #define CONNTABLE_BUCKETS 5003
 #endif

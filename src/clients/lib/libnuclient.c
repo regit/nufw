@@ -482,16 +482,21 @@ int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn)
 
 static int send_hello_pckt(NuAuth * session){
 	struct nuv2_header header;
+	uint16_t header_length;
 
 	/* fill struct */
 	header.proto=0x2;
 	header.msg_type=USER_HELLO;
 	header.option=0;
+#ifdef WORDS_BIGENDIAN	
+	header.length=swap16(sizeof(struct nuv2_header));
+#else
 	header.length=sizeof(struct nuv2_header);
+#endif
 		
 	/*  send it */
 	if(session->tls){
-		if( gnutls_record_send(*(session->tls),&header,header.length)<=0){
+		if( gnutls_record_send(*(session->tls),&header,sizeof(struct nuv2_header))<=0){
 #if DEBUG_ENABLE
 			printf("write failed at %s:%d\n",__FILE__,__LINE__);
 #endif 
@@ -531,14 +536,29 @@ static int send_user_pckt(NuAuth * session,conn_t* c)
 				authreq.packet_length=sizeof(struct nuv2_authreq)+sizeof(struct nuv2_authfield_ipv4);
 				authfield.type=IPV4_FIELD;
 				authfield.option=0;
+#ifdef WORDS_BIGENDIAN	
+				authfield.length=swap16(sizeof(struct nuv2_authfield_ipv4));
+#else
 				authfield.length=sizeof(struct nuv2_authfield_ipv4);
+#endif
+
+#ifdef WORDS_BIGENDIAN	
+				authfield.src=swap32(c->lcl);
+				authfield.dst=swap32(c->rmt);
+#else
 				authfield.src=htonl(c->lcl);
 				authfield.dst=htonl(c->rmt);
+#endif
 				authfield.proto=6;
 				authfield.flags=0;
 				authfield.FUSE=0;
+#ifdef WORDS_BIGENDIAN	
+				authfield.sport=swap16(c->lclp);
+				authfield.dport=swap16(c->rmtp);
+#else
 				authfield.sport=c->lclp;
 				authfield.dport=c->rmtp;
+#endif
 				/* application field  */
 				appfield.type=APP_FIELD;
 				if (1) { 
@@ -555,6 +575,9 @@ static int send_user_pckt(NuAuth * session,conn_t* c)
 					appfield.length=4+len;
 					appfield.datas=enc_appname;
 					authreq.packet_length+=appfield.length;
+#ifdef WORDS_BIGENDIAN	
+					authreq.packet_length=swap16(authreq.packet_length);
+#endif
 				} else {
 #if 0
 					appfield.option=APP_TYPE_SHA1;
@@ -573,9 +596,20 @@ static int send_user_pckt(NuAuth * session,conn_t* c)
 				}
 				/* glue piece together on data if packet is not too long */
 				header.length+=appfield.length;
+				printf("sending header : proto %d, msg_type %d, option %d, length %d\n",header.proto,
+						header.msg_type,
+						header.option,
+						header.length);
+				fflush(NULL);
 				if (header.length < PACKET_SIZE){
 					pointer=datas;
+#ifdef WORDS_BIGENDIAN	
+					header.length=swap16(header.length);
+					appfield.length=swap16(appfield.length);
 					memcpy(pointer,&header,sizeof(struct nuv2_header));
+#else
+					memcpy(pointer,&header,sizeof(struct nuv2_header));
+#endif
 					pointer+=sizeof(struct nuv2_header);
 					memcpy(pointer,&authreq,sizeof(struct nuv2_authreq));
 					pointer+=sizeof(struct nuv2_authreq);
@@ -842,6 +876,7 @@ NuAuth* nu_client_init(char *username, unsigned long userid, char *password,
 			printf("Server Certificat OK\n");
 		}
 
+		printf("maman\n");
 
 		/* SASL time */
 
@@ -908,9 +943,14 @@ NuAuth* nu_client_init(char *username, unsigned long userid, char *password,
 			}
 			osfield.type=OS_FIELD;
 			osfield.option=OS_SRV;
-                        osfield_length=4+actuallen;
-			osfield.length=htons(osfield_length);
+                        osfield_length=sizeof(struct nuv2_authfield)+actuallen;
 			buf=alloca(osfield_length);
+#ifdef WORDS_BIGENDIAN	
+			osfield.length=swap16(osfield_length);
+#else
+			osfield.length=osfield_length;
+#endif
+			printf("osfield.length %d length %d\n",osfield.length,osfield_length);
 			pointer = buf ;
 			memcpy(buf,&osfield,sizeof osfield);
 			pointer+=sizeof osfield;
@@ -1230,6 +1270,7 @@ NuAuth* nu_client_init2(
 		int actuallen;
 		char* enc_oses;
 		char * pointer, *buf;
+		int osfield_length;
 		struct nuv2_authfield osfield;
 		/* get info */
 		uname(&info);
@@ -1246,15 +1287,19 @@ NuAuth* nu_client_init2(
 		osfield.option=OS_SRV;
 		osfield.length=4+actuallen;
 		buf=alloca(osfield.length);
+		osfield_length=osfield.length;
+#ifdef WORDS_BIGENDIAN	
+		osfield.length=swap16(osfield.length);
+#endif
 		pointer = buf ;
 		memcpy(buf,&osfield,sizeof osfield);
 		pointer+=sizeof osfield;
 		memcpy(pointer,enc_oses,actuallen);
 		free(enc_oses);
-		gnutls_record_send(*(session->tls),buf,osfield.length);
+		gnutls_record_send(*(session->tls),buf,osfield_length);
 
 		/* wait for message of server about mode */
-		if (gnutls_record_recv(*(session->tls),buf,osfield.length)<=0){
+		if (gnutls_record_recv(*(session->tls),buf,osfield_length)<=0){
 			nu_exit_clean(session);
 			errno=EACCES;
 			return NULL;
