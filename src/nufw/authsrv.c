@@ -124,7 +124,11 @@ int auth_packet_to_decision(char* dgram){
 	switch (*dgram) {
 		case 0x1:
 			if ( *(dgram+1) == AUTH_ANSWER) {
+#ifdef WORDS_BIGENDIAN
+				packet_id=swap32(*(unsigned long *)(dgram+8));
+#else
 				packet_id=*(unsigned long *)(dgram+8);
+#endif
 				/* lock mutex */
 				pthread_mutex_lock(&packets_list_mutex);
 				/* search and destroy packet by packet_id */
@@ -155,7 +159,11 @@ int auth_packet_to_decision(char* dgram){
 							}
 #endif
 							/* we put the userid mark at the end of the mark, not changing the 16 first big bits */
+#ifdef WORDS_BIGENDIAN
+							IPQ_SET_VWMARK(packet_id, NF_ACCEPT,((swap16(*(u_int16_t *)(dgram+2))) & 0xffff ) | (nfmark & 0xffff0000 )); 
+#else
 							IPQ_SET_VWMARK(packet_id, NF_ACCEPT,(*(u_int16_t *)(dgram+2) & 0xffff ) | (nfmark & 0xffff0000 )); 
+#endif
 						} else 
 #endif
 							IPQ_SET_VERDICT(packet_id, NF_ACCEPT);

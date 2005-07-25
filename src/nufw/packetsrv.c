@@ -146,6 +146,12 @@ int auth_request_send(uint8_t type,unsigned long packet_id,char* payload,int dat
 
 	timestamp = time(NULL);
 
+#ifdef WORDS_BIGENDIAN
+	packet_id=swap32(packet_id);
+	dataslen=swap16(dataslen);
+	timestamp=swap32(timestamp);
+#endif
+
 	if ( ((struct iphdr *)payload)->version == 4) {
 		memset(datas,0,sizeof datas);
 		memcpy(datas,&version,sizeof version);
@@ -194,9 +200,17 @@ int auth_request_send(uint8_t type,unsigned long packet_id,char* payload,int dat
 #ifdef DEBUG_ENABLE
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
 		if (log_engine == LOG_TO_SYSLOG) {
+#ifdef WORDS_BIGENDIAN
+			syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"Sending request for %lu",swap32(packet_id));
+#else
 			syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"Sending request for %lu",packet_id);
+#endif
 		}else {
+#ifdef WORDS_BIGENDIAN
+			printf("[%i] Sending request for %lu\n",getpid(),swap32(packet_id));
+#else
 			printf("[%i] Sending request for %lu\n",getpid(),packet_id);
+#endif
 		}
 	}
 #endif

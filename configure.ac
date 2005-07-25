@@ -12,6 +12,10 @@ AC_PROG_CC
 AC_PROG_LIBTOOL
 AC_PROG_INSTALL
 
+# Checks for endianess
+#AC_C_BIGENDIAN(AC_DEFINE_UNQUOTED([__BIG_ENDIAN__],[1],[big endian architecture]),AC_DEFINE_UNQUOTED([__LITTLE_ENDIAN__],[1],[little endian architecture]))
+AC_C_BIGENDIAN()
+
 # Checks for libraries.
 
 

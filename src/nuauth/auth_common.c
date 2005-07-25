@@ -404,6 +404,10 @@ void send_auth_response(gpointer data, gpointer userdata){
 	char datas[512];
 	char *pointer;
 
+#ifdef WORDS_BIGENDIAN
+	aanswer->user_id=swap16(aanswer->user_id);
+	packet_id=swap32(packet_id);
+#endif
 	/* for each packet_id send a response */
 
 	memset(datas,0,sizeof datas);
