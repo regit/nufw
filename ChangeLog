@@ -1,10 +1,13 @@
 1.0.11 (2005/07/21)
+	- NuFW : port to big endian architecture. It has been tested on a
+	powerpc.
 	- nuauth : fix a bug that causes nuauth to crash when launched with an
 	empty nuauth.conf
 	- nufw : better handling of non-IP packet
 	- nufw : added option -n to permit a strict match of the nuauth
 	certificat
 	- nuauth : client certificat check is stricter
+	- nuauth : better handling on incorrect user OS announce 
 1.0.10, "Michel Rocard" release (2005/07/13)
 	- libnuclient : ignore SIGPIPE to avoid crash when HELLO packet can
 	not be sent
