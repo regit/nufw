@@ -131,7 +131,7 @@ char * get_username()
 
 static void usage (void)
 {
-	fprintf (stderr, "usage: nutcpc [-kdV]  [-I interval] "
+	fprintf (stderr, "usage: nutcpc [-kldV]  [-I interval] "
 			"[-U userid ] [-H nuauth_srv]\n");
 	exit (EXIT_FAILURE);
 }
