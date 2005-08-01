@@ -47,12 +47,12 @@ void exit_nutcpc(){
 	if (runpid){
 		FD = fopen(runpid,"r");
 		if (FD){
-		fscanf(FD,"%d",&pid);
-		fclose(FD);
-		kill(pid,SIGTERM);
+			fscanf(FD,"%d",&pid);
+			fclose(FD);
+			kill(pid,SIGTERM);
 		} else {
-		printf("No nutcpc seems to be running (no lock file found)\n");
-	}
+			printf("No nutcpc seems to be running (no lock file found)\n");
+		}
 
 		/*
 		 * */
@@ -150,6 +150,7 @@ int main (int argc, char *argv[])
 	NuAuth *session;
 	int userid;
 	int tempo=1;
+	unsigned char donotuselock=0;
 	char* runpid=computerunpid();
 
 	/*
@@ -157,7 +158,7 @@ int main (int argc, char *argv[])
 	 */
 	username=NULL;
 	opterr = 0;
-	while ((ch = getopt (argc, argv, "kdVu:H:I:U:p:")) != -1) {
+	while ((ch = getopt (argc, argv, "kldVu:H:I:U:p:")) != -1) {
 		switch (ch) {
 			case 'H':
 				strncpy(srv_addr,optarg,512);
@@ -171,6 +172,9 @@ int main (int argc, char *argv[])
 					fprintf (stderr, "nutcpc: bad interval\n");
 					exit (EXIT_FAILURE);
 				}
+				break;
+			case 'l':
+				donotuselock=1;
 				break;
 			case 'U':
 				sscanf(optarg,"%u",&userid);
@@ -190,10 +194,12 @@ int main (int argc, char *argv[])
 	}
 
 	if (debug == 0){
-		if (! access(runpid,R_OK)){
-			printf("lock file found, not starting, please check %s\n",runpid);
-			free(runpid);
-			exit(EXIT_FAILURE);
+		if (donotuselock == 0) {
+			if (! access(runpid,R_OK)){
+				printf("lock file found, not starting, please check %s\n",runpid);
+				free(runpid);
+				exit(EXIT_FAILURE);
+			}
 		}
 	}
 
@@ -265,10 +271,12 @@ int main (int argc, char *argv[])
 			FILE* RunD;
 			fprintf (stderr, "nutcpc started (pid %d)\n", 
 					(int) p);
-			RunD=fopen(runpid,"w");
-			free(runpid);
-			fprintf(RunD,"%d",p);
-			fclose(RunD);
+			if (donotuselock==0){
+				RunD=fopen(runpid,"w");
+				free(runpid);
+				fprintf(RunD,"%d",p);
+				fclose(RunD);
+			}
 			exit (EXIT_SUCCESS);
 		}
 		ioctl (STDIN_FILENO, TIOCNOTTY, NULL);
