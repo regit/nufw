@@ -18,22 +18,6 @@ AC_C_BIGENDIAN()
 # Checks for libraries.
 
 
-AC_CHECK_HEADERS([libipq/libipq.h libipq.h])
-AC_CHECK_LIB([ipq], [ipq_message_type], have_ipq="yes", have_ipq="")
-
-if test "$have_ipq" = "yes"; then
-# check if we have a version of libipq supporting mark
-AC_ARG_WITH(user-mark, [--with-user-mark  Support user mark on NuFW firewall], enable_user_mark="yes", enable_user_mark="")
-if test "$enable_user_mark" = "yes"; then
-        AC_CHECK_LIB([ipq], [ipq_set_vwmark],AC_DEFINE_UNQUOTED([HAVE_LIBIPQ_MARK],[1],[libipq has support for mark]),AC_MSG_RESULT([libipq has no support for mark]))
-fi
-
-
-fi
-
-AM_CONDITIONAL(HAVE_LIBIPQ,test x$have_ipq = xyes)
-
-
 #AC_CHECK_LIB([pthread], [pthread_mutex_init])
 
 # glib stuff
@@ -69,6 +53,33 @@ AC_ARG_WITH(gdbm,   [--with-gdbm  Support gdbm users lookup],gdbm="yes", gdbm=""
 AC_ARG_WITH(ident,   [--with-ident  Support ident users authentication],ident="yes", ident="")
 
 AC_ARG_WITH(debug,   [--with-debug Add development debug message],debug="yes", debug="")
+
+AC_ARG_WITH(nfqueue,   [--with-nfqueue Compile for NFQUEUE instead of QUEUE],use_nfqueue="yes", use_nfqueue="")
+
+AM_CONDITIONAL(HAVE_NFQUEUE,test x$have_nfqueue = xyes)
+
+if test "${use_nfqueue}" = "yes"; then
+	AC_CHECK_LIB([nfnetlink], [nfnl_open], have_nfqueue="yes", have_nfqueue="")
+#	AC_CHECK_LIB([nfnetlink], [nfnl_open], have_nfnetlink="yes", have_nfnetlink="")
+#	AC_CHECK_LIB([nfnetlink_queue], [nfqnl_open], have_nfqueue="yes", have_nfqueue="")
+	AC_DEFINE_UNQUOTED([USE_NFQUEUE],[1],[Will use netlink queue support instead of libipq])
+else
+
+AC_CHECK_HEADERS([libipq/libipq.h libipq.h])
+AC_CHECK_LIB([ipq], [ipq_message_type], have_ipq="yes", have_ipq="")
+
+if test "$have_ipq" = "yes"; then
+# check if we have a version of libipq supporting mark
+AC_ARG_WITH(user-mark, [--with-user-mark  Support user mark on NuFW firewall], enable_user_mark="yes", enable_user_mark="")
+if test "$enable_user_mark" = "yes"; then
+        AC_CHECK_LIB([ipq], [ipq_set_vwmark],AC_DEFINE_UNQUOTED([HAVE_LIBIPQ_MARK],[1],[libipq has support for mark]),AC_MSG_RESULT([libipq has no support for mark]))
+fi
+fi
+fi
+
+AM_CONDITIONAL(HAVE_IPQ,test x$have_ipq = xyes)
+AM_CONDITIONAL(HAVE_NFQUEUE,test x$have_nfqueue = xyes)
+AM_CONDITIONAL(HAVE_NETFILTER,(test x$have_nfqueue = xyes) || (test x$have_ipq = xyes)  )
 
 if test "$enable_system_auth" = "yes"; then
   AC_CHECK_LIB([pam],[pam_start],,AC_MSG_ERROR([PAM library needed for system authentication]))
@@ -134,8 +145,8 @@ if test "$debug"; then
 	AC_MSG_NOTICE([Compiling with developement debug support])
 fi
 
-if test "$have_ipq" = ""; then
-	AC_MSG_NOTICE([nufw daemon WON'T be compiled: libipq not present])
+if (test "$have_ipq" = "" && test "$have_nfqueue" = "")  ;  then
+	AC_MSG_NOTICE([nufw daemon WON'T be compiled: libipq or nfnetlink_queue not present])
 else
 	if test "$enable_user_mark" = "yes"; then
 		AC_MSG_NOTICE([nufw will be compiled with user mark support])
@@ -164,6 +175,10 @@ fi
 
 if test "${enable_pgsql_log}" = "yes"; then
 	AC_MSG_NOTICE([Compiling pgsql log module])
+fi
+
+if test "${have_nfqueue}" = "yes"; then
+	AC_MSG_NOTICE([Compiling with nfnetlink_queue support instead of libipq])
 fi
 
 
