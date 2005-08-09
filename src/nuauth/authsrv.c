@@ -247,6 +247,11 @@ confparams nuauth_vars[] = {
 	nuauth_acl_cache=1;
 	nuauth_user_cache=1;
 
+
+#ifdef GLIB_2.3_HACK
+	atomic_mutex=g_mutex_new();
+#endif
+	
 	/* 
 	 * Minimum debug_level value is 2 -> for 1) fatal and 2) critical messages to always
 	 * be outputed

@@ -36,7 +36,11 @@ GCRY_THREAD_OPTION_PTHREAD_IMPL;
 
 void nufw_cleanup( int signal ) {
     /* destroy netlink handle */
+#if USE_NFQUEUE
+
+#else
     ipq_destroy_handle(hndl);
+#endif
     /* destroy pid file */
     unlink(NUFW_PID_FILE);
     /* exit */
@@ -47,7 +51,11 @@ int main(int argc,char * argv[]){
     pthread_t pckt_server,auth_server;
     struct hostent *authreq_srv, *listenaddr_srv;
     /* option */
+#if USE_NFQUEUE
+    char * options_list = "UDhVvmq:c:k:a:n:l:L:d:p:t:T:";
+#else
     char * options_list = "UDhVvmc:k:a:n:l:L:d:p:t:T:";
+#endif
     int option,daemonize = 0;
     int value;
     unsigned int ident_srv;
@@ -309,20 +317,6 @@ int main(int argc,char * argv[]){
     packets_list_length=0;
     /* initialize mutex */
     pthread_mutex_init(&packets_list_mutex ,NULL);
-
-    /* init netlink connection */
-    hndl = ipq_create_handle(0,PF_INET);
-    if (hndl)
-        ipq_set_mode(hndl, IPQ_COPY_PACKET,BUFSIZ);  
-    else {
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
-            if (log_engine == LOG_TO_SYSLOG){
-                syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"Could not create ipq handle");
-            }else{
-                printf("[%d] Could not create ipq handle\n",getpid());
-            }
-        }
-    }
 
     if (nufw_use_tls){
         tls.session=NULL;

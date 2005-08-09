@@ -33,11 +33,12 @@
 #include <errno.h>
 /* config dependant */
 #include <config.h>
-
-
-
 #include <gnutls/gnutls.h>
 #include <sasl/sasl.h>
+
+/* uncomment following line if you have
+ * SUSE 9 and RHEL 3.0 which only have glib 2.3 */
+//#define GLIB_2.3_HACK 1
 
 #define NUAUTH_TLS_MAX_CLIENTS 1024
 #define NUAUTH_TLS_MAX_SERVERS 16
@@ -312,6 +313,15 @@ char * get_rid_of_domain(const char* user);
 /*
  * From check_acls.c
  */
+
+
+#ifdef GLIB_2.3_HACK
+GMutex *atomic_mutex;
+void g_atomic_int_inc(gint* numv);
+gint g_atomic_int_get(gint *atomic);
+gboolean g_atomic_int_dec_and_test(gint* numv);
+#endif
+
 
 int external_acl_groups (connection * element);
 

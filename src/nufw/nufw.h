@@ -10,6 +10,10 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
+#if USE_NFQUEUE
+#include <linux/netfilter.h>		/* for NF_ACCEPT */
+#include <libnfnetlink_queue/libnfnetlink_queue.h>
+#else
 /* redhat like hack */
 #ifdef HAVE_LIBIPQ_LIBIPQ_H 
 #include <libipq/libipq.h>
@@ -18,6 +22,7 @@
 #include <libipq.h>
 #else
 #error "libipq needed for NuFW compilation"
+#endif
 #endif
 #endif
 

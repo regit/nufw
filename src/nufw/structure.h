@@ -71,7 +71,7 @@ int nufw_set_mark;
 typedef struct Packet_Ids {
   unsigned long id;
   long timestamp;
-#ifdef HAVE_LIBIPQ_MARK
+#ifdef HAVE_LIBIPQ_MARK || USE_NFQUEUE
   unsigned long nfmark;
 #endif
   struct Packet_Ids * next;
@@ -83,14 +83,24 @@ int packets_list_length;
 /* mutex relative to packet_list */
 pthread_mutex_t packets_list_mutex;
 
+#if USE_NFQUEUE
+struct nfqnl_q_handle *hndl;
+#else
 /* ipq handler */
 struct ipq_handle *hndl;
+#endif
+
 /* mutex */
 pthread_mutex_t hndl_mutex;
 
 /* do some define to add mutex usage */
+#if USE_NFQUEUE
+#define	IPQ_SET_VERDICT(PACKETID, DECISION) nfqnl_set_verdict(hndl, PACKETID, DECISION, 0 , NULL)
+#define	IPQ_SET_VWMARK(PACKETID, DECISION,NFMARK) nfqnl_set_verdict_mark(hndl, PACKETID, DECISION, NFMARK,0,NULL) 
+#else
 #define	IPQ_SET_VERDICT(PACKETID, DECISION) ipq_set_verdict(hndl, PACKETID, DECISION,0,NULL)
 #define	IPQ_SET_VWMARK(PACKETID, DECISION,NFMARK) ipq_set_vwmark(hndl, PACKETID, DECISION,NFMARK,0,NULL)
+#endif
 
 
 //global variable :

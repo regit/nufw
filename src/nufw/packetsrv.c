@@ -37,14 +37,135 @@ int look_for_flags(char* dgram){
 	return 0;
 }
 
+#if USE_NFQUEUE
+static int treat_packet(struct nfqnl_q_handle *qh, struct nfgenmsg *nfmsg,
+	      struct nfattr *nfa[], void *data)
+{
+	packet_idl * current;
+	if (nfa[NFQA_PACKET_HDR-1]) {
+		struct nfqnl_msg_packet_hdr *ph = 
+					NFA_DATA(nfa[NFQA_PACKET_HDR-1]);
+		current->id= ntohl(ph->packet_id);
+	}
+
+	if (nfa[NFQA_PAYLOAD-1]) {
+		printf("payload_len=%d ", NFA_PAYLOAD(nfa[NFQA_PAYLOAD-1]));
+	}
+	current=calloc(1,sizeof( packet_idl));
+	if (current == NULL){
+		if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_MAIN)){
+			if (log_engine == LOG_TO_SYSLOG) {
+				syslog(SYSLOG_FACILITY(DEBUG_LEVEL_MESSAGE),"Can not allocate packet_id");
+			} else {
+				printf("[%i] Can not allocate packet_id\n",getpid());
+			} 
+		}
+		return 0;
+	}
+#ifdef HAVE_LIBIPQ_MARK
+	current->nfmark=msg_p->mark;
+#endif
+	current->timestamp=msg_p->timestamp_sec;
+	/* lock packet list mutex */
+	pthread_mutex_lock(&packets_list_mutex);
+	/* Adding packet to list  */
+	pcktid=padd(current);
+	/* unlock datas */
+	pthread_mutex_unlock(&packets_list_mutex);
+
+	if (pcktid){
+		/* send an auth request packet */
+		if (! auth_request_send(AUTH_REQUEST,msg_p->packet_id,msg_p->payload,msg_p->data_len)){
+			int sandf=0;
+			/* we fail to send the packet so we free packet related to current */
+			pthread_mutex_lock(&packets_list_mutex);
+			/* search and destroy packet by packet_id */
+			sandf = psearch_and_destroy (msg_p->packet_id,&msg_p->mark);
+			pthread_mutex_unlock(&packets_list_mutex);
+
+			if (!sandf){
+				if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
+					if (log_engine == LOG_TO_SYSLOG) {
+						syslog(SYSLOG_FACILITY(DEBUG_LEVEL_WARNING),"Packet could not be removed : %lu",msg_p->packet_id);
+					}else{
+						printf("[%i] Packet could not be removed : %lu\n",getpid(),msg_p->packet_id);
+					}
+				}
+			}
+		}
+	}
+return 1;
+}
+#endif
+
 void* packetsrv(){
 	unsigned char buffer[BUFSIZ];
 	int16_t size;
 	uint32_t pcktid;
+#if USE_NFQUEUE
+	struct nfqnl_handle *h;
+	struct nfnl_handle *nh;
+	int fd;
+	int rv;
+
+	printf("opening library handle\n");
+	h = nfqnl_open();
+	if (!h) {
+		fprintf(stderr, "error during nfqnl_open()\n");
+		exit(1);
+	}
+
+	printf("unbinding existing nf_queue handler for AF_INET (if any)\n");
+	if (nfqnl_unbind_pf(h, AF_INET) < 0) {
+		fprintf(stderr, "error during nfqnl_unbind_pf()\n");
+		exit(1);
+	}
+
+	printf("binding nfnetlink_queue as nf_queue handler for AF_INET\n");
+	if (nfqnl_bind_pf(h, AF_INET) < 0) {
+		fprintf(stderr, "error during nfqnl_bind_pf()\n");
+		exit(1);
+	}
+
+	printf("binding this socket to queue '0'\n");
+	hndl = nfqnl_create_queue(h,  0, &treat_packet, NULL);
+	if (!hndl) {
+		fprintf(stderr, "error during nfqnl_create_queue()\n");
+		exit(1);
+	}
+
+	printf("setting copy_packet mode\n");
+	if (nfqnl_set_mode(hndl, NFQNL_COPY_PACKET, 0xffff) < 0) {
+		fprintf(stderr, "can't set packet_copy mode\n");
+		exit(1);
+	}
+
+	nh = nfqnl_nfnlh(h);
+	fd = nfnl_fd(nh);
+#else
 	ipq_packet_msg_t *msg_p = NULL ;
 	packet_idl * current;
-
+    /* init netlink connection */
+    hndl = ipq_create_handle(0,PF_INET);
+    if (hndl)
+        ipq_set_mode(hndl, IPQ_COPY_PACKET,BUFSIZ);  
+    else {
+        if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
+            if (log_engine == LOG_TO_SYSLOG){
+                syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"Could not create ipq handle");
+            }else{
+                printf("[%d] Could not create ipq handle\n",getpid());
+            }
+        }
+    }
+#endif
 	for (;;){
+#if USE_NFQUEUE
+		if (rv = recv(fd, buffer, sizeof(buffer), 0)) && rv >= 0) {
+			nfqnl_handle_packet(h, buffer, rv);
+		} else 
+			break;
+#else
 		size = ipq_read(hndl,buffer,sizeof(buffer),0);
 		if (size != -1){
 			if (size < BUFSIZ ){
@@ -132,8 +253,13 @@ void* packetsrv(){
 				}
 			}
 		}
+#endif
 	}
+#if USE_NFQUEUE
+
+#else
 	ipq_destroy_handle( hndl );  
+#endif
 }   
 
 int auth_request_send(uint8_t type,unsigned long packet_id,char* payload,int data_len){

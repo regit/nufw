@@ -147,7 +147,7 @@ int auth_packet_to_decision(char* dgram){
 							}
 						}
 #endif
-#ifdef HAVE_LIBIPQ_MARK
+#ifdef HAVE_LIBIPQ_MARK || USE_NFQUEUE
 						if (nufw_set_mark) {
 #ifdef DEBUG_ENABLE
 							if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
