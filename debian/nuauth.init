@@ -71,7 +71,7 @@ case "$1" in
 	#
 	echo -n "Restarting $DESC: "
 	start-stop-daemon --stop --quiet --pidfile \
-		/var/run/$NAME/$NAME.pid --exec $DAEMON
+		/var/run/$NAME/$NAME.pid --exec $DAEMON || /bin/true
 	sleep 1
 	start-stop-daemon --start --quiet --pidfile /var/run/$NAME/$NAME.pid \
                 --chuid $NUAUTH_USER --exec $DAEMON -- $DAEMON_OPTS
