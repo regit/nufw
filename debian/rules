@@ -88,7 +88,7 @@ binary-arch: build install
 #	dh_installemacsen
 #	dh_installpam
 #	dh_installmime
-	dh_installinit --no-start -u"start 40 S . stop 89 0 6 ."
+	dh_installinit -u"start 40 2 3 4 5 . stop 89 0 1 6 ."
 #	dh_installcron
 #	dh_installinfo
 	dh_installman -pnufw doc/nufw.1

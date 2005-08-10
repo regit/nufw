@@ -1,8 +1,0 @@
-# Automatically added by dh_installinit
-if [ -x "/etc/init.d/nuauth" ]; then
-	update-rc.d nuauth start 40 2 3 4 5 . stop 89 0 1 6 . >/dev/null
-fi
-# End automatically added section
-if [ -x "/etc/init.d/nuauth" ]; then
-	/etc/init.d/nuauth restart || exit 0
-fi
