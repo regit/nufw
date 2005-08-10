@@ -1,8 +1,8 @@
 1.1.0
 	- port to libnfnetlink_queue
-1.0.12
 	- Many small fixes in the debian/ subdir : start in correct runlevels,
 	have smoother init scripts.
+	- nutcpc : add -l option to disable use of lock
 1.0.11 (2005/07/26)
 	- NuFW : port to big endian architecture. It has been tested on a
 	powerpc.
