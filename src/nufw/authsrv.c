@@ -166,8 +166,7 @@ int auth_packet_to_decision(char* dgram){
 #endif
 						} else 
 #endif
-                                                    printf("call IPQ_\n");
-							IPQ_SET_VERDICT(packet_id, NF_ACCEPT);
+						IPQ_SET_VERDICT(packet_id, NF_ACCEPT);
 
 						pckt_tx++;
 						return 1;

@@ -37,7 +37,8 @@ GCRY_THREAD_OPTION_PTHREAD_IMPL;
 void nufw_cleanup( int signal ) {
     /* destroy netlink handle */
 #if USE_NFQUEUE
-
+        nfqnl_destroy_queue(hndl);
+        nfqnl_unbind_pf(h, AF_INET);
 #else
     ipq_destroy_handle(hndl);
 #endif
@@ -82,7 +83,8 @@ int main(int argc,char * argv[]){
     debug=DEBUG; /* this shall disapear */
     debug_level=0;
     debug_areas=DEFAULT_DEBUG_AREAS;
-
+    nfqueue_num=0;
+    
     /*parse options */
     while((option = getopt ( argc, argv, options_list)) != -1 ){
         switch (option){
@@ -100,14 +102,14 @@ int main(int argc,char * argv[]){
                 exit(1);
             }
             break;
-        case 'a' :
+          case 'a' :
             ca_file=strdup(optarg);
             if (ca_file == NULL){
                 fprintf(stderr, "Couldn't malloc! Exiting");
                 exit(1);
             }
             break;
-    case 'n' :
+          case 'n' :
             nuauth_cert_dn=strdup(optarg);
             if (nuauth_cert_dn == NULL){
                 fprintf(stderr, "Couldn't malloc! Exiting");
@@ -161,27 +163,32 @@ int main(int argc,char * argv[]){
           case 'm':
             nufw_set_mark=1;
             break;
-	  case 'U':
+          case 'U':
             nufw_use_tls=0;
             break;
+#if USE_NFQUEUE
+          case 'q':
+            sscanf(optarg,"%ud",&nfqueue_num);
+            break;
+#endif
           case 'h' :
             fprintf (stdout ,"%s [-hVv[v[v[v[v[v[v[v[v[v]]]]]]]]]] [-l local_port] [-L local_addr] [-d remote_addr] [-p remote_port]  [-t packet_timeout] [-T track_size]\n\
-\t-h : display this help and exit\n\
-\t-V : display version and exit\n\
-\t-D : daemonize\n\
-\t-k : use specified file as key file\n\
-\t-c : use specified file as cert file\n\
-\t-a : use specified file as ca file (strict checking is done if selected) (default: none)\n\
-\t-n : use specified string as the needed DN of nuauth (inforce certificate checking) (default: none)\n\
-\t-U : use UDP unencrypted communication with nuauth server\n\
-\t-v : increase debug level (+1 for each 'v') (max useful number : 10)\n\
-\t-m : mark packet with userid\n\
-\t-l : (DEPRECATED OPTION) specify listening UDP port (default : 4129)\n\
-\t-L : (DEPRECATED OPTION) specify listening address (default : 127.0.0.1)\n\
-\t-d : remote address we send auth requests to (adress of the nuauth server) (default : 127.0.0.1)\n\
-\t-p : remote port we send auth requests to (TCP port nuauth server listens on) (default : 4128)\n\
-\t-t : timeout to forget about packets when they don't match (default : 15 s)\n\
-\t-T : track size (default : 1000)\n",PACKAGE_TARNAME);
+                \t-h : display this help and exit\n\
+                \t-V : display version and exit\n\
+                \t-D : daemonize\n\
+                \t-k : use specified file as key file\n\
+                \t-c : use specified file as cert file\n\
+                \t-a : use specified file as ca file (strict checking is done if selected) (default: none)\n\
+                \t-n : use specified string as the needed DN of nuauth (inforce certificate checking) (default: none)\n\
+                \t-U : use UDP unencrypted communication with nuauth server\n\
+                \t-v : increase debug level (+1 for each 'v') (max useful number : 10)\n\
+                \t-m : mark packet with userid\n\
+                \t-l : (DEPRECATED OPTION) specify listening UDP port (default : 4129)\n\
+                \t-L : (DEPRECATED OPTION) specify listening address (default : 127.0.0.1)\n\
+                \t-d : remote address we send auth requests to (adress of the nuauth server) (default : 127.0.0.1)\n\
+                \t-p : remote port we send auth requests to (TCP port nuauth server listens on) (default : 4128)\n\
+                \t-t : timeout to forget about packets when they don't match (default : 15 s)\n\
+                \t-T : track size (default : 1000)\n",PACKAGE_TARNAME);
 
             return 1;
         }
@@ -324,7 +331,7 @@ int main(int argc,char * argv[]){
         gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);
         gnutls_global_init();
     }
-/* create condition for tls session transition phase */
+    /* create condition for tls session transition phase */
     session_destroyed_cond=(pthread_cond_t *)calloc(sizeof(pthread_cond_t),1);
     pthread_cond_init(session_destroyed_cond,NULL);
     session_active_cond=(pthread_cond_t *)calloc(sizeof(pthread_cond_t),1);

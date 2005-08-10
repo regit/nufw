@@ -42,8 +42,8 @@ static int treat_packet(struct nfqnl_q_handle *qh, struct nfgenmsg *nfmsg,
 	      struct nfattr *nfa[], void *data)
 {
 	packet_idl * current;
-        int pcktid;
-        uint32_t c_mark;
+        uint32_t pcktid;
+        unsigned long c_mark;
 
 	current=calloc(1,sizeof( packet_idl));
 	if (nfa[NFQA_PACKET_HDR-1]) {
@@ -73,7 +73,7 @@ static int treat_packet(struct nfqnl_q_handle *qh, struct nfgenmsg *nfmsg,
         
         if (nfa[NFQA_TIMESTAMP-1]) {
 struct nfqnl_msg_packet_timestamp *timestamp = 
-			ntohl(*(u_int32_t *)NFA_DATA(nfa[NFQA_TIMESTAMP-1]));
+			 (struct nfqnl_msg_packet_timestamp *)NFA_DATA(nfa[NFQA_TIMESTAMP-1]);
                         current->timestamp=timestamp->sec;
 	}
 
@@ -97,9 +97,9 @@ struct nfqnl_msg_packet_timestamp *timestamp =
 			if (!sandf){
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
 					if (log_engine == LOG_TO_SYSLOG) {
-						syslog(SYSLOG_FACILITY(DEBUG_LEVEL_WARNING),"Packet could not be removed : %lu",pcktid);
+						syslog(SYSLOG_FACILITY(DEBUG_LEVEL_WARNING),"Packet could not be removed : %ue",pcktid);
 					}else{
-						printf("[%i] Packet could not be removed : %lu\n",getpid(),pcktid);
+						printf("[%i] Packet could not be removed : %u\n",getpid(),pcktid);
 					}
 				}
 			}
@@ -110,50 +110,76 @@ return 1;
 #endif
 
 void* packetsrv(){
-	unsigned char buffer[BUFSIZ];
-	int16_t size;
-	uint32_t pcktid;
+	char buffer[BUFSIZ];
 #if USE_NFQUEUE
-	struct nfqnl_handle *h;
-	struct nfnl_handle *nh;
 	int fd;
-	int rv;
+        int rv;
+        struct nfnl_handle *nh;
 
-	printf("opening library handle\n");
 	h = nfqnl_open();
 	if (!h) {
-		fprintf(stderr, "error during nfqnl_open()\n");
+if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
+                if (log_engine == LOG_TO_SYSLOG){
+                    syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"error during nfqnl_open()");
+                }else{
+                    printf("[%d] error during nfqnl_open()\n",getpid());
+                }
+            }
 		exit(1);
 	}
 
-	printf("unbinding existing nf_queue handler for AF_INET (if any)\n");
 	if (nfqnl_unbind_pf(h, AF_INET) < 0) {
-		fprintf(stderr, "error during nfqnl_unbind_pf()\n");
+		if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
+                if (log_engine == LOG_TO_SYSLOG){
+                    syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"error during nfqnl_unbind_pf()");
+                }else{
+                    printf("[%d] error during nfqnl_unbind_pf()\n",getpid());
+                }
+            }
 		exit(1);
 	}
 
-	printf("binding nfnetlink_queue as nf_queue handler for AF_INET\n");
-	if (nfqnl_bind_pf(h, AF_INET) < 0) {
-		fprintf(stderr, "error during nfqnl_bind_pf()\n");
+        if (nfqnl_bind_pf(h, AF_INET) < 0) {
+            if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
+                if (log_engine == LOG_TO_SYSLOG){
+                    syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"error during nfqnl_bind_pf()");
+                }else{
+                    printf("[%d] error during nfqnl_bind_pf()\n",getpid());
+                }
+            }
 		exit(1);
 	}
 
-	printf("binding this socket to queue '0'\n");
-	hndl = nfqnl_create_queue(h,  0, &treat_packet, NULL);
+	hndl = nfqnl_create_queue(h,  nfqueue_num, &treat_packet, NULL);
 	if (!hndl) {
-		fprintf(stderr, "error during nfqnl_create_queue()\n");
+  if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
+                if (log_engine == LOG_TO_SYSLOG){
+                    syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"error during nfqnl_create_queue() (queue %d busy ?)",nfqueue_num);
+                }else{
+                    printf("[%d] error during nfqnl_create_queue() (queue %d busy ?)\n",getpid(),nfqueue_num);
+                }
+            }
 		exit(1);
 	}
 
-	printf("setting copy_packet mode\n");
 	if (nfqnl_set_mode(hndl, NFQNL_COPY_PACKET, 0xffff) < 0) {
-		fprintf(stderr, "can't set packet_copy mode\n");
+
+  if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
+                if (log_engine == LOG_TO_SYSLOG){
+                    syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"can't set packet_copy mode");
+                }else{
+                    printf("[%d] can't set packet_copy mode\n",getpid());
+                }
+            }
+
 		exit(1);
 	}
 
 	nh = nfqnl_nfnlh(h);
 	fd = nfnl_fd(nh);
 #else
+	int16_t size;
+	uint32_t pcktid;
 	ipq_packet_msg_t *msg_p = NULL ;
 	packet_idl * current;
     /* init netlink connection */
@@ -271,6 +297,7 @@ void* packetsrv(){
 #else
 	ipq_destroy_handle( hndl );  
 #endif
+        return NULL;
 }   
 
 int auth_request_send(uint8_t type,unsigned long packet_id,char* payload,int data_len){
