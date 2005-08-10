@@ -21,8 +21,7 @@
 */
 #include <stdlib.h>
 #include <time.h>
-#include <structure.h>
-#include <nufw_debug.h>
+#include <nufw.h>
 
 
 /* datas stuffs */

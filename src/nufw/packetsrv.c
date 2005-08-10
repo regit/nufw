@@ -42,6 +42,10 @@ static int treat_packet(struct nfqnl_q_handle *qh, struct nfgenmsg *nfmsg,
 	      struct nfattr *nfa[], void *data)
 {
 	packet_idl * current;
+        int pcktid;
+        uint32_t c_mark;
+
+	current=calloc(1,sizeof( packet_idl));
 	if (nfa[NFQA_PACKET_HDR-1]) {
 		struct nfqnl_msg_packet_hdr *ph = 
 					NFA_DATA(nfa[NFQA_PACKET_HDR-1]);
@@ -51,7 +55,6 @@ static int treat_packet(struct nfqnl_q_handle *qh, struct nfgenmsg *nfmsg,
 	if (nfa[NFQA_PAYLOAD-1]) {
 		printf("payload_len=%d ", NFA_PAYLOAD(nfa[NFQA_PAYLOAD-1]));
 	}
-	current=calloc(1,sizeof( packet_idl));
 	if (current == NULL){
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_MAIN)){
 			if (log_engine == LOG_TO_SYSLOG) {
@@ -62,10 +65,18 @@ static int treat_packet(struct nfqnl_q_handle *qh, struct nfgenmsg *nfmsg,
 		}
 		return 0;
 	}
-#ifdef HAVE_LIBIPQ_MARK
-	current->nfmark=msg_p->mark;
-#endif
-	current->timestamp=msg_p->timestamp_sec;
+
+	if (nfa[NFQA_MARK-1]) {
+		c_mark=current->nfmark = 
+			ntohl(*(u_int32_t *)NFA_DATA(nfa[NFQA_MARK-1]));
+	}
+        
+        if (nfa[NFQA_TIMESTAMP-1]) {
+struct nfqnl_msg_packet_timestamp *timestamp = 
+			ntohl(*(u_int32_t *)NFA_DATA(nfa[NFQA_TIMESTAMP-1]));
+                        current->timestamp=timestamp->sec;
+	}
+
 	/* lock packet list mutex */
 	pthread_mutex_lock(&packets_list_mutex);
 	/* Adding packet to list  */
@@ -75,20 +86,20 @@ static int treat_packet(struct nfqnl_q_handle *qh, struct nfgenmsg *nfmsg,
 
 	if (pcktid){
 		/* send an auth request packet */
-		if (! auth_request_send(AUTH_REQUEST,msg_p->packet_id,msg_p->payload,msg_p->data_len)){
+		if (! auth_request_send(AUTH_REQUEST,pcktid,NFA_DATA(nfa[NFQA_PAYLOAD-1]),NFA_PAYLOAD(nfa[NFQA_PAYLOAD-1]))){
 			int sandf=0;
 			/* we fail to send the packet so we free packet related to current */
 			pthread_mutex_lock(&packets_list_mutex);
 			/* search and destroy packet by packet_id */
-			sandf = psearch_and_destroy (msg_p->packet_id,&msg_p->mark);
+			sandf = psearch_and_destroy (pcktid,&c_mark);
 			pthread_mutex_unlock(&packets_list_mutex);
 
 			if (!sandf){
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
 					if (log_engine == LOG_TO_SYSLOG) {
-						syslog(SYSLOG_FACILITY(DEBUG_LEVEL_WARNING),"Packet could not be removed : %lu",msg_p->packet_id);
+						syslog(SYSLOG_FACILITY(DEBUG_LEVEL_WARNING),"Packet could not be removed : %lu",pcktid);
 					}else{
-						printf("[%i] Packet could not be removed : %lu\n",getpid(),msg_p->packet_id);
+						printf("[%i] Packet could not be removed : %lu\n",getpid(),pcktid);
 					}
 				}
 			}
@@ -161,7 +172,7 @@ void* packetsrv(){
 #endif
 	for (;;){
 #if USE_NFQUEUE
-		if (rv = recv(fd, buffer, sizeof(buffer), 0)) && rv >= 0) {
+		if ((rv = recv(fd, buffer, sizeof(buffer), 0)) && rv >= 0) {
 			nfqnl_handle_packet(h, buffer, rv);
 		} else 
 			break;

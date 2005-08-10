@@ -71,7 +71,7 @@ int nufw_set_mark;
 typedef struct Packet_Ids {
   unsigned long id;
   long timestamp;
-#ifdef HAVE_LIBIPQ_MARK || USE_NFQUEUE
+#if (HAVE_LIBIPQ_MARK || USE_NFQUEUE)
   unsigned long nfmark;
 #endif
   struct Packet_Ids * next;
