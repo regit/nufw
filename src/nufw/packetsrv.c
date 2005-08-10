@@ -46,16 +46,7 @@ static int treat_packet(struct nfqnl_q_handle *qh, struct nfgenmsg *nfmsg,
         unsigned long c_mark;
 
 	current=calloc(1,sizeof( packet_idl));
-	if (nfa[NFQA_PACKET_HDR-1]) {
-		struct nfqnl_msg_packet_hdr *ph = 
-					NFA_DATA(nfa[NFQA_PACKET_HDR-1]);
-		current->id= ntohl(ph->packet_id);
-	}
-
-	if (nfa[NFQA_PAYLOAD-1]) {
-		printf("payload_len=%d ", NFA_PAYLOAD(nfa[NFQA_PAYLOAD-1]));
-	}
-	if (current == NULL){
+        if (current == NULL){
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_MAIN)){
 			if (log_engine == LOG_TO_SYSLOG) {
 				syslog(SYSLOG_FACILITY(DEBUG_LEVEL_MESSAGE),"Can not allocate packet_id");
@@ -65,6 +56,13 @@ static int treat_packet(struct nfqnl_q_handle *qh, struct nfgenmsg *nfmsg,
 		}
 		return 0;
 	}
+	if (nfa[NFQA_PACKET_HDR-1]) {
+		struct nfqnl_msg_packet_hdr *ph = 
+					NFA_DATA(nfa[NFQA_PACKET_HDR-1]);
+		current->id= ntohl(ph->packet_id);
+	}
+
+	
 
 	if (nfa[NFQA_MARK-1]) {
 		c_mark=current->nfmark = 
