@@ -1,3 +1,5 @@
+1.1.0
+	- port to libnfnetlink_queue
 1.0.12
 	- Many small fixes in the debian/ subdir : start in correct runlevels,
 	have smoother init scripts.
