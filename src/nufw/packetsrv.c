@@ -45,6 +45,17 @@ static int treat_packet(struct nfqnl_q_handle *qh, struct nfgenmsg *nfmsg,
   uint32_t pcktid;
   uint32_t c_mark;
 
+
+  if (look_for_flags(NFA_DATA(nfa[NFQA_PAYLOAD-1]))){
+          struct nfqnl_msg_packet_hdr *ph =
+            NFA_DATA(nfa[NFQA_PACKET_HDR-1]);
+          pcktid = ntohl(ph->packet_id);
+      auth_request_send(AUTH_CONTROL,
+          pcktid,
+          NFA_DATA(nfa[NFQA_PAYLOAD-1]),NFA_PAYLOAD(nfa[NFQA_PAYLOAD-1]));
+      IPQ_SET_VERDICT(pcktid,NF_ACCEPT);
+      return 1;
+  } 
   current=calloc(1,sizeof( packet_idl));
   current->id=0;
   if (current == NULL){
@@ -94,19 +105,13 @@ static int treat_packet(struct nfqnl_q_handle *qh, struct nfgenmsg *nfmsg,
       current->timestamp=time(NULL);
   }
 
-  if (look_for_flags(NFA_DATA(nfa[NFQA_PAYLOAD-1]))){
-      IPQ_SET_VERDICT( current->id,NF_ACCEPT);
-      auth_request_send(AUTH_CONTROL,current->id,NFA_DATA(nfa[NFQA_PAYLOAD-1]),NFA_PAYLOAD(nfa[NFQA_PAYLOAD-1]));
-      free(current);
-      return 1;
-  } else {
-      /* lock packet list mutex */
-      pthread_mutex_lock(&packets_list_mutex);
-      /* Adding packet to list  */
-      pcktid=padd(current);
-      /* unlock datas */
-      pthread_mutex_unlock(&packets_list_mutex);
-  }
+
+  /* lock packet list mutex */
+  pthread_mutex_lock(&packets_list_mutex);
+  /* Adding packet to list  */
+  pcktid=padd(current);
+  /* unlock datas */
+  pthread_mutex_unlock(&packets_list_mutex);
 
   if (pcktid){
       /* send an auth request packet */
@@ -245,8 +250,8 @@ void* packetsrv(){
                         msg_p = ipq_get_packet(buffer);
                         /* need to parse to see if it's an end connection packet */
                         if (look_for_flags(msg_p->payload)){
-                            IPQ_SET_VERDICT( msg_p->packet_id,NF_ACCEPT);
                             auth_request_send(AUTH_CONTROL,msg_p->packet_id,msg_p->payload,msg_p->data_len);
+                            IPQ_SET_VERDICT( msg_p->packet_id,NF_ACCEPT);
                         } else {
                             current=calloc(1,sizeof( packet_idl));
                             if (current == NULL){
