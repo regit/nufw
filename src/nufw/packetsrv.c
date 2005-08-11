@@ -23,11 +23,15 @@
 /* 
  * return offset to next type of headers 
  */
-int look_for_flags(char* dgram){
+int look_for_flags(char* dgram,unsigned int datalen){
     struct iphdr * iphdrs = (struct iphdr *) dgram;
+    /* check need some datas */    
+    if (datalen < sizeof(struct iphdr) +sizeof(struct tcphdr)){
+        return 0;
+    }
     /* check IP version */
     if (iphdrs->version == 4){
-        if (iphdrs->protocol == IPPROTO_TCP){
+        if ( iphdrs->protocol == IPPROTO_TCP){
             struct tcphdr * tcphdrs=(struct tcphdr *) (dgram+4*iphdrs->ihl);
             if (tcphdrs->fin || tcphdrs->ack || tcphdrs->rst ){
                 return 1;
@@ -44,17 +48,28 @@ static int treat_packet(struct nfqnl_q_handle *qh, struct nfgenmsg *nfmsg,
   packet_idl * current;
   uint32_t pcktid;
   uint32_t c_mark;
+  char *payload;
+  unsigned int payload_len;
+  struct nfqnl_msg_packet_hdr *ph;
+  struct nfqnl_msg_packet_timestamp *timestamp;
 
 
-  if (look_for_flags(NFA_DATA(nfa[NFQA_PAYLOAD-1]))){
-          struct nfqnl_msg_packet_hdr *ph =
-            NFA_DATA(nfa[NFQA_PACKET_HDR-1]);
+  if (! nfqnl_get_payload(nfa,&payload,&payload_len)){
+      return 0;
+  }
+
+  if (look_for_flags(payload,payload_len)){
+      ph = nfqnl_get_msg_packet_hdr(nfa);
+      if (ph){
           pcktid = ntohl(ph->packet_id);
-      auth_request_send(AUTH_CONTROL,
-          pcktid,
-          NFA_DATA(nfa[NFQA_PAYLOAD-1]),NFA_PAYLOAD(nfa[NFQA_PAYLOAD-1]));
-      IPQ_SET_VERDICT(pcktid,NF_ACCEPT);
-      return 1;
+          auth_request_send(AUTH_CONTROL,
+              pcktid,
+              payload,payload_len);
+          IPQ_SET_VERDICT(pcktid,NF_ACCEPT);
+          return 1;
+      } else {
+          return 0;
+      }
   } 
   current=calloc(1,sizeof( packet_idl));
   current->id=0;
@@ -68,9 +83,9 @@ static int treat_packet(struct nfqnl_q_handle *qh, struct nfgenmsg *nfmsg,
       }
       return 0;
   }
-  if (nfa[NFQA_PACKET_HDR-1]) {
-      struct nfqnl_msg_packet_hdr *ph = 
-        NFA_DATA(nfa[NFQA_PACKET_HDR-1]);
+
+  ph = nfqnl_get_msg_packet_hdr(nfa);
+  if (ph){
       current->id= ntohl(ph->packet_id);
   } else {
       if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_MAIN)){
@@ -85,14 +100,10 @@ static int treat_packet(struct nfqnl_q_handle *qh, struct nfgenmsg *nfmsg,
       return 0;
   }
 
-  if (nfa[NFQA_MARK-1]) {
-      c_mark = ntohl(*(u_int32_t *)NFA_DATA(nfa[NFQA_MARK-1]));
-      current->nfmark=c_mark;
-  }
+  current->nfmark=nfqnl_get_nfmark(nfa);
 
-  if (nfa[NFQA_TIMESTAMP-1]) {
-      struct nfqnl_msg_packet_timestamp *timestamp = 
-        (struct nfqnl_msg_packet_timestamp *)NFA_DATA(nfa[NFQA_TIMESTAMP-1]);
+  timestamp = nfqnl_get_timestamp(nfa);
+  if (timestamp){
       current->timestamp=timestamp->sec;
   }else {
       if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_MAIN)){
@@ -105,7 +116,6 @@ static int treat_packet(struct nfqnl_q_handle *qh, struct nfgenmsg *nfmsg,
       current->timestamp=time(NULL);
   }
 
-
   /* lock packet list mutex */
   pthread_mutex_lock(&packets_list_mutex);
   /* Adding packet to list  */
@@ -115,7 +125,7 @@ static int treat_packet(struct nfqnl_q_handle *qh, struct nfgenmsg *nfmsg,
 
   if (pcktid){
       /* send an auth request packet */
-      if (! auth_request_send(AUTH_REQUEST,pcktid,NFA_DATA(nfa[NFQA_PAYLOAD-1]),NFA_PAYLOAD(nfa[NFQA_PAYLOAD-1]))){
+      if (! auth_request_send(AUTH_REQUEST,pcktid,payload,payload_len)){
           int sandf=0;
           /* we fail to send the packet so we free packet related to current */
           pthread_mutex_lock(&packets_list_mutex);
@@ -249,7 +259,7 @@ void* packetsrv(){
                         /* printf("Working on IP packet\n"); */
                         msg_p = ipq_get_packet(buffer);
                         /* need to parse to see if it's an end connection packet */
-                        if (look_for_flags(msg_p->payload)){
+                        if (look_for_flags(msg_p->payload,msg_p->data_len)){
                             auth_request_send(AUTH_CONTROL,msg_p->packet_id,msg_p->payload,msg_p->data_len);
                             IPQ_SET_VERDICT( msg_p->packet_id,NF_ACCEPT);
                         } else {
