@@ -225,6 +225,7 @@ confparams nuauth_vars[] = {
 	{ "nuauth_multi_servers" , G_TOKEN_STRING , 1, NULL },
 	{ "nuauth_acl_cache" , G_TOKEN_INT , 0,NULL },
 	{ "nuauth_user_cache" , G_TOKEN_INT , 0,NULL },
+	{ "nuauth_uses_utf8" , G_TOKEN_INT , 1,NULL },
 };
 	tracking empty_header;
 	gpointer vpointer;
@@ -376,6 +377,9 @@ confparams nuauth_vars[] = {
 	if ((nuauth_multi_users || nuauth_multi_servers)&&(!(nuauth_multi_servers&&nuauth_multi_users))){
 		g_error("The two options nuauth_multi_users and nuauth_multi_servers need to set simultaneoulsy");
 	}
+
+	vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_uses_utf8");
+	nuauth_uses_utf8=*(int*)(vpointer);
 
 	/*parse options */
 	while((option = getopt ( argc, argv, options_list)) != -1 ){

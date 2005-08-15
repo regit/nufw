@@ -857,11 +857,29 @@ char * get_rid_of_domain(const char* user)
 
 gchar *string_escape(gchar *orig)
 {
-	if (g_strrstr(orig,"'"))
+	gchar * traduc;
+	/* convert from utf-8 to locale if needed */
+	if (nuauth_uses_utf8){
+		int bwritten;
+		traduc = g_locale_from_utf8  (orig,
+                                          -1,
+                                           NULL,
+                                           &bwritten,
+                                           NULL);
+		if (!traduc){
+			return NULL;
+		}
+	} else {
+		traduc = orig;
+	}
+
+	if (g_strrstr(traduc,"'"))
 		return NULL;
-	if (g_strrstr(orig,";"))
+	if (g_strrstr(traduc,";"))
 		return NULL;
-	return g_strescape(orig,"");
+	orig = g_strescape(traduc,"");
+	g_free(traduc);
+	return orig;
 }
 
 void free_buffer_read(struct buffer_read* datas){

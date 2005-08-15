@@ -385,6 +385,8 @@ struct cache_init_datas* acl_cache;
 int nuauth_acl_cache;
 int nuauth_user_cache;
 
+int nuauth_uses_utf8;
+
 struct cache_init_datas* user_cache;
 
 

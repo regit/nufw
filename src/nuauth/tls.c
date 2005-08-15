@@ -96,6 +96,7 @@ int userdb_checkpass(sasl_conn_t *conn,
 {
 	GSList *groups=NULL;
 	uint16_t uid=0;
+	char *dec_user=NULL;
 
 	/*
 	 * call module to get password 
@@ -109,7 +110,28 @@ int userdb_checkpass(sasl_conn_t *conn,
 		return SASL_BADAUTH;
 	}
 
-	if ((* module_user_check)(user,pass,passlen,&uid,&groups)==SASL_OK){
+	/* convert username from utf-8 to locale */
+	if (nuauth_uses_utf8){
+		int bwritten;
+		dec_user = g_locale_from_utf8  (user,
+				-1,
+				NULL,
+				&bwritten,
+				NULL);
+		if ( ! dec_user ) {
+			if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
+				g_message("can not convert username at %s:%d",__FILE__,__LINE__);
+			}
+
+			/* return to fallback */
+			return SASL_NOAUTHZ;
+		}
+	} else {
+		dec_user=user;
+	}
+
+
+	if ((* module_user_check)(dec_user,pass,passlen,&uid,&groups)==SASL_OK){
 		guint tuid=uid;
 		g_private_set(group_priv,groups);
 		g_private_set(user_priv,GUINT_TO_POINTER(tuid));
@@ -224,20 +246,20 @@ void hash_clean_session(user_session * c_session){
 /* strictly close a tls session
  * nothing to care about client */
 
-int close_tls_session(int c,gnutls_session* session){
-	if (close(c))
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-			g_message("close_tls_session : close() failed!");
-	gnutls_deinit(*session); /* TODO check output */
+	int close_tls_session(int c,gnutls_session* session){
+		if (close(c))
+			if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
+				g_message("close_tls_session : close() failed!");
+		gnutls_deinit(*session); /* TODO check output */
 #ifdef DEBUG_ENABLE
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-		g_message("gnutls_deinit() was called");
+		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
+			g_message("gnutls_deinit() was called");
 #endif
-	if (session){
-		g_free(session);
+		if (session){
+			g_free(session);
+		}
+		return 1;
 	}
-	return 1;
-}
 /** cleanly end a tls session */
 int cleanly_close_tls_session(int c,gnutls_session* session){
 	gnutls_bye(*session,GNUTLS_SHUT_RDWR);
@@ -1370,7 +1392,7 @@ void* tls_user_authsrv()
 
 	addr_inet.sin_family= AF_INET;
 	addr_inet.sin_port=htons(userpckt_port);
-//	addr_inet.sin_port=userpckt_port;
+	//	addr_inet.sin_port=userpckt_port;
 	addr_inet.sin_addr.s_addr=client_srv.sin_addr.s_addr;
 
 	len_inet = sizeof addr_inet;
