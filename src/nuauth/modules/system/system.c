@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2004 INL
+ ** Copyright(C) 2004-2005 INL
  ** written by Eric Leblond <regit@inl.fr>
  **
  ** This program is free software; you can redistribute it and/or modify
@@ -33,16 +33,16 @@ typedef struct _auth_pam_userinfo {
 } auth_pam_userinfo;
 
 gint system_convert_username_to_uppercase;
-confparams system_nuauth_vars[] = {
-  { "system_convert_username_to_uppercase", G_TOKEN_INT, 0, 0 }
-};
-
-
+gint system_pam_module_not_threadsafe;
 
 /* Init module system */
 G_MODULE_EXPORT gchar* g_module_check_init(GModule *module)
 {
   gpointer vpointer;
+confparams system_nuauth_vars[] = {
+  { "system_convert_username_to_uppercase", G_TOKEN_INT, 0, 0 },
+  { "system_pam_module_not_threadsafe", G_TOKEN_INT, 1, 0 }
+};
 
   system_convert_username_to_uppercase=0;
   // parse conf file
@@ -53,7 +53,12 @@ G_MODULE_EXPORT gchar* g_module_check_init(GModule *module)
   vpointer = get_confvar_value(system_nuauth_vars,
           sizeof(system_nuauth_vars)/sizeof(confparams),
           "system_convert_username_to_uppercase");
-  system_convert_username_to_uppercase = *(int *)(vpointer?vpointer:system_convert_username_to_uppercase);
+  system_convert_username_to_uppercase = *(int *)(vpointer); 
+
+  vpointer = get_confvar_value(system_nuauth_vars,
+          sizeof(system_nuauth_vars)/sizeof(confparams),
+          "system_pam_module_not_threadsafe");
+  system_pam_module_not_threadsafe = *(int *)(vpointer); 
 
   return NULL;
 }
@@ -141,7 +146,9 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass
 		userinfo.name=user;
 		userinfo.pw=pass;
 
-		g_static_mutex_lock (&pam_mutex);
+		if (system_pam_module_not_threadsafe){
+			g_static_mutex_lock (&pam_mutex);
+		}
 
 		ret = pam_start("nuauth", user, &conv_info, &pamh);
 		if (ret != PAM_SUCCESS){
@@ -154,12 +161,16 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_AUTH))
 				g_warning("Bad password for user \"%s\"",user);
 			pam_end(pamh,PAM_DATA_SILENT);
+		if (system_pam_module_not_threadsafe){
 			g_static_mutex_unlock (&pam_mutex);
+		}
 			return SASL_BADAUTH;
 		}
 		pam_end(pamh,PAM_DATA_SILENT);
 		
-		g_static_mutex_unlock (&pam_mutex);
+		if (system_pam_module_not_threadsafe){
+			g_static_mutex_unlock (&pam_mutex);
+		}
 
 	}
 	ret = getpwnam_r(user, &result_buf, buffer, 512, &result_bufp);
