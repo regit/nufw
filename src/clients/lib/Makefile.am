@@ -2,7 +2,7 @@ AM_CPPFLAGS = -O2 -Wall -Werror-implicit-function-declaration -DCONFIG_DIR=\"$(s
 
 lib_LTLIBRARIES = libnuclient.la
 
-libnuclient_la_SOURCES = libnuclient.c proc.c
+libnuclient_la_SOURCES = libnuclient.c proc.c iconv.c
 LIBS = -lgnutls -lsasl2 -lpthread
 
 include_HEADERS = nuclient.h

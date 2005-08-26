@@ -225,7 +225,11 @@ confparams nuauth_vars[] = {
 	{ "nuauth_multi_servers" , G_TOKEN_STRING , 1, NULL },
 	{ "nuauth_acl_cache" , G_TOKEN_INT , 0,NULL },
 	{ "nuauth_user_cache" , G_TOKEN_INT , 0,NULL },
+#if USE_UTF8
 	{ "nuauth_uses_utf8" , G_TOKEN_INT , 1,NULL },
+#else 
+	{ "nuauth_uses_utf8" , G_TOKEN_INT , 0,NULL },
+#endif
 };
 	tracking empty_header;
 	gpointer vpointer;
@@ -249,7 +253,7 @@ confparams nuauth_vars[] = {
 	nuauth_user_cache=1;
 
 
-#ifdef GLIB_2.3_HACK
+#ifdef GLIB_23_HACK
 	atomic_mutex=g_mutex_new();
 #endif
 	
@@ -442,6 +446,11 @@ confparams nuauth_vars[] = {
 						\t-t : timeout to forget about packets when they don't match (default : 15 s)\n");
 				return 1;
 		}
+	}
+
+
+	if (nuauth_uses_utf8){
+		setlocale(LC_ALL,"");	
 	}
 
 	/* debug cannot be above 10 */

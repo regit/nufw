@@ -35,10 +35,11 @@
 #include <config.h>
 #include <gnutls/gnutls.h>
 #include <sasl/sasl.h>
+#include <locale.h>
 
 /* uncomment following line if you have
  * SUSE 9 and RHEL 3.0 which only have glib 2.3 */
-//#define GLIB_2.3_HACK 1
+//#define GLIB_23_HACK 1
 
 #define NUAUTH_TLS_MAX_CLIENTS 1024
 #define NUAUTH_TLS_MAX_SERVERS 16
@@ -315,7 +316,7 @@ char * get_rid_of_domain(const char* user);
  */
 
 
-#ifdef GLIB_2.3_HACK
+#ifdef GLIB_23_HACK
 GMutex *atomic_mutex;
 void g_atomic_int_inc(gint* numv);
 gint g_atomic_int_get(gint *atomic);

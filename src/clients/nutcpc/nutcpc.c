@@ -19,7 +19,8 @@
  */
 
 #include "../lib/nuclient.h"
-#define NUTCPC_VERSION "0.6"
+#include <locale.h>
+#define NUTCPC_VERSION "0.7"
 
 #define MAX_RETRY_TIME 30
 
@@ -153,6 +154,10 @@ int main (int argc, char *argv[])
 	unsigned char donotuselock=0;
 	char* runpid=computerunpid();
 
+#if USE_UTF8
+	/* needed by iconv */
+	setlocale (LC_ALL, "");
+#endif
 	/*
 	 * Parse our arguments.
 	 */

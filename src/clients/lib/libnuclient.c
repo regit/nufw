@@ -37,6 +37,9 @@
 #include <jhash.h>
 #include "proc.h"
 
+char * locale_to_utf8(char* inbuf);
+
+
 #define DH_BITS 1024
 #define PACKET_SIZE 1482
 #define REQUEST_CERT 0
@@ -86,7 +89,17 @@ int nu_get_usersecret(sasl_conn_t *conn __attribute__((unused)),
 {
 	NuAuth* session=(NuAuth *)context;
 	if ((session->password == NULL) && session->passwd_callback) {
+#if USE_UTF8
+		char *givenpass=session->passwd_callback();
+		session->password=locale_to_utf8(givenpass);
+		if (! session->password){
+				free(givenpass);
+				return EXIT_FAILURE;
+		}
+		free(givenpass);
+#else
 		session->password=(session->passwd_callback)();
+#endif
 	}
 	if(id != SASL_CB_PASS) {
 		printf("getsecret not looking for pass");
@@ -118,8 +131,18 @@ static int nu_get_userdatas(void *context __attribute__((unused)),
 	switch (id) {
 		case SASL_CB_USER:
 			if ((session->username == NULL) && session->username_callback) {
-				printf("get username\n");
-				session->username=session->username_callback();
+#if USE_UTF8
+		char *givenuser=session->username_callback();
+		session->username=locale_to_utf8(givenuser);
+		free(givenuser);
+		if (! session->username){
+				return EXIT_FAILURE;
+		}
+
+
+#else
+		session->password=(session->username_callback)();
+#endif
 			}
 
 			if (session->protocol == 2)
@@ -132,7 +155,17 @@ static int nu_get_userdatas(void *context __attribute__((unused)),
 			break;
 		case SASL_CB_AUTHNAME:
 			if ((session->username == NULL) && session->username_callback) {
-				session->username=session->username_callback();
+#if USE_UTF8
+		char *givenuser=session->username_callback();
+		session->username=locale_to_utf8(givenuser);
+		free(givenuser);
+		if (! session->username){
+				return EXIT_FAILURE;
+		}
+#else
+		session->password=(session->username_callback)();
+#endif
+
 			}
 			if (session->protocol == 2)
 				*result=session->username;
@@ -482,7 +515,6 @@ int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn)
 
 static int send_hello_pckt(NuAuth * session){
 	struct nuv2_header header;
-	uint16_t header_length;
 
 	/* fill struct */
 	header.proto=0x2;
@@ -937,10 +969,22 @@ NuAuth* nu_client_init(char *username, unsigned long userid, char *password,
 			oses=alloca(stringlen);
 			enc_oses=calloc(4*stringlen,sizeof( char));
 			snprintf(oses,stringlen,"%s;%s;%s",info.sysname, info.release, info.version);
+#if USE_UTF8
+			oses=locale_to_utf8(oses);
+			if (! oses){
+				nu_exit_clean(session);
+				errno=EBADMSG;
+				return NULL;
+			}
+#endif
 			if (sasl_encode64(oses,strlen(oses),enc_oses,4*stringlen,&actuallen) == SASL_BUFOVER){
 				enc_oses=realloc(enc_oses,actuallen);
 				sasl_encode64(oses,strlen(oses),enc_oses,actuallen,&actuallen);
 			}
+
+#if USE_UTF8
+			free(oses);
+#endif
 			osfield.type=OS_FIELD;
 			osfield.option=OS_SRV;
                         osfield_length=sizeof(struct nuv2_authfield)+actuallen;

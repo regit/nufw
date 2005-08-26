@@ -26,7 +26,7 @@
 int verify_user_password(const char* given,const char* ours){
 	gcry_md_hd_t hd;
 	char * res;
-	char decoded; 
+	char* decoded; 
 	int len;
 	char **splitted_secret; 
 	int algo=0;
@@ -102,10 +102,9 @@ int verify_user_password(const char* given,const char* ours){
 		decoded = g_new0(char, 50);
 		sasl_encode64(res,strlen(res),decoded,50,&len);
 
-
 		/* convert password from utf-8 to locale */
 		if (nuauth_uses_utf8){
-			int bwritten;
+			int bwritten=0;
 			gchar * traduc;
 			traduc = g_locale_from_utf8  (decoded,
 					-1,
@@ -117,7 +116,7 @@ int verify_user_password(const char* given,const char* ours){
 				decoded=traduc;
 			} else {
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
-					g_message("can not convert password at %s:%d",__FILE__,__LINE__);
+					g_message("can not convert password %s at %s:%d",decoded,__FILE__,__LINE__);
 				}
 			}
 		}
@@ -182,10 +181,10 @@ int verify_user_password(const char* given,const char* ours){
 	} else {
 		/* convert password from utf-8 to locale */
 		if (nuauth_uses_utf8){
-			int bwritten;
+			int bwritten=0;
 			gchar * traduc;
 			traduc = g_locale_from_utf8  (given,
-					-1,
+					strlen(given),
 					NULL,
 					&bwritten,
 					NULL);
@@ -193,7 +192,10 @@ int verify_user_password(const char* given,const char* ours){
 				given=traduc;
 			} else {
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
-					g_message("can not convert password at %s:%d",__FILE__,__LINE__);
+					char *ccharset;
+					g_get_charset(&ccharset);
+					g_message("Can not convert password %s to %s at %s:%d",given,
+							ccharset,__FILE__,__LINE__);
 				}
 			}
 		}

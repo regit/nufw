@@ -68,9 +68,15 @@ static void prg_cache_add(unsigned long inode, char *name)
     pn=*pnp;
     pn->next=NULL;
     pn->inode=inode;
+#if USE_UTF8
+	name=locale_to_utf8(name);
+#endif
     if (strlen(name)>sizeof(pn->name)-1) 
 	name[sizeof(pn->name)-1]='\0';
     strcpy(pn->name,name);
+#if USE_UTF8
+    free(name);
+#endif
 }
 
 const char *prg_cache_get(unsigned long inode)

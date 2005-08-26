@@ -1125,7 +1125,7 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 							c_session->tls=NULL;
 							clean_session(c_session);
 							break;
-						}else{
+						} else {
 							g_static_mutex_lock (&client_mutex);
 							g_hash_table_remove(client_conn_hash,GINT_TO_POINTER(c));
 							g_static_mutex_unlock (&client_mutex);

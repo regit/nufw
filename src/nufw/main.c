@@ -83,7 +83,9 @@ int main(int argc,char * argv[]){
     debug=DEBUG; /* this shall disapear */
     debug_level=0;
     debug_areas=DEFAULT_DEBUG_AREAS;
+#if USE_NFQUEUE
     nfqueue_num=0;
+#endif
     
     /*parse options */
     while((option = getopt ( argc, argv, options_list)) != -1 ){

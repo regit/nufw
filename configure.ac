@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
-AC_INIT(NuFW, 1.0.11, nufw-devel@nongnu.org)
+AC_INIT(NuFW, 1.1.0, nufw-devel@nongnu.org)
 AM_CONFIG_HEADER(src/include/config.h)
 AC_CONFIG_SRCDIR([src/nufw/main.c])
 
@@ -55,6 +55,9 @@ AC_ARG_WITH(ident,   [--with-ident  Support ident users authentication],ident="y
 AC_ARG_WITH(debug,   [--with-debug Add development debug message],debug="yes", debug="")
 
 AC_ARG_WITH(nfqueue,   [--with-nfqueue Compile for NFQUEUE instead of QUEUE],use_nfqueue="yes", use_nfqueue="")
+
+AC_ARG_WITH(utf8,   [--with-utf8 Use UTF8 exchange between client and server], AC_DEFINE_UNQUOTED([USE_UTF8],[1],[Will use UTF8 exchange])
+)
 
 AM_CONDITIONAL(HAVE_NFQUEUE,test x$have_nfqueue = xyes)
 

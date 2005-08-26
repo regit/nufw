@@ -1,10 +1,11 @@
-1.1.0
+1.1.0 (2005/08/29)
 	- nufw : port to libnfnetlink_queue
 	- NuFW : many small fixes in the debian/ subdir : start in correct runlevels,
 	have smoother init scripts.
 	- nutcpc : add -l option to disable use of lock
 	- NuFW : all exchanges between clients and nuauth are now done in
-	UTF-8 by default.
+	UTF-8 by default. Use --with-utf8 at configure time to select this
+	behaviour on client side.  
 1.0.11 (2005/07/26)
 	- NuFW : port to big endian architecture. It has been tested on a
 	powerpc.
