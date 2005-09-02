@@ -1,3 +1,14 @@
+nufw (1.0.11-2) stable; urgency=low
+
+  * Add the Vietnamese translation for debconf.
+  (closes: #316322)
+  * Add the French translation for debconf.
+  (closes: #307763)
+  * Add the Czech translation for debconf.
+  (closes: #310700)
+
+ -- Jean-Michel Kelbert <kelbert@debian.org>  Fri,  2 Sep 2005 22:02:12 +0200
+
 nufw (1.0.11-1) stable; urgency=low
 
   * new upstream release
