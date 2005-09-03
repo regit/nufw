@@ -1,4 +1,4 @@
-nufw (1.0.11-2) stable; urgency=low
+nufw (1.0.11-2) unstable; urgency=low
 
   * Add the Vietnamese translation for debconf.
   (closes: #316322)
