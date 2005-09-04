@@ -515,6 +515,7 @@ confparams nuauth_vars[] = {
 		g_message("Starting nuauth");
 	}
 	/* intercept SIGTERM */
+	memset(&action,0,sizeof(action));
 	action.sa_handler = nuauth_cleanup;
 	sigemptyset( & (action.sa_mask));
 	action.sa_flags = 0;
@@ -840,6 +841,7 @@ confparams nuauth_vars[] = {
 	myaudit->cache_hit_nb = 0;
 
 
+	memset(&act,0,sizeof(act));
 	act.sa_handler=&process_poll;
 	act.sa_flags = SIGPOLL;
 	if (sigaction(SIGPOLL,&act,NULL) == -1){
@@ -847,6 +849,7 @@ confparams nuauth_vars[] = {
 		exit(EXIT_FAILURE);
 	}
 
+	memset(&act,0,sizeof(act));
 	act.sa_handler=&process_usr1;
 	act.sa_flags = SIGUSR1;
 
@@ -855,6 +858,7 @@ confparams nuauth_vars[] = {
 		exit(EXIT_FAILURE);
 	}
 
+	memset(&act,0,sizeof(act));
 	act.sa_handler=&process_usr2;
 	act.sa_flags = SIGUSR2;
 

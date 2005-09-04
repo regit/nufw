@@ -249,6 +249,7 @@ int main(int argc,char * argv[]){
             close(i);
         }
         /* intercept SIGTERM */
+    	memset(&action,0,sizeof(action));
         action.sa_handler = nufw_cleanup;
         sigemptyset( & (action.sa_mask));
         action.sa_flags = 0;
@@ -351,8 +352,8 @@ int main(int argc,char * argv[]){
         exit(1);
     }
 
+    memset(&act,0,sizeof(act));
     act.sa_handler = &process_usr1;
-    act.sa_restorer = NULL;
     act.sa_flags = SIGUSR1;
     if (sigaction(SIGUSR1,&act,NULL) == -1)
     {
@@ -360,8 +361,8 @@ int main(int argc,char * argv[]){
         exit(1);
     }
 
+    memset(&act,0,sizeof(act));
     act.sa_handler = &process_usr2;
-    act.sa_restorer = NULL;
     act.sa_flags = SIGUSR2;
     if (sigaction(SIGUSR2,&act,NULL) == -1)
     {
@@ -369,8 +370,8 @@ int main(int argc,char * argv[]){
         exit(1);
     }
 
+    memset(&act,0,sizeof(act));
     act.sa_handler = &process_poll;
-    act.sa_restorer = NULL;
     act.sa_flags = SIGPOLL;
     if (sigaction(SIGPOLL,&act,NULL) == -1)
     {
