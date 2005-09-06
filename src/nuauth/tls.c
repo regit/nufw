@@ -1981,8 +1981,8 @@ void  warn_client (gpointer key, gpointer value, gpointer user_data)
 		}
 	} else {
 		if ( ((struct msg_addr_set *)user_data)->addr == htonl(((user_session*)value)->addr) ) {
-			((struct msg_addr_set *)user_data)->found = TRUE;
 			struct timeval current_time;
+			((struct msg_addr_set *)user_data)->found = TRUE;
 			gettimeofday(&current_time,NULL);
 			current_time.tv_sec=current_time.tv_sec -((user_session  *)value)->last_req.tv_sec;
 			current_time.tv_usec=current_time.tv_usec -((user_session  *)value)->last_req.tv_usec;
