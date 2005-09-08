@@ -1,119 +1,119 @@
-attributetype ( 18.3.6.1.1.18.1.0 NAME 'SrcIPStart'
+attributetype ( 1.3.6.1.4.1.23812.1.0 NAME 'SrcIPStart'
 	DESC 'An integer defining the beginning of an IP src scope'
 	EQUALITY integerMatch
 	ORDERING integerOrderingMatch
         SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 SINGLE-VALUE)
 
-attributetype ( 18.3.6.1.1.18.1.1 NAME 'SrcIPEnd'
+attributetype ( 1.3.6.1.4.1.23812.1.1 NAME 'SrcIPEnd'
 	DESC 'An integer defining the end of an IP src scope'
 	EQUALITY integerMatch
 	ORDERING integerOrderingMatch
         SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 SINGLE-VALUE)
 
-attributetype ( 18.3.6.1.1.18.1.2 NAME 'DstIPStart'
+attributetype ( 1.3.6.1.4.1.23812.1.2 NAME 'DstIPStart'
 	DESC 'An integer defining the start of an IP dst scope'
 	EQUALITY integerMatch
 	ORDERING integerOrderingMatch
         SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 SINGLE-VALUE)
 
-attributetype ( 18.3.6.1.1.18.1.3 NAME 'DstIPEnd'
+attributetype ( 1.3.6.1.4.1.23812.1.3 NAME 'DstIPEnd'
 	DESC 'An integer defining the end of an IP dst scope'
 	EQUALITY integerMatch
 	ORDERING integerOrderingMatch
         SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 SINGLE-VALUE)
 
-attributetype ( 18.3.6.1.1.18.1.4 NAME 'SrcPortStart'
+attributetype ( 1.3.6.1.4.1.23812.1.4 NAME 'SrcPortStart'
 	DESC 'An integer defining the start of a Port src scope'
 	EQUALITY integerMatch
 	ORDERING integerOrderingMatch
         SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 SINGLE-VALUE)
 
-attributetype ( 18.3.6.1.1.18.1.5 NAME 'SrcPortEnd'
+attributetype ( 1.3.6.1.4.1.23812.1.5 NAME 'SrcPortEnd'
 	DESC 'An integer defining the end of a Port dst scope'
 	EQUALITY integerMatch
 	ORDERING integerOrderingMatch
         SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 SINGLE-VALUE)
 
 
-attributetype ( 18.3.6.1.1.18.1.6 NAME 'DstPortStart'
+attributetype ( 1.3.6.1.4.1.23812.1.6 NAME 'DstPortStart'
 	DESC 'An integer defining the start of a Port dst scope'
 	EQUALITY integerMatch
 	ORDERING integerOrderingMatch
         SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 SINGLE-VALUE)
 
-attributetype ( 18.3.6.1.1.18.1.7 NAME 'DstPortEnd'
+attributetype ( 1.3.6.1.4.1.23812.1.7 NAME 'DstPortEnd'
 	DESC 'An integer defining the end of a Port dst scope'
 	EQUALITY integerMatch
 	ORDERING integerOrderingMatch
         SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 SINGLE-VALUE)
 
-attributetype ( 18.3.6.1.1.18.1.8 NAME 'Proto'
+attributetype ( 1.3.6.1.4.1.23812.1.8 NAME 'Proto'
 	DESC 'An integer defining the IP protocol'
 	EQUALITY integerMatch
         SYNTAX 1.3.6.1.4.1.1466.115.121.1.27)
 
-attributetype ( 18.3.6.1.1.18.1.9 NAME 'Decision'
+attributetype ( 1.3.6.1.4.1.23812.1.9 NAME 'Decision'
 	DESC 'An integer defining the ACL Decision'
 	EQUALITY integerMatch
         SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 SINGLE-VALUE)
 
-attributetype ( 18.3.6.1.1.18.1.10 NAME 'Group'
+attributetype ( 1.3.6.1.4.1.23812.1.10 NAME 'Group'
 	DESC 'An integer defining a group id'
 	EQUALITY integerMatch
         SYNTAX 1.3.6.1.4.1.1466.115.121.1.27)
 
-attributetype ( 18.3.6.1.1.18.1.11 NAME 'DstPort'
+attributetype ( 1.3.6.1.4.1.23812.1.11 NAME 'DstPort'
 	DESC 'An integer defining a Port dst'
 	EQUALITY integerMatch
         SYNTAX 1.3.6.1.4.1.1466.115.121.1.27)
 
-attributetype ( 18.3.6.1.1.18.1.12 NAME 'OsName'
+attributetype ( 1.3.6.1.4.1.23812.1.12 NAME 'OsName'
 	DESC 'Operating System Name'
 	EQUALITY caseIgnoreMatch
 	SUBSTR caseIgnoreSubstringsMatch
 	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{256})
 
-attributetype ( 18.3.6.1.1.18.1.13 NAME 'OsVersion'
+attributetype ( 1.3.6.1.4.1.23812.1.13 NAME 'OsVersion'
 	DESC 'Operating System Version'
 	EQUALITY caseIgnoreMatch
 	SUBSTR caseIgnoreSubstringsMatch
 	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{256})
 
-attributetype ( 18.3.6.1.1.18.1.14 NAME 'OsRelease'
+attributetype ( 1.3.6.1.4.1.23812.1.14 NAME 'OsRelease'
 	DESC 'Operating System Release'
 	EQUALITY caseIgnoreMatch
 	SUBSTR caseIgnoreSubstringsMatch
 	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{256})
 
-attributetype ( 18.3.6.1.1.18.1.15 NAME 'AppName'
+attributetype ( 1.3.6.1.4.1.23812.1.15 NAME 'AppName'
 	DESC 'Application Name'
 	EQUALITY caseIgnoreMatch
 	SUBSTR caseIgnoreSubstringsMatch
 	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{256})
 
-attributetype ( 18.3.6.1.1.18.1.16 NAME 'AppSig'
+attributetype ( 1.3.6.1.4.1.23812.1.16 NAME 'AppSig'
 	DESC 'Application Signature'
 	EQUALITY caseIgnoreMatch
 	SUBSTR caseIgnoreSubstringsMatch
 	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{256})
 
-attributetype ( 18.3.6.1.1.18.1.17 NAME 'SrcPort'
+attributetype ( 1.3.6.1.4.1.23812.1.17 NAME 'SrcPort'
 	DESC 'An integer defining a Port src'
 	EQUALITY integerMatch
         SYNTAX 1.3.6.1.4.1.1466.115.121.1.27)
 
-attributetype ( 18.3.6.1.1.18.1.18 NAME 'TimeRange'
+attributetype ( 1.3.6.1.4.1.23812.1.18 NAME 'TimeRange'
 	DESC 'Name of Time Range to apply'
 	EQUALITY caseIgnoreMatch
 	SUBSTR caseIgnoreSubstringsMatch
 	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{256})
 
-objectclass ( 18.3.6.1.1.18.2.1 NAME 'NuAccessControlList'
+objectclass ( 1.3.6.1.4.1.23812.2.1 NAME 'NuAccessControlList'
 	DESC 'An IP Acl'
 	MUST (cn $ SrcIPStart $ SrcIPEnd $ DstIPStart $ DstIPEnd $ Decision )
 	MAY (Proto $ SrcPortStart $ SrcPortEnd $ DstPortStart $ DstPortEnd $ DstPort $ SrcPort  $ OsName $ OsVersion $ OsRelease $ AppName $ AppSig $ Group $ description  ) )
 
-objectclass ( 18.3.6.1.1.18.2.2 NAME 'NuAccount' SUP top AUXILIARY
+objectclass ( 1.3.6.1.4.1.23812.2.2 NAME 'NuAccount' SUP top AUXILIARY
 	DESC 'Abstraction of an account with Nufw attributes'
 	MUST ( cn $ uid $ uidNumber $ Group  )
 	MAY ( userPassword $ loginShell $ gecos $ description $ homeDirectory)  )
