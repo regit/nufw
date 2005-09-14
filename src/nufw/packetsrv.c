@@ -239,6 +239,7 @@ void* packetsrv(){
 #if USE_NFQUEUE
         if ((rv = recv(fd, buffer, sizeof(buffer), 0)) && rv >= 0) {
             nfqnl_handle_packet(h, buffer, rv);
+            pckt_rx++ ;
         } else 
             break;
 #else
