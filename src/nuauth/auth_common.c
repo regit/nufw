@@ -717,7 +717,6 @@ gint take_decision(connection * element) {
 				( parcours != NULL  && test == NODECIDE ); 
 				parcours = g_slist_next(parcours) ) {
 			/* for each user  group */
-
 			if (parcours->data != NULL) {
 				for ( user_group = element->user_groups;
 						user_group != NULL && test == NODECIDE;
@@ -744,8 +743,11 @@ gint take_decision(connection * element) {
 				test=OK;
 			}
 		}
-	}
-
+        }
+        /* answer is NODECIDE if we did not found any matching group */
+        if(answer == NODECIDE){
+          answer=NOK;
+        }
 	element->decision=answer;
 
 	if (nuauth_log_users_sync) {
