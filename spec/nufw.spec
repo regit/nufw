@@ -3,7 +3,7 @@
 # ------------------------------------------------------------------------- #
 %define _unpackaged_files_terminate_build_ 0
 %define name nufw
-%define version 1.0.9
+%define version 1.0.13
 %define release 1
 %define _prefix     /usr
 %define _sysconfdir /etc/nufw
