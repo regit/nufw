@@ -175,22 +175,25 @@ int main(int argc,char * argv[]){
 #endif
           case 'h' :
             fprintf (stdout ,"%s [-hVv[v[v[v[v[v[v[v[v[v]]]]]]]]]] [-l local_port] [-L local_addr] [-d remote_addr] [-p remote_port]  [-t packet_timeout] [-T track_size]\n\
-                \t-h : display this help and exit\n\
-                \t-V : display version and exit\n\
-                \t-D : daemonize\n\
-                \t-k : use specified file as key file\n\
-                \t-c : use specified file as cert file\n\
-                \t-a : use specified file as ca file (strict checking is done if selected) (default: none)\n\
-                \t-n : use specified string as the needed DN of nuauth (inforce certificate checking) (default: none)\n\
-                \t-U : use UDP unencrypted communication with nuauth server\n\
-                \t-v : increase debug level (+1 for each 'v') (max useful number : 10)\n\
-                \t-m : mark packet with userid\n\
-                \t-l : (DEPRECATED OPTION) specify listening UDP port (default : 4129)\n\
-                \t-L : (DEPRECATED OPTION) specify listening address (default : 127.0.0.1)\n\
-                \t-d : remote address we send auth requests to (adress of the nuauth server) (default : 127.0.0.1)\n\
-                \t-p : remote port we send auth requests to (TCP port nuauth server listens on) (default : 4128)\n\
-                \t-t : timeout to forget about packets when they don't match (default : 15 s)\n\
-                \t-T : track size (default : 1000)\n",PACKAGE_TARNAME);
+\t-h : display this help and exit\n\
+\t-V : display version and exit\n\
+\t-D : daemonize\n\
+\t-k : use specified file as key file\n\
+\t-c : use specified file as cert file\n\
+\t-a : use specified file as ca file (strict checking is done if selected) (default: none)\n\
+\t-n : use specified string as the needed DN of nuauth (inforce certificate checking) (default: none)\n\
+\t-U : use UDP unencrypted communication with nuauth server\n\
+\t-v : increase debug level (+1 for each 'v') (max useful number : 10)\n\
+\t-m : mark packet with userid\n\
+\t-l : (DEPRECATED OPTION) specify listening UDP port (default : 4129)\n\
+\t-L : (DEPRECATED OPTION) specify listening address (default : 127.0.0.1)\n\
+\t-d : remote address we send auth requests to (adress of the nuauth server) (default : 127.0.0.1)\n\
+\t-p : remote port we send auth requests to (TCP port nuauth server listens on) (default : 4128)\n"
+#if USE_NFQUEUE
+		"\t-q : use nfqueue number (default : 0)\n"
+#endif
+                "\t-t : timeout to forget about packets when they don't match (default : 15 s)\n\
+\t-T : track size (default : 1000)\n",PACKAGE_TARNAME);
 
             return 1;
         }
