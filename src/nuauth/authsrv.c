@@ -888,6 +888,7 @@ confparams nuauth_vars[] = {
 			message->type=CACHE_UPDATE;
 			g_async_queue_push(acl_cache->queue,message);
 		}
+#if OLD_FLAVOUR
 		if (nuauth_push){
 			if (tls_push){
 				struct tls_message * message=g_new0(struct tls_message,1);
@@ -896,6 +897,7 @@ confparams nuauth_vars[] = {
 				g_async_queue_push (tls_push,message);
 			}
 		}
+#endif
 		/* a little sleep */
 		usleep(500000);	
 	}

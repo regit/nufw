@@ -135,89 +135,6 @@ int get_icmp_headers(connection *connexion, char * dgram)
 	return 0;
 }
 
-#if 0
-/**
- * socket server for Nufw gateway packet. (protocol 1 so disabled 
- * stay here for a while ...)
- *
- * - Argument : None
- * - Return : None
- */
-
-void* packet_authsrv()
-{
-	int z;
-	int sck_inet;
-	struct sockaddr_in addr_inet,addr_clnt;
-	int len_inet;
-	char dgram[512];
-	connection * current_conn;
-
-	//open the socket
-	sck_inet = socket (AF_INET,SOCK_DGRAM,0);
-
-	if (sck_inet == -1)
-	{
-		g_error("socket()");
-		exit (-1); /*useless*/
-	}
-
-	memset(&addr_inet,0,sizeof addr_inet);
-
-	addr_inet.sin_family= AF_INET;
-	addr_inet.sin_port=htons(authreq_port);
-	addr_inet.sin_addr.s_addr=nufw_srv.sin_addr.s_addr;
-
-	len_inet = sizeof addr_inet;
-
-	z = bind (sck_inet,
-			(struct sockaddr *)&addr_inet,
-			len_inet);
-	if (z == -1)
-	{
-		g_error ("pckt bind() : \n");
-		exit (-1); /*useless*/
-	}
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_PACKET)){
-		g_message("Packet Server now Listening\n");
-	}
-	for(;;){
-		len_inet = sizeof addr_clnt;
-		z = recvfrom(sck_inet,
-				dgram,
-				sizeof dgram,
-				0,
-				(struct sockaddr *)&addr_clnt,
-				&len_inet);
-		if (z<0)
-		{
-			g_warning("pckt recvfrom()");
-			continue;
-			//exit (-1); /*useless*/
-		}
-		/* decode packet and create connection */
-		current_conn = authpckt_decode(dgram, z);
-		if (current_conn == NULL){
-			if ( *(dgram+1) != AUTH_CONTROL )
-				if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_PACKET)){
-					g_message("Can't parse packet, this IS bad !\n");
-				}
-		} else {
-
-			current_conn->socket=sck_auth_reply ;
-			current_conn->tls=NULL;
-			/* gonna feed the birds */
-			current_conn->state = STATE_AUTHREQ;
-			/* put gateway addr in struct */
-			g_thread_pool_push (acl_checkers,
-					current_conn,
-					NULL);
-		}
-	}
-	close(sck_inet);
-}
-#endif
-
 /**
  * (acl_ckeckers function).
  * Treat a connection from insertion to decision 
@@ -356,6 +273,15 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz)
 				if ( offset) {
 					pointer+=offset;
 					/* get saddr and daddr */
+#if AUTH_PROTO_MONO
+					/* check if proto is in Hello mode list */
+					if ( nufw_authenticated_protocol(connexion->tracking_hdrs.protocol) ) {
+						/* send hello */
+						g_atomic_inc(id_count);
+						connexion->localid=g_atomic_get(id_count);	
+					} else {
+#endif
+						/* proceed to nufw authentication */
 					switch (connexion->tracking_hdrs.protocol) {
 						case IPPROTO_TCP:
 							switch (get_tcp_headers(connexion, pointer)){
@@ -400,6 +326,9 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz)
 							free_connection(connexion);
 							return NULL;
 					}
+#if AUTH_PROTO_MONO
+					}
+#endif
 				}
 				else {
 					if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))

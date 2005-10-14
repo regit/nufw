@@ -212,41 +212,10 @@ void  pre_client_check(){
 	}
 }
 
-void clean_session(user_session * c_session)
-{
-	if (c_session->tls)
-	{
-		gnutls_deinit(
-				*(c_session->tls)	
-			     );
-		g_free(c_session->tls);
-	}
-	if (c_session->userid){
-		g_free(c_session->userid);
-	}
-	if (c_session->groups){
-		g_slist_free(c_session->groups);
-	}
-
-	if (c_session){
-		g_free(c_session); 
-	}
-}
-
-void hash_clean_session(user_session * c_session){
-	gnutls_transport_ptr socket_tls;
-
-	socket_tls=gnutls_transport_get_ptr(*(c_session->tls));
-	if (socket_tls){
-		close((int)socket_tls); 
-	}
-	clean_session(c_session);
-}
-
 /* strictly close a tls session
  * nothing to care about client */
 
-	int close_tls_session(int c,gnutls_session* session){
+int close_tls_session(int c,gnutls_session* session){
 		if (close(c))
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
 				g_message("close_tls_session : close() failed!");
@@ -1102,7 +1071,7 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 						g_async_queue_push(tls_push,message);
 					} else {
 						g_static_mutex_lock (&client_mutex);
-						g_hash_table_insert(client_conn_hash,GINT_TO_POINTER(c),c_session);
+						add_client(c,c_session);
 						g_static_mutex_unlock (&client_mutex);
 					}
 					/* unlock hash client */
@@ -1127,7 +1096,7 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 							break;
 						} else {
 							g_static_mutex_lock (&client_mutex);
-							g_hash_table_remove(client_conn_hash,GINT_TO_POINTER(c));
+							delete_client_by_socket(c);
 							g_static_mutex_unlock (&client_mutex);
 							break;
 						}
@@ -1319,14 +1288,7 @@ void* tls_user_authsrv()
 	mech_string_internal=g_strdup("plain");
 	mech_string_external=g_strdup("external");
 
-	/* build client hash */
-	client_conn_hash = g_hash_table_new_full(
-			NULL,
-			NULL,
-			NULL,
-			(GDestroyNotify) hash_clean_session
-			);
-
+	init_client_struct();
 	/* initialize SASL */
 	ret = sasl_server_init(callbacks, "nuauth");
 	if (ret != SASL_OK){
@@ -1543,7 +1505,7 @@ void* tls_user_authsrv()
 				/* we lock here but can do other thing on hash as it is not destructive 
 				 * in push mode modification of hash are done in push_worker */
 				g_static_mutex_lock (&client_mutex);
-				c_session = g_hash_table_lookup(client_conn_hash ,GINT_TO_POINTER(c));
+				c_session = get_client_datas_by_socket(c);
 				g_static_mutex_unlock (&client_mutex);
 				u_request = treat_user_request( c_session );
 				if (u_request == EOF) {
@@ -1560,7 +1522,7 @@ void* tls_user_authsrv()
 						g_async_queue_push(tls_push,message);
 					} else {
 						g_static_mutex_lock (&client_mutex);
-						g_hash_table_remove(client_conn_hash,GINT_TO_POINTER(c));
+						delete_client_by_socket(c);
 						g_static_mutex_unlock (&client_mutex);
 					}
 				}else if (u_request < 0) {
@@ -1893,13 +1855,6 @@ void* tls_nufw_authsrv()
 
 }
 
-struct msg_addr_set {
-	struct nuv2_srv_message msg;
-	uint32_t addr;
-	uint16_t delay;
-	gboolean found;
-};
-
 void  refresh_client (gpointer key, gpointer value, gpointer user_data)
 {
 	/* first check if a request is needed */
@@ -1936,82 +1891,6 @@ void  refresh_client (gpointer key, gpointer value, gpointer user_data)
 		}
 	} 
 }
-
-/**
- * warn client that it need to check about new connection.
- * 
- */
-
-void  warn_client (gpointer key, gpointer value, gpointer user_data)
-{
-	/* first check if a request is needed */
-	if ( ((user_session *)value)->req_needed){
-		struct timeval current_time;
-		gettimeofday(&current_time,NULL);
-		current_time.tv_sec=current_time.tv_sec -((user_session  *)value)->last_req.tv_sec;
-		current_time.tv_usec=current_time.tv_usec -((user_session  *)value)->last_req.tv_usec;
-
-#ifdef DEBUG_ENABLE
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)){
-			g_message("request needed");
-		}
-#endif
-
-		/* check if timeout is reached */
-		if ( 
-				( current_time.tv_sec	 > 1 ) ||			
-				(  abs(current_time.tv_usec) > TLS_CLIENT_MIN_DELAY ) 
-
-		   ) {
-#ifdef DEBUG_ENABLE
-			if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)){
-				g_message("request now sent");
-			}
-#endif
-			gnutls_record_send(*((user_session*)value)->tls,
-					&((struct msg_addr_set *)user_data)->msg,
-					sizeof(struct nuv2_srv_message)
-					);
-			((user_session  *)value)->req_needed=FALSE; 
-			((user_session *)value)->last_req.tv_sec=current_time.tv_sec;
-			((user_session  *)value)->last_req.tv_usec=current_time.tv_usec;
-		}
-		if ( ((struct msg_addr_set *)user_data)->addr == htonl(((user_session*)value)->addr) ) {
-			((struct msg_addr_set *)user_data)->found = TRUE;
-		}
-	} else {
-		if ( ((struct msg_addr_set *)user_data)->addr == htonl(((user_session*)value)->addr) ) {
-			struct timeval current_time;
-			((struct msg_addr_set *)user_data)->found = TRUE;
-			gettimeofday(&current_time,NULL);
-			current_time.tv_sec=current_time.tv_sec -((user_session  *)value)->last_req.tv_sec;
-			current_time.tv_usec=current_time.tv_usec -((user_session  *)value)->last_req.tv_usec;
-			if ( 
-					( current_time.tv_sec	 > 1 ) ||			
-					(  abs(current_time.tv_usec) > TLS_CLIENT_MIN_DELAY ) 
-
-			   ) {
-
-#ifdef DEBUG_ENABLE
-				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)){
-					g_message("sending request");
-				}
-#endif
-				gnutls_record_send(*((user_session*)value)->tls,
-						&((struct msg_addr_set *)user_data)->msg,
-						sizeof(struct nuv2_srv_message)
-						);
-
-				((user_session  *)value)->req_needed=FALSE; 
-				((user_session *)value)->last_req.tv_sec=current_time.tv_sec;
-				((user_session  *)value)->last_req.tv_usec=current_time.tv_usec;
-			} else {
-				((user_session  *)value)->req_needed=TRUE; 
-			}
-		}
-	}
-}
-
 /**
  * dequeue addr that need to do a check.
  * 
@@ -2039,7 +1918,7 @@ void push_worker ()
 					global_msg->found = FALSE;
 					/* search in client array */
 					g_static_mutex_lock (&client_mutex);
-					g_hash_table_foreach (client_conn_hash, warn_client, global_msg);
+					warn_clients(global_msg);
 					g_static_mutex_unlock (&client_mutex);
 					/* do we have found something */
 					if (global_msg->addr != INADDR_ANY){
@@ -2062,7 +1941,7 @@ void push_worker ()
 			case FREE_CLIENT:
 				{
 					g_static_mutex_lock (&client_mutex);
-					g_hash_table_remove(client_conn_hash,message->datas);
+					delete_client_by_socket(message->datas);
 					g_static_mutex_unlock (&client_mutex);
 				}
 				break;
@@ -2071,16 +1950,18 @@ void push_worker ()
 					struct tls_insert_data* datas=message->datas;
 					if (datas->data){
 						g_static_mutex_lock (&client_mutex);
-						g_hash_table_insert(client_conn_hash,GINT_TO_POINTER(datas->socket),datas->data);
+						add_client(datas->socket,datas->data);
 						g_static_mutex_unlock (&client_mutex);
 					}
 				}
 				break;
+#if OLD_FLAVOUR
 			case REFRESH_CLIENTS:
 				g_static_mutex_lock (&client_mutex);
 				g_hash_table_foreach (client_conn_hash, refresh_client, NULL);
 				g_static_mutex_unlock (&client_mutex);
 				break;
+#endif
 			default:
 				g_message("lost");
 		}

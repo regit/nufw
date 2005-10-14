@@ -188,10 +188,11 @@ typedef struct Connection {
   gchar * appmd5;
   /** state of the packet. */
   char state;
+  /** localid */
+  uint32_t localid;
   /** decision on packet. */
   char decision;
 } connection;
-
 
 
 /*
@@ -539,6 +540,7 @@ void process_poll(int signum);
 /* END AUDIT */
 
 GHashTable* client_conn_hash;
+GHashTable* client_ip_hash;
 
 void create_x509_credentials();
 void* tls_nufw_authsrv();
@@ -570,3 +572,28 @@ gchar *string_escape(gchar *orig);
 struct in_addr* generate_inaddr_list(gchar* gwsrv_addr);
 gboolean check_inaddr_in_array(struct in_addr check_ip,struct in_addr *iparray);
 gboolean check_string_in_array(gchar* checkstring,gchar** stringarray);
+
+/* client_mngr.c */
+
+void init_client_struct();
+
+void add_client(int socket, gpointer datas);
+
+char delete_client_by_socket(int c);
+
+inline user_session * get_client_datas_by_socket(int c);
+
+inline GSList * get_client_sockets_by_ip(uint32_t ip);
+
+void clean_session(user_session*);
+
+
+struct msg_addr_set {
+	struct nuv2_srv_message msg;
+	uint32_t addr;
+	uint16_t delay;
+	gboolean found;
+};
+
+
+char warn_clients(struct msg_addr_set * global_msg);

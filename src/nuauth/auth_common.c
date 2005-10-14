@@ -1,7 +1,7 @@
 /*
  ** Copyright(C) 2003-2005 Eric Leblond <regit@inl.fr>
  **		     Vincent Deffontaines <vincent@gryzor.com>
- **                  INL http://www.inl.fr/
+ **                  INL : http://www.inl.fr/
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -23,12 +23,15 @@
 
 
 #ifdef GLIB_2.3_HACK
-void g_atomic_int_inc(gint* atomic){
+void g_atomic_int_inc(gint* atomic)
+{
 	g_mutex_lock(atomic_mutex);
  	*atomic++;
 	g_mutex_unlock(atomic_mutex);
 }
-gboolean g_atomic_int_dec_and_test(gint* atomic){
+
+gboolean g_atomic_int_dec_and_test(gint* atomic)
+{
 	g_mutex_lock(atomic_mutex);
 	*atomic--;
 	if (!*atomic){
@@ -40,14 +43,17 @@ gboolean g_atomic_int_dec_and_test(gint* atomic){
 	}
 }
 
-gint g_atomic_int_get(gint *atomic){
+gint g_atomic_int_get(gint *atomic)
+{
 	return *atomic;	
 }
+
 #endif
 
 static gint apply_decision(connection element);
 
-void bail (const char *on_what){
+void bail (const char *on_what)
+{
 	perror(on_what);
 	exit(1);
 }
@@ -55,7 +61,8 @@ void bail (const char *on_what){
  * Args : a connection and a state
  */
 
-inline void change_state(connection *elt, char state){
+inline void change_state(connection *elt, char state)
+{
         if (elt != NULL){
         	elt->state = state;
         }
@@ -68,8 +75,7 @@ inline void change_state(connection *elt, char state){
  * - Return : the associated key
  */
 
-	inline  guint
-hash_connection(gconstpointer headers)
+inline  guint hash_connection(gconstpointer headers)
 {
 	return (jhash_3words(((tracking *)headers)->saddr,
 				(((tracking *)headers)->daddr ^ ((tracking *)headers)->protocol),
@@ -144,7 +150,8 @@ gboolean compare_connection(gconstpointer tracking_hdrs1, gconstpointer tracking
  * - Return : None
  */
 
-void search_and_fill () {
+void search_and_fill () 
+{
 	connection * element = NULL;
         //GRYZOR warning : it seems we g_free() on pckt only on some conditions in this function
 	connection * pckt = NULL;
@@ -381,7 +388,8 @@ void search_and_fill () {
  * received packets.
  */
 
-gint print_connection(gpointer data,gpointer userdata){
+gint print_connection(gpointer data,gpointer userdata)
+{
 	struct in_addr src,dest;
 	connection * conn=(connection *) data;
 	src.s_addr = ntohl(conn->tracking_hdrs.saddr);
@@ -419,7 +427,8 @@ gint print_connection(gpointer data,gpointer userdata){
  * - Return : None
  */
 
-void send_auth_response(gpointer data, gpointer userdata){
+void send_auth_response(gpointer data, gpointer userdata)
+{
 	unsigned long  packet_id = GPOINTER_TO_UINT(data);
 	struct auth_answer * aanswer = (struct auth_answer *) userdata;
 	u_int8_t answer = aanswer->answer;
@@ -497,7 +506,8 @@ void send_auth_response(gpointer data, gpointer userdata){
  * Argument : A connection
  * Return 1
  */
-int free_connection(connection * conn){
+int free_connection(connection * conn)
+{
 	g_assert (conn != NULL );
 
 #ifdef DEBUG_ENABLE
@@ -592,7 +602,8 @@ int free_connection(connection * conn){
  * Return : 1 if succeeded, 0 otherwise
  */
 
-int conn_cl_delete(gconstpointer conn) {
+int conn_cl_delete(gconstpointer conn) 
+{
 	g_assert (conn != NULL);
 
 	if (!  g_hash_table_steal (conn_list,
@@ -621,7 +632,8 @@ int conn_cl_delete(gconstpointer conn) {
 
 gboolean  get_old_conn (gpointer key,
 		gpointer value,
-		gpointer user_data){
+		gpointer user_data)
+{
 	long current_timestamp = GPOINTER_TO_INT(user_data);
 	if (
 			( current_timestamp - ((connection *)value)->timestamp > packet_timeout)  
@@ -641,7 +653,8 @@ gboolean  get_old_conn (gpointer key,
  * Return : 1 if element suppressed, 0 otherwise
  */
 
-int conn_key_delete(gconstpointer key) {
+int conn_key_delete(gconstpointer key)
+{
 	connection* element = (connection*)g_hash_table_lookup ( conn_list,key);
 	if (element){
 		/* need to log drop of packet if it is a nufw packet */
@@ -661,7 +674,8 @@ int conn_key_delete(gconstpointer key) {
  * Return : None
  */
 
-void clean_connections_list (){
+void clean_connections_list ()
+{
 	int conn_list_size=g_hash_table_size(conn_list); /* not acccurate but we don't abuse of the lock */
 	long current_timestamp=time(NULL);
 
@@ -686,7 +700,8 @@ void clean_connections_list (){
  * Return : -1 if parameter is NULL
  */
 
-gint take_decision(connection * element) {
+gint take_decision(connection * element) 
+{
 	GSList * parcours=NULL;
 	int answer = NODECIDE;
 	char test;
@@ -802,7 +817,8 @@ gint take_decision(connection * element) {
  * Return : 1
  */
 
-gint apply_decision(connection element){
+gint apply_decision(connection element)
+{
 	int answer=element.decision;
 	struct auth_answer aanswer ={ answer , element.user_id ,element.socket, element.tls } ;
 
@@ -832,7 +848,8 @@ gint apply_decision(connection element){
  * - Return : None
  */
 
-void decisions_queue_work (gpointer userdata, gpointer data){
+void decisions_queue_work (gpointer userdata, gpointer data)
+{
 	connection* element=(connection *)userdata;
 
 	apply_decision( * element);
@@ -884,7 +901,8 @@ gchar *string_escape(gchar *orig)
 	return orig;
 }
 
-void free_buffer_read(struct buffer_read* datas){
+void free_buffer_read(struct buffer_read* datas)
+{
 	if (datas->sysname){
 		g_free(datas->sysname);
 	}
