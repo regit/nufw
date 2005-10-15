@@ -976,53 +976,58 @@ G_MODULE_EXPORT GSList* acl_check(connection* element)
 
       // ICMP?
       if (netdata->protocol == IPPROTO_ICMP) {
-          // TODO Check ICMP
-          g_message("[plaintext] ICMP code not yet supported! :-(\n");
-          continue;
-      }
+	      // TODO Check ICMP
+	      g_message("[plaintext] ICMP code not yet supported! :-(\n");
+	      g_message("[plaintext] faking ICMP support");
+	      if (p_acl->proto == IPPROTO_ICMP){
+	      	g_message("[plaintext] ICMP acls");
+	      }
+      } else {
+	      // Following is only for TCP / UDP  (ports stuff...)
+	      if (p_acl->proto != IPPROTO_TCP && p_acl->proto != IPPROTO_UDP) {
+		      g_message("[plaintext] Unsupported protocol: %d", p_acl->proto);
+		      continue;
+	      }
 
-      // Following is only for TCP / UDP  (ports stuff...)
-      if (p_acl->proto != IPPROTO_TCP && p_acl->proto != IPPROTO_UDP) {
-          g_message("[plaintext] Unsupported protocol: %d", p_acl->proto);
-          continue;
+	      // Check source port
+	      if (p_acl->src_ports) {
+		      int found = 0;
+		      struct T_ports *p_ports;
+		      GSList *pl_ports = p_acl->src_ports;
+		      for ( ; pl_ports ; pl_ports = g_slist_next(pl_ports)) {
+			      p_ports = (struct T_ports*)pl_ports->data;
+			      if (!p_ports->firstport ||
+					      ((netdata->source >= p_ports->firstport) &&
+					       (netdata->source <= p_ports->firstport+p_ports->nbports))) {
+				      found = 1;
+				      break;
+			      }
+		      }
+		      if (!found)
+			      continue;
+	      }
+	      // Check destination port
+	      if (p_acl->dst_ports) {
+		      int found = 0;
+		      struct T_ports *p_ports;
+		      GSList *pl_ports = p_acl->dst_ports;
+		      for ( ; pl_ports ; pl_ports = g_slist_next(pl_ports)) {
+			      p_ports = (struct T_ports*)pl_ports->data;
+			      if (!p_ports->firstport ||
+					      ((netdata->dest >= p_ports->firstport) &&
+					       (netdata->dest <= p_ports->firstport+p_ports->nbports))) {
+				      found = 1;
+				      break;
+			      }
+		      }
+		      if (!found)
+			      continue;
+	      }
       }
-
-      // Check source port
-      if (p_acl->src_ports) {
-          int found = 0;
-          struct T_ports *p_ports;
-          GSList *pl_ports = p_acl->src_ports;
-          for ( ; pl_ports ; pl_ports = g_slist_next(pl_ports)) {
-              p_ports = (struct T_ports*)pl_ports->data;
-              if (!p_ports->firstport ||
-                  ((netdata->source >= p_ports->firstport) &&
-                   (netdata->source <= p_ports->firstport+p_ports->nbports))) {
-                  found = 1;
-                  break;
-              }
-          }
-          if (!found)
-              continue;
-      }
-      // Check destination port
-      if (p_acl->dst_ports) {
-          int found = 0;
-          struct T_ports *p_ports;
-          GSList *pl_ports = p_acl->dst_ports;
-          for ( ; pl_ports ; pl_ports = g_slist_next(pl_ports)) {
-              p_ports = (struct T_ports*)pl_ports->data;
-              if (!p_ports->firstport ||
-                  ((netdata->dest >= p_ports->firstport) &&
-                   (netdata->dest <= p_ports->firstport+p_ports->nbports))) {
-                  found = 1;
-                  break;
-              }
-          }
-          if (!found)
-              continue;
-      }
-
       // We have a match 8-)
+  if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
+      g_message("[plaintext] matching with decision %d", p_acl->decision);
+  }
       this_acl=g_new0(struct acl_group, 1);
       g_assert(this_acl);
       this_acl->answer = p_acl->decision;

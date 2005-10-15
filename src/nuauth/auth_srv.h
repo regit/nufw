@@ -302,7 +302,9 @@ int sck_auth_reply;
 void send_auth_response(gpointer data, gpointer userdata);
 int conn_cl_delete(gconstpointer conn);
 inline char get_state(connection *elt);
-gint take_decision(connection * element);
+#define PACKET_ALONE 0
+#define PACKET_IN_HASH 1
+gint take_decision(connection * element,gchar place);
 gint print_connection(gpointer data,gpointer userdata);
 int free_connection(connection * conn);
 int lock_and_free_connection(connection * conn);

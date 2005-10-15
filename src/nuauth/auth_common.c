@@ -245,7 +245,7 @@ void search_and_fill ()
 							} else {
 								/* change STATE */
 								change_state(((connection *)element),STATE_READY);
-								take_decision(element);
+								take_decision(element,PACKET_IN_HASH);
 							}
 							break;
 					}
@@ -286,7 +286,7 @@ void search_and_fill ()
 
 								g_free(pckt);
 								/* going to take decision ? */
-								take_decision(element);
+								take_decision(element,PACKET_IN_HASH);
 							}
 							break;
 						case STATE_USERPCKT:
@@ -327,7 +327,7 @@ void search_and_fill ()
 								((connection *)element)->acl_groups = pckt->acl_groups;
 								g_free(pckt);
 								change_state(((connection *)element),STATE_READY);
-								take_decision(element);
+								take_decision(element,PACKET_IN_HASH);
 							}
 							break;
 						case  STATE_AUTHREQ:
@@ -700,7 +700,7 @@ void clean_connections_list ()
  * Return : -1 if parameter is NULL
  */
 
-gint take_decision(connection * element) 
+gint take_decision(connection * element,gchar place) 
 {
 	GSList * parcours=NULL;
 	int answer = NODECIDE;
@@ -806,7 +806,11 @@ gint take_decision(connection * element)
 	}
 
 	element->packet_id=NULL;
-	conn_cl_delete(element);
+	if (place == PACKET_IN_HASH){
+		conn_cl_delete(element);
+	} else {
+		free_connection(element);
+	}
 	return 1;
 }
 

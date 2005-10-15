@@ -21,8 +21,7 @@
 
 char localid_authenticated_protocol(int protocol)
 {
-	return TRUE;
-	if (protocol != 6){
+	if (protocol != IPPROTO_TCP){
 		return TRUE;
 	}
 	return FALSE;
@@ -50,7 +49,6 @@ void localid_auth()
 	g_async_queue_ref (tls_push);
 	/* wait for message */
 	while ( (pckt = g_async_queue_pop(localid_auth_queue)) ) {
-		g_message("localid packet reveived");
 		switch ( pckt->state){
 			case STATE_AUTHREQ:
 				/* add in struct */
@@ -72,7 +70,6 @@ void localid_auth()
 				g_static_mutex_unlock (&client_mutex);
 				break;
 			case STATE_USERPCKT:
-				g_message("user request received at %s/%d",__FILE__,__LINE__);
 				/* search in struct */
 				element = (connection*) g_hash_table_lookup (localid_auth_hash,(GSList*)(pckt->packet_id)->data);
 				/* if found ask for completion */
@@ -84,6 +81,8 @@ void localid_auth()
 						element->user_id=pckt->user_id;
 						element->username=pckt->username;
 						element->user_groups=pckt->user_groups;
+						pckt->user_groups=NULL;
+						pckt->username=NULL;
 						/* do asynchronous call to acl check */
 						g_thread_pool_push (acl_checkers, element, NULL);
 						/* remove element from hash without destroy */
@@ -101,8 +100,7 @@ void localid_auth()
 				}
 				break;
 			case STATE_HELLOMODE:
-				take_decision(pckt);
-				/* TODO free_connection(pckt); */
+				take_decision(pckt,PACKET_ALONE);
 				break;
 			case STATE_DONE:
 				/* packet has already been dropped, need only cleaning */

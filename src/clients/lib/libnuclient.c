@@ -270,13 +270,11 @@ static void recv_message(NuAuth* session){
 					case SRV_REQUIRED_PACKET:
 						/* TODO ? introduce a delay to not DOS our own client */
 						/* we act */
-						printf("nufw packet\n");
 						nu_client_real_check(session);
 						break;
 					case SRV_REQUIRED_HELLO:
 						hellofield.helloid = ((struct nuv2_srv_helloreq*)dgram)->helloid;
 						memcpy(pointer,&hellofield,sizeof(struct nuv2_authfield_hello));
-						printf("hello localid (type %d) %d\n",hellofield.helloid,((struct nuv2_authfield_hello*)pointer)->type);
 						/*  send it */
 						if(session->tls){
 							if( gnutls_record_send(*(session->tls),message,
