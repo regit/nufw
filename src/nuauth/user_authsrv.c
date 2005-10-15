@@ -50,7 +50,11 @@ void user_check_and_decide (gpointer userdata, gpointer data)
 			print_connection(conn_elt,NULL);
 		}
 #endif
-		g_async_queue_push (connexions_queue,conn_elt);
+		if (conn_elt->packet_id){
+			g_async_queue_push (localid_auth_queue,conn_elt);
+		} else {
+			g_async_queue_push (connexions_queue,conn_elt);
+		}
 		/* free userdata, packet is parsed now */
 		g_free(((struct buffer_read *)userdata)->buf);
 		g_free(userdata);
@@ -96,6 +100,7 @@ static connection * userpckt_decode(struct buffer_read * datas)
 							connexion->appmd5=NULL;
 							connexion->username=NULL;
 							connexion->cacheduserdatas=NULL;
+							connexion->packet_id=NULL;
 
 #ifdef WORDS_BIGENDIAN	
 							header->length=swap16(header->length);
@@ -298,6 +303,13 @@ static connection * userpckt_decode(struct buffer_read * datas)
 
 											}
 											break;
+										case HELLO_FIELD:
+											{
+												struct nuv2_authfield_hello* hellofield = (struct nuv2_authfield_hello*)req_start;
+												g_message("got hello field");
+												connexion->packet_id=g_slist_prepend(NULL,GINT_TO_POINTER(hellofield->helloid));
+											}
+											break;
 										default:
 											if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
 												g_message("unknown field type : %d",field->type);
@@ -345,7 +357,6 @@ static connection * userpckt_decode(struct buffer_read * datas)
 							connexion->timestamp=time(NULL);
 							connexion->state=STATE_USERPCKT;
 							/* acl part is NULL */
-							connexion->packet_id=NULL;
 							connexion->acl_groups=NULL;
 
 							/* Tadaaa */

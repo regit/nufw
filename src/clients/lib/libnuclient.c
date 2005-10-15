@@ -93,8 +93,8 @@ int nu_get_usersecret(sasl_conn_t *conn __attribute__((unused)),
 		char *givenpass=session->passwd_callback();
 		session->password=locale_to_utf8(givenpass);
 		if (! session->password){
-				free(givenpass);
-				return EXIT_FAILURE;
+			free(givenpass);
+			return EXIT_FAILURE;
 		}
 		free(givenpass);
 #else
@@ -113,7 +113,7 @@ int nu_get_usersecret(sasl_conn_t *conn __attribute__((unused)),
 	} else {
 		*psecret = (sasl_secret_t*)calloc(sizeof(sasl_secret_t) + strlen(session->password)+1,sizeof(char));
 		(*psecret)->len = strlen(session->password);
-	        strncpy((*psecret)->data, session->password ,(*psecret)->len +1 );
+		strncpy((*psecret)->data, session->password ,(*psecret)->len +1 );
 	}
 
 	return SASL_OK;
@@ -133,16 +133,16 @@ static int nu_get_userdatas(void *context __attribute__((unused)),
 		case SASL_CB_USER:
 			if ((session->username == NULL) && session->username_callback) {
 #if USE_UTF8
-		char *givenuser=session->username_callback();
-		session->username=locale_to_utf8(givenuser);
-		free(givenuser);
-		if (! session->username){
-				return EXIT_FAILURE;
-		}
+				char *givenuser=session->username_callback();
+				session->username=locale_to_utf8(givenuser);
+				free(givenuser);
+				if (! session->username){
+					return EXIT_FAILURE;
+				}
 
 
 #else
-		session->password=(session->username_callback)();
+				session->password=(session->username_callback)();
 #endif
 			}
 
@@ -157,14 +157,14 @@ static int nu_get_userdatas(void *context __attribute__((unused)),
 		case SASL_CB_AUTHNAME:
 			if ((session->username == NULL) && session->username_callback) {
 #if USE_UTF8
-		char *givenuser=session->username_callback();
-		session->username=locale_to_utf8(givenuser);
-		free(givenuser);
-		if (! session->username){
-				return EXIT_FAILURE;
-		}
+				char *givenuser=session->username_callback();
+				session->username=locale_to_utf8(givenuser);
+				free(givenuser);
+				if (! session->username){
+					return EXIT_FAILURE;
+				}
 #else
-		session->password=(session->username_callback)();
+				session->password=(session->username_callback)();
 #endif
 
 			}
@@ -221,6 +221,40 @@ static void nu_exit_clean(NuAuth * session)
 static void recv_message(NuAuth* session){
 	int ret;
 	char dgram[512];
+	struct nuv2_header header;
+	struct nuv2_authreq authreq;
+	struct nuv2_authfield_hello hellofield;
+	int message_length= sizeof(struct nuv2_header)+sizeof(struct nuv2_authfield_hello)+sizeof(struct nuv2_authreq);
+	char * message=calloc(
+			message_length/sizeof(char),
+			sizeof(char));
+	char* pointer=NULL;
+
+	/* fill struct */
+	header.proto=0x2;
+	header.msg_type=USER_REQUEST;
+	header.option=0;
+#ifdef WORDS_BIGENDIAN	
+	header.length=swap16(sizeof(struct nuv2_header)++sizeof(struct nuv2_authreq)+sizeof(struct nuv2_authfield_hello));
+#else
+	header.length=sizeof(struct nuv2_header)+sizeof(struct nuv2_authreq)+sizeof(struct nuv2_authfield_hello);
+#endif
+
+	memcpy(message,&header,sizeof(struct nuv2_header));
+	authreq.packet_id=session->packet_id++;
+	authreq.packet_length=sizeof(struct nuv2_authreq)+sizeof(struct nuv2_authfield_hello);
+				
+	pointer=message+sizeof(struct nuv2_header);
+	memcpy(pointer,&authreq,sizeof(struct nuv2_authreq));
+	pointer+=sizeof(struct nuv2_authreq);
+	hellofield.type=HELLO_FIELD;
+	hellofield.option=0;
+#ifdef WORDS_BIGENDIAN	
+	hellofield.length=swap16(sizeof(struct nuv2_authfield_hello));
+#else
+	hellofield.length=sizeof(struct nuv2_authfield_hello);
+#endif
+
 	for (;;){
 		if (conn_on && session){
 			ret= gnutls_record_recv(*session->tls,dgram,sizeof dgram);
@@ -232,12 +266,35 @@ static void recv_message(NuAuth* session){
 					return;
 				}
 			} else {
-				if( *dgram==SRV_REQUIRED_PACKET ){
-					/* TODO ? introduce a delay to not DOS our own client */
-					/* we act */
-					nu_client_real_check(session);
-				} else {
-					//	printf("unknown message\n");
+				switch (*dgram){
+					case SRV_REQUIRED_PACKET:
+						/* TODO ? introduce a delay to not DOS our own client */
+						/* we act */
+						printf("nufw packet\n");
+						nu_client_real_check(session);
+						break;
+					case SRV_REQUIRED_HELLO:
+						hellofield.helloid = ((struct nuv2_srv_helloreq*)dgram)->helloid;
+						memcpy(pointer,&hellofield,sizeof(struct nuv2_authfield_hello));
+						printf("hello localid (type %d) %d\n",hellofield.helloid,((struct nuv2_authfield_hello*)pointer)->type);
+						/*  send it */
+						if(session->tls){
+							if( gnutls_record_send(*(session->tls),message,
+										message_length
+									      )<=0){
+#if DEBUG_ENABLE
+								printf("write failed at %s:%d\n",__FILE__,__LINE__);
+#endif 
+								if (conn_on){
+									nu_exit_clean(session);
+								}
+								return;
+							}
+						} 
+
+						break;
+					default:
+						printf("unknown message\n");
 				}
 			}
 		} else {
@@ -526,7 +583,7 @@ static int send_hello_pckt(NuAuth * session){
 #else
 	header.length=sizeof(struct nuv2_header);
 #endif
-		
+
 	/*  send it */
 	if(session->tls){
 		if( gnutls_record_send(*(session->tls),&header,sizeof(struct nuv2_header))<=0){
@@ -701,7 +758,7 @@ static int compare (NuAuth * session,conntable_t *old, conntable_t *new)
 		bucket = new->buckets[i];
 		while (bucket != NULL) {
 			same_bucket = tcptable_find (old, bucket) ;
-		if (same_bucket == NULL){
+			if (same_bucket == NULL){
 				if (send_user_pckt (session,bucket) != 1){
 					/* error sending */
 					return -1;
@@ -826,16 +883,16 @@ NuAuth* nu_client_init(char *username, unsigned long userid, char *password,
 
 		/* test if key exists */
 		if (access(keyfile,R_OK)){
-                    /* Added by gryzor after getting confused with weird
-                     * messages, when no cert is present */
-                        printf("\nSorry, cannot read key file %s\n",keyfile);
+			/* Added by gryzor after getting confused with weird
+			 * messages, when no cert is present */
+			printf("\nSorry, cannot read key file %s\n",keyfile);
 			keyfile[0]=0;
 		}
 		/* test if key exists */
 		if (access(certfile,R_OK)){
-                    /* Added by gryzor after getting confused with weird
-                     * messages, when no cert is present*/
-                        printf("\nSorry, cannot read key file %s\n",keyfile);
+			/* Added by gryzor after getting confused with weird
+			 * messages, when no cert is present*/
+			printf("\nSorry, cannot read key file %s\n",keyfile);
 			certfile[0]=0;
 		}
 
@@ -851,10 +908,10 @@ NuAuth* nu_client_init(char *username, unsigned long userid, char *password,
 		gnutls_certificate_set_x509_trust_file(xcred, certfile, GNUTLS_X509_FMT_PEM);
 
 		if ( certfile[0] && keyfile[0]){
-		ret = gnutls_certificate_set_x509_key_file(xcred, certfile, keyfile, GNUTLS_X509_FMT_PEM);
-		if (ret <0){
-			printf("problem with X509 file : %s\n",gnutls_strerror(ret));
-		}
+			ret = gnutls_certificate_set_x509_key_file(xcred, certfile, keyfile, GNUTLS_X509_FMT_PEM);
+			if (ret <0){
+				printf("problem with X509 file : %s\n",gnutls_strerror(ret));
+			}
 		}
 
 		generate_dh_params();
@@ -959,7 +1016,7 @@ NuAuth* nu_client_init(char *username, unsigned long userid, char *password,
 			char *oses;
 			int stringlen;
 			int actuallen;
-                        int osfield_length;
+			int osfield_length;
 			char* enc_oses;
 			char * pointer, *buf;
 			struct nuv2_authfield osfield;
@@ -988,7 +1045,7 @@ NuAuth* nu_client_init(char *username, unsigned long userid, char *password,
 #endif
 			osfield.type=OS_FIELD;
 			osfield.option=OS_SRV;
-                        osfield_length=sizeof(struct nuv2_authfield)+actuallen;
+			osfield_length=sizeof(struct nuv2_authfield)+actuallen;
 			buf=alloca(osfield_length);
 #ifdef WORDS_BIGENDIAN	
 			osfield.length=swap16(osfield_length);
@@ -1157,7 +1214,7 @@ NuAuth* nu_client_init2(
 	}
 	/* test if key exists */
 	if (access(keyfile,R_OK)){
-            keyfile=NULL;
+		keyfile=NULL;
 #if REQUEST_CERT
 		errno=EBADF;
 		return NULL;
@@ -1170,7 +1227,7 @@ NuAuth* nu_client_init2(
 	}
 	/* test if cert exists */
 	if (access(certfile,R_OK)){
-                certfile=NULL;
+		certfile=NULL;
 #if REQUEST_CERT
 		errno=EBADF;
 		return NULL;
@@ -1187,12 +1244,12 @@ NuAuth* nu_client_init2(
 #if REQUEST_CERT
 	gnutls_certificate_set_x509_trust_file(xcred, certfile, GNUTLS_X509_FMT_PEM);
 #endif
-        if (certfile && keyfile){
-            ret = gnutls_certificate_set_x509_key_file(xcred, certfile, keyfile, GNUTLS_X509_FMT_PEM);
-            if (ret <0){
-                printf("problem with keyfile : %s\n",gnutls_strerror(ret));
-            }
-        }
+	if (certfile && keyfile){
+		ret = gnutls_certificate_set_x509_key_file(xcred, certfile, keyfile, GNUTLS_X509_FMT_PEM);
+		if (ret <0){
+			printf("problem with keyfile : %s\n",gnutls_strerror(ret));
+		}
+	}
 	generate_dh_params();
 	gnutls_certificate_set_dh_params( xcred, dh_params);
 
@@ -1214,7 +1271,7 @@ NuAuth* nu_client_init2(
 		printf("Error setting \n");
 		exit(1);
 	}
-	
+
 
 	session->socket = socket (AF_INET,SOCK_STREAM,0);
 	/* connect */

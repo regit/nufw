@@ -83,6 +83,7 @@ struct nuv2_authreq {
 #define APP_FIELD 0x3
 #define OS_FIELD 0x4
 #define USERNAME_FIELD 0x5
+#define HELLO_FIELD 0x6
 #define OS_SRV 0x1
 
 struct nuv2_authfield {
@@ -130,12 +131,21 @@ struct nuv2_authfield_username {
 	char *datas;
 };
 
+struct nuv2_authfield_hello {
+        uint8_t type;
+        uint8_t option;
+        uint16_t length;
+	uint32_t helloid;
+};
+
+
 /* sender to client message */
 
 /* type message */
 #define SRV_TYPE 0x1
 #define SRV_REQUIRED_PACKET 0x2
 #define SRV_REQUIRED_DISCONNECT 0x3
+#define SRV_REQUIRED_HELLO 0x4
 
 /* option set to 0 by default */
 /* option for server type */
@@ -143,7 +153,12 @@ struct nuv2_authfield_username {
 #define SRV_TYPE_PUSH 0x1
 
 struct nuv2_srv_message {
-//uint16_t type:8,option:8;
         uint8_t type,option;
         uint16_t length;
+};
+
+struct nuv2_srv_helloreq {
+        uint8_t type,option;
+        uint16_t length;
+	uint32_t helloid;
 };

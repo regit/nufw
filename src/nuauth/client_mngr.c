@@ -142,8 +142,8 @@ char warn_clients(struct msg_addr_set * global_msg)
 		global_msg->found=TRUE;
 		while (ipsockets) {
 			gnutls_record_send(*(gnutls_session*)(ipsockets->data),
-					&(global_msg->msg),
-					sizeof(struct nuv2_srv_message)
+					global_msg->msg,
+					ntohs(global_msg->msg->length)
 					);
 			ipsockets=ipsockets->next;
 		}

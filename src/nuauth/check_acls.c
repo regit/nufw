@@ -44,3 +44,78 @@ int external_acl_groups (connection * element){
   return 0;
 }
 
+
+/**
+ * (acl_ckeckers function).
+ * Treat a connection from insertion to decision 
+ * 
+ * - Argument 1 : a connection 
+ * - Argument 2 : unused
+ * - Return : None
+ */
+
+void acl_check_and_decide (gpointer userdata, gpointer data)
+{
+	connection * conn_elt = userdata;
+	int initialstate = conn_elt->state;
+#ifdef DEBUG_ENABLE
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET))
+		g_message("entering acl_check\n");
+#endif
+	if (conn_elt == NULL){
+		if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_PACKET)){
+			g_message("This is no good : elt is NULL\n");
+		}
+	} else {
+		if (nuauth_aclcheck_state_ready && (! (initialstate == STATE_HELLOMODE) )){
+			/* if STATE_COMPLETING packet comes from search and fill 
+			 * research need to be done
+			 * */
+			if (conn_elt->state == STATE_COMPLETING){
+				if (nuauth_acl_cache){
+					get_acls_from_cache(conn_elt);
+				} else {
+					external_acl_groups(conn_elt);
+				}
+			} else {
+				conn_elt->acl_groups=NULL;
+			}
+		} else {
+			if (nuauth_acl_cache){
+					get_acls_from_cache(conn_elt);
+			} else {
+					external_acl_groups(conn_elt);
+			}
+			g_message("getting acl for:");
+			print_connection(conn_elt,NULL);
+			if (conn_elt->acl_groups==NULL){
+				/* no acl found so packet has to be dropped */
+				struct auth_answer aanswer ={ NOK , conn_elt->user_id ,conn_elt->socket,conn_elt->tls } ;
+
+#ifdef DEBUG_ENABLE
+				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)){
+					g_message("No ACL, packet dropped %p\n",conn_elt);
+				}
+#endif
+				send_auth_response(GUINT_TO_POINTER(conn_elt->packet_id->data),&aanswer);
+				/* we can get rid of packet_id because we have sent an answer */
+				conn_elt->packet_id=g_slist_remove(conn_elt->packet_id,conn_elt->packet_id->data);
+				conn_elt->state=STATE_DONE;
+			}
+
+		}
+		if (initialstate == STATE_HELLOMODE){
+			/* well this is an localid auth packet */
+			g_async_queue_push (localid_auth_queue,conn_elt);
+		} else {
+			/* search and fill */
+			g_async_queue_push (connexions_queue,conn_elt);
+		}
+	}
+#ifdef DEBUG_ENABLE
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET))
+		g_message("leaving acl_check\n");
+#endif
+}
+
+

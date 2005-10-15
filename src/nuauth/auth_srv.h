@@ -100,6 +100,7 @@
 #define STATE_READY 0x3
 #define STATE_COMPLETING 0x4
 #define STATE_DONE 0x5
+#define STATE_HELLOMODE 0x6
 
 #define STATE_DROP 0x0
 #define STATE_OPEN 0x1
@@ -156,7 +157,7 @@ typedef struct Connection {
   int socket;  /**< socket from which nufw request is coming. */
   nufw_session* tls; /**< infos on nufw which sent the request. */
   tracking tracking_hdrs; /**< IPV4  stuffs (headers). */
-  u_int16_t user_id; /**< user numeric identity (protocol 1). */
+  u_int16_t user_id; /**< user numeric identity (protocol 1). Used by protocol 2 for marking. */
   char * username; /**< user identity (protocol 2). */
  /**
   * acl related groups.
@@ -188,8 +189,6 @@ typedef struct Connection {
   gchar * appmd5;
   /** state of the packet. */
   char state;
-  /** localid */
-  uint32_t localid;
   /** decision on packet. */
   char decision;
 } connection;
@@ -231,6 +230,7 @@ GThreadPool*  ip_authentication_workers;
 
 GAsyncQueue* connexions_queue;
 GAsyncQueue* tls_push;
+GAsyncQueue* localid_auth_queue;
 
 int packet_timeout;
 int authpckt_port;
@@ -589,11 +589,14 @@ void clean_session(user_session*);
 
 
 struct msg_addr_set {
-	struct nuv2_srv_message msg;
 	uint32_t addr;
-	uint16_t delay;
+	struct nuv2_srv_message* msg;
 	gboolean found;
 };
 
 
 char warn_clients(struct msg_addr_set * global_msg);
+
+/* from localid_auth */
+char localid_authenticated_protocol(int protocol);
+void localid_auth();

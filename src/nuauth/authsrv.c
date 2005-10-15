@@ -179,7 +179,8 @@ int main(int argc,char * argv[])
 	GThread *tls_auth_server,
 		*tls_nufw_server,
 		*tls_pusher,
-		*search_and_fill_worker;
+		*search_and_fill_worker,
+		*localid_auth_thread;
 	/* option */
 	char * options_list = "DhVvl:L:C:d:p:t:T:";
 	int option,daemonize = 0;
@@ -249,8 +250,8 @@ confparams nuauth_vars[] = {
 	nuauth_prio_to_nok= PRIO_TO_NOK;
 	nuauth_push=1;
 	nuauth_do_ip_authentication=0;
-	nuauth_acl_cache=1;
-	nuauth_user_cache=1;
+	nuauth_acl_cache=0;
+	nuauth_user_cache=0;
 
 
 #ifdef GLIB_23_HACK
@@ -755,6 +756,15 @@ confparams nuauth_vars[] = {
 			NULL);
 	if (! search_and_fill_worker )
 		exit(1);
+
+	localid_auth_queue = g_async_queue_new ();
+	localid_auth_thread = g_thread_create ( (GThreadFunc) localid_auth,
+			NULL,
+			FALSE,
+			NULL);
+	if (! localid_auth_thread )
+		exit(1);
+
 
 	/* create socket for auth reply */
 	sck_auth_reply = socket (PF_INET,SOCK_DGRAM,0);

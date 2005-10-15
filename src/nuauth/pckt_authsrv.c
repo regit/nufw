@@ -136,68 +136,6 @@ int get_icmp_headers(connection *connexion, char * dgram)
 }
 
 /**
- * (acl_ckeckers function).
- * Treat a connection from insertion to decision 
- * 
- * - Argument 1 : a connection 
- * - Argument 2 : unused
- * - Return : None
- */
-
-void acl_check_and_decide (gpointer userdata, gpointer data)
-{
-	connection * conn_elt = userdata;
-#ifdef DEBUG_ENABLE
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET))
-		g_message("entering acl_check\n");
-#endif
-	if (conn_elt == NULL){
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_PACKET)){
-			g_message("This is no good : elt is NULL\n");
-		}
-	} else {
-		if (nuauth_aclcheck_state_ready){
-			/* if STATE_COMPLETING packet comes from search and fill 
-			 * decision needs to be taken 
-			 * */
-			if (conn_elt->state == STATE_COMPLETING){
-				if (nuauth_acl_cache){
-					get_acls_from_cache(conn_elt);
-				} else {
-					external_acl_groups(conn_elt);
-				}
-			} else {
-				conn_elt->acl_groups=NULL;
-			}
-		} else {
-			get_acls_from_cache(conn_elt);
-			if (conn_elt->acl_groups==NULL){
-				/* no acl found so packet has to be dropped */
-				struct auth_answer aanswer ={ NOK , conn_elt->user_id ,conn_elt->socket,conn_elt->tls } ;
-
-#ifdef DEBUG_ENABLE
-				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)){
-					g_message("No ACL, packet dropped %p\n",conn_elt);
-				}
-#endif
-				send_auth_response(GUINT_TO_POINTER(conn_elt->packet_id->data),&aanswer);
-				/* we can get rid of packet_id because we have sent an answer */
-				conn_elt->packet_id=g_slist_remove(conn_elt->packet_id,conn_elt->packet_id->data);
-				conn_elt->state=STATE_DONE;
-			}
-
-		}
-		/* search and fill */
-		g_async_queue_push (connexions_queue,conn_elt);
-	}
-#ifdef DEBUG_ENABLE
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET))
-		g_message("leaving acl_check\n");
-#endif
-}
-
-
-/**
  * decode a dgram packet from gateway and create a connection with it.
  * 
  * - Argument 1 : pointer to dgram
@@ -273,62 +211,59 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz)
 				if ( offset) {
 					pointer+=offset;
 					/* get saddr and daddr */
-#if AUTH_PROTO_MONO
 					/* check if proto is in Hello mode list */
-					if ( nufw_authenticated_protocol(connexion->tracking_hdrs.protocol) ) {
-						/* send hello */
-						g_atomic_inc(id_count);
-						connexion->localid=g_atomic_get(id_count);	
-					} else {
-#endif
+					if ( localid_authenticated_protocol(connexion->tracking_hdrs.protocol) ) {
+						connexion->state=STATE_HELLOMODE;
+					} 
 						/* proceed to nufw authentication */
-					switch (connexion->tracking_hdrs.protocol) {
-						case IPPROTO_TCP:
-							switch (get_tcp_headers(connexion, pointer)){
-								case STATE_OPEN:
-									break; 
-								case STATE_CLOSE:
-									if (msg_type == AUTH_CONTROL ){
-										log_user_packet(*connexion,STATE_CLOSE);
+						switch (connexion->tracking_hdrs.protocol) {
+							case IPPROTO_TCP:
+								switch (get_tcp_headers(connexion, pointer)){
+									case STATE_OPEN:
+										break; 
+									case STATE_CLOSE:
+										if (msg_type == AUTH_CONTROL ){
+											log_user_packet(*connexion,STATE_CLOSE);
+											return NULL;
+										}
+										break;
+									case STATE_ESTABLISHED:
+										if (msg_type == AUTH_CONTROL ){
+											log_user_packet(*connexion,STATE_ESTABLISHED);
+											return NULL;
+										}
+										break;
+									default:
+										if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))
+											g_warning ("Can't parse TCP headers\n");
+										free_connection(connexion);
 										return NULL;
-									}
-									break;
-								case STATE_ESTABLISHED:
-									if (msg_type == AUTH_CONTROL ){
-										log_user_packet(*connexion,STATE_ESTABLISHED);
-										return NULL;
-									}
-									break;
-								default:
+								}
+								break;
+							case IPPROTO_UDP:
+								if ( get_udp_headers(connexion, pointer) ){
 									if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))
-										g_warning ("Can't parse TCP headers\n");
+										g_warning ("Can't parse UDP headers\n");
 									free_connection(connexion);
 									return NULL;
-							}
-							break;
-						case IPPROTO_UDP:
-							if ( get_udp_headers(connexion, pointer) ){
-								if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))
-									g_warning ("Can't parse UDP headers\n");
-								free_connection(connexion);
-								return NULL;
-							}
-							break;
-						case IPPROTO_ICMP:
-							if ( get_icmp_headers(connexion, pointer)){
-								if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))
-									g_message ("Can't parse ICMP headers\n");
-								free_connection(connexion);
-								return NULL;
-							}
-							break;
-						default:
-							free_connection(connexion);
-							return NULL;
-					}
-#if AUTH_PROTO_MONO
-					}
-#endif
+								}
+								break;
+							case IPPROTO_ICMP:
+								if ( get_icmp_headers(connexion, pointer)){
+									if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))
+										g_message ("Can't parse ICMP headers\n");
+									free_connection(connexion);
+									return NULL;
+								}
+								break;
+							default:
+								if ( connexion->state != STATE_HELLOMODE){
+									if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))
+										g_message ("Can't parse this protocol\n");
+									free_connection(connexion);
+									return NULL;
+								}
+						}
 				}
 				else {
 					if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))

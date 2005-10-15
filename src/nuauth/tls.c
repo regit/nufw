@@ -1581,11 +1581,18 @@ treat_nufw_request (nufw_session * c_session)
 				current_conn->socket=0;
 				current_conn->tls=c_session;
 				/* gonna feed the birds */
-				current_conn->state = STATE_AUTHREQ;
-				/* put gateway addr in struct */
-				g_thread_pool_push (acl_checkers,
+
+				if (current_conn->state == STATE_HELLOMODE){
+					g_message("local id");
+					current_conn->state = STATE_AUTHREQ;
+					g_async_queue_push (localid_auth_queue,current_conn);
+				}else {
+					current_conn->state = STATE_AUTHREQ;
+					/* put gateway addr in struct */
+					g_thread_pool_push (acl_checkers,
 						current_conn,
 						NULL);
+				}
 			}
 		} else {
 			g_free(dgram);
@@ -1901,11 +1908,13 @@ void  refresh_client (gpointer key, gpointer value, gpointer user_data)
 void push_worker () 
 {
 	struct msg_addr_set *global_msg=g_new0(struct msg_addr_set,1);
+	struct nuv2_srv_message *msg=g_new0(struct nuv2_srv_message,1);
 	struct tls_message * message;
 
-	global_msg->msg.type=SRV_REQUIRED_PACKET;
-	global_msg->msg.option=0;
-	global_msg->msg.length=4;
+	global_msg->msg=msg;
+	msg->type=SRV_REQUIRED_PACKET;
+	msg->option=0;
+	msg->length=htons(4);
 
 	g_async_queue_ref (tls_push);
 
