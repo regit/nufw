@@ -129,6 +129,14 @@ manpage.1: manpage.sgml
           on our local userID.</para>
         </listitem>
       </varlistentry>
+     <varlistentry>
+        <term><option>-l</option>
+        </term>
+        <listitem>
+          <para>Do not verify whether lock file exists before starting. And do
+          not create lock file.</para>
+        </listitem>
+      </varlistentry>
       <varlistentry>
         <term><option>-H <replaceable>Nuauth IP</replaceable></option>
         </term>
