@@ -160,6 +160,10 @@ manpage.1: manpage.sgml
    </variablelist>
   </refsect1>
   <refsect1>
+    <title>LOCK FILE</title>
+    <para>By default, the lock file set by nutcpc is at ~/.nutcpc/.nufw</para>
+  </refsect1>
+  <refsect1>
     <title>SEE ALSO</title>
     <para>nufw(1)</para>
     <para>nuauth(1)</para>
