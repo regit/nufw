@@ -66,7 +66,7 @@ void acl_check_and_decide (gpointer userdata, gpointer data)
 			g_message("This is no good : elt is NULL\n");
 		}
 	} else {
-		if (nuauth_aclcheck_state_ready && (! (initialstate == STATE_HELLOMODE) )){
+		if (nuauth_aclcheck_state_ready && (nuauth_hello_authentication && (! (initialstate == STATE_HELLOMODE)) )){
 			/* if STATE_COMPLETING packet comes from search and fill 
 			 * research need to be done
 			 * */
@@ -103,7 +103,7 @@ void acl_check_and_decide (gpointer userdata, gpointer data)
 			}
 
 		}
-		if (initialstate == STATE_HELLOMODE){
+		if (nuauth_hello_authentication && (initialstate == STATE_HELLOMODE)){
 			/* well this is an localid auth packet */
 			g_async_queue_push (localid_auth_queue,conn_elt);
 		} else {

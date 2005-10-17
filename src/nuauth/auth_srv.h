@@ -555,6 +555,8 @@ int nuauth_push;
 
 int nuauth_do_ip_authentication;
 
+int nuauth_hello_authentication;
+
 void external_ip_auth(gpointer userdata, gpointer data);
 
 /* multi users clients */

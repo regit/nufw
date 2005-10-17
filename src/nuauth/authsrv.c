@@ -231,6 +231,7 @@ confparams nuauth_vars[] = {
 #else 
 	{ "nuauth_uses_utf8" , G_TOKEN_INT , 0,NULL },
 #endif
+	{ "nuauth_hello_authentication" , G_TOKEN_INT , 0,NULL },
 };
 	tracking empty_header;
 	gpointer vpointer;
@@ -276,11 +277,6 @@ confparams nuauth_vars[] = {
 	g_thread_pool_set_max_unused_threads (5);
         gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_gthread);
 
-        //Gryzor adding this
-       /* gcry_check_version("1.0");
-        gcry_control( GCRYCTL_INIT_SECMEM, 131072, 0 );
-        gcry_control( GCRYCTL_DISABLE_SECMEM_WARN );
-	*/
 	gnutls_global_init();
 	/* initi credential */
 	create_x509_credentials();
@@ -385,6 +381,14 @@ confparams nuauth_vars[] = {
 
 	vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_uses_utf8");
 	nuauth_uses_utf8=*(int*)(vpointer);
+
+	vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_hello_authentication");
+	nuauth_hello_authentication=*(int*)(vpointer);
+
+	if((!  nuauth_push) && nuauth_hello_authentication ){
+		g_message("nuauth_hello_authentication required nuauth_push to be 1, resetting to 0");
+		nuauth_hello_authentication=0;
+	}
 
 	/*parse options */
 	while((option = getopt ( argc, argv, options_list)) != -1 ){
@@ -757,13 +761,17 @@ confparams nuauth_vars[] = {
 	if (! search_and_fill_worker )
 		exit(1);
 
-	localid_auth_queue = g_async_queue_new ();
-	localid_auth_thread = g_thread_create ( (GThreadFunc) localid_auth,
-			NULL,
-			FALSE,
-			NULL);
-	if (! localid_auth_thread )
-		exit(1);
+	if (nuauth_push && nuauth_hello_authentication){
+		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+			g_message("Creating %d hello mode authentication thread");
+		localid_auth_queue = g_async_queue_new ();
+		localid_auth_thread = g_thread_create ( (GThreadFunc) localid_auth,
+				NULL,
+				FALSE,
+				NULL);
+		if (! localid_auth_thread )
+			exit(1);
+	}
 
 
 	/* create socket for auth reply */

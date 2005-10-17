@@ -211,59 +211,58 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz)
 				if ( offset) {
 					pointer+=offset;
 					/* get saddr and daddr */
-					/* check if proto is in Hello mode list */
-					if ( localid_authenticated_protocol(connexion->tracking_hdrs.protocol) ) {
+					/* check if proto is in Hello mode list (when hello authentication is used) */
+					if ( nuauth_hello_authentication &&  localid_authenticated_protocol(connexion->tracking_hdrs.protocol) ) {
 						connexion->state=STATE_HELLOMODE;
 					} 
-						/* proceed to nufw authentication */
-						switch (connexion->tracking_hdrs.protocol) {
-							case IPPROTO_TCP:
-								switch (get_tcp_headers(connexion, pointer)){
-									case STATE_OPEN:
-										break; 
-									case STATE_CLOSE:
-										if (msg_type == AUTH_CONTROL ){
-											log_user_packet(*connexion,STATE_CLOSE);
-											return NULL;
-										}
-										break;
-									case STATE_ESTABLISHED:
-										if (msg_type == AUTH_CONTROL ){
-											log_user_packet(*connexion,STATE_ESTABLISHED);
-											return NULL;
-										}
-										break;
-									default:
-										if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))
-											g_warning ("Can't parse TCP headers\n");
-										free_connection(connexion);
+					switch (connexion->tracking_hdrs.protocol) {
+						case IPPROTO_TCP:
+							switch (get_tcp_headers(connexion, pointer)){
+								case STATE_OPEN:
+									break; 
+								case STATE_CLOSE:
+									if (msg_type == AUTH_CONTROL ){
+										log_user_packet(*connexion,STATE_CLOSE);
 										return NULL;
-								}
-								break;
-							case IPPROTO_UDP:
-								if ( get_udp_headers(connexion, pointer) ){
+									}
+									break;
+								case STATE_ESTABLISHED:
+									if (msg_type == AUTH_CONTROL ){
+										log_user_packet(*connexion,STATE_ESTABLISHED);
+										return NULL;
+									}
+									break;
+								default:
 									if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))
-										g_warning ("Can't parse UDP headers\n");
+										g_warning ("Can't parse TCP headers\n");
 									free_connection(connexion);
 									return NULL;
-								}
-								break;
-							case IPPROTO_ICMP:
-								if ( get_icmp_headers(connexion, pointer)){
-									if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))
-										g_message ("Can't parse ICMP headers\n");
-									free_connection(connexion);
-									return NULL;
-								}
-								break;
-							default:
-								if ( connexion->state != STATE_HELLOMODE){
-									if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))
-										g_message ("Can't parse this protocol\n");
-									free_connection(connexion);
-									return NULL;
-								}
-						}
+							}
+							break;
+						case IPPROTO_UDP:
+							if ( get_udp_headers(connexion, pointer) ){
+								if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))
+									g_warning ("Can't parse UDP headers\n");
+								free_connection(connexion);
+								return NULL;
+							}
+							break;
+						case IPPROTO_ICMP:
+							if ( get_icmp_headers(connexion, pointer)){
+								if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))
+									g_message ("Can't parse ICMP headers\n");
+								free_connection(connexion);
+								return NULL;
+							}
+							break;
+						default:
+							if ( connexion->state != STATE_HELLOMODE){
+								if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))
+									g_message ("Can't parse this protocol\n");
+								free_connection(connexion);
+								return NULL;
+							}
+					}
 				}
 				else {
 					if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))
