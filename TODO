@@ -3,20 +3,24 @@
 - nuauth : cache : configurable max number of cached entries
                    configurable max number of cached entries per protocol?
 
-
 - nuauth : display or log a clever message if user sets SSL and certificate is
   unavailable. Else it is pretty hard to diagnose.
 
 - nuauth : check for simultaneous login of same user
 
+- nuauth : cleaning of localid hash
+
+- nuauth : do not send hello message if multiple instance runs on the same computer
+
+- nuauth : do a check on src address for every user packet to avoid spoofing
 
 # User auth srv
 - deal with reload signals
 
-#Modules
+# Modules
 - libdb -> load all in cache and close the file straight away
 
-#Modelizing
+# Modelizing
 - Build groups not only for users, but also for applications, OSes
 
 # TLS
