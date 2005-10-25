@@ -69,7 +69,7 @@ int timestamp_last_sent;
 /* callbacks we support */
 int nu_getrealm(void *context __attribute__((unused)), int id,
 		const char **availrealms __attribute__((unused)),
-		const char **result) 
+		const char **result)
 {
 	// NuAuth * session = (NuAuth*)context;
 
@@ -85,7 +85,7 @@ int nu_getrealm(void *context __attribute__((unused)), int id,
 
 int nu_get_usersecret(sasl_conn_t *conn __attribute__((unused)),
 		void *context __attribute__((unused)), int id,
-		sasl_secret_t **psecret) 
+		sasl_secret_t **psecret)
 {
 	NuAuth* session=(NuAuth *)context;
 	if ((session->password == NULL) && session->passwd_callback) {
@@ -113,7 +113,7 @@ int nu_get_usersecret(sasl_conn_t *conn __attribute__((unused)),
 	} else {
 		*psecret = (sasl_secret_t*)calloc(sizeof(sasl_secret_t) + strlen(session->password)+1,sizeof(char));
 		(*psecret)->len = strlen(session->password);
-		strncpy((*psecret)->data, session->password ,(*psecret)->len +1 );
+		strncpy((*psecret)->data, session->password, (*psecret)->len +1 );
 	}
 
 	return SASL_OK;
@@ -148,7 +148,7 @@ static int nu_get_userdatas(void *context __attribute__((unused)),
 
 			if (session->protocol == 2)
 				*result=session->username;
-			else { 
+			else {
 				char number[12];
 				snprintf(number,12,"%lu",session->userid);
 				*result=strdup(number);
@@ -170,7 +170,7 @@ static int nu_get_userdatas(void *context __attribute__((unused)),
 			}
 			if (session->protocol == 2)
 				*result=session->username;
-			else { 
+			else {
 				char number[12];
 				snprintf(number,12,"%lu",session->userid);
 				*result=strdup(number);
@@ -215,7 +215,7 @@ static void nu_exit_clean(NuAuth * session)
 		session=NULL;
 	}
 	sasl_done();
-	gnutls_global_deinit();	
+	gnutls_global_deinit();
 }
 
 static void recv_message(NuAuth* session){
@@ -234,7 +234,7 @@ static void recv_message(NuAuth* session){
 	header.proto=0x2;
 	header.msg_type=USER_REQUEST;
 	header.option=0;
-#ifdef WORDS_BIGENDIAN	
+#ifdef WORDS_BIGENDIAN
 	header.length=swap16(sizeof(struct nuv2_header)++sizeof(struct nuv2_authreq)+sizeof(struct nuv2_authfield_hello));
 #else
 	header.length=sizeof(struct nuv2_header)+sizeof(struct nuv2_authreq)+sizeof(struct nuv2_authfield_hello);
@@ -243,13 +243,13 @@ static void recv_message(NuAuth* session){
 	memcpy(message,&header,sizeof(struct nuv2_header));
 	authreq.packet_id=session->packet_id++;
 	authreq.packet_length=sizeof(struct nuv2_authreq)+sizeof(struct nuv2_authfield_hello);
-				
+
 	pointer=message+sizeof(struct nuv2_header);
 	memcpy(pointer,&authreq,sizeof(struct nuv2_authreq));
 	pointer+=sizeof(struct nuv2_authreq);
 	hellofield.type=HELLO_FIELD;
 	hellofield.option=0;
-#ifdef WORDS_BIGENDIAN	
+#ifdef WORDS_BIGENDIAN
 	hellofield.length=swap16(sizeof(struct nuv2_authfield_hello));
 #else
 	hellofield.length=sizeof(struct nuv2_authfield_hello);
@@ -282,13 +282,13 @@ static void recv_message(NuAuth* session){
 									      )<=0){
 #if DEBUG_ENABLE
 								printf("write failed at %s:%d\n",__FILE__,__LINE__);
-#endif 
+#endif
 								if (conn_on){
 									nu_exit_clean(session);
 								}
 								return;
 							}
-						} 
+						}
 
 						break;
 					default:
@@ -349,7 +349,7 @@ static int tcptable_add (conntable_t *ct, conn_t *c)
 
 	newc = (conn_t *) calloc (1,sizeof (conn_t));
 	if (!newc) {
-		panic ("memory exhausted");	
+		panic ("memory exhausted");
 	}
 
 	memcpy (newc, c, sizeof (conn_t));
@@ -363,7 +363,7 @@ static int tcptable_add (conntable_t *ct, conn_t *c)
 
 /*
  * tcptable_find ()
- * 
+ *
  * Find a connection in a table, return connection if found, NULL otherwise.
  */
 static conn_t* tcptable_find (conntable_t *ct, conn_t *c)
@@ -377,7 +377,7 @@ static conn_t* tcptable_find (conntable_t *ct, conn_t *c)
 	while (bucket != NULL) {
 		if (
 				(c->rmt == bucket->rmt) && (c->rmtp == bucket->rmtp) &&
-				(c->lcl == bucket->lcl) && (c->lclp == bucket->lclp) 
+				(c->lcl == bucket->lcl) && (c->lclp == bucket->lclp)
 		   ) {
 			return bucket;
 		}
@@ -389,7 +389,7 @@ static conn_t* tcptable_find (conntable_t *ct, conn_t *c)
 
 /*
  * tcptable_read ()
- * 
+ *
  * Read /proc/net/tcp and add all connections to the table if connections
  * of that type are being watched.
  */
@@ -482,7 +482,7 @@ int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn)
 	const char *data;
 	const char *chosenmech;
 	//sasl_interatcptable_t *client_interact = NULL;
-	int len;
+	size_t len;
 	int r;
 	char * mech;
 
@@ -503,7 +503,7 @@ int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn)
 		mech = buf;
 #if MECH_CHOICE
 	}
-#endif 
+#endif
 
 	r = sasl_client_start(conn, mech, NULL, &data, &len, &chosenmech);
 	//r = sasl_client_start(conn, mech, &client_interact, &data, &len, &chosenmech);
@@ -576,7 +576,7 @@ static int send_hello_pckt(NuAuth * session){
 	header.proto=0x2;
 	header.msg_type=USER_HELLO;
 	header.option=0;
-#ifdef WORDS_BIGENDIAN	
+#ifdef WORDS_BIGENDIAN
 	header.length=swap16(sizeof(struct nuv2_header));
 #else
 	header.length=sizeof(struct nuv2_header);
@@ -587,10 +587,10 @@ static int send_hello_pckt(NuAuth * session){
 		if( gnutls_record_send(*(session->tls),&header,sizeof(struct nuv2_header))<=0){
 #if DEBUG_ENABLE
 			printf("write failed at %s:%d\n",__FILE__,__LINE__);
-#endif 
+#endif
 			return 0;
 		}
-	} 
+	}
 	return 1;
 }
 
@@ -613,9 +613,9 @@ static int send_user_pckt(NuAuth * session,conn_t* c)
 				struct nuv2_authreq authreq;
 				struct nuv2_authfield_ipv4 authfield;
 				struct nuv2_authfield_app appfield;
-				int len=0;
+				size_t len=0;
 				/* get application name from inode */
-				const char * appname = prg_cache_get(c->ino); 
+				const char * appname = prg_cache_get(c->ino);
 				header.proto=0x2;
 				header.msg_type=USER_REQUEST;
 				header.option=0;
@@ -624,13 +624,13 @@ static int send_user_pckt(NuAuth * session,conn_t* c)
 				authreq.packet_length=sizeof(struct nuv2_authreq)+sizeof(struct nuv2_authfield_ipv4);
 				authfield.type=IPV4_FIELD;
 				authfield.option=0;
-#ifdef WORDS_BIGENDIAN	
+#ifdef WORDS_BIGENDIAN
 				authfield.length=swap16(sizeof(struct nuv2_authfield_ipv4));
 #else
 				authfield.length=sizeof(struct nuv2_authfield_ipv4);
 #endif
 
-#ifdef WORDS_BIGENDIAN	
+#ifdef WORDS_BIGENDIAN
 				authfield.src=swap32(c->lcl);
 				authfield.dst=swap32(c->rmt);
 #else
@@ -640,7 +640,7 @@ static int send_user_pckt(NuAuth * session,conn_t* c)
 				authfield.proto=6;
 				authfield.flags=0;
 				authfield.FUSE=0;
-#ifdef WORDS_BIGENDIAN	
+#ifdef WORDS_BIGENDIAN
 				authfield.sport=swap16(c->lclp);
 				authfield.dport=swap16(c->rmtp);
 #else
@@ -649,21 +649,21 @@ static int send_user_pckt(NuAuth * session,conn_t* c)
 #endif
 				/* application field  */
 				appfield.type=APP_FIELD;
-				if (1) { 
+				if (1) {
 					appfield.option=APP_TYPE_NAME;
 					enc_appname=calloc(128,sizeof(char));
 					if ( sasl_encode64(appname,strlen(appname),
-								enc_appname,128 ,&len) == SASL_BUFOVER ){
+								enc_appname,128, &len) == SASL_BUFOVER ){
 						/* realloc */
 						enc_appname=realloc(enc_appname,len);
 						/* encode */
 						sasl_encode64(appname,strlen(appname),
-								enc_appname, len ,&len);
+								enc_appname, len, &len);
 					}
 					appfield.length=4+len;
 					appfield.datas=enc_appname;
 					authreq.packet_length+=appfield.length;
-#ifdef WORDS_BIGENDIAN	
+#ifdef WORDS_BIGENDIAN
 					authreq.packet_length=swap16(authreq.packet_length);
 #endif
 				} else {
@@ -671,12 +671,12 @@ static int send_user_pckt(NuAuth * session,conn_t* c)
 					appfield.option=APP_TYPE_SHA1;
 					enc_appname=calloc(128,sizeof(char));
 					if ( sasl_encode64(appname,strlen(appname),
-								enc_appname,128 ,&len) == SASL_BUFOVER ){
+								enc_appname,128, &len) == SASL_BUFOVER ){
 						/* realloc */
 						enc_appname=realloc(enc_appname,len);
 						/* encode */
 						sasl_encode64(appname,strlen(appname),
-								enc_appname, len ,&len);
+								enc_appname, len, &len);
 					}
 					appfield.length=4+len;
 					appfield.datas=g_strconcat(enc_appname,";",sha1_sig);
@@ -691,7 +691,7 @@ static int send_user_pckt(NuAuth * session,conn_t* c)
 				fflush(NULL);
 				if (header.length < PACKET_SIZE){
 					pointer=datas;
-#ifdef WORDS_BIGENDIAN	
+#ifdef WORDS_BIGENDIAN
 					header.length=swap16(header.length);
 					appfield.length=swap16(appfield.length);
 					memcpy(pointer,&header,sizeof(struct nuv2_header));
@@ -730,7 +730,7 @@ static int send_user_pckt(NuAuth * session,conn_t* c)
 			printf("write failed\n");
 			return 0;
 		}
-	} 
+	}
 	if (enc_appname)
 		free(enc_appname);
 	return 1;
@@ -815,9 +815,9 @@ NuAuth* nu_client_init(char *username, unsigned long userid, char *password,
 	session=(NuAuth*) calloc(1,sizeof(NuAuth));
 
 	sasl_callback_t callbacks[] = {
-		{ SASL_CB_GETREALM, &nu_getrealm, session }, 
-		{ SASL_CB_USER, &nu_get_userdatas, session }, 
-		{ SASL_CB_AUTHNAME, &nu_get_userdatas, session } , 
+		{ SASL_CB_GETREALM, &nu_getrealm, session },
+		{ SASL_CB_USER, &nu_get_userdatas, session },
+		{ SASL_CB_AUTHNAME, &nu_get_userdatas, session },
 		{ SASL_CB_PASS, &nu_get_usersecret, session },
 		{ SASL_CB_LIST_END, NULL, NULL }
 	};
@@ -872,8 +872,8 @@ NuAuth* nu_client_init(char *username, unsigned long userid, char *password,
 	}
 	/* create socket stuff */
 	if (ssl_on){
-		char keyfile[256]; 
-		char certfile[256]; 
+		char keyfile[256];
+		char certfile[256];
 		sasl_conn_t *conn;
 		/* compute patch keyfile */
 		snprintf(keyfile,255,"%s/.nufw/key.pem",getenv("HOME"));
@@ -916,7 +916,7 @@ NuAuth* nu_client_init(char *username, unsigned long userid, char *password,
 		gnutls_certificate_set_dh_params( xcred, dh_params);
 
 
-		/* Initialize TLS session 
+		/* Initialize TLS session
 		*/
 		session->tls=(gnutls_session*)calloc(1,sizeof(gnutls_session));
 		gnutls_init(session->tls, GNUTLS_CLIENT);
@@ -934,7 +934,7 @@ NuAuth* nu_client_init(char *username, unsigned long userid, char *password,
 		/* connect */
 		if (session->socket <= 0){
 			nu_exit_clean(session);
-			errno=EADDRNOTAVAIL;	
+			errno=EADDRNOTAVAIL;
 			return NULL;
 		}
 
@@ -954,7 +954,7 @@ NuAuth* nu_client_init(char *username, unsigned long userid, char *password,
 			nu_exit_clean(session);
 			errno=ECONNRESET;
 			return NULL;
-		} 
+		}
 		/* certificate verification */
 		ret = gnutls_certificate_verify_peers(*(session->tls));
 		if (ret <0){
@@ -1013,7 +1013,7 @@ NuAuth* nu_client_init(char *username, unsigned long userid, char *password,
 			struct utsname info;
 			char *oses;
 			int stringlen;
-			int actuallen;
+			size_t actuallen;
 			int osfield_length;
 			char* enc_oses;
 			char * pointer, *buf;
@@ -1045,7 +1045,7 @@ NuAuth* nu_client_init(char *username, unsigned long userid, char *password,
 			osfield.option=OS_SRV;
 			osfield_length=sizeof(struct nuv2_authfield)+actuallen;
 			buf=alloca(osfield_length);
-#ifdef WORDS_BIGENDIAN	
+#ifdef WORDS_BIGENDIAN
 			osfield.length=swap16(osfield_length);
 #else
 			osfield.length=osfield_length;
@@ -1066,7 +1066,7 @@ NuAuth* nu_client_init(char *username, unsigned long userid, char *password,
 					session->mode=*(buf+1);
 				} else {
 					session->mode=SRV_TYPE_POLL;
-				}	
+				}
 			}
 
 		}
@@ -1085,7 +1085,7 @@ NuAuth* nu_client_init(char *username, unsigned long userid, char *password,
 	/* alloc ct */
 	if (tcptable_init (&new) == 0) panic ("tcptable_init failed");
 	session->ct=new;
-	/* set init variable */	
+	/* set init variable */
 	conn_on =1;
 	recv_started=0;
 	return session;
@@ -1125,7 +1125,7 @@ int nu_client_check(NuAuth * session)
 	/* TODO : use less ressource be clever */
 	if (recv_started == 0){
 		pthread_t recvthread;
-		pthread_create(&recvthread,NULL ,recv_message,session );
+		pthread_create(&recvthread, NULL, recv_message, session);
 		recv_started =1;
 	}
 
@@ -1135,7 +1135,7 @@ int nu_client_check(NuAuth * session)
 	else {
 		if ((time(NULL) - timestamp_last_sent) > SENT_TEST_INTERVAL){
 			if (! send_hello_pckt(session)){
-				nu_exit_clean(session);	
+				nu_exit_clean(session);
 			}
 			timestamp_last_sent=time(NULL);
 		}
@@ -1172,9 +1172,9 @@ NuAuth* nu_client_init2(
 	session->tls_passwd_callback=tlscred_callback;
 
 	sasl_callback_t callbacks[] = {
-		{ SASL_CB_GETREALM, &nu_getrealm, session }, 
-		{ SASL_CB_USER, &nu_get_userdatas, session }, 
-		{ SASL_CB_AUTHNAME, &nu_get_userdatas, session } , 
+		{ SASL_CB_GETREALM, &nu_getrealm, session },
+		{ SASL_CB_USER, &nu_get_userdatas, session },
+		{ SASL_CB_AUTHNAME, &nu_get_userdatas, session },
 		{ SASL_CB_PASS, &nu_get_usersecret, session },
 		{ SASL_CB_LIST_END, NULL, NULL }
 	};
@@ -1252,7 +1252,7 @@ NuAuth* nu_client_init2(
 	gnutls_certificate_set_dh_params( xcred, dh_params);
 
 
-	/* Initialize TLS session 
+	/* Initialize TLS session
 	*/
 	session->tls=(gnutls_session*)calloc(1,sizeof(gnutls_session));
 	gnutls_init(session->tls, GNUTLS_CLIENT);
@@ -1265,7 +1265,7 @@ NuAuth* nu_client_init2(
 	no_action.sa_handler = SIG_IGN;
 	sigemptyset( & (no_action.sa_mask));
 	no_action.sa_flags = 0;
-	if ( sigaction( SIGPIPE, & no_action , NULL ) != 0) {
+	if ( sigaction( SIGPIPE, & no_action, NULL ) != 0) {
 		printf("Error setting \n");
 		exit(1);
 	}
@@ -1275,7 +1275,7 @@ NuAuth* nu_client_init2(
 	/* connect */
 	if (session->socket <= 0){
 		nu_exit_clean(session);
-		errno=EADDRNOTAVAIL;	
+		errno=EADDRNOTAVAIL;
 		return NULL;
 	}
 	option_value=1;
@@ -1303,7 +1303,7 @@ NuAuth* nu_client_init2(
 		nu_exit_clean(session);
 		errno=ECONNRESET;
 		return NULL;
-	} 
+	}
 	/* certificate verification */
 	ret = gnutls_certificate_verify_peers(*(session->tls));
 	if (ret <0){
@@ -1340,7 +1340,7 @@ NuAuth* nu_client_init2(
 
 	if (! session->username){
 		if (session->username_callback){
-			session->username=session->username_callback();	
+			session->username=session->username_callback();
 		} else {
 			printf("can't call username callback\n");
 		}
@@ -1366,8 +1366,8 @@ NuAuth* nu_client_init2(
 		/* announce our OS */
 		struct utsname info;
 		char *oses;
-		int stringlen;
-		int actuallen;
+		size_t stringlen;
+		size_t actuallen;
 		char* enc_oses;
 		char * pointer, *buf;
 		int osfield_length;
@@ -1388,7 +1388,7 @@ NuAuth* nu_client_init2(
 		osfield.length=4+actuallen;
 		buf=alloca(osfield.length);
 		osfield_length=osfield.length;
-#ifdef WORDS_BIGENDIAN	
+#ifdef WORDS_BIGENDIAN
 		osfield.length=swap16(osfield.length);
 #endif
 		pointer = buf ;
@@ -1408,7 +1408,7 @@ NuAuth* nu_client_init2(
 				session->mode=*(buf+1);
 			} else {
 				session->mode=SRV_TYPE_POLL;
-			}	
+			}
 		}
 
 	}
@@ -1421,7 +1421,7 @@ NuAuth* nu_client_init2(
 	/* alloc ct */
 	if (tcptable_init (&new) == 0) panic ("tcptable_init failed");
 	session->ct=new;
-	/* set init variable */	
+	/* set init variable */
 	conn_on =1;
 	recv_started=0;
 	timestamp_last_sent=time(NULL);

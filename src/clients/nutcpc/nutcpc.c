@@ -97,7 +97,7 @@ char* password;
 char* get_password()
 {
 	char* passwd;
-	int password_size=32;
+	size_t password_size=32;
 	if (password == NULL){
 		passwd=(char *)calloc(32,sizeof( char));
 		printf("Enter password : ");
@@ -117,7 +117,7 @@ char * get_username()
 {
 	char* user;
 	int nread;
-	int username_size=32;
+	size_t username_size=32;
 
 	if (username == NULL){
 		printf("Enter username : ");

@@ -62,50 +62,50 @@ char *strip_line(char *line, int acceptnull)
 }
 
 /**
- * parse_groups()
- * Extracts group ids in groupline and fills *p_grouplist.
+ * parse_ints()
+ * Extracts integers (like group ids) in intline and fills *p_intlist.
  * prefix is displayed in front of the log messages.
  * Returns 0 if successful.
  */
-int parse_groups(char *groupline, GSList **p_grouplist, char *prefix)
+int parse_ints(char *intline, GSList **p_intlist, char *prefix)
 {
-  char *p_nextgroup;
-  char *p_groups = groupline;
-  GSList *grouplist = *p_grouplist;
-  int group;
+  char *p_nextint;
+  char *p_ints = intline;
+  GSList *intlist = *p_intlist;
+  int number;
 
-  // parsing groups
-  while (p_groups) {
-      p_nextgroup = strchr(p_groups, ',');
-      if (p_nextgroup) {
-          *p_nextgroup = 0;
+  // parsing ints
+  while (p_ints) {
+      p_nextint = strchr(p_ints, ',');
+      if (p_nextint) {
+          *p_nextint = 0;
       }
-      if (sscanf(p_groups, "%u", &group) != 1) {
-          // We can't read a group.  This will be an error only if we can
+      if (sscanf(p_ints, "%u", &number) != 1) {
+          // We can't read a number.  This will be an error only if we can
           //  see a comma next.
-          if (p_nextgroup) {
+          if (p_nextint) {
               if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-                  g_message("%s parse_groups: Malformed line",
+                  g_message("%s parse_ints: Malformed line",
                           prefix);
-              *p_grouplist = grouplist;
+              *p_intlist = intlist;
               return 1;
           }
           if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-              g_message("%s parse_groups: Garbarge at end of line", prefix);
+              g_message("%s parse_ints: Garbarge at end of line", prefix);
       } else {
-          // One group to add...
-          grouplist = g_slist_prepend(grouplist, 
-                      GINT_TO_POINTER((u_int32_t)group));
+          // One number (group, integer...) to add
+          intlist = g_slist_prepend(intlist,
+                                    GINT_TO_POINTER((u_int32_t)number));
 #ifdef DEBUG_ENABLE
           if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-              g_message("%s Added group %d", prefix, group);
+              g_message("%s Added group/int %d", prefix, number);
 #endif
       }
-      if ((p_groups = p_nextgroup))
-          p_groups++;
+      if ((p_ints = p_nextint))
+          p_ints++;
   }
 
-  *p_grouplist = grouplist;
+  *p_intlist = intlist;
   return 0;
 }
 
@@ -146,24 +146,27 @@ int parse_ports(char *portsline, GSList **p_portslist, char *prefix)
           struct T_ports *this_port;
           // One port or ports range to add...
           if (n == 2) {  // That's a range
-              if (lastport >= fport)
+              if (lastport >= fport) {
                   ports.nbports = lastport - fport;
-              else {
+              } else {
+                  ports.nbports = -1;
                   if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
                       g_message("%s parse_ports: Malformed line", prefix);
-	      }
+              }
           } else
               ports.nbports = 0;
 
-          this_port = g_new0(struct T_ports, 1);
-          this_port->firstport = ports.firstport;
-          this_port->nbports = ports.nbports;
-          portslist = g_slist_prepend(portslist, this_port);
+          if (ports.nbports >= 0) {
+              this_port = g_new0(struct T_ports, 1);
+              this_port->firstport = ports.firstport;
+              this_port->nbports = ports.nbports;
+              portslist = g_slist_prepend(portslist, this_port);
 #ifdef DEBUG_ENABLE
-          if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-              g_message("%s Adding Port = %d, number = %d", prefix,
-                      ports.firstport, ports.nbports);
+              if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+                  g_message("%s Adding Port = %d, number = %d", prefix,
+                            ports.firstport, ports.nbports);
 #endif
+          }
       }
       if ((p_ports = p_nextports))
           p_ports++;
@@ -360,7 +363,7 @@ int read_user_list(void)
 
       snprintf(log_prefix, 15, "L.%d: ", ln);
       // parsing groups
-      if (parse_groups(p_groups, &plaintext_user->groups, log_prefix)) {
+      if (parse_ints(p_groups, &plaintext_user->groups, log_prefix)) {
           g_free(plaintext_user);
           fclose(fd);
           return 2;
@@ -416,10 +419,15 @@ int read_acl_list(void)
               if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
                   g_message("Done with ACL [%s]", newacl->aclname);
 #endif
-              // check if ACL node has minimal information (protocol?)
+              // check if ACL node has minimal information
               // Warning: this code is duplicated after the loop
-              if (newacl->proto == IPPROTO_TCP || newacl->proto == IPPROTO_UDP
-                      || newacl->proto == IPPROTO_ICMP) {
+              if (!newacl->groups) {
+                  if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
+                      g_message("No group(s) declared in ACL %s",
+                              newacl->aclname);
+              } else if (newacl->proto == IPPROTO_TCP ||
+                         newacl->proto == IPPROTO_UDP ||
+                         newacl->proto == IPPROTO_ICMP) {
                   // ACL node is ready
                   plaintext_acllist = g_slist_prepend(plaintext_acllist, newacl);
               } else {
@@ -500,7 +508,7 @@ int read_acl_list(void)
           char log_prefix[16];
           snprintf(log_prefix, 15, "L.%d: ", ln);
           // parsing groups
-          if (parse_groups(p_value, &newacl->groups, log_prefix)) {
+          if (parse_ints(p_value, &newacl->groups, log_prefix)) {
               fclose(fd);
               return 2;
           }
@@ -516,6 +524,14 @@ int read_acl_list(void)
           if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
               g_message("L.%d: Read proto = %d", ln, newacl->proto);
 #endif
+      } else if (!strcasecmp("type", p_key)) {                  // Type (icmp)
+          char log_prefix[16];
+          snprintf(log_prefix, 15, "L.%d: ", ln);
+          // parse type values
+          if (parse_ints(p_value, &newacl->types, log_prefix)) {
+              fclose(fd);
+              return 2;
+          }
       } else if (!strcasecmp("srcip", p_key)) {                 // SrcIP
           char log_prefix[16];
           snprintf(log_prefix, 15, "L.%d: ", ln);
@@ -621,10 +637,15 @@ int read_acl_list(void)
       if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
           g_message("Done with ACL [%s]", newacl->aclname);
 #endif
-      // check if ACL node has minimal information (protocol?)
+      // check if ACL node has minimal information
       // Warning: this code is duplicated after the loop
-      if (newacl->proto == IPPROTO_TCP || newacl->proto == IPPROTO_UDP ||
-              newacl->proto == IPPROTO_ICMP) {
+      if (!newacl->groups) {
+          if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
+              g_message("No group(s) declared in ACL %s",
+                      newacl->aclname);
+      } else if (newacl->proto == IPPROTO_TCP ||
+                 newacl->proto == IPPROTO_UDP ||
+                 newacl->proto == IPPROTO_ICMP) {
           // ACL node is ready
           plaintext_acllist = g_slist_prepend(plaintext_acllist, newacl);
       } else if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
@@ -681,15 +702,27 @@ G_MODULE_EXPORT gchar* g_module_unload(void)
           if (p_acl->apps) {
               GSList *p_app = p_acl->apps;
               for ( ; p_app ; p_app = g_slist_next(p_app)) {
+                  // Free AppName string
                   g_free(((struct T_app*)p_app->data)->appname);
+                  // Free MD5 string if there is one
                   if (((struct T_app*)p_app->data)->appmd5)
                       g_free(((struct T_app*)p_app->data)->appmd5);
               }
               g_slist_free(p_acl->apps);
               g_free(p_acl);
           }
-          // FIXME: free IPs
-          // FIXME: free ports
+          // Free Src IPs
+          if (p_acl->src_ip)
+              g_slist_free(p_acl->src_ip);
+          // Free Dst IPs
+          if (p_acl->dst_ip)
+              g_slist_free(p_acl->dst_ip);
+          // Free Src ports
+          if (p_acl->src_ports)
+              g_slist_free(p_acl->src_ports);
+          // Free Dst ports
+          if (p_acl->dst_ports)
+              g_slist_free(p_acl->dst_ports);
       }
       // Now we can free the list
       g_slist_free(plaintext_acllist);
@@ -769,7 +802,7 @@ G_MODULE_EXPORT int user_check(const char *username, const char *clientpass,
   user = get_rid_of_domain((char*)username);
 #ifdef DEBUG_ENABLE
       if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-  		g_message("Looking for group(s) for user %s", user);
+        g_message("Looking for group(s) for user %s", user);
 #endif
   // Let's look for the first node with matching username
   ref.username = (char*)user;
@@ -976,58 +1009,65 @@ G_MODULE_EXPORT GSList* acl_check(connection* element)
 
       // ICMP?
       if (netdata->protocol == IPPROTO_ICMP) {
-	      // TODO Check ICMP
-	      g_message("[plaintext] ICMP code not yet supported! :-(\n");
-	      g_message("[plaintext] faking ICMP support");
-	      if (p_acl->proto == IPPROTO_ICMP){
-	      	g_message("[plaintext] ICMP acls");
-	      }
+          if (p_acl->proto == IPPROTO_ICMP){
+              int found = 0;
+              GSList *sl_type = p_acl->types;
+              for ( ; sl_type ; sl_type = g_slist_next(sl_type)) {
+                  if (*((int*)sl_type->data) == netdata->type) {
+                      found = 1;
+                      break;
+                  }
+              }
+              if (!found)
+                  continue;
+          }
       } else {
-	      // Following is only for TCP / UDP  (ports stuff...)
-	      if (p_acl->proto != IPPROTO_TCP && p_acl->proto != IPPROTO_UDP) {
-		      g_message("[plaintext] Unsupported protocol: %d", p_acl->proto);
-		      continue;
-	      }
+          // Following is only for TCP / UDP  (ports stuff...)
+          if (p_acl->proto != IPPROTO_TCP && p_acl->proto != IPPROTO_UDP) {
+              g_message("[plaintext] Unsupported protocol: %d", p_acl->proto);
+              continue;
+          }
 
-	      // Check source port
-	      if (p_acl->src_ports) {
-		      int found = 0;
-		      struct T_ports *p_ports;
-		      GSList *pl_ports = p_acl->src_ports;
-		      for ( ; pl_ports ; pl_ports = g_slist_next(pl_ports)) {
-			      p_ports = (struct T_ports*)pl_ports->data;
-			      if (!p_ports->firstport ||
-					      ((netdata->source >= p_ports->firstport) &&
-					       (netdata->source <= p_ports->firstport+p_ports->nbports))) {
-				      found = 1;
-				      break;
-			      }
-		      }
-		      if (!found)
-			      continue;
-	      }
-	      // Check destination port
-	      if (p_acl->dst_ports) {
-		      int found = 0;
-		      struct T_ports *p_ports;
-		      GSList *pl_ports = p_acl->dst_ports;
-		      for ( ; pl_ports ; pl_ports = g_slist_next(pl_ports)) {
-			      p_ports = (struct T_ports*)pl_ports->data;
-			      if (!p_ports->firstport ||
-					      ((netdata->dest >= p_ports->firstport) &&
-					       (netdata->dest <= p_ports->firstport+p_ports->nbports))) {
-				      found = 1;
-				      break;
-			      }
-		      }
-		      if (!found)
-			      continue;
-	      }
+          // Check source port
+          if (p_acl->src_ports) {
+              int found = 0;
+              struct T_ports *p_ports;
+              GSList *pl_ports = p_acl->src_ports;
+              for ( ; pl_ports ; pl_ports = g_slist_next(pl_ports)) {
+                  p_ports = (struct T_ports*)pl_ports->data;
+                  if (!p_ports->firstport ||
+                      ((netdata->source >= p_ports->firstport) &&
+                       (netdata->source <= p_ports->firstport+p_ports->nbports))) {
+                      found = 1;
+                      break;
+                  }
+              }
+              if (!found)
+                  continue;
+          }
+          // Check destination port
+          if (p_acl->dst_ports) {
+              int found = 0;
+              struct T_ports *p_ports;
+              GSList *pl_ports = p_acl->dst_ports;
+              for ( ; pl_ports ; pl_ports = g_slist_next(pl_ports)) {
+                  p_ports = (struct T_ports*)pl_ports->data;
+                  if (!p_ports->firstport ||
+                      ((netdata->dest >= p_ports->firstport) &&
+                       (netdata->dest <= p_ports->firstport+p_ports->nbports))) {
+                      found = 1;
+                      break;
+                  }
+              }
+              if (!found)
+                  continue;
+          }
       }
+
       // We have a match 8-)
-  if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
-      g_message("[plaintext] matching with decision %d", p_acl->decision);
-  }
+      if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
+          g_message("[plaintext] matching with decision %d", p_acl->decision);
+      }
       this_acl=g_new0(struct acl_group, 1);
       g_assert(this_acl);
       this_acl->answer = p_acl->decision;
@@ -1037,8 +1077,8 @@ G_MODULE_EXPORT GSList* acl_check(connection* element)
 
 #ifdef DEBUG_ENABLE
   if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
-    g_message("[plaintext] We are leaving acl_check()");
-  	g_message("(DBG) [plaintext] check_acls leaves with %p", g_list);
+      g_message("[plaintext] We are leaving acl_check()");
+      g_message("(DBG) [plaintext] check_acls leaves with %p", g_list);
   }
 #endif
   return g_list;

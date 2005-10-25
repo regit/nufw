@@ -1,6 +1,6 @@
-1.1.0 (2005/10/18)
+1.1.0 (2005/10/25)
 	- full "a posteriori" IP authentication for mono user system via hello message system
-	- nufw : port to libnfnetlink_queue
+	- nufw : port to libnetfilter_queue
 	- NuFW : many small fixes in the debian/ subdir : start in correct runlevels,
 	have smoother init scripts.
 	- nutcpc : add -l option to disable use of lock

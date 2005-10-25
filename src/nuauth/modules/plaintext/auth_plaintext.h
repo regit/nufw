@@ -58,6 +58,8 @@ struct T_plaintext_acl {
     GSList *apps;
     GSList *os;
 
+    GSList *types;
+
     GSList *src_ip;
     GSList *src_ports;
 

@@ -40,10 +40,10 @@
 char * locale_to_utf8(char* inbuf){
 	char* locale_charset=nl_langinfo(CODESET);
 	iconv_t cd;
-	int inlen=strlen(inbuf);
+	size_t inlen=strlen(inbuf);
 	char *outbuf,*targetbuf;
-	int outbuflen=inlen*2+1;
-	int outbufleft;
+	size_t outbuflen=inlen*2+1;
+	size_t outbufleft;
 	int ret;
 
 	setlocale (LC_ALL, "");

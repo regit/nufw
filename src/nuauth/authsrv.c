@@ -763,7 +763,7 @@ confparams nuauth_vars[] = {
 
 	if (nuauth_push && nuauth_hello_authentication){
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-			g_message("Creating %d hello mode authentication thread");
+			g_message("Creating hello mode authentication thread");
 		localid_auth_queue = g_async_queue_new ();
 		localid_auth_thread = g_thread_create ( (GThreadFunc) localid_auth,
 				NULL,

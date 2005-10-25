@@ -64,7 +64,7 @@ AM_CONDITIONAL(HAVE_NFQUEUE,test x$have_nfqueue = xyes)
 if test "${use_nfqueue}" = "yes"; then
 	AC_CHECK_LIB([nfnetlink], [nfnl_open], have_nfqueue="yes", have_nfqueue="")
 #	AC_CHECK_LIB([nfnetlink], [nfnl_open], have_nfnetlink="yes", have_nfnetlink="")
-#	AC_CHECK_LIB([nfnetlink_queue], [nfqnl_open], have_nfqueue="yes", have_nfqueue="")
+	AC_CHECK_LIB([netfilter_queue], [nfqnl_open], have_nfqueue="yes", have_nfqueue="")
 	AC_DEFINE_UNQUOTED([USE_NFQUEUE],[1],[Will use netlink queue support instead of libipq])
 else
 
@@ -149,7 +149,7 @@ if test "$debug"; then
 fi
 
 if (test "$have_ipq" = "" && test "$have_nfqueue" = "")  ;  then
-	AC_MSG_NOTICE([nufw daemon WON'T be compiled: libipq or nfnetlink_queue not present])
+	AC_MSG_NOTICE([nufw daemon WON'T be compiled: libipq or libnetfilter_queue not present])
 else
 	if test "$enable_user_mark" = "yes"; then
 		AC_MSG_NOTICE([nufw will be compiled with user mark support])
@@ -181,7 +181,7 @@ if test "${enable_pgsql_log}" = "yes"; then
 fi
 
 if test "${have_nfqueue}" = "yes"; then
-	AC_MSG_NOTICE([Compiling with nfnetlink_queue support instead of libipq])
+	AC_MSG_NOTICE([Compiling with libnetfilter_queue support instead of libipq])
 fi
 
 

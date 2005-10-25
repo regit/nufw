@@ -112,7 +112,7 @@ int userdb_checkpass(sasl_conn_t *conn,
 
 	/* convert username from utf-8 to locale */
 	if (nuauth_uses_utf8){
-		int bwritten;
+		size_t bwritten;
 		dec_user = g_locale_from_utf8  (user,
 				-1,
 				NULL,
@@ -127,7 +127,7 @@ int userdb_checkpass(sasl_conn_t *conn,
 			return SASL_NOAUTHZ;
 		}
 	} else {
-		dec_user=user;
+		dec_user=(char*)user;
 	}
 
 

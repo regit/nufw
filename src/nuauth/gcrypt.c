@@ -27,7 +27,7 @@ int verify_user_password(const char* given,const char* ours){
 	gcry_md_hd_t hd;
 	char * res;
 	char* decoded; 
-	int len;
+	size_t len;
 	char **splitted_secret; 
 	int algo=0;
 
@@ -76,7 +76,6 @@ int verify_user_password(const char* given,const char* ours){
 
 		if ((algo == GCRY_MD_SHA1) && seeded) {
 			char temp[24];
-			int len;
 
 			if (sasl_decode64(splitted_secret[1],strlen(splitted_secret[1]),temp,24,&len) != SASL_OK){
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN))
@@ -87,7 +86,6 @@ int verify_user_password(const char* given,const char* ours){
 		}
 		else if ((algo == GCRY_MD_MD5) && seeded) {
 			char temp[20];
-			int len;
 
 			if (sasl_decode64(splitted_secret[1],strlen(splitted_secret[1]),temp,20,&len) != SASL_OK){
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN))
@@ -104,7 +102,7 @@ int verify_user_password(const char* given,const char* ours){
 
 		/* convert password from utf-8 to locale */
 		if (nuauth_uses_utf8){
-			int bwritten=0;
+			size_t bwritten=0;
 			gchar * traduc;
 			traduc = g_locale_from_utf8  (decoded,
 					-1,
@@ -181,7 +179,7 @@ int verify_user_password(const char* given,const char* ours){
 	} else {
 		/* convert password from utf-8 to locale */
 		if (nuauth_uses_utf8){
-			int bwritten=0;
+			size_t bwritten=0;
 			gchar * traduc;
 			traduc = g_locale_from_utf8  (given,
 					strlen(given),
@@ -192,7 +190,7 @@ int verify_user_password(const char* given,const char* ours){
 				given=traduc;
 			} else {
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
-					char *ccharset;
+					const char *ccharset;
 					g_get_charset(&ccharset);
 					g_message("Can not convert password %s to %s at %s:%d",given,
 							ccharset,__FILE__,__LINE__);
@@ -201,13 +199,13 @@ int verify_user_password(const char* given,const char* ours){
 		}
 		if (!strcmp(given,ours)){
 			if (nuauth_uses_utf8){
-				g_free(given);
+				g_free((char*)given);
 			}
 			return SASL_OK;
 		}
 		else {
 			if (nuauth_uses_utf8){
-				g_free(given);
+				g_free((char*)given);
 			}
 			return SASL_BADAUTH;
 		}

@@ -8,6 +8,7 @@
 # gid=100,101           # which groups are concerned
 # gid=103               # several lines can be used
 # proto=6               # TCP (only 1 proto allowed per ACL, of course)
+# type=0                # Type, for ICMP protocol only
 # SrcIP=10.10.0.1       # Source IP, equivalent to 10.10.0.1/32
 # SrcPort=1024-65535    # List of source ports (a single port is ok)
 # DstIP=10.10.0.5       # Destination IP address
