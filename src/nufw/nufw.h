@@ -12,7 +12,7 @@
 #endif
 #if USE_NFQUEUE
 #include <linux/netfilter.h>		/* for NF_ACCEPT */
-#include <libnfnetlink_queue/libnfnetlink_queue.h>
+#include <libnnetfilter_queue/libnfnetlink_queue.h>
 
 uint16_t nfqueue_num;
 struct nfqnl_handle *h;
