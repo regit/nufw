@@ -136,8 +136,10 @@ int userdb_checkpass(sasl_conn_t *conn,
 		g_private_set(group_priv,groups);
 		g_private_set(user_priv,GUINT_TO_POINTER(tuid));
 		/* we're done */
-		return SASL_OK;    
+		if (nuauth_uses_utf8) g_free(dec_user);
+		return SASL_OK;
 	}
+	if (nuauth_uses_utf8) g_free(dec_user);
 	/* return to fallback */
 	return SASL_NOAUTHZ;
 }
