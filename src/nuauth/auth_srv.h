@@ -314,6 +314,10 @@ void decisions_queue_work (gpointer userdata, gpointer data);
 
 char * get_rid_of_domain(const char* user);
 
+gboolean  get_old_conn (gpointer key,
+		gpointer value,
+		gpointer user_data);
+
 /*
  * From check_acls.c
  */
@@ -402,11 +406,6 @@ void cache_manager (gpointer datas);
  * between cache thread and others 
  */
 
-/* define message types */
-#define CACHE_GET 0x1
-#define CACHE_PUT 0x2
-#define CACHE_FREE 0x3
-#define CACHE_UPDATE 0x4
 
 /**
  * generic message send between thread working with the
@@ -424,12 +423,13 @@ struct cache_message {
 gpointer null_message;
 gpointer null_queue_datas;
 
-#define WARN_CLIENTS 0x1
-#define FREE_CLIENT 0x0
-#define INSERT_CLIENT 0x2
-#define REFRESH_CLIENTS 0x3
+#define WARN_MESSAGE 0x1
+#define FREE_MESSAGE 0x0
+#define INSERT_MESSAGE 0x2
+#define GET_MESSAGE 0x3
+#define REFRESH_MESSAGE 0x4
 
-struct tls_message {
+struct internal_message {
 	guint type;
 	gpointer datas;
 };

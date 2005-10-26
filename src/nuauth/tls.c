@@ -1058,7 +1058,7 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 					remove_socket_from_pre_client_list(c);
 
 					if (nuauth_push) {
-						struct tls_message* message=g_new0(struct tls_message,1);
+						struct internal_message* message=g_new0(struct internal_message,1);
 						struct tls_insert_data * datas=g_new0(struct tls_insert_data,1);
 						if ((message == NULL) || (datas == NULL )){
 							close_tls_session(c,c_session->tls);
@@ -1069,7 +1069,7 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 						datas->socket=c;
 						datas->data=c_session;
 						message->datas=datas;
-						message->type=INSERT_CLIENT;
+						message->type=INSERT_MESSAGE;
 						g_async_queue_push(tls_push,message);
 					} else {
 						g_static_mutex_lock (&client_mutex);
@@ -1518,8 +1518,8 @@ void* tls_user_authsrv()
 					FD_CLR(c,&tls_rx_set);
 					/* clean client structure */
 					if (nuauth_push){
-						struct tls_message* message=g_new0(struct tls_message,1);
-						message->type = FREE_CLIENT;
+						struct internal_message* message=g_new0(struct internal_message,1);
+						message->type = FREE_MESSAGE;
 						message->datas = GINT_TO_POINTER(c);
 						g_async_queue_push(tls_push,message);
 					} else {
@@ -1585,9 +1585,11 @@ treat_nufw_request (nufw_session * c_session)
 				/* gonna feed the birds */
 
 				if (current_conn->state == STATE_HELLOMODE){
-					g_message("local id");
+					struct internal_message *message = g_new0(struct internal_message,1);
+					message->type=INSERT_MESSAGE;
+					message->datas=current_conn;
 					current_conn->state = STATE_AUTHREQ;
-					g_async_queue_push (localid_auth_queue,current_conn);
+					g_async_queue_push (localid_auth_queue,message);
 				}else {
 					current_conn->state = STATE_AUTHREQ;
 					/* put gateway addr in struct */
@@ -1911,7 +1913,7 @@ void push_worker ()
 {
 	struct msg_addr_set *global_msg=g_new0(struct msg_addr_set,1);
 	struct nuv2_srv_message *msg=g_new0(struct nuv2_srv_message,1);
-	struct tls_message * message;
+	struct internal_message * message;
 
 	global_msg->msg=msg;
 	msg->type=SRV_REQUIRED_PACKET;
@@ -1923,7 +1925,7 @@ void push_worker ()
 	/* wait for message */
 	while ( ( message = g_async_queue_pop(tls_push))  ) {
 		switch (message->type) {
-			case WARN_CLIENTS:
+			case WARN_MESSAGE:
 				{
 					global_msg->addr=((tracking *)message->datas)->saddr;
 					global_msg->found = FALSE;
@@ -1949,14 +1951,14 @@ void push_worker ()
 					}
 				}
 				break;
-			case FREE_CLIENT:
+			case FREE_MESSAGE:
 				{
 					g_static_mutex_lock (&client_mutex);
 					delete_client_by_socket(GPOINTER_TO_INT(message->datas));
 					g_static_mutex_unlock (&client_mutex);
 				}
 				break;
-			case INSERT_CLIENT:
+			case INSERT_MESSAGE:
 				{
 					struct tls_insert_data* datas=message->datas;
 					if (datas->data){
@@ -1966,13 +1968,6 @@ void push_worker ()
 					}
 				}
 				break;
-#if OLD_FLAVOUR
-			case REFRESH_CLIENTS:
-				g_static_mutex_lock (&client_mutex);
-				g_hash_table_foreach (client_conn_hash, refresh_client, NULL);
-				g_static_mutex_unlock (&client_mutex);
-				break;
-#endif
 			default:
 				g_message("lost");
 		}

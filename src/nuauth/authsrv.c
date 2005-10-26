@@ -903,24 +903,16 @@ confparams nuauth_vars[] = {
 		if (nuauth_acl_cache){
 			/* send update message to cache thread */
 			message=g_new0(struct cache_message,1);
-			message->type=CACHE_UPDATE;
+			message->type=REFRESH_MESSAGE;
 			g_async_queue_push(acl_cache->queue,message);
 		}
-#if OLD_FLAVOUR
 		if (nuauth_push){
-			if (tls_push){
-				struct tls_message * message=g_new0(struct tls_message,1);
-				message->type=REFRESH_CLIENTS;
-				/* ask to purge client request expired due to timeout */
-				g_async_queue_push (tls_push,message);
-			}
-#if 0
 			if (nuauth_hello_authentication) {
-				g_async_queue_push(localid_auth_queue) 	
+				struct internal_message * message=g_new0(struct internal_message,1);
+				message->type=REFRESH_MESSAGE;
+				g_async_queue_push(localid_auth_queue,message);
 			}
-#endif
 		}
-#endif
 		/* a little sleep */
 		usleep(500000);	
 	}

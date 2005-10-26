@@ -35,6 +35,7 @@ void localid_auth()
 	struct msg_addr_set *global_msg = g_new0(struct msg_addr_set,1);
 	struct nuv2_srv_helloreq *msg = g_new0(struct nuv2_srv_helloreq,1);
 	GHashTable *localid_auth_hash;
+	struct internal_message *message=NULL;
 
 
 	global_msg->msg = (struct nuv2_srv_message*) msg;
@@ -48,69 +49,84 @@ void localid_auth()
 	g_async_queue_ref (localid_auth_queue);
 	g_async_queue_ref (tls_push);
 	/* wait for message */
-	while ( (pckt = g_async_queue_pop(localid_auth_queue)) ) {
-		switch ( pckt->state){
-			case STATE_AUTHREQ:
-				/* add in struct */
-				/* compute random u32 integer  and test if 
-				 * iter if it exists in hash, increment it if needed
-				 */
-				randomid = random();
-				while(g_hash_table_lookup(localid_auth_hash,GINT_TO_POINTER(randomid))){
-					randomid++;
+	while ( (message = g_async_queue_pop(localid_auth_queue)) ) {
+		switch (message->type) { 
+			case INSERT_MESSAGE:
+				pckt=message->datas;
+				g_free(message);
+				switch ( pckt->state){
+					case STATE_AUTHREQ:
+						/* add in struct */
+						/* compute random u32 integer  and test if 
+						 * iter if it exists in hash, increment it if needed
+						 */
+						randomid = random();
+						while(g_hash_table_lookup(localid_auth_hash,GINT_TO_POINTER(randomid))){
+							randomid++;
+						}
+						/* add element to hash with computed key */
+						g_hash_table_insert(localid_auth_hash,GINT_TO_POINTER(randomid),pckt);
+						/* send message to clients */
+						((struct nuv2_srv_helloreq*)global_msg->msg)->helloid = randomid;
+						global_msg->addr = pckt->tracking_hdrs.saddr;
+						global_msg->found = FALSE;
+						g_static_mutex_lock (&client_mutex);
+						warn_clients(global_msg);
+						g_static_mutex_unlock (&client_mutex);
+						break;
+					case STATE_USERPCKT:
+						/* search in struct */
+						element = (connection*) g_hash_table_lookup (localid_auth_hash,(GSList*)(pckt->packet_id)->data);
+						/* if found ask for completion */
+						if (element){
+							/* TODO : do a check on saddr */
+							if ( (element->tracking_hdrs.saddr == pckt->tracking_hdrs.saddr ) || 1 ){	
+
+								element->state=STATE_HELLOMODE;	
+								element->user_id=pckt->user_id;
+								element->username=pckt->username;
+								element->user_groups=pckt->user_groups;
+								pckt->user_groups=NULL;
+								pckt->username=NULL;
+								/* do asynchronous call to acl check */
+								g_thread_pool_push (acl_checkers, element, NULL);
+								/* remove element from hash without destroy */
+								g_hash_table_steal(localid_auth_hash,pckt->packet_id);
+							} else {
+								g_warning("looks like a spoofing attempt.");
+								/* TODO : kill bad guy */
+							}
+							/* free pckt */
+							free_connection(pckt);
+
+						} else {
+							free_connection(pckt);
+							g_warning("Bad user packet.");
+						}
+						break;
+					case STATE_HELLOMODE:
+						take_decision(pckt,PACKET_ALONE);
+						break;
+					case STATE_DONE:
+						/* packet has already been dropped, need only cleaning */
+						free_connection(pckt);
+						break;
+					default:
+						g_warning("Should not have this at %s:%d.\n",__FILE__,__LINE__);
+				} 
+				break;
+			case REFRESH_MESSAGE:
+				{
+					long current_timestamp=time(NULL);
+					g_free(message);
+					g_hash_table_foreach_remove(localid_auth_hash,get_old_conn,GINT_TO_POINTER(current_timestamp));
 				}
-				/* add element to hash with computed key */
-				g_hash_table_insert(localid_auth_hash,GINT_TO_POINTER(randomid),pckt);
-				/* send message to clients */
-				((struct nuv2_srv_helloreq*)global_msg->msg)->helloid = randomid;
-				global_msg->addr = pckt->tracking_hdrs.saddr;
-				global_msg->found = FALSE;
-				g_static_mutex_lock (&client_mutex);
-				warn_clients(global_msg);
-				g_static_mutex_unlock (&client_mutex);
-				break;
-			case STATE_USERPCKT:
-				/* search in struct */
-				element = (connection*) g_hash_table_lookup (localid_auth_hash,(GSList*)(pckt->packet_id)->data);
-				/* if found ask for completion */
-				if (element){
-					/* do a check on saddr */
-					if ( (element->tracking_hdrs.saddr == pckt->tracking_hdrs.saddr ) || 1 ){	
-						
-						element->state=STATE_HELLOMODE;	
-						element->user_id=pckt->user_id;
-						element->username=pckt->username;
-						element->user_groups=pckt->user_groups;
-						pckt->user_groups=NULL;
-						pckt->username=NULL;
-						/* do asynchronous call to acl check */
-						g_thread_pool_push (acl_checkers, element, NULL);
-						/* remove element from hash without destroy */
-						g_hash_table_steal(localid_auth_hash,pckt->packet_id);
-					} else {
-						g_warning("looks like a spoofing attempt.");
-						/* TODO : kill bad guy */
-					}
-					/* free pckt */
-					free_connection(pckt);
-					
-				} else {
-					free_connection(pckt);
-					g_warning("Bad user packet.");
-				}
-				break;
-			case STATE_HELLOMODE:
-				take_decision(pckt,PACKET_ALONE);
-				break;
-			case STATE_DONE:
-				/* packet has already been dropped, need only cleaning */
-				free_connection(pckt);
 				break;
 			default:
-				g_warning("Should not have this.\n");
-		} 
-		
+				g_warning("Should not have this at %s:%d.\n",__FILE__,__LINE__);
+
+		}
 	}
-	
+
 }
 

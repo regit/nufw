@@ -58,7 +58,7 @@ void get_users_from_cache (connection* conn_elt)
 	struct cache_message message;
 	/* Going to ask to the cache */
 	/* prepare message */
-	message.type=CACHE_GET;
+	message.type=GET_MESSAGE;
 	message.key=conn_elt->username;
 	message.datas=NULL;
 	message.reply_queue=g_private_get(userqueue);
@@ -112,7 +112,7 @@ void get_users_from_cache (connection* conn_elt)
                         //GRYZOR asks : shouldnt we just leave here?
 		}
 		rmessage=g_new0(struct cache_message,1);
-		rmessage->type=CACHE_PUT;
+		rmessage->type=INSERT_MESSAGE;
 		rmessage->key=g_strdup(conn_elt->username);
 		rmessage->datas=userdatas;
 		rmessage->reply_queue=NULL;

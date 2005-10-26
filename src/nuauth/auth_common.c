@@ -151,7 +151,7 @@ void search_and_fill ()
 			if (nuauth_push){
 				/* push data to sender */
 				if (pckt->state == STATE_AUTHREQ){
-					struct tls_message *message=g_new0(struct tls_message,1);
+					struct internal_message *message=g_new0(struct internal_message,1);
                                         if (!message){
                                             //GRYZOR asks if we should clean conn_list since we filled it before
                                             if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_USER))
@@ -163,7 +163,7 @@ void search_and_fill ()
 						g_message("need to warn client");
 #endif
 					/* duplicate tracking_hdrs */
-					message->type=WARN_CLIENTS;
+					message->type=WARN_MESSAGE;
 					message->datas=g_memdup(&(pckt->tracking_hdrs),sizeof(tracking));
 					if (message->datas){
 						g_async_queue_push (tls_push, message);
@@ -507,7 +507,7 @@ int free_connection(connection * conn)
 		}
 #endif
 		message->key=acl_create_and_alloc_key(conn);
-		message->type=CACHE_FREE;
+		message->type=FREE_MESSAGE;
 		message->datas=conn->acl_groups;
 		g_async_queue_push(acl_cache->queue,message);
 	}
@@ -526,7 +526,7 @@ int free_connection(connection * conn)
 			  }
 #endif
 			  message->key=g_strdup(conn->username);
-			  message->type=CACHE_FREE;
+			  message->type=FREE_MESSAGE;
 			  message->datas=conn->cacheduserdatas;
 			  g_async_queue_push(user_cache->queue,message);
                         }
@@ -591,7 +591,7 @@ int conn_cl_delete(gconstpointer conn)
 
 
 /**
- * test if a a  connection is old and add it to the list of old connections.
+ * test if a a  connection is old 
  * 
  * Argument 1 :  key in hash of the connection
  * Argument 2 : pointer to the connection

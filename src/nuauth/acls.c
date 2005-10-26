@@ -259,7 +259,7 @@ void get_acls_from_cache (connection* conn_elt)
 	struct cache_message message;
 	/* Going to ask to the cache */
 	/* prepare message */
-	message.type=CACHE_GET;
+	message.type=GET_MESSAGE;
 	message.key=acl_create_key(conn_elt);
 	message.datas=NULL;
 	message.reply_queue=g_private_get(aclqueue);
@@ -302,7 +302,7 @@ void get_acls_from_cache (connection* conn_elt)
 		}
 #endif
 		rmessage = g_new0(struct cache_message,1);
-		rmessage->type = CACHE_PUT;
+		rmessage->type = INSERT_MESSAGE;
 		rmessage->key = acl_duplicate_key(message.key);
 		rmessage->datas = conn_elt->acl_groups;
 		rmessage->reply_queue = NULL;

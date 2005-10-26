@@ -51,7 +51,10 @@ void user_check_and_decide (gpointer userdata, gpointer data)
 		}
 #endif
 		if (conn_elt->packet_id){
-			g_async_queue_push (localid_auth_queue,conn_elt);
+			struct internal_message *message = g_new0(struct internal_message,1);
+			message->type=INSERT_MESSAGE;
+			message->datas=conn_elt;
+			g_async_queue_push (localid_auth_queue,message);
 		} else {
 			g_async_queue_push (connexions_queue,conn_elt);
 		}

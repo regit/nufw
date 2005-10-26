@@ -70,7 +70,7 @@ void cache_manager (gpointer datas) {
 	/* wait for message */
 	while ( (message = g_async_queue_pop(cache_datas->queue)) ) {
 		switch(message->type){
-			case CACHE_GET:
+			case GET_MESSAGE:
 				/* look for datas */
 				return_list = g_hash_table_lookup(cache_datas->hash,message->key);	
 				if (return_list == NULL) {
@@ -136,7 +136,7 @@ void cache_manager (gpointer datas) {
 					}
 				}
 				break;
-			case CACHE_PUT:
+			case INSERT_MESSAGE:
 				/* look for datas */
 				return_list = g_hash_table_lookup(cache_datas->hash,message->key);	
 				g_assert(return_list != NULL);
@@ -171,7 +171,7 @@ void cache_manager (gpointer datas) {
 				cache_datas->free_key(message->key);
 				g_free(message);
 				break;
-			case CACHE_FREE:
+			case FREE_MESSAGE:
 				return_list = g_hash_table_lookup(cache_datas->hash,message->key);	
 				if (return_list != NULL){
 					GSList* cache_datas_list = return_list->datas;
@@ -199,7 +199,7 @@ void cache_manager (gpointer datas) {
 				cache_datas->free_key(message->key);
 				g_free(message);
 				break;
-			case CACHE_UPDATE:
+			case REFRESH_MESSAGE:
 				/* iter on each element */
 				g_hash_table_foreach_remove (cache_datas->hash
 						,is_old_cache_entry
