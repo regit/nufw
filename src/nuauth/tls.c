@@ -1950,7 +1950,7 @@ void push_worker ()
 			case FREE_CLIENT:
 				{
 					g_static_mutex_lock (&client_mutex);
-					delete_client_by_socket(message->datas);
+					delete_client_by_socket(GPOINTER_TO_INT(message->datas));
 					g_static_mutex_unlock (&client_mutex);
 				}
 				break;

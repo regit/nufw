@@ -147,7 +147,7 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz)
 {
 	int offset; 
 	int8_t *pointer;
-	u_int8_t msg_type;
+	uint8_t msg_type;
 	uint16_t data_len;
 
 #ifdef WORDS_BIGENDIAN	
@@ -168,7 +168,7 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz)
 					return NULL;
 				}
 				/* parse packet */
-				pointer=dgram+2;
+				pointer=(int8_t*)dgram + 2;
 
 
 				data_len=*(uint16_t *)pointer;
@@ -207,7 +207,7 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz)
 #endif
 				pointer+=sizeof ( int32_t);
 				/* get ip headers till tracking is filled */
-				offset = get_ip_headers(connexion, pointer);
+				offset = get_ip_headers(connexion, (char*)pointer);
 				if ( offset) {
 					pointer+=offset;
 					/* get saddr and daddr */
@@ -217,7 +217,7 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz)
 					} 
 					switch (connexion->tracking_hdrs.protocol) {
 						case IPPROTO_TCP:
-							switch (get_tcp_headers(connexion, pointer)){
+							switch (get_tcp_headers(connexion, (char*)pointer)){
 								case STATE_OPEN:
 									break; 
 								case STATE_CLOSE:
@@ -240,7 +240,7 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz)
 							}
 							break;
 						case IPPROTO_UDP:
-							if ( get_udp_headers(connexion, pointer) ){
+							if ( get_udp_headers(connexion, (char*)pointer) ){
 								if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))
 									g_warning ("Can't parse UDP headers\n");
 								free_connection(connexion);
@@ -248,7 +248,7 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz)
 							}
 							break;
 						case IPPROTO_ICMP:
-							if ( get_icmp_headers(connexion, pointer)){
+							if ( get_icmp_headers(connexion, (char*)pointer)){
 								if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))
 									g_message ("Can't parse ICMP headers\n");
 								free_connection(connexion);

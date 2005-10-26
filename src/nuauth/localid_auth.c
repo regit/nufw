@@ -32,15 +32,15 @@ void localid_auth()
 	connection * pckt = NULL;
 	connection * element = NULL;
 	u_int32_t randomid;
-	struct msg_addr_set *global_msg=g_new0(struct msg_addr_set,1);
-	struct nuv2_srv_helloreq *msg=g_new0(struct nuv2_srv_helloreq,1);
+	struct msg_addr_set *global_msg = g_new0(struct msg_addr_set,1);
+	struct nuv2_srv_helloreq *msg = g_new0(struct nuv2_srv_helloreq,1);
 	GHashTable *localid_auth_hash;
 
 
-	global_msg->msg=(struct nuv2_srv_message*)msg;
-	msg->type=SRV_REQUIRED_HELLO;
-	msg->option=0;
-	msg->length=htons(sizeof(struct nuv2_srv_helloreq));
+	global_msg->msg = (struct nuv2_srv_message*) msg;
+	msg->type = SRV_REQUIRED_HELLO;
+	msg->option = 0;
+	msg->length = htons(sizeof(struct nuv2_srv_helloreq));
 
 	/* init hash table */
 	localid_auth_hash=g_hash_table_new(NULL,NULL);
@@ -62,9 +62,9 @@ void localid_auth()
 				/* add element to hash with computed key */
 				g_hash_table_insert(localid_auth_hash,GINT_TO_POINTER(randomid),pckt);
 				/* send message to clients */
-				((struct nuv2_srv_helloreq*)global_msg->msg)->helloid=randomid;
-				global_msg->addr=pckt->tracking_hdrs.saddr;
-				global_msg->found=FALSE;
+				((struct nuv2_srv_helloreq*)global_msg->msg)->helloid = randomid;
+				global_msg->addr = pckt->tracking_hdrs.saddr;
+				global_msg->found = FALSE;
 				g_static_mutex_lock (&client_mutex);
 				warn_clients(global_msg);
 				g_static_mutex_unlock (&client_mutex);

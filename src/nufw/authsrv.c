@@ -31,7 +31,8 @@ void* authsrv(){
 	int z;
 	int sck_inet;
 	struct sockaddr_in addr_inet,addr_clnt;
-	int len_inet,ret;
+	int ret;
+        size_t len_inet;
 	char dgram[512];
 
 	if (!nufw_use_tls){

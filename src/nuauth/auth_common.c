@@ -22,34 +22,6 @@
 #include <jhash.h>
 
 
-#ifdef GLIB_2.3_HACK
-void g_atomic_int_inc(gint* atomic)
-{
-	g_mutex_lock(atomic_mutex);
- 	*atomic++;
-	g_mutex_unlock(atomic_mutex);
-}
-
-gboolean g_atomic_int_dec_and_test(gint* atomic)
-{
-	g_mutex_lock(atomic_mutex);
-	*atomic--;
-	if (!*atomic){
-		g_mutex_unlock(atomic_mutex);
-		return TRUE;
-	} else {
-		g_mutex_unlock(atomic_mutex);
-		return FALSE;
-	}
-}
-
-gint g_atomic_int_get(gint *atomic)
-{
-	return *atomic;	
-}
-
-#endif
-
 static gint apply_decision(connection element);
 
 void bail (const char *on_what)
@@ -883,7 +855,7 @@ gchar *string_escape(gchar *orig)
 	gchar * traduc;
 	/* convert from utf-8 to locale if needed */
 	if (nuauth_uses_utf8){
-		int bwritten;
+		size_t bwritten;
 		traduc = g_locale_from_utf8  (orig,
                                           -1,
                                            NULL,

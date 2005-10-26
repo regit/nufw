@@ -95,7 +95,7 @@ int verify_user_password(const char* given,const char* ours){
 			gcry_md_write(hd,temp+16,4);
 		}
 
-		res=gcry_md_read(hd,algo);
+		res=(char*)gcry_md_read(hd,algo);
 		/* alloc decoded to reasonnable length */
 		decoded = g_new0(char, 50);
 		sasl_encode64(res,strlen(res),decoded,50,&len);

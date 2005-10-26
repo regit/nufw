@@ -914,6 +914,11 @@ confparams nuauth_vars[] = {
 				/* ask to purge client request expired due to timeout */
 				g_async_queue_push (tls_push,message);
 			}
+#if 0
+			if (nuauth_hello_authentication) {
+				g_async_queue_push(localid_auth_queue) 	
+			}
+#endif
 		}
 #endif
 		/* a little sleep */

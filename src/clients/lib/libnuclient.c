@@ -113,7 +113,7 @@ int nu_get_usersecret(sasl_conn_t *conn __attribute__((unused)),
 	} else {
 		*psecret = (sasl_secret_t*)calloc(sizeof(sasl_secret_t) + strlen(session->password)+1,sizeof(char));
 		(*psecret)->len = strlen(session->password);
-		strncpy((*psecret)->data, session->password, (*psecret)->len +1 );
+		strncpy((char*)(*psecret)->data, session->password, (*psecret)->len +1 );
 	}
 
 	return SASL_OK;

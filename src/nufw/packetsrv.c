@@ -23,7 +23,7 @@
 /* 
  * return offset to next type of headers 
  */
-int look_for_flags(char* dgram,unsigned int datalen){
+int look_for_flags(unsigned char* dgram,unsigned int datalen){
     struct iphdr * iphdrs = (struct iphdr *) dgram;
     /* check need some datas */    
     if (datalen < sizeof(struct iphdr) +sizeof(struct tcphdr)){
@@ -149,7 +149,7 @@ static int treat_packet(struct nfqnl_q_handle *qh, struct nfgenmsg *nfmsg,
 #endif
 
 void* packetsrv(){
-    char buffer[BUFSIZ];
+    unsigned char buffer[BUFSIZ];
 #if USE_NFQUEUE
     int fd;
     int rv;
@@ -217,7 +217,7 @@ void* packetsrv(){
     nh = nfqnl_nfnlh(h);
     fd = nfnl_fd(nh);
 #else
-    int16_t size;
+    ssize_t size;
     uint32_t pcktid;
     ipq_packet_msg_t *msg_p = NULL ;
     packet_idl * current;
@@ -261,7 +261,7 @@ void* packetsrv(){
                         msg_p = ipq_get_packet(buffer);
                         /* need to parse to see if it's an end connection packet */
                         if (look_for_flags(msg_p->payload,msg_p->data_len)){
-                            auth_request_send(AUTH_CONTROL,msg_p->packet_id,msg_p->payload,msg_p->data_len);
+                            auth_request_send(AUTH_CONTROL,msg_p->packet_id,(char*)msg_p->payload,msg_p->data_len);
                             IPQ_SET_VERDICT( msg_p->packet_id,NF_ACCEPT);
                         } else {
                             current=calloc(1,sizeof( packet_idl));
@@ -289,7 +289,7 @@ void* packetsrv(){
 
                             if (pcktid){
                                 /* send an auth request packet */
-                                if (! auth_request_send(AUTH_REQUEST,msg_p->packet_id,msg_p->payload,msg_p->data_len)){
+                                if (! auth_request_send(AUTH_REQUEST,msg_p->packet_id,(char*)msg_p->payload,msg_p->data_len)){
                                     int sandf=0;
                                     /* we fail to send the packet so we free packet related to current */
                                     pthread_mutex_lock(&packets_list_mutex);
