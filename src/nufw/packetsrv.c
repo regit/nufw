@@ -217,7 +217,7 @@ void* packetsrv(){
     nh = nfqnl_nfnlh(h);
     fd = nfnl_fd(nh);
 #else
-    ssize_t size;
+    size_t size;
     uint32_t pcktid;
     ipq_packet_msg_t *msg_p = NULL ;
     packet_idl * current;
