@@ -1,4 +1,4 @@
-1.1.0 (2005/10/25)
+1.1.0 (2005/10/31)
 	- full "a posteriori" IP authentication for mono user system via hello message system
 	- nufw : port to libnetfilter_queue
 	- NuFW : many small fixes in the debian/ subdir : start in correct runlevels,
@@ -7,6 +7,7 @@
 	- NuFW : all exchanges between clients and nuauth are now done in
 	UTF-8 by default. Use --with-utf8 at configure time to select this
 	behaviour on client side.  
+	- plaintext module : cleaning and icmp support
 1.0.11 (2005/07/26)
 	- NuFW : port to big endian architecture. It has been tested on a
 	powerpc.
