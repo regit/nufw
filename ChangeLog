@@ -8,6 +8,8 @@
 	UTF-8 by default. Use --with-utf8 at configure time to select this
 	behaviour on client side.  
 	- plaintext module : cleaning and icmp support
+	- increase internal message usage instead of sending directly
+	structure to queue.
 1.0.11 (2005/07/26)
 	- NuFW : port to big endian architecture. It has been tested on a
 	powerpc.
