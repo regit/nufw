@@ -37,6 +37,7 @@
 #include <sasl/sasl.h>
 #include <locale.h>
 
+
 /* uncomment following line if you have
  * SUSE 9 and RHEL 3.0 which only have glib 2.3 */
 //#define GLIB_23_HACK 1
@@ -57,6 +58,8 @@
 
 /* config file related */
 #include <conffile.h>
+
+#include "tls.h"
 
 /*
  * declare some global variables and do some definitions
@@ -117,16 +120,6 @@ char nufw_listen_address[HOSTNAME_SIZE];
 int authreq_port;
 int  gwsrv_port , userpckt_port;
 int nuauth_aclcheck_state_ready;
-
-
-
-typedef struct Nufw_session {
-        gnutls_session* tls;
-	gint usage;
-	gboolean alive;
-} nufw_session;
-
-void clean_nufw_session(nufw_session * c_session);
 
 
 /**
@@ -205,10 +198,6 @@ GStaticMutex insert_mutex;
 /** global lock for client hash. */
 GStaticMutex client_mutex;
 
-/**Gryzor's global lock for gnutls_handshake */
-GStaticMutex gnutls_handshake_mutex;
-
-
 /**
  * pool of thread which treat user packet.
  */
@@ -255,10 +244,7 @@ struct acl_group {
   char answer;
 };
 
-
-
 GSList * ALLGROUP;
-
 
 /**
  * user statistic. */
@@ -277,81 +263,13 @@ GHashTable * users_hash;
 /* internal for crypt */
 GPrivate* crypt_priv;
 
-/**
- * internal for send_auth_response. */
-
-struct auth_answer {
-  u_int8_t answer;
-  u_int16_t user_id;
-  int socket;
-  nufw_session* tls;
-};
-
-/*
- * Functions
- */
-
-/*
- * From auth_common.c
- */
-
-void search_and_fill ();
-
-gboolean compare_connection(gconstpointer conn1, gconstpointer conn2);
-int sck_auth_reply;
-void send_auth_response(gpointer data, gpointer userdata);
-int conn_cl_delete(gconstpointer conn);
-inline char get_state(connection *elt);
-#define PACKET_ALONE 0
-#define PACKET_IN_HASH 1
-gint take_decision(connection * element,gchar place);
-gint print_connection(gpointer data,gpointer userdata);
-int free_connection(connection * conn);
-int lock_and_free_connection(connection * conn);
-void clean_connections_list ();
-guint hash_connection(gconstpointer conn_p);
-void decisions_queue_work (gpointer userdata, gpointer data);
-
-char * get_rid_of_domain(const char* user);
-
-gboolean  get_old_conn (gpointer key,
-		gpointer value,
-		gpointer user_data);
-
-/*
- * From check_acls.c
- */
-
-
-#ifdef GLIB_23_HACK
-GMutex *atomic_mutex;
-void g_atomic_int_inc(gint* numv);
-gint g_atomic_int_get(gint *atomic);
-gboolean g_atomic_int_dec_and_test(gint* numv);
-#endif
-
+#include "auth_common.h"
 
 int external_acl_groups (connection * element);
 
-/*
- * From pckt_authsrv.c
- */
+#include "user_logs.h"
+#include "pckt_authsrv.h"
 
-void* packet_authsrv();
-connection*  authpckt_decode(char * , int);
-void acl_check_and_decide (gpointer userdata , gpointer data);
-
-/*
- * from userlogs.c
- */
- 
-int check_fill_user_counters(u_int16_t userid,long time,unsigned long packet_id,u_int32_t ip);
-void print_users_list();
-void log_new_user(char* username,char* remoteip);
-GModule * logs_module;
-void log_user_packet (connection element,int state);
-void real_log_user_packet (gpointer userdata, gpointer data);
-int (*module_user_logs) (connection element, int state);
 /*
  * External auth  stuff
  */
@@ -362,32 +280,15 @@ GPrivate* dbm_priv; /* private pointer for dbm file access */
 GPrivate* pgsql_priv; /* private pointer for pgsql database access */
 GPrivate* mysql_priv; /* private pointer for mysql database access */
 GSList * (*module_acl_check) (connection* element);
-#if USE_PROTO_V1
-GSList * (*module_user_check) (connection* connexion,char *passwd);
-#else
+
 int (*module_user_check) (const char *user, const char *pass,unsigned passlen,uint16_t *uid,GSList **groups);
-#endif
+
 int init_ldap_system(void);
 
 /* ip auth */
 gchar* (*module_ip_auth)(tracking * header);
 
-/*
- * cache system : cache.c
- */
-
-/**
- * struct needed for initialisation of cache manager occurence
- */
-struct cache_init_datas {
-	GAsyncQueue * queue;
-	GHashTable*  hash;
-	void (*delete_elt)(gpointer,gpointer);
-	void* (*duplicate_key)(gpointer);
-	void (*free_key)(gpointer);
-	gboolean (*equal_key)(gconstpointer,gconstpointer);
-};
-
+#include "cache.h"
 
 struct cache_init_datas* acl_cache;
 int nuauth_acl_cache;
@@ -407,22 +308,6 @@ void cache_manager (gpointer datas);
  */
 
 
-/**
- * generic message send between thread working with the
- * cache system
- */
-
-struct cache_message {
-	guint type; /* message type */
-	gpointer key; /* key that identify datas in hash */ 
-	gpointer datas; /* datas to store */
-	GAsyncQueue* reply_queue; /* reply has to be sent to */
-};
-
-
-gpointer null_message;
-gpointer null_queue_datas;
-
 #define WARN_MESSAGE 0x1
 #define FREE_MESSAGE 0x0
 #define INSERT_MESSAGE 0x2
@@ -434,70 +319,11 @@ struct internal_message {
 	gpointer datas;
 };
 
-/* from cache.c */
-/* from acls.c (for cache)*/
-void free_acl_cache(gpointer datas);
-void free_acl_struct(gpointer datas,gpointer uda);
-void free_acl_key(gpointer datas);
-gboolean compare_acls(gconstpointer tracking_hdrs1, gconstpointer tracking_hdrs2);
+#include "acls.h"
 
-gpointer acl_create_and_alloc_key(connection* kdatas);
-inline  guint hash_acl(gconstpointer headers);
-void free_acl_list(void * datas);
-void get_acls_from_cache (connection* conn_elt);
-gpointer acl_duplicate_key(gpointer datas);
-/* from users.c (for cache) */
-void free_user_cache(gpointer datas);
-void free_user_struct(gpointer datas,gpointer uda);
-void get_users_from_cache (connection* conn_elt);
-gpointer user_duplicate_key(gpointer datas);
+#include "users.h"
 
-struct user_cached_datas {
-       uint16_t uid;
-       GSList * groups;
-};
-
-/* cache system related */
-
-/**
- * stores all informatin relative to a TLS user session
- * so we don't have to get this information at each packet
- */
-typedef struct User_session {
-	uint32_t addr;
-        gnutls_session* tls;
-        char * userid;
-	u_int16_t uid;
-        GSList * groups;
-	gchar * sysname;
-	gchar * release;
-	gchar * version;
-        struct timeval last_req;
-        gboolean req_needed;
-	gboolean multiusers;
-} user_session;
-
-struct client_connection {
-	int socket;
-	struct sockaddr_in addr;
-};
-
-/**
- * structure used to sent data from
- * tls function to core functions
- */
-
-struct buffer_read {
-        int socket;
-        gnutls_session* tls;
-        char * userid;
-	uint16_t uid;
-        GSList * groups;
-	char * sysname;
-	char * release;
-	char * version;
-        char* buf;
-};
+#include "client_mngr.h"
 
 void free_buffer_read(struct buffer_read* datas);
 
@@ -521,32 +347,9 @@ void user_check_and_decide (gpointer userdata ,gpointer data);
 
 int verify_user_password(const char* given,const char* ours);
 
-/* AUDIT */
-
-struct audit_struct{
-  GThreadPool *users;
-  GThreadPool *acls;
-  GThreadPool *loggers;
-  GHashTable *conn_list;
-  GHashTable *aclcache;
-  gint cache_req_nb;
-  gint cache_hit_nb;
-};
-
-struct audit_struct *myaudit;
-
-void process_usr1(int signum);
-void process_usr2(int signum);
-void process_poll(int signum);
-
-/* END AUDIT */
-
 GHashTable* client_conn_hash;
 GHashTable* client_ip_hash;
 
-void create_x509_credentials();
-void* tls_nufw_authsrv();
-GHashTable* nufw_servers;
 
 /* authorized server list */
 struct in_addr *authorized_servers;
@@ -563,8 +366,7 @@ void external_ip_auth(gpointer userdata, gpointer data);
 char** nuauth_multi_users_array;
 struct in_addr * nuauth_multi_servers_array;
 
-/* x509 parsing */
-gchar * parse_x509_certificate_info(gnutls_session session);
+#include "x509_parsing.h"
 
 // Check validity of data before inserting them to SQL
 // This allocates a new string.
@@ -572,35 +374,8 @@ gchar * parse_x509_certificate_info(gnutls_session session);
 // Else returns escaped char (with glib function g_strescape()
 gchar *string_escape(gchar *orig);
 
-/* parsing function */
-struct in_addr* generate_inaddr_list(gchar* gwsrv_addr);
-gboolean check_inaddr_in_array(struct in_addr check_ip,struct in_addr *iparray);
-gboolean check_string_in_array(gchar* checkstring,gchar** stringarray);
+#include "parsing.h"
 
-/* client_mngr.c */
+#include "localid_auth.h"
 
-void init_client_struct();
-
-void add_client(int socket, gpointer datas);
-
-char delete_client_by_socket(int c);
-
-inline user_session * get_client_datas_by_socket(int c);
-
-inline GSList * get_client_sockets_by_ip(uint32_t ip);
-
-void clean_session(user_session*);
-
-
-struct msg_addr_set {
-	uint32_t addr;
-	struct nuv2_srv_message* msg;
-	gboolean found;
-};
-
-
-char warn_clients(struct msg_addr_set * global_msg);
-
-/* from localid_auth */
-char localid_authenticated_protocol(int protocol);
-void localid_auth();
+#include "audit.h"

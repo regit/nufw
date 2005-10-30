@@ -14,7 +14,8 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
-
+#ifndef TLS_H
+#define TLS_H
 
 #define KEYFILE "privkey.pem"
 #define CERTFILE "cacert.pem"
@@ -30,3 +31,40 @@ GAsyncQueue* mx_queue;
 GAsyncQueue* mx_nufw_queue;
 
 int tls_connect(int c,gnutls_session** session_ptr);
+
+/* cache system related */
+struct client_connection {
+	int socket;
+	struct sockaddr_in addr;
+};
+
+/**
+ * structure used to sent data from
+ * tls function to core functions
+ */
+
+struct buffer_read {
+        int socket;
+        gnutls_session* tls;
+        char * userid;
+	uint16_t uid;
+        GSList * groups;
+	char * sysname;
+	char * release;
+	char * version;
+        char* buf;
+};
+
+typedef struct Nufw_session {
+        gnutls_session* tls;
+	gint usage;
+	gboolean alive;
+} nufw_session;
+
+void clean_nufw_session(nufw_session * c_session);
+
+
+void create_x509_credentials();
+void* tls_nufw_authsrv();
+GHashTable* nufw_servers;
+#endif
