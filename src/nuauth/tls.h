@@ -66,5 +66,23 @@ void clean_nufw_session(nufw_session * c_session);
 
 void create_x509_credentials();
 void* tls_nufw_authsrv();
+
 GHashTable* nufw_servers;
+
+void close_servers(int signal);
+
+/*
+ * For user authentication
+ */
+
+void* tls_user_authsrv();
+
+void push_worker () ;
+
+/** global lock for client hash. */
+GStaticMutex client_mutex;
+
+/** end tls stuff */
+void end_tls(int signal);
+
 #endif

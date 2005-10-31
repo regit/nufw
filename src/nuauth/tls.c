@@ -1974,3 +1974,14 @@ void push_worker ()
 		g_free(message);
 	}
 }
+
+
+void close_servers(int signal)
+{
+	g_hash_table_destroy(nufw_servers);
+}
+
+void end_tls(int signal)
+{
+	gnutls_global_deinit();
+}

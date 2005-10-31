@@ -21,6 +21,8 @@
 #include <ldap.h>
 
 
+GPrivate* ldap_priv; /* private pointer to ldap connection */
+
 #define LDAP_SERVER "127.0.0.1"
 #define LDAP_SERVER_PORT 389
 /*#define LDAP_USER NULL

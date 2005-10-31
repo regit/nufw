@@ -41,5 +41,6 @@ struct msg_addr_set {
 
 char warn_clients(struct msg_addr_set * global_msg);
 
-#endif
+void close_clients(int signal);
 
+#endif

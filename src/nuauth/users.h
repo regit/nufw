@@ -47,6 +47,8 @@ typedef struct User_session {
 	gboolean multiusers;
 } user_session;
 
+
+
 #endif
 
 

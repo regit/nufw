@@ -1,5 +1,5 @@
 /*
-** Copyright(C) 2003-2005 Eric Leblond <regit@inl.fr>
+** Copyright(C) 2005 Eric Leblond <regit@inl.fr>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -15,29 +15,9 @@
 ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+#ifndef CHECK_ACLS_H
+#define CHECK_ACLS_H
 
-#ifndef AUDIT_H
-#define AUDIT_H
-
-/* AUDIT */
-
-struct audit_struct{
-  GThreadPool *users;
-  GThreadPool *acls;
-  GThreadPool *loggers;
-  GHashTable *conn_list;
-  GHashTable *aclcache;
-  gint cache_req_nb;
-  gint cache_hit_nb;
-};
-
-struct audit_struct *myaudit;
-
-void process_usr1(int signum);
-void process_usr2(int signum);
-void process_poll(int signum);
-
-
-void end_audit(int signal);
+int external_acl_groups (connection * element);
 
 #endif

@@ -1,3 +1,4 @@
+
 /*
  ** Copyright(C) 2005 Eric Leblond <regit@inl.fr>
  **                  INL http://www.inl.fr/
@@ -16,19 +17,10 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef ACLS_H
-#define ACLS_H
+#ifndef IP_AUTH_H
+#define IP_AUTH_H
 
-void free_acl_cache(gpointer datas);
-void free_acl_struct(gpointer datas,gpointer uda);
-void free_acl_key(gpointer datas);
-gboolean compare_acls(gconstpointer tracking_hdrs1, gconstpointer tracking_hdrs2);
 
-gpointer acl_create_and_alloc_key(connection* kdatas);
-inline  guint hash_acl(gconstpointer headers);
-void free_acl_list(void * datas);
-void get_acls_from_cache (connection* conn_elt);
-gpointer acl_duplicate_key(gpointer datas);
-
+void external_ip_auth(gpointer userdata, gpointer data);
 
 #endif

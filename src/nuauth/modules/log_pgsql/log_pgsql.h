@@ -47,3 +47,5 @@ char * pgsql_ssl;
 char * pgsql_db_name;
 char * pgsql_table_name;
 int pgsql_server_port;
+
+GPrivate* pgsql_priv; /* private pointer for pgsql database access */

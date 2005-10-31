@@ -1,5 +1,5 @@
 /*
-** Copyright(C) 2003-2005 Eric Leblond <regit@inl.fr>
+** Copyright(C) 2005 Eric Leblond <regit@inl.fr>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -15,29 +15,18 @@
 ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+#ifndef PARSING_H 
+#define PARSING_H
 
-#ifndef AUDIT_H
-#define AUDIT_H
+/* parsing function */
+struct in_addr* generate_inaddr_list(gchar* gwsrv_addr);
+gboolean check_inaddr_in_array(struct in_addr check_ip,struct in_addr *iparray);
+gboolean check_string_in_array(gchar* checkstring,gchar** stringarray);
 
-/* AUDIT */
-
-struct audit_struct{
-  GThreadPool *users;
-  GThreadPool *acls;
-  GThreadPool *loggers;
-  GHashTable *conn_list;
-  GHashTable *aclcache;
-  gint cache_req_nb;
-  gint cache_hit_nb;
-};
-
-struct audit_struct *myaudit;
-
-void process_usr1(int signum);
-void process_usr2(int signum);
-void process_poll(int signum);
-
-
-void end_audit(int signal);
+// Check validity of data before inserting them to SQL
+// This allocates a new string.
+// Returns NULL is the original string contains ' or ;
+// Else returns escaped char (with glib function g_strescape()
+gchar *string_escape(gchar *orig);
 
 #endif

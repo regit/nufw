@@ -15,29 +15,9 @@
 ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+#ifndef USER_AUTHSRV_H
+#define USER_AUTHSRV_H
 
-#ifndef AUDIT_H
-#define AUDIT_H
-
-/* AUDIT */
-
-struct audit_struct{
-  GThreadPool *users;
-  GThreadPool *acls;
-  GThreadPool *loggers;
-  GHashTable *conn_list;
-  GHashTable *aclcache;
-  gint cache_req_nb;
-  gint cache_hit_nb;
-};
-
-struct audit_struct *myaudit;
-
-void process_usr1(int signum);
-void process_usr2(int signum);
-void process_poll(int signum);
-
-
-void end_audit(int signal);
+void user_check_and_decide (gpointer userdata ,gpointer data);
 
 #endif

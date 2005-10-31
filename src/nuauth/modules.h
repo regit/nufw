@@ -16,19 +16,16 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef ACLS_H
-#define ACLS_H
+#ifndef MODULES_H
+#define MODULES_H
 
-void free_acl_cache(gpointer datas);
-void free_acl_struct(gpointer datas,gpointer uda);
-void free_acl_key(gpointer datas);
-gboolean compare_acls(gconstpointer tracking_hdrs1, gconstpointer tracking_hdrs2);
+int (*module_user_check) (const char *user, const char *pass,unsigned passlen,uint16_t *uid,GSList **groups);
 
-gpointer acl_create_and_alloc_key(connection* kdatas);
-inline  guint hash_acl(gconstpointer headers);
-void free_acl_list(void * datas);
-void get_acls_from_cache (connection* conn_elt);
-gpointer acl_duplicate_key(gpointer datas);
+GSList * (*module_acl_check) (connection* element);
 
+/* ip auth */
+gchar* (*module_ip_auth)(tracking * header);
+
+int (*module_user_logs) (connection element, int state);
 
 #endif

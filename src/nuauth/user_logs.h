@@ -22,9 +22,7 @@
 int check_fill_user_counters(u_int16_t userid,long time,unsigned long packet_id,u_int32_t ip);
 void print_users_list();
 void log_new_user(char* username,char* remoteip);
-GModule * logs_module;
 void log_user_packet (connection element,int state);
 void real_log_user_packet (gpointer userdata, gpointer data);
-int (*module_user_logs) (connection element, int state);
 
 #endif

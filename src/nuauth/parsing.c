@@ -80,3 +80,31 @@ gboolean check_string_in_array(gchar* checkstring,gchar** stringarray){
 
 }
 
+gchar *string_escape(gchar *orig)
+{
+	gchar * traduc;
+	/* convert from utf-8 to locale if needed */
+	if (nuauth_uses_utf8){
+		size_t bwritten;
+		traduc = g_locale_from_utf8  (orig,
+                                          -1,
+                                           NULL,
+                                           &bwritten,
+                                           NULL);
+		if (!traduc){
+			return NULL;
+		}
+	} else {
+		traduc = orig;
+	}
+
+	if (g_strrstr(traduc,"'"))
+		return NULL;
+	if (g_strrstr(traduc,";"))
+		return NULL;
+	orig = g_strescape(traduc,"");
+	g_free(traduc);
+	return orig;
+}
+
+

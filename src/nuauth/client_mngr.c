@@ -35,6 +35,11 @@
 
 #include <auth_srv.h>
 
+
+/* Client structure */
+GHashTable* client_conn_hash;
+GHashTable* client_ip_hash;
+
 void clean_session(user_session * c_session)
 {
 	if (c_session->tls)
@@ -150,4 +155,9 @@ char warn_clients(struct msg_addr_set * global_msg)
 		return 1;
 	} else 
 		return 0;
+}
+
+void close_clients(int signal)
+{
+	g_hash_table_destroy(client_conn_hash);
 }

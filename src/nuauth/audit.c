@@ -52,3 +52,8 @@ void process_usr2(int signum)
       debug_level = 0;
   g_message("USR2 : setting debug level to %d",debug_level);
 }
+
+void end_audit(int signal)
+{
+	g_free(myaudit);
+}

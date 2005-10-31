@@ -32,42 +32,8 @@ GCRY_THREAD_OPTION_PTHREAD_IMPL;
 #endif
 #endif
 
-#include <tls.h>
-
-/*sasl init function*/
-void *sasl_gthread_mutex_init(void)
-{
-	GMutex* lock = g_mutex_new();
-	if (!lock)								      
-		return NULL;							      
-	return lock;
-//	return 0;								      
-}
-
-int sasl_gthread_mutex_lock(void *lock)
-{
-	g_mutex_lock(lock);
-	return 0;
-}
-
-int sasl_gthread_mutex_unlock(void *lock)
-{
-	g_mutex_unlock(lock);
-	return 0;
-}
-
-void sasl_gthread_mutex_free(void *lock)
-{
-	g_mutex_free(lock);
-}
-
-void our_sasl_init(void){
-	sasl_set_mutex(sasl_gthread_mutex_init, 
-			sasl_gthread_mutex_lock, 
-			sasl_gthread_mutex_unlock, 
-			sasl_gthread_mutex_free);
-}
-
+#include "tls.h"
+#include "sasl.h"
 
 /* gcrypt init function */
 static int gcry_gthread_mutex_init (void **priv)			     //to check 
@@ -157,15 +123,15 @@ sasl_mutex_utils_t _sasl_mutex_utils={
  * Return : None
  */
 void nuauth_cleanup( int signal ) {
-	/* clean gnutls */
-	gnutls_global_deinit();
-	g_free(myaudit);
 	/* free nufw server hash */
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN))
 		g_message("caught interrupt, cleaning");
-	g_hash_table_destroy(nufw_servers);
+	close_servers(signal);
 	/* free client hash */
-	g_hash_table_destroy(client_conn_hash);
+	close_clients(signal);
+	/* clean gnutls */
+	end_tls(signal);
+	end_audit(signal);
 	/* destroy pid file */
 	unlink(NUAUTH_PID_FILE);
 	/* exit */
@@ -198,6 +164,7 @@ int main(int argc,char * argv[])
 	char * nuauth_user_check_module;
 	char * nuauth_user_logs_module;
 	char * nuauth_ip_authentication_module;
+	GModule * auth_module,*logs_module,*acl_module,*ipauth_module;
 confparams nuauth_vars[] = {
 	{ "nuauth_client_listen_addr" ,  G_TOKEN_STRING, 0 , g_strdup(AUTHREQ_CLIENT_LISTEN_ADDR) },
 	{ "nuauth_nufw_listen_addr" ,  G_TOKEN_STRING, 0 , g_strdup(AUTHREQ_NUFW_LISTEN_ADDR) },
@@ -612,7 +579,7 @@ confparams nuauth_vars[] = {
 	}
 	if ( strcmp(nuauth_user_check_module,nuauth_acl_check_module)){
 		module_path = g_module_build_path(MODULE_PATH, nuauth_acl_check_module);
-		auth_module = g_module_open (module_path 
+		acl_module = g_module_open (module_path 
 				,0);
 		g_free(module_path);
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
@@ -620,13 +587,15 @@ confparams nuauth_vars[] = {
 		if (auth_module == NULL){
 			g_error("Unable to load module %s in %s",nuauth_acl_check_module,MODULE_PATH);
 		}
+	} else {
+		acl_module=auth_module;
 	}
 
         g_free(nuauth_user_check_module);
         g_free(nuauth_acl_check_module);
 
 
-	if (!g_module_symbol (auth_module, "acl_check", 
+	if (!g_module_symbol (acl_module, "acl_check", 
 				(gpointer*)&module_acl_check))
 	{
 		g_error ("Unable to load acl checking function\n");
@@ -712,7 +681,7 @@ confparams nuauth_vars[] = {
 		/* load module */
 		module_path=g_module_build_path(MODULE_PATH,
 				nuauth_ip_authentication_module);
-		auth_module=g_module_open (module_path,0);
+		ipauth_module=g_module_open (module_path,0);
 		g_free(module_path);
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
 			g_message("IP Auth (user) module: %s",nuauth_ip_authentication_module);
@@ -721,7 +690,7 @@ confparams nuauth_vars[] = {
 		}
                 g_free(nuauth_ip_authentication_module);
 
-		if (!g_module_symbol (auth_module, "ip_authentication", 
+		if (!g_module_symbol (ipauth_module, "ip_authentication", 
 					(gpointer*) &module_ip_auth))
 		{
 			g_error ("Unable to load ip authentication function\n");
@@ -779,10 +748,6 @@ confparams nuauth_vars[] = {
 	if (sck_auth_reply == -1){
 		exit(1);
 	}
-
-
-	/* private data for crypt */
-	crypt_priv = g_private_new (g_free);
 
 	/* create pckt workers */
 

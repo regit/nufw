@@ -454,7 +454,7 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned p
 		attrs_array = ldap_get_values(ld, result, "uidNumber");
 		attrs_array_len = ldap_count_values(attrs_array);
 		if (attrs_array_len==1){
-			sscanf(*attrs_array,"%u",uid);
+			sscanf(*attrs_array,"%hu",uid);
 		}
 		ldap_value_free(attrs_array);
 		/* build groups  list */

@@ -21,6 +21,8 @@
 #include <gdbm.h>
 
 
+GPrivate* dbm_priv; /* private pointer for dbm file access */
+
 #define DBM_USERS_FILE "/etc/nuauth/nuauth_users.dbm"
 //DBM_BLOCK_SIZE is useless (ignored on file reads, and file is ALWAYS read
 #define DBM_BLOCK_SIZE 512
