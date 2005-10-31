@@ -8,8 +8,6 @@
 
 - nuauth : check for simultaneous login of same user
 
-- nuauth : cleaning of localid hash
-
 - nuauth : do not send hello message if multiple instance runs on the same computer
 
 - nuauth : do a check on src address for every user packet to avoid spoofing
