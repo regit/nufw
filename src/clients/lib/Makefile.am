@@ -5,4 +5,10 @@ lib_LTLIBRARIES = libnuclient.la
 libnuclient_la_SOURCES = libnuclient.c proc.c iconv.c
 LIBS = -lgnutls -lsasl2 -lpthread
 
+LIBNUCLIENT_AC=1
+LIBNUCLIENT_REV=1
+LIBNUCLIENT_ANC=0
+
+libnuclient_la_LDFLAGS=-version-info ${LIBNUCLIENT_AC}:${LIBNUCLIENT_REV}:${LIBNUCLIENT_ANC}
+
 include_HEADERS = nuclient.h
