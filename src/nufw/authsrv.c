@@ -20,64 +20,15 @@
 #include "nufw.h"
 
 
-static void 
-bail (const char *on_what){
-	perror(on_what);
-	exit(1);
-}
-
-
 void* authsrv(){
-	int z;
-	int sck_inet;
-	struct sockaddr_in addr_inet,addr_clnt;
 	int ret;
-        size_t len_inet;
 	char dgram[512];
 
-	if (!nufw_use_tls){
-		//open the socket
-		sck_inet = socket (AF_INET,SOCK_DGRAM,0);
-
-		if (sck_inet == -1)
-			bail("socket()");
-
-		memset(&addr_inet,0,sizeof addr_inet);
-
-		addr_inet.sin_family= AF_INET;
-		addr_inet.sin_port=htons(authsrv_port);
-		addr_inet.sin_addr.s_addr=list_srv.sin_addr.s_addr;
-
-		len_inet = sizeof addr_inet;
-
-		z = bind (sck_inet,
-				(struct sockaddr *)&addr_inet,
-				len_inet);
-		if (z == -1)
-			bail ("bind()");
-
-		for(;;){
-			len_inet = sizeof addr_clnt;
-			z = recvfrom(sck_inet,
-					dgram,
-					sizeof dgram,
-					0,
-					(struct sockaddr *)&addr_clnt,
-					&len_inet);
-			if (z<0)
-				bail("recvfrom()");
-			//	pckt_rx++;
-			// decode packet
-			auth_packet_to_decision(dgram);
-		}
-
-		close(sck_inet);
-	} else {
-		for(;;){
-			/* if session is defined */
-			if (tls.active){
-				ret= gnutls_record_recv(*tls.session,dgram,sizeof dgram);
-				if (ret<0){
+	for(;;){
+		/* if session is defined */
+		if (tls.active){
+			ret= gnutls_record_recv(*tls.session,dgram,sizeof dgram);
+			if (ret<0){
 
 				if ( gnutls_error_is_fatal(ret) ){
 					int socket_tls;
@@ -104,14 +55,13 @@ void* authsrv(){
 					pthread_cond_signal(session_destroyed_cond);
 					pthread_cond_wait(session_active_cond,session_destroyed_mutex);
 				}
-				} else {
-					auth_packet_to_decision(dgram);
-				}
-				memset(dgram,0,512);
 			} else {
-				/* else sleep a moment */
-				sleep(1);
+				auth_packet_to_decision(dgram);
 			}
+			memset(dgram,0,512);
+		} else {
+			/* else sleep a moment */
+			sleep(1);
 		}
 	}
 	return NULL;

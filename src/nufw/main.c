@@ -50,12 +50,12 @@ void nufw_cleanup( int signal ) {
 
 int main(int argc,char * argv[]){
     pthread_t pckt_server,auth_server;
-    struct hostent *authreq_srv, *listenaddr_srv;
+    struct hostent *authreq_srv;
     /* option */
 #if USE_NFQUEUE
-    char * options_list = "UDhVvmq:c:k:a:n:l:L:d:p:t:T:";
+    char * options_list = "DhVvmq:c:k:a:n:d:p:t:T:";
 #else
-    char * options_list = "UDhVvmc:k:a:n:l:L:d:p:t:T:";
+    char * options_list = "DhVvmc:k:a:n:d:p:t:T:";
 #endif
     int option,daemonize = 0;
     int value;
@@ -69,17 +69,14 @@ int main(int argc,char * argv[]){
 
     log_engine = LOG_TO_STD; /* default is to send debug messages to stdout + stderr */
     authreq_port = AUTHREQ_PORT;
-    authsrv_port = AUTHSRV_PORT;
     packet_timeout = PACKET_TIMEOUT;
     track_size = TRACK_SIZE;
     id_srv = ID_SERVER;
-    nufw_use_tls=1;
     cert_file=NULL;
     key_file=NULL;
     ca_file=NULL;
     nuauth_cert_dn=NULL;
     strncpy(authreq_addr,AUTHREQ_ADDR,HOSTNAME_SIZE);
-    strncpy(listen_addr,LISTEN_ADDR,HOSTNAME_SIZE);
     debug=DEBUG; /* this shall disapear */
     debug_level=0;
     debug_areas=DEFAULT_DEBUG_AREAS;
@@ -128,18 +125,6 @@ int main(int argc,char * argv[]){
             /*fprintf (stdout, "Debug should be On\n");*/
             debug_level+=1;
             break;
-            /* port we listen for auth answer */
-          case 'l' :
-            sscanf(optarg,"%d",&value);
-            printf("Listening on UDP port %d\n",value);
-            authsrv_port=value;
-            break;
-            /* Listening adress */
-          case 'L' :
-            strncpy(listen_addr,optarg,HOSTNAME_SIZE);
-            printf("Listening on address %s\n",listen_addr);
-            break;
-            /* destination port */
           case 'p' :
             sscanf(optarg,"%d",&value);
             printf("Auth requests sent to port %d\n",value);
@@ -165,16 +150,13 @@ int main(int argc,char * argv[]){
           case 'm':
             nufw_set_mark=1;
             break;
-          case 'U':
-            nufw_use_tls=0;
-            break;
 #if USE_NFQUEUE
           case 'q':
             sscanf(optarg,"%ud",&nfqueue_num);
             break;
 #endif
           case 'h' :
-            fprintf (stdout ,"%s [-hVv[v[v[v[v[v[v[v[v[v]]]]]]]]]] [-l local_port] [-L local_addr] [-d remote_addr] [-p remote_port]  [-t packet_timeout] [-T track_size]\n\
+            fprintf (stdout ,"%s [-hVv[v[v[v[v[v[v[v[v[v]]]]]]]]]] [-d remote_addr] [-p remote_port]  [-t packet_timeout] [-T track_size]\n\
 \t-h : display this help and exit\n\
 \t-V : display version and exit\n\
 \t-D : daemonize\n\
@@ -182,11 +164,8 @@ int main(int argc,char * argv[]){
 \t-c : use specified file as cert file\n\
 \t-a : use specified file as ca file (strict checking is done if selected) (default: none)\n\
 \t-n : use specified string as the needed DN of nuauth (inforce certificate checking) (default: none)\n\
-\t-U : use UDP unencrypted communication with nuauth server\n\
 \t-v : increase debug level (+1 for each 'v') (max useful number : 10)\n\
 \t-m : mark packet with userid\n\
-\t-l : (DEPRECATED OPTION) specify listening UDP port (default : 4129)\n\
-\t-L : (DEPRECATED OPTION) specify listening address (default : 127.0.0.1)\n\
 \t-d : remote address we send auth requests to (adress of the nuauth server) (default : 127.0.0.1)\n\
 \t-p : remote port we send auth requests to (TCP port nuauth server listens on) (default : 4128)\n"
 #if USE_NFQUEUE
@@ -310,33 +289,17 @@ int main(int argc,char * argv[]){
                 printf("[%d] Bad Address in configuration for adr_srv",getpid());
             }
         }
-    if (nufw_use_tls == 0){
-        memset(&list_srv,0,sizeof list_srv);
-        listenaddr_srv=gethostbyname(listen_addr);
-        list_srv.sin_addr=*(struct in_addr *)listenaddr_srv->h_addr;
-
-        if (list_srv.sin_addr.s_addr == INADDR_NONE )
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
-                if (log_engine == LOG_TO_SYSLOG){
-                    syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"Bad Listening Address in configuration");
-                }else{
-                    printf("[%d] Bad Listening Address in configuration",getpid());
-                }
-            }
-        list_srv.sin_addr.s_addr = INADDR_ANY;
-    }
+    
     packets_list_start=NULL;
     packets_list_end=NULL;
     packets_list_length=0;
     /* initialize mutex */
     pthread_mutex_init(&packets_list_mutex ,NULL);
 
-    if (nufw_use_tls){
-        tls.session=NULL;
-        tls.active=0;
-        gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);
-        gnutls_global_init();
-    }
+    tls.session=NULL;
+    tls.active=0;
+    gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);
+    gnutls_global_init();
     /* create condition for tls session transition phase */
     session_destroyed_cond=(pthread_cond_t *)calloc(sizeof(pthread_cond_t),1);
     pthread_cond_init(session_destroyed_cond,NULL);

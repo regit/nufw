@@ -57,7 +57,6 @@ struct nuauth_conn {
 };
 
 struct nuauth_conn tls;
-int nufw_use_tls;
 gnutls_session * tls_connect( );
 pthread_cond_t *session_destroyed_cond;
 pthread_cond_t *session_active_cond;
