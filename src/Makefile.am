@@ -1,2 +1,2 @@
 
-SUBDIRS = nuauth nufw clients support
+SUBDIRS = nuauth nufw clients support nutrackd

@@ -37,9 +37,8 @@ AC_CHECK_FUNCS([gethostbyname memset socket strcasecmp strspn])
 
 AC_CHECK_LIB([gcrypt], [gcry_md_open],AC_DEFINE([HAVE_LIBRARY_GCRYPT],[1],[Gcrypt lib flag]),AC_MSG_ERROR([gcrypt library needed for encryption]))
 AC_CHECK_LIB([gnutls], [gnutls_init],AC_DEFINE([HAVE_LIBRARY_GNUTLS],[1],[Gnutls lib flag]),AC_MSG_ERROR([gnutls library needed for encryption]))
-AC_CHECK_LIB([sasl2],[sasl_server_init],AC_DEFINE([HAVE_LIBRARY_SASL2],[1],[SASLlib flag]),AC_MSG_ERROR([sasl library needed for authentication]))
+AC_CHECK_LIB([sasl2],[sasl_server_init],AC_DEFINE([HAVE_LIBRARY_SASL2],[1],[SASL lib flag]),AC_MSG_ERROR([sasl library needed for authentication]))
         
-AM_CONDITIONAL(USE_USER_MARK, test x$enable_user_mark = xyes)
 
 
 #Configure database support, depending on user input
@@ -56,6 +55,8 @@ AC_ARG_WITH(debug,   [--with-debug Add development debug message],debug="yes", d
 
 AC_ARG_WITH(nfqueue,   [--with-nfqueue Compile for NFQUEUE instead of QUEUE],use_nfqueue="yes", use_nfqueue="")
 
+AC_ARG_WITH(conntrack,   [--with-conntrack Compile with libnetfilter_conntrack support],use_conntrack="yes", use_conntrack="")
+
 AC_ARG_WITH(utf8,   [--with-utf8 Use UTF8 exchange between client and server], AC_DEFINE_UNQUOTED([USE_UTF8],[1],[Will use UTF8 exchange])
 )
 
@@ -68,20 +69,31 @@ if test "${use_nfqueue}" = "yes"; then
 	AC_DEFINE_UNQUOTED([USE_NFQUEUE],[1],[Will use netlink queue support instead of libipq])
 else
 
+
 AC_CHECK_HEADERS([libipq/libipq.h libipq.h])
 AC_CHECK_LIB([ipq], [ipq_message_type], have_ipq="yes", have_ipq="")
 
 if test "$have_ipq" = "yes"; then
 # check if we have a version of libipq supporting mark
-AC_ARG_WITH(user-mark, [--with-user-mark  Support user mark on NuFW firewall], enable_user_mark="yes", enable_user_mark="")
+AC_ARG_WITH(user-mark, [--with-user-mark  Support user mark on NuFW firewall (useless if using nfqueue)], enable_user_mark="yes", enable_user_mark="")
+
 if test "$enable_user_mark" = "yes"; then
         AC_CHECK_LIB([ipq], [ipq_set_vwmark],AC_DEFINE_UNQUOTED([HAVE_LIBIPQ_MARK],[1],[libipq has support for mark]),AC_MSG_RESULT([libipq has no support for mark]))
 fi
 fi
 fi
 
+if test "${use_conntrack}" = "yes"; then
+#	AC_CHECK_LIB([nfnetlink], [nfnl_open], have_nfqueue="yes", have_nfqueue="")
+#	AC_CHECK_LIB([nfnetlink], [nfnl_open], have_nfnetlink="yes", have_nfnetlink="")
+	AC_CHECK_LIB([netfilter_conntrack], [nfct_event_conntrack], have_conntrack="yes", have_conntrack="")
+	AC_DEFINE_UNQUOTED([USE_CONNTRACK],[1],[Will build nutrackd daemon])
+fi
+
 AM_CONDITIONAL(HAVE_IPQ,test x$have_ipq = xyes)
+AM_CONDITIONAL(USE_USER_MARK, test x$enable_user_mark = xyes)
 AM_CONDITIONAL(HAVE_NFQUEUE,test x$have_nfqueue = xyes)
+AM_CONDITIONAL(HAVE_CONNTRACK,test x$have_conntrack = xyes)
 AM_CONDITIONAL(HAVE_NETFILTER,(test x$have_nfqueue = xyes) || (test x$have_ipq = xyes)  )
 
 if test "$enable_system_auth" = "yes"; then
@@ -138,6 +150,7 @@ AC_CONFIG_FILES([Makefile
 		 src/nufw/Makefile
                  src/support/Makefile
                  src/support/dbm/Makefile
+                 src/nutrackd/Makefile
 		 ])
 
 AM_INIT_AUTOMAKE(1.9)
@@ -151,9 +164,12 @@ fi
 if (test "$have_ipq" = "" && test "$have_nfqueue" = "")  ;  then
 	AC_MSG_NOTICE([nufw daemon WON'T be compiled: libipq or libnetfilter_queue not present])
 else
+
+if test "${have_ipq}" = "yes"; then
 	if test "$enable_user_mark" = "yes"; then
-		AC_MSG_NOTICE([nufw will be compiled with user mark support])
+AC_MSG_NOTICE([nufw will be compiled with user mark support])
 	fi
+fi
 fi
 
 if test "$enable_system_auth" = "yes"; then
@@ -184,6 +200,9 @@ if test "${have_nfqueue}" = "yes"; then
 	AC_MSG_NOTICE([Compiling with libnetfilter_queue support instead of libipq])
 fi
 
+if test "${have_conntrack}" = "yes"; then
+	AC_MSG_NOTICE([Compiling nutrackd])
+fi
 
 
 
