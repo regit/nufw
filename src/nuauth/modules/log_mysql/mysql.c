@@ -1,6 +1,6 @@
 
 /*
- ** Copyright(C) 2003-2004 Eric Leblond <eric@regit.org>
+ ** Copyright(C) 2003-2005 Eric Leblond <eric@regit.org>
  **		     Vincent Deffontaines <vincent@gryzor.com>
  **
  ** This program is free software; you can redistribute it and/or modify
@@ -200,17 +200,6 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
 
 					if (nuauth_log_users_strict){
 						/* need to update table to suppress double field */
-#if 0
-						if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET state=%hu,end_timestamp=FROM_UNIXTIME(%lu) WHERE (ip_daddr=%lu AND ip_saddr=%lu AND tcp_dport=%u AND tcp_sport=%u AND (state=1 OR state=2))",
-									mysql_table_name,
-									STATE_CLOSE,
-									element.timestamp,
-									(long unsigned int)(element.tracking_hdrs).saddr,
-									(long unsigned int)(element.tracking_hdrs).daddr,
-									(element.tracking_hdrs).source,
-									(element.tracking_hdrs).dest
-							    ) >= SHORT_REQUEST_SIZE-1){
-#endif
 						if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET state=%hu,end_timestamp=FROM_UNIXTIME(%lu) WHERE (ip_saddr=%lu  AND tcp_sport=%u AND (state=1 OR state=2))",
 									mysql_table_name,
 									STATE_CLOSE,
