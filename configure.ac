@@ -60,15 +60,15 @@ AC_ARG_WITH(conntrack,   [--with-conntrack Compile with libnetfilter_conntrack s
 AC_ARG_WITH(utf8,   [--with-utf8 Use UTF8 exchange between client and server], AC_DEFINE_UNQUOTED([USE_UTF8],[1],[Will use UTF8 exchange])
 )
 
-AM_CONDITIONAL(HAVE_NFQUEUE,test x$have_nfqueue = xyes)
 
 if test "${use_nfqueue}" = "yes"; then
 	AC_CHECK_LIB([nfnetlink], [nfnl_open], have_nfqueue="yes", have_nfqueue="")
 #	AC_CHECK_LIB([nfnetlink], [nfnl_open], have_nfnetlink="yes", have_nfnetlink="")
-	AC_CHECK_LIB([netfilter_queue], [nfqnl_open], have_nfqueue="yes", have_nfqueue="")
+#	AC_CHECK_LIB([netfilter_queue], [nfqnl_open], have_nfqueue="yes", have_nfqueue="")
 	AC_DEFINE_UNQUOTED([USE_NFQUEUE],[1],[Will use netlink queue support instead of libipq])
 else
 
+AM_CONDITIONAL(HAVE_NFQUEUE,test x$have_nfqueue = xyes)
 
 AC_CHECK_HEADERS([libipq/libipq.h libipq.h])
 AC_CHECK_LIB([ipq], [ipq_message_type], have_ipq="yes", have_ipq="")
