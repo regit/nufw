@@ -41,7 +41,7 @@ int look_for_flags(unsigned char* dgram,unsigned int datalen){
 
 #if USE_NFQUEUE
 static int treat_packet(struct nfqnl_q_handle *qh, struct nfgenmsg *nfmsg,
-		struct nfattr *nfa[], void *data)
+		struct nfqnl_q_datas *nfa, void *data)
 {
 	packet_idl * current;
 	uint32_t pcktid;
