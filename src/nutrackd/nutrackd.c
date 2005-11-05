@@ -1,6 +1,7 @@
 /*
  ** Copyright (C) 2005 - INL 
- ** Written by Eric Leblond <regit@inl.fr>
+ ** Written by Vincent Deffontaines <gryzor@inl.fr>
+ **            Eric Leblond <regit@inl.fr>
  **            INL http://www.inl.fr/
  **
  ** This program is free software; you can redistribute it and/or modify
