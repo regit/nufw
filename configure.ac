@@ -83,17 +83,20 @@ fi
 fi
 fi
 
+#FIXME : this MUST be fixed before any release
 if test "${use_conntrack}" = "yes"; then
 #	AC_CHECK_LIB([nfnetlink], [nfnl_open], have_nfqueue="yes", have_nfqueue="")
 #	AC_CHECK_LIB([nfnetlink], [nfnl_open], have_nfnetlink="yes", have_nfnetlink="")
-	AC_CHECK_LIB([netfilter_conntrack], [nfct_event_conntrack], have_conntrack="yes", have_conntrack="")
+#	AC_CHECK_LIB([netfilter_conntrack], [nfct_dump_conntrack_table], have_conntrack="yes", have_conntrack="")
 	AC_DEFINE_UNQUOTED([USE_CONNTRACK],[1],[Will build nutrackd daemon])
 fi
 
 AM_CONDITIONAL(HAVE_IPQ,test x$have_ipq = xyes)
 AM_CONDITIONAL(USE_USER_MARK, test x$enable_user_mark = xyes)
 AM_CONDITIONAL(HAVE_NFQUEUE,test x$have_nfqueue = xyes)
-AM_CONDITIONAL(HAVE_CONNTRACK,test x$have_conntrack = xyes)
+#FIXME : this MUST be fixed before any release
+#AM_CONDITIONAL(HAVE_CONNTRACK,test x$have_conntrack = xyes)
+AM_CONDITIONAL(HAVE_CONNTRACK,test x$use_conntrack = xyes)
 AM_CONDITIONAL(HAVE_NETFILTER,(test x$have_nfqueue = xyes) || (test x$have_ipq = xyes)  )
 
 if test "$enable_system_auth" = "yes"; then

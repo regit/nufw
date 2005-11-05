@@ -5,7 +5,8 @@ sbin_PROGRAMS = nutrackd
 
 # nutrackd
 nutrackd_SOURCES = nutrackd.c  sql.c 
-nutrackd_LDADD = -lnfnetlink -lnetfilter_conntrack -lpthread
+nutrackd_LDADD = -lnfnetlink -lnetfilter_conntrack
+#nutrackd_LDADD = -lnfnetlink -lnetfilter_conntrack -lpthread
 
 nutrackd$(EXEEXT): $(nutrackd_OBJECTS) $(nutrackd_DEPENDENCIES) 
 	@rm -f nutrackd$(EXEEXT)
