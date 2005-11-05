@@ -15,7 +15,7 @@
 #include <libnetfilter_queue/libnetfilter_queue.h>
 
 uint16_t nfqueue_num;
-struct nfqnl_handle *h;
+struct nfq_handle *h;
 #else
 /* redhat like hack */
 #ifdef HAVE_LIBIPQ_LIBIPQ_H 

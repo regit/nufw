@@ -37,8 +37,8 @@ GCRY_THREAD_OPTION_PTHREAD_IMPL;
 void nufw_cleanup( int signal ) {
     /* destroy netlink handle */
 #if USE_NFQUEUE
-        nfqnl_destroy_queue(hndl);
-        nfqnl_unbind_pf(h, AF_INET);
+        nfq_destroy_queue(hndl);
+        nfq_unbind_pf(h, AF_INET);
 #else
     ipq_destroy_handle(hndl);
 #endif

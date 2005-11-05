@@ -69,7 +69,7 @@ void* authsrv(){
 
 
 int auth_packet_to_decision(char* dgram){
-	unsigned long packet_id;
+	u_int32_t packet_id;
 	int sandf;
 	unsigned long nfmark;
 	switch (*dgram) {

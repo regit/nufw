@@ -21,7 +21,7 @@
 /* 
  * return offset to next type of headers 
  */
-int look_for_flags(unsigned char* dgram,unsigned int datalen){
+int look_for_flags(unsigned char* dgram,int datalen){
 	struct iphdr * iphdrs = (struct iphdr *) dgram;
 	/* check need some datas */    
 	if (datalen < sizeof(struct iphdr) +sizeof(struct tcphdr)){
@@ -40,24 +40,24 @@ int look_for_flags(unsigned char* dgram,unsigned int datalen){
 }
 
 #if USE_NFQUEUE
-static int treat_packet(struct nfqnl_q_handle *qh, struct nfgenmsg *nfmsg,
-		struct nfqnl_q_datas *nfa, void *data)
+static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
+		struct nfq_data *nfa, void *data)
 {
 	packet_idl * current;
 	uint32_t pcktid;
 	uint32_t c_mark;
 	char *payload;
-	unsigned int payload_len;
+	int payload_len;
 	struct nfqnl_msg_packet_hdr *ph;
 	struct nfqnl_msg_packet_timestamp *timestamp;
 
-
-	if (! nfqnl_get_payload(nfa,&payload,&payload_len)){
+	payload_len =  nfq_get_payload(nfa,&payload);
+	if (payload_len == -1){
 		return 0;
 	}
 
 	if (look_for_flags(payload,payload_len)){
-		ph = nfqnl_get_msg_packet_hdr(nfa);
+		ph = nfq_get_msg_packet_hdr(nfa);
 		if (ph){
 			pcktid = ntohl(ph->packet_id);
 			auth_request_send(AUTH_CONTROL,
@@ -82,7 +82,7 @@ static int treat_packet(struct nfqnl_q_handle *qh, struct nfgenmsg *nfmsg,
 		return 0;
 	}
 
-	ph = nfqnl_get_msg_packet_hdr(nfa);
+	ph = nfq_get_msg_packet_hdr(nfa);
 	if (ph){
 		current->id= ntohl(ph->packet_id);
 	} else {
@@ -98,9 +98,9 @@ static int treat_packet(struct nfqnl_q_handle *qh, struct nfgenmsg *nfmsg,
 		return 0;
 	}
 
-	current->nfmark=nfqnl_get_nfmark(nfa);
+	current->nfmark=nfq_get_nfmark(nfa);
 
-	timestamp = nfqnl_get_timestamp(nfa);
+	timestamp = nfq_get_timestamp(nfa);
 	if (timestamp){
 		current->timestamp=timestamp->sec;
 	}else {
@@ -153,53 +153,53 @@ void* packetsrv(){
 	int rv;
 	struct nfnl_handle *nh;
 
-	h = nfqnl_open();
+	h = nfq_open();
 	if (!h) {
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
 			if (log_engine == LOG_TO_SYSLOG){
-				syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"error during nfqnl_open()");
+				syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"error during nfq_open()");
 			}else{
-				printf("[%d] error during nfqnl_open()\n",getpid());
+				printf("[%d] error during nfq_open()\n",getpid());
 			}
 		}
 		exit(1);
 	}
 
-	if (nfqnl_unbind_pf(h, AF_INET) < 0) {
+	if (nfq_unbind_pf(h, AF_INET) < 0) {
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
 			if (log_engine == LOG_TO_SYSLOG){
-				syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"error during nfqnl_unbind_pf()");
+				syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"error during nfq_unbind_pf()");
 			}else{
-				printf("[%d] error during nfqnl_unbind_pf()\n",getpid());
+				printf("[%d] error during nfq_unbind_pf()\n",getpid());
 			}
 		}
 		exit(1);
 	}
 
-	if (nfqnl_bind_pf(h, AF_INET) < 0) {
+	if (nfq_bind_pf(h, AF_INET) < 0) {
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
 			if (log_engine == LOG_TO_SYSLOG){
-				syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"error during nfqnl_bind_pf()");
+				syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"error during nfq_bind_pf()");
 			}else{
-				printf("[%d] error during nfqnl_bind_pf()\n",getpid());
+				printf("[%d] error during nfq_bind_pf()\n",getpid());
 			}
 		}
 		exit(1);
 	}
 
-	hndl = nfqnl_create_queue(h,  nfqueue_num, &treat_packet, NULL);
+	hndl = nfq_create_queue(h,  nfqueue_num, &treat_packet, NULL);
 	if (!hndl) {
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
 			if (log_engine == LOG_TO_SYSLOG){
-				syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"error during nfqnl_create_queue() (queue %d busy ?)",nfqueue_num);
+				syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"error during nfq_create_queue() (queue %d busy ?)",nfqueue_num);
 			}else{
-				printf("[%d] error during nfqnl_create_queue() (queue %d busy ?)\n",getpid(),nfqueue_num);
+				printf("[%d] error during nfq_create_queue() (queue %d busy ?)\n",getpid(),nfqueue_num);
 			}
 		}
 		exit(1);
 	}
 
-	if (nfqnl_set_mode(hndl, NFQNL_COPY_PACKET, 0xffff) < 0) {
+	if (nfq_set_mode(hndl, NFQNL_COPY_PACKET, 0xffff) < 0) {
 
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
 			if (log_engine == LOG_TO_SYSLOG){
@@ -212,7 +212,7 @@ void* packetsrv(){
 		exit(1);
 	}
 
-	nh = nfqnl_nfnlh(h);
+	nh = nfq_nfnlh(h);
 	fd = nfnl_fd(nh);
 #else
 	size_t size;
@@ -236,7 +236,7 @@ void* packetsrv(){
 	for (;;){
 #if USE_NFQUEUE
 		if ((rv = recv(fd, buffer, sizeof(buffer), 0)) && rv >= 0) {
-			nfqnl_handle_packet(h, buffer, rv);
+			nfq_handle_packet(h, buffer, rv);
 			pckt_rx++ ;
 		} else 
 			break;

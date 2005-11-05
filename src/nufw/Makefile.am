@@ -10,7 +10,7 @@ if HAVE_IPQ
 nufw_LDADD = -lipq -lpthread -lgnutls
 endif
 if HAVE_NFQUEUE
-nufw_LDADD = -lnfnetlink -lnfnetlink_queue -lpthread -lgnutls
+nufw_LDADD = -lnfnetlink -lnetfilter_queue -lpthread -lgnutls
 endif
 
 nufw$(EXEEXT): $(nufw_OBJECTS) $(nufw_DEPENDENCIES) 

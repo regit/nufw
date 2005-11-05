@@ -84,7 +84,7 @@ int packets_list_length;
 pthread_mutex_t packets_list_mutex;
 
 #if USE_NFQUEUE
-struct nfqnl_q_handle *hndl;
+struct nfq_q_handle *hndl;
 #else
 /* ipq handler */
 struct ipq_handle *hndl;
@@ -95,8 +95,8 @@ pthread_mutex_t hndl_mutex;
 
 /* do some define to add mutex usage */
 #if USE_NFQUEUE
-#define	IPQ_SET_VERDICT(PACKETID, DECISION) nfqnl_set_verdict(hndl, PACKETID, DECISION, 0 , NULL)
-#define	IPQ_SET_VWMARK(PACKETID, DECISION,NFMARK) nfqnl_set_verdict_mark(hndl, PACKETID, DECISION, NFMARK,0,NULL) 
+#define	IPQ_SET_VERDICT(PACKETID, DECISION) nfq_set_verdict(hndl, PACKETID, DECISION, 0 , NULL)
+#define	IPQ_SET_VWMARK(PACKETID, DECISION,NFMARK) nfq_set_verdict_mark(hndl, PACKETID, DECISION, NFMARK,0,NULL) 
 #else
 #define	IPQ_SET_VERDICT(PACKETID, DECISION) ipq_set_verdict(hndl, PACKETID, DECISION,0,NULL)
 #define	IPQ_SET_VWMARK(PACKETID, DECISION,NFMARK) ipq_set_vwmark(hndl, PACKETID, DECISION,NFMARK,0,NULL)
