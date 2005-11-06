@@ -18,12 +18,15 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+
+#include "nutrackd.h"
+
 #define NUTRACKD_PID_FILE  LOCAL_STATE_DIR "/run/nutrackd.pid"
 
-void nuconntrack_cleanup( int signal ) {
+void nutrackd_cleanup( int signal ) {
     /* TODO destroy conntrack handle */
-     nfqnl_destroy_queue(hndl);
-     nfqnl_unbind_pf(h, AF_INET);
+//     nfqnl_destroy_queue(hndl);
+//     nfqnl_unbind_pf(h, AF_INET);
      /* TODO close mysql connection(s) */
      
     /* destroy pid file */
@@ -34,22 +37,22 @@ void nuconntrack_cleanup( int signal ) {
 
 nfct_callback *update_handler(void *arg, unsigned int flags, int type)
 {
+  struct nfct_conntrack *conn = arg;
   // arg is a nfct_conntrack object - we can parse it directly
-  u_int8_t proto = arg->tuple->protonum;
-  u_int32_t src = arg->tuple->src;
-  u_int32_t dst = arg->tuple->dst;
+  u_int8_t proto = conn->tuple[0].protonum;
+  u_int32_t src = conn->tuple[0].src.v4;
+  u_int32_t dst = conn->tuple[0].dst.v4;
   u_int16_t sport = 0;
   u_int16_t dport = 0;
 
-  char request[LONG_REQUEST_SIZE];
   switch (proto){
         case TCP :
-          sport = arg->tuple->l4src->tcp->port;
-          dport = arg->tuple->l4dst->tcp->port;
+          sport = conn->tuple[0].l4src.tcp.port;
+          dport = conn->tuple[0].l4dst.tcp.port;
         break;
         case UDP :
-          sport = arg->tuple->l4src->udp->port;
-          dport = arg->tuple->l4dst->udp->port;
+          sport = conn->tuple[0].l4src.udp.port;
+          dport = conn->tuple[0].l4dst.udp.port;
         break;
         default :
           sport = 0;
@@ -64,7 +67,7 @@ nfct_callback *update_handler(void *arg, unsigned int flags, int type)
 
 int main(int argc,char * argv[]){
     pthread_t sql_worker;
-    struct hostent *authreq_srv;
+//    struct hostent *authreq_srv;
     /* options */
     char * options_list = "Dhvd:u:p:t:";
     int option,daemonize = 0;
@@ -72,17 +75,19 @@ int main(int argc,char * argv[]){
     unsigned int ident_srv;
     char* version=PACKAGE_VERSION;
     pid_t pidf;
+    int packet_timeout;
+    int res;
+    struct nfct_handle *cth;
 
-    struct sigaction act;
+//    struct sigaction act;
 
     /* initialize variables */
 
     log_engine = LOG_TO_STD; /* default is to send debug messages to stdout + stderr */
     packet_timeout = PACKET_TIMEOUT;
-    strncpy(authreq_addr,AUTHREQ_ADDR,HOSTNAME_SIZE);
-    debug=DEBUG; /* this shall disapear */
+//    strncpy(authreq_addr,AUTHREQ_ADDR,HOSTNAME_SIZE);
+//    debug=DEBUG; /* this shall disapear */
     debug_level=0;
-    debug_areas=DEFAULT_DEBUG_AREAS;
     
     /*parse options */
     while((option = getopt ( argc, argv, options_list)) != -1 ){
@@ -107,7 +112,7 @@ int main(int argc,char * argv[]){
 \t-h : display this help and exit\n\
 \t-V : display version and exit\n\
 \t-D : daemonize\n\
-\t-v : increase debug level (+1 for each 'v') (max useful number : 10)\n");
+\t-v : increase debug level (+1 for each 'v') (max useful number : 10)\n", PACKAGE_NAME);
             return 1;
         }
     }
@@ -166,7 +171,7 @@ int main(int argc,char * argv[]){
         }
         /* intercept SIGTERM */
     	memset(&action,0,sizeof(action));
-        action.sa_handler = nufw_cleanup;
+        action.sa_handler = nutrackd_cleanup;
         sigemptyset( & (action.sa_mask));
         action.sa_flags = 0;
         if ( sigaction(SIGTERM, & action , NULL ) != 0) {
@@ -178,7 +183,7 @@ int main(int argc,char * argv[]){
 //        log_engine = LOG_TO_SYSLOG;
     }
 
-    signal(SIGPIPE,SIG_IGN);
+//    signal(SIGPIPE,SIG_IGN);
 
 //    init_log_engine();
     /* create socket for sending auth request */
@@ -196,8 +201,8 @@ int main(int argc,char * argv[]){
 
     cth = nfct_open(CONNTRACK, NF_NETLINK_CONNTRACK_DESTROY);
     if (!cth)
-      exit_error(OTHER_PROBLEM, "Not enough memory");
-    signal(SIGINT, event_sighandler);
-    nfct_set_callback(cth, update_handler);
+      fprintf(stderr,"%s : Not enough memory",PACKAGE_NAME);
+//    signal(SIGINT, event_sighandler);
+    nfct_register_callback(cth, update_handler,NULL);
     res = nfct_event_conntrack(cth);
 }
