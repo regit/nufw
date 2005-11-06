@@ -49,7 +49,8 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 	char *payload;
 	int payload_len;
 	struct nfqnl_msg_packet_hdr *ph;
-	struct nfqnl_msg_packet_timestamp *timestamp;
+	struct timeval timestamp;
+	int ret;
 
 	payload_len =  nfq_get_payload(nfa,&payload);
 	if (payload_len == -1){
@@ -100,17 +101,19 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 
 	current->nfmark=nfq_get_nfmark(nfa);
 
-	timestamp = nfq_get_timestamp(nfa);
-	if (timestamp){
-		current->timestamp=timestamp->sec;
+	ret = nfq_get_timestamp(nfa, &timestamp);
+	if (ret == 0){
+		current->timestamp=timestamp.tv_sec;
 	}else {
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_MAIN)){
+#ifdef DEBUG_ENABLE
+		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
 			if (log_engine == LOG_TO_SYSLOG) {
 				syslog(SYSLOG_FACILITY(DEBUG_LEVEL_MESSAGE),"Can not get timestamp for message");
 			} else {
 				printf("[%i] Can not get timestamp for message\n",getpid());
 			} 
 		}
+#endif
 		current->timestamp=time(NULL);
 	}
 
