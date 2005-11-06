@@ -46,11 +46,11 @@ nfct_callback *update_handler(void *arg, unsigned int flags, int type)
   u_int16_t dport = 0;
 
   switch (conn->tuple[0].protonum){
-        case TCP :
+        case IPPROTO_TCP :
           sport = conn->tuple[0].l4src.tcp.port;
           dport = conn->tuple[0].l4dst.tcp.port;
         break;
-        case UDP :
+        case IPPROTO_UDP :
           sport = conn->tuple[0].l4src.udp.port;
           dport = conn->tuple[0].l4dst.udp.port;
         break;

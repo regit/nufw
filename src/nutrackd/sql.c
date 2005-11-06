@@ -19,6 +19,8 @@
 /* 
  * Initialize connection to mysql server
  */
+#include "nutrackd.h"
+#include <mysql/mysql.h>
 
 MYSQL* mysql_conn_init(void){
 	MYSQL *ld = NULL;
@@ -53,10 +55,10 @@ int update_sql_table(u_int32_t src, u_int32_t dst, u_int8_t proto, u_int16_t spo
             return -1;
         }
         switch (proto){
-          case TCP:
+          case IPPROTO_TCP:
             {//add port conditions
             }
-          case UDP:
+          case IPPROTO_UDP:
             {//add port conditions
             }
           default :
