@@ -10,6 +10,7 @@ if HAVE_IPQ
 nufw_LDADD = -lipq -lpthread -lgnutls
 endif
 if HAVE_NFQUEUE
+INCLUDES = -I$(KERNELDIR) 
 nufw_LDADD = -lnfnetlink -lnetfilter_queue -lpthread -lgnutls
 endif
 
