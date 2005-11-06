@@ -7,7 +7,6 @@
 #include <signal.h>
 #include <errno.h>
 #include <libnetfilter_conntrack/libnetfilter_conntrack.h>
-#include <conntrack.h>
 
 #include "nutrackd_debug.h"
 
