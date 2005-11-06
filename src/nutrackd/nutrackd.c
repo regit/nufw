@@ -39,13 +39,13 @@ nfct_callback *update_handler(void *arg, unsigned int flags, int type)
 {
   struct nfct_conntrack *conn = arg;
   // arg is a nfct_conntrack object - we can parse it directly
-  u_int8_t proto = conn->tuple[0].protonum;
-  u_int32_t src = conn->tuple[0].src.v4;
-  u_int32_t dst = conn->tuple[0].dst.v4;
+//  u_int8_t proto = conn->tuple[0].protonum;
+//  u_int32_t src = conn->tuple[0].src.v4;
+//  u_int32_t dst = conn->tuple[0].dst.v4;
   u_int16_t sport = 0;
   u_int16_t dport = 0;
 
-  switch (proto){
+  switch (conn->tuple[0].protonum){
         case TCP :
           sport = conn->tuple[0].l4src.tcp.port;
           dport = conn->tuple[0].l4dst.tcp.port;
@@ -59,7 +59,11 @@ nfct_callback *update_handler(void *arg, unsigned int flags, int type)
           dport = 0;
         break;
   }
-  if (update_sql_table(src,dst,proto,sport,dport)) //This prototype sucks
+  if (update_sql_table(conn->tuple[0].src.v4,
+                       conn->tuple[0].dst.v4,
+                       conn->tuple[0].protonum,
+                       sport,
+                       dport)) //This prototype sucks
   {
       //log shit
   }

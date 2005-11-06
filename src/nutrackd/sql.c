@@ -39,9 +39,34 @@ MYSQL* mysql_conn_init(void){
 }
 
 
-void mysql_work(void)
+int update_sql_table(u_int32_t src, u_int32_t dst, u_int8_t proto, u_int16_t sport, u_int16_t dport)
 {
-	
+        char request[LONG_REQUEST_SIZE];
+        if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET state=%hu,end_timestamp=FROM_UNIXTIME(%lu) WHERE (protocol=%d AND ip_saddr=%lu AND ip_daddr=%lu AND (state=1 OR state=2)",
+                        mysql_table_name,
+                        STATE_CLOSE,
+                        timestamp,
+                        proto,
+                        saddr,
+                        daddr) >= SHORT_REQUEST_SIZE-1)
+        {
+            return -1;
+        }
+        switch (proto){
+          case TCP:
+            {//add port conditions
+            }
+          case UDP:
+            {//add port conditions
+            }
+          default :
+            {//just add ")" to the request
+            }
+        }
+        if (mysql_real_query(ld, request, strlen(request)) != 0)
+        {
+            //log some error
+        }
 }
 
 
