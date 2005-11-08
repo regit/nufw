@@ -126,6 +126,8 @@ typedef struct conntable {
 
 /* only publicly seen structure but datas are private */
 
+#define PACKET_SIZE 1482
+
 #define ERROR_OK 0x0
 #define ERROR_UNKNOWN 0x1
 #define ERROR_LOGIN 0x2

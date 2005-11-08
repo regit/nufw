@@ -27,11 +27,11 @@
  *
  */
 
-#ifndef CHECKS_H
-#define CHECKS_H
+#ifndef SENDING_H
+#define SENDING_H
 
-void recv_message(NuAuth* session);
+int send_hello_pckt(NuAuth * session);
 
-int nu_client_check(NuAuth * session);
+int send_user_pckt(NuAuth * session,conn_t* c);
 
 #endif

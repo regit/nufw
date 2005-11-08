@@ -31,10 +31,17 @@
 #ifndef CLIENT_H
 #define CLIENT_H
 
+
+#define SENT_TEST_INTERVAL 30
+
 #include "libnuclient.h"
 #include "proc.h"
 #include "checks.h"
+#include "sending.h"
 
 int conn_on;
+int recv_started;
+
+int timestamp_last_sent;
 
 #endif

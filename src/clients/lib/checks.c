@@ -122,3 +122,33 @@ void recv_message(NuAuth* session)
 }
 
 
+
+int nu_client_check(NuAuth * session)
+{
+	if (conn_on == 0 ){
+		errno=ECONNRESET;
+		return -1;
+	}
+
+	/* TODO : use less ressource be clever */
+	if (recv_started == 0){
+		pthread_t recvthread;
+		pthread_create(&recvthread, NULL, recv_message, session);
+		recv_started =1;
+	}
+
+	if (session->mode == SRV_TYPE_POLL) {
+		return	nu_client_real_check(session);
+	}
+	else {
+		if ((time(NULL) - timestamp_last_sent) > SENT_TEST_INTERVAL){
+			if (! send_hello_pckt(session)){
+				nu_exit_clean(session);
+			}
+			timestamp_last_sent=time(NULL);
+		}
+	}
+	return 0;
+}
+
+

@@ -39,9 +39,7 @@ char * locale_to_utf8(char* inbuf);
 
 
 #define DH_BITS 1024
-#define PACKET_SIZE 1482
 #define REQUEST_CERT 0
-#define SENT_TEST_INTERVAL 30
 
 //#include <stdlib.h>
 #include <sys/utsname.h>
@@ -58,8 +56,6 @@ static int compare (NuAuth *session,conntable_t *old, conntable_t *new);
 /* TODO : be clever ;-) */
 int track_size;
 int track_place;
-int recv_started;
-int timestamp_last_sent;
 
 /* callbacks we support */
 int nu_getrealm(void *context __attribute__((unused)), int id,
@@ -479,174 +475,6 @@ int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn)
 	return EXIT_FAILURE;
 }
 
-static int send_hello_pckt(NuAuth * session){
-	struct nuv2_header header;
-
-	/* fill struct */
-	header.proto=0x2;
-	header.msg_type=USER_HELLO;
-	header.option=0;
-#ifdef WORDS_BIGENDIAN
-	header.length=swap16(sizeof(struct nuv2_header));
-#else
-	header.length=sizeof(struct nuv2_header);
-#endif
-
-	/*  send it */
-	if(session->tls){
-		if( gnutls_record_send(*(session->tls),&header,sizeof(struct nuv2_header))<=0){
-#if DEBUG_ENABLE
-			printf("write failed at %s:%d\n",__FILE__,__LINE__);
-#endif
-			return 0;
-		}
-	}
-	return 1;
-}
-
-/*
- * send_user_pckt
- */
-static int send_user_pckt(NuAuth * session,conn_t* c)
-{
-	char datas[PACKET_SIZE];
-	/* TODO : look if we don't override datas */
-	char *pointer=NULL;
-	char *enc_appname=NULL;
-
-	timestamp_last_sent=time(NULL);
-	memset(datas,0,sizeof datas);
-	switch (session->protocol){
-		case 2:
-			{
-				struct nuv2_header header;
-				struct nuv2_authreq authreq;
-				struct nuv2_authfield_ipv4 authfield;
-				struct nuv2_authfield_app appfield;
-				size_t len=0;
-				/* get application name from inode */
-				const char * appname = prg_cache_get(c->ino);
-				header.proto=0x2;
-				header.msg_type=USER_REQUEST;
-				header.option=0;
-				header.length=sizeof(struct nuv2_header)+sizeof(struct nuv2_authreq)+sizeof(struct nuv2_authfield_ipv4);
-				authreq.packet_id=session->packet_id++;
-				authreq.packet_length=sizeof(struct nuv2_authreq)+sizeof(struct nuv2_authfield_ipv4);
-				authfield.type=IPV4_FIELD;
-				authfield.option=0;
-#ifdef WORDS_BIGENDIAN
-				authfield.length=swap16(sizeof(struct nuv2_authfield_ipv4));
-#else
-				authfield.length=sizeof(struct nuv2_authfield_ipv4);
-#endif
-
-#ifdef WORDS_BIGENDIAN
-				authfield.src=swap32(c->lcl);
-				authfield.dst=swap32(c->rmt);
-#else
-				authfield.src=htonl(c->lcl);
-				authfield.dst=htonl(c->rmt);
-#endif
-				authfield.proto=6;
-				authfield.flags=0;
-				authfield.FUSE=0;
-#ifdef WORDS_BIGENDIAN
-				authfield.sport=swap16(c->lclp);
-				authfield.dport=swap16(c->rmtp);
-#else
-				authfield.sport=c->lclp;
-				authfield.dport=c->rmtp;
-#endif
-				/* application field  */
-				appfield.type=APP_FIELD;
-				if (1) {
-					appfield.option=APP_TYPE_NAME;
-					enc_appname=calloc(128,sizeof(char));
-					if ( sasl_encode64(appname,strlen(appname),
-								enc_appname,128, &len) == SASL_BUFOVER ){
-						/* realloc */
-						enc_appname=realloc(enc_appname,len);
-						/* encode */
-						sasl_encode64(appname,strlen(appname),
-								enc_appname, len, &len);
-					}
-					appfield.length=4+len;
-					appfield.datas=enc_appname;
-					authreq.packet_length+=appfield.length;
-#ifdef WORDS_BIGENDIAN
-					authreq.packet_length=swap16(authreq.packet_length);
-#endif
-				} else {
-#if 0
-					appfield.option=APP_TYPE_SHA1;
-					enc_appname=calloc(128,sizeof(char));
-					if ( sasl_encode64(appname,strlen(appname),
-								enc_appname,128, &len) == SASL_BUFOVER ){
-						/* realloc */
-						enc_appname=realloc(enc_appname,len);
-						/* encode */
-						sasl_encode64(appname,strlen(appname),
-								enc_appname, len, &len);
-					}
-					appfield.length=4+len;
-					appfield.datas=g_strconcat(enc_appname,";",sha1_sig);
-#endif
-				}
-				/* glue piece together on data if packet is not too long */
-				header.length+=appfield.length;
-				printf("sending header : proto %d, msg_type %d, option %d, length %d\n",header.proto,
-						header.msg_type,
-						header.option,
-						header.length);
-				fflush(NULL);
-				if (header.length < PACKET_SIZE){
-					pointer=datas;
-#ifdef WORDS_BIGENDIAN
-					header.length=swap16(header.length);
-					appfield.length=swap16(appfield.length);
-					memcpy(pointer,&header,sizeof(struct nuv2_header));
-#else
-					memcpy(pointer,&header,sizeof(struct nuv2_header));
-#endif
-					pointer+=sizeof(struct nuv2_header);
-					memcpy(pointer,&authreq,sizeof(struct nuv2_authreq));
-					pointer+=sizeof(struct nuv2_authreq);
-					memcpy(pointer,&authfield,sizeof(struct nuv2_authfield_ipv4));
-					pointer+=sizeof(struct nuv2_authfield_ipv4);
-					memcpy(pointer,&appfield,4);
-					pointer+=4;
-					if (len < (PACKET_SIZE + datas - pointer)){
-						memcpy(pointer,appfield.datas,len);
-					} else {
-						if (enc_appname)
-							free(enc_appname);
-						return 1;
-					}
-					pointer+=len;
-				} else {
-					if (enc_appname)
-						free(enc_appname);
-					return 1;
-				}
-			}
-			break;
-		default:
-			return 1;
-	}
-
-	/* and send it */
-	if(session->tls){
-		if( gnutls_record_send(*(session->tls),datas,pointer-datas)<=0){
-			printf("write failed\n");
-			return 0;
-		}
-	}
-	if (enc_appname)
-		free(enc_appname);
-	return 1;
-}
-
-
 /*
  * compare ()
  *
@@ -1022,35 +850,6 @@ int nu_client_real_check(NuAuth * session)
 	session->ct=new;
 
 	return nb_packets;
-}
-
-
-int nu_client_check(NuAuth * session)
-{
-	if (conn_on == 0 ){
-		errno=ECONNRESET;
-		return -1;
-	}
-
-	/* TODO : use less ressource be clever */
-	if (recv_started == 0){
-		pthread_t recvthread;
-		pthread_create(&recvthread, NULL, recv_message, session);
-		recv_started =1;
-	}
-
-	if (session->mode == SRV_TYPE_POLL) {
-		return	nu_client_real_check(session);
-	}
-	else {
-		if ((time(NULL) - timestamp_last_sent) > SENT_TEST_INTERVAL){
-			if (! send_hello_pckt(session)){
-				nu_exit_clean(session);
-			}
-			timestamp_last_sent=time(NULL);
-		}
-	}
-	return 0;
 }
 
 void nu_client_free(NuAuth *session)
