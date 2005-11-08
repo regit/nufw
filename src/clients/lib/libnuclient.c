@@ -53,10 +53,6 @@ static int tcptable_read (NuAuth * session,conntable_t *ct);
 static int tcptable_free (conntable_t *ct);
 static int compare (NuAuth *session,conntable_t *old, conntable_t *new);
 
-/* TODO : be clever ;-) */
-int track_size;
-int track_place;
-
 /* callbacks we support */
 int nu_getrealm(void *context __attribute__((unused)), int id,
 		const char **availrealms __attribute__((unused)),
