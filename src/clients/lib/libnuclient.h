@@ -1,5 +1,7 @@
 /*
- * Copyright 2005 - INL
+ * libnuclient - TCP/IP connection auth client library.
+ *
+ * Copyright 2004,2005 - INL
  *	written by Eric Leblond <regit@inl.fr>
  *	           Vincent Deffontaines <vincent@inl.fr>
  *
@@ -27,25 +29,11 @@
  *
  */
 
+#ifndef LIBNUCLIENT_H
+#define LIBNUCLIENT_H
 
-#ifndef PROC_H
-#define PROC_H
+void nu_exit_clean(NuAuth * session);
 
-#define PROGNAME_WIDTH 64
-
-#define PRG_HASH_SIZE 211
-
-static struct prg_node {
-    struct prg_node *next;
-    unsigned long inode;
-    char name[PROGNAME_WIDTH];
-} *prg_hash[PRG_HASH_SIZE];
-
-int     prg_cache_loaded;
-
-
-void prg_cache_load(void);
-const char *prg_cache_get(unsigned long inode);
-void prg_cache_clear(void);
+int nu_client_real_check(NuAuth * session);
 
 #endif

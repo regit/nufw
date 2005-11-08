@@ -28,10 +28,14 @@
  *
  */
 
+#ifndef NUCLIENT_H
+#define NUCLIENT_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include <config.h>
 
 #include <arpa/inet.h>
 #include <assert.h>
@@ -90,7 +94,7 @@ GCRY_THREAD_OPTION_PTHREAD_IMPL;
 #include <gnutls/gnutls.h>
 #include <sasl/sasl.h>
 
-#include <config.h>
+
 
 #ifndef CONNTABLE_BUCKETS
 #define CONNTABLE_BUCKETS 5003
@@ -163,7 +167,9 @@ NuAuth* nu_client_init2(
 		void* username_callback,void * passwd_callback, void* tlscred_callback
 		);
 
+
 #ifdef __cplusplus
 }
 #endif
 
+#endif
