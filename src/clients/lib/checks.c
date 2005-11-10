@@ -87,9 +87,11 @@ void recv_message(NuAuth* session)
 			} else {
 				switch (*dgram){
 					case SRV_REQUIRED_PACKET:
-						/* TODO ? introduce a delay to not DOS our own client */
-						/* we act */
-						nu_client_real_check(session);
+						/* wake up nu_client_real_check_tread */
+						pthread_mutex_lock(check_count_mutex);
+						count_msg_cond++;
+						pthread_mutex_unlock(check_count_mutex);
+						pthread_cond_signal(check_cond);
 						break;
 					case SRV_REQUIRED_HELLO:
 						hellofield.helloid = ((struct nuv2_srv_helloreq*)dgram)->helloid;
@@ -125,30 +127,75 @@ void recv_message(NuAuth* session)
 
 int nu_client_check(NuAuth * session)
 {
-	if (conn_on == 0 ){
-		errno=ECONNRESET;
-		return -1;
-	}
+		if (conn_on == 0 ){
+			errno=ECONNRESET;
+		}
 
-	/* TODO : use less ressource be clever */
-	if (recv_started == 0){
-		pthread_t recvthread;
-		pthread_create(&recvthread, NULL, recv_message, session);
-		recv_started =1;
-	}
-
-	if (session->mode == SRV_TYPE_POLL) {
-		return	nu_client_real_check(session);
-	}
-	else {
-		if ((time(NULL) - timestamp_last_sent) > SENT_TEST_INTERVAL){
-			if (! send_hello_pckt(session)){
-				nu_exit_clean(session);
+		if (recv_started == 0){
+			if (session->mode == SRV_TYPE_PUSH) {
+				pthread_t checkthread;
+				pthread_create(&checkthread, NULL, nu_client_thread_check, session);
 			}
-			timestamp_last_sent=time(NULL);
+			/* TODO : use less ressource be clever */
+			pthread_t recvthread;
+			pthread_create(&recvthread, NULL, recv_message, session);
+			recv_started =1;
+		}
+
+		if (session->mode == SRV_TYPE_POLL) {
+			return	nu_client_real_check(session);
+		}
+		else {
+			if ((time(NULL) - timestamp_last_sent) > SENT_TEST_INTERVAL){
+				if (! send_hello_pckt(session)){
+					nu_exit_clean(session);
+				}
+				timestamp_last_sent=time(NULL);
+			}
+		}
+	
+}
+
+void nu_client_thread_check(NuAuth * session)
+{
+	pthread_mutex_t check_mutex;
+	pthread_mutex_init(&check_mutex,NULL);
+	pthread_mutex_lock(&check_mutex);
+	for(;;){
+		nu_client_real_check(session);
+	/* Do we need to do an other check ? */
+		pthread_mutex_lock(check_count_mutex);
+		if (count_msg_cond>0){
+			pthread_mutex_unlock(check_count_mutex);
+		} else {
+			pthread_mutex_unlock(check_count_mutex);
+			/* wait for cond */
+			pthread_cond_wait(check_cond, &check_mutex);
 		}
 	}
-	return 0;
+}
+
+int nu_client_real_check(NuAuth * session)
+{
+	conntable_t *new;
+	int nb_packets=0;
+	if (tcptable_init (&new) == 0) panic ("tcptable_init failed");
+	if (tcptable_read (session,new) == 0) panic ("tcptable_read failed");
+	/* update cache for link between proc and socket inode */
+	prg_cache_load();
+	nb_packets = compare (session,session->ct, new);
+	/* TODO : free link between proc and socket inode */
+	prg_cache_clear();
+
+	if (nb_packets < 0){
+		/* error we ask client to exit */
+		nu_exit_clean(session);
+		return nb_packets;
+	}
+	if (tcptable_free (session->ct) == 0) panic ("tcptable_free failed");
+	session->ct=new;
+
+	return nb_packets;
 }
 
 

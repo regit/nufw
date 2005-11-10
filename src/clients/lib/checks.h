@@ -33,5 +33,8 @@
 void recv_message(NuAuth* session);
 
 int nu_client_check(NuAuth * session);
+void nu_client_thread_check(NuAuth * session);
+
+int nu_client_real_check(NuAuth * session);
 
 #endif

@@ -44,4 +44,9 @@ int recv_started;
 
 int timestamp_last_sent;
 
+/* condition and associated mutex used to know when a check
+ * is necessary */
+pthread_cond_t *check_cond;
+pthread_mutex_t *check_count_mutex;
+int count_msg_cond;
 #endif

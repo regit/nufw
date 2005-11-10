@@ -45,13 +45,9 @@ char * locale_to_utf8(char* inbuf);
 #include <sys/utsname.h>
 
 
-static int tcptable_init (conntable_t **ct);
 static int tcptable_hash (conn_t *c);
 static int tcptable_add (conntable_t *ct, conn_t *c);
 static conn_t * tcptable_find (conntable_t *ct, conn_t *c);
-static int tcptable_read (NuAuth * session,conntable_t *ct);
-static int tcptable_free (conntable_t *ct);
-static int compare (NuAuth *session,conntable_t *old, conntable_t *new);
 
 /* callbacks we support */
 int nu_getrealm(void *context __attribute__((unused)), int id,
@@ -173,7 +169,7 @@ static int nu_get_userdatas(void *context __attribute__((unused)),
 	return SASL_OK;
 }
 
-static void panic(const char *fmt, ...)
+void panic(const char *fmt, ...)
 {
 	printf("error\n");
 	exit(-1);
@@ -303,7 +299,11 @@ static int tcptable_read (NuAuth* session, conntable_t *ct)
 #if DEBUG
 	assert (ct != NULL);
 #endif
-
+/* need to set check_cond */
+	pthread_mutex_lock(check_count_mutex);
+	count_msg_cond=0;
+	pthread_mutex_unlock(check_count_mutex);
+/* open file */
 	if (fp == NULL) {
 		fp = fopen ("/proc/net/tcp", "r");
 		if (fp == NULL) panic ("/proc/net/tcp: %s", strerror (errno));
@@ -823,29 +823,6 @@ NuAuth* nu_client_init(char *username, unsigned long userid, char *password,
 	conn_on =1;
 	recv_started=0;
 	return session;
-}
-
-int nu_client_real_check(NuAuth * session)
-{
-	conntable_t *new;
-	int nb_packets=0;
-	if (tcptable_init (&new) == 0) panic ("tcptable_init failed");
-	if (tcptable_read (session,new) == 0) panic ("tcptable_read failed");
-	/* update cache for link between proc and socket inode */
-	prg_cache_load();
-	nb_packets = compare (session,session->ct, new);
-	/* TODO : free link between proc and socket inode */
-	prg_cache_clear();
-
-	if (nb_packets < 0){
-		/* error we ask client to exit */
-		nu_exit_clean(session);
-		return nb_packets;
-	}
-	if (tcptable_free (session->ct) == 0) panic ("tcptable_free failed");
-	session->ct=new;
-
-	return nb_packets;
 }
 
 void nu_client_free(NuAuth *session)

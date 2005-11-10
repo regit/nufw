@@ -34,6 +34,10 @@
 
 void nu_exit_clean(NuAuth * session);
 
-int nu_client_real_check(NuAuth * session);
+static int tcptable_init (conntable_t **ct);
+static int tcptable_read (NuAuth * session,conntable_t *ct);
+static int tcptable_free (conntable_t *ct);
+static int compare (NuAuth *session,conntable_t *old, conntable_t *new);
 
+void panic(const char *fmt, ...);
 #endif
