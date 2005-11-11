@@ -103,7 +103,6 @@ gchar *string_escape(gchar *orig)
 	if (g_strrstr(traduc,";"))
 		return NULL;
 	orig = g_strescape(traduc,"");
-	g_free(traduc);
 	return orig;
 }
 
