@@ -205,7 +205,7 @@ void nu_exit_clean(NuAuth * session)
  *
  * Initialise a connection table (hashtable).
  */
-static int tcptable_init (conntable_t **ct)
+int tcptable_init (conntable_t **ct)
 {
 	int i;
 
@@ -291,7 +291,7 @@ static conn_t* tcptable_find (conntable_t *ct, conn_t *c)
  * Read /proc/net/tcp and add all connections to the table if connections
  * of that type are being watched.
  */
-static int tcptable_read (NuAuth* session, conntable_t *ct)
+int tcptable_read (NuAuth* session, conntable_t *ct)
 {
 	static FILE *fp = NULL;
 	char buf[1024];
@@ -353,7 +353,7 @@ static int tcptable_read (NuAuth* session, conntable_t *ct)
  *
  * Free a connection table.
  */
-static int tcptable_free (conntable_t *ct)
+int tcptable_free (conntable_t *ct)
 {
 	int i;
 #if DEBUG
@@ -476,7 +476,7 @@ int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn)
  *
  * Compare the `old' and `new' tables, logging any differences.
  */
-static int compare (NuAuth * session,conntable_t *old, conntable_t *new)
+int compare (NuAuth * session,conntable_t *old, conntable_t *new)
 {
 	int i;
 

@@ -134,6 +134,10 @@ int nu_client_check(NuAuth * session)
 		if (recv_started == 0){
 			if (session->mode == SRV_TYPE_PUSH) {
 				pthread_t checkthread;
+				check_cond=(pthread_cond_t*)calloc(1,sizeof(pthread_cond_t));
+				check_count_mutex=(pthread_mutex_t*)calloc(1,sizeof(pthread_cond_t));
+				pthread_mutex_init(check_count_mutex,NULL);
+				pthread_cond_init(check_cond,NULL);
 				pthread_create(&checkthread, NULL, nu_client_thread_check, session);
 			}
 			/* TODO : use less ressource be clever */

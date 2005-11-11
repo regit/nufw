@@ -34,6 +34,9 @@
 #include <jhash.h>
 #include "client.h"
 
+#if DEBUG_ENABLE
+int count;
+#endif
 
 int send_hello_pckt(NuAuth * session){
 	struct nuv2_header header;
@@ -150,7 +153,13 @@ int send_user_pckt(NuAuth * session,conn_t* c)
 				}
 				/* glue piece together on data if packet is not too long */
 				header.length+=appfield.length;
-				printf("sending header : proto %d, msg_type %d, option %d, length %d\n",header.proto,
+#if DEBUG_ENABLE
+				printf("(%d) sending header : proto %d, msg_type %d, option %d, length %d\n",
+						count++,
+#else
+				printf(" sending header : proto %d, msg_type %d, option %d, length %d\n",
+#endif
+						header.proto,
 						header.msg_type,
 						header.option,
 						header.length);
