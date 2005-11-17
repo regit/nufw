@@ -28,6 +28,7 @@ void nutrackd_cleanup( int signal ) {
 //     nfqnl_destroy_queue(hndl);
 //     nfqnl_unbind_pf(h, AF_INET);
      /* TODO close mysql connection(s) */
+    sql_close();
      
     /* destroy pid file */
     unlink(NUTRACKD_PID_FILE);
@@ -35,7 +36,7 @@ void nutrackd_cleanup( int signal ) {
     exit(0);
 }
 
-nfct_callback *update_handler(void *arg, unsigned int flags, int type)
+nfct_callback update_handler(void *arg, unsigned int flags, int type)
 {
   struct nfct_conntrack *conn = arg;
   // arg is a nfct_conntrack object - we can parse it directly
@@ -70,13 +71,13 @@ nfct_callback *update_handler(void *arg, unsigned int flags, int type)
 }
 
 int main(int argc,char * argv[]){
-    pthread_t sql_worker;
+    //pthread_t sql_worker;
 //    struct hostent *authreq_srv;
     /* options */
     char * options_list = "Dhvd:u:p:t:";
     int option,daemonize = 0;
-    int value;
-    unsigned int ident_srv;
+    //int value;
+    //unsigned int ident_srv;
     char* version=PACKAGE_VERSION;
     pid_t pidf;
     int packet_timeout;
@@ -207,6 +208,6 @@ int main(int argc,char * argv[]){
     if (!cth)
       fprintf(stderr,"%s : Not enough memory",PACKAGE_NAME);
 //    signal(SIGINT, event_sighandler);
-    nfct_register_callback(cth, update_handler,NULL);
+    nfct_register_callback(cth, update_handler, NULL);
     res = nfct_event_conntrack(cth);
 }

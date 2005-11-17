@@ -22,52 +22,93 @@
 #include "nutrackd.h"
 #include <mysql/mysql.h>
 
-MYSQL* mysql_conn_init(void){
-	MYSQL *ld = NULL;
+MYSQL *ld = NULL;
+
+
+int mysql_conn_init(MYSQL *ld){
 
 	/* init connection */
 	ld = mysql_init(ld);     
 	if (ld == NULL) {
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-			g_warning("mysql init error : %s\n",strerror(errno));
-		return NULL;
+                //TODO : log stuff
+		return -1;
 	}
 	if (!mysql_real_connect(ld,mysql_server,mysql_user,mysql_passwd,mysql_db_name,mysql_server_port,NULL,0)) {
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-			g_warning("mysql connection failed : %s\n",mysql_error(ld));
-		return NULL;
+                //TODO : log stuff
+		return -1;
 	}
-	return ld;
+	return 0;
+}
+
+void sql_close(void)
+{
+  mysql_close(ld);
 }
 
 
 int update_sql_table(u_int32_t src, u_int32_t dst, u_int8_t proto, u_int16_t sport, u_int16_t dport)
 {
+        time_t timestamp;
+
+        if (ld == NULL)
+            if (mysql_conn_init(ld))
+            {
+                // TODO log some stuff
+                return -1;
+            }
+
+        timestamp=time(NULL);
+        
         char request[LONG_REQUEST_SIZE];
-        if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET state=%hu,end_timestamp=FROM_UNIXTIME(%lu) WHERE (protocol=%d AND ip_saddr=%lu AND ip_daddr=%lu AND (state=1 OR state=2)",
+        if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET state=%u,end_timestamp=FROM_UNIXTIME(%u) WHERE (protocol=%u AND ip_saddr=%lu AND ip_daddr=%lu AND (state=1 OR state=2)",
                         mysql_table_name,
                         STATE_CLOSE,
                         timestamp,
                         proto,
-                        saddr,
-                        daddr) >= SHORT_REQUEST_SIZE-1)
+                        src,
+                        dst) >= LONG_REQUEST_SIZE-1)
         {
             return -1;
         }
         switch (proto){
           case IPPROTO_TCP:
             {//add port conditions
+                char subreq[LONG_REQUEST_SIZE];
+                if (snprintf(subreq,SHORT_REQUEST_SIZE-1,"AND sport=%u AND dport=%u)",
+                        sport,
+                        dport) >= LONG_REQUEST_SIZE-1)
+                {
+                    //never occurs
+                    return -1;
+                }
+                if ( ( strlen(request) + strlen(subreq) ) < LONG_REQUEST_SIZE-1)
+                    strcat(request,subreq);
+                else
+                {
+                    //TODO log stuff
+                    return -1;
+                }
+
+                break;
             }
           case IPPROTO_UDP:
             {//add port conditions
             }
           default :
             {//just add ")" to the request
+              if ( ( strlen(request) ) < LONG_REQUEST_SIZE-2)
+                  strcat(request,")");
+              else
+              {
+                  // TODO log stuff
+                  return -1;
+              }
+
             }
         }
         if (mysql_real_query(ld, request, strlen(request)) != 0)
         {
-            //log some error
+            //TODO log some error
         }
 }
 
