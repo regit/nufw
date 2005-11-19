@@ -33,7 +33,14 @@ int mysql_conn_init(MYSQL *ld){
                 //TODO : log stuff
 		return -1;
 	}
-	if (!mysql_real_connect(ld,mysql_server,mysql_user,mysql_passwd,mysql_db_name,mysql_server_port,NULL,0)) {
+	if (!mysql_real_connect(ld,
+                                (*params).host,
+                                (*params).user,
+                                (*params).pass,
+                                (*params).database,
+                                (*params).port,
+                                NULL,
+                                0)) {
                 //TODO : log stuff
 		return -1;
 	}
@@ -60,8 +67,8 @@ int update_sql_table(u_int32_t src, u_int32_t dst, u_int8_t proto, u_int16_t spo
         timestamp=time(NULL);
         
         char request[LONG_REQUEST_SIZE];
-        if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET state=%u,end_timestamp=FROM_UNIXTIME(%u) WHERE (protocol=%u AND ip_saddr=%lu AND ip_daddr=%lu AND (state=1 OR state=2)",
-                        mysql_table_name,
+        if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET state=%u,end_timestamp=FROM_UNIXTIME(%u) WHERE (protocol=%u AND ip_saddr=%u AND ip_daddr=%u AND (state=1 OR state=2)",
+                        (*params).table,
                         STATE_CLOSE,
                         timestamp,
                         proto,

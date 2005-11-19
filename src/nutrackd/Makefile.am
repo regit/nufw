@@ -6,8 +6,8 @@ INCLUDES = -I$(KERNELDIR)
 sbin_PROGRAMS = nutrackd
 
 # nutrackd
-nutrackd_SOURCES = nutrackd.c  sql.c 
-nutrackd_LDADD = -lnfnetlink -lnetfilter_conntrack -ldl
+nutrackd_SOURCES = nutrackd.c  sql.c conf.c
+nutrackd_LDADD = -lnfnetlink -lnetfilter_conntrack -ldl -lmysqlclient
 #nutrackd_LDADD = -lnfnetlink -lnetfilter_conntrack -ldl -lpthread
 
 nutrackd$(EXEEXT): $(nutrackd_OBJECTS) $(nutrackd_DEPENDENCIES) 

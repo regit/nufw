@@ -83,6 +83,9 @@ int main(int argc,char * argv[]){
     int packet_timeout;
     int res;
     struct nfct_handle *cth;
+    SQLconnection *sql_params ;
+    char *conffile="./dummy.conf";
+    FILE * FH;
 
 //    struct sigaction act;
 
@@ -126,6 +129,9 @@ int main(int argc,char * argv[]){
         printf("nutrackd must be run as root! Sorry\n");
         return 1;
     }
+    FH = fopen (conffile, "r");
+
+    sql_params = read_conf(FH);
 
     /* Daemon code */
     if (daemonize == 1) {
