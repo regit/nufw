@@ -1,8 +1,6 @@
 if HAVE_CONNTRACK
 AM_CPPFLAGS = -O2 -Wall -DLOCAL_STATE_DIR=\"$(localstatedir)\"  -DCONFIG_DIR=\"$(sysconfdir)\"
 
-INCLUDES = -I$(KERNELDIR) 
-
 sbin_PROGRAMS = nutrackd
 
 # nutrackd
