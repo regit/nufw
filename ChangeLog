@@ -11,6 +11,8 @@
 	- increase internal message usage instead of sending directly
 	structure to queue.
 	- nufw : get rid fo old UDP protocol
+	- nuauth : fix double free problem linked with string_escape function
+	- libnuclient : new algo in push mode
 1.0.11 (2005/07/26)
 	- NuFW : port to big endian architecture. It has been tested on a
 	powerpc.

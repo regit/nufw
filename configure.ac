@@ -56,49 +56,9 @@ AC_ARG_WITH(debug,   [--with-debug Add development debug message],debug="yes", d
 AC_ARG_WITH(nfqueue,   [--with-nfqueue Compile for NFQUEUE instead of QUEUE],use_nfqueue="yes", use_nfqueue="")
 
 AC_ARG_WITH(conntrack,   [--with-conntrack Compile with libnetfilter_conntrack support],use_conntrack="yes", use_conntrack="")
-dnl--------------------------------
-
-AC_DEFUN([NF_KERNEL_SOURCE],[
-    
-  if test "$with_kernel" = ""; then
-    KERNEL="`uname -r`"
-  else
-    KERNEL="$with_kernel"
-  fi
-
-  THIS_PREFIX=""
-  for i in "/lib/modules/$KERNEL/build/include" "$KERNEL" "$KERNEL/include" "/usr/src/linux-$KERNEL" "/usr/src/kernel-$KERNEL" "/usr/src/linux-headers-$KERNEL" "/usr/src/kernel-headers-$KERNEL"
-  do  
-    AC_MSG_CHECKING([Looking for kernel source or headers in $i])
-    if test -r "$i/linux/config.h"
-    then
-      THIS_PREFIX="$i"
-      AC_MSG_RESULT([found])
-      break
-    fi
-    AC_MSG_RESULT([ ])    
-  done
-  if test -r "$THIS_PREFIX/linux/config.h" ; then
-    AC_SUBST(KERNELDIR,[$THIS_PREFIX])
-    AC_MSG_RESULT([found])
-  else
-    AC_MSG_ERROR([not found $THIS_PREFIX])  
-  fi
-
-  # somehow add this as an include path
-])
-
-AC_ARG_WITH(kernel,
-               AC_HELP_STRING([--with-kernel=DIR],
-                              [ Show location of kernel source. Default is to use uname -r and look in /lib/modules/KERNEL/build/include. ]),
-	       NF_KERNEL_SOURCE($with_kernel),NF_KERNEL_SOURCE())
-
-dnl--------------------------------
 
 AC_ARG_WITH(utf8,   [--with-utf8 Use UTF8 exchange between client and server], AC_DEFINE_UNQUOTED([USE_UTF8],[1],[Will use UTF8 exchange])
 )
-
-
 
 if test "${use_nfqueue}" = "yes"; then
 	AC_CHECK_LIB([nfnetlink], [nfnl_open], have_nfqueue="yes", have_nfqueue="")
