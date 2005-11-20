@@ -56,7 +56,7 @@ void log_user_packet (connection element,int state){
                    if (nuauth_log_users_without_realm){
                        element.username = get_rid_of_domain(element.username);
                     }
-                   (*module_user_logs) (
+                   user_logs (
 				     element, 
 				     state
 				    );
@@ -97,7 +97,7 @@ void log_user_packet (connection element,int state){
  */
 
 void real_log_user_packet (gpointer userdata, gpointer data){
-	(*module_user_logs) (
+	user_logs (
 			     ((struct Conn_State *)userdata)->conn, 
 			     ((struct Conn_State *)userdata)->state
 			    );

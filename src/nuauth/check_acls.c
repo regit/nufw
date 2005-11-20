@@ -34,7 +34,7 @@ int external_acl_groups (connection * element){
 
   /* query external authority */
 
-  acl_groups = (*module_acl_check) (element);
+  acl_groups = acl_check(element);
 
   element->acl_groups=acl_groups;
   if (acl_groups != NULL){

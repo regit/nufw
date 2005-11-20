@@ -19,13 +19,13 @@
 #ifndef MODULES_H
 #define MODULES_H
 
-int (*module_user_check) (const char *user, const char *pass,unsigned passlen,uint16_t *uid,GSList **groups);
+int init_modules_system();
 
-GSList * (*module_acl_check) (connection* element);
-
+int load_modules();
+int user_check (const char *user, const char *pass,unsigned passlen,uint16_t *uid,GSList **groups);
+GSList * acl_check (connection* element);
 /* ip auth */
-gchar* (*module_ip_auth)(tracking * header);
-
-int (*module_user_logs) (connection element, int state);
+gchar* ip_auth(tracking * header);
+int user_logs (connection element, int state);
 
 #endif

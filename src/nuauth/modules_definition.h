@@ -16,21 +16,27 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef ACLS_H
-#define ACLS_H
+#ifndef MODULES_DEFINITION_H
+#define MODULES_DEFINITION_H
+
+GSList* user_check_modules;
+
+GSList* acl_check_modules;
+
+GSList* ip_auth_modules;
+
+GSList* user_logs_modules;
 
 
-int init_acl_cache();
+GMutex *modules_mutex;
 
-void free_acl_cache(gpointer datas);
-void free_acl_struct(gpointer datas,gpointer uda);
-void free_acl_key(gpointer datas);
-gboolean compare_acls(gconstpointer tracking_hdrs1, gconstpointer tracking_hdrs2);
+typedef int user_check_callback (const char *user, const char *pass,unsigned passlen,uint16_t *uid,GSList **groups);
 
-gpointer acl_create_and_alloc_key(connection* kdatas);
-inline  guint hash_acl(gconstpointer headers);
-void free_acl_list(void * datas);
-void get_acls_from_cache (connection* conn_elt);
-gpointer acl_duplicate_key(gpointer datas);
+typedef GSList * acl_check_callback (connection* element);
+
+/* ip auth */
+typedef gchar* ip_auth_callback (tracking * header);
+
+typedef int user_logs_callback (connection element, int state);
 
 #endif

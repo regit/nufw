@@ -37,7 +37,7 @@ void process_usr1(int signum);
 void process_usr2(int signum);
 void process_poll(int signum);
 
-
+void init_audit();
 void end_audit(int signal);
 
 #endif

@@ -35,7 +35,7 @@
  */
 void external_ip_auth(gpointer userdata, gpointer data)
 {
-        char* username=(*module_ip_auth)(userdata);
+        char* username=ip_auth(userdata);
         if (username){
             GSList* groups=NULL;
 	    uint16_t uid;
@@ -45,7 +45,8 @@ void external_ip_auth(gpointer userdata, gpointer data)
              *  set a cache for such query 
              */
             /* get groups by calling user_check module with a empty password */
-            if((*module_user_check)(username,NULL,0,&uid,&groups)!=SASL_OK)
+	     
+            if(user_check(username,NULL,0,&uid,&groups)!=SASL_OK)
                   groups=NULL;
             /* if search succeed process to packet transmission */
             if (groups){

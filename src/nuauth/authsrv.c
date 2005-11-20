@@ -160,11 +160,6 @@ int main(int argc,char * argv[])
 	int nbipauth_check=NB_ACLCHECK;
 	int nbuser_check=NB_USERCHECK;
 	int nuauth_number_loggers=NB_ACLCHECK;
-	char * nuauth_acl_check_module;
-	char * nuauth_user_check_module;
-	char * nuauth_user_logs_module;
-	char * nuauth_ip_authentication_module;
-	GModule * auth_module,*logs_module,*acl_module,*ipauth_module;
 confparams nuauth_vars[] = {
 	{ "nuauth_client_listen_addr" ,  G_TOKEN_STRING, 0 , g_strdup(AUTHREQ_CLIENT_LISTEN_ADDR) },
 	{ "nuauth_nufw_listen_addr" ,  G_TOKEN_STRING, 0 , g_strdup(AUTHREQ_NUFW_LISTEN_ADDR) },
@@ -180,15 +175,11 @@ confparams nuauth_vars[] = {
 	{ "nuauth_log_users_sync" , G_TOKEN_INT , 0, NULL },
 	{ "nuauth_log_users_strict" , G_TOKEN_INT , 1, NULL },
 	{ "nuauth_log_users_without_realm" , G_TOKEN_INT , 1, NULL },
-	{ "nuauth_user_check_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_USERAUTH_MODULE) },
-	{ "nuauth_acl_check_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_ACLS_MODULE) },
-	{ "nuauth_user_logs_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_LOGS_MODULE) },
-	{ "nuauth_prio_to_nok" , G_TOKEN_INT , 1, NULL },
+{ "nuauth_prio_to_nok" , G_TOKEN_INT , 1, NULL },
 	{ "nuauth_datas_persistance" , G_TOKEN_INT , 10, NULL },
 	{ "nuauth_aclcheck_state_ready" , G_TOKEN_INT , 1,NULL },
 	{ "nuauth_push_to_client" , G_TOKEN_INT , 1,NULL },
 	{ "nuauth_do_ip_authentication" , G_TOKEN_INT , 0,NULL },
-	{ "nuauth_ip_authentication_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_IPAUTH_MODULE) },
 	{ "nuauth_multi_users" , G_TOKEN_STRING , 1, NULL },
 	{ "nuauth_multi_servers" , G_TOKEN_STRING , 1, NULL },
 	{ "nuauth_acl_cache" , G_TOKEN_INT , 0,NULL },
@@ -204,9 +195,7 @@ confparams nuauth_vars[] = {
 	gpointer vpointer;
 	pid_t pidf;
 	struct hostent *nufw_list_srv, *client_list_srv;
-	struct sigaction act;
 	struct sigaction action;
-	gchar* module_path;
 	gchar *nuauth_multi_users=NULL;
 	gchar *nuauth_multi_servers=NULL;
 
@@ -222,10 +211,6 @@ confparams nuauth_vars[] = {
 	nuauth_user_cache=0;
 
 
-#ifdef GLIB_23_HACK
-	atomic_mutex=g_mutex_new();
-#endif
-	
 	/* 
 	 * Minimum debug_level value is 2 -> for 1) fatal and 2) critical messages to always
 	 * be outputed
@@ -296,21 +281,8 @@ confparams nuauth_vars[] = {
 	vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_log_users_without_realm");
 	nuauth_log_users_without_realm=*(int*)(vpointer);//?vpointer:&nuauth_log_users_without_realm);
 
-	vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_user_check_module");
-	nuauth_user_check_module=(char*)(vpointer);//?vpointer:nuauth_user_check_module);
-
-	vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_acl_check_module");
-	nuauth_acl_check_module=(char*)(vpointer);//?vpointer:nuauth_acl_check_module);
-
-	vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_ip_authentication_module");
-	nuauth_ip_authentication_module=(char*)(vpointer);//?vpointer:nuauth_ip_authentication_module);
-
-
 	vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_prio_to_nok");
 	nuauth_prio_to_nok=*(int*)(vpointer);//?vpointer:&nuauth_prio_to_nok);
-
-	vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_user_logs_module");
-	nuauth_user_logs_module=(char*)(vpointer);//?vpointer:nuauth_user_logs_module);
 
 	vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_number_loggers");
 	nuauth_number_loggers=*(int*)(vpointer);//?vpointer:&nuauth_number_loggers);
@@ -414,7 +386,6 @@ confparams nuauth_vars[] = {
 						\t-L : specify NUFW listening IP address (local) (this address waits for nufw data) (default : 127.0.0.1)\n\
 						\t-C : specify clients listening IP address (local) (this address waits for clients auth) (default : 0.0.0.0)\n\
 						\t-d : (remote) address of the nufw (gateway) server\n\
-						\t-p : THIS OPTION IS DEPRECATED \n\t\t(remote) port we use to send responses to nufw server(default : 4128)\n\
 						\t-t : timeout to forget about packets when they don't match (default : 15 s)\n");
 				return 1;
 		}
@@ -557,67 +528,10 @@ confparams nuauth_vars[] = {
 	if (!connexions_queue)
 		exit(1);
 
-	/* external auth module loading */
-
-	module_acl_check=NULL;
-	module_user_check=NULL;
-
-	module_path=g_module_build_path(MODULE_PATH,
-			nuauth_user_check_module);
-	auth_module=g_module_open (module_path,0);
-	g_free(module_path);
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-		g_message("Auth (user) module: %s", nuauth_user_check_module);
-	if (auth_module == NULL){
-		g_error("Unable to load module %s in %s",nuauth_user_check_module,MODULE_PATH);
-	}
-
-	if (!g_module_symbol (auth_module, "user_check", 
-				(gpointer*) &module_user_check))
-	{
-		g_error ("Unable to load user checking function\n");
-	}
-	if ( strcmp(nuauth_user_check_module,nuauth_acl_check_module)){
-		module_path = g_module_build_path(MODULE_PATH, nuauth_acl_check_module);
-		acl_module = g_module_open (module_path 
-				,0);
-		g_free(module_path);
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-			g_message("ACL module: %s", nuauth_acl_check_module);
-		if (auth_module == NULL){
-			g_error("Unable to load module %s in %s",nuauth_acl_check_module,MODULE_PATH);
-		}
-	} else {
-		acl_module=auth_module;
-	}
-
-        g_free(nuauth_user_check_module);
-        g_free(nuauth_acl_check_module);
-
-
-	if (!g_module_symbol (acl_module, "acl_check", 
-				(gpointer*)&module_acl_check))
-	{
-		g_error ("Unable to load acl checking function\n");
-	}
-
-	module_path=g_module_build_path(MODULE_PATH,
-			nuauth_user_logs_module);
-	logs_module=g_module_open (module_path,0);
-	g_free(module_path);
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-		g_message("User logs module: %s", nuauth_user_logs_module);
-	if (logs_module == NULL){
-		g_error("Unable to load module %s in %s",nuauth_user_logs_module,MODULE_PATH);
-	}
-        g_free(nuauth_user_logs_module);
-
-	if (!g_module_symbol (logs_module, "user_packet_logs", 
-				(gpointer*) &module_user_logs))
-	{
-		g_error ("Unable to load user logging function\n");
-	}
-
+	/* init modules system */
+	init_modules_system();
+	/* load modules */
+	load_modules();
 
 	/* internal Use */
 	ALLGROUP=NULL;
@@ -625,78 +539,18 @@ confparams nuauth_vars[] = {
 
 
 	if (nuauth_acl_cache) {
-		GThread *acl_cache_thread;
-			/* create acl cache thread */
-			if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-				g_message("creating acl cache thread");
-		acl_cache=g_new0(struct cache_init_datas,1);
-		acl_cache->hash=g_hash_table_new_full((GHashFunc)hash_acl,
-				compare_acls,
-				(GDestroyNotify) free_acl_key,
-				(GDestroyNotify) free_acl_cache); 
-		acl_cache->queue=g_async_queue_new();
-		acl_cache->delete_elt=free_acl_struct;
-		acl_cache->duplicate_key=acl_duplicate_key;
-		acl_cache->free_key=free_acl_key;
-                acl_cache->equal_key=compare_acls;
-
-
-		acl_cache_thread = g_thread_create ( (GThreadFunc) cache_manager,
-				acl_cache,
-				FALSE,
-				NULL);
-		if (! acl_cache_thread )
-			exit(1);
+		init_acl_cache();
 	}
 
 	/* create user cache thread */
 	if (nuauth_user_cache && (nuauth_multi_users && nuauth_multi_servers) ){
-		GThread *user_cache_thread;
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-			g_message("creating user cache thread");
-		user_cache=g_new0(struct cache_init_datas,1);
-		user_cache->hash=g_hash_table_new_full((GHashFunc)g_str_hash,
-				g_str_equal,
-				(GDestroyNotify) g_free,
-				(GDestroyNotify) free_user_cache); 
-		user_cache->queue=g_async_queue_new();
-		user_cache->delete_elt=free_user_struct;
-		user_cache->duplicate_key=user_duplicate_key;
-		user_cache->free_key=g_free;
-                user_cache->equal_key=g_str_equal;
-
-
-		user_cache_thread = g_thread_create ( (GThreadFunc) cache_manager,
-				user_cache,
-				FALSE,
-				NULL);
-		if (! user_cache_thread )
-			exit(1);
+		init_user_cache();
 	}
 
 	null_message=g_new0(struct cache_message,1);
 	null_queue_datas=g_new0(gchar,1);
 
 	if (nuauth_do_ip_authentication){
-		/* load module */
-		module_path=g_module_build_path(MODULE_PATH,
-				nuauth_ip_authentication_module);
-		ipauth_module=g_module_open (module_path,0);
-		g_free(module_path);
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-			g_message("IP Auth (user) module: %s",nuauth_ip_authentication_module);
-		if (auth_module == NULL){
-			g_error("Unable to load module %s in %s",nuauth_ip_authentication_module,MODULE_PATH);
-		}
-                g_free(nuauth_ip_authentication_module);
-
-		if (!g_module_symbol (ipauth_module, "ip_authentication", 
-					(gpointer*) &module_ip_auth))
-		{
-			g_error ("Unable to load ip authentication function\n");
-		}
-
-
 		/* create thread of pool */
 		ip_authentication_workers = g_thread_pool_new  ((GFunc) external_ip_auth,
 				NULL,
@@ -740,13 +594,6 @@ confparams nuauth_vars[] = {
 				NULL);
 		if (! localid_auth_thread )
 			exit(1);
-	}
-
-
-	/* create socket for auth reply */
-	sck_auth_reply = socket (PF_INET,SOCK_DGRAM,0);
-	if (sck_auth_reply == -1){
-		exit(1);
 	}
 
 	/* create pckt workers */
@@ -812,43 +659,7 @@ confparams nuauth_vars[] = {
 		g_message("Threads system started");
 
 	/* init audit structure */
-	myaudit=g_new0(struct audit_struct,1);
-	myaudit->users = user_checkers;
-	myaudit->acls  = acl_checkers;
-	myaudit->loggers = user_loggers;
-	myaudit->conn_list = conn_list;
-	if (nuauth_acl_cache){
-		myaudit->aclcache = acl_cache->hash;
-	}
-	myaudit->cache_req_nb = 0;
-	myaudit->cache_hit_nb = 0;
-
-
-	memset(&act,0,sizeof(act));
-	act.sa_handler=&process_poll;
-	act.sa_flags = SIGPOLL;
-	if (sigaction(SIGPOLL,&act,NULL) == -1){
-		printf("could not set signal");
-		exit(EXIT_FAILURE);
-	}
-
-	memset(&act,0,sizeof(act));
-	act.sa_handler=&process_usr1;
-	act.sa_flags = SIGUSR1;
-
-	if (sigaction(SIGUSR1,&act,NULL) == -1){
-		printf("could not set signal");
-		exit(EXIT_FAILURE);
-	}
-
-	memset(&act,0,sizeof(act));
-	act.sa_handler=&process_usr2;
-	act.sa_flags = SIGUSR2;
-
-	if (sigaction(SIGUSR2,&act,NULL) == -1){
-		printf("could not set signal");
-		exit(EXIT_FAILURE);
-	}
+	init_audit();
 	/* a little sleep */
 	usleep(500000);	
 

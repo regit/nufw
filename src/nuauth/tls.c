@@ -131,7 +131,7 @@ int userdb_checkpass(sasl_conn_t *conn,
 	}
 
 
-	if ((* module_user_check)(dec_user,pass,passlen,&uid,&groups)==SASL_OK){
+	if ( user_check(dec_user,pass,passlen,&uid,&groups)==SASL_OK){
 		guint tuid=uid;
 		g_private_set(group_priv,groups);
 		g_private_set(user_priv,GUINT_TO_POINTER(tuid));
@@ -684,7 +684,7 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 				g_message("Couldn't get user ID!");	
 		}
 		if (c_session->groups == NULL){
-			if((*module_user_check)(c_session->userid,NULL,0,&(c_session->uid),&(c_session->groups))!=SASL_OK){
+			if(user_check(c_session->userid,NULL,0,&(c_session->uid),&(c_session->groups))!=SASL_OK){
 #ifdef DEBUG_ENABLE
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
 					g_message("error when searching user groups");	
@@ -1031,7 +1031,7 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
 					g_message("Using username %s from X509 certificate",username);
 #endif
-				if( (* module_user_check)(username, NULL, 0,
+				if(  user_check(username, NULL, 0,
 							&(c_session->uid), &(c_session->groups)
 							)!=SASL_OK) {
 #ifdef DEBUG_ENABLE

@@ -342,7 +342,7 @@ static connection * userpckt_decode(struct buffer_read * datas)
 									if ( nuauth_user_cache ){
 										get_users_from_cache(connexion);
 									} else {
-										if ((*module_user_check)(connexion->username,NULL,0,&(connexion->user_id),&(connexion->user_groups))!=SASL_OK){
+										if (user_check(connexion->username,NULL,0,&(connexion->user_id),&(connexion->user_groups))!=SASL_OK){
 											if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_PACKET)){
 												g_message("User not found");
 											}

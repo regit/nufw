@@ -53,6 +53,51 @@ void process_usr2(int signum)
   g_message("USR2 : setting debug level to %d",debug_level);
 }
 
+void init_audit()
+{
+
+	struct sigaction act;
+	myaudit=g_new0(struct audit_struct,1);
+	myaudit->users = user_checkers;
+	myaudit->acls  = acl_checkers;
+	myaudit->loggers = user_loggers;
+	myaudit->conn_list = conn_list;
+	if (nuauth_acl_cache){
+		myaudit->aclcache = acl_cache->hash;
+	}
+	myaudit->cache_req_nb = 0;
+	myaudit->cache_hit_nb = 0;
+
+
+	memset(&act,0,sizeof(act));
+	act.sa_handler=&process_poll;
+	act.sa_flags = SIGPOLL;
+	if (sigaction(SIGPOLL,&act,NULL) == -1){
+		printf("could not set signal");
+		exit(EXIT_FAILURE);
+	}
+
+	memset(&act,0,sizeof(act));
+	act.sa_handler=&process_usr1;
+	act.sa_flags = SIGUSR1;
+
+	if (sigaction(SIGUSR1,&act,NULL) == -1){
+		printf("could not set signal");
+		exit(EXIT_FAILURE);
+	}
+
+	memset(&act,0,sizeof(act));
+	act.sa_handler=&process_usr2;
+	act.sa_flags = SIGUSR2;
+
+	if (sigaction(SIGUSR2,&act,NULL) == -1){
+		printf("could not set signal");
+		exit(EXIT_FAILURE);
+	}
+
+
+}
+
 void end_audit(int signal)
 {
 	g_free(myaudit);

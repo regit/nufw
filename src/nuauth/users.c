@@ -102,7 +102,7 @@ void get_users_from_cache (connection* conn_elt)
 
 		/* cache wants an update 
 		 * external check of user */
-		if ((*module_user_check)(conn_elt->username,NULL,0,&(userdatas->uid),&(userdatas->groups))!=SASL_OK){
+		if (user_check(conn_elt->username,NULL,0,&(userdatas->uid),&(userdatas->groups))!=SASL_OK){
 			/*user has not been found or problem occurs we must fail 
 			 * returning NULL is enough (don't want to be DOSsed)*/
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET)){
@@ -142,4 +142,30 @@ void get_users_from_cache (connection* conn_elt)
 gpointer user_duplicate_key(gpointer datas)
 {
 	return (void*) g_strdup((gchar *)datas);
+}
+
+int init_user_cache()
+{
+	GThread *user_cache_thread;
+		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+			g_message("creating user cache thread");
+		user_cache=g_new0(struct cache_init_datas,1);
+		user_cache->hash=g_hash_table_new_full((GHashFunc)g_str_hash,
+				g_str_equal,
+				(GDestroyNotify) g_free,
+				(GDestroyNotify) free_user_cache); 
+		user_cache->queue=g_async_queue_new();
+		user_cache->delete_elt=free_user_struct;
+		user_cache->duplicate_key=user_duplicate_key;
+		user_cache->free_key=g_free;
+                user_cache->equal_key=g_str_equal;
+
+
+		user_cache_thread = g_thread_create ( (GThreadFunc) cache_manager,
+				user_cache,
+				FALSE,
+				NULL);
+		if (! user_cache_thread )
+			exit(1);
+		return 1;
 }

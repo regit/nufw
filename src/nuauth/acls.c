@@ -318,4 +318,28 @@ void get_acls_from_cache (connection* conn_elt)
 	/* free initial key */
 	g_free(message.key);
 }
+int init_acl_cache(){
+		GThread *acl_cache_thread;
+			/* create acl cache thread */
+			if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+				g_message("creating acl cache thread");
+		acl_cache=g_new0(struct cache_init_datas,1);
+		acl_cache->hash=g_hash_table_new_full((GHashFunc)hash_acl,
+				compare_acls,
+				(GDestroyNotify) free_acl_key,
+				(GDestroyNotify) free_acl_cache); 
+		acl_cache->queue=g_async_queue_new();
+		acl_cache->delete_elt=free_acl_struct;
+		acl_cache->duplicate_key=acl_duplicate_key;
+		acl_cache->free_key=free_acl_key;
+                acl_cache->equal_key=compare_acls;
 
+
+		acl_cache_thread = g_thread_create ( (GThreadFunc) cache_manager,
+				acl_cache,
+				FALSE,
+				NULL);
+		if (! acl_cache_thread )
+			exit(1);
+		return 1;
+}
