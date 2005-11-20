@@ -96,6 +96,36 @@ int init_modules_system(){
 	return 1;
 }
 
+static int load_modules_from(gchar* confvar, gchar* func,GSList** target)
+{
+	gchar** modules_list=g_strsplit(confvar," ",0);
+	GModule * module;
+	gchar* module_path;
+	gpointer module_func;
+	int i;
+	for (i=0;modules_list[i]!=NULL;i++) {	
+		module_path = g_module_build_path(MODULE_PATH, modules_list[i]);
+		module = g_module_open (module_path 
+				,0);
+		g_free(module_path);
+		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+			g_message("\tmodule %d: %s",i, modules_list[i]);
+		if (module == NULL){
+			g_error("Unable to load module %s in %s",modules_list[i],MODULE_PATH);
+		}
+
+		if (!g_module_symbol (module, func, 
+					(gpointer*)&module_func))
+		{
+			g_error ("Unable to load acl checking function\n");
+		}
+
+		*target=g_slist_append(*target,(gpointer)module_func);
+	}
+	return 1;
+
+}
+
 int load_modules()
 {
 	char * nuauth_acl_check_module;
@@ -103,18 +133,12 @@ int load_modules()
 	char * nuauth_user_logs_module;
 	char * nuauth_ip_authentication_module;
 	char *configfile=DEFAULT_CONF_FILE;
-	GModule * auth_module,*logs_module,*acl_module,*ipauth_module;
-	user_check_callback * module_user_check;
-	acl_check_callback * module_acl_check;
-	ip_auth_callback * module_ip_auth;
-	user_logs_callback * module_user_logs;
 	confparams nuauth_vars[] = {
 		{ "nuauth_user_check_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_USERAUTH_MODULE) },
 		{ "nuauth_acl_check_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_ACLS_MODULE) },
 		{ "nuauth_user_logs_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_LOGS_MODULE) },
 		{ "nuauth_ip_authentication_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_IPAUTH_MODULE) }
 	};
-	gchar* module_path;
 	gpointer vpointer;
 
 	/* parse conf file */
@@ -136,92 +160,28 @@ int load_modules()
 	g_mutex_lock(modules_mutex);
 
 	/* loading user check modules */
-	module_path=g_module_build_path(MODULE_PATH,
-			nuauth_user_check_module);
-	auth_module=g_module_open (module_path,0);
-	g_free(module_path);
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-		g_message("Auth (user) module: %s", nuauth_user_check_module);
-	if (auth_module == NULL){
-		g_error("Unable to load module %s in %s",nuauth_user_check_module,MODULE_PATH);
-	}
-
-	if (!g_module_symbol (auth_module, "user_check", 
-				(gpointer*) &module_user_check))
-	{
-		g_error ("Unable to load user checking function\n");
-	}
-
-	user_check_modules=g_slist_append(user_check_modules,(gpointer)module_user_check);
-
-	/* loading acl check module */
-	if ( strcmp(nuauth_user_check_module,nuauth_acl_check_module)){
-		module_path = g_module_build_path(MODULE_PATH, nuauth_acl_check_module);
-		acl_module = g_module_open (module_path 
-				,0);
-		g_free(module_path);
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-			g_message("ACL module: %s", nuauth_acl_check_module);
-		if (auth_module == NULL){
-			g_error("Unable to load module %s in %s",nuauth_acl_check_module,MODULE_PATH);
-		}
-	} else {
-		acl_module=auth_module;
-	}
-
-	if (!g_module_symbol (acl_module, "acl_check", 
-				(gpointer*)&module_acl_check))
-	{
-		g_error ("Unable to load acl checking function\n");
-	}
-
-	acl_check_modules=g_slist_append(acl_check_modules,(gpointer)module_acl_check);
-	/* free configuration variables */
+		g_message("Loading user checking modules:");
+	load_modules_from(nuauth_user_check_module,"user_check",&user_check_modules);
 	g_free(nuauth_user_check_module);
-	g_free(nuauth_acl_check_module);
-	
-	/* user logs modules */
-	user_logs_modules=NULL;
-	module_path=g_module_build_path(MODULE_PATH,
-			nuauth_user_logs_module);
-	logs_module=g_module_open (module_path,0);
-	g_free(module_path);
+	/* loading acl check module */
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-		g_message("User logs module: %s", nuauth_user_logs_module);
-	if (logs_module == NULL){
-		g_error("Unable to load module %s in %s",nuauth_user_logs_module,MODULE_PATH);
-	}
+		g_message("Loading acls checking modules:");
+	load_modules_from(nuauth_acl_check_module,"acl_check",&acl_check_modules);
+	g_free(nuauth_acl_check_module);
+
+	/* user logs modules */
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+		g_message("Loading user logging modules:");
+	load_modules_from(nuauth_user_logs_module,"user_packet_logs",&user_logs_modules);
 	g_free(nuauth_user_logs_module);
-
-	if (!g_module_symbol (logs_module, "user_packet_logs", 
-				(gpointer*) &module_user_logs))
-	{
-		g_error ("Unable to load user logging function\n");
-	}
-
-
-	user_logs_modules=g_slist_append(user_logs_modules,(gpointer)module_user_logs);
 
 	if (nuauth_do_ip_authentication){
 		/* load module */
-		module_path=g_module_build_path(MODULE_PATH,
-				nuauth_ip_authentication_module);
-		ipauth_module=g_module_open (module_path,0);
-		g_free(module_path);
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-			g_message("IP Auth (user) module: %s",nuauth_ip_authentication_module);
-		if (auth_module == NULL){
-			g_error("Unable to load module %s in %s",nuauth_ip_authentication_module,MODULE_PATH);
-		}
+			g_message("Loading ip authentication modules:");
+		load_modules_from(nuauth_ip_authentication_module,"ip_authentication",&ip_auth_modules);
 		g_free(nuauth_ip_authentication_module);
-
-		if (!g_module_symbol (ipauth_module, "ip_authentication", 
-					(gpointer*) &module_ip_auth))
-		{
-			g_error ("Unable to load ip authentication function\n");
-		}
-
-		ip_auth_modules=g_slist_append(ip_auth_modules,(gpointer)module_ip_auth);
 	}
 
 	g_mutex_unlock(modules_mutex);
