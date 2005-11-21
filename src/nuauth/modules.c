@@ -33,9 +33,24 @@
  **
  */
 
+/*! \file modules.c
+    \brief Take care of interaction with modules
+    
+    It contains the functions that load and unload modules as well as all 
+    *_check functions use in the code to interact with the modules
+*/
+
+
+
 
 #include <auth_srv.h>
 #include "modules_definition.h"
+
+/**
+ * Check a user/password against the list of modules used for user authentication
+ *  It returns the decision using SASL define return value and fill uid and list of groups
+ *  the user belongs to.
+ */
 
 int user_check (const char *user, const char *pass,unsigned passlen,uint16_t *uid,GSList **groups){
 	/* iter through module list and stop when user is found */
@@ -48,6 +63,11 @@ int user_check (const char *user, const char *pass,unsigned passlen,uint16_t *ui
 	}
 	return SASL_NOAUTHZ;
 }
+
+/**
+ * Check a connection and return a list of acl that match the information
+ * contained in the connection.
+ */
 
 GSList * acl_check (connection* element){
 	/* iter through module list and stop when an acl is found */
@@ -96,6 +116,11 @@ int init_modules_system(){
 	return 1;
 }
 
+/**
+ * Load module for a task
+ *
+ * Please not that last args is a pointer of pointer
+ */
 static int load_modules_from(gchar* confvar, gchar* func,GSList** target)
 {
 	gchar** modules_list=g_strsplit(confvar," ",0);
@@ -125,7 +150,9 @@ static int load_modules_from(gchar* confvar, gchar* func,GSList** target)
 	return 1;
 
 }
-
+/**
+ * Load modules for user and acl checking as well as for user logging and ip authentication
+ */
 int load_modules()
 {
 	char * nuauth_acl_check_module;

@@ -16,6 +16,17 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/*! \file acls.c
+    \brief Acls manipulations and cache
+    
+    It implements the functions needed to activate cache for acls and basic
+    acl manipulations tasks
+    
+    
+*/
+
+
+
 #include <auth_srv.h>
 #include <jhash.h>
 #include "cache.h"

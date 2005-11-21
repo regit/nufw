@@ -16,6 +16,13 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/*! \file authsrv.c
+    \brief Main file
+    
+    It takes care of init stuffs and runs sheduled tasks at a given interval.
+*/
+
+
 #include <auth_srv.h>
 #include <gcrypt.h>
 #include <sasl/saslutil.h>
