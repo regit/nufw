@@ -377,7 +377,9 @@ static connection * userpckt_decode(struct buffer_read * datas)
 		default:
 			free_buffer_read(datas);
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
-				g_message("unsupported protocol");
+				g_message("unsupported protocol, got protocol %d (msg %d) with option %d (length %d)",header->proto,
+						header->msg_type,header->option,header->length);
 			return NULL;
 	}
+	return NULL;
 }
