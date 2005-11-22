@@ -1,4 +1,4 @@
-1.1.0 (2005/10/31)
+1.1.0 (2005/11/31)
 	- full "a posteriori" IP authentication for mono user system via hello message system
 	- nufw : port to libnetfilter_queue
 	- NuFW : many small fixes in the debian/ subdir : start in correct runlevels,
@@ -13,6 +13,9 @@
 	- nufw : get rid fo old UDP protocol
 	- nuauth : fix double free problem linked with string_escape function
 	- libnuclient : new algo in push mode
+	- nuauth : multi modules support
+	- nutrackd : brand new connection tracking system based on
+	libconntrack
 1.0.11 (2005/07/26)
 	- NuFW : port to big endian architecture. It has been tested on a
 	powerpc.
