@@ -363,6 +363,10 @@ treat_user_request (user_session * c_session)
 					return -1;
 				}
 			}
+			/* check message type because USER_HELLO has to be ignored */
+			if ( pbuf->msg_type == USER_HELLO){
+				return 1;
+			}
 			/* check authorization if we're facing a multi user packet */ 
 			if ( (pbuf->option == 0x0) ||
 					((pbuf->option == 0x1) && c_session->multiusers)) {
@@ -411,6 +415,7 @@ treat_user_request (user_session * c_session)
 					g_message("Bad packet, option of header is not set or unauthorized option");
 				}
 				free_buffer_read(datas);
+				return EOF;
 			}
 		} else {
 #ifdef DEBUG_ENABLE
@@ -816,6 +821,13 @@ int sasl_user_check(user_session* c_session)
 					if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
 						g_warning("error osfield is too long, announced %d",osfield->length);	
 					}
+#ifdef DEBUG_ENABLE
+						if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
+							g_message("%s:%d osfield received %d,%d,%d ",__FILE__,__LINE__,osfield->type,osfield->option,osfield->length);
+
+						}
+#endif
+
 					return SASL_BADAUTH;
 				}
 				dec_buf = g_new0( gchar ,dec_buf_size);
@@ -906,9 +918,19 @@ int sasl_user_check(user_session* c_session)
 					if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
 						g_message("osfield->option is not OS_SRV ?!");
 
+					g_free(dec_buf);
+					return SASL_FAIL;
+
 				}
 				g_free(dec_buf);
 			} else {
+#ifdef DEBUG_ENABLE
+						if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
+							g_message("osfield received %d,%d,%d ",osfield->type,osfield->option,osfield->length);
+
+						}
+#endif
+
 				return SASL_FAIL;
 			}
 		}
