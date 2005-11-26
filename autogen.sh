@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 libtoolize --force --automake
 aclocal -I macros/
