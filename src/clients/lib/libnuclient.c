@@ -29,6 +29,14 @@
  *
  */
 
+/*! \file libnuclient.c
+  \brief Main file for libnuclient
+
+  It contains all the exported functions
+ */
+
+
+
 #include "nuclient.h"
 #include <sasl/saslutil.h>
 #include <proto.h>
@@ -46,159 +54,158 @@ char * locale_to_utf8(char* inbuf);
 
 
 static int tcptable_hash (conn_t *c);
-static int tcptable_add (conntable_t *ct, conn_t *c);
 static conn_t * tcptable_find (conntable_t *ct, conn_t *c);
 
 /* callbacks we support */
 int nu_getrealm(void *context __attribute__((unused)), int id,
-		const char **availrealms __attribute__((unused)),
-		const char **result)
+    const char **availrealms __attribute__((unused)),
+    const char **result)
 {
-	// NuAuth * session = (NuAuth*)context;
+  // NuAuth * session = (NuAuth*)context;
 
-	if(id != SASL_CB_GETREALM) {
-		printf("nu_getrealm not looking for realm");
-		return EXIT_FAILURE;
-	}
-	if(!result) return SASL_BADPARAM;
-	*result = "NuPik";
-	return SASL_OK;
+  if(id != SASL_CB_GETREALM) {
+      printf("nu_getrealm not looking for realm");
+      return EXIT_FAILURE;
+  }
+  if(!result) return SASL_BADPARAM;
+  *result = "NuPik";
+  return SASL_OK;
 }
 
 
 int nu_get_usersecret(sasl_conn_t *conn __attribute__((unused)),
-		void *context __attribute__((unused)), int id,
-		sasl_secret_t **psecret)
+    void *context __attribute__((unused)), int id,
+    sasl_secret_t **psecret)
 {
-	NuAuth* session=(NuAuth *)context;
-	if ((session->password == NULL) && session->passwd_callback) {
+  NuAuth* session=(NuAuth *)context;
+  if ((session->password == NULL) && session->passwd_callback) {
 #if USE_UTF8
-		char *givenpass=session->passwd_callback();
-		session->password=locale_to_utf8(givenpass);
-		if (! session->password){
-			free(givenpass);
-			return EXIT_FAILURE;
-		}
-		free(givenpass);
+      char *givenpass=session->passwd_callback();
+      session->password=locale_to_utf8(givenpass);
+      if (! session->password){
+          free(givenpass);
+          return EXIT_FAILURE;
+      }
+      free(givenpass);
 #else
-		session->password=(session->passwd_callback)();
+      session->password=(session->passwd_callback)();
 #endif
-	}
-	if(id != SASL_CB_PASS) {
-		printf("getsecret not looking for pass");
-		return EXIT_FAILURE;
-	}
-	if(!psecret) return SASL_BADPARAM;
-	if (! session->password){
-		*psecret = (sasl_secret_t*)calloc(1,sizeof(sasl_secret_t) );
-		(*psecret)->len = 0;
-		(*psecret)->data[0] = 0;
-	} else {
-		*psecret = (sasl_secret_t*)calloc(sizeof(sasl_secret_t) + strlen(session->password)+1,sizeof(char));
-		(*psecret)->len = strlen(session->password);
-		strncpy((char*)(*psecret)->data, session->password, (*psecret)->len +1 );
-	}
+  }
+  if(id != SASL_CB_PASS) {
+      printf("getsecret not looking for pass");
+      return EXIT_FAILURE;
+  }
+  if(!psecret) return SASL_BADPARAM;
+  if (! session->password){
+      *psecret = (sasl_secret_t*)calloc(1,sizeof(sasl_secret_t) );
+      (*psecret)->len = 0;
+      (*psecret)->data[0] = 0;
+  } else {
+      *psecret = (sasl_secret_t*)calloc(sizeof(sasl_secret_t) + strlen(session->password)+1,sizeof(char));
+      (*psecret)->len = strlen(session->password);
+      strncpy((char*)(*psecret)->data, session->password, (*psecret)->len +1 );
+  }
 
-	return SASL_OK;
+  return SASL_OK;
 }
 
 static int nu_get_userdatas(void *context __attribute__((unused)),
-		int id,
-		const char **result,
-		unsigned *len)
+    int id,
+    const char **result,
+    unsigned *len)
 {
-	NuAuth* session=(NuAuth *)context;
-	/* paranoia check */
-	if (! result)
-		return SASL_BADPARAM;
+  NuAuth* session=(NuAuth *)context;
+  /* paranoia check */
+  if (! result)
+      return SASL_BADPARAM;
 
-	switch (id) {
-		case SASL_CB_USER:
-			if ((session->username == NULL) && session->username_callback) {
+  switch (id) {
+    case SASL_CB_USER:
+      if ((session->username == NULL) && session->username_callback) {
 #if USE_UTF8
-				char *givenuser=session->username_callback();
-				session->username=locale_to_utf8(givenuser);
-				free(givenuser);
-				if (! session->username){
-					return EXIT_FAILURE;
-				}
+          char *givenuser=session->username_callback();
+          session->username=locale_to_utf8(givenuser);
+          free(givenuser);
+          if (! session->username){
+              return EXIT_FAILURE;
+          }
 
 
 #else
-				session->password=(session->username_callback)();
+          session->password=(session->username_callback)();
 #endif
-			}
+      }
 
-			if (session->protocol == 2)
-				*result=session->username;
-			else {
-				char number[12];
-				snprintf(number,12,"%lu",session->userid);
-				*result=strdup(number);
-			}
-			break;
-		case SASL_CB_AUTHNAME:
-			if ((session->username == NULL) && session->username_callback) {
+      if (session->protocol == 2)
+          *result=session->username;
+      else {
+          char number[12];
+          snprintf(number,12,"%lu",session->userid);
+          *result=strdup(number);
+      }
+      break;
+    case SASL_CB_AUTHNAME:
+      if ((session->username == NULL) && session->username_callback) {
 #if USE_UTF8
-				char *givenuser=session->username_callback();
-				session->username=locale_to_utf8(givenuser);
-				free(givenuser);
-				if (! session->username){
-					return EXIT_FAILURE;
-				}
+          char *givenuser=session->username_callback();
+          session->username=locale_to_utf8(givenuser);
+          free(givenuser);
+          if (! session->username){
+              return EXIT_FAILURE;
+          }
 #else
-				session->password=(session->username_callback)();
+          session->password=(session->username_callback)();
 #endif
 
-			}
-			if (session->protocol == 2)
-				*result=session->username;
-			else {
-				char number[12];
-				snprintf(number,12,"%lu",session->userid);
-				*result=strdup(number);
-			}
+      }
+      if (session->protocol == 2)
+          *result=session->username;
+      else {
+          char number[12];
+          snprintf(number,12,"%lu",session->userid);
+          *result=strdup(number);
+      }
 
-			break;
-		default:
-			return SASL_BADPARAM;
-	}
+      break;
+    default:
+      return SASL_BADPARAM;
+  }
 
-	if (len) *len = strlen(*result);
+  if (len) *len = strlen(*result);
 
-	return SASL_OK;
+  return SASL_OK;
 }
 
 void panic(const char *fmt, ...)
 {
-	printf("error\n");
-	exit(-1);
+  printf("error\n");
+  exit(-1);
 }
 
 void nu_exit_clean(NuAuth * session)
 {
-	conn_on=0;
-	if (session){
-		if (session->tls){
-			gnutls_bye(*(session->tls),GNUTLS_SHUT_RDWR);
-			gnutls_deinit(*(session->tls));
-			free(session->tls);
-		}
-		if (session->socket>0){
-			shutdown(session->socket,SHUT_RDWR);
-			session->socket=0;
-		}
-		if (session->username){
-			free(session->username);
-		}
-		if (session->password){
-			free(session->password);
-		}
-		free(session);
-		session=NULL;
-	}
-	sasl_done();
-	gnutls_global_deinit();
+  conn_on=0;
+  if (session){
+      if (session->tls){
+          gnutls_bye(*(session->tls),GNUTLS_SHUT_RDWR);
+          gnutls_deinit(*(session->tls));
+          free(session->tls);
+      }
+      if (session->socket>0){
+          shutdown(session->socket,SHUT_RDWR);
+          session->socket=0;
+      }
+      if (session->username){
+          free(session->username);
+      }
+      if (session->password){
+          free(session->password);
+      }
+      free(session);
+      session=NULL;
+  }
+  sasl_done();
+  gnutls_global_deinit();
 }
 /*
  * tcptable_init ()
@@ -207,15 +214,15 @@ void nu_exit_clean(NuAuth * session)
  */
 int tcptable_init (conntable_t **ct)
 {
-	int i;
+  int i;
 
-	(* ct) = (conntable_t *) calloc(1,sizeof(conntable_t));
-	assert (*ct != NULL);
+  (* ct) = (conntable_t *) calloc(1,sizeof(conntable_t));
+  assert (*ct != NULL);
 
-	for (i = 0; i < CONNTABLE_BUCKETS; i++)
-		(*ct)->buckets[i] = NULL;
+  for (i = 0; i < CONNTABLE_BUCKETS; i++)
+      (*ct)->buckets[i] = NULL;
 
-	return 1;
+  return 1;
 }
 
 /*
@@ -225,10 +232,10 @@ int tcptable_init (conntable_t **ct)
  */
 static inline int tcptable_hash (conn_t *c)
 {
-	return (jhash_3words(c->lcl,
-				c->rmt,
-				(c->rmtp | c->lclp << 16),
-				32)) % CONNTABLE_BUCKETS;
+  return (jhash_3words(c->lcl,
+        c->rmt,
+        (c->rmtp | c->lclp << 16),
+        32)) % CONNTABLE_BUCKETS;
 }
 
 /*
@@ -236,27 +243,27 @@ static inline int tcptable_hash (conn_t *c)
  *
  * Add a connection to the connection table.
  */
-static int tcptable_add (conntable_t *ct, conn_t *c)
+int tcptable_add (conntable_t *ct, conn_t *c)
 {
-	conn_t *old, *newc;
-	int bi;
+  conn_t *old, *newc;
+  int bi;
 #if DEBUG
-	assert (ct != NULL);
-	assert (c != NULL);
+  assert (ct != NULL);
+  assert (c != NULL);
 #endif
 
-	newc = (conn_t *) calloc (1,sizeof (conn_t));
-	if (!newc) {
-		panic ("memory exhausted");
-	}
+  newc = (conn_t *) calloc (1,sizeof (conn_t));
+  if (!newc) {
+      panic ("memory exhausted");
+  }
 
-	memcpy (newc, c, sizeof (conn_t));
-	bi = tcptable_hash (c);
-	old = ct->buckets[bi];
-	ct->buckets[bi] = newc;
-	ct->buckets[bi]->next = old;
+  memcpy (newc, c, sizeof (conn_t));
+  bi = tcptable_hash (c);
+  old = ct->buckets[bi];
+  ct->buckets[bi] = newc;
+  ct->buckets[bi]->next = old;
 
-	return 1;
+  return 1;
 }
 
 /*
@@ -266,86 +273,23 @@ static int tcptable_add (conntable_t *ct, conn_t *c)
  */
 static conn_t* tcptable_find (conntable_t *ct, conn_t *c)
 {
-	conn_t *bucket;
+  conn_t *bucket;
 #if DEBUG
-	assert (ct != NULL);
-	assert (c != NULL);
+  assert (ct != NULL);
+  assert (c != NULL);
 #endif
-	bucket = ct->buckets[tcptable_hash (c)];
-	while (bucket != NULL) {
-		if (
-				(c->rmt == bucket->rmt) && (c->rmtp == bucket->rmtp) &&
-				(c->lcl == bucket->lcl) && (c->lclp == bucket->lclp)
-		   ) {
-			return bucket;
-		}
-		bucket = bucket->next;
-	}
+  bucket = ct->buckets[tcptable_hash (c)];
+  while (bucket != NULL) {
+      if (
+          (c->rmt == bucket->rmt) && (c->rmtp == bucket->rmtp) &&
+          (c->lcl == bucket->lcl) && (c->lclp == bucket->lclp)
+         ) {
+          return bucket;
+      }
+      bucket = bucket->next;
+  }
 
-	return NULL;
-}
-
-/*
- * tcptable_read ()
- *
- * Read /proc/net/tcp and add all connections to the table if connections
- * of that type are being watched.
- */
-int tcptable_read (NuAuth* session, conntable_t *ct)
-{
-	static FILE *fp = NULL;
-	char buf[1024];
-	conn_t c;
-#if DEBUG
-	assert (ct != NULL);
-#endif
-/* need to set check_cond */
-	pthread_mutex_lock(check_count_mutex);
-	count_msg_cond=0;
-	pthread_mutex_unlock(check_count_mutex);
-/* open file */
-	if (fp == NULL) {
-		fp = fopen ("/proc/net/tcp", "r");
-		if (fp == NULL) panic ("/proc/net/tcp: %s", strerror (errno));
-	}
-	rewind (fp);
-
-	if (fgets (buf, sizeof (buf), fp) == NULL)
-		panic ("/proc/net/tcp: missing header");
-
-	while (fgets (buf, sizeof (buf), fp) != NULL) {
-		unsigned long st;
-		int seen = 0;
-		if (sscanf (buf, "%*d: %lx:%x %lx:%x %lx %*x:%*x %*x:%*x %x %lu %*d %lu",
-					&c.lcl, &c.lclp, &c.rmt, &c.rmtp, &st, &c.retransmit, &c.uid, &c.ino) != 8)
-			continue;
-
-		if ((c.ino == 0) || (st != TCP_SYN_SENT))
-			continue;
-
-		// Check if it's the good user
-		if (c.uid != session->localuserid)
-			continue;
-#if DEBUG
-		// Check if there is a matching rule in the filters list
-		printf("Packet dst = %ld (%lx)\n", c.rmt, c.rmt);
-#endif
-		if ((c.ino == 0) || (st != TCP_SYN_SENT))
-			continue;
-		/* Check if it's the good user */
-		if (c.uid != session->localuserid)
-			continue;
-		// If we're sure auth_by_default is either 0 or 1, it can be simplified.
-		// (MiKael) TODO: Make sure!! :)
-		if (session->auth_by_default && seen)
-			continue;
-		if (!session->auth_by_default && !seen)
-			continue;
-		if (tcptable_add (ct, &c) == 0)
-			return 0;
-	}
-
-	return 1;
+  return NULL;
 }
 
 /*
@@ -355,120 +299,120 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
  */
 int tcptable_free (conntable_t *ct)
 {
-	int i;
+  int i;
 #if DEBUG
-	assert (ct != NULL);
+  assert (ct != NULL);
 #endif
 
-	for (i = 0; i < CONNTABLE_BUCKETS; i++) {
-		conn_t *c0, *c1;
+  for (i = 0; i < CONNTABLE_BUCKETS; i++) {
+      conn_t *c0, *c1;
 
-		c0 = ct->buckets[i];
-		while (c0 != NULL) {
-			c1 = c0->next;
-			free (c0);
-			c0 = c1;
-		}
-		ct->buckets[i] = NULL;
-	}
+      c0 = ct->buckets[i];
+      while (c0 != NULL) {
+          c1 = c0->next;
+          free (c0);
+          c0 = c1;
+      }
+      ct->buckets[i] = NULL;
+  }
 
-	/* free structure */
-	free(ct);
+  /* free structure */
+  free(ct);
 
-	return 1;
+  return 1;
 }
 
 int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn)
 {
-	char buf[8192];
-	const char *data;
-	const char *chosenmech;
-	//sasl_interatcptable_t *client_interact = NULL;
-	size_t len;
-	int r;
-	char * mech;
+  char buf[8192];
+  const char *data;
+  const char *chosenmech;
+  //sasl_interatcptable_t *client_interact = NULL;
+  size_t len;
+  int r;
+  char * mech;
 
-	memset(buf,0,sizeof buf);
-	/* get the capability list */
-	len = gnutls_record_recv(session, buf, sizeof buf);
-	if (len < 0)
-		return EXIT_FAILURE;
+  memset(buf,0,sizeof buf);
+  /* get the capability list */
+  len = gnutls_record_recv(session, buf, sizeof buf);
+  if (len < 0)
+      return EXIT_FAILURE;
 #if MECH_CHOICE
-	if (mech) {
-		/* make sure that 'mech' appears in 'buf' */
-		if (!strstr(buf, mech)) {
-			printf("server doesn't offer mandatory mech '%s'\n", mech);
-			return EXIT_FAILURE;
-		}
-	} else {
+  if (mech) {
+      /* make sure that 'mech' appears in 'buf' */
+      if (!strstr(buf, mech)) {
+          printf("server doesn't offer mandatory mech '%s'\n", mech);
+          return EXIT_FAILURE;
+      }
+  } else {
 #endif
-		mech = buf;
+      mech = buf;
 #if MECH_CHOICE
-	}
+  }
 #endif
 
-	r = sasl_client_start(conn, mech, NULL, &data, &len, &chosenmech);
-	//r = sasl_client_start(conn, mech, &client_interact, &data, &len, &chosenmech);
-	if (r != SASL_OK && r != SASL_CONTINUE) {
-		printf("starting SASL negotiation");
-		printf("\n%s\n", sasl_errdetail(conn));
-		return EXIT_FAILURE;
-	}
+  r = sasl_client_start(conn, mech, NULL, &data, &len, &chosenmech);
+  //r = sasl_client_start(conn, mech, &client_interact, &data, &len, &chosenmech);
+  if (r != SASL_OK && r != SASL_CONTINUE) {
+      printf("starting SASL negotiation");
+      printf("\n%s\n", sasl_errdetail(conn));
+      return EXIT_FAILURE;
+  }
 
 
-	/* we send up to 3 strings;
-	   the mechanism chosen, the presence of initial response,
-	   and optionally the initial response */
-	gnutls_record_send(session, chosenmech, strlen(chosenmech));
-	if(data) {
-		gnutls_record_send(session, "Y", 1);
-		gnutls_record_send(session, data, len);
-	} else {
-		gnutls_record_send(session, "N", 1);
-	}
+  /* we send up to 3 strings;
+     the mechanism chosen, the presence of initial response,
+     and optionally the initial response */
+  gnutls_record_send(session, chosenmech, strlen(chosenmech));
+  if(data) {
+      gnutls_record_send(session, "Y", 1);
+      gnutls_record_send(session, data, len);
+  } else {
+      gnutls_record_send(session, "N", 1);
+  }
 
-	r=SASL_CONTINUE;
-	for (;;) {
+  r=SASL_CONTINUE;
+  for (;;) {
 
-		memset(buf,0,sizeof buf);
-		len = gnutls_record_recv(session, buf, 1);
-		if (len < 0){
-			return EXIT_FAILURE;
-		}
-		switch (*buf) {
-			case 'O':
-				return SASL_OK;
-			case 'N':
-				return EXIT_FAILURE;
-			case 'C': /* continue authentication */
-				break;
-			default:
-				return EXIT_FAILURE;
-		}
-		memset(buf,0,sizeof buf);
-		len = gnutls_record_recv(session, buf, sizeof buf);
+      memset(buf,0,sizeof buf);
+      len = gnutls_record_recv(session, buf, 1);
+      if (len < 0){
+          return EXIT_FAILURE;
+      }
+      switch (*buf) {
+        case 'O':
+          return SASL_OK;
+        case 'N':
+          return EXIT_FAILURE;
+        case 'C': /* continue authentication */
+          break;
+        default:
+          return EXIT_FAILURE;
+      }
+      memset(buf,0,sizeof buf);
+      len = gnutls_record_recv(session, buf, sizeof buf);
 
-		if (len < 0){
-			return EXIT_FAILURE;
-		}
-		r = sasl_client_step(conn, buf, len, NULL, &data, &len);
-		if (r != SASL_OK && r != SASL_CONTINUE) {
-			if (r == SASL_INTERACT){
-				return EXIT_FAILURE;
-			}
-			printf("error performing SASL negotiation");
-			printf("\n%s\n", sasl_errdetail(conn));
-			return EXIT_FAILURE;
-		}
+      if (len < 0){
+          return EXIT_FAILURE;
+      }
+      r = sasl_client_step(conn, buf, len, NULL, &data, &len);
+      if (r != SASL_OK && r != SASL_CONTINUE) {
+          if (r == SASL_INTERACT){
+              return EXIT_FAILURE;
+          }
+          printf("error performing SASL negotiation");
+          printf("\n%s\n", sasl_errdetail(conn));
+          return EXIT_FAILURE;
+      }
 
-		if (data ) {
-			if (!len) len++;
-			gnutls_record_send(session, data, len);
-		} else {
-			gnutls_record_send(session, "", 1);
-		}
-	}
-	return EXIT_FAILURE;
+      if (data ) {
+          if (!len) len++;
+          gnutls_record_send(session, data, len);
+      } else {
+          gnutls_record_send(session, "", 1);
+      }
+  }
+  return EXIT_FAILURE;
 }
 
 /*
@@ -478,635 +422,667 @@ int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn)
  */
 int compare (NuAuth * session,conntable_t *old, conntable_t *new)
 {
-	int i;
+  int i;
+  int count=0;
+  conn_t* auth[CONN_MAX];
 
-	assert (old != NULL);
-	assert (new != NULL);
+  assert (old != NULL);
+  assert (new != NULL);
 
-	for (i = 0; i < CONNTABLE_BUCKETS; i++) {
-		conn_t *bucket;
-		conn_t *same_bucket;
+  for (i = 0; i < CONNTABLE_BUCKETS; i++) {
+      conn_t *bucket;
+      conn_t *same_bucket;
 
-		bucket = new->buckets[i];
-		while (bucket != NULL) {
-			same_bucket = tcptable_find (old, bucket) ;
-			if (same_bucket == NULL){
-				if (send_user_pckt (session,bucket) != 1){
-					/* error sending */
-					return -1;
-				}
-			} else {
-				/* compare values of retransmit */
-				if (bucket->retransmit > same_bucket->retransmit){
-					if (send_user_pckt (session,bucket) != 1){
-						/* error sending */
-						return -1;
-					}
-				}
-			}
-			bucket = bucket->next;
-		}
-	}
-	return 0;
+      bucket = new->buckets[i];
+      while (bucket != NULL) {
+          same_bucket = tcptable_find (old, bucket) ;
+          if (same_bucket == NULL){
+              if (count < CONN_MAX-1){
+                  auth[count]=bucket;
+                  count++;
+              } else {
+                  auth[count]=bucket;
+                  if (send_user_pckt (session,auth) != 1){
+                      /* error sending */
+                      return -1;
+                  }
+                  for(count=0;count<CONN_MAX;count++){
+                      auth[count]=NULL;
+                  }
+                  count=0;
+              }
+          } else {
+              /* compare values of retransmit */
+              if (bucket->retransmit > same_bucket->retransmit){
+                  if (count < CONN_MAX-1){
+                      auth[count]=bucket;
+                      count++;
+                  } else {
+                      auth[count]=bucket;
+                      if (send_user_pckt (session,auth) != 1){
+                          /* error sending */
+                          return -1;
+                      }
+                      for(count=0;count<CONN_MAX;count++){
+                          auth[count]=NULL;
+                      }
+                      count=0;
+                  }
+
+              }
+          }
+          bucket = bucket->next;
+      }
+  }
+  if(count>0){
+      if (count<CONN_MAX){
+        auth[count]=NULL;
+      }
+      if (send_user_pckt (session,auth) != 1){
+          /* error sending */
+          return -1;
+      }
+  }
+  return 0;
 }
 
 int nu_client_error(NuAuth * session)
 {
-	if (session)
-		return session->error;
-	else
-		return ERROR_UNKNOWN ;
+  if (session)
+      return session->error;
+  else
+      return ERROR_UNKNOWN ;
 }
 
 static gnutls_dh_params dh_params;
 
 static int generate_dh_params(void) {
 
-	/* Generate Diffie Hellman parameters - for use with DHE
-	 * kx algorithms. These should be discarded and regenerated
-	 * once a day, once a week or once a month. Depending on the
-	 * security requirements.
-	 */
-	gnutls_dh_params_init( &dh_params);
-	gnutls_dh_params_generate2( dh_params, DH_BITS);
+    /* Generate Diffie Hellman parameters - for use with DHE
+     * kx algorithms. These should be discarded and regenerated
+     * once a day, once a week or once a month. Depending on the
+     * security requirements.
+     */
+    gnutls_dh_params_init( &dh_params);
+    gnutls_dh_params_generate2( dh_params, DH_BITS);
 
-	return 0;
+    return 0;
 }
 
 NuAuth* nu_client_init(char *username, unsigned long userid, char *password,
-		const char *hostname, unsigned int port, char protocol, char ssl_on)
+    const char *hostname, unsigned int port, char protocol, char ssl_on)
 {
-	gnutls_certificate_credentials xcred;
-	conntable_t *new;
-	int ret;
+  gnutls_certificate_credentials xcred;
+  conntable_t *new;
+  int ret;
 #if 0
-	const int cert_type_priority[2] = { GNUTLS_CRT_X509,  0 };
+  const int cert_type_priority[2] = { GNUTLS_CRT_X509,  0 };
 #endif
-	//const int cert_type_priority[3] = { GNUTLS_CRT_X509, GNUTLS_CRT_OPENPGP, 0 };
-	struct hostent *host;
-	NuAuth * session;
+  //const int cert_type_priority[3] = { GNUTLS_CRT_X509, GNUTLS_CRT_OPENPGP, 0 };
+  struct hostent *host;
+  NuAuth * session;
 
-	session=(NuAuth*) calloc(1,sizeof(NuAuth));
+  session=(NuAuth*) calloc(1,sizeof(NuAuth));
 
-	sasl_callback_t callbacks[] = {
-		{ SASL_CB_GETREALM, &nu_getrealm, session },
-		{ SASL_CB_USER, &nu_get_userdatas, session },
-		{ SASL_CB_AUTHNAME, &nu_get_userdatas, session },
-		{ SASL_CB_PASS, &nu_get_usersecret, session },
-		{ SASL_CB_LIST_END, NULL, NULL }
-	};
+  sasl_callback_t callbacks[] = {
+      { SASL_CB_GETREALM, &nu_getrealm, session },
+      { SASL_CB_USER, &nu_get_userdatas, session },
+      { SASL_CB_AUTHNAME, &nu_get_userdatas, session },
+      { SASL_CB_PASS, &nu_get_usersecret, session },
+      { SASL_CB_LIST_END, NULL, NULL }
+  };
 
-	/* initiate session */
-	session->auth_by_default = 1;
-	session->tls=NULL;
-	session->protocol = protocol;
-	switch (protocol){
-		case 1:
-			session->username=NULL;
-			session->userid=userid;
-			break;
-		case 2:
-			if (!username){
-				nu_exit_clean(session);
-				return NULL;
-			}
-			session->username=strdup(username);
-			session->userid=0;
-			ssl_on=1;
-			break;
-		default:
-			nu_exit_clean(session);
-			return NULL;
-	}
+  /* initiate session */
+  session->auth_by_default = 1;
+  session->tls=NULL;
+  session->protocol = protocol;
+  switch (protocol){
+    case 1:
+      session->username=NULL;
+      session->userid=userid;
+      break;
+    case 2:
+      if (!username){
+          nu_exit_clean(session);
+          return NULL;
+      }
+      session->username=strdup(username);
+      session->userid=0;
+      ssl_on=1;
+      break;
+    default:
+      nu_exit_clean(session);
+      return NULL;
+  }
 
-	if (! password){
-		nu_exit_clean(session);
-		return NULL;
-	}
-	session->password=strdup(password);
-	/* initiate packet number */
-	session->packet_id=0;
+  if (! password){
+      nu_exit_clean(session);
+      return NULL;
+  }
+  session->password=strdup(password);
+  /* initiate packet number */
+  session->packet_id=0;
 
-	host = gethostbyname(hostname);
-	if (host == NULL)
-	{
-		fprintf(stderr, "*** An error occured when resolving the provided hostname\n");
+  host = gethostbyname(hostname);
+  if (host == NULL)
+  {
+      fprintf(stderr, "*** An error occured when resolving the provided hostname\n");
 
-		nu_exit_clean(session);
-		return NULL;
-	}
+      nu_exit_clean(session);
+      return NULL;
+  }
 
-	(session->adr_srv).sin_family= AF_INET;
-	(session->adr_srv).sin_port=htons(port);
-	(session->adr_srv).sin_addr=*(struct in_addr *)host->h_addr_list[0];
-	if (	(session->adr_srv).sin_addr.s_addr == INADDR_NONE) {
+  (session->adr_srv).sin_family= AF_INET;
+  (session->adr_srv).sin_port=htons(port);
+  (session->adr_srv).sin_addr=*(struct in_addr *)host->h_addr_list[0];
+  if (	(session->adr_srv).sin_addr.s_addr == INADDR_NONE) {
 
-		nu_exit_clean(session);
-		return NULL;
-	}
-	/* create socket stuff */
-	if (ssl_on){
-		char keyfile[256];
-		char certfile[256];
-		sasl_conn_t *conn;
-		/* compute patch keyfile */
-		snprintf(keyfile,255,"%s/.nufw/key.pem",getenv("HOME"));
-		snprintf(certfile,255,"%s/.nufw/cert.pem",getenv("HOME"));
+      nu_exit_clean(session);
+      return NULL;
+  }
+  /* create socket stuff */
+  if (ssl_on){
+      char keyfile[256];
+      char certfile[256];
+      sasl_conn_t *conn;
+      /* compute patch keyfile */
+      snprintf(keyfile,255,"%s/.nufw/key.pem",getenv("HOME"));
+      snprintf(certfile,255,"%s/.nufw/cert.pem",getenv("HOME"));
 
-		/* test if key exists */
-		if (access(keyfile,R_OK)){
-			/* Added by gryzor after getting confused with weird
-			 * messages, when no cert is present */
-			printf("\nSorry, cannot read key file %s\n",keyfile);
-			keyfile[0]=0;
-		}
-		/* test if key exists */
-		if (access(certfile,R_OK)){
-			/* Added by gryzor after getting confused with weird
-			 * messages, when no cert is present*/
-			printf("\nSorry, cannot read key file %s\n",keyfile);
-			certfile[0]=0;
-		}
-
-
-
-		gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);
-		gnutls_global_init();
-		session->tls=(gnutls_session *)calloc(1,sizeof(gnutls_session));
-		/* X509 stuff */
-		gnutls_certificate_allocate_credentials(&xcred);
-		/* sets the trusted cas file
-		*/
-		gnutls_certificate_set_x509_trust_file(xcred, certfile, GNUTLS_X509_FMT_PEM);
-
-		if ( certfile[0] && keyfile[0]){
-			ret = gnutls_certificate_set_x509_key_file(xcred, certfile, keyfile, GNUTLS_X509_FMT_PEM);
-			if (ret <0){
-				printf("problem with X509 file : %s\n",gnutls_strerror(ret));
-			}
-		}
-
-		generate_dh_params();
-		gnutls_certificate_set_dh_params( xcred, dh_params);
+      /* test if key exists */
+      if (access(keyfile,R_OK)){
+          /* Added by gryzor after getting confused with weird
+           * messages, when no cert is present */
+          printf("\nSorry, cannot read key file %s\n",keyfile);
+          keyfile[0]=0;
+      }
+      /* test if key exists */
+      if (access(certfile,R_OK)){
+          /* Added by gryzor after getting confused with weird
+           * messages, when no cert is present*/
+          printf("\nSorry, cannot read key file %s\n",keyfile);
+          certfile[0]=0;
+      }
 
 
-		/* Initialize TLS session
-		*/
-		session->tls=(gnutls_session*)calloc(1,sizeof(gnutls_session));
-		gnutls_init(session->tls, GNUTLS_CLIENT);
 
-		gnutls_set_default_priority(*(session->tls));
+      gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);
+      gnutls_global_init();
+      session->tls=(gnutls_session *)calloc(1,sizeof(gnutls_session));
+      /* X509 stuff */
+      gnutls_certificate_allocate_credentials(&xcred);
+      /* sets the trusted cas file
+       */
+      gnutls_certificate_set_x509_trust_file(xcred, certfile, GNUTLS_X509_FMT_PEM);
+
+      if ( certfile[0] && keyfile[0]){
+          ret = gnutls_certificate_set_x509_key_file(xcred, certfile, keyfile, GNUTLS_X509_FMT_PEM);
+          if (ret <0){
+              printf("problem with X509 file : %s\n",gnutls_strerror(ret));
+          }
+      }
+
+      generate_dh_params();
+      gnutls_certificate_set_dh_params( xcred, dh_params);
+
+
+      /* Initialize TLS session
+       */
+      session->tls=(gnutls_session*)calloc(1,sizeof(gnutls_session));
+      gnutls_init(session->tls, GNUTLS_CLIENT);
+
+      gnutls_set_default_priority(*(session->tls));
 #if 0
-		gnutls_certificate_type_set_priority(*(session->tls), cert_type_priority);
+      gnutls_certificate_type_set_priority(*(session->tls), cert_type_priority);
 #endif
-		/* put the x509 credentials to the current session */
-		gnutls_credentials_set(*(session->tls), GNUTLS_CRD_CERTIFICATE, xcred);
+      /* put the x509 credentials to the current session */
+      gnutls_credentials_set(*(session->tls), GNUTLS_CRD_CERTIFICATE, xcred);
 
 
 
-		session->socket = socket (AF_INET,SOCK_STREAM,0);
-		/* connect */
-		if (session->socket <= 0){
-			nu_exit_clean(session);
-			errno=EADDRNOTAVAIL;
-			return NULL;
-		}
+      session->socket = socket (AF_INET,SOCK_STREAM,0);
+      /* connect */
+      if (session->socket <= 0){
+          nu_exit_clean(session);
+          errno=EADDRNOTAVAIL;
+          return NULL;
+      }
 
-		if ( connect(session->socket,(struct sockaddr *)(&session->adr_srv),sizeof(session->adr_srv)) == -1){
-			nu_exit_clean(session);
-			errno=ENOTCONN;
-			return NULL;
-		}
+      if ( connect(session->socket,(struct sockaddr *)(&session->adr_srv),sizeof(session->adr_srv)) == -1){
+          nu_exit_clean(session);
+          errno=ENOTCONN;
+          return NULL;
+      }
 
-		gnutls_transport_set_ptr( *(session->tls), (gnutls_transport_ptr)session->socket);
+      gnutls_transport_set_ptr( *(session->tls), (gnutls_transport_ptr)session->socket);
 
-		/* Perform the TLS handshake
-		*/
-		ret = gnutls_handshake( *(session->tls));
-		if (ret < 0) {
-			gnutls_perror(ret);
-			nu_exit_clean(session);
-			errno=ECONNRESET;
-			return NULL;
-		}
-		/* certificate verification */
-		ret = gnutls_certificate_verify_peers(*(session->tls));
-		if (ret <0){
-			printf("Certificate verification failed : %s",gnutls_strerror(ret));
-			return NULL;
-		} else {
-			printf("Server Certificat OK\n");
-		}
+      /* Perform the TLS handshake
+       */
+      ret = gnutls_handshake( *(session->tls));
+      if (ret < 0) {
+          gnutls_perror(ret);
+          nu_exit_clean(session);
+          errno=ECONNRESET;
+          return NULL;
+      }
+      /* certificate verification */
+      ret = gnutls_certificate_verify_peers(*(session->tls));
+      if (ret <0){
+          printf("Certificate verification failed : %s",gnutls_strerror(ret));
+          return NULL;
+      } else {
+          printf("Server Certificat OK\n");
+      }
 
-		printf("maman\n");
+      printf("maman\n");
 
-		/* SASL time */
+      /* SASL time */
 
-		/* initialize the sasl library */
-		ret = sasl_client_init(callbacks);
-		if (ret != SASL_OK) {
-			nu_exit_clean(session);
-			errno=EAGAIN;
-			return NULL;
-		}
+      /* initialize the sasl library */
+      ret = sasl_client_init(callbacks);
+      if (ret != SASL_OK) {
+          nu_exit_clean(session);
+          errno=EAGAIN;
+          return NULL;
+      }
 
-		/* client new connection */
-		//   ret = sasl_client_new(service, host, localaddr, remoteaddr, NULL, 0, &conn);
-		ret = sasl_client_new("NuFW", "myserver", NULL, NULL, NULL, 0, &conn);
-		if (ret != SASL_OK) {
-			printf("Failed allocating connection state");
-			nu_exit_clean(session);
-			errno=EAGAIN;
-			return NULL;
-		}
+      /* client new connection */
+      //   ret = sasl_client_new(service, host, localaddr, remoteaddr, NULL, 0, &conn);
+      ret = sasl_client_new("NuFW", "myserver", NULL, NULL, NULL, 0, &conn);
+      if (ret != SASL_OK) {
+          printf("Failed allocating connection state");
+          nu_exit_clean(session);
+          errno=EAGAIN;
+          return NULL;
+      }
 
-		/* set external properties here
-		   sasl_setprop(conn, SASL_SSF_EXTERNAL, &extprops); */
-		/* set username taken from console */
+      /* set external properties here
+         sasl_setprop(conn, SASL_SSF_EXTERNAL, &extprops); */
+      /* set username taken from console */
 
-		sasl_setprop(conn, SASL_AUTH_EXTERNAL,username);
+      sasl_setprop(conn, SASL_AUTH_EXTERNAL,username);
 
-		/* FIXME */
-		{
-			sasl_ssf_t extssf = 0;
-			sasl_setprop(conn,SASL_SSF_EXTERNAL,&extssf);
-		}
+      /* FIXME */
+      {
+          sasl_ssf_t extssf = 0;
+          sasl_setprop(conn,SASL_SSF_EXTERNAL,&extssf);
+      }
 
 
-		/* set required security properties here
-		   sasl_setprop(conn, SASL_SEC_PROPS, &secprops); */
+      /* set required security properties here
+         sasl_setprop(conn, SASL_SEC_PROPS, &secprops); */
 
-		ret = mysasl_negotiate(*(session->tls), conn);
-		sasl_done();
-		if (ret != SASL_OK) {
-			nu_exit_clean(session);
-			errno=EACCES;
-			return NULL;
-		} else {
-			/* announce our OS */
-			struct utsname info;
-			char *oses;
-			int stringlen;
-			size_t actuallen;
-			int osfield_length;
-			char* enc_oses;
-			char * pointer, *buf;
-			struct nuv2_authfield osfield;
-			/* get info */
-			uname(&info);
-			/* build packet */
-			stringlen=strlen(info.sysname)+strlen(info.release)+strlen(info.version)+3;
-			oses=alloca(stringlen);
-			enc_oses=calloc(4*stringlen,sizeof( char));
-			snprintf(oses,stringlen,"%s;%s;%s",info.sysname, info.release, info.version);
+      ret = mysasl_negotiate(*(session->tls), conn);
+      sasl_done();
+      if (ret != SASL_OK) {
+          nu_exit_clean(session);
+          errno=EACCES;
+          return NULL;
+      } else {
+          /* announce our OS */
+          struct utsname info;
+          char *oses;
+          int stringlen;
+          size_t actuallen;
+          int osfield_length;
+          char* enc_oses;
+          char * pointer, *buf;
+          struct nuv2_authfield osfield;
+          /* get info */
+          uname(&info);
+          /* build packet */
+          stringlen=strlen(info.sysname)+strlen(info.release)+strlen(info.version)+3;
+          oses=alloca(stringlen);
+          enc_oses=calloc(4*stringlen,sizeof( char));
+          snprintf(oses,stringlen,"%s;%s;%s",info.sysname, info.release, info.version);
 #if USE_UTF8
-			oses=locale_to_utf8(oses);
-			if (! oses){
-				nu_exit_clean(session);
-				errno=EBADMSG;
-				return NULL;
-			}
+          oses=locale_to_utf8(oses);
+          if (! oses){
+              nu_exit_clean(session);
+              errno=EBADMSG;
+              return NULL;
+          }
 #endif
-			if (sasl_encode64(oses,strlen(oses),enc_oses,4*stringlen,&actuallen) == SASL_BUFOVER){
-				enc_oses=realloc(enc_oses,actuallen);
-				sasl_encode64(oses,strlen(oses),enc_oses,actuallen,&actuallen);
-			}
+          if (sasl_encode64(oses,strlen(oses),enc_oses,4*stringlen,&actuallen) == SASL_BUFOVER){
+              enc_oses=realloc(enc_oses,actuallen);
+              sasl_encode64(oses,strlen(oses),enc_oses,actuallen,&actuallen);
+          }
 
 #if USE_UTF8
-			free(oses);
+          free(oses);
 #endif
-			osfield.type=OS_FIELD;
-			osfield.option=OS_SRV;
-			osfield_length=sizeof(struct nuv2_authfield)+actuallen;
-			buf=alloca(osfield_length);
+          osfield.type=OS_FIELD;
+          osfield.option=OS_SRV;
+          osfield_length=sizeof(struct nuv2_authfield)+actuallen;
+          buf=alloca(osfield_length);
 #ifdef WORDS_BIGENDIAN
-			osfield.length=swap16(osfield_length);
+          osfield.length=swap16(osfield_length);
 #else
-			osfield.length=osfield_length;
+          osfield.length=osfield_length;
 #endif
-			printf("osfield.length %d length %d\n",osfield.length,osfield_length);
-			pointer = buf ;
-			memcpy(buf,&osfield,sizeof osfield);
-			pointer+=sizeof osfield;
-			memcpy(pointer,enc_oses,actuallen);
-			free(enc_oses);
-			gnutls_record_send(*(session->tls),buf,osfield_length);
+          printf("osfield.length %d length %d\n",osfield.length,osfield_length);
+          pointer = buf ;
+          memcpy(buf,&osfield,sizeof osfield);
+          pointer+=sizeof osfield;
+          memcpy(pointer,enc_oses,actuallen);
+          free(enc_oses);
+          gnutls_record_send(*(session->tls),buf,osfield_length);
 
-			/* wait for message of server about mode */
-			if (gnutls_record_recv(*(session->tls),buf,osfield_length)<=0){
-				/* TODO : houston we've got a problem */
-			} else {
-				if (*buf == SRV_TYPE) {
-					session->mode=*(buf+1);
-				} else {
-					session->mode=SRV_TYPE_POLL;
-				}
-			}
+          /* wait for message of server about mode */
+          if (gnutls_record_recv(*(session->tls),buf,osfield_length)<=0){
+              /* TODO : houston we've got a problem */
+          } else {
+              if (*buf == SRV_TYPE) {
+                  session->mode=*(buf+1);
+              } else {
+                  session->mode=SRV_TYPE_POLL;
+              }
+          }
 
-		}
-
-
-	} else {
-		session->socket = socket (AF_INET,SOCK_DGRAM,0);
-	}
-
-	session->localuserid=getuid();
+      }
 
 
-	/*
-	 * Initialisation's done, start watching for connections.
-	 */
-	/* alloc ct */
-	if (tcptable_init (&new) == 0) panic ("tcptable_init failed");
-	session->ct=new;
-	/* set init variable */
-	conn_on =1;
-	recv_started=0;
-	return session;
+  } else {
+      session->socket = socket (AF_INET,SOCK_DGRAM,0);
+  }
+
+  session->localuserid=getuid();
+
+
+  /*
+   * Initialisation's done, start watching for connections.
+   */
+  /* alloc ct */
+  if (tcptable_init (&new) == 0) panic ("tcptable_init failed");
+  session->ct=new;
+  /* set init variable */
+  conn_on =1;
+  recv_started=0;
+  return session;
 }
 
 void nu_client_free(NuAuth *session)
 {
-	if (tcptable_free (session->ct) == 0) panic ("tcptable_free failed");
-	nu_exit_clean(session);
+  if (tcptable_free (session->ct) == 0) panic ("tcptable_free failed");
+  nu_exit_clean(session);
 }
 
 NuAuth* nu_client_init2(
-		const char *hostname, unsigned int port,
-		char* keyfile, char* certfile,
-		void* username_callback,void * passwd_callback, void* tlscred_callback
-		)
+    const char *hostname, unsigned int port,
+    char* keyfile, char* certfile,
+    void* username_callback,void * passwd_callback, void* tlscred_callback
+    )
 {
-	gnutls_certificate_credentials xcred;
-	conntable_t *new;
-	int ret;
-	int option_value;
-	const int cert_type_priority[3] = { GNUTLS_CRT_X509,  0 };
-	struct hostent *host;
-	/* create socket stuff */
-	sasl_conn_t *conn;
-	NuAuth * session;
-	struct sigaction no_action;
+  gnutls_certificate_credentials xcred;
+  conntable_t *new;
+  int ret;
+  int option_value;
+  const int cert_type_priority[3] = { GNUTLS_CRT_X509,  0 };
+  struct hostent *host;
+  /* create socket stuff */
+  sasl_conn_t *conn;
+  NuAuth * session;
+  struct sigaction no_action;
 
-	session=(NuAuth*) calloc(1,sizeof(NuAuth));
-	session->username_callback=username_callback;
-	session->passwd_callback=passwd_callback;
-	session->tls_passwd_callback=tlscred_callback;
+  session=(NuAuth*) calloc(1,sizeof(NuAuth));
+  session->username_callback=username_callback;
+  session->passwd_callback=passwd_callback;
+  session->tls_passwd_callback=tlscred_callback;
 
-	sasl_callback_t callbacks[] = {
-		{ SASL_CB_GETREALM, &nu_getrealm, session },
-		{ SASL_CB_USER, &nu_get_userdatas, session },
-		{ SASL_CB_AUTHNAME, &nu_get_userdatas, session },
-		{ SASL_CB_PASS, &nu_get_usersecret, session },
-		{ SASL_CB_LIST_END, NULL, NULL }
-	};
+  sasl_callback_t callbacks[] = {
+      { SASL_CB_GETREALM, &nu_getrealm, session },
+      { SASL_CB_USER, &nu_get_userdatas, session },
+      { SASL_CB_AUTHNAME, &nu_get_userdatas, session },
+      { SASL_CB_PASS, &nu_get_usersecret, session },
+      { SASL_CB_LIST_END, NULL, NULL }
+  };
 
 
 
-	/* initiate session */
-	session->auth_by_default = 1;
-	session->tls=NULL;
-	session->protocol = 2;
-	/* initiate packet number */
-	session->packet_id=0;
+  /* initiate session */
+  session->auth_by_default = 1;
+  session->tls=NULL;
+  session->protocol = 2;
+  /* initiate packet number */
+  session->packet_id=0;
 
-	host = gethostbyname(hostname);
-	if (host == NULL)
-	{
-		fprintf(stderr, "*** An error occured when resolving the provided hostname\n");
+  host = gethostbyname(hostname);
+  if (host == NULL)
+  {
+      fprintf(stderr, "*** An error occured when resolving the provided hostname\n");
 
-		nu_exit_clean(session);
-		return NULL;
-	}
+      nu_exit_clean(session);
+      return NULL;
+  }
 
-	(session->adr_srv).sin_family= AF_INET;
-	(session->adr_srv).sin_port=htons(port);
-	(session->adr_srv).sin_addr=*(struct in_addr *)host->h_addr_list[0];
-	if (	(session->adr_srv).sin_addr.s_addr == INADDR_NONE) {
+  (session->adr_srv).sin_family= AF_INET;
+  (session->adr_srv).sin_port=htons(port);
+  (session->adr_srv).sin_addr=*(struct in_addr *)host->h_addr_list[0];
+  if (	(session->adr_srv).sin_addr.s_addr == INADDR_NONE) {
 
-		nu_exit_clean(session);
-		return NULL;
-	}
-	/* compute patch keyfile */
-	if (! keyfile){
-		keyfile=calloc(256,1);
-		snprintf(keyfile,255,"%s/.nufw/key.pem",getenv("HOME"));
-	}
-	/* test if key exists */
-	if (access(keyfile,R_OK)){
-		keyfile=NULL;
+      nu_exit_clean(session);
+      return NULL;
+  }
+  /* compute patch keyfile */
+  if (! keyfile){
+      keyfile=calloc(256,1);
+      snprintf(keyfile,255,"%s/.nufw/key.pem",getenv("HOME"));
+  }
+  /* test if key exists */
+  if (access(keyfile,R_OK)){
+      keyfile=NULL;
 #if REQUEST_CERT
-		errno=EBADF;
-		return NULL;
+      errno=EBADF;
+      return NULL;
 #endif
-	}
+  }
 
-	if (! certfile){
-		certfile=calloc(256,1);
-		snprintf(certfile,255,"%s/.nufw/cert.pem",getenv("HOME"));
-	}
-	/* test if cert exists */
-	if (access(certfile,R_OK)){
-		certfile=NULL;
+  if (! certfile){
+      certfile=calloc(256,1);
+      snprintf(certfile,255,"%s/.nufw/cert.pem",getenv("HOME"));
+  }
+  /* test if cert exists */
+  if (access(certfile,R_OK)){
+      certfile=NULL;
 #if REQUEST_CERT
-		errno=EBADF;
-		return NULL;
+      errno=EBADF;
+      return NULL;
 #endif
-	}
+  }
 
-	gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);
-	gnutls_global_init();
-	session->tls=(gnutls_session *)calloc(1,sizeof(gnutls_session));
-	/* X509 stuff */
-	gnutls_certificate_allocate_credentials(&xcred);
-	/* sets the trusted cas file
-	*/
+  gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);
+  gnutls_global_init();
+  session->tls=(gnutls_session *)calloc(1,sizeof(gnutls_session));
+  /* X509 stuff */
+  gnutls_certificate_allocate_credentials(&xcred);
+  /* sets the trusted cas file
+   */
 #if REQUEST_CERT
-	gnutls_certificate_set_x509_trust_file(xcred, certfile, GNUTLS_X509_FMT_PEM);
+  gnutls_certificate_set_x509_trust_file(xcred, certfile, GNUTLS_X509_FMT_PEM);
 #endif
-	if (certfile && keyfile){
-		ret = gnutls_certificate_set_x509_key_file(xcred, certfile, keyfile, GNUTLS_X509_FMT_PEM);
-		if (ret <0){
-			printf("problem with keyfile : %s\n",gnutls_strerror(ret));
-		}
-	}
-	generate_dh_params();
-	gnutls_certificate_set_dh_params( xcred, dh_params);
+  if (certfile && keyfile){
+      ret = gnutls_certificate_set_x509_key_file(xcred, certfile, keyfile, GNUTLS_X509_FMT_PEM);
+      if (ret <0){
+          printf("problem with keyfile : %s\n",gnutls_strerror(ret));
+      }
+  }
+  generate_dh_params();
+  gnutls_certificate_set_dh_params( xcred, dh_params);
 
 
-	/* Initialize TLS session
-	*/
-	session->tls=(gnutls_session*)calloc(1,sizeof(gnutls_session));
-	gnutls_init(session->tls, GNUTLS_CLIENT);
+  /* Initialize TLS session
+   */
+  session->tls=(gnutls_session*)calloc(1,sizeof(gnutls_session));
+  gnutls_init(session->tls, GNUTLS_CLIENT);
 
-	gnutls_set_default_priority(*(session->tls));
-	gnutls_certificate_type_set_priority(*(session->tls), cert_type_priority);
-	/* put the x509 credentials to the current session */
-	gnutls_credentials_set(*(session->tls), GNUTLS_CRD_CERTIFICATE, xcred);
+  gnutls_set_default_priority(*(session->tls));
+  gnutls_certificate_type_set_priority(*(session->tls), cert_type_priority);
+  /* put the x509 credentials to the current session */
+  gnutls_credentials_set(*(session->tls), GNUTLS_CRD_CERTIFICATE, xcred);
 
-	no_action.sa_handler = SIG_IGN;
-	sigemptyset( & (no_action.sa_mask));
-	no_action.sa_flags = 0;
-	if ( sigaction( SIGPIPE, & no_action, NULL ) != 0) {
-		printf("Error setting \n");
-		exit(1);
-	}
-
-
-	session->socket = socket (AF_INET,SOCK_STREAM,0);
-	/* connect */
-	if (session->socket <= 0){
-		nu_exit_clean(session);
-		errno=EADDRNOTAVAIL;
-		return NULL;
-	}
-	option_value=1;
-	setsockopt (
-			session->socket,
-			SOL_SOCKET,
-			SO_KEEPALIVE,
-			&option_value,
-			sizeof(option_value));
+  no_action.sa_handler = SIG_IGN;
+  sigemptyset( & (no_action.sa_mask));
+  no_action.sa_flags = 0;
+  if ( sigaction( SIGPIPE, & no_action, NULL ) != 0) {
+      printf("Error setting \n");
+      exit(1);
+  }
 
 
-	if ( connect(session->socket,(struct sockaddr *)(&session->adr_srv),sizeof(session->adr_srv)) == -1){
-		nu_exit_clean(session);
-		errno=ENOTCONN;
-		return NULL;
-	}
-
-	gnutls_transport_set_ptr( *(session->tls), (gnutls_transport_ptr)session->socket);
-
-	/* Perform the TLS handshake
-	*/
-	ret = gnutls_handshake( *(session->tls));
-	if (ret < 0) {
-		gnutls_perror(ret);
-		nu_exit_clean(session);
-		errno=ECONNRESET;
-		return NULL;
-	}
-	/* certificate verification */
-	ret = gnutls_certificate_verify_peers(*(session->tls));
-	if (ret <0){
-		printf("Certificate verification failed : %s",gnutls_strerror(ret));
-		return NULL;
-	} else {
-		printf("Server Certificat OK\n");
-	}
+  session->socket = socket (AF_INET,SOCK_STREAM,0);
+  /* connect */
+  if (session->socket <= 0){
+      nu_exit_clean(session);
+      errno=EADDRNOTAVAIL;
+      return NULL;
+  }
+  option_value=1;
+  setsockopt (
+      session->socket,
+      SOL_SOCKET,
+      SO_KEEPALIVE,
+      &option_value,
+      sizeof(option_value));
 
 
-	/* SASL time */
+  if ( connect(session->socket,(struct sockaddr *)(&session->adr_srv),sizeof(session->adr_srv)) == -1){
+      nu_exit_clean(session);
+      errno=ENOTCONN;
+      return NULL;
+  }
 
-	/* initialize the sasl library */
-	ret = sasl_client_init(callbacks);
-	if (ret != SASL_OK) {
-		nu_exit_clean(session);
-		errno=EAGAIN;
-		return NULL;
-	}
+  gnutls_transport_set_ptr( *(session->tls), (gnutls_transport_ptr)session->socket);
 
-	/* client new connection */
-	//   ret = sasl_client_new(service, host, localaddr, remoteaddr, NULL, 0, &conn);
-	ret = sasl_client_new("NuFW", "myserver", NULL, NULL, NULL, 0, &conn);
-	if (ret != SASL_OK) {
-		printf("Failed allocating connection state");
-		nu_exit_clean(session);
-		errno=EAGAIN;
-		return NULL;
-	}
-
-	/* set external properties here
-	   sasl_setprop(conn, SASL_SSF_EXTERNAL, &extprops); */
-	/* set username taken from console */
-
-	if (! session->username){
-		if (session->username_callback){
-			session->username=session->username_callback();
-		} else {
-			printf("can't call username callback\n");
-		}
-	}
-	sasl_setprop(conn, SASL_AUTH_EXTERNAL,session->username);
-
-	{
-		sasl_ssf_t extssf = 0;
-		sasl_setprop(conn,SASL_SSF_EXTERNAL,&extssf);
-	}
+  /* Perform the TLS handshake
+   */
+  ret = gnutls_handshake( *(session->tls));
+  if (ret < 0) {
+      gnutls_perror(ret);
+      nu_exit_clean(session);
+      errno=ECONNRESET;
+      return NULL;
+  }
+  /* certificate verification */
+  ret = gnutls_certificate_verify_peers(*(session->tls));
+  if (ret <0){
+      printf("Certificate verification failed : %s",gnutls_strerror(ret));
+      return NULL;
+  } else {
+      printf("Server Certificat OK\n");
+  }
 
 
-	/* set required security properties here
-	   sasl_setprop(conn, SASL_SEC_PROPS, &secprops); */
+  /* SASL time */
 
-	ret = mysasl_negotiate(*(session->tls), conn);
-	sasl_done();
-	if (ret != SASL_OK) {
-		nu_exit_clean(session);
-		errno=EACCES;
-		return NULL;
-	} else {
-		/* announce our OS */
-		struct utsname info;
-		char *oses;
-		size_t stringlen;
-		size_t actuallen;
-		char* enc_oses;
-		char * pointer, *buf;
-		int osfield_length;
-		struct nuv2_authfield osfield;
-		/* get info */
-		uname(&info);
-		/* build packet */
-		stringlen=strlen(info.sysname)+strlen(info.release)+strlen(info.version)+3;
-		oses=alloca(stringlen);
-		enc_oses=calloc(4*stringlen,sizeof(char));
-		snprintf(oses,stringlen,"%s;%s;%s",info.sysname, info.release, info.version);
-		if (sasl_encode64(oses,strlen(oses),enc_oses,4*stringlen,&actuallen) == SASL_BUFOVER){
-			enc_oses=realloc(enc_oses,actuallen);
-			sasl_encode64(oses,strlen(oses),enc_oses,actuallen,&actuallen);
-		}
-		osfield.type=OS_FIELD;
-		osfield.option=OS_SRV;
-		osfield.length=4+actuallen;
-		buf=alloca(osfield.length);
-		osfield_length=osfield.length;
+  /* initialize the sasl library */
+  ret = sasl_client_init(callbacks);
+  if (ret != SASL_OK) {
+      nu_exit_clean(session);
+      errno=EAGAIN;
+      return NULL;
+  }
+
+  /* client new connection */
+  //   ret = sasl_client_new(service, host, localaddr, remoteaddr, NULL, 0, &conn);
+  ret = sasl_client_new("NuFW", "myserver", NULL, NULL, NULL, 0, &conn);
+  if (ret != SASL_OK) {
+      printf("Failed allocating connection state");
+      nu_exit_clean(session);
+      errno=EAGAIN;
+      return NULL;
+  }
+
+  /* set external properties here
+     sasl_setprop(conn, SASL_SSF_EXTERNAL, &extprops); */
+  /* set username taken from console */
+
+  if (! session->username){
+      if (session->username_callback){
+          session->username=session->username_callback();
+      } else {
+          printf("can't call username callback\n");
+      }
+  }
+  sasl_setprop(conn, SASL_AUTH_EXTERNAL,session->username);
+
+  {
+      sasl_ssf_t extssf = 0;
+      sasl_setprop(conn,SASL_SSF_EXTERNAL,&extssf);
+  }
+
+
+  /* set required security properties here
+     sasl_setprop(conn, SASL_SEC_PROPS, &secprops); */
+
+  ret = mysasl_negotiate(*(session->tls), conn);
+  sasl_done();
+  if (ret != SASL_OK) {
+      nu_exit_clean(session);
+      errno=EACCES;
+      return NULL;
+  } else {
+      /* announce our OS */
+      struct utsname info;
+      char *oses;
+      size_t stringlen;
+      size_t actuallen;
+      char* enc_oses;
+      char * pointer, *buf;
+      int osfield_length;
+      struct nuv2_authfield osfield;
+      /* get info */
+      uname(&info);
+      /* build packet */
+      stringlen=strlen(info.sysname)+strlen(info.release)+strlen(info.version)+3;
+      oses=alloca(stringlen);
+      enc_oses=calloc(4*stringlen,sizeof(char));
+      snprintf(oses,stringlen,"%s;%s;%s",info.sysname, info.release, info.version);
+      if (sasl_encode64(oses,strlen(oses),enc_oses,4*stringlen,&actuallen) == SASL_BUFOVER){
+          enc_oses=realloc(enc_oses,actuallen);
+          sasl_encode64(oses,strlen(oses),enc_oses,actuallen,&actuallen);
+      }
+      osfield.type=OS_FIELD;
+      osfield.option=OS_SRV;
+      osfield.length=4+actuallen;
+      buf=alloca(osfield.length);
+      osfield_length=osfield.length;
 #ifdef WORDS_BIGENDIAN
-		osfield.length=swap16(osfield.length);
+      osfield.length=swap16(osfield.length);
 #endif
-		pointer = buf ;
-		memcpy(buf,&osfield,sizeof osfield);
-		pointer+=sizeof osfield;
-		memcpy(pointer,enc_oses,actuallen);
-		free(enc_oses);
-		gnutls_record_send(*(session->tls),buf,osfield_length);
+      pointer = buf ;
+      memcpy(buf,&osfield,sizeof osfield);
+      pointer+=sizeof osfield;
+      memcpy(pointer,enc_oses,actuallen);
+      free(enc_oses);
+      gnutls_record_send(*(session->tls),buf,osfield_length);
 
-		/* wait for message of server about mode */
-		if (gnutls_record_recv(*(session->tls),buf,osfield_length)<=0){
-			nu_exit_clean(session);
-			errno=EACCES;
-			return NULL;
-		} else {
-			if (*buf == SRV_TYPE) {
-				session->mode=*(buf+1);
-			} else {
-				session->mode=SRV_TYPE_POLL;
-			}
-		}
+      /* wait for message of server about mode */
+      if (gnutls_record_recv(*(session->tls),buf,osfield_length)<=0){
+          nu_exit_clean(session);
+          errno=EACCES;
+          return NULL;
+      } else {
+          if (*buf == SRV_TYPE) {
+              session->mode=*(buf+1);
+          } else {
+              session->mode=SRV_TYPE_POLL;
+          }
+      }
 
-	}
+  }
 
-	session->localuserid=getuid();
+  session->localuserid=getuid();
 
-	/*
-	 * Initialisation's done, start watching for connections.
-	 */
-	/* alloc ct */
-	if (tcptable_init (&new) == 0) panic ("tcptable_init failed");
-	session->ct=new;
-	/* set init variable */
-	conn_on =1;
-	recv_started=0;
-	timestamp_last_sent=time(NULL);
-	return session;
+  /*
+   * Initialisation's done, start watching for connections.
+   */
+  /* alloc ct */
+  if (tcptable_init (&new) == 0) panic ("tcptable_init failed");
+  session->ct=new;
+  /* set init variable */
+  conn_on =1;
+  recv_started=0;
+  timestamp_last_sent=time(NULL);
+  return session;
 
 }

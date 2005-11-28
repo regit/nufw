@@ -36,6 +36,7 @@
 
 #include "libnuclient.h"
 #include "proc.h"
+#include "tcptable.h"
 #include "checks.h"
 #include "sending.h"
 
