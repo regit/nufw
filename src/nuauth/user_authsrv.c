@@ -24,7 +24,7 @@
 #include <sasl/saslutil.h>
 
 
-static connection * userpckt_decode(struct buffer_read * datas);
+static GSList * userpckt_decode(struct buffer_read * datas);
 
 /**
  * get user datas (containing datagram) and goes till inclusion (or decision) on packet.
@@ -36,37 +36,47 @@ static connection * userpckt_decode(struct buffer_read * datas);
 
 void user_check_and_decide (gpointer userdata, gpointer data)
 {
-  connection * conn_elt=NULL;
+  GSList * conn_elts=NULL;
+  GSList* conn_elt_l;
+  connection* conn_elt;
 #ifdef DEBUG_ENABLE
   if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
       g_message("entering user_check\n");
 #endif
-  conn_elt = userpckt_decode(userdata);
+  conn_elts = userpckt_decode(userdata);
   /* if OK search and fill */
-  if ( conn_elt != NULL ) {
+  if ( conn_elts != NULL ) {
+      for (conn_elt_l=conn_elts;conn_elt_l!=NULL;conn_elt_l=conn_elt_l->next){
+          conn_elt=conn_elt_l->data;
 #ifdef DEBUG_ENABLE
-      if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_PACKET)){
-          g_message("User : %s",conn_elt->username);
-          print_connection(conn_elt,NULL);
-      }
+          if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_PACKET)){
+              g_message("User : %s",conn_elt->username);
+              print_connection(conn_elt,NULL);
+          }
 #endif
-      if (conn_elt->packet_id){
-          struct internal_message *message = g_new0(struct internal_message,1);
-          message->type=INSERT_MESSAGE;
-          message->datas=conn_elt;
-          g_async_queue_push (localid_auth_queue,message);
-      } else {
-          g_async_queue_push (connexions_queue,conn_elt);
+          if (conn_elt->packet_id){
+              struct internal_message *message = g_new0(struct internal_message,1);
+              message->type=INSERT_MESSAGE;
+              message->datas=conn_elt;
+              g_async_queue_push (localid_auth_queue,message);
+          } else {
+              g_async_queue_push (connexions_queue,conn_elt);
+          }
       }
-      /* free userdata, packet is parsed now */
-      g_free(((struct buffer_read *)userdata)->buf);
-      g_free(userdata);
   }
   else {
       if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER)){
           g_message("User packet decoding failed\n");
       }
   }
+          /* free userdata, packet is parsed now */
+          g_free(((struct buffer_read *)userdata)->buf);
+          g_free(((struct buffer_read *)userdata)->userid);
+          g_free(((struct buffer_read *)userdata)->sysname);
+          g_free(((struct buffer_read *)userdata)->release);
+          g_free(((struct buffer_read *)userdata)->version);
+          g_slist_free(((struct buffer_read *)userdata)->groups);
+          g_free(userdata);
 #ifdef DEBUG_ENABLE
   if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
       g_message("leaving user_check\n");
@@ -81,12 +91,13 @@ void user_check_and_decide (gpointer userdata, gpointer data)
  * - Return : pointer to newly allocated connection
  */
 
-static connection * userpckt_decode(struct buffer_read * datas)
+static GSList * userpckt_decode(struct buffer_read * datas)
 {
   char * dgram = datas->buf;
   connection* connexion=NULL;
   struct nuv2_header* header=(struct nuv2_header*)dgram;
   gboolean multiclient_ok=FALSE;
+  GSList* conn_elts=NULL;
 
 
   /* decode dgram */
@@ -107,26 +118,28 @@ static connection * userpckt_decode(struct buffer_read * datas)
             case USER_REQUEST :
               { 
                   char* start=dgram+4;
-                  connexion = g_new0( connection,1);
-                  connexion->acl_groups=NULL;
-                  connexion->user_groups=NULL;
-                  connexion->appname=NULL;
-                  connexion->appmd5=NULL;
-                  connexion->username=NULL;
-                  connexion->cacheduserdatas=NULL;
-                  connexion->packet_id=NULL;
-
-
+          
                   while (start<dgram+header->length){
                       struct nuv2_authreq* authreq=(struct nuv2_authreq* )start;
                       char *req_start=start;
+
+                      connexion = g_new0( connection,1);
+                      connexion->acl_groups=NULL;
+                      connexion->user_groups=NULL;
+                      connexion->appname=NULL;
+                      connexion->appmd5=NULL;
+                      connexion->username=NULL;
+                      connexion->cacheduserdatas=NULL;
+                      connexion->packet_id=NULL;
+
+
                       req_start+=4;
 
 #ifdef WORDS_BIGENDIAN	
                       authreq->packet_length=swap16(authreq->packet_length);
 #endif
                       if((start+authreq->packet_length>
-                          dgram+header->length) || (authreq->packet_length == 0)){
+                            dgram+header->length) || (authreq->packet_length == 0)){
                           if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
                               g_message("Improper length signaled in authreq header : %d",authreq->packet_length);
                           free_connection(connexion);
@@ -135,6 +148,11 @@ static connection * userpckt_decode(struct buffer_read * datas)
 
                       }
 
+#ifdef DEBUG_ENABLE
+                      if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
+                          g_message("Authreq start");
+#endif
+
                       while(req_start-start<authreq->packet_length){
                           struct nuv2_authfield* field=(struct nuv2_authfield* )req_start;
 
@@ -142,7 +160,7 @@ static connection * userpckt_decode(struct buffer_read * datas)
                           field->length=swap16(field->length);
 #endif
                           if( (req_start+field->length >
-                              start+authreq->packet_length) || (field->length == 0)){
+                                start+authreq->packet_length) || (field->length == 0)){
                               if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
                                   g_message("Improper field length signaled : %d",field->length);
                               free_connection(connexion);
@@ -168,7 +186,7 @@ static connection * userpckt_decode(struct buffer_read * datas)
 
 #ifdef DEBUG_ENABLE
                                   if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-                                      g_message("got IPV4 field");
+                                      g_message("\tgot IPV4 field");
 #endif
                                   switch (connexion->tracking_hdrs.protocol) {
                                     case IPPROTO_TCP:
@@ -209,7 +227,7 @@ static connection * userpckt_decode(struct buffer_read * datas)
                                   struct nuv2_authfield_app * appfield=(struct nuv2_authfield_app* )req_start; 
 #ifdef DEBUG_ENABLE
                                   if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-                                      g_message("got APP field");
+                                      g_message("\tgot APP field");
 #endif
                                   switch (appfield->option) {
                                     default:
@@ -277,7 +295,7 @@ static connection * userpckt_decode(struct buffer_read * datas)
                                   struct nuv2_authfield_username * usernamefield=(struct nuv2_authfield_username* )req_start; 
 #ifdef DEBUG_ENABLE
                                   if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-                                      g_message("got Username field");
+                                      g_message("\tgot Username field");
 #endif
                                   if (header->option == 0x1) {
                                       switch (usernamefield->option) {
@@ -360,48 +378,54 @@ static connection * userpckt_decode(struct buffer_read * datas)
                           }
                           req_start+=field->length;
                       }
+                      /* here all packet related information are filled-in */
+                      if (connexion->username == NULL){	
+                          connexion->username=g_strdup(datas->userid);
+                      }
+                      connexion->user_id=datas->uid;
+                      connexion->user_groups = g_slist_copy(datas->groups);
+                      connexion->sysname=g_strdup(datas->sysname);
+                      connexion->release=g_strdup(datas->release);
+                      connexion->version=g_strdup(datas->version);
+                      if (connexion->user_groups == NULL) {
+                          if ((header->option == 0x1) && multiclient_ok) {
+                              if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
+                                  g_message("Get users info");
+                              /* group is not fill in multi users mode
+                               * need to be done now */
+                              if ( nuauth_user_cache ){
+                                  get_users_from_cache(connexion);
+                              } else {
+                                  if (user_check(connexion->username,NULL,0,&(connexion->user_id),&(connexion->user_groups))!=SASL_OK){
+                                      if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_PACKET)){
+                                          g_message("User not found");
+                                      }
+
+                                  }
+                              }
+                          } else {
+                              if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
+                                  g_message("User_check return is bad");
+                              free_connection(connexion);
+                              return NULL;
+                          }
+                      }
+                      /* first reset timestamp to now */
+                      connexion->timestamp=time(NULL);
+                      connexion->state=STATE_USERPCKT;
+                      /* acl part is NULL */
+                      connexion->acl_groups=NULL;
+
+                      conn_elts=g_slist_prepend(conn_elts,connexion);
+#ifdef DEBUG_ENABLE
+                                  if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
+                                      g_message("Authreq end");
+#endif
+
                       start+=authreq->packet_length;
                   }
-                  /* here all packet related information are filled-in */
-                  if (connexion->username == NULL){	
-                      connexion->username=datas->userid;
-                  }
-                  connexion->user_id=datas->uid;
-                  connexion->user_groups = datas->groups;
-                  connexion->sysname=datas->sysname;
-                  connexion->release=datas->release;
-                  connexion->version=datas->version;
-                  if (connexion->user_groups == NULL) {
-                      if ((header->option == 0x1) && multiclient_ok) {
-                          if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
-                              g_message("Get users info");
-                          /* group is not fill in multi users mode
-                           * need to be done now */
-                          if ( nuauth_user_cache ){
-                              get_users_from_cache(connexion);
-                          } else {
-                              if (user_check(connexion->username,NULL,0,&(connexion->user_id),&(connexion->user_groups))!=SASL_OK){
-                                  if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_PACKET)){
-                                      g_message("User not found");
-                                  }
-
-                              }
-                          }
-                      } else {
-                          if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
-                              g_message("User_check return is bad");
-                          free_connection(connexion);
-                          return NULL;
-                      }
-                  }
-                  /* first reset timestamp to now */
-                  connexion->timestamp=time(NULL);
-                  connexion->state=STATE_USERPCKT;
-                  /* acl part is NULL */
-                  connexion->acl_groups=NULL;
-
                   /* Tadaaa */
-                  return connexion;
+                  return conn_elts;
               }
               break;
             default:
