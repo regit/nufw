@@ -45,6 +45,7 @@ nfct_callback update_handler(void *arg, unsigned int flags, int type)
 //  u_int32_t dst = conn->tuple[0].dst.v4;
   u_int16_t sport = 0;
   u_int16_t dport = 0;
+//  printf("in handler\n");
 
   switch (conn->tuple[0].protonum){
         case IPPROTO_TCP :
@@ -130,6 +131,11 @@ int main(int argc,char * argv[]){
         return 1;
     }
     FH = fopen (conffile, "r");
+    if (FH == NULL)
+    {
+        printf("Cannot read config file %s. Sorry\n",conffile);
+        return 1;
+    }
 
     sql_params = read_conf(FH);
 

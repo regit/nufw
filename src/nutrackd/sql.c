@@ -56,6 +56,9 @@ void sql_close(void)
 int update_sql_table(u_int32_t src, u_int32_t dst, u_int8_t proto, u_int16_t sport, u_int16_t dport)
 {
         time_t timestamp;
+//        printf ("sport %u\n",ntohs(sport));
+//        printf ("dport %u\n",ntohs(dport));
+//        return 0;
 
         if (ld == NULL)
             if (mysql_conn_init(ld))
