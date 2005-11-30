@@ -280,7 +280,7 @@ static conn_t* tcptable_find (conntable_t *ct, conn_t *c)
 #endif
   bucket = ct->buckets[tcptable_hash (c)];
   while (bucket != NULL) {
-      if (
+      if ( (c->proto == bucket->proto) &&
           (c->rmt == bucket->rmt) && (c->rmtp == bucket->rmtp) &&
           (c->lcl == bucket->lcl) && (c->lclp == bucket->lclp)
          ) {

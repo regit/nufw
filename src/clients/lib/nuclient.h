@@ -109,6 +109,7 @@ GCRY_THREAD_OPTION_PTHREAD_IMPL;
  * easier.
  */
 typedef struct conn {
+        unsigned int proto;
 	unsigned long lcl;
 	unsigned int lclp;
 	unsigned long rmt;

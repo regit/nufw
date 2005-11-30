@@ -138,7 +138,7 @@ char warn_clients(struct msg_addr_set * global_msg)
 #if DEBUG_ENABLE
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)){
 		struct in_addr saddress;
-		saddress.s_addr=global_msg->addr;
+		saddress.s_addr=htonl(global_msg->addr);
 		g_message("need to warn client on %s",inet_ntoa(saddress));
 	}
 #endif

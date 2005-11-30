@@ -111,7 +111,7 @@ int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
               authfield.src=htonl(carray[item]->lcl);
               authfield.dst=htonl(carray[item]->rmt);
 #endif
-              authfield.proto=6;
+              authfield.proto=carray[item]->proto;
               authfield.flags=0;
               authfield.FUSE=0;
 #ifdef WORDS_BIGENDIAN
