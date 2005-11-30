@@ -21,4 +21,4 @@
 #define LOG_TO_SYSLOG	2
 
 int log_engine;
-int debug_level;
+int log_level;

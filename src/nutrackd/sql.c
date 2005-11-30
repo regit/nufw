@@ -63,7 +63,8 @@ int update_sql_table(u_int32_t src, u_int32_t dst, u_int8_t proto, u_int16_t spo
         if (ld == NULL)
             if (mysql_conn_init(ld))
             {
-                // TODO log some stuff
+                if (log_level > 2)
+                    syslog(LOG_NOTICE,"Cannot init SQL connection!");
                 return -1;
             }
 
@@ -96,6 +97,8 @@ int update_sql_table(u_int32_t src, u_int32_t dst, u_int8_t proto, u_int16_t spo
                 else
                 {
                     //TODO log stuff
+                if (log_level > 2)
+                    syslog(LOG_WARNING,"Won't update : SQL request too long?!");
                     return -1;
                 }
 
@@ -103,6 +106,8 @@ int update_sql_table(u_int32_t src, u_int32_t dst, u_int8_t proto, u_int16_t spo
             }
           case IPPROTO_UDP:
             {//add port conditions
+                if (log_level > 2)
+                    syslog(LOG_INFO,"UDP update : not implemented yet ;)");
             }
           default :
             {//just add ")" to the request
@@ -110,15 +115,17 @@ int update_sql_table(u_int32_t src, u_int32_t dst, u_int8_t proto, u_int16_t spo
                   strcat(request,")");
               else
               {
-                  // TODO log stuff
-                  return -1;
+                if (log_level > 2)
+                  syslog(LOG_WARNING,"Won't update : SQL request too long?!");
+                return -1;
               }
 
             }
         }
         if (mysql_real_query(ld, request, strlen(request)) != 0)
         {
-            //TODO log some error
+            if (log_level > 2)
+              syslog(LOG_ERR,"SQL query failed : %s",mysql_errno(ld));
         }
 }
 

@@ -23,6 +23,11 @@
 
 #define NUTRACKD_PID_FILE  LOCAL_STATE_DIR "/run/nutrackd.pid"
 
+void init_log(void)
+{
+  openlog("nutrackd",LOG_PID,LOG_DAEMON);
+}
+
 void nutrackd_cleanup( int signal ) {
     /* TODO destroy conntrack handle */
 //     nfqnl_destroy_queue(hndl);
@@ -46,6 +51,7 @@ nfct_callback update_handler(void *arg, unsigned int flags, int type)
   u_int16_t sport = 0;
   u_int16_t dport = 0;
 //  printf("in handler\n");
+  init_log();
 
   switch (conn->tuple[0].protonum){
         case IPPROTO_TCP :
@@ -61,13 +67,18 @@ nfct_callback update_handler(void *arg, unsigned int flags, int type)
           dport = 0;
         break;
   }
+      if (log_level > 9)
+          syslog(LOG_DEBUG,"Updating SQL entry (proto %u,sport %u,dport %u",conn->tuple[0].protonum,
+                                                                    sport,
+                                                                    dport);
   if (update_sql_table(conn->tuple[0].src.v4,
                        conn->tuple[0].dst.v4,
                        conn->tuple[0].protonum,
                        sport,
                        dport)) //This prototype sucks
   {
-      //log shit
+      if (log_level > 3)
+          syslog(LOG_WARNING,"Cannot update SQL entry : SQL problem?");
   }
 }
 
@@ -92,11 +103,11 @@ int main(int argc,char * argv[]){
 
     /* initialize variables */
 
-    log_engine = LOG_TO_STD; /* default is to send debug messages to stdout + stderr */
+//    log_engine = LOG_TO_STD; /* default is to send debug messages to stdout + stderr */
     packet_timeout = PACKET_TIMEOUT;
 //    strncpy(authreq_addr,AUTHREQ_ADDR,HOSTNAME_SIZE);
 //    debug=DEBUG; /* this shall disapear */
-    debug_level=0;
+    log_level=0;
     
     /*parse options */
     while((option = getopt ( argc, argv, options_list)) != -1 ){
@@ -109,7 +120,7 @@ int main(int argc,char * argv[]){
             break;
           case 'v' :
             /*fprintf (stdout, "Debug should be On\n");*/
-            debug_level+=1;
+            log_level+=1;
             break;
             /* packet timeout */
           case 't' :
@@ -136,6 +147,8 @@ int main(int argc,char * argv[]){
         printf("Cannot read config file %s. Sorry\n",conffile);
         return 1;
     }
+    if (log_level > 3)
+      syslog(LOG_INFO,"starting");
 
     sql_params = read_conf(FH);
 
@@ -222,4 +235,6 @@ int main(int argc,char * argv[]){
 //    signal(SIGINT, event_sighandler);
     nfct_register_callback(cth, update_handler, NULL);
     res = nfct_event_conntrack(cth);
+      if (log_level > 3)
+          syslog(LOG_INFO,"Normal exit");
 }
