@@ -43,6 +43,7 @@
 #include <jhash.h>
 #include "client.h"
 
+
 char * locale_to_utf8(char* inbuf);
 
 
@@ -257,6 +258,7 @@ int tcptable_add (conntable_t *ct, conn_t *c)
       panic ("memory exhausted");
   }
 
+  c->createtime=time(NULL);
   memcpy (newc, c, sizeof (conn_t));
   bi = tcptable_hash (c);
   old = ct->buckets[bi];
@@ -415,6 +417,30 @@ int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn)
   return EXIT_FAILURE;
 }
 
+static int add_packet_to_send(NuAuth * session,conn_t** auth,int *count_p,conn_t *bucket )
+{
+  int count=*count_p;
+  if (count < CONN_MAX-1){
+      auth[count]=bucket;
+      (*count_p)++;
+  } else {
+      int i;
+      auth[count]=bucket;
+      if (send_user_pckt (session,auth) != 1){
+          /* error sending */
+#if DEBUG
+          printf("error when sending\n");
+#endif
+
+          return -1;
+      }
+      for(i=0;i<CONN_MAX;i++){
+          auth[i]=NULL;
+      }
+      *count_p=0;
+  }
+  return 1;
+}
 /*
  * compare ()
  *
@@ -437,38 +463,32 @@ int compare (NuAuth * session,conntable_t *old, conntable_t *new)
       while (bucket != NULL) {
           same_bucket = tcptable_find (old, bucket) ;
           if (same_bucket == NULL){
-              if (count < CONN_MAX-1){
-                  auth[count]=bucket;
-                  count++;
-              } else {
-                  auth[count]=bucket;
-                  if (send_user_pckt (session,auth) != 1){
-                      /* error sending */
-                      return -1;
-                  }
-                  for(count=0;count<CONN_MAX;count++){
-                      auth[count]=NULL;
-                  }
-                  count=0;
-              }
+#if DEBUG
+              printf("sending new\n");
+#endif
+              add_packet_to_send(session,auth,&count,bucket);
           } else {
               /* compare values of retransmit */
-              if (bucket->retransmit > same_bucket->retransmit){
-                  if (count < CONN_MAX-1){
-                      auth[count]=bucket;
-                      count++;
-                  } else {
-                      auth[count]=bucket;
-                      if (send_user_pckt (session,auth) != 1){
-                          /* error sending */
-                          return -1;
-                      }
-                      for(count=0;count<CONN_MAX;count++){
-                          auth[count]=NULL;
-                      }
-                      count=0;
-                  }
+              if (bucket->retransmit > same_bucket->retransmit) {
+#if DEBUG
+                  printf("sending retransmit\n");
+#endif
+                  add_packet_to_send(session,auth,&count,bucket);
+              }
 
+              /* solve timeout issue on UDP */
+              if (bucket->proto == IPPROTO_UDP){
+                  /* send an auth packet if netfilter timeout may have been reached */
+                  if (same_bucket->createtime<time(NULL)-UDP_TIMEOUT){
+#if DEBUG
+                      printf("working on timeout issue\n");
+#endif
+                         add_packet_to_send(session,auth,&count,bucket);
+                   
+
+                  } else {
+                      bucket->createtime=same_bucket->createtime;
+                  }
               }
           }
           bucket = bucket->next;
@@ -476,7 +496,7 @@ int compare (NuAuth * session,conntable_t *old, conntable_t *new)
   }
   if(count>0){
       if (count<CONN_MAX){
-        auth[count]=NULL;
+          auth[count]=NULL;
       }
       if (send_user_pckt (session,auth) != 1){
           /* error sending */

@@ -92,6 +92,10 @@ int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
               size_t len=0;
               /* get application name from inode */
               const char * appname = NULL;
+
+#if DEBUG
+                printf("adding one authreq\n"); 
+#endif
               appname = prg_cache_get(carray[item]->ino);
               header.length+=sizeof(struct nuv2_authreq)+sizeof(struct nuv2_authfield_ipv4);
               authreq.packet_id=session->packet_id++;

@@ -20,6 +20,14 @@
 
 #include "proc.h"
 
+static struct prg_node {
+    struct prg_node *next;
+    unsigned long inode;
+    char name[PROGNAME_WIDTH];
+} *prg_hash[PRG_HASH_SIZE];
+
+
+
 
 #define PROGNAME_WIDTHs PROGNAME_WIDTH1(PROGNAME_WIDTH)
 #define PROGNAME_WIDTH1(s) PROGNAME_WIDTH2(s)

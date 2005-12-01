@@ -16,6 +16,7 @@
 	- nuauth : multi modules support
 	- nutrackd : brand new connection tracking system based on
 	libconntrack
+	- libnuclient : UDP support
 1.0.11 (2005/07/26)
 	- NuFW : port to big endian architecture. It has been tested on a
 	powerpc.

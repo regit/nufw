@@ -94,7 +94,7 @@ GCRY_THREAD_OPTION_PTHREAD_IMPL;
 #include <gnutls/gnutls.h>
 #include <sasl/sasl.h>
 
-
+#define DEBUG 0
 
 #ifndef CONNTABLE_BUCKETS
 #define CONNTABLE_BUCKETS 5003
@@ -102,6 +102,8 @@ GCRY_THREAD_OPTION_PTHREAD_IMPL;
 #define NUAUTH_IP "192.168.1.1"
 
 #define KEYFILE "key.pem"
+
+#define UDP_TIMEOUT 30
 
 /*
  * This structure holds everything we need to know about a connection. We
@@ -117,6 +119,7 @@ typedef struct conn {
 	unsigned long uid;
 	unsigned long ino;
 	unsigned int retransmit;
+        time_t  createtime;
 
 	struct conn *next;
 } conn_t;
