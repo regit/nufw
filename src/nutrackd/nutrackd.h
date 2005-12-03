@@ -44,4 +44,5 @@ typedef struct _SQLconnection {
 SQLconnection *params;
 
 SQLconnection *read_conf (FILE * FH);
+
 int update_sql_table(u_int32_t src, u_int32_t dst, u_int8_t proto, u_int16_t sport, u_int16_t dport);

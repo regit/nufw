@@ -68,18 +68,19 @@ nfct_callback update_handler(void *arg, unsigned int flags, int type)
         break;
   }
       if (log_level > 9)
-          syslog(LOG_DEBUG,"Updating SQL entry (proto %u,sport %u,dport %u",conn->tuple[0].protonum,
-                                                                    sport,
-                                                                    dport);
+          syslog(LOG_DEBUG,"Updating SQL entry (proto %u,sport %u,dport %u)",conn->tuple[0].protonum,
+                                                                    ntohs(sport),
+                                                                    ntohs(dport));
   if (update_sql_table(conn->tuple[0].src.v4,
                        conn->tuple[0].dst.v4,
                        conn->tuple[0].protonum,
                        sport,
-                       dport)) //This prototype sucks
+                       dport) != 1) //This prototype sucks
   {
       if (log_level > 3)
           syslog(LOG_WARNING,"Cannot update SQL entry : SQL problem?");
   }
+  return NULL;
 }
 
 int main(int argc,char * argv[]){
@@ -95,7 +96,6 @@ int main(int argc,char * argv[]){
     int packet_timeout;
     int res;
     struct nfct_handle *cth;
-    SQLconnection *sql_params ;
     char *conffile="./dummy.conf";
     FILE * FH;
 
@@ -150,7 +150,7 @@ int main(int argc,char * argv[]){
     if (log_level > 3)
       syslog(LOG_INFO,"starting");
 
-    sql_params = read_conf(FH);
+    params = read_conf(FH);
 
     /* Daemon code */
     if (daemonize == 1) {
@@ -213,21 +213,6 @@ int main(int argc,char * argv[]){
 //        log_engine = LOG_TO_SYSLOG;
     }
 
-//    signal(SIGPIPE,SIG_IGN);
-
-//    init_log_engine();
-    /* create socket for sending auth request */
-//    sck_auth_request = socket (AF_INET,SOCK_DGRAM,0);
-//
-//    if (sck_auth_request == -1)
-//        if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
-//            if (log_engine == LOG_TO_SYSLOG){
-//                syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"socket()");
-//            }else{
-//                printf("[%d] socket()",getpid());
-//            }
-//        }
-
 
     cth = nfct_open(CONNTRACK, NF_NETLINK_CONNTRACK_DESTROY);
     if (!cth)
@@ -235,6 +220,8 @@ int main(int argc,char * argv[]){
 //    signal(SIGINT, event_sighandler);
     nfct_register_callback(cth, update_handler, NULL);
     res = nfct_event_conntrack(cth);
-      if (log_level > 3)
+      if (log_level > 3){
           syslog(LOG_INFO,"Normal exit");
+      }
+      return 1;
 }

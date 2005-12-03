@@ -25,26 +25,27 @@
 MYSQL *ld = NULL;
 
 
-int mysql_conn_init(MYSQL *ld){
+MYSQL * mysql_conn_init(){
 
-	/* init connection */
-	ld = mysql_init(ld);     
-	if (ld == NULL) {
-                //TODO : log stuff
-		return -1;
-	}
-	if (!mysql_real_connect(ld,
-                                (*params).host,
-                                (*params).user,
-                                (*params).pass,
-                                (*params).database,
-                                (*params).port,
-                                NULL,
-                                0)) {
-                //TODO : log stuff
-		return -1;
-	}
-	return 0;
+    /* init connection */
+    ld = mysql_init(NULL);     
+    if (ld == NULL) {
+        //TODO : log stuff
+        return 0;
+    }
+    if (!mysql_real_connect(ld,
+          params->host,
+          params->user,
+          params->pass,
+          params->database,
+          params->port,
+          NULL,
+          0)) {
+        //TODO : log stuff
+        syslog(LOG_NOTICE,"Cannot init SQL with params : %s,%s,%s,%s,%d",params->host,params->user,params->pass,params->database,params->port);
+        return NULL;
+    }
+    return ld;
 }
 
 void sql_close(void)
@@ -55,78 +56,59 @@ void sql_close(void)
 
 int update_sql_table(u_int32_t src, u_int32_t dst, u_int8_t proto, u_int16_t sport, u_int16_t dport)
 {
-        time_t timestamp;
-//        printf ("sport %u\n",ntohs(sport));
-//        printf ("dport %u\n",ntohs(dport));
-//        return 0;
+  time_t timestamp;
+  //        printf ("sport %u\n",ntohs(sport));
+  //        printf ("dport %u\n",ntohs(dport));
+  //        return 0;
 
-        if (ld == NULL)
-            if (mysql_conn_init(ld))
-            {
-                if (log_level > 2)
-                    syslog(LOG_NOTICE,"Cannot init SQL connection!");
-                return -1;
-            }
+  if ((proto == IPPROTO_TCP )||(proto || IPPROTO_UDP)){
+      char request[LONG_REQUEST_SIZE];
+      char* prefix;
+      
+      memset((void*)request,0,LONG_REQUEST_SIZE);
 
-        timestamp=time(NULL);
-        
-        char request[LONG_REQUEST_SIZE];
-        if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET state=%u,end_timestamp=FROM_UNIXTIME(%u) WHERE (protocol=%u AND ip_saddr=%u AND ip_daddr=%u AND (state=1 OR state=2)",
-                        (*params).table,
-                        STATE_CLOSE,
-                        timestamp,
-                        proto,
-                        src,
-                        dst) >= LONG_REQUEST_SIZE-1)
-        {
-            return -1;
-        }
-        switch (proto){
-          case IPPROTO_TCP:
-            {//add port conditions
-                char subreq[LONG_REQUEST_SIZE];
-                if (snprintf(subreq,SHORT_REQUEST_SIZE-1,"AND sport=%u AND dport=%u)",
-                        sport,
-                        dport) >= LONG_REQUEST_SIZE-1)
-                {
-                    //never occurs
-                    return -1;
-                }
-                if ( ( strlen(request) + strlen(subreq) ) < LONG_REQUEST_SIZE-1)
-                    strcat(request,subreq);
-                else
-                {
-                    //TODO log stuff
-                if (log_level > 2)
-                    syslog(LOG_WARNING,"Won't update : SQL request too long?!");
-                    return -1;
-                }
+      if (ld == NULL){
+               ld = mysql_conn_init();
+          if (! ld)
+          {
+              if (log_level > 2)
+                  syslog(LOG_NOTICE,"Cannot init SQL connection!");
+              return -1;
+          }
+      }
 
-                break;
-            }
-          case IPPROTO_UDP:
-            {//add port conditions
-                if (log_level > 2)
-                    syslog(LOG_INFO,"UDP update : not implemented yet ;)");
-            }
-          default :
-            {//just add ")" to the request
-              if ( ( strlen(request) ) < LONG_REQUEST_SIZE-2)
-                  strcat(request,")");
-              else
-              {
-                if (log_level > 2)
-                  syslog(LOG_WARNING,"Won't update : SQL request too long?!");
-                return -1;
-              }
+      timestamp=time(NULL);
 
-            }
-        }
-        if (mysql_real_query(ld, request, strlen(request)) != 0)
-        {
-            if (log_level > 2)
+      switch(proto){
+        case IPPROTO_TCP:
+          prefix="tcp";
+          break;
+        case IPPROTO_UDP:
+          prefix="udp";
+      }
+      if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET state=%u,end_timestamp=FROM_UNIXTIME(%u) WHERE ip_protocol=%u AND ip_saddr=%u AND ip_daddr=%u AND (state=1 OR state=2) AND %s_sport=%u AND %s_dport=%u ",
+            params->table,
+            STATE_CLOSE,
+            timestamp,
+            proto,
+            ntohl(src),
+            ntohl(dst),
+            prefix,
+            ntohs(sport),
+            prefix,
+            ntohs(dport)) >= LONG_REQUEST_SIZE-1) {
+          return -1;
+      }
+
+      if (mysql_real_query(ld, request, strlen(request)) != 0) {
+          if (log_level > 2){
               syslog(LOG_ERR,"SQL query failed : %s",mysql_errno(ld));
-        }
+          }
+      }
+      return 1;
+  } else {
+      return 0;
+  }
 }
 
 
