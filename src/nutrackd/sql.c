@@ -61,7 +61,7 @@ int update_sql_table(u_int32_t src, u_int32_t dst, u_int8_t proto, u_int16_t spo
   //        printf ("dport %u\n",ntohs(dport));
   //        return 0;
 
-  if ((proto == IPPROTO_TCP )||(proto || IPPROTO_UDP)){
+  if ((proto == IPPROTO_TCP )||(proto == IPPROTO_UDP)){
       char request[LONG_REQUEST_SIZE];
       char* prefix;
       
