@@ -51,16 +51,24 @@ AC_ARG_WITH(ident,   [AC_HELP_STRING(--with-ident,  Support ident users authenti
 
 AC_ARG_WITH(nfqueue,   [AC_HELP_STRING(--with-nfqueue, Compile for NFQUEUE instead of QUEUE)],use_nfqueue="yes", use_nfqueue="")
 
-AC_ARG_WITH(conntrack,   [AC_HELP_STRING(--with-conntrack, Compile with libnetfilter_conntrack support)],use_conntrack="yes", use_conntrack="")
 
 AC_ARG_WITH(utf8,   [AC_HELP_STRING(--with-utf8, Use UTF8 exchange between client and server)], AC_DEFINE_UNQUOTED([USE_UTF8],[1],[Will use UTF8 exchange]))
 
-AC_ARG_ENABLE(nuauth, [AC_HELP_STRING(--disable-nuauth, Don't build nuauth (default is to build))], nuauth_compilation=$enableval,nuauth_compilation="yes")
-AC_ARG_ENABLE(debug,   [AC_HELP_STRING(--enable-debug, Add development debug messagei (default no))],debug=$enableval, debug="")
 
-AM_CONDITIONAL(BUILD_NUAUTH, test x${nuauth_compilation} = xyes)
+AC_ARG_ENABLE(debug,   [AC_HELP_STRING(--enable-debug, Add development debug messages (default no))],debug=$enableval, debug="")
+AC_ARG_ENABLE(nufw,   [AC_HELP_STRING(--disable-nufw, Don't build nufw (default is to build))],build_nufw=$enableval, build_nufw="yes")
+AC_ARG_ENABLE(nuauth, [AC_HELP_STRING(--disable-nuauth, Don't build nuauth (default is to build))],build_nuauth=$enableval, build_nuauth="yes")
+AC_ARG_ENABLE(libnuclient,   [AC_HELP_STRING(--disable-libnuclient, Don't build libnuclient (default is to build))],build_libnuclient=$enableval, build_libnuclient="yes")
+AC_ARG_ENABLE(nutcpc,   [AC_HELP_STRING(--disable-nutcpc, Don't build nutcpc (default is to build))],build_nutcpc=$enableval, build_nutcpc="yes" )
+AC_ARG_ENABLE(nutrackd,   [AC_HELP_STRING(--disable-nutrackd, Don't build nutrackd (default is to build))],build_nutrackd=$enableval, build_nutrackd="yes")
 
-if test "${nuauth_compilation}" = "yes"; then
+AM_CONDITIONAL(BUILD_NUFW, test x${build_nufw} = xyes)
+AM_CONDITIONAL(BUILD_NUAUTH, test x${build_nuauth} = xyes)
+AM_CONDITIONAL(BUILD_NUTRACKD, test x${build_nutrackd} = xyes)
+AM_CONDITIONAL(BUILD_NUTCPC, test x${build_nutcpc} = xyes)
+AM_CONDITIONAL(BUILD_LIBNUCLIENT, test x${build_libnuclient} = xyes)
+
+if test "${build_nuauth}" = "yes"; then
 
         # glib stuff
         AM_PATH_GLIB_2_0(2.4.0, , AC_MSG_ERROR([glib is required in order to compile nuauth]),[gthread gmodule])
@@ -97,40 +105,37 @@ AM_CONDITIONAL(USE_IDENT, test x$ident = xyes)
 AM_CONDITIONAL(USE_MYSQL_LOG, test x$enable_mysql_log = xyes)
 AM_CONDITIONAL(USE_PGSQL_LOG, test x$enable_pgsql_log = xyes)
 
+AM_CONDITIONAL(HAVE_NFQUEUE,test x$have_nfqueue = xyes)
+if test "${build_nufw}" = "yes"; then
 if test "${use_nfqueue}" = "yes"; then
-	AC_CHECK_LIB([nfnetlink], [nfnl_open], have_nfqueue="yes", have_nfqueue="")
+        # if we don't have we can't build nufw
+	AC_CHECK_LIB([nfnetlink], [nfnl_open], have_nfqueue="yes", build_nufw="")
 	AC_CHECK_LIB([netfilter_queue], [nfq_open], have_nfqueue="yes", have_nfqueue="",[-lnfnetlink])
 	AC_DEFINE_UNQUOTED([USE_NFQUEUE],[1],[Will use netlink queue support instead of libipq])
 else
 
-AM_CONDITIONAL(HAVE_NFQUEUE,test x$have_nfqueue = xyes)
+        AC_CHECK_HEADERS([libipq/libipq.h libipq.h])
+        # if we don't have we can't build nufw
+        AC_CHECK_LIB([ipq], [ipq_message_type], have_ipq="yes", build_nufw="")
 
-AC_CHECK_HEADERS([libipq/libipq.h libipq.h])
-AC_CHECK_LIB([ipq], [ipq_message_type], have_ipq="yes", have_ipq="")
+        if test "$have_ipq" = "yes"; then
+        # check if we have a version of libipq supporting mark
+                AC_ARG_WITH(user-mark, [AC_HELP_STRING(--with-user-mark,  Support user mark on NuFW firewall (useless if using nfqueue))], enable_user_mark="yes", enable_user_mark="")
 
-if test "$have_ipq" = "yes"; then
-# check if we have a version of libipq supporting mark
-AC_ARG_WITH(user-mark, [AC_HELP_STRING(--with-user-mark,  Support user mark on NuFW firewall (useless if using nfqueue))], enable_user_mark="yes", enable_user_mark="")
-
-if test "$enable_user_mark" = "yes"; then
-        AC_CHECK_LIB([ipq], [ipq_set_vwmark],AC_DEFINE_UNQUOTED([HAVE_LIBIPQ_MARK],[1],[libipq has support for mark]),AC_MSG_RESULT([libipq has no support for mark]))
+                if test "$enable_user_mark" = "yes"; then
+                        AC_CHECK_LIB([ipq], [ipq_set_vwmark],AC_DEFINE_UNQUOTED([HAVE_LIBIPQ_MARK],[1],[libipq has support for mark]),AC_MSG_RESULT([libipq has no support for mark]))
+                fi
+        fi
 fi
 fi
-fi
 
-#FIXME : this MUST be fixed before any release
-if test "${use_conntrack}" = "yes"; then
-#	AC_CHECK_LIB([nfnetlink], [nfnl_open], have_nfqueue="yes", have_nfqueue="")
-#	AC_CHECK_LIB([nfnetlink], [nfnl_open], have_nfnetlink="yes", have_nfnetlink="")
-	AC_CHECK_LIB([netfilter_conntrack], [nfct_dump_conntrack_table], have_conntrack="yes", have_conntrack="",[-ldl -lnfnetlink])
-	AC_DEFINE_UNQUOTED([USE_CONNTRACK],[1],[Will build nutrackd daemon])
+if test "${build_nutrackd}" = "yes"; then
+	AC_CHECK_LIB([netfilter_conntrack], [nfct_dump_conntrack_table], build_nutrackd="yes", build_nutrackd="",[-ldl -lnfnetlink])
 fi
 
 AM_CONDITIONAL(HAVE_IPQ,test x$have_ipq = xyes)
 AM_CONDITIONAL(USE_USER_MARK, test x$enable_user_mark = xyes)
 AM_CONDITIONAL(HAVE_NFQUEUE,test x$have_nfqueue = xyes)
-AM_CONDITIONAL(HAVE_CONNTRACK,test x$have_conntrack = xyes)
-AM_CONDITIONAL(HAVE_NETFILTER,(test x$have_nfqueue = xyes) || (test x$have_ipq = xyes)  )
 
 if test "${debug}" = "yes"; then
 	AC_DEFINE_UNQUOTED([DEBUG_ENABLE],[1],[Will compile development debug message])
@@ -166,50 +171,59 @@ if test "$debug"; then
 	AC_MSG_NOTICE([Compiling with developement debug support])
 fi
 
-if (test "$have_ipq" = "" && test "$have_nfqueue" = "")  ;  then
-	AC_MSG_NOTICE([nufw daemon WON'T be compiled: libipq or libnetfilter_queue not present])
-else
-
-if test "${have_ipq}" = "yes"; then
-	if test "$enable_user_mark" = "yes"; then
-AC_MSG_NOTICE([nufw will be compiled with user mark support])
-	fi
-fi
-fi
 
 
-if test "${nuauth_compilation}" = "yes"; then
+if test "${build_nuauth}" = "yes"; then
+       	AC_MSG_NOTICE([Compiling nuauth])
         if test "$enable_system_auth" = "yes"; then
-        	AC_MSG_NOTICE([Compiling module system auth])
+        	AC_MSG_NOTICE([         Compiling module system auth])
         fi
 
         if test "${ldap}" = "yes"; then
-        	AC_MSG_NOTICE([Compiling module ldap])
+        	AC_MSG_NOTICE([         Compiling module ldap])
         fi
 
         if test "${gdbm}" = "yes"; then
-        	AC_MSG_NOTICE([Compiling module dbm])
+        	AC_MSG_NOTICE([         Compiling module dbm])
         fi
 
         if test "${ident}" = "yes"; then
-        	AC_MSG_NOTICE([Compiling fallback module ident])
+        	AC_MSG_NOTICE([         Compiling fallback module ident])
         fi
 
         if test "${enable_mysql_log}" = "yes"; then
-        	AC_MSG_NOTICE([Compiling mysql log module])
+        	AC_MSG_NOTICE([         Compiling mysql log module])
         fi
 
         if test "${enable_pgsql_log}" = "yes"; then
-        	AC_MSG_NOTICE([Compiling pgsql log module])
+        	AC_MSG_NOTICE([         Compiling pgsql log module])
         fi
 fi
 
-if test "${have_nfqueue}" = "yes"; then
-	AC_MSG_NOTICE([Compiling with libnetfilter_queue support instead of libipq])
+if test "${build_nufw}" = "yes"; then
+        AC_MSG_NOTICE([Compiling nufw])
+        if test "${have_nfqueue}" = "yes"; then
+        	AC_MSG_NOTICE([         Using libnetfilter_queue support])
+        else
+                if test "${have_ipq}" = "yes"; then
+        	        if test "$enable_user_mark" = "yes"; then
+                                AC_MSG_NOTICE([         With user mark support])
+	                fi
+                fi
+        fi
+else
+	AC_MSG_NOTICE([nufw daemon WON'T be compiled: libipq or libnetfilter_queue not present])
 fi
 
-if test "${have_conntrack}" = "yes"; then
+if test "${build_nutrackd}" = "yes"; then
 	AC_MSG_NOTICE([Compiling nutrackd])
+fi
+if test "${build_libnuclient}" = "yes"; then
+	AC_MSG_NOTICE([Compiling libnuclient])
+fi
+
+if test "${build_nutpcc}" = "yes"; then
+	AC_MSG_NOTICE([Compiling nutcpc])
 fi
 
 
