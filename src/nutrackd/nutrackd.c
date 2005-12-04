@@ -41,7 +41,7 @@ void nutrackd_cleanup( int signal ) {
     exit(0);
 }
 
-nfct_callback update_handler(void *arg, unsigned int flags, int type)
+int update_handler (void *arg, unsigned int flags, int type,void *data)
 {
   struct nfct_conntrack *conn = arg;
   // arg is a nfct_conntrack object - we can parse it directly
@@ -75,12 +75,12 @@ nfct_callback update_handler(void *arg, unsigned int flags, int type)
                        conn->tuple[0].dst.v4,
                        conn->tuple[0].protonum,
                        sport,
-                       dport) != 1) //This prototype sucks
-  {
-      if (log_level > 3)
+                       dport) != 1) { //This prototype sucks
+      if (log_level > 3){
           syslog(LOG_WARNING,"Cannot update SQL entry : SQL problem?");
+      }
   }
-  return NULL;
+  return 0;
 }
 
 int main(int argc,char * argv[]){
