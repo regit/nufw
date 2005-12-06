@@ -1299,6 +1299,7 @@ void* tls_user_authsrv()
 	int nuauth_tls_max_clients=NUAUTH_TLS_MAX_CLIENTS;
 	int nuauth_number_authcheckers=NB_AUTHCHECK;
 	int nuauth_auth_nego_timeout=AUTH_NEGO_TIMEOUT;
+	char addresse[INET_ADDRSTRLEN+1];
 	/* get config file setup */
 	/* parse conf file */
 	parse_conffile(configfile,sizeof(nuauth_tls_vars)/sizeof(confparams),nuauth_tls_vars);
@@ -1533,6 +1534,10 @@ void* tls_user_authsrv()
 				g_static_mutex_unlock (&client_mutex);
 				u_request = treat_user_request( c_session );
 				if (u_request == EOF) {
+					struct in_addr remote_inaddr;
+					remote_inaddr.s_addr=c_session->addr;
+					inet_ntop( AF_INET, &remote_inaddr, addresse, INET_ADDRSTRLEN);
+					log_user_disconnect(c_session->userid,addresse);
 #ifdef DEBUG_ENABLE
 					if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
 						g_message("client disconnect on %d\n",c);
