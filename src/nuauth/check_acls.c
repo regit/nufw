@@ -1,5 +1,5 @@
 /*
-** Copyright(C) 2003-2005 Eric Leblond <eric@regit.org>
+** Copyright(C) 2003-2005 Eric Leblond <regit@inl.fr>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -85,8 +85,12 @@ void acl_check_and_decide (gpointer userdata, gpointer data)
 			} else {
 					external_acl_groups(conn_elt);
 			}
-			g_message("getting acl for:");
-			print_connection(conn_elt,NULL);
+#ifdef DEBUG_ENABLE
+			if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
+				g_message("getting acl for:");
+				print_connection(conn_elt,NULL);
+			}
+#endif
 			if (conn_elt->acl_groups==NULL){
 				/* no acl found so packet has to be dropped */
 				struct auth_answer aanswer ={ NOK , conn_elt->user_id ,conn_elt->socket,conn_elt->tls } ;
@@ -96,13 +100,16 @@ void acl_check_and_decide (gpointer userdata, gpointer data)
 					g_message("No ACL, packet dropped %p\n",conn_elt);
 				}
 #endif
+#if IAMAWARRIOR
 				send_auth_response(GUINT_TO_POINTER(conn_elt->packet_id->data),&aanswer);
 				/* we can get rid of packet_id because we have sent an answer */
 				conn_elt->packet_id=g_slist_remove(conn_elt->packet_id,conn_elt->packet_id->data);
-				conn_elt->state=STATE_DONE;
+#endif
+				conn_elt->state=STATE_NONE;
 			}
 
 		}
+		/* transmit data we get to the next step */
 		if (nuauth_hello_authentication && (initialstate == STATE_HELLOMODE)){
 			struct internal_message *message = g_new0(struct internal_message,1);
 			message->type=INSERT_MESSAGE;
@@ -110,7 +117,7 @@ void acl_check_and_decide (gpointer userdata, gpointer data)
 			/* well this is an localid auth packet */
 			g_async_queue_push (localid_auth_queue,message);
 		} else {
-			/* search and fill */
+			/* give packet to search and fill */
 			g_async_queue_push (connexions_queue,conn_elt);
 		}
 	}

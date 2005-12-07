@@ -263,8 +263,16 @@ void search_and_fill ()
 #endif
 							free_connection(pckt);
 							break;
+						case STATE_NONE:
+							element->acl_groups=NULL;
+							take_decision(element,PACKET_IN_HASH);
+							free_connection(pckt);
+							break;
 						default:
-							g_warning("Should not have this. Please email Nufw developpers!\n");
+							if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING_DEBUG,DEBUG_AREA_MAIN)){
+								g_warning("%s:%d Should not have this. Please email Nufw developpers!\n",__FILE__,__LINE__);
+								g_message("state of packet is %d/USERPCKT",pckt->state);
+							}
 					}
 					break;
 				case STATE_DONE:
@@ -282,8 +290,23 @@ void search_and_fill ()
 						case STATE_USERPCKT:
 							free_connection(pckt);
 							break;
+							/* packet has been drop cause no acl was found */
+						case STATE_NONE:
+							free_connection(pckt);
+							element->acl_groups=NULL;
+							element->username=pckt->username;
+							element->appname = pckt->appname;
+							/* system */
+							((connection *)element)->sysname = pckt->sysname;
+							((connection *)element)->release = pckt->release;
+							((connection *)element)->version = pckt->version;
+							take_decision(element,PACKET_IN_HASH);
+							break;
 						default:
-							g_warning("Should not have this. Please email Nufw developpers!\n");
+							if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
+								g_message("packet is in state DONE/%d",pckt->state);
+								g_message("%s:%d Should not be here. Please email Nufw developpers!\n",__FILE__,__LINE__);
+							}
 					}
 					break;
 				case STATE_COMPLETING:
@@ -314,7 +337,7 @@ void search_and_fill ()
 							break;
 						default:
 							if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-								g_message("Should not be here. Please email Nufw developpers!\n");
+								g_message("%s:%d Should not be here. Please email Nufw developpers!\n",__FILE__,__LINE__);
 
 					}
 					break;
@@ -486,7 +509,8 @@ int free_connection(connection * conn)
 		}
 	}
 #endif
-	/* log if necessary (only state authreq) with user log module */
+	/* log if necessary (only state authreq) with user log module
+	 * STATE_COMPLETING is reached when no acl is found for packet */
 	if (conn->state == STATE_AUTHREQ){
 		/* copy message */
 		log_user_packet(*conn,STATE_DROP);
