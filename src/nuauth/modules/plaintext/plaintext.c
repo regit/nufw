@@ -787,7 +787,11 @@ G_MODULE_EXPORT int user_check(const char *username, const char *clientpass,
   char *realpass;
   int initstatus;
   char *user;
+  static GStaticMutex plaintext_initmutex = G_STATIC_MUTEX_INIT;
+  
 
+  /* init has only to be done once */
+  g_static_mutex_lock (&plaintext_initmutex);
   // Initialization if the user list is empty
   if (!plaintext_userlist) {
       initstatus = read_user_list();
@@ -797,6 +801,7 @@ G_MODULE_EXPORT int user_check(const char *username, const char *clientpass,
           return SASL_BADAUTH;
       }
   }
+  g_static_mutex_unlock (&plaintext_initmutex);
 
   /* strip username from domain */
   user = get_rid_of_domain((char*)username);
