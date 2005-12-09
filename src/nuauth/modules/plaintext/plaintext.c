@@ -861,7 +861,11 @@ G_MODULE_EXPORT GSList* acl_check(connection* element)
   struct T_plaintext_acl *p_acl;
   int initstatus;
   uint32_t src_ip, dst_ip;
+  static GStaticMutex plaintext_initmutex = G_STATIC_MUTEX_INIT;
 
+
+  /* init has only to be done once */
+  g_static_mutex_lock (&plaintext_initmutex);
   // Initialization if the ACL list is empty
   if (!plaintext_acllist) {
       initstatus = read_acl_list();
@@ -871,6 +875,7 @@ G_MODULE_EXPORT GSList* acl_check(connection* element)
           return NULL;
       }
   }
+  g_static_mutex_unlock (&plaintext_initmutex);
 
   // netdata.protocol   // IPPROTO_TCP || IPPROTO_UDP || IPPROTO_ICMP
   // netdata.type       // for ICMP
