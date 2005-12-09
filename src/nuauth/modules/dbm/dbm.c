@@ -141,11 +141,15 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned p
 	datum dbm_key, dbm_data;
 	struct dbm_data_struct return_data;
 	char* user;
+  	static GStaticMutex dbm_initmutex = G_STATIC_MUTEX_INIT;
 
 #ifdef DEBUG_ENABLE
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
 		g_message("We are entering dbm_user_check()\n");
 #endif
+
+  	/* init has only to be done once */
+  	g_static_mutex_lock (&dbm_initmutex);
 	if (dbf == NULL){
 		/* dbm init has not been done yet*/
 #ifdef DEBUG_ENABLE
@@ -160,6 +164,8 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned p
 			return SASL_BADAUTH;
 		}
 	}
+
+  	g_static_mutex_lock (&dbm_initmutex);
 
 	/* compute user name */
 	user = get_rid_of_domain(username);
