@@ -92,8 +92,10 @@ void acl_check_and_decide (gpointer userdata, gpointer data)
 			}
 #endif
 			if (conn_elt->acl_groups==NULL){
+#if IAMAWARRIOR
 				/* no acl found so packet has to be dropped */
 				struct auth_answer aanswer ={ NOK , conn_elt->user_id ,conn_elt->socket,conn_elt->tls } ;
+#endif
 
 #ifdef DEBUG_ENABLE
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)){
