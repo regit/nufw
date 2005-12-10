@@ -1,0 +1,10 @@
+AM_CPPFLAGS = -O2 -Wall -Werror-implicit-function-declaration -DCONFIG_DIR=\"$(sysconfdir)\" -DMODULE_DIR=\"$(libdir)\"
+INCLUDES = $(GLIB_CFLAGS) -I../../ -I../../include/
+plugindir = $(libdir)/nuauth/modules
+
+plugin_LTLIBRARIES = libscript.la
+
+libscript_la_SOURCES = script.c
+
+libscript.la: $(libscript_la_OBJECTS) $(libscript_la_DEPENDENCIES) 
+	$(LINK) -rpath $(plugindir) $(libscript_la_LDFLAGS) $(libscript_la_OBJECTS) $(libscript_la_LIBADD)

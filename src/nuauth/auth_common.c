@@ -269,7 +269,7 @@ void search_and_fill ()
 							free_connection(pckt);
 							break;
 						default:
-							if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING_DEBUG,DEBUG_AREA_MAIN)){
+							if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
 								g_warning("%s:%d Should not have this. Please email Nufw developpers!\n",__FILE__,__LINE__);
 								g_message("state of packet is %d/USERPCKT",pckt->state);
 							}

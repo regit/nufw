@@ -32,7 +32,7 @@ struct user_cached_datas {
 };
 
 /**
- * stores all informatin relative to a TLS user session
+ * stores all information relative to a TLS user session
  * so we don't have to get this information at each packet
  */
 typedef struct User_session {

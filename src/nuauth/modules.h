@@ -20,12 +20,17 @@
 #define MODULES_H
 
 int init_modules_system();
-
 int load_modules();
+
 int user_check (const char *user, const char *pass,unsigned passlen,uint16_t *uid,GSList **groups);
+
 GSList * acl_check (connection* element);
+
 /* ip auth */
 gchar* ip_auth(tracking * header);
+
 int user_logs (connection element, int state);
+
+int user_session_logs(user_session* user , int state);
 
 #endif

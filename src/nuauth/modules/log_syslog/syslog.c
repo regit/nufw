@@ -87,3 +87,19 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
     return 0;
 }
 
+G_MODULE_EXPORT int user_session_logs(user_session *c_session,int state)
+{
+	struct in_addr remote_inaddr;
+	remote_inaddr.s_addr=c_session->addr;
+	char addresse[INET_ADDRSTRLEN+1];
+        inet_ntop( AF_INET, &remote_inaddr, addresse, INET_ADDRSTRLEN);
+        switch (state) {
+          case SESSION_OPEN:
+		g_message("User %s connect on %s",c_session->userid,addresse);
+                break;
+          case SESSION_CLOSE:
+		g_message("User %s disconnect on %s",c_session->userid,addresse);
+                break;
+        }
+        return 1;
+}

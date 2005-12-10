@@ -725,7 +725,6 @@ int sasl_user_check(user_session* c_session)
 	sasl_security_properties_t secprops;
 	gboolean external_auth=FALSE;
 	char buf[1024];
-	char addresse[INET_ADDRSTRLEN+1];
 #if FAIT_BEAU
 	char *groups=NULL;
 #endif
@@ -779,10 +778,6 @@ int sasl_user_check(user_session* c_session)
 	}
 	sasl_dispose(&conn);
 	if ( ret == SASL_OK ) {
-		struct in_addr remote_inaddr;
-		remote_inaddr.s_addr=c_session->addr;
-		inet_ntop( AF_INET, &remote_inaddr, addresse, INET_ADDRSTRLEN);
-		log_new_user(c_session->userid,addresse);
 #ifdef DEBUG_ENABLE
 		if (c_session->multiusers){
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
@@ -934,6 +929,8 @@ int sasl_user_check(user_session* c_session)
 				return SASL_FAIL;
 			}
 		}
+
+		user_session_logs(c_session,SESSION_OPEN);
 		/* sasl connection is not used anymore */
 		return SASL_OK;
 	} else {
@@ -1534,10 +1531,7 @@ void* tls_user_authsrv()
 				g_static_mutex_unlock (&client_mutex);
 				u_request = treat_user_request( c_session );
 				if (u_request == EOF) {
-					struct in_addr remote_inaddr;
-					remote_inaddr.s_addr=c_session->addr;
-					inet_ntop( AF_INET, &remote_inaddr, addresse, INET_ADDRSTRLEN);
-					log_user_disconnect(c_session->userid,addresse);
+					user_session_logs(c_session,SESSION_CLOSE);
 #ifdef DEBUG_ENABLE
 					if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
 						g_message("client disconnect on %d\n",c);

@@ -26,6 +26,7 @@ GSList* acl_check_modules;
 GSList* ip_auth_modules;
 
 GSList* user_logs_modules;
+GSList* user_session_logs_modules;
 
 
 GMutex *modules_mutex;
@@ -38,5 +39,6 @@ typedef GSList * acl_check_callback (connection* element);
 typedef gchar* ip_auth_callback (tracking * header);
 
 typedef int user_logs_callback (connection element, int state);
+typedef int user_session_logs_callback (user_session* element, int state);
 
 #endif

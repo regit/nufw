@@ -20,56 +20,6 @@
 #include <auth_srv.h>
 #include <time.h>
 
-//#define CAPTIVE_PORTAL 1
-
-
-/**
- * print log message about new user on IP.
- * 
- * Argument 1 : user id
- * Argument 2 : ip
- * Return : None
- */
-
-void log_new_user(char *username,char* remoteip)
-{
-	if ( nuauth_log_users & 1 ){
-#ifdef CAPTIVE_PORTAL
-		char cmdbuffer[128];
-#endif
-		g_message("User %s on %s",username,remoteip);
-#ifdef CAPTIVE_PORTAL
-		snprintf(cmdbuffer,128,"/etc/nufw/user-up.sh %s %s",username,remoteip);
-		system(cmdbuffer);
-#endif
-	}
-}
-
-/**
- * print log message about user disconnect.
- * 
- * Argument 1 : user id
- * Argument 2 : ip
- * Return : None
- */
-
-void log_user_disconnect(char *username,char* remoteip)
-{
-	if ( nuauth_log_users & 1 ){
-#ifdef CAPTIVE_PORTAL
-		char cmdbuffer[128];
-#endif
-		g_message("User %s disconnect on %s",username,remoteip);
-#ifdef CAPTIVE_PORTAL
-		snprintf(cmdbuffer,128,"/etc/nufw/user-down.sh %s %s",username,remoteip);
-		system(cmdbuffer);
-#endif
-	}
-	/* TODO : branch user-down script here */
-}
-
-
-
 struct Conn_State { 
 	connection conn;
 	int state;};

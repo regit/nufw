@@ -96,6 +96,10 @@ gchar* ip_auth(tracking * header){
 	return NULL;
 }
 
+
+/**
+ * log authenticated packets
+ */
 int user_logs (connection element, int state){
 	/* iter through all modules list */
 	GSList *walker=user_logs_modules;
@@ -106,6 +110,21 @@ int user_logs (connection element, int state){
 	return 0;
 }
 
+/**
+ * log user connection and disconnection
+ */
+int user_session_logs(user_session* user , int state){
+	if ( nuauth_log_users & 1 ){
+	/* iter through all modules list */
+	GSList *walker=user_session_logs_modules;
+	for (;walker!=NULL;walker=walker->next ){
+		(*(user_session_logs_callback*)(walker->data))(user,state);
+	}
+
+        }
+    return 0;
+}
+
 int init_modules_system(){
 	/* init modules list mutex */
 	modules_mutex = g_mutex_new ();
@@ -113,6 +132,7 @@ int init_modules_system(){
 	acl_check_modules=NULL;
 	ip_auth_modules=NULL;
 	user_logs_modules=NULL;
+        user_session_logs_modules=NULL;
 	return 1;
 }
 
@@ -158,12 +178,14 @@ int load_modules()
 	char * nuauth_acl_check_module;
 	char * nuauth_user_check_module;
 	char * nuauth_user_logs_module;
+	char * nuauth_user_session_logs_module;
 	char * nuauth_ip_authentication_module;
 	char *configfile=DEFAULT_CONF_FILE;
 	confparams nuauth_vars[] = {
 		{ "nuauth_user_check_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_USERAUTH_MODULE) },
 		{ "nuauth_acl_check_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_ACLS_MODULE) },
 		{ "nuauth_user_logs_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_LOGS_MODULE) },
+		{ "nuauth_user_session_logs_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_LOGS_MODULE) },
 		{ "nuauth_ip_authentication_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_IPAUTH_MODULE) }
 	};
 	gpointer vpointer;
@@ -175,6 +197,9 @@ int load_modules()
 	nuauth_user_check_module=(char*)(vpointer);//?vpointer:nuauth_user_check_module);
 	vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_user_logs_module");
 	nuauth_user_logs_module=(char*)(vpointer);//?vpointer:nuauth_user_logs_module);
+
+	vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_user_session_logs_module");
+	nuauth_user_session_logs_module=(char*)(vpointer);//?vpointer:nuauth_user_logs_module);
 
 
 	vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_acl_check_module");
@@ -199,9 +224,14 @@ int load_modules()
 
 	/* user logs modules */
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-		g_message("Loading user logging modules:");
+		g_message("Loading user packet logging modules:");
 	load_modules_from(nuauth_user_logs_module,"user_packet_logs",&user_logs_modules);
 	g_free(nuauth_user_logs_module);
+	/* user logs modules */
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+		g_message("Loading user session logging modules:");
+	load_modules_from(nuauth_user_session_logs_module,"user_session_logs",&user_session_logs_modules);
+	g_free(nuauth_user_session_logs_module);
 
 	if (nuauth_do_ip_authentication){
 		/* load module */

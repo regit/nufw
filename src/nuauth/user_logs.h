@@ -18,11 +18,13 @@
 
 #ifndef USER_LOGS_H
 #define USER_LOGS_H
+
+#define SESSION_CLOSE 0x0
+#define SESSION_OPEN 0x1
  
 int check_fill_user_counters(u_int16_t userid,long time,unsigned long packet_id,u_int32_t ip);
 void print_users_list();
-void log_new_user(char* username,char* remoteip);
-void log_user_disconnect(char* username,char* remoteip);
+
 void log_user_packet (connection element,int state);
 void real_log_user_packet (gpointer userdata, gpointer data);
 
