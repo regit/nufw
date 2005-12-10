@@ -1,3 +1,7 @@
+1.1.1
+	- new session logging module system (hook at user connection and
+	  disconnection)
+	- libscript : new session logging module
 1.1.0 (2005/12/06)
 	- full "a posteriori" IP authentication for mono user system via hello message system
 	- nufw : port to libnetfilter_queue

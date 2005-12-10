@@ -153,6 +153,7 @@ AC_CONFIG_FILES([Makefile
   		 src/nuauth/modules/log_pgsql/Makefile
   		 src/nuauth/modules/log_mysql/Makefile
   		 src/nuauth/modules/log_syslog/Makefile
+  		 src/nuauth/modules/log_script/Makefile
 		 src/nuauth/modules/ipauth_ident/Makefile
 		 src/clients/Makefile
 		 src/clients/lib/Makefile
