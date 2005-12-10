@@ -142,11 +142,11 @@ int prompt_password(char **pass1, size_t *n)
 int passwd_crypt(int pass_crypt,char **pass)
 {
   gcry_md_hd_t hd;
-  char *crypted;
+  unsigned char *crypted;
   char *prestring;
   char decoded[30];
   int algo = 0;
-  int len;
+  size_t len;
   if (pass_crypt == 0)
       return 0;
   //MD5
@@ -308,7 +308,7 @@ int main(int argc, char *argv[])
     datum data;
     char *inserted;
     char *pass1=NULL;
-    int pass_size = 0;
+    size_t pass_size = 0;
     if (groups == NULL)
     {
         usage(program_name);
@@ -388,7 +388,7 @@ int main(int argc, char *argv[])
     }else if (mode == MODE_UPDATE)
     {
         char *pass=NULL;
-        int size=32;
+        size_t size=32;
         int ret;
         char *chaine;
         pass_crypt = 0;
