@@ -1,0 +1,1 @@
+create table users (username varchar(30),ip_saddr int(10) unsigned,start_timestamp datetime, end_timestamp datetime);
