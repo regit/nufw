@@ -28,7 +28,8 @@
 #define MYSQL_USER "nufw"
 #define MYSQL_PASSWD "mypassword" 
 #define MYSQL_DB_NAME "nufw" 
-#define MYSQL_TABLE_NAME "nufw-logs" 
+#define MYSQL_TABLE_NAME "ulog" 
+#define MYSQL_USERS_TABLE_NAME "users" 
 #define MYSQL_REQUEST_TIMEOUT 10
 
 //SSL options
@@ -51,6 +52,7 @@ char * mysql_passwd;
 char * mysql_server;
 char * mysql_db_name;
 char * mysql_table_name;
+char * mysql_users_table_name;
 int mysql_server_port;
 int mysql_use_ssl;
 char * mysql_ssl_keyfile;

@@ -30,6 +30,7 @@ confparams mysql_nuauth_vars[] = {
 	{ "mysql_passwd" , G_TOKEN_STRING , 0 ,MYSQL_PASSWD},
 	{ "mysql_db_name" , G_TOKEN_STRING , 0 ,MYSQL_DB_NAME},
 	{ "mysql_table_name" , G_TOKEN_STRING , 0 ,MYSQL_TABLE_NAME},
+	{ "mysql_users_table_name" , G_TOKEN_STRING , 0 ,MYSQL_USERS_TABLE_NAME},
 	{ "mysql_request_timeout" , G_TOKEN_INT , MYSQL_REQUEST_TIMEOUT , NULL },
 	{ "mysql_use_ssl" , G_TOKEN_INT , MYSQL_USE_SSL, NULL},
 	{ "mysql_ssl_keyfile" , G_TOKEN_STRING , 0, MYSQL_SSL_KEYFILE},
@@ -60,6 +61,7 @@ g_module_check_init(GModule *module){
 	mysql_server_port=MYSQL_SERVER_PORT;
 	mysql_db_name=MYSQL_DB_NAME;
 	mysql_table_name=MYSQL_TABLE_NAME;
+	mysql_users_table_name=MYSQL_USERS_TABLE_NAME;
 	mysql_request_timeout=MYSQL_REQUEST_TIMEOUT;
 	mysql_use_ssl=MYSQL_USE_SSL;
 	mysql_ssl_keyfile=MYSQL_SSL_KEYFILE;
@@ -83,6 +85,8 @@ g_module_check_init(GModule *module){
 	mysql_db_name=(char *)(vpointer?vpointer:mysql_db_name);
 	vpointer=get_confvar_value(mysql_nuauth_vars,sizeof(mysql_nuauth_vars)/sizeof(confparams),"mysql_table_name");
 	mysql_table_name=(char *)(vpointer?vpointer:mysql_table_name);
+	vpointer=get_confvar_value(mysql_nuauth_vars,sizeof(mysql_nuauth_vars)/sizeof(confparams),"mysql_users_table_name");
+	mysql_users_table_name=(char *)(vpointer?vpointer:mysql_users_table_name);
 	vpointer=get_confvar_value(mysql_nuauth_vars,sizeof(mysql_nuauth_vars)/sizeof(confparams),"mysql_request_timeout");
 	mysql_request_timeout=*(int *)(vpointer?vpointer:&mysql_request_timeout);
 
@@ -610,7 +614,6 @@ G_MODULE_EXPORT int user_session_logs(user_session *c_session,int state)
 	MYSQL *ld = g_private_get (mysql_priv);
 	char request[LONG_REQUEST_SIZE];
 	int Result;
-        char* mysql_user_table="users";
         char *username=NULL;
         if (nuauth_log_users_without_realm){
                      username = get_rid_of_domain(c_session->userid);
@@ -628,7 +631,7 @@ G_MODULE_EXPORT int user_session_logs(user_session *c_session,int state)
           case SESSION_OPEN:
                   /* create new user session */
                 snprintf(request,LONG_REQUEST_SIZE-1,"INSERT INTO %s (username,ip_saddr,start_timestamp) VALUES ('%s',%lu,FROM_UNIXTIME(%lu))",
-                        mysql_user_table,
+                        mysql_users_table_name,
                       username,
                         c_session->addr,
                         time(NULL)
@@ -637,7 +640,7 @@ G_MODULE_EXPORT int user_session_logs(user_session *c_session,int state)
           case SESSION_CLOSE:
                 /* update existing user session */
                 snprintf(request,LONG_REQUEST_SIZE-1,"UPDATE %s set end_timestamp=FROM_UNIXTIME(%lu) where username='%s' and ip_saddr=%lu",
-                        mysql_user_table,
+                        mysql_users_table_name,
                         time(NULL),
                         username,
                         c_session->addr
