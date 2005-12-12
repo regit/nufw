@@ -304,8 +304,9 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
 						g_free(AppFullname);
 						Result = mysql_real_query(ld, request, strlen(request));
 						if (Result != 0){
-							if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+							if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN)){
 								g_warning("Can not insert Data : %s\n",mysql_error(ld));
+                                                        }
 							return -1;
 						}
 
@@ -602,4 +603,54 @@ G_MODULE_EXPORT gint log_sql_disconnect(void){
 	MYSQL *ld = g_private_get (mysql_priv);
 	mysql_close(ld);
 	return 0;
+}
+
+G_MODULE_EXPORT int user_session_logs(user_session *c_session,int state)
+{
+	MYSQL *ld = g_private_get (mysql_priv);
+	char request[LONG_REQUEST_SIZE];
+	int Result;
+        char* mysql_user_table="users";
+        char* username= get_rid_of_domain(c_session->userid);
+	if (ld == NULL){
+		ld=mysql_conn_init();
+		if (ld == NULL){
+			if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+				g_warning("Can not initiate MYSQL conn\n");
+			return -1;
+		}
+		g_private_set(mysql_priv,ld);
+	}
+        switch (state) {
+          case SESSION_OPEN:
+                  /* create new user session */
+                snprintf(request,LONG_REQUEST_SIZE-1,"INSERT INTO %s (username,ip_saddr,start_timestamp) VALUES ('%s',%lu,FROM_UNIXTIME(%lu))",
+                        mysql_user_table,
+                      username,
+                        c_session->addr,
+                        time(NULL)
+                        );
+                break;
+          case SESSION_CLOSE:
+                /* update existing user session */
+                snprintf(request,LONG_REQUEST_SIZE-1,"UPDATE %s set end_timestamp=FROM_UNIXTIME(%lu) where username='%s' and ip_saddr=%lu",
+                        mysql_user_table,
+                        time(NULL),
+                        username,
+                        c_session->addr
+                        );
+
+                
+                break;
+        }
+        g_free(username);
+        /* execute query */
+	Result = mysql_real_query(ld, request, strlen(request));
+		if (Result != 0){
+			if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN)){
+				g_warning("Can execute request : %s\n",mysql_error(ld));
+                        }
+			return -1;
+                }
+        return 1;
 }
