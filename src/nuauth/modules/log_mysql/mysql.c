@@ -611,7 +611,10 @@ G_MODULE_EXPORT int user_session_logs(user_session *c_session,int state)
 	char request[LONG_REQUEST_SIZE];
 	int Result;
         char* mysql_user_table="users";
-        char* username= get_rid_of_domain(c_session->userid);
+        char *username=NULL;
+        if (nuauth_log_users_without_realm){
+                     username = get_rid_of_domain(c_session->userid);
+        }
 	if (ld == NULL){
 		ld=mysql_conn_init();
 		if (ld == NULL){
