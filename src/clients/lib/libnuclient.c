@@ -202,7 +202,6 @@ void nu_exit_clean(NuAuth * session)
 		if (session->password){
 			free(session->password);
 		}
-		pthread_mutex_unlock(session->mutex);
 		pthread_mutex_destroy(session->mutex);
 		free(session);
 		session=NULL;
@@ -840,7 +839,13 @@ NuAuth* nu_client_init(char *username, unsigned long userid, char *password,
 
 void nu_client_free(NuAuth *session)
 {
+	pthread_mutex_lock(session->mutex);
 	if (tcptable_free (session->ct) == 0) panic ("tcptable_free failed");
+        /* kill all threads */
+        ask_session_end(session);
+        /* all threads are dead, we are the one who can access to it */
+	pthread_mutex_unlock(session->mutex);
+        /* destroy session */
 	nu_exit_clean(session);
 }
 
