@@ -124,6 +124,15 @@ void recv_message(NuAuth* session)
 }
 
 
+/**
+ * Function call by client to initiate a check
+ *
+ * In poll mode :
+ * 	this is just a wrapper to nu_client_real_check
+ * In push mode :
+ * 	It is used to send HELLO message
+ * 
+ */
 
 int nu_client_check(NuAuth * session)
 {
@@ -153,13 +162,22 @@ int nu_client_check(NuAuth * session)
 			if ((time(NULL) - timestamp_last_sent) > SENT_TEST_INTERVAL){
 				if (! send_hello_pckt(session)){
 					nu_exit_clean(session);
+					return -1;
 				}
 				timestamp_last_sent=time(NULL);
 			}
 		}
+		return 1;
 	
 }
 
+/**
+ * Function used to launch check in push mode
+ *
+ * This is a thread waiting to a condition to awake and launch
+ * nu_client_real_check
+ *
+ */
 void nu_client_thread_check(NuAuth * session)
 {
 	pthread_mutex_t check_mutex;
@@ -179,6 +197,14 @@ void nu_client_thread_check(NuAuth * session)
 	}
 }
 
+/**
+ * Function that check connections table and send authentication packets
+ *
+ * Read the list of connections and build a conntrack table (call to tcptable_read)
+ * compare current table with old one
+ *
+ * Return : Number of authenticated packets
+ */
 int nu_client_real_check(NuAuth * session)
 {
 	conntable_t *new;
