@@ -62,12 +62,6 @@ AC_ARG_ENABLE(libnuclient,   [AC_HELP_STRING(--disable-libnuclient, Don't build 
 AC_ARG_ENABLE(nutcpc,   [AC_HELP_STRING(--disable-nutcpc, Don't build nutcpc (default is to build))],build_nutcpc=$enableval, build_nutcpc="yes" )
 AC_ARG_ENABLE(nutrackd,   [AC_HELP_STRING(--disable-nutrackd, Don't build nutrackd (default is to build))],build_nutrackd=$enableval, build_nutrackd="yes")
 
-AM_CONDITIONAL(BUILD_NUFW, test x${build_nufw} = xyes)
-AM_CONDITIONAL(BUILD_NUAUTH, test x${build_nuauth} = xyes)
-AM_CONDITIONAL(BUILD_NUTRACKD, test x${build_nutrackd} = xyes)
-AM_CONDITIONAL(BUILD_NUTCPC, test x${build_nutcpc} = xyes)
-AM_CONDITIONAL(BUILD_LIBNUCLIENT, test x${build_libnuclient} = xyes)
-
 if test "${build_nuauth}" = "yes"; then
 
         # glib stuff
@@ -132,6 +126,12 @@ fi
 if test "${build_nutrackd}" = "yes"; then
 	AC_CHECK_LIB([netfilter_conntrack], [nfct_dump_conntrack_table], build_nutrackd="yes", build_nutrackd="",[-ldl -lnfnetlink])
 fi
+
+AM_CONDITIONAL(BUILD_NUFW, test x${build_nufw} = xyes)
+AM_CONDITIONAL(BUILD_NUAUTH, test x${build_nuauth} = xyes)
+AM_CONDITIONAL(BUILD_NUTRACKD, test x${build_nutrackd} = xyes)
+AM_CONDITIONAL(BUILD_NUTCPC, test x${build_nutcpc} = xyes)
+AM_CONDITIONAL(BUILD_LIBNUCLIENT, test x${build_libnuclient} = xyes)
 
 AM_CONDITIONAL(HAVE_IPQ,test x$have_ipq = xyes)
 AM_CONDITIONAL(USE_USER_MARK, test x$enable_user_mark = xyes)
