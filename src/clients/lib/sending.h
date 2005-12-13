@@ -30,7 +30,7 @@
 #ifndef SENDING_H
 #define SENDING_H
 
-#define CONN_MAX 1 /*> max number of packets to authenticate in a single tls packet */
+#define CONN_MAX 10 /*> max number of packets to authenticate in a single tls packet */
 
 int send_hello_pckt(NuAuth * session);
 

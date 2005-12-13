@@ -865,6 +865,7 @@ NuAuth* nu_client_init2(
 	session->username_callback=username_callback;
 	session->passwd_callback=passwd_callback;
 	session->tls_passwd_callback=tlscred_callback;
+	session->mutex=calloc(1,sizeof(pthread_mutex_t));
 	pthread_mutex_init(session->mutex,NULL);
 
 	sasl_callback_t callbacks[] = {
@@ -1124,9 +1125,11 @@ NuAuth* nu_client_init2(
 		session->check_count_mutex=(pthread_mutex_t*)calloc(1,sizeof(pthread_cond_t));
 		pthread_mutex_init(session->check_count_mutex,NULL);
 		pthread_cond_init(session->check_cond,NULL);
+		session->checkthread=(pthread_t*)calloc(1,sizeof(pthread_t));
 		pthread_create(session->checkthread, NULL, nu_client_thread_check, session);
 	}
 	session->timestamp_last_sent=time(NULL);
+	session->recvthread=(pthread_t*)calloc(1,sizeof(pthread_t));
 	pthread_create(session->recvthread, NULL, recv_message, session);
 	return session;
 }
