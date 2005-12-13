@@ -41,4 +41,7 @@ int tcptable_free (conntable_t *ct);
 int compare (NuAuth *session,conntable_t *old, conntable_t *new);
 
 void panic(const char *fmt, ...);
+
+void ask_session_end(NuAuth* session);
+
 #endif

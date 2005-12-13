@@ -73,7 +73,7 @@ int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
   char *enc_appname=NULL;
   int item=0;
 
-  timestamp_last_sent=time(NULL);
+  session->timestamp_last_sent=time(NULL);
   memset(datas,0,sizeof datas);
   pointer=datas+sizeof(struct nuv2_header);
   switch (session->protocol){

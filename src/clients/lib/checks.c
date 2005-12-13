@@ -34,7 +34,13 @@
 #include "proc.h"
 #include "client.h"
 
-
+/**
+ * Thread waiting for nuauth message to do client tasks
+ *
+ * Message from nuauth :
+ * - SRV_REQUIRED_PACKET : awake nu_client_thread_check
+ * - SRV_REQUIRED_HELLO : send hello back to nuauth
+ */
 
 void recv_message(NuAuth* session)
 {
@@ -75,23 +81,21 @@ void recv_message(NuAuth* session)
 #endif
 
 	for (;;){
-		if (conn_on && session){
+		if (session && session->connected){
 			ret= gnutls_record_recv(*session->tls,dgram,sizeof dgram);
 			if (ret<0){
 				if ( gnutls_error_is_fatal(ret) ){
-					if (conn_on){
-						nu_exit_clean(session);
-					}
+					ask_session_end(session);
 					return;
 				}
 			} else {
 				switch (*dgram){
 					case SRV_REQUIRED_PACKET:
 						/* wake up nu_client_real_check_tread */
-						pthread_mutex_lock(check_count_mutex);
-						count_msg_cond++;
-						pthread_mutex_unlock(check_count_mutex);
-						pthread_cond_signal(check_cond);
+						pthread_mutex_lock(session->check_count_mutex);
+						session->count_msg_cond++;
+						pthread_mutex_unlock(session->check_count_mutex);
+						pthread_cond_signal(session->check_cond);
 						break;
 					case SRV_REQUIRED_HELLO:
 						hellofield.helloid = ((struct nuv2_srv_helloreq*)dgram)->helloid;
@@ -104,9 +108,7 @@ void recv_message(NuAuth* session)
 #if DEBUG_ENABLE
 								printf("write failed at %s:%d\n",__FILE__,__LINE__);
 #endif
-								if (conn_on){
-									nu_exit_clean(session);
-								}
+								ask_session_end(session);
 								return;
 							}
 						}
@@ -127,44 +129,51 @@ void recv_message(NuAuth* session)
 /**
  * Function call by client to initiate a check
  *
- * In poll mode :
+ *
+ * It is in charge of cleaning session as the session may be used
+ * by user and we have no control of it.
+ * 
+ * - In poll mode :
  * 	this is just a wrapper to nu_client_real_check
- * In push mode :
+ * - In push mode :
  * 	It is used to send HELLO message
  * 
+ * Return -1 if a problem occurs. Session is destroyed if nu_client_check return -1;
  */
 
 int nu_client_check(NuAuth * session)
 {
-		if (conn_on == 0 ){
-			errno=ECONNRESET;
-		}
-
-		if (recv_started == 0){
-			if (session->mode == SRV_TYPE_PUSH) {
-				pthread_t checkthread;
-				check_cond=(pthread_cond_t*)calloc(1,sizeof(pthread_cond_t));
-				check_count_mutex=(pthread_mutex_t*)calloc(1,sizeof(pthread_cond_t));
-				pthread_mutex_init(check_count_mutex,NULL);
-				pthread_cond_init(check_cond,NULL);
-				pthread_create(&checkthread, NULL, nu_client_thread_check, session);
-			}
-			/* TODO : use less ressource be clever */
-			pthread_t recvthread;
-			pthread_create(&recvthread, NULL, recv_message, session);
-			recv_started =1;
-		}
-
+		pthread_mutex_lock(session->mutex);
+		if (session->connected==0){
+			/* if we are here, threads are dead */
+			pthread_mutex_unlock(session->mutex);
+			nu_exit_clean(session);
+			return -1;
+		} 
+		pthread_mutex_unlock(session->mutex);
 		if (session->mode == SRV_TYPE_POLL) {
-			return	nu_client_real_check(session);
+			int checkreturn;
+			checkreturn = nu_client_real_check(session);
+			if (checkreturn == -1){
+				/* kill all threads */
+				ask_session_end(session);
+				/* cleaning up things */
+				nu_exit_clean(session);
+				return -1;
+			} else {
+				return checkreturn;
+			}
 		}
 		else {
-			if ((time(NULL) - timestamp_last_sent) > SENT_TEST_INTERVAL){
+			if ((time(NULL) - session->timestamp_last_sent) > SENT_TEST_INTERVAL){
 				if (! send_hello_pckt(session)){
+					/* kill all threads */
+					ask_session_end(session);
+					/* cleaning up things */
 					nu_exit_clean(session);
 					return -1;
 				}
-				timestamp_last_sent=time(NULL);
+				session->timestamp_last_sent=time(NULL);
 			}
 		}
 		return 1;
@@ -186,13 +195,13 @@ void nu_client_thread_check(NuAuth * session)
 	for(;;){
 		nu_client_real_check(session);
 	/* Do we need to do an other check ? */
-		pthread_mutex_lock(check_count_mutex);
-		if (count_msg_cond>0){
-			pthread_mutex_unlock(check_count_mutex);
+		pthread_mutex_lock(session->check_count_mutex);
+		if (session->count_msg_cond>0){
+			pthread_mutex_unlock(session->check_count_mutex);
 		} else {
-			pthread_mutex_unlock(check_count_mutex);
+			pthread_mutex_unlock(session->check_count_mutex);
 			/* wait for cond */
-			pthread_cond_wait(check_cond, &check_mutex);
+			pthread_cond_wait(session->check_cond, &check_mutex);
 		}
 	}
 }
@@ -200,8 +209,10 @@ void nu_client_thread_check(NuAuth * session)
 /**
  * Function that check connections table and send authentication packets
  *
- * Read the list of connections and build a conntrack table (call to tcptable_read)
- * compare current table with old one
+ * -# read the list of connections and build a conntrack table (call to tcptable_read)
+ * -# init program list (/proc/ reading) 
+ * -# compare current table with old one (compare call)
+ * -# free and return
  *
  * Return : Number of authenticated packets
  */
@@ -219,7 +230,7 @@ int nu_client_real_check(NuAuth * session)
 
 	if (nb_packets < 0){
 		/* error we ask client to exit */
-		nu_exit_clean(session);
+		ask_session_end(session);
 		return nb_packets;
 	}
 	if (tcptable_free (session->ct) == 0) panic ("tcptable_free failed");

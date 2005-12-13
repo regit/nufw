@@ -54,9 +54,9 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
 #endif
         if ( session->mode==SRV_TYPE_PUSH){
 /* need to set check_cond */
-	pthread_mutex_lock(check_count_mutex);
-	count_msg_cond=0;
-	pthread_mutex_unlock(check_count_mutex);
+	pthread_mutex_lock(session->check_count_mutex);
+	session->count_msg_cond=0;
+	pthread_mutex_unlock(session->check_count_mutex);
         }
 /* open file */
 	if (fp == NULL) {
@@ -115,7 +115,6 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
 
 	while (fgets (buf, sizeof (buf), fq) != NULL) {
 		unsigned long st;
-		int seen = 0;
 		if (sscanf (buf, "%*d: %lx:%x %lx:%x %lx %*x:%*x %*x:%*x %x %lu %*d %lu",
 					&c.lcl, &c.lclp, &c.rmt, &c.rmtp, &st, &c.retransmit, &c.uid, &c.ino) != 8)
 			continue;
