@@ -546,16 +546,13 @@ static int generate_dh_params(void) {
 	return 0;
 }
 
+#if 0
 NuAuth* nu_client_init(char *username, unsigned long userid, char *password,
 		const char *hostname, unsigned int port, char protocol, char ssl_on)
 {
 	gnutls_certificate_credentials xcred;
 	conntable_t *new;
 	int ret;
-#if 0
-	const int cert_type_priority[2] = { GNUTLS_CRT_X509,  0 };
-#endif
-	//const int cert_type_priority[3] = { GNUTLS_CRT_X509, GNUTLS_CRT_OPENPGP, 0 };
 	struct hostent *host;
 	NuAuth * session;
 
@@ -711,8 +708,6 @@ NuAuth* nu_client_init(char *username, unsigned long userid, char *password,
 			printf("Server Certificat OK\n");
 		}
 
-		printf("maman\n");
-
 		/* SASL time */
 
 		/* initialize the sasl library */
@@ -836,6 +831,7 @@ NuAuth* nu_client_init(char *username, unsigned long userid, char *password,
 	session->connected =1;
 	return session;
 }
+#endif
 
 void nu_client_free(NuAuth *session)
 {
@@ -1125,17 +1121,8 @@ NuAuth* nu_client_init2(
 	session->ct=new;
 	/* set init variable */
 	session->connected =1;
-	if (session->mode == SRV_TYPE_PUSH) {
-		session->check_cond=(pthread_cond_t*)calloc(1,sizeof(pthread_cond_t));
-		session->check_count_mutex=(pthread_mutex_t*)calloc(1,sizeof(pthread_cond_t));
-		pthread_mutex_init(session->check_count_mutex,NULL);
-		pthread_cond_init(session->check_cond,NULL);
-		session->checkthread=(pthread_t*)calloc(1,sizeof(pthread_t));
-		pthread_create(session->checkthread, NULL, nu_client_thread_check, session);
-	}
 	session->timestamp_last_sent=time(NULL);
-	session->recvthread=(pthread_t*)calloc(1,sizeof(pthread_t));
-	pthread_create(session->recvthread, NULL, recv_message, session);
+	session->recvthread=NULL;
 	return session;
 }
 

@@ -144,6 +144,18 @@ void recv_message(NuAuth* session)
 int nu_client_check(NuAuth * session)
 {
 		pthread_mutex_lock(session->mutex);
+		if (session->recvthread == NULL){
+			if (session->mode == SRV_TYPE_PUSH) {
+				session->check_cond=(pthread_cond_t*)calloc(1,sizeof(pthread_cond_t));
+				session->check_count_mutex=(pthread_mutex_t*)calloc(1,sizeof(pthread_cond_t));
+				pthread_mutex_init(session->check_count_mutex,NULL);
+				pthread_cond_init(session->check_cond,NULL);
+				session->checkthread=(pthread_t*)calloc(1,sizeof(pthread_t));
+				pthread_create(session->checkthread, NULL, nu_client_thread_check, session);
+			}
+			session->recvthread=(pthread_t*)calloc(1,sizeof(pthread_t));
+			pthread_create(session->recvthread, NULL, recv_message, session);
+		}
 		if (session->connected==0){
 			/* if we are here, threads are dead */
 			pthread_mutex_unlock(session->mutex);
