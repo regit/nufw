@@ -273,10 +273,10 @@ int main (int argc, char *argv[])
 					strerror (errno));
 			exit (EXIT_FAILURE);
 		} else if (p != 0) {
-			FILE* RunD;
 			fprintf (stderr, "nutcpc started (pid %d)\n", 
 					(int) p);
 			if (donotuselock==0){
+				FILE* RunD;
 				RunD=fopen(runpid,"w");
 				free(runpid);
 				fprintf(RunD,"%d",p);
@@ -290,8 +290,9 @@ int main (int argc, char *argv[])
 		close (STDERR_FILENO); 
 		setpgid (0, 0);
 		chdir ("/");
-	} else
+	} else {
 		fprintf (stderr, "nutcpc " NUTCPC_VERSION " started (debug)\n");
+	}
 
 
 	for (;;) {
