@@ -1,6 +1,6 @@
-usr/lib/libnuclient.so.0.0.0
+usr/lib/libnuclient.so.1.0.1
 usr/lib/libnuclient.a
 usr/lib/libnuclient.la
 usr/include/nuclient.h
-usr/lib/libnuclient.so.0
+usr/lib/libnuclient.so.1
 usr/lib/libnuclient.so

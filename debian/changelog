@@ -1,3 +1,9 @@
+nufw (1.1.1-1) stable; urgency=low
+
+  * New upstream release
+
+ -- Regit <regit@inl.fr>  Wed, 14 Dec 2005 14:19:23 +0100
+
 nufw (1.1.0-1) unstable; urgency=low
 
   * New upstreal release
