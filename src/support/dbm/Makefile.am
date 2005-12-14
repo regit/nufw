@@ -6,5 +6,5 @@ bin_PROGRAMS = nufw_dbm
 # nufw
 nufw_dbm_SOURCES = nufw_dbm.c
 
-LIBADD = -lsasl2 -lgcrypt -lgdbm
+nufw_dbm_LDADD = -lsasl2 -lgcrypt -lgdbm
 endif
