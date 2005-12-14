@@ -20,7 +20,7 @@
 
 #include "../lib/nuclient.h"
 #include <locale.h>
-#define NUTCPC_VERSION "0.7"
+#define NUTCPC_VERSION "0.8"
 
 #define MAX_RETRY_TIME 30
 
