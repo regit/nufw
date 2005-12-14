@@ -131,7 +131,9 @@ void recv_message(NuAuth* session)
  *
  *
  * It is in charge of cleaning session as the session may be used
- * by user and we have no control of it.
+ * by user and we have no control of it. It has to be called for the first
+ * time AFTER all forks occurs to create the working threads. This is 
+ * mandatory and occurs because fork does not replicate the threads.
  * 
  * - In poll mode :
  * 	this is just a wrapper to nu_client_real_check

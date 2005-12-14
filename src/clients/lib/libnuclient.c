@@ -845,6 +845,10 @@ void nu_client_free(NuAuth *session)
 	nu_exit_clean(session);
 }
 
+/**
+ * Initialisation of nufw authentication session
+ *
+ */
 NuAuth* nu_client_init2(
 		const char *hostname, unsigned int port,
 		char* keyfile, char* certfile,
