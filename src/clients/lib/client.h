@@ -34,6 +34,7 @@
 
 #define SENT_TEST_INTERVAL 30
 
+#include <config.h>
 #include "libnuclient.h"
 #include "proc.h"
 #include "tcptable.h"
