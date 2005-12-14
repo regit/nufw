@@ -182,7 +182,7 @@ confparams nuauth_vars[] = {
 	{ "nuauth_log_users_sync" , G_TOKEN_INT , 0, NULL },
 	{ "nuauth_log_users_strict" , G_TOKEN_INT , 1, NULL },
 	{ "nuauth_log_users_without_realm" , G_TOKEN_INT , 1, NULL },
-{ "nuauth_prio_to_nok" , G_TOKEN_INT , 1, NULL },
+        { "nuauth_prio_to_nok" , G_TOKEN_INT , 1, NULL },
 	{ "nuauth_datas_persistance" , G_TOKEN_INT , 10, NULL },
 	{ "nuauth_aclcheck_state_ready" , G_TOKEN_INT , 1,NULL },
 	{ "nuauth_push_to_client" , G_TOKEN_INT , 1,NULL },

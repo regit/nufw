@@ -263,11 +263,6 @@ void search_and_fill ()
 #endif
 							free_connection(pckt);
 							break;
-						case STATE_NONE:
-							element->acl_groups=NULL;
-							take_decision(element,PACKET_IN_HASH);
-							free_connection(pckt);
-							break;
 						default:
 							if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
 								g_warning("%s:%d Should not have this. Please email Nufw developpers!\n",__FILE__,__LINE__);
@@ -291,20 +286,9 @@ void search_and_fill ()
 							free_connection(pckt);
 							break;
 							/* packet has been drop cause no acl was found */
-						case STATE_NONE:
-							free_connection(pckt);
-							element->acl_groups=NULL;
-							element->username=pckt->username;
-							element->appname = pckt->appname;
-							/* system */
-							((connection *)element)->sysname = pckt->sysname;
-							((connection *)element)->release = pckt->release;
-							((connection *)element)->version = pckt->version;
-							take_decision(element,PACKET_IN_HASH);
-							break;
 						default:
 							if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
-								g_message("packet is in state DONE/%d",pckt->state);
+								g_message("packet is in state %d",pckt->state);
 								g_message("%s:%d Should not be here. Please email Nufw developpers!\n",__FILE__,__LINE__);
 							}
 					}

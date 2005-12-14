@@ -99,7 +99,7 @@ void acl_check_and_decide (gpointer userdata, gpointer data)
 
 #ifdef DEBUG_ENABLE
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)){
-					g_message("No ACL, packet dropped %p\n",conn_elt);
+					g_message("No ACL, packet dropped %p with state %d\n",conn_elt,conn_elt->state);
 				}
 #endif
 #if IAMAWARRIOR
@@ -107,7 +107,6 @@ void acl_check_and_decide (gpointer userdata, gpointer data)
 				/* we can get rid of packet_id because we have sent an answer */
 				conn_elt->packet_id=g_slist_remove(conn_elt->packet_id,conn_elt->packet_id->data);
 #endif
-				conn_elt->state=STATE_NONE;
 			}
 
 		}
