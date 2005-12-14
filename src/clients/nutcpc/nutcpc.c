@@ -320,7 +320,9 @@ int main (int argc, char *argv[])
 		}
 	}
 
-	nu_client_free(session);
+	if (session){
+		nu_client_free(session);
+	}
 
 	return EXIT_SUCCESS;
 }
