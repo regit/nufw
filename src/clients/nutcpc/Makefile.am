@@ -6,6 +6,6 @@ bin_PROGRAMS = nutcpc
 
 # nutcpc
 nutcpc_SOURCES = nutcpc.c
-nutcpc_LDADD=-lnuclient
+nutcpc_LDADD = -lnuclient
 
 endif

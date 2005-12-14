@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
-AC_INIT(NuFW, 1.1.0, nufw-devel@nongnu.org)
+AC_INIT(NuFW, 1.1.1, nufw-devel@nongnu.org)
 AM_CONFIG_HEADER(src/include/config.h)
 AC_CONFIG_SRCDIR([src/nufw/main.c])
 
@@ -17,8 +17,7 @@ AC_C_BIGENDIAN()
 
 # Checks for libraries.
 
-
-#AC_CHECK_LIB([pthread], [pthread_mutex_init])
+AC_CHECK_LIB([pthread], [pthread_mutex_init])
 
 # Checks for header files.
 AC_HEADER_STDC
@@ -35,8 +34,6 @@ AC_CHECK_FUNCS([gethostbyname memset socket strcasecmp strspn])
 AC_CHECK_LIB([gcrypt], [gcry_md_open],AC_DEFINE([HAVE_LIBRARY_GCRYPT],[1],[Gcrypt lib flag]),AC_MSG_ERROR([gcrypt library needed for encryption]))
 AC_CHECK_LIB([gnutls], [gnutls_init],AC_DEFINE([HAVE_LIBRARY_GNUTLS],[1],[Gnutls lib flag]),AC_MSG_ERROR([gnutls library needed for encryption]))
 AC_CHECK_LIB([sasl2],[sasl_server_init],AC_DEFINE([HAVE_LIBRARY_SASL2],[1],[SASL lib flag]),AC_MSG_ERROR([sasl library needed for authentication]))
-        
-
 
 #Configure database support, depending on user input
 AC_ARG_WITH(mysql-log, [AC_HELP_STRING(--with-mysql-log,  Support user activity logging in Mysql database)], enable_mysql_log="yes", enable_mysql_log="")
@@ -63,32 +60,31 @@ AC_ARG_ENABLE(nutcpc,   [AC_HELP_STRING(--disable-nutcpc, Don't build nutcpc (de
 AC_ARG_ENABLE(nutrackd,   [AC_HELP_STRING(--disable-nutrackd, Don't build nutrackd (default is to build))],build_nutrackd=$enableval, build_nutrackd="yes")
 
 if test "${build_nuauth}" = "yes"; then
-
         # glib stuff
         AM_PATH_GLIB_2_0(2.4.0, , AC_MSG_ERROR([glib is required in order to compile nuauth]),[gthread gmodule])
         if test "$enable_system_auth" = "yes"; then
-                AC_CHECK_LIB([pam],[pam_start],,AC_MSG_ERROR([PAM library needed for system authentication]))
+                AC_CHECK_LIB([pam],[pam_start],AC_DEFINE([HAVE_LIBRARY_PAM],[1],[pam lib flag]),AC_MSG_ERROR([PAM library needed for system authentication]))
         fi
 
         if test "${ldap}" = "yes"; then
-                 AC_CHECK_LIB([ldap],[ldap_simple_bind_s],,AC_MSG_ERROR([ldap library needed for authentication]))
+                 AC_CHECK_LIB([ldap],[ldap_simple_bind_s],AC_DEFINE([HAVE_LIBRARY_LDAP],[1],[ldap lib flag]),AC_MSG_ERROR([ldap library needed for authentication]))
         fi
 
         if test "${gdbm}" = "yes"; then
-                AC_CHECK_LIB([gdbm],[gdbm_fetch],,AC_MSG_ERROR([dbm library needed for authentication]))
+                AC_CHECK_LIB([gdbm],[gdbm_fetch], AC_DEFINE([HAVE_LIBRARY_GDBM],[1],[ldap lib flag] ) ,AC_MSG_ERROR([dbm library needed for authentication]))
         fi
 
         if test "${ident}" = "yes"; then
-                AC_CHECK_LIB([ident],[id_open],,AC_MSG_ERROR([ident library needed for ident user authentication]))
+                AC_CHECK_LIB([ident],[id_open], AC_DEFINE([HAVE_LIBRARY_IDENT],[1],[ident lib flag] )    ,AC_MSG_ERROR([ident library needed for ident user authentication]))
         fi
 
         if test "$enable_mysql_log" = "yes"; then
-                AC_CHECK_LIB([mysqlclient],[mysql_real_connect],,AC_MSG_ERROR([mysqlclient library needed if selected]))
+                AC_CHECK_LIB([mysqlclient],[mysql_real_connect],AC_DEFINE([HAVE_LIBRARY_MYSQLCLIENT],[1],[mysql lib flag] )  ,AC_MSG_ERROR([mysqlclient library needed if selected]))
                 AC_CHECK_LIB([mysqlclient],[mysql_ssl_set],AC_DEFINE_UNQUOTED([HAVE_MYSQL_SSL],[1],[Will compile mysql log module with ssl support]),AC_MSG_NOTICE([mysqlclient has no ssl support]))
         fi
   
         if test "$enable_pgsql_log" = "yes"; then
-                AC_CHECK_LIB([pq],[PQconnectdb],,AC_MSG_ERROR([libpq library needed if PostgreSQL support selected]))
+                AC_CHECK_LIB([pq],[PQconnectdb],AC_DEFINE([HAVE_LIBRARY_PQ],[1],[pgsql lib flag] )   ,AC_MSG_ERROR([libpq library needed if PostgreSQL support selected]))
         fi
 fi
 

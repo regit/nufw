@@ -1296,7 +1296,6 @@ void* tls_user_authsrv()
 	int nuauth_tls_max_clients=NUAUTH_TLS_MAX_CLIENTS;
 	int nuauth_number_authcheckers=NB_AUTHCHECK;
 	int nuauth_auth_nego_timeout=AUTH_NEGO_TIMEOUT;
-	char addresse[INET_ADDRSTRLEN+1];
 	/* get config file setup */
 	/* parse conf file */
 	parse_conffile(configfile,sizeof(nuauth_tls_vars)/sizeof(confparams),nuauth_tls_vars);
