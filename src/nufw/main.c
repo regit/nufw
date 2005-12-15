@@ -49,7 +49,7 @@ void nufw_cleanup( int signal ) {
 }
 
 int main(int argc,char * argv[]){
-    pthread_t pckt_server,auth_server;
+    pthread_t pckt_server;
     struct hostent *authreq_srv;
     /* option */
 #if USE_NFQUEUE
@@ -152,7 +152,7 @@ int main(int argc,char * argv[]){
             break;
 #if USE_NFQUEUE
           case 'q':
-            sscanf(optarg,"%ud",&nfqueue_num);
+            sscanf(optarg,"%hu",&nfqueue_num);
             break;
 #endif
           case 'h' :

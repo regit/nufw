@@ -21,7 +21,7 @@
 /* 
  * return offset to next type of headers 
  */
-int look_for_flags(unsigned char* dgram,int datalen){
+int look_for_flags(char* dgram,int datalen){
 	struct iphdr * iphdrs = (struct iphdr *) dgram;
 	/* check need some datas */    
 	if (datalen < sizeof(struct iphdr) +sizeof(struct tcphdr)){
@@ -149,8 +149,8 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 }
 #endif
 
-void* packetsrv(){
-	unsigned char buffer[BUFSIZ];
+void* packetsrv(void *data){
+	char buffer[BUFSIZ];
 #if USE_NFQUEUE
 	int fd;
 	int rv;
@@ -189,8 +189,9 @@ void* packetsrv(){
 		}
 		exit(1);
 	}
-
-	hndl = nfq_create_queue(h,  nfqueue_num, &treat_packet, NULL);
+        
+        
+	hndl = nfq_create_queue(h,  nfqueue_num, (nfq_callback *)&treat_packet, NULL);
 	if (!hndl) {
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
 			if (log_engine == LOG_TO_SYSLOG){
@@ -469,7 +470,7 @@ int auth_request_send(uint8_t type,unsigned long packet_id,char* payload,int dat
 			}
                 }
                 pthread_mutex_lock(tls.mutex);
-                pthread_exit(tls.auth_server);
+                pthread_cancel(tls.auth_server);
                 gnutls_bye(*tls.session,GNUTLS_SHUT_WR);
                 socket_tls=(int)gnutls_transport_get_ptr(*tls.session);
                 shutdown(socket_tls,SHUT_RDWR);

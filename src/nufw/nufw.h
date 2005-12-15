@@ -79,11 +79,11 @@ int raw_sock;
 
 // IP packet catcher
 
-void* packetsrv();
+void* packetsrv(void *data);
 
 // IP auth server
 
-void authsrv();
+void* authsrv(void* data);
 
 /* send an auth request packet given a payload (raw packet) */
 int auth_request_send(u_int8_t type,unsigned long packet_id, char* payload,int data_len);
@@ -94,7 +94,7 @@ int auth_packet_to_decision(char* dgram);
 /* common */
 
 unsigned long padd ( packet_idl * packet);
-int psearch_and_destroy (unsigned long packet_id,unsigned long * mark);
+int psearch_and_destroy (uint32_t packet_id,uint32_t * mark);
 int clean_old_packets ();
 
 void process_usr1(int signum);

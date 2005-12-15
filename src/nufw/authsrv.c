@@ -20,7 +20,7 @@
 #include "nufw.h"
 
 
-void authsrv(){
+void* authsrv(void* data){
 	int ret;
 	char dgram[512];
 
@@ -45,7 +45,7 @@ void authsrv(){
 int auth_packet_to_decision(char* dgram){
 	u_int32_t packet_id;
 	int sandf;
-	unsigned long nfmark;
+	uint32_t nfmark;
 	switch (*dgram) {
 		case 0x1:
 			if ( *(dgram+1) == AUTH_ANSWER) {
@@ -66,9 +66,9 @@ int auth_packet_to_decision(char* dgram){
 #ifdef DEBUG_ENABLE
 						if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
 							if (log_engine == LOG_TO_SYSLOG) {
-								syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"Accepting %lu",packet_id);
+								syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"Accepting %u",packet_id);
 							}else {
-								printf ("[%i] Accepting %lu\n",getpid(),packet_id);
+								printf ("[%i] Accepting %u\n",getpid(),packet_id);
 							}
 						}
 #endif
@@ -112,9 +112,9 @@ int auth_packet_to_decision(char* dgram){
 #ifdef DEBUG_ENABLE
 						if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
 							if (log_engine == LOG_TO_SYSLOG) {
-								syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"Dropping %lu",packet_id);
+								syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"Dropping %u",packet_id);
 							}else{
-								printf ("[%i] Dropping %lu\n",getpid(),packet_id);
+								printf ("[%i] Dropping %u\n",getpid(),packet_id);
 							}
 						}
 #endif
@@ -124,9 +124,9 @@ int auth_packet_to_decision(char* dgram){
 				} else {
 					if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
 						if (log_engine == LOG_TO_SYSLOG) {
-							syslog(SYSLOG_FACILITY(DEBUG_LEVEL_WARNING),"Packet without a known ID : %lu",packet_id);
+							syslog(SYSLOG_FACILITY(DEBUG_LEVEL_WARNING),"Packet without a known ID : %u",packet_id);
 						}else{
-							printf("[%i] Packet without a known ID : %lu\n",getpid(),packet_id);
+							printf("[%i] Packet without a known ID : %u\n",getpid(),packet_id);
 						}
 					}
 				}

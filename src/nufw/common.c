@@ -77,7 +77,7 @@ unsigned long padd (packet_idl *current){
 /* search an entry, create it if not exists, suppress it if exists
    return mark if libipq is allright
 */
-int psearch_and_destroy (unsigned long packet_id,unsigned long * nfmark){
+int psearch_and_destroy (uint32_t packet_id,uint32_t * nfmark){
   packet_idl *packets_list=packets_list_start,* previous=NULL;
   int timestamp=time(NULL);
 
