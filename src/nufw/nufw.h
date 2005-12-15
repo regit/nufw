@@ -53,7 +53,9 @@ struct nfq_handle *h;
 
 struct nuauth_conn {
         gnutls_session * session;
-        unsigned char active;
+        pthread_mutex_t* mutex;
+        unsigned char auth_server_running;
+        pthread_t auth_server;
 };
 
 struct nuauth_conn tls;
@@ -81,7 +83,7 @@ void* packetsrv();
 
 // IP auth server
 
-void* authsrv();
+void authsrv();
 
 /* send an auth request packet given a payload (raw packet) */
 int auth_request_send(u_int8_t type,unsigned long packet_id, char* payload,int data_len);

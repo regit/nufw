@@ -20,51 +20,25 @@
 #include "nufw.h"
 
 
-void* authsrv(){
+void authsrv(){
 	int ret;
 	char dgram[512];
 
-	for(;;){
-		/* if session is defined */
-		if (tls.active){
-			ret= gnutls_record_recv(*tls.session,dgram,sizeof dgram);
-			if (ret<0){
-
-				if ( gnutls_error_is_fatal(ret) ){
-					int socket_tls;
-#ifdef DEBUG_ENABLE
-					if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
-						if (log_engine == LOG_TO_SYSLOG) {
-							syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"gnutls recv failure");
-						}else {
-							printf ("[%i] gnutls recv failure\n",getpid());
-						}
-					}
-#endif
-					pthread_mutex_lock(session_active_mutex);
-					if (tls.active){
-						tls.active=0;
-						//gnutls_bye(*tls.session,GNUTLS_SHUT_WR);
-						socket_tls=(int)gnutls_transport_get_ptr(*tls.session);
-						shutdown(socket_tls,SHUT_RDWR);
-					}
-					pthread_mutex_unlock(session_active_mutex);
-					gnutls_deinit(*tls.session);
-					free(tls.session);
-					tls.session=NULL;
-					pthread_cond_signal(session_destroyed_cond);
-					pthread_cond_wait(session_active_cond,session_destroyed_mutex);
-				}
-			} else {
-				auth_packet_to_decision(dgram);
-			}
-			memset(dgram,0,512);
-		} else {
-			/* else sleep a moment */
-			sleep(1);
-		}
-	}
-	return NULL;
+        for(;;){
+            ret= gnutls_record_recv(*tls.session,dgram,sizeof dgram);
+            if (ret<0){
+                if ( gnutls_error_is_fatal(ret) ){
+                    pthread_mutex_lock(tls.mutex);
+                    /* warn sender thread that it will need to reconnect at next access */
+                    tls.auth_server_running=0;
+                    pthread_mutex_unlock(tls.mutex);
+                    pthread_exit(NULL);
+                }
+            } else {
+                auth_packet_to_decision(dgram);
+            }
+            memset(dgram,0,512);
+        }
 }
 
 

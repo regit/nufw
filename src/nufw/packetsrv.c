@@ -419,6 +419,17 @@ int auth_request_send(uint8_t type,unsigned long packet_id,char* payload,int dat
 		}
 	}
 #endif
+        pthread_mutex_lock(tls.mutex);
+        /* cleaning up current session : auth_server has detected a problem */
+        if (tls.auth_server_running == 0){
+            if (tls.session){
+                int socket_tls=(int)gnutls_transport_get_ptr(*tls.session);
+                gnutls_bye(*tls.session,GNUTLS_SHUT_WR);
+                shutdown(socket_tls,SHUT_RDWR);
+                tls.session=NULL;
+            }
+        }
+        pthread_mutex_unlock(tls.mutex);
 	/* negotiate TLS connection if needed */
 	if (!tls.session){
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
@@ -438,9 +449,14 @@ int auth_request_send(uint8_t type,unsigned long packet_id,char* payload,int dat
 					printf("[%i] Connection to nuauth restored\n",getpid());
 				}
 			}
-			tls.active=1;
-			pthread_cond_signal(session_active_cond);
-		}
+			tls.auth_server_running=1;
+                        /* create thread for auth server */
+                        if (pthread_create(&(tls.auth_server),NULL,authsrv,NULL) == EAGAIN){
+                                exit(1);
+                        }
+		} else {
+                        return 0;
+                }
 	}
 	/* send packet */
 	if (!gnutls_record_send(*(tls.session),datas,total_data_len)){
@@ -451,18 +467,17 @@ int auth_request_send(uint8_t type,unsigned long packet_id,char* payload,int dat
 			}else {
 				printf ("[%i] tls send failure when sending request\n",getpid());
 			}
-		}
-		pthread_mutex_lock(session_active_mutex);
-		if (tls.active){
-			tls.active=0;
-			//	gnutls_bye(*tls.session,GNUTLS_SHUT_WR);
-			socket_tls=(int)gnutls_transport_get_ptr(*tls.session);
-			shutdown(socket_tls,SHUT_RDWR);
-		}
-		pthread_cond_wait(session_destroyed_cond,session_active_mutex);
+                }
+                pthread_mutex_lock(tls.mutex);
+                pthread_exit(tls.auth_server);
+                gnutls_bye(*tls.session,GNUTLS_SHUT_WR);
+                socket_tls=(int)gnutls_transport_get_ptr(*tls.session);
+                shutdown(socket_tls,SHUT_RDWR);
+                tls.session=NULL;
+                /* put auth_server_running to 1 because this is this thread which has just killed auth_server */
+                tls.auth_server_running=1;
+                pthread_mutex_unlock(tls.mutex);
 		return 0;
-	} else {
-		tls.active=1;
 	}
-	return 1;
+        return 1;
 }

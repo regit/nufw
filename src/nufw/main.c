@@ -297,28 +297,13 @@ int main(int argc,char * argv[]){
     pthread_mutex_init(&packets_list_mutex ,NULL);
 
     tls.session=NULL;
-    tls.active=0;
+    tls.auth_server_running=1;
+    tls.mutex=(pthread_mutex_t*)calloc(1,sizeof(pthread_mutex_t));
+    pthread_mutex_init(tls.mutex,NULL);
     gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);
     gnutls_global_init();
-    /* create condition for tls session transition phase */
-    session_destroyed_cond=(pthread_cond_t *)calloc(sizeof(pthread_cond_t),1);
-    pthread_cond_init(session_destroyed_cond,NULL);
-    session_active_cond=(pthread_cond_t *)calloc(sizeof(pthread_cond_t),1);
-    pthread_cond_init(session_active_cond,NULL);
-    session_destroyed_mutex=(pthread_mutex_t *)calloc(sizeof(pthread_mutex_t),1);
-    pthread_mutex_init(session_destroyed_mutex ,NULL);
-    session_active_mutex=(pthread_mutex_t *)calloc(sizeof(pthread_mutex_t),1);
-    pthread_mutex_init(session_active_mutex ,NULL);
-    /* create thread for packet server */
-    if (pthread_create(&pckt_server,NULL,packetsrv,NULL) == EAGAIN){
-        exit(1);
-    }
-    /* create thread for auth server */
-    if (pthread_create(&auth_server,NULL,authsrv,NULL) == EAGAIN){
-        exit(1);
-    }
-
-    memset(&act,0,sizeof(act));
+    
+     memset(&act,0,sizeof(act));
     act.sa_handler = &process_usr1;
     act.sa_flags = SIGUSR1;
     if (sigaction(SIGUSR1,&act,NULL) == -1)
@@ -345,6 +330,11 @@ int main(int argc,char * argv[]){
         exit(1);
     }
 
+    /* create packet server thread */
+    if (pthread_create(&pckt_server,NULL,packetsrv,NULL) == EAGAIN){
+        exit(1);
+    }
+
     /* control stuff */
     pckt_tx=pckt_rx=0;
     for(;;){
@@ -362,3 +352,5 @@ int main(int argc,char * argv[]){
         sleep(5);	
     }
 }
+
+
