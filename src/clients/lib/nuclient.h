@@ -83,11 +83,6 @@ extern "C" {
 #include <gcrypt.h>
 //#warning "this may be a source of problems"
 #include <pthread.h>
-#ifndef GCRY_THREAD
-#define GCRY_THREAD 1
-GCRY_THREAD_OPTION_PTHREAD_IMPL;
-#endif
-
 
 #include <gnutls/gnutls.h>
 #include <sasl/sasl.h>

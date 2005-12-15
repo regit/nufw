@@ -42,8 +42,9 @@
  * - SRV_REQUIRED_HELLO : send hello back to nuauth
  */
 
-void recv_message(NuAuth* session)
+void* recv_message(void *data)
 {
+        NuAuth* session=(NuAuth*)data;
 	int ret;
 	char dgram[512];
 	struct nuv2_header header;
@@ -86,7 +87,7 @@ void recv_message(NuAuth* session)
 			if (ret<0){
 				if ( gnutls_error_is_fatal(ret) ){
 					ask_session_end(session);
-					return;
+					return NULL;
 				}
 			} else {
 				switch (*dgram){
@@ -109,7 +110,7 @@ void recv_message(NuAuth* session)
 								printf("write failed at %s:%d\n",__FILE__,__LINE__);
 #endif
 								ask_session_end(session);
-								return;
+								return NULL;
 							}
 						}
 
@@ -119,7 +120,7 @@ void recv_message(NuAuth* session)
 				}
 			}
 		} else {
-			return;
+			return NULL;
 		}
 
 	}
@@ -201,8 +202,9 @@ int nu_client_check(NuAuth * session)
  * nu_client_real_check
  *
  */
-void nu_client_thread_check(NuAuth * session)
+void* nu_client_thread_check(void *data)
 {
+        NuAuth * session=(NuAuth*)data;
 	pthread_mutex_t check_mutex;
 	pthread_mutex_init(&check_mutex,NULL);
 	pthread_mutex_lock(&check_mutex);

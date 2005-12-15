@@ -43,6 +43,12 @@
 #include <jhash.h>
 #include "client.h"
 
+#ifndef GCRY_THREAD
+#define GCRY_THREAD 1
+GCRY_THREAD_OPTION_PTHREAD_IMPL;
+#endif
+
+
 
 char * locale_to_utf8(char* inbuf);
 
