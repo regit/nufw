@@ -1,3 +1,9 @@
+nufw (1.1.2-1) stable; urgency=low
+
+  * New svn release
+
+ -- Regit <regit@inl.fr>  Fri, 16 Dec 2005 10:41:52 +0100
+
 nufw (1.1.1-1) stable; urgency=low
 
   * New upstream release
