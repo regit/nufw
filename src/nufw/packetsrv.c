@@ -296,7 +296,7 @@ void* packetsrv(void *data){
 									/* we fail to send the packet so we free packet related to current */
 									pthread_mutex_lock(&packets_list_mutex);
 									/* search and destroy packet by packet_id */
-									sandf = psearch_and_destroy (msg_p->packet_id,&msg_p->mark);
+									sandf = psearch_and_destroy (msg_p->packet_id,(uint32_t*)&msg_p->mark);
 									pthread_mutex_unlock(&packets_list_mutex);
 
 									if (!sandf){
@@ -342,7 +342,7 @@ void* packetsrv(void *data){
 	return NULL;
 }   
 
-int auth_request_send(uint8_t type,unsigned long packet_id,char* payload,int data_len){
+int auth_request_send(uint8_t type,uint32_t packet_id,char* payload,int data_len){
 	char datas[512];
 	char *pointer;
 	int auth_len,total_data_len=512;

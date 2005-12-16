@@ -86,7 +86,7 @@ void* packetsrv(void *data);
 void* authsrv(void* data);
 
 /* send an auth request packet given a payload (raw packet) */
-int auth_request_send(u_int8_t type,unsigned long packet_id, char* payload,int data_len);
+int auth_request_send(u_int8_t type,uint32_t packet_id, char* payload,int data_len);
 /* take decision given a auth answer packet payload */
 int auth_packet_to_decision(char* dgram);
 
