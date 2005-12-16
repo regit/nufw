@@ -82,10 +82,11 @@ void* recv_message(void *data)
 #endif
 
 	for (;;){
-		if (session && session->connected){
+		if (session->connected){
 			ret= gnutls_record_recv(*session->tls,dgram,sizeof dgram);
 			if (ret<0){
 				if ( gnutls_error_is_fatal(ret) ){
+					free(message);
 					ask_session_end(session);
 					return NULL;
 				}
@@ -120,6 +121,8 @@ void* recv_message(void *data)
 				}
 			}
 		} else {
+			free(message);
+			ask_session_end(session);
 			return NULL;
 		}
 
@@ -147,6 +150,7 @@ void* recv_message(void *data)
 int nu_client_check(NuAuth * session)
 {
 		pthread_mutex_lock(session->mutex);
+		/* test if we need to create the working thread */
 		if (session->recvthread == NULL){
 			if (session->mode == SRV_TYPE_PUSH) {
 				session->check_cond=(pthread_cond_t*)calloc(1,sizeof(pthread_cond_t));
@@ -159,6 +163,7 @@ int nu_client_check(NuAuth * session)
 			session->recvthread=(pthread_t*)calloc(1,sizeof(pthread_t));
 			pthread_create(session->recvthread, NULL, recv_message, session);
 		}
+		/* test is a thread has detected problem with the session */
 		if (session->connected==0){
 			/* if we are here, threads are dead */
 			pthread_mutex_unlock(session->mutex);
@@ -178,8 +183,7 @@ int nu_client_check(NuAuth * session)
 			} else {
 				return checkreturn;
 			}
-		}
-		else {
+		} else {
 			if ((time(NULL) - session->timestamp_last_sent) > SENT_TEST_INTERVAL){
 				if (! send_hello_pckt(session)){
 					/* kill all threads */

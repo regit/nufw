@@ -853,18 +853,20 @@ void ask_session_end(NuAuth* session)
 {
 	pthread_t self_thread=pthread_self();
 	/* we kill thread thus lock will be lost if another thread reach this point */
-	pthread_mutex_lock(session->mutex);
-	if(! pthread_equal(*(session->recvthread),self_thread)){
-		/* destroy thread */
-		pthread_cancel(*(session->recvthread));
-	}
-	if (session->mode == SRV_TYPE_PUSH) {
-		if(! pthread_equal(*(session->checkthread),self_thread)){
-			pthread_cancel(*(session->checkthread));
+	if (session){ /* sanity check */
+		pthread_mutex_lock(session->mutex);
+		if(! pthread_equal(*(session->recvthread),self_thread)){
+			/* destroy thread */
+			pthread_cancel(*(session->recvthread));
 		}
+		if (session->mode == SRV_TYPE_PUSH) {
+			if(! pthread_equal(*(session->checkthread),self_thread)){
+				pthread_cancel(*(session->checkthread));
+			}
+		}
+		session->connected=0;
+		pthread_mutex_unlock(session->mutex);
 	}
-	session->connected=0;
-	pthread_mutex_unlock(session->mutex);
 	pthread_exit(NULL);
 }
 
