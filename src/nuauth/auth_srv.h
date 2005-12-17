@@ -94,10 +94,11 @@
 #define DEFAULT_LOGS_MODULE "libsyslog"
 #define DEFAULT_IPAUTH_MODULE "libident"
 #define MODULE_PATH MODULE_DIR "/nuauth/modules/"
+#define NUAUTH_PID_FILE  LOCAL_STATE_DIR "/run/nuauth/nuauth.pid"
 /* define the number of threads that will do user check */
-#define NB_USERCHECK 10
+#define NB_USERCHECK 5
 /* define the number of threads that will check acls  */
-#define NB_ACLCHECK 10
+#define NB_ACLCHECK 5
 /* define the number of threads that will log  */
 #define NB_LOGGERS 3
 

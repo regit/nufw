@@ -77,51 +77,6 @@ static struct gcry_thread_cbs gcry_threads_gthread =
 	gcry_gthread_mutex_lock, gcry_gthread_mutex_unlock 
 };
 
-//sasl_set_mutex();
-
-/* sasl init functions */
-#if 0
-static void *sasl_mutex_new(void)
-{
-  /* got to return something; NULL => failure */
-  return sasl_alloc(1);
-}
-
-int sasl_mutex_lock(void *mutex)
-{
-  return 0;
-}
-
-int sasl_mutex_unlock(void *mutex)
-{
-  return 0;
-}
-
-void sasl_mutex_dispose(void *mutex)
-{
-  sasl_free(mutex);
-}
-
-sasl_mutex_utils_t _sasl_mutex_utils={
-  &sasl_mutex_new,
-  &sasl_mutex_lock,
-  &sasl_mutex_unlock,
-  &sasl_mutex_dispose
-};
-
-#endif
-//{
-//  _sasl_mutex_utils.new=n;
-//  _sasl_mutex_utils.lock=l;
-//  _sasl_mutex_utils.unlock=u;
-//  _sasl_mutex_utils.dispose=d;
-//}
-
-
-
-
-
-#define NUAUTH_PID_FILE  LOCAL_STATE_DIR "/run/nuauth/nuauth.pid"
 
 /**
  * exit function if a signal is received in daemon mode.

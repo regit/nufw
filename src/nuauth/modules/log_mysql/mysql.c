@@ -630,7 +630,7 @@ G_MODULE_EXPORT int user_session_logs(user_session *c_session,int state)
         switch (state) {
           case SESSION_OPEN:
                   /* create new user session */
-                snprintf(request,LONG_REQUEST_SIZE-1,"INSERT INTO %s (username,ip_saddr,start_timestamp) VALUES ('%s',%lu,FROM_UNIXTIME(%lu))",
+                snprintf(request,LONG_REQUEST_SIZE-1,"INSERT INTO %s (username,ip_saddr,start_timestamp) VALUES ('%s',%u,FROM_UNIXTIME(%lu))",
                         mysql_users_table_name,
                       username,
                         c_session->addr,
@@ -639,7 +639,7 @@ G_MODULE_EXPORT int user_session_logs(user_session *c_session,int state)
                 break;
           case SESSION_CLOSE:
                 /* update existing user session */
-                snprintf(request,LONG_REQUEST_SIZE-1,"UPDATE %s set end_timestamp=FROM_UNIXTIME(%lu) where username='%s' and ip_saddr=%lu",
+                snprintf(request,LONG_REQUEST_SIZE-1,"UPDATE %s set end_timestamp=FROM_UNIXTIME(%lu) where username='%s' and ip_saddr=%u",
                         mysql_users_table_name,
                         time(NULL),
                         username,
