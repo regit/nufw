@@ -36,9 +36,9 @@ void log_user_packet (connection element,int state){
 	struct Conn_State conn_state= { element, state};
 	struct Conn_State * conn_state_copy;
 
-	if ((nuauth_log_users_sync) && (state == STATE_OPEN) ){
-            if ( nuauth_log_users &  8 ){
-                   if (nuauth_log_users_without_realm){
+	if ((nuauthconf->log_users_sync) && (state == STATE_OPEN) ){
+            if ( nuauthconf->log_users &  8 ){
+                   if (nuauthconf->log_users_without_realm){
                        element.username = get_rid_of_domain(element.username);
                     }
                    user_logs (
@@ -49,22 +49,22 @@ void log_user_packet (connection element,int state){
             }
 	} else {
             if (
-                ((nuauth_log_users & 2) && (state == STATE_DROP)) 
+                ((nuauthconf->log_users & 2) && (state == STATE_DROP)) 
                 || 
-                ((nuauth_log_users & 4) && (state == STATE_OPEN)) 
+                ((nuauthconf->log_users & 4) && (state == STATE_OPEN)) 
                 || 
-                (nuauth_log_users & 8) 
+                (nuauthconf->log_users & 8) 
                ) {
 		/* feed thread pool */
                 conn_state_copy=g_memdup(&conn_state,sizeof(conn_state));
                 if ( conn_state.conn.username ){
-                    if (nuauth_log_users_without_realm){
+                    if (nuauthconf->log_users_without_realm){
                         conn_state_copy->conn.username = get_rid_of_domain(conn_state.conn.username);
                     } else {
                         conn_state_copy->conn.username = g_strdup(conn_state.conn.username);
                     }
                 }
-		g_thread_pool_push(user_loggers,
+		g_thread_pool_push(nuauthdatas->user_loggers,
 				conn_state_copy,
 				NULL);
             }

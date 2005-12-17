@@ -58,9 +58,9 @@ void user_check_and_decide (gpointer userdata, gpointer data)
               struct internal_message *message = g_new0(struct internal_message,1);
               message->type=INSERT_MESSAGE;
               message->datas=conn_elt;
-              g_async_queue_push (localid_auth_queue,message);
+              g_async_queue_push (nuauthdatas->localid_auth_queue,message);
           } else {
-              g_async_queue_push (connexions_queue,conn_elt);
+              g_async_queue_push (nuauthdatas->connexions_queue,conn_elt);
           }
       }
   }
@@ -393,7 +393,7 @@ static GSList * userpckt_decode(struct buffer_read * datas)
                                   g_message("Get users info");
                               /* group is not fill in multi users mode
                                * need to be done now */
-                              if ( nuauth_user_cache ){
+                              if ( nuauthconf->user_cache ){
                                   get_users_from_cache(connexion);
                               } else {
                                   if (user_check(connexion->username,NULL,0,&(connexion->user_id),&(connexion->user_groups))!=SASL_OK){

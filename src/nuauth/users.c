@@ -61,17 +61,17 @@ void get_users_from_cache (connection* conn_elt)
 	message.type=GET_MESSAGE;
 	message.key=conn_elt->username;
 	message.datas=NULL;
-	message.reply_queue=g_private_get(userqueue);
+	message.reply_queue=g_private_get(nuauthdatas->userqueue);
 	if (message.reply_queue==NULL){
 		message.reply_queue=g_async_queue_new();
-		g_private_set(userqueue,message.reply_queue);
+		g_private_set(nuauthdatas->userqueue,message.reply_queue);
 	}
 	/* send message */
 #ifdef DEBUG_ENABLE
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET))
 		g_message("[user cache] going to send cache request for %s\n",conn_elt->username);
 #endif
-	g_async_queue_push (user_cache->queue,&message);
+	g_async_queue_push (nuauthdatas->user_cache->queue,&message);
 	/* lock */
 	g_atomic_int_inc(&(myaudit->cache_req_nb));
 	/*release */
@@ -121,7 +121,7 @@ void get_users_from_cache (connection* conn_elt)
 			g_message("[user cache] answering for key %p\n",rmessage->key);
 #endif
 		/* reply to the cache */
-		g_async_queue_push(user_cache->queue,rmessage);
+		g_async_queue_push(nuauthdatas->user_cache->queue,rmessage);
 		/* fill connection datas */
 		conn_elt->user_groups=userdatas->groups;
 		conn_elt->user_id=userdatas->uid;
@@ -149,20 +149,20 @@ int init_user_cache()
 	GThread *user_cache_thread;
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
 			g_message("creating user cache thread");
-		user_cache=g_new0(struct cache_init_datas,1);
-		user_cache->hash=g_hash_table_new_full((GHashFunc)g_str_hash,
+		nuauthdatas->user_cache=g_new0(struct cache_init_datas,1);
+		nuauthdatas->user_cache->hash=g_hash_table_new_full((GHashFunc)g_str_hash,
 				g_str_equal,
 				(GDestroyNotify) g_free,
 				(GDestroyNotify) free_user_cache); 
-		user_cache->queue=g_async_queue_new();
-		user_cache->delete_elt=free_user_struct;
-		user_cache->duplicate_key=user_duplicate_key;
-		user_cache->free_key=g_free;
-                user_cache->equal_key=g_str_equal;
+		nuauthdatas->user_cache->queue=g_async_queue_new();
+		nuauthdatas->user_cache->delete_elt=free_user_struct;
+		nuauthdatas->user_cache->duplicate_key=user_duplicate_key;
+		nuauthdatas->user_cache->free_key=g_free;
+                nuauthdatas->user_cache->equal_key=g_str_equal;
 
 
 		user_cache_thread = g_thread_create ( (GThreadFunc) cache_manager,
-				user_cache,
+				nuauthdatas->user_cache,
 				FALSE,
 				NULL);
 		if (! user_cache_thread )

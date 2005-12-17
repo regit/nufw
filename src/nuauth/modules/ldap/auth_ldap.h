@@ -1,7 +1,8 @@
 /* $Id: auth_ldap.h,v 1.2 2003/11/25 22:24:51 gryzor Exp $ */
 
 /*
-** Copyright(C) 2003 Eric Leblond <eric@regit.org>
+** Copyright(C) 2003-2005 INL
+**              Written by Eric Leblond <regit@inl.fr>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by

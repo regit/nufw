@@ -114,7 +114,7 @@ int user_logs (connection element, int state){
  * log user connection and disconnection
  */
 int user_session_logs(user_session* user , int state){
-	if ( nuauth_log_users & 1 ){
+	if ( nuauthconf->log_users & 1 ){
 	/* iter through all modules list */
 	GSList *walker=user_session_logs_modules;
 	for (;walker!=NULL;walker=walker->next ){
@@ -233,7 +233,7 @@ int load_modules()
 	load_modules_from(nuauth_user_session_logs_module,"user_session_logs",&user_session_logs_modules);
 	g_free(nuauth_user_session_logs_module);
 
-	if (nuauth_do_ip_authentication){
+	if (nuauthconf->do_ip_authentication){
 		/* load module */
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
 			g_message("Loading ip authentication modules:");

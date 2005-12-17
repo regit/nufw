@@ -59,7 +59,7 @@ void external_ip_auth(gpointer userdata, gpointer data)
                 connexion->appname=NULL;
                 /* copy ipv4 header */
                 memcpy(&(connexion->tracking_hdrs),userdata,sizeof(tracking));
-		g_async_queue_push (connexions_queue,connexion);
+		g_async_queue_push (nuauthdatas->connexions_queue,connexion);
             } 
         } 
         g_free(userdata);

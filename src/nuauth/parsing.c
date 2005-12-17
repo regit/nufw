@@ -84,7 +84,7 @@ gchar *string_escape(gchar *orig)
 {
 	gchar * traduc;
 	/* convert from utf-8 to locale if needed */
-	if (nuauth_uses_utf8){
+	if (nuauthconf->uses_utf8){
 		size_t bwritten;
 		traduc = g_locale_from_utf8  (orig,
                                           -1,

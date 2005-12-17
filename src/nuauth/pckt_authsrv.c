@@ -212,7 +212,7 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz)
 					pointer+=offset;
 					/* get saddr and daddr */
 					/* check if proto is in Hello mode list (when hello authentication is used) */
-					if ( nuauth_hello_authentication &&  localid_authenticated_protocol(connexion->tracking_hdrs.protocol) ) {
+					if ( nuauthconf->hello_authentication &&  localid_authenticated_protocol(connexion->tracking_hdrs.protocol) ) {
 						connexion->state=STATE_HELLOMODE;
 					} 
 					switch (connexion->tracking_hdrs.protocol) {

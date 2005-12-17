@@ -47,5 +47,3 @@
 
 #define LOG_FACILITY LOG_DAEMON
 
-#define DEBUG_OR_NOT(LOGLEVEL,LOGAREA) (LOGAREA&&debug_areas)&&(debug_level>=LOGLEVEL)
-

@@ -12,7 +12,7 @@ void process_poll(int signum)
   g_message("AUDIT : acls    threads : %u/%u max/unassigned",
             g_thread_pool_get_max_threads(myaudit->acls),
             g_thread_pool_unprocessed(myaudit->acls));
-  if (nuauth_acl_cache){
+  if (nuauthconf->acl_cache){
   g_message("AUDIT :  acls cache : - contains %d elements",
             (g_hash_table_size(myaudit->aclcache)));
   g_message("AUDIT :               - %u/%u hits/requests",
@@ -35,10 +35,10 @@ void process_poll(int signum)
  */
 void process_usr1(int signum)
 {
-  debug_level+=1;
-  if (debug_level>20)
-      debug_level = 20;
-  g_message("USR1 : setting debug level to %d",debug_level);
+  nuauthconf->debug_level+=1;
+  if (nuauthconf->debug_level>20)
+      nuauthconf->debug_level = 20;
+  g_message("USR1 : setting debug level to %d",nuauthconf->debug_level);
 }
 
 
@@ -47,10 +47,10 @@ void process_usr1(int signum)
  */
 void process_usr2(int signum)
 {
-  debug_level-=1;
-  if (debug_level <0)
-      debug_level = 0;
-  g_message("USR2 : setting debug level to %d",debug_level);
+  nuauthconf->debug_level-=1;
+  if (nuauthconf->debug_level <0)
+      nuauthconf->debug_level = 0;
+  g_message("USR2 : setting debug level to %d",nuauthconf->debug_level);
 }
 
 void init_audit()
@@ -58,12 +58,12 @@ void init_audit()
 
 	struct sigaction act;
 	myaudit=g_new0(struct audit_struct,1);
-	myaudit->users = user_checkers;
-	myaudit->acls  = acl_checkers;
-	myaudit->loggers = user_loggers;
+	myaudit->users = nuauthdatas->user_checkers;
+	myaudit->acls  = nuauthdatas->acl_checkers;
+	myaudit->loggers = nuauthdatas->user_loggers;
 	myaudit->conn_list = conn_list;
-	if (nuauth_acl_cache){
-		myaudit->aclcache = acl_cache->hash;
+	if (nuauthconf->acl_cache){
+		myaudit->aclcache = nuauthdatas->acl_cache->hash;
 	}
 	myaudit->cache_req_nb = 0;
 	myaudit->cache_hit_nb = 0;

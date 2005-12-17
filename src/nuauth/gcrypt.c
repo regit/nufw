@@ -105,7 +105,7 @@ int verify_user_password(const char* given,const char* ours){
 		sasl_encode64(res,strlen(res),decoded,50,&len);
 
 		/* convert password from utf-8 to locale */
-		if (nuauth_uses_utf8){
+		if (nuauthconf->uses_utf8){
 			size_t bwritten=0;
 			gchar * traduc;
 			traduc = g_locale_from_utf8  (decoded,
@@ -182,7 +182,7 @@ int verify_user_password(const char* given,const char* ours){
 		}
 	} else {
 		/* convert password from utf-8 to locale */
-		if (nuauth_uses_utf8){
+		if (nuauthconf->uses_utf8){
 			size_t bwritten=0;
 			gchar * traduc;
 			traduc = g_locale_from_utf8  (given,
@@ -202,13 +202,13 @@ int verify_user_password(const char* given,const char* ours){
 			}
 		}
 		if (!strcmp(given,ours)){
-			if (nuauth_uses_utf8){
+			if (nuauthconf->uses_utf8){
 				g_free((char*)given);
 			}
 			return SASL_OK;
 		}
 		else {
-			if (nuauth_uses_utf8){
+			if (nuauthconf->uses_utf8){
 				g_free((char*)given);
 			}
 			return SASL_BADAUTH;

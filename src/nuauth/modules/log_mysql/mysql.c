@@ -202,7 +202,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
 					//start_timestamp       long                        DATETIME
 					//end_timestamp         long                        DATETIME
 
-					if (nuauth_log_users_strict){
+					if (nuauthconf->log_users_strict){
 						/* need to update table to suppress double field */
 						if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET state=%hu,end_timestamp=FROM_UNIXTIME(%lu) WHERE (ip_saddr=%lu  AND tcp_sport=%u AND (state=1 OR state=2))",
 									mysql_table_name,
@@ -615,7 +615,7 @@ G_MODULE_EXPORT int user_session_logs(user_session *c_session,int state)
 	char request[LONG_REQUEST_SIZE];
 	int Result;
         char *username=NULL;
-        if (nuauth_log_users_without_realm){
+        if (nuauthconf->log_users_without_realm){
                      username = get_rid_of_domain(c_session->userid);
         }
 	if (ld == NULL){

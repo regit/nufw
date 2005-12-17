@@ -111,7 +111,7 @@ int userdb_checkpass(sasl_conn_t *conn,
 	}
 
 	/* convert username from utf-8 to locale */
-	if (nuauth_uses_utf8){
+	if (nuauthconf->uses_utf8){
 		size_t bwritten;
 		dec_user = g_locale_from_utf8  (user,
 				-1,
@@ -136,10 +136,10 @@ int userdb_checkpass(sasl_conn_t *conn,
 		g_private_set(group_priv,groups);
 		g_private_set(user_priv,GUINT_TO_POINTER(tuid));
 		/* we're done */
-		if (nuauth_uses_utf8) g_free(dec_user);
+		if (nuauthconf->uses_utf8) g_free(dec_user);
 		return SASL_OK;
 	}
-	if (nuauth_uses_utf8) g_free(dec_user);
+	if (nuauthconf->uses_utf8) g_free(dec_user);
 	/* return to fallback */
 	return SASL_NOAUTHZ;
 }
@@ -406,7 +406,7 @@ treat_user_request (user_session * c_session)
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
 					g_message("Pushing packet to user_checker");
 #endif
-				g_thread_pool_push (user_checkers,
+				g_thread_pool_push (nuauthdatas->user_checkers,
 						datas,	
 						NULL
 						);
@@ -658,9 +658,9 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 	//		g_warning("get user failed");
 
 	/* check on multi user capability */
-	if ( check_inaddr_in_array(remote_inaddr,nuauth_multi_servers_array)){
+	if ( check_inaddr_in_array(remote_inaddr,nuauthconf->multi_servers_array)){
 		gchar* stripped_user=get_rid_of_domain(c_session->userid);
-		if (check_string_in_array(stripped_user,nuauth_multi_users_array)) {
+		if (check_string_in_array(stripped_user,nuauthconf->multi_users_array)) {
 			c_session->multiusers=TRUE;
 		} else {
 #ifdef DEBUG_ENABLE
@@ -1076,7 +1076,7 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 					/* remove socket from the list of pre auth socket */
 					remove_socket_from_pre_client_list(c);
 
-					if (nuauth_push) {
+					if (nuauthconf->push) {
 						struct internal_message* message=g_new0(struct internal_message,1);
 						struct tls_insert_data * datas=g_new0(struct tls_insert_data,1);
 						if ((message == NULL) || (datas == NULL )){
@@ -1089,7 +1089,7 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 						datas->data=c_session;
 						message->datas=datas;
 						message->type=INSERT_MESSAGE;
-						g_async_queue_push(tls_push,message);
+						g_async_queue_push(nuauthdatas->tls_push_queue,message);
 					} else {
 						g_static_mutex_lock (&client_mutex);
 						add_client(c,c_session);
@@ -1097,7 +1097,7 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 					}
 					/* unlock hash client */
 					msg.type=SRV_TYPE;
-					if (nuauth_push){
+					if (nuauthconf->push){
 						msg.option = SRV_TYPE_PUSH ;
 					} else {
 						msg.option = SRV_TYPE_POLL ;
@@ -1109,7 +1109,7 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 						if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
 							g_message("Argh. gnutls_record_send() failure");
 #endif
-						if (nuauth_push){
+						if (nuauthconf->push){
 							close_tls_session(c,c_session->tls);
 							//                                            close(c);
 							c_session->tls=NULL;
@@ -1374,9 +1374,8 @@ void* tls_user_authsrv()
 	memset(&addr_inet,0,sizeof addr_inet);
 
 	addr_inet.sin_family= AF_INET;
-	addr_inet.sin_port=htons(userpckt_port);
-	//	addr_inet.sin_port=userpckt_port;
-	addr_inet.sin_addr.s_addr=client_srv.sin_addr.s_addr;
+	addr_inet.sin_port=htons(nuauthconf->userpckt_port);
+	addr_inet.sin_addr.s_addr=nuauthconf->client_srv.sin_addr.s_addr;
 
 	len_inet = sizeof addr_inet;
 
@@ -1385,7 +1384,7 @@ void* tls_user_authsrv()
 			len_inet);
 	if (z == -1)
 	{
-		g_warning ("user bind() failed to %s:%d at %s:%d, exiting",inet_ntoa(addr_inet.sin_addr),userpckt_port,__FILE__,__LINE__);
+		g_warning ("user bind() failed to %s:%d at %s:%d, exiting",inet_ntoa(addr_inet.sin_addr),nuauthconf->userpckt_port,__FILE__,__LINE__);
 		exit(-1);
 	}
 
@@ -1537,11 +1536,11 @@ void* tls_user_authsrv()
 #endif
 					FD_CLR(c,&tls_rx_set);
 					/* clean client structure */
-					if (nuauth_push){
+					if (nuauthconf->push){
 						struct internal_message* message=g_new0(struct internal_message,1);
 						message->type = FREE_MESSAGE;
 						message->datas = GINT_TO_POINTER(c);
-						g_async_queue_push(tls_push,message);
+						g_async_queue_push(nuauthdatas->tls_push_queue,message);
 					} else {
 						g_static_mutex_lock (&client_mutex);
 						delete_client_by_socket(c);
@@ -1609,11 +1608,11 @@ treat_nufw_request (nufw_session * c_session)
 					message->type=INSERT_MESSAGE;
 					message->datas=current_conn;
 					current_conn->state = STATE_AUTHREQ;
-					g_async_queue_push (localid_auth_queue,message);
+					g_async_queue_push (nuauthdatas->localid_auth_queue,message);
 				}else {
 					current_conn->state = STATE_AUTHREQ;
 					/* put gateway addr in struct */
-					g_thread_pool_push (acl_checkers,
+					g_thread_pool_push (nuauthdatas->acl_checkers,
 						current_conn,
 						NULL);
 				}
@@ -1739,15 +1738,15 @@ void* tls_nufw_authsrv()
 	memset(&addr_inet,0,sizeof addr_inet);
 
 	addr_inet.sin_family= AF_INET;
-	addr_inet.sin_port=htons(authreq_port);
-	addr_inet.sin_addr.s_addr=nufw_srv.sin_addr.s_addr;
+	addr_inet.sin_port=htons(nuauthconf->authreq_port);
+	addr_inet.sin_addr.s_addr=nuauthconf->nufw_srv.sin_addr.s_addr;
 
 	z = bind (sck_inet,
 			(struct sockaddr *)&addr_inet,
 			sizeof addr_inet);
 	if (z == -1)
 	{
-		g_warning ("nufw bind() failed to %s:%d, exiting",inet_ntoa(addr_inet.sin_addr),authreq_port);
+		g_warning ("nufw bind() failed to %s:%d, exiting",inet_ntoa(addr_inet.sin_addr),nuauthconf->authreq_port);
 		exit(-1);
 	}
 
@@ -1811,7 +1810,7 @@ void* tls_nufw_authsrv()
 				}
 
 			/* test if server is in the list of authorized servers */
-			if (! check_inaddr_in_array(addr_clnt.sin_addr,authorized_servers)){
+			if (! check_inaddr_in_array(addr_clnt.sin_addr,nuauthconf->authorized_servers)){
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
 					g_warning("unwanted server (%s)\n",inet_ntoa(addr_clnt.sin_addr));
 				}
@@ -1940,10 +1939,10 @@ void push_worker ()
 	msg->option=0;
 	msg->length=htons(4);
 
-	g_async_queue_ref (tls_push);
+	g_async_queue_ref (nuauthdatas->tls_push_queue);
 
 	/* wait for message */
-	while ( ( message = g_async_queue_pop(tls_push))  ) {
+	while ( ( message = g_async_queue_pop(nuauthdatas->tls_push_queue))  ) {
 		switch (message->type) {
 			case WARN_MESSAGE:
 				{
@@ -1957,8 +1956,8 @@ void push_worker ()
 					if (global_msg->addr != INADDR_ANY){
 						if (global_msg->found == FALSE ){
 							/* if we do ip authentication send request to pool */
-							if (nuauth_do_ip_authentication){
-								g_thread_pool_push (ip_authentication_workers,
+							if (nuauthconf->do_ip_authentication){
+								g_thread_pool_push (nuauthdatas->ip_authentication_workers,
 										message->datas,
 										NULL);
 							} else {

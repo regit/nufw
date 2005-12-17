@@ -67,6 +67,8 @@
 #include "localid_auth.h"
 #include "audit.h"
 
+#define DEBUG_OR_NOT(LOGLEVEL,LOGAREA) (LOGAREA&&(nuauthconf->debug_areas))&&((nuauthconf->debug_level)>=LOGLEVEL)
+
 /*
  * declare some global variables and do some definitions
  */
@@ -110,72 +112,8 @@
 #define NUAUTH_CACERTFILE CONFIG_DIR "/NuFW-cacert.pem"
 #define NUAUTH_SSL_MAX_CLIENTS 256
 
-/* Start internal */
 #define USERNAMESIZE 30
+/* Start internal */
 
-/* Sockets related */
-char client_listen_address[HOSTNAME_SIZE];
-char nufw_listen_address[HOSTNAME_SIZE];
-int authreq_port;
-int  gwsrv_port , userpckt_port;
-int nuauth_aclcheck_state_ready;
-
-/* global configuration variables */
-
-int packet_timeout;
-int authpckt_port;
-int debug; /* This will disapear*/
-int debug_level;
-int debug_areas;
-int nuauth_log_users;
-int nuauth_log_users_sync;
-int nuauth_log_users_strict;
-int nuauth_log_users_without_realm;
-int nuauth_prio_to_nok;
-int nuauth_uses_utf8;
-int nuauth_push;
-int nuauth_do_ip_authentication;
-int nuauth_hello_authentication;
-int nuauth_datas_persistance;
-
-struct sockaddr_in adr_srv, client_srv, nufw_srv;
-/* cache variables for acl cache */
-int nuauth_acl_cache;
-struct cache_init_datas* acl_cache;
-
-/* cache variables for user cache */
-int nuauth_user_cache;
-struct cache_init_datas* user_cache;
-
-/* Multi user related variables */
-/* authorized server list */
-struct in_addr *authorized_servers;
-/* multi users clients */
-char** nuauth_multi_users_array;
-struct in_addr * nuauth_multi_servers_array;
-
-/**
- * pool of thread which treat user packet.
- */
-GThreadPool* user_checkers;
-
-/**
- * pool of thread which treat nufw packet.
- */
-GThreadPool* acl_checkers;
-
-/* private datas */
-GPrivate *aclqueue;
-GPrivate *userqueue;
-
-
-GThreadPool* user_loggers;
-GThreadPool* decisions_workers;
-
-GThreadPool*  ip_authentication_workers;
-
-GAsyncQueue* connexions_queue;
-GAsyncQueue* tls_push;
-GAsyncQueue* localid_auth_queue;
-
+#include "nuauth_params.h"
 #endif

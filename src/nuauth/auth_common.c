@@ -123,10 +123,10 @@ void search_and_fill ()
         //GRYZOR warning : it seems we g_free() on pckt only on some conditions in this function
 	connection * pckt = NULL;
 
-	g_async_queue_ref (connexions_queue);
-	g_async_queue_ref (tls_push);
+	g_async_queue_ref (nuauthdatas->connexions_queue);
+	g_async_queue_ref (nuauthdatas->tls_push_queue);
 	/* wait for message */
-	while ( (pckt = g_async_queue_pop(connexions_queue)) ) {
+	while ( (pckt = g_async_queue_pop(nuauthdatas->connexions_queue)) ) {
 		/* search pckt */
 		g_static_mutex_lock (&insert_mutex);
 #ifdef DEBUG_ENABLE
@@ -143,7 +143,7 @@ void search_and_fill ()
 					&(pckt->tracking_hdrs),
 					pckt);
 			g_static_mutex_unlock (&insert_mutex);
-			if (nuauth_push){
+			if (nuauthconf->push){
 				/* push data to sender */
 				if (pckt->state == STATE_AUTHREQ){
 					struct internal_message *message=g_new0(struct internal_message,1);
@@ -161,7 +161,7 @@ void search_and_fill ()
 					message->type=WARN_MESSAGE;
 					message->datas=g_memdup(&(pckt->tracking_hdrs),sizeof(tracking));
 					if (message->datas){
-						g_async_queue_push (tls_push, message);
+						g_async_queue_push (nuauthdatas->tls_push_queue, message);
 					}else{
                                             //GRYZOR asks if we should clean conn_list since we filled it before
                                             if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_USER))
@@ -203,10 +203,10 @@ void search_and_fill ()
 							((connection *)element)->cacheduserdatas = pckt->cacheduserdatas;
 							/* going to take decision ? */
 
-							if (nuauth_aclcheck_state_ready){
+							if (nuauthconf->aclcheck_state_ready){
 								change_state(((connection *)pckt),STATE_COMPLETING);
 								change_state(((connection *)element),STATE_COMPLETING);
-								g_thread_pool_push (acl_checkers,
+								g_thread_pool_push (nuauthdatas->acl_checkers,
 										pckt,
 										NULL);
 							} else {
@@ -221,7 +221,7 @@ void search_and_fill ()
 					switch (pckt->state){
 						case  STATE_AUTHREQ:
 							change_state(((connection *)element),STATE_COMPLETING);
-							if (nuauth_aclcheck_state_ready){
+							if (nuauthconf->aclcheck_state_ready){
 								change_state(((connection *)pckt),STATE_COMPLETING);
 								/* application */
 								pckt->appname =  ((connection *)element)->appname ;
@@ -231,7 +231,7 @@ void search_and_fill ()
 								pckt->release =  ((connection *)element)->release ;
 								pckt->version =  ((connection *)element)->version ;
 
-								g_thread_pool_push (acl_checkers,
+								g_thread_pool_push (nuauthdatas->acl_checkers,
 										pckt,
 										NULL);
 								((connection *)element)->packet_id = pckt->packet_id;
@@ -296,7 +296,7 @@ void search_and_fill ()
 				case STATE_COMPLETING:
 					switch (pckt->state){
 						case  STATE_COMPLETING:
-							if (nuauth_aclcheck_state_ready){
+							if (nuauthconf->aclcheck_state_ready){
 								/* fill acl this is a return from acl search */
 								((connection *)element)->acl_groups = pckt->acl_groups;
 								g_free(pckt);
@@ -434,42 +434,23 @@ void send_auth_response(gpointer data, gpointer userdata)
 	memcpy(pointer,&(packet_id),sizeof(packet_id));
 	pointer+=sizeof (packet_id);
 
-	if (aanswer->socket){
 #ifdef DEBUG_ENABLE
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)) {
-			g_message("Sending auth answer %d for %lu on %d ... ",answer,packet_id,aanswer->socket);
-			fflush(stdout);
-		}
+        if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)) {
+            g_message("Sending auth answer %d for %lu on %p ... ",answer,packet_id,aanswer->tls);
+        }
 #endif
-
-		if (sendto(aanswer->socket,
-					datas,
-					pointer-datas,
-					MSG_DONTWAIT,
-					(struct sockaddr *)&adr_srv,
-					sizeof adr_srv) < 0) {
-			if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-				g_warning("failure when sending auth response\n");
-		}
-	} else {
+        if (aanswer->tls->alive){
+            gnutls_record_send(*(aanswer->tls->tls),datas,pointer-datas);
+            g_atomic_int_dec_and_test(&(aanswer->tls->usage));
+        } else {
+            if (g_atomic_int_dec_and_test(&(aanswer->tls->usage))){
+                clean_nufw_session(aanswer->tls);			
+            }
+        }
 #ifdef DEBUG_ENABLE
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)) {
-			g_message("Sending auth answer %d for %lu on %p ... ",answer,packet_id,aanswer->tls);
-		}
-#endif
-		if (aanswer->tls->alive){
-			gnutls_record_send(*(aanswer->tls->tls),datas,pointer-datas);
-			g_atomic_int_dec_and_test(&(aanswer->tls->usage));
-		} else {
-			if (g_atomic_int_dec_and_test(&(aanswer->tls->usage))){
-				clean_nufw_session(aanswer->tls);			
-			}
-		}
-	}
-#ifdef DEBUG_ENABLE
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
-		g_message("done\n");
-	}
+        if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
+            g_message("done\n");
+        }
 #endif
 }
 
@@ -502,7 +483,7 @@ int free_connection(connection * conn)
 	/* 
 	 * tell cache we don't use the ressource anymore
 	 */
-	if (conn->acl_groups && nuauth_acl_cache){
+	if (conn->acl_groups && nuauthconf->acl_cache){
 		struct cache_message * message=g_new0(struct cache_message,1);
 #ifdef DEBUG_ENABLE
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
@@ -512,7 +493,7 @@ int free_connection(connection * conn)
 		message->key=acl_create_and_alloc_key(conn);
 		message->type=FREE_MESSAGE;
 		message->datas=conn->acl_groups;
-		g_async_queue_push(acl_cache->queue,message);
+		g_async_queue_push(nuauthdatas->acl_cache->queue,message);
 	}
 	/* free user group */
 	if (conn->cacheduserdatas){
@@ -531,7 +512,7 @@ int free_connection(connection * conn)
 			  message->key=g_strdup(conn->username);
 			  message->type=FREE_MESSAGE;
 			  message->datas=conn->cacheduserdatas;
-			  g_async_queue_push(user_cache->queue,message);
+			  g_async_queue_push(nuauthdatas->user_cache->queue,message);
                         }
 		} 
 #ifdef DEBUG_ENABLE
@@ -611,7 +592,7 @@ gboolean  get_old_conn (gpointer key,
 {
 	long current_timestamp = GPOINTER_TO_INT(user_data);
 	if (
-			( current_timestamp - ((connection *)value)->timestamp > packet_timeout)  
+			( current_timestamp - ((connection *)value)->timestamp > nuauthconf->packet_timeout)  
 			&&
 			(((connection *)value)->state!=STATE_COMPLETING)		    
 	   ){
@@ -695,7 +676,7 @@ gint take_decision(connection * element,gchar place)
 		answer = NOK;
 	} else {
 		int start_test,stop_test;
-		if (nuauth_prio_to_nok == 1){
+		if (nuauthconf->prio_to_nok == 1){
 			start_test=OK;
 			stop_test=NOK;
 		} else {
@@ -715,7 +696,7 @@ gint take_decision(connection * element,gchar place)
 					g_assert(((struct acl_group *)(parcours->data))->groups);
 					if (g_slist_find(((struct acl_group *)(parcours->data))->groups,(gconstpointer)user_group->data)) {
 						answer = ((struct acl_group *)(parcours->data))->answer ;
-						if (nuauth_prio_to_nok == 1){
+						if (nuauthconf->prio_to_nok == 1){
 							if (answer == NOK)
 								test=OK;
 						} else {
@@ -740,7 +721,7 @@ gint take_decision(connection * element,gchar place)
         }
 	element->decision=answer;
 
-	if (nuauth_log_users_sync) {
+	if (nuauthconf->log_users_sync) {
 		/* copy current element */
 		connection * copy_of_element=(connection *)g_memdup(element,sizeof(connection));
 
@@ -753,7 +734,7 @@ gint take_decision(connection * element,gchar place)
 			copy_of_element->username=element->username;
 			element->username = NULL;
 		}
-		if (nuauth_acl_cache) {
+		if (nuauthconf->acl_cache) {
 			copy_of_element->appname=g_strdup(element->appname);
 			copy_of_element->appmd5=g_strdup(element->appmd5);
 			copy_of_element->sysname=g_strdup(element->sysname);
@@ -773,7 +754,7 @@ gint take_decision(connection * element,gchar place)
 		}
 		copy_of_element->user_id=element->user_id;
 		/* push element to decision workers */
-		g_thread_pool_push (decisions_workers,
+		g_thread_pool_push (nuauthdatas->decisions_workers,
 				copy_of_element,
 				NULL);
 	} else {

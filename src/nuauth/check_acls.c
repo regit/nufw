@@ -66,12 +66,12 @@ void acl_check_and_decide (gpointer userdata, gpointer data)
 			g_message("This is no good : elt is NULL\n");
 		}
 	} else {
-		if (nuauth_aclcheck_state_ready && (nuauth_hello_authentication && (! (initialstate == STATE_HELLOMODE)) )){
+		if (nuauthconf->aclcheck_state_ready && (nuauthconf->hello_authentication && (! (initialstate == STATE_HELLOMODE)) )){
 			/* if STATE_COMPLETING packet comes from search and fill 
 			 * research need to be done
 			 * */
 			if (conn_elt->state == STATE_COMPLETING){
-				if (nuauth_acl_cache){
+				if (nuauthconf->acl_cache){
 					get_acls_from_cache(conn_elt);
 				} else {
 					external_acl_groups(conn_elt);
@@ -80,7 +80,7 @@ void acl_check_and_decide (gpointer userdata, gpointer data)
 				conn_elt->acl_groups=NULL;
 			}
 		} else {
-			if (nuauth_acl_cache){
+			if (nuauthconf->acl_cache){
 					get_acls_from_cache(conn_elt);
 			} else {
 					external_acl_groups(conn_elt);
@@ -111,15 +111,15 @@ void acl_check_and_decide (gpointer userdata, gpointer data)
 
 		}
 		/* transmit data we get to the next step */
-		if (nuauth_hello_authentication && (initialstate == STATE_HELLOMODE)){
+		if (nuauthconf->hello_authentication && (initialstate == STATE_HELLOMODE)){
 			struct internal_message *message = g_new0(struct internal_message,1);
 			message->type=INSERT_MESSAGE;
 			message->datas=conn_elt;
 			/* well this is an localid auth packet */
-			g_async_queue_push (localid_auth_queue,message);
+			g_async_queue_push (nuauthdatas->localid_auth_queue,message);
 		} else {
 			/* give packet to search and fill */
-			g_async_queue_push (connexions_queue,conn_elt);
+			g_async_queue_push (nuauthdatas->connexions_queue,conn_elt);
 		}
 	}
 #ifdef DEBUG_ENABLE

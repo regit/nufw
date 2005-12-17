@@ -104,3 +104,6 @@ void process_poll(int signum);
 #ifdef GRYZOR_HACKS
 int send_icmp_unreach(char *dgram);
 #endif
+
+
+#define DEBUG_OR_NOT(LOGLEVEL,LOGAREA) (LOGAREA&&(debug_areas))&&((debug_level)>=LOGLEVEL)

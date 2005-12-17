@@ -82,7 +82,7 @@ void cache_manager (gpointer datas) {
 					cache_elt = g_new0(struct cache_element,1);
 					/* initialize */
 					cache_elt->create_timestamp = time(NULL);
-					cache_elt->refresh_timestamp = time(NULL)+nuauth_datas_persistance;
+					cache_elt->refresh_timestamp = time(NULL)+nuauthconf->datas_persistance;
 					cache_elt->refreshing = TRUE;
 					cache_elt->datas = NULL;
 					key = cache_datas->duplicate_key(message->key);
@@ -163,7 +163,7 @@ void cache_manager (gpointer datas) {
 					local_queue = g_slist_remove_all(local_queue,NULL);
 					return_list->datas = g_slist_prepend(return_list->datas,elt);
 					return_list->refreshing = FALSE;
-					return_list->refresh_timestamp = time(NULL)+nuauth_datas_persistance;
+					return_list->refresh_timestamp = time(NULL)+nuauthconf->datas_persistance;
 
 				} else {
 					g_error("a thread lost its mind");

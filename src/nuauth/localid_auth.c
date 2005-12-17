@@ -46,10 +46,10 @@ void localid_auth()
 	/* init hash table */
 	localid_auth_hash=g_hash_table_new(NULL,NULL);
 	
-	g_async_queue_ref (localid_auth_queue);
-	g_async_queue_ref (tls_push);
+	g_async_queue_ref (nuauthdatas->localid_auth_queue);
+	g_async_queue_ref (nuauthdatas->tls_push_queue);
 	/* wait for message */
-	while ( (message = g_async_queue_pop(localid_auth_queue)) ) {
+	while ( (message = g_async_queue_pop(nuauthdatas->localid_auth_queue)) ) {
 		switch (message->type) { 
 			case INSERT_MESSAGE:
 				pckt=message->datas;
@@ -89,7 +89,7 @@ void localid_auth()
 								pckt->user_groups=NULL;
 								pckt->username=NULL;
 								/* do asynchronous call to acl check */
-								g_thread_pool_push (acl_checkers, element, NULL);
+								g_thread_pool_push (nuauthdatas->acl_checkers, element, NULL);
 								/* remove element from hash without destroy */
 								g_hash_table_steal(localid_auth_hash,pckt->packet_id);
 							} else {

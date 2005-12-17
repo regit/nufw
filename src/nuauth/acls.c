@@ -273,17 +273,17 @@ void get_acls_from_cache (connection* conn_elt)
 	message.type=GET_MESSAGE;
 	message.key=acl_create_key(conn_elt);
 	message.datas=NULL;
-	message.reply_queue=g_private_get(aclqueue);
+	message.reply_queue=g_private_get(nuauthdatas->aclqueue);
 	if (message.reply_queue==NULL){
 		message.reply_queue=g_async_queue_new();
-		g_private_set(aclqueue,message.reply_queue);
+		g_private_set(nuauthdatas->aclqueue,message.reply_queue);
 	}
 	/* send message */
 #ifdef DEBUG_ENABLE
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET))
 		g_message("[acl cache] going to send cache request\n");
 #endif
-	g_async_queue_push (acl_cache->queue,&message);
+	g_async_queue_push (nuauthdatas->acl_cache->queue,&message);
 	/* lock */
 	g_atomic_int_inc(&(myaudit->cache_req_nb));
 	/*release */
@@ -322,7 +322,7 @@ void get_acls_from_cache (connection* conn_elt)
 			g_message("[acl cache] answering for key %p\n",rmessage->key);
 #endif
 		/* reply to the cache */
-		g_async_queue_push(acl_cache->queue,rmessage);
+		g_async_queue_push(nuauthdatas->acl_cache->queue,rmessage);
 	} else {
 		g_atomic_int_inc(&(myaudit->cache_hit_nb));
 	}
@@ -334,20 +334,20 @@ int init_acl_cache(){
 			/* create acl cache thread */
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
 				g_message("creating acl cache thread");
-		acl_cache=g_new0(struct cache_init_datas,1);
-		acl_cache->hash=g_hash_table_new_full((GHashFunc)hash_acl,
+		nuauthdatas->acl_cache=g_new0(struct cache_init_datas,1);
+		nuauthdatas->acl_cache->hash=g_hash_table_new_full((GHashFunc)hash_acl,
 				compare_acls,
 				(GDestroyNotify) free_acl_key,
 				(GDestroyNotify) free_acl_cache); 
-		acl_cache->queue=g_async_queue_new();
-		acl_cache->delete_elt=free_acl_struct;
-		acl_cache->duplicate_key=acl_duplicate_key;
-		acl_cache->free_key=free_acl_key;
-                acl_cache->equal_key=compare_acls;
+		nuauthdatas->acl_cache->queue=g_async_queue_new();
+		nuauthdatas->acl_cache->delete_elt=free_acl_struct;
+		nuauthdatas->acl_cache->duplicate_key=acl_duplicate_key;
+		nuauthdatas->acl_cache->free_key=free_acl_key;
+                nuauthdatas->acl_cache->equal_key=compare_acls;
 
 
 		acl_cache_thread = g_thread_create ( (GThreadFunc) cache_manager,
-				acl_cache,
+				nuauthdatas->acl_cache,
 				FALSE,
 				NULL);
 		if (! acl_cache_thread )
