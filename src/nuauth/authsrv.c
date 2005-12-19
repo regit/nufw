@@ -29,6 +29,7 @@
 #include "gcrypt_init.h"
 #include "tls.h"
 #include "sasl.h"
+
 /**
  * exit function if a signal is received in daemon mode.
  * 
@@ -246,6 +247,20 @@ struct nuauth_params*   init_nuauthconf()
   return nuauthconf;
 }
 
+/**
+ * exit function if a signal is received in daemon mode.
+ * 
+ * Argument : a signal
+ * Return : None
+ */
+void nuauth_reload( int signal ) {
+        struct nuauth_params* newconf;
+        newconf=init_nuauthconf();
+        g_message("nuauth reloading");
+
+}
+ 
+
 int main(int argc,char * argv[]) 
 {
   /* option */
@@ -256,8 +271,8 @@ int main(int argc,char * argv[])
   tracking empty_header;
   struct sigaction action;
   pid_t pidf;
-  char* nuauth_client_listen_addr=AUTHREQ_CLIENT_LISTEN_ADDR;
-  char* nuauth_nufw_listen_addr=AUTHREQ_NUFW_LISTEN_ADDR;
+  char* nuauth_client_listen_addr=NULL;
+  char* nuauth_nufw_listen_addr=NULL;
 
   /* init gcrypt and gnutls */
   //        gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_gthread);
@@ -269,7 +284,9 @@ int main(int argc,char * argv[])
   gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_gthread);
 
   gnutls_global_init();
+
   nuauthdatas=g_new0(struct nuauth_datas,1);
+  
   nuauthconf=init_nuauthconf();
 
   /* init credential */
@@ -318,7 +335,6 @@ int main(int argc,char * argv[])
                 break;
                 /* Adress we listen for NUFW originating packets */
         case 'C' :
-                g_free(nuauth_client_listen_addr);
                 nuauth_client_listen_addr = (char *)calloc(HOSTNAME_SIZE,sizeof(char));
                 if (nuauth_client_listen_addr == NULL){return -1;}
                 strncpy(nuauth_client_listen_addr,optarg,HOSTNAME_SIZE);
@@ -427,6 +443,16 @@ int main(int argc,char * argv[])
       printf("Error\n");
       exit(1);
   }
+  /* intercept SIGTERM */
+  memset(&action,0,sizeof(action));
+  action.sa_handler = nuauth_reload;
+  sigemptyset( & (action.sa_mask));
+  action.sa_flags = 0;
+  if ( sigaction( SIGHUP, & action , NULL ) != 0) {
+      printf("Error\n");
+      exit(1);
+  }
+
 
   signal(SIGPIPE,SIG_IGN);
 
@@ -489,8 +515,9 @@ int main(int argc,char * argv[])
   nuauthdatas->userqueue = g_private_new(g_free);
 
   /* create thread for search_and_fill thread */
-  if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+  if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
       g_message("Creating search_and_fill thread");
+  }
   nuauthdatas->search_and_fill_worker = g_thread_create ( (GThreadFunc) search_and_fill,
                   NULL,
                   FALSE,
