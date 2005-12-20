@@ -43,6 +43,8 @@ void user_check_and_decide (gpointer userdata, gpointer data)
   if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
       g_message("entering user_check\n");
 #endif
+  /* reload condition */
+  block_on_conf_reload();
   conn_elts = userpckt_decode(userdata);
   /* if OK search and fill */
   if ( conn_elts != NULL ) {
@@ -77,6 +79,7 @@ void user_check_and_decide (gpointer userdata, gpointer data)
           g_free(((struct buffer_read *)userdata)->version);
           g_slist_free(((struct buffer_read *)userdata)->groups);
           g_free(userdata);
+
 #ifdef DEBUG_ENABLE
   if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
       g_message("leaving user_check\n");

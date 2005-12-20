@@ -812,6 +812,7 @@ void decisions_queue_work (gpointer userdata, gpointer data)
 {
 	connection* element=(connection *)userdata;
 
+        block_on_conf_reload();
 	apply_decision( * element);
 
         if (element)

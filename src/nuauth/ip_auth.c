@@ -35,7 +35,10 @@
  */
 void external_ip_auth(gpointer userdata, gpointer data)
 {
-        char* username=ip_auth(userdata);
+        char* username=NULL;
+        
+        block_on_conf_reload();
+        username=ip_auth(userdata);
         if (username){
             GSList* groups=NULL;
 	    uint16_t uid;

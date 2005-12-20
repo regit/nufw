@@ -61,6 +61,7 @@ void acl_check_and_decide (gpointer userdata, gpointer data)
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET))
 		g_message("entering acl_check\n");
 #endif
+        block_on_conf_reload();
 	if (conn_elt == NULL){
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_PACKET)){
 			g_message("This is no good : elt is NULL\n");

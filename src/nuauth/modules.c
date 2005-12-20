@@ -166,6 +166,8 @@ static int load_modules_from(gchar* confvar, gchar* func,GSList** target)
 		}
 
 		*target=g_slist_append(*target,(gpointer)module_func);
+                /** add modules to list of modules */
+                nuauthdatas->modules=g_slist_prepend(nuauthdatas->modules,module);
 	}
 	return 1;
 
@@ -247,8 +249,25 @@ int load_modules()
 
 int unload_modules()
 {
+        GSList *c_module;
 	g_mutex_lock(modules_mutex);
 	/*TODO put unload code here */
+        for(c_module=nuauthdatas->modules;c_module;c_module=c_module->next){
+                g_module_close(c_module->data);
+        }
 	g_mutex_unlock(modules_mutex);
 	return 1;
+}
+
+
+void block_on_conf_reload()
+{
+  if (nuauthdatas->need_reload){
+      g_atomic_int_inc(&(nuauthdatas->locked_threads_number));
+      g_mutex_lock(nuauthdatas->reload_cond_mutex);
+      while(nuauthdatas->need_reload){
+          g_cond_wait (nuauthdatas->reload_cond, nuauthdatas->reload_cond_mutex);
+      }
+      g_mutex_unlock(nuauthdatas->reload_cond_mutex);
+  }
 }

@@ -30,6 +30,8 @@
 #include "tls.h"
 #include "sasl.h"
 
+#define POOL_TYPE FALSE
+
 /**
  * exit function if a signal is received in daemon mode.
  * 
@@ -254,10 +256,49 @@ struct nuauth_params*   init_nuauthconf()
  * Return : None
  */
 void nuauth_reload( int signal ) {
+        int pool_threads_num=0;
+#ifdef CONF_CAN_RELOAD
         struct nuauth_params* newconf;
         newconf=init_nuauthconf();
-        g_message("nuauth reloading");
+#endif
+        g_message("nuauth module reloading");
 
+        /* set flag to block threads of pool at exit */
+        nuauthdatas->need_reload=1;
+        /* stop unused threads : now newly created threads will be locked */
+        g_thread_pool_stop_unused_threads();
+        /* we have to wait that all threads are blocked */
+        do {
+            usleep(100000);
+            g_message("waiting for threads to finish at %s:%d",__FILE__,__LINE__);
+            g_message("got %d on %d",nuauthdatas->locked_threads_number,pool_threads_num);
+            /* 1. count thread in pool */
+            pool_threads_num=g_thread_pool_get_num_threads(nuauthdatas->user_checkers)
+                    + g_thread_pool_get_num_threads(nuauthdatas->acl_checkers)
+                    + g_thread_pool_get_num_threads(nuauthdatas->user_loggers);
+            if (nuauthconf->do_ip_authentication){
+                pool_threads_num+=g_thread_pool_get_num_threads(nuauthdatas->ip_authentication_workers); 
+            }
+            if ( nuauthconf->log_users_sync ){
+                    pool_threads_num+= g_thread_pool_get_num_threads(nuauthdatas->decisions_workers);
+            }
+            pool_threads_num-=g_thread_pool_get_num_unused_threads ();
+            /* compare against thread in state lock */
+        } while (nuauthdatas->locked_threads_number<pool_threads_num);
+        /* we've reached equality thus all threads are blocked now */
+        /* unload modules */
+        unload_modules();
+#ifdef CONF_CAN_RELOAD
+        /* switch conf before loading modules */
+        nuauthconf=newconf;
+#endif
+        /* reload modules with new conf */
+        load_modules();
+        /* liberate threads by broadcasting condition */
+        nuauthdatas->need_reload=0;
+        g_mutex_lock(nuauthdatas->reload_cond_mutex);
+        g_cond_broadcast(nuauthdatas->reload_cond);
+        g_mutex_unlock(nuauthdatas->reload_cond_mutex);
 }
  
 
@@ -285,8 +326,12 @@ int main(int argc,char * argv[])
 
   gnutls_global_init();
 
+  /* init nuauthdatas */
   nuauthdatas=g_new0(struct nuauth_datas,1);
-  
+  nuauthdatas->reload_cond=g_cond_new ();
+  nuauthdatas->reload_cond_mutex=g_mutex_new ();
+       
+  /* load configuration */
   nuauthconf=init_nuauthconf();
 
   /* init credential */
@@ -495,7 +540,7 @@ int main(int argc,char * argv[])
       nuauthdatas->ip_authentication_workers = g_thread_pool_new  ((GFunc) external_ip_auth,
                       NULL,
                       nuauthconf->nbipauth_check,
-                      TRUE,
+                      POOL_TYPE,
                       NULL);
   }
 
@@ -544,7 +589,7 @@ int main(int argc,char * argv[])
   nuauthdatas->acl_checkers = g_thread_pool_new  ((GFunc) acl_check_and_decide,
                   NULL,
                   nuauthconf->nbacl_check,
-                  TRUE,
+                  POOL_TYPE,
                   NULL);
 
   /* create user worker */
@@ -554,7 +599,7 @@ int main(int argc,char * argv[])
   nuauthdatas->user_checkers = g_thread_pool_new  ((GFunc) user_check_and_decide,
                   NULL,
                   nuauthconf->nbuser_check,
-                  TRUE,
+                  POOL_TYPE,
                   NULL);
 
 
@@ -563,7 +608,7 @@ int main(int argc,char * argv[])
   nuauthdatas->user_loggers = g_thread_pool_new  ((GFunc)  real_log_user_packet,
                   NULL,
                   nuauthconf->nbloggers,
-                  TRUE,
+                  POOL_TYPE,
                   NULL);
 
   if ( nuauthconf->log_users_sync ){
@@ -572,7 +617,7 @@ int main(int argc,char * argv[])
       nuauthdatas->decisions_workers = g_thread_pool_new  ((GFunc)  decisions_queue_work,
                       NULL,
                       nuauthconf->nbloggers,
-                      TRUE,
+                      POOL_TYPE,
                       NULL);
   }
 

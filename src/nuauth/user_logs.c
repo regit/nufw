@@ -82,6 +82,7 @@ void log_user_packet (connection element,int state){
  */
 
 void real_log_user_packet (gpointer userdata, gpointer data){
+        block_on_conf_reload();
 	user_logs (
 			     ((struct Conn_State *)userdata)->conn, 
 			     ((struct Conn_State *)userdata)->state

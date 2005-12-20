@@ -100,6 +100,15 @@ struct nuauth_datas {
 
     struct cache_init_datas* acl_cache;
 
+/* reload related */
+    gint need_reload;
+    gint locked_threads_number;
+    GCond* reload_cond;
+    GMutex* reload_cond_mutex;
+
+    /** list of loaded modules */
+    GSList * modules;
+       
 };
 
 

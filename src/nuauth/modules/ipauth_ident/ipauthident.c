@@ -80,8 +80,8 @@ gchar* ip_authentication(tracking* ipheader)
       }
       id_close(id);
   } else {
-	  int tmperrno=errno;
 #ifdef DEBUG_ENABLE
+      int tmperrno=errno;
       if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
           g_message("can not open ident to %s: %s",inet_ntoa(faddr),strerror(tmperrno));
 #endif

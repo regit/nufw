@@ -1476,6 +1476,8 @@ void* tls_user_authsrv()
 				close(c);
 				continue;
 			} else {
+                                /* if system is not in reload */
+                                if (! (nuauthdatas->need_reload)){
 				struct client_connection* current_client_conn=g_new0(struct client_connection,1);
 				struct pre_client_elt* new_pre_client;
 				current_client_conn->socket=c;
@@ -1490,21 +1492,23 @@ void* tls_user_authsrv()
 						SO_KEEPALIVE,
 						&option_value,
 						sizeof(option_value));
-				/* give the connection to a separate thread */
+				        /* give the connection to a separate thread */
+                                    /*  add element to pre_client 
+                                        create pre_client_elt */
+                                    new_pre_client = g_new0(struct pre_client_elt,1);
+                                    new_pre_client->socket = c;
+                                    new_pre_client->validity = time(NULL) + nuauth_auth_nego_timeout;
 
-				/*  add element to pre_client 
-				    create pre_client_elt */
-				new_pre_client = g_new0(struct pre_client_elt,1);
-				new_pre_client->socket = c;
-				new_pre_client->validity = time(NULL) + nuauth_auth_nego_timeout;
-
-				g_static_mutex_lock (&pre_client_list_mutex);
-				pre_client_list=g_slist_prepend(pre_client_list,new_pre_client);
-				g_static_mutex_unlock (&pre_client_list_mutex);
-				g_thread_pool_push (tls_sasl_worker,
-						current_client_conn,	
-						NULL
-						);
+                                    g_static_mutex_lock (&pre_client_list_mutex);
+                                    pre_client_list=g_slist_prepend(pre_client_list,new_pre_client);
+                                    g_static_mutex_unlock (&pre_client_list_mutex);
+                                    g_thread_pool_push (tls_sasl_worker,
+                                                    current_client_conn,	
+                                                    NULL
+                                                    );
+                                } else {
+                                        shutdown(c,SHUT_RDWR);
+                                }
 			}
 		}
 
