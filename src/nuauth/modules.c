@@ -144,7 +144,7 @@ int init_modules_system(){
 static int load_modules_from(gchar* confvar, gchar* func,GSList** target)
 {
 	gchar** modules_list=g_strsplit(confvar," ",0);
-	GModule ** module;
+	GModule * module;
 	gchar* module_path;
 	gpointer module_func;
 	int i;
@@ -155,8 +155,7 @@ static int load_modules_from(gchar* confvar, gchar* func,GSList** target)
 
 	for (i=0;modules_list[i]!=NULL;i++) {	
 		module_path = g_module_build_path(MODULE_PATH, modules_list[i]);
-                module =g_new0(GModule*,1);
-		*module = g_module_open (module_path 
+		module = g_module_open (module_path 
 				,0);
 		g_free(module_path);
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
@@ -165,10 +164,10 @@ static int load_modules_from(gchar* confvar, gchar* func,GSList** target)
 			g_error("Unable to load module %s in %s",modules_list[i],MODULE_PATH);
 		}
 
-		if (!g_module_symbol (*module, func, 
+		if (!g_module_symbol (module, func, 
 					(gpointer*)&module_func))
 		{
-			g_error ("Unable to load function %s in %s\n",func,g_module_name(*module));
+			g_error ("Unable to load function %s in %s\n",func,g_module_name(module));
 		}
 
 		*target=g_slist_append(*target,(gpointer)module_func);
@@ -176,7 +175,7 @@ static int load_modules_from(gchar* confvar, gchar* func,GSList** target)
 #if 0
                 found=0;
                  for(c_module=nuauthdatas->modules;c_module;c_module=c_module->next){
-                        if(!strcmp(g_module_name(*(GModule**)(c_module->data)),g_module_name(*module))){
+                        if(!strcmp(g_module_name((GModule*)(c_module->data)),g_module_name(module))){
                                 found=1;
                                 break;
                         }
@@ -284,12 +283,11 @@ int unload_modules()
         user_session_logs_modules=NULL;
 
         for(c_module=nuauthdatas->modules;c_module;c_module=c_module->next){
-                if (!g_module_close(*(GModule**)(c_module->data))){
-                       g_message("module unloading failed for %s",g_module_name(*(GModule**)(c_module->data))); 
+                if (!g_module_close((GModule*)(c_module->data))){
+                       g_message("module unloading failed for %s",g_module_name((GModule*)(c_module->data))); 
                 } else {
-                       g_message("module unloading done for %s",g_module_name(*(GModule**)(c_module->data))); 
+                       g_message("module unloading done for %s",g_module_name((GModule*)(c_module->data))); 
                 }
-                g_free(c_module->data);
         }
         g_slist_free(nuauthdatas->modules);
         nuauthdatas->modules=NULL;
