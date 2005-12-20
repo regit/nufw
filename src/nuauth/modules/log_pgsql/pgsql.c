@@ -86,7 +86,7 @@ g_module_check_init(GModule *module){
     pgsql_request_timeout=*(int *)(vpointer?vpointer:&pgsql_request_timeout);
 
     /* init thread private stuff */
-    pgsql_priv = g_private_new (g_free);
+    pgsql_priv = g_private_new ((GDestroyNotify)PQfinish);
 
     return NULL;
 }
