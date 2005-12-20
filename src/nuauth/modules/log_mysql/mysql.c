@@ -104,7 +104,7 @@ g_module_check_init(GModule *module){
 	mysql_ssl_cipher=(char *)(vpointer?vpointer:mysql_ssl_cipher);
 
 	/* init thread private stuff */
-	mysql_priv = g_private_new (g_free); 
+	mysql_priv = g_private_new (mysql_close); 
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
 		g_message("mysql part of the config file is parsed\n");
 	return NULL;

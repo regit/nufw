@@ -119,7 +119,7 @@ g_module_check_init(GModule *module)
 
 
 	/* init thread private stuff */
-	ldap_priv = g_private_new (g_free);
+	ldap_priv = g_private_new (ldap_unbind);
 
 	return NULL;
 }
@@ -129,8 +129,6 @@ g_module_check_init(GModule *module)
  */
 G_MODULE_EXPORT gchar* g_module_unload(void)
 {
-	LDAP *ld = g_private_get (ldap_priv);
-	ldap_unbind(ld);
 	return NULL;
 }
 
