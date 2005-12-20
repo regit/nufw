@@ -87,7 +87,7 @@ int main(int argc,char * argv[]){
     //pthread_t sql_worker;
 //    struct hostent *authreq_srv;
     /* options */
-    char * options_list = "Dhvd:u:p:t:";
+    char * options_list = "Dhvt:f:";
     int option,daemonize = 0;
     //int value;
     //unsigned int ident_srv;
@@ -127,11 +127,15 @@ int main(int argc,char * argv[]){
             sscanf(optarg,"%d",&packet_timeout);
             break;
             /* max size of packet list */
+          case 'f' :
+            conffile = optarg;
+            break;
           case 'h' :
             fprintf (stdout ,"%s [-hVv[v[v[v[v[v[v[v[v[v]]]]]]]]]] [-t packet_timeout]\n\
 \t-h : display this help and exit\n\
 \t-V : display version and exit\n\
 \t-D : daemonize\n\
+\t-f : config file\n\
 \t-v : increase debug level (+1 for each 'v') (max useful number : 10)\n", PACKAGE_NAME);
             return 1;
         }
