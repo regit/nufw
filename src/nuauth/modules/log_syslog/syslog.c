@@ -103,3 +103,9 @@ G_MODULE_EXPORT int user_session_logs(user_session *c_session,int state)
         }
         return 1;
 }
+
+G_MODULE_EXPORT gchar* g_module_unload(void)
+{
+        return NULL;
+}
+

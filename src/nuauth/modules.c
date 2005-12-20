@@ -144,13 +144,19 @@ int init_modules_system(){
 static int load_modules_from(gchar* confvar, gchar* func,GSList** target)
 {
 	gchar** modules_list=g_strsplit(confvar," ",0);
-	GModule * module;
+	GModule ** module;
 	gchar* module_path;
 	gpointer module_func;
 	int i;
+#if 0
+        char found;
+        GSList *c_module;
+#endif
+
 	for (i=0;modules_list[i]!=NULL;i++) {	
 		module_path = g_module_build_path(MODULE_PATH, modules_list[i]);
-		module = g_module_open (module_path 
+                module =g_new0(GModule*,1);
+		*module = g_module_open (module_path 
 				,0);
 		g_free(module_path);
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
@@ -159,16 +165,30 @@ static int load_modules_from(gchar* confvar, gchar* func,GSList** target)
 			g_error("Unable to load module %s in %s",modules_list[i],MODULE_PATH);
 		}
 
-		if (!g_module_symbol (module, func, 
+		if (!g_module_symbol (*module, func, 
 					(gpointer*)&module_func))
 		{
-			g_error ("Unable to load acl checking function\n");
+			g_error ("Unable to load function %s in %s\n",func,g_module_name(*module));
 		}
 
 		*target=g_slist_append(*target,(gpointer)module_func);
                 /** add modules to list of modules */
-                nuauthdatas->modules=g_slist_prepend(nuauthdatas->modules,module);
+#if 0
+                found=0;
+                 for(c_module=nuauthdatas->modules;c_module;c_module=c_module->next){
+                        if(!strcmp(g_module_name(*(GModule**)(c_module->data)),g_module_name(*module))){
+                                found=1;
+                                break;
+                        }
+                 }
+                 if(found == 0){
+#endif
+                        nuauthdatas->modules=g_slist_prepend(nuauthdatas->modules,module);
+#if 0
+                 }
+#endif
 	}
+        g_strfreev(modules_list);
 	return 1;
 
 }
@@ -252,9 +272,27 @@ int unload_modules()
         GSList *c_module;
 	g_mutex_lock(modules_mutex);
 	/*TODO put unload code here */
+        g_slist_free(user_check_modules);
+	user_check_modules=NULL;
+        g_slist_free(acl_check_modules);
+	acl_check_modules=NULL;
+        g_slist_free(ip_auth_modules);
+	ip_auth_modules=NULL;
+        g_slist_free(user_logs_modules);
+	user_logs_modules=NULL;
+        g_slist_free(user_session_logs_modules);
+        user_session_logs_modules=NULL;
+
         for(c_module=nuauthdatas->modules;c_module;c_module=c_module->next){
-                g_module_close(c_module->data);
+                if (!g_module_close(*(GModule**)(c_module->data))){
+                       g_message("module unloading failed for %s",g_module_name(*(GModule**)(c_module->data))); 
+                } else {
+                       g_message("module unloading done for %s",g_module_name(*(GModule**)(c_module->data))); 
+                }
+                g_free(c_module->data);
         }
+        g_slist_free(nuauthdatas->modules);
+        nuauthdatas->modules=NULL;
 	g_mutex_unlock(modules_mutex);
 	return 1;
 }
@@ -262,12 +300,12 @@ int unload_modules()
 
 void block_on_conf_reload()
 {
+  g_mutex_lock(nuauthdatas->reload_cond_mutex);
   if (nuauthdatas->need_reload){
       g_atomic_int_inc(&(nuauthdatas->locked_threads_number));
-      g_mutex_lock(nuauthdatas->reload_cond_mutex);
       while(nuauthdatas->need_reload){
           g_cond_wait (nuauthdatas->reload_cond, nuauthdatas->reload_cond_mutex);
       }
-      g_mutex_unlock(nuauthdatas->reload_cond_mutex);
   }
+  g_mutex_unlock(nuauthdatas->reload_cond_mutex);
 }

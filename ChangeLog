@@ -1,5 +1,7 @@
 1.1.2
 	- nufw : new thread architecture
+	- libnuclient : fix potential problem with new thread architecture
+	- "HOT" modules reloading
 1.1.1 (2005/12/14)
 	- new session logging module system (hook at user connection and
 	  disconnection)

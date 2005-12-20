@@ -930,7 +930,18 @@ int sasl_user_check(user_session* c_session)
 			}
 		}
 
-		user_session_logs(c_session,SESSION_OPEN);
+
+                g_mutex_lock(nuauthdatas->reload_cond_mutex);
+                if (! (nuauthdatas->need_reload)){
+                    g_mutex_unlock(nuauthdatas->reload_cond_mutex);
+                    user_session_logs(c_session,SESSION_OPEN);
+                } else {
+                    while(nuauthdatas->need_reload){
+                        g_cond_wait (nuauthdatas->reload_cond, nuauthdatas->reload_cond_mutex);
+                    }
+                    g_mutex_unlock(nuauthdatas->reload_cond_mutex);
+                    user_session_logs(c_session,SESSION_OPEN);
+                }
 		/* sasl connection is not used anymore */
 		return SASL_OK;
 	} else {
@@ -1533,7 +1544,18 @@ void* tls_user_authsrv()
 				g_static_mutex_unlock (&client_mutex);
 				u_request = treat_user_request( c_session );
 				if (u_request == EOF) {
-					user_session_logs(c_session,SESSION_CLOSE);
+                                    g_mutex_lock(nuauthdatas->reload_cond_mutex);
+                                    if (! (nuauthdatas->need_reload)){
+                                        g_mutex_unlock(nuauthdatas->reload_cond_mutex);
+                                        user_session_logs(c_session,SESSION_CLOSE);
+                                    } else {
+                                        while(nuauthdatas->need_reload){
+                                            g_cond_wait (nuauthdatas->reload_cond, nuauthdatas->reload_cond_mutex);
+                                        }
+                                        user_session_logs(c_session,SESSION_CLOSE);
+                                        g_mutex_unlock(nuauthdatas->reload_cond_mutex);
+                                    }
+
 #ifdef DEBUG_ENABLE
 					if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
 						g_message("client disconnect on %d\n",c);
