@@ -67,6 +67,10 @@
 #include "localid_auth.h"
 #include "audit.h"
 
+#include "nuauth_params.h"
+#include "nuauthconf.h"
+
+
 #define DEBUG_OR_NOT(LOGLEVEL,LOGAREA) (LOGAREA&&(nuauthconf->debug_areas))&&((nuauthconf->debug_level)>=LOGLEVEL)
 
 /*
@@ -79,6 +83,8 @@
 #define AUTH_NEGO_TIMEOUT 30
 
 #define UNKNOWN_STRING "UNKNOWN"
+
+#define POOL_TYPE FALSE
 
 #define DUMMY 0
 #define USE_LDAP 0
@@ -113,7 +119,5 @@
 #define NUAUTH_SSL_MAX_CLIENTS 256
 
 #define USERNAMESIZE 30
-/* Start internal */
 
-#include "nuauth_params.h"
 #endif

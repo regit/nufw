@@ -1,7 +1,10 @@
 1.1.2
 	- nufw : new thread architecture
 	- libnuclient : fix potential problem with new thread architecture
-	- "HOT" modules reloading
+	- nuauth : modules reloading
+	- nuauth : config reloading (partial)
+	- nutrackd : config file option added and an example conf is now
+	  provided
 1.1.1 (2005/12/14)
 	- new session logging module system (hook at user connection and
 	  disconnection)

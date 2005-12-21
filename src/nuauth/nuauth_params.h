@@ -82,15 +82,15 @@ struct nuauth_datas {
      */
     GThreadPool* acl_checkers;
 
-    /* private datas */
-    GPrivate *aclqueue;
-    GPrivate *userqueue;
-
-
     GThreadPool* user_loggers; 
     GThreadPool* decisions_workers;
 
     GThreadPool*  ip_authentication_workers;
+
+    /* private datas */
+    GPrivate *aclqueue;
+    GPrivate *userqueue;
+
 
     GAsyncQueue* connexions_queue;
     GAsyncQueue* tls_push_queue;

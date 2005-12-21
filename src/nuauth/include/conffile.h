@@ -15,7 +15,8 @@
 ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#include <config.h>
+#ifndef CONFFILE_H
+#define CONFFILE_H
 
 #define DEFAULT_CONF_FILE   CONFIG_DIR "/nuauth.conf"
 
@@ -38,3 +39,5 @@ GHashTable * confvarlist;
 
 int parse_conffile(char * filename,gint array_size,confparams symbols[]);
 gpointer get_confvar_value(confparams symbols[],gint array_size,gchar * confparam);
+
+#endif
