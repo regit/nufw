@@ -119,7 +119,7 @@ g_module_check_init(GModule *module)
 
 
 	/* init thread private stuff */
-	ldap_priv = g_private_new (ldap_unbind);
+	ldap_priv = g_private_new ((GDestroyNotify)ldap_unbind);
 
 	return NULL;
 }
