@@ -97,6 +97,7 @@
 #define PRIO_TO_NOK 1
 #define HOSTNAME_SIZE 128
 #define PACKET_TIMEOUT 15
+#define SESSION_DURATION 0
 #define DEFAULT_USERAUTH_MODULE "libsystem"
 #define DEFAULT_ACLS_MODULE "libplaintext"
 #define DEFAULT_LOGS_MODULE "libsyslog"

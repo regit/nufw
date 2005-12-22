@@ -34,8 +34,6 @@
  **
  */
 
-#define VALIDITY_TIME 60
-
 #include <auth_srv.h>
 
 #include <sasl/saslutil.h>
@@ -931,7 +929,7 @@ int sasl_user_check(user_session* c_session)
 			}
 		}
 
-                c_session->expire=time(NULL)+VALIDITY_TIME;
+                c_session->expire=time(NULL)+nuauthconf->session_duration;
 
                 g_mutex_lock(nuauthdatas->reload_cond_mutex);
                 if (! (nuauthdatas->need_reload)){
@@ -1544,7 +1542,7 @@ void* tls_user_authsrv()
 				g_static_mutex_lock (&client_mutex);
 				c_session = get_client_datas_by_socket(c);
 				g_static_mutex_unlock (&client_mutex);
-                                if (c_session->expire < time(NULL)){
+                                if (nuauthconf->session_duration && c_session->expire < time(NULL)){
                                     FD_CLR(c,&tls_rx_set);
                                     g_static_mutex_lock (&client_mutex);
                                     delete_client_by_socket(c);

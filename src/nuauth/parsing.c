@@ -33,13 +33,14 @@ struct in_addr* generate_inaddr_list(gchar* gwsrv_addr)
 		gwsrv_addr_list = g_strsplit(gwsrv_addr ," ",0);
 		gwsrv_addr_item = gwsrv_addr_list;
 		/* compute array length */
-		while(*gwsrv_addr_item)
+		while(*gwsrv_addr_item){
 			gwsrv_addr_item++;
+                }
 		/* allocate array of struct sock_addr */
 		addrs_array=g_new0(struct in_addr,gwsrv_addr_item-gwsrv_addr_list );
 		authorized_server=addrs_array;
 		gwsrv_addr_item = gwsrv_addr_list;
-		while(*gwsrv_addr_item){
+		while (*gwsrv_addr_item) {
 			authorized_server->s_addr=inet_addr(*gwsrv_addr_item);
 			authorized_server++;
 			gwsrv_addr_item++;

@@ -25,6 +25,7 @@ struct nuauth_params {
     int aclcheck_state_ready;
     /* global configuration variables */
     int packet_timeout;
+    int session_duration;
     /* debug related */
     int debug_level;
     int debug_areas;

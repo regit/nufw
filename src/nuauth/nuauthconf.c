@@ -31,7 +31,7 @@ int build_nuauthconf(struct nuauth_params * nuauthconf,
       nuauthconf->hello_authentication=0;
   }
 
-  if(gwsrv_addr){
+  if (gwsrv_addr) {
       /* parse nufw server address */
       nuauthconf->authorized_servers= generate_inaddr_list(gwsrv_addr);
   }
@@ -96,6 +96,7 @@ struct nuauth_params*   init_nuauthconf()
       { "nuauth_user_packet_port" , G_TOKEN_INT , USERPCKT_PORT ,NULL},
       { "nufw_gw_addr" , G_TOKEN_STRING , 0, GWSRV_ADDR },
       { "nuauth_packet_timeout" , G_TOKEN_INT , PACKET_TIMEOUT, NULL },
+      { "nuauth_session_duration" , G_TOKEN_INT , SESSION_DURATION, NULL },
       { "nuauth_number_usercheckers" , G_TOKEN_INT , NB_USERCHECK, NULL},
       { "nuauth_number_aclcheckers" , G_TOKEN_INT , NB_ACLCHECK, NULL },
       { "nuauth_number_ipauthcheckers" , G_TOKEN_INT , NB_ACLCHECK, NULL },
@@ -171,6 +172,10 @@ struct nuauth_params*   init_nuauthconf()
 
   vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_packet_timeout");
   nuauthconf->packet_timeout=*(int*)(vpointer);
+
+  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_session_duration");
+  nuauthconf->session_duration=*(int*)(vpointer);
+  
   vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_datas_persistance");
   nuauthconf->datas_persistance=*(int*)(vpointer);
 
@@ -213,7 +218,7 @@ gboolean free_nuauth_params(struct nuauth_params* data)
 {
 	g_free(data->nufw_srv);
 	g_free(data->client_srv);
-	g_free(data->authorized_servers);
+	//g_free(data->authorized_servers);
 	g_strfreev(data->multi_users_array);
 	g_free(data->multi_servers_array);
 	return TRUE;
