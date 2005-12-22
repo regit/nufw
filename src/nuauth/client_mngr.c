@@ -66,7 +66,7 @@ static void hash_clean_session(user_session * c_session){
 
 	socket_tls=gnutls_transport_get_ptr(*(c_session->tls));
 	if (socket_tls){
-		close((int)socket_tls); 
+		shutdown((int)socket_tls,SHUT_RDWR); 
 	}
 	clean_session(c_session);
 }
@@ -160,4 +160,25 @@ char warn_clients(struct msg_addr_set * global_msg)
 void close_clients(int signal)
 {
 	g_hash_table_destroy(client_conn_hash);
+}
+
+gboolean   is_expired_client (gpointer key,
+                             gpointer value,
+                             gpointer user_data)
+{
+        if ( ((user_session*)value)->expire < *((time_t*)user_data) ){
+                return TRUE;
+        } else {
+                return FALSE;
+        }
+}
+
+void kill_expired_clients_session()
+{
+        time_t current_time=time(NULL);
+        g_hash_table_foreach_remove (
+                        client_conn_hash,
+                        is_expired_client,
+                        &current_time
+                        );
 }

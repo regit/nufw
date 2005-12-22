@@ -1,6 +1,6 @@
 /*
- ** Copyright(C) 2005 Eric Leblond <regit@inl.fr>
- **                  INL http://www.inl.fr/
+ ** Copyright(C) 2005 INL
+ **             written by Eric Leblond <regit@inl.fr>
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -42,5 +42,7 @@ struct msg_addr_set {
 char warn_clients(struct msg_addr_set * global_msg);
 
 void close_clients(int signal);
+
+void kill_expired_clients_session();
 
 #endif

@@ -34,6 +34,7 @@
  **
  */
 
+#define VALIDITY_TIME 60
 
 #include <auth_srv.h>
 
@@ -930,6 +931,7 @@ int sasl_user_check(user_session* c_session)
 			}
 		}
 
+                c_session->expire=time(NULL)+VALIDITY_TIME;
 
                 g_mutex_lock(nuauthdatas->reload_cond_mutex);
                 if (! (nuauthdatas->need_reload)){
@@ -1455,10 +1457,10 @@ void* tls_user_authsrv()
 		n=select(mx,&wk_set,NULL,NULL,&tv);
 
 		if (n == -1) {
-			g_warning("select() failed, exiting\n");
-			exit(EXIT_FAILURE);
-		} else if (!n) {
-			continue;
+                        g_warning("select() failed, exiting\n");
+                        exit(EXIT_FAILURE);
+                } else if (!n) {
+                    continue;
 		}
 
 		/*
@@ -1487,37 +1489,37 @@ void* tls_user_authsrv()
 				close(c);
 				continue;
 			} else {
-                                /* if system is not in reload */
-                                if (! (nuauthdatas->need_reload)){
-				struct client_connection* current_client_conn=g_new0(struct client_connection,1);
-				struct pre_client_elt* new_pre_client;
-				current_client_conn->socket=c;
-				memcpy(&current_client_conn->addr,&addr_clnt,sizeof(struct sockaddr_in));
+                            /* if system is not in reload */
+                            if (! (nuauthdatas->need_reload)){
+                                struct client_connection* current_client_conn=g_new0(struct client_connection,1);
+                                struct pre_client_elt* new_pre_client;
+                                current_client_conn->socket=c;
+                                memcpy(&current_client_conn->addr,&addr_clnt,sizeof(struct sockaddr_in));
 
-				if ( c+1 > mx )
-					mx = c + 1;
-				/* Set KEEP ALIVE on connection */
-				setsockopt (
-						c,
-						SOL_SOCKET,
-						SO_KEEPALIVE,
-						&option_value,
-						sizeof(option_value));
-				        /* give the connection to a separate thread */
-                                    /*  add element to pre_client 
-                                        create pre_client_elt */
-                                    new_pre_client = g_new0(struct pre_client_elt,1);
-                                    new_pre_client->socket = c;
-                                    new_pre_client->validity = time(NULL) + nuauth_auth_nego_timeout;
+                                if ( c+1 > mx )
+                                    mx = c + 1;
+                                /* Set KEEP ALIVE on connection */
+                                setsockopt (
+                                                c,
+                                                SOL_SOCKET,
+                                                SO_KEEPALIVE,
+                                                &option_value,
+                                                sizeof(option_value));
+                                /* give the connection to a separate thread */
+                                /*  add element to pre_client 
+                                    create pre_client_elt */
+                                new_pre_client = g_new0(struct pre_client_elt,1);
+                                new_pre_client->socket = c;
+                                new_pre_client->validity = time(NULL) + nuauth_auth_nego_timeout;
 
-                                    g_static_mutex_lock (&pre_client_list_mutex);
-                                    pre_client_list=g_slist_prepend(pre_client_list,new_pre_client);
-                                    g_static_mutex_unlock (&pre_client_list_mutex);
-                                    g_thread_pool_push (tls_sasl_worker,
-                                                    current_client_conn,	
-                                                    NULL
-                                                    );
-                                } else {
+                                g_static_mutex_lock (&pre_client_list_mutex);
+                                pre_client_list=g_slist_prepend(pre_client_list,new_pre_client);
+                                g_static_mutex_unlock (&pre_client_list_mutex);
+                                g_thread_pool_push (tls_sasl_worker,
+                                                current_client_conn,	
+                                                NULL
+                                                );
+                            } else {
                                         shutdown(c,SHUT_RDWR);
                                 }
 			}
@@ -1542,6 +1544,12 @@ void* tls_user_authsrv()
 				g_static_mutex_lock (&client_mutex);
 				c_session = get_client_datas_by_socket(c);
 				g_static_mutex_unlock (&client_mutex);
+                                if (c_session->expire < time(NULL)){
+                                    FD_CLR(c,&tls_rx_set);
+                                    g_static_mutex_lock (&client_mutex);
+                                    delete_client_by_socket(c);
+                                    g_static_mutex_unlock (&client_mutex);
+                                } else {
 				u_request = treat_user_request( c_session );
 				if (u_request == EOF) {
                                     g_mutex_lock(nuauthdatas->reload_cond_mutex);
@@ -1578,6 +1586,7 @@ void* tls_user_authsrv()
 						g_message("treat_user_request() failure\n");
 #endif
 				}
+                                }
 			}
 		}
 
