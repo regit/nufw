@@ -42,8 +42,8 @@ struct nuauth_params {
     int push;
     int do_ip_authentication;
     int hello_authentication;
-    struct sockaddr_in nufw_srv;
-    struct sockaddr_in client_srv;
+    struct in_addr* nufw_srv;
+    struct in_addr* client_srv;
     /* cache setting */
     int datas_persistance;
     /* cache variables for acl cache */

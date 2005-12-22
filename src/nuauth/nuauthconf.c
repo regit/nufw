@@ -35,34 +35,30 @@ int build_nuauthconf(struct nuauth_params * nuauthconf,
       /* parse nufw server address */
       nuauthconf->authorized_servers= generate_inaddr_list(gwsrv_addr);
   }
-  /* socket ready */
-  //listening adress for clients requests
-  memset(&(nuauthconf->client_srv),0,sizeof nuauthconf->client_srv);
 
   /* hostname conversion */
   if (nuauth_client_listen_addr){
       client_list_srv=gethostbyname(nuauth_client_listen_addr);
-      nuauthconf->client_srv.sin_addr=*(struct in_addr *)client_list_srv->h_addr;
+      nuauthconf->client_srv=g_memdup(client_list_srv->h_addr,sizeof(struct in_addr));
 
-      if (nuauthconf->client_srv.sin_addr.s_addr == INADDR_NONE ){
-          if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN))
-              g_warning("Bad Address was passed with \"-C\" parameter. Ignored. Using INADDR_ANY instead!");
-          nuauthconf->client_srv.sin_addr.s_addr = INADDR_ANY;
+      if (nuauthconf->client_srv->s_addr == INADDR_NONE ){
+          if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
+              g_warning("Bad Address was passed for client listening address. Ignored. Using INADDR_ANY instead!");
+	  }
+          nuauthconf->client_srv->s_addr = INADDR_ANY;
       }
   }
-
-  // INIT adress for listening to nufw
-  memset(&nuauthconf->nufw_srv,0,sizeof nuauthconf->nufw_srv);
 
   /* hostname conversion */
   if (nuauth_nufw_listen_addr){
       nufw_list_srv=gethostbyname(nuauth_nufw_listen_addr);
-      nuauthconf->nufw_srv.sin_addr=*(struct in_addr *)nufw_list_srv->h_addr;
+      nuauthconf->nufw_srv=g_memdup(nufw_list_srv->h_addr, sizeof(struct in_addr));
 
-      if (nuauthconf->nufw_srv.sin_addr.s_addr == INADDR_NONE ){
-          if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN))
-              g_warning("Bad Address was passed with \"-L\" parameter. Ignored. Using INADDR_ANY instead!");
-          nuauthconf->nufw_srv.sin_addr.s_addr = INADDR_ANY;
+      if (nuauthconf->nufw_srv->s_addr == INADDR_NONE ){
+          if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
+              g_warning("Bad Address was passed for nufw listening address. Ignored. Using INADDR_ANY instead!");
+	  }
+          nuauthconf->nufw_srv->s_addr = INADDR_ANY;
       }
   }
 
@@ -88,10 +84,10 @@ int build_nuauthconf(struct nuauth_params * nuauthconf,
 struct nuauth_params*   init_nuauthconf()
 {
   struct nuauth_params* nuauthconf;
-  char* nuauth_client_listen_addr=AUTHREQ_CLIENT_LISTEN_ADDR;
-  char* nuauth_nufw_listen_addr=AUTHREQ_NUFW_LISTEN_ADDR;
+  char* nuauth_client_listen_addr; //=AUTHREQ_CLIENT_LISTEN_ADDR;
+  char* nuauth_nufw_listen_addr; //=AUTHREQ_NUFW_LISTEN_ADDR;
   char *configfile=DEFAULT_CONF_FILE;
-  char* gwsrv_addr=GWSRV_ADDR;
+  char* gwsrv_addr;//=GWSRV_ADDR;
   gpointer vpointer;
   confparams nuauth_vars[] = {
       { "nuauth_client_listen_addr" ,  G_TOKEN_STRING, 0 , g_strdup(AUTHREQ_CLIENT_LISTEN_ADDR) },
@@ -213,6 +209,15 @@ struct nuauth_params*   init_nuauthconf()
   return nuauthconf;
 }
 
+gboolean free_nuauth_params(struct nuauth_params* data)
+{
+	g_free(data->nufw_srv);
+	g_free(data->client_srv);
+	g_free(data->authorized_servers);
+	g_strfreev(data->multi_users_array);
+	g_free(data->multi_servers_array);
+	return TRUE;
+}
 
 static struct nuauth_params* compare_and_update_nuauthparams(struct nuauth_params* current,struct nuauth_params* new);
 
@@ -236,8 +241,11 @@ void nuauth_reload( int signal ) {
     /* we have to wait that all threads are blocked */
     do {
         usleep(100000);
-        g_message("waiting for threads to finish at %s:%d",__FILE__,__LINE__);
-        g_message("got %d on %d",nuauthdatas->locked_threads_number,pool_threads_num);
+
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
+		g_message("waiting for threads to finish at %s:%d",__FILE__,__LINE__);
+		g_message("got %d on %d",nuauthdatas->locked_threads_number,pool_threads_num);
+	}
         /* 1. count thread in pool */
         pool_threads_num=g_thread_pool_get_num_threads(nuauthdatas->user_checkers)
                 + g_thread_pool_get_num_threads(nuauthdatas->acl_checkers)
@@ -273,65 +281,66 @@ static struct nuauth_params* compare_and_update_nuauthparams(struct nuauth_param
 {
   gboolean restart=FALSE;
   if( current->authreq_port != new->authreq_port ){
-      g_message("authreq_port has changed, please restart");
+      g_warning("authreq_port has changed, please restart");
       restart=TRUE;
   }
 
   if( current->userpckt_port != new->userpckt_port ){
-      g_message("userpckt_port has changed, please restart");
+      g_warning("userpckt_port has changed, please restart");
       restart=TRUE;
   }
   if( current->aclcheck_state_ready != new->aclcheck_state_ready ){
-      g_message("aclcheck_state_ready has changed, please restart");
+      g_warning("aclcheck_state_ready has changed, please restart");
       restart=TRUE;
   }
 
 
   if( current->log_users_sync != new->log_users_sync  ){
-      g_message("log_users_sync has changed, please restart");
+      g_warning("log_users_sync has changed, please restart");
       restart=TRUE;
   }
 
   if( current->log_users_strict != new->log_users_strict  ){
-      g_message("log_users_strict has changed, please restart");
+      g_warning("log_users_strict has changed, please restart");
       restart=TRUE;
   }
 
   if( current->push != new->push  ){
-      g_message("switch between push and poll mode has been asked, please restart");
+      g_warning("switch between push and poll mode has been asked, please restart");
       restart=TRUE;
   }
 
   if( current->acl_cache != new->acl_cache  ){
-      g_message("switch between acl caching or not has been asked, please restart");
+      g_warning("switch between acl caching or not has been asked, please restart");
       restart=TRUE;
   }
 
   if( current->user_cache != new->user_cache  ){
-      g_message("switch between user caching or not has been asked, please restart");
+      g_warning("switch between user caching or not has been asked, please restart");
       restart=TRUE;
   }
 
   if( current->do_ip_authentication != new->do_ip_authentication   ){
-      g_message("switch on ip authentication feature has been asked, please restart");
+      g_warning("switch on ip authentication feature has been asked, please restart");
       restart=TRUE;
   }
 
   if( current->hello_authentication != new->hello_authentication   ){
-      g_message("switch on ip authentication feature has been asked, please restart");
-      restart=TRUE;
-  }
-#if 0
-  if( (current->nufw_srv).sin_addr.s_addr != (new->nufw_srv).sin_addr.s_addr  ){
-      g_message("nufw listening ip has changed, please restart");
+      g_warning("switch on ip authentication feature has been asked, please restart");
       restart=TRUE;
   }
 
-  if( (current->client_srv).sin_addr.s_addr != (new->client_srv).sin_addr.s_addr  ){
-      g_message("client listening ip has changed, please restart");
+  if( (current->nufw_srv)->s_addr != (new->nufw_srv)->s_addr  ){
+      g_warning("nufw listening ip has changed, please restart");
+      g_message("was %s",inet_ntoa(*(current->nufw_srv)));
+      g_message("want %s",inet_ntoa(*(new->nufw_srv)));
       restart=TRUE;
   }
-#endif
+
+  if( (current->client_srv)->s_addr != (new->client_srv)->s_addr  ){
+      g_warning("client listening ip has changed, please restart");
+      restart=TRUE;
+  }
 
 
   if (restart == FALSE){
@@ -348,8 +357,10 @@ static struct nuauth_params* compare_and_update_nuauthparams(struct nuauth_param
       /* debug is set via command line thus duplicate */
       new->debug_level=current->debug_level;
       new->debug_areas=current->debug_areas;
+      free_nuauth_params(current);
       return new;
   } else {
+      free_nuauth_params(new);
       return NULL;
   }
 }

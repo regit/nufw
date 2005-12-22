@@ -1386,7 +1386,7 @@ void* tls_user_authsrv()
 
 	addr_inet.sin_family= AF_INET;
 	addr_inet.sin_port=htons(nuauthconf->userpckt_port);
-	addr_inet.sin_addr.s_addr=nuauthconf->client_srv.sin_addr.s_addr;
+	addr_inet.sin_addr.s_addr=nuauthconf->client_srv->s_addr;
 
 	len_inet = sizeof addr_inet;
 
@@ -1765,7 +1765,7 @@ void* tls_nufw_authsrv()
 
 	addr_inet.sin_family= AF_INET;
 	addr_inet.sin_port=htons(nuauthconf->authreq_port);
-	addr_inet.sin_addr.s_addr=nuauthconf->nufw_srv.sin_addr.s_addr;
+	addr_inet.sin_addr.s_addr=nuauthconf->nufw_srv->s_addr;
 
 	z = bind (sck_inet,
 			(struct sockaddr *)&addr_inet,
