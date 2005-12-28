@@ -54,7 +54,7 @@ int main(int argc,char * argv[]){
     struct hostent *authreq_srv;
     /* option */
 #if USE_NFQUEUE
-    char * options_list = "DhVvmq:c:k:a:n:d:p:t:T:";
+    char * options_list = "DhVvmq:c:k:a:n:d:p:t:T:C";
 #else
     char * options_list = "DhVvmc:k:a:n:d:p:t:T:";
 #endif
@@ -82,8 +82,10 @@ int main(int argc,char * argv[]){
     debug_level=0;
     debug_areas=DEFAULT_DEBUG_AREAS;
 #if USE_NFQUEUE
-    nfqueue_num=0;
+    nfqueue_num=DEFAULT_NFQUEUE;
+    handle_conntrack_event=CONNTRACK_HANDLE_DEFAULT;
 #endif
+   
     
     /*parse options */
     while((option = getopt ( argc, argv, options_list)) != -1 ){
@@ -155,9 +157,12 @@ int main(int argc,char * argv[]){
           case 'q':
             sscanf(optarg,"%hu",&nfqueue_num);
             break;
+          case 'C':
+                handle_conntrack_event=1;
+            break;
 #endif
           case 'h' :
-            fprintf (stdout ,"%s [-hVv[v[v[v[v[v[v[v[v[v]]]]]]]]]] [-d remote_addr] [-p remote_port]  [-t packet_timeout] [-T track_size]\n\
+            fprintf (stdout ,"%s [-hVcv[v[v[v[v[v[v[v[v[v]]]]]]]]]] [-d remote_addr] [-p remote_port]  [-t packet_timeout] [-T track_size]\n\
 \t-h : display this help and exit\n\
 \t-V : display version and exit\n\
 \t-D : daemonize\n\

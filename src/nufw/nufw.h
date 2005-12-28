@@ -14,8 +14,12 @@
 #include <linux/netfilter.h>		/* for NF_ACCEPT */
 #include <libnetfilter_queue/libnetfilter_queue.h>
 
+#define DEFAULT_NFQUEUE 0
+#define CONNTRACK_HANDLE_DEFAULT 0
+
 uint16_t nfqueue_num;
 struct nfq_handle *h;
+
 #else
 /* redhat like hack */
 #ifdef HAVE_LIBIPQ_LIBIPQ_H 
@@ -34,6 +38,9 @@ struct nfq_handle *h;
 #include <libnetfilter_conntrack/libnetfilter_conntrack.h>
 
 struct nfct_handle *cth;
+unsigned char handle_conntrack_event; 
+
+void* conntrack_event_handler(void *data);
 
 #endif
 
@@ -62,6 +69,7 @@ struct nuauth_conn {
         pthread_mutex_t* mutex;
         unsigned char auth_server_running;
         pthread_t auth_server;
+        pthread_t conntrack_event_handler;
 };
 
 struct nuauth_conn tls;

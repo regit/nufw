@@ -722,10 +722,10 @@ gint take_decision(connection * element,gchar place)
         }
 	element->decision=answer;
 
-//#define WANTOTEST 1 
+#define WANTOTEST 0 
 #ifdef WANTOTEST
         /* TODO : do real stuff */
-        expire=time(NULL)+10;
+        expire=time(NULL)+3600;
 #endif
         /* we must put element in expire list if needed before decision is taken */
         if(expire>0){

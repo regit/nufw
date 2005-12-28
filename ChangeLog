@@ -1,5 +1,9 @@
 1.1.3
 	- nufw| nuauth : expiration of connection is now possible
+	- nufw : new switch -C to handle contnrack destroy event by sending a
+	  message to nuauth. This is mandatory for connection expiration
+	  system.
+	- nuauth : handle nufw destroy message 
 1.1.2 (2005/12/22)
 	- nufw : new threads architecture
 	- libnuclient : fix potential problem with new thread architecture

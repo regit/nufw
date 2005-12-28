@@ -5,7 +5,7 @@ sbin_PROGRAMS = nufw
 
 # nufw
 nufw_SOURCES = authsrv.c  common.c  main.c  packetsrv.c  proto.h  structure.h\
-		debug.c tls.c audit.c
+		debug.c tls.c audit.c conntrack.c
 if HAVE_IPQ
 nufw_LDADD = -lipq -lpthread -lgnutls
 endif

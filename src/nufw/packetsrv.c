@@ -149,7 +149,8 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 }
 #endif
 
-void* packetsrv(void *data){
+void* packetsrv(void *data)
+{
 	char buffer[BUFSIZ];
 #if USE_NFQUEUE
 	int fd;
@@ -455,6 +456,13 @@ int auth_request_send(uint8_t type,uint32_t packet_id,char* payload,int data_len
                         if (pthread_create(&(tls.auth_server),NULL,authsrv,NULL) == EAGAIN){
                                 exit(1);
                         }
+#ifdef HAVE_LIBCONNTRACK
+                        if (handle_conntrack_event){
+                            if (pthread_create(&(tls.conntrack_event_handler),NULL,conntrack_event_handler,NULL) == EAGAIN){
+                                exit(1);
+                            }
+                        }
+#endif
 		} else {
                         return 0;
                 }
@@ -471,6 +479,7 @@ int auth_request_send(uint8_t type,uint32_t packet_id,char* payload,int data_len
                 }
                 pthread_mutex_lock(tls.mutex);
                 pthread_cancel(tls.auth_server);
+                pthread_cancel(tls.conntrack_event_handler);
                 gnutls_bye(*tls.session,GNUTLS_SHUT_WR);
                 socket_tls=(int)gnutls_transport_get_ptr(*tls.session);
                 shutdown(socket_tls,SHUT_RDWR);

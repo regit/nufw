@@ -158,7 +158,10 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz)
 	switch (*dgram) {
 		case 0x1:
 			msg_type=*(dgram+1);
-			if ( (msg_type == AUTH_REQUEST) || (msg_type == AUTH_CONTROL) ) {
+                        switch (msg_type){
+                          case AUTH_REQUEST:
+                          case AUTH_CONTROL:
+                                  {
 				/* allocate connection */
 				connexion = g_new0( connection,1);
 				if (connexion == NULL){
@@ -282,15 +285,37 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz)
 				}
 #endif
 				return connexion;
-			} else {
-
+			} 
+                                  break;
+                          case AUTH_CONN_DESTROY:
+                                  {
+                                      struct nuv2_destroy_message* msg=(struct nuv2_destroy_message*) dgram;
+                                      tracking* datas=g_new0(tracking,1);
+                                      struct internal_message  *message=g_new0(struct internal_message,1);
+                                      datas->protocol=msg->ipproto;
+                                      datas->saddr=ntohl(msg->src);
+                                      datas->daddr=ntohl(msg->dst);
+                                      if (msg->ipproto == IPPROTO_ICMP){
+                                          datas->type=ntohs(msg->sport);
+                                          datas->code=ntohs(msg->dport);
+                                      } else {
+                                          datas->source=ntohs(msg->sport);
+                                          datas->dest=ntohs(msg->dport);
+                                      }               
+                                      message->datas=datas;
+                                      message->type=FREE_MESSAGE;
+                                      g_async_queue_push (nuauthdatas->limited_connexions_queue, message);
+                                  }
+                                  break;
+                          default:
 #ifdef DEBUG_ENABLE
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)) {
 					g_message("Not for us\n");
 				}
 #endif
-				return NULL;
-			}
+                        }
+                                  
+
 	}
 	return NULL;
 }

@@ -1628,7 +1628,7 @@ treat_nufw_request (nufw_session * c_session)
 			connection * current_conn;
 			current_conn = authpckt_decode(dgram , dgram_size );
 			if (current_conn == NULL){
-				if ( *(dgram+1) != AUTH_CONTROL )
+				if ( *(dgram+1) != AUTH_CONTROL && *(dgram+1) != AUTH_CONN_DESTROY  )
 					if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_PACKET)){
 						g_warning("Can't parse packet, this IS bad !\n");
 					}

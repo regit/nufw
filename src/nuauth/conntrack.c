@@ -140,6 +140,9 @@ void limited_connection_handler()
                 g_hash_table_insert(conn_list,&(((struct limited_connection*)message->datas)->tracking_hdrs),message->datas);
                 break;
         case REFRESH_MESSAGE:
+                if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)){
+                    g_message("expire conn list size : %d",g_hash_table_size (conn_list));
+                }
                 destroy_expired_connection(conn_list);
                 break;
         case FREE_MESSAGE:
@@ -149,10 +152,11 @@ void limited_connection_handler()
                         elt->expire=0;
                         g_hash_table_remove(conn_list,message->datas);
                     } else {
-                        if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER)){
+                        if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)){
                             g_message("connection not found can not be destroyed");
                         }
                     }
+                    g_free(message->datas);
                 }
       }
       g_free(message);
