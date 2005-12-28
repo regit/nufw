@@ -30,6 +30,12 @@ struct nfq_handle *h;
 #endif
 
 
+#ifdef HAVE_LIBCONNTRACK
+#include <libnetfilter_conntrack/libnetfilter_conntrack.h>
+
+struct nfct_handle *cth;
+
+#endif
 
 #include <gnutls/gnutls.h>
 #include <gcrypt.h>

@@ -9,7 +9,11 @@ nufw_SOURCES = authsrv.c  common.c  main.c  packetsrv.c  proto.h  structure.h\
 if HAVE_IPQ
 nufw_LDADD = -lipq -lpthread -lgnutls
 endif
-if HAVE_NFQUEUE
+if HAVE_NFQUEUE_CONNTRACK
+nufw_LDADD = -lnfnetlink -lnetfilter_queue -lnetfilter_conntrack -lpthread -lgnutls -ldl
+endif
+
+if HAVE_NFQUEUE_ONLY
 nufw_LDADD = -lnfnetlink -lnetfilter_queue -lpthread -lgnutls
 endif
 

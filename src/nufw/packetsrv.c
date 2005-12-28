@@ -407,15 +407,15 @@ int auth_request_send(uint8_t type,uint32_t packet_id,char* payload,int data_len
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
 		if (log_engine == LOG_TO_SYSLOG) {
 #ifdef WORDS_BIGENDIAN
-			syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"Sending request for %lu",swap32(packet_id));
+			syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"Sending request for %u",swap32(packet_id));
 #else
-			syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"Sending request for %lu",packet_id);
+			syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"Sending request for %u",packet_id);
 #endif
 		}else {
 #ifdef WORDS_BIGENDIAN
-			printf("[%i] Sending request for %lu\n",getpid(),swap32(packet_id));
+			printf("[%i] Sending request for %u\n",getpid(),swap32(packet_id));
 #else
-			printf("[%i] Sending request for %lu\n",getpid(),packet_id);
+			printf("[%i] Sending request for %u\n",getpid(),packet_id);
 #endif
 		}
 	}

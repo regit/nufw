@@ -1,5 +1,3 @@
-/* $Id: main.c,v 1.21 2004/02/10 16:09:15 regit Exp $ */
-
 /*
  ** Copyright (C) 2002 - 2005 Eric Leblond <eric@regit.org>
  **		      Vincent Deffontaines <vincent@gryzor.com>
@@ -41,6 +39,9 @@ void nufw_cleanup( int signal ) {
         nfq_unbind_pf(h, AF_INET);
 #else
     ipq_destroy_handle(hndl);
+#endif
+#ifdef HAVE_LIBCONNTRACK
+    nfct_close(cth);
 #endif
     /* destroy pid file */
     unlink(NUFW_PID_FILE);
@@ -329,6 +330,10 @@ int main(int argc,char * argv[]){
         printf("Could not set signal POLL");
         exit(1);
     }
+
+#ifdef HAVE_LIBCONNTRACK
+    cth = nfct_open(CONNTRACK, 0);
+#endif
 
     /* create packet server thread */
     if (pthread_create(&pckt_server,NULL,packetsrv,NULL) == EAGAIN){
