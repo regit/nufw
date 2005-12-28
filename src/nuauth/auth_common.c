@@ -662,6 +662,7 @@ gint take_decision(connection * element,gchar place)
 	int answer = NODECIDE;
 	char test;
 	GSList * user_group=element->user_groups;
+        time_t expire=0;
 
 #ifdef DEBUG_ENABLE
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
@@ -721,6 +722,23 @@ gint take_decision(connection * element,gchar place)
         }
 	element->decision=answer;
 
+//#define WANTOTEST 1 
+#ifdef WANTOTEST
+        /* TODO : do real stuff */
+        expire=time(NULL)+10;
+#endif
+        /* we must put element in expire list if needed before decision is taken */
+        if(expire>0){
+                struct limited_connection* datas=g_new0(struct limited_connection,1);
+                struct internal_message  *message=g_new0(struct internal_message,1);
+	        memcpy(&(datas->tracking_hdrs),&(element->tracking_hdrs),sizeof(tracking));
+                datas->expire=expire;
+                datas->gwaddr.s_addr=(element->tls)->peername.s_addr;
+                message->datas=datas;
+                message->type=INSERT_MESSAGE;
+		g_async_queue_push (nuauthdatas->limited_connexions_queue, message);
+        }
+        
 	if (nuauthconf->log_users_sync) {
 		/* copy current element */
 		connection * copy_of_element=(connection *)g_memdup(element,sizeof(connection));

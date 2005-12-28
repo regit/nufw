@@ -390,6 +390,11 @@ int main(int argc,char * argv[])
                   NULL);
   if (! nuauthdatas->tls_nufw_server )
       exit(1);
+   nuauthdatas->limited_connexions_handler = g_thread_create ( limited_connection_handler,
+                  NULL,
+                  FALSE,
+                  NULL);
+  
 
   if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
       g_message("Threads system started");
@@ -425,6 +430,11 @@ int main(int argc,char * argv[])
               g_async_queue_push(nuauthdatas->localid_auth_queue,message);
           }
       }
+      {
+              struct internal_message * message=g_new0(struct internal_message,1);
+              message->type=REFRESH_MESSAGE;
+              g_async_queue_push(nuauthdatas->limited_connexions_queue,message);
+      } 
       /* a little sleep */
       usleep(500000);	
   }

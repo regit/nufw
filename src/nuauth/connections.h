@@ -56,8 +56,7 @@ typedef struct uniq_headers {
  * It contains all datas relative to a packet
  * 
  */
-typedef struct Connection {
-  // netfilter stuff 
+typedef struct _Connection {
   GSList * packet_id; /**< Netfilter number. */
   long timestamp; /**< Packet arrival time (seconds). */
   int socket;  /**< socket from which nufw request is coming. */

@@ -160,7 +160,8 @@ struct pre_client_elt {
 	time_t validity;
 };
 
-gboolean remove_socket_from_pre_client_list(int c){
+gboolean remove_socket_from_pre_client_list(int c)
+{
 	GSList * client_runner=NULL;
 	g_static_mutex_lock (&pre_client_list_mutex);
 	for(client_runner=pre_client_list;client_runner;client_runner=client_runner->next){
@@ -180,7 +181,8 @@ gboolean remove_socket_from_pre_client_list(int c){
 }
 
 
-void  pre_client_check(){
+void  pre_client_check()
+{
 	GSList * client_runner=NULL;
 	time_t current_timestamp;
 	for(;;){
@@ -216,7 +218,8 @@ void  pre_client_check(){
 /* strictly close a tls session
  * nothing to care about client */
 
-int close_tls_session(int c,gnutls_session* session){
+int close_tls_session(int c,gnutls_session* session)
+{
 		if (close(c))
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
 				g_message("close_tls_session : close() failed!");
@@ -1118,7 +1121,7 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 					if (gnutls_record_send(*(c_session->tls),&msg,sizeof(msg)) < 0){ 
 #ifdef DEBUG_ENABLE
 						if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
-							g_message("Argh. gnutls_record_send() failure");
+							g_message("gnutls_record_send() failure at %s:%d",__FILE__,__LINE__);
 #endif
 						if (nuauthconf->push){
 							close_tls_session(c,c_session->tls);
@@ -1497,8 +1500,7 @@ void* tls_user_authsrv()
                                 if ( c+1 > mx )
                                     mx = c + 1;
                                 /* Set KEEP ALIVE on connection */
-                                setsockopt (
-                                                c,
+                                setsockopt ( c,
                                                 SOL_SOCKET,
                                                 SO_KEEPALIVE,
                                                 &option_value,
@@ -1735,7 +1737,7 @@ void* tls_nufw_authsrv()
 			NULL,
 			(GDestroyNotify)	clean_nufw_session
 			);
-
+        nufw_servers_mutex = g_mutex_new();
 
 	/* this must be called once in the program
 	*/
@@ -1837,10 +1839,11 @@ void* tls_nufw_authsrv()
 			c = accept (sck_inet,
 					(struct sockaddr *)&addr_clnt,
 					&len_inet);
-			if (c == -1)
+			if (c == -1){
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
 					g_warning("accept");
 				}
+                        }
 
 			/* test if server is in the list of authorized servers */
 			if (! check_inaddr_in_array(addr_clnt.sin_addr,nuauthconf->authorized_servers)){
@@ -1864,8 +1867,11 @@ void* tls_nufw_authsrv()
 			nu_session=g_new0(nufw_session,1);
 			nu_session->usage=0;
 			nu_session->alive=TRUE;
+                        nu_session->peername.s_addr=addr_clnt.sin_addr.s_addr;
 			if (tls_connect(c,&(nu_session->tls)) == SASL_OK){
+                                g_mutex_lock(nufw_servers_mutex);
 				g_hash_table_insert(nufw_servers,GINT_TO_POINTER(c),nu_session);
+                                g_mutex_unlock(nufw_servers_mutex);
 				FD_SET(c,&tls_rx_set);
 				if ( c+1 > mx )
 					mx = c + 1;
@@ -1893,6 +1899,7 @@ void* tls_nufw_authsrv()
 						g_message("nufw server disconnect on %d\n",c);
 #endif
 					FD_CLR(c,&tls_rx_set);
+                                                g_mutex_lock(nufw_servers_mutex);
 					if (g_atomic_int_get(&(c_session->usage)) == 0) {
 						/* clean client structure */
 						g_hash_table_remove(nufw_servers,GINT_TO_POINTER(c));
@@ -1900,6 +1907,7 @@ void* tls_nufw_authsrv()
 						g_hash_table_steal(nufw_servers,GINT_TO_POINTER(c));
 						c_session->alive=FALSE;
 					}
+                                                g_mutex_unlock(nufw_servers_mutex);
 					close(c);
 				}
 			}
@@ -2030,7 +2038,10 @@ void push_worker ()
 
 void close_servers(int signal)
 {
+        g_mutex_lock(nufw_servers_mutex);
 	g_hash_table_destroy(nufw_servers);
+        nufw_servers=NULL;
+        g_mutex_unlock(nufw_servers_mutex);
 }
 
 void end_tls(int signal)

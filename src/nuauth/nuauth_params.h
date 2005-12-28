@@ -72,6 +72,7 @@ struct nuauth_datas {
     GThread *tls_pusher;
     GThread *search_and_fill_worker;
     GThread *localid_auth_thread;
+    GThread *limited_connexions_handler;
 
         /**
      * pool of thread which treat user packet.
@@ -94,6 +95,7 @@ struct nuauth_datas {
 
 
     GAsyncQueue* connexions_queue;
+    GAsyncQueue* limited_connexions_queue;
     GAsyncQueue* tls_push_queue;
     GAsyncQueue* localid_auth_queue;
 /* cache related structure */

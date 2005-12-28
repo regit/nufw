@@ -119,8 +119,12 @@ else
 fi
 fi
 
-if test "${build_nutrackd}" = "yes"; then
-	AC_CHECK_LIB([netfilter_conntrack], [nfct_dump_conntrack_table], build_nutrackd="yes", build_nutrackd="",[-ldl -lnfnetlink])
+AC_CHECK_LIB([netfilter_conntrack], [nfct_dump_conntrack_table], have_conntrack="yes", have_conntrack="",[-ldl -lnfnetlink])
+
+if test "${have_conntrack}" = "yes"; then
+        AC_DEFINE_UNQUOTED([HAVE_LIBCONNTRACK],[1],[libconntrack has been found])
+else
+        build_nutrackd=""
 fi
 
 AM_CONDITIONAL(BUILD_NUFW, test x${build_nufw} = xyes)
@@ -131,7 +135,8 @@ AM_CONDITIONAL(BUILD_LIBNUCLIENT, test x${build_libnuclient} = xyes)
 
 AM_CONDITIONAL(HAVE_IPQ,test x$have_ipq = xyes)
 AM_CONDITIONAL(USE_USER_MARK, test x$enable_user_mark = xyes)
-AM_CONDITIONAL(HAVE_NFQUEUE,test x$have_nfqueue = xyes)
+AM_CONDITIONAL(HAVE_NFQUEUE_ONLY, test x$have_nfqueue = xyes && test x$have_conntrack = x  )
+AM_CONDITIONAL(HAVE_NFQUEUE_CONNTRACK,test x$have_conntrack = xyes && test x$have_nfqueue = xyes )
 
 if test "${debug}" = "yes"; then
 	AC_DEFINE_UNQUOTED([DEBUG_ENABLE],[1],[Will compile development debug message])

@@ -57,6 +57,7 @@ struct buffer_read {
 
 typedef struct Nufw_session {
         gnutls_session* tls;
+        struct in_addr peername;
 	gint usage;
 	gboolean alive;
 } nufw_session;
@@ -68,6 +69,7 @@ void create_x509_credentials();
 void* tls_nufw_authsrv();
 
 GHashTable* nufw_servers;
+GMutex * nufw_servers_mutex;
 
 void close_servers(int signal);
 

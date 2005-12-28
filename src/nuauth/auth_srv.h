@@ -49,6 +49,7 @@
 #include <conffile.h>
 #include "tls.h"
 #include "connections.h"
+#include "conntrack.h"
 #include "auth_common.h"
 #include "check_acls.h"
 #include "user_logs.h"

@@ -1,4 +1,3 @@
-
 /*
  ** Copyright(C) 2003-2005 Eric Leblond <eric@regit.org>
  **		     Vincent Deffontaines <vincent@gryzor.com>
@@ -167,7 +166,7 @@ static gchar * generate_osname(gchar *Name,gchar *Version,gchar *Release)
       return g_strdup("");
   }else
       return g_strdup("");
-  return g_strjoin("-",Name,Version,Release);
+  return g_strjoin("-",Name,Version,Release,NULL);
 }
 
 static gchar* generate_appname(gchar *Name)

@@ -218,7 +218,7 @@ gboolean free_nuauth_params(struct nuauth_params* data)
 {
 	g_free(data->nufw_srv);
 	g_free(data->client_srv);
-	//g_free(data->authorized_servers);
+	g_free(data->authorized_servers);
 	g_strfreev(data->multi_users_array);
 	g_free(data->multi_servers_array);
 	return TRUE;
