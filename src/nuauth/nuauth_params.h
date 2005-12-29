@@ -57,6 +57,8 @@ struct nuauth_params {
     /* multi users clients */
     char** multi_users_array;
     struct in_addr * multi_servers_array;
+    /* period definition */
+    GHashTable* periods;
     /* performance tuning */
     int nbacl_check;
     int nbipauth_check;

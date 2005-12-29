@@ -88,9 +88,9 @@ static gboolean get_old_entry(gpointer key,gpointer value,gpointer user_data)
 {
   if (((struct limited_connection *)value)->expire < GPOINTER_TO_UINT(user_data)){
 #ifdef DEBUG_ENABLE
-  if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)){
-      g_message("found connection to be destroyed");
-  }
+      if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)){
+          g_message("found connection to be destroyed");
+      }
 #endif
 
       return TRUE;
@@ -140,9 +140,11 @@ void limited_connection_handler()
                 g_hash_table_insert(conn_list,&(((struct limited_connection*)message->datas)->tracking_hdrs),message->datas);
                 break;
         case REFRESH_MESSAGE:
+#ifdef DEBUG_ENABLE
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)){
                     g_message("expire conn list size : %d",g_hash_table_size (conn_list));
                 }
+#endif
                 destroy_expired_connection(conn_list);
                 break;
         case FREE_MESSAGE:
@@ -151,11 +153,14 @@ void limited_connection_handler()
                     if (elt){
                         elt->expire=0;
                         g_hash_table_remove(conn_list,message->datas);
-                    } else {
+                    } 
+#ifdef DEBUG_ENABLE
+                    else {
                         if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)){
                             g_message("connection not found can not be destroyed");
                         }
                     }
+#endif
                     g_free(message->datas);
                 }
       }
