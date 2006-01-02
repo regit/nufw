@@ -87,17 +87,20 @@ int auth_packet_to_decision(char* dgram)
                                               printf("[%i] Marking packet with %d!\n",getpid(),*(u_int16_t *)(dgram+2));
                                           }
                                       }
-#endif
+#endif /* DEBUG_ENABLE */
                                       /* we put the userid mark at the end of the mark, not changing the 16 first big bits */
 #ifdef WORDS_BIGENDIAN
                                       IPQ_SET_VWMARK(packet_id, NF_ACCEPT,((swap16(*(u_int16_t *)(dgram+2))) & 0xffff ) | (nfmark & 0xffff0000 )); 
 #else
                                       IPQ_SET_VWMARK(packet_id, NF_ACCEPT,(*(u_int16_t *)(dgram+2) & 0xffff ) | (nfmark & 0xffff0000 )); 
-#endif
+#endif /* WORDS_BIGENDIAN */
                                   } else {
-#endif
+#endif /* HAVE_LIBIPQ_MARK || USE_NFQUEUE */
                                       IPQ_SET_VERDICT(packet_id, NF_ACCEPT);
+
+#if HAVE_LIBIPQ_MARK || USE_NFQUEUE
                                   }
+#endif /* HAVE_LIBIPQ_MARK || USE_NFQUEUE */
 
                                   pckt_tx++;
                                   return 1;
