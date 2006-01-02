@@ -295,12 +295,13 @@ int unload_modules()
 
 void block_on_conf_reload()
 {
-  g_mutex_lock(nuauthdatas->reload_cond_mutex);
-  if (nuauthdatas->need_reload){
-      g_atomic_int_inc(&(nuauthdatas->locked_threads_number));
-      while(nuauthdatas->need_reload){
-          g_cond_wait (nuauthdatas->reload_cond, nuauthdatas->reload_cond_mutex);
-      }
-  }
-  g_mutex_unlock(nuauthdatas->reload_cond_mutex);
+	g_mutex_lock(nuauthdatas->reload_cond_mutex);
+	if (nuauthdatas->need_reload){
+		g_mutex_unlock(nuauthdatas->reload_cond_mutex);
+		g_atomic_int_inc(&(nuauthdatas->locked_threads_number));
+		while(nuauthdatas->need_reload){
+			g_cond_wait (nuauthdatas->reload_cond, nuauthdatas->reload_cond_mutex);
+		}
+	}
+	g_mutex_unlock(nuauthdatas->reload_cond_mutex);
 }
