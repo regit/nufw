@@ -28,4 +28,7 @@ void print_users_list();
 void log_user_packet (connection element,int state);
 void real_log_user_packet (gpointer userdata, gpointer data);
 
+gboolean log_user_session(user_session* element,int state);
+void log_user_session_thread (gpointer element,gpointer state);
+
 #endif

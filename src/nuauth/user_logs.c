@@ -24,6 +24,11 @@ struct Conn_State {
 	connection conn;
 	int state;};
 
+struct session_event {
+	user_session* session;
+	int state;
+};
+
 /**
  * log user packet or by a direct call to log module or by sending log 
  * message to logger thread pool.
@@ -32,7 +37,8 @@ struct Conn_State {
  * Argument 2 : state of the connection
  */
 
-void log_user_packet (connection element,int state){
+void log_user_packet (connection element,int state)
+{
 	struct Conn_State conn_state= { element, state};
 	struct Conn_State * conn_state_copy;
 
@@ -90,4 +96,35 @@ void real_log_user_packet (gpointer userdata, gpointer data){
 	/* free userdata */
 	g_free(((struct Conn_State*)userdata)->conn.username);
 	g_free(userdata);
+}
+
+gboolean log_user_session(user_session* usession,int state)
+{
+	struct session_event* sessevent=g_new0(struct session_event,1);
+	/* feed thread pool */
+	if (nuauthconf->log_users & 1){
+		g_message("logging session");
+		sessevent->session=g_memdup(usession,sizeof(usession));
+		sessevent->state=state;
+		if ( sessevent->session->userid ){
+			if (nuauthconf->log_users_without_realm){
+				sessevent->session->userid = get_rid_of_domain(usession->userid);
+			} else {
+				sessevent->session->userid  = g_strdup(usession->userid);
+			}
+		}
+		g_thread_pool_push(nuauthdatas->user_session_loggers,
+				sessevent,
+				NULL);
+	}
+	return TRUE;
+}
+
+void log_user_session_thread (gpointer element,gpointer data)
+{
+        block_on_conf_reload();
+	user_session_logs(((struct session_event*)element)->session,((struct session_event*)element)->state);
+	g_free(((struct session_event*)element)->session->userid);
+	g_free(((struct session_event*)element)->session);
+	g_free(element);
 }

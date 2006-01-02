@@ -302,6 +302,7 @@ void block_on_conf_reload()
 		while(nuauthdatas->need_reload){
 			g_cond_wait (nuauthdatas->reload_cond, nuauthdatas->reload_cond_mutex);
 		}
+	} else {
+		g_mutex_unlock(nuauthdatas->reload_cond_mutex);
 	}
-	g_mutex_unlock(nuauthdatas->reload_cond_mutex);
 }

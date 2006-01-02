@@ -47,7 +47,7 @@ typedef struct User_session {
         struct timeval last_req;
         gboolean req_needed;
 	gboolean multiusers;
-        time_t expire;
+        time_t expire; /**< set to -1 to have unlimited session */
 } user_session;
 
 

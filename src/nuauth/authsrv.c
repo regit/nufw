@@ -354,17 +354,29 @@ int main(int argc,char * argv[])
                   NULL);
 
 
-  if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+  if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
       g_message("Creating %d user loggers", nuauthconf->nbloggers);
+  }
   nuauthdatas->user_loggers = g_thread_pool_new  ((GFunc)  real_log_user_packet,
                   NULL,
                   nuauthconf->nbloggers,
                   POOL_TYPE,
                   NULL);
+  if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
+	  g_message("Creating %d user session loggers", nuauthconf->nbloggers);
+  }
+  nuauthdatas->user_session_loggers = g_thread_pool_new  ((GFunc)  log_user_session_thread,
+		  NULL,
+		  nuauthconf->nbloggers,
+		  POOL_TYPE,
+		  NULL);
+
+
 
   if ( nuauthconf->log_users_sync ){
-      if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+      if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
           g_message("Creating %d decision workers", nuauthconf->nbloggers);
+      }
       nuauthdatas->decisions_workers = g_thread_pool_new  ((GFunc)  decisions_queue_work,
                       NULL,
                       nuauthconf->nbloggers,

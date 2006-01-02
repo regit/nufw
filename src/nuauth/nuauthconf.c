@@ -255,6 +255,7 @@ void nuauth_reload( int signal ) {
         pool_threads_num=g_thread_pool_get_num_threads(nuauthdatas->user_checkers)
                 + g_thread_pool_get_num_threads(nuauthdatas->acl_checkers)
                 + g_thread_pool_get_num_threads(nuauthdatas->user_loggers);
+                + g_thread_pool_get_num_threads(nuauthdatas->user_session_loggers);
         if (nuauthconf->do_ip_authentication){
             pool_threads_num+=g_thread_pool_get_num_threads(nuauthdatas->ip_authentication_workers); 
         }
@@ -359,6 +360,7 @@ static struct nuauth_params* compare_and_update_nuauthparams(struct nuauth_param
           g_thread_pool_set_max_threads(nuauthdatas->decisions_workers,new->nbloggers,NULL);
       }
       g_thread_pool_set_max_threads(nuauthdatas->user_loggers,new->nbloggers,NULL);
+      g_thread_pool_set_max_threads(nuauthdatas->user_session_loggers,new->nbloggers,NULL);
       /* debug is set via command line thus duplicate */
       new->debug_level=current->debug_level;
       new->debug_areas=current->debug_areas;

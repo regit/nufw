@@ -932,19 +932,13 @@ int sasl_user_check(user_session* c_session)
 			}
 		}
 
-                c_session->expire=time(NULL)+nuauthconf->session_duration;
+		if (nuauthconf->session_duration){
+                	c_session->expire=time(NULL)+nuauthconf->session_duration;
+		} else {
+			c_session->expire=-1;
+		}
 
-                g_mutex_lock(nuauthdatas->reload_cond_mutex);
-                if (! (nuauthdatas->need_reload)){
-                    g_mutex_unlock(nuauthdatas->reload_cond_mutex);
-                    user_session_logs(c_session,SESSION_OPEN);
-                } else {
-                    while(nuauthdatas->need_reload){
-                        g_cond_wait (nuauthdatas->reload_cond, nuauthdatas->reload_cond_mutex);
-                    }
-                    g_mutex_unlock(nuauthdatas->reload_cond_mutex);
-                    user_session_logs(c_session,SESSION_OPEN);
-                }
+                log_user_session(c_session,SESSION_OPEN);
 		/* sasl connection is not used anymore */
 		return SASL_OK;
 	} else {
@@ -1552,18 +1546,7 @@ void* tls_user_authsrv()
                                 } else {
 				u_request = treat_user_request( c_session );
 				if (u_request == EOF) {
-                                    g_mutex_lock(nuauthdatas->reload_cond_mutex);
-                                    if (! (nuauthdatas->need_reload)){
-                                        g_mutex_unlock(nuauthdatas->reload_cond_mutex);
-                                        user_session_logs(c_session,SESSION_CLOSE);
-                                    } else {
-                                        while(nuauthdatas->need_reload){
-                                            g_cond_wait (nuauthdatas->reload_cond, nuauthdatas->reload_cond_mutex);
-                                        }
-                                        user_session_logs(c_session,SESSION_CLOSE);
-                                        g_mutex_unlock(nuauthdatas->reload_cond_mutex);
-                                    }
-
+                                        log_user_session(c_session,SESSION_CLOSE);
 #ifdef DEBUG_ENABLE
 					if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
 						g_message("client disconnect on %d\n",c);

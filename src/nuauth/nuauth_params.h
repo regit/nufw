@@ -87,6 +87,7 @@ struct nuauth_datas {
     GThreadPool* acl_checkers;
 
     GThreadPool* user_loggers; 
+    GThreadPool* user_session_loggers; 
     GThreadPool* decisions_workers;
 
     GThreadPool*  ip_authentication_workers;
