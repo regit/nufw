@@ -64,6 +64,7 @@ struct nuauth_params {
     int nbipauth_check;
     int nbuser_check;
     int nbloggers;
+    int nb_session_loggers;
 };
 
 

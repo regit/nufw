@@ -6,7 +6,11 @@
 	- nuauth : handle nufw destroy message 
 	- nufw : restore compilation of nufw in libipq mode
 	- nuauth : introduce a ppol of thread for user session logging
-	- nuauth : fix a stupid but grave bug on module reloading
+	- nuauth : fix a stupid but critical bug on module reloading
+	- nuauth : introduce nuauth_number_session_loggers to specify the
+	  number of threads in the user session logging pool
+	- nuauth : change type of limited_connection_handler to suppress
+	  compilation warning
 1.1.2 (2005/12/22)
 	- nufw : new threads architecture
 	- libnuclient : fix potential problem with new thread architecture

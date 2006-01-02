@@ -27,6 +27,6 @@ struct limited_connection {
 };
 
 
-void limited_connection_handler();
+void* limited_connection_handler();
 
 #endif /* CONNTRACK_H */

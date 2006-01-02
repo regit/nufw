@@ -400,8 +400,9 @@ int main(int argc,char * argv[])
                   NULL,
                   FALSE,
                   NULL);
-  if (! nuauthdatas->tls_nufw_server )
+  if (! nuauthdatas->tls_nufw_server ){
       exit(1);
+  }
    nuauthdatas->limited_connexions_handler = g_thread_create ( limited_connection_handler,
                   NULL,
                   FALSE,

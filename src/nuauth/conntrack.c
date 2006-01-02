@@ -120,7 +120,7 @@ void destroy_expired_connection(GHashTable* conn_list)
  * to expire
  */
 
-void limited_connection_handler()
+void* limited_connection_handler()
 {
   GHashTable* conn_list;
   struct internal_message *message=NULL;
@@ -167,5 +167,5 @@ void limited_connection_handler()
       g_free(message);
 
   }
-
+  return NULL;
 }

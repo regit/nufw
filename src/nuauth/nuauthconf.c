@@ -101,6 +101,7 @@ struct nuauth_params*   init_nuauthconf()
       { "nuauth_number_aclcheckers" , G_TOKEN_INT , NB_ACLCHECK, NULL },
       { "nuauth_number_ipauthcheckers" , G_TOKEN_INT , NB_ACLCHECK, NULL },
       { "nuauth_number_loggers" , G_TOKEN_INT , NB_LOGGERS, NULL },
+      { "nuauth_number_session_loggers" , G_TOKEN_INT , NB_LOGGERS, NULL },
       { "nuauth_log_users" , G_TOKEN_INT , 1, NULL },
       { "nuauth_log_users_sync" , G_TOKEN_INT , 0, NULL },
       { "nuauth_log_users_strict" , G_TOKEN_INT , 1, NULL },
@@ -169,6 +170,9 @@ struct nuauth_params*   init_nuauthconf()
 
   vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_number_loggers");
   nuauthconf->nbloggers=*(int*)(vpointer);
+
+  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_number_session_loggers");
+  nuauthconf->nb_session_loggers=*(int*)(vpointer);
 
   vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_packet_timeout");
   nuauthconf->packet_timeout=*(int*)(vpointer);
@@ -360,7 +364,7 @@ static struct nuauth_params* compare_and_update_nuauthparams(struct nuauth_param
           g_thread_pool_set_max_threads(nuauthdatas->decisions_workers,new->nbloggers,NULL);
       }
       g_thread_pool_set_max_threads(nuauthdatas->user_loggers,new->nbloggers,NULL);
-      g_thread_pool_set_max_threads(nuauthdatas->user_session_loggers,new->nbloggers,NULL);
+      g_thread_pool_set_max_threads(nuauthdatas->user_session_loggers,new->nb_session_loggers,NULL);
       /* debug is set via command line thus duplicate */
       new->debug_level=current->debug_level;
       new->debug_areas=current->debug_areas;
