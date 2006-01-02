@@ -48,7 +48,9 @@ int auth_packet_to_decision(char* dgram)
   u_int32_t packet_id;
   int sandf;
   uint32_t nfmark;
+#ifdef HAVE_LIBCONNTRACK
   int res;
+#endif
   switch (*dgram) {
     case 0x1:
             switch (*(dgram+1)) {
@@ -169,7 +171,7 @@ int auth_packet_to_decision(char* dgram)
                                         id);
 
 
-#else
+#else /* HAVE_LIBCONNTRACK */
                       if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
                           if (log_engine == LOG_TO_SYSLOG) {
                               syslog(SYSLOG_FACILITY(DEBUG_LEVEL_WARNING),"Connexion destroy message not supported");
@@ -177,7 +179,7 @@ int auth_packet_to_decision(char* dgram)
                               printf("[%i] Connexion destroy message not supported\n",getpid());
                           }
                       }
-#endif
+#endif /* HAVE_LIBCONNTRACK */
                       }
                       break;
               default:
