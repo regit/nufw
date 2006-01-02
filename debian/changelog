@@ -1,3 +1,9 @@
+nufw (1.1.3-1) stable; urgency=low
+
+  * New release
+
+ -- Regit <regit@profy.inl.fr>  Mon,  2 Jan 2006 18:16:00 +0100
+
 nufw (1.1.2-1) stable; urgency=low
 
   * New svn release

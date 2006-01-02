@@ -4,6 +4,9 @@
 	  message to nuauth. This is mandatory for connection expiration
 	  system.
 	- nuauth : handle nufw destroy message 
+	- nufw : restore compilation of nufw in libipq mode
+	- nuauth : introduce a ppol of thread for user session logging
+	- nuauth : fix a stupid but grave bug on module reloading
 1.1.2 (2005/12/22)
 	- nufw : new threads architecture
 	- libnuclient : fix potential problem with new thread architecture
