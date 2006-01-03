@@ -108,6 +108,7 @@ typedef struct _Connection {
 struct acl_group {
   GSList * groups;
   char answer;
+  time_t expire;
 };
 
 

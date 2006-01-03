@@ -869,6 +869,7 @@ G_MODULE_EXPORT GSList* acl_check(connection* element)
   int initstatus;
   uint32_t src_ip, dst_ip;
   static GStaticMutex plaintext_initmutex = G_STATIC_MUTEX_INIT;
+  time_t periodend;
 
 
   /* init has only to be done once */
@@ -1081,18 +1082,13 @@ G_MODULE_EXPORT GSList* acl_check(connection* element)
           }
       }
 
-      /* TODO better not like a trainee
-       * period checking 
+       /* period checking 
        * */
-      {
-          time_t periodend=get_end_of_period_for_time_t(p_acl->period,time(NULL));
+          periodend=get_end_of_period_for_time_t(p_acl->period,time(NULL));
           if (periodend==0){
               /* this is not a match */
                 continue;
-          } else {
-                element->expire=periodend;
           }
-      }
       // We have a match 8-)
       if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
           g_message("[plaintext] matching with decision %d", p_acl->decision);
@@ -1101,6 +1097,7 @@ G_MODULE_EXPORT GSList* acl_check(connection* element)
       g_assert(this_acl);
       this_acl->answer = p_acl->decision;
       this_acl->groups = g_slist_copy(p_acl->groups);
+      this_acl->expire = periodend; 
       g_list = g_slist_prepend(g_list, this_acl);
   }
 

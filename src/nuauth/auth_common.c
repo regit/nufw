@@ -662,7 +662,7 @@ gint take_decision(connection * element,gchar place)
 	int answer = NODECIDE;
 	char test;
 	GSList * user_group=element->user_groups;
-        time_t expire=0;
+        time_t expire=-1; /* no expiration by default */
 
 #ifdef DEBUG_ENABLE
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
@@ -698,11 +698,25 @@ gint take_decision(connection * element,gchar place)
 					if (g_slist_find(((struct acl_group *)(parcours->data))->groups,(gconstpointer)user_group->data)) {
 						answer = ((struct acl_group *)(parcours->data))->answer ;
 						if (nuauthconf->prio_to_nok == 1){
-							if (answer == NOK)
+							if (answer == NOK){
 								test=OK;
+							}
 						} else {
-							if (answer == OK)
+							if (answer == OK){
 								test=OK;
+							}
+						}
+						if (answer == OK){
+							if ( (expire == -1) || 
+								( (((struct acl_group *)(parcours->data))->expire != -1)
+									&&
+									(expire !=-1) 
+									&&
+									(expire > ((struct acl_group *)(parcours->data))->expire 
+									)
+							    )) {
+								expire =  ((struct acl_group *)(parcours->data))->expire;
+							}
 						}
 					}
 				}
@@ -720,14 +734,15 @@ gint take_decision(connection * element,gchar place)
         if(answer == NODECIDE){
           answer=NOK;
         }
+	if (expire == 0){
+		answer=NOK;
+	}
 	element->decision=answer;
 
-#define WANTOTEST 0 
-#ifdef WANTOTEST
-        /* TODO : do real stuff */
-        expire=time(NULL)+3600;
-#endif
-        /* we must put element in expire list if needed before decision is taken */
+	if ((element->expire != -1) && (element->expire < expire)){
+		expire=element->expire;
+	}
+	/* we must put element in expire list if needed before decision is taken */
         if(expire>0){
                 struct limited_connection* datas=g_new0(struct limited_connection,1);
                 struct internal_message  *message=g_new0(struct internal_message,1);
