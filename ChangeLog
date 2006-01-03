@@ -1,4 +1,7 @@
 1.1.3
+	- nutrackd : PostGreSQL support
+	- Fixes in the PostGreSQL log module (removed the useless server_port
+	variable, fixed a very stupid strlen bug on port)
 	- nufw| nuauth : expiration of connection is now possible
 	- nufw : new switch -C to handle contnrack destroy event by sending a
 	  message to nuauth. This is mandatory for connection expiration
@@ -40,7 +43,7 @@
 	- plaintext module : cleaning and icmp support
 	- increase internal message usage instead of sending directly
 	structure to queue.
-	- nufw : get rid fo old UDP protocol
+	- nufw : get rid of old UDP protocol
 	- nuauth : fix double free problem linked with string_escape function
 	- libnuclient : new algo in push mode
 	- libnuclient : UDP support, need recent kernel

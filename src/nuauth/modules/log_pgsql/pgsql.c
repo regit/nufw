@@ -98,13 +98,13 @@ G_MODULE_EXPORT PGconn *pgsql_conn_init(void){
     PGconn *ld = NULL;
     char *pgsql_conninfo;
     int pgsql_status; //,err,version=3;
-    char port[15],timeout[15],server_port[15];
+    char port[15],timeout[15]; //,server_port[15];
 
     if (snprintf(port,14,"%d",pgsql_server_port) >= 14){return NULL;}
     if (snprintf(timeout,14,"%d",pgsql_request_timeout) >= 14){return NULL;};
-    if (snprintf(server_port,14,"%d",pgsql_server_port) >= 14){return NULL;};
+//    if (snprintf(server_port,14,"%d",pgsql_server_port) >= 14){return NULL;};
     pgsql_conninfo = (char *)calloc(strlen(pgsql_user) + strlen(pgsql_passwd) + 
-        strlen(pgsql_server) + strlen(pgsql_ssl) + strlen(server_port) + strlen(pgsql_db_name) +
+        strlen(pgsql_server) + strlen(pgsql_ssl) + strlen(pgsql_db_name) +
         strlen(port) + strlen(timeout) +
         strlen("hostaddr='' port= dbname='' user='' password='' connect_timeout= sslmode='' ") + 1, 
         sizeof(char));
@@ -113,7 +113,7 @@ G_MODULE_EXPORT PGconn *pgsql_conn_init(void){
     strncat(pgsql_conninfo,"host='",6);
     strncat(pgsql_conninfo,pgsql_server,strlen(pgsql_server));
     strncat(pgsql_conninfo,"' port=",7);
-    strncat(pgsql_conninfo,port,strlen(pgsql_conninfo));
+    strncat(pgsql_conninfo,port,strlen(port));
     strncat(pgsql_conninfo," dbname='",9);
     strncat(pgsql_conninfo,pgsql_db_name,strlen(pgsql_db_name));
     strncat(pgsql_conninfo,"' user='",8);

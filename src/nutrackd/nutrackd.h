@@ -32,6 +32,7 @@ typedef struct _SQLconnection {
   char *database;
   char *pass;
   char *table;
+  int timeout;
   int ssl_enabled;
   char *ssl_key;
   char *ssl_cert;

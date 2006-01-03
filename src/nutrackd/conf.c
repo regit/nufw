@@ -68,6 +68,7 @@ read_conf (FILE * FH)
 #else
   our_conn->port = 5432;
 #endif
+  our_conn->timeout = 15;
 
   while ((cp = fgets (line, sizeof (line), FH)) != NULL) {
 		  if (line[0] == '#') {
@@ -93,6 +94,8 @@ read_conf (FILE * FH)
         parse_char(&our_conn->user);
     else if(!strcmp(token,"db_pass"))
         parse_char(&our_conn->pass);
+    else if(!strcmp(token,"db_timeout"))
+        parse_unsigned_int(&our_conn->timeout);
   }
   return our_conn;
 }
