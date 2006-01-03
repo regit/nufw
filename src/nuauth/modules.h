@@ -36,4 +36,6 @@ int user_session_logs(user_session* user , int state);
 
 void block_on_conf_reload();
 
+void parse_periods(GHashTable* periods);
+
 #endif

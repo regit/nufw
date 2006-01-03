@@ -102,6 +102,7 @@
 #define SESSION_DURATION 0
 #define DEFAULT_USERAUTH_MODULE "libsystem"
 #define DEFAULT_ACLS_MODULE "libplaintext"
+#define DEFAULT_PERIODS_MODULE "libplaintext"
 #define DEFAULT_LOGS_MODULE "libsyslog"
 #define DEFAULT_IPAUTH_MODULE "libident"
 #define MODULE_PATH MODULE_DIR "/nuauth/modules/"

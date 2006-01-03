@@ -96,6 +96,7 @@ typedef struct _Connection {
   char state;
   /** decision on packet. */
   char decision;
+  time_t expire; /**< set to -1 to not expire */
 } connection;
 
 

@@ -114,15 +114,27 @@ int user_logs (connection element, int state){
  * log user connection and disconnection
  */
 int user_session_logs(user_session* user , int state){
-	if ( nuauthconf->log_users & 1 ){
-	/* iter through all modules list */
-	GSList *walker=user_session_logs_modules;
-	for (;walker!=NULL;walker=walker->next ){
-		(*(user_session_logs_callback*)(walker->data))(user,state);
-	}
+    /* iter through all modules list */
+    GSList *walker=user_session_logs_modules;
+    for (;walker!=NULL;walker=walker->next ){
+        (*(user_session_logs_callback*)(walker->data))(user,state);
+    }
 
-        }
     return 0;
+}
+
+/** 
+ * parse time period configuration for each module
+ * and fille the given hash (first argument)
+ */
+
+void parse_periods(GHashTable* periods)
+{
+   /* iter through all modules list */
+    GSList *walker=period_modules;
+    for (;walker!=NULL;walker=walker->next ){
+        (*(define_period_callback*)(walker->data))(periods);
+    }
 }
 
 int init_modules_system(){
@@ -130,6 +142,7 @@ int init_modules_system(){
 	modules_mutex = g_mutex_new ();
 	user_check_modules=NULL;
 	acl_check_modules=NULL;
+        period_modules=NULL;
 	ip_auth_modules=NULL;
 	user_logs_modules=NULL;
         user_session_logs_modules=NULL;
@@ -194,10 +207,12 @@ int load_modules()
 	char * nuauth_user_logs_module;
 	char * nuauth_user_session_logs_module;
 	char * nuauth_ip_authentication_module;
+        char * nuauth_periods_module;
 	char *configfile=DEFAULT_CONF_FILE;
 	confparams nuauth_vars[] = {
 		{ "nuauth_user_check_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_USERAUTH_MODULE) },
 		{ "nuauth_acl_check_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_ACLS_MODULE) },
+		{ "nuauth_periods_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_PERIODS_MODULE) },
 		{ "nuauth_user_logs_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_LOGS_MODULE) },
 		{ "nuauth_user_session_logs_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_LOGS_MODULE) },
 		{ "nuauth_ip_authentication_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_IPAUTH_MODULE) }
@@ -208,19 +223,22 @@ int load_modules()
 	parse_conffile(configfile,sizeof(nuauth_vars)/sizeof(confparams),nuauth_vars);
 
 	vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_user_check_module");
-	nuauth_user_check_module=(char*)(vpointer);//?vpointer:nuauth_user_check_module);
+	nuauth_user_check_module=(char*)(vpointer);
 	vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_user_logs_module");
-	nuauth_user_logs_module=(char*)(vpointer);//?vpointer:nuauth_user_logs_module);
+	nuauth_user_logs_module=(char*)(vpointer);
 
 	vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_user_session_logs_module");
-	nuauth_user_session_logs_module=(char*)(vpointer);//?vpointer:nuauth_user_logs_module);
+	nuauth_user_session_logs_module=(char*)(vpointer);
 
 
 	vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_acl_check_module");
-	nuauth_acl_check_module=(char*)(vpointer);//?vpointer:nuauth_acl_check_module);
+	nuauth_acl_check_module=(char*)(vpointer);
+
+	vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_periods_module");
+	nuauth_periods_module=(char*)(vpointer);
 
 	vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_ip_authentication_module");
-	nuauth_ip_authentication_module=(char*)(vpointer);//?vpointer:nuauth_ip_authentication_module);
+	nuauth_ip_authentication_module=(char*)(vpointer);
 
 	/* external auth module loading */
 	g_mutex_lock(modules_mutex);
@@ -236,6 +254,10 @@ int load_modules()
 	load_modules_from(nuauth_acl_check_module,"acl_check",&acl_check_modules);
 	g_free(nuauth_acl_check_module);
 
+
+	load_modules_from(nuauth_periods_module,"define_periods",&period_modules);
+	g_free(nuauth_periods_module);
+        
 	/* user logs modules */
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
 		g_message("Loading user packet logging modules:");
@@ -269,6 +291,8 @@ int unload_modules()
 	user_check_modules=NULL;
         g_slist_free(acl_check_modules);
 	acl_check_modules=NULL;
+        g_slist_free(period_modules);
+        period_modules=NULL;
         g_slist_free(ip_auth_modules);
 	ip_auth_modules=NULL;
         g_slist_free(user_logs_modules);
@@ -306,3 +330,5 @@ void block_on_conf_reload()
 		g_mutex_unlock(nuauthdatas->reload_cond_mutex);
 	}
 }
+
+

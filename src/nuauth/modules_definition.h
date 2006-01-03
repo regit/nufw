@@ -23,6 +23,13 @@ GSList* user_check_modules;
 
 GSList* acl_check_modules;
 
+/** this is the list of module which are used to define time period
+ * as this is used by other modules there is no need to have a special locking 
+ * mechanism for them. It will not be used if usage of all other modules (specifically acls and user one) 
+ * is blocked.
+ */
+GSList* period_modules;
+
 GSList* ip_auth_modules;
 
 GSList* user_logs_modules;
@@ -34,6 +41,8 @@ GMutex *modules_mutex;
 typedef int user_check_callback (const char *user, const char *pass,unsigned passlen,uint16_t *uid,GSList **groups);
 
 typedef GSList * acl_check_callback (connection* element);
+
+typedef void define_period_callback (GHashTable* periods);
 
 /* ip auth */
 typedef gchar* ip_auth_callback (tracking * header);

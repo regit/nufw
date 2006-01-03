@@ -65,6 +65,8 @@ struct T_plaintext_acl {
 
     GSList *dst_ip;
     GSList *dst_ports;
+
+    gchar* period;
 };
 
 

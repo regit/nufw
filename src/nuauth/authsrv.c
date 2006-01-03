@@ -84,7 +84,7 @@ int main(int argc,char * argv[])
        
   /* load configuration */
   nuauthconf=init_nuauthconf();
-
+  
   /* init credential */
   create_x509_credentials();
 
@@ -269,6 +269,8 @@ int main(int argc,char * argv[])
   /* load modules */
   load_modules();
 
+/* init periods */
+  nuauthconf->periods=init_periods(nuauthconf);
   /* internal Use */
   ALLGROUP=NULL;
   ALLGROUP=g_slist_prepend(ALLGROUP, GINT_TO_POINTER(0) );

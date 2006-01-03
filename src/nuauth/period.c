@@ -28,27 +28,24 @@ gboolean is_time_t_in_period(gchar* periodname,time_t time)
 
 }
 
-static inline unsigned int get_hour_of_day_from_time_t(time_t time)
-{
-        time_t modt=time%86400;
-        return modt/3600;
-}
-
 static inline unsigned int get_start_of_day_from_time_t(time_t time)
 {
-        return time%86400;
+        return time-time%86400;
 }
 
 /**
- * return 0 if time not in period
+ * Compute end of period for a given time (second since epoch)
+ * - return 0 if time not in period
+ * - return -1 if there's no end
  */
 
 static time_t get_end_of_period_item_for_time(struct period_item* perioditem,time_t time)
 {
-  unsigned int htime=0;
   time_t endtime=-1;
   if (perioditem->start_date != -1) {
-        if ((perioditem->start_date>=time) && (perioditem->end_date<=time)){
+        if ((perioditem->start_date>=time) && ((perioditem->end_date<=time)
+                        || (perioditem->end_date==-1))
+                        ){
                 return perioditem->end_date;
         }
   } else {
@@ -72,11 +69,17 @@ static time_t get_end_of_period_item_for_time(struct period_item* perioditem,tim
       
       /* compare time */
       if (perioditem->start_hour!=-1){
-        htime = get_hour_of_day_from_time_t(time);
-          if ((htime>=perioditem->start_hour) && (htime<=perioditem->end_hour)){
-              return get_start_of_day_from_time_t(time)+3600*perioditem->end_hour; 
+          if ((tmtime.tm_hour>=perioditem->start_hour) && ( (tmtime.tm_hour<=perioditem->end_hour) || (perioditem->end_hour==-1)) ){
+              if (perioditem->end_hour==-1){
+                  return -1;
+              } else {
+                  return get_start_of_day_from_time_t(time)+3600*perioditem->end_hour; 
+              }
+          } else {
+              /* out of bound */
+                return 0;
           }
-      }
+      } 
   }
   return endtime;
 }
@@ -90,7 +93,7 @@ static time_t get_end_of_period_item_for_time(struct period_item* perioditem,tim
 time_t get_end_of_period_for_time_t(gchar* period,time_t time)
 {
   struct period* pperiod=NULL;
-  time_t result=0;
+  time_t result=-1;
   /* get period in hash */
   pperiod = g_hash_table_lookup(nuauthconf->periods,period);
   if (pperiod==NULL){
@@ -98,30 +101,88 @@ time_t get_end_of_period_for_time_t(gchar* period,time_t time)
                 g_message("period can not be found, typo ?");
         }
   } else {
-       GSList* pointer=pperiod->items;
+       GSList* pointer;
        time_t provend;
         /* iter on period_item */
-        for(;pointer;pointer=pointer->next){
-                provend=get_end_of_period_item_for_time((struct period_item*)pointer,time);
-                if(provend==0){
-                    return 0;
-                } else {
-                        if ((result == 0) || (provend<result)){
-                                result=provend;
-                        }
-                }
+       for( pointer=pperiod->items ;pointer;pointer=pointer->next){
+           provend=get_end_of_period_item_for_time((struct period_item*)(pointer->data),time);
+           switch (provend){
+             case 0:
+                     return 0;
+             case -1:
+                     break;
+             default:
+                     if ((result == -1) || (provend<result)){
+                         result=provend;
+                     }
+           }
         }
   }
   return result;
 }
 
-gboolean define_new_period(gchar* name,gchar* description)
+void free_period(gpointer data)
 {
+        struct period* period=(struct period*) data;
+        g_slist_free(period->items);
+        g_free(period->description);
+        g_free(period->name);
+        g_free(period);
+}
+
+gboolean delete_period(GHashTable* periods,gchar* name)
+{
+        return g_hash_table_remove(periods,name);
+}
+
+
+gboolean destroy_periods(GHashTable* periods)
+{
+        g_hash_table_destroy(periods);
         return TRUE;
 }
 
-gboolean add_perioditem_to_period(gchar* name,struct period_item* perioditem)
+gboolean define_new_period(GHashTable* periods,gchar* name,gchar* description)
 {
+  /* alloc struct */
+  struct period* periodelt=g_new0(struct period,1);
+  /* insert in hash */
+  periodelt->name=g_strdup(name);
+  periodelt->description=g_strdup(description);
+  periodelt->items=NULL;
+  g_hash_table_insert(periods,g_strdup(name),periodelt);
+  return TRUE;
+}
+
+gboolean add_perioditem_to_period(GHashTable* periods,gchar* name,struct period_item* perioditem)
+{
+  /* search entry in hash */
+        struct period* periodelt = g_hash_table_lookup(periods,name);
+  /* add iperioditem to GSList items (but do sanity check on perioditem) */
+        if (periodelt && perioditem){
+  /* set used to TRUE */
+            periodelt->items=g_slist_prepend(periodelt->items,perioditem);
+            periodelt->used=TRUE;
+        } else {
+            if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER)){
+                g_message("Can not add period item (%p) to period (%s at %p)",perioditem,name,periodelt);
+            }            
+                return FALSE;
+        }
         return TRUE;
 }
 
+/** can have no parameter as a module reload is needed */
+GHashTable *init_periods( )
+{
+  GHashTable * periods=NULL;
+
+  periods=g_hash_table_new_full(g_str_hash,
+                  g_str_equal,
+                  g_free,
+                  (GDestroyNotify) free_period);
+  
+  parse_periods(periods);
+
+  return periods;
+}

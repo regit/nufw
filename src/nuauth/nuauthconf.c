@@ -215,6 +215,7 @@ struct nuauth_params*   init_nuauthconf()
   build_nuauthconf(nuauthconf,nuauth_client_listen_addr,nuauth_nufw_listen_addr,
                   gwsrv_addr,nuauth_multi_users,nuauth_multi_servers);
 
+
   return nuauthconf;
 }
 
@@ -368,6 +369,8 @@ static struct nuauth_params* compare_and_update_nuauthparams(struct nuauth_param
       /* debug is set via command line thus duplicate */
       new->debug_level=current->debug_level;
       new->debug_areas=current->debug_areas;
+      destroy_periods(current->periods);
+      new->periods=init_periods(new);
       free_nuauth_params(current);
       return new;
   } else {

@@ -11,6 +11,9 @@
 	  number of threads in the user session logging pool
 	- nuauth : change type of limited_connection_handler to suppress
 	  compilation warning
+	- nuauth : new hook for time period definition
+	- plaintext : add period check
+	- plaintext : add example for time period creation (define '5x8' period)
 1.1.2 (2005/12/22)
 	- nufw : new threads architecture
 	- libnuclient : fix potential problem with new thread architecture

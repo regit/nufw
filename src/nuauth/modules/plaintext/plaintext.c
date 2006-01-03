@@ -625,7 +625,14 @@ int read_acl_list(void)
 
           // TODO checks
           newacl->os = g_slist_prepend(newacl->os, newos);
-      } else {
+      } else if (!strcasecmp("period",p_key)) {
+                     newacl->period=g_strdup(p_value); 
+
+#ifdef DEBUG_ENABLE
+              if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+                  g_message("L.%d: Read  period [%s]", ln, newacl->period);
+#endif
+                     } else {
           if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
               g_message("L.%d: Unknown key [%s] in ACL %s", ln,
                       p_key, newacl->aclname);
@@ -1074,6 +1081,18 @@ G_MODULE_EXPORT GSList* acl_check(connection* element)
           }
       }
 
+      /* TODO better not like a trainee
+       * period checking 
+       * */
+      {
+          time_t periodend=get_end_of_period_for_time_t(p_acl->period,time(NULL));
+          if (periodend==0){
+              /* this is not a match */
+                continue;
+          } else {
+                element->expire=periodend;
+          }
+      }
       // We have a match 8-)
       if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
           g_message("[plaintext] matching with decision %d", p_acl->decision);
@@ -1094,3 +1113,19 @@ G_MODULE_EXPORT GSList* acl_check(connection* element)
   return g_list;
 }
 
+
+
+G_MODULE_EXPORT void define_periods(GHashTable* periods)
+{
+        struct period_item *perioditem;
+        /* TODO get file based definition */
+        define_new_period(periods,"5x8","open hour");
+        perioditem=g_new0(struct period_item,1);
+        perioditem->start_date=-1;
+        perioditem->end_date=-1;
+        perioditem->start_day=1;
+        perioditem->end_day=5;
+        perioditem->start_hour=8;
+        perioditem->end_hour=18;
+        add_perioditem_to_period(periods,g_strdup("5x8"),perioditem);
+}

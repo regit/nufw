@@ -141,9 +141,11 @@ void* limited_connection_handler()
                 break;
         case REFRESH_MESSAGE:
 #ifdef DEBUG_ENABLE
+#if 0
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)){
                     g_message("expire conn list size : %d",g_hash_table_size (conn_list));
                 }
+#endif
 #endif
                 destroy_expired_connection(conn_list);
                 break;
