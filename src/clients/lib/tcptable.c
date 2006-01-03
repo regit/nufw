@@ -43,8 +43,10 @@
  * Read /proc/net/tcp and add all connections to the table if connections
  * of that type are being watched.
  */
+
 int tcptable_read (NuAuth* session, conntable_t *ct)
 {
+#ifdef LINUX 
 	static FILE *fp = NULL;
 	static FILE *fq = NULL;
 	char buf[1024];
@@ -146,8 +148,15 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
 	}
 
 
+#else /* LINUX */
+#ifdef FREEBSD
+	
+#endif
+#endif
 	return 1;
 }
+
+
 
 
 
