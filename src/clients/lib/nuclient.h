@@ -43,8 +43,6 @@ extern "C" {
 #include <grp.h>
 #include <limits.h>
 #include <netdb.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
 #include <pwd.h>
 #include <signal.h>
 #include <stdarg.h>
@@ -71,6 +69,7 @@ extern "C" {
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <netdb.h>
