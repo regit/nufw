@@ -63,7 +63,6 @@ extern "C" {
 #include <time.h>
 #define _XOPEN_SOURCE
 #include <unistd.h>
-#include <crypt.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 
