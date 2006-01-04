@@ -467,7 +467,6 @@ int compare (NuAuth * session,conntable_t *old, conntable_t *new)
 
 	assert (old != NULL);
 	assert (new != NULL);
-
 	for (i = 0; i < CONNTABLE_BUCKETS; i++) {
 		conn_t *bucket;
 		conn_t *same_bucket;
@@ -484,7 +483,9 @@ int compare (NuAuth * session,conntable_t *old, conntable_t *new)
 					return -1;
 				}
 				nb_packets++;
-			} else {
+			} 
+#ifdef LINUX
+			else {
 				/* compare values of retransmit */
 				if (bucket->retransmit > same_bucket->retransmit) {
 #if DEBUG
@@ -514,6 +515,7 @@ int compare (NuAuth * session,conntable_t *old, conntable_t *new)
 					}
 				}
 			}
+#endif /* LINUX */
 			bucket = bucket->next;
 		}
 	}

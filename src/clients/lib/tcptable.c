@@ -161,15 +161,9 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
 
 #else /* LINUX */
 #ifdef FREEBSD
-#if 0
-
-  protopr(u_long proto,		/* for sysctl version we pass proto # */
-          const char *name, int af1)
-#endif
       int istcp;
-  static int first = 1;
   char *buf;
-  const char *mibvar, *vchar;
+  const char *mibvar;
   struct tcpcb *tp = NULL;
   struct inpcb *inp;
   struct xinpgen *xig, *oxig;
@@ -195,16 +189,24 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
   if (sysctlbyname(mibvar, 0, &len, 0, 0) < 0) {
       if (errno != ENOENT)
           printf("sysctl: %s", mibvar);
-      return;
+      return 0;
   }
   if ((buf = malloc(len)) == 0) {
       printf("malloc %lu bytes", (u_long)len);
-      return;
+      return 0;
   }
+
+  if ( session->mode==SRV_TYPE_PUSH){
+      /* need to set check_cond */
+      pthread_mutex_lock(session->check_count_mutex);
+      session->count_msg_cond=0;
+      pthread_mutex_unlock(session->check_count_mutex);
+  }
+  /* open file */
   if (sysctlbyname(mibvar, buf, &len, 0, 0) < 0) {
       printf("sysctl: %s", mibvar);
       free(buf);
-      return;
+      return 0;
   }
 
   oxig = xig = (struct xinpgen *)buf;

@@ -209,9 +209,6 @@ int nu_client_check(NuAuth * session)
 void* nu_client_thread_check(void *data)
 {
         NuAuth * session=(NuAuth*)data;
-	pthread_mutex_t check_mutex;
-	pthread_mutex_init(&check_mutex,NULL);
-	pthread_mutex_lock(&check_mutex);
 	for(;;){
 		nu_client_real_check(session);
 	/* Do we need to do an other check ? */
@@ -219,9 +216,8 @@ void* nu_client_thread_check(void *data)
 		if (session->count_msg_cond>0){
 			pthread_mutex_unlock(session->check_count_mutex);
 		} else {
-			pthread_mutex_unlock(session->check_count_mutex);
 			/* wait for cond */
-			pthread_cond_wait(session->check_cond, &check_mutex);
+			pthread_cond_wait(session->check_cond, session->check_count_mutex);
 		}
 	}
 }
