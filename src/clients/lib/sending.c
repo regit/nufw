@@ -126,8 +126,13 @@ int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
               authfield.sport=swap16(carray[item]->lclp);
               authfield.dport=swap16(carray[item]->rmtp);
 #else
+#ifdef FREEBSD
+              authfield.sport=ntohs(carray[item]->lclp);
+              authfield.dport=ntohs(carray[item]->rmtp);
+#else
               authfield.sport=carray[item]->lclp;
               authfield.dport=carray[item]->rmtp;
+#endif
 #endif
               /* application field  */
               appfield.type=APP_FIELD;

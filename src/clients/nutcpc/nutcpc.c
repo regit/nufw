@@ -112,6 +112,10 @@ char* get_password()
 #ifdef LINUX
 		printf("Enter password : ");
 		my_getpass(&passwd,&password_size);
+
+		if (strlen(passwd)<password_size) {
+			passwd[strlen(passwd)-1]=0;
+		}
 #else 
  if (readpassphrase("Enter password : ", passwd, password_size,
                RPP_REQUIRE_TTY) == NULL){
@@ -119,9 +123,6 @@ char* get_password()
 }
 #endif
 
-		if (strlen(passwd)<password_size) {
-			passwd[strlen(passwd)-1]=0;
-		}
 	} else {
 		passwd=strdup(password);
 	}
