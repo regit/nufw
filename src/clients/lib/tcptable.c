@@ -31,7 +31,17 @@
 #include "libnuclient.h"
 #include <proto.h>
 #ifdef FREEBSD
+
+#include <sys/param.h>
+#include <sys/queue.h>
+#include <sys/socket.h>
+#include <sys/socketvar.h>
+#include <sys/sysctl.h>
+#include <sys/protosw.h>
+
 #include <netinet/tcp_fsm.h>
+#include <netinet/in_pcb.h>
+#include <netinet/tcp_var.h>
 #endif
 
 /*! \file tcptable.c
@@ -184,15 +194,15 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
   len = 0;
   if (sysctlbyname(mibvar, 0, &len, 0, 0) < 0) {
       if (errno != ENOENT)
-          warn("sysctl: %s", mibvar);
+          printf("sysctl: %s", mibvar);
       return;
   }
   if ((buf = malloc(len)) == 0) {
-      warnx("malloc %lu bytes", (u_long)len);
+      printf("malloc %lu bytes", (u_long)len);
       return;
   }
   if (sysctlbyname(mibvar, buf, &len, 0, 0) < 0) {
-      warn("sysctl: %s", mibvar);
+      printf("sysctl: %s", mibvar);
       free(buf);
       return;
   }
@@ -223,19 +233,19 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
       if ((inp->inp_vflag & INP_IPV4) == 0)
           continue;
       /* check SYN_SENT and get rid of NULL address */
-      if ( (istcp && tp->t_state != TCPS_SYNSENT)
+      if ( (istcp && tp->t_state != TCPS_SYN_SENT)
               || ( inet_lnaof(inp->inp_laddr) == INADDR_ANY))
           continue;
 
-      c.lcl = inp->inl_laddr.s_addr;
-      c.lclp = inp->inl_lport;
+      c.lcl = inp->inp_laddr.s_addr;
+      c.lclp = inp->inp_lport;
 
-      c.rmt = inp->inl_faddr.s_addr;
-      c.rmtp = inp->inl_fport;
+      c.rmt = inp->inp_faddr.s_addr;
+      c.rmtp = inp->inp_fport;
       c.proto=IPPROTO_TCP;
 
       if (tcptable_add (ct, &c) == 0){
-          free(buf)
+          free(buf);
               return 0;
       }
   }

@@ -18,6 +18,8 @@
 #include <net/if.h>
 #include <dirent.h>
 
+#ifdef LINUX
+
 #include "proc.h"
 
 static struct prg_node {
@@ -244,4 +246,4 @@ void prg_cache_load(void)
 		geteuid());
     }
 }
-
+#endif
