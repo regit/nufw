@@ -30,12 +30,15 @@
 #include "client.h"
 #include "libnuclient.h"
 #include <proto.h>
+#ifdef FREEBSD
+#include <netinet/tcp_fsm.h>
+#endif
 
 /*! \file tcptable.c
-    \brief TCP parsing function
-    
-    Contains the TCP parsing functions
-*/
+  \brief TCP parsing function
+
+  Contains the TCP parsing functions
+ */
 
 /**
  * \brief Read tcptable
@@ -46,114 +49,200 @@
 
 int tcptable_read (NuAuth* session, conntable_t *ct)
 {
+  conn_t c;
 #ifdef LINUX 
-	static FILE *fp = NULL;
-	static FILE *fq = NULL;
-	char buf[1024];
-	conn_t c;
+  static FILE *fp = NULL;
+  static FILE *fq = NULL;
+  char buf[1024];
 #if DEBUG
-	assert (ct != NULL);
+  assert (ct != NULL);
 #endif
-	if ( session->mode==SRV_TYPE_PUSH){
-		/* need to set check_cond */
-		pthread_mutex_lock(session->check_count_mutex);
-		session->count_msg_cond=0;
-		pthread_mutex_unlock(session->check_count_mutex);
-	}
-/* open file */
-	if (fp == NULL) {
-		fp = fopen ("/proc/net/tcp", "r");
-		if (fp == NULL) panic ("/proc/net/tcp: %s", strerror (errno));
-	}
-	rewind (fp);
+  if ( session->mode==SRV_TYPE_PUSH){
+      /* need to set check_cond */
+      pthread_mutex_lock(session->check_count_mutex);
+      session->count_msg_cond=0;
+      pthread_mutex_unlock(session->check_count_mutex);
+  }
+  /* open file */
+  if (fp == NULL) {
+      fp = fopen ("/proc/net/tcp", "r");
+      if (fp == NULL) panic ("/proc/net/tcp: %s", strerror (errno));
+  }
+  rewind (fp);
 
-	if (fgets (buf, sizeof (buf), fp) == NULL)
-		panic ("/proc/net/tcp: missing header");
+  if (fgets (buf, sizeof (buf), fp) == NULL)
+      panic ("/proc/net/tcp: missing header");
 
-	while (fgets (buf, sizeof (buf), fp) != NULL) {
-		unsigned long st;
+  while (fgets (buf, sizeof (buf), fp) != NULL) {
+      unsigned long st;
 #ifdef USE_FILTER
-		int seen = 0;
+      int seen = 0;
 #endif
-		if (sscanf (buf, "%*d: %lx:%x %lx:%x %lx %*x:%*x %*x:%*x %x %lu %*d %lu",
-					&c.lcl, &c.lclp, &c.rmt, &c.rmtp, &st, &c.retransmit, &c.uid, &c.ino) != 8)
-			continue;
+      if (sscanf (buf, "%*d: %lx:%x %lx:%x %lx %*x:%*x %*x:%*x %x %lu %*d %lu",
+                  &c.lcl, &c.lclp, &c.rmt, &c.rmtp, &st, &c.retransmit, &c.uid, &c.ino) != 8)
+          continue;
 
-		if ((c.ino == 0) || (st != TCP_SYN_SENT))
-			continue;
+      if ((c.ino == 0) || (st != TCP_SYN_SENT))
+          continue;
 
-		// Check if it's the good user
-		if (c.uid != session->localuserid)
-			continue;
+      // Check if it's the good user
+      if (c.uid != session->localuserid)
+          continue;
 #if DEBUG
-		// Check if there is a matching rule in the filters list
-		printf("Packet dst = %ld (%lx)\n", c.rmt, c.rmt);
+      // Check if there is a matching rule in the filters list
+      printf("Packet dst = %ld (%lx)\n", c.rmt, c.rmt);
 #endif
-		/* Check if it's the good user */
-		if (c.uid != session->localuserid)
-			continue;
+      /* Check if it's the good user */
+      if (c.uid != session->localuserid)
+          continue;
 #ifdef USE_FILTER
-		// If we're sure auth_by_default is either 0 or 1, it can be simplified.
-		// (MiKael) TODO: Make sure!! :)
-		if (session->auth_by_default && seen)
-			continue;
-		if (!session->auth_by_default && !seen)
-			continue;
+      // If we're sure auth_by_default is either 0 or 1, it can be simplified.
+      // (MiKael) TODO: Make sure!! :)
+      if (session->auth_by_default && seen)
+          continue;
+      if (!session->auth_by_default && !seen)
+          continue;
 #endif
-                c.proto=IPPROTO_TCP;
-		if (tcptable_add (ct, &c) == 0)
-			return 0;
-	}
+      c.proto=IPPROTO_TCP;
+      if (tcptable_add (ct, &c) == 0)
+          return 0;
+  }
 
-        /* open file */
-	if (fq == NULL) {
-		fq = fopen ("/proc/net/udp", "r");
-		if (fq == NULL) panic ("/proc/net/udp: %s", strerror (errno));
-	}
-	rewind (fq);
+  /* open file */
+  if (fq == NULL) {
+      fq = fopen ("/proc/net/udp", "r");
+      if (fq == NULL) panic ("/proc/net/udp: %s", strerror (errno));
+  }
+  rewind (fq);
 
-	if (fgets (buf, sizeof (buf), fq) == NULL)
-		panic ("/proc/net/udp: missing header");
+  if (fgets (buf, sizeof (buf), fq) == NULL)
+      panic ("/proc/net/udp: missing header");
 
-	while (fgets (buf, sizeof (buf), fq) != NULL) {
-		unsigned long st;
-		if (sscanf (buf, "%*d: %lx:%x %lx:%x %lx %*x:%*x %*x:%*x %x %lu %*d %lu",
-					&c.lcl, &c.lclp, &c.rmt, &c.rmtp, &st, &c.retransmit, &c.uid, &c.ino) != 8)
-			continue;
+  while (fgets (buf, sizeof (buf), fq) != NULL) {
+      unsigned long st;
+      if (sscanf (buf, "%*d: %lx:%x %lx:%x %lx %*x:%*x %*x:%*x %x %lu %*d %lu",
+                  &c.lcl, &c.lclp, &c.rmt, &c.rmtp, &st, &c.retransmit, &c.uid, &c.ino) != 8)
+          continue;
 
-		if (c.ino == 0) 
-			continue;
+      if (c.ino == 0) 
+          continue;
 
-		// Check if it's the good user
-		if (c.uid != session->localuserid)
-			continue;
+      // Check if it's the good user
+      if (c.uid != session->localuserid)
+          continue;
 #if DEBUG
-		// Check if there is a matching rule in the filters list
-		printf("Packet dst = %ld (%lx)\n", c.rmt, c.rmt);
+      // Check if there is a matching rule in the filters list
+      printf("Packet dst = %ld (%lx)\n", c.rmt, c.rmt);
 #endif
-		/* Check if it's the good user */
-		if (c.uid != session->localuserid)
-			continue;
+
 #if USE_FILTER
-		// If we're sure auth_by_default is either 0 or 1, it can be simplified.
-		// (MiKael) TODO: Make sure!! :)
-		if (session->auth_by_default && seen)
-			continue;
-		if (!session->auth_by_default && !seen)
-			continue;
+      // If we're sure auth_by_default is either 0 or 1, it can be simplified.
+      // (MiKael) TODO: Make sure!! :)
+      if (session->auth_by_default && seen)
+          continue;
+      if (!session->auth_by_default && !seen)
+          continue;
 #endif
-                c.proto=IPPROTO_UDP;
-		if (tcptable_add (ct, &c) == 0)
-			return 0;
-	}
+      c.proto=IPPROTO_UDP;
+      if (tcptable_add (ct, &c) == 0)
+          return 0;
+  }
 
 
 #else /* LINUX */
 #ifdef FREEBSD
-	
+#if 0
+
+  protopr(u_long proto,		/* for sysctl version we pass proto # */
+          const char *name, int af1)
+#endif
+      int istcp;
+  static int first = 1;
+  char *buf;
+  const char *mibvar, *vchar;
+  struct tcpcb *tp = NULL;
+  struct inpcb *inp;
+  struct xinpgen *xig, *oxig;
+  struct xsocket *so;
+  size_t len;
+  int proto = IPPROTO_TCP;
+
+#if 0
+  istcp = 0;
+  switch (proto) {
+    case IPPROTO_TCP:
+#endif
+        istcp = 1;
+        mibvar = "net.inet.tcp.pcblist";
+#if 0
+        break;
+    case IPPROTO_UDP:
+        mibvar = "net.inet.udp.pcblist";
+        break;
+  }
+#endif
+  len = 0;
+  if (sysctlbyname(mibvar, 0, &len, 0, 0) < 0) {
+      if (errno != ENOENT)
+          warn("sysctl: %s", mibvar);
+      return;
+  }
+  if ((buf = malloc(len)) == 0) {
+      warnx("malloc %lu bytes", (u_long)len);
+      return;
+  }
+  if (sysctlbyname(mibvar, buf, &len, 0, 0) < 0) {
+      warn("sysctl: %s", mibvar);
+      free(buf);
+      return;
+  }
+
+  oxig = xig = (struct xinpgen *)buf;
+  for (xig = (struct xinpgen *)((char *)xig + xig->xig_len);
+          xig->xig_len > sizeof(struct xinpgen);
+          xig = (struct xinpgen *)((char *)xig + xig->xig_len)) {
+      if (istcp) {
+          tp = &((struct xtcpcb *)xig)->xt_tp;
+          inp = &((struct xtcpcb *)xig)->xt_inp;
+          so = &((struct xtcpcb *)xig)->xt_socket;
+      } else {
+          inp = &((struct xinpcb *)xig)->xi_inp;
+          so = &((struct xinpcb *)xig)->xi_socket;
+      }
+
+      /* Ignore sockets for protocols other than the desired one. */
+      /* TODO : put a check on UDP/TCP here */
+      if (so->xso_protocol != (int)proto)
+          continue;
+
+      /* Ignore PCBs which were freed during copyout. */
+      if (inp->inp_gencnt > oxig->xig_gen)
+          continue;
+
+      /* only do IPV4 for now */
+      if ((inp->inp_vflag & INP_IPV4) == 0)
+          continue;
+      /* check SYN_SENT and get rid of NULL address */
+      if ( (istcp && tp->t_state != TCPS_SYNSENT)
+              || ( inet_lnaof(inp->inp_laddr) == INADDR_ANY))
+          continue;
+
+      c.lcl = inp->inl_laddr.s_addr;
+      c.lclp = inp->inl_lport;
+
+      c.rmt = inp->inl_faddr.s_addr;
+      c.rmtp = inp->inl_fport;
+      c.proto=IPPROTO_TCP;
+
+      if (tcptable_add (ct, &c) == 0){
+          free(buf)
+              return 0;
+      }
+  }
+  free(buf);	
 #endif
 #endif
-	return 1;
+  return 1;
 }
 
 
