@@ -17,6 +17,10 @@ if HAVE_NFQUEUE_ONLY
 nufw_LDADD = -lnfnetlink -lnetfilter_queue -lpthread -lgnutls
 endif
 
+if HAVE_CONNTRACK_ONLY
+nufw_LDADD = -lnfnetlink -lipq -lnetfilter_conntrack -ldl -lpthread -lgnutls
+endif
+
 nufw$(EXEEXT): $(nufw_OBJECTS) $(nufw_DEPENDENCIES) 
 	@rm -f nufw$(EXEEXT)
 	$(LINK) $(nufw_LDFLAGS) $(nufw_OBJECTS) $(nufw_LDADD)
