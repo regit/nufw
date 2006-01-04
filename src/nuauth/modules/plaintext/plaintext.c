@@ -869,7 +869,7 @@ G_MODULE_EXPORT GSList* acl_check(connection* element)
   int initstatus;
   uint32_t src_ip, dst_ip;
   static GStaticMutex plaintext_initmutex = G_STATIC_MUTEX_INIT;
-  time_t periodend;
+  time_t periodend=-1;
 
 
   /* init has only to be done once */
@@ -906,6 +906,7 @@ G_MODULE_EXPORT GSList* acl_check(connection* element)
   for (p_acllist = plaintext_acllist ; p_acllist ;
           p_acllist = g_slist_next(p_acllist)) {
       p_acl = (struct T_plaintext_acl*)p_acllist->data;
+	p_acl->period=NULL;
 
       if (netdata->protocol != p_acl->proto)
               continue;
@@ -1084,11 +1085,13 @@ G_MODULE_EXPORT GSList* acl_check(connection* element)
 
        /* period checking 
        * */
+      if (p_acl->period){
           periodend=get_end_of_period_for_time_t(p_acl->period,time(NULL));
           if (periodend==0){
               /* this is not a match */
                 continue;
           }
+      }
       // We have a match 8-)
       if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
           g_message("[plaintext] matching with decision %d", p_acl->decision);
