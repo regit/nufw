@@ -17,7 +17,6 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include <endian.h>
 
 #define swap16(A)  ((((uint16_t)(A) & 0xff00) >> 8) | (((uint16_t)(A) & 0x00ff) << 8))
 #define swap32(A)  ((((uint32_t)(A) & 0xff000000) >> 24) | \
