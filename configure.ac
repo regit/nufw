@@ -15,6 +15,13 @@ AC_PROG_INSTALL
 # Checks for endianess
 AC_C_BIGENDIAN()
 
+case $host in
+*-*-linux*) AC_DEFINE([LINUX],[1],[Target is Linux]) ;;
+*-*-freebsd*) AC_DEFINE([FREEBSD],[1],[Target is freebsd]) ;;
+*) AC_MSG_ERROR([Linux or FreeBSD only, dude!]);;
+esac
+
+
 # Checks for libraries.
 
 AC_CHECK_LIB([pthread], [pthread_mutex_init])
@@ -31,7 +38,7 @@ AC_FUNC_MALLOC
 AC_FUNC_STAT
 AC_CHECK_FUNCS([gethostbyname memset socket strcasecmp strspn])
 
-AC_CHECK_LIB([gcrypt], [gcry_md_open],AC_DEFINE([HAVE_LIBRARY_GCRYPT],[1],[Gcrypt lib flag]),AC_MSG_ERROR([gcrypt library needed for encryption]))
+AC_CHECK_LIB([gcrypt], [gcry_md_open],AC_DEFINE([HAVE_LIBRARY_GCRYPT],[1],[Gcrypt lib flag]),AC_MSG_ERROR([gcrypt library needed for encryption]),[-L/usr/local/lib])
 AC_CHECK_LIB([gnutls], [gnutls_init],AC_DEFINE([HAVE_LIBRARY_GNUTLS],[1],[Gnutls lib flag]),AC_MSG_ERROR([gnutls library needed for encryption]))
 AC_CHECK_LIB([sasl2],[sasl_server_init],AC_DEFINE([HAVE_LIBRARY_SASL2],[1],[SASL lib flag]),AC_MSG_ERROR([sasl library needed for authentication]))
 
