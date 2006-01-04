@@ -20,8 +20,10 @@
 
 #include "../lib/nuclient.h"
 #include <locale.h>
-#define NUTCPC_VERSION "0.8"
-#ifndef LINUX
+#include <config.h>
+#define NUTCPC_VERSION "0.9"
+
+#ifdef FREEBSD
 #include <readpassphrase.h>
 #endif
 
