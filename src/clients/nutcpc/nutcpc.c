@@ -21,6 +21,9 @@
 #include "../lib/nuclient.h"
 #include <locale.h>
 #define NUTCPC_VERSION "0.8"
+#ifndef LINUX
+#include <readpassphrase.h>
+#endif
 
 #define MAX_RETRY_TIME 30
 
@@ -84,7 +87,11 @@ my_getpass (char **lineptr, size_t *n)
 		return -1;
 
 	/* Read the password. */
+#ifdef LINUX
 	nread = getline (lineptr, n, stdin);
+#else 
+	scanf("%s", lineptr);
+#endif
 
 	/* Restore terminal. */
 	(void) tcsetattr (fileno (stdin), TCSAFLUSH, &orig);
@@ -100,8 +107,16 @@ char* get_password()
 	size_t password_size=32;
 	if (password == NULL){
 		passwd=(char *)calloc(32,sizeof( char));
+#ifdef LINUX
 		printf("Enter password : ");
 		my_getpass(&passwd,&password_size);
+#else 
+ if (readpassphrase("Enter password : ", passwd, password_size,
+               RPP_REQUIRE_TTY) == NULL){
+                  fprintf(stderr, "unable to read passphrase");
+}
+#endif
+
 		if (strlen(passwd)<password_size) {
 			passwd[strlen(passwd)-1]=0;
 		}
@@ -122,7 +137,12 @@ char * get_username()
 	if (username == NULL){
 		printf("Enter username : ");
 		user=(char *)calloc(32,sizeof( char));
+#ifdef LINUX
 		nread = getline (&user, &username_size, stdin);
+#else
+		/* TODO : do this REALLY */
+		scanf("%s",user);
+#endif
 		user[32]=0;
 	} else {
 		user = strdup(username);

@@ -96,7 +96,11 @@ int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
 #if DEBUG
                 printf("adding one authreq\n"); 
 #endif
+#ifdef LINUX
               appname = prg_cache_get(carray[item]->ino);
+#else
+		appname="UNKNOWN";
+#endif
               header.length+=sizeof(struct nuv2_authreq)+sizeof(struct nuv2_authfield_ipv4);
               authreq.packet_id=session->packet_id++;
               authreq.packet_length=sizeof(struct nuv2_authreq)+sizeof(struct nuv2_authfield_ipv4);

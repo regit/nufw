@@ -242,11 +242,15 @@ int nu_client_real_check(NuAuth * session)
 	int nb_packets=0;
 	if (tcptable_init (&new) == 0) panic ("tcptable_init failed");
 	if (tcptable_read (session,new) == 0) panic ("tcptable_read failed");
+#ifdef LINUX
 	/* update cache for link between proc and socket inode */
 	prg_cache_load();
+#endif
 	nb_packets = compare (session,session->ct, new);
-	/* TODO : free link between proc and socket inode */
+	/* free link between proc and socket inode */
+#ifdef LINUX
 	prg_cache_clear();
+#endif
 
 	if (nb_packets < 0){
 		/* error we ask client to exit */
