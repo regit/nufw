@@ -809,9 +809,9 @@ int sasl_user_check(user_session* c_session)
 #ifdef WORDS_BIGENDIAN	
 				int dec_buf_size;
 				osfield->length=swap16(osfield->length);
-				dec_buf_size = osfield->length *8 - 32;
+				dec_buf_size = osfield->length *4 - 32;
 #else
-				int dec_buf_size = osfield->length *8 - 32;
+				int dec_buf_size = osfield->length *4 - 32;
 #endif
 				if ( dec_buf_size > 1024 ) { //if1a
 					/* it's a joke it's far too long */

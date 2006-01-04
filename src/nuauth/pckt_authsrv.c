@@ -308,11 +308,9 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz)
                                   }
                                   break;
                           default:
-#ifdef DEBUG_ENABLE
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)) {
 					g_message("Not for us\n");
 				}
-#endif
                         }
                                   
 
