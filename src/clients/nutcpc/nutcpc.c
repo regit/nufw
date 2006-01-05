@@ -91,8 +91,6 @@ my_getpass (char **lineptr, size_t *n)
 	/* Read the password. */
 #ifdef LINUX
 	nread = getline (lineptr, n, stdin);
-#else 
-	scanf("%s", lineptr);
 #endif
 
 	/* Restore terminal. */

@@ -170,7 +170,6 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
   struct xsocket *so;
   size_t len;
   int proto = IPPROTO_TCP;
-
 #if 0
   istcp = 0;
   switch (proto) {
@@ -223,7 +222,6 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
       }
 
       /* Ignore sockets for protocols other than the desired one. */
-      /* TODO : put a check on UDP/TCP here */
       if (so->xso_protocol != (int)proto)
           continue;
 
@@ -234,6 +232,7 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
       /* only do IPV4 for now */
       if ((inp->inp_vflag & INP_IPV4) == 0)
           continue;
+
       /* check SYN_SENT and get rid of NULL address */
       if ( (istcp && tp->t_state != TCPS_SYN_SENT)
               || ( inet_lnaof(inp->inp_laddr) == INADDR_ANY))
@@ -252,6 +251,7 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
       }
   }
   free(buf);	
+
 #endif
 #endif
   return 1;

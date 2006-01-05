@@ -47,6 +47,7 @@ int send_hello_pckt(NuAuth * session){
     header.option=0;
 #ifdef WORDS_BIGENDIAN
     header.length=swap16(sizeof(struct nuv2_header));
+    header.length=sizeof(struct nuv2_header);
 #else
     header.length=sizeof(struct nuv2_header);
 #endif

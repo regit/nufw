@@ -31,6 +31,7 @@
 #ifndef PROC_H
 #define PROC_H
 
+#ifdef LINUX
 #define PROGNAME_WIDTH 64
 
 #define PRG_HASH_SIZE 211
@@ -41,5 +42,6 @@ int     prg_cache_loaded;
 void prg_cache_load(void);
 const char *prg_cache_get(unsigned long inode);
 void prg_cache_clear(void);
+#endif
 
 #endif

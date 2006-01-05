@@ -209,6 +209,10 @@ void nu_exit_clean(NuAuth * session)
 			free(session->password);
 		}
 		pthread_mutex_destroy(session->mutex);
+		if (session->mode==SRV_TYPE_PUSH){
+			pthread_mutex_destroy(session->check_count_mutex);
+			pthread_cond_destroy(session->check_cond);
+		}
 		free(session);
 		session=NULL;
 	}
@@ -802,6 +806,8 @@ NuAuth* nu_client_init2(
 		oses=alloca(stringlen);
 		enc_oses=calloc(4*stringlen,sizeof(char));
 		snprintf(oses,stringlen,"%s;%s;%s",info.sysname, info.release, info.version);
+printf("oses : %s",oses);fflush(NULL);
+		snprintf(oses,stringlen,"%s;%s;%s",info.sysname, info.release,"pipo"); //, info.version);
 		if (sasl_encode64(oses,strlen(oses),enc_oses,4*stringlen,&actuallen) == SASL_BUFOVER){
 			enc_oses=realloc(enc_oses,actuallen);
 			sasl_encode64(oses,strlen(oses),enc_oses,actuallen,&actuallen);
