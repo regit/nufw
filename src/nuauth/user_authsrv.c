@@ -65,20 +65,12 @@ void user_check_and_decide (gpointer userdata, gpointer data)
               g_async_queue_push (nuauthdatas->connexions_queue,conn_elt);
           }
       }
-  }
-  else {
+      free_buffer_read(userdata);
+  } else {
       if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER)){
           g_message("User packet decoding failed\n");
       }
   }
-          /* free userdata, packet is parsed now */
-          g_free(((struct buffer_read *)userdata)->buf);
-          g_free(((struct buffer_read *)userdata)->userid);
-          g_free(((struct buffer_read *)userdata)->sysname);
-          g_free(((struct buffer_read *)userdata)->release);
-          g_free(((struct buffer_read *)userdata)->version);
-          g_slist_free(((struct buffer_read *)userdata)->groups);
-          g_free(userdata);
 
 #ifdef DEBUG_ENABLE
   if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
