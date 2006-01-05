@@ -102,10 +102,8 @@ gchar *string_escape(gchar *orig)
 		traduc = orig;
 	}
 
-	if (g_strrstr(traduc,"'"))
-		return NULL;
-	if (g_strrstr(traduc,";"))
-		return NULL;
+#define VALID_CHARS """@#$%^&*()_+1234567890-={}[]:,.<>/?abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ "
+        traduc=g_strcanon(traduc,VALID_CHARS,'_');
 	orig = g_strescape(traduc,"");
 	return orig;
 }
