@@ -45,6 +45,7 @@ struct client_connection {
 
 struct buffer_read {
         int socket;
+	uint32_t addr;
         gnutls_session* tls;
         char * userid;
 	uint16_t uid;

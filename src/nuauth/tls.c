@@ -325,6 +325,7 @@ treat_user_request (user_session * c_session)
 		datas->socket=0;
 		datas->buf=NULL;
 		datas->tls=c_session->tls;
+		datas->addr=c_session->addr;
 #ifdef DEBUG_ENABLE
 		if (!c_session->multiusers) {
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
@@ -1084,6 +1085,35 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 					/* remove socket from the list of pre auth socket */
 					remove_socket_from_pre_client_list(c);
 
+					/* checking policy on multiuser usage */
+					switch (nuauthconf->connect_policy){
+						case POLICY_MULTIPLE_LOGIN:
+							break;
+						case POLICY_ONE_LOGIN:
+							g_static_mutex_lock (&client_mutex);
+							if (get_ip_for_username(c_session->userid)){
+								g_static_mutex_unlock (&client_mutex);
+								break;
+							}
+							g_static_mutex_unlock (&client_mutex);
+						case POLICY_PER_IP_ONE_LOGIN:
+							g_static_mutex_lock (&client_mutex);
+							if ( get_client_sockets_by_ip(c_session->addr) ){
+								g_static_mutex_unlock (&client_mutex);
+								break;
+							}
+							g_static_mutex_unlock (&client_mutex);
+						default:
+#ifdef DEBUG_ENABLE
+							if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
+								g_message("Problem with user, closing socket");
+#endif
+							/* get rid of client */
+							close_tls_session(c,c_session->tls);
+							c_session->tls=NULL;
+							clean_session(c_session);
+							return;
+					}
 					if (nuauthconf->push) {
 						struct internal_message* message=g_new0(struct internal_message,1);
 						struct tls_insert_data * datas=g_new0(struct tls_insert_data,1);

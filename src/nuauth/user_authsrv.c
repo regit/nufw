@@ -50,6 +50,11 @@ void user_check_and_decide (gpointer userdata, gpointer data)
   if ( conn_elts != NULL ) {
       for (conn_elt_l=conn_elts;conn_elt_l!=NULL;conn_elt_l=conn_elt_l->next){
           conn_elt=conn_elt_l->data;
+
+	/* check source IP equality */
+	if  (  ((struct buffer_read *)userdata)->addr 
+			==
+			conn_elt->tracking_hdrs.saddr ){
 #ifdef DEBUG_ENABLE
           if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_PACKET)){
               g_message("User : %s",conn_elt->username);
@@ -64,6 +69,16 @@ void user_check_and_decide (gpointer userdata, gpointer data)
           } else {
               g_async_queue_push (nuauthdatas->connexions_queue,conn_elt);
           }
+	} else {
+		if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER)){
+			struct in_addr badaddr;
+			badaddr.s_addr=((struct buffer_read *)userdata)->addr;
+			g_message("User %s on %s tried to authenticate packet from other ip\n",conn_elt->username,inet_ntoa(badaddr));
+              		print_connection(conn_elt,NULL);
+		}
+		/* free connection */
+                free_connection(conn_elt);
+	}
       }
       free_buffer_read(userdata);
   } else {

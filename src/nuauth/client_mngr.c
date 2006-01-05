@@ -132,6 +132,24 @@ inline GSList * get_client_sockets_by_ip(uint32_t ip)
 	return g_hash_table_lookup(client_ip_hash ,GINT_TO_POINTER(ip));
 }
 
+static gboolean look_for_username (gpointer key,
+                                             gpointer value,
+                                             gpointer user_data)
+{
+	if(! strcmp(
+				((user_session*)value)->userid,
+			user_data)){
+		return TRUE;
+	} else {
+		return FALSE;
+	}
+}
+
+inline uint32_t get_ip_for_username(const gchar* username)
+{
+	return	GPOINTER_TO_UINT(g_hash_table_find(client_ip_hash,look_for_username,(void*)username));
+}
+
 char warn_clients(struct msg_addr_set * global_msg) 
 {
 	GSList* ipsockets=NULL;

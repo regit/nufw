@@ -38,6 +38,12 @@ struct nuauth_params {
     int log_users_without_realm;
     /* decision related */
     int prio_to_nok;
+    /** policy on user connection, one of
+     * - POLICY_MULTIPLE_LOGIN
+     * - POLICY_ONE_LOGIN
+     * - POLICY_ONE_LOGIN_PER_IP
+     */
+    int connect_policy;
     /* switch to full utf8 exchange */
     int uses_utf8;
     int push;
@@ -67,6 +73,10 @@ struct nuauth_params {
     int nb_session_loggers;
 };
 
+
+#define POLICY_MULTIPLE_LOGIN 0
+#define POLICY_ONE_LOGIN 1
+#define POLICY_PER_IP_ONE_LOGIN 2
 
 struct nuauth_datas {
     /* main threads */

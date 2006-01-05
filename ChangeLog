@@ -2,7 +2,7 @@
 	- nutrackd : PostGreSQL support
 	- Fixes in the PostGreSQL log module (removed the useless server_port
 	variable, fixed a very stupid strlen bug on port)
-	- nufw| nuauth : expiration of connection is now possible
+	- nufw|nuauth : expiration of connection is now possible
 	- nufw : new switch -C to handle contnrack destroy event by sending a
 	  message to nuauth. This is mandatory for connection expiration
 	  system.

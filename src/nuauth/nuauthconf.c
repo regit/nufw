@@ -107,6 +107,7 @@ struct nuauth_params*   init_nuauthconf()
       { "nuauth_log_users_strict" , G_TOKEN_INT , 1, NULL },
       { "nuauth_log_users_without_realm" , G_TOKEN_INT , 1, NULL },
       { "nuauth_prio_to_nok" , G_TOKEN_INT , 1, NULL },
+      { "nuauth_connect_policy" , G_TOKEN_INT , POLICY_MULTIPLE_LOGIN, NULL },
       { "nuauth_datas_persistance" , G_TOKEN_INT , 9, NULL },
       { "nuauth_aclcheck_state_ready" , G_TOKEN_INT , 1,NULL },
       { "nuauth_push_to_client" , G_TOKEN_INT , 1,NULL },
@@ -167,6 +168,9 @@ struct nuauth_params*   init_nuauthconf()
 
   vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_prio_to_nok");
   nuauthconf->prio_to_nok=*(int*)(vpointer);
+
+  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_connect_policy");
+  nuauthconf->connect_policy=*(int*)(vpointer);
 
   vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_number_loggers");
   nuauthconf->nbloggers=*(int*)(vpointer);
