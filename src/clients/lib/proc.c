@@ -18,8 +18,9 @@
 #include <net/if.h>
 #include <dirent.h>
 
-#ifdef LINUX
+#include <config.h>
 
+#ifdef LINUX
 #include "proc.h"
 
 static struct prg_node {
