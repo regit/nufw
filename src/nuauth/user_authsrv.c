@@ -54,7 +54,7 @@ void user_check_and_decide (gpointer userdata, gpointer data)
 	/* check source IP equality */
 	if  (  ((struct buffer_read *)userdata)->addr 
 			==
-			conn_elt->tracking_hdrs.saddr ){
+			htonl(conn_elt->tracking_hdrs.saddr) ){
 #ifdef DEBUG_ENABLE
           if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_PACKET)){
               g_message("User : %s",conn_elt->username);
