@@ -939,7 +939,6 @@ int sasl_user_check(user_session* c_session)
 			c_session->expire=-1;
 		}
 
-                log_user_session(c_session,SESSION_OPEN);
 		/* sasl connection is not used anymore */
 		return SASL_OK;
 	} else {
@@ -1091,14 +1090,14 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 							break;
 						case POLICY_ONE_LOGIN:
 							g_static_mutex_lock (&client_mutex);
-							if (get_ip_for_username(c_session->userid)){
+							if (! get_ip_for_username(c_session->userid)){
 								g_static_mutex_unlock (&client_mutex);
 								break;
 							}
 							g_static_mutex_unlock (&client_mutex);
 						case POLICY_PER_IP_ONE_LOGIN:
 							g_static_mutex_lock (&client_mutex);
-							if ( get_client_sockets_by_ip(c_session->addr) ){
+							if (! get_client_sockets_by_ip(c_session->addr) ){
 								g_static_mutex_unlock (&client_mutex);
 								break;
 							}
@@ -1106,7 +1105,7 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 						default:
 #ifdef DEBUG_ENABLE
 							if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-								g_message("Problem with user, closing socket");
+								g_message("User %s already connected, closing socket",c_session->userid);
 #endif
 							/* get rid of client */
 							close_tls_session(c,c_session->tls);
@@ -1161,6 +1160,7 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 						}
 					}
 
+                			log_user_session(c_session,SESSION_OPEN);
 #ifdef DEBUG_ENABLE
 					if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
 						g_message("Says we need to work on %d\n",c);
