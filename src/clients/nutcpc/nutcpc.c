@@ -74,6 +74,34 @@ void exit_clean(){
 	exit(0);
 }
 
+#ifdef FREEBSD
+ssize_t
+getline(char **lineptr, size_t *n, FILE *stream)
+{
+	char *line;
+	size_t len;
+
+	line = fgetln(stream, &len);
+	if (!line)
+		return -1;
+	if (len >= *n) {
+		char *tmp;
+
+		/* XXX some realloc() implementations don't set errno */
+		tmp = realloc(*lineptr, len + 1);
+		if (!tmp)
+			return -1;
+		*lineptr = tmp;
+		*n = len + 1;
+	}
+	memcpy(*lineptr, line, len);
+	(*lineptr)[len] = 0;
+	return len;
+}
+#endif
+
+
+
 	ssize_t
 my_getpass (char **lineptr, size_t *n)
 {
@@ -128,23 +156,17 @@ char* get_password()
 }
 
 char * username;
-
 char * get_username()
 {
 	char* user;
 	int nread;
-	size_t username_size=32;
+	size_t username_size=64;
 
 	if (username == NULL){
 		printf("Enter username : ");
-		user=(char *)calloc(32,sizeof( char));
-#ifdef LINUX
+		user=(char *)calloc(64,sizeof( char));
 		nread = getline (&user, &username_size, stdin);
-#else
-		/* TODO : do this REALLY */
-		scanf("%s",user);
-#endif
-		user[32]=0;
+		user[64]=0;
 	} else {
 		user = strdup(username);
 	}
