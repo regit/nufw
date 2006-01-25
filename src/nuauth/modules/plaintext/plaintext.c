@@ -1126,6 +1126,6 @@ G_MODULE_EXPORT void define_periods(GHashTable* periods)
         perioditem->start_day=1;
         perioditem->end_day=5;
         perioditem->start_hour=8;
-        perioditem->end_hour=18;
+        perioditem->end_hour=23;
         add_perioditem_to_period(periods,g_strdup("5x8"),perioditem);
 }

@@ -1090,7 +1090,7 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 							break;
 						case POLICY_ONE_LOGIN:
 							g_static_mutex_lock (&client_mutex);
-							if (! get_ip_for_username(c_session->userid)){
+							if (! look_for_username(c_session->userid)){
 								g_static_mutex_unlock (&client_mutex);
 								break;
 							}

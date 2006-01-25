@@ -29,7 +29,7 @@ inline user_session * get_client_datas_by_socket(int c);
 
 inline GSList * get_client_sockets_by_ip(uint32_t ip);
 
-uint32_t get_ip_for_username(const gchar* username);
+user_session* look_for_username(const gchar* username);
 
 void clean_session(user_session*);
 
