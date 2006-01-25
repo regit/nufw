@@ -248,7 +248,7 @@ void nuauth_reload( int signal ) {
     newconf=init_nuauthconf();
     g_message("nuauth module reloading");
 
-    /* set flag to block threads of pool at exit */
+    /* set flag to block threads of pool at start */
     nuauthdatas->need_reload=1;
     /* stop unused threads : now newly created threads will be locked */
     g_thread_pool_stop_unused_threads();
