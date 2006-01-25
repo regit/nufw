@@ -14,6 +14,14 @@
     </copyright>
     <revhistory>
  <revision>
+	<revnumber>0.4</revnumber>
+	<date>2006/01/25</date>
+	<revdescription>
+	  <para>Add new option from 1.1.3</para>
+	</revdescription>
+      </revision>
+
+ <revision>
 	<revnumber>0.3</revnumber>
 	<date>2005/05/02</date>
 	<revdescription>
@@ -40,7 +48,7 @@
     <para>
 the nufw server has no configuration file as it as only a restricted set of options :
 <screen>
-nufw [-hVv[v[v[v[v[v[v[v[v[v]]]]]]]]]] [-l local_port] [-L local_addr] [-d remote_addr] [-p remote_port]  [-t packet_timeout] [-T track_size]</screen>
+nufw [-nChVv[v[v[v[v[v[v[v[v[v]]]]]]]]]] [-l local_port] [-L local_addr] [-d remote_addr] [-p remote_port]  [-t packet_timeout] [-T track_size] [-n DN name]</screen>
 <itemizedlist>
 <listitem><para>-h : display this help and exit</para>	</listitem>
  <listitem><para>-v : increase verbosity (maximum 9)</para>
@@ -73,6 +81,10 @@ nufw [-hVv[v[v[v[v[v[v[v[v[v]]]]]]]]]] [-l local_port] [-L local_addr] [-d remot
    <listitem><para>-t : timeout to forget about packets when they don't match (default : 15 s)</para>
 	</listitem>
    <listitem><para>-T : track size (default : 1000)</para>
+	</listitem>
+   <listitem><para>-n : Check nuauth certificate DN against the specified string</para>
+	</listitem>
+  <listitem><para>-C : send conntrack destroy event to nuauth</para>
 	</listitem>
       </itemizedlist>
 
@@ -206,7 +218,7 @@ have modification to the file taken into account.</para>
 </para><para>Default: <computeroutput>nuauth_acl_check_module="libplaintext"</computeroutput>
 </para>
       </section>
-      <section><title>nuauth_ip_authentication_module</title>
+<section><title>nuauth_ip_authentication_module</title>
 	<para>
 A fallback authentication module can be used to employ other authentication methods.
 Currently, only an ident based module is available.
@@ -228,6 +240,19 @@ Only SQL modules permit to evolve to a SSO system. Acceptable values for this pa
 </para><para>Default: <computeroutput>nuauth_user_logs_module="syslog"</computeroutput>
 </para>
       </section>
+<section><title>nuauth_user_session_logs_module</title>
+<para>
+This define the method to use for user connection and disconnection logging.
+The available modules are :
+<itemizedlist>
+<listitem><para>syslog</para></listitem>
+<listitem><para>script : run a custom script at user connection  (CONFDIR/user-up.sh) and disconnection (CONFDIR/user-down.sh)</para></listitem>
+<listitem><para>mysql</para></listitem>
+</itemizedlist>
+</para>
+<para>Default: <computeroutput>nuauth_user_session_logs_module="syslog"</computeroutput>
+</para>
+    </section>
     </section>
     <section><title>Underlying options of nuauth</title>
 <section><title>nuauth_prio_to_nok</title>
@@ -249,6 +274,26 @@ What to do when several groups user is member of disagree about access rights
 <para>Default: <computeroutput>nuauth_push_to_client=1</computeroutput>
 </para>
       </section>
+<section><title>nuauth_hello_authentication</title>
+<para>
+This is a fallback hello authentication mode for non NuFW supported
+protocols. This brings authentication for all protocols based on IP
+ by doing a posteriori IP based authentication.
+ </para>
+ <section><title>Warning</title>
+ <para>
+Authentication is <emphasis>FAR</emphasis> less strict than nufw original protocol :
+<itemizedlist>
+<listitem><para>It authenticates NATed computer (and every computers behind the same firewall)</para></listitem>
+<listitem><para>It is strictly MONO user</para></listitem>
+<listitem><para>But, it can authenticate all type of IP flows</para></listitem>
+</itemizedlist>
+</para>
+</section>
+<para>Default: <computeroutput>nuauth_hello_authentication=0</computeroutput></para>
+</section>
+
+
 <section><title>nuauth_do_ip_authentication</title>
 <para>
  Do we use fallback mode when no client are found<footnote><para>When no client is known on the IP from which a packet is coming
