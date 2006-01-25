@@ -289,6 +289,7 @@ This is a fallback hello authentication mode for non NuFW supported
 protocols. This brings authentication for all protocols based on IP
  by doing a posteriori IP based authentication.
  </para>
+<para>Default: <computeroutput>nuauth_hello_authentication=0</computeroutput></para>
  <section><title>Warning</title>
  <para>
 Authentication is <emphasis>FAR</emphasis> less strict than nufw original protocol :
@@ -299,7 +300,6 @@ Authentication is <emphasis>FAR</emphasis> less strict than nufw original protoc
 </itemizedlist>
 </para>
 </section>
-<para>Default: <computeroutput>nuauth_hello_authentication=0</computeroutput></para>
 </section>
 
 
@@ -365,7 +365,7 @@ This option set the delay after which a authentication failed and it forcibly in
 <para>
 A pool of threads is used to work on client authentication.
 This variable set the  number of threads used for this task.
-</para><para>Default: <computeroutput>nuauth_number_usercheckers=3</computeroutput>
+</para><para>Default: <computeroutput>nuauth_number_usercheckers=5</computeroutput>
 </para>
 	</section>
 <section><title>nuauth_number_aclcheckers</title>
@@ -373,16 +373,24 @@ This variable set the  number of threads used for this task.
 A pool of threads is used to do acl checking against external authority
 and to treat gateway request.
  This variable set the number of threads to work on gateway requests.
-</para><para>Default: <computeroutput>nuauth_number_aclcheckers=10</computeroutput>
+</para><para>Default: <computeroutput>nuauth_number_aclcheckers=5</computeroutput>
 </para>
 	  </section>
 <section><title>nuauth_number_loggers</title>
 <para>
-A pool of threads is used to do logging. You mau need to adjust 
+A pool of threads is used to do logging. You may need to adjust 
 it to the capability of the database server.
- </para><para>Default: <computeroutput>nuauth_number_loggers=10</computeroutput>
+ </para><para>Default: <computeroutput>nuauth_number_loggers=3</computeroutput>
 </para>
 	  </section>
+<section><title>nuauth_number_session_loggers</title>
+<para>
+A pool of threads is used to do user connection logging. You may need to adjust 
+it to the capability of the database server.
+ </para><para>Default: <computeroutput>nuauth_number_session_loggers=3</computeroutput>
+</para>
+	  </section>
+
 <section><title>nuauth_number_authcheckers</title>
 <para>
 A pool of threads is used to do TLS and SASL negotiation with users.
@@ -462,6 +470,17 @@ username before logging.</para>
 </para>
 	</section>
 
+<section><title>nuauth_session_timeout</title>
+<para>This option if set to a non null value causes nuauth to close a user session
+after the specified time. The user client has then to reconnect (transparently or not).
+This permit for example to disconnect users when their account has been cancelled.</para>
+
+<para>Default: <computeroutput>nuauth_session_timeout=0</computeroutput>
+</para>
+	</section>
+
+
+      </section>
       </section>
   </chapter>
   <chapter><title>Modules configuration</title>
