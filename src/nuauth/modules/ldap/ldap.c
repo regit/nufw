@@ -374,6 +374,7 @@ G_MODULE_EXPORT GSList* acl_check (connection* element)
 			result = ldap_next_entry(ld,result);
 			/* add when acl is filled */
 			if (this_acl->groups !=NULL){
+      				this_acl->expire = -1; 
 				g_list = g_slist_prepend(g_list,this_acl);
 			} else {
 				g_free(this_acl);
