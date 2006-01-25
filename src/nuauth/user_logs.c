@@ -103,7 +103,6 @@ gboolean log_user_session(user_session* usession,int state)
 	struct session_event* sessevent=g_new0(struct session_event,1);
 	/* feed thread pool */
 	if (nuauthconf->log_users & 1){
-		g_message("logging session");
 		sessevent->session=g_memdup(usession,sizeof(usession));
 		sessevent->state=state;
 		if ( sessevent->session->userid ){
