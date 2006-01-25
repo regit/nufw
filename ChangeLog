@@ -20,6 +20,7 @@
 	- nutcpc : working on freebsd :-) (but mono user for the moment)
 	- nutcpc : working on Mac OS X :-) (but mono user for the moment)
 	- nuauth : user connect policy (see config file for detail)
+	- libnuclient : fix typo that could cause a hang
 1.1.2 (2005/12/22)
 	- nufw : new threads architecture
 	- libnuclient : fix potential problem with new thread architecture

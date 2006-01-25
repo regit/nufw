@@ -154,7 +154,7 @@ int nu_client_check(NuAuth * session)
 		if (session->recvthread == NULL){
 			if (session->mode == SRV_TYPE_PUSH) {
 				session->check_cond=(pthread_cond_t*)calloc(1,sizeof(pthread_cond_t));
-				session->check_count_mutex=(pthread_mutex_t*)calloc(1,sizeof(pthread_cond_t));
+				session->check_count_mutex=(pthread_mutex_t*)calloc(1,sizeof(pthread_mutex_t));
 				pthread_mutex_init(session->check_count_mutex,NULL);
 				pthread_cond_init(session->check_cond,NULL);
 				session->checkthread=(pthread_t*)calloc(1,sizeof(pthread_t));
@@ -223,7 +223,6 @@ void* nu_client_thread_check(void *data)
 			pthread_mutex_lock(&check_mutex);
 			pthread_cond_wait(session->check_cond, &check_mutex);
 			pthread_mutex_unlock(&check_mutex);
-			printf(" condition event"); 
 		}
 	}
 }
