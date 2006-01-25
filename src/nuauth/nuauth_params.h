@@ -41,7 +41,7 @@ struct nuauth_params {
     /** policy on user connection, one of
      * - POLICY_MULTIPLE_LOGIN
      * - POLICY_ONE_LOGIN
-     * - POLICY_ONE_LOGIN_PER_IP
+     * - POLICY_PER_IP_ONE_LOGIN
      */
     int connect_policy;
     /* switch to full utf8 exchange */
