@@ -274,6 +274,15 @@ What to do when several groups user is member of disagree about access rights
 <para>Default: <computeroutput>nuauth_push_to_client=1</computeroutput>
 </para>
       </section>
+<section><title>nuauth_connect_policy</title>
+<para>
+This is used to choose the user connection policy :
+<itemizedlist>
+<listitem><para>0 : no login restriction (default)</para></listitem>
+<listitem><para>1 : one login per user</para></listitem>
+<listitem><para>2 : one login per ip and per user</para></listitem>
+</itemizedlist>
+</para>
 <section><title>nuauth_hello_authentication</title>
 <para>
 This is a fallback hello authentication mode for non NuFW supported
