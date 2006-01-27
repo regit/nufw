@@ -47,4 +47,6 @@ void close_clients(int signal);
 
 void kill_expired_clients_session();
 
+guint get_number_of_clients();
+
 #endif

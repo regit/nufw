@@ -132,6 +132,11 @@ inline GSList * get_client_sockets_by_ip(uint32_t ip)
 	return g_hash_table_lookup(client_ip_hash ,GINT_TO_POINTER(ip));
 }
 
+inline guint get_number_of_clients()
+{
+	return g_hash_table_size(client_conn_hash);
+}
+
 static gboolean look_for_username_callback (gpointer key,
                                              gpointer value,
                                              gpointer user_data)

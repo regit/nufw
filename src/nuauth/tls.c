@@ -1506,7 +1506,7 @@ void* tls_user_authsrv()
 				}
 			}
 
-			if ( c >= nuauth_tls_max_clients) {
+			if ( get_number_of_clients() >= nuauth_tls_max_clients -1 ) {
 
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
 					g_warning("too many clients (%d configured)\n",nuauth_tls_max_clients);
@@ -1730,8 +1730,9 @@ void* tls_nufw_authsrv()
 	fd_set wk_set; /* working set */
 	struct timeval tv;
 	gpointer vpointer;
-	char *configfile=DEFAULT_CONF_FILE;
 	nufw_session * nu_session;
+	char *configfile=DEFAULT_CONF_FILE;
+#if 0
 	confparams nuauth_tls_vars[] = {
 		{ "nuauth_tls_max_servers" , G_TOKEN_INT ,NUAUTH_TLS_MAX_SERVERS, NULL }
 	};
@@ -1742,6 +1743,7 @@ void* tls_nufw_authsrv()
 	/* set variable value from config file */
 	vpointer=get_confvar_value(nuauth_tls_vars,sizeof(nuauth_tls_vars)/sizeof(confparams),"nuauth_tls_max_servers");
 	nuauth_tls_max_servers=*(int*)(vpointer?vpointer:&nuauth_tls_max_servers);
+#endif
 
 	/* build servers hash */
 	nufw_servers = g_hash_table_new_full(
