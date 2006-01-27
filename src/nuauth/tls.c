@@ -52,10 +52,8 @@ struct tls_insert_data {
 /* These are global */
 gnutls_certificate_credentials x509_cred;
 int nuauth_tls_request_cert;
+int nuauth_tls_auth_by_cert;
 
-#if FAIT_BEAU
-static const char *group_prop[]={SASL_USER_GROUPS,NULL};
-#endif
 
 GPrivate* group_priv;
 GPrivate* user_priv;
@@ -657,8 +655,6 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 			c_session->userid=g_strdup(tempname);
 		}
 	}
-	//	if (ret != SASL_OK)
-	//		g_warning("get user failed");
 
 	/* check on multi user capability */
 	if ( check_inaddr_in_array(remote_inaddr,nuauthconf->multi_servers_array)){
@@ -670,7 +666,6 @@ int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
 				inet_ntop( AF_INET, &remote_inaddr, addresse, INET_ADDRSTRLEN);
 				g_message("%s users on multi server %s\n", c_session->userid,addresse);
-				//g_message("%s users on multi server %s\n", c_session->userid,inet_ntoa(remote_inaddr));
 			}
 #endif
 			if (gnutls_record_send(session,"N", 1) <= 0) /* send NO to client */
@@ -728,9 +723,6 @@ int sasl_user_check(user_session* c_session)
 	sasl_security_properties_t secprops;
 	gboolean external_auth=FALSE;
 	char buf[1024];
-#if FAIT_BEAU
-	char *groups=NULL;
-#endif
 	int ret;
 	if (c_session->userid) {
 		external_auth=TRUE;
@@ -1034,7 +1026,7 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 {
 	gnutls_session * session;
 	user_session* c_session;
-	int ret;
+	int ret,size=1;
 	int c = ((struct client_connection*)userdata)->socket;
 
 	if (tls_connect(c,&session) != SASL_BADPARAM){
@@ -1046,9 +1038,20 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 		c_session->last_req.tv_usec=0;
 		c_session->req_needed=TRUE;
 		c_session->userid=NULL;
+		c_session->uid=0;
 		g_free(userdata);
-		if (nuauth_tls_request_cert == GNUTLS_CERT_REQUIRE) 
+		if ((nuauth_tls_auth_by_cert == TRUE)   
+				&& gnutls_certificate_get_peers(*session,&size) 
+					)
 		{
+		ret = gnutls_certificate_verify_peers(*session);
+
+			if (ret != 0){
+				if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
+					g_message("Certificate verification failed : %s",gnutls_strerror(ret));
+				}
+			} else {
+		
 			gchar* username=NULL;
 			/* need to parse the certificate to see if it is a sufficient credential */
 			username=parse_x509_certificate_info(*session);
@@ -1073,6 +1076,7 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 				} else {
 					c_session->userid=username;
 				}
+			}
 			}
 		}
 		ret = sasl_user_check(c_session);
@@ -1221,7 +1225,8 @@ void create_x509_credentials(){
 		{ "nuauth_tls_cacert" , G_TOKEN_STRING , 0, g_strdup(NUAUTH_CACERTFILE) },
 		{ "nuauth_tls_crl" , G_TOKEN_STRING , 0, NULL },
 		{ "nuauth_tls_key_passwd" , G_TOKEN_STRING , 0, NULL },
-		{ "nuauth_tls_request_cert" , G_TOKEN_INT ,FALSE, NULL }
+		{ "nuauth_tls_request_cert" , G_TOKEN_INT ,FALSE, NULL },
+		{ "nuauth_tls_auth_by__cert" , G_TOKEN_INT ,FALSE, NULL }
 	};
 	parse_conffile(configfile,sizeof(nuauth_tls_vars)/sizeof(confparams),nuauth_tls_vars);
 	/* set variable value from config file */
@@ -1242,11 +1247,9 @@ void create_x509_credentials(){
 
 	vpointer=get_confvar_value(nuauth_tls_vars,sizeof(nuauth_tls_vars)/sizeof(confparams),"nuauth_tls_request_cert");
 	nuauth_tls_request_cert=*(int*)(vpointer);
-	if (nuauth_tls_request_cert == TRUE){
-		nuauth_tls_request_cert=GNUTLS_CERT_REQUIRE;
-	} else {
-		nuauth_tls_request_cert=GNUTLS_CERT_REQUEST;
-	}
+
+	vpointer=get_confvar_value(nuauth_tls_vars,sizeof(nuauth_tls_vars)/sizeof(confparams),"nuauth_tls_auth_by_cert");
+	nuauth_tls_auth_by_cert=*(int*)(vpointer);
 
 	gnutls_certificate_allocate_credentials(&x509_cred);
 	ret = gnutls_certificate_set_x509_trust_file(x509_cred,  nuauth_tls_cacert , 
