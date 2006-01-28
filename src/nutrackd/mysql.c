@@ -1,6 +1,7 @@
 /*
  ** Copyright(C) 2005 INL
  ** Written by Eric Leblond <regit@inl.fr>
+ **            Vincent Deffontaines <gryzor@inl.fr>
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -33,6 +34,8 @@ MYSQL * mysql_conn_init(){
         //TODO : log stuff
         return 0;
     }
+    if (!mysql_options(ld,MYSQL_OPT_CONNECT_TIMEOUT,params->timeout))
+        syslog(LOG_NOTICE,"mysql_options : having trouble when setting timeout");
     if (!mysql_real_connect(ld,
           params->host,
           params->user,
@@ -104,8 +107,10 @@ int update_sql_table(u_int32_t src, u_int32_t dst, u_int8_t proto, u_int16_t spo
           if (log_level > 2){
               syslog(LOG_ERR,"SQL query failed : %s",mysql_errno(ld));
           }
+        return 1;
+      }else{
+        return 0;
       }
-      return 1;
   } else {
       return 0;
   }
