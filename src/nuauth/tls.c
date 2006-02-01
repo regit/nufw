@@ -1734,10 +1734,10 @@ void* tls_nufw_authsrv()
 	fd_set tls_rx_set; /* read set */
 	fd_set wk_set; /* working set */
 	struct timeval tv;
-	gpointer vpointer;
 	nufw_session * nu_session;
-	char *configfile=DEFAULT_CONF_FILE;
 #if 0
+	char *configfile=DEFAULT_CONF_FILE;
+	gpointer vpointer;
 	confparams nuauth_tls_vars[] = {
 		{ "nuauth_tls_max_servers" , G_TOKEN_INT ,NUAUTH_TLS_MAX_SERVERS, NULL }
 	};
