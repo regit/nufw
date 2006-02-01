@@ -152,7 +152,8 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass
 
 		ret = pam_start("nuauth", user, &conv_info, &pamh);
 		if (ret != PAM_SUCCESS){
-			g_error("Can not initiate pam, dying");
+			g_warning("Can not initiate pam, dying");
+			return SASL_BADAUTH;
 		}
 
 		ret = pam_authenticate(pamh, 0);    /* is user really user? */
