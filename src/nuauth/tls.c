@@ -200,6 +200,7 @@ void  pre_client_check()
 					}
 #endif
 					shutdown(((struct pre_client_elt*)(client_runner->data))->socket,SHUT_RDWR);
+					close(((struct pre_client_elt*)(client_runner->data))->socket);
 					g_free(client_runner->data);
 					client_runner->data=NULL;
 				} 
@@ -1226,7 +1227,7 @@ void create_x509_credentials(){
 		{ "nuauth_tls_crl" , G_TOKEN_STRING , 0, NULL },
 		{ "nuauth_tls_key_passwd" , G_TOKEN_STRING , 0, NULL },
 		{ "nuauth_tls_request_cert" , G_TOKEN_INT ,FALSE, NULL },
-		{ "nuauth_tls_auth_by__cert" , G_TOKEN_INT ,FALSE, NULL }
+		{ "nuauth_tls_auth_by_cert" , G_TOKEN_INT ,FALSE, NULL }
 	};
 	parse_conffile(configfile,sizeof(nuauth_tls_vars)/sizeof(confparams),nuauth_tls_vars);
 	/* set variable value from config file */
@@ -1548,6 +1549,7 @@ void* tls_user_authsrv()
                                                 );
                             } else {
                                         shutdown(c,SHUT_RDWR);
+					close(c);
                                 }
 			}
 		}

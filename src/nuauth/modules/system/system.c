@@ -162,9 +162,9 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_AUTH))
 				g_warning("Bad password for user \"%s\"",user);
 			pam_end(pamh,PAM_DATA_SILENT);
-		if (system_pam_module_not_threadsafe){
-			g_static_mutex_unlock (&pam_mutex);
-		}
+			if (system_pam_module_not_threadsafe){
+				g_static_mutex_unlock (&pam_mutex);
+			}
 			return SASL_BADAUTH;
 		}
 		pam_end(pamh,PAM_DATA_SILENT);

@@ -67,6 +67,7 @@ static void hash_clean_session(user_session * c_session){
 	socket_tls=gnutls_transport_get_ptr(*(c_session->tls));
 	if (socket_tls){
 		shutdown((int)socket_tls,SHUT_RDWR); 
+		close((int)socket_tls); 
 	}
 	clean_session(c_session);
 }

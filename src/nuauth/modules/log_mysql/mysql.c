@@ -49,7 +49,8 @@ g_module_unload(void)
 }
 /* Init mysql system */
 G_MODULE_EXPORT gchar* 
-g_module_check_init(GModule *module){
+g_module_check_init(GModule *module)
+{
 	char *configfile=DEFAULT_CONF_FILE;
 	gpointer vpointer; 
 	//char *ldap_base_dn=LDAP_BASE;
