@@ -132,7 +132,8 @@ G_MODULE_EXPORT PGconn *pgsql_conn_init(void){
 		    " dbname='", pgsql_db_name,
 		    "' user='",pgsql_user,
 		    "' password='",pgsql_passwd,
-		    "' connect_timeout=",timeout);
+		    "' connect_timeout=",timeout,
+                    NULL);
 #endif
 		    
     if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
@@ -220,7 +221,9 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
             //
             //
             ipone.s_addr=ntohl((element.tracking_hdrs).saddr);
+            iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
             strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
+            strncpy(tmp_inet2,inet_ntoa(iptwo),40);
             if (nuauthconf->log_users_strict){
                 if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET end_timestamp=%lu, state=%hu WHERE (ip_saddr='%s' and tcp_sport=%u and (state=1 or state=2))",
                   pgsql_table_name,
