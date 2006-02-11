@@ -73,13 +73,17 @@ void* conntrack_event_handler(void *data)
 {
     struct nfct_handle *cth;
     int res;
-    cth = nfct_open(CONNTRACK, NF_NETLINK_CONNTRACK_DESTROY);
+    if (nufw_set_mark == 1){
+        cth = nfct_open(CONNTRACK, NF_NETLINK_CONNTRACK_DESTROY|NF_NETLINK_CONNTRACK_UPDATE);
+    } else {
+        cth = nfct_open(CONNTRACK, NF_NETLINK_CONNTRACK_DESTROY);
+    }
     if (!cth)
       fprintf(stderr,"%s : Not enough memory",PACKAGE_NAME);
     nfct_register_callback(cth, update_handler, NULL);
     res = nfct_event_conntrack(cth);
     nfct_close(cth);
-
+    return NULL;
 }
 
 #endif

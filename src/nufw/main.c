@@ -162,7 +162,7 @@ int main(int argc,char * argv[]){
             break;
 #endif
           case 'h' :
-            fprintf (stdout ,"%s [-hVcv[v[v[v[v[v[v[v[v[v]]]]]]]]]] [-d remote_addr] [-p remote_port]  [-t packet_timeout] [-T track_size]\n\
+            fprintf (stdout ,"%s [-hVcCv[v[v[v[v[v[v[v[v[v]]]]]]]]]] [-d remote_addr] [-p remote_port]  [-t packet_timeout] [-T track_size]\n\
 \t-h : display this help and exit\n\
 \t-V : display version and exit\n\
 \t-D : daemonize\n\
@@ -171,8 +171,11 @@ int main(int argc,char * argv[]){
 \t-a : use specified file as ca file (strict checking is done if selected) (default: none)\n\
 \t-n : use specified string as the needed DN of nuauth (inforce certificate checking) (default: none)\n\
 \t-v : increase debug level (+1 for each 'v') (max useful number : 10)\n\
-\t-m : mark packet with userid\n\
-\t-d : remote address we send auth requests to (adress of the nuauth server) (default : 127.0.0.1)\n\
+\t-m : mark packet with userid (needed for connection expiration)\n"
+#ifdef HAVE_LIBCONNTRACK
+"\t-C : listen to conntrack even (needed for connection expiration)\n"
+#endif
+"\t-d : remote address we send auth requests to (adress of the nuauth server) (default : 127.0.0.1)\n\
 \t-p : remote port we send auth requests to (TCP port nuauth server listens on) (default : 4128)\n"
 #if USE_NFQUEUE
 		"\t-q : use nfqueue number (default : 0)\n"
