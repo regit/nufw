@@ -26,7 +26,11 @@ int update_handler (void *arg, unsigned int flags, int type,void *data)
   struct nuv2_destroy_message message;
   int ret;
 
-
+        if (nufw_set_mark == 1){
+                if (conn->mark == 0){
+                        return 0;
+                }
+        }
   message.protocol=1;
   message.type=AUTH_CONN_DESTROY;
   message.ipproto=conn->tuple[0].protonum;
