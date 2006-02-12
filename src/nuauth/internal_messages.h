@@ -27,8 +27,9 @@
 #define WARN_MESSAGE 0x1
 #define FREE_MESSAGE 0x0
 #define INSERT_MESSAGE 0x2
-#define GET_MESSAGE 0x3
-#define REFRESH_MESSAGE 0x4
+#define UPDATE_MESSAGE 0x3
+#define GET_MESSAGE 0x4
+#define REFRESH_MESSAGE 0x5
 
 struct internal_message {
 	guint type;

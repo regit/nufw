@@ -289,24 +289,45 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz)
                                   break;
                           case AUTH_CONN_DESTROY:
                                   {
-                                      struct nuv2_destroy_message* msg=(struct nuv2_destroy_message*) dgram;
+                                      struct nuv2_conntrack_message* msg=(struct nuv2_conntrack_message*) dgram;
                                       tracking* datas=g_new0(tracking,1);
-                                      struct internal_message  *message=g_new0(struct internal_message,1);
-                                      datas->protocol=msg->ipproto;
-                                      datas->saddr=ntohl(msg->src);
-                                      datas->daddr=ntohl(msg->dst);
-                                      if (msg->ipproto == IPPROTO_ICMP){
-                                          datas->type=ntohs(msg->sport);
-                                          datas->code=ntohs(msg->dport);
+                                      struct internal_message  *message = g_new0(struct internal_message,1);
+                                      datas->protocol = msg->ipproto;
+                                      datas->saddr = ntohl(msg->src);
+                                      datas->daddr = ntohl(msg->dst);
+                                      if (msg->ipproto == IPPROTO_ICMP) {
+                                          datas->type = ntohs(msg->sport);
+                                          datas->code = ntohs(msg->dport);
                                       } else {
-                                          datas->source=ntohs(msg->sport);
-                                          datas->dest=ntohs(msg->dport);
+                                          datas->source = ntohs(msg->sport);
+                                          datas->dest = ntohs(msg->dport);
                                       }               
-                                      message->datas=datas;
-                                      message->type=FREE_MESSAGE;
+                                      message->datas = datas;
+                                      message->type = FREE_MESSAGE;
                                       g_async_queue_push (nuauthdatas->limited_connexions_queue, message);
                                   }
                                   break;
+                         case AUTH_CONN_UPDATE:
+                                  {
+                                      struct nuv2_conntrack_message* msg=(struct nuv2_conntrack_message*) dgram;
+                                      tracking* datas=g_new0(tracking,1);
+                                      struct internal_message  *message = g_new0(struct internal_message,1);
+                                      datas->protocol = msg->ipproto;
+                                      datas->saddr = ntohl(msg->src);
+                                      datas->daddr = ntohl(msg->dst);
+                                      if (msg->ipproto == IPPROTO_ICMP) {
+                                          datas->type = ntohs(msg->sport);
+                                          datas->code = ntohs(msg->dport);
+                                      } else {
+                                          datas->source = ntohs(msg->sport);
+                                          datas->dest = ntohs(msg->dport);
+                                      }               
+                                      message->datas = datas;
+                                      message->type = UPDATE_MESSAGE;
+                                      g_async_queue_push (nuauthdatas->limited_connexions_queue, message);
+                                  }
+                                  break;
+
                           default:
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)) {
 					g_message("Not for us\n");

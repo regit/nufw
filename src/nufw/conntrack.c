@@ -23,7 +23,7 @@
 int update_handler (void *arg, unsigned int flags, int type,void *data)
 {
   struct nfct_conntrack *conn = arg;
-  struct nuv2_destroy_message message;
+  struct nuv2_conntrack_message message;
   int ret;
 
         if (nufw_set_mark == 1){
@@ -32,7 +32,23 @@ int update_handler (void *arg, unsigned int flags, int type,void *data)
                 }
         }
   message.protocol=1;
-  message.type=AUTH_CONN_DESTROY;
+  switch (type) {
+    case IPCTNL_MSG_CT_DELETE:
+        message.type=AUTH_CONN_DESTROY;
+        break;
+    case IPCTNL_MSG_CT_NEW:
+        /** check for ASSURED, elsewhere timeout is so small it is useless to
+         * have a fixed one */
+        if (conn->status & IPS_ASSURED) {
+                message.type=AUTH_CONN_UPDATE;
+        } else {
+                /* not really your business we leave */
+                return 0;
+        }
+        break;
+    default:
+        message.type=AUTH_CONN_UPDATE;
+  }
   message.ipproto=conn->tuple[0].protonum;
   message.src= conn->tuple[0].src.v4;
   message.dst=conn->tuple[0].dst.v4;
@@ -52,9 +68,9 @@ int update_handler (void *arg, unsigned int flags, int type,void *data)
             break;
   }
   ret = gnutls_record_send(
-                  *(tls.session) ,
+                  *(tls.session),
                   &message,
-                  sizeof(struct nuv2_destroy_message)
+                  sizeof(struct nuv2_conntrack_message)
                   ); 
           if (ret <0){
               if ( gnutls_error_is_fatal(ret) ){

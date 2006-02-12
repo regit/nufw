@@ -29,53 +29,60 @@ static gboolean get_nufw_server_by_addr(gpointer key,gpointer value,gpointer use
   }
 }
 
-void  send_destroy_message_and_free(gpointer user_data)
+static void send_conntrack_message(struct limited_connection * lconn,unsigned char msgtype)
 {
   nufw_session* session=NULL;
-  struct limited_connection* data=(struct limited_connection*)user_data;
-  /* look for corresponding nufw tls session */
+  g_mutex_lock(nufw_servers_mutex);
+  if (nufw_servers){
+      session = g_hash_table_find (nufw_servers,
+              get_nufw_server_by_addr,
+              &(lconn->gwaddr));
+      g_mutex_unlock(nufw_servers_mutex);
+      if (session){
+          struct nuv2_conntrack_message message;
+          /* send message */
+          message.protocol=1;
+          message.type=msgtype;
+          if (lconn->expire != -1) {
+              message.timeout=htonl(lconn->expire-time(NULL));
+          } else {
+              message.timeout=0;
+          }
+          message.ipproto=lconn->tracking_hdrs.protocol;
+          message.src=htonl(lconn->tracking_hdrs.saddr);
+          message.dst=htonl(lconn->tracking_hdrs.daddr);
+          if (message.ipproto == IPPROTO_ICMP){
+              message.sport=lconn->tracking_hdrs.type;
+              message.dport=lconn->tracking_hdrs.code;
+          } else {
+              message.sport=htons(lconn->tracking_hdrs.source);
+              message.dport=htons(lconn->tracking_hdrs.dest);
+          }
+          gnutls_record_send(
+                  *(session->tls) ,
+                  &message,
+                  sizeof(struct nuv2_conntrack_message)
+                  );
+      } else {
+          if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER)){
+              g_message("correct session not found among nufw servers");
+          }
+      }
+  } else {
+      g_mutex_unlock(nufw_servers_mutex);
+  }
+}
 
-  if(data->expire){
+void  send_destroy_message_and_free(gpointer user_data)
+{
+  struct limited_connection* data=(struct limited_connection*)user_data;
 #ifdef DEBUG_ENABLE
       if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)){
           g_message("connection will be destroyed");
       }
 #endif
-      g_mutex_lock(nufw_servers_mutex);
-      if (nufw_servers){
-          session = g_hash_table_find (nufw_servers,
-                          get_nufw_server_by_addr,
-                          &(data->gwaddr));
-          g_mutex_unlock(nufw_servers_mutex);
-          if (session){
-              struct nuv2_destroy_message message;
-              /* send message */
-              message.protocol=1;
-              message.type=AUTH_CONN_DESTROY;
-              message.ipproto=data->tracking_hdrs.protocol;
-              message.src=htonl(data->tracking_hdrs.saddr);
-              message.dst=htonl(data->tracking_hdrs.daddr);
-              if (message.ipproto == IPPROTO_ICMP){
-                  message.sport=data->tracking_hdrs.type;
-                  message.dport=data->tracking_hdrs.code;
-              } else {
-                  message.sport=htons(data->tracking_hdrs.source);
-                  message.dport=htons(data->tracking_hdrs.dest);
-              }
-              gnutls_record_send(
-                              *(session->tls) ,
-                              &message,
-                              sizeof(struct nuv2_destroy_message)
-                              );
-          } else {
-              if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER)){
-                  g_message("correct session not found among nufw servers");
-              }
-          }
-      } else {
-          g_mutex_unlock(nufw_servers_mutex);
-      }
-  }
+  /* look for corresponding nufw tls session */
+  send_conntrack_message(data,AUTH_CONN_DESTROY);
   /* free */
   g_free(data);
 }
@@ -164,6 +171,18 @@ void* limited_connection_handler()
                     }
 #endif
                     g_free(message->datas);
+                }
+                break;
+                /** here we get message from nufw kernel connection is ASSURED 
+                 * we have to limit it if needed and log the state change if needed */
+        case UPDATE_MESSAGE:
+                {
+                        struct limited_connection* elt=(struct limited_connection*)g_hash_table_lookup(conn_list,message->datas);
+                        if (elt == NULL){
+                                /* TODO need only to log */
+                        } else {
+                                send_conntrack_message(elt,AUTH_CONN_UPDATE);
+                        }
                 }
       }
       g_free(message);

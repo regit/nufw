@@ -44,6 +44,8 @@
 #define AUTH_CONTROL 0x4
 #define USER_HELLO 0x5
 #define AUTH_CONN_DESTROY 0x6
+#define AUTH_CONN_UPDATE 0x7
+#define AUTH_CONN_FIXED_TIMEOUT 0x7
 
 #define NOK 0
 #define OK 1
@@ -172,10 +174,11 @@ struct nuv2_srv_helloreq {
 };
 
 /* TODO : inject struct nuv2_authfield ? */
-struct nuv2_destroy_message {
+struct nuv2_conntrack_message {
         uint8_t protocol;
         uint8_t type;
         uint16_t length;
+        uint32_t timeout;
         uint32_t src;
         uint32_t dst;
         uint8_t ipproto;

@@ -146,7 +146,7 @@ int auth_packet_to_decision(char* dgram)
               case AUTH_CONN_DESTROY:
                       {
 #ifdef HAVE_LIBCONNTRACK
-                        struct nuv2_destroy_message* packet_hdr=(struct nuv2_destroy_message*)dgram;
+                        struct nuv2_conntrack_message* packet_hdr=(struct nuv2_conntrack_message*)dgram;
                         struct nfct_tuple orig;
                         int id=0;
                         orig.src.v4=packet_hdr->src;
@@ -165,7 +165,6 @@ int auth_packet_to_decision(char* dgram)
                           default:
                                   return 0; 
                         }
-                        printf("try to delete sport=%d dport=%d\n",orig.l4src.tcp.port,orig.l4dst.tcp.port);fflush(NULL);
                         res = nfct_delete_conntrack(cth, &orig, 
                                         NFCT_DIR_ORIGINAL,
                                         id);
@@ -181,6 +180,45 @@ int auth_packet_to_decision(char* dgram)
                       }
 #endif /* HAVE_LIBCONNTRACK */
                       }
+                      break;
+              case AUTH_CONN_UPDATE:
+                      {
+#ifdef HAVE_LIBCONNTRACK
+                        struct nuv2_conntrack_message* packet_hdr=(struct nuv2_conntrack_message*)dgram;
+                        struct nfct_conntrack ct;
+                        ct.tuple[NFCT_DIR_ORIGINAL].src.v4=packet_hdr->src;
+                        ct.tuple[NFCT_DIR_ORIGINAL].dst.v4=packet_hdr->dst;
+                        ct.tuple[NFCT_DIR_ORIGINAL].protonum=packet_hdr->ipproto;
+                        ct.timeout=0;
+
+                        switch (packet_hdr->ipproto){
+                          case IPPROTO_TCP:
+                                  ct.tuple[NFCT_DIR_ORIGINAL].l4src.tcp.port=packet_hdr->sport;  
+                                  ct.tuple[NFCT_DIR_ORIGINAL].l4dst.tcp.port=packet_hdr->dport;  
+                                  break;
+                          case IPPROTO_UDP:
+                                  ct.tuple[NFCT_DIR_ORIGINAL].l4src.udp.port=packet_hdr->sport;  
+                                  ct.tuple[NFCT_DIR_ORIGINAL].l4dst.udp.port=packet_hdr->dport;  
+                                  break;
+                          default:
+                                  return 0; 
+                        }
+                        if (packet_hdr->timeout){
+                                ct.fixed_timeout=ntohl(packet_hdr->timeout);
+                        }
+                        res = nfct_update_conntrack(cth, &ct);
+
+#else /* HAVE_LIBCONNTRACK */
+                      if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
+                          if (log_engine == LOG_TO_SYSLOG) {
+                              syslog(SYSLOG_FACILITY(DEBUG_LEVEL_WARNING),"Connexion update message not supported");
+                          } else {
+                              printf("[%i] Connexion update message not supported\n",getpid());
+                          }
+                      }
+#endif /* HAVE_LIBCONNTRACK */
+                      }
+
                       break;
               default:
                       {
