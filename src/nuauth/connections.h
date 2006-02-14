@@ -97,6 +97,10 @@ typedef struct _Connection {
   /** decision on packet. */
   char decision;
   time_t expire; /**< set to -1 to not expire */
+#ifdef PERF_DISPLAY_ENABLE
+  /* performance datas */
+  struct timeval arrival_time;
+#endif
 } connection;
 
 

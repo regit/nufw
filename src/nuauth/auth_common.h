@@ -19,8 +19,6 @@
 #ifndef AUTH_COMMON_H
 #define AUTH_COMMON_H
 
-
-
 void search_and_fill ();
 
 gboolean compare_connection(gconstpointer conn1, gconstpointer conn2);
@@ -64,5 +62,9 @@ void free_buffer_read(struct buffer_read* datas);
 GHashTable * conn_list;
 /** global lock for the conn list. */
 GStaticMutex insert_mutex;
+
+#ifdef PERF_DISPLAY_ENABLE
+int timeval_substract (struct timeval *result,struct timeval *x,struct timeval *y);
+#endif
 
 #endif

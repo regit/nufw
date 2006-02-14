@@ -18,6 +18,8 @@
 #ifndef AUTH_SRV_H
 #define AUTH_SRV_H
 
+#define PERF_DISPLAY_ENABLE 1
+
 /* Use glib to treat data structures */
 #include <glib.h>
 #include <gmodule.h>
@@ -38,6 +40,7 @@
 #include <gnutls/gnutls.h>
 #include <sasl/sasl.h>
 #include <locale.h>
+#include <sys/time.h>
 
 /* NUFW Protocol */
 #include <proto.h>
@@ -71,6 +74,7 @@
 
 #include "nuauth_params.h"
 #include "nuauthconf.h"
+
 
 
 #define DEBUG_OR_NOT(LOGLEVEL,LOGAREA) (LOGAREA&&(nuauthconf->debug_areas))&&((nuauthconf->debug_level)>=LOGLEVEL)

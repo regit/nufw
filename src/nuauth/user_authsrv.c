@@ -50,7 +50,7 @@ void user_check_and_decide (gpointer userdata, gpointer data)
   if ( conn_elts != NULL ) {
       for (conn_elt_l=conn_elts;conn_elt_l!=NULL;conn_elt_l=conn_elt_l->next){
           conn_elt=conn_elt_l->data;
-
+	
 	/* check source IP equality */
 	if  (  ((struct buffer_read *)userdata)->addr 
 			==
@@ -141,6 +141,9 @@ static GSList * userpckt_decode(struct buffer_read * datas)
                       connexion->username=NULL;
                       connexion->cacheduserdatas=NULL;
                       connexion->packet_id=NULL;
+#ifdef DEBUG_ENABLE
+		      gettimeofday(&(connexion->arrival_time),NULL);
+#endif
 
 
                       req_start+=4;

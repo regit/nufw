@@ -22,6 +22,38 @@
 #include <jhash.h>
 
 
+#ifdef PERF_DISPLAY_ENABLE
+/* Subtract the `struct timeval' values X and Y,
+ *         storing the result in RESULT.
+ *                 Return 1 if the difference is negative, otherwise 0.  */
+
+int timeval_substract (result, x, y)
+	struct timeval *result, *x, *y;
+{
+	/* Perform the carry for the later subtraction by updating y. */
+	if (x->tv_usec < y->tv_usec) {
+		int nsec = (y->tv_usec - x->tv_usec) / 1000000 + 1;
+		y->tv_usec -= 1000000 * nsec;
+		y->tv_sec += nsec;
+	}
+	if (x->tv_usec - y->tv_usec > 1000000) {
+		int nsec = (x->tv_usec - y->tv_usec) / 1000000;
+		y->tv_usec += 1000000 * nsec;
+		y->tv_sec -= nsec;
+	}
+
+	/* Compute the time remaining to wait.
+	 *           tv_usec is certainly positive. */
+	result->tv_sec = x->tv_sec - y->tv_sec;
+	result->tv_usec = x->tv_usec - y->tv_usec;
+
+	/* Return 1 if result is negative. */
+	return x->tv_sec < y->tv_sec;
+}
+#endif
+
+
+
 static gint apply_decision(connection element);
 
 /*
@@ -814,6 +846,9 @@ gint apply_decision(connection element)
 {
 	int answer=element.decision;
 	struct auth_answer aanswer ={ answer , element.user_id ,element.socket, element.tls } ;
+#ifdef PERF_DISPLAY_ENABLE
+	struct timeval leave_time,elapsed_time;
+#endif
 
 	if (answer == OK){
 		log_user_packet(element,STATE_OPEN);
@@ -825,6 +860,11 @@ gint apply_decision(connection element)
 			send_auth_response,
 			&aanswer);
 	/* free packet_id */
+#ifdef PERF_DISPLAY_ENABLE
+	gettimeofday(&leave_time,NULL);
+	timeval_substract (&elapsed_time,&(element.arrival_time),&leave_time);
+	g_message("treatment time for conn : %d.%d",elapsed_time.tv_sec,elapsed_time.tv_usec);
+#endif
 
 	if (element.packet_id != NULL ){
 		g_slist_free (element.packet_id);
