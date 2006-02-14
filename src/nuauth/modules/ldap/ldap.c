@@ -296,8 +296,8 @@ G_MODULE_EXPORT GSList* acl_check (connection* element)
 
 #ifdef PERF_DISPLAY_ENABLE
 		gettimeofday(&tvend, NULL);
-		timeval_substract (&result ,&tvstart, &tvend);
-		g_message("ldap query time : %d.%d",result.tv_sec,result.tv_usec);
+		timeval_substract (&result ,&tvend, &tvstart);
+		g_message("ldap query time : %u.%06u",result.tv_sec,result.tv_usec);
 	}
 #endif
 	if ( err !=  LDAP_SUCCESS ) {

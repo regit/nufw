@@ -27,8 +27,7 @@
  *         storing the result in RESULT.
  *                 Return 1 if the difference is negative, otherwise 0.  */
 
-int timeval_substract (result, x, y)
-	struct timeval *result, *x, *y;
+int timeval_substract (struct timeval *result,struct timeval *x,struct timeval *y)
 {
 	/* Perform the carry for the later subtraction by updating y. */
 	if (x->tv_usec < y->tv_usec) {
@@ -862,8 +861,8 @@ gint apply_decision(connection element)
 	/* free packet_id */
 #ifdef PERF_DISPLAY_ENABLE
 	gettimeofday(&leave_time,NULL);
-	timeval_substract (&elapsed_time,&(element.arrival_time),&leave_time);
-	g_message("treatment time for conn : %d.%d",elapsed_time.tv_sec,elapsed_time.tv_usec);
+	timeval_substract (&elapsed_time,&leave_time,&(element.arrival_time));
+	g_message("Treatment time for conn : %u.%06u",elapsed_time.tv_sec,elapsed_time.tv_usec);
 #endif
 
 	if (element.packet_id != NULL ){

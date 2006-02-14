@@ -170,6 +170,9 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz)
 					}
 					return NULL;
 				}
+#ifdef PERF_DISPLAY_ENABLE
+			      gettimeofday(&(connexion->arrival_time),NULL);
+#endif
 				/* parse packet */
 				pointer=(int8_t*)dgram + 2;
 

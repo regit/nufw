@@ -141,7 +141,7 @@ static GSList * userpckt_decode(struct buffer_read * datas)
                       connexion->username=NULL;
                       connexion->cacheduserdatas=NULL;
                       connexion->packet_id=NULL;
-#ifdef DEBUG_ENABLE
+#ifdef PERF_DISPLAY_ENABLE
 		      gettimeofday(&(connexion->arrival_time),NULL);
 #endif
 
