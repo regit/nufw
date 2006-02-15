@@ -103,7 +103,7 @@ int userdb_checkpass(sasl_conn_t *conn,
 	/* pass can not be null */
 	if (pass==NULL || passlen==0){
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN))
-			g_message("password sent by user %s is NULL",user);
+			g_message("Password sent by user %s is NULL",user);
 		return SASL_BADAUTH;
 	}
 
@@ -117,7 +117,7 @@ int userdb_checkpass(sasl_conn_t *conn,
 				NULL);
 		if ( ! dec_user ) {
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
-				g_message("can not convert username at %s:%d",__FILE__,__LINE__);
+				g_message("Can not convert username at %s:%d",__FILE__,__LINE__);
 			}
 
 			/* return to fallback */
@@ -219,19 +219,19 @@ void  pre_client_check()
 
 int close_tls_session(int c,gnutls_session* session)
 {
-		if (close(c))
-			if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-				g_message("close_tls_session : close() failed!");
-		gnutls_deinit(*session); /* TODO check output */
-#ifdef DEBUG_ENABLE
+	if (close(c))
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-			g_message("gnutls_deinit() was called");
+			g_message("close_tls_session : close() failed!");
+	gnutls_deinit(*session); /* TODO check output */
+#ifdef DEBUG_ENABLE
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
+		g_message("gnutls_deinit() was called");
 #endif
-		if (session){
-			g_free(session);
-		}
-		return 1;
+	if (session){
+		g_free(session);
 	}
+	return 1;
+}
 /** cleanly end a tls session */
 int cleanly_close_tls_session(int c,gnutls_session* session){
 	gnutls_bye(*session,GNUTLS_SHUT_RDWR);
@@ -813,10 +813,10 @@ int sasl_user_check(user_session* c_session)
 						g_warning("error osfield is too long, announced %d",osfield->length);	
 					}
 #ifdef DEBUG_ENABLE
-						if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
-							g_message("%s:%d osfield received %d,%d,%d ",__FILE__,__LINE__,osfield->type,osfield->option,osfield->length);
+					if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
+						g_message("%s:%d osfield received %d,%d,%d ",__FILE__,__LINE__,osfield->type,osfield->option,osfield->length);
 
-						}
+					}
 #endif
 
 					return SASL_BADAUTH;
@@ -916,10 +916,10 @@ int sasl_user_check(user_session* c_session)
 				g_free(dec_buf);
 			} else {
 #ifdef DEBUG_ENABLE
-						if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
-							g_message("osfield received %d,%d,%d ",osfield->type,osfield->option,osfield->length);
+				if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
+					g_message("osfield received %d,%d,%d ",osfield->type,osfield->option,osfield->length);
 
-						}
+				}
 #endif
 
 				return SASL_FAIL;
@@ -927,7 +927,7 @@ int sasl_user_check(user_session* c_session)
 		}
 
 		if (nuauthconf->session_duration){
-                	c_session->expire=time(NULL)+nuauthconf->session_duration;
+			c_session->expire=time(NULL)+nuauthconf->session_duration;
 		} else {
 			c_session->expire=-1;
 		}
@@ -1030,7 +1030,7 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 	int ret,size=1;
 	int c = ((struct client_connection*)userdata)->socket;
 
-	if (tls_connect(c,&session) != SASL_BADPARAM){
+	if (tls_connect(c,&session) != SASL_BADPARAM) {
 		c_session=g_new0(user_session,1);
 		c_session->tls=session;
 		c_session->addr=((struct client_connection*)userdata)->addr.sin_addr.s_addr;
@@ -1043,41 +1043,40 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 		g_free(userdata);
 		if ((nuauth_tls_auth_by_cert == TRUE)   
 				&& gnutls_certificate_get_peers(*session,&size) 
-					)
-		{
-		ret = gnutls_certificate_verify_peers(*session);
+		   ) {
+			ret = gnutls_certificate_verify_peers(*session);
 
 			if (ret != 0){
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
 					g_message("Certificate verification failed : %s",gnutls_strerror(ret));
 				}
 			} else {
-		
-			gchar* username=NULL;
-			/* need to parse the certificate to see if it is a sufficient credential */
-			username=parse_x509_certificate_info(*session);
-			/* parsing complete */ 
-			if (username){
+
+				gchar* username=NULL;
+				/* need to parse the certificate to see if it is a sufficient credential */
+				username=parse_x509_certificate_info(*session);
+				/* parsing complete */ 
+				if (username){
 #ifdef DEBUG_ENABLE
-				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-					g_message("Using username %s from X509 certificate",username);
+					if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
+						g_message("Using username %s from X509 certificate",username);
 #endif
-				if(  user_check(username, NULL, 0,
-							&(c_session->uid), &(c_session->groups)
-							)!=SASL_OK) {
+					if(  user_check(username, NULL, 0,
+								&(c_session->uid), &(c_session->groups)
+						       )!=SASL_OK) {
 #ifdef DEBUG_ENABLE
-					if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
-						g_message("error when searching user groups");	
+						if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
+							g_message("error when searching user groups");	
+						}
+#endif
+						c_session->groups=NULL;
+						c_session->uid=0;
+						/* we free username as it is not a good one */
+						g_free(username);
+					} else {
+						c_session->userid=username;
 					}
-#endif
-					c_session->groups=NULL;
-					c_session->uid=0;
-					/* we free username as it is not a good one */
-					g_free(username);
-				} else {
-					c_session->userid=username;
 				}
-			}
 			}
 		}
 		ret = sasl_user_check(c_session);
@@ -1165,7 +1164,7 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 						}
 					}
 
-                			log_user_session(c_session,SESSION_OPEN);
+					log_user_session(c_session,SESSION_OPEN);
 #ifdef DEBUG_ENABLE
 					if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
 						g_message("Says we need to work on %d\n",c);
@@ -1198,7 +1197,7 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 					clean_session(c_session);
 				}
 		}
-	}else{
+	} else {
 		g_free(userdata);
 	}
 	remove_socket_from_pre_client_list(c);
@@ -1273,7 +1272,7 @@ void create_x509_credentials(){
 #ifdef DEBUG_ENABLE
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)){
 		g_message("TLS using key %s and cert %s",nuauth_tls_key,nuauth_tls_cert);
-		if (	nuauth_tls_request_cert == GNUTLS_CERT_REQUIRE)
+		if (nuauth_tls_request_cert == GNUTLS_CERT_REQUIRE)
 			g_message("TLS require cert from client");
 	}
 #endif
@@ -1486,10 +1485,10 @@ void* tls_user_authsrv()
 		n=select(mx,&wk_set,NULL,NULL,&tv);
 
 		if (n == -1) {
-                        g_warning("select() failed, exiting\n");
-                        exit(EXIT_FAILURE);
-                } else if (!n) {
-                    continue;
+			g_warning("select() failed, exiting\n");
+			exit(EXIT_FAILURE);
+		} else if (!n) {
+			continue;
 		}
 
 		/*
@@ -1518,39 +1517,39 @@ void* tls_user_authsrv()
 				close(c);
 				continue;
 			} else {
-                            /* if system is not in reload */
-                            if (! (nuauthdatas->need_reload)){
-                                struct client_connection* current_client_conn=g_new0(struct client_connection,1);
-                                struct pre_client_elt* new_pre_client;
-                                current_client_conn->socket=c;
-                                memcpy(&current_client_conn->addr,&addr_clnt,sizeof(struct sockaddr_in));
+				/* if system is not in reload */
+				if (! (nuauthdatas->need_reload)){
+					struct client_connection* current_client_conn=g_new0(struct client_connection,1);
+					struct pre_client_elt* new_pre_client;
+					current_client_conn->socket=c;
+					memcpy(&current_client_conn->addr,&addr_clnt,sizeof(struct sockaddr_in));
 
-                                if ( c+1 > mx )
-                                    mx = c + 1;
-                                /* Set KEEP ALIVE on connection */
-                                setsockopt ( c,
-                                                SOL_SOCKET,
-                                                SO_KEEPALIVE,
-                                                &option_value,
-                                                sizeof(option_value));
-                                /* give the connection to a separate thread */
-                                /*  add element to pre_client 
-                                    create pre_client_elt */
-                                new_pre_client = g_new0(struct pre_client_elt,1);
-                                new_pre_client->socket = c;
-                                new_pre_client->validity = time(NULL) + nuauth_auth_nego_timeout;
+					if ( c+1 > mx )
+						mx = c + 1;
+					/* Set KEEP ALIVE on connection */
+					setsockopt ( c,
+							SOL_SOCKET,
+							SO_KEEPALIVE,
+							&option_value,
+							sizeof(option_value));
+					/* give the connection to a separate thread */
+					/*  add element to pre_client 
+					    create pre_client_elt */
+					new_pre_client = g_new0(struct pre_client_elt,1);
+					new_pre_client->socket = c;
+					new_pre_client->validity = time(NULL) + nuauth_auth_nego_timeout;
 
-                                g_static_mutex_lock (&pre_client_list_mutex);
-                                pre_client_list=g_slist_prepend(pre_client_list,new_pre_client);
-                                g_static_mutex_unlock (&pre_client_list_mutex);
-                                g_thread_pool_push (tls_sasl_worker,
-                                                current_client_conn,	
-                                                NULL
-                                                );
-                            } else {
-                                        shutdown(c,SHUT_RDWR);
+					g_static_mutex_lock (&pre_client_list_mutex);
+					pre_client_list=g_slist_prepend(pre_client_list,new_pre_client);
+					g_static_mutex_unlock (&pre_client_list_mutex);
+					g_thread_pool_push (tls_sasl_worker,
+							current_client_conn,	
+							NULL
+							);
+				} else {
+					shutdown(c,SHUT_RDWR);
 					close(c);
-                                }
+				}
 			}
 		}
 
@@ -1573,38 +1572,38 @@ void* tls_user_authsrv()
 				g_static_mutex_lock (&client_mutex);
 				c_session = get_client_datas_by_socket(c);
 				g_static_mutex_unlock (&client_mutex);
-                                if (nuauthconf->session_duration && c_session->expire < time(NULL)){
-                                    FD_CLR(c,&tls_rx_set);
-                                    g_static_mutex_lock (&client_mutex);
-                                    delete_client_by_socket(c);
-                                    g_static_mutex_unlock (&client_mutex);
-                                } else {
-				u_request = treat_user_request( c_session );
-				if (u_request == EOF) {
-                                        log_user_session(c_session,SESSION_CLOSE);
-#ifdef DEBUG_ENABLE
-					if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-						g_message("client disconnect on %d\n",c);
-#endif
+				if (nuauthconf->session_duration && c_session->expire < time(NULL)){
 					FD_CLR(c,&tls_rx_set);
-					/* clean client structure */
-					if (nuauthconf->push){
-						struct internal_message* message=g_new0(struct internal_message,1);
-						message->type = FREE_MESSAGE;
-						message->datas = GINT_TO_POINTER(c);
-						g_async_queue_push(nuauthdatas->tls_push_queue,message);
-					} else {
-						g_static_mutex_lock (&client_mutex);
-						delete_client_by_socket(c);
-						g_static_mutex_unlock (&client_mutex);
-					}
-				}else if (u_request < 0) {
+					g_static_mutex_lock (&client_mutex);
+					delete_client_by_socket(c);
+					g_static_mutex_unlock (&client_mutex);
+				} else {
+					u_request = treat_user_request( c_session );
+					if (u_request == EOF) {
+						log_user_session(c_session,SESSION_CLOSE);
 #ifdef DEBUG_ENABLE
-					if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-						g_message("treat_user_request() failure\n");
+						if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
+							g_message("client disconnect on %d\n",c);
 #endif
+						FD_CLR(c,&tls_rx_set);
+						/* clean client structure */
+						if (nuauthconf->push){
+							struct internal_message* message=g_new0(struct internal_message,1);
+							message->type = FREE_MESSAGE;
+							message->datas = GINT_TO_POINTER(c);
+							g_async_queue_push(nuauthdatas->tls_push_queue,message);
+						} else {
+							g_static_mutex_lock (&client_mutex);
+							delete_client_by_socket(c);
+							g_static_mutex_unlock (&client_mutex);
+						}
+					}else if (u_request < 0) {
+#ifdef DEBUG_ENABLE
+						if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
+							g_message("treat_user_request() failure\n");
+#endif
+					}
 				}
-                                }
 			}
 		}
 
@@ -1666,8 +1665,8 @@ treat_nufw_request (nufw_session * c_session)
 					current_conn->state = STATE_AUTHREQ;
 					/* put gateway addr in struct */
 					g_thread_pool_push (nuauthdatas->acl_checkers,
-						current_conn,
-						NULL);
+							current_conn,
+							NULL);
 				}
 			}
 		} else {
@@ -1757,7 +1756,7 @@ void* tls_nufw_authsrv()
 			NULL,
 			(GDestroyNotify)	clean_nufw_session
 			);
-        nufw_servers_mutex = g_mutex_new();
+	nufw_servers_mutex = g_mutex_new();
 
 	/* this must be called once in the program
 	*/
@@ -1863,7 +1862,7 @@ void* tls_nufw_authsrv()
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
 					g_warning("accept");
 				}
-                        }
+			}
 
 			/* test if server is in the list of authorized servers */
 			if (! check_inaddr_in_array(addr_clnt.sin_addr,nuauthconf->authorized_servers)){
@@ -1887,11 +1886,11 @@ void* tls_nufw_authsrv()
 			nu_session=g_new0(nufw_session,1);
 			nu_session->usage=0;
 			nu_session->alive=TRUE;
-                        nu_session->peername.s_addr=addr_clnt.sin_addr.s_addr;
+			nu_session->peername.s_addr=addr_clnt.sin_addr.s_addr;
 			if (tls_connect(c,&(nu_session->tls)) == SASL_OK){
-                                g_mutex_lock(nufw_servers_mutex);
+				g_mutex_lock(nufw_servers_mutex);
 				g_hash_table_insert(nufw_servers,GINT_TO_POINTER(c),nu_session);
-                                g_mutex_unlock(nufw_servers_mutex);
+				g_mutex_unlock(nufw_servers_mutex);
 				FD_SET(c,&tls_rx_set);
 				if ( c+1 > mx )
 					mx = c + 1;
@@ -1919,7 +1918,7 @@ void* tls_nufw_authsrv()
 						g_message("nufw server disconnect on %d\n",c);
 #endif
 					FD_CLR(c,&tls_rx_set);
-                                                g_mutex_lock(nufw_servers_mutex);
+					g_mutex_lock(nufw_servers_mutex);
 					if (g_atomic_int_get(&(c_session->usage)) == 0) {
 						/* clean client structure */
 						g_hash_table_remove(nufw_servers,GINT_TO_POINTER(c));
@@ -1927,7 +1926,7 @@ void* tls_nufw_authsrv()
 						g_hash_table_steal(nufw_servers,GINT_TO_POINTER(c));
 						c_session->alive=FALSE;
 					}
-                                                g_mutex_unlock(nufw_servers_mutex);
+					g_mutex_unlock(nufw_servers_mutex);
 					close(c);
 				}
 			}
@@ -2058,10 +2057,10 @@ void push_worker ()
 
 void close_servers(int signal)
 {
-        g_mutex_lock(nufw_servers_mutex);
+	g_mutex_lock(nufw_servers_mutex);
 	g_hash_table_destroy(nufw_servers);
-        nufw_servers=NULL;
-        g_mutex_unlock(nufw_servers_mutex);
+	nufw_servers=NULL;
+	g_mutex_unlock(nufw_servers_mutex);
 }
 
 void end_tls(int signal)

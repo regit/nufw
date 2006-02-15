@@ -19,4 +19,7 @@
 #define X509_PARSING_H
 
 gchar * parse_x509_certificate_info(gnutls_session session);
+
+gint check_x509_certificate_validity(gnutls_x509_crt* cert);
+
 #endif
