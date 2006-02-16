@@ -21,7 +21,7 @@
 /* 
  * return offset to next type of headers 
  */
-int look_for_flags(char* dgram,int datalen){
+int look_for_flags(unsigned char* dgram,int datalen){
 	struct iphdr * iphdrs = (struct iphdr *) dgram;
 	/* check need some datas */    
 	if (datalen < sizeof(struct iphdr) +sizeof(struct tcphdr)){
@@ -135,7 +135,7 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 
 void* packetsrv(void *data)
 {
-	char buffer[BUFSIZ];
+	unsigned char buffer[BUFSIZ];
 #if USE_NFQUEUE
 	int fd;
 	int rv;
