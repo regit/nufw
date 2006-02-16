@@ -152,16 +152,13 @@ static int userdb_checkpass(sasl_conn_t *conn,
 void my_sasl_init()
 {
 	int ret;
-	sasl_callback_t callbacks[] = {
-	};
-
 
 	sasl_set_mutex(sasl_gthread_mutex_init, 
 			sasl_gthread_mutex_lock, 
 			sasl_gthread_mutex_unlock, 
 			sasl_gthread_mutex_free);
 	/* initialize SASL */
-	ret = sasl_server_init(callbacks, "nuauth");
+	ret = sasl_server_init(NULL, "nuauth");
 	if (ret != SASL_OK){
 		exit(EXIT_FAILURE);
 	}
