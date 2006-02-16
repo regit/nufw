@@ -106,25 +106,25 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 	}
 
 	/* lock packet list mutex */
-	pthread_mutex_lock(&packets_list_mutex);
+	pthread_mutex_lock(&packets_list.mutex);
 	/* Adding packet to list  */
 	pcktid=padd(current);
 	/* unlock datas */
-	pthread_mutex_unlock(&packets_list_mutex);
+	pthread_mutex_unlock(&packets_list.mutex);
 
 	if (pcktid){
 		/* send an auth request packet */
 		if (! auth_request_send(AUTH_REQUEST,pcktid,payload,payload_len)){
 			int sandf=0;
 			/* we fail to send the packet so we free packet related to current */
-			pthread_mutex_lock(&packets_list_mutex);
+			pthread_mutex_lock(&packets_list.mutex);
 			/* search and destroy packet by packet_id */
 			sandf = psearch_and_destroy (pcktid,&c_mark);
-			pthread_mutex_unlock(&packets_list_mutex);
+			pthread_mutex_unlock(&packets_list.mutex);
 
 			if (!sandf){
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
-					log_printf (DEBUG_LEVEL_WARNING ,"Packet could not be removed : %u", pcktid);
+					log_printf (DEBUG_LEVEL_WARNING ,"Packet could not be removed: %u", pcktid);
 				}
 			}
 		}
@@ -238,21 +238,21 @@ void* packetsrv(void *data)
 #endif
 							current->timestamp=msg_p->timestamp_sec;
 							/* lock packet list mutex */
-							pthread_mutex_lock(&packets_list_mutex);
+							pthread_mutex_lock(&packets_list.mutex);
 							/* Adding packet to list  */
 							pcktid=padd(current);
 							/* unlock datas */
-							pthread_mutex_unlock(&packets_list_mutex);
+							pthread_mutex_unlock(&packets_list.mutex);
 
 							if (pcktid){
 								/* send an auth request packet */
 								if (! auth_request_send(AUTH_REQUEST,msg_p->packet_id,(char*)msg_p->payload,msg_p->data_len)){
 									int sandf=0;
 									/* we fail to send the packet so we free packet related to current */
-									pthread_mutex_lock(&packets_list_mutex);
+									pthread_mutex_lock(&packets_list.mutex);
 									/* search and destroy packet by packet_id */
 									sandf = psearch_and_destroy (msg_p->packet_id,(uint32_t*)&msg_p->mark);
-									pthread_mutex_unlock(&packets_list_mutex);
+									pthread_mutex_unlock(&packets_list.mutex);
 
 									if (!sandf){
 										if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){

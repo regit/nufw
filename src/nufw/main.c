@@ -310,11 +310,11 @@ int main(int argc,char * argv[]){
             log_printf (DEBUG_LEVEL_CRITICAL, "Bad Address in configuration for adr_srv");
     }
     
-    packets_list_start=NULL;
-    packets_list_end=NULL;
-    packets_list_length=0;
+    packets_list.start=NULL;
+    packets_list.end=NULL;
+    packets_list.length=0;
     /* initialize mutex */
-    pthread_mutex_init(&packets_list_mutex ,NULL);
+    pthread_mutex_init(&packets_list.mutex ,NULL);
 
     tls.session=NULL;
     tls.auth_server_running=1;
@@ -362,13 +362,13 @@ int main(int argc,char * argv[]){
     /* control stuff */
     pckt_tx=pckt_rx=0;
     for(;;){
-        pthread_mutex_lock(&packets_list_mutex);
+        pthread_mutex_lock(&packets_list.mutex);
         clean_old_packets ();
-        pthread_mutex_unlock(&packets_list_mutex);
+        pthread_mutex_unlock(&packets_list.mutex);
         if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
             log_printf (DEBUG_LEVEL_INFO, 
                     "rx : %d, tx : %d, track_size : %d, start_list : %p",
-                    pckt_rx, pckt_tx, packets_list_length, packets_list_start);
+                    pckt_rx, pckt_tx, packets_list.length, packets_list.start);
         }
 
         sleep(5);	

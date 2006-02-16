@@ -58,8 +58,8 @@ char authreq_addr[HOSTNAME_SIZE];
 char listen_addr[HOSTNAME_SIZE];
 u_int16_t authreq_port;
 u_int16_t authsrv_port;
-int packet_timeout;   /*!< Number of second before a packet is dropped, default: #PACKET_TIMEOUT */
-int track_size;       /*!< Maximum size of the packet list (see ::packets_list_length). */
+int packet_timeout;   /*!< Number of second before a packet is dropped, default value: #PACKET_TIMEOUT */
+int track_size;       /*!< Maximum size of the packet list (::packets_list), default value: #TRACK_SIZE */
 u_int16_t id_srv;
 int debug;
 int nufw_set_mark;
@@ -81,20 +81,13 @@ typedef struct Packet_Ids {
 
 /***** Pack list ****/
 
-/*! Begin of the packet list (NULL if the list is empty), 
- * ::packets_list_end is the end and ::packets_list_length the length. */
-packet_idl * packets_list_start;
-
-/*! End of the packet list (NULL if the list is empty),
- * ::packets_list_start is the begin and ::packets_list_length the length. */
-packet_idl * packets_list_end;    
-
-/*! Size of the packet list, ::packets_list_start is the begin and
- * ::packets_list_end is the end. */
-int packets_list_length;
-
-/* mutex relative to packet_list */
-pthread_mutex_t packets_list_mutex;
+struct packets_list_t 
+{
+  packet_idl * start;    /*!< Begin of the list (NULL if the list is empty) */
+  packet_idl * end;      /*!< End of the list (NULL if the list is empty) */
+  int length;            /*!< Length of the list */
+  pthread_mutex_t mutex;
+} packets_list;
 
 #if USE_NFQUEUE
 struct nfq_q_handle *hndl;

@@ -62,10 +62,10 @@ int auth_packet_to_decision(char* dgram)
                           packet_id=*(unsigned long *)(dgram+8);
 #endif
                           /* lock mutex */
-                          pthread_mutex_lock(&packets_list_mutex);
+                          pthread_mutex_lock(&packets_list.mutex);
                           /* search and destroy packet by packet_id */
                           sandf=psearch_and_destroy (packet_id,&nfmark);
-                          pthread_mutex_unlock(&packets_list_mutex);
+                          pthread_mutex_unlock(&packets_list.mutex);
 
                           if (sandf){
                               if ( *(dgram+4) == OK ) {
