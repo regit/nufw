@@ -265,6 +265,9 @@ int main (int argc, char *argv[])
 		exit(1);
 	}
 
+        /* global libnuclient init */
+        nu_client_global_init();
+        
 	password=NULL;
 	session = nu_client_init2(
 			srv_addr,

@@ -217,8 +217,6 @@ void nu_exit_clean(NuAuth * session)
 		free(session);
 		session=NULL;
 	}
-	sasl_done();
-	gnutls_global_deinit();
 }
 
 /**
@@ -573,6 +571,29 @@ void nu_client_free(NuAuth *session)
 }
 
 /**
+ * global init 
+ *
+ * to be called once
+ */
+ 
+void nu_client_global_init()
+{
+
+        int ret;
+
+	gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);
+	gnutls_global_init();
+
+	/* initialize the sasl library */
+	ret = sasl_client_init(NULL);
+
+        if (ret != SASL_OK) {
+            exit(0);
+	}
+
+}
+
+/**
  * Initialisation of nufw authentication session
  *
  */
@@ -599,16 +620,6 @@ NuAuth* nu_client_init2(
 	session->tls_passwd_callback=tlscred_callback;
 	session->mutex=calloc(1,sizeof(pthread_mutex_t));
 	pthread_mutex_init(session->mutex,NULL);
-
-	sasl_callback_t callbacks[] = {
-		{ SASL_CB_GETREALM, &nu_getrealm, session },
-		{ SASL_CB_USER, &nu_get_userdatas, session },
-		{ SASL_CB_AUTHNAME, &nu_get_userdatas, session },
-		{ SASL_CB_PASS, &nu_get_usersecret, session },
-		{ SASL_CB_LIST_END, NULL, NULL }
-	};
-
-
 
 	/* initiate session */
 	session->auth_by_default = 1;
@@ -661,9 +672,7 @@ NuAuth* nu_client_init2(
 #endif
 	}
 
-	gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);
-	gnutls_global_init();
-	session->tls=(gnutls_session *)calloc(1,sizeof(gnutls_session));
+        session->tls=(gnutls_session *)calloc(1,sizeof(gnutls_session));
 	/* X509 stuff */
 	gnutls_certificate_allocate_credentials(&xcred);
 	/* sets the trusted cas file
@@ -744,18 +753,17 @@ NuAuth* nu_client_init2(
 
 
 	/* SASL time */
-
-	/* initialize the sasl library */
-	ret = sasl_client_init(callbacks);
-	if (ret != SASL_OK) {
-		nu_exit_clean(session);
-		errno=EAGAIN;
-		return NULL;
-	}
+	sasl_callback_t callbacks[] = {
+		{ SASL_CB_GETREALM, &nu_getrealm, session },
+		{ SASL_CB_USER, &nu_get_userdatas, session },
+		{ SASL_CB_AUTHNAME, &nu_get_userdatas, session },
+		{ SASL_CB_PASS, &nu_get_usersecret, session },
+		{ SASL_CB_LIST_END, NULL, NULL }
+	};
 
 	/* client new connection */
 	//   ret = sasl_client_new(service, host, localaddr, remoteaddr, NULL, 0, &conn);
-	ret = sasl_client_new("NuFW", "myserver", NULL, NULL, NULL, 0, &conn);
+	ret = sasl_client_new("NuFW", "myserver", NULL, NULL, callbacks, 0, &conn);
 	if (ret != SASL_OK) {
 		printf("Failed allocating connection state");
 		nu_exit_clean(session);

@@ -169,6 +169,9 @@ int	nu_client_check(NuAuth * session);
 int     nu_client_error(NuAuth * session);
 void 	nu_client_free(NuAuth *session);
 
+
+void nu_client_global_init();
+
 NuAuth* nu_client_init2(
 		const char *hostname, unsigned int port,
 		char* keyfile, char* certfile,
