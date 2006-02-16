@@ -4,6 +4,41 @@
 #define DN_LENGTH 256
 
 /**
+ * Given a pointer to a x509 certificate, it checks 
+ * the validity :
+ * - expiration time
+ * - activation time
+ */
+gint check_x509_certificate_validity(gnutls_x509_crt* cert)
+{
+	time_t expiration_time, activation_time;
+
+	expiration_time = gnutls_x509_crt_get_expiration_time(*cert);
+	activation_time = gnutls_x509_crt_get_activation_time(*cert);
+
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
+		g_message("Certificate validity starts at: %s", ctime(&activation_time));
+		g_message("Certificate expires: %s", ctime(&expiration_time));
+	}
+	/* verify date */
+	if (expiration_time<time(NULL)){
+	        if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
+		        g_message("Certificate expired at: %s", ctime(&expiration_time));
+                }
+		return SASL_EXPIRED;
+	}
+
+	if (activation_time>time(NULL)){
+	        if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
+		        g_message("Certificate only activates at: %s", ctime(&activation_time));
+                }
+		return SASL_DISABLED;
+	}
+
+	return SASL_OK;
+}
+
+/**
  *  This function parse information about this session's peer
  * certificate and return username of peer.
  *
@@ -43,9 +78,7 @@ gchar* parse_x509_certificate_info(gnutls_session session)
 			/* we can't accept an unvalid certificate to authenticate */
 			return NULL;
 		}
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
-			g_message("Certificate info:\n");
-		}
+
 		/* Extract some of the public key algorithm's parameters
 		*/
 
@@ -84,21 +117,3 @@ gchar* parse_x509_certificate_info(gnutls_session session)
 }
 
 
-gint check_x509_certificate_validity(gnutls_x509_crt* cert)
-{
-	time_t expiration_time, activation_time;
-
-	expiration_time = gnutls_x509_crt_get_expiration_time(*cert);
-	activation_time = gnutls_x509_crt_get_activation_time(*cert);
-
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
-		g_message("\tCertificate is valid since: %s", ctime(&activation_time));
-		g_message("\tCertificate expires: %s", ctime(&expiration_time));
-	}
-	/* verify date */
-	if (expiration_time<time(NULL)){
-		return SASL_EXPIRED;
-	}
-
-	return SASL_BADAUTH;
-}
