@@ -354,7 +354,10 @@ int auth_request_send(uint8_t type,uint32_t packet_id,char* payload,int data_len
             if (tls.session){
                 int socket_tls=(int)gnutls_transport_get_ptr(*tls.session);
                 gnutls_bye(*tls.session,GNUTLS_SHUT_WR);
+		gnutls_deinit(*tls.session);
                 shutdown(socket_tls,SHUT_RDWR);
+		close(socket_tls);
+		free(tls.session);
                 tls.session=NULL;
             }
         }
@@ -395,9 +398,12 @@ int auth_request_send(uint8_t type,uint32_t packet_id,char* payload,int data_len
                 pthread_mutex_lock(tls.mutex);
                 pthread_cancel(tls.auth_server);
                 pthread_cancel(tls.conntrack_event_handler);
-                gnutls_bye(*tls.session,GNUTLS_SHUT_WR);
                 socket_tls=(int)gnutls_transport_get_ptr(*tls.session);
+                gnutls_bye(*tls.session,GNUTLS_SHUT_WR);
+		gnutls_deinit(*tls.session);
                 shutdown(socket_tls,SHUT_RDWR);
+		close(socket_tls);
+		free(tls.session);
                 tls.session=NULL;
                 /* put auth_server_running to 1 because this is this thread which has just killed auth_server */
                 tls.auth_server_running=1;
