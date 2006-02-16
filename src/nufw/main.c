@@ -106,7 +106,7 @@ int main(int argc,char * argv[]){
     key_file=NULL;
     ca_file=NULL;
     nuauth_cert_dn=NULL;
-    strncpy(authreq_addr,AUTHREQ_ADDR,HOSTNAME_SIZE);
+    SECURE_STRNCPY(authreq_addr, AUTHREQ_ADDR, HOSTNAME_SIZE);
     debug=DEBUG; /* this shall disapear */
     debug_level=0;
     debug_areas=DEFAULT_DEBUG_AREAS;
@@ -164,7 +164,7 @@ int main(int argc,char * argv[]){
             break;
             /* destination IP */
           case 'd' :
-            strncpy(authreq_addr,optarg,HOSTNAME_SIZE);
+            SECURE_STRNCPY(authreq_addr, optarg, HOSTNAME_SIZE);
             printf("Sending Auth request to %s\n",authreq_addr);
             break;
             /* packet timeout */

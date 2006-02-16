@@ -121,5 +121,7 @@ void process_poll(int signum);
 int send_icmp_unreach(char *dgram);
 #endif
 
+#define SECURE_STRNCPY(dst, src, size) \
+    do { strncpy(dst, src, (size)-1); (dst)[(size)-1] = '\0'; } while (0)
 
 #define DEBUG_OR_NOT(LOGLEVEL,LOGAREA) (LOGAREA&&(debug_areas))&&((debug_level)>=LOGLEVEL)
