@@ -16,32 +16,11 @@
  ** along with this program; if not, write to the Free Software
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  **
- ** In addition, as a special exception, the copyright holders give
- ** permission to link the code of portions of this program with the
- ** Cyrus SASL library under certain conditions as described in each
- ** individual source file, and distribute linked combinations
- ** including the two.
- ** You must obey the GNU General Public License in all respects
- ** for all of the code used other than Cyrus SASL.  If you modify
- ** file(s) with this exception, you may extend this exception to your
- ** version of the file(s), but you are not obligated to do so.  If you
- ** do not wish to do so, delete this exception statement from your
- ** version.  If you delete this exception statement from all source
- ** files in the program, then also delete it here.
- **
- ** This product includes software developed by Computing Services
- ** at Carnegie Mellon University (http://www.cmu.edu/computing/).
- **
  */
 
 #include <auth_srv.h>
-
-
 #include <sys/time.h>
 #include <time.h>
-
-
-#include "tls.h"
 
 struct tls_insert_data { 
 	int socket;
@@ -83,6 +62,10 @@ gboolean remove_socket_from_pre_client_list(int c)
 	return FALSE;
 }
 
+/**
+ * Check pre client list to disconnect connection
+ * that are open since too long
+ */
 
 void  pre_client_check()
 {
@@ -119,9 +102,9 @@ void  pre_client_check()
 	}
 }
 
-/* strictly close a tls session
+/**
+ * strictly close a tls session
  * nothing to care about client */
-
 int close_tls_session(int c,gnutls_session* session)
 {
 	if (close(c))
@@ -137,7 +120,9 @@ int close_tls_session(int c,gnutls_session* session)
 	}
 	return 1;
 }
-/** cleanly end a tls session */
+/** 
+ * cleanly end a tls session 
+ */
 int cleanly_close_tls_session(int c,gnutls_session* session){
 	gnutls_bye(*session,GNUTLS_SHUT_RDWR);
 #ifdef DEBUG_ENABLE
@@ -147,7 +132,61 @@ int cleanly_close_tls_session(int c,gnutls_session* session){
 	return close_tls_session(c,session);
 }
 
+/**
+ * verify certs for a session
+ */
 
+gint check_certs_for_tls_session(gnutls_session session)
+{
+	unsigned int status;
+	int ret;
+	/* This verification function uses the trusted CAs in the credentials
+	 * structure. So you must have installed one or more CA certificates.
+	 */
+	ret = gnutls_certificate_verify_peers2 (session, &status);
+
+	if (ret < 0){
+		g_warning ("Certificate verification failed\n");
+		return SASL_BADPARAM;
+	}
+
+	if (status & GNUTLS_CERT_INVALID){
+		g_message("The certificate is not trusted.\n");
+		return SASL_FAIL;
+	}
+
+	if (status & GNUTLS_CERT_SIGNER_NOT_FOUND){
+		g_message("The certificate hasn't got a known issuer.\n");
+		return SASL_NOVERIFY;
+	}
+
+	if (status & GNUTLS_CERT_REVOKED){
+		g_message("The certificate has been revoked.\n");
+		return SASL_EXPIRED;
+	}
+
+	if (gnutls_certificate_type_get(session) == GNUTLS_CRT_X509){
+ 		return check_x509_certificate_validity(session);
+	} else {
+		/* we only support X509 for now */
+		return SASL_BADPARAM;
+	}
+	return SASL_OK;
+}
+
+/**
+ * get username from a tls session
+ *
+ * Extract the username from the provided certificate
+ */
+gchar* get_username_from_tls_session(gnutls_session session)
+{
+	if (gnutls_certificate_type_get(session) == GNUTLS_CRT_X509){
+ 		return get_username_from_x509_certificate(session);
+	} else {
+		return NULL;
+	}
+}
 
 gnutls_session* initialize_tls_session()
 {
@@ -210,14 +249,14 @@ static int generate_dh_params(void)
 
 	return 0;
 }
+
 /**
  * get RX paquet from a TLS client connection and send it to user authentication threads.
  *
  * - Argument : SSL RX packet
  * - Return : 1 if read done, EOF if read complete, -1 on error
  */
-	static int
-treat_user_request (user_session * c_session)
+static int treat_user_request (user_session * c_session)
 {
 	struct buffer_read * datas;
 	int read_size=0;
@@ -408,7 +447,7 @@ int tls_connect(int c,gnutls_session** session_ptr){
 
 	if (nuauth_tls_request_cert==GNUTLS_CERT_REQUIRE){
 		/* certicate verification */
-		ret = gnutls_certificate_verify_peers(*session);
+		ret = check_certs_for_tls_session(*session);
 		if (ret != 0){
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
 				g_message("Certificate verification failed : %s",gnutls_strerror(ret));
@@ -444,22 +483,21 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 		if ((nuauth_tls_auth_by_cert == TRUE)   
 				&& gnutls_certificate_get_peers(*session,&size) 
 		   ) {
-			ret = gnutls_certificate_verify_peers(*session);
+			ret = check_certs_for_tls_session(*session);
 
-			if (ret != 0){
+			if (ret != SASL_OK){
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
 					g_message("Certificate verification failed : %s",gnutls_strerror(ret));
 				}
 			} else {
-
 				gchar* username=NULL;
 				/* need to parse the certificate to see if it is a sufficient credential */
-				username=parse_x509_certificate_info(*session);
+				username=get_username_from_tls_session(*session);
 				/* parsing complete */ 
 				if (username){
 #ifdef DEBUG_ENABLE
 					if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-						g_message("Using username %s from X509 certificate",username);
+						g_message("Using username %s from certificate",username);
 #endif
 					if(  user_check(username, NULL, 0,
 								&(c_session->uid), &(c_session->groups)
@@ -705,7 +743,8 @@ void create_x509_credentials(){
 }
 
 /**
- * TLS user packet server.
+ * TLS user packet server. 
+ * Thread function serving user connection.
  * 
  * - Argument : None
  * - Return : None
@@ -714,12 +753,11 @@ void create_x509_credentials(){
 void* tls_user_authsrv()
 {
 	int z;
-	//struct sigaction action;
 	struct sockaddr_in addr_inet,addr_clnt;
 	GThreadPool* tls_sasl_worker;
 	unsigned int len_inet;
 	int sck_inet;
-	int n,c,ret;
+	int n,c;
 	int mx;
 	fd_set tls_rx_set; /* read set */
 	fd_set wk_set; /* working set */

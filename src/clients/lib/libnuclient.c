@@ -194,12 +194,13 @@ void nu_exit_clean(NuAuth * session)
 	/* lock mutex to avoid multiple call */
 	if (session){
 		if (session->tls){
-			gnutls_bye(*(session->tls),GNUTLS_SHUT_RDWR);
+			gnutls_bye(*(session->tls),GNUTLS_SHUT_WR);
 			gnutls_deinit(*(session->tls));
 			free(session->tls);
 		}
 		if (session->socket>0){
 			shutdown(session->socket,SHUT_RDWR);
+			close(session->socket);
 			session->socket=0;
 		}
 		if (session->username){
@@ -219,7 +220,8 @@ void nu_exit_clean(NuAuth * session)
 	sasl_done();
 	gnutls_global_deinit();
 }
-/*
+
+/**
  * tcptable_init ()
  *
  * Initialise a connection table (hashtable).

@@ -14,6 +14,23 @@
  ** You should have received a copy of the GNU General Public License
  ** along with this program; if not, write to the Free Software
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ **
+ ** In addition, as a special exception, the copyright holders give
+ ** permission to link the code of portions of this program with the
+ ** Cyrus SASL library under certain conditions as described in each
+ ** individual source file, and distribute linked combinations
+ ** including the two.
+ ** You must obey the GNU General Public License in all respects
+ ** for all of the code used other than Cyrus SASL.  If you modify
+ ** file(s) with this exception, you may extend this exception to your
+ ** version of the file(s), but you are not obligated to do so.  If you
+ ** do not wish to do so, delete this exception statement from your
+ ** version.  If you delete this exception statement from all source
+ ** files in the program, then also delete it here.
+ **
+ ** This product includes software developed by Computing Services
+ ** at Carnegie Mellon University (http://www.cmu.edu/computing/).
+ **
  */
 
 #include <auth_srv.h>
@@ -50,11 +67,6 @@ void sasl_gthread_mutex_free(void *lock)
 {
 	g_mutex_free(lock);
 }
-
-void our_sasl_init(void){
-}
-
-
 
 /* where using private datas to avoid over allocating */
 
@@ -135,23 +147,14 @@ static int userdb_checkpass(sasl_conn_t *conn,
 	return SASL_NOAUTHZ;
 }
 
-static sasl_callback_t callbacks[] = {
-	{ SASL_CB_GETOPT, &internal_get_opt, NULL },
-	{ SASL_CB_SERVER_USERDB_CHECKPASS, &userdb_checkpass,NULL}, 
-	{ SASL_CB_LIST_END, NULL, NULL }
-};
-
-static sasl_callback_t external_callbacks[] = {
-	{ SASL_CB_GETOPT, &external_get_opt, NULL },
-	{ SASL_CB_SERVER_USERDB_CHECKPASS, &userdb_checkpass,NULL}, 
-	{ SASL_CB_LIST_END, NULL, NULL }
-};
-
 
 
 void my_sasl_init()
 {
 	int ret;
+	sasl_callback_t callbacks[] = {
+	};
+
 
 	sasl_set_mutex(sasl_gthread_mutex_init, 
 			sasl_gthread_mutex_lock, 
@@ -463,6 +466,17 @@ int sasl_user_check(user_session* c_session)
 	gboolean external_auth=FALSE;
 	char buf[1024];
 	int ret;
+	sasl_callback_t callbacks[] = {
+		{ SASL_CB_GETOPT, &internal_get_opt, NULL },
+		{ SASL_CB_SERVER_USERDB_CHECKPASS, &userdb_checkpass,NULL}, 
+		{ SASL_CB_LIST_END, NULL, NULL }
+	};
+	sasl_callback_t external_callbacks[] = {
+		{ SASL_CB_GETOPT, &external_get_opt, NULL },
+		{ SASL_CB_SERVER_USERDB_CHECKPASS, &userdb_checkpass,NULL}, 
+		{ SASL_CB_LIST_END, NULL, NULL }
+	};
+
 	if (c_session->userid) {
 		external_auth=TRUE;
 	} 
