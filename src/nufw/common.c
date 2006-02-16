@@ -46,11 +46,7 @@ unsigned long padd (packet_idl *current){
   if (track_size < packets_list_length ){
     /* suppress first element */
     if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
-      if (log_engine == LOG_TO_SYSLOG) {
-        syslog(SYSLOG_FACILITY(DEBUG_LEVEL_MESSAGE),"Queue is full, dropping element");
-      }else {
-        printf ("[%i] Queue is full, dropping element\n",getpid());
-      }
+      log_printf (DEBUG_LEVEL_MESSAGE, "Queue is full, dropping element");
     }
   IPQ_SET_VERDICT(current->id,NF_DROP);
   return 0;
@@ -96,11 +92,7 @@ int psearch_and_destroy (uint32_t packet_id,uint32_t * nfmark){
 	  IPQ_SET_VERDICT(packets_list->id,NF_DROP);
 #ifdef DEBUG_ENABLE
 	  if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
-	    if (log_engine == LOG_TO_SYSLOG) {
-              syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"dropped : %lu",packets_list->id);
-            }else {
-	    printf("[%i] dropped  : %lu\n",getpid(),packets_list->id);
-	    }
+	    log_printf ("Dropped: %lu", packets_list->id);
 	  }
 #endif
 	  psuppress (previous,packets_list);
@@ -125,11 +117,7 @@ int clean_old_packets (){
 	IPQ_SET_VERDICT(packets_list->id,NF_DROP);
 #ifdef DEBUG_ENABLE
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
-	  if (log_engine == LOG_TO_SYSLOG) {
-            syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"dropped : %lu",packets_list->id);
-          }else {
-	    printf("[%i] dropped  : %lu\n",getpid(),packets_list->id);
-	  }
+	  log_printf (DEBUG_LEVEL_DEBUG, "Dropped: %lu", packets_list->id);
 	}
 #endif
 	psuppress (previous,packets_list);

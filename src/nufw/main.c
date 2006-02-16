@@ -54,6 +54,13 @@ GCRY_THREAD_OPTION_PTHREAD_IMPL;
 
 #define NUFW_PID_FILE  LOCAL_STATE_DIR "/run/nufw.pid"
 
+/**
+ * Cleanup before leaving:
+ *   - Destroy netfilter queue/handler
+ *   - Close conntrack
+ *   - Unlink pid file
+ *   - Call exit(0)
+ */
 void nufw_cleanup( int signal ) {
     /* destroy netlink handle */
 #if USE_NFQUEUE
@@ -238,7 +245,7 @@ int main(int argc,char * argv[]){
         }
 
         if ((pidf = fork()) < 0){
-            syslog(SYSLOG_FACILITY(DEBUG_LEVEL_FATAL),"Unable to fork. Aborting\n");
+            log_printf (DEBUG_LEVEL_FATAL, "Unable to fork. Aborting!");
             exit (-1);
         } else {
             /* parent */
@@ -283,11 +290,7 @@ int main(int argc,char * argv[]){
 
     if (sck_auth_request == -1)
         if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
-            if (log_engine == LOG_TO_SYSLOG){
-                syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"socket()");
-            }else{
-                printf("[%d] socket()",getpid());
-            }
+            log_printf (DEBUG_LEVEL_CRITICAL, "socket() creation failure!");
         }
 
 #ifdef GRYZOR_HACKS
@@ -295,11 +298,7 @@ int main(int argc,char * argv[]){
     raw_sock = socket(PF_INET, SOCK_RAW, 1);
     if (raw_sock == -1)
         if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
-            if (log_engine == LOG_TO_SYSLOG){
-                syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"socket() on raw_sock");
-            }else{
-                printf("[%d] socket() on raw_sock",getpid());
-            }
+            log_printf (DEBUG_LEVEL_CRITICAL, "socket() on raw_sock creation failure!");
         }
 #endif
 
@@ -312,14 +311,10 @@ int main(int argc,char * argv[]){
     authreq_srv=gethostbyname(authreq_addr);
     adr_srv.sin_addr=*(struct in_addr *)authreq_srv->h_addr;
 
-    if (adr_srv.sin_addr.s_addr == INADDR_NONE )
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
-            if (log_engine == LOG_TO_SYSLOG){
-                syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"Bad Address in configuration for adr_srv");
-            }else{
-                printf("[%d] Bad Address in configuration for adr_srv",getpid());
-            }
-        }
+    if (adr_srv.sin_addr.s_addr == INADDR_NONE ) {
+        if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN))
+            log_printf (DEBUG_LEVEL_CRITICAL, "Bad Address in configuration for adr_srv");
+    }
     
     packets_list_start=NULL;
     packets_list_end=NULL;
@@ -377,11 +372,9 @@ int main(int argc,char * argv[]){
         clean_old_packets ();
         pthread_mutex_unlock(&packets_list_mutex);
         if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
-            if (log_engine == LOG_TO_SYSLOG){
-                syslog(SYSLOG_FACILITY(DEBUG_LEVEL_INFO),"rx : %d, tx : %d, track_size : %d, start_list : %p",pckt_rx,pckt_tx,packets_list_length,packets_list_start);
-            }else{
-                printf("[%i] rx : %d, tx : %d, track_size : %d, start_list : %p\n",getpid(),pckt_rx,pckt_tx,packets_list_length,packets_list_start);
-            }
+            log_printf (DEBUG_LEVEL_INFO, 
+                    "rx : %d, tx : %d, track_size : %d, start_list : %p",
+                    pckt_rx, pckt_tx, packets_list_length, packets_list_start);
         }
 
         sleep(5);	

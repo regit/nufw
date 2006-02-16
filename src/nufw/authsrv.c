@@ -72,22 +72,14 @@ int auth_packet_to_decision(char* dgram)
                                   /* TODO : test on return */
 #ifdef DEBUG_ENABLE
                                   if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
-                                      if (log_engine == LOG_TO_SYSLOG) {
-                                          syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"Accepting %u",packet_id);
-                                      }else {
-                                          printf ("[%i] Accepting %u\n",getpid(),packet_id);
-                                      }
+                                      log_printf(DEBUG_LEVEL_DEBUG, "Accepting %u", packet_id);
                                   }
 #endif
 #if HAVE_LIBIPQ_MARK || USE_NFQUEUE
                                   if (nufw_set_mark) {
 #ifdef DEBUG_ENABLE
                                       if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
-                                          if (log_engine == LOG_TO_SYSLOG) {
-                                              syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"Marking packet with %d",*(u_int16_t *)(dgram+2));
-                                          }else {
-                                              printf("[%i] Marking packet with %d!\n",getpid(),*(u_int16_t *)(dgram+2));
-                                          }
+                                          log_printf (DEBUG_LEVEL_DEBUG ,"Marking packet with %d", *(u_int16_t *)(dgram+2));
                                       }
 #endif /* DEBUG_ENABLE */
                                       /* we put the userid mark at the end of the mark, not changing the 16 first big bits */
@@ -109,11 +101,7 @@ int auth_packet_to_decision(char* dgram)
 #ifdef GRYZOR_HACKS
                               }else if( *(dgram+4) == NOK_REJ){ //Packet is rejected, ie dropped and ICMP signalized
                                   if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
-                                      if (log_engine == LOG_TO_SYSLOG) {
-                                          syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"Rejecting %lu",packet_id);
-                                      }else{
-                                          printf ("[%i] Rejecting %lu\n",getpid(),packet_id);
-                                      }
+                                      log_printf (DEBUG_LEVEL_DEBUG, "Rejecting %lu", packet_id);
                                   }
                                   IPQ_SET_VERDICT(packet_id, NF_DROP);
                                   send_icmp_unreach(dgram);
@@ -122,11 +110,7 @@ int auth_packet_to_decision(char* dgram)
                               } else {
 #ifdef DEBUG_ENABLE
                                   if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
-                                      if (log_engine == LOG_TO_SYSLOG) {
-                                          syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"Dropping %u",packet_id);
-                                      }else{
-                                          printf ("[%i] Dropping %u\n",getpid(),packet_id);
-                                      }
+                                      log_printf (DEBUG_LEVEL_DEBUG ,"Dropping %u", packet_id);
                                   }
 #endif
                                   IPQ_SET_VERDICT(packet_id, NF_DROP);
@@ -134,11 +118,7 @@ int auth_packet_to_decision(char* dgram)
                               }
                           } else {
                               if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
-                                  if (log_engine == LOG_TO_SYSLOG) {
-                                      syslog(SYSLOG_FACILITY(DEBUG_LEVEL_WARNING),"Packet without a known ID : %u",packet_id);
-                                  }else{
-                                      printf("[%i] Packet without a known ID : %u\n",getpid(),packet_id);
-                                  }
+                                  log_printf (DEBUG_LEVEL_WARNING, "Packet without a known ID: %u", packet_id);
                               }
                           }
                       } 
@@ -172,11 +152,7 @@ int auth_packet_to_decision(char* dgram)
 
 #else /* HAVE_LIBCONNTRACK */
                       if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
-                          if (log_engine == LOG_TO_SYSLOG) {
-                              syslog(SYSLOG_FACILITY(DEBUG_LEVEL_WARNING),"Connexion destroy message not supported");
-                          } else {
-                              printf("[%i] Connexion destroy message not supported\n",getpid());
-                          }
+                          log_printf (DEBUG_LEVEL_WARNING, "Connection destroy message not supported");
                       }
 #endif /* HAVE_LIBCONNTRACK */
                       }
@@ -210,11 +186,7 @@ int auth_packet_to_decision(char* dgram)
 
 #else /* HAVE_LIBCONNTRACK */
                       if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
-                          if (log_engine == LOG_TO_SYSLOG) {
-                              syslog(SYSLOG_FACILITY(DEBUG_LEVEL_WARNING),"Connexion update message not supported");
-                          } else {
-                              printf("[%i] Connexion update message not supported\n",getpid());
-                          }
+                          log_printf (DEBUG_LEVEL_WARNING, "Connection update message not supported");
                       }
 #endif /* HAVE_LIBCONNTRACK */
                       }
@@ -223,11 +195,8 @@ int auth_packet_to_decision(char* dgram)
               default:
                       {
                           if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
-                              if (log_engine == LOG_TO_SYSLOG) {
-                                  syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"Type %d for packet %lu (not for me)",*(dgram+1),*(unsigned long * )(dgram+4));
-                              }else{
-                                  printf("[%i] Type %d for packet %lu (not for me)\n",getpid(),*(dgram+1),*(unsigned long * )(dgram+4));
-                              }
+                              log_printf (DEBUG_LEVEL_DEBUG, "Type %d for packet %lu (not for me)",
+                                      *(dgram+1),*(unsigned long * )(dgram+4));
                           }
                       }
                       break;

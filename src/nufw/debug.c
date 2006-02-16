@@ -11,7 +11,6 @@ void init_log_engine()
   if (log_engine == LOG_TO_SYSLOG)
   {
     openlog(LOG_ID,SYSLOG_OPTS,LOG_FACILITY);
-/*    nufw_log=*/
   }
 }
 

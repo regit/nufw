@@ -4,6 +4,7 @@
 #include "structure.h"
 #include <nufw_debug.h>
 #include <signal.h>
+#include <assert.h>
 
 #include <strings.h>
 
@@ -106,6 +107,7 @@ int auth_packet_to_decision(char* dgram);
 
 
 /* common */
+void log_printf(int priority, char *format, ...);
 
 unsigned long padd ( packet_idl * packet);
 int psearch_and_destroy (uint32_t packet_id,uint32_t * mark);

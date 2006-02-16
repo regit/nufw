@@ -74,11 +74,7 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 	current->id=0;
 	if (current == NULL){
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_MAIN)){
-			if (log_engine == LOG_TO_SYSLOG) {
-				syslog(SYSLOG_FACILITY(DEBUG_LEVEL_MESSAGE),"Can not allocate packet_id");
-			} else {
-				printf("[%i] Can not allocate packet_id\n",getpid());
-			} 
+            log_printf (DEBUG_LEVEL_MESSAGE ,"Can not allocate packet_id");
 		}
 		return 0;
 	}
@@ -88,11 +84,7 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 		current->id= ntohl(ph->packet_id);
 	} else {
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_MAIN)){
-			if (log_engine == LOG_TO_SYSLOG) {
-				syslog(SYSLOG_FACILITY(DEBUG_LEVEL_MESSAGE),"Can not get id for message");
-			} else {
-				printf("[%i] Can not get id for message\n",getpid());
-			} 
+			log_printf (DEBUG_LEVEL_MESSAGE ,"Can not get id for message");
 		}
 
 		free(current);
@@ -107,11 +99,7 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 	}else {
 #ifdef DEBUG_ENABLE
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
-			if (log_engine == LOG_TO_SYSLOG) {
-				syslog(SYSLOG_FACILITY(DEBUG_LEVEL_MESSAGE),"Can not get timestamp for message");
-			} else {
-				printf("[%i] Can not get timestamp for message\n",getpid());
-			} 
+			log_printf (DEBUG_LEVEL_MESSAGE ,"Can not get timestamp for message");
 		}
 #endif
 		current->timestamp=time(NULL);
@@ -136,11 +124,7 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 
 			if (!sandf){
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
-					if (log_engine == LOG_TO_SYSLOG) {
-						syslog(SYSLOG_FACILITY(DEBUG_LEVEL_WARNING),"Packet could not be removed : %ue",pcktid);
-					}else{
-						printf("[%i] Packet could not be removed : %u\n",getpid(),pcktid);
-					}
+					log_printf (DEBUG_LEVEL_WARNING ,"Packet could not be removed : %u", pcktid);
 				}
 			}
 		}
@@ -160,33 +144,21 @@ void* packetsrv(void *data)
 	h = nfq_open();
 	if (!h) {
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
-			if (log_engine == LOG_TO_SYSLOG){
-				syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"error during nfq_open()");
-			}else{
-				printf("[%d] error during nfq_open()\n",getpid());
-			}
+			log_printf (DEBUG_LEVEL_CRITICAL, "Error during nfq_open()");
 		}
 		exit(1);
 	}
 
 	if (nfq_unbind_pf(h, AF_INET) < 0) {
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
-			if (log_engine == LOG_TO_SYSLOG){
-				syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"error during nfq_unbind_pf()");
-			}else{
-				printf("[%d] error during nfq_unbind_pf()\n",getpid());
-			}
+			log_printf (DEBUG_LEVEL_CRITICAL, "Error during nfq_unbind_pf()");
 		}
 		exit(1);
 	}
 
 	if (nfq_bind_pf(h, AF_INET) < 0) {
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
-			if (log_engine == LOG_TO_SYSLOG){
-				syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"error during nfq_bind_pf()");
-			}else{
-				printf("[%d] error during nfq_bind_pf()\n",getpid());
-			}
+			log_printf (DEBUG_LEVEL_CRITICAL, "Error during nfq_bind_pf()");
 		}
 		exit(1);
 	}
@@ -195,11 +167,9 @@ void* packetsrv(void *data)
 	hndl = nfq_create_queue(h,  nfqueue_num, (nfq_callback *)&treat_packet, NULL);
 	if (!hndl) {
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
-			if (log_engine == LOG_TO_SYSLOG){
-				syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"error during nfq_create_queue() (queue %d busy ?)",nfqueue_num);
-			}else{
-				printf("[%d] error during nfq_create_queue() (queue %d busy ?)\n",getpid(),nfqueue_num);
-			}
+			log_printf (DEBUG_LEVEL_CRITICAL,
+                    "Error during nfq_create_queue() (queue %d busy ?)", 
+                    nfqueue_num);
 		}
 		exit(1);
 	}
@@ -207,11 +177,7 @@ void* packetsrv(void *data)
 	if (nfq_set_mode(hndl, NFQNL_COPY_PACKET, 0xffff) < 0) {
 
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
-			if (log_engine == LOG_TO_SYSLOG){
-				syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"can't set packet_copy mode");
-			}else{
-				printf("[%d] can't set packet_copy mode\n",getpid());
-			}
+            log_printf (DEBUG_LEVEL_CRITICAL ,"Can't set packet_copy mode");
 		}
 
 		exit(1);
@@ -230,11 +196,7 @@ void* packetsrv(void *data)
 		ipq_set_mode(hndl, IPQ_COPY_PACKET,BUFSIZ);  
 	else {
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
-			if (log_engine == LOG_TO_SYSLOG){
-				syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"Could not create ipq handle");
-			}else{
-				printf("[%d] Could not create ipq handle\n",getpid());
-			}
+			log_printf (DEBUG_LEVEL_CRITICAL ,"Could not create ipq handle");
 		}
 	}
 #endif
@@ -251,11 +213,7 @@ void* packetsrv(void *data)
 			if (size < BUFSIZ ){
 				if (ipq_message_type(buffer) == NLMSG_ERROR ){
 					if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_MAIN)){
-						if (log_engine == LOG_TO_SYSLOG) {
-							syslog(SYSLOG_FACILITY(DEBUG_LEVEL_MESSAGE),"Got error message from libipq : %d",ipq_get_msgerr(buffer));
-						}else {
-							printf("[%i] Got error message from libipq : %d\n",getpid(),ipq_get_msgerr(buffer));
-						}
+						log_printf (DEBUG_LEVEL_MESSAGE ,"Got error message from libipq: %d",ipq_get_msgerr(buffer));
 					}
 				} else {
 					if ( ipq_message_type (buffer) == IPQM_PACKET ) {
@@ -270,11 +228,7 @@ void* packetsrv(void *data)
 							current=calloc(1,sizeof( packet_idl));
 							if (current == NULL){
 								if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_MAIN)){
-									if (log_engine == LOG_TO_SYSLOG) {
-										syslog(SYSLOG_FACILITY(DEBUG_LEVEL_MESSAGE),"Can not allocate packet_id");
-									} else {
-										printf("[%i] Can not allocate packet_id\n",getpid());
-									} 
+									log_printf (DEBUG_LEVEL_MESSAGE ,"Can not allocate packet_id");
 								}
 								return 0;
 							}
@@ -302,11 +256,7 @@ void* packetsrv(void *data)
 
 									if (!sandf){
 										if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
-											if (log_engine == LOG_TO_SYSLOG) {
-												syslog(SYSLOG_FACILITY(DEBUG_LEVEL_WARNING),"Packet could not be removed : %lu",msg_p->packet_id);
-											}else{
-												printf("[%i] Packet could not be removed : %lu\n",getpid(),msg_p->packet_id);
-											}
+											log_printf (DEBUG_LEVEL_WARNING ,"Packet could not be removed: %lu", msg_p->packet_id);
 										}
 									}
 								}
@@ -314,11 +264,7 @@ void* packetsrv(void *data)
 						}
 					} else {
 						if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
-							if (log_engine == LOG_TO_SYSLOG) {
-								syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"Dropping non-IP packet");
-							}else {
-								printf ("[%i] Dropping non-IP packet\n",getpid());
-							}
+							log_printf (DEBUG_LEVEL_DEBUG, "Dropping non-IP packet");
 						}
 						IPQ_SET_VERDICT(msg_p->packet_id, NF_DROP);
 					}
@@ -326,11 +272,7 @@ void* packetsrv(void *data)
 			}
 		} else {
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
-				if (log_engine == LOG_TO_SYSLOG) {
-					syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"BUFSIZ too small, (size == %d)",size);
-				}else {
-					printf("[%i] BUFSIZ too small, (size == %d)\n",getpid(),size);
-				}
+				log_printf (DEBUG_LEVEL_DEBUG ,"BUFSIZ too small (size == %d)", size);
 			}
 		}
 #endif
@@ -380,11 +322,7 @@ int auth_request_send(uint8_t type,uint32_t packet_id,char* payload,int data_len
 		} else {
 #ifdef DEBUG_ENABLE
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
-				if (log_engine == LOG_TO_SYSLOG) {
-					syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"Very long packet : truncating !");
-				}else {
-					printf("[%i] Very long packet : truncating !\n",getpid());
-				}
+				log_printf (DEBUG_LEVEL_DEBUG, "Very long packet: truncating!");
 			}
 #endif
 			memcpy(pointer,payload,511-auth_len);
@@ -393,11 +331,7 @@ int auth_request_send(uint8_t type,uint32_t packet_id,char* payload,int data_len
 	} else {
 #ifdef DEBUG_ENABLE
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
-			if (log_engine == LOG_TO_SYSLOG) {
-				syslog(SYSLOG_FACILITY(DEBUG_LEVEL_WARNING),"Dropping non-IP packet");
-			}else {
-				printf ("[%i] Dropping non-IP packet\n",getpid());
-			}
+			log_printf (DEBUG_LEVEL_WARNING, "Dropping non-IP packet");
 		}
 #endif
 		return 0;
@@ -406,19 +340,12 @@ int auth_request_send(uint8_t type,uint32_t packet_id,char* payload,int data_len
 
 #ifdef DEBUG_ENABLE
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
-		if (log_engine == LOG_TO_SYSLOG) {
 #ifdef WORDS_BIGENDIAN
-			syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"Sending request for %u",swap32(packet_id));
+        int packet_id_endian = swap32(packet_id);
 #else
-			syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"Sending request for %u",packet_id);
+        int packet_id_endian = packet_id;
 #endif
-		}else {
-#ifdef WORDS_BIGENDIAN
-			printf("[%i] Sending request for %u\n",getpid(),swap32(packet_id));
-#else
-			printf("[%i] Sending request for %u\n",getpid(),packet_id);
-#endif
-		}
+	    log_printf(DEBUG_LEVEL_DEBUG, "Sending request for %u", packet_id_endian);
 	}
 #endif
         pthread_mutex_lock(tls.mutex);
@@ -435,21 +362,13 @@ int auth_request_send(uint8_t type,uint32_t packet_id,char* payload,int data_len
 	/* negotiate TLS connection if needed */
 	if (!tls.session){
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
-			if (log_engine == LOG_TO_SYSLOG) {
-				syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"Not connected, trying TLS connection");
-			}else {
-				printf("[%i] Not connected, trying TLS connection\n",getpid());
-			}
+			log_printf (DEBUG_LEVEL_DEBUG, "Not connected, trying TLS connection");
 		}
 		tls.session = tls_connect();
 
 		if (tls.session){
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
-				if (log_engine == LOG_TO_SYSLOG) {
-					syslog(SYSLOG_FACILITY(DEBUG_LEVEL_DEBUG),"Connection to nuauth restored");
-				}else {
-					printf("[%i] Connection to nuauth restored\n",getpid());
-				}
+				log_printf (DEBUG_LEVEL_DEBUG ,"Connection to nuauth restored");
 			}
 			tls.auth_server_running=1;
                         /* create thread for auth server */
@@ -471,11 +390,7 @@ int auth_request_send(uint8_t type,uint32_t packet_id,char* payload,int data_len
 	if (!gnutls_record_send(*(tls.session),datas,total_data_len)){
 		int socket_tls;
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
-			if (log_engine == LOG_TO_SYSLOG) {
-				syslog(SYSLOG_FACILITY(DEBUG_LEVEL_CRITICAL),"tls send failure when sending request");
-			}else {
-				printf ("[%i] tls send failure when sending request\n",getpid());
-			}
+			log_printf (DEBUG_LEVEL_CRITICAL, "tls send failure when sending request");
                 }
                 pthread_mutex_lock(tls.mutex);
                 pthread_cancel(tls.auth_server);
