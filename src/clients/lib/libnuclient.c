@@ -794,7 +794,6 @@ NuAuth* nu_client_init2(
 	   sasl_setprop(conn, SASL_SEC_PROPS, &secprops); */
 
 	ret = mysasl_negotiate(*(session->tls), conn);
-	sasl_done();
 	if (ret != SASL_OK) {
 		nu_exit_clean(session);
 		errno=EACCES;
