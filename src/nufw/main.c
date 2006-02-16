@@ -17,6 +17,28 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/** \file main.c
+ *  \brief Function main() 
+ *   
+ * Do:
+ *   - Initialize variables
+ *   - Parse command line options
+ *   - Dameonize it if nequired
+ *   - Initialize log engine (see init_log_engine()).
+ *   - Create sockets 
+ *   - Initialiaze mutex
+ *   - Create TLS tunnel
+ *   - Install signal handlers:
+ *      - Ignore SIGPIPE
+ *      - SIGTERM quit the program (see nufw_cleanup())
+ *      - SIGUSR1 increase debug verbosity (see process_usr1())
+ *      - SIGUSR2 decrease debug verbosity (see process_usr2())
+ *      - SIGPOLL display statistics (see process_poll())
+ *   - Open conntrack
+ *   - Create packet server thread
+ *   - Run main loop 
+ */
+
 #include "nufw.h"
 #include <linux/netfilter.h>
 #include <unistd.h>
