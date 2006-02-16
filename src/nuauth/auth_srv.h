@@ -71,6 +71,7 @@
 #include "parsing.h"
 #include "localid_auth.h"
 #include "audit.h"
+#include "sasl.h"
 
 #include "nuauth_params.h"
 #include "nuauthconf.h"

@@ -862,7 +862,7 @@ gint apply_decision(connection element)
 #ifdef PERF_DISPLAY_ENABLE
 	gettimeofday(&leave_time,NULL);
 	timeval_substract (&elapsed_time,&leave_time,&(element.arrival_time));
-	g_message("Treatment time for conn : %u.%06u",elapsed_time.tv_sec,elapsed_time.tv_usec);
+	g_message("Treatment time for conn : %ld.%06ld",elapsed_time.tv_sec,elapsed_time.tv_usec);
 #endif
 
 	if (element.packet_id != NULL ){

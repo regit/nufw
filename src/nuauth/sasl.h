@@ -16,4 +16,11 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-void our_sasl_init(void);
+#ifndef NU_SASL_H
+#define NU_SASL_H
+
+void my_sasl_init();
+
+int sasl_user_check(user_session* c_session);
+
+#endif /* SASL_H */

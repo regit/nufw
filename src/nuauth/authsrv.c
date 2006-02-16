@@ -71,7 +71,6 @@ int main(int argc,char * argv[])
 
   /* Initialize glib thread system */
   g_thread_init(NULL);
-  our_sasl_init();
   g_thread_pool_set_max_unused_threads (5);
   gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_gthread);
 
