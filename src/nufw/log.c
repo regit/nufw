@@ -16,24 +16,51 @@
 ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+/** \file log.c
+ *  \brief Initialize and write messages in log.
+ *   
+ * Before using the log, call init_log_engine(). After that call log_printf()
+ * as you call printf, you just need a priority as first argument.
+ *
+ * The global variable log_engine choose between printf() (value LOG_TO_STD)
+ * and syslog() (value LOG_TO_SYSLOG).
+ */
 
 #include <debug.h>
 #include <nufw.h>
 #include <stdarg.h>
 
+/**
+ * Convert NuFW verbosity level to syslog priority.
+ */
 int syslog_priority_map[MAX_DEBUG_LEVEL-MIN_DEBUG_LEVEL+1] =
 {
-  LOG_FACILITY||LOG_ALERT, // DEBUG_LEVEL_FATAL		
-  LOG_FACILITY||LOG_CRIT, // DEBUG_LEVEL_CRITICAL
-  LOG_FACILITY||LOG_WARNING, // DEBUG_LEVEL_SERIOUS_WARNING
-  LOG_FACILITY||LOG_WARNING, // DEBUG_LEVEL_WARNING
-  LOG_FACILITY||LOG_NOTICE, // DEBUG_LEVEL_SERIOUS_MESSAGE
-  LOG_FACILITY||LOG_NOTICE, // DEBUG_LEVEL_MESSAGE
-  LOG_FACILITY||LOG_INFO, // DEBUG_LEVEL_INFO
-  LOG_FACILITY||LOG_DEBUG, // DEBUG_LEVEL_DEBUG
-  LOG_FACILITY||LOG_DEBUG // DEBUG_LEVEL_VERBOSE_DEBUG
+  LOG_FACILITY || LOG_ALERT, // DEBUG_LEVEL_FATAL		
+  LOG_FACILITY || LOG_CRIT, // DEBUG_LEVEL_CRITICAL
+  LOG_FACILITY || LOG_WARNING, // DEBUG_LEVEL_SERIOUS_WARNING
+  LOG_FACILITY || LOG_WARNING, // DEBUG_LEVEL_WARNING
+  LOG_FACILITY || LOG_NOTICE, // DEBUG_LEVEL_SERIOUS_MESSAGE
+  LOG_FACILITY || LOG_NOTICE, // DEBUG_LEVEL_MESSAGE
+  LOG_FACILITY || LOG_INFO, // DEBUG_LEVEL_INFO
+  LOG_FACILITY || LOG_DEBUG, // DEBUG_LEVEL_DEBUG
+  LOG_FACILITY || LOG_DEBUG // DEBUG_LEVEL_VERBOSE_DEBUG
 };    
 
+/**
+ * Initialize log engine: initialize syslog if it's used (see ::log_engine).
+ */
+void init_log_engine()
+{
+  if (log_engine == LOG_TO_SYSLOG)
+  {
+    openlog(LOG_ID,SYSLOG_OPTS,LOG_FACILITY);
+  }
+}
+
+/**
+ * Display a message to log, the syntax for format is the same as printf().
+ * The priority is used for syslog.
+ */
 void log_printf(int priority, char *format, ...)
 {
   va_list args;  

@@ -30,6 +30,7 @@
 
 /**
  * Output traffic statistics (packets received/accepted).
+ * \see pckt_rx and pckt_tx: Received and transmitted packets count.
  */
 void process_poll(int signum)
 {
@@ -40,6 +41,7 @@ void process_poll(int signum)
 
 /**
  * Increase debug verbosity.
+ * \see debug_level
  */
 void process_usr1(int signum)
 {
@@ -51,6 +53,7 @@ void process_usr1(int signum)
 
 /**
  * Decrease debug verbosity.
+ * \see debug_level
  */
 void process_usr2(int signum)
 {

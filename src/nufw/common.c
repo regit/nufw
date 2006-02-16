@@ -26,7 +26,14 @@
 
 /* datas stuffs */
 
-int psuppress (packet_idl * previous,packet_idl * current){
+/**
+ * Remove packet current from the global packet list (see
+ * ::packets_list_start). Free the packet memory.
+ *
+ * \param previous Packet before current
+ * \param current Packet to remove
+ */
+void psuppress (packet_idl * previous,packet_idl * current){
   if (previous != NULL)
     previous->next=current->next;
   else
@@ -36,20 +43,23 @@ int psuppress (packet_idl * previous,packet_idl * current){
   }
   free(current);
   packets_list_length--;
-  return 1;
 }
-/* create a packet at end of chained list, if we exceed max_length 
-   then we also suppress the first element which is the older
-   return : pointer to last element
-*/
+
+/**
+ * Create a packet at end of chained list. If we exceed max length 
+ * (::track_size), we also suppress the first element which
+ * is the older.
+ *
+ * \return Pointer to last element
+ */
 unsigned long padd (packet_idl *current){
   if (track_size < packets_list_length ){
     /* suppress first element */
     if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
       log_printf (DEBUG_LEVEL_MESSAGE, "Queue is full, dropping element");
     }
-  IPQ_SET_VERDICT(current->id,NF_DROP);
-  return 0;
+    IPQ_SET_VERDICT(current->id,NF_DROP);
+    return 0;
   }
 
   packets_list_length++;
@@ -70,13 +80,19 @@ unsigned long padd (packet_idl *current){
 
 /* called by authsrv */
 
-/* search an entry, create it if not exists, suppress it if exists
-   return mark if libipq is allright
-*/
+/**
+ * Search an entry in packet list (see ::packets_list_start), and drop and
+ * delete old packets (using ::packet_timeout). If the packet can be found,
+ * delete it and copy it's mark into nfmark.
+ * 
+ * \return Returns 1 and the mark (in nfmark) if the packet can be found, 0 else.
+ */
 int psearch_and_destroy (uint32_t packet_id,uint32_t * nfmark){
   packet_idl *packets_list=packets_list_start,* previous=NULL;
   int timestamp=time(NULL);
 
+  /* TODO: Do benchmarks and check if an hash-table + list (instead of just
+   * list) wouldn't be faster than just a list when NuAuth is slow */
   while (packets_list != NULL) {
     if ( packets_list->id == packet_id){
 #ifdef HAVE_LIBIPQ_MARK
@@ -84,10 +100,9 @@ int psearch_and_destroy (uint32_t packet_id,uint32_t * nfmark){
 #endif
       psuppress (previous,packets_list);
       return 1;
-    } else 
-      /* we want to suppress first element if it is too old */
-      if ( timestamp - packets_list->timestamp  > packet_timeout)
-	{
+
+    /* we want to suppress first element if it is too old */
+    } else if ( timestamp - packets_list->timestamp  > packet_timeout) {
 	  /* TODO : find a better place, does not satisfy me */
 	  IPQ_SET_VERDICT(packets_list->id,NF_DROP);
 #ifdef DEBUG_ENABLE
@@ -98,7 +113,7 @@ int psearch_and_destroy (uint32_t packet_id,uint32_t * nfmark){
 	  psuppress (previous,packets_list);
 	  packets_list=packets_list_start;
 	  previous=NULL;
-	}  else {
+	} else {
 	  previous=packets_list;
 	  packets_list=packets_list->next;
 	}
@@ -106,28 +121,30 @@ int psearch_and_destroy (uint32_t packet_id,uint32_t * nfmark){
   return 0;
 }
 
-int clean_old_packets (){
+/**
+ * Walk in the packet list and remove old packets (using ::packet_timeout limit).
+ */
+void clean_old_packets (){
   packet_idl *packets_list=packets_list_start,* previous=NULL;
   int timestamp=time(NULL);
 
   while (packets_list != NULL) {
     /* we want to suppress first element if it is too old */
     if ( timestamp - packets_list->timestamp  > packet_timeout)
-      {
-	IPQ_SET_VERDICT(packets_list->id,NF_DROP);
+    {
+	  IPQ_SET_VERDICT(packets_list->id,NF_DROP);
 #ifdef DEBUG_ENABLE
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
-	  log_printf (DEBUG_LEVEL_DEBUG, "Dropped: %lu", packets_list->id);
-	}
+	  if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
+	    log_printf (DEBUG_LEVEL_DEBUG, "Dropped: %lu", packets_list->id);
+	  }
 #endif
-	psuppress (previous,packets_list);
-	packets_list=packets_list_start;
-	previous=NULL;
-      }  else {
-	packets_list=NULL;
-      }
+	  psuppress (previous,packets_list);
+	  packets_list=packets_list_start;
+	  previous=NULL;
+    } else {
+	  packets_list=NULL;
+    }
   }
-  return 0;
 }
 
 #ifdef GRYZOR_HACKS

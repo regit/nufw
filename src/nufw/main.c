@@ -20,23 +20,7 @@
 /** \file main.c
  *  \brief Function main() 
  *   
- * Do:
- *   - Initialize variables
- *   - Parse command line options
- *   - Dameonize it if nequired
- *   - Initialize log engine (see init_log_engine()).
- *   - Create sockets 
- *   - Initialiaze mutex
- *   - Create TLS tunnel
- *   - Install signal handlers:
- *      - Ignore SIGPIPE
- *      - SIGTERM quit the program (see nufw_cleanup())
- *      - SIGUSR1 increase debug verbosity (see process_usr1())
- *      - SIGUSR2 decrease debug verbosity (see process_usr2())
- *      - SIGPOLL display statistics (see process_poll())
- *   - Open conntrack
- *   - Create packet server thread
- *   - Run main loop 
+ * See function main().
  */
 
 #include "nufw.h"
@@ -78,6 +62,24 @@ void nufw_cleanup( int signal ) {
     exit(0);
 }
 
+/**
+ * Main function of NuFW:
+ *   - Initialize variables
+ *   - Parse command line options
+ *   - Dameonize it if nequired
+ *   - Initialize log engine (see init_log_engine()).
+ *   - Initialiaze mutex
+ *   - Create TLS tunnel
+ *   - Install signal handlers:
+ *      - Ignore SIGPIPE
+ *      - SIGTERM quit the program (see nufw_cleanup())
+ *      - SIGUSR1 increase debug verbosity (see process_usr1())
+ *      - SIGUSR2 decrease debug verbosity (see process_usr2())
+ *      - SIGPOLL display statistics (see process_poll())
+ *   - Open conntrack
+ *   - Create packet server thread
+ *   - Run main loop 
+ */
 int main(int argc,char * argv[]){
     pthread_t pckt_server;
     struct hostent *authreq_srv;
@@ -285,13 +287,6 @@ int main(int argc,char * argv[]){
     signal(SIGPIPE,SIG_IGN);
 
     init_log_engine();
-    /* create socket for sending auth request */
-    sck_auth_request = socket (AF_INET,SOCK_DGRAM,0);
-
-    if (sck_auth_request == -1)
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
-            log_printf (DEBUG_LEVEL_CRITICAL, "socket() creation failure!");
-        }
 
 #ifdef GRYZOR_HACKS
     /* create socket for sending ICMP messages */
@@ -301,7 +296,6 @@ int main(int argc,char * argv[]){
             log_printf (DEBUG_LEVEL_CRITICAL, "socket() on raw_sock creation failure!");
         }
 #endif
-
 
     memset(&adr_srv,0,sizeof adr_srv);
 

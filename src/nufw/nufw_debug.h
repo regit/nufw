@@ -8,7 +8,14 @@
 #define LOG_TO_STD	1
 #define LOG_TO_SYSLOG	2
 
+/**
+ * Log engine used:
+ *   - if equals to #LOG_TO_SYSLOG, use syslog
+ *   - else use printf()
+ * \see log_printf()
+ */
 int log_engine;
+
 int debug_level;
 int debug_areas;
 

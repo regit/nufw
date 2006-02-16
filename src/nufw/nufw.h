@@ -80,8 +80,6 @@ pthread_cond_t *session_active_cond;
 pthread_mutex_t *session_destroyed_mutex;
 pthread_mutex_t *session_active_mutex;
 
-/* socket number to send auth request */
-int sck_auth_request;
 struct sockaddr_in adr_srv, list_srv;
 
 #ifdef GRYZOR_HACKS
@@ -111,7 +109,7 @@ void log_printf(int priority, char *format, ...);
 
 unsigned long padd ( packet_idl * packet);
 int psearch_and_destroy (uint32_t packet_id,uint32_t * mark);
-int clean_old_packets ();
+void clean_old_packets ();
 
 void process_usr1(int signum);
 void process_usr2(int signum);

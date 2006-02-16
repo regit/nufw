@@ -41,7 +41,7 @@
 #define AUTHREQ_PORT 4129
 #define TRACK_SIZE 1000
 #define ID_SERVER 12345
-#define PACKET_TIMEOUT 15
+#define PACKET_TIMEOUT 15   /*!< Default value of ::packet_timeout */
 #define PRIO 1
 #define HOSTNAME_SIZE 256
 #define FILENAME_SIZE 256
@@ -58,15 +58,17 @@ char authreq_addr[HOSTNAME_SIZE];
 char listen_addr[HOSTNAME_SIZE];
 u_int16_t authreq_port;
 u_int16_t authsrv_port;
-int packet_timeout;
-int track_size;
+int packet_timeout;   /*!< Number of second before a packet is dropped, default: #PACKET_TIMEOUT */
+int track_size;       /*!< Maximum size of the packet list (see ::packets_list_length). */
 u_int16_t id_srv;
 int debug;
 int nufw_set_mark;
 
 
 
-/* Keep id of packets received */
+/**
+ * Keep id of received packets
+ */
 /* TODO use a kind of HASH */
 typedef struct Packet_Ids {
   unsigned long id;
@@ -77,9 +79,20 @@ typedef struct Packet_Ids {
   struct Packet_Ids * next;
 } packet_idl;
 
+/***** Pack list ****/
+
+/*! Begin of the packet list (NULL if the list is empty), 
+ * ::packets_list_end is the end and ::packets_list_length the length. */
 packet_idl * packets_list_start;
-packet_idl * packets_list_end;
+
+/*! End of the packet list (NULL if the list is empty),
+ * ::packets_list_start is the begin and ::packets_list_length the length. */
+packet_idl * packets_list_end;    
+
+/*! Size of the packet list, ::packets_list_start is the begin and
+ * ::packets_list_end is the end. */
 int packets_list_length;
+
 /* mutex relative to packet_list */
 pthread_mutex_t packets_list_mutex;
 
@@ -95,17 +108,17 @@ pthread_mutex_t hndl_mutex;
 
 /* do some define to add mutex usage */
 #if USE_NFQUEUE
-#define	IPQ_SET_VERDICT(PACKETID, DECISION) nfq_set_verdict(hndl, PACKETID, DECISION, 0 , NULL)
-#define	IPQ_SET_VWMARK(PACKETID, DECISION,NFMARK) nfq_set_verdict_mark(hndl, PACKETID, DECISION, NFMARK,0,NULL) 
+#define IPQ_SET_VERDICT(PACKETID, DECISION) \
+    nfq_set_verdict(hndl, PACKETID, DECISION, 0 , NULL)
+#define IPQ_SET_VWMARK(PACKETID, DECISION, NFMARK) \
+    nfq_set_verdict_mark(hndl, PACKETID, DECISION, NFMARK, 0, NULL) 
 #else
-#define	IPQ_SET_VERDICT(PACKETID, DECISION) ipq_set_verdict(hndl, PACKETID, DECISION,0,NULL)
-#define	IPQ_SET_VWMARK(PACKETID, DECISION,NFMARK) ipq_set_vwmark(hndl, PACKETID, DECISION,NFMARK,0,NULL)
+#define	IPQ_SET_VERDICT(PACKETID, DECISION) \
+    ipq_set_verdict(hndl, PACKETID, DECISION,0,NULL)
+#define	IPQ_SET_VWMARK(PACKETID, DECISION, NFMARK) \
+    ipq_set_vwmark(hndl, PACKETID, DECISION, NFMARK,0,NULL)
 #endif
 
-
-//global variable :
-int pckt_tx,pckt_rx ;
-
-
-
+int pckt_tx;   /*!< Number of transmitted packets since NuFW is running */
+int pckt_rx;   /*!< Number of received packets since NuFW is running */
 
