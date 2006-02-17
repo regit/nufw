@@ -167,6 +167,7 @@ void* packetsrv(void *data)
 {
 	unsigned char buffer[BUFSIZ];
 #if USE_NFQUEUE
+    struct nfq_handle *h;
 	int fd;
 	int rv;
 	struct nfnl_handle *nh;

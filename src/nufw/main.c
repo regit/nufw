@@ -296,8 +296,8 @@ int main(int argc,char * argv[]){
 
     memset(&adr_srv,0,sizeof adr_srv);
 
-    adr_srv.sin_family= AF_INET;
-    adr_srv.sin_port=htons(authreq_port);
+    adr_srv.sin_family = AF_INET;
+    adr_srv.sin_port = htons(authreq_port);
     /* hostname conversion */
     authreq_srv=gethostbyname(authreq_addr);
     adr_srv.sin_addr=*(struct in_addr *)authreq_srv->h_addr;

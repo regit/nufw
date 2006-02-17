@@ -2,52 +2,57 @@
 #include <stdio.h>
 #include <string.h>
 #include "structure.h"
-#include <nufw_debug.h>
 #include <signal.h>
 #include <assert.h>
-
 #include <strings.h>
-
+#include <gnutls/gnutls.h>
+#include <gcrypt.h>
+#include <errno.h>
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+#  include <config.h>
 #endif
+#include "log.h"
+
+/** \file nufw.h
+ *  \brief Common functions and variables to NuFW 
+ *   
+ * Some structures, functions, global variables and #define common to NuFW.
+ */
+
 #if USE_NFQUEUE
 #include <linux/netfilter.h>		/* for NF_ACCEPT */
 #include <libnetfilter_queue/libnetfilter_queue.h>
 
+/** Default value of ::nfqueue_num */
 #define DEFAULT_NFQUEUE 0
+
+/** Default value of ::handle_conntrack_event */
 #define CONNTRACK_HANDLE_DEFAULT 0
 
+/** NetFilter queue number, default value: #DEFAULT_NFQUEUE */
 uint16_t nfqueue_num;
-struct nfq_handle *h;
 
 #else
+
 /* redhat like hack */
 #ifdef HAVE_LIBIPQ_LIBIPQ_H 
-#include <libipq/libipq.h>
+#  include <libipq/libipq.h>
 #else
-#ifdef HAVE_LIBIPQ_H
-#include <libipq.h>
-#else
-#error "libipq needed for NuFW compilation"
-#endif
-#endif
-#endif
+#  ifdef HAVE_LIBIPQ_H
+#    include <libipq.h>
+#  else
+#    error "libipq needed for NuFW compilation"
+#  endif      /* ifdef HAVE_LIBIPQ_H */
+#endif      /* ifdef HAVE_LIBIPQ_LIBIPQ_H  */            
+#endif   /* if USE_NFQUEUE */
 
-
+/* conntrack things */
 #ifdef HAVE_LIBCONNTRACK
-#include <libnetfilter_conntrack/libnetfilter_conntrack.h>
-
-struct nfct_handle *cth;
-unsigned char handle_conntrack_event; 
-
-void* conntrack_event_handler(void *data);
-
+#  include <libnetfilter_conntrack/libnetfilter_conntrack.h>
+   struct nfct_handle *cth;
+   unsigned char handle_conntrack_event; 
+   void* conntrack_event_handler(void *data);
 #endif
-
-#include <gnutls/gnutls.h>
-#include <gcrypt.h>
-#include <errno.h>
 
 /** Gryzor hacks with aims to answer ICMP message when a packet is dropped. */
 #define GRYZOR_HACKS
@@ -75,18 +80,23 @@ struct nuauth_conn {
 };
 
 struct nuauth_conn tls;
-gnutls_session * tls_connect( );
+
+gnutls_session * tls_connect();
 pthread_cond_t *session_destroyed_cond;
 pthread_cond_t *session_active_cond;
 pthread_mutex_t *session_destroyed_mutex;
 pthread_mutex_t *session_active_mutex;
 
-struct sockaddr_in adr_srv, list_srv;
+/** IPv4 address of NuAuth server: hostname ::authreq_addr,
+ * port ::authreq_port 
+ */
+struct sockaddr_in adr_srv;
 
 #ifdef GRYZOR_HACKS
 //Raw socket we use for sending ICMP messages
 int raw_sock;
 #endif
+
 /* 
  * all functions 
  */
@@ -99,20 +109,9 @@ void* authsrv(void* data);
 
 /* send an auth request packet given a payload (raw packet) */
 int auth_request_send(uint8_t type,uint32_t packet_id, char* payload,int data_len);
+
 /* take decision given a auth answer packet payload */
 int auth_packet_to_decision(char* dgram);
-
-
-/* common */
-void log_printf(int priority, char *format, ...);
-void log_area_printf(int area, int priority, char *format, ...);
-
-#ifdef DEBUG_ENABLE
-#  define debug_log_printf(area, priority, format, ...) \
-       log_area_printf(area, priority, ...)
-#else
-#  define debug_log_printf(area, priority, format, ...)
-#endif
 
 unsigned long padd ( packet_idl * packet);
 int psearch_and_destroy (uint32_t packet_id,uint32_t * mark);
@@ -126,5 +125,11 @@ void process_poll(int signum);
 int send_icmp_unreach(char *dgram);
 #endif
 
+/** \def SECURE_STRNCPY(dst,src,size)
+ * 
+ * Workaround strncpy security problem: if size is smaller than strlen(src),
+ * dst doesn't contains '\\0'. This macro copy on maximum size-1 characters,
+ * and always write a '\\0' on last position (dst[size-1]).
+ */
 #define SECURE_STRNCPY(dst, src, size) \
     do { strncpy(dst, src, (size)-1); (dst)[(size)-1] = '\0'; } while (0)

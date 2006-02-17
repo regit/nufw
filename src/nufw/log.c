@@ -22,8 +22,8 @@
  * Before using the log, call init_log_engine(). After that call log_printf()
  * as you call printf, you just need a priority as first argument.
  *
- * The global variable log_engine choose between printf() (value LOG_TO_STD)
- * and syslog() (value LOG_TO_SYSLOG).
+ * The global variable log_engine choose between printf() (value #LOG_TO_STD)
+ * and syslog() (value #LOG_TO_SYSLOG).
  */
 
 #include <debug.h>
@@ -53,7 +53,7 @@ void init_log_engine()
 {
   if (log_engine == LOG_TO_SYSLOG)
   {
-    openlog(LOG_ID,SYSLOG_OPTS,LOG_FACILITY);
+    openlog(LOG_ID, SYSLOG_OPTS, LOG_FACILITY);
   }
 }
 

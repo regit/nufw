@@ -54,10 +54,10 @@ char *key_file;  /*!< Key filename used in TLS connection, default value: NULL *
 char *ca_file;   /*!< Trust filename used in TLS connection, default value: NULL */
 char *nuauth_cert_dn;   /*!< NuAuth certificate filename, default value: NULL */
 
-/*! IP or hostname of NuAuth, default value: #AUTHREQ_ADDR */
+/*! IP or hostname of NuAuth server address (::adr_srv), default value: #AUTHREQ_ADDR */
 char authreq_addr[HOSTNAME_SIZE];
 
-/*! Port of NuAuth, default value: #AUTHREQ_PORT */
+/*! Port of NuAuth server address (::adr_srv), default value: #AUTHREQ_PORT */
 u_int16_t authreq_port;
 
 /*! Number of second before a packet is dropped, default value: #PACKET_TIMEOUT */
@@ -117,6 +117,16 @@ struct ipq_handle *hndl;
 
 /* mutex */
 pthread_mutex_t hndl_mutex;
+
+/** \def IPQ_SET_VERDICT(PACKETID, DECISION)
+ * Set decision (NF_ACCEPT or NF_DROP) of a packet. Call nfq_set_verdict() 
+ * or ipq_set_verdict().
+ */
+
+/** \def IPQ_SET_VWMARK(PACKETID, DECISION, NFMARK)
+ * Set decision (NF_ACCEPT or NF_DROP) of a packet and add a marker. Call
+ * nfq_set_verdict_mark() or ipq_set_vwmark().
+ */
 
 /* do some define to add mutex usage */
 #if USE_NFQUEUE
