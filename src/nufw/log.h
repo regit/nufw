@@ -32,8 +32,8 @@ void log_area_printf(int area, int priority, char *format, ...);
  * Call log_area_printf(area, priority, ...) if DEBUG_ENABLE is defined 
  */
 #ifdef DEBUG_ENABLE
-#  define debug_log_printf(area, priority, format, ...) \
-       log_area_printf(area, priority, ...)
+#  define debug_log_printf(area, priority, format, args...) \
+       log_area_printf(area, priority, format, ##args )
 #else
 #  define debug_log_printf(area, priority, format, ...)
 #endif

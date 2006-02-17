@@ -114,7 +114,7 @@ void* conntrack_event_handler(void *data)
         cth = nfct_open(CONNTRACK, NF_NETLINK_CONNTRACK_DESTROY);
     }
     if (!cth)
-        log_printf(DEBUG_WARNING, "Not enough memory to open netfilter conntrack");
+        log_printf(DEBUG_LEVEL_WARNING, "Not enough memory to open netfilter conntrack");
     nfct_register_callback(cth, update_handler, NULL);
     res = nfct_event_conntrack(cth);
     nfct_close(cth);

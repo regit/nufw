@@ -69,8 +69,7 @@ void auth_packet_to_decision(char* dgram)
 #endif
   if (*dgram != PROTO_VERSION)
   {
-      debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, 
-              "Wrong protocol version from authentification server answer.");
+      debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, "Wrong protocol version from authentification server answer.");
       return;
   }
 

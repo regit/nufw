@@ -31,6 +31,8 @@
 
 /** NetFilter queue number, default value: #DEFAULT_NFQUEUE */
 uint16_t nfqueue_num;
+/** Netfilter queue handle */
+struct nfq_handle *h;
 
 #else
 
