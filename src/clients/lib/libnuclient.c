@@ -182,6 +182,7 @@ void nu_exit_clean(NuAuth * session)
 		if (session->tls){
 			gnutls_bye(*(session->tls),GNUTLS_SHUT_WR);
 			gnutls_deinit(*(session->tls));
+			gnutls_certificate_free_credentials (session->cred);
 			free(session->tls);
 		}
 		if (session->socket>0){
@@ -601,7 +602,6 @@ NuAuth* nu_client_init2(
 		void* username_callback,void * passwd_callback, void* tlscred_callback
 		)
 {
-	gnutls_certificate_credentials xcred;
 	conntable_t *new;
 	int ret;
 	int option_value;
@@ -611,6 +611,8 @@ NuAuth* nu_client_init2(
 	sasl_conn_t *conn;
 	NuAuth * session;
 	struct sigaction no_action;
+	char certstring[256];
+	char keystring[256];
 
 	session=(NuAuth*) calloc(1,sizeof(NuAuth));
 	session->username_callback=username_callback;
@@ -645,8 +647,9 @@ NuAuth* nu_client_init2(
 	}
 	/* compute patch keyfile */
 	if (! keyfile){
-		keyfile=calloc(256,1);
+		keyfile=keystring;
 		snprintf(keyfile,255,"%s/.nufw/key.pem",getenv("HOME"));
+		keyfile[255]=0;
 	}
 	/* test if key exists */
 	if (access(keyfile,R_OK)){
@@ -658,8 +661,9 @@ NuAuth* nu_client_init2(
 	}
 
 	if (! certfile){
-		certfile=calloc(256,1);
+		certfile=certstring;
 		snprintf(certfile,255,"%s/.nufw/cert.pem",getenv("HOME"));
+		certfile[255]=0;
 	}
 	/* test if cert exists */
 	if (access(certfile,R_OK)){
@@ -672,20 +676,20 @@ NuAuth* nu_client_init2(
 
         session->tls=(gnutls_session *)calloc(1,sizeof(gnutls_session));
 	/* X509 stuff */
-	gnutls_certificate_allocate_credentials(&xcred);
+	gnutls_certificate_allocate_credentials(&(session->cred));
 	/* sets the trusted cas file
 	*/
 #if REQUEST_CERT
-	gnutls_certificate_set_x509_trust_file(xcred, certfile, GNUTLS_X509_FMT_PEM);
+	gnutls_certificate_set_x509_trust_file(session->cred, certfile, GNUTLS_X509_FMT_PEM);
 #endif
 	if (certfile && keyfile){
-		ret = gnutls_certificate_set_x509_key_file(xcred, certfile, keyfile, GNUTLS_X509_FMT_PEM);
+		ret = gnutls_certificate_set_x509_key_file(session->cred, certfile, keyfile, GNUTLS_X509_FMT_PEM);
 		if (ret <0){
 			printf("problem with keyfile : %s\n",gnutls_strerror(ret));
 		}
 	}
 	generate_dh_params();
-	gnutls_certificate_set_dh_params( xcred, dh_params);
+	gnutls_certificate_set_dh_params( session->cred, dh_params);
 
 
 	/* Initialize TLS session
@@ -696,7 +700,7 @@ NuAuth* nu_client_init2(
 	gnutls_set_default_priority(*(session->tls));
 	gnutls_certificate_type_set_priority(*(session->tls), cert_type_priority);
 	/* put the x509 credentials to the current session */
-	gnutls_credentials_set(*(session->tls), GNUTLS_CRD_CERTIFICATE, xcred);
+	gnutls_credentials_set(*(session->tls), GNUTLS_CRD_CERTIFICATE, session->cred);
 
 	no_action.sa_handler = SIG_IGN;
 	sigemptyset( & (no_action.sa_mask));

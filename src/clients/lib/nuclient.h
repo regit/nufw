@@ -137,6 +137,8 @@ typedef struct _NuAuth {
 	char * username;
 	char * password;
         gnutls_session* tls;
+	gnutls_certificate_credentials cred;
+
 	char* (*username_callback)();
 	char* (*passwd_callback)();
 	char* (*tls_passwd_callback)();
