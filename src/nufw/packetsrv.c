@@ -307,6 +307,8 @@ void* packetsrv(void *data)
  * Send an authentication request to NuAuth. May restart TLS session
  * and/or open TLS connection (if closed).
  *
+ * Create the thread authsrv() when opening a new session.
+ *
  * Packet maximum size is 512 bytes, and it's structure is:
  * \code
  *  ofs | size | description

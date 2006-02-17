@@ -111,7 +111,7 @@ void* authsrv(void* data);
 int auth_request_send(uint8_t type,uint32_t packet_id, char* payload,int data_len);
 
 /* take decision given a auth answer packet payload */
-int auth_packet_to_decision(char* dgram);
+void auth_packet_to_decision(char* dgram);
 
 unsigned long padd ( packet_idl * packet);
 int psearch_and_destroy (uint32_t packet_id,uint32_t * mark);

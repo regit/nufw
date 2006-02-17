@@ -27,7 +27,6 @@
  * Create a TLS connection to NuAuth using tls_connect().
  */
 
-
 /**
  * Create a TLS connection to NuAuth: create a TCP socket and connect to ::adr_srv.
  *
