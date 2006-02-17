@@ -60,11 +60,10 @@ void psuppress (packet_idl * previous,packet_idl * current){
  */
 unsigned long padd (packet_idl *current){
   if (track_size <= packets_list.length ){
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
-      log_printf (DEBUG_LEVEL_MESSAGE, "Queue is full, dropping element");
-    }
-    IPQ_SET_VERDICT(current->id,NF_DROP);
-    return 0;
+      log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_MESSAGE, 
+              "Queue is full, dropping element");
+      IPQ_SET_VERDICT(current->id,NF_DROP);
+      return 0;
   }
 
   packets_list.length++;
@@ -110,11 +109,7 @@ int psearch_and_destroy (uint32_t packet_id,uint32_t * nfmark){
     } else if ( timestamp - current->timestamp  > packet_timeout) {
 	  /* TODO : find a better place, does not satisfy me */
 	  IPQ_SET_VERDICT(current->id,NF_DROP);
-#ifdef DEBUG_ENABLE
-	  if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
-	    log_printf ("Dropped: %lu", current->id);
-	  }
-#endif
+      log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, "Dropped: %lu", current->id);
 	  psuppress (previous,current);
 	  current=packets_list.start;
 	  previous=NULL;
@@ -138,11 +133,8 @@ void clean_old_packets (){
     if ( timestamp - current->timestamp  > packet_timeout)
     {
 	  IPQ_SET_VERDICT(current->id,NF_DROP);
-#ifdef DEBUG_ENABLE
-	  if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
-	    log_printf (DEBUG_LEVEL_DEBUG, "Dropped: %lu", current->id);
-	  }
-#endif
+      log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, 
+              "Dropped: %lu", current->id);
 	  psuppress (previous,current);
 	  current=packets_list.start;
 	  previous=NULL;

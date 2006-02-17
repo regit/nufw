@@ -35,10 +35,7 @@ gnutls_session * tls_connect()
       key_file=(char*)calloc(strlen(CONFIG_DIR)+strlen(KEYFILE)+2,sizeof(char));
       if (!key_file)
       {
-          if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
-              log_printf (DEBUG_LEVEL_DEBUG, "Couldn't malloc for key_file!");
-          }
-
+          log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, "Couldn't malloc for key_file!");
           return NULL;
       }
       strcat(key_file,CONFIG_DIR);
@@ -49,9 +46,8 @@ gnutls_session * tls_connect()
       cert_file=(char*)calloc(strlen(CONFIG_DIR)+strlen(CERTFILE)+2,sizeof(char));
       if (!cert_file)
       {
-          if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
-              log_printf (DEBUG_LEVEL_DEBUG, "Couldn't malloc for cert_file!");
-          }
+          log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, 
+                  "Couldn't malloc for cert_file!");
           return NULL;
       }
       strcat(cert_file,CONFIG_DIR);
@@ -60,15 +56,13 @@ gnutls_session * tls_connect()
   }
   /* test if key exists */
   if (access(key_file,R_OK)){
-      if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
-          log_printf (DEBUG_LEVEL_DEBUG, "TLS: can not access key file %s", key_file);
-      }
+      log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, 
+              "TLS: can not access key file %s", key_file);
       return NULL;
   }
   if (access(cert_file,R_OK)){
-      if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
-          log_printf (DEBUG_LEVEL_DEBUG, "TLS: can not access cert file %s", cert_file);
-      }
+      log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
+              "TLS: can not access cert file \"%s\"!", cert_file);
       return NULL;
   }
   /* X509 stuff */
@@ -117,9 +111,7 @@ gnutls_session * tls_connect()
 	  if (ca_file){
 		  /* we need to verify received certificates */
 		  if( gnutls_certificate_verify_peers(*tls_session) !=0){
-			  if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
-                  log_printf (DEBUG_LEVEL_DEBUG, "TLS: invalid certificates received from nuauth server");
-			  }
+              log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING, "TLS: invalid certificates received from nuauth server");
 			  return NULL;
 		  } else {
 			  if (nuauth_cert_dn){
@@ -161,9 +153,8 @@ gnutls_session * tls_connect()
 					  size = sizeof(dn);
 					  gnutls_x509_crt_get_dn( cert, dn, &size);
 					  if (strcmp(dn,nuauth_cert_dn)){
-						  if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
-							  log_printf (DEBUG_LEVEL_DEBUG, "TLS : bad certificate DN received from nuauth server: %s", dn);
-						  }
+                          log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
+                                  "TLS : bad certificate DN received from nuauth server: %s", dn);
 						  return NULL;
 					  }
 				  }

@@ -66,18 +66,13 @@ int auth_packet_to_decision(char* dgram)
                           if (sandf){
                               if ( *(dgram+4) == OK ) {
                                   /* TODO : test on return */
-#ifdef DEBUG_ENABLE
-                                  if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
-                                      log_printf(DEBUG_LEVEL_DEBUG, "Accepting %u", packet_id);
-                                  }
-#endif
+                                  log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
+                                          "Accepting %u", packet_id);
 #if HAVE_LIBIPQ_MARK || USE_NFQUEUE
                                   if (nufw_set_mark) {
-#ifdef DEBUG_ENABLE
-                                      if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
-                                          log_printf (DEBUG_LEVEL_DEBUG ,"Marking packet with %d", *(u_int16_t *)(dgram+2));
-                                      }
-#endif /* DEBUG_ENABLE */
+                                      log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
+                                              "Marking packet with %d",
+                                              *(u_int16_t *)(dgram+2));
                                       /* we put the userid mark at the end of the mark, not changing the 16 first big bits */
                                       IPQ_SET_VWMARK(packet_id, NF_ACCEPT,((ntohs(*(u_int16_t *)(dgram+2))) & 0xffff ) | (nfmark & 0xffff0000 )); 
                                   } else {
@@ -92,26 +87,21 @@ int auth_packet_to_decision(char* dgram)
                                   return 1;
 #ifdef GRYZOR_HACKS
                               }else if( *(dgram+4) == NOK_REJ){ //Packet is rejected, ie dropped and ICMP signalized
-                                  if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
-                                      log_printf (DEBUG_LEVEL_DEBUG, "Rejecting %lu", packet_id);
-                                  }
+                                  log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
+                                          "Rejecting %lu", packet_id);
                                   IPQ_SET_VERDICT(packet_id, NF_DROP);
                                   send_icmp_unreach(dgram);
                                   return 0;
 #endif
                               } else {
-#ifdef DEBUG_ENABLE
-                                  if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
-                                      log_printf (DEBUG_LEVEL_DEBUG ,"Dropping %u", packet_id);
-                                  }
-#endif
+                                  log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
+                                          "Dropping %u", packet_id);
                                   IPQ_SET_VERDICT(packet_id, NF_DROP);
                                   return 0;
                               }
                           } else {
-                              if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
-                                  log_printf (DEBUG_LEVEL_WARNING, "Packet without a known ID: %u", packet_id);
-                              }
+                              log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING, 
+                                      "Packet without a known ID: %u", packet_id);
                           }
                       } 
                       break;
@@ -143,9 +133,8 @@ int auth_packet_to_decision(char* dgram)
 
 
 #else /* HAVE_LIBCONNTRACK */
-                      if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
-                          log_printf (DEBUG_LEVEL_WARNING, "Connection destroy message not supported");
-                      }
+                        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING, 
+                                "Connection destroy message not supported");
 #endif /* HAVE_LIBCONNTRACK */
                       }
                       break;
@@ -177,19 +166,17 @@ int auth_packet_to_decision(char* dgram)
                         res = nfct_update_conntrack(cth, &ct);
 
 #else /* HAVE_LIBCONNTRACK */
-                      if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
-                          log_printf (DEBUG_LEVEL_WARNING, "Connection update message not supported");
-                      }
+                        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
+                                "Connection update message not supported");
 #endif /* HAVE_LIBCONNTRACK */
                       }
 
                       break;
               default:
                       {
-                          if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
-                              log_printf (DEBUG_LEVEL_DEBUG, "Type %d for packet %lu (not for me)",
-                                      *(dgram+1),*(unsigned long * )(dgram+4));
-                          }
+                          log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, 
+                                  "Type %d for packet %lu (not for me)",
+                                  *(dgram+1),*(unsigned long * )(dgram+4));
                       }
                       break;
             }

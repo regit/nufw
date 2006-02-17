@@ -296,9 +296,8 @@ int main(int argc,char * argv[]){
     /* create socket for sending ICMP messages */
     raw_sock = socket(PF_INET, SOCK_RAW, 1);
     if (raw_sock == -1)
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
-            log_printf (DEBUG_LEVEL_CRITICAL, "socket() on raw_sock creation failure!");
-        }
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
+                "socket() on raw_sock creation failure!");
 #endif
 
     memset(&adr_srv,0,sizeof adr_srv);
@@ -310,8 +309,8 @@ int main(int argc,char * argv[]){
     adr_srv.sin_addr=*(struct in_addr *)authreq_srv->h_addr;
 
     if (adr_srv.sin_addr.s_addr == INADDR_NONE ) {
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN))
-            log_printf (DEBUG_LEVEL_CRITICAL, "Bad Address in configuration for adr_srv");
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
+                "Bad Address in configuration for adr_srv");
     }
     
     packets_list.start=NULL;
@@ -369,12 +368,9 @@ int main(int argc,char * argv[]){
         pthread_mutex_lock(&packets_list.mutex);
         clean_old_packets ();
         pthread_mutex_unlock(&packets_list.mutex);
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
-            log_printf (DEBUG_LEVEL_INFO, 
-                    "rx : %d, tx : %d, track_size : %d, start_list : %p",
-                    pckt_rx, pckt_tx, packets_list.length, packets_list.start);
-        }
-
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_INFO, 
+                "rx : %d, tx : %d, track_size : %d, start_list : %p",
+                pckt_rx, pckt_tx, packets_list.length, packets_list.start);
         sleep(5);	
     }
 }
