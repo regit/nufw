@@ -67,7 +67,7 @@ void acl_check_and_decide (gpointer userdata, gpointer data)
 			g_message("This is no good : elt is NULL\n");
 		}
 	} else {
-		if (nuauthconf->aclcheck_state_ready && (nuauthconf->hello_authentication && (! (initialstate == STATE_HELLOMODE)) )){
+		if (nuauthconf->aclcheck_state_ready || (nuauthconf->hello_authentication && (! (initialstate == STATE_HELLOMODE)) )){
 			/* if STATE_COMPLETING packet comes from search and fill 
 			 * research need to be done
 			 * */
