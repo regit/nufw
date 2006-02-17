@@ -111,7 +111,7 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 	if (ret == 0){
 		current->timestamp=timestamp.tv_sec;
 	}else {
-        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_MESSAGE,
+        debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_MESSAGE,
                 "Can not get timestamp for message");
 		current->timestamp=time(NULL);
 	}
@@ -141,6 +141,16 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 }
 #endif
 
+/**
+ * Packet server thread. Connect to netfilter to ask a netlink. Read packet
+ * on this link. Check if packet useful for NuFW. If yes, add it to packet 
+ * list and/or send it to NuAuth.
+ *
+ * When using NetFilter queue, use treat_packet() callback.
+ * Else, use internal packet parser and process mechanism.
+ *
+ * \return NULL
+ */
 void* packetsrv(void *data)
 {
 	unsigned char buffer[BUFSIZ];
@@ -224,22 +234,22 @@ void* packetsrv(void *data)
 							auth_request_send(AUTH_CONTROL,msg_p->packet_id,(char*)msg_p->payload,msg_p->data_len);
 							IPQ_SET_VERDICT( msg_p->packet_id,NF_ACCEPT);
 						} else {
+                            /* Create packet */
 							current=calloc(1,sizeof( packet_idl));
 							if (current == NULL){
                                 log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_MESSAGE,
                                         "Can not allocate packet_id");
-								return 0;
+								return NULL;
 							}
 							current->id=msg_p->packet_id;
+							current->timestamp=msg_p->timestamp_sec;
 #ifdef HAVE_LIBIPQ_MARK
 							current->nfmark=msg_p->mark;
 #endif
-							current->timestamp=msg_p->timestamp_sec;
-							/* lock packet list mutex */
-							pthread_mutex_lock(&packets_list.mutex);
+
 							/* Adding packet to list  */
+							pthread_mutex_lock(&packets_list.mutex);
 							pcktid=padd(current);
-							/* unlock datas */
 							pthread_mutex_unlock(&packets_list.mutex);
 
 							if (pcktid){
@@ -274,13 +284,21 @@ void* packetsrv(void *data)
 #endif
 	}
 #if USE_NFQUEUE
-
 #else
 	ipq_destroy_handle( hndl );  
 #endif
 	return NULL;
 }   
 
+
+/**
+ * Send an authentication request to NuAuth.
+ *
+ * \param type Type of request
+ * \param packet_id Unique identifier of the packet in netfilter queue
+ * \param payload Packet content
+ * \param data_len Size of payload (in bytes)
+ */
 int auth_request_send(uint8_t type,uint32_t packet_id,char* payload,int data_len){
 	char datas[512];
 	char *pointer;
@@ -314,16 +332,17 @@ int auth_request_send(uint8_t type,uint32_t packet_id,char* payload,int data_len
 			memcpy(pointer,payload,data_len);
 			total_data_len=data_len+auth_len;
 		} else {
-            log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, 
+            debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, 
                     "Very long packet: truncating!");
 			memcpy(pointer,payload,511-auth_len);
 		}
 
 	} else {
-        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, "Dropping non-IP packet");
+        debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, "Dropping non-IP packet");
 		return 0;
 	}
-    log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, "Sending request for %u", ntohl(packet_id));
+    debug_log_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, 
+            "Sending request for %u", ntohl(packet_id));
     
     /* cleaning up current session : auth_server has detected a problem */
     pthread_mutex_lock(tls.mutex);

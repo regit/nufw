@@ -57,20 +57,20 @@ int auth_packet_to_decision(char* dgram)
               case AUTH_ANSWER:
                       {
                           packet_id=ntohl(*(unsigned long *)(dgram+8));
-                          /* lock mutex */
-                          pthread_mutex_lock(&packets_list.mutex);
+
                           /* search and destroy packet by packet_id */
+                          pthread_mutex_lock(&packets_list.mutex);
                           sandf=psearch_and_destroy (packet_id,&nfmark);
                           pthread_mutex_unlock(&packets_list.mutex);
 
                           if (sandf){
                               if ( *(dgram+4) == OK ) {
                                   /* TODO : test on return */
-                                  log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
+                                  debug_log_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
                                           "Accepting %u", packet_id);
 #if HAVE_LIBIPQ_MARK || USE_NFQUEUE
                                   if (nufw_set_mark) {
-                                      log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
+                                      debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
                                               "Marking packet with %d",
                                               *(u_int16_t *)(dgram+2));
                                       /* we put the userid mark at the end of the mark, not changing the 16 first big bits */
@@ -94,7 +94,7 @@ int auth_packet_to_decision(char* dgram)
                                   return 0;
 #endif
                               } else {
-                                  log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
+                                  debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
                                           "Dropping %u", packet_id);
                                   IPQ_SET_VERDICT(packet_id, NF_DROP);
                                   return 0;

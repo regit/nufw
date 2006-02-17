@@ -109,7 +109,8 @@ int psearch_and_destroy (uint32_t packet_id,uint32_t * nfmark){
     } else if ( timestamp - current->timestamp  > packet_timeout) {
 	  /* TODO : find a better place, does not satisfy me */
 	  IPQ_SET_VERDICT(current->id,NF_DROP);
-      log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, "Dropped: %lu", current->id);
+      debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, 
+              "Dropped: %lu", current->id);
 	  psuppress (previous,current);
 	  current=packets_list.start;
 	  previous=NULL;
@@ -133,7 +134,7 @@ void clean_old_packets (){
     if ( timestamp - current->timestamp  > packet_timeout)
     {
 	  IPQ_SET_VERDICT(current->id,NF_DROP);
-      log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, 
+      debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, 
               "Dropped: %lu", current->id);
 	  psuppress (previous,current);
 	  current=packets_list.start;

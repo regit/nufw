@@ -108,6 +108,13 @@ int auth_packet_to_decision(char* dgram);
 void log_printf(int priority, char *format, ...);
 void log_area_printf(int area, int priority, char *format, ...);
 
+#ifdef DEBUG_ENABLE
+#  define debug_log_printf(area, priority, format, ...) \
+       log_area_printf(area, priority, ...)
+#else
+#  define debug_log_printf(area, priority, format, ...)
+#endif
+
 unsigned long padd ( packet_idl * packet);
 int psearch_and_destroy (uint32_t packet_id,uint32_t * mark);
 void clean_old_packets ();
