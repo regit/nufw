@@ -106,6 +106,7 @@ int auth_packet_to_decision(char* dgram);
 
 /* common */
 void log_printf(int priority, char *format, ...);
+void log_area_printf(int area, int priority, char *format, ...);
 
 unsigned long padd ( packet_idl * packet);
 int psearch_and_destroy (uint32_t packet_id,uint32_t * mark);
@@ -122,4 +123,5 @@ int send_icmp_unreach(char *dgram);
 #define SECURE_STRNCPY(dst, src, size) \
     do { strncpy(dst, src, (size)-1); (dst)[(size)-1] = '\0'; } while (0)
 
-#define DEBUG_OR_NOT(LOGLEVEL,LOGAREA) (LOGAREA&&(debug_areas))&&((debug_level)>=LOGLEVEL)
+#define DEBUG_OR_NOT(LOGLEVEL,LOGAREA) \
+    (LOGAREA&(debug_areas)) && ((debug_level)>=LOGLEVEL)

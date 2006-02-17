@@ -18,10 +18,13 @@
 
 #include "nufw.h"
 
-/* 
- * return offset to next type of headers 
+/**
+ * Parse an packet and check if it's TCP in IPv4 packet with TCP flag
+ * ACK, FIN or RST set.
+ *
+ * \return If the TCP if the packet matchs, returns 1. Else, returns 0.
  */
-int look_for_flags(unsigned char* dgram,int datalen){
+int look_for_tcp_flags(unsigned char* dgram,int datalen){
 	struct iphdr * iphdrs = (struct iphdr *) dgram;
 	/* check need some datas */    
 	if (datalen < sizeof(struct iphdr) +sizeof(struct tcphdr)){
@@ -40,6 +43,19 @@ int look_for_flags(unsigned char* dgram,int datalen){
 }
 
 #if USE_NFQUEUE
+/**
+ * Callback called by NetFilter when a packet with target QUEUE is matched.
+ *
+ * For TCP packet with flags different than SYN, just send it to NuAuth and
+ * accept it.
+ * 
+ * For other packet: First of all, fill a structure ::packet_idl (identifier,
+ * timestamp, ...). Try to add the new packet to ::packets_list (fails if the
+ * list is full). Ask an authentification to NuAuth using auth_request_send(),
+ * If the packet can't be sended, remove it from the list.
+ *
+ * \return If an error occurs, returns 0, else returns 1.
+ */
 static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 		struct nfq_data *nfa, void *data)
 {
@@ -57,7 +73,7 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 		return 0;
 	}
 
-	if (look_for_flags(payload,payload_len)){
+	if (look_for_tcp_flags(payload,payload_len)){
 		ph = nfq_get_msg_packet_hdr(nfa);
 		if (ph){
 			pcktid = ntohl(ph->packet_id);
@@ -73,20 +89,18 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 	current=calloc(1,sizeof( packet_idl));
 	current->id=0;
 	if (current == NULL){
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_MAIN)){
-            log_printf (DEBUG_LEVEL_MESSAGE ,"Can not allocate packet_id");
-		}
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_MESSAGE,
+                "Can not allocate packet_id");
 		return 0;
 	}
 
+    /* Get unique identifier of packet in queue */
 	ph = nfq_get_msg_packet_hdr(nfa);
 	if (ph){
 		current->id= ntohl(ph->packet_id);
 	} else {
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_MAIN)){
-			log_printf (DEBUG_LEVEL_MESSAGE ,"Can not get id for message");
-		}
-
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_MESSAGE,
+                "Can not get id for message");
 		free(current);
 		return 0;
 	}
@@ -97,19 +111,14 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 	if (ret == 0){
 		current->timestamp=timestamp.tv_sec;
 	}else {
-#ifdef DEBUG_ENABLE
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
-			log_printf (DEBUG_LEVEL_MESSAGE ,"Can not get timestamp for message");
-		}
-#endif
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_MESSAGE,
+                "Can not get timestamp for message");
 		current->timestamp=time(NULL);
 	}
 
-	/* lock packet list mutex */
+	/* Try to add the packet to the list */
 	pthread_mutex_lock(&packets_list.mutex);
-	/* Adding packet to list  */
 	pcktid=padd(current);
-	/* unlock datas */
 	pthread_mutex_unlock(&packets_list.mutex);
 
 	if (pcktid){
@@ -123,9 +132,8 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 			pthread_mutex_unlock(&packets_list.mutex);
 
 			if (!sandf){
-				if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
-					log_printf (DEBUG_LEVEL_WARNING ,"Packet could not be removed: %u", pcktid);
-				}
+                log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING, \
+                        "Packet could not be removed: %u", pcktid);
 			}
 		}
 	}
@@ -143,44 +151,36 @@ void* packetsrv(void *data)
 
 	h = nfq_open();
 	if (!h) {
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
-			log_printf (DEBUG_LEVEL_CRITICAL, "Error during nfq_open()");
-		}
-		exit(1);
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
+                "Error during nfq_open()");
+		exit(EXIT_FAILURE);
 	}
 
 	if (nfq_unbind_pf(h, AF_INET) < 0) {
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
-			log_printf (DEBUG_LEVEL_CRITICAL, "Error during nfq_unbind_pf()");
-		}
-		exit(1);
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
+                "Error during nfq_unbind_pf()");
+		exit(EXIT_FAILURE);
 	}
 
 	if (nfq_bind_pf(h, AF_INET) < 0) {
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
-			log_printf (DEBUG_LEVEL_CRITICAL, "Error during nfq_bind_pf()");
-		}
-		exit(1);
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
+                "Error during nfq_bind_pf()");
+		exit(EXIT_FAILURE);
 	}
         
         
 	hndl = nfq_create_queue(h,  nfqueue_num, (nfq_callback *)&treat_packet, NULL);
 	if (!hndl) {
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
-			log_printf (DEBUG_LEVEL_CRITICAL,
-                    "Error during nfq_create_queue() (queue %d busy ?)", 
-                    nfqueue_num);
-		}
-		exit(1);
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
+                "Error during nfq_create_queue() (queue %d busy ?)",
+                nfqueue_num);
+		exit(EXIT_FAILURE);
 	}
 
 	if (nfq_set_mode(hndl, NFQNL_COPY_PACKET, 0xffff) < 0) {
-
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
-            log_printf (DEBUG_LEVEL_CRITICAL ,"Can't set packet_copy mode");
-		}
-
-		exit(1);
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
+                "Can't set packet_copy mode");
+		exit(EXIT_FAILURE);
 	}
 
 	nh = nfq_nfnlh(h);
@@ -195,9 +195,8 @@ void* packetsrv(void *data)
 	if (hndl)
 		ipq_set_mode(hndl, IPQ_COPY_PACKET,BUFSIZ);  
 	else {
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
-			log_printf (DEBUG_LEVEL_CRITICAL ,"Could not create ipq handle");
-		}
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
+                "Could not create ipq handle");
 	}
 #endif
 	for (;;){
@@ -212,24 +211,23 @@ void* packetsrv(void *data)
 		if (size != -1){
 			if (size < BUFSIZ ){
 				if (ipq_message_type(buffer) == NLMSG_ERROR ){
-					if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_MAIN)){
-						log_printf (DEBUG_LEVEL_MESSAGE ,"Got error message from libipq: %d",ipq_get_msgerr(buffer));
-					}
+                    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_MESSAGE, 
+                            "Got error message from libipq: %d",
+                            ipq_get_msgerr(buffer));
 				} else {
 					if ( ipq_message_type (buffer) == IPQM_PACKET ) {
 						pckt_rx++ ;
 						/* printf("Working on IP packet\n"); */
 						msg_p = ipq_get_packet(buffer);
 						/* need to parse to see if it's an end connection packet */
-						if (look_for_flags(msg_p->payload,msg_p->data_len)){
+						if (look_for_tcp_flags(msg_p->payload,msg_p->data_len)){
 							auth_request_send(AUTH_CONTROL,msg_p->packet_id,(char*)msg_p->payload,msg_p->data_len);
 							IPQ_SET_VERDICT( msg_p->packet_id,NF_ACCEPT);
 						} else {
 							current=calloc(1,sizeof( packet_idl));
 							if (current == NULL){
-								if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_MAIN)){
-									log_printf (DEBUG_LEVEL_MESSAGE ,"Can not allocate packet_id");
-								}
+                                log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_MESSAGE,
+                                        "Can not allocate packet_id");
 								return 0;
 							}
 							current->id=msg_p->packet_id;
@@ -255,25 +253,23 @@ void* packetsrv(void *data)
 									pthread_mutex_unlock(&packets_list.mutex);
 
 									if (!sandf){
-										if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
-											log_printf (DEBUG_LEVEL_WARNING ,"Packet could not be removed: %lu", msg_p->packet_id);
-										}
+                                        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
+                                                "Packet could not be removed: %lu", 
+                                                msg_p->packet_id);
 									}
 								}
 							}
 						}
 					} else {
-						if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
-							log_printf (DEBUG_LEVEL_DEBUG, "Dropping non-IP packet");
-						}
+                        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, 
+                                "Dropping non-IP packet");
 						IPQ_SET_VERDICT(msg_p->packet_id, NF_DROP);
 					}
 				}
 			}
 		} else {
-			if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
-				log_printf (DEBUG_LEVEL_DEBUG ,"BUFSIZ too small (size == %d)", size);
-			}
+            log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
+                    "BUFSIZ too small (size == %d)", size);
 		}
 #endif
 	}
@@ -318,91 +314,74 @@ int auth_request_send(uint8_t type,uint32_t packet_id,char* payload,int data_len
 			memcpy(pointer,payload,data_len);
 			total_data_len=data_len+auth_len;
 		} else {
-#ifdef DEBUG_ENABLE
-			if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
-				log_printf (DEBUG_LEVEL_DEBUG, "Very long packet: truncating!");
-			}
-#endif
+            log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, 
+                    "Very long packet: truncating!");
 			memcpy(pointer,payload,511-auth_len);
 		}
 
 	} else {
-#ifdef DEBUG_ENABLE
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
-			log_printf (DEBUG_LEVEL_WARNING, "Dropping non-IP packet");
-		}
-#endif
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, "Dropping non-IP packet");
 		return 0;
 	}
-
-
-#ifdef DEBUG_ENABLE
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
-            int packet_id_endian = ntohl(packet_id);
-	    log_printf(DEBUG_LEVEL_DEBUG, "Sending request for %u", packet_id_endian);
-	}
-#endif
-        pthread_mutex_lock(tls.mutex);
-        /* cleaning up current session : auth_server has detected a problem */
-        if (tls.auth_server_running == 0){
-            if (tls.session){
-                int socket_tls=(int)gnutls_transport_get_ptr(*tls.session);
-                gnutls_bye(*tls.session,GNUTLS_SHUT_WR);
-		gnutls_deinit(*tls.session);
-                shutdown(socket_tls,SHUT_RDWR);
-		close(socket_tls);
-		free(tls.session);
-                tls.session=NULL;
-            }
-        }
-        pthread_mutex_unlock(tls.mutex);
+    log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, "Sending request for %u", ntohl(packet_id));
+    
+    /* cleaning up current session : auth_server has detected a problem */
+    pthread_mutex_lock(tls.mutex);
+    if ((tls.auth_server_running == 0) && tls.session) {
+        int socket_tls = (int)gnutls_transport_get_ptr(*tls.session);
+        gnutls_bye(*tls.session,GNUTLS_SHUT_WR);
+        gnutls_deinit(*tls.session);
+        shutdown(socket_tls,SHUT_RDWR);
+        close(socket_tls);
+        free(tls.session);
+        tls.session = NULL;
+    }
+    pthread_mutex_unlock(tls.mutex);
+    
 	/* negotiate TLS connection if needed */
 	if (!tls.session){
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
-			log_printf (DEBUG_LEVEL_DEBUG, "Not connected, trying TLS connection");
-		}
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_INFO, 
+                "Not connected, trying TLS connection");
 		tls.session = tls_connect();
 
 		if (tls.session){
-			if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
-				log_printf (DEBUG_LEVEL_DEBUG ,"Connection to nuauth restored");
-			}
+            log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
+                    "Connection to nuauth restored");
 			tls.auth_server_running=1;
-                        /* create thread for auth server */
-                        if (pthread_create(&(tls.auth_server),NULL,authsrv,NULL) == EAGAIN){
-                                exit(1);
-                        }
+            /* create thread for auth server */
+            if (pthread_create(&(tls.auth_server),NULL,authsrv,NULL) == EAGAIN){
+                exit(EXIT_FAILURE);
+            }
 #ifdef HAVE_LIBCONNTRACK
-                        if (handle_conntrack_event){
-                            if (pthread_create(&(tls.conntrack_event_handler),NULL,conntrack_event_handler,NULL) == EAGAIN){
-                                exit(1);
-                            }
-                        }
-#endif
-		} else {
-                        return 0;
+            if (handle_conntrack_event){
+                if (pthread_create(&(tls.conntrack_event_handler),NULL,conntrack_event_handler,NULL) == EAGAIN){
+                    exit(EXIT_FAILURE);
                 }
+            }
+#endif
+        } else {
+            return 0;
+        }
 	}
+    
 	/* send packet */
 	if (!gnutls_record_send(*(tls.session),datas,total_data_len)){
 		int socket_tls;
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
-			log_printf (DEBUG_LEVEL_CRITICAL, "tls send failure when sending request");
-                }
-                pthread_mutex_lock(tls.mutex);
-                pthread_cancel(tls.auth_server);
-                pthread_cancel(tls.conntrack_event_handler);
-                socket_tls=(int)gnutls_transport_get_ptr(*tls.session);
-                gnutls_bye(*tls.session,GNUTLS_SHUT_WR);
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, "tls send failure when sending request");
+        pthread_mutex_lock(tls.mutex);
+        pthread_cancel(tls.auth_server);
+        pthread_cancel(tls.conntrack_event_handler);
+        socket_tls=(int)gnutls_transport_get_ptr(*tls.session);
+        gnutls_bye(*tls.session,GNUTLS_SHUT_WR);
 		gnutls_deinit(*tls.session);
-                shutdown(socket_tls,SHUT_RDWR);
+        shutdown(socket_tls,SHUT_RDWR);
 		close(socket_tls);
 		free(tls.session);
-                tls.session=NULL;
-                /* put auth_server_running to 1 because this is this thread which has just killed auth_server */
-                tls.auth_server_running=1;
-                pthread_mutex_unlock(tls.mutex);
+        tls.session=NULL;
+        /* put auth_server_running to 1 because this is this thread which has just killed auth_server */
+        tls.auth_server_running=1;
+        pthread_mutex_unlock(tls.mutex);
 		return 0;
 	}
-        return 1;
+    return 1;
 }

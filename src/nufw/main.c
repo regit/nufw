@@ -36,6 +36,8 @@
 
 GCRY_THREAD_OPTION_PTHREAD_IMPL;
 
+/*! Name of pid file prefixed by LOCAL_STATE_DIR (variable defined 
+ * during compilation/installation) */
 #define NUFW_PID_FILE  LOCAL_STATE_DIR "/run/nufw.pid"
 
 /**
@@ -43,7 +45,7 @@ GCRY_THREAD_OPTION_PTHREAD_IMPL;
  *   - Destroy netfilter queue/handler
  *   - Close conntrack
  *   - Unlink pid file
- *   - Call exit(0)
+ *   - Call exit(EXIT_SUCCESS)
  */
 void nufw_cleanup( int signal ) {
     /* destroy netlink handle */
@@ -58,8 +60,7 @@ void nufw_cleanup( int signal ) {
 #endif
     /* destroy pid file */
     unlink(NUFW_PID_FILE);
-    /* exit */
-    exit(0);
+    exit(EXIT_SUCCESS);
 }
 
 /**
@@ -79,6 +80,9 @@ void nufw_cleanup( int signal ) {
  *   - Open conntrack
  *   - Create packet server thread
  *   - Run main loop 
+ *
+ * The most interresting things are done in the packet server (thread). The main
+ * loop just clean up old packets and display statistics.
  */
 int main(int argc,char * argv[]){
     pthread_t pckt_server;
@@ -117,6 +121,11 @@ int main(int argc,char * argv[]){
     handle_conntrack_event=CONNTRACK_HANDLE_DEFAULT;
 #endif
    
+    if (getuid())
+    {
+        printf("nufw must be run as root! Sorry\n");
+        exit (EXIT_FAILURE);
+    }
     
     /*parse options */
     while((option = getopt ( argc, argv, options_list)) != -1 ){
@@ -125,28 +134,28 @@ int main(int argc,char * argv[]){
             key_file=strdup(optarg);
             if (key_file == NULL){
                 fprintf(stderr, "Couldn't malloc! Exiting");
-                exit(1);
+                exit(EXIT_FAILURE);
             }
             break;
           case 'c' :
             cert_file=strdup(optarg);
             if (cert_file == NULL){
                 fprintf(stderr, "Couldn't malloc! Exiting");
-                exit(1);
+                exit(EXIT_FAILURE);
             }
             break;
           case 'a' :
             ca_file=strdup(optarg);
             if (ca_file == NULL){
                 fprintf(stderr, "Couldn't malloc! Exiting");
-                exit(1);
+                exit(EXIT_FAILURE);
             }
             break;
           case 'n' :
             nuauth_cert_dn=strdup(optarg);
             if (nuauth_cert_dn == NULL){
                 fprintf(stderr, "Couldn't malloc! Exiting");
-                exit(1);
+                exit(EXIT_FAILURE);
             }
             break;
           case 'V' :
@@ -217,11 +226,6 @@ int main(int argc,char * argv[]){
             return 1;
         }
     }
-    if (getuid())
-    {
-        printf("nufw must be run as root! Sorry\n");
-        return 1;
-    }
 
     /* Daemon code */
     if (daemonize == 1) {
@@ -239,7 +243,7 @@ int main(int argc,char * argv[]){
                 kill (pidv, 0) == 0 ) {
                 fclose (pf);
                 printf ("pid file exists. Is nufw already running? Aborting!\n");
-                exit(-1);
+                exit(EXIT_FAILURE);
             }
 
             if (pf != NULL)
@@ -257,9 +261,9 @@ int main(int argc,char * argv[]){
                     fclose (pf);
                 } else {
                     printf ("Dying, can not create PID file : " NUFW_PID_FILE "\n"); 
-                    exit(-1);
+                    exit(EXIT_FAILURE);
                 }
-                exit(0);
+                exit(EXIT_SUCCESS);
             }
         }
 
@@ -277,7 +281,7 @@ int main(int argc,char * argv[]){
         action.sa_flags = 0;
         if ( sigaction(SIGTERM, & action , NULL ) != 0) {
             printf("Error %d \n",errno);
-            exit(1);
+            exit(EXIT_FAILURE);
         }
 
         /* set log engine */
@@ -329,7 +333,7 @@ int main(int argc,char * argv[]){
     if (sigaction(SIGUSR1,&act,NULL) == -1)
     {
         printf("Could not set signal USR1");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     memset(&act,0,sizeof(act));
@@ -338,7 +342,7 @@ int main(int argc,char * argv[]){
     if (sigaction(SIGUSR2,&act,NULL) == -1)
     {
         printf("Could not set signal USR2");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     memset(&act,0,sizeof(act));
@@ -347,7 +351,7 @@ int main(int argc,char * argv[]){
     if (sigaction(SIGPOLL,&act,NULL) == -1)
     {
         printf("Could not set signal POLL");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
 #ifdef HAVE_LIBCONNTRACK
@@ -356,7 +360,7 @@ int main(int argc,char * argv[]){
 
     /* create packet server thread */
     if (pthread_create(&pckt_server,NULL,packetsrv,NULL) == EAGAIN){
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     /* control stuff */

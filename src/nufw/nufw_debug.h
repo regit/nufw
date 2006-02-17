@@ -16,8 +16,8 @@
  */
 int log_engine;
 
-int debug_level;
-int debug_areas;
+int debug_level; /*!< Debug level, default valut: 0 */
+int debug_areas; /*!< Debug areas, default value: #DEFAULT_DEBUG_AREAS (all areas) */
 
 void init_log_engine();
 int nufw_log(char *message,int debug_level);

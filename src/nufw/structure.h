@@ -39,10 +39,9 @@
 #define LISTEN_ADDR   "127.0.0.1"
 #define AUTHSRV_PORT 4128
 #define AUTHREQ_PORT 4129
-#define TRACK_SIZE 1000
+#define TRACK_SIZE 1000     /*!< Default value of ::track_size */
 #define ID_SERVER 12345
 #define PACKET_TIMEOUT 15   /*!< Default value of ::packet_timeout */
-#define PRIO 1
 #define HOSTNAME_SIZE 256
 #define FILENAME_SIZE 256
 #define CERT_FILE
@@ -67,16 +66,27 @@ int nufw_set_mark;
 
 
 /**
- * Keep id of received packets
+ * Informations about one packet: unique identifier in netfilter queue,
+ * timestamp (initialized by NuFW) and mark (if NuFW compiled with
+ * mark support).
  */
 /* TODO use a kind of HASH */
 typedef struct Packet_Ids {
+  /*! Unique identifier in netfilter queue, comes 
+   * from nfq_get_msg_packet_hdr() */
   unsigned long id;
-  long timestamp;
+
+  /*! Timestamp in Epoch format, value comes from netfilter or time(NULL) */
+  long timestamp;      
+
 #if (HAVE_LIBIPQ_MARK || USE_NFQUEUE)
+  /*! Packet mark, comes from nfq_get_nfmark() */
   unsigned long nfmark;
 #endif
-  struct Packet_Ids * next;
+
+  /*! Pointer to next packet entry in ::packets_list, 
+   * set by padd() and psuppress() */
+  struct Packet_Ids *next;
 } packet_idl;
 
 /***** Pack list ****/

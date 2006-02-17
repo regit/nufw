@@ -61,10 +61,13 @@ void init_log_engine()
  * Display a message to log, the syntax for format is the same as printf().
  * The priority is used for syslog.
  */
-void log_printf(int priority, char *format, ...)
+void do_log_area_printf(int area, int priority, char *format, va_list args)
 {
-  va_list args;  
-  va_start(args, format);
+  /* Don't display message if area is not enabled 
+   * or priority is smaller then debug level */
+  if (! (area & debug_areas) || (priority < debug_level))
+    return;
+  
   if (log_engine == LOG_TO_SYSLOG) {
     assert (MIN_DEBUG_LEVEL <= priority && priority <= MAX_DEBUG_LEVEL);
     priority = syslog_priority_map[priority-MIN_DEBUG_LEVEL];
@@ -74,6 +77,29 @@ void log_printf(int priority, char *format, ...)
     vprintf(format, args);
     printf("\n");
   }
+}
+
+/**
+ * Display a message to log, the syntax for format is the same as printf().
+ * The priority is used for syslog.
+ */
+void log_area_printf(int area, int priority, char *format, ...)
+{
+  va_list args;  
+  va_start(args, format);
+  do_log_area_printf(area, priority, format, args);
+  va_end(args);
+}
+
+/**
+ * Display a message to log, the syntax for format is the same as printf().
+ * The priority is used for syslog.
+ */
+void log_printf(int priority, char *format, ...)
+{
+  va_list args;  
+  va_start(args, format);
+  do_log_area_printf(DEBUG_AREA_ALL, priority, format, args);
   va_end(args);
 }
 
