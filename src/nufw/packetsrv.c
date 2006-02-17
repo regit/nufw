@@ -295,11 +295,9 @@ int auth_request_send(uint8_t type,uint32_t packet_id,char* payload,int data_len
 
 	timestamp = time(NULL);
 
-#ifdef WORDS_BIGENDIAN
-	packet_id=swap32(packet_id);
-	dataslen=swap16(dataslen);
-	timestamp=swap32(timestamp);
-#endif
+	packet_id=htonl(packet_id);
+	dataslen=htons(dataslen);
+	timestamp=htonl(timestamp);
 
 	if ( ((struct iphdr *)payload)->version == 4) {
 		memset(datas,0,sizeof datas);
@@ -340,11 +338,7 @@ int auth_request_send(uint8_t type,uint32_t packet_id,char* payload,int data_len
 
 #ifdef DEBUG_ENABLE
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
-#ifdef WORDS_BIGENDIAN
-        int packet_id_endian = swap32(packet_id);
-#else
-        int packet_id_endian = packet_id;
-#endif
+            int packet_id_endian = ntohl(packet_id);
 	    log_printf(DEBUG_LEVEL_DEBUG, "Sending request for %u", packet_id_endian);
 	}
 #endif

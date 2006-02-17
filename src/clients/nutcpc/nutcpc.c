@@ -60,9 +60,8 @@ void exit_nutcpc(){
 			printf("No nutcpc seems to be running (no lock file found)\n");
 		}
 
-		/*
-		 * */
-	}	exit(0);
+	}
+        exit(0);
 }
 
 void exit_clean(){
@@ -71,6 +70,7 @@ void exit_clean(){
 	free(runpid);
 	/* Restore terminal (can be superflu). */
 	(void) tcsetattr (fileno (stdin), TCSAFLUSH, &orig);
+        nu_client_global_deinit();
 	exit(0);
 }
 
@@ -370,6 +370,7 @@ int main (int argc, char *argv[])
 	if (session){
 		nu_client_free(session);
 	}
+        nu_client_global_deinit();
 
 	return EXIT_SUCCESS;
 }

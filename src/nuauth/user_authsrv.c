@@ -112,11 +112,9 @@ static GSList * userpckt_decode(struct buffer_read * datas)
 
   /* decode dgram */
   switch (header->proto) {
-    case 0x2:
+    case PROTO_VERSION:
       {
-#ifdef WORDS_BIGENDIAN	
-          header->length=swap16(header->length);
-#endif
+          header->length=ntohs(header->length);
           if(header->length>BUFSIZE){
               if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
                   g_message("Improper length signaled in packet header");
@@ -148,9 +146,7 @@ static GSList * userpckt_decode(struct buffer_read * datas)
 
                       req_start+=4;
 
-#ifdef WORDS_BIGENDIAN	
-                      authreq->packet_length=swap16(authreq->packet_length);
-#endif
+                      authreq->packet_length=ntohs(authreq->packet_length);
                       if((start+authreq->packet_length>
                             dgram+header->length) || (authreq->packet_length == 0)){
                           if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
@@ -169,9 +165,7 @@ static GSList * userpckt_decode(struct buffer_read * datas)
                       while(req_start-start<authreq->packet_length){
                           struct nuv2_authfield* field=(struct nuv2_authfield* )req_start;
 
-#ifdef WORDS_BIGENDIAN	
-                          field->length=swap16(field->length);
-#endif
+                          field->length=ntohs(field->length);
                           if( (req_start+field->length >
                                 start+authreq->packet_length) || (field->length == 0)){
                               if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
@@ -188,13 +182,8 @@ static GSList * userpckt_decode(struct buffer_read * datas)
                                   struct nuv2_authfield_ipv4 * ipfield=(struct nuv2_authfield_ipv4 * )req_start; 
 
 
-#ifdef WORDS_BIGENDIAN	
-                                  connexion->tracking_hdrs.saddr=swap32(ipfield->src);
-                                  connexion->tracking_hdrs.daddr=swap32(ipfield->dst);
-#else
-                                  connexion->tracking_hdrs.saddr=ipfield->src;
-                                  connexion->tracking_hdrs.daddr=ipfield->dst;
-#endif
+                                  connexion->tracking_hdrs.saddr=ntohl(ipfield->src);
+                                  connexion->tracking_hdrs.daddr=ntohl(ipfield->dst);
                                   connexion->tracking_hdrs.protocol=ipfield->proto;
 
 #ifdef DEBUG_ENABLE
@@ -204,33 +193,22 @@ static GSList * userpckt_decode(struct buffer_read * datas)
                                   switch (connexion->tracking_hdrs.protocol) {
                                     case IPPROTO_TCP:
 
-#ifdef WORDS_BIGENDIAN	
-                                      connexion->tracking_hdrs.source=swap16(ipfield->sport);
-                                      connexion->tracking_hdrs.dest=swap16(ipfield->dport);
-#else
-                                      connexion->tracking_hdrs.source=ipfield->sport;
-                                      connexion->tracking_hdrs.dest=ipfield->dport;
-#endif
+                                      connexion->tracking_hdrs.source=ntohs(ipfield->sport);
+                                      connexion->tracking_hdrs.dest=ntohs(ipfield->dport);
                                       connexion->tracking_hdrs.type=0;
                                       connexion->tracking_hdrs.code=0;
                                       break;
                                     case IPPROTO_UDP:
-#ifdef WORDS_BIGENDIAN	
-                                      connexion->tracking_hdrs.source=swap16(ipfield->sport);
-                                      connexion->tracking_hdrs.dest=swap16(ipfield->dport);
-#else
-                                      connexion->tracking_hdrs.source=ipfield->sport;
-                                      connexion->tracking_hdrs.dest=ipfield->dport;
-#endif
-
+                                      connexion->tracking_hdrs.source=ntohs(ipfield->sport);
+                                      connexion->tracking_hdrs.dest=ntohs(ipfield->dport);
                                       connexion->tracking_hdrs.type=0;
                                       connexion->tracking_hdrs.code=0;
                                       break;
                                     case IPPROTO_ICMP:
                                       connexion->tracking_hdrs.source=0;
                                       connexion->tracking_hdrs.dest=0;
-                                      connexion->tracking_hdrs.type=ipfield->sport;
-                                      connexion->tracking_hdrs.code=ipfield->dport;
+                                      connexion->tracking_hdrs.type=ntohs(ipfield->sport);
+                                      connexion->tracking_hdrs.code=ntohs(ipfield->dport);
                                       break;
                                   }
                               }
@@ -247,16 +225,10 @@ static GSList * userpckt_decode(struct buffer_read * datas)
                                       {
                                           unsigned int reallen=0;
                                           gchar* dec_appname=NULL;
-#ifdef WORDS_BIGENDIAN	
-                                          unsigned int len;
-                                          //appfield->length=swap16(appfield->length);
-                                          len=appfield->length-4;
+                                          unsigned int len=ntohs(appfield->length)-4;
 
-#else
-                                          unsigned int len=appfield->length-4;
-#endif
                                           /* this has to be smaller than field size */
-                                          if(appfield->length >
+                                          if(ntohs(appfield->length) >
                                               authreq->packet_length+start-req_start){
                                               if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
                                                   g_message("Improper application field length signaled in authreq header");
@@ -316,14 +288,7 @@ static GSList * userpckt_decode(struct buffer_read * datas)
                                           {
                                               unsigned int reallen=0;
                                               gchar* dec_fieldname=NULL;
-
-#ifdef WORDS_BIGENDIAN	
-                                              unsigned int len;
-                                              usernamefield->length=swap16(usernamefield->length);
-                                              len=usernamefield->length-4;
-#else
-                                              unsigned int len=usernamefield->length-4;
-#endif
+                                              unsigned int len=ntohs(usernamefield->length)-4;
                                               if (8*len > 2048){
                                                   /* it is reaaally long, we ignore packet (too lasy to kill client) */
                                                   if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
@@ -389,7 +354,7 @@ static GSList * userpckt_decode(struct buffer_read * datas)
                               free_buffer_read(datas);
                               return NULL;
                           }
-                          req_start+=field->length;
+                          req_start+=ntohs(field->length);
                       }
                       /* here all packet related information are filled-in */
                       if (connexion->username == NULL){	

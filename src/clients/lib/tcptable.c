@@ -114,6 +114,9 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
           continue;
 #endif
       c.proto=IPPROTO_TCP;
+      
+      c.lcl=ntohl(c.lcl);
+      c.rmt=ntohl(c.rmt);
       if (tcptable_add (ct, &c) == 0)
           return 0;
   }
@@ -140,6 +143,9 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
       // Check if it's the good user
       if (c.uid != session->localuserid)
           continue;
+
+      c.lcl=ntohl(c.lcl);
+      c.rmt=ntohl(c.rmt);
 #if DEBUG
       // Check if there is a matching rule in the filters list
       printf("Packet dst = %ld (%lx)\n", c.rmt, c.rmt);

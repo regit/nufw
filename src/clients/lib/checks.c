@@ -57,14 +57,10 @@ void* recv_message(void *data)
 	char* pointer=NULL;
 
 	/* fill struct */
-	header.proto=0x2;
+	header.proto=PROTO_VERSION;
 	header.msg_type=USER_REQUEST;
 	header.option=0;
-#ifdef WORDS_BIGENDIAN
-	header.length=swap16(sizeof(struct nuv2_header)+sizeof(struct nuv2_authreq)+sizeof(struct nuv2_authfield_hello));
-#else
-	header.length=sizeof(struct nuv2_header)+sizeof(struct nuv2_authreq)+sizeof(struct nuv2_authfield_hello);
-#endif
+	header.length=htons(sizeof(struct nuv2_header)+sizeof(struct nuv2_authreq)+sizeof(struct nuv2_authfield_hello));
 
 	memcpy(message,&header,sizeof(struct nuv2_header));
 	authreq.packet_id=session->packet_id++;
@@ -75,11 +71,7 @@ void* recv_message(void *data)
 	pointer+=sizeof(struct nuv2_authreq);
 	hellofield.type=HELLO_FIELD;
 	hellofield.option=0;
-#ifdef WORDS_BIGENDIAN
-	hellofield.length=swap16(sizeof(struct nuv2_authfield_hello));
-#else
-	hellofield.length=sizeof(struct nuv2_authfield_hello);
-#endif
+	hellofield.length=htons(sizeof(struct nuv2_authfield_hello));
 
 	for (;;){
 		if (session->connected){

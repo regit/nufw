@@ -171,6 +171,7 @@ void 	nu_client_free(NuAuth *session);
 
 
 void nu_client_global_init();
+void nu_client_global_deinit();
 
 NuAuth* nu_client_init2(
 		const char *hostname, unsigned int port,

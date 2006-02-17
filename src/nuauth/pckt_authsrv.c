@@ -37,13 +37,8 @@ int get_ip_headers(connection *connexion,char * dgram)
 	struct iphdr * iphdrs = (struct iphdr *) dgram;
 	/* check IP version */
 	if (iphdrs->version == 4){
-#ifdef WORDS_BIGENDIAN	
-		connexion->tracking_hdrs.saddr=(iphdrs->saddr);
-		connexion->tracking_hdrs.daddr=(iphdrs->daddr);
-#else
-		connexion->tracking_hdrs.saddr=htonl(iphdrs->saddr);
-		connexion->tracking_hdrs.daddr=htonl(iphdrs->daddr);
-#endif
+		connexion->tracking_hdrs.saddr=ntohl(iphdrs->saddr);
+		connexion->tracking_hdrs.daddr=ntohl(iphdrs->daddr);
 		/* get protocol */
 		connexion->tracking_hdrs.protocol=iphdrs->protocol;
 		return 4*iphdrs->ihl;
@@ -67,13 +62,8 @@ int get_ip_headers(connection *connexion,char * dgram)
 int get_udp_headers(connection *connexion, char * dgram)
 {
 	struct udphdr * udphdrs=(struct udphdr *)dgram;
-#ifdef WORDS_BIGENDIAN	
-	connexion->tracking_hdrs.source=(udphdrs->source);
-	connexion->tracking_hdrs.dest=(udphdrs->dest);
-#else
-	connexion->tracking_hdrs.source=htons(udphdrs->source);
-	connexion->tracking_hdrs.dest=htons(udphdrs->dest);
-#endif
+	connexion->tracking_hdrs.source=ntohs(udphdrs->source);
+	connexion->tracking_hdrs.dest=ntohs(udphdrs->dest);
 	connexion->tracking_hdrs.type=0;
 	connexion->tracking_hdrs.code=0;
 	return 0;
@@ -91,13 +81,8 @@ int get_udp_headers(connection *connexion, char * dgram)
 int get_tcp_headers(connection *connexion, char * dgram)
 {
 	struct tcphdr * tcphdrs=(struct tcphdr *) dgram;
-#ifdef WORDS_BIGENDIAN	
-	connexion->tracking_hdrs.source=(tcphdrs->source);
-	connexion->tracking_hdrs.dest=(tcphdrs->dest);
-#else
-	connexion->tracking_hdrs.source=htons(tcphdrs->source);
-	connexion->tracking_hdrs.dest=htons(tcphdrs->dest);
-#endif
+	connexion->tracking_hdrs.source=ntohs(tcphdrs->source);
+	connexion->tracking_hdrs.dest=ntohs(tcphdrs->dest);
 
 	connexion->tracking_hdrs.type=0;
 	connexion->tracking_hdrs.code=0;
@@ -149,14 +134,10 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz)
 	int8_t *pointer;
 	uint8_t msg_type;
 	uint16_t data_len;
-
-#ifdef WORDS_BIGENDIAN	
-	uint32_t tmpdata;
-#endif
 	connection*  connexion = NULL;
 
 	switch (*dgram) {
-		case 0x1:
+		case PROTO_VERSION:
 			msg_type=*(dgram+1);
                         switch (msg_type){
                           case AUTH_REQUEST:
@@ -177,10 +158,7 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz)
 				pointer=(int8_t*)dgram + 2;
 
 
-				data_len=*(uint16_t *)pointer;
-#ifdef WORDS_BIGENDIAN	
-				data_len=swap16(data_len);
-#endif
+				data_len=ntohs(*(uint16_t *)pointer);
 				if (data_len != dgramsiz){
 					if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET)){
 						g_warning("packet seems to contain other datas, left %d byte(s) (announced : %d, get : %d)",
@@ -193,12 +171,7 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz)
 				connexion->acl_groups=NULL;
 				connexion->user_groups=NULL;
 				connexion->packet_id=NULL;
-#ifdef WORDS_BIGENDIAN	
-				tmpdata=swap32(*(uint32_t * )pointer);
-				connexion->packet_id=g_slist_append(connexion->packet_id, GUINT_TO_POINTER(tmpdata));
-#else
-				connexion->packet_id=g_slist_append(connexion->packet_id, GUINT_TO_POINTER(*(uint32_t * )pointer));
-#endif
+				connexion->packet_id=g_slist_append(connexion->packet_id, ntohl(GUINT_TO_POINTER(*(uint32_t * )pointer)));
 #ifdef DEBUG_ENABLE
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_PACKET)) {
 					g_message("Working on  %u\n",(uint32_t)GPOINTER_TO_UINT(connexion->packet_id->data));
@@ -206,11 +179,7 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz)
 #endif
 				pointer+=sizeof (uint32_t);
 
-#ifdef WORDS_BIGENDIAN	
-				connexion->timestamp=swap32(*(uint32_t * )pointer);
-#else
-				connexion->timestamp=*( int32_t * )(pointer);
-#endif
+				connexion->timestamp=ntohl(*(uint32_t * )pointer);
 				pointer+=sizeof ( int32_t);
 				/* get ip headers till tracking is filled */
 				offset = get_ip_headers(connexion, (char*)pointer);

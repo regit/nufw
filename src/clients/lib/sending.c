@@ -42,15 +42,10 @@ int send_hello_pckt(NuAuth * session){
     struct nuv2_header header;
 
     /* fill struct */
-    header.proto=0x2;
+    header.proto=PROTO_VERSION;
     header.msg_type=USER_HELLO;
     header.option=0;
-#ifdef WORDS_BIGENDIAN
-    header.length=swap16(sizeof(struct nuv2_header));
-    header.length=sizeof(struct nuv2_header);
-#else
-    header.length=sizeof(struct nuv2_header);
-#endif
+    header.length=htons(sizeof(struct nuv2_header));
 
     /*  send it */
     if(session->tls){
@@ -78,10 +73,10 @@ int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
   memset(datas,0,sizeof datas);
   pointer=datas+sizeof(struct nuv2_header);
   switch (session->protocol){
-    case 2:
+    case PROTO_VERSION:
       {
           struct nuv2_header header;
-          header.proto=0x2;
+          header.proto=PROTO_VERSION;
           header.msg_type=USER_REQUEST;
           header.option=0;
           header.length=sizeof(struct nuv2_header);
@@ -107,34 +102,15 @@ int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
               authreq.packet_length=sizeof(struct nuv2_authreq)+sizeof(struct nuv2_authfield_ipv4);
               authfield.type=IPV4_FIELD;
               authfield.option=0;
-#ifdef WORDS_BIGENDIAN
-              authfield.length=swap16(sizeof(struct nuv2_authfield_ipv4));
-#else
-              authfield.length=sizeof(struct nuv2_authfield_ipv4);
-#endif
+              authfield.length=htons(sizeof(struct nuv2_authfield_ipv4));
 
-#ifdef WORDS_BIGENDIAN
-              authfield.src=swap32(carray[item]->lcl);
-              authfield.dst=swap32(carray[item]->rmt);
-#else
               authfield.src=htonl(carray[item]->lcl);
               authfield.dst=htonl(carray[item]->rmt);
-#endif
               authfield.proto=carray[item]->proto;
               authfield.flags=0;
               authfield.FUSE=0;
-#ifdef WORDS_BIGENDIAN
-              authfield.sport=swap16(carray[item]->lclp);
-              authfield.dport=swap16(carray[item]->rmtp);
-#else
-#ifdef FREEBSD
-              authfield.sport=ntohs(carray[item]->lclp);
-              authfield.dport=ntohs(carray[item]->rmtp);
-#else
-              authfield.sport=carray[item]->lclp;
-              authfield.dport=carray[item]->rmtp;
-#endif
-#endif
+              authfield.sport=htons(carray[item]->lclp);
+              authfield.dport=htons(carray[item]->rmtp);
               /* application field  */
               appfield.type=APP_FIELD;
 #if 0
@@ -153,9 +129,7 @@ int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
                   appfield.length=4+len;
                   appfield.datas=enc_appname;
                   authreq.packet_length+=appfield.length;
-#ifdef WORDS_BIGENDIAN
-                  authreq.packet_length=swap16(authreq.packet_length);
-#endif
+                  authreq.packet_length=htons(authreq.packet_length);
 #if 0
               } else {
                   appfield.option=APP_TYPE_SHA1;
@@ -175,9 +149,7 @@ int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
               /* glue piece together on data if packet is not too long */
               header.length+=appfield.length;
               if (header.length < PACKET_SIZE){
-#ifdef WORDS_BIGENDIAN
-                  appfield.length=swap16(appfield.length);
-#endif
+                  appfield.length=htons(appfield.length);
                   memcpy(pointer,&authreq,sizeof(struct nuv2_authreq));
                   pointer+=sizeof(struct nuv2_authreq);
                   memcpy(pointer,&authfield,sizeof(struct nuv2_authfield_ipv4));
@@ -198,9 +170,7 @@ int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
                   return 1;
               }
           }
-#ifdef WORDS_BIGENDIAN
-          header.length=swap16(header.length);
-#endif
+          header.length=htons(header.length);
           memcpy(datas,&header,sizeof(struct nuv2_header));
 
       }

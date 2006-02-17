@@ -36,7 +36,6 @@
   */
 
 
-
 #include "nuclient.h"
 #include <sasl/saslutil.h>
 #include <proto.h>
@@ -143,13 +142,7 @@ static int nu_get_userdatas(void *context __attribute__((unused)),
 #endif
 			}
 
-			if (session->protocol == 2)
-				*result=session->username;
-			else {
-				char number[12];
-				snprintf(number,12,"%lu",session->userid);
-				*result=strdup(number);
-			}
+			*result=session->username;
 			break;
 		case SASL_CB_AUTHNAME:
 			if ((session->username == NULL) && session->username_callback) {
@@ -165,14 +158,7 @@ static int nu_get_userdatas(void *context __attribute__((unused)),
 #endif
 
 			}
-			if (session->protocol == 2)
-				*result=session->username;
-			else {
-				char number[12];
-				snprintf(number,12,"%lu",session->userid);
-				*result=strdup(number);
-			}
-
+			*result=session->username;
 			break;
 		default:
 			return SASL_BADPARAM;
@@ -594,6 +580,18 @@ void nu_client_global_init()
 }
 
 /**
+ * global de init 
+ *
+ * to be called once when leaving
+ */
+ 
+void nu_client_global_deinit()
+{
+        sasl_done();
+        gnutls_global_deinit();
+}
+
+/**
  * Initialisation of nufw authentication session
  *
  */
@@ -624,7 +622,7 @@ NuAuth* nu_client_init2(
 	/* initiate session */
 	session->auth_by_default = 1;
 	session->tls=NULL;
-	session->protocol = 2;
+	session->protocol = PROTO_VERSION;
 	/* initiate packet number */
 	session->packet_id=0;
 
@@ -824,9 +822,7 @@ NuAuth* nu_client_init2(
 		osfield.length=4+actuallen;
 		buf=alloca(osfield.length);
 		osfield_length=osfield.length;
-#ifdef WORDS_BIGENDIAN
-		osfield.length=swap16(osfield.length);
-#endif
+                osfield.length=htons(osfield.length);
 		pointer = buf ;
 		memcpy(buf,&osfield,sizeof osfield);
 		pointer+=sizeof osfield;

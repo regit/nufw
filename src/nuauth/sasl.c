@@ -549,21 +549,15 @@ int sasl_user_check(user_session* c_session)
 			gchar** os_strings;
 			osfield=(struct nuv2_authfield*)buf;
 			if (osfield->type == OS_FIELD) { //if1
-#ifdef WORDS_BIGENDIAN	
-				int dec_buf_size;
-				osfield->length=swap16(osfield->length);
-				dec_buf_size = osfield->length *4 - 32;
-#else
-				int dec_buf_size = osfield->length *4 - 32;
-#endif
+				int dec_buf_size = ntohs(osfield->length) *4 - 32;
 				if ( dec_buf_size > 1024 ) { //if1a
 					/* it's a joke it's far too long */
 					if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
-						g_warning("error osfield is too long, announced %d",osfield->length);	
+						g_warning("error osfield is too long, announced %d",ntohs(osfield->length));	
 					}
 #ifdef DEBUG_ENABLE
 					if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
-						g_message("%s:%d osfield received %d,%d,%d ",__FILE__,__LINE__,osfield->type,osfield->option,osfield->length);
+						g_message("%s:%d osfield received %d,%d,%d ",__FILE__,__LINE__,osfield->type,osfield->option,ntohs(osfield->length));
 
 					}
 #endif
@@ -571,7 +565,7 @@ int sasl_user_check(user_session* c_session)
 					return SASL_BADAUTH;
 				}
 				dec_buf = g_new0( gchar ,dec_buf_size);
-				decode = sasl_decode64(buf+4,osfield->length -4,dec_buf, dec_buf_size,&len);
+				decode = sasl_decode64(buf+4,ntohs(osfield->length) -4,dec_buf, dec_buf_size,&len);
 				switch (decode){ //if1b
 					case SASL_BUFOVER:
 						{
@@ -582,7 +576,7 @@ int sasl_user_check(user_session* c_session)
 							}
 							dec_buf=g_try_realloc(dec_buf,len);
 							if (dec_buf){//if1b2
-								if (sasl_decode64(buf+4,osfield->length -4,
+								if (sasl_decode64(buf+4,ntohs(osfield->length) -4,
 											dec_buf,len,&len) != SASL_OK){
 									g_free(dec_buf);
 									return SASL_BADAUTH;
@@ -666,7 +660,7 @@ int sasl_user_check(user_session* c_session)
 			} else {
 #ifdef DEBUG_ENABLE
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
-					g_message("osfield received %d,%d,%d ",osfield->type,osfield->option,osfield->length);
+					g_message("osfield received %d,%d,%d ",osfield->type,osfield->option,ntohs(osfield->length));
 
 				}
 #endif
