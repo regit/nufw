@@ -1091,8 +1091,7 @@ treat_nufw_request (nufw_session * c_session)
 					g_async_queue_push (nuauthdatas->localid_auth_queue,message);
 				}else {
 					current_conn->state = STATE_AUTHREQ;
-					/* put gateway addr in struct */
-					g_thread_pool_push (nuauthdatas->acl_checkers,
+					g_async_queue_push (nuauthdatas->connexions_queue,
 							current_conn,
 							NULL);
 				}

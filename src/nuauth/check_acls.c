@@ -47,6 +47,10 @@ int external_acl_groups (connection * element){
 /**
  * (acl_ckeckers function).
  * Treat a connection from insertion to decision 
+ *
+ *  We use this function when :
+ *  - decision is ready to be taken for the connection
+ *  - 
  * 
  * - Argument 1 : a connection 
  * - Argument 2 : unused
@@ -56,73 +60,52 @@ int external_acl_groups (connection * element){
 void acl_check_and_decide (gpointer userdata, gpointer data)
 {
 	connection * conn_elt = userdata;
-	int initialstate = conn_elt->state;
 #ifdef DEBUG_ENABLE
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET))
 		g_message("entering acl_check\n");
 #endif
         block_on_conf_reload();
 	if (conn_elt == NULL){
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_PACKET)){
-			g_message("This is no good : elt is NULL\n");
+		if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET)){
+			g_message("This is no good : elt is NULL at %s:%d\n",__FILE__,__LINE__);
 		}
-	} else {
-		if (nuauthconf->aclcheck_state_ready || (nuauthconf->hello_authentication && (! (initialstate == STATE_HELLOMODE)) )){
-			/* if STATE_COMPLETING packet comes from search and fill 
-			 * research need to be done
-			 * */
-			if (conn_elt->state == STATE_COMPLETING){
-				if (nuauthconf->acl_cache){
-					get_acls_from_cache(conn_elt);
-				} else {
-					external_acl_groups(conn_elt);
-				}
-			} else {
-				conn_elt->acl_groups=NULL;
-			}
-		} else {
-			if (nuauthconf->acl_cache){
-					get_acls_from_cache(conn_elt);
-			} else {
-					external_acl_groups(conn_elt);
-			}
-#ifdef DEBUG_ENABLE
-			if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
-				g_message("getting acl for:");
-				print_connection(conn_elt,NULL);
-			}
-#endif
-			if (conn_elt->acl_groups==NULL){
-#if IAMAWARRIOR
-				/* no acl found so packet has to be dropped */
-				struct auth_answer aanswer ={ NOK , conn_elt->user_id ,conn_elt->socket,conn_elt->tls } ;
-#endif
-
-#ifdef DEBUG_ENABLE
-				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)){
-					g_message("No ACL, packet dropped %p with state %d\n",conn_elt,conn_elt->state);
-				}
-#endif
-#if IAMAWARRIOR
-				send_auth_response(GUINT_TO_POINTER(conn_elt->packet_id->data),&aanswer);
-				/* we can get rid of packet_id because we have sent an answer */
-				conn_elt->packet_id=g_slist_remove(conn_elt->packet_id,conn_elt->packet_id->data);
-#endif
-			}
-
-		}
-		/* transmit data we get to the next step */
-		if (nuauthconf->hello_authentication && (initialstate == STATE_HELLOMODE)){
-			struct internal_message *message = g_new0(struct internal_message,1);
-			message->type=INSERT_MESSAGE;
-			message->datas=conn_elt;
-			/* well this is an localid auth packet */
-			g_async_queue_push (nuauthdatas->localid_auth_queue,message);
-		} else {
-			/* give packet to search and fill */
-			g_async_queue_push (nuauthdatas->connexions_queue,conn_elt);
-		}
-	}
+        } else {
+            /* if STATE_COMPLETING packet comes from search and fill 
+             * research need to be done, same if state is STATE_HELLOMODE
+             * but here this is a packet from localid_auth_queue
+             * */
+            if ((conn_elt->state == STATE_COMPLETING) ||
+                    (nuauthconf->hello_authentication && (conn_elt->state == STATE_HELLOMODE)) 
+               ){
+                if (nuauthconf->acl_cache){
+                    get_acls_from_cache(conn_elt);
+                } else {
+                    external_acl_groups(conn_elt);
+                }
+                switch(conn_elt->state){
+                    /* packet is coming from hello authentication, sending it back */
+                  case STATE_HELLOMODE:
+                      {
+                          struct internal_message *message = g_new0(struct internal_message,1);
+                          message->type=INSERT_MESSAGE;
+                          message->datas=conn_elt;
+                          /* well this is an localid auth packet */
+                          g_async_queue_push (nuauthdatas->localid_auth_queue,message);
+                      }
+                      break;
+                      /* give packet to search and fill */
+                  case STATE_COMPLETING:
+                      {
+                          g_async_queue_push (nuauthdatas->connexions_queue,conn_elt);
+                      }
+                      break;
+                  default:
+                      if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET)){
+                          g_message("This is no good : conn state is unvalid at %s:%d\n",__FILE__,__LINE__);
+                      }
+                }
+            }
+        }
 #ifdef DEBUG_ENABLE
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET))
 		g_message("leaving acl_check\n");

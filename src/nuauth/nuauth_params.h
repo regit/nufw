@@ -22,7 +22,6 @@ struct nuauth_params {
     /* Sockets related */
     int authreq_port;
     int userpckt_port;
-    int aclcheck_state_ready;
     /* global configuration variables */
     int packet_timeout;
     int session_duration;

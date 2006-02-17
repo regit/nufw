@@ -109,7 +109,6 @@ struct nuauth_params*   init_nuauthconf()
       { "nuauth_prio_to_nok" , G_TOKEN_INT , 1, NULL },
       { "nuauth_connect_policy" , G_TOKEN_INT , POLICY_MULTIPLE_LOGIN, NULL },
       { "nuauth_datas_persistance" , G_TOKEN_INT , 9, NULL },
-      { "nuauth_aclcheck_state_ready" , G_TOKEN_INT , 1,NULL },
       { "nuauth_push_to_client" , G_TOKEN_INT , 1,NULL },
       { "nuauth_do_ip_authentication" , G_TOKEN_INT , 0,NULL },
       { "nuauth_multi_users" , G_TOKEN_STRING , 1, NULL },
@@ -186,10 +185,6 @@ struct nuauth_params*   init_nuauthconf()
   
   vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_datas_persistance");
   nuauthconf->datas_persistance=*(int*)(vpointer);
-
-  nuauthconf->aclcheck_state_ready=1;
-  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_aclcheck_state_ready");
-  nuauthconf->aclcheck_state_ready=*(int*)(vpointer);
 
   vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_push_to_client");
   nuauthconf->push=*(int*)(vpointer);
@@ -307,11 +302,6 @@ static struct nuauth_params* compare_and_update_nuauthparams(struct nuauth_param
       g_warning("userpckt_port has changed, please restart");
       restart=TRUE;
   }
-  if( current->aclcheck_state_ready != new->aclcheck_state_ready ){
-      g_warning("aclcheck_state_ready has changed, please restart");
-      restart=TRUE;
-  }
-
 
   if( current->log_users_sync != new->log_users_sync  ){
       g_warning("log_users_sync has changed, please restart");

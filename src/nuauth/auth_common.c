@@ -179,7 +179,6 @@ void search_and_fill ()
 				if (pckt->state == STATE_AUTHREQ){
 					struct internal_message *message=g_new0(struct internal_message,1);
                                         if (!message){
-                                            //GRYZOR asks if we should clean conn_list since we filled it before
                                             if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_USER))
                                                 g_message("Couldn't g_new0(). No more memory?");
                                             return;
@@ -232,61 +231,35 @@ void search_and_fill ()
 							((connection *)element)->version = pckt->version;
 							/* user cache system */
 							((connection *)element)->cacheduserdatas = pckt->cacheduserdatas;
-							/* going to take decision ? */
 
-							if (nuauthconf->aclcheck_state_ready){
-								change_state(((connection *)pckt),STATE_COMPLETING);
-								change_state(((connection *)element),STATE_COMPLETING);
-								g_thread_pool_push (nuauthdatas->acl_checkers,
-										pckt,
-										NULL);
-							} else {
-								/* change STATE */
-								change_state(((connection *)element),STATE_READY);
-								take_decision(element,PACKET_IN_HASH);
-							}
-							break;
+                                                        change_state(((connection *)pckt),STATE_COMPLETING);
+                                                        change_state(((connection *)element),STATE_COMPLETING);
+                                                        g_thread_pool_push (nuauthdatas->acl_checkers,
+                                                                pckt,
+                                                                NULL);
+                                                        break;
 					}
 					break;
 				case STATE_USERPCKT:
 					switch (pckt->state){
 						case  STATE_AUTHREQ:
-							change_state(((connection *)element),STATE_COMPLETING);
-							if (nuauthconf->aclcheck_state_ready){
-								change_state(((connection *)pckt),STATE_COMPLETING);
-								/* application */
-								pckt->appname =  ((connection *)element)->appname ;
-								pckt->appmd5 =   ((connection *)element)->appmd5 ;
-								/* system */
-								pckt->sysname =  ((connection *)element)->sysname ;
-								pckt->release =  ((connection *)element)->release ;
-								pckt->version =  ((connection *)element)->version ;
+                                                    change_state(((connection *)element),STATE_COMPLETING);
+                                                    change_state(((connection *)pckt),STATE_COMPLETING);
+                                                    /* application */
+                                                    pckt->appname =  ((connection *)element)->appname ;
+                                                    pckt->appmd5 =   ((connection *)element)->appmd5 ;
+                                                    /* system */
+                                                    pckt->sysname =  ((connection *)element)->sysname ;
+                                                    pckt->release =  ((connection *)element)->release ;
+                                                    pckt->version =  ((connection *)element)->version ;
 
-								g_thread_pool_push (nuauthdatas->acl_checkers,
-										pckt,
-										NULL);
-								((connection *)element)->packet_id = pckt->packet_id;
-								((connection *)element)->socket = pckt->socket;
-								((connection *)element)->tls = pckt->tls;
-
-
-							} else {
-#ifdef DEBUG_ENABLE
-								if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-									g_message("Filling acl data\n");
-#endif
-								((connection *)element)->acl_groups = pckt->acl_groups;
-								/* now we don't care about pckt acl_group */
-								pckt->acl_groups=NULL;
-								((connection *)element)->packet_id = pckt->packet_id;
-								((connection *)element)->socket = pckt->socket;
-								((connection *)element)->tls = pckt->tls;
-
-								g_free(pckt);
-								/* going to take decision ? */
-								take_decision(element,PACKET_IN_HASH);
-							}
-							break;
+                                                    g_thread_pool_push (nuauthdatas->acl_checkers,
+                                                            pckt,
+                                                            NULL);
+                                                    ((connection *)element)->packet_id = pckt->packet_id;
+                                                    ((connection *)element)->socket = pckt->socket;
+                                                    ((connection *)element)->tls = pckt->tls;
+                                                    break;
 						case STATE_USERPCKT:
 #ifdef DEBUG_ENABLE
 							if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
@@ -327,14 +300,12 @@ void search_and_fill ()
 				case STATE_COMPLETING:
 					switch (pckt->state){
 						case  STATE_COMPLETING:
-							if (nuauthconf->aclcheck_state_ready){
-								/* fill acl this is a return from acl search */
-								((connection *)element)->acl_groups = pckt->acl_groups;
-								g_free(pckt);
-								change_state(((connection *)element),STATE_READY);
-								take_decision(element,PACKET_IN_HASH);
-							}
-							break;
+                                                    /* fill acl this is a return from acl search */
+                                                    ((connection *)element)->acl_groups = pckt->acl_groups;
+                                                    g_free(pckt);
+                                                    change_state(((connection *)element),STATE_READY);
+                                                    take_decision(element,PACKET_IN_HASH);
+                                                    break;
 						case  STATE_AUTHREQ:
 #ifdef DEBUG_ENABLE
 							if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
