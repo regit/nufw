@@ -17,6 +17,14 @@
 ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+/** \file structure.h
+ *  \brief Global variables with their default value
+ *   
+ * Global variables with their default value. Most important one is
+ * the ::packets_list.
+ */
+
+
 #include <semaphore.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -34,36 +42,32 @@
 
 #include "proto.h"
 
-#define DEBUG 0
-#define AUTHREQ_ADDR  "127.0.0.1"
-#define LISTEN_ADDR   "127.0.0.1"
-#define AUTHSRV_PORT 4128
-#define AUTHREQ_PORT 4129
+#define AUTHREQ_ADDR  "127.0.0.1" /*!< Default value of ::authreq_addr */
+#define AUTHREQ_PORT 4129   /*!< Default value of  ::authreq_port */
 #define TRACK_SIZE 1000     /*!< Default value of ::track_size */
-#define ID_SERVER 12345
 #define PACKET_TIMEOUT 15   /*!< Default value of ::packet_timeout */
-#define HOSTNAME_SIZE 256
-#define FILENAME_SIZE 256
-#define CERT_FILE
-#define KEY_FILE
+#define HOSTNAME_SIZE 256   /*!< Maximum size of hostnames (::authreq_addr) */
+#define FILENAME_SIZE 256   /*!< Maximum length of filenames */
 
+char *cert_file;   /*!< Certificatename used in TLS connection, default value: NULL */
+char *key_file;  /*!< Key filename used in TLS connection, default value: NULL */
+char *ca_file;   /*!< Trust filename used in TLS connection, default value: NULL */
+char *nuauth_cert_dn;   /*!< NuAuth certificate filename, default value: NULL */
 
-char *cert_file;
-char *key_file;
-char *ca_file;
-char *nuauth_cert_dn;
-
+/*! IP or hostname of NuAuth, default value: #AUTHREQ_ADDR */
 char authreq_addr[HOSTNAME_SIZE];
-char listen_addr[HOSTNAME_SIZE];
+
+/*! Port of NuAuth, default value: #AUTHREQ_PORT */
 u_int16_t authreq_port;
-u_int16_t authsrv_port;
-int packet_timeout;   /*!< Number of second before a packet is dropped, default value: #PACKET_TIMEOUT */
-int track_size;       /*!< Maximum size of the packet list (::packets_list), default value: #TRACK_SIZE */
-u_int16_t id_srv;
-int debug;
+
+/*! Number of second before a packet is dropped, default value: #PACKET_TIMEOUT */
+int packet_timeout;
+
+/*! Maximum size of the packet list (::packets_list), default value: #TRACK_SIZE */
+int track_size;
+
+/*! If equals to 1, set mark on packet using #IPQ_SET_VWMARK. Default value: 0 */
 int nufw_set_mark;
-
-
 
 /**
  * Informations about one packet: unique identifier in netfilter queue,
@@ -91,6 +95,11 @@ typedef struct Packet_Ids {
 
 /***** Pack list ****/
 
+/**
+ * Packet list used to store packet until NuAuth answer.
+ * clean_old_packets() and psearch_and_destroy() remove old packets (after 
+ * ::packet_timeout secondes).
+ */
 struct packets_list_t 
 {
   packet_idl * start;    /*!< Begin of the list (NULL if the list is empty) */

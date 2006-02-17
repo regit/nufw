@@ -73,13 +73,13 @@ gnutls_session * tls_connect()
       gnutls_certificate_set_x509_trust_file(xcred, ca_file, GNUTLS_X509_FMT_PEM);
   }
   gnutls_certificate_set_x509_key_file(xcred,cert_file,key_file,GNUTLS_X509_FMT_PEM);
-
 #endif
-  /* Initialize TLS session 
-   */
+  
+  /* Initialize TLS session */
   tls_session=(gnutls_session*)calloc(1,sizeof(gnutls_session));
   gnutls_init(tls_session, GNUTLS_CLIENT);
   tls_socket = socket (AF_INET,SOCK_STREAM,0);
+
   /* connect */
   if (tls_socket <= 0)
       return NULL;

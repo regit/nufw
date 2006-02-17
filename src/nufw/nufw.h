@@ -49,6 +49,7 @@ void* conntrack_event_handler(void *data);
 #include <gcrypt.h>
 #include <errno.h>
 
+/** Gryzor hacks with aims to answer ICMP message when a packet is dropped. */
 #define GRYZOR_HACKS
 #undef GRYZOR_HACKS
 
@@ -56,14 +57,14 @@ void* conntrack_event_handler(void *data);
 #include <sys/socket.h>
 #endif
 
-
-
-
-
-
+/** If equals to 1, compile with x509 certificate support */
 #define USE_X509 1
-#define KEYFILE "/nufw-key.pem"
-#define CERTFILE "/nufw-cert.pem"
+
+/** Default value, prefixed with CONFIG_DIR, of ::key_file */
+#define KEYFILE "/nufw-key.pem"  
+
+/** Default value, prefixed with CONFIG_DIR, of ::cert_file */
+#define CERTFILE "/nufw-cert.pem"  
 
 struct nuauth_conn {
         gnutls_session * session;
@@ -91,15 +92,13 @@ int raw_sock;
  */
 
 // IP packet catcher
-
 void* packetsrv(void *data);
 
 // IP auth server
-
 void* authsrv(void* data);
 
 /* send an auth request packet given a payload (raw packet) */
-int auth_request_send(u_int8_t type,uint32_t packet_id, char* payload,int data_len);
+int auth_request_send(uint8_t type,uint32_t packet_id, char* payload,int data_len);
 /* take decision given a auth answer packet payload */
 int auth_packet_to_decision(char* dgram);
 

@@ -18,6 +18,18 @@
 
 #include "nufw.h"
 
+/** \file packetsrv.c
+ *  \brief Packet server thread
+ *   
+ * packetsrv() is a thread which read packet from netfilter queue. If packet
+ * content match to IPv4 TCP/UDP, add it to the packet list (::packets_list)
+ * and ask NuAuth an authentification or control using auth_request_send().
+ *
+ * When using NetFilter queue, treat_packet() is used as callback to parse
+ * new packets. Function look_for_tcp_flags() is a tool to check TCP flags
+ * in a IPv4 packet.
+ */
+
 /**
  * Parse an packet and check if it's TCP in IPv4 packet with TCP flag
  * ACK, FIN or RST set.
@@ -290,57 +302,63 @@ void* packetsrv(void *data)
 	return NULL;
 }   
 
-
 /**
- * Send an authentication request to NuAuth.
+ * Send an authentication request to NuAuth. May restart TLS session
+ * and/or open TLS connection (if closed).
  *
- * \param type Type of request
+ * Packet maximum size is 512 bytes, and it's structure is:
+ * \code
+ *  ofs | size | description
+ * -----+------+------------
+ *    0 |   1  | version (PROTO_VERSION)
+ *    1 |   2  | type (AUTH_REQUEST, AUTH_ANSWER, ...)  
+ *    2 |   2  | data len (in bytes)
+ *    4 |   4  | packet unique identifier
+ *    8 |   4  | timestamp (in Epoch format)
+ *   12 |   n  | packet content (may be truncated to 500 bytes)
+ * \endcode
+ *
+ * \param type Type of request (AUTH_REQUEST, AUTH_CONTROL, ...)
  * \param packet_id Unique identifier of the packet in netfilter queue
  * \param payload Packet content
- * \param data_len Size of payload (in bytes)
+ * \param data_len Size of packet content in bytes
+ * \return If an error occurs returns 0, else return 1.
  */
 int auth_request_send(uint8_t type,uint32_t packet_id,char* payload,int data_len){
-	char datas[512];
-	char *pointer;
-	int auth_len,total_data_len=512;
-	uint8_t version=PROTO_VERSION;
-	uint16_t dataslen=data_len+12;
-	long timestamp;
+	char datas[512], *pointer;
+	int auth_len, total_data_len;
+	uint8_t version = PROTO_VERSION;
+	uint16_t dataslen = AUTHREQ_OFFSET + data_len;
+	long timestamp = time(NULL);
 
-	timestamp = time(NULL);
+	packet_id = htonl(packet_id);
+	dataslen = htons(dataslen);
+	timestamp = htonl(timestamp);
 
-	packet_id=htonl(packet_id);
-	dataslen=htons(dataslen);
-	timestamp=htonl(timestamp);
-
-	if ( ((struct iphdr *)payload)->version == 4) {
-		memset(datas,0,sizeof datas);
-		memcpy(datas,&version,sizeof version);
-		pointer=datas+sizeof version;
-		memcpy(pointer,&type,sizeof type);
-		pointer+=sizeof type;
-		memcpy(pointer,&dataslen,sizeof dataslen);
-		pointer+=sizeof dataslen;
-		memcpy(pointer,&packet_id,sizeof packet_id);
-		pointer+=sizeof packet_id;
-		memcpy(pointer,&timestamp,sizeof timestamp);
-		pointer+=sizeof timestamp;
-		auth_len=pointer-datas;
-
-		/* memcpy header to datas + offset */
-		if (data_len<512-auth_len) {
-			memcpy(pointer,payload,data_len);
-			total_data_len=data_len+auth_len;
-		} else {
-            debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, 
-                    "Very long packet: truncating!");
-			memcpy(pointer,payload,511-auth_len);
-		}
-
-	} else {
-        debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, "Dropping non-IP packet");
+	if ( ((struct iphdr *)payload)->version != 4) {
+        debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, "Dropping non-IPv4 packet");
 		return 0;
-	}
+    }
+    
+    pointer = datas;
+    memset(pointer, 0, sizeof datas);                 
+    memcpy(pointer, &version, sizeof version);     pointer += sizeof version;
+    memcpy(pointer, &type, sizeof type);           pointer += sizeof type;
+    memcpy(pointer, &dataslen, sizeof dataslen);   pointer += sizeof dataslen;
+    memcpy(pointer, &packet_id, sizeof packet_id); pointer += sizeof packet_id;
+    memcpy(pointer, &timestamp, sizeof timestamp); pointer += sizeof timestamp;
+    auth_len = pointer - datas;
+
+    /* memcpy header to datas + offset */
+    if (data_len <= sizeof(datas) - auth_len) {
+        memcpy(pointer, payload, data_len);
+        total_data_len = auth_len + data_len;
+    } else {
+        debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, 
+                "Very long packet: truncating!");
+        memcpy(pointer, payload, sizeof(datas)-auth_len);
+        total_data_len = sizeof datas;
+    }
     debug_log_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, 
             "Sending request for %u", ntohl(packet_id));
     

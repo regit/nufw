@@ -95,7 +95,6 @@ int main(int argc,char * argv[]){
 #endif
     int option,daemonize = 0;
     int value;
-    unsigned int ident_srv;
     char* version=PACKAGE_VERSION;
     pid_t pidf;
 
@@ -107,19 +106,18 @@ int main(int argc,char * argv[]){
     authreq_port = AUTHREQ_PORT;
     packet_timeout = PACKET_TIMEOUT;
     track_size = TRACK_SIZE;
-    id_srv = ID_SERVER;
     cert_file=NULL;
     key_file=NULL;
     ca_file=NULL;
     nuauth_cert_dn=NULL;
     SECURE_STRNCPY(authreq_addr, AUTHREQ_ADDR, HOSTNAME_SIZE);
-    debug=DEBUG; /* this shall disapear */
     debug_level=0;
     debug_areas=DEFAULT_DEBUG_AREAS;
 #if USE_NFQUEUE
     nfqueue_num=DEFAULT_NFQUEUE;
     handle_conntrack_event=CONNTRACK_HANDLE_DEFAULT;
 #endif
+    nufw_set_mark = 0;
    
     if (getuid())
     {
@@ -185,10 +183,6 @@ int main(int argc,char * argv[]){
             /* max size of packet list */
           case 'T' :
             sscanf(optarg,"%d",&track_size);
-            break;
-          case 'I' :
-            sscanf(optarg,"%ud",&ident_srv);
-            id_srv=ident_srv;
             break;
           case 'm':
             nufw_set_mark=1;
@@ -326,7 +320,7 @@ int main(int argc,char * argv[]){
     gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);
     gnutls_global_init();
     
-     memset(&act,0,sizeof(act));
+    memset(&act,0,sizeof(act));
     act.sa_handler = &process_usr1;
     act.sa_flags = SIGUSR1;
     if (sigaction(SIGUSR1,&act,NULL) == -1)
