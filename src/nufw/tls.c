@@ -21,7 +21,7 @@
 #include "nufw.h"
 #include <gnutls/x509.h>
 
-/** \file tls.c
+/** \file nufw/tls.c
  * \brief Create a TLS connection to NuAuth
  * 
  * Create a TLS connection to NuAuth using tls_connect().

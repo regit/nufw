@@ -19,7 +19,7 @@
 
 #include "nufw.h"
 
-/** \file authsrv.c
+/** \file nufw/authsrv.c
  *  \brief Process NuAuth packets
  *   
  * authsrv() thread (created by auth_request_send()) wait for new NuAuth packets,

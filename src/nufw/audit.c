@@ -17,7 +17,7 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/** \file audit.c
+/** \file nufw/audit.c
  *  \brief Signal handlers (SIGPOLL, SIGUSR1, SIGUSR2).
  *   
  * Signal handlers:

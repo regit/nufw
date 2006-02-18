@@ -16,7 +16,7 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/** \file conntrack.c
+/** \file nufw/conntrack.c
  *  \brief Connection tracking
  *   
  * Connection tracking function if NuFW is compiled with #HAVE_LIBCONNTRACK.
