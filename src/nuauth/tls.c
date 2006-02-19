@@ -1089,11 +1089,10 @@ treat_nufw_request (nufw_session * c_session)
 					message->datas=current_conn;
 					current_conn->state = STATE_AUTHREQ;
 					g_async_queue_push (nuauthdatas->localid_auth_queue,message);
-				}else {
+				} else {
 					current_conn->state = STATE_AUTHREQ;
 					g_async_queue_push (nuauthdatas->connexions_queue,
-							current_conn,
-							NULL);
+							current_conn);
 				}
 			}
 		} else {
