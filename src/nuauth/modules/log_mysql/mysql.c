@@ -1,6 +1,6 @@
 
 /*
- ** Copyright(C) 2003-2005 Eric Leblond <eric@regit.org>
+ ** Copyright(C) 2003-2006 Eric Leblond <eric@regit.org>
  **		     Vincent Deffontaines <vincent@gryzor.com>
  **
  ** This program is free software; you can redistribute it and/or modify
@@ -616,9 +616,6 @@ G_MODULE_EXPORT int user_session_logs(user_session *c_session,int state)
 	char request[LONG_REQUEST_SIZE];
 	int Result;
         char *username=NULL;
-        if (nuauthconf->log_users_without_realm){
-                     username = get_rid_of_domain(c_session->userid);
-        }
 	if (ld == NULL){
 		ld=mysql_conn_init();
 		if (ld == NULL){
