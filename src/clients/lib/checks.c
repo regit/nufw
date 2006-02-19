@@ -78,11 +78,10 @@ void* recv_message(void *data)
 
         for (;;){
             ret= gnutls_record_recv(*session->tls,dgram,sizeof dgram);
-            if (ret<0){
+            if (ret<=0){
                 if ( gnutls_error_is_fatal(ret) ){
                     free(message);
                     ask_session_end(session);
-                    return NULL;
                 }
             } else {
                 switch (*dgram){

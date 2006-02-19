@@ -196,10 +196,15 @@ void nu_exit_clean(NuAuth * session)
 			free(session->password);
 		}
 		pthread_mutex_destroy(session->mutex);
+		free(session->mutex);
 		if (session->mode==SRV_TYPE_PUSH){
 			pthread_mutex_destroy(session->check_count_mutex);
 			pthread_cond_destroy(session->check_cond);
+			free(session->check_cond);
+			free(session->check_count_mutex);
+			free(session->checkthread);
 		}
+		free(session->recvthread);
 		free(session);
 		session=NULL;
 	}
