@@ -34,6 +34,7 @@
 #include "proc.h"
 #include "client.h"
 
+
 /**
  * Thread waiting for nuauth message to do client tasks
  *
@@ -72,6 +73,8 @@ void* recv_message(void *data)
 	hellofield.type=HELLO_FIELD;
 	hellofield.option=0;
 	hellofield.length=htons(sizeof(struct nuv2_authfield_hello));
+
+        pthread_cleanup_push(pthread_mutex_unlock, (void*)(session->check_count_mutex));
 
 	for (;;){
 		if (session->connected){
@@ -119,6 +122,8 @@ void* recv_message(void *data)
 		}
 
 	}
+
+        pthread_cleanup_pop(1);
 }
 
 
@@ -191,6 +196,12 @@ int nu_client_check(NuAuth * session)
 	
 }
 
+void clear_local_mutex(void* mutex)
+{
+        pthread_mutex_unlock(mutex);
+        pthread_mutex_destroy(mutex);
+}
+
 /**
  * Function used to launch check in push mode
  *
@@ -203,6 +214,9 @@ void* nu_client_thread_check(void *data)
         NuAuth * session=(NuAuth*)data;
 	pthread_mutex_t check_mutex;
 	pthread_mutex_init(&check_mutex,NULL);
+
+        pthread_cleanup_push(pthread_mutex_unlock, (void*)session->check_count_mutex);
+        pthread_cleanup_push(clear_local_mutex, (void*)&check_mutex );
 	for(;;){
 		nu_client_real_check(session);
 	/* Do we need to do an other check ? */
@@ -217,6 +231,11 @@ void* nu_client_thread_check(void *data)
 			pthread_mutex_unlock(&check_mutex);
 		}
 	}
+
+        pthread_cleanup_pop(1);
+        pthread_cleanup_pop(0);
+
+        return NULL;
 }
 
 /**
@@ -255,5 +274,3 @@ int nu_client_real_check(NuAuth * session)
 
 	return nb_packets;
 }
-
-

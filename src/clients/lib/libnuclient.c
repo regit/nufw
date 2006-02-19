@@ -180,7 +180,6 @@ void nu_exit_clean(NuAuth * session)
 	/* lock mutex to avoid multiple call */
 	if (session){
 		if (session->tls){
-			gnutls_bye(*(session->tls),GNUTLS_SHUT_WR);
 			gnutls_deinit(*(session->tls));
 			gnutls_certificate_free_credentials (session->cred);
 			free(session->tls);
@@ -868,9 +867,13 @@ void ask_session_end(NuAuth* session)
 {
 	pthread_t self_thread=pthread_self();
 	/* we kill thread thus lock will be lost if another thread reach this point */
+
 	if (session){ /* sanity check */
-		pthread_mutex_lock(session->mutex);
-		if(! pthread_equal(*(session->recvthread),self_thread)){
+            if(session->tls){
+                gnutls_bye(*(session->tls),GNUTLS_SHUT_RDWR);
+            }
+            pthread_mutex_lock(session->mutex);
+            if(! pthread_equal(*(session->recvthread),self_thread)){
 			/* destroy thread */
 			pthread_cancel(*(session->recvthread));
 		}
