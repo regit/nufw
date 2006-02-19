@@ -1,4 +1,3 @@
-
 /*
  ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
  **		     Vincent Deffontaines <vincent@gryzor.com>
