@@ -889,7 +889,14 @@ void ask_session_end(NuAuth* session)
                 gnutls_bye(*(session->tls),GNUTLS_SHUT_RDWR);
             }
             pthread_mutex_unlock(session->mutex);
-        }
-	pthread_exit(NULL);
+	}
+	if (pthread_equal(*(session->recvthread),self_thread)
+			||
+			((session->mode == SRV_TYPE_PUSH) && pthread_equal(*(session->checkthread),self_thread)
+			)
+	   ) {
+		pthread_exit(NULL);
+	}
+
 }
 
