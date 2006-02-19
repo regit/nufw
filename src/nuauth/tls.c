@@ -937,7 +937,7 @@ void* tls_user_authsrv()
 				}
 			}
 
-			if ( get_number_of_clients() >= nuauth_tls_max_clients -1 ) {
+			if ( get_number_of_clients() >= nuauth_tls_max_clients ) {
 
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
 					g_warning("too many clients (%d configured)\n",nuauth_tls_max_clients);
