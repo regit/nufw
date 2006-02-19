@@ -869,10 +869,13 @@ void decisions_queue_work (gpointer userdata, gpointer data)
 
 char * get_rid_of_domain(const char* user)
 {
-	char *username,**user_realm;
+	char *username=NULL;
+        char **user_realm;
 	user_realm=g_strsplit(user,"@",2);
-	username=g_strdup(*user_realm);
-	g_strfreev(user_realm);
+        if (*user_realm){
+            username=g_strdup(*user_realm);
+        }
+        g_strfreev(user_realm);
 	return username;
 }
 
