@@ -869,22 +869,22 @@ void ask_session_end(NuAuth* session)
 	/* we kill thread thus lock will be lost if another thread reach this point */
 
 	if (session){ /* sanity check */
-            if(session->tls){
-                gnutls_bye(*(session->tls),GNUTLS_SHUT_RDWR);
-            }
             pthread_mutex_lock(session->mutex);
+            session->connected=0;
             if(! pthread_equal(*(session->recvthread),self_thread)){
 			/* destroy thread */
 			pthread_cancel(*(session->recvthread));
-		}
-		if (session->mode == SRV_TYPE_PUSH) {
-			if(! pthread_equal(*(session->checkthread),self_thread)){
-				pthread_cancel(*(session->checkthread));
-			}
-		}
-		session->connected=0;
-		pthread_mutex_unlock(session->mutex);
-	}
+            }
+            if (session->mode == SRV_TYPE_PUSH) {
+                if(! pthread_equal(*(session->checkthread),self_thread)){
+                    pthread_cancel(*(session->checkthread));
+                }
+            }
+            if(session->tls){
+                gnutls_bye(*(session->tls),GNUTLS_SHUT_RDWR);
+            }
+            pthread_mutex_unlock(session->mutex);
+        }
 	pthread_exit(NULL);
 }
 

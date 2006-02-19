@@ -76,52 +76,45 @@ void* recv_message(void *data)
 
         pthread_cleanup_push(pthread_mutex_unlock, (void*)(session->check_count_mutex));
 
-	for (;;){
-		if (session->connected){
-			ret= gnutls_record_recv(*session->tls,dgram,sizeof dgram);
-			if (ret<0){
-				if ( gnutls_error_is_fatal(ret) ){
-					free(message);
-					ask_session_end(session);
-					return NULL;
-				}
-			} else {
-				switch (*dgram){
-					case SRV_REQUIRED_PACKET:
-						/* wake up nu_client_real_check_tread */
-						pthread_mutex_lock(session->check_count_mutex);
-						session->count_msg_cond++;
-						pthread_mutex_unlock(session->check_count_mutex);
-						pthread_cond_signal(session->check_cond);
-						break;
-					case SRV_REQUIRED_HELLO:
-						hellofield.helloid = ((struct nuv2_srv_helloreq*)dgram)->helloid;
-						memcpy(pointer,&hellofield,sizeof(struct nuv2_authfield_hello));
-						/*  send it */
-						if(session->tls){
-							if( gnutls_record_send(*(session->tls),message,
-										message_length
-									      )<=0){
+        for (;;){
+            ret= gnutls_record_recv(*session->tls,dgram,sizeof dgram);
+            if (ret<0){
+                if ( gnutls_error_is_fatal(ret) ){
+                    free(message);
+                    ask_session_end(session);
+                    return NULL;
+                }
+            } else {
+                switch (*dgram){
+                  case SRV_REQUIRED_PACKET:
+                      /* wake up nu_client_real_check_tread */
+                      pthread_mutex_lock(session->check_count_mutex);
+                      session->count_msg_cond++;
+                      pthread_mutex_unlock(session->check_count_mutex);
+                      pthread_cond_signal(session->check_cond);
+                      break;
+                  case SRV_REQUIRED_HELLO:
+                      hellofield.helloid = ((struct nuv2_srv_helloreq*)dgram)->helloid;
+                      memcpy(pointer,&hellofield,sizeof(struct nuv2_authfield_hello));
+                      /*  send it */
+                      if(session->tls){
+                          if( gnutls_record_send(*(session->tls),message,
+                                      message_length
+                                      )<=0){
 #if DEBUG_ENABLE
-								printf("write failed at %s:%d\n",__FILE__,__LINE__);
+                              printf("write failed at %s:%d\n",__FILE__,__LINE__);
 #endif
-								ask_session_end(session);
-								return NULL;
-							}
-						}
+                              ask_session_end(session);
+                              return NULL;
+                          }
+                      }
 
-						break;
-					default:
-						printf("unknown message\n");
-				}
-			}
-		} else {
-			free(message);
-			ask_session_end(session);
-			return NULL;
-		}
-
-	}
+                      break;
+                  default:
+                      printf("unknown message\n");
+                }
+            }
+        }
 
         pthread_cleanup_pop(1);
 }
@@ -147,8 +140,15 @@ void* recv_message(void *data)
 int nu_client_check(NuAuth * session)
 {
 		pthread_mutex_lock(session->mutex);
-		/* test if we need to create the working thread */
-		if (session->recvthread == NULL){
+                /* test is a thread has detected problem with the session */
+                if (session->connected==0){
+                    /* if we are here, threads are dead */
+                    pthread_mutex_unlock(session->mutex);
+                    nu_exit_clean(session);
+                    return -1;
+                } 
+                /* test if we need to create the working thread */
+                if (session->recvthread == NULL){
 			if (session->mode == SRV_TYPE_PUSH) {
 				session->check_cond=(pthread_cond_t*)calloc(1,sizeof(pthread_cond_t));
 				session->check_count_mutex=(pthread_mutex_t*)calloc(1,sizeof(pthread_mutex_t));
@@ -160,13 +160,7 @@ int nu_client_check(NuAuth * session)
 			session->recvthread=(pthread_t*)calloc(1,sizeof(pthread_t));
 			pthread_create(session->recvthread, NULL, recv_message, session);
 		}
-		/* test is a thread has detected problem with the session */
-		if (session->connected==0){
-			/* if we are here, threads are dead */
-			pthread_mutex_unlock(session->mutex);
-			nu_exit_clean(session);
-			return -1;
-		} 
+	
 		pthread_mutex_unlock(session->mutex);
 		if (session->mode == SRV_TYPE_POLL) {
 			int checkreturn;
