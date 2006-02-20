@@ -47,7 +47,7 @@ void* authsrv(void* data){
         } else {
             auth_packet_to_decision(dgram);
         }
-        memset(dgram,0,512);
+        memset(dgram, 0, sizeof dgram);
     }
 }
 

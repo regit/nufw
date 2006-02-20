@@ -110,7 +110,7 @@ int main(int argc,char * argv[]){
     key_file=NULL;
     ca_file=NULL;
     nuauth_cert_dn=NULL;
-    SECURE_STRNCPY(authreq_addr, AUTHREQ_ADDR, HOSTNAME_SIZE);
+    SECURE_STRNCPY(authreq_addr, AUTHREQ_ADDR, sizeof authreq_addr);
     debug_level=0;
     debug_areas=DEFAULT_DEBUG_AREAS;
 #if USE_NFQUEUE
@@ -167,7 +167,7 @@ int main(int argc,char * argv[]){
             break;
             /* destination IP */
           case 'd' :
-            SECURE_STRNCPY(authreq_addr, optarg, HOSTNAME_SIZE);
+            SECURE_STRNCPY(authreq_addr, optarg, sizeof authreq_addr);
             printf("Sending Auth request to %s\n",authreq_addr);
             break;
             /* packet timeout */
