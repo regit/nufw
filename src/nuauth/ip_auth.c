@@ -53,7 +53,7 @@ void external_ip_auth(gpointer userdata, gpointer data)
                   groups=NULL;
             /* if search succeed process to packet transmission */
             if (groups){
-                connection* connexion=g_new0(connection,1);
+                connection_t* connexion=g_new0(connection_t,1);
                 connexion->state=STATE_USERPCKT;
                 connexion->user_groups=groups;
 		connexion->user_id=uid;

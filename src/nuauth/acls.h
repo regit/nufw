@@ -27,10 +27,10 @@ void free_acl_struct(gpointer datas,gpointer uda);
 void free_acl_key(gpointer datas);
 gboolean compare_acls(gconstpointer tracking_hdrs1, gconstpointer tracking_hdrs2);
 
-gpointer acl_create_and_alloc_key(connection* kdatas);
+gpointer acl_create_and_alloc_key(connection_t* kdatas);
 inline  guint hash_acl(gconstpointer headers);
 void free_acl_list(void * datas);
-void get_acls_from_cache (connection* conn_elt);
+void get_acls_from_cache (connection_t* conn_elt);
 gpointer acl_duplicate_key(gpointer datas);
 
 #endif

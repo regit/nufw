@@ -859,7 +859,7 @@ G_MODULE_EXPORT int user_check(const char *username, const char *clientpass,
 }
 
 // acl_check()
-G_MODULE_EXPORT GSList* acl_check(connection* element)
+G_MODULE_EXPORT GSList* acl_check(connection_t* element)
 {
   GSList *g_list = NULL;
   GSList *p_acllist;

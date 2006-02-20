@@ -40,14 +40,14 @@ GMutex *modules_mutex;
 
 typedef int user_check_callback (const char *user, const char *pass,unsigned passlen,uint16_t *uid,GSList **groups);
 
-typedef GSList * acl_check_callback (connection* element);
+typedef GSList * acl_check_callback (connection_t* element);
 
 typedef void define_period_callback (GHashTable* periods);
 
 /* ip auth */
 typedef gchar* ip_auth_callback (tracking * header);
 
-typedef int user_logs_callback (connection element, int state);
+typedef int user_logs_callback (connection_t element, int state);
 typedef int user_session_logs_callback (user_session* element, int state);
 
 #endif

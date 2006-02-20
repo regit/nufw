@@ -53,13 +53,13 @@ int timeval_substract (struct timeval *result,struct timeval *x,struct timeval *
 
 
 
-static gint apply_decision(connection element);
+static gint apply_decision(connection_t element);
 
 /*
  * Args : a connection and a state
  */
 
-inline void change_state(connection *elt, char state)
+inline void change_state(connection_t *elt, char state)
 {
         if (elt != NULL){
         	elt->state = state;
@@ -150,9 +150,9 @@ gboolean compare_connection(gconstpointer tracking_hdrs1, gconstpointer tracking
 
 void search_and_fill () 
 {
-	connection * element = NULL;
+	connection_t * element = NULL;
         //GRYZOR warning : it seems we g_free() on pckt only on some conditions in this function
-	connection * pckt = NULL;
+	connection_t * pckt = NULL;
 
 	g_async_queue_ref (nuauthdatas->connexions_queue);
 	g_async_queue_ref (nuauthdatas->tls_push_queue);
@@ -164,7 +164,7 @@ void search_and_fill ()
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
 			g_message("Starting search and fill\n");
 #endif
-		element = (connection *) g_hash_table_lookup(conn_list,&(pckt->tracking_hdrs));
+		element = (connection_t *) g_hash_table_lookup(conn_list,&(pckt->tracking_hdrs));
 		if (element == NULL) {
 #ifdef DEBUG_ENABLE
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
@@ -201,7 +201,7 @@ void search_and_fill ()
 				}
 			}
 		} else { 
-			switch (((connection *)element)->state){
+			switch (((connection_t *)element)->state){
 				case STATE_AUTHREQ:
 					switch (pckt->state){
 						case  STATE_AUTHREQ:
@@ -209,8 +209,8 @@ void search_and_fill ()
 							if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
 								g_message("Adding a packet_id to a connection\n");
 #endif
-							((connection *)element)->packet_id =
-								g_slist_prepend(((connection *)element)->packet_id, GINT_TO_POINTER((pckt->packet_id)->data));
+							((connection_t *)element)->packet_id =
+								g_slist_prepend(((connection_t *)element)->packet_id, GINT_TO_POINTER((pckt->packet_id)->data));
 							free_connection(pckt);
 							/* and return */
 							break;
@@ -219,21 +219,21 @@ void search_and_fill ()
 							if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
 								g_message("Filling user data for %s\n",pckt->username);
 #endif
-							((connection *)element)->user_groups = pckt->user_groups;
-							((connection *)element)->user_id = pckt->user_id;
-							((connection *)element)->username = pckt->username;
+							((connection_t *)element)->user_groups = pckt->user_groups;
+							((connection_t *)element)->user_id = pckt->user_id;
+							((connection_t *)element)->username = pckt->username;
 							/* application */
-							((connection *)element)->appname = pckt->appname;
-							((connection *)element)->appmd5 = pckt->appmd5;
+							((connection_t *)element)->appname = pckt->appname;
+							((connection_t *)element)->appmd5 = pckt->appmd5;
 							/* system */
-							((connection *)element)->sysname = pckt->sysname;
-							((connection *)element)->release = pckt->release;
-							((connection *)element)->version = pckt->version;
+							((connection_t *)element)->sysname = pckt->sysname;
+							((connection_t *)element)->release = pckt->release;
+							((connection_t *)element)->version = pckt->version;
 							/* user cache system */
-							((connection *)element)->cacheduserdatas = pckt->cacheduserdatas;
+							((connection_t *)element)->cacheduserdatas = pckt->cacheduserdatas;
 
-                                                        change_state(((connection *)pckt),STATE_COMPLETING);
-                                                        change_state(((connection *)element),STATE_COMPLETING);
+                                                        change_state(((connection_t *)pckt),STATE_COMPLETING);
+                                                        change_state(((connection_t *)element),STATE_COMPLETING);
                                                         g_thread_pool_push (nuauthdatas->acl_checkers,
                                                                 pckt,
                                                                 NULL);
@@ -243,22 +243,22 @@ void search_and_fill ()
 				case STATE_USERPCKT:
 					switch (pckt->state){
 						case  STATE_AUTHREQ:
-                                                    change_state(((connection *)element),STATE_COMPLETING);
-                                                    change_state(((connection *)pckt),STATE_COMPLETING);
+                                                    change_state(((connection_t *)element),STATE_COMPLETING);
+                                                    change_state(((connection_t *)pckt),STATE_COMPLETING);
                                                     /* application */
-                                                    pckt->appname =  ((connection *)element)->appname ;
-                                                    pckt->appmd5 =   ((connection *)element)->appmd5 ;
+                                                    pckt->appname =  ((connection_t *)element)->appname ;
+                                                    pckt->appmd5 =   ((connection_t *)element)->appmd5 ;
                                                     /* system */
-                                                    pckt->sysname =  ((connection *)element)->sysname ;
-                                                    pckt->release =  ((connection *)element)->release ;
-                                                    pckt->version =  ((connection *)element)->version ;
+                                                    pckt->sysname =  ((connection_t *)element)->sysname ;
+                                                    pckt->release =  ((connection_t *)element)->release ;
+                                                    pckt->version =  ((connection_t *)element)->version ;
 
                                                     g_thread_pool_push (nuauthdatas->acl_checkers,
                                                             pckt,
                                                             NULL);
-                                                    ((connection *)element)->packet_id = pckt->packet_id;
-                                                    ((connection *)element)->socket = pckt->socket;
-                                                    ((connection *)element)->tls = pckt->tls;
+                                                    ((connection_t *)element)->packet_id = pckt->packet_id;
+                                                    ((connection_t *)element)->socket = pckt->socket;
+                                                    ((connection_t *)element)->tls = pckt->tls;
                                                     break;
 						case STATE_USERPCKT:
 #ifdef DEBUG_ENABLE
@@ -301,9 +301,9 @@ void search_and_fill ()
 					switch (pckt->state){
 						case  STATE_COMPLETING:
                                                     /* fill acl this is a return from acl search */
-                                                    ((connection *)element)->acl_groups = pckt->acl_groups;
+                                                    ((connection_t *)element)->acl_groups = pckt->acl_groups;
                                                     g_free(pckt);
-                                                    change_state(((connection *)element),STATE_READY);
+                                                    change_state(((connection_t *)element),STATE_READY);
                                                     take_decision(element,PACKET_IN_HASH);
                                                     break;
 						case  STATE_AUTHREQ:
@@ -311,8 +311,8 @@ void search_and_fill ()
 							if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
 								g_message("Adding a packet_id to a completing connection\n");
 #endif
-							((connection *)element)->packet_id =
-								g_slist_prepend(((connection *)element)->packet_id, GINT_TO_POINTER((pckt->packet_id)->data));
+							((connection_t *)element)->packet_id =
+								g_slist_prepend(((connection_t *)element)->packet_id, GINT_TO_POINTER((pckt->packet_id)->data));
 							free_connection(pckt);
 							/* and return */
 							break;
@@ -331,7 +331,7 @@ void search_and_fill ()
 #ifdef DEBUG_ENABLE
 					if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
 						g_message("Element is in state %d but we received packet state %d\n",
-								((connection *)element)->state,
+								((connection_t *)element)->state,
 								pckt->state);
 #endif
 					switch (pckt->state){
@@ -340,8 +340,8 @@ void search_and_fill ()
 							if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
 								g_message("Adding a packet_id to a connection\n");
 #endif
-							((connection *)element)->packet_id =
-								g_slist_prepend(((connection *)element)->packet_id, GUINT_TO_POINTER((pckt->packet_id)->data));
+							((connection_t *)element)->packet_id =
+								g_slist_prepend(((connection_t *)element)->packet_id, GUINT_TO_POINTER((pckt->packet_id)->data));
 							free_connection(pckt);
 							/* and return */
 							break;
@@ -367,7 +367,7 @@ void search_and_fill ()
 gint print_connection(gpointer data,gpointer userdata)
 {
 	struct in_addr src,dest;
-	connection * conn=(connection *) data;
+	connection_t * conn=(connection_t *) data;
 	src.s_addr = ntohl(conn->tracking_hdrs.saddr);
 	dest.s_addr = ntohl(conn->tracking_hdrs.daddr);
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
@@ -461,7 +461,7 @@ void send_auth_response(gpointer data, gpointer userdata)
  * Argument : A connection
  * Return 1
  */
-int free_connection(connection * conn)
+int free_connection(connection_t * conn)
 {
 	g_assert (conn != NULL );
 
@@ -563,13 +563,13 @@ int conn_cl_delete(gconstpointer conn)
 	g_assert (conn != NULL);
 
 	if (!  g_hash_table_steal (conn_list,
-				&(((connection *)conn)->tracking_hdrs)) ){
+				&(((connection_t *)conn)->tracking_hdrs)) ){
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
 			g_warning("Removal of conn in hash failed\n");
 		return 0;
 	}
 	/* free isolated structure */ 
-	free_connection((connection *)conn);
+	free_connection((connection_t *)conn);
 	return 1;
 }
 
@@ -592,9 +592,9 @@ gboolean  get_old_conn (gpointer key,
 {
 	long current_timestamp = GPOINTER_TO_INT(user_data);
 	if (
-			( current_timestamp - ((connection *)value)->timestamp > nuauthconf->packet_timeout)  
+			( current_timestamp - ((connection_t *)value)->timestamp > nuauthconf->packet_timeout)  
 			&&
-			(((connection *)value)->state!=STATE_COMPLETING)		    
+			(((connection_t *)value)->state!=STATE_COMPLETING)		    
 	   ){
 		return TRUE;
 	}
@@ -611,7 +611,7 @@ gboolean  get_old_conn (gpointer key,
 
 int conn_key_delete(gconstpointer key)
 {
-	connection* element = (connection*)g_hash_table_lookup ( conn_list,key);
+	connection_t* element = (connection_t*)g_hash_table_lookup ( conn_list,key);
 	if (element){
 		/* need to log drop of packet if it is a nufw packet */
 		if (element->state == STATE_AUTHREQ) {
@@ -656,7 +656,7 @@ void clean_connections_list ()
  * Return : -1 if parameter is NULL
  */
 
-gint take_decision(connection * element,gchar place) 
+gint take_decision(connection_t * element,gchar place) 
 {
 	GSList * parcours=NULL;
 	int answer = NODECIDE;
@@ -756,7 +756,7 @@ gint take_decision(connection * element,gchar place)
         
 	if (nuauthconf->log_users_sync) {
 		/* copy current element */
-		connection * copy_of_element=(connection *)g_memdup(element,sizeof(connection));
+		connection_t * copy_of_element=(connection_t *)g_memdup(element,sizeof(connection_t));
 
 		/* need to free acl and user group */
 		copy_of_element->acl_groups=NULL;
@@ -810,7 +810,7 @@ gint take_decision(connection * element,gchar place)
  * Return : 1
  */
 
-gint apply_decision(connection element)
+gint apply_decision(connection_t element)
 {
 	int answer=element.decision;
 	struct auth_answer aanswer ={ answer , element.user_id ,element.socket, element.tls } ;
@@ -851,7 +851,7 @@ gint apply_decision(connection element)
 
 void decisions_queue_work (gpointer userdata, gpointer data)
 {
-	connection* element=(connection *)userdata;
+	connection_t* element=(connection_t *)userdata;
 
         block_on_conf_reload();
 	apply_decision( * element);

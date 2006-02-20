@@ -19,7 +19,7 @@
 #ifndef PCKT_AUTHSR_H
 #define PCKT_AUTHSR_H
 void* packet_authsrv();
-connection*  authpckt_decode(char * , int);
+connection_t*  authpckt_decode(char * , int);
 void acl_check_and_decide (gpointer userdata , gpointer data);
 
 #endif

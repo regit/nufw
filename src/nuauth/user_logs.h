@@ -25,7 +25,7 @@
 int check_fill_user_counters(u_int16_t userid,long time,unsigned long packet_id,u_int32_t ip);
 void print_users_list();
 
-void log_user_packet (connection element,int state);
+void log_user_packet (connection_t element,int state);
 void real_log_user_packet (gpointer userdata, gpointer data);
 
 gboolean log_user_session(user_session* element,int state);

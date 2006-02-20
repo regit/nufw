@@ -25,13 +25,13 @@ gboolean compare_connection(gconstpointer conn1, gconstpointer conn2);
 int sck_auth_reply;
 void send_auth_response(gpointer data, gpointer userdata);
 int conn_cl_delete(gconstpointer conn);
-inline char get_state(connection *elt);
+inline char get_state(connection_t *elt);
 #define PACKET_ALONE 0
 #define PACKET_IN_HASH 1
-gint take_decision(connection * element,gchar place);
+gint take_decision(connection_t * element,gchar place);
 gint print_connection(gpointer data,gpointer userdata);
-int free_connection(connection * conn);
-int lock_and_free_connection(connection * conn);
+int free_connection(connection_t * conn);
+int lock_and_free_connection(connection_t * conn);
 void clean_connections_list ();
 guint hash_connection(gconstpointer conn_p);
 void decisions_queue_work (gpointer userdata, gpointer data);

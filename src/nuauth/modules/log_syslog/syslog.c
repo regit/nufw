@@ -21,7 +21,7 @@
 #include <errno.h>
 
 
-G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
+G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
     char *str_state;
     char source_addr[16];
     char dest_addr[16];

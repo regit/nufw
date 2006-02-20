@@ -29,8 +29,8 @@ char localid_authenticated_protocol(int protocol)
 
 void localid_auth()
 {
-	connection * pckt = NULL;
-	connection * element = NULL;
+	connection_t * pckt = NULL;
+	connection_t * element = NULL;
 	u_int32_t randomid;
 	struct msg_addr_set *global_msg = g_new0(struct msg_addr_set,1);
 	struct nuv2_srv_helloreq *msg = g_new0(struct nuv2_srv_helloreq,1);
@@ -76,7 +76,7 @@ void localid_auth()
 						break;
 					case STATE_USERPCKT:
 						/* search in struct */
-						element = (connection*) g_hash_table_lookup (localid_auth_hash,(GSList*)(pckt->packet_id)->data);
+						element = (connection_t*) g_hash_table_lookup (localid_auth_hash,(GSList*)(pckt->packet_id)->data);
 						/* if found ask for completion */
 						if (element){
 							/* TODO : do a check on saddr */

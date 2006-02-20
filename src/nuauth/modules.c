@@ -69,7 +69,7 @@ int user_check (const char *user, const char *pass,unsigned passlen,uint16_t *ui
  * contained in the connection.
  */
 
-GSList * acl_check (connection* element){
+GSList * acl_check (connection_t* element){
 	/* iter through module list and stop when an acl is found */
 	GSList *walker=acl_check_modules;
 	GSList* walker_return=NULL;
@@ -100,7 +100,7 @@ gchar* ip_auth(tracking * header){
 /**
  * log authenticated packets
  */
-int user_logs (connection element, int state){
+int user_logs (connection_t element, int state){
 	/* iter through all modules list */
 	GSList *walker=user_logs_modules;
 	for (;walker!=NULL;walker=walker->next ){

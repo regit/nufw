@@ -21,7 +21,7 @@
 #include <time.h>
 
 struct Conn_State { 
-	connection conn;
+	connection_t conn;
 	int state;};
 
 struct session_event {
@@ -37,7 +37,7 @@ struct session_event {
  * Argument 2 : state of the connection
  */
 
-void log_user_packet (connection element,int state)
+void log_user_packet (connection_t element,int state)
 {
 	struct Conn_State conn_state= { element, state};
 	struct Conn_State * conn_state_copy;

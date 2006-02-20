@@ -101,7 +101,7 @@ typedef struct _Connection {
   /* performance datas */
   struct timeval arrival_time;
 #endif
-} connection;
+} connection_t;
 
 
 /** 

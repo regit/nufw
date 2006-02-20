@@ -206,7 +206,7 @@ void free_acl_cache(gpointer datas)
 	g_free(datas);
 }
 
-struct acl_key* acl_create_key(connection *kdatas)
+struct acl_key* acl_create_key(connection_t *kdatas)
 {
 	struct acl_key * key=g_new0(struct acl_key,1);
 	key->acl_tracking=&(kdatas->tracking_hdrs);
@@ -218,7 +218,7 @@ struct acl_key* acl_create_key(connection *kdatas)
 	return key;
 }
 
-gpointer acl_create_and_alloc_key(connection* kdatas)
+gpointer acl_create_and_alloc_key(connection_t* kdatas)
 {
 	struct acl_key key;
 	key.acl_tracking=&(kdatas->tracking_hdrs);
@@ -265,7 +265,7 @@ gpointer acl_duplicate_key(gpointer datas)
  * ask the acl cache information about a received packet.
  *
  */
-void get_acls_from_cache (connection* conn_elt)
+void get_acls_from_cache (connection_t* conn_elt)
 {
 	struct cache_message message;
 	/* Going to ask to the cache */

@@ -29,7 +29,7 @@
  * Return : 1 if OK, 0 otherwise
  */
 
-int external_acl_groups (connection * element){
+int external_acl_groups (connection_t * element){
   GSList * acl_groups=NULL;
 
   /* query external authority */
@@ -59,7 +59,7 @@ int external_acl_groups (connection * element){
 
 void acl_check_and_decide (gpointer userdata, gpointer data)
 {
-	connection * conn_elt = userdata;
+	connection_t * conn_elt = userdata;
 #ifdef DEBUG_ENABLE
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET))
 		g_message("entering acl_check\n");

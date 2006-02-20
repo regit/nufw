@@ -32,7 +32,7 @@
  * - Return : offset to next type of headers 
  */
 
-int get_ip_headers(connection *connexion,char * dgram)
+int get_ip_headers(connection_t *connexion,char * dgram)
 {
 	struct iphdr * iphdrs = (struct iphdr *) dgram;
 	/* check IP version */
@@ -59,7 +59,7 @@ int get_ip_headers(connection *connexion,char * dgram)
  * - Return : 0
  */
 
-int get_udp_headers(connection *connexion, char * dgram)
+int get_udp_headers(connection_t *connexion, char * dgram)
 {
 	struct udphdr * udphdrs=(struct udphdr *)dgram;
 	connexion->tracking_hdrs.source=ntohs(udphdrs->source);
@@ -78,7 +78,7 @@ int get_udp_headers(connection *connexion, char * dgram)
  * - Return : STATE of the packet
  */
 
-int get_tcp_headers(connection *connexion, char * dgram)
+int get_tcp_headers(connection_t *connexion, char * dgram)
 {
 	struct tcphdr * tcphdrs=(struct tcphdr *) dgram;
 	connexion->tracking_hdrs.source=ntohs(tcphdrs->source);
@@ -110,7 +110,7 @@ int get_tcp_headers(connection *connexion, char * dgram)
  */
 
 
-int get_icmp_headers(connection *connexion, char * dgram)
+int get_icmp_headers(connection_t *connexion, char * dgram)
 {
 	struct icmphdr * icmphdrs= (struct icmphdr *)dgram;
 	connexion->tracking_hdrs.source=0;
@@ -128,13 +128,13 @@ int get_icmp_headers(connection *connexion, char * dgram)
  * - Return : pointer to allocated connection
  */
 
-connection*  authpckt_decode(char * dgram, int  dgramsiz)
+connection_t*  authpckt_decode(char * dgram, int  dgramsiz)
 {
 	int offset; 
 	int8_t *pointer;
 	uint8_t msg_type;
 	uint16_t data_len;
-	connection*  connexion = NULL;
+	connection_t*  connexion = NULL;
 
 	switch (*dgram) {
 		case PROTO_VERSION:
@@ -144,7 +144,7 @@ connection*  authpckt_decode(char * dgram, int  dgramsiz)
                           case AUTH_CONTROL:
                                   {
 				/* allocate connection */
-				connexion = g_new0( connection,1);
+				connexion = g_new0( connection_t,1);
 				if (connexion == NULL){
 					if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET)){
 						g_message("Can not allocate connexion\n");

@@ -53,7 +53,7 @@ void free_user_cache(gpointer datas)
  * handle discussion with user cache 
  */
 
-void get_users_from_cache (connection* conn_elt)
+void get_users_from_cache (connection_t* conn_elt)
 {
 	struct cache_message message;
 	/* Going to ask to the cache */

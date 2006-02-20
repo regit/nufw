@@ -25,12 +25,12 @@ int unload_modules();
 
 int user_check (const char *user, const char *pass,unsigned passlen,uint16_t *uid,GSList **groups);
 
-GSList * acl_check (connection* element);
+GSList * acl_check (connection_t* element);
 
 /* ip auth */
 gchar* ip_auth(tracking * header);
 
-int user_logs (connection element, int state);
+int user_logs (connection_t element, int state);
 
 int user_session_logs(user_session* user , int state);
 

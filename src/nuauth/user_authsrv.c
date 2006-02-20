@@ -38,7 +38,7 @@ void user_check_and_decide (gpointer userdata, gpointer data)
 {
   GSList * conn_elts=NULL;
   GSList* conn_elt_l;
-  connection* conn_elt;
+  connection_t* conn_elt;
 #ifdef DEBUG_ENABLE
   if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
       g_message("entering user_check\n");
@@ -104,7 +104,7 @@ void user_check_and_decide (gpointer userdata, gpointer data)
 static GSList * userpckt_decode(struct buffer_read * datas)
 {
   char * dgram = datas->buf;
-  connection* connexion=NULL;
+  connection_t* connexion=NULL;
   struct nuv2_header* header=(struct nuv2_header*)dgram;
   gboolean multiclient_ok=FALSE;
   GSList* conn_elts=NULL;
@@ -131,7 +131,7 @@ static GSList * userpckt_decode(struct buffer_read * datas)
                       struct nuv2_authreq* authreq=(struct nuv2_authreq* )start;
                       char *req_start=start;
 
-                      connexion = g_new0( connection,1);
+                      connexion = g_new0( connection_t,1);
                       connexion->acl_groups=NULL;
                       connexion->user_groups=NULL;
                       connexion->appname=NULL;

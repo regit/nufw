@@ -1071,7 +1071,7 @@ treat_nufw_request (nufw_session * c_session)
 		dgram=g_new0(char,BUFSIZE);
 		dgram_size =  gnutls_record_recv(*(c_session->tls),dgram,BUFSIZE) ;
 		if (  dgram_size > 0 ){
-			connection * current_conn;
+			connection_t * current_conn;
 			current_conn = authpckt_decode(dgram , dgram_size );
 			if (current_conn == NULL){
 				if ( *(dgram+1) != AUTH_CONTROL && *(dgram+1) != AUTH_CONN_DESTROY  )

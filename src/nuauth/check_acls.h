@@ -18,6 +18,6 @@
 #ifndef CHECK_ACLS_H
 #define CHECK_ACLS_H
 
-int external_acl_groups (connection * element);
+int external_acl_groups (connection_t * element);
 
 #endif
