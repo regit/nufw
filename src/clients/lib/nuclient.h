@@ -136,7 +136,7 @@ typedef struct _NuAuth {
 	unsigned long localuserid;
 	char * username;
 	char * password;
-        gnutls_session* tls;
+        gnutls_session tls;
 	gnutls_certificate_credentials cred;
 
 	char* (*username_callback)();
@@ -149,16 +149,16 @@ typedef struct _NuAuth {
 	unsigned long packet_id;
         int auth_by_default;
 	unsigned char mode;
-	pthread_mutex_t * mutex;
+	/* private ;-) */
+	pthread_mutex_t mutex;
 	unsigned char connected;
 	/* condition and associated mutex used to know when a check
 	 * is necessary */
-	pthread_cond_t *check_cond;
-	pthread_mutex_t *check_count_mutex;
+	pthread_cond_t check_cond;
+	pthread_mutex_t check_count_mutex;
 	int count_msg_cond;
-	/* private ;-) */
-	pthread_t* checkthread;
-	pthread_t* recvthread;
+	pthread_t checkthread;
+	pthread_t recvthread;
 	time_t timestamp_last_sent;
 } NuAuth;
 

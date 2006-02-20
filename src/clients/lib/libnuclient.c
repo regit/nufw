@@ -48,9 +48,7 @@ GCRY_THREAD_OPTION_PTHREAD_IMPL;
 #endif
 
 
-
 char * locale_to_utf8(char* inbuf);
-
 
 #define DH_BITS 1024
 #define REQUEST_CERT 0
@@ -177,37 +175,23 @@ void panic(const char *fmt, ...)
 
 void nu_exit_clean(NuAuth * session)
 {
-	/* lock mutex to avoid multiple call */
-	if (session){
-		if (session->tls){
-			gnutls_deinit(*(session->tls));
-			gnutls_certificate_free_credentials (session->cred);
-			free(session->tls);
-		}
-		if (session->socket>0){
-			shutdown(session->socket,SHUT_RDWR);
-			close(session->socket);
-			session->socket=0;
-		}
-		if (session->username){
-			free(session->username);
-		}
-		if (session->password){
-			free(session->password);
-		}
-		pthread_mutex_destroy(session->mutex);
-		free(session->mutex);
-		if (session->mode==SRV_TYPE_PUSH){
-			pthread_mutex_destroy(session->check_count_mutex);
-			pthread_cond_destroy(session->check_cond);
-			free(session->check_cond);
-			free(session->check_count_mutex);
-			free(session->checkthread);
-		}
-		free(session->recvthread);
-		free(session);
-		session=NULL;
-	}
+    if (session->socket>0){
+        shutdown(session->socket,SHUT_RDWR);
+        close(session->socket);
+        session->socket=0;
+    }
+    if (session->username){
+        free(session->username);
+    }
+    if (session->password){
+        free(session->password);
+    }
+    if (session->mode == SRV_TYPE_PUSH){
+        pthread_mutex_destroy(&(session->check_count_mutex));
+        pthread_cond_destroy(&(session->check_cond));
+    }
+    pthread_mutex_destroy(&(session->mutex));
+    free(session);
 }
 
 /**
@@ -551,12 +535,12 @@ static int generate_dh_params(void) {
 
 void nu_client_free(NuAuth *session)
 {
-	pthread_mutex_lock(session->mutex);
+	pthread_mutex_lock(&(session->mutex));
 	if (tcptable_free (session->ct) == 0) panic ("tcptable_free failed");
         /* kill all threads */
         ask_session_end(session);
         /* all threads are dead, we are the one who can access to it */
-	pthread_mutex_unlock(session->mutex);
+	pthread_mutex_unlock(&(session->mutex));
         /* destroy session */
 	nu_exit_clean(session);
 }
@@ -622,8 +606,7 @@ NuAuth* nu_client_init2(
 	session->username_callback=username_callback;
 	session->passwd_callback=passwd_callback;
 	session->tls_passwd_callback=tlscred_callback;
-	session->mutex=calloc(1,sizeof(pthread_mutex_t));
-	pthread_mutex_init(session->mutex,NULL);
+	pthread_mutex_init(&(session->mutex),NULL);
 
 	/* initiate session */
 	session->auth_by_default = 1;
@@ -678,7 +661,6 @@ NuAuth* nu_client_init2(
 #endif
 	}
 
-        session->tls=(gnutls_session *)calloc(1,sizeof(gnutls_session));
 	/* X509 stuff */
 	gnutls_certificate_allocate_credentials(&(session->cred));
 	/* sets the trusted cas file
@@ -698,13 +680,12 @@ NuAuth* nu_client_init2(
 
 	/* Initialize TLS session
 	*/
-	session->tls=(gnutls_session*)calloc(1,sizeof(gnutls_session));
-	gnutls_init(session->tls, GNUTLS_CLIENT);
+	gnutls_init(&(session->tls), GNUTLS_CLIENT);
 
-	gnutls_set_default_priority(*(session->tls));
-	gnutls_certificate_type_set_priority(*(session->tls), cert_type_priority);
+	gnutls_set_default_priority(session->tls);
+	gnutls_certificate_type_set_priority(session->tls, cert_type_priority);
 	/* put the x509 credentials to the current session */
-	gnutls_credentials_set(*(session->tls), GNUTLS_CRD_CERTIFICATE, session->cred);
+	gnutls_credentials_set(session->tls, GNUTLS_CRD_CERTIFICATE, session->cred);
 
 	no_action.sa_handler = SIG_IGN;
 	sigemptyset( & (no_action.sa_mask));
@@ -737,11 +718,11 @@ NuAuth* nu_client_init2(
 		return NULL;
 	}
 
-	gnutls_transport_set_ptr( *(session->tls), (gnutls_transport_ptr)session->socket);
+	gnutls_transport_set_ptr( session->tls, (gnutls_transport_ptr)session->socket);
 
 	/* Perform the TLS handshake
 	*/
-	ret = gnutls_handshake( *(session->tls));
+	ret = gnutls_handshake( session->tls);
 	if (ret < 0) {
 		gnutls_perror(ret);
 		nu_exit_clean(session);
@@ -749,7 +730,7 @@ NuAuth* nu_client_init2(
 		return NULL;
 	}
 	/* certificate verification */
-	ret = gnutls_certificate_verify_peers(*(session->tls));
+	ret = gnutls_certificate_verify_peers(session->tls);
 	if (ret <0){
 		printf("Certificate verification failed : %s",gnutls_strerror(ret));
 		return NULL;
@@ -799,7 +780,7 @@ NuAuth* nu_client_init2(
 	/* set required security properties here
 	   sasl_setprop(conn, SASL_SEC_PROPS, &secprops); */
 
-	ret = mysasl_negotiate(*(session->tls), conn);
+	ret = mysasl_negotiate(session->tls, conn);
 	if (ret != SASL_OK) {
 		nu_exit_clean(session);
 		errno=EACCES;
@@ -836,10 +817,10 @@ NuAuth* nu_client_init2(
 		pointer+=sizeof osfield;
 		memcpy(pointer,enc_oses,actuallen);
 		free(enc_oses);
-		gnutls_record_send(*(session->tls),buf,osfield_length);
+		gnutls_record_send(session->tls,buf,osfield_length);
 
 		/* wait for message of server about mode */
-		if (gnutls_record_recv(*(session->tls),buf,osfield_length)<=0){
+		if (gnutls_record_recv(session->tls,buf,osfield_length)<=0){
 			nu_exit_clean(session);
 			errno=EACCES;
 			return NULL;
@@ -860,11 +841,11 @@ NuAuth* nu_client_init2(
 	 */
 	/* alloc ct */
 	if (tcptable_init (&new) == 0) panic ("tcptable_init failed");
-	session->ct=new;
+	session->ct = new;
 	/* set init variable */
-	session->connected =1;
-	session->timestamp_last_sent=time(NULL);
-	session->recvthread=NULL;
+	session->connected = 1;
+        session->count_msg_cond = -1;
+	session->timestamp_last_sent = time(NULL);
 	return session;
 }
 
@@ -874,26 +855,22 @@ void ask_session_end(NuAuth* session)
 	/* we kill thread thus lock will be lost if another thread reach this point */
 
 	if (session){ /* sanity check */
-            pthread_mutex_lock(session->mutex);
+            pthread_mutex_lock(&(session->mutex));
             session->connected=0;
-            if(! pthread_equal(*(session->recvthread),self_thread)){
+            if(! pthread_equal(session->recvthread,self_thread)){
 			/* destroy thread */
-			pthread_cancel(*(session->recvthread));
+			pthread_cancel(session->recvthread);
             }
             if (session->mode == SRV_TYPE_PUSH) {
-                if(! pthread_equal(*(session->checkthread),self_thread)){
-                    pthread_cancel(*(session->checkthread));
+                if(! pthread_equal(session->checkthread,self_thread)){
+                    pthread_cancel(session->checkthread);
                 }
             }
-            if(session->tls){
-                gnutls_bye(*(session->tls),GNUTLS_SHUT_RDWR);
-            }
-            pthread_mutex_unlock(session->mutex);
+            gnutls_bye(session->tls,GNUTLS_SHUT_RDWR);
+            pthread_mutex_unlock(&(session->mutex));
 	}
-	if (pthread_equal(*(session->recvthread),self_thread)
-			||
-			((session->mode == SRV_TYPE_PUSH) && pthread_equal(*(session->checkthread),self_thread)
-			)
+	if (pthread_equal(session->recvthread,self_thread) ||
+                ((session->mode == SRV_TYPE_PUSH) && pthread_equal(session->checkthread,self_thread))
 	   ) {
 		pthread_exit(NULL);
 	}

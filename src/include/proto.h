@@ -41,7 +41,7 @@ typedef enum
     USER_HELLO, // 0x5
     AUTH_CONN_DESTROY, // 0x6
     AUTH_CONN_UPDATE, // 0x7
-    AUTH_CONN_FIXED_TIMEOUT // 8 
+    AUTH_CONN_FIXED_TIMEOUT // 0x8 
 } nufw_message_t;
 
 #define NOK 0           /*!< NuAuth decision answer: packet rejected */

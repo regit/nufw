@@ -49,7 +49,7 @@ int send_hello_pckt(NuAuth * session){
 
     /*  send it */
     if(session->tls){
-        if( gnutls_record_send(*(session->tls),&header,sizeof(struct nuv2_header))<=0){
+        if( gnutls_record_send(session->tls,&header,sizeof(struct nuv2_header))<=0){
 #if DEBUG_ENABLE
             printf("write failed at %s:%d\n",__FILE__,__LINE__);
 #endif
@@ -181,7 +181,7 @@ int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
 
   /* and send it */
   if(session->tls){
-      if( gnutls_record_send(*(session->tls),datas,pointer-datas)<=0){
+      if( gnutls_record_send(session->tls,datas,pointer-datas)<=0){
           printf("write failed\n");
           return 0;
       }

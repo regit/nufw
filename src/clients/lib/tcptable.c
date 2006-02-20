@@ -69,9 +69,9 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
 #endif
   if ( session->mode==SRV_TYPE_PUSH){
       /* need to set check_cond */
-      pthread_mutex_lock(session->check_count_mutex);
+      pthread_mutex_lock(&(session->check_count_mutex));
       session->count_msg_cond=0;
-      pthread_mutex_unlock(session->check_count_mutex);
+      pthread_mutex_unlock(&(session->check_count_mutex));
   }
   /* open file */
   if (fp == NULL) {

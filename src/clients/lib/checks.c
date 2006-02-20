@@ -74,10 +74,14 @@ void* recv_message(void *data)
 	hellofield.option=0;
 	hellofield.length=htons(sizeof(struct nuv2_authfield_hello));
 
-        pthread_cleanup_push(pthread_mutex_unlock, (void*)(session->check_count_mutex));
+        pthread_cleanup_push(pthread_mutex_unlock, (void*)(&(session->check_count_mutex)));
+
+        pthread_mutex_lock(&(session->check_count_mutex));
+        session->count_msg_cond=0;
+        pthread_mutex_unlock(&(session->check_count_mutex));
 
         for (;;){
-            ret= gnutls_record_recv(*session->tls,dgram,sizeof dgram);
+            ret= gnutls_record_recv(session->tls,dgram,sizeof dgram);
             if (ret<=0){
                 if ( gnutls_error_is_fatal(ret) ){
                     free(message);
@@ -87,24 +91,23 @@ void* recv_message(void *data)
                 switch (*dgram){
                   case SRV_REQUIRED_PACKET:
                       /* wake up nu_client_real_check_tread */
-                      pthread_mutex_lock(session->check_count_mutex);
+                      pthread_mutex_lock(&(session->check_count_mutex));
                       session->count_msg_cond++;
-                      pthread_mutex_unlock(session->check_count_mutex);
-                      pthread_cond_signal(session->check_cond);
+                      pthread_mutex_unlock(&(session->check_count_mutex));
+                      pthread_cond_signal(&(session->check_cond));
                       break;
                   case SRV_REQUIRED_HELLO:
                       hellofield.helloid = ((struct nuv2_srv_helloreq*)dgram)->helloid;
                       memcpy(pointer,&hellofield,sizeof(struct nuv2_authfield_hello));
                       /*  send it */
                       if(session->tls){
-                          if( gnutls_record_send(*(session->tls),message,
+                          if( gnutls_record_send(session->tls,message,
                                       message_length
                                       )<=0){
 #if DEBUG_ENABLE
                               printf("write failed at %s:%d\n",__FILE__,__LINE__);
 #endif
                               ask_session_end(session);
-                              return NULL;
                           }
                       }
 
@@ -114,7 +117,6 @@ void* recv_message(void *data)
                 }
             }
         }
-
         pthread_cleanup_pop(1);
 }
 
@@ -138,29 +140,25 @@ void* recv_message(void *data)
 
 int nu_client_check(NuAuth * session)
 {
-		pthread_mutex_lock(session->mutex);
+		pthread_mutex_lock(&(session->mutex));
                 /* test is a thread has detected problem with the session */
                 if (session->connected==0){
                     /* if we are here, threads are dead */
-                    pthread_mutex_unlock(session->mutex);
+                    pthread_mutex_unlock(&(session->mutex));
                     nu_exit_clean(session);
                     return -1;
                 } 
                 /* test if we need to create the working thread */
-                if (session->recvthread == NULL){
+                if (session->count_msg_cond == -1){ /* if set to -1 then we've just leave init */
 			if (session->mode == SRV_TYPE_PUSH) {
-				session->check_cond=(pthread_cond_t*)calloc(1,sizeof(pthread_cond_t));
-				session->check_count_mutex=(pthread_mutex_t*)calloc(1,sizeof(pthread_mutex_t));
-				pthread_mutex_init(session->check_count_mutex,NULL);
-				pthread_cond_init(session->check_cond,NULL);
-				session->checkthread=(pthread_t*)calloc(1,sizeof(pthread_t));
-				pthread_create(session->checkthread, NULL, nu_client_thread_check, session);
+				pthread_mutex_init(&(session->check_count_mutex),NULL);
+				pthread_cond_init(&(session->check_cond),NULL);
+				pthread_create(&(session->checkthread), NULL, nu_client_thread_check, session);
 			}
-			session->recvthread=(pthread_t*)calloc(1,sizeof(pthread_t));
-			pthread_create(session->recvthread, NULL, recv_message, session);
+			pthread_create(&(session->recvthread), NULL, recv_message, session);
 		}
 	
-		pthread_mutex_unlock(session->mutex);
+		pthread_mutex_unlock(&(session->mutex));
 		if (session->mode == SRV_TYPE_POLL) {
 			int checkreturn;
 			checkreturn = nu_client_real_check(session);
@@ -208,19 +206,19 @@ void* nu_client_thread_check(void *data)
 	pthread_mutex_t check_mutex;
 	pthread_mutex_init(&check_mutex,NULL);
 
-        pthread_cleanup_push(pthread_mutex_unlock, (void*)session->check_count_mutex);
+        pthread_cleanup_push(pthread_mutex_unlock, (void*)&(session->check_count_mutex));
         pthread_cleanup_push(clear_local_mutex, (void*)&check_mutex );
 	for(;;){
 		nu_client_real_check(session);
 	/* Do we need to do an other check ? */
-		pthread_mutex_lock(session->check_count_mutex);
+		pthread_mutex_lock(&(session->check_count_mutex));
 		if (session->count_msg_cond>0){
-			pthread_mutex_unlock(session->check_count_mutex);
+			pthread_mutex_unlock(&(session->check_count_mutex));
 		} else {
-			pthread_mutex_unlock(session->check_count_mutex);
+			pthread_mutex_unlock(&(session->check_count_mutex));
 			/* wait for cond */
 			pthread_mutex_lock(&check_mutex);
-			pthread_cond_wait(session->check_cond, &check_mutex);
+			pthread_cond_wait(&(session->check_cond), &check_mutex);
 			pthread_mutex_unlock(&check_mutex);
 		}
 	}
