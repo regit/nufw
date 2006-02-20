@@ -39,12 +39,19 @@ int build_nuauthconf(struct nuauth_params * nuauthconf,
   /* hostname conversion */
   if (nuauth_client_listen_addr){
       client_list_srv=gethostbyname(nuauth_client_listen_addr);
-      nuauthconf->client_srv=g_memdup(client_list_srv->h_addr,sizeof(struct in_addr));
+      if (client_list_srv != NULL){
+          nuauthconf->client_srv=g_memdup(client_list_srv->h_addr,sizeof(struct in_addr));
 
-      if (nuauthconf->client_srv->s_addr == INADDR_NONE ){
+          if (nuauthconf->client_srv->s_addr == INADDR_NONE ){
+              if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
+                  g_warning("Bad Address was passed for client listening address. Ignored. Using INADDR_ANY instead!");
+              }
+              nuauthconf->client_srv->s_addr = INADDR_ANY;
+          }
+      } else {
           if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
-              g_warning("Bad Address was passed for client listening address. Ignored. Using INADDR_ANY instead!");
-	  }
+              g_warning("Can not resolve client listening address (%s). Ignored. Using INADDR_ANY instead!", nuauth_client_listen_addr);
+          }
           nuauthconf->client_srv->s_addr = INADDR_ANY;
       }
   }
@@ -52,12 +59,19 @@ int build_nuauthconf(struct nuauth_params * nuauthconf,
   /* hostname conversion */
   if (nuauth_nufw_listen_addr){
       nufw_list_srv=gethostbyname(nuauth_nufw_listen_addr);
-      nuauthconf->nufw_srv=g_memdup(nufw_list_srv->h_addr, sizeof(struct in_addr));
+      if (nufw_list_srv != NULL){
+          nuauthconf->nufw_srv=g_memdup(nufw_list_srv->h_addr, sizeof(struct in_addr));
 
-      if (nuauthconf->nufw_srv->s_addr == INADDR_NONE ){
+          if (nuauthconf->nufw_srv->s_addr == INADDR_NONE ){
+              if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
+                  g_warning("Bad Address was passed for nufw listening address. Ignored. Using INADDR_ANY instead!");
+          }
+              nuauthconf->nufw_srv->s_addr = INADDR_ANY;
+          }
+      } else {
           if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
               g_warning("Bad Address was passed for nufw listening address. Ignored. Using INADDR_ANY instead!");
-	  }
+          }
           nuauthconf->nufw_srv->s_addr = INADDR_ANY;
       }
   }
