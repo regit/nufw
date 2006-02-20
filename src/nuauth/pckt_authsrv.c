@@ -236,7 +236,7 @@ connection_t* authpckt_new_connection(int8_t msg_type, unsigned char *dgram, int
  * -----+------+-------------------
  *   0  |   1  | Protocol version (equals to PROTO_VERSION)
  *   1  |   1  | Message type (from nufw_message_t)
- *   2  |   n  | Mesage content
+ *   2  |   n  | Message content
  * \endcode
  * (see constant #PROTO_VERSION and enum ::nufw_message_t)
  *
