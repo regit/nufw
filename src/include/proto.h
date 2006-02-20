@@ -20,9 +20,9 @@
 
 #include <config.h>
 #ifdef LINUX 
-#include <endian.h>
+#  include <endian.h>
 #else
-#include <machine/endian.h>
+#  include <machine/endian.h>
 #endif
 
 
@@ -32,14 +32,17 @@
 /**
  * Message type : stored on 4 bits
  */
-#define AUTH_REQUEST 0x1
-#define AUTH_ANSWER 0x2
-#define USER_REQUEST 0x3
-#define AUTH_CONTROL 0x4
-#define USER_HELLO 0x5
-#define AUTH_CONN_DESTROY 0x6
-#define AUTH_CONN_UPDATE 0x7
-#define AUTH_CONN_FIXED_TIMEOUT 0x7
+typedef enum
+{
+    AUTH_REQUEST=0x1,
+    AUTH_ANSWER, // 0x2
+    USER_REQUEST, // 0x3
+    AUTH_CONTROL, // 0x4
+    USER_HELLO, // 0x5
+    AUTH_CONN_DESTROY, // 0x6
+    AUTH_CONN_UPDATE, // 0x7
+    AUTH_CONN_FIXED_TIMEOUT // 8 
+} nufw_message_t;
 
 #define NOK 0           /*!< NuAuth decision answer: packet rejected */
 #define OK 1            /*!< NuAuth decision answer: packet accepted */
