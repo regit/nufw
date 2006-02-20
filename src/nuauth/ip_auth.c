@@ -53,16 +53,16 @@ void external_ip_auth(gpointer userdata, gpointer data)
                   groups=NULL;
             /* if search succeed process to packet transmission */
             if (groups){
-                connection_t* connexion=g_new0(connection_t,1);
-                connexion->state=STATE_USERPCKT;
-                connexion->user_groups=groups;
-		connexion->user_id=uid;
-                connexion->username=username;
-                connexion->sysname=NULL;
-                connexion->appname=NULL;
+                connection_t* connection=g_new0(connection_t,1);
+                connection->state=STATE_USERPCKT;
+                connection->user_groups=groups;
+		connection->user_id=uid;
+                connection->username=username;
+                connection->sysname=NULL;
+                connection->appname=NULL;
                 /* copy ipv4 header */
-                memcpy(&(connexion->tracking_hdrs),userdata,sizeof(tracking));
-		g_async_queue_push (nuauthdatas->connexions_queue,connexion);
+                memcpy(&(connection->tracking_hdrs),userdata,sizeof(tracking));
+		g_async_queue_push (nuauthdatas->connections_queue,connection);
             } 
         } 
         g_free(userdata);

@@ -259,8 +259,8 @@ int main(int argc,char * argv[])
 
   /* async  queue initialisation */
 
-  nuauthdatas->connexions_queue = g_async_queue_new();
-  if (!nuauthdatas->connexions_queue)
+  nuauthdatas->connections_queue = g_async_queue_new();
+  if (!nuauthdatas->connections_queue)
       exit(1);
 
   /* init modules system */
@@ -404,7 +404,7 @@ int main(int argc,char * argv[])
   if (! nuauthdatas->tls_nufw_server ){
       exit(1);
   }
-   nuauthdatas->limited_connexions_handler = g_thread_create ( limited_connection_handler,
+   nuauthdatas->limited_connections_handler = g_thread_create ( limited_connection_handler,
                   NULL,
                   FALSE,
                   NULL);
@@ -447,7 +447,7 @@ int main(int argc,char * argv[])
       {
               struct internal_message * message=g_new0(struct internal_message,1);
               message->type=REFRESH_MESSAGE;
-              g_async_queue_push(nuauthdatas->limited_connexions_queue,message);
+              g_async_queue_push(nuauthdatas->limited_connections_queue,message);
       } 
       /* a little sleep */
       usleep(500000);	

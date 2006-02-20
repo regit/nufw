@@ -67,7 +67,7 @@ void user_check_and_decide (gpointer userdata, gpointer data)
               message->datas=conn_elt;
               g_async_queue_push (nuauthdatas->localid_auth_queue,message);
           } else {
-              g_async_queue_push (nuauthdatas->connexions_queue,conn_elt);
+              g_async_queue_push (nuauthdatas->connections_queue,conn_elt);
           }
 	} else {
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER)){
@@ -104,7 +104,7 @@ void user_check_and_decide (gpointer userdata, gpointer data)
 static GSList * userpckt_decode(struct buffer_read * datas)
 {
   char * dgram = datas->buf;
-  connection_t* connexion=NULL;
+  connection_t* connection=NULL;
   struct nuv2_header* header=(struct nuv2_header*)dgram;
   gboolean multiclient_ok=FALSE;
   GSList* conn_elts=NULL;
@@ -131,16 +131,16 @@ static GSList * userpckt_decode(struct buffer_read * datas)
                       struct nuv2_authreq* authreq=(struct nuv2_authreq* )start;
                       char *req_start=start;
 
-                      connexion = g_new0( connection_t,1);
-                      connexion->acl_groups=NULL;
-                      connexion->user_groups=NULL;
-                      connexion->appname=NULL;
-                      connexion->appmd5=NULL;
-                      connexion->username=NULL;
-                      connexion->cacheduserdatas=NULL;
-                      connexion->packet_id=NULL;
+                      connection = g_new0( connection_t,1);
+                      connection->acl_groups=NULL;
+                      connection->user_groups=NULL;
+                      connection->appname=NULL;
+                      connection->appmd5=NULL;
+                      connection->username=NULL;
+                      connection->cacheduserdatas=NULL;
+                      connection->packet_id=NULL;
 #ifdef PERF_DISPLAY_ENABLE
-		      gettimeofday(&(connexion->arrival_time),NULL);
+		      gettimeofday(&(connection->arrival_time),NULL);
 #endif
 
 
@@ -151,7 +151,7 @@ static GSList * userpckt_decode(struct buffer_read * datas)
                             dgram+header->length) || (authreq->packet_length == 0)){
                           if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
                               g_message("Improper length signaled in authreq header : %d",authreq->packet_length);
-                          free_connection(connexion);
+                          free_connection(connection);
                           free_buffer_read(datas);
                           return NULL;
 
@@ -170,7 +170,7 @@ static GSList * userpckt_decode(struct buffer_read * datas)
                                 start+authreq->packet_length) || (field->length == 0)){
                               if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
                                   g_message("Improper field length signaled : %d",field->length);
-                              free_connection(connexion);
+                              free_connection(connection);
                               free_buffer_read(datas);
                               return NULL;
                           }
@@ -182,33 +182,33 @@ static GSList * userpckt_decode(struct buffer_read * datas)
                                   struct nuv2_authfield_ipv4 * ipfield=(struct nuv2_authfield_ipv4 * )req_start; 
 
 
-                                  connexion->tracking_hdrs.saddr=ntohl(ipfield->src);
-                                  connexion->tracking_hdrs.daddr=ntohl(ipfield->dst);
-                                  connexion->tracking_hdrs.protocol=ipfield->proto;
+                                  connection->tracking_hdrs.saddr=ntohl(ipfield->src);
+                                  connection->tracking_hdrs.daddr=ntohl(ipfield->dst);
+                                  connection->tracking_hdrs.protocol=ipfield->proto;
 
 #ifdef DEBUG_ENABLE
                                   if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
                                       g_message("\tgot IPV4 field");
 #endif
-                                  switch (connexion->tracking_hdrs.protocol) {
+                                  switch (connection->tracking_hdrs.protocol) {
                                     case IPPROTO_TCP:
 
-                                      connexion->tracking_hdrs.source=ntohs(ipfield->sport);
-                                      connexion->tracking_hdrs.dest=ntohs(ipfield->dport);
-                                      connexion->tracking_hdrs.type=0;
-                                      connexion->tracking_hdrs.code=0;
+                                      connection->tracking_hdrs.source=ntohs(ipfield->sport);
+                                      connection->tracking_hdrs.dest=ntohs(ipfield->dport);
+                                      connection->tracking_hdrs.type=0;
+                                      connection->tracking_hdrs.code=0;
                                       break;
                                     case IPPROTO_UDP:
-                                      connexion->tracking_hdrs.source=ntohs(ipfield->sport);
-                                      connexion->tracking_hdrs.dest=ntohs(ipfield->dport);
-                                      connexion->tracking_hdrs.type=0;
-                                      connexion->tracking_hdrs.code=0;
+                                      connection->tracking_hdrs.source=ntohs(ipfield->sport);
+                                      connection->tracking_hdrs.dest=ntohs(ipfield->dport);
+                                      connection->tracking_hdrs.type=0;
+                                      connection->tracking_hdrs.code=0;
                                       break;
                                     case IPPROTO_ICMP:
-                                      connexion->tracking_hdrs.source=0;
-                                      connexion->tracking_hdrs.dest=0;
-                                      connexion->tracking_hdrs.type=ntohs(ipfield->sport);
-                                      connexion->tracking_hdrs.code=ntohs(ipfield->dport);
+                                      connection->tracking_hdrs.source=0;
+                                      connection->tracking_hdrs.dest=0;
+                                      connection->tracking_hdrs.type=ntohs(ipfield->sport);
+                                      connection->tracking_hdrs.code=ntohs(ipfield->dport);
                                       break;
                                   }
                               }
@@ -232,7 +232,7 @@ static GSList * userpckt_decode(struct buffer_read * datas)
                                               authreq->packet_length+start-req_start){
                                               if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
                                                   g_message("Improper application field length signaled in authreq header");
-                                              free_connection(connexion);
+                                              free_connection(connection);
                                               free_buffer_read(datas);
                                               return NULL;
 
@@ -242,7 +242,7 @@ static GSList * userpckt_decode(struct buffer_read * datas)
                                               /* it is reaaally long, we ignore packet (too lasy to kill client) */
                                               if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
                                                   g_warning("user packet announced a too long app name\n");
-                                              free_connection(connexion);
+                                              free_connection(connection);
                                               free_buffer_read(datas);
                                               return NULL;
                                           }
@@ -260,15 +260,15 @@ static GSList * userpckt_decode(struct buffer_read * datas)
 
                                           if (dec_appname != NULL)
                                           {
-                                              connexion->appname= string_escape(dec_appname);
-                                              if (connexion->appname == NULL)
+                                              connection->appname= string_escape(dec_appname);
+                                              if (connection->appname == NULL)
                                                   if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
                                                       g_warning("user packet received an invalid app name\n");
                                           }else{
-                                              connexion->appname=NULL;
+                                              connection->appname=NULL;
                                           }
                                           g_free(dec_appname);
-                                          connexion->appmd5=NULL;
+                                          connection->appmd5=NULL;
 
                                       }
 
@@ -293,7 +293,7 @@ static GSList * userpckt_decode(struct buffer_read * datas)
                                                   /* it is reaaally long, we ignore packet (too lasy to kill client) */
                                                   if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
                                                       g_warning("user packet announced a too long user name\n");
-                                                  free_connection(connexion);
+                                                  free_connection(connection);
                                                   free_buffer_read(datas);
                                                   return NULL;
                                               }
@@ -311,13 +311,13 @@ static GSList * userpckt_decode(struct buffer_read * datas)
 
                                               if (dec_fieldname != NULL)
                                               {
-                                                  connexion->username= string_escape(dec_fieldname);
-                                                  if (connexion->username == NULL)
+                                                  connection->username= string_escape(dec_fieldname);
+                                                  if (connection->username == NULL)
                                                       if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
                                                           g_warning("user packet received an invalid username\n");
                                               }else {
                                                   g_free(dec_fieldname);
-                                                  free_connection(connexion);
+                                                  free_connection(connection);
                                                   if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER)){
                                                       g_message("rejected packet, invalid username field");
                                                   }
@@ -330,7 +330,7 @@ static GSList * userpckt_decode(struct buffer_read * datas)
                                       multiclient_ok=TRUE;
                                   } else {
                                       /* should not be here */
-                                      free_connection(connexion);
+                                      free_connection(connection);
                                       if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER)){
                                           g_message("not multiuser client but sent username field");
                                       }
@@ -344,37 +344,37 @@ static GSList * userpckt_decode(struct buffer_read * datas)
                               {
                                   struct nuv2_authfield_hello* hellofield = (struct nuv2_authfield_hello*)req_start;
                                   g_message("got hello field");
-                                  connexion->packet_id=g_slist_prepend(NULL,GINT_TO_POINTER(hellofield->helloid));
+                                  connection->packet_id=g_slist_prepend(NULL,GINT_TO_POINTER(hellofield->helloid));
                               }
                               break;
                             default:
                               if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
                                   g_message("unknown field type : %d",field->type);
-                              free_connection(connexion);
+                              free_connection(connection);
                               free_buffer_read(datas);
                               return NULL;
                           }
                           req_start+=ntohs(field->length);
                       }
                       /* here all packet related information are filled-in */
-                      if (connexion->username == NULL){	
-                          connexion->username=g_strdup(datas->userid);
+                      if (connection->username == NULL){	
+                          connection->username=g_strdup(datas->userid);
                       }
-                      connexion->user_id=datas->uid;
-                      connexion->user_groups = g_slist_copy(datas->groups);
-                      connexion->sysname=g_strdup(datas->sysname);
-                      connexion->release=g_strdup(datas->release);
-                      connexion->version=g_strdup(datas->version);
-                      if (connexion->user_groups == NULL) {
+                      connection->user_id=datas->uid;
+                      connection->user_groups = g_slist_copy(datas->groups);
+                      connection->sysname=g_strdup(datas->sysname);
+                      connection->release=g_strdup(datas->release);
+                      connection->version=g_strdup(datas->version);
+                      if (connection->user_groups == NULL) {
                           if ((header->option == 0x1) && multiclient_ok) {
                               if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
                                   g_message("Get users info");
                               /* group is not fill in multi users mode
                                * need to be done now */
                               if ( nuauthconf->user_cache ){
-                                  get_users_from_cache(connexion);
+                                  get_users_from_cache(connection);
                               } else {
-                                  if (user_check(connexion->username,NULL,0,&(connexion->user_id),&(connexion->user_groups))!=SASL_OK){
+                                  if (user_check(connection->username,NULL,0,&(connection->user_id),&(connection->user_groups))!=SASL_OK){
                                       if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_PACKET)){
                                           g_message("User not found");
                                       }
@@ -384,17 +384,17 @@ static GSList * userpckt_decode(struct buffer_read * datas)
                           } else {
                               if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
                                   g_message("User_check return is bad");
-                              free_connection(connexion);
+                              free_connection(connection);
                               return NULL;
                           }
                       }
                       /* first reset timestamp to now */
-                      connexion->timestamp=time(NULL);
-                      connexion->state=STATE_USERPCKT;
+                      connection->timestamp=time(NULL);
+                      connection->state=STATE_USERPCKT;
                       /* acl part is NULL */
-                      connexion->acl_groups=NULL;
+                      connection->acl_groups=NULL;
 
-                      conn_elts=g_slist_prepend(conn_elts,connexion);
+                      conn_elts=g_slist_prepend(conn_elts,connection);
 #ifdef DEBUG_ENABLE
                                   if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
                                       g_message("Authreq end");

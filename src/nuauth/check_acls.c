@@ -96,7 +96,7 @@ void acl_check_and_decide (gpointer userdata, gpointer data)
                       /* give packet to search and fill */
                   case STATE_COMPLETING:
                       {
-                          g_async_queue_push (nuauthdatas->connexions_queue,conn_elt);
+                          g_async_queue_push (nuauthdatas->connections_queue,conn_elt);
                       }
                       break;
                   default:

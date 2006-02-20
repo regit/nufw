@@ -25,22 +25,22 @@
 #include <errno.h>
 
 /** 
- *fill ip related part of the connexion tracking header.
+ *fill ip related part of the connection tracking header.
  * 
  * - Argument 1 : a connection
  * - Argument 2 : pointer to packet datas
  * - Return : offset to next type of headers 
  */
 
-int get_ip_headers(connection_t *connexion,char * dgram)
+int get_ip_headers(connection_t *connection,char * dgram)
 {
 	struct iphdr * iphdrs = (struct iphdr *) dgram;
 	/* check IP version */
 	if (iphdrs->version == 4){
-		connexion->tracking_hdrs.saddr=ntohl(iphdrs->saddr);
-		connexion->tracking_hdrs.daddr=ntohl(iphdrs->daddr);
+		connection->tracking_hdrs.saddr=ntohl(iphdrs->saddr);
+		connection->tracking_hdrs.daddr=ntohl(iphdrs->daddr);
 		/* get protocol */
-		connexion->tracking_hdrs.protocol=iphdrs->protocol;
+		connection->tracking_hdrs.protocol=iphdrs->protocol;
 		return 4*iphdrs->ihl;
 	}
 #ifdef DEBUG_ENABLE
@@ -52,40 +52,40 @@ int get_ip_headers(connection_t *connexion,char * dgram)
 }
 
 /** 
- * fill udp related part of the connexion tracking header.
+ * fill udp related part of the connection tracking header.
  * 
  * - Argument 1 : a connection
  * - Argument 2 : pointer to packet datas
  * - Return : 0
  */
 
-int get_udp_headers(connection_t *connexion, char * dgram)
+int get_udp_headers(connection_t *connection, char * dgram)
 {
 	struct udphdr * udphdrs=(struct udphdr *)dgram;
-	connexion->tracking_hdrs.source=ntohs(udphdrs->source);
-	connexion->tracking_hdrs.dest=ntohs(udphdrs->dest);
-	connexion->tracking_hdrs.type=0;
-	connexion->tracking_hdrs.code=0;
+	connection->tracking_hdrs.source=ntohs(udphdrs->source);
+	connection->tracking_hdrs.dest=ntohs(udphdrs->dest);
+	connection->tracking_hdrs.type=0;
+	connection->tracking_hdrs.code=0;
 	return 0;
 }
 
 
 /**
- * fill tcp related part of the connexion tracking header.
+ * fill tcp related part of the connection tracking header.
  *
  * - Argument 1 : a connection
  * - Argument 2 : pointer to packet datas
  * - Return : STATE of the packet
  */
 
-int get_tcp_headers(connection_t *connexion, char * dgram)
+int get_tcp_headers(connection_t *connection, char * dgram)
 {
 	struct tcphdr * tcphdrs=(struct tcphdr *) dgram;
-	connexion->tracking_hdrs.source=ntohs(tcphdrs->source);
-	connexion->tracking_hdrs.dest=ntohs(tcphdrs->dest);
+	connection->tracking_hdrs.source=ntohs(tcphdrs->source);
+	connection->tracking_hdrs.dest=ntohs(tcphdrs->dest);
 
-	connexion->tracking_hdrs.type=0;
-	connexion->tracking_hdrs.code=0;
+	connection->tracking_hdrs.type=0;
+	connection->tracking_hdrs.code=0;
 	/* test if fin ack or syn */
 	/* if fin ack return 0 end of connection */
 	if (tcphdrs->fin || tcphdrs->rst )
@@ -102,7 +102,7 @@ int get_tcp_headers(connection_t *connexion, char * dgram)
 }
 
 /** 
- * fill icmp related part of the connexion tracking header.
+ * fill icmp related part of the connection tracking header.
  * 
  * - Argument 1 : a connection
  * - Argument 2 : pointer to packet datas
@@ -110,13 +110,13 @@ int get_tcp_headers(connection_t *connexion, char * dgram)
  */
 
 
-int get_icmp_headers(connection_t *connexion, char * dgram)
+int get_icmp_headers(connection_t *connection, char * dgram)
 {
 	struct icmphdr * icmphdrs= (struct icmphdr *)dgram;
-	connexion->tracking_hdrs.source=0;
-	connexion->tracking_hdrs.dest=0;
-	connexion->tracking_hdrs.type=icmphdrs->type;
-	connexion->tracking_hdrs.code=icmphdrs->code;
+	connection->tracking_hdrs.source=0;
+	connection->tracking_hdrs.dest=0;
+	connection->tracking_hdrs.type=icmphdrs->type;
+	connection->tracking_hdrs.code=icmphdrs->code;
 	return 0;
 }
 
@@ -134,7 +134,7 @@ connection_t*  authpckt_decode(char * dgram, int  dgramsiz)
 	int8_t *pointer;
 	uint8_t msg_type;
 	uint16_t data_len;
-	connection_t*  connexion = NULL;
+	connection_t*  connection = NULL;
 
 	switch (*dgram) {
 		case PROTO_VERSION:
@@ -144,15 +144,15 @@ connection_t*  authpckt_decode(char * dgram, int  dgramsiz)
                           case AUTH_CONTROL:
                                   {
 				/* allocate connection */
-				connexion = g_new0( connection_t,1);
-				if (connexion == NULL){
+				connection = g_new0( connection_t,1);
+				if (connection == NULL){
 					if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET)){
-						g_message("Can not allocate connexion\n");
+						g_message("Can not allocate connection\n");
 					}
 					return NULL;
 				}
 #ifdef PERF_DISPLAY_ENABLE
-			      gettimeofday(&(connexion->arrival_time),NULL);
+			      gettimeofday(&(connection->arrival_time),NULL);
 #endif
 				/* parse packet */
 				pointer=(int8_t*)dgram + 2;
@@ -168,73 +168,73 @@ connection_t*  authpckt_decode(char * dgram, int  dgramsiz)
 					}
 				}
 				pointer+=2;
-				connexion->acl_groups=NULL;
-				connexion->user_groups=NULL;
-				connexion->packet_id=NULL;
-				connexion->packet_id=g_slist_append(connexion->packet_id, GUINT_TO_POINTER(ntohl(*(uint32_t * )pointer)));
+				connection->acl_groups=NULL;
+				connection->user_groups=NULL;
+				connection->packet_id=NULL;
+				connection->packet_id=g_slist_append(connection->packet_id, GUINT_TO_POINTER(ntohl(*(uint32_t * )pointer)));
 #ifdef DEBUG_ENABLE
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_PACKET)) {
-					g_message("Working on  %u\n",(uint32_t)GPOINTER_TO_UINT(connexion->packet_id->data));
+					g_message("Working on  %u\n",(uint32_t)GPOINTER_TO_UINT(connection->packet_id->data));
 				}
 #endif
 				pointer+=sizeof (uint32_t);
 
-				connexion->timestamp=ntohl(*(uint32_t * )pointer);
+				connection->timestamp=ntohl(*(uint32_t * )pointer);
 				pointer+=sizeof ( int32_t);
 				/* get ip headers till tracking is filled */
-				offset = get_ip_headers(connexion, (char*)pointer);
+				offset = get_ip_headers(connection, (char*)pointer);
 				if ( offset) {
 					pointer+=offset;
 					/* get saddr and daddr */
 					/* check if proto is in Hello mode list (when hello authentication is used) */
-					if ( nuauthconf->hello_authentication &&  localid_authenticated_protocol(connexion->tracking_hdrs.protocol) ) {
-						connexion->state=STATE_HELLOMODE;
+					if ( nuauthconf->hello_authentication &&  localid_authenticated_protocol(connection->tracking_hdrs.protocol) ) {
+						connection->state=STATE_HELLOMODE;
 					} 
-					switch (connexion->tracking_hdrs.protocol) {
+					switch (connection->tracking_hdrs.protocol) {
 						case IPPROTO_TCP:
-							switch (get_tcp_headers(connexion, (char*)pointer)){
+							switch (get_tcp_headers(connection, (char*)pointer)){
 								case STATE_OPEN:
 									break; 
 								case STATE_CLOSE:
 									if (msg_type == AUTH_CONTROL ){
-										log_user_packet(*connexion,STATE_CLOSE);
+										log_user_packet(*connection,STATE_CLOSE);
 										return NULL;
 									}
 									break;
 								case STATE_ESTABLISHED:
 									if (msg_type == AUTH_CONTROL ){
-										log_user_packet(*connexion,STATE_ESTABLISHED);
+										log_user_packet(*connection,STATE_ESTABLISHED);
 										return NULL;
 									}
 									break;
 								default:
 									if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))
 										g_warning ("Can't parse TCP headers\n");
-									free_connection(connexion);
+									free_connection(connection);
 									return NULL;
 							}
 							break;
 						case IPPROTO_UDP:
-							if ( get_udp_headers(connexion, (char*)pointer) ){
+							if ( get_udp_headers(connection, (char*)pointer) ){
 								if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))
 									g_warning ("Can't parse UDP headers\n");
-								free_connection(connexion);
+								free_connection(connection);
 								return NULL;
 							}
 							break;
 						case IPPROTO_ICMP:
-							if ( get_icmp_headers(connexion, (char*)pointer)){
+							if ( get_icmp_headers(connection, (char*)pointer)){
 								if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))
 									g_message ("Can't parse ICMP headers\n");
-								free_connection(connexion);
+								free_connection(connection);
 								return NULL;
 							}
 							break;
 						default:
-							if ( connexion->state != STATE_HELLOMODE){
+							if ( connection->state != STATE_HELLOMODE){
 								if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))
 									g_message ("Can't parse this protocol\n");
-								free_connection(connexion);
+								free_connection(connection);
 								return NULL;
 							}
 					}
@@ -242,21 +242,21 @@ connection_t*  authpckt_decode(char * dgram, int  dgramsiz)
 				else {
 					if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))
 						g_message ("Can't parse IP headers\n");
-					free_connection(connexion);
+					free_connection(connection);
 					return NULL;
 				}
-				connexion->user_groups = ALLGROUP;
+				connection->user_groups = ALLGROUP;
 				/* have look at timestamp */
-				if ( connexion->timestamp == 0 ){
-					connexion->timestamp=time(NULL);
+				if ( connection->timestamp == 0 ){
+					connection->timestamp=time(NULL);
 				}
 #ifdef DEBUG_ENABLE
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)){
 					g_message("Packet : ");
-					print_connection(connexion,NULL);
+					print_connection(connection,NULL);
 				}
 #endif
-				return connexion;
+				return connection;
 			} 
                                   break;
                           case AUTH_CONN_DESTROY:
@@ -276,7 +276,7 @@ connection_t*  authpckt_decode(char * dgram, int  dgramsiz)
                                       }               
                                       message->datas = datas;
                                       message->type = FREE_MESSAGE;
-                                      g_async_queue_push (nuauthdatas->limited_connexions_queue, message);
+                                      g_async_queue_push (nuauthdatas->limited_connections_queue, message);
                                   }
                                   break;
                          case AUTH_CONN_UPDATE:
@@ -296,7 +296,7 @@ connection_t*  authpckt_decode(char * dgram, int  dgramsiz)
                                       }               
                                       message->datas = datas;
                                       message->type = UPDATE_MESSAGE;
-                                      g_async_queue_push (nuauthdatas->limited_connexions_queue, message);
+                                      g_async_queue_push (nuauthdatas->limited_connections_queue, message);
                                   }
                                   break;
 

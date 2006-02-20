@@ -154,10 +154,10 @@ void search_and_fill ()
         //GRYZOR warning : it seems we g_free() on pckt only on some conditions in this function
 	connection_t * pckt = NULL;
 
-	g_async_queue_ref (nuauthdatas->connexions_queue);
+	g_async_queue_ref (nuauthdatas->connections_queue);
 	g_async_queue_ref (nuauthdatas->tls_push_queue);
 	/* wait for message */
-	while ( (pckt = g_async_queue_pop(nuauthdatas->connexions_queue)) ) {
+	while ( (pckt = g_async_queue_pop(nuauthdatas->connections_queue)) ) {
 		/* search pckt */
 		g_static_mutex_lock (&insert_mutex);
 #ifdef DEBUG_ENABLE
@@ -751,7 +751,7 @@ gint take_decision(connection_t * element,gchar place)
                 datas->gwaddr.s_addr=(element->tls)->peername.s_addr;
                 message->datas=datas;
                 message->type=INSERT_MESSAGE;
-		g_async_queue_push (nuauthdatas->limited_connexions_queue, message);
+		g_async_queue_push (nuauthdatas->limited_connections_queue, message);
         }
         
 	if (nuauthconf->log_users_sync) {

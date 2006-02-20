@@ -132,16 +132,16 @@ void* limited_connection_handler()
   GHashTable* conn_list;
   struct internal_message *message=NULL;
 
-  nuauthdatas->limited_connexions_queue = g_async_queue_new();
+  nuauthdatas->limited_connections_queue = g_async_queue_new();
   /* initialize packets list */
   conn_list = g_hash_table_new_full ((GHashFunc)hash_connection,
                   compare_connection,
                   NULL,
                   (GDestroyNotify) send_destroy_message_and_free); 
 
-  g_async_queue_ref (nuauthdatas->limited_connexions_queue);
+  g_async_queue_ref (nuauthdatas->limited_connections_queue);
   /* wait for message */
-  while ( (message = g_async_queue_pop(nuauthdatas->limited_connexions_queue)) ) {
+  while ( (message = g_async_queue_pop(nuauthdatas->limited_connections_queue)) ) {
       switch (message->type) {
         case INSERT_MESSAGE:
                 g_hash_table_insert(conn_list,&(((struct limited_connection*)message->datas)->tracking_hdrs),message->datas);
