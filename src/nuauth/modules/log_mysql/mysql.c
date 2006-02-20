@@ -167,7 +167,7 @@ static gchar* generate_appname(gchar *Name)
 	return g_strdup(Name);
 }
 
-G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
+G_MODULE_EXPORT gint user_packet_logs (connection_t element, tcp_state_t state){
 	MYSQL *ld = g_private_get (mysql_priv);
 	char request[LONG_REQUEST_SIZE];
 	int Result;
@@ -183,7 +183,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
 
 	/* contruct request */
 	switch (state) {
-		case STATE_OPEN:
+		case TCP_STATE_OPEN:
 			switch ((element.tracking_hdrs).protocol){
 				case IPPROTO_TCP:
 
@@ -206,7 +206,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
 						/* need to update table to suppress double field */
 						if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET state=%hu,end_timestamp=FROM_UNIXTIME(%lu) WHERE (ip_saddr=%lu  AND tcp_sport=%u AND (state=1 OR state=2))",
 									mysql_table_name,
-									STATE_CLOSE,
+									TCP_STATE_CLOSE,
 									element.timestamp,
 									(long unsigned int)(element.tracking_hdrs).daddr,
 									(element.tracking_hdrs).source
@@ -240,7 +240,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
 									(long unsigned int)(element.tracking_hdrs).daddr,
 									(element.tracking_hdrs).source,
 									(element.tracking_hdrs).dest,
-									STATE_OPEN,
+									TCP_STATE_OPEN,
 									OSFullname,
 									AppFullname
 							    ) >= LONG_REQUEST_SIZE-1){
@@ -263,7 +263,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
 									(long unsigned int)(element.tracking_hdrs).daddr,
 									(element.tracking_hdrs).source,
 									(element.tracking_hdrs).dest,
-									STATE_OPEN
+									TCP_STATE_OPEN
 							    ) >= SHORT_REQUEST_SIZE-1){
 							if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
 								g_warning("Building mysql insert query, the SHORT_REQUEST_SIZE limit was reached!\n");
@@ -294,7 +294,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
 									(long unsigned int)(element.tracking_hdrs).daddr,
 									(element.tracking_hdrs).source,
 									(element.tracking_hdrs).dest,
-									STATE_OPEN,
+									TCP_STATE_OPEN,
 									OSFullname,
 									AppFullname
 							    ) >= LONG_REQUEST_SIZE-1){
@@ -332,7 +332,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
 									(element.tracking_hdrs).protocol,
 									(long unsigned int)(element.tracking_hdrs).saddr,
 									(long unsigned int)(element.tracking_hdrs).daddr,
-									STATE_OPEN,
+									TCP_STATE_OPEN,
 									OSFullname,
 									AppFullname
 							    ) >= (LONG_REQUEST_SIZE-1)){
@@ -355,7 +355,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
 					}
 			}
 			break;
-		case STATE_ESTABLISHED: 
+		case TCP_STATE_ESTABLISHED: 
 			if ((element.tracking_hdrs).protocol == IPPROTO_TCP){
 				int update_status = 0;
 				while (update_status < 2){
@@ -363,13 +363,13 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
 					if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET state=%hu,start_timestamp=FROM_UNIXTIME(%lu) WHERE (ip_daddr=%lu AND ip_saddr=%lu AND tcp_dport=%u AND tcp_sport=%u AND state=%hu)",
 
 								mysql_table_name,
-								STATE_ESTABLISHED,
+								TCP_STATE_ESTABLISHED,
 								element.timestamp,
 								(long unsigned int)(element.tracking_hdrs).saddr,
 								(long unsigned int)(element.tracking_hdrs).daddr,
 								(element.tracking_hdrs).source,
 								(element.tracking_hdrs).dest,
-								STATE_OPEN
+								TCP_STATE_OPEN
 						    ) >= SHORT_REQUEST_SIZE-1){
 						if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
 							g_warning("Building mysql update query, the SHORT_REQUEST_SIZE limit was reached!\n");
@@ -397,7 +397,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
 				return 0;
 			}
 			break;
-		case STATE_CLOSE: 
+		case TCP_STATE_CLOSE: 
 			if ((element.tracking_hdrs).protocol == IPPROTO_TCP){
 				int update_status = 0;
 				while (update_status < 2){
@@ -406,12 +406,12 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
 
 								mysql_table_name,
 								element.timestamp,
-								STATE_CLOSE,
+								TCP_STATE_CLOSE,
 								(long unsigned int)(element.tracking_hdrs).saddr,
 								(long unsigned int)(element.tracking_hdrs).daddr,
 								(element.tracking_hdrs).source,
 								(element.tracking_hdrs).dest,
-								STATE_ESTABLISHED
+								TCP_STATE_ESTABLISHED
 						    ) >= SHORT_REQUEST_SIZE-1){
 						if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
 							g_warning("Building mysql update query, the SHORT_REQUEST_SIZE limit was reached!\n");
@@ -439,7 +439,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
 				return 0;
 			}
 			break;
-		case STATE_DROP:
+		case TCP_STATE_DROP:
 			switch ((element.tracking_hdrs).protocol){
 				case IPPROTO_TCP:
 					{
@@ -459,7 +459,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
 										(long unsigned int)(element.tracking_hdrs).daddr,
 										(element.tracking_hdrs).source,
 										(element.tracking_hdrs).dest,
-										STATE_DROP,
+										TCP_STATE_DROP,
 										OSFullname,
 										AppFullname
 								    ) >= LONG_REQUEST_SIZE-1){
@@ -487,7 +487,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
 										(long unsigned int)(element.tracking_hdrs).daddr,
 										(element.tracking_hdrs).source,
 										(element.tracking_hdrs).dest,
-										STATE_DROP) >= (LONG_REQUEST_SIZE-1)){
+										TCP_STATE_DROP) >= (LONG_REQUEST_SIZE-1)){
 								if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
 									g_warning("Building mysql insert query, the LONG_REQUEST_SIZE limit was reached!\n");
 								return -1;
@@ -518,7 +518,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
 										(long unsigned int)(element.tracking_hdrs).daddr,
 										(element.tracking_hdrs).source,
 										(element.tracking_hdrs).dest,
-										STATE_DROP,
+										TCP_STATE_DROP,
 										OSFullname,
 										AppFullname
 								    ) >= LONG_REQUEST_SIZE-1){
@@ -549,7 +549,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
 										(long unsigned int)(element.tracking_hdrs).daddr,
 										(element.tracking_hdrs).source,
 										(element.tracking_hdrs).dest,
-										STATE_DROP) >= (LONG_REQUEST_SIZE-1)){
+										TCP_STATE_DROP) >= (LONG_REQUEST_SIZE-1)){
 								if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
 									g_warning("Building mysql insert query, the LONG_REQUEST_SIZE limit was reached!\n");
 								return -1;
@@ -577,7 +577,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
 									(element.tracking_hdrs).protocol,
 									(long unsigned int) (element.tracking_hdrs).saddr,
 									(long unsigned int) (element.tracking_hdrs).daddr,
-									STATE_DROP,
+									TCP_STATE_DROP,
 									OSFullname,
 									AppFullname
 							    ) >= LONG_REQUEST_SIZE-1){
@@ -599,6 +599,10 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
 					}
 			}
 			break;
+
+        // To make gcc happy
+        default:
+            break;
 	}
 	return 0;
 }

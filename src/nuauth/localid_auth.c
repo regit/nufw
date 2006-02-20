@@ -55,7 +55,7 @@ void localid_auth()
 				pckt=message->datas;
 				g_free(message);
 				switch ( pckt->state){
-					case STATE_AUTHREQ:
+					case AUTH_STATE_AUTHREQ:
 						/* add in struct */
 						/* compute random u32 integer  and test if 
 						 * iter if it exists in hash, increment it if needed
@@ -74,7 +74,7 @@ void localid_auth()
 						warn_clients(global_msg);
 						g_static_mutex_unlock (&client_mutex);
 						break;
-					case STATE_USERPCKT:
+					case AUTH_STATE_USERPCKT:
 						/* search in struct */
 						element = (connection_t*) g_hash_table_lookup (localid_auth_hash,(GSList*)(pckt->packet_id)->data);
 						/* if found ask for completion */
@@ -82,7 +82,7 @@ void localid_auth()
 							/* TODO : do a check on saddr */
 							if ( (element->tracking_hdrs.saddr == pckt->tracking_hdrs.saddr ) || 1 ){	
 
-								element->state=STATE_HELLOMODE;	
+								element->state=AUTH_STATE_HELLOMODE;	
 								element->user_id=pckt->user_id;
 								element->username=pckt->username;
 								element->user_groups=pckt->user_groups;
@@ -104,10 +104,10 @@ void localid_auth()
 							g_warning("Bad user packet.");
 						}
 						break;
-					case STATE_HELLOMODE:
+					case AUTH_STATE_HELLOMODE:
 						take_decision(pckt,PACKET_ALONE);
 						break;
-					case STATE_DONE:
+					case AUTH_STATE_DONE:
 						/* packet has already been dropped, need only cleaning */
 						free_connection(pckt);
 						break;

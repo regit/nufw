@@ -188,7 +188,7 @@ static GSList * userpckt_decode(struct buffer_read * datas)
 
 #ifdef DEBUG_ENABLE
                                   if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-                                      g_message("\tgot IPV4 field");
+                                      g_message("\tgot IPv4 field");
 #endif
                                   switch (connection->tracking_hdrs.protocol) {
                                     case IPPROTO_TCP:
@@ -390,7 +390,7 @@ static GSList * userpckt_decode(struct buffer_read * datas)
                       }
                       /* first reset timestamp to now */
                       connection->timestamp=time(NULL);
-                      connection->state=STATE_USERPCKT;
+                      connection->state=AUTH_STATE_USERPCKT;
                       /* acl part is NULL */
                       connection->acl_groups=NULL;
 

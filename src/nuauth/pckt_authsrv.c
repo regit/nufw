@@ -25,14 +25,13 @@
 #include <errno.h>
 
 /** 
- * Fill IP related part of the connection tracking header.
+ * Fill IP related fields of the connection tracking header (see ::tracking structure).
  * 
  * \param connection Pointer to a connection
  * \param dgram Pointer to packet datas
  * \return Offset to next type of headers, or 0 if the packet is not recognized 
  */
-
-int get_ip_headers(connection_t *connection, unsigned char * dgram)
+int get_ip_headers(connection_t *connection, unsigned char *dgram)
 {
 	struct iphdr * iphdrs = (struct iphdr *)dgram;
 	/* check IP version */
@@ -51,33 +50,29 @@ int get_ip_headers(connection_t *connection, unsigned char * dgram)
 }
 
 /** 
- * fill udp related part of the connection tracking header.
+ * Fill UDP related fields of the connection tracking header (see ::tracking structure).
  * 
- * - Argument 1 : a connection
- * - Argument 2 : pointer to packet datas
- * - Return : 0
+ * \param connection Pointer to a connection
+ * \param dgram Pointer to packet datas
  */
-
-int get_udp_headers(connection_t *connection, char * dgram)
+void get_udp_headers(connection_t *connection, unsigned char *dgram)
 {
 	struct udphdr * udphdrs=(struct udphdr *)dgram;
 	connection->tracking_hdrs.source=ntohs(udphdrs->source);
 	connection->tracking_hdrs.dest=ntohs(udphdrs->dest);
 	connection->tracking_hdrs.type=0;
 	connection->tracking_hdrs.code=0;
-	return 0;
 }
 
 
 /**
- * fill tcp related part of the connection tracking header.
+ * Fill TCP related part of the connection tracking header (see ::tracking structure).
  *
- * - Argument 1 : a connection
- * - Argument 2 : pointer to packet datas
- * - Return : STATE of the packet
+ * \param connection Pointer to a connection
+ * \param dgram Pointer to packet datas
+ * \return State of the TCP connection (open, established, close).
  */
-
-int get_tcp_headers(connection_t *connection, char * dgram)
+tcp_state_t get_tcp_headers(connection_t *connection, unsigned char *dgram)
 {
 	struct tcphdr * tcphdrs=(struct tcphdr *) dgram;
 	connection->tracking_hdrs.source=ntohs(tcphdrs->source);
@@ -88,46 +83,41 @@ int get_tcp_headers(connection_t *connection, char * dgram)
 	/* test if fin ack or syn */
 	/* if fin ack return 0 end of connection */
 	if (tcphdrs->fin || tcphdrs->rst )
-		return STATE_CLOSE;
+		return TCP_STATE_CLOSE;
 	/* if syn return 1 */
 	if (tcphdrs->syn) {
 		if (tcphdrs->ack){
-			return STATE_ESTABLISHED;
+			return TCP_STATE_ESTABLISHED;
 		} else {
-			return STATE_OPEN;
+			return TCP_STATE_OPEN;
 		}
 	}
-	return -1;
+	return TCP_STATE_UNKNOW;
 }
 
 /** 
- * fill icmp related part of the connection tracking header.
+ * Fill ICMP related part of the connection tracking header.
  * 
- * - Argument 1 : a connection
- * - Argument 2 : pointer to packet datas
- * - Return : 0
+ * \param connection Pointer to a connection
+ * \param dgram Pointer to packet datas
  */
-
-
-int get_icmp_headers(connection_t *connection, char * dgram)
+void get_icmp_headers(connection_t *connection, unsigned char *dgram)
 {
 	struct icmphdr * icmphdrs= (struct icmphdr *)dgram;
 	connection->tracking_hdrs.source=0;
 	connection->tracking_hdrs.dest=0;
 	connection->tracking_hdrs.type=icmphdrs->type;
 	connection->tracking_hdrs.code=icmphdrs->code;
-	return 0;
 }
 
 /**
- * decode a dgram packet from gateway and create a connection with it.
+ * Decode a dgram packet from gateway and create a connection with it.
  * 
- * - Argument 1 : pointer to dgram
- * - Argument 2 : dgram size
- * - Return : pointer to allocated connection
+ * \param dgram Pointer to dgram
+ * \param dgramsize Size of the dgram (in bytes)
+ * \return Pointer to allocated connection
  */
-
-connection_t*  authpckt_decode(char * dgram, int  dgramsiz)
+connection_t*  authpckt_decode(unsigned char * dgram, int  dgramsiz)
 {
 	int offset; 
 	int8_t *pointer;
@@ -187,22 +177,22 @@ connection_t*  authpckt_decode(char * dgram, int  dgramsiz)
 					/* get saddr and daddr */
 					/* check if proto is in Hello mode list (when hello authentication is used) */
 					if ( nuauthconf->hello_authentication &&  localid_authenticated_protocol(connection->tracking_hdrs.protocol) ) {
-						connection->state=STATE_HELLOMODE;
+						connection->state=AUTH_STATE_HELLOMODE;
 					} 
 					switch (connection->tracking_hdrs.protocol) {
 						case IPPROTO_TCP:
-							switch (get_tcp_headers(connection, (char*)pointer)){
-								case STATE_OPEN:
+							switch (get_tcp_headers(connection, (unsigned char*)pointer)){
+								case TCP_STATE_OPEN:
 									break; 
-								case STATE_CLOSE:
+								case TCP_STATE_CLOSE:
 									if (msg_type == AUTH_CONTROL ){
-										log_user_packet(*connection,STATE_CLOSE);
+										log_user_packet(*connection, TCP_STATE_CLOSE);
 										return NULL;
 									}
 									break;
-								case STATE_ESTABLISHED:
+								case TCP_STATE_ESTABLISHED:
 									if (msg_type == AUTH_CONTROL ){
-										log_user_packet(*connection,STATE_ESTABLISHED);
+										log_user_packet(*connection, TCP_STATE_ESTABLISHED);
 										return NULL;
 									}
 									break;
@@ -214,23 +204,13 @@ connection_t*  authpckt_decode(char * dgram, int  dgramsiz)
 							}
 							break;
 						case IPPROTO_UDP:
-							if ( get_udp_headers(connection, (char*)pointer) ){
-								if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))
-									g_warning ("Can't parse UDP headers\n");
-								free_connection(connection);
-								return NULL;
-							}
+							get_udp_headers(connection, (unsigned char*)pointer);
 							break;
 						case IPPROTO_ICMP:
-							if ( get_icmp_headers(connection, (char*)pointer)){
-								if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))
-									g_message ("Can't parse ICMP headers\n");
-								free_connection(connection);
-								return NULL;
-							}
+							get_icmp_headers(connection, (unsigned char*)pointer);
 							break;
 						default:
-							if ( connection->state != STATE_HELLOMODE){
+							if ( connection->state != AUTH_STATE_HELLOMODE){
 								if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))
 									g_message ("Can't parse this protocol\n");
 								free_connection(connection);

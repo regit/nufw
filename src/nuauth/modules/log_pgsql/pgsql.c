@@ -200,7 +200,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
     }
     /* contruct request */
     switch (state){
-      case STATE_OPEN:
+      case TCP_STATE_OPEN:
         switch ((element.tracking_hdrs).protocol){
           case IPPROTO_TCP:
             //
@@ -228,7 +228,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
                 if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET end_timestamp=%lu, state=%hu WHERE (ip_saddr='%s' and tcp_sport=%u and (state=1 or state=2))",
                   pgsql_table_name,
                   element.timestamp,
-                  STATE_CLOSE,
+                  TCP_STATE_CLOSE,
                   tmp_inet1,
                   (element.tracking_hdrs).source
                   ) >= SHORT_REQUEST_SIZE-1){
@@ -261,7 +261,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
                   tmp_inet2,
                   (element.tracking_hdrs).source,
                   (element.tracking_hdrs).dest,
-                  STATE_OPEN,
+                  TCP_STATE_OPEN,
                   OSFullname,
                   AppFullname
                   ) >= LONG_REQUEST_SIZE-1 ) {
@@ -283,7 +283,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
                   tmp_inet2,
                   (element.tracking_hdrs).source,
                   (element.tracking_hdrs).dest,
-                  STATE_OPEN
+                  TCP_STATE_OPEN
                   ) >= SHORT_REQUEST_SIZE-1){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                     g_warning("Building pgsql insert query, the SHORT_REQUEST_SIZE limit was reached!\n");
@@ -328,7 +328,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
                   tmp_inet2,
                   (element.tracking_hdrs).source,
                   (element.tracking_hdrs).dest,
-                  STATE_OPEN,
+                  TCP_STATE_OPEN,
                   OSFullname,
                   AppFullname
                   ) >= LONG_REQUEST_SIZE-1 ){
@@ -368,7 +368,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
                   (element.tracking_hdrs).protocol,
                   tmp_inet1,
                   tmp_inet2,
-                  STATE_OPEN,
+                  TCP_STATE_OPEN,
                   OSFullname,
                   AppFullname
                   ) >= LONG_REQUEST_SIZE-1){
@@ -392,7 +392,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
           }
         }
         break;
-      case STATE_ESTABLISHED:
+      case TCP_STATE_ESTABLISHED:
         if ((element.tracking_hdrs).protocol == IPPROTO_TCP){
             int update_status = 0;
             while (update_status < 2){
@@ -403,13 +403,13 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
               strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
               if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET state=%hu, start_timestamp=%lu WHERE (ip_daddr='%s' and ip_saddr='%s' and tcp_dport=%u and tcp_sport=%u and state=%hu);",
                   pgsql_table_name,
-                  STATE_ESTABLISHED,
+                  TCP_STATE_ESTABLISHED,
                   element.timestamp,
                   tmp_inet1,
                   tmp_inet2,
                   (element.tracking_hdrs).source,
                   (element.tracking_hdrs).dest,
-                  STATE_OPEN
+                  TCP_STATE_OPEN
                   ) >= SHORT_REQUEST_SIZE-1){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                     g_warning("Building pgsql update query, the SHORT_REQUEST_SIZE limit was reached!\n");
@@ -441,7 +441,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
         }
         //Nothing will be done...
         return 0;
-      case STATE_CLOSE:
+      case TCP_STATE_CLOSE:
         if ((element.tracking_hdrs).protocol == IPPROTO_TCP){
             int update_status = 0;
             while (update_status < 2){
@@ -453,12 +453,12 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
               if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET end_timestamp=%lu, state=%hu WHERE (ip_saddr='%s' and ip_daddr='%s' and tcp_sport=%u and tcp_dport=%u and state=%hu);",
                   pgsql_table_name,
                   element.timestamp,
-                  STATE_CLOSE,
+                  TCP_STATE_CLOSE,
                   tmp_inet1,
                   tmp_inet2,
                   (element.tracking_hdrs).source,
                   (element.tracking_hdrs).dest,
-                  STATE_ESTABLISHED
+                  TCP_STATE_ESTABLISHED
                   ) >= SHORT_REQUEST_SIZE-1){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                     g_warning("Building pgsql update query, the SHORT_REQUEST_SIZE limit was reached!\n");
@@ -491,7 +491,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
         }
         //Nothing will be done...
         return 0;
-      case STATE_DROP:
+      case TCP_STATE_DROP:
         switch ((element.tracking_hdrs).protocol) {
           case IPPROTO_TCP:
           {
@@ -516,7 +516,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
                   tmp_inet2,
                   (element.tracking_hdrs).source,
                   (element.tracking_hdrs).dest,
-                  STATE_DROP,
+                  TCP_STATE_DROP,
                   OSFullname,
                   AppFullname
                   ) >= LONG_REQUEST_SIZE-1 ){
@@ -561,7 +561,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
                   tmp_inet2,
                   (element.tracking_hdrs).source,
                   (element.tracking_hdrs).dest,
-                  STATE_DROP,
+                  TCP_STATE_DROP,
                   OSFullname,
                   AppFullname
                   ) >= LONG_REQUEST_SIZE-1 ){
@@ -603,7 +603,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
                   tmp_inet1,
                   tmp_inet2,
                   element.timestamp,
-                  STATE_DROP,
+                  TCP_STATE_DROP,
                   OSFullname,
                   AppFullname
                   ) >= LONG_REQUEST_SIZE-1){
@@ -626,6 +626,10 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
             return 0;
           }
         }
+        break;
+
+      // To make gcc happy
+      default:
         break;
     }
     //This return is just here to please GCC, will never be reached

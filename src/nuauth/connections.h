@@ -19,35 +19,46 @@
 #define CONNECTIONS_H
 
 
-/* internal auth srv */
-#define STATE_NONE 0x0
-#define STATE_AUTHREQ 0x1
-#define STATE_USERPCKT 0x2
-#define STATE_READY 0x3
-#define STATE_COMPLETING 0x4
-#define STATE_DONE 0x5
-#define STATE_HELLOMODE 0x6
+/** 
+ * State of a connection in the authentification server.
+ * See field state of a structure ::connection_t and function
+ * change_state().
+ */
+typedef enum
+{
+    AUTH_STATE_NONE = 0,
+    AUTH_STATE_AUTHREQ,    // 0x1
+    AUTH_STATE_USERPCKT,   // 0x2
+    AUTH_STATE_READY,      // 0x3
+    AUTH_STATE_COMPLETING, // 0x4
+    AUTH_STATE_DONE,       // 0x5
+    AUTH_STATE_HELLOMODE   // 0x6
+} auth_state_t;
 
-#define STATE_DROP 0x0
-#define STATE_OPEN 0x1
-#define STATE_ESTABLISHED 0x2
-#define STATE_CLOSE 0x3
-
-#define ALL_GROUPS 0
+/** State of a TCP connection */
+typedef enum
+{
+    TCP_STATE_DROP = 0,    // 0
+    TCP_STATE_OPEN,        // 1
+    TCP_STATE_ESTABLISHED, // 2
+    TCP_STATE_CLOSE,       // 3
+    TCP_STATE_UNKNOW       // 4: get_tcp_headers() function error
+} tcp_state_t;
 
 /**
- * ipv4 headers related sructure used as key for connection identification.
+ * Informations about an IPv4 connection used as key for connection
+ * identification.
  */
-typedef struct uniq_headers {
-  u_int32_t saddr;/*!< IPV4 source address. */
-  u_int32_t daddr;/*!< IPV4 dest address. */
-  u_int8_t protocol;/*!< IPV4 protocol. */
-  /* TCP or UDP */
-  u_int16_t source; /*!< TCP/UDP source port. */
-  u_int16_t dest; /*!< TCP/UDP dest port. */
-  /* ICMP Things */
-  u_int8_t type; /*!< icmp message type. */
-  u_int8_t code; /*!< icmp code type. */
+typedef struct {
+  u_int32_t saddr;    /*!< IPv4 source address */
+  u_int32_t daddr;    /*!< IPv4 destination address */
+  u_int8_t protocol;  /*!< IPv4 protocol */
+
+  u_int16_t source;   /*!< TCP/UDP source port */
+  u_int16_t dest;     /*!< TCP/UDP destination port */
+
+  u_int8_t type;      /*!< ICMP message type */
+  u_int8_t code;      /*!< ICMP code type */
 } tracking;
 
 /**
@@ -57,36 +68,35 @@ typedef struct uniq_headers {
  * 
  */
 typedef struct {
-  GSList * packet_id;     /*!< Netfilter unique identifier */
-  long timestamp;         /*!< Packet arrival time (seconds). */
-  int socket;             /*!< Socket from which nufw request is coming. */
-  nufw_session* tls;      /*!< Infos on nufw which sent the request. */
-  tracking tracking_hdrs; /*!< IPV4  stuffs (headers). */
-  u_int16_t user_id;      /*!< User numeric identity used for marking. */
-  char * username;        /*!< User name. */
+  GSList *packet_id;      /*!< Netfilter unique identifier */
+  long timestamp;         /*!< Packet arrival time (seconds) */
+  int socket;             /*!< Socket from which NuFW request is coming */
+  nufw_session *tls;      /*!< Infos on NuFW which sent the request */
+  tracking tracking_hdrs; /*!< IPv4 connection tracking (headers) */
+  u_int16_t user_id;      /*!< User numeric identity used for marking */
+  char *username;         /*!< User name */
 
  /**
   * acl related groups.
   *
   * Contains the list of acl corresponding to the ipv4 header
   */
-  GSList * acl_groups;
-  GSList * user_groups;  /*!< User groups */
-  struct user_cached_datas * cacheduserdatas;  /* Pointer to cache */
+  GSList *acl_groups;
+  GSList *user_groups;    /*!< User groups */
+  struct user_cached_datas *cacheduserdatas;  /* Pointer to cache */
   
-  gchar *os_sysname;  /*!< Operating system name */
-  gchar *os_release;  /*!< Operating system release */
-  gchar *os_version;  /*!< Operating system version */
-  gchar *app_name;    /*!< Application name (full path) */
-  gchar *app_md5;     /*!< Application binary MD5 checksum */
+  gchar *os_sysname;      /*!< Operating system name */
+  gchar *os_release;      /*!< Operating system release */
+  gchar *os_version;      /*!< Operating system version */
+  gchar *app_name;        /*!< Application name (full path) */
+  gchar *app_md5;         /*!< Application binary MD5 checksum */
 
-  char state;         /*!< State of the packet */
-  char decision;      /*!< Decision on packet. */
-  time_t expire;      /*!< Expire time (never: -1) */
+  auth_state_t state; /*!< State of the packet */
+  char decision;            /*!< Decision on packet. */
+  time_t expire;            /*!< Expire time (never: -1) */
 
 #ifdef PERF_DISPLAY_ENABLE
-  /* performance datas */
-  struct timeval arrival_time;
+  struct timeval arrival_time;   /*!< Performance datas */
 #endif
 } connection_t;
 

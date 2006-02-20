@@ -59,7 +59,7 @@ static gint apply_decision(connection_t element);
  * Args : a connection and a state
  */
 
-inline void change_state(connection_t *elt, char state)
+inline void change_state(connection_t *elt, auth_state_t state)
 {
         if (elt != NULL){
         	elt->state = state;
@@ -143,11 +143,7 @@ gboolean compare_connection(gconstpointer tracking_hdrs1, gconstpointer tracking
 /**
  * Try to insert a connection in Struct
  * Fetch datas in connections queue.
- * 
- * - Argument : None
- * - Return : None
  */
-
 void search_and_fill () 
 {
 	connection_t * element = NULL;
@@ -176,7 +172,7 @@ void search_and_fill ()
 			g_static_mutex_unlock (&insert_mutex);
 			if (nuauthconf->push){
 				/* push data to sender */
-				if (pckt->state == STATE_AUTHREQ){
+				if (pckt->state == AUTH_STATE_AUTHREQ){
 					struct internal_message *message=g_new0(struct internal_message,1);
                                         if (!message){
                                             if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_USER))
@@ -202,9 +198,9 @@ void search_and_fill ()
 			}
 		} else { 
 			switch (((connection_t *)element)->state){
-				case STATE_AUTHREQ:
+				case AUTH_STATE_AUTHREQ:
 					switch (pckt->state){
-						case  STATE_AUTHREQ:
+						case  AUTH_STATE_AUTHREQ:
 #ifdef DEBUG_ENABLE
 							if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
 								g_message("Adding a packet_id to a connection\n");
@@ -214,7 +210,7 @@ void search_and_fill ()
 							free_connection(pckt);
 							/* and return */
 							break;
-						case STATE_USERPCKT:
+						case AUTH_STATE_USERPCKT:
 #ifdef DEBUG_ENABLE
 							if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
 								g_message("Filling user data for %s\n",pckt->username);
@@ -232,19 +228,19 @@ void search_and_fill ()
 							/* user cache system */
 							((connection_t *)element)->cacheduserdatas = pckt->cacheduserdatas;
 
-                                                        change_state(((connection_t *)pckt),STATE_COMPLETING);
-                                                        change_state(((connection_t *)element),STATE_COMPLETING);
+                                                        change_state((connection_t *)pckt, AUTH_STATE_COMPLETING);
+                                                        change_state((connection_t *)element, AUTH_STATE_COMPLETING);
                                                         g_thread_pool_push (nuauthdatas->acl_checkers,
                                                                 pckt,
                                                                 NULL);
                                                         break;
 					}
 					break;
-				case STATE_USERPCKT:
+				case AUTH_STATE_USERPCKT:
 					switch (pckt->state){
-						case  STATE_AUTHREQ:
-                                                    change_state(((connection_t *)element),STATE_COMPLETING);
-                                                    change_state(((connection_t *)pckt),STATE_COMPLETING);
+						case  AUTH_STATE_AUTHREQ:
+                                                    change_state((connection_t *)element, AUTH_STATE_COMPLETING);
+                                                    change_state((connection_t *)pckt, AUTH_STATE_COMPLETING);
                                                     /* application */
                                                     pckt->app_name =  ((connection_t *)element)->app_name ;
                                                     pckt->app_md5 =   ((connection_t *)element)->app_md5 ;
@@ -260,7 +256,7 @@ void search_and_fill ()
                                                     ((connection_t *)element)->socket = pckt->socket;
                                                     ((connection_t *)element)->tls = pckt->tls;
                                                     break;
-						case STATE_USERPCKT:
+						case AUTH_STATE_USERPCKT:
 #ifdef DEBUG_ENABLE
 							if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
 								g_message("Found a duplicate user packet\n");
@@ -274,10 +270,10 @@ void search_and_fill ()
 							}
 					}
 					break;
-				case STATE_DONE:
+				case AUTH_STATE_DONE:
 					/* if pckt is a nufw request respond with correct decision */
 					switch (pckt->state){
-						case  STATE_AUTHREQ:
+						case  AUTH_STATE_AUTHREQ:
 							{ struct auth_answer aanswer ={ element->decision , element->user_id ,element->socket, element->tls} ;
 								g_slist_foreach(pckt->packet_id,
 										(GFunc) send_auth_response,
@@ -286,7 +282,7 @@ void search_and_fill ()
 							}
 							free_connection(pckt);
 							break;
-						case STATE_USERPCKT:
+						case AUTH_STATE_USERPCKT:
 							free_connection(pckt);
 							break;
 							/* packet has been drop cause no acl was found */
@@ -297,16 +293,16 @@ void search_and_fill ()
 							}
 					}
 					break;
-				case STATE_COMPLETING:
+				case AUTH_STATE_COMPLETING:
 					switch (pckt->state){
-						case  STATE_COMPLETING:
+						case  AUTH_STATE_COMPLETING:
                                                     /* fill acl this is a return from acl search */
                                                     ((connection_t *)element)->acl_groups = pckt->acl_groups;
                                                     g_free(pckt);
-                                                    change_state(((connection_t *)element),STATE_READY);
+                                                    change_state((connection_t *)element, AUTH_STATE_READY);
                                                     take_decision(element,PACKET_IN_HASH);
                                                     break;
-						case  STATE_AUTHREQ:
+						case  AUTH_STATE_AUTHREQ:
 #ifdef DEBUG_ENABLE
 							if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
 								g_message("Adding a packet_id to a completing connection\n");
@@ -316,7 +312,7 @@ void search_and_fill ()
 							free_connection(pckt);
 							/* and return */
 							break;
-						case STATE_USERPCKT:
+						case AUTH_STATE_USERPCKT:
 							if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
 								g_message("User packet in state completing\n");
 							free_connection(pckt);
@@ -327,7 +323,7 @@ void search_and_fill ()
 
 					}
 					break;
-				case STATE_READY: 
+				case AUTH_STATE_READY: 
 #ifdef DEBUG_ENABLE
 					if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
 						g_message("Element is in state %d but we received packet state %d\n",
@@ -335,7 +331,7 @@ void search_and_fill ()
 								pckt->state);
 #endif
 					switch (pckt->state){
-						case  STATE_AUTHREQ:
+						case  AUTH_STATE_AUTHREQ:
 #ifdef DEBUG_ENABLE
 							if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
 								g_message("Adding a packet_id to a connection\n");
@@ -345,7 +341,7 @@ void search_and_fill ()
 							free_connection(pckt);
 							/* and return */
 							break;
-						case STATE_USERPCKT:
+						case AUTH_STATE_USERPCKT:
 #ifdef DEBUG_ENABLE
 							if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
 								g_message("Need only cleaning\n");
@@ -475,10 +471,10 @@ int free_connection(connection_t * conn)
 	}
 #endif
 	/* log if necessary (only state authreq) with user log module
-	 * STATE_COMPLETING is reached when no acl is found for packet */
-	if (conn->state == STATE_AUTHREQ){
+	 * AUTH_STATE_COMPLETING is reached when no acl is found for packet */
+	if (conn->state == AUTH_STATE_AUTHREQ){
 		/* copy message */
-		log_user_packet(*conn,STATE_DROP);
+		log_user_packet(*conn,TCP_STATE_DROP);
 	}
 	/* 
 	 * tell cache we don't use the ressource anymore
@@ -594,7 +590,7 @@ gboolean  get_old_conn (gpointer key,
 	if (
 			( current_timestamp - ((connection_t *)value)->timestamp > nuauthconf->packet_timeout)  
 			&&
-			(((connection_t *)value)->state!=STATE_COMPLETING)		    
+			(((connection_t *)value)->state!=AUTH_STATE_COMPLETING)		    
 	   ){
 		return TRUE;
 	}
@@ -614,8 +610,8 @@ int conn_key_delete(gconstpointer key)
 	connection_t* element = (connection_t*)g_hash_table_lookup ( conn_list,key);
 	if (element){
 		/* need to log drop of packet if it is a nufw packet */
-		if (element->state == STATE_AUTHREQ) {
-			log_user_packet(*element,STATE_DROP); 
+		if (element->state == AUTH_STATE_AUTHREQ) {
+			log_user_packet(*element,TCP_STATE_DROP); 
 		}
 		g_hash_table_remove (conn_list,key);
 		return 1;
@@ -819,9 +815,9 @@ gint apply_decision(connection_t element)
 #endif
 
 	if (answer == OK){
-		log_user_packet(element,STATE_OPEN);
+		log_user_packet(element,TCP_STATE_OPEN);
 	} else {
-		log_user_packet(element,STATE_DROP);
+		log_user_packet(element,TCP_STATE_DROP);
 	}
 
 	g_slist_foreach(element.packet_id,

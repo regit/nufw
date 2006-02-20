@@ -1063,12 +1063,12 @@ void* tls_user_authsrv()
 	static int
 treat_nufw_request (nufw_session * c_session)
 {
-	char * dgram=NULL;
+	unsigned char * dgram=NULL;
 	int dgram_size;
 
 	if (c_session != NULL){
 		/* copy packet datas */
-		dgram=g_new0(char,BUFSIZE);
+		dgram=g_new0(unsigned char,BUFSIZE);
 		dgram_size =  gnutls_record_recv(*(c_session->tls),dgram,BUFSIZE) ;
 		if (  dgram_size > 0 ){
 			connection_t * current_conn;
@@ -1084,14 +1084,14 @@ treat_nufw_request (nufw_session * c_session)
 				current_conn->tls=c_session;
 				/* gonna feed the birds */
 
-				if (current_conn->state == STATE_HELLOMODE){
+				if (current_conn->state == AUTH_STATE_HELLOMODE){
 					struct internal_message *message = g_new0(struct internal_message,1);
 					message->type=INSERT_MESSAGE;
 					message->datas=current_conn;
-					current_conn->state = STATE_AUTHREQ;
+					current_conn->state = AUTH_STATE_AUTHREQ;
 					g_async_queue_push (nuauthdatas->localid_auth_queue,message);
 				} else {
-					current_conn->state = STATE_AUTHREQ;
+					current_conn->state = AUTH_STATE_AUTHREQ;
 					g_async_queue_push (nuauthdatas->connections_queue,
 							current_conn);
 				}

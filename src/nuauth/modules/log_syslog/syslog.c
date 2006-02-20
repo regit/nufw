@@ -21,7 +21,7 @@
 #include <errno.h>
 
 
-G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
+G_MODULE_EXPORT gint user_packet_logs (connection_t element, tcp_state_t state){
     char *str_state;
     char source_addr[16];
     char dest_addr[16];
@@ -29,16 +29,16 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
 
     /* contruct request */
     switch (state) {
-      case STATE_OPEN:
+      case TCP_STATE_OPEN:
         str_state="Open ";
         break;
-      case STATE_CLOSE:
+      case TCP_STATE_CLOSE:
         str_state="Close ";
         break;
-      case STATE_ESTABLISHED:
+      case TCP_STATE_ESTABLISHED:
         str_state="Established ";
         break;
-      case STATE_DROP:
+      case TCP_STATE_DROP:
           str_state="Drop ";
 	  break;
       default:
@@ -50,7 +50,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
     strncpy(dest_addr,inet_ntoa(oneip),16);
 
     if ( ((element.tracking_hdrs).protocol == IPPROTO_TCP) || ((element.tracking_hdrs).protocol == IPPROTO_UDP) ) {
-        if (state==STATE_ESTABLISHED){
+        if (state==TCP_STATE_ESTABLISHED){
         g_message("%s[%s] %ld : SRC=%s DST=%s PROTO=%d SPT=%u DPT=%u",
             str_state,
             element.username,

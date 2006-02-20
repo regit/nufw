@@ -37,12 +37,12 @@ struct session_event {
  * Argument 2 : state of the connection
  */
 
-void log_user_packet (connection_t element,int state)
+void log_user_packet (connection_t element, tcp_state_t state)
 {
 	struct Conn_State conn_state= { element, state};
 	struct Conn_State * conn_state_copy;
 
-	if ((nuauthconf->log_users_sync) && (state == STATE_OPEN) ){
+	if ((nuauthconf->log_users_sync) && (state == TCP_STATE_OPEN) ){
             if ( nuauthconf->log_users &  8 ){
                    if (nuauthconf->log_users_without_realm){
                        element.username = get_rid_of_domain(element.username);
@@ -55,9 +55,9 @@ void log_user_packet (connection_t element,int state)
             }
 	} else {
             if (
-                ((nuauthconf->log_users & 2) && (state == STATE_DROP)) 
+                ((nuauthconf->log_users & 2) && (state == TCP_STATE_DROP)) 
                 || 
-                ((nuauthconf->log_users & 4) && (state == STATE_OPEN)) 
+                ((nuauthconf->log_users & 4) && (state == TCP_STATE_OPEN)) 
                 || 
                 (nuauthconf->log_users & 8) 
                ) {

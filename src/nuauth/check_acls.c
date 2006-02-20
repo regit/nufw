@@ -70,12 +70,12 @@ void acl_check_and_decide (gpointer userdata, gpointer data)
 			g_message("This is no good : elt is NULL at %s:%d\n",__FILE__,__LINE__);
 		}
         } else {
-            /* if STATE_COMPLETING packet comes from search and fill 
-             * research need to be done, same if state is STATE_HELLOMODE
+            /* if AUTH_STATE_COMPLETING packet comes from search and fill 
+             * research need to be done, same if state is AUTH_STATE_HELLOMODE
              * but here this is a packet from localid_auth_queue
              * */
-            if ((conn_elt->state == STATE_COMPLETING) ||
-                    (nuauthconf->hello_authentication && (conn_elt->state == STATE_HELLOMODE)) 
+            if ((conn_elt->state == AUTH_STATE_COMPLETING) ||
+                    (nuauthconf->hello_authentication && (conn_elt->state == AUTH_STATE_HELLOMODE)) 
                ){
                 if (nuauthconf->acl_cache){
                     get_acls_from_cache(conn_elt);
@@ -84,7 +84,7 @@ void acl_check_and_decide (gpointer userdata, gpointer data)
                 }
                 switch(conn_elt->state){
                     /* packet is coming from hello authentication, sending it back */
-                  case STATE_HELLOMODE:
+                  case AUTH_STATE_HELLOMODE:
                       {
                           struct internal_message *message = g_new0(struct internal_message,1);
                           message->type=INSERT_MESSAGE;
@@ -94,7 +94,7 @@ void acl_check_and_decide (gpointer userdata, gpointer data)
                       }
                       break;
                       /* give packet to search and fill */
-                  case STATE_COMPLETING:
+                  case AUTH_STATE_COMPLETING:
                       {
                           g_async_queue_push (nuauthdatas->connections_queue,conn_elt);
                       }
