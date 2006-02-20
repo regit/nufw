@@ -20,6 +20,7 @@
 
 #include <auth_srv.h>
 #include <auth_ldap.h>
+#include "security.h"
 
 
 confparams ldap_nuauth_vars[] = {
@@ -444,7 +445,7 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned p
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
 					g_message ("what ! no password found!\n");
 			} else {
-				sscanf(*attrs_array,"%127s",passwd);
+				SECURE_STRCPY(passwd, attrs_array[0], sizeof passwd);
 #ifdef DEBUG_ENABLE
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_AUTH))
 					g_message("reading password\n");

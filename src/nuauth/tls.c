@@ -466,7 +466,8 @@ void  tls_sasl_connect(gpointer userdata, gpointer data)
 {
 	gnutls_session * session;
 	user_session* c_session;
-	int ret,size=1;
+	int ret;
+    unsigned int size=1;
 	int c = ((struct client_connection*)userdata)->socket;
 
 	if (tls_connect(c,&session) != SASL_BADPARAM) {

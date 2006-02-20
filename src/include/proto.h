@@ -41,11 +41,12 @@
 #define AUTH_CONN_UPDATE 0x7
 #define AUTH_CONN_FIXED_TIMEOUT 0x7
 
-#define NOK 0
-#define OK 1
+#define NOK 0           /*!< NuAuth decision answer: packet rejected */
+#define OK 1            /*!< NuAuth decision answer: packet accepted */
 #define NODECIDE 2
+
 #ifdef GRYZOR_HACKS
-#define NOK_REJ 3
+#  define NOK_REJ 3
 #endif
 
 #define AUTHSRV_PORT 4128
