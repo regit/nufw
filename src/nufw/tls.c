@@ -28,7 +28,8 @@
  */
 
 /**
- * Create a TLS connection to NuAuth: create a TCP socket and connect to ::adr_srv.
+ * Create a TLS connection to NuAuth: create a TCP socket and connect 
+ * to NuAuth using ::adr_srv.
  *
  * If x509 is enable (USE_X509 equals to 1), create credentials and check
  * NuAuth's one.

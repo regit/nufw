@@ -90,7 +90,7 @@ pthread_mutex_t *session_destroyed_mutex;
 pthread_mutex_t *session_active_mutex;
 
 /** IPv4 address of NuAuth server: hostname ::authreq_addr,
- * port ::authreq_port 
+ * port ::authreq_port. Used in tls_connect().
  */
 struct sockaddr_in adr_srv;
 

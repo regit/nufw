@@ -78,11 +78,15 @@ void nufw_cleanup( int signal ) {
  *      - SIGUSR2 decrease debug verbosity (see process_usr2())
  *      - SIGPOLL display statistics (see process_poll())
  *   - Open conntrack
- *   - Create packet server thread
+ *   - Create packet server thread: packetsrv()
  *   - Run main loop 
  *
- * The most interresting things are done in the packet server (thread). The main
- * loop just clean up old packets and display statistics.
+ * When NuFW is running, main loop and two threads (packetsrv() and 
+ * authsrv()) and  are running.
+ * 
+ * The most interresting things are done in the packet server (thread
+ * packetsrv()). The main loop just clean up old packets and display
+ * statistics. 
  */
 int main(int argc,char * argv[]){
     pthread_t pckt_server;
@@ -294,14 +298,18 @@ int main(int argc,char * argv[]){
                 "socket() on raw_sock creation failure!");
 #endif
 
+    /* Create address adr_srv */
     memset(&adr_srv,0,sizeof adr_srv);
-
     adr_srv.sin_family = AF_INET;
     adr_srv.sin_port = htons(authreq_port);
     /* hostname conversion */
     authreq_srv=gethostbyname(authreq_addr);
+    if (authreq_srv == NULL) {
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
+                "Can not resolve NuAuth hostname \"%s\"!", authreq_addr);
+        exit(EXIT_FAILURE);
+    }
     adr_srv.sin_addr=*(struct in_addr *)authreq_srv->h_addr;
-
     if (adr_srv.sin_addr.s_addr == INADDR_NONE ) {
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
                 "Bad Address in configuration for adr_srv");
