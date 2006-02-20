@@ -118,12 +118,6 @@ int main(int argc,char * argv[]){
     handle_conntrack_event=CONNTRACK_HANDLE_DEFAULT;
 #endif
     nufw_set_mark = 0;
-   
-    if (getuid())
-    {
-        printf("nufw must be run as root! Sorry\n");
-        exit (EXIT_FAILURE);
-    }
     
     /*parse options */
     while((option = getopt ( argc, argv, options_list)) != -1 ){
@@ -217,8 +211,14 @@ int main(int argc,char * argv[]){
                 "\t-t : timeout to forget about packets when they don't match (default : 15 s)\n\
 \t-T : track size (default : 1000)\n",PACKAGE_TARNAME);
 
-            return 1;
+            exit(EXIT_SUCCESS);
         }
+    }
+   
+    if (getuid())
+    {
+        printf("nufw must be run as root! Sorry\n");
+        exit (EXIT_FAILURE);
     }
 
     /* Daemon code */
