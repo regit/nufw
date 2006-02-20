@@ -898,9 +898,9 @@ G_MODULE_EXPORT GSList* acl_check(connection_t* element)
 
 #ifdef DEBUG_ENABLE
   if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)) {
-      g_message("(DBG) acl_check -- appname: %p", element->appname);
-      g_message("(DBG) acl_check -- appmd5 : %p", element->appmd5);
-      g_message("(DBG) acl_check -- sysname: %p", element->sysname);
+      g_message("(DBG) acl_check -- appname: %p", element->app_name);
+      g_message("(DBG) acl_check -- appmd5 : %p", element->app_md5);
+      g_message("(DBG) acl_check -- sysname: %p", element->os_sysname);
   }
 #endif
   for (p_acllist = plaintext_acllist ; p_acllist ;
@@ -916,7 +916,7 @@ G_MODULE_EXPORT GSList* acl_check(connection_t* element)
       if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
           g_message("(DBG) current ACL os=%p", p_acl->os);
 #endif
-      if (element->sysname && p_acl->os) {
+      if (element->os_sysname && p_acl->os) {
           GSList *p_os = p_acl->os;
           gchar *p_sysname, *p_release, *p_version;
           int found = 0;
@@ -924,17 +924,17 @@ G_MODULE_EXPORT GSList* acl_check(connection_t* element)
           // sysname
           if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
               g_message("[plaintext] Checking for OS sysname=[%s]",
-                      element->sysname);
+                      element->os_sysname);
 
           for ( ; p_os ; p_os = g_slist_next(p_os)) {
               p_sysname = ((struct T_os*)p_os->data)->sysname;
               p_release = ((struct T_os*)p_os->data)->release;
               p_version = ((struct T_os*)p_os->data)->version;
-              if (!strcasecmp(p_sysname, element->sysname)) {
-                  if (element->release && p_release) {
-                      if (!strcasecmp(p_release, element->release)) {
-                          if (element->version && p_version) {
-                              if (!strcasecmp(p_version, element->version)) {
+              if (!strcasecmp(p_sysname, element->os_sysname)) {
+                  if (element->os_release && p_release) {
+                      if (!strcasecmp(p_release, element->os_release)) {
+                          if (element->os_version && p_version) {
+                              if (!strcasecmp(p_version, element->os_version)) {
                                   found = 1;
                                   break;
                               }
@@ -957,7 +957,7 @@ G_MODULE_EXPORT GSList* acl_check(connection_t* element)
               continue;
           if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
               g_message("[plaintext] OS match (%s)",
-                      element->sysname);
+                      element->os_sysname);
       }
 
       // Application filtering?
@@ -965,17 +965,17 @@ G_MODULE_EXPORT GSList* acl_check(connection_t* element)
       if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
           g_message("(DBG) current ACL apps=%p", p_acl->apps);
 #endif
-      if (element->appname && p_acl->apps) {
+      if (element->app_name && p_acl->apps) {
           GSList *p_app = p_acl->apps;
           int found = 0;
 
           if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
               g_message("[plaintext] Checking for App=[%s]",
-                      element->appname);
+                      element->app_name);
 
           for ( ; p_app ; p_app = g_slist_next(p_app)) {
               if (!strcasecmp(((struct T_app*)p_app->data)->appname,
-                          element->appname)) {
+                          element->app_name)) {
                   found = 1;
                   break;
               }
@@ -988,7 +988,7 @@ G_MODULE_EXPORT GSList* acl_check(connection_t* element)
               continue;
           if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
               g_message("[plaintext] App match (%s)",
-                      element->appname);
+                      element->app_name);
       }
 
       // Check source address

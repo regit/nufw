@@ -148,7 +148,7 @@ G_MODULE_EXPORT LDAP* ldap_conn_init(void)
 /**
  * acl check function.
  */
-G_MODULE_EXPORT GSList* acl_check (connection* element)
+G_MODULE_EXPORT GSList* acl_check (connection_t* element)
 {
 	GSList * g_list = NULL;
 	char filter[LDAP_QUERY_SIZE];
@@ -220,37 +220,37 @@ G_MODULE_EXPORT GSList* acl_check (connection* element)
 			}
 		}
 		/* finish filter */
-		if (element->sysname){
+		if (element->os_sysname){
 			g_strlcat(filter,"(|(&(OsName=*)(OsName=",LDAP_QUERY_SIZE);
-			g_strlcat(filter,element->sysname,LDAP_QUERY_SIZE);
+			g_strlcat(filter,element->os_sysname,LDAP_QUERY_SIZE);
 			g_strlcat(filter,"))(!(OsName=*)))",LDAP_QUERY_SIZE);
 		} else {
 			g_strlcat(filter,"(!(OsName=*))",LDAP_QUERY_SIZE);
 		}
-		if (element->appname){
+		if (element->app_name){
 			g_strlcat(filter,"(|(&(AppName=*)(AppName=",LDAP_QUERY_SIZE);
-			g_strlcat(filter,element->appname,LDAP_QUERY_SIZE);
+			g_strlcat(filter,element->app_name,LDAP_QUERY_SIZE);
 			g_strlcat(filter,"))(!(AppName=*)))",LDAP_QUERY_SIZE);
 		} else {
 			g_strlcat(filter,"(!(AppName=*))",LDAP_QUERY_SIZE);
 		}
-		if (element->release){
+		if (element->os_release){
 			g_strlcat(filter,"(|(&(OsRelease=*)(OsRelease=",LDAP_QUERY_SIZE);
-			g_strlcat(filter,element->release,LDAP_QUERY_SIZE);
+			g_strlcat(filter,element->os_release,LDAP_QUERY_SIZE);
 			g_strlcat(filter,"))(!(OsRelease=*)))",LDAP_QUERY_SIZE);
 		} else {
 			g_strlcat(filter,"(!(OsRelease=*))",LDAP_QUERY_SIZE);
 		}
-		if (element->version){
+		if (element->os_version){
 			g_strlcat(filter,"(|(&(OsVersion=*)(OsVersion=",LDAP_QUERY_SIZE);
-			g_strlcat(filter,element->version,LDAP_QUERY_SIZE);
+			g_strlcat(filter,element->os_version,LDAP_QUERY_SIZE);
 			g_strlcat(filter,"))(!(OsVersion=*)))",LDAP_QUERY_SIZE);
 		} else {
 			g_strlcat(filter,"(!(OsVersion=*))",LDAP_QUERY_SIZE);
 	}
-		if (element->appmd5){
+		if (element->app_md5){
 			g_strlcat(filter,"(|(&(AppSig=*)(AppSig=",LDAP_QUERY_SIZE);
-			g_strlcat(filter,element->appmd5,LDAP_QUERY_SIZE);
+			g_strlcat(filter,element->app_md5,LDAP_QUERY_SIZE);
 			g_strlcat(filter,"))(!(AppSig=*)))",LDAP_QUERY_SIZE);
 		} else {
 			g_strlcat(filter,"(!(AppSig=*))",LDAP_QUERY_SIZE);
@@ -445,7 +445,7 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned p
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
 					g_message ("what ! no password found!\n");
 			} else {
-				SECURE_STRCPY(passwd, attrs_array[0], sizeof passwd);
+				SECURE_STRNCPY(passwd, attrs_array[0], sizeof passwd);
 #ifdef DEBUG_ENABLE
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_AUTH))
 					g_message("reading password\n");

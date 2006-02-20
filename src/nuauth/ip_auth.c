@@ -58,8 +58,8 @@ void external_ip_auth(gpointer userdata, gpointer data)
                 connection->user_groups=groups;
 		connection->user_id=uid;
                 connection->username=username;
-                connection->sysname=NULL;
-                connection->appname=NULL;
+                connection->os_sysname=NULL;
+                connection->app_name=NULL;
                 /* copy ipv4 header */
                 memcpy(&(connection->tracking_hdrs),userdata,sizeof(tracking));
 		g_async_queue_push (nuauthdatas->connections_queue,connection);

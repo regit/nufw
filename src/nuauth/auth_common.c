@@ -223,12 +223,12 @@ void search_and_fill ()
 							((connection_t *)element)->user_id = pckt->user_id;
 							((connection_t *)element)->username = pckt->username;
 							/* application */
-							((connection_t *)element)->appname = pckt->appname;
-							((connection_t *)element)->appmd5 = pckt->appmd5;
+							((connection_t *)element)->app_name = pckt->app_name;
+							((connection_t *)element)->app_md5 = pckt->app_md5;
 							/* system */
-							((connection_t *)element)->sysname = pckt->sysname;
-							((connection_t *)element)->release = pckt->release;
-							((connection_t *)element)->version = pckt->version;
+							((connection_t *)element)->os_sysname = pckt->os_sysname;
+							((connection_t *)element)->os_release = pckt->os_release;
+							((connection_t *)element)->os_version = pckt->os_version;
 							/* user cache system */
 							((connection_t *)element)->cacheduserdatas = pckt->cacheduserdatas;
 
@@ -246,12 +246,12 @@ void search_and_fill ()
                                                     change_state(((connection_t *)element),STATE_COMPLETING);
                                                     change_state(((connection_t *)pckt),STATE_COMPLETING);
                                                     /* application */
-                                                    pckt->appname =  ((connection_t *)element)->appname ;
-                                                    pckt->appmd5 =   ((connection_t *)element)->appmd5 ;
+                                                    pckt->app_name =  ((connection_t *)element)->app_name ;
+                                                    pckt->app_md5 =   ((connection_t *)element)->app_md5 ;
                                                     /* system */
-                                                    pckt->sysname =  ((connection_t *)element)->sysname ;
-                                                    pckt->release =  ((connection_t *)element)->release ;
-                                                    pckt->version =  ((connection_t *)element)->version ;
+                                                    pckt->os_sysname =  ((connection_t *)element)->os_sysname ;
+                                                    pckt->os_release =  ((connection_t *)element)->os_release ;
+                                                    pckt->os_version =  ((connection_t *)element)->os_version ;
 
                                                     g_thread_pool_push (nuauthdatas->acl_checkers,
                                                             pckt,
@@ -383,11 +383,11 @@ gint print_connection(gpointer data,gpointer userdata)
 			g_message("sport=%d dport=%d", conn->tracking_hdrs.source,
 					conn->tracking_hdrs.dest);
 		}
-		if (conn->sysname && conn->release && conn->version ){
-			g_message("OS : %s %s %s",conn->sysname ,conn->release , conn->version );
+		if (conn->os_sysname && conn->os_release && conn->os_version ){
+			g_message("OS : %s %s %s",conn->os_sysname ,conn->os_release , conn->os_version );
 		}
-		if (conn->appname){
-			g_message("Application : %s",conn->appname);
+		if (conn->app_name){
+			g_message("Application : %s",conn->app_name);
 		}
 		g_message(" ");
 		g_free(firstfield);
@@ -533,18 +533,18 @@ int free_connection(connection_t * conn)
 	if (conn->packet_id != NULL )
 		g_slist_free (conn->packet_id);
 
-//	if (conn->appname != NULL)
-		g_free(conn->appname);
+//	if (conn->app_name != NULL)
+		g_free(conn->app_name);
 
-//	if (conn->appmd5 != NULL)
-		g_free(conn->appmd5);
+//	if (conn->app_md5 != NULL)
+		g_free(conn->app_md5);
 
-//	if (conn->sysname != NULL)
-		g_free(conn->sysname);
-//	if (conn->release != NULL)
-		g_free(conn->release);
-//	if (conn->version != NULL)
-		g_free(conn->version);
+//	if (conn->os_sysname != NULL)
+		g_free(conn->os_sysname);
+//	if (conn->os_release != NULL)
+		g_free(conn->os_release);
+//	if (conn->os_version != NULL)
+		g_free(conn->os_version);
 
 	g_free(conn);
 	return 1;
@@ -768,22 +768,22 @@ gint take_decision(connection_t * element,gchar place)
 			element->username = NULL;
 		}
 		if (nuauthconf->acl_cache) {
-			copy_of_element->appname=g_strdup(element->appname);
-			copy_of_element->appmd5=g_strdup(element->appmd5);
-			copy_of_element->sysname=g_strdup(element->sysname);
-			copy_of_element->release=g_strdup(element->release);
-			copy_of_element->version=g_strdup(element->version);
+			copy_of_element->app_name=g_strdup(element->app_name);
+			copy_of_element->app_md5=g_strdup(element->app_md5);
+			copy_of_element->os_sysname=g_strdup(element->os_sysname);
+			copy_of_element->os_release=g_strdup(element->os_release);
+			copy_of_element->os_version=g_strdup(element->os_version);
 		} else {
-			copy_of_element->appname=element->appname;
-			element->appname=NULL;
-			copy_of_element->appmd5=element->appmd5;
-			element->appmd5=NULL;
-			copy_of_element->sysname=element->sysname;
-			element->sysname=NULL;
-			copy_of_element->release=element->release;
-			element->release=NULL;
-			copy_of_element->version=element->version;
-			element->version=NULL;
+			copy_of_element->app_name=element->app_name;
+			element->app_name=NULL;
+			copy_of_element->app_md5=element->app_md5;
+			element->app_md5=NULL;
+			copy_of_element->os_sysname=element->os_sysname;
+			element->os_sysname=NULL;
+			copy_of_element->os_release=element->os_release;
+			element->os_release=NULL;
+			copy_of_element->os_version=element->os_version;
+			element->os_version=NULL;
 		}
 		copy_of_element->user_id=element->user_id;
 		/* push element to decision workers */

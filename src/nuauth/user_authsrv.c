@@ -134,8 +134,8 @@ static GSList * userpckt_decode(struct buffer_read * datas)
                       connection = g_new0( connection_t,1);
                       connection->acl_groups=NULL;
                       connection->user_groups=NULL;
-                      connection->appname=NULL;
-                      connection->appmd5=NULL;
+                      connection->app_name=NULL;
+                      connection->app_md5=NULL;
                       connection->username=NULL;
                       connection->cacheduserdatas=NULL;
                       connection->packet_id=NULL;
@@ -260,15 +260,15 @@ static GSList * userpckt_decode(struct buffer_read * datas)
 
                                           if (dec_appname != NULL)
                                           {
-                                              connection->appname= string_escape(dec_appname);
-                                              if (connection->appname == NULL)
+                                              connection->app_name= string_escape(dec_appname);
+                                              if (connection->app_name == NULL)
                                                   if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
                                                       g_warning("user packet received an invalid app name\n");
                                           }else{
-                                              connection->appname=NULL;
+                                              connection->app_name=NULL;
                                           }
                                           g_free(dec_appname);
-                                          connection->appmd5=NULL;
+                                          connection->app_md5=NULL;
 
                                       }
 
@@ -362,9 +362,9 @@ static GSList * userpckt_decode(struct buffer_read * datas)
                       }
                       connection->user_id=datas->uid;
                       connection->user_groups = g_slist_copy(datas->groups);
-                      connection->sysname=g_strdup(datas->sysname);
-                      connection->release=g_strdup(datas->release);
-                      connection->version=g_strdup(datas->version);
+                      connection->os_sysname=g_strdup(datas->sysname);
+                      connection->os_release=g_strdup(datas->release);
+                      connection->os_version=g_strdup(datas->version);
                       if (connection->user_groups == NULL) {
                           if ((header->option == 0x1) && multiclient_ok) {
                               if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))

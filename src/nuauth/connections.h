@@ -56,47 +56,34 @@ typedef struct uniq_headers {
  * It contains all datas relative to a packet
  * 
  */
-typedef struct _Connection {
-  GSList * packet_id; /**< Netfilter number. */
-  long timestamp; /**< Packet arrival time (seconds). */
-  int socket;  /**< socket from which nufw request is coming. */
-  nufw_session* tls; /**< infos on nufw which sent the request. */
-  tracking tracking_hdrs; /**< IPV4  stuffs (headers). */
-  u_int16_t user_id; /**< user numeric identity (protocol 1). Used by protocol 2 for marking. */
-  char * username; /**< user identity (protocol 2). */
+typedef struct {
+  GSList * packet_id;     /*!< Netfilter unique identifier */
+  long timestamp;         /*!< Packet arrival time (seconds). */
+  int socket;             /*!< Socket from which nufw request is coming. */
+  nufw_session* tls;      /*!< Infos on nufw which sent the request. */
+  tracking tracking_hdrs; /*!< IPV4  stuffs (headers). */
+  u_int16_t user_id;      /*!< User numeric identity used for marking. */
+  char * username;        /*!< User name. */
+
  /**
   * acl related groups.
   *
   * Contains the list of acl corresponding to the ipv4 header
   */
   GSList * acl_groups;
- /**
-  * user groups.
-  */
-  GSList * user_groups;
-  /* Pointer to cache */
-  struct user_cached_datas * cacheduserdatas;
-  /** operating system name. */
-  gchar * sysname;
-  /** operating system release. */
-  gchar * release;
-  /** operating system version. */
-  gchar * version;
-  /** application name.
-   *
-   * application full path
-   */
-  gchar * appname;
- /** application md5sum.
-   *
-   * md5sum of the binary which send the packet
-   */
-  gchar * appmd5;
-  /** state of the packet. */
-  char state;
-  /** decision on packet. */
-  char decision;
-  time_t expire; /**< set to -1 to not expire */
+  GSList * user_groups;  /*!< User groups */
+  struct user_cached_datas * cacheduserdatas;  /* Pointer to cache */
+  
+  gchar *os_sysname;  /*!< Operating system name */
+  gchar *os_release;  /*!< Operating system release */
+  gchar *os_version;  /*!< Operating system version */
+  gchar *app_name;    /*!< Application name (full path) */
+  gchar *app_md5;     /*!< Application binary MD5 checksum */
+
+  char state;         /*!< State of the packet */
+  char decision;      /*!< Decision on packet. */
+  time_t expire;      /*!< Expire time (never: -1) */
+
 #ifdef PERF_DISPLAY_ENABLE
   /* performance datas */
   struct timeval arrival_time;

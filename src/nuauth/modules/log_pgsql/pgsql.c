@@ -183,7 +183,7 @@ static gchar* generate_appname(gchar *Name)
 
 
 
-G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
+G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
     PGconn *ld = g_private_get (pgsql_priv);
     char request[LONG_REQUEST_SIZE];
     struct in_addr ipone,iptwo;
@@ -249,8 +249,8 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
 	    if (element.username != NULL) { 
                 gchar* OSFullname;
                 gchar* AppFullname;
-                OSFullname = generate_osname(element.sysname,element.version,element.release);
-                AppFullname = generate_appname(element.appname); /*Just a size check actually*/
+                OSFullname = generate_osname(element.os_sysname,element.os_version,element.os_release);
+                AppFullname = generate_appname(element.app_name); /*Just a size check actually*/
                 if (snprintf(request,LONG_REQUEST_SIZE-1,"INSERT INTO %s (username,user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,state,oob_prefix,client_os,client_app) VALUES ('%s',%u,%lu,%u,'%s','%s',%u,%u,%hu,'ACCEPT','%s','%s');",
                   pgsql_table_name,
                   element.username,
@@ -312,8 +312,8 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
           {
             gchar* OSFullname;
             gchar* AppFullname;
-            OSFullname = generate_osname(element.sysname,element.version,element.release);
-            AppFullname = generate_appname(element.appname); /*Just a size check actually*/
+            OSFullname = generate_osname(element.os_sysname,element.os_version,element.os_release);
+            AppFullname = generate_appname(element.app_name); /*Just a size check actually*/
             ipone.s_addr=ntohl((element.tracking_hdrs).saddr);
             iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
             strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
@@ -354,8 +354,8 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
           {
             gchar* OSFullname;
             gchar* AppFullname;
-            OSFullname = generate_osname(element.sysname,element.version,element.release);
-            AppFullname = generate_appname(element.appname); /*Just a size check actually*/
+            OSFullname = generate_osname(element.os_sysname,element.os_version,element.os_release);
+            AppFullname = generate_appname(element.app_name); /*Just a size check actually*/
             ipone.s_addr=ntohl((element.tracking_hdrs).saddr);
             iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
             strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
@@ -497,8 +497,8 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
           {
             gchar* OSFullname;
             gchar* AppFullname;
-            OSFullname = generate_osname(element.sysname,element.version,element.release);
-            AppFullname = generate_appname(element.appname); /*Just a size check actually*/
+            OSFullname = generate_osname(element.os_sysname,element.os_version,element.os_release);
+            AppFullname = generate_appname(element.app_name); /*Just a size check actually*/
             ipone.s_addr=ntohl((element.tracking_hdrs).saddr);
             iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
             strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
@@ -542,8 +542,8 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
           {
             gchar* OSFullname;
             gchar* AppFullname;
-            OSFullname = generate_osname(element.sysname,element.version,element.release);
-            AppFullname = generate_appname(element.appname); /*Just a size check actually*/
+            OSFullname = generate_osname(element.os_sysname,element.os_version,element.os_release);
+            AppFullname = generate_appname(element.app_name); /*Just a size check actually*/
             ipone.s_addr=ntohl((element.tracking_hdrs).saddr);
             iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
             strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
@@ -588,8 +588,8 @@ G_MODULE_EXPORT gint user_packet_logs (connection element, int state){
           {
             gchar* OSFullname;
             gchar* AppFullname;
-            OSFullname = generate_osname(element.sysname,element.version,element.release);
-            AppFullname = generate_appname(element.appname); /*Just a size check actually*/
+            OSFullname = generate_osname(element.os_sysname,element.os_version,element.os_release);
+            AppFullname = generate_appname(element.app_name); /*Just a size check actually*/
             ipone.s_addr=ntohl((element.tracking_hdrs).saddr);
             iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
             strncpy(tmp_inet1,inet_ntoa(ipone),40) ;

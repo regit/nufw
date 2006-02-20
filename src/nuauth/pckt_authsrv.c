@@ -25,22 +25,21 @@
 #include <errno.h>
 
 /** 
- *fill ip related part of the connection tracking header.
+ * Fill IP related part of the connection tracking header.
  * 
- * - Argument 1 : a connection
- * - Argument 2 : pointer to packet datas
- * - Return : offset to next type of headers 
+ * \param connection Pointer to a connection
+ * \param dgram Pointer to packet datas
+ * \return Offset to next type of headers, or 0 if the packet is not recognized 
  */
 
-int get_ip_headers(connection_t *connection,char * dgram)
+int get_ip_headers(connection_t *connection, unsigned char * dgram)
 {
-	struct iphdr * iphdrs = (struct iphdr *) dgram;
+	struct iphdr * iphdrs = (struct iphdr *)dgram;
 	/* check IP version */
 	if (iphdrs->version == 4){
-		connection->tracking_hdrs.saddr=ntohl(iphdrs->saddr);
-		connection->tracking_hdrs.daddr=ntohl(iphdrs->daddr);
-		/* get protocol */
-		connection->tracking_hdrs.protocol=iphdrs->protocol;
+		connection->tracking_hdrs.saddr = ntohl(iphdrs->saddr);
+		connection->tracking_hdrs.daddr = ntohl(iphdrs->daddr);
+		connection->tracking_hdrs.protocol = iphdrs->protocol;
 		return 4*iphdrs->ihl;
 	}
 #ifdef DEBUG_ENABLE
@@ -182,7 +181,7 @@ connection_t*  authpckt_decode(char * dgram, int  dgramsiz)
 				connection->timestamp=ntohl(*(uint32_t * )pointer);
 				pointer+=sizeof ( int32_t);
 				/* get ip headers till tracking is filled */
-				offset = get_ip_headers(connection, (char*)pointer);
+				offset = get_ip_headers(connection, (unsigned char*)pointer);
 				if ( offset) {
 					pointer+=offset;
 					/* get saddr and daddr */

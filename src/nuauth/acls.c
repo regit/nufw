@@ -210,11 +210,11 @@ struct acl_key* acl_create_key(connection_t *kdatas)
 {
 	struct acl_key * key=g_new0(struct acl_key,1);
 	key->acl_tracking=&(kdatas->tracking_hdrs);
-	key->sysname=kdatas->sysname;
-	key->release=kdatas->release;
-	key->version=kdatas->version;
-	key->appname=kdatas->appname;
-	key->appmd5=kdatas->appmd5;
+	key->sysname=kdatas->os_sysname;
+	key->release=kdatas->os_release;
+	key->version=kdatas->os_version;
+	key->appname=kdatas->app_name;
+	key->appmd5=kdatas->app_md5;
 	return key;
 }
 
@@ -222,11 +222,11 @@ gpointer acl_create_and_alloc_key(connection_t* kdatas)
 {
 	struct acl_key key;
 	key.acl_tracking=&(kdatas->tracking_hdrs);
-	key.sysname=kdatas->sysname;
-	key.release=kdatas->release;
-	key.version=kdatas->version;
-	key.appname=kdatas->appname;
-	key.appmd5=kdatas->appmd5;
+	key.sysname=kdatas->os_sysname;
+	key.release=kdatas->os_release;
+	key.version=kdatas->os_version;
+	key.appname=kdatas->app_name;
+	key.appmd5=kdatas->app_md5;
 	return acl_duplicate_key(&key);
 }
 
