@@ -65,7 +65,6 @@ typedef struct {
  * connection element
  * 
  * It contains all datas relative to a packet
- * 
  */
 typedef struct {
   GSList *packet_id;      /*!< Netfilter unique identifier */

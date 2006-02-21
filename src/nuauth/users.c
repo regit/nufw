@@ -166,6 +166,6 @@ int init_user_cache()
 				FALSE,
 				NULL);
 		if (! user_cache_thread )
-			exit(1);
+			exit(EXIT_FAILURE);
 		return 1;
 }

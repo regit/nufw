@@ -351,6 +351,6 @@ int init_acl_cache(){
 				FALSE,
 				NULL);
 		if (! acl_cache_thread )
-			exit(1);
+			exit(EXIT_FAILURE);
 		return 1;
 }

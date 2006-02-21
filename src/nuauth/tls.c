@@ -104,7 +104,8 @@ void  pre_client_check()
 
 /**
  * strictly close a tls session
- * nothing to care about client */
+ * nothing to care about client
+ */
 int close_tls_session(int c,gnutls_session* session)
 {
 	if (close(c))
@@ -798,7 +799,7 @@ void* tls_user_authsrv()
 	action.sa_flags = 0;
 	if ( sigaction( SIGTERM, & action , NULL ) != 0) {
 		printf("Error\n");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 #endif
 
@@ -808,7 +809,7 @@ void* tls_user_authsrv()
 			FALSE,
 			NULL);
 	if (! pre_client_thread )
-		exit(1);
+		exit(EXIT_FAILURE);
 
 
 	tls_sasl_worker = g_thread_pool_new  ((GFunc) tls_sasl_connect,
@@ -1194,7 +1195,7 @@ void* tls_nufw_authsrv()
 	action.sa_flags = 0;
 	if ( sigaction( SIGTERM, & action , NULL ) != 0) {
 		printf("Error\n");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 #endif
 

@@ -34,23 +34,24 @@
 /**
  * exit function if a signal is received in daemon mode.
  * 
- * Argument : a signal
- * Return : None
+ * \param signal Code of raised signal
  */
 void nuauth_cleanup( int signal ) {
     /* free nufw server hash */
     if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN))
         g_message("caught interrupt, cleaning");
     close_servers(signal);
+    
     /* free client hash */
     close_clients(signal);
+    
     /* clean gnutls */
     end_tls(signal);
     end_audit(signal);
+    
     /* destroy pid file */
     unlink(NUAUTH_PID_FILE);
-    /* exit */
-    exit(0);
+    exit(EXIT_SUCCESS);
 }
 
 int main(int argc,char * argv[]) 
@@ -89,7 +90,7 @@ int main(int argc,char * argv[])
 
   nuauthdatas->tls_push_queue = g_async_queue_new ();
   if (!nuauthdatas->tls_push_queue)
-      exit(1);
+      exit(EXIT_FAILURE);
 
 
   /*vtable=g_new(GMemVTable, 1);
@@ -207,7 +208,7 @@ int main(int argc,char * argv[])
                   printf ("Dying, can not create PID file : " NUAUTH_PID_FILE "\n"); 
                   exit(-1);
               }
-              exit(0);
+              exit(EXIT_SUCCESS);
           }
       }
 
@@ -232,11 +233,11 @@ int main(int argc,char * argv[])
   action.sa_flags = 0;
   if ( sigaction( SIGTERM, & action , NULL ) != 0) {
       printf("Error\n");
-      exit(1);
+      exit(EXIT_FAILURE);
   }
   if ( sigaction( SIGINT, & action , NULL ) != 0) {
       printf("Error\n");
-      exit(1);
+      exit(EXIT_FAILURE);
   }
   /* intercept SIGTERM */
   memset(&action,0,sizeof(action));
@@ -245,7 +246,7 @@ int main(int argc,char * argv[])
   action.sa_flags = 0;
   if ( sigaction( SIGHUP, & action , NULL ) != 0) {
       printf("Error\n");
-      exit(1);
+      exit(EXIT_FAILURE);
   }
 
 
@@ -261,7 +262,7 @@ int main(int argc,char * argv[])
 
   nuauthdatas->connections_queue = g_async_queue_new();
   if (!nuauthdatas->connections_queue)
-      exit(1);
+      exit(EXIT_FAILURE);
 
   /* init modules system */
   init_modules_system();
@@ -304,7 +305,7 @@ int main(int argc,char * argv[])
                   FALSE,
                   NULL);
   if (! nuauthdatas->tls_pusher )
-      exit(1);
+      exit(EXIT_FAILURE);
 
 
   /* init private datas for pool thread */
@@ -320,7 +321,7 @@ int main(int argc,char * argv[])
                   FALSE,
                   NULL);
   if (! nuauthdatas->search_and_fill_worker )
-      exit(1);
+      exit(EXIT_FAILURE);
 
   if (nuauthconf->push && nuauthconf->hello_authentication){
       if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
@@ -331,7 +332,7 @@ int main(int argc,char * argv[])
                       FALSE,
                       NULL);
       if (! nuauthdatas->localid_auth_thread )
-          exit(1);
+          exit(EXIT_FAILURE);
   }
 
   /* create pckt workers */
@@ -394,7 +395,7 @@ int main(int argc,char * argv[])
                   FALSE,
                   NULL);
   if (! nuauthdatas->tls_auth_server )
-      exit(1);
+      exit(EXIT_FAILURE);
   if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
       g_message("Creating tls nufw server thread");
   nuauthdatas->tls_nufw_server = g_thread_create ( tls_nufw_authsrv,
@@ -402,7 +403,7 @@ int main(int argc,char * argv[])
                   FALSE,
                   NULL);
   if (! nuauthdatas->tls_nufw_server ){
-      exit(1);
+      exit(EXIT_FAILURE);
   }
    nuauthdatas->limited_connections_handler = g_thread_create ( limited_connection_handler,
                   NULL,
