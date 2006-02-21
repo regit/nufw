@@ -33,8 +33,8 @@ struct session_event {
  * log user packet or by a direct call to log module or by sending log 
  * message to logger thread pool.
  * 
- * Argument 1 : connection
- * Argument 2 : state of the connection
+ * /param element A connection
+ * /param state TCP state of the connection
  */
 
 void log_user_packet (connection_t element, tcp_state_t state)

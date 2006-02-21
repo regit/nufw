@@ -137,7 +137,7 @@ connection_t* authpckt_new_connection(int8_t msg_type, unsigned char *dgram, int
     int offset; 
 
     /* allocate new connection */
-    connection_t*  connection = g_new0( connection_t,1);
+    connection_t *connection = g_new0(connection_t, 1);
     if (connection == NULL){
         if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET)){
             g_message("Can not allocate connection\n");
