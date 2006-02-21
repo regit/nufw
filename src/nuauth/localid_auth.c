@@ -68,7 +68,7 @@ void localid_auth()
 						g_hash_table_insert(localid_auth_hash,GINT_TO_POINTER(randomid),pckt);
 						/* send message to clients */
 						((struct nuv2_srv_helloreq*)global_msg->msg)->helloid = randomid;
-						global_msg->addr = pckt->tracking_hdrs.saddr;
+						global_msg->addr = pckt->tracking.saddr;
 						global_msg->found = FALSE;
 						g_static_mutex_lock (&client_mutex);
 						warn_clients(global_msg);
@@ -80,7 +80,7 @@ void localid_auth()
 						/* if found ask for completion */
 						if (element){
 							/* TODO : do a check on saddr */
-							if ( (element->tracking_hdrs.saddr == pckt->tracking_hdrs.saddr ) || 1 ){	
+							if ( (element->tracking.saddr == pckt->tracking.saddr ) || 1 ){	
 
 								element->state=AUTH_STATE_HELLOMODE;	
 								element->user_id=pckt->user_id;

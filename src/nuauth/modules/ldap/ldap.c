@@ -171,7 +171,7 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element)
 		g_private_set(ldap_priv,ld);
 	}
 	/* contruct filter */
-	if ((element->tracking_hdrs).protocol == IPPROTO_TCP || (element->tracking_hdrs).protocol == IPPROTO_UDP ){
+	if ((element->tracking).protocol == IPPROTO_TCP || (element->tracking).protocol == IPPROTO_UDP ){
 		switch (ldap_filter_type){
 			case 1:
 				if (snprintf(filter,LDAP_QUERY_SIZE-1,
@@ -180,15 +180,15 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element)
 #endif 
 						"(&(objectClass=NuAccessControlList)(Proto=%d)(DstPort=%d)(SrcIPStart<=%lu)(SrcIPEnd>=%lu)(DstIPStart<=%lu)(DstIPEnd>=%lu)",
 
-						(element->tracking_hdrs).protocol,
-						(element->tracking_hdrs).dest,
-						(long unsigned int)(element->tracking_hdrs).saddr,
-						(long unsigned int)(element->tracking_hdrs).saddr,
-						(long unsigned int)(element->tracking_hdrs).daddr,
-						(long unsigned int)(element->tracking_hdrs).daddr
+						(element->tracking).protocol,
+						(element->tracking).dest,
+						(long unsigned int)(element->tracking).saddr,
+						(long unsigned int)(element->tracking).saddr,
+						(long unsigned int)(element->tracking).daddr,
+						(long unsigned int)(element->tracking).daddr
 #if USE_SOURCE_PORT	
-						, (element->tracking_hdrs).source,
-						(element->tracking_hdrs).source
+						, (element->tracking).source,
+						(element->tracking).source
 #endif
 				    ) >= (LDAP_QUERY_SIZE -1)){
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
@@ -202,17 +202,17 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element)
 						"(&(objectClass=NuAccessControlList)(SrcIPStart<=%lu)(SrcIPEnd>=%lu)(DstIPStart<=%lu)(DstIPEnd>=%lu)(Proto=%d)(SrcPortStart<=%d)(SrcPortEnd>=%d)(DstPortStart<=%d)(DstPortEnd>=%d)",
 #endif 
 						"(&(objectClass=NuAccessControlList)(SrcIPStart<=%lu)(SrcIPEnd>=%lu)(DstIPStart<=%lu)(DstIPEnd>=%lu)(Proto=%d)(DstPortStart<=%d)(DstPortEnd>=%d)",
-						(long unsigned int)(element->tracking_hdrs).saddr,
-						(long unsigned int)(element->tracking_hdrs).saddr,
-						(long unsigned int)(element->tracking_hdrs).daddr,
-						(long unsigned int)(element->tracking_hdrs).daddr,
-						(element->tracking_hdrs).protocol,
+						(long unsigned int)(element->tracking).saddr,
+						(long unsigned int)(element->tracking).saddr,
+						(long unsigned int)(element->tracking).daddr,
+						(long unsigned int)(element->tracking).daddr,
+						(element->tracking).protocol,
 #if USE_SOURCE_PORT
-						(element->tracking_hdrs).source,
-						(element->tracking_hdrs).source,
+						(element->tracking).source,
+						(element->tracking).source,
 #endif
-						(element->tracking_hdrs).dest,
-						(element->tracking_hdrs).dest
+						(element->tracking).dest,
+						(element->tracking).dest
 				    ) >= (LDAP_QUERY_SIZE -1)){
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
 					g_warning ("LDAP query too big (more than %d bytes)\n",LDAP_QUERY_SIZE);
@@ -263,18 +263,18 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element)
 			g_message("LDAP filter : \n%s\n",filter);
 #endif	
 
-	} else if ((element->tracking_hdrs).protocol == IPPROTO_ICMP ) {
+	} else if ((element->tracking).protocol == IPPROTO_ICMP ) {
 		if (snprintf(filter,LDAP_QUERY_SIZE-1,
 					"(&(objectClass=NuAccessControlList)(SrcIPStart<=%lu)(SrcIPEnd>=%lu)(DstIPStart<=%lu)(DstIPEnd>=%lu)(Proto=%d)(SrcPortStart<=%d)(SrcPortEnd>=%d)(DstPortStart<=%d)(DstPortEnd>=%d))",
-					(long unsigned int)(element->tracking_hdrs).saddr,
-					(long unsigned int)(element->tracking_hdrs).saddr,
-					(long unsigned int)(element->tracking_hdrs).daddr,
-					(long unsigned int)(element->tracking_hdrs).daddr,
-					(element->tracking_hdrs).protocol,
-					(element->tracking_hdrs).type,
-					(element->tracking_hdrs).type,
-					(element->tracking_hdrs).code,
-					(element->tracking_hdrs).code
+					(long unsigned int)(element->tracking).saddr,
+					(long unsigned int)(element->tracking).saddr,
+					(long unsigned int)(element->tracking).daddr,
+					(long unsigned int)(element->tracking).daddr,
+					(element->tracking).protocol,
+					(element->tracking).type,
+					(element->tracking).type,
+					(element->tracking).code,
+					(element->tracking).code
 			    ) >= (LDAP_QUERY_SIZE-1)){
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
 				g_warning ("LDAP query too big (more than %d bytes)\n",LDAP_QUERY_SIZE);

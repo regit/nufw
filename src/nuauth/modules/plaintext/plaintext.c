@@ -864,7 +864,7 @@ G_MODULE_EXPORT GSList* acl_check(connection_t* element)
   GSList *g_list = NULL;
   GSList *p_acllist;
   struct acl_group *this_acl;
-  tracking *netdata = &element->tracking_hdrs;
+  tracking_t *netdata = &element->tracking;
   struct T_plaintext_acl *p_acl;
   int initstatus;
   uint32_t src_ip, dst_ip;

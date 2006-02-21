@@ -25,20 +25,21 @@
 #include <errno.h>
 
 /** 
- * Fill IP related fields of the connection tracking header (see ::tracking structure).
+ * Fill IP fields (saddr, daddr and protocol) of the a connection tracking 
+ * (::tracking_t) structure.
  * 
  * \param connection Pointer to a connection
  * \param dgram Pointer to packet datas
  * \return Offset to next type of headers, or 0 if the packet is not recognized 
  */
-int get_ip_headers(connection_t *connection, unsigned char *dgram)
+int get_ip_headers(tracking_t *tracking, unsigned char *dgram)
 {
     struct iphdr * iphdrs = (struct iphdr *)dgram;
-    /* check IP version */
+    /* check IP version (should be IPv4) */
     if (iphdrs->version == 4){
-        connection->tracking_hdrs.saddr = ntohl(iphdrs->saddr);
-        connection->tracking_hdrs.daddr = ntohl(iphdrs->daddr);
-        connection->tracking_hdrs.protocol = iphdrs->protocol;
+        tracking->saddr = ntohl(iphdrs->saddr);
+        tracking->daddr = ntohl(iphdrs->daddr);
+        tracking->protocol = iphdrs->protocol;
         return 4*iphdrs->ihl;
     }
 #ifdef DEBUG_ENABLE
@@ -50,40 +51,43 @@ int get_ip_headers(connection_t *connection, unsigned char *dgram)
 }
 
 /** 
- * Fill UDP related fields of the connection tracking header (see ::tracking structure).
+ * Fill UDP fields (source and dest) of a connection tracking
+ * (::tracking_t) structure.
  * 
  * \param connection Pointer to a connection
  * \param dgram Pointer to packet datas
  */
-void get_udp_headers(connection_t *connection, unsigned char *dgram)
+void get_udp_headers(tracking_t *tracking, unsigned char *dgram)
 {
     struct udphdr * udphdrs=(struct udphdr *)dgram;
-    connection->tracking_hdrs.source=ntohs(udphdrs->source);
-    connection->tracking_hdrs.dest=ntohs(udphdrs->dest);
-    connection->tracking_hdrs.type=0;
-    connection->tracking_hdrs.code=0;
+    tracking->source=ntohs(udphdrs->source);
+    tracking->dest=ntohs(udphdrs->dest);
+    tracking->type=0;
+    tracking->code=0;
 }
 
 
 /**
- * Fill TCP related part of the connection tracking header (see ::tracking structure).
+ * Fill TCP fields (source and dest) of the connection tracking
+ * (::tracking_t) structure.
  *
  * \param connection Pointer to a connection
  * \param dgram Pointer to packet datas
  * \return State of the TCP connection (open, established, close).
  */
-tcp_state_t get_tcp_headers(connection_t *connection, unsigned char *dgram)
+tcp_state_t get_tcp_headers(tracking_t *tracking, unsigned char *dgram)
 {
     struct tcphdr * tcphdrs=(struct tcphdr *) dgram;
-    connection->tracking_hdrs.source=ntohs(tcphdrs->source);
-    connection->tracking_hdrs.dest=ntohs(tcphdrs->dest);
+    tracking->source=ntohs(tcphdrs->source);
+    tracking->dest=ntohs(tcphdrs->dest);
+    tracking->type=0;
+    tracking->code=0;
 
-    connection->tracking_hdrs.type=0;
-    connection->tracking_hdrs.code=0;
     /* test if fin ack or syn */
     /* if fin ack return 0 end of connection */
     if (tcphdrs->fin || tcphdrs->rst )
         return TCP_STATE_CLOSE;
+
     /* if syn return 1 */
     if (tcphdrs->syn) {
         if (tcphdrs->ack){
@@ -96,20 +100,37 @@ tcp_state_t get_tcp_headers(connection_t *connection, unsigned char *dgram)
 }
 
 /** 
- * Fill ICMP related part of the connection tracking header.
+ * Fill ICMP fields (type and code) of the connection tracking
+ * (::tracking_t) structure.
  * 
  * \param connection Pointer to a connection
  * \param dgram Pointer to packet datas
  */
-void get_icmp_headers(connection_t *connection, unsigned char *dgram)
+void get_icmp_headers(tracking_t *tracking, unsigned char *dgram)
 {
     struct icmphdr * icmphdrs= (struct icmphdr *)dgram;
-    connection->tracking_hdrs.source=0;
-    connection->tracking_hdrs.dest=0;
-    connection->tracking_hdrs.type=icmphdrs->type;
-    connection->tracking_hdrs.code=icmphdrs->code;
+    tracking->source=0;
+    tracking->dest=0;
+    tracking->type=icmphdrs->type;
+    tracking->code=icmphdrs->code;
 }
 
+/**
+ * Parse message content for message of type #AUTH_REQUEST or #AUTH_CONTROL.
+ *
+ * Message structure:
+ * \code
+ *  ofs | size | description
+ * -----+------+-------------------
+ *   0  |   2  | Message length
+ *   2  |   4  | Netfilter packet unique identifier
+ *   6  |   4  | Timestamp (Epoch format)
+ *  10  |   n  | IPv4 headers (see get_ip_headers()) +
+ *      |      |      TCP headers (get_tcp_headers())
+ *      |      |   or UDP headers (get_udp_headers())
+ *      |      |   or ICMP message (get_icmp_headers())
+ * \endcode
+ */
 connection_t* authpckt_new_connection(int8_t msg_type, unsigned char *dgram, int  dgramsiz) {
     unsigned char *pointer;
     uint16_t data_len;
@@ -157,7 +178,7 @@ connection_t* authpckt_new_connection(int8_t msg_type, unsigned char *dgram, int
     pointer += sizeof(int32_t);
 
     /* get ip headers till tracking is filled */
-    offset = get_ip_headers(connection, pointer);
+    offset = get_ip_headers(&connection->tracking, pointer);
     if (offset == 0) 
     {
         if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))
@@ -169,12 +190,14 @@ connection_t* authpckt_new_connection(int8_t msg_type, unsigned char *dgram, int
 
     /* get saddr and daddr */
     /* check if proto is in Hello mode list (when hello authentication is used) */
-    if ( nuauthconf->hello_authentication &&  localid_authenticated_protocol(connection->tracking_hdrs.protocol) ) {
+    if ( nuauthconf->hello_authentication &&  localid_authenticated_protocol(connection->tracking.protocol) ) {
         connection->state=AUTH_STATE_HELLOMODE;
     } 
-    switch (connection->tracking_hdrs.protocol) {
+    switch (connection->tracking.protocol) {
         case IPPROTO_TCP:
-            switch (get_tcp_headers(connection, pointer)){
+        {
+            tcp_state_t tcp_state = get_tcp_headers(&connection->tracking, pointer);
+            switch (tcp_state){
                 case TCP_STATE_OPEN:
                     break; 
                 case TCP_STATE_CLOSE:
@@ -198,19 +221,20 @@ connection_t* authpckt_new_connection(int8_t msg_type, unsigned char *dgram, int
                     return NULL;
             }
             break;
+        }
 
         case IPPROTO_UDP:
-            get_udp_headers(connection, pointer);
+            get_udp_headers(&connection->tracking, pointer);
             break;
 
         case IPPROTO_ICMP:
-            get_icmp_headers(connection, pointer);
+            get_icmp_headers(&connection->tracking, pointer);
             break;
 
         default:
             if ( connection->state != AUTH_STATE_HELLOMODE){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))
-                    g_message ("Can't parse protocol %u\n", connection->tracking_hdrs.protocol);
+                    g_message ("Can't parse protocol %u\n", connection->tracking.protocol);
                 free_connection(connection);
                 return NULL;
             }
@@ -227,20 +251,10 @@ connection_t* authpckt_new_connection(int8_t msg_type, unsigned char *dgram, int
 }
 
 /**
- * Decode a datagram packet from NuFW and create a connection 
- * (type ::connection_t) with it.
+ * Parse message content for message of type #AUTH_CONN_DESTROY 
+ * or #AUTH_CONN_UPDATE.
  *
- * Structure of a datagram:
- * \code
- *  ofs | size | description
- * -----+------+-------------------
- *   0  |   1  | Protocol version (equals to PROTO_VERSION)
- *   1  |   1  | Message type (from nufw_message_t)
- *   2  |   n  | Message content
- * \endcode
- * (see constant #PROTO_VERSION and enum ::nufw_message_t)
- *
- * Message content for message of type AUTH_CONN_DESTROY or AUTH_CONN_UPDATE:
+ * Message structure:
  * \code
  *  ofs | size | description
  * -----+------+-------------------
@@ -253,25 +267,53 @@ connection_t* authpckt_new_connection(int8_t msg_type, unsigned char *dgram, int
  *  17  |   2  | TCP/UDP destination port 
  * \endcode
  * (see ::nuv2_conntrack_message structure)
+ */
+void authpckt_conntrack (nufw_message_t msg_type, unsigned char *dgram) {
+    struct nuv2_conntrack_message* msg = (struct nuv2_conntrack_message*)dgram;
+    tracking_t* datas=g_new0(tracking_t,1);
+    struct internal_message  *message = g_new0(struct internal_message,1);
+    datas->protocol = msg->ipproto;
+    datas->saddr = ntohl(msg->src);
+    datas->daddr = ntohl(msg->dst);
+    if (msg->ipproto == IPPROTO_ICMP) {
+        datas->type = ntohs(msg->sport);
+        datas->code = ntohs(msg->dport);
+    } else {
+        datas->source = ntohs(msg->sport);
+        datas->dest = ntohs(msg->dport);
+    }               
+    message->datas = datas;
+    if (msg_type == AUTH_CONN_DESTROY)
+        message->type = FREE_MESSAGE;
+    else
+        message->type = UPDATE_MESSAGE;
+}
+
+/**
+ * Decode a datagram packet from NuFW. Create a connection 
+ * (type ::connection_t) for message of type #AUTH_REQUEST or #AUTH_CONTROL.
+ * Update conntrack for message of type #AUTH_CONN_DESTROY or 
+ * #AUTH_CONN_UPDATE.
  *
- * Message content for message of type AUTH_REQUEST or AUTH_CONTROL:
+ * Structure of a datagram:
  * \code
  *  ofs | size | description
  * -----+------+-------------------
- *   0  |   2  | Message length
- *   2  |   4  | Netfilter packet unique identifier
- *   6  |   4  | Timestamp (Epoch format)
- *  10  |   n  | IPv4 headers (see get_ip_headers()) +
- *      |      |      TCP headers (get_tcp_headers())
- *      |      |   or UDP headers (get_udp_headers())
- *      |      |   or ICMP message (get_icmp_headers())
+ *   0  |   1  | Protocol version (equals to PROTO_VERSION)
+ *   1  |   1  | Message type (from nufw_message_t)
+ *   2  |   n  | Mesage content (parse by next function)
  * \endcode
+ *
+ * Call:
+ *   - authpckt_new_connection(): Message type #AUTH_REQUEST or #AUTH_CONTROL
+ *   - authpckt_conntrack(): Message type #AUTH_CONN_DESTROY
+ *     or #AUTH_CONN_UPDATE
  * 
- * \param dgram Pointer to dgram
- * \param dgramsize Size of the dgram (in bytes)
- * \return Pointer to allocated connection
+ * \param dgram Pointer to datagram
+ * \param dgramsize Size of the datagram (in bytes)
+ * \return Pointer to new connection or NULL
  */
-connection_t* authpckt_decode(unsigned char * dgram, unsigned int dgramsize)
+connection_t* authpckt_decode(unsigned char *dgram, unsigned int dgramsize)
 {
     nufw_message_t msg_type;
 
@@ -285,45 +327,9 @@ connection_t* authpckt_decode(unsigned char * dgram, unsigned int dgramsize)
             return authpckt_new_connection(msg_type, dgram+2, dgramsize);
             
         case AUTH_CONN_DESTROY:
-            {
-                struct nuv2_conntrack_message* msg=(struct nuv2_conntrack_message*) dgram;
-                tracking* datas=g_new0(tracking,1);
-                struct internal_message  *message = g_new0(struct internal_message,1);
-                datas->protocol = msg->ipproto;
-                datas->saddr = ntohl(msg->src);
-                datas->daddr = ntohl(msg->dst);
-                if (msg->ipproto == IPPROTO_ICMP) {
-                    datas->type = ntohs(msg->sport);
-                    datas->code = ntohs(msg->dport);
-                } else {
-                    datas->source = ntohs(msg->sport);
-                    datas->dest = ntohs(msg->dport);
-                }               
-                message->datas = datas;
-                message->type = FREE_MESSAGE;
-                g_async_queue_push (nuauthdatas->limited_connections_queue, message);
-            }
-            break;
         case AUTH_CONN_UPDATE:
-            {
-                struct nuv2_conntrack_message* msg=(struct nuv2_conntrack_message*) dgram;
-                tracking* datas=g_new0(tracking,1);
-                struct internal_message  *message = g_new0(struct internal_message,1);
-                datas->protocol = msg->ipproto;
-                datas->saddr = ntohl(msg->src);
-                datas->daddr = ntohl(msg->dst);
-                if (msg->ipproto == IPPROTO_ICMP) {
-                    datas->type = ntohs(msg->sport);
-                    datas->code = ntohs(msg->dport);
-                } else {
-                    datas->source = ntohs(msg->sport);
-                    datas->dest = ntohs(msg->dport);
-                }               
-                message->datas = datas;
-                message->type = UPDATE_MESSAGE;
-                g_async_queue_push (nuauthdatas->limited_connections_queue, message);
-            }
-            break;
+            authpckt_conntrack(msg_type, dgram);
+            return NULL;
 
         default:
             if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)) {

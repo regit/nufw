@@ -60,7 +60,7 @@ int main(int argc,char * argv[])
   int option,daemonize = 0;
   int value;
   char* version=VERSION;
-  tracking empty_header;
+  tracking_t empty_header;
   struct sigaction action;
   pid_t pidf;
   char* nuauth_client_listen_addr=NULL;

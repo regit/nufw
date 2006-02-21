@@ -31,7 +31,7 @@
  */
 
   G_MODULE_EXPORT 
-gchar* ip_authentication(tracking* ipheader)
+gchar* ip_authentication(tracking_t* ipheader)
 {
   struct in_addr laddr, faddr;
   struct timeval timeout;

@@ -184,7 +184,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, tcp_state_t state){
 	/* contruct request */
 	switch (state) {
 		case TCP_STATE_OPEN:
-			switch ((element.tracking_hdrs).protocol){
+			switch ((element.tracking).protocol){
 				case IPPROTO_TCP:
 
 					//
@@ -208,8 +208,8 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, tcp_state_t state){
 									mysql_table_name,
 									TCP_STATE_CLOSE,
 									element.timestamp,
-									(long unsigned int)(element.tracking_hdrs).daddr,
-									(element.tracking_hdrs).source
+									(long unsigned int)(element.tracking).daddr,
+									(element.tracking).source
 							    ) >= SHORT_REQUEST_SIZE-1){
 
 							if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
@@ -235,11 +235,11 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, tcp_state_t state){
 									element.username,
 									(element.user_id),
 									element.timestamp,
-									(element.tracking_hdrs).protocol,
-									(long unsigned int)(element.tracking_hdrs).saddr,
-									(long unsigned int)(element.tracking_hdrs).daddr,
-									(element.tracking_hdrs).source,
-									(element.tracking_hdrs).dest,
+									(element.tracking).protocol,
+									(long unsigned int)(element.tracking).saddr,
+									(long unsigned int)(element.tracking).daddr,
+									(element.tracking).source,
+									(element.tracking).dest,
 									TCP_STATE_OPEN,
 									OSFullname,
 									AppFullname
@@ -258,11 +258,11 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, tcp_state_t state){
 									mysql_table_name,
 									(element.user_id),
 									element.timestamp,
-									(element.tracking_hdrs).protocol,
-									(long unsigned int)(element.tracking_hdrs).saddr,
-									(long unsigned int)(element.tracking_hdrs).daddr,
-									(element.tracking_hdrs).source,
-									(element.tracking_hdrs).dest,
+									(element.tracking).protocol,
+									(long unsigned int)(element.tracking).saddr,
+									(long unsigned int)(element.tracking).daddr,
+									(element.tracking).source,
+									(element.tracking).dest,
 									TCP_STATE_OPEN
 							    ) >= SHORT_REQUEST_SIZE-1){
 							if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
@@ -289,11 +289,11 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, tcp_state_t state){
 									element.username,
 									(element.user_id),
 									element.timestamp,
-									(element.tracking_hdrs).protocol,
-									(long unsigned int)(element.tracking_hdrs).saddr,
-									(long unsigned int)(element.tracking_hdrs).daddr,
-									(element.tracking_hdrs).source,
-									(element.tracking_hdrs).dest,
+									(element.tracking).protocol,
+									(long unsigned int)(element.tracking).saddr,
+									(long unsigned int)(element.tracking).daddr,
+									(element.tracking).source,
+									(element.tracking).dest,
 									TCP_STATE_OPEN,
 									OSFullname,
 									AppFullname
@@ -329,9 +329,9 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, tcp_state_t state){
 									element.username,
 									(element.user_id),
 									element.timestamp,
-									(element.tracking_hdrs).protocol,
-									(long unsigned int)(element.tracking_hdrs).saddr,
-									(long unsigned int)(element.tracking_hdrs).daddr,
+									(element.tracking).protocol,
+									(long unsigned int)(element.tracking).saddr,
+									(long unsigned int)(element.tracking).daddr,
 									TCP_STATE_OPEN,
 									OSFullname,
 									AppFullname
@@ -356,7 +356,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, tcp_state_t state){
 			}
 			break;
 		case TCP_STATE_ESTABLISHED: 
-			if ((element.tracking_hdrs).protocol == IPPROTO_TCP){
+			if ((element.tracking).protocol == IPPROTO_TCP){
 				int update_status = 0;
 				while (update_status < 2){
 					update_status++;
@@ -365,10 +365,10 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, tcp_state_t state){
 								mysql_table_name,
 								TCP_STATE_ESTABLISHED,
 								element.timestamp,
-								(long unsigned int)(element.tracking_hdrs).saddr,
-								(long unsigned int)(element.tracking_hdrs).daddr,
-								(element.tracking_hdrs).source,
-								(element.tracking_hdrs).dest,
+								(long unsigned int)(element.tracking).saddr,
+								(long unsigned int)(element.tracking).daddr,
+								(element.tracking).source,
+								(element.tracking).dest,
 								TCP_STATE_OPEN
 						    ) >= SHORT_REQUEST_SIZE-1){
 						if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
@@ -398,7 +398,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, tcp_state_t state){
 			}
 			break;
 		case TCP_STATE_CLOSE: 
-			if ((element.tracking_hdrs).protocol == IPPROTO_TCP){
+			if ((element.tracking).protocol == IPPROTO_TCP){
 				int update_status = 0;
 				while (update_status < 2){
 					update_status++;
@@ -407,10 +407,10 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, tcp_state_t state){
 								mysql_table_name,
 								element.timestamp,
 								TCP_STATE_CLOSE,
-								(long unsigned int)(element.tracking_hdrs).saddr,
-								(long unsigned int)(element.tracking_hdrs).daddr,
-								(element.tracking_hdrs).source,
-								(element.tracking_hdrs).dest,
+								(long unsigned int)(element.tracking).saddr,
+								(long unsigned int)(element.tracking).daddr,
+								(element.tracking).source,
+								(element.tracking).dest,
 								TCP_STATE_ESTABLISHED
 						    ) >= SHORT_REQUEST_SIZE-1){
 						if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
@@ -440,7 +440,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, tcp_state_t state){
 			}
 			break;
 		case TCP_STATE_DROP:
-			switch ((element.tracking_hdrs).protocol){
+			switch ((element.tracking).protocol){
 				case IPPROTO_TCP:
 					{
 						if (element.username){
@@ -454,11 +454,11 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, tcp_state_t state){
 										element.username,
 										(element.user_id),
 										element.timestamp,
-										(element.tracking_hdrs).protocol,
-										(long unsigned int)(element.tracking_hdrs).saddr,
-										(long unsigned int)(element.tracking_hdrs).daddr,
-										(element.tracking_hdrs).source,
-										(element.tracking_hdrs).dest,
+										(element.tracking).protocol,
+										(long unsigned int)(element.tracking).saddr,
+										(long unsigned int)(element.tracking).daddr,
+										(element.tracking).source,
+										(element.tracking).dest,
 										TCP_STATE_DROP,
 										OSFullname,
 										AppFullname
@@ -482,11 +482,11 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, tcp_state_t state){
 										"INSERT INTO %s (oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,state,oob_prefix) VALUES (%lu,%u,%lu,%lu,%u,%u,%hu,'UNAUTHENTICATED DROP')", 
 										mysql_table_name,
 										element.timestamp,
-										(element.tracking_hdrs).protocol,
-										(long unsigned int)(element.tracking_hdrs).saddr,
-										(long unsigned int)(element.tracking_hdrs).daddr,
-										(element.tracking_hdrs).source,
-										(element.tracking_hdrs).dest,
+										(element.tracking).protocol,
+										(long unsigned int)(element.tracking).saddr,
+										(long unsigned int)(element.tracking).daddr,
+										(element.tracking).source,
+										(element.tracking).dest,
 										TCP_STATE_DROP) >= (LONG_REQUEST_SIZE-1)){
 								if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
 									g_warning("Building mysql insert query, the LONG_REQUEST_SIZE limit was reached!\n");
@@ -513,11 +513,11 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, tcp_state_t state){
 										element.username,
 										(element.user_id),
 										element.timestamp,
-										(element.tracking_hdrs).protocol,
-										(long unsigned int)(element.tracking_hdrs).saddr,
-										(long unsigned int)(element.tracking_hdrs).daddr,
-										(element.tracking_hdrs).source,
-										(element.tracking_hdrs).dest,
+										(element.tracking).protocol,
+										(long unsigned int)(element.tracking).saddr,
+										(long unsigned int)(element.tracking).daddr,
+										(element.tracking).source,
+										(element.tracking).dest,
 										TCP_STATE_DROP,
 										OSFullname,
 										AppFullname
@@ -544,11 +544,11 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, tcp_state_t state){
 										"INSERT INTO %s (oob_time_sec,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,state,oob_prefix) VALUES (%lu,%u,%lu,%lu,%u,%u,%hu,'UNAUTHENTICATED DROP')", 
 										mysql_table_name,
 										element.timestamp,
-										(element.tracking_hdrs).protocol,
-										(long unsigned int)(element.tracking_hdrs).saddr,
-										(long unsigned int)(element.tracking_hdrs).daddr,
-										(element.tracking_hdrs).source,
-										(element.tracking_hdrs).dest,
+										(element.tracking).protocol,
+										(long unsigned int)(element.tracking).saddr,
+										(long unsigned int)(element.tracking).daddr,
+										(element.tracking).source,
+										(element.tracking).dest,
 										TCP_STATE_DROP) >= (LONG_REQUEST_SIZE-1)){
 								if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
 									g_warning("Building mysql insert query, the LONG_REQUEST_SIZE limit was reached!\n");
@@ -574,9 +574,9 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, tcp_state_t state){
 									element.username,
 									(element.user_id),
 									element.timestamp,
-									(element.tracking_hdrs).protocol,
-									(long unsigned int) (element.tracking_hdrs).saddr,
-									(long unsigned int) (element.tracking_hdrs).daddr,
+									(element.tracking).protocol,
+									(long unsigned int) (element.tracking).saddr,
+									(long unsigned int) (element.tracking).daddr,
 									TCP_STATE_DROP,
 									OSFullname,
 									AppFullname

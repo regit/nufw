@@ -59,7 +59,7 @@ typedef struct {
 
   u_int8_t type;      /*!< ICMP message type */
   u_int8_t code;      /*!< ICMP code type */
-} tracking;
+} tracking_t;
 
 /**
  * connection element
@@ -72,7 +72,7 @@ typedef struct {
   long timestamp;         /*!< Packet arrival time (seconds) */
   int socket;             /*!< Socket from which NuFW request is coming */
   nufw_session *tls;      /*!< Infos on NuFW which sent the request */
-  tracking tracking_hdrs; /*!< IPv4 connection tracking (headers) */
+  tracking_t tracking;    /*!< IPv4 connection tracking (headers) */
   u_int16_t user_id;      /*!< User numeric identity used for marking */
   char *username;         /*!< User name */
 

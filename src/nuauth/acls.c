@@ -35,7 +35,7 @@
  * identify a acl in the cache
  */
 struct acl_key {
-	tracking* acl_tracking;
+	tracking_t* acl_tracking;
 	/** operating system name. */
 	gchar * sysname;
 	/** operating system release. */
@@ -63,7 +63,7 @@ struct acl_key {
 
 inline  guint hash_acl(gconstpointer key)
 {
-	tracking* headers=((struct acl_key*)key)->acl_tracking;
+	tracking_t* headers=((struct acl_key*)key)->acl_tracking;
 	return (jhash_3words(headers->saddr,
 				(headers->daddr ^ headers->protocol),
 				(headers->dest << 16),
@@ -96,43 +96,43 @@ gint nstrcmp(gchar* a,gchar* b){
  * Return : TRUE is ip headers are equal, FALSE otherwise
  */
 
-gboolean compare_tracking(gconstpointer tracking_hdrs1, gconstpointer tracking_hdrs2){
+gboolean compare_tracking(gconstpointer tracking1, gconstpointer tracking2){
 	/* compare IPheaders */
-	if (        ( ((tracking *) tracking_hdrs1)->saddr ==
-				((tracking *) tracking_hdrs2)->saddr ) ){
+	if (        ( ((tracking_t *) tracking1)->saddr ==
+				((tracking_t *) tracking2)->saddr ) ){
 
 		/* compare proto */
-		if (((tracking *) tracking_hdrs1)->protocol ==
-				((tracking *) tracking_hdrs2)->protocol) {
+		if (((tracking_t *) tracking1)->protocol ==
+				((tracking_t *) tracking2)->protocol) {
 
 			/* compare proto headers */
-			switch ( ((tracking *) tracking_hdrs1)->protocol) {
+			switch ( ((tracking_t *) tracking1)->protocol) {
 				case IPPROTO_TCP:
-					if (  ((tracking *) tracking_hdrs1)->dest ==
-							((tracking *) tracking_hdrs2)->dest 
+					if (  ((tracking_t *) tracking1)->dest ==
+							((tracking_t *) tracking2)->dest 
 					   ){
-						if ( ((tracking *) tracking_hdrs1)->daddr ==
-								((tracking *) tracking_hdrs2)->daddr ) 
+						if ( ((tracking_t *) tracking1)->daddr ==
+								((tracking_t *) tracking2)->daddr ) 
 							return TRUE;
 
 					}
 					break;
 				case IPPROTO_UDP:
-					if (  ((tracking *)tracking_hdrs1)->dest ==
-							((tracking *)tracking_hdrs2)->dest ){
+					if (  ((tracking_t *)tracking1)->dest ==
+							((tracking_t *)tracking2)->dest ){
 
-						if ( ((tracking *) tracking_hdrs1)->daddr ==
-								((tracking *) tracking_hdrs2)->daddr ) 
+						if ( ((tracking_t *) tracking1)->daddr ==
+								((tracking_t *) tracking2)->daddr ) 
 							return TRUE;
 					}
 					break;
 				case IPPROTO_ICMP:
-					if ( ( ((tracking *)tracking_hdrs1)->type ==
-								((tracking *)tracking_hdrs2)->type )   &&
-							( ((tracking *)tracking_hdrs1)->code ==
-							  ((tracking *)tracking_hdrs2)->code ) ){
-						if ( ((tracking *) tracking_hdrs1)->daddr ==
-								((tracking *) tracking_hdrs2)->daddr ) 
+					if ( ( ((tracking_t *)tracking1)->type ==
+								((tracking_t *)tracking2)->type )   &&
+							( ((tracking_t *)tracking1)->code ==
+							  ((tracking_t *)tracking2)->code ) ){
+						if ( ((tracking_t *) tracking1)->daddr ==
+								((tracking_t *) tracking2)->daddr ) 
 							return TRUE;
 					}
 					break;
@@ -209,7 +209,7 @@ void free_acl_cache(gpointer datas)
 struct acl_key* acl_create_key(connection_t *kdatas)
 {
 	struct acl_key * key=g_new0(struct acl_key,1);
-	key->acl_tracking=&(kdatas->tracking_hdrs);
+	key->acl_tracking=&(kdatas->tracking);
 	key->sysname=kdatas->os_sysname;
 	key->release=kdatas->os_release;
 	key->version=kdatas->os_version;
@@ -221,7 +221,7 @@ struct acl_key* acl_create_key(connection_t *kdatas)
 gpointer acl_create_and_alloc_key(connection_t* kdatas)
 {
 	struct acl_key key;
-	key.acl_tracking=&(kdatas->tracking_hdrs);
+	key.acl_tracking=&(kdatas->tracking);
 	key.sysname=kdatas->os_sysname;
 	key.release=kdatas->os_release;
 	key.version=kdatas->os_version;
@@ -235,8 +235,8 @@ gpointer acl_duplicate_key(gpointer datas)
 {
 	struct acl_key * key=g_new0(struct acl_key,1);
 	struct acl_key * kdatas=(struct acl_key*)datas;
-	tracking* ktracking=g_new0(tracking,1);
-	memcpy(ktracking,kdatas->acl_tracking,sizeof( tracking));
+	tracking_t* ktracking=g_new0(tracking_t,1);
+	memcpy(ktracking,kdatas->acl_tracking,sizeof( tracking_t));
 	key->acl_tracking=ktracking;
 	if(kdatas->sysname){
 		key->sysname=g_strdup(kdatas->sysname);

@@ -44,12 +44,12 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, tcp_state_t state){
       default:
     	  str_state="Unknown ";
     } 
-    oneip.s_addr=htonl((element.tracking_hdrs).saddr);
+    oneip.s_addr=htonl((element.tracking).saddr);
     strncpy(source_addr,inet_ntoa(oneip),16);
-    oneip.s_addr=htonl((element.tracking_hdrs).daddr);
+    oneip.s_addr=htonl((element.tracking).daddr);
     strncpy(dest_addr,inet_ntoa(oneip),16);
 
-    if ( ((element.tracking_hdrs).protocol == IPPROTO_TCP) || ((element.tracking_hdrs).protocol == IPPROTO_UDP) ) {
+    if ( ((element.tracking).protocol == IPPROTO_TCP) || ((element.tracking).protocol == IPPROTO_UDP) ) {
         if (state==TCP_STATE_ESTABLISHED){
         g_message("%s[%s] %ld : SRC=%s DST=%s PROTO=%d SPT=%u DPT=%u",
             str_state,
@@ -57,9 +57,9 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, tcp_state_t state){
             element.timestamp,
             dest_addr,
             source_addr,
-            (element.tracking_hdrs).protocol,
-            (element.tracking_hdrs).dest,
-            (element.tracking_hdrs).source
+            (element.tracking).protocol,
+            (element.tracking).dest,
+            (element.tracking).source
             );
         } else {
         g_message("%s[%s] %ld : SRC=%s DST=%s PROTO=%d SPT=%u DPT=%u",
@@ -68,9 +68,9 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, tcp_state_t state){
             element.timestamp,
             source_addr,
             dest_addr,
-            (element.tracking_hdrs).protocol,
-            (element.tracking_hdrs).source,
-            (element.tracking_hdrs).dest
+            (element.tracking).protocol,
+            (element.tracking).source,
+            (element.tracking).dest
             );
         }
     } else {
@@ -80,7 +80,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, tcp_state_t state){
             element.timestamp,
             source_addr,
             dest_addr,
-            (element.tracking_hdrs).protocol
+            (element.tracking).protocol
             );
     }
     return 0;

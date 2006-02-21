@@ -1433,7 +1433,7 @@ void push_worker ()
 		switch (message->type) {
 			case WARN_MESSAGE:
 				{
-					global_msg->addr=((tracking *)message->datas)->saddr;
+					global_msg->addr=((tracking_t *)message->datas)->saddr;
 					global_msg->found = FALSE;
 					/* search in client array */
 					g_static_mutex_lock (&client_mutex);

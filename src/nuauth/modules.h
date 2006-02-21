@@ -28,7 +28,7 @@ int user_check (const char *user, const char *pass,unsigned passlen,uint16_t *ui
 GSList * acl_check (connection_t* element);
 
 /* ip auth */
-gchar* ip_auth(tracking * header);
+gchar* ip_auth(tracking_t *tracking);
 
 int user_logs (connection_t element, int state);
 

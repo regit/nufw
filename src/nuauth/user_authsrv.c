@@ -54,7 +54,7 @@ void user_check_and_decide (gpointer userdata, gpointer data)
 	/* check source IP equality */
 	if  (  ((struct buffer_read *)userdata)->addr 
 			==
-			htonl(conn_elt->tracking_hdrs.saddr) ){
+			htonl(conn_elt->tracking.saddr) ){
 #ifdef DEBUG_ENABLE
           if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_PACKET)){
               g_message("User : %s",conn_elt->username);
@@ -182,33 +182,33 @@ static GSList * userpckt_decode(struct buffer_read * datas)
                                   struct nuv2_authfield_ipv4 * ipfield=(struct nuv2_authfield_ipv4 * )req_start; 
 
 
-                                  connection->tracking_hdrs.saddr=ntohl(ipfield->src);
-                                  connection->tracking_hdrs.daddr=ntohl(ipfield->dst);
-                                  connection->tracking_hdrs.protocol=ipfield->proto;
+                                  connection->tracking.saddr=ntohl(ipfield->src);
+                                  connection->tracking.daddr=ntohl(ipfield->dst);
+                                  connection->tracking.protocol=ipfield->proto;
 
 #ifdef DEBUG_ENABLE
                                   if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
                                       g_message("\tgot IPv4 field");
 #endif
-                                  switch (connection->tracking_hdrs.protocol) {
+                                  switch (connection->tracking.protocol) {
                                     case IPPROTO_TCP:
 
-                                      connection->tracking_hdrs.source=ntohs(ipfield->sport);
-                                      connection->tracking_hdrs.dest=ntohs(ipfield->dport);
-                                      connection->tracking_hdrs.type=0;
-                                      connection->tracking_hdrs.code=0;
+                                      connection->tracking.source=ntohs(ipfield->sport);
+                                      connection->tracking.dest=ntohs(ipfield->dport);
+                                      connection->tracking.type=0;
+                                      connection->tracking.code=0;
                                       break;
                                     case IPPROTO_UDP:
-                                      connection->tracking_hdrs.source=ntohs(ipfield->sport);
-                                      connection->tracking_hdrs.dest=ntohs(ipfield->dport);
-                                      connection->tracking_hdrs.type=0;
-                                      connection->tracking_hdrs.code=0;
+                                      connection->tracking.source=ntohs(ipfield->sport);
+                                      connection->tracking.dest=ntohs(ipfield->dport);
+                                      connection->tracking.type=0;
+                                      connection->tracking.code=0;
                                       break;
                                     case IPPROTO_ICMP:
-                                      connection->tracking_hdrs.source=0;
-                                      connection->tracking_hdrs.dest=0;
-                                      connection->tracking_hdrs.type=ntohs(ipfield->sport);
-                                      connection->tracking_hdrs.code=ntohs(ipfield->dport);
+                                      connection->tracking.source=0;
+                                      connection->tracking.dest=0;
+                                      connection->tracking.type=ntohs(ipfield->sport);
+                                      connection->tracking.code=ntohs(ipfield->dport);
                                       break;
                                   }
                               }

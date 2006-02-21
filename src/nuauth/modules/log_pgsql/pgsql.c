@@ -201,7 +201,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
     /* contruct request */
     switch (state){
       case TCP_STATE_OPEN:
-        switch ((element.tracking_hdrs).protocol){
+        switch ((element.tracking).protocol){
           case IPPROTO_TCP:
             //
             // FIELD          IN NUAUTH STRUCTURE               IN ULOG
@@ -220,8 +220,8 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
             //
             //
             //
-            ipone.s_addr=ntohl((element.tracking_hdrs).saddr);
-            iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
+            ipone.s_addr=ntohl((element.tracking).saddr);
+            iptwo.s_addr=ntohl((element.tracking).daddr);
             strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
             strncpy(tmp_inet2,inet_ntoa(iptwo),40);
             if (nuauthconf->log_users_strict){
@@ -230,7 +230,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
                   element.timestamp,
                   TCP_STATE_CLOSE,
                   tmp_inet1,
-                  (element.tracking_hdrs).source
+                  (element.tracking).source
                   ) >= SHORT_REQUEST_SIZE-1){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
                     g_warning("Building pgsql update query, the SHORT_REQUEST_SIZE limit was reached!\n");
@@ -256,11 +256,11 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
                   element.username,
                   (element.user_id),
                   element.timestamp,
-                  (element.tracking_hdrs).protocol,
+                  (element.tracking).protocol,
                   tmp_inet1,
                   tmp_inet2,
-                  (element.tracking_hdrs).source,
-                  (element.tracking_hdrs).dest,
+                  (element.tracking).source,
+                  (element.tracking).dest,
                   TCP_STATE_OPEN,
                   OSFullname,
                   AppFullname
@@ -278,11 +278,11 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
                   pgsql_table_name,
                   (element.user_id),
                   element.timestamp,
-                  (element.tracking_hdrs).protocol,
+                  (element.tracking).protocol,
                   tmp_inet1,
                   tmp_inet2,
-                  (element.tracking_hdrs).source,
-                  (element.tracking_hdrs).dest,
+                  (element.tracking).source,
+                  (element.tracking).dest,
                   TCP_STATE_OPEN
                   ) >= SHORT_REQUEST_SIZE-1){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
@@ -314,8 +314,8 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
             gchar* AppFullname;
             OSFullname = generate_osname(element.os_sysname,element.os_version,element.os_release);
             AppFullname = generate_appname(element.app_name); /*Just a size check actually*/
-            ipone.s_addr=ntohl((element.tracking_hdrs).saddr);
-            iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
+            ipone.s_addr=ntohl((element.tracking).saddr);
+            iptwo.s_addr=ntohl((element.tracking).daddr);
             strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
             strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
             if (snprintf(request,LONG_REQUEST_SIZE-1,"INSERT INTO %s (username,user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,state,oob_prefix,client_os,client_app) VALUES ('%s',%u,%lu,%u,'%s','%s',%u,%u,%hu,'ACCEPT','%s','%s');", //TODO : Add a check about username being NULL
@@ -323,11 +323,11 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
                   element.username,
                   (element.user_id),
                   element.timestamp,
-                  (element.tracking_hdrs).protocol,
+                  (element.tracking).protocol,
                   tmp_inet1,
                   tmp_inet2,
-                  (element.tracking_hdrs).source,
-                  (element.tracking_hdrs).dest,
+                  (element.tracking).source,
+                  (element.tracking).dest,
                   TCP_STATE_OPEN,
                   OSFullname,
                   AppFullname
@@ -356,8 +356,8 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
             gchar* AppFullname;
             OSFullname = generate_osname(element.os_sysname,element.os_version,element.os_release);
             AppFullname = generate_appname(element.app_name); /*Just a size check actually*/
-            ipone.s_addr=ntohl((element.tracking_hdrs).saddr);
-            iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
+            ipone.s_addr=ntohl((element.tracking).saddr);
+            iptwo.s_addr=ntohl((element.tracking).daddr);
             strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
             strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
             if (snprintf(request,LONG_REQUEST_SIZE-1,"INSERT INTO %s (username,user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,state,oob_prefix,client_os,client_app) VALUES ('%s',%u,%lu,%u,'%s','%s',%hu,'ACCEPT','%s','%s');", //TODO : username NULL?
@@ -365,7 +365,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
                   element.username,
                   (element.user_id),
                   element.timestamp,
-                  (element.tracking_hdrs).protocol,
+                  (element.tracking).protocol,
                   tmp_inet1,
                   tmp_inet2,
                   TCP_STATE_OPEN,
@@ -393,12 +393,12 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
         }
         break;
       case TCP_STATE_ESTABLISHED:
-        if ((element.tracking_hdrs).protocol == IPPROTO_TCP){
+        if ((element.tracking).protocol == IPPROTO_TCP){
             int update_status = 0;
             while (update_status < 2){
               update_status++;
-              ipone.s_addr=ntohl((element.tracking_hdrs).saddr);
-              iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
+              ipone.s_addr=ntohl((element.tracking).saddr);
+              iptwo.s_addr=ntohl((element.tracking).daddr);
               strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
               strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
               if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET state=%hu, start_timestamp=%lu WHERE (ip_daddr='%s' and ip_saddr='%s' and tcp_dport=%u and tcp_sport=%u and state=%hu);",
@@ -407,8 +407,8 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
                   element.timestamp,
                   tmp_inet1,
                   tmp_inet2,
-                  (element.tracking_hdrs).source,
-                  (element.tracking_hdrs).dest,
+                  (element.tracking).source,
+                  (element.tracking).dest,
                   TCP_STATE_OPEN
                   ) >= SHORT_REQUEST_SIZE-1){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
@@ -442,12 +442,12 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
         //Nothing will be done...
         return 0;
       case TCP_STATE_CLOSE:
-        if ((element.tracking_hdrs).protocol == IPPROTO_TCP){
+        if ((element.tracking).protocol == IPPROTO_TCP){
             int update_status = 0;
             while (update_status < 2){
               update_status++;
-              ipone.s_addr=ntohl((element.tracking_hdrs).saddr);
-              iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
+              ipone.s_addr=ntohl((element.tracking).saddr);
+              iptwo.s_addr=ntohl((element.tracking).daddr);
               strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
               strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
               if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET end_timestamp=%lu, state=%hu WHERE (ip_saddr='%s' and ip_daddr='%s' and tcp_sport=%u and tcp_dport=%u and state=%hu);",
@@ -456,8 +456,8 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
                   TCP_STATE_CLOSE,
                   tmp_inet1,
                   tmp_inet2,
-                  (element.tracking_hdrs).source,
-                  (element.tracking_hdrs).dest,
+                  (element.tracking).source,
+                  (element.tracking).dest,
                   TCP_STATE_ESTABLISHED
                   ) >= SHORT_REQUEST_SIZE-1){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
@@ -492,15 +492,15 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
         //Nothing will be done...
         return 0;
       case TCP_STATE_DROP:
-        switch ((element.tracking_hdrs).protocol) {
+        switch ((element.tracking).protocol) {
           case IPPROTO_TCP:
           {
             gchar* OSFullname;
             gchar* AppFullname;
             OSFullname = generate_osname(element.os_sysname,element.os_version,element.os_release);
             AppFullname = generate_appname(element.app_name); /*Just a size check actually*/
-            ipone.s_addr=ntohl((element.tracking_hdrs).saddr);
-            iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
+            ipone.s_addr=ntohl((element.tracking).saddr);
+            iptwo.s_addr=ntohl((element.tracking).daddr);
             strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
             strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
 	    if (element.username == NULL){
@@ -511,11 +511,11 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
                   element.username,
                   (element.user_id),
                   element.timestamp,
-                  (element.tracking_hdrs).protocol,
+                  (element.tracking).protocol,
                   tmp_inet1,
                   tmp_inet2,
-                  (element.tracking_hdrs).source,
-                  (element.tracking_hdrs).dest,
+                  (element.tracking).source,
+                  (element.tracking).dest,
                   TCP_STATE_DROP,
                   OSFullname,
                   AppFullname
@@ -544,8 +544,8 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
             gchar* AppFullname;
             OSFullname = generate_osname(element.os_sysname,element.os_version,element.os_release);
             AppFullname = generate_appname(element.app_name); /*Just a size check actually*/
-            ipone.s_addr=ntohl((element.tracking_hdrs).saddr);
-            iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
+            ipone.s_addr=ntohl((element.tracking).saddr);
+            iptwo.s_addr=ntohl((element.tracking).daddr);
             strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
             strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
 	    if (element.username == NULL){
@@ -556,11 +556,11 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
                   element.username,
                   (element.user_id),
                   element.timestamp,
-                  (element.tracking_hdrs).protocol,
+                  (element.tracking).protocol,
                   tmp_inet1,
                   tmp_inet2,
-                  (element.tracking_hdrs).source,
-                  (element.tracking_hdrs).dest,
+                  (element.tracking).source,
+                  (element.tracking).dest,
                   TCP_STATE_DROP,
                   OSFullname,
                   AppFullname
@@ -590,8 +590,8 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
             gchar* AppFullname;
             OSFullname = generate_osname(element.os_sysname,element.os_version,element.os_release);
             AppFullname = generate_appname(element.app_name); /*Just a size check actually*/
-            ipone.s_addr=ntohl((element.tracking_hdrs).saddr);
-            iptwo.s_addr=ntohl((element.tracking_hdrs).daddr);
+            ipone.s_addr=ntohl((element.tracking).saddr);
+            iptwo.s_addr=ntohl((element.tracking).daddr);
             strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
             strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
             if (snprintf(request,LONG_REQUEST_SIZE-1,"INSERT INTO %s (username,user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,state,oob_prefix,client_os,client_app) VALUES ('%s',%u,%lu,%u,'%s','%s',%lu,%hu,'DROP','%s','%s');", //TODO : username NULL?
@@ -599,7 +599,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
                   element.username,
                   (element.user_id),
                   element.timestamp,
-                  (element.tracking_hdrs).protocol,
+                  (element.tracking).protocol,
                   tmp_inet1,
                   tmp_inet2,
                   element.timestamp,

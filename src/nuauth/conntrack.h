@@ -23,7 +23,7 @@
 struct limited_connection {
         struct in_addr gwaddr;
         time_t expire; /**< expiration time of connection */
-        tracking tracking_hdrs;
+        tracking_t tracking;
 };
 
 

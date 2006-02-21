@@ -48,15 +48,15 @@ static void send_conntrack_message(struct limited_connection * lconn,unsigned ch
           } else {
               message.timeout=0;
           }
-          message.ipproto=lconn->tracking_hdrs.protocol;
-          message.src=htonl(lconn->tracking_hdrs.saddr);
-          message.dst=htonl(lconn->tracking_hdrs.daddr);
+          message.ipproto=lconn->tracking.protocol;
+          message.src=htonl(lconn->tracking.saddr);
+          message.dst=htonl(lconn->tracking.daddr);
           if (message.ipproto == IPPROTO_ICMP){
-              message.sport=lconn->tracking_hdrs.type;
-              message.dport=lconn->tracking_hdrs.code;
+              message.sport=lconn->tracking.type;
+              message.dport=lconn->tracking.code;
           } else {
-              message.sport=htons(lconn->tracking_hdrs.source);
-              message.dport=htons(lconn->tracking_hdrs.dest);
+              message.sport=htons(lconn->tracking.source);
+              message.dport=htons(lconn->tracking.dest);
           }
           gnutls_record_send(
                   *(session->tls) ,
@@ -144,7 +144,7 @@ void* limited_connection_handler()
   while ( (message = g_async_queue_pop(nuauthdatas->limited_connections_queue)) ) {
       switch (message->type) {
         case INSERT_MESSAGE:
-                g_hash_table_insert(conn_list,&(((struct limited_connection*)message->datas)->tracking_hdrs),message->datas);
+                g_hash_table_insert(conn_list,&(((struct limited_connection*)message->datas)->tracking),message->datas);
                 break;
         case REFRESH_MESSAGE:
 #ifdef DEBUG_ENABLE

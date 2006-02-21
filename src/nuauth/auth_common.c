@@ -75,9 +75,9 @@ inline void change_state(connection_t *elt, auth_state_t state)
 
 inline  guint hash_connection(gconstpointer headers)
 {
-	return (jhash_3words(((tracking *)headers)->saddr,
-				(((tracking *)headers)->daddr ^ ((tracking *)headers)->protocol),
-				(((tracking *)headers)->dest | ((tracking *)headers)->source << 16),
+	return (jhash_3words(((tracking_t *)headers)->saddr,
+				(((tracking_t *)headers)->daddr ^ ((tracking_t *)headers)->protocol),
+				(((tracking_t *)headers)->dest | ((tracking_t *)headers)->source << 16),
 				32));
 }
 
@@ -88,50 +88,50 @@ inline  guint hash_connection(gconstpointer headers)
  * - Return : TRUE is ip headers are equal, FALSE otherwise
  */
 
-gboolean compare_connection(gconstpointer tracking_hdrs1, gconstpointer tracking_hdrs2){
+gboolean compare_connection(gconstpointer tracking1, gconstpointer tracking2){
       /* Note from Gryzor : this might be optimized by comparing daddr first? 
        * daddr may have greater chances of being different when working on connections from a LAN*/
 	/* compare IPheaders */
-	if (        ( ((tracking *) tracking_hdrs1)->saddr ==
-				((tracking *) tracking_hdrs2)->saddr ) ){
+	if (        ( ((tracking_t *) tracking1)->saddr ==
+				((tracking_t *) tracking2)->saddr ) ){
 
 		/* compare proto */
-		if (((tracking *) tracking_hdrs1)->protocol ==
-				((tracking *) tracking_hdrs2)->protocol) {
+		if (((tracking_t *) tracking1)->protocol ==
+				((tracking_t *) tracking2)->protocol) {
 
 			/* compare proto headers */
-			switch ( ((tracking *) tracking_hdrs1)->protocol) {
+			switch ( ((tracking_t *) tracking1)->protocol) {
 				case IPPROTO_TCP:
-					if ( ( ((tracking *) tracking_hdrs1)->source ==
-								((tracking *) tracking_hdrs2)->source )
+					if ( ( ((tracking_t *) tracking1)->source ==
+								((tracking_t *) tracking2)->source )
 							&&
-							( ((tracking *) tracking_hdrs1)->dest ==
-							  ((tracking *) tracking_hdrs2)->dest )   
+							( ((tracking_t *) tracking1)->dest ==
+							  ((tracking_t *) tracking2)->dest )   
 					   ){
-						if ( ((tracking *) tracking_hdrs1)->daddr ==
-								((tracking *) tracking_hdrs2)->daddr ) 
+						if ( ((tracking_t *) tracking1)->daddr ==
+								((tracking_t *) tracking2)->daddr ) 
 							return TRUE;
 
 					}
 					break;
 				case IPPROTO_UDP:
-					if ( ( ((tracking *)tracking_hdrs1)->dest ==
-								((tracking *)tracking_hdrs2)->dest )   &&
-							( ((tracking *)tracking_hdrs1)->source ==
-							  ((tracking *)tracking_hdrs2)->source ) ){
+					if ( ( ((tracking_t *)tracking1)->dest ==
+								((tracking_t *)tracking2)->dest )   &&
+							( ((tracking_t *)tracking1)->source ==
+							  ((tracking_t *)tracking2)->source ) ){
 
-						if ( ((tracking *) tracking_hdrs1)->daddr ==
-								((tracking *) tracking_hdrs2)->daddr ) 
+						if ( ((tracking_t *) tracking1)->daddr ==
+								((tracking_t *) tracking2)->daddr ) 
 							return TRUE;
 					}
 					break;
 				case IPPROTO_ICMP:
-					if ( ( ((tracking *)tracking_hdrs1)->type ==
-								((tracking *)tracking_hdrs2)->type )   &&
-							( ((tracking *)tracking_hdrs1)->code ==
-							  ((tracking *)tracking_hdrs2)->code ) ){
-						if ( ((tracking *) tracking_hdrs1)->daddr ==
-								((tracking *) tracking_hdrs2)->daddr ) 
+					if ( ( ((tracking_t *)tracking1)->type ==
+								((tracking_t *)tracking2)->type )   &&
+							( ((tracking_t *)tracking1)->code ==
+							  ((tracking_t *)tracking2)->code ) ){
+						if ( ((tracking_t *) tracking1)->daddr ==
+								((tracking_t *) tracking2)->daddr ) 
 							return TRUE;
 					}
 			}
@@ -160,14 +160,14 @@ void search_and_fill ()
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
 			g_message("Starting search and fill\n");
 #endif
-		element = (connection_t *) g_hash_table_lookup(conn_list,&(pckt->tracking_hdrs));
+		element = (connection_t *) g_hash_table_lookup(conn_list,&(pckt->tracking));
 		if (element == NULL) {
 #ifdef DEBUG_ENABLE
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
 				g_message("Creating new element\n");
 #endif
 			g_hash_table_insert (conn_list,
-					&(pckt->tracking_hdrs),
+					&(pckt->tracking),
 					pckt);
 			g_static_mutex_unlock (&insert_mutex);
 			if (nuauthconf->push){
@@ -183,9 +183,9 @@ void search_and_fill ()
 					if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
 						g_message("need to warn client");
 #endif
-					/* duplicate tracking_hdrs */
+					/* duplicate tracking */
 					message->type=WARN_MESSAGE;
-					message->datas=g_memdup(&(pckt->tracking_hdrs),sizeof(tracking));
+					message->datas=g_memdup(&(pckt->tracking),sizeof(tracking_t));
 					if (message->datas){
 						g_async_queue_push (nuauthdatas->tls_push_queue, message);
 					}else{
@@ -364,8 +364,8 @@ gint print_connection(gpointer data,gpointer userdata)
 {
 	struct in_addr src,dest;
 	connection_t * conn=(connection_t *) data;
-	src.s_addr = ntohl(conn->tracking_hdrs.saddr);
-	dest.s_addr = ntohl(conn->tracking_hdrs.daddr);
+	src.s_addr = ntohl(conn->tracking.saddr);
+	dest.s_addr = ntohl(conn->tracking.daddr);
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
 	{
 		gchar* firstfield=strdup(inet_ntoa(src));
@@ -374,10 +374,10 @@ gint print_connection(gpointer data,gpointer userdata)
                     return -1;
                 }
 		g_message( "Connection : src=%s dst=%s proto=%u", firstfield, inet_ntoa(dest),
-				conn->tracking_hdrs.protocol);
-		if (conn->tracking_hdrs.protocol == IPPROTO_TCP){
-			g_message("sport=%d dport=%d", conn->tracking_hdrs.source,
-					conn->tracking_hdrs.dest);
+				conn->tracking.protocol);
+		if (conn->tracking.protocol == IPPROTO_TCP){
+			g_message("sport=%d dport=%d", conn->tracking.source,
+					conn->tracking.dest);
 		}
 		if (conn->os_sysname && conn->os_release && conn->os_version ){
 			g_message("OS : %s %s %s",conn->os_sysname ,conn->os_release , conn->os_version );
@@ -559,7 +559,7 @@ int conn_cl_delete(gconstpointer conn)
 	g_assert (conn != NULL);
 
 	if (!  g_hash_table_steal (conn_list,
-				&(((connection_t *)conn)->tracking_hdrs)) ){
+				&(((connection_t *)conn)->tracking)) ){
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
 			g_warning("Removal of conn in hash failed\n");
 		return 0;
@@ -742,7 +742,7 @@ gint take_decision(connection_t * element,gchar place)
         if(expire>0){
                 struct limited_connection* datas=g_new0(struct limited_connection,1);
                 struct internal_message  *message=g_new0(struct internal_message,1);
-	        memcpy(&(datas->tracking_hdrs),&(element->tracking_hdrs),sizeof(tracking));
+	        memcpy(&(datas->tracking),&(element->tracking),sizeof(tracking_t));
                 datas->expire=expire;
                 datas->gwaddr.s_addr=(element->tls)->peername.s_addr;
                 message->datas=datas;

@@ -84,7 +84,7 @@ GSList * acl_check (connection_t* element){
 }
 
 /* ip auth */
-gchar* ip_auth(tracking * header){
+gchar* ip_auth(tracking_t * header){
 	/* iter through module list and stop when decision is made */
 	GSList *walker=ip_auth_modules;
 	gchar* walker_return=NULL;
