@@ -23,6 +23,8 @@
 #ifdef LINUX
 #include "proc.h"
 
+char * locale_to_utf8(char* inbuf);
+
 static struct prg_node {
     struct prg_node *next;
     unsigned long inode;
