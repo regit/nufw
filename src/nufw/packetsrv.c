@@ -303,6 +303,29 @@ void* packetsrv(void *data)
 }   
 
 /**
+ * Halt TLS threads and close socket
+ */
+void shutdown_tls() {
+    int socket_tls;
+    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, "tls send failure when sending request");
+    pthread_mutex_lock(tls.mutex);
+    
+    pthread_cancel(tls.auth_server);
+    pthread_cancel(tls.conntrack_event_handler);
+    socket_tls=(int)gnutls_transport_get_ptr(*tls.session);
+    gnutls_bye(*tls.session,GNUTLS_SHUT_WR);
+    gnutls_deinit(*tls.session);
+    shutdown(socket_tls,SHUT_RDWR);
+    close(socket_tls);
+    free(tls.session);
+    tls.session=NULL;
+    /* put auth_server_running to 1 because this is this thread which has just killed auth_server */
+    tls.auth_server_running=1;
+    
+    pthread_mutex_unlock(tls.mutex);
+}
+
+/**
  * Send an authentication request to NuAuth. May restart TLS session
  * and/or open TLS connection (if closed).
  *
@@ -326,43 +349,39 @@ void* packetsrv(void *data)
  * \param data_len Size of packet content in bytes
  * \return If an error occurs returns 0, else return 1.
  */
-int auth_request_send(uint8_t type,uint32_t packet_id,char* payload,int data_len){
-	char datas[512], *pointer;
-	int auth_len, total_data_len;
-	uint8_t version = PROTO_VERSION;
-	uint16_t dataslen = AUTHREQ_OFFSET + data_len;
-	long timestamp = time(NULL);
+int auth_request_send(uint8_t type, uint32_t packet_id, char* payload, int payload_len){
+    unsigned char datas[512];
+    nufw_to_nuauth_auth_message_t *msg_header = (nufw_to_nuauth_auth_message_t *)&datas;
+    unsigned char *msg_content = datas + sizeof(nufw_to_nuauth_auth_message_t);
+    int msg_length;
 
-	packet_id = htonl(packet_id);
-	dataslen = htons(dataslen);
-	timestamp = htonl(timestamp);
-
+    /* Drop non-IPv4 packet */
 	if ( ((struct iphdr *)payload)->version != 4) {
         debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, "Dropping non-IPv4 packet");
 		return 0;
     }
-    
-    pointer = datas;
-    memset(pointer, 0, sizeof datas);                 
-    memcpy(pointer, &version, sizeof version);     pointer += sizeof version;
-    memcpy(pointer, &type, sizeof type);           pointer += sizeof type;
-    memcpy(pointer, &dataslen, sizeof dataslen);   pointer += sizeof dataslen;
-    memcpy(pointer, &packet_id, sizeof packet_id); pointer += sizeof packet_id;
-    memcpy(pointer, &timestamp, sizeof timestamp); pointer += sizeof timestamp;
-    auth_len = pointer - datas;
-
-    /* memcpy header to datas + offset */
-    if (data_len <= sizeof(datas) - auth_len) {
-        memcpy(pointer, payload, data_len);
-        total_data_len = auth_len + data_len;
-    } else {
+   
+    /* Truncate packet content if needed */
+    if (sizeof(datas) - sizeof(nufw_to_nuauth_auth_message_t) < payload_len) {
         debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, 
                 "Very long packet: truncating!");
-        memcpy(pointer, payload, sizeof(datas)-auth_len);
-        total_data_len = sizeof datas;
+        payload_len = sizeof(datas) - sizeof(nufw_to_nuauth_auth_message_t);
     }
+    msg_length = sizeof(nufw_to_nuauth_auth_message_t) + payload_len;
+   
+    /* Fill message header */
+    msg_header->protocol_version = PROTO_VERSION;
+    msg_header->msg_type = type;
+    msg_header->msg_length = htons(msg_length);    
+    msg_header->packet_id = htonl(packet_id);
+    msg_header->timestamp = htonl( time(NULL) );
+
+    /* Copy (maybe truncated) packet content */
+    memcpy(msg_content, payload, payload_len);    
+
+    /* Display message */
     debug_log_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, 
-            "Sending request for %u", ntohl(packet_id));
+            "Sending request for %u", packet_id);
     
     /* cleaning up current session : auth_server has detected a problem */
     pthread_mutex_lock(tls.mutex);
@@ -404,22 +423,8 @@ int auth_request_send(uint8_t type,uint32_t packet_id,char* payload,int data_len
 	}
     
 	/* send packet */
-	if (!gnutls_record_send(*(tls.session),datas,total_data_len)){
-		int socket_tls;
-        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, "tls send failure when sending request");
-        pthread_mutex_lock(tls.mutex);
-        pthread_cancel(tls.auth_server);
-        pthread_cancel(tls.conntrack_event_handler);
-        socket_tls=(int)gnutls_transport_get_ptr(*tls.session);
-        gnutls_bye(*tls.session,GNUTLS_SHUT_WR);
-		gnutls_deinit(*tls.session);
-        shutdown(socket_tls,SHUT_RDWR);
-		close(socket_tls);
-		free(tls.session);
-        tls.session=NULL;
-        /* put auth_server_running to 1 because this is this thread which has just killed auth_server */
-        tls.auth_server_running=1;
-        pthread_mutex_unlock(tls.mutex);
+	if (!gnutls_record_send(*(tls.session), datas, msg_length)){
+        shutdown_tls();
 		return 0;
 	}
     return 1;

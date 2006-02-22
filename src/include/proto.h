@@ -25,12 +25,17 @@
 #  include <machine/endian.h>
 #endif
 
-
+/** 
+ * Protocol version of message exchanged between NuFW and NuAuth.
+ *
+ * Value of field protocol_version of ::nufw_to_nuauth_message_header_t
+ */
 #define PROTO_VERSION 3
-#define AUTHREQ_OFFSET 12
 
 /**
  * Message type : stored on 4 bits
+ *
+ * Used in ::nufw_to_nuauth_message_header_t
  */
 typedef enum
 {
@@ -72,18 +77,18 @@ AUTHREQ : user send packet
 
 struct nuv2_header {
 #ifdef WORDS_BIGENDIAN	
-        uint8_t msg_type:4,proto:4;
-	uint8_t option;
+    uint8_t msg_type:4,proto:4;
+    uint8_t option;
 #else
-        uint8_t proto:4,msg_type:4;
-        uint8_t option;
+    uint8_t proto:4,msg_type:4;
+    uint8_t option;
 #endif
-        uint16_t length;
+    uint16_t length;
 };
 
 struct nuv2_authreq {
-        uint16_t packet_id;
-        uint16_t packet_length;
+    uint16_t packet_id;
+    uint16_t packet_length;
 };
 
 #define IPV4_FIELD 0x1
@@ -171,17 +176,56 @@ struct nuv2_srv_helloreq {
 	uint32_t helloid;
 };
 
-/* TODO : inject struct nuv2_authfield ? */
-struct nuv2_conntrack_message {
-        uint8_t protocol;
-        uint8_t type;
-        uint16_t length;
-        uint32_t timeout;
-        uint32_t src;
-        uint32_t dst;
-        uint8_t ipproto;
-        uint16_t sport;
-        uint16_t dport;
-};
+/** 
+ * Header of message send by NuFW to NuAuth 
+ *
+ * See also structures ::nufw_to_nuauth_conntrack_message_t and
+ * ::nufw_to_nuauth_auth_message_t which include message content.
+ */
+typedef struct {
+    /** Version of the protocol (equals to #PROTO_VERSION) */
+    uint8_t protocol_version;
 
+    /** Message type (from ::nufw_message_t) */
+    uint8_t msg_type;
+
+    /** Message length including header (in bytes) */
+    uint16_t msg_length;
+} nufw_to_nuauth_message_header_t;
+
+/**
+ * Message of type #AUTH_CONN_DESTROY or #AUTH_CONN_UPDATE send 
+ * by NuFW to NuAuth
+ */
+typedef struct {
+    /* Copy/paste nufw_to_nuauth_message_header_t content */
+    uint8_t protocol_version; /*!< Version of the protocol (equals to #PROTO_VERSION) */
+    uint8_t msg_type;         /*!< Message type (from ::nufw_message_t) */
+    uint16_t msg_length;      /*!< Message length including header (in bytes) */
+
+    /* Conntrack fields */
+    uint32_t timeout;        /*!< Timeout (Epoch format) */
+    uint32_t ipv4_src;       /*!< IPv4 source IP */
+    uint32_t ipv4_dst;       /*!< IPv4 destination IP */
+    uint8_t  ipv4_protocol;  /*!< IPv4 protocol number */
+    uint16_t src_port;       /*!< TCP/UDP source port or ICMP type */
+    uint16_t dest_port;      /*!< TCP/UDP destionation port or ICMP code */
+} nufw_to_nuauth_conntrack_message_t;
+
+/**
+ * Message of type #AUTH_REQUEST or #AUTH_CONTROL
+ * send by NuFW to NuAuth
+ */
+typedef struct {
+    /* Copy/paste nufw_to_nuauth_message_header_t content */
+    uint8_t protocol_version; /*!< Version of the protocol (equals to #PROTO_VERSION) */
+    uint8_t msg_type;         /*!< Message type (from ::nufw_message_t) */
+    uint16_t msg_length;      /*!< Message length including header (in bytes) */
+
+    /* Authentification fields */
+    uint32_t packet_id;      /*!< Netfilter packet unique identifier */
+    uint32_t timestamp;      /*!< Timestamp (Epoch format) */
+
+    /* (...): packet content (maybe truncated) */
+} nufw_to_nuauth_auth_message_t;
 

@@ -39,30 +39,29 @@ static void send_conntrack_message(struct limited_connection * lconn,unsigned ch
               &(lconn->gwaddr));
       g_mutex_unlock(nufw_servers_mutex);
       if (session){
-          struct nuv2_conntrack_message message;
+          nufw_to_nuauth_conntrack_message_t message;
           /* send message */
-          message.protocol=1;
-          message.type=msgtype;
+          message.protocol_version = 1;
+          message.msg_type = msgtype;
           if (lconn->expire != -1) {
-              message.timeout=htonl(lconn->expire-time(NULL));
+              message.timeout = htonl(lconn->expire - time(NULL));
           } else {
-              message.timeout=0;
+              message.timeout = 0;
           }
-          message.ipproto=lconn->tracking.protocol;
-          message.src=htonl(lconn->tracking.saddr);
-          message.dst=htonl(lconn->tracking.daddr);
-          if (message.ipproto == IPPROTO_ICMP){
-              message.sport=lconn->tracking.type;
-              message.dport=lconn->tracking.code;
+          message.ipv4_protocol = lconn->tracking.protocol;
+          message.ipv4_src = htonl(lconn->tracking.saddr);
+          message.ipv4_dst = htonl(lconn->tracking.daddr);
+          if (message.ipv4_protocol == IPPROTO_ICMP){
+              message.src_port = lconn->tracking.type;
+              message.dest_port = lconn->tracking.code;
           } else {
-              message.sport=htons(lconn->tracking.source);
-              message.dport=htons(lconn->tracking.dest);
+              message.src_port = htons(lconn->tracking.source);
+              message.dest_port = htons(lconn->tracking.dest);
           }
           gnutls_record_send(
                   *(session->tls) ,
                   &message,
-                  sizeof(struct nuv2_conntrack_message)
-                  );
+                  sizeof(message));
       } else {
           if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER)){
               g_message("correct session not found among nufw servers");

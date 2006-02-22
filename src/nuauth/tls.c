@@ -1064,23 +1064,21 @@ void* tls_user_authsrv()
 	static int
 treat_nufw_request (nufw_session * c_session)
 {
-	unsigned char * dgram=NULL;
+	unsigned char *dgram=NULL;
 	int dgram_size;
 
 	if (c_session != NULL){
 		/* copy packet datas */
-		dgram=g_new0(unsigned char,BUFSIZE);
-		dgram_size =  gnutls_record_recv(*(c_session->tls),dgram,BUFSIZE) ;
+		dgram = g_new0(unsigned char, BUFSIZE);
+		dgram_size = gnutls_record_recv(*(c_session->tls), dgram, BUFSIZE) ;
 		if (  dgram_size > 0 ){
-			connection_t * current_conn;
-			current_conn = authpckt_decode(dgram , dgram_size );
+			connection_t *current_conn = authpckt_decode(dgram , dgram_size);
 			if (current_conn == NULL){
-				if ( *(dgram+1) != AUTH_CONTROL && *(dgram+1) != AUTH_CONN_DESTROY  )
+				if ( dgram[1] != AUTH_CONTROL && dgram[1] != AUTH_CONN_DESTROY  )
 					if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_PACKET)){
 						g_warning("Can't parse packet, this IS bad !\n");
 					}
 			} else {
-
 				current_conn->socket=0;
 				current_conn->tls=c_session;
 				/* gonna feed the birds */
@@ -1142,12 +1140,10 @@ void clean_nufw_session(nufw_session * c_session){
 
 
 /**
- * TLS nufw packet server.
+ * TLS nufw packet server running in a thread.
  *
- * - Argument : None
- * - Return : None
+ * \return NULL
  */
-
 void* tls_nufw_authsrv()
 {
 	int z;
@@ -1161,7 +1157,7 @@ void* tls_nufw_authsrv()
 	fd_set tls_rx_set; /* read set */
 	fd_set wk_set; /* working set */
 	struct timeval tv;
-	nufw_session * nu_session;
+	nufw_session *nu_session;
 #if 0
 	char *configfile=DEFAULT_CONF_FILE;
 	gpointer vpointer;
@@ -1182,7 +1178,7 @@ void* tls_nufw_authsrv()
 			NULL,
 			NULL,
 			NULL,
-			(GDestroyNotify)	clean_nufw_session
+			(GDestroyNotify)clean_nufw_session
 			);
 	nufw_servers_mutex = g_mutex_new();
 
@@ -1200,8 +1196,7 @@ void* tls_nufw_authsrv()
 #endif
 
 	/* open the socket */
-	sck_inet = socket (AF_INET,SOCK_STREAM,0);
-
+	sck_inet = socket (AF_INET, SOCK_STREAM, 0);
 	if (sck_inet == -1)
 	{
 		g_warning("socket() failed, exiting");
@@ -1218,11 +1213,9 @@ void* tls_nufw_authsrv()
 
 
 	memset(&addr_inet,0,sizeof addr_inet);
-
 	addr_inet.sin_family= AF_INET;
 	addr_inet.sin_port=htons(nuauthconf->authreq_port);
 	addr_inet.sin_addr.s_addr=nuauthconf->nufw_srv->s_addr;
-
 	z = bind (sck_inet,
 			(struct sockaddr *)&addr_inet,
 			sizeof addr_inet);
