@@ -290,19 +290,19 @@ connection_t* authpckt_new_connection(unsigned char *dgram, unsigned int dgram_s
  * (see ::nuv2_conntrack_message structure)
  */
 void authpckt_conntrack (unsigned char *dgram, unsigned int dgram_size) {
-    nufw_to_nuauth_conntrack_message_t* conntrack;
+    struct nu_conntrack_message_t* conntrack;
     tracking_t* datas;
     struct internal_message *message;
 
     /* Check message content size */
-    if (dgram_size != sizeof(nufw_to_nuauth_conntrack_message_t))
+    if (dgram_size != sizeof(struct nu_conntrack_message_t))
     {
         // TODO: Display warning
         return;
     }
     
     /* Create a message for limited_connexions_queue */
-    conntrack = (nufw_to_nuauth_conntrack_message_t*)dgram;
+    conntrack = (struct nu_conntrack_message_t*)dgram;
     datas = g_new0(tracking_t, 1);
     message = g_new0(struct internal_message, 1);
     datas->protocol = conntrack->ipv4_protocol;

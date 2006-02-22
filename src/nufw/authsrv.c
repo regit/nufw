@@ -124,21 +124,21 @@ void auth_packet_to_decision(char* dgram)
       case AUTH_CONN_DESTROY:
           {
 #ifdef HAVE_LIBCONNTRACK
-              struct nuv2_conntrack_message* packet_hdr=(struct nuv2_conntrack_message*)dgram;
+              struct nu_conntrack_message_t* packet_hdr=(struct nu_conntrack_message_t*)dgram;
               struct nfct_tuple orig;
               int id=0;
-              orig.src.v4=packet_hdr->src;
-              orig.dst.v4=packet_hdr->dst;
-              orig.protonum=packet_hdr->ipproto;
+              orig.src.v4=packet_hdr->ipv4_src;
+              orig.dst.v4=packet_hdr->ipv4_dst;
+              orig.protonum=packet_hdr->ipv4_protocol;
 
-              switch (packet_hdr->ipproto){
+              switch (packet_hdr->ipv4_protocol){
                   case IPPROTO_TCP:
-                      orig.l4src.tcp.port=packet_hdr->sport;  
-                      orig.l4dst.tcp.port=packet_hdr->dport;  
+                      orig.l4src.tcp.port=packet_hdr->src_port;  
+                      orig.l4dst.tcp.port=packet_hdr->dest_port;  
                       break;
                   case IPPROTO_UDP:
-                      orig.l4src.udp.port=packet_hdr->sport;  
-                      orig.l4dst.udp.port=packet_hdr->dport;  
+                      orig.l4src.udp.port=packet_hdr->src_port;  
+                      orig.l4dst.udp.port=packet_hdr->dest_port;  
                       break;
                   default:
                       return; 
@@ -156,21 +156,21 @@ void auth_packet_to_decision(char* dgram)
       case AUTH_CONN_UPDATE:
           {
 #ifdef HAVE_LIBCONNTRACK
-              struct nuv2_conntrack_message* packet_hdr=(struct nuv2_conntrack_message*)dgram;
+              struct nu_conntrack_message_t* packet_hdr=(struct nu_conntrack_message_t*)dgram;
               struct nfct_conntrack ct;
-              ct.tuple[NFCT_DIR_ORIGINAL].src.v4=packet_hdr->src;
-              ct.tuple[NFCT_DIR_ORIGINAL].dst.v4=packet_hdr->dst;
-              ct.tuple[NFCT_DIR_ORIGINAL].protonum=packet_hdr->ipproto;
+              ct.tuple[NFCT_DIR_ORIGINAL].src.v4=packet_hdr->ipv4_src;
+              ct.tuple[NFCT_DIR_ORIGINAL].dst.v4=packet_hdr->ipv4_dst;
+              ct.tuple[NFCT_DIR_ORIGINAL].protonum=packet_hdr->ipv4_protocol;
               ct.timeout=0;
 
-              switch (packet_hdr->ipproto){
+              switch (packet_hdr->ipv4_protocol){
                   case IPPROTO_TCP:
-                      ct.tuple[NFCT_DIR_ORIGINAL].l4src.tcp.port=packet_hdr->sport;  
-                      ct.tuple[NFCT_DIR_ORIGINAL].l4dst.tcp.port=packet_hdr->dport;  
+                      ct.tuple[NFCT_DIR_ORIGINAL].l4src.tcp.port=packet_hdr->src_port;  
+                      ct.tuple[NFCT_DIR_ORIGINAL].l4dst.tcp.port=packet_hdr->dest_port;  
                       break;
                   case IPPROTO_UDP:
-                      ct.tuple[NFCT_DIR_ORIGINAL].l4src.udp.port=packet_hdr->sport;  
-                      ct.tuple[NFCT_DIR_ORIGINAL].l4dst.udp.port=packet_hdr->dport;  
+                      ct.tuple[NFCT_DIR_ORIGINAL].l4src.udp.port=packet_hdr->src_port;  
+                      ct.tuple[NFCT_DIR_ORIGINAL].l4dst.udp.port=packet_hdr->dest_port;  
                       break;
                   default:
                       return; 

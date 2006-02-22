@@ -197,7 +197,7 @@ typedef struct {
  * Message of type #AUTH_CONN_DESTROY or #AUTH_CONN_UPDATE send 
  * by NuFW to NuAuth
  */
-typedef struct {
+struct nu_conntrack_message_t {
     /* Copy/paste nufw_to_nuauth_message_header_t content */
     uint8_t protocol_version; /*!< Version of the protocol (equals to #PROTO_VERSION) */
     uint8_t msg_type;         /*!< Message type (from ::nufw_message_t) */
@@ -210,7 +210,7 @@ typedef struct {
     uint8_t  ipv4_protocol;  /*!< IPv4 protocol number */
     uint16_t src_port;       /*!< TCP/UDP source port or ICMP type */
     uint16_t dest_port;      /*!< TCP/UDP destionation port or ICMP code */
-} nufw_to_nuauth_conntrack_message_t;
+};
 
 /**
  * Message of type #AUTH_REQUEST or #AUTH_CONTROL

@@ -39,7 +39,7 @@ static void send_conntrack_message(struct limited_connection * lconn,unsigned ch
               &(lconn->gwaddr));
       g_mutex_unlock(nufw_servers_mutex);
       if (session){
-          nufw_to_nuauth_conntrack_message_t message;
+          struct nu_conntrack_message_t message;
           /* send message */
           message.protocol_version = 1;
           message.msg_type = msgtype;

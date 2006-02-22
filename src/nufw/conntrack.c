@@ -37,7 +37,7 @@
 int update_handler (void *arg, unsigned int flags, int type,void *data)
 {
     struct nfct_conntrack *conn = arg;
-    struct nuv2_conntrack_message message;
+    struct nu_conntrack_message_t message;
     int ret;
 
     if (nufw_set_mark == 1){
@@ -45,46 +45,46 @@ int update_handler (void *arg, unsigned int flags, int type,void *data)
             return 0;
         }
     }
-    message.protocol=1;
+    message.protocol_version=PROTO_VERSION;
     switch (type) {
         case IPCTNL_MSG_CT_DELETE:
-            message.type=AUTH_CONN_DESTROY;
+            message.msg_type=AUTH_CONN_DESTROY;
             break;
         case IPCTNL_MSG_CT_NEW:
             /* check for ASSURED, elsewhere timeout is so small it is useless to
              * have a fixed one */
             if (conn->status & IPS_ASSURED) {
-                message.type=AUTH_CONN_UPDATE;
+                message.msg_type=AUTH_CONN_UPDATE;
             } else {
                 /* not really your business we leave */
                 return 0;
             }
             break;
         default:
-            message.type=AUTH_CONN_UPDATE;
+            message.msg_type=AUTH_CONN_UPDATE;
     }
-    message.ipproto=conn->tuple[0].protonum;
-    message.src= conn->tuple[0].src.v4;
-    message.dst=conn->tuple[0].dst.v4;
+    message.ipv4_protocol=conn->tuple[0].protonum;
+    message.ipv4_src= conn->tuple[0].src.v4;
+    message.ipv4_dst=conn->tuple[0].dst.v4;
 
     switch (conn->tuple[0].protonum){
         case IPPROTO_TCP :
-            message.sport = conn->tuple[0].l4src.tcp.port;
-            message.dport = conn->tuple[0].l4dst.tcp.port;
+            message.src_port = conn->tuple[0].l4src.tcp.port;
+            message.dest_port = conn->tuple[0].l4dst.tcp.port;
             break;
         case IPPROTO_UDP :
-            message.sport = conn->tuple[0].l4src.udp.port;
-            message.dport = conn->tuple[0].l4dst.udp.port;
+            message.src_port = conn->tuple[0].l4src.udp.port;
+            message.dest_port = conn->tuple[0].l4dst.udp.port;
             break;
         default :
-            message.sport = 0;
-            message.dport = 0;
+            message.src_port = 0;
+            message.dest_port = 0;
             break;
     }
     ret = gnutls_record_send(
             *(tls.session),
             &message,
-            sizeof(struct nuv2_conntrack_message)
+            sizeof(struct nu_conntrack_message_t)
             ); 
     if (ret <0){
         if ( gnutls_error_is_fatal(ret) ){
