@@ -63,6 +63,11 @@ typedef struct Nufw_session {
 	gboolean alive;
 } nufw_session;
 
+struct tls_insert_data { 
+	int socket;
+	gpointer data;
+};
+
 void clean_nufw_session(nufw_session * c_session);
 
 
@@ -91,5 +96,7 @@ void end_tls(int signal);
 gboolean remove_socket_from_pre_client_list(int c);
 
 void tls_sasl_connect(gpointer userdata, gpointer data);
+gint check_certs_for_tls_session(gnutls_session session);
+int close_tls_session(int c,gnutls_session* session);
 
 #endif
