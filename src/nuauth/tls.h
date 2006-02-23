@@ -72,7 +72,7 @@ void* tls_nufw_authsrv();
 GHashTable* nufw_servers;
 GMutex * nufw_servers_mutex;
 
-void close_servers(int signal);
+void close_nufw_servers(int signal);
 
 /*
  * For user authentication
@@ -87,5 +87,9 @@ GStaticMutex client_mutex;
 
 /** end tls stuff */
 void end_tls(int signal);
+
+gboolean remove_socket_from_pre_client_list(int c);
+
+void tls_sasl_connect(gpointer userdata, gpointer data);
 
 #endif

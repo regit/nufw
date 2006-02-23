@@ -47,7 +47,7 @@ void nuauth_cleanup( int signal ) {
     /* free nufw server hash */
     if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN))
         g_message("caught interrupt, cleaning");
-    close_servers(signal);
+    close_nufw_servers(signal);
 
     /* free client hash */
     close_clients(signal);
