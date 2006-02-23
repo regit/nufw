@@ -25,6 +25,17 @@ extern int nuauth_tls_auth_by_cert;
 GSList* pre_client_list;
 GStaticMutex pre_client_list_mutex;
 
+struct tls_user_context_t {
+	int mx;
+	int sck_inet;
+	fd_set tls_rx_set; /* read set */
+    int nuauth_tls_max_clients;
+	int nuauth_number_authcheckers;
+	int nuauth_auth_nego_timeout;
+	gint option_value;
+	GThreadPool* tls_sasl_worker;
+};
+
 struct pre_client_elt {
 	int socket;
 	time_t validity;
@@ -215,47 +226,218 @@ static int treat_user_request (user_session * c_session)
 }
 
 /**
- * TLS user packet server. 
- * Thread function serving user connection.
- * 
- * - Argument : None
- * - Return : None
+ * \return If an error occurs returns 1, else returns 0.
  */
+int tls_user_accept(struct tls_user_context_t *context) {
+    int c;
+    struct sockaddr_in addr_clnt;
+	unsigned int len_inet = sizeof addr_clnt;
+    
+    /* Wait for a connect */
+    c = accept (context->sck_inet,
+            (struct sockaddr *)&addr_clnt,
+            &len_inet);
+    if (c == -1){
+        if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
+            g_warning("accept");
+        }
+    }
 
-void* tls_user_authsrv()
-{
-	int z;
-	struct sockaddr_in addr_inet,addr_clnt;
-	GThreadPool* tls_sasl_worker;
-	unsigned int len_inet;
-	int sck_inet;
-	int n,c;
-	int mx;
-	fd_set tls_rx_set; /* read set */
+    if ( get_number_of_clients() >= context->nuauth_tls_max_clients ) {
+
+        if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
+            g_warning("too many clients (%d configured)\n",context->nuauth_tls_max_clients);
+        }
+        close(c);
+        return 1;
+    } else {
+        /* if system is not in reload */
+        if (! (nuauthdatas->need_reload)){
+            struct client_connection* current_client_conn=g_new0(struct client_connection,1);
+            struct pre_client_elt* new_pre_client;
+            current_client_conn->socket=c;
+            memcpy(&current_client_conn->addr,&addr_clnt,sizeof(struct sockaddr_in));
+
+            if ( c+1 > context->mx )
+                context->mx = c + 1;
+            /* Set KEEP ALIVE on connection */
+            setsockopt ( c,
+                    SOL_SOCKET,
+                    SO_KEEPALIVE,
+                    &context->option_value,
+                    sizeof(context->option_value));
+            /* give the connection to a separate thread */
+            /*  add element to pre_client 
+                create pre_client_elt */
+            new_pre_client = g_new0(struct pre_client_elt,1);
+            new_pre_client->socket = c;
+            new_pre_client->validity = time(NULL) + context->nuauth_auth_nego_timeout;
+
+            g_static_mutex_lock (&pre_client_list_mutex);
+            pre_client_list=g_slist_prepend(pre_client_list,new_pre_client);
+            g_static_mutex_unlock (&pre_client_list_mutex);
+            g_thread_pool_push (context->tls_sasl_worker,
+                    current_client_conn,	
+                    NULL
+                    );
+        } else {
+            shutdown(c,SHUT_RDWR);
+            close(c);
+        }
+    }
+    return 0;
+}    
+
+void tls_user_check_activity(struct tls_user_context_t *context, int c) {
+    user_session * c_session;
+    int u_request;
+#ifdef DEBUG_ENABLE
+    if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
+        g_message("activity on %d\n",c);
+#endif
+
+    /* we lock here but can do other thing on hash as it is not destructive 
+     * in push mode modification of hash are done in push_worker */
+    g_static_mutex_lock (&client_mutex);
+    c_session = get_client_datas_by_socket(c);
+    g_static_mutex_unlock (&client_mutex);
+    if (nuauthconf->session_duration && c_session->expire < time(NULL)){
+        FD_CLR(c,&context->tls_rx_set);
+        g_static_mutex_lock (&client_mutex);
+        delete_client_by_socket(c);
+        g_static_mutex_unlock (&client_mutex);
+    } else {
+        u_request = treat_user_request( c_session );
+        if (u_request == EOF) {
+            log_user_session(c_session,SESSION_CLOSE);
+#ifdef DEBUG_ENABLE
+            if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
+                g_message("client disconnect on %d\n",c);
+#endif
+            FD_CLR(c,&context->tls_rx_set);
+            /* clean client structure */
+            if (nuauthconf->push){
+                struct internal_message* message=g_new0(struct internal_message,1);
+                message->type = FREE_MESSAGE;
+                message->datas = GINT_TO_POINTER(c);
+                g_async_queue_push(nuauthdatas->tls_push_queue,message);
+            } else {
+                g_static_mutex_lock (&client_mutex);
+                delete_client_by_socket(c);
+                g_static_mutex_unlock (&client_mutex);
+            }
+        }else if (u_request < 0) {
+#ifdef DEBUG_ENABLE
+            if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
+                g_message("treat_user_request() failure\n");
+#endif
+        }
+    }
+}
+
+void tls_user_main_loop(struct tls_user_context_t *context) {    
+	gpointer c_pop;
+    int i, nb_active_clients;
 	fd_set wk_set; /* working set */
 	struct timeval tv;
-	gpointer vpointer;
-	char *configfile=DEFAULT_CONF_FILE;
-	gpointer c_pop;
-	gint option_value;
-	GThread * pre_client_thread;
+
+    /* define timeout */
+    tv.tv_sec=2;
+    tv.tv_usec=30000;
+
+	for(;;){
+		/* try to get new file descriptor to update set */
+		c_pop=g_async_queue_try_pop (mx_queue);
+		while (c_pop) {
+			int c = GPOINTER_TO_INT(c_pop);
+
+#ifdef DEBUG_ENABLE
+			if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
+				g_message("checking mx against %d\n",c);
+#endif
+			if ( c+1 > context->mx )
+				context->mx = c + 1;
+			/*
+			 * change FD_SET
+			 */
+			FD_SET(c,&context->tls_rx_set);
+			c_pop=g_async_queue_try_pop (mx_queue);
+		}
+
+
+		/* copy rx set to working set */
+		FD_ZERO(&wk_set);
+		for (i=0;i<context->mx;++i){
+			if (FD_ISSET(i,&context->tls_rx_set))
+				FD_SET(i,&wk_set);
+		}
+
+		nb_active_clients = select(context->mx,&wk_set,NULL,NULL,&tv);
+		if (nb_active_clients == -1) {
+			g_warning("select() failed, exiting\n");
+			exit(EXIT_FAILURE);
+		}
+        if (nb_active_clients == 0)
+			continue;
+
+		/*
+		 * Check if a connect has occured
+		 */
+
+		if (FD_ISSET(context->sck_inet,&wk_set) ){
+            if (tls_user_accept(context))
+                continue;
+		}
+
+		/*
+		 * check for client activity
+		 */
+		for ( i=0; i<context->mx; ++i) {
+            if ( i == context->sck_inet )
+                continue;
+            if ( FD_ISSET(i, &wk_set) )
+                tls_user_check_activity(context, i);
+		}
+
+		for ( i = context->mx - 1;
+				i >= 0 && !FD_ISSET(i,&context->tls_rx_set);
+				i = context->mx -1 ){
+#ifdef DEBUG_ENABLE
+			if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
+				g_message("setting mx to %d\n",i);
+#endif
+			context->mx = i;
+		}
+	}
+
+	close(context->sck_inet);
+}
+
+void tls_user_init(struct tls_user_context_t *context) {
 	confparams nuauth_tls_vars[] = {
 		{ "nuauth_tls_max_clients" , G_TOKEN_INT ,NUAUTH_SSL_MAX_CLIENTS, NULL },
 		{ "nuauth_number_authcheckers" , G_TOKEN_INT ,NB_AUTHCHECK, NULL },
 		{ "nuauth_auth_nego_timeout" , G_TOKEN_INT ,AUTH_NEGO_TIMEOUT, NULL }
 	};
-	int nuauth_tls_max_clients=NUAUTH_TLS_MAX_CLIENTS;
-	int nuauth_number_authcheckers=NB_AUTHCHECK;
-	int nuauth_auth_nego_timeout=AUTH_NEGO_TIMEOUT;
+	struct sockaddr_in addr_inet;
+	GThread *pre_client_thread;
+	gpointer vpointer;
+    int result;
+
+    /* set default values */
+	context->nuauth_tls_max_clients=NUAUTH_TLS_MAX_CLIENTS;
+	context->nuauth_number_authcheckers=NB_AUTHCHECK;
+	context->nuauth_auth_nego_timeout=AUTH_NEGO_TIMEOUT;
+
 	/* get config file setup */
 	/* parse conf file */
-	parse_conffile(configfile,sizeof(nuauth_tls_vars)/sizeof(confparams),nuauth_tls_vars);
+	parse_conffile(DEFAULT_CONF_FILE, sizeof(nuauth_tls_vars)/sizeof(confparams),nuauth_tls_vars);
 	vpointer=get_confvar_value(nuauth_tls_vars,sizeof(nuauth_tls_vars)/sizeof(confparams),"nuauth_tls_max_clients");
-	nuauth_tls_max_clients=*(int*)(vpointer); 
+	context->nuauth_tls_max_clients=*(int*)(vpointer); 
 	vpointer=get_confvar_value(nuauth_tls_vars,sizeof(nuauth_tls_vars)/sizeof(confparams),"nuauth_number_authcheckers");
-	nuauth_number_authcheckers=*(int*)(vpointer);
+	context->nuauth_number_authcheckers=*(int*)(vpointer);
 	vpointer=get_confvar_value(nuauth_tls_vars,sizeof(nuauth_tls_vars)/sizeof(confparams),"nuauth_auth_nego_timeout");
-	nuauth_auth_nego_timeout=*(int*)(vpointer);
+	context->nuauth_auth_nego_timeout=*(int*)(vpointer);
 
 	/* init sasl stuff */	
 	my_sasl_init();
@@ -273,6 +455,7 @@ void* tls_user_authsrv()
 	}
 #endif
 
+    /* pre client list */
 	pre_client_list=NULL;
 	pre_client_thread = g_thread_create ( (GThreadFunc) pre_client_check,
 			NULL,
@@ -281,248 +464,76 @@ void* tls_user_authsrv()
 	if (! pre_client_thread )
 		exit(EXIT_FAILURE);
 
-
-	tls_sasl_worker = g_thread_pool_new  ((GFunc) tls_sasl_connect,
+    /* create tls sasl worker thread pool */
+	context->tls_sasl_worker = g_thread_pool_new  ((GFunc) tls_sasl_connect,
 			NULL,
-			nuauth_number_authcheckers,
+			context->nuauth_number_authcheckers,
 			TRUE,
 			NULL);
+    
 	/* open the socket */
-	sck_inet = socket (AF_INET,SOCK_STREAM,0);
-
-	if (sck_inet == -1)
+	context->sck_inet = socket (AF_INET,SOCK_STREAM,0);
+	if (context->sck_inet == -1)
 	{
 		g_warning("socket() failed, exiting");
 		exit(-1);
 	}
 
-	option_value=1;
 	/* set socket reuse and keep alive option */
+	context->option_value=1;
 	setsockopt (
-			sck_inet,
+			context->sck_inet,
 			SOL_SOCKET,
 			SO_REUSEADDR,
-			&option_value,
-			sizeof(option_value));
-
+			&context->option_value,
+			sizeof(context->option_value));
 	setsockopt (
-			sck_inet,
+			context->sck_inet,
 			SOL_SOCKET,
 			SO_KEEPALIVE,
-			&option_value,
-			sizeof(option_value));
+			&context->option_value,
+			sizeof(context->option_value));
 
+    /* bind */
 	memset(&addr_inet,0,sizeof addr_inet);
-
 	addr_inet.sin_family= AF_INET;
 	addr_inet.sin_port=htons(nuauthconf->userpckt_port);
 	addr_inet.sin_addr.s_addr=nuauthconf->client_srv->s_addr;
-
-	len_inet = sizeof addr_inet;
-
-	z = bind (sck_inet,
+	result = bind (context->sck_inet,
 			(struct sockaddr *)&addr_inet,
-			len_inet);
-	if (z == -1)
+			sizeof addr_inet);
+	if (result == -1)
 	{
 		g_warning ("user bind() failed to %s:%d at %s:%d, exiting",inet_ntoa(addr_inet.sin_addr),nuauthconf->userpckt_port,__FILE__,__LINE__);
 		exit(-1);
 	}
 
-	/* Listen ! */
-	z = listen(sck_inet,20);
-	if (z == -1)
+	/* listen */
+	result = listen(context->sck_inet,20);
+	if (result == -1)
 	{
 		g_warning ("user listen() failed, exiting");
 		exit(-1);
 	}
 
 	/* init fd_set */
-	FD_ZERO(&tls_rx_set);
-	FD_ZERO(&wk_set);
-	FD_SET(sck_inet,&tls_rx_set);
-	mx=sck_inet+1;
+	FD_ZERO(&context->tls_rx_set);
+	FD_SET(context->sck_inet,&context->tls_rx_set);
+	context->mx=context->sck_inet+1;
 	mx_queue=g_async_queue_new ();
+}
 
-	for(;;){
-		/* try to get new file descriptor to update set */
-		c_pop=g_async_queue_try_pop (mx_queue);
-
-		while (c_pop) {
-			c=GPOINTER_TO_INT(c_pop);
-
-#ifdef DEBUG_ENABLE
-			if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-				g_message("checking mx against %d\n",c);
-#endif
-			if ( c+1 > mx )
-				mx = c + 1;
-			/*
-			 * change FD_SET
-			 */
-			FD_SET(c,&tls_rx_set);
-			c_pop=g_async_queue_try_pop (mx_queue);
-		}
-
-
-		/*
-		 * copy rx set to working set 
-		 */
-
-		FD_ZERO(&wk_set);
-		for (z=0;z<mx;++z){
-			if (FD_ISSET(z,&tls_rx_set))
-				FD_SET(z,&wk_set);
-		}
-
-		/*
-		 * define timeout 
-		 */
-
-		tv.tv_sec=2;
-		tv.tv_usec=30000;
-
-		n=select(mx,&wk_set,NULL,NULL,&tv);
-
-		if (n == -1) {
-			g_warning("select() failed, exiting\n");
-			exit(EXIT_FAILURE);
-		} else if (!n) {
-			continue;
-		}
-
-		/*
-		 * Check if a connect has occured
-		 */
-
-		if (FD_ISSET(sck_inet,&wk_set) ){
-			/*
-			 * Wait for a connect
-			 */
-			len_inet = sizeof addr_clnt;
-			c = accept (sck_inet,
-					(struct sockaddr *)&addr_clnt,
-					&len_inet);
-			if (c == -1){
-				if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
-					g_warning("accept");
-				}
-			}
-
-			if ( get_number_of_clients() >= nuauth_tls_max_clients ) {
-
-				if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
-					g_warning("too many clients (%d configured)\n",nuauth_tls_max_clients);
-				}
-				close(c);
-				continue;
-			} else {
-				/* if system is not in reload */
-				if (! (nuauthdatas->need_reload)){
-					struct client_connection* current_client_conn=g_new0(struct client_connection,1);
-					struct pre_client_elt* new_pre_client;
-					current_client_conn->socket=c;
-					memcpy(&current_client_conn->addr,&addr_clnt,sizeof(struct sockaddr_in));
-
-					if ( c+1 > mx )
-						mx = c + 1;
-					/* Set KEEP ALIVE on connection */
-					setsockopt ( c,
-							SOL_SOCKET,
-							SO_KEEPALIVE,
-							&option_value,
-							sizeof(option_value));
-					/* give the connection to a separate thread */
-					/*  add element to pre_client 
-					    create pre_client_elt */
-					new_pre_client = g_new0(struct pre_client_elt,1);
-					new_pre_client->socket = c;
-					new_pre_client->validity = time(NULL) + nuauth_auth_nego_timeout;
-
-					g_static_mutex_lock (&pre_client_list_mutex);
-					pre_client_list=g_slist_prepend(pre_client_list,new_pre_client);
-					g_static_mutex_unlock (&pre_client_list_mutex);
-					g_thread_pool_push (tls_sasl_worker,
-							current_client_conn,	
-							NULL
-							);
-				} else {
-					shutdown(c,SHUT_RDWR);
-					close(c);
-				}
-			}
-		}
-
-		/*
-		 * check for client activity
-		 */
-		for ( c=0; c<mx; ++c) {
-			if ( c == sck_inet )
-				continue;
-			if ( FD_ISSET(c,&wk_set) ) {
-				user_session * c_session;
-				int u_request;
-#ifdef DEBUG_ENABLE
-				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-					g_message("activity on %d\n",c);
-#endif
-
-				/* we lock here but can do other thing on hash as it is not destructive 
-				 * in push mode modification of hash are done in push_worker */
-				g_static_mutex_lock (&client_mutex);
-				c_session = get_client_datas_by_socket(c);
-				g_static_mutex_unlock (&client_mutex);
-				if (nuauthconf->session_duration && c_session->expire < time(NULL)){
-					FD_CLR(c,&tls_rx_set);
-					g_static_mutex_lock (&client_mutex);
-					delete_client_by_socket(c);
-					g_static_mutex_unlock (&client_mutex);
-				} else {
-					u_request = treat_user_request( c_session );
-					if (u_request == EOF) {
-						log_user_session(c_session,SESSION_CLOSE);
-#ifdef DEBUG_ENABLE
-						if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-							g_message("client disconnect on %d\n",c);
-#endif
-						FD_CLR(c,&tls_rx_set);
-						/* clean client structure */
-						if (nuauthconf->push){
-							struct internal_message* message=g_new0(struct internal_message,1);
-							message->type = FREE_MESSAGE;
-							message->datas = GINT_TO_POINTER(c);
-							g_async_queue_push(nuauthdatas->tls_push_queue,message);
-						} else {
-							g_static_mutex_lock (&client_mutex);
-							delete_client_by_socket(c);
-							g_static_mutex_unlock (&client_mutex);
-						}
-					}else if (u_request < 0) {
-#ifdef DEBUG_ENABLE
-						if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-							g_message("treat_user_request() failure\n");
-#endif
-					}
-				}
-			}
-		}
-
-		for ( c = mx - 1;
-				c >= 0 && !FD_ISSET(c,&tls_rx_set);
-				c = mx -1 ){
-#ifdef DEBUG_ENABLE
-			if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-				g_message("setting mx to %d\n",c);
-#endif
-			mx = c;
-		}
-	}
-
-
-	close(sck_inet);
-
+/**
+ * TLS user packet server. 
+ * Thread function serving user connection.
+ * 
+ * \return NULL
+ */
+void* tls_user_authsrv() {
+    struct tls_user_context_t context;
+    tls_user_init(&context);
+    tls_user_main_loop(&context);
 	return NULL;
-
 }
 
 void  refresh_client (gpointer key, gpointer value, gpointer user_data)
