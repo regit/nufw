@@ -33,7 +33,8 @@ struct tls_nufw_context_t {
  * - Argument : SSL RX packet
  * - Return : 1 if read done, EOF if read complete
  */
-static int treat_nufw_request (nufw_session_t *c_session) {
+static int treat_nufw_request (nufw_session_t *c_session)
+{
     unsigned char *dgram=NULL;
     int dgram_size;
 
@@ -76,14 +77,16 @@ static int treat_nufw_request (nufw_session_t *c_session) {
     return 1;
 }
 
-void close_nufw_servers(int signal) {
+void close_nufw_servers(int signal) 
+{
     g_mutex_lock(nufw_servers_mutex);
     g_hash_table_destroy(nufw_servers);
     nufw_servers=NULL;
     g_mutex_unlock(nufw_servers_mutex);
 }
 
-void clean_nufw_session(nufw_session_t * c_session) {
+void clean_nufw_session(nufw_session_t * c_session) 
+{
     gnutls_transport_ptr socket_tls;
     socket_tls=gnutls_transport_get_ptr(*(c_session->tls));
     close((int)socket_tls);
@@ -118,7 +121,8 @@ void clean_nufw_session(nufw_session_t * c_session) {
 /**
  * \return If an error occurs returns 1, else returns 0.
  */
-int tls_nufw_accept(struct tls_nufw_context_t *context) {
+int tls_nufw_accept(struct tls_nufw_context_t *context) 
+{
     int c;
     struct sockaddr_in addr_clnt;
     unsigned int len_inet;
@@ -173,7 +177,8 @@ int tls_nufw_accept(struct tls_nufw_context_t *context) {
     return 0;
 }    
 
-void tls_nufw_main_loop(struct tls_nufw_context_t *context) {
+void tls_nufw_main_loop(struct tls_nufw_context_t *context) 
+{
     int n,c,z;
     fd_set wk_set; /* working set */
     struct timeval tv;
@@ -251,7 +256,8 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context) {
     close(context->sck_inet);
 }    
 
-void tls_nufw_init(struct tls_nufw_context_t *context) {    
+void tls_nufw_init(struct tls_nufw_context_t *context)
+{    
     int z;
     gint option_value;
 #if 0
@@ -338,7 +344,8 @@ void tls_nufw_init(struct tls_nufw_context_t *context) {
  *
  * \return NULL
  */
-void* tls_nufw_authsrv() {
+void* tls_nufw_authsrv()
+{
     struct tls_nufw_context_t context;
 
     tls_nufw_init(&context);

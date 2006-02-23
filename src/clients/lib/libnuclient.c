@@ -856,7 +856,7 @@ void ask_session_end(NuAuth* session)
 
 	if (session){ /* sanity check */
 		if (session->connected == 0){
-			return
+			return;
 		}
 		pthread_mutex_lock(&(session->mutex));
 		session->connected=0;
@@ -864,12 +864,12 @@ void ask_session_end(NuAuth* session)
 		if(! pthread_equal(session->recvthread,self_thread)){
 			/* destroy thread */
 			pthread_cancel(session->recvthread);
-			pthread_join(session->recvthread);
+			pthread_join(session->recvthread,NULL);
 		}
 		if (session->mode == SRV_TYPE_PUSH) {
 			if(! pthread_equal(session->checkthread,self_thread)){
 				pthread_cancel(session->checkthread);
-				pthread_join(session->cancelthread);
+				pthread_join(session->checkthread,NULL);
 			}
 		}
 		pthread_mutex_unlock(&(session->mutex));
