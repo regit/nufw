@@ -76,10 +76,6 @@ void* recv_message(void *data)
 
         pthread_cleanup_push(pthread_mutex_unlock, (void*)(&(session->check_count_mutex)));
 
-        pthread_mutex_lock(&(session->check_count_mutex));
-        session->count_msg_cond=0;
-        pthread_mutex_unlock(&(session->check_count_mutex));
-
         for (;;){
             ret= gnutls_record_recv(session->tls,dgram,sizeof dgram);
             if (ret<=0){

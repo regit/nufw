@@ -175,23 +175,26 @@ void panic(const char *fmt, ...)
 
 void nu_exit_clean(NuAuth * session)
 {
-    if (session->socket>0){
-        shutdown(session->socket,SHUT_RDWR);
-        close(session->socket);
-        session->socket=0;
-    }
-    if (session->username){
-        free(session->username);
-    }
-    if (session->password){
-        free(session->password);
-    }
-    if (session->mode == SRV_TYPE_PUSH){
-        pthread_mutex_destroy(&(session->check_count_mutex));
-        pthread_cond_destroy(&(session->check_cond));
-    }
-    pthread_mutex_destroy(&(session->mutex));
-    free(session);
+	if(session->ct){
+		tcptable_free (session->ct);
+	}
+	if (session->socket>0){
+		shutdown(session->socket,SHUT_RDWR);
+		close(session->socket);
+		session->socket=0;
+	}
+	if (session->username){
+		free(session->username);
+	}
+	if (session->password){
+		free(session->password);
+	}
+	if (session->mode == SRV_TYPE_PUSH){
+		pthread_mutex_destroy(&(session->check_count_mutex));
+		pthread_cond_destroy(&(session->check_cond));
+	}
+	pthread_mutex_destroy(&(session->mutex));
+	free(session);
 }
 
 /**
@@ -535,12 +538,9 @@ static int generate_dh_params(void) {
 
 void nu_client_free(NuAuth *session)
 {
-	pthread_mutex_lock(&(session->mutex));
-	if (tcptable_free (session->ct) == 0) panic ("tcptable_free failed");
         /* kill all threads */
         ask_session_end(session);
         /* all threads are dead, we are the one who can access to it */
-	pthread_mutex_unlock(&(session->mutex));
         /* destroy session */
 	nu_exit_clean(session);
 }
@@ -855,25 +855,24 @@ void ask_session_end(NuAuth* session)
 	/* we kill thread thus lock will be lost if another thread reach this point */
 
 	if (session){ /* sanity check */
-            pthread_mutex_lock(&(session->mutex));
-            session->connected=0;
-            if(! pthread_equal(session->recvthread,self_thread)){
+		pthread_mutex_lock(&(session->mutex));
+		session->connected=0;
+		if(! pthread_equal(session->recvthread,self_thread)){
 			/* destroy thread */
 			pthread_cancel(session->recvthread);
-            }
-            if (session->mode == SRV_TYPE_PUSH) {
-                if(! pthread_equal(session->checkthread,self_thread)){
-                    pthread_cancel(session->checkthread);
-                }
-            }
-            gnutls_bye(session->tls,GNUTLS_SHUT_RDWR);
-            pthread_mutex_unlock(&(session->mutex));
+		}
+		if (session->mode == SRV_TYPE_PUSH) {
+			if(! pthread_equal(session->checkthread,self_thread)){
+				pthread_cancel(session->checkthread);
+			}
+		}
+		gnutls_bye(session->tls,GNUTLS_SHUT_RDWR);
+		pthread_mutex_unlock(&(session->mutex));
+		if (pthread_equal(session->recvthread,self_thread) ||
+				((session->mode == SRV_TYPE_PUSH) && pthread_equal(session->checkthread,self_thread))
+		   ) {
+			pthread_exit(NULL);
+		}
 	}
-	if (pthread_equal(session->recvthread,self_thread) ||
-                ((session->mode == SRV_TYPE_PUSH) && pthread_equal(session->checkthread,self_thread))
-	   ) {
-		pthread_exit(NULL);
-	}
-
 }
 
