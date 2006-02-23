@@ -659,6 +659,7 @@ int read_acl_list(void)
           g_message("No valid protocol declared in ACL %s", newacl->aclname);
   }
 
+  fclose(fd);
   return 0;
 }
 
@@ -1126,6 +1127,6 @@ G_MODULE_EXPORT void define_periods(GHashTable* periods)
         perioditem->start_day=1;
         perioditem->end_day=5;
         perioditem->start_hour=8;
-        perioditem->end_hour=23;
+        perioditem->end_hour=18;
         add_perioditem_to_period(periods,g_strdup("5x8"),perioditem);
 }
