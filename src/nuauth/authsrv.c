@@ -43,7 +43,8 @@ typedef struct
  * 
  * \param signal Code of raised signal
  */
-void nuauth_cleanup( int signal ) {
+void nuauth_cleanup( int signal ) 
+{
     /* free nufw server hash */
     if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN))
         g_message("caught interrupt, cleaning");
@@ -61,7 +62,8 @@ void nuauth_cleanup( int signal ) {
     exit(EXIT_SUCCESS);
 }
 
-void daemonize() {
+void daemonize() 
+{
     int i;
     FILE* pf;
     pid_t pidf;
@@ -111,7 +113,8 @@ void daemonize() {
         close(i);
 }
 
-void print_usage() {
+void print_usage() 
+{
     fprintf (stdout,
             "nuauth [-hDVv[v[v[v[v[v[v[v[v]]]]]]]]] [-l user_packet_port] [-C local_addr] [-L local_addr] \n"
             "\t\t[-t packet_timeout]\n"
@@ -125,7 +128,8 @@ void print_usage() {
             "\t-t : timeout to forget about packets when they don't match (default : 15 s)\n");
 }
 
-void parse_options(int argc, char **argv, command_line_params_t *params) {
+void parse_options(int argc, char **argv, command_line_params_t *params) 
+{
     char* version=VERSION;
     char * options_list = "DhVvl:L:C:p:t:T:";
     int option;
@@ -192,7 +196,8 @@ void parse_options(int argc, char **argv, command_line_params_t *params) {
     }
 }
 
-void install_signals() {
+void install_signals() 
+{
     struct sigaction action;
 
     memset(&action, 0, sizeof(action));
@@ -226,7 +231,8 @@ void install_signals() {
     signal(SIGPIPE,SIG_IGN);
 }
 
-void configure_app(int argc, char **argv) {
+void configure_app(int argc, char **argv) 
+{
     command_line_params_t params;
     params.daemonize = 0;
     params.nuauth_client_listen_addr=NULL;
@@ -289,7 +295,8 @@ void configure_app(int argc, char **argv) {
     }
 }
 
-void init_nuauthdatas() {
+void init_nuauthdatas() 
+{
     nuauthdatas->tls_push_queue = g_async_queue_new ();
     if (!nuauthdatas->tls_push_queue)
         exit(EXIT_FAILURE);
@@ -447,9 +454,6 @@ void init_nuauthdatas() {
 }
 
 void main_loop() {
-    /* a little sleep (1/2 second) */
-    usleep(500000);	
-
     /* admin task */
     for(;;){
         struct cache_message * message;
@@ -492,6 +496,11 @@ int main(int argc,char * argv[])
     install_signals();
     init_nuauthdatas();
     init_audit();
+    /* a little sleep (1 second) 
+     * we are waiting for threads to initiate
+     */
+    usleep(1000000);	
+    /* start main loop */
     main_loop();
     return EXIT_SUCCESS;
 }
