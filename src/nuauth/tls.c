@@ -33,14 +33,15 @@ int nuauth_tls_auth_by_cert;
  */
 int close_tls_session(int c,gnutls_session* session) {
 	if (close(c))
-        log_message(VERBOSE_DEBUG, USER, "close_tls_session: close() failed!");
+        log_message(VERBOSE_DEBUG, AREA_USER, "close_tls_session: close() failed!");
 	gnutls_deinit(*session);
 #ifdef DEBUG_ENABLE
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
 		g_message("gnutls_deinit() was called");
 #endif
-	if (session)
+	if (session) {
 		g_free(session);
+    }
 	return 1;
 }
 
