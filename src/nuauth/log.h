@@ -25,17 +25,15 @@
 #define DEBUG_OR_NOT(LOGLEVEL, LOGAREA) \
     ((LOGAREA & nuauthconf->debug_areas) && ((nuauthconf->debug_level)>=LOGLEVEL))
 
-void log_print_message(int level, int area, char *format, ...);
-
 #define log_message(level, area, format, args...) \
-   log_print_message(DEBUG_LEVEL_##level, DEBUG_##area, format, ##args )
+  do { if ((DEBUG_##area & nuauthconf->debug_areas) && (nuauthconf->debug_level >= DEBUG_LEVEL_##level)) \
+    g_message(format, ##args); } while (0)
 
-/** \def debug_log_printf(area, priority, format, ...)
- * Call log_area_printf(area, priority, ...) if DEBUG_ENABLE is defined 
- */
 #ifdef DEBUG_ENABLE
+   /* copy of log_message macro */
 #  define debug_log_message(level, area, format, args...) \
-       log_print_message(DEBUG_LEVEL_##level, DEBUG_AREA_##area, format, ##args )
+      do { if ((DEBUG_##area & nuauthconf->debug_areas) && (nuauthconf->debug_level >= DEBUG_LEVEL_##level)) \
+        g_message(format, ##args); } while (0)
 #else
 #  define debug_log_message(level, area, format, ...)
 #endif
