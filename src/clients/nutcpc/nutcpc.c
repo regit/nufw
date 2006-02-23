@@ -210,6 +210,7 @@ int main (int argc, char *argv[])
 		switch (ch) {
 			case 'H':
 				strncpy(srv_addr,optarg,512);
+				srv_addr[511]=0;
 				break;
 			case 'd':
 				debug = 1;
