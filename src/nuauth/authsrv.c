@@ -153,7 +153,7 @@ void parse_options(int argc, char **argv, command_line_params_t *params) {
 
             case 'L' :
                 /* Adress we listen for NUFW originating packets */
-                // strncpy(nufw_listen_address,optarg,HOSTNAME_SIZE);
+                // SECURE_STRNCPY(nufw_listen_address, optarg, HOSTNAME_SIZE);
                 params->nuauth_nufw_listen_addr = (char *)calloc(HOSTNAME_SIZE, sizeof(char));
                 if (params->nuauth_nufw_listen_addr == NULL)
                 {

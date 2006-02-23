@@ -84,7 +84,9 @@ int get_udp_headers(tracking_t *tracking, unsigned char *dgram, unsigned int dgr
  *
  * \param connection Pointer to a connection
  * \param dgram Pointer to packet datas
- * \return State of the TCP connection (open, established, close).
+ * \return State of the TCP connection (#TCP_STATE_OPEN, 
+ *         #TCP_STATE_ESTABLISHED, #TCP_STATE_CLOSE), or #TCP_STATE_UNKNOW
+ *         if an error occurs.
  */
 tcp_state_t get_tcp_headers(tracking_t *tracking, unsigned char *dgram, unsigned int dgram_size)
 {
@@ -139,20 +141,12 @@ int get_icmp_headers(tracking_t *tracking, unsigned char *dgram, unsigned int dg
 }
 
 /**
- * Parse message content for message of type #AUTH_REQUEST or #AUTH_CONTROL.
- *
- * Message structure:
- * \code
- *  ofs | size | description
- * -----+------+-------------------
- *   0  |   2  | Message length
- *   2  |   4  | Netfilter packet unique identifier
- *   6  |   4  | Timestamp (Epoch format)
- *  10  |   n  | IPv4 headers (see get_ip_headers()) +
- *      |      |      TCP headers (get_tcp_headers())
- *      |      |   or UDP headers (get_udp_headers())
- *      |      |   or ICMP message (get_icmp_headers())
- * \endcode
+ * Parse message content for message of type #AUTH_REQUEST or #AUTH_CONTROL
+ * using structure ::nufw_to_nuauth_auth_message_t. 
+ * 
+ * \param dgram Pointer to packet datas
+ * \param dgram_size Number of bytes in the packet
+ * \return A new connection or NULL if fails 
  */
 connection_t* authpckt_new_connection(unsigned char *dgram, unsigned int dgram_size) {
     nufw_to_nuauth_auth_message_t *msg = (nufw_to_nuauth_auth_message_t *)dgram;
@@ -273,21 +267,10 @@ connection_t* authpckt_new_connection(unsigned char *dgram, unsigned int dgram_s
 
 /**
  * Parse message content for message of type #AUTH_CONN_DESTROY 
- * or #AUTH_CONN_UPDATE.
- *
- * Message structure:
- * \code
- *  ofs | size | description
- * -----+------+-------------------
- *   0  |   2  | Message length 
- *   2  |   4  | Timeout 
- *   6  |   4  | IPv4 source
- *  10  |   4  | IPv4 destination 
- *  14  |   1  | IPv4 protocol
- *  15  |   2  | TCP/UDP source port 
- *  17  |   2  | TCP/UDP destination port 
- * \endcode
- * (see ::nuv2_conntrack_message structure)
+ * or #AUTH_CONN_UPDATE using structure ::nu_conntrack_message_t structure.
+ * 
+ * \param dgram Pointer to packet datas
+ * \param dgram_size Number of bytes in the packet
  */
 void authpckt_conntrack (unsigned char *dgram, unsigned int dgram_size) {
     struct nu_conntrack_message_t* conntrack;
@@ -324,19 +307,11 @@ void authpckt_conntrack (unsigned char *dgram, unsigned int dgram_size) {
 }
 
 /**
- * Decode a datagram packet from NuFW. Create a connection 
+ * Parse a datagram packet from NuFW using structure 
+ * ::nufw_to_nuauth_message_header_t. Create a connection
  * (type ::connection_t) for message of type #AUTH_REQUEST or #AUTH_CONTROL.
- * Update conntrack for message of type #AUTH_CONN_DESTROY or 
- * #AUTH_CONN_UPDATE.
- *
- * Structure of a datagram:
- * \code
- *  ofs | size | description
- * -----+------+-------------------
- *   0  |   1  | Protocol version (equals to PROTO_VERSION)
- *   1  |   1  | Message type (from nufw_message_t)
- *   2  |   n  | Mesage content (parse by next function)
- * \endcode
+ * Update conntrack for message of type #AUTH_CONN_DESTROY 
+ * or #AUTH_CONN_UPDATE.
  *
  * Call:
  *   - authpckt_new_connection(): Message type #AUTH_REQUEST or #AUTH_CONTROL

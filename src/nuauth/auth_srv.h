@@ -50,6 +50,7 @@
 
 /* config file related */
 #include <conffile.h>
+#include "log.h"
 #include "tls.h"
 #include "connections.h"
 #include "conntrack.h"
@@ -75,10 +76,6 @@
 
 #include "nuauth_params.h"
 #include "nuauthconf.h"
-
-
-
-#define DEBUG_OR_NOT(LOGLEVEL,LOGAREA) (LOGAREA&&(nuauthconf->debug_areas))&&((nuauthconf->debug_level)>=LOGLEVEL)
 
 /*
  * declare some global variables and do some definitions
