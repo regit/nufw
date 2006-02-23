@@ -70,7 +70,7 @@ typedef struct {
   GSList *packet_id;      /*!< Netfilter unique identifier */
   long timestamp;         /*!< Packet arrival time (seconds) */
   int socket;             /*!< Socket from which NuFW request is coming */
-  nufw_session *tls;      /*!< Infos on NuFW which sent the request */
+  nufw_session_t *tls;    /*!< Infos on NuFW which sent the request */
   tracking_t tracking;    /*!< IPv4 connection tracking (headers) */
   u_int16_t user_id;      /*!< User numeric identity used for marking */
   char *username;         /*!< User name */

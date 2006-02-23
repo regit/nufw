@@ -20,7 +20,7 @@
 
 static gboolean get_nufw_server_by_addr(gpointer key,gpointer value,gpointer user_data)
 {
-  if ( (((nufw_session*)value)->peername).s_addr 
+  if ( (((nufw_session_t*)value)->peername).s_addr 
                   == 
                   ((struct in_addr*)user_data)->s_addr ){
       return TRUE;
@@ -31,7 +31,7 @@ static gboolean get_nufw_server_by_addr(gpointer key,gpointer value,gpointer use
 
 static void send_conntrack_message(struct limited_connection * lconn,unsigned char msgtype)
 {
-  nufw_session* session=NULL;
+  nufw_session_t* session=NULL;
   g_mutex_lock(nufw_servers_mutex);
   if (nufw_servers){
       session = g_hash_table_find (nufw_servers,

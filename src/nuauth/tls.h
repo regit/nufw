@@ -57,18 +57,18 @@ struct buffer_read {
 };
 
 typedef struct Nufw_session {
-        gnutls_session* tls;
-        struct in_addr peername;
+    gnutls_session* tls;
+    struct in_addr peername;
 	gint usage;
 	gboolean alive;
-} nufw_session;
+} nufw_session_t;
 
 struct tls_insert_data { 
 	int socket;
 	gpointer data;
 };
 
-void clean_nufw_session(nufw_session * c_session);
+void clean_nufw_session(nufw_session_t *c_session);
 
 
 void create_x509_credentials();

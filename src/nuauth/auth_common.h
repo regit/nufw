@@ -49,7 +49,7 @@ struct auth_answer {
   u_int8_t answer;
   u_int16_t user_id;
   int socket;
-  nufw_session* tls;
+  nufw_session_t* tls;
 };
 
 void free_buffer_read(struct buffer_read* datas);
