@@ -118,6 +118,7 @@ void tls_sasl_connect_ok(user_session* c_session, int c)
         }
     }
 
+    /* send new valid session to user session logging system */
     log_user_session(c_session,SESSION_OPEN);
 #ifdef DEBUG_ENABLE
     if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))

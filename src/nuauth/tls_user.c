@@ -108,6 +108,7 @@ static int treat_user_request (user_session * c_session)
 {
     struct buffer_read *datas;
     int read_size;
+    int pbuf_length;
 
     if (c_session == NULL) return 1;
 
@@ -144,13 +145,14 @@ static int treat_user_request (user_session * c_session)
 
     /* get header to check if we need to get more datas */
     struct nuv2_header* pbuf=(struct nuv2_header* )datas->buf;
+    pbuf_length=ntohs(pbuf->length);
 #ifdef DEBUG_ENABLE
     if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
-        g_message("(%s:%d) Packet size is %d\n",__FILE__,__LINE__,pbuf->length );
+        g_message("(%s:%d) Packet size is %d\n",__FILE__,__LINE__,pbuf_length );
     }
 #endif
 
-    if (pbuf->proto==2 && pbuf->msg_type == USER_HELLO){
+    if (pbuf->proto==PROTO_VERSION && pbuf->msg_type == USER_HELLO){
 #ifdef DEBUG_ENABLE
         if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
             g_message("(%s:%d) user HELLO",__FILE__,__LINE__);
@@ -160,10 +162,10 @@ static int treat_user_request (user_session * c_session)
         g_free(datas);
         return 1;
     }
-    if (pbuf->proto==2 && pbuf->length> read_size && pbuf->length<1800 ){
+    if (pbuf->proto==2 && pbuf_length> read_size && pbuf_length<1800 ){
         /* we realloc and get what we miss */
-        datas->buf=g_realloc(datas->buf,pbuf->length);
-        if (gnutls_record_recv(*(c_session->tls),datas->buf+BUFSIZE,read_size-pbuf->length)<0){
+        datas->buf=g_realloc(datas->buf,pbuf_length);
+        if (gnutls_record_recv(*(c_session->tls),datas->buf+BUFSIZE,read_size-pbuf_length)<0){
             free_buffer_read(datas);
             return -1;
         }
@@ -341,9 +343,8 @@ void tls_user_main_loop(struct tls_user_context_t *context)
     fd_set wk_set; /* working set */
     struct timeval tv;
 
-
     for(;;){
-        /* define timeout */
+        /* define timeout, need to be rewritten as select write it */
         tv.tv_sec=2;
         tv.tv_usec=30000;
         /* try to get new file descriptor to update set */
