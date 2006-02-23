@@ -52,9 +52,7 @@ void* recv_message(void *data)
 	struct nuv2_authreq authreq;
 	struct nuv2_authfield_hello hellofield;
 	int message_length= sizeof(struct nuv2_header)+sizeof(struct nuv2_authfield_hello)+sizeof(struct nuv2_authreq);
-	char * message=calloc(
-			message_length/sizeof(char),
-			sizeof(char));
+	char message[sizeof(struct nuv2_header)+sizeof(struct nuv2_authfield_hello)+sizeof(struct nuv2_authreq)];
 	char* pointer=NULL;
 
 	/* fill struct */
@@ -80,8 +78,8 @@ void* recv_message(void *data)
             ret= gnutls_record_recv(session->tls,dgram,sizeof dgram);
             if (ret<=0){
                 if ( gnutls_error_is_fatal(ret) ){
-                    free(message);
                     ask_session_end(session);
+                    return NULL;
                 }
             } else {
                 switch (*dgram){
@@ -104,6 +102,7 @@ void* recv_message(void *data)
                               printf("write failed at %s:%d\n",__FILE__,__LINE__);
 #endif
                               ask_session_end(session);
+                              return NULL;
                           }
                       }
 
