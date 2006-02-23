@@ -334,17 +334,18 @@ void tls_user_check_activity(struct tls_user_context_t *context, int c) {
     }
 }
 
-void tls_user_main_loop(struct tls_user_context_t *context) {    
+void tls_user_main_loop(struct tls_user_context_t *context)
+{    
     gpointer c_pop;
     int i, nb_active_clients;
     fd_set wk_set; /* working set */
     struct timeval tv;
 
-    /* define timeout */
-    tv.tv_sec=2;
-    tv.tv_usec=30000;
 
     for(;;){
+        /* define timeout */
+        tv.tv_sec=2;
+        tv.tv_usec=30000;
         /* try to get new file descriptor to update set */
         c_pop=g_async_queue_try_pop (mx_queue);
         while (c_pop) {
@@ -412,7 +413,8 @@ void tls_user_main_loop(struct tls_user_context_t *context) {
     close(context->sck_inet);
 }
 
-void tls_user_init(struct tls_user_context_t *context) {
+void tls_user_init(struct tls_user_context_t *context)
+{
     confparams nuauth_tls_vars[] = {
         { "nuauth_tls_max_clients" , G_TOKEN_INT ,NUAUTH_SSL_MAX_CLIENTS, NULL },
         { "nuauth_number_authcheckers" , G_TOKEN_INT ,NB_AUTHCHECK, NULL },

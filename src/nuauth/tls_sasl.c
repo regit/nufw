@@ -35,7 +35,8 @@ gchar* get_username_from_tls_session(gnutls_session session) {
     }
 }
 
-void tls_sasl_connect_ok(user_session* c_session, int c) {
+void tls_sasl_connect_ok(user_session* c_session, int c) 
+{
     struct nuv2_srv_message msg;
     /* Success place */
     /* remove socket from the list of pre auth socket */
@@ -128,7 +129,8 @@ void tls_sasl_connect_ok(user_session* c_session, int c) {
 /**
  * complete all user initation phase.
  */
-void tls_sasl_connect(gpointer userdata, gpointer data) {
+void tls_sasl_connect(gpointer userdata, gpointer data) 
+{
     gnutls_session * session;
     user_session* c_session;
     int ret;
@@ -138,6 +140,7 @@ void tls_sasl_connect(gpointer userdata, gpointer data) {
     if (tls_connect(c,&session) == SASL_BADPARAM) {
         g_free(userdata);
         remove_socket_from_pre_client_list(c);
+        return;
     }
     
     c_session = g_new0(user_session,1);
