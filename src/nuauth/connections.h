@@ -26,8 +26,7 @@
  */
 typedef enum
 {
-    AUTH_STATE_NONE = 0,
-    AUTH_STATE_AUTHREQ,    // 0x1
+    AUTH_STATE_AUTHREQ = 1,// 0x1
     AUTH_STATE_USERPCKT,   // 0x2
     AUTH_STATE_READY,      // 0x3
     AUTH_STATE_COMPLETING, // 0x4

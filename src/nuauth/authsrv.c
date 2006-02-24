@@ -356,7 +356,8 @@ void init_nuauthdatas()
     if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
         g_message("Creating search_and_fill thread");
     }
-    nuauthdatas->search_and_fill_worker = g_thread_create ( (GThreadFunc)search_and_fill,
+    nuauthdatas->search_and_fill_worker = g_thread_create (
+            (GThreadFunc)search_and_fill,
             NULL,
             FALSE,
             NULL);

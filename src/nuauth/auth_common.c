@@ -92,7 +92,6 @@ gint print_connection(gpointer data,gpointer userdata)
  * 
  * - Argument 1 : packet_id
  * - Argument 2 : answer
- * - Return : None
  */
 
 void send_auth_response(gpointer data, gpointer userdata)
@@ -249,7 +248,6 @@ int conn_cl_delete(gconstpointer conn)
     return 1;
 }
 
-
 /**
  * test if a a  connection is old 
  * 
@@ -258,13 +256,9 @@ int conn_cl_delete(gconstpointer conn)
  * Argument 3 : current timestamp
  * Return : None
  *
- * used for connection hash cleaning purpose
- * 
+ * used by clean_connections_list() 
  */
-
-gboolean  get_old_conn (gpointer key,
-        gpointer value,
-        gpointer user_data)
+gboolean get_old_conn (gpointer key, gpointer value, gpointer user_data)
 {
     long current_timestamp = GPOINTER_TO_INT(user_data);
 
@@ -280,7 +274,6 @@ gboolean  get_old_conn (gpointer key,
     }
     return FALSE;
 }
-
 
 /**
  * delete a element given its key.

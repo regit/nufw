@@ -187,5 +187,6 @@ void* limited_connection_handler()
       g_free(message);
 
   }
+  g_async_queue_unref (nuauthdatas->limited_connections_queue);
   return NULL;
 }

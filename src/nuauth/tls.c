@@ -406,6 +406,8 @@ void push_worker() {
 		}
 		g_free(message);
 	}
+    
+	g_async_queue_unref (nuauthdatas->tls_push_queue);
 }
 
 void end_tls(int signal) {

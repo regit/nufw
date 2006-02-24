@@ -127,6 +127,7 @@ void localid_auth()
 
 		}
 	}
-
+	g_async_queue_unref (nuauthdatas->localid_auth_queue);
+	g_async_queue_unref (nuauthdatas->tls_push_queue);
 }
 
