@@ -179,7 +179,7 @@ void nu_exit_clean(NuAuth * session)
 		tcptable_free (session->ct);
 	}
 	if (session->socket>0){
-		shutdown(session->socket,SHUT_RDWR);
+		shutdown(session->socket,SHUT_WR);
 		close(session->socket);
 		session->socket=0;
 	}
@@ -624,10 +624,10 @@ NuAuth* nu_client_init2(
 		return NULL;
 	}
 
-	(session->adr_srv).sin_family= AF_INET;
-	(session->adr_srv).sin_port=htons(port);
-	(session->adr_srv).sin_addr=*(struct in_addr *)host->h_addr_list[0];
-	if (	(session->adr_srv).sin_addr.s_addr == INADDR_NONE) {
+	(session->adr_srv).sin_family = AF_INET;
+	(session->adr_srv).sin_port = htons(port);
+	(session->adr_srv).sin_addr = *(struct in_addr *)host->h_addr_list[0];
+	if ((session->adr_srv).sin_addr.s_addr == INADDR_NONE) {
 
 		nu_exit_clean(session);
 		return NULL;
@@ -860,7 +860,7 @@ void ask_session_end(NuAuth* session)
 		}
 		pthread_mutex_lock(&(session->mutex));
 		session->connected=0;
-		gnutls_bye(session->tls,GNUTLS_SHUT_RDWR);
+		gnutls_bye(session->tls,GNUTLS_SHUT_WR);
 		if(! pthread_equal(session->recvthread,self_thread)){
 			/* destroy thread */
 			pthread_cancel(session->recvthread);
