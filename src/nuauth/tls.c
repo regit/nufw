@@ -31,7 +31,8 @@ int nuauth_tls_auth_by_cert;
  * strictly close a tls session
  * nothing to care about client
  */
-int close_tls_session(int c,gnutls_session* session) {
+int close_tls_session(int c,gnutls_session* session) 
+{
 	if (close(c))
         log_message(VERBOSE_DEBUG, AREA_USER, "close_tls_session: close() failed!");
 	gnutls_deinit(*session);
@@ -48,7 +49,8 @@ int close_tls_session(int c,gnutls_session* session) {
 /** 
  * cleanly end a tls session 
  */
-int cleanly_close_tls_session(int c,gnutls_session* session) {
+int cleanly_close_tls_session(int c,gnutls_session* session) 
+{
 	gnutls_bye(*session,GNUTLS_SHUT_RDWR);
 #ifdef DEBUG_ENABLE
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
@@ -60,7 +62,8 @@ int cleanly_close_tls_session(int c,gnutls_session* session) {
 /**
  * verify certs for a session
  */
-gint check_certs_for_tls_session(gnutls_session session) {
+gint check_certs_for_tls_session(gnutls_session session) 
+{
 	unsigned int status;
 	int ret;
 	/* This verification function uses the trusted CAs in the credentials
@@ -97,7 +100,8 @@ gint check_certs_for_tls_session(gnutls_session session) {
 	return SASL_OK;
 }
 
-gnutls_session* initialize_tls_session() {
+gnutls_session* initialize_tls_session() 
+{
 	gnutls_session* session;
 #if 0
 	const int cert_type_priority[2] = { GNUTLS_CRT_X509, 0 };
@@ -142,7 +146,8 @@ gnutls_session* initialize_tls_session() {
 
 static gnutls_dh_params dh_params;
 
-static int generate_dh_params(void)  {
+static int generate_dh_params(void)  
+{
 	/* Generate Diffie Hellman parameters - for use with DHE
 	 * kx algorithms. These should be discarded and regenerated
 	 * once a day, once a week or once a month. Depending on the
@@ -157,9 +162,19 @@ static int generate_dh_params(void)  {
 }
 
 /**
+ * TLS push fonction : go NON blocking !
+ */
+
+static ssize_t tls_push_func(int fd, const void *buf, size_t count)
+{
+        return send(fd,buf,count,MSG_DONTWAIT);
+}
+
+/**
  * realize tls connection.
  */
-int tls_connect(int c,gnutls_session** session_ptr) {
+int tls_connect(int c,gnutls_session** session_ptr) 
+{
 	int ret;
 	int count=0;
 	gnutls_session* session;
@@ -180,6 +195,7 @@ int tls_connect(int c,gnutls_session** session_ptr) {
 			g_message("NuFW TLS Init failure (initialize_tls_session())\n");
 #endif
 	gnutls_transport_set_ptr( *session, (gnutls_transport_ptr) c);
+        gnutls_transport_set_push_function (* session, tls_push_func);
 
 #ifdef DEBUG_ENABLE
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
