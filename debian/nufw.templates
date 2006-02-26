@@ -15,31 +15,6 @@ _Description: Nufw daemon verbosity level
  will be. A good production value is "vv", increase it to get more details
  in case of problems.
 
-Template: nufw/listen_address
-Type: string
-_Default: 127.0.0.1
-_Description: Nufw listening address
- Nufw needs to bind to one IP address, to communicate with nuauth daemon.
- This is not an option, an address must always be listening. It is
- suggested to have it listening only on needed addresses, which means
- "127.0.0.1" is nuauth is installed on the same system as nufw, or an
- internal IP address in most cases. It is not advised to have nufw listen
- on all adresses, but it can be done specifiing "0.0.0.0".
- .
- Please input an IP address of this system. Default value is "127.0.0.1"
-
-Template: nufw/listen_port
-Type: string
-_Default: 4129
-_Description: Nufw listening port
- Nufw needs to bind to an UDP port, to communicate with nuauth daemon. This
- is not an option, a port must always be listening. It is suggested you
- leave it at its default value (4129), which is very good for everyone (or
- nearly). Don't forget to reconfigure your nuauth installation, if you
- change this.
- .
- Please input a numeric port number.
-
 Template: nufw/nuauth_address
 Type: string
 _Default: 127.0.0.1

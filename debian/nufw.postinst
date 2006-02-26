@@ -29,10 +29,10 @@ db_get nufw/start_at_boot
 NUFW_START="$RET"
 db_get nufw/verbosity
 NUFW_VERBOSITY="$RET"
-db_get nufw/listen_port
-NUFW_LISTEN_UDP_PORT="$RET"
-db_get nufw/listen_address
-NUFW_LISTEN_ADDRESS="$RET"
+#db_get nufw/listen_port
+#NUFW_LISTEN_UDP_PORT="$RET"
+#db_get nufw/listen_address
+#NUFW_LISTEN_ADDRESS="$RET"
 db_get nufw/nuauth_address
 NUFW_NUAUTH_ADDRESS="$RET"
 db_get nufw/nuauth_port
@@ -43,10 +43,10 @@ db_get nufw/tracksize
 NUFW_TRACK_SIZE="$RET"
 cp -a -f $CONFIGFILE $CONFIGFILE.tmp
 #  -e "s/^ *BAR=.*/BAR=\"$BAR\"/" \
+# -e "s/^ *NUFW_LISTEN_UDP_PORT=.*/NUFW_LISTEN_UDP_PORT=$NUFW_LISTEN_UDP_PORT/" \
+# -e "s/^ *NUFW_LISTEN_ADDRESS=.*/NUFW_LISTEN_ADDRESS=\"$NUFW_LISTEN_ADDRESS\"/" \
 sed -e "s/^ *NUFW_START=.*/NUFW_START=\"$NUFW_START\"/" \
  -e "s/^ *NUFW_VERBOSITY=.*/NUFW_VERBOSITY=\"$NUFW_VERBOSITY\"/" \
- -e "s/^ *NUFW_LISTEN_UDP_PORT=.*/NUFW_LISTEN_UDP_PORT=$NUFW_LISTEN_UDP_PORT/" \
- -e "s/^ *NUFW_LISTEN_ADDRESS=.*/NUFW_LISTEN_ADDRESS=\"$NUFW_LISTEN_ADDRESS\"/" \
  -e "s/^ *NUFW_NUAUTH_ADDRESS=.*/NUFW_NUAUTH_ADDRESS=\"$NUFW_NUAUTH_ADDRESS\"/" \
  -e "s/^ *NUFW_NUAUTH_UDP_PORT=.*/NUFW_NUAUTH_UDP_PORT=$NUFW_NUAUTH_UDP_PORT/" \
  -e "s/^ *NUFW_TIMEOUT=.*/NUFW_TIMEOUT=$NUFW_TIMEOUT/" \
