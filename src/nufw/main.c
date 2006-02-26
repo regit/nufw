@@ -205,7 +205,7 @@ int main(int argc,char * argv[]){
 \t-v : increase debug level (+1 for each 'v') (max useful number : 10)\n\
 \t-m : mark packet with userid (needed for connection expiration)\n"
 #ifdef HAVE_LIBCONNTRACK
-"\t-C : listen to conntrack even (needed for connection expiration)\n"
+"\t-C : listen to conntrack events (needed for connection expiration)\n"
 #endif
 "\t-d : remote address we send auth requests to (adress of the nuauth server) (default : 127.0.0.1)\n\
 \t-p : remote port we send auth requests to (TCP port nuauth server listens on) (default : 4128)\n"

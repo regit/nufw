@@ -45,7 +45,7 @@ manpage.1: manpage.sgml
       &dhsurname;
     </author>
     <copyright>
-      <year>2003</year>
+      <year>2003-2006</year>
       <holder>&dhusername;</holder>
     </copyright>
     &dhdate;
@@ -80,6 +80,8 @@ manpage.1: manpage.sgml
       <arg><option>-t <replaceable>timeout</replaceable></option></arg>
       <arg><option>-T <replaceable>track_size</replaceable></option></arg>
       <arg><option>-I <replaceable>ServerID</replaceable></option></arg>
+      <arg><option>-q <replaceable>NfQueue_num</replaceable></option></arg>
+      <arg><option>-C</option></arg>
 
     </cmdsynopsis>
   </refsynopsisdiv>
@@ -228,6 +230,21 @@ manpage.1: manpage.sgml
         </term>
         <listitem>
           <para>Ask regit :) Default value : 12345.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>-q <replaceable>NfQueue number</replaceable></option>
+        </term>
+        <listitem>
+          <para>If Nufw was compiled with NfQueue support, Id of the NfQueue to
+          use (default : 0).</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>-C</option>
+        </term>
+        <listitem>
+          <para>listen to conntrack events (needed for connection expiration).</para>
         </listitem>
       </varlistentry>
     </variablelist>
