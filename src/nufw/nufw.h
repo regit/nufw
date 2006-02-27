@@ -1,3 +1,6 @@
+
+#define PERF_DISPLAY_ENABLE 1
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -113,8 +116,6 @@ void* authsrv(void* data);
 /* send an auth request packet given a payload (raw packet) */
 int auth_request_send(uint8_t type,uint32_t packet_id, char* payload,int data_len);
 
-/* take decision given a auth answer packet payload */
-void auth_packet_to_decision(char* dgram);
 
 unsigned long padd ( packet_idl * packet);
 int psearch_and_destroy (uint32_t packet_id,uint32_t * mark);

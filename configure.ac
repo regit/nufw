@@ -57,6 +57,7 @@ AC_ARG_WITH(nfqueue,   [AC_HELP_STRING(--with-nfqueue, Compile for NFQUEUE inste
 
 
 AC_ARG_WITH(utf8,   [AC_HELP_STRING(--with-utf8, Use UTF8 exchange between client and server)], AC_DEFINE_UNQUOTED([USE_UTF8],[1],[Will use UTF8 exchange]))
+AC_ARG_WITH(fixedtimeout,   [AC_HELP_STRING(--with-fixedtimeout, Assume libconntrack has fixed timeout extension )],have_conntrack_fixedtimeout="yes" )
 
 
 AC_ARG_ENABLE(debug,   [AC_HELP_STRING(--enable-debug, Add development debug messages (default no))],debug=$enableval, debug="")
@@ -130,6 +131,9 @@ AC_CHECK_LIB([netfilter_conntrack], [nfct_dump_conntrack_table], have_conntrack=
 
 if test "${have_conntrack}" = "yes"; then
         AC_DEFINE_UNQUOTED([HAVE_LIBCONNTRACK],[1],[libconntrack has been found])
+	if test "${have_conntrack_fixedtimeout}" = "yes"; then
+        	AC_DEFINE_UNQUOTED([HAVE_LIBCONNTRACK_FIXEDTIMEOUT],[1],[libconntrack with fixed timeout extension has been choosen])
+	fi
 else
         build_nutrackd=""
 fi

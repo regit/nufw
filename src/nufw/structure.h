@@ -82,6 +82,9 @@ typedef struct Packet_Ids {
 
   /*! Timestamp in Epoch format, value comes from netfilter or time(NULL) */
   long timestamp;      
+#ifdef PERF_DISPLAY_ENABLE
+  struct timeval arrival_time;
+#endif
 
 #if (HAVE_LIBIPQ_MARK || USE_NFQUEUE)
   /*! Packet mark, comes from nfq_get_nfmark() */

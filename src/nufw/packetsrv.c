@@ -105,7 +105,9 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
                 "Can not allocate packet_id");
 		return 0;
 	}
-
+#ifdef PERF_DISPLAY_ENABLE
+	gettimeofday(&(current->arrival_time),NULL);
+#endif
     /* Get unique identifier of packet in queue */
 	ph = nfq_get_msg_packet_hdr(nfa);
 	if (ph){

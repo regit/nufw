@@ -26,30 +26,7 @@
  * and then call auth_packet_to_decision() to process packet.
  */
 
-/**
- * Thread waiting to authentification server (NuAuth) answer.
- * Call auth_packet_to_decision() on new packet.
- */
-void* authsrv(void* data){
-    int ret;
-    char dgram[512];
 
-    for(;;){
-        ret= gnutls_record_recv(*tls.session,dgram,sizeof dgram);
-        if (ret<0){
-            if ( gnutls_error_is_fatal(ret) ){
-                pthread_mutex_lock(tls.mutex);
-                /* warn sender thread that it will need to reconnect at next access */
-                tls.auth_server_running=0;
-                pthread_mutex_unlock(tls.mutex);
-                pthread_exit(NULL);
-            }
-        } else {
-            auth_packet_to_decision(dgram);
-        }
-        memset(dgram, 0, sizeof dgram);
-    }
-}
 
 /**
  * Process authentification server (NuAuth) packet answer. Different answers
@@ -59,7 +36,7 @@ void* authsrv(void* data){
  *   - Connection update: ask connectrak to set connection timeout to given
  *     value
  */
-void auth_packet_to_decision(char* dgram)
+inline void auth_packet_to_decision(char* dgram)
 {
   u_int32_t packet_id;
   int sandf;
@@ -100,6 +77,7 @@ void auth_packet_to_decision(char* dgram)
 #else                      
                   IPQ_SET_VERDICT(packet_id, NF_ACCEPT);
 #endif /* HAVE_LIBIPQ_MARK || USE_NFQUEUE */
+
                   pckt_tx++;
 
 #ifdef GRYZOR_HACKS
@@ -175,9 +153,11 @@ void auth_packet_to_decision(char* dgram)
                   default:
                       return; 
               }
+#ifdef HAVE_LIBCONNTRACK_FIXEDTIMEOUT
               if (packet_hdr->timeout){
                   ct.fixed_timeout=ntohl(packet_hdr->timeout);
               }
+#endif
               res = nfct_update_conntrack(cth, &ct);
 #else
               log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
@@ -193,3 +173,29 @@ void auth_packet_to_decision(char* dgram)
           break;
   }
 }
+
+/**
+ * Thread waiting to authentification server (NuAuth) answer.
+ * Call auth_packet_to_decision() on new packet.
+ */
+void* authsrv(void* data){
+    int ret;
+    char dgram[512];
+
+    for(;;){
+        ret= gnutls_record_recv(*tls.session,dgram,sizeof dgram);
+        if (ret<0){
+            if ( gnutls_error_is_fatal(ret) ){
+                pthread_mutex_lock(tls.mutex);
+                /* warn sender thread that it will need to reconnect at next access */
+                tls.auth_server_running=0;
+                pthread_mutex_unlock(tls.mutex);
+                pthread_exit(NULL);
+            }
+        } else {
+            auth_packet_to_decision(dgram);
+        }
+        memset(dgram, 0, sizeof dgram);
+    }
+}
+
