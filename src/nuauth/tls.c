@@ -165,9 +165,10 @@ static int generate_dh_params(void)
  * TLS push fonction : go NON blocking !
  */
 
-static ssize_t tls_push_func(int fd, const void *buf, size_t count)
+static ssize_t tls_push_func(gnutls_transport_ptr fd, const void *buf, size_t count)
 {
-        return send(fd,buf,count,MSG_DONTWAIT);
+    /* TODO: Catch error */
+    return send(fd,buf,count,MSG_DONTWAIT);
 }
 
 /**
@@ -195,7 +196,7 @@ int tls_connect(int c,gnutls_session** session_ptr)
 			g_message("NuFW TLS Init failure (initialize_tls_session())\n");
 #endif
 	gnutls_transport_set_ptr( *session, (gnutls_transport_ptr) c);
-        gnutls_transport_set_push_function (* session, tls_push_func);
+    gnutls_transport_set_push_function (* session, tls_push_func);
 
 #ifdef DEBUG_ENABLE
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){

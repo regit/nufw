@@ -194,8 +194,7 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 
 	remote_inaddr.s_addr=c_session->addr;
 
-	r = sasl_listmech(conn, NULL, "(",",",")",
-			&data, &len, &count);
+	r = sasl_listmech(conn, NULL, "(", ",", ")", &data, &len, &count);
 	if (r != SASL_OK) {
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
 			g_warning("generating mechanism list");
@@ -444,7 +443,6 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 
 	/* negotiation complete */
 	return SASL_OK;
-
 }
 
 int sasl_parse_user_os(user_session* c_session, char *buf, int buf_size)
