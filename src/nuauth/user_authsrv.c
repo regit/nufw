@@ -24,7 +24,7 @@
 #include <sasl/saslutil.h>
 
 
-static GSList * userpckt_decode(struct buffer_read * datas);
+static GSList * userpckt_decode(struct tls_buffer_read * datas);
 
 /**
  * get user datas (containing datagram) and goes till inclusion (or decision) on packet.
@@ -52,7 +52,7 @@ void user_check_and_decide (gpointer userdata, gpointer data)
           conn_elt=conn_elt_l->data;
 	
 	/* check source IP equality */
-	if  (  ((struct buffer_read *)userdata)->addr 
+	if  (  ((struct tls_buffer_read *)userdata)->ipv4_addr 
 			==
 			htonl(conn_elt->tracking.saddr) ){
 #ifdef DEBUG_ENABLE
@@ -72,7 +72,7 @@ void user_check_and_decide (gpointer userdata, gpointer data)
 	} else {
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER)){
 			struct in_addr badaddr;
-			badaddr.s_addr=((struct buffer_read *)userdata)->addr;
+			badaddr.s_addr=((struct tls_buffer_read *)userdata)->ipv4_addr;
 			g_message("User %s on %s tried to authenticate packet from other ip\n",conn_elt->username,inet_ntoa(badaddr));
               		print_connection(conn_elt,NULL);
 		}
@@ -101,9 +101,9 @@ void user_check_and_decide (gpointer userdata, gpointer data)
  * - Return : pointer to newly allocated connection
  */
 
-static GSList * userpckt_decode(struct buffer_read * datas)
+static GSList * userpckt_decode(struct tls_buffer_read *datas)
 {
-  char * dgram = datas->buf;
+  char * dgram = datas->buffer;
   connection_t* connection=NULL;
   struct nuv2_header* header=(struct nuv2_header*)dgram;
   gboolean multiclient_ok=FALSE;
@@ -358,13 +358,13 @@ static GSList * userpckt_decode(struct buffer_read * datas)
                       }
                       /* here all packet related information are filled-in */
                       if (connection->username == NULL){	
-                          connection->username=g_strdup(datas->userid);
+                          connection->username=g_strdup(datas->user_name);
                       }
-                      connection->user_id=datas->uid;
+                      connection->user_id=datas->user_id;
                       connection->user_groups = g_slist_copy(datas->groups);
-                      connection->os_sysname=g_strdup(datas->sysname);
-                      connection->os_release=g_strdup(datas->release);
-                      connection->os_version=g_strdup(datas->version);
+                      connection->os_sysname=g_strdup(datas->os_sysname);
+                      connection->os_release=g_strdup(datas->os_release);
+                      connection->os_version=g_strdup(datas->os_version);
                       if (connection->user_groups == NULL) {
                           if ((header->option == 0x1) && multiclient_ok) {
                               if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))

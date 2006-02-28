@@ -551,23 +551,13 @@ char * get_rid_of_domain(const char* user)
     return username;
 }
 
-void free_buffer_read(struct buffer_read* datas)
+void free_buffer_read(struct tls_buffer_read* datas)
 {
-    if (datas->sysname){
-        g_free(datas->sysname);
-    }
-    if (datas->release){
-        g_free(datas->release);
-    }
-    if (datas->version){
-        g_free(datas->version);
-    }
-    if (datas->buf){
-        g_free(datas->buf);
-    }
-    if (datas->userid){
-        g_free(datas->userid);
-    }
+    g_free(datas->os_sysname);
+    g_free(datas->os_release);
+    g_free(datas->os_version);
+    g_free(datas->buffer);
+    g_free(datas->user_name);
     if (datas->groups){
         g_slist_free(datas->groups);
     }

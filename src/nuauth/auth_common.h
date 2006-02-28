@@ -52,7 +52,7 @@ struct auth_answer {
   nufw_session_t* tls;
 };
 
-void free_buffer_read(struct buffer_read* datas);
+void free_buffer_read(struct tls_buffer_read* datas);
 
 /*
  * Keep connection in a hash

@@ -46,18 +46,17 @@ struct client_connection {
  * structure used to sent data from
  * tls function to core functions
  */
-
-struct buffer_read {
+struct tls_buffer_read {
     int socket;
-    uint32_t addr;
-    gnutls_session* tls;
-    char * userid;
-    uint16_t uid;
-    GSList * groups;
-    char * sysname;
-    char * release;
-    char * version;
-    char* buf;
+    uint32_t ipv4_addr;
+    gnutls_session *tls;
+    char *user_name;
+    uint16_t user_id;
+    GSList *groups;
+    char *os_sysname;
+    char *os_release;
+    char *os_version;
+    char *buffer;
 };
 
 typedef struct Nufw_session {

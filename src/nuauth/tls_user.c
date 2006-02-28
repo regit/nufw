@@ -106,19 +106,19 @@ void  pre_client_check() {
  */
 static int treat_user_request (user_session * c_session)
 {
-    struct buffer_read *datas;
+    struct tls_buffer_read *datas;
     int read_size;
     int pbuf_length;
 
     if (c_session == NULL) return 1;
 
-    datas=g_new0(struct buffer_read,1);
+    datas=g_new0(struct tls_buffer_read, 1);
     if (datas==NULL)
         return -1;
     datas->socket=0;
-    datas->buf=NULL;
+    datas->buffer=NULL;
     datas->tls=c_session->tls;
-    datas->addr=c_session->addr;
+    datas->ipv4_addr=c_session->addr;
 #ifdef DEBUG_ENABLE
     if (!c_session->multiusers) {
         if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
@@ -127,24 +127,31 @@ static int treat_user_request (user_session * c_session)
 #endif
     
     /* copy packet datas */
-    datas->buf=g_new0(char,MAX_NUFW_PACKET_SIZE);
-    if (datas->buf == NULL){
+    datas->buffer=g_new0(char,MAX_NUFW_PACKET_SIZE);
+    if (datas->buffer == NULL){
         g_free(datas);
         return -1;
     }
-    read_size = gnutls_record_recv(*(c_session->tls),datas->buf,MAX_NUFW_PACKET_SIZE);
+    read_size = gnutls_record_recv(*(c_session->tls), datas->buffer, MAX_NUFW_PACKET_SIZE);
     if ( read_size <= 0) {
 #ifdef DEBUG_ENABLE
         if (read_size <0) 
             if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-                g_message("Received error from user %s\n",datas->userid );
+                g_message("Received error from user %s\n",datas->user_name);
 #endif
         free_buffer_read(datas);
         return EOF;
     }
 
+    /* check buffer underflow */
+    if (read_size < sizeof(struct nuv2_header))
+    {
+        free_buffer_read(datas);
+        return -1;
+    }
+
     /* get header to check if we need to get more datas */
-    struct nuv2_header* pbuf=(struct nuv2_header* )datas->buf;
+    struct nuv2_header* pbuf = (struct nuv2_header* )datas->buffer;
     pbuf_length=ntohs(pbuf->length);
 #ifdef DEBUG_ENABLE
     if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
@@ -158,14 +165,13 @@ static int treat_user_request (user_session * c_session)
             g_message("(%s:%d) user HELLO",__FILE__,__LINE__);
         }
 #endif
-        g_free(datas->buf);
-        g_free(datas);
+        free_buffer_read(datas);
         return 1;
     }
     if (pbuf->proto==2 && pbuf_length> read_size && pbuf_length<1800 ){
         /* we realloc and get what we miss */
-        datas->buf=g_realloc(datas->buf,pbuf_length);
-        if (gnutls_record_recv(*(c_session->tls),datas->buf+MAX_NUFW_PACKET_SIZE,read_size-pbuf_length)<0){
+        datas->buffer=g_realloc(datas->buffer, pbuf_length);
+        if (gnutls_record_recv(*(c_session->tls),datas->buffer+MAX_NUFW_PACKET_SIZE,read_size-pbuf_length)<0){
             free_buffer_read(datas);
             return -1;
         }
@@ -179,31 +185,31 @@ static int treat_user_request (user_session * c_session)
             ((pbuf->option == 0x1) && c_session->multiusers)) {
         /* this is an authorized packet we fill the buffer_read structure */
         if (c_session->multiusers) {
-            datas->userid=NULL;
-            datas->uid=0;
+            datas->user_name=NULL;
+            datas->user_id=0;
             datas->groups=NULL;
         } else {
-            datas->userid = g_strdup(c_session->userid);
-            datas->uid = c_session->uid;
+            datas->user_name = g_strdup(c_session->userid);
+            datas->user_id = c_session->uid;
             datas->groups = g_slist_copy (c_session->groups);
         }
         if (c_session->sysname){
-            datas->sysname=g_strdup(c_session->sysname);
-            if (datas->sysname == NULL){
+            datas->os_sysname=g_strdup(c_session->sysname);
+            if (datas->os_sysname == NULL){
                 free_buffer_read(datas);
                 return -1;
             }
         }
         if (c_session->release){
-            datas->release=g_strdup(c_session->release);
-            if (datas->release == NULL){
+            datas->os_release=g_strdup(c_session->release);
+            if (datas->os_release == NULL){
                 free_buffer_read(datas);
                 return -1;
             }
         }
         if (c_session->version){
-            datas->version=g_strdup(c_session->version);
-            if (datas->version == NULL){
+            datas->os_version=g_strdup(c_session->version);
+            if (datas->os_version == NULL){
                 free_buffer_read(datas);
                 return -1;
             }
