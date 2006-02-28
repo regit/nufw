@@ -94,18 +94,15 @@ int build_nuauthconf(struct nuauth_params * nuauthconf,
   return 1;
 }
 
-
-struct nuauth_params*   init_nuauthconf()
+struct nuauth_params* init_nuauthconf()
 {
   struct nuauth_params* nuauthconf;
-  char* nuauth_client_listen_addr; //=AUTHREQ_CLIENT_LISTEN_ADDR;
-  char* nuauth_nufw_listen_addr; //=AUTHREQ_NUFW_LISTEN_ADDR;
-  char *configfile=DEFAULT_CONF_FILE;
-  char* gwsrv_addr;//=GWSRV_ADDR;
-  gpointer vpointer;
+  char* nuauth_client_listen_addr = NULL;
+  char* nuauth_nufw_listen_addr = NULL;
+  char* gwsrv_addr = NULL;
   confparams nuauth_vars[] = {
-      { "nuauth_client_listen_addr" ,  G_TOKEN_STRING, 0 , g_strdup(AUTHREQ_CLIENT_LISTEN_ADDR) },
-      { "nuauth_nufw_listen_addr" ,  G_TOKEN_STRING, 0 , g_strdup(AUTHREQ_NUFW_LISTEN_ADDR) },
+      { "nuauth_client_listen_addr" ,  G_TOKEN_STRING, 0 , AUTHREQ_CLIENT_LISTEN_ADDR },
+      { "nuauth_nufw_listen_addr" ,  G_TOKEN_STRING, 0 , AUTHREQ_NUFW_LISTEN_ADDR },
       { "nuauth_gw_packet_port" , G_TOKEN_INT , AUTHREQ_PORT,NULL },
       { "nuauth_user_packet_port" , G_TOKEN_INT , USERPCKT_PORT ,NULL},
       { "nufw_gw_addr" , G_TOKEN_STRING , 0, GWSRV_ADDR },
@@ -136,98 +133,63 @@ struct nuauth_params*   init_nuauthconf()
 #endif
       { "nuauth_hello_authentication" , G_TOKEN_INT , 0,NULL },
   };
-
+  const unsigned int nb_params = sizeof(nuauth_vars)/sizeof(confparams);
   gchar *nuauth_multi_users=NULL;
   gchar *nuauth_multi_servers=NULL;
 
   nuauthconf=g_new0(struct nuauth_params,1);
+
   /* 
    * Minimum debug_level value is 2 -> for 1) fatal and 2) critical messages to always
    * be outputed
    */
   nuauthconf->debug_level=0;
   nuauthconf->debug_areas=DEFAULT_DEBUG_AREAS;
-  /* parse conf file */
-  parse_conffile(configfile,sizeof(nuauth_vars)/sizeof(confparams),nuauth_vars);
-  /* set variable value from config file */
-
-  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_client_listen_addr");
-  nuauth_client_listen_addr=(char *)(vpointer) ;
-  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_nufw_listen_addr");
-  nuauth_nufw_listen_addr=(char *)(vpointer);
-  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nufw_gw_addr");
-  gwsrv_addr=(char*)(vpointer);
-  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_gw_packet_port");
-  nuauthconf->authreq_port=*(int*)(vpointer);
-  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_user_packet_port");
-  nuauthconf->userpckt_port=*(int*)(vpointer);
-  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_number_usercheckers");
-  nuauthconf->nbuser_check=*(int*)(vpointer);
-  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_number_aclcheckers");
-  nuauthconf->nbacl_check=*(int*)(vpointer);
-  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_number_ipauthcheckers");
-  nuauthconf->nbipauth_check=*(int*)(vpointer);
-  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_log_users");
-  nuauthconf->log_users=*(int*)(vpointer);
-
-  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_log_users_sync");
-  nuauthconf->log_users_sync=*(int*)(vpointer);
-
-  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_log_users_strict");
-  nuauthconf->log_users_strict=*(int*)(vpointer);
-
-  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_log_users_without_realm");
-  nuauthconf->log_users_without_realm=*(int*)(vpointer);
-
-  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_prio_to_nok");
-  nuauthconf->prio_to_nok=*(int*)(vpointer);
-
-  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_connect_policy");
-  nuauthconf->connect_policy=*(int*)(vpointer);
-
-  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_number_loggers");
-  nuauthconf->nbloggers=*(int*)(vpointer);
-
-  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_number_session_loggers");
-  nuauthconf->nb_session_loggers=*(int*)(vpointer);
-
-  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_packet_timeout");
-  nuauthconf->packet_timeout=*(int*)(vpointer);
-
-  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_session_duration");
-  nuauthconf->session_duration=*(int*)(vpointer);
   
-  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_datas_persistance");
-  nuauthconf->datas_persistance=*(int*)(vpointer);
+  /* parse conf file */
+  parse_conffile(DEFAULT_CONF_FILE, nb_params, nuauth_vars);
+  
+#define READ_CONF(KEY) \
+  get_confvar_value(nuauth_vars, nb_params, KEY)  
 
-  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_push_to_client");
-  nuauthconf->push=*(int*)(vpointer);
+  nuauth_client_listen_addr = (char *)READ_CONF("nuauth_client_listen_addr");
+  nuauth_nufw_listen_addr = (char *)READ_CONF("nuauth_nufw_listen_addr");
+  gwsrv_addr = (char *)READ_CONF("nufw_gw_addr");
+  nuauth_multi_users = (char *)READ_CONF("nuauth_multi_users");
+  nuauth_multi_servers = (char *)READ_CONF("nuauth_multi_servers");
 
-  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_do_ip_authentication");
-  nuauthconf->do_ip_authentication=*(int*)(vpointer);
-
-  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_acl_cache");
-  nuauthconf->acl_cache=*(int*)(vpointer);
-
-  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_user_cache");
-  nuauthconf->user_cache=*(int*)(vpointer);
-
-  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_multi_users");
-  nuauth_multi_users=(char*)(vpointer);
-
-  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_multi_servers");
-  nuauth_multi_servers=(char*)(vpointer);
-
-
-  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_uses_utf8");
-  nuauthconf->uses_utf8=*(int*)(vpointer);
-
-  vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_hello_authentication");
-  nuauthconf->hello_authentication=*(int*)(vpointer);
-
+  nuauthconf->authreq_port = *(int*)READ_CONF("nuauth_gw_packet_port");
+  nuauthconf->userpckt_port = *(int*)READ_CONF("nuauth_user_packet_port");
+  nuauthconf->nbuser_check = *(int*)READ_CONF("nuauth_number_usercheckers");
+  nuauthconf->nbacl_check = *(int*)READ_CONF("nuauth_number_aclcheckers");
+  nuauthconf->nbipauth_check = *(int*)READ_CONF("nuauth_number_ipauthcheckers");
+  nuauthconf->log_users = *(int*)READ_CONF("nuauth_log_users");
+  nuauthconf->log_users_sync = *(int*)READ_CONF("nuauth_log_users_sync");
+  nuauthconf->log_users_strict = *(int*)READ_CONF("nuauth_log_users_strict");
+  nuauthconf->log_users_without_realm = *(int*)READ_CONF("nuauth_log_users_without_realm");
+  nuauthconf->prio_to_nok = *(int*)READ_CONF("nuauth_prio_to_nok");
+  nuauthconf->connect_policy = *(int*)READ_CONF("nuauth_connect_policy");
+  nuauthconf->nbloggers = *(int*)READ_CONF("nuauth_number_loggers");
+  nuauthconf->nb_session_loggers = *(int*)READ_CONF("nuauth_number_session_loggers");
+  nuauthconf->packet_timeout = *(int*)READ_CONF("nuauth_packet_timeout");
+  nuauthconf->session_duration = *(int*)READ_CONF("nuauth_session_duration");
+  nuauthconf->datas_persistance = *(int*)READ_CONF("nuauth_datas_persistance");
+  nuauthconf->push = *(int*)READ_CONF("nuauth_push_to_client");
+  nuauthconf->do_ip_authentication = *(int*)READ_CONF("nuauth_do_ip_authentication");
+  nuauthconf->acl_cache = *(int*)READ_CONF("nuauth_acl_cache");
+  nuauthconf->user_cache = *(int*)READ_CONF("nuauth_user_cache");
+  nuauthconf->uses_utf8 = *(int*)READ_CONF("nuauth_uses_utf8");
+  nuauthconf->hello_authentication = *(int*)READ_CONF("nuauth_hello_authentication");
+#undef READ_CONF
+  
   build_nuauthconf(nuauthconf,nuauth_client_listen_addr,nuauth_nufw_listen_addr,
                   gwsrv_addr,nuauth_multi_users,nuauth_multi_servers);
 
+  g_free(nuauth_client_listen_addr);
+  g_free(nuauth_nufw_listen_addr);
+  g_free(gwsrv_addr);
+  g_free(nuauth_multi_users);
+  g_free(nuauth_multi_servers);
 
   return nuauthconf;
 }

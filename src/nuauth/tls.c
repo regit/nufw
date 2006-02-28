@@ -245,9 +245,9 @@ void create_x509_credentials()
 	int ret;
 	static gnutls_dh_params dh_params;
 	confparams nuauth_tls_vars[] = {
-		{ "nuauth_tls_key" , G_TOKEN_STRING , 0, g_strdup(NUAUTH_KEYFILE) },
-		{ "nuauth_tls_cert" , G_TOKEN_STRING , 0, g_strdup(NUAUTH_CERTFILE) },
-		{ "nuauth_tls_cacert" , G_TOKEN_STRING , 0, g_strdup(NUAUTH_CACERTFILE) },
+		{ "nuauth_tls_key" , G_TOKEN_STRING , 0, NUAUTH_KEYFILE },
+		{ "nuauth_tls_cert" , G_TOKEN_STRING , 0, NUAUTH_CERTFILE },
+		{ "nuauth_tls_cacert" , G_TOKEN_STRING , 0, NUAUTH_CACERTFILE },
 		{ "nuauth_tls_crl" , G_TOKEN_STRING , 0, NULL },
 		{ "nuauth_tls_key_passwd" , G_TOKEN_STRING , 0, NULL },
 		{ "nuauth_tls_request_cert" , G_TOKEN_INT ,FALSE, NULL },
