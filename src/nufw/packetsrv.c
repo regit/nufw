@@ -333,17 +333,8 @@ void shutdown_tls() {
  *
  * Create the thread authsrv() when opening a new session.
  *
- * Packet maximum size is 512 bytes, and it's structure is:
- * \code
- *  ofs | size | description
- * -----+------+------------
- *    0 |   1  | version (PROTO_VERSION)
- *    1 |   2  | type (AUTH_REQUEST, AUTH_ANSWER, ...)  
- *    2 |   2  | data len (in bytes)
- *    4 |   4  | packet unique identifier
- *    8 |   4  | timestamp (in Epoch format)
- *   12 |   n  | packet content (may be truncated to 500 bytes)
- * \endcode
+ * Packet maximum size is 512 bytes, 
+ * and it's structure is ::nufw_to_nuauth_auth_message_t.
  *
  * \param type Type of request (AUTH_REQUEST, AUTH_CONTROL, ...)
  * \param packet_id Unique identifier of the packet in netfilter queue
