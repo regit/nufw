@@ -123,7 +123,7 @@ void clean_nufw_session(nufw_session_t * c_session)
  */
 int tls_nufw_accept(struct tls_nufw_context_t *context) 
 {
-    int c;
+    int conn_fd;
     struct sockaddr_in addr_clnt;
     unsigned int len_inet;
     nufw_session_t *nu_session;
@@ -132,10 +132,10 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
      * Wait for a connect
      */
     len_inet = sizeof addr_clnt;
-    c = accept (context->sck_inet,
+    conn_fd = accept (context->sck_inet,
             (struct sockaddr *)&addr_clnt,
             &len_inet);
-    if (c == -1){
+    if (conn_fd == -1){
         if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
             g_warning("accept");
         }
@@ -146,15 +146,15 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
         if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
             g_warning("unwanted server (%s)\n",inet_ntoa(addr_clnt.sin_addr));
         }
-        close(c);
+        close(conn_fd);
         return 1;
     }
 #if 0
-    if ( c >= nuauth_tls_max_servers) {
+    if ( conn_fd >= nuauth_tls_max_servers) {
         if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
             g_warning("too much servers (%d configured)\n",nuauth_tls_max_servers);
         }
-        close(c);
+        close(conn_fd);
         continue;
     }
 #endif
@@ -164,13 +164,13 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
     nu_session->usage=0;
     nu_session->alive=TRUE;
     nu_session->peername.s_addr=addr_clnt.sin_addr.s_addr;
-    if (tls_connect(c,&(nu_session->tls)) == SASL_OK){
+    if (tls_connect(conn_fd,&(nu_session->tls)) == SASL_OK){
         g_mutex_lock(nufw_servers_mutex);
-        g_hash_table_insert(nufw_servers,GINT_TO_POINTER(c),nu_session);
+        g_hash_table_insert(nufw_servers,GINT_TO_POINTER(conn_fd),nu_session);
         g_mutex_unlock(nufw_servers_mutex);
-        FD_SET(c,&context->tls_rx_set);
-        if ( c+1 > context->mx )
-            context->mx = c + 1;
+        FD_SET(conn_fd,&context->tls_rx_set);
+        if ( conn_fd+1 > context->mx )
+            context->mx = conn_fd + 1;
     } else {
         g_free(nu_session);
     }

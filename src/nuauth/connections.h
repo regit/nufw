@@ -18,7 +18,6 @@
 #ifndef CONNECTIONS_H
 #define CONNECTIONS_H
 
-
 /** 
  * State of a connection in the authentification server.
  * See field state of a structure ::connection_t and function
@@ -88,7 +87,7 @@ typedef struct {
   *
   * Contains the list of acl corresponding to the ipv4 header
   */
-  GSList *acl_groups;
+  GSList *acl_groups;     /*!< ACL group list (of type ::acl_group) */
   GSList *user_groups;    /*!< User groups */
   struct user_cached_datas *cacheduserdatas;  /* Pointer to cache */
   

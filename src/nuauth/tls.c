@@ -21,6 +21,7 @@
 #include "auth_srv.h"
 #include <sys/time.h>
 #include <time.h>
+#include <errno.h>
 
 /* These are global */
 gnutls_certificate_credentials x509_cred;
@@ -28,35 +29,21 @@ int nuauth_tls_request_cert;
 int nuauth_tls_auth_by_cert;
 
 /**
- * strictly close a tls session
- * nothing to care about client
+ * Strictly close a TLS session. Nothing to care about client.
+ *
+ * \param session A session with a client
+ * \param conn_fd File descriptor of the connection (created by accept() syscall)
  */
-int close_tls_session(int c,gnutls_session* session) 
+int close_tls_session(int conn_fd, gnutls_session* session) 
 {
-	if (close(c))
-        log_message(VERBOSE_DEBUG, AREA_USER, "close_tls_session: close() failed!");
+	if (close(conn_fd))
+        log_message(VERBOSE_DEBUG, AREA_USER, "close_tls_session: close() failed (error code %i)!", errno);
 	gnutls_deinit(*session);
-#ifdef DEBUG_ENABLE
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-		g_message("gnutls_deinit() was called");
-#endif
+    debug_log_message (VERBOSE_DEBUG, AREA_USER, "gnutls_deinit() was called");
 	if (session) {
 		g_free(session);
     }
 	return 1;
-}
-
-/** 
- * cleanly end a tls session 
- */
-int cleanly_close_tls_session(int c,gnutls_session* session) 
-{
-	gnutls_bye(*session,GNUTLS_SHUT_RDWR);
-#ifdef DEBUG_ENABLE
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-		g_message("gnutls_bye() was called");
-#endif
-	return close_tls_session(c,session);
 }
 
 /**
@@ -174,16 +161,23 @@ static ssize_t tls_push_func(gnutls_transport_ptr fd, const void *buf, size_t co
 /**
  * realize tls connection.
  */
-int tls_connect(int c,gnutls_session** session_ptr) 
+int tls_connect(int conn_fd,gnutls_session** session_ptr) 
 {
 	int ret;
 	int count=0;
 	gnutls_session* session;
-	*(session_ptr) = initialize_tls_session();
-	session=*(session_ptr);
-	if ((session_ptr==NULL) || (session==NULL))
+
+	*session_ptr = initialize_tls_session();
+	if (session_ptr==NULL)
 	{
-		close(c);
+		close(conn_fd);
+		return SASL_BADPARAM;
+	}
+
+	session = *session_ptr;
+	if (session_ptr==NULL)
+	{
+		close(conn_fd);
 		return SASL_BADPARAM;
 	}
 #ifdef DEBUG_ENABLE
@@ -195,7 +189,7 @@ int tls_connect(int c,gnutls_session** session_ptr)
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN))
 			g_message("NuFW TLS Init failure (initialize_tls_session())\n");
 #endif
-	gnutls_transport_set_ptr( *session, (gnutls_transport_ptr) c);
+	gnutls_transport_set_ptr( *session, (gnutls_transport_ptr) conn_fd);
     gnutls_transport_set_push_function (* session, tls_push_func);
 
 #ifdef DEBUG_ENABLE
@@ -226,7 +220,7 @@ int tls_connect(int c,gnutls_session** session_ptr)
 #endif
 	}else
 		if (ret < 0) {
-			close_tls_session(c,session);
+			close_tls_session(conn_fd,session);
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
 				g_message("NuFW TLS Handshake has failed (%s)\n\n",
 						gnutls_strerror(ret)) ; 
@@ -247,7 +241,7 @@ int tls_connect(int c,gnutls_session** session_ptr)
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
 				g_message("Certificate verification failed : %s",gnutls_strerror(ret));
 			}
-			close_tls_session(c,session);
+			close_tls_session(conn_fd,session);
 			return SASL_BADPARAM;
 		}
 	}

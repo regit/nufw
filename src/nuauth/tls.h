@@ -44,16 +44,16 @@ struct client_connection {
  */
 
 struct buffer_read {
-        int socket;
-	uint32_t addr;
-        gnutls_session* tls;
-        char * userid;
-	uint16_t uid;
-        GSList * groups;
-	char * sysname;
-	char * release;
-	char * version;
-        char* buf;
+    int socket;
+    uint32_t addr;
+    gnutls_session* tls;
+    char * userid;
+    uint16_t uid;
+    GSList * groups;
+    char * sysname;
+    char * release;
+    char * version;
+    char* buf;
 };
 
 typedef struct Nufw_session {
