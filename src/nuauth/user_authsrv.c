@@ -115,7 +115,7 @@ static GSList * userpckt_decode(struct buffer_read * datas)
     case PROTO_VERSION:
       {
           header->length=ntohs(header->length);
-          if(header->length>BUFSIZE){
+          if(header->length>MAX_NUFW_PACKET_SIZE){
               if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
                   g_message("Improper length signaled in packet header");
               free_buffer_read(datas);

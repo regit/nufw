@@ -127,12 +127,12 @@ static int treat_user_request (user_session * c_session)
 #endif
     
     /* copy packet datas */
-    datas->buf=g_new0(char,BUFSIZE);
+    datas->buf=g_new0(char,MAX_NUFW_PACKET_SIZE);
     if (datas->buf == NULL){
         g_free(datas);
         return -1;
     }
-    read_size = gnutls_record_recv(*(c_session->tls),datas->buf,BUFSIZE);
+    read_size = gnutls_record_recv(*(c_session->tls),datas->buf,MAX_NUFW_PACKET_SIZE);
     if ( read_size <= 0) {
 #ifdef DEBUG_ENABLE
         if (read_size <0) 
@@ -165,7 +165,7 @@ static int treat_user_request (user_session * c_session)
     if (pbuf->proto==2 && pbuf_length> read_size && pbuf_length<1800 ){
         /* we realloc and get what we miss */
         datas->buf=g_realloc(datas->buf,pbuf_length);
-        if (gnutls_record_recv(*(c_session->tls),datas->buf+BUFSIZE,read_size-pbuf_length)<0){
+        if (gnutls_record_recv(*(c_session->tls),datas->buf+MAX_NUFW_PACKET_SIZE,read_size-pbuf_length)<0){
             free_buffer_read(datas);
             return -1;
         }
@@ -417,29 +417,25 @@ void tls_user_main_loop(struct tls_user_context_t *context)
 void tls_user_init(struct tls_user_context_t *context)
 {
     confparams nuauth_tls_vars[] = {
-        { "nuauth_tls_max_clients" , G_TOKEN_INT ,NUAUTH_SSL_MAX_CLIENTS, NULL },
+        { "nuauth_tls_max_clients" , G_TOKEN_INT ,NUAUTH_TLS_MAX_CLIENTS, NULL },
         { "nuauth_number_authcheckers" , G_TOKEN_INT ,NB_AUTHCHECK, NULL },
         { "nuauth_auth_nego_timeout" , G_TOKEN_INT ,AUTH_NEGO_TIMEOUT, NULL }
     };
     struct sockaddr_in addr_inet;
     GThread *pre_client_thread;
-    gpointer vpointer;
     int result;
-
-    /* set default values */
-    context->nuauth_tls_max_clients=NUAUTH_TLS_MAX_CLIENTS;
-    context->nuauth_number_authcheckers=NB_AUTHCHECK;
-    context->nuauth_auth_nego_timeout=AUTH_NEGO_TIMEOUT;
 
     /* get config file setup */
     /* parse conf file */
     parse_conffile(DEFAULT_CONF_FILE, sizeof(nuauth_tls_vars)/sizeof(confparams),nuauth_tls_vars);
-    vpointer=get_confvar_value(nuauth_tls_vars,sizeof(nuauth_tls_vars)/sizeof(confparams),"nuauth_tls_max_clients");
-    context->nuauth_tls_max_clients=*(int*)(vpointer); 
-    vpointer=get_confvar_value(nuauth_tls_vars,sizeof(nuauth_tls_vars)/sizeof(confparams),"nuauth_number_authcheckers");
-    context->nuauth_number_authcheckers=*(int*)(vpointer);
-    vpointer=get_confvar_value(nuauth_tls_vars,sizeof(nuauth_tls_vars)/sizeof(confparams),"nuauth_auth_nego_timeout");
-    context->nuauth_auth_nego_timeout=*(int*)(vpointer);
+    
+#define READ_CONF(KEY) \
+	get_confvar_value(nuauth_tls_vars, sizeof(nuauth_tls_vars)/sizeof(confparams), KEY)
+
+    context->nuauth_tls_max_clients = *(int*)READ_CONF("nuauth_tls_max_clients");
+    context->nuauth_number_authcheckers = *(int*)READ_CONF("nuauth_number_authcheckers");
+    context->nuauth_auth_nego_timeout = *(int*)READ_CONF("nuauth_auth_nego_timeout");
+#undef READ_CONF    
 
     /* init sasl stuff */	
     my_sasl_init();

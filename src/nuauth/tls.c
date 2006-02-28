@@ -242,7 +242,6 @@ void create_x509_credentials()
 	char* nuauth_tls_key_passwd=NULL;
 	char* nuauth_tls_crl=NULL;
 	char *configfile=DEFAULT_CONF_FILE;
-	gpointer vpointer;
 	int ret;
 	//gnutls_dh_params dh_params;
 	int int_dh_params;
@@ -255,28 +254,21 @@ void create_x509_credentials()
 		{ "nuauth_tls_request_cert" , G_TOKEN_INT ,FALSE, NULL },
 		{ "nuauth_tls_auth_by_cert" , G_TOKEN_INT ,FALSE, NULL }
 	};
-	parse_conffile(configfile,sizeof(nuauth_tls_vars)/sizeof(confparams),nuauth_tls_vars);
-	/* set variable value from config file */
-	vpointer=get_confvar_value(nuauth_tls_vars,sizeof(nuauth_tls_vars)/sizeof(confparams),"nuauth_tls_key");
-	nuauth_tls_key=(char*)(vpointer);
+    const unsigned int nb_params = sizeof(nuauth_tls_vars) / sizeof(confparams);
 
-	vpointer=get_confvar_value(nuauth_tls_vars,sizeof(nuauth_tls_vars)/sizeof(confparams),"nuauth_tls_cert");
-	nuauth_tls_cert=(char*)(vpointer);
-
-	vpointer=get_confvar_value(nuauth_tls_vars,sizeof(nuauth_tls_vars)/sizeof(confparams),"nuauth_tls_cacert");
-	nuauth_tls_cacert=(char*)(vpointer);
-
-	vpointer=get_confvar_value(nuauth_tls_vars,sizeof(nuauth_tls_vars)/sizeof(confparams),"nuauth_tls_crl");
-	nuauth_tls_crl=(char*)(vpointer);
-
-	vpointer=get_confvar_value(nuauth_tls_vars,sizeof(nuauth_tls_vars)/sizeof(confparams),"nuauth_tls_key_passwd");
-	nuauth_tls_key_passwd=(char*)(vpointer);
-
-	vpointer=get_confvar_value(nuauth_tls_vars,sizeof(nuauth_tls_vars)/sizeof(confparams),"nuauth_tls_request_cert");
-	nuauth_tls_request_cert=*(int*)(vpointer);
-
-	vpointer=get_confvar_value(nuauth_tls_vars,sizeof(nuauth_tls_vars)/sizeof(confparams),"nuauth_tls_auth_by_cert");
-	nuauth_tls_auth_by_cert=*(int*)(vpointer);
+	parse_conffile(configfile, nb_params, nuauth_tls_vars);
+    
+#define READ_CONF(KEY) \
+	get_confvar_value(nuauth_tls_vars, nb_params, KEY)
+    
+	nuauth_tls_key = (char*)READ_CONF("nuauth_tls_key");
+	nuauth_tls_cert = (char*)READ_CONF("nuauth_tls_cert");
+	nuauth_tls_cacert = (char*)READ_CONF("nuauth_tls_cacert");
+	nuauth_tls_crl = (char*)READ_CONF("nuauth_tls_crl");
+	nuauth_tls_key_passwd = (char*)READ_CONF("nuauth_tls_key_passwd");
+	nuauth_tls_request_cert = *(int*)READ_CONF("nuauth_tls_request_cert");
+	nuauth_tls_auth_by_cert = *(int*)READ_CONF("nuauth_tls_auth_by_cert");
+#undef READ_CONF
 
 	gnutls_certificate_allocate_credentials(&x509_cred);
 	ret = gnutls_certificate_set_x509_trust_file(x509_cred,  nuauth_tls_cacert , 
@@ -297,7 +289,7 @@ void create_x509_credentials()
 	}
 
 #ifdef DEBUG_ENABLE
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)){
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG, DEBUG_AREA_USER)){
 		g_message("TLS using key %s and cert %s",nuauth_tls_key,nuauth_tls_cert);
 		if (nuauth_tls_request_cert == GNUTLS_CERT_REQUIRE)
 			g_message("TLS require cert from client");
@@ -312,8 +304,9 @@ void create_x509_credentials()
 	}
 
 	if (nuauth_tls_crl){
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-			g_message("certificate revocation list : %s\n",nuauth_tls_crl);
+		log_message (VERBOSE_DEBUG, AREA_USER,
+                "certificate revocation list: %s\n",
+                nuauth_tls_crl);
 		gnutls_certificate_set_x509_crl_file(x509_cred, nuauth_tls_crl, 
 				GNUTLS_X509_FMT_PEM);
 		g_free(nuauth_tls_crl);
@@ -321,13 +314,11 @@ void create_x509_credentials()
 	int_dh_params = generate_dh_params();
 #ifdef DEBUG_ENABLE
 	if (int_dh_params < 0)
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
-			g_message("generate_dh_params() failed\n");
+		log_message (INFO, AREA_USER, "generate_dh_params() failed\n");
 #endif
 
-
-	//Gryzor doesnt understand wht dh_params is passed as 2nd argument, where a gnutls_dh_params_t structure is awaited
-	//	gnutls_certificate_set_dh_params( x509_cred, 0);
+	// Gryzor doesnt understand wht dh_params is passed as 2nd argument, where a gnutls_dh_params_t structure is awaited
+	// gnutls_certificate_set_dh_params( x509_cred, 0);
 	gnutls_certificate_set_dh_params( x509_cred, dh_params);
 }
 

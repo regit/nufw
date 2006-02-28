@@ -69,5 +69,3 @@ static struct gcry_thread_cbs gcry_threads_gthread =
 	gcry_gthread_mutex_lock, gcry_gthread_mutex_unlock 
 };
 
-
-

@@ -42,8 +42,8 @@ static int treat_nufw_request (nufw_session_t *c_session)
         return 1;
     
     /* copy packet datas */
-    dgram = g_new0(unsigned char, BUFSIZE);
-    dgram_size = gnutls_record_recv(*(c_session->tls), dgram, BUFSIZE) ;
+    dgram = g_new0(unsigned char, MAX_NUFW_PACKET_SIZE);
+    dgram_size = gnutls_record_recv(*(c_session->tls), dgram, MAX_NUFW_PACKET_SIZE) ;
     if (  dgram_size > 0 ){
         connection_t *current_conn = authpckt_decode(dgram , dgram_size);
         if (current_conn != NULL){

@@ -24,7 +24,12 @@ struct nuauth_params {
     int userpckt_port;
     /* global configuration variables */
     int packet_timeout;
+    
+    /** 
+     * User session duration in second, default value: ::SESSION_DURATION
+     */
     int session_duration;
+    
     /* debug related */
     int debug_level;
     int debug_areas;
@@ -43,8 +48,10 @@ struct nuauth_params {
      * - POLICY_PER_IP_ONE_LOGIN
      */
     int connect_policy;
-    /* switch to full utf8 exchange */
+    
+    /* Use UTF-8 charset in exchanges */
     int uses_utf8;
+
     int push;
     int do_ip_authentication;
     int hello_authentication;

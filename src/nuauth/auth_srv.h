@@ -90,17 +90,25 @@
 
 #define POOL_TYPE FALSE
 
-#define DUMMY 0
-#define USE_LDAP 0
 #define AUTHREQ_CLIENT_LISTEN_ADDR "0.0.0.0"
 #define AUTHREQ_NUFW_LISTEN_ADDR "127.0.0.1"
 #define AUTHREQ_PORT 4129
 #define USERPCKT_PORT 4130
 #define GWSRV_ADDR "127.0.0.1"
-#define PRIO 1
-#define PRIO_TO_NOK 1
+
+/** Maximum length of a hostname (including final '\0') */
 #define HOSTNAME_SIZE 128
+
+/** 
+ * Default value of packet timeout (in second), 
+ * option "nuauth_packet_timeout"
+ */
 #define PACKET_TIMEOUT 15
+
+/**
+ * Default value of session duration (in second),
+ * option "nuauth_session_duration". See member session_duration of ::nuauth_params. 
+ */
 #define SESSION_DURATION 0
 #define DEFAULT_USERAUTH_MODULE "libsystem"
 #define DEFAULT_ACLS_MODULE "libplaintext"
@@ -116,14 +124,36 @@
 /* define the number of threads that will log  */
 #define NB_LOGGERS 3
 
-#define BUFSIZE 1024
+/**
+ * Size of buffer used to store one packet read
+ * on TLS connection (from NuFW)
+ */
+#define MAX_NUFW_PACKET_SIZE 1024
 
-/* SSL stuffs */
+/*----------------------- SSL stuffs ----------------------------------*/
+
+/** 
+ * Default value for "nuauth_tls_key" option: filename of
+ * the key file. Value used in ::create_x509_credentials().
+ */
 #define NUAUTH_KEYFILE CONFIG_DIR "/nuauth-key.pem"
-#define NUAUTH_CERTFILE CONFIG_DIR "/nuauth-cert.pem"
-#define NUAUTH_CACERTFILE CONFIG_DIR "/NuFW-cacert.pem"
-#define NUAUTH_SSL_MAX_CLIENTS 256
 
-#define USERNAMESIZE 30
+/** 
+ * Default value for "nuauth_tls_cert" option: file name of the
+ * certification. Value used in ::create_x509_credentials().
+ */
+#define NUAUTH_CERTFILE CONFIG_DIR "/nuauth-cert.pem"
+
+/** 
+ * Default value for "nuauth_tls_cacert" option: filename of the
+ * CA certificate. Value used in ::create_x509_credentials().
+ */
+#define NUAUTH_CACERTFILE CONFIG_DIR "/NuFW-cacert.pem"
+
+/** 
+ * Default value for "nuauth_tls_max_clients" option: maximum number
+ * of SSL users. Value used in ::tls_user_init().
+ */
+#define NUAUTH_SSL_MAX_CLIENTS 256
 
 #endif
