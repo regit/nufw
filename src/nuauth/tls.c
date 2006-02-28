@@ -129,27 +129,26 @@ gnutls_session* initialize_tls_session()
 	return session;
 }
 
-static gnutls_dh_params dh_params;
-
-static int generate_dh_params(void)  
+/**
+ * Generate Diffie Hellman parameters - for use with DHE
+ * (Ephemeral Diffie Hellman) kx algorithms. These should be discarded 
+ * and regenerated once a day, once a week or once a month. Depending on
+ * the security requirements.
+ *
+ * \return If an error occurs returns -1, else return 0
+ */
+static int generate_dh_params(gnutls_dh_params *dh_params)  
 {
-	/* Generate Diffie Hellman parameters - for use with DHE
-	 * kx algorithms. These should be discarded and regenerated
-	 * once a day, once a week or once a month. Depending on the
-	 * security requirements.
-	 */
-	if (gnutls_dh_params_init( &dh_params)<0)
+	if (gnutls_dh_params_init(dh_params)<0)
 		return -1;
-	if (gnutls_dh_params_generate2( dh_params, DH_BITS)<0)
+	if (gnutls_dh_params_generate2(*dh_params, DH_BITS)<0)
 		return -1;
-
 	return 0;
 }
 
 /**
  * TLS push fonction : go NON blocking !
  */
-
 static ssize_t tls_push_func(gnutls_transport_ptr fd, const void *buf, size_t count)
 {
     /* TODO: Catch error */
@@ -232,7 +231,8 @@ int tls_connect(int conn_fd,gnutls_session** session_ptr)
 }
 
 /**
- * Read conf file and allocate x509 credentials
+ * Read conf file and allocate x509 credentials. This function should only be
+ * called once because it uses the static variable ::dh_params
  */
 void create_x509_credentials()
 {
@@ -243,8 +243,7 @@ void create_x509_credentials()
 	char* nuauth_tls_crl=NULL;
 	char *configfile=DEFAULT_CONF_FILE;
 	int ret;
-	//gnutls_dh_params dh_params;
-	int int_dh_params;
+	static gnutls_dh_params dh_params;
 	confparams nuauth_tls_vars[] = {
 		{ "nuauth_tls_key" , G_TOKEN_STRING , 0, g_strdup(NUAUTH_KEYFILE) },
 		{ "nuauth_tls_cert" , G_TOKEN_STRING , 0, g_strdup(NUAUTH_CERTFILE) },
@@ -311,9 +310,9 @@ void create_x509_credentials()
 				GNUTLS_X509_FMT_PEM);
 		g_free(nuauth_tls_crl);
 	}
-	int_dh_params = generate_dh_params();
+	ret = generate_dh_params(&dh_params);
 #ifdef DEBUG_ENABLE
-	if (int_dh_params < 0)
+	if (ret < 0)
 		log_message (INFO, AREA_USER, "generate_dh_params() failed\n");
 #endif
 

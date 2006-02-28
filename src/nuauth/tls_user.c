@@ -41,13 +41,13 @@ struct pre_client_elt {
     time_t validity;
 };
 
-gboolean remove_socket_from_pre_client_list(int c) {
+gboolean remove_socket_from_pre_client_list(int socket) {
     GSList * client_runner=NULL;
     g_static_mutex_lock (&pre_client_list_mutex);
     for(client_runner=pre_client_list;client_runner;client_runner=client_runner->next){
         /* if entry older than delay then close socket */
         if (client_runner->data){
-            if ( ((struct pre_client_elt*)(client_runner->data))->socket == c){
+            if ( ((struct pre_client_elt*)(client_runner->data))->socket == socket){
                 g_free(client_runner->data);
                 client_runner->data=NULL;
                 pre_client_list=g_slist_remove_all(pre_client_list,NULL);
@@ -237,15 +237,15 @@ static int treat_user_request (user_session * c_session)
  * \return If an error occurs returns 1, else returns 0.
  */
 int tls_user_accept(struct tls_user_context_t *context) {
-    int c;
+    int socket;
     struct sockaddr_in addr_clnt;
     unsigned int len_inet = sizeof addr_clnt;
 
     /* Wait for a connect */
-    c = accept (context->sck_inet,
+    socket = accept (context->sck_inet,
             (struct sockaddr *)&addr_clnt,
             &len_inet);
-    if (c == -1){
+    if (socket == -1){
         if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
             g_warning("accept");
         }
@@ -255,20 +255,20 @@ int tls_user_accept(struct tls_user_context_t *context) {
         if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
             g_warning("too many clients (%d configured)\n",context->nuauth_tls_max_clients);
         }
-        close(c);
+        close(socket);
         return 1;
     } else {
         /* if system is not in reload */
         if (! (nuauthdatas->need_reload)){
             struct client_connection* current_client_conn=g_new0(struct client_connection,1);
             struct pre_client_elt* new_pre_client;
-            current_client_conn->socket=c;
+            current_client_conn->socket=socket;
             memcpy(&current_client_conn->addr,&addr_clnt,sizeof(struct sockaddr_in));
 
-            if ( c+1 > context->mx )
-                context->mx = c + 1;
+            if ( socket+1 > context->mx )
+                context->mx = socket + 1;
             /* Set KEEP ALIVE on connection */
-            setsockopt ( c,
+            setsockopt ( socket,
                     SOL_SOCKET,
                     SO_KEEPALIVE,
                     &context->option_value,
@@ -277,7 +277,7 @@ int tls_user_accept(struct tls_user_context_t *context) {
             /*  add element to pre_client 
                 create pre_client_elt */
             new_pre_client = g_new0(struct pre_client_elt,1);
-            new_pre_client->socket = c;
+            new_pre_client->socket = socket;
             new_pre_client->validity = time(NULL) + context->nuauth_auth_nego_timeout;
 
             g_static_mutex_lock (&pre_client_list_mutex);
@@ -288,30 +288,30 @@ int tls_user_accept(struct tls_user_context_t *context) {
                     NULL
                     );
         } else {
-            shutdown(c,SHUT_RDWR);
-            close(c);
+            shutdown(socket,SHUT_RDWR);
+            close(socket);
         }
     }
     return 0;
 }    
 
-void tls_user_check_activity(struct tls_user_context_t *context, int c) {
+void tls_user_check_activity(struct tls_user_context_t *context, int socket) {
     user_session * c_session;
     int u_request;
 #ifdef DEBUG_ENABLE
     if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-        g_message("activity on %d\n",c);
+        g_message("activity on %d\n",socket);
 #endif
 
     /* we lock here but can do other thing on hash as it is not destructive 
      * in push mode modification of hash are done in push_worker */
     g_static_mutex_lock (&client_mutex);
-    c_session = get_client_datas_by_socket(c);
+    c_session = get_client_datas_by_socket(socket);
     g_static_mutex_unlock (&client_mutex);
     if (nuauthconf->session_duration && c_session->expire < time(NULL)){
-        FD_CLR(c,&context->tls_rx_set);
+        FD_CLR(socket,&context->tls_rx_set);
         g_static_mutex_lock (&client_mutex);
-        delete_client_by_socket(c);
+        delete_client_by_socket(socket);
         g_static_mutex_unlock (&client_mutex);
     } else {
         u_request = treat_user_request( c_session );
@@ -319,18 +319,18 @@ void tls_user_check_activity(struct tls_user_context_t *context, int c) {
             log_user_session(c_session,SESSION_CLOSE);
 #ifdef DEBUG_ENABLE
             if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-                g_message("client disconnect on %d\n",c);
+                g_message("client disconnect on %d\n",socket);
 #endif
-            FD_CLR(c,&context->tls_rx_set);
+            FD_CLR(socket,&context->tls_rx_set);
             /* clean client structure */
             if (nuauthconf->push){
                 struct internal_message* message=g_new0(struct internal_message,1);
                 message->type = FREE_MESSAGE;
-                message->datas = GINT_TO_POINTER(c);
+                message->datas = GINT_TO_POINTER(socket);
                 g_async_queue_push(nuauthdatas->tls_push_queue,message);
             } else {
                 g_static_mutex_lock (&client_mutex);
-                delete_client_by_socket(c);
+                delete_client_by_socket(socket);
                 g_static_mutex_unlock (&client_mutex);
             }
         }else if (u_request < 0) {
@@ -356,18 +356,18 @@ void tls_user_main_loop(struct tls_user_context_t *context)
         /* try to get new file descriptor to update set */
         c_pop=g_async_queue_try_pop (mx_queue);
         while (c_pop) {
-            int c = GPOINTER_TO_INT(c_pop);
+            int socket = GPOINTER_TO_INT(c_pop);
 
 #ifdef DEBUG_ENABLE
             if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-                g_message("checking mx against %d\n",c);
+                g_message("checking mx against %d\n",socket);
 #endif
-            if ( c+1 > context->mx )
-                context->mx = c + 1;
+            if ( socket+1 > context->mx )
+                context->mx = socket + 1;
             /*
              * change FD_SET
              */
-            FD_SET(c,&context->tls_rx_set);
+            FD_SET(socket,&context->tls_rx_set);
             c_pop=g_async_queue_try_pop (mx_queue);
         }
 

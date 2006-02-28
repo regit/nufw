@@ -43,20 +43,21 @@ struct client_connection {
 };
 
 /**
- * structure used to sent data from
- * tls function to core functions
+ * Store information from an user packet read on a TLS connection.
+ * Structure is feeded by function treat_user_request() which is part of
+ * the thread tls_user_authsrv().
  */
 struct tls_buffer_read {
-    int socket;
-    uint32_t ipv4_addr;
-    gnutls_session *tls;
-    char *user_name;
-    uint16_t user_id;
-    GSList *groups;
-    char *os_sysname;
-    char *os_release;
-    char *os_version;
-    char *buffer;
+    int socket;           /*!< Socket file descriptor (value from accept()) */
+    uint32_t ipv4_addr;   /*!< User IPv4 address */
+    gnutls_session *tls;  /*!< TLS session */
+    char *user_name;      /*!< User name string */
+    uint16_t user_id;     /*!< User identifier (16 bits */
+    GSList *groups;       /*!< User groups */
+    char *os_sysname;     /*!< Operation system name */
+    char *os_release;     /*!< Operation system release */
+    char *os_version;     /*!< Operation system version */
+    char *buffer;         /*!< Content of the received packet */
 };
 
 typedef struct Nufw_session {
