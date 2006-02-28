@@ -333,7 +333,6 @@ void tls_nufw_init(struct tls_nufw_context_t *context)
 
     /* init fd_set */
     context->mx=context->sck_inet+1;
-    mx_nufw_queue=g_async_queue_new ();
 
     FD_ZERO(&context->tls_rx_set);
     FD_SET(context->sck_inet,&context->tls_rx_set);

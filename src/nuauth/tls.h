@@ -17,18 +17,22 @@
 #ifndef TLS_H
 #define TLS_H
 
-#define KEYFILE "privkey.pem"
-#define CERTFILE "cacert.pem"
-#define CAFILE "/etc/nufw/cacert.pem"
-#define CRLFILE "/etc/nufw/crl.pem"
-
-#define MAX_BUF 1024
+/**
+ * Number of bits for use in an Diffie Hellman key exchange,
+ * used in gnutls_dh_set_prime_bits() call.
+ */
 #define DH_BITS 1024
 
+/**
+ * Default number of thread in tls_sasl_connect() thread pool
+ */
 #define NB_AUTHCHECK 10
 
+/**
+ * Queue used to exchange messages between tls_sasl_connect_ok()
+ * function and tls_user_authsrv() thread
+ */
 GAsyncQueue* mx_queue;
-GAsyncQueue* mx_nufw_queue;
 
 int tls_connect(int c,gnutls_session** session_ptr);
 
@@ -97,6 +101,6 @@ gboolean remove_socket_from_pre_client_list(int c);
 
 void tls_sasl_connect(gpointer userdata, gpointer data);
 gint check_certs_for_tls_session(gnutls_session session);
-int close_tls_session(int c,gnutls_session* session);
+void close_tls_session(int c,gnutls_session* session);
 
 #endif

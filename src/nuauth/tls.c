@@ -29,25 +29,25 @@ int nuauth_tls_request_cert;
 int nuauth_tls_auth_by_cert;
 
 /**
- * Strictly close a TLS session. Nothing to care about client.
+ * Strictly close a TLS session: call gnutls_deinit() and free memory.
+ * Nothing to care about client.
  *
  * \param session A session with a client
  * \param conn_fd File descriptor of the connection (created by accept() syscall)
  */
-int close_tls_session(int conn_fd, gnutls_session* session) 
+void close_tls_session(int conn_fd, gnutls_session* session) 
 {
 	if (close(conn_fd))
         log_message(VERBOSE_DEBUG, AREA_USER, "close_tls_session: close() failed (error code %i)!", errno);
 	gnutls_deinit(*session);
     debug_log_message (VERBOSE_DEBUG, AREA_USER, "gnutls_deinit() was called");
-	if (session) {
-		g_free(session);
-    }
-	return 1;
+    g_free(session);
 }
 
 /**
- * verify certs for a session
+ * Check certificates of a session. Only accept x509 certificated.
+ * 
+ * \return SASL_OK if ok, SASL error code else
  */
 gint check_certs_for_tls_session(gnutls_session session) 
 {
@@ -104,9 +104,7 @@ gnutls_session* initialize_tls_session()
 		return NULL;
 	}
 
-	/* avoid calling all the priority functions, since the defaults
-	 * are adequate.
-	 */
+	/* avoid calling all the priority functions, since the defaults are adequate */
 	if (gnutls_set_default_priority( *session)<0)
 	{
 		g_free(session);
@@ -155,7 +153,7 @@ static int generate_dh_params(void)
 static ssize_t tls_push_func(gnutls_transport_ptr fd, const void *buf, size_t count)
 {
     /* TODO: Catch error */
-    return send(fd,buf,count,MSG_DONTWAIT);
+    return send((int)fd, buf, count, MSG_DONTWAIT);
 }
 
 /**
@@ -187,6 +185,7 @@ int tls_connect(int conn_fd,gnutls_session** session_ptr)
 		return SASL_BADPARAM;
 	}
 
+    /* HAYPO question: does it work anywhere to cast int to gnutls_transport_ptr? ie. sizeof(int) <= sizeof(gnutls_transport_ptr)? */
 	gnutls_transport_set_ptr( *session, (gnutls_transport_ptr) conn_fd);
     gnutls_transport_set_push_function (* session, tls_push_func);
 
@@ -235,7 +234,8 @@ int tls_connect(int conn_fd,gnutls_session** session_ptr)
 /**
  * Read conf file and allocate x509 credentials
  */
-void create_x509_credentials() {
+void create_x509_credentials()
+{
 	char* nuauth_tls_key=NULL;
 	char* nuauth_tls_cert=NULL;
 	char* nuauth_tls_cacert=NULL;
