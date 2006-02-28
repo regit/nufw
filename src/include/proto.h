@@ -49,13 +49,17 @@ typedef enum
     AUTH_CONN_FIXED_TIMEOUT // 0x8 
 } nufw_message_t;
 
-#define NOK 0           /*!< NuAuth decision answer: packet rejected */
-#define OK 1            /*!< NuAuth decision answer: packet accepted */
-#define NODECIDE 2
-
+typedef enum
+{
+    DECISION_DROP=0,    /*!< NuAuth decision answer: drop packet */
+    DECISION_ACCEPT,    /*!< NuAuth decision answer: packet accepted */
 #ifdef GRYZOR_HACKS
-#  define NOK_REJ 3
+    DECISION_NODECIDE,  /*!< NuAuth decision answer: can't decide! */
+    DECISION_REJECT     /*!< NuAuth decision answer: reject the packet */ 
+#else            
+    DECISION_NODECIDE   /*!< NuAuth decision answer: can't decide! */
 #endif
+} decision_t;    
 
 #define AUTHSRV_PORT 4128
 #define AUTHREQ_PORT 4129

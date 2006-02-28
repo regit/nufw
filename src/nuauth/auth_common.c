@@ -332,8 +332,8 @@ void clean_connections_list ()
 gint take_decision(connection_t * element,gchar place) 
 {
     GSList * parcours=NULL;
-    int answer = NODECIDE;
-    char test;
+    decision_t answer = DECISION_NODECIDE;
+    decision_t test;
     GSList * user_group=element->user_groups;
     time_t expire=-1; /* no expiration by default */
 
@@ -346,39 +346,39 @@ gint take_decision(connection_t * element,gchar place)
 
     /* first check if we have found acl */
     if ( element->acl_groups == NULL ){
-        answer = NOK;
+        answer = DECISION_DROP;
     } else {
-        int start_test,stop_test;
+        decision_t start_test,stop_test;
         if (nuauthconf->prio_to_nok == 1){
-            start_test=OK;
-            stop_test=NOK;
+            start_test=DECISION_ACCEPT;
+            stop_test=DECISION_DROP;
         } else {
-            start_test=NOK;
-            stop_test=OK;
+            start_test=DECISION_DROP;
+            stop_test=DECISION_ACCEPT;
         }
-        test=NODECIDE;
+        test=DECISION_NODECIDE;
         for  ( parcours = element->acl_groups; 
-                ( parcours != NULL  && test == NODECIDE ); 
+                ( parcours != NULL  && test == DECISION_NODECIDE ); 
                 parcours = g_slist_next(parcours) ) {
             /* for each user  group */
             if (parcours->data != NULL) {
                 for ( user_group = element->user_groups;
-                        user_group != NULL && test == NODECIDE;
+                        user_group != NULL && test == DECISION_NODECIDE;
                         user_group =  g_slist_next(user_group)) {
                     /* search user group in acl_groups */
                     g_assert(((struct acl_group *)(parcours->data))->groups);
                     if (g_slist_find(((struct acl_group *)(parcours->data))->groups,(gconstpointer)user_group->data)) {
                         answer = ((struct acl_group *)(parcours->data))->answer ;
                         if (nuauthconf->prio_to_nok == 1){
-                            if (answer == NOK){
-                                test=OK;
+                            if (answer == DECISION_DROP){
+                                test=DECISION_ACCEPT;
                             }
                         } else {
-                            if (answer == OK){
-                                test=OK;
+                            if (answer == DECISION_ACCEPT){
+                                test=DECISION_ACCEPT;
                             }
                         }
-                        if (answer == OK){
+                        if (answer == DECISION_ACCEPT){
                             if ( (expire == -1) || 
                                     ( (((struct acl_group *)(parcours->data))->expire != -1)
                                       &&
@@ -397,17 +397,17 @@ gint take_decision(connection_t * element,gchar place)
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
                     g_warning("Empty acl : bad things ...");
 #endif
-                answer=NOK;
-                test=OK;
+                answer=DECISION_DROP;
+                test=DECISION_ACCEPT;
             }
         }
     }
-    /* answer is NODECIDE if we did not found any matching group */
-    if(answer == NODECIDE){
-        answer=NOK;
+    /* answer is DECISION_NODECIDE if we did not found any matching group */
+    if(answer == DECISION_NODECIDE){
+        answer=DECISION_DROP;
     }
     if (expire == 0){
-        answer=NOK;
+        answer=DECISION_DROP;
     }
     element->decision=answer;
 
@@ -490,7 +490,7 @@ gint apply_decision(connection_t element)
     struct timeval leave_time,elapsed_time;
 #endif
 
-    if (answer == OK){
+    if (answer == DECISION_ACCEPT){
         log_user_packet(element,TCP_STATE_OPEN);
     } else {
         log_user_packet(element,TCP_STATE_DROP);

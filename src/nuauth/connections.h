@@ -37,11 +37,11 @@ typedef enum
 /** State of a TCP connection */
 typedef enum
 {
-    TCP_STATE_DROP = 0,    // 0
-    TCP_STATE_OPEN,        // 1
-    TCP_STATE_ESTABLISHED, // 2
-    TCP_STATE_CLOSE,       // 3
-    TCP_STATE_UNKNOW       // 4: get_tcp_headers() function error
+    TCP_STATE_DROP = 0,    /*!< NuAuth decide to drop the connection */
+    TCP_STATE_OPEN,        /*!< A new connection is just created (SYN) */
+    TCP_STATE_ESTABLISHED, /*!< The connection is established (SYN,ACK) */
+    TCP_STATE_CLOSE,       /*!< The connection is closed (RST) */
+    TCP_STATE_UNKNOW       /*!< Error code of get_tcp_headers() function */
 } tcp_state_t;
 
 /**
@@ -60,6 +60,15 @@ typedef struct {
   u_int8_t code;      /*!< ICMP code type */
 } tracking_t;
 
+/** 
+ * Used to store the acl that apply for a packet
+ */ 
+struct acl_group {
+  GSList *groups;
+  decision_t answer;
+  time_t expire;
+};
+
 /**
  * connection element
  * 
@@ -73,7 +82,7 @@ typedef struct {
   tracking_t tracking;    /*!< IPv4 connection tracking (headers) */
   u_int16_t user_id;      /*!< User numeric identity used for marking */
   char *username;         /*!< User name */
-
+  
  /**
   * acl related groups.
   *
@@ -97,19 +106,6 @@ typedef struct {
   struct timeval arrival_time;   /*!< Performance datas */
 #endif
 } connection_t;
-
-
-/** 
- * 
- * Used to store the acl that apply for a packet
- */ 
-
-struct acl_group {
-  GSList * groups;
-  char answer;
-  time_t expire;
-};
-
 
 GSList * ALLGROUP;
 

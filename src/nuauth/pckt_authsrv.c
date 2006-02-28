@@ -16,6 +16,19 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/** \file pckt_authsrv.c
+ *  \brief Functions to parse a packet sent by NuFW 
+ * 
+ * Function authpckt_decode() parse a packet sent by NuFW. Depends on
+ * message type (see ::nufw_message_t), send a message to
+ * limited_connections_queue (member of ::nuauthdatas), may log packet
+ * (log_user_packet()) and/or create a new connection
+ * (of type ::connection_t).
+ *
+ * This function is called by treat_nufw_request()
+ * which is called in the thread tls_nufw_authsrv().
+ */
+
 #include <auth_srv.h>
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
@@ -32,7 +45,8 @@
  * \param dgram Pointer to packet datas
  * \return Offset to next type of headers, or 0 if the packet is not recognized 
  */
-unsigned int get_ip_headers(tracking_t *tracking, unsigned char *dgram, unsigned int dgram_size) {
+unsigned int get_ip_headers(tracking_t *tracking, unsigned char *dgram, unsigned int dgram_size)
+{
     struct iphdr *ip = (struct iphdr *)dgram;
 
     /* check ip headers minimum size */
@@ -148,7 +162,8 @@ int get_icmp_headers(tracking_t *tracking, unsigned char *dgram, unsigned int dg
  * \param dgram_size Number of bytes in the packet
  * \return A new connection or NULL if fails 
  */
-connection_t* authpckt_new_connection(unsigned char *dgram, unsigned int dgram_size) {
+connection_t* authpckt_new_connection(unsigned char *dgram, unsigned int dgram_size)
+{
     nufw_to_nuauth_auth_message_t *msg = (nufw_to_nuauth_auth_message_t *)dgram;
     unsigned int ip_hdr_size; 
 
@@ -268,11 +283,15 @@ connection_t* authpckt_new_connection(unsigned char *dgram, unsigned int dgram_s
 /**
  * Parse message content for message of type #AUTH_CONN_DESTROY 
  * or #AUTH_CONN_UPDATE using structure ::nu_conntrack_message_t structure.
+ *
+ * Send a message FREE_MESSAGE or UPDATE_MESSAGE to limited_connections_queue
+ * (member of ::nuauthdatas).
  * 
  * \param dgram Pointer to packet datas
  * \param dgram_size Number of bytes in the packet
  */
-void authpckt_conntrack (unsigned char *dgram, unsigned int dgram_size) {
+void authpckt_conntrack (unsigned char *dgram, unsigned int dgram_size)
+{
     struct nu_conntrack_message_t* conntrack;
     tracking_t* datas;
     struct internal_message *message;
@@ -322,7 +341,8 @@ void authpckt_conntrack (unsigned char *dgram, unsigned int dgram_size) {
  * \param dgramsize Size of the datagram (in bytes)
  * \return Pointer to new connection or NULL
  */
-connection_t* authpckt_decode(unsigned char *dgram, unsigned int dgram_size) {
+connection_t* authpckt_decode(unsigned char *dgram, unsigned int dgram_size)
+{
     nufw_to_nuauth_message_header_t *header;
 
     /* Check message header size */
@@ -362,6 +382,4 @@ connection_t* authpckt_decode(unsigned char *dgram, unsigned int dgram_size) {
     }
     return NULL;
 }
-
-
 

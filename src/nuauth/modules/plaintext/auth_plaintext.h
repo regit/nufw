@@ -51,7 +51,7 @@ struct T_ports {
 
 struct T_plaintext_acl {
     char *aclname;
-    int decision;
+    decision_t decision;
     int proto;
 
     GSList *groups;

@@ -60,7 +60,7 @@ inline void auth_packet_to_decision(char* dgram)
           pthread_mutex_unlock(&packets_list.mutex);
 
           if (sandf){
-              if ( *(dgram+4) == OK ) {
+              if ( *(dgram+4) == DECISION_ACCEPT ) {
                   /* TODO : test on return */
                   debug_log_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
                           "Accepting %u", packet_id);

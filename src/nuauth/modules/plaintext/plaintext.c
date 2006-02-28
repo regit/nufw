@@ -474,7 +474,7 @@ int read_acl_list(void)
       // Ok.  Let's study the key/value we've found, now.
       if (!strcasecmp("decision", p_key)) {                     // Decision
           if (!strcmp(p_value, "1"))
-              newacl->decision = OK;
+              newacl->decision = DECISION_ACCEPT;
           else if (strcmp(p_value, "0")) {
               log_message(WARNING, AREA_MAIN,
                           "L.%d: Malformed line (decision should be 0 or 1)",
