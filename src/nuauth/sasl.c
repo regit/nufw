@@ -619,7 +619,7 @@ int sasl_user_check(user_session* c_session)
 	secprops.property_names = NULL;
 	secprops.property_values = NULL;
 	secprops.security_flags = SASL_SEC_NOANONYMOUS; /* as appropriate */
-
+	secprops.maxbufsize = 65536;
 	sasl_setprop(conn, SASL_SEC_PROPS, &secprops);
 
 	if (external_auth){
