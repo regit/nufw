@@ -350,7 +350,7 @@ int read_user_list(void)
       plaintext_user->username = g_strdup(p_username);
       plaintext_user->uid = uid;
 
-      snprintf(log_prefix, sizeof(logprefix)-1, "L.%d: ", ln);
+      snprintf(log_prefix, sizeof(log_prefix)-1, "L.%d: ", ln);
       // parsing groups
       if (parse_ints(p_groups, &plaintext_user->groups, log_prefix)) {
           g_free(plaintext_user);
@@ -502,7 +502,7 @@ int read_acl_list(void)
                             "L.%d: Read proto = %d", ln, newacl->proto);
       } else if (!strcasecmp("type", p_key)) {                  // Type (icmp)
           char log_prefix[16];
-          snprintf(log_prefix, sizeof(logprefix)-1, "L.%d: ", ln);
+          snprintf(log_prefix, sizeof(log_prefix)-1, "L.%d: ", ln);
           // parse type values
           if (parse_ints(p_value, &newacl->types, log_prefix)) {
               fclose(fd);
@@ -510,7 +510,7 @@ int read_acl_list(void)
           }
       } else if (!strcasecmp("srcip", p_key)) {                 // SrcIP
           char log_prefix[16];
-          snprintf(log_prefix, sizeof(logprefix)-1, "L.%d: ", ln);
+          snprintf(log_prefix, sizeof(log_prefix)-1, "L.%d: ", ln);
           // parsing IPs
           if (parse_ips(p_value, &newacl->src_ip, log_prefix)) {
               fclose(fd);
@@ -518,7 +518,7 @@ int read_acl_list(void)
           }
       } else if (!strcasecmp("srcport", p_key)) {               // SrcPort
           char log_prefix[16];
-          snprintf(log_prefix, sizeof(logprefix)-1, "L.%d: ", ln);
+          snprintf(log_prefix, sizeof(log_prefix)-1, "L.%d: ", ln);
           // parsing ports
           if (parse_ports(p_value, &newacl->src_ports, log_prefix)) {
               fclose(fd);
@@ -526,7 +526,7 @@ int read_acl_list(void)
           }
       } else if (!strcasecmp("dstip", p_key)) {                 // DstIP
           char log_prefix[16];
-          snprintf(log_prefix, sizeof(logprefix)-1, "L.%d: ", ln);
+          snprintf(log_prefix, sizeof(log_prefix)-1, "L.%d: ", ln);
           // parsing IPs
           if (parse_ips(p_value, &newacl->dst_ip, log_prefix)) {
               fclose(fd);
@@ -534,7 +534,7 @@ int read_acl_list(void)
           }
       } else if (!strcasecmp("dstport", p_key)) {               // DstPort
           char log_prefix[16];
-          snprintf(log_prefix, sizeof(logprefix)-1, "L.%d: ", ln);
+          snprintf(log_prefix, sizeof(log_prefix)-1, "L.%d: ", ln);
           // parsing ports
           if (parse_ports(p_value, &newacl->dst_ports, log_prefix)) {
               fclose(fd);

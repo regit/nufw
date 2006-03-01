@@ -455,6 +455,17 @@ void init_nuauthdatas()
 }
 
 void main_loop() {
+    struct timespec sleep;
+
+    /* a little sleep (1 second), we are waiting for threads to initiate:w */
+    sleep.tv_sec = 1;
+    sleep.tv_nsec = 0;
+    nanosleep(&sleep, NULL);	
+
+    /* Set sleep in loop to 0.5 second */
+    sleep.tv_sec = 0;
+    sleep.tv_nsec = 500000000;
+
     /* admin task */
     for(;;){
         struct cache_message * message;
@@ -486,8 +497,9 @@ void main_loop() {
             message->type=REFRESH_MESSAGE;
             g_async_queue_push(nuauthdatas->limited_connections_queue,message);
         } 
+
         /* a little sleep (1/2 second) */
-        usleep(500000);	
+        nanosleep(&sleep, NULL);	
     }
 }
 
@@ -497,11 +509,6 @@ int main(int argc,char * argv[])
     install_signals();
     init_nuauthdatas();
     init_audit();
-    /* a little sleep (1 second) 
-     * we are waiting for threads to initiate
-     */
-    usleep(1000000);	
-    /* start main loop */
     main_loop();
     return EXIT_SUCCESS;
 }

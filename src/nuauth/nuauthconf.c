@@ -17,6 +17,7 @@
  */
 
 #include <auth_srv.h>
+#include <time.h>
 
 int build_nuauthconf(struct nuauth_params * nuauthconf,
                 char* nuauth_client_listen_addr,
@@ -216,6 +217,10 @@ void nuauth_reload( int signal ) {
     int pool_threads_num=0;
     struct nuauth_params* newconf=NULL;
     struct nuauth_params* actconf;
+    struct timespec sleep;
+    sleep.tv_sec = 0;
+    sleep.tv_nsec = 100000000;  /* 0.1 second */
+    
     newconf=init_nuauthconf();
     g_message("nuauth module reloading");
 
@@ -225,7 +230,7 @@ void nuauth_reload( int signal ) {
     g_thread_pool_stop_unused_threads();
     /* we have to wait that all threads are blocked */
     do {
-        usleep(100000);
+        nanosleep(&sleep, NULL);
 
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
 		g_message("waiting for threads to finish at %s:%d",__FILE__,__LINE__);

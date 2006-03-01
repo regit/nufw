@@ -385,7 +385,11 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, tcp_state_t state){
 						return 0;
 					}else{
 						if (update_status <2){
-							usleep(33333); //Sleep for 1/3 sec
+							/* Sleep for 1/3 sec */
+							struct timespec sleep;
+							sleep.tv_sec = 0;
+							sleep.tv_nsec = 333333333;
+							nanosleep(&sleep, NULL);
 						}else{
 #ifdef DEBUG_ENABLE
 							if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
@@ -427,7 +431,11 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, tcp_state_t state){
 						return 0;
 					}else{
 						if (update_status <2){
-							usleep(66666); //Sleep for 2/3 sec
+							/* Sleep for 2/3 sec */
+							struct timespec sleep;
+							sleep.tv_sec = 0;
+							sleep.tv_nsec = 666666666;
+							nanosleep(&sleep, NULL);
 						}else{
 #ifdef DEBUG_ENABLE
 							if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
