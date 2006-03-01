@@ -20,23 +20,33 @@
 #include <string.h>
 #include <errno.h>
 
-G_MODULE_EXPORT int user_session_logs(user_session *c_session,int state)
+G_MODULE_EXPORT int user_session_logs(user_session *c_session, int state)
 {
 	struct in_addr remote_inaddr;
 	remote_inaddr.s_addr=c_session->addr;
-	char addresse[INET_ADDRSTRLEN+1];
-	char cmdbuffer[128];
+	char address[INET_ADDRSTRLEN+1];
+	char cmdbuffer[200];
+    char *quoted_username = g_shell_quote(c_session->userid);
+    char *quoted_address;
+    char *format;
+    int ret;
         
-        inet_ntop( AF_INET, &remote_inaddr, addresse, INET_ADDRSTRLEN);
-        switch (state) {
-          case SESSION_OPEN:
-		snprintf(cmdbuffer,128,CONFIG_DIR "/user-up.sh %s %s",c_session->userid,addresse);
-                break;
-          case SESSION_CLOSE:
-		snprintf(cmdbuffer,128,CONFIG_DIR "/user-down.sh %s %s",c_session->userid,addresse);
-                break;
-        }
-	system(cmdbuffer);
-        return 1;
+    inet_ntop( AF_INET, &remote_inaddr, address, INET_ADDRSTRLEN);
+    quoted_address = g_shell_quote(address);
+
+    if (state == SESSION_OPEN) {
+        format = CONFIG_DIR "/user-up.sh %s %s";
+    } else { /* state == SESSION_CLOSE */
+        format = CONFIG_DIR "/user-down.sh %s %s";
+    }
+    ret = snprintf(cmdbuffer, sizeof(cmdbuffer), format, quoted_username,quoted_address);
+    if (0 < ret && ret < sizeof(cmdbuffer)) {
+        system(cmdbuffer);
+    } else {
+        log_message(WARNING, AREA_MAIN, "Can't call script, command line truncated!");
+    }
+    g_free(quoted_username);
+    g_free(quoted_address);
+    return 1;
 }
 
