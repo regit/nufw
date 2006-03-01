@@ -380,8 +380,22 @@ void tls_user_main_loop(struct tls_user_context_t *context)
         }
 
         nb_active_clients = select(context->mx,&wk_set,NULL,NULL,&tv);
-        if (nb_active_clients == -1) {
-            g_warning("select() failed, exiting\n");
+	if (nb_active_clients == -1) {
+		switch(errno){
+			case EBADF:
+				g_message("Bad file descriptor");
+				break;
+			case EINTR:
+				g_message("Signal catch");
+				break;
+			case EINVAL:
+				g_message("Negative value for socket");
+				break;
+			case ENOMEM:
+				g_message("Not enough memory");
+				break;
+		}
+            g_warning("select() failed, exiting at %s:%d in %s\n",__FILE__,__LINE__,__func__);
             exit(EXIT_FAILURE);
         }
         if (nb_active_clients == 0)

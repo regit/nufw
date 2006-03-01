@@ -197,7 +197,21 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context)
         
         n=select(context->mx,&wk_set,NULL,NULL,&tv);
         if (n == -1) {
-            g_warning("select() failed, exiting\n");
+	switch(errno){
+			case EBADF:
+				g_message("Bad file descriptor in one of the set.");
+				break;
+			case EINTR:
+				g_message("Signal was catched");
+				break;
+			case EINVAL:
+				g_message("Negative value for socket");
+				break;
+			case ENOMEM:
+				g_message("Not enough memory");
+				break;
+		}
+            g_warning("select() failed, exiting at %s:%d in %s\n",__FILE__,__LINE__,__func__);
             exit(EXIT_FAILURE);
         } else if (!n) {
             continue;

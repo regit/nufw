@@ -18,7 +18,7 @@
 #ifndef AUTH_SRV_H
 #define AUTH_SRV_H
 
-#define PERF_DISPLAY_ENABLE 1
+//#define PERF_DISPLAY_ENABLE 1
 
 /* Use glib to treat data structures */
 #include <glib.h>
