@@ -613,7 +613,7 @@ G_MODULE_EXPORT gint log_sql_disconnect(void){
 	return 0;
 }
 
-G_MODULE_EXPORT int user_session_logs(user_session *c_session,int state)
+G_MODULE_EXPORT int user_session_logs(user_session *c_session, session_state_t state)
 {
 	MYSQL *ld = g_private_get (mysql_priv);
 	char request[LONG_REQUEST_SIZE];

@@ -484,7 +484,7 @@ gint take_decision(connection_t * element,gchar place)
 
 gint apply_decision(connection_t element)
 {
-    int answer=element.decision;
+    decision_t answer=element.decision;
     struct auth_answer aanswer ={ answer , element.user_id ,element.socket, element.tls } ;
 #ifdef PERF_DISPLAY_ENABLE
     struct timeval leave_time,elapsed_time;

@@ -171,8 +171,7 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned p
 	user = get_rid_of_domain(username);
 
 	dbm_key.dsize = strlen(user);
-	dbm_key.dptr = g_new0(char,strlen(user)+1);
-	strcpy(dbm_key.dptr, user);
+	dbm_key.dptr = g_strdup(user);
 
 #ifdef DEBUG_ENABLE
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_AUTH))

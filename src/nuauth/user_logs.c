@@ -22,11 +22,7 @@
 
 struct Conn_State { 
 	connection_t conn;
-	int state;};
-
-struct session_event {
-	user_session* session;
-	int state;
+	tcp_state_t state;
 };
 
 /**
@@ -99,7 +95,7 @@ void real_log_user_packet (gpointer userdata, gpointer data)
 	g_free(userdata);
 }
 
-gboolean log_user_session(user_session* usession,int state)
+gboolean log_user_session(user_session* usession, session_state_t state)
 {
 	struct session_event* sessevent=g_new0(struct session_event,1);
 	/* feed thread pool */

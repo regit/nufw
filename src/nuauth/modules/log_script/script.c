@@ -20,7 +20,7 @@
 #include <string.h>
 #include <errno.h>
 
-G_MODULE_EXPORT int user_session_logs(user_session *c_session, int state)
+G_MODULE_EXPORT int user_session_logs(user_session *c_session, session_state_t state)
 {
 	struct in_addr remote_inaddr;
 	remote_inaddr.s_addr=c_session->addr;

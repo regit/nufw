@@ -100,7 +100,7 @@ gchar* ip_auth(tracking_t * header){
 /**
  * log authenticated packets
  */
-int user_logs (connection_t element, int state){
+int user_logs (connection_t element, tcp_state_t state){
 	/* iter through all modules list */
 	GSList *walker=user_logs_modules;
 	for (;walker!=NULL;walker=walker->next ){
@@ -113,7 +113,7 @@ int user_logs (connection_t element, int state){
 /**
  * log user connection and disconnection
  */
-int user_session_logs(user_session* user , int state){
+int user_session_logs(user_session* user, session_state_t state){
     /* iter through all modules list */
     GSList *walker=user_session_logs_modules;
     for (;walker!=NULL;walker=walker->next ){

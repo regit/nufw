@@ -97,9 +97,9 @@ typedef struct {
   gchar *app_name;        /*!< Application name (full path) */
   gchar *app_md5;         /*!< Application binary MD5 checksum */
 
-  auth_state_t state; /*!< State of the packet */
-  char decision;            /*!< Decision on packet. */
-  time_t expire;            /*!< Expire time (never: -1) */
+  auth_state_t state;     /*!< State of the packet */
+  decision_t decision;    /*!< Decision on packet. */
+  time_t expire;          /*!< Expire time (never: -1) */
 
 #ifdef PERF_DISPLAY_ENABLE
   struct timeval arrival_time;   /*!< Performance datas */

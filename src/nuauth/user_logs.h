@@ -19,8 +19,15 @@
 #ifndef USER_LOGS_H
 #define USER_LOGS_H
 
-#define SESSION_CLOSE 0x0
-#define SESSION_OPEN 0x1
+typedef enum {
+    SESSION_CLOSE=0,
+    SESSION_OPEN     /* =1 */
+} session_state_t;    
+
+struct session_event {
+	user_session* session;
+	session_state_t state;
+};
  
 int check_fill_user_counters(u_int16_t userid,long time,unsigned long packet_id,u_int32_t ip);
 void print_users_list();
@@ -28,7 +35,7 @@ void print_users_list();
 void log_user_packet (connection_t element, tcp_state_t state);
 void real_log_user_packet (gpointer userdata, gpointer data);
 
-gboolean log_user_session(user_session* element,int state);
+gboolean log_user_session(user_session* element, session_state_t state);
 void log_user_session_thread (gpointer element,gpointer state);
 
 #endif

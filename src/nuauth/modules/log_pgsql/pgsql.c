@@ -183,7 +183,7 @@ static gchar* generate_appname(gchar *Name)
 
 
 
-G_MODULE_EXPORT gint user_packet_logs (connection_t element, int state){
+G_MODULE_EXPORT gint user_packet_logs (connection_t element, tcp_state_t state){
     PGconn *ld = g_private_get (pgsql_priv);
     char request[LONG_REQUEST_SIZE];
     struct in_addr ipone,iptwo;
