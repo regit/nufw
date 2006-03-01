@@ -174,8 +174,8 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass
 		}
 
 	}
-	ret = getpwnam_r(user, &result_buf, buffer, 512, &result_bufp);
-	if (ret || (! result_bufp)){
+	ret = getpwnam_r(user, &result_buf, buffer, sizeof(buffer), &result_bufp);
+	if (ret != 0 || (! result_bufp)){
 		return SASL_BADAUTH;
 	}
 

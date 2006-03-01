@@ -23,6 +23,7 @@
 #include <tls.h>
 #include <gcrypt.h>
 #include <sasl/saslutil.h>
+#include "../include/security.h"
 
 /**
  * verify user password against user authentication module.
@@ -81,7 +82,7 @@ int verify_user_password(const char* given,const char* ours){
 		if ((algo == GCRY_MD_SHA1) && seeded) {
 			char temp[24];
 
-			if (sasl_decode64(splitted_secret[1],strlen(splitted_secret[1]),temp,24,&len) != SASL_OK){
+			if (sasl_decode64(splitted_secret[1],strlen(splitted_secret[1]),temp,sizeof(temp),&len) != SASL_OK){
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN))
 					g_message("sasl_decode64 failed in gcrypt.c, where seeded SHA1 is used");
 				return(SASL_BADAUTH);
@@ -91,7 +92,7 @@ int verify_user_password(const char* given,const char* ours){
 		else if ((algo == GCRY_MD_MD5) && seeded) {
 			char temp[20];
 
-			if (sasl_decode64(splitted_secret[1],strlen(splitted_secret[1]),temp,20,&len) != SASL_OK){
+			if (sasl_decode64(splitted_secret[1],strlen(splitted_secret[1]),temp,sizeof(temp),&len) != SASL_OK){
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN))
 					g_message("sasl_decode64 failed in gcrypt.c, where seeded MD5 is used");
 				return(SASL_BADAUTH);
@@ -143,8 +144,8 @@ int verify_user_password(const char* given,const char* ours){
 				char temp_decoded[21];
 				char temp_stored[21];
 
-				snprintf(temp_decoded,20,"%s",decoded);
-				snprintf(temp_stored,20,"%s",splitted_secret[1]);
+                SECURE_STRNCPY (temp_decoded, decoded, sizeof(temp_decoded));
+				SECURE_STRNCPY (temp_stored, splitted_secret[1], sizeof(temp_stored));
 
 				g_message("%s == %s (first 20 chars)\n",temp_decoded,temp_stored);
 			}
@@ -160,10 +161,10 @@ int verify_user_password(const char* given,const char* ours){
 				char temp_decoded[17];
 				char temp_stored[17];
 
-				snprintf(temp_decoded,16,"%s",decoded);
-				snprintf(temp_stored,16,"%s",splitted_secret[1]);
+                SECURE_STRNCPY(temp_decoded, decoded, sizeof(temp_decoded));
+                SECURE_STRNCPY(temp_stored, decoded, sizeof(temp_stored));
 
-				g_message("%s == %s (first 16 chars)\n",temp_decoded,temp_stored);
+				g_message("%s == %s (first 16 chars)\n", temp_decoded, temp_stored);
 			}
 #endif
 

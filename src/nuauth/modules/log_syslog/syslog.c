@@ -19,12 +19,12 @@
 #include <auth_srv.h>
 #include <string.h>
 #include <errno.h>
-
+#include "security.h"
 
 G_MODULE_EXPORT gint user_packet_logs (connection_t element, tcp_state_t state){
     char *str_state;
-    char source_addr[16];
-    char dest_addr[16];
+    char source_addr[INET_ADDRSTRLEN+1];
+    char dest_addr[INET_ADDRSTRLEN+1];
     struct in_addr oneip;
 
     /* contruct request */
@@ -44,10 +44,13 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, tcp_state_t state){
       default:
     	  str_state="Unknown ";
     } 
+
+    /* convert IPv4 source and destination address to string */
     oneip.s_addr=htonl((element.tracking).saddr);
-    strncpy(source_addr,inet_ntoa(oneip),16);
+    SECURE_STRNCPY (source_addr, inet_ntoa(oneip), sizeof(source_addr));
+    
     oneip.s_addr=htonl((element.tracking).daddr);
-    strncpy(dest_addr,inet_ntoa(oneip),16);
+    SECURE_STRNCPY (dest_addr, inet_ntoa(oneip), sizeof(dest_addr));
 
     if ( ((element.tracking).protocol == IPPROTO_TCP) || ((element.tracking).protocol == IPPROTO_UDP) ) {
         if (state==TCP_STATE_ESTABLISHED){
@@ -90,14 +93,14 @@ G_MODULE_EXPORT int user_session_logs(user_session *c_session, session_state_t s
 {
 	struct in_addr remote_inaddr;
 	remote_inaddr.s_addr=c_session->addr;
-	char addresse[INET_ADDRSTRLEN+1];
-        inet_ntop( AF_INET, &remote_inaddr, addresse, INET_ADDRSTRLEN);
+	char address[INET_ADDRSTRLEN+1];
+        inet_ntop( AF_INET, &remote_inaddr, address, sizeof(address));
         switch (state) {
           case SESSION_OPEN:
-		g_message("User %s connect on %s",c_session->userid,addresse);
+		g_message("User %s connect on %s",c_session->userid,address);
                 break;
           case SESSION_CLOSE:
-		g_message("User %s disconnect on %s",c_session->userid,addresse);
+		g_message("User %s disconnect on %s",c_session->userid,address);
                 break;
         }
         return 1;

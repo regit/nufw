@@ -220,9 +220,7 @@ int parse_ips(char *ipsline, GSList **p_ipslist, char *prefix)
           log_message(WARNING, AREA_MAIN,
                       "%s parse_ips: Garbarge at end of line", prefix);
       } else {
-          struct T_ip *this_ip = g_new0(struct T_ip, 1);
-
-          memcpy(&this_ip->addr, &ip_addr, sizeof(ip_addr));
+          struct T_ip *this_ip = g_memdup(&ip_addr, sizeof(ip_addr));
 
           // Netmask conversion
           p_netmask = (uint32_t *)&this_ip->netmask.s_addr;
@@ -281,7 +279,7 @@ int read_user_list(void)
       return 1;
   }
 
-  while (fgets(line, 1000, fd)) {
+  while (fgets(line, sizeof(line), fd) != NULL) {
       ln++;
       p_username = strip_line(line, TRUE);
 
@@ -352,7 +350,7 @@ int read_user_list(void)
       plaintext_user->username = g_strdup(p_username);
       plaintext_user->uid = uid;
 
-      snprintf(log_prefix, 15, "L.%d: ", ln);
+      snprintf(log_prefix, sizeof(logprefix)-1, "L.%d: ", ln);
       // parsing groups
       if (parse_ints(p_groups, &plaintext_user->groups, log_prefix)) {
           g_free(plaintext_user);
@@ -486,7 +484,7 @@ int read_acl_list(void)
                             "L.%d: Read decision = %d", ln, newacl->decision);
       } else if (!strcasecmp("gid", p_key)) {                   // Groups
           char log_prefix[16];
-          snprintf(log_prefix, 15, "L.%d: ", ln);
+          snprintf(log_prefix, sizeof(log_prefix)-1, "L.%d: ", ln);
           // parsing groups
           if (parse_ints(p_value, &newacl->groups, log_prefix)) {
               fclose(fd);
@@ -504,7 +502,7 @@ int read_acl_list(void)
                             "L.%d: Read proto = %d", ln, newacl->proto);
       } else if (!strcasecmp("type", p_key)) {                  // Type (icmp)
           char log_prefix[16];
-          snprintf(log_prefix, 15, "L.%d: ", ln);
+          snprintf(log_prefix, sizeof(logprefix)-1, "L.%d: ", ln);
           // parse type values
           if (parse_ints(p_value, &newacl->types, log_prefix)) {
               fclose(fd);
@@ -512,7 +510,7 @@ int read_acl_list(void)
           }
       } else if (!strcasecmp("srcip", p_key)) {                 // SrcIP
           char log_prefix[16];
-          snprintf(log_prefix, 15, "L.%d: ", ln);
+          snprintf(log_prefix, sizeof(logprefix)-1, "L.%d: ", ln);
           // parsing IPs
           if (parse_ips(p_value, &newacl->src_ip, log_prefix)) {
               fclose(fd);
@@ -520,7 +518,7 @@ int read_acl_list(void)
           }
       } else if (!strcasecmp("srcport", p_key)) {               // SrcPort
           char log_prefix[16];
-          snprintf(log_prefix, 15, "L.%d: ", ln);
+          snprintf(log_prefix, sizeof(logprefix)-1, "L.%d: ", ln);
           // parsing ports
           if (parse_ports(p_value, &newacl->src_ports, log_prefix)) {
               fclose(fd);
@@ -528,7 +526,7 @@ int read_acl_list(void)
           }
       } else if (!strcasecmp("dstip", p_key)) {                 // DstIP
           char log_prefix[16];
-          snprintf(log_prefix, 15, "L.%d: ", ln);
+          snprintf(log_prefix, sizeof(logprefix)-1, "L.%d: ", ln);
           // parsing IPs
           if (parse_ips(p_value, &newacl->dst_ip, log_prefix)) {
               fclose(fd);
@@ -536,7 +534,7 @@ int read_acl_list(void)
           }
       } else if (!strcasecmp("dstport", p_key)) {               // DstPort
           char log_prefix[16];
-          snprintf(log_prefix, 15, "L.%d: ", ln);
+          snprintf(log_prefix, sizeof(logprefix)-1, "L.%d: ", ln);
           // parsing ports
           if (parse_ports(p_value, &newacl->dst_ports, log_prefix)) {
               fclose(fd);
