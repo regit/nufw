@@ -119,7 +119,9 @@ int main(int argc,char * argv[]){
     debug_areas=DEFAULT_DEBUG_AREAS;
 #if USE_NFQUEUE
     nfqueue_num=DEFAULT_NFQUEUE;
+#if HAVE_LIBCONNTRACK
     handle_conntrack_event=CONNTRACK_HANDLE_DEFAULT;
+#endif
 #endif
     nufw_set_mark = 0;
     
@@ -190,7 +192,9 @@ int main(int argc,char * argv[]){
             sscanf(optarg,"%hu",&nfqueue_num);
             break;
           case 'C':
+#if HAVE_LIBCONNTRACK
                 handle_conntrack_event=1;
+#endif
             break;
 #endif
           case 'h' :
