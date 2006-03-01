@@ -208,8 +208,11 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context)
          */
 
         if (FD_ISSET(context->sck_inet,&wk_set) ){
-            if (tls_nufw_accept(context))
+            if (tls_nufw_accept(context)){
                 continue;
+            } else {
+                    g_message("nufw connect on %d\n",c);
+            }
         }
 
         /*

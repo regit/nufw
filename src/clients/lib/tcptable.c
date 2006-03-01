@@ -84,27 +84,27 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
       panic ("/proc/net/tcp: missing header");
 
   while (fgets (buf, sizeof (buf), fp) != NULL) {
-      unsigned long st;
 #ifdef USE_FILTER
       int seen = 0;
 #endif
-      if (sscanf (buf, "%*d: %lx:%x %lx:%x %lx %*x:%*x %*x:%*x %x %lu %*d %lu",
-                  &c.lcl, &c.lclp, &c.rmt, &c.rmtp, &st, &c.retransmit, &c.uid, &c.ino) != 8)
+      if(atoi(buf+76) != 1226){
+          continue;
+      } 
+      if(atoi(buf+34) != 2){
+          continue;
+      } 
+      if (sscanf (buf, "%*d: %lx:%x %lx:%x %*x:%*x %*x:%*x %x %lu %*d %lu",
+                  &c.lcl, &c.lclp, &c.rmt, &c.rmtp,  &c.retransmit, &c.uid, &c.ino) != 8)
           continue;
 
-      if ((c.ino == 0) || (st != TCP_SYN_SENT))
+      if (c.ino == 0)
           continue;
 
-      // Check if it's the good user
-      if (c.uid != session->localuserid)
-          continue;
 #if DEBUG
       // Check if there is a matching rule in the filters list
       printf("Packet dst = %ld (%lx)\n", c.rmt, c.rmt);
 #endif
-      /* Check if it's the good user */
-      if (c.uid != session->localuserid)
-          continue;
+
 #ifdef USE_FILTER
       // If we're sure auth_by_default is either 0 or 1, it can be simplified.
       // (MiKael) TODO: Make sure!! :)
