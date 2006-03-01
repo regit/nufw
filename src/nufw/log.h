@@ -1,3 +1,4 @@
+#include <config.h>
 #include <syslog.h>
 #include <debug.h>
 

@@ -87,14 +87,14 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
 #ifdef USE_FILTER
       int seen = 0;
 #endif
-      if(atoi(buf+76) != 1226){
+      if(atoi(buf+76) != session->localuserid){
           continue;
       } 
-      if(atoi(buf+34) != 2){
+      if(atoi(buf+34) != TCP_SYN_SENT){
           continue;
       } 
-      if (sscanf (buf, "%*d: %lx:%x %lx:%x %*x:%*x %*x:%*x %x %lu %*d %lu",
-                  &c.lcl, &c.lclp, &c.rmt, &c.rmtp,  &c.retransmit, &c.uid, &c.ino) != 8)
+      if (sscanf (buf, "%*d: %lx:%x %lx:%x %*x %*x:%*x %*x:%*x %x %lu %*d %lu",
+                  &c.lcl, &c.lclp, &c.rmt, &c.rmtp,  &c.retransmit, &c.uid, &c.ino) != 7)
           continue;
 
       if (c.ino == 0)
