@@ -71,10 +71,56 @@ inline  guint hash_acl(gconstpointer key)
 }
 
 /**
- * Internal string comparison function
+ * Find if two acls decision are equal.
+ * 
+ * Params : two ip headers
+ * Return : TRUE is ip headers are equal, FALSE otherwise
  */
 
-gint nstrcmp(gchar* a,gchar* b){
+gboolean compare_tracking(gconstpointer a, gconstpointer b){
+    tracking_t *tracking1 = (tracking_t *)a;
+    tracking_t *tracking2 = (tracking_t *)b;
+    
+	/* compare IP source address */
+	if (tracking1->saddr != tracking2->saddr) return FALSE;
+
+    /* compare proto */
+    if (tracking1->protocol !=
+            tracking2->protocol) return FALSE;
+
+    /* compare proto headers */
+    switch ( tracking1->protocol) {
+        case IPPROTO_TCP:
+            if (tracking1->dest == tracking2->dest
+                && tracking1->daddr == tracking2->daddr) 
+                return TRUE;
+            else
+                return FALSE;
+
+        case IPPROTO_UDP:
+            if (tracking1->dest == tracking2->dest
+                && tracking1->daddr == tracking2->daddr) 
+                return TRUE;
+            else
+                return FALSE;
+
+        case IPPROTO_ICMP:
+            if (tracking1->type == tracking2->type
+                && tracking1->code == tracking2->code
+                && tracking1->daddr == tracking2->daddr) 
+                return TRUE;
+            else
+                return FALSE;
+
+        default:
+            return FALSE;
+    }
+}
+
+/**
+ * Internal string comparison function
+ */
+gint strcmp_null(gchar* a,gchar* b){
 	if (a == NULL ) {
 		if (b==NULL)
 			return FALSE;
@@ -88,92 +134,35 @@ gint nstrcmp(gchar* a,gchar* b){
 	}
 }
 
+gboolean compare_acls(gconstpointer a, gconstpointer b)
+{
+    struct acl_key *acl_key1 = (struct acl_key *)a;
+    struct acl_key *acl_key2 = (struct acl_key *)b;
 
-/**
- * Find if two acls decision are equal.
- * 
- * Params : two ip headers
- * Return : TRUE is ip headers are equal, FALSE otherwise
- */
-
-gboolean compare_tracking(gconstpointer tracking1, gconstpointer tracking2){
-	/* compare IPheaders */
-	if (        ( ((tracking_t *) tracking1)->saddr ==
-				((tracking_t *) tracking2)->saddr ) ){
-
-		/* compare proto */
-		if (((tracking_t *) tracking1)->protocol ==
-				((tracking_t *) tracking2)->protocol) {
-
-			/* compare proto headers */
-			switch ( ((tracking_t *) tracking1)->protocol) {
-				case IPPROTO_TCP:
-					if (  ((tracking_t *) tracking1)->dest ==
-							((tracking_t *) tracking2)->dest 
-					   ){
-						if ( ((tracking_t *) tracking1)->daddr ==
-								((tracking_t *) tracking2)->daddr ) 
-							return TRUE;
-
-					}
-					break;
-				case IPPROTO_UDP:
-					if (  ((tracking_t *)tracking1)->dest ==
-							((tracking_t *)tracking2)->dest ){
-
-						if ( ((tracking_t *) tracking1)->daddr ==
-								((tracking_t *) tracking2)->daddr ) 
-							return TRUE;
-					}
-					break;
-				case IPPROTO_ICMP:
-					if ( ( ((tracking_t *)tracking1)->type ==
-								((tracking_t *)tracking2)->type )   &&
-							( ((tracking_t *)tracking1)->code ==
-							  ((tracking_t *)tracking2)->code ) ){
-						if ( ((tracking_t *) tracking1)->daddr ==
-								((tracking_t *) tracking2)->daddr ) 
-							return TRUE;
-					}
-					break;
-			}
-		}
-	}
-	return FALSE;
-}
-
-gboolean compare_acls(gconstpointer acl_key1, gconstpointer acl_key2){
-	if (compare_tracking((( struct acl_key*)acl_key1)->acl_tracking,((struct acl_key*) ((struct acl_key*)acl_key2))->acl_tracking)){
-		if (nstrcmp(((struct acl_key*)acl_key1)->appname,((struct acl_key*)acl_key2)->appname))
-			return FALSE;
-		if (nstrcmp(((struct acl_key*)acl_key1)->appmd5,((struct acl_key*)acl_key2)->appmd5))
-			return FALSE;
-		if (nstrcmp(((struct acl_key*)acl_key1)->sysname,((struct acl_key*)acl_key2)->sysname))
-			return FALSE;
-		if (nstrcmp(((struct acl_key*)acl_key1)->release,((struct acl_key*)acl_key2)->release))
-			return FALSE;
-		if (nstrcmp(((struct acl_key*)acl_key1)->version,((struct acl_key*)acl_key2)->version))
-			return FALSE;
-		return TRUE;
-	}
-	return FALSE;
+	if (!compare_tracking(acl_key1->acl_tracking, acl_key2->acl_tracking))
+        return FALSE;
+    if (strcmp_null(acl_key1->appname, acl_key2->appname))
+        return FALSE;
+    if (strcmp_null(acl_key1->appmd5, acl_key2->appmd5))
+        return FALSE;
+    if (strcmp_null(acl_key1->sysname, acl_key2->sysname))
+        return FALSE;
+    if (strcmp_null(acl_key1->release, acl_key2->release))
+        return FALSE;
+    if (strcmp_null(acl_key1->version, acl_key2->version))
+        return FALSE;
+    return TRUE;
 }
 
 void free_acl_key(gpointer datas)
 {
 	struct acl_key * kdatas=(struct acl_key*)datas;
 	g_free(kdatas->acl_tracking);
-	if (kdatas->sysname)
-		g_free(kdatas->sysname);
-	if (kdatas->release)
-		g_free(kdatas->release);
-	if (kdatas->version)
-		g_free(kdatas->version);
-	if (kdatas->appname)
-		g_free(kdatas->appname);
-	if (kdatas->appmd5)
-		g_free(kdatas->appmd5);
-
+    g_free(kdatas->sysname);
+    g_free(kdatas->release);
+    g_free(kdatas->version);
+    g_free(kdatas->appname);
+    g_free(kdatas->appmd5);
 	g_free(kdatas);
 }
 
@@ -233,31 +222,16 @@ gpointer acl_create_and_alloc_key(connection_t* kdatas)
 
 gpointer acl_duplicate_key(gpointer datas)
 {
-	struct acl_key * key=g_new0(struct acl_key,1);
-	struct acl_key * kdatas=(struct acl_key*)datas;
-	tracking_t* ktracking=g_new0(tracking_t,1);
-	memcpy(ktracking,kdatas->acl_tracking,sizeof( tracking_t));
-	key->acl_tracking=ktracking;
-	if(kdatas->sysname){
-		key->sysname=g_strdup(kdatas->sysname);
-	} else
-		key->sysname=NULL;
-	if(kdatas->release)
-		key->release=g_strdup(kdatas->release);
-	else
-		key->release=NULL;
-	if(kdatas->version)
-		key->version=g_strdup(kdatas->version);
-	else
-		key->version=NULL;
-	if(kdatas->appname)
-		key->appname=g_strdup(kdatas->appname);
-	else
-		key->appname=NULL;
-	if(kdatas->appmd5)
-		key->appmd5=g_strdup(kdatas->appmd5);
-	else
-		key->appmd5=NULL;
+	struct acl_key *key = g_new0(struct acl_key,1);
+	struct acl_key *kdatas = (struct acl_key*)datas;
+    
+	key->acl_tracking =
+        g_memdup(kdatas->acl_tracking, sizeof(kdatas->acl_tracking));
+    key->sysname = g_strdup(kdatas->sysname);
+    key->release = g_strdup(kdatas->release);
+    key->version = g_strdup(kdatas->version);
+    key->appname = g_strdup(kdatas->appname);
+    key->appmd5 = g_strdup(kdatas->appmd5);
 	return key;
 }
 
@@ -329,28 +303,30 @@ void get_acls_from_cache (connection_t* conn_elt)
 	/* free initial key */
 	g_free(message.key);
 }
-int init_acl_cache(){
-		GThread *acl_cache_thread;
-			/* create acl cache thread */
-			if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-				g_message("creating acl cache thread");
-		nuauthdatas->acl_cache=g_new0(struct cache_init_datas,1);
-		nuauthdatas->acl_cache->hash=g_hash_table_new_full((GHashFunc)hash_acl,
-				compare_acls,
-				(GDestroyNotify) free_acl_key,
-				(GDestroyNotify) free_acl_cache); 
-		nuauthdatas->acl_cache->queue=g_async_queue_new();
-		nuauthdatas->acl_cache->delete_elt=free_acl_struct;
-		nuauthdatas->acl_cache->duplicate_key=acl_duplicate_key;
-		nuauthdatas->acl_cache->free_key=free_acl_key;
-                nuauthdatas->acl_cache->equal_key=compare_acls;
+
+int init_acl_cache()
+{
+    GThread *acl_cache_thread;
+    /* create acl cache thread */
+    if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+        g_message("creating acl cache thread");
+    nuauthdatas->acl_cache=g_new0(struct cache_init_datas,1);
+    nuauthdatas->acl_cache->hash=g_hash_table_new_full((GHashFunc)hash_acl,
+            compare_acls,
+            (GDestroyNotify) free_acl_key,
+            (GDestroyNotify) free_acl_cache); 
+    nuauthdatas->acl_cache->queue=g_async_queue_new();
+    nuauthdatas->acl_cache->delete_elt=free_acl_struct;
+    nuauthdatas->acl_cache->duplicate_key=acl_duplicate_key;
+    nuauthdatas->acl_cache->free_key=free_acl_key;
+    nuauthdatas->acl_cache->equal_key=compare_acls;
 
 
-		acl_cache_thread = g_thread_create ( (GThreadFunc) cache_manager,
-				nuauthdatas->acl_cache,
-				FALSE,
-				NULL);
-		if (! acl_cache_thread )
-			exit(EXIT_FAILURE);
-		return 1;
+    acl_cache_thread = g_thread_create ( (GThreadFunc) cache_manager,
+            nuauthdatas->acl_cache,
+            FALSE,
+            NULL);
+    if (! acl_cache_thread )
+        exit(EXIT_FAILURE);
+    return 1;
 }
