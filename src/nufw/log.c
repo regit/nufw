@@ -65,7 +65,7 @@ void do_log_area_printf(int area, int priority, char *format, va_list args)
 {
   /* Don't display message if area is not enabled 
    * or priority is smaller then debug level */
-  if (! (area & debug_areas) || (priority < debug_level))
+  if (! (area & debug_areas) || (debug_level < priority))
     return;
   
   if (log_engine == LOG_TO_SYSLOG) {
@@ -76,6 +76,7 @@ void do_log_area_printf(int area, int priority, char *format, va_list args)
     printf ("[%i] ", getpid());
     vprintf(format, args);
     printf("\n");
+    fflush(stdout);
   }
 }
 
