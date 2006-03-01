@@ -45,6 +45,9 @@ typedef struct
  */
 void nuauth_cleanup( int signal ) 
 {
+    if (signal == SIGINT)
+        g_message("CTRL+c catched: quit NuAuth");
+    
     /* free nufw server hash */
     if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN))
         g_message("caught interrupt, cleaning");
@@ -52,6 +55,7 @@ void nuauth_cleanup( int signal )
 
     /* free client hash */
     close_clients(signal);
+    free_nuauth_params (nuauthconf);
 
     /* clean gnutls */
     end_tls(signal);
@@ -59,6 +63,8 @@ void nuauth_cleanup( int signal )
 
     /* destroy pid file */
     unlink(NUAUTH_PID_FILE);
+    
+    g_message("NuAuth exit");
     exit(EXIT_SUCCESS);
 }
 

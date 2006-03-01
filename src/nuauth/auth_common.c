@@ -202,25 +202,16 @@ int free_connection(connection_t * conn)
             /* free ressource */
             g_slist_free (conn->user_groups);
         }
-        //		if (conn->username != NULL)
         g_free(conn->username);
     }
     if (conn->packet_id != NULL )
         g_slist_free (conn->packet_id);
 
-    //	if (conn->app_name != NULL)
     g_free(conn->app_name);
-
-    //	if (conn->app_md5 != NULL)
     g_free(conn->app_md5);
-
-    //	if (conn->os_sysname != NULL)
     g_free(conn->os_sysname);
-    //	if (conn->os_release != NULL)
     g_free(conn->os_release);
-    //	if (conn->os_version != NULL)
     g_free(conn->os_version);
-
     g_free(conn);
     return 1;
 }
@@ -553,12 +544,16 @@ char * get_rid_of_domain(const char* user)
 
 void free_buffer_read(struct tls_buffer_read* datas)
 {
+    if (datas->tls != NULL) {
+        gnutls_deinit (*datas->tls);
+        g_free(datas->tls);
+    }
     g_free(datas->os_sysname);
     g_free(datas->os_release);
     g_free(datas->os_version);
     g_free(datas->buffer);
     g_free(datas->user_name);
-    if (datas->groups){
+    if (datas->groups != NULL){
         g_slist_free(datas->groups);
     }
     g_free(datas);

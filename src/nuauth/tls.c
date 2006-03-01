@@ -395,6 +395,9 @@ void push_worker() {
 	g_async_queue_unref (nuauthdatas->tls_push_queue);
 }
 
-void end_tls(int signal) {
+void end_tls(int signal)
+{
+    gnutls_certificate_free_keys(x509_cred);
+    gnutls_certificate_free_credentials(x509_cred);
 	gnutls_global_deinit();
 }
