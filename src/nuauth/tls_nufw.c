@@ -225,7 +225,7 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context)
             if (tls_nufw_accept(context)){
                 continue;
             } else {
-                    g_message("nufw connect on %d\n",c);
+                    g_message("nufw connect on %d\n",context->mx);
             }
         }
 
