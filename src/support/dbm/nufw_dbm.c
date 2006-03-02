@@ -165,7 +165,7 @@ int passwd_crypt(int pass_crypt,char **pass)
    gcry_md_open (&hd, algo,0);
    gcry_md_write(hd,*pass,strlen(*pass));
    crypted=gcry_md_read(hd,algo);
-   sasl_encode64(crypted,strlen(crypted),decoded,30,&len);
+   sasl_encode64((char *)crypted,strlen((char *)crypted),decoded,30,&len);
    free(*pass);
    *pass = (char *)calloc(35,sizeof(char));
    if (*pass == NULL)

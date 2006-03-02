@@ -2,6 +2,8 @@
 #define _NUFW_SECURITY_H
 
 /** \def SECURE_STRNCPY(dst,src,size)
+ * Copy string src to dst. Copy at maximum size-1 characters and make
+ * sure that the string finish with a '\0'.
  * 
  * Workaround strncpy security problem: if size is smaller than strlen(src),
  * dst doesn't contains '\\0'. This macro copy on maximum size-1 characters,

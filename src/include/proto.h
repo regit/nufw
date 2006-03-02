@@ -187,7 +187,7 @@ struct nuv2_srv_helloreq {
  * ::nufw_to_nuauth_auth_message_t which include message content.
  */
 typedef struct {
-    /** Version of the protocol (equals to #PROTO_VERSION) */
+    /** Version of the protocol (#PROTO_VERSION) */
     uint8_t protocol_version;
 
     /** Message type (from ::nufw_message_t) */
@@ -203,7 +203,7 @@ typedef struct {
  */
 struct nu_conntrack_message_t {
     /* Copy/paste nufw_to_nuauth_message_header_t content */
-    uint8_t protocol_version; /*!< Version of the protocol (equals to #PROTO_VERSION) */
+    uint8_t protocol_version; /*!< Version of the protocol (#PROTO_VERSION) */
     uint8_t msg_type;         /*!< Message type (from ::nufw_message_t) */
     uint16_t msg_length;      /*!< Message length including header (in bytes) */
 
@@ -222,7 +222,7 @@ struct nu_conntrack_message_t {
  */
 typedef struct {
     /* Copy/paste nufw_to_nuauth_message_header_t content */
-    uint8_t protocol_version; /*!< Version of the protocol (equals to #PROTO_VERSION) */
+    uint8_t protocol_version; /*!< Version of the protocol (#PROTO_VERSION) */
     uint8_t msg_type;         /*!< Message type (from ::nufw_message_t) */
     uint16_t msg_length;      /*!< Message length including header (in bytes) */
 
@@ -232,4 +232,18 @@ typedef struct {
 
     /* (...): packet content (maybe truncated) */
 } nufw_to_nuauth_auth_message_t;
+
+/**
+ * Send NuAuth decision to NuFW
+ */
+typedef struct {
+    uint8_t protocol_version;   /*!< Version of the protocol (#PROTO_VERSION) */
+    uint8_t msg_type;           /*!< Message type (#AUTH_ANSWER) */
+    /* TODO: Use user id in 32 bits? Or rename the field "QoS_group_id"? */
+    u_int16_t user_id;          /*!< User identifier */
+    u_int8_t decision;          /*!< NuAuth decision (see ::decision_t) */
+    uint8_t priority;           /*!< Priority ? */
+    uint16_t padding;           /*!< Padding (0x0000) */
+    uint32_t packet_id;         /*!< NetFilter packet unique identifier */
+} nuauth_decision_response_t;    
 

@@ -94,52 +94,36 @@ gint print_connection(gpointer data,gpointer userdata)
  * - Argument 2 : answer
  */
 
-void send_auth_response(gpointer data, gpointer userdata)
+void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 {
-    unsigned long  packet_id = GPOINTER_TO_UINT(data);
-    struct auth_answer * aanswer = (struct auth_answer *) userdata;
-    u_int8_t answer = aanswer->answer;
-    uint8_t prio=1;
-    uint8_t proto_version=PROTO_VERSION,answer_type=AUTH_ANSWER;
-    char datas[512];
-    char *pointer;
+    struct auth_answer * answer = (struct auth_answer *) userdata;
+    nuauth_decision_response_t response;
+    uint32_t packet_id = GPOINTER_TO_UINT(packet_id_ptr);
     uint16_t uid16;
 
-    if (0xFFFF < aanswer->user_id) {
+    if (0xFFFF < answer->user_id) {
         log_message(WARNING, AREA_MAIN,
                 "User identifier don't fit in 16 bits, not to truncate the value.");
     }
-    uid16 = htons(aanswer->user_id & 0xFFFF);
+    uid16 = (answer->user_id & 0xFFFF);
 
-    packet_id=htonl(packet_id);
-    /* for each packet_id send a response */
-
-    memset(datas,0,sizeof datas);
-    memcpy(datas,&proto_version,sizeof proto_version);
-    pointer=datas+sizeof proto_version;
-    memcpy(pointer,&answer_type,sizeof answer_type);
-    pointer+=sizeof answer_type;
-    memcpy(pointer,&uid16,sizeof( u_int16_t));
-    pointer+=sizeof (u_int16_t);
-    /* ANSWER and Prio */
-    memcpy(pointer,&answer,sizeof answer);
-    pointer+=sizeof answer;
-    memcpy(pointer,&prio,sizeof prio);
-    pointer+=sizeof prio;
-    pointer+=2;
-    /* packet_id */
-    memcpy(pointer,&(packet_id),sizeof(packet_id));
-    pointer+=sizeof (packet_id);
+    response.protocol_version = PROTO_VERSION;
+    response.msg_type = AUTH_ANSWER;
+    response.user_id = htons(uid16);
+    response.decision = answer->answer;
+    response.priority = 1;
+    response.padding = 0;
+    response.packet_id = htonl(packet_id);
 
     debug_log_message (DEBUG, AREA_MAIN, 
-            "Sending auth answer %d for %lu on %p ... ",
-            answer, packet_id, aanswer->tls);
-    if (aanswer->tls->alive){
-        gnutls_record_send(*(aanswer->tls->tls),datas,pointer-datas);
-        g_atomic_int_dec_and_test(&(aanswer->tls->usage));
+            "Sending auth answer %d for %u on %p ...",
+            answer->answer, packet_id, answer->tls);
+    if (answer->tls->alive){
+        gnutls_record_send(*(answer->tls->tls), &response, sizeof(response));
+        g_atomic_int_dec_and_test(&(answer->tls->usage));
     } else {
-        if (g_atomic_int_dec_and_test(&(aanswer->tls->usage))){
-            clean_nufw_session(aanswer->tls);			
+        if (g_atomic_int_dec_and_test(&(answer->tls->usage))){
+            clean_nufw_session(answer->tls);			
         }
     }
     debug_log_message (DEBUG, AREA_MAIN, "done\n");
