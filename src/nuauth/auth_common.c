@@ -544,10 +544,6 @@ char * get_rid_of_domain(const char* user)
 
 void free_buffer_read(struct tls_buffer_read* datas)
 {
-    if (datas->tls != NULL) {
-        gnutls_deinit (*datas->tls);
-        g_free(datas->tls);
-    }
     g_free(datas->os_sysname);
     g_free(datas->os_release);
     g_free(datas->os_version);
