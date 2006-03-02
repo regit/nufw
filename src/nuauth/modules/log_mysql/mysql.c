@@ -50,57 +50,36 @@ G_MODULE_EXPORT gchar*
 g_module_check_init(GModule *module)
 {
 	char *configfile=DEFAULT_CONF_FILE;
-	gpointer vpointer; 
 	//char *ldap_base_dn=LDAP_BASE;
 
 	/* init global variables */
-	mysql_user=MYSQL_USER;
-	mysql_passwd=MYSQL_PASSWD;
-	mysql_server=MYSQL_SERVER;
-	mysql_server_port=MYSQL_SERVER_PORT;
-	mysql_db_name=MYSQL_DB_NAME;
-	mysql_table_name=MYSQL_TABLE_NAME;
-	mysql_users_table_name=MYSQL_USERS_TABLE_NAME;
-	mysql_request_timeout=MYSQL_REQUEST_TIMEOUT;
-	mysql_use_ssl=MYSQL_USE_SSL;
-	mysql_ssl_keyfile=MYSQL_SSL_KEYFILE;
-	mysql_ssl_certfile=MYSQL_SSL_CERTFILE;
-	mysql_ssl_ca=MYSQL_SSL_CA;
-	mysql_ssl_capath=MYSQL_SSL_CAPATH;
 	mysql_ssl_cipher=MYSQL_SSL_CIPHER;
 
 	/* parse conf file */
 	parse_conffile(configfile,sizeof(mysql_nuauth_vars)/sizeof(confparams),mysql_nuauth_vars);
+    
 	/* set variables */
-	vpointer=get_confvar_value(mysql_nuauth_vars,sizeof(mysql_nuauth_vars)/sizeof(confparams),"mysql_server_addr");
-	mysql_server=(char *)(vpointer?vpointer:mysql_server);
-	vpointer=get_confvar_value(mysql_nuauth_vars,sizeof(mysql_nuauth_vars)/sizeof(confparams),"mysql_server_port");
-	mysql_server_port=*(int *)(vpointer?vpointer:&mysql_server_port);
-	vpointer=get_confvar_value(mysql_nuauth_vars,sizeof(mysql_nuauth_vars)/sizeof(confparams),"mysql_user");
-	mysql_user=(char *)(vpointer?vpointer:mysql_user);
-	vpointer=get_confvar_value(mysql_nuauth_vars,sizeof(mysql_nuauth_vars)/sizeof(confparams),"mysql_passwd");
-	mysql_passwd=(char *)(vpointer?vpointer:mysql_passwd);
-	vpointer=get_confvar_value(mysql_nuauth_vars,sizeof(mysql_nuauth_vars)/sizeof(confparams),"mysql_db_name");
-	mysql_db_name=(char *)(vpointer?vpointer:mysql_db_name);
-	vpointer=get_confvar_value(mysql_nuauth_vars,sizeof(mysql_nuauth_vars)/sizeof(confparams),"mysql_table_name");
-	mysql_table_name=(char *)(vpointer?vpointer:mysql_table_name);
-	vpointer=get_confvar_value(mysql_nuauth_vars,sizeof(mysql_nuauth_vars)/sizeof(confparams),"mysql_users_table_name");
-	mysql_users_table_name=(char *)(vpointer?vpointer:mysql_users_table_name);
-	vpointer=get_confvar_value(mysql_nuauth_vars,sizeof(mysql_nuauth_vars)/sizeof(confparams),"mysql_request_timeout");
-	mysql_request_timeout=*(int *)(vpointer?vpointer:&mysql_request_timeout);
 
-	vpointer=get_confvar_value(mysql_nuauth_vars,sizeof(mysql_nuauth_vars)/sizeof(confparams),"mysql_use_ssl");
-	mysql_use_ssl=*(int *)(vpointer?vpointer:&mysql_use_ssl);
-	vpointer=get_confvar_value(mysql_nuauth_vars,sizeof(mysql_nuauth_vars)/sizeof(confparams),"mysql_ssl_keyfile");
-	mysql_ssl_keyfile=(char *)(vpointer?vpointer:mysql_ssl_keyfile);
-	vpointer=get_confvar_value(mysql_nuauth_vars,sizeof(mysql_nuauth_vars)/sizeof(confparams),"mysql_ssl_certfile");
-	mysql_ssl_certfile=(char *)(vpointer?vpointer:mysql_ssl_certfile);
-	vpointer=get_confvar_value(mysql_nuauth_vars,sizeof(mysql_nuauth_vars)/sizeof(confparams),"mysql_ssl_ca");
-	mysql_ssl_ca=(char *)(vpointer?vpointer:mysql_ssl_ca);
-	vpointer=get_confvar_value(mysql_nuauth_vars,sizeof(mysql_nuauth_vars)/sizeof(confparams),"mysql_ssl_capath");
-	mysql_ssl_capath=(char *)(vpointer?vpointer:mysql_ssl_capath);
-	vpointer=get_confvar_value(mysql_nuauth_vars,sizeof(mysql_nuauth_vars)/sizeof(confparams),"mysql_ssl_cipher");
-	mysql_ssl_cipher=(char *)(vpointer?vpointer:mysql_ssl_cipher);
+#define READ_CONF(KEY) \
+  get_confvar_value(mysql_nuauth_vars, sizeof(mysql_nuauth_vars)/sizeof(confparams), KEY)
+#define READ_CONF_INT(VAR, KEY, DEFAULT) \
+  do { gpointer vpointer = READ_CONF(KEY); if (vpointer) VAR = *(int *)vpointer; else VAR = DEFAULT; } while (0)
+
+	mysql_server = (char *)READ_CONF("mysql_server_addr");
+	mysql_user = (char *)READ_CONF("mysql_user");
+	mysql_passwd = (char *)READ_CONF("mysql_passwd");
+	mysql_db_name = (char *)READ_CONF("mysql_db_name");
+	mysql_table_name = (char *)READ_CONF("mysql_table_name");
+	mysql_users_table_name = (char *)READ_CONF("mysql_users_table_name");
+	mysql_ssl_keyfile = (char *)READ_CONF("mysql_ssl_keyfile");
+	mysql_ssl_certfile = (char *)READ_CONF("mysql_ssl_certfile");
+	mysql_ssl_ca = (char *)READ_CONF("mysql_ssl_ca");
+	mysql_ssl_capath = (char *)READ_CONF("mysql_ssl_capath");
+	mysql_ssl_cipher = (char *)READ_CONF("mysql_ssl_cipher");
+    
+	READ_CONF_INT(mysql_server_port, "mysql_server_port", MYSQL_SERVER_PORT);
+	READ_CONF_INT(mysql_request_timeout, "mysql_request_timeout", MYSQL_REQUEST_TIMEOUT);
+	READ_CONF_INT(mysql_use_ssl, "mysql_use_ssl", MYSQL_USE_SSL);
 
 	/* init thread private stuff */
 	mysql_priv = g_private_new ((GDestroyNotify)mysql_close); 
@@ -157,9 +136,7 @@ static gchar * generate_osname(gchar *Name,gchar *Version,gchar *Release)
 
 static gchar* generate_appname(gchar *Name)
 { 
-	if (!Name)
-	  return g_strdup("");
-	if ((strlen(Name)+1) > APPNAME_MAX_SIZE)
+	if (!Name || (strlen(Name)+1) > APPNAME_MAX_SIZE)
 	{
 		return g_strdup("");
 	}

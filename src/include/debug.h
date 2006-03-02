@@ -19,7 +19,7 @@
 
 
 
-// DEBUG_LEVEL's value are between MIN_DEBUG_LEVEL and MAX_DEBUG_LEVEL
+/* DEBUG_LEVEL's value are between MIN_DEBUG_LEVEL and MAX_DEBUG_LEVEL */
 
 #define DEBUG_LEVEL_FATAL		1
 #define DEBUG_LEVEL_CRITICAL		2

@@ -40,13 +40,13 @@
 typedef enum
 {
     AUTH_REQUEST=0x1,
-    AUTH_ANSWER, // 0x2
-    USER_REQUEST, // 0x3
-    AUTH_CONTROL, // 0x4
-    USER_HELLO, // 0x5
-    AUTH_CONN_DESTROY, // 0x6
-    AUTH_CONN_UPDATE, // 0x7
-    AUTH_CONN_FIXED_TIMEOUT // 0x8 
+    AUTH_ANSWER,
+    USER_REQUEST,
+    AUTH_CONTROL,
+    USER_HELLO,
+    AUTH_CONN_DESTROY,
+    AUTH_CONN_UPDATE,
+    AUTH_CONN_FIXED_TIMEOUT
 } nufw_message_t;
 
 typedef enum
