@@ -67,6 +67,10 @@ AC_ARG_ENABLE(libnuclient,   [AC_HELP_STRING(--disable-libnuclient, Don't build 
 AC_ARG_ENABLE(nutcpc,   [AC_HELP_STRING(--disable-nutcpc, Don't build nutcpc (default is to build))],build_nutcpc=$enableval, build_nutcpc="yes" )
 AC_ARG_ENABLE(nutrackd,   [AC_HELP_STRING(--disable-nutrackd, Don't build nutrackd (default is to build))],build_nutrackd=$enableval, build_nutrackd="yes")
 
+AC_ARG_WITH(perf-display, 
+    [AC_HELP_STRING(--with-perf-display, Enable benchmark of user authentification)],
+    AC_DEFINE_UNQUOTED([PERF_DISPLAY_ENABLE],[1],[Benchmark of user authentification]))
+
 if test "${build_nuauth}" = "yes"; then
         # glib stuff
         AM_PATH_GLIB_2_0(2.4.0, , AC_MSG_ERROR([glib is required in order to compile nuauth]),[gthread gmodule])
