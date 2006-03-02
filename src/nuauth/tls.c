@@ -149,8 +149,9 @@ static int generate_dh_params(gnutls_dh_params *dh_params)
 /**
  * TLS push fonction : go NON blocking !
  */
-static ssize_t tls_push_func(gnutls_transport_ptr fd, const void *buf, size_t count)
+static ssize_t tls_push_func(gnutls_transport_ptr ptr, const void *buf, size_t count)
 {
+    int fd = GPOINTER_TO_INT(ptr);
     /* TODO: Catch error */
     return send((int)fd, buf, count, MSG_DONTWAIT);
 }
@@ -184,8 +185,7 @@ int tls_connect(int conn_fd,gnutls_session** session_ptr)
 		return SASL_BADPARAM;
 	}
 
-    /* HAYPO question: does it work anywhere to cast int to gnutls_transport_ptr? ie. sizeof(int) <= sizeof(gnutls_transport_ptr)? */
-	gnutls_transport_set_ptr( *session, (gnutls_transport_ptr) conn_fd);
+	gnutls_transport_set_ptr( *session, GINT_TO_POINTER(conn_fd));
     gnutls_transport_set_push_function (* session, tls_push_func);
 
     debug_log_message (DEBUG, AREA_MAIN, "NuFW TLS Handshaking\n");
