@@ -27,10 +27,9 @@
  * (clean_old_packets()) packets from packet list (::packets_list).
  */
 
+#include "nufw.h"
 #include <stdlib.h>
 #include <time.h>
-#include <nufw.h>
-
 
 /* datas stuffs */
 

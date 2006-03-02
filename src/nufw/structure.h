@@ -24,7 +24,7 @@
  * the ::packets_list.
  */
 
-
+#include "nufw.h"
 #include <semaphore.h>
 #include <sys/types.h>
 #include <unistd.h>

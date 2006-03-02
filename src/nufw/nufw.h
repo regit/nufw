@@ -1,3 +1,20 @@
+#ifndef _NUFW_HEADER_H
+#define _NUFW_HEADER_H
+
+/*
+ * Use POSIX standard, version "IEEE 1003.1-2004"
+ */
+#define _POSIX_C_SOURCE 200112L
+
+/**
+ * Use 4.3BSD standard
+ */
+#define _BSD_SOURCE
+
+/* Disable inline keyword when compiling in strict ANSI conformance */
+#ifdef __STRICT_ANSI__
+#  define inline
+#endif
 
 #define PERF_DISPLAY_ENABLE 1
 
@@ -99,7 +116,7 @@ pthread_mutex_t *session_active_mutex;
 struct sockaddr_in adr_srv;
 
 #ifdef GRYZOR_HACKS
-//Raw socket we use for sending ICMP messages
+/* Raw socket we use for sending ICMP messages */
 int raw_sock;
 #endif
 
@@ -107,10 +124,10 @@ int raw_sock;
  * all functions 
  */
 
-// IP packet catcher
+/* IP packet catcher */
 void* packetsrv(void *data);
 
-// IP auth server
+/* IP auth server */
 void* authsrv(void* data);
 
 /* send an auth request packet given a payload (raw packet) */
@@ -129,3 +146,4 @@ void process_poll(int signum);
 int send_icmp_unreach(char *dgram);
 #endif
 
+#endif   /* _NUFW_HEADER_H */
