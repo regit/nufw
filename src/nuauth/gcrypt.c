@@ -38,10 +38,10 @@ int verify_user_password(const char* given,const char* ours){
 
 	if (g_str_has_prefix(ours,"{")) {
 		splitted_secret=g_strsplit    (ours, "}", 2);
-		if (splitted_secret == NULL) //We received an empty string
+		if (splitted_secret == NULL) /* We received an empty string */
 			return SASL_BADAUTH;
 
-		if (strncmp("{",splitted_secret[0],1)) { // Not starting with "{" means this is plaintext
+		if (strncmp("{",splitted_secret[0],1)) { /* Not starting with "{" means this is plaintext */
 			if (strcmp(given,splitted_secret[0])){
 				g_strfreev(splitted_secret);
 				return SASL_BADAUTH;
@@ -54,19 +54,19 @@ int verify_user_password(const char* given,const char* ours){
 
 		int seeded = 0;
 
-		if (!(strcmp("{SSHA",splitted_secret[0]))) {      // SHA1 (seeded)
+		if (!(strcmp("{SSHA",splitted_secret[0]))) {      /* SHA1 (seeded) */
 			algo = GCRY_MD_SHA1;
 			seeded = 1;
 		}
-		else if (!(strcmp("{SMD5",splitted_secret[0]))) { // MD5 (seeded)
+		else if (!(strcmp("{SMD5",splitted_secret[0]))) { /* MD5 (seeded) */
 			algo = GCRY_MD_MD5;
 			seeded = 1;
 		}
-		else if (!(strcmp("{SHA1",splitted_secret[0]))) // SHA1
+		else if (!(strcmp("{SHA1",splitted_secret[0]))) /* SHA1 */
 			algo = GCRY_MD_SHA1;
-		else if (!(strcmp("{SHA",splitted_secret[0])))  // SHA1
+		else if (!(strcmp("{SHA",splitted_secret[0])))  /* SHA1 */
 			algo = GCRY_MD_SHA1;
-		else if (!(strcmp("{MD5",splitted_secret[0])))  // MD5
+		else if (!(strcmp("{MD5",splitted_secret[0])))  /* MD5 */
 			algo = GCRY_MD_MD5;
 		else {
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))

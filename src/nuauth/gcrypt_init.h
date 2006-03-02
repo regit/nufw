@@ -22,7 +22,7 @@
 */
 #if 0
 #ifdef G_THREADS_IMPL_POSIX
-//#warning "this may be a source of problems"
+/* #warning "this may be a source of problems" */
 #include <pthread.h>
 #ifndef GCRY_THREAD
 #define GCRY_THREAD 1
@@ -35,7 +35,7 @@ GCRY_THREAD_OPTION_PTHREAD_IMPL;
 
 
 /* gcrypt init function */
-static int gcry_gthread_mutex_init (void **priv)			     //to check 
+static int gcry_gthread_mutex_init (void **priv)			     /* to check */
 {									      
 	GMutex* lock = g_mutex_new();
 	if (!lock)								      

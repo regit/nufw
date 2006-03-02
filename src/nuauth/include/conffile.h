@@ -23,7 +23,7 @@
 typedef struct Conf_Params
 {
   gchar *name;
-  //  guint token;
+  /*  guint token; */
   guint value_type;
   gint v_int;
   gchar * v_char;

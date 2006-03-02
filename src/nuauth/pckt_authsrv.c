@@ -299,7 +299,7 @@ void authpckt_conntrack (unsigned char *dgram, unsigned int dgram_size)
     /* Check message content size */
     if (dgram_size != sizeof(struct nu_conntrack_message_t))
     {
-        // TODO: Display warning
+        /* TODO: Display warning */
         return;
     }
     

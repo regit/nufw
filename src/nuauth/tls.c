@@ -316,8 +316,10 @@ void create_x509_credentials()
 		log_message (INFO, AREA_USER, "generate_dh_params() failed\n");
 #endif
 
-	// Gryzor doesnt understand wht dh_params is passed as 2nd argument, where a gnutls_dh_params_t structure is awaited
-	// gnutls_certificate_set_dh_params( x509_cred, 0);
+	/* 
+     * Gryzor doesnt understand wht dh_params is passed as 2nd argument, where a gnutls_dh_params_t structure is awaited
+     * gnutls_certificate_set_dh_params( x509_cred, 0);
+     */
 	gnutls_certificate_set_dh_params( x509_cred, dh_params);
 }
 

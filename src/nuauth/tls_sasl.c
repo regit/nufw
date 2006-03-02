@@ -106,7 +106,7 @@ void tls_sasl_connect_ok(user_session* c_session, int c)
 #endif
         if (nuauthconf->push){
             close_tls_session(c,c_session->tls);
-            //                                            close(c);
+            /* close(c); */
             c_session->tls=NULL;
             clean_session(c_session);
             return;

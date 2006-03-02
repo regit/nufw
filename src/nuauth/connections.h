@@ -25,12 +25,12 @@
  */
 typedef enum
 {
-    AUTH_STATE_AUTHREQ = 1,// 0x1
-    AUTH_STATE_USERPCKT,   // 0x2
-    AUTH_STATE_READY,      // 0x3
-    AUTH_STATE_COMPLETING, // 0x4
-    AUTH_STATE_DONE,       // 0x5
-    AUTH_STATE_HELLOMODE   // 0x6
+    AUTH_STATE_AUTHREQ = 1,
+    AUTH_STATE_USERPCKT,  
+    AUTH_STATE_READY,    
+    AUTH_STATE_COMPLETING,
+    AUTH_STATE_DONE,     
+    AUTH_STATE_HELLOMODE 
 } auth_state_t;
 
 /** State of a TCP connection */

@@ -1,5 +1,5 @@
 #include <auth_srv.h>
-
+#include <signal.h>
 
 /**
  * process signal POLL and print performance information.

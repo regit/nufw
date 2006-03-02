@@ -21,7 +21,6 @@
 #include <string.h>
 #include <errno.h>
 
-
 confparams mysql_nuauth_vars[] = {
 	{ "mysql_server_addr" , G_TOKEN_STRING, 0 , MYSQL_SERVER },
 	{ "mysql_server_port" ,G_TOKEN_INT , MYSQL_SERVER_PORT,NULL },

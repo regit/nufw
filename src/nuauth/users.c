@@ -109,7 +109,7 @@ void get_users_from_cache (connection_t* conn_elt)
 				g_message("User not found");
 			}
 
-                        //GRYZOR asks : shouldnt we just leave here?
+            /* GRYZOR asks : shouldnt we just leave here? */
 		}
 		rmessage=g_new0(struct cache_message,1);
 		rmessage->type=INSERT_MESSAGE;

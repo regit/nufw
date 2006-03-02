@@ -18,7 +18,21 @@
 #ifndef AUTH_SRV_H
 #define AUTH_SRV_H
 
-//#define PERF_DISPLAY_ENABLE 1
+/**
+ * Use Posix standard, version "IEEE Std 1003.1b-1993" 
+ * Neded by sigaction (signal.h) and timespec (time.h) for example
+ */
+#define _POSIX_C_SOURCE 199309L
+
+/**
+ * Use 4.3BSD standard, needed by strcasecmp
+ */
+#define _BSD_SOURCE
+
+/**
+ * Use ISO C99 standard, needed by snprintf for example
+ */
+#define _ISOC99_SOURCE
 
 /* Use glib to treat data structures */
 #include <glib.h>

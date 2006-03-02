@@ -88,12 +88,11 @@ gint print_connection(gpointer data,gpointer userdata)
 }
 
 /**
- * Send auth response to the gateway.
+ * Send authentification response to the NuFW. 
  * 
- * - Argument 1 : packet_id
- * - Argument 2 : answer
+ * \param packet_id_ptr NetFilter packet unique identifier (32 bits)
+ * \param userdata Pointer to an answer of type ::auth_answer
  */
-
 void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 {
     struct auth_answer * answer = (struct auth_answer *) userdata;
@@ -173,7 +172,7 @@ int free_connection(connection_t * conn)
             if (!message){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN))
                     g_warning("Could not g_new0(). No more memory?");
-                //GRYZOR should we do something special here?
+                /* GRYZOR should we do something special here? */
             }else{
                 debug_log_message (VERBOSE_DEBUG, AREA_MAIN,
                         "Sending free to user cache");

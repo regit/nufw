@@ -23,10 +23,12 @@ struct in_addr* generate_inaddr_list(gchar* gwsrv_addr);
 gboolean check_inaddr_in_array(struct in_addr check_ip,struct in_addr *iparray);
 gboolean check_string_in_array(gchar* checkstring,gchar** stringarray);
 
-// Check validity of data before inserting them to SQL
-// This allocates a new string.
-// Returns NULL is the original string contains ' or ;
-// Else returns escaped char (with glib function g_strescape()
+/**
+ * Check validity of data before inserting them to SQL
+ * This allocates a new string.
+ * Returns NULL is the original string contains ' or ;
+ * Else returns escaped char (with glib function g_strescape()
+ */
 gchar *string_escape(gchar *orig);
 
 #endif

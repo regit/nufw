@@ -17,9 +17,8 @@
 ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+#include "auth_srv.h"
 #include <string.h>
-
-#include <auth_srv.h>
 #include "auth_plaintext.h"
 
 

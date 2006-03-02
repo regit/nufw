@@ -25,6 +25,8 @@
 # include <config.h>
 #endif
 
+#include "auth_srv.h"
+
 #include <sys/types.h>
 #include <stdio.h> /* grp.h on alpha OSF1 V2.0 uses "FILE *". */
 
@@ -43,8 +45,6 @@
 struct group *getgrent ();
 
 #include <string.h>
-
-#include <auth_srv.h>
 
 GStaticMutex group_mutex;
 

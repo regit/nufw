@@ -163,11 +163,11 @@ void parse_options(int argc, char **argv, command_line_params_t *params)
 
             case 'L' :
                 /* Adress we listen for NUFW originating packets */
-                // SECURE_STRNCPY(nufw_listen_address, optarg, HOSTNAME_SIZE);
+                /* SECURE_STRNCPY(nufw_listen_address, optarg, HOSTNAME_SIZE); */
                 params->nuauth_nufw_listen_addr = (char *)calloc(HOSTNAME_SIZE, sizeof(char));
                 if (params->nuauth_nufw_listen_addr == NULL)
                 {
-                    // TODO: Error message and free memory?
+                    /* TODO: Error message and free memory? */
                     exit(EXIT_FAILURE);
                 }
                 SECURE_STRNCPY (params->nuauth_nufw_listen_addr, optarg, HOSTNAME_SIZE);
@@ -179,7 +179,7 @@ void parse_options(int argc, char **argv, command_line_params_t *params)
                 params->nuauth_client_listen_addr = (char *)calloc(HOSTNAME_SIZE, sizeof(char));
                 if (params->nuauth_client_listen_addr == NULL)
                 {
-                    // TODO: Error message and free memory?
+                    /* TODO: Error message and free memory? */
                     exit(EXIT_FAILURE);
                 }
                 SECURE_STRNCPY(params->nuauth_client_listen_addr, optarg, HOSTNAME_SIZE);
@@ -245,7 +245,7 @@ void configure_app(int argc, char **argv)
     params.nuauth_nufw_listen_addr=NULL;
 
     /* init gcrypt and gnutls */
-    //        gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_gthread);
+    /*        gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_gthread); */
 
     /* Initialize glib thread system */
     g_thread_init(NULL);
@@ -265,15 +265,17 @@ void configure_app(int argc, char **argv)
     /* init credential */
     create_x509_credentials();
 
-    /*vtable=g_new(GMemVTable, 1);
-      vtable->malloc=&(malloc);
-      vtable->realloc=&(realloc);
-      vtable->free=&(free);
-      vtable->calloc = NULL;
-      vtable->try_malloc = NULL;
-      vtable->try_realloc = NULL;*/
+#if 0    
     /* TODO : it stink ? */
-    //	 g_mem_set_vtable(glib_mem_profiler_table);
+    *vtable=g_new(GMemVTable, 1);
+    vtable->malloc=&(malloc);
+    vtable->realloc=&(realloc);
+    vtable->free=&(free);
+    vtable->calloc = NULL;
+    vtable->try_malloc = NULL;
+    vtable->try_realloc = NULL;
+    g_mem_set_vtable(glib_mem_profiler_table);
+#endif        
 
     parse_options(argc, argv, &params);
 

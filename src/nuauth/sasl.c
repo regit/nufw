@@ -301,7 +301,7 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 		}
 		ret = sasl_getprop(conn, SASL_USERNAME, (const void **)	&(user_name));
 		c_session->userid = g_strdup(user_name);
-		//		ret = sasl_getprop(conn, SASL_USERNAME, (const void **)	&(c_session->userid));
+		/*		ret = sasl_getprop(conn, SASL_USERNAME, (const void **)	&(c_session->userid)); */
 		if (ret == SASL_OK){
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
 				inet_ntop( AF_INET, &remote_inaddr, addresse, INET_ADDRSTRLEN);
@@ -364,7 +364,7 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 				return SASL_FAIL;
 			return SASL_BADPARAM;
 		}
-	} // while continue
+	} /* while continue */
 
 
 	if (r != SASL_OK) {
@@ -469,7 +469,7 @@ int sasl_parse_user_os(user_session* c_session, char *buf, int buf_size)
     }
     
     int dec_buf_size = ntohs(osfield->length) *4 - 32;
-    if ( dec_buf_size > 1024 ) { //if1a
+    if ( dec_buf_size > 1024 ) {
         /* it's a joke it's far too long */
         if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
             g_warning("error osfield is too long, announced %d",ntohs(osfield->length));	
@@ -483,15 +483,15 @@ int sasl_parse_user_os(user_session* c_session, char *buf, int buf_size)
     }
     dec_buf = g_new0( gchar ,dec_buf_size);
     decode = sasl_decode64(buf+4,ntohs(osfield->length) -4,dec_buf, dec_buf_size,&len);
-    switch (decode){ //if1b
+    switch (decode){
         case SASL_BUFOVER:
-            if (len > 1024)//if1b1
+            if (len > 1024)
             {
                 g_free(dec_buf);
                 return SASL_BADAUTH;
             }
             dec_buf=g_try_realloc(dec_buf,len);
-            if (dec_buf){//if1b2
+            if (dec_buf){
                 if (sasl_decode64(buf+4,ntohs(osfield->length) -4,
                             dec_buf,len,&len) != SASL_OK){
                     g_free(dec_buf);
@@ -513,11 +513,11 @@ int sasl_parse_user_os(user_session* c_session, char *buf, int buf_size)
     }
 
     /* should always be true for the moment */
-    if (osfield->option == OS_SRV){ //if1c
+    if (osfield->option == OS_SRV){
         os_strings=g_strsplit(dec_buf,";",3);
-        if (os_strings[0] && (strlen(os_strings[0]) < 128) ){ //if1c1
+        if (os_strings[0] && (strlen(os_strings[0]) < 128) ){
             c_session->sysname=string_escape(os_strings[0]);
-            if (c_session->sysname==NULL){//if1c1a
+            if (c_session->sysname==NULL){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
                     g_warning("received sysname contains invalid characters");	
                 g_free(dec_buf);
@@ -526,9 +526,9 @@ int sasl_parse_user_os(user_session* c_session, char *buf, int buf_size)
         } else {
             c_session->sysname=g_strdup(UNKNOWN_STRING);
         }
-        if (os_strings[1] && (strlen(os_strings[1]) < 128) )   {//if1c2
+        if (os_strings[1] && (strlen(os_strings[1]) < 128) )   {
             c_session->release=string_escape(os_strings[1]);
-            if (c_session->release==NULL){//if1c2a
+            if (c_session->release==NULL){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
                     g_warning("received release contains invalid characters");	
                 g_free(dec_buf);
@@ -537,9 +537,9 @@ int sasl_parse_user_os(user_session* c_session, char *buf, int buf_size)
         } else {
             c_session->release=g_strdup(UNKNOWN_STRING);
         }
-        if (os_strings[2] && (strlen(os_strings[2]) < 128) )  {//if1c3
+        if (os_strings[2] && (strlen(os_strings[2]) < 128) )  {
             c_session->version=string_escape(os_strings[2]);
-            if (c_session->version==NULL){//if1c3a
+            if (c_session->version==NULL){
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
                     g_warning("received version contains invalid characters");	
                 g_free(dec_buf);
@@ -550,7 +550,7 @@ int sasl_parse_user_os(user_session* c_session, char *buf, int buf_size)
         }
         /* print information */
         if (c_session->sysname && c_session->release && 
-                c_session->version){ //if1c4
+                c_session->version){ 
 
 #ifdef DEBUG_ENABLE
             if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){

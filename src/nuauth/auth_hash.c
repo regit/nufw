@@ -285,7 +285,7 @@ inline void search_and_fill_update(connection_t *pckt, connection_t *element)
  */
 void search_and_fill() 
 {
-    //GRYZOR warning : it seems we g_free() on pckt only on some conditions in this function
+    /* GRYZOR warning : it seems we g_free() on pckt only on some conditions in this function */
     connection_t *element;
     connection_t *pckt;
 
