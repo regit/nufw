@@ -33,7 +33,7 @@ GPrivate* dbm_priv; /* private pointer for dbm file access */
 
 struct dbm_data_struct{ 
 	char *passwd;
-	uint16_t uid;
+	uint32_t uid;
 	GSList *outelt;
 };
 

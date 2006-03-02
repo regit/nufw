@@ -79,7 +79,7 @@ typedef struct {
   int socket;             /*!< Socket from which NuFW request is coming */
   nufw_session_t *tls;    /*!< Infos on NuFW which sent the request */
   tracking_t tracking;    /*!< IPv4 connection tracking (headers) */
-  u_int16_t user_id;      /*!< User numeric identity used for marking */
+  uint32_t user_id;       /*!< User numeric identity used for marking */
   char *username;         /*!< User name */
   
  /**

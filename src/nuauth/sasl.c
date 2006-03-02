@@ -98,7 +98,7 @@ static int userdb_checkpass(sasl_conn_t *conn,
 		struct propctx *propctx)
 {
 	GSList *groups=NULL;
-	uint16_t uid=0;
+	uint32_t uid=0;
 	char *dec_user=NULL;
 
 	/*
@@ -135,9 +135,8 @@ static int userdb_checkpass(sasl_conn_t *conn,
 
 
 	if ( user_check(dec_user,pass,passlen,&uid,&groups)==SASL_OK){
-		guint tuid=uid;
 		g_private_set(group_priv,groups);
-		g_private_set(user_priv,GUINT_TO_POINTER(tuid));
+		g_private_set(user_priv,GUINT_TO_POINTER(uid));
 		/* we're done */
 		if (nuauthconf->uses_utf8) g_free(dec_user);
 		return SASL_OK;

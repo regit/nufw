@@ -41,7 +41,7 @@ void external_ip_auth(gpointer userdata, gpointer data)
         username=ip_auth(userdata);
         if (username){
             GSList* groups=NULL;
-	    uint16_t uid;
+	    uint32_t uid;
             /**
 	     * \todo 
              *  switch to a list of modules

@@ -46,8 +46,8 @@ gboolean  get_old_conn (gpointer key,
  * internal for send_auth_response. */
 
 struct auth_answer {
-  u_int8_t answer;
-  u_int16_t user_id;
+  uint8_t answer;
+  uint32_t user_id;
   int socket;
   nufw_session_t* tls;
 };

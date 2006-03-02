@@ -264,8 +264,7 @@ int read_user_list(void)
   FILE *fd;
   char line[1024];
   char *p_username, *p_passwd, *p_uid, *p_groups;
-  int iuid;
-  u_int16_t uid;
+  u_int32_t uid;
   char log_prefix[16];
   int ln = 0;   // Line number
 
@@ -314,14 +313,13 @@ int read_user_list(void)
           return 2;
       }
       *p_uid++ = 0;
-      if (sscanf(p_uid, "%d", &iuid) != 1) {
+      if (sscanf(p_uid, "%d", &uid) != 1) {
           log_message(WARNING, AREA_MAIN,
                       "L.%d: read_user_list: Malformed line "
                       "(uid should be a number)", ln);
           fclose(fd);
           return 2;
       }
-      uid = (u_int16_t) iuid;
 
       // List of groups
       p_groups = strchr(p_uid, ':');
@@ -745,7 +743,7 @@ gint find_by_username(struct T_plaintext_user *a, struct T_plaintext_user *b)
  *           uid to return the user id
  */
 G_MODULE_EXPORT int user_check(const char *username, const char *clientpass,
-        unsigned passlen, uint16_t* uid, GSList **groups)
+        unsigned passlen, uint32_t* uid, GSList **groups)
 {
   GSList *outelt = *groups;
   GSList *res;

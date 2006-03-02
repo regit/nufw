@@ -52,7 +52,7 @@ struct tls_buffer_read {
     uint32_t ipv4_addr;   /*!< User IPv4 address */
     gnutls_session *tls;  /*!< TLS session */
     char *user_name;      /*!< User name string */
-    uint16_t user_id;     /*!< User identifier (16 bits */
+    uint32_t user_id;     /*!< User identifier (16 bits */
     GSList *groups;       /*!< User groups */
     char *os_sysname;     /*!< Operation system name */
     char *os_release;     /*!< Operation system release */

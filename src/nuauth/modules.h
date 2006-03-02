@@ -23,7 +23,7 @@ int init_modules_system();
 int load_modules();
 int unload_modules();
 
-int user_check (const char *user, const char *pass,unsigned passlen,uint16_t *uid,GSList **groups);
+int user_check (const char *user, const char *pass,unsigned passlen,uint32_t *uid,GSList **groups);
 
 GSList * acl_check (connection_t* element);
 

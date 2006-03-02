@@ -38,7 +38,7 @@ GSList* user_session_logs_modules;
 
 GMutex *modules_mutex;
 
-typedef int user_check_callback (const char *user, const char *pass,unsigned passlen,uint16_t *uid,GSList **groups);
+typedef int user_check_callback (const char *user, const char *pass,unsigned passlen,uint32_t *uid,GSList **groups);
 
 typedef GSList * acl_check_callback (connection_t* element);
 

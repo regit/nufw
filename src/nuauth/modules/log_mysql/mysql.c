@@ -190,6 +190,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, tcp_state_t state){
 					//
 					// FIELD          IN NUAUTH STRUCTURE               IN ULOG
 					//user_id               u_int16_t                   SMALLINT UNSIGNED     2 bytes
+                    //   \--> TODO: haypo changed it to 32 bits (4 bytes)
 					//ip_protocol           u_int8_t                    TINYINT UNSIGNED      1 byte
 					//ip_saddr              u_int32_t                   INT UNSIGNED          4 bytes
 					//ip_daddr              u_int32_t                   INT UNSIGNED

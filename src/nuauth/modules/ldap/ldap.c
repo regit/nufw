@@ -374,7 +374,7 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element)
  *  - modify : groups to return the list of user group
  */
 
-G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned passlen,uint16_t *uid,GSList **groups)
+G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned passlen,uint32_t *uid,GSList **groups)
 {
 	char filter[LDAP_QUERY_SIZE];
 	LDAP *ld = g_private_get (ldap_priv);
@@ -466,7 +466,7 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned p
 		attrs_array = ldap_get_values(ld, result, "uidNumber");
 		attrs_array_len = ldap_count_values(attrs_array);
 		if (attrs_array_len==1){
-			sscanf(*attrs_array,"%hu",uid);
+            *uid = atoi(*attrs_array);
 		}
 		ldap_value_free(attrs_array);
 		/* build groups  list */

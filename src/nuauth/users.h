@@ -27,7 +27,7 @@ void get_users_from_cache (connection_t* conn_elt);
 gpointer user_duplicate_key(gpointer datas);
 
 struct user_cached_datas {
-       uint16_t uid;
+       uint32_t uid;
        GSList * groups;
 };
 
@@ -39,7 +39,7 @@ typedef struct User_session {
 	uint32_t addr;
         gnutls_session* tls;
         char * userid;
-	u_int16_t uid;
+	uint32_t uid;
         GSList * groups;
 	gchar * sysname;
 	gchar * release;

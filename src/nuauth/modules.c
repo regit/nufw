@@ -52,7 +52,7 @@
  *  the user belongs to.
  */
 
-int user_check (const char *user, const char *pass,unsigned passlen,uint16_t *uid,GSList **groups){
+int user_check (const char *user, const char *pass,unsigned passlen, uint32_t *uid, GSList **groups){
 	/* iter through module list and stop when user is found */
 	GSList *walker=user_check_modules;
 	int walker_return=0;

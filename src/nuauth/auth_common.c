@@ -103,8 +103,14 @@ void send_auth_response(gpointer data, gpointer userdata)
     uint8_t proto_version=PROTO_VERSION,answer_type=AUTH_ANSWER;
     char datas[512];
     char *pointer;
+    uint16_t uid16;
 
-    aanswer->user_id=htons(aanswer->user_id);
+    if (0xFFFF < aanswer->user_id) {
+        log_message(WARNING, AREA_MAIN,
+                "User identifier don't fit in 16 bits, not to truncate the value.");
+    }
+    uid16 = htons(aanswer->user_id & 0xFFFF);
+
     packet_id=htonl(packet_id);
     /* for each packet_id send a response */
 
@@ -113,7 +119,7 @@ void send_auth_response(gpointer data, gpointer userdata)
     pointer=datas+sizeof proto_version;
     memcpy(pointer,&answer_type,sizeof answer_type);
     pointer+=sizeof answer_type;
-    memcpy(pointer,&(aanswer->user_id),sizeof( u_int16_t));
+    memcpy(pointer,&uid16,sizeof( u_int16_t));
     pointer+=sizeof (u_int16_t);
     /* ANSWER and Prio */
     memcpy(pointer,&answer,sizeof answer);
