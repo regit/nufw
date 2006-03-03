@@ -38,7 +38,7 @@ confparams mysql_nuauth_vars[] = {
 	{ "mysql_ssl_cipher" , G_TOKEN_STRING , 0, MYSQL_SSL_CIPHER}
 };
 
-	G_MODULE_EXPORT gchar* 
+G_MODULE_EXPORT gchar* 
 g_module_unload(void)
 {
 	MYSQL *ld = g_private_get (mysql_priv);
@@ -88,11 +88,9 @@ g_module_check_init(GModule *module)
 	return NULL;
 }
 
-
 /* 
  * Initialize connection to mysql server
  */
-
 G_MODULE_EXPORT MYSQL* mysql_conn_init(void){
 	MYSQL *ld = NULL;
 
@@ -143,10 +141,411 @@ static gchar* generate_appname(gchar *Name)
 	return g_strdup(Name);
 }
 
+int log_state_open(MYSQL *ld, connection_t element)
+{
+	char request[LONG_REQUEST_SIZE];
+    int Result;
+
+    switch ((element.tracking).protocol){
+        case IPPROTO_TCP:
+
+            //
+            // FIELD          IN NUAUTH STRUCTURE               IN ULOG
+            //user_id               u_int16_t                   SMALLINT UNSIGNED     2 bytes
+            //   \--> TODO: haypo changed it to 32 bits (4 bytes)
+            //ip_protocol           u_int8_t                    TINYINT UNSIGNED      1 byte
+            //ip_saddr              u_int32_t                   INT UNSIGNED          4 bytes
+            //ip_daddr              u_int32_t                   INT UNSIGNED
+            //tcp_sport             u_int16_t                   SMALLINT UNSIGNED 
+            //tcp_dport             u_int16_t                   SMALLINT UNSIGNED
+            //udp_sport             u_int16_t                   SMALLINT UNSIGNED
+            //udp_dport             u_int16_t                   SMALLINT UNSIGNED
+            //icmp_type             u_int8_t                    TINYINT UNSIGNED        
+            //icmp_code             u_int8_t                    TINYINT UNSIGNED    
+            //start_timestamp       long                        DATETIME
+            //end_timestamp         long                        DATETIME
+
+            if (nuauthconf->log_users_strict){
+                /* need to update table to suppress double field */
+                if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET state=%hu,end_timestamp=FROM_UNIXTIME(%lu) WHERE (ip_saddr=%lu  AND tcp_sport=%u AND (state=1 OR state=2))",
+                            mysql_table_name,
+                            TCP_STATE_CLOSE,
+                            element.timestamp,
+                            (long unsigned int)(element.tracking).daddr,
+                            (element.tracking).source
+                            ) >= SHORT_REQUEST_SIZE-1){
+
+                    if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+                        g_warning("Building mysql update query, the SHORT_REQUEST_SIZE limit was reached!\n");
+                    return -1;
+                }
+
+                Result = mysql_real_query(ld, request, strlen(request));
+                if (Result != 0){
+                    if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+                        g_warning("Can not update Data : %s\n",mysql_error(ld));
+                    return -1;
+                }
+            }
+
+            if (element.username != NULL) {
+                gchar* OSFullname;
+                gchar* AppFullname;
+                OSFullname = generate_osname(element.os_sysname,element.os_version,element.os_release);
+                AppFullname = generate_appname(element.app_name); /*Just a size check actually*/
+                if (snprintf(request,LONG_REQUEST_SIZE-1,"INSERT INTO %s (username,user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,state,oob_prefix,client_os,client_app) VALUES ('%s',%u,%lu,%u,%lu,%lu,%u,%u,%hu,'ACCEPT','%s','%s')",
+                            mysql_table_name,
+                            element.username,
+                            (element.user_id),
+                            element.timestamp,
+                            (element.tracking).protocol,
+                            (long unsigned int)(element.tracking).saddr,
+                            (long unsigned int)(element.tracking).daddr,
+                            (element.tracking).source,
+                            (element.tracking).dest,
+                            TCP_STATE_OPEN,
+                            OSFullname,
+                            AppFullname
+                            ) >= LONG_REQUEST_SIZE-1){
+                    if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN)){
+                        g_warning("Building mysql insert query, the LONG_REQUEST_SIZE limit was reached!\n");
+                    }
+                    g_free(OSFullname);
+                    g_free(AppFullname);
+                    return -1;
+                }
+                g_free(OSFullname);
+                g_free(AppFullname);
+            } else {
+                if (snprintf(request,SHORT_REQUEST_SIZE-1,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,state,oob_prefix) VALUES (%u,%lu,%u,%lu,%lu,%u,%u,%hu,'ACCEPT')",
+                            mysql_table_name,
+                            (element.user_id),
+                            element.timestamp,
+                            (element.tracking).protocol,
+                            (long unsigned int)(element.tracking).saddr,
+                            (long unsigned int)(element.tracking).daddr,
+                            (element.tracking).source,
+                            (element.tracking).dest,
+                            TCP_STATE_OPEN
+                            ) >= SHORT_REQUEST_SIZE-1){
+                    if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+                        g_warning("Building mysql insert query, the SHORT_REQUEST_SIZE limit was reached!\n");
+                    return -1;
+                }
+            }
+            Result = mysql_real_query(ld, request, strlen(request));
+
+            if (Result != 0){
+                if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+                    g_warning("Can not insert Data : %s\n",mysql_error(ld));
+                return -1;
+            }
+            break;
+        case IPPROTO_UDP:
+            {
+                gchar * OSFullname;
+                gchar * AppFullname;
+                OSFullname = generate_osname(element.os_sysname,element.os_version,element.os_release);
+                AppFullname = generate_appname(element.app_name); /*Just a size check actually*/
+                if (snprintf(request,LONG_REQUEST_SIZE-1,"INSERT INTO %s (username,user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,state,oob_prefix,client_os,client_app) VALUES ('%s',%u,%lu,%u,%lu,%lu,%u,%u,%hu,'ACCEPT','%s','%s')", //TODO : username NULL?
+                            mysql_table_name,
+                            element.username,
+                            (element.user_id),
+                            element.timestamp,
+                            (element.tracking).protocol,
+                            (long unsigned int)(element.tracking).saddr,
+                            (long unsigned int)(element.tracking).daddr,
+                            (element.tracking).source,
+                            (element.tracking).dest,
+                            TCP_STATE_OPEN,
+                            OSFullname,
+                            AppFullname
+                            ) >= LONG_REQUEST_SIZE-1){
+                    if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+                        g_warning("Building mysql insert query, the LONG_REQUEST_SIZE limit was reached!\n");
+                    g_free(OSFullname);
+                    g_free(AppFullname);
+                    return -1;
+                }
+                g_free(OSFullname);
+                g_free(AppFullname);
+                Result = mysql_real_query(ld, request, strlen(request));
+                if (Result != 0){
+                    if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN)){
+                        g_warning("Can not insert Data : %s\n",mysql_error(ld));
+                    }
+                    return -1;
+                }
+
+                return 0;
+                break;
+            }
+        default:
+            {
+                gchar *OSFullname;
+                gchar *AppFullname;
+                OSFullname = generate_osname(element.os_sysname,element.os_version,element.os_release);
+                AppFullname = generate_appname(element.app_name); /*Just a size check actually*/
+                if (snprintf(request,LONG_REQUEST_SIZE-1,
+                            "INSERT INTO %s (username,user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,state,oob_prefix,client_os,client_app) VALUES ('%s',%u,%lu,%u,%lu,%lu,%hu,'ACCEPT','%s','%s')", 
+                            mysql_table_name,
+                            element.username,
+                            (element.user_id),
+                            element.timestamp,
+                            (element.tracking).protocol,
+                            (long unsigned int)(element.tracking).saddr,
+                            (long unsigned int)(element.tracking).daddr,
+                            TCP_STATE_OPEN,
+                            OSFullname,
+                            AppFullname
+                            ) >= (LONG_REQUEST_SIZE-1)){
+                    if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+                        g_warning("Building mysql insert query, the LONG_REQUEST_SIZE limit was reached!\n");
+                    g_free(OSFullname);
+                    g_free(AppFullname);
+                    return -1;
+                }
+                g_free(OSFullname);
+                g_free(AppFullname);
+                Result = mysql_real_query(ld, request,strlen(request));
+                if (Result != 0){
+                    if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+                        g_warning("Can not insert Data : %s\n",mysql_error(ld));
+                    return -1;
+                }
+
+                return 0;
+            }
+    }
+    return 0;
+}    
+
+int log_state_established(MYSQL *ld, connection_t element)
+{
+	char request[LONG_REQUEST_SIZE];
+    int Result;
+    int update_status = 0;
+
+    while (update_status < 2){
+        update_status++;
+        if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET state=%hu,start_timestamp=FROM_UNIXTIME(%lu) WHERE (ip_daddr=%lu AND ip_saddr=%lu AND tcp_dport=%u AND tcp_sport=%u AND state=%hu)",
+
+                    mysql_table_name,
+                    TCP_STATE_ESTABLISHED,
+                    element.timestamp,
+                    (long unsigned int)(element.tracking).saddr,
+                    (long unsigned int)(element.tracking).daddr,
+                    (element.tracking).source,
+                    (element.tracking).dest,
+                    TCP_STATE_OPEN
+                    ) >= SHORT_REQUEST_SIZE-1){
+            if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+                g_warning("Building mysql update query, the SHORT_REQUEST_SIZE limit was reached!\n");
+            return -1;
+        }
+        Result = mysql_real_query(ld, request, strlen(request));
+        if (Result != 0){
+            if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+                g_warning("Can not update Data : %s\n",mysql_error(ld));
+            return -1;
+        }
+        if (mysql_affected_rows(ld) >= 1){
+            return 0;
+        }else{
+            if (update_status <2){
+                /* Sleep for 1/3 sec */
+                struct timespec sleep;
+                sleep.tv_sec = 0;
+                sleep.tv_nsec = 333333333;
+                nanosleep(&sleep, NULL);
+            }else{
+#ifdef DEBUG_ENABLE
+                if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
+                    g_warning("Tried to update MYSQL entry twice, looks like data to update wasn't inserted\n");
+#endif
+            }
+        }
+    }
+    return 0;
+}    
+
+int log_state_close(MYSQL *ld, connection_t element)
+{
+	char request[LONG_REQUEST_SIZE];
+    int Result;
+    int update_status = 0;
+
+    while (update_status < 2){
+        update_status++;
+        if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET end_timestamp=FROM_UNIXTIME(%lu), state=%hu WHERE (ip_saddr=%lu AND ip_daddr=%lu AND tcp_sport=%u AND tcp_dport=%u AND state=%hu)",
+
+                    mysql_table_name,
+                    element.timestamp,
+                    TCP_STATE_CLOSE,
+                    (long unsigned int)(element.tracking).saddr,
+                    (long unsigned int)(element.tracking).daddr,
+                    (element.tracking).source,
+                    (element.tracking).dest,
+                    TCP_STATE_ESTABLISHED
+                    ) >= SHORT_REQUEST_SIZE-1){
+            if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+                g_warning("Building mysql update query, the SHORT_REQUEST_SIZE limit was reached!\n");
+            return -1;
+        }
+        Result = mysql_real_query(ld, request, strlen(request));
+        if (Result != 0){
+            if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+                g_warning("Can not update Data : %s\n",mysql_error(ld));
+            return -1;
+        }
+        if (mysql_affected_rows(ld) >= 1){
+            return 0;
+        }else{
+            if (update_status <2){
+                /* Sleep for 2/3 sec */
+                struct timespec sleep;
+                sleep.tv_sec = 0;
+                sleep.tv_nsec = 666666666;
+                nanosleep(&sleep, NULL);
+            }else{
+#ifdef DEBUG_ENABLE
+                if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
+                    g_warning("Tried to update MYSQL entry twice, looks like data to update wasn't inserted\n");
+#endif
+            }
+        }
+    }
+    return 0;
+}    
+
+int log_state_drop(MYSQL *ld, connection_t element)
+{
+	char request[LONG_REQUEST_SIZE];
+    int error_code = 0;
+    gchar *OSFullname = NULL;
+    gchar* AppFullname = NULL ;
+
+    switch ((element.tracking).protocol){
+        case IPPROTO_TCP:
+            if (element.username){
+                OSFullname = generate_osname(element.os_sysname,element.os_version,element.os_release);
+                AppFullname = generate_appname(element.app_name); /*Just a size check actually*/
+                if (snprintf(request,LONG_REQUEST_SIZE-1,
+                            "INSERT INTO %s (username,user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,state,oob_prefix,client_os,client_app) VALUES ('%s',%u,%lu,%u,%lu,%lu,%u,%u,%hu,'DROP','%s','%s')", 
+                            mysql_table_name,
+                            element.username,
+                            (element.user_id),
+                            element.timestamp,
+                            (element.tracking).protocol,
+                            (long unsigned int)(element.tracking).saddr,
+                            (long unsigned int)(element.tracking).daddr,
+                            (element.tracking).source,
+                            (element.tracking).dest,
+                            TCP_STATE_DROP,
+                            OSFullname,
+                            AppFullname
+                            ) >= LONG_REQUEST_SIZE-1){
+                    if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+                        g_warning("Building mysql insert query, the LONG_REQUEST_SIZE limit was reached!\n");
+                    error_code = -1;
+                }
+            } else {
+                if (snprintf(request,LONG_REQUEST_SIZE-1,
+                            "INSERT INTO %s (oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,state,oob_prefix) VALUES (%lu,%u,%lu,%lu,%u,%u,%hu,'UNAUTHENTICATED DROP')", 
+                            mysql_table_name,
+                            element.timestamp,
+                            (element.tracking).protocol,
+                            (long unsigned int)(element.tracking).saddr,
+                            (long unsigned int)(element.tracking).daddr,
+                            (element.tracking).source,
+                            (element.tracking).dest,
+                            TCP_STATE_DROP) >= (LONG_REQUEST_SIZE-1)){
+                    if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+                        g_warning("Building mysql insert query, the LONG_REQUEST_SIZE limit was reached!\n");
+                    error_code = -1;
+                }
+            }
+            break;
+
+        case IPPROTO_UDP:
+            OSFullname = generate_osname(element.os_sysname,element.os_version,element.os_release);
+            AppFullname = generate_appname(element.app_name); /*Just a size check actually*/
+            if (element.username){
+                if (snprintf(request,LONG_REQUEST_SIZE-1,"INSERT INTO %s (username,user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,state,oob_prefix,client_os,client_app) VALUES ('%s',%u,%lu,%u,%lu,%lu,%u,%u,%hu,'DROP','%s','%s')", 
+                            mysql_table_name,
+                            element.username,
+                            (element.user_id),
+                            element.timestamp,
+                            (element.tracking).protocol,
+                            (long unsigned int)(element.tracking).saddr,
+                            (long unsigned int)(element.tracking).daddr,
+                            (element.tracking).source,
+                            (element.tracking).dest,
+                            TCP_STATE_DROP,
+                            OSFullname,
+                            AppFullname
+                            ) >= LONG_REQUEST_SIZE-1){
+                    if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+                        g_warning("Building mysql insert query, the LONG_REQUEST_SIZE limit was reached!\n");
+                    error_code = -1;
+                }
+            } else {
+                if (snprintf(request,LONG_REQUEST_SIZE-1,
+                            "INSERT INTO %s (oob_time_sec,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,state,oob_prefix) VALUES (%lu,%u,%lu,%lu,%u,%u,%hu,'UNAUTHENTICATED DROP')", 
+                            mysql_table_name,
+                            element.timestamp,
+                            (element.tracking).protocol,
+                            (long unsigned int)(element.tracking).saddr,
+                            (long unsigned int)(element.tracking).daddr,
+                            (element.tracking).source,
+                            (element.tracking).dest,
+                            TCP_STATE_DROP) >= (LONG_REQUEST_SIZE-1)){
+                    if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+                        g_warning("Building mysql insert query, the LONG_REQUEST_SIZE limit was reached!\n");
+                    error_code = -1;
+                }
+            }
+            break;
+            
+        default:
+            OSFullname = generate_osname(element.os_sysname,element.os_version,element.os_release);
+            AppFullname = generate_appname(element.app_name); /*Just a size check actually*/
+            if (snprintf(request,LONG_REQUEST_SIZE-1,"INSERT INTO %s (username,user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,state,oob_prefix,client_os,client_app) VALUES ('%s',%u,%lu,%u,%lu,%lu,%hu,'DROP','%s','%s')", //TODO : username NULL?
+                        mysql_table_name,
+                        element.username,
+                        (element.user_id),
+                        element.timestamp,
+                        (element.tracking).protocol,
+                        (long unsigned int) (element.tracking).saddr,
+                        (long unsigned int) (element.tracking).daddr,
+                        TCP_STATE_DROP,
+                        OSFullname,
+                        AppFullname
+                        ) >= LONG_REQUEST_SIZE-1){
+                if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+                    g_warning("Building mysql insert query, the LONG_REQUEST_SIZE limit was reached!\n");
+                error_code = -1;
+            }
+            break;
+    }
+
+    if (error_code == 0)
+    {
+        int ret = mysql_real_query(ld, request, strlen(request));
+        if (ret != 0){
+            if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
+                g_warning("Can not insert Data : %s\n",mysql_error(ld));
+            error_code = -1;
+        }
+    }
+    
+    g_free(OSFullname);
+    g_free(AppFullname);
+    return error_code;
+}    
+
 G_MODULE_EXPORT gint user_packet_logs (connection_t element, tcp_state_t state){
 	MYSQL *ld = g_private_get (mysql_priv);
-	char request[LONG_REQUEST_SIZE];
-	int Result;
 	if (ld == NULL){
 		ld=mysql_conn_init();
 		if (ld == NULL){
@@ -160,436 +559,29 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, tcp_state_t state){
 	/* contruct request */
 	switch (state) {
 		case TCP_STATE_OPEN:
-			switch ((element.tracking).protocol){
-				case IPPROTO_TCP:
-
-					//
-					// FIELD          IN NUAUTH STRUCTURE               IN ULOG
-					//user_id               u_int16_t                   SMALLINT UNSIGNED     2 bytes
-                    //   \--> TODO: haypo changed it to 32 bits (4 bytes)
-					//ip_protocol           u_int8_t                    TINYINT UNSIGNED      1 byte
-					//ip_saddr              u_int32_t                   INT UNSIGNED          4 bytes
-					//ip_daddr              u_int32_t                   INT UNSIGNED
-					//tcp_sport             u_int16_t                   SMALLINT UNSIGNED 
-					//tcp_dport             u_int16_t                   SMALLINT UNSIGNED
-					//udp_sport             u_int16_t                   SMALLINT UNSIGNED
-					//udp_dport             u_int16_t                   SMALLINT UNSIGNED
-					//icmp_type             u_int8_t                    TINYINT UNSIGNED        
-					//icmp_code             u_int8_t                    TINYINT UNSIGNED    
-					//start_timestamp       long                        DATETIME
-					//end_timestamp         long                        DATETIME
-
-					if (nuauthconf->log_users_strict){
-						/* need to update table to suppress double field */
-						if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET state=%hu,end_timestamp=FROM_UNIXTIME(%lu) WHERE (ip_saddr=%lu  AND tcp_sport=%u AND (state=1 OR state=2))",
-									mysql_table_name,
-									TCP_STATE_CLOSE,
-									element.timestamp,
-									(long unsigned int)(element.tracking).daddr,
-									(element.tracking).source
-							    ) >= SHORT_REQUEST_SIZE-1){
-
-							if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-								g_warning("Building mysql update query, the SHORT_REQUEST_SIZE limit was reached!\n");
-							return -1;
-						}
-
-						Result = mysql_real_query(ld, request, strlen(request));
-						if (Result != 0){
-							if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-								g_warning("Can not update Data : %s\n",mysql_error(ld));
-							return -1;
-						}
-					}
-
-					if (element.username != NULL) {
-						gchar* OSFullname;
-						gchar* AppFullname;
-						OSFullname = generate_osname(element.os_sysname,element.os_version,element.os_release);
-						AppFullname = generate_appname(element.app_name); /*Just a size check actually*/
-						if (snprintf(request,LONG_REQUEST_SIZE-1,"INSERT INTO %s (username,user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,state,oob_prefix,client_os,client_app) VALUES ('%s',%u,%lu,%u,%lu,%lu,%u,%u,%hu,'ACCEPT','%s','%s')",
-									mysql_table_name,
-									element.username,
-									(element.user_id),
-									element.timestamp,
-									(element.tracking).protocol,
-									(long unsigned int)(element.tracking).saddr,
-									(long unsigned int)(element.tracking).daddr,
-									(element.tracking).source,
-									(element.tracking).dest,
-									TCP_STATE_OPEN,
-									OSFullname,
-									AppFullname
-							    ) >= LONG_REQUEST_SIZE-1){
-							if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN)){
-								g_warning("Building mysql insert query, the LONG_REQUEST_SIZE limit was reached!\n");
-							}
-							g_free(OSFullname);
-							g_free(AppFullname);
-							return -1;
-						}
-						g_free(OSFullname);
-						g_free(AppFullname);
-					} else {
-						if (snprintf(request,SHORT_REQUEST_SIZE-1,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,state,oob_prefix) VALUES (%u,%lu,%u,%lu,%lu,%u,%u,%hu,'ACCEPT')",
-									mysql_table_name,
-									(element.user_id),
-									element.timestamp,
-									(element.tracking).protocol,
-									(long unsigned int)(element.tracking).saddr,
-									(long unsigned int)(element.tracking).daddr,
-									(element.tracking).source,
-									(element.tracking).dest,
-									TCP_STATE_OPEN
-							    ) >= SHORT_REQUEST_SIZE-1){
-							if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-								g_warning("Building mysql insert query, the SHORT_REQUEST_SIZE limit was reached!\n");
-							return -1;
-						}
-					}
-					Result = mysql_real_query(ld, request, strlen(request));
-
-					if (Result != 0){
-						if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-							g_warning("Can not insert Data : %s\n",mysql_error(ld));
-						return -1;
-					}
-					break;
-				case IPPROTO_UDP:
-					{
-						gchar * OSFullname;
-						gchar * AppFullname;
-						OSFullname = generate_osname(element.os_sysname,element.os_version,element.os_release);
-						AppFullname = generate_appname(element.app_name); /*Just a size check actually*/
-						if (snprintf(request,LONG_REQUEST_SIZE-1,"INSERT INTO %s (username,user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,state,oob_prefix,client_os,client_app) VALUES ('%s',%u,%lu,%u,%lu,%lu,%u,%u,%hu,'ACCEPT','%s','%s')", //TODO : username NULL?
-									mysql_table_name,
-									element.username,
-									(element.user_id),
-									element.timestamp,
-									(element.tracking).protocol,
-									(long unsigned int)(element.tracking).saddr,
-									(long unsigned int)(element.tracking).daddr,
-									(element.tracking).source,
-									(element.tracking).dest,
-									TCP_STATE_OPEN,
-									OSFullname,
-									AppFullname
-							    ) >= LONG_REQUEST_SIZE-1){
-							if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-								g_warning("Building mysql insert query, the LONG_REQUEST_SIZE limit was reached!\n");
-							g_free(OSFullname);
-							g_free(AppFullname);
-							return -1;
-						}
-						g_free(OSFullname);
-						g_free(AppFullname);
-						Result = mysql_real_query(ld, request, strlen(request));
-						if (Result != 0){
-							if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN)){
-								g_warning("Can not insert Data : %s\n",mysql_error(ld));
-                                                        }
-							return -1;
-						}
-
-						return 0;
-						break;
-					}
-				default:
-					{
-						gchar *OSFullname;
-						gchar *AppFullname;
-						OSFullname = generate_osname(element.os_sysname,element.os_version,element.os_release);
-						AppFullname = generate_appname(element.app_name); /*Just a size check actually*/
-						if (snprintf(request,LONG_REQUEST_SIZE-1,
-									"INSERT INTO %s (username,user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,state,oob_prefix,client_os,client_app) VALUES ('%s',%u,%lu,%u,%lu,%lu,%hu,'ACCEPT','%s','%s')", 
-									mysql_table_name,
-									element.username,
-									(element.user_id),
-									element.timestamp,
-									(element.tracking).protocol,
-									(long unsigned int)(element.tracking).saddr,
-									(long unsigned int)(element.tracking).daddr,
-									TCP_STATE_OPEN,
-									OSFullname,
-									AppFullname
-							    ) >= (LONG_REQUEST_SIZE-1)){
-							if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-								g_warning("Building mysql insert query, the LONG_REQUEST_SIZE limit was reached!\n");
-							g_free(OSFullname);
-							g_free(AppFullname);
-							return -1;
-						}
-						g_free(OSFullname);
-						g_free(AppFullname);
-						Result = mysql_real_query(ld, request,strlen(request));
-						if (Result != 0){
-							if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-								g_warning("Can not insert Data : %s\n",mysql_error(ld));
-							return -1;
-						}
-
-						return 0;
-					}
-			}
-			break;
+            return log_state_open(ld, element);
+            
 		case TCP_STATE_ESTABLISHED: 
 			if ((element.tracking).protocol == IPPROTO_TCP){
-				int update_status = 0;
-				while (update_status < 2){
-					update_status++;
-					if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET state=%hu,start_timestamp=FROM_UNIXTIME(%lu) WHERE (ip_daddr=%lu AND ip_saddr=%lu AND tcp_dport=%u AND tcp_sport=%u AND state=%hu)",
+                return log_state_established(ld, element);
+			} else {
+                return 0;
+            }
 
-								mysql_table_name,
-								TCP_STATE_ESTABLISHED,
-								element.timestamp,
-								(long unsigned int)(element.tracking).saddr,
-								(long unsigned int)(element.tracking).daddr,
-								(element.tracking).source,
-								(element.tracking).dest,
-								TCP_STATE_OPEN
-						    ) >= SHORT_REQUEST_SIZE-1){
-						if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-							g_warning("Building mysql update query, the SHORT_REQUEST_SIZE limit was reached!\n");
-						return -1;
-					}
-					Result = mysql_real_query(ld, request, strlen(request));
-					if (Result != 0){
-						if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-							g_warning("Can not update Data : %s\n",mysql_error(ld));
-						return -1;
-					}
-					if (mysql_affected_rows(ld) >= 1){
-						return 0;
-					}else{
-						if (update_status <2){
-							/* Sleep for 1/3 sec */
-							struct timespec sleep;
-							sleep.tv_sec = 0;
-							sleep.tv_nsec = 333333333;
-							nanosleep(&sleep, NULL);
-						}else{
-#ifdef DEBUG_ENABLE
-							if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-								g_warning("Tried to update MYSQL entry twice, looks like data to update wasn't inserted\n");
-#endif
-						}
-					}
-				}
-				return 0;
-			}
-			break;
 		case TCP_STATE_CLOSE: 
 			if ((element.tracking).protocol == IPPROTO_TCP){
-				int update_status = 0;
-				while (update_status < 2){
-					update_status++;
-					if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET end_timestamp=FROM_UNIXTIME(%lu), state=%hu WHERE (ip_saddr=%lu AND ip_daddr=%lu AND tcp_sport=%u AND tcp_dport=%u AND state=%hu)",
-
-								mysql_table_name,
-								element.timestamp,
-								TCP_STATE_CLOSE,
-								(long unsigned int)(element.tracking).saddr,
-								(long unsigned int)(element.tracking).daddr,
-								(element.tracking).source,
-								(element.tracking).dest,
-								TCP_STATE_ESTABLISHED
-						    ) >= SHORT_REQUEST_SIZE-1){
-						if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-							g_warning("Building mysql update query, the SHORT_REQUEST_SIZE limit was reached!\n");
-						return -1;
-					}
-					Result = mysql_real_query(ld, request, strlen(request));
-					if (Result != 0){
-						if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-							g_warning("Can not update Data : %s\n",mysql_error(ld));
-						return -1;
-					}
-					if (mysql_affected_rows(ld) >= 1){
-						return 0;
-					}else{
-						if (update_status <2){
-							/* Sleep for 2/3 sec */
-							struct timespec sleep;
-							sleep.tv_sec = 0;
-							sleep.tv_nsec = 666666666;
-							nanosleep(&sleep, NULL);
-						}else{
-#ifdef DEBUG_ENABLE
-							if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-								g_warning("Tried to update MYSQL entry twice, looks like data to update wasn't inserted\n");
-#endif
-						}
-					}
-				}
-				return 0;
-			}
-			break;
+                return log_state_close(ld, element);
+			} else {
+                return 0;
+            }
+            
 		case TCP_STATE_DROP:
-			switch ((element.tracking).protocol){
-				case IPPROTO_TCP:
-					{
-						if (element.username){
-							gchar *OSFullname;
-							gchar *AppFullname;
-							OSFullname = generate_osname(element.os_sysname,element.os_version,element.os_release);
-							AppFullname = generate_appname(element.app_name); /*Just a size check actually*/
-							if (snprintf(request,LONG_REQUEST_SIZE-1,
-										"INSERT INTO %s (username,user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,state,oob_prefix,client_os,client_app) VALUES ('%s',%u,%lu,%u,%lu,%lu,%u,%u,%hu,'DROP','%s','%s')", 
-										mysql_table_name,
-										element.username,
-										(element.user_id),
-										element.timestamp,
-										(element.tracking).protocol,
-										(long unsigned int)(element.tracking).saddr,
-										(long unsigned int)(element.tracking).daddr,
-										(element.tracking).source,
-										(element.tracking).dest,
-										TCP_STATE_DROP,
-										OSFullname,
-										AppFullname
-								    ) >= LONG_REQUEST_SIZE-1){
-								if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-									g_warning("Building mysql insert query, the LONG_REQUEST_SIZE limit was reached!\n");
-								return -1;
-							}
-							Result = mysql_real_query(ld, request, strlen(request));
-							if (Result != 0){
-								if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-									g_warning("Can not insert Data : %s\n",mysql_error(ld));
-								g_free(OSFullname);
-								g_free(AppFullname);
-								return -1;
-							}
-							g_free(OSFullname);
-							g_free(AppFullname);
-						} else {
-							if (snprintf(request,LONG_REQUEST_SIZE-1,
-										"INSERT INTO %s (oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,state,oob_prefix) VALUES (%lu,%u,%lu,%lu,%u,%u,%hu,'UNAUTHENTICATED DROP')", 
-										mysql_table_name,
-										element.timestamp,
-										(element.tracking).protocol,
-										(long unsigned int)(element.tracking).saddr,
-										(long unsigned int)(element.tracking).daddr,
-										(element.tracking).source,
-										(element.tracking).dest,
-										TCP_STATE_DROP) >= (LONG_REQUEST_SIZE-1)){
-								if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-									g_warning("Building mysql insert query, the LONG_REQUEST_SIZE limit was reached!\n");
-								return -1;
-							}
-							Result = mysql_real_query(ld, request, strlen(request));
-							if (Result != 0){
-								if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-									g_warning("Can not insert Data : %s\n",mysql_error(ld));
-								return -1;
-							}
-						}
-						break;
-					}
-				case IPPROTO_UDP:
-					{
-						gchar* OSFullname;
-						gchar* AppFullname;
-						OSFullname = generate_osname(element.os_sysname,element.os_version,element.os_release);
-						AppFullname = generate_appname(element.app_name); /*Just a size check actually*/
-						if (element.username){
-							if (snprintf(request,LONG_REQUEST_SIZE-1,"INSERT INTO %s (username,user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,state,oob_prefix,client_os,client_app) VALUES ('%s',%u,%lu,%u,%lu,%lu,%u,%u,%hu,'DROP','%s','%s')", 
-										mysql_table_name,
-										element.username,
-										(element.user_id),
-										element.timestamp,
-										(element.tracking).protocol,
-										(long unsigned int)(element.tracking).saddr,
-										(long unsigned int)(element.tracking).daddr,
-										(element.tracking).source,
-										(element.tracking).dest,
-										TCP_STATE_DROP,
-										OSFullname,
-										AppFullname
-								    ) >= LONG_REQUEST_SIZE-1){
-								if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-									g_warning("Building mysql insert query, the LONG_REQUEST_SIZE limit was reached!\n");
-								g_free(OSFullname);
-								g_free(AppFullname);
-								return -1;
-							}
-							Result = mysql_real_query(ld, request, strlen(request));
-							g_free(OSFullname);
-							g_free(AppFullname);
-							if (Result != 0){
-								if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-									g_warning("Can not insert Data : %s\n",mysql_error(ld));
-								return -1;
-							}
-
-							return 0;
-							break;
-						} else {
-							if (snprintf(request,LONG_REQUEST_SIZE-1,
-										"INSERT INTO %s (oob_time_sec,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,state,oob_prefix) VALUES (%lu,%u,%lu,%lu,%u,%u,%hu,'UNAUTHENTICATED DROP')", 
-										mysql_table_name,
-										element.timestamp,
-										(element.tracking).protocol,
-										(long unsigned int)(element.tracking).saddr,
-										(long unsigned int)(element.tracking).daddr,
-										(element.tracking).source,
-										(element.tracking).dest,
-										TCP_STATE_DROP) >= (LONG_REQUEST_SIZE-1)){
-								if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-									g_warning("Building mysql insert query, the LONG_REQUEST_SIZE limit was reached!\n");
-								return -1;
-							}
-							Result = mysql_real_query(ld, request, strlen(request));
-							if (Result != 0){
-								if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-									g_warning("Can not insert Data : %s\n",mysql_error(ld));
-								return -1;
-							}
-						}
-						break;
-					}
-				default:
-					{
-						gchar* OSFullname;
-						gchar* AppFullname;
-						OSFullname = generate_osname(element.os_sysname,element.os_version,element.os_release);
-						AppFullname = generate_appname(element.app_name); /*Just a size check actually*/
-						if (snprintf(request,LONG_REQUEST_SIZE-1,"INSERT INTO %s (username,user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,state,oob_prefix,client_os,client_app) VALUES ('%s',%u,%lu,%u,%lu,%lu,%hu,'DROP','%s','%s')", //TODO : username NULL?
-									mysql_table_name,
-									element.username,
-									(element.user_id),
-									element.timestamp,
-									(element.tracking).protocol,
-									(long unsigned int) (element.tracking).saddr,
-									(long unsigned int) (element.tracking).daddr,
-									TCP_STATE_DROP,
-									OSFullname,
-									AppFullname
-							    ) >= LONG_REQUEST_SIZE-1){
-							if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-								g_warning("Building mysql insert query, the LONG_REQUEST_SIZE limit was reached!\n");
-							g_free(OSFullname);
-							g_free(AppFullname);
-							return -1;
-						}
-						g_free(OSFullname);
-						g_free(AppFullname);
-						Result = mysql_real_query(ld, request,strlen(request));
-						if (Result != 0){
-							if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-								g_warning("Can not insert Data : %s\n",mysql_error(ld));
-							return -1;
-						}
-						return 0;
-					}
-			}
-			break;
+            return log_state_drop(ld, element);
 
         // To make gcc happy
         default:
-            break;
+            return 0;
 	}
-	return 0;
 }
 
 G_MODULE_EXPORT gint log_sql_disconnect(void){
