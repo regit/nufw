@@ -46,6 +46,10 @@
 #define SHORT_REQUEST_SIZE 512
 #define LONG_REQUEST_SIZE 1024
 
+#define INSERT_REQUEST_FIEDLS_SIZE 200 
+#define INSERT_REQUEST_VALUES_SIZE 800 
+#define REQUEST_TMP_BUFFER 500 
+
 int mysql_request_timeout;
 char * mysql_user;
 char * mysql_passwd;
