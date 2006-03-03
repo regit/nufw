@@ -13,6 +13,29 @@
 	  them is mysql)
 	- libnuclient : free connection table
 	- libnuclient : fix multithreaded code
+	- nuauth: store user identifiers in 32 bits (and not 16), but still send
+	  user id. in 16 bits to nufw (with a warning)
+	- new configure option: --with-perf-display, display benchmark of user
+	  authentification
+	- nuauth: fixes about buffer underflow, check that received packet are big
+	  enough before casting them to structure
+	- nufw and nuauth: fix buffer overflow caused: replace strncpy with the
+	  new macro SECURE_STRNCPY which always write '\0' on last position, and
+	  replace call like sscanf(..., "%10s", ...) with SECURE_STRNCPY
+	- nufw: whole code is documented using doxygen syntax
+	- nufw and nuauth: use shorter syntax to display debug messages
+	- nufw and nuauth: fixes to make them compile in strict ANSI mode
+	  with gcc (using -ansi option)
+	- nufw and nuauth: fix memory leaks, some of them detected with the great
+	  tool Valgrind
+	- nuauth: reorganize source code, split big function in small
+	  sub-functions and move some functions in new files
+	- nufw and nuauth: remove dead code and unused variable/macro
+	- nufw and nuauth: use more explicit names for variables and structures,
+	  rename for example 'c' to 'socket'
+	- nuauth, module script: fix a security bug, quote script arguments
+	- small changes to make flawfinder and rats tools happy
+	- replace obsolete usleep() with nanosleep()
 1.1.3 (2006/01/25)
 	- nutrackd : PostGreSQL support
 	- Fixes in the PostGreSQL log module (removed the useless server_port
