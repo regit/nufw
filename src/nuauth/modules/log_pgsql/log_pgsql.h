@@ -36,8 +36,9 @@
 #define OSNAME_MAX_SIZE 64
 #define APPNAME_MAX_SIZE 256
 
-#define SHORT_REQUEST_SIZE 512
-#define LONG_REQUEST_SIZE 1024
+#define SHORT_REQUEST_SIZE 400 
+#define INSERT_REQUEST_FIEDLS_SIZE 200
+#define INSERT_REQUEST_VALUES_SIZE 800
 
 int pgsql_request_timeout;
 char * pgsql_user;

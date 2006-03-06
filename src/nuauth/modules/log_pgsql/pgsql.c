@@ -27,8 +27,8 @@
 #include <log_pgsql.h>
 #include <string.h>
 #include <errno.h>
-
 #include <time.h>
+#include "security.h"
 
 confparams pgsql_nuauth_vars[] = {
     { "pgsql_server_addr" , G_TOKEN_STRING, 0 , PGSQL_SERVER },
@@ -41,27 +41,25 @@ confparams pgsql_nuauth_vars[] = {
     { "pgsql_request_timeout" , G_TOKEN_INT , PGSQL_REQUEST_TIMEOUT , NULL }
 };
 
-G_MODULE_EXPORT gchar* 
-g_module_unload(void)
+G_MODULE_EXPORT gchar* g_module_unload(void)
 {
     PGconn *ld = g_private_get (pgsql_priv);
     PQfinish(ld);
     return NULL;
 }
 /* Init pgsql system */
-G_MODULE_EXPORT gchar* 
-g_module_check_init(GModule *module){
+G_MODULE_EXPORT gchar* g_module_check_init(GModule *module){
     unsigned int nb_params = sizeof(pgsql_nuauth_vars)/sizeof(confparams);
 
     /* parse conf file */
     parse_conffile(DEFAULT_CONF_FILE, nb_params, pgsql_nuauth_vars);
-   
+
     /* set variables */
 #define READ_CONF(KEY) \
     get_confvar_value(pgsql_nuauth_vars, nb_params, KEY)
 #define READ_CONF_INT(VAR, KEY, DEFAULT) \
     do { gpointer vpointer = READ_CONF(KEY); if (vpointer) VAR = *(int *)vpointer; else VAR = DEFAULT; } while (0)
-    
+
     pgsql_server = (char *)READ_CONF("pgsql_server_addr");
     READ_CONF_INT (pgsql_server_port, "pgsql_server_port", PGSQL_SERVER_PORT);
     pgsql_user = (char *)READ_CONF("pgsql_user");
@@ -77,559 +75,387 @@ g_module_check_init(GModule *module){
     return NULL;
 }
 
+
+gboolean secure_snprintf(char *buffer, unsigned int buffer_size, char *format, ...)
+{
+    va_list args;  
+    int ret;
+    va_start(args, format);
+    ret = g_vsnprintf(buffer, buffer_size, format, args);
+    va_end(args);
+    if (0 <= ret && ret <= (buffer_size-1))
+        return TRUE;
+    else
+        return FALSE;
+}    
+
+
+
 /* 
  * Initialize connection to pgsql server
  */
 
 G_MODULE_EXPORT PGconn *pgsql_conn_init(void){
-    PGconn *ld = NULL;
     char *pgsql_conninfo;
-    int pgsql_status; //,err,version=3;
-    char port[15],timeout[15]; //,server_port[15];
+    PGconn *ld = NULL;
+    int pgsql_status;
 
-    if (snprintf(port,14,"%d",pgsql_server_port) >= 14){return NULL;}
-    if (snprintf(timeout,14,"%d",pgsql_request_timeout) >= 14){return NULL;};
-//    if (snprintf(server_port,14,"%d",pgsql_server_port) >= 14){return NULL;};
-    pgsql_conninfo = (char *)calloc(strlen(pgsql_user) + strlen(pgsql_passwd) + 
-        strlen(pgsql_server) + strlen(pgsql_ssl) + strlen(pgsql_db_name) +
-        strlen(port) + strlen(timeout) +
-        strlen("hostaddr='' port= dbname='' user='' password='' connect_timeout= sslmode='' ") + 1, 
-        sizeof(char));
-    if (pgsql_conninfo == NULL){return NULL;}
-    //Build string we will pass to PQconnectdb
-    strncat(pgsql_conninfo,"host='",6);
-    strncat(pgsql_conninfo,pgsql_server,strlen(pgsql_server));
-    strncat(pgsql_conninfo,"' port=",7);
-    strncat(pgsql_conninfo,port,strlen(port));
-    strncat(pgsql_conninfo," dbname='",9);
-    strncat(pgsql_conninfo,pgsql_db_name,strlen(pgsql_db_name));
-    strncat(pgsql_conninfo,"' user='",8);
-    strncat(pgsql_conninfo,pgsql_user,strlen(pgsql_user));
-    strncat(pgsql_conninfo,"' password='",12);
-    strncat(pgsql_conninfo,pgsql_passwd,strlen(pgsql_passwd));
-    strncat(pgsql_conninfo,"' connect_timeout=",18);
-    strncat(pgsql_conninfo,timeout,strlen(timeout));
-    /* strcat(pgsql_conninfo," sslmode='");
-       strcat(pgsql_conninfo,pgsql_ssl); 
-       strcat(pgsql_conninfo,"'"); */
-    /* init connection */
-#if OTHER_CHOICE
-    pgsql_conninfo=g_strjoin(" ","host='",pgsql_server,
-		    "' port=",port,
-		    " dbname='", pgsql_db_name,
-		    "' user='",pgsql_user,
-		    "' password='",pgsql_passwd,
-		    "' connect_timeout=",timeout,
-                    NULL);
-#endif
-		    
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-        g_message("Going to init pgsql connection ");
+    log_message (DEBUG, AREA_MAIN,
+            "Going to init PostgreSQL connection.");
+
+    pgsql_conninfo = g_strdup_printf(
+            "host=%s port=%d dbname=%s user=%s password=%s connect_timeout=%d",
+            /* " sslmode=%s" */
+            pgsql_server,
+            pgsql_server_port,
+            pgsql_db_name,
+            pgsql_user,
+            pgsql_passwd,
+            pgsql_request_timeout
+            /* pgsql_ssl */
+            );
 
     ld = PQconnectdb(pgsql_conninfo);
-
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-        g_message("...");
     pgsql_status=PQstatus(ld);
-
     if(pgsql_status != CONNECTION_OK) {
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-            g_warning("pgsql init error : %s\n",strerror(errno));
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-            g_message("connection : %s",pgsql_conninfo);
-        free(pgsql_conninfo);
+        log_message (WARNING, AREA_MAIN,
+                "PostgreSQL init error: %s\n",
+                strerror(errno));
+        g_free(pgsql_conninfo);
         PQfinish(ld);
         return NULL;
     }
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-        g_message("Pgsql init done");
-    free(pgsql_conninfo);
+    log_message (DEBUG, AREA_MAIN, "PostgreSQL init done");
+    g_free(pgsql_conninfo);
     return ld;
 }
 
-static gchar * generate_osname(gchar *Name,gchar *Version,gchar *Release)
+char* quote_string(char *text)
 {
-  if (Name && Release && Version){
-    if ((strlen(Name)+strlen(Release)+strlen(Version)+3) > OSNAME_MAX_SIZE)
-      return g_strdup("");
-  }else
-      return g_strdup("");
-  return g_strjoin("-",Name,Version,Release,NULL);
+    unsigned int length = strlen(text);
+    char *quoted = (char *)malloc(length*2 + 1);
+    if (PQescapeString(quoted, text, length))
+    {
+        g_free(quoted);
+        return NULL;
+    }
+    return quoted;
+}    
+
+static gchar* generate_osname(gchar *Name, gchar *Version, gchar *Release)
+{
+    char *all, *quoted;
+    if (!Name || !Release || !Version 
+        || OSNAME_MAX_SIZE < (strlen(Name)+strlen(Release)+strlen(Version)+3))
+    {
+        return g_strdup("");
+    }
+    all = g_strjoin("-",Name,Version,Release,NULL);
+    quoted = quote_string(all);
+    g_free(all);
+    return quoted;
 }
 
-static gchar* generate_appname(gchar *Name)
-{ 
-  if (!Name)
-    return g_strdup("");
-  if ((strlen(Name)+1) > APPNAME_MAX_SIZE)
-  {
-      return g_strdup("");
-  }
-  return g_strdup(Name);
-}
-
-
-
-G_MODULE_EXPORT gint user_packet_logs (connection_t element, tcp_state_t state){
-    PGconn *ld = g_private_get (pgsql_priv);
-    char request[LONG_REQUEST_SIZE];
-    struct in_addr ipone,iptwo;
+int pgsql_insert(PGconn *ld, connection_t element, char *oob_prefix, tcp_state_t state)
+{
+    char request_fields[INSERT_REQUEST_FIEDLS_SIZE];
+    char request_values[INSERT_REQUEST_VALUES_SIZE];
+    char tmp_buffer[INSERT_REQUEST_VALUES_SIZE];
+    struct in_addr ip_addr;
+    char ip_src[INET_ADDRSTRLEN+1], ip_dest[INET_ADDRSTRLEN+1];
+    gboolean ok;
     PGresult *Result;
-    char tmp_inet1[41], tmp_inet2[41];
+    char *sql_query;
+
+    ip_addr.s_addr = ntohl(element.tracking.saddr);
+    SECURE_STRNCPY(ip_src, inet_ntoa(ip_addr), sizeof(ip_src)) ;
+    ip_addr.s_addr = ntohl(element.tracking.daddr);
+    SECURE_STRNCPY(ip_dest, inet_ntoa(ip_addr), sizeof(ip_dest));
+
+    /* Write common informations */
+    ok = secure_snprintf(request_fields, sizeof(request_fields),
+            "INSERT INTO %s (oob_prefix, state, oob_time_sec"
+            "ip_protocol, ip_saddr, ip_daddr",
+            pgsql_table_name
+            );
+    if (!ok) {
+        return -1;
+    }
+    ok = secure_snprintf(request_values, sizeof(request_values),
+            "VALUES ('%s', '%hu', '%lu', '%u','%s','%s'",
+            oob_prefix,
+            state,
+            element.timestamp,
+            element.tracking.protocol,
+            ip_src,
+            ip_dest
+            );
+    if (!ok) {
+        return -1;
+    }
+
+    /* Add user informations */ 
+    if (element.username) {
+        /* Get OS and application names */
+        char *quoted_username = quote_string(element.username);
+        char *quoted_osname = generate_osname(
+                element.os_sysname,
+                element.os_version,
+                element.os_release);
+        char *quoted_appname;
+        
+        if (element.app_name != NULL  && strlen(element.app_name) < APPNAME_MAX_SIZE)
+            quoted_appname = quote_string(element.app_name);
+        else
+            quoted_appname = g_strdup("");
+
+        /* Quote strings send to MySQL */ 
+        g_strlcat(
+                request_fields, 
+                ", user_id, username, client_os, client_app", 
+                sizeof(request_fields));
+        ok = secure_snprintf(tmp_buffer, sizeof(tmp_buffer),
+                ", '%u', '%s', '%s', '%s'",
+                element.user_id,
+                quoted_username,
+                quoted_osname,
+                quoted_appname
+                );
+        g_free(quoted_username);
+        g_free(quoted_osname);
+        g_free(quoted_appname);
+        if (!ok) {
+            return -1;
+        }
+    }
+
+    /* Add TCP/UDP parameters */
+    if ((element.tracking.protocol == IPPROTO_TCP) 
+            || (element.tracking.protocol == IPPROTO_UDP))
+    {
+        if (element.tracking.protocol == IPPROTO_TCP) {
+            g_strlcat(
+                    request_fields, 
+                    ", tcp_sport, tcp_dport) ", 
+                    sizeof(request_fields));
+        } else {
+            g_strlcat(
+                    request_fields, 
+                    ", udp_sport, udp_dport) ", 
+                    sizeof(request_fields));
+        }
+        ok = secure_snprintf(tmp_buffer, sizeof(tmp_buffer),
+                ", %hu, %hu);", 
+                element.tracking.source,
+                element.tracking.dest);
+        if (!ok) {
+            return -1;
+        }
+        g_strlcat(request_values, tmp_buffer, sizeof(request_values));
+    } else {
+        g_strlcat(request_fields, ") ", sizeof(request_fields));
+        g_strlcat(request_values, ");", sizeof(request_values));
+    }
+
+    /* Check overflow */
+    if (( (sizeof(request_fields)-1) <= strlen(request_fields) )
+            ||
+            ( (sizeof(request_values)-1) <= strlen(request_values) ))
+    {
+        return -1;
+    }
+
+    /* create the sql query */
+    sql_query = g_strconcat(request_fields, request_values, NULL);
+    if (sql_query == NULL) {
+        log_message(SERIOUS_WARNING, AREA_MAIN,
+                "Fail to build PostgreSQL query (maybe too long)!");
+        return -1;
+    }
+    
+    /* do the query */
+    log_message(DEBUG, AREA_MAIN, "PostgreSQL: do insert \"%s\".", sql_query);
+    Result = PQexec(ld, sql_query);
+
+    /* check error */
+    if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK){
+        log_message (SERIOUS_WARNING, AREA_MAIN,
+                "Can not insert Data in PostgreSQL: %s\n",
+                PQerrorMessage(ld));
+        PQclear(Result);
+        return -1;
+    }
+    PQclear(Result);
+    return 0;
+}
+
+int pgsql_update_close(PGconn *ld, connection_t element)
+{
+    struct in_addr addr;
+    char ip_src[INET_ADDRSTRLEN+1];
+    char request[SHORT_REQUEST_SIZE];
+    PGresult *Result;
+    gboolean ok;
+
+    addr.s_addr = ntohl(element.tracking.saddr);
+    SECURE_STRNCPY(ip_src, inet_ntoa(addr), sizeof(ip_src)) ;
+
+    ok = secure_snprintf(request, sizeof(request),
+            "UPDATE %s SET state='%hu', end_timestamp='%lu' "
+            "WHERE (ip_saddr='%s' AND tcp_sport='%u' "
+            "AND (state=1 OR state=2));",
+            pgsql_table_name,
+            TCP_STATE_CLOSE,
+            element.timestamp,
+            ip_src,
+            element.tracking.source);
+    if (!ok) {
+        log_message (SERIOUS_WARNING, AREA_MAIN,
+                "Fail to build PostgreSQL query (maybe too long)!");
+        return -1;
+    }
+
+    Result = PQexec(ld, request);
+    if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK){
+        log_message (SERIOUS_WARNING, AREA_MAIN,
+                "Can not update PostgreSQL data: %s\n",
+                PQerrorMessage(ld));
+        PQclear(Result);
+        return -1;
+    }
+    PQclear(Result);
+    return 0;
+}    
+
+
+int pgsql_update_state(PGconn *ld, connection_t element, 
+        tcp_state_t old_state, tcp_state_t new_state, 
+        int reverse)
+{
+    char request[SHORT_REQUEST_SIZE];
+    PGresult *Result;
+    struct in_addr ip_addr;
+    char tmp_inet1[INET_ADDRSTRLEN+1], tmp_inet2[INET_ADDRSTRLEN+1];
+    short int tcp_src, tcp_dst;
+    char *ip_src, *ip_dst;
+    int nb_try = 0;
+    int nb_tuple;
+    gboolean ok;
+
+    /* setup IP/TCP parameters */
+    ip_addr.s_addr=ntohl((element.tracking).saddr);
+    SECURE_STRNCPY(tmp_inet1, inet_ntoa(ip_addr), sizeof(tmp_inet1)) ;
+    ip_addr.s_addr=ntohl((element.tracking).daddr);
+    SECURE_STRNCPY(tmp_inet2, inet_ntoa(ip_addr), sizeof(tmp_inet2));
+    if (reverse) { 
+        ip_src = tmp_inet2;
+        ip_dst = tmp_inet1;
+        tcp_src = element.tracking.dest;
+        tcp_dst = element.tracking.source;
+    } else {
+        ip_src = tmp_inet1;
+        ip_dst = tmp_inet2;
+        tcp_src = element.tracking.source;
+        tcp_dst = element.tracking.dest;
+    }       
+
+    /* build sql query */
+    ok = secure_snprintf(request, sizeof(request),
+            "UPDATE %s SET state='%hu', start_timestamp='%lu' "
+            "WHERE (ip_daddr='%s' AND ip_saddr='%s' "
+            "AND tcp_dport='%u' AND tcp_sport='%u' AND state='%hu');",
+            pgsql_table_name,
+            new_state, element.timestamp,
+            ip_src, ip_dst,
+            tcp_src, tcp_dst, old_state);
+    if (!ok)
+    {
+        log_message (SERIOUS_WARNING, AREA_MAIN,
+                "Fail to build PostgreSQL query (maybe too long)!");
+        return -1;
+    }
+
+    while (nb_try < 2){
+        /* build the query */
+        nb_try++;
+
+        /* do the query */
+        Result = PQexec(ld, request);
+        if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK){
+            log_message (SERIOUS_WARNING, AREA_MAIN,
+                "Can not update data: %s",
+                PQerrorMessage(ld));
+            PQclear(Result);
+            return -1;
+        }
+        nb_tuple = atoi(PQcmdTuples(Result));
+        PQclear(Result);
+        
+        /* ok */
+        if (nb_tuple >= 1){
+            return 0;
+        }
+        
+        /* error */
+        if (nb_try<2) {
+            /* Sleep for 1/3 sec */
+            struct timespec sleep;
+            sleep.tv_sec = 0;
+            sleep.tv_nsec = 333333333;
+            nanosleep(&sleep, NULL);
+        }
+    }
+    debug_log_message (WARNING, AREA_MAIN,
+            "Tried to update PGSQL entry twice, looks like data to update wasn't inserted\n");
+    return -1;
+}    
+
+G_MODULE_EXPORT gint user_packet_logs (connection_t element, tcp_state_t state)
+{
+    /* get/open postgresql connection */
+    PGconn *ld = g_private_get (pgsql_priv);
     if (ld == NULL){
         ld=pgsql_conn_init();
         if (ld == NULL){
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-                g_warning("Can not initiate PGSQL conn\n");
+            log_message (SERIOUS_WARNING, AREA_MAIN,
+                    "Can not initiate PGSQL connection!\n");
             return -1;
         }
         g_private_set(pgsql_priv,ld);
     }
-    /* contruct request */
+
     switch (state){
-      case TCP_STATE_OPEN:
-        switch ((element.tracking).protocol){
-          case IPPROTO_TCP:
-            //
-            // FIELD          IN NUAUTH STRUCTURE               IN ULOG
-            //user_id               u_int16_t                   integer
-            //   \--> TODO: haypo changed it to 32 bits (4 bytes)
-            //ip_protocol           u_int8_t                    smallint        2 bytes
-            //ip_saddr              u_int32_t                   inet            12 or 24 bytes (ipv4 or ipv6)
-            //ip_daddr              u_int32_t                   inet
-            //tcp_sport             u_int16_t                   integer         4 bytes
-            //tcp_dport             u_int16_t                   integer
-            //udp_sport             u_int16_t                   integer
-            //udp_dport             u_int16_t                   integer
-            //icmp_type             u_int8_t                    smallint        2 bytes
-            //icmp_code             u_int8_t                    smallint        2 bytes
-            //start_timestamp       long                        bigint          8 bytes
-            //end_timestamp         long                        bigint
-            //
-            //
-            //
-            ipone.s_addr=ntohl((element.tracking).saddr);
-            iptwo.s_addr=ntohl((element.tracking).daddr);
-            strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
-            strncpy(tmp_inet2,inet_ntoa(iptwo),40);
-            if (nuauthconf->log_users_strict){
-                if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET end_timestamp=%lu, state=%hu WHERE (ip_saddr='%s' and tcp_sport=%u and (state=1 or state=2))",
-                  pgsql_table_name,
-                  element.timestamp,
-                  TCP_STATE_CLOSE,
-                  tmp_inet1,
-                  (element.tracking).source
-                  ) >= SHORT_REQUEST_SIZE-1){
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-                    g_warning("Building pgsql update query, the SHORT_REQUEST_SIZE limit was reached!\n");
-                return -1;
-              }
-              Result = PQexec(ld, request);
-              if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK){
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-                    g_warning("Can not update Data : %s\n",PQerrorMessage(ld));
-                PQclear(Result);
-                return -1;
-              } else {
-		PQclear(Result);
-	      }
-            }
-	    if (element.username != NULL) { 
-                gchar* OSFullname;
-                gchar* AppFullname;
-                OSFullname = generate_osname(element.os_sysname,element.os_version,element.os_release);
-                AppFullname = generate_appname(element.app_name); /*Just a size check actually*/
-                if (snprintf(request,LONG_REQUEST_SIZE-1,"INSERT INTO %s (username,user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,state,oob_prefix,client_os,client_app) VALUES ('%s',%u,%lu,%u,'%s','%s',%u,%u,%hu,'ACCEPT','%s','%s');",
-                  pgsql_table_name,
-                  element.username,
-                  (element.user_id),
-                  element.timestamp,
-                  (element.tracking).protocol,
-                  tmp_inet1,
-                  tmp_inet2,
-                  (element.tracking).source,
-                  (element.tracking).dest,
-                  TCP_STATE_OPEN,
-                  OSFullname,
-                  AppFullname
-                  ) >= LONG_REQUEST_SIZE-1 ) {
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-                    g_warning("Building pgsql insert query, the LONG_REQUEST_SIZE limit was reached!\n");
-	        g_free(OSFullname);
-		g_free(AppFullname);
-                return -1;
-            	}
-		g_free(OSFullname);
-		g_free(AppFullname);
-	    } else {
-              if (snprintf(request,SHORT_REQUEST_SIZE-1,"INSERT INTO %s (user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,state,oob_prefix) VALUES (%u,%lu,%u,'%s','%s',%u,%u,%hu,'ACCEPT');", 
-                  pgsql_table_name,
-                  (element.user_id),
-                  element.timestamp,
-                  (element.tracking).protocol,
-                  tmp_inet1,
-                  tmp_inet2,
-                  (element.tracking).source,
-                  (element.tracking).dest,
-                  TCP_STATE_OPEN
-                  ) >= SHORT_REQUEST_SIZE-1){
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-                    g_warning("Building pgsql insert query, the SHORT_REQUEST_SIZE limit was reached!\n");
-
-                return -1;
-            }
-
-	    }
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-                g_message("Doing %s ...",request);
-
-            Result = PQexec(ld, request);
-
-            if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK){
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-                    g_warning("Can not insert Data : %s\n",PQerrorMessage(ld));
-                PQclear(Result);
-                return -1;
-            } else {
-		PQclear(Result);
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-                    g_message("Request done\n");
-            }
-            break;
-          case IPPROTO_UDP:
-          {
-            gchar* OSFullname;
-            gchar* AppFullname;
-            OSFullname = generate_osname(element.os_sysname,element.os_version,element.os_release);
-            AppFullname = generate_appname(element.app_name); /*Just a size check actually*/
-            ipone.s_addr=ntohl((element.tracking).saddr);
-            iptwo.s_addr=ntohl((element.tracking).daddr);
-            strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
-            strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
-            if (snprintf(request,LONG_REQUEST_SIZE-1,"INSERT INTO %s (username,user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,state,oob_prefix,client_os,client_app) VALUES ('%s',%u,%lu,%u,'%s','%s',%u,%u,%hu,'ACCEPT','%s','%s');", //TODO : Add a check about username being NULL
-                  pgsql_table_name,
-                  element.username,
-                  (element.user_id),
-                  element.timestamp,
-                  (element.tracking).protocol,
-                  tmp_inet1,
-                  tmp_inet2,
-                  (element.tracking).source,
-                  (element.tracking).dest,
-                  TCP_STATE_OPEN,
-                  OSFullname,
-                  AppFullname
-                  ) >= LONG_REQUEST_SIZE-1 ){
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-                    g_warning("Building pgsql insert query, the LONG_REQUEST_SIZE limit was reached!\n");
-	        g_free(OSFullname);
-		g_free(AppFullname);
-                return -1;
-            }
-	    g_free(OSFullname);
-	    g_free(AppFullname);
-            Result = PQexec(ld, request);
-            if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK){
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-                    g_warning("Can not insert Data : %s\n",PQerrorMessage(ld));
-                PQclear(Result);
-                return -1;
-            }
-            PQclear(Result);
-            return 0;
-          }
-          default:
-          {
-            gchar* OSFullname;
-            gchar* AppFullname;
-            OSFullname = generate_osname(element.os_sysname,element.os_version,element.os_release);
-            AppFullname = generate_appname(element.app_name); /*Just a size check actually*/
-            ipone.s_addr=ntohl((element.tracking).saddr);
-            iptwo.s_addr=ntohl((element.tracking).daddr);
-            strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
-            strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
-            if (snprintf(request,LONG_REQUEST_SIZE-1,"INSERT INTO %s (username,user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,state,oob_prefix,client_os,client_app) VALUES ('%s',%u,%lu,%u,'%s','%s',%hu,'ACCEPT','%s','%s');", //TODO : username NULL?
-                  pgsql_table_name,
-                  element.username,
-                  (element.user_id),
-                  element.timestamp,
-                  (element.tracking).protocol,
-                  tmp_inet1,
-                  tmp_inet2,
-                  TCP_STATE_OPEN,
-                  OSFullname,
-                  AppFullname
-                  ) >= LONG_REQUEST_SIZE-1){
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-                    g_warning("Building pgsql insert query, the LONG_REQUEST_SIZE limit was reached!\n");
-	        g_free(OSFullname);
-		g_free(AppFullname);
-                return -1;
-            }
-	    g_free(OSFullname);
-	    g_free(AppFullname);
-            Result = PQexec(ld, request);
-            if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK){
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-                    g_warning("Can not insert Data : %s\n",PQerrorMessage(ld));
-                PQclear(Result);
-                return -1;
-            }
-            PQclear(Result);
-            return 0;
-          }
-        }
-        break;
-      case TCP_STATE_ESTABLISHED:
-        if ((element.tracking).protocol == IPPROTO_TCP){
-            int update_status = 0;
-            while (update_status < 2){
-              update_status++;
-              ipone.s_addr=ntohl((element.tracking).saddr);
-              iptwo.s_addr=ntohl((element.tracking).daddr);
-              strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
-              strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
-              if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET state=%hu, start_timestamp=%lu WHERE (ip_daddr='%s' and ip_saddr='%s' and tcp_dport=%u and tcp_sport=%u and state=%hu);",
-                  pgsql_table_name,
-                  TCP_STATE_ESTABLISHED,
-                  element.timestamp,
-                  tmp_inet1,
-                  tmp_inet2,
-                  (element.tracking).source,
-                  (element.tracking).dest,
-                  TCP_STATE_OPEN
-                  ) >= SHORT_REQUEST_SIZE-1){
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-                    g_warning("Building pgsql update query, the SHORT_REQUEST_SIZE limit was reached!\n");
-                return -1;
-            }
-            Result = PQexec(ld, request);
-            if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK){
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-                    g_warning("Can not update Data : %s\n",PQerrorMessage(ld));
-                PQclear(Result);
-                return -1;
-            }
-            if (atoi(PQcmdTuples(Result)) >= 1){
-	   	PQclear(Result);
-                return 0;
-            }else{
-                if (update_status <2){
-                    /* Sleep for 1/3 sec */
-                    struct timespec sleep;
-                    sleep.tv_sec = 0;
-                    sleep.tv_nsec = 333333333;
-                    nanosleep(&sleep, NULL);
-                }else{
-#ifdef DEBUG_ENABLE
-                    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-                        g_warning("Tried to update PGSQL entry twice, looks like data to update wasn't inserted\n");
-#endif
+        case TCP_STATE_OPEN:
+            if (element.tracking.protocol == IPPROTO_TCP 
+                && nuauthconf->log_users_strict)
+            {
+                int ret = pgsql_update_close(ld, element);
+                if (ret != 0) {
+                    return ret;
                 }
-            PQclear(Result);
             }
-          }
-          return 0;
-        }
-        //Nothing will be done...
-        return 0;
-      case TCP_STATE_CLOSE:
-        if ((element.tracking).protocol == IPPROTO_TCP){
-            int update_status = 0;
-            while (update_status < 2){
-              update_status++;
-              ipone.s_addr=ntohl((element.tracking).saddr);
-              iptwo.s_addr=ntohl((element.tracking).daddr);
-              strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
-              strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
-              if (snprintf(request,SHORT_REQUEST_SIZE-1,"UPDATE %s SET end_timestamp=%lu, state=%hu WHERE (ip_saddr='%s' and ip_daddr='%s' and tcp_sport=%u and tcp_dport=%u and state=%hu);",
-                  pgsql_table_name,
-                  element.timestamp,
-                  TCP_STATE_CLOSE,
-                  tmp_inet1,
-                  tmp_inet2,
-                  (element.tracking).source,
-                  (element.tracking).dest,
-                  TCP_STATE_ESTABLISHED
-                  ) >= SHORT_REQUEST_SIZE-1){
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-                    g_warning("Building pgsql update query, the SHORT_REQUEST_SIZE limit was reached!\n");
-                return -1;
-              }
-              Result = PQexec(ld, request);
-              if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK){
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-                    g_warning("Can not update Data : %s\n",PQerrorMessage(ld));
-                PQclear(Result);
-                return -1;
-              }
-              if (atoi(PQcmdTuples(Result)) >=1){
-                PQclear(Result);
+
+            return pgsql_insert(ld, element, "ACCEPT", state);
+
+        case TCP_STATE_ESTABLISHED:
+            if (element.tracking.protocol == IPPROTO_TCP)
+                return pgsql_update_state(ld, element, TCP_STATE_OPEN, TCP_STATE_ESTABLISHED, 0);
+            else
                 return 0;
-              }else{
-                if (update_status <2){
-                    /* Sleep for 2/3 sec */
-                    struct timespec sleep;
-                    sleep.tv_sec = 0;
-                    sleep.tv_nsec = 666666666;
-                    nanosleep(&sleep, NULL);
-                }else{
-#ifdef DEBUG_ENABLE
-                    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-                        g_warning("Tried to update PGSQL entry twice, looks like data to update wasn't inserted\n");
-#endif
-                }
 
-                PQclear(Result);
-              }
-            }
-          return 0;
-        }
-        //Nothing will be done...
-        return 0;
-      case TCP_STATE_DROP:
-        switch ((element.tracking).protocol) {
-          case IPPROTO_TCP:
-          {
-            gchar* OSFullname;
-            gchar* AppFullname;
-            OSFullname = generate_osname(element.os_sysname,element.os_version,element.os_release);
-            AppFullname = generate_appname(element.app_name); /*Just a size check actually*/
-            ipone.s_addr=ntohl((element.tracking).saddr);
-            iptwo.s_addr=ntohl((element.tracking).daddr);
-            strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
-            strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
-	    if (element.username == NULL){
-			element.username="No User Given";
-	    }
-            if (snprintf(request,LONG_REQUEST_SIZE-1,"INSERT INTO %s (username,user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,state,oob_prefix,client_os,client_app) VALUES ('%s',%u,%lu,%u,'%s','%s',%u,%u,%hu,'DROP','%s','%s');",//TODO : username NULL?
-                  pgsql_table_name,
-                  element.username,
-                  (element.user_id),
-                  element.timestamp,
-                  (element.tracking).protocol,
-                  tmp_inet1,
-                  tmp_inet2,
-                  (element.tracking).source,
-                  (element.tracking).dest,
-                  TCP_STATE_DROP,
-                  OSFullname,
-                  AppFullname
-                  ) >= LONG_REQUEST_SIZE-1 ){
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-                    g_warning("Building pgsql insert query, the LONG_REQUEST_SIZE limit was reached!\n");
-	        g_free(OSFullname);
-		g_free(AppFullname);
-                return -1;
-            }
-	    g_free(OSFullname);
-	    g_free(AppFullname);
-            Result = PQexec(ld, request);
-            if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK){
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-                    g_warning("Can not insert Data : %s\n",PQerrorMessage(ld));
-                PQclear(Result);
-                return -1;
-            }
-            PQclear(Result);
-            break;
-          }
-          case IPPROTO_UDP:
-          {
-            gchar* OSFullname;
-            gchar* AppFullname;
-            OSFullname = generate_osname(element.os_sysname,element.os_version,element.os_release);
-            AppFullname = generate_appname(element.app_name); /*Just a size check actually*/
-            ipone.s_addr=ntohl((element.tracking).saddr);
-            iptwo.s_addr=ntohl((element.tracking).daddr);
-            strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
-            strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
-	    if (element.username == NULL){
-			element.username="No User Given";
-	    }
-            if (snprintf(request,LONG_REQUEST_SIZE-1,"INSERT INTO %s (username,user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,udp_sport,udp_dport,state,oob_prefix,client_os,client_app) VALUES ('%s',%u,%lu,%u,'%s','%s',%u,%u,%hu,'DROP','%s','%s');", //TODO : username NULL?
-                  pgsql_table_name,
-                  element.username,
-                  (element.user_id),
-                  element.timestamp,
-                  (element.tracking).protocol,
-                  tmp_inet1,
-                  tmp_inet2,
-                  (element.tracking).source,
-                  (element.tracking).dest,
-                  TCP_STATE_DROP,
-                  OSFullname,
-                  AppFullname
-                  ) >= LONG_REQUEST_SIZE-1 ){
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-                    g_warning("Building pgsql insert query, the LONG_REQUEST_SIZE limit was reached!\n");
-	        g_free(OSFullname);
-		g_free(AppFullname);
-                return -1;
-            }
-	    g_free(OSFullname);
-	    g_free(AppFullname);
-            Result = PQexec(ld, request);
-            if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK){
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-                    g_warning("Can not insert Data : %s\n",PQerrorMessage(ld));
-                PQclear(Result);
-                return -1;
-            }
-            PQclear(Result);
-            return 0;
-            break;
-          }
-          default:
-          {
-            gchar* OSFullname;
-            gchar* AppFullname;
-            OSFullname = generate_osname(element.os_sysname,element.os_version,element.os_release);
-            AppFullname = generate_appname(element.app_name); /*Just a size check actually*/
-            ipone.s_addr=ntohl((element.tracking).saddr);
-            iptwo.s_addr=ntohl((element.tracking).daddr);
-            strncpy(tmp_inet1,inet_ntoa(ipone),40) ;
-            strncpy(tmp_inet2,inet_ntoa(iptwo),40) ;
-            if (snprintf(request,LONG_REQUEST_SIZE-1,"INSERT INTO %s (username,user_id,oob_time_sec,ip_protocol,ip_saddr,ip_daddr,state,oob_prefix,client_os,client_app) VALUES ('%s',%u,%lu,%u,'%s','%s',%lu,%hu,'DROP','%s','%s');", //TODO : username NULL?
-                  pgsql_table_name,
-                  element.username,
-                  (element.user_id),
-                  element.timestamp,
-                  (element.tracking).protocol,
-                  tmp_inet1,
-                  tmp_inet2,
-                  element.timestamp,
-                  TCP_STATE_DROP,
-                  OSFullname,
-                  AppFullname
-                  ) >= LONG_REQUEST_SIZE-1){
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-                    g_warning("Building pgsql insert query, the LONG_REQUEST_SIZE limit was reached!\n");
-	        g_free(OSFullname);
-		g_free(AppFullname);
-                return -1;
-            }
-	    g_free(OSFullname);
-	    g_free(AppFullname);
-            Result = PQexec(ld, request);
-            if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK){
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-                    g_warning("Can not insert Data : %s\n",PQerrorMessage(ld));
-                PQclear(Result);
-                return -1;
-            }
-            PQclear(Result);
-            return 0;
-          }
-        }
-        break;
+        case TCP_STATE_CLOSE:
+            if (element.tracking.protocol == IPPROTO_TCP)
+                return pgsql_update_state(ld, element, TCP_STATE_ESTABLISHED, TCP_STATE_CLOSE, 1);
+            else
+                return 0;
 
-      // To make gcc happy
-      default:
-        break;
+        case TCP_STATE_DROP:
+            return pgsql_insert(ld, element, "DROP", state);
+
+            /* Skip other messages */
+        default:
+            return 0;
     }
-    //This return is just here to please GCC, will never be reached
-    return 0;
 }
 
 G_MODULE_EXPORT gint log_sql_disconnect(void){
@@ -637,3 +463,4 @@ G_MODULE_EXPORT gint log_sql_disconnect(void){
     PQfinish(ld);
     return 0;
 }
+
