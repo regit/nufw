@@ -35,6 +35,7 @@
 
 #include <auth_srv.h>
 #include <sasl/saslutil.h>
+#include "security.h"
 
 gchar * mech_string_internal;
 gchar * mech_string_external;
@@ -189,7 +190,7 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 	gboolean external_auth=FALSE;
 	struct in_addr remote_inaddr;
 	ssize_t record_send;
-	char addresse[INET_ADDRSTRLEN+1];
+	char address[INET_ADDRSTRLEN+1];
 
 	remote_inaddr.s_addr=c_session->addr;
 
@@ -304,13 +305,17 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 		/*		ret = sasl_getprop(conn, SASL_USERNAME, (const void **)	&(c_session->userid)); */
 		if (ret == SASL_OK){
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
-				inet_ntop( AF_INET, &remote_inaddr, addresse, INET_ADDRSTRLEN);
-				g_warning("%s at %s is a badguy",c_session->userid,addresse);
+				const char *err = inet_ntop( AF_INET, &remote_inaddr, address, sizeof(address));
+                if (err == NULL)
+                    SECURE_STRNCPY(address, "<inet_ntop error>", sizeof(address));
+				g_warning("%s at %s is a badguy",c_session->userid,address);
 			}
 		}else{
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
-				inet_ntop( AF_INET, &remote_inaddr, addresse, INET_ADDRSTRLEN);
-				g_warning("unidentified badguy(?) from %s",addresse);
+				const char *err = inet_ntop( AF_INET, &remote_inaddr, address, sizeof(address));
+                if (err == NULL)
+                    SECURE_STRNCPY(address, "<inet_ntop error>", sizeof(address));
+				g_warning("unidentified badguy(?) from %s",address);
 			}
 		}
 		if (gnutls_record_send(session,"N", 1)<=0) /* send NO to client */
@@ -401,8 +406,10 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 		} else {
 #ifdef DEBUG_ENABLE
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
-				inet_ntop( AF_INET, &remote_inaddr, addresse, INET_ADDRSTRLEN);
-				g_message("%s users on multi server %s\n", c_session->userid,addresse);
+				const char *err = inet_ntop( AF_INET, &remote_inaddr, address, sizeof(address));
+                if (err == NULL)
+                    SECURE_STRNCPY(address, "<inet_ntop error>", sizeof(address));
+				g_message("%s users on multi server %s\n", c_session->userid,address);
 			}
 #endif
 			if (gnutls_record_send(session,"N", 1) <= 0) /* send NO to client */

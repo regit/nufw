@@ -51,8 +51,8 @@
  *  It returns the decision using SASL define return value and fill uid and list of groups
  *  the user belongs to.
  */
-
-int user_check (const char *user, const char *pass,unsigned passlen, uint32_t *uid, GSList **groups){
+int user_check (const char *user, const char *pass,unsigned passlen, uint32_t *uid, GSList **groups)
+{
 	/* iter through module list and stop when user is found */
 	GSList *walker=user_check_modules;
 	int walker_return=0;
@@ -68,8 +68,8 @@ int user_check (const char *user, const char *pass,unsigned passlen, uint32_t *u
  * Check a connection and return a list of acl that match the information
  * contained in the connection.
  */
-
-GSList * acl_check (connection_t* element){
+GSList* acl_check (connection_t* element)
+{
 	/* iter through module list and stop when an acl is found */
 	GSList *walker=acl_check_modules;
 	GSList* walker_return=NULL;
@@ -84,7 +84,8 @@ GSList * acl_check (connection_t* element){
 }
 
 /* ip auth */
-gchar* ip_auth(tracking_t * header){
+gchar* ip_auth(tracking_t * header)
+{
 	/* iter through module list and stop when decision is made */
 	GSList *walker=ip_auth_modules;
 	gchar* walker_return=NULL;
@@ -100,26 +101,28 @@ gchar* ip_auth(tracking_t * header){
 /**
  * log authenticated packets
  */
-int user_logs (connection_t element, tcp_state_t state){
+int user_logs (connection_t element, tcp_state_t state)
+{
 	/* iter through all modules list */
 	GSList *walker=user_logs_modules;
-	for (;walker!=NULL;walker=walker->next ){
-		(*(user_logs_callback*)(walker->data))(element,state);
+	for (; walker!=NULL; walker=walker->next) {
+        user_logs_callback *handler = (user_logs_callback*)walker->data;
+		handler (element, state);
 	}
-
 	return 0;
 }
 
 /**
  * log user connection and disconnection
  */
-int user_session_logs(user_session* user, session_state_t state){
+int user_session_logs(user_session* user, session_state_t state)
+{
     /* iter through all modules list */
     GSList *walker=user_session_logs_modules;
-    for (;walker!=NULL;walker=walker->next ){
-        (*(user_session_logs_callback*)(walker->data))(user,state);
+    for (; walker!=NULL; walker=walker->next) {
+        user_session_logs_callback *handler = (user_session_logs_callback *)walker->data;
+        handler (user, state);
     }
-
     return 0;
 }
 
@@ -127,27 +130,29 @@ int user_session_logs(user_session* user, session_state_t state){
  * parse time period configuration for each module
  * and fille the given hash (first argument)
  */
-
 void parse_periods(GHashTable* periods)
 {
    /* iter through all modules list */
     GSList *walker=period_modules;
-    for (;walker!=NULL;walker=walker->next ){
-        (*(define_period_callback*)(walker->data))(periods);
+    for (; walker!=NULL; walker=walker->next ){
+        define_period_callback *handler = (define_period_callback*)walker->data;
+        handler (periods);
     }
 }
 
-int init_modules_system(){
+int init_modules_system()
+{
 	/* init modules list mutex */
 	modules_mutex = g_mutex_new ();
 	user_check_modules=NULL;
 	acl_check_modules=NULL;
-        period_modules=NULL;
+    period_modules=NULL;
 	ip_auth_modules=NULL;
 	user_logs_modules=NULL;
-        user_session_logs_modules=NULL;
+    user_session_logs_modules=NULL;
 	return 1;
 }
+
 /**
  * Load module for a task
  *
@@ -283,36 +288,36 @@ int load_modules()
 
 int unload_modules()
 {
-        GSList *c_module;
-        const gchar* module_name;
+    GSList *c_module;
+    const gchar* module_name;
 
-	g_mutex_lock(modules_mutex);
-        g_slist_free(user_check_modules);
-	user_check_modules=NULL;
-        g_slist_free(acl_check_modules);
-	acl_check_modules=NULL;
-        g_slist_free(period_modules);
-        period_modules=NULL;
-        g_slist_free(ip_auth_modules);
-	ip_auth_modules=NULL;
-        g_slist_free(user_logs_modules);
-	user_logs_modules=NULL;
-        g_slist_free(user_session_logs_modules);
-        user_session_logs_modules=NULL;
+    g_mutex_lock(modules_mutex);
+    g_slist_free(user_check_modules);
+    user_check_modules=NULL;
+    g_slist_free(acl_check_modules);
+    acl_check_modules=NULL;
+    g_slist_free(period_modules);
+    period_modules=NULL;
+    g_slist_free(ip_auth_modules);
+    ip_auth_modules=NULL;
+    g_slist_free(user_logs_modules);
+    user_logs_modules=NULL;
+    g_slist_free(user_session_logs_modules);
+    user_session_logs_modules=NULL;
 
-        for(c_module=nuauthdatas->modules;c_module;c_module=c_module->next){
-                module_name=g_module_name((GModule*)(c_module->data));
-                if (!g_module_close((GModule*)(c_module->data))){
-                       g_message("module unloading failed for %s",module_name); 
-                } else {
-	                if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
-                                g_message("module unloading done for %s",module_name); 
-                        }
-                }
+    for(c_module=nuauthdatas->modules;c_module;c_module=c_module->next){
+        module_name=g_module_name((GModule*)(c_module->data));
+        if (!g_module_close((GModule*)(c_module->data))){
+            g_message("module unloading failed for %s",module_name); 
+        } else {
+            if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
+                g_message("module unloading done for %s",module_name); 
+            }
         }
-        g_slist_free(nuauthdatas->modules);
-        nuauthdatas->modules=NULL;
-	g_mutex_unlock(modules_mutex);
+    }
+    g_slist_free(nuauthdatas->modules);
+    nuauthdatas->modules=NULL;
+    g_mutex_unlock(modules_mutex);
 	return 1;
 }
 
@@ -331,5 +336,4 @@ void block_on_conf_reload()
 		g_mutex_unlock(nuauthdatas->reload_cond_mutex);
 	}
 }
-
 

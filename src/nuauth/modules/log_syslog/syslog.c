@@ -94,16 +94,20 @@ G_MODULE_EXPORT int user_session_logs(user_session *c_session, session_state_t s
 	struct in_addr remote_inaddr;
 	remote_inaddr.s_addr=c_session->addr;
 	char address[INET_ADDRSTRLEN+1];
-        inet_ntop( AF_INET, &remote_inaddr, address, sizeof(address));
-        switch (state) {
-          case SESSION_OPEN:
-		g_message("User %s connect on %s",c_session->userid,address);
-                break;
-          case SESSION_CLOSE:
-		g_message("User %s disconnect on %s",c_session->userid,address);
-                break;
-        }
-        return 1;
+    
+    const char *err = inet_ntop( AF_INET, &remote_inaddr, address, sizeof(address));
+    if (err == NULL) {
+        return -1;
+    }
+    switch (state) {
+        case SESSION_OPEN:
+            g_message("User %s connect on %s",c_session->userid,address);
+            break;
+        case SESSION_CLOSE:
+            g_message("User %s disconnect on %s",c_session->userid,address);
+            break;
+    }
+    return 1;
 }
 
 G_MODULE_EXPORT gchar* g_module_unload(void)

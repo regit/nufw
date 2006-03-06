@@ -25,29 +25,45 @@
 struct in_addr* generate_inaddr_list(gchar* gwsrv_addr)
 {
 	gchar** gwsrv_addr_list=NULL;
-	gchar** gwsrv_addr_item=NULL ;
+	gchar** gwsrv_addr_iter=NULL ;
 	struct in_addr *authorized_server=NULL;
 	struct in_addr *addrs_array=NULL;
-	if (gwsrv_addr){
-		/* parse nufw server address */
-		gwsrv_addr_list = g_strsplit(gwsrv_addr ," ",0);
-		gwsrv_addr_item = gwsrv_addr_list;
-		/* compute array length */
-		while(*gwsrv_addr_item){
-			gwsrv_addr_item++;
-                }
-		/* allocate array of struct sock_addr */
-		addrs_array=g_new0(struct in_addr,gwsrv_addr_item-gwsrv_addr_list+1);
-		authorized_server=addrs_array;
-		gwsrv_addr_item = gwsrv_addr_list;
-		while (*gwsrv_addr_item) {
-			authorized_server->s_addr=inet_addr(*gwsrv_addr_item);
-			authorized_server++;
-			gwsrv_addr_item++;
-		}
-		authorized_server->s_addr=INADDR_NONE;
-		g_strfreev(gwsrv_addr_list);
-	}
+	struct in_addr tmp_addr;
+    unsigned int count = 0;
+    
+	if (gwsrv_addr == NULL)
+        return NULL;
+    
+    /* parse nufw server address */
+    gwsrv_addr_list = g_strsplit(gwsrv_addr ," ",0);
+
+    /* compute array length */
+    gwsrv_addr_iter = gwsrv_addr_list;
+    while(*gwsrv_addr_iter){
+        tmp_addr.s_addr = inet_addr(*gwsrv_addr_iter);
+        if (tmp_addr.s_addr != INADDR_NONE) {
+            gwsrv_addr_iter++;
+            count++;
+        }
+    }
+    
+    /* allocate array of struct sock_addr */
+    if (0 < count)
+    {
+        addrs_array=g_new0(struct in_addr, count);
+        authorized_server=addrs_array;
+        gwsrv_addr_iter = gwsrv_addr_list;
+        while (*gwsrv_addr_iter != NULL) {
+            tmp_addr.s_addr = inet_addr(*gwsrv_addr_iter);
+            if (tmp_addr.s_addr != INADDR_NONE) {
+                *authorized_server = tmp_addr;
+                authorized_server++;
+                gwsrv_addr_iter++;
+            }
+        }
+        authorized_server->s_addr=INADDR_NONE;
+    }
+    g_strfreev(gwsrv_addr_list);
 	return addrs_array;
 }
 

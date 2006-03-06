@@ -30,8 +30,11 @@ G_MODULE_EXPORT int user_session_logs(user_session *c_session, session_state_t s
     char *quoted_address;
     char *format;
     int ret;
-        
-    inet_ntop( AF_INET, &remote_inaddr, address, INET_ADDRSTRLEN);
+    
+    const char *err = inet_ntop( AF_INET, &remote_inaddr, address, INET_ADDRSTRLEN);
+    if (err == NULL) {
+        return -1;
+    }
     quoted_address = g_shell_quote(address);
 
     if (state == SESSION_OPEN) {
