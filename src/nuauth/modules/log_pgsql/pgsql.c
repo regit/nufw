@@ -51,38 +51,25 @@ g_module_unload(void)
 /* Init pgsql system */
 G_MODULE_EXPORT gchar* 
 g_module_check_init(GModule *module){
-    char *configfile=DEFAULT_CONF_FILE;
-    gpointer vpointer; 
-
-    /* init global variables */
-    pgsql_user=PGSQL_USER;
-    pgsql_passwd=PGSQL_PASSWD;
-    pgsql_server=PGSQL_SERVER;
-    pgsql_server_port=PGSQL_SERVER_PORT;
-    pgsql_ssl=PGSQL_SSL;
-    pgsql_db_name=PGSQL_DB_NAME;
-    pgsql_request_timeout=PGSQL_REQUEST_TIMEOUT;
+    unsigned int nb_params = sizeof(pgsql_nuauth_vars)/sizeof(confparams);
 
     /* parse conf file */
-    parse_conffile(configfile,sizeof(pgsql_nuauth_vars)/sizeof(confparams),pgsql_nuauth_vars);
+    parse_conffile(DEFAULT_CONF_FILE, nb_params, pgsql_nuauth_vars);
+   
     /* set variables */
-    vpointer=get_confvar_value(pgsql_nuauth_vars,sizeof(pgsql_nuauth_vars)/sizeof(confparams),"pgsql_server_addr");
-    pgsql_server=(char *)(vpointer?vpointer:pgsql_server);
-    vpointer=get_confvar_value(pgsql_nuauth_vars,sizeof(pgsql_nuauth_vars)/sizeof(confparams),"pgsql_server_port");
-    pgsql_server_port=*(int *)(vpointer?vpointer:&pgsql_server_port);
-    vpointer=get_confvar_value(pgsql_nuauth_vars,sizeof(pgsql_nuauth_vars)/sizeof(confparams),"pgsql_user");
-    pgsql_user=(char *)(vpointer?vpointer:pgsql_user);
-    vpointer=get_confvar_value(pgsql_nuauth_vars,sizeof(pgsql_nuauth_vars)/sizeof(confparams),"pgsql_passwd");
-    pgsql_passwd=(char *)(vpointer?vpointer:pgsql_passwd);
-
-    vpointer=get_confvar_value(pgsql_nuauth_vars,sizeof(pgsql_nuauth_vars)/sizeof(confparams),"pgsql_ssl");
-    pgsql_ssl=(char *)(vpointer?vpointer:pgsql_ssl);
-    vpointer=get_confvar_value(pgsql_nuauth_vars,sizeof(pgsql_nuauth_vars)/sizeof(confparams),"pgsql_db_name");
-    pgsql_db_name=(char *)(vpointer?vpointer:pgsql_db_name);
-    vpointer=get_confvar_value(pgsql_nuauth_vars,sizeof(pgsql_nuauth_vars)/sizeof(confparams),"pgsql_table_name");
-    pgsql_table_name=(char *)(vpointer?vpointer:pgsql_table_name);
-    vpointer=get_confvar_value(pgsql_nuauth_vars,sizeof(pgsql_nuauth_vars)/sizeof(confparams),"pgsql_request_timeout");
-    pgsql_request_timeout=*(int *)(vpointer?vpointer:&pgsql_request_timeout);
+#define READ_CONF(KEY) \
+    get_confvar_value(pgsql_nuauth_vars, nb_params, KEY)
+#define READ_CONF_INT(VAR, KEY, DEFAULT) \
+    do { gpointer vpointer = READ_CONF(KEY); if (vpointer) VAR = *(int *)vpointer; else VAR = DEFAULT; } while (0)
+    
+    pgsql_server = (char *)READ_CONF("pgsql_server_addr");
+    READ_CONF_INT (pgsql_server_port, "pgsql_server_port", PGSQL_SERVER_PORT);
+    pgsql_user = (char *)READ_CONF("pgsql_user");
+    pgsql_passwd = (char *)READ_CONF("pgsql_passwd");
+    pgsql_ssl = (char *)READ_CONF("pgsql_ssl");
+    pgsql_db_name = (char *)READ_CONF("pgsql_db_name");
+    pgsql_table_name = (char *)READ_CONF("pgsql_table_name");
+    READ_CONF_INT(pgsql_request_timeout, "pgsql_request_timeout", PGSQL_REQUEST_TIMEOUT);
 
     /* init thread private stuff */
     pgsql_priv = g_private_new ((GDestroyNotify)PQfinish);
