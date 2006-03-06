@@ -14,7 +14,7 @@ void search_and_fill_catchall(connection_t *pckt, connection_t *element)
 /**
  * Compute the key (hash) of a connection tracking.
  * 
- * \param header IPv4 tracking headers (of type tracking_t) of a connection 
+ * \param headers IPv4 tracking headers (of type tracking_t) of a connection 
  * \return Comptuted hash
  */
 inline guint hash_connection(gconstpointer headers)

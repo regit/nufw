@@ -41,8 +41,9 @@
  * Fill IP fields (saddr, daddr and protocol) of the a connection tracking 
  * (::tracking_t) structure.
  * 
- * \param connection Pointer to a connection
+ * \param tracking Pointer to a connection tracking
  * \param dgram Pointer to packet datas
+ * \param dgram_size Number of bytes in the packet
  * \return Offset to next type of headers, or 0 if the packet is not recognized 
  */
 unsigned int get_ip_headers(tracking_t *tracking, unsigned char *dgram, unsigned int dgram_size)
@@ -72,8 +73,9 @@ unsigned int get_ip_headers(tracking_t *tracking, unsigned char *dgram, unsigned
  * Fill UDP fields (source and dest) of a connection tracking
  * (::tracking_t) structure.
  * 
- * \param connection Pointer to a connection
+ * \param tracking Pointer to a connection tracking
  * \param dgram Pointer to packet datas
+ * \param dgram_size Number of bytes in the packet
  * \return If an error occurs return 1, else returns 0
  */
 int get_udp_headers(tracking_t *tracking, unsigned char *dgram, unsigned int dgram_size)
@@ -96,8 +98,9 @@ int get_udp_headers(tracking_t *tracking, unsigned char *dgram, unsigned int dgr
  * Fill TCP fields (source and dest) of the connection tracking
  * (::tracking_t) structure.
  *
- * \param connection Pointer to a connection
+ * \param tracking Pointer to a connection tracking
  * \param dgram Pointer to packet datas
+ * \param dgram_size Number of bytes in the packet
  * \return State of the TCP connection (#TCP_STATE_OPEN, 
  *         #TCP_STATE_ESTABLISHED, #TCP_STATE_CLOSE), or #TCP_STATE_UNKNOW
  *         if an error occurs.
@@ -135,8 +138,9 @@ tcp_state_t get_tcp_headers(tracking_t *tracking, unsigned char *dgram, unsigned
  * Fill ICMP fields (type and code) of the connection tracking
  * (::tracking_t) structure.
  * 
- * \param connection Pointer to a connection
+ * \param tracking Pointer to a connection tracking
  * \param dgram Pointer to packet datas
+ * \param dgram_size Number of bytes in the packet
  * \return If an error occurs return 1, else returns 0
  */
 int get_icmp_headers(tracking_t *tracking, unsigned char *dgram, unsigned int dgram_size)
@@ -338,7 +342,7 @@ void authpckt_conntrack (unsigned char *dgram, unsigned int dgram_size)
  *     or #AUTH_CONN_UPDATE
  * 
  * \param dgram Pointer to datagram
- * \param dgramsize Size of the datagram (in bytes)
+ * \param dgram_size Size of the datagram (in bytes)
  * \return Pointer to new connection or NULL
  */
 connection_t* authpckt_decode(unsigned char *dgram, unsigned int dgram_size)

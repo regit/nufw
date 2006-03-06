@@ -110,7 +110,7 @@
 #define USERPCKT_PORT 4130
 #define GWSRV_ADDR "127.0.0.1"
 
-/** Maximum length of a hostname (including final '\0') */
+/** Maximum length of a hostname (including final '\\0') */
 #define HOSTNAME_SIZE 128
 
 /** 

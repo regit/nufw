@@ -456,21 +456,20 @@ gint take_decision(connection_t * element,gchar place)
 }
 
 /** 
- * log and send answer for a given connection.
+ * Log and send answer for a given connection.
  * 
- * Argument : a connection
- * Return : 1
+ * \param element A connection
+ * \return Returns 1
  */
-
 gint apply_decision(connection_t element)
 {
-    decision_t answer=element.decision;
-    struct auth_answer aanswer ={ answer , element.user_id ,element.socket, element.tls } ;
+    decision_t decision=element.decision;
+    struct auth_answer answer ={ decision , element.user_id ,element.socket, element.tls } ;
 #ifdef PERF_DISPLAY_ENABLE
     struct timeval leave_time,elapsed_time;
 #endif
 
-    if (answer == DECISION_ACCEPT){
+    if (decision == DECISION_ACCEPT){
         log_user_packet(element,TCP_STATE_OPEN);
     } else {
         log_user_packet(element,TCP_STATE_DROP);
@@ -478,7 +477,7 @@ gint apply_decision(connection_t element)
 
     g_slist_foreach(element.packet_id,
             send_auth_response,
-            &aanswer);
+            &answer);
     /* free packet_id */
 #ifdef PERF_DISPLAY_ENABLE
     gettimeofday(&leave_time,NULL);
