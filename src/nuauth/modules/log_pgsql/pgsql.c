@@ -140,7 +140,7 @@ static gchar* generate_osname(gchar *Name, gchar *Version, gchar *Release)
     return quoted;
 }
 
-int pgsql_insert(PGconn *ld, connection_t element, char *oob_prefix, tcp_state_t state)
+int pgsql_insert(PGconn *ld, connection_t *element, char *oob_prefix, tcp_state_t state)
 {
     char request_fields[INSERT_REQUEST_FIEDLS_SIZE];
     char request_values[INSERT_REQUEST_VALUES_SIZE];
@@ -151,9 +151,9 @@ int pgsql_insert(PGconn *ld, connection_t element, char *oob_prefix, tcp_state_t
     PGresult *Result;
     char *sql_query;
 
-    ip_addr.s_addr = ntohl(element.tracking.saddr);
+    ip_addr.s_addr = ntohl(element->tracking.saddr);
     SECURE_STRNCPY(ip_src, inet_ntoa(ip_addr), sizeof(ip_src)) ;
-    ip_addr.s_addr = ntohl(element.tracking.daddr);
+    ip_addr.s_addr = ntohl(element->tracking.daddr);
     SECURE_STRNCPY(ip_dest, inet_ntoa(ip_addr), sizeof(ip_dest));
 
     /* Write common informations */
@@ -169,8 +169,8 @@ int pgsql_insert(PGconn *ld, connection_t element, char *oob_prefix, tcp_state_t
             "VALUES ('%s', '%hu', '%lu', '%u','%s','%s'",
             oob_prefix,
             state,
-            element.timestamp,
-            element.tracking.protocol,
+            element->timestamp,
+            element->tracking.protocol,
             ip_src,
             ip_dest
             );
@@ -179,17 +179,17 @@ int pgsql_insert(PGconn *ld, connection_t element, char *oob_prefix, tcp_state_t
     }
 
     /* Add user informations */ 
-    if (element.username) {
+    if (element->username) {
         /* Get OS and application names */
-        char *quoted_username = quote_string(element.username);
+        char *quoted_username = quote_string(element->username);
         char *quoted_osname = generate_osname(
-                element.os_sysname,
-                element.os_version,
-                element.os_release);
+                element->os_sysname,
+                element->os_version,
+                element->os_release);
         char *quoted_appname;
         
-        if (element.app_name != NULL  && strlen(element.app_name) < APPNAME_MAX_SIZE)
-            quoted_appname = quote_string(element.app_name);
+        if (element->app_name != NULL  && strlen(element->app_name) < APPNAME_MAX_SIZE)
+            quoted_appname = quote_string(element->app_name);
         else
             quoted_appname = g_strdup("");
 
@@ -200,7 +200,7 @@ int pgsql_insert(PGconn *ld, connection_t element, char *oob_prefix, tcp_state_t
                 sizeof(request_fields));
         ok = secure_snprintf(tmp_buffer, sizeof(tmp_buffer),
                 ", '%u', '%s', '%s', '%s'",
-                element.user_id,
+                element->user_id,
                 quoted_username,
                 quoted_osname,
                 quoted_appname
@@ -214,10 +214,10 @@ int pgsql_insert(PGconn *ld, connection_t element, char *oob_prefix, tcp_state_t
     }
 
     /* Add TCP/UDP parameters */
-    if ((element.tracking.protocol == IPPROTO_TCP) 
-            || (element.tracking.protocol == IPPROTO_UDP))
+    if ((element->tracking.protocol == IPPROTO_TCP) 
+            || (element->tracking.protocol == IPPROTO_UDP))
     {
-        if (element.tracking.protocol == IPPROTO_TCP) {
+        if (element->tracking.protocol == IPPROTO_TCP) {
             g_strlcat(
                     request_fields, 
                     ", tcp_sport, tcp_dport) ", 
@@ -230,8 +230,8 @@ int pgsql_insert(PGconn *ld, connection_t element, char *oob_prefix, tcp_state_t
         }
         ok = secure_snprintf(tmp_buffer, sizeof(tmp_buffer),
                 ", %hu, %hu);", 
-                element.tracking.source,
-                element.tracking.dest);
+                element->tracking.source,
+                element->tracking.dest);
         if (!ok) {
             return -1;
         }
@@ -273,7 +273,7 @@ int pgsql_insert(PGconn *ld, connection_t element, char *oob_prefix, tcp_state_t
     return 0;
 }
 
-int pgsql_update_close(PGconn *ld, connection_t element)
+int pgsql_update_close(PGconn *ld, connection_t *element)
 {
     struct in_addr addr;
     char ip_src[INET_ADDRSTRLEN+1];
@@ -281,7 +281,7 @@ int pgsql_update_close(PGconn *ld, connection_t element)
     PGresult *Result;
     gboolean ok;
 
-    addr.s_addr = ntohl(element.tracking.saddr);
+    addr.s_addr = ntohl(element->tracking.saddr);
     SECURE_STRNCPY(ip_src, inet_ntoa(addr), sizeof(ip_src)) ;
 
     ok = secure_snprintf(request, sizeof(request),
@@ -290,9 +290,9 @@ int pgsql_update_close(PGconn *ld, connection_t element)
             "AND (state=1 OR state=2));",
             pgsql_table_name,
             TCP_STATE_CLOSE,
-            element.timestamp,
+            element->timestamp,
             ip_src,
-            element.tracking.source);
+            element->tracking.source);
     if (!ok) {
         log_message (SERIOUS_WARNING, AREA_MAIN,
                 "Fail to build PostgreSQL query (maybe too long)!");
@@ -312,7 +312,7 @@ int pgsql_update_close(PGconn *ld, connection_t element)
 }    
 
 
-int pgsql_update_state(PGconn *ld, connection_t element, 
+int pgsql_update_state(PGconn *ld, connection_t *element, 
         tcp_state_t old_state, tcp_state_t new_state, 
         int reverse)
 {
@@ -327,20 +327,20 @@ int pgsql_update_state(PGconn *ld, connection_t element,
     gboolean ok;
 
     /* setup IP/TCP parameters */
-    ip_addr.s_addr=ntohl((element.tracking).saddr);
+    ip_addr.s_addr=ntohl((element->tracking).saddr);
     SECURE_STRNCPY(tmp_inet1, inet_ntoa(ip_addr), sizeof(tmp_inet1)) ;
-    ip_addr.s_addr=ntohl((element.tracking).daddr);
+    ip_addr.s_addr=ntohl((element->tracking).daddr);
     SECURE_STRNCPY(tmp_inet2, inet_ntoa(ip_addr), sizeof(tmp_inet2));
     if (reverse) { 
         ip_src = tmp_inet2;
         ip_dst = tmp_inet1;
-        tcp_src = element.tracking.dest;
-        tcp_dst = element.tracking.source;
+        tcp_src = element->tracking.dest;
+        tcp_dst = element->tracking.source;
     } else {
         ip_src = tmp_inet1;
         ip_dst = tmp_inet2;
-        tcp_src = element.tracking.source;
-        tcp_dst = element.tracking.dest;
+        tcp_src = element->tracking.source;
+        tcp_dst = element->tracking.dest;
     }       
 
     /* build sql query */
@@ -349,7 +349,7 @@ int pgsql_update_state(PGconn *ld, connection_t element,
             "WHERE (ip_daddr='%s' AND ip_saddr='%s' "
             "AND tcp_dport='%u' AND tcp_sport='%u' AND state='%hu');",
             pgsql_table_name,
-            new_state, element.timestamp,
+            new_state, element->timestamp,
             ip_src, ip_dst,
             tcp_src, tcp_dst, old_state);
     if (!ok)
@@ -413,28 +413,28 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, tcp_state_t state)
             if (element.tracking.protocol == IPPROTO_TCP 
                 && nuauthconf->log_users_strict)
             {
-                int ret = pgsql_update_close(ld, element);
+                int ret = pgsql_update_close(ld, &element);
                 if (ret != 0) {
                     return ret;
                 }
             }
 
-            return pgsql_insert(ld, element, "ACCEPT", state);
+            return pgsql_insert(ld, &element, "ACCEPT", state);
 
         case TCP_STATE_ESTABLISHED:
             if (element.tracking.protocol == IPPROTO_TCP)
-                return pgsql_update_state(ld, element, TCP_STATE_OPEN, TCP_STATE_ESTABLISHED, 0);
+                return pgsql_update_state(ld, &element, TCP_STATE_OPEN, TCP_STATE_ESTABLISHED, 0);
             else
                 return 0;
 
         case TCP_STATE_CLOSE:
             if (element.tracking.protocol == IPPROTO_TCP)
-                return pgsql_update_state(ld, element, TCP_STATE_ESTABLISHED, TCP_STATE_CLOSE, 1);
+                return pgsql_update_state(ld, &element, TCP_STATE_ESTABLISHED, TCP_STATE_CLOSE, 1);
             else
                 return 0;
 
         case TCP_STATE_DROP:
-            return pgsql_insert(ld, element, "DROP", state);
+            return pgsql_insert(ld, &element, "DROP", state);
 
             /* Skip other messages */
         default:

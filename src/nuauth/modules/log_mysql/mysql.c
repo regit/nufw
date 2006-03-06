@@ -155,7 +155,7 @@ char* quote_string(MYSQL *mysql, char *text)
 }    
 
 char* build_insert_request(
-        MYSQL *ld, connection_t element,
+        MYSQL *ld, connection_t *element,
         tcp_state_t state,
         char *auth_oob_prefix,
         char *unauth_oob_prefix)
@@ -175,26 +175,26 @@ char* build_insert_request(
     ok = secure_snprintf(request_values, sizeof(request_values),
             "VALUES (%hu, %lu, %hu, %lu, %lu, ",
             (short unsigned int)state,
-            (long unsigned int)element.timestamp,
-            (short unsigned int)element.tracking.protocol,
-            (long unsigned int)element.tracking.saddr,
-            (long unsigned int)element.tracking.daddr);
+            (long unsigned int)element->timestamp,
+            (short unsigned int)element->tracking.protocol,
+            (long unsigned int)element->tracking.saddr,
+            (long unsigned int)element->tracking.daddr);
     if (!ok) {
         return NULL;
     }
 
     /* Add user informations */ 
-    if (element.username)
+    if (element->username)
     {        
         /* Get OS and application names */
         char *osname = generate_osname(
-                element.os_sysname,
-                element.os_version,
-                element.os_release);
-        char *appname = generate_appname(element.app_name); /*Just a size check actually*/
+                element->os_sysname,
+                element->os_version,
+                element->os_release);
+        char *appname = generate_appname(element->app_name); /*Just a size check actually*/
 
         /* Quote strings send to MySQL */
-        char *quoted_username = quote_string(ld, element.username);
+        char *quoted_username = quote_string(ld, element->username);
         char *quoted_osname = quote_string(ld, osname);
         char *quoted_appname = quote_string(ld, appname);
         g_free(osname);
@@ -211,7 +211,7 @@ char* build_insert_request(
             ok = secure_snprintf(tmp_buffer, sizeof(tmp_buffer),
                     "'%s', %lu, '%s', '%s', '%s'",
                     auth_oob_prefix,
-                    (long unsigned int)element.user_id,
+                    (long unsigned int)element->user_id,
                     quoted_username,
                     quoted_osname,
                     quoted_appname);
@@ -239,10 +239,10 @@ char* build_insert_request(
     }
 
     /* Add TCP/UDP parameters */
-    if ((element.tracking.protocol == IPPROTO_TCP) 
-            || (element.tracking.protocol == IPPROTO_UDP))
+    if ((element->tracking.protocol == IPPROTO_TCP) 
+            || (element->tracking.protocol == IPPROTO_UDP))
     {
-        if (element.tracking.protocol == IPPROTO_TCP)
+        if (element->tracking.protocol == IPPROTO_TCP)
         {
             g_strlcat(
                     request_fields, 
@@ -256,8 +256,8 @@ char* build_insert_request(
         }
         ok = secure_snprintf(tmp_buffer, sizeof(tmp_buffer),
                 ", %hu, %hu)", 
-                element.tracking.source,
-                element.tracking.dest);
+                element->tracking.source,
+                element->tracking.dest);
         if (!ok) {
             return NULL;
         }
@@ -279,12 +279,12 @@ char* build_insert_request(
     return g_strconcat(request_fields, request_values, NULL);
 }    
 
-int log_state_open(MYSQL *ld, connection_t element)
+int log_state_open(MYSQL *ld, connection_t *element)
 {
     char *request;
     int mysql_ret;
 
-    if (element.tracking.protocol == IPPROTO_TCP
+    if (element->tracking.protocol == IPPROTO_TCP
             && nuauthconf->log_users_strict)
     {
         gboolean ok;
@@ -295,9 +295,9 @@ int log_state_open(MYSQL *ld, connection_t element)
                 "WHERE (ip_saddr=%lu AND tcp_sport=%u AND (state=1 OR state=2))",
                 mysql_table_name,
                 TCP_STATE_CLOSE,
-                element.timestamp,
-                (long unsigned int)element.tracking.daddr,
-                (element.tracking).source);
+                element->timestamp,
+                (long unsigned int)element->tracking.daddr,
+                (element->tracking).source);
 
         /* need to update table to suppress double field */
         if (!ok)
@@ -342,7 +342,7 @@ int log_state_open(MYSQL *ld, connection_t element)
     return 0;
 }    
 
-int log_state_established(MYSQL *ld, connection_t element)
+int log_state_established(MYSQL *ld, connection_t *element)
 {
     char request[LONG_REQUEST_SIZE];
     int Result;
@@ -358,11 +358,11 @@ int log_state_established(MYSQL *ld, connection_t element)
                 "AND tcp_dport=%u AND tcp_sport=%u AND state=%hu)",
                 mysql_table_name,
                 TCP_STATE_ESTABLISHED,
-                element.timestamp,
-                (long unsigned int)(element.tracking).saddr,
-                (long unsigned int)(element.tracking).daddr,
-                (element.tracking).source,
-                (element.tracking).dest,
+                element->timestamp,
+                (long unsigned int)(element->tracking).saddr,
+                (long unsigned int)(element->tracking).daddr,
+                (element->tracking).source,
+                (element->tracking).dest,
                 TCP_STATE_OPEN);
         if (!ok) {
             if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
@@ -395,7 +395,7 @@ int log_state_established(MYSQL *ld, connection_t element)
     return 0;
 }    
 
-int log_state_close(MYSQL *ld, connection_t element)
+int log_state_close(MYSQL *ld, connection_t *element)
 {
     char request[LONG_REQUEST_SIZE];
     int Result;
@@ -409,12 +409,12 @@ int log_state_close(MYSQL *ld, connection_t element)
                 "WHERE (ip_saddr=%lu AND ip_daddr=%lu "
                 "AND tcp_sport=%u AND tcp_dport=%u AND state=%hu)",
                 mysql_table_name,
-                element.timestamp,
+                element->timestamp,
                 TCP_STATE_CLOSE,
-                (long unsigned int)(element.tracking).saddr,
-                (long unsigned int)(element.tracking).daddr,
-                (element.tracking).source,
-                (element.tracking).dest,
+                (long unsigned int)(element->tracking).saddr,
+                (long unsigned int)(element->tracking).daddr,
+                (element->tracking).source,
+                (element->tracking).dest,
                 TCP_STATE_ESTABLISHED);
         if (!ok)
             log_message (SERIOUS_WARNING, AREA_MAIN,
@@ -446,7 +446,7 @@ int log_state_close(MYSQL *ld, connection_t element)
     return 0;
 }    
 
-int log_state_drop(MYSQL *ld, connection_t element)
+int log_state_drop(MYSQL *ld, connection_t *element)
 {
     int mysql_ret;
 
@@ -503,24 +503,24 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, tcp_state_t state){
     /* contruct request */
     switch (state) {
         case TCP_STATE_OPEN:
-            return log_state_open(ld, element);
+            return log_state_open(ld, &element);
 
         case TCP_STATE_ESTABLISHED: 
             if ((element.tracking).protocol == IPPROTO_TCP){
-                return log_state_established(ld, element);
+                return log_state_established(ld, &element);
             } else {
                 return 0;
             }
 
         case TCP_STATE_CLOSE: 
             if ((element.tracking).protocol == IPPROTO_TCP){
-                return log_state_close(ld, element);
+                return log_state_close(ld, &element);
             } else {
                 return 0;
             }
 
         case TCP_STATE_DROP:
-            return log_state_drop(ld, element);
+            return log_state_drop(ld, &element);
 
             // To make gcc happy
         default:
