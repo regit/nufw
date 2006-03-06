@@ -76,25 +76,9 @@ G_MODULE_EXPORT gchar* g_module_check_init(GModule *module){
 }
 
 
-gboolean secure_snprintf(char *buffer, unsigned int buffer_size, char *format, ...)
-{
-    va_list args;  
-    int ret;
-    va_start(args, format);
-    ret = g_vsnprintf(buffer, buffer_size, format, args);
-    va_end(args);
-    if (0 <= ret && ret <= (buffer_size-1))
-        return TRUE;
-    else
-        return FALSE;
-}    
-
-
-
 /* 
  * Initialize connection to pgsql server
  */
-
 G_MODULE_EXPORT PGconn *pgsql_conn_init(void){
     char *pgsql_conninfo;
     PGconn *ld = NULL;

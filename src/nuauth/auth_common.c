@@ -544,3 +544,16 @@ void free_buffer_read(struct tls_buffer_read* datas)
     g_free(datas);
 }
 
+gboolean secure_snprintf(char *buffer, unsigned int buffer_size, char *format, ...)
+{
+    va_list args;  
+    int ret;
+    va_start(args, format);
+    ret = g_vsnprintf(buffer, buffer_size, format, args);
+    va_end(args);
+    if (0 <= ret && ret <= (buffer_size-1))
+        return TRUE;
+    else
+        return FALSE;
+}    
+

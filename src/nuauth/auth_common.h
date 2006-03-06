@@ -42,6 +42,10 @@ gboolean  get_old_conn (gpointer key,
 		gpointer value,
 		gpointer user_data);
 
+
+gboolean secure_snprintf(char *buffer, unsigned int buffer_size, char *format, ...);
+
+
 /**
  * internal for send_auth_response. */
 

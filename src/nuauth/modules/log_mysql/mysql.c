@@ -142,19 +142,6 @@ static gchar* generate_appname(gchar *appname)
     }
 }
 
-gboolean secure_snprintf(char *buffer, unsigned int buffer_size, char *format, ...)
-{
-    va_list args;  
-    int ret;
-    va_start(args, format);
-    ret = g_vsnprintf(buffer, buffer_size, format, args);
-    va_end(args);
-    if (0 <= ret && ret <= (buffer_size-1))
-        return TRUE;
-    else
-        return FALSE;
-}    
-
 char* quote_string(MYSQL *mysql, char *text)
 {
     unsigned int length = strlen(text);
@@ -309,7 +296,7 @@ int log_state_open(MYSQL *ld, connection_t element)
                 mysql_table_name,
                 TCP_STATE_CLOSE,
                 element.timestamp,
-                (long unsigned int)(element.tracking).daddr,
+                (long unsigned int)element.tracking.daddr,
                 (element.tracking).source);
 
         /* need to update table to suppress double field */
