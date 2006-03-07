@@ -19,6 +19,11 @@
 #ifndef AUTH_COMMON_H
 #define AUTH_COMMON_H
 
+typedef enum {
+  PACKET_ALONE=0,
+  PACKET_IN_HASH
+} packet_place_t;
+
 void search_and_fill ();
 
 gboolean compare_connection(gconstpointer conn1, gconstpointer conn2);
@@ -26,9 +31,7 @@ int sck_auth_reply;
 void send_auth_response(gpointer data, gpointer userdata);
 int conn_cl_delete(gconstpointer conn);
 inline char get_state(connection_t *elt);
-#define PACKET_ALONE 0
-#define PACKET_IN_HASH 1
-gint take_decision(connection_t * element,gchar place);
+gint take_decision(connection_t * element, packet_place_t place);
 gint print_connection(gpointer data,gpointer userdata);
 int free_connection(connection_t * conn);
 int lock_and_free_connection(connection_t * conn);

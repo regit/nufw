@@ -73,17 +73,17 @@ gint print_connection(gpointer data,gpointer userdata)
             g_message("Couldn't strdup(). No more memory?");
             return -1;
         }
-        g_message( "Connection : src=%s dst=%s proto=%u", firstfield, inet_ntoa(dest),
+        g_message( "Connection: src=%s dst=%s proto=%u", firstfield, inet_ntoa(dest),
                 conn->tracking.protocol);
         if (conn->tracking.protocol == IPPROTO_TCP){
             g_message("sport=%d dport=%d", conn->tracking.source,
                     conn->tracking.dest);
         }
         if (conn->os_sysname && conn->os_release && conn->os_version ){
-            g_message("OS : %s %s %s",conn->os_sysname ,conn->os_release , conn->os_version );
+            g_message("OS: %s %s %s",conn->os_sysname ,conn->os_release , conn->os_version );
         }
         if (conn->app_name){
-            g_message("Application : %s",conn->app_name);
+            g_message("Application: %s",conn->app_name);
         }
         g_message(" ");
         g_free(firstfield);
@@ -136,10 +136,13 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 
 
 /**
- * free structure associated to a connection.
+ * Delete a connection and all of its memory.
+ *
+ * May call log_user_packet() with #TCP_STATE_DROP state if connection was
+ * waiting its authentification.
  * 
- * Argument : A connection
- * Return 1
+ * \param conn Pointer to a connection
+ * \return 1
  */
 int free_connection(connection_t * conn)
 {
@@ -213,10 +216,11 @@ int free_connection(connection_t * conn)
 
 
 /**
- * remove a connection from connection hash and free it.
+ * Remove a connection from the connection hash table (::conn_list)
+ * and free its memory using free_connection().
  *
- * Argument : a connection
- * Return : 1 if succeeded, 0 otherwise
+ * \param conn A connection
+ * \return Returns 1 if succeeded, 0 otherwise
  */
 
 int conn_cl_delete(gconstpointer conn) 
@@ -305,16 +309,17 @@ void clean_connections_list ()
     }
 }
 
-
 /**
- * find answer for a connection and send it.
+ * Take a decision of a connection authentification, and send it to NuFW.
+ *
+ * The process may be asynchrone (using decisions_workers, member of ::nuauthdatas)
  * 
- * Argument : a connection
- * Return : 1
- * Return : -1 if parameter is NULL
+ * \param element A connection
+ * \param place Place where the connection is stored
+ *              (PACKET_ALONE or PACKET_IN_HASH
+ * \return Returns -1 if fails, 1 otherwise
  */
-
-gint take_decision(connection_t * element,gchar place) 
+gint take_decision(connection_t *element, packet_place_t place) 
 {
     GSList * parcours=NULL;
     decision_t answer = DECISION_NODECIDE;
@@ -499,13 +504,14 @@ gint apply_decision(connection_t *element)
 }
 
 /**
- * interface for apply_decision compliant with queue system.
+ * This is a callback to apply a decision from the decision thread 
+ * pool (decisions_workers member of ::nuauthdatas).
+ *
+ * The queue is feeded by take_decision().
  * 
- * - Argument 1  : a connection
- * - Argument 2 : unused
- * - Return : None
+ * \param userdata Pointer to a connection (of type ::connection_t)
+ * \param data NULL pointer (unused)
  */
-
 void decisions_queue_work (gpointer userdata, gpointer data)
 {
     connection_t* element=(connection_t *)userdata;
@@ -519,23 +525,27 @@ void decisions_queue_work (gpointer userdata, gpointer data)
 }
 
 /**
- * suppress domain from user\@domain string.
+ * Suppress domain from "user\@domain" string (returns "user").
  *
- * Return user.
+ * \return Username which need to be freeded
  */
-
-char * get_rid_of_domain(const char* user)
+char * get_rid_of_domain(const char* user_domain)
 {
     char *username=NULL;
     char **user_realm;
-    user_realm=g_strsplit(user,"@",2);
-    if (*user_realm){
-        username=g_strdup(*user_realm);
+    user_realm=g_strsplit(user_domain, "@", 2);
+    if (user_realm[0] != NULL){
+        username = g_strdup(user_realm[0]);
+    } else {
+        username = g_strdup(user_domain);
     }
     g_strfreev(user_realm);
     return username;
 }
 
+/**
+ * Free a ::tls_buffer_read buffer and all of its memory.
+ */
 void free_buffer_read(struct tls_buffer_read* datas)
 {
     g_free(datas->os_sysname);
@@ -549,6 +559,15 @@ void free_buffer_read(struct tls_buffer_read* datas)
     g_free(datas);
 }
 
+/**
+ * Function snprintf() which check buffer overflow, and always write a '\\0'
+ * to the end of the buffer.
+ *
+ * \param buffer Buffer where characters are written
+ * \param buffer_size Buffer size (in bytes), usually equals to sizeof(buffer)
+ * \param format Format string (see printf() documentation)
+ * \return Returns FALSE if a buffer overflow occurs, TRUE is everything goes fine.
+ */
 gboolean secure_snprintf(char *buffer, unsigned int buffer_size, char *format, ...)
 {
     va_list args;  
@@ -556,6 +575,7 @@ gboolean secure_snprintf(char *buffer, unsigned int buffer_size, char *format, .
     va_start(args, format);
     ret = g_vsnprintf(buffer, buffer_size, format, args);
     va_end(args);
+    buffer[buffer_size-1] = '\0';
     if (0 <= ret && ret <= (buffer_size-1))
         return TRUE;
     else
