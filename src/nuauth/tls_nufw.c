@@ -35,15 +35,14 @@ struct tls_nufw_context_t {
  */
 static int treat_nufw_request (nufw_session_t *c_session)
 {
-    unsigned char *dgram=NULL;
+    unsigned char dgram[CLASSIC_NUFW_PACKET_SIZE];
     int dgram_size;
 
     if (c_session == NULL)
         return 1;
     
     /* copy packet datas */
-    dgram = g_new0(unsigned char, MAX_NUFW_PACKET_SIZE);
-    dgram_size = gnutls_record_recv(*(c_session->tls), dgram, MAX_NUFW_PACKET_SIZE) ;
+    dgram_size = gnutls_record_recv(*(c_session->tls), dgram, CLASSIC_NUFW_PACKET_SIZE) ;
     if (  dgram_size > 0 ){
         connection_t *current_conn = authpckt_decode(dgram , dgram_size);
         if (current_conn != NULL){
@@ -69,11 +68,9 @@ static int treat_nufw_request (nufw_session_t *c_session)
                 }
         }
     } else {
-        g_free(dgram);
         g_atomic_int_dec_and_test(&(c_session->usage));
         return EOF;
     }
-    g_free(dgram);
     return 1;
 }
 

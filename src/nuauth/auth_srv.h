@@ -139,10 +139,16 @@
 #define NB_LOGGERS 3
 
 /**
- * Size of buffer used to store one packet read
- * on TLS connection (from NuFW)
+ * "Classic" size of buffer used to store one packet read
+ * on TLS connection (from NuFW or the users)
  */
-#define MAX_NUFW_PACKET_SIZE 1024
+#define CLASSIC_NUFW_PACKET_SIZE 1024
+
+/**
+ * Maximum size of buffer used to store one packet read
+ * on TLS connection (from NuFW or the users)
+ */
+#define MAX_NUFW_PACKET_SIZE 1800 
 
 /*----------------------- SSL stuffs ----------------------------------*/
 

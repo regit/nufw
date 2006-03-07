@@ -108,7 +108,6 @@ void pre_client_check()
 static int treat_user_request (user_session * c_session)
 {
     struct tls_buffer_read *datas;
-    int read_size;
     int pbuf_length;
 
     if (c_session == NULL) return 1;
@@ -117,7 +116,6 @@ static int treat_user_request (user_session * c_session)
     if (datas==NULL)
         return -1;
     datas->socket=0;
-    datas->buffer=NULL;
     datas->tls=c_session->tls;
     datas->ipv4_addr=c_session->addr;
 #ifdef DEBUG_ENABLE
@@ -128,15 +126,15 @@ static int treat_user_request (user_session * c_session)
 #endif
     
     /* copy packet datas */
-    datas->buffer=g_new0(char,MAX_NUFW_PACKET_SIZE);
+    datas->buffer = g_new0(char, CLASSIC_NUFW_PACKET_SIZE);
     if (datas->buffer == NULL){
         g_free(datas);
         return -1;
     }
-    read_size = gnutls_record_recv(*(c_session->tls), datas->buffer, MAX_NUFW_PACKET_SIZE);
-    if ( read_size <= 0) {
+    datas->buffer_len = gnutls_record_recv(*(c_session->tls), datas->buffer, CLASSIC_NUFW_PACKET_SIZE);
+    if ( datas->buffer_len <= 0) {
 #ifdef DEBUG_ENABLE
-        if (read_size <0) 
+        if (datas->buffer_len <0) 
             if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
                 g_message("Received error from user %s\n",datas->user_name);
 #endif
@@ -145,7 +143,7 @@ static int treat_user_request (user_session * c_session)
     }
 
     /* check buffer underflow */
-    if (read_size < sizeof(struct nuv2_header))
+    if (datas->buffer_len < sizeof(struct nuv2_header))
     {
         free_buffer_read(datas);
         return -1;
@@ -169,13 +167,18 @@ static int treat_user_request (user_session * c_session)
         free_buffer_read(datas);
         return 1;
     }
-    if (pbuf->proto==2 && pbuf_length> read_size && pbuf_length<1800 ){
+    if (pbuf->proto==2 && pbuf_length> datas->buffer_len && pbuf_length<MAX_NUFW_PACKET_SIZE  ){
         /* we realloc and get what we miss */
         datas->buffer=g_realloc(datas->buffer, pbuf_length);
-        if (gnutls_record_recv(*(c_session->tls),datas->buffer+MAX_NUFW_PACKET_SIZE,read_size-pbuf_length)<0){
+        int tmp_len = gnutls_record_recv(
+                *(c_session->tls), 
+                datas->buffer+CLASSIC_NUFW_PACKET_SIZE,
+                pbuf_length - datas->buffer_len);
+        if (tmp_len<0){
             free_buffer_read(datas);
             return -1;
         }
+        datas->buffer_len += tmp_len;
     }
     /* check message type because USER_HELLO has to be ignored */
     if ( pbuf->msg_type == USER_HELLO){

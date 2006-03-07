@@ -58,6 +58,7 @@ struct tls_buffer_read {
     char *os_release;     /*!< Operation system release */
     char *os_version;     /*!< Operation system version */
     char *buffer;         /*!< Content of the received packet */
+    int32_t buffer_len;   /*!< Length of the buffer */
 };
 
 typedef struct Nufw_session {
