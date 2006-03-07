@@ -19,6 +19,7 @@
 #ifndef NUAUTH_LOG_H
 #define NUAUTH_LOG_H
 
+#include "auth_srv.h"
 #include <config.h>
 #include <syslog.h>
 #include <debug.h>

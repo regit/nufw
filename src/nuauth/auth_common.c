@@ -20,7 +20,7 @@
 
 #include "auth_srv.h"
 
-static gint apply_decision(connection_t element);
+static gint apply_decision(connection_t *element);
 
 #ifdef PERF_DISPLAY_ENABLE
 /* Subtract the `struct timeval' values X and Y,
@@ -52,18 +52,22 @@ int timeval_substract (struct timeval *result,struct timeval *x,struct timeval *
 #endif
 
 /**
- * Debug  function used to print ip headers of 
- * received packets.
+ * Display connection parameters using g_message(): IP+TCP/UDP headers,
+ * OS name, OS release and OS version, and application name.
+ *
+ * Only display the connection if ::debug_level is #DEBUG_LEVEL_VERBOSE_DEBUG
+ * or greater.
+ *
+ * \return Returns -1 if an error occurs, 1 else.
  */
-
 gint print_connection(gpointer data,gpointer userdata)
 {
     struct in_addr src,dest;
     connection_t * conn=(connection_t *) data;
-    src.s_addr = ntohl(conn->tracking.saddr);
-    dest.s_addr = ntohl(conn->tracking.daddr);
     if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
     {
+        src.s_addr = ntohl(conn->tracking.saddr);
+        dest.s_addr = ntohl(conn->tracking.daddr);
         gchar* firstfield=g_strdup(inet_ntoa(src));
         if (! firstfield){
             g_message("Couldn't strdup(). No more memory?");
@@ -88,7 +92,9 @@ gint print_connection(gpointer data,gpointer userdata)
 }
 
 /**
- * Send authentification response to the NuFW. 
+ * Send authentification response (decision of type ::decision_t) to the NuFW. 
+ *
+ * Use ::nuauth_decision_response_t structure to build the packet.
  * 
  * \param packet_id_ptr NetFilter packet unique identifier (32 bits)
  * \param userdata Pointer to an answer of type ::auth_answer
@@ -229,14 +235,16 @@ int conn_cl_delete(gconstpointer conn)
 }
 
 /**
- * test if a a  connection is old 
+ * This function is used by clean_connections_list() to check if a
+ * connection is 'old' (outdated) or not. It checks timeout with current
+ * timestamp (see member packet_timeout of ::nuauthconf) and skip connection
+ * in state ::AUTH_STATE_COMPLETING (because of an evil hack in 
+ * search_and_fill_complete_of_userpckt() :-)).
  * 
- * Argument 1 :  key in hash of the connection
- * Argument 2 : pointer to the connection
- * Argument 3 : current timestamp
- * Return : None
- *
- * used by clean_connections_list() 
+ * \param key Key in hash of the connection (not used in the function)
+ * \param value Pointer to the connection
+ * \param user_data Current timestamp (get by time(NULL))
+ * \return TRUE if the connection is old, FALSE else
  */
 gboolean get_old_conn (gpointer key, gpointer value, gpointer user_data)
 {
@@ -256,15 +264,15 @@ gboolean get_old_conn (gpointer key, gpointer value, gpointer user_data)
 }
 
 /**
- * delete a element given its key.
+ * Delete a connection from the hash table ::conn_list by its key.
+ * Log the message with ::TCP_STATE_DROP state.
  *
- * Argument : a key
- * Return : 1 if element suppressed, 0 otherwise
+ * \param key Key of connection which have to be deleted
+ * \return If the connection is suppressed returns 1, otherwise returns 0
  */
-
 int conn_key_delete(gconstpointer key)
 {
-    connection_t* element = (connection_t*)g_hash_table_lookup ( conn_list,key);
+    connection_t* element = (connection_t*)g_hash_table_lookup (conn_list, key);
     if (element){
         /* need to log drop of packet if it is a nufw packet */
         if (element->state == AUTH_STATE_AUTHREQ) {
@@ -277,12 +285,9 @@ int conn_key_delete(gconstpointer key)
 }
 
 /**
- * find old elements in connection hash and delete them.
- *
- * Argument : None
- * Return : None
+ * Find old connection and delete them.
+ * It uses get_old_conn() to check if a connection is 'old' or not.
  */
-
 void clean_connections_list ()
 {
     int conn_list_size=g_hash_table_size(conn_list); /* not acccurate but we don't abuse of the lock */
@@ -443,7 +448,7 @@ gint take_decision(connection_t * element,gchar place)
                 copy_of_element,
                 NULL);
     } else {
-        apply_decision(*element);
+        apply_decision(element);
     }
 
     element->packet_id=NULL;
@@ -456,38 +461,39 @@ gint take_decision(connection_t * element,gchar place)
 }
 
 /** 
- * Log and send answer for a given connection.
+ * Log (using log_user_packet()) and send answer (using send_auth_response())
+ * for a given connection.
  * 
  * \param element A connection
  * \return Returns 1
  */
-gint apply_decision(connection_t element)
+gint apply_decision(connection_t *element)
 {
-    decision_t decision=element.decision;
-    struct auth_answer answer ={ decision , element.user_id ,element.socket, element.tls } ;
+    decision_t decision=element->decision;
+    struct auth_answer answer ={ decision , element->user_id ,element->socket, element->tls } ;
 #ifdef PERF_DISPLAY_ENABLE
     struct timeval leave_time,elapsed_time;
 #endif
 
     if (decision == DECISION_ACCEPT){
-        log_user_packet(element,TCP_STATE_OPEN);
+        log_user_packet(*element,TCP_STATE_OPEN);
     } else {
-        log_user_packet(element,TCP_STATE_DROP);
+        log_user_packet(*element,TCP_STATE_DROP);
     }
 
-    g_slist_foreach(element.packet_id,
+    g_slist_foreach(element->packet_id,
             send_auth_response,
             &answer);
     /* free packet_id */
 #ifdef PERF_DISPLAY_ENABLE
     gettimeofday(&leave_time,NULL);
-    timeval_substract (&elapsed_time,&leave_time,&(element.arrival_time));
+    timeval_substract (&elapsed_time,&leave_time,&(element->arrival_time));
     g_message("Treatment time for conn : %ld.%06ld",elapsed_time.tv_sec,elapsed_time.tv_usec);
 #endif
 
-    if (element.packet_id != NULL ){
-        g_slist_free (element.packet_id);
-        element.packet_id=NULL;
+    if (element->packet_id != NULL ){
+        g_slist_free (element->packet_id);
+        element->packet_id=NULL;
     }
     return 1;
 }
@@ -505,7 +511,7 @@ void decisions_queue_work (gpointer userdata, gpointer data)
     connection_t* element=(connection_t *)userdata;
 
     block_on_conf_reload();
-    apply_decision( * element);
+    apply_decision(element);
 
     if (element)
         g_free(element->username);
