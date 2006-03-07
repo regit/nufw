@@ -28,10 +28,10 @@ struct tls_nufw_context_t {
 };
 
 /** 
- * get RX paquet from a TLS client connection and send it to user authentication threads.
+ * Get RX paquet from a TLS client connection and send it to user authentication threads.
  *
- * - Argument : SSL RX packet
- * - Return : 1 if read done, EOF if read complete
+ * \param c_session SSL RX packet
+ * \return Returns 1 if read is done, EOF if read is completed
  */
 static int treat_nufw_request (nufw_session_t *c_session)
 {
@@ -77,6 +77,9 @@ static int treat_nufw_request (nufw_session_t *c_session)
     return 1;
 }
 
+/**
+ * Close the TLS NuFW servers
+ */
 void close_nufw_servers(int signal) 
 {
     g_mutex_lock(nufw_servers_mutex);
@@ -85,6 +88,10 @@ void close_nufw_servers(int signal)
     g_mutex_unlock(nufw_servers_mutex);
 }
 
+/**
+ * Clean a NuFW TLS session: send "bye", deinit the connection
+ * and free the memory.
+ */
 void clean_nufw_session(nufw_session_t * c_session) 
 {
     gnutls_transport_ptr socket_tls;
@@ -119,6 +126,9 @@ void clean_nufw_session(nufw_session_t * c_session)
 }
 
 /**
+ * Function called on new NuFW connection: create a new TLS session using
+ * tls_connect().
+ * 
  * \return If an error occurs returns 1, else returns 0.
  */
 int tls_nufw_accept(struct tls_nufw_context_t *context) 
@@ -177,6 +187,12 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
     return 0;
 }    
 
+/**
+ * NuFW TLS thread main loop:
+ *   - Wait events using() (with a timeout of 2.3 seconds)
+ *   - Accept new connections
+ *   - Read and process new packets
+ */
 void tls_nufw_main_loop(struct tls_nufw_context_t *context) 
 {
     int n,c,z;
@@ -273,6 +289,9 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context)
     close(context->sck_inet);
 }    
 
+/**
+ * Initialize the NuFW TLS servers thread
+ */
 void tls_nufw_init(struct tls_nufw_context_t *context)
 {    
     int z;
@@ -356,7 +375,8 @@ void tls_nufw_init(struct tls_nufw_context_t *context)
 }
 
 /**
- * TLS nufw packet server running in a thread.
+ * TLS nufw packet server thread: call tls_nufw_init() and then live
+ * in tls_nufw_main_loop().
  *
  * \return NULL
  */

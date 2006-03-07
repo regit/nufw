@@ -17,8 +17,12 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-
 #include "auth_srv.h"
+
+/** \file auth_common.c
+ *  \brief Various functions used in NuAuth.
+ */
+
 
 static gint apply_decision(connection_t *element);
 
@@ -312,7 +316,8 @@ void clean_connections_list ()
 /**
  * Take a decision of a connection authentification, and send it to NuFW.
  *
- * The process may be asynchrone (using decisions_workers, member of ::nuauthdatas)
+ * The process may be asynchronous (using decisions_workers,
+ * member of ::nuauthdatas)
  * 
  * \param element A connection
  * \param place Place where the connection is stored

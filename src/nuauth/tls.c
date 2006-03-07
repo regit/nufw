@@ -45,7 +45,7 @@ void close_tls_session(int conn_fd, gnutls_session* session)
 }
 
 /**
- * Check certificates of a session. Only accept x509 certificated.
+ * Check certificates of a session. Only accept certificate of type x509. 
  * 
  * \return SASL_OK if ok, SASL error code else
  */
@@ -87,6 +87,11 @@ gint check_certs_for_tls_session(gnutls_session session)
 	return SASL_OK;
 }
 
+/**
+ * Create the TLS server using the credentials ::x509_cred.
+ *
+ * \return Pointer to the TLS session
+ */
 gnutls_session* initialize_tls_session() 
 {
 	gnutls_session* session;
@@ -147,7 +152,7 @@ static int generate_dh_params(gnutls_dh_params *dh_params)
 }
 
 /**
- * TLS push fonction : go NON blocking !
+ * TLS push fonction: go NON blocking !
  */
 static ssize_t tls_push_func(gnutls_transport_ptr ptr, const void *buf, size_t count)
 {
@@ -157,7 +162,9 @@ static ssize_t tls_push_func(gnutls_transport_ptr ptr, const void *buf, size_t c
 }
 
 /**
- * realize tls connection.
+ * Realize a tls connection.
+ * 
+ * \return Returns SASL_BADPARAM if fails, SASL_OK otherwise.
  */
 int tls_connect(int conn_fd,gnutls_session** session_ptr) 
 {
@@ -324,11 +331,11 @@ void create_x509_credentials()
 }
 
 /**
- * dequeue addr that need to do a check.
+ * Unlimited loop which eat addresses on tls push queue (tls_push_queue member
+ * of ::nuauthdatas) which need an authentification.
  * 
- * lock is only needed when modifications are done
- * because when this thread work (push mode) it's the only one
- * who can modify the hash
+ * Lock is only needed when modifications are done, because when this thread
+ * work (push mode) it's the only one who can modify the hash.
  */
 void push_worker() {
 	struct msg_addr_set *global_msg=g_new0(struct msg_addr_set,1);
@@ -397,6 +404,9 @@ void push_worker() {
 	g_async_queue_unref (nuauthdatas->tls_push_queue);
 }
 
+/**
+ * Free memory (of ::x509_cred) and call gnutls_global_deinit().
+ */
 void end_tls(int signal)
 {
     gnutls_certificate_free_keys(x509_cred);

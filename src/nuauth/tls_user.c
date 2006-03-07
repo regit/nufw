@@ -64,7 +64,8 @@ gboolean remove_socket_from_pre_client_list(int socket) {
  * Check pre client list to disconnect connection
  * that are open since too long
  */
-void  pre_client_check() {
+void pre_client_check()
+{
     GSList * client_runner=NULL;
     time_t current_timestamp;
     for(;;){
@@ -234,6 +235,9 @@ static int treat_user_request (user_session * c_session)
 }
 
 /**
+ * Function called on new client connection: create a new TLS session using
+ * tls_connect().
+ * 
  * \return If an error occurs returns 1, else returns 0.
  */
 int tls_user_accept(struct tls_user_context_t *context) {
