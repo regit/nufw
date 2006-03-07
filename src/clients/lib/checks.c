@@ -34,6 +34,7 @@
 #include "proc.h"
 #include "client.h"
 
+typedef void (*pthread_cleanup_push_arg1_t) (void *);
 
 /**
  * Thread waiting for nuauth message to do client tasks
@@ -73,7 +74,7 @@ void* recv_message(void *data)
 	hellofield.option=0;
 	hellofield.length=htons(sizeof(struct nuv2_authfield_hello));
 
-        pthread_cleanup_push(pthread_mutex_unlock, (void*)(&(session->check_count_mutex)));
+        pthread_cleanup_push((pthread_cleanup_push_arg1_t)pthread_mutex_unlock, &session->check_count_mutex);
 
         for (;;){
             ret= gnutls_record_recv(session->tls,dgram,sizeof dgram);
@@ -202,8 +203,8 @@ void* nu_client_thread_check(void *data)
 	pthread_mutex_t check_mutex;
 	pthread_mutex_init(&check_mutex,NULL);
 
-        pthread_cleanup_push(pthread_mutex_unlock, (void*)&(session->check_count_mutex));
-        pthread_cleanup_push(clear_local_mutex, (void*)&check_mutex );
+        pthread_cleanup_push((pthread_cleanup_push_arg1_t)pthread_mutex_unlock, &session->check_count_mutex);
+        pthread_cleanup_push((pthread_cleanup_push_arg1_t)clear_local_mutex, &check_mutex);
 	for(;;){
 		nu_client_real_check(session);
 	/* Do we need to do an other check ? */
