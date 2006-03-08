@@ -132,7 +132,7 @@ static int treat_user_request (user_session * c_session)
         return -1;
     }
     datas->buffer_len = gnutls_record_recv(*(c_session->tls), datas->buffer, CLASSIC_NUFW_PACKET_SIZE);
-    if ( datas->buffer_len < sizeof(struct nuv2_header)) {
+    if ( datas->buffer_len < (int)sizeof(struct nuv2_header)) {
 #ifdef DEBUG_ENABLE
         if (datas->buffer_len <0) 
             if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
