@@ -24,10 +24,10 @@
 GPrivate* dbm_priv; /* private pointer for dbm file access */
 
 #define DBM_USERS_FILE "/etc/nuauth/nuauth_users.dbm"
-//DBM_BLOCK_SIZE is useless (ignored on file reads, and file is ALWAYS read
+/* DBM_BLOCK_SIZE is useless (ignored on file reads, and file is ALWAYS read */
 #define DBM_BLOCK_SIZE 512
 #define DBM_FILE_ACCESS_MODE GDBM_READER
-//DBM_FILE_MODE is ignored on read too
+/* DBM_FILE_MODE is ignored on read too */
 #define DBM_FILE_MODE 777
 #define DBM_FATAL_FUNCTION 0
 

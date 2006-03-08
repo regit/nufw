@@ -32,11 +32,12 @@ confparams dbm_nuauth_vars[] = {
 };
 
 int analyse_dbm_char(char *datas, struct dbm_data_struct *mystruct)
-	//IN : char containing, space separated, in this order (it MUST end with a
-	//space, else last group isnt read): 
-	//	password userid group1 group2 ... group N
-	//OUT : the data string gets scrambled over, it shouldnt be used anymore after
-	//	call this function. The structure gets filled with password and groups.
+	/* IN : char containing, space separated, in this order (it MUST end with a
+	 * space, else last group isnt read): 
+	 * password userid group1 group2 ... group N
+	 * OUT : the data string gets scrambled over, it shouldnt be used anymore after
+	 * call this function. The structure gets filled with password and groups.
+	 */
 	/*TODO : limit the size of acceptable password, and groups. Even if there
 	 * should not be any buffer overflow with this, those should probably never
 	 * exceed a well-chosen value*/
@@ -54,8 +55,10 @@ int analyse_dbm_char(char *datas, struct dbm_data_struct *mystruct)
 	way_datas = split_datas++;
 	mystruct->uid=atoi(*split_datas);
 	split_datas++;
-	//      if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-	//          g_message("it's %s",mystruct->passwd);
+#if 0	
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+		g_message("it's %s",mystruct->passwd);
+#endif	
 	while(*split_datas){
 		if(atoi(*split_datas)>0){
 			mystruct->outelt = g_slist_prepend(mystruct->outelt, GINT_TO_POINTER(atoi(*split_datas)));
@@ -178,7 +181,7 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned p
 		g_message("user id is %s, size %i\n",dbm_key.dptr,dbm_key.dsize);
 #endif
 
-	//Check key exists before trying to fetch its value
+	/* Check key exists before trying to fetch its value */
 	if (! gdbm_exists(dbf,dbm_key))
 	{
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_AUTH))
@@ -201,8 +204,10 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned p
 		return SASL_BADAUTH;
 	}
 
-	//  if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_AUTH))
-	//    g_message("Data shall now be analysed : %s\n",dbm_data.dptr);
+#if 0
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_AUTH))
+		g_message("Data shall now be analysed : %s\n",dbm_data.dptr);
+#endif	
 
 	/* string is not NULL terminated */
 	if (analyse_dbm_char(dbm_data.dptr,&return_data) != 0)
@@ -221,14 +226,14 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned p
 	}
 	g_free(dbm_key.dptr);
 	g_free(dbm_data.dptr);
-	// We found a relevant entry in database. Now check passwords match.
+	/* We found a relevant entry in database. Now check passwords match. */
 	if (pass != NULL) {
 		if ( return_data.passwd==NULL ){
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_AUTH))
 				g_warning("No password for user \"%s\"",user);
 			return SASL_BADAUTH;
 		}
-		//  if (strcmp(pass,return_data.passwd)){
+		/*  if (strcmp(pass,return_data.passwd)){ */
 		if (verify_user_password(pass,return_data.passwd) != SASL_OK){
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_AUTH))
 				g_warning("Bad password for user \"%s\"",user);

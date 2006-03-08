@@ -32,8 +32,8 @@
 #define MYSQL_USERS_TABLE_NAME "users" 
 #define MYSQL_REQUEST_TIMEOUT 10
 
-//SSL options
-#define MYSQL_USE_SSL 1 //use ssl by default
+/* SSL options */
+#define MYSQL_USE_SSL 1 /* use ssl by default */
 #define MYSQL_SSL_KEYFILE NULL
 #define MYSQL_SSL_CERTFILE NULL
 #define MYSQL_SSL_CA      NULL

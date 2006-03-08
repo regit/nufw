@@ -33,7 +33,7 @@ GPrivate* ldap_priv; /* private pointer to ldap connection */
 #define LDAP_REQUEST_TIMEOUT 10
 #define LDAP_BASE "dc=nufw,dc=org"
 
-//Maximum size of a LDAP query
+/* Maximum size of a LDAP query */
 #define LDAP_QUERY_SIZE 512
 
 int ldap_request_timeout;

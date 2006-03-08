@@ -51,7 +51,7 @@ G_MODULE_EXPORT gchar*
 g_module_check_init(GModule *module)
 {
     char *configfile=DEFAULT_CONF_FILE;
-    //char *ldap_base_dn=LDAP_BASE;
+    /* char *ldap_base_dn=LDAP_BASE; */
 
     /* init global variables */
     mysql_ssl_cipher=MYSQL_SSL_CIPHER;
@@ -108,7 +108,7 @@ G_MODULE_EXPORT MYSQL* mysql_conn_init(void){
         mysql_ssl_set(ld,mysql_ssl_keyfile,mysql_ssl_certfile,mysql_ssl_ca,mysql_ssl_capath,mysql_ssl_cipher);
 #endif
 #if 0
-    // Set MYSQL object properties
+    /* Set MYSQL object properties */
     if (mysql_options(ld,MYSQL_OPT_CONNECT_TIMEOUT,mysql_conninfo) != 0){
         if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)) {
             g_warning("mysql options setting failed : %s\n",mysql_error(ld));
@@ -522,8 +522,8 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, tcp_state_t state){
         case TCP_STATE_DROP:
             return log_state_drop(ld, &element);
 
-            // To make gcc happy
         default:
+			/* Ignore other states */
             return 0;
     }
 }

@@ -42,7 +42,7 @@ gchar* ip_authentication(tracking_t* ipheader)
   int fport=ipheader->source ;
   int rcode;
 
-  laddr.s_addr=INADDR_ANY ; //htonl(ipheader->daddr);
+  laddr.s_addr=INADDR_ANY ; /* htonl(ipheader->daddr); */
   faddr.s_addr=htonl(ipheader->saddr);
 
 

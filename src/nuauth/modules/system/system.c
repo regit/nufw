@@ -45,11 +45,11 @@ confparams system_nuauth_vars[] = {
 };
 
   system_convert_username_to_uppercase=0;
-  // parse conf file
+  /*  parse conf file */
   parse_conffile(DEFAULT_CONF_FILE,
           sizeof(system_nuauth_vars)/sizeof(confparams),
           system_nuauth_vars);
-  // set variables
+  /*  set variables */
   vpointer = get_confvar_value(system_nuauth_vars,
           sizeof(system_nuauth_vars)/sizeof(confparams),
           "system_convert_username_to_uppercase");

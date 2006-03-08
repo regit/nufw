@@ -18,8 +18,8 @@
  */
 
 
-// SSL notes :
-/* the client cert needs to go in 
+/* SSL notes :
+ * the client cert needs to go in 
  *                $HOME/.postgresql/root.crt see the comments at the top of 
  *                               src/interfaces/libpq/fe-secure.c */
 
