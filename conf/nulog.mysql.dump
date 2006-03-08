@@ -50,12 +50,17 @@ CREATE TABLE tcp_ports (
 --
 
 CREATE TABLE users (
+  ip_saddr int(10) unsigned NOT NULL,
   user_id smallint(5) unsigned default NULL,
   username varchar(30) default NULL,
   bad_conns int(10) unsigned not NULL default '0',
   good_conns int(10) unsigned not NULL default '0',
   first_time int(10) unsigned default NULL,
   last_time int(10) unsigned default NULL,
+  os_sysname varchar(100) default NULL,
+  os_release varchar(30) default NULL,
+  os_version varchar(30) default NULL,
+  start_timestamp timestamp(14) NOT NULL,
   PRIMARY KEY  (user_id),
   KEY username (username)
 ) TYPE=MyISAM;

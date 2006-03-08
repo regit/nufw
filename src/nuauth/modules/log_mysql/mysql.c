@@ -550,11 +550,14 @@ G_MODULE_EXPORT int user_session_logs(user_session *c_session, session_state_t s
         case SESSION_OPEN:
             /* create new user session */
             ok = secure_snprintf(request, sizeof(request),
-                    "INSERT INTO %s (ip_saddr,start_timestamp) "
-                    "VALUES ('%s',%u,FROM_UNIXTIME(%lu))",
+                    "INSERT INTO %s (username, ip_saddr, os_sysname, os_release, os_version, start_timestamp) "
+                    "VALUES ('%s', '%u', '%s', '%s', '%s', FROM_UNIXTIME(%lu))",
                     mysql_users_table_name,
                     c_session->user_name,
                     c_session->addr,
+                    c_session->sysname,
+                    c_session->release,
+                    c_session->version,
                     time(NULL));
             break;
             
