@@ -553,6 +553,7 @@ G_MODULE_EXPORT int user_session_logs(user_session *c_session, session_state_t s
                     "INSERT INTO %s (ip_saddr,start_timestamp) "
                     "VALUES ('%s',%u,FROM_UNIXTIME(%lu))",
                     mysql_users_table_name,
+                    c_session->userid,
                     c_session->addr,
                     time(NULL));
             break;
@@ -583,4 +584,5 @@ G_MODULE_EXPORT int user_session_logs(user_session *c_session, session_state_t s
     }
     return 1;
 }
+
 
