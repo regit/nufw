@@ -1,6 +1,8 @@
 if BUILD_NUTCPC
 
-AM_CPPFLAGS = -O2 -Wall -Werror-implicit-function-declaration
+# Evil hack (because not portable) by haypo to make gcc (or ld or libtool)
+# find libnuclient.so librar
+AM_LDFLAGS = "-L../lib/.libs"
 
 bin_PROGRAMS = nutcpc
 
