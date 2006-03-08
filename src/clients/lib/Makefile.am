@@ -1,5 +1,5 @@
 if BUILD_LIBNUCLIENT
-AM_CPPFLAGS = -O2 -Wall -Werror-implicit-function-declaration -DCONFIG_DIR=\"$(sysconfdir)\" 
+AM_CPPFLAGS = -DCONFIG_DIR=\"$(sysconfdir)\" 
 
 lib_LTLIBRARIES = libnuclient.la
 

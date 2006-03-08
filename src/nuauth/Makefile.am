@@ -1,6 +1,6 @@
 SUBDIRS = modules
 
-AM_CPPFLAGS = -O2 -Wall -fno-strict-aliasing -Werror-implicit-function-declaration -DCONFIG_DIR=\"$(sysconfdir)\" -DMODULE_DIR=\"$(libdir)\" -DLOCAL_STATE_DIR=\"$(localstatedir)\"
+AM_CPPFLAGS = $(CFLAGS) -DCONFIG_DIR=\"$(sysconfdir)\" -DMODULE_DIR=\"$(libdir)\" -DLOCAL_STATE_DIR=\"$(localstatedir)\"
 INCLUDES = $(GLIB_CFLAGS) -Iinclude/
 
 sbin_PROGRAMS = nuauth

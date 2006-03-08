@@ -2,7 +2,7 @@
 
 if USE_LDAP
 
-AM_CPPFLAGS = -O2 -Wall -fPIC -Werror-implicit-function-declaration -DCONFIG_DIR=\"$(sysconfdir)\" -DMODULE_DIR=\"$(libdir)\"
+AM_CPPFLAGS = -fPIC -DCONFIG_DIR=\"$(sysconfdir)\" -DMODULE_DIR=\"$(libdir)\"
 INCLUDES = $(GLIB_CFLAGS) -I../../ -I../../include/
 plugindir = $(libdir)/nuauth/modules/
 

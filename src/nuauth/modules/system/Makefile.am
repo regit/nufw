@@ -2,7 +2,7 @@
 
 if USE_SYSTEM_AUTH
 
-AM_CPPFLAGS = -O2 -Wall -Werror-implicit-function-declaration -DCONFIG_DIR=\"$(sysconfdir)\" -DMODULE_DIR=\"$(libdir)\"
+AM_CPPFLAGS = -DCONFIG_DIR=\"$(sysconfdir)\" -DMODULE_DIR=\"$(libdir)\"
 INCLUDES = $(GLIB_CFLAGS) -I../../ -I../../include/
 plugindir = $(libdir)/nuauth/modules
 
