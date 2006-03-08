@@ -315,7 +315,6 @@ GSList* user_request(struct tls_buffer_read *datas)
         /* check buffer underflow */
         if (buffer_len < sizeof(struct nuv2_authreq))
         {
-            free_buffer_read(datas);
             free_connection_list(conn_elts);
             return NULL;
         }
@@ -328,7 +327,6 @@ GSList* user_request(struct tls_buffer_read *datas)
             log_message (WARNING, AREA_USER,
                 "Improper length signaled in authreq header: %d",
                 authreq->packet_length);
-            free_buffer_read(datas);
             free_connection_list(conn_elts);
             return NULL;
         }
@@ -358,7 +356,6 @@ GSList* user_request(struct tls_buffer_read *datas)
             /* check buffer underflow */
             if (auth_buffer_len < sizeof(struct nuv2_authfield))
             {
-                free_buffer_read(datas);
                 free_connection_list(conn_elts);
                 free_connection(connection);
                 return NULL;
@@ -368,7 +365,6 @@ GSList* user_request(struct tls_buffer_read *datas)
             field_length = user_process_field (authreq, header->option, 
                     connection, &multiclient_ok, auth_buffer_len, field);
             if (field_length < 0) {
-                free_buffer_read(datas);
                 free_connection_list(conn_elts);
                 free_connection(connection);
                 return NULL;
@@ -403,7 +399,6 @@ GSList* user_request(struct tls_buffer_read *datas)
                 }
             } else {
                 log_message (INFO, AREA_USER, "User_check return is bad");
-                free_buffer_read(datas);
                 free_connection_list(conn_elts);
                 free_connection(connection);
                 return NULL;
@@ -431,7 +426,6 @@ static GSList * userpckt_decode(struct tls_buffer_read *datas)
     /* check buffer underflow */
     if (datas->buffer_len < sizeof(struct nuv2_header))
     {
-        free_buffer_read(datas);
         return NULL;
     }
 
@@ -441,7 +435,6 @@ static GSList * userpckt_decode(struct tls_buffer_read *datas)
         log_message (INFO, AREA_USER,
             "unsupported protocol, got protocol %d (msg %d) with option %d (length %d)",
             header->proto, header->msg_type, header->option, header->length);
-        free_buffer_read(datas);
         return NULL;
     }
 
@@ -450,17 +443,14 @@ static GSList * userpckt_decode(struct tls_buffer_read *datas)
     if(header->length > MAX_NUFW_PACKET_SIZE){
         log_message (WARNING, AREA_USER,
                 "Improper length signaled in packet header");
-        free_buffer_read(datas);
         return NULL;
     }
 
     if (header->msg_type != USER_REQUEST)
     {
         log_message (INFO, AREA_USER, "unsupported message type");
-        free_buffer_read(datas);
         return NULL;
     }
-
     return user_request(datas);
 }
 
