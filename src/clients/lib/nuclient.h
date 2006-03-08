@@ -31,6 +31,17 @@
 #ifndef NUCLIENT_H
 #define NUCLIENT_H
 
+/*
+ * Use POSIX standard, version "IEEE 1003.1-2004",
+ * needed to get sigaction for example
+ */
+#define _POSIX_C_SOURCE 200112L
+
+/**
+ * Use 4.3BSD standard, needed to get snprintf for example
+ */
+#define _BSD_SOURCE
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -79,11 +90,16 @@ extern "C" {
 #include <string.h>
 
 #include <gcrypt.h>
-//#warning "this may be a source of problems"
+/* #warning "this may be a source of problems" */
 #include <pthread.h>
 
 #include <gnutls/gnutls.h>
 #include <sasl/sasl.h>
+
+/* Disable inline keyword when compiling in strict ANSI conformance */
+#ifdef __STRICT_ANSI__
+#  define inline
+#endif
 
 #define DEBUG 0
 

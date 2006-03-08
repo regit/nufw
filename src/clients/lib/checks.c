@@ -56,7 +56,6 @@ void* recv_message(void *data)
 	char message[sizeof(struct nuv2_header)+sizeof(struct nuv2_authfield_hello)+sizeof(struct nuv2_authreq)];
 	char* pointer=NULL;
 
-        //return NULL;
 	/* fill struct */
 	header.proto=PROTO_VERSION;
 	header.msg_type=USER_REQUEST;

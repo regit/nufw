@@ -101,13 +101,13 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
           continue;
 
 #if DEBUG
-      // Check if there is a matching rule in the filters list
+      /*  Check if there is a matching rule in the filters list */
       printf("Packet dst = %ld (%lx)\n", c.rmt, c.rmt);
 #endif
 
 #ifdef USE_FILTER
-      // If we're sure auth_by_default is either 0 or 1, it can be simplified.
-      // (MiKael) TODO: Make sure!! :)
+      /*  If we're sure auth_by_default is either 0 or 1, it can be simplified. */
+      /*  (MiKael) TODO: Make sure!! :) */
       if (session->auth_by_default && seen)
           continue;
       if (!session->auth_by_default && !seen)
@@ -140,20 +140,20 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
       if (c.ino == 0) 
           continue;
 
-      // Check if it's the good user
+      /*  Check if it's the good user */
       if (c.uid != session->localuserid)
           continue;
 
       c.lcl=ntohl(c.lcl);
       c.rmt=ntohl(c.rmt);
 #if DEBUG
-      // Check if there is a matching rule in the filters list
+      /*  Check if there is a matching rule in the filters list */
       printf("Packet dst = %ld (%lx)\n", c.rmt, c.rmt);
 #endif
 
 #if USE_FILTER
-      // If we're sure auth_by_default is either 0 or 1, it can be simplified.
-      // (MiKael) TODO: Make sure!! :)
+      /*  If we're sure auth_by_default is either 0 or 1, it can be simplified. */
+      /*  (MiKael) TODO: Make sure!! :) */
       if (session->auth_by_default && seen)
           continue;
       if (!session->auth_by_default && !seen)

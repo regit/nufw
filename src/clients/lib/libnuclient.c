@@ -53,7 +53,6 @@ char * locale_to_utf8(char* inbuf);
 #define DH_BITS 1024
 #define REQUEST_CERT 0
 
-//#include <stdlib.h>
 #include <sys/utsname.h>
 
 
@@ -65,8 +64,6 @@ int nu_getrealm(void *context __attribute__((unused)), int id,
 		const char **availrealms __attribute__((unused)),
 		const char **result)
 {
-	// NuAuth * session = (NuAuth*)context;
-
 	if(id != SASL_CB_GETREALM) {
 		printf("nu_getrealm not looking for realm");
 		return EXIT_FAILURE;
@@ -318,7 +315,6 @@ int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn)
 	char buf[8192];
 	const char *data;
 	const char *chosenmech;
-	//sasl_interatcptable_t *client_interact = NULL;
 	size_t len;
 	int r;
 	char * mech;
@@ -343,7 +339,6 @@ int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn)
 #endif
 
 	r = sasl_client_start(conn, mech, NULL, &data, &len, &chosenmech);
-	//r = sasl_client_start(conn, mech, &client_interact, &data, &len, &chosenmech);
 	if (r != SASL_OK && r != SASL_CONTINUE) {
 		printf("starting SASL negotiation");
 		printf("\n%s\n", sasl_errdetail(conn));
@@ -749,7 +744,6 @@ NuAuth* nu_client_init2(
 	};
 
 	/* client new connection */
-	//   ret = sasl_client_new(service, host, localaddr, remoteaddr, NULL, 0, &conn);
 	ret = sasl_client_new("NuFW", "myserver", NULL, NULL, callbacks, 0, &conn);
 	if (ret != SASL_OK) {
 		printf("Failed allocating connection state");
