@@ -199,7 +199,7 @@ int user_process_field_app(
     debug_log_message (VERBOSE_DEBUG, AREA_USER, "\tgot APP field");
 
     /* this has to be smaller than field size */
-    if (field_buffer_len < ntohs(appfield->length))
+    if (field_buffer_len < (int)ntohs(appfield->length))
     {
         if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
             g_message("Improper application field length signaled in authreq header");
@@ -249,21 +249,21 @@ int user_process_field(
 {
     /* check field length */
     field->length = ntohs(field->length);
-    if (auth_buffer_len < field->length)
+    if (auth_buffer_len < (int)field->length)
     {
         return -1;
     }
 
     switch (field->type) {
         case IPV4_FIELD:
-            if (auth_buffer_len < sizeof(struct nuv2_authfield_ipv4)) {
+            if (auth_buffer_len < (int)sizeof(struct nuv2_authfield_ipv4)) {
                 return -1;
             }
             user_process_field_ipv4(connection, (struct nuv2_authfield_ipv4 *)field);
             break;
 
         case APP_FIELD:
-            if (auth_buffer_len < sizeof(struct nuv2_authfield_app)) {
+            if (auth_buffer_len < (int)sizeof(struct nuv2_authfield_app)) {
                 return -1;
             }
             if (user_process_field_app(authreq, connection, field->length, (struct nuv2_authfield_app *)field) < 0)
@@ -271,7 +271,7 @@ int user_process_field(
             break;
 
         case USERNAME_FIELD:
-            if (auth_buffer_len < sizeof(struct nuv2_authfield_username)) {
+            if (auth_buffer_len < (int)sizeof(struct nuv2_authfield_username)) {
                 return -1;
             }
             if (user_process_field_username(connection, header_option, multiclient_ok, 
@@ -280,7 +280,7 @@ int user_process_field(
             break;
 
         case HELLO_FIELD:
-            if (auth_buffer_len < sizeof(struct nuv2_authfield_hello)) {
+            if (auth_buffer_len < (int)sizeof(struct nuv2_authfield_hello)) {
                 return -1;
             }
             user_process_field_hello(connection, (struct nuv2_authfield_hello *)field);
@@ -313,7 +313,7 @@ GSList* user_request(struct tls_buffer_read *datas)
          start += authreq->packet_length, buffer_len -= authreq->packet_length)
     {
         /* check buffer underflow */
-        if (buffer_len < sizeof(struct nuv2_authreq))
+        if (buffer_len < (int)sizeof(struct nuv2_authreq))
         {
             free_connection_list(conn_elts);
             return NULL;
@@ -322,7 +322,7 @@ GSList* user_request(struct tls_buffer_read *datas)
 
         authreq->packet_length=ntohs(authreq->packet_length);
         if (authreq->packet_length == 0
-                || buffer_len < authreq->packet_length)
+                || buffer_len < (int)authreq->packet_length)
         {
             log_message (WARNING, AREA_USER,
                 "Improper length signaled in authreq header: %d",
@@ -354,7 +354,7 @@ GSList* user_request(struct tls_buffer_read *datas)
             struct nuv2_authfield* field = (struct nuv2_authfield* )req_start;
 
             /* check buffer underflow */
-            if (auth_buffer_len < sizeof(struct nuv2_authfield))
+            if (auth_buffer_len < (int)sizeof(struct nuv2_authfield))
             {
                 free_connection_list(conn_elts);
                 free_connection(connection);
@@ -424,7 +424,7 @@ static GSList * userpckt_decode(struct tls_buffer_read *datas)
     struct nuv2_header* header=(struct nuv2_header*)dgram;
 
     /* check buffer underflow */
-    if (datas->buffer_len < sizeof(struct nuv2_header))
+    if (datas->buffer_len < (int)sizeof(struct nuv2_header))
     {
         return NULL;
     }
