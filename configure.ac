@@ -154,8 +154,12 @@ AM_CONDITIONAL(HAVE_NFQUEUE_ONLY, test x$have_nfqueue = xyes && test x$have_conn
 AM_CONDITIONAL(HAVE_NFQUEUE_CONNTRACK,test x$have_conntrack = xyes && test x$have_nfqueue = xyes )
 AM_CONDITIONAL(HAVE_CONNTRACK_ONLY, test x$have_nfqueue = x && test x$have_conntrack = xyes  )
 
+CFLAGS="-Wall -fno-strict-aliasing -Werror-implicit-function-declaration -ansi"
 if test "${debug}" = "yes"; then
 	AC_DEFINE_UNQUOTED([DEBUG_ENABLE],[1],[Will compile development debug message])
+	CFLAGS="$CFLAGS -O0 -ggdb3"
+else	
+	CFLAGS="$CFLAGS -O2"
 fi
 
 AC_CONFIG_FILES([Makefile
@@ -184,65 +188,67 @@ AC_CONFIG_FILES([Makefile
 AM_INIT_AUTOMAKE(1.9)
 
 AC_OUTPUT
+AC_MSG_RESULT([
+
+Configuration complete
+])
 
 if test "$debug"; then
-	AC_MSG_NOTICE([Compiling with developement debug support])
+	AC_MSG_RESULT([* Compiling with developement DEBUG support])
 fi
 
-
-
 if test "${build_nuauth}" = "yes"; then
-       	AC_MSG_NOTICE([Compiling nuauth])
+		AC_MSG_RESULT([* Compiling NuAuth])
         if test "$enable_system_auth" = "yes"; then
-        	AC_MSG_NOTICE([         Compiling module system auth])
+        	AC_MSG_RESULT([  - NuAuth: compile auth module system])
         fi
 
         if test "${ldap}" = "yes"; then
-        	AC_MSG_NOTICE([         Compiling module ldap])
+        	AC_MSG_RESULT([  - NuAuth: compile module ldap])
         fi
 
         if test "${gdbm}" = "yes"; then
-        	AC_MSG_NOTICE([         Compiling module dbm])
+        	AC_MSG_RESULT([  - NuAuth: compile module dbm])
         fi
 
         if test "${ident}" = "yes"; then
-        	AC_MSG_NOTICE([         Compiling fallback module ident])
+        	AC_MSG_RESULT([  - NuAuth: compile (fallback) module ident])
         fi
 
         if test "${enable_mysql_log}" = "yes"; then
-        	AC_MSG_NOTICE([         Compiling mysql log module])
+        	AC_MSG_RESULT([  - NuAuth: compile log module mysql])
         fi
 
         if test "${enable_pgsql_log}" = "yes"; then
-        	AC_MSG_NOTICE([         Compiling pgsql log module])
+        	AC_MSG_RESULT([  - NuAuth: compile log module pgsql])
         fi
 fi
 
 if test "${build_nufw}" = "yes"; then
-        AC_MSG_NOTICE([Compiling nufw])
+		AC_MSG_RESULT([* Compiling NuFW])
         if test "${have_nfqueue}" = "yes"; then
-        	AC_MSG_NOTICE([         Using libnetfilter_queue support])
+        	AC_MSG_RESULT([  - NuFW: libnetfilter_queue support])
         else
                 if test "${have_ipq}" = "yes"; then
         	        if test "$enable_user_mark" = "yes"; then
-                                AC_MSG_NOTICE([         With user mark support])
+                                AC_MSG_RESULT([  - NuFW: User mark support])
 	                fi
                 fi
         fi
 else
-	AC_MSG_NOTICE([nufw daemon WON'T be compiled: libipq or libnetfilter_queue not present])
+	AC_MSG_RESULT([!!! WARNING !!! NuFW daemon WON'T be compiled: libipq or libnetfilter_queue not present])
 fi
 
 if test "${build_nutrackd}" = "yes"; then
-	AC_MSG_NOTICE([Compiling nutrackd])
+	AC_MSG_RESULT([* Compiling nutrackd])
 fi
 if test "${build_libnuclient}" = "yes"; then
-	AC_MSG_NOTICE([Compiling libnuclient])
+	AC_MSG_RESULT([* Compiling libnuclient])
 fi
 
 if test "${build_nutpcc}" = "yes"; then
-	AC_MSG_NOTICE([Compiling nutcpc])
+	AC_MSG_RESULT([* Compiling nutcpc])
 fi
 
-
-
+AC_MSG_RESULT([
+Now type 'make' and then 'sudo make install'])
