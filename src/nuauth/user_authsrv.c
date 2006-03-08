@@ -92,9 +92,8 @@ void user_check_and_decide (gpointer userdata, gpointer data)
           "leaving user_check\n");
 }
 
-void user_process_field_hello(connection_t* connection, char *req_start)
+void user_process_field_hello(connection_t* connection, struct nuv2_authfield_hello* hellofield)
 {
-    struct nuv2_authfield_hello* hellofield = (struct nuv2_authfield_hello*)req_start;
     g_message("got hello field");
     connection->packet_id=g_slist_prepend(NULL,GINT_TO_POINTER(hellofield->helloid));
 }    
@@ -106,9 +105,8 @@ int user_process_field_username(
         connection_t* connection, 
         uint8_t header_option,
         gboolean *multiclient_ok,
-        char *req_start)
+        struct nuv2_authfield_username *usernamefield)
 {
-    struct nuv2_authfield_username * usernamefield=(struct nuv2_authfield_username* )req_start; 
     unsigned int len;
     gchar* dec_fieldname=NULL;
     unsigned int reallen=0;
@@ -161,9 +159,8 @@ int user_process_field_username(
     return 1;
 }    
 
-void user_process_field_ipv4(connection_t* connection, char *req_start)
+void user_process_field_ipv4(connection_t* connection, struct nuv2_authfield_ipv4 *ipfield)
 {
-    struct nuv2_authfield_ipv4 * ipfield=(struct nuv2_authfield_ipv4 * )req_start; 
     connection->tracking.saddr = ntohl(ipfield->src);
     connection->tracking.daddr = ntohl(ipfield->dst);
     connection->tracking.protocol = ipfield->proto;
@@ -192,60 +189,52 @@ void user_process_field_ipv4(connection_t* connection, char *req_start)
 int user_process_field_app(
         struct nuv2_authreq* authreq,
         connection_t* connection, 
-        char *start,
-        char *req_start)
+        int field_buffer_len,
+        struct nuv2_authfield_app *appfield)
 {
-    struct nuv2_authfield_app * appfield=(struct nuv2_authfield_app* )req_start; 
-#ifdef DEBUG_ENABLE
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-        g_message("\tgot APP field");
-#endif
-    switch (appfield->option) {
-        default:
-            {
-                unsigned int reallen=0;
-                gchar* dec_appname=NULL;
-                unsigned int len=ntohs(appfield->length)-4;
+    unsigned int reallen=0;
+    gchar* dec_appname=NULL;
+    unsigned int len=ntohs(appfield->length)-4;
 
-                /* this has to be smaller than field size */
-                if(ntohs(appfield->length) >
-                        authreq->packet_length+start-req_start){
-                    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
-                        g_message("Improper application field length signaled in authreq header");
-                    return -1;
-                }
+    debug_log_message (VERBOSE_DEBUG, AREA_USER, "\tgot APP field");
 
-                if (8*len > 2048){
-                    /* it is reaaally long, we ignore packet (too lasy to kill client) */
-                    if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
-                        g_warning("user packet announced a too long app name\n");
-                    return -1;
-                }
-                dec_appname =	g_new0(gchar,8*len);
-                if (sasl_decode64((char*)appfield+4,len, dec_appname,8*len,&reallen) 
-                        ==
-                        SASL_BUFOVER) {
-                    dec_appname=g_try_realloc(dec_appname,reallen+1);
-                    if (dec_appname)
-                        sasl_decode64((char*)appfield+4,len, dec_appname,reallen,&reallen) ;
-                } else {
-                    dec_appname=g_try_realloc(dec_appname,reallen+1);
-                }
-                dec_appname[reallen]=0;
-
-                if (dec_appname != NULL)
-                {
-                    connection->app_name= string_escape(dec_appname);
-                    if (connection->app_name == NULL)
-                        if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
-                            g_warning("user packet received an invalid app name\n");
-                }else{
-                    connection->app_name=NULL;
-                }
-                g_free(dec_appname);
-                connection->app_md5=NULL;
-            }
+    /* this has to be smaller than field size */
+    if (field_buffer_len < ntohs(appfield->length))
+    {
+        if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
+            g_message("Improper application field length signaled in authreq header");
+        return -1;
     }
+
+    if (8*len > 2048){
+        /* it is reaaally long, we ignore packet (too lasy to kill client) */
+        log_message (INFO, AREA_USER,
+            "user packet announced a too long app name\n");
+        return -1;
+    }
+    dec_appname = g_new0(gchar,8*len);
+    if (sasl_decode64((char*)appfield+4,len, dec_appname,8*len,&reallen) 
+            ==
+            SASL_BUFOVER) {
+        dec_appname=g_try_realloc(dec_appname,reallen+1);
+        if (dec_appname)
+            sasl_decode64((char*)appfield+4,len, dec_appname,reallen,&reallen) ;
+    } else {
+        dec_appname=g_try_realloc(dec_appname,reallen+1);
+    }
+    dec_appname[reallen]=0;
+
+    if (dec_appname != NULL)
+    {
+        connection->app_name= string_escape(dec_appname);
+        if (connection->app_name == NULL)
+            if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
+                g_warning("user packet received an invalid app name\n");
+    }else{
+        connection->app_name=NULL;
+    }
+    g_free(dec_appname);
+    connection->app_md5=NULL;
     return 1;
 }    
 
@@ -255,38 +244,46 @@ int user_process_field(
         uint8_t header_option,
         connection_t* connection, 
         gboolean *multiclient_ok,
-        char* start,
-        char *req_start)
+        int auth_buffer_len,
+        struct nuv2_authfield* field)
 {
-    struct nuv2_authfield* field=(struct nuv2_authfield* )req_start;
-
+    /* check field length */
     field->length = ntohs(field->length);
-    if( (req_start+field->length >
-                start+authreq->packet_length) || (field->length == 0))
+    if (auth_buffer_len < field->length)
     {
-        log_message (WARNING, AREA_USER,
-            "Improper field length signaled: %d",
-            field->length);
         return -1;
     }
 
     switch (field->type) {
         case IPV4_FIELD:
-            user_process_field_ipv4(connection, req_start);
+            if (auth_buffer_len < sizeof(struct nuv2_authfield_ipv4)) {
+                return -1;
+            }
+            user_process_field_ipv4(connection, (struct nuv2_authfield_ipv4 *)field);
             break;
 
         case APP_FIELD:
-            if (user_process_field_app(authreq, connection, start, req_start) < 0)
+            if (auth_buffer_len < sizeof(struct nuv2_authfield_app)) {
+                return -1;
+            }
+            if (user_process_field_app(authreq, connection, field->length, (struct nuv2_authfield_app *)field) < 0)
                 return -1;
             break;
 
         case USERNAME_FIELD:
-            if (user_process_field_username(connection, header_option, multiclient_ok, req_start) < 0)
+            if (auth_buffer_len < sizeof(struct nuv2_authfield_username)) {
+                return -1;
+            }
+            if (user_process_field_username(connection, header_option, multiclient_ok, 
+                        (struct nuv2_authfield_username *)field) < 0)
                 return -1;
             break;
 
         case HELLO_FIELD:
-            user_process_field_hello(connection, req_start);
+            if (auth_buffer_len < sizeof(struct nuv2_authfield_hello)) {
+                return -1;
+            }
+            user_process_field_hello(connection, (struct nuv2_authfield_hello *)field);
             break;
 
         default:
@@ -305,8 +302,8 @@ GSList* user_request(struct tls_buffer_read *datas)
     connection_t* connection=NULL;
     char* start;
     gboolean multiclient_ok=FALSE;
-    unsigned int buffer_len = datas->buffer_len;
-    unsigned int auth_buffer_len;
+    int buffer_len = datas->buffer_len;
+    int auth_buffer_len;
     int field_length;
     struct nuv2_authreq* authreq;
     char *req_start;
@@ -315,8 +312,6 @@ GSList* user_request(struct tls_buffer_read *datas)
          0 < buffer_len; 
          start += authreq->packet_length, buffer_len -= authreq->packet_length)
     {
-        authreq=(struct nuv2_authreq* )start;
-
         /* check buffer underflow */
         if (buffer_len < sizeof(struct nuv2_authreq))
         {
@@ -324,6 +319,7 @@ GSList* user_request(struct tls_buffer_read *datas)
             free_connection_list(conn_elts);
             return NULL;
         }
+        authreq=(struct nuv2_authreq* )start;
 
         authreq->packet_length=ntohs(authreq->packet_length);
         if (authreq->packet_length == 0
@@ -348,7 +344,8 @@ GSList* user_request(struct tls_buffer_read *datas)
 #ifdef PERF_DISPLAY_ENABLE
         gettimeofday(&(connection->arrival_time),NULL);
 #endif
-        
+       
+        /*** process all fields ***/
         debug_log_message (VERBOSE_DEBUG, AREA_USER, "Authreq start");
         req_start = start + sizeof(struct nuv2_authreq);
         auth_buffer_len = authreq->packet_length - sizeof(struct nuv2_authreq);
@@ -356,8 +353,20 @@ GSList* user_request(struct tls_buffer_read *datas)
                 0 < auth_buffer_len; 
                 req_start += field_length, auth_buffer_len -= field_length)
         {
+            struct nuv2_authfield* field = (struct nuv2_authfield* )req_start;
+
+            /* check buffer underflow */
+            if (auth_buffer_len < sizeof(struct nuv2_authfield))
+            {
+                free_buffer_read(datas);
+                free_connection_list(conn_elts);
+                free_connection(connection);
+                return NULL;
+            }
+
+            /* process field */
             field_length = user_process_field (authreq, header->option, 
-                    connection, &multiclient_ok, start, req_start);
+                    connection, &multiclient_ok, auth_buffer_len, field);
             if (field_length < 0) {
                 free_buffer_read(datas);
                 free_connection_list(conn_elts);
@@ -377,10 +386,9 @@ GSList* user_request(struct tls_buffer_read *datas)
         connection->os_version=g_strdup(datas->os_version);
         if (connection->user_groups == NULL) {
             if ((header->option == 0x1) && multiclient_ok) {
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
-                    g_message("Get users info");
                 /* group is not fill in multi users mode
                  * need to be done now */
+                log_message (INFO, AREA_USER, "Get users info");
                 if ( nuauthconf->user_cache ){
                     get_users_from_cache(connection);
                 } else {
