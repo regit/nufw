@@ -79,9 +79,9 @@ void fatal_e(char *msg)
   exit(1);
 }
 
-//IN : password in a string, gids in the form "gid1,gid2,..."
-//OUT : DBM stored format : "password gid1 gid2 ... " Yes there IS a space in
-//the end of the output string.
+/* IN : password in a string, gids in the form "gid1,gid2,..."
+ * OUT : DBM stored format : "password gid1 gid2 ... " Yes there IS a space in
+ * the end of the output string. */
 void pass_and_gids(char *passwd, char *gids, char **result)
 {
   char *tmp;
@@ -149,7 +149,7 @@ int passwd_crypt(int pass_crypt,char **pass)
   size_t len;
   if (pass_crypt == 0)
       return 0;
-  //MD5
+  /* MD5 */
   if (pass_crypt == CRYPT_SHA1)
   {
       algo = GCRY_MD_SHA1;
@@ -247,7 +247,7 @@ int main(int argc, char *argv[])
       usage(program_name);
       exit(1);
   }
-  //Listing mode
+  /* Listing mode */
   if ((mode == 0) || (mode == MODE_LIST))
   {
     datum data;
@@ -255,7 +255,7 @@ int main(int argc, char *argv[])
     dbf = gdbm_open(filename, 512, GDBM_READER, 0, 0);
     if (dbf == NULL)
         fatal_e(gdbm_strerror ( gdbm_errno ));
-    //One user only
+    /* One user only */
     if (mode == MODE_LIST)
     {
         key.dsize = strlen(username);
@@ -286,7 +286,7 @@ int main(int argc, char *argv[])
         free(data.dptr);
         return 0;
     } else {
-    //All users
+    /* All users */
       key = gdbm_firstkey ( dbf );
       while (key.dptr != NULL)
       {
@@ -301,7 +301,7 @@ int main(int argc, char *argv[])
       return 0;
     }
   }
-  //Create a new user
+  /* Create a new user */
   else if (mode == MODE_CREATE)
   {
     int ret;
@@ -365,7 +365,7 @@ int main(int argc, char *argv[])
     }
     return 0;
   }
-  //Other modes : update user, delete user
+  /* Other modes : update user, delete user */
   else 
   {
     dbf = gdbm_open(filename, 512, GDBM_WRITER, 0, 0);
