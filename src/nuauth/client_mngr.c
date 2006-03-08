@@ -49,12 +49,8 @@ void clean_session(user_session * c_session)
 			     );
 		g_free(c_session->tls);
 	}
-	if (c_session->userid){
-		g_free(c_session->userid);
-	}
-	if (c_session->groups){
-		g_slist_free(c_session->groups);
-	}
+    g_free(c_session->user_name);
+    g_slist_free(c_session->groups);
 
 	if (c_session){
 		g_free(c_session); 
@@ -143,7 +139,7 @@ static gboolean look_for_username_callback (gpointer key,
                                              gpointer user_data)
 {
 	if(! strcmp(
-				((user_session*)value)->userid,
+				((user_session*)value)->user_name,
 			user_data)){
 		return TRUE;
 	} else {

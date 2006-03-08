@@ -48,7 +48,7 @@ void tls_sasl_connect_ok(user_session* c_session, int c)
             break;
         case POLICY_ONE_LOGIN:
             g_static_mutex_lock (&client_mutex);
-            if (! look_for_username(c_session->userid)){
+            if (! look_for_username(c_session->user_name)){
                 g_static_mutex_unlock (&client_mutex);
                 break;
             }
@@ -63,7 +63,7 @@ void tls_sasl_connect_ok(user_session* c_session, int c)
         default:
 #ifdef DEBUG_ENABLE
             if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-                g_message("User %s already connected, closing socket",c_session->userid);
+                g_message("User %s already connected, closing socket",c_session->user_name);
 #endif
             /* get rid of client */
             close_tls_session(c,c_session->tls);
@@ -151,8 +151,8 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
     c_session->last_req.tv_sec = 0;
     c_session->last_req.tv_usec = 0;
     c_session->req_needed = TRUE;
-    c_session->userid = NULL;
-    c_session->uid = 0;
+    c_session->user_name = NULL;
+    c_session->user_id = 0;
     g_free(userdata);
 
     if ((nuauth_tls_auth_by_cert == TRUE) && gnutls_certificate_get_peers(*session,&size)) {
@@ -173,7 +173,7 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
                     g_message("Using username %s from certificate",username);
 #endif
                 if(  user_check(username, NULL, 0,
-                            &(c_session->uid), &(c_session->groups)
+                            &(c_session->user_id), &(c_session->groups)
                             )!=SASL_OK) {
 #ifdef DEBUG_ENABLE
                     if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
@@ -181,11 +181,11 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
                     }
 #endif
                     c_session->groups=NULL;
-                    c_session->uid=0;
+                    c_session->user_id=0;
                     /* we free username as it is not a good one */
                     g_free(username);
                 } else {
-                    c_session->userid=username;
+                    c_session->user_name=username;
                 }
             }
         }

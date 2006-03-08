@@ -301,14 +301,14 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 			g_warning("sasl negotiation error: %d",r);
 		}
 		ret = sasl_getprop(conn, SASL_USERNAME, (const void **)	&(user_name));
-		c_session->userid = g_strdup(user_name);
-		/*		ret = sasl_getprop(conn, SASL_USERNAME, (const void **)	&(c_session->userid)); */
+		c_session->user_name = g_strdup(user_name);
+		/*		ret = sasl_getprop(conn, SASL_USERNAME, (const void **)	&(c_session->user_name)); */
 		if (ret == SASL_OK){
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
 				const char *err = inet_ntop( AF_INET, &remote_inaddr, address, sizeof(address));
                 if (err == NULL)
                     SECURE_STRNCPY(address, "<inet_ntop error>", sizeof(address));
-				g_warning("%s at %s is a badguy",c_session->userid,address);
+				g_warning("%s at %s is a badguy",c_session->user_name,address);
 			}
 		}else{
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
@@ -384,7 +384,7 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 	}
 
 
-	if (c_session->userid)
+	if (c_session->user_name)
 		external_auth=TRUE;
 
 	if (external_auth == FALSE){
@@ -394,13 +394,13 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 			g_warning("get user failed");
 			return SASL_FAIL;
 		}else{
-			c_session->userid=g_strdup(tempname);
+			c_session->user_name=g_strdup(tempname);
 		}
 	}
 
 	/* check on multi user capability */
 	if ( check_inaddr_in_array(remote_inaddr,nuauthconf->multi_servers_array)){
-		gchar* stripped_user=get_rid_of_domain(c_session->userid);
+		gchar* stripped_user=get_rid_of_domain(c_session->user_name);
 		if (check_string_in_array(stripped_user,nuauthconf->multi_users_array)) {
 			c_session->multiusers=TRUE;
 		} else {
@@ -409,7 +409,7 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 				const char *err = inet_ntop( AF_INET, &remote_inaddr, address, sizeof(address));
                 if (err == NULL)
                     SECURE_STRNCPY(address, "<inet_ntop error>", sizeof(address));
-				g_message("%s users on multi server %s\n", c_session->userid,address);
+				g_message("%s users on multi server %s\n", c_session->user_name,address);
 			}
 #endif
 			if (gnutls_record_send(session,"N", 1) <= 0) /* send NO to client */
@@ -424,14 +424,14 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 
 	if (external_auth == FALSE){
 		c_session->groups=g_private_get(group_priv);
-		c_session->uid=GPOINTER_TO_UINT(g_private_get(user_priv));
-		if (c_session->uid == 0) 
+		c_session->user_id=GPOINTER_TO_UINT(g_private_get(user_priv));
+		if (c_session->user_id == 0) 
 		{
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN))
 				g_message("Couldn't get user ID!");	
 		}
 		if (c_session->groups == NULL){
-			if(user_check(c_session->userid,NULL,0,&(c_session->uid),&(c_session->groups))!=SASL_OK){
+			if(user_check(c_session->user_name,NULL,0,&(c_session->user_id),&(c_session->groups))!=SASL_OK){
 #ifdef DEBUG_ENABLE
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
 					g_message("error when searching user groups");	
@@ -561,7 +561,7 @@ int sasl_parse_user_os(user_session* c_session, char *buf, int buf_size)
 
 #ifdef DEBUG_ENABLE
             if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
-                g_message("user %s uses OS %s ,%s, %s",c_session->userid,
+                g_message("user %s uses OS %s ,%s, %s",c_session->user_name,
                         c_session->sysname , c_session->release , c_session->version);
 
             }
@@ -605,7 +605,7 @@ int sasl_user_check(user_session* c_session)
 		{ SASL_CB_LIST_END, NULL, NULL }
 	};
 
-	if (c_session->userid) {
+	if (c_session->user_name) {
 		external_auth=TRUE;
 	} 
 
@@ -635,10 +635,10 @@ int sasl_user_check(user_session* c_session)
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
 			g_message("setting params for external");
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
-			g_message("TLS gives user %s, trying EXTERNAL",c_session->userid);	
+			g_message("TLS gives user %s, trying EXTERNAL",c_session->user_name);	
 		}
 #endif
-		ret = sasl_setprop(conn, SASL_AUTH_EXTERNAL,c_session->userid);
+		ret = sasl_setprop(conn, SASL_AUTH_EXTERNAL,c_session->user_name);
 		if (ret != SASL_OK){
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN))
 				g_warning("Error setting external auth");

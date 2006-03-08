@@ -145,6 +145,8 @@ void free_connection_callback(gpointer conn, gpointer unused)
 
 void free_connection_list(GSList *list)
 {
+    if (list == NULL)
+        return;
     g_slist_foreach(list, free_connection_callback, NULL);
     g_slist_free(list);
 }

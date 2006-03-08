@@ -121,7 +121,7 @@ static int treat_user_request (user_session * c_session)
 #ifdef DEBUG_ENABLE
     if (!c_session->multiusers) {
         if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-            g_message("Packet from user %s\n",c_session->userid);
+            g_message("Packet from user %s\n",c_session->user_name);
     }
 #endif
     
@@ -187,8 +187,8 @@ static int treat_user_request (user_session * c_session)
             datas->user_id=0;
             datas->groups=NULL;
         } else {
-            datas->user_name = g_strdup(c_session->userid);
-            datas->user_id = c_session->uid;
+            datas->user_name = g_strdup(c_session->user_name);
+            datas->user_id = c_session->user_id;
             datas->groups = g_slist_copy (c_session->groups);
         }
         if (c_session->sysname){

@@ -27,8 +27,8 @@ void get_users_from_cache (connection_t* conn_elt);
 gpointer user_duplicate_key(gpointer datas);
 
 struct user_cached_datas {
-       uint32_t uid;
-       GSList * groups;
+    uint32_t uid;
+    GSList * groups;
 };
 
 /**
@@ -36,23 +36,19 @@ struct user_cached_datas {
  * so we don't have to get this information at each packet
  */
 typedef struct User_session {
-	uint32_t addr;
-        gnutls_session* tls;
-        char * userid;
-	uint32_t uid;
-        GSList * groups;
-	gchar * sysname;
-	gchar * release;
-	gchar * version;
-        struct timeval last_req;
-        gboolean req_needed;
-	gboolean multiusers;
-        time_t expire; /**< set to -1 to have unlimited session */
+    uint32_t addr;
+    gnutls_session* tls;
+    char * user_name;
+    uint32_t user_id;
+    GSList * groups;
+    gchar * sysname;
+    gchar * release;
+    gchar * version;
+    struct timeval last_req;
+    gboolean req_needed;
+    gboolean multiusers;
+    time_t expire; /**< set to -1 to have unlimited session */
 } user_session;
 
-
-
 #endif
-
-
 

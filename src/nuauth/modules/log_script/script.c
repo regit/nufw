@@ -26,7 +26,7 @@ G_MODULE_EXPORT int user_session_logs(user_session *c_session, session_state_t s
 	remote_inaddr.s_addr=c_session->addr;
 	char address[INET_ADDRSTRLEN+1];
 	char cmdbuffer[200];
-    char *quoted_username = g_shell_quote(c_session->userid);
+    char *quoted_username = g_shell_quote(c_session->user_name);
     char *quoted_address;
     char *format;
     int ret;

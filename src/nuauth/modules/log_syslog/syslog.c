@@ -101,10 +101,10 @@ G_MODULE_EXPORT int user_session_logs(user_session *c_session, session_state_t s
     }
     switch (state) {
         case SESSION_OPEN:
-            g_message("User %s connect on %s",c_session->userid,address);
+            g_message("User %s connect on %s",c_session->user_name,address);
             break;
         case SESSION_CLOSE:
-            g_message("User %s disconnect on %s",c_session->userid,address);
+            g_message("User %s disconnect on %s",c_session->user_name,address);
             break;
     }
     return 1;

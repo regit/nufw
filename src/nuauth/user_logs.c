@@ -102,11 +102,11 @@ gboolean log_user_session(user_session* usession, session_state_t state)
 	if (nuauthconf->log_users & 1){
 		sessevent->session=g_memdup(usession,sizeof(usession));
 		sessevent->state=state;
-		if ( sessevent->session->userid ){
+		if ( sessevent->session->user_name ){
 			if (nuauthconf->log_users_without_realm){
-				sessevent->session->userid = get_rid_of_domain(usession->userid);
+				sessevent->session->user_name = get_rid_of_domain(usession->user_name);
 			} else {
-				sessevent->session->userid  = g_strdup(usession->userid);
+				sessevent->session->user_name  = g_strdup(usession->user_name);
 			}
 		}
 		g_thread_pool_push(nuauthdatas->user_session_loggers,
@@ -120,7 +120,7 @@ void log_user_session_thread (gpointer element,gpointer data)
 {
         block_on_conf_reload();
 	user_session_logs(((struct session_event*)element)->session,((struct session_event*)element)->state);
-	g_free(((struct session_event*)element)->session->userid);
+	g_free(((struct session_event*)element)->session->user_name);
 	g_free(((struct session_event*)element)->session);
 	g_free(element);
 }
