@@ -57,7 +57,7 @@ typedef enum
     DECISION_NODECIDE,  /*!< NuAuth decision answer: can't decide! */
     DECISION_REJECT     /*!< NuAuth decision answer: reject the packet */ 
 #else            
-    DECISION_NODECIDE   /*!< NuAuth decision answer: can't decide! */
+        DECISION_NODECIDE   /*!< NuAuth decision answer: can't decide! */
 #endif
 } decision_t;    
 
@@ -69,90 +69,106 @@ typedef enum
  */
 
 /* header common for all packets
-        1         4            8            16          24     32
-        |         |            |            |           |      |
-        |  Proto  |Msg Type    | Msg option |    packet length |
+   1         4            8            16          24     32
+   |         |            |            |           |      |
+   |  Proto  |Msg Type    | Msg option |    packet length |
 
-message type is one of :
+   message type is one of :
 
 AUTHREQ : user send packet
 
- */
+*/
 
 struct nuv2_header {
 #ifdef WORDS_BIGENDIAN	
-    uint8_t msg_type:4,proto:4;
-    uint8_t option;
+    uint8_t msg_type:4;
+    uint8_t proto:4;
 #else
-    uint8_t proto:4,msg_type:4;
-    uint8_t option;
+    uint8_t proto:4;
+    uint8_t msg_type:4;
 #endif
+    uint8_t option;
     uint16_t length;
 };
 
-struct nuv2_authreq {
-    uint16_t packet_id;
-    uint16_t packet_length;
-};
+typedef enum
+{
+    IPV4_FIELD=1,
+    IPV6_FIELD,
+    APP_FIELD,
+    OS_FIELD,
+    USERNAME_FIELD,
+    HELLO_FIELD
+} field_identifier_t;    
 
-#define IPV4_FIELD 0x1
-#define IPV6_FIELD 0x2
-#define APP_FIELD 0x3
-#define OS_FIELD 0x4
-#define USERNAME_FIELD 0x5
-#define HELLO_FIELD 0x6
+/**
+ * (possible value of the option member of ::nuv2_authfield)
+ */
 #define OS_SRV 0x1
 
-struct nuv2_authfield {
-        uint8_t type;
-        uint8_t option;
-        uint16_t length;
-};
-
-/* TODO : inject struct nuv2_authfield ? */
-struct nuv2_authfield_ipv4 {
-        uint8_t type;
-        uint8_t option;
-        uint16_t length;
-        uint32_t src;
-        uint32_t dst;
-        uint8_t proto;
-        uint8_t flags;
-        uint16_t FUSE;
-        uint16_t sport;
-        uint16_t dport;
-};
-
 #define APP_TYPE_NAME 0x1 /** application is defined by full path.  */
-/** application is defined by full path and SHA1 sig of binary.
+
+/**
+ * Application is defined by full path and SHA1 sig of binary.
  *
  * Format is : "full_path_app;SHA1 sig" each filed being base64 encoded
  */
 #define APP_TYPE_SHA1 0x2 
+
+struct nuv2_authreq {
+    uint16_t packet_id;
+    uint16_t packet_length; /*!< Length of the whole packet including this header */
+};
+
+/**
+ * Header of one field.
+ * See also the header of the whole packet: ::nuv2_authreq
+ */
+struct nuv2_authfield {
+    uint8_t type;    /*!< Field type identifier: see ::field_identifier_t */
+    uint8_t option;  /*!< Option: equals to 0 to #OS_SRV */
+    uint16_t length; /*!< Length of one field */
+};
+
+/* TODO : inject struct nuv2_authfield ? */
+struct nuv2_authfield_ipv4 {
+    uint8_t type;
+    uint8_t option;
+    uint16_t length;   /*!< Length of one field */
+    uint32_t src;
+    uint32_t dst;
+    uint8_t proto;
+    uint8_t flags;
+    uint16_t FUSE;
+    uint16_t sport;
+    uint16_t dport;
+};
+
+/**
+ * Application field datas
+ */
 struct nuv2_authfield_app {
-        uint8_t type;
-        uint8_t option;
-        uint16_t length;
-	char *datas;
+    uint8_t type;
+    uint8_t option;
+    uint16_t length;   /*!< Length of one field */
+    char *datas;
 };
 
 /** 
- * username data
- * 
+ * Username field data
  */ 
-
 struct nuv2_authfield_username {
-        uint8_t type;
-        uint8_t option;
-        uint16_t length;
-	char *datas;
+    uint8_t type;
+    uint8_t option;
+    uint16_t length;   /*!< Length of one field */
+    char *datas;
 };
 
 struct nuv2_authfield_hello {
-        uint8_t type;
-        uint8_t option;
-        uint16_t length;
-	uint32_t helloid;
+    uint8_t type;
+    uint8_t option;
+    uint16_t length;
+    uint32_t helloid;   /*!< Length of one field */
 };
 
 
@@ -170,14 +186,14 @@ struct nuv2_authfield_hello {
 #define SRV_TYPE_PUSH 0x1
 
 struct nuv2_srv_message {
-        uint8_t type,option;
-        uint16_t length;
+    uint8_t type,option;
+    uint16_t length;
 };
 
 struct nuv2_srv_helloreq {
-        uint8_t type,option;
-        uint16_t length;
-	uint32_t helloid;
+    uint8_t type,option;
+    uint16_t length;
+    uint32_t helloid;
 };
 
 /** 
