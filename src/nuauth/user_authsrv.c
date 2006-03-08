@@ -305,21 +305,35 @@ GSList* user_request(struct tls_buffer_read *datas)
     connection_t* connection=NULL;
     char* start;
     gboolean multiclient_ok=FALSE;
+    unsigned int buffer_len = datas->buffer_len;
+    unsigned int auth_buffer_len;
+    int field_length;
+    struct nuv2_authreq* authreq;
+    char *req_start;
 
-    for (start=dgram + sizeof(struct nuv2_header); 
-         start<dgram+header->length; 
-         start+=authreq->packet_length)
+    for (start = dgram + sizeof(struct nuv2_header), buffer_len -= sizeof(struct nuv2_header); 
+         0 < buffer_len; 
+         start += authreq->packet_length, buffer_len -= authreq->packet_length)
     {
-        struct nuv2_authreq* authreq=(struct nuv2_authreq* )start;
-        char *req_start=start;
+        authreq=(struct nuv2_authreq* )start;
+
+        /* check buffer underflow */
+        if (buffer_len < sizeof(struct nuv2_authreq))
+        {
+            free_buffer_read(datas);
+            free_connection_list(conn_elts);
+            return NULL;
+        }
 
         authreq->packet_length=ntohs(authreq->packet_length);
-        if((start+authreq->packet_length>
-                    dgram+header->length) || (authreq->packet_length == 0)){
+        if (authreq->packet_length == 0
+                || buffer_len < authreq->packet_length)
+        {
             log_message (WARNING, AREA_USER,
                 "Improper length signaled in authreq header: %d",
                 authreq->packet_length);
             free_buffer_read(datas);
+            free_connection_list(conn_elts);
             return NULL;
         }
 
@@ -334,22 +348,24 @@ GSList* user_request(struct tls_buffer_read *datas)
 #ifdef PERF_DISPLAY_ENABLE
         gettimeofday(&(connection->arrival_time),NULL);
 #endif
-        req_start += sizeof(struct nuv2_header);
+        
         debug_log_message (VERBOSE_DEBUG, AREA_USER, "Authreq start");
-
-        while(req_start-start<authreq->packet_length)
+        req_start = start + sizeof(struct nuv2_authreq);
+        auth_buffer_len = authreq->packet_length - sizeof(struct nuv2_authreq);
+        for (; 
+                0 < auth_buffer_len; 
+                req_start += field_length, auth_buffer_len -= field_length)
         {
-            int field_length = user_process_field(
-                    authreq, header->option, 
-                    connection, &multiclient_ok, 
-                    start, req_start);
+            field_length = user_process_field (authreq, header->option, 
+                    connection, &multiclient_ok, start, req_start);
             if (field_length < 0) {
-                free_connection(connection);
                 free_buffer_read(datas);
+                free_connection_list(conn_elts);
+                free_connection(connection);
                 return NULL;
             }
-            req_start += field_length;
         }
+
         /* here all packet related information are filled-in */
         if (connection->username == NULL){	
             connection->username=g_strdup(datas->user_name);
@@ -378,18 +394,17 @@ GSList* user_request(struct tls_buffer_read *datas)
                     }
                 }
             } else {
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
-                    g_message("User_check return is bad");
+                log_message (INFO, AREA_USER, "User_check return is bad");
+                free_buffer_read(datas);
+                free_connection_list(conn_elts);
                 free_connection(connection);
                 return NULL;
             }
         }
-        /* first reset timestamp to now */
-        connection->timestamp=time(NULL);
+        
         connection->state=AUTH_STATE_USERPCKT;
-        /* acl part is NULL */
-        connection->acl_groups=NULL;
-
+        connection->acl_groups=NULL;            /* acl part is NULL */
+        connection->timestamp=time(NULL);       /* first reset timestamp to now */
         conn_elts=g_slist_prepend(conn_elts,connection);
 
         debug_log_message (VERBOSE_DEBUG, AREA_USER, "Authreq end");
@@ -405,13 +420,20 @@ static GSList * userpckt_decode(struct tls_buffer_read *datas)
     char * dgram = datas->buffer;
     struct nuv2_header* header=(struct nuv2_header*)dgram;
 
-    /* decode dgram */
-    if (header->proto != PROTO_VERSION)
+    /* check buffer underflow */
+    if (datas->buffer_len < sizeof(struct nuv2_header))
     {
         free_buffer_read(datas);
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER))
-            g_message("unsupported protocol, got protocol %d (msg %d) with option %d (length %d)",header->proto,
-                    header->msg_type,header->option,header->length);
+        return NULL;
+    }
+
+    /* check protocol version */
+    if (header->proto != PROTO_VERSION)
+    {
+        log_message (INFO, AREA_USER,
+            "unsupported protocol, got protocol %d (msg %d) with option %d (length %d)",
+            header->proto, header->msg_type, header->option, header->length);
+        free_buffer_read(datas);
         return NULL;
     }
 
@@ -426,10 +448,8 @@ static GSList * userpckt_decode(struct tls_buffer_read *datas)
 
     if (header->msg_type != USER_REQUEST)
     {
+        log_message (INFO, AREA_USER, "unsupported message type");
         free_buffer_read(datas);
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER)){
-            g_message("unsupported message type");
-        }
         return NULL;
     }
 

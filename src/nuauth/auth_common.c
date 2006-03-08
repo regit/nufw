@@ -138,6 +138,16 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
     debug_log_message (DEBUG, AREA_MAIN, "done\n");
 }
 
+void free_connection_callback(gpointer conn, gpointer unused)
+{
+    free_connection((connection_t *)conn);
+}
+
+void free_connection_list(GSList *list)
+{
+    g_slist_foreach(list, free_connection_callback, NULL);
+    g_slist_free(list);
+}
 
 /**
  * Delete a connection and all of its memory.
@@ -146,9 +156,8 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
  * waiting its authentification.
  * 
  * \param conn Pointer to a connection
- * \return 1
  */
-int free_connection(connection_t * conn)
+void free_connection(connection_t *conn)
 {
     g_assert (conn != NULL );
 
@@ -215,7 +224,6 @@ int free_connection(connection_t * conn)
     g_free(conn->os_release);
     g_free(conn->os_version);
     g_free(conn);
-    return 1;
 }
 
 
