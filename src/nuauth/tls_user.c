@@ -132,7 +132,7 @@ static int treat_user_request (user_session * c_session)
         return -1;
     }
     datas->buffer_len = gnutls_record_recv(*(c_session->tls), datas->buffer, CLASSIC_NUFW_PACKET_SIZE);
-    if ( datas->buffer_len <= 0) {
+    if ( datas->buffer_len < sizeof(struct nuv2_header)) {
 #ifdef DEBUG_ENABLE
         if (datas->buffer_len <0) 
             if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
@@ -142,31 +142,23 @@ static int treat_user_request (user_session * c_session)
         return EOF;
     }
 
-    /* check buffer underflow */
-    if (datas->buffer_len < sizeof(struct nuv2_header))
-    {
-        free_buffer_read(datas);
-        return -1;
-    }
-
     /* get header to check if we need to get more datas */
     struct nuv2_header* pbuf = (struct nuv2_header* )datas->buffer;
     pbuf_length=ntohs(pbuf->length);
-#ifdef DEBUG_ENABLE
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
-        g_message("(%s:%d) Packet size is %d\n",__FILE__,__LINE__,pbuf_length );
-    }
-#endif
+    debug_log_message (VERBOSE_DEBUG, AREA_MAIN,
+        "(%s:%d) Packet size is %d\n",
+        __FILE__, __LINE__, pbuf_length);
 
+    /* is it an "USER HELLO" message ? */
     if (pbuf->proto==PROTO_VERSION && pbuf->msg_type == USER_HELLO){
-#ifdef DEBUG_ENABLE
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
-            g_message("(%s:%d) user HELLO",__FILE__,__LINE__);
-        }
-#endif
+        debug_log_message (VERBOSE_DEBUG, AREA_MAIN,
+            "(%s:%d) user HELLO",__FILE__,__LINE__);
         free_buffer_read(datas);
         return 1;
     }
+
+    /* if message content is bigger than CLASSIC_NUFW_PACKET_SIZE, */
+    /* continue to read the content */
     if (pbuf->proto==2 && pbuf_length> datas->buffer_len && pbuf_length<MAX_NUFW_PACKET_SIZE  ){
         /* we realloc and get what we miss */
         datas->buffer=g_realloc(datas->buffer, pbuf_length);
@@ -180,10 +172,12 @@ static int treat_user_request (user_session * c_session)
         }
         datas->buffer_len += tmp_len;
     }
+    
     /* check message type because USER_HELLO has to be ignored */
     if ( pbuf->msg_type == USER_HELLO){
         return 1;
     }
+
     /* check authorization if we're facing a multi user packet */ 
     if ( (pbuf->option == 0x0) ||
             ((pbuf->option == 0x1) && c_session->multiusers)) {
