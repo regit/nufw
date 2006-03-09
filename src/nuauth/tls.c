@@ -407,7 +407,7 @@ void push_worker() {
 /**
  * Free memory (of ::x509_cred) and call gnutls_global_deinit().
  */
-void end_tls(int signal)
+void end_tls()
 {
     gnutls_certificate_free_keys(x509_cred);
     gnutls_certificate_free_credentials(x509_cred);

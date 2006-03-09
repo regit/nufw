@@ -77,7 +77,7 @@ static int treat_nufw_request (nufw_session_t *c_session)
 /**
  * Close the TLS NuFW servers
  */
-void close_nufw_servers(int signal) 
+void close_nufw_servers() 
 {
     g_mutex_lock(nufw_servers_mutex);
     g_hash_table_destroy(nufw_servers);

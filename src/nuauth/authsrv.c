@@ -51,15 +51,15 @@ void nuauth_cleanup( int signal )
     /* free nufw server hash */
     if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN))
         g_message("caught interrupt, cleaning");
-    close_nufw_servers(signal);
+    close_nufw_servers();
 
     /* free client hash */
-    close_clients(signal);
+    close_clients();
     free_nuauth_params (nuauthconf);
 
     /* clean gnutls */
-    end_tls(signal);
-    end_audit(signal);
+    end_tls();
+    end_audit();
 
     /* destroy pid file */
     unlink(NUAUTH_PID_FILE);
@@ -70,7 +70,6 @@ void nuauth_cleanup( int signal )
 
 void daemonize() 
 {
-    int i;
     FILE* pf;
     pid_t pidf;
 

@@ -31,13 +31,10 @@ void process_g_syslog (const gchar *log_domain, GLogLevelFlags log_level, const 
   syslog(LOG_FACILITY || syslog_level,message);
 }
 
-int set_glib_loghandlers()
+void set_glib_loghandlers()
 {
-	int error=0;
-
 	openlog("nuauth",LOG_CONS||LOG_PID,LOG_DAEMON);
 	g_log_set_handler (NULL, G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL
                      | G_LOG_FLAG_RECURSION, process_g_syslog, NULL);
-	return error;
 }
 

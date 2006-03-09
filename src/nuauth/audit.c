@@ -98,7 +98,7 @@ void init_audit()
 
 }
 
-void end_audit(int signal)
+void end_audit()
 {
 	g_free(myaudit);
 }
