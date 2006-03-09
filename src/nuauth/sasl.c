@@ -182,7 +182,8 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 	char buf[8192];
 	char chosenmech[128];
 	const char *data=NULL;
-	int len=0;
+	int tls_len=0;
+    unsigned sasl_len=0;
 	int r = SASL_FAIL;
 	int count;
 	int ret=0;
@@ -194,7 +195,7 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 
 	remote_inaddr.s_addr=c_session->addr;
 
-	r = sasl_listmech(conn, NULL, "(", ",", ")", &data, (unsigned int *)&len, &count);
+	r = sasl_listmech(conn, NULL, "(", ",", ")", &data,&sasl_len, &count);
 	if (r != SASL_OK) {
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
 			g_warning("generating mechanism list");
@@ -205,15 +206,16 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
 		g_message("%d mechanisms : %s\n", count,data);
 #endif
+    tls_len=sasl_len;
 	/* send capability list to client */
-	record_send = gnutls_record_send(session, data, len);
+	record_send = gnutls_record_send(session, data, tls_len);
 	if (( record_send == GNUTLS_E_INTERRUPTED ) || ( record_send == GNUTLS_E_AGAIN)){
 #ifdef DEBUG_ENABLE
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
 			g_message("sasl nego : need to resend packet");
 		}
 #endif
-		record_send = gnutls_record_send(session, data, len);
+		record_send = gnutls_record_send(session, data, tls_len);
 	}
 	if (record_send<0) 
 	{
@@ -225,9 +227,9 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 #endif
 
 	memset(chosenmech,0,sizeof chosenmech);
-	len = gnutls_record_recv(session, chosenmech, sizeof chosenmech);
-	if (len <= 0) {
-		if (len==0){
+	tls_len = gnutls_record_recv(session, chosenmech, sizeof chosenmech);
+	if (tls_len <= 0) {
+		if (tls_len==0){
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
 				g_message("client didn't choose mechanism\n");
 			}
@@ -235,7 +237,6 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 				return SASL_FAIL;
 			return SASL_BADPARAM;
 		} else {
-
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
 				g_message("sasl nego : tls crash");
 			}
@@ -248,9 +249,9 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 #endif
 
 	memset(buf,0,sizeof buf);
-	len = gnutls_record_recv(session, buf, sizeof(buf));
-	if(len != 1) {
-		if (len<0){
+	tls_len = gnutls_record_recv(session, buf, sizeof(buf));
+	if(tls_len != 1) {
+		if (tls_len<0){
 			return SASL_FAIL;
 		}
 #ifdef DEBUG_ENABLE
@@ -267,17 +268,17 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 
 
 		memset(buf,0,sizeof(buf));
-		len = gnutls_record_recv(session, buf, sizeof(buf));
-		if (len<0){
+		tls_len = gnutls_record_recv(session, buf, sizeof(buf));
+		if (tls_len<0){
 			return SASL_FAIL;
 		}
 		/* start libsasl negotiation */
 		r = sasl_server_start(conn, 
 				chosenmech, 
 				buf, 
-				len,
+				tls_len,
 				&data,
-				(unsigned int *)&len);
+				&sasl_len);
 	} else {
 #ifdef DEBUG_ENABLE
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
@@ -288,7 +289,7 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 				NULL, 
 				0,
 				&data, 
-				(unsigned int *)&len);
+				&sasl_len);
 
 	}
 
@@ -330,7 +331,7 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 		if (data) {
 			if (gnutls_record_send(session,"C", 1)<=0) /* send CONTINUE to client */
 				return SASL_FAIL;
-			if (gnutls_record_send(session, data, len)<0)
+			if (gnutls_record_send(session, data, tls_len)<0)
 				return SASL_FAIL;
 		} else {
 			if (gnutls_record_send(session,"C", 1)<=0) /* send CONTINUE to client */
@@ -341,10 +342,10 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 
 
 		memset(buf,0,sizeof buf);
-		len = gnutls_record_recv(session, buf, sizeof buf);
-		if (len <= 0) {
+		tls_len = gnutls_record_recv(session, buf, sizeof buf);
+		if (tls_len <= 0) {
 #ifdef DEBUG_ENABLE
-			if (!len){
+			if (!tls_len){
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
 					g_message("Client disconnected during sasl negotiation\n");
 				}
@@ -357,7 +358,7 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 			return SASL_FAIL;
 		}
 
-		r = sasl_server_step(conn, buf, len, &data, (unsigned int *)&len);
+		r = sasl_server_step(conn, buf, tls_len, &data, &sasl_len);
 		if (r != SASL_OK && r != SASL_CONTINUE) {
 #ifdef DEBUG_ENABLE
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
