@@ -115,8 +115,10 @@ void daemonize()
 
     set_glib_loghandlers();
 
-    for (i = 0; i < FOPEN_MAX ; i++)
-        close(i);
+    /* Close stdin, stdout, stderr. */
+    (void) close(0);
+    (void) close(1);
+    (void) close(2);
 }
 
 void print_usage() 
