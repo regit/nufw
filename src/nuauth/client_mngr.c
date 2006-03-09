@@ -97,7 +97,7 @@ void add_client(int socket, gpointer datas)
 	g_hash_table_replace (client_ip_hash, GINT_TO_POINTER(c_session->addr), ipsockets);
 }
 
-char delete_client_by_socket(int c)
+void delete_client_by_socket(int c)
 {
 	GSList * ipsockets;
 	user_session * session; 
@@ -116,7 +116,6 @@ char delete_client_by_socket(int c)
 	g_hash_table_replace (client_ip_hash, GINT_TO_POINTER(session->addr), ipsockets);
 	/* remove entry from hash */
 	g_hash_table_remove(client_conn_hash,GINT_TO_POINTER(c));
-	return 0;
 }
 
 inline user_session * get_client_datas_by_socket(int c)

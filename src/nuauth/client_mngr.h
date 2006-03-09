@@ -23,7 +23,7 @@ void init_client_struct();
 
 void add_client(int socket, gpointer datas);
 
-char delete_client_by_socket(int c);
+void delete_client_by_socket(int c);
 
 inline user_session * get_client_datas_by_socket(int c);
 

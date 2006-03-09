@@ -95,7 +95,7 @@ void real_log_user_packet (gpointer userdata, gpointer data)
 	g_free(userdata);
 }
 
-gboolean log_user_session(user_session* usession, session_state_t state)
+void log_user_session(user_session* usession, session_state_t state)
 {
 	struct session_event* sessevent=g_new0(struct session_event,1);
 	/* feed thread pool */
@@ -117,7 +117,6 @@ gboolean log_user_session(user_session* usession, session_state_t state)
 				sessevent,
 				NULL);
 	}
-	return TRUE;
 }
 
 void log_user_session_thread (gpointer element,gpointer data)

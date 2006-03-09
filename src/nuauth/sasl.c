@@ -459,6 +459,8 @@ int sasl_parse_user_os(user_session* c_session, char *buf, int buf_size)
     struct nuv2_authfield* osfield;
     gchar*	dec_buf=NULL;
     gchar** os_strings;
+    int dec_buf_size;
+    
     osfield=(struct nuv2_authfield*)buf;
 
     /* check buffer underflow */
@@ -476,7 +478,7 @@ int sasl_parse_user_os(user_session* c_session, char *buf, int buf_size)
         return SASL_FAIL;
     }
     
-    int dec_buf_size = ntohs(osfield->length) *4 - 32;
+    dec_buf_size = ntohs(osfield->length) *4 - 32;
     if ( dec_buf_size > 1024 ) {
         /* it's a joke it's far too long */
         if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){

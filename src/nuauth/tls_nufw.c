@@ -44,7 +44,7 @@ static int treat_nufw_request (nufw_session_t *c_session)
     /* copy packet datas */
     dgram_size = gnutls_record_recv(*(c_session->tls), dgram, CLASSIC_NUFW_PACKET_SIZE) ;
     if (  dgram_size > 0 ){
-        connection_t *current_conn = authpckt_decode(dgram , dgram_size);
+        connection_t *current_conn = authpckt_decode(dgram , (unsigned int)dgram_size);
         if (current_conn != NULL){
             current_conn->socket=0;
             current_conn->tls=c_session;
@@ -62,7 +62,8 @@ static int treat_nufw_request (nufw_session_t *c_session)
                         current_conn);
             }
         } else {
-            if ( dgram[1] != AUTH_CONTROL && dgram[1] != AUTH_CONN_DESTROY  )
+            if ( (nufw_message_t)dgram[1] != AUTH_CONTROL 
+                    && (nufw_message_t)dgram[1] != AUTH_CONN_DESTROY  )
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_PACKET)){
                     g_warning("Can't parse packet, this IS bad !\n");
                 }
@@ -336,7 +337,7 @@ void tls_nufw_init(struct tls_nufw_context_t *context)
     if (context->sck_inet == -1)
     {
         g_warning("socket() failed, exiting");
-        exit(-1);
+        exit(EXIT_FAILURE);
     }
 
     option_value=1;
@@ -353,7 +354,7 @@ void tls_nufw_init(struct tls_nufw_context_t *context)
     if (z == -1)
     {
         g_warning ("nufw bind() failed to %s:%d, exiting",inet_ntoa(context->addr_inet.sin_addr),nuauthconf->authreq_port);
-        exit(-1);
+        exit(EXIT_FAILURE);
     }
 
     /* Listen ! */
@@ -361,7 +362,7 @@ void tls_nufw_init(struct tls_nufw_context_t *context)
     if (z == -1)
     {
         g_warning ("nufw listen() failed, exiting");
-        exit(-1);
+        exit(EXIT_FAILURE);
     }
 
     /* init fd_set */
