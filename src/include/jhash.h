@@ -17,8 +17,10 @@
  * any bugs present are surely my fault.  -DaveM
  */
 
-#define u32 u_int32_t
-#define u8 u_int8_t
+#ifndef _JHASH_HEADER
+#define _JHASH_HEADER
+
+#include <stdint.h>
 
 /* NOTE: Arguments are modified. */
 #define __jhash_mix(a, b, c) \
@@ -37,14 +39,14 @@
 /* The golden ration: an arbitrary value */
 #define JHASH_GOLDEN_RATIO	0x9e3779b9
 
-
-/* A special ultra-optimized versions that knows they are hashing exactly
+/**
+ * A special ultra-optimized versions that knows they are hashing exactly
  * 3, 2 or 1 word(s).
  *
  * NOTE: In partilar the "c += length; __jhash_mix(a,b,c);" normally
  *       done at the end is not done here.
  */
-static inline u32 jhash_3words(u32 a, u32 b, u32 c, u32 initval)
+static uint32_t jhash_3words(uint32_t a, uint32_t b, uint32_t c, uint32_t initval)
 {
 	a += JHASH_GOLDEN_RATIO;
 	b += JHASH_GOLDEN_RATIO;
@@ -54,3 +56,6 @@ static inline u32 jhash_3words(u32 a, u32 b, u32 c, u32 initval)
 	
 	return c;
 }
+
+#endif
+

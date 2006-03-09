@@ -360,7 +360,7 @@ connection_t* authpckt_decode(unsigned char *dgram, unsigned int dgram_size)
 
     /* Check if message length looks correct */
     if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET)){
-        int msg_length = ntohs(header->msg_length);
+        uint16_t msg_length = ntohs(header->msg_length);
         if (msg_length != dgram_size){
             g_warning("packet seems to contain other datas, left %d byte(s) (announced : %d, get : %d)",
                     dgram_size - msg_length,

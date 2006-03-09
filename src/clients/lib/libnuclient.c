@@ -315,7 +315,7 @@ int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn)
 	char buf[8192];
 	const char *data;
 	const char *chosenmech;
-	size_t len;
+	int len;
 	int r;
 	char * mech;
 
@@ -338,7 +338,7 @@ int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn)
 	}
 #endif
 
-	r = sasl_client_start(conn, mech, NULL, &data, &len, &chosenmech);
+	r = sasl_client_start(conn, mech, NULL, &data, (unsigned int *)&len, &chosenmech);
 	if (r != SASL_OK && r != SASL_CONTINUE) {
 		printf("starting SASL negotiation");
 		printf("\n%s\n", sasl_errdetail(conn));
@@ -381,7 +381,7 @@ int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn)
 		if (len < 0){
 			return EXIT_FAILURE;
 		}
-		r = sasl_client_step(conn, buf, len, NULL, &data, &len);
+		r = sasl_client_step(conn, buf, len, NULL, &data, (unsigned int *)&len);
 		if (r != SASL_OK && r != SASL_CONTINUE) {
 			if (r == SASL_INTERACT){
 				return EXIT_FAILURE;

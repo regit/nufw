@@ -87,7 +87,7 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
 #ifdef USE_FILTER
       int seen = 0;
 #endif
-      if(atoi(buf+76) != session->localuserid){
+      if(atoi(buf+76) != (int)session->localuserid){
           continue;
       } 
       if(atoi(buf+34) != TCP_SYN_SENT){

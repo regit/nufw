@@ -33,7 +33,6 @@
 #include <errno.h>
 #include <sys/types.h>
 
-
 GCRY_THREAD_OPTION_PTHREAD_IMPL;
 
 /*! Name of pid file prefixed by LOCAL_STATE_DIR (variable defined 

@@ -92,7 +92,7 @@ void  send_destroy_message_and_free(gpointer user_data)
 
 static gboolean get_old_entry(gpointer key,gpointer value,gpointer user_data)
 {
-  if (((struct limited_connection *)value)->expire < GPOINTER_TO_UINT(user_data)){
+  if (((struct limited_connection *)value)->expire < GPOINTER_TO_INT(user_data)){
 #ifdef DEBUG_ENABLE
       if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)){
           g_message("found connection to be destroyed");

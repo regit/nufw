@@ -66,6 +66,7 @@ static struct gcry_thread_cbs gcry_threads_gthread =
 {
 	GCRY_THREAD_OPTION_USER, NULL,					      
 	gcry_gthread_mutex_init, gcry_gthread_mutex_destroy,			      
-	gcry_gthread_mutex_lock, gcry_gthread_mutex_unlock 
+	gcry_gthread_mutex_lock, gcry_gthread_mutex_unlock,
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
 

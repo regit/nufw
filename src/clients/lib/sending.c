@@ -156,7 +156,7 @@ int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
                   pointer+=sizeof(struct nuv2_authfield_ipv4);
                   memcpy(pointer,&appfield,4);
                   pointer+=4;
-                  if (len < (PACKET_SIZE + datas - pointer)){
+                  if ((int)len < (PACKET_SIZE + datas - pointer)){
                       memcpy(pointer,appfield.datas,len);
                   } else {
                       if (enc_appname)

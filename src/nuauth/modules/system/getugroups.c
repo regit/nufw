@@ -81,7 +81,7 @@ getugroups (char *username, gid_t gid)
 
           /* See if this group number is already on the list.  */
           for (item = grouplist; item ; item=item->next){
-              if (grouplist && GPOINTER_TO_INT(grouplist->data) == grp->gr_gid){
+              if (grouplist && (gid_t)GPOINTER_TO_INT(grouplist->data) == grp->gr_gid){
                   break;
               }
           }

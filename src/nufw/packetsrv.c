@@ -36,7 +36,7 @@
  *
  * \return If the TCP if the packet matchs, returns 1. Else, returns 0.
  */
-int look_for_tcp_flags(unsigned char* dgram,int datalen){
+int look_for_tcp_flags(unsigned char* dgram, unsigned int datalen){
 	struct iphdr * iphdrs = (struct iphdr *) dgram;
 	/* check need some datas */    
 	if (datalen < sizeof(struct iphdr) +sizeof(struct tcphdr)){
@@ -91,7 +91,7 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 			pcktid = ntohl(ph->packet_id);
 			auth_request_send(AUTH_CONTROL,
 					pcktid,
-					payload,payload_len);
+					payload, payload_len);
 			IPQ_SET_VERDICT(pcktid,NF_ACCEPT);
 			return 1;
 		} else {
@@ -210,7 +210,7 @@ void* packetsrv(void *data)
 	nh = nfq_nfnlh(h);
 	fd = nfnl_fd(nh);
 #else
-	size_t size;
+	int size;
 	uint32_t pcktid;
 	ipq_packet_msg_t *msg_p = NULL ;
 	packet_idl * current;
@@ -342,7 +342,7 @@ void shutdown_tls() {
  * \param data_len Size of packet content in bytes
  * \return If an error occurs returns 0, else return 1.
  */
-int auth_request_send(uint8_t type, uint32_t packet_id, char* payload, int payload_len){
+int auth_request_send(uint8_t type, uint32_t packet_id, char* payload, unsigned int payload_len){
     unsigned char datas[512];
     nufw_to_nuauth_auth_message_t *msg_header = (nufw_to_nuauth_auth_message_t *)&datas;
     unsigned char *msg_content = datas + sizeof(nufw_to_nuauth_auth_message_t);

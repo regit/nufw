@@ -135,7 +135,7 @@ static int extract_type_1_socket_inode(const char lname[], unsigned long * inode
         strncpy(inode_str, lname+PRG_SOCKET_PFXl, inode_str_len);
         inode_str[inode_str_len] = '\0';
         *inode_p = strtol(inode_str,&serr,0);
-        if (!serr || *serr || *inode_p < 0 || *inode_p >= INT_MAX) 
+        if (!serr || *serr || *inode_p >= INT_MAX) 
             return(-1);
     }
     return(0);
@@ -156,7 +156,7 @@ static int extract_type_2_socket_inode(const char lname[], unsigned long * inode
         char *serr;
 
         *inode_p=strtol(lname + PRG_SOCKET_PFX2l,&serr,0);
-        if (!serr || *serr || *inode_p < 0 || *inode_p >= INT_MAX) 
+        if (!serr || *serr || *inode_p >= INT_MAX) 
             return(-1);
     }
     return(0);
@@ -191,7 +191,7 @@ void prg_cache_load(void)
 	if (*cs) 
 	    continue;
 	procfdlen=snprintf(line,sizeof(line),PATH_PROC_X_FD,direproc->d_name);
-	if (procfdlen<=0 || procfdlen>=sizeof(line)-5) 
+	if (procfdlen<=0 || procfdlen>=((int)sizeof(line)-5)) 
 	    continue;
 	errno=0;
 	dirfd=opendir(line);

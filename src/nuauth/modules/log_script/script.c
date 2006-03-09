@@ -29,7 +29,7 @@ G_MODULE_EXPORT int user_session_logs(user_session *c_session, session_state_t s
     char *quoted_username = g_shell_quote(c_session->user_name);
     char *quoted_address;
     char *format;
-    int ret;
+    gboolean ok;
     
     const char *err = inet_ntop( AF_INET, &remote_inaddr, address, INET_ADDRSTRLEN);
     if (err == NULL) {
@@ -42,8 +42,8 @@ G_MODULE_EXPORT int user_session_logs(user_session *c_session, session_state_t s
     } else { /* state == SESSION_CLOSE */
         format = CONFIG_DIR "/user-down.sh %s %s";
     }
-    ret = snprintf(cmdbuffer, sizeof(cmdbuffer), format, quoted_username,quoted_address);
-    if (0 < ret && ret < sizeof(cmdbuffer)) {
+    ok = secure_snprintf(cmdbuffer, sizeof(cmdbuffer), format, quoted_username,quoted_address);
+    if (ok) {
         system(cmdbuffer);
     } else {
         log_message(WARNING, AREA_MAIN, "Can't call script, command line truncated!");

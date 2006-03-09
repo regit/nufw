@@ -154,10 +154,29 @@ AM_CONDITIONAL(HAVE_NFQUEUE_ONLY, test x$have_nfqueue = xyes && test x$have_conn
 AM_CONDITIONAL(HAVE_NFQUEUE_CONNTRACK,test x$have_conntrack = xyes && test x$have_nfqueue = xyes )
 AM_CONDITIONAL(HAVE_CONNTRACK_ONLY, test x$have_nfqueue = x && test x$have_conntrack = xyes  )
 
-CFLAGS="-Wall -fno-strict-aliasing -Werror-implicit-function-declaration -ansi"
+if test "x$GCC" = "xyes"; then
+
+	dnl get gcc version 
+	AC_MSG_CHECKING([gcc version])
+		gccver=$($CC -dumpversion)
+		gccvermajor=$(echo $gccver | cut -d . -f1)
+		gccverminor=$(echo $gccver | cut -d . -f2)
+		gccvernum=$(expr $gccvermajor "*" 100 + $gccverminor)
+	AC_MSG_RESULT($gccver)
+
+    CFLAGS="$CFLAGS -ansi -Wall"
+	if test "$gccvernum" -ge "400"; then
+		dnl gcc 4.0 or later
+        CFLAGS="$CFLAGS -Wextra"
+	else
+        CFLAGS="$CFLAGS -W"
+	fi
+    CFLAGS="$CFLAGS -Wno-unused-parameter"
+fi
+
 if test "${debug}" = "yes"; then
 	AC_DEFINE_UNQUOTED([DEBUG_ENABLE],[1],[Will compile development debug message])
-	CFLAGS="$CFLAGS -O0 -ggdb3"
+	CFLAGS="$CFLAGS -O0 -g"
 else	
 	CFLAGS="$CFLAGS -O2"
 fi

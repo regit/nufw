@@ -29,7 +29,7 @@ struct tls_user_context_t {
     int mx;
     int sck_inet;
     fd_set tls_rx_set; /* read set */
-    int nuauth_tls_max_clients;
+    unsigned int nuauth_tls_max_clients;
     int nuauth_number_authcheckers;
     int nuauth_auth_nego_timeout;
     gint option_value;
@@ -453,7 +453,7 @@ void tls_user_init(struct tls_user_context_t *context)
 #define READ_CONF(KEY) \
 	get_confvar_value(nuauth_tls_vars, sizeof(nuauth_tls_vars)/sizeof(confparams), KEY)
 
-    context->nuauth_tls_max_clients = *(int*)READ_CONF("nuauth_tls_max_clients");
+    context->nuauth_tls_max_clients = *(unsigned int*)READ_CONF("nuauth_tls_max_clients");
     context->nuauth_number_authcheckers = *(int*)READ_CONF("nuauth_number_authcheckers");
     context->nuauth_auth_nego_timeout = *(int*)READ_CONF("nuauth_auth_nego_timeout");
 #undef READ_CONF    

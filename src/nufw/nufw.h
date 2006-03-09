@@ -131,7 +131,7 @@ void* packetsrv(void *data);
 void* authsrv(void* data);
 
 /* send an auth request packet given a payload (raw packet) */
-int auth_request_send(uint8_t type,uint32_t packet_id, char* payload,int data_len);
+int auth_request_send(uint8_t type,uint32_t packet_id, char* payload, unsigned int data_len);
 
 
 unsigned long padd ( packet_idl * packet);

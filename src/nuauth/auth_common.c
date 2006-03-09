@@ -591,7 +591,7 @@ gboolean secure_snprintf(char *buffer, unsigned int buffer_size, char *format, .
     ret = g_vsnprintf(buffer, buffer_size, format, args);
     va_end(args);
     buffer[buffer_size-1] = '\0';
-    if (0 <= ret && ret <= (buffer_size-1))
+    if (0 <= ret && ret <= ((int)buffer_size-1))
         return TRUE;
     else
         return FALSE;

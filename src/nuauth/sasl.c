@@ -182,7 +182,7 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 	char buf[8192];
 	char chosenmech[128];
 	const char *data=NULL;
-	unsigned len=0;
+	int len=0;
 	int r = SASL_FAIL;
 	int count;
 	int ret=0;
@@ -194,7 +194,7 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 
 	remote_inaddr.s_addr=c_session->addr;
 
-	r = sasl_listmech(conn, NULL, "(", ",", ")", &data, &len, &count);
+	r = sasl_listmech(conn, NULL, "(", ",", ")", &data, (unsigned int *)&len, &count);
 	if (r != SASL_OK) {
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
 			g_warning("generating mechanism list");
@@ -277,7 +277,7 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 				buf, 
 				len,
 				&data,
-				&len);
+				(unsigned int *)&len);
 	} else {
 #ifdef DEBUG_ENABLE
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
@@ -288,7 +288,7 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 				NULL, 
 				0,
 				&data, 
-				&len);
+				(unsigned int *)&len);
 
 	}
 
@@ -357,7 +357,7 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 			return SASL_FAIL;
 		}
 
-		r = sasl_server_step(conn, buf, len, &data, &len);
+		r = sasl_server_step(conn, buf, len, &data, (unsigned int *)&len);
 		if (r != SASL_OK && r != SASL_CONTINUE) {
 #ifdef DEBUG_ENABLE
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
@@ -461,7 +461,7 @@ int sasl_parse_user_os(user_session* c_session, char *buf, int buf_size)
     osfield=(struct nuv2_authfield*)buf;
 
     /* check buffer underflow */
-    if (buf_size < sizeof(struct nuv2_authfield)) {
+    if (buf_size < (int)sizeof(struct nuv2_authfield)) {
         g_message("osfield too small");
         return SASL_FAIL;
     }
