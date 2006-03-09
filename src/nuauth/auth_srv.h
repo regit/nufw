@@ -37,9 +37,9 @@
 /* workaround SPlint error (don't know __gnuc_va_list) */
 #ifdef S_SPLINT_S
 #  include <err.h> 
-#  define CONFIG_DIR "/etc/nufw" \
-#  define MODULE_DIR "/usr/local/lib" \
-#  define LOCAL_STATE_DIR "/usr/local/var" \
+#  define CONFIG_DIR "/etc/nufw"
+#  define MODULE_DIR "/usr/local/lib"
+#  define LOCAL_STATE_DIR "/usr/local/var"
 #endif
 
 /* Use glib to treat data structures */
