@@ -34,6 +34,14 @@
  */
 #define _ISOC99_SOURCE
 
+/* workaround SPlint error (don't know __gnuc_va_list) */
+#ifdef S_SPLINT_S
+#  include <err.h> 
+#  define CONFIG_DIR "/etc/nufw" \
+#  define MODULE_DIR "/usr/local/lib" \
+#  define LOCAL_STATE_DIR "/usr/local/var" \
+#endif
+
 /* Use glib to treat data structures */
 #include <glib.h>
 #include <gmodule.h>
@@ -130,7 +138,13 @@
 #define DEFAULT_LOGS_MODULE "libsyslog"
 #define DEFAULT_IPAUTH_MODULE "libident"
 #define MODULE_PATH MODULE_DIR "/nuauth/modules/"
-#define NUAUTH_PID_FILE  LOCAL_STATE_DIR "/run/nuauth/nuauth.pid"
+
+#ifdef S_SPLINT_S
+#  define NUAUTH_PID_FILE  "/usr/local/var/run/nuauth/nuauth.pid"
+#else
+#  define NUAUTH_PID_FILE  LOCAL_STATE_DIR "/run/nuauth/nuauth.pid"
+#endif
+
 /* define the number of threads that will do user check */
 #define NB_USERCHECK 5
 /* define the number of threads that will check acls  */

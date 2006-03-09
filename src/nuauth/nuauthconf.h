@@ -30,6 +30,6 @@ struct nuauth_params*   init_nuauthconf();
 
 void nuauth_reload( int signal );
 
-gboolean free_nuauth_params(struct nuauth_params* data);
+void free_nuauth_params(struct nuauth_params* data);
 
 #endif

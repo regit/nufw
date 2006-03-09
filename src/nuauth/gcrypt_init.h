@@ -16,10 +16,14 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#ifndef GCRYPT_NUAUTH_H
+#define GCRYPT_NUAUTH_H
+
 /*! \file nuauth/gcrypt_init.h
     \brief Contains gcrypt init functions
     
 */
+
 #if 0
 #ifdef G_THREADS_IMPL_POSIX
 /* #warning "this may be a source of problems" */
@@ -32,7 +36,6 @@ GCRY_THREAD_OPTION_PTHREAD_IMPL;
 #error "Code need to be written to have gcrypt support other threading type"
 #endif
 #endif
-
 
 /* gcrypt init function */
 static int gcry_gthread_mutex_init (void **priv)			     /* to check */
@@ -69,4 +72,6 @@ static struct gcry_thread_cbs gcry_threads_gthread =
 	gcry_gthread_mutex_lock, gcry_gthread_mutex_unlock,
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
+
+#endif
 

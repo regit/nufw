@@ -25,7 +25,9 @@
 #include <debug.h>
 
 #define DEBUG_OR_NOT(LOGLEVEL, LOGAREA) \
-    ((LOGAREA & nuauthconf->debug_areas) && ((nuauthconf->debug_level)>=LOGLEVEL))
+    ((nuauthconf->debug_areas & LOGAREA) == LOGAREA \
+     && \
+     (nuauthconf->debug_level >=LOGLEVEL ))
 
 #define log_message(level, area, format, args...) \
   do { if ((DEBUG_##area & nuauthconf->debug_areas) && (nuauthconf->debug_level >= DEBUG_LEVEL_##level)) \

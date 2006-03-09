@@ -195,14 +195,13 @@ struct nuauth_params* init_nuauthconf()
   return nuauthconf;
 }
 
-gboolean free_nuauth_params(struct nuauth_params* data)
+void free_nuauth_params(struct nuauth_params* data)
 {
 	g_free(data->nufw_srv);
 	g_free(data->client_srv);
 	g_free(data->authorized_servers);
 	g_strfreev(data->multi_users_array);
 	g_free(data->multi_servers_array);
-	return TRUE;
 }
 
 static struct nuauth_params* compare_and_update_nuauthparams(struct nuauth_params* current,struct nuauth_params* new);
