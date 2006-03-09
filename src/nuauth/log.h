@@ -30,13 +30,13 @@
      (nuauthconf->debug_level >=LOGLEVEL ))
 
 #define log_message(level, area, format, args...) \
-  do { if ((DEBUG_##area & nuauthconf->debug_areas) && (nuauthconf->debug_level >= DEBUG_LEVEL_##level)) \
+  do { if ((DEBUG_##area & nuauthconf->debug_areas) == DEBUG_##area && (nuauthconf->debug_level >= DEBUG_LEVEL_##level)) \
     g_message(format, ##args); } while (0)
 
 #ifdef DEBUG_ENABLE
    /* copy of log_message macro */
 #  define debug_log_message(level, area, format, args...) \
-      do { if ((DEBUG_##area & nuauthconf->debug_areas) && (nuauthconf->debug_level >= DEBUG_LEVEL_##level)) \
+      do { if ((DEBUG_##area & nuauthconf->debug_areas) == DEBUG_##area && (nuauthconf->debug_level >= DEBUG_LEVEL_##level)) \
         g_message(format, ##args); } while (0)
 #else
 #  define debug_log_message(level, area, format, ...)
