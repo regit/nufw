@@ -1,0 +1,18 @@
+{
+   lib_ld_quiet
+   Memcheck:Cond
+   obj:/lib/ld-2.3.6.so
+}
+
+{
+   tls_dynamic_library_quiet   
+   Memcheck:Cond
+   obj:/lib/tls/libdl-2.3.6.so
+}
+
+{
+   lib_sasl_quiet
+   Memcheck:Cond
+   obj:/usr/lib/libsasl2.so.2.*
+}
+
