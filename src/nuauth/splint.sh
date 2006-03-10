@@ -13,7 +13,7 @@
 #
 # -predboolint: "if (x)" is clear enough (I (haypo) think)
 #
-# -mustfreeonly -exportlocal -paramuse -branchstate -compdef 
+# +boolint -mustfreefresh -mustfreeonly -exportlocal -paramuse -branchstate -compdef 
 #    SPlint is toooo much verbose without them
 
 splint \
@@ -26,6 +26,6 @@ splint \
     -nullassign \
     -nullret -nullstate -nullpass \
     -predboolint \
-    -mustfreeonly -exportlocal -paramuse -branchstate -compdef \
+    +boolint -mustfreefresh -mustfreeonly -exportlocal -paramuse -branchstate -compdef \
     $* 
 
