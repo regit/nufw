@@ -136,7 +136,7 @@ static int treat_user_request (user_session * c_session)
 #ifdef DEBUG_ENABLE
         if (datas->buffer_len <0) 
             if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-                g_message("Received error from user %s\n",datas->user_name);
+                g_message("Received error from user %s\n", c_session->user_name);
 #endif
         free_buffer_read(datas);
         return EOF;
@@ -223,7 +223,7 @@ static int treat_user_request (user_session * c_session)
                 );
     } else {
         if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
-            g_message("Bad packet, option of header is not set or unauthorized option");
+            g_message("Bad packet, option of header is not set or unauthorized option from user %s.", c_session->user_name);
         }
         free_buffer_read(datas);
         return EOF;
