@@ -189,8 +189,8 @@ void clean_old_packets (){
 
 #ifdef GRYZOR_HACKS
 int send_icmp_unreach(char *dgram){
-    //First thing we do, let's build the packet to send
-    //sendmsg();
+    /* First thing we do, let's build the packet to send */
+    /* sendmsg(); */
     sendto(raw_sock);
 }
 #endif

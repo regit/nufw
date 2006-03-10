@@ -345,9 +345,9 @@ void tls_nufw_init(struct tls_nufw_context_t *context)
             &option_value,	sizeof(option_value));
 
     memset(&context->addr_inet,0,sizeof context->addr_inet);
-    context->addr_inet.sin_family= AF_INET;
-    context->addr_inet.sin_port=htons(nuauthconf->authreq_port);
-    context->addr_inet.sin_addr.s_addr=nuauthconf->nufw_srv->s_addr;
+    context->addr_inet.sin_family = AF_INET;
+    context->addr_inet.sin_port = htons(nuauthconf->authreq_port);
+    context->addr_inet.sin_addr.s_addr = nuauthconf->nufw_srv->s_addr;
     z = bind (context->sck_inet,
             (struct sockaddr *)&context->addr_inet,
             sizeof context->addr_inet);

@@ -75,11 +75,7 @@ extern "C" {
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <errno.h>
-#include <sys/types.h>
-#include <sys/socket.h>
 
 #include <netinet/in.h>
 #include <netinet/tcp.h>

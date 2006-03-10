@@ -35,6 +35,19 @@ gchar* get_username_from_tls_session(gnutls_session session) {
     }
 }
 
+static void  policy_refuse_user(user_session* c_session,int c)
+{
+#ifdef DEBUG_ENABLE
+            if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
+                g_message("User %s already connected, closing socket",c_session->user_name);
+#endif
+            /* get rid of client */
+            close_tls_session(c,c_session->tls);
+            c_session->tls=NULL;
+            clean_session(c_session);
+}
+
+
 void tls_sasl_connect_ok(user_session* c_session, int c) 
 {
     struct nuv2_srv_message msg;
@@ -51,26 +64,23 @@ void tls_sasl_connect_ok(user_session* c_session, int c)
             if (! look_for_username(c_session->user_name)){
                 g_static_mutex_unlock (&client_mutex);
                 break;
+            } else {
+                g_static_mutex_unlock (&client_mutex);
+                policy_refuse_user(c_session,c);
             }
-            g_static_mutex_unlock (&client_mutex);
         case POLICY_PER_IP_ONE_LOGIN:
             g_static_mutex_lock (&client_mutex);
             if (! get_client_sockets_by_ip(c_session->addr) ){
                 g_static_mutex_unlock (&client_mutex);
                 break;
+            } else {
+                g_static_mutex_unlock (&client_mutex);
+                policy_refuse_user(c_session,c);
             }
-            g_static_mutex_unlock (&client_mutex);
         default:
-#ifdef DEBUG_ENABLE
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-                g_message("User %s already connected, closing socket",c_session->user_name);
-#endif
-            /* get rid of client */
-            close_tls_session(c,c_session->tls);
-            c_session->tls=NULL;
-            clean_session(c_session);
             return;
     }
+
     if (nuauthconf->push) {
         struct internal_message* message=g_new0(struct internal_message,1);
         struct tls_insert_data * datas=g_new0(struct tls_insert_data,1);
@@ -106,7 +116,6 @@ void tls_sasl_connect_ok(user_session* c_session, int c)
 #endif
         if (nuauthconf->push){
             close_tls_session(c,c_session->tls);
-            /* close(c); */
             c_session->tls=NULL;
             clean_session(c_session);
             return;

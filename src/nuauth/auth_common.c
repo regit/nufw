@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2003-2005 Eric Leblond <regit@inl.fr>
+ ** Copyright(C) 2003-2006 Eric Leblond <regit@inl.fr>
  **		     Vincent Deffontaines <vincent@gryzor.com>
  **                  INL : http://www.inl.fr/
  **
@@ -199,7 +199,7 @@ void free_connection(connection_t *conn)
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN))
                     g_warning("Could not g_new0(). No more memory?");
                 /* GRYZOR should we do something special here? */
-            }else{
+            } else {
                 debug_log_message (VERBOSE_DEBUG, AREA_MAIN,
                         "Sending free to user cache");
                 message->key=g_strdup(conn->username);
@@ -207,16 +207,11 @@ void free_connection(connection_t *conn)
                 message->datas=conn->cacheduserdatas;
                 g_async_queue_push(nuauthdatas->user_cache->queue,message);
             }
-        } 
-        else {
+        } else {
             debug_log_message (VERBOSE_DEBUG, AREA_MAIN,
                     "Can not free user cache, username is null");
         }
     } else {
-        if ( (conn->user_groups != ALLGROUP)  && (conn->user_groups != NULL)){
-            /* free ressource */
-            g_slist_free (conn->user_groups);
-        }
         g_free(conn->username);
     }
     if (conn->packet_id != NULL )
@@ -230,6 +225,57 @@ void free_connection(connection_t *conn)
     g_free(conn);
 }
 
+/** used for logging purpose 
+ * it DOES NOT duplicate internal data 
+ */
+
+connection_t* duplicate_connection(connection_t* element)
+{
+    connection_t * conn_copy=g_memdup(element,sizeof(connection_t));
+    if (conn_copy == NULL){
+        if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
+            g_warning("memory duplication falied");
+        }
+        return NULL;
+    }
+    if ( element->username ){
+        conn_copy->username = g_strdup(element->username);
+    }
+    if(element->app_name)
+        conn_copy->app_name = g_strdup(element->app_name);
+    if(element->app_md5)
+        conn_copy->app_md5 = g_strdup(element->app_md5);
+    if(element->os_sysname)
+        conn_copy->os_sysname = g_strdup(element->os_sysname);
+    if (element->os_release)
+        conn_copy->os_release = g_strdup(element->os_release);
+    if (element->os_version)
+        conn_copy->os_version = g_strdup(element->os_version);
+    /* Nullify needed internal field */
+    conn_copy->acl_groups=NULL;
+    conn_copy->user_groups=NULL;
+    conn_copy->packet_id=NULL;
+    conn_copy->cacheduserdatas=NULL;
+    conn_copy->state=AUTH_STATE_DONE;
+    return conn_copy;
+}
+
+
+
+/**
+ * remove element from hash table
+ */
+
+inline int conn_cl_remove(gconstpointer conn)
+{
+  if (!  g_hash_table_steal (conn_list,
+                &(((connection_t *)conn)->tracking)) ){
+        if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
+            g_warning("Removal of conn in hash failed\n");
+        return 0;
+    }
+    return 1;
+}
 
 /**
  * Remove a connection from the connection hash table (::conn_list)
@@ -243,12 +289,10 @@ int conn_cl_delete(gconstpointer conn)
 {
     g_assert (conn != NULL);
 
-    if (!  g_hash_table_steal (conn_list,
-                &(((connection_t *)conn)->tracking)) ){
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-            g_warning("Removal of conn in hash failed\n");
+    if (conn_cl_remove(conn)==0){
         return 0;
     }
+
     /* free isolated structure */ 
     free_connection((connection_t *)conn);
     return 1;
@@ -435,49 +479,22 @@ gint take_decision(connection_t *element, packet_place_t place)
 
     if (nuauthconf->log_users_sync) {
         /* copy current element */
-        connection_t * copy_of_element=(connection_t *)g_memdup(element,sizeof(connection_t));
-
-        /* need to free acl and user group */
-        copy_of_element->acl_groups=NULL;
-        copy_of_element->user_groups=NULL;
-        if (element->cacheduserdatas){
-            copy_of_element->username=g_strdup(element->username);
-        } else	{
-            copy_of_element->username=element->username;
-            element->username = NULL;
+        if (place == PACKET_IN_HASH){
+            conn_cl_remove(element);
         }
-        if (nuauthconf->acl_cache) {
-            copy_of_element->app_name=g_strdup(element->app_name);
-            copy_of_element->app_md5=g_strdup(element->app_md5);
-            copy_of_element->os_sysname=g_strdup(element->os_sysname);
-            copy_of_element->os_release=g_strdup(element->os_release);
-            copy_of_element->os_version=g_strdup(element->os_version);
-        } else {
-            copy_of_element->app_name=element->app_name;
-            element->app_name=NULL;
-            copy_of_element->app_md5=element->app_md5;
-            element->app_md5=NULL;
-            copy_of_element->os_sysname=element->os_sysname;
-            element->os_sysname=NULL;
-            copy_of_element->os_release=element->os_release;
-            element->os_release=NULL;
-            copy_of_element->os_version=element->os_version;
-            element->os_version=NULL;
-        }
-        copy_of_element->user_id=element->user_id;
         /* push element to decision workers */
         g_thread_pool_push (nuauthdatas->decisions_workers,
-                copy_of_element,
+                element,
                 NULL);
     } else {
         apply_decision(element);
-    }
+        element->packet_id=NULL;
+        if (place == PACKET_IN_HASH){
+            conn_cl_delete(element);
+        } else {
+            free_connection(element);
+        }
 
-    element->packet_id=NULL;
-    if (place == PACKET_IN_HASH){
-        conn_cl_delete(element);
-    } else {
-        free_connection(element);
     }
     return 1;
 }
@@ -536,9 +553,7 @@ void decisions_queue_work (gpointer userdata, gpointer data)
     block_on_conf_reload();
     apply_decision(element);
 
-    if (element)
-        g_free(element->username);
-    g_free(element);
+    free_connection(element);
 }
 
 /**

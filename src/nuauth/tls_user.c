@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2004,2005 INL
+ ** Copyright(C) 2004,2005,2006 INL
  ** written by  Eric Leblond <regit@inl.fr>
  **             Vincent Deffontaines <gryzor@inl.fr>
  **
@@ -189,7 +189,7 @@ static int treat_user_request (user_session * c_session)
         } else {
             datas->user_name = g_strdup(c_session->user_name);
             datas->user_id = c_session->user_id;
-            datas->groups = g_slist_copy (c_session->groups);
+            datas->groups = c_session->groups;
         }
         if (c_session->sysname){
             datas->os_sysname=g_strdup(c_session->sysname);
