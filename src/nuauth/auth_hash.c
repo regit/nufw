@@ -2,11 +2,11 @@
 #include <jhash.h>
 
 /* should never be called !!! */
-void search_and_fill_catchall(connection_t *new, connection_t *element)
+void search_and_fill_catchall(connection_t *new, connection_t *packet)
 {
     if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
         g_warning("%s:%d Should not have this. Please email Nufw developpers!\n",__FILE__,__LINE__);
-        g_message("state of pckt: %d, state of element: %d",new->state, element->state);
+        g_message("state of new packet: %d, state of existring packet: %d",new->state, packet->state);
     }
     free_connection(new);
 }
@@ -17,12 +17,13 @@ void search_and_fill_catchall(connection_t *new, connection_t *element)
  * \param headers IPv4 tracking headers (of type tracking_t) of a connection 
  * \return Comptuted hash
  */
-inline guint hash_connection(gconstpointer headers)
+inline guint hash_connection(gconstpointer data)
 {
-    return (jhash_3words(((tracking_t *)headers)->saddr,
-                (((tracking_t *)headers)->daddr ^ ((tracking_t *)headers)->protocol),
-                (((tracking_t *)headers)->dest | ((tracking_t *)headers)->source << 16),
-                32));
+    const tracking_t *headers = (tracking_t *)data;
+    return jhash_3words(headers->saddr,
+            headers->daddr ^ headers->protocol,
+            headers->dest | (headers->source << 16),
+            32);
 }
 
 /**
@@ -96,13 +97,13 @@ void search_and_push(connection_t *new)
     }
 }
 
-inline void search_and_fill_complete_of_authreq(connection_t *new, connection_t *element) 
+inline void search_and_fill_complete_of_authreq(connection_t *new, connection_t *packet) 
 {
     switch (new->state){
         case  AUTH_STATE_AUTHREQ:
             debug_log_message (DEBUG, AREA_MAIN, "Adding a packet_id to a connection\n");
-            element->packet_id =
-                g_slist_prepend(element->packet_id, GINT_TO_POINTER((new->packet_id)->data));
+            packet->packet_id =
+                g_slist_prepend(packet->packet_id, GINT_TO_POINTER((new->packet_id)->data));
             free_connection(new);
             break;
 
@@ -110,55 +111,53 @@ inline void search_and_fill_complete_of_authreq(connection_t *new, connection_t 
             debug_log_message (VERBOSE_DEBUG, AREA_MAIN,
                     "Filling user data for %s\n", new->username);
             new->state = AUTH_STATE_COMPLETING;
+            packet->state = AUTH_STATE_COMPLETING;
 
-            element->user_groups = new->user_groups;
-            element->user_id = new->user_id;
-            element->username = new->username;
+            packet->user_groups = new->user_groups;
+            packet->user_id = new->user_id;
+            packet->username = new->username;
             /* application */
-            element->app_name = new->app_name;
-            element->app_md5 = new->app_md5;
+            packet->app_name = new->app_name;
+            packet->app_md5 = new->app_md5;
             /* system */
-            element->os_sysname = new->os_sysname;
-            element->os_release = new->os_release;
-            element->os_version = new->os_version;
+            packet->os_sysname = new->os_sysname;
+            packet->os_release = new->os_release;
+            packet->os_version = new->os_version;
             /* user cache system */
-            element->cacheduserdatas = new->cacheduserdatas;
-            element->state = AUTH_STATE_COMPLETING;
+            packet->cacheduserdatas = new->cacheduserdatas;
 
             g_thread_pool_push (nuauthdatas->acl_checkers, new, NULL);
             break;
 
         default:
-            search_and_fill_catchall(new, element);
+            search_and_fill_catchall(new, packet);
     }
 }
 
-inline void search_and_fill_complete_of_userpckt(connection_t *new, connection_t *element) 
+inline void search_and_fill_complete_of_userpckt(connection_t *new, connection_t *packet) 
 {
     switch (new->state){
         case  AUTH_STATE_AUTHREQ:
-            element->state = AUTH_STATE_COMPLETING;
+            packet->state = AUTH_STATE_COMPLETING;
 
-            /* Copy element members needed by ACL checker into new.
+            /* Copy packet members needed by ACL checker into new.
              * We don't use strdup/free because it's slow. 
              * So clean_connections_list() don't remove connection 
              * in state AUTH_STATE_COMPLETING :-)
              */
             new->state = AUTH_STATE_COMPLETING;
             /* application */
-            new->app_name = element->app_name ;
-            new->app_md5 =  element->app_md5 ;
+            new->app_name = packet->app_name ;
+            new->app_md5 =  packet->app_md5 ;
             /* system */
-            new->os_sysname = element->os_sysname ;
-            new->os_release = element->os_release ;
-            new->os_version = element->os_version ;
+            new->os_sysname = packet->os_sysname ;
+            new->os_release = packet->os_release ;
+            new->os_version = packet->os_version ;
 
-            g_thread_pool_push (nuauthdatas->acl_checkers,
-                    new,
-                    NULL);
-            element->packet_id = new->packet_id;
-            element->socket = new->socket;
-            element->tls = new->tls;
+            g_thread_pool_push (nuauthdatas->acl_checkers, new, NULL);
+            packet->packet_id = new->packet_id;
+            packet->socket = new->socket;
+            packet->tls = new->tls;
             break;
             
         case AUTH_STATE_USERPCKT:
@@ -168,17 +167,17 @@ inline void search_and_fill_complete_of_userpckt(connection_t *new, connection_t
             break;
 
         default:
-            search_and_fill_catchall(new, element);
+            search_and_fill_catchall(new, packet);
     }
 }
 
-inline void search_and_fill_done(connection_t *new, connection_t *element) 
+inline void search_and_fill_done(connection_t *new, connection_t *packet) 
 {    
     /* if new is a nufw request respond with correct decision */
     switch (new->state){
         case AUTH_STATE_AUTHREQ:
             { 
-                struct auth_answer answer = {element->decision, element->user_id, element->socket, element->tls} ;
+                struct auth_answer answer = {packet->decision, packet->user_id, packet->socket, packet->tls} ;
                 g_slist_foreach(new->packet_id,
                         (GFunc) send_auth_response,
                         &answer);
@@ -191,26 +190,26 @@ inline void search_and_fill_done(connection_t *new, connection_t *element)
             break;
 
         default:
-            search_and_fill_catchall(new, element);
+            search_and_fill_catchall(new, packet);
     }
 }
 
-inline void search_and_fill_completing(connection_t *new, connection_t *element) 
+inline void search_and_fill_completing(connection_t *new, connection_t *packet) 
 {
     switch (new->state){
         case  AUTH_STATE_COMPLETING:
             /* fill acl this is a return from acl search */
-            element->acl_groups = new->acl_groups;
+            packet->acl_groups = new->acl_groups;
             g_free(new);
-            element->state = AUTH_STATE_READY;
-            take_decision(element,PACKET_IN_HASH);
+            packet->state = AUTH_STATE_READY;
+            take_decision(packet,PACKET_IN_HASH);
             break;
 
         case  AUTH_STATE_AUTHREQ:
             debug_log_message (DEBUG, AREA_MAIN,
                     "Adding a packet_id to a completing connection\n");
-            element->packet_id =
-                g_slist_prepend(element->packet_id, GINT_TO_POINTER((new->packet_id)->data));
+            packet->packet_id =
+                g_slist_prepend(packet->packet_id, GINT_TO_POINTER((new->packet_id)->data));
             free_connection(new);
             break;
             
@@ -220,22 +219,22 @@ inline void search_and_fill_completing(connection_t *new, connection_t *element)
             break;
             
         default:
-            search_and_fill_catchall(new, element);
+            search_and_fill_catchall(new, packet);
     }
 }
 
-inline void search_and_fill_ready(connection_t *new, connection_t *element)
+inline void search_and_fill_ready(connection_t *new, connection_t *packet)
 {
     debug_log_message (DEBUG, AREA_MAIN,
             "Element is in state %d but we received packet state %d\n",
-            element->state,
+            packet->state,
             new->state);
     switch (new->state){
         case  AUTH_STATE_AUTHREQ:
             debug_log_message (DEBUG, AREA_MAIN,
                     "Adding a packet_id to a connection\n");
-            element->packet_id =
-                g_slist_prepend(element->packet_id, GUINT_TO_POINTER((new->packet_id)->data));
+            packet->packet_id =
+                g_slist_prepend(packet->packet_id, GUINT_TO_POINTER((new->packet_id)->data));
             free_connection(new);
             break;
             
@@ -246,35 +245,35 @@ inline void search_and_fill_ready(connection_t *new, connection_t *element)
             break;           
 
         default:
-            search_and_fill_catchall(new, element);
+            search_and_fill_catchall(new, packet);
     }
 }
 
-inline void search_and_fill_update(connection_t *new, connection_t *element)
+inline void search_and_fill_update(connection_t *new, connection_t *packet)
 {
-    switch (element->state){
+    switch (packet->state){
         case AUTH_STATE_AUTHREQ:
-            search_and_fill_complete_of_authreq(new, element);
+            search_and_fill_complete_of_authreq(new, packet);
             break;
 
         case AUTH_STATE_USERPCKT:
-            search_and_fill_complete_of_userpckt(new, element);
+            search_and_fill_complete_of_userpckt(new, packet);
             break;
             
         case AUTH_STATE_DONE:
-            search_and_fill_done(new, element);
+            search_and_fill_done(new, packet);
             break;
             
         case AUTH_STATE_COMPLETING:
-            search_and_fill_completing(new, element);
+            search_and_fill_completing(new, packet);
             break;
             
         case AUTH_STATE_READY: 
-            search_and_fill_ready(new, element);
+            search_and_fill_ready(new, packet);
             break;
             
         default:
-            search_and_fill_catchall(new, element);
+            search_and_fill_catchall(new, packet);
     }
 }
 
@@ -286,7 +285,7 @@ inline void search_and_fill_update(connection_t *new, connection_t *element)
 void search_and_fill() 
 {
     /* GRYZOR warning : it seems we g_free() on pckt only on some conditions in this function */
-    connection_t *element;
+    connection_t *packet;
     connection_t *new;
 
     g_async_queue_ref (nuauthdatas->connections_queue);
@@ -297,16 +296,16 @@ void search_and_fill()
         g_static_mutex_lock (&insert_mutex);
         debug_log_message (VERBOSE_DEBUG, AREA_MAIN,
                 "Starting search and fill\n");
-        element = (connection_t *)g_hash_table_lookup(conn_list,&(new->tracking));
-        if (element == NULL) {
-            debug_log_message (DEBUG, AREA_MAIN, "Creating new element\n");
+        packet = (connection_t *)g_hash_table_lookup(conn_list,&(new->tracking));
+        if (packet == NULL) {
+            debug_log_message (DEBUG, AREA_MAIN, "Creating new packet\n");
             g_hash_table_insert (conn_list, &(new->tracking), new);
             g_static_mutex_unlock (&insert_mutex);
             if (nuauthconf->push && new->state == AUTH_STATE_AUTHREQ) {
                 search_and_push(new);
             }
         } else { 
-            search_and_fill_update(new, element);
+            search_and_fill_update(new, packet);
             g_static_mutex_unlock (&insert_mutex);
         }
     }
