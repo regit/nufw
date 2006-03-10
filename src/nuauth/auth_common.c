@@ -70,9 +70,11 @@ gint print_connection(gpointer data,gpointer userdata)
     connection_t * conn=(connection_t *) data;
     if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
     {
+        gchar* firstfield;
+
         src.s_addr = ntohl(conn->tracking.saddr);
         dest.s_addr = ntohl(conn->tracking.daddr);
-        gchar* firstfield=g_strdup(inet_ntoa(src));
+        firstfield=g_strdup(inet_ntoa(src));
         if (! firstfield){
             g_message("Couldn't strdup(). No more memory?");
             return -1;
