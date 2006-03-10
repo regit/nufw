@@ -60,21 +60,15 @@ void tls_sasl_connect_ok(user_session* c_session, int c)
         case POLICY_MULTIPLE_LOGIN:
             break;
         case POLICY_ONE_LOGIN:
-            g_static_mutex_lock (&client_mutex);
             if (! look_for_username(c_session->user_name)){
-                g_static_mutex_unlock (&client_mutex);
                 break;
             } else {
-                g_static_mutex_unlock (&client_mutex);
                 policy_refuse_user(c_session,c);
             }
         case POLICY_PER_IP_ONE_LOGIN:
-            g_static_mutex_lock (&client_mutex);
             if (! get_client_sockets_by_ip(c_session->addr) ){
-                g_static_mutex_unlock (&client_mutex);
                 break;
             } else {
-                g_static_mutex_unlock (&client_mutex);
                 policy_refuse_user(c_session,c);
             }
         default:
@@ -96,9 +90,7 @@ void tls_sasl_connect_ok(user_session* c_session, int c)
         message->type=INSERT_MESSAGE;
         g_async_queue_push(nuauthdatas->tls_push_queue,message);
     } else {
-        g_static_mutex_lock (&client_mutex);
         add_client(c,c_session);
-        g_static_mutex_unlock (&client_mutex);
     }
     /* unlock hash client */
     msg.type=SRV_TYPE;
@@ -120,9 +112,7 @@ void tls_sasl_connect_ok(user_session* c_session, int c)
             clean_session(c_session);
             return;
         } else {
-            g_static_mutex_lock (&client_mutex);
             delete_client_by_socket(c);
-            g_static_mutex_unlock (&client_mutex);
             return;
         }
     }

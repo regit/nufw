@@ -49,9 +49,7 @@ void localid_insert_message(connection_t *pckt,
             ((struct nuv2_srv_helloreq*)global_msg->msg)->helloid = randomid;
             global_msg->addr = pckt->tracking.saddr;
             global_msg->found = FALSE;
-            g_static_mutex_lock (&client_mutex);
             warn_clients(global_msg);
-            g_static_mutex_unlock (&client_mutex);
             break;
             
         case AUTH_STATE_USERPCKT:

@@ -19,7 +19,11 @@
  */
 
 
+#define _GNU_SOURCE
 #include "nutrackd.h"
+#include <unistd.h>
+#include <getopt.h>
+#include <signal.h>
 
 #define NUTRACKD_PID_FILE  LOCAL_STATE_DIR "/run/nutrackd.pid"
 
@@ -30,8 +34,8 @@ void init_log(void)
 
 void nutrackd_cleanup( int signal ) {
     /* TODO destroy conntrack handle */
-//     nfqnl_destroy_queue(hndl);
-//     nfqnl_unbind_pf(h, AF_INET);
+/*     nfqnl_destroy_queue(hndl);
+     nfqnl_unbind_pf(h, AF_INET); */
      /* TODO close mysql connection(s) */
     sql_close();
      
@@ -44,13 +48,16 @@ void nutrackd_cleanup( int signal ) {
 int update_handler (void *arg, unsigned int flags, int type,void *data)
 {
   struct nfct_conntrack *conn = arg;
-  // arg is a nfct_conntrack object - we can parse it directly
-//  u_int8_t proto = conn->tuple[0].protonum;
-//  u_int32_t src = conn->tuple[0].src.v4;
-//  u_int32_t dst = conn->tuple[0].dst.v4;
+  /* arg is a nfct_conntrack object - we can parse it directly
+  u_int8_t proto = conn->tuple[0].protonum;
+  u_int32_t src = conn->tuple[0].src.v4;
+  u_int32_t dst = conn->tuple[0].dst.v4;
+  */
   u_int16_t sport = 0;
   u_int16_t dport = 0;
-//  printf("in handler\n");
+  /*
+   * printf("in handler\n");
+  */
   init_log();
 
   switch (conn->tuple[0].protonum){
@@ -75,7 +82,7 @@ int update_handler (void *arg, unsigned int flags, int type,void *data)
                        conn->tuple[0].dst.v4,
                        conn->tuple[0].protonum,
                        sport,
-                       dport) != 1) { //This prototype sucks
+                       dport) != 1) { /* This prototype sucks */
       if (log_level > 3){
           syslog(LOG_WARNING,"Cannot update SQL entry : SQL problem?");
       }
@@ -84,13 +91,13 @@ int update_handler (void *arg, unsigned int flags, int type,void *data)
 }
 
 int main(int argc,char * argv[]){
-    //pthread_t sql_worker;
-//    struct hostent *authreq_srv;
+    /* pthread_t sql_worker;
+    struct hostent *authreq_srv; */
     /* options */
     char * options_list = "Dhvt:f:";
     int option,daemonize = 0;
-    //int value;
-    //unsigned int ident_srv;
+    /* int value; */
+    /* unsigned int ident_srv; */
     char* version=PACKAGE_VERSION;
     pid_t pidf;
     int packet_timeout;
@@ -99,14 +106,18 @@ int main(int argc,char * argv[]){
     char *conffile="./dummy.conf";
     FILE * FH;
 
-//    struct sigaction act;
+/*    struct sigaction act; */
 
     /* initialize variables */
 
-//    log_engine = LOG_TO_STD; /* default is to send debug messages to stdout + stderr */
+#if 0
+    log_engine = LOG_TO_STD; /* default is to send debug messages to stdout + stderr */
+#endif
     packet_timeout = PACKET_TIMEOUT;
-//    strncpy(authreq_addr,AUTHREQ_ADDR,HOSTNAME_SIZE);
-//    debug=DEBUG; /* this shall disapear */
+/*    strncpy(authreq_addr,AUTHREQ_ADDR,HOSTNAME_SIZE); */
+#if 0
+    debug=DEBUG; /* this shall disapear */
+#endif
     log_level=0;
     
     /*parse options */
@@ -214,14 +225,14 @@ int main(int argc,char * argv[]){
         }
 
         /* set log engine */
-//        log_engine = LOG_TO_SYSLOG;
+/*        log_engine = LOG_TO_SYSLOG; */
     }
 
 
     cth = nfct_open(CONNTRACK, NF_NETLINK_CONNTRACK_DESTROY);
     if (!cth)
       fprintf(stderr,"%s : Not enough memory",PACKAGE_NAME);
-//    signal(SIGINT, event_sighandler);
+/*    signal(SIGINT, event_sighandler); */
     nfct_register_callback(cth, update_handler, NULL);
     res = nfct_event_conntrack(cth);
       if (log_level > 3){

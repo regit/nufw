@@ -92,8 +92,6 @@ void* tls_user_authsrv();
 
 void push_worker () ;
 
-/** global lock for client hash. */
-GStaticMutex client_mutex;
 
 /** end tls stuff */
 void end_tls();

@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <config.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -20,7 +21,7 @@
 #define SHORT_REQUEST_SIZE 256
 #define LONG_REQUEST_SIZE 512
 
-//WARNING : this is also defined in nuauth/connections.h, which sucks
+/* WARNING : this is also defined in nuauth/connections.h, which sucks */
 #define STATE_CLOSE 0x3
 
 void sql_close(void);
@@ -39,7 +40,7 @@ typedef struct _SQLconnection {
   char *ssl_ca;
   char *ssl_ca_dir;
   char *ssl_cypher;
-//  struct _SQLconnection *next;
+/*  struct _SQLconnection *next; */
 }SQLconnection;
 
 SQLconnection *params;

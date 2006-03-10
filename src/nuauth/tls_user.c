@@ -306,14 +306,10 @@ void tls_user_check_activity(struct tls_user_context_t *context, int socket) {
 
     /* we lock here but can do other thing on hash as it is not destructive 
      * in push mode modification of hash are done in push_worker */
-    g_static_mutex_lock (&client_mutex);
     c_session = get_client_datas_by_socket(socket);
-    g_static_mutex_unlock (&client_mutex);
     if (nuauthconf->session_duration && c_session->expire < time(NULL)){
         FD_CLR(socket,&context->tls_rx_set);
-        g_static_mutex_lock (&client_mutex);
         delete_client_by_socket(socket);
-        g_static_mutex_unlock (&client_mutex);
     } else {
         u_request = treat_user_request( c_session );
         if (u_request == EOF) {
@@ -330,9 +326,7 @@ void tls_user_check_activity(struct tls_user_context_t *context, int socket) {
                 message->datas = GINT_TO_POINTER(socket);
                 g_async_queue_push(nuauthdatas->tls_push_queue,message);
             } else {
-                g_static_mutex_lock (&client_mutex);
                 delete_client_by_socket(socket);
-                g_static_mutex_unlock (&client_mutex);
             }
         }else if (u_request < 0) {
 #ifdef DEBUG_ENABLE

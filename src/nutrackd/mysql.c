@@ -31,7 +31,7 @@ MYSQL * mysql_conn_init(){
     /* init connection */
     ld = mysql_init(NULL);     
     if (ld == NULL) {
-        //TODO : log stuff
+        /* TODO : log stuff */
         return 0;
     }
     if (!mysql_options(ld,MYSQL_OPT_CONNECT_TIMEOUT,params->timeout))
@@ -44,7 +44,7 @@ MYSQL * mysql_conn_init(){
           params->port,
           NULL,
           0)) {
-        //TODO : log stuff
+        /* TODO : log stuff */
         syslog(LOG_NOTICE,"Cannot init SQL with params : %s,%s,%s,%s,%d",params->host,params->user,params->pass,params->database,params->port);
         return NULL;
     }
@@ -60,9 +60,9 @@ void sql_close(void)
 int update_sql_table(u_int32_t src, u_int32_t dst, u_int8_t proto, u_int16_t sport, u_int16_t dport)
 {
   time_t timestamp;
-  //        printf ("sport %u\n",ntohs(sport));
-  //        printf ("dport %u\n",ntohs(dport));
-  //        return 0;
+  /*        printf ("sport %u\n",ntohs(sport)); */
+  /*        printf ("dport %u\n",ntohs(dport)); */
+  /*        return 0; */
 
   if ((proto == IPPROTO_TCP )||(proto == IPPROTO_UDP)){
       char request[LONG_REQUEST_SIZE];

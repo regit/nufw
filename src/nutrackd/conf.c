@@ -26,20 +26,17 @@
 const char *const w_space = " \t\n\r";
 
 
-static void
-parse_char(char **ourchar)
+static void parse_char(char **ourchar)
 {
   char *token = strtok(NULL,w_space);
-  if (token == NULL)
+  if (token == NULL) {
       *ourchar = NULL;
-  else
-  {
+  } else {
       *ourchar = strdup(token);
   }
 }
 
-static void
-parse_unsigned_int(unsigned int *value)
+static void parse_unsigned_int(unsigned int *value)
 {
   char *token = strtok(NULL,w_space);
   if (token == NULL)
@@ -52,8 +49,7 @@ parse_unsigned_int(unsigned int *value)
 
 
 
-SQLconnection *
-read_conf (FILE * FH)
+SQLconnection * read_conf (FILE * FH)
 {
   SQLconnection *our_conn;
   char line[256];		/* the buffer for the lines read
@@ -81,7 +77,7 @@ read_conf (FILE * FH)
     if (line == NULL)
         continue;
     if ((token = strtok(line, w_space)) == NULL)
-        continue; //Ignore empty lines;
+        continue; /* Ignore empty lines; */
     else if(!strcmp(token,"db_host"))
         parse_char(&our_conn->host);
     else if(!strcmp(token,"db_port"))

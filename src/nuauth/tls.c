@@ -357,9 +357,7 @@ void push_worker() {
 					global_msg->addr=((tracking_t *)message->datas)->saddr;
 					global_msg->found = FALSE;
 					/* search in client array */
-					g_static_mutex_lock (&client_mutex);
 					warn_clients(global_msg);
-					g_static_mutex_unlock (&client_mutex);
 					/* do we have found something */
 					if (global_msg->addr != INADDR_ANY){
 						if (global_msg->found == FALSE ){
@@ -380,18 +378,14 @@ void push_worker() {
 				break;
 			case FREE_MESSAGE:
 				{
-					g_static_mutex_lock (&client_mutex);
 					delete_client_by_socket(GPOINTER_TO_INT(message->datas));
-					g_static_mutex_unlock (&client_mutex);
 				}
 				break;
 			case INSERT_MESSAGE:
 				{
 					struct tls_insert_data* datas=message->datas;
 					if (datas->data){
-						g_static_mutex_lock (&client_mutex);
 						add_client(datas->socket,datas->data);
-						g_static_mutex_unlock (&client_mutex);
 					}
 				}
 				break;
