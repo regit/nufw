@@ -186,6 +186,40 @@ manpage.1: manpage.sgml
     </variablelist>
   </refsect1>
   <refsect1>
+    <title>SIGNALS</title>
+     <para>
+      The <command>&dhpackage;</command> daemon is designed to deal with several
+      signals : USR1, USR2, and POLL.
+        <variablelist>
+          <varlistentry>
+            <term><option>USR1</option>
+            </term>
+            <listitem>
+              <para>Increases verbosity. The daemon then acts as if it had been
+              launched with one supplementary '-v'.A line is also added to the system
+              log to mention the signal event.</para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><option>USR2</option>
+            </term>
+            <listitem>
+              <para>Decreases verbosity. The daemon then acts as if it had been
+              launched with one less '-v'. A line is also added to the system
+              log to mention the signal event.</para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><option>POLL</option>
+            </term>
+            <listitem>
+              <para>Logs an "audit" line, mentionning how many network datagrams
+              were received and sent since daemon startup.</para>
+            </listitem>
+          </varlistentry>
+     </para>
+  </refsect1>
+  <refsect1>
     <title>SEE ALSO</title>
     <para>nufw(1)</para>
   </refsect1>
