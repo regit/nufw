@@ -26,6 +26,7 @@
  * Skip invalid addresses.
  * 
  * \return Returns an array of in_addr, or NULL if no valid address has been found.
+ * The array always finish with an INADDR_NONE value.
  */
 struct in_addr* generate_inaddr_list(gchar* gwsrv_addr)
 {
