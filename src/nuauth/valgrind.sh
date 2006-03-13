@@ -12,11 +12,13 @@ function stop_valgrind
 
 trap stop_valgrind SIGINT SIGTERM
     
-# You may prefer to write output in a log:
-#    --log-file-exactly=$LOG \
+# Some interesting options:
+#    --log-file-exactly=$LOG
+#    --gen-suppressions=yes
 
 valgrind \
-    --show-reachable=yes -v --suppressions=valgrind.supp \
+    --show-reachable=yes -v \
+    --suppressions=valgrind.supp \
     --leak-check=full \
     ./nuauth $NUAUTH_OPT 2>&1 | tee $LOG
 

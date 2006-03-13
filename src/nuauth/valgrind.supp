@@ -1,31 +1,37 @@
 {
-   lib_sasl_quiet
-   Memcheck:Cond
-   obj:/usr/lib/libsasl2.*
+    libld_cond_quiet
+    Memcheck:Cond
+    obj:/lib/ld-2.3.6.so
 }
-
-
 {
-   lib_c_quiet
-   Memcheck:Cond
-   obj:/lib/tls/libc-*
+    dlopen_level4_quiet
+    Memcheck:Addr4
+    obj:/lib/ld-*
+    obj:/lib/ld-*
+    obj:/lib/tls/libc-*
+    obj:/lib/ld-*
+    fun:*dl_open*
 }
-
 {
-   lib_ld_quiet
-   Memcheck:Cond
-   obj:/lib/ld-*
+    dlopen_level5_quiet
+    Memcheck:Addr4
+    obj:/lib/ld-*
+    obj:/lib/ld-*
+    obj:/lib/ld-*
+    obj:/lib/tls/libc-*
+    obj:/lib/ld-*
+    fun:*dl_open*
 }
-
 {
-   tls_dynamic_library_quiet   
-   Memcheck:Cond
-   obj:/lib/tls/libdl-*
+    dlopen_level8_quiet
+    Memcheck:Addr4
+    obj:/lib/ld-*
+    obj:/lib/ld-*
+    obj:/lib/ld-*
+    obj:/lib/ld-*
+    obj:/lib/ld-*
+    obj:/lib/ld-*
+    obj:/lib/tls/libc-*
+    obj:/lib/ld-*
+    fun:*dl_open*
 }
-
-{
-   lib_sasl_quiet
-   Memcheck:Cond
-   obj:/usr/lib/libsasl2.so.2.*
-}
-
