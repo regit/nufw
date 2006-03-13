@@ -245,12 +245,11 @@ void configure_app(int argc, char **argv)
     params.nuauth_client_listen_addr=NULL;
     params.nuauth_nufw_listen_addr=NULL;
 
-    /* init gcrypt and gnutls */
-    /*        gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_gthread); */
-
     /* Initialize glib thread system */
     g_thread_init(NULL);
     g_thread_pool_set_max_unused_threads (5);
+    
+    /* init gcrypt and gnutls */
     gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_gthread);
 
     gnutls_global_init();

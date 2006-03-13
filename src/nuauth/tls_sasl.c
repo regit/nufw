@@ -27,7 +27,8 @@ extern int nuauth_tls_auth_by_cert;
  *
  * Extract the username from the provided certificate
  */
-gchar* get_username_from_tls_session(gnutls_session session) {
+gchar* get_username_from_tls_session(gnutls_session session) 
+{
     if (gnutls_certificate_type_get(session) == GNUTLS_CRT_X509){
         return get_username_from_x509_certificate(session);
     } else {
@@ -48,7 +49,7 @@ static void  policy_refuse_user(user_session* c_session,int c)
 }
 
 
-void tls_sasl_connect_ok(user_session* c_session, int c) 
+static void tls_sasl_connect_ok(user_session* c_session, int c) 
 {
     struct nuv2_srv_message msg;
     /* Success place */
@@ -213,11 +214,11 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
             if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
                 g_message("Problem with user, closing socket");
 #endif
+            remove_socket_from_pre_client_list(c);
             /* get rid of client */
             close_tls_session(c,c_session->tls);
             c_session->tls=NULL;
             clean_session(c_session);
     }
-    remove_socket_from_pre_client_list(c);
 }
 
