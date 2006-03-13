@@ -21,7 +21,12 @@
 
 #include <auth_srv.h>
 
-
+/*
+ * Parse a string containing a list of addresses (separated by spaces).
+ * Skip invalid addresses.
+ * 
+ * \return Returns an array of in_addr, or NULL if no valid address has been found.
+ */
 struct in_addr* generate_inaddr_list(gchar* gwsrv_addr)
 {
 	gchar** gwsrv_addr_list=NULL;
@@ -50,7 +55,7 @@ struct in_addr* generate_inaddr_list(gchar* gwsrv_addr)
     /* allocate array of struct sock_addr */
     if (0 < count)
     {
-        addrs_array=g_new0(struct in_addr, count);
+        addrs_array=g_new0(struct in_addr, count+1);
         authorized_server=addrs_array;
         gwsrv_addr_iter = gwsrv_addr_list;
         while (*gwsrv_addr_iter != NULL) {
