@@ -39,8 +39,7 @@ void log_user_packet (connection_t* element, tcp_state_t state)
 {
 	if ((nuauthconf->log_users_sync) && (state == TCP_STATE_OPEN) ){
             if ( nuauthconf->log_users &  8 ){
-                                      user_logs ( element, state);
-                   g_free(element->username);
+                user_logs ( element, state);
             }
 	} else {
         if (
