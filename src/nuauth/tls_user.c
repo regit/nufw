@@ -239,7 +239,8 @@ static int treat_user_request (user_session * c_session)
  * 
  * \return If an error occurs returns 1, else returns 0.
  */
-int tls_user_accept(struct tls_user_context_t *context) {
+int tls_user_accept(struct tls_user_context_t *context) 
+{
     int socket;
     struct sockaddr_in addr_clnt;
     unsigned int len_inet = sizeof addr_clnt;

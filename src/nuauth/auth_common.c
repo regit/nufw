@@ -177,7 +177,7 @@ void free_connection(connection_t *conn)
      * AUTH_STATE_COMPLETING is reached when no acl is found for packet */
     if (conn->state == AUTH_STATE_AUTHREQ){
         /* copy message */
-        log_user_packet(*conn,TCP_STATE_DROP);
+        log_user_packet(conn,TCP_STATE_DROP);
     }
     /* 
      * tell cache we don't use the ressource anymore
@@ -340,7 +340,7 @@ int conn_key_delete(gconstpointer key)
     if (element){
         /* need to log drop of packet if it is a nufw packet */
         if (element->state == AUTH_STATE_AUTHREQ) {
-            log_user_packet(*element,TCP_STATE_DROP); 
+            log_user_packet(element,TCP_STATE_DROP); 
         }
         g_hash_table_remove (conn_list,key);
         return 1;
@@ -515,9 +515,9 @@ gint apply_decision(connection_t *element)
 #endif
 
     if (decision == DECISION_ACCEPT){
-        log_user_packet(*element,TCP_STATE_OPEN);
+        log_user_packet(element,TCP_STATE_OPEN);
     } else {
-        log_user_packet(*element,TCP_STATE_DROP);
+        log_user_packet(element,TCP_STATE_DROP);
     }
 
     g_slist_foreach(element->packet_id,

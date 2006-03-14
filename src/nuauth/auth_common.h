@@ -34,6 +34,7 @@ inline char get_state(connection_t *elt);
 gint take_decision(connection_t * element, packet_place_t place);
 gint print_connection(gpointer data,gpointer userdata);
 void free_connection_list(GSList *list);
+connection_t* duplicate_connection(connection_t* element);
 void free_connection(connection_t * conn);
 int lock_and_free_connection(connection_t * conn);
 void clean_connections_list ();

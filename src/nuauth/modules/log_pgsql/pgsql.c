@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2003-2005 Eric Leblond <eric@regit.org>
+ ** Copyright(C) 2003-2006 Eric Leblond <eric@regit.org>
  **		     Vincent Deffontaines <vincent@gryzor.com>
  **                   INL
  **
@@ -394,7 +394,7 @@ int pgsql_update_state(PGconn *ld, connection_t *element,
     return -1;
 }    
 
-G_MODULE_EXPORT gint user_packet_logs (connection_t element, tcp_state_t state)
+G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state)
 {
     /* get/open postgresql connection */
     PGconn *ld = g_private_get (pgsql_priv);
@@ -410,31 +410,31 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, tcp_state_t state)
 
     switch (state){
         case TCP_STATE_OPEN:
-            if (element.tracking.protocol == IPPROTO_TCP 
+            if (element->tracking.protocol == IPPROTO_TCP 
                 && nuauthconf->log_users_strict)
             {
-                int ret = pgsql_update_close(ld, &element);
+                int ret = pgsql_update_close(ld, element);
                 if (ret != 0) {
                     return ret;
                 }
             }
 
-            return pgsql_insert(ld, &element, "ACCEPT", state);
+            return pgsql_insert(ld, element, "ACCEPT", state);
 
         case TCP_STATE_ESTABLISHED:
-            if (element.tracking.protocol == IPPROTO_TCP)
-                return pgsql_update_state(ld, &element, TCP_STATE_OPEN, TCP_STATE_ESTABLISHED, 0);
+            if (element->tracking.protocol == IPPROTO_TCP)
+                return pgsql_update_state(ld, element, TCP_STATE_OPEN, TCP_STATE_ESTABLISHED, 0);
             else
                 return 0;
 
         case TCP_STATE_CLOSE:
-            if (element.tracking.protocol == IPPROTO_TCP)
-                return pgsql_update_state(ld, &element, TCP_STATE_ESTABLISHED, TCP_STATE_CLOSE, 1);
+            if (element->tracking.protocol == IPPROTO_TCP)
+                return pgsql_update_state(ld, element, TCP_STATE_ESTABLISHED, TCP_STATE_CLOSE, 1);
             else
                 return 0;
 
         case TCP_STATE_DROP:
-            return pgsql_insert(ld, &element, "DROP", state);
+            return pgsql_insert(ld, element, "DROP", state);
 
             /* Skip other messages */
         default:

@@ -231,14 +231,14 @@ connection_t* authpckt_new_connection(unsigned char *dgram, unsigned int dgram_s
                     break; 
                 case TCP_STATE_CLOSE:
                     if (msg->msg_type == AUTH_CONTROL ){
-                        log_user_packet(*connection, TCP_STATE_CLOSE);
+                        log_user_packet(connection, TCP_STATE_CLOSE);
                         free_connection(connection);
                         return NULL;
                     }
                     break;
                 case TCP_STATE_ESTABLISHED:
                     if (msg->msg_type == AUTH_CONTROL ){
-                        log_user_packet(*connection, TCP_STATE_ESTABLISHED);
+                        log_user_packet(connection, TCP_STATE_ESTABLISHED);
                         free_connection(connection);
                         return NULL;
                     }

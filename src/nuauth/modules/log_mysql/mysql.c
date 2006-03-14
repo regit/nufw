@@ -494,7 +494,7 @@ MYSQL* get_mysql_handler()
 
 }    
 
-G_MODULE_EXPORT gint user_packet_logs (connection_t element, tcp_state_t state){
+G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state){
     MYSQL *ld = get_mysql_handler();
     if (ld == NULL) {
         return -1;
@@ -503,24 +503,24 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, tcp_state_t state){
     /* contruct request */
     switch (state) {
         case TCP_STATE_OPEN:
-            return log_state_open(ld, &element);
+            return log_state_open(ld, element);
 
         case TCP_STATE_ESTABLISHED: 
-            if ((element.tracking).protocol == IPPROTO_TCP){
-                return log_state_established(ld, &element);
+            if ((element->tracking).protocol == IPPROTO_TCP){
+                return log_state_established(ld, element);
             } else {
                 return 0;
             }
 
         case TCP_STATE_CLOSE: 
-            if ((element.tracking).protocol == IPPROTO_TCP){
-                return log_state_close(ld, &element);
+            if ((element->tracking).protocol == IPPROTO_TCP){
+                return log_state_close(ld, element);
             } else {
                 return 0;
             }
 
         case TCP_STATE_DROP:
-            return log_state_drop(ld, &element);
+            return log_state_drop(ld, element);
 
         default:
 			/* Ignore other states */
@@ -528,7 +528,8 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, tcp_state_t state){
     }
 }
 
-G_MODULE_EXPORT gint log_sql_disconnect(void){
+G_MODULE_EXPORT gint log_sql_disconnect(void)
+{
     MYSQL *ld = g_private_get (mysql_priv);
     mysql_close(ld);
     return 0;

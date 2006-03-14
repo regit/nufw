@@ -414,8 +414,10 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 				g_message("%s users on multi server %s\n", c_session->user_name,address);
 			}
 #endif
-			if (gnutls_record_send(session,"N", 1) <= 0) /* send NO to client */
+			if (gnutls_record_send(session,"N", 1) <= 0){ /* send NO to client */
+                g_free(stripped_user);
 				return SASL_FAIL;
+            }
 		}
 		g_free(stripped_user);
 	} else {

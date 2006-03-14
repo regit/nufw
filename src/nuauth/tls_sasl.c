@@ -112,6 +112,12 @@ static void tls_sasl_connect_ok(user_session* c_session, int c)
         }
     }
 
+    if (nuauthconf->log_users_without_realm){
+        gchar *username = get_rid_of_domain(c_session->user_name);
+        g_free(c_session->user_name);
+        c_session->user_name=username;
+    }
+
     /* send new valid session to user session logging system */
     log_user_session(c_session,SESSION_OPEN);
 #ifdef DEBUG_ENABLE

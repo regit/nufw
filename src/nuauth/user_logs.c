@@ -23,7 +23,7 @@
 #include <time.h>
 
 struct Conn_State { 
-	connection_t conn;
+	connection_t* conn;
 	tcp_state_t state;
 };
 
@@ -35,43 +35,34 @@ struct Conn_State {
  * \param state TCP state of the connection
  */
 
-void log_user_packet (connection_t element, tcp_state_t state)
+void log_user_packet (connection_t* element, tcp_state_t state)
 {
-	struct Conn_State conn_state= { element, state};
-	struct Conn_State * conn_state_copy;
-
 	if ((nuauthconf->log_users_sync) && (state == TCP_STATE_OPEN) ){
             if ( nuauthconf->log_users &  8 ){
-                   if (nuauthconf->log_users_without_realm){
-                       element.username = get_rid_of_domain(element.username);
-                    }
-                   user_logs (
-				     element, 
-				     state
-				    );
-                   g_free(element.username);
+                                      user_logs ( element, state);
+                   g_free(element->username);
             }
 	} else {
-            if (
+        if (
                 ((nuauthconf->log_users & 2) && (state == TCP_STATE_DROP)) 
                 || 
                 ((nuauthconf->log_users & 4) && (state == TCP_STATE_OPEN)) 
                 || 
                 (nuauthconf->log_users & 8) 
-               ) {
-		/* feed thread pool */
-                conn_state_copy=g_memdup(&conn_state,sizeof(conn_state));
-                if ( conn_state.conn.username ){
-                    if (nuauthconf->log_users_without_realm){
-                        conn_state_copy->conn.username = get_rid_of_domain(conn_state.conn.username);
-                    } else {
-                        conn_state_copy->conn.username = g_strdup(conn_state.conn.username);
-                    }
-                }
-		g_thread_pool_push(nuauthdatas->user_loggers,
-				conn_state_copy,
-				NULL);
+           ) {
+            struct Conn_State * conn_state_copy;
+            conn_state_copy=g_new0(struct Conn_State,1);
+            conn_state_copy->conn=duplicate_connection(element);
+            if (! conn_state_copy){
+                g_free(conn_state_copy);
+                return;
             }
+            conn_state_copy->state=state;
+
+            g_thread_pool_push(nuauthdatas->user_loggers,
+                    conn_state_copy,
+                    NULL);
+        }
 	}
 	/* end */
 }
@@ -92,9 +83,10 @@ void real_log_user_packet (gpointer userdata, gpointer data)
 			     ((struct Conn_State *)userdata)->conn, 
 			     ((struct Conn_State *)userdata)->state
 			    );
-	/* free userdata */
-	g_free(((struct Conn_State*)userdata)->conn.username);
-	g_free(userdata);
+    /* free userdata */
+    ((struct Conn_State *)userdata)->conn->state=AUTH_STATE_DONE;
+    free_connection(((struct Conn_State *)userdata)->conn);
+    g_free(userdata);
 }
 
 void log_user_session(user_session* usession, session_state_t state)

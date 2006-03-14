@@ -30,7 +30,7 @@ GSList * acl_check (connection_t* element);
 /* ip auth */
 gchar* ip_auth(tracking_t *tracking);
 
-int user_logs (connection_t element, tcp_state_t state);
+int user_logs (connection_t* element, tcp_state_t state);
 
 int user_session_logs(user_session* user, session_state_t state);
 

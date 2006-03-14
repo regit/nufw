@@ -32,7 +32,7 @@ struct session_event {
 int check_fill_user_counters(u_int16_t userid,long time,unsigned long packet_id,u_int32_t ip);
 void print_users_list();
 
-void log_user_packet (connection_t element, tcp_state_t state);
+void log_user_packet (connection_t* element, tcp_state_t state);
 void real_log_user_packet (gpointer userdata, gpointer data);
 
 void log_user_session(user_session* element, session_state_t state);

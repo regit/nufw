@@ -21,7 +21,7 @@
 #include <errno.h>
 #include "security.h"
 
-G_MODULE_EXPORT gint user_packet_logs (connection_t element, tcp_state_t state){
+G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state){
     char *str_state;
     char source_addr[INET_ADDRSTRLEN+1];
     char dest_addr[INET_ADDRSTRLEN+1];
@@ -46,44 +46,44 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t element, tcp_state_t state){
     } 
 
     /* convert IPv4 source and destination address to string */
-    oneip.s_addr=htonl((element.tracking).saddr);
+    oneip.s_addr=htonl((element->tracking).saddr);
     SECURE_STRNCPY (source_addr, inet_ntoa(oneip), sizeof(source_addr));
     
-    oneip.s_addr=htonl((element.tracking).daddr);
+    oneip.s_addr=htonl((element->tracking).daddr);
     SECURE_STRNCPY (dest_addr, inet_ntoa(oneip), sizeof(dest_addr));
 
-    if ( ((element.tracking).protocol == IPPROTO_TCP) || ((element.tracking).protocol == IPPROTO_UDP) ) {
+    if ( ((element->tracking).protocol == IPPROTO_TCP) || ((element->tracking).protocol == IPPROTO_UDP) ) {
         if (state==TCP_STATE_ESTABLISHED){
         g_message("%s[%s] %ld : SRC=%s DST=%s PROTO=%d SPT=%u DPT=%u",
             str_state,
-            element.username,
-            element.timestamp,
+            element->username,
+            element->timestamp,
             dest_addr,
             source_addr,
-            (element.tracking).protocol,
-            (element.tracking).dest,
-            (element.tracking).source
+            (element->tracking).protocol,
+            (element->tracking).dest,
+            (element->tracking).source
             );
         } else {
         g_message("%s[%s] %ld : SRC=%s DST=%s PROTO=%d SPT=%u DPT=%u",
             str_state,
-            element.username,
-            element.timestamp,
+            element->username,
+            element->timestamp,
             source_addr,
             dest_addr,
-            (element.tracking).protocol,
-            (element.tracking).source,
-            (element.tracking).dest
+            (element->tracking).protocol,
+            (element->tracking).source,
+            (element->tracking).dest
             );
         }
     } else {
         g_message("%s[%s] %ld : SRC=%s DST=%s PROTO=%d",
             str_state,
-            element.username,
-            element.timestamp,
+            element->username,
+            element->timestamp,
             source_addr,
             dest_addr,
-            (element.tracking).protocol
+            (element->tracking).protocol
             );
     }
     return 0;
