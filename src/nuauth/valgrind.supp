@@ -1,3 +1,15 @@
+{
+   mysterious_ld_bug
+   Memcheck:Cond
+   obj:/lib/ld-*
+   obj:/lib/ld-*
+   obj:/lib/ld-*
+   obj:/lib/ld-*
+   obj:/lib/ld-*
+}
+
+
+
 # *dlopen and *dlsym()
 {
     sasl_get_plugin_cond_quiet
@@ -14,7 +26,22 @@
     fun: *sasl_get_plugin
 }    
 
+{
+   ld_level2_cond_quiet
+   Memcheck:Cond
+   obj:/lib/ld-*
+   fun:_dl_open
+}
 
+{
+   dlopen_level5_cond_quiet
+   Memcheck:Cond
+   obj:/lib/ld-*
+   obj:/lib/ld-*
+   obj:/lib/tls/libc-*
+   obj:/lib/ld-*
+   fun:_dl_open
+}
 
 {
     dlsym_level4_cond_quiet
