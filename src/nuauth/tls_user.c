@@ -41,7 +41,8 @@ struct pre_client_elt {
     time_t validity;
 };
 
-gboolean remove_socket_from_pre_client_list(int socket) {
+gboolean remove_socket_from_pre_client_list(int socket) 
+{
     GSList * client_runner=NULL;
     g_static_mutex_lock (&pre_client_list_mutex);
     for(client_runner=pre_client_list;client_runner;client_runner=client_runner->next){

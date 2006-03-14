@@ -53,27 +53,21 @@ static void tls_sasl_connect_ok(user_session* c_session, int c)
 {
     struct nuv2_srv_message msg;
     /* Success place */
-    /* remove socket from the list of pre auth socket */
-    remove_socket_from_pre_client_list(c);
 
     /* checking policy on multiuser usage */
     switch (nuauthconf->connect_policy){
         case POLICY_MULTIPLE_LOGIN:
             break;
         case POLICY_ONE_LOGIN:
-            if (! look_for_username(c_session->user_name)){
-                break;
-            } else {
+            if (look_for_username(c_session->user_name)){
                 policy_refuse_user(c_session,c);
             }
+            break;
         case POLICY_PER_IP_ONE_LOGIN:
-            if (! get_client_sockets_by_ip(c_session->addr) ){
-                break;
-            } else {
+            if (get_client_sockets_by_ip(c_session->addr) ){
                 policy_refuse_user(c_session,c);
             }
-        default:
-            return;
+            break;
     }
 
     if (nuauthconf->push) {
@@ -194,6 +188,8 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
     ret = sasl_user_check(c_session);
     switch (ret){
         case SASL_OK:
+            /* remove socket from the list of pre auth socket */
+            remove_socket_from_pre_client_list(c);
             tls_sasl_connect_ok(c_session, c);
             break;
 

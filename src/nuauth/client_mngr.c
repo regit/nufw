@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2005 INL
+ ** Copyright(C) 2005-2006 INL
  ** written by  Eric Leblond <regit@inl.fr>
  **
  ** This program is free software; you can redistribute it and/or modify
@@ -59,7 +59,8 @@ void clean_session(user_session * c_session)
 	}
 }
 
-static void hash_clean_session(user_session * c_session){
+static void hash_clean_session(user_session * c_session)
+{
 	gnutls_transport_ptr socket_tls;
 
 	socket_tls=gnutls_transport_get_ptr(*(c_session->tls));
@@ -71,7 +72,8 @@ static void hash_clean_session(user_session * c_session){
 }
 
 
-void init_client_struct(){
+void init_client_struct()
+{
 	/* build client hash */
 	client_conn_hash = g_hash_table_new_full(
 			NULL,
@@ -90,7 +92,7 @@ void init_client_struct(){
 
 void add_client(int socket, gpointer datas)
 {
-	user_session * c_session=(user_session *) datas;
+	user_session * c_session = (user_session *) datas;
 	GSList * ipsockets;
 
     g_static_mutex_lock (&client_mutex);
@@ -102,7 +104,7 @@ void add_client(int socket, gpointer datas)
     g_static_mutex_unlock (&client_mutex);
 }
 
-void delete_client_by_socket(int c)
+void delete_client_by_socket(int socket)
 {
 	GSList * ipsockets;
 	user_session * session; 
@@ -111,28 +113,28 @@ void delete_client_by_socket(int c)
 	 *  get addr field
 	 */
     g_static_mutex_lock (&client_mutex);
-	session = (user_session*)( 
-			g_hash_table_lookup(client_conn_hash ,GINT_TO_POINTER(c)));
-
-	/* walk on IP based struct to find the socket */
-	ipsockets = g_hash_table_lookup(client_ip_hash ,GINT_TO_POINTER(session->addr));
-	/* destroy entry */
-	ipsockets = g_slist_remove(ipsockets , session->tls);
-    if (ipsockets) {
+	session = (user_session*)(g_hash_table_lookup(client_conn_hash ,GINT_TO_POINTER(socket)));
+    if (session) {
+        /* walk on IP based struct to find the socket */
+        ipsockets = g_hash_table_lookup(client_ip_hash ,GINT_TO_POINTER(session->addr));
+        /* destroy entry */
+        ipsockets = g_slist_remove(ipsockets , session->tls);
         /* update hash */
         g_hash_table_replace (client_ip_hash, GINT_TO_POINTER(session->addr), ipsockets);
+        /* remove entry from hash */
+        g_hash_table_remove(client_conn_hash,GINT_TO_POINTER(socket));
+    } else {
+        log_message(WARNING,AREA_USER,"Could not found user session in hash");
     }
-	/* remove entry from hash */
-	g_hash_table_remove(client_conn_hash,GINT_TO_POINTER(c));
     g_static_mutex_unlock (&client_mutex);
 }
 
-inline user_session * get_client_datas_by_socket(int c)
+inline user_session * get_client_datas_by_socket(int socket)
 {
   void * ret;
 
   g_static_mutex_lock (&client_mutex);
-  ret = g_hash_table_lookup(client_conn_hash ,GINT_TO_POINTER(c));
+  ret = g_hash_table_lookup(client_conn_hash ,GINT_TO_POINTER(socket));
   g_static_mutex_unlock (&client_mutex);
   return ret;
 }

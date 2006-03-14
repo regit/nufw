@@ -126,6 +126,9 @@ void log_user_session_thread (gpointer element,gpointer data)
         block_on_conf_reload();
 	user_session_logs(((struct session_event*)element)->session,((struct session_event*)element)->state);
 	g_free(((struct session_event*)element)->session->user_name);
+	g_free(((struct session_event*)element)->session->sysname);
+	g_free(((struct session_event*)element)->session->version);
+	g_free(((struct session_event*)element)->session->release);
 	g_free(((struct session_event*)element)->session);
 	g_free(element);
 }

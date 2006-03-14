@@ -337,7 +337,8 @@ void create_x509_credentials()
  * Lock is only needed when modifications are done, because when this thread
  * work (push mode) it's the only one who can modify the hash.
  */
-void push_worker() {
+void push_worker() 
+{
 	struct msg_addr_set *global_msg=g_new0(struct msg_addr_set,1);
 	struct nuv2_srv_message *msg=g_new0(struct nuv2_srv_message,1);
 	struct internal_message * message;

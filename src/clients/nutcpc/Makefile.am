@@ -2,7 +2,7 @@ if BUILD_NUTCPC
 
 # Evil hack (because not portable) by haypo to make gcc (or ld or libtool)
 # find libnuclient.so librar
-AM_LDFLAGS = "-L../lib/.libs"
+AM_LDFLAGS = "-L../lib/"
 
 bin_PROGRAMS = nutcpc
 
