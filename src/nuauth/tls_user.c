@@ -108,7 +108,8 @@ void pre_client_check()
 static int treat_user_request (user_session * c_session)
 {
     struct tls_buffer_read *datas;
-    int pbuf_length;
+    int header_length;
+    struct nuv2_header* header;
 
     if (c_session == NULL) return 1;
 
@@ -143,14 +144,14 @@ static int treat_user_request (user_session * c_session)
     }
 
     /* get header to check if we need to get more datas */
-    struct nuv2_header* pbuf = (struct nuv2_header* )datas->buffer;
-    pbuf_length=ntohs(pbuf->length);
+    header = (struct nuv2_header* )datas->buffer;
+    header_length=ntohs(header->length);
     debug_log_message (VERBOSE_DEBUG, AREA_MAIN,
         "(%s:%d) Packet size is %d\n",
-        __FILE__, __LINE__, pbuf_length);
+        __FILE__, __LINE__, header_length);
 
     /* is it an "USER HELLO" message ? */
-    if (pbuf->proto==PROTO_VERSION && pbuf->msg_type == USER_HELLO){
+    if (header->proto==PROTO_VERSION && header->msg_type == USER_HELLO){
         debug_log_message (VERBOSE_DEBUG, AREA_MAIN,
             "(%s:%d) user HELLO",__FILE__,__LINE__);
         free_buffer_read(datas);
@@ -159,13 +160,13 @@ static int treat_user_request (user_session * c_session)
 
     /* if message content is bigger than CLASSIC_NUFW_PACKET_SIZE, */
     /* continue to read the content */
-    if (pbuf->proto==2 && pbuf_length> datas->buffer_len && pbuf_length<MAX_NUFW_PACKET_SIZE  ){
+    if (header->proto==2 && header_length> datas->buffer_len && header_length<MAX_NUFW_PACKET_SIZE  ){
         /* we realloc and get what we miss */
-        datas->buffer=g_realloc(datas->buffer, pbuf_length);
+        datas->buffer=g_realloc(datas->buffer, header_length);
         int tmp_len = gnutls_record_recv(
                 *(c_session->tls), 
                 datas->buffer+CLASSIC_NUFW_PACKET_SIZE,
-                pbuf_length - datas->buffer_len);
+                header_length - datas->buffer_len);
         if (tmp_len<0){
             free_buffer_read(datas);
             return -1;
@@ -174,13 +175,13 @@ static int treat_user_request (user_session * c_session)
     }
     
     /* check message type because USER_HELLO has to be ignored */
-    if ( pbuf->msg_type == USER_HELLO){
+    if ( header->msg_type == USER_HELLO){
         return 1;
     }
 
     /* check authorization if we're facing a multi user packet */ 
-    if ( (pbuf->option == 0x0) ||
-            ((pbuf->option == 0x1) && c_session->multiusers)) {
+    if ( (header->option == 0x0) ||
+            ((header->option == 0x1) && c_session->multiusers)) {
         /* this is an authorized packet we fill the buffer_read structure */
         if (c_session->multiusers) {
             datas->user_name=NULL;
@@ -284,10 +285,9 @@ int tls_user_accept(struct tls_user_context_t *context) {
             g_static_mutex_lock (&pre_client_list_mutex);
             pre_client_list=g_slist_prepend(pre_client_list,new_pre_client);
             g_static_mutex_unlock (&pre_client_list_mutex);
+
             g_thread_pool_push (context->tls_sasl_worker,
-                    current_client_conn,	
-                    NULL
-                    );
+                    current_client_conn, NULL);
         } else {
             shutdown(socket,SHUT_RDWR);
             close(socket);
@@ -307,6 +307,7 @@ void tls_user_check_activity(struct tls_user_context_t *context, int socket) {
     /* we lock here but can do other thing on hash as it is not destructive 
      * in push mode modification of hash are done in push_worker */
     c_session = get_client_datas_by_socket(socket);
+
     if (nuauthconf->session_duration && c_session->expire < time(NULL)){
         FD_CLR(socket,&context->tls_rx_set);
         delete_client_by_socket(socket);
@@ -345,12 +346,9 @@ void tls_user_main_loop(struct tls_user_context_t *context)
     struct timeval tv;
 
     for(;;){
-        /* define timeout, need to be rewritten as select write it */
-        tv.tv_sec=2;
-        tv.tv_usec=30000;
         /* try to get new file descriptor to update set */
         c_pop=g_async_queue_try_pop (mx_queue);
-        while (c_pop) {
+        while (c_pop != NULL) {
             int socket = GPOINTER_TO_INT(c_pop);
 
 #ifdef DEBUG_ENABLE
@@ -374,22 +372,25 @@ void tls_user_main_loop(struct tls_user_context_t *context)
                 FD_SET(i,&wk_set);
         }
 
+        /* define timeout, need to be rewritten as select write it */
+        tv.tv_sec=2;
+        tv.tv_usec=30000;
         nb_active_clients = select(context->mx,&wk_set,NULL,NULL,&tv);
-	if (nb_active_clients == -1) {
-		switch(errno){
-			case EBADF:
-				g_message("Bad file descriptor");
-				break;
-			case EINTR:
-				g_message("Signal catch");
-				break;
-			case EINVAL:
-				g_message("Negative value for socket");
-				break;
-			case ENOMEM:
-				g_message("Not enough memory");
-				break;
-		}
+        if (nb_active_clients == -1) {
+            switch(errno){
+                case EBADF:
+                    g_message("Bad file descriptor");
+                    break;
+                case EINTR:
+                    g_message("Signal catch");
+                    break;
+                case EINVAL:
+                    g_message("Negative value for socket");
+                    break;
+                case ENOMEM:
+                    g_message("Not enough memory");
+                    break;
+            }
             g_warning("select() failed, exiting at %s:%d in %s\n",__FILE__,__LINE__,__func__);
             exit(EXIT_FAILURE);
         }
@@ -401,7 +402,7 @@ void tls_user_main_loop(struct tls_user_context_t *context)
          */
 
         if (FD_ISSET(context->sck_inet,&wk_set) ){
-            if (tls_user_accept(context))
+            if (tls_user_accept(context) != 0)
                 continue;
         }
 
@@ -547,42 +548,5 @@ void* tls_user_authsrv() {
     tls_user_init(&context);
     tls_user_main_loop(&context);
     return NULL;
-}
-
-void  refresh_client (gpointer key, gpointer value, gpointer user_data)
-{
-    /* first check if a request is needed */
-    if ( ((user_session *)value)->req_needed){
-        struct timeval current_time;
-        gettimeofday(&current_time,NULL);
-        current_time.tv_sec=current_time.tv_sec -((user_session  *)value)->last_req.tv_sec;
-        current_time.tv_usec=current_time.tv_usec -((user_session  *)value)->last_req.tv_usec;
-
-#ifdef DEBUG_ENABLE
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)){
-            g_message("request needed");
-        }
-#endif
-
-        /* check if timeout is reached */
-        if ( 
-                ( current_time.tv_sec	 > 1 ) ||			
-                (  abs(current_time.tv_usec) > TLS_CLIENT_MIN_DELAY ) 
-
-           ) {
-#ifdef DEBUG_ENABLE
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)){
-                g_message("request now sent");
-            }
-#endif
-            gnutls_record_send(*((user_session*)value)->tls,
-                    &((struct msg_addr_set *)user_data)->msg,
-                    sizeof(struct nuv2_srv_message)
-                    );
-            ((user_session  *)value)->req_needed=FALSE; 
-            ((user_session *)value)->last_req.tv_sec=current_time.tv_sec;
-            ((user_session  *)value)->last_req.tv_usec=current_time.tv_usec;
-        }
-    } 
 }
 
