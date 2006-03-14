@@ -42,7 +42,10 @@ int parse_conffile(char * filename,gint array_size,confparams* symbols) {
 	scanner=g_scanner_new(NULL);
 	fd=open(filename,O_RDONLY);
 	if (fd == -1)
+    {
 		g_error("Can not open config file : %s",filename);
+        exit (EXIT_FAILURE);
+    }
 	g_scanner_input_file(scanner,fd);
 	for (i = 0; i < array_size; i++)
 		g_scanner_scope_add_symbol (scanner, 0, symbols[i].name, GINT_TO_POINTER (i));

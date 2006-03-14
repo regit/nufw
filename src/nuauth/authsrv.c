@@ -260,7 +260,7 @@ void configure_app(int argc, char **argv)
     nuauthdatas->reload_cond_mutex=g_mutex_new ();
 
     /* load configuration */
-    nuauthconf=init_nuauthconf();
+    init_nuauthconf(&nuauthconf);
 
     /* init credential */
     create_x509_credentials();
