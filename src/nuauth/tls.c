@@ -342,10 +342,10 @@ void push_worker() {
 	struct nuv2_srv_message *msg=g_new0(struct nuv2_srv_message,1);
 	struct internal_message * message;
 
-	global_msg->msg=msg;
 	msg->type=SRV_REQUIRED_PACKET;
 	msg->option=0;
 	msg->length=htons(4);
+	global_msg->msg=msg;
 
 	g_async_queue_ref (nuauthdatas->tls_push_queue);
 
@@ -394,7 +394,9 @@ void push_worker() {
 		}
 		g_free(message);
 	}
-    
+
+    g_free (msg);
+    g_free (global_msg);    
 	g_async_queue_unref (nuauthdatas->tls_push_queue);
 }
 
