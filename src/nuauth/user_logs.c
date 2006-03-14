@@ -93,15 +93,10 @@ void log_user_session(user_session* usession, session_state_t state)
 	struct session_event* sessevent=g_new0(struct session_event,1);
 	/* feed thread pool */
 	if (nuauthconf->log_users & 1){
-		sessevent->session=g_memdup(usession,sizeof(usession));
+		sessevent->session=g_memdup(usession, sizeof(usession[0]));
 		sessevent->state=state;
-		if ( sessevent->session->user_name ){
-			if (nuauthconf->log_users_without_realm){
-				sessevent->session->user_name = get_rid_of_domain(usession->user_name);
-			} else {
-				sessevent->session->user_name  = g_strdup(usession->user_name);
-			}
-        }
+        sessevent->session->user_name  = g_strdup(usession->user_name);
+        sessevent->session->tls = NULL;
         sessevent->session->groups = NULL;
         sessevent->session->sysname = g_strdup(usession->sysname);
         sessevent->session->version = g_strdup(usession->version);
