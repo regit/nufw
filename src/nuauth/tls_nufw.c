@@ -42,7 +42,9 @@ static int treat_nufw_request (nufw_session_t *c_session)
         return 1;
     
     /* copy packet datas */
+    g_mutex_lock(c_session->tls_lock);
     dgram_size = gnutls_record_recv(*(c_session->tls), dgram, CLASSIC_NUFW_PACKET_SIZE) ;
+    g_mutex_unlock(c_session->tls_lock);
     if (  dgram_size > 0 ){
         connection_t *current_conn = authpckt_decode(dgram , (unsigned int)dgram_size);
         if (current_conn != NULL){
@@ -116,6 +118,7 @@ void clean_nufw_session(nufw_session_t * c_session)
 #endif
 
     }
+    g_mutex_free(c_session->tls_lock);
 
 #ifdef DEBUG_ENABLE
     if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
@@ -173,6 +176,7 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
     nu_session->alive=TRUE;
     nu_session->peername.s_addr=addr_clnt.sin_addr.s_addr;
     if (tls_connect(conn_fd,&(nu_session->tls)) == SASL_OK){
+	nu_session->tls_lock = g_mutex_new();
         g_mutex_lock(nufw_servers_mutex);
         g_hash_table_insert(nufw_servers,GINT_TO_POINTER(conn_fd),nu_session);
         g_mutex_unlock(nufw_servers_mutex);

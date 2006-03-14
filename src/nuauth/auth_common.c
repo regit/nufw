@@ -130,7 +130,9 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
             "Sending auth answer %d for %u on %p ...",
             answer->answer, packet_id, answer->tls);
     if (answer->tls->alive){
+	g_mutex_lock(answer->tls->tls_lock);
         gnutls_record_send(*(answer->tls->tls), &response, sizeof(response));
+	g_mutex_unlock(answer->tls->tls_lock);
         g_atomic_int_dec_and_test(&(answer->tls->usage));
     } else {
         if (g_atomic_int_dec_and_test(&(answer->tls->usage))){

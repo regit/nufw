@@ -29,8 +29,8 @@ PGconn *ld = NULL;
 PGconn * pgsql_conn_init(){
 
     char *pgsql_conninfo;
-    int pgsql_status; //,err,version=3;
-    char port[15],timeout[15]; //,server_port[15];
+    int pgsql_status; /* ,err,version=3; */
+    char port[15],timeout[15]; /* ,server_port[15]; */
 
     if (snprintf(port,14,"%d",params->port) >= 14){return NULL;}
     if (snprintf(timeout,14,"%d",params->timeout) >= 14){return NULL;};
@@ -41,7 +41,7 @@ PGconn * pgsql_conn_init(){
         strlen("hostaddr='' port= dbname='' user='' password='' connect_timeout= sslmode='' ") + 1, 
         sizeof(char));
     if (pgsql_conninfo == NULL){return NULL;}
-    //Build string we will pass to PQconnectdb
+    /* Build string we will pass to PQconnectdb */
     strncat(pgsql_conninfo,"host='",6);
     strncat(pgsql_conninfo,params->host,strlen(params->host));
     strncat(pgsql_conninfo,"' port=",7);
@@ -60,7 +60,6 @@ PGconn * pgsql_conn_init(){
     if(pgsql_status != CONNECTION_OK) {
         if (log_level > 1)
           syslog(LOG_WARNING,"Cannot init SQL connection:%s",strerror(errno));
-//        syslog(LOG_DEBUG,"connection : %s",pgsql_conninfo);
         free(pgsql_conninfo);
         PQfinish(ld);
         return NULL;
@@ -78,9 +77,6 @@ void sql_close(void)
 int update_sql_table(u_int32_t src, u_int32_t dst, u_int8_t proto, u_int16_t sport, u_int16_t dport)
 {
   time_t timestamp;
-  //        printf ("sport %u\n",ntohs(sport));
-  //        printf ("dport %u\n",ntohs(dport));
-  //        return 0;
   PGresult *Result;
 
   if ((proto == IPPROTO_TCP )||(proto == IPPROTO_UDP)){
@@ -117,10 +113,8 @@ int update_sql_table(u_int32_t src, u_int32_t dst, u_int8_t proto, u_int16_t spo
             ntohl(dst),
             prefix,
             sport,
-            //ntohs(sport),
             prefix,
             dport) >= LONG_REQUEST_SIZE-1) {
-//            ntohs(dport)) >= LONG_REQUEST_SIZE-1) {
           return -1;
       }
 

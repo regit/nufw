@@ -133,7 +133,9 @@ static int treat_user_request (user_session * c_session)
         g_free(datas);
         return -1;
     }
+    g_mutex_lock(c_session->tls_lock);
     datas->buffer_len = gnutls_record_recv(*(c_session->tls), datas->buffer, CLASSIC_NUFW_PACKET_SIZE);
+    g_mutex_unlock(c_session->tls_lock);
     if ( datas->buffer_len < (int)sizeof(struct nuv2_header)) {
 #ifdef DEBUG_ENABLE
         if (datas->buffer_len <0) 
@@ -164,10 +166,12 @@ static int treat_user_request (user_session * c_session)
     if (header->proto==2 && header_length> datas->buffer_len && header_length<MAX_NUFW_PACKET_SIZE  ){
         /* we realloc and get what we miss */
         datas->buffer=g_realloc(datas->buffer, header_length);
+	g_mutex_lock(c_session->tls_lock);
         int tmp_len = gnutls_record_recv(
                 *(c_session->tls), 
                 datas->buffer+CLASSIC_NUFW_PACKET_SIZE,
                 header_length - datas->buffer_len);
+	g_mutex_unlock(c_session->tls_lock);
         if (tmp_len<0){
             free_buffer_read(datas);
             return -1;
@@ -298,7 +302,8 @@ int tls_user_accept(struct tls_user_context_t *context)
     return 0;
 }    
 
-void tls_user_check_activity(struct tls_user_context_t *context, int socket) {
+void tls_user_check_activity(struct tls_user_context_t *context, int socket)
+{
     user_session * c_session;
     int u_request;
 #ifdef DEBUG_ENABLE

@@ -58,10 +58,9 @@ static void send_conntrack_message(struct limited_connection * lconn,unsigned ch
               message.src_port = htons(lconn->tracking.source);
               message.dest_port = htons(lconn->tracking.dest);
           }
-          gnutls_record_send(
-                  *(session->tls) ,
-                  &message,
-                  sizeof(message));
+	  g_mutex_lock(session->tls_lock);
+          gnutls_record_send( *(session->tls) , &message, sizeof(message));
+	  g_mutex_unlock(session->tls_lock);
       } else {
           if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER)){
               g_message("correct session not found among nufw servers");

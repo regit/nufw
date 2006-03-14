@@ -38,6 +38,7 @@ struct user_cached_datas {
 typedef struct User_session {
     uint32_t addr;
     gnutls_session* tls;
+    GMutex* tls_lock;
     char * user_name;
     uint32_t user_id;
     GSList * groups;

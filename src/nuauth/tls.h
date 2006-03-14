@@ -63,14 +63,15 @@ struct tls_buffer_read {
 
 typedef struct Nufw_session {
     gnutls_session* tls;
+    GMutex* tls_lock;
     struct in_addr peername;
-	gint usage;
-	gboolean alive;
+    gint usage;
+    gboolean alive;
 } nufw_session_t;
 
 struct tls_insert_data { 
-	int socket;
-	gpointer data;
+    int socket;
+    gpointer data;
 };
 
 void clean_nufw_session(nufw_session_t *c_session);

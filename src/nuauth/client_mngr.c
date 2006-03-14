@@ -44,19 +44,20 @@ GHashTable* client_ip_hash;
 
 void clean_session(user_session * c_session)
 {
-	if (c_session->tls)
-	{
-		gnutls_deinit(
-				*(c_session->tls)	
-			     );
-		g_free(c_session->tls);
-	}
+    if (c_session->tls)
+    {
+	gnutls_deinit(
+		*(c_session->tls)	
+		);
+	g_free(c_session->tls);
+    }
     g_free(c_session->user_name);
     g_slist_free(c_session->groups);
 
-	if (c_session){
-		g_free(c_session); 
-	}
+    g_mutex_free(c_session->tls_lock);
+    if (c_session){
+	g_free(c_session); 
+    }
 }
 
 static void hash_clean_session(user_session * c_session)
@@ -185,31 +186,31 @@ inline user_session* look_for_username(const gchar* username)
 
 char warn_clients(struct msg_addr_set * global_msg) 
 {
-	GSList* ipsockets=NULL;
+    GSList* ipsockets=NULL;
 #if DEBUG_ENABLE
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)){
-		struct in_addr saddress;
-		saddress.s_addr=htonl(global_msg->addr);
-		g_message("need to warn client on %s",inet_ntoa(saddress));
-	}
+    if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)){
+	struct in_addr saddress;
+	saddress.s_addr=htonl(global_msg->addr);
+	g_message("need to warn client on %s",inet_ntoa(saddress));
+    }
 #endif
 
     g_mutex_lock(client_mutex);
-	ipsockets=g_hash_table_lookup(client_ip_hash,GINT_TO_POINTER(ntohl(global_msg->addr)));
-	if (ipsockets) {
-		global_msg->found=TRUE;
-		while (ipsockets) {
-			gnutls_record_send(*(gnutls_session*)(ipsockets->data),
-					global_msg->msg,
-					ntohs(global_msg->msg->length)
-					);
-			ipsockets=ipsockets->next;
-		}
-        g_mutex_unlock(client_mutex);
-		return 1;
-	} else {
-        g_mutex_unlock(client_mutex);
-		return 0;
+    ipsockets=g_hash_table_lookup(client_ip_hash,GINT_TO_POINTER(ntohl(global_msg->addr)));
+    if (ipsockets) {
+	global_msg->found=TRUE;
+	while (ipsockets) {
+	    gnutls_record_send(*(gnutls_session*)(ipsockets->data),
+		    global_msg->msg,
+		    ntohs(global_msg->msg->length)
+		    );
+	    ipsockets=ipsockets->next;
+	}
+	g_mutex_unlock(client_mutex);
+	return 1;
+    } else {
+	g_mutex_unlock(client_mutex);
+	return 0;
     }
 }
 
