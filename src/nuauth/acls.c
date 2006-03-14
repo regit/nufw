@@ -226,7 +226,7 @@ gpointer acl_duplicate_key(gpointer datas)
 	struct acl_key *kdatas = (struct acl_key*)datas;
     
 	key->acl_tracking =
-        g_memdup(kdatas->acl_tracking, sizeof(kdatas->acl_tracking));
+        g_memdup(kdatas->acl_tracking, sizeof(*kdatas->acl_tracking));
     key->sysname = g_strdup(kdatas->sysname);
     key->release = g_strdup(kdatas->release);
     key->version = g_strdup(kdatas->version);

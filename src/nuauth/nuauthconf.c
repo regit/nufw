@@ -41,7 +41,7 @@ int build_nuauthconf(struct nuauth_params * nuauthconf,
   if (nuauth_client_listen_addr){
       client_list_srv=gethostbyname(nuauth_client_listen_addr);
       if (client_list_srv != NULL){
-          nuauthconf->client_srv=g_memdup(client_list_srv->h_addr,sizeof(struct in_addr));
+          nuauthconf->client_srv=g_memdup(client_list_srv->h_addr,sizeof(*client_list_srv->h_addr));
 
           if (nuauthconf->client_srv->s_addr == INADDR_NONE ){
               if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
@@ -61,7 +61,7 @@ int build_nuauthconf(struct nuauth_params * nuauthconf,
   if (nuauth_nufw_listen_addr){
       nufw_list_srv=gethostbyname(nuauth_nufw_listen_addr);
       if (nufw_list_srv != NULL){
-          nuauthconf->nufw_srv=g_memdup(nufw_list_srv->h_addr, sizeof(struct in_addr));
+          nuauthconf->nufw_srv=g_memdup(nufw_list_srv->h_addr, sizeof(*nufw_list_srv->h_addr));
 
           if (nuauthconf->nufw_srv->s_addr == INADDR_NONE ){
               if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
