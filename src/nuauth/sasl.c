@@ -274,27 +274,14 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 			return SASL_FAIL;
 		}
 		/* start libsasl negotiation */
-		r = sasl_server_start(conn, 
-				chosenmech, 
-				buf, 
-				tls_len,
-				&data,
-				&sasl_len);
+		r = sasl_server_start(conn,	chosenmech, buf, tls_len, &data, &sasl_len);
 	} else {
 #ifdef DEBUG_ENABLE
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
 			g_message("start with no msg");
 #endif
-		r = sasl_server_start(conn, 
-				chosenmech, 
-				NULL, 
-				0,
-				&data, 
-				&sasl_len);
-
+		r = sasl_server_start(conn, chosenmech, NULL, 0, &data, &sasl_len);
 	}
-
-
 
 	if (r != SASL_OK && r != SASL_CONTINUE) {
 		gchar * user_name;

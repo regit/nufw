@@ -1,5 +1,10 @@
 #!/bin/sh
+
 echo "Run nuauth in Valgrind"
+echo
+echo "!!! Valgrind makes NuAuth very slow, system auth. doesn't work because of timeouts."
+echo "!!! Use NuAuth with plaintext auth"
+echo
 
 LOG=valgrind.log
 NUAUTH_OPT=-vvvvvvvvvvvvvvv
