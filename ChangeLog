@@ -36,6 +36,16 @@
 	- nuauth, module script: fix a security bug, quote script arguments
 	- small changes to make flawfinder and rats tools happy
 	- replace obsolete usleep() with nanosleep()
+	- stronger security in mysql and  postgresql modules: use secure_sprintf()
+	  instead of classic sprintf() and quote all user strings
+	- stronger security in script module: quote all arguments
+	- fix some minor bugs detected by Valgrind
+	- check inet_ntop() and inet_addr() errors
+	- small changes to make nufw and nuauth source code ANSI C compliant
+	- fix gcc compilation flags: use -O0 in bug mode instead of -02, and
+	  detect all warnings with -Wextra (or -W for gcc < 4.0)
+	- use pointer and not object during logging
+	- bugfix:nuauth: don't crash anymore if configuration file doesn't exist
 1.1.3 (2006/01/25)
 	- nutrackd : PostGreSQL support
 	- Fixes in the PostGreSQL log module (removed the useless server_port
