@@ -26,7 +26,7 @@ int build_nuauthconf(struct nuauth_params * nuauthconf,
                 char* nuauth_multi_users,
                 char* nuauth_multi_servers);
 
-struct nuauth_params*   init_nuauthconf();
+void init_nuauthconf(struct nuauth_params**);
 
 void nuauth_reload( int signal );
 
