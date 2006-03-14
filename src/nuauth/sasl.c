@@ -148,7 +148,7 @@ static int userdb_checkpass(sasl_conn_t *conn,
 }
 
 
-
+/* called in tls_user_init */
 void my_sasl_init()
 {
 	int ret;
@@ -158,10 +158,11 @@ void my_sasl_init()
 			sasl_gthread_mutex_unlock, 
 			sasl_gthread_mutex_free);
 	/* initialize SASL */
-	ret = sasl_server_init(NULL, "nuauth");
-	if (ret != SASL_OK){
-		exit(EXIT_FAILURE);
-	}
+    ret = sasl_server_init(NULL, "nuauth");
+    if (ret != SASL_OK){
+        log_message(CRITICAL, AREA_MAIN, "Fail to init SASL library!");
+        exit(EXIT_FAILURE);
+    }
 
 	mech_string_internal=g_strdup("plain");
 	mech_string_external=g_strdup("external");
@@ -597,7 +598,7 @@ int sasl_user_check(user_session* c_session)
 	gboolean external_auth=FALSE;
 	char buf[1024];
 	int ret, buf_size;
-	sasl_callback_t callbacks[] = {
+	sasl_callback_t internal_callbacks[] = {
 		{ SASL_CB_GETOPT, &internal_get_opt, NULL },
 		{ SASL_CB_SERVER_USERDB_CHECKPASS, &userdb_checkpass,NULL}, 
 		{ SASL_CB_LIST_END, NULL, NULL }
@@ -607,18 +608,16 @@ int sasl_user_check(user_session* c_session)
 		{ SASL_CB_SERVER_USERDB_CHECKPASS, &userdb_checkpass,NULL}, 
 		{ SASL_CB_LIST_END, NULL, NULL }
 	};
+    sasl_callback_t *callbacks;
 
 	if (c_session->user_name) {
 		external_auth=TRUE;
-	} 
-
-	if (external_auth){
-		ret = sasl_server_new(service, myhostname, myrealm, NULL, NULL,
-				external_callbacks, 0, &conn);
-	} else {
-		ret = sasl_server_new(service, myhostname, myrealm, NULL, NULL,
-				callbacks, 0, &conn);
+        callbacks = external_callbacks;
+	} else { 
+        callbacks = internal_callbacks;
 	}
+    
+    ret = sasl_server_new(service, myhostname, myrealm, NULL, NULL, callbacks, 0, &conn);
 	if (ret != SASL_OK) {
 		g_warning("allocating connection state - failure at sasl_server_new()");
 	}
@@ -691,6 +690,4 @@ int sasl_user_check(user_session* c_session)
     /* sasl connection is not used anymore */
     return SASL_OK;
 }
-
-
 
