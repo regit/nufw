@@ -168,7 +168,7 @@ static int treat_user_request (user_session * c_session)
         
         /* we realloc and get what we miss */
         datas->buffer=g_realloc(datas->buffer, header_length);
-        header = (struct nuv2_header* )datas->buffer
+        header = (struct nuv2_header* )datas->buffer;
         
         g_mutex_lock(c_session->tls_lock);
         tmp_len = gnutls_record_recv( *(c_session->tls), datas->buffer+CLASSIC_NUFW_PACKET_SIZE,
