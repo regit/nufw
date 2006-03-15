@@ -164,10 +164,14 @@ static int treat_user_request (user_session * c_session)
     /* if message content is bigger than CLASSIC_NUFW_PACKET_SIZE, */
     /* continue to read the content */
     if (header->proto==PROTO_VERSION && header_length> datas->buffer_len && header_length<MAX_NUFW_PACKET_SIZE  ){
+        int tmp_len;
+        
         /* we realloc and get what we miss */
         datas->buffer=g_realloc(datas->buffer, header_length);
+        header = (struct nuv2_header* )datas->buffer
+        
         g_mutex_lock(c_session->tls_lock);
-        int tmp_len = gnutls_record_recv( *(c_session->tls), datas->buffer+CLASSIC_NUFW_PACKET_SIZE,
+        tmp_len = gnutls_record_recv( *(c_session->tls), datas->buffer+CLASSIC_NUFW_PACKET_SIZE,
                 header_length - datas->buffer_len);
         g_mutex_unlock(c_session->tls_lock);
         if (tmp_len<0){
