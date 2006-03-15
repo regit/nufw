@@ -55,8 +55,9 @@ void clean_session(user_session * c_session)
     g_slist_free(c_session->groups);
 
     g_mutex_free(c_session->tls_lock);
+
     if (c_session){
-	g_free(c_session); 
+        g_free(c_session); 
     }
 }
 

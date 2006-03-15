@@ -120,7 +120,7 @@ int user_process_field_username(
         return -1;
     }
 
-    len=ntohs(usernamefield->length)-4;
+    len=usernamefield->length-4;
     if (8*len > 2048)
     {
         /* it is reaaally long, we ignore packet (too lasy to kill client) */
@@ -194,15 +194,14 @@ int user_process_field_app(
 {
     unsigned int reallen=0;
     gchar* dec_appname=NULL;
-    unsigned int len=ntohs(appfield->length)-4;
+    unsigned int len=appfield->length-4;
 
     debug_log_message (VERBOSE_DEBUG, AREA_USER, "\tgot APP field");
 
     /* this has to be smaller than field size */
-    if (field_buffer_len < (int)ntohs(appfield->length))
-    {
+    if (field_buffer_len < (int)appfield->length) {
         if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
-            g_message("Improper application field length signaled in authreq header");
+            g_message("Improper application field length signaled in authreq header %d < %d",field_buffer_len,appfield->length);
         return -1;
     }
 

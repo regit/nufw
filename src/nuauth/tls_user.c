@@ -150,8 +150,8 @@ static int treat_user_request (user_session * c_session)
     header = (struct nuv2_header* )datas->buffer;
     header_length=ntohs(header->length);
     debug_log_message (VERBOSE_DEBUG, AREA_MAIN,
-        "(%s:%d) Packet size is %d\n",
-        __FILE__, __LINE__, header_length);
+        "(%s:%d) Annonced packet size is %d, received %d\n",
+        __FILE__, __LINE__, header_length,datas->buffer_len);
 
     /* is it an "USER HELLO" message ? */
     if (header->proto==PROTO_VERSION && header->msg_type == USER_HELLO){
@@ -163,15 +163,13 @@ static int treat_user_request (user_session * c_session)
 
     /* if message content is bigger than CLASSIC_NUFW_PACKET_SIZE, */
     /* continue to read the content */
-    if (header->proto==2 && header_length> datas->buffer_len && header_length<MAX_NUFW_PACKET_SIZE  ){
+    if (header->proto==PROTO_VERSION && header_length> datas->buffer_len && header_length<MAX_NUFW_PACKET_SIZE  ){
         /* we realloc and get what we miss */
         datas->buffer=g_realloc(datas->buffer, header_length);
-	g_mutex_lock(c_session->tls_lock);
-        int tmp_len = gnutls_record_recv(
-                *(c_session->tls), 
-                datas->buffer+CLASSIC_NUFW_PACKET_SIZE,
+        g_mutex_lock(c_session->tls_lock);
+        int tmp_len = gnutls_record_recv( *(c_session->tls), datas->buffer+CLASSIC_NUFW_PACKET_SIZE,
                 header_length - datas->buffer_len);
-	g_mutex_unlock(c_session->tls_lock);
+        g_mutex_unlock(c_session->tls_lock);
         if (tmp_len<0){
             free_buffer_read(datas);
             return -1;
@@ -185,8 +183,7 @@ static int treat_user_request (user_session * c_session)
     }
 
     /* check authorization if we're facing a multi user packet */ 
-    if ( (header->option == 0x0) ||
-            ((header->option == 0x1) && c_session->multiusers)) {
+    if ( (header->option == 0x0) || ((header->option == 0x1) && c_session->multiusers)) {
         /* this is an authorized packet we fill the buffer_read structure */
         if (c_session->multiusers) {
             datas->user_name=NULL;
@@ -195,7 +192,7 @@ static int treat_user_request (user_session * c_session)
         } else {
             datas->user_name = g_strdup(c_session->user_name);
             datas->user_id = c_session->user_id;
-            datas->groups = c_session->groups;
+            datas->groups = g_slist_copy(c_session->groups);
         }
         if (c_session->sysname){
             datas->os_sysname=g_strdup(c_session->sysname);

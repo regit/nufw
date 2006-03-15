@@ -129,7 +129,6 @@ int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
                   appfield.length=4+len;
                   appfield.datas=enc_appname;
                   authreq.packet_length+=appfield.length;
-                  authreq.packet_length=htons(authreq.packet_length);
 #if 0
               } else {
                   appfield.option=APP_TYPE_SHA1;
@@ -150,6 +149,7 @@ int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
               header.length+=appfield.length;
               if (header.length < PACKET_SIZE){
                   appfield.length=htons(appfield.length);
+                  authreq.packet_length=htons(authreq.packet_length);
                   memcpy(pointer,&authreq,sizeof(struct nuv2_authreq));
                   pointer+=sizeof(struct nuv2_authreq);
                   memcpy(pointer,&authfield,sizeof(struct nuv2_authfield_ipv4));

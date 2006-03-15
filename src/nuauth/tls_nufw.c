@@ -42,9 +42,11 @@ static int treat_nufw_request (nufw_session_t *c_session)
         return 1;
     
     /* copy packet datas */
+    g_message("nufw receive at %s:%d",__FILE__,__LINE__);
     g_mutex_lock(c_session->tls_lock);
     dgram_size = gnutls_record_recv(*(c_session->tls), dgram, CLASSIC_NUFW_PACKET_SIZE) ;
     g_mutex_unlock(c_session->tls_lock);
+    g_message("nufw receive at %s:%d",__FILE__,__LINE__);
     if (  dgram_size > 0 ){
         connection_t *current_conn = authpckt_decode(dgram , (unsigned int)dgram_size);
         if (current_conn != NULL){
@@ -71,6 +73,7 @@ static int treat_nufw_request (nufw_session_t *c_session)
                 }
         }
     } else {
+        g_message("nufw failure at %s:%d",__FILE__,__LINE__);
         g_atomic_int_dec_and_test(&(c_session->usage));
         return EOF;
     }

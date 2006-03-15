@@ -156,7 +156,7 @@
  * "Classic" size of buffer used to store one packet read
  * on TLS connection (from NuFW or the users)
  */
-#define CLASSIC_NUFW_PACKET_SIZE 1024
+#define CLASSIC_NUFW_PACKET_SIZE 1400
 
 /**
  * Maximum size of buffer used to store one packet read

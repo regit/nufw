@@ -440,6 +440,7 @@ int read_acl_list(void)
           }
 
           newacl->aclname = g_strdup(p_key);
+          newacl->period=NULL;
           debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
                             "L.%d: ACL name found: [%s]", ln, newacl->aclname);
           /*  We're done with this line */
@@ -842,23 +843,110 @@ G_MODULE_EXPORT GSList* acl_check(connection_t* element)
   /*  netdata.source       Port source */
   /*  netdata.dest         Port destination */
 
+  /* TODO check if ntohl is needed */
   src_ip = ntohl(netdata->saddr);
-  dst_ip = ntohl(netdata->daddr);
-
-  debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
-                    "(DBG) acl_check -- appname: %p", element->app_name);
-  debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
-                    "(DBG) acl_check -- appmd5 : %p", element->app_md5);
-  debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
-                    "(DBG) acl_check -- sysname: %p", element->os_sysname);
+  dst_ip = ntohl(netdata->daddr); 
 
   for (p_acllist = plaintext_acllist ; p_acllist ;
           p_acllist = g_slist_next(p_acllist)) {
       p_acl = (struct T_plaintext_acl*)p_acllist->data;
-      p_acl->period = NULL;
 
       if (netdata->protocol != p_acl->proto)
               continue;
+      
+      /*  Check source address */
+      if (!p_acl->src_ip){
+          continue;
+      } else {
+          int found = 0;
+          struct T_ip *p_ip;
+          GSList *pl_ip = p_acl->src_ip;
+          for ( ; pl_ip ; pl_ip = g_slist_next(pl_ip)) {
+              p_ip = (struct T_ip*)pl_ip->data;
+              if ((src_ip & p_ip->netmask.s_addr) == p_ip->addr.s_addr) {
+                  found = 1;
+                  break;
+              }
+          }
+          if (!found)
+              continue; /*  We don't have a match */
+      }
+      /*  Check destination address */
+      if (!p_acl->dst_ip){
+          continue;
+      } else {
+          int found = 0;
+          struct T_ip *p_ip;
+          GSList *pl_ip = p_acl->dst_ip;
+          for ( ; pl_ip ; pl_ip = g_slist_next(pl_ip)) {
+              p_ip = (struct T_ip*)pl_ip->data;
+              if ((dst_ip & p_ip->netmask.s_addr) == p_ip->addr.s_addr) {
+                  found = 1;
+                  break;
+              }
+          }
+          if (!found)
+              continue; /*  We don't have a match */
+      }
+
+      /*  ICMP? */
+      if (netdata->protocol == IPPROTO_ICMP) {
+          if (p_acl->proto == IPPROTO_ICMP){
+              int found = 0;
+              GSList *sl_type = p_acl->types;
+              for ( ; sl_type ; sl_type = g_slist_next(sl_type)) {
+                  if (*((int*)sl_type->data) == netdata->type) {
+                      found = 1;
+                      break;
+                  }
+              }
+              if (!found)
+                  continue;
+          }
+      } else {
+          /*  Following is only for TCP / UDP  (ports stuff...) */
+          if (p_acl->proto != IPPROTO_TCP && p_acl->proto != IPPROTO_UDP) {
+              g_message("[plaintext] Unsupported protocol: %d", p_acl->proto);
+              continue;
+          }
+
+          /*  Check source port */
+          if (p_acl->src_ports) {
+              int found = 0;
+              struct T_ports *p_ports;
+              GSList *pl_ports = p_acl->src_ports;
+              for ( ; pl_ports ; pl_ports = g_slist_next(pl_ports)) {
+                  p_ports = (struct T_ports*)pl_ports->data;
+                  if (!p_ports->firstport ||
+                      ((netdata->source >= p_ports->firstport) &&
+                       (netdata->source <= p_ports->firstport+p_ports->nbports))) {
+                      found = 1;
+                      break;
+                  }
+              }
+              if (!found)
+                  continue;
+          }
+          /*  Check destination port */
+          if (p_acl->dst_ports) {
+              int found = 0;
+              struct T_ports *p_ports;
+              GSList *pl_ports = p_acl->dst_ports;
+              for ( ; pl_ports ; pl_ports = g_slist_next(pl_ports)) {
+                  p_ports = (struct T_ports*)pl_ports->data;
+                  if (!p_ports->firstport ||
+                      ((netdata->dest >= p_ports->firstport) &&
+                       (netdata->dest <= p_ports->firstport+p_ports->nbports))) {
+                      found = 1;
+                      break;
+                  }
+              }
+              if (!found){
+                  continue;
+              }
+          }
+      }
+
 
       /*  O.S. filtering? */
       debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
@@ -930,99 +1018,6 @@ G_MODULE_EXPORT GSList* acl_check(connection_t* element)
           log_message(VERBOSE_DEBUG, AREA_MAIN,
                       "[plaintext] App match (%s)", element->app_name);
       }
-
-      /*  Check source address */
-      if (!p_acl->src_ip)
-          continue;
-      else {
-          int found = 0;
-          struct T_ip *p_ip;
-          GSList *pl_ip = p_acl->src_ip;
-          for ( ; pl_ip ; pl_ip = g_slist_next(pl_ip)) {
-              p_ip = (struct T_ip*)pl_ip->data;
-              if ((src_ip & p_ip->netmask.s_addr) == p_ip->addr.s_addr) {
-                  found = 1;
-                  break;
-              }
-          }
-          if (!found)
-              continue; /*  We don't have a match */
-      }
-      /*  Check destination address */
-      if (!p_acl->dst_ip)
-          continue;
-      else {
-          int found = 0;
-          struct T_ip *p_ip;
-          GSList *pl_ip = p_acl->dst_ip;
-          for ( ; pl_ip ; pl_ip = g_slist_next(pl_ip)) {
-              p_ip = (struct T_ip*)pl_ip->data;
-              if ((dst_ip & p_ip->netmask.s_addr) == p_ip->addr.s_addr) {
-                  found = 1;
-                  break;
-              }
-          }
-          if (!found)
-              continue; /*  We don't have a match */
-      }
-
-      /*  ICMP? */
-      if (netdata->protocol == IPPROTO_ICMP) {
-          if (p_acl->proto == IPPROTO_ICMP){
-              int found = 0;
-              GSList *sl_type = p_acl->types;
-              for ( ; sl_type ; sl_type = g_slist_next(sl_type)) {
-                  if (*((int*)sl_type->data) == netdata->type) {
-                      found = 1;
-                      break;
-                  }
-              }
-              if (!found)
-                  continue;
-          }
-      } else {
-          /*  Following is only for TCP / UDP  (ports stuff...) */
-          if (p_acl->proto != IPPROTO_TCP && p_acl->proto != IPPROTO_UDP) {
-              g_message("[plaintext] Unsupported protocol: %d", p_acl->proto);
-              continue;
-          }
-
-          /*  Check source port */
-          if (p_acl->src_ports) {
-              int found = 0;
-              struct T_ports *p_ports;
-              GSList *pl_ports = p_acl->src_ports;
-              for ( ; pl_ports ; pl_ports = g_slist_next(pl_ports)) {
-                  p_ports = (struct T_ports*)pl_ports->data;
-                  if (!p_ports->firstport ||
-                      ((netdata->source >= p_ports->firstport) &&
-                       (netdata->source <= p_ports->firstport+p_ports->nbports))) {
-                      found = 1;
-                      break;
-                  }
-              }
-              if (!found)
-                  continue;
-          }
-          /*  Check destination port */
-          if (p_acl->dst_ports) {
-              int found = 0;
-              struct T_ports *p_ports;
-              GSList *pl_ports = p_acl->dst_ports;
-              for ( ; pl_ports ; pl_ports = g_slist_next(pl_ports)) {
-                  p_ports = (struct T_ports*)pl_ports->data;
-                  if (!p_ports->firstport ||
-                      ((netdata->dest >= p_ports->firstport) &&
-                       (netdata->dest <= p_ports->firstport+p_ports->nbports))) {
-                      found = 1;
-                      break;
-                  }
-              }
-              if (!found)
-                  continue;
-          }
-      }
-
        /* period checking
        * */
       if (p_acl->period) {
