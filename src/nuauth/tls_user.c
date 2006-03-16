@@ -346,17 +346,21 @@ void tls_user_check_activity(struct tls_user_context_t *context, int socket)
     }
 }
 
-void tls_user_main_loop(struct tls_user_context_t *context)
+void tls_user_main_loop(struct tls_user_context_t *context, GMutex *mutex)
 {    
     gpointer c_pop;
     int i, nb_active_clients;
     fd_set wk_set; /* working set */
     struct timeval tv;
 
-    for(;;){
+    while (g_mutex_trylock(mutex)) 
+    {
+        g_mutex_unlock(mutex);
+
         /* try to get new file descriptor to update set */
-        c_pop=g_async_queue_try_pop (mx_queue);
-        while (c_pop != NULL) {
+        c_pop = g_async_queue_try_pop (mx_queue);
+        while (c_pop != NULL)
+        {
             int socket = GPOINTER_TO_INT(c_pop);
 
 #ifdef DEBUG_ENABLE
@@ -380,9 +384,9 @@ void tls_user_main_loop(struct tls_user_context_t *context)
                 FD_SET(i,&wk_set);
         }
 
-        /* define timeout, need to be rewritten as select write it */
-        tv.tv_sec=2;
-        tv.tv_usec=30000;
+        /* wait new events during 1 second */
+        tv.tv_sec=1;
+        tv.tv_usec=0;
         nb_active_clients = select(context->mx,&wk_set,NULL,NULL,&tv);
         if (nb_active_clients == -1) {
             switch(errno){
@@ -551,10 +555,11 @@ void tls_user_init(struct tls_user_context_t *context)
  * 
  * \return NULL
  */
-void* tls_user_authsrv() {
+void* tls_user_authsrv(GMutex *mutex)
+{
     struct tls_user_context_t context;
     tls_user_init(&context);
-    tls_user_main_loop(&context);
+    tls_user_main_loop(&context, mutex);
     return NULL;
 }
 

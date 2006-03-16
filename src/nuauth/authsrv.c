@@ -38,6 +38,70 @@ typedef struct
     char* nuauth_nufw_listen_addr;
 } command_line_params_t;    
 
+void stop_threads()
+{
+    /* ask theads to stop */
+    g_message("Ask threads to stop.");
+    g_mutex_lock (nuauthdatas->tls_pusher.mutex);
+    g_mutex_lock (nuauthdatas->search_and_fill_worker.mutex);
+    g_mutex_lock (nuauthdatas->tls_auth_server.mutex);
+    g_mutex_lock (nuauthdatas->tls_nufw_server.mutex);
+    g_mutex_lock (nuauthdatas->limited_connections_handler.mutex);
+    if (nuauthconf->push && nuauthconf->hello_authentication) {
+        g_mutex_lock (nuauthdatas->localid_auth_thread.mutex);
+    }
+    
+    /* wait thread end */
+    g_message("Wait thread end ...");
+
+    log_message(DEBUG, AREA_MAIN, "Wait thread 'tls pusher'");
+    g_thread_join (nuauthdatas->tls_pusher.thread);
+
+    log_message(DEBUG, AREA_MAIN, "Wait thread 'seach&fill'");
+    g_thread_join (nuauthdatas->search_and_fill_worker.thread);
+
+    log_message(DEBUG, AREA_MAIN, "Wait thread 'tls auth server'");
+    g_thread_join (nuauthdatas->tls_auth_server.thread);
+
+    log_message(DEBUG, AREA_MAIN, "Wait thread 'tls nufw server'");
+    g_thread_join (nuauthdatas->tls_nufw_server.thread);
+    
+    log_message(DEBUG, AREA_MAIN, "Wait thread 'limited connections'");
+    g_thread_join (nuauthdatas->limited_connections_handler.thread);
+    
+    if (nuauthconf->push && nuauthconf->hello_authentication) {
+        log_message(DEBUG, AREA_MAIN, "Wait thread 'localid'");
+        g_thread_join (nuauthdatas->localid_auth_thread.thread);
+    }
+    
+    /* done! */
+    g_message("Threads stopped.");
+}    
+
+void free_threads()
+{
+    /* free all thread mutex */
+    g_mutex_unlock (nuauthdatas->tls_pusher.mutex);
+    g_mutex_free (nuauthdatas->tls_pusher.mutex);
+    
+    g_mutex_unlock (nuauthdatas->search_and_fill_worker.mutex);
+    g_mutex_free (nuauthdatas->search_and_fill_worker.mutex);
+
+    g_mutex_unlock (nuauthdatas->tls_auth_server.mutex);
+    g_mutex_free (nuauthdatas->tls_auth_server.mutex);
+
+    g_mutex_unlock (nuauthdatas->tls_nufw_server.mutex);
+    g_mutex_free (nuauthdatas->tls_nufw_server.mutex);
+
+    g_mutex_unlock (nuauthdatas->limited_connections_handler.mutex);
+    g_mutex_free (nuauthdatas->limited_connections_handler.mutex);
+    
+    if (nuauthconf->push && nuauthconf->hello_authentication) {
+        g_mutex_unlock (nuauthdatas->localid_auth_thread.mutex);
+        g_mutex_free (nuauthdatas->localid_auth_thread.mutex);
+    }
+}    
+
 /**
  * exit function if a signal is received in daemon mode.
  * 
@@ -47,6 +111,8 @@ void nuauth_cleanup( int signal )
 {
     if (signal == SIGINT)
         g_message("CTRL+c catched: quit NuAuth");
+
+    stop_threads();
     
     /* free nufw server hash */
     if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN))
@@ -60,6 +126,8 @@ void nuauth_cleanup( int signal )
     /* clean gnutls */
     end_tls();
     end_audit();
+
+    free_threads();
 
     /* destroy pid file */
     unlink(NUAUTH_PID_FILE);
@@ -238,6 +306,14 @@ void install_signals()
     signal(SIGPIPE,SIG_IGN);
 }
 
+void create_thread(struct nuauth_thread_t *thread, void* (*func) (GMutex*) )
+{
+    thread->mutex = g_mutex_new();
+    thread->thread = g_thread_create ((GThreadFunc)func, thread->mutex, TRUE, NULL);
+    if (thread->thread == NULL)
+        exit(EXIT_FAILURE);
+}
+
 void configure_app(int argc, char **argv) 
 {
     command_line_params_t params;
@@ -349,39 +425,21 @@ void init_nuauthdatas()
                 NULL);
 
     /* create thread for client request sender */
-    nuauthdatas->tls_pusher = g_thread_create ( (GThreadFunc)push_worker,
-            NULL,
-            FALSE,
-            NULL);
-    if (! nuauthdatas->tls_pusher )
-        exit(EXIT_FAILURE);
+    create_thread (&nuauthdatas->tls_pusher, push_worker);
 
     /* init private datas for pool thread */
     nuauthdatas->aclqueue = g_private_new(g_free);
     nuauthdatas->userqueue = g_private_new(g_free);
 
     /* create thread for search_and_fill thread */
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
-        g_message("Creating search_and_fill thread");
-    }
-    nuauthdatas->search_and_fill_worker = g_thread_create (
-            (GThreadFunc)search_and_fill,
-            NULL,
-            FALSE,
-            NULL);
-    if (! nuauthdatas->search_and_fill_worker )
-        exit(EXIT_FAILURE);
+    log_message (VERBOSE_DEBUG, AREA_MAIN, "Creating search_and_fill thread");
+    create_thread (&nuauthdatas->search_and_fill_worker, search_and_fill);
 
     if (nuauthconf->push && nuauthconf->hello_authentication){
         if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
             g_message("Creating hello mode authentication thread");
         nuauthdatas->localid_auth_queue = g_async_queue_new ();
-        nuauthdatas->localid_auth_thread = g_thread_create ((GThreadFunc)localid_auth,
-                NULL,
-                FALSE,
-                NULL);
-        if (! nuauthdatas->localid_auth_thread )
-            exit(EXIT_FAILURE);
+        create_thread (&nuauthdatas->localid_auth_thread, localid_auth);
     }
 
     /* create acl checker workers */
@@ -433,33 +491,15 @@ void init_nuauthdatas()
     }
 
     /* create TLS authentification server threads (auth + nufw) */
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-        g_message("Creating tls authentication server thread");
-    nuauthdatas->tls_auth_server = g_thread_create ( tls_user_authsrv,
-            NULL,
-            FALSE,
-            NULL);
-    if (! nuauthdatas->tls_auth_server )
-        exit(EXIT_FAILURE);
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-        g_message("Creating tls nufw server thread");
-    nuauthdatas->tls_nufw_server = g_thread_create ( tls_nufw_authsrv,
-            NULL,
-            FALSE,
-            NULL);
-    if (! nuauthdatas->tls_nufw_server )
-        exit(EXIT_FAILURE);
-    nuauthdatas->limited_connections_handler = g_thread_create ( limited_connection_handler,
-            NULL,
-            FALSE,
-            NULL);
-    if (! nuauthdatas->limited_connections_handler )
-        exit(EXIT_FAILURE);
+    log_message (VERBOSE_DEBUG, AREA_MAIN, "Creating tls authentication server thread");
+    create_thread (&nuauthdatas->tls_auth_server, tls_user_authsrv);
 
+    log_message (VERBOSE_DEBUG, AREA_MAIN, "Creating tls nufw server thread");
+    create_thread (&nuauthdatas->tls_nufw_server, tls_nufw_authsrv);
 
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-        g_message("Threads system started");
+    create_thread (&nuauthdatas->limited_connections_handler, limited_connection_handler);
 
+    log_message (INFO, AREA_MAIN, "Threads system started");
 }
 
 void main_loop() {

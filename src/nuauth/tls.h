@@ -78,7 +78,7 @@ void clean_nufw_session(nufw_session_t *c_session);
 
 
 void create_x509_credentials();
-void* tls_nufw_authsrv();
+void* tls_nufw_authsrv(GMutex *mutex);
 
 GHashTable* nufw_servers;
 GMutex * nufw_servers_mutex;
@@ -89,9 +89,8 @@ void close_nufw_servers();
  * For user authentication
  */
 
-void* tls_user_authsrv();
-
-void push_worker () ;
+void* tls_user_authsrv(GMutex *mutex);
+void* push_worker (GMutex *mutex);
 
 
 /** end tls stuff */

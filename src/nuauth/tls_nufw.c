@@ -198,13 +198,16 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
  *   - Accept new connections
  *   - Read and process new packets
  */
-void tls_nufw_main_loop(struct tls_nufw_context_t *context) 
+void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex *mutex) 
 {
     int n,c,z;
     fd_set wk_set; /* working set */
     struct timeval tv;
 
-    for(;;){
+    while (g_mutex_trylock(mutex))
+    {
+        g_mutex_unlock(mutex);
+
         /* copy rx set to working set */
         FD_ZERO(&wk_set);
         for (z=0;z<context->mx;++z){
@@ -212,11 +215,10 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context)
                 FD_SET(z,&wk_set);
         }
 
-        /* define timeout */
-        tv.tv_sec=2;
-        tv.tv_usec=30000;
-        
-        n=select(context->mx,&wk_set,NULL,NULL,&tv);
+        /* wait new events during 1 second */
+        tv.tv_sec = 1;
+        tv.tv_usec = 0;
+        n = select(context->mx,&wk_set,NULL,NULL,&tv);
         if (n == -1) {
 	switch(errno){
 			case EBADF:
@@ -385,14 +387,11 @@ void tls_nufw_init(struct tls_nufw_context_t *context)
  *
  * \return NULL
  */
-void* tls_nufw_authsrv()
+void* tls_nufw_authsrv(GMutex *mutex)
 {
     struct tls_nufw_context_t context;
-
     tls_nufw_init(&context);
-
-    tls_nufw_main_loop(&context);
-
+    tls_nufw_main_loop(&context, mutex);
     return NULL;
 }
 

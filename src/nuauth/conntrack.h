@@ -27,6 +27,6 @@ struct limited_connection {
 };
 
 
-void* limited_connection_handler();
+void* limited_connection_handler(GMutex *mutex);
 
 #endif /* CONNTRACK_H */

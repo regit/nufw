@@ -125,10 +125,11 @@ void destroy_expired_connection(GHashTable* conn_list)
  * to expire
  */
 
-void* limited_connection_handler()
+void* limited_connection_handler(GMutex *mutex)
 {
   GHashTable* conn_list;
   struct internal_message *message=NULL;
+  GTimeVal tv;
 
   nuauthdatas->limited_connections_queue = g_async_queue_new();
   /* initialize packets list */
@@ -136,10 +137,19 @@ void* limited_connection_handler()
                   compare_connection,
                   NULL,
                   (GDestroyNotify) send_destroy_message_and_free); 
-
   g_async_queue_ref (nuauthdatas->limited_connections_queue);
-  /* wait for message */
-  while ( (message = g_async_queue_pop(nuauthdatas->limited_connections_queue)) ) {
+
+  while (g_mutex_trylock(mutex)) 
+  {
+      g_mutex_unlock(mutex);
+  
+      /* wait for message */
+      g_get_current_time (&tv);
+      g_time_val_add(&tv, 1000);
+      message = g_async_queue_timed_pop(nuauthdatas->limited_connections_queue, &tv);
+      if (message == NULL)
+          continue;
+      
       switch (message->type) {
         case INSERT_MESSAGE:
                 g_hash_table_insert(conn_list,&(((struct limited_connection*)message->datas)->tracking),message->datas);

@@ -97,13 +97,14 @@ void localid_insert_message(connection_t *pckt,
     } 
 }    
     
-void localid_auth()
+void* localid_auth(GMutex *mutex)
 {
 	connection_t *pckt = NULL;
 	struct msg_addr_set global_msg;
 	struct nuv2_srv_helloreq *msg = g_new0(struct nuv2_srv_helloreq,1);
 	GHashTable *localid_auth_hash;
 	struct internal_message *message=NULL;
+    GTimeVal tv;
 
 	global_msg.msg = (struct nuv2_srv_message*) msg;
 	msg->type = SRV_REQUIRED_HELLO;
@@ -116,7 +117,17 @@ void localid_auth()
 	g_async_queue_ref (nuauthdatas->localid_auth_queue);
 	g_async_queue_ref (nuauthdatas->tls_push_queue);
 	/* wait for message */
-	while ( (message = g_async_queue_pop(nuauthdatas->localid_auth_queue)) ) {
+	while (g_mutex_trylock(mutex))
+    {
+        g_mutex_unlock(mutex);
+        
+        /* wait a message during 1000ms */
+        g_get_current_time (&tv);
+        g_time_val_add(&tv, 1000);
+        message = g_async_queue_timed_pop(nuauthdatas->localid_auth_queue, &tv);
+        if (message == NULL)
+            continue;
+
 		switch (message->type) { 
 			case INSERT_MESSAGE:
 				pckt=message->datas;
@@ -137,5 +148,6 @@ void localid_auth()
 	}
 	g_async_queue_unref (nuauthdatas->localid_auth_queue);
 	g_async_queue_unref (nuauthdatas->tls_push_queue);
+    return NULL;
 }
 

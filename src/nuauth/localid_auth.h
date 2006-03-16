@@ -20,6 +20,6 @@
 
 /* from localid_auth */
 char localid_authenticated_protocol(int protocol);
-void localid_auth();
+void* localid_auth(GMutex *mutex);
 
 #endif

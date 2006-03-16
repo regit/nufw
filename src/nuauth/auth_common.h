@@ -24,7 +24,7 @@ typedef enum {
   PACKET_IN_HASH
 } packet_place_t;
 
-void search_and_fill ();
+void* search_and_fill (GMutex *mutex);
 
 gboolean compare_connection(gconstpointer conn1, gconstpointer conn2);
 int sck_auth_reply;

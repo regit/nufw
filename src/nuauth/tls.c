@@ -337,11 +337,12 @@ void create_x509_credentials()
  * Lock is only needed when modifications are done, because when this thread
  * work (push mode) it's the only one who can modify the hash.
  */
-void push_worker() 
+void* push_worker(GMutex *mutex) 
 {
 	struct msg_addr_set *global_msg=g_new0(struct msg_addr_set,1);
 	struct nuv2_srv_message *msg=g_new0(struct nuv2_srv_message,1);
 	struct internal_message * message;
+    GTimeVal tv;
 
 	msg->type=SRV_REQUIRED_PACKET;
 	msg->option=0;
@@ -351,8 +352,19 @@ void push_worker()
 	g_async_queue_ref (nuauthdatas->tls_push_queue);
 
 	/* wait for message */
-	while ( ( message = g_async_queue_pop(nuauthdatas->tls_push_queue))  ) {
-		switch (message->type) {
+	while (g_mutex_trylock(mutex)) 
+    {
+        g_mutex_unlock(mutex);
+
+        /* wait a message during 1000ms */
+        g_get_current_time (&tv);
+        g_time_val_add(&tv, 1000);
+        message = g_async_queue_timed_pop(nuauthdatas->tls_push_queue, &tv);
+        if (message == NULL)
+            continue;
+        
+		switch (message->type)
+        {
 			case WARN_MESSAGE:
 				{
 					global_msg->addr=((tracking_t *)message->datas)->saddr;
@@ -399,6 +411,7 @@ void push_worker()
     g_free (msg);
     g_free (global_msg);    
 	g_async_queue_unref (nuauthdatas->tls_push_queue);
+    return NULL;
 }
 
 /**

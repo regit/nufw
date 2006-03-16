@@ -282,16 +282,28 @@ inline void search_and_fill_update(connection_t *new, connection_t *packet)
  * Try to insert a connection in Struct
  * Fetch datas in connections queue.
  */
-void search_and_fill() 
+void* search_and_fill(GMutex* mutex) 
 {
     /* GRYZOR warning : it seems we g_free() on pckt only on some conditions in this function */
     connection_t *packet;
     connection_t *new;
+    GTimeVal tv;
 
     g_async_queue_ref (nuauthdatas->connections_queue);
     g_async_queue_ref (nuauthdatas->tls_push_queue);
+
     /* wait for message */
-    while ( (new = g_async_queue_pop(nuauthdatas->connections_queue)) ) {
+    while (g_mutex_trylock(mutex))
+    {
+        g_mutex_unlock(mutex);
+
+        /* wait a message during 1000ms */
+        g_get_current_time (&tv);
+        g_time_val_add(&tv, 1000);
+        new = g_async_queue_timed_pop(nuauthdatas->connections_queue, &tv);
+        if (new == NULL)
+            continue;
+        
         /* search pckt */
         g_static_mutex_lock (&insert_mutex);
         debug_log_message (VERBOSE_DEBUG, AREA_MAIN,
@@ -311,5 +323,7 @@ void search_and_fill()
     }
     g_async_queue_unref (nuauthdatas->connections_queue);
     g_async_queue_unref (nuauthdatas->tls_push_queue);
+
+    return NULL;
 }
 
