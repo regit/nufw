@@ -30,16 +30,16 @@
  */
 struct in_addr* generate_inaddr_list(gchar* gwsrv_addr)
 {
-	gchar** gwsrv_addr_list=NULL;
-	gchar** gwsrv_addr_iter=NULL ;
-	struct in_addr *authorized_server=NULL;
-	struct in_addr *addrs_array=NULL;
-	struct in_addr tmp_addr;
+    gchar** gwsrv_addr_list=NULL;
+    gchar** gwsrv_addr_iter=NULL ;
+    struct in_addr *authorized_server=NULL;
+    struct in_addr *addrs_array=NULL;
+    struct in_addr tmp_addr;
     unsigned int count = 0;
-    
-	if (gwsrv_addr == NULL)
+
+    if (gwsrv_addr == NULL)
         return NULL;
-    
+
     /* parse nufw server address */
     gwsrv_addr_list = g_strsplit(gwsrv_addr ," ",0);
 
@@ -52,7 +52,7 @@ struct in_addr* generate_inaddr_list(gchar* gwsrv_addr)
             count++;
         }
     }
-    
+
     /* allocate array of struct sock_addr */
     if (0 < count)
     {
@@ -70,64 +70,60 @@ struct in_addr* generate_inaddr_list(gchar* gwsrv_addr)
         authorized_server->s_addr=INADDR_NONE;
     }
     g_strfreev(gwsrv_addr_list);
-	return addrs_array;
+    return addrs_array;
 }
 
 
 gboolean check_inaddr_in_array(struct in_addr check_ip,struct in_addr *iparray){
-	struct in_addr *ipitem;
-	/* test if server is in the list of authorized servers */
-	if (iparray){
-		ipitem=iparray;
-		while(ipitem->s_addr != INADDR_NONE){
-			if ( ipitem->s_addr == check_ip.s_addr )
-				return TRUE;
-			ipitem++;
-		} 
-	}
-	return FALSE;
+    struct in_addr *ipitem;
+    /* test if server is in the list of authorized servers */
+    if (iparray){
+        ipitem=iparray;
+        while(ipitem->s_addr != INADDR_NONE){
+            if ( ipitem->s_addr == check_ip.s_addr )
+                return TRUE;
+            ipitem++;
+        } 
+    }
+    return FALSE;
 }
 
 gboolean check_string_in_array(gchar* checkstring,gchar** stringarray){
-	gchar **stringitem;
-	/* test if server is in the list of authorized servers */
-	if (stringarray){
-		stringitem=stringarray;
-		while(*stringitem){
-			if ( !strcmp(*stringitem,checkstring))
-				return TRUE;
-			stringitem++;
-		} 
-	}
-	return FALSE;
+    gchar **stringitem;
+    /* test if server is in the list of authorized servers */
+    if (stringarray){
+        stringitem=stringarray;
+        while(*stringitem){
+            if ( !strcmp(*stringitem,checkstring))
+                return TRUE;
+            stringitem++;
+        } 
+    }
+    return FALSE;
 
 }
 
 gchar *string_escape(gchar *orig)
 {
-	gchar * traduc;
-	/* convert from utf-8 to locale if needed */
-	if (nuauthconf->uses_utf8){
-		size_t bwritten;
-		traduc = g_locale_from_utf8  (orig,
-                                          -1,
-                                           NULL,
-                                           &bwritten,
-                                           NULL);
-                if (!traduc){
-                    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET)){
-                        g_warning("UTF-8 conversion failed at %s:%d",__FILE__,__LINE__);
-                    }
-                    return NULL;
-                }
-	} else {
-		traduc = orig;
-	}
+    gchar * traduc;
+    /* convert from utf-8 to locale if needed */
+    if (nuauthconf->uses_utf8){
+        size_t bwritten;
+        traduc = g_locale_from_utf8  (orig, -1, NULL, &bwritten, NULL);
+        if (!traduc){
+            if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET)){
+                g_warning("UTF-8 conversion failed at %s:%d",__FILE__,__LINE__);
+            }
+            return NULL;
+        }
+    } else {
+        traduc = orig;
+    }
 
 #define VALID_CHARS """@#$%^&*()_+1234567890-={}[]:,.<>/?abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ "
-        traduc=g_strcanon(traduc,VALID_CHARS,'_');
-	orig = g_strescape(traduc,"");
-	return orig;
+    traduc = g_strcanon(traduc,VALID_CHARS,'_');
+    orig = g_strescape(traduc,"");
+    return orig;
 }
 
 
