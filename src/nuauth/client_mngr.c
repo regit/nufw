@@ -63,34 +63,22 @@ void clean_session(user_session * c_session)
 
 static void hash_clean_session(user_session * c_session)
 {
-	gnutls_transport_ptr socket_tls;
-
-	socket_tls=gnutls_transport_get_ptr(*(c_session->tls));
-	if (socket_tls){
-		shutdown((int)socket_tls,SHUT_RDWR); 
-		close((int)socket_tls); 
-	}
-	clean_session(c_session);
+    int socket = (int)gnutls_transport_get_ptr(*c_session->tls);
+    clean_session(c_session);
+    shutdown(socket, SHUT_RDWR); 
+    close(socket); 
 }
 
 
 void init_client_struct()
 {
 	/* build client hash */
-	client_conn_hash = g_hash_table_new_full(
-			NULL,
-			NULL,
-			NULL,
-			(GDestroyNotify) hash_clean_session
-			);
+    client_conn_hash = g_hash_table_new_full(NULL, NULL, NULL,
+			(GDestroyNotify)hash_clean_session);
 
 	/* build client hash */
-	client_ip_hash = g_hash_table_new(
-			NULL,
-			NULL	
-			);
-    client_mutex=g_mutex_new();
-
+    client_ip_hash = g_hash_table_new(NULL, NULL);
+    client_mutex = g_mutex_new();
 }
 
 void add_client(int socket, gpointer datas)
@@ -189,10 +177,11 @@ char warn_clients(struct msg_addr_set * global_msg)
 {
     GSList* ipsockets=NULL;
 #if DEBUG_ENABLE
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)){
-	struct in_addr saddress;
-	saddress.s_addr=htonl(global_msg->addr);
-	g_message("need to warn client on %s",inet_ntoa(saddress));
+    if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
+    {
+        struct in_addr saddress;
+        saddress.s_addr=htonl(global_msg->addr);
+        g_message("need to warn client on %s",inet_ntoa(saddress));
     }
 #endif
 
