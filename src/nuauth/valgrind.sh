@@ -18,16 +18,16 @@ function stop_valgrind
 trap stop_valgrind SIGINT SIGTERM
     
 # Some interesting options:
-#    --log-file-exactly=$LOG
 #    --gen-suppressions=yes
-#    --leak-check=full \
 #    --gen-suppressions=yes \
 
 valgrind \
     --show-reachable=yes -v \
     --suppressions=valgrind.supp \
+    --log-file-exactly=$LOG \
+    --leak-check=full \
     --verbose \
-    ./nuauth $NUAUTH_OPT 2>&1 | tee $LOG
+    ./nuauth $NUAUTH_OPT 2>&1
 
 trap - SIGINT SIGTERM
 

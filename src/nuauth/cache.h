@@ -65,7 +65,9 @@ gpointer null_queue_datas;
 
 void free_cache_elt(gpointer data,gpointer userdata);
 
+void clear_cache (struct cache_init_datas *datas);
 void cache_manager (gpointer datas);
 
 
 #endif
+

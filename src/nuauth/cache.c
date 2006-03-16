@@ -269,3 +269,19 @@ void cache_manager (gpointer datas) {
     }
 }
 
+void clear_cache (struct cache_init_datas *cache_datas)
+{
+    struct cache_message *message;
+
+    if (cache_datas == NULL)
+        return;
+    
+    /* clear queue */
+    while ( (message = g_async_queue_pop(cache_datas->queue)) != NULL )
+    {
+        g_free(message);
+    }
+
+	g_hash_table_destroy (cache_datas->hash);
+}
+

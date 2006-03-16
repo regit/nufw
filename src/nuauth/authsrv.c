@@ -109,10 +109,18 @@ void free_threads()
  */
 void nuauth_cleanup( int signal ) 
 {
+    /* first of all, reinstall old handlers (ignore errors) */
+    (void)sigaction(SIGTERM, &nuauthdatas->old_sigterm_hdl, NULL);
+    (void)sigaction(SIGINT, &nuauthdatas->old_sigint_hdl, NULL);
+
     if (signal == SIGINT)
-        g_message("CTRL+c catched: quit NuAuth");
+        g_message("CTRL+c catched: stop NuAuth server.");
+    else if (signal == SIGTERM)
+        g_message("SIGTERM catched: stop NuAuth server.");
 
     stop_threads();
+
+    /* TODO: stop thread pools */
     
     /* free nufw server hash */
     if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN))
@@ -127,6 +135,10 @@ void nuauth_cleanup( int signal )
     end_tls();
     end_audit();
 
+    unload_modules();
+    clear_cache(nuauthdatas->acl_cache);
+    if (nuauthconf->user_cache)
+        clear_cache(nuauthconf->user_cache);
     free_threads();
 
     /* destroy pid file */
@@ -281,13 +293,13 @@ void install_signals()
     action.sa_flags = 0;
 
     /* intercept SIGTERM */
-    if ( sigaction(SIGTERM, &action, NULL) != 0) {
+    if ( sigaction(SIGTERM, &action, &nuauthdatas->old_sigterm_hdl) != 0) {
         printf("Error\n");
         exit(EXIT_FAILURE);
     }
 
     /* intercept SIGINT */
-    if ( sigaction(SIGINT, &action, NULL) != 0) {
+    if ( sigaction(SIGINT, &action, &nuauthdatas->old_sigint_hdl) != 0) {
         printf("Error\n");
         exit(EXIT_FAILURE);
     }
@@ -317,26 +329,30 @@ void create_thread(struct nuauth_thread_t *thread, void* (*func) (GMutex*) )
 void configure_app(int argc, char **argv) 
 {
     command_line_params_t params;
-    params.daemonize = 0;
-    params.nuauth_client_listen_addr=NULL;
-    params.nuauth_nufw_listen_addr=NULL;
 
     /* Initialize glib thread system */
     g_thread_init(NULL);
     g_thread_pool_set_max_unused_threads (5);
-    
-    /* init gcrypt and gnutls */
-    gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_gthread);
-
-    gnutls_global_init();
 
     /* init nuauthdatas */
     nuauthdatas=g_new0(struct nuauth_datas,1);
     nuauthdatas->reload_cond=g_cond_new ();
     nuauthdatas->reload_cond_mutex=g_mutex_new ();
 
+    /* set default parameters */
+    params.daemonize = 0;
+    params.nuauth_client_listen_addr=NULL;
+    params.nuauth_nufw_listen_addr=NULL;
+
     /* load configuration */
     init_nuauthconf(&nuauthconf);
+
+    log_message (INFO, AREA_MAIN, "Start NuAuth server.");
+    
+    /* init gcrypt and gnutls */
+    gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_gthread);
+
+    gnutls_global_init();
 
     /* init credential */
     create_x509_credentials();
@@ -502,7 +518,8 @@ void init_nuauthdatas()
     log_message (INFO, AREA_MAIN, "Threads system started");
 }
 
-void main_loop() {
+void main_loop()
+{
     struct timespec sleep;
 
     /* a little sleep (1 second), we are waiting for threads to initiate:w */

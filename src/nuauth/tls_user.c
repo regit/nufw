@@ -353,6 +353,7 @@ void tls_user_main_loop(struct tls_user_context_t *context, GMutex *mutex)
     fd_set wk_set; /* working set */
     struct timeval tv;
 
+    log_message(INFO, AREA_MAIN, "NuAuth is waiting client connections.");
     while (g_mutex_trylock(mutex)) 
     {
         g_mutex_unlock(mutex);
@@ -531,7 +532,7 @@ void tls_user_init(struct tls_user_context_t *context)
     if (result == -1)
     {
         g_warning ("user bind() failed to %s:%d at %s:%d, exiting",inet_ntoa(addr_inet.sin_addr),nuauthconf->userpckt_port,__FILE__,__LINE__);
-        exit(-1);
+        exit(EXIT_FAILURE);
     }
 
     /* listen */
@@ -539,7 +540,7 @@ void tls_user_init(struct tls_user_context_t *context)
     if (result == -1)
     {
         g_warning ("user listen() failed, exiting");
-        exit(-1);
+        exit(EXIT_FAILURE);
     }
 
     /* init fd_set */

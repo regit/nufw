@@ -140,6 +140,10 @@ struct nuauth_datas
 
     /** list of loaded modules */
     GSList *modules;
+
+    /* signals */
+    struct sigaction old_sigint_hdl;
+    struct sigaction old_sigterm_hdl;
 };
 
 struct nuauth_params *nuauthconf;

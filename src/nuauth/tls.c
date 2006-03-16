@@ -250,7 +250,7 @@ void create_x509_credentials()
 	char* nuauth_tls_crl=NULL;
 	char *configfile=DEFAULT_CONF_FILE;
 	int ret;
-	static gnutls_dh_params dh_params;
+	gnutls_dh_params dh_params;
 	confparams nuauth_tls_vars[] = {
 		{ "nuauth_tls_key" , G_TOKEN_STRING , 0, NUAUTH_KEYFILE },
 		{ "nuauth_tls_cert" , G_TOKEN_STRING , 0, NUAUTH_CERTFILE },
