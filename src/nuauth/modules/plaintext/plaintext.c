@@ -219,7 +219,9 @@ int parse_ips(char *ipsline, GSList **p_ipslist, char *prefix)
           log_message(WARNING, AREA_MAIN,
                       "%s parse_ips: Garbarge at end of line", prefix);
       } else {
-          struct T_ip *this_ip = g_memdup(&ip_addr, sizeof(ip_addr));
+          struct T_ip *this_ip = g_new0(struct T_ip, 1);
+          this_ip->addr.s_addr = ip_addr.s_addr;
+          this_ip->netmask.s_addr = 0; 
 
           /*  Netmask conversion */
           p_netmask = (uint32_t *)&this_ip->netmask.s_addr;
