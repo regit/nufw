@@ -88,7 +88,7 @@ void search_and_push(connection_t *new)
     debug_log_message (VERBOSE_DEBUG, AREA_USER, "need to warn client");
     /* duplicate tracking */
     message->type = WARN_MESSAGE;
-    message->datas = g_memdup(&(new->tracking), sizeof(new->tracking));
+    message->datas = g_memdup(&(new->tracking), sizeof(tracking_t));
     if (message->datas){
         g_async_queue_push (nuauthdatas->tls_push_queue, message);
     }else{
