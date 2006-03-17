@@ -44,12 +44,9 @@ GHashTable* client_ip_hash;
 
 void clean_session(user_session * c_session)
 {
-    if (c_session->tls)
-    {
-	gnutls_deinit(
-		*(c_session->tls)	
-		);
-	g_free(c_session->tls);
+    if (c_session->tls){
+        gnutls_deinit(*(c_session->tls));
+        g_free(c_session->tls);
     }
     g_free(c_session->user_name);
     g_slist_free(c_session->groups);

@@ -106,12 +106,13 @@ struct nuauth_datas
     struct nuauth_thread_t limited_connections_handler;
 
     /**
-     * pool of thread which treat user packet.
+     * pools of thread which treat user packet.
      */
     GThreadPool* user_checkers;
+    GThreadPool* tls_sasl_worker;
 
     /**
-     * pool of thread which treat nufw packet.
+     * pools of thread which treat nufw packet.
      */
     GThreadPool* acl_checkers;
     GThreadPool* user_loggers; 

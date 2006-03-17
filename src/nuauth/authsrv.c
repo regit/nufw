@@ -42,38 +42,51 @@ void stop_threads()
 {
     /* ask theads to stop */
     g_message("Ask threads to stop.");
-    g_mutex_lock (nuauthdatas->tls_pusher.mutex);
-    g_mutex_lock (nuauthdatas->search_and_fill_worker.mutex);
-    g_mutex_lock (nuauthdatas->tls_auth_server.mutex);
-    g_mutex_lock (nuauthdatas->tls_nufw_server.mutex);
-    g_mutex_lock (nuauthdatas->limited_connections_handler.mutex);
     if (nuauthconf->push && nuauthconf->hello_authentication) {
         g_mutex_lock (nuauthdatas->localid_auth_thread.mutex);
     }
     
     /* wait thread end */
     g_message("Wait thread end ...");
-
+    
+    /* kill push worker */
+    g_mutex_lock (nuauthdatas->tls_pusher.mutex);
     log_message(DEBUG, AREA_MAIN, "Wait thread 'tls pusher'");
     g_thread_join (nuauthdatas->tls_pusher.thread);
 
-    log_message(DEBUG, AREA_MAIN, "Wait thread 'seach&fill'");
-    g_thread_join (nuauthdatas->search_and_fill_worker.thread);
-
+    /* kill entries point */
+    g_mutex_lock (nuauthdatas->tls_auth_server.mutex);
+    g_mutex_lock (nuauthdatas->tls_nufw_server.mutex);
+    
     log_message(DEBUG, AREA_MAIN, "Wait thread 'tls auth server'");
     g_thread_join (nuauthdatas->tls_auth_server.thread);
 
     log_message(DEBUG, AREA_MAIN, "Wait thread 'tls nufw server'");
     g_thread_join (nuauthdatas->tls_nufw_server.thread);
     
+    /* end logging threads */
+    g_thread_pool_free(nuauthdatas->user_session_loggers,TRUE,TRUE);
+    g_thread_pool_free(nuauthdatas->user_loggers,TRUE,TRUE);
+    g_thread_pool_free(nuauthdatas->decisions_workers,TRUE,TRUE);
+    
+    g_thread_pool_free(nuauthdatas->acl_checkers,TRUE,TRUE);
+    
+    g_mutex_lock (nuauthdatas->limited_connections_handler.mutex);
     log_message(DEBUG, AREA_MAIN, "Wait thread 'limited connections'");
     g_thread_join (nuauthdatas->limited_connections_handler.thread);
+
+    g_mutex_lock (nuauthdatas->search_and_fill_worker.mutex);
+    log_message(DEBUG, AREA_MAIN, "Wait thread 'search&fill'");
+    g_thread_join (nuauthdatas->search_and_fill_worker.thread);
+
+    /* working  */
+    g_thread_pool_free(nuauthdatas->ip_authentication_workers,TRUE,TRUE);
     
     if (nuauthconf->push && nuauthconf->hello_authentication) {
         log_message(DEBUG, AREA_MAIN, "Wait thread 'localid'");
         g_thread_join (nuauthdatas->localid_auth_thread.thread);
     }
-    
+
     /* done! */
     g_message("Threads stopped.");
 }    
@@ -120,8 +133,6 @@ void nuauth_cleanup( int signal )
 
     stop_threads();
 
-    /* TODO: stop thread pools */
-    
     /* free nufw server hash */
     if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN))
         g_message("caught interrupt, cleaning");
@@ -136,9 +147,12 @@ void nuauth_cleanup( int signal )
     end_audit();
 
     unload_modules();
-    clear_cache(nuauthdatas->acl_cache);
-    if (nuauthconf->user_cache)
-        clear_cache(nuauthconf->user_cache);
+    if (nuauthconf->acl_cache){
+        clear_cache(nuauthdatas->acl_cache);
+    }
+    if (nuauthconf->user_cache){
+        clear_cache(nuauthdatas->user_cache);
+    }
     free_threads();
 
     /* destroy pid file */

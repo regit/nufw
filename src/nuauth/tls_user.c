@@ -33,7 +33,6 @@ struct tls_user_context_t {
     int nuauth_number_authcheckers;
     int nuauth_auth_nego_timeout;
     gint option_value;
-    GThreadPool* tls_sasl_worker;
 };
 
 struct pre_client_elt {
@@ -293,7 +292,7 @@ int tls_user_accept(struct tls_user_context_t *context)
             pre_client_list=g_slist_prepend(pre_client_list,new_pre_client);
             g_static_mutex_unlock (&pre_client_list_mutex);
 
-            g_thread_pool_push (context->tls_sasl_worker,
+            g_thread_pool_push (nuauthdatas->tls_sasl_worker,
                     current_client_conn, NULL);
         } else {
             shutdown(socket,SHUT_RDWR);
@@ -492,7 +491,7 @@ void tls_user_init(struct tls_user_context_t *context)
         exit(EXIT_FAILURE);
 
     /* create tls sasl worker thread pool */
-    context->tls_sasl_worker = g_thread_pool_new  ((GFunc) tls_sasl_connect,
+    nuauthdatas->tls_sasl_worker = g_thread_pool_new  ((GFunc) tls_sasl_connect,
             NULL,
             context->nuauth_number_authcheckers,
             TRUE,
