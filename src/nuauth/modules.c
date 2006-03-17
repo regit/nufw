@@ -174,12 +174,15 @@ static int load_modules_from(gchar* confvar, gchar* func,GSList** target)
 			g_message("\tmodule %d: %s",i, modules_list[i]);
 		if (module == NULL){
 			g_error("Unable to load module %s in %s",modules_list[i],MODULE_PATH);
+            continue;
 		}
 
 		if (!g_module_symbol (module, func, 
 					(gpointer*)&module_func))
 		{
 			g_error ("Unable to load function %s in %s\n",func,g_module_name(module));
+            g_module_close (module);
+            continue;
 		}
 
 		*target=g_slist_append(*target,(gpointer)module_func);
@@ -276,7 +279,7 @@ int load_modules()
 int unload_modules()
 {
     GSList *c_module;
-    const gchar* module_name;
+    gchar* module_name;
 
     g_mutex_lock(modules_mutex);
     g_slist_free(user_check_modules);
@@ -292,15 +295,16 @@ int unload_modules()
     g_slist_free(user_session_logs_modules);
     user_session_logs_modules=NULL;
 
-    for(c_module=nuauthdatas->modules;c_module;c_module=c_module->next){
-        module_name=g_module_name((GModule*)(c_module->data));
+    for(c_module=nuauthdatas->modules;c_module;c_module=c_module->next)
+    {
+        module_name = g_strdup(g_module_name((GModule*)(c_module->data)));
         if (!g_module_close((GModule*)(c_module->data))){
-            g_message("module unloading failed for %s",module_name); 
+            g_message("module unloading failed for %s", module_name); 
         } else {
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
-                g_message("module unloading done for %s",module_name); 
-            }
+            log_message (VERBOSE_DEBUG, AREA_MAIN,
+                "module unloading done for %s", module_name); 
         }
+        g_free(module_name);
     }
     g_slist_free(nuauthdatas->modules);
     nuauthdatas->modules=NULL;
