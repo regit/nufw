@@ -675,7 +675,6 @@ G_MODULE_EXPORT gchar* g_module_unload(void)
                       g_free(((struct T_app*)p_app->data)->appmd5);
               }
               g_slist_free(p_acl->apps);
-              g_free(p_acl);
           }
           /*  Free Src IPs */
           if (p_acl->src_ip)
@@ -689,6 +688,7 @@ G_MODULE_EXPORT gchar* g_module_unload(void)
           /*  Free Dst ports */
           if (p_acl->dst_ports)
               g_slist_free(p_acl->dst_ports);
+          g_free(p_acl);
       }
       /*  Now we can free the list */
       g_slist_free(plaintext_acllist);
