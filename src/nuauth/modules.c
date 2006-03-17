@@ -165,13 +165,10 @@ static int load_modules_from(gchar* confvar, gchar* func,GSList** target)
 	gchar* module_path;
 	gpointer module_func;
 	int i;
-        char found;
-        GSList *c_module;
 
 	for (i=0;modules_list[i]!=NULL;i++) {	
 		module_path = g_module_build_path(MODULE_PATH, modules_list[i]);
-		module = g_module_open (module_path 
-				,0);
+		module = g_module_open (module_path, 0);
 		g_free(module_path);
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
 			g_message("\tmodule %d: %s",i, modules_list[i]);
@@ -186,17 +183,7 @@ static int load_modules_from(gchar* confvar, gchar* func,GSList** target)
 		}
 
 		*target=g_slist_append(*target,(gpointer)module_func);
-                /** add modules to list of modules */
-                found=0;
-                 for(c_module=nuauthdatas->modules;c_module;c_module=c_module->next){
-                        if(!strcmp(g_module_name((GModule*)(c_module->data)),g_module_name(module))){
-                                found=1;
-                                break;
-                        }
-                 }
-                 if(found == 0){
-                        nuauthdatas->modules=g_slist_prepend(nuauthdatas->modules,module);
-                 }
+        nuauthdatas->modules=g_slist_prepend(nuauthdatas->modules,module);
 	}
         g_strfreev(modules_list);
 	return 1;
