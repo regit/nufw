@@ -20,7 +20,7 @@
 
 #include "auth_srv.h"
 
-extern int nuauth_tls_auth_by_cert;
+extern struct nuauth_tls_t nuauth_tls;
 
 /**
  * get username from a tls session
@@ -156,7 +156,7 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
     c_session->user_id = 0;
     g_free(userdata);
 
-    if ((nuauth_tls_auth_by_cert == TRUE) && gnutls_certificate_get_peers(*session,&size)) {
+    if ((nuauth_tls.auth_by_cert == TRUE) && gnutls_certificate_get_peers(*session,&size)) {
         ret = check_certs_for_tls_session(*session);
 
         if (ret != SASL_OK){

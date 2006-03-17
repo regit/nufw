@@ -74,6 +74,14 @@ struct tls_insert_data {
     gpointer data;
 };
 
+struct nuauth_tls_t
+{
+    gnutls_certificate_credentials x509_cred;
+    int request_cert;
+    int auth_by_cert;
+    gnutls_dh_params dh_params;
+};
+
 void clean_nufw_session(nufw_session_t *c_session);
 
 

@@ -41,13 +41,13 @@ typedef struct
 void stop_threads()
 {
     /* ask theads to stop */
-    g_message("Ask threads to stop.");
+    log_message(INFO, AREA_MAIN, "Ask threads to stop.");
     if (nuauthconf->push && nuauthconf->hello_authentication) {
         g_mutex_lock (nuauthdatas->localid_auth_thread.mutex);
     }
     
     /* wait thread end */
-    g_message("Wait thread end ...");
+    log_message(INFO, AREA_MAIN, "Wait thread end ...");
     
     /* kill push worker */
     g_mutex_lock (nuauthdatas->tls_pusher.mutex);
@@ -88,7 +88,7 @@ void stop_threads()
     }
 
     /* done! */
-    g_message("Threads stopped.");
+    log_message(INFO, AREA_MAIN, "Threads stopped.");
 }    
 
 void free_threads()
@@ -127,9 +127,9 @@ void nuauth_cleanup( int signal )
     (void)sigaction(SIGINT, &nuauthdatas->old_sigint_hdl, NULL);
 
     if (signal == SIGINT)
-        g_message("CTRL+c catched: stop NuAuth server.");
+        g_message("Catch SIGINT signal: stop NuAuth server");
     else if (signal == SIGTERM)
-        g_message("SIGTERM catched: stop NuAuth server.");
+        g_message("Catch SIGTERM signal: stop NuAuth server");
 
     stop_threads();
 
@@ -141,6 +141,8 @@ void nuauth_cleanup( int signal )
     /* free client hash */
     close_clients();
     free_nuauth_params (nuauthconf);
+
+    /* TODO: clear nuauthdatas->tls_push_queue */ 
 
     /* clean gnutls */
     end_tls();

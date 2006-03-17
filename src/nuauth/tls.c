@@ -24,9 +24,7 @@
 #include <errno.h>
 
 /* These are global */
-gnutls_certificate_credentials x509_cred;
-int nuauth_tls_request_cert;
-int nuauth_tls_auth_by_cert;
+struct nuauth_tls_t nuauth_tls; 
 
 /**
  * Strictly close a TLS session: call gnutls_deinit() and free memory.
@@ -121,13 +119,13 @@ gnutls_session* initialize_tls_session()
 		return NULL;
 #endif
 
-	if (gnutls_credentials_set(*session, GNUTLS_CRD_CERTIFICATE, x509_cred)<0)
+	if (gnutls_credentials_set(*session, GNUTLS_CRD_CERTIFICATE, nuauth_tls.x509_cred)<0)
 	{
 		g_free(session);
 		return NULL;
 	}
 	/* request client certificate if any.  */ 
-	gnutls_certificate_server_set_request( *session,nuauth_tls_request_cert);
+	gnutls_certificate_server_set_request( *session, nuauth_tls.request_cert);
 
 	gnutls_dh_set_prime_bits( *session, DH_BITS);
 
@@ -223,7 +221,7 @@ int tls_connect(int conn_fd,gnutls_session** session_ptr)
     }
     debug_log_message (DEBUG, AREA_MAIN, "NuFW TLS Handshake was completed\n");
 
-	if (nuauth_tls_request_cert==GNUTLS_CERT_REQUIRE){
+	if (nuauth_tls.request_cert==GNUTLS_CERT_REQUIRE){
 		/* certicate verification */
 		ret = check_certs_for_tls_session(*session);
 		if (ret != 0){
@@ -250,7 +248,6 @@ void create_x509_credentials()
 	char* nuauth_tls_crl=NULL;
 	char *configfile=DEFAULT_CONF_FILE;
 	int ret;
-	gnutls_dh_params dh_params;
 	confparams nuauth_tls_vars[] = {
 		{ "nuauth_tls_key" , G_TOKEN_STRING , 0, NUAUTH_KEYFILE },
 		{ "nuauth_tls_cert" , G_TOKEN_STRING , 0, NUAUTH_CERTFILE },
@@ -272,12 +269,12 @@ void create_x509_credentials()
 	nuauth_tls_cacert = (char*)READ_CONF("nuauth_tls_cacert");
 	nuauth_tls_crl = (char*)READ_CONF("nuauth_tls_crl");
 	nuauth_tls_key_passwd = (char*)READ_CONF("nuauth_tls_key_passwd");
-	nuauth_tls_request_cert = *(int*)READ_CONF("nuauth_tls_request_cert");
-	nuauth_tls_auth_by_cert = *(int*)READ_CONF("nuauth_tls_auth_by_cert");
+	nuauth_tls.request_cert = *(int*)READ_CONF("nuauth_tls_request_cert");
+	nuauth_tls.auth_by_cert = *(int*)READ_CONF("nuauth_tls_auth_by_cert");
 #undef READ_CONF
 
-	gnutls_certificate_allocate_credentials(&x509_cred);
-	ret = gnutls_certificate_set_x509_trust_file(x509_cred,  nuauth_tls_cacert , 
+	gnutls_certificate_allocate_credentials(&nuauth_tls.x509_cred);
+	ret = gnutls_certificate_set_x509_trust_file(nuauth_tls.x509_cred,  nuauth_tls_cacert , 
 			GNUTLS_X509_FMT_PEM);
 	if(ret<=0){
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER)){
@@ -285,7 +282,7 @@ void create_x509_credentials()
 					gnutls_strerror(ret) 	);
 		}
 	}
-	ret = gnutls_certificate_set_x509_key_file(x509_cred, nuauth_tls_cert,nuauth_tls_key, 
+	ret = gnutls_certificate_set_x509_key_file(nuauth_tls.x509_cred, nuauth_tls_cert,nuauth_tls_key, 
 			GNUTLS_X509_FMT_PEM);
 	if (ret <0){
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER)){
@@ -297,7 +294,7 @@ void create_x509_credentials()
 #ifdef DEBUG_ENABLE
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG, DEBUG_AREA_USER)){
 		g_message("TLS using key %s and cert %s",nuauth_tls_key,nuauth_tls_cert);
-		if (nuauth_tls_request_cert == GNUTLS_CERT_REQUIRE)
+		if (nuauth_tls.request_cert == GNUTLS_CERT_REQUIRE)
 			g_message("TLS require cert from client");
 	}
 #endif
@@ -313,11 +310,11 @@ void create_x509_credentials()
 		log_message (VERBOSE_DEBUG, AREA_USER,
                 "certificate revocation list: %s\n",
                 nuauth_tls_crl);
-		gnutls_certificate_set_x509_crl_file(x509_cred, nuauth_tls_crl, 
+		gnutls_certificate_set_x509_crl_file(nuauth_tls.x509_cred, nuauth_tls_crl, 
 				GNUTLS_X509_FMT_PEM);
 		g_free(nuauth_tls_crl);
 	}
-	ret = generate_dh_params(&dh_params);
+	ret = generate_dh_params(&nuauth_tls.dh_params);
 #ifdef DEBUG_ENABLE
 	if (ret < 0)
 		log_message (INFO, AREA_USER, "generate_dh_params() failed\n");
@@ -327,7 +324,7 @@ void create_x509_credentials()
      * Gryzor doesnt understand wht dh_params is passed as 2nd argument, where a gnutls_dh_params_t structure is awaited
      * gnutls_certificate_set_dh_params( x509_cred, 0);
      */
-	gnutls_certificate_set_dh_params( x509_cred, dh_params);
+	gnutls_certificate_set_dh_params( nuauth_tls.x509_cred, nuauth_tls.dh_params);
 }
 
 /**
@@ -419,7 +416,8 @@ void* push_worker(GMutex *mutex)
  */
 void end_tls()
 {
-    gnutls_certificate_free_keys(x509_cred);
-    gnutls_certificate_free_credentials(x509_cred);
+    gnutls_certificate_free_keys(nuauth_tls.x509_cred);
+    gnutls_certificate_free_credentials(nuauth_tls.x509_cred);
+    gnutls_dh_params_deinit(nuauth_tls.dh_params);
 	gnutls_global_deinit();
 }
