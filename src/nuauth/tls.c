@@ -37,6 +37,7 @@ void close_tls_session(int conn_fd, gnutls_session* session)
 {
 	if (close(conn_fd))
         log_message(VERBOSE_DEBUG, AREA_USER, "close_tls_session: close() failed (error code %i)!", errno);
+	gnutls_credentials_clear(*session);
 	gnutls_deinit(*session);
     debug_log_message (VERBOSE_DEBUG, AREA_USER, "gnutls_deinit() was called");
     g_free(session);
