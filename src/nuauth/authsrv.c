@@ -65,10 +65,14 @@ void stop_threads()
     g_thread_join (nuauthdatas->tls_nufw_server.thread);
     
     /* end logging threads */
+    log_message(DEBUG, AREA_MAIN, "Stop thread pool 'user session loggers'");
     g_thread_pool_free(nuauthdatas->user_session_loggers,TRUE,TRUE);
+    log_message(DEBUG, AREA_MAIN, "Stop thread pool 'user loggers'");
     g_thread_pool_free(nuauthdatas->user_loggers,TRUE,TRUE);
+    log_message(DEBUG, AREA_MAIN, "Stop thread pool 'decision workers'");
     g_thread_pool_free(nuauthdatas->decisions_workers,TRUE,TRUE);
     
+    log_message(DEBUG, AREA_MAIN, "Stop thread pool 'acl checkers'");
     g_thread_pool_free(nuauthdatas->acl_checkers,TRUE,TRUE);
     
     g_mutex_lock (nuauthdatas->limited_connections_handler.mutex);
@@ -80,7 +84,10 @@ void stop_threads()
     g_thread_join (nuauthdatas->search_and_fill_worker.thread);
 
     /* working  */
-    g_thread_pool_free(nuauthdatas->ip_authentication_workers,TRUE,TRUE);
+    if (nuauthconf->do_ip_authentication) {
+        log_message(DEBUG, AREA_MAIN, "Stop thread pool 'ip auth workers'");
+        g_thread_pool_free(nuauthdatas->ip_authentication_workers,TRUE,TRUE);
+    }
     
     if (nuauthconf->push && nuauthconf->hello_authentication) {
         log_message(DEBUG, AREA_MAIN, "Wait thread 'localid'");

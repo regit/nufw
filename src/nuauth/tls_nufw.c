@@ -302,7 +302,7 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex *mutex)
  */
 void tls_nufw_init(struct tls_nufw_context_t *context)
 {    
-    int z;
+    int socket;
     gint option_value;
 #if 0
     struct sigaction action;
@@ -358,18 +358,18 @@ void tls_nufw_init(struct tls_nufw_context_t *context)
     context->addr_inet.sin_family = AF_INET;
     context->addr_inet.sin_port = htons(nuauthconf->authreq_port);
     context->addr_inet.sin_addr.s_addr = nuauthconf->nufw_srv->s_addr;
-    z = bind (context->sck_inet,
+    socket = bind (context->sck_inet,
             (struct sockaddr *)&context->addr_inet,
             sizeof context->addr_inet);
-    if (z == -1)
+    if (socket == -1)
     {
         g_warning ("nufw bind() failed to %s:%d, exiting",inet_ntoa(context->addr_inet.sin_addr),nuauthconf->authreq_port);
         exit(EXIT_FAILURE);
     }
 
     /* Listen ! */
-    z = listen(context->sck_inet,20);
-    if (z == -1)
+    socket = listen(context->sck_inet,20);
+    if (socket == -1)
     {
         g_warning ("nufw listen() failed, exiting");
         exit(EXIT_FAILURE);
