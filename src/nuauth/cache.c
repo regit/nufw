@@ -276,7 +276,10 @@ void clear_cache (struct cache_init_datas *cache_datas)
     if (cache_datas == NULL)
         return;
     
-    /* TODO: clear queue ??? */
+    while ( (message = g_async_queue_try_pop(cache_datas->queue)) != NULL ) {
+        g_free(message);
+    }
+
 	g_hash_table_destroy (cache_datas->hash);
 }
 
