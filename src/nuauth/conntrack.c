@@ -197,5 +197,7 @@ void* limited_connection_handler(GMutex *mutex)
 
   }
   g_async_queue_unref (nuauthdatas->limited_connections_queue);
+  g_hash_table_destroy(conn_list); 
   return NULL;
 }
+
