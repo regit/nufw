@@ -21,6 +21,7 @@
 
 typedef struct module_T {
     gchar* name;
+    gchar* module_name;
     GModule* module;
     gchar* configfile;
     gpointer func;
@@ -45,6 +46,10 @@ GSList* user_session_logs_modules;
 
 
 GMutex *modules_mutex;
+
+/** callback definition */
+
+typedef gboolean init_module_from_conf_t (module_t* module);
 
 typedef int user_check_callback (const char *user, const char *pass,unsigned passlen,uint32_t *uid,GSList **groups,gpointer params);
 

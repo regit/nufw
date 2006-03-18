@@ -177,18 +177,29 @@ static int load_modules_from(gchar* confvar, gchar* func,GSList** target)
         /* var format is NAME:MODULE:CONFFILE */
         gchar **params_list = g_strsplit(modules_list[i],":",3);
         module_t *current_module = g_new0(module_t,1);
+        init_module_from_conf_t* initmod;
 
         current_module->name=g_strdup(params_list[0]);
         if (params_list[1]) {
-            module_path = g_module_build_path(MODULE_PATH, params_list[1]);
+            current_module->module_name=g_strdup(params_list[1]);
+            if (params_list[2]) {
+                current_module->configfile=g_strdup(params_list[2]);
+            } else {
+                /* we build config file name */
+                current_module->configfile=g_strjoin(NULL,CONFIG_DIR,"/",MODULES_CONF_DIR,"/"
+                        ,current_module->name,MODULES_CONF_EXTENSION,NULL);
+            }
         } else {
-            module_path = g_module_build_path(MODULE_PATH, params_list[0]);
+            current_module->module_name=g_strdup(current_module->name);
+            current_module->configfile=NULL;
         }
+       
+        module_path = g_module_build_path(MODULE_PATH, current_module->module_name);
 		current_module->module = g_module_open (module_path, 0);
 		g_free(module_path);
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)) {
-			g_message("\tmodule %d: %s",i, modules_list[i]);
-        }
+		log_message(VERBOSE_DEBUG,AREA_MAIN,
+                "\tmodule %s: using %s with configfile %s",
+                current_module->name,current_module->module_name,current_module->configfile);
 		if (current_module->module == NULL) {
 			g_error("Unable to load module %s in %s",modules_list[i],MODULE_PATH);
             free_module_t(current_module);
@@ -201,6 +212,17 @@ static int load_modules_from(gchar* confvar, gchar* func,GSList** target)
             g_strfreev(params_list);
             continue;
 		}
+
+        /* get params for module by calling module exported function */
+        if (!g_module_symbol (current_module->module, INIT_MODULE_FROM_CONF, (gpointer*)&initmod)) {
+            log_message(WARNING,AREA_MAIN,"No init function for module %s : PLEASE UPGRADE !",current_module->module_name);
+            current_module->params=NULL;
+		} else {
+            if (! initmod(current_module) ) {
+                g_warning("Unable to init module, continuing anyway");
+                current_module->params=NULL;
+            }
+        }
 
 		*target=g_slist_append(*target,(gpointer)current_module);
         nuauthdatas->modules=g_slist_prepend(nuauthdatas->modules,current_module);
