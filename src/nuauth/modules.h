@@ -19,24 +19,21 @@
 #ifndef MODULES_H
 #define MODULES_H
 
+#define INIT_MODULE_FROM_CONF "init_module_from_configfile"
+
 int init_modules_system();
 int load_modules();
 int unload_modules();
 
 int modules_user_check (const char *user, const char *pass,unsigned passlen,uint32_t *uid,GSList **groups);
-
 GSList * modules_acl_check (connection_t* element);
-
 /* ip auth */
 gchar* modules_ip_auth(tracking_t *tracking);
 
 int modules_user_logs (connection_t* element, tcp_state_t state);
-
 int modules_user_session_logs(user_session* user, session_state_t state);
 
 void modules_parse_periods(GHashTable* periods);
 
 void block_on_conf_reload();
-
-
 #endif
