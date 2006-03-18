@@ -135,7 +135,7 @@ static int userdb_checkpass(sasl_conn_t *conn,
 	}
 
 
-	if ( user_check(dec_user,pass,passlen,&uid,&groups)==SASL_OK){
+	if ( modules_user_check(dec_user,pass,passlen,&uid,&groups)==SASL_OK){
 		g_private_set(group_priv,groups);
 		g_private_set(user_priv,GUINT_TO_POINTER(uid));
 		/* we're done */
@@ -422,7 +422,7 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 				g_message("Couldn't get user ID!");	
 		}
 		if (c_session->groups == NULL){
-			if(user_check(c_session->user_name,NULL,0,&(c_session->user_id),&(c_session->groups))!=SASL_OK){
+			if(modules_user_check(c_session->user_name,NULL,0,&(c_session->user_id),&(c_session->groups))!=SASL_OK){
 #ifdef DEBUG_ENABLE
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
 					g_message("error when searching user groups");	

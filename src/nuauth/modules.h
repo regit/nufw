@@ -23,19 +23,20 @@ int init_modules_system();
 int load_modules();
 int unload_modules();
 
-int user_check (const char *user, const char *pass,unsigned passlen,uint32_t *uid,GSList **groups);
+int modules_user_check (const char *user, const char *pass,unsigned passlen,uint32_t *uid,GSList **groups);
 
-GSList * acl_check (connection_t* element);
+GSList * modules_acl_check (connection_t* element);
 
 /* ip auth */
-gchar* ip_auth(tracking_t *tracking);
+gchar* modules_ip_auth(tracking_t *tracking);
 
-int user_logs (connection_t* element, tcp_state_t state);
+int modules_user_logs (connection_t* element, tcp_state_t state);
 
-int user_session_logs(user_session* user, session_state_t state);
+int modules_user_session_logs(user_session* user, session_state_t state);
+
+void modules_parse_periods(GHashTable* periods);
 
 void block_on_conf_reload();
 
-void parse_periods(GHashTable* periods);
 
 #endif

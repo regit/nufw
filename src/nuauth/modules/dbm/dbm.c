@@ -138,7 +138,7 @@ GDBM_FILE dbm_file_init(void){
 }
 
 
-G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned passlen,uint32_t *uid,GSList **groups)
+G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned passlen,uint32_t *uid,GSList **groups,gpointer params)
 {
 	GDBM_FILE dbf = g_private_get (dbm_priv);
 	datum dbm_key, dbm_data;

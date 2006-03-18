@@ -120,7 +120,7 @@ int auth_pam_talker(int num_msg,
 
 
 G_MODULE_EXPORT int user_check(const char *username, const char *pass
-		,unsigned passlen, uint32_t *userid, GSList **groups)
+		,unsigned passlen, uint32_t *userid, GSList **groups,gpointer params)
 {
 	char* user;
 	int ret; 

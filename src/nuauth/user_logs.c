@@ -39,7 +39,7 @@ void log_user_packet (connection_t* element, tcp_state_t state)
 {
 	if ((nuauthconf->log_users_sync) && (state == TCP_STATE_OPEN) ){
             if ( nuauthconf->log_users &  8 ){
-                user_logs ( element, state);
+                modules_user_logs ( element, state);
             }
 	} else {
         if (
@@ -77,15 +77,15 @@ void log_user_packet (connection_t* element, tcp_state_t state)
 
 void real_log_user_packet (gpointer userdata, gpointer data)
 {
-        block_on_conf_reload();
-	user_logs (
-			     ((struct Conn_State *)userdata)->conn, 
-			     ((struct Conn_State *)userdata)->state
-			    );
-    /* free userdata */
-    ((struct Conn_State *)userdata)->conn->state=AUTH_STATE_DONE;
-    free_connection(((struct Conn_State *)userdata)->conn);
-    g_free(userdata);
+  block_on_conf_reload();
+  modules_user_logs (
+          ((struct Conn_State *)userdata)->conn, 
+          ((struct Conn_State *)userdata)->state
+          );
+  /* free userdata */
+  ((struct Conn_State *)userdata)->conn->state=AUTH_STATE_DONE;
+  free_connection(((struct Conn_State *)userdata)->conn);
+  g_free(userdata);
 }
 
 void log_user_session(user_session* usession, session_state_t state)
@@ -110,7 +110,7 @@ void log_user_session(user_session* usession, session_state_t state)
 void log_user_session_thread (gpointer element,gpointer data)
 {
         block_on_conf_reload();
-	user_session_logs(((struct session_event*)element)->session,((struct session_event*)element)->state);
+	modules_user_session_logs(((struct session_event*)element)->session,((struct session_event*)element)->state);
 	g_free(((struct session_event*)element)->session->user_name);
 	g_free(((struct session_event*)element)->session->sysname);
 	g_free(((struct session_event*)element)->session->version);

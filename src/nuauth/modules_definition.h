@@ -19,6 +19,14 @@
 #ifndef MODULES_DEFINITION_H
 #define MODULES_DEFINITION_H
 
+typedef struct module_T {
+    gchar* name;
+    GModule* module;
+    gchar* configfile;
+    gpointer func;
+    gpointer params;
+} module_t;
+
 GSList* user_check_modules;
 
 GSList* acl_check_modules;
@@ -38,16 +46,16 @@ GSList* user_session_logs_modules;
 
 GMutex *modules_mutex;
 
-typedef int user_check_callback (const char *user, const char *pass,unsigned passlen,uint32_t *uid,GSList **groups);
+typedef int user_check_callback (const char *user, const char *pass,unsigned passlen,uint32_t *uid,GSList **groups,gpointer params);
 
-typedef GSList * acl_check_callback (connection_t* element);
+typedef GSList * acl_check_callback (connection_t* element,gpointer params);
 
-typedef void define_period_callback (GHashTable* periods);
+typedef void define_period_callback (GHashTable* periods,gpointer params);
 
 /* ip auth */
-typedef gchar* ip_auth_callback (tracking_t * header);
+typedef gchar* ip_auth_callback (tracking_t * header,gpointer params);
 
-typedef int user_logs_callback (connection_t* element, tcp_state_t state);
-typedef int user_session_logs_callback (user_session* element, session_state_t state);
+typedef int user_logs_callback (connection_t* element, tcp_state_t state,gpointer params);
+typedef int user_session_logs_callback (user_session* element, session_state_t state,gpointer params);
 
 #endif

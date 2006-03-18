@@ -182,7 +182,7 @@ GHashTable *init_periods( )
                   g_free,
                   (GDestroyNotify) free_period);
   
-  parse_periods(periods);
+  modules_parse_periods(periods);
 
   return periods;
 }

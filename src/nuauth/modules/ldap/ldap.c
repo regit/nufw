@@ -148,7 +148,7 @@ G_MODULE_EXPORT LDAP* ldap_conn_init(void)
 /**
  * acl check function.
  */
-G_MODULE_EXPORT GSList* acl_check (connection_t* element)
+G_MODULE_EXPORT GSList* acl_check (connection_t* element,gpointer params)
 {
 	GSList * g_list = NULL;
 	char filter[LDAP_QUERY_SIZE];
@@ -374,7 +374,7 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element)
  *  - modify : groups to return the list of user group
  */
 
-G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned passlen,uint32_t *uid,GSList **groups)
+G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned passlen,uint32_t *uid,GSList **groups,gpointer params)
 {
 	char filter[LDAP_QUERY_SIZE];
 	LDAP *ld = g_private_get (ldap_priv);

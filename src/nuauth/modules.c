@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2005 INL
+ ** Copyright(C) 2005,2006 INL
  ** written by  Eric Leblond <regit@inl.fr>
  **
  ** This program is free software; you can redistribute it and/or modify
@@ -40,9 +40,6 @@
     *_check functions use in the code to interact with the modules
 */
 
-
-
-
 #include <auth_srv.h>
 #include "modules_definition.h"
 
@@ -51,13 +48,14 @@
  *  It returns the decision using SASL define return value and fill uid and list of groups
  *  the user belongs to.
  */
-int user_check (const char *user, const char *pass,unsigned passlen, uint32_t *uid, GSList **groups)
+int modules_user_check (const char *user, const char *pass,unsigned passlen, uint32_t *uid, GSList **groups)
 {
 	/* iter through module list and stop when user is found */
 	GSList *walker=user_check_modules;
 	int walker_return=0;
 	for (;walker!=NULL;walker=walker->next ){
-		walker_return=(*(user_check_callback*)(walker->data))(user,pass,passlen,uid,groups);
+		walker_return=(*(user_check_callback*)(((module_t*)walker->data))->func)(user,
+                pass,passlen,uid,groups,((module_t*)walker->data)->params);
 		if (walker_return == SASL_OK)
 			return SASL_OK;
 	}
@@ -68,14 +66,15 @@ int user_check (const char *user, const char *pass,unsigned passlen, uint32_t *u
  * Check a connection and return a list of acl that match the information
  * contained in the connection.
  */
-GSList* acl_check (connection_t* element)
+GSList* modules_acl_check (connection_t* element)
 {
 	/* iter through module list and stop when an acl is found */
 	GSList *walker=acl_check_modules;
 	GSList* walker_return=NULL;
 
 	for (;walker!=NULL;walker=walker->next ){
-		walker_return=(*(acl_check_callback*)(walker->data))(element);
+		walker_return=(*(acl_check_callback*)(((module_t*)walker->data))->func)(element,
+                ((module_t*)walker->data)->params);
 		if (walker_return)
 			return walker_return;
 	}
@@ -84,13 +83,14 @@ GSList* acl_check (connection_t* element)
 }
 
 /* ip auth */
-gchar* ip_auth(tracking_t * header)
+gchar* modules_ip_auth(tracking_t * header)
 {
 	/* iter through module list and stop when decision is made */
 	GSList *walker=ip_auth_modules;
 	gchar* walker_return=NULL;
 	for (;walker!=NULL;walker=walker->next ){
-		walker_return=(*(ip_auth_callback*)(walker->data))(header);
+		walker_return=(*(ip_auth_callback*)(((module_t*)walker->data))->func)(header,
+                ((module_t*)walker->data)->params);
 		if (walker_return)
 			return walker_return;
 	}
@@ -101,13 +101,13 @@ gchar* ip_auth(tracking_t * header)
 /**
  * log authenticated packets
  */
-int user_logs (connection_t* element, tcp_state_t state)
+int modules_user_logs (connection_t* element, tcp_state_t state)
 {
 	/* iter through all modules list */
 	GSList *walker=user_logs_modules;
 	for (; walker!=NULL; walker=walker->next) {
-        user_logs_callback *handler = (user_logs_callback*)walker->data;
-		handler (element, state);
+        user_logs_callback *handler = (user_logs_callback*)((module_t*)walker->data)->func;
+		handler (element, state, ((module_t*)walker->data)->params);
 	}
 	return 0;
 }
@@ -115,13 +115,13 @@ int user_logs (connection_t* element, tcp_state_t state)
 /**
  * log user connection and disconnection
  */
-int user_session_logs(user_session* user, session_state_t state)
+int modules_user_session_logs(user_session* user, session_state_t state)
 {
     /* iter through all modules list */
     GSList *walker=user_session_logs_modules;
     for (; walker!=NULL; walker=walker->next) {
-        user_session_logs_callback *handler = (user_session_logs_callback *)walker->data;
-        handler (user, state);
+        user_session_logs_callback *handler = (user_session_logs_callback*)((module_t*)walker->data)->func;
+		handler (user, state, ((module_t*)walker->data)->params);
     }
     return 0;
 }
@@ -130,14 +130,23 @@ int user_session_logs(user_session* user, session_state_t state)
  * parse time period configuration for each module
  * and fille the given hash (first argument)
  */
-void parse_periods(GHashTable* periods)
+void modules_parse_periods(GHashTable* periods)
 {
    /* iter through all modules list */
     GSList *walker=period_modules;
     for (; walker!=NULL; walker=walker->next ){
-        define_period_callback *handler = (define_period_callback*)walker->data;
-        handler (periods);
+        define_period_callback *handler = (define_period_callback*)(((module_t*)walker->data)->func);
+        handler (periods,((module_t*)walker->data)->params);
     }
+}
+
+void free_module_t(module_t* module)
+{
+  if (module){
+      g_free(module->name);
+      g_module_close(module->module);
+      g_free(module->configfile);
+  }
 }
 
 int init_modules_system()
@@ -161,34 +170,43 @@ int init_modules_system()
 static int load_modules_from(gchar* confvar, gchar* func,GSList** target)
 {
 	gchar** modules_list=g_strsplit(confvar," ",0);
-	GModule * module;
 	gchar* module_path;
-	gpointer module_func;
 	int i;
 
 	for (i=0;modules_list[i]!=NULL;i++) {	
-		module_path = g_module_build_path(MODULE_PATH, modules_list[i]);
-		module = g_module_open (module_path, 0);
+        /* var format is NAME:MODULE:CONFFILE */
+        gchar **params_list = g_strsplit(modules_list[i],":",3);
+        module_t *current_module = g_new0(module_t,1);
+
+        current_module->name=g_strdup(params_list[0]);
+        if (params_list[1]) {
+            module_path = g_module_build_path(MODULE_PATH, params_list[1]);
+        } else {
+            module_path = g_module_build_path(MODULE_PATH, params_list[0]);
+        }
+		current_module->module = g_module_open (module_path, 0);
 		g_free(module_path);
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)) {
 			g_message("\tmodule %d: %s",i, modules_list[i]);
-		if (module == NULL){
+        }
+		if (current_module->module == NULL) {
 			g_error("Unable to load module %s in %s",modules_list[i],MODULE_PATH);
+            free_module_t(current_module);
             continue;
 		}
 
-		if (!g_module_symbol (module, func, 
-					(gpointer*)&module_func))
-		{
-			g_error ("Unable to load function %s in %s\n",func,g_module_name(module));
-            g_module_close (module);
+		if (!g_module_symbol (current_module->module, func, (gpointer*)&current_module->func)) {
+			g_error ("Unable to load function %s in %s\n",func,g_module_name(current_module->module));
+            free_module_t(current_module);
+            g_strfreev(params_list);
             continue;
 		}
 
-		*target=g_slist_append(*target,(gpointer)module_func);
-        nuauthdatas->modules=g_slist_prepend(nuauthdatas->modules,module);
+		*target=g_slist_append(*target,(gpointer)current_module);
+        nuauthdatas->modules=g_slist_prepend(nuauthdatas->modules,current_module);
+        g_strfreev(params_list);
 	}
-        g_strfreev(modules_list);
+    g_strfreev(modules_list);
 	return 1;
 
 }
@@ -279,7 +297,6 @@ int load_modules()
 int unload_modules()
 {
     GSList *c_module;
-    gchar* module_name;
 
     g_mutex_lock(modules_mutex);
     g_slist_free(user_check_modules);
@@ -295,16 +312,8 @@ int unload_modules()
     g_slist_free(user_session_logs_modules);
     user_session_logs_modules=NULL;
 
-    for(c_module=nuauthdatas->modules;c_module;c_module=c_module->next)
-    {
-        module_name = g_strdup(g_module_name((GModule*)(c_module->data)));
-        if (!g_module_close((GModule*)(c_module->data))){
-            g_message("module unloading failed for %s", module_name); 
-        } else {
-            log_message (VERBOSE_DEBUG, AREA_MAIN,
-                "module unloading done for %s", module_name); 
-        }
-        g_free(module_name);
+    for(c_module=nuauthdatas->modules;c_module;c_module=c_module->next) {
+        free_module_t((module_t *)c_module->data);
     }
     g_slist_free(nuauthdatas->modules);
     nuauthdatas->modules=NULL;

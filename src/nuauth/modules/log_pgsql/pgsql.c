@@ -394,7 +394,7 @@ int pgsql_update_state(PGconn *ld, connection_t *element,
     return -1;
 }    
 
-G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state)
+G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state,gpointer params)
 {
     /* get/open postgresql connection */
     PGconn *ld = g_private_get (pgsql_priv);

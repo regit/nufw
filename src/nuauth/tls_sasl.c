@@ -173,7 +173,7 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
                     g_message("Using username %s from certificate",username);
 #endif
-                if(  user_check(username, NULL, 0,
+                if(  modules_user_check(username, NULL, 0,
                             &(c_session->user_id), &(c_session->groups)
                             )!=SASL_OK) {
 #ifdef DEBUG_ENABLE

@@ -387,7 +387,7 @@ GSList* user_request(struct tls_buffer_read *datas)
                 if ( nuauthconf->user_cache ){
                     get_users_from_cache(connection);
                 } else {
-                    if (user_check(
+                    if (modules_user_check(
                                 connection->username,
                                 NULL,0,
                                 &(connection->user_id),

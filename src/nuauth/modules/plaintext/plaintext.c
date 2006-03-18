@@ -698,7 +698,6 @@ G_MODULE_EXPORT gchar* g_module_unload(void)
   return NULL;
 }
 
-
 /* Init plaintext system */
 G_MODULE_EXPORT gchar* g_module_check_init(GModule *module)
 {
@@ -745,7 +744,7 @@ gint find_by_username(struct T_plaintext_user *a, struct T_plaintext_user *b)
  *           uid to return the user id
  */
 G_MODULE_EXPORT int user_check(const char *username, const char *clientpass,
-        unsigned passlen, uint32_t* uid, GSList **groups)
+        unsigned passlen, uint32_t* uid, GSList **groups,gpointer params)
 {
   GSList *outelt = *groups;
   GSList *res;
@@ -812,7 +811,7 @@ G_MODULE_EXPORT int user_check(const char *username, const char *clientpass,
 }
 
 /*  acl_check() */
-G_MODULE_EXPORT GSList* acl_check(connection_t* element)
+G_MODULE_EXPORT GSList* acl_check(connection_t* element,gpointer params)
 {
   GSList *g_list = NULL;
   GSList *p_acllist;

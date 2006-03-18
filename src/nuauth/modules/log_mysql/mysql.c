@@ -494,7 +494,8 @@ MYSQL* get_mysql_handler()
 
 }    
 
-G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state){
+G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state,gpointer params)
+{
     MYSQL *ld = get_mysql_handler();
     if (ld == NULL) {
         return -1;
@@ -535,7 +536,7 @@ G_MODULE_EXPORT gint log_sql_disconnect(void)
     return 0;
 }
 
-G_MODULE_EXPORT int user_session_logs(user_session *c_session, session_state_t state)
+G_MODULE_EXPORT int user_session_logs(user_session *c_session, session_state_t state,gpointer params)
 {
     char request[LONG_REQUEST_SIZE];
     int mysql_ret;
