@@ -19,15 +19,6 @@
 #ifndef MODULES_DEFINITION_H
 #define MODULES_DEFINITION_H
 
-typedef struct module_T {
-    gchar* name;
-    gchar* module_name;
-    GModule* module;
-    gchar* configfile;
-    gpointer func;
-    gpointer params;
-} module_t;
-
 GSList* user_check_modules;
 
 GSList* acl_check_modules;

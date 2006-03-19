@@ -143,6 +143,9 @@ void modules_parse_periods(GHashTable* periods)
 void free_module_t(module_t* module)
 {
   if (module){
+      if (module->free_params){
+          module->free_params(module->params);
+      }
       g_free(module->name);
       g_module_close(module->module);
       g_free(module->configfile);
@@ -223,7 +226,12 @@ static int load_modules_from(gchar* confvar, gchar* func,GSList** target)
                 current_module->params=NULL;
             }
         }
-
+         /* get params for module by calling module exported function */
+        if (!g_module_symbol (current_module->module, MODULE_PARAMS_UNLOAD, (gpointer*)&(current_module->free_params))) {
+            log_message(WARNING,AREA_MAIN,"No init function for module %s : PLEASE UPGRADE !",current_module->module_name);
+            current_module->free_params=NULL;
+		} 
+        
 		*target=g_slist_append(*target,(gpointer)current_module);
         nuauthdatas->modules=g_slist_prepend(nuauthdatas->modules,current_module);
         g_strfreev(params_list);

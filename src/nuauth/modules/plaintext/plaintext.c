@@ -27,7 +27,6 @@ confparams plaintext_nuauth_vars[] = {
   { "plaintext_aclfile",  G_TOKEN_STRING, 0, TEXT_ACLFILE }
 };
 
-
 /**
  * strip_line()
  * Returns a pointer on stripped line or
@@ -259,7 +258,7 @@ int parse_ips(char *ipsline, GSList **p_ipslist, char *prefix)
  * Returns 0 if successful.
  * Line format: "username:passwd:gid1,gid2,gid3" (gid are numbers)
  */
-int read_user_list(void)
+int read_user_list(struct plaintext_params* params)
 {
   struct T_plaintext_user *plaintext_user;
   FILE *fd;
@@ -270,9 +269,9 @@ int read_user_list(void)
   int ln = 0;   /*  Line number */
 
   log_message(VERBOSE_DEBUG, AREA_MAIN,
-              "[plaintext] read_user_list: reading [%s]", plaintext_userfile);
+              "[plaintext] read_user_list: reading [%s]", params->plaintext_userfile);
 
-  fd = fopen(plaintext_userfile, "r");
+  fd = fopen(params->plaintext_userfile, "r");
 
   if (!fd) {
       log_message(WARNING, AREA_MAIN, "read_user_list: fopen error");
@@ -358,7 +357,7 @@ int read_user_list(void)
       }
 
       /*  User node is ready */
-      plaintext_userlist = g_slist_prepend(plaintext_userlist, plaintext_user);
+      params->plaintext_userlist = g_slist_prepend(params->plaintext_userlist, plaintext_user);
   }
 
   fclose(fd);
@@ -374,7 +373,7 @@ int read_user_list(void)
  * ACL begins with "[ACL name]", then each line should have the structure
  * "key = value".  For example "proto = 6".
  */
-int read_acl_list(void)
+int read_acl_list(struct plaintext_params* params)
 {
   FILE *fd;
   char line[1024];
@@ -383,9 +382,9 @@ int read_acl_list(void)
   int ln = 0;   /*  Line number */
 
   log_message(VERBOSE_DEBUG, AREA_MAIN,
-              "[plaintext] read_acl_list: reading [%s]", plaintext_aclfile);
+              "[plaintext] read_acl_list: reading [%s]", params->plaintext_aclfile);
 
-  fd = fopen(plaintext_aclfile, "r");
+  fd = fopen(params->plaintext_aclfile, "r");
 
   if (!fd) {
       log_message(WARNING, AREA_MAIN, "read_acl_list: fopen error");
@@ -414,7 +413,7 @@ int read_acl_list(void)
                          newacl->proto == IPPROTO_UDP ||
                          newacl->proto == IPPROTO_ICMP) {
                   /*  ACL node is ready */
-                  plaintext_acllist = g_slist_prepend(plaintext_acllist, newacl);
+                  params->plaintext_acllist = g_slist_prepend(params->plaintext_acllist, newacl);
               } else {
                   log_message(WARNING, AREA_AUTH,
                               "No valid protocol declared in ACL %s",
@@ -616,7 +615,7 @@ int read_acl_list(void)
                  newacl->proto == IPPROTO_UDP ||
                  newacl->proto == IPPROTO_ICMP) {
           /*  ACL node is ready */
-          plaintext_acllist = g_slist_prepend(plaintext_acllist, newacl);
+          params->plaintext_acllist = g_slist_prepend(params->plaintext_acllist, newacl);
       } else {
         log_message(WARNING, AREA_AUTH,
                     "No valid protocol declared in ACL %s", newacl->aclname);
@@ -627,102 +626,122 @@ int read_acl_list(void)
   return 0;
 }
 
-G_MODULE_EXPORT gchar* g_module_unload(void)
+G_MODULE_EXPORT gboolean module_params_unload(gpointer params_p)
 {
+  struct plaintext_params* params=(struct plaintext_params*)params_p;
   /*  Free user list */
-  if (plaintext_userlist) {
-      GSList *p_userlist;
-      struct T_plaintext_user *p_user;
+  if (params){
+      if (params->plaintext_userlist) {
+          GSList *p_userlist;
+          struct T_plaintext_user *p_user;
 
-      debug_log_message(VERBOSE_DEBUG, AREA_MAIN, "Freeing users list");
+          debug_log_message(VERBOSE_DEBUG, AREA_MAIN, "Freeing users list");
 
-      /*  Let's free each node separately */
-      for (p_userlist = plaintext_userlist ; p_userlist ;
-              p_userlist = g_slist_next(p_userlist)) {
-          p_user = (struct T_plaintext_user*) p_userlist->data;
-          g_free(p_user->passwd);
-          g_free(p_user->username);
-          if (p_user->groups)
-              g_slist_free(p_user->groups);
-      }
-      /*  Now we can free the list */
-      g_slist_free(plaintext_userlist);
-      plaintext_userlist = NULL;
-  }
-
-  /*  Free acl list */
-  if (plaintext_acllist) {
-      GSList *p_acllist;
-      struct T_plaintext_acl *p_acl;
-
-      debug_log_message(VERBOSE_DEBUG, AREA_MAIN, "Freeing ACLs");
-
-      /*  Let's free each node separately */
-      for (p_acllist = plaintext_acllist ; p_acllist ;
-              p_acllist = g_slist_next(p_acllist)) {
-          p_acl = (struct T_plaintext_acl*) p_acllist->data;
-          g_free(p_acl->aclname);
-          if (p_acl->groups)
-              g_slist_free(p_acl->groups);
-          /*  Let's free each appname(/appmd5) */
-          if (p_acl->apps) {
-              GSList *p_app = p_acl->apps;
-              for ( ; p_app ; p_app = g_slist_next(p_app)) {
-                  /*  Free AppName string */
-                  g_free(((struct T_app*)p_app->data)->appname);
-                  /*  Free MD5 string if there is one */
-                  if (((struct T_app*)p_app->data)->appmd5)
-                      g_free(((struct T_app*)p_app->data)->appmd5);
-              }
-              g_slist_free(p_acl->apps);
+          /*  Let's free each node separately */
+          for (p_userlist = params->plaintext_userlist ; p_userlist ;
+                  p_userlist = g_slist_next(p_userlist)) {
+              p_user = (struct T_plaintext_user*) p_userlist->data;
+              g_free(p_user->passwd);
+              g_free(p_user->username);
+              if (p_user->groups)
+                  g_slist_free(p_user->groups);
           }
-          /*  Free Src IPs */
-          if (p_acl->src_ip)
-              g_slist_free(p_acl->src_ip);
-          /*  Free Dst IPs */
-          if (p_acl->dst_ip)
-              g_slist_free(p_acl->dst_ip);
-          /*  Free Src ports */
-          if (p_acl->src_ports)
-              g_slist_free(p_acl->src_ports);
-          /*  Free Dst ports */
-          if (p_acl->dst_ports)
-              g_slist_free(p_acl->dst_ports);
-          g_free(p_acl);
+          /*  Now we can free the list */
+          g_slist_free(params->plaintext_userlist);
+          params->plaintext_userlist = NULL;
       }
-      /*  Now we can free the list */
-      g_slist_free(plaintext_acllist);
-      plaintext_acllist = NULL;
-  }
 
-  return NULL;
+      /*  Free acl list */
+      if (params->plaintext_acllist) {
+          GSList *p_acllist;
+          struct T_plaintext_acl *p_acl;
+
+          debug_log_message(VERBOSE_DEBUG, AREA_MAIN, "Freeing ACLs");
+
+          /*  Let's free each node separately */
+          for (p_acllist = params->plaintext_acllist ; p_acllist ;
+                  p_acllist = g_slist_next(p_acllist)) {
+              p_acl = (struct T_plaintext_acl*) p_acllist->data;
+              g_free(p_acl->aclname);
+              if (p_acl->groups)
+                  g_slist_free(p_acl->groups);
+              /*  Let's free each appname(/appmd5) */
+              if (p_acl->apps) {
+                  GSList *p_app = p_acl->apps;
+                  for ( ; p_app ; p_app = g_slist_next(p_app)) {
+                      /*  Free AppName string */
+                      g_free(((struct T_app*)p_app->data)->appname);
+                      /*  Free MD5 string if there is one */
+                      if (((struct T_app*)p_app->data)->appmd5)
+                          g_free(((struct T_app*)p_app->data)->appmd5);
+                  }
+                  g_slist_free(p_acl->apps);
+              }
+              /*  Free Src IPs */
+              if (p_acl->src_ip)
+                  g_slist_free(p_acl->src_ip);
+              /*  Free Dst IPs */
+              if (p_acl->dst_ip)
+                  g_slist_free(p_acl->dst_ip);
+              /*  Free Src ports */
+              if (p_acl->src_ports)
+                  g_slist_free(p_acl->src_ports);
+              /*  Free Dst ports */
+              if (p_acl->dst_ports)
+                  g_slist_free(p_acl->dst_ports);
+              g_free(p_acl);
+          }
+          /*  Now we can free the list */
+          g_slist_free(params->plaintext_acllist);
+          params->plaintext_acllist = NULL;
+      }
+  }
+  return TRUE;
 }
 
-/* Init plaintext system */
-G_MODULE_EXPORT gchar* g_module_check_init(GModule *module)
+G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
 {
   gpointer vpointer;
+  struct plaintext_params* params=g_new0(struct plaintext_params,1);
 
   /*  init global variables */
-  plaintext_userfile = TEXT_USERFILE;
-  plaintext_aclfile  = TEXT_ACLFILE;
+  params->plaintext_userfile = TEXT_USERFILE;
+  params->plaintext_aclfile  = TEXT_ACLFILE;
 
   /*  parse conf file */
-  parse_conffile(DEFAULT_CONF_FILE,
-          sizeof(plaintext_nuauth_vars)/sizeof(confparams),
-          plaintext_nuauth_vars);
+  if (module->configfile){
+      parse_conffile(module->configfile,
+              sizeof(plaintext_nuauth_vars)/sizeof(confparams),
+              plaintext_nuauth_vars);
+  } else {
+      parse_conffile(DEFAULT_CONF_FILE,
+              sizeof(plaintext_nuauth_vars)/sizeof(confparams),
+              plaintext_nuauth_vars);
+  }
   /*  set variables */
   vpointer = get_confvar_value(plaintext_nuauth_vars,
           sizeof(plaintext_nuauth_vars)/sizeof(confparams),
           "plaintext_userfile");
-  plaintext_userfile = (char *)(vpointer?vpointer:plaintext_userfile);
+  params->plaintext_userfile = (char *)(vpointer?vpointer:params->plaintext_userfile);
   vpointer = get_confvar_value(plaintext_nuauth_vars,
           sizeof(plaintext_nuauth_vars)/sizeof(confparams),
           "plaintext_aclfile");
-  plaintext_aclfile  = (char *)(vpointer?vpointer:plaintext_aclfile);
+  params->plaintext_aclfile  = (char *)(vpointer?vpointer:params->plaintext_aclfile);
+  params->plaintext_userlist = NULL;
+  params->plaintext_acllist = NULL;
+
+  module->params = (gpointer) params; 
+  return TRUE;
+}
+
+#if 0
+/* Init plaintext system */
+G_MODULE_EXPORT gchar* g_module_check_init(GModule *module)
+{
 
   return NULL;
 }
+#endif
 
 /*  This function is used by g_slist_find_custom() in user_check(). */
 gint find_by_username(struct T_plaintext_user *a, struct T_plaintext_user *b)
@@ -757,11 +776,11 @@ G_MODULE_EXPORT int user_check(const char *username, const char *clientpass,
   /* init has only to be done once */
   g_static_mutex_lock (&plaintext_initmutex);
   /*  Initialization if the user list is empty */
-  if (!plaintext_userlist) {
-      initstatus = read_user_list();
+  if (!((struct plaintext_params*)params)->plaintext_userlist) {
+      initstatus = read_user_list(params);
       if (initstatus) {
           log_message(SERIOUS_WARNING, AREA_AUTH,
-                      "Can't parse users file [%s]", plaintext_userfile);
+                      "Can't parse users file [%s]",((struct plaintext_params*)params)->plaintext_userfile);
           return SASL_BADAUTH;
       }
   }
@@ -773,7 +792,7 @@ G_MODULE_EXPORT int user_check(const char *username, const char *clientpass,
                         "Looking for group(s) for user %s", user);
   /*  Let's look for the first node with matching username */
   ref.username = (char*)user;
-  res = g_slist_find_custom(plaintext_userlist, &ref,
+  res = g_slist_find_custom(((struct plaintext_params*)params)->plaintext_userlist, &ref,
           (GCompareFunc)find_by_username);
 
   if (!res) {
@@ -826,11 +845,11 @@ G_MODULE_EXPORT GSList* acl_check(connection_t* element,gpointer params)
   /* init has only to be done once */
   g_static_mutex_lock (&plaintext_initmutex);
   /*  Initialization if the ACL list is empty */
-  if (!plaintext_acllist) {
-      initstatus = read_acl_list();
+  if (!((struct plaintext_params*)params)->plaintext_acllist) {
+      initstatus = read_acl_list((struct plaintext_params*)params);
       if (initstatus) {
           log_message(SERIOUS_WARNING, AREA_AUTH,
-                      "Can't parse ACLs file [%s]", plaintext_aclfile);
+                      "Can't parse ACLs file [%s]", ((struct plaintext_params*)params)->plaintext_aclfile);
           return NULL;
       }
   }
@@ -848,7 +867,7 @@ G_MODULE_EXPORT GSList* acl_check(connection_t* element,gpointer params)
   src_ip = ntohl(netdata->saddr);
   dst_ip = ntohl(netdata->daddr); 
 
-  for (p_acllist = plaintext_acllist ; p_acllist ;
+  for (p_acllist = ((struct plaintext_params*)params)->plaintext_acllist ; p_acllist ;
           p_acllist = g_slist_next(p_acllist)) {
       p_acl = (struct T_plaintext_acl*)p_acllist->data;
 

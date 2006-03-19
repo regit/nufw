@@ -69,9 +69,10 @@ struct T_plaintext_acl {
     gchar* period;
 };
 
-
-char    *plaintext_userfile;
-char    *plaintext_aclfile;
-GSList  *plaintext_userlist;
-GSList  *plaintext_acllist;
+struct plaintext_params {
+    char    *plaintext_userfile;
+    char    *plaintext_aclfile;
+    GSList  *plaintext_userlist;
+    GSList  *plaintext_acllist;
+};
 

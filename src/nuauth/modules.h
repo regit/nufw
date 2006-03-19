@@ -19,7 +19,21 @@
 #ifndef MODULES_H
 #define MODULES_H
 
-#define INIT_MODULE_FROM_CONF "init_module_from_configfile"
+#define INIT_MODULE_FROM_CONF "init_module_from_conf"
+#define MODULE_PARAMS_UNLOAD "module_params_unload"
+
+typedef gboolean module_params_unload_t (gpointer params);
+
+typedef struct module_T {
+    gchar* name;
+    gchar* module_name;
+    GModule* module;
+    gchar* configfile;
+    gpointer func;
+    gpointer params;
+    module_params_unload_t* free_params;
+} module_t;
+
 
 int init_modules_system();
 int load_modules();
