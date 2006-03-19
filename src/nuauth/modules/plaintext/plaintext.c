@@ -1,21 +1,21 @@
 
 /*
-**  "plaintext" module
-** Copyright(C) 2004-2005 Mikael Berthe <mikael+nufw@lists.lilotux.net>
-**
-** This program is free software; you can redistribute it and/or modify
-** it under the terms of the GNU General Public License as published by
-** the Free Software Foundation, version 2 of the License.
-**
-** This program is distributed in the hope that it will be useful,
-** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-** GNU General Public License for more details.
-**
-** You should have received a copy of the GNU General Public License
-** along with this program; if not, write to the Free Software
-** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-*/
+ **  "plaintext" module
+ ** Copyright(C) 2004-2005 Mikael Berthe <mikael+nufw@lists.lilotux.net>
+ **
+ ** This program is free software; you can redistribute it and/or modify
+ ** it under the terms of the GNU General Public License as published by
+ ** the Free Software Foundation, version 2 of the License.
+ **
+ ** This program is distributed in the hope that it will be useful,
+ ** but WITHOUT ANY WARRANTY; without even the implied warranty of
+ ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ ** GNU General Public License for more details.
+ **
+ ** You should have received a copy of the GNU General Public License
+ ** along with this program; if not, write to the Free Software
+ ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
 
 #include "auth_srv.h"
 #include <string.h>
@@ -23,8 +23,8 @@
 
 
 confparams plaintext_nuauth_vars[] = {
-  { "plaintext_userfile", G_TOKEN_STRING, 0, TEXT_USERFILE },
-  { "plaintext_aclfile",  G_TOKEN_STRING, 0, TEXT_ACLFILE }
+    { "plaintext_userfile", G_TOKEN_STRING, 0, TEXT_USERFILE },
+    { "plaintext_aclfile",  G_TOKEN_STRING, 0, TEXT_ACLFILE }
 };
 
 /**
@@ -83,18 +83,18 @@ int parse_ints(char *intline, GSList **p_intlist, char *prefix)
           /*   see a comma next. */
           if (p_nextint) {
               log_message(WARNING, AREA_MAIN,
-                          "%s parse_ints: Malformed line", prefix);
+                      "%s parse_ints: Malformed line", prefix);
               *p_intlist = intlist;
               return 1;
           }
           log_message(WARNING, AREA_MAIN,
-                      "%s parse_ints: Garbarge at end of line", prefix);
+                  "%s parse_ints: Garbarge at end of line", prefix);
       } else {
           /*  One number (group, integer...) to add */
           intlist = g_slist_prepend(intlist,
-                                    GINT_TO_POINTER((u_int32_t)number));
+                  GINT_TO_POINTER((u_int32_t)number));
           debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
-                            "%s Added group/int %d", prefix, number);
+                  "%s Added group/int %d", prefix, number);
       }
       if ((p_ints = p_nextint))
           p_ints++;
@@ -131,12 +131,12 @@ int parse_ports(char *portsline, GSList **p_portslist, char *prefix)
           /*   see a comma next. */
           if (p_nextports) {
               log_message(WARNING, AREA_MAIN,
-                          "%s parse_ports: Malformed line", prefix);
+                      "%s parse_ports: Malformed line", prefix);
               *p_portslist = portslist;
               return 1;
           }
           log_message(WARNING, AREA_MAIN,
-                      "%s parse_ports: Garbarge at end of line", prefix);
+                  "%s parse_ports: Garbarge at end of line", prefix);
       } else {
           struct T_ports *this_port;
           /*  One port or ports range to add... */
@@ -146,7 +146,7 @@ int parse_ports(char *portsline, GSList **p_portslist, char *prefix)
               } else {
                   ports.nbports = -1;
                   log_message(WARNING, AREA_MAIN,
-                              "%s parse_ports: Malformed line", prefix);
+                          "%s parse_ports: Malformed line", prefix);
               }
           } else
               ports.nbports = 0;
@@ -157,8 +157,8 @@ int parse_ports(char *portsline, GSList **p_portslist, char *prefix)
               this_port->nbports = ports.nbports;
               portslist = g_slist_prepend(portslist, this_port);
               debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
-                                "%s Adding Port = %d, number = %d", prefix,
-                                ports.firstport, ports.nbports);
+                      "%s Adding Port = %d, number = %d", prefix,
+                      ports.firstport, ports.nbports);
           }
       }
       if ((p_ports = p_nextports))
@@ -211,12 +211,12 @@ int parse_ips(char *ipsline, GSList **p_ipslist, char *prefix)
           /*   see a comma next. */
           if (p_nextip) {
               log_message(WARNING, AREA_MAIN,
-                          "%s parse_ips: Malformed line", prefix);
+                      "%s parse_ips: Malformed line", prefix);
               *p_ipslist = ipslist;
               return 1;
           }
           log_message(WARNING, AREA_MAIN,
-                      "%s parse_ips: Garbarge at end of line", prefix);
+                  "%s parse_ips: Garbarge at end of line", prefix);
       } else {
           struct T_ip *this_ip = g_new0(struct T_ip, 1);
           this_ip->addr.s_addr = ip_addr.s_addr;
@@ -233,16 +233,16 @@ int parse_ips(char *ipsline, GSList **p_ipslist, char *prefix)
 
           if ((*p_address & *p_netmask) != *p_address) {
               log_message(WARNING, AREA_MAIN,
-                          "%s parse_ips: Invalid network specification!",
-                          prefix);
+                      "%s parse_ips: Invalid network specification!",
+                      prefix);
               *p_address &= *p_netmask;
           }
 
           ipslist = g_slist_prepend(ipslist, this_ip);
 
           debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
-                            "%s Adding IP = %u, netmask = %u", prefix,
-                            this_ip->addr.s_addr, this_ip->netmask.s_addr);
+                  "%s Adding IP = %u, netmask = %u", prefix,
+                  this_ip->addr.s_addr, this_ip->netmask.s_addr);
       }
       if ((p_ip = p_nextip))
           p_ip++;
@@ -269,7 +269,7 @@ int read_user_list(struct plaintext_params* params)
   int ln = 0;   /*  Line number */
 
   log_message(VERBOSE_DEBUG, AREA_MAIN,
-              "[plaintext] read_user_list: reading [%s]", params->plaintext_userfile);
+          "[plaintext] read_user_list: reading [%s]", params->plaintext_userfile);
 
   fd = fopen(params->plaintext_userfile, "r");
 
@@ -289,7 +289,7 @@ int read_user_list(struct plaintext_params* params)
       /*  User Name */
       if (!p_username) {
           log_message(WARNING, AREA_MAIN,
-                      "L.%d: read_user_list: Malformed line (no username)", ln);
+                  "L.%d: read_user_list: Malformed line (no username)", ln);
           fclose(fd);
           return 2;
       }
@@ -298,7 +298,7 @@ int read_user_list(struct plaintext_params* params)
       p_passwd = strchr(p_username, ':');
       if (!p_passwd) {
           log_message(WARNING, AREA_MAIN,
-                      "L.%d: read_user_list: Malformed line (no passwd)", ln);
+                  "L.%d: read_user_list: Malformed line (no passwd)", ln);
           fclose(fd);
           return 2;
       }
@@ -308,15 +308,15 @@ int read_user_list(struct plaintext_params* params)
       p_uid = strchr(p_passwd, ':');
       if (!p_uid) {
           log_message(WARNING, AREA_MAIN,
-                      "L.%d: read_user_list: Malformed line (no uid)", ln);
+                  "L.%d: read_user_list: Malformed line (no uid)", ln);
           fclose(fd);
           return 2;
       }
       *p_uid++ = 0;
       if (sscanf(p_uid, "%d", &uid) != 1) {
           log_message(WARNING, AREA_MAIN,
-                      "L.%d: read_user_list: Malformed line "
-                      "(uid should be a number)", ln);
+                  "L.%d: read_user_list: Malformed line "
+                  "(uid should be a number)", ln);
           fclose(fd);
           return 2;
       }
@@ -325,21 +325,21 @@ int read_user_list(struct plaintext_params* params)
       p_groups = strchr(p_uid, ':');
       if (!p_groups) {
           log_message(WARNING, AREA_MAIN,
-                      "L.%d: read_user_list: Malformed line (no groups)", ln);
+                  "L.%d: read_user_list: Malformed line (no groups)", ln);
           fclose(fd);
           return 2;
       }
       *p_groups++ = 0;
 
       debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
-                        "L.%d: Read username=[%s], uid=%d",
-                        ln, p_username, uid);
+              "L.%d: Read username=[%s], uid=%d",
+              ln, p_username, uid);
 
       /*  Let's create an user node */
       plaintext_user = g_new0(struct T_plaintext_user, 1);
       if (!plaintext_user) {
           log_message(WARNING, AREA_MAIN,
-                      "read_user_list: Cannot allocate T_plaintext_user!");
+                  "read_user_list: Cannot allocate T_plaintext_user!");
           fclose(fd);
           return 5;
       }
@@ -382,7 +382,7 @@ int read_acl_list(struct plaintext_params* params)
   int ln = 0;   /*  Line number */
 
   log_message(VERBOSE_DEBUG, AREA_MAIN,
-              "[plaintext] read_acl_list: reading [%s]", params->plaintext_aclfile);
+          "[plaintext] read_acl_list: reading [%s]", params->plaintext_aclfile);
 
   fd = fopen(params->plaintext_aclfile, "r");
 
@@ -402,22 +402,22 @@ int read_acl_list(struct plaintext_params* params)
       if (p_key[0] == '[') {
           if (newacl) {
               debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
-                                "Done with ACL [%s]", newacl->aclname);
+                      "Done with ACL [%s]", newacl->aclname);
               /*  check if ACL node has minimal information */
               /*  Warning: this code is duplicated after the loop */
               if (!newacl->groups) {
                   log_message(WARNING, AREA_AUTH,
-                              "No group(s) declared in ACL %s",
-                              newacl->aclname);
+                          "No group(s) declared in ACL %s",
+                          newacl->aclname);
               } else if (newacl->proto == IPPROTO_TCP ||
-                         newacl->proto == IPPROTO_UDP ||
-                         newacl->proto == IPPROTO_ICMP) {
+                      newacl->proto == IPPROTO_UDP ||
+                      newacl->proto == IPPROTO_ICMP) {
                   /*  ACL node is ready */
                   params->plaintext_acllist = g_slist_prepend(params->plaintext_acllist, newacl);
               } else {
                   log_message(WARNING, AREA_AUTH,
-                              "No valid protocol declared in ACL %s",
-                              newacl->aclname);
+                          "No valid protocol declared in ACL %s",
+                          newacl->aclname);
               }
           }
 
@@ -426,7 +426,7 @@ int read_acl_list(struct plaintext_params* params)
           p_tmp = strchr(++p_key, ']');
           if (!p_tmp) {
               log_message(WARNING, AREA_MAIN,
-                          "L.%d: Malformed line (ACLname)", ln);
+                      "L.%d: Malformed line (ACLname)", ln);
               fclose(fd);
               return 2;
           }
@@ -435,7 +435,7 @@ int read_acl_list(struct plaintext_params* params)
           newacl = g_new0(struct T_plaintext_acl, 1);
           if (!newacl) {
               log_message(WARNING, AREA_MAIN,
-                          "read_acl_list: Cannot allocate T_plaintext_acl!");
+                      "read_acl_list: Cannot allocate T_plaintext_acl!");
               fclose(fd);
               return 5;
           }
@@ -443,7 +443,7 @@ int read_acl_list(struct plaintext_params* params)
           newacl->aclname = g_strdup(p_key);
           newacl->period=NULL;
           debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
-                            "L.%d: ACL name found: [%s]", ln, newacl->aclname);
+                  "L.%d: ACL name found: [%s]", ln, newacl->aclname);
           /*  We're done with this line */
           continue;
       }
@@ -451,7 +451,7 @@ int read_acl_list(struct plaintext_params* params)
       /*  We shouldn't be here if we aren't in an ACL declaration */
       if (!newacl) {
           log_message(WARNING, AREA_MAIN,
-                      "L.%d: Malformed line (Not in an ACL declaration)", ln);
+                  "L.%d: Malformed line (Not in an ACL declaration)", ln);
           fclose(fd);
           return 2;
       }
@@ -459,7 +459,7 @@ int read_acl_list(struct plaintext_params* params)
       p_value = strchr(p_key, '=');
       if (!p_value) {
           log_message(WARNING, AREA_MAIN,
-                      "L.%d: Malformed line (No '=' inside)", ln);
+                  "L.%d: Malformed line (No '=' inside)", ln);
           fclose(fd);
           return 2;
       }
@@ -474,13 +474,13 @@ int read_acl_list(struct plaintext_params* params)
               newacl->decision = DECISION_ACCEPT;
           else if (strcmp(p_value, "0")) {
               log_message(WARNING, AREA_MAIN,
-                          "L.%d: Malformed line (decision should be 0 or 1)",
-                          ln);
+                      "L.%d: Malformed line (decision should be 0 or 1)",
+                      ln);
               fclose(fd);
               return 2;
           }
           debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
-                            "L.%d: Read decision = %d", ln, newacl->decision);
+                  "L.%d: Read decision = %d", ln, newacl->decision);
       } else if (!strcasecmp("gid", p_key)) {                   /*  Groups */
           char log_prefix[16];
           snprintf(log_prefix, sizeof(log_prefix)-1, "L.%d: ", ln);
@@ -492,13 +492,13 @@ int read_acl_list(struct plaintext_params* params)
       } else if (!strcasecmp("proto", p_key)) {                 /*  Protocol */
           if (sscanf(p_value, "%d", &newacl->proto) != 1) {
               log_message(WARNING, AREA_MAIN,
-                          "L.%d: Malformed line (proto should be a number)",
-                          ln);
+                      "L.%d: Malformed line (proto should be a number)",
+                      ln);
               fclose(fd);
               return 2;
           }
           debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
-                            "L.%d: Read proto = %d", ln, newacl->proto);
+                  "L.%d: Read proto = %d", ln, newacl->proto);
       } else if (!strcasecmp("type", p_key)) {                  /*  Type (icmp) */
           char log_prefix[16];
           snprintf(log_prefix, sizeof(log_prefix)-1, "L.%d: ", ln);
@@ -548,14 +548,14 @@ int read_acl_list(struct plaintext_params* params)
               *sep++ = 0;
           newapp->appname = g_strdup(strip_line(p_value, 0));
           debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
-                            "L.%d: Read App name [%s]", ln, newapp->appname);
+                  "L.%d: Read App name [%s]", ln, newapp->appname);
 
           /*  MD5: */
           if (sep) {
               p_value = sep;
               newapp->appmd5 = g_strdup(strip_line(p_value, 0));
               debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
-                                "L.%d: Read App MD5 [%s]", ln, newapp->appmd5);
+                      "L.%d: Read App MD5 [%s]", ln, newapp->appmd5);
           }
           /*  TODO checks */
           newacl->apps = g_slist_prepend(newacl->apps, newapp);
@@ -568,7 +568,7 @@ int read_acl_list(struct plaintext_params* params)
               *sep++ = 0;
           newos->sysname = g_strdup(strip_line(p_value, 0));
           debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
-                            "L.%d: Read OS sysname [%s]", ln, newos->sysname);
+                  "L.%d: Read OS sysname [%s]", ln, newos->sysname);
 
           /*  Release: */
           if (sep) {
@@ -578,16 +578,16 @@ int read_acl_list(struct plaintext_params* params)
                   *sep++ = 0;
               newos->release = g_strdup(strip_line(p_value, 0));
               debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
-                                "L.%d: Read OS release [%s]",
-                                ln, newos->release);
+                      "L.%d: Read OS release [%s]",
+                      ln, newos->release);
           }
           /*  Version: */
           if (sep) {
               p_value = sep;
               newos->version = g_strdup(strip_line(p_value, 0));
               debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
-                                "L.%d: Read OS version [%s]",
-                                ln, newos->version);
+                      "L.%d: Read OS version [%s]",
+                      ln, newos->version);
           }
 
           /*  TODO checks */
@@ -595,30 +595,30 @@ int read_acl_list(struct plaintext_params* params)
       } else if (!strcasecmp("period", p_key)) {                /*  Period */
           newacl->period = g_strdup(p_value);
           debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
-                            "L.%d: Read  period [%s]", ln, newacl->period);
+                  "L.%d: Read  period [%s]", ln, newacl->period);
       } else {
           log_message(SERIOUS_WARNING, AREA_MAIN,
-                      "L.%d: Unknown key [%s] in ACL %s",
-                      ln, p_key, newacl->aclname);
+                  "L.%d: Unknown key [%s] in ACL %s",
+                  ln, p_key, newacl->aclname);
       } /*  End of key/value parsing */
   }
   if (newacl) {
 
       debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
-                        "Done with ACL [%s]", newacl->aclname);
+              "Done with ACL [%s]", newacl->aclname);
       /*  check if ACL node has minimal information */
       /*  Warning: this code is duplicated after the loop */
       if (!newacl->groups) {
           log_message(WARNING, AREA_AUTH,
-                      "No group(s) declared in ACL %s", newacl->aclname);
+                  "No group(s) declared in ACL %s", newacl->aclname);
       } else if (newacl->proto == IPPROTO_TCP ||
-                 newacl->proto == IPPROTO_UDP ||
-                 newacl->proto == IPPROTO_ICMP) {
+              newacl->proto == IPPROTO_UDP ||
+              newacl->proto == IPPROTO_ICMP) {
           /*  ACL node is ready */
           params->plaintext_acllist = g_slist_prepend(params->plaintext_acllist, newacl);
       } else {
-        log_message(WARNING, AREA_AUTH,
-                    "No valid protocol declared in ACL %s", newacl->aclname);
+          log_message(WARNING, AREA_AUTH,
+                  "No valid protocol declared in ACL %s", newacl->aclname);
       }
   }
 
@@ -780,7 +780,7 @@ G_MODULE_EXPORT int user_check(const char *username, const char *clientpass,
       initstatus = read_user_list(params);
       if (initstatus) {
           log_message(SERIOUS_WARNING, AREA_AUTH,
-                      "Can't parse users file [%s]",((struct plaintext_params*)params)->plaintext_userfile);
+                  "Can't parse users file [%s]",((struct plaintext_params*)params)->plaintext_userfile);
           return SASL_BADAUTH;
       }
   }
@@ -788,8 +788,8 @@ G_MODULE_EXPORT int user_check(const char *username, const char *clientpass,
 
   /* strip username from domain */
   user = get_rid_of_domain((char*)username);
-      debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
-                        "Looking for group(s) for user %s", user);
+  debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+          "Looking for group(s) for user %s", user);
   /*  Let's look for the first node with matching username */
   ref.username = (char*)user;
   res = g_slist_find_custom(((struct plaintext_params*)params)->plaintext_userlist, &ref,
@@ -804,7 +804,7 @@ G_MODULE_EXPORT int user_check(const char *username, const char *clientpass,
 
   if (!strcmp(realpass, "*") || !strcmp(realpass, "!")) {
       log_message(INFO, AREA_MAIN,
-                  "user_check: Account is disabled (%s)", user);
+              "user_check: Account is disabled (%s)", user);
       return SASL_BADAUTH;
   }
 
@@ -813,7 +813,7 @@ G_MODULE_EXPORT int user_check(const char *username, const char *clientpass,
   if (clientpass) {
       if (verify_user_password(clientpass, realpass) != SASL_OK ){
           log_message(INFO, AREA_MAIN,
-                      "user_check: Wrong password for %s", user);
+                  "user_check: Wrong password for %s", user);
           return SASL_BADAUTH;
       }
   }
@@ -821,7 +821,7 @@ G_MODULE_EXPORT int user_check(const char *username, const char *clientpass,
   outelt = g_slist_copy(((struct T_plaintext_user*)res->data)->groups);
 
   debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
-                    "We are leaving (plaintext) user_check()");
+          "We are leaving (plaintext) user_check()");
 
   *groups = outelt;
   *uid = ((struct T_plaintext_user*)res->data)->uid;
@@ -849,7 +849,7 @@ G_MODULE_EXPORT GSList* acl_check(connection_t* element,gpointer params)
       initstatus = read_acl_list((struct plaintext_params*)params);
       if (initstatus) {
           log_message(SERIOUS_WARNING, AREA_AUTH,
-                      "Can't parse ACLs file [%s]", ((struct plaintext_params*)params)->plaintext_aclfile);
+                  "Can't parse ACLs file [%s]", ((struct plaintext_params*)params)->plaintext_aclfile);
           return NULL;
       }
   }
@@ -872,8 +872,8 @@ G_MODULE_EXPORT GSList* acl_check(connection_t* element,gpointer params)
       p_acl = (struct T_plaintext_acl*)p_acllist->data;
 
       if (netdata->protocol != p_acl->proto)
-              continue;
-      
+          continue;
+
       /*  Check source address */
       if (!p_acl->src_ip){
           continue;
@@ -938,8 +938,8 @@ G_MODULE_EXPORT GSList* acl_check(connection_t* element,gpointer params)
               for ( ; pl_ports ; pl_ports = g_slist_next(pl_ports)) {
                   p_ports = (struct T_ports*)pl_ports->data;
                   if (!p_ports->firstport ||
-                      ((netdata->source >= p_ports->firstport) &&
-                       (netdata->source <= p_ports->firstport+p_ports->nbports))) {
+                          ((netdata->source >= p_ports->firstport) &&
+                           (netdata->source <= p_ports->firstport+p_ports->nbports))) {
                       found = 1;
                       break;
                   }
@@ -955,8 +955,8 @@ G_MODULE_EXPORT GSList* acl_check(connection_t* element,gpointer params)
               for ( ; pl_ports ; pl_ports = g_slist_next(pl_ports)) {
                   p_ports = (struct T_ports*)pl_ports->data;
                   if (!p_ports->firstport ||
-                      ((netdata->dest >= p_ports->firstport) &&
-                       (netdata->dest <= p_ports->firstport+p_ports->nbports))) {
+                          ((netdata->dest >= p_ports->firstport) &&
+                           (netdata->dest <= p_ports->firstport+p_ports->nbports))) {
                       found = 1;
                       break;
                   }
@@ -970,7 +970,7 @@ G_MODULE_EXPORT GSList* acl_check(connection_t* element,gpointer params)
 
       /*  O.S. filtering? */
       debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
-                        "(DBG) current ACL os=%p", p_acl->os);
+              "(DBG) current ACL os=%p", p_acl->os);
 
       if (element->os_sysname && p_acl->os) {
           GSList *p_os = p_acl->os;
@@ -979,8 +979,8 @@ G_MODULE_EXPORT GSList* acl_check(connection_t* element,gpointer params)
 
           /*  sysname */
           log_message(VERBOSE_DEBUG, AREA_MAIN,
-                      "[plaintext] Checking for OS sysname=[%s]",
-                      element->os_sysname);
+                  "[plaintext] Checking for OS sysname=[%s]",
+                  element->os_sysname);
 
           for ( ; p_os ; p_os = g_slist_next(p_os)) {
               p_sysname = ((struct T_os*)p_os->data)->sysname;
@@ -1006,23 +1006,23 @@ G_MODULE_EXPORT GSList* acl_check(connection_t* element,gpointer params)
               }
           }
           debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
-                            "(DBG) Checking OS sysname ACL found=%d", found);
+                  "(DBG) Checking OS sysname ACL found=%d", found);
           if (!found)
               continue;
           log_message(VERBOSE_DEBUG, AREA_MAIN,
-                      "[plaintext] OS match (%s)", element->os_sysname);
+                  "[plaintext] OS match (%s)", element->os_sysname);
       }
 
       /*  Application filtering? */
       debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
-                        "(DBG) current ACL apps=%p", p_acl->apps);
+              "(DBG) current ACL apps=%p", p_acl->apps);
 
       if (element->app_name && p_acl->apps) {
           GSList *p_app = p_acl->apps;
           int found = 0;
 
           log_message(VERBOSE_DEBUG, AREA_MAIN,
-                      "[plaintext] Checking for App=[%s]", element->app_name);
+                  "[plaintext] Checking for App=[%s]", element->app_name);
 
           for ( ; p_app ; p_app = g_slist_next(p_app)) {
               if (!strcasecmp(((struct T_app*)p_app->data)->appname,
@@ -1032,24 +1032,24 @@ G_MODULE_EXPORT GSList* acl_check(connection_t* element,gpointer params)
               }
           }
           log_message(VERBOSE_DEBUG, AREA_MAIN,
-                      "(DBG) Checking App ACL found=%d", found);
+                  "(DBG) Checking App ACL found=%d", found);
           if (!found)
               continue;
           log_message(VERBOSE_DEBUG, AREA_MAIN,
-                      "[plaintext] App match (%s)", element->app_name);
+                  "[plaintext] App match (%s)", element->app_name);
       }
-       /* period checking
+      /* period checking
        * */
       if (p_acl->period) {
           periodend=get_end_of_period_for_time_t(p_acl->period,time(NULL));
           if (periodend==0){
               /* this is not a match */
-                continue;
+              continue;
           }
       }
       /*  We have a match 8-) */
       log_message(VERBOSE_DEBUG, AREA_MAIN,
-                  "[plaintext] matching with decision %d", p_acl->decision);
+              "[plaintext] matching with decision %d", p_acl->decision);
       this_acl=g_new0(struct acl_group, 1);
       g_assert(this_acl);
       this_acl->answer = p_acl->decision;
@@ -1059,9 +1059,9 @@ G_MODULE_EXPORT GSList* acl_check(connection_t* element,gpointer params)
   }
 
   debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
-                    "[plaintext] We are leaving acl_check()");
+          "[plaintext] We are leaving acl_check()");
   debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
-                    "(DBG) [plaintext] check_acls leaves with %p", g_list);
+          "(DBG) [plaintext] check_acls leaves with %p", g_list);
   return g_list;
 }
 
