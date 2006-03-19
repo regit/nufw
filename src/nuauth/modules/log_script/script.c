@@ -53,3 +53,13 @@ G_MODULE_EXPORT int user_session_logs(user_session *c_session, session_state_t s
     return 1;
 }
 
+
+G_MODULE_EXPORT gboolean module_params_unload(gpointer params_p)
+{
+  return TRUE;
+}
+
+G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
+{
+  return TRUE;
+}
