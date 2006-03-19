@@ -1,6 +1,6 @@
 
 /*
- ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
+ ** Copyright(C) 2003-2006 Eric Leblond <eric@regit.org>
  **		     Vincent Deffontaines <vincent@gryzor.com>
  **
  ** This program is free software; you can redistribute it and/or modify
@@ -36,61 +36,82 @@ confparams ldap_nuauth_vars[] = {
 	{ "ldap_filter_type" , G_TOKEN_INT , 1 , NULL }
 };
 
+G_MODULE_EXPORT gboolean module_params_unload(gpointer params_p)
+{
+  struct ldap_params* params=(struct ldap_params*)params_p;
+  g_free(params->binddn);
+  g_free(params->bindpasswd);
+  g_free(params->ldap_server);
+  g_free(params->ldap_acls_base_dn);
+  g_free(params->ldap_acls_timerange_base_dn);
+  g_free(params->ldap_users_base_dn);
+
+  return TRUE;
+}
+
 /**
  * Init ldap system.
  */
-	G_MODULE_EXPORT gchar* 
-g_module_check_init(GModule *module)
+G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
 {
-	char *configfile=DEFAULT_CONF_FILE;
+	char *configfile=NULL;
 	gpointer vpointer; 
+    struct ldap_params* params=g_new0(struct ldap_params,1);
 	char *ldap_base_dn=LDAP_BASE;
 
+    if (! module->configfile){
+        configfile = DEFAULT_CONF_FILE;
+    } else {
+        configfile = module->configfile;
+    }
+    
 	/* init global variables */
-	binddn=LDAP_USER;
-	bindpasswd=LDAP_CRED;
-	ldap_server=LDAP_SERVER;
-	ldap_server_port=LDAP_SERVER_PORT;
-	ldap_users_base_dn=LDAP_BASE;
-	ldap_acls_base_dn=LDAP_BASE;
-	ldap_acls_timerange_base_dn=LDAP_BASE;
-	ldap_filter_type=1;
+	params->binddn=LDAP_USER;
+    params->bindpasswd=LDAP_CRED;
+    params->ldap_server=LDAP_SERVER;
+    params->ldap_server_port=LDAP_SERVER_PORT;
+    params->ldap_users_base_dn=LDAP_BASE;
+    params->ldap_acls_base_dn=LDAP_BASE;
+    params->ldap_acls_timerange_base_dn=LDAP_BASE;
+    params->ldap_filter_type=1;
 
 	/* parse conf file */
 	parse_conffile(configfile,sizeof(ldap_nuauth_vars)/sizeof(confparams),ldap_nuauth_vars);
 	/* set variables */
-	vpointer=get_confvar_value(ldap_nuauth_vars,sizeof(ldap_nuauth_vars)/sizeof(confparams),"ldap_server_addr");
-	ldap_server=(char *)(vpointer?vpointer:ldap_server);
-	vpointer=get_confvar_value(ldap_nuauth_vars,sizeof(ldap_nuauth_vars)/sizeof(confparams),"ldap_server_port");
-	ldap_server_port=*(int *)(vpointer?vpointer:&ldap_server_port);
-	vpointer=get_confvar_value(ldap_nuauth_vars,sizeof(ldap_nuauth_vars)/sizeof(confparams),"ldap_bind_dn");
-	binddn=(char *)(vpointer?vpointer:binddn);
-	vpointer=get_confvar_value(ldap_nuauth_vars,sizeof(ldap_nuauth_vars)/sizeof(confparams),"ldap_base_dn");
-	ldap_base_dn=(char *)(vpointer?vpointer:ldap_base_dn);
-	vpointer=get_confvar_value(ldap_nuauth_vars,sizeof(ldap_nuauth_vars)/sizeof(confparams),"ldap_users_base_dn");
-	ldap_users_base_dn=(char *)(vpointer?vpointer:ldap_users_base_dn);
-	vpointer=get_confvar_value(ldap_nuauth_vars,sizeof(ldap_nuauth_vars)/sizeof(confparams),"ldap_acls_base_dn");
-	ldap_acls_base_dn=(char *)(vpointer?vpointer:ldap_acls_base_dn);
+    vpointer=get_confvar_value(ldap_nuauth_vars,sizeof(ldap_nuauth_vars)/sizeof(confparams),"ldap_server_addr");
+    params->ldap_server=(char *)(vpointer?vpointer:params->ldap_server);
+    vpointer=get_confvar_value(ldap_nuauth_vars,sizeof(ldap_nuauth_vars)/sizeof(confparams),"ldap_server_port");
+    params->ldap_server_port=*(int *)(vpointer?vpointer:&params->ldap_server_port);
+    vpointer=get_confvar_value(ldap_nuauth_vars,sizeof(ldap_nuauth_vars)/sizeof(confparams),"ldap_bind_dn");
+    params->binddn=(char *)(vpointer?vpointer:params->binddn);
+    vpointer=get_confvar_value(ldap_nuauth_vars,sizeof(ldap_nuauth_vars)/sizeof(confparams),"ldap_base_dn");
+    ldap_base_dn=(char *)(vpointer?vpointer:ldap_base_dn);
+    vpointer=get_confvar_value(ldap_nuauth_vars,sizeof(ldap_nuauth_vars)/sizeof(confparams),"ldap_users_base_dn");
+    params->ldap_users_base_dn=(char *)(vpointer?vpointer:params->ldap_users_base_dn);
+    vpointer=get_confvar_value(ldap_nuauth_vars,sizeof(ldap_nuauth_vars)/sizeof(confparams),"ldap_acls_base_dn");
+    params->ldap_acls_base_dn=(char *)(vpointer?vpointer:params->ldap_acls_base_dn);
 
-	if (! strcmp(ldap_acls_base_dn,LDAP_BASE) )
-		ldap_acls_base_dn=ldap_base_dn;
-	if (! strcmp(ldap_users_base_dn,LDAP_BASE) )
-		ldap_users_base_dn=ldap_base_dn;
+    if (! strcmp(params->ldap_acls_base_dn,LDAP_BASE) ) {
+        params->ldap_acls_base_dn =	ldap_base_dn;
+    }
+    if (! strcmp(params->ldap_users_base_dn,LDAP_BASE) ) {
+        params->ldap_users_base_dn=ldap_base_dn;
+    }
 
-	vpointer=get_confvar_value(ldap_nuauth_vars,sizeof(ldap_nuauth_vars)/sizeof(confparams),"ldap_bind_password");
-	bindpasswd=(char *)(vpointer?vpointer:bindpasswd);
-	ldap_request_timeout=LDAP_REQUEST_TIMEOUT;
-	vpointer=get_confvar_value(ldap_nuauth_vars,sizeof(ldap_nuauth_vars)/sizeof(confparams),"ldap_request_timeout");
-	ldap_request_timeout=*(int *)(vpointer?vpointer:&ldap_request_timeout);
+    vpointer=get_confvar_value(ldap_nuauth_vars,sizeof(ldap_nuauth_vars)/sizeof(confparams),"ldap_bind_password");
+    params->bindpasswd=(char *)(vpointer?vpointer:params->bindpasswd);
+    params->ldap_request_timeout=LDAP_REQUEST_TIMEOUT;
+    vpointer=get_confvar_value(ldap_nuauth_vars,sizeof(ldap_nuauth_vars)/sizeof(confparams),"ldap_request_timeout");
+    params->ldap_request_timeout=*(int *)(vpointer?vpointer:&params->ldap_request_timeout);
 
-	vpointer=get_confvar_value(ldap_nuauth_vars,sizeof(ldap_nuauth_vars)/sizeof(confparams),"ldap_filter_type");
-	ldap_filter_type=*(int *)(vpointer?vpointer:&ldap_filter_type);
+    vpointer=get_confvar_value(ldap_nuauth_vars,sizeof(ldap_nuauth_vars)/sizeof(confparams),"ldap_filter_type");
+    params->ldap_filter_type=*(int *)(vpointer?vpointer:&params->ldap_filter_type);
 
 
-	/* init thread private stuff */
-	ldap_priv = g_private_new ((GDestroyNotify)ldap_unbind);
+    /* init thread private stuff */
+    params->ldap_priv = g_private_new ((GDestroyNotify)ldap_unbind);
 
-	return NULL;
+    return TRUE;
 }
 
 /**
@@ -105,13 +126,13 @@ G_MODULE_EXPORT gchar* g_module_unload(void)
  * Initialize connection to ldap server.
  */
 
-G_MODULE_EXPORT LDAP* ldap_conn_init(void)
+G_MODULE_EXPORT LDAP* ldap_conn_init(struct ldap_params* params)
 {
 	LDAP* ld = NULL;
 	int err,version=3;
 
 	/* init connection */
-	ld = ldap_init(ldap_server,ldap_server_port);
+	ld = ldap_init(params->ldap_server,params->ldap_server_port);
 	if(!ld) {
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
 			g_warning("ldap init error\n");
@@ -121,19 +142,19 @@ G_MODULE_EXPORT LDAP* ldap_conn_init(void)
 				&version) == LDAP_OPT_SUCCESS) {
 		/* Goes to ssl if needed */
 #ifdef LDAP_OPT_X_TLS
-		if (ldap_server_port ==  LDAPS_PORT){
+		if (params->ldap_server_port ==  LDAPS_PORT){
 			int tls_option;
 			tls_option = LDAP_OPT_X_TLS_TRY;
 			ldap_set_option(ld, LDAP_OPT_X_TLS, (void *)&tls_option);
 		}
 #endif /* LDAP_OPT_X_TLS */
-		err = ldap_bind_s(ld, binddn, bindpasswd,LDAP_AUTH_SIMPLE);
+		err = ldap_bind_s(ld, params->binddn, params->bindpasswd,LDAP_AUTH_SIMPLE);
 		if ( err !=  LDAP_SUCCESS ){
 			if (err == LDAP_SERVER_DOWN ){
 				/* we lost connection, so disable current one */
 				ldap_unbind(ld);
 				ld=NULL;
-				g_private_set(ldap_priv,ld);
+				g_private_set(	params->ldap_priv,ld);
 				return NULL;
 			} 
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_AUTH)){
@@ -148,7 +169,7 @@ G_MODULE_EXPORT LDAP* ldap_conn_init(void)
 /**
  * acl check function.
  */
-G_MODULE_EXPORT GSList* acl_check (connection_t* element,gpointer params)
+G_MODULE_EXPORT GSList* acl_check (connection_t* element,gpointer params_p)
 {
 	GSList * g_list = NULL;
 	char filter[LDAP_QUERY_SIZE];
@@ -158,21 +179,22 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element,gpointer params)
 	struct acl_group * this_acl;
 	LDAPMessage * res , *result;
 	int err;
-	LDAP *ld = g_private_get (ldap_priv);
+    struct ldap_params* params=(struct ldap_params*)params_p;
+	LDAP *ld = g_private_get (params->ldap_priv);
 
 	if (ld == NULL){
 		/* init ldap has never been done */
-		ld = ldap_conn_init();
+		ld = ldap_conn_init(params);
 		if (ld == NULL) {
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_AUTH))
 				g_warning("Can not initiate LDAP conn\n");
 			return NULL;
 		}
-		g_private_set(ldap_priv,ld);
+		g_private_set(	params->ldap_priv,ld);
 	}
 	/* contruct filter */
 	if ((element->tracking).protocol == IPPROTO_TCP || (element->tracking).protocol == IPPROTO_UDP ){
-		switch (ldap_filter_type){
+		switch (params->ldap_filter_type){
 			case 1:
 				if (snprintf(filter,LDAP_QUERY_SIZE-1,
 #if USE_SOURCE_PORT
@@ -283,7 +305,7 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element,gpointer params)
 	}
 
 	/* send query and wait result */
-	timeout.tv_sec = ldap_request_timeout;
+	timeout.tv_sec = params->ldap_request_timeout;
 	timeout.tv_usec = 0;
 #ifdef PERF_DISPLAY_ENABLE
 	{
@@ -291,7 +313,7 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element,gpointer params)
 		gettimeofday(&tvstart, NULL);
 #endif
 
-	err =  ldap_search_st(ld, ldap_acls_base_dn, LDAP_SCOPE_SUBTREE,filter,NULL,0,
+	err =  ldap_search_st(ld, params->ldap_acls_base_dn, LDAP_SCOPE_SUBTREE,filter,NULL,0,
 			&timeout,
 			&res) ;
 
@@ -308,7 +330,7 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element,gpointer params)
 				g_warning ("disabling current connection");
 			ldap_unbind(ld);
 			ld=NULL;
-			g_private_set(ldap_priv,ld);
+			g_private_set(	params->ldap_priv,ld);
 		}
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
 			g_warning ("invalid return from ldap_search_st : %s\n",ldap_err2string(err));
@@ -374,10 +396,11 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element,gpointer params)
  *  - modify : groups to return the list of user group
  */
 
-G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned passlen,uint32_t *uid,GSList **groups,gpointer params)
+G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned passlen,uint32_t *uid,GSList **groups,gpointer params_p)
 {
 	char filter[LDAP_QUERY_SIZE];
-	LDAP *ld = g_private_get (ldap_priv);
+    struct ldap_params* params=(struct ldap_params*)params_p;
+	LDAP *ld = g_private_get (	params->ldap_priv);
 	LDAPMessage * res , *result;
 	char ** attrs_array, ** walker;
 	int attrs_array_len,i,group,err;
@@ -388,8 +411,8 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned p
 
 	if (ld == NULL){
 		/* init ldap has never been done */
-		ld = ldap_conn_init();
-		g_private_set(ldap_priv,ld);
+		ld = ldap_conn_init(params);
+		g_private_set(	params->ldap_priv,ld);
 		if (ld == NULL){
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_AUTH))
 				g_message("Can't initiate LDAP conn\n");
@@ -406,10 +429,10 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned p
 		return SASL_BADAUTH;
 	}
 	/* send query and wait result */
-	timeout.tv_sec = ldap_request_timeout;
+	timeout.tv_sec = params->ldap_request_timeout;
 	timeout.tv_usec = 0;
 	/* TODO : just get group and decision */
-	err =  ldap_search_st(ld, ldap_users_base_dn, LDAP_SCOPE_SUBTREE,filter,NULL,0,
+	err =  ldap_search_st(ld, params->ldap_users_base_dn, LDAP_SCOPE_SUBTREE,filter,NULL,0,
 			&timeout,
 			&res) ;
 	if ( err !=  LDAP_SUCCESS ) {
@@ -419,7 +442,7 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned p
 				g_warning ("disabling current connection");
 			ldap_unbind(ld);
 			ld=NULL;
-			g_private_set(ldap_priv,ld);
+			g_private_set(	params->ldap_priv,ld);
 		}
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
 			g_warning ("invalid return of ldap_search_st : %s\n",ldap_err2string(err));

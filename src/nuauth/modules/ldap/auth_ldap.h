@@ -1,7 +1,5 @@
-/* $Id: auth_ldap.h,v 1.2 2003/11/25 22:24:51 gryzor Exp $ */
-
 /*
-** Copyright(C) 2003-2005 INL
+** Copyright(C) 2003-2006 INL
 **              Written by Eric Leblond <regit@inl.fr>
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -36,12 +34,15 @@ GPrivate* ldap_priv; /* private pointer to ldap connection */
 /* Maximum size of a LDAP query */
 #define LDAP_QUERY_SIZE 512
 
-int ldap_request_timeout;
-char * binddn;
-char * bindpasswd;
-char * ldap_server;
-char* ldap_acls_base_dn;
-char* ldap_acls_timerange_base_dn;
-char* ldap_users_base_dn;
-int ldap_server_port;
-int ldap_filter_type;
+struct ldap_params { 
+    int ldap_request_timeout;
+    char * binddn;
+    char * bindpasswd;
+    char * ldap_server;
+    char* ldap_acls_base_dn;
+    char* ldap_acls_timerange_base_dn;
+    char* ldap_users_base_dn;
+    int ldap_server_port;
+    int ldap_filter_type;
+    GPrivate* ldap_priv;
+};
