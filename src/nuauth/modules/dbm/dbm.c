@@ -74,36 +74,42 @@ int analyse_dbm_char(char *datas, struct dbm_data_struct *mystruct)
 }
 
 
-G_MODULE_EXPORT gchar* 
-g_module_unload(void){
-	GDBM_FILE dbf = g_private_get (dbm_priv);
+G_MODULE_EXPORT gboolean module_params_unload(gpointer params_p)
+{
+  struct dbm_params* params=(struct dbm_params*)params_p;
+	GDBM_FILE dbf = g_private_get (params->dbm_priv);
 	gdbm_close(dbf);
-	return NULL;
+	return TRUE;
 }
 
 /* Init dbm system */
-G_MODULE_EXPORT gchar* 
-g_module_check_init(GModule *module){
+G_MODULE_EXPORT gboolean init_module_from_conf(module_t* module)
+{
 	char *configfile=DEFAULT_CONF_FILE; 
 	gpointer vpointer; 
+  struct dbm_params* params=g_new0(struct dbm_params,1);
 
 	/* init global variables */
-	users_file = DBM_USERS_FILE;
-
+	params->users_file = DBM_USERS_FILE;
+    
 	/* parse conf file */
+  if (module->configfile){
+	parse_conffile(module->configfile,sizeof(dbm_nuauth_vars)/sizeof(confparams),dbm_nuauth_vars);
+  } else {
 	parse_conffile(configfile,sizeof(dbm_nuauth_vars)/sizeof(confparams),dbm_nuauth_vars);
+  }
 	/* set variables */
 	vpointer=get_confvar_value(dbm_nuauth_vars,sizeof(dbm_nuauth_vars)/sizeof(confparams),"dbm_users_file");
-	users_file=(char *)(vpointer?vpointer:users_file);
+	params->users_file=(char *)(vpointer?vpointer:params->users_file);
 
 	/* init thread private stuff */
-	dbm_priv = g_private_new (g_free);
+	params->dbm_priv = g_private_new (g_free);
 #ifdef DEBUG_ENABLE
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
 		g_message("We are leaving g_module_check_init()\n");
 #endif
 
-	return NULL;
+	return TRUE;
 }
 
 /* 
@@ -111,7 +117,7 @@ g_module_check_init(GModule *module){
  */
 
 
-GDBM_FILE dbm_file_init(void){
+GDBM_FILE dbm_file_init(struct dbm_params *params){
 	GDBM_FILE dbf;
 
 	/* init connection */
@@ -119,7 +125,7 @@ GDBM_FILE dbm_file_init(void){
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
 		g_message("We are entering dbm_file_init()\n");
 #endif
-	dbf = gdbm_open(users_file,DBM_BLOCK_SIZE,DBM_FILE_ACCESS_MODE,DBM_FILE_MODE,DBM_FATAL_FUNCTION);
+	dbf = gdbm_open(params->users_file,DBM_BLOCK_SIZE,DBM_FILE_ACCESS_MODE,DBM_FILE_MODE,DBM_FATAL_FUNCTION);
 #ifdef DEBUG_ENABLE
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
 		g_message("dbm_file_init : file should be open now()\n");
@@ -138,9 +144,10 @@ GDBM_FILE dbm_file_init(void){
 }
 
 
-G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned passlen,uint32_t *uid,GSList **groups,gpointer params)
+G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned passlen,uint32_t *uid,GSList **groups,gpointer params_p)
 {
-	GDBM_FILE dbf = g_private_get (dbm_priv);
+  struct dbm_params* params=(struct dbm_params*)params_p;
+	GDBM_FILE dbf = g_private_get (params->dbm_priv);
 	datum dbm_key, dbm_data;
 	struct dbm_data_struct return_data;
 	char* user;
@@ -159,16 +166,15 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned p
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
 			g_message("calling dbm_file_init() now\n");
 #endif
-		dbf = dbm_file_init();
-		g_private_set(dbm_priv,dbf);
+		dbf = dbm_file_init(params);
+		g_private_set(params->dbm_priv,dbf);
 		if (dbf == NULL){
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_AUTH))
 				g_message("Can't access DBM database\n");
 			return SASL_BADAUTH;
 		}
 	}
-
-  	g_static_mutex_lock (&dbm_initmutex);
+  	g_static_mutex_unlock (&dbm_initmutex);
 
 	/* compute user name */
 	user = get_rid_of_domain(username);
