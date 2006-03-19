@@ -184,3 +184,13 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass
 
 	return SASL_OK;
 }
+
+G_MODULE_EXPORT gboolean module_params_unload(gpointer params_p)
+{
+  return TRUE;
+}
+
+G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
+{
+  return TRUE;
+}
