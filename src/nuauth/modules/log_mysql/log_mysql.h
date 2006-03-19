@@ -50,19 +50,20 @@
 #define INSERT_REQUEST_VALUES_SIZE 800 
 #define REQUEST_TMP_BUFFER 500 
 
-int mysql_request_timeout;
-char * mysql_user;
-char * mysql_passwd;
-char * mysql_server;
-char * mysql_db_name;
-char * mysql_table_name;
-char * mysql_users_table_name;
-int mysql_server_port;
-int mysql_use_ssl;
-char * mysql_ssl_keyfile;
-char * mysql_ssl_certfile;
-char * mysql_ssl_ca;
-char * mysql_ssl_capath;
-char * mysql_ssl_cipher;
-
-GPrivate* mysql_priv; /* private pointer for mysql database access */
+struct log_mysql_params {
+    int mysql_request_timeout;
+    char * mysql_user;
+    char * mysql_passwd;
+    char * mysql_server;
+    char * mysql_db_name;
+    char * mysql_table_name;
+    char * mysql_users_table_name;
+    int mysql_server_port;
+    int mysql_use_ssl;
+    char * mysql_ssl_keyfile;
+    char * mysql_ssl_certfile;
+    char * mysql_ssl_ca;
+    char * mysql_ssl_capath;
+    char * mysql_ssl_cipher;
+    GPrivate* mysql_priv; /* private pointer for mysql database access */
+};

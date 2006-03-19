@@ -38,27 +38,40 @@ confparams mysql_nuauth_vars[] = {
     { "mysql_ssl_cipher" , G_TOKEN_STRING , 0, MYSQL_SSL_CIPHER}
 };
 
-G_MODULE_EXPORT gchar* 
-g_module_unload(void)
+G_MODULE_EXPORT gboolean* module_params_unload(gpointer params_p)
 {
-    MYSQL *ld = g_private_get (mysql_priv);
-    mysql_close(ld);
-    return NULL;
+  struct log_mysql_params* params = (struct log_mysql_params*)params_p;
+  g_free(params->mysql_user);
+  g_free(params->mysql_passwd);
+  g_free(params->mysql_server);
+  g_free(params->mysql_db_name);
+  g_free(params->mysql_table_name);
+  g_free(params->mysql_users_table_name);
+  g_free(params->mysql_ssl_keyfile);
+  g_free(params->mysql_ssl_certfile);
+  g_free(params->mysql_ssl_ca);
+  g_free(params->mysql_ssl_capath);
+  g_free(params->mysql_ssl_cipher);
+  return NULL;
 }
 
 /* Init mysql system */
-G_MODULE_EXPORT gchar* 
-g_module_check_init(GModule *module)
+G_MODULE_EXPORT gboolean 
+init_module_from_conf(module_t *module)
 {
     char *configfile=DEFAULT_CONF_FILE;
     /* char *ldap_base_dn=LDAP_BASE; */
+    struct log_mysql_params* params=g_new0(struct log_mysql_params,1);
 
     /* init global variables */
-    mysql_ssl_cipher=MYSQL_SSL_CIPHER;
+    params->mysql_ssl_cipher=MYSQL_SSL_CIPHER;
 
     /* parse conf file */
-    parse_conffile(configfile,sizeof(mysql_nuauth_vars)/sizeof(confparams),mysql_nuauth_vars);
-
+    if (module->configfile){
+        parse_conffile(module->configfile,sizeof(mysql_nuauth_vars)/sizeof(confparams),mysql_nuauth_vars);
+    } else {
+        parse_conffile(configfile,sizeof(mysql_nuauth_vars)/sizeof(confparams),mysql_nuauth_vars);
+    }
     /* set variables */
 
 #define READ_CONF(KEY) \
@@ -66,33 +79,35 @@ g_module_check_init(GModule *module)
 #define READ_CONF_INT(VAR, KEY, DEFAULT) \
     do { gpointer vpointer = READ_CONF(KEY); if (vpointer) VAR = *(int *)vpointer; else VAR = DEFAULT; } while (0)
 
-    mysql_server = (char *)READ_CONF("mysql_server_addr");
-    mysql_user = (char *)READ_CONF("mysql_user");
-    mysql_passwd = (char *)READ_CONF("mysql_passwd");
-    mysql_db_name = (char *)READ_CONF("mysql_db_name");
-    mysql_table_name = (char *)READ_CONF("mysql_table_name");
-    mysql_users_table_name = (char *)READ_CONF("mysql_users_table_name");
-    mysql_ssl_keyfile = (char *)READ_CONF("mysql_ssl_keyfile");
-    mysql_ssl_certfile = (char *)READ_CONF("mysql_ssl_certfile");
-    mysql_ssl_ca = (char *)READ_CONF("mysql_ssl_ca");
-    mysql_ssl_capath = (char *)READ_CONF("mysql_ssl_capath");
-    mysql_ssl_cipher = (char *)READ_CONF("mysql_ssl_cipher");
+    params->mysql_server = (char *)READ_CONF("mysql_server_addr");
+    params->mysql_user = (char *)READ_CONF("mysql_user");
+    params->mysql_passwd = (char *)READ_CONF("mysql_passwd");
+    params->mysql_db_name = (char *)READ_CONF("mysql_db_name");
+    params->mysql_table_name = (char *)READ_CONF("mysql_table_name");
+    params->mysql_users_table_name = (char *)READ_CONF("mysql_users_table_name");
+    params->mysql_ssl_keyfile = (char *)READ_CONF("mysql_ssl_keyfile");
+    params->mysql_ssl_certfile = (char *)READ_CONF("mysql_ssl_certfile");
+    params->mysql_ssl_ca = (char *)READ_CONF("mysql_ssl_ca");
+    params->mysql_ssl_capath = (char *)READ_CONF("mysql_ssl_capath");
+    params->mysql_ssl_cipher = (char *)READ_CONF("mysql_ssl_cipher");
 
-    READ_CONF_INT(mysql_server_port, "mysql_server_port", MYSQL_SERVER_PORT);
-    READ_CONF_INT(mysql_request_timeout, "mysql_request_timeout", MYSQL_REQUEST_TIMEOUT);
-    READ_CONF_INT(mysql_use_ssl, "mysql_use_ssl", MYSQL_USE_SSL);
+    READ_CONF_INT(params->mysql_server_port, "mysql_server_port", MYSQL_SERVER_PORT);
+    READ_CONF_INT(params->mysql_request_timeout, "mysql_request_timeout", MYSQL_REQUEST_TIMEOUT);
+    READ_CONF_INT(params->mysql_use_ssl, "mysql_use_ssl", MYSQL_USE_SSL);
 
     /* init thread private stuff */
-    mysql_priv = g_private_new ((GDestroyNotify)mysql_close); 
+    params->mysql_priv = g_private_new ((GDestroyNotify)mysql_close); 
     if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
         g_message("mysql part of the config file is parsed\n");
-    return NULL;
+    module->params=(gpointer)params;
+    return TRUE;
 }
 
 /* 
  * Initialize connection to mysql server
  */
-G_MODULE_EXPORT MYSQL* mysql_conn_init(void){
+MYSQL* mysql_conn_init(struct log_mysql_params* params)
+{
     MYSQL *ld = NULL;
 
     /* init connection */
@@ -104,8 +119,8 @@ G_MODULE_EXPORT MYSQL* mysql_conn_init(void){
     }
 #if HAVE_MYSQL_SSL
     /* Set SSL options, if configured to do so */
-    if (mysql_use_ssl)
-        mysql_ssl_set(ld,mysql_ssl_keyfile,mysql_ssl_certfile,mysql_ssl_ca,mysql_ssl_capath,mysql_ssl_cipher);
+    if (params->mysql_use_ssl)
+        mysql_ssl_set(ld,params->mysql_ssl_keyfile,params->mysql_ssl_certfile,params->mysql_ssl_ca,params->mysql_ssl_capath,params->mysql_ssl_cipher);
 #endif
 #if 0
     /* Set MYSQL object properties */
@@ -115,7 +130,9 @@ G_MODULE_EXPORT MYSQL* mysql_conn_init(void){
         }
     }
 #endif
-    if (!mysql_real_connect(ld,mysql_server,mysql_user,mysql_passwd,mysql_db_name,mysql_server_port,NULL,0)) {
+    if (!mysql_real_connect(ld,params->mysql_server,params->mysql_user,
+                params->mysql_passwd,params->mysql_db_name,
+                params->mysql_server_port,NULL,0)) {
         if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
             g_warning("mysql connection failed : %s\n",mysql_error(ld));
         return NULL;
@@ -158,7 +175,8 @@ char* build_insert_request(
         MYSQL *ld, connection_t *element,
         tcp_state_t state,
         char *auth_oob_prefix,
-        char *unauth_oob_prefix)
+        char *unauth_oob_prefix,
+        struct log_mysql_params *params)
 {
     char request_fields[INSERT_REQUEST_FIEDLS_SIZE];
     char request_values[INSERT_REQUEST_VALUES_SIZE];
@@ -168,7 +186,7 @@ char* build_insert_request(
     /* Write common informations */
     ok = secure_snprintf(request_fields, sizeof(request_fields),
             "INSERT INTO %s (state, oob_time_sec, ip_protocol, ip_saddr, ip_daddr, ",
-            mysql_table_name);
+            params->mysql_table_name);
     if (!ok) {
         return NULL;
     }
@@ -279,7 +297,7 @@ char* build_insert_request(
     return g_strconcat(request_fields, request_values, NULL);
 }    
 
-int log_state_open(MYSQL *ld, connection_t *element)
+inline int log_state_open(MYSQL *ld, connection_t *element,struct log_mysql_params* params)
 {
     char *request;
     int mysql_ret;
@@ -293,7 +311,7 @@ int log_state_open(MYSQL *ld, connection_t *element)
         ok = secure_snprintf(request, sizeof(request),
                 "UPDATE %s SET state=%hu, end_timestamp=FROM_UNIXTIME(%lu) "
                 "WHERE (ip_saddr=%lu AND tcp_sport=%u AND (state=1 OR state=2))",
-                mysql_table_name,
+                params->mysql_table_name,
                 TCP_STATE_CLOSE,
                 element->timestamp,
                 (long unsigned int)element->tracking.daddr,
@@ -318,7 +336,7 @@ int log_state_open(MYSQL *ld, connection_t *element)
     /* build sql request */
     request = build_insert_request(
             ld, element,
-            TCP_STATE_OPEN, "ACCEPT", "ACCEPT");
+            TCP_STATE_OPEN, "ACCEPT", "ACCEPT",params);
     if (request == NULL)
     {
         log_message (SERIOUS_WARNING, AREA_MAIN,
@@ -342,7 +360,7 @@ int log_state_open(MYSQL *ld, connection_t *element)
     return 0;
 }    
 
-int log_state_established(MYSQL *ld, connection_t *element)
+inline int log_state_established(MYSQL *ld, connection_t *element,struct log_mysql_params* params)
 {
     char request[LONG_REQUEST_SIZE];
     int Result;
@@ -356,7 +374,7 @@ int log_state_established(MYSQL *ld, connection_t *element)
                 "UPDATE %s SET state=%hu,start_timestamp=FROM_UNIXTIME(%lu) "
                 "WHERE (ip_daddr=%lu AND ip_saddr=%lu "
                 "AND tcp_dport=%u AND tcp_sport=%u AND state=%hu)",
-                mysql_table_name,
+                params->mysql_table_name,
                 TCP_STATE_ESTABLISHED,
                 element->timestamp,
                 (long unsigned int)(element->tracking).saddr,
@@ -395,7 +413,7 @@ int log_state_established(MYSQL *ld, connection_t *element)
     return 0;
 }    
 
-int log_state_close(MYSQL *ld, connection_t *element)
+inline int log_state_close(MYSQL *ld, connection_t *element,struct log_mysql_params *params)
 {
     char request[LONG_REQUEST_SIZE];
     int Result;
@@ -408,7 +426,7 @@ int log_state_close(MYSQL *ld, connection_t *element)
                 "UPDATE %s SET end_timestamp=FROM_UNIXTIME(%lu), state=%hu "
                 "WHERE (ip_saddr=%lu AND ip_daddr=%lu "
                 "AND tcp_sport=%u AND tcp_dport=%u AND state=%hu)",
-                mysql_table_name,
+                params->mysql_table_name,
                 element->timestamp,
                 TCP_STATE_CLOSE,
                 (long unsigned int)(element->tracking).saddr,
@@ -446,14 +464,14 @@ int log_state_close(MYSQL *ld, connection_t *element)
     return 0;
 }    
 
-int log_state_drop(MYSQL *ld, connection_t *element)
+int log_state_drop(MYSQL *ld, connection_t *element, struct log_mysql_params* params)
 {
     int mysql_ret;
 
     /* build sql request */
     char *request = build_insert_request(
             ld, element, 
-            TCP_STATE_DROP, "DROP", "UNAUTHENTICATED DROP");
+            TCP_STATE_DROP, "DROP", "UNAUTHENTICATED DROP",params);
     if (request == NULL)
     {
         log_message (SERIOUS_WARNING, AREA_MAIN,
@@ -476,27 +494,28 @@ int log_state_drop(MYSQL *ld, connection_t *element)
     return 0;
 }    
 
-MYSQL* get_mysql_handler()
+MYSQL* get_mysql_handler(struct log_mysql_params* params)
 {
-    MYSQL *ld = g_private_get (mysql_priv);
+    MYSQL *ld = g_private_get (params->mysql_priv);
     if (ld != NULL) {
         return ld;
     }
     
-    ld = mysql_conn_init();
+    ld = mysql_conn_init(params);
     if (ld == NULL){
         log_message (SERIOUS_WARNING, AREA_MAIN,
             "Can not initiate MYSQL connection");
         return NULL;
     }
-    g_private_set(mysql_priv,ld);
+    g_private_set(params->mysql_priv,ld);
     return ld;
 
 }    
 
-G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state,gpointer params)
+G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state,gpointer params_p)
 {
-    MYSQL *ld = get_mysql_handler();
+  struct log_mysql_params* params = (struct log_mysql_params*)params_p;
+    MYSQL *ld = get_mysql_handler(params);
     if (ld == NULL) {
         return -1;
     }
@@ -504,24 +523,24 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state,
     /* contruct request */
     switch (state) {
         case TCP_STATE_OPEN:
-            return log_state_open(ld, element);
+            return log_state_open(ld, element,params);
 
         case TCP_STATE_ESTABLISHED: 
             if ((element->tracking).protocol == IPPROTO_TCP){
-                return log_state_established(ld, element);
+                return log_state_established(ld, element,params);
             } else {
                 return 0;
             }
 
         case TCP_STATE_CLOSE: 
             if ((element->tracking).protocol == IPPROTO_TCP){
-                return log_state_close(ld, element);
+                return log_state_close(ld, element, params);
             } else {
                 return 0;
             }
 
         case TCP_STATE_DROP:
-            return log_state_drop(ld, element);
+            return log_state_drop(ld, element, params);
 
         default:
 			/* Ignore other states */
@@ -529,21 +548,15 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state,
     }
 }
 
-G_MODULE_EXPORT gint log_sql_disconnect(void)
+G_MODULE_EXPORT int user_session_logs(user_session *c_session, session_state_t state,gpointer params_p)
 {
-    MYSQL *ld = g_private_get (mysql_priv);
-    mysql_close(ld);
-    return 0;
-}
-
-G_MODULE_EXPORT int user_session_logs(user_session *c_session, session_state_t state,gpointer params)
-{
+  struct log_mysql_params* params = (struct log_mysql_params*)params_p;
     char request[LONG_REQUEST_SIZE];
     int mysql_ret;
     MYSQL *ld;
     gboolean ok;
     
-    ld = get_mysql_handler();
+    ld = get_mysql_handler(params);
     if (ld == NULL) {
         return -1;
     }
@@ -554,7 +567,7 @@ G_MODULE_EXPORT int user_session_logs(user_session *c_session, session_state_t s
             ok = secure_snprintf(request, sizeof(request),
                     "INSERT INTO %s (username, ip_saddr, os_sysname, os_release, os_version, start_timestamp) "
                     "VALUES ('%s', '%u', '%s', '%s', '%s', FROM_UNIXTIME(%lu))",
-                    mysql_users_table_name,
+                    params->mysql_users_table_name,
                     c_session->user_name,
                     c_session->addr,
                     c_session->sysname,
@@ -568,7 +581,7 @@ G_MODULE_EXPORT int user_session_logs(user_session *c_session, session_state_t s
             ok = secure_snprintf(request, sizeof(request),
                     "UPDATE %s SET end_timestamp=FROM_UNIXTIME(%lu) "
                     "WHERE ip_saddr=%u",
-                    mysql_users_table_name,
+                    params->mysql_users_table_name,
                     time(NULL),
                     c_session->addr);
             break;
