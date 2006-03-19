@@ -39,13 +39,15 @@ confparams ldap_nuauth_vars[] = {
 G_MODULE_EXPORT gboolean module_params_unload(gpointer params_p)
 {
   struct ldap_params* params=(struct ldap_params*)params_p;
-  g_free(params->binddn);
-  g_free(params->bindpasswd);
-  g_free(params->ldap_server);
-  g_free(params->ldap_acls_base_dn);
-  g_free(params->ldap_acls_timerange_base_dn);
-  g_free(params->ldap_users_base_dn);
-
+  if (params) {
+      g_free(params->binddn);
+      g_free(params->bindpasswd);
+      g_free(params->ldap_server);
+      g_free(params->ldap_acls_base_dn);
+      g_free(params->ldap_acls_timerange_base_dn);
+      g_free(params->ldap_users_base_dn);
+  }
+  g_free(params);
   return TRUE;
 }
 

@@ -696,6 +696,7 @@ G_MODULE_EXPORT gboolean module_params_unload(gpointer params_p)
           params->plaintext_acllist = NULL;
       }
   }
+  g_free(params);
   return TRUE;
 }
 

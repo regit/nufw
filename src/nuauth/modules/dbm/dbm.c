@@ -77,9 +77,12 @@ int analyse_dbm_char(char *datas, struct dbm_data_struct *mystruct)
 G_MODULE_EXPORT gboolean module_params_unload(gpointer params_p)
 {
   struct dbm_params* params=(struct dbm_params*)params_p;
-	GDBM_FILE dbf = g_private_get (params->dbm_priv);
-	gdbm_close(dbf);
-	return TRUE;
+  if (params) {
+      GDBM_FILE dbf = g_private_get (params->dbm_priv);
+      gdbm_close(dbf);
+  }
+  g_free(params);
+  return TRUE;
 }
 
 /* Init dbm system */

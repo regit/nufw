@@ -44,14 +44,17 @@ confparams pgsql_nuauth_vars[] = {
 G_MODULE_EXPORT gboolean module_params_unload(gpointer params_p)
 {
   struct log_pgsql_params *params = (struct log_pgsql_params*)params_p;
-  g_free(params->pgsql_user);
-  g_free(params->pgsql_passwd);
-  g_free(params->pgsql_server);
-  g_free(params->pgsql_ssl);
-  g_free(params->pgsql_db_name);
-  g_free(params->pgsql_table_name);
-   
-        return TRUE;
+  if(params){
+      g_free(params->pgsql_user);
+      g_free(params->pgsql_passwd);
+      g_free(params->pgsql_server);
+      g_free(params->pgsql_ssl);
+      g_free(params->pgsql_db_name);
+      g_free(params->pgsql_table_name);
+  } 
+  g_free(params);
+
+  return TRUE;
 }
 /* Init pgsql system */
 G_MODULE_EXPORT gboolean init_module_from_conf(module_t *module)

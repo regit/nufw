@@ -41,6 +41,7 @@ confparams mysql_nuauth_vars[] = {
 G_MODULE_EXPORT gboolean* module_params_unload(gpointer params_p)
 {
   struct log_mysql_params* params = (struct log_mysql_params*)params_p;
+  if (params){
   g_free(params->mysql_user);
   g_free(params->mysql_passwd);
   g_free(params->mysql_server);
@@ -52,6 +53,8 @@ G_MODULE_EXPORT gboolean* module_params_unload(gpointer params_p)
   g_free(params->mysql_ssl_ca);
   g_free(params->mysql_ssl_capath);
   g_free(params->mysql_ssl_cipher);
+  }
+  g_free(params);
   return NULL;
 }
 
