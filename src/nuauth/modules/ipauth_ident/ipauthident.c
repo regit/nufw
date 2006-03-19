@@ -88,3 +88,13 @@ gchar* ip_authentication(tracking_t* ipheader,gpointer params)
   }
   return username; 
 }
+
+G_MODULE_EXPORT gboolean module_params_unload(gpointer params_p)
+{
+  return TRUE;
+}
+
+G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
+{
+  return TRUE;
+}
