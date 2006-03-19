@@ -41,18 +41,30 @@ confparams pgsql_nuauth_vars[] = {
     { "pgsql_request_timeout" , G_TOKEN_INT , PGSQL_REQUEST_TIMEOUT , NULL }
 };
 
-G_MODULE_EXPORT gchar* g_module_unload(void)
+G_MODULE_EXPORT gboolean module_params_unload(gpointer params_p)
 {
-    PGconn *ld = g_private_get (pgsql_priv);
-    PQfinish(ld);
-    return NULL;
+  struct log_pgsql_params *params = (struct log_pgsql_params*)params_p;
+  g_free(params->pgsql_user);
+  g_free(params->pgsql_passwd);
+  g_free(params->pgsql_server);
+  g_free(params->pgsql_ssl);
+  g_free(params->pgsql_db_name);
+  g_free(params->pgsql_table_name);
+   
+        return TRUE;
 }
 /* Init pgsql system */
-G_MODULE_EXPORT gchar* g_module_check_init(GModule *module){
+G_MODULE_EXPORT gboolean init_module_from_conf(module_t *module)
+{
     unsigned int nb_params = sizeof(pgsql_nuauth_vars)/sizeof(confparams);
+    struct log_pgsql_params* params=g_new0(struct log_pgsql_params,1);
 
     /* parse conf file */
-    parse_conffile(DEFAULT_CONF_FILE, nb_params, pgsql_nuauth_vars);
+    if (module->configfile){
+        parse_conffile(module->configfile, nb_params, pgsql_nuauth_vars);
+    } else {
+        parse_conffile(DEFAULT_CONF_FILE, nb_params, pgsql_nuauth_vars);
+    }
 
     /* set variables */
 #define READ_CONF(KEY) \
@@ -60,26 +72,26 @@ G_MODULE_EXPORT gchar* g_module_check_init(GModule *module){
 #define READ_CONF_INT(VAR, KEY, DEFAULT) \
     do { gpointer vpointer = READ_CONF(KEY); if (vpointer) VAR = *(int *)vpointer; else VAR = DEFAULT; } while (0)
 
-    pgsql_server = (char *)READ_CONF("pgsql_server_addr");
-    READ_CONF_INT (pgsql_server_port, "pgsql_server_port", PGSQL_SERVER_PORT);
-    pgsql_user = (char *)READ_CONF("pgsql_user");
-    pgsql_passwd = (char *)READ_CONF("pgsql_passwd");
-    pgsql_ssl = (char *)READ_CONF("pgsql_ssl");
-    pgsql_db_name = (char *)READ_CONF("pgsql_db_name");
-    pgsql_table_name = (char *)READ_CONF("pgsql_table_name");
-    READ_CONF_INT(pgsql_request_timeout, "pgsql_request_timeout", PGSQL_REQUEST_TIMEOUT);
+    params->pgsql_server = (char *)READ_CONF("pgsql_server_addr");
+    READ_CONF_INT (params->pgsql_server_port, "pgsql_server_port", PGSQL_SERVER_PORT);
+    params->pgsql_user = (char *)READ_CONF("pgsql_user");
+    params->pgsql_passwd = (char *)READ_CONF("pgsql_passwd");
+    params->pgsql_ssl = (char *)READ_CONF("pgsql_ssl");
+    params->pgsql_db_name = (char *)READ_CONF("pgsql_db_name");
+    params->pgsql_table_name = (char *)READ_CONF("pgsql_table_name");
+    READ_CONF_INT(params->pgsql_request_timeout, "pgsql_request_timeout", PGSQL_REQUEST_TIMEOUT);
 
     /* init thread private stuff */
-    pgsql_priv = g_private_new ((GDestroyNotify)PQfinish);
+    params->pgsql_priv = g_private_new ((GDestroyNotify)PQfinish);
 
-    return NULL;
+    return TRUE;
 }
 
 
 /* 
  * Initialize connection to pgsql server
  */
-G_MODULE_EXPORT PGconn *pgsql_conn_init(void){
+PGconn *pgsql_conn_init(struct log_pgsql_params* params){
     char *pgsql_conninfo;
     PGconn *ld = NULL;
     int pgsql_status;
@@ -90,13 +102,13 @@ G_MODULE_EXPORT PGconn *pgsql_conn_init(void){
     pgsql_conninfo = g_strdup_printf(
             "host=%s port=%d dbname=%s user=%s password=%s connect_timeout=%d",
             /* " sslmode=%s" */
-            pgsql_server,
-            pgsql_server_port,
-            pgsql_db_name,
-            pgsql_user,
-            pgsql_passwd,
-            pgsql_request_timeout
-            /* pgsql_ssl */
+            params->pgsql_server,
+            params->pgsql_server_port,
+            params->pgsql_db_name,
+            params->pgsql_user,
+            params->pgsql_passwd,
+            params->pgsql_request_timeout
+            /* params->pgsql_ssl */
             );
 
     ld = PQconnectdb(pgsql_conninfo);
@@ -140,7 +152,8 @@ static gchar* generate_osname(gchar *Name, gchar *Version, gchar *Release)
     return quoted;
 }
 
-int pgsql_insert(PGconn *ld, connection_t *element, char *oob_prefix, tcp_state_t state)
+int pgsql_insert(PGconn *ld, connection_t *element, char *oob_prefix, tcp_state_t state,
+        struct log_pgsql_params* params)
 {
     char request_fields[INSERT_REQUEST_FIEDLS_SIZE];
     char request_values[INSERT_REQUEST_VALUES_SIZE];
@@ -160,7 +173,7 @@ int pgsql_insert(PGconn *ld, connection_t *element, char *oob_prefix, tcp_state_
     ok = secure_snprintf(request_fields, sizeof(request_fields),
             "INSERT INTO %s (oob_prefix, state, oob_time_sec"
             "ip_protocol, ip_saddr, ip_daddr",
-            pgsql_table_name
+            params->pgsql_table_name
             );
     if (!ok) {
         return -1;
@@ -273,7 +286,7 @@ int pgsql_insert(PGconn *ld, connection_t *element, char *oob_prefix, tcp_state_
     return 0;
 }
 
-int pgsql_update_close(PGconn *ld, connection_t *element)
+int pgsql_update_close(PGconn *ld, connection_t *element,struct log_pgsql_params* params)
 {
     struct in_addr addr;
     char ip_src[INET_ADDRSTRLEN+1];
@@ -288,7 +301,7 @@ int pgsql_update_close(PGconn *ld, connection_t *element)
             "UPDATE %s SET state='%hu', end_timestamp='%lu' "
             "WHERE (ip_saddr='%s' AND tcp_sport='%u' "
             "AND (state=1 OR state=2));",
-            pgsql_table_name,
+            params->pgsql_table_name,
             TCP_STATE_CLOSE,
             element->timestamp,
             ip_src,
@@ -314,7 +327,7 @@ int pgsql_update_close(PGconn *ld, connection_t *element)
 
 int pgsql_update_state(PGconn *ld, connection_t *element, 
         tcp_state_t old_state, tcp_state_t new_state, 
-        int reverse)
+        int reverse,struct log_pgsql_params* params)
 {
     char request[SHORT_REQUEST_SIZE];
     PGresult *Result;
@@ -348,7 +361,7 @@ int pgsql_update_state(PGconn *ld, connection_t *element,
             "UPDATE %s SET state='%hu', start_timestamp='%lu' "
             "WHERE (ip_daddr='%s' AND ip_saddr='%s' "
             "AND tcp_dport='%u' AND tcp_sport='%u' AND state='%hu');",
-            pgsql_table_name,
+            params->pgsql_table_name,
             new_state, element->timestamp,
             ip_src, ip_dst,
             tcp_src, tcp_dst, old_state);
@@ -394,18 +407,19 @@ int pgsql_update_state(PGconn *ld, connection_t *element,
     return -1;
 }    
 
-G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state,gpointer params)
+G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state,gpointer params_p)
 {
+  struct log_pgsql_params *params = (struct log_pgsql_params*)params_p;
     /* get/open postgresql connection */
-    PGconn *ld = g_private_get (pgsql_priv);
+    PGconn *ld = g_private_get (params->pgsql_priv);
     if (ld == NULL){
-        ld=pgsql_conn_init();
+        ld=pgsql_conn_init(params);
         if (ld == NULL){
             log_message (SERIOUS_WARNING, AREA_MAIN,
                     "Can not initiate PGSQL connection!\n");
             return -1;
         }
-        g_private_set(pgsql_priv,ld);
+        g_private_set(params->pgsql_priv,ld);
     }
 
     switch (state){
@@ -413,38 +427,32 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state,
             if (element->tracking.protocol == IPPROTO_TCP 
                 && nuauthconf->log_users_strict)
             {
-                int ret = pgsql_update_close(ld, element);
+                int ret = pgsql_update_close(ld, element,params);
                 if (ret != 0) {
                     return ret;
                 }
             }
 
-            return pgsql_insert(ld, element, "ACCEPT", state);
+            return pgsql_insert(ld, element, "ACCEPT", state,params);
 
         case TCP_STATE_ESTABLISHED:
             if (element->tracking.protocol == IPPROTO_TCP)
-                return pgsql_update_state(ld, element, TCP_STATE_OPEN, TCP_STATE_ESTABLISHED, 0);
+                return pgsql_update_state(ld, element, TCP_STATE_OPEN, TCP_STATE_ESTABLISHED, 0,params);
             else
                 return 0;
 
         case TCP_STATE_CLOSE:
             if (element->tracking.protocol == IPPROTO_TCP)
-                return pgsql_update_state(ld, element, TCP_STATE_ESTABLISHED, TCP_STATE_CLOSE, 1);
+                return pgsql_update_state(ld, element, TCP_STATE_ESTABLISHED, TCP_STATE_CLOSE, 1,params);
             else
                 return 0;
 
         case TCP_STATE_DROP:
-            return pgsql_insert(ld, element, "DROP", state);
+            return pgsql_insert(ld, element, "DROP", state,params);
 
             /* Skip other messages */
         default:
             return 0;
     }
-}
-
-G_MODULE_EXPORT gint log_sql_disconnect(void){
-    PGconn *ld = g_private_get (pgsql_priv);
-    PQfinish(ld);
-    return 0;
 }
 

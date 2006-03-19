@@ -40,13 +40,15 @@
 #define INSERT_REQUEST_FIEDLS_SIZE 200
 #define INSERT_REQUEST_VALUES_SIZE 800
 
-int pgsql_request_timeout;
-char * pgsql_user;
-char * pgsql_passwd;
-char * pgsql_server;
-char * pgsql_ssl;
-char * pgsql_db_name;
-char * pgsql_table_name;
-int pgsql_server_port;
+struct log_pgsql_params {
+    int pgsql_request_timeout;
+    char * pgsql_user;
+    char * pgsql_passwd;
+    char * pgsql_server;
+    char * pgsql_ssl;
+    char * pgsql_db_name;
+    char * pgsql_table_name;
+    int pgsql_server_port;
 
-GPrivate* pgsql_priv; /* private pointer for pgsql database access */
+    GPrivate* pgsql_priv; /* private pointer for pgsql database access */
+};
