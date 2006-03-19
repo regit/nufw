@@ -116,3 +116,14 @@ G_MODULE_EXPORT gchar* g_module_unload(void)
         return NULL;
 }
 
+G_MODULE_EXPORT gboolean* init_module_from_conf(module_t* module)
+{
+        return TRUE;
+}
+
+G_MODULE_EXPORT gboolean* module_params_unload(gpointer params_p)
+{
+        return TRUE;
+}
+
+
