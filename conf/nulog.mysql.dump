@@ -55,11 +55,11 @@ CREATE TABLE users (
   username varchar(30) default NULL,
   bad_conns int(10) unsigned not NULL default '0',
   good_conns int(10) unsigned not NULL default '0',
-  first_time timestamp(14) default NULL,
-  last_time timestamp(14) default NULL,
-  os_sysname varchar(100) default NULL,
-  os_release varchar(30) default NULL,
-  os_version varchar(30) default NULL,
+  first_time DATETIME default NULL,
+  last_time DATETIME default NULL,
+  os_sysname varchar(40) default NULL,
+  os_release varchar(40) default NULL,
+  os_version varchar(100) default NULL,
   PRIMARY KEY  (user_id),
   KEY username (username)
 ) TYPE=MyISAM;
@@ -141,7 +141,7 @@ CREATE TABLE ulog (
   start_timestamp datetime default NULL,
   username varchar(30) default NULL,
   user_id smallint(5) unsigned default NULL,
-  client_os varchar(128) default NULL,
-  client_app varchar(128) default NULL
+  client_os varchar(100) default NULL,
+  client_app varchar(256) default NULL
 ) TYPE=MyISAM;
 
