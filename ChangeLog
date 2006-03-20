@@ -36,7 +36,8 @@
 	- nuauth, module script: fix a security bug, quote script arguments
 	- small changes to make flawfinder and rats tools happy
 	- replace obsolete usleep() with nanosleep()
-	- Introduce lock in tls code because gnuTLS is NOT really threadsafe (does NOT support thread sending on the same TLS session)
+	- Introduce lock in tls code because gnuTLS is NOT really threadsafe (does
+	  NOT support thread sending on the same TLS session)
 	- stronger security in mysql and  postgresql modules: use secure_sprintf()
 	  instead of classic sprintf() and quote all user strings
 	- stronger security in script module: quote all arguments
@@ -47,8 +48,13 @@
 	  detect all warnings with -Wextra (or -W for gcc < 4.0)
 	- use pointer and not object during logging
 	- bugfix:nuauth: don't crash anymore if configuration file doesn't exist
-	- nuauth : fix gnutls problem (multithread writing and reading)
-	- nuauth : multiple modules with separate conf 
+	- nuauth: fix gnutls problem (multithread writing and reading)
+	- nuauth: multiple modules with separate conf 
+	- nautuh: stop threads (and thread pools) before exiting NuAuth. Use a
+	mutex to ask a thread to stop. Each thread use timeout of one second,
+	and don't use any blocking function anymore (use function with timeout
+	instead: eg. use g_async_queue_timed_pop() instead of g_async_queue_pop())
+
 1.1.3 (2006/01/25)
 	- nutrackd : PostGreSQL support
 	- Fixes in the PostGreSQL log module (removed the useless server_port
