@@ -38,7 +38,7 @@ confparams mysql_nuauth_vars[] = {
     { "mysql_ssl_cipher" , G_TOKEN_STRING , 0, MYSQL_SSL_CIPHER}
 };
 
-G_MODULE_EXPORT gboolean* module_params_unload(gpointer params_p)
+G_MODULE_EXPORT gchar* module_params_unload(gpointer params_p)
 {
   struct log_mysql_params* params = (struct log_mysql_params*)params_p;
   if (params){
