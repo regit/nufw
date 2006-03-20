@@ -90,21 +90,29 @@ void real_log_user_packet (gpointer userdata, gpointer data)
 
 void log_user_session(user_session* usession, session_state_t state)
 {
-	struct session_event* sessevent=g_new0(struct session_event,1);
-	/* feed thread pool */
-	if (nuauthconf->log_users & 1){
-		sessevent->session=g_memdup(usession, sizeof(*usession));
-		sessevent->state=state;
-        sessevent->session->user_name  = g_strdup(usession->user_name);
-        sessevent->session->tls = NULL;
-        sessevent->session->groups = NULL;
-        sessevent->session->sysname = g_strdup(usession->sysname);
-        sessevent->session->version = g_strdup(usession->version);
-        sessevent->session->release = g_strdup(usession->release);
-		g_thread_pool_push(nuauthdatas->user_session_loggers,
-				sessevent,
-				NULL);
-	}
+    struct session_event* sessevent;
+    if ((nuauthconf->log_users & 1) == 0)
+        return;
+
+    /* copy interresting informations of the session */
+    sessevent=g_new0(struct session_event,1);
+    if (sessevent == NULL) {
+        /* no more memory :-( */
+        return;
+    }
+    sessevent->session=g_memdup(usession, sizeof(*usession));
+    sessevent->state=state;
+    sessevent->session->user_name  = g_strdup(usession->user_name);
+    sessevent->session->tls = NULL;
+    sessevent->session->groups = NULL;
+    sessevent->session->sysname = g_strdup(usession->sysname);
+    sessevent->session->version = g_strdup(usession->version);
+    sessevent->session->release = g_strdup(usession->release);
+
+    /* feed thread pool */
+    g_thread_pool_push(nuauthdatas->user_session_loggers,
+            sessevent,
+            NULL);
 }
 
 void log_user_session_thread (gpointer element,gpointer data)
