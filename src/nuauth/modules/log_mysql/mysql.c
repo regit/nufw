@@ -145,8 +145,8 @@ MYSQL* mysql_conn_init(struct log_mysql_params* params)
 
 static gchar * generate_osname(gchar *Name, gchar *Version, gchar *Release)
 {
-    if (Name && Release && Version
-            && (OSNAME_MAX_SIZE < (strlen(Name)+strlen(Release)+strlen(Version)+3))) {
+    if (Name != NULL && Release != NULL && Version != NULL
+            && ((strlen(Name)+strlen(Release)+strlen(Version)+3) <= OSNAME_MAX_SIZE)) {
         return g_strjoin("-",Name,Version,Release,NULL);
     } else {
         return g_strdup("");
@@ -165,8 +165,11 @@ static gchar* generate_appname(gchar *appname)
 char* quote_string(MYSQL *mysql, char *text)
 {
     unsigned int length = strlen(text);
-    char *quoted = (char *)malloc(length*2 + 1);
-    if (mysql_real_escape_string(mysql, quoted, text, length))
+    char *quoted;
+    if (length == 0)
+        return strdup(text);
+    quoted = (char *)malloc(length*2 + 1);
+    if (mysql_real_escape_string(mysql, quoted, text, length) == 0)
     {
         g_free(quoted);
         return NULL;
@@ -194,7 +197,7 @@ char* build_insert_request(
         return NULL;
     }
     ok = secure_snprintf(request_values, sizeof(request_values),
-            "VALUES (%hu, %lu, %hu, %lu, %lu, ",
+            "VALUES ('%hu', '%lu', '%hu', '%lu', '%lu', ",
             (short unsigned int)state,
             (long unsigned int)element->timestamp,
             (short unsigned int)element->tracking.protocol,
@@ -230,7 +233,7 @@ char* build_insert_request(
                     "oob_prefix, user_id, username, client_os, client_app", 
                     sizeof(request_fields));
             ok = secure_snprintf(tmp_buffer, sizeof(tmp_buffer),
-                    "'%s', %lu, '%s', '%s', '%s'",
+                    "'%s', '%lu', '%s', '%s', '%s'",
                     auth_oob_prefix,
                     (long unsigned int)element->user_id,
                     quoted_username,
@@ -267,16 +270,16 @@ char* build_insert_request(
         {
             g_strlcat(
                     request_fields, 
-                    ", tcp_sport, tcp_dport) ", 
+                    ", tcp_sport, tcp_dport)", 
                     sizeof(request_fields));
         } else {
             g_strlcat(
                     request_fields, 
-                    ", udp_sport, udp_dport) ", 
+                    ", udp_sport, udp_dport)", 
                     sizeof(request_fields));
         }
         ok = secure_snprintf(tmp_buffer, sizeof(tmp_buffer),
-                ", %hu, %hu)", 
+                ", '%hu', '%hu')", 
                 element->tracking.source,
                 element->tracking.dest);
         if (!ok) {
@@ -284,7 +287,7 @@ char* build_insert_request(
         }
         g_strlcat(request_values, tmp_buffer, sizeof(request_values));
     } else {
-        g_strlcat(request_fields, ") ", sizeof(request_fields));
+        g_strlcat(request_fields, ")", sizeof(request_fields));
         g_strlcat(request_values, ")", sizeof(request_values));
     }
 
@@ -297,7 +300,7 @@ char* build_insert_request(
     }
 
     /* do the mysql request */
-    return g_strconcat(request_fields, request_values, NULL);
+    return g_strconcat(request_fields, "\n", request_values, NULL);
 }    
 
 inline int log_state_open(MYSQL *ld, connection_t *element,struct log_mysql_params* params)
@@ -566,11 +569,20 @@ G_MODULE_EXPORT int user_session_logs(user_session *c_session, session_state_t s
 
     switch (state) {
         case SESSION_OPEN:
+            ok = secure_snprintf(request, sizeof(request),
+                    "DELETE FROM %s WHERE user_id='%lu';",
+                    params->mysql_users_table_name,
+                    c_session->user_id,
+                    time(NULL));
+            if (ok) (void)mysql_real_query(ld, request, strlen(request));
+
             /* create new user session */
             ok = secure_snprintf(request, sizeof(request),
-                    "INSERT INTO %s (username, ip_saddr, os_sysname, os_release, os_version, start_timestamp) "
-                    "VALUES ('%s', '%u', '%s', '%s', '%s', FROM_UNIXTIME(%lu))",
+                    "INSERT INTO %s (user_id, username, ip_saddr, "
+                    "os_sysname, os_release, os_version, first_time) "
+                    "VALUES ('%lu', '%s', '%u', '%s', '%s', '%s', FROM_UNIXTIME(%lu))",
                     params->mysql_users_table_name,
+                    c_session->user_id,
                     c_session->user_name,
                     c_session->addr,
                     c_session->sysname,
@@ -582,7 +594,7 @@ G_MODULE_EXPORT int user_session_logs(user_session *c_session, session_state_t s
         case SESSION_CLOSE:
             /* update existing user session */
             ok = secure_snprintf(request, sizeof(request),
-                    "UPDATE %s SET end_timestamp=FROM_UNIXTIME(%lu) "
+                    "UPDATE %s SET last_time=FROM_UNIXTIME(%lu) "
                     "WHERE ip_saddr=%u",
                     params->mysql_users_table_name,
                     time(NULL),
