@@ -146,6 +146,7 @@ void free_module_t(module_t* module)
       if (module->free_params){
           module->free_params(module->params);
       }
+      g_free(module->module_name);
       g_free(module->name);
       g_module_close(module->module);
       g_free(module->configfile);

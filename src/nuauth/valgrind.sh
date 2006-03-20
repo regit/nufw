@@ -21,10 +21,14 @@ trap stop_valgrind SIGINT SIGTERM
 #    --gen-suppressions=yes
 #    --gen-suppressions=yes \
 
+# Explains:
+#   --run-libc-freeres=no: Valgrind free all memory that libc allocates
+
 valgrind \
     --show-reachable=yes -v \
     --suppressions=valgrind.supp \
     --log-file-exactly=$LOG \
+    --run-libc-freeres=no \
     --leak-check=full \
     --verbose \
     ./nuauth $NUAUTH_OPT 2>&1

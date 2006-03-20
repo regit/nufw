@@ -122,6 +122,15 @@ void free_threads()
     }
 }    
 
+void clear_push_queue()
+{
+    struct internal_message* message;
+    while ( (message=g_async_queue_try_pop(nuauthdatas->tls_push_queue)) != NULL)
+    {
+        g_free(message->datas);
+    }
+}    
+
 /**
  * exit function if a signal is received in daemon mode.
  * 
@@ -149,8 +158,6 @@ void nuauth_cleanup( int signal )
     close_clients();
     free_nuauth_params (nuauthconf);
 
-    /* TODO: clear nuauthdatas->tls_push_queue */ 
-
     /* clean gnutls */
     end_tls();
     end_audit();
@@ -163,6 +170,7 @@ void nuauth_cleanup( int signal )
         clear_cache(nuauthdatas->user_cache);
     }
     free_threads();
+    clear_push_queue();
 
     /* destroy pid file */
     unlink(NUAUTH_PID_FILE);
