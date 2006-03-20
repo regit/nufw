@@ -50,7 +50,7 @@
 	- bugfix:nuauth: don't crash anymore if configuration file doesn't exist
 	- nuauth: fix gnutls problem (multithread writing and reading)
 	- nuauth: multiple modules with separate conf 
-	- nautuh: stop threads (and thread pools) before exiting NuAuth. Use a
+	- nuauth: stop threads (and thread pools) before exiting NuAuth. Use a
 	mutex to ask a thread to stop. Each thread use timeout of one second,
 	and don't use any blocking function anymore (use function with timeout
 	instead: eg. use g_async_queue_timed_pop() instead of g_async_queue_pop())
