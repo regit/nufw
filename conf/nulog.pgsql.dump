@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\connect - postgres
+-- \connect - postgres
 
 SET search_path = public, pg_catalog;
 
