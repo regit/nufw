@@ -61,6 +61,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t *module)
 {
     unsigned int nb_params = sizeof(pgsql_nuauth_vars)/sizeof(confparams);
     struct log_pgsql_params* params=g_new0(struct log_pgsql_params,1);
+    module->params = params;
 
     /* parse conf file */
     if (module->configfile){
@@ -133,7 +134,7 @@ char* quote_string(char *text)
 {
     unsigned int length = strlen(text);
     char *quoted = (char *)malloc(length*2 + 1);
-    if (PQescapeString(quoted, text, length))
+    if (PQescapeString(quoted, text, length) == 0)
     {
         g_free(quoted);
         return NULL;
@@ -144,7 +145,7 @@ char* quote_string(char *text)
 static gchar* generate_osname(gchar *Name, gchar *Version, gchar *Release)
 {
     char *all, *quoted;
-    if (!Name || !Release || !Version 
+    if (Name == NULL || Release == NULL || Version == NULL
         || OSNAME_MAX_SIZE < (strlen(Name)+strlen(Release)+strlen(Version)+3))
     {
         return g_strdup("");
@@ -174,7 +175,7 @@ int pgsql_insert(PGconn *ld, connection_t *element, char *oob_prefix, tcp_state_
 
     /* Write common informations */
     ok = secure_snprintf(request_fields, sizeof(request_fields),
-            "INSERT INTO %s (oob_prefix, state, oob_time_sec"
+            "INSERT INTO %s (oob_prefix, state, oob_time_sec, "
             "ip_protocol, ip_saddr, ip_daddr",
             params->pgsql_table_name
             );
@@ -182,14 +183,10 @@ int pgsql_insert(PGconn *ld, connection_t *element, char *oob_prefix, tcp_state_
         return -1;
     }
     ok = secure_snprintf(request_values, sizeof(request_values),
-            "VALUES ('%s', '%hu', '%lu', '%u','%s','%s'",
-            oob_prefix,
-            state,
-            element->timestamp,
-            element->tracking.protocol,
-            ip_src,
-            ip_dest
-            );
+            "VALUES ('%s', '%hu', '%lu', "
+            "'%u','%s','%s'",
+            oob_prefix, state, element->timestamp,
+            element->tracking.protocol, ip_src, ip_dest);
     if (!ok) {
         return -1;
     }
@@ -227,6 +224,7 @@ int pgsql_insert(PGconn *ld, connection_t *element, char *oob_prefix, tcp_state_
         if (!ok) {
             return -1;
         }
+        g_strlcat(request_values, tmp_buffer, sizeof(request_values));
     }
 
     /* Add TCP/UDP parameters */
@@ -236,16 +234,16 @@ int pgsql_insert(PGconn *ld, connection_t *element, char *oob_prefix, tcp_state_
         if (element->tracking.protocol == IPPROTO_TCP) {
             g_strlcat(
                     request_fields, 
-                    ", tcp_sport, tcp_dport) ", 
+                    ", tcp_sport, tcp_dport)", 
                     sizeof(request_fields));
         } else {
             g_strlcat(
                     request_fields, 
-                    ", udp_sport, udp_dport) ", 
+                    ", udp_sport, udp_dport)", 
                     sizeof(request_fields));
         }
         ok = secure_snprintf(tmp_buffer, sizeof(tmp_buffer),
-                ", %hu, %hu);", 
+                ", '%hu', '%hu');", 
                 element->tracking.source,
                 element->tracking.dest);
         if (!ok) {
@@ -253,7 +251,7 @@ int pgsql_insert(PGconn *ld, connection_t *element, char *oob_prefix, tcp_state_
         }
         g_strlcat(request_values, tmp_buffer, sizeof(request_values));
     } else {
-        g_strlcat(request_fields, ") ", sizeof(request_fields));
+        g_strlcat(request_fields, ")", sizeof(request_fields));
         g_strlcat(request_values, ");", sizeof(request_values));
     }
 
@@ -266,7 +264,7 @@ int pgsql_insert(PGconn *ld, connection_t *element, char *oob_prefix, tcp_state_
     }
 
     /* create the sql query */
-    sql_query = g_strconcat(request_fields, request_values, NULL);
+    sql_query = g_strconcat(request_fields, "\n", request_values, NULL);
     if (sql_query == NULL) {
         log_message(SERIOUS_WARNING, AREA_MAIN,
                 "Fail to build PostgreSQL query (maybe too long)!");
@@ -419,7 +417,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state,
         ld=pgsql_conn_init(params);
         if (ld == NULL){
             log_message (SERIOUS_WARNING, AREA_MAIN,
-                    "Can not initiate PGSQL connection!\n");
+                    "Can not initiate PgSQL connection!\n");
             return -1;
         }
         g_private_set(params->pgsql_priv,ld);
@@ -458,4 +456,10 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state,
             return 0;
     }
 }
+
+G_MODULE_EXPORT int user_session_logs(user_session *c_session, session_state_t state,gpointer params_p)
+{
+    return 1;
+}
+
 
