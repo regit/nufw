@@ -60,8 +60,8 @@ CREATE TABLE users (
   os_sysname varchar(40) default NULL,
   os_release varchar(40) default NULL,
   os_version varchar(100) default NULL,
-  PRIMARY KEY  (user_id),
-  KEY username (username)
+  KEY `user_id` (user_id),
+  KEY `username` (username)
 ) TYPE=MyISAM;
 
 --

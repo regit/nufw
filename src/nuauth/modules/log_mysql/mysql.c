@@ -569,13 +569,6 @@ G_MODULE_EXPORT int user_session_logs(user_session *c_session, session_state_t s
 
     switch (state) {
         case SESSION_OPEN:
-            ok = secure_snprintf(request, sizeof(request),
-                    "DELETE FROM %s WHERE user_id='%lu';",
-                    params->mysql_users_table_name,
-                    c_session->user_id,
-                    time(NULL));
-            if (ok) (void)mysql_real_query(ld, request, strlen(request));
-
             /* create new user session */
             ok = secure_snprintf(request, sizeof(request),
                     "INSERT INTO %s (user_id, username, ip_saddr, "
