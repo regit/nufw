@@ -58,14 +58,6 @@ void nufw_prepare_quit()
     /* stop nufw */
     pthread_mutex_destroy(&packets_list.mutex);
 
-    /* destroy netlink/ipq handle */
-#if USE_NFQUEUE
-    nfq_destroy_queue(hndl);
-    nfq_unbind_pf(h, AF_INET);
-#else
-    ipq_destroy_handle(hndl);
-#endif
-
     /* destroy conntrack handle */
 #ifdef HAVE_LIBCONNTRACK
     nfct_close(cth);

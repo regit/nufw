@@ -218,6 +218,9 @@ void* packetsrv(void *arg)
         } else 
             break;
     }
+
+    nfq_destroy_queue(hndl);
+    nfq_unbind_pf(h, AF_INET);
 #else
     unsigned char buffer[BUFSIZ];
     int size;
@@ -237,7 +240,12 @@ void* packetsrv(void *arg)
     {
         pthread_mutex_unlock(&self->mutex);
 
-        size = ipq_read(hndl,buffer,sizeof(buffer),0);
+        /* wait netfilter event with a timeout of one second */
+        size = ipq_read(hndl,buffer,sizeof(buffer), 1000000);
+        if (size == 0) {
+            /* timeout! */
+            continue;
+        }          
         if (size != -1){
             if (size < BUFSIZ ){
                 if (ipq_message_type(buffer) == NLMSG_ERROR ){
