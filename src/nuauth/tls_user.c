@@ -122,7 +122,8 @@ static int treat_user_request (user_session * c_session)
 #ifdef DEBUG_ENABLE
     if (!c_session->multiusers) {
         if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-            g_message("Packet from user %s",c_session->user_name);
+            g_message("(*) New packet from user %s",
+                    c_session->user_name);
     }
 #endif
     
@@ -148,14 +149,11 @@ static int treat_user_request (user_session * c_session)
     /* get header to check if we need to get more datas */
     header = (struct nuv2_header* )datas->buffer;
     header_length=ntohs(header->length);
-    debug_log_message (VERBOSE_DEBUG, AREA_MAIN,
-        "(%s:%d) Annonced packet size is %d, received %d\n",
-        __FILE__, __LINE__, header_length,datas->buffer_len);
 
     /* is it an "USER HELLO" message ? */
     if (header->proto==PROTO_VERSION && header->msg_type == USER_HELLO){
         debug_log_message (VERBOSE_DEBUG, AREA_MAIN,
-            "(%s:%d) user HELLO",__FILE__,__LINE__);
+            "tls user: HELLO from %s", c_session->user_name);
         free_buffer_read(datas);
         return 1;
     }
@@ -352,7 +350,7 @@ void tls_user_main_loop(struct tls_user_context_t *context, GMutex *mutex)
     fd_set wk_set; /* working set */
     struct timeval tv;
 
-    log_message(INFO, AREA_MAIN, "NuAuth is waiting client connections.");
+    log_message(INFO, AREA_MAIN, "[+] NuAuth is waiting client connections.");
     while (g_mutex_trylock(mutex)) 
     {
         g_mutex_unlock(mutex);

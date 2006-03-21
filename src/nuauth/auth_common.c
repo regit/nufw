@@ -126,7 +126,7 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
     response.packet_id = htonl(packet_id);
 
     debug_log_message (DEBUG, AREA_MAIN, 
-            "Sending auth answer %d for %u on %p ...",
+            "Sending auth answer %d for packet %u on socket %p",
             answer->answer, packet_id, answer->tls);
     if (answer->tls->alive){
 	g_mutex_lock(answer->tls->tls_lock);
@@ -138,7 +138,6 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
             clean_nufw_session(answer->tls);			
         }
     }
-    debug_log_message (DEBUG, AREA_MAIN, "done");
 }
 
 void free_connection_callback(gpointer conn, gpointer unused)
@@ -382,7 +381,7 @@ gint take_decision(connection_t *element, packet_place_t place)
     time_t expire=-1; /* no expiration by default */
 
     debug_log_message (DEBUG, AREA_MAIN,
-            "Trying to take decision on %p\n", element);
+            "Trying to take decision on %p", element);
 
     /*even firster we check if we have an actual element*/
     if (element == NULL)

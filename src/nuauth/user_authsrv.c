@@ -87,9 +87,6 @@ void user_check_and_decide (gpointer userdata, gpointer data)
       }
   }
   free_buffer_read(userdata);
-
-  debug_log_message (VERBOSE_DEBUG, AREA_USER,
-          "leaving user_check\n");
 }
 
 void user_process_field_hello(connection_t* connection, struct nuv2_authfield_hello* hellofield)

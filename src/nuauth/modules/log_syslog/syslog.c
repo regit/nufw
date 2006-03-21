@@ -23,13 +23,21 @@
 
 G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state,gpointer params)
 {
+    char *prefix = "[nuauth] ";
     char *str_state;
     char source_addr[INET_ADDRSTRLEN+1];
     char dest_addr[INET_ADDRSTRLEN+1];
     struct in_addr oneip;
 
+    char *saddr;
+    char* daddr;
+    u_int8_t protocol;
+    u_int16_t sport;
+    u_int16_t dport;
+
     /* contruct request */
-    switch (state) {
+    switch (state)
+    {
       case TCP_STATE_OPEN:
         str_state="Open ";
         break;
@@ -55,37 +63,27 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state,
 
     if ( ((element->tracking).protocol == IPPROTO_TCP) || ((element->tracking).protocol == IPPROTO_UDP) ) {
         if (state==TCP_STATE_ESTABLISHED){
-        g_message("%s[%s] %ld : SRC=%s DST=%s PROTO=%d SPT=%u DPT=%u",
-            str_state,
-            element->username,
-            element->timestamp,
-            dest_addr,
-            source_addr,
-            (element->tracking).protocol,
-            (element->tracking).dest,
-            (element->tracking).source
-            );
+            saddr = dest_addr;
+            daddr = source_addr;
+            sport = (element->tracking).dest;
+            dport = (element->tracking).source;
         } else {
-        g_message("%s[%s] %ld : SRC=%s DST=%s PROTO=%d SPT=%u DPT=%u",
-            str_state,
-            element->username,
-            element->timestamp,
-            source_addr,
-            dest_addr,
-            (element->tracking).protocol,
-            (element->tracking).source,
-            (element->tracking).dest
-            );
+            saddr = source_addr;
+            daddr = dest_addr;
+            sport = (element->tracking).source;
+            dport = (element->tracking).dest;
         }
+        g_message("%s%s[%s] %ld : SRC=%s DST=%s PROTO=%d SPT=%u DPT=%u",
+            prefix, str_state,
+            element->username, element->timestamp,
+            saddr, daddr, element->tracking.protocol,
+            sport, dport);
     } else {
-        g_message("%s[%s] %ld : SRC=%s DST=%s PROTO=%d",
-            str_state,
-            element->username,
-            element->timestamp,
-            source_addr,
-            dest_addr,
-            (element->tracking).protocol
-            );
+        g_message("%s%s[%s] %ld : SRC=%s DST=%s PROTO=%d",
+            prefix, str_state,
+            element->username, element->timestamp,
+            source_addr, dest_addr,
+            (element->tracking).protocol);
     }
     return 0;
 }

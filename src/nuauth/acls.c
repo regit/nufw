@@ -271,10 +271,6 @@ void get_acls_from_cache (connection_t* conn_elt)
 	if (conn_elt->acl_groups == null_queue_datas){
 		conn_elt->acl_groups=NULL;
 	} 
-#ifdef DEBUG_ENABLE
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET))
-		g_message("[acl cache] check if answer is NULL");
-#endif
 	if (conn_elt->acl_groups==null_message){
 		struct cache_message * rmessage;
 		/* cache wants an update 
