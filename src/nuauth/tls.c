@@ -63,17 +63,17 @@ gint check_certs_for_tls_session(gnutls_session session)
 	}
 
 	if (status & GNUTLS_CERT_INVALID){
-		g_message("The certificate is not trusted.\n");
+		g_message("The certificate is not trusted.");
 		return SASL_FAIL;
 	}
 
 	if (status & GNUTLS_CERT_SIGNER_NOT_FOUND){
-		g_message("The certificate hasn't got a known issuer.\n");
+		g_message("The certificate hasn't got a known issuer.");
 		return SASL_NOVERIFY;
 	}
 
 	if (status & GNUTLS_CERT_REVOKED){
-		g_message("The certificate has been revoked.\n");
+		g_message("The certificate has been revoked.");
 		return SASL_EXPIRED;
 	}
 
@@ -194,9 +194,9 @@ int tls_connect(int conn_fd,gnutls_session** session_ptr)
 	gnutls_transport_set_ptr( *session, GINT_TO_POINTER(conn_fd));
     gnutls_transport_set_push_function (* session, tls_push_func);
 
-    debug_log_message (DEBUG, AREA_MAIN, "NuFW TLS Handshaking\n");
+    debug_log_message (DEBUG, AREA_MAIN, "NuFW TLS Handshaking");
 	ret = gnutls_handshake( *session);
-    debug_log_message (DEBUG, AREA_MAIN, "NuFW TLS Handshaked\n");
+    debug_log_message (DEBUG, AREA_MAIN, "NuFW TLS Handshaked");
 
 	while ((ret == GNUTLS_E_AGAIN) || (ret == GNUTLS_E_INTERRUPTED))
 	{
@@ -220,7 +220,7 @@ int tls_connect(int conn_fd,gnutls_session** session_ptr)
 			return SASL_BADPARAM;
 		}
     }
-    debug_log_message (DEBUG, AREA_MAIN, "NuFW TLS Handshake was completed\n");
+    debug_log_message (DEBUG, AREA_MAIN, "NuFW TLS Handshake was completed");
 
 	if (nuauth_tls.request_cert==GNUTLS_CERT_REQUIRE){
 		/* certicate verification */
@@ -318,7 +318,7 @@ void create_x509_credentials()
 	ret = generate_dh_params(&nuauth_tls.dh_params);
 #ifdef DEBUG_ENABLE
 	if (ret < 0)
-		log_message (INFO, AREA_USER, "generate_dh_params() failed\n");
+		log_message (INFO, AREA_USER, "generate_dh_params() failed");
 #endif
 
 	/* 

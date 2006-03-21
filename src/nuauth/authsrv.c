@@ -143,9 +143,9 @@ void nuauth_cleanup( int signal )
     (void)sigaction(SIGINT, &nuauthdatas->old_sigint_hdl, NULL);
 
     if (signal == SIGINT)
-        g_message("Catch SIGINT signal: stop NuAuth server");
+        g_message("[+] Stop NuAuth server (SIGINT)");
     else if (signal == SIGTERM)
-        g_message("Catch SIGTERM signal: stop NuAuth server");
+        g_message("[+] Stop NuAuth server (SIGTERM)");
 
     stop_threads();
 
@@ -175,7 +175,7 @@ void nuauth_cleanup( int signal )
     /* destroy pid file */
     unlink(NUAUTH_PID_FILE);
     
-    g_message("NuAuth exit");
+    g_message("[+] NuAuth exit");
     exit(EXIT_SUCCESS);
 }
 
@@ -417,12 +417,12 @@ void configure_app(int argc, char **argv)
     if (nuauthconf->debug_level < MIN_DEBUG_LEVEL)
         nuauthconf->debug_level=MIN_DEBUG_LEVEL;
     if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN))
-        g_message("debug_level is %i\n",nuauthconf->debug_level);
+        g_message("debug_level is %i",nuauthconf->debug_level);
 
     if (params.daemonize == 1) {
         daemonize();
     } else {
-        g_message("Starting nuauth");
+        g_message("[+] Starting nuauth");
     }
 }
 
@@ -553,6 +553,8 @@ void main_loop()
 {
     struct timespec sleep;
 
+    g_message("[+] NuAuth started.");
+            
     /* a little sleep (1 second), we are waiting for threads to initiate:w */
     sleep.tv_sec = 1;
     sleep.tv_nsec = 0;
@@ -568,7 +570,7 @@ void main_loop()
         clean_connections_list();
         if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
             if (g_thread_pool_unprocessed(nuauthdatas->user_checkers) || g_thread_pool_unprocessed(nuauthdatas->acl_checkers)){
-                g_message("%u user/%u acl unassigned task(s), %d connection(s)\n",
+                g_message("%u user/%u acl unassigned task(s), %d connection(s)",
                         g_thread_pool_unprocessed(nuauthdatas->user_checkers),
                         g_thread_pool_unprocessed(nuauthdatas->acl_checkers),
                         g_hash_table_size(conn_list)

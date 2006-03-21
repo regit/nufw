@@ -82,10 +82,10 @@ void search_and_push(connection_t *new)
     /* push data to sender */ 
     struct internal_message *message = g_new0(struct internal_message, 1);
     if (!message){
-        log_message (CRITICAL, AREA_USER, "Couldn't g_new0(). No more memory?");
+        log_message (CRITICAL, AREA_USER, "search&push: Couldn't g_new0(). No more memory?");
         return;
     }
-    debug_log_message (VERBOSE_DEBUG, AREA_USER, "need to warn client");
+    debug_log_message (VERBOSE_DEBUG, AREA_USER, "search&push: need to warn client");
     /* duplicate tracking */
     message->type = WARN_MESSAGE;
     message->datas = g_memdup(&(new->tracking), sizeof(tracking_t));
@@ -93,7 +93,7 @@ void search_and_push(connection_t *new)
         g_async_queue_push (nuauthdatas->tls_push_queue, message);
     }else{
         g_free(message);
-        log_message (CRITICAL, AREA_USER, "g_memdup returned NULL");
+        log_message (CRITICAL, AREA_USER, "search&push: g_memdup returned NULL");
     }
 }
 
@@ -101,7 +101,7 @@ inline void search_and_fill_complete_of_authreq(connection_t *new, connection_t 
 {
     switch (new->state){
         case  AUTH_STATE_AUTHREQ:
-            debug_log_message (DEBUG, AREA_MAIN, "Adding a packet_id to a connection\n");
+            debug_log_message (DEBUG, AREA_MAIN, "Complete authreq: Adding a packet_id to a connection");
             packet->packet_id =
                 g_slist_prepend(packet->packet_id, GINT_TO_POINTER((new->packet_id)->data));
             free_connection(new);
@@ -109,7 +109,7 @@ inline void search_and_fill_complete_of_authreq(connection_t *new, connection_t 
 
         case AUTH_STATE_USERPCKT:
             debug_log_message (VERBOSE_DEBUG, AREA_MAIN,
-                    "Filling user data for %s\n", new->username);
+                    "Complete authreq: Filling user data for %s\n", new->username);
             new->state = AUTH_STATE_COMPLETING;
             packet->state = AUTH_STATE_COMPLETING;
 
@@ -162,7 +162,7 @@ inline void search_and_fill_complete_of_userpckt(connection_t *new, connection_t
             
         case AUTH_STATE_USERPCKT:
             debug_log_message (VERBOSE_DEBUG, AREA_MAIN,
-                    "Found a duplicate user packet\n");
+                    "Complete user packet: Found a duplicate user packet\n");
             free_connection(new);
             break;
 
@@ -207,14 +207,14 @@ inline void search_and_fill_completing(connection_t *new, connection_t *packet)
 
         case  AUTH_STATE_AUTHREQ:
             debug_log_message (DEBUG, AREA_MAIN,
-                    "Adding a packet_id to a completing connection\n");
+                    "Completing (auth): Adding a packet_id to a completing connection\n");
             packet->packet_id =
                 g_slist_prepend(packet->packet_id, GINT_TO_POINTER((new->packet_id)->data));
             free_connection(new);
             break;
             
         case AUTH_STATE_USERPCKT:
-            log_message (DEBUG, AREA_MAIN, "User packet in state completing\n");
+            log_message (DEBUG, AREA_MAIN, "Completing (user): User packet in state completing");
             free_connection(new);
             break;
             
@@ -226,13 +226,13 @@ inline void search_and_fill_completing(connection_t *new, connection_t *packet)
 inline void search_and_fill_ready(connection_t *new, connection_t *packet)
 {
     debug_log_message (DEBUG, AREA_MAIN,
-            "Element is in state %d but we received packet state %d\n",
+            "seach&fill ready: Element is in state %d but we received packet state %d\n",
             packet->state,
             new->state);
     switch (new->state){
         case  AUTH_STATE_AUTHREQ:
             debug_log_message (DEBUG, AREA_MAIN,
-                    "Adding a packet_id to a connection\n");
+                    "seach&fill ready: Adding a packet_id to a connection\n");
             packet->packet_id =
                 g_slist_prepend(packet->packet_id, GUINT_TO_POINTER((new->packet_id)->data));
             free_connection(new);
@@ -240,7 +240,7 @@ inline void search_and_fill_ready(connection_t *new, connection_t *packet)
             
         case AUTH_STATE_USERPCKT:
             debug_log_message (VERBOSE_DEBUG, AREA_MAIN,
-                    "Need only cleaning\n");
+                    "seach&fill ready: Need only cleaning\n");
             free_connection(new);
             break;           
 
@@ -307,10 +307,10 @@ void* search_and_fill(GMutex* mutex)
         /* search pckt */
         g_static_mutex_lock (&insert_mutex);
         debug_log_message (VERBOSE_DEBUG, AREA_MAIN,
-                "Starting search and fill\n");
+                "Starting search and fill");
         packet = (connection_t *)g_hash_table_lookup(conn_list,&(new->tracking));
         if (packet == NULL) {
-            debug_log_message (DEBUG, AREA_MAIN, "Creating new packet\n");
+            debug_log_message (DEBUG, AREA_MAIN, "Creating new packet");
             g_hash_table_insert (conn_list, &(new->tracking), new);
             g_static_mutex_unlock (&insert_mutex);
             if (nuauthconf->push && new->state == AUTH_STATE_AUTHREQ) {

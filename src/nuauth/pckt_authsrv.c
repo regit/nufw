@@ -183,9 +183,7 @@ connection_t* authpckt_new_connection(unsigned char *dgram, unsigned int dgram_s
     /* allocate new connection */
     connection = g_new0(connection_t, 1);
     if (connection == NULL){
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET)){
-            g_message("Can not allocate connection\n");
-        }
+        log_message (WARNING, AREA_PACKET, "Can not allocate connection");
         return NULL;
     }
 #ifdef PERF_DISPLAY_ENABLE
@@ -195,11 +193,9 @@ connection_t* authpckt_new_connection(unsigned char *dgram, unsigned int dgram_s
     connection->user_groups = NULL;
 
     connection->packet_id = g_slist_append(NULL, GUINT_TO_POINTER(ntohl(msg->packet_id)));
-#ifdef DEBUG_ENABLE
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_PACKET)) {
-        g_message("Working on  %u\n",(uint32_t)GPOINTER_TO_UINT(connection->packet_id->data));
-    }
-#endif
+    debug_log_message(DEBUG, AREA_PACKET,
+        "Auth pckt: Working on new connection (id=%u)",
+        (uint32_t)GPOINTER_TO_UINT(connection->packet_id->data));
 
     /* timestamp */
     connection->timestamp = ntohl(msg->timestamp);
@@ -209,8 +205,7 @@ connection_t* authpckt_new_connection(unsigned char *dgram, unsigned int dgram_s
     /* get ip headers till tracking is filled */
     ip_hdr_size = get_ip_headers(&connection->tracking, dgram, dgram_size);
     if (ip_hdr_size == 0)  {
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))
-            g_message ("Can't parse IP headers\n");
+        log_message (WARNING, AREA_PACKET, "Can't parse IP headers");
         free_connection(connection);
         return NULL;
     }
@@ -268,8 +263,9 @@ connection_t* authpckt_new_connection(unsigned char *dgram, unsigned int dgram_s
 
         default:
             if ( connection->state != AUTH_STATE_HELLOMODE){
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))
-                    g_message ("Can't parse protocol %u\n", connection->tracking.protocol);
+                log_message (WARNING, AREA_PACKET,
+                        "Can't parse protocol %u",
+                        connection->tracking.protocol);
                 free_connection(connection);
                 return NULL;
             }
@@ -382,7 +378,7 @@ connection_t* authpckt_decode(unsigned char *dgram, unsigned int dgram_size)
 
         default:
             if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)) {
-                g_message("Not for us\n");
+                g_message("Not for us");
             }
     }
     return NULL;

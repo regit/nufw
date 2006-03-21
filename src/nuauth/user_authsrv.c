@@ -37,7 +37,7 @@ void user_check_and_decide (gpointer userdata, gpointer data)
   GSList* conn_elt_l;
   connection_t* conn_elt;
 
-  debug_log_message (VERBOSE_DEBUG, AREA_USER, "entering user_check\n");
+  debug_log_message (VERBOSE_DEBUG, AREA_USER, "entering user_check");
   
   /* reload condition */
   block_on_conf_reload();
@@ -46,7 +46,7 @@ void user_check_and_decide (gpointer userdata, gpointer data)
   if (conn_elts == NULL)
   {
       free_buffer_read(userdata);
-      log_message (INFO, AREA_USER, "User packet decoding failed\n");
+      log_message (INFO, AREA_USER, "User packet decoding failed");
       return;
   }
   
@@ -77,7 +77,7 @@ void user_check_and_decide (gpointer userdata, gpointer data)
           if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER)){
               struct in_addr badaddr;
               badaddr.s_addr=((struct tls_buffer_read *)userdata)->ipv4_addr;
-              g_message("User %s on %s tried to authenticate packet from other ip\n",
+              g_message("User %s on %s tried to authenticate packet from other ip",
                       conn_elt->username,
                       inet_ntoa(badaddr));
               print_connection(conn_elt,NULL);

@@ -62,12 +62,12 @@ void acl_check_and_decide (gpointer userdata, gpointer data)
 	connection_t * conn_elt = userdata;
 #ifdef DEBUG_ENABLE
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET))
-		g_message("entering acl_check\n");
+		g_message("entering acl_check");
 #endif
         block_on_conf_reload();
 	if (conn_elt == NULL){
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET)){
-			g_message("This is no good : elt is NULL at %s:%d\n",__FILE__,__LINE__);
+			g_message("This is no good : elt is NULL at %s:%d",__FILE__,__LINE__);
 		}
         } else {
             /* if AUTH_STATE_COMPLETING packet comes from search and fill 
@@ -101,14 +101,14 @@ void acl_check_and_decide (gpointer userdata, gpointer data)
                       break;
                   default:
                       if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET)){
-                          g_message("This is no good : conn state is unvalid at %s:%d\n",__FILE__,__LINE__);
+                          g_message("This is no good : conn state is unvalid at %s:%d",__FILE__,__LINE__);
                       }
                 }
             }
         }
 #ifdef DEBUG_ENABLE
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET))
-		g_message("leaving acl_check\n");
+		g_message("leaving acl_check");
 #endif
 }
 

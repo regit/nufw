@@ -91,7 +91,6 @@ gint print_connection(gpointer data,gpointer userdata)
         if (conn->app_name){
             g_message("Application: %s",conn->app_name);
         }
-        g_message(" ");
         g_free(firstfield);
     }
     return 1;
@@ -139,7 +138,7 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
             clean_nufw_session(answer->tls);			
         }
     }
-    debug_log_message (DEBUG, AREA_MAIN, "done\n");
+    debug_log_message (DEBUG, AREA_MAIN, "done");
 }
 
 void free_connection_callback(gpointer conn, gpointer unused)
@@ -167,14 +166,6 @@ void free_connection(connection_t *conn)
 {
     g_assert (conn != NULL );
 
-#ifdef DEBUG_ENABLE
-    if (conn->packet_id != NULL) {
-        log_message (VERBOSE_DEBUG, AREA_MAIN, 
-                "freeing connection %p with %lu\n",
-                conn,
-                (long unsigned int)GPOINTER_TO_UINT(conn->packet_id->data));
-    }
-#endif
     /* log if necessary (only state authreq) with user log module
      * AUTH_STATE_COMPLETING is reached when no acl is found for packet */
     if (conn->state == AUTH_STATE_AUTHREQ){
@@ -367,7 +358,7 @@ void clean_connections_list ()
     if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)) {
         int conn_list_size_now=g_hash_table_size(conn_list);
         if (conn_list_size_now != conn_list_size)
-            g_message("%d connection(s) suppressed from list\n",conn_list_size-conn_list_size_now);
+            g_message("%d connection(s) suppressed from list",conn_list_size-conn_list_size_now);
     }
 }
 

@@ -255,7 +255,7 @@ void get_acls_from_cache (connection_t* conn_elt)
 	/* send message */
 #ifdef DEBUG_ENABLE
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET))
-		g_message("[acl cache] going to send cache request\n");
+		g_message("[acl cache] going to send cache request");
 #endif
 	g_async_queue_push (nuauthdatas->acl_cache->queue,&message);
 	/* lock */
@@ -263,7 +263,7 @@ void get_acls_from_cache (connection_t* conn_elt)
 	/*release */
 #ifdef DEBUG_ENABLE
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET))
-		g_message("[acl cache] request sent\n");
+		g_message("[acl cache] request sent");
 #endif
 	/* wait for answer */
 	conn_elt->acl_groups=g_async_queue_pop(message.reply_queue);
@@ -283,7 +283,7 @@ void get_acls_from_cache (connection_t* conn_elt)
 
 #ifdef DEBUG_ENABLE
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)){
-			g_message("[acl cache] We are about to search entry\n");
+			g_message("[acl cache] We are about to search entry");
 		}
 #endif
 		rmessage = g_new0(struct cache_message,1);
@@ -293,7 +293,7 @@ void get_acls_from_cache (connection_t* conn_elt)
 		rmessage->reply_queue = NULL;
 #ifdef DEBUG_ENABLE
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET))
-			g_message("[acl cache] answering for key %p\n",rmessage->key);
+			g_message("[acl cache] answering for key %p",rmessage->key);
 #endif
 		/* reply to the cache */
 		g_async_queue_push(nuauthdatas->acl_cache->queue,rmessage);

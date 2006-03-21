@@ -42,7 +42,7 @@ void free_user_cache(gpointer datas)
 		g_slist_free (dataslist);
 #ifdef DEBUG_ENABLE
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-			g_message ("user datas freed %p\n",dataslist);
+			g_message ("user datas freed %p",dataslist);
 #endif
 	}
 	g_free(datas);
@@ -69,7 +69,7 @@ void get_users_from_cache (connection_t* conn_elt)
 	/* send message */
 #ifdef DEBUG_ENABLE
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET))
-		g_message("[user cache] going to send cache request for %s\n",conn_elt->username);
+		g_message("[user cache] going to send cache request for %s",conn_elt->username);
 #endif
 	g_async_queue_push (nuauthdatas->user_cache->queue,&message);
 	/* lock */
@@ -88,7 +88,7 @@ void get_users_from_cache (connection_t* conn_elt)
 	if (conn_elt->cacheduserdatas == null_queue_datas){
 #ifdef DEBUG_ENABLE
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET))
-			g_message("[user cache] setting cached user datas to NULL\n");
+			g_message("[user cache] setting cached user datas to NULL");
 #endif
 		conn_elt->cacheduserdatas=NULL;
 	} 
@@ -118,7 +118,7 @@ void get_users_from_cache (connection_t* conn_elt)
 		rmessage->reply_queue=NULL;
 #ifdef DEBUG_ENABLE
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET))
-			g_message("[user cache] answering for key %p\n",rmessage->key);
+			g_message("[user cache] answering for key %p",rmessage->key);
 #endif
 		/* reply to the cache */
 		g_async_queue_push(nuauthdatas->user_cache->queue,rmessage);

@@ -205,7 +205,7 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 	}
 #ifdef DEBUG_ENABLE
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-		g_message("%d mechanisms : %s\n", count,data);
+		g_message("%d mechanisms : %s", count,data);
 #endif
 	tls_len=sasl_len;
 	/* send capability list to client */
@@ -232,7 +232,7 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 	if (tls_len <= 0) {
 		if (tls_len==0){
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
-				g_message("client didn't choose mechanism\n");
+				g_message("client didn't choose mechanism");
 			}
 			if (gnutls_record_send(session,"N", 1) <= 0) /* send NO to client */
 				return SASL_FAIL;
@@ -246,7 +246,7 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 	} 
 #ifdef DEBUG_ENABLE
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-		g_message("client chose mechanism %s\n",chosenmech);
+		g_message("client chose mechanism %s",chosenmech);
 #endif
 
 	memset(buf,0,sizeof buf);
@@ -335,11 +335,11 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 #ifdef DEBUG_ENABLE
 			if (!tls_len){
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
-					g_message("Client disconnected during sasl negotiation\n");
+					g_message("Client disconnected during sasl negotiation");
 				}
 			} else {
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
-					g_message("TLS error during sasl negotiation\n");
+					g_message("TLS error during sasl negotiation");
 				}
 			}
 #endif
@@ -350,8 +350,7 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 		if (r != SASL_OK && r != SASL_CONTINUE) {
 #ifdef DEBUG_ENABLE
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
-				g_message("error performing SASL negotiation");
-				g_message("\n%s\n", sasl_errdetail(conn));
+				g_message("error performing SASL negotiation: %s", sasl_errdetail(conn));
 			}
 #endif
 			if (gnutls_record_send(session,"N", 1) <= 0) /* send NO to client */
@@ -398,7 +397,7 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 				const char *err = inet_ntop( AF_INET, &remote_inaddr, address, sizeof(address));
                 if (err == NULL)
                     SECURE_STRNCPY(address, "<inet_ntop error>", sizeof(address));
-				g_message("%s users on multi server %s\n", c_session->user_name,address);
+				g_message("%s users on multi server %s", c_session->user_name,address);
 			}
 #endif
 			if (gnutls_record_send(session,"N", 1) <= 0){ /* send NO to client */

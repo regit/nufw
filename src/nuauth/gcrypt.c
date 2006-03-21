@@ -70,7 +70,7 @@ int verify_user_password(const char* given,const char* ours){
 			algo = GCRY_MD_MD5;
 		else {
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-				g_message("verify_user_password() : Unsupported hash algorithm\n");
+				g_message("verify_user_password() : Unsupported hash algorithm");
 			g_strfreev(splitted_secret);
 			return SASL_BADAUTH;
 		}
@@ -131,7 +131,7 @@ int verify_user_password(const char* given,const char* ours){
 		if (!seeded && !strcmp(decoded,splitted_secret[1])) {
 #ifdef DEBUG_ENABLE
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-				g_message("%s == %s\n",decoded,splitted_secret[1]);
+				g_message("%s == %s",decoded,splitted_secret[1]);
 #endif
 
 			g_free(decoded);
@@ -147,7 +147,7 @@ int verify_user_password(const char* given,const char* ours){
                 SECURE_STRNCPY (temp_decoded, decoded, sizeof(temp_decoded));
 				SECURE_STRNCPY (temp_stored, splitted_secret[1], sizeof(temp_stored));
 
-				g_message("%s == %s (first 20 chars)\n",temp_decoded,temp_stored);
+				g_message("%s == %s (first 20 chars)",temp_decoded,temp_stored);
 			}
 #endif
 
@@ -164,7 +164,7 @@ int verify_user_password(const char* given,const char* ours){
                 SECURE_STRNCPY(temp_decoded, decoded, sizeof(temp_decoded));
                 SECURE_STRNCPY(temp_stored, decoded, sizeof(temp_stored));
 
-				g_message("%s == %s (first 16 chars)\n", temp_decoded, temp_stored);
+				g_message("%s == %s (first 16 chars)", temp_decoded, temp_stored);
 			}
 #endif
 
@@ -174,7 +174,7 @@ int verify_user_password(const char* given,const char* ours){
 		}
 		else {
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)) {
-				g_message("given != stored\n");
+				g_message("given != stored");
 			}
 
 			g_strfreev(splitted_secret);

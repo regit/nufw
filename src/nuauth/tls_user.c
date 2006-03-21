@@ -81,7 +81,7 @@ void pre_client_check()
 
 #ifdef DEBUG_ENABLE
                     if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)){
-                        g_message("closing socket %d due to timeout\n",((struct pre_client_elt*)(client_runner->data))->socket);
+                        g_message("closing socket %d due to timeout",((struct pre_client_elt*)(client_runner->data))->socket);
                     }
 #endif
                     shutdown(((struct pre_client_elt*)(client_runner->data))->socket,SHUT_RDWR);
@@ -122,7 +122,7 @@ static int treat_user_request (user_session * c_session)
 #ifdef DEBUG_ENABLE
     if (!c_session->multiusers) {
         if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-            g_message("Packet from user %s\n",c_session->user_name);
+            g_message("Packet from user %s",c_session->user_name);
     }
 #endif
     
@@ -139,7 +139,7 @@ static int treat_user_request (user_session * c_session)
 #ifdef DEBUG_ENABLE
         if (datas->buffer_len <0) 
             if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-                g_message("Received error from user %s\n", c_session->user_name);
+                g_message("Received error from user %s", c_session->user_name);
 #endif
         free_buffer_read(datas);
         return EOF;
@@ -308,7 +308,7 @@ void tls_user_check_activity(struct tls_user_context_t *context, int socket)
     int u_request;
 #ifdef DEBUG_ENABLE
     if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-        g_message("activity on %d\n",socket);
+        g_message("user activity on socket %d",socket);
 #endif
 
     /* we lock here but can do other thing on hash as it is not destructive 
@@ -324,7 +324,7 @@ void tls_user_check_activity(struct tls_user_context_t *context, int socket)
             log_user_session(c_session,SESSION_CLOSE);
 #ifdef DEBUG_ENABLE
             if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-                g_message("client disconnect on %d\n",socket);
+                g_message("client disconnect on socket %d",socket);
 #endif
             FD_CLR(socket,&context->tls_rx_set);
             /* clean client structure */
@@ -339,7 +339,7 @@ void tls_user_check_activity(struct tls_user_context_t *context, int socket)
         }else if (u_request < 0) {
 #ifdef DEBUG_ENABLE
             if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-                g_message("treat_user_request() failure\n");
+                g_message("treat_user_request() failure");
 #endif
         }
     }
@@ -365,7 +365,7 @@ void tls_user_main_loop(struct tls_user_context_t *context, GMutex *mutex)
 
 #ifdef DEBUG_ENABLE
             if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-                g_message("checking mx against %d\n",socket);
+                g_message("checking mx against %d",socket);
 #endif
             if ( socket+1 > context->mx )
                 context->mx = socket + 1;
@@ -433,7 +433,7 @@ void tls_user_main_loop(struct tls_user_context_t *context, GMutex *mutex)
                 i = context->mx -1 ){
 #ifdef DEBUG_ENABLE
             if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-                g_message("setting mx to %d\n",i);
+                g_message("setting mx to %d",i);
 #endif
             context->mx = i;
         }

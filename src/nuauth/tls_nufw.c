@@ -42,11 +42,9 @@ static int treat_nufw_request (nufw_session_t *c_session)
         return 1;
     
     /* copy packet datas */
-    g_message("nufw receive at %s:%d",__FILE__,__LINE__);
     g_mutex_lock(c_session->tls_lock);
     dgram_size = gnutls_record_recv(*(c_session->tls), dgram, CLASSIC_NUFW_PACKET_SIZE) ;
     g_mutex_unlock(c_session->tls_lock);
-    g_message("nufw receive at %s:%d",__FILE__,__LINE__);
     if (  dgram_size > 0 ){
         connection_t *current_conn = authpckt_decode(dgram , (unsigned int)dgram_size);
         if (current_conn != NULL){
@@ -55,12 +53,18 @@ static int treat_nufw_request (nufw_session_t *c_session)
             /* gonna feed the birds */
 
             if (current_conn->state == AUTH_STATE_HELLOMODE){
+                debug_log_message(DEBUG, AREA_MAIN,
+                          "(*) NuFW auth request (hello mode): packetid=%u",
+                          (uint32_t)GPOINTER_TO_UINT(current_conn->packet_id->data));
                 struct internal_message *message = g_new0(struct internal_message,1);
                 message->type=INSERT_MESSAGE;
                 message->datas=current_conn;
                 current_conn->state = AUTH_STATE_AUTHREQ;
                 g_async_queue_push (nuauthdatas->localid_auth_queue,message);
             } else {
+                debug_log_message(DEBUG, AREA_MAIN,
+                          "(*) NuFW auth request (hello mode): packetid=%u",
+                          (uint32_t)GPOINTER_TO_UINT(current_conn->packet_id->data));
                 current_conn->state = AUTH_STATE_AUTHREQ;
                 g_async_queue_push (nuauthdatas->connections_queue,
                         current_conn);
@@ -68,9 +72,8 @@ static int treat_nufw_request (nufw_session_t *c_session)
         } else {
             if ( (nufw_message_t)dgram[1] != AUTH_CONTROL 
                     && (nufw_message_t)dgram[1] != AUTH_CONN_DESTROY  )
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_PACKET)){
-                    g_warning("Can't parse packet, this IS bad !\n");
-                }
+                log_message (SERIOUS_WARNING, AREA_PACKET,
+                    "Can't parse nufw packet, this IS bad !\n");
         }
     } else {
         g_message("nufw failure at %s:%d",__FILE__,__LINE__);
@@ -186,6 +189,7 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
         FD_SET(conn_fd,&context->tls_rx_set);
         if ( conn_fd+1 > context->mx )
             context->mx = conn_fd + 1;
+        g_message("[+] NuFW: new client connected on socket %d",conn_fd);
     } else {
         g_free(nu_session);
     }
@@ -248,8 +252,6 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex *mutex)
         if (FD_ISSET(context->sck_inet,&wk_set) ){
             if (tls_nufw_accept(context)){
                 continue;
-            } else {
-                    g_message("nufw connect on %d\n",context->mx);
             }
         }
 
@@ -263,7 +265,7 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex *mutex)
                 nufw_session_t * c_session;
 #ifdef DEBUG_ENABLE
                 if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-                    g_message("activity on %d\n",c);
+                    g_message("nufw activity on socket %d",c);
 #endif
                 c_session=g_hash_table_lookup( nufw_servers , GINT_TO_POINTER(c));
                 g_atomic_int_inc(&(c_session->usage));
@@ -271,7 +273,7 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex *mutex)
                     /* get session link with c */
 #ifdef DEBUG_ENABLE
                     if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
-                        g_message("nufw server disconnect on %d\n",c);
+                        g_message("nufw server disconnect on %d",c);
 #endif
                     FD_CLR(c,&context->tls_rx_set);
                     g_mutex_lock(nufw_servers_mutex);

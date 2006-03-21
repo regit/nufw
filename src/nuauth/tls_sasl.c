@@ -122,7 +122,7 @@ static void tls_sasl_connect_ok(user_session* c_session, int c)
     log_user_session(c_session,SESSION_OPEN);
 #ifdef DEBUG_ENABLE
     if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-        g_message("Says we need to work on %d\n",c);
+        g_message("Says we need to work on %d",c);
 #endif
     g_async_queue_push(mx_queue,GINT_TO_POINTER(c));
 }    
