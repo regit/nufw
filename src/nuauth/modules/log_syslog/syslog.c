@@ -31,7 +31,6 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state,
 
     char *saddr;
     char* daddr;
-    u_int8_t protocol;
     u_int16_t sport;
     u_int16_t dport;
 
@@ -93,6 +92,7 @@ G_MODULE_EXPORT int user_session_logs(user_session *c_session, session_state_t s
 	struct in_addr remote_inaddr;
 	remote_inaddr.s_addr=c_session->addr;
 	char address[INET_ADDRSTRLEN+1];
+        char *prefix = "[nuauth] ";
     
     const char *err = inet_ntop( AF_INET, &remote_inaddr, address, sizeof(address));
     if (err == NULL) {
@@ -100,10 +100,10 @@ G_MODULE_EXPORT int user_session_logs(user_session *c_session, session_state_t s
     }
     switch (state) {
         case SESSION_OPEN:
-            g_message("User %s connect on %s",c_session->user_name,address);
+            g_message("%sUser %s connect on %s", prefix, c_session->user_name,address);
             break;
         case SESSION_CLOSE:
-            g_message("User %s disconnect on %s",c_session->user_name,address);
+            g_message("%sUser %s disconnect on %s", prefix, c_session->user_name,address);
             break;
     }
     return 1;
