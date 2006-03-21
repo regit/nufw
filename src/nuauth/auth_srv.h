@@ -42,7 +42,7 @@
 #  define LOCAL_STATE_DIR "/usr/local/var"
 #endif
 
-#  define MODULES_CONF_DIR "/modules"
+#  define MODULES_CONF_DIR "modules"
 #  define MODULES_CONF_EXTENSION ".conf"
 
 /* Use glib to treat data structures */
@@ -140,7 +140,7 @@
 #define DEFAULT_PERIODS_MODULE "libplaintext"
 #define DEFAULT_LOGS_MODULE "libsyslog"
 #define DEFAULT_IPAUTH_MODULE "libident"
-#define MODULE_PATH MODULE_DIR "/nuauth/modules/"
+#define MODULE_PATH MODULE_DIR "/nuauth/modules"
 
 #ifdef S_SPLINT_S
 #  define NUAUTH_PID_FILE  "/usr/local/var/run/nuauth/nuauth.pid"
