@@ -87,7 +87,8 @@ void nufw_cleanup( int signal ) {
  * packetsrv()). The main loop just clean up old packets and display
  * statistics. 
  */
-int main(int argc,char * argv[]){
+int main(int argc,char * argv[])
+{
     pthread_t pckt_server;
     struct hostent *authreq_srv;
     /* option */
