@@ -35,9 +35,45 @@
 
 GCRY_THREAD_OPTION_PTHREAD_IMPL;
 
+/* packet server thread */
+struct Thread thread;
+
+/* packet server thread */
+struct Signals signals;
+
 /*! Name of pid file prefixed by LOCAL_STATE_DIR (variable defined 
  * during compilation/installation) */
 #define NUFW_PID_FILE  LOCAL_STATE_DIR "/run/nufw.pid"
+
+void nufw_prepare_quit()
+{
+    /* ask thread to stop */
+    pthread_mutex_lock(&thread.mutex);
+
+    /* wait for thread end */
+    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
+            "Wait thread end");
+    pthread_join (thread.thread, NULL);
+
+    /* stop nufw */
+    pthread_mutex_destroy(&packets_list.mutex);
+
+    /* destroy netlink/ipq handle */
+#if USE_NFQUEUE
+    nfq_destroy_queue(hndl);
+    nfq_unbind_pf(h, AF_INET);
+#else
+    ipq_destroy_handle(hndl);
+#endif
+
+    /* destroy conntrack handle */
+#ifdef HAVE_LIBCONNTRACK
+    nfct_close(cth);
+#endif
+
+    /* destroy pid file */
+    unlink(NUFW_PID_FILE);
+}
 
 /**
  * Cleanup before leaving:
@@ -46,23 +82,169 @@ GCRY_THREAD_OPTION_PTHREAD_IMPL;
  *   - Unlink pid file
  *   - Call exit(EXIT_SUCCESS)
  */
-void nufw_cleanup( int signal ) {
-    /* destroy netlink handle */
-#if USE_NFQUEUE
-        nfq_destroy_queue(hndl);
-        nfq_unbind_pf(h, AF_INET);
-#else
-    ipq_destroy_handle(hndl);
-#endif
-#ifdef HAVE_LIBCONNTRACK
-    nfct_close(cth);
-#endif
-    /* destroy pid file */
-    unlink(NUFW_PID_FILE);
+void nufw_cleanup (int signal)
+{
+    /* reinstall old handlers */
+    (void)sigaction(SIGTERM, &signals.old_sigterm_hdl, NULL);
+    (void)sigaction(SIGINT, &signals.old_sigint_hdl, NULL);
+
+    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
+            "[+] Stop NuFW (catch signal)");
+    nufw_prepare_quit();
     log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
             "[+] Exit NuFW");
     exit(EXIT_SUCCESS);
 }
+
+/**
+ * Create packet server thread: init mutex and create thread
+ * with packetsrv() function. Send pointer to ::thread to
+ * the function.
+ */
+void create_thread()
+{
+    /* set attribute to "joinable thread" */
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+   
+    /* create mutex */
+    pthread_mutex_init(&thread.mutex, NULL);
+
+    /* try to create the thread */
+    if (pthread_create(&thread.thread, NULL, packetsrv, &thread) != 0)
+    {
+        pthread_mutex_destroy(&thread.mutex);
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
+                "Fail to create thread!");
+        exit(EXIT_FAILURE);
+    }
+}    
+
+/**
+ * Install signals:
+ *   - Set SIGTERM handler to nufw_cleanup()
+ *   - Set SIGINT handler to nufw_cleanup()
+ *   - Ignore SIGPIPE
+ *   - Set SIGUSR1 handler to process_usr1()
+ *   - Set SIGUSR2 handler to process_usr2()
+ *   - Set SIGPOLL handler to process_poll()
+ */
+void install_signals()
+{
+    struct sigaction action;
+
+    /* intercept SIGTERM */
+    memset(&action,0,sizeof(action));
+    action.sa_handler = nufw_cleanup;
+    sigemptyset( & (action.sa_mask));
+    action.sa_flags = 0;
+    if ( sigaction(SIGTERM, &action, &signals.old_sigterm_hdl) != 0) {
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
+                "Fail to install SIGTERM handler: %d \n",errno);
+        exit(EXIT_FAILURE);
+    }
+
+    /* intercept SIGINT */
+    memset(&action,0,sizeof(action));
+    action.sa_handler = nufw_cleanup;
+    sigemptyset( & (action.sa_mask));
+    action.sa_flags = 0;
+    if ( sigaction(SIGINT, &action, &signals.old_sigint_hdl) != 0) {
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
+                "Fail to install SIGINT handler: %d \n",errno);
+        exit(EXIT_FAILURE);
+    }
+
+    /* ignore "broken pipe" signal */
+    signal(SIGPIPE,SIG_IGN);
+
+    /* intercpet SIGUSR1 */    
+    memset(&action,0,sizeof(action));
+    action.sa_handler = &process_usr1;
+    action.sa_flags = SIGUSR1;
+    if (sigaction(SIGUSR1,&action,NULL) == -1)
+    {
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
+                "Warning: Could not set signal USR1");
+    }
+
+    /* intercpet SIGUSR2 */    
+    memset(&action,0,sizeof(action));
+    action.sa_handler = &process_usr2;
+    action.sa_flags = SIGUSR2;
+    if (sigaction(SIGUSR2,&action,NULL) == -1)
+    {
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
+                "Warning: Could not set signal USR2");
+    }
+
+    /* intercpet SIGPOLL */    
+    memset(&action,0,sizeof(action));
+    action.sa_handler = &process_poll;
+    action.sa_flags = SIGPOLL;
+    if (sigaction(SIGPOLL,&action,NULL) == -1)
+    {
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
+            "Warning: Could not set signal POLL");
+    }
+}    
+
+/**
+ * Daemonize current process.
+ */
+void nufw_daemonize()
+{
+    FILE* pf;
+    pid_t pidf;
+
+    if (access (NUFW_PID_FILE, R_OK) == 0) {
+        /* Check if the existing process is still alive. */
+        pid_t pidv;
+
+        pf = fopen (NUFW_PID_FILE, "r");
+        if (pf != NULL &&
+                fscanf (pf, "%d", &pidv) == 1 &&
+                kill (pidv, 0) == 0 ) {
+            fclose (pf);
+            printf ("pid file exists. Is nufw already running? Aborting!\n");
+            exit(EXIT_FAILURE);
+        }
+
+        if (pf != NULL)
+            fclose (pf);
+    }
+
+    pidf = fork();
+    if (pidf < 0){
+        log_printf (DEBUG_LEVEL_FATAL, "Unable to fork. Aborting!");
+        exit (-1);
+    } else {
+        /* parent */
+        if (pidf > 0) {
+            if ((pf = fopen (NUFW_PID_FILE, "w")) != NULL) {
+                fprintf (pf, "%d\n", (int)pidf);
+                fclose (pf);
+            } else {
+                printf ("Dying, can not create PID file : " NUFW_PID_FILE "\n"); 
+                exit(EXIT_FAILURE);
+            }
+            exit(EXIT_SUCCESS);
+        }
+    }
+
+    chdir("/");
+
+    setsid();
+
+    /* set log engine */
+    log_engine = LOG_TO_SYSLOG;
+
+    /* Close stdin, stdout, stderr. */
+    (void) close(0);
+    (void) close(1);
+    (void) close(2);
+}    
 
 /**
  * Main function of NuFW:
@@ -91,7 +273,6 @@ void nufw_cleanup( int signal ) {
  */
 int main(int argc,char * argv[])
 {
-    pthread_t pckt_server;
     struct hostent *authreq_srv;
     /* option */
 #if USE_NFQUEUE
@@ -102,9 +283,6 @@ int main(int argc,char * argv[])
     int option,daemonize = 0;
     int value;
     char* version=PACKAGE_VERSION;
-    pid_t pidf;
-
-    struct sigaction act;
 
     /* initialize variables */
 
@@ -236,66 +414,10 @@ int main(int argc,char * argv[])
 
     /* Daemon code */
     if (daemonize == 1) {
-        int i;
-        struct sigaction action;
-        FILE* pf;
-
-        if (access (NUFW_PID_FILE, R_OK) == 0) {
-            /* Check if the existing process is still alive. */
-            pid_t pidv;
-
-            pf = fopen (NUFW_PID_FILE, "r");
-            if (pf != NULL &&
-                fscanf (pf, "%d", &pidv) == 1 &&
-                kill (pidv, 0) == 0 ) {
-                fclose (pf);
-                printf ("pid file exists. Is nufw already running? Aborting!\n");
-                exit(EXIT_FAILURE);
-            }
-
-            if (pf != NULL)
-                fclose (pf);
-        }
-
-        if ((pidf = fork()) < 0){
-            log_printf (DEBUG_LEVEL_FATAL, "Unable to fork. Aborting!");
-            exit (-1);
-        } else {
-            /* parent */
-            if (pidf > 0) {
-                if ((pf = fopen (NUFW_PID_FILE, "w")) != NULL) {
-                    fprintf (pf, "%d\n", (int)pidf);
-                    fclose (pf);
-                } else {
-                    printf ("Dying, can not create PID file : " NUFW_PID_FILE "\n"); 
-                    exit(EXIT_FAILURE);
-                }
-                exit(EXIT_SUCCESS);
-            }
-        }
-
-        chdir("/");
-
-        setsid();
-
-        for (i = 0; i < FOPEN_MAX ; i++){
-            close(i);
-        }
-        /* intercept SIGTERM */
-    	memset(&action,0,sizeof(action));
-        action.sa_handler = nufw_cleanup;
-        sigemptyset( & (action.sa_mask));
-        action.sa_flags = 0;
-        if ( sigaction(SIGTERM, & action , NULL ) != 0) {
-            printf("Error %d \n",errno);
-            exit(EXIT_FAILURE);
-        }
-
-        /* set log engine */
-        log_engine = LOG_TO_SYSLOG;
+        nufw_daemonize();
     }
 
-    signal(SIGPIPE,SIG_IGN);
+    install_signals();
 
     init_log_engine();
 
@@ -336,58 +458,33 @@ int main(int argc,char * argv[])
     pthread_mutex_init(tls.mutex,NULL);
     gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);
     gnutls_global_init();
-    
-    memset(&act,0,sizeof(act));
-    act.sa_handler = &process_usr1;
-    act.sa_flags = SIGUSR1;
-    if (sigaction(SIGUSR1,&act,NULL) == -1)
-    {
-        printf("Could not set signal USR1");
-        exit(EXIT_FAILURE);
-    }
-
-    memset(&act,0,sizeof(act));
-    act.sa_handler = &process_usr2;
-    act.sa_flags = SIGUSR2;
-    if (sigaction(SIGUSR2,&act,NULL) == -1)
-    {
-        printf("Could not set signal USR2");
-        exit(EXIT_FAILURE);
-    }
-
-    memset(&act,0,sizeof(act));
-    act.sa_handler = &process_poll;
-    act.sa_flags = SIGPOLL;
-    if (sigaction(SIGPOLL,&act,NULL) == -1)
-    {
-        printf("Could not set signal POLL");
-        exit(EXIT_FAILURE);
-    }
 
 #ifdef HAVE_LIBCONNTRACK
     cth = nfct_open(CONNTRACK, 0);
 #endif
 
     /* create packet server thread */
-    if (pthread_create(&pckt_server,NULL,packetsrv,NULL) == EAGAIN){
-        exit(EXIT_FAILURE);
-    }
-    
+    create_thread();
     log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
             "[+] NuFW started");
 
     /* control stuff */
     pckt_tx=pckt_rx=0;
-    for(;;){
+    while (1 == 1) 
+    {
+        /* clean old packets */
         pthread_mutex_lock(&packets_list.mutex);
         clean_old_packets ();
         pthread_mutex_unlock(&packets_list.mutex);
+
+        /* display stats */
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_INFO, 
                 "rx : %d, tx : %d, track_size : %d, start_list : %p",
                 pckt_rx, pckt_tx, packets_list.length, packets_list.start);
-        sleep(5);	
+        sleep(1);	
     }
-    pthread_mutex_destroy(&packets_list.mutex);
+
+    nufw_prepare_quit();
     return EXIT_SUCCESS;
 }
 

@@ -165,8 +165,9 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
  *
  * \return NULL
  */
-void* packetsrv(void *data)
+void* packetsrv(void *arg)
 {
+    struct Thread *self = arg;
 #if USE_NFQUEUE
     unsigned char buffer[BUFSIZ];
     int fd;
@@ -232,7 +233,10 @@ void* packetsrv(void *data)
                 "Could not create ipq handle");
     }
 
-    for (;;){
+    while (pthread_mutex_trylock(&self->mutex) == 0)
+    {
+        pthread_mutex_unlock(&self->mutex);
+
         size = ipq_read(hndl,buffer,sizeof(buffer),0);
         if (size != -1){
             if (size < BUFSIZ ){

@@ -24,7 +24,13 @@
  * the ::packets_list.
  */
 
-#include "nufw.h"
+#ifndef STRUCTURE_HEADER
+#define STRUCTURE_HEADER
+
+#ifndef NUFW_HEADER_H
+#   error "include nufw.h instead of structure.h"
+#endif
+
 #include <semaphore.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -111,12 +117,30 @@ struct packets_list_t
   pthread_mutex_t mutex;
 } packets_list;
 
+/**
+ * Store old signal handlers
+ */
+struct Signals
+{
+    struct sigaction old_sigterm_hdl;
+    struct sigaction old_sigint_hdl;
+};
+
 #if USE_NFQUEUE
 struct nfq_q_handle *hndl;
 #else
 /* ipq handler */
 struct ipq_handle *hndl;
 #endif
+
+/**
+ * All data of a thread (use for packetsrv()) 
+ */
+struct Thread
+{
+    pthread_t thread;
+    pthread_mutex_t mutex;
+};
 
 /* mutex */
 pthread_mutex_t hndl_mutex;
@@ -146,4 +170,6 @@ pthread_mutex_t hndl_mutex;
 
 int pckt_tx;   /*!< Number of transmitted packets since NuFW is running */
 int pckt_rx;   /*!< Number of received packets since NuFW is running */
+
+#endif   /* ifndef STRUCTURE_HEADER */
 

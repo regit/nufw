@@ -1,5 +1,10 @@
-#ifndef _NUFW_HEADER_H
-#define _NUFW_HEADER_H
+#ifndef NUFW_HEADER_H
+#define NUFW_HEADER_H
+
+/**
+ * Use ISO C99 standard, needed by snprintf for example
+ */
+#define _ISOC99_SOURCE
 
 /*
  * Use POSIX standard, version "IEEE 1003.1-2004"
@@ -21,7 +26,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "structure.h"
 #include <signal.h>
 #include <assert.h>
 #include <strings.h>
@@ -31,8 +35,10 @@
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
+
 #include "log.h"
 #include "security.h"
+#include "structure.h"
 
 /** \file nufw.h
  *  \brief Common functions and variables to NuFW 
@@ -147,3 +153,4 @@ int send_icmp_unreach(char *dgram);
 #endif
 
 #endif   /* _NUFW_HEADER_H */
+
