@@ -387,6 +387,7 @@ int main(int argc,char * argv[])
                 pckt_rx, pckt_tx, packets_list.length, packets_list.start);
         sleep(5);	
     }
+    pthread_mutex_destroy(&packets_list.mutex);
     return EXIT_SUCCESS;
 }
 
