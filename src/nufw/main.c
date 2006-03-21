@@ -59,6 +59,8 @@ void nufw_cleanup( int signal ) {
 #endif
     /* destroy pid file */
     unlink(NUFW_PID_FILE);
+    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
+            "[+] Exit NuFW");
     exit(EXIT_SUCCESS);
 }
 
@@ -115,7 +117,7 @@ int main(int argc,char * argv[])
     ca_file=NULL;
     nuauth_cert_dn=NULL;
     SECURE_STRNCPY(authreq_addr, AUTHREQ_ADDR, sizeof authreq_addr);
-    debug_level=0;
+    debug_level=DEFAULT_DEBUG_LEVEL;
     debug_areas=DEFAULT_DEBUG_AREAS;
 #if USE_NFQUEUE
     nfqueue_num=DEFAULT_NFQUEUE;
@@ -124,6 +126,9 @@ int main(int argc,char * argv[])
 #endif
 #endif
     nufw_set_mark = 0;
+    
+    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
+            "[+] Start NuFW");
     
     /*parse options */
     while((option = getopt ( argc, argv, options_list)) != -1 ){
@@ -367,6 +372,9 @@ int main(int argc,char * argv[])
     if (pthread_create(&pckt_server,NULL,packetsrv,NULL) == EAGAIN){
         exit(EXIT_FAILURE);
     }
+    
+    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
+            "[+] NuFW started");
 
     /* control stuff */
     pckt_tx=pckt_rx=0;
@@ -379,6 +387,7 @@ int main(int argc,char * argv[])
                 pckt_rx, pckt_tx, packets_list.length, packets_list.start);
         sleep(5);	
     }
+    return EXIT_SUCCESS;
 }
 
 

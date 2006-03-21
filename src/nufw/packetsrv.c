@@ -167,8 +167,8 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
  */
 void* packetsrv(void *data)
 {
-    unsigned char buffer[BUFSIZ];
 #if USE_NFQUEUE
+    unsigned char buffer[BUFSIZ];
     int fd;
     int rv;
     struct nfnl_handle *nh;
@@ -209,7 +209,16 @@ void* packetsrv(void *data)
 
     nh = nfq_nfnlh(h);
     fd = nfnl_fd(nh);
+    for (;;)
+    {
+        if ((rv = recv(fd, buffer, sizeof(buffer), 0)) && rv >= 0) {
+            nfq_handle_packet(h, buffer, rv);
+            pckt_rx++ ;
+        } else 
+            break;
+    }
 #else
+    unsigned char buffer[BUFSIZ];
     int size;
     uint32_t pcktid;
     ipq_packet_msg_t *msg_p = NULL ;
@@ -222,15 +231,8 @@ void* packetsrv(void *data)
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
                 "Could not create ipq handle");
     }
-#endif
+
     for (;;){
-#if USE_NFQUEUE
-        if ((rv = recv(fd, buffer, sizeof(buffer), 0)) && rv >= 0) {
-            nfq_handle_packet(h, buffer, rv);
-            pckt_rx++ ;
-        } else 
-            break;
-#else
         size = ipq_read(hndl,buffer,sizeof(buffer),0);
         if (size != -1){
             if (size < BUFSIZ ){
@@ -295,12 +297,11 @@ void* packetsrv(void *data)
             log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
                     "BUFSIZ too small (size == %d)", size);
         }
-#endif
     }
-#if USE_NFQUEUE
-#else
     ipq_destroy_handle( hndl );  
 #endif
+    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
+            "[+] Leave packet server thread");
     return NULL;
 }   
 
