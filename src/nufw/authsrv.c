@@ -29,54 +29,75 @@
 /**
  * Process NuAuth message of type #AUTH_ANSWER
  */
-void auth_process_answer(char *dgram)
+void auth_process_answer(char *dgram, int dgram_size)
 {
+    nuauth_decision_response_t *answer;
     uint32_t nfmark;
     int sandf;
-    u_int32_t packet_id = ntohl(*(unsigned long *)(dgram+8));
+    u_int32_t packet_id;
+    u_int16_t user_id;
+
+    /* check packet size */
+    if (dgram_size < (int)sizeof(nuauth_decision_response_t))
+    {
+        return;
+    }
+    answer = (nuauth_decision_response_t *)dgram;
+    
+    /* get packet id and user id */
+    packet_id = ntohl(answer->packet_id);
+    user_id = ntohs(answer->user_id);
 
     /* search and destroy packet by packet_id */
     pthread_mutex_lock(&packets_list.mutex);
     sandf=psearch_and_destroy (packet_id,&nfmark);
     pthread_mutex_unlock(&packets_list.mutex);
-
-    if (sandf){
-        if ( *(dgram+4) == DECISION_ACCEPT ) {
-            /* TODO : test on return */
-            debug_log_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
-                    "Accepting packet with id=%u", packet_id);
-#if HAVE_LIBIPQ_MARK || USE_NFQUEUE
-            if (nufw_set_mark) {
-                debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
-                        "Marking packet with %d",
-                        *(u_int16_t *)(dgram+2));
-                /* we put the userid mark at the end of the mark, not changing the 16 first big bits */
-                IPQ_SET_VWMARK(packet_id, NF_ACCEPT,((ntohs(*(u_int16_t *)(dgram+2))) & 0xffff ) | (nfmark & 0xffff0000 )); 
-            } else {
-                IPQ_SET_VERDICT(packet_id, NF_ACCEPT);
-            }
-#else                      
-            IPQ_SET_VERDICT(packet_id, NF_ACCEPT);
-#endif /* HAVE_LIBIPQ_MARK || USE_NFQUEUE */
-
-            pckt_tx++;
-
-#ifdef GRYZOR_HACKS
-        }else if( *(dgram+4) == NOK_REJ){ 
-            /* Packet is rejected, ie. dropped and ICMP signalized */
-            log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
-                    "Rejecting %lu", packet_id);
-            IPQ_SET_VERDICT(packet_id, NF_DROP);
-            send_icmp_unreach(dgram);
-#endif
-        } else {
-            debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
-                    "Dropping %u", packet_id);
-            IPQ_SET_VERDICT(packet_id, NF_DROP);
-        }
-    } else {
+    if (!sandf)
+    {
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING, 
                 "Packet without a known ID: %u", packet_id);
+        return;
+    }
+
+    switch (answer->decision)
+    {
+    case DECISION_ACCEPT:
+        /* accept packet */
+        debug_log_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
+                "Accepting packet with id=%u", packet_id);
+#if HAVE_LIBIPQ_MARK || USE_NFQUEUE
+        if (nufw_set_mark) {
+            debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
+                    "Marking packet with %d",
+                    user_id);
+            /* we put the userid mark at the end of the mark, not changing the 16 first big bits */
+            nfmark = (nfmark & 0xffff0000 ) | user_id;
+            IPQ_SET_VWMARK(packet_id, NF_ACCEPT, nfmark); 
+        } else {
+            IPQ_SET_VERDICT(packet_id, NF_ACCEPT);
+        }
+#else                      
+        IPQ_SET_VERDICT(packet_id, NF_ACCEPT);
+#endif /* HAVE_LIBIPQ_MARK || USE_NFQUEUE */
+        pckt_tx++;
+        break;
+
+#ifdef GRYZOR_HACKS
+    case NOK_REJ:
+        /* Packet is rejected, ie. dropped and ICMP signalized */
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
+                "Rejecting %lu", packet_id);
+        IPQ_SET_VERDICT(packet_id, NF_DROP);
+        send_icmp_unreach(dgram);
+        break;
+#endif
+        
+    default:
+        /* drop packet */
+        debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
+                "Dropping %u", packet_id);
+        printf ("DROP %d\n", packet_id);
+        IPQ_SET_VERDICT(packet_id, NF_DROP);
     }
 }    
 
@@ -84,16 +105,24 @@ void auth_process_answer(char *dgram)
 /**
  * Process NuAuth message of type #AUTH_CONN_DESTROY
  */
-void auth_process_conn_destroy(char *dgram)
+void auth_process_conn_destroy(char *dgram, int dgram_size)
 {
-    struct nu_conntrack_message_t* packet_hdr=(struct nu_conntrack_message_t*)dgram;
+    struct nu_conntrack_message_t* packet_hdr;
     struct nfct_tuple orig;
     int id=0;
-    orig.src.v4=packet_hdr->ipv4_src;
-    orig.dst.v4=packet_hdr->ipv4_dst;
-    orig.protonum=packet_hdr->ipv4_protocol;
 
-    switch (packet_hdr->ipv4_protocol){
+    /* check packet size */
+    if (dgram_size < (int)sizeof(struct nu_conntrack_message_t)) {
+        return;
+    }
+    packet_hdr = (struct nu_conntrack_message_t*)dgram;
+
+    orig.protonum = packet_hdr->ipv4_protocol;
+    orig.src.v4 = packet_hdr->ipv4_src;
+    orig.dst.v4 = packet_hdr->ipv4_dst;
+
+    switch (packet_hdr->ipv4_protocol)
+    {
         case IPPROTO_TCP:
             orig.l4src.tcp.port=packet_hdr->src_port;  
             orig.l4dst.tcp.port=packet_hdr->dest_port;  
@@ -105,18 +134,23 @@ void auth_process_conn_destroy(char *dgram)
         default:
             return; 
     }
-    (void)nfct_delete_conntrack(cth, &orig, 
-            NFCT_DIR_ORIGINAL,
-            id);
+    (void)nfct_delete_conntrack(cth, &orig, NFCT_DIR_ORIGINAL, id);
 }    
 
 /**
  * Process NuAuth message of type #AUTH_CONN_UPDATE
  */
-void auth_process_conn_update(char *dgram)
+void auth_process_conn_update(char *dgram, int dgram_size)
 {
-    struct nu_conntrack_message_t* packet_hdr=(struct nu_conntrack_message_t*)dgram;
+    struct nu_conntrack_message_t* packet_hdr;
     struct nfct_conntrack ct;
+
+    /* check packet size */
+    if (dgram_size < (int)sizeof(struct nu_conntrack_message_t)) {
+        return;
+    }
+    packet_hdr = (struct nu_conntrack_message_t*)dgram;
+    
     ct.tuple[NFCT_DIR_ORIGINAL].src.v4=packet_hdr->ipv4_src;
     ct.tuple[NFCT_DIR_ORIGINAL].dst.v4=packet_hdr->ipv4_dst;
     ct.tuple[NFCT_DIR_ORIGINAL].protonum=packet_hdr->ipv4_protocol;
@@ -135,8 +169,9 @@ void auth_process_conn_update(char *dgram)
             return; 
     }
 #ifdef HAVE_LIBCONNTRACK_FIXEDTIMEOUT
-    if (packet_hdr->timeout){
-        ct.fixed_timeout=ntohl(packet_hdr->timeout);
+    if (packet_hdr->timeout)
+    {
+        ct.fixed_timeout = ntohl(packet_hdr->timeout);
     }
 #endif
     (void)nfct_update_conntrack(cth, &ct);
@@ -151,24 +186,32 @@ void auth_process_conn_update(char *dgram)
  *   - Connection update: ask connectrak to set connection timeout to given
  *     value
  */
-inline void auth_packet_to_decision(char* dgram)
+inline void auth_packet_to_decision(char* dgram, int dgram_size)
 {
-    if (*dgram != PROTO_VERSION)
+    if (dgram_size < 2)
     {
-        debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, "Wrong protocol version from authentification server answer.");
+        debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, 
+                "NuAuth sent too small message");
         return;
     }
 
-    switch (*(dgram+1)) {
+    if (dgram[0] != PROTO_VERSION)
+    {
+        debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
+                "Wrong protocol version from authentification server answer.");
+        return;
+    }
+
+    switch (dgram[1]) {
         case AUTH_ANSWER:
-            auth_process_answer(dgram);
+            auth_process_answer(dgram, dgram_size);
             break;
 #ifdef HAVE_LIBCONNTRACK
         case AUTH_CONN_DESTROY: 
-            auth_process_conn_destroy(dgram);
+            auth_process_conn_destroy(dgram, dgram_size);
             break;
         case AUTH_CONN_UPDATE: 
-            auth_process_conn_update(dgram);
+            auth_process_conn_update(dgram, dgram_size);
             break;
 #else          
         case AUTH_CONN_DESTROY:
@@ -182,8 +225,8 @@ inline void auth_packet_to_decision(char* dgram)
 #endif                             
         default:
             log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, 
-                    "Type %d for packet %lu (not for me)",
-                    *(dgram+1),*(unsigned long * )(dgram+4));
+                    "NuAuth message type %d not for me",
+                    dgram[1]);
             break;
     }
 }
@@ -234,7 +277,7 @@ void* authsrv(void* data)
                 break;
             }
         } else {
-            auth_packet_to_decision(dgram);
+            auth_packet_to_decision(dgram, ret);
         }
     }
     
