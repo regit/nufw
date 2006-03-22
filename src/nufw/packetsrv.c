@@ -331,6 +331,7 @@ void* packetsrv(void *void_arg)
 
     nfq_destroy_queue(hndl);
     nfq_unbind_pf(h, AF_INET);
+    nfq_close(h);
 #else
     unsigned char buffer[BUFSIZ];
     int size;

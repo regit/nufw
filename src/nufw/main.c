@@ -72,6 +72,21 @@ void nufw_prepare_quit()
     nfct_close(cth);
 #endif
 
+    /* close tls session */
+    if (tls.session != NULL) 
+    {
+        int socket_tls = (int)gnutls_transport_get_ptr(*tls.session);
+        gnutls_bye(*tls.session, GNUTLS_SHUT_WR);
+        gnutls_deinit(*tls.session);
+        shutdown(socket_tls, SHUT_RDWR);
+        close(socket_tls);
+        free(tls.session);
+    }
+    pthread_mutex_destroy(&tls.mutex);
+
+    /* quit gnutls */
+    gnutls_global_deinit();
+
     /* destroy pid file */
     unlink(NUFW_PID_FILE);
 }
