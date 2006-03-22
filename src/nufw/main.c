@@ -509,16 +509,27 @@ int main(int argc,char * argv[])
     pckt_tx=pckt_rx=0;
     while (1 == 1) 
     {
+        time_t current_time;
+        struct tm *current_time_tm;
+        char time_str[10];
+        
+        sleep(5);	
+        
         /* clean old packets */
         pthread_mutex_lock(&packets_list.mutex);
         clean_old_packets ();
         pthread_mutex_unlock(&packets_list.mutex);
 
         /* display stats */
+        current_time = time(NULL);
+        current_time_tm = gmtime(&current_time);
+        if (strftime(time_str, sizeof(time_str), "%H:%M:%S", current_time_tm) == 0)
+            time_str[0] = '\0';
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_INFO, 
-                "rx : %d, tx : %d, track_size : %d, start_list : %p",
-                pckt_rx, pckt_tx, packets_list.length, packets_list.start);
-        sleep(1);	
+                "(%s) rx=%d tx=%d track_size=%d list=%s",
+                time_str,
+                pckt_rx, pckt_tx, packets_list.length, 
+                (packets_list.start==NULL)?"empty":"one packet or more");
     }
 
     nufw_stop_thread();

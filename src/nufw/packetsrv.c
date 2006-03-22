@@ -235,9 +235,12 @@ void* packetsrv(void *void_arg)
     struct Thread *this  = thread_arg->thread;
 #if USE_NFQUEUE
     unsigned char buffer[BUFSIZ];
+    struct timeval tv;
     int fd;
     int rv;
+    int select_result;
     struct nfnl_handle *nh;
+    fd_set wk_set;
 
     log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_MESSAGE,
             "Try to open a netfilter queue socket");
@@ -281,18 +284,49 @@ void* packetsrv(void *void_arg)
 
     log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
             "[+] Packet server started");
+    
+    FD_ZERO(&wk_set);
+    FD_SET(fd,&wk_set);
 
     /* loop until main process ask to stop */
     while (pthread_mutex_trylock(&this->mutex) == 0)
     {
         pthread_mutex_unlock(&this->mutex);
 
-        /* read one packet */
-        if ((rv = recv(fd, buffer, sizeof(buffer), 0)) && rv >= 0) {
-            nfq_handle_packet(h, (char*)buffer, rv);
-            pckt_rx++ ;
-        } else 
+        /* Set timeout: one second */
+        tv.tv_sec = 1;
+        tv.tv_usec = 0;
+
+        /* wait new event on socket */
+        select_result = select(fd+1,&wk_set,NULL,NULL,&tv);
+        if (select_result == -1)
+        {
+            log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
+                    "[!] FATAL ERROR: Error of select() in netfilter queue thread (code %i)!",
+                    errno);
+            kill(thread_arg->parent_pid, SIGTERM);
             break;
+        }
+
+        /* catch timeout */
+        if (select_result == 0) {
+            /* timeout! */
+            continue;
+        }
+
+        /* read one packet */
+        rv = recv(fd, buffer, sizeof(buffer), 0);
+        if (rv < 0)
+        {
+            log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
+                    "[!] FATAL ERROR: Error of read on netfilter queue socket (code %i)!",
+                    rv);
+            kill(thread_arg->parent_pid, SIGTERM);
+            break;
+        }
+
+        nfq_handle_packet(h, (char*)buffer, rv);
+        pckt_rx++ ;
     }
 
     nfq_destroy_queue(hndl);
