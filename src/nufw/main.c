@@ -48,20 +48,21 @@ struct Signals signals;
 #define NUFW_PID_FILE  LOCAL_STATE_DIR "/run/nufw.pid"
 
 /**
- * Stop thread and then wait thread until it exits.
+ * Stop threads and then wait until threads exit.
  */
 void nufw_stop_thread()
 {
-    /* stop auth server thread */
-    close_tls_session();
-
-    /* ask thread to stop */
+    /* ask threads to stop */
+    pthread_mutex_lock(&tls.auth_server_mutex);
     pthread_mutex_lock(&thread.mutex);
 
     /* wait for thread end */
     log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_MESSAGE,
-            "Wait packet server thread end");
+            "Wait threads end");
+    pthread_join (tls.auth_server, NULL);
+    pthread_mutex_unlock(&tls.auth_server_mutex);
     pthread_join (thread.thread, NULL);
+    pthread_mutex_unlock(&thread.mutex);
 }
 
 /**
@@ -69,6 +70,8 @@ void nufw_stop_thread()
  */
 void nufw_prepare_quit()
 {
+    close_tls_session();
+
     /* destroy mutex */
     pthread_mutex_destroy(&packets_list.mutex);
     
@@ -166,7 +169,7 @@ void create_thread()
     pthread_mutex_init(&thread.mutex, NULL);
 
     /* try to create the thread */
-    if (pthread_create(&thread.thread, NULL, packetsrv, &arg) != 0)
+    if (pthread_create(&thread.thread, &attr, packetsrv, &arg) != 0)
     {
         pthread_mutex_destroy(&thread.mutex);
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,

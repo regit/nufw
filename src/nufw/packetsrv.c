@@ -489,12 +489,17 @@ int auth_request_send(uint8_t type, uint32_t packet_id, char* payload, unsigned 
         tls.session = tls_connect();
 
         if (tls.session){
+            pthread_attr_t attr;
+            pthread_attr_init(&attr);
+            pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+
             log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_INFO,
                     "Connection to nuauth restored");
             tls.auth_server_running=1;
-            /* create thread for auth server */
+            
+            /* create joinable thread for auth server */
             pthread_mutex_init(&tls.auth_server_mutex, NULL);
-            if (pthread_create(&(tls.auth_server),NULL,authsrv,NULL) == EAGAIN){
+            if (pthread_create(&tls.auth_server, &attr, authsrv, NULL) == EAGAIN){
                 exit(EXIT_FAILURE);
             }
 #ifdef HAVE_LIBCONNTRACK

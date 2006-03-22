@@ -73,13 +73,6 @@ void close_tls_session()
     if (tls.session == NULL) 
         return;
 
-    /* ask auth server thread to stop */
-    pthread_mutex_lock(&tls.auth_server_mutex);
-    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_MESSAGE,
-            "Wait auth server thread end");
-
-    /* stop thread */
-    pthread_mutex_unlock(&tls.auth_server_mutex);
     pthread_mutex_destroy(&tls.auth_server_mutex);
     
     socket = (int)gnutls_transport_get_ptr(*tls.session);
