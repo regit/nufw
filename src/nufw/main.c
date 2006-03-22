@@ -81,13 +81,14 @@ void nufw_stop_thread()
  */
 void nufw_prepare_quit()
 {
-#if USE_X509
-/*    gnutls_certificate_free_keys(tls.xcred); */
-    gnutls_certificate_free_credentials(tls.xcred);
-#endif   
-
     /* close tls session */
     pthread_mutex_trylock(&tls.mutex);
+#if USE_X509
+    if (tls.session)
+    {
+        gnutls_certificate_free_credentials(tls.xcred);
+    }
+#endif   
     close_tls_session();
     pthread_mutex_unlock(&tls.mutex);
     pthread_mutex_destroy(&tls.mutex);
