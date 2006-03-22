@@ -45,7 +45,10 @@ struct Signals signals;
  * during compilation/installation) */
 #define NUFW_PID_FILE  LOCAL_STATE_DIR "/run/nufw.pid"
 
-void nufw_prepare_quit()
+/**
+ * Stop thread and then wait thread until it exits.
+ */
+void nufw_stop_thread()
 {
     /* ask thread to stop */
     pthread_mutex_lock(&thread.mutex);
@@ -54,10 +57,16 @@ void nufw_prepare_quit()
     log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_MESSAGE,
             "Wait thread end");
     pthread_join (thread.thread, NULL);
+}
 
-    /* stop nufw */
+/**
+ * Clean mutex, memory, etc. before exiting NuFW
+ */
+void nufw_prepare_quit()
+{
+    /* destroy mutex */
     pthread_mutex_destroy(&packets_list.mutex);
-
+    
     /* destroy conntrack handle */
 #ifdef HAVE_LIBCONNTRACK
     nfct_close(cth);
@@ -65,6 +74,24 @@ void nufw_prepare_quit()
 
     /* destroy pid file */
     unlink(NUFW_PID_FILE);
+}
+
+/**
+ * "Hard" cleanup before leaving: called when SIGINT/SIGTERM is called twice.
+ * Don't wait for thread end.
+ */
+void nufw_hard_cleanup (int signal)
+{
+    /* reinstall old handlers */
+    (void)sigaction(SIGTERM, &signals.old_sigterm_hdl, NULL);
+    (void)sigaction(SIGINT, &signals.old_sigint_hdl, NULL);
+
+    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
+            "[+] NuFW \"hard\" cleanup (catch double signal)");
+    nufw_prepare_quit();
+    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
+            "[+] Exit NuFW");
+    exit(EXIT_SUCCESS);
 }
 
 /**
@@ -76,12 +103,25 @@ void nufw_prepare_quit()
  */
 void nufw_cleanup (int signal)
 {
-    /* reinstall old handlers */
-    (void)sigaction(SIGTERM, &signals.old_sigterm_hdl, NULL);
-    (void)sigaction(SIGINT, &signals.old_sigint_hdl, NULL);
+    struct sigaction action;
+
+    /* install "hard cleanup" for SIGTERM */
+    memset(&action,0,sizeof(action));
+    action.sa_handler = nufw_hard_cleanup;
+    sigemptyset( & (action.sa_mask));
+    action.sa_flags = 0;
+    sigaction(SIGTERM, &action, NULL);
+
+    /* install "hard cleanup" for SIGINT */
+    memset(&action,0,sizeof(action));
+    action.sa_handler = nufw_hard_cleanup;
+    sigemptyset( & (action.sa_mask));
+    action.sa_flags = 0;
+    sigaction(SIGINT, &action, NULL);
 
     log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
             "[+] Stop NuFW (catch signal)");
+    nufw_stop_thread();
     nufw_prepare_quit();
     log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
             "[+] Exit NuFW");
@@ -481,6 +521,7 @@ int main(int argc,char * argv[])
         sleep(1);	
     }
 
+    nufw_stop_thread();
     nufw_prepare_quit();
     return EXIT_SUCCESS;
 }

@@ -85,7 +85,7 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
         return 0;
     }
 
-    if (look_for_tcp_flags(payload,payload_len)){
+    if (look_for_tcp_flags((unsigned char*)payload,payload_len)){
         ph = nfq_get_msg_packet_hdr(nfa);
         if (ph){
             pcktid = ntohl(ph->packet_id);
@@ -239,6 +239,9 @@ void* packetsrv(void *void_arg)
     int rv;
     struct nfnl_handle *nh;
 
+    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_MESSAGE,
+            "Try to open a netfilter queue socket");
+
     h = nfq_open();
     if (!h) {
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
@@ -275,10 +278,18 @@ void* packetsrv(void *void_arg)
 
     nh = nfq_nfnlh(h);
     fd = nfnl_fd(nh);
-    for (;;)
+
+    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
+            "[+] Packet server started");
+
+    /* loop until main process ask to stop */
+    while (pthread_mutex_trylock(&this->mutex) == 0)
     {
+        pthread_mutex_unlock(&this->mutex);
+
+        /* read one packet */
         if ((rv = recv(fd, buffer, sizeof(buffer), 0)) && rv >= 0) {
-            nfq_handle_packet(h, buffer, rv);
+            nfq_handle_packet(h, (char*)buffer, rv);
             pckt_rx++ ;
         } else 
             break;
@@ -291,6 +302,9 @@ void* packetsrv(void *void_arg)
     int size;
     int ok;
 
+    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_MESSAGE,
+            "Try to connect to netlink (IPQ)");
+
     /* init netlink connection */
     hndl = ipq_create_handle(0,PF_INET);
     if (!hndl)
@@ -302,6 +316,9 @@ void* packetsrv(void *void_arg)
     }
     
     ipq_set_mode(hndl, IPQ_COPY_PACKET,BUFSIZ);  
+
+    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
+            "[+] Packet server started");
 
     /* loop until main process ask this thread to stop using its mutex */
     while (pthread_mutex_trylock(&this->mutex) == 0)
