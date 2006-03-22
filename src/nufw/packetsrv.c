@@ -248,19 +248,19 @@ void* packetsrv(void *void_arg)
     h = nfq_open();
     if (!h) {
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
-                "Error during nfq_open()");
+                "[!] Error during nfq_open()");
         exit(EXIT_FAILURE);
     }
 
     if (nfq_unbind_pf(h, AF_INET) < 0) {
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
-                "Error during nfq_unbind_pf()");
+                "[!] Error during nfq_unbind_pf()");
         exit(EXIT_FAILURE);
     }
 
     if (nfq_bind_pf(h, AF_INET) < 0) {
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
-                "Error during nfq_bind_pf()");
+                "[!] Error during nfq_bind_pf()");
         exit(EXIT_FAILURE);
     }
 
@@ -268,21 +268,21 @@ void* packetsrv(void *void_arg)
     hndl = nfq_create_queue(h,  nfqueue_num, (nfq_callback *)&treat_packet, NULL);
     if (!hndl) {
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
-                "Error during nfq_create_queue() (queue %d busy ?)",
+                "[!] Error during nfq_create_queue() (queue %d busy ?)",
                 nfqueue_num);
         exit(EXIT_FAILURE);
     }
 
     if (nfq_set_mode(hndl, NFQNL_COPY_PACKET, 0xffff) < 0) {
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
-                "Can't set packet_copy mode");
+                "[!] Can't set packet_copy mode");
         exit(EXIT_FAILURE);
     }
 
     nh = nfq_nfnlh(h);
     fd = nfnl_fd(nh);
 
-    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
+    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
             "[+] Packet server started");
     
     FD_ZERO(&wk_set);
@@ -400,7 +400,7 @@ void* packetsrv(void *void_arg)
     }
     ipq_destroy_handle( hndl );  
 #endif
-    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_MESSAGE,
+    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
             "[+] Leave packet server thread");
     return NULL;
 }   

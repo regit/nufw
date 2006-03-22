@@ -509,10 +509,7 @@ int main(int argc,char * argv[])
     pckt_tx=pckt_rx=0;
     while (1 == 1) 
     {
-        time_t current_time;
-        struct tm *current_time_tm;
-        char time_str[10];
-        
+       
         sleep(5);	
         
         /* clean old packets */
@@ -521,13 +518,8 @@ int main(int argc,char * argv[])
         pthread_mutex_unlock(&packets_list.mutex);
 
         /* display stats */
-        current_time = time(NULL);
-        current_time_tm = gmtime(&current_time);
-        if (strftime(time_str, sizeof(time_str), "%H:%M:%S", current_time_tm) == 0)
-            time_str[0] = '\0';
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_INFO, 
-                "(%s) rx=%d tx=%d track_size=%d list=%s",
-                time_str,
+                "rx=%d tx=%d track_size=%d list=%s",
                 pckt_rx, pckt_tx, packets_list.length, 
                 (packets_list.start==NULL)?"empty":"one packet or more");
     }

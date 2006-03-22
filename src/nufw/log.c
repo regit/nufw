@@ -73,7 +73,15 @@ void do_log_area_printf(int area, int priority, char *format, va_list args)
     priority = syslog_priority_map[priority-MIN_DEBUG_LEVEL];
     vsyslog(priority, format, args);
   } else {
-    printf ("[%i] ", getpid());
+    time_t current_time;
+    struct tm *current_time_tm;
+    char time_str[10];
+
+    /* get time */
+    current_time = time(NULL);
+    current_time_tm = gmtime(&current_time);
+    if (0 < strftime(time_str, sizeof(time_str), "%H:%M:%S", current_time_tm))
+      printf ("[%s] ", time_str);
     vprintf(format, args);
     printf("\n");
     fflush(stdout);
