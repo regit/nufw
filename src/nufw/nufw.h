@@ -105,6 +105,7 @@ struct nuauth_conn {
         pthread_mutex_t mutex;
         unsigned char auth_server_running;
         pthread_t auth_server;
+        pthread_mutex_t auth_server_mutex;
         pthread_t conntrack_event_handler;
 };
 
@@ -139,6 +140,7 @@ void* authsrv(void* data);
 /* send an auth request packet given a payload (raw packet) */
 int auth_request_send(uint8_t type,uint32_t packet_id, char* payload, unsigned int data_len);
 
+void close_tls_session();
 
 unsigned long padd ( packet_idl * packet);
 int psearch_and_destroy (uint32_t packet_id,uint32_t * mark);

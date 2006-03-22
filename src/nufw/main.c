@@ -52,12 +52,15 @@ struct Signals signals;
  */
 void nufw_stop_thread()
 {
+    /* stop auth server thread */
+    close_tls_session();
+
     /* ask thread to stop */
     pthread_mutex_lock(&thread.mutex);
 
     /* wait for thread end */
     log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_MESSAGE,
-            "Wait thread end");
+            "Wait packet server thread end");
     pthread_join (thread.thread, NULL);
 }
 
@@ -74,16 +77,6 @@ void nufw_prepare_quit()
     nfct_close(cth);
 #endif
 
-    /* close tls session */
-    if (tls.session != NULL) 
-    {
-        int socket_tls = (int)gnutls_transport_get_ptr(*tls.session);
-        gnutls_bye(*tls.session, GNUTLS_SHUT_WR);
-        gnutls_deinit(*tls.session);
-        shutdown(socket_tls, SHUT_RDWR);
-        close(socket_tls);
-        free(tls.session);
-    }
     pthread_mutex_destroy(&tls.mutex);
 
     /* quit gnutls */
@@ -507,15 +500,18 @@ int main(int argc,char * argv[])
                 "Bad Address in configuration for adr_srv");
     }
     
+    /* create packet list */
     packets_list.start=NULL;
     packets_list.end=NULL;
     packets_list.length=0;
-    /* initialize mutex */
     pthread_mutex_init(&packets_list.mutex ,NULL);
 
+    /* init. tls */
     tls.session=NULL;
     tls.auth_server_running=1;
     pthread_mutex_init(&tls.mutex,NULL);
+
+    /* start GNU TLS library */
     gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);
     gnutls_global_init();
 
@@ -541,10 +537,7 @@ int main(int argc,char * argv[])
         pthread_mutex_unlock(&packets_list.mutex);
 
         /* display stats */
-        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_INFO, 
-                "rx=%d tx=%d track_size=%d list=%s",
-                pckt_rx, pckt_tx, packets_list.length, 
-                (packets_list.start==NULL)?"empty":"one packet or more");
+        process_poll(0);
     }
 
     nufw_stop_thread();

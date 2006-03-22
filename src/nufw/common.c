@@ -63,7 +63,33 @@ int timeval_substract (struct timeval *result,struct timeval *x,struct timeval *
 }
 #endif
 
+/**
+ * Close the TLS session
+ */
+void close_tls_session()
+{
+    int socket;
 
+    if (tls.session == NULL) 
+        return;
+
+    /* ask auth server thread to stop */
+    pthread_mutex_lock(&tls.auth_server_mutex);
+    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_MESSAGE,
+            "Wait auth server thread end");
+
+    /* stop thread */
+    pthread_mutex_unlock(&tls.auth_server_mutex);
+    pthread_mutex_destroy(&tls.auth_server_mutex);
+    
+    socket = (int)gnutls_transport_get_ptr(*tls.session);
+    gnutls_bye(*tls.session, GNUTLS_SHUT_WR);
+    gnutls_deinit(*tls.session);
+    shutdown(socket, SHUT_RDWR);
+    close(socket);
+    free(tls.session);
+    tls.session = NULL;
+}    
 
 /**
  * Suppress the packet current from the packet list (::packets_list).
@@ -137,9 +163,12 @@ int psearch_and_destroy (uint32_t packet_id,uint32_t * nfmark){
 #ifdef PERF_DISPLAY_ENABLE
       {
 	      struct timeval elapsed_time,leave_time;
+              double ms;
 	      gettimeofday(&leave_time,NULL);
 	      timeval_substract (&elapsed_time,&leave_time,&(current->arrival_time));
-	      printf("Treatment time for conn :%ld.%06ld",elapsed_time.tv_sec,elapsed_time.tv_usec);
+              ms = (double)elapsed_time.tv_sec*1000 + (double)elapsed_time.tv_usec/1000;
+	      log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
+                      "Treatment time for connection: %.1f ms", ms);
       }
 #endif
 

@@ -288,7 +288,6 @@ void* packetsrv(void *void_arg)
     log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
             "[+] Packet server started");
 
-
     /* loop until main process ask to stop */
     while (pthread_mutex_trylock(&this->mutex) == 0)
     {
@@ -328,7 +327,6 @@ void* packetsrv(void *void_arg)
             break;
         }
 
-        debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_VERBOSE_DEBUG, "Read buffer: %i bytes", rv);
         nfq_handle_packet(h, (char*)buffer, rv);
         pckt_rx++ ;
     }
@@ -414,19 +412,14 @@ void* packetsrv(void *void_arg)
  */
 void shutdown_tls()
 {
-    int socket_tls;
     log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, "tls send failure when sending request");
     pthread_mutex_lock(&tls.mutex);
 
     pthread_cancel(tls.auth_server);
     pthread_cancel(tls.conntrack_event_handler);
-    socket_tls=(int)gnutls_transport_get_ptr(*tls.session);
-    gnutls_bye(*tls.session,GNUTLS_SHUT_WR);
-    gnutls_deinit(*tls.session);
-    shutdown(socket_tls,SHUT_RDWR);
-    close(socket_tls);
-    free(tls.session);
-    tls.session=NULL;
+
+    close_tls_session();
+
     /* put auth_server_running to 1 because this is this thread which has just killed auth_server */
     tls.auth_server_running=1;
 
@@ -484,14 +477,8 @@ int auth_request_send(uint8_t type, uint32_t packet_id, char* payload, unsigned 
 
     /* cleaning up current session : auth_server has detected a problem */
     pthread_mutex_lock(&tls.mutex);
-    if ((tls.auth_server_running == 0) && tls.session) {
-        int socket_tls = (int)gnutls_transport_get_ptr(*tls.session);
-        gnutls_bye(*tls.session,GNUTLS_SHUT_WR);
-        gnutls_deinit(*tls.session);
-        shutdown(socket_tls,SHUT_RDWR);
-        close(socket_tls);
-        free(tls.session);
-        tls.session = NULL;
+    if ((tls.auth_server_running == 0) && tls.session != NULL) {
+        close_tls_session();
     }
     pthread_mutex_unlock(&tls.mutex);
 
@@ -502,10 +489,11 @@ int auth_request_send(uint8_t type, uint32_t packet_id, char* payload, unsigned 
         tls.session = tls_connect();
 
         if (tls.session){
-            log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
+            log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_INFO,
                     "Connection to nuauth restored");
             tls.auth_server_running=1;
             /* create thread for auth server */
+            pthread_mutex_init(&tls.auth_server_mutex, NULL);
             if (pthread_create(&(tls.auth_server),NULL,authsrv,NULL) == EAGAIN){
                 exit(EXIT_FAILURE);
             }

@@ -34,9 +34,10 @@
  */
 void process_poll(int signum)
 {
-  log_printf(DEBUG_LEVEL_INFO,
-          "AUDIT: Traffic statistics: %d packets received - %d accepted",
-          pckt_rx, pckt_tx);
+    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_INFO, 
+            "AUDIT: rx=%d tx=%d track_size=%d list=%s",
+            pckt_rx, pckt_tx, packets_list.length, 
+            (packets_list.start==NULL)?"empty":"one packet or more");
 }
 
 /**

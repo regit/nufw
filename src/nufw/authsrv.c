@@ -63,7 +63,7 @@ inline void auth_packet_to_decision(char* dgram)
               if ( *(dgram+4) == DECISION_ACCEPT ) {
                   /* TODO : test on return */
                   debug_log_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
-                          "Accepting %u", packet_id);
+                          "Accepting packet with id=%u", packet_id);
 #if HAVE_LIBIPQ_MARK || USE_NFQUEUE
                   if (nufw_set_mark) {
                       debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
@@ -178,24 +178,59 @@ inline void auth_packet_to_decision(char* dgram)
  * Thread waiting to authentification server (NuAuth) answer.
  * Call auth_packet_to_decision() on new packet.
  */
-void* authsrv(void* data){
+void* authsrv(void* data)
+{
     int ret;
     char dgram[512];
+    int socket = (int)gnutls_transport_get_ptr(*tls.session);
+    fd_set wk_set;
+    int select_result;
+    struct timeval tv;
 
-    for(;;){
+    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
+            "[+] Start auth server thread");
+
+    while (pthread_mutex_trylock(&tls.auth_server_mutex) == 0)
+    {
+        pthread_mutex_unlock(&tls.auth_server_mutex);
+
+        /* Set timeout: one second */
+        tv.tv_sec = 1;
+        tv.tv_usec = 0;
+
+        /* wait new event on socket */
+        FD_ZERO(&wk_set);
+        FD_SET(socket,&wk_set);
+        select_result = select(socket+1,&wk_set,NULL,NULL,&tv);
+        if (select_result == -1)
+        {
+            break;
+        }
+
+        /* catch timeout */
+        if (select_result == 0) {
+            /* timeout! */
+            continue;
+        }
+        
+        memset(dgram, 0, sizeof dgram);
         ret= gnutls_record_recv(*tls.session,dgram,sizeof dgram);
         if (ret<0){
             if ( gnutls_error_is_fatal(ret) ){
-                pthread_mutex_lock(&tls.mutex);
-                /* warn sender thread that it will need to reconnect at next access */
-                tls.auth_server_running=0;
-                pthread_mutex_unlock(&tls.mutex);
-                pthread_exit(NULL);
+                break;
             }
         } else {
             auth_packet_to_decision(dgram);
         }
-        memset(dgram, 0, sizeof dgram);
     }
+    
+    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
+            "[+] Leave auth server thread");
+    
+    pthread_mutex_lock(&tls.mutex);
+    /* warn sender thread that it will need to reconnect at next access */
+    tls.auth_server_running=0;
+    pthread_mutex_unlock(&tls.mutex);
+    pthread_exit(NULL);
 }
 
