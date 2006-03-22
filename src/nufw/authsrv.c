@@ -96,7 +96,6 @@ void auth_process_answer(char *dgram, int dgram_size)
         /* drop packet */
         debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
                 "Dropping %u", packet_id);
-        printf ("DROP %d\n", packet_id);
         IPQ_SET_VERDICT(packet_id, NF_DROP);
     }
 }    

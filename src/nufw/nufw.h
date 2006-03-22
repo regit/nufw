@@ -23,6 +23,10 @@
 
 #define PERF_DISPLAY_ENABLE 1
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -32,9 +36,6 @@
 #include <gnutls/gnutls.h>
 #include <gcrypt.h>
 #include <errno.h>
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
 
 #include "log.h"
 #include "security.h"
@@ -84,11 +85,8 @@ struct nfq_handle *h;
 #endif
 
 /** Gryzor hacks with aims to answer ICMP message when a packet is dropped. */
-#define GRYZOR_HACKS
-#undef GRYZOR_HACKS
-
 #ifdef GRYZOR_HACKS
-#include <sys/socket.h>
+#  include <sys/socket.h>
 #endif
 
 /** If equals to 1, compile with x509 certificate support */
