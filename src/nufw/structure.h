@@ -142,6 +142,15 @@ struct Thread
     pthread_mutex_t mutex;
 };
 
+/**
+ * Structure to send arguments to the thread.
+ */
+struct ThreadArgument
+{
+    struct Thread *thread;
+    int parent_pid;
+};    
+
 /* mutex */
 pthread_mutex_t hndl_mutex;
 

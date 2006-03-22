@@ -51,7 +51,7 @@ void nufw_prepare_quit()
     pthread_mutex_lock(&thread.mutex);
 
     /* wait for thread end */
-    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
+    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_MESSAGE,
             "Wait thread end");
     pthread_join (thread.thread, NULL);
 
@@ -95,6 +95,11 @@ void nufw_cleanup (int signal)
  */
 void create_thread()
 {
+    /* should be static because thread may read data after this function exits */
+    static struct ThreadArgument arg;
+    arg.thread = &thread;
+    arg.parent_pid = getpid();
+    
     /* set attribute to "joinable thread" */
     pthread_attr_t attr;
     pthread_attr_init(&attr);
@@ -104,7 +109,7 @@ void create_thread()
     pthread_mutex_init(&thread.mutex, NULL);
 
     /* try to create the thread */
-    if (pthread_create(&thread.thread, NULL, packetsrv, &thread) != 0)
+    if (pthread_create(&thread.thread, NULL, packetsrv, &arg) != 0)
     {
         pthread_mutex_destroy(&thread.mutex);
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
