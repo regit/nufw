@@ -186,10 +186,10 @@ void* authsrv(void* data){
         ret= gnutls_record_recv(*tls.session,dgram,sizeof dgram);
         if (ret<0){
             if ( gnutls_error_is_fatal(ret) ){
-                pthread_mutex_lock(tls.mutex);
+                pthread_mutex_lock(&tls.mutex);
                 /* warn sender thread that it will need to reconnect at next access */
                 tls.auth_server_running=0;
-                pthread_mutex_unlock(tls.mutex);
+                pthread_mutex_unlock(&tls.mutex);
                 pthread_exit(NULL);
             }
         } else {

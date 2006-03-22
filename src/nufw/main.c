@@ -491,8 +491,7 @@ int main(int argc,char * argv[])
 
     tls.session=NULL;
     tls.auth_server_running=1;
-    tls.mutex=(pthread_mutex_t*)calloc(1,sizeof(pthread_mutex_t));
-    pthread_mutex_init(tls.mutex,NULL);
+    pthread_mutex_init(&tls.mutex,NULL);
     gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);
     gnutls_global_init();
 

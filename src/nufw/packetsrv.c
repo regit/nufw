@@ -408,10 +408,11 @@ void* packetsrv(void *void_arg)
 /**
  * Halt TLS threads and close socket
  */
-void shutdown_tls() {
+void shutdown_tls()
+{
     int socket_tls;
     log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, "tls send failure when sending request");
-    pthread_mutex_lock(tls.mutex);
+    pthread_mutex_lock(&tls.mutex);
 
     pthread_cancel(tls.auth_server);
     pthread_cancel(tls.conntrack_event_handler);
@@ -425,7 +426,7 @@ void shutdown_tls() {
     /* put auth_server_running to 1 because this is this thread which has just killed auth_server */
     tls.auth_server_running=1;
 
-    pthread_mutex_unlock(tls.mutex);
+    pthread_mutex_unlock(&tls.mutex);
 }
 
 /**
@@ -478,7 +479,7 @@ int auth_request_send(uint8_t type, uint32_t packet_id, char* payload, unsigned 
             "Sending request for %u", packet_id);
 
     /* cleaning up current session : auth_server has detected a problem */
-    pthread_mutex_lock(tls.mutex);
+    pthread_mutex_lock(&tls.mutex);
     if ((tls.auth_server_running == 0) && tls.session) {
         int socket_tls = (int)gnutls_transport_get_ptr(*tls.session);
         gnutls_bye(*tls.session,GNUTLS_SHUT_WR);
@@ -488,7 +489,7 @@ int auth_request_send(uint8_t type, uint32_t packet_id, char* payload, unsigned 
         free(tls.session);
         tls.session = NULL;
     }
-    pthread_mutex_unlock(tls.mutex);
+    pthread_mutex_unlock(&tls.mutex);
 
     /* negotiate TLS connection if needed */
     if (!tls.session){

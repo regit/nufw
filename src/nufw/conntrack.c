@@ -88,11 +88,11 @@ int update_handler (void *arg, unsigned int flags, int type,void *data)
             ); 
     if (ret <0){
         if ( gnutls_error_is_fatal(ret) ){
-            pthread_mutex_lock(tls.mutex);
+            pthread_mutex_lock(&tls.mutex);
             /* warn sender thread that it will need to reconnect at next access */
             tls.auth_server_running=0;
             pthread_cancel(tls.auth_server);
-            pthread_mutex_unlock(tls.mutex);
+            pthread_mutex_unlock(&tls.mutex);
             return -1;
         }
     }

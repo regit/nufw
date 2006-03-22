@@ -102,7 +102,7 @@ struct nfq_handle *h;
 
 struct nuauth_conn {
         gnutls_session * session;
-        pthread_mutex_t* mutex;
+        pthread_mutex_t mutex;
         unsigned char auth_server_running;
         pthread_t auth_server;
         pthread_t conntrack_event_handler;
