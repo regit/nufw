@@ -35,6 +35,8 @@
 
 GCRY_THREAD_OPTION_PTHREAD_IMPL;
 
+char *key_file = NULL;
+
 /* packet server thread */
 struct Thread thread;
 
@@ -85,7 +87,14 @@ void nufw_prepare_quit()
     pthread_mutex_destroy(&tls.mutex);
 
     /* quit gnutls */
+#if 0
+    gnutls_certificate_free_keys(&xcred);
+    gnutls_certificate_free_credentials(&xcred);
+#endif    
     gnutls_global_deinit();
+
+    /* free memory */
+    free(key_file);
 
     /* destroy pid file */
     unlink(NUFW_PID_FILE);

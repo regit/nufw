@@ -80,6 +80,9 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
     struct timeval timestamp;
     int ret;
 
+    debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_VERBOSE_DEBUG,
+            "(*) New packet");
+
     payload_len =  nfq_get_payload(nfa,&payload);
     if (payload_len == -1){
         return 0;
@@ -284,9 +287,7 @@ void* packetsrv(void *void_arg)
 
     log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
             "[+] Packet server started");
-    
-    FD_ZERO(&wk_set);
-    FD_SET(fd,&wk_set);
+
 
     /* loop until main process ask to stop */
     while (pthread_mutex_trylock(&this->mutex) == 0)
@@ -298,6 +299,8 @@ void* packetsrv(void *void_arg)
         tv.tv_usec = 0;
 
         /* wait new event on socket */
+        FD_ZERO(&wk_set);
+        FD_SET(fd,&wk_set);
         select_result = select(fd+1,&wk_set,NULL,NULL,&tv);
         if (select_result == -1)
         {
@@ -325,12 +328,12 @@ void* packetsrv(void *void_arg)
             break;
         }
 
+        debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_VERBOSE_DEBUG, "Read buffer: %i bytes", rv);
         nfq_handle_packet(h, (char*)buffer, rv);
         pckt_rx++ ;
     }
 
     nfq_destroy_queue(hndl);
-    nfq_unbind_pf(h, AF_INET);
     nfq_close(h);
 #else
     unsigned char buffer[BUFSIZ];
