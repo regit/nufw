@@ -55,7 +55,7 @@
 #define HOSTNAME_SIZE 256   /*!< Maximum size of hostnames (::authreq_addr) */
 #define FILENAME_SIZE 256   /*!< Maximum length of filenames */
 
-char *cert_file;   /*!< Certificatename used in TLS connection, default value: NULL */
+extern char *cert_file;   /*!< Certificatename used in TLS connection, default value: NULL */
 extern char *key_file;  /*!< Key filename used in TLS connection, default value: NULL */
 char *ca_file;   /*!< Trust filename used in TLS connection, default value: NULL */
 char *nuauth_cert_dn;   /*!< NuAuth certificate filename, default value: NULL */

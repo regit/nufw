@@ -107,6 +107,7 @@ struct nuauth_conn {
         pthread_t auth_server;
         pthread_mutex_t auth_server_mutex;
         pthread_t conntrack_event_handler;
+        gnutls_certificate_credentials xcred;
 };
 
 struct nuauth_conn tls;
@@ -144,6 +145,7 @@ void close_tls_session();
 
 unsigned long padd ( packet_idl * packet);
 int psearch_and_destroy (uint32_t packet_id,uint32_t * mark);
+void clear_packet_list ();
 void clean_old_packets ();
 
 void process_usr1(int signum);

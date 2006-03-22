@@ -36,6 +36,7 @@
 GCRY_THREAD_OPTION_PTHREAD_IMPL;
 
 char *key_file = NULL;
+char *cert_file = NULL;
 
 /* packet server thread */
 struct Thread thread;
@@ -59,10 +60,20 @@ void nufw_stop_thread()
     /* wait for thread end */
     log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_MESSAGE,
             "Wait threads end");
-    pthread_join (tls.auth_server, NULL);
+    if (tls.session != NULL)
+    {
+        pthread_join (tls.auth_server, NULL);
+    }
     pthread_mutex_unlock(&tls.auth_server_mutex);
     pthread_join (thread.thread, NULL);
     pthread_mutex_unlock(&thread.mutex);
+
+    /* clear packet list: use trylock() instead of lock() because the 
+     * mutex may already be locked */
+    pthread_mutex_trylock(&packets_list.mutex);
+    clear_packet_list();
+    pthread_mutex_unlock(&packets_list.mutex);
+    pthread_mutex_destroy(&packets_list.mutex);
 }
 
 /**
@@ -70,27 +81,29 @@ void nufw_stop_thread()
  */
 void nufw_prepare_quit()
 {
-    close_tls_session();
+#if USE_X509
+/*    gnutls_certificate_free_keys(tls.xcred); */
+    gnutls_certificate_free_credentials(tls.xcred);
+#endif   
 
-    /* destroy mutex */
-    pthread_mutex_destroy(&packets_list.mutex);
+    /* close tls session */
+    pthread_mutex_trylock(&tls.mutex);
+    close_tls_session();
+    pthread_mutex_unlock(&tls.mutex);
+    pthread_mutex_destroy(&tls.mutex);
     
     /* destroy conntrack handle */
 #ifdef HAVE_LIBCONNTRACK
     nfct_close(cth);
 #endif
 
-    pthread_mutex_destroy(&tls.mutex);
-
     /* quit gnutls */
-#if 0
-    gnutls_certificate_free_keys(&xcred);
-    gnutls_certificate_free_credentials(&xcred);
-#endif    
     gnutls_global_deinit();
 
     /* free memory */
     free(key_file);
+    free(cert_file);
+    free(ca_file);
 
     /* destroy pid file */
     unlink(NUFW_PID_FILE);

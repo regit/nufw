@@ -420,7 +420,8 @@ void shutdown_tls()
 
     close_tls_session();
 
-    /* put auth_server_running to 1 because this is this thread which has just killed auth_server */
+    /* put auth_server_running to 1 because this is this thread which has
+     * just killed auth_server */
     tls.auth_server_running=1;
 
     pthread_mutex_unlock(&tls.mutex);

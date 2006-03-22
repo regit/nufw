@@ -39,7 +39,6 @@
 gnutls_session* tls_connect()
 {
     gnutls_session* tls_session;
-    gnutls_certificate_credentials xcred;
     int tls_socket,ret;
 #if USE_X509
     const int cert_type_priority[3] = { GNUTLS_CRT_X509, 0 };
@@ -82,13 +81,13 @@ gnutls_session* tls_connect()
     }
 
     /* X509 stuff */
-    gnutls_certificate_allocate_credentials(&xcred);
+    gnutls_certificate_allocate_credentials(&tls.xcred);
 
     /* sets the trusted cas file */
     if (ca_file){
-        gnutls_certificate_set_x509_trust_file(xcred, ca_file, GNUTLS_X509_FMT_PEM);
+        gnutls_certificate_set_x509_trust_file(tls.xcred, ca_file, GNUTLS_X509_FMT_PEM);
     }
-    gnutls_certificate_set_x509_key_file(xcred,cert_file,key_file,GNUTLS_X509_FMT_PEM);
+    gnutls_certificate_set_x509_key_file(tls.xcred,cert_file,key_file,GNUTLS_X509_FMT_PEM);
 #endif
 
     /* Initialize TLS session */
@@ -108,7 +107,7 @@ gnutls_session* tls_connect()
     gnutls_certificate_type_set_priority(*(tls_session), cert_type_priority);
 
     /* put the x509 credentials to the current session */
-    gnutls_credentials_set(*(tls_session), GNUTLS_CRD_CERTIFICATE, xcred);
+    gnutls_credentials_set(*(tls_session), GNUTLS_CRD_CERTIFICATE, tls.xcred);
 #endif
 
     gnutls_transport_set_ptr( *(tls_session), (gnutls_transport_ptr)tls_socket);

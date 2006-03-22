@@ -187,9 +187,27 @@ int psearch_and_destroy (uint32_t packet_id,uint32_t * nfmark){
 }
 
 /**
+ * Clear packet list: delete all elements
+ */
+void clear_packet_list()
+{
+  packet_idl *current=packets_list.start, *next;
+  while (current != NULL)
+  {
+      next = current->next;
+      free(current);
+      current = next;
+  }
+  packets_list.start = NULL;
+  packets_list.end = NULL;
+  packets_list.length = 0;
+}
+
+/**
  * Walk in the packet list (::packets_list) and remove old packets (using ::packet_timeout limit).
  */
-void clean_old_packets (){
+void clean_old_packets ()
+{
   packet_idl *current=packets_list.start,* previous=NULL;
   int timestamp=time(NULL);
 
