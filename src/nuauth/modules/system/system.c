@@ -33,6 +33,7 @@ typedef struct _auth_pam_userinfo {
 } auth_pam_userinfo;
 
 gint system_convert_username_to_uppercase;
+gint system_convert_username_to_lowercase;
 gint system_pam_module_not_threadsafe;
 
 /* Init module system */
@@ -41,10 +42,12 @@ G_MODULE_EXPORT gchar* g_module_check_init(GModule *module)
   gpointer vpointer;
 confparams system_nuauth_vars[] = {
   { "system_convert_username_to_uppercase", G_TOKEN_INT, 0, 0 },
+  { "system_convert_username_to_lowercase", G_TOKEN_INT, 0, 0 },
   { "system_pam_module_not_threadsafe", G_TOKEN_INT, 1, 0 }
 };
 
   system_convert_username_to_uppercase=0;
+  system_convert_username_to_lowercase=0;
   /*  parse conf file */
   parse_conffile(DEFAULT_CONF_FILE,
           sizeof(system_nuauth_vars)/sizeof(confparams),
@@ -54,6 +57,17 @@ confparams system_nuauth_vars[] = {
           sizeof(system_nuauth_vars)/sizeof(confparams),
           "system_convert_username_to_uppercase");
   system_convert_username_to_uppercase = *(int *)(vpointer); 
+ vpointer = get_confvar_value(system_nuauth_vars,
+          sizeof(system_nuauth_vars)/sizeof(confparams),
+          "system_convert_username_to_lowercase");
+  system_convert_username_to_lowercase = *(int *)(vpointer); 
+  if (system_convert_username_to_lowercase && system_convert_username_to_uppercase){
+    system_convert_username_to_lowercase=0;
+    system_convert_username_to_uppercase=0;
+    g_message("Can not convert simultaneously username to upper and lower case");
+  }
+
+
 
   vpointer = get_confvar_value(system_nuauth_vars,
           sizeof(system_nuauth_vars)/sizeof(confparams),
@@ -137,6 +151,12 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass
 	/* User need to be pass in upper case to winbind */
 	  g_strup(user);
         }
+        if (system_convert_username_to_lowercase){
+            /* User need to be pass in lower case to winbind */
+            g_strdown(user);
+        }
+
+
 
 	if (pass != NULL) {
 		auth_pam_userinfo userinfo;

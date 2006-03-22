@@ -54,6 +54,7 @@
 	mutex to ask a thread to stop. Each thread use timeout of one second,
 	and don't use any blocking function anymore (use function with timeout
 	instead: eg. use g_async_queue_timed_pop() instead of g_async_queue_pop())
+	- nuauth: port of system_convert_username_to_lowercase option (from 1.0)
 
 1.1.3 (2006/01/25)
 	- nutrackd : PostGreSQL support
