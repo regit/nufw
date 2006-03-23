@@ -95,7 +95,7 @@ void auth_process_answer(char *dgram, int dgram_size)
     default:
         /* drop packet */
         debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
-                "Dropping %u", packet_id);
+                "Drop packet %u", packet_id);
         IPQ_SET_VERDICT(packet_id, NF_DROP);
     }
 }    

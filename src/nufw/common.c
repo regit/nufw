@@ -111,7 +111,7 @@ void psuppress (packet_idl * previous,packet_idl * current){
 unsigned long padd (packet_idl *current){
   if (track_size <= packets_list.length ){
       log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_MESSAGE, 
-              "Queue is full, dropping element");
+              "Warning: queue is full, drop element %d", current->id);
       IPQ_SET_VERDICT(current->id,NF_DROP);
       return 0;
   }
@@ -160,7 +160,7 @@ int psearch_and_destroy (uint32_t packet_id,uint32_t * nfmark){
 	      gettimeofday(&leave_time,NULL);
 	      timeval_substract (&elapsed_time,&leave_time,&(current->arrival_time));
               ms = (double)elapsed_time.tv_sec*1000 + (double)elapsed_time.tv_usec/1000;
-	      log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
+	      log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_INFO,
                       "Treatment time for connection: %.1f ms", ms);
       }
 #endif
@@ -234,5 +234,6 @@ int send_icmp_unreach(char *dgram){
 #if 0    
     sendto(raw_sock, buffer, buffer_length, flags, to, tolen);
 #endif        
+    return 0;
 }
 #endif
