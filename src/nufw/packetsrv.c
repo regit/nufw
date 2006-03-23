@@ -281,11 +281,13 @@ int packetsrv_open()
 
 void packetsrv_close(int smart)
 {
+#if USE_NFQUEUE
     log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_SERIOUS_MESSAGE,
             "Destroy netfilter queue socket");
     if (smart)
         nfq_destroy_queue(hndl);
     nfq_close(h);
+#endif    
 }    
 
 
@@ -303,6 +305,7 @@ void* packetsrv(void *void_arg)
 {
     struct ThreadArgument *thread_arg  = void_arg;
     struct Thread *this  = thread_arg->thread;
+    int fatal_error = 0;
 #if USE_NFQUEUE
     unsigned char buffer[BUFSIZ];
     struct timeval tv;
@@ -310,7 +313,6 @@ void* packetsrv(void *void_arg)
     int rv;
     int select_result;
     fd_set wk_set;
-    int fatal_error = 0;
 
     fd = packetsrv_open();
     if (fd < 0) 
@@ -376,10 +378,6 @@ void* packetsrv(void *void_arg)
     }
 
     packetsrv_close(!fatal_error);
-    if (fatal_error)
-    {
-        kill(thread_arg->parent_pid, SIGTERM);
-    }
 #else
     unsigned char buffer[BUFSIZ];
     int size;
@@ -439,7 +437,8 @@ void* packetsrv(void *void_arg)
                 log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
                         "[!] FATAL ERROR: libipq error (code %d)!",
                         ipq_get_msgerr(buffer));
-                kill(thread_arg->parent_pid, SIGTERM);
+                fatal_error = 1;
+                break;
             }
             continue;
         }
@@ -451,6 +450,10 @@ void* packetsrv(void *void_arg)
 #endif
     log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
             "[+] Leave packet server thread");
+    if (fatal_error)
+    {
+        kill(thread_arg->parent_pid, SIGTERM);
+    }
     pthread_exit (NULL);
 }   
 
