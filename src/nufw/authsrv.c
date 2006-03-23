@@ -83,7 +83,7 @@ void auth_process_answer(char *dgram, int dgram_size)
         break;
 
 #ifdef GRYZOR_HACKS
-    case NOK_REJ:
+    case DECISION_REJECT:
         /* Packet is rejected, ie. dropped and ICMP signalized */
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
                 "Rejecting %lu", packet_id);

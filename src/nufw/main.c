@@ -67,13 +67,6 @@ void nufw_stop_thread()
     pthread_mutex_unlock(&tls.auth_server_mutex);
     pthread_join (thread.thread, NULL);
     pthread_mutex_unlock(&thread.mutex);
-
-    /* clear packet list: use trylock() instead of lock() because the 
-     * mutex may already be locked */
-    pthread_mutex_trylock(&packets_list.mutex);
-    clear_packet_list();
-    pthread_mutex_unlock(&packets_list.mutex);
-    pthread_mutex_destroy(&packets_list.mutex);
 }
 
 /**
@@ -81,8 +74,12 @@ void nufw_stop_thread()
  */
 void nufw_prepare_quit()
 {
+    /* clear packet list: use trylock() instead of lock() because the 
+     * mutex may already be locked */
+    clear_packet_list();
+    pthread_mutex_destroy(&packets_list.mutex);
+
     /* close tls session */
-    pthread_mutex_trylock(&tls.mutex);
 #if USE_X509
     if (tls.session)
     {
@@ -90,7 +87,6 @@ void nufw_prepare_quit()
     }
 #endif   
     close_tls_session();
-    pthread_mutex_unlock(&tls.mutex);
     pthread_mutex_destroy(&tls.mutex);
     
     /* destroy conntrack handle */

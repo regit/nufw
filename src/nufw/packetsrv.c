@@ -248,6 +248,7 @@ void* packetsrv(void *void_arg)
     log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_MESSAGE,
             "Try to open a netfilter queue socket");
 
+    /* opening library handle */
     h = nfq_open();
     if (!h) {
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
@@ -255,12 +256,14 @@ void* packetsrv(void *void_arg)
         exit(EXIT_FAILURE);
     }
 
+    /* unbinding existing nf_queue handler for AF_INET (if any) */
     if (nfq_unbind_pf(h, AF_INET) < 0) {
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
                 "[!] Error during nfq_unbind_pf()");
         exit(EXIT_FAILURE);
     }
 
+    /* binding nfnetlink_queue as nf_queue handler for AF_INET */
     if (nfq_bind_pf(h, AF_INET) < 0) {
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
                 "[!] Error during nfq_bind_pf()");
@@ -268,6 +271,8 @@ void* packetsrv(void *void_arg)
     }
 
 
+    /* binding this socket to queue number ::nfqueue_num 
+     * and install our packet handler */
     hndl = nfq_create_queue(h,  nfqueue_num, (nfq_callback *)&treat_packet, NULL);
     if (!hndl) {
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
@@ -276,6 +281,7 @@ void* packetsrv(void *void_arg)
         exit(EXIT_FAILURE);
     }
 
+    /* setting copy_packet mode */
     if (nfq_set_mode(hndl, NFQNL_COPY_PACKET, 0xffff) < 0) {
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
                 "[!] Can't set packet_copy mode");
@@ -327,6 +333,7 @@ void* packetsrv(void *void_arg)
             break;
         }
 
+        /* process the packet */
         nfq_handle_packet(h, (char*)buffer, rv);
         pckt_rx++ ;
     }

@@ -231,6 +231,8 @@ void clean_old_packets ()
 int send_icmp_unreach(char *dgram){
     /* First thing we do, let's build the packet to send */
     /* sendmsg(); */
-    sendto(raw_sock);
+#if 0    
+    sendto(raw_sock, buffer, buffer_length, flags, to, tolen);
+#endif        
 }
 #endif
