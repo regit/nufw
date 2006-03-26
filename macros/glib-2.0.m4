@@ -5,7 +5,7 @@ dnl AM_PATH_GLIB_2_0([MINIMUM-VERSION, [ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND [
 dnl Test for GLIB, and define GLIB_CFLAGS and GLIB_LIBS, if gmodule, gobject or 
 dnl gthread is specified in MODULES, pass to pkg-config
 dnl
-AC_DEFUN(AM_PATH_GLIB_2_0,
+AC_DEFUN([AM_PATH_GLIB_2_0],
 [dnl 
 dnl Get the cflags and libraries from pkg-config
 dnl
@@ -18,6 +18,9 @@ AC_ARG_ENABLE(glibtest, [  --disable-glibtest      do not try to compile and run
       case "$module" in
          gmodule) 
              pkg_config_args="$pkg_config_args gmodule-2.0"
+         ;;
+         gmodule-no-export) 
+             pkg_config_args="$pkg_config_args gmodule-no-export-2.0"
          ;;
          gobject) 
              pkg_config_args="$pkg_config_args gobject-2.0"
