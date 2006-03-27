@@ -17,8 +17,13 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#ifndef NUFW_PROTOCOL_H
+#define NUFW_PROTOCOL_H
 
-#include <config.h>
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #ifdef LINUX 
 #  include <endian.h>
 #else
@@ -57,7 +62,7 @@ typedef enum
     DECISION_NODECIDE,  /*!< NuAuth decision answer: can't decide! */
     DECISION_REJECT     /*!< NuAuth decision answer: reject the packet */ 
 #else            
-        DECISION_NODECIDE   /*!< NuAuth decision answer: can't decide! */
+    DECISION_NODECIDE   /*!< NuAuth decision answer: can't decide! */
 #endif
 } decision_t;    
 
@@ -262,4 +267,6 @@ typedef struct {
     uint16_t padding;           /*!< Padding (0x0000) */
     uint32_t packet_id;         /*!< NetFilter packet unique identifier */
 } nuauth_decision_response_t;    
+
+#endif
 
