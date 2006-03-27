@@ -31,7 +31,8 @@
 #define PGSQL_SSL "prefer"
 #define PGSQL_DB_NAME "nufw" 
 #define PGSQL_REQUEST_TIMEOUT 10
-#define PGSQL_TABLE_NAME "nufw_logs"
+#define PGSQL_TABLE_NAME "ulog"
+#define PGSQL_USERS_TABLE_NAME "users"
 
 #define OSNAME_MAX_SIZE 64
 #define APPNAME_MAX_SIZE 256
@@ -48,6 +49,7 @@ struct log_pgsql_params {
     char * pgsql_ssl;
     char * pgsql_db_name;
     char * pgsql_table_name;
+    char * pgsql_users_table_name;
     int pgsql_server_port;
 
     GPrivate* pgsql_priv; /* private pointer for pgsql database access */

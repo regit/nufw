@@ -38,6 +38,7 @@ confparams pgsql_nuauth_vars[] = {
     { "pgsql_ssl" , G_TOKEN_STRING , 0 ,PGSQL_SSL},
     { "pgsql_db_name" , G_TOKEN_STRING , 0 ,PGSQL_DB_NAME},
     { "pgsql_table_name" , G_TOKEN_STRING , 0 ,PGSQL_TABLE_NAME},
+    { "pgsql_users_table_name" , G_TOKEN_STRING , 0, PGSQL_USERS_TABLE_NAME},
     { "pgsql_request_timeout" , G_TOKEN_INT , PGSQL_REQUEST_TIMEOUT , NULL }
 };
 
@@ -51,6 +52,7 @@ G_MODULE_EXPORT gboolean module_params_unload(gpointer params_p)
       g_free(params->pgsql_ssl);
       g_free(params->pgsql_db_name);
       g_free(params->pgsql_table_name);
+      g_free(params->pgsql_users_table_name);
   } 
   g_free(params);
 
@@ -83,6 +85,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t *module)
     params->pgsql_ssl = (char *)READ_CONF("pgsql_ssl");
     params->pgsql_db_name = (char *)READ_CONF("pgsql_db_name");
     params->pgsql_table_name = (char *)READ_CONF("pgsql_table_name");
+    params->pgsql_users_table_name = (char *)READ_CONF("pgsql_users_table_name");
     READ_CONF_INT(params->pgsql_request_timeout, "pgsql_request_timeout", PGSQL_REQUEST_TIMEOUT);
 
     /* init thread private stuff */
@@ -119,7 +122,7 @@ PGconn *pgsql_conn_init(struct log_pgsql_params* params){
     pgsql_status=PQstatus(ld);
     if(pgsql_status != CONNECTION_OK) {
         log_message (WARNING, AREA_MAIN,
-                "PostgreSQL init error: %s\n",
+                "PostgreSQL init error: %s",
                 strerror(errno));
         g_free(pgsql_conninfo);
         PQfinish(ld);
@@ -175,7 +178,8 @@ int pgsql_insert(PGconn *ld, connection_t *element, char *oob_prefix, tcp_state_
 
     /* Write common informations */
     ok = secure_snprintf(request_fields, sizeof(request_fields),
-            "INSERT INTO %s (oob_prefix, state, oob_time_sec, "
+            "INSERT INTO %s (oob_prefix, state, "
+            "oob_time_sec, oob_time_usec, start_timestamp, "
             "ip_protocol, ip_saddr, ip_daddr",
             params->pgsql_table_name
             );
@@ -183,9 +187,11 @@ int pgsql_insert(PGconn *ld, connection_t *element, char *oob_prefix, tcp_state_
         return -1;
     }
     ok = secure_snprintf(request_values, sizeof(request_values),
-            "VALUES ('%s', '%hu', '%lu', "
+            "VALUES ('%s', '%hu', "
+            "'%lu', '0', '%lu', "
             "'%u','%s','%s'",
-            oob_prefix, state, element->timestamp,
+            oob_prefix, state,
+            element->timestamp, element->timestamp,
             element->tracking.protocol, ip_src, ip_dest);
     if (!ok) {
         return -1;
@@ -278,7 +284,7 @@ int pgsql_insert(PGconn *ld, connection_t *element, char *oob_prefix, tcp_state_
     /* check error */
     if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK){
         log_message (SERIOUS_WARNING, AREA_MAIN,
-                "Can not insert Data in PostgreSQL: %s\n",
+                "Can not insert Data in PostgreSQL: %s",
                 PQerrorMessage(ld));
         PQclear(Result);
         return -1;
@@ -312,11 +318,14 @@ int pgsql_update_close(PGconn *ld, connection_t *element,struct log_pgsql_params
                 "Fail to build PostgreSQL query (maybe too long)!");
         return -1;
     }
+    
+    debug_log_message(DEBUG, AREA_MAIN, 
+            "PostgreSQL: update (close) \"%s\".", request);
 
     Result = PQexec(ld, request);
     if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK){
         log_message (SERIOUS_WARNING, AREA_MAIN,
-                "Can not update PostgreSQL data: %s\n",
+                "Can not update PostgreSQL data: %s",
                 PQerrorMessage(ld));
         PQclear(Result);
         return -1;
@@ -334,7 +343,7 @@ int pgsql_update_state(PGconn *ld, connection_t *element,
     PGresult *Result;
     struct in_addr ip_addr;
     char tmp_inet1[INET_ADDRSTRLEN+1], tmp_inet2[INET_ADDRSTRLEN+1];
-    short int tcp_src, tcp_dst;
+    u_int16_t tcp_src, tcp_dst;
     char *ip_src, *ip_dst;
     int nb_try = 0;
     int nb_tuple;
@@ -361,7 +370,7 @@ int pgsql_update_state(PGconn *ld, connection_t *element,
     ok = secure_snprintf(request, sizeof(request),
             "UPDATE %s SET state='%hu', start_timestamp='%lu' "
             "WHERE (ip_daddr='%s' AND ip_saddr='%s' "
-            "AND tcp_dport='%u' AND tcp_sport='%u' AND state='%hu');",
+            "AND tcp_dport='%hu' AND tcp_sport='%hu' AND state='%hu');",
             params->pgsql_table_name,
             new_state, element->timestamp,
             ip_src, ip_dst,
@@ -372,6 +381,9 @@ int pgsql_update_state(PGconn *ld, connection_t *element,
                 "Fail to build PostgreSQL query (maybe too long)!");
         return -1;
     }
+    
+    debug_log_message(DEBUG, AREA_MAIN, 
+            "PostgreSQL: update state \"%s\".", request);
 
     while (nb_try < 2){
         /* build the query */
@@ -404,24 +416,32 @@ int pgsql_update_state(PGconn *ld, connection_t *element,
         }
     }
     debug_log_message (WARNING, AREA_MAIN,
-            "Tried to update PGSQL entry twice, looks like data to update wasn't inserted\n");
+            "Tried to update PGSQL entry twice, looks like data to update wasn't inserted");
     return -1;
 }    
 
-G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state,gpointer params_p)
-{
-  struct log_pgsql_params *params = (struct log_pgsql_params*)params_p;
+PGconn *get_pgsql_handler(struct log_pgsql_params *params)
+{    
     /* get/open postgresql connection */
     PGconn *ld = g_private_get (params->pgsql_priv);
     if (ld == NULL){
         ld=pgsql_conn_init(params);
         if (ld == NULL){
             log_message (SERIOUS_WARNING, AREA_MAIN,
-                    "Can not initiate PgSQL connection!\n");
-            return -1;
+                    "Can not initiate PgSQL connection!");
+            return NULL;
         }
         g_private_set(params->pgsql_priv,ld);
     }
+    return ld;
+}
+
+G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state,gpointer params_p)
+{
+    struct log_pgsql_params *params = (struct log_pgsql_params*)params_p;
+    PGconn *ld = get_pgsql_handler(params);
+    if (ld == NULL)
+        return -1;
 
     switch (state){
         case TCP_STATE_OPEN:
@@ -459,7 +479,63 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state,
 
 G_MODULE_EXPORT int user_session_logs(user_session *c_session, session_state_t state,gpointer params_p)
 {
-    return 1;
+    char request[INSERT_REQUEST_VALUES_SIZE];
+    struct log_pgsql_params *params = (struct log_pgsql_params*)params_p;
+    gboolean ok;
+    PGresult *Result;
+    PGconn *ld = get_pgsql_handler(params);
+    if (ld == NULL)
+        return -1;
+
+    switch (state) {
+        case SESSION_OPEN:
+            /* create new user session */
+            ok = secure_snprintf(request, sizeof(request),
+                    "INSERT INTO %s (user_id, username, ip_saddr, "
+                    "os_sysname, os_release, os_version, first_time) "
+                    "VALUES ('%lu', '%s', '%u', '%s', '%s', '%s', ABSTIME(%lu))",
+                    params->pgsql_users_table_name,
+                    c_session->user_id,
+                    c_session->user_name,
+                    c_session->addr,
+                    c_session->sysname,
+                    c_session->release,
+                    c_session->version,
+                    time(NULL));
+            break;
+
+        case SESSION_CLOSE:
+            /* update existing user session */
+            ok = secure_snprintf(request, sizeof(request),
+                    "UPDATE %s SET last_time=ABSTIME(%lu) "
+                    "WHERE ip_saddr=%u",
+                    params->pgsql_users_table_name,
+                    time(NULL),
+                    c_session->addr);
+            break;
+
+        default:
+            return -1;
+    }
+    if (!ok) {
+        return -1;
+    }
+
+    /* do the query */
+    debug_log_message(DEBUG, AREA_MAIN, 
+            "PostgreSQL: do insert session \"%s\".", request);
+    Result = PQexec(ld, request);
+
+    /* check error */
+    if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK){
+        log_message (SERIOUS_WARNING, AREA_MAIN,
+                "Can not insert session in PostgreSQL: %s",
+                PQerrorMessage(ld));
+        PQclear(Result);
+        return -1;
+    }
+    PQclear(Result);
+    return 0;
 }
 
 
