@@ -28,7 +28,9 @@ struct tls_nufw_context_t {
 };
 
 /** 
- * Get RX paquet from a TLS client connection and send it to user authentication threads.
+ * Get RX paquet from a TLS client connection and send it to user
+ * authentication threads: nuauthdatas->localid_auth_queue (see 
+ * ::localid_auth()) or nuauthdatas->connections_queue (search_and_fill()).
  *
  * \param c_session SSL RX packet
  * \return Returns 1 if read is done, EOF if read is completed

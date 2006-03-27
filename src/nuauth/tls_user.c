@@ -100,10 +100,11 @@ void pre_client_check()
 }
 
 /**
- * get RX paquet from a TLS client connection and send it to user authentication threads.
+ * get RX paquet from a TLS client connection and send it to user 
+ * authentication threads.
  *
- * - Argument : SSL RX packet
- * - Return : 1 if read done, EOF if read complete, -1 on error
+ * \argument c_session SSL RX packet
+ * \return 1 if read done, EOF if read complete, -1 on error
  */
 static int treat_user_request (user_session * c_session)
 {
@@ -300,6 +301,13 @@ int tls_user_accept(struct tls_user_context_t *context)
     return 0;
 }    
 
+/**
+ * Process client events:
+ *    - Delete client if its session expired: delete_client_by_socket()
+ *    - Call treat_user_request(). If it gets EOF, delete the client:
+ *      send #FREE_MESSAGE to tls_push_queue (see push_worker()) if using
+ *      PUSH mode (::nuauthconf->push), or call delete_client_by_socket().
+ */
 void tls_user_check_activity(struct tls_user_context_t *context, int socket)
 {
     user_session * c_session;
@@ -316,30 +324,31 @@ void tls_user_check_activity(struct tls_user_context_t *context, int socket)
     if (nuauthconf->session_duration && c_session->expire < time(NULL)){
         FD_CLR(socket,&context->tls_rx_set);
         delete_client_by_socket(socket);
-    } else {
-        u_request = treat_user_request( c_session );
-        if (u_request == EOF) {
-            log_user_session(c_session,SESSION_CLOSE);
+        return;
+    }
+
+    u_request = treat_user_request( c_session );
+    if (u_request == EOF) {
+        log_user_session(c_session,SESSION_CLOSE);
 #ifdef DEBUG_ENABLE
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-                g_message("client disconnect on socket %d",socket);
+        if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
+            g_message("client disconnect on socket %d",socket);
 #endif
-            FD_CLR(socket,&context->tls_rx_set);
-            /* clean client structure */
-            if (nuauthconf->push){
-                struct internal_message* message=g_new0(struct internal_message,1);
-                message->type = FREE_MESSAGE;
-                message->datas = GINT_TO_POINTER(socket);
-                g_async_queue_push(nuauthdatas->tls_push_queue,message);
-            } else {
-                delete_client_by_socket(socket);
-            }
-        }else if (u_request < 0) {
-#ifdef DEBUG_ENABLE
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-                g_message("treat_user_request() failure");
-#endif
+        FD_CLR(socket,&context->tls_rx_set);
+        /* clean client structure */
+        if (nuauthconf->push){
+            struct internal_message* message=g_new0(struct internal_message,1);
+            message->type = FREE_MESSAGE;
+            message->datas = GINT_TO_POINTER(socket);
+            g_async_queue_push(nuauthdatas->tls_push_queue,message);
+        } else {
+            delete_client_by_socket(socket);
         }
+    }else if (u_request < 0) {
+#ifdef DEBUG_ENABLE
+        if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
+            g_message("treat_user_request() failure");
+#endif
     }
 }
 

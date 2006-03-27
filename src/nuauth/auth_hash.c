@@ -77,6 +77,9 @@ gboolean compare_connection(gconstpointer a, gconstpointer b)
     }
 }
 
+/**
+ * Send the a #WARN_MESSAGE to nuauthdatas->tls_push_queue (see ::push_worker()).
+ */
 void search_and_push(connection_t *new) 
 {
     /* push data to sender */ 
@@ -86,6 +89,7 @@ void search_and_push(connection_t *new)
         return;
     }
     debug_log_message (VERBOSE_DEBUG, AREA_USER, "search&push: need to warn client");
+
     /* duplicate tracking */
     message->type = WARN_MESSAGE;
     message->datas = g_memdup(&(new->tracking), sizeof(tracking_t));
@@ -249,7 +253,10 @@ inline void search_and_fill_ready(connection_t *new, connection_t *packet)
     }
 }
 
-inline void search_and_fill_update(connection_t *new, connection_t *packet)
+/**
+ * Update an existring connection.
+ */
+void search_and_fill_update(connection_t *new, connection_t *packet)
 {
     switch (packet->state){
         case AUTH_STATE_AUTHREQ:
@@ -278,13 +285,15 @@ inline void search_and_fill_update(connection_t *new, connection_t *packet)
 }
 
 /**
- * Thread created in init_nuauthdatas()
- * Try to insert a connection in Struct
+ * Thread created in ::init_nuauthdatas().
+ * Try to insert a connection in Struct.
  * Fetch datas in connections queue.
+ *
+ * Call search_and_fill_update() if the connection exists in ::conn_list,
+ * else call search_and_push().
  */
 void* search_and_fill(GMutex* mutex) 
 {
-    /* GRYZOR warning : it seems we g_free() on pckt only on some conditions in this function */
     connection_t *packet;
     connection_t *new;
     GTimeVal tv;

@@ -151,7 +151,6 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
     c_session->groups = NULL;
     c_session->last_req.tv_sec = 0;
     c_session->last_req.tv_usec = 0;
-    c_session->req_needed = TRUE;
     c_session->user_name = NULL;
     c_session->user_id = 0;
     g_free(userdata);

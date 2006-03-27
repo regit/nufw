@@ -192,6 +192,8 @@ void* limited_connection_handler(GMutex *mutex)
                                 send_conntrack_message(elt,AUTH_CONN_UPDATE);
                         }
                 }
+        default:
+                break;
       }
       g_free(message);
 

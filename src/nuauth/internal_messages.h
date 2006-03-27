@@ -21,18 +21,21 @@
 /* 
  * message structure for async communication
  * between cache thread and others 
+ *
+ * See push_worker().
  */
-
-
-#define WARN_MESSAGE 0x1
-#define FREE_MESSAGE 0x0
-#define INSERT_MESSAGE 0x2
-#define UPDATE_MESSAGE 0x3
-#define GET_MESSAGE 0x4
-#define REFRESH_MESSAGE 0x5
+typedef enum 
+{
+    FREE_MESSAGE=0,   /*!< Call delete_client_by_socket() / used in cache_manager() */
+    WARN_MESSAGE,     /*!< Warn clients: see warn_clients() */
+    INSERT_MESSAGE,   /*!< Call add_client() / used in cache_manager() */
+    UPDATE_MESSAGE,   /*!< Used in cache_manager() */
+    GET_MESSAGE,      /*!< Used in cache_manager() */
+    REFRESH_MESSAGE   /*!< Used in cache_manager() */
+} internal_message_type_t;
 
 struct internal_message {
-	guint type;
+	internal_message_type_t type;
 	gpointer datas;
 };
 

@@ -34,21 +34,22 @@ struct user_cached_datas {
 /**
  * stores all information relative to a TLS user session
  * so we don't have to get this information at each packet
+ *
+ * An "user" is a person authentified with a NuFW client.
  */
 typedef struct User_session {
-    uint32_t addr;
-    gnutls_session* tls;
-    GMutex* tls_lock;
-    char * user_name;
-    uint32_t user_id;
-    GSList * groups;
-    gchar * sysname;
-    gchar * release;
-    gchar * version;
-    struct timeval last_req;
-    gboolean req_needed;
-    gboolean multiusers;
-    time_t expire; /**< set to -1 to have unlimited session */
+    uint32_t addr;           /*!< IPv4 address */
+    gnutls_session *tls;     /*!< TLS session opened with initialize_tls_session() */ 
+    GMutex *tls_lock;        /*!< Mutex to lock use of TLS */
+    char *user_name;         /*!< User name */
+    uint32_t user_id;        /*!< User identifier */
+    GSList *groups;          /*!< List of groups */
+    gchar *sysname;          /*!< OS system name (eg. "Linux") */
+    gchar *release;          /*!< OS release (eg. "2.6.12") */
+    gchar *version;          /*!< OS full version */
+    struct timeval last_req; /*!< Timestamp of last request */
+    gboolean multiusers;     /*!< Multi-user session? */
+    time_t expire;           /*!< Timeout of the session (-1 means unlimited) */
 } user_session;
 
 #endif
