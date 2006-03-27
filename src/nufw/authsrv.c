@@ -88,7 +88,7 @@ void auth_process_answer(char *dgram, int dgram_size)
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
                 "Rejecting %lu", packet_id);
         IPQ_SET_VERDICT(packet_id, NF_DROP);
-        send_icmp_unreach(dgram);
+        send_icmp_unreach(dgram, dgram_size);
         break;
 #endif
         

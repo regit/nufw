@@ -30,6 +30,7 @@
 #include "nufw.h"
 #include <stdlib.h>
 #include <time.h>
+#include <linux/icmp.h> /* icmphdr */
 
 /* datas stuffs */
 
@@ -228,12 +229,38 @@ void clean_old_packets ()
 }
 
 #ifdef GRYZOR_HACKS
-int send_icmp_unreach(char *dgram){
-    /* First thing we do, let's build the packet to send */
-    /* sendmsg(); */
-#if 0    
-    sendto(raw_sock, buffer, buffer_length, flags, to, tolen);
-#endif        
-    return 0;
+int send_icmp_unreach(char *dgram, int dgram_len)
+{
+    struct sockaddr_in to;
+    struct iphdr *ip = (struct iphdr *)dgram;
+    char buffer[200];
+    int buflen = 0;    
+    int len;
+    struct icmphdr *icmp = (struct icmphdr *)buffer;
+
+    /* write ICMP header */
+    icmp->type = 3;
+    icmp->code = 0x0A;
+    icmp->checksum = 0xF5FC;
+    icmp->un.frag.__unused = 0;
+    icmp->un.frag.mtu = 0;
+    buflen = sizeof(struct icmphdr);
+    
+    /* copy header */
+    len = sizeof(buffer)-buflen;
+    if (dgram_len < len)
+        len = dgram_len;
+    memcpy(buffer+buflen, dgram, len);
+    buflen += len;
+
+    /* get destination IPv4 address */
+    memset(&to, 0, sizeof(struct sockaddr_in));
+    to.sin_family = AF_INET;
+    to.sin_addr.s_addr = ip->saddr;
+
+    /* send packet */
+    return sendto (raw_sock, buffer, buflen, 0,
+            (struct sockaddr *)&to,
+            sizeof (struct sockaddr_in));
 }
 #endif

@@ -151,7 +151,7 @@ void process_usr2(int signum);
 void process_poll(int signum);
 
 #ifdef GRYZOR_HACKS
-int send_icmp_unreach(char *dgram);
+int send_icmp_unreach(char *dgram, int dgram_len);
 #endif
 
 #endif   /* _NUFW_HEADER_H */
