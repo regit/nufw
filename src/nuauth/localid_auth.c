@@ -27,8 +27,16 @@ char localid_authenticated_protocol(int protocol)
     return FALSE;
 }
 
+/**
+ * Insert a packet in localid hash table:
+ *    - Connection state #AUTH_STATE_AUTHREQ: Generate an unique identifier,
+ *      add the connection to the hash table, and then call warn_clients()
+ *    - State #AUTH_STATE_USERPCKT: Add connection to acl_checkers queue (see
+ *      acl_check_and_decide())
+ */
 void localid_insert_message(connection_t *pckt, 
-        GHashTable *localid_auth_hash, struct msg_addr_set *global_msg)
+        GHashTable *localid_auth_hash,
+        struct msg_addr_set *global_msg)
 {
     connection_t *element = NULL;
     u_int32_t randomid;
@@ -36,13 +44,13 @@ void localid_insert_message(connection_t *pckt,
     switch ( pckt->state){
         case AUTH_STATE_AUTHREQ:
             /* add in struct */
-            /* compute random u32 integer  and test if 
-             * iter if it exists in hash, increment it if needed
-             */
+            
+            /* generete an unique identifier (32 bits) */
             randomid = random();
             while(g_hash_table_lookup(localid_auth_hash,GINT_TO_POINTER(randomid))){
                 randomid++;
             }
+
             /* add element to hash with computed key */
             g_hash_table_insert(localid_auth_hash,GINT_TO_POINTER(randomid),pckt);
             /* send message to clients */
@@ -97,6 +105,17 @@ void localid_insert_message(connection_t *pckt,
     } 
 }    
 
+/**
+ * Local id auth. Process messages on localid_auth_queue queue:
+ *    - #INSERT_MESSAGE: insert a packet with localid_insert_message()
+ *    - #REFRESH_MESSAGE: delete all old messages, use get_old_conn() to check
+ *      if a connection is expired or not.
+ *
+ * Thread running until mutex (function argument) is locked. 
+ *
+ * \param mutex Mutex used to stop the thread
+ * \return NULL
+ */
 void* localid_auth(GMutex *mutex)
 {
     connection_t *pckt = NULL;
@@ -104,6 +123,7 @@ void* localid_auth(GMutex *mutex)
     struct nuv2_srv_helloreq *msg = g_new0(struct nuv2_srv_helloreq,1);
     GHashTable *localid_auth_hash;
     struct internal_message *message=NULL;
+    long current_timestamp;
     GTimeVal tv;
 
     global_msg.msg = (struct nuv2_srv_message*) msg;
@@ -116,7 +136,6 @@ void* localid_auth(GMutex *mutex)
 
     g_async_queue_ref (nuauthdatas->localid_auth_queue);
     g_async_queue_ref (nuauthdatas->tls_push_queue);
-    /* wait for message */
     while (g_mutex_trylock(mutex))
     {
         g_mutex_unlock(mutex);
@@ -134,13 +153,13 @@ void* localid_auth(GMutex *mutex)
                 g_free(message);
                 localid_insert_message(pckt, localid_auth_hash, &global_msg);
                 break;
+                
             case REFRESH_MESSAGE:
-                {
-                    long current_timestamp=time(NULL);
-                    g_free(message);
-                    g_hash_table_foreach_remove(localid_auth_hash,get_old_conn,GINT_TO_POINTER(current_timestamp));
-                }
+                g_free(message);
+                current_timestamp=time(NULL);
+                g_hash_table_foreach_remove(localid_auth_hash,get_old_conn,GINT_TO_POINTER(current_timestamp));
                 break;
+
             default:
                 g_warning("Should not have this at %s:%d.\n",__FILE__,__LINE__);
                 g_free(message);
@@ -148,6 +167,7 @@ void* localid_auth(GMutex *mutex)
     }
     g_async_queue_unref (nuauthdatas->localid_auth_queue);
     g_async_queue_unref (nuauthdatas->tls_push_queue);
+    g_hash_table_destroy(localid_auth_hash);
     return NULL;
 }
 

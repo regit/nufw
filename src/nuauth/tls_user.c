@@ -20,9 +20,26 @@
 
 #include "auth_srv.h"
 
+/** \file tls_user.c
+ *  \brief Manager clients connections and messages.
+ *   
+ * The thread tls_user_authsrv() wait for clients in tls_user_main_loop().
+ */
+
 extern int nuauth_tls_auth_by_cert;
 
+/**
+ * List of new clients which are in authentification state. This list is
+ * feeded by tls_user_accept(), and read by pre_client_check() and
+ * remove_socket_from_pre_client_list().
+ *
+ * Lock ::pre_client_list_mutex when you access to this list.
+ */
 GSList* pre_client_list;
+
+/**
+ * Mutex used to access ::pre_client_list.
+ */
 GStaticMutex pre_client_list_mutex;
 
 struct tls_user_context_t {
@@ -40,6 +57,9 @@ struct pre_client_elt {
     time_t validity;
 };
 
+/**
+ * Drop a client from the ::pre_client_list.
+ */
 gboolean remove_socket_from_pre_client_list(int socket) 
 {
     GSList * client_runner=NULL;
@@ -237,16 +257,22 @@ static int treat_user_request (user_session * c_session)
 }
 
 /**
- * Function called on new client connection: create a new TLS session using
- * tls_connect().
+ * Function called on new client connection:
+ *    - Call accept()
+ *    - Drop client if there are to much clients or if NuAuth is in reload
+ *    - Create a client_connection structure
+ *    - Add client to ::pre_client_list
+ *    - Add client to ::tls_sasl_worker queue (see sasl_worker())
  * 
  * \return If an error occurs returns 1, else returns 0.
  */
 int tls_user_accept(struct tls_user_context_t *context) 
 {
-    int socket;
     struct sockaddr_in addr_clnt;
     unsigned int len_inet = sizeof addr_clnt;
+    struct client_connection* current_client_conn;
+    struct pre_client_elt* new_pre_client;
+    int socket;
 
     /* Wait for a connect */
     socket = accept (context->sck_inet,
@@ -262,42 +288,45 @@ int tls_user_accept(struct tls_user_context_t *context)
         if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
             g_warning("too many clients (%d configured)\n",context->nuauth_tls_max_clients);
         }
+        shutdown(socket, SHUT_RDWR); 
         close(socket);
         return 1;
-    } else {
-        /* if system is not in reload */
-        if (! (nuauthdatas->need_reload)){
-            struct client_connection* current_client_conn=g_new0(struct client_connection,1);
-            struct pre_client_elt* new_pre_client;
-            current_client_conn->socket=socket;
-            memcpy(&current_client_conn->addr,&addr_clnt,sizeof(struct sockaddr_in));
-
-            if ( socket+1 > context->mx )
-                context->mx = socket + 1;
-            /* Set KEEP ALIVE on connection */
-            setsockopt ( socket,
-                    SOL_SOCKET,
-                    SO_KEEPALIVE,
-                    &context->option_value,
-                    sizeof(context->option_value));
-            /* give the connection to a separate thread */
-            /*  add element to pre_client 
-                create pre_client_elt */
-            new_pre_client = g_new0(struct pre_client_elt,1);
-            new_pre_client->socket = socket;
-            new_pre_client->validity = time(NULL) + context->nuauth_auth_nego_timeout;
-
-            g_static_mutex_lock (&pre_client_list_mutex);
-            pre_client_list=g_slist_prepend(pre_client_list,new_pre_client);
-            g_static_mutex_unlock (&pre_client_list_mutex);
-
-            g_thread_pool_push (nuauthdatas->tls_sasl_worker,
-                    current_client_conn, NULL);
-        } else {
-            shutdown(socket,SHUT_RDWR);
-            close(socket);
-        }
     }
+
+    /* if system is in reload: drop new client */
+    if (nuauthdatas->need_reload)
+    {
+        shutdown(socket,SHUT_RDWR);
+        close(socket);
+        return 0;
+    }
+
+    current_client_conn=g_new0(struct client_connection,1);
+    current_client_conn->socket=socket;
+    memcpy(&current_client_conn->addr,&addr_clnt,sizeof(struct sockaddr_in));
+
+    /* Update mx number if needed */
+    if ( socket+1 > context->mx )
+        context->mx = socket + 1;
+    
+    /* Set KEEP ALIVE on connection */
+    setsockopt (socket,
+            SOL_SOCKET, SO_KEEPALIVE,
+            &context->option_value,  sizeof(context->option_value));
+    
+    /* give the connection to a separate thread */
+    /*  add element to pre_client 
+        create pre_client_elt */
+    new_pre_client = g_new0(struct pre_client_elt,1);
+    new_pre_client->socket = socket;
+    new_pre_client->validity = time(NULL) + context->nuauth_auth_nego_timeout;
+
+    g_static_mutex_lock (&pre_client_list_mutex);
+    pre_client_list=g_slist_prepend(pre_client_list,new_pre_client);
+    g_static_mutex_unlock (&pre_client_list_mutex);
+
+    g_thread_pool_push (nuauthdatas->tls_sasl_worker,
+            current_client_conn, NULL);
     return 0;
 }    
 
@@ -352,6 +381,13 @@ void tls_user_check_activity(struct tls_user_context_t *context, int socket)
     }
 }
 
+/**
+ * Wait for new client connection or client event using ::mx_queue
+ * and select().
+ *
+ * It calls tls_user_accept() on new client connection, and 
+ * tls_user_check_activity() on user event.
+ */
 void tls_user_main_loop(struct tls_user_context_t *context, GMutex *mutex)
 {    
     gpointer c_pop;

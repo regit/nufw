@@ -39,7 +39,7 @@ struct user_cached_datas {
  */
 typedef struct User_session {
     uint32_t addr;           /*!< IPv4 address */
-    gnutls_session *tls;     /*!< TLS session opened with initialize_tls_session() */ 
+    gnutls_session *tls;     /*!< TLS session opened with tls_connect() */ 
     GMutex *tls_lock;        /*!< Mutex to lock use of TLS */
     char *user_name;         /*!< User name */
     uint32_t user_id;        /*!< User identifier */

@@ -20,6 +20,12 @@
 
 #include "auth_srv.h"
 
+/** \file tls_nufw.c
+ *  \brief Manage NuFW firewall connections and messages.
+ *   
+ * The main thread is tls_nufw_authsrv() which call tls_nufw_main_loop().
+ */
+
 struct tls_nufw_context_t {
     int mx;
     int sck_inet;
@@ -29,8 +35,10 @@ struct tls_nufw_context_t {
 
 /** 
  * Get RX paquet from a TLS client connection and send it to user
- * authentication threads: nuauthdatas->localid_auth_queue (see 
- * ::localid_auth()) or nuauthdatas->connections_queue (search_and_fill()).
+ * authentication threads:
+ *   - nuauthdatas->localid_auth_queue (see ::localid_auth()), if connection
+ *     state is #AUTH_STATE_HELLOMODE
+ *   - nuauthdatas->connections_queue (see search_and_fill()), otherwise
  *
  * \param c_session SSL RX packet
  * \return Returns 1 if read is done, EOF if read is completed
@@ -200,9 +208,10 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 
 /**
  * NuFW TLS thread main loop:
- *   - Wait events using() (with a timeout of 2.3 seconds)
- *   - Accept new connections
- *   - Read and process new packets
+ *   - Wait events (message/new connection) using select() with a timeout
+ *     of one second
+ *   - Accept new connections: call tls_nufw_accept()
+ *   - Read and process new packets using treat_nufw_request()
  */
 void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex *mutex) 
 {
@@ -227,42 +236,40 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex *mutex)
         tv.tv_usec = 0;
         n = select(context->mx,&wk_set,NULL,NULL,&tv);
         if (n == -1) {
-	switch(errno){
-			case EBADF:
-				g_message("Bad file descriptor in one of the set.");
-				break;
-			case EINTR:
-				g_message("Signal was catched");
-				break;
-			case EINVAL:
-				g_message("Negative value for socket");
-				break;
-			case ENOMEM:
-				g_message("Not enough memory");
-				break;
-		}
+            switch(errno)
+            {
+                case EBADF:
+                    g_message("Bad file descriptor in one of the set.");
+                    break;
+                case EINTR:
+                    g_message("Signal was catched");
+                    break;
+                case EINVAL:
+                    g_message("Negative value for socket");
+                    break;
+                case ENOMEM:
+                    g_message("Not enough memory");
+                    break;
+            }
             g_warning("select() failed, exiting at %s:%d in %s\n",__FILE__,__LINE__,__func__);
             exit(EXIT_FAILURE);
         } else if (!n) {
             continue;
         }
 
-        /*
-         * Check if a connect has occured
-         */
-
+        /* Check if a connect has occured */
         if (FD_ISSET(context->sck_inet,&wk_set) ){
             if (tls_nufw_accept(context)){
                 continue;
             }
         }
 
-        /*
-         * check for server activity
-         */
-        for ( c=0; c<context->mx; ++c) {
+        /* check for server activity */
+        for ( c=0; c<context->mx; ++c)
+        {
             if ( c == context->sck_inet )
                 continue;
+
             if ( FD_ISSET(c,&wk_set) ) {
                 nufw_session_t * c_session;
 #ifdef DEBUG_ENABLE

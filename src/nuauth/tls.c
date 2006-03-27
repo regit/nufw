@@ -31,11 +31,11 @@ struct nuauth_tls_t nuauth_tls;
  * Nothing to care about client.
  *
  * \param session A session with a client
- * \param conn_fd File descriptor of the connection (created by accept() syscall)
+ * \param socket_fd File descriptor of the connection (created by accept() syscall)
  */
-void close_tls_session(int conn_fd, gnutls_session* session) 
+void close_tls_session(int socket_fd, gnutls_session* session) 
 {
-    if (close(conn_fd))
+    if (close(socket_fd))
         log_message(VERBOSE_DEBUG, AREA_USER, "close_tls_session: close() failed (error code %i)!", errno);
     gnutls_credentials_clear(*session);
     gnutls_deinit(*session);
@@ -151,21 +151,25 @@ static int generate_dh_params(gnutls_dh_params *dh_params)
 }
 
 /**
- * TLS push fonction: go NON blocking !
+ * TLS push function: send data to the socket in non-blocking mode.
  */
 static ssize_t tls_push_func(gnutls_transport_ptr ptr, const void *buf, size_t count)
 {
     int fd = GPOINTER_TO_INT(ptr);
-    /* TODO: Catch error */
-    return send((int)fd, buf, count, MSG_DONTWAIT);
+    return send(fd, buf, count, MSG_DONTWAIT);
 }
 
 /**
- * Realize a tls connection.
+ * Realize a tls connection: call initialize_tls_session(), set tranport 
+ * pointer to the socket file descriptor (socket_fd), set push function to
+ * tls_push_func(), then do the gnutls_handshake().
+ *
+ * Finally checks the certificate using check_certs_for_tls_session() 
+ * if needed.
  * 
  * \return Returns SASL_BADPARAM if fails, SASL_OK otherwise.
  */
-int tls_connect(int conn_fd,gnutls_session** session_ptr) 
+int tls_connect(int socket_fd,gnutls_session** session_ptr) 
 {
     int ret;
     int count=0;
@@ -176,7 +180,7 @@ int tls_connect(int conn_fd,gnutls_session** session_ptr)
     {
         log_message (INFO, AREA_MAIN,
                 "NuFW TLS Init failure (session_ptr is NULL)");
-        close(conn_fd);
+        close(socket_fd);
         return SASL_BADPARAM;
     }
 
@@ -187,11 +191,11 @@ int tls_connect(int conn_fd,gnutls_session** session_ptr)
     {
         log_message (INFO, AREA_MAIN,
                 "NuFW TLS Init failure (initialize_tls_session())");
-        close(conn_fd);
+        close(socket_fd);
         return SASL_BADPARAM;
     }
 
-    gnutls_transport_set_ptr( *session, GINT_TO_POINTER(conn_fd));
+    gnutls_transport_set_ptr( *session, GINT_TO_POINTER(socket_fd));
     gnutls_transport_set_push_function (* session, tls_push_func);
 
     debug_log_message (DEBUG, AREA_MAIN, "NuFW TLS Handshaking");
@@ -213,7 +217,7 @@ int tls_connect(int conn_fd,gnutls_session** session_ptr)
                 "and returned a nonfatal error. Trying to continue..");
     } else {
         if (ret < 0) {
-            close_tls_session(conn_fd, session);
+            close_tls_session(socket_fd, session);
             log_message (DEBUG, AREA_MAIN,
                     "NuFW TLS Handshake has failed (%s)\n\n",
                     gnutls_strerror(ret)) ; 
@@ -229,7 +233,7 @@ int tls_connect(int conn_fd,gnutls_session** session_ptr)
             if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
                 g_message("Certificate verification failed : %s",gnutls_strerror(ret));
             }
-            close_tls_session(conn_fd,session);
+            close_tls_session(socket_fd, session);
             return SASL_BADPARAM;
         }
     }

@@ -230,19 +230,13 @@ connection_t* duplicate_connection(connection_t* element)
         }
         return NULL;
     }
-    if ( element->username ){
-        conn_copy->username = g_strdup(element->username);
-    }
-    if(element->app_name)
-        conn_copy->app_name = g_strdup(element->app_name);
-    if(element->app_md5)
-        conn_copy->app_md5 = g_strdup(element->app_md5);
-    if(element->os_sysname)
-        conn_copy->os_sysname = g_strdup(element->os_sysname);
-    if (element->os_release)
-        conn_copy->os_release = g_strdup(element->os_release);
-    if (element->os_version)
-        conn_copy->os_version = g_strdup(element->os_version);
+    conn_copy->username = g_strdup(element->username);
+    conn_copy->app_name = g_strdup(element->app_name);
+    conn_copy->app_md5 = g_strdup(element->app_md5);
+    conn_copy->os_sysname = g_strdup(element->os_sysname);
+    conn_copy->os_release = g_strdup(element->os_release);
+    conn_copy->os_version = g_strdup(element->os_version);
+
     /* Nullify needed internal field */
     conn_copy->acl_groups=NULL;
     conn_copy->user_groups=NULL;

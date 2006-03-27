@@ -27,6 +27,8 @@ static GSList * userpckt_decode(struct tls_buffer_read * datas);
 /**
  * Get user datas (containing datagram) and goes till inclusion
  * (or decision) on packet.
+ * 
+ * Call userpckt_decode()
  *
  * \param userdata The datagram
  * \param data NULL (unused)
@@ -290,6 +292,10 @@ int user_process_field(
     return field->length;
 }    
 
+/**
+ * \param datas Buffer read on a TLS socket
+ * \return Single linked list of connections (of type connection_t).
+ */
 GSList* user_request(struct tls_buffer_read *datas)
 {
     char * dgram = datas->buffer;
@@ -412,9 +418,13 @@ GSList* user_request(struct tls_buffer_read *datas)
 }    
 
 /**
- * Decode user datagram packet and fill a connection with datas.
+ * Decode user datagram packet and fill a connection with datas
+ * (called by user_check_and_decide()).
+ *
+ * \param datas Buffer read on a TLS socket
+ * \return Single linked list of connections (of type connection_t).
  */
-static GSList * userpckt_decode(struct tls_buffer_read *datas)
+static GSList* userpckt_decode(struct tls_buffer_read *datas)
 {
     char * dgram = datas->buffer;
     struct nuv2_header* header=(struct nuv2_header*)dgram;

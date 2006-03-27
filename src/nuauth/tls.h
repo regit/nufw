@@ -38,8 +38,11 @@ int tls_connect(int c,gnutls_session** session_ptr);
 
 /* cache system related */
 struct client_connection {
-	int socket;
-	struct sockaddr_in addr;
+    /** Socket file descriptor, init. with accept() and set to SO_KEEPALIVE mode */
+    int socket;             
+
+    /** IPv4 address */
+    struct sockaddr_in addr; 
 };
 
 /**

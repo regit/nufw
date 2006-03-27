@@ -19,21 +19,27 @@
 #define CONNECTIONS_H
 
 /** 
- * State of a connection in the authentification server.
+ * State of a connection (type ::connection_t) in the authentification server.
  * See field state of a structure ::connection_t and function
  * change_state().
  */
 typedef enum
 {
-    AUTH_STATE_AUTHREQ = 1,
-    AUTH_STATE_USERPCKT,  
-    AUTH_STATE_READY,    
+    AUTH_STATE_NONE = 0,    /*!< Unknow state (when a connection is created) */
+    AUTH_STATE_AUTHREQ = 1, /*!< Waiting for authentification */
+    AUTH_STATE_USERPCKT,    /*!< (see user_request()) */
+    AUTH_STATE_READY,       /*!< (see search_and_fill_completing()) */
+
+    /** 
+     * State used when a connection is send to acl_checkers queue: read ACLs
+     * from cache or external source. See acl_check_and_decide().
+     */
     AUTH_STATE_COMPLETING,
-    AUTH_STATE_DONE,     
-    AUTH_STATE_HELLOMODE 
+    AUTH_STATE_DONE,        /*!< */
+    AUTH_STATE_HELLOMODE    /*!< */
 } auth_state_t;
 
-/** State of a TCP connection */
+/** State of a connection */
 typedef enum
 {
     TCP_STATE_DROP = 0,    /*!< NuAuth decide to drop the connection */
@@ -69,23 +75,25 @@ struct acl_group {
 };
 
 /**
- * connection element
+ * This is a packet blocked by NuFW and waiting for an authentification 
+ * of NuAuth. They are created in authpckt_new_connection().
  * 
  * It contains all datas relative to a packet
  */
-typedef struct {
+typedef struct
+{
   GSList *packet_id;      /*!< Netfilter unique identifier */
   long timestamp;         /*!< Packet arrival time (seconds) */
-  int socket;             /*!< Socket from which NuFW request is coming */
-  nufw_session_t *tls;    /*!< Infos on NuFW which sent the request */
+  int socket;             /*!< Socket (file descriptor) from which NuFW request is coming */
+  nufw_session_t *tls;    /*!< TLS connection to NuFW from which comes the packet */
   tracking_t tracking;    /*!< IPv4 connection tracking (headers) */
   uint32_t user_id;       /*!< User numeric identity used for marking */
   char *username;         /*!< User name */
   
  /**
-  * acl related groups.
+  * ACL related groups.
   *
-  * Contains the list of acl corresponding to the ipv4 header
+  * Contains the list of acl corresponding to the IPv4 header
   */
   GSList *acl_groups;     /*!< ACL group list (of type ::acl_group) */
   GSList *user_groups;    /*!< User groups */
