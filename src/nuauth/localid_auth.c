@@ -21,17 +21,17 @@
 
 char localid_authenticated_protocol(int protocol)
 {
-	if (protocol != IPPROTO_TCP){
-		return TRUE;
-	}
-	return FALSE;
+    if (protocol != IPPROTO_TCP){
+        return TRUE;
+    }
+    return FALSE;
 }
 
 void localid_insert_message(connection_t *pckt, 
         GHashTable *localid_auth_hash, struct msg_addr_set *global_msg)
 {
-	connection_t *element = NULL;
-	u_int32_t randomid;
+    connection_t *element = NULL;
+    u_int32_t randomid;
 
     switch ( pckt->state){
         case AUTH_STATE_AUTHREQ:
@@ -51,7 +51,7 @@ void localid_insert_message(connection_t *pckt,
             global_msg->found = FALSE;
             warn_clients(global_msg);
             break;
-            
+
         case AUTH_STATE_USERPCKT:
             /* search in struct */
             element = (connection_t*) g_hash_table_lookup (localid_auth_hash,(GSList*)(pckt->packet_id)->data);
@@ -82,45 +82,45 @@ void localid_insert_message(connection_t *pckt,
                 g_warning("Bad user packet.");
             }
             break;
-            
+
         case AUTH_STATE_HELLOMODE:
             take_decision(pckt,PACKET_ALONE);
             break;
-            
+
         case AUTH_STATE_DONE:
             /* packet has already been dropped, need only cleaning */
             free_connection(pckt);
             break;
-            
+
         default:
             g_warning("Should not have this at %s:%d.\n",__FILE__,__LINE__);
     } 
 }    
-    
+
 void* localid_auth(GMutex *mutex)
 {
-	connection_t *pckt = NULL;
-	struct msg_addr_set global_msg;
-	struct nuv2_srv_helloreq *msg = g_new0(struct nuv2_srv_helloreq,1);
-	GHashTable *localid_auth_hash;
-	struct internal_message *message=NULL;
+    connection_t *pckt = NULL;
+    struct msg_addr_set global_msg;
+    struct nuv2_srv_helloreq *msg = g_new0(struct nuv2_srv_helloreq,1);
+    GHashTable *localid_auth_hash;
+    struct internal_message *message=NULL;
     GTimeVal tv;
 
-	global_msg.msg = (struct nuv2_srv_message*) msg;
-	msg->type = SRV_REQUIRED_HELLO;
-	msg->option = 0;
-	msg->length = htons(sizeof(struct nuv2_srv_helloreq));
+    global_msg.msg = (struct nuv2_srv_message*) msg;
+    msg->type = SRV_REQUIRED_HELLO;
+    msg->option = 0;
+    msg->length = htons(sizeof(struct nuv2_srv_helloreq));
 
-	/* init hash table */
-	localid_auth_hash=g_hash_table_new(NULL,NULL);
-	
-	g_async_queue_ref (nuauthdatas->localid_auth_queue);
-	g_async_queue_ref (nuauthdatas->tls_push_queue);
-	/* wait for message */
-	while (g_mutex_trylock(mutex))
+    /* init hash table */
+    localid_auth_hash=g_hash_table_new(NULL,NULL);
+
+    g_async_queue_ref (nuauthdatas->localid_auth_queue);
+    g_async_queue_ref (nuauthdatas->tls_push_queue);
+    /* wait for message */
+    while (g_mutex_trylock(mutex))
     {
         g_mutex_unlock(mutex);
-        
+
         /* wait a message during 1000ms */
         g_get_current_time (&tv);
         g_time_val_add(&tv, 1000);
@@ -128,26 +128,26 @@ void* localid_auth(GMutex *mutex)
         if (message == NULL)
             continue;
 
-		switch (message->type) { 
-			case INSERT_MESSAGE:
-				pckt=message->datas;
-				g_free(message);
+        switch (message->type) { 
+            case INSERT_MESSAGE:
+                pckt=message->datas;
+                g_free(message);
                 localid_insert_message(pckt, localid_auth_hash, &global_msg);
-				break;
-			case REFRESH_MESSAGE:
-				{
-					long current_timestamp=time(NULL);
-					g_free(message);
-					g_hash_table_foreach_remove(localid_auth_hash,get_old_conn,GINT_TO_POINTER(current_timestamp));
-				}
-				break;
-			default:
-				g_warning("Should not have this at %s:%d.\n",__FILE__,__LINE__);
-				g_free(message);
-		}
-	}
-	g_async_queue_unref (nuauthdatas->localid_auth_queue);
-	g_async_queue_unref (nuauthdatas->tls_push_queue);
+                break;
+            case REFRESH_MESSAGE:
+                {
+                    long current_timestamp=time(NULL);
+                    g_free(message);
+                    g_hash_table_foreach_remove(localid_auth_hash,get_old_conn,GINT_TO_POINTER(current_timestamp));
+                }
+                break;
+            default:
+                g_warning("Should not have this at %s:%d.\n",__FILE__,__LINE__);
+                g_free(message);
+        }
+    }
+    g_async_queue_unref (nuauthdatas->localid_auth_queue);
+    g_async_queue_unref (nuauthdatas->tls_push_queue);
     return NULL;
 }
 
