@@ -33,10 +33,10 @@ REVOKE ALL ON TABLE seq_ulog FROM PUBLIC;
 --
 
 CREATE TABLE ulog (
-    id integer DEFAULT nextval('seq_ulog'::text) NOT NULL,
-    user_id integer,
+    id bigint DEFAULT nextval('seq_ulog'::text) NOT NULL,
+    user_id bigint,
     oob_prefix character varying(32),
-    oob_time_sec integer,
+    oob_time_sec bigint,
     oob_time_usec integer,
     oob_mark bigint,
     oob_in character varying(32),
@@ -112,4 +112,22 @@ COPY ulog (id, user_id, oob_prefix, oob_time_sec, oob_time_usec, oob_mark, oob_i
 
 SELECT pg_catalog.setval ('seq_ulog', 36, true);
 
+--
+-- Users session table 
+--
+
+CREATE TABLE users (
+    ip_saddr bigint NOT NULL,
+    user_id bigint,
+    username character varying(30),
+    bad_conns integer DEFAULT 0 NOT NULL,
+    good_conns integer DEFAULT 0 NOT NULL,
+    first_time timestamp without time zone,
+    last_time timestamp without time zone,
+    os_sysname character varying(40),
+    os_release character varying(40),
+    os_version character varying(100)
+);
+CREATE INDEX ip_saddr ON users USING btree (ip_saddr);
+CREATE INDEX username ON users USING btree (username);
 
