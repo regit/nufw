@@ -342,11 +342,7 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 
 
 	if (r != SASL_OK) {
-#ifdef DEBUG_ENABLE
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
-			g_warning("incorrect authentication");
-		}
-#endif
+		debug_log_message(VERBOSE_DEBUG, AREA_MAIN, "incorrect authentication");
 		if (gnutls_record_send(session,"N", 1) <= 0) /* send NO to client */
 			return SASL_FAIL;
 		return SASL_BADAUTH;
@@ -403,11 +399,7 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 		}
 		if (c_session->groups == NULL){
 			if(modules_user_check(c_session->user_name,NULL,0,&(c_session->user_id),&(c_session->groups))!=SASL_OK){
-#ifdef DEBUG_ENABLE
-				if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
-					g_message("error when searching user groups");	
-				}
-#endif
+				debug_log_message(DEBUG, AREA_MAIN, "error when searching user groups");
 				if (gnutls_record_send(session,"N", 1) <= 0) /* send NO to client */
 					return SASL_FAIL;
 				return SASL_BADAUTH;
@@ -638,11 +630,7 @@ int sasl_user_check(user_session* c_session)
     buf_size = gnutls_record_recv(*(c_session->tls), buf, sizeof buf) ;
     if (buf_size <= 0){
         /* allo houston */
-#ifdef DEBUG_ENABLE
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
-            g_message("error when receiving user OS");	
-        }
-#endif
+        debug_log_message(DEBUG, AREA_MAIN, "error when receiving user OS");
         return SASL_FAIL;
     }
 

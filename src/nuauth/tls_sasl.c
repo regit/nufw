@@ -166,11 +166,7 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
                 if(  modules_user_check(username, NULL, 0,
                             &(c_session->user_id), &(c_session->groups)
                             )!=SASL_OK) {
-#ifdef DEBUG_ENABLE
-                    if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
-                        g_message("error when searching user groups");	
-                    }
-#endif
+                    debug_log_message(DEBUG, AREA_MAIN, "error when searching user groups");
                     c_session->groups=NULL;
                     c_session->user_id=0;
                     /* we free username as it is not a good one */
