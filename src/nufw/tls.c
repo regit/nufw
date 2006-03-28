@@ -70,7 +70,7 @@ gnutls_session* tls_connect()
     
     /* test if key exists */
     if (access(key_file,R_OK)){
-        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, 
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING, 
                 "TLS: can not access key file \"%s\"!", key_file);
         return NULL;
     }

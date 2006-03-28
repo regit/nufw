@@ -278,6 +278,14 @@ void create_x509_credentials()
     nuauth_tls.auth_by_cert = *(int*)READ_CONF("nuauth_tls_auth_by_cert");
 #undef READ_CONF
 
+    if (access(nuauth_tls_key,R_OK)){
+        g_error("[%i] TLS : can not access key file %s\n",getpid(),nuauth_tls_key);
+    }
+    if (access(nuauth_tls_cert,R_OK)){
+        g_error("[%i] TLS : can not access cert file %s\n",getpid(),nuauth_tls_cert);
+    }
+
+
     gnutls_certificate_allocate_credentials(&nuauth_tls.x509_cred);
     ret = gnutls_certificate_set_x509_trust_file(nuauth_tls.x509_cred,  nuauth_tls_cacert , 
             GNUTLS_X509_FMT_PEM);
