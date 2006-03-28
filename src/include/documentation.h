@@ -8,24 +8,24 @@
  *
  * NuFW is a firewall based on NetFilter (http://www.netfilter.org)
  * which authentificate users. It's composed of three parts:
- *   - NuFW: gateway working directly with NetFilter, just send new
- *     connection packets to NuAuth, and apply decision (accept or drop) ;
- *   - NuAuth: Kernel of the firewall, manage client connections, and take
- *     decision on new connection packets send by NuFW ;
- *   - Client (nutcpc or Windows client): Authentificate himself to NuAuth and
- *     answer to NuAuth request (send its new connection list).
+ *   - NuFW: gateway that works directly with NetFilter, just sends new
+ *     connection packets to NuAuth, and applies decisions (accept or drop) ;
+ *   - NuAuth: Kernel of the firewall, manages client connections, and takes
+ *     decisions on new connection packets sent by NuFW ;
+ *   - Client (nutcpc or Windows client): Authentificates users to NuAuth and
+ *     answers NuAuth requests (sends its new connection list).
  *
- * This documentation only describe NuFW and NuAuth.
+ * This documentation only describes NuFW and NuAuth.
  * 
  * \section nufw_sec NuFW
  *
- * NuFW is a very simple gateway. It's running in user-space but need root
- * account because it's connected directly to NetFilter using IPQ or Netfilter
+ * NuFW is a very simple gateway. It runs in user-space but needs root
+ * privileges because it's connected directly to NetFilter using IPQ or Netfilter
  * queue link.
  *
  * NuFW is composed of three main parts:
- *    - Main process which just display audit informations (number of received
- *      packet and number of accepted packets) every five seconds ; 
+ *    - Main process which just displays audit informations (number of received
+ *      packets and number of accepted packets) every five seconds ; 
  *    - Packet server thread: packetsrv() ;
  *    - Auth server thread (connection to NuAuth): authsrv().
  *
