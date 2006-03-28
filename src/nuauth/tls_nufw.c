@@ -112,10 +112,7 @@ void clean_nufw_session(nufw_session_t * c_session)
     gnutls_transport_ptr socket_tls;
     socket_tls=gnutls_transport_get_ptr(*(c_session->tls));
     close((int)socket_tls);
-#ifdef DEBUG_ENABLE
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-        g_message("close nufw session calling");
-#endif
+    debug_log_message(VERBOSE_DEBUG, AREA_USER, "close nufw session calling");
     if (c_session->tls ){
         gnutls_bye(
                 *(c_session->tls)	
@@ -135,10 +132,7 @@ void clean_nufw_session(nufw_session_t * c_session)
     }
     g_mutex_free(c_session->tls_lock);
 
-#ifdef DEBUG_ENABLE
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-        g_message("close nufw session calling");
-#endif
+    debug_log_message(VERBOSE_DEBUG, AREA_USER, "close nufw session calling");
 }
 
 /**
@@ -271,18 +265,12 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex *mutex)
 
             if ( FD_ISSET(c,&wk_set) ) {
                 nufw_session_t * c_session;
-#ifdef DEBUG_ENABLE
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-                    g_message("nufw activity on socket %d",c);
-#endif
+                debug_log_message(VERBOSE_DEBUG, AREA_USER, "nufw activity on socket %d",c);
                 c_session=g_hash_table_lookup( nufw_servers , GINT_TO_POINTER(c));
                 g_atomic_int_inc(&(c_session->usage));
                 if (treat_nufw_request(c_session) == EOF) {
                     /* get session link with c */
-#ifdef DEBUG_ENABLE
-                    if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
-                        g_message("nufw server disconnect on %d",c);
-#endif
+                    debug_log_message(DEBUG, AREA_USER, "nufw server disconnect on %d",c);
                     FD_CLR(c,&context->tls_rx_set);
                     g_mutex_lock(nufw_servers_mutex);
                     if (g_atomic_int_get(&(c_session->usage)) == 0) {

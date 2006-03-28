@@ -238,10 +238,7 @@ static int treat_user_request (user_session * c_session)
             }
         }
 
-#ifdef DEBUG_ENABLE
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-            g_message("Pushing packet to user_checker");
-#endif
+        debug_log_message(VERBOSE_DEBUG, AREA_MAIN, "Pushing packet to user_checker");
         g_thread_pool_push (nuauthdatas->user_checkers,
                 datas,	
                 NULL
@@ -341,10 +338,7 @@ void tls_user_check_activity(struct tls_user_context_t *context, int socket)
 {
     user_session * c_session;
     int u_request;
-#ifdef DEBUG_ENABLE
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-        g_message("user activity on socket %d",socket);
-#endif
+    debug_log_message(VERBOSE_DEBUG, AREA_USER, "user activity on socket %d",socket);
 
     /* we lock here but can do other thing on hash as it is not destructive 
      * in push mode modification of hash are done in push_worker */
@@ -359,10 +353,7 @@ void tls_user_check_activity(struct tls_user_context_t *context, int socket)
     u_request = treat_user_request( c_session );
     if (u_request == EOF) {
         log_user_session(c_session,SESSION_CLOSE);
-#ifdef DEBUG_ENABLE
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-            g_message("client disconnect on socket %d",socket);
-#endif
+        debug_log_message(VERBOSE_DEBUG, AREA_USER, "client disconnect on socket %d",socket);
         FD_CLR(socket,&context->tls_rx_set);
         /* clean client structure */
         if (nuauthconf->push){
@@ -406,10 +397,7 @@ void tls_user_main_loop(struct tls_user_context_t *context, GMutex *mutex)
         {
             int socket = GPOINTER_TO_INT(c_pop);
 
-#ifdef DEBUG_ENABLE
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-                g_message("checking mx against %d",socket);
-#endif
+            debug_log_message(VERBOSE_DEBUG, AREA_USER, "checking mx against %d",socket);
             if ( socket+1 > context->mx )
                 context->mx = socket + 1;
             /*
@@ -474,10 +462,7 @@ void tls_user_main_loop(struct tls_user_context_t *context, GMutex *mutex)
         for ( i = context->mx - 1;
                 i >= 0 && !FD_ISSET(i,&context->tls_rx_set);
                 i = context->mx -1 ){
-#ifdef DEBUG_ENABLE
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-                g_message("setting mx to %d",i);
-#endif
+            debug_log_message(VERBOSE_DEBUG, AREA_USER, "setting mx to %d",i);
             context->mx = i;
         }
     }

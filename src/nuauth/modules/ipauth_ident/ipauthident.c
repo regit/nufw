@@ -52,18 +52,12 @@ gchar* ip_authentication(tracking_t* ipheader,gpointer params)
   id = id_open(&laddr, &faddr, &timeout);
   if (id){
       if (id_query(id, fport, lport , NULL)>0){
-#ifdef DEBUG_ENABLE
-              if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-                         g_message("identd server sent some bytes");
-#endif
+              debug_log_message(VERBOSE_DEBUG, AREA_USER, "identd server sent some bytes");
           while((rcode= id_parse(id, &timeout, &fport, &lport, &identifier,
                   &opsys, &charset)) == 0);
           switch(rcode){
             case 1:
-#ifdef DEBUG_ENABLE
-              if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-                  g_message("found username %s",identifier);
-#endif
+              debug_log_message(VERBOSE_DEBUG, AREA_USER, "found username %s",identifier);
               username = identifier; 
 	      g_free(opsys);
 	      g_free(charset);

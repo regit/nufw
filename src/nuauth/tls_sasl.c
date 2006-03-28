@@ -38,10 +38,7 @@ gchar* get_username_from_tls_session(gnutls_session session)
 
 static void  policy_refuse_user(user_session* c_session,int c)
 {
-#ifdef DEBUG_ENABLE
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-                g_message("User %s already connected, closing socket",c_session->user_name);
-#endif
+            debug_log_message(VERBOSE_DEBUG, AREA_USER, "User %s already connected, closing socket",c_session->user_name);
             /* get rid of client */
             close_tls_session(c,c_session->tls);
             c_session->tls=NULL;
@@ -120,10 +117,7 @@ static void tls_sasl_connect_ok(user_session* c_session, int c)
 
     /* send new valid session to user session logging system */
     log_user_session(c_session,SESSION_OPEN);
-#ifdef DEBUG_ENABLE
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-        g_message("Says we need to work on %d",c);
-#endif
+    debug_log_message(VERBOSE_DEBUG, AREA_USER, "Says we need to work on %d",c);
     g_async_queue_push(mx_queue,GINT_TO_POINTER(c));
 }    
 
@@ -168,10 +162,7 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
             username=get_username_from_tls_session(*session);
             /* parsing complete */ 
             if (username){
-#ifdef DEBUG_ENABLE
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-                    g_message("Using username %s from certificate",username);
-#endif
+                debug_log_message(VERBOSE_DEBUG, AREA_USER, "Using username %s from certificate",username);
                 if(  modules_user_check(username, NULL, 0,
                             &(c_session->user_id), &(c_session->groups)
                             )!=SASL_OK) {
@@ -201,10 +192,7 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 
         case SASL_FAIL:
 
-#ifdef DEBUG_ENABLE
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-                g_message("Crash on user side, closing socket");
-#endif
+            debug_log_message(VERBOSE_DEBUG, AREA_USER, "Crash on user side, closing socket");
             remove_socket_from_pre_client_list(c);
             close_tls_session(c,c_session->tls);
             c_session->tls=NULL;
@@ -212,10 +200,7 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
             break;
 
         default:
-#ifdef DEBUG_ENABLE
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-                g_message("Problem with user, closing socket");
-#endif
+            debug_log_message(VERBOSE_DEBUG, AREA_USER, "Problem with user, closing socket");
             remove_socket_from_pre_client_list(c);
             /* get rid of client */
             close_tls_session(c,c_session->tls);

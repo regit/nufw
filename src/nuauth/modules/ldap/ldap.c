@@ -349,10 +349,7 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element,gpointer params_p)
           /* get decision */
           attrs_array=ldap_get_values(ld, result, "Decision");
           sscanf(*attrs_array,"%d",(int *)&(this_acl->answer));
-#ifdef DEBUG_ENABLE
-          if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_AUTH))
-              g_message("Acl found with decision %d\n",this_acl->answer);
-#endif
+          debug_log_message(DEBUG, AREA_AUTH, "Acl found with decision %d\n",this_acl->answer);
           ldap_value_free(attrs_array);
           /* build groups  list */
           attrs_array = ldap_get_values(ld, result, "Group");
@@ -377,10 +374,7 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element,gpointer params_p)
       return g_list;
   } else {
 
-#ifdef DEBUG_ENABLE
-      if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_AUTH))
-          g_message("No acl found\n");
-#endif
+      debug_log_message(DEBUG, AREA_AUTH, "No acl found\n");
       ldap_msgfree (res);
   }
   return NULL;
@@ -455,10 +449,7 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned p
       /* parse result to feed a user_list */
       result = ldap_first_entry(ld,res);
       if (result == NULL ){
-#ifdef DEBUG_ENABLE
-          if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_AUTH))
-              g_message("Can not get entry for %s\n",user);
-#endif
+          debug_log_message(INFO, AREA_AUTH, "Can not get entry for %s\n",user);
           ldap_msgfree(res);
           return SASL_BADAUTH;
       }
@@ -471,18 +462,12 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned p
                   g_message ("what ! no password found!\n");
           } else {
               SECURE_STRNCPY(passwd, attrs_array[0], sizeof passwd);
-#ifdef DEBUG_ENABLE
-              if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_AUTH))
-                  g_message("reading password\n");
-#endif
+              debug_log_message(DEBUG, AREA_AUTH, "reading password\n");
           }
           ldap_value_free(attrs_array);
           /* check user password */
           if (verify_user_password(pass,passwd) != SASL_OK ){
-#ifdef DEBUG_ENABLE
-              if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_AUTH))
-                  g_message("passwd is not good\n");
-#endif
+              debug_log_message(DEBUG, AREA_AUTH, "passwd is not good\n");
               ldap_msgfree(res);
               return SASL_BADAUTH;
           }
