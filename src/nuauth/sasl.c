@@ -315,9 +315,7 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 		r = sasl_server_step(conn, buf, tls_len, &data, &sasl_len);
 		if (r != SASL_OK && r != SASL_CONTINUE) {
 #ifdef DEBUG_ENABLE
-			if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
-				g_message("error performing SASL negotiation: %s", sasl_errdetail(conn));
-			}
+			log_message(VERBOSE_DEBUG, AREA_MAIN, "error performing SASL negotiation: %s", sasl_errdetail(conn));
 #endif
 			if (gnutls_record_send(session,"N", 1) <= 0) /* send NO to client */
 				return SASL_FAIL;
@@ -417,9 +415,7 @@ int sasl_parse_user_os(user_session* c_session, char *buf, int buf_size)
     
     if (osfield->type != OS_FIELD) {
 #ifdef DEBUG_ENABLE
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
-            g_message("osfield received %d,%d,%d ",osfield->type,osfield->option,ntohs(osfield->length));
-        }
+        log_message(DEBUG, AREA_MAIN, "osfield received %d,%d,%d ",osfield->type,osfield->option,ntohs(osfield->length));
 #endif
         return SASL_FAIL;
     }
@@ -427,13 +423,9 @@ int sasl_parse_user_os(user_session* c_session, char *buf, int buf_size)
     dec_buf_size = ntohs(osfield->length) *4 - 32;
     if ( dec_buf_size > 1024 ) {
         /* it's a joke it's far too long */
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
-            g_warning("error osfield is too long, announced %d",ntohs(osfield->length));	
-        }
+        log_message(WARNING, AREA_MAIN, "error osfield is too long, announced %d",ntohs(osfield->length));
 #ifdef DEBUG_ENABLE
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
-            g_message("%s:%d osfield received %d,%d,%d ",__FILE__,__LINE__,osfield->type,osfield->option,ntohs(osfield->length));
-        }
+        log_message(DEBUG, AREA_MAIN, "%s:%d osfield received %d,%d,%d ",__FILE__,__LINE__,osfield->type,osfield->option,ntohs(osfield->length));
 #endif
         return SASL_BADAUTH;
     }

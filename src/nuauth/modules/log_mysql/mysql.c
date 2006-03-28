@@ -115,8 +115,7 @@ MYSQL* mysql_conn_init(struct log_mysql_params* params)
     /* init connection */
     ld = mysql_init(ld);     
     if (ld == NULL) {
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-            g_warning("mysql init error : %s\n",strerror(errno));
+        log_message(WARNING, AREA_MAIN, "mysql init error : %s\n",strerror(errno));
         return NULL;
     }
 #if HAVE_MYSQL_SSL
@@ -127,16 +126,13 @@ MYSQL* mysql_conn_init(struct log_mysql_params* params)
 #if 0
     /* Set MYSQL object properties */
     if (mysql_options(ld,MYSQL_OPT_CONNECT_TIMEOUT,mysql_conninfo) != 0){
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)) {
-            g_warning("mysql options setting failed : %s\n",mysql_error(ld));
-        }
+        log_message(WARNING, AREA_MAIN, "mysql options setting failed : %s\n",mysql_error(ld));
     }
 #endif
     if (!mysql_real_connect(ld,params->mysql_server,params->mysql_user,
                 params->mysql_passwd,params->mysql_db_name,
                 params->mysql_server_port,NULL,0)) {
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-            g_warning("mysql connection failed : %s\n",mysql_error(ld));
+        log_message(WARNING, AREA_MAIN, "mysql connection failed : %s\n",mysql_error(ld));
         return NULL;
     }
     return ld;
@@ -393,8 +389,7 @@ inline int log_state_established(MYSQL *ld, connection_t *element,struct log_mys
         }
         Result = mysql_real_query(ld, request, strlen(request));
         if (Result != 0){
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-                g_warning("Can not update Data : %s\n",mysql_error(ld));
+            log_message(SERIOUS_WARNING, AREA_MAIN, "Can not update Data : %s\n",mysql_error(ld));
             return -1;
         }
         if (mysql_affected_rows(ld) >= 1){
@@ -443,8 +438,7 @@ inline int log_state_close(MYSQL *ld, connection_t *element,struct log_mysql_par
 
     Result = mysql_real_query(ld, request, strlen(request));
     if (Result != 0){
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-            g_warning("Can not update Data : %s\n",mysql_error(ld));
+        log_message(SERIOUS_WARNING, AREA_MAIN, "Can not update Data : %s\n",mysql_error(ld));
         return -1;
     }
     if (mysql_affected_rows(ld) >= 1){

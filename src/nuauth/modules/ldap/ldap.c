@@ -158,9 +158,7 @@ G_MODULE_EXPORT LDAP* ldap_conn_init(struct ldap_params* params)
               g_private_set(	params->ldap_priv,ld);
               return NULL;
           } 
-          if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_AUTH)){
-              g_warning("ldap bind error : %s \n",ldap_err2string(err));
-          }
+          log_message(SERIOUS_WARNING, AREA_AUTH, "ldap bind error : %s \n",ldap_err2string(err));
           return NULL;
       }
   }
@@ -325,8 +323,7 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element,gpointer params_p)
           ld=NULL;
           g_private_set(	params->ldap_priv,ld);
       }
-      if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-          g_warning ("invalid return from ldap_search_st : %s\n",ldap_err2string(err));
+      log_message(WARNING, AREA_MAIN, "invalid return from ldap_search_st : %s\n",ldap_err2string(err));
       return NULL;
   }
   /* parse result to feed a group_list */
@@ -428,8 +425,7 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned p
           ld=NULL;
           g_private_set(	params->ldap_priv,ld);
       }
-      if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
-          g_warning ("invalid return of ldap_search_st : %s\n",ldap_err2string(err));
+      log_message(WARNING, AREA_AUTH, "invalid return of ldap_search_st : %s\n",ldap_err2string(err));
       return SASL_BADAUTH;
   }
 

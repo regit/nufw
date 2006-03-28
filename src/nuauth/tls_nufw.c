@@ -158,9 +158,7 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 
     /* test if server is in the list of authorized servers */
     if (! check_inaddr_in_array(addr_clnt.sin_addr,nuauthconf->authorized_servers)){
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
-            g_warning("unwanted server (%s)\n",inet_ntoa(addr_clnt.sin_addr));
-        }
+        log_message(WARNING, AREA_MAIN, "unwanted server (%s)\n",inet_ntoa(addr_clnt.sin_addr));
         close(conn_fd);
         return 1;
     }

@@ -152,9 +152,7 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
         ret = check_certs_for_tls_session(*session);
 
         if (ret != SASL_OK){
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
-                g_message("Certificate verification failed : %s",gnutls_strerror(ret));
-            }
+            log_message(INFO, AREA_MAIN, "Certificate verification failed : %s",gnutls_strerror(ret));
         } else {
             gchar* username=NULL;
             /* need to parse the certificate to see if it is a sufficient credential */

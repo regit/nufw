@@ -74,8 +74,7 @@ gchar* ip_authentication(tracking_t* ipheader,gpointer params)
   } else {
 #ifdef DEBUG_ENABLE
       int tmperrno=errno;
-      if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER))
-          g_message("can not open ident to %s: %s",inet_ntoa(faddr),strerror(tmperrno));
+      log_message(DEBUG, AREA_USER, "can not open ident to %s: %s",inet_ntoa(faddr),strerror(tmperrno));
 #endif
   }
   return username; 

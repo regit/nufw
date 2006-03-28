@@ -53,17 +53,13 @@ gint check_x509_certificate_validity(gnutls_session session)
 	}
 	/* verify date */
 	if (expiration_time<time(NULL)){
-	        if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
-		        g_message("Certificate expired at: %s", ctime(&expiration_time));
-                }
+	        log_message(INFO, AREA_MAIN, "Certificate expired at: %s", ctime(&expiration_time));
 		gnutls_x509_crt_deinit( cert);
 		return SASL_EXPIRED;
 	}
 
 	if (activation_time>time(NULL)){
-	        if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
-		        g_message("Certificate only activates at: %s", ctime(&activation_time));
-                }
+	        log_message(INFO, AREA_MAIN, "Certificate only activates at: %s", ctime(&activation_time));
 		gnutls_x509_crt_deinit( cert);
 		return SASL_DISABLED;
 	}

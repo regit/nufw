@@ -162,9 +162,7 @@ gboolean add_perioditem_to_period(GHashTable* periods,gchar* name,struct period_
             periodelt->items=g_slist_prepend(periodelt->items,perioditem);
             periodelt->used=TRUE;
         } else {
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER)){
-                g_message("Can not add period item (%p) to period (%s at %p)",perioditem,name,periodelt);
-            }            
+            log_message(WARNING, AREA_USER, "Can not add period item (%p) to period (%s at %p)",perioditem,name,periodelt);
                 return FALSE;
         }
         return TRUE;

@@ -230,9 +230,7 @@ int tls_connect(int socket_fd,gnutls_session** session_ptr)
         /* certicate verification */
         ret = check_certs_for_tls_session(*session);
         if (ret != 0){
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
-                g_message("Certificate verification failed : %s",gnutls_strerror(ret));
-            }
+            log_message(INFO, AREA_MAIN, "Certificate verification failed : %s",gnutls_strerror(ret));
             close_tls_session(socket_fd, session);
             return SASL_BADPARAM;
         }
