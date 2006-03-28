@@ -224,9 +224,7 @@ void nuauth_reload( int signal ) {
     do {
         nanosleep(&sleep, NULL);
 
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
-		g_message("waiting for threads to finish at %s:%d",__FILE__,__LINE__);
-        }
+	log_message(VERBOSE_DEBUG, AREA_MAIN, "waiting for threads to finish at %s:%d",__FILE__,__LINE__);
         /* 1. count thread in pool */
         pool_threads_num=g_thread_pool_get_num_threads(nuauthdatas->user_checkers)
                 + g_thread_pool_get_num_threads(nuauthdatas->acl_checkers)
@@ -240,9 +238,7 @@ void nuauth_reload( int signal ) {
         }
         pool_threads_num-=g_thread_pool_get_num_unused_threads ();
 
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
-		g_message("got %d on %d",nuauthdatas->locked_threads_number,pool_threads_num);
-	}
+	log_message(VERBOSE_DEBUG, AREA_MAIN, "got %d on %d",nuauthdatas->locked_threads_number,pool_threads_num);
     /* compare against thread in state lock */
     } while (nuauthdatas->locked_threads_number<pool_threads_num);
     /* we've reached equality thus all threads are blocked now */

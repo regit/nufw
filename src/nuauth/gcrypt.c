@@ -115,9 +115,7 @@ int verify_user_password(const char* given,const char* ours){
 				g_free(decoded);	
 				decoded=traduc;
 			} else {
-				if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
-					g_message("can not convert password %s at %s:%d",decoded,__FILE__,__LINE__);
-				}
+				log_message(WARNING, AREA_MAIN, "can not convert password %s at %s:%d",decoded,__FILE__,__LINE__);
 			}
 		}
 		debug_log_message(VERBOSE_DEBUG, AREA_MAIN, "given %s, hash %s, decoded %s, stored : %s",given,res,decoded,ours);

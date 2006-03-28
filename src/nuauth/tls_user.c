@@ -244,9 +244,7 @@ static int treat_user_request (user_session * c_session)
                 NULL
                 );
     } else {
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
-            g_message("Bad packet, option of header is not set or unauthorized option from user %s.", c_session->user_name);
-        }
+        log_message(INFO, AREA_MAIN, "Bad packet, option of header is not set or unauthorized option from user %s.", c_session->user_name);
         free_buffer_read(datas);
         return EOF;
     }

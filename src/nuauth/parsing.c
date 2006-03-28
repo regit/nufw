@@ -111,9 +111,7 @@ gchar *string_escape(gchar *orig)
         size_t bwritten;
         traduc = g_locale_from_utf8  (orig, -1, NULL, &bwritten, NULL);
         if (!traduc){
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET)){
-                g_warning("UTF-8 conversion failed at %s:%d",__FILE__,__LINE__);
-            }
+            log_message(WARNING, AREA_PACKET, "UTF-8 conversion failed at %s:%d",__FILE__,__LINE__);
             return NULL;
         }
     } else {

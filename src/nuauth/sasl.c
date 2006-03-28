@@ -123,9 +123,7 @@ static int userdb_checkpass(sasl_conn_t *conn,
 				&bwritten,
 				NULL);
 		if ( ! dec_user ) {
-			if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
-				g_message("Can not convert username at %s:%d",__FILE__,__LINE__);
-			}
+			log_message(WARNING, AREA_MAIN, "Can not convert username at %s:%d",__FILE__,__LINE__);
 
 			/* return to fallback */
 			return SASL_NOAUTHZ;
@@ -261,9 +259,7 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 	if (r != SASL_OK && r != SASL_CONTINUE) {
 		gchar * user_name;
 
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
-			g_warning("sasl negotiation error: %d",r);
-		}
+		log_message(INFO, AREA_MAIN, "sasl negotiation error: %d",r);
 		ret = sasl_getprop(conn, SASL_USERNAME, (const void **)	&(user_name));
 		c_session->user_name = g_strdup(user_name);
 		/*		ret = sasl_getprop(conn, SASL_USERNAME, (const void **)	&(c_session->user_name)); */
@@ -581,9 +577,7 @@ int sasl_user_check(user_session* c_session)
 
 #ifdef DEBUG_ENABLE
 		log_message(VERBOSE_DEBUG, AREA_MAIN, "setting params for external");
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
-			g_message("TLS gives user %s, trying EXTERNAL",c_session->user_name);	
-		}
+		log_message(VERBOSE_DEBUG, AREA_MAIN, "TLS gives user %s, trying EXTERNAL",c_session->user_name);
 #endif
 		ret = sasl_setprop(conn, SASL_AUTH_EXTERNAL,c_session->user_name);
 		if (ret != SASL_OK){

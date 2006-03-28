@@ -13,9 +13,7 @@ gint get_first_x509_cert_from_tls_session(gnutls_session session,gnutls_x509_crt
 
 	cert_list = gnutls_certificate_get_peers(session, &cert_list_size);
 
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
-		g_message("Peer provided %d certificates.", cert_list_size);
-	}
+	log_message(VERBOSE_DEBUG, AREA_MAIN, "Peer provided %d certificates.", cert_list_size);
 
 	if (cert_list_size > 0) {
 		/* we only print information about the first certificate. */
@@ -72,9 +70,7 @@ gint check_x509_certificate_validity(gnutls_session session)
 	
 	size = sizeof(dn);
 	gnutls_x509_crt_get_issuer_dn( cert, dn, &size);
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)){
-		g_message("\tIssuer's DN: %s", dn);
-	}
+	log_message(VERBOSE_DEBUG, AREA_USER, "\tIssuer's DN: %s", dn);
 	/* TODO  test if we trust this Issuer */
 	gnutls_x509_crt_deinit( cert);
 	return SASL_OK;
@@ -101,9 +97,7 @@ gchar *	get_username_from_x509_certificate(gnutls_session session)
 	
 	size = sizeof(dn);
 	gnutls_x509_crt_get_dn( cert, dn, &size);
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)){
-		g_message("\tDN: %s", dn);
-	}
+	log_message(VERBOSE_DEBUG, AREA_USER, "\tDN: %s", dn);
 	
 	/* parse DN and extract username is there is one */
 	pointer=g_strrstr_len(dn,DN_LENGTH-1,",CN=");
@@ -118,9 +112,7 @@ gchar *	get_username_from_x509_certificate(gnutls_session session)
 	}
 
 	gnutls_x509_crt_deinit( cert);
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)){
-		g_message("\tCN: %s", username);
-	}
+	log_message(VERBOSE_DEBUG, AREA_USER, "\tCN: %s", username);
 	return username;
 }
 
