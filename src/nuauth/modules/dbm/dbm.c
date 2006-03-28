@@ -28,42 +28,40 @@
 
 
 confparams dbm_nuauth_vars[] = {
-	{ "dbm_users_file" , G_TOKEN_STRING, 0 , DBM_USERS_FILE }
+    { "dbm_users_file" , G_TOKEN_STRING, 0 , DBM_USERS_FILE }
 };
 
 int analyse_dbm_char(char *datas, struct dbm_data_struct *mystruct)
-	/* IN : char containing, space separated, in this order (it MUST end with a
-	 * space, else last group isnt read): 
-	 * password userid group1 group2 ... group N
-	 * OUT : the data string gets scrambled over, it shouldnt be used anymore after
-	 * call this function. The structure gets filled with password and groups.
-	 */
-	/*TODO : limit the size of acceptable password, and groups. Even if there
-	 * should not be any buffer overflow with this, those should probably never
-	 * exceed a well-chosen value*/
+    /* IN : char containing, space separated, in this order (it MUST end with a
+     * space, else last group isnt read): 
+     * password userid group1 group2 ... group N
+     * OUT : the data string gets scrambled over, it shouldnt be used anymore after
+     * call this function. The structure gets filled with password and groups.
+     */
+    /*TODO : limit the size of acceptable password, and groups. Even if there
+     * should not be any buffer overflow with this, those should probably never
+     * exceed a well-chosen value*/
 {
-	char **split_datas;
-	char **way_datas;
+  char **split_datas;
+  char **way_datas;
 
-	mystruct->outelt = NULL;
-	split_datas=g_strsplit(datas," ",0);
-	debug_log_message(VERBOSE_DEBUG, AREA_MAIN, "Extracting password...");
-	mystruct->passwd=g_strdup(*split_datas);
-	way_datas = split_datas++;
-	mystruct->uid=atoi(*split_datas);
-	split_datas++;
-#if 0	
-	log_message(VERBOSE_DEBUG, AREA_MAIN, "it's %s",mystruct->passwd);
-#endif	
-	while(*split_datas){
-		if(atoi(*split_datas)>0){
-			mystruct->outelt = g_slist_prepend(mystruct->outelt, GINT_TO_POINTER(atoi(*split_datas)));
-			debug_log_message(VERBOSE_DEBUG, AREA_MAIN, "got *%s*\n",*split_datas);
-		}
-		split_datas++;
-	}
-	g_strfreev(way_datas);
-	return 0;
+  mystruct->outelt = NULL;
+  split_datas=g_strsplit(datas," ",0);
+  debug_log_message(VERBOSE_DEBUG, AREA_MAIN, "Extracting password...");
+  mystruct->passwd=g_strdup(*split_datas);
+  way_datas = split_datas++;
+  mystruct->uid=atoi(*split_datas);
+  split_datas++;
+  debug_log_message(VERBOSE_DEBUG, AREA_MAIN, "it's %s",mystruct->passwd);
+  while(*split_datas){
+      if(atoi(*split_datas)>0){
+          mystruct->outelt = g_slist_prepend(mystruct->outelt, GINT_TO_POINTER(atoi(*split_datas)));
+          debug_log_message(VERBOSE_DEBUG, AREA_MAIN, "got *%s*\n",*split_datas);
+      }
+      split_datas++;
+  }
+  g_strfreev(way_datas);
+  return 0;
 }
 
 
@@ -81,30 +79,28 @@ G_MODULE_EXPORT gboolean module_params_unload(gpointer params_p)
 /* Init dbm system */
 G_MODULE_EXPORT gboolean init_module_from_conf(module_t* module)
 {
-	char *configfile=DEFAULT_CONF_FILE; 
-	gpointer vpointer; 
+  char *configfile=DEFAULT_CONF_FILE; 
+  gpointer vpointer; 
   struct dbm_params* params=g_new0(struct dbm_params,1);
 
-	/* init global variables */
-	params->users_file = DBM_USERS_FILE;
-    
-	/* parse conf file */
+  /* init global variables */
+  params->users_file = DBM_USERS_FILE;
+
+  /* parse conf file */
   if (module->configfile){
-	parse_conffile(module->configfile,sizeof(dbm_nuauth_vars)/sizeof(confparams),dbm_nuauth_vars);
+      parse_conffile(module->configfile,sizeof(dbm_nuauth_vars)/sizeof(confparams),dbm_nuauth_vars);
   } else {
-	parse_conffile(configfile,sizeof(dbm_nuauth_vars)/sizeof(confparams),dbm_nuauth_vars);
+      parse_conffile(configfile,sizeof(dbm_nuauth_vars)/sizeof(confparams),dbm_nuauth_vars);
   }
-	/* set variables */
-	vpointer=get_confvar_value(dbm_nuauth_vars,sizeof(dbm_nuauth_vars)/sizeof(confparams),"dbm_users_file");
-	params->users_file=(char *)(vpointer?vpointer:params->users_file);
+  /* set variables */
+  vpointer=get_confvar_value(dbm_nuauth_vars,sizeof(dbm_nuauth_vars)/sizeof(confparams),"dbm_users_file");
+  params->users_file=(char *)(vpointer?vpointer:params->users_file);
 
-	/* init thread private stuff */
-	params->dbm_priv = g_private_new (g_free);
-#ifdef DEBUG_ENABLE
-	log_message(VERBOSE_DEBUG, AREA_MAIN, "We are leaving g_module_check_init()\n");
-#endif
+  /* init thread private stuff */
+  params->dbm_priv = g_private_new (g_free);
+  debug_log_message(VERBOSE_DEBUG, AREA_MAIN, "We are leaving g_module_check_init()\n");
 
-	return TRUE;
+  return TRUE;
 }
 
 /* 
@@ -113,86 +109,72 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t* module)
 
 
 GDBM_FILE dbm_file_init(struct dbm_params *params){
-	GDBM_FILE dbf;
+    GDBM_FILE dbf;
 
-	/* init connection */
-#ifdef DEBUG_ENABLE
-	log_message(VERBOSE_DEBUG, AREA_MAIN, "We are entering dbm_file_init()\n");
-#endif
-	dbf = gdbm_open(params->users_file,DBM_BLOCK_SIZE,DBM_FILE_ACCESS_MODE,DBM_FILE_MODE,DBM_FATAL_FUNCTION);
-#ifdef DEBUG_ENABLE
-	log_message(VERBOSE_DEBUG, AREA_MAIN, "dbm_file_init : file should be open now()\n");
-#endif
+    /* init connection */
+	debug_log_message(VERBOSE_DEBUG, AREA_MAIN, "We are entering dbm_file_init()\n");
+    dbf = gdbm_open(params->users_file,DBM_BLOCK_SIZE,DBM_FILE_ACCESS_MODE,DBM_FILE_MODE,DBM_FATAL_FUNCTION);
+	debug_log_message(VERBOSE_DEBUG, AREA_MAIN, "dbm_file_init : file should be open now()\n");
 	if(dbf == NULL) {
 		log_message(WARNING, AREA_MAIN, "dbm init error\n");
 		return NULL;
 	}
 
-#ifdef DEBUG_ENABLE
-	log_message(VERBOSE_DEBUG, AREA_MAIN, "We are leaving dbm_file_init()\n");
-#endif
-	return dbf;
+	debug_log_message(VERBOSE_DEBUG, AREA_MAIN, "We are leaving dbm_file_init()\n");
+    return dbf;
 }
 
 
 G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned passlen,uint32_t *uid,GSList **groups,gpointer params_p)
 {
   struct dbm_params* params=(struct dbm_params*)params_p;
-	GDBM_FILE dbf = g_private_get (params->dbm_priv);
-	datum dbm_key, dbm_data;
-	struct dbm_data_struct return_data;
-	char* user;
-  	static GStaticMutex dbm_initmutex = G_STATIC_MUTEX_INIT;
+  GDBM_FILE dbf = g_private_get (params->dbm_priv);
+  datum dbm_key, dbm_data;
+  struct dbm_data_struct return_data;
+  char* user;
+  static GStaticMutex dbm_initmutex = G_STATIC_MUTEX_INIT;
 
-#ifdef DEBUG_ENABLE
-	log_message(VERBOSE_DEBUG, AREA_MAIN, "We are entering dbm_user_check()\n");
-#endif
+  debug_log_message(VERBOSE_DEBUG, AREA_MAIN, "We are entering dbm_user_check()\n");
 
-  	/* init has only to be done once */
-  	g_static_mutex_lock (&dbm_initmutex);
-	if (dbf == NULL){
-		/* dbm init has not been done yet*/
-#ifdef DEBUG_ENABLE
-		log_message(VERBOSE_DEBUG, AREA_MAIN, "calling dbm_file_init() now\n");
-#endif
-		dbf = dbm_file_init(params);
-		g_private_set(params->dbm_priv,dbf);
-		if (dbf == NULL){
-			log_message(SERIOUS_WARNING, AREA_AUTH, "Can't access DBM database\n");
-			return SASL_BADAUTH;
-		}
-	}
-  	g_static_mutex_unlock (&dbm_initmutex);
+  /* init has only to be done once */
+  g_static_mutex_lock (&dbm_initmutex);
+  if (dbf == NULL){
+      /* dbm init has not been done yet*/
+		debug_log_message(VERBOSE_DEBUG, AREA_MAIN, "calling dbm_file_init() now\n");
+      dbf = dbm_file_init(params);
+      g_private_set(params->dbm_priv,dbf);
+      if (dbf == NULL){
+          if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_AUTH))
+              g_message("Can't access DBM database\n");
+          return SASL_BADAUTH;
+      }
+  }
+  g_static_mutex_unlock (&dbm_initmutex);
 
-	/* compute user name */
-	user = get_rid_of_domain(username);
+  /* compute user name */
+  user = get_rid_of_domain(username);
 
-	dbm_key.dsize = strlen(user);
-	dbm_key.dptr = g_strdup(user);
+  dbm_key.dsize = strlen(user);
+  dbm_key.dptr = g_strdup(user);
 
-	debug_log_message(DEBUG, AREA_AUTH, "user id is %s, size %i\n",dbm_key.dptr,dbm_key.dsize);
-
-	/* Check key exists before trying to fetch its value */
+  debug_log_message(DEBUG, AREA_AUTH, "user id is %s, size %i\n",dbm_key.dptr,dbm_key.dsize);
+  /* Check key exists before trying to fetch its value */
 	if (! gdbm_exists(dbf,dbm_key))
 	{
 		log_message(MESSAGE, AREA_AUTH, "no key \"%s, size %i\" could be found in database\n",dbm_key.dptr,dbm_key.dsize);
 		g_free(dbm_key.dptr);
 		return SASL_BADAUTH;
 	}
-
 	debug_log_message(DEBUG, AREA_AUTH, "key %s, size %i was found. good\n",dbm_key.dptr,dbm_key.dsize);
 	
-	dbm_data = gdbm_fetch(dbf,dbm_key);
-	if (dbm_data.dptr == NULL)
-	{
-		log_message(WARNING, AREA_AUTH, "key \"%s, size %i\" exists in database, but cannot be fetched ?!\n",dbm_key.dptr,dbm_key.dsize);
-		g_free(dbm_key.dptr);
-		return SASL_BADAUTH;
-	}
-
-#if 0
-	log_message(DEBUG, AREA_AUTH, "Data shall now be analysed : %s\n",dbm_data.dptr);
-#endif	
+  dbm_data = gdbm_fetch(dbf,dbm_key);
+  if (dbm_data.dptr == NULL)
+  {
+      if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
+          g_warning("key \"%s, size %i\" exists in database, but cannot be fetched ?!\n",dbm_key.dptr,dbm_key.dsize);
+      g_free(dbm_key.dptr);
+      return SASL_BADAUTH;
+  }
 
 	/* string is not NULL terminated */
 	if (analyse_dbm_char(dbm_data.dptr,&return_data) != 0)
