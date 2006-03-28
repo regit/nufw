@@ -125,8 +125,7 @@ gpointer user_duplicate_key(gpointer datas)
 int init_user_cache()
 {
 	GThread *user_cache_thread;
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-			g_message("creating user cache thread");
+		log_message(VERBOSE_DEBUG, AREA_MAIN, "creating user cache thread");
 		nuauthdatas->user_cache=g_new0(struct cache_init_datas,1);
 		nuauthdatas->user_cache->hash=g_hash_table_new_full((GHashFunc)g_str_hash,
 				g_str_equal,

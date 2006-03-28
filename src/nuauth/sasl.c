@@ -394,8 +394,7 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 		c_session->user_id=GPOINTER_TO_UINT(g_private_get(user_priv));
 		if (c_session->user_id == 0) 
 		{
-			if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN))
-				g_message("Couldn't get user ID!");	
+			log_message(INFO, AREA_MAIN, "Couldn't get user ID!");
 		}
 		if (c_session->groups == NULL){
 			if(modules_user_check(c_session->user_name,NULL,0,&(c_session->user_id),&(c_session->groups))!=SASL_OK){
@@ -490,8 +489,7 @@ int sasl_parse_user_os(user_session* c_session, char *buf, int buf_size)
         if (os_strings[0] && (strlen(os_strings[0]) < 128) ){
             c_session->sysname=string_escape(os_strings[0]);
             if (c_session->sysname==NULL){
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
-                    g_warning("received sysname contains invalid characters");	
+                log_message(WARNING, AREA_USER, "received sysname contains invalid characters");
                 g_free(dec_buf);
                 return SASL_BADAUTH;
             }
@@ -501,8 +499,7 @@ int sasl_parse_user_os(user_session* c_session, char *buf, int buf_size)
         if (os_strings[1] && (strlen(os_strings[1]) < 128) )   {
             c_session->release=string_escape(os_strings[1]);
             if (c_session->release==NULL){
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
-                    g_warning("received release contains invalid characters");	
+                log_message(WARNING, AREA_USER, "received release contains invalid characters");
                 g_free(dec_buf);
                 return SASL_BADAUTH;
             }
@@ -512,8 +509,7 @@ int sasl_parse_user_os(user_session* c_session, char *buf, int buf_size)
         if (os_strings[2] && (strlen(os_strings[2]) < 128) )  {
             c_session->version=string_escape(os_strings[2]);
             if (c_session->version==NULL){
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
-                    g_warning("received version contains invalid characters");	
+                log_message(WARNING, AREA_USER, "received version contains invalid characters");
                 g_free(dec_buf);
                 return SASL_BADAUTH;
             }
@@ -534,8 +530,7 @@ int sasl_parse_user_os(user_session* c_session, char *buf, int buf_size)
         }
         g_strfreev(os_strings);
     }else{
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-            g_message("osfield->option is not OS_SRV ?!");
+        log_message(DEBUG, AREA_MAIN, "osfield->option is not OS_SRV ?!");
 
         g_free(dec_buf);
         return SASL_FAIL;
@@ -595,21 +590,18 @@ int sasl_user_check(user_session* c_session)
 		sasl_ssf_t extssf = 0;
 
 #ifdef DEBUG_ENABLE
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-			g_message("setting params for external");
+		log_message(VERBOSE_DEBUG, AREA_MAIN, "setting params for external");
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
 			g_message("TLS gives user %s, trying EXTERNAL",c_session->user_name);	
 		}
 #endif
 		ret = sasl_setprop(conn, SASL_AUTH_EXTERNAL,c_session->user_name);
 		if (ret != SASL_OK){
-			if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN))
-				g_warning("Error setting external auth");
+			log_message(INFO, AREA_MAIN, "Error setting external auth");
 		}
 		ret = sasl_setprop(conn,SASL_SSF_EXTERNAL,&extssf);
 		if (ret != SASL_OK){
-			if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN))
-				g_warning("Error setting external SSF");
+			log_message(INFO, AREA_MAIN, "Error setting external SSF");
 		}
 		ret = mysasl_negotiate(c_session, conn);
 	} else {

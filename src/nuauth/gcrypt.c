@@ -69,8 +69,7 @@ int verify_user_password(const char* given,const char* ours){
 		else if (!(strcmp("{MD5",splitted_secret[0])))  /* MD5 */
 			algo = GCRY_MD_MD5;
 		else {
-			if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-				g_message("verify_user_password() : Unsupported hash algorithm");
+			log_message(WARNING, AREA_MAIN, "verify_user_password() : Unsupported hash algorithm");
 			g_strfreev(splitted_secret);
 			return SASL_BADAUTH;
 		}
@@ -83,8 +82,7 @@ int verify_user_password(const char* given,const char* ours){
 			char temp[24];
 
 			if (sasl_decode64(splitted_secret[1],strlen(splitted_secret[1]),temp,sizeof(temp),&len) != SASL_OK){
-				if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN))
-					g_message("sasl_decode64 failed in gcrypt.c, where seeded SHA1 is used");
+				log_message(INFO, AREA_MAIN, "sasl_decode64 failed in gcrypt.c, where seeded SHA1 is used");
 				return(SASL_BADAUTH);
 			}
 			gcry_md_write(hd,temp+20,4);
@@ -93,8 +91,7 @@ int verify_user_password(const char* given,const char* ours){
 			char temp[20];
 
 			if (sasl_decode64(splitted_secret[1],strlen(splitted_secret[1]),temp,sizeof(temp),&len) != SASL_OK){
-				if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN))
-					g_message("sasl_decode64 failed in gcrypt.c, where seeded MD5 is used");
+				log_message(INFO, AREA_MAIN, "sasl_decode64 failed in gcrypt.c, where seeded MD5 is used");
 				return(SASL_BADAUTH);
 			}
 			gcry_md_write(hd,temp+16,4);

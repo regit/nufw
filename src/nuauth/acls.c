@@ -291,8 +291,7 @@ int init_acl_cache()
 {
     GThread *acl_cache_thread;
     /* create acl cache thread */
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-        g_message("creating acl cache thread");
+    log_message(VERBOSE_DEBUG, AREA_MAIN, "creating acl cache thread");
     nuauthdatas->acl_cache=g_new0(struct cache_init_datas,1);
     nuauthdatas->acl_cache->hash=g_hash_table_new_full((GHashFunc)hash_acl,
             compare_acls,

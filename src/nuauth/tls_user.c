@@ -366,8 +366,7 @@ void tls_user_check_activity(struct tls_user_context_t *context, int socket)
         }
     }else if (u_request < 0) {
 #ifdef DEBUG_ENABLE
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-            g_message("treat_user_request() failure");
+        log_message(VERBOSE_DEBUG, AREA_USER, "treat_user_request() failure");
 #endif
     }
 }

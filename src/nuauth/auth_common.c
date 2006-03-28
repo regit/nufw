@@ -188,8 +188,7 @@ void free_connection(connection_t *conn)
         if(conn->username){
             struct cache_message * message=g_new0(struct cache_message,1);
             if (!message){
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN))
-                    g_warning("Could not g_new0(). No more memory?");
+                log_message(CRITICAL, AREA_MAIN, "Could not g_new0(). No more memory?");
                 /* GRYZOR should we do something special here? */
             } else {
                 debug_log_message (VERBOSE_DEBUG, AREA_MAIN,
@@ -256,8 +255,7 @@ inline int conn_cl_remove(gconstpointer conn)
 {
   if (!  g_hash_table_steal (conn_list,
                 &(((connection_t *)conn)->tracking)) ){
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-            g_warning("Removal of conn in hash failed\n");
+        log_message(WARNING, AREA_MAIN, "Removal of conn in hash failed\n");
         return 0;
     }
     return 1;

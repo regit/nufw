@@ -144,8 +144,7 @@ int user_process_field_username(
     {
         connection->username= string_escape(dec_fieldname);
         if (connection->username == NULL)
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
-                g_warning("user packet received an invalid username\n");
+            log_message(WARNING, AREA_USER, "user packet received an invalid username\n");
     }else {
         g_free(dec_fieldname);
         if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER)){
@@ -226,8 +225,7 @@ int user_process_field_app(
     {
         connection->app_name= string_escape(dec_appname);
         if (connection->app_name == NULL)
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
-                g_warning("user packet received an invalid app name\n");
+            log_message(WARNING, AREA_USER, "user packet received an invalid app name\n");
     }else{
         connection->app_name=NULL;
     }

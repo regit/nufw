@@ -237,8 +237,7 @@ connection_t* authpckt_new_connection(unsigned char *dgram, unsigned int dgram_s
                     }
                     break;
                 default:
-                    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET))
-                        g_warning ("Can't parse TCP headers\n");
+                    log_message(WARNING, AREA_PACKET, "Can't parse TCP headers\n");
                     free_connection(connection);
                     return NULL;
             }

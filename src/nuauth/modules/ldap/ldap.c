@@ -136,8 +136,7 @@ G_MODULE_EXPORT LDAP* ldap_conn_init(struct ldap_params* params)
   /* init connection */
   ld = ldap_init(params->ldap_server,params->ldap_server_port);
   if(!ld) {
-      if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-          g_warning("ldap init error\n");
+      log_message(WARNING, AREA_MAIN, "ldap init error\n");
       return NULL;
   }
   if (ldap_set_option(ld, LDAP_OPT_PROTOCOL_VERSION,
@@ -188,8 +187,7 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element,gpointer params_p)
       /* init ldap has never been done */
       ld = ldap_conn_init(params);
       if (ld == NULL) {
-          if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_AUTH))
-              g_warning("Can not initiate LDAP conn\n");
+          log_message(SERIOUS_WARNING, AREA_AUTH, "Can not initiate LDAP conn\n");
           return NULL;
       }
       g_private_set(	params->ldap_priv,ld);
@@ -325,8 +323,7 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element,gpointer params_p)
   if ( err !=  LDAP_SUCCESS ) {
       if (err == LDAP_SERVER_DOWN ){
           /* we lost connection, so disable current one */
-          if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-              g_warning ("disabling current connection");
+          log_message(WARNING, AREA_MAIN, "disabling current connection");
           ldap_unbind(ld);
           ld=NULL;
           g_private_set(	params->ldap_priv,ld);
@@ -407,8 +404,7 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned p
       ld = ldap_conn_init(params);
       g_private_set(	params->ldap_priv,ld);
       if (ld == NULL){
-          if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_AUTH))
-              g_message("Can't initiate LDAP conn\n");
+          log_message(SERIOUS_WARNING, AREA_AUTH, "Can't initiate LDAP conn\n");
           return SASL_BADAUTH;
       }
   }
@@ -431,8 +427,7 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned p
   if ( err !=  LDAP_SUCCESS ) {
       if (err == LDAP_SERVER_DOWN ){
           /* we lost connection, so disable current one */
-          if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-              g_warning ("disabling current connection");
+          log_message(WARNING, AREA_MAIN, "disabling current connection");
           ldap_unbind(ld);
           ld=NULL;
           g_private_set(	params->ldap_priv,ld);
@@ -455,8 +450,7 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned p
           attrs_array = ldap_get_values(ld, result, "userPassword");
           attrs_array_len = ldap_count_values(attrs_array);
           if (attrs_array_len == 0){
-              if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
-                  g_message ("what ! no password found!\n");
+              log_message(WARNING, AREA_AUTH, "what ! no password found!\n");
           } else {
               SECURE_STRNCPY(passwd, attrs_array[0], sizeof passwd);
               debug_log_message(DEBUG, AREA_AUTH, "reading password\n");

@@ -63,12 +63,10 @@ gchar* ip_authentication(tracking_t* ipheader,gpointer params)
 	      g_free(charset);
               break;
             case 2:
-              if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-                  g_message("protocol error");
+              log_message(VERBOSE_DEBUG, AREA_USER, "protocol error");
               break;
             default:
-              if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-                  g_message("Unknown error (timeout ?)");
+              log_message(VERBOSE_DEBUG, AREA_USER, "Unknown error (timeout ?)");
 
           }
       }

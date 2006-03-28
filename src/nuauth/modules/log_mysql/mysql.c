@@ -100,8 +100,7 @@ init_module_from_conf(module_t *module)
 
     /* init thread private stuff */
     params->mysql_priv = g_private_new ((GDestroyNotify)mysql_close); 
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-        g_message("mysql part of the config file is parsed\n");
+    log_message(DEBUG, AREA_MAIN, "mysql part of the config file is parsed\n");
     module->params=(gpointer)params;
     return TRUE;
 }
@@ -389,8 +388,7 @@ inline int log_state_established(MYSQL *ld, connection_t *element,struct log_mys
                 (element->tracking).dest,
                 TCP_STATE_OPEN);
         if (!ok) {
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_MAIN))
-                g_warning("Building mysql update query, the SHORT_REQUEST_SIZE limit was reached!\n");
+            log_message(SERIOUS_WARNING, AREA_MAIN, "Building mysql update query, the SHORT_REQUEST_SIZE limit was reached!\n");
             return -1;
         }
         Result = mysql_real_query(ld, request, strlen(request));

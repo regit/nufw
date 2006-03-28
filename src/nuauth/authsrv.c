@@ -156,8 +156,7 @@ void nuauth_cleanup( int signal )
     stop_threads();
 
     /* free nufw server hash */
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN))
-        g_message("caught interrupt, cleaning");
+    log_message(CRITICAL, AREA_MAIN, "caught interrupt, cleaning");
     close_nufw_servers();
 
     /* free client hash */
@@ -543,8 +542,7 @@ void init_nuauthdatas()
     create_thread (&nuauthdatas->search_and_fill_worker, search_and_fill);
 
     if (nuauthconf->push && nuauthconf->hello_authentication){
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-            g_message("Creating hello mode authentication thread");
+        log_message(VERBOSE_DEBUG, AREA_MAIN, "Creating hello mode authentication thread");
         nuauthdatas->localid_auth_queue = g_async_queue_new ();
         create_thread (&nuauthdatas->localid_auth_thread, localid_auth);
     }

@@ -288,13 +288,11 @@ int load_modules()
 	g_mutex_lock(modules_mutex);
 
 	/* loading user check modules */
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-		g_message("Loading user checking modules:");
+	log_message(VERBOSE_DEBUG, AREA_MAIN, "Loading user checking modules:");
 	load_modules_from(nuauth_user_check_module,"user_check",&user_check_modules);
 	g_free(nuauth_user_check_module);
 	/* loading acl check module */
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-		g_message("Loading acls checking modules:");
+	log_message(VERBOSE_DEBUG, AREA_MAIN, "Loading acls checking modules:");
 	load_modules_from(nuauth_acl_check_module,"acl_check",&acl_check_modules);
 	g_free(nuauth_acl_check_module);
 
@@ -303,20 +301,17 @@ int load_modules()
 	g_free(nuauth_periods_module);
         
 	/* user logs modules */
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-		g_message("Loading user packet logging modules:");
+	log_message(VERBOSE_DEBUG, AREA_MAIN, "Loading user packet logging modules:");
 	load_modules_from(nuauth_user_logs_module,"user_packet_logs",&user_logs_modules);
 	g_free(nuauth_user_logs_module);
 	/* user logs modules */
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-		g_message("Loading user session logging modules:");
+	log_message(VERBOSE_DEBUG, AREA_MAIN, "Loading user session logging modules:");
 	load_modules_from(nuauth_user_session_logs_module,"user_session_logs",&user_session_logs_modules);
 	g_free(nuauth_user_session_logs_module);
 
 	if (nuauthconf->do_ip_authentication){
 		/* load module */
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-			g_message("Loading ip authentication modules:");
+		log_message(VERBOSE_DEBUG, AREA_MAIN, "Loading ip authentication modules:");
 		load_modules_from(nuauth_ip_authentication_module,"ip_authentication",&ip_auth_modules);
 		g_free(nuauth_ip_authentication_module);
 	}

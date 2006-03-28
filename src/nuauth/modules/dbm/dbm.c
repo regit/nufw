@@ -102,8 +102,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t* module)
 	/* init thread private stuff */
 	params->dbm_priv = g_private_new (g_free);
 #ifdef DEBUG_ENABLE
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-		g_message("We are leaving g_module_check_init()\n");
+	log_message(VERBOSE_DEBUG, AREA_MAIN, "We are leaving g_module_check_init()\n");
 #endif
 
 	return TRUE;
@@ -119,23 +118,19 @@ GDBM_FILE dbm_file_init(struct dbm_params *params){
 
 	/* init connection */
 #ifdef DEBUG_ENABLE
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-		g_message("We are entering dbm_file_init()\n");
+	log_message(VERBOSE_DEBUG, AREA_MAIN, "We are entering dbm_file_init()\n");
 #endif
 	dbf = gdbm_open(params->users_file,DBM_BLOCK_SIZE,DBM_FILE_ACCESS_MODE,DBM_FILE_MODE,DBM_FATAL_FUNCTION);
 #ifdef DEBUG_ENABLE
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-		g_message("dbm_file_init : file should be open now()\n");
+	log_message(VERBOSE_DEBUG, AREA_MAIN, "dbm_file_init : file should be open now()\n");
 #endif
 	if(dbf == NULL) {
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-			g_warning("dbm init error\n");
+		log_message(WARNING, AREA_MAIN, "dbm init error\n");
 		return NULL;
 	}
 
 #ifdef DEBUG_ENABLE
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-		g_message("We are leaving dbm_file_init()\n");
+	log_message(VERBOSE_DEBUG, AREA_MAIN, "We are leaving dbm_file_init()\n");
 #endif
 	return dbf;
 }
@@ -151,8 +146,7 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned p
   	static GStaticMutex dbm_initmutex = G_STATIC_MUTEX_INIT;
 
 #ifdef DEBUG_ENABLE
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-		g_message("We are entering dbm_user_check()\n");
+	log_message(VERBOSE_DEBUG, AREA_MAIN, "We are entering dbm_user_check()\n");
 #endif
 
   	/* init has only to be done once */
@@ -160,14 +154,12 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned p
 	if (dbf == NULL){
 		/* dbm init has not been done yet*/
 #ifdef DEBUG_ENABLE
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-			g_message("calling dbm_file_init() now\n");
+		log_message(VERBOSE_DEBUG, AREA_MAIN, "calling dbm_file_init() now\n");
 #endif
 		dbf = dbm_file_init(params);
 		g_private_set(params->dbm_priv,dbf);
 		if (dbf == NULL){
-			if (DEBUG_OR_NOT(DEBUG_LEVEL_SERIOUS_WARNING,DEBUG_AREA_AUTH))
-				g_message("Can't access DBM database\n");
+			log_message(SERIOUS_WARNING, AREA_AUTH, "Can't access DBM database\n");
 			return SASL_BADAUTH;
 		}
 	}
