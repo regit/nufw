@@ -53,8 +53,7 @@ int analyse_dbm_char(char *datas, struct dbm_data_struct *mystruct)
 	mystruct->uid=atoi(*split_datas);
 	split_datas++;
 #if 0	
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-		g_message("it's %s",mystruct->passwd);
+	log_message(VERBOSE_DEBUG, AREA_MAIN, "it's %s",mystruct->passwd);
 #endif	
 	while(*split_datas){
 		if(atoi(*split_datas)>0){
@@ -176,8 +175,7 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned p
 	/* Check key exists before trying to fetch its value */
 	if (! gdbm_exists(dbf,dbm_key))
 	{
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_AUTH))
-			g_message("no key \"%s, size %i\" could be found in database\n",dbm_key.dptr,dbm_key.dsize);
+		log_message(MESSAGE, AREA_AUTH, "no key \"%s, size %i\" could be found in database\n",dbm_key.dptr,dbm_key.dsize);
 		g_free(dbm_key.dptr);
 		return SASL_BADAUTH;
 	}
@@ -187,29 +185,25 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned p
 	dbm_data = gdbm_fetch(dbf,dbm_key);
 	if (dbm_data.dptr == NULL)
 	{
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
-			g_warning("key \"%s, size %i\" exists in database, but cannot be fetched ?!\n",dbm_key.dptr,dbm_key.dsize);
+		log_message(WARNING, AREA_AUTH, "key \"%s, size %i\" exists in database, but cannot be fetched ?!\n",dbm_key.dptr,dbm_key.dsize);
 		g_free(dbm_key.dptr);
 		return SASL_BADAUTH;
 	}
 
 #if 0
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_AUTH))
-		g_message("Data shall now be analysed : %s\n",dbm_data.dptr);
+	log_message(DEBUG, AREA_AUTH, "Data shall now be analysed : %s\n",dbm_data.dptr);
 #endif	
 
 	/* string is not NULL terminated */
 	if (analyse_dbm_char(dbm_data.dptr,&return_data) != 0)
 	{
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
-			g_message("A problem occured when analysing data for key %s, size %i\n",dbm_key.dptr, dbm_key.dsize);
+		log_message(WARNING, AREA_AUTH, "A problem occured when analysing data for key %s, size %i\n",dbm_key.dptr, dbm_key.dsize);
 		g_free(dbm_key.dptr);
 		return SASL_BADAUTH;
 	}
 	if (return_data.outelt == NULL )
 	{
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_AUTH))
-			g_warning("inconsistency in database? unable to parse data for key %s (size %i)\n",dbm_key.dptr,dbm_key.dsize);
+		log_message(WARNING, AREA_AUTH, "inconsistency in database? unable to parse data for key %s (size %i)\n",dbm_key.dptr,dbm_key.dsize);
 		g_free(dbm_key.dptr);
 		return SASL_BADAUTH;
 	}
@@ -218,14 +212,12 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned p
 	/* We found a relevant entry in database. Now check passwords match. */
 	if (pass != NULL) {
 		if ( return_data.passwd==NULL ){
-			if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_AUTH))
-				g_warning("No password for user \"%s\"",user);
+			log_message(INFO, AREA_AUTH, "No password for user \"%s\"",user);
 			return SASL_BADAUTH;
 		}
 		/*  if (strcmp(pass,return_data.passwd)){ */
 		if (verify_user_password(pass,return_data.passwd) != SASL_OK){
-			if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_AUTH))
-				g_warning("Bad password for user \"%s\"",user);
+			log_message(INFO, AREA_AUTH, "Bad password for user \"%s\"",user);
 			return SASL_BADAUTH;
 		}
 	}

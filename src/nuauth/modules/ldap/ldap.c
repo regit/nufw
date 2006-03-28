@@ -213,8 +213,7 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element,gpointer params_p)
                         (element->tracking).source
 #endif
                         ) >= (LDAP_QUERY_SIZE -1)){
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-                    g_warning ("LDAP query too big (more than %d bytes)\n",LDAP_QUERY_SIZE);
+                log_message(WARNING, AREA_MAIN, "LDAP query too big (more than %d bytes)\n",LDAP_QUERY_SIZE);
                 return NULL;
             }
             break;
@@ -236,8 +235,7 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element,gpointer params_p)
                         (element->tracking).dest,
                         (element->tracking).dest
                         ) >= (LDAP_QUERY_SIZE -1)){
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-                    g_warning ("LDAP query too big (more than %d bytes)\n",LDAP_QUERY_SIZE);
+                log_message(WARNING, AREA_MAIN, "LDAP query too big (more than %d bytes)\n",LDAP_QUERY_SIZE);
                 return NULL;
             }
       }
@@ -295,8 +293,7 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element,gpointer params_p)
                   (element->tracking).code,
                   (element->tracking).code
                   ) >= (LDAP_QUERY_SIZE-1)){
-          if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-              g_warning ("LDAP query too big (more than %d bytes)\n",LDAP_QUERY_SIZE);
+          log_message(WARNING, AREA_MAIN, "LDAP query too big (more than %d bytes)\n",LDAP_QUERY_SIZE);
           return NULL;
       }
   }
@@ -413,8 +410,7 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned p
   user = get_rid_of_domain(username);
 
   if (snprintf(filter,LDAP_QUERY_SIZE-1,"(&(objectClass=NuAccount)(cn=%s))",user) >= (LDAP_QUERY_SIZE-1)){
-      if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN))
-          g_warning ("LDAP query too big (more than %d bytes)\n",LDAP_QUERY_SIZE);
+      log_message(WARNING, AREA_MAIN, "LDAP query too big (more than %d bytes)\n",LDAP_QUERY_SIZE);
       return SASL_BADAUTH;
   }
   /* send query and wait result */
@@ -484,8 +480,7 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned p
       *groups=outelt;
       return SASL_OK;
   } else {
-      if (DEBUG_OR_NOT(DEBUG_LEVEL_MESSAGE,DEBUG_AREA_AUTH))
-          g_message("No or too many users found with user %s\n",user);
+      log_message(MESSAGE, AREA_AUTH, "No or too many users found with user %s\n",user);
       ldap_msgfree(res);
       return SASL_BADAUTH;
   }

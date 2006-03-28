@@ -109,8 +109,7 @@ static int userdb_checkpass(sasl_conn_t *conn,
 
 	/* pass can not be null */
 	if (pass==NULL || passlen==0){
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN))
-			g_message("Password sent by user %s is NULL",user);
+		log_message(INFO, AREA_MAIN, "Password sent by user %s is NULL",user);
 		return SASL_BADAUTH;
 	}
 

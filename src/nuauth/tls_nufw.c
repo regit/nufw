@@ -166,9 +166,7 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
     }
 #if 0
     if ( conn_fd >= nuauth_tls_max_servers) {
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
-            g_warning("too much servers (%d configured)\n",nuauth_tls_max_servers);
-        }
+        log_message(WARNING, AREA_MAIN, "too much servers (%d configured)\n",nuauth_tls_max_servers);
         close(conn_fd);
         continue;
     }

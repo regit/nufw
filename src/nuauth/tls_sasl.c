@@ -95,8 +95,7 @@ static void tls_sasl_connect_ok(user_session* c_session, int c)
     /* send mode to client */
     if (gnutls_record_send(*(c_session->tls),&msg,sizeof(msg)) < 0){ 
 #ifdef DEBUG_ENABLE
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
-            g_message("gnutls_record_send() failure at %s:%d",__FILE__,__LINE__);
+        log_message(WARNING, AREA_USER, "gnutls_record_send() failure at %s:%d",__FILE__,__LINE__);
 #endif
         if (nuauthconf->push){
             close_tls_session(c,c_session->tls);

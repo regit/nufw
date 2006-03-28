@@ -48,9 +48,7 @@ int build_nuauthconf(struct nuauth_params * nuauthconf,
               nuauthconf->client_srv->s_addr = INADDR_ANY;
           }
       } else {
-          if (DEBUG_OR_NOT(DEBUG_LEVEL_CRITICAL,DEBUG_AREA_MAIN)){
-              g_warning("Can not resolve client listening address (%s). Ignored. Using INADDR_ANY instead!", nuauth_client_listen_addr);
-          }
+          log_message(CRITICAL, AREA_MAIN, "Can not resolve client listening address (%s). Ignored. Using INADDR_ANY instead!", nuauth_client_listen_addr);
           nuauthconf->client_srv->s_addr = INADDR_ANY;
       }
   }

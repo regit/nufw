@@ -100,9 +100,7 @@ void pre_client_check()
                 if ( ((struct pre_client_elt*)(client_runner->data))->validity < current_timestamp){
 
 #ifdef DEBUG_ENABLE
-                    if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)){
-                        g_message("closing socket %d due to timeout",((struct pre_client_elt*)(client_runner->data))->socket);
-                    }
+                    log_message(VERBOSE_DEBUG, AREA_USER, "closing socket %d due to timeout",((struct pre_client_elt*)(client_runner->data))->socket);
 #endif
                     shutdown(((struct pre_client_elt*)(client_runner->data))->socket,SHUT_RDWR);
                     close(((struct pre_client_elt*)(client_runner->data))->socket);
@@ -160,8 +158,7 @@ static int treat_user_request (user_session * c_session)
     if ( datas->buffer_len < (int)sizeof(struct nuv2_header)) {
 #ifdef DEBUG_ENABLE
         if (datas->buffer_len <0) 
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-                g_message("Received error from user %s", c_session->user_name);
+            log_message(DEBUG, AREA_MAIN, "Received error from user %s", c_session->user_name);
 #endif
         free_buffer_read(datas);
         return EOF;
@@ -278,9 +275,7 @@ int tls_user_accept(struct tls_user_context_t *context)
     }
 
     if ( get_number_of_clients() >= context->nuauth_tls_max_clients ) {
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
-            g_warning("too many clients (%d configured)\n",context->nuauth_tls_max_clients);
-        }
+        log_message(WARNING, AREA_MAIN, "too many clients (%d configured)\n",context->nuauth_tls_max_clients);
         shutdown(socket, SHUT_RDWR); 
         close(socket);
         return 1;

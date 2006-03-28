@@ -196,8 +196,7 @@ int user_process_field_app(
 
     /* this has to be smaller than field size */
     if (field_buffer_len < (int)appfield->length) {
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER))
-            g_message("Improper application field length signaled in authreq header %d < %d",field_buffer_len,appfield->length);
+        log_message(WARNING, AREA_USER, "Improper application field length signaled in authreq header %d < %d",field_buffer_len,appfield->length);
         return -1;
     }
 

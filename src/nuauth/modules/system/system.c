@@ -179,8 +179,7 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass
 		ret = pam_authenticate(pamh, 0);    /* is user really user? */
 		/* check auth */
 		if (ret != PAM_SUCCESS){
-			if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_AUTH))
-				g_warning("Bad password for user \"%s\"",user);
+			log_message(INFO, AREA_AUTH, "Bad password for user \"%s\"",user);
 			pam_end(pamh,PAM_DATA_SILENT);
 			if (system_pam_module_not_threadsafe){
 				g_static_mutex_unlock (&pam_mutex);

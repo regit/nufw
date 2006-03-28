@@ -450,8 +450,7 @@ void configure_app(int argc, char **argv)
         nuauthconf->debug_level=MAX_DEBUG_LEVEL;
     if (nuauthconf->debug_level < MIN_DEBUG_LEVEL)
         nuauthconf->debug_level=MIN_DEBUG_LEVEL;
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN))
-        g_message("debug_level is %i",nuauthconf->debug_level);
+    log_message(INFO, AREA_MAIN, "debug_level is %i",nuauthconf->debug_level);
 
     if (params.daemonize == 1) {
         daemonize();
@@ -548,8 +547,7 @@ void init_nuauthdatas()
     }
 
     /* create acl checker workers */
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-        g_message("Creating %d acl checkers",nuauthconf->nbacl_check);
+    log_message(VERBOSE_DEBUG, AREA_MAIN, "Creating %d acl checkers",nuauthconf->nbacl_check);
     nuauthdatas->acl_checkers = g_thread_pool_new ((GFunc)acl_check_and_decide,
             NULL,
             nuauthconf->nbacl_check,
@@ -557,8 +555,7 @@ void init_nuauthdatas()
             NULL);
 
     /* create user checker workers */
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-        g_message("Creating %d user checkers",nuauthconf->nbuser_check);
+    log_message(VERBOSE_DEBUG, AREA_MAIN, "Creating %d user checkers",nuauthconf->nbuser_check);
     nuauthdatas->user_checkers = g_thread_pool_new ((GFunc)user_check_and_decide,
             NULL,
             nuauthconf->nbuser_check,
