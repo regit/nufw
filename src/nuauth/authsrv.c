@@ -185,6 +185,16 @@ void nuauth_cleanup( int signal )
     exit(EXIT_SUCCESS);
 }
 
+/**
+ * Daemonize the process:
+ *    - If a pid file already exists: if it's valid, just quit, else delete it
+ *    - Call fork(): the child will just write the pid in the pid file
+ *      and then exit
+ *    - Set current directory to "/"
+ *    - Call setsid()
+ *    - Install log handler: call set_glib_loghandlers(),
+ *      close stdin, stdout and stderr
+ */
 void daemonize() 
 {
     FILE* pf;
@@ -213,6 +223,7 @@ void daemonize()
         exit (EXIT_FAILURE); /* this should be useless !! */
     } else {
         if (pidf > 0) {
+            /* child process */
             pf = fopen (NUAUTH_PID_FILE, "w");
             if (pf != NULL) {
                 fprintf (pf, "%d\n", (int)pidf);
