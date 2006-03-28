@@ -430,10 +430,7 @@ gint take_decision(connection_t *element, packet_place_t place)
                     }
                 }
             } else {
-#ifdef DEBUG_ENABLE
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-                    g_warning("Empty acl : bad things ...");
-#endif
+                debug_log_message(DEBUG, AREA_MAIN, "Empty acl : bad things ...");
                 answer=DECISION_DROP;
                 test=DECISION_ACCEPT;
             }

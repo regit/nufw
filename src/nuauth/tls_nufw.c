@@ -124,10 +124,7 @@ void clean_nufw_session(nufw_session_t * c_session)
     } else {
 
 
-#ifdef DEBUG_ENABLE
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-            g_warning("close nufw session was called but NULL");
-#endif
+        debug_log_message(VERBOSE_DEBUG, AREA_USER, "close nufw session was called but NULL");
 
     }
     g_mutex_free(c_session->tls_lock);

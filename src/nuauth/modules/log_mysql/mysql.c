@@ -409,10 +409,7 @@ inline int log_state_established(MYSQL *ld, connection_t *element,struct log_mys
                 sleep.tv_nsec = 333333333;
                 nanosleep(&sleep, NULL);
             }else{
-#ifdef DEBUG_ENABLE
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-                    g_warning("Tried to update MYSQL entry twice, looks like data to update wasn't inserted\n");
-#endif
+                debug_log_message(DEBUG, AREA_MAIN, "Tried to update MYSQL entry twice, looks like data to update wasn't inserted\n");
             }
         }
     }

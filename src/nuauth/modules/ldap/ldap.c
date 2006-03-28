@@ -282,10 +282,7 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element,gpointer params_p)
 
 
       g_strlcat(filter,")",LDAP_QUERY_SIZE);
-#ifdef DEBUG_ENABLE
-      if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-          g_message("LDAP filter : \n%s\n",filter);
-#endif	
+      debug_log_message(VERBOSE_DEBUG, AREA_MAIN, "LDAP filter : \n%s\n",filter);
 
   } else if ((element->tracking).protocol == IPPROTO_ICMP ) {
       if (snprintf(filter,LDAP_QUERY_SIZE-1,
