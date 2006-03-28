@@ -47,10 +47,7 @@ int analyse_dbm_char(char *datas, struct dbm_data_struct *mystruct)
 
 	mystruct->outelt = NULL;
 	split_datas=g_strsplit(datas," ",0);
-#ifdef DEBUG_ENABLE
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-		g_message("Extracting password...");
-#endif
+	debug_log_message(VERBOSE_DEBUG, AREA_MAIN, "Extracting password...");
 	mystruct->passwd=g_strdup(*split_datas);
 	way_datas = split_datas++;
 	mystruct->uid=atoi(*split_datas);
@@ -62,10 +59,7 @@ int analyse_dbm_char(char *datas, struct dbm_data_struct *mystruct)
 	while(*split_datas){
 		if(atoi(*split_datas)>0){
 			mystruct->outelt = g_slist_prepend(mystruct->outelt, GINT_TO_POINTER(atoi(*split_datas)));
-#ifdef DEBUG_ENABLE
-			if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-				g_message("got *%s*\n",*split_datas);
-#endif
+			debug_log_message(VERBOSE_DEBUG, AREA_MAIN, "got *%s*\n",*split_datas);
 		}
 		split_datas++;
 	}
@@ -185,10 +179,7 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned p
 	dbm_key.dsize = strlen(user);
 	dbm_key.dptr = g_strdup(user);
 
-#ifdef DEBUG_ENABLE
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_AUTH))
-		g_message("user id is %s, size %i\n",dbm_key.dptr,dbm_key.dsize);
-#endif
+	debug_log_message(DEBUG, AREA_AUTH, "user id is %s, size %i\n",dbm_key.dptr,dbm_key.dsize);
 
 	/* Check key exists before trying to fetch its value */
 	if (! gdbm_exists(dbf,dbm_key))
@@ -199,10 +190,7 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned p
 		return SASL_BADAUTH;
 	}
 
-#ifdef DEBUG_ENABLE
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_AUTH))
-		g_message("key %s, size %i was found. good\n",dbm_key.dptr,dbm_key.dsize);
-#endif
+	debug_log_message(DEBUG, AREA_AUTH, "key %s, size %i was found. good\n",dbm_key.dptr,dbm_key.dsize);
 	
 	dbm_data = gdbm_fetch(dbf,dbm_key);
 	if (dbm_data.dptr == NULL)

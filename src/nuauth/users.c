@@ -40,10 +40,7 @@ void free_user_cache(gpointer datas)
 	if ( dataslist  != NULL ){
 		g_slist_foreach(dataslist,(GFunc) free_cache_elt,free_user_struct);
 		g_slist_free (dataslist);
-#ifdef DEBUG_ENABLE
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-			g_message ("user datas freed %p",dataslist);
-#endif
+		debug_log_message(DEBUG, AREA_MAIN, "user datas freed %p",dataslist);
 	}
 	g_free(datas);
 }
@@ -67,29 +64,17 @@ void get_users_from_cache (connection_t* conn_elt)
 		g_private_set(nuauthdatas->userqueue,message.reply_queue);
 	}
 	/* send message */
-#ifdef DEBUG_ENABLE
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET))
-		g_message("[user cache] going to send cache request for %s",conn_elt->username);
-#endif
+	debug_log_message(VERBOSE_DEBUG, AREA_PACKET, "[user cache] going to send cache request for %s",conn_elt->username);
 	g_async_queue_push (nuauthdatas->user_cache->queue,&message);
 	/* lock */
 	g_atomic_int_inc(&(myaudit->cache_req_nb));
 	/*release */
-#ifdef DEBUG_ENABLE
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET))
-		g_message("[user cache] request sent");
-#endif
+	debug_log_message(VERBOSE_DEBUG, AREA_PACKET, "[user cache] request sent");
 	/* wait for answer */
 	conn_elt->cacheduserdatas=g_async_queue_pop(message.reply_queue);
-#ifdef DEBUG_ENABLE
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET))
-		g_message("[user cache] cache answered");
-#endif
+	debug_log_message(VERBOSE_DEBUG, AREA_PACKET, "[user cache] cache answered");
 	if (conn_elt->cacheduserdatas == null_queue_datas){
-#ifdef DEBUG_ENABLE
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET))
-			g_message("[user cache] setting cached user datas to NULL");
-#endif
+		debug_log_message(VERBOSE_DEBUG, AREA_PACKET, "[user cache] setting cached user datas to NULL");
 		conn_elt->cacheduserdatas=NULL;
 	} 
 	/* check if answer is NULL */
@@ -116,10 +101,7 @@ void get_users_from_cache (connection_t* conn_elt)
 		rmessage->key=g_strdup(conn_elt->username);
 		rmessage->datas=userdatas;
 		rmessage->reply_queue=NULL;
-#ifdef DEBUG_ENABLE
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET))
-			g_message("[user cache] answering for key %p",rmessage->key);
-#endif
+		debug_log_message(VERBOSE_DEBUG, AREA_PACKET, "[user cache] answering for key %p",rmessage->key);
 		/* reply to the cache */
 		g_async_queue_push(nuauthdatas->user_cache->queue,rmessage);
 		/* fill connection datas */

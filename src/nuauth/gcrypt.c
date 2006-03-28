@@ -123,16 +123,10 @@ int verify_user_password(const char* given,const char* ours){
 				}
 			}
 		}
-#ifdef DEBUG_ENABLE
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-			g_message("given %s, hash %s, decoded %s, stored : %s",given,res,decoded,ours);
-#endif
+		debug_log_message(VERBOSE_DEBUG, AREA_MAIN, "given %s, hash %s, decoded %s, stored : %s",given,res,decoded,ours);
 
 		if (!seeded && !strcmp(decoded,splitted_secret[1])) {
-#ifdef DEBUG_ENABLE
-			if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-				g_message("%s == %s",decoded,splitted_secret[1]);
-#endif
+			debug_log_message(VERBOSE_DEBUG, AREA_MAIN, "%s == %s",decoded,splitted_secret[1]);
 
 			g_free(decoded);
 			g_strfreev(splitted_secret);

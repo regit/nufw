@@ -60,10 +60,7 @@ int external_acl_groups (connection_t * element){
 void acl_check_and_decide (gpointer userdata, gpointer data)
 {
 	connection_t * conn_elt = userdata;
-#ifdef DEBUG_ENABLE
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET))
-		g_message("entering acl_check");
-#endif
+	debug_log_message(VERBOSE_DEBUG, AREA_PACKET, "entering acl_check");
         block_on_conf_reload();
 	if (conn_elt == NULL){
 		if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET)){
@@ -106,10 +103,7 @@ void acl_check_and_decide (gpointer userdata, gpointer data)
                 }
             }
         }
-#ifdef DEBUG_ENABLE
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET))
-		g_message("leaving acl_check");
-#endif
+	debug_log_message(VERBOSE_DEBUG, AREA_PACKET, "leaving acl_check");
 }
 
 

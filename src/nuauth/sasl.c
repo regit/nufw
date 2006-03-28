@@ -203,10 +203,7 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 		}
 		return SASL_BADPARAM;
 	}
-#ifdef DEBUG_ENABLE
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-		g_message("%d mechanisms : %s", count,data);
-#endif
+	debug_log_message(VERBOSE_DEBUG, AREA_MAIN, "%d mechanisms : %s", count,data);
 	tls_len=sasl_len;
 	/* send capability list to client */
 	record_send = gnutls_record_send(session, data, tls_len);
@@ -222,10 +219,7 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 	{
 		return SASL_FAIL;
 	}
-#ifdef DEBUG_ENABLE
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-		g_message("Now we know record_send >= 0");
-#endif
+	debug_log_message(VERBOSE_DEBUG, AREA_MAIN, "Now we know record_send >= 0");
 
 	memset(chosenmech,0,sizeof chosenmech);
 	tls_len = gnutls_record_recv(session, chosenmech, sizeof chosenmech);
@@ -244,10 +238,7 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 			return SASL_FAIL; 
 		}
 	} 
-#ifdef DEBUG_ENABLE
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-		g_message("client chose mechanism %s",chosenmech);
-#endif
+	debug_log_message(VERBOSE_DEBUG, AREA_MAIN, "client chose mechanism %s",chosenmech);
 
 	memset(buf,0,sizeof buf);
 	tls_len = gnutls_record_recv(session, buf, sizeof(buf));
@@ -255,10 +246,7 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 		if (tls_len<0){
 			return SASL_FAIL;
 		}
-#ifdef DEBUG_ENABLE
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-			g_message("didn't receive first-sent parameter correctly");
-#endif
+		debug_log_message(DEBUG, AREA_MAIN, "didn't receive first-sent parameter correctly");
 		if (gnutls_record_send(session,"N", 1) <= 0) /* send NO to client */
 			return SASL_FAIL;
 		return SASL_BADPARAM;
@@ -276,10 +264,7 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 		/* start libsasl negotiation */
 		r = sasl_server_start(conn,	chosenmech, buf, tls_len, &data, &sasl_len);
 	} else {
-#ifdef DEBUG_ENABLE
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN))
-			g_message("start with no msg");
-#endif
+		debug_log_message(DEBUG, AREA_MAIN, "start with no msg");
 		r = sasl_server_start(conn, chosenmech, NULL, 0, &data, &sasl_len);
 	}
 
