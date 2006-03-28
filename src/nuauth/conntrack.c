@@ -108,10 +108,10 @@ static gboolean get_old_entry(gpointer key,gpointer value,gpointer user_data)
  * search and destroy expired connections 
  */
 
-void destroy_expired_connection(GHashTable* conn_list)
+void destroy_expired_connection(GHashTable* lim_conn_list)
 {
 
-  g_hash_table_foreach_remove     (conn_list,
+  g_hash_table_foreach_remove     (lim_conn_list,
                   get_old_entry,
                   GUINT_TO_POINTER(time(NULL)));
 }
@@ -127,13 +127,14 @@ void destroy_expired_connection(GHashTable* conn_list)
 
 void* limited_connection_handler(GMutex *mutex)
 {
-  GHashTable* conn_list;
+  GHashTable* lim_conn_list;
   struct internal_message *message=NULL;
+ struct limited_connection* elt;
   GTimeVal tv;
 
   nuauthdatas->limited_connections_queue = g_async_queue_new();
   /* initialize packets list */
-  conn_list = g_hash_table_new_full ((GHashFunc)hash_connection,
+  lim_conn_list = g_hash_table_new_full ((GHashFunc)hash_connection,
                   compare_connection,
                   NULL,
                   (GDestroyNotify) send_destroy_message_and_free); 
@@ -152,24 +153,18 @@ void* limited_connection_handler(GMutex *mutex)
       
       switch (message->type) {
         case INSERT_MESSAGE:
-                g_hash_table_insert(conn_list,&(((struct limited_connection*)message->datas)->tracking),message->datas);
+                g_hash_table_insert(lim_conn_list,&(((struct limited_connection*)message->datas)->tracking),message->datas);
                 break;
+
         case REFRESH_MESSAGE:
-#ifdef DEBUG_ENABLE
-#if 0
-                if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)){
-                    g_message("expire conn list size : %d",g_hash_table_size (conn_list));
-                }
-#endif
-#endif
-                destroy_expired_connection(conn_list);
+                destroy_expired_connection(lim_conn_list);
                 break;
+                
         case FREE_MESSAGE:
-                {
-                    struct limited_connection* elt=(struct limited_connection*)g_hash_table_lookup(conn_list,message->datas);
+                    elt = (struct limited_connection*)g_hash_table_lookup(lim_conn_list,message->datas);
                     if (elt){
                         elt->expire=0;
-                        g_hash_table_remove(conn_list,message->datas);
+                        g_hash_table_remove(lim_conn_list,message->datas);
                     } 
 #ifdef DEBUG_ENABLE
                     else {
@@ -179,19 +174,19 @@ void* limited_connection_handler(GMutex *mutex)
                     }
 #endif
                     g_free(message->datas);
-                }
-                break;
+                    break;
+
                 /** here we get message from nufw kernel connection is ASSURED 
                  * we have to limit it if needed and log the state change if needed */
         case UPDATE_MESSAGE:
-                {
-                        struct limited_connection* elt=(struct limited_connection*)g_hash_table_lookup(conn_list,message->datas);
+                        elt = (struct limited_connection*)g_hash_table_lookup(lim_conn_list,message->datas);
                         if (elt == NULL){
                                 /* TODO need only to log */
                         } else {
                                 send_conntrack_message(elt,AUTH_CONN_UPDATE);
                         }
-                }
+                        break;
+
         default:
                 break;
       }
@@ -199,7 +194,7 @@ void* limited_connection_handler(GMutex *mutex)
 
   }
   g_async_queue_unref (nuauthdatas->limited_connections_queue);
-  g_hash_table_destroy(conn_list); 
+  g_hash_table_destroy(lim_conn_list); 
   return NULL;
 }
 

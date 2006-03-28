@@ -132,7 +132,13 @@ void clear_push_queue()
 }    
 
 /**
- * exit function if a signal is received in daemon mode.
+ * Function called when a SIGTERM or SIGINT is received:
+ *    - Reinstall old signal handlers (for SIGTERM and SIGINT) ;
+ *    - Stop NuAuth: stop_threads(), close_nufw_servers(), close_clients(), end_tls(), end_audit() ;
+ *    - Free memory ; 
+ *    - Unload modules: unload_modules() ;
+ *    - Destroy pid file ;
+ *    - And finally exit.
  * 
  * \param signal Code of raised signal
  */
@@ -314,7 +320,15 @@ void parse_options(int argc, char **argv, command_line_params_t *params)
     }
 }
 
-void install_signals() 
+/**
+ * Install all signals used in NuAuth:
+ *    - SIGTERM and SIGINT: install nuauth_cleanup() handler ;
+ *    - SIGHUP: install nuauth_reload() handler ;
+ *    - SIGPIPE: ignore signal.
+ *
+ * \see init_audit()
+ */
+void nuauth_install_signals() 
 {
     struct sigaction action;
 
@@ -357,6 +371,16 @@ void create_thread(struct nuauth_thread_t *thread, void* (*func) (GMutex*) )
         exit(EXIT_FAILURE);
 }
 
+/**
+ * Configure NuAuth:
+ *   - Init. glib threads: g_thread_init() ;
+ *   - Read NuAuth configuration file: init_nuauthconf() ;
+ *   - Init GNU TLS library: gnutls_global_init() ;
+ *   - Create credentials: create_x509_credentials() ;
+ *   - Read command line options: parse_options() ;
+ *   - Build configuartion options: build_nuauthconf() ;
+ *   - Daemonize the process if asked: daemonize().
+ */
 void configure_app(int argc, char **argv) 
 {
     command_line_params_t params;
@@ -426,9 +450,34 @@ void configure_app(int argc, char **argv)
     }
 }
 
+/**
+ * Initialize all datas:
+ *   - Create different queues:
+ *      - tls_push_queue: read in push_worker() ; 
+ *      - connections_queue: read in search_and_fill() ;
+ *      - localid_auth_queue: read in localid_auth().
+ *   - Create hash table ::conn_list
+ *   - Init. modules: init_modules_system(), load_modules()
+ *   - Init. periods: init_periods()
+ *   - Init. cache: init_acl_cache() and init_user_cache() (if enabled)
+ *   - Create thread pools:
+ *      - ip_authentication_workers with external_ip_auth() (if enabled) ;
+ *      - acl_checkers with acl_check_and_decide() ;
+ *      - user_checkers with user_check_and_decide() ;
+ *      - user_loggers with real_log_user_packet() ;
+ *      - user_session_loggers with log_user_session_thread() ;
+ *      - decisions_workers with decisions_queue_work().
+ *   - Create threads:
+ *      - tls_pusher with push_worker() ;
+ *      - search_and_fill_worker with search_and_fill() ;
+ *      - localid_auth_thread with localid_auth() (if needed) ;
+ *      - tls_auth_server with tls_user_authsrv() ;
+ *      - tls_nufw_server with tls_nufw_authsrv() ;
+ *      - limited_connections_handler with limited_connection_handler().
+ */
 void init_nuauthdatas() 
 {
-    nuauthdatas->tls_push_queue = g_async_queue_new ();
+    nuauthdatas->tls_push_queue = g_async_queue_new();
     if (!nuauthdatas->tls_push_queue)
         exit(EXIT_FAILURE);
 
@@ -549,25 +598,30 @@ void init_nuauthdatas()
     log_message (INFO, AREA_MAIN, "Threads system started");
 }
 
-void main_loop()
+/**
+ * Main loop: refresh connection queue and all other queues
+ */
+void nuauth_main_loop()
 {
     struct timespec sleep;
+    struct cache_message *cmessage;
+    struct internal_message * int_message;
 
     g_message("[+] NuAuth started.");
             
-    /* a little sleep (1 second), we are waiting for threads to initiate:w */
+    /* set sleep time: one second */
     sleep.tv_sec = 1;
     sleep.tv_nsec = 0;
-    nanosleep(&sleep, NULL);	
 
-    /* Set sleep in loop to 0.5 second */
-    sleep.tv_sec = 0;
-    sleep.tv_nsec = 500000000;
-
-    /* admin task */
+    /* main loop */
     for(;;){
-        struct cache_message * message;
+        /* a little sleep (one second) */
+        nanosleep(&sleep, NULL);	
+       
+        /* remove old connections */
         clean_connections_list();
+
+        /* info message about thread pools */
         if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
             if (g_thread_pool_unprocessed(nuauthdatas->user_checkers) || g_thread_pool_unprocessed(nuauthdatas->acl_checkers)){
                 g_message("%u user/%u acl unassigned task(s), %d connection(s)",
@@ -577,37 +631,43 @@ void main_loop()
                         );  
             }
         }
+        
         if (nuauthconf->acl_cache){
-            /* send update message to cache thread */
-            message=g_new0(struct cache_message,1);
-            message->type=REFRESH_MESSAGE;
-            g_async_queue_push(nuauthdatas->acl_cache->queue,message);
+            /* send refresh message to acl cache thread */
+            cmessage=g_new0(struct cache_message,1);
+            cmessage->type=REFRESH_MESSAGE;
+            g_async_queue_push(nuauthdatas->acl_cache->queue, cmessage);
         }
-        if (nuauthconf->push){
-            if (nuauthconf->hello_authentication) {
-                struct internal_message * message=g_new0(struct internal_message,1);
-                message->type=REFRESH_MESSAGE;
-                g_async_queue_push(nuauthdatas->localid_auth_queue,message);
-            }
+        
+        if (nuauthconf->push && nuauthconf->hello_authentication) {
+            /* refresh localid_auth_queue queue */
+            int_message = g_new0(struct internal_message,1);
+            int_message->type = REFRESH_MESSAGE;
+            g_async_queue_push(nuauthdatas->localid_auth_queue,int_message);
         }
-        {
-            struct internal_message * message=g_new0(struct internal_message,1);
-            message->type=REFRESH_MESSAGE;
-            g_async_queue_push(nuauthdatas->limited_connections_queue,message);
-        } 
 
-        /* a little sleep (1/2 second) */
-        nanosleep(&sleep, NULL);	
+        /* refresh limited_connections_queue queue */
+        int_message = g_new0(struct internal_message,1);
+        int_message->type = REFRESH_MESSAGE;
+        g_async_queue_push(nuauthdatas->limited_connections_queue,int_message);
     }
 }
 
+/**
+ * NuAuth entry point:
+ *   - Configure application with: configure_app()
+ *   - Install signals: nuauth_install_signals()
+ *   - Init. all datas: init_nuauthdatas()
+ *   - Init. autdit: init_audit()
+ *   - Run main loop: nuauth_main_loop()
+ */
 int main(int argc,char * argv[]) 
 {
     configure_app(argc, argv);
-    install_signals();
+    nuauth_install_signals();
     init_nuauthdatas();
     init_audit();
-    main_loop();
+    nuauth_main_loop();
     return EXIT_SUCCESS;
 }
 

@@ -37,7 +37,7 @@ typedef struct module_T {
 
 int init_modules_system();
 int load_modules();
-int unload_modules();
+void unload_modules();
 
 int modules_user_check (const char *user, const char *pass,unsigned passlen,uint32_t *uid,GSList **groups);
 GSList * modules_acl_check (connection_t* element);

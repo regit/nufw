@@ -39,7 +39,7 @@ char *key_file = NULL;
 char *cert_file = NULL;
 
 /* packet server thread */
-struct Thread thread;
+struct ThreadType thread;
 
 /* packet server thread */
 struct Signals signals;

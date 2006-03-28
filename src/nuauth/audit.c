@@ -2,9 +2,10 @@
 #include <signal.h>
 
 /**
- * process signal POLL and print performance information.
+ * Print performance information.
+ * This is the handler of SIGPOLL signal. 
  */
-void process_poll(int signum)
+void nuauth_process_poll(int signum)
 {
   g_message("AUDIT : users   threads : %u/%u max/unassigned",
             g_thread_pool_get_max_threads(myaudit->users),
@@ -27,13 +28,13 @@ void process_poll(int signum)
 /*  g_message("AUDIT : overall number of unused threads : %u",
             g_thread_pool_get_num_unused_threads());*/
   g_mem_profile();
-
 }
 
 /**
- * process USR1 signal : increase debug level.
+ * Increase debug level (see ::nuauthconf->debug_level).
+ * This is the handler of SIGUSR1 signal. 
  */
-void process_usr1(int signum)
+void nuauth_process_usr1(int signum)
 {
   nuauthconf->debug_level+=1;
   if (nuauthconf->debug_level>20)
@@ -43,9 +44,10 @@ void process_usr1(int signum)
 
 
 /**
- * process USR2 signal : decrease debug level.
+ * Decrease debug level (see ::nuauthconf->debug_level).
+ * This is the handler of SIGUSR2 signal. 
  */
-void process_usr2(int signum)
+void nuauth_process_usr2(int signum)
 {
   nuauthconf->debug_level-=1;
   if (nuauthconf->debug_level <0)
@@ -53,6 +55,12 @@ void process_usr2(int signum)
   g_message("USR2 : setting debug level to %d",nuauthconf->debug_level);
 }
 
+/**
+ * Install signals used in audit:
+ *   - Set SIGPOLL handler to nuauth_process_poll() ;
+ *   - Set SIGUSR1 handler to nuauth_process_usr1() ;
+ *   - Set SIGUSR2 handler to nuauth_process_usr2() ;
+ */
 void init_audit()
 {
 
@@ -70,7 +78,7 @@ void init_audit()
 
 
 	memset(&act,0,sizeof(act));
-	act.sa_handler=&process_poll;
+	act.sa_handler=&nuauth_process_poll;
 	act.sa_flags = SIGPOLL;
 	if (sigaction(SIGPOLL,&act,NULL) == -1){
 		printf("could not set signal");
@@ -78,7 +86,7 @@ void init_audit()
 	}
 
 	memset(&act,0,sizeof(act));
-	act.sa_handler=&process_usr1;
+	act.sa_handler=&nuauth_process_usr1;
 	act.sa_flags = SIGUSR1;
 
 	if (sigaction(SIGUSR1,&act,NULL) == -1){
@@ -87,7 +95,7 @@ void init_audit()
 	}
 
 	memset(&act,0,sizeof(act));
-	act.sa_handler=&process_usr2;
+	act.sa_handler=&nuauth_process_usr2;
 	act.sa_flags = SIGUSR2;
 
 	if (sigaction(SIGUSR2,&act,NULL) == -1){

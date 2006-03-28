@@ -304,7 +304,7 @@ void packetsrv_close(int smart)
 void* packetsrv(void *void_arg)
 {
     struct ThreadArgument *thread_arg  = void_arg;
-    struct Thread *this  = thread_arg->thread;
+    struct ThreadType *this  = thread_arg->thread;
     int fatal_error = 0;
 #if USE_NFQUEUE
     unsigned char buffer[BUFSIZ];

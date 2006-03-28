@@ -136,7 +136,7 @@ struct ipq_handle *hndl;
 /**
  * All data of a thread (use for packetsrv()) 
  */
-struct Thread
+struct ThreadType
 {
     pthread_t thread;
     pthread_mutex_t mutex;

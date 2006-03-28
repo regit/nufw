@@ -325,7 +325,10 @@ int load_modules()
 	return 1;
 }
 
-int unload_modules()
+/**
+ * Unload all modules of NuAuth (variable ::nuauthdatas->modules).
+ */
+void unload_modules()
 {
     GSList *c_module;
 
@@ -349,7 +352,6 @@ int unload_modules()
     g_slist_free(nuauthdatas->modules);
     nuauthdatas->modules=NULL;
     g_mutex_unlock(modules_mutex);
-	return 1;
 }
 
 
