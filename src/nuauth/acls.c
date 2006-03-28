@@ -271,11 +271,7 @@ void get_acls_from_cache (connection_t* conn_elt)
 		 * external check of acl */
 		external_acl_groups(conn_elt);
 
-#ifdef DEBUG_ENABLE
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)){
-			g_message("[acl cache] We are about to search entry");
-		}
-#endif
+		debug_log_message(VERBOSE_DEBUG, AREA_PACKET, "[acl cache] We are about to search entry");
 		rmessage = g_new0(struct cache_message,1);
 		rmessage->type = INSERT_MESSAGE;
 		rmessage->key = acl_duplicate_key(message.key);

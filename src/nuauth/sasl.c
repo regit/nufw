@@ -208,11 +208,7 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 	/* send capability list to client */
 	record_send = gnutls_record_send(session, data, tls_len);
 	if (( record_send == GNUTLS_E_INTERRUPTED ) || ( record_send == GNUTLS_E_AGAIN)){
-#ifdef DEBUG_ENABLE
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
-			g_message("sasl nego : need to resend packet");
-		}
-#endif
+		debug_log_message(VERBOSE_DEBUG, AREA_MAIN, "sasl nego : need to resend packet");
 		record_send = gnutls_record_send(session, data, tls_len);
 	}
 	if (record_send<0) 

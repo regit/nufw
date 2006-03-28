@@ -109,11 +109,7 @@ void get_users_from_cache (connection_t* conn_elt)
 		conn_elt->user_id=userdatas->uid;
 		conn_elt->cacheduserdatas=userdatas;
 	} else {
-#ifdef DEBUG_ENABLE
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)){
-			g_message("[user cache] cache call succedeed");
-		}
-#endif
+		debug_log_message(VERBOSE_DEBUG, AREA_PACKET, "[user cache] cache call succedeed");
 		conn_elt->user_groups=(conn_elt->cacheduserdatas)->groups;
 		conn_elt->user_id=(conn_elt->cacheduserdatas)->uid;
 
