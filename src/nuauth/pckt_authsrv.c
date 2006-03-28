@@ -61,11 +61,7 @@ unsigned int get_ip_headers(tracking_t *tracking, unsigned char *dgram, unsigned
         tracking->protocol = ip->protocol;
         return 4*ip->ihl;
     }
-#ifdef DEBUG_ENABLE
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_PACKET)){
-        g_message("IP version is %d, ihl : %d", ip->version, ip->ihl);
-    }
-#endif
+    debug_log_message(DEBUG, AREA_PACKET, "IP version is %d, ihl : %d", ip->version, ip->ihl);
     return 0;
 }
 

@@ -74,11 +74,7 @@ static void send_conntrack_message(struct limited_connection * lconn,unsigned ch
 void  send_destroy_message_and_free(gpointer user_data)
 {
     struct limited_connection* data=(struct limited_connection*)user_data;
-#ifdef DEBUG_ENABLE
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)){
-        g_message("connection will be destroyed");
-    }
-#endif
+    debug_log_message(VERBOSE_DEBUG, AREA_USER, "connection will be destroyed");
     /* look for corresponding nufw tls session */
     send_conntrack_message(data,AUTH_CONN_DESTROY);
     /* free */
@@ -92,11 +88,7 @@ void  send_destroy_message_and_free(gpointer user_data)
 static gboolean get_old_entry(gpointer key,gpointer value,gpointer user_data)
 {
     if (((struct limited_connection *)value)->expire < GPOINTER_TO_INT(user_data)){
-#ifdef DEBUG_ENABLE
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)){
-            g_message("found connection to be destroyed");
-        }
-#endif
+        debug_log_message(VERBOSE_DEBUG, AREA_USER, "found connection to be destroyed");
         return TRUE;
     } else {
         return FALSE;
