@@ -147,9 +147,7 @@ int user_process_field_username(
             log_message(WARNING, AREA_USER, "user packet received an invalid username\n");
     }else {
         g_free(dec_fieldname);
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER)){
-            g_message("rejected packet, invalid username field");
-        }
+        log_message(INFO, AREA_USER, "rejected packet, invalid username field");
         return -1;
     }
     g_free(dec_fieldname);

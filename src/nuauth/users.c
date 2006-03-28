@@ -90,9 +90,7 @@ void get_users_from_cache (connection_t* conn_elt)
 		if (modules_user_check(conn_elt->username,NULL,0,&(userdatas->uid),&(userdatas->groups))!=SASL_OK){
 			/*user has not been found or problem occurs we must fail 
 			 * returning NULL is enough (don't want to be DOSsed)*/
-			if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET)){
-				g_message("User not found");
-			}
+			log_message(WARNING, AREA_PACKET, "User not found");
 
             /* GRYZOR asks : shouldnt we just leave here? */
 		}

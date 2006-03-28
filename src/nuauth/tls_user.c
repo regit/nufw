@@ -276,9 +276,7 @@ int tls_user_accept(struct tls_user_context_t *context)
             (struct sockaddr *)&addr_clnt,
             &len_inet);
     if (socket == -1){
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
-            g_warning("accept");
-        }
+        log_message(WARNING, AREA_MAIN, "accept");
     }
 
     if ( get_number_of_clients() >= context->nuauth_tls_max_clients ) {

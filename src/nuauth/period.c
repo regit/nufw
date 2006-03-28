@@ -97,9 +97,7 @@ time_t get_end_of_period_for_time_t(gchar* period,time_t time)
   /* get period in hash */
   pperiod = g_hash_table_lookup(nuauthconf->periods,period);
   if (pperiod==NULL){
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER)){
-                g_message("period can not be found, typo ?");
-        }
+        log_message(WARNING, AREA_USER, "period can not be found, typo ?");
   } else {
        GSList* pointer;
        time_t provend;

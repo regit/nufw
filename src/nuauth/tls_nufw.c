@@ -153,9 +153,7 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
             (struct sockaddr *)&addr_clnt,
             &len_inet);
     if (conn_fd == -1){
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
-            g_warning("accept");
-        }
+        log_message(WARNING, AREA_MAIN, "accept");
     }
 
     /* test if server is in the list of authorized servers */

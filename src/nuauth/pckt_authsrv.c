@@ -374,9 +374,7 @@ connection_t* authpckt_decode(unsigned char *dgram, unsigned int dgram_size)
             return NULL;
 
         default:
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)) {
-                g_message("Not for us");
-            }
+            log_message(VERBOSE_DEBUG, AREA_PACKET, "Not for us");
     }
     return NULL;
 }

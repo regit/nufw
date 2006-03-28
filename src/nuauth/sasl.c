@@ -198,9 +198,7 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 
 	r = sasl_listmech(conn, NULL, "(", ",", ")", &data,&sasl_len, &count);
 	if (r != SASL_OK) {
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_MAIN)){
-			g_warning("generating mechanism list");
-		}
+		log_message(WARNING, AREA_MAIN, "generating mechanism list");
 		return SASL_BADPARAM;
 	}
 	debug_log_message(VERBOSE_DEBUG, AREA_MAIN, "%d mechanisms : %s", count,data);
@@ -221,16 +219,12 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 	tls_len = gnutls_record_recv(session, chosenmech, sizeof chosenmech);
 	if (tls_len <= 0) {
 		if (tls_len==0){
-			if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
-				g_message("client didn't choose mechanism");
-			}
+			log_message(INFO, AREA_MAIN, "client didn't choose mechanism");
 			if (gnutls_record_send(session,"N", 1) <= 0) /* send NO to client */
 				return SASL_FAIL;
 			return SASL_BADPARAM;
 		} else {
-			if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
-				g_message("sasl nego : tls crash");
-			}
+			log_message(INFO, AREA_MAIN, "sasl nego : tls crash");
 			return SASL_FAIL; 
 		}
 	} 
@@ -315,13 +309,9 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 		if (tls_len <= 0) {
 #ifdef DEBUG_ENABLE
 			if (!tls_len){
-				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
-					g_message("Client disconnected during sasl negotiation");
-				}
+				log_message(VERBOSE_DEBUG, AREA_MAIN, "Client disconnected during sasl negotiation");
 			} else {
-				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
-					g_message("TLS error during sasl negotiation");
-				}
+				log_message(VERBOSE_DEBUG, AREA_MAIN, "TLS error during sasl negotiation");
 			}
 #endif
 			return SASL_FAIL;
@@ -612,9 +602,7 @@ int sasl_user_check(user_session* c_session)
 		return ret;
 #ifdef DEBUG_ENABLE
     if (c_session->multiusers){
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)){
-            g_message("multi user client");	
-        }
+        log_message(DEBUG, AREA_MAIN, "multi user client");
     }
 #endif
 

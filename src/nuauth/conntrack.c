@@ -62,9 +62,7 @@ static void send_conntrack_message(struct limited_connection * lconn,unsigned ch
             gnutls_record_send( *(session->tls) , &message, sizeof(message));
             g_mutex_unlock(session->tls_lock);
         } else {
-            if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER)){
-                g_message("correct session not found among nufw servers");
-            }
+            log_message(WARNING, AREA_USER, "correct session not found among nufw servers");
         }
     } else {
         g_mutex_unlock(nufw_servers_mutex);
@@ -157,9 +155,7 @@ void* limited_connection_handler(GMutex *mutex)
                 } 
 #ifdef DEBUG_ENABLE
                 else {
-                    if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)){
-                        g_message("connection not found can not be destroyed");
-                    }
+                    log_message(VERBOSE_DEBUG, AREA_USER, "connection not found can not be destroyed");
                 }
 #endif
                 g_free(message->datas);

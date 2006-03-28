@@ -164,9 +164,7 @@ int verify_user_password(const char* given,const char* ours){
 			return SASL_OK;
 		}
 		else {
-			if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_MAIN)) {
-				g_message("given != stored");
-			}
+			log_message(DEBUG, AREA_MAIN, "given != stored");
 
 			g_strfreev(splitted_secret);
 			g_free(decoded);
