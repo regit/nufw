@@ -69,12 +69,12 @@ static int treat_nufw_request (nufw_session_t *c_session)
                 struct internal_message *message = g_new0(struct internal_message,1);
                 message->type=INSERT_MESSAGE;
                 message->datas=current_conn;
+                current_conn->state = AUTH_STATE_AUTHREQ;
                 g_async_queue_push (nuauthdatas->localid_auth_queue,message);
             } else {
                 debug_log_message(DEBUG, AREA_MAIN,
                           "(*) NuFW auth request (hello mode): packetid=%u",
                           (uint32_t)GPOINTER_TO_UINT(current_conn->packet_id->data));
-                current_conn->state = AUTH_STATE_AUTHREQ;
                 g_async_queue_push (nuauthdatas->connections_queue,
                         current_conn);
             }
