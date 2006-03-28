@@ -19,7 +19,7 @@
 /** \file nufw/conntrack.c
  *  \brief Connection tracking
  *   
- * Connection tracking function if NuFW is compiled with #HAVE_LIBCONNTRACK.
+ * Connection tracking function if NuFW is compiled with \#HAVE_LIBCONNTRACK.
  */
 
 #include "nufw.h"

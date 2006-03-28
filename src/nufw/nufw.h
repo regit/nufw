@@ -1,6 +1,12 @@
 #ifndef NUFW_HEADER_H
 #define NUFW_HEADER_H
 
+/** \file nufw.h
+ *  \brief Common functions and variables to NuFW 
+ *   
+ * Some structures, functions, global variables and \#define common to NuFW.
+ */
+
 /**
  * Use ISO C99 standard, needed by snprintf for example
  */
@@ -40,12 +46,6 @@
 #include "log.h"
 #include "security.h"
 #include "structure.h"
-
-/** \file nufw.h
- *  \brief Common functions and variables to NuFW 
- *   
- * Some structures, functions, global variables and #define common to NuFW.
- */
 
 #if USE_NFQUEUE
 #include <linux/netfilter.h>		/* for NF_ACCEPT */

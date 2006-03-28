@@ -1,8 +1,13 @@
-#include <config.h>
-#include <syslog.h>
-#include <debug.h>
+#ifndef NUFW_LOG_HEADER
+#define NUFW_LOG_HEADER
 
-/** \file log.h
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+#include <syslog.h>
+#include "debug.h"
+
+/** \file nufw/log.h
  *  \brief Initialize and write messages in log.
  *   
  * Some constants used in log, and function prototypes.
@@ -22,12 +27,12 @@
  */
 int log_engine;
 
-int debug_level; /*!< Debug level, default valut: 0 */
+int debug_level; /*!< Debug level, default valut: #DEFAULT_DEBUG_LEVEL */
 int debug_areas; /*!< Debug areas, default value: #DEFAULT_DEBUG_AREAS (all areas) */
 
 void init_log_engine();
-void log_printf(int priority, char *format, ...);
-void log_area_printf(int area, int priority, char *format, ...);
+void log_printf(debug_level_t priority, char *format, ...);
+void log_area_printf(debug_area_t area, debug_level_t priority, char *format, ...);
 
 /** \def debug_log_printf(area, priority, format, ...)
  * Call log_area_printf(area, priority, ...) if DEBUG_ENABLE is defined 
@@ -38,4 +43,6 @@ void log_area_printf(int area, int priority, char *format, ...);
 #else
 #  define debug_log_printf(area, priority, format, ...)
 #endif
+
+#endif /* ifndef NUFW_LOG_HEADER */
 

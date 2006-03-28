@@ -16,38 +16,47 @@
 ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+#ifndef NUFW_DEBUG_HEADER
+#define NUFW_DEBUG_HEADER
 
+/**
+ * Debug levels: default is #DEFAULT_DEBUG_LEVEL 
+ * and values are between #MIN_DEBUG_LEVEL and #MAX_DEBUG_LEVEL 
+ */
+typedef enum
+{
+    DEBUG_LEVEL_FATAL=1,          /*!< 1: Least verbose level */
+    DEBUG_LEVEL_CRITICAL,         /*!< 2 */
+    DEBUG_LEVEL_SERIOUS_WARNING,  /*!< 3 (default) */
+    DEBUG_LEVEL_WARNING,          /*!< 4 */
+    DEBUG_LEVEL_SERIOUS_MESSAGE,  /*!< 5 */
+    DEBUG_LEVEL_MESSAGE,          /*!< 6 */
+    DEBUG_LEVEL_INFO,             /*!< 7 */
+    DEBUG_LEVEL_DEBUG,            /*!< 8 */
+    DEBUG_LEVEL_VERBOSE_DEBUG,    /*!< 9: Most verbose level */
 
+    DEFAULT_DEBUG_LEVEL = DEBUG_LEVEL_SERIOUS_WARNING, /*!< Default debug level */
 
-/* DEBUG_LEVEL's value are between MIN_DEBUG_LEVEL and MAX_DEBUG_LEVEL */
+    MIN_DEBUG_LEVEL=DEBUG_LEVEL_FATAL,         /*!< Minimum debug level value (least verbose) */
+    MAX_DEBUG_LEVEL=DEBUG_LEVEL_VERBOSE_DEBUG  /*!< Maximum debug level value (most verbose) */
+} debug_level_t;
 
-#define DEBUG_LEVEL_FATAL		1
-#define DEBUG_LEVEL_CRITICAL		2
-#define DEBUG_LEVEL_SERIOUS_WARNING	3
-#define DEBUG_LEVEL_WARNING		4
-#define DEBUG_LEVEL_SERIOUS_MESSAGE	5
-#define DEBUG_LEVEL_MESSAGE		6
-#define DEBUG_LEVEL_INFO		7
-#define DEBUG_LEVEL_DEBUG		8
-#define DEBUG_LEVEL_VERBOSE_DEBUG	9
+/** Debug areas (domains), default is #DEFAULT_DEBUG_AREAS (all) */
+typedef enum
+{
+    DEBUG_AREA_MAIN = 1,                   /*!< 1: Main domain */
+    DEBUG_AREA_PACKET = 2,                 /*!< 2: Packet domain */
+    DEBUG_AREA_USER = 4,                   /*!< 4: User domain */
+    DEBUG_AREA_GW = 8,                     /*!< 8: Gateway domain */
+    DEBUG_AREA_AUTH = 16,                  /*!< 16: Auth. domain */
 
-#define DEFAULT_DEBUG_LEVEL		DEBUG_LEVEL_SERIOUS_WARNING
+    DEBUG_AREA_ALL = DEBUG_AREA_MAIN | DEBUG_AREA_PACKET | DEBUG_AREA_USER \
+                     | DEBUG_AREA_GW | DEBUG_AREA_AUTH, /*!< All debug areas */
 
-#define MIN_DEBUG_LEVEL			DEBUG_LEVEL_FATAL
-#define MAX_DEBUG_LEVEL			DEBUG_LEVEL_VERBOSE_DEBUG
-
-#define DEBUG_AREA_MAIN		1
-#define DEBUG_AREA_PACKET	2
-#define DEBUG_AREA_USER		4
-#define DEBUG_AREA_GW		8
-#define DEBUG_AREA_AUTH		16
-
-#define DEBUG_AREA_ALL \
-    DEBUG_AREA_MAIN | DEBUG_AREA_PACKET | DEBUG_AREA_USER \
-    | DEBUG_AREA_GW | DEBUG_AREA_AUTH
-
-/* Default is to debug all*/
-#define DEFAULT_DEBUG_AREAS DEBUG_AREA_ALL
+    DEFAULT_DEBUG_AREAS = DEBUG_AREA_ALL   /*!< Default debug areas: all areas */
+} debug_area_t;
 
 #define LOG_FACILITY LOG_DAEMON
+
+#endif /* define NUFW_DEBUG_HEADER */
 

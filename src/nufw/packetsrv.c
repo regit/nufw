@@ -489,7 +489,7 @@ void shutdown_tls()
  * \param type Type of request (AUTH_REQUEST, AUTH_CONTROL, ...)
  * \param packet_id Unique identifier of the packet in netfilter queue
  * \param payload Packet content
- * \param data_len Size of packet content in bytes
+ * \param payload_len Size of packet content in bytes
  * \return If an error occurs returns 0, else return 1.
  */
 int auth_request_send(uint8_t type, uint32_t packet_id, char* payload, unsigned int payload_len){

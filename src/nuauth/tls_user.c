@@ -123,7 +123,7 @@ void pre_client_check()
  * get RX paquet from a TLS client connection and send it to user 
  * authentication threads.
  *
- * \argument c_session SSL RX packet
+ * \param c_session SSL RX packet
  * \return 1 if read done, EOF if read complete, -1 on error
  */
 static int treat_user_request (user_session * c_session)
