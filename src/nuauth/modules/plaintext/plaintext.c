@@ -470,14 +470,28 @@ int read_acl_list(struct plaintext_params* params)
 
       /*  Ok.  Let's study the key/value we've found, now. */
       if (!strcasecmp("decision", p_key)) {                     /*  Decision */
-          if (!strcmp(p_value, "1"))
-              newacl->decision = DECISION_ACCEPT;
-          else if (strcmp(p_value, "0")) {
-              log_message(WARNING, AREA_MAIN,
-                      "L.%d: Malformed line (decision should be 0 or 1)",
-                      ln);
-              fclose(fd);
-              return 2;
+          unsigned int decis = atoi(p_value);
+          
+          switch (decis){
+              case DECISION_ACCEPT:
+                  newacl->decision = DECISION_ACCEPT;
+                  break;
+              case DECISION_DROP:
+                  newacl->decision = DECISION_DROP;
+                  break;
+#ifdef  GRYZOR_HACKS
+              case DECISION_REJECT:
+                  newacl->decision = DECISION_REJECT;
+                  break;
+#endif
+              default:
+                  {
+                      log_message(WARNING, AREA_MAIN,
+                              "L.%d: Malformed line (decision should be 0 or 1)",
+                              ln);
+                      fclose(fd);
+                      return 2;
+                  }
           }
           debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
                   "L.%d: Read decision = %d", ln, newacl->decision);
