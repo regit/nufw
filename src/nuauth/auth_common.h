@@ -51,16 +51,6 @@ gboolean  get_old_conn (gpointer key,
 gboolean secure_snprintf(char *buffer, unsigned int buffer_size, char *format, ...);
 
 
-/**
- * internal for send_auth_response. */
-
-struct auth_answer {
-  uint8_t answer;
-  uint32_t user_id;
-  int socket;
-  nufw_session_t* tls;
-};
-
 void free_buffer_read(struct tls_buffer_read* datas);
 
 /*

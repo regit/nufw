@@ -181,10 +181,9 @@ inline void search_and_fill_done(connection_t *new, connection_t *packet)
     switch (new->state){
         case AUTH_STATE_AUTHREQ:
             { 
-                struct auth_answer answer = {packet->decision, packet->user_id, packet->socket, packet->tls} ;
                 g_slist_foreach(new->packet_id,
                         (GFunc) send_auth_response,
-                        &answer);
+                        packet);
                 free_connection(new);
                 break;
             }

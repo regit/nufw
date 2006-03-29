@@ -260,12 +260,15 @@ typedef struct {
 typedef struct {
     uint8_t protocol_version;   /*!< Version of the protocol (#PROTO_VERSION) */
     uint8_t msg_type;           /*!< Message type (#AUTH_ANSWER) */
-    /* TODO: Use user id in 32 bits? Or rename the field "QoS_group_id"? */
+    /* TODO Use user id in 32 bits? Or rename the field "QoS_group_id"? */
     u_int16_t user_id;          /*!< User identifier */
     u_int8_t decision;          /*!< NuAuth decision (see ::decision_t) */
     uint8_t priority;           /*!< Priority ? */
     uint16_t padding;           /*!< Padding (0x0000) */
     uint32_t packet_id;         /*!< NetFilter packet unique identifier */
+    uint32_t payload_size;      /*!< Indicate the size of datas in the recv buffer after 
+                                  the end of the structure that contains the payload of packet. Set
+                                 to 0 to treat the following datas as a new decision response */
 } nuauth_decision_response_t;    
 
 #endif

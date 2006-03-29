@@ -106,36 +106,59 @@ gint print_connection(gpointer data,gpointer userdata)
  */
 void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 {
-    struct auth_answer * answer = (struct auth_answer *) userdata;
-    nuauth_decision_response_t response;
+    connection_t * element = (connection_t *) userdata;
+    nuauth_decision_response_t* response = NULL;
     uint32_t packet_id = GPOINTER_TO_UINT(packet_id_ptr);
     uint16_t uid16;
 
-    if (0xFFFF < answer->user_id) {
+    if (0xFFFF < element->user_id) {
         log_message(WARNING, AREA_MAIN,
                 "User identifier don't fit in 16 bits, not to truncate the value.");
     }
-    uid16 = (answer->user_id & 0xFFFF);
+    uid16 = (element->user_id & 0xFFFF);
+    
+#ifdef GRYZOR_HACKS
+    if (element->decision == DECISION_REJECT){
+        int payload_size;
+        /* allocate */
+        response=g_alloca(sizeof(nuauth_decision_response_t)+payload_size);
+        /* build ip header */
 
-    response.protocol_version = PROTO_VERSION;
-    response.msg_type = AUTH_ANSWER;
-    response.user_id = htons(uid16);
-    response.decision = answer->answer;
-    response.priority = 1;
-    response.padding = 0;
-    response.packet_id = htonl(packet_id);
+        /* build protocol header (TCP or ICMP or UDP) */
+
+        /* compute payload_size */
+
+        
+        
+    } else {
+        response=g_newa(nuauth_decision_response_t,1);
+        response->payload_size = htonl(0);
+    }
+#else 
+    response=g_newa(nuauth_decision_response_t,1);
+    response->payload_size=0;
+#endif
+
+    response->protocol_version = PROTO_VERSION;
+    response->msg_type = AUTH_ANSWER;
+    response->user_id = htons(uid16);
+    response->decision = element->decision;
+    response->priority = 1;
+    response->padding = 0;
+    response->packet_id = htonl(packet_id);
+
 
     debug_log_message (DEBUG, AREA_MAIN, 
             "Sending auth answer %d for packet %u on socket %p",
-            answer->answer, packet_id, answer->tls);
-    if (answer->tls->alive){
-	g_mutex_lock(answer->tls->tls_lock);
-        gnutls_record_send(*(answer->tls->tls), &response, sizeof(response));
-	g_mutex_unlock(answer->tls->tls_lock);
-        g_atomic_int_dec_and_test(&(answer->tls->usage));
+            element->decision, packet_id, element->tls);
+    if (element->tls->alive){
+        g_mutex_lock(element->tls->tls_lock);
+        gnutls_record_send(*(element->tls->tls), response, sizeof(nuauth_decision_response_t)+response->payload_size);
+        g_mutex_unlock(element->tls->tls_lock);
+        g_atomic_int_dec_and_test(&(element->tls->usage));
     } else {
-        if (g_atomic_int_dec_and_test(&(answer->tls->usage))){
-            clean_nufw_session(answer->tls);			
+        if (g_atomic_int_dec_and_test(&(element->tls->usage))){
+            clean_nufw_session(element->tls);			
         }
     }
 }
@@ -488,7 +511,6 @@ gint take_decision(connection_t *element, packet_place_t place)
 gint apply_decision(connection_t *element)
 {
     decision_t decision=element->decision;
-    struct auth_answer answer ={ decision , element->user_id ,element->socket, element->tls } ;
 #ifdef PERF_DISPLAY_ENABLE
     struct timeval leave_time,elapsed_time;
 #endif
@@ -501,14 +523,14 @@ gint apply_decision(connection_t *element)
 
     g_slist_foreach(element->packet_id,
             send_auth_response,
-            &answer);
-    /* free packet_id */
+            element);
 #ifdef PERF_DISPLAY_ENABLE
     gettimeofday(&leave_time,NULL);
     timeval_substract (&elapsed_time,&leave_time,&(element->arrival_time));
     g_message("Treatment time for conn : %ld.%06ld",elapsed_time.tv_sec,elapsed_time.tv_usec);
 #endif
 
+    /* free packet_id */
     if (element->packet_id != NULL ){
         g_slist_free (element->packet_id);
         element->packet_id=NULL;
