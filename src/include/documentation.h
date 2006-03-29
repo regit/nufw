@@ -32,6 +32,7 @@
  * \section nuauth_sec NuAuth
  *
  * NuAuth is the biggest and most important part of NuFW firewall:
+ *    - Create all queues and threads: init_nuauthdatas()
  *    - Main loop: nuauth_main_loop()
  */
 
