@@ -229,6 +229,34 @@ void clean_old_packets ()
 }
 
 #ifdef GRYZOR_HACKS
+
+/*
+ * Copy taken from hping2 project, original comment was:
+ * "from R. Stevens's Network Programming"
+ */
+__u16 icmp_cksum(__u16 *buf, int nbytes)
+{
+        __u32 sum;
+        __u16 oddbyte;
+
+        sum = 0;
+        while (nbytes > 1) {
+                sum += *buf++;
+                nbytes -= 2;
+        }
+
+        if (nbytes == 1) {
+                oddbyte = 0;
+                *((__u16 *) &oddbyte) = *(__u16 *) buf;
+                sum += oddbyte;
+        }
+
+        sum = (sum >> 16) + (sum & 0xffff);
+        sum += (sum >> 16);
+
+        return (__u16) ~sum;
+}
+
 int send_icmp_unreach(char *payload)
 {
     struct sockaddr_in to;
@@ -238,8 +266,8 @@ int send_icmp_unreach(char *payload)
 
     /* write ICMP header */
     icmp->type = 3;
-    icmp->code = 0x0A;
-    icmp->checksum = 0xF5FC;
+    icmp->code = 0;
+    icmp->checksum = 0x0000; /* TODO: Compute checksum */
     icmp->un.frag.__unused = 0;
     icmp->un.frag.mtu = 0;
     
@@ -250,6 +278,9 @@ int send_icmp_unreach(char *payload)
     memset(&to, 0, sizeof(struct sockaddr_in));
     to.sin_family = AF_INET;
     to.sin_addr.s_addr = ip->saddr;
+
+    /* compute icmp checksum */
+    icmp->checksum = icmp_cksum( (__u16*)buffer, sizeof(buffer));
 
     /* send packet */
     return sendto (raw_sock, buffer, sizeof(buffer), 0,

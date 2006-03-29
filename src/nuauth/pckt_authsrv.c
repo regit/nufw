@@ -51,7 +51,7 @@ unsigned int get_ip_headers(tracking_t *tracking, unsigned char *dgram, unsigned
     struct iphdr *ip = (struct iphdr *)dgram;
 
     /* check ip headers minimum size */
-    if (dgram_size < sizeof(tracking->icmp_reject))
+    if (dgram_size < (20+8))
         return 0;
 
     /* check IP version (should be IPv4) */
@@ -59,7 +59,7 @@ unsigned int get_ip_headers(tracking_t *tracking, unsigned char *dgram, unsigned
         tracking->saddr = ntohl(ip->saddr);
         tracking->daddr = ntohl(ip->daddr);
         tracking->protocol = ip->protocol;
-        memcpy(tracking->icmp_reject, dgram, sizeof(tracking->icmp_reject));
+        memcpy(tracking->icmp_reject, dgram + 4*ip->ihl, sizeof(tracking->icmp_reject));
         return 4*ip->ihl;
     }
     debug_log_message(DEBUG, AREA_PACKET, "IP version is %d, ihl : %d", ip->version, ip->ihl);

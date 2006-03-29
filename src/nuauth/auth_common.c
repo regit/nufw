@@ -18,6 +18,7 @@
  */
 
 #include "auth_srv.h"
+#include <netinet/ip.h>
 
 /** \file auth_common.c
  *  \brief Various functions used in NuAuth.
@@ -121,7 +122,7 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 
 #ifdef GRYZOR_HACKS
     if (element->decision == DECISION_REJECT){
-        payload_size = sizeof(element->tracking.icmp_reject);
+        payload_size = 20+8;
     }
 #endif    
     /* allocate */
@@ -137,7 +138,24 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
     response->payload_len = htons(payload_size);
 #ifdef GRYZOR_HACKS
     if (element->decision == DECISION_REJECT){
-        memcpy((char*)response+sizeof(nuauth_decision_response_t), element->tracking.icmp_reject, payload_size);
+        char payload[28];
+        struct iphdr *ip = (struct iphdr *)payload;
+
+        /* create ip header */
+        memset(payload, 0, 20);
+        ip->version = 4;
+        ip->ihl = 5;
+        ip->tot_len = htons(20+8);
+        ip->ttl = 64; /* write dummy ttl */
+        ip->protocol = element->tracking.protocol;
+        ip->saddr = htonl(element->tracking.saddr);
+        ip->daddr = htonl(element->tracking.daddr);
+
+        /* write transport layer */
+        memcpy(payload+20, element->tracking.icmp_reject, 8);
+
+        /* write icmp reject packet */
+        memcpy((char*)response+sizeof(nuauth_decision_response_t), payload, payload_size);
     }
 #endif        
 
