@@ -120,7 +120,6 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
     uid16 = (element->user_id & 0xFFFF);
 
 #ifdef GRYZOR_HACKS
-    element->decision = DECISION_REJECT;
     if (element->decision == DECISION_REJECT){
         payload_size = sizeof(element->tracking.icmp_reject);
     }
@@ -368,6 +367,11 @@ void clean_connections_list ()
     }
 }
 
+typedef enum {
+    TEST_NODECIDE,
+    TEST_DECIDED
+} test_t;
+
 /**
  * Take a decision of a connection authentification, and send it to NuFW.
  *
@@ -383,7 +387,7 @@ gint take_decision(connection_t *element, packet_place_t place)
 {
     GSList * parcours=NULL;
     decision_t answer = DECISION_NODECIDE;
-    decision_t test;
+    test_t test;
     GSList * user_group=element->user_groups;
     time_t expire=-1; /* no expiration by default */
 
@@ -406,26 +410,30 @@ gint take_decision(connection_t *element, packet_place_t place)
             start_test=DECISION_DROP;
             stop_test=DECISION_ACCEPT;
         }
-        test=DECISION_NODECIDE;
+        test=TEST_NODECIDE;
         for  ( parcours = element->acl_groups; 
-                ( parcours != NULL  && test == DECISION_NODECIDE ); 
+                ( parcours != NULL  && test == TEST_NODECIDE ); 
                 parcours = g_slist_next(parcours) ) {
             /* for each user  group */
             if (parcours->data != NULL) {
                 for ( user_group = element->user_groups;
-                        user_group != NULL && test == DECISION_NODECIDE;
+                        user_group != NULL && test == TEST_NODECIDE;
                         user_group =  g_slist_next(user_group)) {
                     /* search user group in acl_groups */
                     g_assert(((struct acl_group *)(parcours->data))->groups);
                     if (g_slist_find(((struct acl_group *)(parcours->data))->groups,(gconstpointer)user_group->data)) {
                         answer = ((struct acl_group *)(parcours->data))->answer ;
                         if (nuauthconf->prio_to_nok == 1){
-                            if (answer == DECISION_DROP){
-                                test=DECISION_ACCEPT;
+                            if ((answer == DECISION_DROP) 
+#ifdef GRYZOR_HACKS 
+                                    || (answer == DECISION_REJECT)
+#endif
+                                    ){
+                                test=TEST_DECIDED;
                             }
                         } else {
                             if (answer == DECISION_ACCEPT){
-                                test=DECISION_ACCEPT;
+                                test=TEST_DECIDED;
                             }
                         }
                         if (answer == DECISION_ACCEPT){
@@ -445,7 +453,7 @@ gint take_decision(connection_t *element, packet_place_t place)
             } else {
                 debug_log_message(DEBUG, AREA_MAIN, "Empty acl : bad things ...");
                 answer=DECISION_DROP;
-                test=DECISION_ACCEPT;
+                test=TEST_DECIDED;
             }
         }
     }
