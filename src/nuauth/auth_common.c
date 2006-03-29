@@ -136,7 +136,7 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
     }
 #else 
     response=g_newa(nuauth_decision_response_t,1);
-    response->payload_size=0;
+    response->payload_len=0;
 #endif
 
     response->protocol_version = PROTO_VERSION;
@@ -153,7 +153,7 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
             element->decision, packet_id, element->tls);
     if (element->tls->alive){
         g_mutex_lock(element->tls->tls_lock);
-        gnutls_record_send(*(element->tls->tls), response, sizeof(nuauth_decision_response_t)+response->payload_size);
+        gnutls_record_send(*(element->tls->tls), response, sizeof(nuauth_decision_response_t)+response->payload_len);
         g_mutex_unlock(element->tls->tls_lock);
         g_atomic_int_dec_and_test(&(element->tls->usage));
     } else {
