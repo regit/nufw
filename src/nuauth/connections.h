@@ -63,6 +63,8 @@ typedef struct {
 
   u_int8_t type;      /*!< ICMP message type */
   u_int8_t code;      /*!< ICMP code type */
+
+  char icmp_reject[20+8];  /*!< First 28 bytes used for ICMP reject */
 } tracking_t;
 
 /** 

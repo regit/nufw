@@ -110,35 +110,24 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
     nuauth_decision_response_t* response = NULL;
     uint32_t packet_id = GPOINTER_TO_UINT(packet_id_ptr);
     uint16_t uid16;
+    int payload_size = 0;
+    int total_size;
 
     if (0xFFFF < element->user_id) {
         log_message(WARNING, AREA_MAIN,
                 "User identifier don't fit in 16 bits, not to truncate the value.");
     }
     uid16 = (element->user_id & 0xFFFF);
-    
+
 #ifdef GRYZOR_HACKS
+    element->decision = DECISION_REJECT;
     if (element->decision == DECISION_REJECT){
-        int payload_size;
-        /* allocate */
-        response=g_alloca(sizeof(nuauth_decision_response_t)+payload_size);
-        /* build ip header */
-
-        /* build protocol header (TCP or ICMP or UDP) */
-
-        /* compute payload_size */
-
-        
-        
-    } else {
-        response=g_newa(nuauth_decision_response_t,1);
-        response->payload_size = htonl(0);
+        payload_size = sizeof(element->tracking.icmp_reject);
     }
-#else 
-    response=g_newa(nuauth_decision_response_t,1);
-    response->payload_len=0;
-#endif
-
+#endif    
+    /* allocate */
+    total_size = sizeof(nuauth_decision_response_t)+payload_size;
+    response=g_alloca(total_size);
     response->protocol_version = PROTO_VERSION;
     response->msg_type = AUTH_ANSWER;
     response->user_id = htons(uid16);
@@ -146,14 +135,19 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
     response->priority = 1;
     response->padding = 0;
     response->packet_id = htonl(packet_id);
-
+    response->payload_len = htons(payload_size);
+#ifdef GRYZOR_HACKS
+    if (element->decision == DECISION_REJECT){
+        memcpy((char*)response+sizeof(nuauth_decision_response_t), element->tracking.icmp_reject, payload_size);
+    }
+#endif        
 
     debug_log_message (DEBUG, AREA_MAIN, 
             "Sending auth answer %d for packet %u on socket %p",
             element->decision, packet_id, element->tls);
     if (element->tls->alive){
         g_mutex_lock(element->tls->tls_lock);
-        gnutls_record_send(*(element->tls->tls), response, sizeof(nuauth_decision_response_t)+response->payload_len);
+        gnutls_record_send(*(element->tls->tls), response, total_size);
         g_mutex_unlock(element->tls->tls_lock);
         g_atomic_int_dec_and_test(&(element->tls->usage));
     } else {

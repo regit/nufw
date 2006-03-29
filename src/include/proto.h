@@ -266,9 +266,9 @@ typedef struct {
     uint8_t priority;           /*!< Priority ? */
     uint16_t padding;           /*!< Padding (0x0000) */
     uint32_t packet_id;         /*!< NetFilter packet unique identifier */
-    uint32_t payload_len;      /*!< Indicate the length of datas in the recv buffer after 
+    uint16_t payload_len;       /*!< Indicate the length of datas in the recv buffer after 
                                   the end of the structure that contains the payload of packet. Set
-                                 to 0 to treat the following datas as a new decision response */
+                                  to 0 to treat the following datas as a new decision response */
 } nuauth_decision_response_t;    
 
 #endif

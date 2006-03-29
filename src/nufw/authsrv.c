@@ -36,6 +36,7 @@ void auth_process_answer(char *dgram, int dgram_size)
     int sandf;
     u_int32_t packet_id;
     u_int16_t user_id;
+    int payload_len;
 
     /* check packet size */
     if (dgram_size < (int)sizeof(nuauth_decision_response_t))
@@ -43,6 +44,14 @@ void auth_process_answer(char *dgram, int dgram_size)
         return;
     }
     answer = (nuauth_decision_response_t *)dgram;
+
+    /* check payload length */
+    payload_len = ntohs(answer->payload_len);
+    if (dgram_size < (int)(sizeof(nuauth_decision_response_t) + payload_len)
+            || (payload_len != (20+8)))
+    {
+        return;
+    }
     
     /* get packet id and user id */
     packet_id = ntohl(answer->packet_id);
@@ -88,7 +97,7 @@ void auth_process_answer(char *dgram, int dgram_size)
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
                 "Rejecting %lu", packet_id);
         IPQ_SET_VERDICT(packet_id, NF_DROP);
-        send_icmp_unreach(dgram, dgram_size);
+        send_icmp_unreach(dgram + sizeof(nuauth_decision_response_t));
         break;
 #endif
         

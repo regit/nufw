@@ -147,7 +147,7 @@ struct ThreadType
  */
 struct ThreadArgument
 {
-    struct Thread *thread;
+    struct ThreadType *thread;
     int parent_pid;
 };    
 
