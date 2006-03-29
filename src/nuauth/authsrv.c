@@ -507,7 +507,9 @@ void init_nuauthdatas()
 
     /* init periods */
     nuauthconf->periods=init_periods(nuauthconf);
-    
+
+
+
     /* internal Use */
     ALLGROUP = g_slist_prepend(NULL, GINT_TO_POINTER(0) );
 

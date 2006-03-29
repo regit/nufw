@@ -1,7 +1,6 @@
-/* $Id: log_mysql.h,v 1.4 2004/01/13 23:19:41 gryzor Exp $ */
-
 /*
-** Copyright(C) 2003 Eric Leblond <eric@regit.org>
+** Copyright(C) 2003-2006 INL
+**          written by Eric Leblond <eric@regit.org>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by

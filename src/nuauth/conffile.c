@@ -32,7 +32,8 @@
  * Return : 1 if OK, 0 otherwise
  */
 
-int parse_conffile(char * filename,gint array_size,confparams* symbols) {
+int parse_conffile(char * filename,gint array_size,confparams* symbols) 
+{
 	GScanner*  scanner;
 	GTokenType dnentry=G_TOKEN_NONE;
 	int fd,i;

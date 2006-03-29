@@ -1080,17 +1080,3 @@ G_MODULE_EXPORT GSList* acl_check(connection_t* element,gpointer params)
   return g_list;
 }
 
-G_MODULE_EXPORT void define_periods(GHashTable* periods)
-{
-  struct period_item *perioditem;
-  /* TODO get file based definition */
-  define_new_period(periods,"5x8","open hour");
-  perioditem=g_new0(struct period_item,1);
-  perioditem->start_date=-1;
-  perioditem->end_date=-1;
-  perioditem->start_day=1;
-  perioditem->end_day=5;
-  perioditem->start_hour=8;
-  perioditem->end_hour=18;
-  add_perioditem_to_period(periods,g_strdup("5x8"),perioditem);
-}
