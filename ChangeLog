@@ -55,6 +55,8 @@
 	and don't use any blocking function anymore (use function with timeout
 	instead: eg. use g_async_queue_timed_pop() instead of g_async_queue_pop())
 	- nuauth: port of system_convert_username_to_lowercase option (from 1.0)
+	- NuFW : ICMP reject via decision 3.
+	- xml_defs : new module for periods definition
 
 1.1.3 (2006/01/25)
 	- nutrackd : PostGreSQL support
