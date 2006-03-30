@@ -284,7 +284,14 @@ void create_x509_credentials()
     }
 
 
-    gnutls_certificate_allocate_credentials(&nuauth_tls.x509_cred);
+    ret = gnutls_certificate_allocate_credentials(&nuauth_tls.x509_cred);
+    if (ret !=0){
+        if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER)){
+            g_message("Problem with gnutls_certificate_allocate_credentials() : %s",
+                    gnutls_strerror(ret) 	);
+        }
+    }
+
     ret = gnutls_certificate_set_x509_trust_file(nuauth_tls.x509_cred,  nuauth_tls_cacert , 
             GNUTLS_X509_FMT_PEM);
     if(ret<=0){
