@@ -49,6 +49,13 @@ typedef enum
     TCP_STATE_UNKNOW       /*!< Error code of get_tcp_headers() function */
 } tcp_state_t;
 
+#define PAYLOAD_SAMPLE 8
+#define IPHDR_REJECT_LENGTH 20
+/**
+ * this is IPHDR_REJECT_LENGTH / 4
+ */
+#define IPHDR_REJECT_LENGTH_BWORD 5
+
 /**
  * Informations about an IPv4 connection used as key for connection
  * identification.
@@ -64,7 +71,7 @@ typedef struct {
   u_int8_t type;      /*!< ICMP message type */
   u_int8_t code;      /*!< ICMP code type */
 
-  char icmp_reject[8];  /*!< First 28 bytes used for ICMP reject */
+  char payload[PAYLOAD_SAMPLE];  /*!< First 8 bytes of protocol payload used for ICMP reject */
 } tracking_t;
 
 /** 

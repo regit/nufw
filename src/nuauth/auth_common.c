@@ -121,7 +121,7 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
     uid16 = (element->user_id & 0xFFFF);
 
     if (element->decision == DECISION_REJECT){
-        payload_size = 20+8;
+        payload_size = IPHDR_REJECT_LENGTH + PAYLOAD_SAMPLE;
     }
     /* allocate */
     total_size = sizeof(nuauth_decision_response_t)+payload_size;
@@ -135,21 +135,21 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
     response->packet_id = htonl(packet_id);
     response->payload_len = htons(payload_size);
     if (element->decision == DECISION_REJECT){
-        char payload[28];
+        char payload[IPHDR_REJECT_LENGTH + PAYLOAD_SAMPLE];
         struct iphdr *ip = (struct iphdr *)payload;
 
         /* create ip header */
-        memset(payload, 0, 20);
+        memset(payload, 0, IPHDR_REJECT_LENGTH );
         ip->version = 4;
-        ip->ihl = 5;
-        ip->tot_len = htons(20+8);
+        ip->ihl = IPHDR_REJECT_LENGTH_BWORD;
+        ip->tot_len = htons( IPHDR_REJECT_LENGTH + PAYLOAD_SAMPLE);
         ip->ttl = 64; /* write dummy ttl */
         ip->protocol = element->tracking.protocol;
         ip->saddr = htonl(element->tracking.saddr);
         ip->daddr = htonl(element->tracking.daddr);
 
         /* write transport layer */
-        memcpy(payload+20, element->tracking.icmp_reject, 8);
+        memcpy(payload+IPHDR_REJECT_LENGTH, element->tracking.payload, PAYLOAD_SAMPLE);
 
         /* write icmp reject packet */
         memcpy((char*)response+sizeof(nuauth_decision_response_t), payload, payload_size);
