@@ -71,10 +71,6 @@ AC_ARG_WITH(perf-display,
     [AC_HELP_STRING(--with-perf-display, Enable benchmark of user authentification)],
     AC_DEFINE_UNQUOTED([PERF_DISPLAY_ENABLE],[1],[Benchmark of user authentification]))
 
-AC_ARG_WITH(gryzor-hacks, 
-    [AC_HELP_STRING(--with-gryzor-hacks, Enable gryzor hacks (send icmp answer))],
-    AC_DEFINE_UNQUOTED([GRYZOR_HACKS],[1],[Enable gryzor hacks (send icmp answer)]))
-
 if test "${build_nuauth}" = "yes"; then
         # glib stuff
         AM_PATH_GLIB_2_0(2.4.0, , AC_MSG_ERROR([glib is required in order to compile nuauth]),[gthread gmodule])

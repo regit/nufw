@@ -479,11 +479,9 @@ int read_acl_list(struct plaintext_params* params)
               case DECISION_DROP:
                   newacl->decision = DECISION_DROP;
                   break;
-#ifdef  GRYZOR_HACKS
               case DECISION_REJECT:
                   newacl->decision = DECISION_REJECT;
                   break;
-#endif
               default:
                   {
                       log_message(WARNING, AREA_MAIN,

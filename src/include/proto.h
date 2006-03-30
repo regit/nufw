@@ -1,6 +1,6 @@
 /*
  ** proto.h, definition of structure for NuFW protocol
- ** Copyright (C) 2002-2004 Eric Leblond <eric@regit.org>
+ ** Copyright (C) 2002-2006 Eric Leblond <eric@regit.org>
  **		      Vincent Deffontaines <vincent@gryzor.com>
  **                    INL http://www.inl.fr/
  ** This program is free software; you can redistribute it and/or modify
@@ -58,12 +58,8 @@ typedef enum
 {
     DECISION_DROP=0,    /*!< NuAuth decision answer: drop packet */
     DECISION_ACCEPT,    /*!< NuAuth decision answer: packet accepted */
-#ifdef GRYZOR_HACKS
     DECISION_NODECIDE,  /*!< NuAuth decision answer: can't decide! */
     DECISION_REJECT     /*!< NuAuth decision answer: reject the packet */ 
-#else            
-    DECISION_NODECIDE   /*!< NuAuth decision answer: can't decide! */
-#endif
 } decision_t;    
 
 #define AUTHSRV_PORT 4128

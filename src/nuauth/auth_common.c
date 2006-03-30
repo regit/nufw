@@ -120,11 +120,9 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
     }
     uid16 = (element->user_id & 0xFFFF);
 
-#ifdef GRYZOR_HACKS
     if (element->decision == DECISION_REJECT){
         payload_size = 20+8;
     }
-#endif    
     /* allocate */
     total_size = sizeof(nuauth_decision_response_t)+payload_size;
     response=g_alloca(total_size);
@@ -136,7 +134,6 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
     response->padding = 0;
     response->packet_id = htonl(packet_id);
     response->payload_len = htons(payload_size);
-#ifdef GRYZOR_HACKS
     if (element->decision == DECISION_REJECT){
         char payload[28];
         struct iphdr *ip = (struct iphdr *)payload;
@@ -157,7 +154,6 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
         /* write icmp reject packet */
         memcpy((char*)response+sizeof(nuauth_decision_response_t), payload, payload_size);
     }
-#endif        
 
     debug_log_message (DEBUG, AREA_MAIN, 
             "Sending auth answer %d for packet %u on socket %p",
@@ -483,11 +479,7 @@ gint take_decision(connection_t *element, packet_place_t place)
                     if (g_slist_find(((struct acl_group *)(parcours->data))->groups,(gconstpointer)user_group->data)) {
                         answer = ((struct acl_group *)(parcours->data))->answer ;
                         if (nuauthconf->prio_to_nok == 1){
-                            if ((answer == DECISION_DROP) 
-#ifdef GRYZOR_HACKS 
-                                    || (answer == DECISION_REJECT)
-#endif
-                                    ){
+                            if ((answer == DECISION_DROP) || (answer == DECISION_REJECT)){
                                 test=TEST_DECIDED;
                             }
                         } else {
