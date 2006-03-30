@@ -54,6 +54,11 @@ struct nuauth_params
      */
     int connect_policy;
 
+    /** When timeout is reached, use #DECISION_REJECT instead 
+     *  of #DECISION_DROP (if different than 0). 
+     *  Default value is 0. */
+    int reject_after_timeout;
+
     /* Use UTF-8 charset in exchanges */
     int uses_utf8;
 

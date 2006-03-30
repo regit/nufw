@@ -364,24 +364,65 @@ int conn_key_delete(gconstpointer key)
     return 0;
 }
 
+void clean_connection_list_callback(gpointer key, gpointer value, gpointer data)
+{
+    GSList **list_ptr = (GSList **)data;
+    long current_timestamp = time(NULL);
+    if (get_old_conn(key, value, GINT_TO_POINTER(current_timestamp)))
+    {
+        *list_ptr = g_slist_prepend(*list_ptr, key);
+    }
+}
+
+
 /**
  * Find old connection and delete them.
  * It uses get_old_conn() to check if a connection is 'old' or not.
  */
 void clean_connections_list ()
 {
-    int conn_list_size=g_hash_table_size(conn_list); /* not acccurate but we don't abuse of the lock */
-    long current_timestamp=time(NULL);
-
+    GSList *old_keyconn_list = NULL;
+    GSList *old_conn_list = NULL;
+    GSList *iterator;
+    int conn_list_size, nb_deleted;
+    
+    /* extract the list of old connections */
     g_static_mutex_lock (&insert_mutex);
-    /* go through table and  stock keys associated to old packets */
-    g_hash_table_foreach_remove(conn_list,get_old_conn,GINT_TO_POINTER(current_timestamp));
-    /* work is done we release lock */
+    conn_list_size = g_hash_table_size(conn_list);
+    g_hash_table_foreach(conn_list, clean_connection_list_callback, &old_keyconn_list);
+
+    /* remove old connections from connection list */
+    nb_deleted = 0;
+    for (iterator = old_keyconn_list; iterator != NULL; )
+    {
+        gpointer key = iterator->data;
+        gpointer value = g_hash_table_lookup(conn_list, key);
+        g_hash_table_steal(conn_list, key);
+        old_conn_list = g_slist_prepend(old_conn_list, value);        
+        iterator = iterator->next;
+        nb_deleted += 1;
+    }
     g_static_mutex_unlock (&insert_mutex);
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)) {
-        int conn_list_size_now=g_hash_table_size(conn_list);
-        if (conn_list_size_now != conn_list_size)
-            g_message("%d connection(s) suppressed from list",conn_list_size-conn_list_size_now);
+    g_slist_free(old_keyconn_list);
+
+    /* reject all old connections */
+    for (iterator = old_conn_list; iterator != NULL; )
+    {
+        connection_t *element = iterator->data;
+        iterator = iterator->next;
+        if (nuauthconf->reject_after_timeout != 0)
+            element->decision = DECISION_REJECT;
+        else
+            element->decision = DECISION_DROP;
+        apply_decision(element);
+        free_connection(element);
+    }
+    g_slist_free(old_conn_list);
+   
+    /* display number of deleted elements */
+    if (0 < nb_deleted) {
+        log_message(INFO, AREA_MAIN, 
+                "Clean connection list: %d connection(s) suppressed", nb_deleted);
     }
 }
 
@@ -547,7 +588,9 @@ gint apply_decision(connection_t *element)
 #ifdef PERF_DISPLAY_ENABLE
     gettimeofday(&leave_time,NULL);
     timeval_substract (&elapsed_time,&leave_time,&(element->arrival_time));
-    g_message("Treatment time for conn : %ld.%06ld",elapsed_time.tv_sec,elapsed_time.tv_usec);
+    log_message(INFO, AREA_MAIN, 
+            "Treatment time for conn : %ld.%03ld sec",
+            elapsed_time.tv_sec,elapsed_time.tv_usec);
 #endif
 
     /* free packet_id */

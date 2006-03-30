@@ -112,6 +112,7 @@ void init_nuauthconf(struct nuauth_params **result)
       { "nuauth_log_users_without_realm" , G_TOKEN_INT , 1, NULL },
       { "nuauth_prio_to_nok" , G_TOKEN_INT , 1, NULL },
       { "nuauth_connect_policy" , G_TOKEN_INT , POLICY_MULTIPLE_LOGIN, NULL },
+      { "nuauth_reject_after_timeout" , G_TOKEN_INT , 0, NULL },
       { "nuauth_datas_persistance" , G_TOKEN_INT , 9, NULL },
       { "nuauth_push_to_client" , G_TOKEN_INT , 1,NULL },
       { "nuauth_do_ip_authentication" , G_TOKEN_INT , 0,NULL },
@@ -163,6 +164,7 @@ void init_nuauthconf(struct nuauth_params **result)
   conf->log_users_without_realm = *(int*)READ_CONF("nuauth_log_users_without_realm");
   conf->prio_to_nok = *(int*)READ_CONF("nuauth_prio_to_nok");
   conf->connect_policy = *(int*)READ_CONF("nuauth_connect_policy");
+  conf->reject_after_timeout = *(int*)READ_CONF("nuauth_reject_after_timeout");
   conf->nbloggers = *(int*)READ_CONF("nuauth_number_loggers");
   conf->nb_session_loggers = *(int*)READ_CONF("nuauth_number_session_loggers");
   conf->packet_timeout = *(int*)READ_CONF("nuauth_packet_timeout");
