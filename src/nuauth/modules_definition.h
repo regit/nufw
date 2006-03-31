@@ -35,6 +35,8 @@ GSList* ip_auth_modules;
 GSList* user_logs_modules;
 GSList* user_session_logs_modules;
 
+GSList* certificate_check_modules;
+GSList* certificate_to_uid_modules;
 
 GMutex *modules_mutex;
 
@@ -53,5 +55,12 @@ typedef gchar* ip_auth_callback (tracking_t * header,gpointer params);
 
 typedef int user_logs_callback (connection_t* element, tcp_state_t state,gpointer params);
 typedef int user_session_logs_callback (user_session* element, session_state_t state,gpointer params);
+
+/* certificate stuff */
+
+typedef int certificate_check_callback (gnutls_session* session, gnutls_x509_crt* cert,gpointer params);
+/* certificate to uid function */
+typedef gchar* certificate_to_uid_callback (gnutls_session* session, gnutls_x509_crt* cert,gpointer params);
+
 
 #endif

@@ -197,6 +197,7 @@ AC_CONFIG_FILES([Makefile
   		 src/nuauth/modules/log_script/Makefile
 		 src/nuauth/modules/ipauth_ident/Makefile
 		 src/nuauth/modules/xml_defs/Makefile
+		 src/nuauth/modules/x509_std/Makefile
 		 src/clients/Makefile
 		 src/clients/lib/Makefile
 		 src/clients/nutcpc/Makefile

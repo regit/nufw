@@ -57,6 +57,10 @@
 	- nuauth: port of system_convert_username_to_lowercase option (from 1.0)
 	- NuFW : ICMP reject via decision 3.
 	- xml_defs : new module for periods definition
+	- nuauth : add nuauth_module_certificate_check and
+	nuauth_module_certificate_to_uid configuration variables
+	- x509_std : new module with standard check and function for
+	nuauth_module_certificate_check and nuauth_module_certificate_to_uid
 
 1.1.3 (2006/01/25)
 	- nutrackd : PostGreSQL support

@@ -140,6 +140,51 @@ void modules_parse_periods(GHashTable* periods)
     }
 }
 
+/**
+ * Check certificate
+ *
+ * \param certificate
+ * \return SASL_OK if certificate is correct
+ */
+int modules_check_certificate (gnutls_session* session, gnutls_x509_crt* cert)
+{
+	/* iter through all modules list */
+	GSList *walker=certificate_check_modules;
+    int ret;
+	for (; walker!=NULL; walker=walker->next) {
+        certificate_check_callback *handler = (certificate_check_callback*)((module_t*)walker->data)->func;
+		ret = handler (session, cert, ((module_t*)walker->data)->params);
+        if (ret != SASL_OK){
+            return ret;
+        }
+	}
+	return SASL_OK;
+}
+
+/**
+ * certificate to uid
+ *
+ * \param certificate
+ * \return uid 
+ */
+
+gchar* modules_certificate_to_uid (gnutls_session* session, gnutls_x509_crt* cert)
+{
+	/* iter through all modules list */
+	GSList *walker=certificate_to_uid_modules;
+    gchar* uid;
+	for (; walker!=NULL; walker=walker->next) {
+        certificate_to_uid_callback *handler = (certificate_to_uid_callback*)((module_t*)walker->data)->func;
+		uid = handler (session, cert, ((module_t*)walker->data)->params);
+        if (uid){
+            return uid;
+        }
+	}
+	return NULL;
+}
+
+
+
 void free_module_t(module_t* module)
 {
   if (module){
@@ -163,6 +208,9 @@ int init_modules_system()
 	ip_auth_modules=NULL;
 	user_logs_modules=NULL;
     user_session_logs_modules=NULL;
+    certificate_to_uid_modules=NULL;
+    certificate_check_modules=NULL;
+
 	return 1;
 }
 
@@ -251,7 +299,9 @@ int load_modules()
 	char * nuauth_user_logs_module;
 	char * nuauth_user_session_logs_module;
 	char * nuauth_ip_authentication_module;
-        char * nuauth_periods_module;
+    char * nuauth_periods_module;
+    char * nuauth_certificate_check_module;
+    char * nuauth_certificate_to_uid_module;
 	char *configfile=DEFAULT_CONF_FILE;
 	confparams nuauth_vars[] = {
 		{ "nuauth_user_check_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_USERAUTH_MODULE) },
@@ -259,7 +309,9 @@ int load_modules()
 		{ "nuauth_periods_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_PERIODS_MODULE) },
 		{ "nuauth_user_logs_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_LOGS_MODULE) },
 		{ "nuauth_user_session_logs_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_LOGS_MODULE) },
-		{ "nuauth_ip_authentication_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_IPAUTH_MODULE) }
+		{ "nuauth_ip_authentication_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_IPAUTH_MODULE) },
+		{ "nuauth_certificate_check_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_CERTIFICATE_CHECK_MODULE) },
+		{ "nuauth_certificate_to_uid_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_CERTIFICATE_TO_UID_MODULE) }
 	};
 	gpointer vpointer;
 
@@ -283,6 +335,12 @@ int load_modules()
 
 	vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_ip_authentication_module");
 	nuauth_ip_authentication_module=(char*)(vpointer);
+
+	vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_certificate_check_module");
+	nuauth_certificate_check_module=(char*)(vpointer);
+
+	vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_certificate_to_uid_module");
+	nuauth_certificate_to_uid_module=(char*)(vpointer);
 
 	/* external auth module loading */
 	g_mutex_lock(modules_mutex);
@@ -316,6 +374,14 @@ int load_modules()
 		g_free(nuauth_ip_authentication_module);
 	}
 
+	log_message(VERBOSE_DEBUG, AREA_MAIN, "Loading certificate check modules:");
+	load_modules_from(nuauth_certificate_check_module,"certificate_check",&certificate_check_modules);
+	g_free(nuauth_certificate_check_module);
+
+	log_message(VERBOSE_DEBUG, AREA_MAIN, "Loading certificate to uid modules:");
+	load_modules_from(nuauth_certificate_to_uid_module,"certificate_to_uid",&certificate_to_uid_modules);
+	g_free(nuauth_certificate_to_uid_module);
+
 	g_mutex_unlock(modules_mutex);
 	return 1;
 }
@@ -340,6 +406,11 @@ void unload_modules()
     user_logs_modules=NULL;
     g_slist_free(user_session_logs_modules);
     user_session_logs_modules=NULL;
+
+    g_slist_free(certificate_check_modules);
+    certificate_check_modules=NULL;
+    g_slist_free(certificate_to_uid_modules);
+    certificate_to_uid_modules=NULL;
 
     for(c_module=nuauthdatas->modules;c_module;c_module=c_module->next) {
         free_module_t((module_t *)c_module->data);

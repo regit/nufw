@@ -1,7 +1,6 @@
 #include <auth_srv.h>
 #include <gnutls/x509.h>
 
-#define DN_LENGTH 256
 
 gint get_first_x509_cert_from_tls_session(gnutls_session session,gnutls_x509_crt* cert)
 {
@@ -36,40 +35,18 @@ gint get_first_x509_cert_from_tls_session(gnutls_session session,gnutls_x509_crt
  */
 gint check_x509_certificate_validity(gnutls_session session)
 {
-	time_t expiration_time, activation_time;
-	char dn[DN_LENGTH];
 	size_t size;
 	gnutls_x509_crt cert;
+    int ret;
 
 	if (get_first_x509_cert_from_tls_session(session,&cert) == SASL_OK){
 		return SASL_BADPARAM;
 	}
-	expiration_time = gnutls_x509_crt_get_expiration_time(cert);
-	activation_time = gnutls_x509_crt_get_activation_time(cert);
-
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN)){
-		g_message("Certificate validity starts at: %s", ctime(&activation_time));
-		g_message("Certificate expires: %s", ctime(&expiration_time));
-	}
-	/* verify date */
-	if (expiration_time<time(NULL)){
-	        log_message(INFO, AREA_MAIN, "Certificate expired at: %s", ctime(&expiration_time));
-		gnutls_x509_crt_deinit( cert);
-		return SASL_EXPIRED;
-	}
-
-	if (activation_time>time(NULL)){
-	        log_message(INFO, AREA_MAIN, "Certificate only activates at: %s", ctime(&activation_time));
-		gnutls_x509_crt_deinit( cert);
-		return SASL_DISABLED;
-	}
-	
-	size = sizeof(dn);
-	gnutls_x509_crt_get_issuer_dn( cert, dn, &size);
-	log_message(VERBOSE_DEBUG, AREA_USER, "\tIssuer's DN: %s", dn);
-	/* TODO  test if we trust this Issuer */
+    /* Check certificat hook */
+    ret = modules_check_certificate(session,cert);
 	gnutls_x509_crt_deinit( cert);
-	return SASL_OK;
+
+	return ret;
 }
 
 /**
@@ -85,28 +62,11 @@ gchar *	get_username_from_x509_certificate(gnutls_session session)
 	gnutls_x509_crt cert;
 	char* username=NULL;
 	char* pointer=NULL;
-	char dn[DN_LENGTH];
 
 	if ( get_first_x509_cert_from_tls_session(session,&cert) != SASL_OK){
 		return NULL;
 	}
-	
-	size = sizeof(dn);
-	gnutls_x509_crt_get_dn( cert, dn, &size);
-	log_message(VERBOSE_DEBUG, AREA_USER, "\tDN: %s", dn);
-	
-	/* parse DN and extract username is there is one */
-	pointer=g_strrstr_len(dn,DN_LENGTH-1,",CN=");
-	if (pointer){
-		char* string_end=NULL;
-		pointer+=4;
-		string_end=g_strrstr_len(pointer,dn-pointer,",");
-		if (string_end) {
-			*string_end=0;
-			username=g_strdup(pointer);
-		}
-	}
-
+    username = modules_certificate_to_uid(&session,&cert);
 	gnutls_x509_crt_deinit( cert);
 	log_message(VERBOSE_DEBUG, AREA_USER, "\tCN: %s", username);
 	return username;
