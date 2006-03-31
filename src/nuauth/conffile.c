@@ -127,9 +127,6 @@ gpointer get_confvar_value(confparams* symbols,gint array_size,gchar * confparam
 			token_type = symbols[i].value_type;
 			switch ( token_type ){
 				case G_TOKEN_STRING :
-#if 0
-					value=symbols[i].v_char;
-#endif
 					value=g_strdup(symbols[i].v_char);
 					break;
 				case G_TOKEN_INT :
