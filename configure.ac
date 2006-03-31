@@ -65,7 +65,6 @@ AC_ARG_ENABLE(nufw,   [AC_HELP_STRING(--disable-nufw, Don't build nufw (default 
 AC_ARG_ENABLE(nuauth, [AC_HELP_STRING(--disable-nuauth, Don't build nuauth (default is to build))],build_nuauth=$enableval, build_nuauth="yes")
 AC_ARG_ENABLE(libnuclient,   [AC_HELP_STRING(--disable-libnuclient, Don't build libnuclient (default is to build))],build_libnuclient=$enableval, build_libnuclient="yes")
 AC_ARG_ENABLE(nutcpc,   [AC_HELP_STRING(--disable-nutcpc, Don't build nutcpc (default is to build))],build_nutcpc=$enableval, build_nutcpc="yes" )
-AC_ARG_ENABLE(nutrackd,   [AC_HELP_STRING(--disable-nutrackd, Don't build nutrackd (default is to build))],build_nutrackd=$enableval, build_nutrackd="yes")
 
 AC_ARG_WITH(perf-display, 
     [AC_HELP_STRING(--with-perf-display, Enable benchmark of user authentification)],
@@ -144,7 +143,6 @@ fi
 
 AM_CONDITIONAL(BUILD_NUFW, test x${build_nufw} = xyes)
 AM_CONDITIONAL(BUILD_NUAUTH, test x${build_nuauth} = xyes)
-AM_CONDITIONAL(BUILD_NUTRACKD, test x${build_nutrackd} = xyes)
 AM_CONDITIONAL(BUILD_NUTCPC, test x${build_nutcpc} = xyes)
 AM_CONDITIONAL(BUILD_LIBNUCLIENT, test x${build_libnuclient} = xyes)
 
@@ -183,29 +181,28 @@ else
 fi
 
 AC_CONFIG_FILES([Makefile
-                doc/Makefile
-                 src/Makefile
-                 src/nuauth/Makefile
-		 src/nuauth/modules/Makefile
-  		 src/nuauth/modules/ldap/Makefile
-  		 src/nuauth/modules/dbm/Makefile
-  		 src/nuauth/modules/plaintext/Makefile
-  		 src/nuauth/modules/system/Makefile
-  		 src/nuauth/modules/log_pgsql/Makefile
-  		 src/nuauth/modules/log_mysql/Makefile
-  		 src/nuauth/modules/log_syslog/Makefile
-  		 src/nuauth/modules/log_script/Makefile
-		 src/nuauth/modules/ipauth_ident/Makefile
-		 src/nuauth/modules/xml_defs/Makefile
-		 src/nuauth/modules/x509_std/Makefile
-		 src/clients/Makefile
-		 src/clients/lib/Makefile
-		 src/clients/nutcpc/Makefile
-		 src/nufw/Makefile
-                 src/support/Makefile
-                 src/support/dbm/Makefile
-                 src/nutrackd/Makefile
-		 ])
+        doc/Makefile
+        src/Makefile
+        src/nuauth/Makefile
+        src/nuauth/modules/Makefile
+        src/nuauth/modules/ldap/Makefile
+        src/nuauth/modules/dbm/Makefile
+        src/nuauth/modules/plaintext/Makefile
+        src/nuauth/modules/system/Makefile
+        src/nuauth/modules/log_pgsql/Makefile
+        src/nuauth/modules/log_mysql/Makefile
+        src/nuauth/modules/log_syslog/Makefile
+        src/nuauth/modules/log_script/Makefile
+        src/nuauth/modules/ipauth_ident/Makefile
+        src/nuauth/modules/xml_defs/Makefile
+        src/nuauth/modules/x509_std/Makefile
+        src/clients/Makefile
+        src/clients/lib/Makefile
+        src/clients/nutcpc/Makefile
+        src/nufw/Makefile
+        src/support/Makefile
+        src/support/dbm/Makefile
+])
 
 AM_INIT_AUTOMAKE(1.9)
 
