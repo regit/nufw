@@ -23,18 +23,6 @@
 #include "security.h"
 
 
-confparams ldap_nuauth_vars[] = {
-    { "ldap_server_addr" , G_TOKEN_STRING, 0 , LDAP_SERVER },
-    { "ldap_server_port" ,G_TOKEN_INT , LDAP_SERVER_PORT,NULL },
-    { "ldap_base_dn" , G_TOKEN_STRING , 0 ,LDAP_BASE},
-    { "ldap_users_base_dn" , G_TOKEN_STRING , 0 ,LDAP_BASE},
-    { "ldap_acls_base_dn" , G_TOKEN_STRING , 0 ,LDAP_BASE},
-    { "ldap_acls_timerange_base_dn" , G_TOKEN_STRING , 0 ,LDAP_BASE},
-    { "ldap_bind_dn" , G_TOKEN_STRING , 0 ,LDAP_USER},
-    { "ldap_bind_password" , G_TOKEN_STRING , 0, LDAP_CRED },
-    { "ldap_request_timeout" , G_TOKEN_INT , LDAP_REQUEST_TIMEOUT , NULL },
-    { "ldap_filter_type" , G_TOKEN_INT , 1 , NULL }
-};
 
 G_MODULE_EXPORT gboolean module_params_unload(gpointer params_p)
 {
@@ -44,7 +32,6 @@ G_MODULE_EXPORT gboolean module_params_unload(gpointer params_p)
       g_free(params->bindpasswd);
       g_free(params->ldap_server);
       g_free(params->ldap_acls_base_dn);
-      g_free(params->ldap_acls_timerange_base_dn);
       g_free(params->ldap_users_base_dn);
   }
   g_free(params);
@@ -60,6 +47,18 @@ G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
   gpointer vpointer; 
   struct ldap_params* params=g_new0(struct ldap_params,1);
   char *ldap_base_dn=LDAP_BASE;
+  confparams ldap_nuauth_vars[] = {
+      { "ldap_server_addr" , G_TOKEN_STRING, 0 , g_strdup(LDAP_SERVER) },
+      { "ldap_server_port" ,G_TOKEN_INT , LDAP_SERVER_PORT,NULL },
+      { "ldap_base_dn" , G_TOKEN_STRING , 0 ,g_strdup(LDAP_BASE)},
+      { "ldap_users_base_dn" , G_TOKEN_STRING , 0 ,g_strdup(LDAP_BASE)},
+      { "ldap_acls_base_dn" , G_TOKEN_STRING , 0 ,g_strdup(LDAP_BASE)},
+      { "ldap_bind_dn" , G_TOKEN_STRING , 0 ,g_strdup(LDAP_USER)},
+      { "ldap_bind_password" , G_TOKEN_STRING , 0, g_strdup(LDAP_CRED) },
+      { "ldap_request_timeout" , G_TOKEN_INT , LDAP_REQUEST_TIMEOUT , NULL },
+      { "ldap_filter_type" , G_TOKEN_INT , 1 , NULL }
+  };
+
 
   if (! module->configfile){
       configfile = DEFAULT_CONF_FILE;
@@ -67,15 +66,6 @@ G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
       configfile = module->configfile;
   }
 
-  /* init global variables */
-  params->binddn=LDAP_USER;
-  params->bindpasswd=LDAP_CRED;
-  params->ldap_server=LDAP_SERVER;
-  params->ldap_server_port=LDAP_SERVER_PORT;
-  params->ldap_users_base_dn=LDAP_BASE;
-  params->ldap_acls_base_dn=LDAP_BASE;
-  params->ldap_acls_timerange_base_dn=LDAP_BASE;
-  params->ldap_filter_type=1;
 
   /* parse conf file */
   parse_conffile(configfile,sizeof(ldap_nuauth_vars)/sizeof(confparams),ldap_nuauth_vars);
@@ -108,6 +98,9 @@ G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
 
   vpointer=get_confvar_value(ldap_nuauth_vars,sizeof(ldap_nuauth_vars)/sizeof(confparams),"ldap_filter_type");
   params->ldap_filter_type=*(int *)(vpointer?vpointer:&params->ldap_filter_type);
+
+  /* free config struct */
+  free_confparams(ldap_nuauth_vars,sizeof(ldap_nuauth_vars)/sizeof(confparams));
 
 
   /* init thread private stuff */

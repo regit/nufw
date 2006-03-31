@@ -21,12 +21,6 @@
 #include <string.h>
 #include "auth_plaintext.h"
 
-
-confparams plaintext_nuauth_vars[] = {
-    { "plaintext_userfile", G_TOKEN_STRING, 0, TEXT_USERFILE },
-    { "plaintext_aclfile",  G_TOKEN_STRING, 0, TEXT_ACLFILE }
-};
-
 /**
  * strip_line()
  * Returns a pointer on stripped line or
@@ -716,10 +710,11 @@ G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
 {
   gpointer vpointer;
   struct plaintext_params* params=g_new0(struct plaintext_params,1);
+  confparams plaintext_nuauth_vars[] = {
+      { "plaintext_userfile", G_TOKEN_STRING, 0, g_strdup(TEXT_USERFILE) },
+      { "plaintext_aclfile",  G_TOKEN_STRING, 0, g_strdup(TEXT_ACLFILE) }
+  };
 
-  /*  init global variables */
-  params->plaintext_userfile = TEXT_USERFILE;
-  params->plaintext_aclfile  = TEXT_ACLFILE;
 
   /*  parse conf file */
   if (module->configfile){
@@ -743,6 +738,9 @@ G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
   params->plaintext_userlist = NULL;
   params->plaintext_acllist = NULL;
 
+  /* free config struct */
+  free_confparams(plaintext_nuauth_vars,sizeof(plaintext_nuauth_vars)/sizeof(confparams));
+  
   module->params = (gpointer) params; 
   return TRUE;
 }

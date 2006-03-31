@@ -22,10 +22,6 @@
 
 #define XML_DEFS_PERIODFILE CONFIG_DIR "/" "periods.xml"
 
-confparams xml_defs_nuauth_vars[] = {
-    { "xml_defs_periodfile", G_TOKEN_STRING, 0, XML_DEFS_PERIODFILE }
-};
-
 G_MODULE_EXPORT gboolean module_params_unload(gpointer params_p)
 {
   struct xml_defs_params* params=(struct xml_defs_params*)params_p;
@@ -39,6 +35,9 @@ G_MODULE_EXPORT gboolean module_params_unload(gpointer params_p)
 
 G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
 {
+  confparams xml_defs_nuauth_vars[] = {
+      { "xml_defs_periodfile", G_TOKEN_STRING, 0, g_strdup(XML_DEFS_PERIODFILE) }
+  };
   gpointer vpointer;
   struct xml_defs_params* params=g_new0(struct xml_defs_params,1);
 
@@ -60,6 +59,9 @@ G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
           sizeof(xml_defs_nuauth_vars)/sizeof(confparams),
           "xml_defs_periodfile");
   params->xml_defs_periodfile = (char *)(vpointer?vpointer:params->xml_defs_periodfile);
+
+  /* free config struct */
+  free_confparams(xml_defs_nuauth_vars,sizeof(xml_defs_nuauth_vars)/sizeof(confparams));
 
   module->params = (gpointer) params; 
   return TRUE;

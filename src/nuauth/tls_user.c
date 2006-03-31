@@ -483,6 +483,9 @@ void tls_user_init(struct tls_user_context_t *context)
     context->nuauth_auth_nego_timeout = *(int*)READ_CONF("nuauth_auth_nego_timeout");
 #undef READ_CONF    
 
+    /* free config struct */
+    free_confparams(nuauth_tls_vars,sizeof(nuauth_tls_vars)/sizeof(confparams));
+
     /* init sasl stuff */	
     my_sasl_init();
 

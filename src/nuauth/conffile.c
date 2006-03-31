@@ -74,6 +74,9 @@ int parse_conffile(char * filename,gint array_size,confparams* symbols)
 						case G_TOKEN_STRING :
 							/* test if element want a string */
 							if (current_symbol->value_type == G_TOKEN_STRING){
+                                /* free allocated value */
+                                g_free(current_symbol->v_char);
+                                /* put new value */
 								current_symbol->v_char=g_strdup(scanner->value.v_string);
 							} else {
 								g_warning("Bad argument value for %s at %u",
@@ -141,3 +144,15 @@ gpointer get_confvar_value(confparams* symbols,gint array_size,gchar * confparam
 	}
 	return NULL;
 }
+
+int free_confparams(confparams symbols[],gint array_size)
+{
+  int i;
+	for (i = 0; i < array_size; i++){
+        if (symbols[i].value_type == G_TOKEN_STRING){
+            g_free(symbols[i].v_char);
+        }
+    }
+    return 0;
+}
+

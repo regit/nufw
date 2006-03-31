@@ -27,10 +27,6 @@
  * too), probably...*/
 
 
-confparams dbm_nuauth_vars[] = {
-    { "dbm_users_file" , G_TOKEN_STRING, 0 , DBM_USERS_FILE }
-};
-
 int analyse_dbm_char(char *datas, struct dbm_data_struct *mystruct)
     /* IN : char containing, space separated, in this order (it MUST end with a
      * space, else last group isnt read): 
@@ -80,6 +76,9 @@ G_MODULE_EXPORT gboolean module_params_unload(gpointer params_p)
 G_MODULE_EXPORT gboolean init_module_from_conf(module_t* module)
 {
   char *configfile=DEFAULT_CONF_FILE; 
+  confparams dbm_nuauth_vars[] = {
+      { "dbm_users_file" , G_TOKEN_STRING, 0 , g_strdup(DBM_USERS_FILE) }
+  };
   gpointer vpointer; 
   struct dbm_params* params=g_new0(struct dbm_params,1);
 
@@ -95,6 +94,9 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t* module)
   /* set variables */
   vpointer=get_confvar_value(dbm_nuauth_vars,sizeof(dbm_nuauth_vars)/sizeof(confparams),"dbm_users_file");
   params->users_file=(char *)(vpointer?vpointer:params->users_file);
+
+  /* free config struct */
+  free_confparams(dbm_nuauth_vars,sizeof(dbm_nuauth_vars)/sizeof(confparams));
 
   /* init thread private stuff */
   params->dbm_priv = g_private_new (g_free);

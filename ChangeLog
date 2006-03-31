@@ -61,6 +61,7 @@
 	nuauth_module_certificate_to_uid configuration variables
 	- x509_std : new module with standard check and function for
 	nuauth_module_certificate_check and nuauth_module_certificate_to_uid
+	- nuauth : modify config file parsing to avoid memory leak
 
 1.1.3 (2006/01/25)
 	- nutrackd : PostGreSQL support

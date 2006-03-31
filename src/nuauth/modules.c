@@ -342,6 +342,9 @@ int load_modules()
 	vpointer=get_confvar_value(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams),"nuauth_certificate_to_uid_module");
 	nuauth_certificate_to_uid_module=(char*)(vpointer);
 
+    /* free config struct */
+    free_confparams(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams));
+
 	/* external auth module loading */
 	g_mutex_lock(modules_mutex);
 

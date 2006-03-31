@@ -252,9 +252,9 @@ void create_x509_credentials()
     char *configfile=DEFAULT_CONF_FILE;
     int ret;
     confparams nuauth_tls_vars[] = {
-        { "nuauth_tls_key" , G_TOKEN_STRING , 0, NUAUTH_KEYFILE },
-        { "nuauth_tls_cert" , G_TOKEN_STRING , 0, NUAUTH_CERTFILE },
-        { "nuauth_tls_cacert" , G_TOKEN_STRING , 0, NUAUTH_CACERTFILE },
+        { "nuauth_tls_key" , G_TOKEN_STRING , 0, g_strdup(NUAUTH_KEYFILE) },
+        { "nuauth_tls_cert" , G_TOKEN_STRING , 0, g_strdup(NUAUTH_CERTFILE) },
+        { "nuauth_tls_cacert" , G_TOKEN_STRING , 0, g_strdup(NUAUTH_CACERTFILE) },
         { "nuauth_tls_crl" , G_TOKEN_STRING , 0, NULL },
         { "nuauth_tls_key_passwd" , G_TOKEN_STRING , 0, NULL },
         { "nuauth_tls_request_cert" , G_TOKEN_INT ,FALSE, NULL },
@@ -276,7 +276,10 @@ void create_x509_credentials()
     nuauth_tls.auth_by_cert = *(int*)READ_CONF("nuauth_tls_auth_by_cert");
 #undef READ_CONF
 
-    if (access(nuauth_tls_key,R_OK)){
+  /* free config struct */
+  free_confparams(nuauth_tls_vars,sizeof(nuauth_tls_vars)/sizeof(confparams));
+
+  if (access(nuauth_tls_key,R_OK)){
         g_error("[%i] TLS : can not access key file %s\n",getpid(),nuauth_tls_key);
     }
     if (access(nuauth_tls_cert,R_OK)){

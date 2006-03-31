@@ -21,23 +21,6 @@
 #include <string.h>
 #include <errno.h>
 
-confparams mysql_nuauth_vars[] = {
-    { "mysql_server_addr" , G_TOKEN_STRING, 0 , MYSQL_SERVER },
-    { "mysql_server_port" ,G_TOKEN_INT , MYSQL_SERVER_PORT,NULL },
-    { "mysql_user" , G_TOKEN_STRING , 0 ,MYSQL_USER},
-    { "mysql_passwd" , G_TOKEN_STRING , 0 ,MYSQL_PASSWD},
-    { "mysql_db_name" , G_TOKEN_STRING , 0 ,MYSQL_DB_NAME},
-    { "mysql_table_name" , G_TOKEN_STRING , 0 ,MYSQL_TABLE_NAME},
-    { "mysql_users_table_name" , G_TOKEN_STRING , 0 ,MYSQL_USERS_TABLE_NAME},
-    { "mysql_request_timeout" , G_TOKEN_INT , MYSQL_REQUEST_TIMEOUT , NULL },
-    { "mysql_use_ssl" , G_TOKEN_INT , MYSQL_USE_SSL, NULL},
-    { "mysql_ssl_keyfile" , G_TOKEN_STRING , 0, MYSQL_SSL_KEYFILE},
-    { "mysql_ssl_certfile" , G_TOKEN_STRING , 0, MYSQL_SSL_CERTFILE},
-    { "mysql_ssl_ca" , G_TOKEN_STRING , 0, MYSQL_SSL_CA},
-    { "mysql_ssl_capath" , G_TOKEN_STRING , 0, MYSQL_SSL_CAPATH},
-    { "mysql_ssl_cipher" , G_TOKEN_STRING , 0, MYSQL_SSL_CIPHER}
-};
-
 G_MODULE_EXPORT gchar* module_params_unload(gpointer params_p)
 {
   struct log_mysql_params* params = (struct log_mysql_params*)params_p;
@@ -62,6 +45,22 @@ G_MODULE_EXPORT gchar* module_params_unload(gpointer params_p)
 G_MODULE_EXPORT gboolean 
 init_module_from_conf(module_t *module)
 {
+  confparams mysql_nuauth_vars[] = {
+      { "mysql_server_addr" , G_TOKEN_STRING, 0 , g_strdup(MYSQL_SERVER) },
+      { "mysql_server_port" ,G_TOKEN_INT , MYSQL_SERVER_PORT,NULL },
+      { "mysql_user" , G_TOKEN_STRING , 0 ,g_strdup(MYSQL_USER)},
+      { "mysql_passwd" , G_TOKEN_STRING , 0 ,g_strdup(MYSQL_PASSWD)},
+      { "mysql_db_name" , G_TOKEN_STRING , 0 ,g_strdup(MYSQL_DB_NAME)},
+      { "mysql_table_name" , G_TOKEN_STRING , 0 ,g_strdup(MYSQL_TABLE_NAME)},
+      { "mysql_users_table_name" , G_TOKEN_STRING , 0 ,g_strdup(MYSQL_USERS_TABLE_NAME)},
+      { "mysql_request_timeout" , G_TOKEN_INT , MYSQL_REQUEST_TIMEOUT , NULL },
+      { "mysql_use_ssl" , G_TOKEN_INT , MYSQL_USE_SSL, NULL},
+      { "mysql_ssl_keyfile" , G_TOKEN_STRING , 0, g_strdup(MYSQL_SSL_KEYFILE)},
+      { "mysql_ssl_certfile" , G_TOKEN_STRING , 0, g_strdup(MYSQL_SSL_CERTFILE)},
+      { "mysql_ssl_ca" , G_TOKEN_STRING , 0, g_strdup(MYSQL_SSL_CA)},
+      { "mysql_ssl_capath" , G_TOKEN_STRING , 0, g_strdup(MYSQL_SSL_CAPATH)},
+      { "mysql_ssl_cipher" , G_TOKEN_STRING , 0, g_strdup(MYSQL_SSL_CIPHER)}
+  };
     char *configfile=DEFAULT_CONF_FILE;
     /* char *ldap_base_dn=LDAP_BASE; */
     struct log_mysql_params* params=g_new0(struct log_mysql_params,1);
@@ -97,6 +96,10 @@ init_module_from_conf(module_t *module)
     READ_CONF_INT(params->mysql_server_port, "mysql_server_port", MYSQL_SERVER_PORT);
     READ_CONF_INT(params->mysql_request_timeout, "mysql_request_timeout", MYSQL_REQUEST_TIMEOUT);
     READ_CONF_INT(params->mysql_use_ssl, "mysql_use_ssl", MYSQL_USE_SSL);
+
+
+    /* free config struct */
+    free_confparams(mysql_nuauth_vars,sizeof(mysql_nuauth_vars)/sizeof(confparams));
 
     /* init thread private stuff */
     params->mysql_priv = g_private_new ((GDestroyNotify)mysql_close); 

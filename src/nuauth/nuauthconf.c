@@ -94,11 +94,11 @@ void init_nuauthconf(struct nuauth_params **result)
   char* nuauth_nufw_listen_addr = NULL;
   char* gwsrv_addr = NULL;
   confparams nuauth_vars[] = {
-      { "nuauth_client_listen_addr" ,  G_TOKEN_STRING, 0 , AUTHREQ_CLIENT_LISTEN_ADDR },
-      { "nuauth_nufw_listen_addr" ,  G_TOKEN_STRING, 0 , AUTHREQ_NUFW_LISTEN_ADDR },
+      { "nuauth_client_listen_addr" ,  G_TOKEN_STRING, 0 , g_strdup(AUTHREQ_CLIENT_LISTEN_ADDR) },
+      { "nuauth_nufw_listen_addr" ,  G_TOKEN_STRING, 0 , g_strdup(AUTHREQ_NUFW_LISTEN_ADDR) },
       { "nuauth_gw_packet_port" , G_TOKEN_INT , AUTHREQ_PORT,NULL },
       { "nuauth_user_packet_port" , G_TOKEN_INT , USERPCKT_PORT ,NULL},
-      { "nufw_gw_addr" , G_TOKEN_STRING , 0, GWSRV_ADDR },
+      { "nufw_gw_addr" , G_TOKEN_STRING , 0, g_strdup(GWSRV_ADDR) },
       { "nuauth_packet_timeout" , G_TOKEN_INT , PACKET_TIMEOUT, NULL },
       { "nuauth_session_duration" , G_TOKEN_INT , SESSION_DURATION, NULL },
       { "nuauth_number_usercheckers" , G_TOKEN_INT , NB_USERCHECK, NULL},
@@ -177,6 +177,9 @@ void init_nuauthconf(struct nuauth_params **result)
   conf->uses_utf8 = *(int*)READ_CONF("nuauth_uses_utf8");
   conf->hello_authentication = *(int*)READ_CONF("nuauth_hello_authentication");
 #undef READ_CONF
+  
+  /* free config struct */
+  free_confparams(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams));
   
   build_nuauthconf(conf,nuauth_client_listen_addr,nuauth_nufw_listen_addr,
                   gwsrv_addr,nuauth_multi_users,nuauth_multi_servers);

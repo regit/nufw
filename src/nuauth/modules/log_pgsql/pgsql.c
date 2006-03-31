@@ -29,19 +29,6 @@
 #include <errno.h>
 #include <time.h>
 #include "security.h"
-
-confparams pgsql_nuauth_vars[] = {
-    { "pgsql_server_addr" , G_TOKEN_STRING, 0 , PGSQL_SERVER },
-    { "pgsql_server_port" ,G_TOKEN_INT , PGSQL_SERVER_PORT,NULL },
-    { "pgsql_user" , G_TOKEN_STRING , 0 ,PGSQL_USER},
-    { "pgsql_passwd" , G_TOKEN_STRING , 0 ,PGSQL_PASSWD},
-    { "pgsql_ssl" , G_TOKEN_STRING , 0 ,PGSQL_SSL},
-    { "pgsql_db_name" , G_TOKEN_STRING , 0 ,PGSQL_DB_NAME},
-    { "pgsql_table_name" , G_TOKEN_STRING , 0 ,PGSQL_TABLE_NAME},
-    { "pgsql_users_table_name" , G_TOKEN_STRING , 0, PGSQL_USERS_TABLE_NAME},
-    { "pgsql_request_timeout" , G_TOKEN_INT , PGSQL_REQUEST_TIMEOUT , NULL }
-};
-
 G_MODULE_EXPORT gboolean module_params_unload(gpointer params_p)
 {
   struct log_pgsql_params *params = (struct log_pgsql_params*)params_p;
@@ -61,6 +48,17 @@ G_MODULE_EXPORT gboolean module_params_unload(gpointer params_p)
 /* Init pgsql system */
 G_MODULE_EXPORT gboolean init_module_from_conf(module_t *module)
 {
+  confparams pgsql_nuauth_vars[] = {
+      { "pgsql_server_addr" , G_TOKEN_STRING, 0 , g_strdup(PGSQL_SERVER) },
+      { "pgsql_server_port" ,G_TOKEN_INT , PGSQL_SERVER_PORT,NULL },
+      { "pgsql_user" , G_TOKEN_STRING , 0 ,g_strdup(PGSQL_USER)},
+      { "pgsql_passwd" , G_TOKEN_STRING , 0 ,g_strdup(PGSQL_PASSWD)},
+      { "pgsql_ssl" , G_TOKEN_STRING , 0 ,g_strdup(PGSQL_SSL)},
+      { "pgsql_db_name" , G_TOKEN_STRING , 0 ,g_strdup(PGSQL_DB_NAME)},
+      { "pgsql_table_name" , G_TOKEN_STRING , 0 ,g_strdup(PGSQL_TABLE_NAME)},
+      { "pgsql_users_table_name" , G_TOKEN_STRING , 0, g_strdup(PGSQL_USERS_TABLE_NAME)},
+      { "pgsql_request_timeout" , G_TOKEN_INT , PGSQL_REQUEST_TIMEOUT , NULL }
+  };
     unsigned int nb_params = sizeof(pgsql_nuauth_vars)/sizeof(confparams);
     struct log_pgsql_params* params=g_new0(struct log_pgsql_params,1);
     module->params = params;
@@ -87,6 +85,11 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t *module)
     params->pgsql_table_name = (char *)READ_CONF("pgsql_table_name");
     params->pgsql_users_table_name = (char *)READ_CONF("pgsql_users_table_name");
     READ_CONF_INT(params->pgsql_request_timeout, "pgsql_request_timeout", PGSQL_REQUEST_TIMEOUT);
+
+    /* free config struct */
+    free_confparams(pgsql_nuauth_vars,sizeof(pgsql_nuauth_vars)/sizeof(confparams));
+#undef READ_CONF
+#undef READ_CONF_INT
 
     /* init thread private stuff */
     params->pgsql_priv = g_private_new ((GDestroyNotify)PQfinish);
