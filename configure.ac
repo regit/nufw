@@ -137,8 +137,6 @@ if test "${have_conntrack}" = "yes"; then
 	if test "${have_conntrack_fixedtimeout}" = "yes"; then
         	AC_DEFINE_UNQUOTED([HAVE_LIBCONNTRACK_FIXEDTIMEOUT],[1],[libconntrack with fixed timeout extension has been choosen])
 	fi
-else
-        build_nutrackd=""
 fi
 
 AM_CONDITIONAL(BUILD_NUFW, test x${build_nufw} = xyes)
@@ -259,9 +257,6 @@ else
 	AC_MSG_RESULT([!!! WARNING !!! NuFW daemon WON'T be compiled: libipq or libnetfilter_queue not present])
 fi
 
-if test "${build_nutrackd}" = "yes"; then
-	AC_MSG_RESULT([* Compiling nutrackd])
-fi
 if test "${build_libnuclient}" = "yes"; then
 	AC_MSG_RESULT([* Compiling libnuclient])
 fi

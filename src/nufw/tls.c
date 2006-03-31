@@ -96,7 +96,6 @@ gnutls_session* tls_connect()
         {
           log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
                 "TLS: can not set gnutls trust file : %s", gnutls_strerror(ret));
-          //Not returning here - things can work without CA [?]
         }
     }
     ret = gnutls_certificate_set_x509_key_file(tls.xcred,cert_file,key_file,GNUTLS_X509_FMT_PEM);
@@ -159,7 +158,7 @@ gnutls_session* tls_connect()
     }
 #endif
 
-    //This function returns void
+    /* This function returns void */
     gnutls_transport_set_ptr( *(tls_session), (gnutls_transport_ptr)tls_socket);
 
     /* Perform the TLS handshake */
