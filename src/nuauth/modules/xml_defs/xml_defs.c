@@ -58,7 +58,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
   vpointer = get_confvar_value(xml_defs_nuauth_vars,
           sizeof(xml_defs_nuauth_vars)/sizeof(confparams),
           "xml_defs_periodfile");
-  params->xml_defs_periodfile = (char *)(vpointer?vpointer:params->xml_defs_periodfile);
+  params->xml_defs_periodfile = (char *)(vpointer);
 
   /* free config struct */
   free_confparams(xml_defs_nuauth_vars,sizeof(xml_defs_nuauth_vars)/sizeof(confparams));

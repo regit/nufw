@@ -18,5 +18,4 @@
 
 struct xml_defs_params {
     char* xml_defs_periodfile;
-    GPrivate* xml_priv; /* private pointer for xml private objects */
 };
