@@ -579,19 +579,20 @@ void nu_client_free(NuAuth *session)
  * to be called once
  */
  
-nuclient_error* nu_client_global_init()
+void nu_client_global_init(nuclient_error *err)
 {
 
         int ret;
-        nuclient_error *err;
 
 	gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);
 	ret = gnutls_global_init();
         if (ret != 0)
         {
-            err->family = GNUTLS_ERROR;
-            err->error = ret;
-            return(err);
+            if (err != NULL){
+              err->family = GNUTLS_ERROR;
+              err->error = ret;
+            }
+            return;
 /*            printf("gnutls init failing : %s\n",gnutls_strerror(ret)); */
         }
 
@@ -599,12 +600,14 @@ nuclient_error* nu_client_global_init()
 	ret = sasl_client_init(NULL);
 
         if (ret != SASL_OK) {
-            err->family = SASL_ERROR;
-            err->error = ret;
-            return(err);
+            if (err != NULL)
+            {
+              err->family = SASL_ERROR;
+              err->error = ret;
+            }
+            return;
 /*            exit(0);*/
 	}
-        return NULL;
 }
 
 /**

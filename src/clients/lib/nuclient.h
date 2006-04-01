@@ -203,7 +203,7 @@ int     nu_client_error(NuAuth * session);
 void 	nu_client_free(NuAuth *session);
 
 
-nuclient_error* nu_client_global_init();
+void nu_client_global_init(nuclient_error *err);
 void nu_client_global_deinit();
 
 NuAuth* nu_client_init2(
