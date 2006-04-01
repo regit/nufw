@@ -1,8 +1,9 @@
 /*
  * nutcpc.c - TCP/IP connection auth client.
  *
- * Copyright 2004,2005 - INL
+ * Copyright 2004-2006 - INL
  * 	written by Eric Leblond <eric.leblond@inl.fr>
+ * 	           Vincent Deffontaines <vincent@inl.fr>
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -21,7 +22,7 @@
 #include "../lib/nuclient.h"
 #include <locale.h>
 #include <config.h>
-#define NUTCPC_VERSION "0.9"
+#define NUTCPC_VERSION "1.1"
 
 #ifdef FREEBSD
 #include <readpassphrase.h>
@@ -66,11 +67,12 @@ void exit_nutcpc(){
 
 void exit_clean(){
 	char* runpid=computerunpid();
+        nuclient_error *err=malloc(sizeof(nuclient_error));
 	unlink(runpid);
 	free(runpid);
 	/* Restore terminal (can be superflu). */
 	(void) tcsetattr (fileno (stdin), TCSAFLUSH, &orig);
-        nu_client_global_deinit();
+        nu_client_global_deinit(err);
 	exit(0);
 }
 
@@ -196,6 +198,7 @@ int main (int argc, char *argv[])
 	int tempo=1;
 	unsigned char donotuselock=0;
 	char* runpid=computerunpid();
+        nuclient_error *err=malloc(sizeof(nuclient_error));
 
 #if USE_UTF8
 	/* needed by iconv */
@@ -267,7 +270,7 @@ int main (int argc, char *argv[])
 	}
 
         /* global libnuclient init */
-        nu_client_global_init();
+        nu_client_global_init(err);
         
 	password=NULL;
 	session = nu_client_init2(
@@ -277,7 +280,8 @@ int main (int argc, char *argv[])
 			NULL,
 			&get_username,
 			&get_password,
-			NULL
+			NULL,
+                        err
 			);
 
 	if (!session){
@@ -356,22 +360,23 @@ int main (int argc, char *argv[])
 					NULL,
 					&get_username,
 					&get_password,
-					NULL
+					NULL,
+                                        err
 					);
 			if (session!=NULL){
 				tempo=1;
 			}
 		} else {
-			if (nu_client_check(session)<0){
+			if (nu_client_check(session,err)<0){
 				session=NULL;
 			}
 		}
 	}
 
 	if (session){
-		nu_client_free(session);
+		nu_client_free(session,err);
 	}
-        nu_client_global_deinit();
+        nu_client_global_deinit(err);
 
 	return EXIT_SUCCESS;
 }
