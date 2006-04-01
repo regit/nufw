@@ -410,3 +410,9 @@ _Description: PostgreSQL SSL wrapping
  SSL, prefer attempts to use SSL, then fall backs to unencrypted operations
  if it fails, allow attemps to use unencrypted mode, then fallbacks to SSL
  if it fails, require forces the use of SSL.
+
+Template: nuauth/pgsql_users_table_name
+Type: string
+_Default: 1
+_Description: Name of the PostgreSQL table to keep track of logged in users
+ Enter the name of the PostgreSQL to store users session in.

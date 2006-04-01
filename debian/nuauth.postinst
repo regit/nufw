@@ -70,6 +70,8 @@ if [ ! -e $CONFIGFILE2 ]; then
         echo "pgsql_passwd" >> $CONFIGFILE2
         echo "pgsql_request_timeout" >> $CONFIGFILE2
         echo "pgsql_ssl" >> $CONFIGFILE2
+        echo "pgsql_users_table_name" >> $CONFIGFILE2
+        echo "reject_after_timeout" >> $CONFIGFILE2
 fi
 # Substitue les valeurs par celles dans la base
 # de donnes de debconf. Il y a ici quelques
@@ -192,6 +194,11 @@ db_get nuauth/pgsql_request_timeout
 pgsql_request_timeout="$RET"
 db_get nuauth/pgsql_ssl
 pgsql_ssl="$RET"
+db_get nuauth/pgsql_users_table_name
+pgsql_users_table_name="$RET"
+db_get nuauth/reject_after_timeout
+nuauth_reject_after_timeout="$RET"
+
 cp -a -f $CONFIGFILE2 $CONFIGFILE2.tmp
 
 sed -e "s/^ *nuauth_client_listen_addr=.*/nuauth_client_listen_addr=\"$nuauth_client_listen_addr\"/" \
@@ -244,6 +251,8 @@ sed -e "s/^ *nuauth_client_listen_addr=.*/nuauth_client_listen_addr=\"$nuauth_cl
  -e "s/^ *pgsql_passwd=.*/pgsql_passwd=\"$pgsql_passwd\"/" \
  -e "s/^ *pgsql_request_timeout=.*/pgsql_request_timeout=$pgsql_request_timeout/" \
  -e "s/^ *pgsql_ssl=.*/pgsql_ssl=$pgsql_ssl/" \
+ -e "s/^ *pgsql_users_table_name=.*/pgsql_users_table_name=$pgsql_users_table_name/" \
+ -e "s/^ *reject_after_timeout=.*/reject_after_timeout=$nuauth_reject_after_timeout/" \
   < $CONFIGFILE2 > $CONFIGFILE2.tmp
 mv -f $CONFIGFILE2.tmp $CONFIGFILE2
 
