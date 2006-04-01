@@ -579,25 +579,32 @@ void nu_client_free(NuAuth *session)
  * to be called once
  */
  
-void nu_client_global_init()
+nuclient_error* nu_client_global_init()
 {
 
         int ret;
+        nuclient_error *err;
 
 	gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);
 	ret = gnutls_global_init();
         if (ret != 0)
         {
-            printf("gnutls init failing : %s\n",gnutls_strerror(ret));
+            err->family = GNUTLS_ERROR;
+            err->error = ret;
+            return(err);
+/*            printf("gnutls init failing : %s\n",gnutls_strerror(ret)); */
         }
 
 	/* initialize the sasl library */
 	ret = sasl_client_init(NULL);
 
         if (ret != SASL_OK) {
-            exit(0);
+            err->family = SASL_ERROR;
+            err->error = ret;
+            return(err);
+/*            exit(0);*/
 	}
-
+        return NULL;
 }
 
 /**
@@ -876,7 +883,7 @@ NuAuth* nu_client_init2(
 		ret = gnutls_record_send(session->tls,buf,osfield_length);
                 if (ret < 0)
                 {
-                    printf("Error sending tls data : %s",gnutls_error(ret));
+                    printf("Error sending tls data : %s",gnutls_strerror(ret));
                 }
 
 		/* wait for message of server about mode */

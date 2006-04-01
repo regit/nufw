@@ -174,23 +174,46 @@ typedef struct _NuAuth {
 	time_t timestamp_last_sent;
 } NuAuth;
 
+/* libnuclient return code structure */
+
+typedef struct _nuclient_error {
+        int family;
+        int error;
+} nuclient_error;
+
+#define INTERNAL_ERROR 0
+#define GNUTLS_ERROR 1
+#define SASL_ERROR 2
+
 
 /* Exported functions */
 
-NuAuth* nu_client_init(char *username, unsigned long userid, char * password,
-        const char * hostname, unsigned int port, char protocol, char ssl_on);
+/* OLD : die now
+NuAuth* nu_client_init(char *username, 
+                       unsigned long userid, 
+                       char * password,
+                       const char * hostname, 
+                       unsigned int port, 
+                       char protocol, 
+                       char ssl_on);*/
+
+
 int	nu_client_check(NuAuth * session);
 int     nu_client_error(NuAuth * session);
 void 	nu_client_free(NuAuth *session);
 
 
-void nu_client_global_init();
+nuclient_error* nu_client_global_init();
 void nu_client_global_deinit();
 
 NuAuth* nu_client_init2(
-		const char *hostname, unsigned int port,
-		char* keyfile, char* certfile,
-		void* username_callback,void * passwd_callback, void* tlscred_callback
+		const char *hostname, 
+                unsigned int port,
+		char* keyfile, 
+                char* certfile,
+		void* username_callback,
+                void * passwd_callback, 
+                void* tlscred_callback
 		);
 
 
