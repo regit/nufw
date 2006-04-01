@@ -316,7 +316,7 @@ int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn)
 	const char *data;
 	const char *chosenmech;
 	int len;
-	int r;
+	int r, ret;
 	char * mech;
 
 	memset(buf,0,sizeof buf);
@@ -349,12 +349,28 @@ int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn)
 	/* we send up to 3 strings;
 	   the mechanism chosen, the presence of initial response,
 	   and optionally the initial response */
-	gnutls_record_send(session, chosenmech, strlen(chosenmech));
+	ret = gnutls_record_send(session, chosenmech, strlen(chosenmech));
+        if (ret < 0)
+        {
+            printf("gnutls_record send problem 1 : %s\n",gnutls_strerror(ret));
+        }
 	if(data) {
-		gnutls_record_send(session, "Y", 1);
-		gnutls_record_send(session, data, len);
+		ret = gnutls_record_send(session, "Y", 1);
+                if (ret < 0)
+                {
+                  printf("gnutls_record send problem Y : %s\n",gnutls_strerror(ret));
+                }
+		ret = gnutls_record_send(session, data, len);
+                if (ret < 0)
+                {
+                  printf("gnutls_record send problem Y1 : %s\n",gnutls_strerror(ret));
+                }
 	} else {
-		gnutls_record_send(session, "N", 1);
+		ret = gnutls_record_send(session, "N", 1);
+                if (ret < 0)
+                {
+                  printf("gnutls_record send problem N : %s\n",gnutls_strerror(ret));
+                }
 	}
 
 	r=SASL_CONTINUE;
@@ -393,9 +409,17 @@ int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn)
 
 		if (data ) {
 			if (!len) len++;
-			gnutls_record_send(session, data, len);
+			ret = gnutls_record_send(session, data, len);
+                        if (ret < 0)
+                        {
+                          printf("gnutls_record_send problem 2 : %s\n",gnutls_strerror(ret));
+                        }
 		} else {
-			gnutls_record_send(session, "", 1);
+			ret = gnutls_record_send(session, "", 1);
+                        if (ret < 0)
+                        {
+                          printf("gnutls_record_send problem 3 : %s\n",gnutls_strerror(ret));
+                        }
 		}
 	}
 	return EXIT_FAILURE;
@@ -519,14 +543,23 @@ int nu_client_error(NuAuth * session)
 static gnutls_dh_params dh_params;
 
 static int generate_dh_params(void) {
+        int ret;
 
 	/* Generate Diffie Hellman parameters - for use with DHE
 	 * kx algorithms. These should be discarded and regenerated
 	 * once a day, once a week or once a month. Depending on the
 	 * security requirements.
 	 */
-	gnutls_dh_params_init( &dh_params);
-	gnutls_dh_params_generate2( dh_params, DH_BITS);
+	ret = gnutls_dh_params_init( &dh_params);
+        if (ret < 0)
+        {
+            printf("Error in dh parameters init : %s\n",gnutls_strerror(ret));
+        }
+	ret = gnutls_dh_params_generate2( dh_params, DH_BITS);
+        if (ret < 0)
+        {
+            printf("Error in dh params generation : %s\n",gnutls_strerror(ret));
+        }
 
 	return 0;
 }
@@ -552,7 +585,11 @@ void nu_client_global_init()
         int ret;
 
 	gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);
-	gnutls_global_init();
+	ret = gnutls_global_init();
+        if (ret != 0)
+        {
+            printf("gnutls init failing : %s\n",gnutls_strerror(ret));
+        }
 
 	/* initialize the sasl library */
 	ret = sasl_client_init(NULL);
@@ -657,11 +694,19 @@ NuAuth* nu_client_init2(
 	}
 
 	/* X509 stuff */
-	gnutls_certificate_allocate_credentials(&(session->cred));
+	ret = gnutls_certificate_allocate_credentials(&(session->cred));
+        if (ret != 0)
+        {
+            printf("problem allocating gnutls credentials : %s\n",gnutls_strerror(ret));
+        }
 	/* sets the trusted cas file
 	*/
 #if REQUEST_CERT
-	gnutls_certificate_set_x509_trust_file(session->cred, certfile, GNUTLS_X509_FMT_PEM);
+	ret = gnutls_certificate_set_x509_trust_file(session->cred, certfile, GNUTLS_X509_FMT_PEM);
+        if (ret < 0)
+        {
+            printf("problem setting x509 trust file : %s\n",gnutls_strerror(ret));
+        }
 #endif
 	if (certfile && keyfile){
 		ret = gnutls_certificate_set_x509_key_file(session->cred, certfile, keyfile, GNUTLS_X509_FMT_PEM);
@@ -675,12 +720,29 @@ NuAuth* nu_client_init2(
 
 	/* Initialize TLS session
 	*/
-	gnutls_init(&(session->tls), GNUTLS_CLIENT);
+	ret = gnutls_init(&(session->tls), GNUTLS_CLIENT);
+        if (ret != 0)
+        {
+            printf("gnutls init error : %s\n",gnutls_strerror(ret));
+        }
 
-	gnutls_set_default_priority(session->tls);
-	gnutls_certificate_type_set_priority(session->tls, cert_type_priority);
+	ret = gnutls_set_default_priority(session->tls);
+        if (ret < 0)
+        {
+            printf("error setting tls default priority : %s\n",gnutls_strerror(ret));
+        }
+
+	ret = gnutls_certificate_type_set_priority(session->tls, cert_type_priority);
+        if (ret < 0)
+        {
+            printf("error setting tls cert type priority : %s\n",gnutls_strerror(ret));
+        }
 	/* put the x509 credentials to the current session */
-	gnutls_credentials_set(session->tls, GNUTLS_CRD_CERTIFICATE, session->cred);
+	ret = gnutls_credentials_set(session->tls, GNUTLS_CRD_CERTIFICATE, session->cred);
+        if (ret < 0)
+        {
+            printf("error setting tls credentials : %s\n",gnutls_strerror(ret));
+        }
 
 	no_action.sa_handler = SIG_IGN;
 	sigemptyset( & (no_action.sa_mask));
@@ -727,7 +789,7 @@ NuAuth* nu_client_init2(
 	/* certificate verification */
 	ret = gnutls_certificate_verify_peers(session->tls);
 	if (ret <0){
-		printf("Certificate verification failed : %s",gnutls_strerror(ret));
+		printf("Certificate verification failed : %s\n",gnutls_strerror(ret));
 		return NULL;
 	} else {
 		printf("Server Certificat OK\n");
@@ -811,7 +873,11 @@ NuAuth* nu_client_init2(
 		pointer+=sizeof osfield;
 		memcpy(pointer,enc_oses,actuallen);
 		free(enc_oses);
-		gnutls_record_send(session->tls,buf,osfield_length);
+		ret = gnutls_record_send(session->tls,buf,osfield_length);
+                if (ret < 0)
+                {
+                    printf("Error sending tls data : %s",gnutls_error(ret));
+                }
 
 		/* wait for message of server about mode */
 		if (gnutls_record_recv(session->tls,buf,osfield_length)<=0){
