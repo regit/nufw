@@ -63,7 +63,7 @@ static int treat_nufw_request (nufw_session_t *c_session)
             /* gonna feed the birds */
 
             if (current_conn->state == AUTH_STATE_HELLOMODE){
-                debug_log_message(DEBUG, AREA_MAIN,
+                debug_log_message(DEBUG, AREA_GW,
                           "(*) NuFW auth request (hello mode): packetid=%u",
                           (uint32_t)GPOINTER_TO_UINT(current_conn->packet_id->data));
                 struct internal_message *message = g_new0(struct internal_message,1);
@@ -72,7 +72,7 @@ static int treat_nufw_request (nufw_session_t *c_session)
                 current_conn->state = AUTH_STATE_AUTHREQ;
                 g_async_queue_push (nuauthdatas->localid_auth_queue,message);
             } else {
-                debug_log_message(DEBUG, AREA_MAIN,
+                debug_log_message(DEBUG, AREA_GW,
                           "(*) NuFW auth request (hello mode): packetid=%u",
                           (uint32_t)GPOINTER_TO_UINT(current_conn->packet_id->data));
                 g_async_queue_push (nuauthdatas->connections_queue,
@@ -112,7 +112,7 @@ void clean_nufw_session(nufw_session_t * c_session)
     gnutls_transport_ptr socket_tls;
     socket_tls=gnutls_transport_get_ptr(*(c_session->tls));
     close((int)socket_tls);
-    debug_log_message(VERBOSE_DEBUG, AREA_USER, "close nufw session calling");
+    debug_log_message(VERBOSE_DEBUG, AREA_GW, "close nufw session calling");
     if (c_session->tls ){
         gnutls_bye(
                 *(c_session->tls)	
@@ -124,12 +124,12 @@ void clean_nufw_session(nufw_session_t * c_session)
     } else {
 
 
-        debug_log_message(VERBOSE_DEBUG, AREA_USER, "close nufw session was called but NULL");
+        debug_log_message(VERBOSE_DEBUG, AREA_GW, "close nufw session was called but NULL");
 
     }
     g_mutex_free(c_session->tls_lock);
 
-    debug_log_message(VERBOSE_DEBUG, AREA_USER, "close nufw session calling");
+    debug_log_message(VERBOSE_DEBUG, AREA_GW, "close nufw session calling");
 }
 
 /**
@@ -256,12 +256,12 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex *mutex)
 
             if ( FD_ISSET(c,&wk_set) ) {
                 nufw_session_t * c_session;
-                debug_log_message(VERBOSE_DEBUG, AREA_USER, "nufw activity on socket %d",c);
+                debug_log_message(VERBOSE_DEBUG, AREA_GW, "nufw activity on socket %d",c);
                 c_session=g_hash_table_lookup( nufw_servers , GINT_TO_POINTER(c));
                 g_atomic_int_inc(&(c_session->usage));
                 if (treat_nufw_request(c_session) == EOF) {
                     /* get session link with c */
-                    debug_log_message(DEBUG, AREA_USER, "nufw server disconnect on %d",c);
+                    debug_log_message(DEBUG, AREA_GW, "nufw server disconnect on %d",c);
                     FD_CLR(c,&context->tls_rx_set);
                     g_mutex_lock(nufw_servers_mutex);
                     if (g_atomic_int_get(&(c_session->usage)) == 0) {

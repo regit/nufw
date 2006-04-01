@@ -140,7 +140,7 @@ static int treat_user_request (user_session * c_session)
     datas->ipv4_addr=c_session->addr;
 #ifdef DEBUG_ENABLE
     if (!c_session->multiusers) {
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
+        if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
             g_message("(*) New packet from user %s",
                     c_session->user_name);
     }
@@ -158,7 +158,7 @@ static int treat_user_request (user_session * c_session)
     if ( datas->buffer_len < (int)sizeof(struct nuv2_header)) {
 #ifdef DEBUG_ENABLE
         if (datas->buffer_len <0) 
-            log_message(DEBUG, AREA_MAIN, "Received error from user %s", c_session->user_name);
+            log_message(DEBUG, AREA_USER, "Received error from user %s", c_session->user_name);
 #endif
         free_buffer_read(datas);
         return EOF;
@@ -170,7 +170,7 @@ static int treat_user_request (user_session * c_session)
 
     /* is it an "USER HELLO" message ? */
     if (header->proto==PROTO_VERSION && header->msg_type == USER_HELLO){
-        debug_log_message (VERBOSE_DEBUG, AREA_MAIN,
+        debug_log_message (VERBOSE_DEBUG, AREA_USER,
             "tls user: HELLO from %s", c_session->user_name);
         free_buffer_read(datas);
         return 1;
@@ -241,7 +241,7 @@ static int treat_user_request (user_session * c_session)
                 NULL
                 );
     } else {
-        log_message(INFO, AREA_MAIN, "Bad packet, option of header is not set or unauthorized option from user %s.", c_session->user_name);
+        log_message(INFO, AREA_USER, "Bad packet, option of header is not set or unauthorized option from user %s.", c_session->user_name);
         free_buffer_read(datas);
         return EOF;
     }

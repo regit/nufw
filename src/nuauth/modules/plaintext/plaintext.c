@@ -262,13 +262,13 @@ int read_user_list(struct plaintext_params* params)
   char log_prefix[16];
   int ln = 0;   /*  Line number */
 
-  log_message(VERBOSE_DEBUG, AREA_MAIN,
+  log_message(VERBOSE_DEBUG, AREA_USER,
           "[plaintext] read_user_list: reading [%s]", params->plaintext_userfile);
 
   fd = fopen(params->plaintext_userfile, "r");
 
   if (!fd) {
-      log_message(WARNING, AREA_MAIN, "read_user_list: fopen error");
+      log_message(WARNING, AREA_USER, "read_user_list: fopen error");
       return 1;
   }
 
@@ -282,7 +282,7 @@ int read_user_list(struct plaintext_params* params)
 
       /*  User Name */
       if (!p_username) {
-          log_message(WARNING, AREA_MAIN,
+          log_message(WARNING, AREA_USER,
                   "L.%d: read_user_list: Malformed line (no username)", ln);
           fclose(fd);
           return 2;
@@ -291,7 +291,7 @@ int read_user_list(struct plaintext_params* params)
       /*  Password */
       p_passwd = strchr(p_username, ':');
       if (!p_passwd) {
-          log_message(WARNING, AREA_MAIN,
+          log_message(WARNING, AREA_USER,
                   "L.%d: read_user_list: Malformed line (no passwd)", ln);
           fclose(fd);
           return 2;
@@ -301,14 +301,14 @@ int read_user_list(struct plaintext_params* params)
       /*  UID */
       p_uid = strchr(p_passwd, ':');
       if (!p_uid) {
-          log_message(WARNING, AREA_MAIN,
+          log_message(WARNING, AREA_USER,
                   "L.%d: read_user_list: Malformed line (no uid)", ln);
           fclose(fd);
           return 2;
       }
       *p_uid++ = 0;
       if (sscanf(p_uid, "%d", &uid) != 1) {
-          log_message(WARNING, AREA_MAIN,
+          log_message(WARNING, AREA_USER,
                   "L.%d: read_user_list: Malformed line "
                   "(uid should be a number)", ln);
           fclose(fd);
@@ -318,21 +318,21 @@ int read_user_list(struct plaintext_params* params)
       /*  List of groups */
       p_groups = strchr(p_uid, ':');
       if (!p_groups) {
-          log_message(WARNING, AREA_MAIN,
+          log_message(WARNING, AREA_USER,
                   "L.%d: read_user_list: Malformed line (no groups)", ln);
           fclose(fd);
           return 2;
       }
       *p_groups++ = 0;
 
-      debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+      debug_log_message(VERBOSE_DEBUG, AREA_USER,
               "L.%d: Read username=[%s], uid=%d",
               ln, p_username, uid);
 
       /*  Let's create an user node */
       plaintext_user = g_new0(struct T_plaintext_user, 1);
       if (!plaintext_user) {
-          log_message(WARNING, AREA_MAIN,
+          log_message(WARNING, AREA_USER,
                   "read_user_list: Cannot allocate T_plaintext_user!");
           fclose(fd);
           return 5;
@@ -400,7 +400,7 @@ int read_acl_list(struct plaintext_params* params)
               /*  check if ACL node has minimal information */
               /*  Warning: this code is duplicated after the loop */
               if (!newacl->groups) {
-                  log_message(WARNING, AREA_AUTH,
+                  log_message(WARNING, AREA_MAIN,
                           "No group(s) declared in ACL %s",
                           newacl->aclname);
               } else if (newacl->proto == IPPROTO_TCP ||
@@ -409,7 +409,7 @@ int read_acl_list(struct plaintext_params* params)
                   /*  ACL node is ready */
                   params->plaintext_acllist = g_slist_prepend(params->plaintext_acllist, newacl);
               } else {
-                  log_message(WARNING, AREA_AUTH,
+                  log_message(WARNING, AREA_MAIN,
                           "No valid protocol declared in ACL %s",
                           newacl->aclname);
               }
@@ -615,7 +615,7 @@ int read_acl_list(struct plaintext_params* params)
       /*  check if ACL node has minimal information */
       /*  Warning: this code is duplicated after the loop */
       if (!newacl->groups) {
-          log_message(WARNING, AREA_AUTH,
+          log_message(WARNING, AREA_MAIN,
                   "No group(s) declared in ACL %s", newacl->aclname);
       } else if (newacl->proto == IPPROTO_TCP ||
               newacl->proto == IPPROTO_UDP ||
@@ -623,7 +623,7 @@ int read_acl_list(struct plaintext_params* params)
           /*  ACL node is ready */
           params->plaintext_acllist = g_slist_prepend(params->plaintext_acllist, newacl);
       } else {
-          log_message(WARNING, AREA_AUTH,
+          log_message(WARNING, AREA_MAIN,
                   "No valid protocol declared in ACL %s", newacl->aclname);
       }
   }
@@ -745,15 +745,6 @@ G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
   return TRUE;
 }
 
-#if 0
-/* Init plaintext system */
-G_MODULE_EXPORT gchar* g_module_check_init(GModule *module)
-{
-
-  return NULL;
-}
-#endif
-
 /*  This function is used by g_slist_find_custom() in user_check(). */
 gint find_by_username(struct T_plaintext_user *a, struct T_plaintext_user *b)
 {
@@ -799,7 +790,7 @@ G_MODULE_EXPORT int user_check(const char *username, const char *clientpass,
 
   /* strip username from domain */
   user = get_rid_of_domain((char*)username);
-  debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+  debug_log_message(VERBOSE_DEBUG, AREA_AUTH,
           "Looking for group(s) for user %s", user);
   /*  Let's look for the first node with matching username */
   ref.username = (char*)user;
@@ -807,14 +798,14 @@ G_MODULE_EXPORT int user_check(const char *username, const char *clientpass,
           (GCompareFunc)find_by_username);
 
   if (!res) {
-      log_message(WARNING, AREA_MAIN, "Unknown user [%s]!", user);
+      log_message(WARNING, AREA_AUTH, "Unknown user [%s]!", user);
       return SASL_BADAUTH;
   }
 
   realpass = ((struct T_plaintext_user*)res->data)->passwd;
 
   if (!strcmp(realpass, "*") || !strcmp(realpass, "!")) {
-      log_message(INFO, AREA_MAIN,
+      log_message(INFO, AREA_AUTH,
               "user_check: Account is disabled (%s)", user);
       return SASL_BADAUTH;
   }
@@ -823,7 +814,7 @@ G_MODULE_EXPORT int user_check(const char *username, const char *clientpass,
   /*  return the groups list (no checks needed) */
   if (clientpass) {
       if (verify_user_password(clientpass, realpass) != SASL_OK ){
-          log_message(INFO, AREA_MAIN,
+          log_message(INFO, AREA_AUTH,
                   "user_check: Wrong password for %s", user);
           return SASL_BADAUTH;
       }
@@ -859,7 +850,7 @@ G_MODULE_EXPORT GSList* acl_check(connection_t* element,gpointer params)
   if (!((struct plaintext_params*)params)->plaintext_acllist) {
       initstatus = read_acl_list((struct plaintext_params*)params);
       if (initstatus) {
-          log_message(SERIOUS_WARNING, AREA_AUTH,
+          log_message(SERIOUS_WARNING, AREA_MAIN,
                   "Can't parse ACLs file [%s]", ((struct plaintext_params*)params)->plaintext_aclfile);
           return NULL;
       }
