@@ -125,6 +125,8 @@ void init_nuauthconf(struct nuauth_params **result)
 #else 
       { "nuauth_uses_utf8" , G_TOKEN_INT , 0,NULL },
 #endif
+      {"nuauth_debug_areas", G_TOKEN_INT, DEFAULT_DEBUG_AREAS, NULL},
+      {"nuauth_debug_level", G_TOKEN_INT, 0, NULL},
       { "nuauth_hello_authentication" , G_TOKEN_INT , 0,NULL },
   };
   const unsigned int nb_params = sizeof(nuauth_vars)/sizeof(confparams);
@@ -134,12 +136,6 @@ void init_nuauthconf(struct nuauth_params **result)
   conf=g_new0(struct nuauth_params,1);
   *result = conf;
 
-  /* 
-   * Minimum debug_level value is 2 -> for 1) fatal and 2) critical messages to always
-   * be outputed
-   */
-  conf->debug_level=0;
-  conf->debug_areas=DEFAULT_DEBUG_AREAS;
   
   /* parse conf file */
   parse_conffile(DEFAULT_CONF_FILE, nb_params, nuauth_vars);
@@ -176,8 +172,13 @@ void init_nuauthconf(struct nuauth_params **result)
   conf->user_cache = *(int*)READ_CONF("nuauth_user_cache");
   conf->uses_utf8 = *(int*)READ_CONF("nuauth_uses_utf8");
   conf->hello_authentication = *(int*)READ_CONF("nuauth_hello_authentication");
+  conf->debug_areas = *(int*)READ_CONF("nuauth_debug_areas");
+  conf->debug_level = *(int*)READ_CONF("nuauth_debug_level");
 #undef READ_CONF
   
+  if (conf->debug_level>9){
+        conf->debug_level=9;
+  }
   /* free config struct */
   free_confparams(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams));
   
@@ -337,7 +338,6 @@ static struct nuauth_params* compare_and_update_nuauthparams(struct nuauth_param
       g_thread_pool_set_max_threads(nuauthdatas->user_session_loggers,new->nb_session_loggers,NULL);
       /* debug is set via command line thus duplicate */
       new->debug_level=current->debug_level;
-      new->debug_areas=current->debug_areas;
       destroy_periods(current->periods);
       new->periods=init_periods(new);
       free_nuauth_params(current);
