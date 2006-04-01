@@ -185,6 +185,22 @@ typedef struct _nuclient_error {
 #define GNUTLS_ERROR 1
 #define SASL_ERROR 2
 
+/* INTERNAL ERROR CODES */
+#define NOERR 0
+#define NO_ERR 0
+#define SESSION_NOT_CONNECTED 1
+#define UNKNOWN 2
+#define TIMEOUT 3
+#define DNS_RESOLUTION 4
+#define NO_ADDR 5
+#define FILE_ACCESS 6
+#define CANT_CONNECT 7
+
+/*typedef enum {
+        NOERR,
+        SESSION_NOT_CONNECTED,
+        UNKNOWN
+} internal_errors_t;*/
 
 /* Exported functions */
 
@@ -198,13 +214,13 @@ NuAuth* nu_client_init(char *username,
                        char ssl_on);*/
 
 
-int	nu_client_check(NuAuth * session);
-int     nu_client_error(NuAuth * session);
-void 	nu_client_free(NuAuth *session);
+int	nu_client_check(NuAuth * session, nuclient_error *err);
+int     nu_client_error(NuAuth * session, nuclient_error *err);
+void 	nu_client_free(NuAuth *session, nuclient_error *err);
 
 
 void nu_client_global_init(nuclient_error *err);
-void nu_client_global_deinit();
+void nu_client_global_deinit(nuclient_error *err);
 
 NuAuth* nu_client_init2(
 		const char *hostname, 
@@ -213,7 +229,8 @@ NuAuth* nu_client_init2(
                 char* certfile,
 		void* username_callback,
                 void * passwd_callback, 
-                void* tlscred_callback
+                void* tlscred_callback,
+                nuclient_error *err
 		);
 
 

@@ -134,7 +134,7 @@ void* recv_message(void *data)
  * Return -1 if a problem occurs. Session is destroyed if nu_client_check return -1;
  */
 
-int nu_client_check(NuAuth * session)
+int nu_client_check(NuAuth * session, nuclient_error *err)
 {
 		pthread_mutex_lock(&(session->mutex));
                 /* test is a thread has detected problem with the session */
@@ -142,6 +142,11 @@ int nu_client_check(NuAuth * session)
                     /* if we are here, threads are dead */
                     pthread_mutex_unlock(&(session->mutex));
                     nu_exit_clean(session);
+                    if (err != NULL)
+                    {
+                        err->family = INTERNAL_ERROR;
+                        err->error  = SESSION_NOT_CONNECTED;
+                    }
                     return -1;
                 } 
                 /* test if we need to create the working thread */
@@ -163,8 +168,18 @@ int nu_client_check(NuAuth * session)
 				ask_session_end(session);
 				/* cleaning up things */
 				nu_exit_clean(session);
+                                if (err != NULL)
+                                {
+                                  err->family = INTERNAL_ERROR;
+                                  err->error  = UNKNOWN;
+                                }
 				return -1;
 			} else {
+                                if (err != NULL)
+                                {
+                                  err->family = INTERNAL_ERROR;
+                                  err->error  = NOERR;
+                                }
 				return checkreturn;
 			}
 		} else {
@@ -174,11 +189,21 @@ int nu_client_check(NuAuth * session)
 					ask_session_end(session);
 					/* cleaning up things */
 					nu_exit_clean(session);
+                                        if (err != NULL)
+                                        {
+                                            err->family = INTERNAL_ERROR;
+                                            err->error  = TIMEOUT;
+                                        }
 					return -1;
 				}
 				session->timestamp_last_sent=time(NULL);
 			}
 		}
+                if (err != NULL)
+                {
+                  err->family = INTERNAL_ERROR;
+                  err->error  = NO_ERR;
+                }
 		return 1;
 	
 }
