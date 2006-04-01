@@ -20,24 +20,60 @@
 #include <auth_srv.h>
 #include <gnutls/x509.h>
 
+#include "x509_std.h"
+
 #define DN_LENGTH 256
 
 G_MODULE_EXPORT gboolean module_params_unload(gpointer params_p)
 {
+  struct x509_std_params* params=(struct x509_std_params*)params_p;
+  /*  Free user list */
+  if (params){
+      g_free(params->trusted_issuer_dn);
+  }
+  g_free(params);
+
   return TRUE;
 }
 
 G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
 {
-  return TRUE;
+    confparams x509_std_nuauth_vars[] = {
+        {"nuauth_tls_trusted_issuer_dn" , G_TOKEN_STRING , 0, NULL }
+    };
+    gpointer vpointer;
+    struct x509_std_params* params=g_new0(struct x509_std_params,1);
+
+    /*  parse conf file */
+    if (module->configfile){
+        parse_conffile(module->configfile,
+                sizeof(x509_std_nuauth_vars)/sizeof(confparams),
+                x509_std_nuauth_vars);
+    } else {
+        parse_conffile(DEFAULT_CONF_FILE,
+                sizeof(x509_std_nuauth_vars)/sizeof(confparams),
+                x509_std_nuauth_vars);
+    }
+    /*  set variables */
+    vpointer = get_confvar_value(x509_std_nuauth_vars,
+            sizeof(x509_std_nuauth_vars)/sizeof(confparams),
+            "nauth_tls_trusted_issuer_dn");
+    params->trusted_issuer_dn = (gchar *)(vpointer);
+
+    /* free config struct */
+    free_confparams(x509_std_nuauth_vars,sizeof(x509_std_nuauth_vars)/sizeof(confparams));
+
+    module->params = (gpointer) params; 
+    return TRUE;
+
 }
 
 
-G_MODULE_EXPORT int certificate_check (gnutls_session* session, gnutls_x509_crt* cert,gpointer params)
+G_MODULE_EXPORT int certificate_check (gnutls_session* session, gnutls_x509_crt* cert,gpointer params_p)
 {
+  struct x509_std_params* params=(struct x509_std_params*)params_p;
 	time_t expiration_time, activation_time;
-    int size;
-    char dn[DN_LENGTH];
+    int ret;
     
 	expiration_time = gnutls_x509_crt_get_expiration_time(*cert);
 	activation_time = gnutls_x509_crt_get_activation_time(*cert);
@@ -49,30 +85,35 @@ G_MODULE_EXPORT int certificate_check (gnutls_session* session, gnutls_x509_crt*
 
     /* verify date */
     if (expiration_time<time(NULL)){
-        log_message(INFO, AREA_MAIN, "Certificate expired at: %s", ctime(&expiration_time));
+        log_message(INFO, AREA_USER, "Certificate expired at: %s", ctime(&expiration_time));
 		gnutls_x509_crt_deinit( *cert);
 		return SASL_EXPIRED;
 	}
 
 	if (activation_time>time(NULL)){
-        log_message(INFO, AREA_MAIN, "Certificate only activates at: %s", ctime(&activation_time));
+        log_message(INFO, AREA_USER, "Certificate only activates at: %s", ctime(&activation_time));
 		gnutls_x509_crt_deinit( *cert);
 		return SASL_DISABLED;
 	}
 	
-
-/* TODO  test if we trust this Issuer */
-	size = sizeof(dn);
-	gnutls_x509_crt_get_issuer_dn( *cert, dn, &size);
-	log_message(VERBOSE_DEBUG, AREA_USER, "\tIssuer's DN: %s", dn);
-
+    if (params->trusted_issuer_dn){
+        size_t size;
+        char dn[DN_LENGTH];
+        size = sizeof(dn);
+        gnutls_x509_crt_get_issuer_dn( *cert, dn, &size);
+        if (strcmp(dn,params->trusted_issuer_dn)){
+            log_message(VERBOSE_DEBUG, AREA_USER, "\tIssuer's DN is not trusted: %s", dn);
+            gnutls_x509_crt_deinit( *cert);
+            return SASL_DISABLED;
+        }
+    }
 
     return SASL_OK;
 }
 
 G_MODULE_EXPORT gchar* certificate_to_uid (gnutls_session* session, gnutls_x509_crt* cert,gpointer params)
 {
-    int size;
+    size_t size;
 	char dn[DN_LENGTH];
     gchar* pointer;
 
