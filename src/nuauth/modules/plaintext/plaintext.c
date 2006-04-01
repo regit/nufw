@@ -262,13 +262,13 @@ int read_user_list(struct plaintext_params* params)
   char log_prefix[16];
   int ln = 0;   /*  Line number */
 
-  log_message(VERBOSE_DEBUG, AREA_USER,
+  log_message(VERBOSE_DEBUG, AREA_AUTH,
           "[plaintext] read_user_list: reading [%s]", params->plaintext_userfile);
 
   fd = fopen(params->plaintext_userfile, "r");
 
   if (!fd) {
-      log_message(WARNING, AREA_USER, "read_user_list: fopen error");
+      log_message(WARNING, AREA_AUTH, "read_user_list: fopen error");
       return 1;
   }
 
@@ -282,7 +282,7 @@ int read_user_list(struct plaintext_params* params)
 
       /*  User Name */
       if (!p_username) {
-          log_message(WARNING, AREA_USER,
+          log_message(WARNING, AREA_AUTH,
                   "L.%d: read_user_list: Malformed line (no username)", ln);
           fclose(fd);
           return 2;
@@ -291,7 +291,7 @@ int read_user_list(struct plaintext_params* params)
       /*  Password */
       p_passwd = strchr(p_username, ':');
       if (!p_passwd) {
-          log_message(WARNING, AREA_USER,
+          log_message(WARNING, AREA_AUTH,
                   "L.%d: read_user_list: Malformed line (no passwd)", ln);
           fclose(fd);
           return 2;
@@ -301,14 +301,14 @@ int read_user_list(struct plaintext_params* params)
       /*  UID */
       p_uid = strchr(p_passwd, ':');
       if (!p_uid) {
-          log_message(WARNING, AREA_USER,
+          log_message(WARNING, AREA_AUTH,
                   "L.%d: read_user_list: Malformed line (no uid)", ln);
           fclose(fd);
           return 2;
       }
       *p_uid++ = 0;
       if (sscanf(p_uid, "%d", &uid) != 1) {
-          log_message(WARNING, AREA_USER,
+          log_message(WARNING, AREA_AUTH,
                   "L.%d: read_user_list: Malformed line "
                   "(uid should be a number)", ln);
           fclose(fd);
@@ -318,21 +318,21 @@ int read_user_list(struct plaintext_params* params)
       /*  List of groups */
       p_groups = strchr(p_uid, ':');
       if (!p_groups) {
-          log_message(WARNING, AREA_USER,
+          log_message(WARNING, AREA_AUTH,
                   "L.%d: read_user_list: Malformed line (no groups)", ln);
           fclose(fd);
           return 2;
       }
       *p_groups++ = 0;
 
-      debug_log_message(VERBOSE_DEBUG, AREA_USER,
+      debug_log_message(VERBOSE_DEBUG, AREA_AUTH,
               "L.%d: Read username=[%s], uid=%d",
               ln, p_username, uid);
 
       /*  Let's create an user node */
       plaintext_user = g_new0(struct T_plaintext_user, 1);
       if (!plaintext_user) {
-          log_message(WARNING, AREA_USER,
+          log_message(WARNING, AREA_AUTH,
                   "read_user_list: Cannot allocate T_plaintext_user!");
           fclose(fd);
           return 5;
