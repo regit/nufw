@@ -1104,9 +1104,45 @@ const char* nuclient_strerror (nuclient_error *err)
 {
   if (err==NULL)
       return "Error structure was not initialised";
-  if (err->family == GNUTLS_ERROR)
+  switch (err->family){
+    case GNUTLS_ERROR:
       return gnutls_strerror(err->error);
-  if (err->family == SASL_ERROR)
+      break;
+    case SASL_ERROR:
       return sasl_errstring(err->error,NULL,NULL);
-  return "Internal error";
+      break;
+    case INTERNAL_ERROR:
+      switch (err->error){
+        case NOERR:
+          return "No error";
+          break;
+        case SESSION_NOT_CONNECTED_ERR:
+          return "Session not connected";
+          break;
+        case TIMEOUT_ERR:
+          return "Connection timeout";
+          break;
+        case DNS_RESOLUTION_ERR:
+          return "DNS resolution error";
+          break;
+        case NO_ADDR_ERR:
+          return "Address not recognized";
+          break;
+        case FILE_ACCESS_ERR:
+          return "File access error";
+          break;
+        case CANT_CONNECT_ERR:
+          return "Connection failed";
+          break;
+        case UNKNOWN_ERR:
+          return "Unkown error";
+          break;
+        default:
+          return "Unknown internal error code";
+          break;
+      }
+    break;
+    default:
+      return "Unkown family error";
+  }
 }
