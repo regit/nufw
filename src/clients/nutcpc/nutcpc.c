@@ -242,6 +242,7 @@ int main (int argc, char *argv[])
 				exit(0);
 			case 'p':
 				sscanf(optarg,"%u",&port);
+                                break;
 			default:
 				usage();
 		}
