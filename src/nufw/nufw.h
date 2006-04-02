@@ -85,9 +85,7 @@ struct nfq_handle *h;
 #endif
 
 /** Gryzor hacks with aims to answer ICMP message when a packet is dropped. */
-#ifdef GRYZOR_HACKS
 #  include <sys/socket.h>
-#endif
 
 /** If equals to 1, compile with x509 certificate support */
 #define USE_X509 1
@@ -121,10 +119,8 @@ pthread_mutex_t *session_active_mutex;
  */
 struct sockaddr_in adr_srv;
 
-#ifdef GRYZOR_HACKS
 /* Raw socket we use for sending ICMP messages */
 int raw_sock;
-#endif
 
 /* 
  * all functions 
@@ -150,9 +146,7 @@ void process_usr1(int signum);
 void process_usr2(int signum);
 void process_poll(int signum);
 
-#ifdef GRYZOR_HACKS
 int send_icmp_unreach(char *payload);
-#endif
 
 #endif   /* _NUFW_HEADER_H */
 

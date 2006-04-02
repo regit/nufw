@@ -488,13 +488,11 @@ int main(int argc,char * argv[])
 
     init_log_engine();
 
-#ifdef GRYZOR_HACKS
     /* create socket for sending ICMP messages */
     raw_sock = socket(PF_INET, SOCK_RAW, 1);
     if (raw_sock == -1)
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
                 "socket() on raw_sock creation failure!");
-#endif
 
     /* Create address adr_srv */
     memset(&adr_srv,0,sizeof adr_srv);

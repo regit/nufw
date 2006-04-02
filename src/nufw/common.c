@@ -228,7 +228,6 @@ void clean_old_packets ()
   }
 }
 
-#ifdef GRYZOR_HACKS
 
 /*
  * Copy taken from hping2 project, original comment was:
@@ -287,4 +286,3 @@ int send_icmp_unreach(char *payload)
             (struct sockaddr *)&to,
             sizeof (struct sockaddr_in));
 }
-#endif

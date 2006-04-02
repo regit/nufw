@@ -93,7 +93,6 @@ void auth_process_answer(char *dgram, int dgram_size)
         pckt_tx++;
         break;
 
-#ifdef GRYZOR_HACKS
     case DECISION_REJECT:
         /* Packet is rejected, ie. dropped and ICMP signalized */
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
@@ -101,7 +100,6 @@ void auth_process_answer(char *dgram, int dgram_size)
         IPQ_SET_VERDICT(packet_id, NF_DROP);
         send_icmp_unreach(dgram + sizeof(nuauth_decision_response_t));
         break;
-#endif
         
     default:
         /* drop packet */
