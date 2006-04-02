@@ -67,12 +67,14 @@ void exit_nutcpc(){
 
 void exit_clean(){
 	char* runpid=computerunpid();
-        nuclient_error *err=malloc(sizeof(nuclient_error));
+        nuclient_error *err=NULL;
+        nuclient_error_init(err);
 	unlink(runpid);
 	free(runpid);
 	/* Restore terminal (can be superflu). */
 	(void) tcsetattr (fileno (stdin), TCSAFLUSH, &orig);
         nu_client_global_deinit(err);
+        nuclient_error_destroy(err);
 	exit(0);
 }
 
@@ -198,7 +200,7 @@ int main (int argc, char *argv[])
 	int tempo=1;
 	unsigned char donotuselock=0;
 	char* runpid=computerunpid();
-        nuclient_error *err=malloc(sizeof(nuclient_error));
+        nuclient_error *err=NULL;
 
 #if USE_UTF8
 	/* needed by iconv */
@@ -268,6 +270,12 @@ int main (int argc, char *argv[])
 		printf("Error\n");
 		exit(1);
 	}
+
+        if (nuclient_error_init(err) != 0)
+        {
+            printf("Cannot init error structure!\n");
+            exit(-1);
+        }
 
         /* global libnuclient init */
         nu_client_global_init(err);
@@ -377,6 +385,7 @@ int main (int argc, char *argv[])
 		nu_client_free(session,err);
 	}
         nu_client_global_deinit(err);
+        nuclient_error_destroy(err);
 
 	return EXIT_SUCCESS;
 }
