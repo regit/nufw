@@ -366,7 +366,7 @@ int main(int argc,char * argv[])
     debug_areas=DEFAULT_DEBUG_AREAS;
 #if USE_NFQUEUE
     nfqueue_num=DEFAULT_NFQUEUE;
-#if HAVE_LIBCONNTRACK
+#ifdef HAVE_LIBCONNTRACK
     handle_conntrack_event=CONNTRACK_HANDLE_DEFAULT;
 #endif
 #endif
@@ -443,7 +443,7 @@ int main(int argc,char * argv[])
             break;
           case 'C':
 #if HAVE_LIBCONNTRACK
-                handle_conntrack_event=1;
+            handle_conntrack_event=1;
 #endif
             break;
 #endif
@@ -529,6 +529,7 @@ int main(int argc,char * argv[])
 #ifdef HAVE_LIBCONNTRACK
     cth = nfct_open(CONNTRACK, 0);
 #endif
+
 
     /* create packet server thread */
     create_thread();

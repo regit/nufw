@@ -492,7 +492,8 @@ void shutdown_tls()
  * \param payload_len Size of packet content in bytes
  * \return If an error occurs returns 0, else return 1.
  */
-int auth_request_send(uint8_t type, uint32_t packet_id, char* payload, unsigned int payload_len){
+int auth_request_send(uint8_t type, uint32_t packet_id, char* payload, unsigned int payload_len)
+{
     unsigned char datas[512];
     nufw_to_nuauth_auth_message_t *msg_header = (nufw_to_nuauth_auth_message_t *)&datas;
     unsigned char *msg_content = datas + sizeof(nufw_to_nuauth_auth_message_t);

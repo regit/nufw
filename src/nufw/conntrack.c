@@ -40,32 +40,50 @@ int update_handler (void *arg, unsigned int flags, int type,void *data)
     struct nu_conntrack_message_t message;
     int ret;
 
+
     if (nufw_set_mark == 1){
         if (conn->mark == 0){
             return 0;
         }
     }
     message.protocol_version=PROTO_VERSION;
+    message.msg_length= htons(sizeof(struct nu_conntrack_message_t));
+#if 0
     switch (type) {
         case IPCTNL_MSG_CT_DELETE:
             message.msg_type=AUTH_CONN_DESTROY;
+            debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_VERBOSE_DEBUG,
+                    "Destroy event to be send to nuauth.");
+
+            debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_VERBOSE_DEBUG,
+                    "Fucking value is %d.",IPCTNL_MSG_CT_DELETE);
             break;
         case IPCTNL_MSG_CT_NEW:
+#endif
             /* check for ASSURED, elsewhere timeout is so small it is useless to
              * have a fixed one */
             if (conn->status & IPS_ASSURED) {
                 message.msg_type=AUTH_CONN_UPDATE;
+                debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_VERBOSE_DEBUG,
+                        "Update event to be send to nuauth.");
             } else {
                 /* not really your business we leave */
+
+                debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_VERBOSE_DEBUG,
+                        "Not our business.");
                 return 0;
             }
+#if 0
             break;
         default:
             message.msg_type=AUTH_CONN_UPDATE;
+            debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_VERBOSE_DEBUG,
+                        "Default update event to be send to nuauth.");
     }
+#endif
     message.ipv4_protocol=conn->tuple[0].protonum;
     message.ipv4_src= conn->tuple[0].src.v4;
-    message.ipv4_dst=conn->tuple[0].dst.v4;
+    message.ipv4_dst= conn->tuple[0].dst.v4;
 
     switch (conn->tuple[0].protonum){
         case IPPROTO_TCP :
@@ -83,7 +101,7 @@ int update_handler (void *arg, unsigned int flags, int type,void *data)
     }
 
     debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
-                "Sending packet to nuauth.");
+                "Sending conntrack event to nuauth.");
     ret = gnutls_record_send(
             *(tls.session),
             &message,
@@ -111,16 +129,26 @@ void* conntrack_event_handler(void *data)
 {
     struct nfct_handle *cth;
     int res;
+    
+    debug_log_printf(DEBUG_AREA_MAIN,DEBUG_LEVEL_VERBOSE_DEBUG, "Starting conntrack thread");
+#if 0
     if (nufw_set_mark == 1){
+#endif
         cth = nfct_open(CONNTRACK, NF_NETLINK_CONNTRACK_DESTROY|NF_NETLINK_CONNTRACK_UPDATE);
+#if 0
     } else {
         cth = nfct_open(CONNTRACK, NF_NETLINK_CONNTRACK_DESTROY);
     }
+#endif
     if (!cth)
         log_printf(DEBUG_LEVEL_WARNING, "Not enough memory to open netfilter conntrack");
-    nfct_register_callback(cth, update_handler, NULL);
+    nfct_register_callback(cth, update_handler, NULL); 
+#if 0
+    nfct_register_callback(cth,nfct_default_conntrack_display , NULL);
+#endif
     res = nfct_event_conntrack(cth);
     nfct_close(cth);
+    debug_log_printf(DEBUG_AREA_MAIN,DEBUG_LEVEL_VERBOSE_DEBUG, "Conntrack thread has exited");
     return NULL;
 }
 
