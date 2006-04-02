@@ -16,4 +16,9 @@
         <dates start="1128282" end="323232323"/>
     </perioditem>
 </period>
+<period name="interval" desc="one hour interval">
+    <perioditem>
+        <duration length="3600"/>
+    </perioditem>
+</period>
 </periods>
