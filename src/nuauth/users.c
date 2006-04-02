@@ -17,7 +17,6 @@
  */
 
 #include <auth_srv.h>
-#include <jhash.h>
 #include "cache.h"
 
 /**
