@@ -1099,3 +1099,14 @@ void    nuclient_error_destroy(nuclient_error *err)
 {
       free(err);
 }
+
+const char* nuclient_strerror (nuclient_error *err)
+{
+  if (err==NULL)
+      return "Error structure was not initialised";
+  if (err->family == GNUTLS_ERROR)
+      return gnutls_strerror(err->error);
+  if (err->family == SASL_ERROR)
+      return sasl_errstring(err->error,NULL,NULL);
+  return "Internal error";
+}

@@ -235,6 +235,8 @@ NuAuth* nu_client_init2(
                 nuclient_error *err
 		);
 
+const char* nuclient_strerror (nuclient_error *err);
+
 
 #ifdef __cplusplus
 }
