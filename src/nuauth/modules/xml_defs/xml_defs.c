@@ -146,7 +146,7 @@ static void period_start_element_handler (GMarkupParseContext *context,
         if (curcontext->perioditem) {
             for(i = 0; attribute_names[i]; i++) {
                 if(!strcmp(attribute_names[i], "length")) {
-                    curcontext->perioditem->end_date=time(NULL)+atoi(attribute_values[i]);
+                    curcontext->perioditem->duration=atoi(attribute_values[i]);
                 }
             }
         }

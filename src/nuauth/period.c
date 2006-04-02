@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2005 INL
+ ** Copyright(C) 2005,2006 INL
  **             written by Eric Leblond <regit@inl.fr>
  **
  ** This program is free software; you can redistribute it and/or modify
@@ -17,6 +17,7 @@
  */
 
 #include "auth_srv.h" 
+
 
 gboolean is_time_t_in_period(gchar* periodname,time_t time)
 {
@@ -39,18 +40,29 @@ static inline unsigned int get_start_of_day_from_time_t(time_t time)
  * - return -1 if there's no end
  */
 
-static time_t get_end_of_period_item_for_time(struct period_item* perioditem,time_t time)
+static time_t get_end_of_period_item_for_time(struct period_item* perioditem,time_t pckt_time)
 {
   time_t endtime=-1;
-  if (perioditem->start_date != -1) {
-        if ((perioditem->start_date>=time) && ((perioditem->end_date<=time)
-                        || (perioditem->end_date==-1))
-                        ){
+  if (perioditem->duration > 0) {
+    endtime = time(NULL) + perioditem->duration;
+    return endtime;
+  }
+  if ( (perioditem->start_date != -1) || (perioditem->end_date != -1)){
+      if (perioditem->start_date != -1) {
+          if (perioditem->start_date>pckt_time){
+            return 0;
+          }
+      }
+      if (perioditem->end_date != -1) {
+          if (perioditem->end_date>=pckt_time) {
                 return perioditem->end_date;
-        }
+          } else {
+                return 0;
+          }
+      }
   } else {
       struct tm tmtime;
-      localtime_r(&time, &tmtime);
+      localtime_r(&pckt_time, &tmtime);
 
       /* compare day if this is not a time only period */
       if (perioditem->start_day!= -1){
@@ -73,7 +85,7 @@ static time_t get_end_of_period_item_for_time(struct period_item* perioditem,tim
               if (perioditem->end_hour==-1){
                   return -1;
               } else {
-                  return get_start_of_day_from_time_t(time)+3600*perioditem->end_hour; 
+                  return get_start_of_day_from_time_t(pckt_time)+3600*perioditem->end_hour; 
               }
           } else {
               /* out of bound */
@@ -90,7 +102,7 @@ static time_t get_end_of_period_item_for_time(struct period_item* perioditem,tim
  * - -1 if no limit
  */
 
-time_t get_end_of_period_for_time_t(gchar* period,time_t time)
+time_t get_end_of_period_for_time_t(gchar* period,time_t pckt_time)
 {
   struct period* pperiod=NULL;
   time_t result=-1;
@@ -103,7 +115,7 @@ time_t get_end_of_period_for_time_t(gchar* period,time_t time)
        time_t provend;
         /* iter on period_item */
        for( pointer=pperiod->items ;pointer;pointer=pointer->next){
-           provend=get_end_of_period_item_for_time((struct period_item*)(pointer->data),time);
+           provend=get_end_of_period_item_for_time((struct period_item*)(pointer->data),pckt_time);
            switch (provend){
              case 0:
                      return 0;
