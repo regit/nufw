@@ -1,5 +1,5 @@
 /*
- ** Copyright (C) 2002-2005, Éric Leblond <eric@regit.org>
+ ** Copyright (C) 2002-2006, Éric Leblond <eric@regit.org>
  **		       Vincent Deffontaines <vincent@gryzor.com>
  **                      INL http://www.inl.fr/
  **
@@ -155,6 +155,8 @@ void auth_process_conn_update(char *dgram, int dgram_size)
 
     /* check packet size */
     if (dgram_size < (int)sizeof(struct nu_conntrack_message_t)) {
+        debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, 
+                "NuAuth sent too small message");
         return;
     }
     packet_hdr = (struct nu_conntrack_message_t*)dgram;
@@ -182,6 +184,8 @@ void auth_process_conn_update(char *dgram, int dgram_size)
         ct.fixed_timeout = ntohl(packet_hdr->timeout);
     }
 #endif
+    debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, 
+                "Updating conntrack entry");
     (void)nfct_update_conntrack(cth, &ct);
 }    
 #endif /* HAVE_LIBCONNTRACK */

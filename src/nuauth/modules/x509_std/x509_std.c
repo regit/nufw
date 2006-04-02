@@ -73,7 +73,6 @@ G_MODULE_EXPORT int certificate_check (gnutls_session* session, gnutls_x509_crt*
 {
   struct x509_std_params* params=(struct x509_std_params*)params_p;
 	time_t expiration_time, activation_time;
-    int ret;
     
 	expiration_time = gnutls_x509_crt_get_expiration_time(*cert);
 	activation_time = gnutls_x509_crt_get_activation_time(*cert);

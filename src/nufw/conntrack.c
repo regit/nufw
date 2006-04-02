@@ -1,5 +1,5 @@
 /*
- ** Copyright (C) 2005 INL http://www.inl.fr/
+ ** Copyright (C) 2005-2006 INL http://www.inl.fr/
  **   written by Eric Leblond <regit@inl.fr>
  **
  ** This program is free software; you can redistribute it and/or modify
@@ -81,6 +81,9 @@ int update_handler (void *arg, unsigned int flags, int type,void *data)
             message.dest_port = 0;
             break;
     }
+
+    debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
+                "Sending packet to nuauth.");
     ret = gnutls_record_send(
             *(tls.session),
             &message,
