@@ -218,6 +218,8 @@ int	nu_client_check(NuAuth * session, nuclient_error *err);
 int     nu_client_error(NuAuth * session, nuclient_error *err);
 void 	nu_client_free(NuAuth *session, nuclient_error *err);
 
+int     nuclient_error_init(nuclient_error *err);
+void    nuclient_error_destroy(nuclient_error *err);
 
 void nu_client_global_init(nuclient_error *err);
 void nu_client_global_deinit(nuclient_error *err);
