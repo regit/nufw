@@ -188,6 +188,7 @@ connection_t* authpckt_new_connection(unsigned char *dgram, unsigned int dgram_s
 #endif
     connection->acl_groups = NULL;
     connection->user_groups = NULL;
+    connection->expire = -1;
 
     connection->packet_id = g_slist_append(NULL, GUINT_TO_POINTER(ntohl(msg->packet_id)));
     debug_log_message(DEBUG, AREA_PACKET,
@@ -295,10 +296,14 @@ void authpckt_conntrack (unsigned char *dgram, unsigned int dgram_size)
     tracking_t* datas;
     struct internal_message *message;
 
+    debug_log_message(VERBOSE_DEBUG, AREA_PACKET,
+        "Auth conntrack: Working on new packet");
+
     /* Check message content size */
     if (dgram_size != sizeof(struct nu_conntrack_message_t))
     {
-        /* TODO: Display warning */
+        debug_log_message(WARNING, AREA_PACKET,
+            "Auth conntrack: Improper length of packet");
         return;
     }
     
@@ -317,10 +322,15 @@ void authpckt_conntrack (unsigned char *dgram, unsigned int dgram_size)
         datas->dest = ntohs(conntrack->dest_port);
     }               
     message->datas = datas;
-    if (conntrack->msg_type == AUTH_CONN_DESTROY)
+    if (conntrack->msg_type == AUTH_CONN_DESTROY) {
         message->type = FREE_MESSAGE;
-    else
+        debug_log_message(VERBOSE_DEBUG, AREA_PACKET,
+                "Auth conntrack: Sending free message");
+    } else {
         message->type = UPDATE_MESSAGE;
+        debug_log_message(VERBOSE_DEBUG, AREA_PACKET,
+                "Auth conntrack: Sending Update message");
+    }
     g_async_queue_push (nuauthdatas->limited_connections_queue, message);
 }
 

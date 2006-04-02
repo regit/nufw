@@ -1043,10 +1043,18 @@ G_MODULE_EXPORT GSList* acl_check(connection_t* element,gpointer params)
       /* period checking
        * */
       if (p_acl->period) {
+          debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+                "checking time against acl %s", p_acl->period);
           periodend=get_end_of_period_for_time_t(p_acl->period,time(NULL));
           if (periodend==0){
+              debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+                "not valid time for %s", p_acl->period);
               /* this is not a match */
               continue;
+          } else {
+              debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+                "end of period for %s in %d", p_acl->period,periodend);
+            
           }
       }
       /*  We have a match 8-) */

@@ -496,6 +496,7 @@ gint take_decision(connection_t *element, packet_place_t place)
                                       (expire > ((struct acl_group *)(parcours->data))->expire 
                                       )
                                     )) {
+                                debug_log_message(DEBUG, AREA_MAIN, " ... modifying expire");
                                 expire =  ((struct acl_group *)(parcours->data))->expire;
                             }
                         }
@@ -518,12 +519,16 @@ gint take_decision(connection_t *element, packet_place_t place)
     element->decision=answer;
 
     if ((element->expire != -1) && (element->expire < expire)){
+        debug_log_message(DEBUG, AREA_MAIN, " taken expire from element");
         expire=element->expire;
     }
     /* we must put element in expire list if needed before decision is taken */
-    if(expire>0){
+    if (expire>0) {
         struct limited_connection* datas=g_new0(struct limited_connection,1);
         struct internal_message  *message=g_new0(struct internal_message,1);
+
+        debug_log_message (VERBOSE_DEBUG, AREA_MAIN, 
+            "Sending connection with fixed timeout to thread");
         memcpy(&(datas->tracking),&(element->tracking),sizeof(tracking_t));
         datas->expire=expire;
         datas->gwaddr.s_addr=(element->tls)->peername.s_addr;

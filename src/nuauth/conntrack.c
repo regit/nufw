@@ -32,6 +32,8 @@ static gboolean get_nufw_server_by_addr(gpointer key,gpointer value,gpointer use
 static void send_conntrack_message(struct limited_connection * lconn,unsigned char msgtype)
 {
     nufw_session_t* session=NULL;
+
+    debug_log_message(VERBOSE_DEBUG, AREA_GW, "going to send conntrack message");
     g_mutex_lock(nufw_servers_mutex);
     if (nufw_servers){
         session = g_hash_table_find (nufw_servers,
@@ -41,11 +43,12 @@ static void send_conntrack_message(struct limited_connection * lconn,unsigned ch
         if (session){
             struct nu_conntrack_message_t message;
             /* send message */
-            message.protocol_version = 1;
+            message.protocol_version = PROTO_VERSION;
             message.msg_type = msgtype;
             if (lconn->expire != -1) {
                 message.timeout = htonl(lconn->expire - time(NULL));
             } else {
+                debug_log_message(WARNING, AREA_PACKET, "not modifying fixed timeout");
                 message.timeout = 0;
             }
             message.ipv4_protocol = lconn->tracking.protocol;
@@ -62,7 +65,7 @@ static void send_conntrack_message(struct limited_connection * lconn,unsigned ch
             gnutls_record_send( *(session->tls) , &message, sizeof(message));
             g_mutex_unlock(session->tls_lock);
         } else {
-            log_message(WARNING, AREA_USER, "correct session not found among nufw servers");
+            log_message(WARNING, AREA_GW, "correct session not found among nufw servers");
         }
     } else {
         g_mutex_unlock(nufw_servers_mutex);
@@ -164,11 +167,14 @@ void* limited_connection_handler(GMutex *mutex)
             case UPDATE_MESSAGE:
                 /** here we get message from nufw kernel connection is ASSURED 
                  * we have to limit it if needed and log the state change if needed */
+                debug_log_message(VERBOSE_DEBUG, AREA_GW, "received update message for a conntrack entry");
                 elt = (struct limited_connection*)g_hash_table_lookup(lim_conn_list,message->datas);
                 if (elt == NULL){
-                    /* TODO need only to log */
+                    debug_log_message(VERBOSE_DEBUG, AREA_GW, "Can't find conntrack entry to update");
                 } else {
                     send_conntrack_message(elt,AUTH_CONN_UPDATE);
+                    /* this has to be removed from hash */
+                    g_hash_table_remove(lim_conn_list,message->datas);
                 }
                 break;
 

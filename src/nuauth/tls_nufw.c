@@ -79,8 +79,9 @@ static int treat_nufw_request (nufw_session_t *c_session)
                         current_conn);
             }
         } else {
-            if ( (nufw_message_t)dgram[1] != AUTH_CONTROL 
-                    && (nufw_message_t)dgram[1] != AUTH_CONN_DESTROY  )
+            if ( ((nufw_message_t)dgram[1] != AUTH_CONTROL )
+                    || ((nufw_message_t)dgram[1] != AUTH_CONN_DESTROY ) 
+                    || ((nufw_message_t)dgram[1] != AUTH_CONN_UPDATE) )
                 log_message (SERIOUS_WARNING, AREA_PACKET,
                     "Can't parse nufw packet, this IS bad !\n");
         }

@@ -336,6 +336,7 @@ GSList* user_request(struct tls_buffer_read *datas)
         connection->username=NULL;
         connection->cacheduserdatas=NULL;
         connection->packet_id=NULL;
+        connection->expire=-1;
 #ifdef PERF_DISPLAY_ENABLE
         gettimeofday(&(connection->arrival_time),NULL);
 #endif
