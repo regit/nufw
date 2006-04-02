@@ -1085,11 +1085,11 @@ void ask_session_end(NuAuth* session)
 	}
 }
 
-int     nuclient_error_init(nuclient_error *err)
+int     nuclient_error_init(nuclient_error **err)
 {
-      if (err != NULL)
-          return -1;
-      err=malloc(sizeof(nuclient_error));
+/*      if (err != NULL)
+          return -1;*/
+      *err=malloc(sizeof(nuclient_error));
       return 0;
 }
 
@@ -1097,6 +1097,7 @@ int     nuclient_error_init(nuclient_error *err)
 
 void    nuclient_error_destroy(nuclient_error *err)
 {
+    if (err!=NULL)
       free(err);
 }
 

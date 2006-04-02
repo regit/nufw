@@ -68,7 +68,7 @@ void exit_nutcpc(){
 void exit_clean(){
 	char* runpid=computerunpid();
         nuclient_error *err=NULL;
-        nuclient_error_init(err);
+        nuclient_error_init(&err);
 	unlink(runpid);
 	free(runpid);
 	/* Restore terminal (can be superflu). */
@@ -271,7 +271,7 @@ int main (int argc, char *argv[])
 		exit(1);
 	}
 
-        if (nuclient_error_init(err) != 0)
+        if (nuclient_error_init(&err) != 0)
         {
             printf("Cannot init error structure!\n");
             exit(-1);
@@ -295,7 +295,8 @@ int main (int argc, char *argv[])
 	if (!session){
 		int nerror=errno;
 		printf("\nCan not initiate connection to NuFW gateway\n");
-		printf("Problem : %s\n",strerror(nerror));
+		/*printf("Problem : %s\n",strerror(nerror));*/
+                printf("Problem : %s\n",nuclient_strerror(err));
 		exit(EXIT_FAILURE);
 	} else {
 		/* store username and password */
@@ -373,10 +374,13 @@ int main (int argc, char *argv[])
 					);
 			if (session!=NULL){
 				tempo=1;
-			}
+			}else{
+                            printf("%s\n",nuclient_strerror(err));
+                        }
 		} else {
 			if (nu_client_check(session,err)<0){
 				session=NULL;
+                                printf("%s\n",nuclient_strerror(err));
 			}
 		}
 	}
