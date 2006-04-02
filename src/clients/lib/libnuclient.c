@@ -691,7 +691,7 @@ NuAuth* nu_client_init2(
                 if (err != NULL)
                 {
                     err->family = INTERNAL_ERROR;
-                    err->error = DNS_RESOLUTION;
+                    err->error = DNS_RESOLUTION_ERR;
                 }
 
 		nu_exit_clean(session);
@@ -707,7 +707,7 @@ NuAuth* nu_client_init2(
                 if (err != NULL)
                 {
                     err->family = INTERNAL_ERROR;
-                    err->error = NO_ADDR;
+                    err->error = NO_ADDR_ERR;
                 }
 		return NULL;
 	}
@@ -724,7 +724,7 @@ NuAuth* nu_client_init2(
                 if (err != NULL)
                 {
                     err->family = INTERNAL_ERROR;
-                    err->error = FILE_ACCESS;
+                    err->error = FILE_ACCESS_ERR;
                 }
 		errno=EBADF;
 		return NULL;
@@ -743,7 +743,7 @@ NuAuth* nu_client_init2(
                 if (err != NULL)
                 {
                     err->family = INTERNAL_ERROR;
-                    err->error = FILE_ACCESS;
+                    err->error = FILE_ACCESS_ERR;
                 }
 		errno=EBADF;
 		return NULL;
@@ -860,7 +860,7 @@ NuAuth* nu_client_init2(
                 if (err != NULL)
                 {
                     err->family = INTERNAL_ERROR;
-                    err->error = CANT_CONNECT;
+                    err->error = CANT_CONNECT_ERR;
                 }
 		return NULL;
 	}
@@ -879,7 +879,7 @@ NuAuth* nu_client_init2(
                 if (err != NULL)
                 {
                     err->family = INTERNAL_ERROR;
-                    err->error = CANT_CONNECT;
+                    err->error = CANT_CONNECT_ERR;
                 }
 		return NULL;
 	}

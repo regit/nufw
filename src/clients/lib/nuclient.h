@@ -188,13 +188,13 @@ typedef struct _nuclient_error {
 /* INTERNAL ERROR CODES */
 #define NOERR 0
 #define NO_ERR 0
-#define SESSION_NOT_CONNECTED 1
-#define UNKNOWN 2
-#define TIMEOUT 3
-#define DNS_RESOLUTION 4
-#define NO_ADDR 5
-#define FILE_ACCESS 6
-#define CANT_CONNECT 7
+#define SESSION_NOT_CONNECTED_ERR 1
+#define UNKNOWN_ERR 2
+#define TIMEOUT_ERR 3
+#define DNS_RESOLUTION_ERR 4
+#define NO_ADDR_ERR 5
+#define FILE_ACCESS_ERR 6
+#define CANT_CONNECT_ERR 7
 
 /*typedef enum {
         NOERR,

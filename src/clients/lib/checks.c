@@ -145,7 +145,7 @@ int nu_client_check(NuAuth * session, nuclient_error *err)
                     if (err != NULL)
                     {
                         err->family = INTERNAL_ERROR;
-                        err->error  = SESSION_NOT_CONNECTED;
+                        err->error  = SESSION_NOT_CONNECTED_ERR;
                     }
                     return -1;
                 } 
@@ -171,14 +171,14 @@ int nu_client_check(NuAuth * session, nuclient_error *err)
                                 if (err != NULL)
                                 {
                                   err->family = INTERNAL_ERROR;
-                                  err->error  = UNKNOWN;
+                                  err->error  = UNKNOWN_ERR;
                                 }
 				return -1;
 			} else {
                                 if (err != NULL)
                                 {
                                   err->family = INTERNAL_ERROR;
-                                  err->error  = NOERR;
+                                  err->error  = NO_ERR;
                                 }
 				return checkreturn;
 			}
@@ -192,7 +192,7 @@ int nu_client_check(NuAuth * session, nuclient_error *err)
                                         if (err != NULL)
                                         {
                                             err->family = INTERNAL_ERROR;
-                                            err->error  = TIMEOUT;
+                                            err->error  = TIMEOUT_ERR;
                                         }
 					return -1;
 				}
