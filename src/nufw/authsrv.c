@@ -48,8 +48,10 @@ void auth_process_answer(char *dgram, int dgram_size)
     /* check payload length */
     payload_len = ntohs(answer->payload_len);
     if (dgram_size < (int)(sizeof(nuauth_decision_response_t) + payload_len)
-            || (payload_len != (20+8)))
+            || ((payload_len != 0) && (payload_len != (20+8))))
     {
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING, 
+                "Packet with improper size");
         return;
     }
     
