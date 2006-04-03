@@ -1,8 +1,8 @@
-nufw12 (1.1.4-1) stable; urgency=low
+nufw12 (1.2.0_beta1-1) stable; urgency=low
 
-  * New release
+  * New Upstream release
 
- -- Regit <regit@inl.fr>  Thu, 26 Jan 2006 14:37:03 +0100
+ -- Regit <regit@inl.fr>  Mon,  3 Apr 2006 13:52:43 +0200
 
 nufw (1.1.3-1) stable; urgency=low
 
