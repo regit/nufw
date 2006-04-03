@@ -34,6 +34,11 @@
  */
 #define _ISOC99_SOURCE
 
+/* Disable inline keyword when compiling in strict ANSI conformance */
+#ifdef __STRICT_ANSI__
+#  define inline
+#endif
+
 /* workaround SPlint error (don't know __gnuc_va_list) */
 #ifdef S_SPLINT_S
 #  include <err.h> 

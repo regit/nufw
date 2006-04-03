@@ -16,8 +16,8 @@
  */
 
 #include "log_prelude.h"
-#include <libprelude/prelude.h>
-#include <libprelude/idmef-tree-wrap.h>
+#include <prelude.h>
+#include <idmef-tree-wrap.h>
 
 #ifdef MODULE
 confparams mysql_nuauth_vars[] = {

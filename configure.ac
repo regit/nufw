@@ -100,7 +100,22 @@ if test "${build_nuauth}" = "yes"; then
         fi
   
         if test "$enable_prelude_log" = "yes"; then
-                AC_CHECK_LIB([prelude],[prelude_init],,AC_MSG_ERROR([libprelude library needed if Prelude logging selected]))
+                # Evil hack to check if /usr/include/libprelude/prelude.h does exist.
+                # TODO: Be able to change this directory and send this directory
+                #       to Prelude module of NuAuth
+                OLDCFLAGS="$CFLAGS"
+                OLDCPPFLAGS="$CPPFLAGS"
+                CFLAGS="$CFLAGS -I/usr/include/libprelude/"
+                CPPFLAGS="$CFLAGS -I/usr/include/libprelude/"
+                AC_CHECK_HEADER(prelude.h,,
+                        AC_MSG_ERROR([libprelude headers are missing]))
+
+                # Check for prelude_init() function libprelude.so
+                AC_CHECK_LIB([prelude],[prelude_init],
+                        AC_DEFINE([HAVE_LIBRARY_PRELUDE],[1],[prelude library flag]),
+                        AC_MSG_ERROR([libprelude library needed if Prelude logging selected]))
+                CFLAGS="$OLDCFLAGS"
+                CPPFLAGS="$OLDCPPFLAGS"
         fi
   
         if test "$enable_pgsql_log" = "yes"; then
@@ -199,6 +214,7 @@ AC_CONFIG_FILES([Makefile
         src/nuauth/modules/system/Makefile
         src/nuauth/modules/log_pgsql/Makefile
         src/nuauth/modules/log_mysql/Makefile
+        src/nuauth/modules/log_prelude/Makefile
         src/nuauth/modules/log_syslog/Makefile
         src/nuauth/modules/log_script/Makefile
         src/nuauth/modules/ipauth_ident/Makefile

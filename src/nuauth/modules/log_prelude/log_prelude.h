@@ -15,8 +15,10 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifdef NUAUTH_MODULE_LOG_PRELUDE
+#ifndef NUAUTH_MODULE_LOG_PRELUDE
 #define NUAUTH_MODULE_LOG_PRELUDE
+
+#include "auth_srv.h"
 
 /** Prelude version required for the module */
 #define PRELUDE_VERSION_REQUIRE "0.9.0"
