@@ -91,6 +91,14 @@ void real_log_user_packet (gpointer userdata, gpointer data)
 void log_user_session(user_session* usession, session_state_t state)
 {
     struct session_event* sessevent;
+
+    if (state == SESSION_OPEN)
+        log_message(MESSAGE, AREA_USER,
+                "[+] User \"%s\" connected.", usession->user_name);
+    else
+        log_message(MESSAGE, AREA_USER,
+                "[+] User \"%s\" disconnected.", usession->user_name);
+    
     if ((nuauthconf->log_users & 1) == 0)
         return;
 
