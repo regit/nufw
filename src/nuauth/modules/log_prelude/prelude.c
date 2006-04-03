@@ -1,8 +1,93 @@
-#include <prelude.h>
-#include <idmef-tree-wrap.h>
-#include <stdio.h>
+/*
+ ** Copyright(C) 2003-2006 Victor Stinner <victor.stinner AT haypocalc.com>
+ **
+ ** This program is free software; you can redistribute it and/or modify
+ ** it under the terms of the GNU General Public License as published by
+ ** the Free Software Foundation, version 2 of the License.
+ **
+ ** This program is distributed in the hope that it will be useful,
+ ** but WITHOUT ANY WARRANTY; without even the implied warranty of
+ ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ ** GNU General Public License for more details.
+ **
+ ** You should have received a copy of the GNU General Public License
+ ** along with this program; if not, write to the Free Software
+ ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
 
-#define PRELUDE_VERSION_REQUIRE "0.9.0"
+#include "log_prelude.h"
+#include <libprelude/prelude.h>
+#include <libprelude/idmef-tree-wrap.h>
+
+#ifdef MODULE
+confparams mysql_nuauth_vars[] = {
+/*    { "prelude_..." , G_TOKEN_STRING, 0 , PRELUDE_... }, */
+}
+
+G_MODULE_EXPORT gchar* module_params_unload(gpointer params_p)
+{
+    return NULL;
+}
+
+G_MODULE_EXPORT gboolean 
+init_module_from_conf(module_t *module)
+{
+    char *configfile=DEFAULT_CONF_FILE;
+    struct log_prelude_params* params=g_new0(struct log_prelude_params, 1);
+
+    /* parse conf file */
+    if (module->configfile){
+        parse_conffile(module->configfile,sizeof(mysql_nuauth_vars)/sizeof(confparams),mysql_nuauth_vars);
+    } else {
+        parse_conffile(configfile,sizeof(mysql_nuauth_vars)/sizeof(confparams),mysql_nuauth_vars);
+    }
+    
+/*    params->... = (char *)READ_CONF("prelude_..."); */
+    module->params=(gpointer)params;
+    return TRUE;
+}
+
+G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state,gpointer params_p)
+{
+    if (0) return -1;
+    switch (state) {
+        case TCP_STATE_OPEN:
+        case TCP_STATE_ESTABLISHED: 
+        case TCP_STATE_CLOSE: 
+        case TCP_STATE_DROP:
+        default:
+            /*
+               element->timestamp,
+               (long unsigned int)(element->tracking).saddr,
+               (long unsigned int)(element->tracking).daddr,
+               (element->tracking).source,
+               (element->tracking).dest,
+               */
+            break;
+    }
+    return 0;
+}
+
+G_MODULE_EXPORT int user_session_logs(user_session *c_session, session_state_t state,gpointer params_p)
+{
+    if (0) return -1;
+    switch (state) {
+        case SESSION_OPEN:
+        case SESSION_CLOSE:
+        default:
+/*                    c_session->user_id,
+                    c_session->user_name,
+                    c_session->addr,
+                    c_session->sysname,
+                    c_session->release,
+                    c_session->version, */
+            break;
+    }
+    return 0;
+}
+#else
+#include <stdio.h>
+#endif
 
 #if 0
 static int add_idmef_object(idmef_message_t *message, const char *object, const char *value)
@@ -134,3 +219,4 @@ int main(int argc, char **argv)
     printf("ok\n");
     return 0;
 }
+

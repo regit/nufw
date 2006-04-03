@@ -43,6 +43,11 @@ AC_CHECK_LIB([gnutls], [gnutls_init],AC_DEFINE([HAVE_LIBRARY_GNUTLS],[1],[Gnutls
 AC_CHECK_LIB([sasl2],[sasl_server_init],AC_DEFINE([HAVE_LIBRARY_SASL2],[1],[SASL lib flag]),AC_MSG_ERROR([sasl library needed for authentication]))
 
 #Configure database support, depending on user input
+AC_ARG_WITH(prelude-log,
+        [AC_HELP_STRING(--with-prelude-log,  
+        Support user activity logging in Prelude)], 
+        enable_prelude_log="yes", 
+        enable_prelude_log="")
 AC_ARG_WITH(mysql-log, [AC_HELP_STRING(--with-mysql-log,  Support user activity logging in Mysql database)], enable_mysql_log="yes", enable_mysql_log="")
 AC_ARG_WITH(pgsql-log, [AC_HELP_STRING(--with-pgsql-log,  Support user activity logging in PostgreSQL database)], enable_pgsql_log="yes", enable_pgsql_log="")
 
@@ -94,6 +99,10 @@ if test "${build_nuauth}" = "yes"; then
                 AC_CHECK_LIB([mysqlclient],[mysql_ssl_set],AC_DEFINE_UNQUOTED([HAVE_MYSQL_SSL],[1],[Will compile mysql log module with ssl support]),AC_MSG_NOTICE([mysqlclient has no ssl support]))
         fi
   
+        if test "$enable_prelude_log" = "yes"; then
+                AC_CHECK_LIB([prelude],[prelude_init],,AC_MSG_ERROR([libprelude library needed if Prelude logging selected]))
+        fi
+  
         if test "$enable_pgsql_log" = "yes"; then
                 AC_CHECK_LIB([pq],[PQconnectdb],AC_DEFINE([HAVE_LIBRARY_PQ],[1],[pgsql lib flag] )   ,AC_MSG_ERROR([libpq library needed if PostgreSQL support selected]))
         fi
@@ -103,6 +112,7 @@ AM_CONDITIONAL(USE_SYSTEM_AUTH, test x$enable_system_auth = xyes)
 AM_CONDITIONAL(USE_LDAP, test x$ldap = xyes)
 AM_CONDITIONAL(USE_GDBM, test x$gdbm = xyes)
 AM_CONDITIONAL(USE_IDENT, test x$ident = xyes)
+AM_CONDITIONAL(USE_PRELUDE_LOG, test x$enable_prelude_log = xyes)
 AM_CONDITIONAL(USE_MYSQL_LOG, test x$enable_mysql_log = xyes)
 AM_CONDITIONAL(USE_PGSQL_LOG, test x$enable_pgsql_log = xyes)
 
@@ -230,6 +240,10 @@ if test "${build_nuauth}" = "yes"; then
 
         if test "${ident}" = "yes"; then
         	AC_MSG_RESULT([  - NuAuth: compile (fallback) module ident])
+        fi
+
+        if test "${enable_prelude_log}" = "yes"; then
+        	AC_MSG_RESULT([  - NuAuth: compile log module prelude])
         fi
 
         if test "${enable_mysql_log}" = "yes"; then
