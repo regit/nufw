@@ -140,14 +140,14 @@ char* get_password()
 	if (password == NULL){
 		passwd=(char *)calloc(32,sizeof( char));
 #ifdef LINUX
-		printf("Enter password : ");
+		printf("Enter password: ");
 		my_getpass(&passwd,&password_size);
 
 		if (strlen(passwd)<password_size) {
 			passwd[strlen(passwd)-1]=0;
 		}
 #else 
- if (readpassphrase("Enter password : ", passwd, password_size,
+ if (readpassphrase("Enter password: ", passwd, password_size,
                RPP_REQUIRE_TTY) == NULL){
                   fprintf(stderr, "unable to read passphrase");
 }
@@ -167,7 +167,7 @@ char * get_username()
 	size_t username_size=64;
 
 	if (username == NULL){
-		printf("Enter username : ");
+		printf("Enter username: ");
 		user=(char *)calloc(64,sizeof( char));
 		nread = getline (&user, &username_size, stdin);
 		user[64]=0;
@@ -296,8 +296,8 @@ int main (int argc, char *argv[])
 	if (!session){
 		int nerror=errno;
 		printf("\nCan not initiate connection to NuFW gateway\n");
-		/*printf("Problem : %s\n",strerror(nerror));*/
-                printf("Problem : %s\n",nuclient_strerror(err));
+		/*printf("Problem: %s\n",strerror(nerror));*/
+                printf("Problem: %s\n",nuclient_strerror(err));
 		exit(EXIT_FAILURE);
 	} else {
 		/* store username and password */
