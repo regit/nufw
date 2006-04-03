@@ -51,7 +51,7 @@ void modules_parse_periods(GHashTable* periods);
 
 int modules_check_certificate (gnutls_session session, gnutls_x509_crt cert);
 
-gchar* modules_certificate_to_uid (gnutls_session* session, gnutls_x509_crt* cert);
+gchar* modules_certificate_to_uid (gnutls_session session, gnutls_x509_crt cert);
 
 void block_on_conf_reload();
 #endif

@@ -110,14 +110,14 @@ G_MODULE_EXPORT int certificate_check (gnutls_session session, gnutls_x509_crt c
     return SASL_OK;
 }
 
-G_MODULE_EXPORT gchar* certificate_to_uid (gnutls_session* session, gnutls_x509_crt* cert,gpointer params)
+G_MODULE_EXPORT gchar* certificate_to_uid (gnutls_session session, gnutls_x509_crt cert,gpointer params)
 {
     size_t size;
 	char dn[DN_LENGTH];
     gchar* pointer;
 
 	size = sizeof(dn);
-	gnutls_x509_crt_get_dn( *cert, dn, &size);
+	gnutls_x509_crt_get_dn( cert, dn, &size);
 
 	log_message(VERBOSE_DEBUG, AREA_USER, "\tDN: %s", dn);
 	

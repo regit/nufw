@@ -64,7 +64,7 @@ gchar *	get_username_from_x509_certificate(gnutls_session session)
     if ( get_first_x509_cert_from_tls_session(session,&cert) != SASL_OK){
         return NULL;
     }
-    username = modules_certificate_to_uid(&session,&cert);
+    username = modules_certificate_to_uid(session,cert);
     gnutls_x509_crt_deinit( cert);
     log_message(VERBOSE_DEBUG, AREA_USER, "\tCN: %s", username);
     return username;
