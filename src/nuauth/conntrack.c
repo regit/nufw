@@ -174,7 +174,8 @@ void* limited_connection_handler(GMutex *mutex)
                 } else {
                     send_conntrack_message(elt,AUTH_CONN_UPDATE);
                     /* this has to be removed from hash */
-                    g_hash_table_remove(lim_conn_list,message->datas);
+                    g_hash_table_steal(lim_conn_list,message->datas);
+                    g_free(elt);
                 }
                 break;
 
