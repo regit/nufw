@@ -110,6 +110,31 @@ void auth_process_answer(char *dgram, int dgram_size)
 }    
 
 #ifdef HAVE_LIBCONNTRACK
+
+int build_nfct_tuple_from_message(struct nfct_tuple* orig,struct nu_conntrack_message_t* packet_hdr)
+{
+    orig->l3protonum = AF_INET;
+    orig->protonum = packet_hdr->ipv4_protocol;
+    orig->src.v4 = packet_hdr->ipv4_src;
+    orig->dst.v4 = packet_hdr->ipv4_dst;
+
+    switch (packet_hdr->ipv4_protocol)
+    {
+        case IPPROTO_TCP:
+            orig->l4src.tcp.port=packet_hdr->src_port;  
+            orig->l4dst.tcp.port=packet_hdr->dest_port;  
+            break;
+        case IPPROTO_UDP:
+            orig->l4src.udp.port=packet_hdr->src_port;  
+            orig->l4dst.udp.port=packet_hdr->dest_port;  
+            break;
+        default:
+            return 0; 
+    }
+    return 1;
+
+}
+
 /**
  * Process NuAuth message of type #AUTH_CONN_DESTROY
  */
@@ -124,30 +149,12 @@ void auth_process_conn_destroy(char *dgram, int dgram_size)
         return;
     }
     packet_hdr = (struct nu_conntrack_message_t*)dgram;
-
-    orig.l3protonum = AF_INET;
-    orig.protonum = packet_hdr->ipv4_protocol;
-    orig.src.v4 = packet_hdr->ipv4_src;
-    orig.dst.v4 = packet_hdr->ipv4_dst;
-
-    switch (packet_hdr->ipv4_protocol)
-    {
-        case IPPROTO_TCP:
-            orig.l4src.tcp.port=packet_hdr->src_port;  
-            orig.l4dst.tcp.port=packet_hdr->dest_port;  
-            break;
-        case IPPROTO_UDP:
-            orig.l4src.udp.port=packet_hdr->src_port;  
-            orig.l4dst.udp.port=packet_hdr->dest_port;  
-            break;
-        default:
-            return; 
-    }
-
-    debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_VERBOSE_DEBUG, 
+    
+    if (build_nfct_tuple_from_message(&orig,packet_hdr)){
+        debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_VERBOSE_DEBUG, 
                 "Deleting entry from conntrack after NuAuth request");
-    (void)nfct_delete_conntrack(cth, &orig, NFCT_DIR_ORIGINAL, id);
-
+        (void)nfct_delete_conntrack(cth, &orig, NFCT_DIR_ORIGINAL, id);
+    }
 }    
 
 /**
@@ -156,14 +163,10 @@ void auth_process_conn_destroy(char *dgram, int dgram_size)
 void auth_process_conn_update(char *dgram, int dgram_size)
 {
     struct nu_conntrack_message_t* packet_hdr;
-#ifdef OLDONE
-    struct nfct_conntrack ct;
-#else
     struct nfct_conntrack *ct;
     struct nfct_tuple orig;
     struct nfct_tuple reply;
     union nfct_protoinfo proto;
-#endif
 
 
     /* check packet size */
@@ -173,76 +176,36 @@ void auth_process_conn_update(char *dgram, int dgram_size)
         return;
     }
     packet_hdr = (struct nu_conntrack_message_t*)dgram;
+    
+    if (build_nfct_tuple_from_message(&orig,packet_hdr)){
+        /* generate reply : this is stupid but done by conntrack tool */
+        reply.l3protonum = orig.l3protonum;
+        memcpy(&reply.src, &orig.dst, sizeof(reply.src));
+        memcpy(&reply.dst, &orig.src, sizeof(reply.dst));
 
-#ifdef OLDONE
-    ct.tuple[NFCT_DIR_ORIGINAL].l3protonum= AF_INET;
-    ct.tuple[NFCT_DIR_ORIGINAL].src.v4=packet_hdr->ipv4_src;
-    ct.tuple[NFCT_DIR_ORIGINAL].dst.v4=packet_hdr->ipv4_dst;
-    ct.tuple[NFCT_DIR_ORIGINAL].protonum=packet_hdr->ipv4_protocol;
-    ct.timeout=0;
-#else
-    orig.l3protonum = AF_INET;
-    orig.src.v4=packet_hdr->ipv4_src;
-    orig.dst.v4=packet_hdr->ipv4_dst;
-    orig.protonum=packet_hdr->ipv4_protocol;
-
-#endif
-
- 
-     switch (packet_hdr->ipv4_protocol){
-         case IPPROTO_TCP:
-#ifdef OLDONE
-            ct.tuple[NFCT_DIR_ORIGINAL].l4src.tcp.port=packet_hdr->src_port;  
-            ct.tuple[NFCT_DIR_ORIGINAL].l4dst.tcp.port=packet_hdr->dest_port;  
-#else
-            orig.l4src.tcp.port=packet_hdr->src_port;  
-            orig.l4dst.tcp.port=packet_hdr->dest_port;  
-#endif
-             break;
-         case IPPROTO_UDP:
-#ifdef OLDONE
-            ct.tuple[NFCT_DIR_ORIGINAL].l4src.udp.port=packet_hdr->src_port;  
-            ct.tuple[NFCT_DIR_ORIGINAL].l4dst.udp.port=packet_hdr->dest_port;  
-#else
-            orig.l4src.udp.port=packet_hdr->src_port;  
-            orig.l4dst.udp.port=packet_hdr->dest_port; 
-#endif
-            break; 
-        default:
-            debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, 
-                "unknown proto",packet_hdr->ipv4_protocol);
-            return; 
-    }
-#ifndef OLDONE
-
-     reply.l3protonum = orig.l3protonum;
-     memcpy(&reply.src, &orig.dst, sizeof(orig.src));
-     memcpy(&reply.dst, &orig.src, sizeof(orig.dst));
-     ct = nfct_conntrack_alloc(&orig, &orig, 0,
-					  &proto,1 , 0, 0,
-					  NULL);
-#endif
+        memcpy(&reply.l4src, &orig.l4dst, sizeof(reply.l4src));
+        memcpy(&reply.l4dst, &orig.l4src, sizeof(reply.l4dst));
+        proto.tcp.state=3;
+        /*
+        ct = nfct_conntrack_alloc(&orig, &reply, -1,
+                &proto, IPS_ASSURED | IPS_CONFIRMED , 0, 0, NULL);
+         */
+        ct = nfct_conntrack_alloc(&orig, &reply, 0,
+                &proto,  0  , 0, 0, NULL);
 
 
 #ifdef HAVE_LIBCONNTRACK_FIXEDTIMEOUT
-    if (packet_hdr->timeout)
-    {
-        debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_VERBOSE_DEBUG, 
-                "Setting timeout to %d after NuAuth request",ntohl(packet_hdr->timeout));
-#ifdef OLDONE
-        ct.fixed_timeout = ntohl(packet_hdr->timeout);
-#else
-        ct->fixed_timeout = ntohl(packet_hdr->timeout);
-#endif
-    }
+        if (packet_hdr->timeout)
+        {
+            debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_VERBOSE_DEBUG, 
+                    "Setting timeout to %d after NuAuth request",ntohl(packet_hdr->timeout));
+            ct->fixed_timeout = ntohl(packet_hdr->timeout);
+        }
 #endif /* HAVE_LIBCONNTRACK_FIXEDTIMEOUT */
 
-#ifdef OLDONE
-    (void)nfct_update_conntrack(cth, &ct);
-#else
-    (void)nfct_update_conntrack(cth, ct);
-    nfct_conntrack_free(ct);
-#endif
+        (void)nfct_update_conntrack(cth, ct);
+        nfct_conntrack_free(ct);
+    }
 }    
 #endif /* HAVE_LIBCONNTRACK */
 
