@@ -10,7 +10,7 @@ plugin_LTLIBRARIES = libprelude.la
 
 libprelude_la_SOURCES = prelude.c
 
-libprelude_la_LIBADD =
+libprelude_la_LIBADD = -lprelude
 
 libprelude.la: $(libprelude_la_OBJECTS) $(libprelude_la_DEPENDENCIES) 
 	$(LINK) $(am_libprelude_la_rpath) $(libprelude_la_LDFLAGS) $(libprelude_la_OBJECTS) $(libprelude_la_LIBADD)
