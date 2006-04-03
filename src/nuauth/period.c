@@ -19,9 +19,9 @@
 #include "auth_srv.h" 
 
 
-gboolean is_time_t_in_period(gchar* periodname,time_t time)
+gboolean is_time_t_in_period(gchar* periodname,time_t pckt_time)
 {
-  if (get_end_of_period_for_time_t(periodname,time)){
+  if (get_end_of_period_for_time_t(periodname,pckt_time)){
         return TRUE;
   } else {
         return FALSE;
@@ -29,9 +29,9 @@ gboolean is_time_t_in_period(gchar* periodname,time_t time)
 
 }
 
-static inline unsigned int get_start_of_day_from_time_t(time_t time)
+static inline unsigned int get_start_of_day_from_time_t(time_t pckt_time)
 {
-        return time-time%86400;
+        return pckt_time-pckt_time%86400;
 }
 
 /**
@@ -68,13 +68,13 @@ static time_t get_end_of_period_item_for_time(struct period_item* perioditem,tim
       if (perioditem->start_day!= -1){
           if(perioditem->start_day<=perioditem->end_day){
               if ((tmtime.tm_wday>=perioditem->start_day) && (tmtime.tm_wday <= perioditem->end_day)){
-                        endtime=get_start_of_day_from_time_t(time)+86400*(perioditem->end_day-tmtime.tm_wday+1);
+                        endtime=get_start_of_day_from_time_t(pckt_time)+86400*(perioditem->end_day-tmtime.tm_wday+1);
               }       
           } else {
               if (tmtime.tm_wday>=perioditem->start_day){
-                        endtime=get_start_of_day_from_time_t(time)+86400*(6-tmtime.tm_wday+1+perioditem->end_day);
+                        endtime=get_start_of_day_from_time_t(pckt_time)+86400*(6-tmtime.tm_wday+1+perioditem->end_day);
               }      else  if (tmtime.tm_wday >= perioditem->end_day){
-                        endtime=get_start_of_day_from_time_t(time)+86400*(perioditem->end_day-tmtime.tm_wday+1);
+                        endtime=get_start_of_day_from_time_t(pckt_time)+86400*(perioditem->end_day-tmtime.tm_wday+1);
               }
           }
       }
