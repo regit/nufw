@@ -146,19 +146,19 @@ void modules_parse_periods(GHashTable* periods)
  * \param certificate
  * \return SASL_OK if certificate is correct
  */
-int modules_check_certificate (gnutls_session* session, gnutls_x509_crt* cert)
+int modules_check_certificate (gnutls_session session, gnutls_x509_crt cert)
 {
-	/* iter through all modules list */
-	GSList *walker=certificate_check_modules;
+    /* iter through all modules list */
+    GSList *walker=certificate_check_modules;
     int ret;
-	for (; walker!=NULL; walker=walker->next) {
+    for (; walker!=NULL; walker=walker->next) {
         certificate_check_callback *handler = (certificate_check_callback*)((module_t*)walker->data)->func;
-		ret = handler (session, cert, ((module_t*)walker->data)->params);
+        ret = handler (session, cert, ((module_t*)walker->data)->params);
         if (ret != SASL_OK){
             return ret;
         }
-	}
-	return SASL_OK;
+    }
+    return SASL_OK;
 }
 
 /**

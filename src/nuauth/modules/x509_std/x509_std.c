@@ -69,13 +69,13 @@ G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
 }
 
 
-G_MODULE_EXPORT int certificate_check (gnutls_session* session, gnutls_x509_crt* cert,gpointer params_p)
+G_MODULE_EXPORT int certificate_check (gnutls_session session, gnutls_x509_crt cert,gpointer params_p)
 {
   struct x509_std_params* params=(struct x509_std_params*)params_p;
 	time_t expiration_time, activation_time;
     
-	expiration_time = gnutls_x509_crt_get_expiration_time(*cert);
-	activation_time = gnutls_x509_crt_get_activation_time(*cert);
+	expiration_time = gnutls_x509_crt_get_expiration_time(cert);
+	activation_time = gnutls_x509_crt_get_activation_time(cert);
 
     log_message(VERBOSE_DEBUG,AREA_MAIN
             , "Certificate validity starts at: %s\nCertificate expires: %s"
@@ -85,13 +85,13 @@ G_MODULE_EXPORT int certificate_check (gnutls_session* session, gnutls_x509_crt*
     /* verify date */
     if (expiration_time<time(NULL)){
         log_message(INFO, AREA_USER, "Certificate expired at: %s", ctime(&expiration_time));
-		gnutls_x509_crt_deinit( *cert);
+		gnutls_x509_crt_deinit(cert);
 		return SASL_EXPIRED;
 	}
 
 	if (activation_time>time(NULL)){
         log_message(INFO, AREA_USER, "Certificate only activates at: %s", ctime(&activation_time));
-		gnutls_x509_crt_deinit( *cert);
+		gnutls_x509_crt_deinit(cert);
 		return SASL_DISABLED;
 	}
 	
@@ -99,10 +99,10 @@ G_MODULE_EXPORT int certificate_check (gnutls_session* session, gnutls_x509_crt*
         size_t size;
         char dn[DN_LENGTH];
         size = sizeof(dn);
-        gnutls_x509_crt_get_issuer_dn( *cert, dn, &size);
+        gnutls_x509_crt_get_issuer_dn(cert, dn, &size);
         if (strcmp(dn,params->trusted_issuer_dn)){
             log_message(VERBOSE_DEBUG, AREA_USER, "\tIssuer's DN is not trusted: %s", dn);
-            gnutls_x509_crt_deinit( *cert);
+            gnutls_x509_crt_deinit(cert);
             return SASL_DISABLED;
         }
     }

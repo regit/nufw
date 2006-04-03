@@ -49,7 +49,7 @@ int modules_user_session_logs(user_session* user, session_state_t state);
 
 void modules_parse_periods(GHashTable* periods);
 
-int modules_check_certificate (gnutls_session* session, gnutls_x509_crt* cert);
+int modules_check_certificate (gnutls_session session, gnutls_x509_crt cert);
 
 gchar* modules_certificate_to_uid (gnutls_session* session, gnutls_x509_crt* cert);
 
