@@ -23,10 +23,9 @@
 /** Prelude version required for the module */
 #define PRELUDE_VERSION_REQUIRE "0.9.0"
 
-#ifdef MODULE
 struct log_prelude_params
 {
 };
-#endif
 
 #endif
+

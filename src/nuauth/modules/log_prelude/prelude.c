@@ -19,10 +19,9 @@
 #include <prelude.h>
 #include <idmef-tree-wrap.h>
 
-#ifdef MODULE
 confparams mysql_nuauth_vars[] = {
 /*    { "prelude_..." , G_TOKEN_STRING, 0 , PRELUDE_... }, */
-}
+};
 
 G_MODULE_EXPORT gchar* module_params_unload(gpointer params_p)
 {
@@ -85,9 +84,6 @@ G_MODULE_EXPORT int user_session_logs(user_session *c_session, session_state_t s
     }
     return 0;
 }
-#else
-#include <stdio.h>
-#endif
 
 #if 0
 static int add_idmef_object(idmef_message_t *message, const char *object, const char *value)
@@ -161,12 +157,14 @@ idmef_message_t *create_message()
     return idmef;
 }
 
-int main(int argc, char **argv)
+int init_prelude()
 {
     int ret;
     prelude_client_t *client;
     idmef_message_t *message;
     const char *version;
+    int argc;
+    char **argv = NULL; 
 
     version = prelude_check_version (PRELUDE_VERSION_REQUIRE);
     if (version == NULL) {
