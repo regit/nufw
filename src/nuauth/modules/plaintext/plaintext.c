@@ -1053,7 +1053,7 @@ G_MODULE_EXPORT GSList* acl_check(connection_t* element,gpointer params)
               continue;
           } else {
               debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
-                "end of period for %s in %d", p_acl->period,periodend);
+                "end of period for %s in %ld", p_acl->period,periodend);
             
           }
       }
