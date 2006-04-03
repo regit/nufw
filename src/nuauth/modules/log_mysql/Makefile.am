@@ -3,7 +3,7 @@
 if USE_MYSQL_LOG
 
 AM_CPPFLAGS = -DCONFIG_DIR=\"$(sysconfdir)\" -DMODULE_DIR=\"$(libdir)\"
-INCLUDES = $(GLIB_CFLAGS) -I../../ -I../../include/ -I/usr/include/postgresql/
+INCLUDES = $(GLIB_CFLAGS) -I../../ -I../../include/
 plugindir = $(libdir)/nuauth/modules
 
 plugin_LTLIBRARIES = libmysql.la
