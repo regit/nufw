@@ -508,8 +508,6 @@ void init_nuauthdatas()
     /* init periods */
     nuauthconf->periods=init_periods(nuauthconf);
 
-
-
     /* internal Use */
     ALLGROUP = g_slist_prepend(NULL, GINT_TO_POINTER(0) );
 
@@ -531,9 +529,6 @@ void init_nuauthdatas()
                 POOL_TYPE,
                 NULL);
 
-    /* create thread for client request sender */
-    create_thread (&nuauthdatas->tls_pusher, push_worker);
-
     /* init private datas for pool thread */
     nuauthdatas->aclqueue = g_private_new(g_free);
     nuauthdatas->userqueue = g_private_new(g_free);
@@ -541,12 +536,6 @@ void init_nuauthdatas()
     /* create thread for search_and_fill thread */
     log_message (VERBOSE_DEBUG, AREA_MAIN, "Creating search_and_fill thread");
     create_thread (&nuauthdatas->search_and_fill_worker, search_and_fill);
-
-    if (nuauthconf->push && nuauthconf->hello_authentication){
-        log_message(VERBOSE_DEBUG, AREA_MAIN, "Creating hello mode authentication thread");
-        nuauthdatas->localid_auth_queue = g_async_queue_new ();
-        create_thread (&nuauthdatas->localid_auth_thread, localid_auth);
-    }
 
     /* create acl checker workers */
     log_message(VERBOSE_DEBUG, AREA_MAIN, "Creating %d acl checkers",nuauthconf->nbacl_check);
@@ -588,14 +577,23 @@ void init_nuauthdatas()
                 NULL);
     }
 
+    if (nuauthconf->push && nuauthconf->hello_authentication){
+        log_message(VERBOSE_DEBUG, AREA_MAIN, "Creating hello mode authentication thread");
+        nuauthdatas->localid_auth_queue = g_async_queue_new ();
+        create_thread (&nuauthdatas->localid_auth_thread, localid_auth);
+    }
+
+    /* create thread for client request sender */
+    create_thread (&nuauthdatas->tls_pusher, push_worker);
+
+    create_thread (&nuauthdatas->limited_connections_handler, limited_connection_handler);
+
     /* create TLS authentification server threads (auth + nufw) */
     log_message (VERBOSE_DEBUG, AREA_MAIN, "Creating tls authentication server thread");
     create_thread (&nuauthdatas->tls_auth_server, tls_user_authsrv);
 
     log_message (VERBOSE_DEBUG, AREA_MAIN, "Creating tls nufw server thread");
     create_thread (&nuauthdatas->tls_nufw_server, tls_nufw_authsrv);
-
-    create_thread (&nuauthdatas->limited_connections_handler, limited_connection_handler);
 
     log_message (INFO, AREA_MAIN, "Threads system started");
 }
@@ -666,8 +664,8 @@ void nuauth_main_loop()
 int main(int argc,char * argv[]) 
 {
     configure_app(argc, argv);
-    nuauth_install_signals();
     init_nuauthdatas();
+    nuauth_install_signals();
     init_audit();
     nuauth_main_loop();
     return EXIT_SUCCESS;
