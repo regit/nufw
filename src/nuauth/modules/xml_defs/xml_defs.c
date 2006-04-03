@@ -196,7 +196,7 @@ G_MODULE_EXPORT void define_periods(GHashTable* periods,gpointer params_p)
 
     curcontext->periods=periods;
     if (!g_file_get_contents(params->xml_defs_periodfile, &contents, &length, &error)) {
-        log_message(SERIOUS_WARNING, AREA_MAIN,"Error reading period: %s\n",
+        log_message(SERIOUS_WARNING, AREA_MAIN,"Error reading period: %s",
                 error->message);
         g_error_free(error);
         return;
