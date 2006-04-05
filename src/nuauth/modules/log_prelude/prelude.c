@@ -23,6 +23,10 @@ confparams mysql_nuauth_vars[] = {
 /*    { "prelude_..." , G_TOKEN_STRING, 0 , PRELUDE_... }, */
 };
 
+/**
+ * Get the client handler. If this function is called for the first time, 
+ * init Prelude library and then create the client connection.
+ */
 prelude_client_t *get_client(struct log_prelude_params* params)
 {
     const char *version;
@@ -35,39 +39,54 @@ prelude_client_t *get_client(struct log_prelude_params* params)
         return client;
     }
 
+    log_message(SERIOUS_WARNING, AREA_MAIN, 
+            "[+] Prelude log: Init Prelude library");
+
     version = prelude_check_version (PRELUDE_VERSION_REQUIRE);
     if (version == NULL) {
-        printf("need prelude version %s (installed version is %s).\n", 
+        log_message(CRITICAL, AREA_MAIN,
+                "Fatal error: Prelude module needs prelude version %s (installed version is %s)!", 
                 PRELUDE_VERSION_REQUIRE,
                 prelude_check_version(NULL));
-        return NULL;
+        exit(EXIT_FAILURE);
     }
     
     ret = prelude_init(&argc, argv);
     if ( ret < 0 ) {
-        prelude_perror(ret, "unable to initialize the prelude library");
-        return NULL;
+        log_message(CRITICAL, AREA_MAIN,
+                "Fatal error: Fail to init Prelude module!");
+        exit(EXIT_FAILURE);
     }
 
+    log_message(SERIOUS_WARNING, AREA_MAIN, 
+            "[+] Prelude log: Open client connection to Prelude manager");
 
     ret = prelude_client_new(&client, "nufw");
     if ( ! client ) {
-        prelude_perror(ret, "Unable to create a prelude client object");
-        return NULL;
+        log_message(CRITICAL, AREA_MAIN,
+                "Fatal error: Unable to create a prelude client object!");
+        exit(EXIT_FAILURE);
     }
 
     ret = prelude_client_start(client);
     if ( ret < 0 ) {
-        prelude_perror(ret, "Unable to start prelude client");
+        log_message(CRITICAL, AREA_MAIN,
+                "Fatal error: Unable to start prelude client!");
         prelude_deinit();
-        return NULL;
+        exit(EXIT_FAILURE);
     }
 
     g_private_set(params->client, client);
     return client;
 }    
 
-
+void close_prelude_client(prelude_client_t *client)
+{
+    log_message(SERIOUS_WARNING, AREA_MAIN, 
+            "[+] Prelude log: close client connection and deinit library");
+    prelude_client_destroy(client, PRELUDE_CLIENT_EXIT_STATUS_SUCCESS);
+    prelude_deinit();
+}
 
 G_MODULE_EXPORT gchar* module_params_unload(gpointer params_ptr)
 {
@@ -80,8 +99,8 @@ G_MODULE_EXPORT gchar* module_params_unload(gpointer params_ptr)
     prelude_client_t *client = g_private_get (params->client);
     if (client != NULL)
     {
-        prelude_client_destroy(client, PRELUDE_CLIENT_EXIT_STATUS_SUCCESS);
-        prelude_deinit();
+        close_prelude_client(client);
+        g_private_set(params->client, NULL);
     }
     g_free(params);
     return NULL;
@@ -94,6 +113,7 @@ init_module_from_conf(module_t *module)
     struct log_prelude_params* params=g_new0(struct log_prelude_params, 1);
     if (params == NULL)
         return FALSE;
+    params->client = g_private_new(close_prelude_client);
 
     /* parse conf file */
     if (module->configfile){
@@ -107,6 +127,20 @@ init_module_from_conf(module_t *module)
     return TRUE;
 }
 
+static void del_idmef_object(idmef_message_t *message, const char *object)
+{
+        idmef_value_t *val;
+        idmef_path_t *path;
+        if ( idmef_path_new(&path, object) < 0) {
+            return;
+        }
+        if (0< idmef_path_get(path, message, &val)) {
+            idmef_value_destroy (val);
+        }
+        idmef_path_destroy(path);
+        return;
+}
+
 static int add_idmef_object(idmef_message_t *message, const char *object, const char *value)
 {
         int ret;
@@ -116,68 +150,51 @@ static int add_idmef_object(idmef_message_t *message, const char *object, const 
         
         ret = idmef_path_new(&path, object);
         if ( ret < 0 ) {
-            printf("FAIL %s=%s\n", object, value);
+            log_message(DEBUG, AREA_MAIN, 
+                    "Prelude: Fail to set attribute %s=%s", object, value);
             return -1;
         }
 
-        ret = idmef_value_new_from_path(&val, path, value);
-        if ( ret < 0 ) {
-            printf("Fails to set %s message attribute to %s!\n", object, value);
-            idmef_path_destroy(path);
-            return -1;
-        }
-
+        /* remove old value if it does exist */
         ret = idmef_path_get(path, message, &oldval);
         if (0< ret)
         {
             idmef_value_destroy (oldval);
         }
-        ret = idmef_path_set(path, message, val);
 
+        /* set new value */
+        ret = idmef_value_new_from_path(&val, path, value);
+        if ( ret < 0 ) {
+            log_message(DEBUG, AREA_MAIN, 
+                    "Prelude: Fail to set attribute %s=%s", object, value);
+            idmef_path_destroy(path);
+            return -1;
+        }
+        ret = idmef_path_set(path, message, val);
         idmef_value_destroy(val);
         idmef_path_destroy(path);
-        
         return ret;
 }
 
 int feed_message(idmef_message_t *idmef)
 {
-    /* classification */
-    add_idmef_object(idmef, "alert.classification.text", "Reject connection");
-    add_idmef_object(idmef, "alert.classification.reference(0).origin", "user-specific"); 
-    add_idmef_object(idmef, "alert.classification.reference(0).name", "NuFW-U001");
-    add_idmef_object(idmef, "alert.classification.reference(0).url", "http://www.nufw.org/attack.php?code=U001");
-
     /* source address/service */    
-    add_idmef_object(idmef, "alert.source(0).interface", "eth0");
     add_idmef_object(idmef, "alert.source(0).node.address(0).category", "ipv4-addr");
     add_idmef_object(idmef, "alert.source(0).service.ip_version", "4"); 
 
     /* target address/service */    
-    add_idmef_object(idmef, "alert.target(0).interface", "eth1");
     add_idmef_object(idmef, "alert.target(0).node.address(0).category", "ipv4-addr");
     add_idmef_object(idmef, "alert.target(0).service.ip_version", "4"); 
+    add_idmef_object(idmef, "alert.target(0).process.name", "nuauth");
 
-    /* target process */
-    add_idmef_object(idmef, "alert.target(0).process.name", "ssh");
-    add_idmef_object(idmef, "alert.target(0).process.path", "/usr/bin/ssh");
-    add_idmef_object(idmef, "alert.target(0).process.pid", "34");
-   
     /* set assessment */
-    add_idmef_object(idmef, "alert.assessment.impact.severity", "high"); /* info | low | medium | high */
     add_idmef_object(idmef, "alert.assessment.impact.completion", "succeeded"); /* failed | succeeded */
     add_idmef_object(idmef, "alert.assessment.impact.type", "user"); /* admin | dos | file | recon | user | other */
-    add_idmef_object(idmef, "alert.assessment.impact.description", "nufw description of impact");
-    add_idmef_object(idmef, "alert.assessment.action.category", "block-installed"); /* block-installed | notification-sent | taken-offline | other */
-
-    /* set additionnal data */
-    add_idmef_object(idmef, "alert.additional_data(0).data", "My name is Bond");
-    add_idmef_object(idmef, "alert.additional_data(1).data", "James Bond");
+/*    add_idmef_object(idmef, "alert.assessment.action.category", "block-installed"); */ /* block-installed | notification-sent | taken-offline | other */
 
     /* user */
 /*    add_idmef_object(idmef, "alert.source(0).user.UserId(0).name", "haypo"); 
     add_idmef_object(idmef, "alert.source(0).user.UserId(0).number", "1000");  */
-
     return 1;
 }
 
@@ -201,7 +218,9 @@ idmef_message_t *create_message_template()
     return idmef;
 }
 
-idmef_message_t *create_message(idmef_message_t *template, connection_t* conn)
+idmef_message_t *create_message(idmef_message_t *template,
+        tcp_state_t state, connection_t* conn, 
+        char *state_text, char *impact,  char *severity)
 {
     idmef_message_t *idmef;
     time_t stdlib_time;
@@ -210,8 +229,9 @@ idmef_message_t *create_message(idmef_message_t *template, connection_t* conn)
     idmef_alert_t *alert;
     int ret;
     char buffer[50];
-    static int time_diff = 0;
     struct in_addr ipaddr;
+    char *tmp_buffer;
+    unsigned short psrc, pdst;
 
 /*     idmef_data_copy_ref and idmef_data_copy_dup should help you */
 /*    idmef_stuff_ref() */
@@ -229,11 +249,7 @@ idmef_message_t *create_message(idmef_message_t *template, connection_t* conn)
     }
 
     /* set create time */
-    stdlib_time = time(NULL);
-    stdlib_time -= 5;
-    stdlib_time += time_diff;
-    time_diff += 5;
-    ret = idmef_time_new_from_time(&create_time, &stdlib_time);
+    ret = idmef_time_new_from_time(&create_time, &conn->timestamp);
     if (ret < 0) {
         idmef_message_destroy(idmef);
         return NULL;
@@ -241,32 +257,52 @@ idmef_message_t *create_message(idmef_message_t *template, connection_t* conn)
     idmef_alert_set_create_time(alert, create_time);
 
     /* set detect time */
-    stdlib_time += 5;    
     ret = idmef_alert_new_detect_time(alert, &detect_time);
     if (ret < 0) {
         idmef_message_destroy(idmef);
         return NULL;
     }
+    stdlib_time = time(NULL);
     idmef_time_set_from_time (detect_time, &stdlib_time);
+
+    add_idmef_object(idmef, "alert.classification.text", state_text);
+    add_idmef_object(idmef, "alert.assessment.impact.severity", severity); /* info | low | medium | high */
+    add_idmef_object(idmef, "alert.assessment.impact.description", impact);
+    
+    if ((state == TCP_STATE_ESTABLISHED) || (state == TCP_STATE_DROP)) {
+        psrc = conn->tracking.dest;
+        pdst = conn->tracking.source;
+    } else {
+        psrc = conn->tracking.source;
+        pdst = conn->tracking.dest;
+    }
 
     /* source address/service */    
     ipaddr.s_addr = ntohl(conn->tracking.saddr);
     add_idmef_object(idmef, "alert.source(0).node.address(0).address", inet_ntoa(ipaddr));
-    add_idmef_object(idmef, "alert.source(0).service.protocol", "tcp");
-    if (secure_snprintf(buffer, sizeof(buffer), "%hu", conn->tracking.source))
+    if (secure_snprintf(buffer, sizeof(buffer), "%hu", conn->tracking.protocol)) {
+        add_idmef_object(idmef, "alert.source(0).service.iana_protocol_number", buffer);
+    }
+    if (secure_snprintf(buffer, sizeof(buffer), "%hu", psrc))
             add_idmef_object(idmef, "alert.source(0).service.port", buffer); 
 
     /* target address/service */    
     ipaddr.s_addr = ntohl(conn->tracking.daddr);
     add_idmef_object(idmef, "alert.target(0).node.address(0).address", inet_ntoa(ipaddr));
     add_idmef_object(idmef, "alert.target(0).service.protocol", "tcp"); 
-    if (secure_snprintf(buffer, sizeof(buffer), "%hu", conn->tracking.dest))
+    if (secure_snprintf(buffer, sizeof(buffer), "%hu", pdst))
         add_idmef_object(idmef, "alert.target(0).service.port", buffer); 
 
     /* source process */
-    add_idmef_object(idmef, "alert.source(0).process.name", "ssh");
-    add_idmef_object(idmef, "alert.source(0).process.path", "/usr/bin/ssh");
-    add_idmef_object(idmef, "alert.source(0).process.pid", "7874");
+    if (conn->app_name != NULL) {
+        tmp_buffer = g_path_get_basename(conn->app_name);
+        add_idmef_object(idmef, "alert.source(0).process.name", tmp_buffer);
+        g_free(tmp_buffer);
+        add_idmef_object(idmef, "alert.source(0).process.path", conn->app_name);
+    } else {
+        del_idmef_object(idmef, "alert.source(0).process.name");
+        del_idmef_object(idmef, "alert.source(0).process.path");
+    }
     return idmef;
 }
 
@@ -275,30 +311,40 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state,
     prelude_client_t *client = get_client(params_p);
     idmef_message_t *message;
     idmef_message_t *tpl;
+    char *impact;
+    char *state_text;
+    char *severity;
 
     if (client == NULL)
         return -1;
 
     tpl = create_message_template();
-    message = create_message(tpl, element);
-    if (message == NULL) {
-        return -1;
-    }
-
+    impact = "notify connection state change";
     switch (state) {
         case TCP_STATE_OPEN:
-        case TCP_STATE_ESTABLISHED: 
-        case TCP_STATE_CLOSE: 
-        case TCP_STATE_DROP:
-        default:
-            /*
-               element->timestamp,
-               (long unsigned int)(element->tracking).saddr,
-               (long unsigned int)(element->tracking).daddr,
-               (element->tracking).source,
-               (element->tracking).dest,
-               */
+            state_text = "Open connection";
+            severity = "low";
             break;
+        case TCP_STATE_ESTABLISHED: 
+            state_text = "Connection established";
+            severity = "info";
+            break;
+        case TCP_STATE_CLOSE: 
+            state_text = "Close connection";
+            severity = "low";
+            break;
+        case TCP_STATE_DROP:
+            state_text = "Drop connection";
+            severity = "medium";
+            break;
+        default:
+            return -1;
+            break;
+    }
+
+    message = create_message(tpl, state, element, state_text, impact, severity);
+    if (message == NULL) {
+        return -1;
     }
 
     prelude_client_send_idmef(client, message);
