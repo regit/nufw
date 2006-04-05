@@ -60,7 +60,7 @@ typedef int user_session_logs_callback (user_session* element, session_state_t s
 
 typedef int certificate_check_callback (gnutls_session session, gnutls_x509_crt cert,gpointer params);
 /* certificate to uid function */
-typedef gchar* certificate_to_uid_callback (gnutls_session* session, gnutls_x509_crt* cert,gpointer params);
+typedef gchar* certificate_to_uid_callback (gnutls_session session, gnutls_x509_crt cert,gpointer params);
 
 
 #endif

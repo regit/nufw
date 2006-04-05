@@ -38,7 +38,17 @@ typedef struct
     char* nuauth_nufw_listen_addr;
 } command_line_params_t;    
 
-void stop_threads()
+int nuauth_running = 1;
+
+/**
+ * Ask all threads to stop (by locking their mutex), and then wait 
+ * until they really stop (if wait is TRUE) using g_thread_join() 
+ * and g_thread_pool_free().
+ * 
+ * \param wait If wait is TRUE, the function will block until all threads
+ *             stopped. Else, it will just ask all threads to stop.
+ */ 
+void stop_threads(gboolean wait)
 {
     /* ask theads to stop */
     log_message(INFO, AREA_MAIN, "Ask threads to stop.");
@@ -47,49 +57,58 @@ void stop_threads()
     }
     
     /* wait thread end */
-    log_message(INFO, AREA_MAIN, "Wait thread end ...");
+    if (wait) {
+        log_message(INFO, AREA_MAIN, "Wait thread end ...");
+    }
     
     /* kill push worker */
     g_mutex_lock (nuauthdatas->tls_pusher.mutex);
-    log_message(DEBUG, AREA_MAIN, "Wait thread 'tls pusher'");
-    g_thread_join (nuauthdatas->tls_pusher.thread);
+    if (wait) {
+        log_message(DEBUG, AREA_MAIN, "Wait thread 'tls pusher'");
+        g_thread_join (nuauthdatas->tls_pusher.thread);
+    }
 
     /* kill entries point */
     g_mutex_lock (nuauthdatas->tls_auth_server.mutex);
     g_mutex_lock (nuauthdatas->tls_nufw_server.mutex);
     
-    log_message(DEBUG, AREA_MAIN, "Wait thread 'tls auth server'");
-    g_thread_join (nuauthdatas->tls_auth_server.thread);
+    if (wait) {
+        log_message(DEBUG, AREA_MAIN, "Wait thread 'tls auth server'");
+        g_thread_join (nuauthdatas->tls_auth_server.thread);
 
-    log_message(DEBUG, AREA_MAIN, "Wait thread 'tls nufw server'");
-    g_thread_join (nuauthdatas->tls_nufw_server.thread);
-    
-    /* end logging threads */
-    log_message(DEBUG, AREA_MAIN, "Stop thread pool 'user session loggers'");
-    g_thread_pool_free(nuauthdatas->user_session_loggers,TRUE,TRUE);
-    log_message(DEBUG, AREA_MAIN, "Stop thread pool 'user loggers'");
-    g_thread_pool_free(nuauthdatas->user_loggers,TRUE,TRUE);
-    log_message(DEBUG, AREA_MAIN, "Stop thread pool 'decision workers'");
-    g_thread_pool_free(nuauthdatas->decisions_workers,TRUE,TRUE);
-    
-    log_message(DEBUG, AREA_MAIN, "Stop thread pool 'acl checkers'");
-    g_thread_pool_free(nuauthdatas->acl_checkers,TRUE,TRUE);
-    
-    g_mutex_lock (nuauthdatas->limited_connections_handler.mutex);
-    log_message(DEBUG, AREA_MAIN, "Wait thread 'limited connections'");
-    g_thread_join (nuauthdatas->limited_connections_handler.thread);
-
-    g_mutex_lock (nuauthdatas->search_and_fill_worker.mutex);
-    log_message(DEBUG, AREA_MAIN, "Wait thread 'search&fill'");
-    g_thread_join (nuauthdatas->search_and_fill_worker.thread);
-
-    /* working  */
-    if (nuauthconf->do_ip_authentication) {
-        log_message(DEBUG, AREA_MAIN, "Stop thread pool 'ip auth workers'");
-        g_thread_pool_free(nuauthdatas->ip_authentication_workers,TRUE,TRUE);
+        log_message(DEBUG, AREA_MAIN, "Wait thread 'tls nufw server'");
+        g_thread_join (nuauthdatas->tls_nufw_server.thread);
     }
     
-    if (nuauthconf->push && nuauthconf->hello_authentication) {
+    /* end logging threads */
+    if (wait) {
+        log_message(DEBUG, AREA_MAIN, "Stop thread pool 'user session loggers'");
+        g_thread_pool_free(nuauthdatas->user_session_loggers, TRUE, wait);
+        log_message(DEBUG, AREA_MAIN, "Stop thread pool 'user loggers'");
+        g_thread_pool_free(nuauthdatas->user_loggers, TRUE, wait);
+        log_message(DEBUG, AREA_MAIN, "Stop thread pool 'decision workers'");
+        g_thread_pool_free(nuauthdatas->decisions_workers, TRUE, wait);
+        log_message(DEBUG, AREA_MAIN, "Stop thread pool 'acl checkers'");
+        g_thread_pool_free(nuauthdatas->acl_checkers, TRUE, wait);
+    }
+    
+    g_mutex_lock (nuauthdatas->limited_connections_handler.mutex);
+    g_mutex_lock (nuauthdatas->search_and_fill_worker.mutex);
+    if (wait) {
+        log_message(DEBUG, AREA_MAIN, "Wait thread 'limited connections'");
+        g_thread_join (nuauthdatas->limited_connections_handler.thread);
+
+        log_message(DEBUG, AREA_MAIN, "Wait thread 'search&fill'");
+        g_thread_join (nuauthdatas->search_and_fill_worker.thread);
+    }
+
+    /* working  */
+    if (nuauthconf->do_ip_authentication && wait) {
+        log_message(DEBUG, AREA_MAIN, "Stop thread pool 'ip auth workers'");
+        g_thread_pool_free(nuauthdatas->ip_authentication_workers, TRUE, wait);
+    }
+    
+    if (nuauthconf->push && nuauthconf->hello_authentication && wait) {
         log_message(DEBUG, AREA_MAIN, "Wait thread 'localid'");
         g_thread_join (nuauthdatas->localid_auth_thread.thread);
     }
@@ -131,6 +150,49 @@ void clear_push_queue()
     }
 }    
 
+void nuauth_deinit()
+{
+    /* free nufw server hash */
+    log_message(CRITICAL, AREA_MAIN, "[+] NuAuth deinit");
+    close_nufw_servers();
+
+    /* free client hash */
+    log_message(INFO, AREA_MAIN, "Close client connections");
+    close_clients();
+
+    log_message(INFO, AREA_MAIN, "Unload modules");
+    unload_modules();
+    
+    log_message(INFO, AREA_MAIN, "End TLS and audit");
+    end_tls();
+    end_audit();
+
+    log_message(INFO, AREA_MAIN, "Free memory");
+    free_nuauth_params (nuauthconf);
+    if (nuauthconf->acl_cache){
+        clear_cache(nuauthdatas->acl_cache);
+    }
+    if (nuauthconf->user_cache){
+        clear_cache(nuauthdatas->user_cache);
+    }
+    free_threads();
+    clear_push_queue();
+
+    /* destroy pid file */
+    unlink(NUAUTH_PID_FILE);
+}
+
+void nuauth_atexit()
+{
+    if (!nuauth_running) {
+        return;
+    }
+    nuauth_running = 0;
+    log_message(CRITICAL, AREA_MAIN, "[+] Stop NuAuth server (exit)");
+    stop_threads(FALSE);
+    nuauth_deinit();
+}
+
 /**
  * Function called when a SIGTERM or SIGINT is received:
  *    - Reinstall old signal handlers (for SIGTERM and SIGINT) ;
@@ -144,41 +206,19 @@ void clear_push_queue()
  */
 void nuauth_cleanup( int signal ) 
 {
+    nuauth_running = 0;
+
     /* first of all, reinstall old handlers (ignore errors) */
     (void)sigaction(SIGTERM, &nuauthdatas->old_sigterm_hdl, NULL);
     (void)sigaction(SIGINT, &nuauthdatas->old_sigint_hdl, NULL);
 
     if (signal == SIGINT)
-        g_message("[+] Stop NuAuth server (SIGINT)");
+        log_message(CRITICAL, AREA_MAIN, "[+] Stop NuAuth server (SIGINT)");
     else if (signal == SIGTERM)
-        g_message("[+] Stop NuAuth server (SIGTERM)");
+        log_message(CRITICAL, AREA_MAIN, "[+] Stop NuAuth server (SIGTERM)");
 
-    stop_threads();
-
-    /* free nufw server hash */
-    log_message(CRITICAL, AREA_MAIN, "caught interrupt, cleaning");
-    close_nufw_servers();
-
-    /* free client hash */
-    close_clients();
-    free_nuauth_params (nuauthconf);
-
-    /* clean gnutls */
-    end_tls();
-    end_audit();
-
-    unload_modules();
-    if (nuauthconf->acl_cache){
-        clear_cache(nuauthdatas->acl_cache);
-    }
-    if (nuauthconf->user_cache){
-        clear_cache(nuauthdatas->user_cache);
-    }
-    free_threads();
-    clear_push_queue();
-
-    /* destroy pid file */
-    unlink(NUAUTH_PID_FILE);
+    stop_threads(TRUE);
+    nuauth_deinit();
     
     g_message("[+] NuAuth exit");
     exit(EXIT_SUCCESS);
@@ -341,6 +381,8 @@ void parse_options(int argc, char **argv, command_line_params_t *params)
 void nuauth_install_signals() 
 {
     struct sigaction action;
+
+    atexit(nuauth_atexit);
 
     memset(&action, 0, sizeof(action));
     action.sa_handler = nuauth_cleanup;
