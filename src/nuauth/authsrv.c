@@ -141,6 +141,9 @@ void free_threads()
     }
 }    
 
+/**
+ * Delete all items (call g_free()) of nuauthdatas->tls_push_queue queue.
+ */
 void clear_push_queue()
 {
     struct internal_message* message;
@@ -150,8 +153,19 @@ void clear_push_queue()
     }
 }    
 
-void nuauth_deinit()
+/**
+ * Deinit NuAuth:
+ *    - Stop NuAuth: close_nufw_servers(), close_clients(), end_tls(), end_audit() ;
+ *    - Free memory ; 
+ *    - Unload modules: unload_modules() ;
+ *    - Destroy pid file ;
+ *    - And finally exit.
+*
+ */
+void nuauth_deinit(gboolean soft)
 {
+    stop_threads(soft);
+    
     /* free nufw server hash */
     log_message(CRITICAL, AREA_MAIN, "[+] NuAuth deinit");
     close_nufw_servers();
@@ -182,6 +196,11 @@ void nuauth_deinit()
     unlink(NUAUTH_PID_FILE);
 }
 
+/**
+ * This is exit() handler. It's used on fatal error of NuAuth.
+ * nuauth_cleanup() also call it, but this call is ignored,
+ * because nuauth_cleanup() set nuauth_running to 0.
+ */
 void nuauth_atexit()
 {
     if (!nuauth_running) {
@@ -189,18 +208,13 @@ void nuauth_atexit()
     }
     nuauth_running = 0;
     log_message(CRITICAL, AREA_MAIN, "[+] Stop NuAuth server (exit)");
-    stop_threads(FALSE);
-    nuauth_deinit();
+    nuauth_deinit(FALSE);
 }
 
 /**
  * Function called when a SIGTERM or SIGINT is received:
  *    - Reinstall old signal handlers (for SIGTERM and SIGINT) ;
- *    - Stop NuAuth: stop_threads(), close_nufw_servers(), close_clients(), end_tls(), end_audit() ;
- *    - Free memory ; 
- *    - Unload modules: unload_modules() ;
- *    - Destroy pid file ;
- *    - And finally exit.
+ *    - Deinit NuAuth: call nuauth_deinit() (in soft mode)
  * 
  * \param signal Code of raised signal
  */
@@ -217,8 +231,7 @@ void nuauth_cleanup( int signal )
     else if (signal == SIGTERM)
         log_message(CRITICAL, AREA_MAIN, "[+] Stop NuAuth server (SIGTERM)");
 
-    stop_threads(TRUE);
-    nuauth_deinit();
+    nuauth_deinit(TRUE);
     
     g_message("[+] NuAuth exit");
     exit(EXIT_SUCCESS);
@@ -287,6 +300,9 @@ void daemonize()
     (void) close(2);
 }
 
+/**
+ * Display all command line options of NuAuth
+ */
 void print_usage() 
 {
     fprintf (stdout,
@@ -302,6 +318,9 @@ void print_usage()
             "\t-t : timeout to forget about packets when they don't match (default : 15 s)\n");
 }
 
+/**
+ * Parse command line options using getopt library.
+ */
 void parse_options(int argc, char **argv, command_line_params_t *params) 
 {
     char* version=VERSION;
@@ -415,6 +434,13 @@ void nuauth_install_signals()
     signal(SIGPIPE,SIG_IGN);
 }
 
+/**
+ * Create one NuAuth thread:
+ *   - Create a new mutex (use in thread loop)
+ *   - Create the thread with glib.
+ *
+ * The mutex is used to stop a thread: to stop a thread, just lock its mutex.
+ */
 void create_thread(struct nuauth_thread_t *thread, void* (*func) (GMutex*) )
 {
     thread->mutex = g_mutex_new();
@@ -463,18 +489,6 @@ void configure_app(int argc, char **argv)
 
     /* init credential */
     create_x509_credentials();
-
-#if 0    
-    /* TODO : it stink ? */
-    *vtable=g_new(GMemVTable, 1);
-    vtable->malloc=&(malloc);
-    vtable->realloc=&(realloc);
-    vtable->free=&(free);
-    vtable->calloc = NULL;
-    vtable->try_malloc = NULL;
-    vtable->try_realloc = NULL;
-    g_mem_set_vtable(glib_mem_profiler_table);
-#endif        
 
     parse_options(argc, argv, &params);
 
