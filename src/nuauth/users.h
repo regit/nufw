@@ -47,7 +47,6 @@ typedef struct User_session {
     gchar *sysname;          /*!< OS system name (eg. "Linux") */
     gchar *release;          /*!< OS release (eg. "2.6.12") */
     gchar *version;          /*!< OS full version */
-    struct timeval last_req; /*!< Timestamp of last request */
     gboolean multiusers;     /*!< Multi-user session? */
     time_t expire;           /*!< Timeout of the session (-1 means unlimited) */
 } user_session;
