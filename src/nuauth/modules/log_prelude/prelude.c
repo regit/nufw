@@ -80,8 +80,9 @@ prelude_client_t *get_client(struct log_prelude_params* params)
     return client;
 }    
 
-void close_prelude_client(prelude_client_t *client)
+void close_prelude_client(void *data)
 {
+    prelude_client_t *client = (prelude_client_t *)data;
     log_message(SERIOUS_WARNING, AREA_MAIN, 
             "[+] Prelude log: close client connection and deinit library");
     prelude_client_destroy(client, PRELUDE_CLIENT_EXIT_STATUS_SUCCESS);
@@ -218,7 +219,7 @@ idmef_message_t *create_message_template()
     return idmef;
 }
 
-idmef_message_t *create_message(idmef_message_t *template,
+idmef_message_t *create_message_packet(idmef_message_t *template,
         tcp_state_t state, connection_t* conn, 
         char *state_text, char *impact,  char *severity)
 {
@@ -306,6 +307,72 @@ idmef_message_t *create_message(idmef_message_t *template,
     return idmef;
 }
 
+idmef_message_t *create_message_session(idmef_message_t *template,
+        user_session *session,
+        char *state_text, char *impact,  char *severity)
+{
+    idmef_message_t *idmef;
+    time_t stdlib_time;
+    idmef_time_t *create_time;
+    idmef_time_t *detect_time;
+    idmef_alert_t *alert;
+    int ret;
+    char buffer[50];
+    struct in_addr ipaddr;
+
+/*     idmef_data_copy_ref and idmef_data_copy_dup should help you */
+/*    idmef_stuff_ref() */
+
+    /* duplicate message */
+    if (template == NULL) {
+        return template;
+    }
+    idmef = idmef_message_ref(template);
+
+    ret = idmef_message_new_alert(idmef, &alert);
+    if ( ret < 0 ) {
+        idmef_message_destroy(idmef);
+        return NULL;
+    }
+
+    /* set create time */
+    stdlib_time = time(NULL);
+    idmef_time_new_from_time (&create_time, &stdlib_time);
+    if (ret < 0) {
+        idmef_message_destroy(idmef);
+        return NULL;
+    }
+    idmef_alert_set_create_time(alert, create_time);
+
+    /* set detect time */
+    ret = idmef_alert_new_detect_time(alert, &detect_time);
+    if (ret < 0) {
+        idmef_message_destroy(idmef);
+        return NULL;
+    }
+    idmef_time_set_from_time (detect_time, &stdlib_time);
+
+
+    add_idmef_object(idmef, "alert.classification.text", state_text);
+    add_idmef_object(idmef, "alert.assessment.impact.severity", severity); /* info | low | medium | high */
+    add_idmef_object(idmef, "alert.assessment.impact.description", impact);
+    
+    /* source address/service */    
+    ipaddr.s_addr = session->addr;
+    add_idmef_object(idmef, "alert.source(0).node.address(0).address", inet_ntoa(ipaddr));
+    add_idmef_object(idmef, "alert.source(0).service.protocol", "tcp");
+    add_idmef_object(idmef, "alert.source(0).process.name", "nutcpc");
+
+    /* target address/service */    
+    inet_aton("127.0.0.1", &ipaddr);
+    add_idmef_object(idmef, "alert.target(0).node.address(0).address", inet_ntoa(ipaddr));
+    add_idmef_object(idmef, "alert.target(0).service.protocol", "tcp"); 
+    if (secure_snprintf(buffer, sizeof(buffer), "%hu", nuauthconf->userpckt_port))
+        add_idmef_object(idmef, "alert.target(0).service.port", buffer); 
+
+    return idmef;
+}
+
 G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state, gpointer params_p)
 {
     prelude_client_t *client = get_client(params_p);
@@ -342,7 +409,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state,
             break;
     }
 
-    message = create_message(tpl, state, element, state_text, impact, severity);
+    message = create_message_packet(tpl, state, element, state_text, impact, severity);
     if (message == NULL) {
         return -1;
     }
@@ -356,36 +423,45 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state,
 
 G_MODULE_EXPORT int user_session_logs(user_session *c_session, session_state_t state,gpointer params_p)
 {
-#if 0    
     idmef_message_t *message;
     idmef_message_t *tpl;
+    char *impact;
+    char *severity;
+    char *state_text;
+
     prelude_client_t *client = get_client(params_p);
     if (client == NULL)
         return -1;
 
     tpl = create_message_template();
-    message = create_message_session(tpl, c_session);
-    if (message == NULL) {
-        return -1;
-    }
-    
+   
+    severity = "low";
     switch (state) {
         case SESSION_OPEN:
+            state_text = "user log in";
+            impact = "user log in";
+            break;
         case SESSION_CLOSE:
+            state_text = "user log out";
+            impact = "user log out";
+            break;
         default:
+            return -1;
 /*                    c_session->user_id,
                     c_session->user_name,
                     c_session->addr,
                     c_session->sysname,
                     c_session->release,
                     c_session->version, */
-            break;
     }
-
+    
+    message = create_message_session(tpl, c_session, state_text, impact, severity);    
+    if (message == NULL) {
+        return -1;
+    }
     prelude_client_send_idmef(client, message);
     idmef_message_destroy(message);
     idmef_message_destroy(tpl);
-#endif    
     return 0;
 }
 
