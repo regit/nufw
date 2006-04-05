@@ -130,10 +130,8 @@ static int nu_get_userdatas(void *context __attribute__((unused)),
 				if (! session->username){
 					return EXIT_FAILURE;
 				}
-
-
 #else
-				session->password=(session->username_callback)();
+				session->username=(session->username_callback)();
 #endif
 			}
 
@@ -149,7 +147,7 @@ static int nu_get_userdatas(void *context __attribute__((unused)),
 					return EXIT_FAILURE;
 				}
 #else
-				session->password=(session->username_callback)();
+				session->username=(session->username_callback)();
 #endif
 
 			}
