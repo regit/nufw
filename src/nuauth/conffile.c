@@ -24,11 +24,11 @@
 
 
 /**
- * taken a conf file and hash containing options, fill the hash with options values.
+ * Taken a conf file and hash containing options, fill the hash with options values.
  * 
- * \param filename
- * \param size of the array
- * \param pointer to a hash containing options
+ * \param filename File name
+ * \param array_size Size of the array
+ * \param symbols (Pointer to) Hash containing options
  * \return 1 if OK, 0 otherwise
  */
 
@@ -112,14 +112,13 @@ int parse_conffile(char * filename,gint array_size,confparams* symbols)
 
 
 /**
- * fetch value of an option and return a pointer to it.
+ * Fetch value of an option and return a pointer to it.
  * 
- * \param option hash
- * \param size of hash
- * \param name of param to get
- * \return pointer to param
+ * \param symbols Option array 
+ * \param array_size Number of entries in symbols
+ * \param confparam String identifier of parameter to get
+ * \return Pointer to parameter value
  */
-
 gpointer get_confvar_value(confparams* symbols,gint array_size,gchar * confparam){
 	gpointer value=NULL;
 	int i;
