@@ -6,14 +6,14 @@ AM_CPPFLAGS = -DCONFIG_DIR=\"$(sysconfdir)\" -DMODULE_DIR=\"$(libdir)\"
 INCLUDES = $(GLIB_CFLAGS) -I../../ -I../../include/ -I/usr/include/libprelude/
 plugindir = $(libdir)/nuauth/modules
 
-plugin_LTLIBRARIES = libprelude.la
+plugin_LTLIBRARIES = libnuprelude.la
 
-libprelude_la_SOURCES = prelude.c
+libnuprelude_la_SOURCES = nuprelude.c
 
-libprelude_la_LIBADD = -lprelude
+libnuprelude_la_LIBADD = -lprelude
 
-libprelude.la: $(libprelude_la_OBJECTS) $(libprelude_la_DEPENDENCIES) 
-	$(LINK) $(am_libprelude_la_rpath) $(libprelude_la_LDFLAGS) $(libprelude_la_OBJECTS) $(libprelude_la_LIBADD)
+libnuprelude.la: $(libnuprelude_la_OBJECTS) $(libnuprelude_la_DEPENDENCIES) 
+	$(LINK) $(am_libnuprelude_la_rpath) $(libnuprelude_la_LDFLAGS) $(libnuprelude_la_OBJECTS) $(libnuprelude_la_LIBADD)
 
 endif
 
