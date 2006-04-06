@@ -35,8 +35,8 @@ typedef enum
      * from cache or external source. See acl_check_and_decide().
      */
     AUTH_STATE_COMPLETING,
-    AUTH_STATE_DONE,        /*!< */
-    AUTH_STATE_HELLOMODE    /*!< */
+    AUTH_STATE_DONE,       
+    AUTH_STATE_HELLOMODE  
 } auth_state_t;
 
 /** State of a connection */
