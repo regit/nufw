@@ -339,27 +339,6 @@ gboolean get_old_conn (gpointer key, gpointer value, gpointer user_data)
     return FALSE;
 }
 
-/**
- * Delete a connection from the hash table ::conn_list by its key.
- * Log the message with ::TCP_STATE_DROP state.
- *
- * \param key Key of connection which have to be deleted
- * \return If the connection is suppressed returns 1, otherwise returns 0
- */
-int conn_key_delete(gconstpointer key)
-{
-    connection_t* element = (connection_t*)g_hash_table_lookup (conn_list, key);
-    if (element){
-        /* need to log drop of packet if it is a nufw packet */
-        if (element->state == AUTH_STATE_AUTHREQ) {
-            log_user_packet(element,TCP_STATE_DROP); 
-        }
-        g_hash_table_remove (conn_list,key);
-        return 1;
-    }
-    return 0;
-}
-
 void clean_connection_list_callback(gpointer key, gpointer value, gpointer data)
 {
     GSList **list_ptr = (GSList **)data;
@@ -369,7 +348,6 @@ void clean_connection_list_callback(gpointer key, gpointer value, gpointer data)
         *list_ptr = g_slist_prepend(*list_ptr, key);
     }
 }
-
 
 /**
  * Find old connection and delete them.
