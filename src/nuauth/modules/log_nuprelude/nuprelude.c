@@ -17,6 +17,7 @@
 
 #include "log_prelude.h"
 #include <prelude.h>
+#include <prelude-log.h>
 #include <idmef-tree-wrap.h>
 
 confparams mysql_nuauth_vars[] = {
@@ -58,16 +59,19 @@ prelude_client_t *get_client(struct log_prelude_params* params)
         exit(EXIT_FAILURE);
     }
 
+    /* Ask Prelude to don't log anything */
+    prelude_log_set_flags(PRELUDE_LOG_FLAGS_QUIET);
+
+    /* create a new client */
     log_message(SERIOUS_WARNING, AREA_MAIN, 
             "[+] Prelude log: Open client connection to Prelude manager");
-
     ret = prelude_client_new(&client, "nufw");
     if ( ! client ) {
         log_message(CRITICAL, AREA_MAIN,
                 "Fatal error: Unable to create a prelude client object!");
         exit(EXIT_FAILURE);
     }
-
+    
     ret = prelude_client_start(client);
     if ( ret < 0 ) {
         log_message(CRITICAL, AREA_MAIN,
@@ -76,6 +80,17 @@ prelude_client_t *get_client(struct log_prelude_params* params)
         exit(EXIT_FAILURE);
     }
 
+#if 0    
+    /* set flags */
+    ret = prelude_client_set_flags(client, 
+            PRELUDE_CLIENT_FLAGS_ASYNC_SEND|PRELUDE_CLIENT_FLAGS_ASYNC_TIMER);
+    if ( ret < 0 ) {
+        log_message(WARNING, AREA_MAIN,
+                "Prelude: Warning, unnable to set asynchronous send and timer.");
+    }
+#endif
+
+    /* store client handler */
     g_private_set(params->client, client);
     return client;
 }    
