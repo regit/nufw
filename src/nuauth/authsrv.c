@@ -203,10 +203,10 @@ void nuauth_deinit(gboolean soft)
  */
 void nuauth_atexit()
 {
-    if (!nuauth_running) {
+    if (g_atomic_int_get(&nuauth_running) == 0) {
         return;
     }
-    nuauth_running = 0;
+    g_atomic_int_set(&nuauth_running, 0);
     log_message(CRITICAL, AREA_MAIN, "[+] Stop NuAuth server (exit)");
     nuauth_deinit(FALSE);
 }
