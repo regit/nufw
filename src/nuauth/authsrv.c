@@ -203,12 +203,10 @@ void nuauth_deinit(gboolean soft)
  */
 void nuauth_atexit()
 {
-    if (g_atomic_int_get(&nuauth_running) == 0) {
-        return;
-    }
-    g_atomic_int_set(&nuauth_running, 0);
-    log_message(CRITICAL, AREA_MAIN, "[+] Stop NuAuth server (exit)");
-    nuauth_deinit(FALSE);
+  if (g_atomic_int_compare_and_exchange (&nuauth_running,1,0)){
+      log_message(CRITICAL, AREA_MAIN, "[+] Stop NuAuth server (exit)");
+      nuauth_deinit(FALSE);
+  }
 }
 
 /**
@@ -220,8 +218,7 @@ void nuauth_atexit()
  */
 void nuauth_cleanup( int signal ) 
 {
-    nuauth_running = 0;
-
+    g_atomic_int_dec_and_test (&nuauth_running);
     /* first of all, reinstall old handlers (ignore errors) */
     (void)sigaction(SIGTERM, &nuauthdatas->old_sigterm_hdl, NULL);
     (void)sigaction(SIGINT, &nuauthdatas->old_sigint_hdl, NULL);
