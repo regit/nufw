@@ -25,7 +25,6 @@
 
 struct log_prelude_params
 {
-    GPrivate* client; /* private pointer for mysql database access */
 };
 
 #endif
