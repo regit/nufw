@@ -25,7 +25,7 @@ typedef enum {
 } session_state_t;    
 
 struct session_event {
-	user_session* session;
+	user_session_t* session;
 	session_state_t state;
 };
  
@@ -35,7 +35,7 @@ void print_users_list();
 void log_user_packet (connection_t* element, tcp_state_t state);
 void real_log_user_packet (gpointer userdata, gpointer data);
 
-void log_user_session(user_session* element, session_state_t state);
+void log_user_session(user_session_t* element, session_state_t state);
 void log_user_session_thread (gpointer element,gpointer state);
 
 #endif

@@ -37,7 +37,7 @@ struct user_cached_datas {
  *
  * An "user" is a person authentified with a NuFW client.
  */
-typedef struct User_session {
+typedef struct {
     uint32_t addr;           /*!< IPv4 address */
     gnutls_session *tls;     /*!< TLS session opened with tls_connect() */ 
     GMutex *tls_lock;        /*!< Mutex to lock use of TLS */
@@ -49,7 +49,7 @@ typedef struct User_session {
     gchar *version;          /*!< OS full version */
     gboolean multiusers;     /*!< Multi-user session? */
     time_t expire;           /*!< Timeout of the session (-1 means unlimited) */
-} user_session;
+} user_session_t;
 
 #endif
 

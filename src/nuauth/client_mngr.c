@@ -42,7 +42,7 @@ GMutex* client_mutex;
 GHashTable* client_conn_hash;
 GHashTable* client_ip_hash;
 
-void clean_session(user_session * c_session)
+void clean_session(user_session_t * c_session)
 {
     if (c_session->tls){
         gnutls_deinit(*(c_session->tls));
@@ -58,7 +58,7 @@ void clean_session(user_session * c_session)
     }
 }
 
-static void hash_clean_session(user_session * c_session)
+static void hash_clean_session(user_session_t * c_session)
 {
     int socket = (int)gnutls_transport_get_ptr(*c_session->tls);
     clean_session(c_session);
@@ -80,7 +80,7 @@ void init_client_struct()
 
 void add_client(int socket, gpointer datas)
 {
-	user_session * c_session = (user_session *) datas;
+	user_session_t * c_session = (user_session_t *) datas;
 	GSList * ipsockets;
 
     g_mutex_lock (client_mutex);
@@ -98,7 +98,7 @@ void add_client(int socket, gpointer datas)
 void delete_client_by_socket(int socket)
 {
 	GSList * ipsockets;
-	user_session * session; 
+	user_session_t * session; 
     
     g_mutex_lock(client_mutex);
 
@@ -106,7 +106,7 @@ void delete_client_by_socket(int socket)
 	 *  get element
 	 *  get addr field
 	 */
-	session = (user_session*)(g_hash_table_lookup(client_conn_hash ,GINT_TO_POINTER(socket)));
+	session = (user_session_t*)(g_hash_table_lookup(client_conn_hash ,GINT_TO_POINTER(socket)));
     if (session) {
         /* walk on IP based struct to find the socket */
         ipsockets = g_hash_table_lookup(client_ip_hash ,GINT_TO_POINTER(session->addr));
@@ -123,7 +123,7 @@ void delete_client_by_socket(int socket)
     g_mutex_unlock(client_mutex);
 }
 
-inline user_session * get_client_datas_by_socket(int socket)
+inline user_session_t * get_client_datas_by_socket(int socket)
 {
   void * ret;
 
@@ -153,7 +153,7 @@ static gboolean look_for_username_callback (gpointer key,
                                              gpointer user_data)
 {
 	if(! strcmp(
-				((user_session*)value)->user_name,
+				((user_session_t*)value)->user_name,
 			user_data)){
 		return TRUE;
 	} else {
@@ -161,7 +161,7 @@ static gboolean look_for_username_callback (gpointer key,
 	}
 }
 
-inline user_session* look_for_username(const gchar* username)
+inline user_session_t* look_for_username(const gchar* username)
 {
   void * ret;
     g_mutex_lock(client_mutex);
@@ -210,7 +210,7 @@ gboolean   is_expired_client (gpointer key,
                              gpointer value,
                              gpointer user_data)
 {
-        if ( ((user_session*)value)->expire < *((time_t*)user_data) ){
+        if ( ((user_session_t*)value)->expire < *((time_t*)user_data) ){
                 return TRUE;
         } else {
                 return FALSE;

@@ -36,7 +36,7 @@ gchar* get_username_from_tls_session(gnutls_session session)
     }
 }
 
-static void  policy_refuse_user(user_session* c_session,int c)
+static void  policy_refuse_user(user_session_t* c_session,int c)
 {
             debug_log_message(VERBOSE_DEBUG, AREA_USER, "User %s already connected, closing socket",c_session->user_name);
             /* get rid of client */
@@ -46,7 +46,7 @@ static void  policy_refuse_user(user_session* c_session,int c)
 }
 
 
-static void tls_sasl_connect_ok(user_session* c_session, int c) 
+static void tls_sasl_connect_ok(user_session_t* c_session, int c) 
 {
     struct nuv2_srv_message msg;
     /* Success place */
@@ -126,7 +126,7 @@ static void tls_sasl_connect_ok(user_session* c_session, int c)
 void tls_sasl_connect(gpointer userdata, gpointer data) 
 {
     gnutls_session * session;
-    user_session* c_session;
+    user_session_t* c_session;
     int ret;
     unsigned int size=1;
     int c = ((struct client_connection*)userdata)->socket;
@@ -137,7 +137,7 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
         return;
     }
     
-    c_session = g_new0(user_session,1);
+    c_session = g_new0(user_session_t,1);
     c_session->tls = session;
     c_session->tls_lock = g_mutex_new();
     c_session->addr = ((struct client_connection*)userdata)->addr.sin_addr.s_addr;

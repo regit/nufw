@@ -175,7 +175,7 @@ void my_sasl_init()
  *
  * return -1 if it fails
  */
-static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
+static int mysasl_negotiate(user_session_t * c_session , sasl_conn_t *conn)
 {
 	char buf[8192];
 	char chosenmech[128];
@@ -396,7 +396,7 @@ static int mysasl_negotiate(user_session * c_session , sasl_conn_t *conn)
 	return SASL_OK;
 }
 
-int sasl_parse_user_os(user_session* c_session, char *buf, int buf_size)
+int sasl_parse_user_os(user_session_t* c_session, char *buf, int buf_size)
 {
     unsigned int len;
     int decode;
@@ -521,7 +521,7 @@ int sasl_parse_user_os(user_session* c_session, char *buf, int buf_size)
  * realize user negotiation from after TLS to the end. 
  */
 
-int sasl_user_check(user_session* c_session)
+int sasl_user_check(user_session_t* c_session)
 {
 	char *service="nufw";
 	char *myhostname="nuserver";

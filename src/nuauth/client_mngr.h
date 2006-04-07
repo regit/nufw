@@ -25,13 +25,13 @@ void add_client(int socket, gpointer datas);
 
 void delete_client_by_socket(int c);
 
-inline user_session * get_client_datas_by_socket(int c);
+inline user_session_t * get_client_datas_by_socket(int c);
 
 inline GSList * get_client_sockets_by_ip(uint32_t ip);
 
-user_session* look_for_username(const gchar* username);
+user_session_t* look_for_username(const gchar* username);
 
-void clean_session(user_session*);
+void clean_session(user_session_t*);
 
 
 struct msg_addr_set {

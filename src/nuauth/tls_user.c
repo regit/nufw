@@ -124,7 +124,7 @@ void pre_client_check()
  * \param c_session SSL RX packet
  * \return 1 if read done, EOF if read complete, -1 on error
  */
-static int treat_user_request (user_session * c_session)
+static int treat_user_request (user_session_t * c_session)
 {
     struct tls_buffer_read *datas;
     int header_length;
@@ -327,7 +327,7 @@ int tls_user_accept(struct tls_user_context_t *context)
  */
 void tls_user_check_activity(struct tls_user_context_t *context, int socket)
 {
-    user_session * c_session;
+    user_session_t * c_session;
     int u_request;
     debug_log_message(VERBOSE_DEBUG, AREA_USER, "user activity on socket %d",socket);
 

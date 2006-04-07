@@ -323,7 +323,7 @@ idmef_message_t *create_message_packet(idmef_message_t *template,
 }
 
 idmef_message_t *create_message_session(idmef_message_t *template,
-        user_session *session,
+        user_session_t *session,
         char *state_text, char *impact,  char *severity)
 {
     idmef_message_t *idmef;
@@ -436,7 +436,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state,
     return 0;
 }
 
-G_MODULE_EXPORT int user_session_logs(user_session *c_session, session_state_t state,gpointer params_p)
+G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t state,gpointer params_p)
 {
     idmef_message_t *message;
     idmef_message_t *tpl;

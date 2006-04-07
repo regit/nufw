@@ -21,6 +21,6 @@
 
 void my_sasl_init();
 
-int sasl_user_check(user_session* c_session);
+int sasl_user_check(user_session_t* c_session);
 
 #endif /* SASL_H */

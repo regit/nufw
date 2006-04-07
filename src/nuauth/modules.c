@@ -116,7 +116,7 @@ int modules_user_logs (connection_t* element, tcp_state_t state)
 /**
  * log user connection and disconnection
  */
-int modules_user_session_logs(user_session* user, session_state_t state)
+int modules_user_session_logs(user_session_t* user, session_state_t state)
 {
     /* iter through all modules list */
     GSList *walker=user_session_logs_modules;
@@ -226,14 +226,16 @@ static int load_modules_from(gchar* confvar, gchar* func,GSList** target)
 {
     gchar** modules_list=g_strsplit(confvar," ",0);
     gchar* module_path;
+    init_module_from_conf_t* initmod;
+    gchar **params_list;
+    module_t *current_module;
     int i;
 
     for (i=0;modules_list[i]!=NULL;i++) {	
-        /* var format is NAME:MODULE:CONFFILE */
-        gchar **params_list = g_strsplit(modules_list[i],":",3);
-        module_t *current_module = g_new0(module_t,1);
-        init_module_from_conf_t* initmod;
+        current_module = g_new0(module_t,1);
 
+        /* var format is NAME:MODULE:CONFFILE */
+        params_list = g_strsplit(modules_list[i],":",3);
         current_module->name=g_strdup(params_list[0]);
         if (params_list[1]) {
             current_module->module_name=g_strdup(params_list[1]);
@@ -241,51 +243,68 @@ static int load_modules_from(gchar* confvar, gchar* func,GSList** target)
                 current_module->configfile=g_strdup(params_list[2]);
             } else {
                 /* we build config file name */
-                current_module->configfile=g_strjoin(NULL,CONFIG_DIR,"/",MODULES_CONF_DIR,"/"
-                        ,current_module->name,MODULES_CONF_EXTENSION,NULL);
+                current_module->configfile=g_strjoin(
+                        NULL, CONFIG_DIR, "/", MODULES_CONF_DIR, "/",
+                        current_module->name, MODULES_CONF_EXTENSION, NULL);
             }
         } else {
             current_module->module_name=g_strdup(current_module->name);
             current_module->configfile=NULL;
         }
 
+        /* Open dynamic library */
         module_path = g_module_build_path(MODULE_PATH, current_module->module_name);
         current_module->module = g_module_open (module_path, 0);
         g_free(module_path);
+        
         log_message(VERBOSE_DEBUG,AREA_MAIN,
                 "\tmodule %s: using %s with configfile %s",
-                current_module->name,current_module->module_name,current_module->configfile);
+                current_module->name,
+                current_module->module_name,
+                current_module->configfile);
         if (current_module->module == NULL) {
             g_error("Unable to load module %s in %s",modules_list[i],MODULE_PATH);
             free_module_t(current_module);
             continue;
         }
 
+        /* get module function handler */
         if (!g_module_symbol (current_module->module, func, (gpointer*)&current_module->func)) {
-            g_error ("Unable to load function %s in %s\n",func,g_module_name(current_module->module));
+            g_error ("Unable to load function %s in %s",
+                    func,
+                    g_module_name(current_module->module));
             free_module_t(current_module);
             g_strfreev(params_list);
             continue;
         }
 
         /* get params for module by calling module exported function */
-        if (!g_module_symbol (current_module->module, INIT_MODULE_FROM_CONF, (gpointer*)&initmod)) {
-            log_message(WARNING,AREA_MAIN,"No init function for module %s : PLEASE UPGRADE !",current_module->module_name);
-            current_module->params=NULL;
-        } else {
+        if (g_module_symbol (current_module->module, INIT_MODULE_FROM_CONF, (gpointer*)&initmod)) {
+            /* Initialize module */
             if (! initmod(current_module) ) {
                 g_warning("Unable to init module, continuing anyway");
                 current_module->params=NULL;
             }
+        } else {
+            log_message(WARNING,AREA_MAIN,
+                    "No init function for module %s: PLEASE UPGRADE!",
+                    current_module->module_name);
+            current_module->params=NULL;
         }
+        
         /* get params for module by calling module exported function */
         if (!g_module_symbol (current_module->module, MODULE_PARAMS_UNLOAD, (gpointer*)&(current_module->free_params))) {
-            log_message(WARNING,AREA_MAIN,"No init function for module %s : PLEASE UPGRADE !",current_module->module_name);
+            log_message(WARNING, AREA_MAIN,
+                    "No init function for module %s: PLEASE UPGRADE!",
+                    current_module->module_name);
             current_module->free_params=NULL;
         } 
 
+        /* store module in module list */
         *target=g_slist_append(*target,(gpointer)current_module);
         nuauthdatas->modules=g_slist_prepend(nuauthdatas->modules,current_module);
+
+        /* free memory */
         g_strfreev(params_list);
     }
     g_strfreev(modules_list);
@@ -297,15 +316,6 @@ static int load_modules_from(gchar* confvar, gchar* func,GSList** target)
  */
 int load_modules()
 {
-    char * nuauth_acl_check_module;
-    char * nuauth_user_check_module;
-    char * nuauth_user_logs_module;
-    char * nuauth_user_session_logs_module;
-    char * nuauth_ip_authentication_module;
-    char * nuauth_periods_module;
-    char * nuauth_certificate_check_module;
-    char * nuauth_certificate_to_uid_module;
-    char *configfile=DEFAULT_CONF_FILE;
     confparams nuauth_vars[] = {
         { "nuauth_user_check_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_USERAUTH_MODULE) },
         { "nuauth_acl_check_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_ACLS_MODULE) },
@@ -316,6 +326,15 @@ int load_modules()
         { "nuauth_certificate_check_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_CERTIFICATE_CHECK_MODULE) },
         { "nuauth_certificate_to_uid_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_CERTIFICATE_TO_UID_MODULE) }
     };
+    char *nuauth_acl_check_module;
+    char *nuauth_user_check_module;
+    char *nuauth_user_logs_module;
+    char *nuauth_user_session_logs_module;
+    char *nuauth_ip_authentication_module;
+    char *nuauth_periods_module;
+    char *nuauth_certificate_check_module;
+    char *nuauth_certificate_to_uid_module;
+    char *configfile=DEFAULT_CONF_FILE;
 
     /* parse conf file */
     parse_conffile(configfile,sizeof(nuauth_vars)/sizeof(confparams),nuauth_vars);
@@ -412,9 +431,7 @@ void block_on_conf_reload()
         while(nuauthdatas->need_reload){
             g_cond_wait (nuauthdatas->reload_cond, nuauthdatas->reload_cond_mutex);
         }
-        g_mutex_unlock(nuauthdatas->reload_cond_mutex);
-    } else {
-        g_mutex_unlock(nuauthdatas->reload_cond_mutex);
     }
+    g_mutex_unlock(nuauthdatas->reload_cond_mutex);
 }
 

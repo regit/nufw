@@ -88,7 +88,14 @@ void real_log_user_packet (gpointer userdata, gpointer data)
   g_free(userdata);
 }
 
-void log_user_session(user_session* usession, session_state_t state)
+/**
+ * High level function used to log an user session (connect / disconnect).
+ * 
+ * It duplicate the user session and push it in 
+ * nuauthdatas->user_session_loggers thread pool: it will call 
+ * log_user_session_thread().
+ */
+void log_user_session(user_session_t* usession, session_state_t state)
 {
     struct session_event* sessevent;
 
@@ -123,14 +130,23 @@ void log_user_session(user_session* usession, session_state_t state)
             NULL);
 }
 
-void log_user_session_thread (gpointer element,gpointer data)
+/**
+ * Thread of nuauthdatas->user_session_loggers thread pool:
+ * call modules_user_session_logs() and the free memory.
+ *
+ * Don't use this function directly! Use log_user_session().
+ */
+void log_user_session_thread (gpointer event_ptr, gpointer unused_optional)
 {
-        block_on_conf_reload();
-	modules_user_session_logs(((struct session_event*)element)->session,((struct session_event*)element)->state);
-	g_free(((struct session_event*)element)->session->user_name);
-	g_free(((struct session_event*)element)->session->sysname);
-	g_free(((struct session_event*)element)->session->version);
-	g_free(((struct session_event*)element)->session->release);
-	g_free(((struct session_event*)element)->session);
-	g_free(element);
+    struct session_event *event = (struct session_event*)event_ptr;
+    user_session_t* session = event->session;
+    block_on_conf_reload();
+    modules_user_session_logs(session, event->state);
+    g_free(session->user_name);
+    g_free(session->sysname);
+    g_free(session->version);
+    g_free(session->release);
+    g_free(session);
+    g_free(event);
 }
+
