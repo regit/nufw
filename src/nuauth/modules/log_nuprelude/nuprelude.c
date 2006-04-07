@@ -25,20 +25,16 @@ confparams mysql_nuauth_vars[] = {
 };
 
 /**
- * Get the client handler. If this function is called for the first time, 
- * init Prelude library and then create the client connection.
- */
-prelude_client_t *get_client(struct log_prelude_params* params)
+ * Function called only once: when the module is loaded.
+ *
+ * \return NULL
+ */ 
+G_MODULE_EXPORT gchar* g_module_check_init()
 {
     const char *version;
     int argc;
     char **argv = NULL; 
     int ret;
-
-    prelude_client_t *client = g_private_get (params->client);
-    if (client != NULL) {
-        return client;
-    }
 
     log_message(SERIOUS_WARNING, AREA_MAIN, 
             "[+] Prelude log: Init Prelude library");
@@ -59,12 +55,41 @@ prelude_client_t *get_client(struct log_prelude_params* params)
         exit(EXIT_FAILURE);
     }
 
+    return NULL;
+}
+
+/**
+ * Function called only once: when the module is unloaded.
+ *
+ * \return NULL
+ */ 
+G_MODULE_EXPORT void g_module_unload(GModule *module)
+{
+    log_message(SERIOUS_WARNING, AREA_MAIN, 
+            "[+] Prelude log: Deinit library");
+    prelude_deinit();
+}
+
+/**
+ * Get the client handler. If this function is called for the first time, 
+ * init Prelude library and then create the client connection.
+ */
+prelude_client_t *get_client(struct log_prelude_params* params)
+{
+    int ret;
+
+    prelude_client_t *client = g_private_get (params->client);
+    if (client != NULL) {
+        return client;
+    }
+
+    log_message(SERIOUS_WARNING, AREA_MAIN, 
+            "[+] Prelude log: Open client connection");
+
     /* Ask Prelude to don't log anything */
     prelude_log_set_flags(PRELUDE_LOG_FLAGS_QUIET);
 
     /* create a new client */
-    log_message(SERIOUS_WARNING, AREA_MAIN, 
-            "[+] Prelude log: Open client connection to Prelude manager");
     ret = prelude_client_new(&client, "nufw");
     if ( ! client ) {
         log_message(CRITICAL, AREA_MAIN,
@@ -76,7 +101,6 @@ prelude_client_t *get_client(struct log_prelude_params* params)
     if ( ret < 0 ) {
         log_message(CRITICAL, AREA_MAIN,
                 "Fatal error: Unable to start prelude client!");
-        prelude_deinit();
         exit(EXIT_FAILURE);
     }
 
@@ -99,9 +123,8 @@ void close_prelude_client(void *data)
 {
     prelude_client_t *client = (prelude_client_t *)data;
     log_message(SERIOUS_WARNING, AREA_MAIN, 
-            "[+] Prelude log: close client connection and deinit library");
+            "[+] Prelude log: Close client connection");
     prelude_client_destroy(client, PRELUDE_CLIENT_EXIT_STATUS_SUCCESS);
-    prelude_deinit();
 }
 
 G_MODULE_EXPORT gchar* module_params_unload(gpointer params_ptr)
