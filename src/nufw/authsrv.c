@@ -191,7 +191,7 @@ void auth_process_conn_update(char *dgram, int dgram_size)
                 &proto, IPS_ASSURED | IPS_CONFIRMED , 0, 0, NULL);
          */
         ct = nfct_conntrack_alloc(&orig, &reply, 0,
-                &proto,  0  , 0, 0, NULL);
+                &proto,  IPS_ASSURED|IPS_SEEN_REPLY|IPS_FIXED_TIMEOUT  , 0, 0, NULL);
 
 
 #ifdef HAVE_LIBCONNTRACK_FIXEDTIMEOUT
@@ -199,7 +199,7 @@ void auth_process_conn_update(char *dgram, int dgram_size)
         {
             debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_VERBOSE_DEBUG, 
                     "Setting timeout to %d after NuAuth request",ntohl(packet_hdr->timeout));
-            ct->fixed_timeout = ntohl(packet_hdr->timeout);
+            ct->timeout = ntohl(packet_hdr->timeout);
         }
 #endif /* HAVE_LIBCONNTRACK_FIXEDTIMEOUT */
 
