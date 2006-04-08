@@ -201,6 +201,13 @@ void free_module_t(module_t* module)
     }
 }
 
+/**
+ * Initialise module system
+ *
+ * Please note it has only to be called once
+ *
+ */
+
 int init_modules_system()
 {
     /* init modules list mutex */
