@@ -190,10 +190,14 @@ void auth_process_conn_update(char *dgram, int dgram_size)
         ct = nfct_conntrack_alloc(&orig, &reply, -1,
                 &proto, IPS_ASSURED | IPS_CONFIRMED , 0, 0, NULL);
          */
+
+#if 0
         ct = nfct_conntrack_alloc(&orig, &reply, 0,
                 &proto,  IPS_ASSURED|IPS_SEEN_REPLY|IPS_FIXED_TIMEOUT  , 0, 0, NULL);
-
-
+#else
+        ct = nfct_conntrack_alloc(&orig, &reply, 0,
+                &proto,  IPS_ASSURED|IPS_SEEN_REPLY, 0, 0, NULL);
+#endif
 #ifdef HAVE_LIBCONNTRACK_FIXEDTIMEOUT
         if (packet_hdr->timeout)
         {

@@ -525,7 +525,7 @@ int auth_request_send(uint8_t type, uint32_t packet_id, char* payload, unsigned 
 
     /* Display message */
     debug_log_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, 
-            "Sending request for %u", packet_id);
+            "Sending request for %lu", packet_id);
 
     /* cleaning up current session : auth_server has detected a problem */
     pthread_mutex_lock(&tls.mutex);
