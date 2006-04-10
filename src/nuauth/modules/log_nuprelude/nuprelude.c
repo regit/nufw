@@ -207,8 +207,23 @@ static int add_idmef_object(idmef_message_t *message, const char *object, const 
     return ret;
 }
 
-int feed_message(idmef_message_t *idmef)
+int feed_template(idmef_message_t *idmef)
 {
+    char buffer[50];
+
+#if 0    
+    /* analyzer */
+    add_idmef_object(idmef, "alert.analyzer.name", "nuauth");
+    add_idmef_object(idmef, "alert.analyzer.analyzer.name", "nuauth");
+    add_idmef_object(idmef, "alert.analyzer.manufacturer", "http://www.nufw.org/");
+    add_idmef_object(idmef, "alert.analyzer.model", "authentification server");
+    add_idmef_object(idmef, "alert.analyzer.version", "2.0");
+    add_idmef_object(idmef, "alert.analyzer.class", "server");
+    add_idmef_object(idmef, "alert.analyzer.ostype", "Linux");
+    add_idmef_object(idmef, "alert.analyzer.osversion", "2.6");
+    add_idmef_object(idmef, "alert.analyzer.process.name", "nuauth");
+#endif
+    
     /* source address/service */    
     add_idmef_object(idmef, "alert.source(0).node.address(0).category", "ipv4-addr");
     add_idmef_object(idmef, "alert.source(0).service.ip_version", "4"); 
@@ -217,6 +232,12 @@ int feed_message(idmef_message_t *idmef)
     add_idmef_object(idmef, "alert.target(0).node.address(0).category", "ipv4-addr");
     add_idmef_object(idmef, "alert.target(0).service.ip_version", "4"); 
     add_idmef_object(idmef, "alert.target(0).process.name", "nuauth");
+    if (secure_snprintf(buffer, sizeof(buffer), "%lu", (unsigned long)getpid())) {
+#if 0        
+        add_idmef_object(idmef, "alert.analyzer.process.pid", buffer);
+#endif        
+        add_idmef_object(idmef, "alert.target(0).process.pid", buffer);
+    }
 
     /* set assessment */
     add_idmef_object(idmef, "alert.assessment.impact.completion", "succeeded"); /* failed | succeeded */
@@ -235,7 +256,7 @@ idmef_message_t *create_message_template()
         return NULL;
     }
 
-    ret = feed_message(idmef);
+    ret = feed_template(idmef);
     if (ret < 0) {
         prelude_perror(ret, "unable to create IDMEF message");
         idmef_message_destroy(idmef);
@@ -344,8 +365,14 @@ idmef_message_t *create_message_packet(
     }
 
     if (conn->os_sysname != NULL) {
+        add_idmef_object(idmef, "alert.additional_data(0).type", "string");
+        add_idmef_object(idmef, "alert.additional_data(0).meaning", "OS system name");
         add_idmef_object(idmef, "alert.additional_data(0).data", conn->os_sysname);
+        add_idmef_object(idmef, "alert.additional_data(1).type", "string");
+        add_idmef_object(idmef, "alert.additional_data(1).meaning", "OS release");
         add_idmef_object(idmef, "alert.additional_data(1).data", conn->os_release);
+        add_idmef_object(idmef, "alert.additional_data(2).type", "string");
+        add_idmef_object(idmef, "alert.additional_data(2).meaning", "OS full version");
         add_idmef_object(idmef, "alert.additional_data(2).data", conn->os_version);
     } else {
         del_idmef_object(idmef, "alert.additional_data(0)");
@@ -432,8 +459,15 @@ idmef_message_t *create_message_session(idmef_message_t *template,
     if (secure_snprintf(buffer, sizeof(buffer), "%hu", nuauthconf->userpckt_port))
         add_idmef_object(idmef, "alert.target(0).service.port", buffer); 
 
+
+    add_idmef_object(idmef, "alert.additional_data(0).type", "string");
+    add_idmef_object(idmef, "alert.additional_data(0).meaning", "OS system name");
     add_idmef_object(idmef, "alert.additional_data(0).data", session->sysname);
+    add_idmef_object(idmef, "alert.additional_data(1).type", "string");
+    add_idmef_object(idmef, "alert.additional_data(1).meaning", "OS release");
     add_idmef_object(idmef, "alert.additional_data(1).data", session->release);
+    add_idmef_object(idmef, "alert.additional_data(2).type", "string");
+    add_idmef_object(idmef, "alert.additional_data(2).meaning", "OS full version");
     add_idmef_object(idmef, "alert.additional_data(2).data", session->version);
 
     return idmef;
