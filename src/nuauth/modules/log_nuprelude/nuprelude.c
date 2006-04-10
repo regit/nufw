@@ -24,6 +24,10 @@ confparams mysql_nuauth_vars[] = {
     /*    { "prelude_..." , G_TOKEN_STRING, 0 , PRELUDE_... }, */
 };
 
+GMutex *packet_tpl_mutex;
+GMutex *session_tpl_mutex;
+idmef_message_t *packet_tpl;
+idmef_message_t *session_tpl;
 GMutex *global_client_mutex;
 prelude_client_t *global_client; /* private pointer for mysql database access */
 
@@ -41,79 +45,6 @@ void update_prelude_timer()
 }
 
 /**
- * Function called only once: when the module is loaded.
- *
- * \return NULL
- */ 
-G_MODULE_EXPORT gchar* g_module_check_init()
-{
-    const char *version;
-    int argc;
-    char **argv = NULL; 
-    int ret;
-
-    log_message(SERIOUS_WARNING, AREA_MAIN, 
-            "[+] Prelude log: Init Prelude library");
-
-    version = prelude_check_version (PRELUDE_VERSION_REQUIRE);
-    if (version == NULL) {
-        log_message(CRITICAL, AREA_MAIN,
-                "Fatal error: Prelude module needs prelude version %s (installed version is %s)!", 
-                PRELUDE_VERSION_REQUIRE,
-                prelude_check_version(NULL));
-        exit(EXIT_FAILURE);
-    }
-
-    ret = prelude_init(&argc, argv);
-    if ( ret < 0 ) {
-        log_message(CRITICAL, AREA_MAIN,
-                "Fatal error: Fail to init Prelude module: %s!",
-                prelude_strerror(ret));
-        exit(EXIT_FAILURE);
-    }
-
-
-    log_message(SERIOUS_WARNING, AREA_MAIN, 
-            "[+] Prelude log: Open client connection");
-
-    /* Ask Prelude to don't log anything */
-    prelude_log_set_flags(PRELUDE_LOG_FLAGS_QUIET);
-
-    /* create a new client */
-    global_client_mutex = g_mutex_new();
-    ret = prelude_client_new(&global_client, "nufw");
-    if ( ! global_client ) {
-        log_message(CRITICAL, AREA_MAIN,
-                "Fatal error: Unable to create a prelude client object: %s!",
-                prelude_strerror(ret));
-        exit(EXIT_FAILURE);
-    }
-
-    ret = prelude_client_start(global_client);
-    if ( ret < 0 ) {
-        log_message(CRITICAL, AREA_MAIN,
-                "Fatal error: Unable to start prelude client: %s!",
-                prelude_strerror(ret));
-        exit(EXIT_FAILURE);
-    }
-
-    cleanup_func_push(update_prelude_timer);
-
-#if 0
-    /* set flags */
-    ret = prelude_client_set_flags(global_client, 
-            PRELUDE_CLIENT_FLAGS_ASYNC_SEND|PRELUDE_CLIENT_FLAGS_ASYNC_TIMER);
-    if ( ret < 0 ) {
-        log_message(WARNING, AREA_MAIN,
-                "Prelude: Warning, unnable to set asynchronous send and timer: %s",
-                prelude_strerror(ret));
-    }
-#endif
-    
-    return NULL;
-}
-
-/**
  * Function called only once: when the module is unloaded.
  *
  * \return NULL
@@ -124,6 +55,11 @@ G_MODULE_EXPORT void g_module_unload(GModule *module)
             "[+] Prelude log: Close client connection");
     prelude_client_destroy(global_client, PRELUDE_CLIENT_EXIT_STATUS_SUCCESS);
     g_mutex_free(global_client_mutex);
+    g_mutex_free(packet_tpl_mutex );
+    g_mutex_free(session_tpl_mutex );
+
+    idmef_message_destroy(packet_tpl);
+    idmef_message_destroy(session_tpl);
     
     cleanup_func_remove(update_prelude_timer);
 
@@ -209,9 +145,9 @@ static int add_idmef_object(idmef_message_t *message, const char *object, const 
 
 int feed_template(idmef_message_t *idmef)
 {
+#if 0    
     char buffer[50];
 
-#if 0    
     /* analyzer */
     add_idmef_object(idmef, "alert.analyzer.name", "nuauth");
     add_idmef_object(idmef, "alert.analyzer.analyzer.name", "nuauth");
@@ -222,6 +158,9 @@ int feed_template(idmef_message_t *idmef)
     add_idmef_object(idmef, "alert.analyzer.ostype", "Linux");
     add_idmef_object(idmef, "alert.analyzer.osversion", "2.6");
     add_idmef_object(idmef, "alert.analyzer.process.name", "nuauth");
+    if (secure_snprintf(buffer, sizeof(buffer), "%lu", (unsigned long)getpid())) {
+        add_idmef_object(idmef, "alert.analyzer.process.pid", buffer);
+    }
 #endif
     
     /* source address/service */    
@@ -231,13 +170,6 @@ int feed_template(idmef_message_t *idmef)
     /* target address/service */    
     add_idmef_object(idmef, "alert.target(0).node.address(0).category", "ipv4-addr");
     add_idmef_object(idmef, "alert.target(0).service.ip_version", "4"); 
-    add_idmef_object(idmef, "alert.target(0).process.name", "nuauth");
-    if (secure_snprintf(buffer, sizeof(buffer), "%lu", (unsigned long)getpid())) {
-#if 0        
-        add_idmef_object(idmef, "alert.analyzer.process.pid", buffer);
-#endif        
-        add_idmef_object(idmef, "alert.target(0).process.pid", buffer);
-    }
 
     /* set assessment */
     add_idmef_object(idmef, "alert.assessment.impact.completion", "succeeded"); /* failed | succeeded */
@@ -245,7 +177,7 @@ int feed_template(idmef_message_t *idmef)
     return 1;
 }
 
-idmef_message_t *create_message_template()
+idmef_message_t *create_alert_template()
 {
     idmef_message_t *idmef;
     int ret;
@@ -265,8 +197,47 @@ idmef_message_t *create_message_template()
     return idmef;
 }
 
+idmef_message_t *create_packet_template()
+{
+    idmef_message_t *idmef = create_alert_template();
+        
+    return idmef;
+}
+
+idmef_message_t *create_session_template()
+{
+    char buffer[50];
+    idmef_message_t *idmef = create_alert_template();
+    struct in_addr ipaddr;
+
+    add_idmef_object(idmef, "alert.target(0).process.name", "nuauth");
+    if (secure_snprintf(buffer, sizeof(buffer), "%lu", (unsigned long)getpid())) {
+        add_idmef_object(idmef, "alert.target(0).process.pid", buffer);
+    }
+
+    add_idmef_object(idmef, "alert.source(0).service.protocol", "tcp");
+    add_idmef_object(idmef, "alert.source(0).service.name", "nufw-client");
+    add_idmef_object(idmef, "alert.source(0).process.name", "nutcpc");
+
+    inet_aton("127.0.0.1", &ipaddr);
+    add_idmef_object(idmef, "alert.target(0).node.address(0).address", inet_ntoa(ipaddr));
+    add_idmef_object(idmef, "alert.target(0).service.protocol", "tcp"); 
+
+    if (secure_snprintf(buffer, sizeof(buffer), "%hu", nuauthconf->userpckt_port)) {
+        add_idmef_object(idmef, "alert.target(0).service.port", buffer); 
+    }
+
+    add_idmef_object(idmef, "alert.additional_data(0).type", "string");
+    add_idmef_object(idmef, "alert.additional_data(0).meaning", "OS system name");
+    add_idmef_object(idmef, "alert.additional_data(1).type", "string");
+    add_idmef_object(idmef, "alert.additional_data(1).meaning", "OS release");
+    add_idmef_object(idmef, "alert.additional_data(2).type", "string");
+    add_idmef_object(idmef, "alert.additional_data(2).meaning", "OS full version");
+
+    return idmef;
+}
+
 idmef_message_t *create_message_packet(
-        idmef_message_t *template,
         tcp_state_t state, connection_t* conn, 
         char *state_text, char *impact,  char *severity)
 {
@@ -282,10 +253,7 @@ idmef_message_t *create_message_packet(
     unsigned short psrc, pdst;
 
     /* duplicate message */
-    if (template == NULL) {
-        return NULL;
-    }
-    idmef = idmef_message_ref(template);
+    idmef = idmef_message_ref(packet_tpl);
 
     ret = idmef_message_new_alert(idmef, &alert);
     if ( ret < 0 ) {
@@ -314,24 +282,45 @@ idmef_message_t *create_message_packet(
     add_idmef_object(idmef, "alert.assessment.impact.severity", severity); /* info | low | medium | high */
     add_idmef_object(idmef, "alert.assessment.impact.description", impact);
 
-    if ((state == TCP_STATE_ESTABLISHED) || (state == TCP_STATE_DROP)) {
-        psrc = conn->tracking.dest;
-        pdst = conn->tracking.source;
-    } else {
-        psrc = conn->tracking.source;
-        pdst = conn->tracking.dest;
-    }
-
-    /* source address/service */    
+    /* IP source/dest */
     ipaddr.s_addr = ntohl(conn->tracking.saddr);
     add_idmef_object(idmef, "alert.source(0).node.address(0).address", inet_ntoa(ipaddr));
+    ipaddr.s_addr = ntohl(conn->tracking.daddr);
+    add_idmef_object(idmef, "alert.target(0).node.address(0).address", inet_ntoa(ipaddr));
+    
+    /* IP protocol */
     if (secure_snprintf(buffer, sizeof(buffer), "%hu", conn->tracking.protocol)) {
         add_idmef_object(idmef, "alert.source(0).service.iana_protocol_number", buffer);
+        add_idmef_object(idmef, "alert.target(0).service.iana_protocol_number", buffer);
     }
-    if (secure_snprintf(buffer, sizeof(buffer), "%hu", psrc))
-        add_idmef_object(idmef, "alert.source(0).service.port", buffer); 
+    
+    /* TCP/UDP ports */
+    if (conn->tracking.protocol == IPPROTO_TCP
+            || conn->tracking.protocol == IPPROTO_UDP)
+    {
+        if ((state == TCP_STATE_ESTABLISHED)/* || (state == TCP_STATE_DROP)*/) {
+            psrc = conn->tracking.dest;
+            pdst = conn->tracking.source;
+        } else {
+            psrc = conn->tracking.source;
+            pdst = conn->tracking.dest;
+        }
+        if (secure_snprintf(buffer, sizeof(buffer), "%hu", psrc)) {
+            add_idmef_object(idmef, "alert.source(0).service.port", buffer); 
+        }
+        if (secure_snprintf(buffer, sizeof(buffer), "%hu", pdst)) {
+            add_idmef_object(idmef, "alert.target(0).service.port", buffer); 
+        }
+    } else {
+        del_idmef_object(idmef, "alert.source(0).service.port");
+        del_idmef_object(idmef, "alert.target(0).service.port");
+        if (conn->tracking.protocol == IPPROTO_ICMP) {
+            add_idmef_object(idmef, "alert.source(0).service.name", "icmp"); 
+            add_idmef_object(idmef, "alert.target(0).service.name", "icmp"); 
+        }
+    }
 
-    /* set user informations */
+    /* user informations */
     if (conn->username != NULL) {
         add_idmef_object(idmef, "alert.source(0).user.user_id(0).type", "current-user");
         add_idmef_object(idmef, "alert.source(0).user.category", "application");  /* os-device */
@@ -340,18 +329,8 @@ idmef_message_t *create_message_packet(
             add_idmef_object(idmef, "alert.source(0).user.user_id(0).number", buffer);
         }
     } else {
-        del_idmef_object(idmef, "alert.source(0).user.category");
-        del_idmef_object(idmef, "alert.source(0).user.user_id(0).name");
-        del_idmef_object(idmef, "alert.source(0).user.user_id(0).number");
-        del_idmef_object(idmef, "alert.source(0).user.user_id(0).type");
+        del_idmef_object(idmef, "alert.source(0).user");
     }
-
-    /* target address/service */    
-    ipaddr.s_addr = ntohl(conn->tracking.daddr);
-    add_idmef_object(idmef, "alert.target(0).node.address(0).address", inet_ntoa(ipaddr));
-    add_idmef_object(idmef, "alert.target(0).service.protocol", "tcp"); 
-    if (secure_snprintf(buffer, sizeof(buffer), "%hu", pdst))
-        add_idmef_object(idmef, "alert.target(0).service.port", buffer); 
 
     /* source process */
     if (conn->app_name != NULL) {
@@ -360,10 +339,10 @@ idmef_message_t *create_message_packet(
         g_free(tmp_buffer);
         add_idmef_object(idmef, "alert.source(0).process.path", conn->app_name);
     } else {
-        del_idmef_object(idmef, "alert.source(0).process.name");
-        del_idmef_object(idmef, "alert.source(0).process.path");
+        del_idmef_object(idmef, "alert.source(0).process");
     }
 
+    /* os informations */
     if (conn->os_sysname != NULL) {
         add_idmef_object(idmef, "alert.additional_data(0).type", "string");
         add_idmef_object(idmef, "alert.additional_data(0).meaning", "OS system name");
@@ -383,7 +362,7 @@ idmef_message_t *create_message_packet(
     return idmef;
 }
 
-idmef_message_t *create_message_session(idmef_message_t *template,
+idmef_message_t *create_message_session(
         user_session_t *session,
         char *state_text, char *impact,  char *severity)
 {
@@ -397,10 +376,7 @@ idmef_message_t *create_message_session(idmef_message_t *template,
     struct in_addr ipaddr;
 
     /* duplicate message */
-    if (template == NULL) {
-        return NULL;
-    }
-    idmef = idmef_message_ref(template);
+    idmef = idmef_message_ref(session_tpl);
 
     ret = idmef_message_new_alert(idmef, &alert);
     if ( ret < 0 ) {
@@ -433,9 +409,6 @@ idmef_message_t *create_message_session(idmef_message_t *template,
     /* source address/service */    
     ipaddr.s_addr = session->addr;
     add_idmef_object(idmef, "alert.source(0).node.address(0).address", inet_ntoa(ipaddr));
-    add_idmef_object(idmef, "alert.source(0).service.protocol", "tcp");
-    add_idmef_object(idmef, "alert.source(0).service.name", "nufw-client");
-    add_idmef_object(idmef, "alert.source(0).process.name", "nutcpc");
 
     /* set user informations */
     if (session->user_name != NULL) {
@@ -446,42 +419,23 @@ idmef_message_t *create_message_session(idmef_message_t *template,
             add_idmef_object(idmef, "alert.source(0).user.user_id(0).number", buffer);
         }
     } else {
-        del_idmef_object(idmef, "alert.source(0).user.category");
-        del_idmef_object(idmef, "alert.source(0).user.user_id(0).name");
-        del_idmef_object(idmef, "alert.source(0).user.user_id(0).number");
-        del_idmef_object(idmef, "alert.source(0).user.user_id(0).type");
+        del_idmef_object(idmef, "alert.source(0).user");
     }
 
-    /* target address/service */    
-    inet_aton("127.0.0.1", &ipaddr);
-    add_idmef_object(idmef, "alert.target(0).node.address(0).address", inet_ntoa(ipaddr));
-    add_idmef_object(idmef, "alert.target(0).service.protocol", "tcp"); 
-    if (secure_snprintf(buffer, sizeof(buffer), "%hu", nuauthconf->userpckt_port))
-        add_idmef_object(idmef, "alert.target(0).service.port", buffer); 
-
-
-    add_idmef_object(idmef, "alert.additional_data(0).type", "string");
-    add_idmef_object(idmef, "alert.additional_data(0).meaning", "OS system name");
+    /* os informations */
     add_idmef_object(idmef, "alert.additional_data(0).data", session->sysname);
-    add_idmef_object(idmef, "alert.additional_data(1).type", "string");
-    add_idmef_object(idmef, "alert.additional_data(1).meaning", "OS release");
     add_idmef_object(idmef, "alert.additional_data(1).data", session->release);
-    add_idmef_object(idmef, "alert.additional_data(2).type", "string");
-    add_idmef_object(idmef, "alert.additional_data(2).meaning", "OS full version");
     add_idmef_object(idmef, "alert.additional_data(2).data", session->version);
-
     return idmef;
 }
 
 G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state, gpointer params_ptr)
 {
     idmef_message_t *message;
-    idmef_message_t *tpl;
     char *impact;
     char *state_text;
     char *severity;
 
-    tpl = create_message_template();
     impact = "notify connection state change";
     switch (state) {
         case TCP_STATE_OPEN:
@@ -497,16 +451,23 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state,
             severity = "low";
             break;
         case TCP_STATE_DROP:
-            state_text = "Drop connection";
-            severity = "medium";
+            if (element->username != NULL) {
+                state_text = "Drop auth connection";
+                severity = "high";
+            } else {
+                state_text = "Drop unauth connection (auth timeout)";
+                severity = "medium";
+            }
             break;
         default:
             return -1;
             break;
     }
 
-    message = create_message_packet(tpl, state, element, state_text, impact, severity);
+    g_mutex_lock(packet_tpl_mutex);
+    message = create_message_packet(state, element, state_text, impact, severity);
     if (message == NULL) {
+        g_mutex_unlock(packet_tpl_mutex);
         return -1;
     }
 
@@ -514,20 +475,16 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state,
     prelude_client_send_idmef(global_client, message);
     g_mutex_unlock(global_client_mutex);
     idmef_message_destroy(message);
-    idmef_message_destroy(tpl);
-
+    g_mutex_unlock(packet_tpl_mutex);
     return 0;
 }
 
 G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t state,gpointer params_ptr)
 {
     idmef_message_t *message;
-    idmef_message_t *tpl;
     char *impact;
     char *severity;
     char *state_text;
-
-    tpl = create_message_template();
 
     severity = "low";
     switch (state) {
@@ -549,8 +506,10 @@ G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t
                                   c_session->version, */
     }
 
-    message = create_message_session(tpl, c_session, state_text, impact, severity);    
+    g_mutex_lock(session_tpl_mutex);
+    message = create_message_session(c_session, state_text, impact, severity);    
     if (message == NULL) {
+        g_mutex_unlock(session_tpl_mutex);
         return -1;
     }
 
@@ -558,9 +517,86 @@ G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t
     g_mutex_lock(global_client_mutex);
     prelude_client_send_idmef(global_client, message);
     g_mutex_unlock(global_client_mutex);
-    
     idmef_message_destroy(message);
-    idmef_message_destroy(tpl);
+    g_mutex_unlock(session_tpl_mutex);
     return 0;
+}
+
+/**
+ * Function called only once: when the module is loaded.
+ *
+ * \return NULL
+ */ 
+G_MODULE_EXPORT gchar* g_module_check_init()
+{
+    const char *version;
+    int argc;
+    char **argv = NULL; 
+    int ret;
+
+    log_message(SERIOUS_WARNING, AREA_MAIN, 
+            "[+] Prelude log: Init Prelude library");
+
+    version = prelude_check_version (PRELUDE_VERSION_REQUIRE);
+    if (version == NULL) {
+        log_message(CRITICAL, AREA_MAIN,
+                "Fatal error: Prelude module needs prelude version %s (installed version is %s)!", 
+                PRELUDE_VERSION_REQUIRE,
+                prelude_check_version(NULL));
+        exit(EXIT_FAILURE);
+    }
+
+    ret = prelude_init(&argc, argv);
+    if ( ret < 0 ) {
+        log_message(CRITICAL, AREA_MAIN,
+                "Fatal error: Fail to init Prelude module: %s!",
+                prelude_strerror(ret));
+        exit(EXIT_FAILURE);
+    }
+
+
+    log_message(SERIOUS_WARNING, AREA_MAIN, 
+            "[+] Prelude log: Open client connection");
+
+    /* Ask Prelude to don't log anything */
+    prelude_log_set_flags(PRELUDE_LOG_FLAGS_QUIET);
+
+    /* create a new client */
+    global_client_mutex = g_mutex_new();
+    packet_tpl_mutex = g_mutex_new();
+    session_tpl_mutex = g_mutex_new();
+    ret = prelude_client_new(&global_client, "nufw");
+    if ( ! global_client ) {
+        log_message(CRITICAL, AREA_MAIN,
+                "Fatal error: Unable to create a prelude client object: %s!",
+                prelude_strerror(ret));
+        exit(EXIT_FAILURE);
+    }
+
+    ret = prelude_client_start(global_client);
+    if ( ret < 0 ) {
+        log_message(CRITICAL, AREA_MAIN,
+                "Fatal error: Unable to start prelude client: %s!",
+                prelude_strerror(ret));
+        exit(EXIT_FAILURE);
+    }
+
+    cleanup_func_push(update_prelude_timer);
+
+#if 0
+    /* set flags */
+    ret = prelude_client_set_flags(global_client, 
+            PRELUDE_CLIENT_FLAGS_ASYNC_SEND|PRELUDE_CLIENT_FLAGS_ASYNC_TIMER);
+    if ( ret < 0 ) {
+        log_message(WARNING, AREA_MAIN,
+                "Prelude: Warning, unnable to set asynchronous send and timer: %s",
+                prelude_strerror(ret));
+    }
+#endif
+
+    packet_tpl = create_packet_template();
+    session_tpl = create_session_template();
+    
+    return NULL;
 }
 
