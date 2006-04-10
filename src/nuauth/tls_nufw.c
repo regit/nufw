@@ -79,11 +79,16 @@ static int treat_nufw_request (nufw_session_t *c_session)
                         current_conn);
             }
         } else {
-            if ( ((nufw_message_t)dgram[1] != AUTH_CONTROL )
-                    || ((nufw_message_t)dgram[1] != AUTH_CONN_DESTROY ) 
-                    || ((nufw_message_t)dgram[1] != AUTH_CONN_UPDATE) )
+            if ( ! ( ( ((nufw_to_nuauth_message_header_t *)dgram)->msg_type == AUTH_CONTROL )
+                    || ( ( (nufw_to_nuauth_message_header_t *)dgram)->msg_type == AUTH_CONN_DESTROY ) 
+                    || ( ( (nufw_to_nuauth_message_header_t *)dgram)->msg_type == AUTH_CONN_UPDATE ) 
+               )
+                    )
                 log_message (SERIOUS_WARNING, AREA_PACKET,
-                    "Can't parse nufw packet, this IS bad !\n");
+                    "Can't parse nufw packet, this IS bad (got msg type %d) (%d)!\n",
+                    ((nufw_to_nuauth_message_header_t *)dgram)->msg_type,
+                    AUTH_CONN_UPDATE
+                    );
         }
     } else {
         g_message("nufw failure at %s:%d",__FILE__,__LINE__);
