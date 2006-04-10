@@ -81,7 +81,7 @@ int get_udp_headers(tracking_t *tracking, unsigned char *dgram, unsigned int dgr
 
     /* check udp headers minimum size */
     if (dgram_size < sizeof(struct udphdr))
-        return 1;
+        return -1;
 
     tracking->source = ntohs(udp->source);
     tracking->dest = ntohs(udp->dest);
@@ -146,7 +146,7 @@ int get_icmp_headers(tracking_t *tracking, unsigned char *dgram, unsigned int dg
 
     /* check udp headers minimum size */
     if (dgram_size < sizeof(struct icmphdr))
-        return 1;
+        return -1;
 
     tracking->source = 0;
     tracking->dest = 0;
@@ -247,14 +247,14 @@ connection_t* authpckt_new_connection(unsigned char *dgram, unsigned int dgram_s
         }
 
         case IPPROTO_UDP:
-            if (!get_udp_headers(&connection->tracking, dgram, dgram_size)) {
+            if (get_udp_headers(&connection->tracking, dgram, dgram_size) < 0) {
                 free_connection(connection);
                 return NULL;
             }
             break;
 
         case IPPROTO_ICMP:
-            if (!get_icmp_headers(&connection->tracking, dgram, dgram_size)) {
+            if (get_icmp_headers(&connection->tracking, dgram, dgram_size) < 0) {
                 free_connection(connection);
                 return NULL;
             }
