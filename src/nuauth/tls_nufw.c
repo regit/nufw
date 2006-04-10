@@ -85,9 +85,8 @@ static int treat_nufw_request (nufw_session_t *c_session)
                )
                     )
                 log_message (SERIOUS_WARNING, AREA_PACKET,
-                    "Can't parse nufw packet, this IS bad (got msg type %d) (%d)!\n",
-                    ((nufw_to_nuauth_message_header_t *)dgram)->msg_type,
-                    AUTH_CONN_UPDATE
+                    "Can't parse nufw packet, this IS bad (got msg type %d)!\n",
+                    ((nufw_to_nuauth_message_header_t *)dgram)->msg_type
                     );
         }
     } else {
