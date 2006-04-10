@@ -24,10 +24,6 @@ confparams mysql_nuauth_vars[] = {
     /*    { "prelude_..." , G_TOKEN_STRING, 0 , PRELUDE_... }, */
 };
 
-GMutex *packet_tpl_mutex;
-GMutex *session_tpl_mutex;
-idmef_message_t *packet_tpl;
-idmef_message_t *session_tpl;
 GMutex *global_client_mutex;
 prelude_client_t *global_client; /* private pointer for mysql database access */
 
@@ -55,12 +51,7 @@ G_MODULE_EXPORT void g_module_unload(GModule *module)
             "[+] Prelude log: Close client connection");
     prelude_client_destroy(global_client, PRELUDE_CLIENT_EXIT_STATUS_SUCCESS);
     g_mutex_free(global_client_mutex);
-    g_mutex_free(packet_tpl_mutex );
-    g_mutex_free(session_tpl_mutex );
 
-    idmef_message_destroy(packet_tpl);
-    idmef_message_destroy(session_tpl);
-    
     cleanup_func_remove(update_prelude_timer);
 
     log_message(SERIOUS_WARNING, AREA_MAIN, 
@@ -68,11 +59,19 @@ G_MODULE_EXPORT void g_module_unload(GModule *module)
     prelude_deinit();
 }
 
+/**
+ * Destroy a private IDMEF message when a thread stops.
+ */ 
+void destroy_idmef (idmef_message_t *idmef)
+{
+    idmef_message_destroy(idmef);
+}
+
 G_MODULE_EXPORT gboolean init_module_from_conf(module_t *module)
 {
+    struct log_prelude_params* params=g_new0(struct log_prelude_params, 1);
 #if 0
     char *configfile=DEFAULT_CONF_FILE;
-    struct log_prelude_params* params=g_new0(struct log_prelude_params, 1);
     if (params == NULL)
         return FALSE;
 
@@ -84,10 +83,10 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t *module)
     }
 
     params->... = (char *)READ_CONF("prelude_...");
-    module->params=(gpointer)params;
-#else
-    module->params = NULL;
 #endif
+    params->packet_tpl = g_private_new((GDestroyNotify)destroy_idmef);
+    params->session_tpl = g_private_new((GDestroyNotify)destroy_idmef);
+    module->params=(gpointer)params;
     return TRUE;
 }
 
@@ -238,6 +237,7 @@ idmef_message_t *create_session_template()
 }
 
 idmef_message_t *create_message_packet(
+        idmef_message_t *tpl,
         tcp_state_t state, connection_t* conn, 
         char *state_text, char *impact,  char *severity)
 {
@@ -253,7 +253,7 @@ idmef_message_t *create_message_packet(
     unsigned short psrc, pdst;
 
     /* duplicate message */
-    idmef = idmef_message_ref(packet_tpl);
+    idmef = idmef_message_ref(tpl);
 
     ret = idmef_message_new_alert(idmef, &alert);
     if ( ret < 0 ) {
@@ -363,6 +363,7 @@ idmef_message_t *create_message_packet(
 }
 
 idmef_message_t *create_message_session(
+        idmef_message_t *tpl,
         user_session_t *session,
         char *state_text, char *impact,  char *severity)
 {
@@ -376,7 +377,7 @@ idmef_message_t *create_message_session(
     struct in_addr ipaddr;
 
     /* duplicate message */
-    idmef = idmef_message_ref(session_tpl);
+    idmef = idmef_message_ref(tpl);
 
     ret = idmef_message_new_alert(idmef, &alert);
     if ( ret < 0 ) {
@@ -431,6 +432,8 @@ idmef_message_t *create_message_session(
 
 G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state, gpointer params_ptr)
 {
+    struct log_prelude_params *params = params_ptr;
+    idmef_message_t *tpl;
     idmef_message_t *message;
     char *impact;
     char *state_text;
@@ -464,23 +467,31 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state,
             break;
     }
 
-    g_mutex_lock(packet_tpl_mutex);
-    message = create_message_packet(state, element, state_text, impact, severity);
+    /* get message template (or create it if needed) */
+    tpl = g_private_get(params->packet_tpl);
+    if (tpl == NULL) {
+        tpl = create_packet_template(); 
+        g_private_set(params->packet_tpl, tpl);
+    }
+
+    /* feed message fields */
+    message = create_message_packet(tpl, state, element, state_text, impact, severity);
     if (message == NULL) {
-        g_mutex_unlock(packet_tpl_mutex);
         return -1;
     }
 
+    /* send message */
     g_mutex_lock(global_client_mutex);
     prelude_client_send_idmef(global_client, message);
     g_mutex_unlock(global_client_mutex);
     idmef_message_destroy(message);
-    g_mutex_unlock(packet_tpl_mutex);
     return 0;
 }
 
 G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t state,gpointer params_ptr)
 {
+    struct log_prelude_params *params = params_ptr;
+    idmef_message_t *tpl;
     idmef_message_t *message;
     char *impact;
     char *severity;
@@ -498,18 +509,18 @@ G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t
             break;
         default:
             return -1;
-            /*                    c_session->user_id,
-                                  c_session->user_name,
-                                  c_session->addr,
-                                  c_session->sysname,
-                                  c_session->release,
-                                  c_session->version, */
     }
 
-    g_mutex_lock(session_tpl_mutex);
-    message = create_message_session(c_session, state_text, impact, severity);    
+    /* get message template (or create it if needed) */
+    tpl = g_private_get(params->session_tpl);
+    if (tpl == NULL) {
+        tpl = create_session_template(); 
+        g_private_set(params->session_tpl, tpl);
+    }
+
+    /* feed message fields */
+    message = create_message_session(tpl, c_session, state_text, impact, severity);    
     if (message == NULL) {
-        g_mutex_unlock(session_tpl_mutex);
         return -1;
     }
 
@@ -518,7 +529,6 @@ G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t
     prelude_client_send_idmef(global_client, message);
     g_mutex_unlock(global_client_mutex);
     idmef_message_destroy(message);
-    g_mutex_unlock(session_tpl_mutex);
     return 0;
 }
 
@@ -563,8 +573,6 @@ G_MODULE_EXPORT gchar* g_module_check_init()
 
     /* create a new client */
     global_client_mutex = g_mutex_new();
-    packet_tpl_mutex = g_mutex_new();
-    session_tpl_mutex = g_mutex_new();
     ret = prelude_client_new(&global_client, "nufw");
     if ( ! global_client ) {
         log_message(CRITICAL, AREA_MAIN,
@@ -594,9 +602,6 @@ G_MODULE_EXPORT gchar* g_module_check_init()
     }
 #endif
 
-    packet_tpl = create_packet_template();
-    session_tpl = create_session_template();
-    
     return NULL;
 }
 

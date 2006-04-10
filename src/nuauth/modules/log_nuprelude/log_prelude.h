@@ -25,6 +25,8 @@
 
 struct log_prelude_params
 {
+    GPrivate *packet_tpl;
+    GPrivate *session_tpl;
 };
 
 #endif
