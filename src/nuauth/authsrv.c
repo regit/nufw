@@ -40,6 +40,29 @@ typedef struct
 
 int nuauth_running = 1;
 
+GList *cleanup_func_list = NULL;
+
+/**
+ * Add a cleanup function: it would be called every second.
+ * Functions are stored in ::cleanup_func_list list. 
+ * 
+ * See also cleanup_func_remove()
+ */
+void cleanup_func_push(cleanup_func_t func)
+{
+    cleanup_func_list = g_list_append(cleanup_func_list, func);
+}
+
+/**
+ * Remove a cleanup function from ::cleanup_func_list list. 
+ * 
+ * See also cleanup_func_push()
+ */
+void cleanup_func_remove(cleanup_func_t func)
+{
+    cleanup_func_list = g_list_remove(cleanup_func_list, func);
+}
+
 /**
  * Ask all threads to stop (by locking their mutex), and then wait 
  * until they really stop (if wait is TRUE) using g_thread_join() 
@@ -652,58 +675,101 @@ void init_nuauthdatas()
 }
 
 /**
+ * Function called every second to cleanup things:
+ *   - remove old connections
+ *   - refresh ACL cache
+ *   - refresh localid auth cache
+ *   - refresh limited connection 
+ */
+void main_cleanup()
+{
+    struct cache_message *cmessage;
+    struct internal_message * int_message;
+    
+    /* remove old connections */
+    clean_connections_list();
+    
+    /* info message about thread pools */
+    if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
+        if (g_thread_pool_unprocessed(nuauthdatas->user_checkers) || g_thread_pool_unprocessed(nuauthdatas->acl_checkers)){
+            g_message("%u user/%u acl unassigned task(s), %d connection(s)",
+                    g_thread_pool_unprocessed(nuauthdatas->user_checkers),
+                    g_thread_pool_unprocessed(nuauthdatas->acl_checkers),
+                    g_hash_table_size(conn_list)
+                    );  
+        }
+    }
+
+    if (nuauthconf->acl_cache){
+        /* send refresh message to acl cache thread */
+        cmessage=g_new0(struct cache_message,1);
+        cmessage->type=REFRESH_MESSAGE;
+        g_async_queue_push(nuauthdatas->acl_cache->queue, cmessage);
+    }
+
+    if (nuauthconf->push && nuauthconf->hello_authentication) {
+        /* refresh localid_auth_queue queue */
+        int_message = g_new0(struct internal_message,1);
+        int_message->type = REFRESH_MESSAGE;
+        g_async_queue_push(nuauthdatas->localid_auth_queue,int_message);
+    }
+
+    /* refresh limited_connections_queue queue */
+    int_message = g_new0(struct internal_message,1);
+    int_message->type = REFRESH_MESSAGE;
+    g_async_queue_push(nuauthdatas->limited_connections_queue,int_message);
+}
+
+/**
  * Main loop: refresh connection queue and all other queues
  */
 void nuauth_main_loop()
 {
     struct timespec sleep;
-    struct cache_message *cmessage;
-    struct internal_message * int_message;
+    GList* cleanup_it;
+    GTimer *timer;
+    double sec; unsigned long ms;
 
     g_message("[+] NuAuth started.");
-            
-    /* set sleep time: one second */
+
+    /* create timer and add main cleanup function to cleanup list */
+    timer = g_timer_new();
+    cleanup_func_push(main_cleanup);
+
+    /* first sleep is one full second */
     sleep.tv_sec = 1;
     sleep.tv_nsec = 0;
 
-    /* main loop */
+    /* 
+     * Main loop: call functions listed in ::cleanup_func_list every second.
+     * If functions take long time, next sleep will be shorter.
+     */
     for(;;){
         /* a little sleep (one second) */
         nanosleep(&sleep, NULL);	
-       
+        
         /* remove old connections */
-        clean_connections_list();
+        g_timer_start(timer);
+        for (cleanup_it = cleanup_func_list; 
+                cleanup_it != NULL; 
+                cleanup_it = cleanup_it->next)
+        {
+            cleanup_func_t cleanup = cleanup_it->data;
+            cleanup();
+        }
+        g_timer_stop(timer);
 
-        /* info message about thread pools */
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
-            if (g_thread_pool_unprocessed(nuauthdatas->user_checkers) || g_thread_pool_unprocessed(nuauthdatas->acl_checkers)){
-                g_message("%u user/%u acl unassigned task(s), %d connection(s)",
-                        g_thread_pool_unprocessed(nuauthdatas->user_checkers),
-                        g_thread_pool_unprocessed(nuauthdatas->acl_checkers),
-                        g_hash_table_size(conn_list)
-                        );  
-            }
-        }
-        
-        if (nuauthconf->acl_cache){
-            /* send refresh message to acl cache thread */
-            cmessage=g_new0(struct cache_message,1);
-            cmessage->type=REFRESH_MESSAGE;
-            g_async_queue_push(nuauthdatas->acl_cache->queue, cmessage);
-        }
-        
-        if (nuauthconf->push && nuauthconf->hello_authentication) {
-            /* refresh localid_auth_queue queue */
-            int_message = g_new0(struct internal_message,1);
-            int_message->type = REFRESH_MESSAGE;
-            g_async_queue_push(nuauthdatas->localid_auth_queue,int_message);
-        }
-
-        /* refresh limited_connections_queue queue */
-        int_message = g_new0(struct internal_message,1);
-        int_message->type = REFRESH_MESSAGE;
-        g_async_queue_push(nuauthdatas->limited_connections_queue,int_message);
+        /* compute next sleep: one second minus (elasped time) */
+        sec = g_timer_elapsed(timer, &ms);
+        if (1 <= sec) {
+            sleep.tv_sec = 0;
+            sleep.tv_nsec = 0; 
+        } else {
+            sleep.tv_sec = 0;
+            sleep.tv_nsec = (1000000-ms)*1000;
+        }        
     }
+    g_timer_destroy(timer);
 }
 
 /**

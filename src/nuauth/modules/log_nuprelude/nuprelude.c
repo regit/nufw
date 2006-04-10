@@ -33,6 +33,14 @@ G_MODULE_EXPORT gchar* module_params_unload(gpointer params_ptr)
 }
 
 /**
+ * Function called every second to update timer 
+ */
+void update_prelude_timer()
+{
+    prelude_timer_wake_up();
+}
+
+/**
  * Function called only once: when the module is loaded.
  *
  * \return NULL
@@ -86,6 +94,8 @@ G_MODULE_EXPORT gchar* g_module_check_init()
         exit(EXIT_FAILURE);
     }
 
+    cleanup_func_push(update_prelude_timer);
+
 #if 0
     /* set flags */
     ret = prelude_client_set_flags(global_client, 
@@ -96,8 +106,6 @@ G_MODULE_EXPORT gchar* g_module_check_init()
     }
 #endif
     
-    /* TODO: Call prelude_timer_wake_up(); every second */
-
     return NULL;
 }
 
@@ -112,6 +120,8 @@ G_MODULE_EXPORT void g_module_unload(GModule *module)
             "[+] Prelude log: Close client connection");
     prelude_client_destroy(global_client, PRELUDE_CLIENT_EXIT_STATUS_SUCCESS);
     g_mutex_free(global_client_mutex);
+    
+    cleanup_func_remove(update_prelude_timer);
 
     log_message(SERIOUS_WARNING, AREA_MAIN, 
             "[+] Prelude log: Deinit library");

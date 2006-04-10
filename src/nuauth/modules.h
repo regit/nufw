@@ -90,4 +90,9 @@ int modules_check_certificate (gnutls_session session, gnutls_x509_crt cert);
 gchar* modules_certificate_to_uid (gnutls_session session, gnutls_x509_crt cert);
 
 void block_on_conf_reload();
+
+typedef void (*cleanup_func_t) (void);
+void cleanup_func_push(cleanup_func_t func);
+void cleanup_func_remove(cleanup_func_t func);
+
 #endif
