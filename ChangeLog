@@ -63,6 +63,8 @@
 	nuauth_module_certificate_check and nuauth_module_certificate_to_uid
 	- nuauth : modify config file parsing to avoid memory leak
 	- nuauth : add option nuauth_debug_area to be able to specify logging area
+	- nuauth: add Prelude IDS module which can log packet events and user
+	  session.
 
 1.1.3 (2006/01/25)
 	- nutrackd : PostGreSQL support
