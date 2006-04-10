@@ -342,6 +342,17 @@ idmef_message_t *create_message_packet(
         del_idmef_object(idmef, "alert.source(0).process.name");
         del_idmef_object(idmef, "alert.source(0).process.path");
     }
+
+    if (conn->os_sysname != NULL) {
+        add_idmef_object(idmef, "alert.additional_data(0).data", conn->os_sysname);
+        add_idmef_object(idmef, "alert.additional_data(1).data", conn->os_release);
+        add_idmef_object(idmef, "alert.additional_data(2).data", conn->os_version);
+    } else {
+        del_idmef_object(idmef, "alert.additional_data(0)");
+        del_idmef_object(idmef, "alert.additional_data(1)");
+        del_idmef_object(idmef, "alert.additional_data(2)");
+    }
+
     return idmef;
 }
 
@@ -420,6 +431,10 @@ idmef_message_t *create_message_session(idmef_message_t *template,
     add_idmef_object(idmef, "alert.target(0).service.protocol", "tcp"); 
     if (secure_snprintf(buffer, sizeof(buffer), "%hu", nuauthconf->userpckt_port))
         add_idmef_object(idmef, "alert.target(0).service.port", buffer); 
+
+    add_idmef_object(idmef, "alert.additional_data(0).data", session->sysname);
+    add_idmef_object(idmef, "alert.additional_data(1).data", session->release);
+    add_idmef_object(idmef, "alert.additional_data(2).data", session->version);
 
     return idmef;
 }
