@@ -67,7 +67,8 @@ G_MODULE_EXPORT gchar* g_module_check_init()
     ret = prelude_init(&argc, argv);
     if ( ret < 0 ) {
         log_message(CRITICAL, AREA_MAIN,
-                "Fatal error: Fail to init Prelude module!");
+                "Fatal error: Fail to init Prelude module: %s!",
+                prelude_strerror(ret));
         exit(EXIT_FAILURE);
     }
 
@@ -83,14 +84,16 @@ G_MODULE_EXPORT gchar* g_module_check_init()
     ret = prelude_client_new(&global_client, "nufw");
     if ( ! global_client ) {
         log_message(CRITICAL, AREA_MAIN,
-                "Fatal error: Unable to create a prelude client object!");
+                "Fatal error: Unable to create a prelude client object: %s!",
+                prelude_strerror(ret));
         exit(EXIT_FAILURE);
     }
 
     ret = prelude_client_start(global_client);
     if ( ret < 0 ) {
         log_message(CRITICAL, AREA_MAIN,
-                "Fatal error: Unable to start prelude client!");
+                "Fatal error: Unable to start prelude client: %s!",
+                prelude_strerror(ret));
         exit(EXIT_FAILURE);
     }
 
@@ -102,7 +105,8 @@ G_MODULE_EXPORT gchar* g_module_check_init()
             PRELUDE_CLIENT_FLAGS_ASYNC_SEND|PRELUDE_CLIENT_FLAGS_ASYNC_TIMER);
     if ( ret < 0 ) {
         log_message(WARNING, AREA_MAIN,
-                "Prelude: Warning, unnable to set asynchronous send and timer.");
+                "Prelude: Warning, unnable to set asynchronous send and timer: %s",
+                prelude_strerror(ret));
     }
 #endif
     
@@ -175,7 +179,9 @@ static int add_idmef_object(idmef_message_t *message, const char *object, const 
     ret = idmef_path_new(&path, object);
     if ( ret < 0 ) {
         log_message(DEBUG, AREA_MAIN, 
-                "Prelude: Fail to set attribute %s=%s", object, value);
+                "Prelude: Fail to set attribute %s=%s: %s", 
+                object, value,
+                prelude_strerror(ret));
         return -1;
     }
 
@@ -190,7 +196,8 @@ static int add_idmef_object(idmef_message_t *message, const char *object, const 
     ret = idmef_value_new_from_path(&val, path, value);
     if ( ret < 0 ) {
         log_message(DEBUG, AREA_MAIN, 
-                "Prelude: Fail to set attribute %s=%s", object, value);
+                "Prelude: Fail to set attribute %s=%s: %s", object, value,
+                prelude_strerror(ret));
         idmef_path_destroy(path);
         return -1;
     }
@@ -214,10 +221,6 @@ int feed_message(idmef_message_t *idmef)
     /* set assessment */
     add_idmef_object(idmef, "alert.assessment.impact.completion", "succeeded"); /* failed | succeeded */
     add_idmef_object(idmef, "alert.assessment.impact.type", "user"); /* admin | dos | file | recon | user | other */
-
-    /* user */
-    /*    add_idmef_object(idmef, "alert.source(0).user.UserId(0).name", "haypo"); 
-          add_idmef_object(idmef, "alert.source(0).user.UserId(0).number", "1000");  */
     return 1;
 }
 
@@ -307,6 +310,21 @@ idmef_message_t *create_message_packet(
     if (secure_snprintf(buffer, sizeof(buffer), "%hu", psrc))
         add_idmef_object(idmef, "alert.source(0).service.port", buffer); 
 
+    /* set user informations */
+    if (conn->username != NULL) {
+        add_idmef_object(idmef, "alert.source(0).user.user_id(0).type", "current-user");
+        add_idmef_object(idmef, "alert.source(0).user.category", "application");  /* os-device */
+        add_idmef_object(idmef, "alert.source(0).user.user_id(0).name", conn->username); 
+        if (secure_snprintf(buffer, sizeof(buffer), "%lu", conn->user_id)) {
+            add_idmef_object(idmef, "alert.source(0).user.user_id(0).number", buffer);
+        }
+    } else {
+        del_idmef_object(idmef, "alert.source(0).user.category");
+        del_idmef_object(idmef, "alert.source(0).user.user_id(0).name");
+        del_idmef_object(idmef, "alert.source(0).user.user_id(0).number");
+        del_idmef_object(idmef, "alert.source(0).user.user_id(0).type");
+    }
+
     /* target address/service */    
     ipaddr.s_addr = ntohl(conn->tracking.daddr);
     add_idmef_object(idmef, "alert.target(0).node.address(0).address", inet_ntoa(ipaddr));
@@ -378,7 +396,23 @@ idmef_message_t *create_message_session(idmef_message_t *template,
     ipaddr.s_addr = session->addr;
     add_idmef_object(idmef, "alert.source(0).node.address(0).address", inet_ntoa(ipaddr));
     add_idmef_object(idmef, "alert.source(0).service.protocol", "tcp");
+    add_idmef_object(idmef, "alert.source(0).service.name", "nufw-client");
     add_idmef_object(idmef, "alert.source(0).process.name", "nutcpc");
+
+    /* set user informations */
+    if (session->user_name != NULL) {
+        add_idmef_object(idmef, "alert.source(0).user.user_id(0).type", "current-user");
+        add_idmef_object(idmef, "alert.source(0).user.category", "application");  /* os-device */
+        add_idmef_object(idmef, "alert.source(0).user.user_id(0).name", session->user_name); 
+        if (secure_snprintf(buffer, sizeof(buffer), "%lu", session->user_id)) {
+            add_idmef_object(idmef, "alert.source(0).user.user_id(0).number", buffer);
+        }
+    } else {
+        del_idmef_object(idmef, "alert.source(0).user.category");
+        del_idmef_object(idmef, "alert.source(0).user.user_id(0).name");
+        del_idmef_object(idmef, "alert.source(0).user.user_id(0).number");
+        del_idmef_object(idmef, "alert.source(0).user.user_id(0).type");
+    }
 
     /* target address/service */    
     inet_aton("127.0.0.1", &ipaddr);
