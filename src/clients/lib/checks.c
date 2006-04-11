@@ -52,7 +52,7 @@ void* recv_message(void *data)
 	struct nuv2_header header;
 	struct nuv2_authreq authreq;
 	struct nuv2_authfield_hello hellofield;
-	const int message_length= sizeof(struct nuv2_header)+sizeof(struct nuv2_authfield_hello)+sizeof(struct nuv2_authreq);
+	const size_t message_length= sizeof(struct nuv2_header)+sizeof(struct nuv2_authfield_hello)+sizeof(struct nuv2_authreq);
 	char message[message_length];
 	char* pointer=NULL;
 
