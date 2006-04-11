@@ -25,16 +25,13 @@
 #include "proc.h"
 #include "security.h"
 
-char * locale_to_utf8(char* inbuf);
+char* locale_to_utf8(char* inbuf);
 
 static struct prg_node {
     struct prg_node *next;
     unsigned long inode;
     char name[PROGNAME_WIDTH];
 } *prg_hash[PRG_HASH_SIZE];
-
-
-
 
 #define PROGNAME_WIDTHs PROGNAME_WIDTH1(PROGNAME_WIDTH)
 #define PROGNAME_WIDTH1(s) PROGNAME_WIDTH2(s)
@@ -49,21 +46,12 @@ static struct prg_node {
 #define PRG_SOCKET_PFX2   "[0000]:"
 #define PRG_SOCKET_PFX2l  (strlen(PRG_SOCKET_PFX2))
 
-
-#ifndef LINE_MAX
-#define LINE_MAX 4096
+#ifndef PATH_MAX
+#  define PATH_MAX 4096
 #endif
 
-
-
-#define PATH_PROC	   "/proc"
-#define PATH_FD_SUFF	"fd"
-#define PATH_FD_SUFFl       strlen(PATH_FD_SUFF)
-#define PATH_PROC_X_FD      PATH_PROC "/%s/" PATH_FD_SUFF
-#define PATH_EXE	"exe"
-#define PATH_EXEl       strlen(PATH_EXE)
 /* NOT working as of glibc-2.0.7: */
-#undef  DIRENT_HAVE_D_TYPE_WORKS
+#undef DIRENT_HAVE_D_TYPE_WORKS
 
 static void prg_cache_add(unsigned long inode, char *name)
 {
@@ -84,7 +72,7 @@ static void prg_cache_add(unsigned long inode, char *name)
     pn->next=NULL;
     pn->inode=inode;
 #if USE_UTF8
-	name=locale_to_utf8(name);
+    name=locale_to_utf8(name);
 #endif
     if (strlen(name)>sizeof(pn->name)-1) 
 	name[sizeof(pn->name)-1]='\0';
@@ -117,16 +105,17 @@ void prg_cache_clear(void)
     prg_cache_loaded=0;
 }
 
-static int extract_type_1_socket_inode(const char lname[], unsigned long * inode_p) {
-
+static int extract_type_1_socket_inode(const char lname[], unsigned long * inode_p)
+{
     /* If lname is of the form "socket:[12345]", extract the "12345"
        as *inode_p.  Otherwise, return -1 as *inode_p.
        */
-
-    if (strlen(lname) < PRG_SOCKET_PFXl+3) return(-1);
-    
-    if (memcmp(lname, PRG_SOCKET_PFX, PRG_SOCKET_PFXl)) return(-1);
-    if (lname[strlen(lname)-1] != ']') return(-1);
+    if (strlen(lname) < PRG_SOCKET_PFXl+3) 
+        return(-1);    
+    if (memcmp(lname, PRG_SOCKET_PFX, PRG_SOCKET_PFXl)) 
+        return(-1);
+    if (lname[strlen(lname)-1] != ']') 
+        return(-1);
 
     {
         char inode_str[strlen(lname + 1)];  /* e.g. "12345" */
@@ -141,8 +130,6 @@ static int extract_type_1_socket_inode(const char lname[], unsigned long * inode
     }
     return(0);
 }
-
-
 
 static int extract_type_2_socket_inode(const char lname[], unsigned long * inode_p) {
 
@@ -163,6 +150,11 @@ static int extract_type_2_socket_inode(const char lname[], unsigned long * inode
     return(0);
 }
 
+/**
+ * Check if a string contains an integer
+ *
+ * \return 1 if it's a number, 0 otherwise
+ */ 
 int str_is_integer(const char* str)
 {
     for (; *str != '\0'; ++str) 
@@ -173,6 +165,11 @@ int str_is_integer(const char* str)
     return 1;
 }
 
+/**
+ * Secure version of readlink()
+ *
+ * \return 0 if an error occurs, 1 if ok
+ */
 int secure_readlink(const char* filename, char *buffer, unsigned int buflen)
 {
     int ret;
@@ -190,7 +187,7 @@ int secure_readlink(const char* filename, char *buffer, unsigned int buflen)
         return 0;
 
     /* that should never happens, but ... */
-    if ((buflen-1) < ret)
+    if (((int)buflen-1) < ret)
         return 0;
 
     /* write nul byte at the end */
@@ -198,86 +195,107 @@ int secure_readlink(const char* filename, char *buffer, unsigned int buflen)
     return 1;
 }
 
-void prg_cache_load(void)
+/**
+ * Walk in directoty like "/proc/123/fd/" 
+ */
+void prg_cache_load_sub(DIR *dir, const char *path_process, const char *path_fd)
 {
-    char line[LINE_MAX],eacces=0;
-    int procfdlen,cmdllen,lnamelen;
-    char lname[30],cmdlbuf[512],finbuf[PROGNAME_WIDTH];
+    char path[PATH_MAX];
+    char lname[30];
+    char finbuf[PROGNAME_WIDTH];
     unsigned long inode;
-    DIR *dirproc=NULL,*dirfd=NULL;
-    struct dirent *direproc,*direfd;
+    struct dirent *file;
 
-    if (prg_cache_loaded ) return;
-    prg_cache_loaded=1;
-    cmdlbuf[sizeof(cmdlbuf)-1]='\0';
-   
-    dirproc = opendir(PATH_PROC);
-    if (!dirproc) 
-        goto fail;
-
-    while (errno=0,direproc=readdir(dirproc)) {
+    while ((file = readdir(dir)) != NULL)
+    {
 #ifdef DIRENT_HAVE_D_TYPE_WORKS
-	if (direproc->d_type!=DT_DIR) continue;
+        if (file->d_type!=DT_LNK) 
+            continue;
 #endif
-        if (!str_is_integer(direproc->d_name))
+
+        /* read link of "/proc/123/fd/FILENAME" */
+        if (!secure_snprintf(path, sizeof(path), "%s/%s", path_fd, file->d_name))
+	    continue;
+        if (!secure_readlink(path, lname, sizeof(lname)))
             continue;
 
-	procfdlen=snprintf(line,sizeof(line),PATH_PROC_X_FD,direproc->d_name);
-	if (procfdlen<=0 || procfdlen>=((int)sizeof(line)-5)) 
+        /*
+         * extract inode number from name like "socket:[12345]" 
+         * or "[0000]:12345" 
+         */
+        if (extract_type_1_socket_inode(lname, &inode) < 0)
+            if (extract_type_2_socket_inode(lname, &inode) < 0)
+                continue;
+
+        /* get exec fullpath */
+        if (!secure_snprintf(path, sizeof(path), "%s/exe", path_process))
 	    continue;
-        
-	errno=0;
-	dirfd=opendir(line);
-	if (! dirfd) {
-	    if (errno==EACCES) 
-		eacces=1;
-	    continue;
-	}
-        
-	line[procfdlen] = '/';
-	while ((direfd = readdir(dirfd))) {
-#ifdef DIRENT_HAVE_D_TYPE_WORKS
-	    if (direfd->d_type!=DT_LNK) 
-		continue;
-#endif
-	    if (procfdlen+1+strlen(direfd->d_name)+1>sizeof(line)) 
-		continue;
-	    memcpy(line + procfdlen - PATH_FD_SUFFl, PATH_FD_SUFF "/",
-		   PATH_FD_SUFFl+1);
-	    strcpy(line + procfdlen + 1, direfd->d_name);
+        if (!secure_readlink(path, finbuf, sizeof(finbuf)))
+            continue;
 
-            if (!secure_readlink(line, lname, sizeof(lname)))
-                continue;
-
-            if (extract_type_1_socket_inode(lname, &inode) < 0)
-              if (extract_type_2_socket_inode(lname, &inode) < 0)
-                continue;
-
-            if (procfdlen - PATH_FD_SUFFl + PATH_EXEl >= 
-                    sizeof(line) - 5) 
-                continue;
-            strcpy(line + procfdlen-PATH_FD_SUFFl, PATH_EXE);
-
-            if (!secure_readlink(line, cmdlbuf, sizeof(cmdlbuf)))
-                continue;
-	    
-	    SECURE_STRNCPY(finbuf, cmdlbuf, sizeof(finbuf));
-	    prg_cache_add(inode, finbuf);
-	}
-	closedir(dirfd); 
-	dirfd = NULL;
-    }
-    if (dirproc) 
-	closedir(dirproc);
-    if (dirfd) 
-	closedir(dirfd);
-    if (!eacces) 
-	return;
-    if (prg_cache_loaded == 1) {
-    fail:
-	fprintf(stderr,"(No info could be read for \"-p\": geteuid()=%d but you should be root.)\n",
-		geteuid());
+        /* add item to the cache */
+        prg_cache_add(inode, finbuf);
     }
 }
+
+/**
+ * Load program cache
+ */
+void prg_cache_load()
+{
+    char path_process[PATH_MAX];
+    char path_fd[PATH_MAX];
+    int eacces=0;
+    DIR *dirproc=NULL;
+    DIR *dirfd=NULL;
+    struct dirent *file;
+
+    if (prg_cache_loaded) 
+        return;
+    prg_cache_loaded=1;
+   
+    /* open directory "/proc" */
+    dirproc = opendir("/proc");
+    if (dirproc != NULL) 
+    {
+        while ( (file=readdir(dirproc)) != NULL )
+        {
+#ifdef DIRENT_HAVE_D_TYPE_WORKS
+            if (file->d_type!=DT_DIR)
+                continue;
+#endif
+            if (!str_is_integer(file->d_name))
+                continue;
+
+            /* create path like "/proc/123" */
+            if (!secure_snprintf(path_process, sizeof(path_process), "/proc/%s", file->d_name))
+                continue;
+
+            /* create path like "/proc/123/fd" */
+            if (!secure_snprintf(path_fd, sizeof(path_fd), "%s/fd", path_process))
+                continue;
+
+            /* open directory like "/proc/123/fd" */
+            errno = 0;
+            dirfd = opendir(path_fd);
+            if (dirfd) {
+                prg_cache_load_sub(dirfd, path_process, path_fd);
+                closedir(dirfd); 
+                dirfd = NULL;
+            } else {
+                if (errno == EACCES) 
+                    eacces = 1;
+            }
+        }
+        closedir(dirproc);
+
+        if (eacces == 0) 
+            return;
+    }
+    fprintf(stderr,
+            "(No info could be read for \"-p\": geteuid()=%d but you should be root)\n",
+            geteuid());
+}
+
 #endif   /* of #ifdef LINUX */
 
