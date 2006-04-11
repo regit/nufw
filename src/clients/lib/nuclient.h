@@ -114,17 +114,18 @@ extern "C" {
  * easier.
  */
 typedef struct conn {
-        unsigned int proto;
-	unsigned long lcl;
-	unsigned int lclp;
-	unsigned long rmt;
-	unsigned int rmtp;
-	unsigned long uid;
-	unsigned long ino;
-	unsigned int retransmit;
-        time_t  createtime;
+    unsigned int proto;        /** IPv4 protocol */
+    unsigned long lcl;         /** Local address IPv4 */
+    unsigned int lclp;         /** Local address port */
+    unsigned long rmt;         /** Remote address IPv4 */
+    unsigned int rmtp;         /** Remote address port */
+    unsigned long uid;         /** User identifier */
+    unsigned long ino;         /** Inode */
+    unsigned int retransmit;   /** Restransmit */
+    time_t createtime;         /** Creation time (Epoch format) */
 
-	struct conn *next;
+    /** Pointer to next connection (NULL if it's as the end) */
+    struct conn *next;        
 } conn_t;
 
 typedef struct conntable {
