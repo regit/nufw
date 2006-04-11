@@ -1,3 +1,4 @@
+#include <config.h>
 #ifdef LINUX
 
 #include "nuclient.h"
@@ -20,7 +21,6 @@
 #include <sys/ioctl.h>
 #include <net/if.h>
 #include <dirent.h>
-#include <config.h>
 
 #include "proc.h"
 #include "security.h"
