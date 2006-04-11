@@ -91,11 +91,11 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
 #endif
 
       if (sscanf (buf, "%*d: %lx:%x %lx:%x %x %*x:%*x %*x:%*x %x %lu %*d %lu",
-                  &c.lcl, &c.lclp, &c.rmt, &c.rmtp, &state, &c.retransmit, &c.uid, &c.ino) != 7)
+                  &c.lcl, &c.lclp, &c.rmt, &c.rmtp, &state, &c.retransmit, &c.uid, &c.ino) != 8)
           continue;
 
       /* only keep session user connections */
-      if(c.uid != (int)session->localuserid){
+      if(c.uid != session->localuserid){
           continue;
       } 
 

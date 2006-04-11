@@ -235,8 +235,6 @@ void prg_cache_load_sub(DIR *dir, const char *path_process, const char *path_fd)
 
         /* add item to the cache */
         prg_cache_add(inode, finbuf);
-
-	printf("process %s: %s (%lu) for %s\n", path, lname, inode, finbuf);
     }
 }
 
