@@ -186,12 +186,8 @@ void auth_process_conn_update(char *dgram, int dgram_size)
         memcpy(&reply.l4src, &orig.l4dst, sizeof(reply.l4src));
         memcpy(&reply.l4dst, &orig.l4src, sizeof(reply.l4dst));
         proto.tcp.state=3;
-        /*
-        ct = nfct_conntrack_alloc(&orig, &reply, -1,
-                &proto, IPS_ASSURED | IPS_CONFIRMED , 0, 0, NULL);
-         */
 
-#if 0
+#ifdef  HAVE_LIBCONNTRACK_FIXEDTIMEOUT
         ct = nfct_conntrack_alloc(&orig, &reply, 0,
                 &proto,  IPS_ASSURED|IPS_SEEN_REPLY|IPS_FIXED_TIMEOUT  , 0, 0, NULL);
 #else
