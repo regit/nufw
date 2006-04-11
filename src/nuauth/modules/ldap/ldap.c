@@ -323,10 +323,22 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element,gpointer params_p)
   if (ldap_count_entries(ld,res) >= 1) {
       result = ldap_first_entry(ld,res);
       while ( result ) {
+	  time_t periodend = -1;
+	  /* get period */
+          attrs_array=ldap_get_values(ld, result, "TimeRange");
+	  if (attrs_array && *attrs_array){
+          	periodend = get_end_of_period_for_time_t(*attrs_array,time(NULL));
+	  } 
+	  if (periodend == 0){
+	        continue;
+	  }
+	  
           /* allocate a new acl_group */
           this_acl=g_new0(struct acl_group,1);
           g_assert(this_acl);
           this_acl->groups=NULL;
+	  this_acl->expire=periodend;
+	 
           /* get decision */
           attrs_array=ldap_get_values(ld, result, "Decision");
           sscanf(*attrs_array,"%d",(int *)&(this_acl->answer));
@@ -345,7 +357,6 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element,gpointer params_p)
           result = ldap_next_entry(ld,result);
           /* add when acl is filled */
           if (this_acl->groups !=NULL){
-              this_acl->expire = -1; 
               g_list = g_slist_prepend(g_list,this_acl);
           } else {
               g_free(this_acl);
