@@ -322,19 +322,7 @@ int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn)
 	len = gnutls_record_recv(session, buf, sizeof buf);
 	if (len < 0)
 		return EXIT_FAILURE;
-#if MECH_CHOICE
-	if (mech) {
-		/* make sure that 'mech' appears in 'buf' */
-		if (!strstr(buf, mech)) {
-			printf("server doesn't offer mandatory mech '%s'\n", mech);
-			return EXIT_FAILURE;
-		}
-	} else {
-#endif
-		mech = buf;
-#if MECH_CHOICE
-	}
-#endif
+	mech = buf;
 
 	r = sasl_client_start(conn, mech, NULL, &data, (unsigned int *)&len, &chosenmech);
 	if (r != SASL_OK && r != SASL_CONTINUE) {
