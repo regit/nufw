@@ -74,9 +74,7 @@ static void prg_cache_add(unsigned long inode, char *name)
 #if USE_UTF8
     name=locale_to_utf8(name);
 #endif
-    if (strlen(name)>sizeof(pn->name)-1) 
-	name[sizeof(pn->name)-1]='\0';
-    strcpy(pn->name,name);
+    SECURE_STRNCPY(pn->name, name, sizeof(pn->name));
 #if USE_UTF8
     free(name);
 #endif
