@@ -25,6 +25,7 @@
 #include "proc.h"
 #include "checks.h" /* for secure_snprintf() */
 #include "security.h"
+#include "libnuclient.h" /* for panic() */
 
 char* locale_to_utf8(char* inbuf);
 
@@ -175,13 +176,13 @@ int secure_readlink(const char* filename, char *buffer, unsigned int buflen)
 
     /* call readlink (add 'canary' to check "buffer overflow") */
     buffer[buflen-1] = '\0';
-    ret = readlink(filename, buffer, buflen-1);
+    ret = readlink(filename, buffer, buflen);
 
     /* error if readlink fails */
     if (ret < 0)
         return 0;
 
-    /* error if buffer is too small */
+    /* error if buffer is too small ("buffer overflow") */
     if (buffer[buflen-1] != '\0')
         return 0;
 
@@ -234,6 +235,8 @@ void prg_cache_load_sub(DIR *dir, const char *path_process, const char *path_fd)
 
         /* add item to the cache */
         prg_cache_add(inode, finbuf);
+
+	printf("process %s: %s (%lu) for %s\n", path, lname, inode, finbuf);
     }
 }
 
@@ -244,7 +247,6 @@ void prg_cache_load()
 {
     char path_process[PATH_MAX];
     char path_fd[PATH_MAX];
-    int eacces=0;
     DIR *dirproc=NULL;
     DIR *dirfd=NULL;
     struct dirent *file;
@@ -255,45 +257,34 @@ void prg_cache_load()
    
     /* open directory "/proc" */
     dirproc = opendir("/proc");
-    if (dirproc != NULL) 
+    if (dirproc == NULL) panic("Fail to open /proc directory!");
+
+    while ( (file=readdir(dirproc)) != NULL )
     {
-        while ( (file=readdir(dirproc)) != NULL )
-        {
 #ifdef DIRENT_HAVE_D_TYPE_WORKS
-            if (file->d_type!=DT_DIR)
-                continue;
+	if (file->d_type!=DT_DIR)
+	    continue;
 #endif
-            if (!str_is_integer(file->d_name))
-                continue;
+	if (!str_is_integer(file->d_name))
+	    continue;
 
-            /* create path like "/proc/123" */
-            if (!secure_snprintf(path_process, sizeof(path_process), "/proc/%s", file->d_name))
-                continue;
+	/* create path like "/proc/123" */
+	if (!secure_snprintf(path_process, sizeof(path_process), "/proc/%s", file->d_name))
+	    continue;
 
-            /* create path like "/proc/123/fd" */
-            if (!secure_snprintf(path_fd, sizeof(path_fd), "%s/fd", path_process))
-                continue;
+	/* create path like "/proc/123/fd" */
+	if (!secure_snprintf(path_fd, sizeof(path_fd), "%s/fd", path_process))
+	    continue;
 
-            /* open directory like "/proc/123/fd" */
-            errno = 0;
-            dirfd = opendir(path_fd);
-            if (dirfd) {
-                prg_cache_load_sub(dirfd, path_process, path_fd);
-                closedir(dirfd); 
-                dirfd = NULL;
-            } else {
-                if (errno == EACCES) 
-                    eacces = 1;
-            }
-        }
-        closedir(dirproc);
-
-        if (eacces == 0) 
-            return;
+	/* open directory like "/proc/123/fd" */
+	dirfd = opendir(path_fd);
+	if (dirfd != NULL) 
+	{
+	    prg_cache_load_sub(dirfd, path_process, path_fd);
+	    closedir(dirfd); 
+	}
     }
-    fprintf(stderr,
-            "(No info could be read for \"-p\": geteuid()=%d but you should be root)\n",
-            geteuid());
+    closedir(dirproc);
 }
 
 #endif   /* of #ifdef LINUX */

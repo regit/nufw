@@ -315,16 +315,14 @@ int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn)
 	const char *chosenmech;
 	int len;
 	int r, ret;
-	char * mech;
 
 	memset(buf,0,sizeof buf);
 	/* get the capability list */
 	len = gnutls_record_recv(session, buf, sizeof buf);
 	if (len < 0)
 		return EXIT_FAILURE;
-	mech = buf;
 
-	r = sasl_client_start(conn, mech, NULL, &data, (unsigned int *)&len, &chosenmech);
+	r = sasl_client_start(conn, buf, NULL, &data, (unsigned int *)&len, &chosenmech);
 	if (r != SASL_OK && r != SASL_CONTINUE) {
 		printf("starting SASL negotiation");
 		printf("\n%s\n", sasl_errdetail(conn));
@@ -367,7 +365,7 @@ int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn)
 		if (len < 0){
 			return EXIT_FAILURE;
 		}
-		switch (*buf) {
+		switch (buf[0]) {
 			case 'O':
 				return SASL_OK;
 			case 'N':
@@ -377,9 +375,9 @@ int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn)
 			default:
 				return EXIT_FAILURE;
 		}
+		
 		memset(buf,0,sizeof buf);
 		len = gnutls_record_recv(session, buf, sizeof buf);
-
 		if (len < 0){
 			return EXIT_FAILURE;
 		}

@@ -43,7 +43,7 @@
 #define _BSD_SOURCE
 
 /* Disable inline keyword when compiling in strict ANSI conformance */
-#if defined(__STRICT_ANSI__) and !defined(__cplusplus)
+#if defined(__STRICT_ANSI__) && !defined(__cplusplus)
 #  define inline
 #endif
 

@@ -64,6 +64,7 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
   static FILE *fp = NULL;
   static FILE *fq = NULL;
   char buf[1024];
+  int state;
 #if DEBUG
   assert (ct != NULL);
 #endif
@@ -83,19 +84,25 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
   if (fgets (buf, sizeof (buf), fp) == NULL)
       panic ("/proc/net/tcp: missing header");
 
-  while (fgets (buf, sizeof (buf), fp) != NULL) {
+  while (fgets (buf, sizeof (buf), fp) != NULL)
+  {
 #ifdef USE_FILTER
       int seen = 0;
 #endif
-      if(atoi(buf+76) != (int)session->localuserid){
+
+      if (sscanf (buf, "%*d: %lx:%x %lx:%x %x %*x:%*x %*x:%*x %x %lu %*d %lu",
+                  &c.lcl, &c.lclp, &c.rmt, &c.rmtp, &state, &c.retransmit, &c.uid, &c.ino) != 7)
+          continue;
+
+      /* only keep session user connections */
+      if(c.uid != (int)session->localuserid){
           continue;
       } 
-      if(atoi(buf+34) != TCP_SYN_SENT){
+
+      /* only keep connections in state "SYN packet sent" */
+      if(state != TCP_SYN_SENT){
           continue;
       } 
-      if (sscanf (buf, "%*d: %lx:%x %lx:%x %*x %*x:%*x %*x:%*x %x %lu %*d %lu",
-                  &c.lcl, &c.lclp, &c.rmt, &c.rmtp,  &c.retransmit, &c.uid, &c.ino) != 7)
-          continue;
 
       if (c.ino == 0)
           continue;
