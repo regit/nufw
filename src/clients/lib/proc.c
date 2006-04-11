@@ -213,6 +213,9 @@ void prg_cache_load(void)
 		   PATH_FD_SUFFl+1);
 	    strcpy(line + procfdlen + 1, direfd->d_name);
 	    lnamelen=readlink(line,lname,sizeof(lname)-1);
+            if (lnamelen < 0){
+                continue;
+            }
             lname[lnamelen] = '\0';  /*make it a null-terminated string*/
 
             if (extract_type_1_socket_inode(lname, &inode) < 0)
