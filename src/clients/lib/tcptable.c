@@ -50,27 +50,114 @@
   Contains the TCP parsing functions
  */
 
+#ifdef LINUX 
+int parse_tcptable_file(NuAuth* session, conntable_t *ct, char *filename, FILE **file, int protocol)
+{
+    char buf[1024];
+    conn_t c;
+    const char state_char = '2'; /* TCP_SYN_SENT written in hexadecimal */
+    int state_pos;
+    int uid_pos;
+    char session_uid[20];
+    int session_uid_len;
+    int ret;
+    char *pos;
+
+    /* open file if it's not already opened */
+    if (*file == NULL) {
+        *file = fopen (filename, "r");
+        if (*file == NULL) {
+            panic ("Fail to open %s: %s", filename, strerror (errno));
+        }
+    }
+
+    /* rewind to the beginning of the file */
+    rewind (*file);
+
+    /* read header */
+    if (fgets (buf, sizeof (buf), *file) == NULL)
+        panic ("/proc/net/tcp: missing header!");
+
+    /* convert session user identifier to string */
+    session_uid_len = snprintf(session_uid, sizeof(session_uid), "%5lu", session->localuserid);
+
+    /* get state field position in header */
+    pos = strstr(buf, " st ");
+    if (pos == NULL)
+        panic ("Can't find position of state field in /proc/net/tcp header!");
+    state_pos = pos-buf+2;
+
+    /* get user identifier position in header (it's just after 'retrnsmt' field) */
+    pos = strstr(buf, " retrnsmt ");
+    if (pos == NULL)
+        panic ("Can't find position of user identifier field in /proc/net/tcp header!");
+    uid_pos = pos - buf + strlen(" retrnsmt ");
+
+    while (fgets (buf, sizeof (buf), *file) != NULL)
+    {
+#ifdef USE_FILTER
+        int seen = 0;
+#endif
+
+        /* only keep connections in state "SYN packet sent" */
+        if(buf[state_pos] != state_char){
+            continue;
+        }
+
+        /* only keep session user connections */
+        if (strncmp(buf+uid_pos, session_uid, session_uid_len) != 0) {
+            continue;
+        }
+
+        /* get all fields */
+        ret = sscanf (buf, 
+                "%*d: %lx:%x %lx:%x %*x %*x:%*x %*x:%*x %x %lu %*d %lu",
+                &c.lcl, &c.lclp, &c.rmt, &c.rmtp, &c.retransmit, &c.uid, &c.ino);
+        if (ret != 7) {
+            continue;
+        }
+
+        /* skip nul inodes */
+        if (c.ino == 0) {
+            continue;
+        }
+
+#if DEBUG
+        /*  Check if there is a matching rule in the filters list */
+        printf("Packet dst = %ld (%lx)\n", c.rmt, c.rmt);
+#endif
+
+#ifdef USE_FILTER
+        /*  If we're sure auth_by_default is either 0 or 1, it can be simplified. */
+        /*  (MiKael) TODO: Make sure!! :) */
+        if (session->auth_by_default && seen)
+            continue;
+        if (!session->auth_by_default && !seen)
+            continue;
+#endif
+        c.proto=protocol;
+        c.lcl=ntohl(c.lcl);
+        c.rmt=ntohl(c.rmt);
+        if (tcptable_add (ct, &c) == 0)
+            return 0;
+    }
+    return 1;
+}
+#endif
+
 /**
  * \brief Read tcptable
  *
  * Read /proc/net/tcp and add all connections to the table if connections
  * of that type are being watched.
  */
-
 int tcptable_read (NuAuth* session, conntable_t *ct)
 {
-  const char state_char = '2'; /* TCP_SYN_SENT written in hexadecimal */
-  conn_t c;
 #ifdef LINUX 
   static FILE *fp = NULL;
   static FILE *fq = NULL;
-  char buf[1024];
-  char session_uid[20];
-  int session_uid_len;
-  int state_pos;
-  int uid_pos;
-  int ret;
-  char *pos;
+  int ok;
+  
 #if DEBUG
   assert (ct != NULL);
   assert (TCP_SYN_SENT == 2);
@@ -81,128 +168,14 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
       session->count_msg_cond=0;
       pthread_mutex_unlock(&(session->check_count_mutex));
   }
-  /* open file */
-  if (fp == NULL) {
-      fp = fopen ("/proc/net/tcp", "r");
-      if (fp == NULL) panic ("/proc/net/tcp: %s", strerror (errno));
-  }
-  rewind (fp);
 
-  /* read header */
-  if (fgets (buf, sizeof (buf), fp) == NULL)
-      panic ("/proc/net/tcp: missing header!");
+  ok  = parse_tcptable_file(session, ct, "/proc/net/tcp", &fp, IPPROTO_TCP);
+  ok &= parse_tcptable_file(session, ct, "/proc/net/udp", &fq, IPPROTO_UDP);
+  return ok;
 
-  /* convert session user identifier to string */
-  session_uid_len = snprintf(session_uid, sizeof(session_uid), "%5lu", session->localuserid);
-
-  /* get state field position in header */
-  pos = strstr(buf, " st ");
-  if (pos == NULL)
-      panic ("Can't find position of state field in /proc/net/tcp header!");
-  state_pos = pos-buf+2;
-
-  /* get user identifier position in header (it's just after 'retrnsmt' field) */
-  pos = strstr(buf, " retrnsmt ");
-  if (pos == NULL)
-      panic ("Can't find position of user identifier field in /proc/net/tcp header!");
-  uid_pos = pos - buf + strlen(" retrnsmt ");
-
-  while (fgets (buf, sizeof (buf), fp) != NULL)
-  {
-#ifdef USE_FILTER
-      int seen = 0;
-#endif
-      
-      /* only keep connections in state "SYN packet sent" */
-      if(buf[state_pos] != state_char){
-	  continue;
-      }
-
-      /* only keep session user connections */
-      if (strncmp(buf+uid_pos, session_uid, session_uid_len) != 0) {
-	  continue;
-      }
-
-      /* get all fields */
-      ret = sscanf (buf, "%*d: %lx:%x %lx:%x %*x %*x:%*x %*x:%*x %x %lu %*d %lu",
-                  &c.lcl, &c.lclp, &c.rmt, &c.rmtp, &c.retransmit, &c.uid, &c.ino);
-      if (ret != 7) {
-          continue;
-      }
-
-      /* skip nul inodes */
-      if (c.ino == 0) {
-          continue;
-      }
-
-#if DEBUG
-      /*  Check if there is a matching rule in the filters list */
-      printf("Packet dst = %ld (%lx)\n", c.rmt, c.rmt);
-#endif
-
-#ifdef USE_FILTER
-      /*  If we're sure auth_by_default is either 0 or 1, it can be simplified. */
-      /*  (MiKael) TODO: Make sure!! :) */
-      if (session->auth_by_default && seen)
-          continue;
-      if (!session->auth_by_default && !seen)
-          continue;
-#endif
-      c.proto=IPPROTO_TCP;
-      
-      c.lcl=ntohl(c.lcl);
-      c.rmt=ntohl(c.rmt);
-      if (tcptable_add (ct, &c) == 0)
-          return 0;
-  }
-
-  /* open file */
-  if (fq == NULL) {
-      fq = fopen ("/proc/net/udp", "r");
-      if (fq == NULL) panic ("/proc/net/udp: %s", strerror (errno));
-  }
-  rewind (fq);
-
-  if (fgets (buf, sizeof (buf), fq) == NULL)
-      panic ("/proc/net/udp: missing header");
-
-  while (fgets (buf, sizeof (buf), fq) != NULL) {
-      unsigned long st;
-      if (sscanf (buf, "%*d: %lx:%x %lx:%x %lx %*x:%*x %*x:%*x %x %lu %*d %lu",
-                  &c.lcl, &c.lclp, &c.rmt, &c.rmtp, &st, &c.retransmit, &c.uid, &c.ino) != 8)
-          continue;
-
-      if (c.ino == 0) 
-          continue;
-
-      /*  Check if it's the good user */
-      if (c.uid != session->localuserid)
-          continue;
-
-      c.lcl=ntohl(c.lcl);
-      c.rmt=ntohl(c.rmt);
-#if DEBUG
-      /*  Check if there is a matching rule in the filters list */
-      printf("Packet dst = %ld (%lx)\n", c.rmt, c.rmt);
-#endif
-
-#if USE_FILTER
-      /*  If we're sure auth_by_default is either 0 or 1, it can be simplified. */
-      /*  (MiKael) TODO: Make sure!! :) */
-      if (session->auth_by_default && seen)
-          continue;
-      if (!session->auth_by_default && !seen)
-          continue;
-#endif
-      c.proto=IPPROTO_UDP;
-      if (tcptable_add (ct, &c) == 0)
-          return 0;
-  }
-
-
-#else /* LINUX */
-#ifdef FREEBSD
-      int istcp;
+#elif defined(FREEBSD)
+  conn_t c;
+  int istcp;
   char *buf;
   const char *mibvar;
   struct tcpcb *tp = NULL;
@@ -292,10 +265,8 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
       }
   }
   free(buf);	
-
-#endif
-#endif
   return 1;
+#endif
 }
 
 
