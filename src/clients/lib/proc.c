@@ -1,3 +1,5 @@
+#ifdef LINUX
+
 #include "nuclient.h"
 #include <errno.h>
 #include <stdio.h>
@@ -18,11 +20,10 @@
 #include <sys/ioctl.h>
 #include <net/if.h>
 #include <dirent.h>
-
 #include <config.h>
 
-#ifdef LINUX
 #include "proc.h"
+#include "security.h"
 
 char * locale_to_utf8(char* inbuf);
 
@@ -162,10 +163,40 @@ static int extract_type_2_socket_inode(const char lname[], unsigned long * inode
     return(0);
 }
 
+int str_is_integer(const char* str)
+{
+    for (; *str != '\0'; ++str) 
+    {
+        if (!isdigit(*str)) 
+            return 0;
+    }
+    return 1;
+}
 
+int secure_readlink(const char* filename, char *buffer, unsigned int buflen)
+{
+    int ret;
 
+    /* call readlink (add 'canary' to check "buffer overflow") */
+    buffer[buflen-1] = '\0';
+    ret = readlink(filename, buffer, buflen-1);
 
+    /* error if readlink fails */
+    if (ret < 0)
+        return 0;
 
+    /* error if buffer is too small */
+    if (buffer[buflen-1] != '\0')
+        return 0;
+
+    /* that should never happens, but ... */
+    if ((buflen-1) < ret)
+        return 0;
+
+    /* write nul byte at the end */
+    buffer[ret] = '\0';
+    return 1;
+}
 
 void prg_cache_load(void)
 {
@@ -173,26 +204,28 @@ void prg_cache_load(void)
     int procfdlen,cmdllen,lnamelen;
     char lname[30],cmdlbuf[512],finbuf[PROGNAME_WIDTH];
     unsigned long inode;
-    const char *cs,*cmdlp;
     DIR *dirproc=NULL,*dirfd=NULL;
     struct dirent *direproc,*direfd;
 
     if (prg_cache_loaded ) return;
     prg_cache_loaded=1;
     cmdlbuf[sizeof(cmdlbuf)-1]='\0';
-    if (!(dirproc=opendir(PATH_PROC))) goto fail;
+   
+    dirproc = opendir(PATH_PROC);
+    if (!dirproc) 
+        goto fail;
+
     while (errno=0,direproc=readdir(dirproc)) {
 #ifdef DIRENT_HAVE_D_TYPE_WORKS
 	if (direproc->d_type!=DT_DIR) continue;
 #endif
-	for (cs=direproc->d_name;*cs;cs++)
-	    if (!isdigit(*cs)) 
-		break;
-	if (*cs) 
-	    continue;
+        if (!str_is_integer(direproc->d_name))
+            continue;
+
 	procfdlen=snprintf(line,sizeof(line),PATH_PROC_X_FD,direproc->d_name);
 	if (procfdlen<=0 || procfdlen>=((int)sizeof(line)-5)) 
 	    continue;
+        
 	errno=0;
 	dirfd=opendir(line);
 	if (! dirfd) {
@@ -200,8 +233,8 @@ void prg_cache_load(void)
 		eacces=1;
 	    continue;
 	}
+        
 	line[procfdlen] = '/';
-	cmdlp = NULL;
 	while ((direfd = readdir(dirfd))) {
 #ifdef DIRENT_HAVE_D_TYPE_WORKS
 	    if (direfd->d_type!=DT_LNK) 
@@ -212,30 +245,23 @@ void prg_cache_load(void)
 	    memcpy(line + procfdlen - PATH_FD_SUFFl, PATH_FD_SUFF "/",
 		   PATH_FD_SUFFl+1);
 	    strcpy(line + procfdlen + 1, direfd->d_name);
-	    lnamelen=readlink(line,lname,sizeof(lname)-1);
-            if (lnamelen < 0){
+
+            if (!secure_readlink(line, lname, sizeof(lname)))
                 continue;
-            }
-            lname[lnamelen] = '\0';  /*make it a null-terminated string*/
 
             if (extract_type_1_socket_inode(lname, &inode) < 0)
               if (extract_type_2_socket_inode(lname, &inode) < 0)
                 continue;
 
-	    if (!cmdlp) {
-		if (procfdlen - PATH_FD_SUFFl + PATH_EXEl >= 
-		    sizeof(line) - 5) 
-		    continue;
-		strcpy(line + procfdlen-PATH_FD_SUFFl, PATH_EXE);
-		memset(cmdlbuf,0,sizeof(cmdlbuf));
-		cmdllen = readlink (line, cmdlbuf, sizeof(cmdlbuf) - 1);
-		if (cmdllen < 0){
-			continue;
-		}
-	    }
-	    
+            if (procfdlen - PATH_FD_SUFFl + PATH_EXEl >= 
+                    sizeof(line) - 5) 
+                continue;
+            strcpy(line + procfdlen-PATH_FD_SUFFl, PATH_EXE);
 
-	    snprintf(finbuf, sizeof(finbuf), "%s", cmdlbuf);
+            if (!secure_readlink(line, cmdlbuf, sizeof(cmdlbuf)))
+                continue;
+	    
+	    SECURE_STRNCPY(finbuf, cmdlbuf, sizeof(finbuf));
 	    prg_cache_add(inode, finbuf);
 	}
 	closedir(dirfd); 
@@ -253,4 +279,5 @@ void prg_cache_load(void)
 		geteuid());
     }
 }
-#endif
+#endif   /* of #ifdef LINUX */
+

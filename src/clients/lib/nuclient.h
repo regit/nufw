@@ -237,6 +237,7 @@ NuAuth* nu_client_init2(
 
 const char* nuclient_strerror (nuclient_error *err);
 
+int secure_snprintf(char *buffer, unsigned int buffer_size, char *format, ...);
 
 #ifdef __cplusplus
 }

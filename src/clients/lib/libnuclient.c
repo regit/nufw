@@ -1145,3 +1145,27 @@ const char* nuclient_strerror (nuclient_error *err)
       return "Unkown family error";
   }
 }
+
+/**
+ * Function snprintf() which check buffer overflow, and always write a '\\0'
+ * to the end of the buffer.
+ *
+ * \param buffer Buffer where characters are written
+ * \param buffer_size Buffer size (in bytes), usually equals to sizeof(buffer)
+ * \param format Format string (see printf() documentation)
+ * \return Returns FALSE if a buffer overflow occurs, TRUE is everything goes fine.
+ */
+int secure_snprintf(char *buffer, unsigned int buffer_size, char *format, ...)
+{
+    va_list args;  
+    int ret;
+    va_start(args, format);
+    ret = vsnprintf(buffer, buffer_size, format, args);
+    va_end(args);
+    buffer[buffer_size-1] = '\0';
+    if (0 <= ret && ret <= ((int)buffer_size-1))
+        return 1;
+    else
+        return 0;
+}    
+
