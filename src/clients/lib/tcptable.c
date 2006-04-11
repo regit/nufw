@@ -59,14 +59,21 @@
 
 int tcptable_read (NuAuth* session, conntable_t *ct)
 {
+  const char state_char = '2'; /* TCP_SYN_SENT written in hexadecimal */
   conn_t c;
 #ifdef LINUX 
   static FILE *fp = NULL;
   static FILE *fq = NULL;
   char buf[1024];
-  int state;
+  char session_uid[20];
+  int session_uid_len;
+  int state_pos;
+  int uid_pos;
+  int ret;
+  char *pos;
 #if DEBUG
   assert (ct != NULL);
+  assert (TCP_SYN_SENT == 2);
 #endif
   if ( session->mode==SRV_TYPE_PUSH){
       /* need to set check_cond */
@@ -81,31 +88,52 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
   }
   rewind (fp);
 
+  /* read header */
   if (fgets (buf, sizeof (buf), fp) == NULL)
-      panic ("/proc/net/tcp: missing header");
+      panic ("/proc/net/tcp: missing header!");
+
+  /* convert session user identifier to string */
+  session_uid_len = snprintf(session_uid, sizeof(session_uid), "%5lu", session->localuserid);
+
+  /* get state field position in header */
+  pos = strstr(buf, " st ");
+  if (pos == NULL)
+      panic ("Can't find position of state field in /proc/net/tcp header!");
+  state_pos = pos-buf+2;
+
+  /* get user identifier position in header (it's just after 'retrnsmt' field) */
+  pos = strstr(buf, " retrnsmt ");
+  if (pos == NULL)
+      panic ("Can't find position of user identifier field in /proc/net/tcp header!");
+  uid_pos = pos - buf + strlen(" retrnsmt ");
 
   while (fgets (buf, sizeof (buf), fp) != NULL)
   {
 #ifdef USE_FILTER
       int seen = 0;
 #endif
-
-      if (sscanf (buf, "%*d: %lx:%x %lx:%x %x %*x:%*x %*x:%*x %x %lu %*d %lu",
-                  &c.lcl, &c.lclp, &c.rmt, &c.rmtp, &state, &c.retransmit, &c.uid, &c.ino) != 8)
-          continue;
+      
+      /* only keep connections in state "SYN packet sent" */
+      if(buf[state_pos] != state_char){
+	  continue;
+      }
 
       /* only keep session user connections */
-      if(c.uid != session->localuserid){
-          continue;
-      } 
+      if (strncmp(buf+uid_pos, session_uid, session_uid_len) != 0) {
+	  continue;
+      }
 
-      /* only keep connections in state "SYN packet sent" */
-      if(state != TCP_SYN_SENT){
+      /* get all fields */
+      ret = sscanf (buf, "%*d: %lx:%x %lx:%x %*x %*x:%*x %*x:%*x %x %lu %*d %lu",
+                  &c.lcl, &c.lclp, &c.rmt, &c.rmtp, &c.retransmit, &c.uid, &c.ino);
+      if (ret != 7) {
           continue;
-      } 
+      }
 
-      if (c.ino == 0)
+      /* skip nul inodes */
+      if (c.ino == 0) {
           continue;
+      }
 
 #if DEBUG
       /*  Check if there is a matching rule in the filters list */
