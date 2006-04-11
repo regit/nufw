@@ -42,6 +42,11 @@
  */
 #define _BSD_SOURCE
 
+/* Disable inline keyword when compiling in strict ANSI conformance */
+#if defined(__STRICT_ANSI__) and !defined(__cplusplus)
+#  define inline
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -92,11 +97,6 @@ extern "C" {
 #include <gnutls/gnutls.h>
 #include <sasl/sasl.h>
 
-/* Disable inline keyword when compiling in strict ANSI conformance */
-#ifdef __STRICT_ANSI__
-#  define inline
-#endif
-
 #define DEBUG 0
 
 #ifndef CONNTABLE_BUCKETS
@@ -109,9 +109,10 @@ extern "C" {
 #define UDP_TIMEOUT 30
 
 /*
- * This structure holds everything we need to know about a connection. We
- * use unsigned long instead of (for example) uid_t, ino_t to make hashing
- * easier.
+ * This structure holds everything we need to know about a connection.
+ *
+ * We use unsigned int and long (instead of exact type) to make
+ * hashing easier.
  */
 typedef struct conn {
     unsigned int proto;        /** IPv4 protocol */
