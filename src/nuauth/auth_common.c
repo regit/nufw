@@ -489,10 +489,18 @@ gint take_decision(connection_t *element, packet_place_t place)
     }
     /* answer is DECISION_NODECIDE if we did not found any matching group */
     if(answer == DECISION_NODECIDE){
-        answer=DECISION_DROP;
+	    if (nuauthconf->reject_authenticated_drop){
+		    answer = DECISION_REJECT;
+	    } else {
+		    answer=DECISION_DROP;
+	    }
     }
     if (expire == 0){
-        answer=DECISION_DROP;
+	    if (nuauthconf->reject_authenticated_drop){
+		    answer = DECISION_REJECT;
+	    } else {
+		    answer=DECISION_DROP;
+	    }
     }
     element->decision=answer;
 

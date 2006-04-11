@@ -59,6 +59,13 @@ struct nuauth_params
      *  Default value is 0. */
     int reject_after_timeout;
 
+    /** When an acl match but user is not in correct group, use #DECISION_REJECT instead 
+     *  of #DECISION_DROP (if different than 0). 
+     *  Default value is 0. */
+    int reject_authenticated_drop;
+
+
+
     /* Use UTF-8 charset in exchanges */
     int uses_utf8;
 

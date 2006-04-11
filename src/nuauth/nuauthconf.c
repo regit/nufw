@@ -113,6 +113,7 @@ void init_nuauthconf(struct nuauth_params **result)
       { "nuauth_prio_to_nok" , G_TOKEN_INT , 1, NULL },
       { "nuauth_connect_policy" , G_TOKEN_INT , POLICY_MULTIPLE_LOGIN, NULL },
       { "nuauth_reject_after_timeout" , G_TOKEN_INT , 0, NULL },
+      { "nuauth_reject_authenticated_drop" , G_TOKEN_INT , 0, NULL },
       { "nuauth_datas_persistance" , G_TOKEN_INT , 9, NULL },
       { "nuauth_push_to_client" , G_TOKEN_INT , 1,NULL },
       { "nuauth_do_ip_authentication" , G_TOKEN_INT , 0,NULL },
@@ -128,6 +129,7 @@ void init_nuauthconf(struct nuauth_params **result)
       {"nuauth_debug_areas", G_TOKEN_INT, DEFAULT_DEBUG_AREAS, NULL},
       {"nuauth_debug_level", G_TOKEN_INT, 0, NULL},
       { "nuauth_hello_authentication" , G_TOKEN_INT , 0,NULL },
+
   };
   const unsigned int nb_params = sizeof(nuauth_vars)/sizeof(confparams);
   gchar *nuauth_multi_users=NULL;
@@ -161,6 +163,7 @@ void init_nuauthconf(struct nuauth_params **result)
   conf->prio_to_nok = *(int*)READ_CONF("nuauth_prio_to_nok");
   conf->connect_policy = *(int*)READ_CONF("nuauth_connect_policy");
   conf->reject_after_timeout = *(int*)READ_CONF("nuauth_reject_after_timeout");
+  conf->reject_authenticated_drop = *(int*)READ_CONF("nuauth_reject_authenticated_drop");
   conf->nbloggers = *(int*)READ_CONF("nuauth_number_loggers");
   conf->nb_session_loggers = *(int*)READ_CONF("nuauth_number_session_loggers");
   conf->packet_timeout = *(int*)READ_CONF("nuauth_packet_timeout");
