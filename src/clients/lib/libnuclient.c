@@ -662,6 +662,7 @@ NuAuth* nu_client_init2(
 	struct sigaction no_action;
 	char certstring[256];
 	char keystring[256];
+        int ok;
 
         if (err != NULL)
         {
@@ -711,9 +712,13 @@ NuAuth* nu_client_init2(
 	}
 	/* compute patch keyfile */
 	if (! keyfile){
-		keyfile=keystring;
-		snprintf(keyfile,255,"%s/.nufw/key.pem",getenv("HOME"));
-		keyfile[255]=0;
+	    char *home = getenv("HOME");
+	    if (home != NULL)
+	    {
+		ok = secure_snprintf(keystring, sizeof(keystring),
+		    "%s/.nufw/key.pem", home);
+		if (ok) keyfile = keystring;
+	    }
 	}
 	/* test if key exists */
 	if (access(keyfile,R_OK)){
@@ -730,9 +735,13 @@ NuAuth* nu_client_init2(
 	}
 
 	if (! certfile){
-		certfile=certstring;
-		snprintf(certfile,255,"%s/.nufw/cert.pem",getenv("HOME"));
-		certfile[255]=0;
+		char *home = getenv("HOME");
+		if (home != NULL) 
+		{
+		    ok = secure_snprintf(certstring, sizeof(certstring),
+			    "%s/.nufw/cert.pem", home);
+		    if (ok) certfile = certstring;
+		}
 	}
 	/* test if cert exists */
 	if (access(certfile,R_OK)){
