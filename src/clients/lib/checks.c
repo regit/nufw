@@ -52,15 +52,15 @@ void* recv_message(void *data)
 	struct nuv2_header header;
 	struct nuv2_authreq authreq;
 	struct nuv2_authfield_hello hellofield;
-	int message_length= sizeof(struct nuv2_header)+sizeof(struct nuv2_authfield_hello)+sizeof(struct nuv2_authreq);
-	char message[sizeof(struct nuv2_header)+sizeof(struct nuv2_authfield_hello)+sizeof(struct nuv2_authreq)];
+	const int message_length= sizeof(struct nuv2_header)+sizeof(struct nuv2_authfield_hello)+sizeof(struct nuv2_authreq);
+	char message[message_length];
 	char* pointer=NULL;
 
 	/* fill struct */
 	header.proto=PROTO_VERSION;
 	header.msg_type=USER_REQUEST;
 	header.option=0;
-	header.length=htons(sizeof(struct nuv2_header)+sizeof(struct nuv2_authreq)+sizeof(struct nuv2_authfield_hello));
+	header.length=htons(message_length);
 
 	memcpy(message,&header,sizeof(struct nuv2_header));
 	authreq.packet_id=session->packet_id++;
