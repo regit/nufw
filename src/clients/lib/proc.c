@@ -23,6 +23,7 @@
 #include <dirent.h>
 
 #include "proc.h"
+#include "checks.h" /* for secure_snprintf() */
 #include "security.h"
 
 char* locale_to_utf8(char* inbuf);

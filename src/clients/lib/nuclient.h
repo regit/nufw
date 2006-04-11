@@ -135,10 +135,13 @@ typedef struct conntable {
 
 #define PACKET_SIZE 1482
 
-#define ERROR_OK 0x0
-#define ERROR_UNKNOWN 0x1
-#define ERROR_LOGIN 0x2
-#define ERROR_NETWORK 0x3
+enum
+{
+    ERROR_OK = 0,
+    ERROR_UNKNOWN = 1,
+    ERROR_LOGIN = 2,
+    ERROR_NETWORK = 3
+};
 
 /* NuAuth structure */
 
@@ -174,46 +177,36 @@ typedef struct _NuAuth {
 	time_t timestamp_last_sent;
 } NuAuth;
 
-/* libnuclient return code structure */
-
-typedef struct _nuclient_error {
-        int family;
-        int error;
-} nuclient_error;
-
-#define INTERNAL_ERROR 0
-#define GNUTLS_ERROR 1
-#define SASL_ERROR 2
+/** Error family */
+typedef enum
+{
+    INTERNAL_ERROR = 0,
+    GNUTLS_ERROR = 1,
+    SASL_ERROR = 2
+} nuclient_error_family_t;
 
 /* INTERNAL ERROR CODES */
-#define NOERR 0
-#define NO_ERR 0
-#define SESSION_NOT_CONNECTED_ERR 1
-#define UNKNOWN_ERR 2
-#define TIMEOUT_ERR 3
-#define DNS_RESOLUTION_ERR 4
-#define NO_ADDR_ERR 5
-#define FILE_ACCESS_ERR 6
-#define CANT_CONNECT_ERR 7
+enum
+{
+    NOERR = 0,
+    NO_ERR  = 0,
+    SESSION_NOT_CONNECTED_ERR  = 1,
+    UNKNOWN_ERR = 2,
+    TIMEOUT_ERR = 3,
+    DNS_RESOLUTION_ERR = 4,
+    NO_ADDR_ERR = 5,
+    FILE_ACCESS_ERR = 6,
+    CANT_CONNECT_ERR  = 7
+};
 
-/*typedef enum {
-        NOERR,
-        SESSION_NOT_CONNECTED,
-        UNKNOWN
-} internal_errors_t;*/
+/* libnuclient return code structure */
+typedef struct
+{
+    nuclient_error_family_t family;
+    int error;
+} nuclient_error;
 
 /* Exported functions */
-
-/* OLD : die now
-NuAuth* nu_client_init(char *username, 
-                       unsigned long userid, 
-                       char * password,
-                       const char * hostname, 
-                       unsigned int port, 
-                       char protocol, 
-                       char ssl_on);*/
-
-
 int	nu_client_check(NuAuth * session, nuclient_error *err);
 int     nu_client_error(NuAuth * session, nuclient_error *err);
 void 	nu_client_free(NuAuth *session, nuclient_error *err);
@@ -236,8 +229,6 @@ NuAuth* nu_client_init2(
 		);
 
 const char* nuclient_strerror (nuclient_error *err);
-
-int secure_snprintf(char *buffer, unsigned int buffer_size, char *format, ...);
 
 #ifdef __cplusplus
 }
