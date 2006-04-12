@@ -102,8 +102,10 @@ int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
       appname="UNKNOWN";
 #endif
       header->length+=sizeof(struct nuv2_authreq)+sizeof(struct nuv2_authfield_ipv4);
+      
       authreq.packet_id=session->packet_id++;
       authreq.packet_length=sizeof(struct nuv2_authreq)+sizeof(struct nuv2_authfield_ipv4);
+      
       authfield.type=IPV4_FIELD;
       authfield.option=0;
       authfield.length=htons(sizeof(struct nuv2_authfield_ipv4));
@@ -117,48 +119,44 @@ int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
       authfield.dport=htons(carray[item]->rmtp);
       /* application field  */
       appfield.type=APP_FIELD;
-#if 0
-      if (1) {
-#endif
-          appfield.option=APP_TYPE_NAME;
-          enc_appname=calloc(128,sizeof(char));
-          if ( sasl_encode64(appname,strlen(appname),
-                enc_appname,128, &len) == SASL_BUFOVER ){
-              /* realloc */
-              enc_appname=realloc(enc_appname,len);
-              /* encode */
-              sasl_encode64(appname,strlen(appname),
+
+#ifdef USE_SHA1
+      appfield.option=APP_TYPE_SHA1;
+#else
+      appfield.option=APP_TYPE_NAME;
+#endif          
+      enc_appname=calloc(128,sizeof(char));
+      if ( sasl_encode64(appname,strlen(appname),
+                  enc_appname,128, &len) == SASL_BUFOVER )
+      {
+          /* enlarge buffer and encode */
+          enc_appname=realloc(enc_appname,len);
+          sasl_encode64(appname,strlen(appname),
                   enc_appname, len, &len);
-          }
-          appfield.length=sizeof(appfield)+len;
-          appfield_datas=enc_appname;
-          authreq.packet_length+=appfield.length;
-#if 0
-      } else {
-          appfield.option=APP_TYPE_SHA1;
-          enc_appname=calloc(128,sizeof(char));
-          if ( sasl_encode64(appname,strlen(appname),
-                enc_appname,128, &len) == SASL_BUFOVER ){
-              /* realloc */
-              enc_appname=realloc(enc_appname,len);
-              /* encode */
-              sasl_encode64(appname,strlen(appname),
-                  enc_appname, len, &len);
-          }
-          appfield.length=4+len;
-          appfield_datas=g_strconcat(enc_appname,";",sha1_sig);
       }
+#ifdef USE_SHA1
+      appfield.length=4+len;
+      appfield_datas=g_strconcat(enc_appname,";",sha1_sig);
+#else
+      appfield.length=sizeof(appfield)+len;
+      appfield_datas=enc_appname;
 #endif
+      authreq.packet_length+=appfield.length;
+
       /* glue piece together on data if packet is not too long */
       header->length+=appfield.length;
       if (header->length < PACKET_SIZE){
           appfield.length=htons(appfield.length);
           authreq.packet_length=htons(authreq.packet_length);
+
           memcpy(pointer,&authreq,sizeof(struct nuv2_authreq));
+          
           pointer+=sizeof(struct nuv2_authreq);
           memcpy(pointer,&authfield,sizeof(struct nuv2_authfield_ipv4));
+          
           pointer+=sizeof(struct nuv2_authfield_ipv4);
           memcpy(pointer,&appfield,sizeof(appfield));
+
           pointer+=sizeof(appfield);
           if ((int)len < (PACKET_SIZE + datas - pointer)){
               memcpy(pointer,appfield_datas,len);
