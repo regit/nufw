@@ -66,6 +66,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
     free_confparams(x509_std_nuauth_vars,sizeof(x509_std_nuauth_vars)/sizeof(confparams));
 
     module->params = (gpointer) params; 
+
     return TRUE;
 
 }

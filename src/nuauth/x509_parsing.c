@@ -71,4 +71,3 @@ gchar *	get_username_from_x509_certificate(gnutls_session session)
     return username;
 }
 
-

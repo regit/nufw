@@ -24,6 +24,11 @@
 #define DH_BITS 1024
 
 /**
+ * default interval between CRL refresh
+ */
+#define DEFAULT_REFRESH_CRL_INTERVAL 30
+
+/**
  * Default number of thread in tls_sasl_connect() thread pool
  */
 #define NB_AUTHCHECK 10
@@ -82,6 +87,9 @@ struct nuauth_tls_t
     gnutls_certificate_credentials x509_cred;
     int request_cert;
     int auth_by_cert;
+    int crl_refresh;
+    int crl_refresh_counter;
+    gchar* crl_file;
     gnutls_dh_params dh_params;
 };
 
@@ -112,5 +120,7 @@ gboolean remove_socket_from_pre_client_list(int c);
 void tls_sasl_connect(gpointer userdata, gpointer data);
 gint check_certs_for_tls_session(gnutls_session session);
 void close_tls_session(int c,gnutls_session* session);
+
+void refresh_crl_file();
 
 #endif

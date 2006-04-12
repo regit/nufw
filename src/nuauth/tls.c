@@ -151,6 +151,20 @@ static int generate_dh_params(gnutls_dh_params *dh_params)
 }
 
 /**
+ * return
+ */
+
+void refresh_crl_file()
+{
+    nuauth_tls.crl_refresh_counter++;
+    if (nuauth_tls.crl_refresh == nuauth_tls.crl_refresh_counter){
+	gnutls_certificate_set_x509_crl_file(nuauth_tls.x509_cred, nuauth_tls.crl_file, 
+		GNUTLS_X509_FMT_PEM);
+	nuauth_tls.crl_refresh_counter=0;
+    }
+}
+
+/**
  * TLS push function: send data to the socket in non-blocking mode.
  */
 static ssize_t tls_push_func(gnutls_transport_ptr ptr, const void *buf, size_t count)
@@ -258,6 +272,7 @@ void create_x509_credentials()
 	{ "nuauth_tls_cert" , G_TOKEN_STRING , 0, g_strdup(NUAUTH_CERTFILE) },
 	{ "nuauth_tls_cacert" , G_TOKEN_STRING , 0, g_strdup(NUAUTH_CACERTFILE) },
 	{ "nuauth_tls_crl" , G_TOKEN_STRING , 0, NULL },
+	{ "nuauth_tls_crl_refresh" , G_TOKEN_INT ,DEFAULT_REFRESH_CRL_INTERVAL, NULL },
 	{ "nuauth_tls_key_passwd" , G_TOKEN_STRING , 0, NULL },
 	{ "nuauth_tls_request_cert" , G_TOKEN_INT ,FALSE, NULL },
 	{ "nuauth_tls_auth_by_cert" , G_TOKEN_INT ,FALSE, NULL }
@@ -275,6 +290,7 @@ void create_x509_credentials()
     nuauth_tls_crl = (char*)READ_CONF("nuauth_tls_crl");
     nuauth_tls_key_passwd = (char*)READ_CONF("nuauth_tls_key_passwd");
     nuauth_tls.request_cert = *(int*)READ_CONF("nuauth_tls_request_cert");
+    nuauth_tls.crl_refresh = *(int*)READ_CONF("nuauth_tls_crl_refresh");
     nuauth_tls.auth_by_cert = *(int*)READ_CONF("nuauth_tls_auth_by_cert");
 #undef READ_CONF
 
@@ -288,6 +304,11 @@ void create_x509_credentials()
 	g_error("[%i] TLS : can not access cert file %s\n",getpid(),nuauth_tls_cert);
     }
 
+    /* don't refresh crl if there is none */
+    if (nuauth_tls_crl == NULL){
+	nuauth_tls.crl_refresh = 0;
+    }
+    nuauth_tls.crl_refresh_counter = 0;
 
     ret = gnutls_certificate_allocate_credentials(&nuauth_tls.x509_cred);
     if (ret !=0){
@@ -337,9 +358,9 @@ void create_x509_credentials()
 	if (access(nuauth_tls_crl,R_OK)){
 	    g_error("[%i] TLS : can not access crl file %s\n",getpid(),nuauth_tls_crl);
 	}
-	gnutls_certificate_set_x509_crl_file(nuauth_tls.x509_cred, nuauth_tls_crl, 
+	nuauth_tls.crl_file=nuauth_tls_crl;
+	gnutls_certificate_set_x509_crl_file(nuauth_tls.x509_cred, nuauth_tls.crl_file, 
 		GNUTLS_X509_FMT_PEM);
-	g_free(nuauth_tls_crl);
     }
     ret = generate_dh_params(&nuauth_tls.dh_params);
 #ifdef DEBUG_ENABLE
@@ -352,6 +373,8 @@ void create_x509_credentials()
      * gnutls_certificate_set_dh_params( x509_cred, 0);
      */
     gnutls_certificate_set_dh_params( nuauth_tls.x509_cred, nuauth_tls.dh_params);
+
+    cleanup_func_push(refresh_crl_file);
 }
 
 /**
