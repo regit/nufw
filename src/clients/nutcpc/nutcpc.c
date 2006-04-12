@@ -67,15 +67,23 @@ void exit_nutcpc(){
 
 void exit_clean(){
 	char* runpid=computerunpid();
+	struct termios term;
+
+        /* restore ECHO mode */
+        printf("\n");
+	if (tcgetattr (fileno (stdin), &term) == 0) 
+        {
+            term.c_lflag |= ECHO;
+            (void)tcsetattr (fileno (stdin), TCSAFLUSH, &term);
+        }
+
         nuclient_error *err=NULL;
         nuclient_error_init(&err);
 	unlink(runpid);
 	free(runpid);
-	/* Restore terminal (can be superflu). */
-	(void) tcsetattr (fileno (stdin), TCSAFLUSH, &orig);
         nu_client_global_deinit(err);
         nuclient_error_destroy(err);
-	exit(0);
+	exit(EXIT_SUCCESS);
 }
 
 #ifdef FREEBSD
