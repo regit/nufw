@@ -22,6 +22,7 @@
 #include "../lib/nuclient.h"
 #include <locale.h>
 #include <config.h>
+#include <stdarg.h>
 #define NUTCPC_VERSION "1.1"
 
 #ifdef FREEBSD
@@ -32,18 +33,29 @@
 
 struct termios orig;
 
-void panic(const char *fmt, ...){
-	printf("error\n");
-	exit(-1);
+void panic(const char *fmt, ...)
+{
+    va_list args;  
+    va_start(args, fmt);
+    printf("\n");
+    printf("Fatal error: ");
+    vprintf(fmt, args);            
+    printf("\n");
+    fflush(stdout);
+    exit(EXIT_FAILURE);
+    va_end(args);
 }
 
 char * computerunpid(){
 	char path_dir[254];
-	snprintf(path_dir,254,"%s/.nufw",getenv("HOME"));
+        char *home = getenv("HOME");
+        if (home == NULL)
+            return NULL;            
+	snprintf(path_dir,sizeof(path_dir),"%s/.nufw", home);
 	if (access(path_dir,R_OK)){
 		mkdir(path_dir,S_IRWXU);
 	}
-	snprintf(path_dir,254,"%s/.nufw/.nutcpc",getenv("HOME"));
+	snprintf(path_dir, sizeof(path_dir), "%s/.nufw/.nutcpc", home);
 	return strdup(path_dir);
 }
 
@@ -65,7 +77,8 @@ void exit_nutcpc(){
         exit(0);
 }
 
-void exit_clean(){
+void exit_clean()
+{
 	char* runpid=computerunpid();
 	struct termios term;
 
