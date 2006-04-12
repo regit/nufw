@@ -105,29 +105,31 @@ void prg_cache_clear(void)
     prg_cache_loaded=0;
 }
 
-static int extract_type_1_socket_inode(const char lname[], unsigned long * inode_p)
+static int extract_type_1_socket_inode(char lname[], unsigned long * inode_p)
 {
+    char *inode_str;
+    char *serr;
+    size_t len = strlen(lname);
+
     /* If lname is of the form "socket:[12345]", extract the "12345"
        as *inode_p.  Otherwise, return -1 as *inode_p.
        */
-    if (strlen(lname) < PRG_SOCKET_PFXl+3) 
+    if (len < PRG_SOCKET_PFXl+3) 
         return(-1);    
     if (memcmp(lname, PRG_SOCKET_PFX, PRG_SOCKET_PFXl)) 
         return(-1);
-    if (lname[strlen(lname)-1] != ']') 
+    if (lname[len-1] != ']') 
         return(-1);
 
-    {
-        char inode_str[strlen(lname + 1)];  /* e.g. "12345" */
-        const int inode_str_len = strlen(lname) - PRG_SOCKET_PFXl - 1;
-        char *serr;
-
-        strncpy(inode_str, lname+PRG_SOCKET_PFXl, inode_str_len);
-        inode_str[inode_str_len] = '\0';
-        *inode_p = strtol(inode_str,&serr,0);
-        if (!serr || *serr || *inode_p >= INT_MAX) 
-            return(-1);
+    inode_str = lname + PRG_SOCKET_PFXl;
+    lname[len-1] = '\0';
+    *inode_p = strtol(inode_str,&serr,0);
+    if (serr == NULL || *serr != '\0' || *inode_p >= INT_MAX)  {
+        lname[len-1] = ']';
+        printf("no %s\n", lname);
+        return(-1);
     }
+    lname[len-1] = ']';
     return(0);
 }
 
