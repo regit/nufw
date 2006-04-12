@@ -49,29 +49,27 @@ void* recv_message(void *data)
         NuAuth* session=(NuAuth*)data;
 	int ret;
 	char dgram[512];
-	struct nuv2_header header;
-	struct nuv2_authreq authreq;
-	struct nuv2_authfield_hello hellofield;
 	const size_t message_length= sizeof(struct nuv2_header)+sizeof(struct nuv2_authfield_hello)+sizeof(struct nuv2_authreq);
 	char message[message_length];
-	char* pointer=NULL;
+	struct nuv2_header *header;
+	struct nuv2_authreq *authreq;
+	struct nuv2_authfield_hello *hellofield;
 
 	/* fill struct */
-	header.proto=PROTO_VERSION;
-	header.msg_type=USER_REQUEST;
-	header.option=0;
-	header.length=htons(message_length);
+        header = (struct nuv2_header *)message;
+	header->proto=PROTO_VERSION;
+	header->msg_type=USER_REQUEST;
+	header->option=0;
+	header->length=htons(message_length);
 
-	memcpy(message,&header,sizeof(struct nuv2_header));
-	authreq.packet_id=session->packet_id++;
-	authreq.packet_length=sizeof(struct nuv2_authreq)+sizeof(struct nuv2_authfield_hello);
+        authreq = (struct nuv2_authreq *)header + sizeof(*header);
+	authreq->packet_id=session->packet_id++;
+	authreq->packet_length = sizeof(struct nuv2_authreq)+sizeof(struct nuv2_authfield_hello);
 
-	pointer=message+sizeof(struct nuv2_header);
-	memcpy(pointer,&authreq,sizeof(struct nuv2_authreq));
-	pointer+=sizeof(struct nuv2_authreq);
-	hellofield.type=HELLO_FIELD;
-	hellofield.option=0;
-	hellofield.length=htons(sizeof(struct nuv2_authfield_hello));
+        hellofield = (struct nuv2_authfield_hello *)authreq + sizeof(*authreq);
+	hellofield->type=HELLO_FIELD;
+	hellofield->option=0;
+	hellofield->length=htons(sizeof(struct nuv2_authfield_hello));
 
         pthread_cleanup_push((pthread_cleanup_push_arg1_t)pthread_mutex_unlock, &session->check_count_mutex);
 
@@ -83,7 +81,7 @@ void* recv_message(void *data)
                     return NULL;
                 }
             } else {
-                switch (*dgram){
+                switch (dgram[0]){
                   case SRV_REQUIRED_PACKET:
                       /* wake up nu_client_real_check_tread */
                       pthread_mutex_lock(&(session->check_count_mutex));
@@ -92,8 +90,8 @@ void* recv_message(void *data)
                       pthread_cond_signal(&(session->check_cond));
                       break;
                   case SRV_REQUIRED_HELLO:
-                      hellofield.helloid = ((struct nuv2_srv_helloreq*)dgram)->helloid;
-                      memcpy(pointer,&hellofield,sizeof(struct nuv2_authfield_hello));
+                      hellofield->helloid = ((struct nuv2_srv_helloreq*)dgram)->helloid;
+
                       /*  send it */
                       if(session->tls){
                           if( gnutls_record_send(session->tls,message,
