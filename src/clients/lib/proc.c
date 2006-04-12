@@ -30,9 +30,9 @@
 char* locale_to_utf8(char* inbuf);
 
 static struct prg_node {
-    struct prg_node *next;
-    unsigned long inode;
-    char name[PROGNAME_WIDTH];
+    struct prg_node *next;     /** Pointer to next element in the single chained list */
+    unsigned long inode;       /** Inode of the program executable binary */
+    char name[PROGNAME_WIDTH]; /** Name of the program (encoded in UTF-8 if using #USE_UTF8) */
 } *prg_hash[PRG_HASH_SIZE];
 
 #define PROGNAME_WIDTHs PROGNAME_WIDTH1(PROGNAME_WIDTH)
@@ -68,7 +68,8 @@ static void prg_cache_add(unsigned long inode, char *name)
 	    return;
 	}
     }
-    if (!(*pnp=malloc(sizeof(**pnp)))) 
+    *pnp = malloc(sizeof(**pnp));
+    if (*pnp == NULL)
 	return;
     pn=*pnp;
     pn->next=NULL;
