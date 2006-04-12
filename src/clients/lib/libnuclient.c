@@ -38,6 +38,7 @@
 
 #include "nuclient.h"
 #include <sasl/saslutil.h>
+#include <stdarg.h> /* va_list, va_start, ... */
 #include <proto.h>
 #include <jhash.h>
 #include "client.h"
@@ -164,8 +165,15 @@ static int nu_get_userdatas(void *context __attribute__((unused)),
 
 void panic(const char *fmt, ...)
 {
-	printf("error\n");
-	exit(-1);
+    va_list args;  
+    va_start(args, fmt);
+    printf("\n");
+    printf("Fatal error: ");
+    vprintf(fmt, args);            
+    printf("\n");
+    fflush(stdout);
+    exit(EXIT_FAILURE);
+    va_end(args);
 }
 
 void nu_exit_clean(NuAuth * session)

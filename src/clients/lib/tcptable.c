@@ -44,13 +44,19 @@
 #include <netinet/tcp_var.h>
 #endif
 
-/*! \file tcptable.c
-  \brief TCP parsing function
-
-  Contains the TCP parsing functions
+/** \file tcptable.c
+ * \brief TCP parsing function
+ *
+ *  Here are functions to get live connection table from the operating system.
+ *  Main function is tcptable_read().
  */
 
 #ifdef LINUX 
+/**
+ * Parse a Linux connection table (/proc/net/tcp or /proc/net/udp) and filter
+ * connection: only keep session user connections in state "SYN packet sent".
+ * Add connections to the our table using tcptable_add().
+ */
 int parse_tcptable_file(NuAuth* session, conntable_t *ct, char *filename, FILE **file, int protocol)
 {
     char buf[1024];
@@ -146,10 +152,11 @@ int parse_tcptable_file(NuAuth* session, conntable_t *ct, char *filename, FILE *
 #endif
 
 /**
- * \brief Read tcptable
+ * On Linux: Parse connection table /proc/net/tcp and /proc/net/udp to get
+ * connections in state "SYN sent" from session user.
  *
- * Read /proc/net/tcp and add all connections to the table if connections
- * of that type are being watched.
+ * On FreeBSD: Use sysctl with "net.inet.tcp.pcblist" to get the connection 
+ * table. Add connections to the our table using tcptable_add().
  */
 int tcptable_read (NuAuth* session, conntable_t *ct)
 {
@@ -198,13 +205,16 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
         break;
   }
 #endif
+  /* get connection table size, and then allocate a buffer */
   len = 0;
   if (sysctlbyname(mibvar, 0, &len, 0, 0) < 0) {
       if (errno != ENOENT)
           printf("sysctl: %s", mibvar);
       return 0;
   }
-  if ((buf = malloc(len)) == 0) {
+  buf = malloc(len);
+  if (buf == NULL) 
+  {
       printf("malloc %lu bytes", (u_long)len);
       return 0;
   }
@@ -215,7 +225,8 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
       session->count_msg_cond=0;
       pthread_mutex_unlock(session->check_count_mutex);
   }
-  /* open file */
+  
+  /* read connection table */
   if (sysctlbyname(mibvar, buf, &len, 0, 0) < 0) {
       printf("sysctl: %s", mibvar);
       free(buf);
@@ -268,9 +279,4 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
   return 1;
 #endif
 }
-
-
-
-
-
 
