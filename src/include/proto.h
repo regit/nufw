@@ -151,8 +151,9 @@ struct nuv2_authfield_ipv4 {
 struct nuv2_authfield_app {
     uint8_t type;
     uint8_t option;
-    uint16_t length;   /*!< Length of one field */
-    char *datas;
+    uint16_t length;   /*!< Length of content */
+
+    /* after that is the application content */
 };
 
 /** 

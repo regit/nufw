@@ -135,6 +135,8 @@ static int extract_type_1_socket_inode(char lname[], unsigned long * inode_p)
 
 static int extract_type_2_socket_inode(const char lname[], unsigned long * inode_p) {
 
+    char *serr;
+
     /* If lname is of the form "[0000]:12345", extract the "12345"
        as *inode_p.  Otherwise, return -1 as *inode_p.
        */
@@ -142,13 +144,9 @@ static int extract_type_2_socket_inode(const char lname[], unsigned long * inode
     if (strlen(lname) < PRG_SOCKET_PFX2l+1) return(-1);
     if (memcmp(lname, PRG_SOCKET_PFX2, PRG_SOCKET_PFX2l)) return(-1);
 
-    {
-        char *serr;
-
-        *inode_p=strtol(lname + PRG_SOCKET_PFX2l,&serr,0);
-        if (!serr || *serr || *inode_p >= INT_MAX) 
-            return(-1);
-    }
+    *inode_p=strtol(lname + PRG_SOCKET_PFX2l,&serr,0);
+    if (serr == NULL || *serr != '\0' || *inode_p >= INT_MAX) 
+        return(-1);
     return(0);
 }
 
