@@ -153,6 +153,8 @@ int modules_check_certificate (gnutls_session session, gnutls_x509_crt cert)
     /* iter through all modules list */
     GSList *walker=certificate_check_modules;
     int ret;
+
+    log_message(VERBOSE_DEBUG,AREA_MAIN,"module check certificate");
     for (; walker!=NULL; walker=walker->next) {
         certificate_check_callback *handler = (certificate_check_callback*)((module_t*)walker->data)->func;
         ret = handler (session, cert, ((module_t*)walker->data)->params);

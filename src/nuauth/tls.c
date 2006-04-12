@@ -226,7 +226,7 @@ int tls_connect(int socket_fd,gnutls_session** session_ptr)
     }
     debug_log_message (DEBUG, AREA_MAIN, "NuFW TLS Handshake was completed");
 
-    if (nuauth_tls.request_cert==GNUTLS_CERT_REQUIRE){
+    if (nuauth_tls.request_cert == GNUTLS_CERT_REQUIRE){
         /* certicate verification */
         ret = check_certs_for_tls_session(*session);
         if (ret != 0){
@@ -234,6 +234,8 @@ int tls_connect(int socket_fd,gnutls_session** session_ptr)
             close_tls_session(socket_fd, session);
             return SASL_BADPARAM;
         }
+    } else {
+	debug_log_message (DEBUG, AREA_MAIN, "Certificate verification is not done as requested");
     }
     return SASL_OK;
 }
@@ -252,13 +254,13 @@ void create_x509_credentials()
     char *configfile=DEFAULT_CONF_FILE;
     int ret;
     confparams nuauth_tls_vars[] = {
-        { "nuauth_tls_key" , G_TOKEN_STRING , 0, g_strdup(NUAUTH_KEYFILE) },
-        { "nuauth_tls_cert" , G_TOKEN_STRING , 0, g_strdup(NUAUTH_CERTFILE) },
-        { "nuauth_tls_cacert" , G_TOKEN_STRING , 0, g_strdup(NUAUTH_CACERTFILE) },
-        { "nuauth_tls_crl" , G_TOKEN_STRING , 0, NULL },
-        { "nuauth_tls_key_passwd" , G_TOKEN_STRING , 0, NULL },
-        { "nuauth_tls_request_cert" , G_TOKEN_INT ,FALSE, NULL },
-        { "nuauth_tls_auth_by_cert" , G_TOKEN_INT ,FALSE, NULL }
+	{ "nuauth_tls_key" , G_TOKEN_STRING , 0, g_strdup(NUAUTH_KEYFILE) },
+	{ "nuauth_tls_cert" , G_TOKEN_STRING , 0, g_strdup(NUAUTH_CERTFILE) },
+	{ "nuauth_tls_cacert" , G_TOKEN_STRING , 0, g_strdup(NUAUTH_CACERTFILE) },
+	{ "nuauth_tls_crl" , G_TOKEN_STRING , 0, NULL },
+	{ "nuauth_tls_key_passwd" , G_TOKEN_STRING , 0, NULL },
+	{ "nuauth_tls_request_cert" , G_TOKEN_INT ,FALSE, NULL },
+	{ "nuauth_tls_auth_by_cert" , G_TOKEN_INT ,FALSE, NULL }
     };
     const unsigned int nb_params = sizeof(nuauth_tls_vars) / sizeof(confparams);
 
@@ -276,69 +278,73 @@ void create_x509_credentials()
     nuauth_tls.auth_by_cert = *(int*)READ_CONF("nuauth_tls_auth_by_cert");
 #undef READ_CONF
 
-  /* free config struct */
-  free_confparams(nuauth_tls_vars,sizeof(nuauth_tls_vars)/sizeof(confparams));
+    /* free config struct */
+    free_confparams(nuauth_tls_vars,sizeof(nuauth_tls_vars)/sizeof(confparams));
 
-  if (access(nuauth_tls_key,R_OK)){
-        g_error("[%i] TLS : can not access key file %s\n",getpid(),nuauth_tls_key);
+    if (access(nuauth_tls_key,R_OK)){
+	g_error("[%i] TLS : can not access key file %s\n",getpid(),nuauth_tls_key);
     }
     if (access(nuauth_tls_cert,R_OK)){
-        g_error("[%i] TLS : can not access cert file %s\n",getpid(),nuauth_tls_cert);
+	g_error("[%i] TLS : can not access cert file %s\n",getpid(),nuauth_tls_cert);
     }
 
 
     ret = gnutls_certificate_allocate_credentials(&nuauth_tls.x509_cred);
     if (ret !=0){
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER)){
-            g_message("Problem with gnutls_certificate_allocate_credentials() : %s",
-                    gnutls_strerror(ret) 	);
-        }
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER)){
+	    g_message("Problem with gnutls_certificate_allocate_credentials() : %s",
+		    gnutls_strerror(ret));
+	}
     }
 
     ret = gnutls_certificate_set_x509_trust_file(nuauth_tls.x509_cred,  nuauth_tls_cacert , 
-            GNUTLS_X509_FMT_PEM);
+	    GNUTLS_X509_FMT_PEM);
     if(ret<=0){
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER)){
-            g_message("Problem with certificate trust file : %s",
-                    gnutls_strerror(ret) 	);
-        }
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER)){
+	    g_message("Problem with certificate trust file : %s",
+		    gnutls_strerror(ret));
+	}
     }
     ret = gnutls_certificate_set_x509_key_file(nuauth_tls.x509_cred, nuauth_tls_cert,nuauth_tls_key, 
-            GNUTLS_X509_FMT_PEM);
+	    GNUTLS_X509_FMT_PEM);
     if (ret <0){
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER)){
-            g_message("Problem with certificate key file : %s",
-                    gnutls_strerror(ret) );
-        }
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER)){
+	    g_message("Problem with certificate key file : %s",
+		    gnutls_strerror(ret) );
+	}
     }
 
 #ifdef DEBUG_ENABLE
     if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG, DEBUG_AREA_USER)){
-        g_message("TLS using key %s and cert %s",nuauth_tls_key,nuauth_tls_cert);
-        if (nuauth_tls.request_cert == GNUTLS_CERT_REQUIRE)
-            g_message("TLS require cert from client");
+	g_message("TLS using key %s and cert %s",nuauth_tls_key,nuauth_tls_cert);
+	if (nuauth_tls.request_cert == GNUTLS_CERT_REQUIRE)
+	    g_message("TLS require cert from client");
     }
 #endif
     if (nuauth_tls_key){
-        g_free(nuauth_tls_key);
+	g_free(nuauth_tls_key);
     }
 
     if (nuauth_tls_cert){
-        g_free(nuauth_tls_cert);
+	g_free(nuauth_tls_cert);
     }
 
     if (nuauth_tls_crl){
-        log_message (VERBOSE_DEBUG, AREA_USER,
-                "certificate revocation list: %s\n",
-                nuauth_tls_crl);
-        gnutls_certificate_set_x509_crl_file(nuauth_tls.x509_cred, nuauth_tls_crl, 
-                GNUTLS_X509_FMT_PEM);
-        g_free(nuauth_tls_crl);
+	log_message (VERBOSE_DEBUG, AREA_USER,
+		"Certificate revocation list: %s\n",
+		nuauth_tls_crl);
+
+	if (access(nuauth_tls_crl,R_OK)){
+	    g_error("[%i] TLS : can not access crl file %s\n",getpid(),nuauth_tls_crl);
+	}
+	gnutls_certificate_set_x509_crl_file(nuauth_tls.x509_cred, nuauth_tls_crl, 
+		GNUTLS_X509_FMT_PEM);
+	g_free(nuauth_tls_crl);
     }
     ret = generate_dh_params(&nuauth_tls.dh_params);
 #ifdef DEBUG_ENABLE
     if (ret < 0)
-        log_message (INFO, AREA_USER, "generate_dh_params() failed");
+	log_message (INFO, AREA_USER, "generate_dh_params() failed");
 #endif
 
     /* 

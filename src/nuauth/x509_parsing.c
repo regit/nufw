@@ -38,7 +38,8 @@ gint check_x509_certificate_validity(gnutls_session session)
     gnutls_x509_crt cert;
     int ret;
 
-    if (get_first_x509_cert_from_tls_session(session,&cert) == SASL_OK){
+    if (get_first_x509_cert_from_tls_session(session,&cert) != SASL_OK){
+	log_message(DEBUG,AREA_USER,"Can't get first cert from session");
         return SASL_BADPARAM;
     }
 

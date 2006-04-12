@@ -507,9 +507,6 @@ void configure_app(int argc, char **argv)
 
     gnutls_global_init();
 
-    /* init credential */
-    create_x509_credentials();
-
     parse_options(argc, argv, &params);
 
     build_nuauthconf(nuauthconf, 
@@ -527,6 +524,9 @@ void configure_app(int argc, char **argv)
     if (nuauthconf->debug_level < MIN_DEBUG_LEVEL)
         nuauthconf->debug_level=MIN_DEBUG_LEVEL;
     log_message(INFO, AREA_MAIN, "debug_level is %i",nuauthconf->debug_level);
+
+    /* init credential */
+    create_x509_credentials();
 
     if (params.daemonize == 1) {
         daemonize();
