@@ -85,7 +85,8 @@ int parse_tcptable_file(NuAuth* session, conntable_t *ct, char *filename, FILE *
         panic ("/proc/net/tcp: missing header!");
 
     /* convert session user identifier to string */
-    session_uid_len = snprintf(session_uid, sizeof(session_uid), "%5lu", session->localuserid);
+    secure_snprintf(session_uid, sizeof(session_uid), "%5lu", session->localuserid);
+    session_uid_len = strlen(session_uid);
 
     /* get state field position in header */
     pos = strstr(buf, " st ");
