@@ -36,8 +36,8 @@ NuAuth *session = NULL;
 nuclient_error *err=NULL;
 struct sigaction old_sigterm;
 struct sigaction old_sigint;
-char *username = NULL;
-char *password = NULL;
+const char *saved_username = NULL;
+const char *saved_password = NULL;
 
 void panic(const char *fmt, ...)
 {
@@ -103,7 +103,6 @@ void leave_client()
     struct termios term;
 
     /* restore ECHO mode */
-    printf("\n");
     if (tcgetattr (fileno (stdin), &term) == 0) 
     {
         term.c_lflag |= ECHO;
@@ -123,8 +122,6 @@ void leave_client()
     }
     nu_client_global_deinit(err);
     nuclient_error_destroy(err);
-    free(username);
-    free(password);
 }
 
 /**
@@ -140,13 +137,13 @@ void exit_clean()
     (void)sigaction (SIGTERM, &old_sigterm, NULL);
 
     /* quit nutcpc */
+    printf("\nQuit client\n");
     leave_client();
     exit(EXIT_SUCCESS);
 }
 
 #ifdef FREEBSD
-ssize_t
-getline(char **lineptr, size_t *n, FILE *stream)
+ssize_t getline(char **lineptr, size_t *n, FILE *stream)
 {
 	char *line;
 	size_t len;
@@ -176,7 +173,8 @@ getline(char **lineptr, size_t *n, FILE *stream)
  *
  * \param lineptr Pointer to buffer
  * \param linelen Initial length (including nul byte) of the buffer
- * \return Number of characters of the password
+ * \return Number of characters of the password,
+ *         or -1 if fails
  */
 ssize_t my_getpass (char **lineptr, size_t *linelen)
 {
@@ -206,6 +204,7 @@ ssize_t my_getpass (char **lineptr, size_t *linelen)
                 nread--;
             }
         }
+        printf("\n");
 	return nread;
 }
 #endif
@@ -213,49 +212,73 @@ ssize_t my_getpass (char **lineptr, size_t *linelen)
 /**
  * Callback used in nu_client_init2() call: read password
  *
- * \return New allocated buffer containing the password
+ * \return New allocated buffer containing the password,
+ *         or NULL if it fails
  */
 char* get_password()
 {
     size_t password_size=32;
-    char* tmp_pass;
+    char* new_pass;
     char* question = "Enter password: ";
 #ifdef FREEBSD
     char *ret;
+#else
+    int ret;
 #endif
-    if (password != NULL)
-    {
-        return strdup(password);
+    
+    /* if password was already read, send it to the library */
+    if (saved_password != NULL) {
+        return strdup(saved_password);
     }
     
-    tmp_pass=(char *)calloc(password_size, sizeof( char));
+    new_pass=(char *)calloc(password_size, sizeof( char));
 #ifdef FREEBSD
-    ret = readpassphrase(question, tmp_pass, password_size, RPP_REQUIRE_TTY);
+    ret = readpassphrase(question, new_pass, password_size, RPP_REQUIRE_TTY);
     if (ret == NULL){
         fprintf(stderr, "unable to read passphrase");
     }
 #else
     printf(question);
-    my_getpass(&tmp_pass,&password_size);
+    ret = my_getpass(&new_pass,&password_size);
+    if (ret < 0) 
+    {
+        free(new_pass);
+        return NULL;
+    }
 #endif
-    return tmp_pass;
+    return new_pass;
 }
 
-char * get_username()
+/**
+ * Callback used in nu_client_init2() call: read user name 
+ *
+ * \return New allocated buffer containing the name,
+ *         or NULL if it fails
+ */
+char* get_username()
 {
-	char* user;
-	int nread;
-	size_t username_size=64;
+    char* username;
+    int nread;
+    size_t username_size=32;
 
-	if (username == NULL){
-		printf("Enter username: ");
-		user=(char *)calloc(64,sizeof( char));
-		nread = getline (&user, &username_size, stdin);
-		user[64]=0;
-	} else {
-		user = strdup(username);
-	}
-	return user;
+    /* if username was already read, send it to the library */
+    if (saved_username != NULL) {
+        return strdup(saved_username);
+    }
+    
+    printf("Enter username: ");
+    username = (char *)calloc(username_size, sizeof(char));
+    nread = getline (&username, &username_size, stdin);
+    if (nread < 0) 
+    {
+        free(username);
+        return NULL;
+    }
+    if (0 < nread && username[nread-1] == '\n')
+    {
+        username[nread-1]=0;
+    }
+    return username;
 }
 
 static void usage (void)
@@ -288,7 +311,6 @@ int main (int argc, char *argv[])
 	/*
 	 * Parse our arguments.
 	 */
-	username=NULL;
 	opterr = 0;
 	while ((ch = getopt (argc, argv, "kldVu:H:I:U:p:")) != -1) {
 		switch (ch) {
@@ -311,7 +333,7 @@ int main (int argc, char *argv[])
 				break;
 			case 'U':
 				sscanf(optarg,"%u",&userid);
-				username=strdup(optarg);
+				saved_username=strdup(optarg);
 				break;
 			case 'k':
 				kill_nutcpc();
@@ -360,7 +382,6 @@ int main (int argc, char *argv[])
         /* global libnuclient init */
         nu_client_global_init(err);
         
-	password=NULL;
         printf("Connecting to NuFw gateway\n");
 	session = nu_client_init2(
 			srv_addr,
@@ -377,17 +398,13 @@ int main (int argc, char *argv[])
 		printf("\nCan not initiate connection to NuFW gateway\n");
                 printf("Problem: %s\n",nuclient_strerror(err));
 		exit(EXIT_FAILURE);
-	} else {
-		/* store username and password */
-		if (session->username){
-			username=strdup(session->username);
-		} else 
-			username=NULL;
-		if (session->password){
-			password=strdup(session->password);
-		} else 
-			password=NULL;
 	}
+
+        /* store username and password */
+        if (session->username)
+            saved_username=strdup(session->username);
+        if (session->password)
+            saved_password=strdup(session->password);
 
 	/*
 	 * Become a daemon by double-forking and detaching completely from

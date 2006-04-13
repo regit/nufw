@@ -83,16 +83,21 @@ int nu_get_usersecret(sasl_conn_t *conn __attribute__((unused)),
 	NuAuth* session=(NuAuth *)context;
 	if ((session->password == NULL) && session->passwd_callback) {
 #if USE_UTF8
+                char *utf8pass;
+#endif
 		char *givenpass=session->passwd_callback();
-		session->password=locale_to_utf8(givenpass);
-		if (! session->password){
-			free(givenpass);
+		if (!givenpass){
 			return EXIT_FAILURE;
 		}
+#if USE_UTF8
+                utf8pass = locale_to_utf8(givenpass);
 		free(givenpass);
-#else
-		session->password=(session->passwd_callback)();
+                givenpass = utf8pass;
+		if (!givenpass){
+			return EXIT_FAILURE;
+		}
 #endif
+                session->password = givenpass;
 	}
 	if(id != SASL_CB_PASS) {
 		printf("getsecret not looking for pass");
@@ -124,35 +129,23 @@ static int nu_get_userdatas(void *context __attribute__((unused)),
 
 	switch (id) {
 		case SASL_CB_USER:
-			if ((session->username == NULL) && session->username_callback) {
-#if USE_UTF8
-				char *givenuser=session->username_callback();
-				session->username=locale_to_utf8(givenuser);
-				free(givenuser);
-				if (! session->username){
-					return EXIT_FAILURE;
-				}
-#else
-				session->username=(session->username_callback)();
-#endif
-			}
-
-			*result=session->username;
-			break;
 		case SASL_CB_AUTHNAME:
 			if ((session->username == NULL) && session->username_callback) {
 #if USE_UTF8
+                                char *utf8name;
+#endif
 				char *givenuser=session->username_callback();
-				session->username=locale_to_utf8(givenuser);
+#if USE_UTF8
+				utf8name = locale_to_utf8(givenuser);
 				free(givenuser);
-				if (! session->username){
+                                givenuser = utf8name;
+				if (givenuser == NULL){
 					return EXIT_FAILURE;
 				}
-#else
-				session->username=(session->username_callback)();
 #endif
-
+				session->username=givenuser;
 			}
+
 			*result=session->username;
 			break;
 		default:
