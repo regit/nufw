@@ -57,13 +57,6 @@ char * locale_to_utf8(char* inbuf);
 
 #include <sys/utsname.h>
 
-#define SET_ERROR(ERR, FAMILY, CODE) \
-        if (ERR != NULL) \
-        { \
-            ERR->family = FAMILY; \
-            ERR->error = CODE; \
-        }
-
 static int tcptable_hash (conn_t *c);
 static conn_t * tcptable_find (conntable_t *ct, conn_t *c);
 
@@ -629,64 +622,71 @@ void nu_client_global_deinit(nuclient_error *err)
         SET_ERROR(err, INTERNAL_ERROR, NO_ERR);
 }
 
-/**
- * Initialisation of nufw authentication session
- *
- */
-NuAuth* nu_client_init2(
-		const char *hostname, unsigned int port,
-		char* keyfile, char* certfile,
-		void* username_callback,void * passwd_callback, 
-                void* tlscred_callback, nuclient_error *err
-		)
+int send_os(NuAuth * session, nuclient_error *err)
 {
-	conntable_t *new;
+	/* announce our OS */
+	struct utsname info;
+	char *oses;
+	size_t stringlen;
+	size_t actuallen;
+	char* enc_oses;
+	char * pointer, *buf;
+	int osfield_length;
+	struct nuv2_authfield osfield;
 	int ret;
-	int option_value;
-	const int cert_type_priority[3] = { GNUTLS_CRT_X509,  0 };
-	struct hostent *host;
-	/* create socket stuff */
-	sasl_conn_t *conn;
-	NuAuth * session;
-	struct sigaction no_action;
+
+	/* get info */
+	uname(&info);
+	/* build packet */
+	stringlen=strlen(info.sysname)+strlen(info.release)+strlen(info.version)+3;
+	oses=alloca(stringlen);
+	enc_oses=calloc(4*stringlen,sizeof(char));
+	(void)secure_snprintf(oses,stringlen,"%s;%s;%s",info.sysname, info.release, info.version);
+	if (sasl_encode64(oses,strlen(oses),enc_oses,4*stringlen,&actuallen) == SASL_BUFOVER){
+		enc_oses=realloc(enc_oses,actuallen);
+		sasl_encode64(oses,strlen(oses),enc_oses,actuallen,&actuallen);
+	}
+	osfield.type=OS_FIELD;
+	osfield.option=OS_SRV;
+	osfield.length=4+actuallen;
+	buf=alloca(osfield.length);
+	osfield_length=osfield.length;
+	osfield.length=htons(osfield.length);
+	pointer = buf ;
+	memcpy(buf,&osfield,sizeof osfield);
+	pointer+=sizeof osfield;
+	memcpy(pointer,enc_oses,actuallen);
+	free(enc_oses);
+	ret = gnutls_record_send(session->tls,buf,osfield_length);
+	if (ret < 0)
+	{
+		printf("Error sending tls data : %s",gnutls_strerror(ret));
+	}
+
+	/* wait for message of server about mode */
+	if (gnutls_record_recv(session->tls,buf,osfield_length)<=0){
+		errno=EACCES;
+		SET_ERROR(err, GNUTLS_ERROR, ret);
+		return 0;
+	} else {
+		if (*buf == SRV_TYPE) {
+			session->mode=*(buf+1);
+		} else {
+			session->mode=SRV_TYPE_POLL;
+		}
+	}
+	return 1;
+}
+
+int init_tls_cert(NuAuth * session, nuclient_error *err,
+		char* keyfile, char* certfile)
+{
 	char certstring[256];
 	char keystring[256];
+	const int cert_type_priority[3] = { GNUTLS_CRT_X509,  0 };
         int ok;
+	int ret;
 
-        SET_ERROR(err, INTERNAL_ERROR, NO_ERR);
-
-	session=(NuAuth*) calloc(1,sizeof(NuAuth));
-	session->username_callback=username_callback;
-	session->passwd_callback=passwd_callback;
-	session->tls_passwd_callback=tlscred_callback;
-	pthread_mutex_init(&(session->mutex),NULL);
-
-	/* initiate session */
-	session->auth_by_default = 1;
-	session->tls=NULL;
-	session->protocol = PROTO_VERSION;
-	/* initiate packet number */
-	session->packet_id=0;
-
-	host = gethostbyname(hostname);
-	if (host == NULL)
-	{
-/*		fprintf(stderr, "*** An error occured when resolving the provided hostname\n");*/
-                SET_ERROR(err, INTERNAL_ERROR, DNS_RESOLUTION_ERR);
-
-		nu_exit_clean(session);
-		return NULL;
-	}
-
-	(session->adr_srv).sin_family = AF_INET;
-	(session->adr_srv).sin_port = htons(port);
-	(session->adr_srv).sin_addr = *(struct in_addr *)host->h_addr_list[0];
-	if ((session->adr_srv).sin_addr.s_addr == INADDR_NONE) {
-
-		nu_exit_clean(session);
-                SET_ERROR(err, INTERNAL_ERROR, NO_ADDR_ERR);
-		return NULL;
-	}
 	/* compute patch keyfile */
 	if (! keyfile){
 	    char *home = getenv("HOME");
@@ -703,7 +703,7 @@ NuAuth* nu_client_init2(
 #if REQUEST_CERT
                 SET_ERROR(err, INTERNAL_ERROR, FILE_ACCESS_ERR);
 		errno=EBADF;
-		return NULL;
+		return 0;
 #endif
 	}
 
@@ -722,7 +722,7 @@ NuAuth* nu_client_init2(
 #if REQUEST_CERT
                 SET_ERROR(err, INTERNAL_ERROR, FILE_ACCESS_ERR);
 		errno=EBADF;
-		return NULL;
+		return 0;
 #endif
 	}
 
@@ -731,7 +731,7 @@ NuAuth* nu_client_init2(
         if (ret != 0)
         {
             SET_ERROR(err, GNUTLS_ERROR, ret);
-            return NULL;
+            return 0;
             /*printf("problem allocating gnutls credentials : %s\n",gnutls_strerror(ret));*/
         }
 	/* sets the trusted cas file
@@ -741,7 +741,7 @@ NuAuth* nu_client_init2(
         if (ret < 0)
         {
             SET_ERROR(err, GNUTLS_ERROR, ret);
-            return NULL;
+            return 0;
             /*printf("problem setting x509 trust file : %s\n",gnutls_strerror(ret));*/
         }
 #endif
@@ -749,21 +749,21 @@ NuAuth* nu_client_init2(
 		ret = gnutls_certificate_set_x509_key_file(session->cred, certfile, keyfile, GNUTLS_X509_FMT_PEM);
 		if (ret <0){
                   SET_ERROR(err, GNUTLS_ERROR, ret);
-                  return NULL;
+                  return 0;
 			/*printf("problem with keyfile : %s\n",gnutls_strerror(ret));*/
 		}
 	}
+
+	/* set Diffie Hellman params */
 	generate_dh_params();
 	gnutls_certificate_set_dh_params( session->cred, dh_params);
 
-
-	/* Initialize TLS session
-	*/
+	/* Initialize TLS session */
 	ret = gnutls_init(&(session->tls), GNUTLS_CLIENT);
         if (ret != 0)
         {
             SET_ERROR(err, GNUTLS_ERROR, ret);
-            return NULL;
+            return 0;
             /*printf("gnutls init error : %s\n",gnutls_strerror(ret));*/
         }
 
@@ -771,7 +771,7 @@ NuAuth* nu_client_init2(
         if (ret < 0)
         {
             SET_ERROR(err, GNUTLS_ERROR, ret);
-            return NULL;
+            return 0;
             /*printf("error setting tls default priority : %s\n",gnutls_strerror(ret));*/
         }
 
@@ -779,7 +779,7 @@ NuAuth* nu_client_init2(
         if (ret < 0)
         {
             SET_ERROR(err, GNUTLS_ERROR, ret);
-            return NULL;
+            return 0;
             /*printf("error setting tls cert type priority : %s\n",gnutls_strerror(ret));*/
         }
 	/* put the x509 credentials to the current session */
@@ -787,65 +787,17 @@ NuAuth* nu_client_init2(
         if (ret < 0)
         {
             SET_ERROR(err, GNUTLS_ERROR, ret);
-            return NULL;
+            return 0;
             /*printf("error setting tls credentials : %s\n",gnutls_strerror(ret));*/
         }
 
-	no_action.sa_handler = SIG_IGN;
-	sigemptyset( & (no_action.sa_mask));
-	no_action.sa_flags = 0;
-	if ( sigaction( SIGPIPE, & no_action, NULL ) != 0) {
-		printf("Error setting \n");
-		exit(1);
-	}
+	return 1;
+}
 
-
-	session->socket = socket (AF_INET,SOCK_STREAM,0);
-	/* connect */
-	if (session->socket <= 0){
-		nu_exit_clean(session);
-		errno=EADDRNOTAVAIL;
-                SET_ERROR(err, INTERNAL_ERROR, CANT_CONNECT_ERR);
-		return NULL;
-	}
-	option_value=1;
-	setsockopt (
-			session->socket,
-			SOL_SOCKET,
-			SO_KEEPALIVE,
-			&option_value,
-			sizeof(option_value));
-
-
-	if ( connect(session->socket,(struct sockaddr *)(&session->adr_srv),sizeof(session->adr_srv)) == -1){
-		nu_exit_clean(session);
-		errno=ENOTCONN;
-                SET_ERROR(err, INTERNAL_ERROR, CANT_CONNECT_ERR);
-		return NULL;
-	}
-
-	gnutls_transport_set_ptr( session->tls, (gnutls_transport_ptr)session->socket);
-
-	/* Perform the TLS handshake
-	*/
-	ret = gnutls_handshake( session->tls);
-	if (ret < 0) {
-		gnutls_perror(ret);
-		nu_exit_clean(session);
-		errno=ECONNRESET;
-                SET_ERROR(err, GNUTLS_ERROR, ret);
-		return NULL;
-	}
-	/* certificate verification */
-	ret = gnutls_certificate_verify_peers(session->tls);
-	if (ret <0){
-		printf("Certificate verification failed : %s\n",gnutls_strerror(ret));
-                SET_ERROR(err, GNUTLS_ERROR, ret);
-		return NULL;
-	} else {
-		printf("Server Certificate OK\n");
-	}
-
+int init_sasl(NuAuth * session, nuclient_error *err)
+{
+	int ret;
+	sasl_conn_t *conn;
 
 	/* SASL time */
 	sasl_callback_t callbacks[] = {
@@ -860,10 +812,9 @@ NuAuth* nu_client_init2(
 	ret = sasl_client_new("NuFW", "myserver", NULL, NULL, callbacks, 0, &conn);
 	if (ret != SASL_OK) {
 		printf("Failed allocating connection state");
-		nu_exit_clean(session);
 		errno=EAGAIN;
                 SET_ERROR(err, SASL_ERROR, ret);
-		return NULL;
+		return 0;
 	}
 
 	/* set external properties here
@@ -884,10 +835,9 @@ NuAuth* nu_client_init2(
 		sasl_setprop(conn,SASL_SSF_EXTERNAL,&extssf);
 	}
 	if (ret != SASL_OK) {
-		nu_exit_clean(session);
 		errno=EACCES;
                 SET_ERROR(err, SASL_ERROR, ret);
-		return NULL;
+		return 0;
         }
 
 
@@ -896,76 +846,174 @@ NuAuth* nu_client_init2(
 
 	ret = mysasl_negotiate(session->tls, conn);
 	if (ret != SASL_OK) {
-		nu_exit_clean(session);
 		errno=EACCES;
                 SET_ERROR(err, SASL_ERROR, ret);
-		return NULL;
-	} else {
-		/* announce our OS */
-		struct utsname info;
-		char *oses;
-		size_t stringlen;
-		size_t actuallen;
-		char* enc_oses;
-		char * pointer, *buf;
-		int osfield_length;
-		struct nuv2_authfield osfield;
-		/* get info */
-		uname(&info);
-		/* build packet */
-		stringlen=strlen(info.sysname)+strlen(info.release)+strlen(info.version)+3;
-		oses=alloca(stringlen);
-		enc_oses=calloc(4*stringlen,sizeof(char));
-		(void)secure_snprintf(oses,stringlen,"%s;%s;%s",info.sysname, info.release, info.version);
-		if (sasl_encode64(oses,strlen(oses),enc_oses,4*stringlen,&actuallen) == SASL_BUFOVER){
-			enc_oses=realloc(enc_oses,actuallen);
-			sasl_encode64(oses,strlen(oses),enc_oses,actuallen,&actuallen);
-		}
-		osfield.type=OS_FIELD;
-		osfield.option=OS_SRV;
-		osfield.length=4+actuallen;
-		buf=alloca(osfield.length);
-		osfield_length=osfield.length;
-                osfield.length=htons(osfield.length);
-		pointer = buf ;
-		memcpy(buf,&osfield,sizeof osfield);
-		pointer+=sizeof osfield;
-		memcpy(pointer,enc_oses,actuallen);
-		free(enc_oses);
-		ret = gnutls_record_send(session->tls,buf,osfield_length);
-                if (ret < 0)
-                {
-                    printf("Error sending tls data : %s",gnutls_strerror(ret));
-                }
-
-		/* wait for message of server about mode */
-		if (gnutls_record_recv(session->tls,buf,osfield_length)<=0){
-			nu_exit_clean(session);
-			errno=EACCES;
-                        SET_ERROR(err, GNUTLS_ERROR, ret);
-			return NULL;
-		} else {
-			if (*buf == SRV_TYPE) {
-				session->mode=*(buf+1);
-			} else {
-				session->mode=SRV_TYPE_POLL;
-			}
-		}
-
+		return 0;
 	}
 
-	session->localuserid=getuid();
+	return 1;
+}
 
-	/*
-	 * Initialisation's done, start watching for connections.
-	 */
-	/* alloc ct */
-	if (tcptable_init (&new) == 0) panic ("tcptable_init failed");
-	session->ct = new;
-	/* set init variable */
+int init_socket(NuAuth * session, nuclient_error *err)
+{
+	int option_value;
+	struct sigaction no_action;
+
+	/* ignore SIGPIPE */
+	no_action.sa_handler = SIG_IGN;
+	sigemptyset( & (no_action.sa_mask));
+	no_action.sa_flags = 0;
+	(void)sigaction( SIGPIPE, & no_action, NULL);
+
+	/* create socket to nuauth */
+	session->socket = socket (AF_INET,SOCK_STREAM,0);
+	if (session->socket <= 0){
+		errno=EADDRNOTAVAIL;
+                SET_ERROR(err, INTERNAL_ERROR, CANT_CONNECT_ERR);
+		return 0;
+	}
+	option_value=1;
+	setsockopt (
+			session->socket,
+			SOL_SOCKET,
+			SO_KEEPALIVE,
+			&option_value,
+			sizeof(option_value));
+
+	/* connect to nuauth */
+	if ( connect(session->socket,(struct sockaddr *)(&session->adr_srv),sizeof(session->adr_srv)) == -1){
+		errno=ENOTCONN;
+                SET_ERROR(err, INTERNAL_ERROR, CANT_CONNECT_ERR);
+		return 0;
+	}
+
+	return 1;
+}
+
+int tls_handshake(NuAuth * session, nuclient_error *err)
+{
+	int ret;
+
+	gnutls_transport_set_ptr( session->tls, (gnutls_transport_ptr)session->socket);
+
+	/* Perform the TLS handshake */
+	ret = gnutls_handshake( session->tls);
+	if (ret < 0) {
+		gnutls_perror(ret);
+		errno=ECONNRESET;
+		SET_ERROR(err, GNUTLS_ERROR, ret);
+		return 0;
+	}
+	/* certificate verification */
+	ret = gnutls_certificate_verify_peers(session->tls);
+	if (ret <0){
+		printf("Certificate verification failed : %s\n",gnutls_strerror(ret));
+		SET_ERROR(err, GNUTLS_ERROR, ret);
+		return 0;
+	} else {
+		printf("Server Certificate OK\n");
+	}
+	return 1;
+}
+
+int set_host(NuAuth * session, nuclient_error *err,
+		const char *hostname, unsigned int port)
+{
+	struct hostent *host = gethostbyname(hostname);
+	if (host == NULL)
+	{
+/*		fprintf(stderr, "*** An error occured when resolving the provided hostname\n");*/
+                SET_ERROR(err, INTERNAL_ERROR, DNS_RESOLUTION_ERR);
+		return 0;
+	}
+
+	(session->adr_srv).sin_family = AF_INET;
+	(session->adr_srv).sin_port = htons(port);
+	(session->adr_srv).sin_addr = *(struct in_addr *)host->h_addr_list[0];
+	if ((session->adr_srv).sin_addr.s_addr == INADDR_NONE) {
+
+                SET_ERROR(err, INTERNAL_ERROR, NO_ADDR_ERR);
+		return 0;
+	}
+	
+	return 1;
+}
+
+/**
+ * Initialisation of nufw authentication session
+ *
+ */
+NuAuth* nu_client_init2(
+		const char *hostname, unsigned int port,
+		char* keyfile, char* certfile,
+		void* username_callback,void * passwd_callback, 
+                void* tlscred_callback, nuclient_error *err
+		)
+{
+	conntable_t *new;
+	NuAuth * session;
+
+	/* First reset error */
+        SET_ERROR(err, INTERNAL_ERROR, NO_ERR);
+
+	/* Allocate a new session */
+	session=(NuAuth*) calloc(1,sizeof(NuAuth));
+	if (session == NULL) {
+		SET_ERROR(err, INTERNAL_ERROR, MEMORY_ERR);
+		return NULL;
+	}
+
+	/* Set basic fields */
+	session->localuserid = getuid();
 	session->connected = 1;
         session->count_msg_cond = -1;
+	session->auth_by_default = 1;
+	session->packet_id = 0;
+	session->tls=NULL;
+	session->ct = NULL;
+	session->protocol = PROTO_VERSION;
+	session->username_callback = username_callback;
+	session->passwd_callback = passwd_callback;
+	session->tls_passwd_callback = tlscred_callback;
 	session->timestamp_last_sent = time(NULL);
+
+	/* create session mutex */
+	pthread_mutex_init(&(session->mutex),NULL);
+
+	/* set field about host */
+	if (!set_host(session, err, hostname, port)) {
+		nu_exit_clean(session);
+		return NULL;
+	}
+
+	/* set fields about TLS and certificates */
+	if (!init_tls_cert(session, err, keyfile, certfile)) {
+		nu_exit_clean(session);
+		return NULL;
+	}
+
+	if (!init_socket(session, err)) {
+		nu_exit_clean(session);
+		return NULL;
+	}
+
+	if (!tls_handshake(session, err)) {
+		nu_exit_clean(session);
+		return NULL;
+	}
+
+	if (!init_sasl(session, err)) {
+		nu_exit_clean(session);
+		return NULL;
+	}
+	
+	if (!send_os(session, err)) {
+		nu_exit_clean(session);
+		return NULL;
+	}
+
+	if (tcptable_init (&new) == 0) panic ("tcptable_init failed");
+	session->ct = new;
 	return session;
 }
 
@@ -1050,6 +1098,9 @@ const char* nuclient_strerror (nuclient_error *err)
           break;
         case CANT_CONNECT_ERR:
           return "Connection failed";
+          break;
+        case MEMORY_ERR:
+          return "No more memory";
           break;
         case UNKNOWN_ERR:
           return "Unkown error";

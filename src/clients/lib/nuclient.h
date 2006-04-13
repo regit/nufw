@@ -91,7 +91,6 @@ extern "C" {
 #include <string.h>
 
 #include <gcrypt.h>
-/* #warning "this may be a source of problems" */
 #include <pthread.h>
 
 #include <gnutls/gnutls.h>
@@ -100,12 +99,17 @@ extern "C" {
 #define DEBUG 0
 
 #ifndef CONNTABLE_BUCKETS
+/** Maximum number of connections in connection table, see ::conntable_t */
 #define CONNTABLE_BUCKETS 5003
 #endif
+
+/** Default address (IPv4) of nuauth */
 #define NUAUTH_IP "192.168.1.1"
 
+/** Default filename of key */
 #define KEYFILE "key.pem"
 
+/** Timeout of UDP connections */
 #define UDP_TIMEOUT 30
 
 /*
@@ -157,25 +161,30 @@ enum
 /* NuAuth structure */
 
 typedef struct {
-	u_int8_t protocol;
-	unsigned long userid;
-	unsigned long localuserid;
-	char * username;
-	char * password;
-        gnutls_session tls;
-	gnutls_certificate_credentials cred;
+	/*--------------- PUBLIC MEMBERS -------------------*/
+	u_int8_t protocol; /** Version of nuauth protocol (equals to #PROTO_VERSION) */
 
-	char* (*username_callback)();
-	char* (*passwd_callback)();
-	char* (*tls_passwd_callback)();
-	int socket;
+	unsigned long userid; /** User identifier */
+	unsigned long localuserid; /** Local user identifier (getuid()) */
+	char *username;  /** Username, stored in UTF-8 */
+	char *password;  /** Password, stored in UTF-8 */
+	
+        gnutls_session tls; /** TLS session over TCP socket */
+	gnutls_certificate_credentials cred; /** TLS credentials */
+
+	char* (*username_callback)(); /** Callback used to get username */
+	char* (*passwd_callback)();   /** Callback used to get password */
+	char* (*tls_passwd_callback)(); /** Callback used to get TLS password */
+	
+	int socket;              /** TCP socket used to exchange message with nuauth */
         int error;
-	struct sockaddr_in adr_srv;
-	conntable_t *ct;
-	unsigned long packet_id;
+	struct sockaddr_in adr_srv; /** nuauth server address */
+	conntable_t *ct;         /** connection table */
+	unsigned long packet_id; /** packet sequence number (start at zero) */
         int auth_by_default;
 	unsigned char mode;
-	/* private ;-) */
+	
+	/*------------- PRIVATE MEMBERS ----------------*/
 	pthread_mutex_t mutex;
 	unsigned char connected;
 	/* condition and associated mutex used to know when a check
@@ -185,7 +194,7 @@ typedef struct {
 	int count_msg_cond;
 	pthread_t checkthread;
 	pthread_t recvthread;
-	time_t timestamp_last_sent;
+	time_t timestamp_last_sent; /** Timestamp (Epoch format) of last packet send to nuauth */
 } NuAuth;
 
 /** Error family */
@@ -200,14 +209,15 @@ typedef enum
 enum
 {
     NOERR = 0,
-    NO_ERR  = 0,
-    SESSION_NOT_CONNECTED_ERR  = 1,
-    UNKNOWN_ERR = 2,
-    TIMEOUT_ERR = 3,
-    DNS_RESOLUTION_ERR = 4,
-    NO_ADDR_ERR = 5,
-    FILE_ACCESS_ERR = 6,
-    CANT_CONNECT_ERR  = 7
+    NO_ERR  = 0,                     /** No error */
+    SESSION_NOT_CONNECTED_ERR  = 1,  /** Session not connected */
+    UNKNOWN_ERR = 2,                 /** Unkown error */
+    TIMEOUT_ERR = 3,                 /** Connection timeout */
+    DNS_RESOLUTION_ERR = 4,          /** DNS resolution error */
+    NO_ADDR_ERR = 5,                 /** Address not recognized */
+    FILE_ACCESS_ERR = 6,             /** File access error */
+    CANT_CONNECT_ERR  = 7,           /** Connection failed */
+    MEMORY_ERR  = 8                  /** No more memory */
 };
 
 /* libnuclient return code structure */

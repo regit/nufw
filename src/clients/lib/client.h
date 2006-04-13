@@ -41,5 +41,12 @@
 #include "checks.h"
 #include "sending.h"
 
+#define SET_ERROR(ERR, FAMILY, CODE) \
+        if (ERR != NULL) \
+        { \
+            ERR->family = FAMILY; \
+            ERR->error = CODE; \
+        }
+
 #endif
 
