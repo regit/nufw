@@ -798,6 +798,7 @@ int init_sasl(NuAuth * session, nuclient_error *err)
 {
 	int ret;
 	sasl_conn_t *conn;
+	sasl_ssf_t extssf = 0;
 
 	/* SASL time */
 	sasl_callback_t callbacks[] = {
@@ -828,12 +829,8 @@ int init_sasl(NuAuth * session, nuclient_error *err)
 			printf("can't call username callback\n");
 		}
 	}
+	sasl_setprop(conn,SASL_SSF_EXTERNAL,&extssf);
 	ret = sasl_setprop(conn, SASL_AUTH_EXTERNAL,session->username);
-
-	{
-		sasl_ssf_t extssf = 0;
-		sasl_setprop(conn,SASL_SSF_EXTERNAL,&extssf);
-	}
 	if (ret != SASL_OK) {
 		errno=EACCES;
                 SET_ERROR(err, SASL_ERROR, ret);
