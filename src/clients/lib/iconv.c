@@ -113,7 +113,7 @@ char* locale_to_utf8(char* inbuf)
     /* realloc output to have a correct size */
     outbuflen = real_outlen+1;
     outbuf = realloc(outbuf, outbuflen);
-    outbuf[outbuflen]=0;
+    outbuf[outbuflen-1]=0;
     return outbuf;
 }
 
