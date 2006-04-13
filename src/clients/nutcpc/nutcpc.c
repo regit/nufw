@@ -23,6 +23,7 @@
 #include <locale.h>
 #include <config.h>
 #include <stdarg.h>
+#include "security.h"
 #define NUTCPC_VERSION "1.1"
 
 #ifdef FREEBSD
@@ -36,8 +37,8 @@ NuAuth *session = NULL;
 nuclient_error *err=NULL;
 struct sigaction old_sigterm;
 struct sigaction old_sigint;
-const char *saved_username = NULL;
-const char *saved_password = NULL;
+char *saved_username = NULL;
+char *saved_password = NULL;
 
 void panic(const char *fmt, ...)
 {
@@ -122,6 +123,8 @@ void leave_client()
     }
     nu_client_global_deinit(err);
     nuclient_error_destroy(err);
+    free(saved_username);
+    free(saved_password);
 }
 
 /**
@@ -284,7 +287,7 @@ char* get_username()
 static void usage (void)
 {
 	fprintf (stderr, "usage: nutcpc [-kldV]  [-I interval] "
-			"[-U userid ] [-H nuauth_srv]\n");
+			"[-U username ] [-H nuauth_srv]\n");
 	exit (EXIT_FAILURE);
 }
 
@@ -299,7 +302,6 @@ int main (int argc, char *argv[])
 	int debug = 0;
 	struct sigaction action;
 	unsigned int port=4130;
-	int userid;
 	int tempo=1;
 	unsigned char donotuselock=0;
 	char* runpid=computerunpid();
@@ -315,8 +317,7 @@ int main (int argc, char *argv[])
 	while ((ch = getopt (argc, argv, "kldVu:H:I:U:p:")) != -1) {
 		switch (ch) {
 			case 'H':
-				strncpy(srv_addr,optarg,512);
-				srv_addr[511]=0;
+				SECURE_STRNCPY(srv_addr, optarg, sizeof(srv_addr));
 				break;
 			case 'd':
 				debug = 1;
@@ -332,7 +333,6 @@ int main (int argc, char *argv[])
 				donotuselock=1;
 				break;
 			case 'U':
-				sscanf(optarg,"%u",&userid);
 				saved_username=strdup(optarg);
 				break;
 			case 'k':
@@ -401,10 +401,13 @@ int main (int argc, char *argv[])
 	}
 
         /* store username and password */
-        if (session->username)
+        if (session->username) {
+            free(saved_username);
             saved_username=strdup(session->username);
-        if (session->password)
+        }
+        if (session->password) {
             saved_password=strdup(session->password);
+        }
 
 	/*
 	 * Become a daemon by double-forking and detaching completely from
