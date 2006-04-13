@@ -1,0 +1,17 @@
+etc/nufw20/nuauth.conf
+usr/sbin/nuauth20
+usr/lib/nuauth20/modules/libldap.so.0.0.0
+usr/lib/nuauth20/modules/libldap.la
+usr/lib/nuauth20/modules/libldap.a
+usr/lib/nuauth20/modules/libdbm.so.0.0.0
+usr/lib/nuauth20/modules/libdbm.la
+usr/lib/nuauth20/modules/libdbm.a
+usr/lib/nuauth20/modules/libsyslog.so.0.0.0
+usr/lib/nuauth20/modules/libsyslog.la
+usr/lib/nuauth20/modules/libsyslog.a
+usr/lib/nuauth20/modules/libldap.so.0
+usr/lib/nuauth20/modules/libldap.so
+usr/lib/nuauth20/modules/libdbm.so.0
+usr/lib/nuauth20/modules/libdbm.so
+usr/lib/nuauth20/modules/libsyslog.so.0
+usr/lib/nuauth20/modules/libsyslog.so

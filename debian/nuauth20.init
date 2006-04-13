@@ -8,17 +8,17 @@
 #
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-DAEMON=/usr/sbin/nuauth
-NAME=nuauth
-DESC=nuauth
+DAEMON=/usr/sbin/nuauth20
+NAME=nuauth20
+DESC=nuauth20
 NUAUTH_START="no"
 
 
 test -x $DAEMON || exit 0
 
 # Include nuauth defaults if available
-if [ -f /etc/default/nuauth ] ; then
-	. /etc/default/nuauth
+if [ -f /etc/default/nuauth20 ] ; then
+	. /etc/default/nuauth20
 fi
 
 if [ "$NUAUTH_START" != "true" ]; then

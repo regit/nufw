@@ -1,11 +1,11 @@
-Source: nufw12
+Source: nufw20
 Section: net
 Priority: optional
 Maintainer: Jean-Michel Kelbert <kelbert@debian.org> 
 Build-Depends: debhelper (>= 4.1.16),po-debconf, automake1.9, libldap2-dev, libgdbm-dev, libglib2.0-dev, libmysqlclient-dev, postgresql-dev, iptables-dev, libtool, libident-dev, libgnutls11-dev, libsasl2-dev, libpam0g-dev
 Standards-Version: 3.6.0
 
-Package: nufw12
+Package: nufw20
 Architecture: any
 Conflicts: nufw
 Depends: ${shlibs:Depends}, debconf
@@ -20,11 +20,11 @@ Description: a per-user firewalling daemon that interfers with libipq
  nuauth daemon, which decides if packets should be accepted or denied, 
  sends back the information to Nufw that applies decisions.
 
-Package: nuauth12
+Package: nuauth20
 Architecture: any
 Conflicts: nuauth
 Depends: ${shlibs:Depends}, debconf, libsasl2-modules
-Recommends: nuauth12-utils
+Recommends: nuauth20-utils
 Description: The authentication daemon from the nufw package
  NuFW is an authenticating gateway, which means that connections are
  authenticated before being forwarded through the gateway.  Classical packet
@@ -36,11 +36,11 @@ Description: The authentication daemon from the nufw package
  Nuauth receives requests from nufw, and auth packets from users' clients,
  and sends decision to the nufw daemon.
 
-Package: nuauth12-extra
+Package: nuauth20-extra
 Architecture: any
 Conflicts: nuauth-extra
-Depends: ${shlibs:Depends}, debconf, nuauth12
-Recommends: nuauth12-utils
+Depends: ${shlibs:Depends}, debconf, nuauth20
+Recommends: nuauth20-utils
 Description: The authentication daemon from the nufw package
  NuFW is an authenticating gateway, which means that connections are
  authenticated before being forwarded through the gateway.  Classical packet
@@ -54,11 +54,11 @@ Description: The authentication daemon from the nufw package
  .
  Nuauth-extra provides extra modules for nuauth.
 
-Package: nuauth12-log-mysql
+Package: nuauth20-log-mysql
 Architecture: any
-Depends: ${shlibs:Depends}, debconf, nuauth12
-Conflicts: nuauth12-log-pgsql, nuauth-log-mysql
-Recommends: nuauth12-utils
+Depends: ${shlibs:Depends}, debconf, nuauth20
+Conflicts: nuauth20-log-pgsql, nuauth-log-mysql
+Recommends: nuauth20-utils
 Description: Module for nuauth logging into mysql databases
  NuFW is an authenticating gateway, which means that connections are
  authenticated before being forwarded through the gateway.  Classical packet
@@ -68,11 +68,11 @@ Description: Module for nuauth logging into mysql databases
  This package adds support for nuauth logging users activity into a Mysql
  database. You can use this for an SSO solution, too.
 
-Package: nuauth12-log-pgsql
+Package: nuauth20-log-pgsql
 Architecture: any
-Depends: ${shlibs:Depends}, debconf, nuauth12
-Conflicts: nuauth12-log-mysql, nuauth-log-pgsql
-Recommends: nuauth12-utils
+Depends: ${shlibs:Depends}, debconf, nuauth20
+Conflicts: nuauth20-log-mysql, nuauth-log-pgsql
+Recommends: nuauth20-utils
 Description: Module for nuauth logging into PostgreSQL databases
  NuFW is an authenticating gateway, which means that connections are
  authenticated before being forwarded through the gateway.  Classical packet
@@ -82,7 +82,7 @@ Description: Module for nuauth logging into PostgreSQL databases
  This package adds support for nuauth logging users activity into a postgreSQL
  database. You can use this for an SSO solution, too.
 
-Package: nutcpc12
+Package: nutcpc20
 Architecture: any
 Depends: ${shlibs:Depends}
 Conflicts: nutcpc
@@ -96,7 +96,7 @@ Description: a linux client for the nufw authentication gateway system
  when network traffic leaves the machine, nutcpc deals with it and sends
  authenticating data to the nuauth server.
 
-Package: nuauth12-utils
+Package: nuauth20-utils
 Architecture: any
 Depends: ${shlibs:Depends}
 Conflicts: nuauth-utils
@@ -109,7 +109,7 @@ Description: Set of tools useful to nuauth admin
  nuaclgen is a perl script that helps generate LDAP ACLs for use with nuauth,
  the nufw auth daemon.
 
-Package: libnuclient12
+Package: libnuclient20
 Architecture: any
 Conflicts: libnuclient
 Depends: ${shlibs:Depends}, libsasl2-modules

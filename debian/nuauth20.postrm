@@ -19,7 +19,7 @@ set -e
 case "$1" in
        purge|disappear)
 		
-		update-rc.d -f nuauth remove >/dev/null
+		update-rc.d -f nuauth20 remove >/dev/null
 		userdel nuauth 2>/dev/null || true
 		;;
        remove|upgrade|failed-upgrade|abort-install|abort-upgrade)
