@@ -42,6 +42,7 @@
 #include <proto.h>
 #include <jhash.h>
 #include "client.h"
+#include "security.h"
 
 #ifndef GCRY_THREAD
 #define GCRY_THREAD 1
@@ -105,7 +106,7 @@ int nu_get_usersecret(sasl_conn_t *conn __attribute__((unused)),
 	} else {
 		*psecret = (sasl_secret_t*)calloc(sizeof(sasl_secret_t) + strlen(session->password)+1,sizeof(char));
 		(*psecret)->len = strlen(session->password);
-		strncpy((char*)(*psecret)->data, session->password, (*psecret)->len +1 );
+		SECURE_STRNCPY((char*)(*psecret)->data, session->password, (*psecret)->len +1 );
 	}
 
 	return SASL_OK;
@@ -163,11 +164,21 @@ static int nu_get_userdatas(void *context __attribute__((unused)),
 	return SASL_OK;
 }
 
-void panic(const char *fmt, ...)
+/**
+ * Display an error message, prefixed by "Fatal error: ", and then exit the
+ * program. If filename is not NULL and line different than zero, also prefix
+ * the message with them.
+ *
+ * Exemple: "checks.c:45:Fatal error: Message ..."
+ */
+void do_panic(const char *filename, unsigned long line, const char *fmt, ...)
 {
     va_list args;  
     va_start(args, fmt);
     printf("\n");
+    if (filename != NULL && line != 0) {
+        printf("%s:%lu:");
+    }
     printf("Fatal error: ");
     vprintf(fmt, args);            
     printf("\n");
@@ -997,7 +1008,7 @@ NuAuth* nu_client_init2(
 		stringlen=strlen(info.sysname)+strlen(info.release)+strlen(info.version)+3;
 		oses=alloca(stringlen);
 		enc_oses=calloc(4*stringlen,sizeof(char));
-		snprintf(oses,stringlen,"%s;%s;%s",info.sysname, info.release, info.version);
+		(void)secure_snprintf(oses,stringlen,"%s;%s;%s",info.sysname, info.release, info.version);
 		if (sasl_encode64(oses,strlen(oses),enc_oses,4*stringlen,&actuallen) == SASL_BUFOVER){
 			enc_oses=realloc(enc_oses,actuallen);
 			sasl_encode64(oses,strlen(oses),enc_oses,actuallen,&actuallen);

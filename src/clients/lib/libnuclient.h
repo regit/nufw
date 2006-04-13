@@ -40,7 +40,23 @@ int tcptable_add (conntable_t *ct, conn_t *c);
 int tcptable_free (conntable_t *ct);
 int compare (NuAuth *session,conntable_t *old, conntable_t *new);
 
-void panic(const char *fmt, ...);
+void do_panic(const char *filename, unsigned long line, const char *fmt, ...);
+
+/** 
+ * \def panic(format, ...)
+ * 
+ * Call do_panic(__FILE__, __LINE__, format, ...) 
+ */
+#define panic(format, args...) \
+    do_panic(__FILE__, __LINE__, format, ##args )
+
+/** 
+ * \def nu_assert(test, format, ...)
+ * 
+ * If test fails, call do_panic(__FILE__, __LINE__, format, ...) 
+ */
+#define panic(test, format, args...) \
+    do { if (!(test)) { do_panic(__FILE__, __LINE__, format, ##args ); } while (0)
 
 void ask_session_end(NuAuth* session);
 
