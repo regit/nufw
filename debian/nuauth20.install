@@ -1,5 +1,5 @@
 etc/nufw20/nuauth.conf
-usr/sbin/nuauth20
+usr/sbin/nuauth
 usr/lib/nuauth20/modules/libldap.so.0.0.0
 usr/lib/nuauth20/modules/libldap.la
 usr/lib/nuauth20/modules/libldap.a

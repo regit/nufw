@@ -9,16 +9,16 @@
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 DAEMON=/usr/sbin/nufw
-NAME=nufw
-DESC=nufw
+NAME=nufw20
+DESC=nufw20
 NUFW_START="false"
 
 
 test -x $DAEMON || exit 0
 
 # Include nufw defaults if available
-if [ -f /etc/default/nufw ] ; then
-	. /etc/default/nufw
+if [ -f /etc/default/nufw20 ] ; then
+	. /etc/default/nufw20
 fi
 
 if [ "$NUFW_START" != "true" ]; then

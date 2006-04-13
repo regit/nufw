@@ -58,11 +58,11 @@ install: build
 
 	# Add here commands to install the package into debian/nufw.
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp/
-	mkdir -p $(CURDIR)/debian/tmp/etc/nufw/
+	mkdir -p $(CURDIR)/debian/tmp/etc/nufw20/
 
-	cp $(CURDIR)/conf/nuauth.conf $(CURDIR)/debian/tmp/etc/nufw/
-	cp $(CURDIR)/conf/nuaclgen.conf $(CURDIR)/debian/tmp/etc/nufw/
-	cp $(CURDIR)/conf/nutop.conf $(CURDIR)/debian/tmp/etc/nufw/
+	cp $(CURDIR)/conf/nuauth.conf $(CURDIR)/debian/tmp/etc/nufw20/
+	cp $(CURDIR)/conf/nuaclgen.conf $(CURDIR)/debian/tmp/etc/nufw20/
+	cp $(CURDIR)/conf/nutop.conf $(CURDIR)/debian/tmp/etc/nufw20/
 	cp $(CURDIR)/scripts/nuaclgen $(CURDIR)/debian/tmp/usr/bin
 	cp $(CURDIR)/scripts/nutop $(CURDIR)/debian/tmp/usr/bin
 #	cp $(CURDIR)/conf/nufw.init $(CURDIR)/debian/tmp/etc/init.d/nufw

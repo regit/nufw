@@ -8,7 +8,7 @@
 #
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-DAEMON=/usr/sbin/nuauth20
+DAEMON=/usr/sbin/nuauth
 NAME=nuauth20
 DESC=nuauth20
 NUAUTH_START="no"
