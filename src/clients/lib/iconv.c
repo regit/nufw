@@ -35,62 +35,85 @@
 #include <langinfo.h>
 #include <stdio.h>
 #include <locale.h>
-/* convert routine */
+#include "libnuclient.h"
 
-char * locale_to_utf8(char* inbuf){
-	char* locale_charset=nl_langinfo(CODESET);
-	iconv_t cd;
-	size_t inlen=strlen(inbuf);
-	char *outbuf,*targetbuf;
-	size_t outbuflen=inlen*2+1;
-	size_t outbufleft;
-	int ret;
+/**
+ * Convert a locale in locale charset to Unicode charset using UTF-8 encoding.
+ * Maximum length of output buffer is four times of inbuf length.
+ *
+ * \param inbuf Input buffer written in locale charset
+ * \return New allocated buffer, which need to be freed
+ */
+char* locale_to_utf8(char* inbuf)
+{
+    char* locale_charset;
+    iconv_t ctx;
+    size_t inlen=strlen(inbuf);
+    size_t maxlen = inlen*4;
+    char *outbuf;
+    char *targetbuf;
+    size_t real_outlen;
+    size_t orig_inlen = inlen;
+    size_t outbuflen=3;
+    size_t outbufleft;
+    int ret;
 
-	setlocale (LC_ALL, "");
-	/* iconv open */
-	if (! locale_charset){
-		printf("exit line %d\n",__LINE__);
-		return NULL;
-	}
-	cd = iconv_open("UTF-8",locale_charset);
-	/* iconv convert */
-	outbuf=calloc(outbuflen,sizeof(char));
-	if (!outbuf){
-		printf("exit line %d\n",__LINE__);
-		return NULL;
-	}
-	outbufleft=outbuflen;
-	targetbuf=outbuf;
-	ret = iconv (cd,&inbuf, &inlen,(char **)&targetbuf,&outbufleft);
-	if (ret == -1){
-		if (errno==E2BIG){
-			/* TODO : put a good value here */
-#define MAXBUF 512
-			while((ret == -1) && (errno == E2BIG) &&(outbuflen < MAXBUF)){
-				/* realloc outbuf */
-				outbuflen+=inlen;
-				outbuf=realloc(outbuf,outbuflen);
-				if (outbuf){
-					/* run iconv once more */
-					outbufleft=outbuflen;
-					targetbuf=outbuf;
-					ret = iconv (cd,&inbuf, &inlen,&targetbuf,&outbufleft);
-				} else {
-					printf("exit line %d\n",__LINE__);
-					return NULL;
-				}
-			}
+    /* get local charset */
+    setlocale (LC_ALL, "");
+    locale_charset=nl_langinfo(CODESET);
+    nu_assert (locale_charset != NULL, "Can't get locale charset!");
 
-		} else {
-			free(outbuf);
-			printf("exit line %d\n",__LINE__);
-			iconv_close(cd);
-			return NULL;
-		}
-	}
-	/* iconv close */
-	iconv_close(cd);
-	/* realloc output to have a correct size */
-	outbuf[outbuflen-outbufleft+1]=0;
-	return realloc(outbuf,outbuflen-outbufleft+1);
+    /* create an iconv context to convert locale charset to UTF-8 */
+    ctx = iconv_open("UTF-8",locale_charset);
+
+    /* allocate a buffer */
+    outbuf=calloc(outbuflen,sizeof(char));
+    nu_assert (outbuf != NULL, "iconv fail to allocate output buffer!");
+
+    /* iconv convert */
+    outbufleft=outbuflen-1; /* -1 because we keep last byte for nul byte */
+    targetbuf=outbuf;
+    ret = iconv (ctx, &inbuf, &inlen, &targetbuf, &outbufleft);
+    real_outlen = targetbuf -outbuf; 
+ 
+    /* is buffer too small? */
+    if (ret == -1)
+    {
+        if (errno!=E2BIG)
+        {
+            free(outbuf);
+            iconv_close(ctx);
+            panic("iconv error code %i!", ret);
+        }
+
+        /* TODO : put a good value here */
+        while((ret == -1) && (errno == E2BIG) &&(outbuflen < maxlen))
+        {
+            /* realloc outbuf */
+            outbuflen+=orig_inlen;
+            outbuf=realloc(outbuf,outbuflen);
+            if (outbuf == NULL)
+            {
+                free(outbuf);
+                iconv_close(ctx);
+                panic("iconv error: can't rellocate buffer!");
+            }
+
+            /* run iconv once more */
+            outbufleft=outbuflen - real_outlen - 1; /* -1 because we keep last byte for nul byte */
+            targetbuf=outbuf + real_outlen;
+            ret = iconv (ctx, &inbuf, &inlen, &targetbuf, &outbufleft);
+            real_outlen = targetbuf -outbuf; 
+        }
+    }
+    
+    /* close iconv context */
+    iconv_close(ctx);
+
+    /* realloc output to have a correct size */
+    outbuflen = real_outlen+1;
+    outbuf = realloc(outbuf, outbuflen);
+    outbuf[outbuflen]=0;
+    return outbuf;
 }
+

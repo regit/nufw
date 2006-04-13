@@ -32,6 +32,8 @@
 #ifndef LIBNUCLIENT_H
 #define LIBNUCLIENT_H
 
+#include "nuclient.h"
+
 void nu_exit_clean(NuAuth * session);
 
 int tcptable_init (conntable_t **ct);
@@ -56,7 +58,7 @@ void do_panic(const char *filename, unsigned long line, const char *fmt, ...);
  * If test fails, call do_panic(__FILE__, __LINE__, format, ...) 
  */
 #define nu_assert(test, format, args...) \
-    do { if (!(test)) { do_panic(__FILE__, __LINE__, format, ##args ); } while (0)
+    do { if (!(test)) do_panic(__FILE__, __LINE__, format, ##args ); } while (0)
 
 void ask_session_end(NuAuth* session);
 

@@ -177,7 +177,7 @@ void do_panic(const char *filename, unsigned long line, const char *fmt, ...)
     va_start(args, fmt);
     printf("\n");
     if (filename != NULL && line != 0) {
-        printf("%s:%lu:");
+        printf("%s:%lu:", filename, line);
     }
     printf("Fatal error: ");
     vprintf(fmt, args);            
