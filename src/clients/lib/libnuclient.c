@@ -49,9 +49,6 @@
 GCRY_THREAD_OPTION_PTHREAD_IMPL;
 #endif
 
-
-char * locale_to_utf8(char* inbuf);
-
 #define DH_BITS 1024
 #define REQUEST_CERT 0
 
@@ -541,7 +538,8 @@ int nu_client_error(NuAuth * session, nuclient_error *err)
 
 static gnutls_dh_params dh_params;
 
-static int generate_dh_params(void) {
+static int generate_dh_params(void)
+{
         int ret;
 
 	/* Generate Diffie Hellman parameters - for use with DHE
@@ -563,6 +561,9 @@ static int generate_dh_params(void) {
 	return 0;
 }
 
+/**
+ * Destroy an client session: free all memory
+ */
 void nu_client_free(NuAuth *session, nuclient_error *err)
 {
         /* kill all threads */
@@ -574,11 +575,10 @@ void nu_client_free(NuAuth *session, nuclient_error *err)
 }
 
 /**
- * global init 
+ * Global initialisation
  *
- * to be called once
+ * Warning: to be called once.
  */
- 
 void nu_client_global_init(nuclient_error *err)
 {
 
@@ -609,11 +609,10 @@ void nu_client_global_init(nuclient_error *err)
 }
 
 /**
- * global de init 
+ * Global de init 
  *
- * to be called once when leaving
+ * Warning: To be called once, when leaving.
  */
- 
 void nu_client_global_deinit(nuclient_error *err)
 {
         sasl_done();
@@ -622,17 +621,22 @@ void nu_client_global_deinit(nuclient_error *err)
         SET_ERROR(err, INTERNAL_ERROR, NO_ERR);
 }
 
+/**
+ * Create the operating system packet and send it to nuauth.
+ * Packet is in format ::nuv2_authfield.
+ */
 int send_os(NuAuth * session, nuclient_error *err)
 {
 	/* announce our OS */
 	struct utsname info;
+	struct nuv2_authfield osfield;
 	char *oses;
+	char *enc_oses;
+	char *pointer;
+	char *buf;
 	size_t stringlen;
 	size_t actuallen;
-	char* enc_oses;
-	char * pointer, *buf;
 	int osfield_length;
-	struct nuv2_authfield osfield;
 	int ret;
 
 	/* get info */
@@ -678,27 +682,37 @@ int send_os(NuAuth * session, nuclient_error *err)
 	return 1;
 }
 
+/**
+ * Initialiaze TLS:
+ *    - Set key filename (and test if the file does exist)
+ *    - Set certificate filename (and test if the file does exist)
+ *    - Allocate x509 credentials
+ *    - Set trust file of credentials (if needed)
+ *    - Set certificate (if key and cert. are present)
+ *    - Generate Diffie Hellman params
+ *    - Init. TLS session
+ */
 int init_tls_cert(NuAuth * session, nuclient_error *err,
 		char* keyfile, char* certfile)
 {
 	char certstring[256];
 	char keystring[256];
 	const int cert_type_priority[3] = { GNUTLS_CRT_X509,  0 };
+	char *home = getenv("HOME");
         int ok;
 	int ret;
 
 	/* compute patch keyfile */
-	if (! keyfile){
-	    char *home = getenv("HOME");
-	    if (home != NULL)
-	    {
+	if (keyfile == NULL && home != NULL)
+	{
 		ok = secure_snprintf(keystring, sizeof(keystring),
-		    "%s/.nufw/key.pem", home);
+				"%s/.nufw/key.pem", home);
 		if (ok) keyfile = keystring;
-	    }
 	}
-	/* test if key exists */
-	if (access(keyfile,R_OK)){
+	
+	/* test if key file exists */
+	if (access(keyfile,R_OK) != 0)
+	{
 		keyfile=NULL;
 #if REQUEST_CERT
                 SET_ERROR(err, INTERNAL_ERROR, FILE_ACCESS_ERR);
@@ -707,17 +721,15 @@ int init_tls_cert(NuAuth * session, nuclient_error *err,
 #endif
 	}
 
-	if (! certfile){
-		char *home = getenv("HOME");
-		if (home != NULL) 
-		{
-		    ok = secure_snprintf(certstring, sizeof(certstring),
-			    "%s/.nufw/cert.pem", home);
-		    if (ok) certfile = certstring;
-		}
+	if (certfile == NULL && home != NULL)
+	{
+		ok = secure_snprintf(certstring, sizeof(certstring),
+				"%s/.nufw/cert.pem", home);
+		if (ok) certfile = certstring;
 	}
 	/* test if cert exists */
-	if (access(certfile,R_OK)){
+	if (access(certfile,R_OK) != 0)
+	{
 		certfile=NULL;
 #if REQUEST_CERT
                 SET_ERROR(err, INTERNAL_ERROR, FILE_ACCESS_ERR);
@@ -734,8 +746,8 @@ int init_tls_cert(NuAuth * session, nuclient_error *err,
             return 0;
             /*printf("problem allocating gnutls credentials : %s\n",gnutls_strerror(ret));*/
         }
-	/* sets the trusted cas file
-	*/
+
+	/* sets the trusted cas file */
 #if REQUEST_CERT
 	ret = gnutls_certificate_set_x509_trust_file(session->cred, certfile, GNUTLS_X509_FMT_PEM);
         if (ret < 0)
@@ -794,6 +806,10 @@ int init_tls_cert(NuAuth * session, nuclient_error *err,
 	return 1;
 }
 
+/**
+ * Initialiaze SASL: create an client, set properties 
+ * and then call mysasl_negotiate()
+ */
 int init_sasl(NuAuth * session, nuclient_error *err)
 {
 	int ret;
@@ -851,6 +867,10 @@ int init_sasl(NuAuth * session, nuclient_error *err)
 	return 1;
 }
 
+/**
+ * Create a socket to nuauth, and try to connect. The function also set 
+ * SIGPIPE handler: ignore these signals.
+ */
 int init_socket(NuAuth * session, nuclient_error *err)
 {
 	int option_value;
@@ -887,6 +907,9 @@ int init_socket(NuAuth * session, nuclient_error *err)
 	return 1;
 }
 
+/**
+ * Do the TLS handshake and check server certificate
+ */
 int tls_handshake(NuAuth * session, nuclient_error *err)
 {
 	int ret;
@@ -913,6 +936,9 @@ int tls_handshake(NuAuth * session, nuclient_error *err)
 	return 1;
 }
 
+/**
+ * Set host address: convert hostname string to IPv4 address
+ */
 int set_host(NuAuth * session, nuclient_error *err,
 		const char *hostname, unsigned int port)
 {
@@ -937,8 +963,16 @@ int set_host(NuAuth * session, nuclient_error *err,
 }
 
 /**
- * Initialisation of nufw authentication session
+ * Initialisation of nufw authentication session: set basic fields and then
+ * call:
+ *    - set_host() ;
+ *    - init_tls_cert() ;
+ *    - init_socket() ;
+ *    - tls_handshake() ;
+ *    - init_sasl() ;
+ *    - send_os().
  *
+ * If everything is ok, create the connection table using tcptable_init(). 
  */
 NuAuth* nu_client_init2(
 		const char *hostname, unsigned int port,
@@ -1046,7 +1080,10 @@ void ask_session_end(NuAuth* session)
 	}
 }
 
-int     nuclient_error_init(nuclient_error **err)
+/**
+ * Allocate a structure to store client error
+ */
+int nuclient_error_init(nuclient_error **err)
 {
       if (*err != NULL)
           return -1;
@@ -1054,14 +1091,18 @@ int     nuclient_error_init(nuclient_error **err)
       return 0;
 }
 
-
-
-void    nuclient_error_destroy(nuclient_error *err)
+/**
+ * Destroy an error (free memory)
+ */
+void nuclient_error_destroy(nuclient_error *err)
 {
     if (err!=NULL)
       free(err);
 }
 
+/**
+ * Convert an error to an human readable string
+ */
 const char* nuclient_strerror (nuclient_error *err)
 {
   if (err==NULL)

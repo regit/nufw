@@ -22,12 +22,8 @@
 #include <net/if.h>
 #include <dirent.h>
 
-#include "proc.h"
-#include "checks.h" /* for secure_snprintf() */
+#include "client.h"
 #include "security.h"
-#include "libnuclient.h" /* for panic() */
-
-char* locale_to_utf8(char* inbuf);
 
 static struct prg_node {
     struct prg_node *next;     /** Pointer to next element in the single chained list */
