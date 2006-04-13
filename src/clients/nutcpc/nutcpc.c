@@ -32,8 +32,12 @@
 #define MAX_RETRY_TIME 30
 
 struct termios orig;
-NuAuth *session;
+NuAuth *session = NULL;
 nuclient_error *err=NULL;
+struct sigaction old_sigterm;
+struct sigaction old_sigint;
+char *username = NULL;
+char *password = NULL;
 
 void panic(const char *fmt, ...)
 {
@@ -61,22 +65,36 @@ char * computerunpid(){
 	return strdup(path_dir);
 }
 
-void exit_nutcpc(){
+/**
+ * Kill existing instance of nutcpc: read pid file, 
+ * and then send SIGTERM to the process. 
+ *
+ * Exit the program at the end of this function.
+ */
+void kill_nutcpc(){
 	pid_t pid;
 	FILE* FD;
-	char* runpid=computerunpid();
+        int ok, ret;
+	char* runpid;
+        
+        ok = 0;
+        runpid=computerunpid();
 	if (runpid){
 		FD = fopen(runpid,"r");
 		if (FD){
 			fscanf(FD,"%d",&pid);
 			fclose(FD);
-			kill(pid,SIGTERM);
-		} else {
-			printf("No nutcpc seems to be running (no lock file found)\n");
+			ret = kill(pid,SIGTERM);
+                        ok = (ret == 0);
 		}
                 free(runpid);
-	}
-        exit(0);
+        }
+        if (!ok) {
+            printf("No nutcpc seems to be running (no lock file found)\n");
+            exit(EXIT_FAILURE);
+        } else {
+            exit(EXIT_SUCCESS);
+        }
 }
 
 void leave_client()
@@ -106,10 +124,22 @@ void leave_client()
     nu_client_global_deinit(err);
     nuclient_error_destroy(err);
     free(username);
+    free(password);
 }
 
+/**
+ * Signal handler: catch SIGINT or SIGTERM. This function will exit nutcpc:
+ * deinit libnuclient, free memory, and then exit the process.
+ *
+ * The function will first reinstall old handlers.
+ */
 void exit_clean()
 {
+    /* reinstall old signal handlers */
+    (void)sigaction (SIGINT, &old_sigint, NULL);
+    (void)sigaction (SIGTERM, &old_sigterm, NULL);
+
+    /* quit nutcpc */
     leave_client();
     exit(EXIT_SUCCESS);
 }
@@ -140,12 +170,17 @@ getline(char **lineptr, size_t *n, FILE *stream)
 }
 #endif
 
-
-
-	ssize_t
-my_getpass (char **lineptr, size_t *n)
+#ifndef FREEBSD
+/**
+ * Read a password on terminal. Given buffer may grow up (resized by realloc).
+ *
+ * \param lineptr Pointer to buffer
+ * \param linelen Initial length (including nul byte) of the buffer
+ * \return Number of characters of the password
+ */
+ssize_t my_getpass (char **lineptr, size_t *linelen)
 {
-	struct termios  new;
+	struct termios new;
 	int nread;
 
 	/* Turn echoing off and fail if we can't. */
@@ -157,45 +192,55 @@ my_getpass (char **lineptr, size_t *n)
 		return -1;
 
 	/* Read the password. */
-#ifdef LINUX
-	nread = getline (lineptr, n, stdin);
-#endif
+	nread = getline (lineptr, linelen, stdin);
 
 	/* Restore terminal. */
 	(void) tcsetattr (fileno (stdin), TCSAFLUSH, &orig);
 
+        /* remove new line if needed */
+        if (0 < nread)
+        {
+            char *line = *lineptr;
+            if (line[nread-1] == '\n') {
+                line[nread-1] = '\0';
+                nread--;
+            }
+        }
 	return nread;
-}
-
-char* password;
-
-char* get_password()
-{
-	char* passwd;
-	size_t password_size=32;
-	if (password == NULL){
-		passwd=(char *)calloc(32,sizeof( char));
-#ifdef LINUX
-		printf("Enter password: ");
-		my_getpass(&passwd,&password_size);
-
-		if (strlen(passwd)<password_size) {
-			passwd[strlen(passwd)-1]=0;
-		}
-#else 
- if (readpassphrase("Enter password: ", passwd, password_size,
-               RPP_REQUIRE_TTY) == NULL){
-                  fprintf(stderr, "unable to read passphrase");
 }
 #endif
 
-	} else {
-		passwd=strdup(password);
-	}
-	return passwd;
+/**
+ * Callback used in nu_client_init2() call: read password
+ *
+ * \return New allocated buffer containing the password
+ */
+char* get_password()
+{
+    size_t password_size=32;
+    char* tmp_pass;
+    char* question = "Enter password: ";
+#ifdef FREEBSD
+    char *ret;
+#endif
+    if (password != NULL)
+    {
+        return strdup(password);
+    }
+    
+    tmp_pass=(char *)calloc(password_size, sizeof( char));
+#ifdef FREEBSD
+    ret = readpassphrase(question, tmp_pass, password_size, RPP_REQUIRE_TTY);
+    if (ret == NULL){
+        fprintf(stderr, "unable to read passphrase");
+    }
+#else
+    printf(question);
+    my_getpass(&tmp_pass,&password_size);
+#endif
+    return tmp_pass;
 }
 
-char * username;
 char * get_username()
 {
 	char* user;
@@ -269,7 +314,7 @@ int main (int argc, char *argv[])
 				username=strdup(optarg);
 				break;
 			case 'k':
-				exit_nutcpc();
+				kill_nutcpc();
 				break;
 			case 'V':
 				printf("nutcpc (version " NUTCPC_VERSION ")\n");
@@ -297,11 +342,11 @@ int main (int argc, char *argv[])
 	action.sa_handler = exit_clean;
 	sigemptyset( & (action.sa_mask));
 	action.sa_flags = 0;
-	if ( sigaction( SIGINT, & action , NULL ) != 0) {
+	if ( sigaction( SIGINT, & action , &old_sigint) != 0) {
 		printf("Error\n");
 		exit(1);
 	}
-	if ( sigaction( SIGTERM, & action , NULL ) != 0) {
+	if ( sigaction( SIGTERM, & action , &old_sigterm) != 0) {
 		printf("Error\n");
 		exit(1);
 	}
