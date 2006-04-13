@@ -87,11 +87,17 @@ void kill_nutcpc(){
 			fclose(FD);
 			ret = kill(pid,SIGTERM);
                         ok = (ret == 0);
+                        if (ok) {
+                            printf("nutcpc process killed (pid %lu)\n", (unsigned long)pid);
+                        } else {
+                            printf("Fail to kill process: remove pid file\n");
+                            unlink(runpid);
+                        }
 		}
                 free(runpid);
         }
         if (!ok) {
-            printf("No nutcpc seems to be running (no lock file found)\n");
+            printf("No nutcpc seems to be running\n");
             exit(EXIT_FAILURE);
         } else {
             exit(EXIT_SUCCESS);
@@ -352,8 +358,10 @@ int main (int argc, char *argv[])
 	if (debug == 0){
 		if (donotuselock == 0) {
 			if (! access(runpid,R_OK)){
-				printf("lock file found, not starting, please check %s\n",runpid);
+				printf("Lock file found: %s\n",runpid);
+                                printf("Kill existing process with \"-k\" or ignore it with \"-l\" option\n");
 				free(runpid);
+                                free(saved_username);
 				exit(EXIT_FAILURE);
 			}
 		}
@@ -443,6 +451,7 @@ int main (int argc, char *argv[])
 			}
 			exit (EXIT_SUCCESS);
 		}
+                setsid();
 		ioctl (STDIN_FILENO, TIOCNOTTY, NULL);
 		close (STDIN_FILENO); 
 		close (STDOUT_FILENO); 
