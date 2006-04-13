@@ -55,7 +55,7 @@ void do_panic(const char *filename, unsigned long line, const char *fmt, ...);
  * 
  * If test fails, call do_panic(__FILE__, __LINE__, format, ...) 
  */
-#define panic(test, format, args...) \
+#define nu_assert(test, format, args...) \
     do { if (!(test)) { do_panic(__FILE__, __LINE__, format, ##args ); } while (0)
 
 void ask_session_end(NuAuth* session);
