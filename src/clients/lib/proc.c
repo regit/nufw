@@ -52,9 +52,6 @@ static struct prg_node {
 #  define PATH_MAX 4096
 #endif
 
-/* NOT working as of glibc-2.0.7: */
-#undef DIRENT_HAVE_D_TYPE_WORKS
-
 static void prg_cache_add(unsigned long inode, char *name)
 {
     unsigned hi = PRG_HASHIT(inode);
@@ -209,7 +206,7 @@ void prg_cache_load_sub(DIR *dir, const char *path_process, const char *path_fd)
 
     while ((file = readdir(dir)) != NULL)
     {
-#ifdef DIRENT_HAVE_D_TYPE_WORKS
+#ifdef HAVE_STRUCT_DIRENT_D_TYPE
         if (file->d_type!=DT_LNK) 
             continue;
 #endif
@@ -260,7 +257,7 @@ void prg_cache_load()
 
     while ( (file=readdir(dirproc)) != NULL )
     {
-#ifdef DIRENT_HAVE_D_TYPE_WORKS
+#ifdef HAVE_STRUCT_DIRENT_D_TYPE
 	if (file->d_type!=DT_DIR)
 	    continue;
 #endif
