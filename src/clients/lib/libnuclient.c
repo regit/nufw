@@ -189,6 +189,9 @@ void do_panic(const char *filename, unsigned long line, const char *fmt, ...)
 
 void nu_exit_clean(NuAuth * session)
 {
+        gnutls_certificate_free_keys(session->cred);
+        gnutls_certificate_free_credentials(session->cred);
+	gnutls_deinit(session->tls);
 	if(session->ct){
 		tcptable_free (session->ct);
 	}
@@ -637,6 +640,7 @@ void nu_client_global_init(nuclient_error *err)
 void nu_client_global_deinit(nuclient_error *err)
 {
         sasl_done();
+        gnutls_dh_params_deinit(dh_params);
         gnutls_global_deinit();
         if (err != NULL)
         {

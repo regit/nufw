@@ -32,6 +32,8 @@
 #define MAX_RETRY_TIME 30
 
 struct termios orig;
+NuAuth *session;
+nuclient_error *err=NULL;
 
 void panic(const char *fmt, ...)
 {
@@ -72,31 +74,44 @@ void exit_nutcpc(){
 		} else {
 			printf("No nutcpc seems to be running (no lock file found)\n");
 		}
-
+                free(runpid);
 	}
         exit(0);
 }
 
+void leave_client()
+{
+    char* runpid;
+    struct termios term;
+
+    /* restore ECHO mode */
+    printf("\n");
+    if (tcgetattr (fileno (stdin), &term) == 0) 
+    {
+        term.c_lflag |= ECHO;
+        (void)tcsetattr (fileno (stdin), TCSAFLUSH, &term);
+    }
+
+    if (session){
+        nu_client_free(session,err);
+    }
+
+
+    runpid=computerunpid();
+    if (runpid != NULL)
+    {
+        unlink(runpid);
+        free(runpid);
+    }
+    nu_client_global_deinit(err);
+    nuclient_error_destroy(err);
+    free(username);
+}
+
 void exit_clean()
 {
-	char* runpid=computerunpid();
-	struct termios term;
-
-        /* restore ECHO mode */
-        printf("\n");
-	if (tcgetattr (fileno (stdin), &term) == 0) 
-        {
-            term.c_lflag |= ECHO;
-            (void)tcsetattr (fileno (stdin), TCSAFLUSH, &term);
-        }
-
-        nuclient_error *err=NULL;
-        nuclient_error_init(&err);
-	unlink(runpid);
-	free(runpid);
-        nu_client_global_deinit(err);
-        nuclient_error_destroy(err);
-	exit(EXIT_SUCCESS);
+    leave_client();
+    exit(EXIT_SUCCESS);
 }
 
 #ifdef FREEBSD
@@ -216,12 +231,10 @@ int main (int argc, char *argv[])
 	int debug = 0;
 	struct sigaction action;
 	unsigned int port=4130;
-	NuAuth *session;
 	int userid;
 	int tempo=1;
 	unsigned char donotuselock=0;
 	char* runpid=computerunpid();
-        nuclient_error *err=NULL;
 
 #if USE_UTF8
 	/* needed by iconv */
@@ -303,6 +316,7 @@ int main (int argc, char *argv[])
         nu_client_global_init(err);
         
 	password=NULL;
+        printf("Connecting to NuFw gateway\n");
 	session = nu_client_init2(
 			srv_addr,
 			port,
@@ -315,9 +329,7 @@ int main (int argc, char *argv[])
 			);
 
 	if (!session){
-		int nerror=errno;
 		printf("\nCan not initiate connection to NuFW gateway\n");
-		/*printf("Problem: %s\n",strerror(nerror));*/
                 printf("Problem: %s\n",nuclient_strerror(err));
 		exit(EXIT_FAILURE);
 	} else {
@@ -375,6 +387,7 @@ int main (int argc, char *argv[])
 	} else {
 		fprintf (stderr, "nutcpc " NUTCPC_VERSION " started (debug)\n");
 	}
+        free(runpid);
 
 
 	for (;;) {
@@ -406,12 +419,6 @@ int main (int argc, char *argv[])
 			}
 		}
 	}
-
-	if (session){
-		nu_client_free(session,err);
-	}
-        nu_client_global_deinit(err);
-        nuclient_error_destroy(err);
-
-	return EXIT_SUCCESS;
+        leave_client();
+	exit (EXIT_SUCCESS);
 }

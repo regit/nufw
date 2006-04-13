@@ -156,7 +156,7 @@ enum
 
 /* NuAuth structure */
 
-typedef struct _NuAuth {
+typedef struct {
 	u_int8_t protocol;
 	unsigned long userid;
 	unsigned long localuserid;
