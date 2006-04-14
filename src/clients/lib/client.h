@@ -31,7 +31,6 @@
 #ifndef CLIENT_H
 #define CLIENT_H
 
-
 #define SENT_TEST_INTERVAL 30
 
 #include <config.h>

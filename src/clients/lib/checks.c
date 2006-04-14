@@ -141,11 +141,7 @@ int nu_client_check(NuAuth * session, nuclient_error *err)
                     /* if we are here, threads are dead */
                     pthread_mutex_unlock(&(session->mutex));
                     nu_exit_clean(session);
-                    if (err != NULL)
-                    {
-                        err->family = INTERNAL_ERROR;
-                        err->error  = SESSION_NOT_CONNECTED_ERR;
-                    }
+                    SET_ERROR(err, INTERNAL_ERROR, SESSION_NOT_CONNECTED_ERR);
                     return -1;
                 } 
                 /* test if we need to create the working thread */
@@ -161,24 +157,15 @@ int nu_client_check(NuAuth * session, nuclient_error *err)
 		pthread_mutex_unlock(&(session->mutex));
 		if (session->mode == SRV_TYPE_POLL) {
 			int checkreturn;
-			checkreturn = nu_client_real_check(session);
+			checkreturn = nu_client_real_check(session, err);
 			if (checkreturn == -1){
 				/* kill all threads */
 				ask_session_end(session);
 				/* cleaning up things */
 				nu_exit_clean(session);
-                                if (err != NULL)
-                                {
-                                  err->family = INTERNAL_ERROR;
-                                  err->error  = UNKNOWN_ERR;
-                                }
 				return -1;
 			} else {
-                                if (err != NULL)
-                                {
-                                  err->family = INTERNAL_ERROR;
-                                  err->error  = NO_ERR;
-                                }
+                                SET_ERROR(err, INTERNAL_ERROR, NO_ERR);
 				return checkreturn;
 			}
 		} else {
@@ -188,21 +175,13 @@ int nu_client_check(NuAuth * session, nuclient_error *err)
 					ask_session_end(session);
 					/* cleaning up things */
 					nu_exit_clean(session);
-                                        if (err != NULL)
-                                        {
-                                            err->family = INTERNAL_ERROR;
-                                            err->error  = TIMEOUT_ERR;
-                                        }
+                                        SET_ERROR(err, INTERNAL_ERROR, TIMEOUT_ERR);
 					return -1;
 				}
 				session->timestamp_last_sent=time(NULL);
 			}
 		}
-                if (err != NULL)
-                {
-                  err->family = INTERNAL_ERROR;
-                  err->error  = NO_ERR;
-                }
+                SET_ERROR(err, INTERNAL_ERROR, NO_ERR);
 		return 1;
 	
 }
@@ -229,7 +208,7 @@ void* nu_client_thread_check(void *data)
         pthread_cleanup_push((pthread_cleanup_push_arg1_t)pthread_mutex_unlock, &session->check_count_mutex);
         pthread_cleanup_push((pthread_cleanup_push_arg1_t)clear_local_mutex, &check_mutex);
 	for(;;){
-		nu_client_real_check(session);
+		nu_client_real_check(session, NULL);
 	/* Do we need to do an other check ? */
 		pthread_mutex_lock(&(session->check_count_mutex));
 		if (session->count_msg_cond>0){
@@ -259,7 +238,7 @@ void* nu_client_thread_check(void *data)
  *
  * \return Number of authenticated packets, or negative number on failure
  */
-int nu_client_real_check(NuAuth * session)
+int nu_client_real_check(NuAuth *session, nuclient_error *err)
 {
 	conntable_t *new;
 	int nb_packets=0;
@@ -275,12 +254,13 @@ int nu_client_real_check(NuAuth * session)
 	prg_cache_clear();
 #endif
 
+	tcptable_free (session->ct);
 	if (nb_packets < 0){
 		/* error we ask client to exit */
 		ask_session_end(session);
+                SET_ERROR(err, INTERNAL_ERROR, UNKNOWN_ERR);
 		return nb_packets;
 	}
-	if (tcptable_free (session->ct) == 0) panic ("tcptable_free failed");
 	session->ct=new;
 
 	return nb_packets;

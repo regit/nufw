@@ -26,5 +26,14 @@
  *
  */
 
-int tcptable_read (NuAuth* session, conntable_t *ct);
+#ifndef TCPTABLE_H
+#define TCPTABLE_H
 
+int tcptable_init (conntable_t **ct);
+int tcptable_read (NuAuth * session,conntable_t *ct);
+int tcptable_add (conntable_t *ct, conn_t *c);
+void tcptable_free (conntable_t *ct);
+int tcptable_hash (conn_t *c);
+conn_t * tcptable_find (conntable_t *ct, conn_t *c);
+
+#endif

@@ -40,7 +40,6 @@
 #include <sasl/saslutil.h>
 #include <stdarg.h> /* va_list, va_start, ... */
 #include <proto.h>
-#include <jhash.h>
 #include "client.h"
 #include "security.h"
 
@@ -53,9 +52,6 @@ GCRY_THREAD_OPTION_PTHREAD_IMPL;
 #define REQUEST_CERT 0
 
 #include <sys/utsname.h>
-
-static int tcptable_hash (conn_t *c);
-static conn_t * tcptable_find (conntable_t *ct, conn_t *c);
 
 /* callbacks we support */
 int nu_getrealm(void *context __attribute__((unused)), int id,
@@ -205,120 +201,6 @@ void nu_exit_clean(NuAuth * session)
 	}
 	pthread_mutex_destroy(&(session->mutex));
 	free(session);
-}
-
-/**
- * tcptable_init ()
- *
- * Initialise a connection table (hashtable).
- */
-int tcptable_init (conntable_t **ct)
-{
-	int i;
-
-	(* ct) = (conntable_t *) calloc(1,sizeof(conntable_t));
-	assert (*ct != NULL);
-
-	for (i = 0; i < CONNTABLE_BUCKETS; i++)
-		(*ct)->buckets[i] = NULL;
-
-	return 1;
-}
-
-/*
- * tcptable_hash ()
- *
- * Simple hash function for connections.
- */
-static inline int tcptable_hash (conn_t *c)
-{
-	return (jhash_3words(c->lcl,
-				c->rmt,
-				(c->rmtp | c->lclp << 16),
-				32)) % CONNTABLE_BUCKETS;
-}
-
-/*
- * tcptable_add ()
- *
- * Add a connection to the connection table.
- */
-int tcptable_add (conntable_t *ct, conn_t *c)
-{
-	conn_t *old, *newc;
-	int bi;
-#if DEBUG
-	assert (ct != NULL);
-	assert (c != NULL);
-#endif
-
-	newc = (conn_t *) calloc (1,sizeof (conn_t));
-	if (!newc) {
-		panic ("memory exhausted");
-	}
-
-	c->createtime=time(NULL);
-	memcpy (newc, c, sizeof (conn_t));
-	bi = tcptable_hash (c);
-	old = ct->buckets[bi];
-	ct->buckets[bi] = newc;
-	ct->buckets[bi]->next = old;
-
-	return 1;
-}
-
-/*
- * tcptable_find ()
- *
- * Find a connection in a table, return connection if found, NULL otherwise.
- */
-static conn_t* tcptable_find (conntable_t *ct, conn_t *c)
-{
-	conn_t *bucket;
-#if DEBUG
-	assert (ct != NULL);
-	assert (c != NULL);
-#endif
-	bucket = ct->buckets[tcptable_hash (c)];
-	while (bucket != NULL) {
-		if ( (c->proto == bucket->proto) &&
-				(c->rmt == bucket->rmt) && (c->rmtp == bucket->rmtp) &&
-				(c->lcl == bucket->lcl) && (c->lclp == bucket->lclp)
-		   ) {
-			return bucket;
-		}
-		bucket = bucket->next;
-	}
-
-	return NULL;
-}
-
-/*
- * tcptable_free ()
- *
- * Free a connection table.
- */
-void tcptable_free (conntable_t *ct)
-{
-	int i;
-
-        if (ct == NULL)
-            return;
-
-	for (i = 0; i < CONNTABLE_BUCKETS; i++) {
-		conn_t *c0, *c1;
-
-		c0 = ct->buckets[i];
-		while (c0 != NULL) {
-			c1 = c0->next;
-			free (c0);
-			c0 = c1;
-		}
-		ct->buckets[i] = NULL;
-	}
-
-	/* free structure */
-	free(ct);
 }
 
 int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn)
