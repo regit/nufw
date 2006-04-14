@@ -39,7 +39,7 @@ void nu_exit_clean(NuAuth * session);
 int tcptable_init (conntable_t **ct);
 int tcptable_read (NuAuth * session,conntable_t *ct);
 int tcptable_add (conntable_t *ct, conn_t *c);
-int tcptable_free (conntable_t *ct);
+void tcptable_free (conntable_t *ct);
 int compare (NuAuth *session,conntable_t *old, conntable_t *new);
 
 void do_panic(const char *filename, unsigned long line, const char *fmt, ...);

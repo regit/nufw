@@ -153,9 +153,8 @@ typedef struct conntable {
 enum
 {
     ERROR_OK = 0,
-    ERROR_UNKNOWN = 1,
-    ERROR_LOGIN = 2,
-    ERROR_NETWORK = 3
+    ERROR_LOGIN = 1,
+    ERROR_NETWORK = 2
 };
 
 /* NuAuth structure */

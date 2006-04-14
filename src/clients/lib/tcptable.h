@@ -27,3 +27,4 @@
  */
 
 int tcptable_read (NuAuth* session, conntable_t *ct);
+

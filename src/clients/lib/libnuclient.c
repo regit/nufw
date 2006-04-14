@@ -298,12 +298,12 @@ static conn_t* tcptable_find (conntable_t *ct, conn_t *c)
  *
  * Free a connection table.
  */
-int tcptable_free (conntable_t *ct)
+void tcptable_free (conntable_t *ct)
 {
 	int i;
-#if DEBUG
-	assert (ct != NULL);
-#endif
+
+        if (ct == NULL)
+            return;
 
 	for (i = 0; i < CONNTABLE_BUCKETS; i++) {
 		conn_t *c0, *c1;
@@ -319,8 +319,6 @@ int tcptable_free (conntable_t *ct)
 
 	/* free structure */
 	free(ct);
-
-	return 1;
 }
 
 int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn)

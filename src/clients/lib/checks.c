@@ -250,14 +250,14 @@ void* nu_client_thread_check(void *data)
 }
 
 /**
- * Function that check connections table and send authentication packets
+ * Function that check connections table and send authentication packets:
+ *    - Read the list of connections and build a conntrack table 
+ *      (call to tcptable_read()) ;
+ *    - Initialize program list (/proc/ reading) ;
+ *    - Compare current table with old one (compare call) ;
+ *    - Free and return.
  *
- * -# read the list of connections and build a conntrack table (call to tcptable_read)
- * -# init program list (/proc/ reading) 
- * -# compare current table with old one (compare call)
- * -# free and return
- *
- * Return : Number of authenticated packets
+ * \return Number of authenticated packets, or negative number on failure
  */
 int nu_client_real_check(NuAuth * session)
 {
