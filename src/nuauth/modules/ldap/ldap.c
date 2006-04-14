@@ -106,6 +106,8 @@ G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
   /* init thread private stuff */
   params->ldap_priv = g_private_new ((GDestroyNotify)ldap_unbind);
 
+  module->params = params;
+
   return TRUE;
 }
 
