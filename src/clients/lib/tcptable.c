@@ -74,7 +74,8 @@ int parse_tcptable_file(NuAuth* session, conntable_t *ct, char *filename, FILE *
     if (*file == NULL) {
         *file = fopen (filename, "r");
         if (*file == NULL) {
-            panic ("Fail to open %s: %s", filename, strerror (errno));
+            printf ("Fail to open %s: %s", filename, strerror (errno));
+            return 0;
         }
     }
 
@@ -146,8 +147,7 @@ int parse_tcptable_file(NuAuth* session, conntable_t *ct, char *filename, FILE *
         c.proto=protocol;
         c.lcl=ntohl(c.lcl);
         c.rmt=ntohl(c.rmt);
-        if (tcptable_add (ct, &c) == 0)
-            return 0;
+        tcptable_add (ct, &c);
     }
     return 1;
 }
@@ -178,10 +178,11 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
       pthread_mutex_unlock(&(session->check_count_mutex));
   }
 
-  ok  = parse_tcptable_file(session, ct, "/proc/net/tcp", &fp, IPPROTO_TCP);
-  ok &= parse_tcptable_file(session, ct, "/proc/net/udp", &fq, IPPROTO_UDP);
-  return ok;
-
+  if (!parse_tcptable_file(session, ct, "/proc/net/tcp", &fp, IPPROTO_TCP))
+      return 0;
+  if (!parse_tcptable_file(session, ct, "/proc/net/udp", &fq, IPPROTO_UDP))
+      return 0;          
+  return 1;
 #elif defined(FREEBSD)
   conn_t c;
   int istcp;
@@ -318,7 +319,7 @@ inline int tcptable_hash (conn_t *c)
  *
  * Add a connection to the connection table.
  */
-int tcptable_add (conntable_t *ct, conn_t *c)
+void tcptable_add (conntable_t *ct, conn_t *c)
 {
 	conn_t *old, *newc;
 	int bi;
@@ -338,8 +339,6 @@ int tcptable_add (conntable_t *ct, conn_t *c)
 	old = ct->buckets[bi];
 	ct->buckets[bi] = newc;
 	ct->buckets[bi]->next = old;
-
-	return 1;
 }
 
 /*

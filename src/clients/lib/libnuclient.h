@@ -36,7 +36,7 @@
 
 void nu_exit_clean(NuAuth * session);
 
-int compare (NuAuth *session,conntable_t *old, conntable_t *new);
+int compare (NuAuth *session,conntable_t *old, conntable_t *new, nuclient_error *err);
 
 void do_panic(const char *filename, unsigned long line, const char *fmt, ...);
 

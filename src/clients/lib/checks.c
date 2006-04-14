@@ -242,23 +242,31 @@ int nu_client_real_check(NuAuth *session, nuclient_error *err)
 {
 	conntable_t *new;
 	int nb_packets=0;
-	if (tcptable_init (&new) == 0) panic ("tcptable_init failed");
-	if (tcptable_read (session,new) == 0) panic ("tcptable_read failed");
+	if (tcptable_init (&new) == 0)
+        {
+            SET_ERROR(err, INTERNAL_ERROR, MEMORY_ERR);
+            return -1;
+        }
+	if (tcptable_read (session,new) == 0)
+        {
+            SET_ERROR(err, INTERNAL_ERROR, TCPTABLE_ERR);
+            return -1;
+        }
 #ifdef LINUX
 	/* update cache for link between proc and socket inode */
 	prg_cache_load();
 #endif
-	nb_packets = compare (session,session->ct, new);
+	nb_packets = compare (session,session->ct, new, err);
 	/* free link between proc and socket inode */
 #ifdef LINUX
 	prg_cache_clear();
 #endif
 
 	tcptable_free (session->ct);
+
+        /* on error, we ask client to exit */
 	if (nb_packets < 0){
-		/* error we ask client to exit */
 		ask_session_end(session);
-                SET_ERROR(err, INTERNAL_ERROR, UNKNOWN_ERR);
 		return nb_packets;
 	}
 	session->ct=new;

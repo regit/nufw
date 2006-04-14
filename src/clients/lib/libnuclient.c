@@ -338,7 +338,7 @@ static int add_packet_to_send(NuAuth * session,conn_t** auth,int *count_p,conn_t
  * Return -1 if error (then disconnect is needed) or the number of 
  * authenticated packets if it has succeed
  */
-int compare (NuAuth * session,conntable_t *old, conntable_t *new)
+int compare (NuAuth * session,conntable_t *old, conntable_t *new, nuclient_error *err)
 {
 	int i;
 	int count=0;
@@ -991,36 +991,17 @@ const char* nuclient_strerror (nuclient_error *err)
       break;
     case INTERNAL_ERROR:
       switch (err->error){
-        case NOERR:
-          return "No error";
-          break;
-        case SESSION_NOT_CONNECTED_ERR:
-          return "Session not connected";
-          break;
-        case TIMEOUT_ERR:
-          return "Connection timeout";
-          break;
-        case DNS_RESOLUTION_ERR:
-          return "DNS resolution error";
-          break;
-        case NO_ADDR_ERR:
-          return "Address not recognized";
-          break;
-        case FILE_ACCESS_ERR:
-          return "File access error";
-          break;
-        case CANT_CONNECT_ERR:
-          return "Connection failed";
-          break;
-        case MEMORY_ERR:
-          return "No more memory";
-          break;
-        case UNKNOWN_ERR:
-          return "Unkown error";
-          break;
-        default:
-          return "Unknown internal error code";
-          break;
+        case NOERR: return "No error";
+        case SESSION_NOT_CONNECTED_ERR:  return "Session not connected";
+        case TIMEOUT_ERR:      return "Connection timeout";
+        case DNS_RESOLUTION_ERR: return "DNS resolution error";
+        case NO_ADDR_ERR:      return "Address not recognized";
+        case FILE_ACCESS_ERR:  return "File access error";
+        case CANT_CONNECT_ERR: return "Connection failed";
+        case MEMORY_ERR:       return "No more memory";
+        case TCPTABLE_ERR:     return "Unable to read connection table";
+        case SEND_ERR:         return "Unable to send packet to nuauth";
+        default: return "Unknown internal error code";
       }
     break;
     default:

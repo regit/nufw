@@ -214,7 +214,9 @@ enum
     NO_ADDR_ERR = 5,                 /** Address not recognized */
     FILE_ACCESS_ERR = 6,             /** File access error */
     CANT_CONNECT_ERR  = 7,           /** Connection failed */
-    MEMORY_ERR  = 8                  /** No more memory */
+    MEMORY_ERR  = 8,                 /** No more memory */
+    TCPTABLE_ERR  = 9,               /** Fail to read connection table */
+    SEND_ERR = 10                    /** Fail to send packet to nuauth */
 };
 
 /* libnuclient return code structure */
