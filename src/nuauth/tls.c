@@ -22,6 +22,11 @@
 #include <sys/time.h>
 #include <time.h>
 #include <errno.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
+
 
 /* These are global */
 struct nuauth_tls_t nuauth_tls; 
@@ -158,8 +163,12 @@ void refresh_crl_file()
 {
     nuauth_tls.crl_refresh_counter++;
     if (nuauth_tls.crl_refresh == nuauth_tls.crl_refresh_counter){
-	gnutls_certificate_set_x509_crl_file(nuauth_tls.x509_cred, nuauth_tls.crl_file, 
-		GNUTLS_X509_FMT_PEM);
+	    struct stat stats;
+	    stat(nuauth_tls.crl_file,&stats);
+	    if (nuauth_tls.crl_file_mtime<stats.st_mtime){
+		    gnutls_certificate_set_x509_crl_file(nuauth_tls.x509_cred, nuauth_tls.crl_file, 
+				    GNUTLS_X509_FMT_PEM);
+	    }
 	nuauth_tls.crl_refresh_counter=0;
     }
 }

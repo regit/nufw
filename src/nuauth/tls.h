@@ -90,6 +90,7 @@ struct nuauth_tls_t
     int crl_refresh;
     int crl_refresh_counter;
     gchar* crl_file;
+    time_t crl_file_mtime;
     gnutls_dh_params dh_params;
 };
 
