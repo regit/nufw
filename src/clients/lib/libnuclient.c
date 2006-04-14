@@ -71,7 +71,11 @@ int nu_getrealm(void *context __attribute__((unused)), int id,
 	return SASL_OK;
 }
 
-
+/**
+ * SASL callback used to get username and password
+ *
+ * \return SASL_OK if ok, EXIT_FAILURE on error
+ */
 int nu_get_usersecret(sasl_conn_t *conn __attribute__((unused)),
 		void *context __attribute__((unused)), int id,
 		sasl_secret_t **psecret)
@@ -525,15 +529,6 @@ int compare (NuAuth * session,conntable_t *old, conntable_t *new)
 		}
 	}
 	return nb_packets;
-}
-
-int nu_client_error(NuAuth * session, nuclient_error *err)
-{
-        SET_ERROR(err, INTERNAL_ERROR, NO_ERR);
-	if (session)
-		return session->error;
-	else
-		return ERROR_UNKNOWN ;
 }
 
 static gnutls_dh_params dh_params;

@@ -164,7 +164,6 @@ typedef struct {
 	/*--------------- PUBLIC MEMBERS -------------------*/
 	u_int8_t protocol; /** Version of nuauth protocol (equals to #PROTO_VERSION) */
 
-	unsigned long userid; /** User identifier */
 	unsigned long localuserid; /** Local user identifier (getuid()) */
 	char *username;  /** Username, stored in UTF-8 */
 	char *password;  /** Password, stored in UTF-8 */
@@ -177,7 +176,6 @@ typedef struct {
 	char* (*tls_passwd_callback)(); /** Callback used to get TLS password */
 	
 	int socket;              /** TCP socket used to exchange message with nuauth */
-        int error;
 	struct sockaddr_in adr_srv; /** nuauth server address */
 	conntable_t *ct;         /** connection table */
 	unsigned long packet_id; /** packet sequence number (start at zero) */
@@ -229,7 +227,6 @@ typedef struct
 
 /* Exported functions */
 int	nu_client_check(NuAuth * session, nuclient_error *err);
-int     nu_client_error(NuAuth * session, nuclient_error *err);
 void 	nu_client_free(NuAuth *session, nuclient_error *err);
 
 int     nuclient_error_init(nuclient_error **err);
