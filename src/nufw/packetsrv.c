@@ -466,7 +466,6 @@ void shutdown_tls()
     pthread_mutex_lock(&tls.mutex);
 
     pthread_cancel(tls.auth_server);
-    pthread_cancel(tls.conntrack_event_handler);
 
     close_tls_session();
 
@@ -554,14 +553,7 @@ int auth_request_send(uint8_t type, uint32_t packet_id, char* payload, unsigned 
             if (pthread_create(&tls.auth_server, &attr, authsrv, NULL) == EAGAIN){
                 exit(EXIT_FAILURE);
             }
-#ifdef HAVE_LIBCONNTRACK
-            if (handle_conntrack_event){
-                if (pthread_create(&(tls.conntrack_event_handler),NULL,conntrack_event_handler,NULL) == EAGAIN){
-                    exit(EXIT_FAILURE);
-                }
-            }
-#endif
-        } else {
+       } else {
             return 0;
         }
     }

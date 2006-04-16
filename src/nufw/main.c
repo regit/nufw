@@ -186,6 +186,14 @@ void create_thread()
                 "Fail to create thread!");
         exit(EXIT_FAILURE);
     }
+#ifdef HAVE_LIBCONNTRACK
+    if (handle_conntrack_event){
+	if (pthread_create(&(tls.conntrack_event_handler),NULL,conntrack_event_handler,NULL) == EAGAIN){
+	    exit(EXIT_FAILURE);
+	}
+    }
+#endif
+
 }    
 
 /**

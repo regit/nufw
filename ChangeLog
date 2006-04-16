@@ -58,7 +58,8 @@
 	- NuFW : ICMP reject via decision 3.
 	- xml_defs : new module for periods definition
 	- nuauth : add nuauth_module_certificate_check and
-	nuauth_module_certificate_to_uid configuration variables
+	nuauth_module_certificate_to_uid configuration variables (work
+	sponsorised by EOLE)
 	- x509_std : new module with standard check and function for
 	nuauth_module_certificate_check and nuauth_module_certificate_to_uid
 	- nuauth : modify config file parsing to avoid memory leak

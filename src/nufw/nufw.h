@@ -102,7 +102,9 @@ struct nuauth_conn {
         unsigned char auth_server_running;
         pthread_t auth_server;
         pthread_mutex_t auth_server_mutex;
+#ifdef HAVE_LIBCONNTRACK
         pthread_t conntrack_event_handler;
+#endif
         gnutls_certificate_credentials xcred;
 };
 
