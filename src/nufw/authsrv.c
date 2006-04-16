@@ -83,7 +83,7 @@ void auth_process_answer(char *dgram, int dgram_size)
                     user_id);
             /* we put the userid mark at the end of the mark, not changing the 16 first big bits */
             nfmark = (nfmark & 0xffff0000 ) | user_id;
-            IPQ_SET_VWMARK(packet_id, NF_ACCEPT, nfmark); 
+            IPQ_SET_VWMARK(packet_id, NF_ACCEPT, htonl(nfmark)); 
         } else {
             IPQ_SET_VERDICT(packet_id, NF_ACCEPT);
         }
