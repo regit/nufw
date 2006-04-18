@@ -67,8 +67,8 @@ static int treat_nufw_request (nufw_session_t *c_session)
         if (current_conn != NULL){
             current_conn->socket=0;
             current_conn->tls=c_session;
+            
             /* gonna feed the birds */
-
             if (current_conn->state == AUTH_STATE_HELLOMODE){
                 debug_log_message(DEBUG, AREA_GW,
                           "(*) NuFW auth request (hello mode): packetid=%u",

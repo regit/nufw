@@ -214,6 +214,7 @@ connection_t* authpckt_new_connection(unsigned char *dgram, unsigned int dgram_s
     /* check if proto is in Hello mode list (when hello authentication is used) */
     if ( nuauthconf->hello_authentication &&  localid_authenticated_protocol(connection->tracking.protocol) ) {
         connection->state = AUTH_STATE_HELLOMODE;
+        return connection;
     } else {
         connection->state = AUTH_STATE_AUTHREQ;
     }
