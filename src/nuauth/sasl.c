@@ -475,7 +475,13 @@ int sasl_parse_user_os(user_session_t* c_session, char *buf, int buf_size)
     /* should always be true for the moment */
     if (osfield->option == OS_SRV){
         os_strings=g_strsplit(dec_buf,";",3);
-        if (os_strings[0] && (strlen(os_strings[0]) < 128) ){
+        if (os_strings[0] == NULL || os_strings[1] == NULL || os_strings[2] == NULL)
+        {
+            g_strfreev(os_strings);
+            g_free(dec_buf);
+            return SASL_BADAUTH;
+        }
+        if (strlen(os_strings[0]) < 128) {
             c_session->sysname=string_escape(os_strings[0]);
             if (c_session->sysname==NULL){
                 const char *err = inet_ntop( AF_INET, &remote_inaddr, address, sizeof(address));
@@ -488,7 +494,7 @@ int sasl_parse_user_os(user_session_t* c_session, char *buf, int buf_size)
         } else {
             c_session->sysname=g_strdup(UNKNOWN_STRING);
         }
-        if (os_strings[1] && (strlen(os_strings[1]) < 128) )   {
+        if (strlen(os_strings[1]) < 128) {
             c_session->release=string_escape(os_strings[1]);
             if (c_session->release==NULL){
                 const char *err = inet_ntop( AF_INET, &remote_inaddr, address, sizeof(address));
@@ -501,7 +507,7 @@ int sasl_parse_user_os(user_session_t* c_session, char *buf, int buf_size)
         } else {
             c_session->release=g_strdup(UNKNOWN_STRING);
         }
-        if (os_strings[2] && (strlen(os_strings[2]) < 128) )  {
+        if (strlen(os_strings[2]) < 128) {
             c_session->version=string_escape(os_strings[2]);
             if (c_session->version==NULL){
                 const char *err = inet_ntop( AF_INET, &remote_inaddr, address, sizeof(address));
