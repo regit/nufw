@@ -427,13 +427,12 @@ int sasl_parse_user_os(user_session_t* c_session, char *buf, int buf_size)
         return SASL_FAIL;
     }
     
-    dec_buf_size = ntohs(osfield->length) *4 - 32;
-    if ( dec_buf_size > 1024 ) {
+    dec_buf_size = ntohs(osfield->length) *4 ;
+    if ( dec_buf_size > 1024 || dec_buf_size <= 0) {
         const char *err = inet_ntop( AF_INET, &remote_inaddr, address, sizeof(address));
         if (err == NULL)
             SECURE_STRNCPY(address, "<inet_ntop error>", sizeof(address));
-        /* it's a joke it's far too long */
-        log_message(WARNING, AREA_USER, "error osfield from %s is too long, announced %d",address,ntohs(osfield->length));
+        log_message(WARNING, AREA_USER, "error osfield from %s is uncorrect, announced %d",address,ntohs(osfield->length));
         /* One more gryzor hack*/
         if ( dec_buf_size > 4096 ) 
           log_message(WARNING, AREA_USER, "   Is %s running a 1.0 client?",address);
