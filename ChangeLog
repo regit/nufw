@@ -1,4 +1,4 @@
-1.2.0-beta1 (2006/04/04)
+2.0-beta1 (2006/04/18)
 	- nuauth : bugfix on the PostGreSQL log module thanks to Julian Reich
 	- nuauth :fix bug in max client number test
 	- nuauth|nufw : really close socket in all cases now
@@ -69,6 +69,8 @@
 	- nuauth : nuauth_reject_authenticated_drop option is now here to
 	choose if we drop or reject ACL that match IPV4 header but when user
 	is not in the group.
+	- nuauth : period checking is now done in main code (not in module
+	anymore) to avoid problem with cache.
 
 1.1.3 (2006/01/25)
 	- nutrackd : PostGreSQL support

@@ -842,7 +842,6 @@ G_MODULE_EXPORT GSList* acl_check(connection_t* element,gpointer params)
   int initstatus;
   uint32_t src_ip, dst_ip;
   static GStaticMutex plaintext_initmutex = G_STATIC_MUTEX_INIT;
-  time_t periodend = -1;
 
   /* init has only to be done once */
   g_static_mutex_lock (&plaintext_initmutex);
@@ -1042,21 +1041,7 @@ G_MODULE_EXPORT GSList* acl_check(connection_t* element,gpointer params)
       }
       /* period checking
        * */
-      if (p_acl->period) {
-          debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
-                "checking time against acl %s", p_acl->period);
-          periodend=get_end_of_period_for_time_t(p_acl->period,time(NULL));
-          if (periodend==0){
-              debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
-                "not valid time for %s", p_acl->period);
-              /* this is not a match */
-              continue;
-          } else {
-              debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
-                "end of period for %s in %ld", p_acl->period,periodend);
-            
-          }
-      }
+
       /*  We have a match 8-) */
       log_message(VERBOSE_DEBUG, AREA_MAIN,
               "[plaintext] matching with decision %d", p_acl->decision);
@@ -1064,7 +1049,11 @@ G_MODULE_EXPORT GSList* acl_check(connection_t* element,gpointer params)
       g_assert(this_acl);
       this_acl->answer = p_acl->decision;
       this_acl->groups = g_slist_copy(p_acl->groups);
-      this_acl->expire = periodend;
+      if (p_acl->period) {
+          this_acl->period = g_strdup(p_acl->period);
+      } else {
+          this_acl->period = NULL;
+      }
       g_list = g_slist_prepend(g_list, this_acl);
   }
 

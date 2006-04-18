@@ -325,21 +325,17 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element,gpointer params_p)
   if (ldap_count_entries(ld,res) >= 1) {
       result = ldap_first_entry(ld,res);
       while ( result ) {
-	  time_t periodend = -1;
-	  /* get period */
+          /* get period */
           attrs_array=ldap_get_values(ld, result, "TimeRange");
-	  if (attrs_array && *attrs_array){
-          	periodend = get_end_of_period_for_time_t(*attrs_array,time(NULL));
-	  } 
-	  if (periodend == 0){
-	        continue;
-	  }
-	  
+          if (attrs_array && *attrs_array){
+              this_acl->period=g_strdup(*attrs_array);
+          } 
+
           /* allocate a new acl_group */
           this_acl=g_new0(struct acl_group,1);
           g_assert(this_acl);
-          this_acl->groups=NULL;
-	  this_acl->expire=periodend;
+          this_acl->groups = NULL;
+          this_acl->period = NULL;
 	 
           /* get decision */
           attrs_array=ldap_get_values(ld, result, "Decision");

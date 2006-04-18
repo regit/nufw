@@ -413,7 +413,7 @@ typedef enum {
  * 
  * \param element A connection
  * \param place Place where the connection is stored
- *              (PACKET_ALONE or PACKET_IN_HASH
+ *              (PACKET_ALONE or PACKET_IN_HASH)
  * \return Returns -1 if fails, 1 otherwise
  */
 gint take_decision(connection_t *element, packet_place_t place) 
@@ -466,16 +466,26 @@ gint take_decision(connection_t *element, packet_place_t place)
                             }
                         }
                         if (answer == DECISION_ACCEPT){
-                            if ( (expire == -1) || 
-                                    ( (((struct acl_group *)(parcours->data))->expire != -1)
-                                      &&
-                                      (expire !=-1) 
-                                      &&
-                                      (expire > ((struct acl_group *)(parcours->data))->expire 
-                                      )
-                                    )) {
+                            time_t periodend=-1;
+                            /* compute end of period for this acl */
+                            if (((struct acl_group *)(parcours->data))->period){
+                                periodend=get_end_of_period_for_time_t(((struct acl_group *)(parcours->data))->period,time(NULL));
+                                if (periodend==0){
+                                    /* this is not a correct time going to drop */
+                                    answer = DECISION_NODECIDE;
+                                    test = TEST_DECIDED;
+                                } else {
+                                    debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+                                            "end of period for %s in %ld", ((struct acl_group *)(parcours->data))->period,periodend);
+
+                                }
+                            }
+                            if ( 
+                                    (expire == -1) || 
+                                    ((periodend != -1) && (expire !=-1) && (expire > periodend ))
+                               ) {
                                 debug_log_message(DEBUG, AREA_MAIN, " ... modifying expire");
-                                expire =  ((struct acl_group *)(parcours->data))->expire;
+                                expire =  periodend;
                             }
                         }
                     }

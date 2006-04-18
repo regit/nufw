@@ -80,7 +80,7 @@ typedef struct {
 struct acl_group {
   GSList *groups;
   decision_t answer;
-  time_t expire;
+  gchar *period;
 };
 
 /**

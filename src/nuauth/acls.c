@@ -169,6 +169,7 @@ void free_acl_key(gpointer datas)
 void free_acl_group(gpointer data,gpointer userdata){
 	if (data){
 		g_slist_free(((struct acl_group*)(data))->groups);
+		g_free(((struct acl_group*)(data))->period);
 		g_free(data);
 	}
 }
