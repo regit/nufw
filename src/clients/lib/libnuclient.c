@@ -279,6 +279,7 @@ int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn, nuclient_error *
 				return SASL_OK;
                                 break;
 			case 'N':
+                                SET_ERROR(err,INTERNAL_ERROR,BAD_CREDENTIALS_ERR);
 				return SASL_BADAUTH;
                                 break;
 			case 'C': /* continue authentication */
@@ -1026,6 +1027,7 @@ const char* nuclient_strerror (nuclient_error *err)
         case MEMORY_ERR:       return "No more memory";
         case TCPTABLE_ERR:     return "Unable to read connection table";
         case SEND_ERR:         return "Unable to send packet to nuauth";
+        case BAD_CREDENTIALS_ERR: return "Bad credentials";
 /*        case UNKNOWN_ERR:       return "Unknown error";*/
         default: return "Unknown internal error code";
       }

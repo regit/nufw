@@ -27,7 +27,7 @@ endif
 config.status: configure
 	dh_testdir
 	# Add here commands to configure the package.
-	CFLAGS="$(CFLAGS)" ./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --prefix=/usr --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info --localstatedir=/var --sysconfdir=/etc/nufw/ --with-mysql-log --with-pgsql-log --with-system-auth --with-ldap --with-gdbm --with-ident
+	CFLAGS="$(CFLAGS)" ./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --prefix=/usr --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info --localstatedir=/var --sysconfdir=/etc/nufw20/ --with-mysql-log --with-pgsql-log --with-system-auth --with-ldap --with-gdbm --with-ident
 
 build: build-stamp
 
@@ -68,6 +68,7 @@ install: build
 #	cp $(CURDIR)/conf/nufw.init $(CURDIR)/debian/tmp/etc/init.d/nufw
 #	cp $(CURDIR)/conf/nuauth $(CURDIR)/debian/tmp/etc/init.d/nuauth
 #	chmod 755 $(CURDIR)/debian/tmp/etc/init.d/*
+	ln -s $(CURDIR)/debian/tmp/usr/lib/nuauth $(CURDIR)/debian/tmp/usr/lib/nuauth20
 
 
 # Build architecture-independent files here.
@@ -91,12 +92,12 @@ binary-arch: build install
 	dh_installinit -u"start 40 2 3 4 5 . stop 89 0 1 6 ."
 #	dh_installcron
 #	dh_installinfo
-	dh_installman -pnufw doc/nufw.1
-	dh_installman -pnufw doc/nufw_dbm.1
-	dh_installman -pnuauth doc/nuauth.1
-	dh_installman -pnutcpc doc/nutcpc.1
-	dh_installman -pnuauth-utils doc/nuaclgen.1
-	dh_installman -pnuauth-utils doc/nutop.1
+	dh_installman -pnufw20 doc/nufw.1
+	dh_installman -pnufw20 doc/nufw_dbm.1
+	dh_installman -pnuauth20 doc/nuauth.1
+	dh_installman -pnutcpc20 doc/nutcpc.1
+	dh_installman -pnuauth20-utils doc/nuaclgen.1
+	dh_installman -pnuauth20-utils doc/nutop.1
 	dh_link
 	dh_strip
 	dh_compress

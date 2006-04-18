@@ -216,7 +216,8 @@ enum
     CANT_CONNECT_ERR  = 7,           /** Connection failed */
     MEMORY_ERR  = 8,                 /** No more memory */
     TCPTABLE_ERR  = 9,               /** Fail to read connection table */
-    SEND_ERR = 10                    /** Fail to send packet to nuauth */
+    SEND_ERR = 10,                   /** Fail to send packet to nuauth */
+    BAD_CREDENTIALS_ERR = 11
 };
 
 /* libnuclient return code structure */
