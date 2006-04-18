@@ -203,7 +203,7 @@ void nu_exit_clean(NuAuth * session)
 	free(session);
 }
 
-int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn)
+int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn, nuclient_error *err)
 {
 	char buf[8192];
 	const char *data;
@@ -215,12 +215,16 @@ int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn)
 	/* get the capability list */
 	len = gnutls_record_recv(session, buf, sizeof buf);
 	if (len < 0)
+        {
+                SET_ERROR(err, GNUTLS_ERROR, len);
 		return EXIT_FAILURE;
+        }
 
 	r = sasl_client_start(conn, buf, NULL, &data, (unsigned int *)&len, &chosenmech);
 	if (r != SASL_OK && r != SASL_CONTINUE) {
 		printf("starting SASL negotiation");
 		printf("\n%s\n", sasl_errdetail(conn));
+                SET_ERROR(err, SASL_ERROR, r);
 		return EXIT_FAILURE;
 	}
 
@@ -232,23 +236,31 @@ int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn)
         if (ret < 0)
         {
             printf("gnutls_record send problem 1 : %s\n",gnutls_strerror(ret));
+            SET_ERROR(err,GNUTLS_ERROR, ret);
+            return EXIT_FAILURE;
         }
 	if(data) {
 		ret = gnutls_record_send(session, "Y", 1);
                 if (ret < 0)
                 {
                   printf("gnutls_record send problem Y : %s\n",gnutls_strerror(ret));
+                  SET_ERROR(err,GNUTLS_ERROR, ret);
+                  return EXIT_FAILURE;
                 }
 		ret = gnutls_record_send(session, data, len);
                 if (ret < 0)
                 {
                   printf("gnutls_record send problem Y1 : %s\n",gnutls_strerror(ret));
+                  SET_ERROR(err,GNUTLS_ERROR, ret);
+                  return EXIT_FAILURE;
                 }
 	} else {
 		ret = gnutls_record_send(session, "N", 1);
                 if (ret < 0)
                 {
                   printf("gnutls_record send problem N : %s\n",gnutls_strerror(ret));
+                  SET_ERROR(err,GNUTLS_ERROR, ret);
+                  return EXIT_FAILURE;
                 }
 	}
 
@@ -259,25 +271,33 @@ int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn)
 		len = gnutls_record_recv(session, buf, 1);
 		if (len < 0){
 			return EXIT_FAILURE;
+                        SET_ERROR(err,GNUTLS_ERROR, len);
+                        return EXIT_FAILURE;
 		}
 		switch (buf[0]) {
 			case 'O':
 				return SASL_OK;
+                                break;
 			case 'N':
 				return SASL_BADAUTH;
+                                break;
 			case 'C': /* continue authentication */
 				break;
 			default:
+                                SET_ERROR(err,INTERNAL_ERROR,UNKNOWN_ERR);
 				return EXIT_FAILURE;
+                                break;
 		}
 		
 		memset(buf,0,sizeof buf);
 		len = gnutls_record_recv(session, buf, sizeof buf);
 		if (len < 0){
+                        SET_ERROR(err,GNUTLS_ERROR,len);
 			return EXIT_FAILURE;
 		}
 		r = sasl_client_step(conn, buf, len, NULL, &data, (unsigned int *)&len);
 		if (r != SASL_OK && r != SASL_CONTINUE) {
+                        SET_ERROR(err,SASL_ERROR,r);
 			if (r == SASL_INTERACT){
 				return EXIT_FAILURE;
 			}
@@ -292,15 +312,20 @@ int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn)
                         if (ret < 0)
                         {
                           printf("gnutls_record_send problem 2 : %s\n",gnutls_strerror(ret));
+                          SET_ERROR(err,SASL_ERROR,ret);
+                          return EXIT_FAILURE;
                         }
 		} else {
 			ret = gnutls_record_send(session, "", 1);
                         if (ret < 0)
                         {
                           printf("gnutls_record_send problem 3 : %s\n",gnutls_strerror(ret));
+                          SET_ERROR(err,SASL_ERROR,ret);
+                          return EXIT_FAILURE;
                         }
 		}
 	}
+        SET_ERROR(err,INTERNAL_ERROR,UNKNOWN_ERR);
 	return EXIT_FAILURE;
 }
 
@@ -732,10 +757,10 @@ int init_sasl(NuAuth * session, nuclient_error *err)
 	/* set required security properties here
 	   sasl_setprop(conn, SASL_SEC_PROPS, &secprops); */
 
-	ret = mysasl_negotiate(session->tls, conn);
+	ret = mysasl_negotiate(session->tls, conn,err);
 	if (ret != SASL_OK) {
 		errno=EACCES;
-        SET_ERROR(err, SASL_ERROR, ret);
+/*        SET_ERROR(err, SASL_ERROR, ret); */
 		return 0;
 	}
 
@@ -1001,6 +1026,7 @@ const char* nuclient_strerror (nuclient_error *err)
         case MEMORY_ERR:       return "No more memory";
         case TCPTABLE_ERR:     return "Unable to read connection table";
         case SEND_ERR:         return "Unable to send packet to nuauth";
+/*        case UNKNOWN_ERR:       return "Unknown error";*/
         default: return "Unknown internal error code";
       }
     break;
