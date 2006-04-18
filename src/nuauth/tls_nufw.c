@@ -56,7 +56,13 @@ static int treat_nufw_request (nufw_session_t *c_session)
     dgram_size = gnutls_record_recv(*(c_session->tls), dgram, CLASSIC_NUFW_PACKET_SIZE) ;
     g_mutex_unlock(c_session->tls_lock);
     if (  dgram_size > 0 ){
-        connection_t *current_conn = authpckt_decode(dgram , (unsigned int)dgram_size);
+        connection_t *current_conn;
+        int ret = authpckt_decode(dgram , (unsigned int)dgram_size, &current_conn);
+        if (ret == 0)
+        {
+            return EOF;
+        }
+        
         if (current_conn != NULL){
             current_conn->socket=0;
             current_conn->tls=c_session;
@@ -78,16 +84,6 @@ static int treat_nufw_request (nufw_session_t *c_session)
                 g_async_queue_push (nuauthdatas->connections_queue,
                         current_conn);
             }
-        } else {
-            if ( ! ( ( ((nufw_to_nuauth_message_header_t *)dgram)->msg_type == AUTH_CONTROL )
-                    || ( ( (nufw_to_nuauth_message_header_t *)dgram)->msg_type == AUTH_CONN_DESTROY ) 
-                    || ( ( (nufw_to_nuauth_message_header_t *)dgram)->msg_type == AUTH_CONN_UPDATE ) 
-               )
-                    )
-                log_message (SERIOUS_WARNING, AREA_PACKET,
-                    "Can't parse nufw packet, this IS bad (got msg type %d)!\n",
-                    ((nufw_to_nuauth_message_header_t *)dgram)->msg_type
-                    );
         }
     } else {
         g_message("nufw failure at %s:%d",__FILE__,__LINE__);

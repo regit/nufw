@@ -350,18 +350,18 @@ void authpckt_conntrack (unsigned char *dgram, unsigned int dgram_size)
  * \param dgram_size Size of the datagram (in bytes)
  * \return Pointer to new connection or NULL
  */
-connection_t* authpckt_decode(unsigned char *dgram, unsigned int dgram_size)
+int authpckt_decode(unsigned char *dgram, unsigned int dgram_size, connection_t** conn)
 {
     nufw_to_nuauth_message_header_t *header;
 
     /* Check message header size */
     if (dgram_size < sizeof(nufw_to_nuauth_message_header_t))
-        return NULL;
+        return 0;
     
     /* Check protocol version */
     header = (nufw_to_nuauth_message_header_t *)dgram;
     if (header->protocol_version != PROTO_VERSION)
-        return NULL;
+        return 0;
 
     /* Check if message length looks correct */
     if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET)){
@@ -377,16 +377,19 @@ connection_t* authpckt_decode(unsigned char *dgram, unsigned int dgram_size)
     switch (header->msg_type){
         case AUTH_REQUEST:
         case AUTH_CONTROL:
-            return authpckt_new_connection(dgram, dgram_size);
+            *conn = authpckt_new_connection(dgram, dgram_size);
+            break;
             
         case AUTH_CONN_DESTROY:
         case AUTH_CONN_UPDATE:
             authpckt_conntrack(dgram, dgram_size);
-            return NULL;
+            *conn = NULL;
+            break;
 
         default:
             log_message(VERBOSE_DEBUG, AREA_PACKET, "Not for us");
+            return 0;
     }
-    return NULL;
+    return 1;
 }
 
