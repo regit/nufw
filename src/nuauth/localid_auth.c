@@ -50,16 +50,18 @@ void localid_insert_message(connection_t *pckt,
             while(g_hash_table_lookup(localid_auth_hash,GINT_TO_POINTER(randomid))){
                 randomid++;
             }
-
-            /* add element to hash with computed key */
-            g_hash_table_insert(localid_auth_hash,GINT_TO_POINTER(randomid),pckt);
             /* send message to clients */
             ((struct nuv2_srv_helloreq*)global_msg->msg)->helloid = randomid;
             global_msg->addr = pckt->tracking.saddr;
             global_msg->found = FALSE;
-            warn_clients(global_msg);
+            /* if return is 1 we have somebody connected */
+            if (warn_clients(global_msg)){
+                /* add element to hash with computed key */
+                g_hash_table_insert(localid_auth_hash,GINT_TO_POINTER(randomid),pckt);
+            } else {
+                free_connection(pckt);
+            }
             break;
-
         case AUTH_STATE_USERPCKT:
             /* search in struct */
             element = (connection_t*) g_hash_table_lookup (localid_auth_hash,(GSList*)(pckt->packet_id)->data);
@@ -67,7 +69,6 @@ void localid_insert_message(connection_t *pckt,
             if (element){
                 /* TODO : do a check on saddr */
                 if ( (element->tracking.saddr == pckt->tracking.saddr ) || 1 ){	
-
                     element->state=AUTH_STATE_HELLOMODE;	
                     element->user_id=pckt->user_id;
                     element->username=pckt->username;
