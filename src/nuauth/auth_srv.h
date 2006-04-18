@@ -72,6 +72,14 @@
 #include <locale.h>
 #include <sys/time.h>
 
+typedef enum 
+{   
+    NU_EXIT_ERROR,
+    NU_EXIT_OK,
+    NU_EXIT_NO_RETURN
+} nu_error_t;
+
+
 /* NUFW Protocol */
 #include <proto.h>
 

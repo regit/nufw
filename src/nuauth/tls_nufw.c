@@ -49,7 +49,7 @@ static int treat_nufw_request (nufw_session_t *c_session)
     int dgram_size;
 
     if (c_session == NULL)
-        return 1;
+        return NU_EXIT_OK;
     
     /* copy packet datas */
     g_mutex_lock(c_session->tls_lock);
@@ -58,42 +58,42 @@ static int treat_nufw_request (nufw_session_t *c_session)
     if (  dgram_size > 0 ){
         connection_t *current_conn;
         int ret = authpckt_decode(dgram , (unsigned int)dgram_size, &current_conn);
-        if (ret == 0)
-        {
-            g_atomic_int_dec_and_test(&(c_session->usage));
-            return EOF;
-        }
-        
-        if (current_conn != NULL){
-            current_conn->socket=0;
-            current_conn->tls=c_session;
-            
-            /* gonna feed the birds */
-            if (current_conn->state == AUTH_STATE_HELLOMODE){
-                debug_log_message(DEBUG, AREA_GW,
-                          "(*) NuFW auth request (hello mode): packetid=%u",
-                          (uint32_t)GPOINTER_TO_UINT(current_conn->packet_id->data));
-                struct internal_message *message = g_new0(struct internal_message,1);
-                message->type=INSERT_MESSAGE;
-                message->datas=current_conn;
-                current_conn->state = AUTH_STATE_AUTHREQ;
-                g_async_queue_push (nuauthdatas->localid_auth_queue,message);
-            } else {
-                debug_log_message(DEBUG, AREA_GW,
-                          "(*) NuFW auth request (hello mode): packetid=%u",
-                          (uint32_t)GPOINTER_TO_UINT(current_conn->packet_id->data));
-                g_async_queue_push (nuauthdatas->connections_queue,
-                        current_conn);
-            }
-        } else {
-            g_atomic_int_dec_and_test(&(c_session->usage));
+        switch (ret){
+            case NU_EXIT_ERROR:
+                g_atomic_int_dec_and_test(&(c_session->usage));
+                return NU_EXIT_ERROR;
+            case NU_EXIT_OK:
+                if (current_conn != NULL){
+                    current_conn->socket=0;
+                    current_conn->tls=c_session;
+
+                    /* gonna feed the birds */
+                    if (current_conn->state == AUTH_STATE_HELLOMODE){
+                        debug_log_message(DEBUG, AREA_GW,
+                                "(*) NuFW auth request (hello mode): packetid=%u",
+                                (uint32_t)GPOINTER_TO_UINT(current_conn->packet_id->data));
+                        struct internal_message *message = g_new0(struct internal_message,1);
+                        message->type=INSERT_MESSAGE;
+                        message->datas=current_conn;
+                        current_conn->state = AUTH_STATE_AUTHREQ;
+                        g_async_queue_push (nuauthdatas->localid_auth_queue,message);
+                    } else {
+                        debug_log_message(DEBUG, AREA_GW,
+                                "(*) NuFW auth request (hello mode): packetid=%u",
+                                (uint32_t)GPOINTER_TO_UINT(current_conn->packet_id->data));
+                        g_async_queue_push (nuauthdatas->connections_queue, current_conn);
+                    }
+                } 
+                return NU_EXIT_OK;
+            case NU_EXIT_NO_RETURN:
+                g_atomic_int_dec_and_test(&(c_session->usage));
         }
     } else {
         g_message("nufw failure at %s:%d",__FILE__,__LINE__);
         g_atomic_int_dec_and_test(&(c_session->usage));
-        return EOF;
+        return NU_EXIT_ERROR;
     }
-    return 1;
+    return NU_EXIT_OK;
 }
 
 /**
@@ -263,7 +263,7 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex *mutex)
                 debug_log_message(VERBOSE_DEBUG, AREA_GW, "nufw activity on socket %d",c);
                 c_session=g_hash_table_lookup( nufw_servers , GINT_TO_POINTER(c));
                 g_atomic_int_inc(&(c_session->usage));
-                if (treat_nufw_request(c_session) == EOF) {
+                if (treat_nufw_request(c_session) != NU_EXIT_OK) {
                     /* get session link with c */
                     debug_log_message(DEBUG, AREA_GW, "nufw server disconnect on %d",c);
                     FD_CLR(c,&context->tls_rx_set);

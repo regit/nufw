@@ -349,20 +349,23 @@ void authpckt_conntrack (unsigned char *dgram, unsigned int dgram_size)
  * 
  * \param dgram Pointer to datagram
  * \param dgram_size Size of the datagram (in bytes)
- * \return Pointer to new connection or NULL
+ * \return 
+ *   - #NU_EXIT_ERROR if failure
+ *   - #NU_EXIT_OK if ok and conn created
+ *   - #NU_EXIT_NO_WORK if no conn is needed but work is ok
  */
-int authpckt_decode(unsigned char *dgram, unsigned int dgram_size, connection_t** conn)
+nu_error_t authpckt_decode(unsigned char *dgram, unsigned int dgram_size, connection_t** conn)
 {
     nufw_to_nuauth_message_header_t *header;
 
     /* Check message header size */
     if (dgram_size < sizeof(nufw_to_nuauth_message_header_t))
-        return 0;
+        return NU_EXIT_ERROR;
     
     /* Check protocol version */
     header = (nufw_to_nuauth_message_header_t *)dgram;
     if (header->protocol_version != PROTO_VERSION)
-        return 0;
+        return NU_EXIT_ERROR;
 
     /* Check if message length looks correct */
     if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET)){
@@ -380,19 +383,18 @@ int authpckt_decode(unsigned char *dgram, unsigned int dgram_size, connection_t*
         case AUTH_CONTROL:
             *conn = authpckt_new_connection(dgram, dgram_size);
             if (*conn == NULL)
-                return 0;
+                return NU_EXIT_ERROR;
             break;
             
         case AUTH_CONN_DESTROY:
         case AUTH_CONN_UPDATE:
             authpckt_conntrack(dgram, dgram_size);
             *conn = NULL;
-            break;
-
+            return NU_EXIT_NO_RETURN;
         default:
             log_message(VERBOSE_DEBUG, AREA_PACKET, "Not for us");
             return 0;
     }
-    return 1;
+    return NU_EXIT_OK;
 }
 

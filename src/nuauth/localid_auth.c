@@ -78,7 +78,7 @@ void localid_insert_message(connection_t *pckt,
                     /* do asynchronous call to acl check */
                     g_thread_pool_push (nuauthdatas->acl_checkers, element, NULL);
                     /* remove element from hash without destroy */
-                    g_hash_table_steal(localid_auth_hash,pckt->packet_id);
+                    g_hash_table_steal(localid_auth_hash,GINT_TO_POINTER(pckt->packet_id));
                 } else {
                     g_warning("looks like a spoofing attempt.");
                     /* TODO : kill bad guy */
