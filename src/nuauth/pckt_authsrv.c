@@ -378,6 +378,8 @@ int authpckt_decode(unsigned char *dgram, unsigned int dgram_size, connection_t*
         case AUTH_REQUEST:
         case AUTH_CONTROL:
             *conn = authpckt_new_connection(dgram, dgram_size);
+            if (*conn == NULL)
+                return 0;
             break;
             
         case AUTH_CONN_DESTROY:

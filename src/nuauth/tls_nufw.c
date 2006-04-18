@@ -60,6 +60,7 @@ static int treat_nufw_request (nufw_session_t *c_session)
         int ret = authpckt_decode(dgram , (unsigned int)dgram_size, &current_conn);
         if (ret == 0)
         {
+            g_atomic_int_dec_and_test(&(c_session->usage));
             return EOF;
         }
         
