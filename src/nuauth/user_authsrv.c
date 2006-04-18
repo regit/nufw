@@ -120,11 +120,11 @@ int user_process_field_username(
     }
 
     len=usernamefield->length-4;
-    if (8*len > 2048)
+    if (8*len > 2048 || (len <= 0))
     {
         /* it is reaaally long, we ignore packet (too lasy to kill client) */
         log_message (INFO, AREA_USER,
-                "user packet announced a too long user name\n");
+                "user packet length announced is bad : %d\n",len);
         return -1;
     }
 
@@ -200,10 +200,10 @@ int user_process_field_app(
         return -1;
     }
 
-    if (8*len > 2048){
-        /* it is reaaally long, we ignore packet (too lasy to kill client) */
+    if (8*len > 2048 || (len <= 0)){
+        /* it is reaaally long (or too short), we ignore packet (too lasy to kill client) */
         log_message (INFO, AREA_USER,
-            "user packet announced a too long app name\n");
+            "user packet announced a bad length app name : %d\n",len);
         return -1;
     }
     dec_appname = g_new0(gchar,8*len);
