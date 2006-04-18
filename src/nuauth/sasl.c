@@ -428,7 +428,7 @@ int sasl_parse_user_os(user_session_t* c_session, char *buf, int buf_size)
     }
     
     dec_buf_size = ntohs(osfield->length) *4 ;
-    if ( dec_buf_size > 1024 || dec_buf_size <= 0) {
+    if ( dec_buf_size > 1024 || (ntohs(osfield->length) <= 4)) {
         const char *err = inet_ntop( AF_INET, &remote_inaddr, address, sizeof(address));
         if (err == NULL)
             SECURE_STRNCPY(address, "<inet_ntop error>", sizeof(address));
