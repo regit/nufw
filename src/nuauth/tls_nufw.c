@@ -85,6 +85,8 @@ static int treat_nufw_request (nufw_session_t *c_session)
                 g_async_queue_push (nuauthdatas->connections_queue,
                         current_conn);
             }
+        } else {
+            g_atomic_int_dec_and_test(&(c_session->usage));
         }
     } else {
         g_message("nufw failure at %s:%d",__FILE__,__LINE__);
