@@ -524,7 +524,7 @@ int sasl_parse_user_os(user_session_t* c_session, char *buf, int buf_size)
                 const char *err = inet_ntop( AF_INET, &remote_inaddr, address, sizeof(address));
                 if (err == NULL)
                     SECURE_STRNCPY(address, "<inet_ntop error>", sizeof(address));
-                g_message("user %s at %s uses OS %s ,%s, %s",c_session->user_name, address
+                g_message("user %s at %s uses OS %s ,%s, %s",c_session->user_name, address,
                         c_session->sysname , c_session->release , c_session->version);
 
             }
