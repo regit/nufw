@@ -208,7 +208,7 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex *mutex)
     fd_set wk_set; /* working set */
     struct timeval tv;
 
-    log_message(INFO, AREA_MAIN, "[+] NuAuth is waiting NuFW connections.");
+    log_message(INFO, AREA_MAIN, "[+] NuAuth is waiting for NuFW connections.");
     while (g_mutex_trylock(mutex))
     {
         g_mutex_unlock(mutex);

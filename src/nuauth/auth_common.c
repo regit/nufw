@@ -187,7 +187,7 @@ void free_connection_list(GSList *list)
  * Delete a connection and all of its memory.
  *
  * May call log_user_packet() with #TCP_STATE_DROP state if connection was
- * waiting its authentification.
+ * waiting for its authentification.
  * 
  * \param conn Pointer to a connection
  */

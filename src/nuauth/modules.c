@@ -229,7 +229,7 @@ int init_modules_system()
 /**
  * Load module for a task
  *
- * Please not that last args is a pointer of pointer
+ * Please note that last args is a pointer of pointer
  */
 static int load_modules_from(gchar* confvar, gchar* func,GSList** target)
 {
@@ -240,7 +240,7 @@ static int load_modules_from(gchar* confvar, gchar* func,GSList** target)
     module_t *current_module;
     int i;
 
-    for (i=0;modules_list[i]!=NULL;i++) {	
+    for (i=0;modules_list[i]!=NULL;i++) {
         current_module = g_new0(module_t,1);
 
         /* var format is NAME:MODULE:CONFFILE */

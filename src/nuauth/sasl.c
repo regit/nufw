@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2005 INL
+ ** Copyright(C) 2005-2006 INL
  ** Written by Eric Leblond <regit@inl.fr>
  **
  ** This program is free software; you can redistribute it and/or modify
@@ -404,26 +404,39 @@ int sasl_parse_user_os(user_session_t* c_session, char *buf, int buf_size)
     gchar*	dec_buf=NULL;
     gchar** os_strings;
     int dec_buf_size;
+	
+    struct in_addr remote_inaddr;
+    char address[INET_ADDRSTRLEN+1];
+    remote_inaddr.s_addr=c_session->addr;
     
     osfield=(struct nuv2_authfield*)buf;
 
     /* check buffer underflow */
     if (buf_size < (int)sizeof(struct nuv2_authfield)) {
-        g_message("osfield too small");
+        const char *err = inet_ntop( AF_INET, &remote_inaddr, address, sizeof(address));
+        if (err == NULL)
+            SECURE_STRNCPY(address, "<inet_ntop error>", sizeof(address));
+        g_message("%s sent a too small osfield",address);
         return SASL_FAIL;
     }
     
     if (osfield->type != OS_FIELD) {
 #ifdef DEBUG_ENABLE
-        log_message(DEBUG, AREA_USER, "osfield received %d,%d,%d ",osfield->type,osfield->option,ntohs(osfield->length));
+        log_message(DEBUG, AREA_USER, "osfield received %d,%d,%d from %s",osfield->type,osfield->option,ntohs(osfield->length),address);
 #endif
         return SASL_FAIL;
     }
     
     dec_buf_size = ntohs(osfield->length) *4 - 32;
     if ( dec_buf_size > 1024 ) {
+        const char *err = inet_ntop( AF_INET, &remote_inaddr, address, sizeof(address));
+        if (err == NULL)
+            SECURE_STRNCPY(address, "<inet_ntop error>", sizeof(address));
         /* it's a joke it's far too long */
-        log_message(WARNING, AREA_USER, "error osfield is too long, announced %d",ntohs(osfield->length));
+        log_message(WARNING, AREA_USER, "error osfield from %s is too long, announced %d",address,ntohs(osfield->length));
+        /* One more gryzor hack*/
+        if ( dec_buf_size > 4096 ) 
+          log_message(WARNING, AREA_USER, "   Is %s running a 1.0 client?",address);
 #ifdef DEBUG_ENABLE
         log_message(DEBUG, AREA_USER, "%s:%d osfield received %d,%d,%d ",__FILE__,__LINE__,osfield->type,osfield->option,ntohs(osfield->length));
 #endif
@@ -466,7 +479,10 @@ int sasl_parse_user_os(user_session_t* c_session, char *buf, int buf_size)
         if (os_strings[0] && (strlen(os_strings[0]) < 128) ){
             c_session->sysname=string_escape(os_strings[0]);
             if (c_session->sysname==NULL){
-                log_message(WARNING, AREA_USER, "received sysname contains invalid characters");
+                const char *err = inet_ntop( AF_INET, &remote_inaddr, address, sizeof(address));
+                if (err == NULL)
+                    SECURE_STRNCPY(address, "<inet_ntop error>", sizeof(address));
+                log_message(WARNING, AREA_USER, "received sysname with invalid characters from %s",address);
                 g_free(dec_buf);
                 return SASL_BADAUTH;
             }
@@ -476,7 +492,10 @@ int sasl_parse_user_os(user_session_t* c_session, char *buf, int buf_size)
         if (os_strings[1] && (strlen(os_strings[1]) < 128) )   {
             c_session->release=string_escape(os_strings[1]);
             if (c_session->release==NULL){
-                log_message(WARNING, AREA_USER, "received release contains invalid characters");
+                const char *err = inet_ntop( AF_INET, &remote_inaddr, address, sizeof(address));
+                if (err == NULL)
+                    SECURE_STRNCPY(address, "<inet_ntop error>", sizeof(address));
+                log_message(WARNING, AREA_USER, "received release with invalid characters from %s",address);
                 g_free(dec_buf);
                 return SASL_BADAUTH;
             }
@@ -486,7 +505,10 @@ int sasl_parse_user_os(user_session_t* c_session, char *buf, int buf_size)
         if (os_strings[2] && (strlen(os_strings[2]) < 128) )  {
             c_session->version=string_escape(os_strings[2]);
             if (c_session->version==NULL){
-                log_message(WARNING, AREA_USER, "received version contains invalid characters");
+                const char *err = inet_ntop( AF_INET, &remote_inaddr, address, sizeof(address));
+                if (err == NULL)
+                    SECURE_STRNCPY(address, "<inet_ntop error>", sizeof(address));
+                log_message(WARNING, AREA_USER, "received version with invalid characters from %s",address);
                 g_free(dec_buf);
                 return SASL_BADAUTH;
             }
@@ -499,7 +521,10 @@ int sasl_parse_user_os(user_session_t* c_session, char *buf, int buf_size)
 
 #ifdef DEBUG_ENABLE
             if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_USER)){
-                g_message("user %s uses OS %s ,%s, %s",c_session->user_name,
+                const char *err = inet_ntop( AF_INET, &remote_inaddr, address, sizeof(address));
+                if (err == NULL)
+                    SECURE_STRNCPY(address, "<inet_ntop error>", sizeof(address));
+                g_message("user %s at %s uses OS %s ,%s, %s",c_session->user_name, address
                         c_session->sysname , c_session->release , c_session->version);
 
             }
@@ -507,7 +532,10 @@ int sasl_parse_user_os(user_session_t* c_session, char *buf, int buf_size)
         }
         g_strfreev(os_strings);
     }else{
-        log_message(DEBUG, AREA_AUTH, "osfield->option is not OS_SRV ?!");
+        const char *err = inet_ntop( AF_INET, &remote_inaddr, address, sizeof(address));
+        if (err == NULL)
+           SECURE_STRNCPY(address, "<inet_ntop error>", sizeof(address));
+        log_message(DEBUG, AREA_AUTH, "from %s : osfield->option is not OS_SRV ?!",address);
 
         g_free(dec_buf);
         return SASL_FAIL;

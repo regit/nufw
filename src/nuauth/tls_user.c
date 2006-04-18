@@ -376,7 +376,7 @@ void tls_user_main_loop(struct tls_user_context_t *context, GMutex *mutex)
     fd_set wk_set; /* working set */
     struct timeval tv;
 
-    log_message(INFO, AREA_MAIN, "[+] NuAuth is waiting client connections.");
+    log_message(INFO, AREA_MAIN, "[+] NuAuth is waiting for client connections.");
     while (g_mutex_trylock(mutex)) 
     {
         g_mutex_unlock(mutex);
