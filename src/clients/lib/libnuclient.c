@@ -264,7 +264,7 @@ int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn)
 			case 'O':
 				return SASL_OK;
 			case 'N':
-				return EXIT_FAILURE;
+				return SASL_BADAUTH;
 			case 'C': /* continue authentication */
 				break;
 			default:
@@ -705,7 +705,7 @@ int init_sasl(NuAuth * session, nuclient_error *err)
 	if (ret != SASL_OK) {
 		printf("Failed allocating connection state");
 		errno=EAGAIN;
-                SET_ERROR(err, SASL_ERROR, ret);
+        SET_ERROR(err, SASL_ERROR, ret);
 		return 0;
 	}
 
@@ -724,7 +724,7 @@ int init_sasl(NuAuth * session, nuclient_error *err)
 	ret = sasl_setprop(conn, SASL_AUTH_EXTERNAL,session->username);
 	if (ret != SASL_OK) {
 		errno=EACCES;
-                SET_ERROR(err, SASL_ERROR, ret);
+        SET_ERROR(err, SASL_ERROR, ret);
 		return 0;
         }
 
@@ -735,7 +735,7 @@ int init_sasl(NuAuth * session, nuclient_error *err)
 	ret = mysasl_negotiate(session->tls, conn);
 	if (ret != SASL_OK) {
 		errno=EACCES;
-                SET_ERROR(err, SASL_ERROR, ret);
+        SET_ERROR(err, SASL_ERROR, ret);
 		return 0;
 	}
 
