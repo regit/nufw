@@ -263,7 +263,7 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex *mutex)
                 debug_log_message(VERBOSE_DEBUG, AREA_GW, "nufw activity on socket %d",c);
                 c_session=g_hash_table_lookup( nufw_servers , GINT_TO_POINTER(c));
                 g_atomic_int_inc(&(c_session->usage));
-                if (treat_nufw_request(c_session) != NU_EXIT_OK) {
+                if (treat_nufw_request(c_session) == NU_EXIT_ERROR) {
                     /* get session link with c */
                     debug_log_message(DEBUG, AREA_GW, "nufw server disconnect on %d",c);
                     FD_CLR(c,&context->tls_rx_set);
