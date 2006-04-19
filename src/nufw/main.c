@@ -188,9 +188,9 @@ void create_thread()
     }
 #ifdef HAVE_LIBCONNTRACK
     if (handle_conntrack_event){
-	if (pthread_create(&(tls.conntrack_event_handler),NULL,conntrack_event_handler,NULL) == EAGAIN){
-	    exit(EXIT_FAILURE);
-	}
+        if (pthread_create(&(tls.conntrack_event_handler),NULL,conntrack_event_handler,NULL) == EAGAIN){
+            exit(EXIT_FAILURE);
+        }
     }
 #endif
 

@@ -302,7 +302,9 @@ void* authsrv(void* data)
         }
         
         memset(dgram, 0, sizeof dgram);
+        pthread_mutex_lock(&tls.mutex);
         ret= gnutls_record_recv(*tls.session,dgram,sizeof dgram);
+        pthread_mutex_unlock(&tls.mutex);
         if (ret<0){
             if ( gnutls_error_is_fatal(ret) ){
                 break;

@@ -94,25 +94,25 @@ int update_handler (void *arg, unsigned int flags, int type,void *data)
     }
 
     if (pthread_mutex_trylock(&tls.mutex) != EBUSY){
-	if (tls.session){
-	    debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
-		    "Sending conntrack event to nuauth.");
-	    ret = gnutls_record_send(
-		    *(tls.session),
-		    &message,
-		    sizeof(struct nu_conntrack_message_t)
-		    ); 
-	    if (ret <0){
-		if ( gnutls_error_is_fatal(ret) ){
-		    /* warn sender thread that it will need to reconnect at next access */
-		    tls.auth_server_running=0;
-		    pthread_cancel(tls.auth_server);
-		    pthread_mutex_unlock(&tls.mutex);
-		    return -1;
-		}
-	    }
-	}
-	pthread_mutex_unlock(&tls.mutex);
+        if (tls.session){
+            debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
+                    "Sending conntrack event to nuauth.");
+            ret = gnutls_record_send(
+                    *(tls.session),
+                    &message,
+                    sizeof(struct nu_conntrack_message_t)
+                    ); 
+            if (ret <0){
+                if ( gnutls_error_is_fatal(ret) ){
+                    /* warn sender thread that it will need to reconnect at next access */
+                    tls.auth_server_running=0;
+                    pthread_cancel(tls.auth_server);
+                    pthread_mutex_unlock(&tls.mutex);
+                    return -1;
+                }
+            }
+        }
+        pthread_mutex_unlock(&tls.mutex);
     } 
     return 0;
 }

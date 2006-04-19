@@ -551,9 +551,12 @@ int auth_request_send(uint8_t type, uint32_t packet_id, char* payload, unsigned 
     }
 
     /* send packet */
+    pthread_mutex_lock(&tls.mutex);
     if (!gnutls_record_send(*(tls.session), datas, msg_length)){
         shutdown_tls();
+        pthread_mutex_unlock(&tls.mutex);
         return 0;
     }
+    pthread_mutex_unlock(&tls.mutex);
     return 1;
 }
