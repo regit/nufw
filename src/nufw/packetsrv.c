@@ -54,7 +54,7 @@ int look_for_tcp_flags(unsigned char* dgram, unsigned int datalen){
     return 0;
 }
 
-#if USE_NFQUEUE
+#ifdef USE_NFQUEUE
 /**
  * Callback called by NetFilter when a packet with target QUEUE is matched.
  *
@@ -156,9 +156,72 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
     }
     return 1;
 }
-#endif
 
-#if !(USE_NFQUEUE)
+/**
+ * Open a netlink connection and returns file descriptor
+ */
+int packetsrv_open()
+{
+    struct nfnl_handle *nh;
+
+    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_SERIOUS_MESSAGE,
+            "Open netfilter queue socket");
+
+    /* opening library handle */
+    h = nfq_open();
+    if (!h) {
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
+                "[!] Error during nfq_open()");
+        return -1;
+    }
+
+    /* unbinding existing nf_queue handler for AF_INET (if any) */
+    if (nfq_unbind_pf(h, AF_INET) < 0) {
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
+                "[!] Error during nfq_unbind_pf()");
+        return -1;
+    }
+
+    /* binding nfnetlink_queue as nf_queue handler for AF_INET */
+    if (nfq_bind_pf(h, AF_INET) < 0) {
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
+                "[!] Error during nfq_bind_pf()");
+        return -1;
+    }
+
+
+    /* binding this socket to queue number ::nfqueue_num 
+     * and install our packet handler */
+    hndl = nfq_create_queue(h,  nfqueue_num, (nfq_callback *)&treat_packet, NULL);
+    if (!hndl) {
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
+                "[!] Error during nfq_create_queue() (queue %d busy ?)",
+                nfqueue_num);
+        return -1;
+    }
+
+    /* setting copy_packet mode */
+    if (nfq_set_mode(hndl, NFQNL_COPY_PACKET, 0xffff) < 0) {
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
+                "[!] Can't set packet_copy mode");
+        return -1;
+    }
+
+    nh = nfq_nfnlh(h);
+    return nfnl_fd(nh);
+}    
+
+void packetsrv_close(int smart)
+{
+    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_SERIOUS_MESSAGE,
+            "Destroy netfilter queue socket");
+    if (smart)
+        nfq_destroy_queue(hndl);
+    nfq_close(h);
+}    
+
+#else /* USE_NFQUEUE */
+
 /**
  * Process an IP message received from IPQ
  * \return Returns 1 if it's ok, 0 otherwise.
@@ -220,76 +283,7 @@ void packetsrv_ipq_process(unsigned char *buffer)
         }
     }
 }    
-#endif
-
-/**
- * Open a netlink connection and returns file descriptor
- */
-int packetsrv_open()
-{
-#if USE_NFQUEUE
-    struct nfnl_handle *nh;
-
-    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_SERIOUS_MESSAGE,
-            "Open netfilter queue socket");
-
-    /* opening library handle */
-    h = nfq_open();
-    if (!h) {
-        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
-                "[!] Error during nfq_open()");
-        return -1;
-    }
-
-    /* unbinding existing nf_queue handler for AF_INET (if any) */
-    if (nfq_unbind_pf(h, AF_INET) < 0) {
-        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
-                "[!] Error during nfq_unbind_pf()");
-        return -1;
-    }
-
-    /* binding nfnetlink_queue as nf_queue handler for AF_INET */
-    if (nfq_bind_pf(h, AF_INET) < 0) {
-        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
-                "[!] Error during nfq_bind_pf()");
-        return -1;
-    }
-
-
-    /* binding this socket to queue number ::nfqueue_num 
-     * and install our packet handler */
-    hndl = nfq_create_queue(h,  nfqueue_num, (nfq_callback *)&treat_packet, NULL);
-    if (!hndl) {
-        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
-                "[!] Error during nfq_create_queue() (queue %d busy ?)",
-                nfqueue_num);
-        return -1;
-    }
-
-    /* setting copy_packet mode */
-    if (nfq_set_mode(hndl, NFQNL_COPY_PACKET, 0xffff) < 0) {
-        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
-                "[!] Can't set packet_copy mode");
-        return -1;
-    }
-
-    nh = nfq_nfnlh(h);
-    return nfnl_fd(nh);
-#else
-#endif    
-}    
-
-void packetsrv_close(int smart)
-{
-#if USE_NFQUEUE
-    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_SERIOUS_MESSAGE,
-            "Destroy netfilter queue socket");
-    if (smart)
-        nfq_destroy_queue(hndl);
-    nfq_close(h);
-#endif    
-}    
-
+#endif /* USE_NFQUEUE */
 
 /**
  * Packet server thread. Connect to netfilter to ask a netlink. Read packet
@@ -306,7 +300,7 @@ void* packetsrv(void *void_arg)
     struct ThreadArgument *thread_arg  = void_arg;
     struct ThreadType *this = thread_arg->thread;
     int fatal_error = 0;
-#if USE_NFQUEUE
+#ifdef USE_NFQUEUE
     unsigned char buffer[BUFSIZ];
     struct timeval tv;
     int fd;
@@ -378,10 +372,9 @@ void* packetsrv(void *void_arg)
     }
 
     packetsrv_close(!fatal_error);
-#else
+#else /* USE_NFQUEUE */
     unsigned char buffer[BUFSIZ];
     int size;
-    int ok;
 
     log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_MESSAGE,
             "Try to connect to netlink (IPQ)");
@@ -402,7 +395,7 @@ void* packetsrv(void *void_arg)
             "[+] Packet server started");
 
     /* loop until main process ask this thread to stop using its mutex */
-    while (pthread_mutex_trylock(&this->mutex) == 0)
+    while (pthread_mutex_trylock(&this->mutex) != EBUSY)
     {
         pthread_mutex_unlock(&this->mutex);
 
@@ -450,8 +443,7 @@ void* packetsrv(void *void_arg)
 #endif
     log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
             "[+] Leave packet server thread");
-    if (fatal_error)
-    {
+    if (fatal_error){
         kill(thread_arg->parent_pid, SIGTERM);
     }
     pthread_exit (NULL);
