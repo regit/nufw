@@ -163,7 +163,7 @@ int get_icmp_headers(tracking_t *tracking, unsigned char *dgram, unsigned int dg
  * \param dgram_size Number of bytes in the packet
  * \return A new connection or NULL if fails 
  */
-connection_t* authpckt_new_connection(unsigned char *dgram, unsigned int dgram_size)
+nu_error_t authpckt_new_connection(unsigned char *dgram, unsigned int dgram_size,connection_t **conn)
 {
     nufw_to_nuauth_auth_message_t *msg = (nufw_to_nuauth_auth_message_t *)dgram;
     unsigned int ip_hdr_size; 
@@ -172,7 +172,7 @@ connection_t* authpckt_new_connection(unsigned char *dgram, unsigned int dgram_s
     if (dgram_size < sizeof(nufw_to_nuauth_auth_message_t))
     {
         /* TODO: Display warning message */
-        return NULL;
+        return NU_EXIT_ERROR;
     }
     dgram += sizeof(nufw_to_nuauth_auth_message_t);
     dgram_size -= sizeof(nufw_to_nuauth_auth_message_t);
@@ -181,7 +181,7 @@ connection_t* authpckt_new_connection(unsigned char *dgram, unsigned int dgram_s
     connection = g_new0(connection_t, 1);
     if (connection == NULL){
         log_message (WARNING, AREA_PACKET, "Can not allocate connection");
-        return NULL;
+        return NU_EXIT_ERROR;
     }
 #ifdef PERF_DISPLAY_ENABLE
     gettimeofday(&(connection->arrival_time),NULL);
@@ -205,7 +205,7 @@ connection_t* authpckt_new_connection(unsigned char *dgram, unsigned int dgram_s
     if (ip_hdr_size == 0)  {
         log_message (WARNING, AREA_PACKET, "Can't parse IP headers");
         free_connection(connection);
-        return NULL;
+        return NU_EXIT_ERROR;
     }
     dgram += ip_hdr_size;
     dgram_size -= ip_hdr_size;
@@ -214,7 +214,8 @@ connection_t* authpckt_new_connection(unsigned char *dgram, unsigned int dgram_s
     /* check if proto is in Hello mode list (when hello authentication is used) */
     if ( nuauthconf->hello_authentication &&  localid_authenticated_protocol(connection->tracking.protocol) ) {
         connection->state = AUTH_STATE_HELLOMODE;
-        return connection;
+        *conn = connection;
+	return NU_EXIT_OK;
     } else {
         connection->state = AUTH_STATE_AUTHREQ;
     }
@@ -229,20 +230,20 @@ connection_t* authpckt_new_connection(unsigned char *dgram, unsigned int dgram_s
                     if (msg->msg_type == AUTH_CONTROL ){
                         log_user_packet(connection, TCP_STATE_CLOSE);
                         free_connection(connection);
-                        return NULL;
+                        return NU_EXIT_NO_RETURN;
                     }
                     break;
                 case TCP_STATE_ESTABLISHED:
                     if (msg->msg_type == AUTH_CONTROL ){
                         log_user_packet(connection, TCP_STATE_ESTABLISHED);
                         free_connection(connection);
-                        return NULL;
+                        return NU_EXIT_NO_RETURN;
                     }
                     break;
                 default:
                     log_message(WARNING, AREA_PACKET, "Can't parse TCP headers\n");
                     free_connection(connection);
-                    return NULL;
+                    return NU_EXIT_ERROR;
             }
             break;
         }
@@ -250,14 +251,14 @@ connection_t* authpckt_new_connection(unsigned char *dgram, unsigned int dgram_s
         case IPPROTO_UDP:
             if (get_udp_headers(&connection->tracking, dgram, dgram_size) < 0) {
                 free_connection(connection);
-                return NULL;
+                return NU_EXIT_OK;
             }
             break;
 
         case IPPROTO_ICMP:
             if (get_icmp_headers(&connection->tracking, dgram, dgram_size) < 0) {
                 free_connection(connection);
-                return NULL;
+                return NU_EXIT_OK;
             }
             break;
 
@@ -267,7 +268,7 @@ connection_t* authpckt_new_connection(unsigned char *dgram, unsigned int dgram_s
                         "Can't parse protocol %u",
                         connection->tracking.protocol);
                 free_connection(connection);
-                return NULL;
+                return NU_EXIT_ERROR;
             }
     }
     connection->user_groups = ALLGROUP;
@@ -278,7 +279,8 @@ connection_t* authpckt_new_connection(unsigned char *dgram, unsigned int dgram_s
         print_connection(connection,NULL);
     }
 #endif
-    return connection;
+    *conn = connection;
+    return NU_EXIT_OK;
 }
 
 /**
@@ -381,11 +383,8 @@ nu_error_t authpckt_decode(unsigned char *dgram, unsigned int dgram_size, connec
     switch (header->msg_type){
         case AUTH_REQUEST:
         case AUTH_CONTROL:
-            *conn = authpckt_new_connection(dgram, dgram_size);
-            if (*conn == NULL)
-                return NU_EXIT_ERROR;
+            return  authpckt_new_connection(dgram, dgram_size,conn);
             break;
-            
         case AUTH_CONN_DESTROY:
         case AUTH_CONN_UPDATE:
             authpckt_conntrack(dgram, dgram_size);
