@@ -301,7 +301,7 @@ void* authsrv(void* data)
             continue;
         }
         
-        memset(dgram, 0, sizeof dgram);
+        /* memset(dgram, 0, sizeof dgram); */
         pthread_mutex_lock(&tls.mutex);
         ret= gnutls_record_recv(*tls.session,dgram,sizeof dgram);
         pthread_mutex_unlock(&tls.mutex);
