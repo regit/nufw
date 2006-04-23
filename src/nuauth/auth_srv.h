@@ -84,10 +84,10 @@ typedef enum
 #include <proto.h>
 
 /*debug functions*/
-#include <nuauth_debug.h>
+#include "nuauth_debug.h"
 
 /* config file related */
-#include <conffile.h>
+#include "conffile.h"
 #include "log.h"
 #include "tls.h"
 #include "connections.h"

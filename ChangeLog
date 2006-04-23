@@ -71,7 +71,8 @@
 	is not in the group.
 	- nuauth : period checking is now done in main code (not in module
 	anymore) to avoid problem with cache.
-
+	- move conffile.h from src/nuauth/include to src/nuauth and suppress
+	  src/nuauth/include
 1.1.3 (2006/01/25)
 	- nutrackd : PostGreSQL support
 	- Fixes in the PostGreSQL log module (removed the useless server_port

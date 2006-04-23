@@ -19,7 +19,7 @@
 */
 
 #include "auth_srv.h"
-#include <nuauth_debug.h>
+#include "nuauth_debug.h"
 #include <syslog.h>
 #include <math.h>
 
