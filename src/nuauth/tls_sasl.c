@@ -145,7 +145,6 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
     c_session->user_name = NULL;
     c_session->user_id = 0;
     g_free(userdata);
-
     if ((nuauth_tls.auth_by_cert == TRUE) && gnutls_certificate_get_peers(*session,&size)) {
         ret = check_certs_for_tls_session(*session);
 
@@ -174,26 +173,19 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
     }
 
     ret = sasl_user_check(c_session);
+    remove_socket_from_pre_client_list(c);
     switch (ret){
         case SASL_OK:
             /* remove socket from the list of pre auth socket */
-            remove_socket_from_pre_client_list(c);
             tls_sasl_connect_ok(c_session, c);
             break;
 
         case SASL_FAIL:
-
-            debug_log_message(VERBOSE_DEBUG, AREA_USER, "Crash on user side, closing socket");
-            remove_socket_from_pre_client_list(c);
-            close_tls_session(c,c_session->tls);
-            c_session->tls=NULL;
-            clean_session(c_session);
-            break;
-
         default:
-            debug_log_message(VERBOSE_DEBUG, AREA_USER, "Problem with user, closing socket");
-            remove_socket_from_pre_client_list(c);
-            /* get rid of client */
+            if (ret == SASL_FAIL)
+                debug_log_message(VERBOSE_DEBUG, AREA_USER, "Crash on user side, closing socket");
+            else
+                debug_log_message(VERBOSE_DEBUG, AREA_USER, "Problem with user, closing socket");
             close_tls_session(c,c_session->tls);
             c_session->tls=NULL;
             clean_session(c_session);
