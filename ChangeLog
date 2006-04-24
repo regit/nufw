@@ -1,4 +1,4 @@
-2.0-beta1 (2006/04/18)
+2.0-beta1 (2006/04/24)
 	- nuauth : bugfix on the PostGreSQL log module thanks to Julian Reich
 	- nuauth :fix bug in max client number test
 	- nuauth|nufw : really close socket in all cases now
