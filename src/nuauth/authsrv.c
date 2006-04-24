@@ -559,6 +559,9 @@ void configure_app(int argc, char **argv)
  *      - tls_auth_server with tls_user_authsrv() ;
  *      - tls_nufw_server with tls_nufw_authsrv() ;
  *      - limited_connections_handler with limited_connection_handler().
+ *
+ * Other queue, threads, etc. are created elsewhere:
+ *      - in tls_user_init(): tls_sasl_worker thread pool, tls_sasl_connect().
  */
 void init_nuauthdatas() 
 {
