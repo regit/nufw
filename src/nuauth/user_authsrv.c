@@ -200,14 +200,14 @@ int user_process_field_app(
         return -1;
     }
 
-    if (8*len > 2048 || (len <= 0)){
+    if (len > 512 || (len <= 0)){
         /* it is reaaally long (or too short), we ignore packet (too lasy to kill client) */
         log_message (INFO, AREA_USER,
             "user packet announced a bad length app name : %d\n",len);
         return -1;
     }
-    dec_appname = g_new0(gchar,8*len);
-    if (sasl_decode64((char*)appfield+4,len, dec_appname,8*len,&reallen) 
+    dec_appname = g_new0(gchar,len);
+    if (sasl_decode64((char*)appfield+4,len, dec_appname,len,&reallen) 
             ==
             SASL_BUFOVER) {
         dec_appname=g_try_realloc(dec_appname,reallen+1);
