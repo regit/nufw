@@ -1,7 +1,7 @@
 Prerequisites :
 - libipq (in iptables-dev on debian)
 		or
-- libnetfilter_queue
+- libnetfilter_queue (optionnaly libnetfilter_conntrack)
 - automake1.7 to execute cleanly autogen.sh 
 - libldap for the provided auth server
 - glib
@@ -40,3 +40,6 @@ Quick Testing :
 
 See http://www.nufw.org/testing.html
 
+Howto :
+
+See http://www.nufw.org/docs/howto.html

@@ -3,8 +3,6 @@
 - nuauth : cache : configurable max number of cached entries
                    configurable max number of cached entries per protocol?
 
-- nuauth : check for simultaneous login of same user
-
 - nuauth : do not send hello message if multiple instance runs on the same computer
 
 # Modules
