@@ -259,6 +259,8 @@ void nuauth_reload( int signal ) {
     }
     /* reload modules with new conf */
     load_modules();
+    /* init period */
+    nuauthconf->periods=init_periods(nuauthconf);
     /* liberate threads by broadcasting condition */
     nuauthdatas->need_reload=0;
     g_mutex_lock(nuauthdatas->reload_cond_mutex);
@@ -326,7 +328,6 @@ static struct nuauth_params* compare_and_update_nuauthparams(struct nuauth_param
       restart=TRUE;
   }
 
-
   if (restart == FALSE){
       /* checking nuauth tuning parameters */
       g_thread_pool_set_max_threads(nuauthdatas->user_checkers,new->nbuser_check,NULL);
@@ -342,7 +343,6 @@ static struct nuauth_params* compare_and_update_nuauthparams(struct nuauth_param
       /* debug is set via command line thus duplicate */
       new->debug_level=current->debug_level;
       destroy_periods(current->periods);
-      new->periods=init_periods(new);
       free_nuauth_params(current);
       return new;
   } else {
