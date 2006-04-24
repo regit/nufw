@@ -772,7 +772,6 @@ G_MODULE_EXPORT int user_check(const char *username, const char *clientpass,
   struct T_plaintext_user ref;
   char *realpass;
   int initstatus;
-  char *user;
   static GStaticMutex plaintext_initmutex = G_STATIC_MUTEX_INIT;
 
   /* init has only to be done once */
@@ -789,16 +788,15 @@ G_MODULE_EXPORT int user_check(const char *username, const char *clientpass,
   g_static_mutex_unlock (&plaintext_initmutex);
 
   /* strip username from domain */
-  user = get_rid_of_domain((char*)username);
+  ref.username = get_rid_of_domain((char*)username);
   debug_log_message(VERBOSE_DEBUG, AREA_AUTH,
-          "Looking for group(s) for user %s", user);
+          "Looking for group(s) for user %s", ref.username);
   /*  Let's look for the first node with matching username */
-  ref.username = (char*)user;
   res = g_slist_find_custom(((struct plaintext_params*)params)->plaintext_userlist, &ref,
           (GCompareFunc)find_by_username);
-
+  free(ref.username);
   if (!res) {
-      log_message(WARNING, AREA_AUTH, "Unknown user [%s]!", user);
+      log_message(WARNING, AREA_AUTH, "Unknown user [%s]!", username);
       return SASL_BADAUTH;
   }
 
@@ -806,7 +804,7 @@ G_MODULE_EXPORT int user_check(const char *username, const char *clientpass,
 
   if (!strcmp(realpass, "*") || !strcmp(realpass, "!")) {
       log_message(INFO, AREA_AUTH,
-              "user_check: Account is disabled (%s)", user);
+              "user_check: Account is disabled (%s)", username);
       return SASL_BADAUTH;
   }
 
@@ -815,7 +813,7 @@ G_MODULE_EXPORT int user_check(const char *username, const char *clientpass,
   if (clientpass) {
       if (verify_user_password(clientpass, realpass) != SASL_OK ){
           log_message(INFO, AREA_AUTH,
-                  "user_check: Wrong password for %s", user);
+                  "user_check: Wrong password for %s", username);
           return SASL_BADAUTH;
       }
   }

@@ -51,6 +51,10 @@ void clean_session(user_session_t * c_session)
     g_free(c_session->user_name);
     g_slist_free(c_session->groups);
 
+    g_free(c_session->sysname);
+    g_free(c_session->release);
+    g_free(c_session->version);
+
     g_mutex_free(c_session->tls_lock);
 
     if (c_session){
