@@ -54,10 +54,10 @@ void panic(const char *fmt, ...)
 }
 
 char * computerunpid(){
-	char path_dir[254];
-        char *home = getenv("HOME");
-        if (home == NULL)
-            return NULL;            
+    char path_dir[254];
+    char *home = getenv("HOME");
+    if (home == NULL)
+        return NULL;            
 	snprintf(path_dir,sizeof(path_dir),"%s/.nufw", home);
 	if (access(path_dir,R_OK)){
 		mkdir(path_dir,S_IRWXU);
