@@ -427,7 +427,7 @@ int sasl_parse_user_os(user_session_t* c_session, char *buf, int buf_size)
         return SASL_FAIL;
     }
     
-    dec_buf_size = ntohs(osfield->length) *4 ;
+    dec_buf_size = ntohs(osfield->length);
     if ( dec_buf_size > 1024 || (ntohs(osfield->length) <= 4)) {
         const char *err = inet_ntop( AF_INET, &remote_inaddr, address, sizeof(address));
         if (err == NULL)
@@ -443,33 +443,10 @@ int sasl_parse_user_os(user_session_t* c_session, char *buf, int buf_size)
     }
     dec_buf = g_new0( gchar ,dec_buf_size);
     decode = sasl_decode64(buf+4,ntohs(osfield->length) -4,dec_buf, dec_buf_size,&len);
-    switch (decode){
-        case SASL_BUFOVER:
-            if (len > 1024)
-            {
-                g_free(dec_buf);
-                return SASL_BADAUTH;
-            }
-            dec_buf=g_try_realloc(dec_buf,len);
-            if (dec_buf){
-                if (sasl_decode64(buf+4,ntohs(osfield->length) -4,
-                            dec_buf,len,&len) != SASL_OK){
-                    g_free(dec_buf);
-                    return SASL_BADAUTH;
-                }
-
-            }else{
-                g_free(dec_buf);
-                return SASL_BADAUTH;
-            }
-            break;
-
-        case SASL_OK:
-            break;
-
-        default:
-            g_free(dec_buf);
-            return SASL_BADAUTH;
+    if (decode != SASL_OK)
+    {
+        g_free(dec_buf);
+        return SASL_BADAUTH;
     }
 
     /* should always be true for the moment */
