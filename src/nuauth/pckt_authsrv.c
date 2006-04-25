@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2003-2004 Eric Leblond <regit@inl.fr>
+ ** Copyright(C) 2003-2006 Eric Leblond <regit@inl.fr>
  **                        INL http://www.inl.fr/
  **
  ** This program is free software; you can redistribute it and/or modify
@@ -228,6 +228,7 @@ nu_error_t authpckt_new_connection(unsigned char *dgram, unsigned int dgram_size
                     break; 
                 case TCP_STATE_CLOSE:
                     if (msg->msg_type == AUTH_CONTROL ){
+			connection->state = AUTH_STATE_DONE;
                         log_user_packet(connection, TCP_STATE_CLOSE);
                         free_connection(connection);
                         return NU_EXIT_NO_RETURN;
@@ -235,6 +236,7 @@ nu_error_t authpckt_new_connection(unsigned char *dgram, unsigned int dgram_size
                     break;
                 case TCP_STATE_ESTABLISHED:
                     if (msg->msg_type == AUTH_CONTROL ){
+			connection->state = AUTH_STATE_DONE;
                         log_user_packet(connection, TCP_STATE_ESTABLISHED);
                         free_connection(connection);
                         return NU_EXIT_NO_RETURN;
@@ -247,6 +249,7 @@ nu_error_t authpckt_new_connection(unsigned char *dgram, unsigned int dgram_size
             }
             break;
         }
+	break;
 
         case IPPROTO_UDP:
             if (get_udp_headers(&connection->tracking, dgram, dgram_size) < 0) {
