@@ -206,8 +206,7 @@ char* build_insert_request(
     }
 
     /* Add user informations */ 
-    if (element->username)
-    {        
+    if (element->username) {        
         /* Get OS and application names */
         char *osname = generate_osname(
                 element->os_sysname,

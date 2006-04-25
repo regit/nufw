@@ -254,7 +254,7 @@ connection_t* duplicate_connection(connection_t* element)
 {
     connection_t * conn_copy=g_memdup(element, sizeof(*element));
     if (conn_copy == NULL){
-        log_message(WARNING, AREA_MAIN, "memory duplication falied");
+        log_message(WARNING, AREA_MAIN, "memory duplication failed");
         return NULL;
     }
     conn_copy->username = g_strdup(element->username);
