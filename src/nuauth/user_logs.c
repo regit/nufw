@@ -52,7 +52,7 @@ void log_user_packet (connection_t* element, tcp_state_t state)
             struct Conn_State * conn_state_copy;
             conn_state_copy=g_new0(struct Conn_State,1);
             conn_state_copy->conn=duplicate_connection(element);
-            if (! conn_state_copy){
+            if (! conn_state_copy->conn){
                 g_free(conn_state_copy);
                 return;
             }
