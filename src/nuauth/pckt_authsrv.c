@@ -161,6 +161,7 @@ int get_icmp_headers(tracking_t *tracking, unsigned char *dgram, unsigned int dg
  * 
  * \param dgram Pointer to packet datas
  * \param dgram_size Number of bytes in the packet
+ * \param pointer of pointer to the ::connection_t that we have to authenticate
  * \return A new connection or NULL if fails 
  */
 nu_error_t authpckt_new_connection(unsigned char *dgram, unsigned int dgram_size,connection_t **conn)
@@ -354,6 +355,7 @@ void authpckt_conntrack (unsigned char *dgram, unsigned int dgram_size)
  * 
  * \param dgram Pointer to datagram
  * \param dgram_size Size of the datagram (in bytes)
+ * \param pointer of pointer to the ::connection_t that will be modified
  * \return 
  *   - #NU_EXIT_ERROR if failure
  *   - #NU_EXIT_OK if ok and conn created
