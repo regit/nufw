@@ -58,11 +58,13 @@ static void tls_sasl_connect_ok(user_session_t* c_session, int c)
         case POLICY_ONE_LOGIN:
             if (look_for_username(c_session->user_name)){
                 policy_refuse_user(c_session,c);
+                return;
             }
             break;
         case POLICY_PER_IP_ONE_LOGIN:
             if (get_client_sockets_by_ip(c_session->addr) ){
                 policy_refuse_user(c_session,c);
+                return;
             }
             break;
     }
