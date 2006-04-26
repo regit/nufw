@@ -381,7 +381,10 @@ void tls_user_main_loop(struct tls_user_context_t *context, GMutex *mutex)
     {
         g_mutex_unlock(mutex);
 
-        /* try to get new file descriptor to update set */
+        /* 
+         * Try to get new file descriptor to update set. Messages come from 
+         * tls_sasl_connect_ok() and are send when a new user is connected.
+         */
         c_pop = g_async_queue_try_pop (mx_queue);
         while (c_pop != NULL)
         {
@@ -398,17 +401,17 @@ void tls_user_main_loop(struct tls_user_context_t *context, GMutex *mutex)
         }
 
 
-        /* copy rx set to working set */
+        /* wait new events during 1 second */
         FD_ZERO(&wk_set);
         for (i=0;i<context->mx;++i){
             if (FD_ISSET(i,&context->tls_rx_set))
                 FD_SET(i,&wk_set);
         }
-
-        /* wait new events during 1 second */
         tv.tv_sec=1;
         tv.tv_usec=0;
         nb_active_clients = select(context->mx,&wk_set,NULL,NULL,&tv);
+
+        /* catch select() error */
         if (nb_active_clients == -1) {
             /* Signal was catched: just ignore it */
             if (errno == EINTR)
@@ -433,13 +436,14 @@ void tls_user_main_loop(struct tls_user_context_t *context, GMutex *mutex)
                     __FILE__,__LINE__,__func__, errno);
             exit(EXIT_FAILURE);
         }
-        if (nb_active_clients == 0)
+        if (nb_active_clients == 0) {
+            /* timeout, just continue */
             continue;
+        }
 
         /*
          * Check if a connect has occured
          */
-
         if (FD_ISSET(context->sck_inet,&wk_set) ){
             if (tls_user_accept(context) != 0)
                 continue;
