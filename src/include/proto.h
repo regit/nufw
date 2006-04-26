@@ -177,18 +177,24 @@ struct nuv2_authfield_hello {
 /* sender to client message */
 
 /* type message */
-#define SRV_TYPE 0x1
-#define SRV_REQUIRED_PACKET 0x2
-#define SRV_REQUIRED_DISCONNECT 0x3
-#define SRV_REQUIRED_HELLO 0x4
+typedef enum
+{
+    SRV_TYPE = 1,               /*!< Send server mode: #SRV_TYPE_PUSH or #SRV_TYPE_POLL */
+    SRV_REQUIRED_PACKET,
+    SRV_REQUIRED_DISCONNECT,
+    SRV_REQUIRED_HELLO
+} nuv2_type_t;
 
-/* option set to 0 by default */
-/* option for server type */
-#define SRV_TYPE_POLL 0x0
-#define SRV_TYPE_PUSH 0x1
+/** Server mode, value of with #SRV_TYPE (::nuv2_srv_message) message type */
+typedef enum
+{
+    SRV_TYPE_POLL=0,   /*!< Server works in POLL mode (default) */
+    SRV_TYPE_PUSH      /*!< Server works in PUSH mode */
+} nuv2_server_mode_t;
 
 struct nuv2_srv_message {
-    uint8_t type,option;
+    uint8_t type;
+    uint8_t option;
     uint16_t length;
 };
 

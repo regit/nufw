@@ -52,7 +52,7 @@ struct nuauth_params
      * - POLICY_ONE_LOGIN
      * - POLICY_PER_IP_ONE_LOGIN
      */
-    int connect_policy;
+    policy_t connect_policy;
 
     /** When timeout is reached, use #DECISION_REJECT instead 
      *  of #DECISION_DROP (if different than 0). 
@@ -102,10 +102,18 @@ struct nuauth_thread_t
     GMutex *mutex;
 };    
 
+/** Polity rule, see tls_sasl_connect_ok() */
+typedef enum
+{
+    /** Allow multiple login per IP (accept any connection) (default rule) */
+    POLICY_MULTIPLE_LOGIN=0,
 
-#define POLICY_MULTIPLE_LOGIN 0
-#define POLICY_ONE_LOGIN 1
-#define POLICY_PER_IP_ONE_LOGIN 2
+    /** Allow an user can only be connected once (test based on username) */
+    POLICY_ONE_LOGIN,         
+    
+    /** Allow only an user session per IP (test based on IP) */
+    POLICY_PER_IP_ONE_LOGIN    
+} policy_t;
 
 struct nuauth_datas
 {

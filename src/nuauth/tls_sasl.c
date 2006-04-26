@@ -51,17 +51,22 @@ static void tls_sasl_connect_ok(user_session_t* c_session, int c)
     struct nuv2_srv_message msg;
     /* Success place */
 
-    /* checking policy on multiuser usage */
+    /* checking policy rule on multiuser usage */
     switch (nuauthconf->connect_policy){
         case POLICY_MULTIPLE_LOGIN:
+            /* Accept all connections */
             break;
+            
         case POLICY_ONE_LOGIN:
+            /* Allow an user can only be connected once (test username) */
             if (look_for_username(c_session->user_name)){
                 policy_refuse_user(c_session,c);
                 return;
             }
             break;
+            
         case POLICY_PER_IP_ONE_LOGIN:
+            /* Allow only an user session per IP (test connection IP) */
             if (get_client_sockets_by_ip(c_session->addr) ){
                 policy_refuse_user(c_session,c);
                 return;
