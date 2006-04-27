@@ -1,3 +1,9 @@
+nufw20 (2.0_beta2-1) stable; urgency=low
+
+  * New Upstream release
+
+ -- Eric Leblond <regit@inl.fr>  Thu, 27 Apr 2006 22:28:22 +0200
+
 nufw20 (2.0_beta1-1) stable; urgency=low
 
   * New Upstream release
@@ -24,7 +30,7 @@ nufw (1.1.1-1) stable; urgency=low
 
 nufw (1.1.0-1) unstable; urgency=low
 
-  * New upstreal release
+  * New upstream release
 
  -- Eric Leblond <regit@inl.fr>  Tue,  6 Dec 2005 15:31:05 +0100
 
