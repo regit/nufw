@@ -13,6 +13,6 @@ libdbm_la_SOURCES = dbm.c
 libdbm_la_LIBADD = -lgdbm
 
 libdbm.la: $(libdbm_la_OBJECTS) $(libdbm_la_DEPENDENCIES) 
-	$(LINK) $(am_libdbm_la_rpath) $(libdbm_la_LDFLAGS) $(libdbm_la_OBJECTS) $(libdbm_la_LIBADD)
+	$(LINK) -rpath $(plugindir) $(am_libdbm_la_rpath) $(libdbm_la_LDFLAGS) $(libdbm_la_OBJECTS) $(libdbm_la_LIBADD)
 
 endif

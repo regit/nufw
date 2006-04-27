@@ -13,7 +13,7 @@ libpgsql_la_SOURCES = pgsql.c
 libpgsql_la_LIBADD = -lpq
 
 libpgsql.la: $(libpgsql_la_OBJECTS) $(libpgsql_la_DEPENDENCIES) 
-	$(LINK) $(am_libpgsql_la_rpath) $(libpgsql_la_LDFLAGS) $(libpgsql_la_OBJECTS) $(libpgsql_la_LIBADD)
+	$(LINK) -rpath $(plugindir) $(am_libpgsql_la_rpath) $(libpgsql_la_LDFLAGS) $(libpgsql_la_OBJECTS) $(libpgsql_la_LIBADD)
 
 endif
 

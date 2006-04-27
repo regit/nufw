@@ -13,6 +13,6 @@ libsystem_la_SOURCES = system.c getugroups.c
 libsystem_la_LIBADD = -lpam $(GLIB_LIBS)
 
 libsystem.la: $(libsystem_la_OBJECTS) $(libsystem_la_DEPENDENCIES) 
-	$(LINK) $(am_libsystem_la_rpath) $(libsystem_la_LDFLAGS) $(libsystem_la_OBJECTS) $(libsystem_la_LIBADD) 
+	$(LINK) -rpath $(plugindir) $(am_libsystem_la_rpath) $(libsystem_la_LDFLAGS) $(libsystem_la_OBJECTS) $(libsystem_la_LIBADD) 
 
 endif

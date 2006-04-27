@@ -13,6 +13,6 @@ libldap_la_SOURCES = ldap.c
 libldap_la_LIBADD = -lldap_r
 
 libldap.la: $(libldap_la_OBJECTS) $(libldap_la_DEPENDENCIES) 
-	$(LINK) $(am_libldap_la_rpath) $(libldap_la_LDFLAGS) $(libldap_la_OBJECTS) $(libldap_la_LIBADD)
+	$(LINK) -rpath $(plugindir) $(am_libldap_la_rpath) $(libldap_la_LDFLAGS) $(libldap_la_OBJECTS) $(libldap_la_LIBADD)
 
 endif
