@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
-AC_INIT(NuFW, 2.0-beta1, nufw-devel@nongnu.org)
+AC_INIT(NuFW, 2.0-beta2, nufw-devel@nongnu.org)
 AM_CONFIG_HEADER(src/include/config.h)
 AC_CONFIG_SRCDIR([src/nufw/main.c])
 
