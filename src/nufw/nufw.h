@@ -81,6 +81,7 @@ struct nfq_handle *h;
 #  include <libnetfilter_conntrack/libnetfilter_conntrack.h>
    struct nfct_handle *cth;
    unsigned char handle_conntrack_event; 
+   unsigned char nufw_conntrack_uses_mark; 
    void* conntrack_event_handler(void *data);
 #endif
 

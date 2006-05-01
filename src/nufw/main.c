@@ -351,7 +351,7 @@ int main(int argc,char * argv[])
     struct hostent *authreq_srv;
     /* option */
 #if USE_NFQUEUE
-    char * options_list = "DhVvmq:c:k:a:n:d:p:t:T:C";
+    char * options_list = "DhVvmq:c:k:a:n:d:p:t:T:CM";
 #else
     char * options_list = "DhVvmc:k:a:n:d:p:t:T:";
 #endif
@@ -379,6 +379,7 @@ int main(int argc,char * argv[])
 #endif
 #endif
     nufw_set_mark = 0;
+    nufw_conntrack_uses_mark = 0;
     
     log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
             "[+] Start NuFW");
@@ -452,11 +453,19 @@ int main(int argc,char * argv[])
           case 'C':
 #if HAVE_LIBCONNTRACK
             handle_conntrack_event=1;
-#endif
             break;
-#endif
+          case 'M':
+            nufw_conntrack_uses_mark=1;
+			/* this implies -C */
+            handle_conntrack_event=1;
+			/* and -m */
+            nufw_set_mark=1;
+            break;
+#endif /* HAVE_LIBCONNTRACK */
+#endif /* USE_NFQUEUE */
+ 
           case 'h' :
-            fprintf (stdout ,"%s [-hVcCv[v[v[v[v[v[v[v[v[v]]]]]]]]]] [-d remote_addr] [-p remote_port]  [-t packet_timeout] [-T track_size]\n\
+            fprintf (stdout ,"%s [-hVcCMv[v[v[v[v[v[v[v[v[v]]]]]]]]]] [-d remote_addr] [-p remote_port]  [-t packet_timeout] [-T track_size]\n\
 \t-h : display this help and exit\n\
 \t-V : display version and exit\n\
 \t-D : daemonize\n\
@@ -467,7 +476,8 @@ int main(int argc,char * argv[])
 \t-v : increase debug level (+1 for each 'v') (max useful number : 10)\n\
 \t-m : mark packet with userid (needed for connection expiration)\n"
 #ifdef HAVE_LIBCONNTRACK
-"\t-C : listen to conntrack events (needed for connection expiration)\n"
+"\t-C : listen to conntrack events (needed for connection expiration)\n\
+\t-M : only report event on marked connections to nuauth (implies -C and -m)\n"
 #endif
 "\t-d : remote address we send auth requests to (adress of the nuauth server) (default : 127.0.0.1)\n\
 \t-p : remote port we send auth requests to (TCP port nuauth server listens on) (default : 4128)\n"

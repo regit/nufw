@@ -179,19 +179,25 @@ void auth_process_conn_update(char *dgram, int dgram_size)
     
     if (build_nfct_tuple_from_message(&orig,packet_hdr)){
         /* generate reply : this is stupid but done by conntrack tool */
+        memset(&reply, 0, sizeof(reply));
         reply.l3protonum = orig.l3protonum;
-        memcpy(&reply.src, &orig.dst, sizeof(reply.src));
-        memcpy(&reply.dst, &orig.src, sizeof(reply.dst));
+#if 0
+        /* we set it to 0 to avoid problem  with NAT */
+        memset(&reply.src, 0, sizeof(reply.src));
+        memset(&reply.dst, 0, sizeof(reply.dst));
 
-        memcpy(&reply.l4src, &orig.l4dst, sizeof(reply.l4src));
-        memcpy(&reply.l4dst, &orig.l4src, sizeof(reply.l4dst));
+        memset(&reply.l4src, 0, sizeof(reply.l4src));
+        memset(&reply.l4dst, 0, sizeof(reply.l4dst));
+#endif
+
+        
         proto.tcp.state=3;
 
 #ifdef  HAVE_LIBCONNTRACK_FIXEDTIMEOUT
-        ct = nfct_conntrack_alloc(&orig, &reply, 0,
+        ct = nfct_conntrack_alloc(&orig, &reply, 0, 
                 &proto,  IPS_ASSURED|IPS_SEEN_REPLY|IPS_FIXED_TIMEOUT  , 0, 0, NULL);
 #else
-        ct = nfct_conntrack_alloc(&orig, &reply, 0,
+        ct = nfct_conntrack_alloc(&orig, &reply, 0, 
                 &proto,  IPS_ASSURED|IPS_SEEN_REPLY, 0, 0, NULL);
 #endif
 #ifdef HAVE_LIBCONNTRACK_FIXEDTIMEOUT
@@ -203,7 +209,11 @@ void auth_process_conn_update(char *dgram, int dgram_size)
         }
 #endif /* HAVE_LIBCONNTRACK_FIXEDTIMEOUT */
 
-        (void)nfct_update_conntrack(cth, ct);
+        if (nfct_update_conntrack(cth, ct) != 0){
+            log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
+                "Conntrack update was impossible");
+
+        }
         nfct_conntrack_free(ct);
     }
 }    

@@ -40,8 +40,9 @@ int update_handler (void *arg, unsigned int flags, int type,void *data)
     struct nu_conntrack_message_t message;
     int ret;
 
-
-    if (nufw_set_mark == 1){
+    /* if nufw_conntrack_uses_mark is set we should have mark set here 
+     * This REQUIRES correct CONNMARK rules and correct kernel */
+    if (nufw_conntrack_uses_mark == 1){
         if (conn->mark == 0){
             return 0;
         }

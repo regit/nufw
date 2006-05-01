@@ -82,6 +82,7 @@ manpage.1: manpage.sgml
       <arg><option>-I <replaceable>ServerID</replaceable></option></arg>
       <arg><option>-q <replaceable>NfQueue_num</replaceable></option></arg>
       <arg><option>-C</option></arg>
+      <arg><option>-M</option></arg>
 
     </cmdsynopsis>
   </refsynopsisdiv>
@@ -247,6 +248,17 @@ manpage.1: manpage.sgml
           <para>listen to conntrack events (needed for connection expiration).</para>
         </listitem>
       </varlistentry>
+     <varlistentry>
+        <term><option>-M</option>
+        </term>
+        <listitem>
+          <para>only report event on marked connections to nuauth (implies -C and -m)</para>
+		  <para>
+		  This is the way to do an efficient selection of events to be sent to nuauth but this REQUIRES a kernel with transmit_mark applied (should be ok for 2.6.18+) and the use of CONNMARK to propagate the initial mark accross all the packets of the connection. 
+		  </para>
+        </listitem>
+      </varlistentry>
+  
     </variablelist>
   </refsect1>
   <refsect1>
@@ -281,6 +293,7 @@ manpage.1: manpage.sgml
               were received and sent since daemon startup.</para>
             </listitem>
           </varlistentry>
+        </variablelist>
      </para>
   </refsect1>
   <refsect1>
