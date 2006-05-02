@@ -507,7 +507,7 @@ int read_acl_list(struct plaintext_params* params)
                   "L.%d: Read proto = %d", ln, newacl->proto);
       } else if (!strcasecmp("type", p_key)) {                  /*  Type (icmp) */
           char log_prefix[16];
-          snprintf(log_prefix, sizeof(log_prefix)-1, "L.%d: ", ln);
+          snprintf(log_prefix, sizeof(log_prefix)-1, "L.%d: type ", ln);
           /*  parse type values */
           if (parse_ints(p_value, &newacl->types, log_prefix)) {
               fclose(fd);
@@ -914,10 +914,10 @@ G_MODULE_EXPORT GSList* acl_check(connection_t* element,gpointer params)
               int found = 0;
               GSList *sl_type = p_acl->types;
               for ( ; sl_type ; sl_type = g_slist_next(sl_type)) {
-                  if (*((int*)sl_type->data) == netdata->type) {
+                  if (GPOINTER_TO_INT(sl_type->data) == netdata->type) {
                       found = 1;
                       break;
-                  }
+                  } 
               }
               if (!found)
                   continue;
