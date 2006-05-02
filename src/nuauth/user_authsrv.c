@@ -57,7 +57,15 @@ void user_check_and_decide (gpointer userdata, gpointer data)
   {
       conn_elt = conn_elt_l->data;
 
-      /* check source IP equality */
+      /* in this case we have an HELLO MODE packet */
+      if (conn_elt->packet_id){
+              struct internal_message *message = g_new0(struct internal_message,1);
+              message->type=INSERT_MESSAGE;
+              message->datas=conn_elt;
+              g_async_queue_push (nuauthdatas->localid_auth_queue,message);
+              continue;
+      } 
+      /* Sanity check : verify source IP equality */
       if  (  ((struct tls_buffer_read *)userdata)->ipv4_addr 
               ==
               htonl(conn_elt->tracking.saddr) ){
@@ -67,14 +75,7 @@ void user_check_and_decide (gpointer userdata, gpointer data)
               print_connection(conn_elt,NULL);
           }
 #endif
-          if (conn_elt->packet_id){
-              struct internal_message *message = g_new0(struct internal_message,1);
-              message->type=INSERT_MESSAGE;
-              message->datas=conn_elt;
-              g_async_queue_push (nuauthdatas->localid_auth_queue,message);
-          } else {
-              g_async_queue_push (nuauthdatas->connections_queue,conn_elt);
-          }
+          g_async_queue_push (nuauthdatas->connections_queue,conn_elt);
       } else {
           if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER)){
               struct in_addr badaddr;
@@ -93,7 +94,7 @@ void user_check_and_decide (gpointer userdata, gpointer data)
 
 void user_process_field_hello(connection_t* connection, struct nuv2_authfield_hello* hellofield)
 {
-    g_message("got hello field");
+    debug_log_message (VERBOSE_DEBUG, AREA_USER, "\tgot hello field");
     connection->packet_id=g_slist_prepend(NULL,GINT_TO_POINTER(hellofield->helloid));
 }    
 
@@ -404,6 +405,7 @@ GSList* user_request(struct tls_buffer_read *datas)
         }
         
         connection->state=AUTH_STATE_USERPCKT;
+
         connection->acl_groups=NULL;            /* acl part is NULL */
         connection->timestamp=time(NULL);       /* first reset timestamp to now */
         conn_elts=g_slist_prepend(conn_elts,connection);
