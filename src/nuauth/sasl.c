@@ -132,7 +132,7 @@ static int userdb_checkpass(sasl_conn_t *conn,
 	}
 
 
-	if ( modules_user_check(dec_user,pass,passlen,&uid,&groups)==SASL_OK){
+	if ( modules_user_check(dec_user,pass,passlen,&uid,&groups) == SASL_OK){
 		g_private_set(group_priv,groups);
 		g_private_set(user_priv,GUINT_TO_POINTER(uid));
 		/* we're done */
@@ -141,6 +141,7 @@ static int userdb_checkpass(sasl_conn_t *conn,
 	}
 	if (nuauthconf->uses_utf8) g_free(dec_user);
 	/* return to fallback */
+	log_message(INFO, AREA_AUTH, "Bad auth from user at %s:%d",__FILE__,__LINE__);
 	return SASL_NOAUTHZ;
 }
 
@@ -249,7 +250,7 @@ static int mysasl_negotiate(user_session_t * c_session , sasl_conn_t *conn)
 			return SASL_FAIL;
 		}
 		/* start libsasl negotiation */
-		r = sasl_server_start(conn,	chosenmech, buf, tls_len, &data, &sasl_len);
+		r = sasl_server_start(conn, chosenmech, buf, tls_len, &data, &sasl_len);
 	} else {
 		debug_log_message(DEBUG, AREA_AUTH, "start with no msg");
 		r = sasl_server_start(conn, chosenmech, NULL, 0, &data, &sasl_len);

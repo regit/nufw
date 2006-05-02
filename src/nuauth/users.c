@@ -90,6 +90,7 @@ void get_users_from_cache (connection_t* conn_elt)
 			/*user has not been found or problem occurs we must fail 
 			 * returning NULL is enough (don't want to be DOSsed)*/
 			log_message(WARNING, AREA_PACKET, "User not found");
+			return;
 
             /* GRYZOR asks : shouldnt we just leave here? */
 		}
