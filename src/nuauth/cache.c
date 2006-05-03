@@ -20,6 +20,20 @@
 #include <auth_srv.h>
 #include "cache.h"
 
+/**
+ * \ingroup Nuauth
+ * \defgroup Cache Cache system
+ *
+ * @{
+ */
+
+/** 
+ * \file cache.c
+ * \brief Generic cache system
+ *
+ * A implementation of a generic cache system
+ */
+
 void free_cache_elt(gpointer data,gpointer userdata)
 {
     GFunc free_datas = (GFunc) userdata;
@@ -283,3 +297,4 @@ void clear_cache (struct cache_init_datas *cache_datas)
 	g_hash_table_destroy (cache_datas->hash);
 }
 
+/** @} */

@@ -30,6 +30,11 @@
 #include <readpassphrase.h>
 #endif
 
+/**
+ * \defgroup Nutcpc Nutcpc
+ * @{
+ */
+
 #define MAX_RETRY_TIME 30
 
 struct termios orig;
@@ -496,3 +501,5 @@ int main (int argc, char *argv[])
         leave_client();
 	exit (EXIT_SUCCESS);
 }
+
+/** @} */

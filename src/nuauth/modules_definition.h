@@ -19,6 +19,10 @@
 #ifndef MODULES_DEFINITION_H
 #define MODULES_DEFINITION_H
 
+/** \addtogroup NuauthModules
+ * @{
+ */
+
 GSList* user_check_modules;
 
 GSList* acl_check_modules;
@@ -62,5 +66,6 @@ typedef int certificate_check_callback (gnutls_session session, gnutls_x509_crt 
 /* certificate to uid function */
 typedef gchar* certificate_to_uid_callback (gnutls_session session, gnutls_x509_crt cert,gpointer params);
 
+/** @} */
 
 #endif

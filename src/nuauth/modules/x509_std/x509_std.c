@@ -22,6 +22,20 @@
 
 #include "x509_std.h"
 
+/**
+ * \ingroup NuauthModules
+ * \defgroup X509NuauthModules X509 Checking modules
+ */
+
+/**
+ * 
+ * \ingroup X509NuauthModules
+ * \defgroup X509STDModule X509 standard checking module
+ *
+ * @{ */
+
+
+
 #define DN_LENGTH 256
 
 G_MODULE_EXPORT gboolean module_params_unload(gpointer params_p)
@@ -139,3 +153,5 @@ G_MODULE_EXPORT gchar* certificate_to_uid (gnutls_session session, gnutls_x509_c
 
     return NULL;
 }
+
+/** @} */

@@ -19,6 +19,11 @@
 
 #include <auth_srv.h>
 
+/** \ingroup Nuauth
+ * \defgroup NuauthHello Hello Authentication
+ * @{
+ */
+
 char localid_authenticated_protocol(int protocol)
 {
     if (protocol != IPPROTO_TCP){
@@ -172,3 +177,4 @@ void* localid_auth(GMutex *mutex)
     return NULL;
 }
 
+/** @} */

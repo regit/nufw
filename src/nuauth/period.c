@@ -18,6 +18,15 @@
 
 #include "auth_srv.h" 
 
+/**
+ * \addtogroup NuauthConntrack
+ * @{
+ */
+
+/**
+ * \file period.c
+ * \brief Provide a set of functions for period and time calculation 
+ */
 
 gboolean is_time_t_in_period(gchar* periodname,time_t pckt_time)
 {
@@ -194,3 +203,5 @@ GHashTable *init_periods( )
     
   return periods;
 }
+
+/** @} */

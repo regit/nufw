@@ -21,6 +21,10 @@
 
 #include <auth_srv.h>
 
+/** \addtogroup NuauthCore
+ * @{
+ */
+
 /*
  * Parse a string containing a list of addresses (separated by spaces).
  * Skip invalid addresses.
@@ -124,4 +128,4 @@ gchar *string_escape(gchar *orig)
     return orig;
 }
 
-
+/** @} */

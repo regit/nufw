@@ -1,6 +1,11 @@
 #include <auth_srv.h>
 #include <gnutls/x509.h>
 
+/**
+ * \addtogroup TLSUser
+ * @{
+ */
+
 
 gint get_first_x509_cert_from_tls_session(gnutls_session session,gnutls_x509_crt* cert)
 {
@@ -71,3 +76,4 @@ gchar *	get_username_from_x509_certificate(gnutls_session session)
     return username;
 }
 
+/** @} */

@@ -38,6 +38,11 @@
 #include "libnuclient.h"
 
 /**
+ * \addtogroup libnuclient
+ * @{
+ */ 
+
+/**
  * Convert a locale in locale charset to Unicode charset using UTF-8 encoding.
  * Maximum length of output buffer is four times of inbuf length.
  *
@@ -117,3 +122,4 @@ char* locale_to_utf8(char* inbuf)
     return outbuf;
 }
 
+/** @} */

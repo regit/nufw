@@ -29,6 +29,11 @@
  *
  */
 
+/**
+ * \defgroup libnuclient Libnuclient
+ * @{
+ */
+
 /*! \file libnuclient.c
   \brief Main file for libnuclient
 
@@ -1037,3 +1042,4 @@ const char* nuclient_strerror (nuclient_error *err)
   }
 }
 
+/** @} */

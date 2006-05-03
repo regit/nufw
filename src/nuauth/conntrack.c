@@ -18,6 +18,16 @@
 
 #include "auth_srv.h"
 
+/** \ingroup Nuauth
+ *  \defgroup NuauthConntrack Fixed timeout connections handling
+ *  @{
+ */
+
+/** 
+ * \file nuauth/conntrack.c
+ * \brief Conntrack handling (used for fixed timeout)
+ */
+
 static gboolean get_nufw_server_by_addr(gpointer key,gpointer value,gpointer user_data)
 {
     if ( (((nufw_session_t*)value)->peername).s_addr 
@@ -189,3 +199,4 @@ void* limited_connection_handler(GMutex *mutex)
     return NULL;
 }
 
+/** @} */

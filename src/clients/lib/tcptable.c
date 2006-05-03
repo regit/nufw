@@ -45,6 +45,11 @@
 #include <netinet/tcp_var.h>
 #endif
 
+/**
+ * \addtogroup libnuclient
+ * @{
+ */
+
 /** \file tcptable.c
  * \brief TCP parsing function
  *
@@ -395,3 +400,4 @@ void tcptable_free (conntable_t *ct)
 	free(ct);
 }
 
+/** @} */

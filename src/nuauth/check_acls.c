@@ -17,9 +17,14 @@
 
 #include <auth_srv.h>
 
-/*
- * check packet contained in element against
- * an external base (ldap,radius,...)
+/**
+ * \addtogroup NuauthCore
+ * @{
+ */
+
+/**
+ * \file check_acls.c
+ * \brief check packet contained in element against an external base 
  */
 
 /**
@@ -102,4 +107,4 @@ void acl_check_and_decide (gpointer userdata, gpointer data)
 	debug_log_message(VERBOSE_DEBUG, AREA_PACKET, "leaving acl_check");
 }
 
-
+/** @} */

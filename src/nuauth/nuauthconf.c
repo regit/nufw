@@ -19,6 +19,15 @@
 #include <auth_srv.h>
 #include <time.h>
 
+/**
+ * \addtogroup NuauthConf
+ * @{
+ */
+
+/** \file nuauthconf.c
+ * \brief Contain functions used to regenerate configuration and reload
+ */
+
 int build_nuauthconf(struct nuauth_params * nuauthconf,
                 char* nuauth_client_listen_addr,
                 char* nuauth_nufw_listen_addr,
@@ -351,3 +360,4 @@ static struct nuauth_params* compare_and_update_nuauthparams(struct nuauth_param
   }
 }
 
+/** @} */

@@ -25,6 +25,11 @@
 #include "client.h"
 #include "security.h"
 
+/**
+ * \addtogroup libnuclient
+ * @{
+ */
+
 static struct prg_node {
     struct prg_node *next;     /** Pointer to next element in the single chained list */
     unsigned long inode;       /** Inode of the program executable binary */
@@ -278,6 +283,8 @@ void prg_cache_load()
     }
     closedir(dirproc);
 }
+
+/** @} */
 
 #endif   /* of #ifdef LINUX */
 

@@ -34,6 +34,10 @@
 #include "proc.h"
 #include "client.h"
 
+/** \addtogroup libnuclient
+ * @{
+ */
+
 typedef void (*pthread_cleanup_push_arg1_t) (void *);
 
 /**
@@ -296,3 +300,4 @@ int secure_snprintf(char *buffer, unsigned int buffer_size, char *format, ...)
         return 0;
 }    
 
+/** @} */

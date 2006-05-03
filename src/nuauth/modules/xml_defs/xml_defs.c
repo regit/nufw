@@ -20,6 +20,20 @@
 #include <auth_srv.h>
 #include "xml_defs.h"
 
+/**
+ * \ingroup NuauthModules
+ * \defgroup PeriodNuauthModules Period definition modules
+ */
+
+/**
+ * 
+ * \ingroup PeriodNuauthModules
+ * \defgroup XMLModule XML period definition module
+ *
+ * @{ */
+
+
+
 #define XML_DEFS_PERIODFILE CONFIG_DIR "/" "periods.xml"
 
 G_MODULE_EXPORT gboolean module_params_unload(gpointer params_p)
@@ -214,3 +228,5 @@ G_MODULE_EXPORT void define_periods(GHashTable* periods,gpointer params_p)
 
     return;
 }
+
+/** @} */

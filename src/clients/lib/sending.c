@@ -34,6 +34,11 @@
 #include <jhash.h>
 #include "client.h"
 
+/**
+ * \addtogroup libnuclient
+ * @{
+ */
+
 #if DEBUG_ENABLE
 int count;
 #endif
@@ -159,4 +164,4 @@ int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
   return 1;
 }
 
-
+/** @} */

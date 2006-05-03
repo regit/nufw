@@ -1,6 +1,15 @@
 #include "auth_srv.h"
 #include <jhash.h>
 
+/**
+ * \addtogroup NuauthCore
+ * @{
+ */
+
+/** \file auth_hash.c
+ * \brief Connections hash handling
+ */
+
 /* should never be called !!! */
 void search_and_fill_catchall(connection_t *new, connection_t *packet)
 {
@@ -335,3 +344,4 @@ void* search_and_fill(GMutex* mutex)
     return NULL;
 }
 
+/* @} */
