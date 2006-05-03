@@ -33,6 +33,13 @@
  **
  */
 
+/**
+ *
+ * \ingroup  Nuauth
+ * \defgroup NuauthModules Nuauth Modules
+ * @{
+ */
+
 /** 
  * \file modules.c
  * \brief Take care of interaction with modules
@@ -444,3 +451,4 @@ void block_on_conf_reload()
     g_mutex_unlock(nuauthdatas->reload_cond_mutex);
 }
 
+/* @} */

@@ -17,7 +17,9 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/** \file main.c
+/** 
+ *  \defgroup Nufw Nufw
+ *  \file main.c
  *  \brief Function main() 
  *   
  * See function main().

@@ -22,6 +22,15 @@
 #include "auth_plaintext.h"
 
 /**
+ *
+ * \ingroup AuthNuauthModules
+ * \defgroup PlaintextModule Plaintext authentication and acl module
+ *
+ * @{ */
+
+
+
+/**
  * strip_line()
  * Returns a pointer on stripped line or
  * NULL if the line should be skipped and acceptnull is true.
@@ -1062,3 +1071,4 @@ G_MODULE_EXPORT GSList* acl_check(connection_t* element,gpointer params)
   return g_list;
 }
 
+/** @} */

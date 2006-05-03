@@ -3,6 +3,7 @@
 	- nufw : add -M option to use mark to select conntrack event to be sent to
 	  nuauth
 	- NuFW : fix hello mode authentication
+	- doxygen documentation improvement
 2.0-beta2 (2006/06/27)
 	- nuauth : fix period reloading
 	- nuauth : fix logging as UNAUTHENTICATED DROP of established packet

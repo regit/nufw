@@ -21,6 +21,19 @@
 #include <errno.h>
 #include "security.h"
 
+/**
+ * \ingroup NuauthModules
+ * \defgroup LoggingNuauthModules Logging modules
+ */
+
+/**
+ * \ingroup LoggingNuauthModules
+ * \defgroup SyslogModule Syslog logging module
+ *
+ * @{ */
+
+
+
 G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state,gpointer params)
 {
     char *prefix = "[nuauth] ";
@@ -124,4 +137,4 @@ G_MODULE_EXPORT gboolean module_params_unload(gpointer params_p)
         return TRUE;
 }
 
-
+/** @} */

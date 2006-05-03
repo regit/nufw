@@ -29,6 +29,16 @@
 #include <errno.h>
 #include <time.h>
 #include "security.h"
+
+/**
+ *
+ * \ingroup LoggingNuauthModules
+ * \defgroup PGSQLModule PgSQL logging module
+ *
+ * @{ */
+
+
+
 G_MODULE_EXPORT gboolean module_params_unload(gpointer params_p)
 {
   struct log_pgsql_params *params = (struct log_pgsql_params*)params_p;
@@ -541,4 +551,4 @@ G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t
     return 0;
 }
 
-
+/** @} */

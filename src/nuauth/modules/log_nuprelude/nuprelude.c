@@ -21,6 +21,15 @@
 #include <prelude-log.h>
 #include <idmef-tree-wrap.h>
 
+/**
+ *
+ * \ingroup LoggingNuauthModules
+ * \defgroup PreludeModule Prelude logging module
+ *
+ * @{ */
+
+
+
 confparams mysql_nuauth_vars[] = {
     /*    { "prelude_..." , G_TOKEN_STRING, 0 , PRELUDE_... }, */
 };
@@ -606,3 +615,4 @@ G_MODULE_EXPORT gchar* g_module_check_init()
     return NULL;
 }
 
+/** @} */

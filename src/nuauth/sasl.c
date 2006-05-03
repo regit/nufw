@@ -33,6 +33,20 @@
  **
  */
 
+
+/**
+ * \addtogroup TLSUser
+ * @{
+ */
+
+/** \file sasl.c
+ *  \brief Manage clients authentication.
+ *   
+ * This file contains functions used for sasl negotiation. The more important of the is mysasl_negotiate().
+ */
+
+
+
 #include <auth_srv.h>
 #include <sasl/saslutil.h>
 #include "security.h"
@@ -43,7 +57,7 @@ gchar * mech_string_external;
 GPrivate* group_priv;
 GPrivate* user_priv;
 
-/*sasl init function*/
+/* sasl init function */
 void *sasl_gthread_mutex_init(void)
 {
 	GMutex* lock = g_mutex_new();
@@ -146,7 +160,9 @@ static int userdb_checkpass(sasl_conn_t *conn,
 }
 
 
-/* called in tls_user_init */
+/**
+ * called in tls_user_init() 
+ */
 void my_sasl_init()
 {
 	int ret;
@@ -624,3 +640,6 @@ int sasl_user_check(user_session_t* c_session)
     return SASL_OK;
 }
 
+/**
+ * @} 
+ */

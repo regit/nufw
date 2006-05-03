@@ -27,6 +27,18 @@
 #include <unistd.h>
 
 
+/**
+ * \addtogroup TLS
+ * @{
+ */
+
+/**
+ * \file nuauth/tls.c
+ * \brief Functions use to create/destroy a TLS connection
+ *
+ * Contain common functions tor TLS handling
+ */
+
 
 /* These are global */
 struct nuauth_tls_t nuauth_tls; 
@@ -190,6 +202,8 @@ static ssize_t tls_push_func(gnutls_transport_ptr ptr, const void *buf, size_t c
  * Finally checks the certificate using check_certs_for_tls_session() 
  * if needed.
  * 
+ * \param socket_fd Socket to established TLS session on
+ * \param session_ptr Pointer of pointer to a gnutls session
  * \return Returns SASL_BADPARAM if fails, SASL_OK otherwise.
  */
 int tls_connect(int socket_fd,gnutls_session** session_ptr) 
@@ -483,3 +497,4 @@ void end_tls()
     gnutls_dh_params_deinit(nuauth_tls.dh_params);
     gnutls_global_deinit();
 }
+/**@}*/

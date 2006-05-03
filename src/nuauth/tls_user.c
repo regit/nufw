@@ -20,8 +20,14 @@
 
 #include "auth_srv.h"
 
+/**
+ * \ingroup TLS
+ * \defgroup TLSUser TLS User server
+ * @{
+ */
+
 /** \file tls_user.c
- *  \brief Manager clients connections and messages.
+ *  \brief Manage clients connections and messages.
  *   
  * The thread tls_user_authsrv() wait for clients in tls_user_main_loop().
  */
@@ -594,3 +600,6 @@ void* tls_user_authsrv(GMutex *mutex)
     return NULL;
 }
 
+/**
+ * @}
+ */

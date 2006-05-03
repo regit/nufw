@@ -16,6 +16,14 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/**
+ *
+ * \ingroup AuthNuauthModules
+ * \defgroup IPauthModule Ident authentication module
+ *
+ * @{ */
+
+
 
 #include <auth_srv.h>
 
@@ -89,3 +97,5 @@ G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
 {
   return TRUE;
 }
+
+/** @} */

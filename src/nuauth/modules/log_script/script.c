@@ -20,6 +20,15 @@
 #include <string.h>
 #include <errno.h>
 
+/**
+ *
+ * \ingroup LoggingNuauthModules
+ * \defgroup ScriptModule Script logging module
+ *
+ * @{ */
+
+
+
 G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t state,gpointer params)
 {
 	struct in_addr remote_inaddr;
@@ -63,3 +72,5 @@ G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
 {
   return TRUE;
 }
+
+/** @} */

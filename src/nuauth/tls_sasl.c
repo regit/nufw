@@ -20,6 +20,18 @@
 
 #include "auth_srv.h"
 
+/**
+ * \addtogroup TLSUser
+ * @{
+ */
+
+/**
+ * \file tls_sasl.c
+ * \brief Handle phase after authentication and till client is active
+ *
+ * It also handle preclient list to be able to disconnect user if authentication take too long.
+ */
+
 extern struct nuauth_tls_t nuauth_tls;
 
 /**
@@ -199,3 +211,6 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
     }
 }
 
+/**
+ * @}
+ */

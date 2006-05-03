@@ -22,7 +22,17 @@
 #include <auth_ldap.h>
 #include "security.h"
 
+/**
+ * \ingroup NuauthModules
+ * \defgroup AuthNuauthModules Authentication modules
+ */
 
+/**
+ * 
+ * \ingroup AuthNuauthModules
+ * \defgroup LdapModule LDAP authentication and acl module
+ *
+ * @{ */
 
 G_MODULE_EXPORT gboolean module_params_unload(gpointer params_p)
 {
@@ -486,3 +496,5 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned p
 
   return SASL_BADAUTH;
 }
+
+/* @} */

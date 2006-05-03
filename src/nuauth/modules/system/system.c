@@ -18,6 +18,14 @@
 
 #include <auth_srv.h>
 
+/**
+ * \ingroup AuthNuauthModules
+ * \defgroup SystemModule PAM+NSS authentication module
+ *
+ * @{ */
+
+
+
 #include "../../nuauth_gcrypt.h"
 
 #include <pwd.h>
@@ -213,3 +221,5 @@ G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
 {
   return TRUE;
 }
+
+/** @} */

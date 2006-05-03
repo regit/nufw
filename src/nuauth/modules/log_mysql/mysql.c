@@ -21,6 +21,15 @@
 #include <string.h>
 #include <errno.h>
 
+/**
+ *
+ * \ingroup LoggingNuauthModules
+ * \defgroup SQLModule MySQL logging module
+ *
+ * @{ */
+
+
+
 G_MODULE_EXPORT gchar* module_params_unload(gpointer params_p)
 {
   struct log_mysql_params* params = (struct log_mysql_params*)params_p;
@@ -602,4 +611,4 @@ G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t
     return 1;
 }
 
-
+/** @} */

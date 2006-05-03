@@ -26,6 +26,16 @@
 #include "../include/security.h"
 
 /**
+ * \ingroup TLSUser
+ * @{
+ *
+ * \file gcrypt.c
+ * \brief Contain function used to ease authentication task
+ *
+ * In particular, it does handle hash verification
+ */
+
+/**
  * verify user password against user authentication module.
  */
 int verify_user_password(const char* given,const char* ours){
@@ -203,3 +213,5 @@ int verify_user_password(const char* given,const char* ours){
 		}
 	}
 }
+
+/* @} */
