@@ -62,11 +62,11 @@ void* recv_message(void *data)
 	header->option=0;
 	header->length=htons(message_length);
 
-        authreq = (struct nuv2_authreq *)header + sizeof(*header);
+     authreq = (struct nuv2_authreq *)(header + 1);
 	authreq->packet_id=session->packet_id++;
-	authreq->packet_length = sizeof(struct nuv2_authreq)+sizeof(struct nuv2_authfield_hello);
+	authreq->packet_length = htons(sizeof(struct nuv2_authreq)+sizeof(struct nuv2_authfield_hello));
 
-        hellofield = (struct nuv2_authfield_hello *)authreq + sizeof(*authreq);
+    hellofield = (struct nuv2_authfield_hello *)(authreq + 1);
 	hellofield->type=HELLO_FIELD;
 	hellofield->option=0;
 	hellofield->length=htons(sizeof(struct nuv2_authfield_hello));
@@ -91,7 +91,6 @@ void* recv_message(void *data)
                       break;
                   case SRV_REQUIRED_HELLO:
                       hellofield->helloid = ((struct nuv2_srv_helloreq*)dgram)->helloid;
-
                       /*  send it */
                       if(session->tls){
                           if( gnutls_record_send(session->tls,message,

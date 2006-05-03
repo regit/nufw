@@ -216,7 +216,6 @@ nu_error_t authpckt_new_connection(unsigned char *dgram, unsigned int dgram_size
     if ( nuauthconf->hello_authentication &&  localid_authenticated_protocol(connection->tracking.protocol) ) {
         connection->state = AUTH_STATE_HELLOMODE;
         *conn = connection;
-	return NU_EXIT_OK;
     } else {
         connection->state = AUTH_STATE_AUTHREQ;
     }
