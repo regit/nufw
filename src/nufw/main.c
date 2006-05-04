@@ -378,10 +378,11 @@ int main(int argc,char * argv[])
     nfqueue_num=DEFAULT_NFQUEUE;
 #ifdef HAVE_LIBCONNTRACK
     handle_conntrack_event=CONNTRACK_HANDLE_DEFAULT;
+    nufw_conntrack_uses_mark = 0;
 #endif
 #endif
     nufw_set_mark = 0;
-    nufw_conntrack_uses_mark = 0;
+
     
     log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
             "[+] Start NuFW");
