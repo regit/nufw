@@ -72,8 +72,7 @@ void localid_insert_message(connection_t *pckt,
             element = (connection_t*) g_hash_table_lookup (localid_auth_hash,(GSList*)(pckt->packet_id)->data);
             /* if found ask for completion */
             if (element){
-                /* TODO : do a check on saddr */
-                if ( (element->tracking.saddr == pckt->tracking.saddr ) || 1 ){	
+                if ( (element->tracking.saddr == pckt->tracking.saddr ) ){	
                     element->state=AUTH_STATE_HELLOMODE;	
                     element->user_id=pckt->user_id;
                     element->username=pckt->username;

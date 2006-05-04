@@ -1,5 +1,5 @@
 /*
- * Copyright(C) 2004-2005 INL http://www.inl.fr/
+ * Copyright(C) 2004-2006 INL http://www.inl.fr/
  ** written by  Eric Leblond <regit@inl.fr>
  **             Vincent Deffontaines <vincent@inl.fr>
  **
@@ -30,7 +30,7 @@ static GSList * userpckt_decode(struct tls_buffer_read * datas);
  * 
  * Call userpckt_decode()
  *
- * \param userdata The datagram
+ * \param userdata Pointer to the datagram
  * \param data NULL (unused)
  */
 void user_check_and_decide (gpointer userdata, gpointer data)
@@ -60,6 +60,9 @@ void user_check_and_decide (gpointer userdata, gpointer data)
       /* in this case we have an HELLO MODE packet */
       if (conn_elt->packet_id){
               struct internal_message *message = g_new0(struct internal_message,1);
+              /* We assume the source address we try to authenticate is source address
+               * of client connection */
+              conn_elt->tracking.saddr = ((struct tls_buffer_read *)userdata)->ipv4_addr;
               message->type=INSERT_MESSAGE;
               message->datas=conn_elt;
               g_async_queue_push (nuauthdatas->localid_auth_queue,message);
