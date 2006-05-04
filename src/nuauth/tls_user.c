@@ -477,9 +477,22 @@ void tls_user_init(struct tls_user_context_t *context)
         { "nuauth_number_authcheckers" , G_TOKEN_INT ,NB_AUTHCHECK, NULL },
         { "nuauth_auth_nego_timeout" , G_TOKEN_INT ,AUTH_NEGO_TIMEOUT, NULL }
     };
-    struct sockaddr_in addr_inet;
+    struct addrinfo *res;
+    struct addrinfo hints;
     GThread *pre_client_thread;
     int result;
+    int ecode;
+    
+    memset(&hints, 0, sizeof hints);
+    hints.ai_flags = AI_PASSIVE;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_family = PF_UNSPEC;
+    ecode = getaddrinfo(NULL, "4130", &hints, &res);
+    if (ecode != 0)
+    {
+	g_error("Fail to init. user server address: %s\n", gai_strerror(ecode));
+	exit(EXIT_SUCCESS);
+    }
 
     /* get config file setup */
     /* parse conf file */
@@ -529,7 +542,13 @@ void tls_user_init(struct tls_user_context_t *context)
             NULL);
 
     /* open the socket */
-    context->sck_inet = socket (AF_INET,SOCK_STREAM,0);
+    if (res->ai_family == PF_INET)
+	printf("Create user server IPv4 socket\n");
+    else if (res->ai_family == PF_INET6)
+	printf("Create user server IPv6 socket\n");
+    else
+	printf("Create user server (any) socket\n");
+    context->sck_inet = socket (res->ai_family, res->ai_socktype, res->ai_protocol);
     if (context->sck_inet == -1)
     {
         g_warning("socket() failed, exiting");
@@ -552,16 +571,11 @@ void tls_user_init(struct tls_user_context_t *context)
             sizeof(context->option_value));
 
     /* bind */
-    memset(&addr_inet,0,sizeof addr_inet);
-    addr_inet.sin_family= AF_INET;
-    addr_inet.sin_port=htons(nuauthconf->userpckt_port);
-    addr_inet.sin_addr.s_addr=nuauthconf->client_srv->s_addr;
-    result = bind (context->sck_inet,
-            (struct sockaddr *)&addr_inet,
-            sizeof addr_inet);
-    if (result == -1)
+    result = bind (context->sck_inet, res->ai_addr, res->ai_addrlen);
+    if (result < 0)
     {
-        g_warning ("user bind() failed to %s:%d at %s:%d, exiting",inet_ntoa(addr_inet.sin_addr),nuauthconf->userpckt_port,__FILE__,__LINE__);
+        g_warning ("user bind() failed to bind port %s (at %s:%d), exiting!",
+		nuauthconf->userpckt_port,__FILE__,__LINE__);
         exit(EXIT_FAILURE);
     }
 
@@ -572,6 +586,7 @@ void tls_user_init(struct tls_user_context_t *context)
         g_warning ("user listen() failed, exiting");
         exit(EXIT_FAILURE);
     }
+    freeaddrinfo(res);
 
     /* init fd_set */
     FD_ZERO(&context->tls_rx_set);

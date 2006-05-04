@@ -49,6 +49,7 @@
 #include "proto.h"
 
 #define AUTHREQ_ADDR  "127.0.0.1" /*!< Default value of ::authreq_addr */
+#undef AUTHREQ_PORT
 #define AUTHREQ_PORT 4129   /*!< Default value of  ::authreq_port */
 #define TRACK_SIZE 1000     /*!< Default value of ::track_size */
 #define PACKET_TIMEOUT 15   /*!< Default value of ::packet_timeout */

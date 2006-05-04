@@ -96,8 +96,8 @@ void init_nuauthconf(struct nuauth_params **result)
   confparams nuauth_vars[] = {
       { "nuauth_client_listen_addr" ,  G_TOKEN_STRING, 0 , g_strdup(AUTHREQ_CLIENT_LISTEN_ADDR) },
       { "nuauth_nufw_listen_addr" ,  G_TOKEN_STRING, 0 , g_strdup(AUTHREQ_NUFW_LISTEN_ADDR) },
-      { "nuauth_gw_packet_port" , G_TOKEN_INT , AUTHREQ_PORT,NULL },
-      { "nuauth_user_packet_port" , G_TOKEN_INT , USERPCKT_PORT ,NULL},
+      { "nuauth_gw_packet_port" , G_TOKEN_STRING, 0, g_strdup(AUTHREQ_PORT) },
+      { "nuauth_user_packet_port" , G_TOKEN_STRING , 0, g_strdup(USERPCKT_PORT) },
       { "nufw_gw_addr" , G_TOKEN_STRING , 0, g_strdup(GWSRV_ADDR) },
       { "nuauth_packet_timeout" , G_TOKEN_INT , PACKET_TIMEOUT, NULL },
       { "nuauth_session_duration" , G_TOKEN_INT , SESSION_DURATION, NULL },
@@ -137,7 +137,6 @@ void init_nuauthconf(struct nuauth_params **result)
 
   conf=g_new0(struct nuauth_params,1);
   *result = conf;
-
   
   /* parse conf file */
   parse_conffile(DEFAULT_CONF_FILE, nb_params, nuauth_vars);
@@ -150,9 +149,9 @@ void init_nuauthconf(struct nuauth_params **result)
   gwsrv_addr = (char *)READ_CONF("nufw_gw_addr");
   nuauth_multi_users = (char *)READ_CONF("nuauth_multi_users");
   nuauth_multi_servers = (char *)READ_CONF("nuauth_multi_servers");
-
-  conf->authreq_port = *(int*)READ_CONF("nuauth_gw_packet_port");
-  conf->userpckt_port = *(int*)READ_CONF("nuauth_user_packet_port");
+  conf->authreq_port = (char *)READ_CONF("nuauth_gw_packet_port");
+  conf->userpckt_port = (char *)READ_CONF("nuauth_user_packet_port");
+  
   conf->nbuser_check = *(int*)READ_CONF("nuauth_number_usercheckers");
   conf->nbacl_check = *(int*)READ_CONF("nuauth_number_aclcheckers");
   conf->nbipauth_check = *(int*)READ_CONF("nuauth_number_ipauthcheckers");
@@ -271,12 +270,12 @@ void nuauth_reload( int signal ) {
 static struct nuauth_params* compare_and_update_nuauthparams(struct nuauth_params* current,struct nuauth_params* new)
 {
   gboolean restart=FALSE;
-  if( current->authreq_port != new->authreq_port ){
+  if( strcmp(current->authreq_port, new->authreq_port) != 0){
       g_warning("authreq_port has changed, please restart");
       restart=TRUE;
   }
 
-  if( current->userpckt_port != new->userpckt_port ){
+  if( strcmp(current->userpckt_port, new->userpckt_port) !=0 ){
       g_warning("userpckt_port has changed, please restart");
       restart=TRUE;
   }

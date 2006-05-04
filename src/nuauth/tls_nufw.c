@@ -29,7 +29,6 @@
 struct tls_nufw_context_t {
     int mx;
     int sck_inet;
-    struct sockaddr_in addr_inet;
     fd_set tls_rx_set; /* read set */
 };
 
@@ -303,6 +302,21 @@ void tls_nufw_init(struct tls_nufw_context_t *context)
 {    
     int socket_fd;
     gint option_value;
+    struct addrinfo *res;
+    struct addrinfo hints;
+    int ecode;
+
+    memset(&hints, 0, sizeof hints);
+    hints.ai_flags = AI_PASSIVE;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_family = PF_UNSPEC;
+    ecode = getaddrinfo(NULL, nuauthconf->authreq_port, &hints, &res);
+    if (ecode != 0)
+    {
+	g_error("Fail to init. user server address: %s\n", gai_strerror(ecode));
+	exit(EXIT_SUCCESS);
+    }
+
 #if 0
     struct sigaction action;
 
@@ -342,7 +356,7 @@ void tls_nufw_init(struct tls_nufw_context_t *context)
 #endif
 
     /* open the socket */
-    context->sck_inet = socket (AF_INET, SOCK_STREAM, 0);
+    context->sck_inet = socket (res->ai_family, res->ai_socktype, res->ai_protocol);
     if (context->sck_inet == -1)
     {
         g_warning("socket() failed, exiting");
@@ -353,16 +367,10 @@ void tls_nufw_init(struct tls_nufw_context_t *context)
     setsockopt (context->sck_inet, SOL_SOCKET, SO_REUSEADDR, 
             &option_value,	sizeof(option_value));
 
-    memset(&context->addr_inet,0,sizeof context->addr_inet);
-    context->addr_inet.sin_family = AF_INET;
-    context->addr_inet.sin_port = htons(nuauthconf->authreq_port);
-    context->addr_inet.sin_addr.s_addr = nuauthconf->nufw_srv->s_addr;
-    socket_fd = bind (context->sck_inet,
-            (struct sockaddr *)&context->addr_inet,
-            sizeof context->addr_inet);
-    if (socket_fd == -1)
+    socket_fd = bind (context->sck_inet, res->ai_addr, res->ai_addrlen);
+    if (socket_fd < 0)
     {
-        g_warning ("nufw bind() failed to %s:%d, exiting",inet_ntoa(context->addr_inet.sin_addr),nuauthconf->authreq_port);
+        g_warning ("nufw bind() failed on port %s, exiting", nuauthconf->authreq_port);
         exit(EXIT_FAILURE);
     }
 

@@ -62,8 +62,8 @@ typedef enum
     DECISION_REJECT     /*!< NuAuth decision answer: reject the packet */ 
 } decision_t;    
 
-#define AUTHSRV_PORT 4128
-#define AUTHREQ_PORT 4129
+#define AUTHREQ_PORT "4129"
+#define USERPCKT_PORT "4130"
 
 /* 
  * Protocol 2 definition 

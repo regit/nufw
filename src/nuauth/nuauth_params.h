@@ -36,8 +36,8 @@ typedef enum
 struct nuauth_params
 {
     /* Sockets related */
-    int authreq_port;
-    int userpckt_port;
+    char* authreq_port;
+    char* userpckt_port;
 
     /* global configuration variables */
     int packet_timeout;
