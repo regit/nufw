@@ -772,40 +772,71 @@ int init_sasl(NuAuth * session, nuclient_error *err)
  * Create a socket to nuauth, and try to connect. The function also set 
  * SIGPIPE handler: ignore these signals.
  */
-int init_socket(NuAuth * session, nuclient_error *err)
+int init_socket(NuAuth * session, nuclient_error *err,
+		const char *hostname, const char *service)
 {
-	int option_value;
-	struct sigaction no_action;
+    int option_value;
+    struct sigaction no_action;
+    int ecode;
+    struct addrinfo *res;
+    struct addrinfo hints = {
+	0,
+	PF_UNSPEC,
+	SOCK_STREAM,
+	0,
+	0,
+	NULL,
+	NULL,
+	NULL
+    };
 
-	/* ignore SIGPIPE */
-	no_action.sa_handler = SIG_IGN;
-	sigemptyset( & (no_action.sa_mask));
-	no_action.sa_flags = 0;
-	(void)sigaction( SIGPIPE, & no_action, NULL);
+    /* get address informations */
+    ecode = getaddrinfo(hostname, service, &hints, &res);
+    if (ecode != 0)
+    {
+	fprintf(stderr, "Fail to create host address: %s\n",
+		gai_strerror(ecode));
+	fprintf(stderr, "(host=\"%s\", service=\"%s\")\n",
+		hostname, service);
+	SET_ERROR(err, INTERNAL_ERROR, DNS_RESOLUTION_ERR);
+	return 0;
+    }
 
-	/* create socket to nuauth */
-	session->socket = socket (AF_INET,SOCK_STREAM,0);
-	if (session->socket <= 0){
-		errno=EADDRNOTAVAIL;
-                SET_ERROR(err, INTERNAL_ERROR, CANT_CONNECT_ERR);
-		return 0;
-	}
-	option_value=1;
-	setsockopt (
-			session->socket,
-			SOL_SOCKET,
-			SO_KEEPALIVE,
-			&option_value,
-			sizeof(option_value));
+    /* ignore SIGPIPE */
+    no_action.sa_handler = SIG_IGN;
+    sigemptyset( & (no_action.sa_mask));
+    no_action.sa_flags = 0;
+    (void)sigaction( SIGPIPE, & no_action, NULL);
 
-	/* connect to nuauth */
-	if ( connect(session->socket,(struct sockaddr *)(&session->adr_srv),sizeof(session->adr_srv)) == -1){
-		errno=ENOTCONN;
-                SET_ERROR(err, INTERNAL_ERROR, CANT_CONNECT_ERR);
-		return 0;
-	}
+    /* create socket to nuauth */
+    if (res->ai_family  == PF_INET)
+	printf("Create IPv4 socket\n");
+    else if (res->ai_family  == PF_INET6)
+	printf("Create IPv6 socket\n");
+    session->socket = socket (res->ai_family, res->ai_socktype, res->ai_protocol);
+    if (session->socket <= 0){
+	errno=EADDRNOTAVAIL;
+	freeaddrinfo(res);
+	SET_ERROR(err, INTERNAL_ERROR, CANT_CONNECT_ERR);
+	return 0;
+    }
+    option_value=1;
+    setsockopt (
+	    session->socket,
+	    SOL_SOCKET,
+	    SO_KEEPALIVE,
+	    &option_value,
+	    sizeof(option_value));
 
-	return 1;
+    /* connect to nuauth */
+    if ( connect(session->socket, res->ai_addr, res->ai_addrlen) == -1){
+	errno=ENOTCONN;
+	SET_ERROR(err, INTERNAL_ERROR, CANT_CONNECT_ERR);
+	freeaddrinfo(res);
+	return 0;
+    }
+    freeaddrinfo(res);
+    return 1;
 }
 
 /**
@@ -838,37 +869,10 @@ int tls_handshake(NuAuth * session, nuclient_error *err)
 }
 
 /**
- * Set host address: convert hostname string to IPv4 address
- */
-int set_host(NuAuth * session, nuclient_error *err,
-		const char *hostname, unsigned int port)
-{
-	struct hostent *host = gethostbyname(hostname);
-	if (host == NULL)
-	{
-/*		fprintf(stderr, "*** An error occured when resolving the provided hostname\n");*/
-                SET_ERROR(err, INTERNAL_ERROR, DNS_RESOLUTION_ERR);
-		return 0;
-	}
-
-	(session->adr_srv).sin_family = AF_INET;
-	(session->adr_srv).sin_port = htons(port);
-	(session->adr_srv).sin_addr = *(struct in_addr *)host->h_addr_list[0];
-	if ((session->adr_srv).sin_addr.s_addr == INADDR_NONE) {
-
-                SET_ERROR(err, INTERNAL_ERROR, NO_ADDR_ERR);
-		return 0;
-	}
-	
-	return 1;
-}
-
-/**
  * Initialisation of nufw authentication session: set basic fields and then
  * call:
- *    - set_host() ;
- *    - init_tls_cert() ;
  *    - init_socket() ;
+ *    - init_tls_cert() ;
  *    - tls_handshake() ;
  *    - init_sasl() ;
  *    - send_os().
@@ -876,7 +880,7 @@ int set_host(NuAuth * session, nuclient_error *err,
  * If everything is ok, create the connection table using tcptable_init(). 
  */
 NuAuth* nu_client_init2(
-		const char *hostname, unsigned int port,
+		const char *hostname, const char *service,
 		char* keyfile, char* certfile,
 		void* username_callback,void * passwd_callback, 
                 void* tlscred_callback, nuclient_error *err
@@ -912,19 +916,14 @@ NuAuth* nu_client_init2(
 	/* create session mutex */
 	pthread_mutex_init(&(session->mutex),NULL);
 
-	/* set field about host */
-	if (!set_host(session, err, hostname, port)) {
-		nu_exit_clean(session);
-		return NULL;
-	}
-
 	/* set fields about TLS and certificates */
 	if (!init_tls_cert(session, err, keyfile, certfile)) {
 		nu_exit_clean(session);
 		return NULL;
 	}
 
-	if (!init_socket(session, err)) {
+	/* set field about host */
+	if (!init_socket(session, err, hostname, service)) {
 		nu_exit_clean(session);
 		return NULL;
 	}

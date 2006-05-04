@@ -104,7 +104,7 @@ extern "C" {
 #endif
 
 /** Default address (IPv4) of nuauth */
-#define NUAUTH_IP "192.168.1.1"
+#define NUAUTH_IP "2002::192.168.1.1"
 
 /** Default filename of key */
 #define KEYFILE "key.pem"
@@ -175,7 +175,6 @@ typedef struct {
 	char* (*tls_passwd_callback)(); /** Callback used to get TLS password */
 	
 	int socket;              /** TCP socket used to exchange message with nuauth */
-	struct sockaddr_in adr_srv; /** nuauth server address */
 	conntable_t *ct;         /** connection table */
 	unsigned long packet_id; /** packet sequence number (start at zero) */
         int auth_by_default;
@@ -239,7 +238,7 @@ void nu_client_global_deinit(nuclient_error *err);
 
 NuAuth* nu_client_init2(
 		const char *hostname, 
-                unsigned int port,
+                const char *service,
 		char* keyfile, 
                 char* certfile,
 		void* username_callback,

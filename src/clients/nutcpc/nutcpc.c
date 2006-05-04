@@ -307,7 +307,7 @@ int main (int argc, char *argv[])
 	int ch;
 	int debug = 0;
 	struct sigaction action;
-	unsigned int port=4130;
+	char port[10] = "4130";
 	int tempo=1;
 	unsigned char donotuselock=0;
 	char* runpid=computerunpid();
@@ -348,7 +348,7 @@ int main (int argc, char *argv[])
 				printf("nutcpc (version " NUTCPC_VERSION ")\n");
 				exit(0);
 			case 'p':
-				sscanf(optarg,"%u",&port);
+				SECURE_STRNCPY(port, optarg, sizeof(port));
                                 break;
 			default:
 				usage();
