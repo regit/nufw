@@ -85,8 +85,8 @@ struct nfq_handle *h;
    void* conntrack_event_handler(void *data);
 #endif
 
-/** Gryzor hacks with aims to answer ICMP message when a packet is dropped. */
-#  include <sys/socket.h>
+#include <sys/socket.h>
+#include <netdb.h>
 
 /** If equals to 1, compile with x509 certificate support */
 #define USE_X509 1
@@ -117,10 +117,11 @@ pthread_cond_t *session_active_cond;
 pthread_mutex_t *session_destroyed_mutex;
 pthread_mutex_t *session_active_mutex;
 
-/** IPv4 address of NuAuth server: hostname ::authreq_addr,
+/** 
+ * Address informations of NuAuth server: hostname ::authreq_addr,
  * port ::authreq_port. Used in tls_connect().
  */
-struct sockaddr_in adr_srv;
+struct addrinfo *adr_srv;
 
 /* Raw socket we use for sending ICMP messages */
 int raw_sock;

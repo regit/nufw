@@ -123,12 +123,12 @@ gnutls_session* tls_connect()
             "TLS: init failed : %s",gnutls_strerror(ret));
         return NULL;
     }
-    tls_socket = socket (AF_INET,SOCK_STREAM,0);
+    tls_socket = socket (adr_srv->ai_family, adr_srv->ai_socktype, adr_srv->ai_protocol);
 
     /* connect */
     if (tls_socket <= 0)
         return NULL;
-    if ( connect(tls_socket,(struct sockaddr *)(&adr_srv),sizeof(adr_srv)) == -1){
+    if ( connect(tls_socket, adr_srv->ai_addr, adr_srv->ai_addrlen) == -1){
         return NULL;
     }
 
