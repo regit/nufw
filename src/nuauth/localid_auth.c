@@ -77,16 +77,17 @@ void localid_insert_message(connection_t *pckt,
                     element->user_id=pckt->user_id;
                     element->username=pckt->username;
                     element->user_groups=pckt->user_groups;
-                    pckt->user_groups=NULL;
-                    pckt->username=NULL;
                     /* do asynchronous call to acl check */
                     g_thread_pool_push (nuauthdatas->acl_checkers, element, NULL);
                     /* remove element from hash without destroy */
                     g_hash_table_steal(localid_auth_hash,GINT_TO_POINTER(pckt->packet_id));
                 } else {
-                    g_warning("looks like a spoofing attempt.");
+                    log_message(WARNING, AREA_USER,
+                            "Looks like a spoofing attempt from %s.",pckt->username);
                     /* TODO : kill bad guy */
                 }
+                pckt->user_groups=NULL;
+                pckt->username=NULL;
                 /* free pckt */
                 free_connection(pckt);
 
