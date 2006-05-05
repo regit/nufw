@@ -19,8 +19,8 @@
 #define PARSING_H
 
 /* parsing function */
-struct in_addr* generate_inaddr_list(gchar* gwsrv_addr);
-gboolean check_inaddr_in_array(struct in_addr check_ip,struct in_addr *iparray);
+struct in6_addr* generate_inaddr_list(gchar* gwsrv_addr);
+gboolean check_inaddr_in_array(struct in6_addr *check_ip, struct in6_addr *iparray);
 gboolean check_string_in_array(gchar* checkstring,gchar** stringarray);
 
 /**

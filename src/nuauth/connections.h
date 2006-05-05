@@ -61,15 +61,15 @@ typedef enum
  * identification.
  */
 typedef struct {
-  u_int32_t saddr;    /*!< IPv4 source address */
-  u_int32_t daddr;    /*!< IPv4 destination address */
-  u_int8_t protocol;  /*!< IPv4 protocol */
+  struct in6_addr saddr;    /*!< IPv6 source address */
+  struct in6_addr daddr;    /*!< IPv6 destination address */
+  u_int8_t protocol;        /*!< IP protocol */
 
-  u_int16_t source;   /*!< TCP/UDP source port */
-  u_int16_t dest;     /*!< TCP/UDP destination port */
+  u_int16_t source;         /*!< TCP/UDP source port */
+  u_int16_t dest;           /*!< TCP/UDP destination port */
 
-  u_int8_t type;      /*!< ICMP message type */
-  u_int8_t code;      /*!< ICMP code type */
+  u_int8_t type;            /*!< ICMP message type */
+  u_int8_t code;            /*!< ICMP code type */
 
   char payload[PAYLOAD_SAMPLE];  /*!< First 8 bytes of protocol payload used for ICMP reject */
 } tracking_t;
