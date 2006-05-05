@@ -66,9 +66,8 @@ void user_check_and_decide (gpointer userdata, gpointer data)
               continue;
       } 
       /* Sanity check : verify source IP equality */
-      if  (  ((struct tls_buffer_read *)userdata)->ipv4_addr 
-              ==
-              htonl(conn_elt->tracking.saddr) ){
+      if  ( memcmp(& ((struct tls_buffer_read *)userdata)->ip_addr,
+              &conn_elt->tracking.saddr, sizeof(conn_elt->tracking.saddr)) == 0 ){
 #ifdef DEBUG_ENABLE
           if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_PACKET)){
               g_message("User : %s",conn_elt->username);
@@ -78,11 +77,14 @@ void user_check_and_decide (gpointer userdata, gpointer data)
           g_async_queue_push (nuauthdatas->connections_queue,conn_elt);
       } else {
           if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER)){
-              struct in_addr badaddr;
-              badaddr.s_addr=((struct tls_buffer_read *)userdata)->ipv4_addr;
-              g_message("User %s on %s tried to authenticate packet from other ip",
-                      conn_elt->username,
-                      inet_ntoa(badaddr));
+              char ip_ascii[INET6_ADDRSTRLEN];
+
+              if (inet_ntop(AF_INET6, &((struct tls_buffer_read *)userdata)->ip_addr, ip_ascii, sizeof(ip_ascii)) != NULL)
+              {
+                  g_message("User %s on %s tried to authenticate packet from other ip",
+                          conn_elt->username,
+                          ip_ascii);
+              }
               print_connection(conn_elt,NULL);
           }
           /* free connection */
@@ -156,10 +158,18 @@ int user_process_field_username(
     return 1;
 }    
 
-void user_process_field_ipv4(connection_t* connection, struct nuv2_authfield_ipv4 *ipfield)
+void user_process_field_ipv4(connection_t* connection, struct nuv2_authfield_ipv6 *ipfield)
 {
-    connection->tracking.saddr = ntohl(ipfield->src);
-    connection->tracking.daddr = ntohl(ipfield->dst);
+    connection->tracking.saddr.s6_addr32[0] = ntohl(ipfield->src.s6_addr32[0]);
+    connection->tracking.saddr.s6_addr32[1] = ntohl(ipfield->src.s6_addr32[1]);
+    connection->tracking.saddr.s6_addr32[2] = ntohl(ipfield->src.s6_addr32[2]);
+    connection->tracking.saddr.s6_addr32[3] = ntohl(ipfield->src.s6_addr32[3]);
+    
+    connection->tracking.daddr.s6_addr32[0] = ntohl(ipfield->dst.s6_addr32[0]);
+    connection->tracking.daddr.s6_addr32[1] = ntohl(ipfield->dst.s6_addr32[1]);
+    connection->tracking.daddr.s6_addr32[2] = ntohl(ipfield->dst.s6_addr32[2]);
+    connection->tracking.daddr.s6_addr32[3] = ntohl(ipfield->dst.s6_addr32[3]);
+
     connection->tracking.protocol = ipfield->proto;
 
     debug_log_message (VERBOSE_DEBUG, AREA_USER, "\tgot IPv4 field");
@@ -250,10 +260,10 @@ int user_process_field(
 
     switch (field->type) {
         case IPV4_FIELD:
-            if (auth_buffer_len < (int)sizeof(struct nuv2_authfield_ipv4)) {
+            if (auth_buffer_len < (int)sizeof(struct nuv2_authfield_ipv6)) {
                 return -1;
             }
-            user_process_field_ipv4(connection, (struct nuv2_authfield_ipv4 *)field);
+            user_process_field_ipv4(connection, (struct nuv2_authfield_ipv6 *)field);
             break;
 
         case APP_FIELD:
