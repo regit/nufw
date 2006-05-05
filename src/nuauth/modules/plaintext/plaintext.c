@@ -863,8 +863,8 @@ G_MODULE_EXPORT GSList* acl_check(connection_t* element,gpointer params)
   /*  netdata.dest         Port destination */
 
   /* TODO check if ntohl is needed */
-  src_ip = ntohl(netdata->saddr);
-  dst_ip = ntohl(netdata->daddr); 
+  /* @@@HAYPO@@@ src_ip = ntohl(netdata->saddr); */
+  /* @@@HAYPO@@@ dst_ip = ntohl(netdata->daddr); */ 
 
   for (p_acllist = ((struct plaintext_params*)params)->plaintext_acllist ; p_acllist ;
           p_acllist = g_slist_next(p_acllist)) {

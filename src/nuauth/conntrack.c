@@ -20,9 +20,8 @@
 
 static gboolean get_nufw_server_by_addr(gpointer key,gpointer value,gpointer user_data)
 {
-    if ( (((nufw_session_t*)value)->peername).s_addr 
-            == 
-            ((struct in_addr*)user_data)->s_addr ){
+    if (memcmp(&((nufw_session_t*)value)->peername, (struct in6_addr*)user_data, sizeof(struct in6_addr)) == 0)
+    {
         return TRUE;
     } else {
         return FALSE;
@@ -51,10 +50,11 @@ static void send_conntrack_message(struct limited_connection * lconn,unsigned ch
                 debug_log_message(WARNING, AREA_PACKET, "not modifying fixed timeout");
                 message.timeout = 0;
             }
-            message.ipv4_protocol = lconn->tracking.protocol;
-            message.ipv4_src = htonl(lconn->tracking.saddr);
-            message.ipv4_dst = htonl(lconn->tracking.daddr);
-            if (message.ipv4_protocol == IPPROTO_ICMP){
+            message.ip_protocol = lconn->tracking.protocol;
+            /*** @@@HAYPO@@@@ */
+            memcpy(&message.ip_src, &lconn->tracking.saddr, sizeof(lconn->tracking.saddr));
+            memcpy(&message.ip_dst, &lconn->tracking.daddr, sizeof(lconn->tracking.daddr));
+            if (message.ip_protocol == IPPROTO_ICMP){
                 message.src_port = lconn->tracking.type;
                 message.dest_port = lconn->tracking.code;
             } else {

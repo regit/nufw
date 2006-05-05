@@ -67,21 +67,20 @@ int timeval_substract (struct timeval *result,struct timeval *x,struct timeval *
  */
 gint print_connection(gpointer data,gpointer userdata)
 {
-    struct in_addr src,dest;
     connection_t * conn=(connection_t *) data;
     if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
     {
-        gchar* firstfield;
+        char src_ascii[INET6_ADDRSTRLEN];
+        char dst_ascii[INET6_ADDRSTRLEN];
 
-        src.s_addr = ntohl(conn->tracking.saddr);
-        dest.s_addr = ntohl(conn->tracking.daddr);
-        firstfield=g_strdup(inet_ntoa(src));
-        if (! firstfield){
-            g_message("Couldn't strdup(). No more memory?");
+        /* @@@HAYPO@@@ ntohl */
+        if (inet_ntop(AF_INET6, &conn->tracking.saddr, src_ascii, sizeof(src_ascii)) == NULL)
             return -1;
-        }
-        g_message( "Connection: src=%s dst=%s proto=%u", firstfield, inet_ntoa(dest),
-                conn->tracking.protocol);
+        if (inet_ntop(AF_INET6, &conn->tracking.daddr, dst_ascii, sizeof(dst_ascii)) == NULL)
+            return -1;
+
+        g_message( "Connection: src=%s dst=%s proto=%u", 
+                src_ascii, dst_ascii, conn->tracking.protocol);
         if (conn->tracking.protocol == IPPROTO_TCP){
             g_message("sport=%d dport=%d", conn->tracking.source,
                     conn->tracking.dest);
@@ -92,7 +91,6 @@ gint print_connection(gpointer data,gpointer userdata)
         if (conn->app_name){
             g_message("Application: %s",conn->app_name);
         }
-        g_free(firstfield);
     }
     return 1;
 }
@@ -145,8 +143,9 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
         ip->tot_len = htons( IPHDR_REJECT_LENGTH + PAYLOAD_SAMPLE);
         ip->ttl = 64; /* write dummy ttl */
         ip->protocol = element->tracking.protocol;
-        ip->saddr = htonl(element->tracking.saddr);
-        ip->daddr = htonl(element->tracking.daddr);
+        /* @@@HAYPO@@@ dummy IPv4 */
+        ip->saddr = htonl(element->tracking.saddr.s6_addr32[3]);
+        ip->daddr = htonl(element->tracking.daddr.s6_addr32[3]);
 
         /* write transport layer */
         memcpy(payload+IPHDR_REJECT_LENGTH, element->tracking.payload, PAYLOAD_SAMPLE);
@@ -527,7 +526,7 @@ gint take_decision(connection_t *element, packet_place_t place)
             "Sending connection with fixed timeout to thread");
         memcpy(&(datas->tracking),&(element->tracking),sizeof(tracking_t));
         datas->expire=expire;
-        datas->gwaddr.s_addr=(element->tls)->peername.s_addr;
+        datas->gwaddr=(element->tls)->peername;
         message->datas=datas;
         message->type=INSERT_MESSAGE;
         g_async_queue_push (nuauthdatas->limited_connections_queue, message);

@@ -25,10 +25,8 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state,
 {
     char *prefix = "[nuauth] ";
     char *str_state;
-    char source_addr[INET_ADDRSTRLEN+1];
-    char dest_addr[INET_ADDRSTRLEN+1];
-    struct in_addr oneip;
-
+    char source_addr[INET6_ADDRSTRLEN];
+    char dest_addr[INET6_ADDRSTRLEN];
     char *saddr;
     char* daddr;
     u_int16_t sport;
@@ -54,12 +52,13 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state,
     } 
 
     /* convert IPv4 source and destination address to string */
-    oneip.s_addr=htonl((element->tracking).saddr);
-    SECURE_STRNCPY (source_addr, inet_ntoa(oneip), sizeof(source_addr));
+    /* @@@HAYPO@@@@ -- oneip.s_addr=htonl((element->tracking).saddr); */
+    if (inet_ntop(AF_INET6, &element->tracking.saddr, source_addr, sizeof(source_addr)) == NULL)
+            return 1;
+    /* @@@HAYPO@@@@ -- oneip.s_addr=htonl((element->tracking).daddr); */
+    if (inet_ntop(AF_INET6, &element->tracking.daddr,dest_addr, sizeof(dest_addr)) == NULL)
+            return 1;
     
-    oneip.s_addr=htonl((element->tracking).daddr);
-    SECURE_STRNCPY (dest_addr, inet_ntoa(oneip), sizeof(dest_addr));
-
     if ( ((element->tracking).protocol == IPPROTO_TCP) || ((element->tracking).protocol == IPPROTO_UDP) ) {
         if (state==TCP_STATE_ESTABLISHED){
             saddr = dest_addr;
@@ -89,12 +88,13 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state,
 
 G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t state,gpointer params)
 {
-	struct in_addr remote_inaddr;
-	remote_inaddr.s_addr=c_session->addr;
-	char address[INET_ADDRSTRLEN+1];
-        char *prefix = "[nuauth] ";
+    struct in6_addr remote_inaddr;
+    char address[INET6_ADDRSTRLEN];
+    char *prefix = "[nuauth] ";
+
+    remote_inaddr=c_session->addr;
     
-    const char *err = inet_ntop( AF_INET, &remote_inaddr, address, sizeof(address));
+    const char *err = inet_ntop(AF_INET6, &remote_inaddr, address, sizeof(address));
     if (err == NULL) {
         return -1;
     }
