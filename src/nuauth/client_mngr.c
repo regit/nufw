@@ -187,7 +187,7 @@ char warn_clients(struct msg_addr_set * global_msg)
 
     if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER)
         /* @@@HAYPO@@@ check endian */
-        && inet_ntop(AF_INET6, global_msg->addr, addr_ascii, sizeof(addr_ascii)) != NULL)
+        && inet_ntop(AF_INET6, &global_msg->addr, addr_ascii, sizeof(addr_ascii)) != NULL)
     {
         g_message("Warn client(s) on IP %s", addr_ascii);
     }

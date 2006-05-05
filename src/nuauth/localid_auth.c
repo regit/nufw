@@ -68,7 +68,7 @@ void localid_insert_message(connection_t *pckt,
             /* if found ask for completion */
             if (element){
                 /* TODO : do a check on saddr */
-                if (memcmp(element->tracking.saddr, pckt->tracking.saddr, sizeof(pckt->tracking.saddr)) == 0)
+                if (memcmp(&element->tracking.saddr, &pckt->tracking.saddr, sizeof(pckt->tracking.saddr)) == 0)
                 {	
                     element->state=AUTH_STATE_HELLOMODE;	
                     element->user_id=pckt->user_id;
