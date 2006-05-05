@@ -30,6 +30,8 @@
 #  include <machine/endian.h>
 #endif
 
+#include <netinet/in.h>    /* struct in6addr */
+
 /** 
  * Protocol version of message exchanged between NuFW and NuAuth.
  *
@@ -132,12 +134,12 @@ struct nuv2_authfield {
 };
 
 /* TODO : inject struct nuv2_authfield ? */
-struct nuv2_authfield_ipv4 {
+struct nuv2_authfield_ipv6 {
     uint8_t type;
     uint8_t option;
     uint16_t length;   /*!< Length of one field */
-    uint32_t src;
-    uint32_t dst;
+    struct in6_addr src;
+    struct in6_addr dst;
     uint8_t proto;
     uint8_t flags;
     uint16_t FUSE;
@@ -233,9 +235,9 @@ struct nu_conntrack_message_t {
 
     /* Conntrack fields */
     uint32_t timeout;        /*!< Timeout (Epoch format) */
-    uint32_t ipv4_src;       /*!< IPv4 source IP */
-    uint32_t ipv4_dst;       /*!< IPv4 destination IP */
-    uint8_t  ipv4_protocol;  /*!< IPv4 protocol number */
+    struct in6_addr ip_src;  /*!< IPv6 source IP */
+    struct in6_addr ip_dst;  /*!< IPv6 destination IP */
+    uint8_t  ip_protocol;    /*!< IP protocol number */
     uint16_t src_port;       /*!< TCP/UDP source port or ICMP type */
     uint16_t dest_port;      /*!< TCP/UDP destionation port or ICMP code */
 };
