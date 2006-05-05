@@ -68,7 +68,7 @@ void localid_insert_message(connection_t *pckt,
             /* if found ask for completion */
             if (element){
                 /* TODO : do a check on saddr */
-                if ( /*@@@HAYPO@@@ (element->tracking.saddr == pckt->tracking.saddr ) ||*/ 1 ){	
+                if ( (element->tracking.saddr == pckt->tracking.saddr ) || 1 ){	
                     element->state=AUTH_STATE_HELLOMODE;	
                     element->user_id=pckt->user_id;
                     element->username=pckt->username;

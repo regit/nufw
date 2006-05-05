@@ -56,11 +56,8 @@ unsigned int get_ip_headers(tracking_t *tracking, unsigned char *dgram, unsigned
 
     /* check IP version (should be IPv4) */
     if (ip->version == 4){
-        /* @@@HAYPO@@@@ */
-        memset(&tracking->saddr, 0, sizeof(tracking->saddr));
-        memset(&tracking->daddr, 0, sizeof(tracking->daddr));
-        tracking->saddr.s6_addr32[3] = ntohl(ip->saddr);
-        tracking->daddr.s6_addr32[3] = ntohl(ip->daddr);
+        tracking->saddr = ntohl(ip->saddr);
+        tracking->daddr = ntohl(ip->daddr);
         tracking->protocol = ip->protocol;
         memcpy(tracking->payload, dgram + 4*ip->ihl, sizeof(tracking->payload));
         return 4*ip->ihl;
@@ -320,12 +317,10 @@ void authpckt_conntrack (unsigned char *dgram, unsigned int dgram_size)
     conntrack = (struct nu_conntrack_message_t*)dgram;
     datas = g_new0(tracking_t, 1);
     message = g_new0(struct internal_message, 1);
-    datas->protocol = conntrack->ip_protocol;
-
-    /* @@@HAYPO@@@@ */
-    memcpy(&datas->saddr, &conntrack->ip_src, sizeof(datas->saddr));
-    memcpy(&datas->daddr, &conntrack->ip_dst, sizeof(datas->daddr));
-    if (conntrack->ip_protocol == IPPROTO_ICMP) {
+    datas->protocol = conntrack->ipv4_protocol;
+    datas->saddr = ntohl(conntrack->ipv4_src);
+    datas->daddr = ntohl(conntrack->ipv4_dst);
+    if (conntrack->ipv4_protocol == IPPROTO_ICMP) {
         datas->type = ntohs(conntrack->src_port);
         datas->code = ntohs(conntrack->dest_port);
     } else {

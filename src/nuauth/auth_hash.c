@@ -19,16 +19,11 @@ void search_and_fill_catchall(connection_t *new, connection_t *packet)
  */
 inline guint hash_connection(gconstpointer data)
 {
-#if 0
-    /*@@@@HAYPO@@@@*/
     const tracking_t *headers = (tracking_t *)data;
     return jhash_3words(headers->saddr,
             headers->daddr ^ headers->protocol,
             headers->dest | (headers->source << 16),
             32);
-#else
-    return 0;
-#endif
 }
 
 /**
@@ -44,7 +39,7 @@ gboolean compare_connection(gconstpointer a, gconstpointer b)
     tracking_t *trck2 = (tracking_t *)b;
 
     /* compare IPheaders */
-    if (memcmp(&trck1->saddr, &trck2->saddr, sizeof(trck1->saddr)) != 0) 
+    if (trck1->saddr != trck2->saddr) 
         return FALSE;
 
     /* compare proto */
@@ -55,7 +50,7 @@ gboolean compare_connection(gconstpointer a, gconstpointer b)
     switch ( trck1->protocol) {
         case IPPROTO_TCP:
             if (trck1->source == trck2->source 
-                && memcmp(&trck1->daddr, &trck2->daddr, sizeof(trck1->daddr)) == 0
+                && trck1->daddr == trck2->daddr
                 && trck1->dest == trck2->dest)
                 return TRUE;
             else
@@ -64,7 +59,7 @@ gboolean compare_connection(gconstpointer a, gconstpointer b)
         case IPPROTO_UDP:
             if (trck1->dest == trck2->dest
                 && trck1->source == trck2->source
-                && memcmp(&trck1->daddr, &trck2->daddr, sizeof(trck1->daddr)) == 0)
+                && trck1->daddr == trck2->daddr)
                 return TRUE;
             else
                 return FALSE;
@@ -72,7 +67,7 @@ gboolean compare_connection(gconstpointer a, gconstpointer b)
         case IPPROTO_ICMP:
             if (trck1->type == trck2->type
                 && trck1->code == trck2->code
-                && memcmp(&trck1->daddr, &trck2->daddr, sizeof(trck1->daddr)) == 0)
+                && trck1->daddr == trck2->daddr)
                 return TRUE;
             else
                 return FALSE;

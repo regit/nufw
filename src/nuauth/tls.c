@@ -432,7 +432,7 @@ void* push_worker(GMutex *mutex)
                 /* search in client array */
                 warn_clients(global_msg);
                 /* do we have found something */
-                if (memcmp(&global_msg->addr, &in6addr_any, sizeof(in6addr_any)) !=  0){
+                if (global_msg->addr != INADDR_ANY){
                     if (global_msg->found == FALSE ){
                         /* if we do ip authentication send request to pool */
                         if (nuauthconf->do_ip_authentication){

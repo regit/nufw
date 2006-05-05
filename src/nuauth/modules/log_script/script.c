@@ -22,14 +22,16 @@
 
 G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t state,gpointer params)
 {
-    char address[INET6_ADDRSTRLEN];
-    char cmdbuffer[200];
+	struct in_addr remote_inaddr;
+	remote_inaddr.s_addr=c_session->addr;
+	char address[INET_ADDRSTRLEN+1];
+	char cmdbuffer[200];
     char *quoted_username = g_shell_quote(c_session->user_name);
     char *quoted_address;
     char *format;
     gboolean ok;
     
-    const char *err = inet_ntop(AF_INET6, &c_session->addr, address, sizeof(address));
+    const char *err = inet_ntop( AF_INET, &remote_inaddr, address, INET_ADDRSTRLEN);
     if (err == NULL) {
         return -1;
     }

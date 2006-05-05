@@ -137,7 +137,7 @@ static int treat_user_request (user_session_t * c_session)
         return -1;
     datas->socket=0;
     datas->tls=c_session->tls;
-    datas->ip_addr=c_session->addr;
+    datas->ipv4_addr=c_session->addr;
 #ifdef DEBUG_ENABLE
     if (!c_session->multiusers) {
         if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))

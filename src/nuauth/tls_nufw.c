@@ -144,8 +144,7 @@ void clean_nufw_session(nufw_session_t * c_session)
 int tls_nufw_accept(struct tls_nufw_context_t *context) 
 {
     int conn_fd;
-    struct sockaddr_in6 addr_clnt;
-    char addr_ascii[INET6_ADDRSTRLEN];
+    struct sockaddr_in addr_clnt;
     unsigned int len_inet;
     nufw_session_t *nu_session;
 
@@ -161,9 +160,8 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
     }
 
     /* test if server is in the list of authorized servers */
-    if (! check_inaddr_in_array(&addr_clnt.sin6_addr, nuauthconf->authorized_servers)){
-        if (inet_ntop(AF_INET6, &addr_clnt, addr_ascii, sizeof(addr_ascii)) != NULL)
-            log_message(WARNING, AREA_MAIN, "unwanted server (%s)\n", addr_ascii);
+    if (! check_inaddr_in_array(addr_clnt.sin_addr,nuauthconf->authorized_servers)){
+        log_message(WARNING, AREA_MAIN, "unwanted server (%s)\n",inet_ntoa(addr_clnt.sin_addr));
         close(conn_fd);
         return 1;
     }
@@ -179,7 +177,7 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
     nu_session = g_new0(nufw_session_t, 1);
     nu_session->usage=0;
     nu_session->alive=TRUE;
-    nu_session->peername = addr_clnt.sin6_addr;
+    nu_session->peername.s_addr=addr_clnt.sin_addr.s_addr;
     if (tls_connect(conn_fd,&(nu_session->tls)) == SASL_OK){
 	nu_session->tls_lock = g_mutex_new();
         g_mutex_lock(nufw_servers_mutex);
