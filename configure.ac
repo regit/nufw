@@ -56,6 +56,7 @@ AC_ARG_WITH(prelude-log,
         enable_prelude_log="yes", 
         enable_prelude_log="")
 AC_ARG_WITH(mysql-log, [AC_HELP_STRING(--with-mysql-log,  Support user activity logging in Mysql database)], enable_mysql_log="yes", enable_mysql_log="")
+AC_ARG_WITH(plaintext-auth, [AC_HELP_STRING(--with-plaintext-auth,  Support for authentification with plaintext file)], enable_plaintext_auth="yes", enable_plaintext_auth="")
 AC_ARG_WITH(pgsql-log, [AC_HELP_STRING(--with-pgsql-log,  Support user activity logging in PostgreSQL database)], enable_pgsql_log="yes", enable_pgsql_log="")
 
 AC_ARG_WITH(system-auth, [AC_HELP_STRING(--with-system-auth,  Support PAM+NSS authentication)], enable_system_auth="yes", enable_system_auth="")
@@ -137,6 +138,7 @@ AM_CONDITIONAL(USE_IDENT, test x$ident = xyes)
 AM_CONDITIONAL(USE_PRELUDE_LOG, test x$enable_prelude_log = xyes)
 AM_CONDITIONAL(USE_MYSQL_LOG, test x$enable_mysql_log = xyes)
 AM_CONDITIONAL(USE_PGSQL_LOG, test x$enable_pgsql_log = xyes)
+AM_CONDITIONAL(USE_PLAINTEXT_AUTH, test x$enable_plaintext_auth = xyes)
 
 AM_CONDITIONAL(HAVE_NFQUEUE,test x$have_nfqueue = xyes)
 if test "${build_nufw}" = "yes"; then
@@ -275,6 +277,10 @@ if test "${build_nuauth}" = "yes"; then
 
         if test "${enable_pgsql_log}" = "yes"; then
         	AC_MSG_RESULT([  - NuAuth: compile log module pgsql])
+        fi
+
+        if test "${enable_plaintext_auth}" = "yes"; then
+        	AC_MSG_RESULT([  - NuAuth: compile plaintext auth module])
         fi
 fi
 
