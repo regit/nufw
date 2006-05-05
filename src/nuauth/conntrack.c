@@ -20,9 +20,8 @@
 
 static gboolean get_nufw_server_by_addr(gpointer key,gpointer value,gpointer user_data)
 {
-    if ( (((nufw_session_t*)value)->peername).s_addr 
-            == 
-            ((struct in_addr*)user_data)->s_addr ){
+    if (memcmp(&((nufw_session_t*)value)->peername, (struct in6_addr*)user_data, sizeof(struct in6_addr)) == 0)
+    {
         return TRUE;
     } else {
         return FALSE;
@@ -38,7 +37,7 @@ static void send_conntrack_message(struct limited_connection * lconn,unsigned ch
     if (nufw_servers){
         session = g_hash_table_find (nufw_servers,
                 get_nufw_server_by_addr,
-                &(lconn->gwaddr));
+                &lconn->gwaddr);
         g_mutex_unlock(nufw_servers_mutex);
         if (session){
             struct nu_conntrack_message_t message;
@@ -51,10 +50,19 @@ static void send_conntrack_message(struct limited_connection * lconn,unsigned ch
                 debug_log_message(WARNING, AREA_PACKET, "not modifying fixed timeout");
                 message.timeout = 0;
             }
-            message.ipv4_protocol = lconn->tracking.protocol;
-            message.ipv4_src = htonl(lconn->tracking.saddr);
-            message.ipv4_dst = htonl(lconn->tracking.daddr);
-            if (message.ipv4_protocol == IPPROTO_ICMP){
+            message.ip_protocol = lconn->tracking.protocol;
+            
+            message.ip_src.s6_addr32[0] = htonl(lconn->tracking.saddr.s6_addr32[0]);
+            message.ip_src.s6_addr32[1] = htonl(lconn->tracking.saddr.s6_addr32[1]);
+            message.ip_src.s6_addr32[2] = htonl(lconn->tracking.saddr.s6_addr32[2]);
+            message.ip_src.s6_addr32[3] = htonl(lconn->tracking.saddr.s6_addr32[3]);
+            
+            message.ip_dst.s6_addr32[0] = lconn->tracking.daddr.s6_addr32[0];
+            message.ip_dst.s6_addr32[1] = lconn->tracking.daddr.s6_addr32[1];
+            message.ip_dst.s6_addr32[2] = lconn->tracking.daddr.s6_addr32[2];
+            message.ip_dst.s6_addr32[3] = lconn->tracking.daddr.s6_addr32[3];
+            
+            if (message.ip_protocol == IPPROTO_ICMP){
                 message.src_port = lconn->tracking.type;
                 message.dest_port = lconn->tracking.code;
             } else {
