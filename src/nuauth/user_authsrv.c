@@ -30,7 +30,7 @@ static GSList * userpckt_decode(struct tls_buffer_read * datas);
  * 
  * Call userpckt_decode()
  *
- * \param userdata Pointer to the datagram
+ * \param userdata Pointer to a struct tls_buffer_read: containing the datagram
  * \param data NULL (unused)
  */
 void user_check_and_decide (gpointer userdata, gpointer data)
@@ -293,7 +293,7 @@ int user_process_field(
 
 /**
  * \param datas Buffer read on a TLS socket
- * \return Single linked list of connections (of type connection_t).
+ * \return Single linked list of connections (of type connection_t:).
  */
 GSList* user_request(struct tls_buffer_read *datas)
 {
@@ -373,6 +373,24 @@ GSList* user_request(struct tls_buffer_read *datas)
             }
         }
 
+	/* Sanity check on received packet :
+	 * Source address can be 0 only if it's a hello mode packet 
+	 * we also want to have APPNAME defined 
+	 * We destroy all the received message and stop parsing */
+	if (
+			(
+			 (connection->tracking.saddr == INADDR_ANY) 
+			 ||
+			 (connection->app_name == NULL)
+			)
+			&& 
+			(connection->packet_id == NULL)
+	   ) {
+		free_connection_list(conn_elts);
+		free_connection(connection);
+		return NULL;
+	}
+
         /* here all packet related information are filled-in */
         if (connection->username == NULL){	
             connection->username=g_strdup(datas->user_name);
@@ -422,7 +440,7 @@ GSList* user_request(struct tls_buffer_read *datas)
  * Decode user datagram packet and fill a connection with datas
  * (called by user_check_and_decide()).
  *
- * \param datas Buffer read on a TLS socket
+ * \param datas Pointer to a struct tls_buffer_read:
  * \return Single linked list of connections (of type connection_t).
  */
 static GSList* userpckt_decode(struct tls_buffer_read *datas)
