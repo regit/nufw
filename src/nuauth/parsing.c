@@ -28,13 +28,13 @@
  * \return Returns an array of in_addr, or NULL if no valid address has been found.
  * The array always finish with an INADDR_NONE value.
  */
-struct in_addr* generate_inaddr_list(gchar* gwsrv_addr)
+struct in6_addr* generate_inaddr_list(gchar* gwsrv_addr)
 {
     gchar** gwsrv_addr_list=NULL;
-    gchar** gwsrv_addr_iter=NULL ;
-    struct in_addr *authorized_server=NULL;
-    struct in_addr *addrs_array=NULL;
-    struct in_addr tmp_addr;
+    gchar** iter=NULL ;
+    struct in6_addr *authorized_server=NULL;
+    struct in6_addr *addrs_array=NULL;
+    struct in6_addr tmp_addr;
     unsigned int count = 0;
 
     if (gwsrv_addr == NULL)
@@ -44,11 +44,10 @@ struct in_addr* generate_inaddr_list(gchar* gwsrv_addr)
     gwsrv_addr_list = g_strsplit(gwsrv_addr ," ",0);
 
     /* compute array length */
-    gwsrv_addr_iter = gwsrv_addr_list;
-    while(*gwsrv_addr_iter){
-        tmp_addr.s_addr = inet_addr(*gwsrv_addr_iter);
-        if (tmp_addr.s_addr != INADDR_NONE) {
-            gwsrv_addr_iter++;
+    for (iter = gwsrv_addr_list; *iter != NULL; iter++)
+    {
+        if (0 <= inet_pton(AF_INET6, *iter, &tmp_addr))
+        {
             count++;
         }
     }
@@ -56,31 +55,32 @@ struct in_addr* generate_inaddr_list(gchar* gwsrv_addr)
     /* allocate array of struct sock_addr */
     if (0 < count)
     {
-        addrs_array=g_new0(struct in_addr, count+1);
+        addrs_array=g_new0(struct in6_addr, count+1);
         authorized_server=addrs_array;
-        gwsrv_addr_iter = gwsrv_addr_list;
-        while (*gwsrv_addr_iter != NULL) {
-            tmp_addr.s_addr = inet_addr(*gwsrv_addr_iter);
-            if (tmp_addr.s_addr != INADDR_NONE) {
+        for (iter = gwsrv_addr_list; *iter != NULL; iter++)
+        {
+            if (inet_pton(AF_INET6, *iter, &tmp_addr))
+            {
                 *authorized_server = tmp_addr;
-                authorized_server++;
-                gwsrv_addr_iter++;
+                authorized_server++;                
             }
         }
-        authorized_server->s_addr=INADDR_NONE;
+        *authorized_server = in6addr_any;
     }
     g_strfreev(gwsrv_addr_list);
     return addrs_array;
 }
 
 
-gboolean check_inaddr_in_array(struct in_addr check_ip,struct in_addr *iparray){
-    struct in_addr *ipitem;
+gboolean check_inaddr_in_array(struct in6_addr *check_ip, struct in6_addr *iparray)
+{
+    struct in6_addr *ipitem;
     /* test if server is in the list of authorized servers */
     if (iparray){
         ipitem=iparray;
-        while(ipitem->s_addr != INADDR_NONE){
-            if ( ipitem->s_addr == check_ip.s_addr )
+        while (memcmp(ipitem, &in6addr_any, sizeof(*ipitem)) != 0)
+        {
+            if (memcmp(ipitem, check_ip, sizeof(*ipitem)) == 0)
                 return TRUE;
             ipitem++;
         } 
@@ -88,7 +88,8 @@ gboolean check_inaddr_in_array(struct in_addr check_ip,struct in_addr *iparray){
     return FALSE;
 }
 
-gboolean check_string_in_array(gchar* checkstring,gchar** stringarray){
+gboolean check_string_in_array(gchar* checkstring,gchar** stringarray)
+{
     gchar **stringitem;
     /* test if server is in the list of authorized servers */
     if (stringarray){
