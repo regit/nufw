@@ -57,10 +57,10 @@ static void send_conntrack_message(struct limited_connection * lconn,unsigned ch
             message.ip_src.s6_addr32[2] = htonl(lconn->tracking.saddr.s6_addr32[2]);
             message.ip_src.s6_addr32[3] = htonl(lconn->tracking.saddr.s6_addr32[3]);
             
-            message.ip_dst.s6_addr32[0] = lconn->tracking.daddr.s6_addr32[0];
-            message.ip_dst.s6_addr32[1] = lconn->tracking.daddr.s6_addr32[1];
-            message.ip_dst.s6_addr32[2] = lconn->tracking.daddr.s6_addr32[2];
-            message.ip_dst.s6_addr32[3] = lconn->tracking.daddr.s6_addr32[3];
+            message.ip_dst.s6_addr32[0] = htonl(conn->tracking.daddr.s6_addr32[0]);
+            message.ip_dst.s6_addr32[1] = htonl(lconn->tracking.daddr.s6_addr32[1]);
+            message.ip_dst.s6_addr32[2] = htonl(lconn->tracking.daddr.s6_addr32[2]);
+            message.ip_dst.s6_addr32[3] = htonl(lconn->tracking.daddr.s6_addr32[3]);
             
             if (message.ip_protocol == IPPROTO_ICMP){
                 message.src_port = lconn->tracking.type;
