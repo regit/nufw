@@ -219,8 +219,8 @@ idmef_message_t *create_session_template()
     add_idmef_object(idmef, "alert.source(0).service.name", "nufw-client");
     add_idmef_object(idmef, "alert.source(0).process.name", "nutcpc");
 
-    inet_aton("127.0.0.1", &ipaddr);
-    add_idmef_object(idmef, "alert.target(0).node.address(0).address", inet_ntoa(ipaddr));
+    /* TODO: Maybe write real IPv6 of nuauth :-) */
+    add_idmef_object(idmef, "alert.target(0).node.address(0).address", "::1");
     add_idmef_object(idmef, "alert.target(0).service.protocol", "tcp"); 
 
     if (secure_snprintf(buffer, sizeof(buffer), "%hu", nuauthconf->userpckt_port)) {
@@ -375,7 +375,7 @@ idmef_message_t *create_message_session(
     idmef_alert_t *alert;
     int ret;
     char buffer[50];
-    struct in_addr ipaddr;
+    char ip_ascii[INET6_ADDRSTRLEN];
 
     /* duplicate message */
     idmef = idmef_message_ref(tpl);
@@ -409,8 +409,10 @@ idmef_message_t *create_message_session(
     add_idmef_object(idmef, "alert.assessment.impact.description", impact);
 
     /* source address/service */    
-    ipaddr.s_addr = session->addr;
-    add_idmef_object(idmef, "alert.source(0).node.address(0).address", inet_ntoa(ipaddr));
+    if (inet_ntop(AF_INET6, &session->addr, ip_ascii, sizeof(ip_ascii)) != NULL)
+    {
+        add_idmef_object(idmef, "alert.source(0).node.address(0).address", ip_ascii);
+    }
 
     /* set user informations */
     if (session->user_name != NULL) {
