@@ -24,7 +24,7 @@
 #include <config.h>
 #include <stdarg.h>
 #include "security.h"
-#define NUTCPC_VERSION "2.0-beta1"
+#define NUTCPC_VERSION "2.0"
 
 #ifdef FREEBSD
 #include <readpassphrase.h>

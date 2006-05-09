@@ -394,9 +394,7 @@ int compare (NuAuth * session,conntable_t *old, conntable_t *new, nuclient_error
 					return -1;
 				}
 				nb_packets++;
-			} 
-#ifdef LINUX
-			else {
+			} else {
 				/* compare values of retransmit */
 				if (bucket->retransmit > same_bucket->retransmit) {
 #if DEBUG
@@ -426,7 +424,6 @@ int compare (NuAuth * session,conntable_t *old, conntable_t *new, nuclient_error
 					}
 				}
 			}
-#endif /* LINUX */
 			bucket = bucket->next;
 		}
 	}
@@ -549,17 +546,28 @@ int send_os(NuAuth * session, nuclient_error *err)
 	uname(&info);
 	/* build packet */
 	stringlen=strlen(info.sysname)+strlen(info.release)+strlen(info.version)+3;
+#ifdef LINUX
 	oses=alloca(stringlen);
+#else 
+	oses=calloc(stringlen,sizeof(char));
+#endif
 	enc_oses=calloc(4*stringlen,sizeof(char));
 	(void)secure_snprintf(oses,stringlen,"%s;%s;%s",info.sysname, info.release, info.version);
 	if (sasl_encode64(oses,strlen(oses),enc_oses,4*stringlen,&actuallen) == SASL_BUFOVER){
 		enc_oses=realloc(enc_oses,actuallen);
 		sasl_encode64(oses,strlen(oses),enc_oses,actuallen,&actuallen);
 	}
+#ifndef LINUX
+	free(oses);
+#endif
 	osfield.type=OS_FIELD;
 	osfield.option=OS_SRV;
 	osfield.length=4+actuallen;
-	buf=alloca(osfield.length);
+#ifdef LINUX
+	buf=alloca(osfield.length); 
+#else
+	buf=calloc(osfield.length,sizeof(char));
+#endif
 	osfield_length=osfield.length;
 	osfield.length=htons(osfield.length);
 	pointer = buf ;
@@ -577,6 +585,9 @@ int send_os(NuAuth * session, nuclient_error *err)
 	if (gnutls_record_recv(session->tls,buf,osfield_length)<=0){
 		errno=EACCES;
 		SET_ERROR(err, GNUTLS_ERROR, ret);
+#ifndef LINUX
+		free(buf);
+#endif
 		return 0;
 	} else {
 		if (*buf == SRV_TYPE) {
@@ -585,6 +596,9 @@ int send_os(NuAuth * session, nuclient_error *err)
 			session->mode=SRV_TYPE_POLL;
 		}
 	}
+#ifndef LINUX
+		free(buf);
+#endif
 	return 1;
 }
 
@@ -859,7 +873,8 @@ int set_host(NuAuth * session, nuclient_error *err,
 	(session->adr_srv).sin_family = AF_INET;
 	(session->adr_srv).sin_port = htons(port);
 	(session->adr_srv).sin_addr = *(struct in_addr *)host->h_addr_list[0];
-	if ((session->adr_srv).sin_addr.s_addr == INADDR_NONE) {
+	if ((session->adr_srv).sin_addr.s_addr == 0) {
+	/* if ((session->adr_srv).sin_addr.s_addr == INADDR_NONE) { */
 
                 SET_ERROR(err, INTERNAL_ERROR, NO_ADDR_ERR);
 		return 0;

@@ -31,9 +31,10 @@
 #ifndef PROC_H
 #define PROC_H
 
-#ifdef LINUX
 #define PROGNAME_WIDTH 64
 #define PROGNAME_BASE64_WIDTH (PROGNAME_WIDTH*2)
+
+#ifdef LINUX
 
 #define PRG_HASH_SIZE 211
 

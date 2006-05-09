@@ -35,7 +35,9 @@
  * Use POSIX standard, version "IEEE 1003.1-2004",
  * needed to get sigaction for example
  */
+#ifdef LINUX
 #define _POSIX_C_SOURCE 200112L
+#endif
 
 /**
  * Use 4.3BSD standard, needed to get snprintf for example

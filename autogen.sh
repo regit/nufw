@@ -1,6 +1,6 @@
 #!/bin/sh
 
-libtoolize --force --automake
+glibtoolize --force --automake
 
 echo "Run aclocal"
 aclocal -I macros/

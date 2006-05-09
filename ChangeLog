@@ -1,5 +1,6 @@
 2.0-rc2
 	- nuauth : add sanity check on type of field contained in a packet
+	- libnuclient : fix MacOSX port
 2.0-rc1 (2006/05/04)
 	- nufw : fix possible problem with connection fixed timeout and NAT
 	- nufw : add -M option to use mark to select conntrack event to be sent to

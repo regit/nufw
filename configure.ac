@@ -10,6 +10,7 @@ AC_CONFIG_SRCDIR([src/nufw/main.c])
 AC_PROG_CC
 
 AC_PROG_LIBTOOL
+AM_PROG_LIBTOOL
 AC_PROG_INSTALL
 
 # Checks for endianess
@@ -17,8 +18,9 @@ AC_C_BIGENDIAN()
 
 case $host in
 *-*-linux*) AC_DEFINE([LINUX],[1],[Target is Linux]) ;;
+*-*-darwin*) AC_DEFINE([FREEBSD],[1],[Target is darwin (freebsd like)]) ;;
 *-*-freebsd*) AC_DEFINE([FREEBSD],[1],[Target is freebsd]) ;;
-*) AC_MSG_ERROR([Linux or FreeBSD only, dude!]);;
+*) AC_MSG_ERROR([Linux, FreeBSD, Darwin only, dude!]);;
 esac
 
 # check to see if struct dirent has the d_type member
