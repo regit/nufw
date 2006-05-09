@@ -31,6 +31,7 @@
 
 #include <auth_srv.h>
 #include <netinet/ip.h>
+#include <netinet/ip6.h>
 #include <netinet/tcp.h>
 #include <netinet/udp.h>
 #include <netinet/ip_icmp.h> 
@@ -49,6 +50,7 @@
 unsigned int get_ip_headers(tracking_t *tracking, unsigned char *dgram, unsigned int dgram_size)
 {
     struct iphdr *ip = (struct iphdr *)dgram;
+    struct ip6_hdr *ip6 = (struct ip6_hdr *)dgram;
 
     /* check ip headers minimum size */
     if (dgram_size < (20+8))
@@ -57,18 +59,32 @@ unsigned int get_ip_headers(tracking_t *tracking, unsigned char *dgram, unsigned
     /* check IP version (should be IPv4) */
     if (ip->version == 4){
         /* create IPv6 addresses like "::ffff:[ipv4]" */
-        memset(&tracking->saddr, 0, sizeof(tracking->saddr));
-        tracking->saddr.s6_addr16[5] = 0xFFFF;
+        tracking->saddr.s6_addr32[0] = 0;
+        tracking->saddr.s6_addr32[1] = 0;
+        tracking->saddr.s6_addr32[2] = 0xffff0000;
         tracking->saddr.s6_addr32[3] = ntohl(ip->saddr);
         
-        memset(&tracking->daddr, 0, sizeof(tracking->daddr));
-        tracking->daddr.s6_addr16[5] = 0xFFFF;
+        tracking->daddr.s6_addr32[0] = 0;
+        tracking->daddr.s6_addr32[1] = 0;
+        tracking->daddr.s6_addr32[2] = 0xffff0000;
         tracking->daddr.s6_addr32[3] = ntohl(ip->daddr);
 
         tracking->protocol = ip->protocol;
         memcpy(tracking->payload, dgram + 4*ip->ihl, sizeof(tracking->payload));
         return 4*ip->ihl;
     }
+
+    if (ip->version == 6)
+    {
+        unsigned short plen = ntohs(ip6->ip6_plen);
+        tracking->saddr = ip6->ip6_src;
+        tracking->daddr = ip6->ip6_dst;
+
+        tracking->protocol = ip6->ip6_nxt;
+        memcpy(tracking->payload, dgram + plen, sizeof(tracking->payload));
+        return plen;
+    }
+    
     debug_log_message(DEBUG, AREA_PACKET, "IP version is %d, ihl : %d", ip->version, ip->ihl);
     return 0;
 }

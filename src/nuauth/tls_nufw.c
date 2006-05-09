@@ -144,26 +144,37 @@ void clean_nufw_session(nufw_session_t * c_session)
 int tls_nufw_accept(struct tls_nufw_context_t *context) 
 {
     int conn_fd;
-    struct sockaddr_in6 addr_clnt;
+    struct sockaddr_storage sockaddr;
+    struct sockaddr_in *sockaddr4 = (struct sockaddr_in *)&sockaddr;
+    struct sockaddr_in6 *sockaddr6 = (struct sockaddr_in6 *)&sockaddr;
+    struct in6_addr addr;
     char addr_ascii[INET6_ADDRSTRLEN];
     unsigned int len_inet;
     nufw_session_t *nu_session;
 
-    /*
-     * Wait for a connect
-     */
-    len_inet = sizeof addr_clnt;
+    /* Accept the connection */
+    len_inet = sizeof sockaddr;
     conn_fd = accept (context->sck_inet,
-            (struct sockaddr *)&addr_clnt,
+            (struct sockaddr *)&sockaddr,
             &len_inet);
     if (conn_fd == -1){
         log_message(WARNING, AREA_MAIN, "accept");
     }
+   
+    /* Extract client address (convert it to IPv6 if it's IPv4) */
+    if (sockaddr6->sin6_family == AF_INET) {
+        addr.s6_addr32[0] = 0;
+        addr.s6_addr32[1] = 0;
+        addr.s6_addr32[2] = 0xffff0000;
+        addr.s6_addr32[3] = sockaddr4->sin_addr.s_addr;
+    } else {
+        addr = sockaddr6->sin6_addr;
+    }
 
     /* test if server is in the list of authorized servers */
-    if (! check_inaddr_in_array(&addr_clnt.sin6_addr, nuauthconf->authorized_servers)){
-        if (inet_ntop(AF_INET6, &addr_clnt, addr_ascii, sizeof(addr_ascii)) != NULL)
-            log_message(WARNING, AREA_MAIN, "unwanted server (%s)\n", addr_ascii);
+    if (!check_inaddr_in_array(&addr, nuauthconf->authorized_servers)){
+        if (inet_ntop(AF_INET6, &addr, addr_ascii, sizeof(addr_ascii)) != NULL)
+            log_message(WARNING, AREA_MAIN, "unwanted nufw server (%s)", addr_ascii);
         close(conn_fd);
         return 1;
     }
@@ -179,7 +190,7 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
     nu_session = g_new0(nufw_session_t, 1);
     nu_session->usage=0;
     nu_session->alive=TRUE;
-    nu_session->peername = addr_clnt.sin6_addr;
+    nu_session->peername = addr;
     if (tls_connect(conn_fd,&(nu_session->tls)) == SASL_OK){
 	nu_session->tls_lock = g_mutex_new();
         g_mutex_lock(nufw_servers_mutex);
@@ -368,6 +379,10 @@ void tls_nufw_init(struct tls_nufw_context_t *context)
     option_value=1;
     setsockopt (context->sck_inet, SOL_SOCKET, SO_REUSEADDR, 
             &option_value,	sizeof(option_value));
+
+    char ascii[INET6_ADDRSTRLEN];
+    inet_ntop(AF_INET6, res->ai_addr, ascii, sizeof(ascii));
+    printf("bind => %s\n", ascii);
 
     socket_fd = bind (context->sck_inet, res->ai_addr, res->ai_addrlen);
     if (socket_fd < 0)

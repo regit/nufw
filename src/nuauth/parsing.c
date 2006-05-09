@@ -34,7 +34,8 @@ struct in6_addr* generate_inaddr_list(gchar* gwsrv_addr)
     gchar** iter=NULL ;
     struct in6_addr *authorized_server=NULL;
     struct in6_addr *addrs_array=NULL;
-    struct in6_addr tmp_addr;
+    struct in6_addr addr6;
+    struct in_addr addr4;
     unsigned int count = 0;
 
     if (gwsrv_addr == NULL)
@@ -46,7 +47,8 @@ struct in6_addr* generate_inaddr_list(gchar* gwsrv_addr)
     /* compute array length */
     for (iter = gwsrv_addr_list; *iter != NULL; iter++)
     {
-        if (0 <= inet_pton(AF_INET6, *iter, &tmp_addr))
+        if (0 < inet_pton(AF_INET6, *iter, &addr6) 
+         || 0 < inet_pton(AF_INET, *iter, &addr4))
         {
             count++;
         }
@@ -59,11 +61,17 @@ struct in6_addr* generate_inaddr_list(gchar* gwsrv_addr)
         authorized_server=addrs_array;
         for (iter = gwsrv_addr_list; *iter != NULL; iter++)
         {
-            if (inet_pton(AF_INET6, *iter, &tmp_addr))
-            {
-                *authorized_server = tmp_addr;
+            if (0 < inet_pton(AF_INET6, *iter, &addr6)) {
+                *authorized_server = addr6;
+                authorized_server++;                
+            } else if (0 < inet_pton(AF_INET, *iter, &addr4)) {
+                authorized_server->s6_addr32[0] = 0;
+                authorized_server->s6_addr32[1] = 0;
+                authorized_server->s6_addr32[2] = 0xffff0000;
+                authorized_server->s6_addr32[3] = addr4.s_addr;
                 authorized_server++;                
             }
+ 
         }
         *authorized_server = in6addr_any;
     }
