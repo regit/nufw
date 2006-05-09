@@ -123,8 +123,11 @@ pthread_mutex_t *session_active_mutex;
  */
 struct addrinfo *adr_srv;
 
-/* Raw socket we use for sending ICMP messages */
-int raw_sock;
+/* Raw IPv4 socket we use for sending ICMP messages */
+int raw_sock4;
+
+/* Raw IPv6 socket we use for sending ICMPv6 messages */
+int raw_sock6;
 
 /* 
  * all functions 

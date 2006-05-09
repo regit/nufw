@@ -48,7 +48,7 @@ void auth_process_answer(char *dgram, int dgram_size)
     /* check payload length */
     payload_len = ntohs(answer->payload_len);
     if (dgram_size < (int)(sizeof(nuauth_decision_response_t) + payload_len)
-            || ((payload_len != 0) && (payload_len != (20+8))))
+            || ((payload_len != 0) && (payload_len != (20+8)) && (payload_len != (40+8))))
     {
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING, 
                 "Packet with improper size");
@@ -118,7 +118,7 @@ void auth_process_answer(char *dgram, int dgram_size)
  */
 int is_ipv4(struct in6_addr *addr)
 {
-    if (addr->s6_addr32[2] != 0xffff)
+    if (addr->s6_addr32[2] != 0xffff0000)
         return 0;
     if (addr->s6_addr32[0] != 0 || addr->s6_addr32[1] != 0)
         return 0;

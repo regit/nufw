@@ -526,12 +526,24 @@ int main(int argc,char * argv[])
 
     init_log_engine();
 
-    /* create socket for sending ICMP messages */
-    raw_sock = socket(PF_INET, SOCK_RAW, 1);
-    if (raw_sock == -1)
+    /* open ICMP (IPv4) socket */
+    raw_sock4 = socket(PF_INET, SOCK_RAW, 1); /* 1: ICMP protocol */
+    if (raw_sock4 == -1)
+    {
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
-                "socket() on raw_sock creation failure!");
-
+                "Fail to create socket for ICMP!");
+        exit(EXIT_FAILURE);
+    }
+    
+    /* open ICMPv6 socket */
+    raw_sock6 = socket(PF_INET6, SOCK_RAW, 58); /* 58: ICMPv6 protocol */
+    if (raw_sock6 == -1)
+    {
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
+                "Fail to create socket for ICMPv6!");
+        exit(EXIT_FAILURE);
+    }
+    
     /* Create address adr_srv */
     create_nuauth_address();
     
