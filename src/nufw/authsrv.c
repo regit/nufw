@@ -111,14 +111,35 @@ void auth_process_answer(char *dgram, int dgram_size)
 
 #ifdef HAVE_LIBCONNTRACK
 
+/**
+ * Check if a IPv6 address is a IPv4 or not.
+ *
+ * \return 1 for IPv4 and 0 for IPv6
+ */
+int is_ipv4(struct in6_addr *addr)
+{
+    if (addr->s6_addr32[2] != 0xffff)
+        return 0;
+    if (addr->s6_addr32[0] != 0 || addr->s6_addr32[1] != 0)
+        return 0;
+    return 1;
+}
+
 int build_nfct_tuple_from_message(struct nfct_tuple* orig,struct nu_conntrack_message_t* packet_hdr)
 {
-    orig->l3protonum = AF_INET;
-    orig->protonum = packet_hdr->ipv4_protocol;
-    orig->src.v4 = packet_hdr->ipv4_src;
-    orig->dst.v4 = packet_hdr->ipv4_dst;
+    orig->protonum = packet_hdr->ip_protocol;
+    if (is_ipv4(&packet_hdr->ip_src) && is_ipv4(&packet_hdr->ip_dst))
+    {
+        orig->l3protonum = AF_INET;
+        orig->src.v4 = packet_hdr->ip_src.s6_addr32[3];
+        orig->dst.v4 = packet_hdr->ip_dst.s6_addr32[3];
+    } else {
+        orig->l3protonum = AF_INET6;
+        memcpy(&orig->src.v6, &packet_hdr->ip_src, sizeof(orig->src.v6));
+        memcpy(&orig->dst.v6, &packet_hdr->ip_dst, sizeof(orig->dst.v6));
+    }
 
-    switch (packet_hdr->ipv4_protocol)
+    switch (packet_hdr->ip_protocol)
     {
         case IPPROTO_TCP:
             orig->l4src.tcp.port=packet_hdr->src_port;  

@@ -36,6 +36,9 @@
  */
 int update_handler (void *arg, unsigned int flags, int type,void *data)
 {
+#if 1
+char ascii[INET6_ADDRSTRLEN];
+#endif
     struct nfct_conntrack *conn = arg;
     struct nu_conntrack_message_t message;
     int ret;
@@ -75,9 +78,33 @@ int update_handler (void *arg, unsigned int flags, int type,void *data)
                         "Strange, get message (type %d) not %d or %d",type,NFCT_MSG_DESTROY,NFCT_MSG_UPDATE);
             return 0;
     }
-    message.ipv4_protocol=conn->tuple[0].protonum;
-    message.ipv4_src= conn->tuple[0].src.v4;
-    message.ipv4_dst= conn->tuple[0].dst.v4;
+    message.ip_protocol=conn->tuple[0].protonum;
+#if 1     
+    printf("(*) New packet ; ");
+    if (inet_ntop(conn->tuple[0].l3protonum, &conn->tuple[0].src, ascii, sizeof(ascii)))
+    {
+        printf(" src=%s", ascii);
+    }
+    if (inet_ntop(conn->tuple[0].l3protonum, &conn->tuple[0].dst, ascii, sizeof(ascii)))
+    {
+        printf(" dst=%s", ascii);
+    }
+    printf("\n");
+#endif    
+    if (conn->tuple[0].l3protonum == AF_INET6) {
+        message.ip_src.s6_addr32[0] = 0;
+        message.ip_src.s6_addr32[1] = 0;
+        message.ip_src.s6_addr32[2] = 0xffff;
+        message.ip_src.s6_addr32[3] = conn->tuple[0].src.v4;
+
+        message.ip_dst.s6_addr32[0] = 0;
+        message.ip_dst.s6_addr32[1] = 0;
+        message.ip_dst.s6_addr32[2] = 0xffff;
+        message.ip_dst.s6_addr32[3] = conn->tuple[0].dst.v4;
+    } else {
+        memcpy(&message.ip_src, &conn->tuple[0].src.v6, sizeof(message.ip_src));
+        memcpy(&message.ip_dst, &conn->tuple[0].dst.v6, sizeof(message.ip_dst));
+    }
 
     switch (conn->tuple[0].protonum){
         case IPPROTO_TCP :
