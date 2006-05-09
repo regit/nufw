@@ -175,15 +175,15 @@ int packetsrv_open()
         return -1;
     }
 
-    /* unbinding existing nf_queue handler for AF_INET (if any) */
-    if (nfq_unbind_pf(h, AF_INET) < 0) {
+    /* unbinding existing nf_queue handler for AF_INET6 (if any) */
+    if (nfq_unbind_pf(h, AF_INET6) < 0) {
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
                 "[!] Error during nfq_unbind_pf()");
         return -1;
     }
 
-    /* binding nfnetlink_queue as nf_queue handler for AF_INET */
-    if (nfq_bind_pf(h, AF_INET) < 0) {
+    /* binding nfnetlink_queue as nf_queue handler for AF_INET6 */
+    if (nfq_bind_pf(h, AF_INET6) < 0) {
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
                 "[!] Error during nfq_bind_pf()");
         return -1;
@@ -491,10 +491,12 @@ int auth_request_send(uint8_t type, uint32_t packet_id, char* payload, unsigned 
     int msg_length;
 
     /* Drop non-IPv4 packet */
-    if ( ((struct iphdr *)payload)->version != 4) {
-        debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, "Dropping non-IPv4 packet");
+    if ((((struct iphdr *)payload)->version != 4) && ( ((struct iphdr *)payload)->version != 6)) {
+        debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, 
+                "Dropping non-IPv4/non-IPv6 packet (version %u)",
+                ((struct iphdr *)payload)->version);
         return 0;
-    }
+    } 
 
     /* Truncate packet content if needed */
     if (sizeof(datas) - sizeof(nufw_to_nuauth_auth_message_t) < payload_len) {

@@ -94,12 +94,12 @@ char ascii[INET6_ADDRSTRLEN];
     if (conn->tuple[0].l3protonum == AF_INET6) {
         message.ip_src.s6_addr32[0] = 0;
         message.ip_src.s6_addr32[1] = 0;
-        message.ip_src.s6_addr32[2] = 0xffff;
+        message.ip_src.s6_addr32[2] = 0xffff0000;
         message.ip_src.s6_addr32[3] = conn->tuple[0].src.v4;
 
         message.ip_dst.s6_addr32[0] = 0;
         message.ip_dst.s6_addr32[1] = 0;
-        message.ip_dst.s6_addr32[2] = 0xffff;
+        message.ip_dst.s6_addr32[2] = 0xffff0000;
         message.ip_dst.s6_addr32[3] = conn->tuple[0].dst.v4;
     } else {
         memcpy(&message.ip_src, &conn->tuple[0].src.v6, sizeof(message.ip_src));
