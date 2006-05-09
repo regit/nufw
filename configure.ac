@@ -228,7 +228,6 @@ AC_CONFIG_FILES([Makefile
         src/nuauth/modules/log_nuprelude/Makefile
         src/nuauth/modules/log_syslog/Makefile
         src/nuauth/modules/log_script/Makefile
-        src/nuauth/modules/ipauth_ident/Makefile
         src/nuauth/modules/xml_defs/Makefile
         src/nuauth/modules/x509_std/Makefile
         src/clients/Makefile
