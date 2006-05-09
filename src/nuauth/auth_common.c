@@ -164,7 +164,6 @@ element->decision = DECISION_REJECT;
             ip->ip6_plen = htons(payload_size);
             ip->ip6_hops = 64; /* write dummy hop limit */
             ip->ip6_nxt = element->tracking.protocol;
-            /* TODO: @@@HAYPO@@@ dummy IPv4 */
             ip->ip6_src = element->tracking.saddr;
             ip->ip6_dst = element->tracking.daddr;
 
@@ -184,7 +183,6 @@ element->decision = DECISION_REJECT;
             ip->tot_len = htons( IPHDR_REJECT_LENGTH + PAYLOAD_SAMPLE);
             ip->ttl = 64; /* write dummy ttl */
             ip->protocol = element->tracking.protocol;
-            /* TODO: @@@HAYPO@@@ dummy IPv4 */
             ip->saddr = htonl(element->tracking.saddr.s6_addr32[3]);
             ip->daddr = htonl(element->tracking.daddr.s6_addr32[3]);
 
