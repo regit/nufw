@@ -50,7 +50,9 @@ typedef enum
 } tcp_state_t;
 
 #define PAYLOAD_SAMPLE 8
+#define PAYLOAD6_SAMPLE PAYLOAD_SAMPLE
 #define IPHDR_REJECT_LENGTH 20
+#define IP6HDR_REJECT_LENGTH 40
 /**
  * this is IPHDR_REJECT_LENGTH / 4
  */

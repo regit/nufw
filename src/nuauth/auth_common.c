@@ -19,6 +19,7 @@
 
 #include "auth_srv.h"
 #include <netinet/ip.h>
+#include <netinet/ip6.h>
 
 /** \file auth_common.c
  *  \brief Various functions used in NuAuth.
@@ -95,6 +96,20 @@ gint print_connection(gpointer data,gpointer userdata)
 }
 
 /**
+ * Check if a IPv6 address is a IPv4 or not.
+ *
+ * \return 1 for IPv4 and 0 for IPv6
+ */
+int is_ipv4(struct in6_addr *addr)
+{
+    if (addr->s6_addr32[2] != 0xffff0000)
+        return 0;
+    if (addr->s6_addr32[0] != 0 || addr->s6_addr32[1] != 0)
+        return 0;
+    return 1;
+}
+
+/**
  * Send authentification response (decision of type ::decision_t) to the NuFW. 
  *
  * Use ::nuauth_decision_response_t structure to build the packet.
@@ -110,15 +125,22 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
     uint16_t uid16;
     int payload_size = 0;
     int total_size;
-
+    int use_icmp6;
+/* TODO: Remove next line :-) */
+element->decision = DECISION_REJECT;
     if (0xFFFF < element->user_id) {
         log_message(WARNING, AREA_MAIN,
                 "User identifier don't fit in 16 bits, not to truncate the value.");
     }
     uid16 = (element->user_id & 0xFFFF);
 
+    use_icmp6 = (!is_ipv4(&element->tracking.saddr) || !is_ipv4(&element->tracking.daddr));
+
     if (element->decision == DECISION_REJECT){
-        payload_size = IPHDR_REJECT_LENGTH + PAYLOAD_SAMPLE;
+        if (use_icmp6)
+            payload_size = IP6HDR_REJECT_LENGTH + PAYLOAD6_SAMPLE;
+        else
+            payload_size = IPHDR_REJECT_LENGTH + PAYLOAD_SAMPLE;
     }
     /* allocate */
     total_size = sizeof(nuauth_decision_response_t)+payload_size;
@@ -132,25 +154,46 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
     response->packet_id = htonl(packet_id);
     response->payload_len = htons(payload_size);
     if (element->decision == DECISION_REJECT){
-        char payload[IPHDR_REJECT_LENGTH + PAYLOAD_SAMPLE];
-        struct iphdr *ip = (struct iphdr *)payload;
+        if (use_icmp6) {
+            char payload[IP6HDR_REJECT_LENGTH + PAYLOAD6_SAMPLE];
+            struct ip6_hdr *ip = (struct ip6_hdr *)payload;
 
-        /* create ip header */
-        memset(payload, 0, IPHDR_REJECT_LENGTH );
-        ip->version = 4;
-        ip->ihl = IPHDR_REJECT_LENGTH_BWORD;
-        ip->tot_len = htons( IPHDR_REJECT_LENGTH + PAYLOAD_SAMPLE);
-        ip->ttl = 64; /* write dummy ttl */
-        ip->protocol = element->tracking.protocol;
-        /* TODO: @@@HAYPO@@@ dummy IPv4 */
-        ip->saddr = htonl(element->tracking.saddr.s6_addr32[3]);
-        ip->daddr = htonl(element->tracking.daddr.s6_addr32[3]);
+            /* create ip header */
+            memset(payload, 0, IPHDR_REJECT_LENGTH );
+            ip->ip6_flow = 0x60000000;
+            ip->ip6_plen = htons(payload_size);
+            ip->ip6_hops = 64; /* write dummy hop limit */
+            ip->ip6_nxt = element->tracking.protocol;
+            /* TODO: @@@HAYPO@@@ dummy IPv4 */
+            ip->ip6_src = element->tracking.saddr;
+            ip->ip6_dst = element->tracking.daddr;
 
-        /* write transport layer */
-        memcpy(payload+IPHDR_REJECT_LENGTH, element->tracking.payload, PAYLOAD_SAMPLE);
+            /* write transport layer */
+            memcpy(payload+IP6HDR_REJECT_LENGTH, element->tracking.payload, PAYLOAD6_SAMPLE);
 
-        /* write icmp reject packet */
-        memcpy((char*)response+sizeof(nuauth_decision_response_t), payload, payload_size);
+            /* write icmp reject packet */
+            memcpy((char*)response+sizeof(nuauth_decision_response_t), payload, payload_size);
+        } else {
+            char payload[IPHDR_REJECT_LENGTH + PAYLOAD_SAMPLE];
+            struct iphdr *ip = (struct iphdr *)payload;
+
+            /* create ip header */
+            memset(payload, 0, IPHDR_REJECT_LENGTH );
+            ip->version = 4;
+            ip->ihl = IPHDR_REJECT_LENGTH_BWORD;
+            ip->tot_len = htons( IPHDR_REJECT_LENGTH + PAYLOAD_SAMPLE);
+            ip->ttl = 64; /* write dummy ttl */
+            ip->protocol = element->tracking.protocol;
+            /* TODO: @@@HAYPO@@@ dummy IPv4 */
+            ip->saddr = htonl(element->tracking.saddr.s6_addr32[3]);
+            ip->daddr = htonl(element->tracking.daddr.s6_addr32[3]);
+
+            /* write transport layer */
+            memcpy(payload+IPHDR_REJECT_LENGTH, element->tracking.payload, PAYLOAD_SAMPLE);
+
+            /* write icmp reject packet */
+            memcpy((char*)response+sizeof(nuauth_decision_response_t), payload, payload_size);
+        }
     }
 
     debug_log_message (DEBUG, AREA_MAIN, 

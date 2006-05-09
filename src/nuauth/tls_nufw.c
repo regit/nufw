@@ -380,10 +380,6 @@ void tls_nufw_init(struct tls_nufw_context_t *context)
     setsockopt (context->sck_inet, SOL_SOCKET, SO_REUSEADDR, 
             &option_value,	sizeof(option_value));
 
-    char ascii[INET6_ADDRSTRLEN];
-    inet_ntop(AF_INET6, res->ai_addr, ascii, sizeof(ascii));
-    printf("bind => %s\n", ascii);
-
     socket_fd = bind (context->sck_inet, res->ai_addr, res->ai_addrlen);
     if (socket_fd < 0)
     {
