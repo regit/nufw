@@ -118,14 +118,15 @@ extern "C" {
  * We use unsigned int and long (instead of exact type) to make
  * hashing easier.
  */
-typedef struct conn {
-    unsigned int proto;        /** IPv4 protocol */
-    unsigned long lcl;         /** Local address IPv4 */
-    unsigned int lclp;         /** Local address port */
-    unsigned long rmt;         /** Remote address IPv4 */
-    unsigned int rmtp;         /** Remote address port */
+typedef struct conn 
+{
+    unsigned int protocol;     /** IPv4 protocol */
+    struct in6_addr ip_src;    /** Local address IPv4 */
+    unsigned short port_src;   /** Local address port */
+    struct in6_addr ip_dst;    /** Remote address IPv4 */
+    unsigned short port_dst;   /** Remote address port */
     unsigned long uid;         /** User identifier */
-    unsigned long ino;         /** Inode */
+    unsigned long inode;       /** Inode */
     unsigned int retransmit;   /** Restransmit */
     time_t createtime;         /** Creation time (Epoch format) */
 
@@ -141,7 +142,7 @@ typedef struct conntable {
 
 #ifndef USE_SHA1
 #  define PACKET_ITEM_MAXSIZE \
-     ( sizeof(struct nuv2_authreq) + sizeof(struct nuv2_authfield_ipv4) \
+     ( sizeof(struct nuv2_authreq) + sizeof(struct nuv2_authfield_ipv6) \
        + sizeof(struct nuv2_authfield_app) + PROGNAME_BASE64_WIDTH )
 #else
 #  error "TODO: Compute PACKET_ITEM_MAXSIZE with SHA1 checksum"

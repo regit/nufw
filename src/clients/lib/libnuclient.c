@@ -406,7 +406,7 @@ int compare (NuAuth * session,conntable_t *old, conntable_t *new, nuclient_error
 				}
 
 				/* solve timeout issue on UDP */
-				if (bucket->proto == IPPROTO_UDP){
+				if (bucket->protocol == IPPROTO_UDP){
 					/* send an auth packet if netfilter timeout may have been reached */
 					if (same_bucket->createtime<time(NULL)-UDP_TIMEOUT){
 #if DEBUG
@@ -433,7 +433,7 @@ int compare (NuAuth * session,conntable_t *old, conntable_t *new, nuclient_error
 			/* error sending */
 			return -1;
 		}
-	}
+        }
 	return nb_packets;
 }
 
