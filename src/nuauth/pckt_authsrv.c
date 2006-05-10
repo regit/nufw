@@ -62,12 +62,12 @@ unsigned int get_ip_headers(tracking_t *tracking, unsigned char *dgram, unsigned
         tracking->saddr.s6_addr32[0] = 0;
         tracking->saddr.s6_addr32[1] = 0;
         tracking->saddr.s6_addr32[2] = 0xffff0000;
-        tracking->saddr.s6_addr32[3] = ntohl(ip->saddr);
+        tracking->saddr.s6_addr32[3] = ip->saddr;
         
         tracking->daddr.s6_addr32[0] = 0;
         tracking->daddr.s6_addr32[1] = 0;
         tracking->daddr.s6_addr32[2] = 0xffff0000;
-        tracking->daddr.s6_addr32[3] = ntohl(ip->daddr);
+        tracking->daddr.s6_addr32[3] = ip->daddr;
 
         tracking->protocol = ip->protocol;
         memcpy(tracking->payload, dgram + 4*ip->ihl, sizeof(tracking->payload));
@@ -76,6 +76,8 @@ unsigned int get_ip_headers(tracking_t *tracking, unsigned char *dgram, unsigned
 
     if (ip->version == 6)
     {
+        if (dgram_size < (40+8))
+            return 0;
         unsigned short plen = ntohs(ip6->ip6_plen);
         tracking->saddr = ip6->ip6_src;
         tracking->daddr = ip6->ip6_dst;
