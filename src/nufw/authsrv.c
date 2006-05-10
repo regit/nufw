@@ -45,13 +45,14 @@ void auth_process_answer(char *dgram, int dgram_size)
     }
     answer = (nuauth_decision_response_t *)dgram;
 
+
     /* check payload length */
     payload_len = ntohs(answer->payload_len);
     if (dgram_size < (int)(sizeof(nuauth_decision_response_t) + payload_len)
             || ((payload_len != 0) && (payload_len != (20+8)) && (payload_len != (40+8))))
     {
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING, 
-                "Packet with improper size");
+                "[!] Packet with improper size");
         return;
     }
     
@@ -66,20 +67,20 @@ void auth_process_answer(char *dgram, int dgram_size)
     if (!sandf)
     {
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING, 
-                "Packet without a known ID: %u", packet_id);
+                "[!] Packet without a known ID: %u", packet_id);
         return;
     }
-
+answer->decision = DECISION_ACCEPT;
     switch (answer->decision)
     {
     case DECISION_ACCEPT:
         /* accept packet */
         debug_log_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
-                "Accepting packet with id=%u", packet_id);
+                "(*) Accepting packet with id=%u", packet_id);
 #if HAVE_LIBIPQ_MARK || USE_NFQUEUE
         if (nufw_set_mark) {
             debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
-                    "Marking packet with %d",
+                    "(*) Marking packet with %d",
                     user_id);
             /* we put the userid mark at the end of the mark, not changing the 16 first big bits */
             nfmark = (nfmark & 0xffff0000 ) | user_id;
@@ -96,7 +97,7 @@ void auth_process_answer(char *dgram, int dgram_size)
     case DECISION_REJECT:
         /* Packet is rejected, ie. dropped and ICMP signalized */
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
-                "Rejecting %lu", packet_id);
+                "(*) Rejecting %lu", packet_id);
         IPQ_SET_VERDICT(packet_id, NF_DROP);
         send_icmp_unreach(dgram + sizeof(nuauth_decision_response_t));
         break;
@@ -104,7 +105,7 @@ void auth_process_answer(char *dgram, int dgram_size)
     default:
         /* drop packet */
         debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
-                "Drop packet %u", packet_id);
+                "(*) Drop packet %u", packet_id);
         IPQ_SET_VERDICT(packet_id, NF_DROP);
     }
 }    
