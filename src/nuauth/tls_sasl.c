@@ -147,7 +147,7 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
     c_session = g_new0(user_session_t,1);
     c_session->tls = session;
     c_session->tls_lock = g_mutex_new();
-    c_session->addr = ((struct client_connection*)userdata)->addr.sin6_addr;
+    c_session->addr = ((struct client_connection*)userdata)->addr;
     c_session->groups = NULL;
     c_session->user_name = NULL;
     c_session->user_id = 0;

@@ -126,8 +126,8 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
     int payload_size = 0;
     int total_size;
     int use_icmp6;
-/* TODO: Remove next line :-) */
-element->decision = DECISION_REJECT;
+
+    /* check if user id fit in 16 bits */
     if (0xFFFF < element->user_id) {
         log_message(WARNING, AREA_MAIN,
                 "User identifier don't fit in 16 bits, not to truncate the value.");

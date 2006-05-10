@@ -194,14 +194,16 @@ char warn_clients(struct msg_addr_set * global_msg)
 #endif
 
     g_mutex_lock(client_mutex);
-    /* @@@HAYPO@@@: check endian */
     ipsockets=g_hash_table_lookup(client_ip_hash, IPV6_TO_POINTER(&global_msg->addr));
     if (ipsockets) {
         global_msg->found=TRUE;
         while (ipsockets) {
-            gnutls_record_send(*(gnutls_session*)(ipsockets->data),
+            int ret = gnutls_record_send(*(gnutls_session*)(ipsockets->data),
                     global_msg->msg,
                     ntohs(global_msg->msg->length));
+            if (ret < 0)
+                log_message(WARNING,AREA_USER,
+                        "Fails to send warning to client(s).");
             ipsockets=ipsockets->next;
         }
         g_mutex_unlock(client_mutex);

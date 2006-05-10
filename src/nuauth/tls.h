@@ -46,8 +46,8 @@ struct client_connection {
     /** Socket file descriptor, init. with accept() and set to SO_KEEPALIVE mode */
     int socket;             
 
-    /** IPv4 address */
-    struct sockaddr_in6 addr; 
+    /** IPv6 address */
+    struct in6_addr addr; 
 };
 
 /**

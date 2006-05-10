@@ -260,15 +260,18 @@ static int treat_user_request (user_session_t * c_session)
  */
 int tls_user_accept(struct tls_user_context_t *context) 
 {
-    struct sockaddr_in addr_clnt;
-    unsigned int len_inet = sizeof addr_clnt;
+    struct sockaddr_storage sockaddr;
+    struct sockaddr_in *sockaddr4 = (struct sockaddr_in *)&sockaddr;
+    struct sockaddr_in6 *sockaddr6 = (struct sockaddr_in6 *)&sockaddr;
+    struct in6_addr addr;
+    unsigned int len_inet = sizeof sockaddr;
     struct client_connection* current_client_conn;
     struct pre_client_elt* new_pre_client;
     int socket;
 
     /* Wait for a connect */
     socket = accept (context->sck_inet,
-            (struct sockaddr *)&addr_clnt,
+            (struct sockaddr *)&sockaddr,
             &len_inet);
     if (socket == -1){
         log_message(WARNING, AREA_MAIN, "accept");
@@ -288,10 +291,20 @@ int tls_user_accept(struct tls_user_context_t *context)
         close(socket);
         return 0;
     }
+   
+    /* Extract client address (convert it to IPv6 if it's IPv4) */
+    if (sockaddr6->sin6_family == AF_INET) {
+        addr.s6_addr32[0] = 0;
+        addr.s6_addr32[1] = 0;
+        addr.s6_addr32[2] = 0xffff0000;
+        addr.s6_addr32[3] = sockaddr4->sin_addr.s_addr;
+    } else {
+        addr = sockaddr6->sin6_addr;
+    }
 
     current_client_conn=g_new0(struct client_connection,1);
     current_client_conn->socket=socket;
-    memcpy(&current_client_conn->addr,&addr_clnt,sizeof(struct sockaddr_in));
+    current_client_conn->addr = addr;
 
     /* Update mx number if needed */
     if ( socket+1 > context->mx )
