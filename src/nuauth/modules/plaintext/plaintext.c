@@ -1,4 +1,3 @@
-
 /*
  **  "plaintext" module
  ** Copyright(C) 2004-2005 Mikael Berthe <mikael+nufw@lists.lilotux.net>
@@ -31,15 +30,15 @@ char *strip_line(char *line, int acceptnull)
   char *p_tmp;
 
   /*  Let's get rid of tabs and spaces */
-  while ((*line == 32) || (*line == 9))
+  while ((*line == ' ') || (*line == '\t'))
       line++;
   /*  Let's get rid of trailing characters */
   for (p_tmp = line; *p_tmp; p_tmp++)
       ;
   if (p_tmp != line)
       p_tmp--;
-  for ( ; p_tmp>line && (*p_tmp=='\x0a' || *p_tmp=='\x0d' ||
-              *p_tmp==32 || *p_tmp==9); *p_tmp-- = 0)
+  for ( ; p_tmp>line && (*p_tmp=='\n' || *p_tmp=='\r' ||
+              *p_tmp==' ' || *p_tmp=='\t'); *p_tmp-- = 0)
       ;
 
   if (!acceptnull)
@@ -47,7 +46,7 @@ char *strip_line(char *line, int acceptnull)
 
   /*  Discard comments and empty lines */
   if (*line == '#' || *line == 0 ||
-          *line == '\x0d' || *line == '\x0a')
+          *line == '\r' || *line == '\n')
       return NULL;
 
   return line;
@@ -164,85 +163,149 @@ int parse_ports(char *portsline, GSList **p_portslist, char *prefix)
 }
 
 /**
+ * Compare addr1 with (addr2 & netmask)
+ *
+ * \return 0 if they match, integer different than zero otherwise (memcmp result)
+ */
+int compare_ipv6_with_mask(struct in6_addr *addr1, struct in6_addr *addr2, struct in6_addr *mask)
+{
+    struct in6_addr masked = *addr2;
+    masked.s6_addr32[0] &= mask->s6_addr32[0];
+    masked.s6_addr32[1] &= mask->s6_addr32[1];
+    masked.s6_addr32[2] &= mask->s6_addr32[2];
+    masked.s6_addr32[3] &= mask->s6_addr32[3];
+    return memcmp(addr1, &masked, sizeof(masked));
+}
+
+/**
+ * Try to match an address from an IP/mask list.
+ * 
+ * \param ip_list Single linked list of T_ip items
+ * \param addr Address to match
+ * \return 1 if addr match ip_list, 0 otherwise
+ */
+int match_ip(GSList *ip_list, struct in6_addr *addr)
+{
+    for (; ip_list != NULL; ip_list = g_slist_next(ip_list)) 
+    {
+        struct T_ip *item = (struct T_ip*)ip_list->data;
+        if (compare_ipv6_with_mask(&item->addr, addr, &item->netmask) == 0)
+            return 1;
+    }
+    return 0;
+}
+
+/**
  * parse_ips()
- * Extracts IP addresses from ipsline and fills *p_ipslist.
+ * Extracts IP addresses from ipsline and fills *ipslist.
  * prefix is displayed in front of the log messages.
  * Returns 0 if successful.
  */
-int parse_ips(char *ipsline, GSList **p_ipslist, char *prefix)
+int parse_ips(char *ipsline, GSList **ip_list, char *prefix)
 {
   char *p_nextip;
-  char *p_ip = ipsline;
-  GSList *ipslist = *p_ipslist;
-  struct in_addr ip_addr;
-  uint32_t *p_address, *p_netmask;
+  struct in_addr ip_addr4;
+  uint32_t *p_netmask;
+  struct in6_addr ip_addr6;
   char *p_tmp;
+  gchar** ip_items = g_strsplit(ipsline, ",", 0);
+  gchar** iter = ip_items;
+  gchar* line;
+  struct T_ip this_ip, *this_ip_copy;
 
   /*  parsing IPs */
-  /*  XXX only IPv4 for now */
-  while (p_ip) {
-      int n = 1;
+  for (iter=ip_items; iter != NULL && *iter != NULL; iter++)
+  {
       uint32_t mask = 0;
-      int imask = 0;
+      int n;
 
-      p_nextip = strchr(p_ip, ',');
-      if (p_nextip) {
-          *p_nextip = 0;
+      line = strip_line(*iter, FALSE);
+
+      /*  Is there a netmask? */
+      p_tmp = strchr(line, '/');
+      if (p_tmp != NULL) {
+          *p_tmp++ = 0;
+          n = sscanf(p_tmp, "%u", &mask);
+          if (n != 1)
+          {
+              log_message(WARNING, AREA_MAIN,
+                      "plaintext warning: wrong network mask (%s)", p_tmp);
+              continue;
+          }
+      } else {   /*  no -> default netmask is 32 bits */
+          mask = 128;
       }
 
-      p_ip = strip_line(p_ip, FALSE);
-      /*  Is there a netmask? */
-      p_tmp = strchr(p_ip, '/');
-      if (p_tmp) {
-          *p_tmp++ = 0;
-          n = sscanf(p_tmp, "%d", &imask);
-          mask = (uint32_t) imask;
-      } else    /*  no -> default netmask is 32 bits */
-          mask = 32;
-
-      if ((n != 1) || (inet_pton(AF_INET, p_ip, &ip_addr) <= 0)) {
+      if (0 < inet_pton(AF_INET, line, &ip_addr4)) {
+          this_ip.addr.s6_addr32[0] = 0;
+          this_ip.addr.s6_addr32[1] = 0;
+          this_ip.addr.s6_addr32[2] = 0xffff0000;
+          this_ip.addr.s6_addr32[3] = ip_addr4.s_addr;
+          if (this_ip.addr.s6_addr32[3] == 0) {
+              this_ip.addr.s6_addr32[2] = 0;
+          }
+          if (32 < mask)
+              mask = 32;
+#if 0          
+          mask = 32-mask;
+          mask += (128-32);
+#endif          
+      } else if (0 < inet_pton(AF_INET6, line, &ip_addr6)) {
+          this_ip.addr = ip_addr6;
+      } else {
           /*  We can't read an IP address.  This will be an error only if we can */
           /*   see a comma next. */
           if (p_nextip) {
               log_message(WARNING, AREA_MAIN,
                       "%s parse_ips: Malformed line", prefix);
-              *p_ipslist = ipslist;
-              return 1;
           }
           log_message(WARNING, AREA_MAIN,
                   "%s parse_ips: Garbarge at end of line", prefix);
-      } else {
-          struct T_ip *this_ip = g_new0(struct T_ip, 1);
-          this_ip->addr.s_addr = ip_addr.s_addr;
-          this_ip->netmask.s_addr = 0; 
-
-          /*  Netmask conversion */
-          p_netmask = (uint32_t *)&this_ip->netmask.s_addr;
-          for (n = 0 ; n < (int)mask ; n++) {
-              *p_netmask <<= 1;
-              *p_netmask |= 1;
-          }
-
-          p_address = (uint32_t *)&this_ip->addr.s_addr;
-
-          if ((*p_address & *p_netmask) != *p_address) {
-              log_message(WARNING, AREA_MAIN,
-                      "%s parse_ips: Invalid network specification!",
-                      prefix);
-              *p_address &= *p_netmask;
-          }
-
-          ipslist = g_slist_prepend(ipslist, this_ip);
-
-          debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
-                  "%s Adding IP = %u, netmask = %u", prefix,
-                  this_ip->addr.s_addr, this_ip->netmask.s_addr);
+          continue;
       }
-      if ((p_ip = p_nextip))
-          p_ip++;
-  }
 
-  *p_ipslist = ipslist;
+      if (128 < mask)
+          mask = 128;
+
+      /*  Create netmask IPv6 address from netmask in bits */
+      memset(&this_ip.netmask, 0, sizeof(this_ip.netmask));
+      p_netmask = &this_ip.netmask.s6_addr32[0];
+      for (; 32 < mask; mask -= 32) {
+          *p_netmask = 0xffffffff; 
+          p_netmask++;
+      }
+      for (n = 0 ; n < (int)mask ; n++) {
+          *p_netmask <<= 1;
+          *p_netmask |= 1;
+      }
+
+
+      if (compare_ipv6_with_mask(&this_ip.addr, &this_ip.addr, &this_ip.netmask) != 0)
+      {
+          log_message(WARNING, AREA_MAIN,
+                  "%s parse_ips: Invalid network specification!",
+                  prefix);
+          continue;
+      }
+
+      this_ip_copy = g_memdup(&this_ip, sizeof(this_ip));
+      *ip_list = g_slist_prepend(*ip_list, this_ip_copy);
+
+#ifdef DEBUG_ENABLE
+      {
+          char addr_ascii[INET6_ADDRSTRLEN];
+          char mask_ascii[INET6_ADDRSTRLEN];
+          if (inet_ntop(PF_INET6, &this_ip_copy->addr, addr_ascii, sizeof(addr_ascii)) != NULL
+              && inet_ntop(PF_INET6, &this_ip_copy->netmask, mask_ascii, sizeof(mask_ascii)) != NULL)
+          {
+              log_message(VERBOSE_DEBUG, AREA_MAIN,
+                      "%s Adding IP = %s, netmask = %s", 
+                      prefix, addr_ascii, mask_ascii);
+          }
+      }
+#endif      
+  }
+  g_strfreev(ip_items);
   return 0;
 }
 
@@ -715,7 +778,6 @@ G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
       { "plaintext_aclfile",  G_TOKEN_STRING, 0, g_strdup(TEXT_ACLFILE) }
   };
 
-
   /*  parse conf file */
   if (module->configfile){
       parse_conffile(module->configfile,
@@ -838,7 +900,6 @@ G_MODULE_EXPORT GSList* acl_check(connection_t* element,gpointer params)
   tracking_t *netdata = &element->tracking;
   struct T_plaintext_acl *p_acl;
   int initstatus;
-  uint32_t src_ip, dst_ip;
   static GStaticMutex plaintext_initmutex = G_STATIC_MUTEX_INIT;
 
   /* init has only to be done once */
@@ -862,10 +923,6 @@ G_MODULE_EXPORT GSList* acl_check(connection_t* element,gpointer params)
   /*  netdata.source       Port source */
   /*  netdata.dest         Port destination */
 
-  /* TODO check if ntohl is needed */
-  src_ip = ntohl(netdata->saddr);
-  dst_ip = ntohl(netdata->daddr); 
-
   for (p_acllist = ((struct plaintext_params*)params)->plaintext_acllist ; p_acllist ;
           p_acllist = g_slist_next(p_acllist)) {
       p_acl = (struct T_plaintext_acl*)p_acllist->data;
@@ -874,38 +931,15 @@ G_MODULE_EXPORT GSList* acl_check(connection_t* element,gpointer params)
           continue;
 
       /*  Check source address */
-      if (!p_acl->src_ip){
+      if (!match_ip(p_acl->src_ip, &netdata->saddr)) {
+          printf("source don't match\n");
           continue;
-      } else {
-          int found = 0;
-          struct T_ip *p_ip;
-          GSList *pl_ip = p_acl->src_ip;
-          for ( ; pl_ip ; pl_ip = g_slist_next(pl_ip)) {
-              p_ip = (struct T_ip*)pl_ip->data;
-              if ((src_ip & p_ip->netmask.s_addr) == p_ip->addr.s_addr) {
-                  found = 1;
-                  break;
-              }
-          }
-          if (!found)
-              continue; /*  We don't have a match */
       }
+
       /*  Check destination address */
-      if (!p_acl->dst_ip){
+      if (!match_ip(p_acl->dst_ip, &netdata->daddr)) {
+          printf("dest don't match\n");
           continue;
-      } else {
-          int found = 0;
-          struct T_ip *p_ip;
-          GSList *pl_ip = p_acl->dst_ip;
-          for ( ; pl_ip ; pl_ip = g_slist_next(pl_ip)) {
-              p_ip = (struct T_ip*)pl_ip->data;
-              if ((dst_ip & p_ip->netmask.s_addr) == p_ip->addr.s_addr) {
-                  found = 1;
-                  break;
-              }
-          }
-          if (!found)
-              continue; /*  We don't have a match */
       }
 
       /*  ICMP? */
@@ -965,7 +999,6 @@ G_MODULE_EXPORT GSList* acl_check(connection_t* element,gpointer params)
               }
           }
       }
-
 
       /*  O.S. filtering? */
       debug_log_message(VERBOSE_DEBUG, AREA_MAIN,

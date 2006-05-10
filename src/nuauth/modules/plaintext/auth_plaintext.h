@@ -40,8 +40,8 @@ struct T_os {
 };
 
 struct T_ip {
-    struct in_addr addr;
-    struct in_addr netmask;
+    struct in6_addr addr;
+    struct in6_addr netmask;
 };
 
 struct T_ports {
