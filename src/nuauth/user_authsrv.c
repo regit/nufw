@@ -158,18 +158,10 @@ int user_process_field_username(
     return 1;
 }    
 
-void user_process_field_ipv4(connection_t* connection, struct nuv2_authfield_ipv6 *ipfield)
+void user_process_field_ipv6(connection_t* connection, struct nuv2_authfield_ipv6 *ipfield)
 {
-    connection->tracking.saddr.s6_addr32[0] = ntohl(ipfield->src.s6_addr32[0]);
-    connection->tracking.saddr.s6_addr32[1] = ntohl(ipfield->src.s6_addr32[1]);
-    connection->tracking.saddr.s6_addr32[2] = ntohl(ipfield->src.s6_addr32[2]);
-    connection->tracking.saddr.s6_addr32[3] = ntohl(ipfield->src.s6_addr32[3]);
-    
-    connection->tracking.daddr.s6_addr32[0] = ntohl(ipfield->dst.s6_addr32[0]);
-    connection->tracking.daddr.s6_addr32[1] = ntohl(ipfield->dst.s6_addr32[1]);
-    connection->tracking.daddr.s6_addr32[2] = ntohl(ipfield->dst.s6_addr32[2]);
-    connection->tracking.daddr.s6_addr32[3] = ntohl(ipfield->dst.s6_addr32[3]);
-
+    connection->tracking.saddr = ipfield->src;
+    connection->tracking.daddr = ipfield->dst;
     connection->tracking.protocol = ipfield->proto;
 
     debug_log_message (VERBOSE_DEBUG, AREA_USER, "\tgot IPv4 field");
@@ -259,11 +251,11 @@ int user_process_field(
     }
 
     switch (field->type) {
-        case IPV4_FIELD:
+        case IPV6_FIELD:
             if (auth_buffer_len < (int)sizeof(struct nuv2_authfield_ipv6)) {
                 return -1;
             }
-            user_process_field_ipv4(connection, (struct nuv2_authfield_ipv6 *)field);
+            user_process_field_ipv6(connection, (struct nuv2_authfield_ipv6 *)field);
             break;
 
         case APP_FIELD:
