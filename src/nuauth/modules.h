@@ -25,7 +25,6 @@
  */
 
 #define INIT_MODULE_FROM_CONF "init_module_from_conf"
-#define MODULE_PARAMS_UNLOAD "module_params_unload"
 
 typedef gboolean module_params_unload_t (gpointer params);
 

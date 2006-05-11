@@ -641,7 +641,7 @@ int read_acl_list(struct plaintext_params* params)
   return 0;
 }
 
-G_MODULE_EXPORT gboolean module_params_unload(gpointer params_p)
+G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
 {
   struct plaintext_params* params=(struct plaintext_params*)params_p;
   /*  Free user list */

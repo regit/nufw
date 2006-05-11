@@ -31,7 +31,7 @@ MYSQL* mysql_conn_init(struct log_mysql_params* params);
  *
  * @{ */
 
-G_MODULE_EXPORT gchar* module_params_unload(gpointer params_p)
+G_MODULE_EXPORT gchar* unload_module_with_params(gpointer params_p)
 {
   struct log_mysql_params* params = (struct log_mysql_params*)params_p;
   

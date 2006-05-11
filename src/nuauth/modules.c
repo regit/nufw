@@ -309,7 +309,7 @@ static int load_modules_from(gchar* confvar, gchar* func,GSList** target)
         }
         
         /* get params for module by calling module exported function */
-        if (!g_module_symbol (current_module->module, MODULE_PARAMS_UNLOAD, (gpointer*)&(current_module->free_params))) {
+        if (!g_module_symbol (current_module->module, "unload_module_with_params", (gpointer*)&(current_module->free_params))) {
             log_message(WARNING, AREA_MAIN,
                     "No init function for module %s: PLEASE UPGRADE!",
                     current_module->module_name);

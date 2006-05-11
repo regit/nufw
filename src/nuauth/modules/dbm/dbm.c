@@ -61,7 +61,7 @@ int analyse_dbm_char(char *datas, struct dbm_data_struct *mystruct)
 }
 
 
-G_MODULE_EXPORT gboolean module_params_unload(gpointer params_p)
+G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
 {
   struct dbm_params* params=(struct dbm_params*)params_p;
   if (params) {

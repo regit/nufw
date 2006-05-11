@@ -63,7 +63,7 @@ G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t
 }
 
 
-G_MODULE_EXPORT gboolean module_params_unload(gpointer params_p)
+G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
 {
   return TRUE;
 }

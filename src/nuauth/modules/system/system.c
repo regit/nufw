@@ -212,7 +212,7 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass
 	return SASL_OK;
 }
 
-G_MODULE_EXPORT gboolean module_params_unload(gpointer params_p)
+G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
 {
   return TRUE;
 }

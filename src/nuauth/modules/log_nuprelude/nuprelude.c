@@ -37,7 +37,7 @@ confparams mysql_nuauth_vars[] = {
 GMutex *global_client_mutex;
 prelude_client_t *global_client; /* private pointer for mysql database access */
 
-G_MODULE_EXPORT gchar* module_params_unload(gpointer params_ptr)
+G_MODULE_EXPORT gchar* unload_module_with_params(gpointer params_ptr)
 {
     return NULL;
 }
