@@ -97,6 +97,7 @@ int modules_check_certificate (gnutls_session session, gnutls_x509_crt cert);
 
 gchar* modules_certificate_to_uid (gnutls_session session, gnutls_x509_crt cert);
 
+gboolean nuauth_is_reloading();
 void block_on_conf_reload();
 
 typedef void (*cleanup_func_t) (void);

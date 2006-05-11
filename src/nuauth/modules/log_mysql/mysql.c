@@ -21,6 +21,9 @@
 #include <string.h>
 #include <errno.h>
 
+nu_error_t mysql_close_open_user_sessions(struct log_mysql_params* params);
+MYSQL* mysql_conn_init(struct log_mysql_params* params);
+
 /**
  *
  * \ingroup LoggingNuauthModules
@@ -28,12 +31,17 @@
  *
  * @{ */
 
-
-
 G_MODULE_EXPORT gchar* module_params_unload(gpointer params_p)
 {
   struct log_mysql_params* params = (struct log_mysql_params*)params_p;
+  
   if (params){
+    if (! nuauth_is_reloading()){
+      if ( mysql_close_open_user_sessions(params) != NU_EXIT_OK){
+            log_message(WARNING, AREA_MAIN,
+                    "Could not close session when unloading module");
+      }
+    }
   g_free(params->mysql_user);
   g_free(params->mysql_passwd);
   g_free(params->mysql_server);
@@ -48,6 +56,38 @@ G_MODULE_EXPORT gchar* module_params_unload(gpointer params_p)
   }
   g_free(params);
   return NULL;
+}
+
+/**
+ * \brief Close all open user sessions
+ *
+ * \return A nu_error_t
+ */
+
+nu_error_t mysql_close_open_user_sessions(struct log_mysql_params* params)
+{
+    MYSQL* ld = mysql_conn_init(params);
+    char request[LONG_REQUEST_SIZE];
+    int mysql_ret;
+    int ok;
+
+    ok = secure_snprintf(request, sizeof(request),
+                    "UPDATE %s SET last_time=FROM_UNIXTIME(%lu) where last_time is NULL",
+                    params->mysql_users_table_name,
+                    time(NULL));
+    if (!ok) {
+        return NU_EXIT_ERROR;
+    }
+
+    /* execute query */
+    mysql_ret = mysql_real_query(ld, request, strlen(request));
+    if (mysql_ret != 0){
+        log_message (SERIOUS_WARNING, AREA_MAIN,
+            "Can execute request : %s\n", mysql_error(ld));
+        return NU_EXIT_ERROR;
+    }
+    return NU_EXIT_OK;
+
 }
 
 /* Init mysql system */
@@ -113,6 +153,12 @@ init_module_from_conf(module_t *module)
     /* init thread private stuff */
     params->mysql_priv = g_private_new ((GDestroyNotify)mysql_close); 
     log_message(DEBUG, AREA_MAIN, "mysql part of the config file is parsed\n");
+
+    /* do initial update of user session if needed */
+    if (! nuauth_is_reloading()){
+        mysql_close_open_user_sessions(params);
+    }
+    
     module->params=(gpointer)params;
     return TRUE;
 }

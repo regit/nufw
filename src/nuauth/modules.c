@@ -437,7 +437,26 @@ void unload_modules()
     g_mutex_unlock(modules_mutex);
 }
 
+/**
+ * \brief Test if this is initial start of nuauth
+ *
+ * \return TRUE if this is the initial start, FALSE if this is not the case
+ */
+gboolean nuauth_is_reloading()
+{
+  gboolean reloading=FALSE;
+  g_mutex_lock(nuauthdatas->reload_cond_mutex);
+  if (nuauthdatas->need_reload){
+      reloading = TRUE;
+  }
+  g_mutex_unlock(nuauthdatas->reload_cond_mutex);
+  return reloading;
+}
 
+/**
+ * \brief Block till reload is over
+ *
+ */
 void block_on_conf_reload()
 {
     g_mutex_lock(nuauthdatas->reload_cond_mutex);

@@ -30,6 +30,9 @@
 #include <time.h>
 #include "security.h"
 
+nu_error_t pgsql_close_open_user_sessions(struct log_pgsql_params* params);
+PGconn *pgsql_conn_init(struct log_pgsql_params* params);
+
 /**
  *
  * \ingroup LoggingNuauthModules
@@ -43,6 +46,13 @@ G_MODULE_EXPORT gboolean module_params_unload(gpointer params_p)
 {
   struct log_pgsql_params *params = (struct log_pgsql_params*)params_p;
   if(params){
+      if (! nuauth_is_reloading()){
+          if ( pgsql_close_open_user_sessions(params) != NU_EXIT_OK){
+              log_message(WARNING, AREA_MAIN,
+                      "Could not close session when unloading module");
+          }
+      }
+
       g_free(params->pgsql_user);
       g_free(params->pgsql_passwd);
       g_free(params->pgsql_server);
@@ -55,6 +65,46 @@ G_MODULE_EXPORT gboolean module_params_unload(gpointer params_p)
 
   return TRUE;
 }
+
+/**
+ * \brief Close all open user sessions
+ *
+ * \return A nu_error_t
+ */
+
+nu_error_t pgsql_close_open_user_sessions(struct log_pgsql_params* params)
+{
+    PGconn* ld = pgsql_conn_init(params);
+    char request[INSERT_REQUEST_VALUES_SIZE];
+    gboolean ok;
+    PGresult *Result;
+
+    ok = secure_snprintf(request, sizeof(request),
+                    "UPDATE %s SET last_time=ABSTIME(%lu) WHERE last_time is NULL",
+                    params->pgsql_users_table_name,
+                    time(NULL));
+    if (!ok) {
+        return NU_EXIT_ERROR;
+    }
+
+/* do the query */
+    debug_log_message(DEBUG, AREA_MAIN, 
+            "PostgreSQL: do insert session \"%s\".", request);
+    Result = PQexec(ld, request);
+
+    /* check error */
+    if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK){
+        log_message (SERIOUS_WARNING, AREA_MAIN,
+                "Can not insert session in PostgreSQL: %s",
+                PQerrorMessage(ld));
+        PQclear(Result);
+        return NU_EXIT_ERROR;
+    }
+    PQclear(Result);
+    return NU_EXIT_OK;
+}
+
+
 /* Init pgsql system */
 G_MODULE_EXPORT gboolean init_module_from_conf(module_t *module)
 {
@@ -104,6 +154,12 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t *module)
     /* init thread private stuff */
     params->pgsql_priv = g_private_new ((GDestroyNotify)PQfinish);
 
+    /* do initial update of user session if needed */
+    if (! nuauth_is_reloading()){
+        pgsql_close_open_user_sessions(params);
+    }
+    
+    module->params=(gpointer)params;
     return TRUE;
 }
 
