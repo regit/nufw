@@ -31,6 +31,10 @@
 #ifndef NUCLIENT_H
 #define NUCLIENT_H
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif 
+
 /*
  * Use POSIX standard, version "IEEE 1003.1-2004",
  * needed to get sigaction for example
