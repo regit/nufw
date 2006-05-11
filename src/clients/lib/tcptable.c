@@ -171,7 +171,6 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
 #ifdef LINUX 
   static FILE *fp = NULL;
   static FILE *fq = NULL;
-  int ok;
   
 #if DEBUG
   assert (ct != NULL);
