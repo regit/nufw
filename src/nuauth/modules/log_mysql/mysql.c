@@ -71,6 +71,10 @@ nu_error_t mysql_close_open_user_sessions(struct log_mysql_params* params)
     int mysql_ret;
     int ok;
 
+    if (! ld){
+        return NU_EXIT_ERROR;
+    }
+
     ok = secure_snprintf(request, sizeof(request),
                     "UPDATE %s SET last_time=FROM_UNIXTIME(%lu) where last_time is NULL",
                     params->mysql_users_table_name,
@@ -84,8 +88,10 @@ nu_error_t mysql_close_open_user_sessions(struct log_mysql_params* params)
     if (mysql_ret != 0){
         log_message (SERIOUS_WARNING, AREA_MAIN,
             "Can execute request : %s\n", mysql_error(ld));
+        mysql_close(ld);
         return NU_EXIT_ERROR;
     }
+    mysql_close(ld);
     return NU_EXIT_OK;
 
 }

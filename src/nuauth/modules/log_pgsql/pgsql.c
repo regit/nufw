@@ -79,11 +79,18 @@ nu_error_t pgsql_close_open_user_sessions(struct log_pgsql_params* params)
     gboolean ok;
     PGresult *Result;
 
+    if (! ld){
+        return NU_EXIT_ERROR;
+    }
+
     ok = secure_snprintf(request, sizeof(request),
                     "UPDATE %s SET last_time=ABSTIME(%lu) WHERE last_time is NULL",
                     params->pgsql_users_table_name,
                     time(NULL));
     if (!ok) {
+        if (ld){
+            PQfinish(ld);
+        }
         return NU_EXIT_ERROR;
     }
 
@@ -98,9 +105,11 @@ nu_error_t pgsql_close_open_user_sessions(struct log_pgsql_params* params)
                 "Can not insert session in PostgreSQL: %s",
                 PQerrorMessage(ld));
         PQclear(Result);
+        PQfinish(ld);
         return NU_EXIT_ERROR;
     }
     PQclear(Result);
+    PQfinish(ld);
     return NU_EXIT_OK;
 }
 
