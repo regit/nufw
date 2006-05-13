@@ -118,7 +118,8 @@ void log_user_session(user_session_t* usession, session_state_t state)
     sessevent->session=g_memdup(usession, sizeof(*usession));
     sessevent->state=state;
     sessevent->session->user_name  = g_strdup(usession->user_name);
-    sessevent->session->tls = usession->tls;
+    sessevent->session->tls = NULL;
+    sessevent->session->socket = usession->socket;
     sessevent->session->groups = NULL;
     sessevent->session->sysname = g_strdup(usession->sysname);
     sessevent->session->version = g_strdup(usession->version);

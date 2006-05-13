@@ -633,7 +633,7 @@ G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t
                     c_session->sysname,
                     c_session->release,
                     c_session->version,
-                    GPOINTER_TO_INT(gnutls_transport_get_ptr(*(c_session->tls))),
+                    c_session->socket,
                     time(NULL));
             break;
             
@@ -644,7 +644,7 @@ G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t
                     "WHERE socket=%u AND ip_saddr=%u",
                     params->mysql_users_table_name,
                     time(NULL),
-                    GPOINTER_TO_INT(gnutls_transport_get_ptr(*(c_session->tls))),
+                    c_session->socket,
                     c_session->addr
 );
             break;

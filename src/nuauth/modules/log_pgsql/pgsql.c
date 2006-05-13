@@ -211,7 +211,7 @@ PGconn *pgsql_conn_init(struct log_pgsql_params* params){
     return ld;
 }
 
-char* quote_string(char *text)
+static char* quote_string(char *text)
 {
     unsigned int length = strlen(text);
     char *quoted = (char *)malloc(length*2 + 1);
@@ -579,7 +579,7 @@ G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t
                     c_session->sysname,
                     c_session->release,
                     c_session->version,
-                    GPOINTER_TO_UINT(gnutls_transport_get_ptr(*(c_session->tls))),
+                    c_session->socket,
                     time(NULL));
             break;
 
@@ -590,7 +590,7 @@ G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t
                     "WHERE socket=%u and ip_saddr=%u",
                     params->pgsql_users_table_name,
                     time(NULL),
-                    GPOINTER_TO_UINT(gnutls_transport_get_ptr(*(c_session->tls))),
+                    c_session->socket,
                     c_session->addr);
             break;
 
