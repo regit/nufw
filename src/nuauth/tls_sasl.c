@@ -192,6 +192,7 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
     }
 
     ret = sasl_user_check(c_session);
+
     remove_socket_from_pre_client_list(c);
     switch (ret){
         case SASL_OK:

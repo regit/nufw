@@ -223,7 +223,6 @@ int tls_connect(int socket_fd,gnutls_session** session_ptr)
 
     /* init. tls session */
     session = initialize_tls_session();
-    *session_ptr = session;
     if (session == NULL)
     {
         log_message (INFO, AREA_MAIN,
@@ -234,6 +233,8 @@ int tls_connect(int socket_fd,gnutls_session** session_ptr)
 
     gnutls_transport_set_ptr( *session, GINT_TO_POINTER(socket_fd));
     gnutls_transport_set_push_function (* session, tls_push_func);
+
+    *session_ptr = session;
 
     debug_log_message (DEBUG, AREA_MAIN, "NuFW TLS Handshaking");
     ret = gnutls_handshake( *session);
@@ -274,6 +275,7 @@ int tls_connect(int socket_fd,gnutls_session** session_ptr)
     } else {
 	debug_log_message (DEBUG, AREA_MAIN, "Certificate verification is not done as requested");
     }
+
     return SASL_OK;
 }
 

@@ -624,8 +624,8 @@ G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t
             /* create new user session */
             ok = secure_snprintf(request, sizeof(request),
                     "INSERT INTO %s (user_id, username, ip_saddr, "
-                    "os_sysname, os_release, os_version, first_time) "
-                    "VALUES ('%lu', '%s', '%u', '%s', '%s', '%s', FROM_UNIXTIME(%lu))",
+                    "os_sysname, os_release, os_version, socket, first_time) "
+                    "VALUES ('%lu', '%s', '%u', '%s', '%s', '%s', '%u', FROM_UNIXTIME(%lu))",
                     params->mysql_users_table_name,
                     c_session->user_id,
                     c_session->user_name,
@@ -633,6 +633,7 @@ G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t
                     c_session->sysname,
                     c_session->release,
                     c_session->version,
+                    GPOINTER_TO_INT(gnutls_transport_get_ptr(*(c_session->tls))),
                     time(NULL));
             break;
             
@@ -640,10 +641,12 @@ G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t
             /* update existing user session */
             ok = secure_snprintf(request, sizeof(request),
                     "UPDATE %s SET last_time=FROM_UNIXTIME(%lu) "
-                    "WHERE ip_saddr=%u",
+                    "WHERE socket=%u AND ip_saddr=%u",
                     params->mysql_users_table_name,
                     time(NULL),
-                    c_session->addr);
+                    GPOINTER_TO_INT(gnutls_transport_get_ptr(*(c_session->tls))),
+                    c_session->addr
+);
             break;
 
         default:
