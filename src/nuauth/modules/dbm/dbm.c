@@ -27,7 +27,7 @@
  * too), probably...*/
 
 
-int analyse_dbm_char(char *datas, struct dbm_data_struct *mystruct)
+static int analyse_dbm_char(char *datas, struct dbm_data_struct *mystruct)
     /* IN : char containing, space separated, in this order (it MUST end with a
      * space, else last group isnt read): 
      * password userid group1 group2 ... group N
@@ -110,7 +110,8 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t* module)
  */
 
 
-GDBM_FILE dbm_file_init(struct dbm_params *params){
+static GDBM_FILE dbm_file_init(struct dbm_params *params)
+{
     GDBM_FILE dbf;
 
     /* init connection */
@@ -199,7 +200,6 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned p
 			log_message(INFO, AREA_AUTH, "No password for user \"%s\"",user);
 			return SASL_BADAUTH;
 		}
-		/*  if (strcmp(pass,return_data.passwd)){ */
 		if (verify_user_password(pass,return_data.passwd) != SASL_OK){
 			log_message(INFO, AREA_AUTH, "Bad password for user \"%s\"",user);
 			return SASL_BADAUTH;
@@ -207,4 +207,4 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned p
 	}
 	*groups = return_data.outelt;
 	return SASL_OK;
-	}
+}

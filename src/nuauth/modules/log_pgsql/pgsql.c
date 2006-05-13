@@ -30,8 +30,8 @@
 #include <time.h>
 #include "security.h"
 
-nu_error_t pgsql_close_open_user_sessions(struct log_pgsql_params* params);
-PGconn *pgsql_conn_init(struct log_pgsql_params* params);
+static nu_error_t pgsql_close_open_user_sessions(struct log_pgsql_params* params);
+static PGconn *pgsql_conn_init(struct log_pgsql_params* params);
 
 /**
  *
@@ -72,7 +72,7 @@ G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
  * \return A nu_error_t
  */
 
-nu_error_t pgsql_close_open_user_sessions(struct log_pgsql_params* params)
+static nu_error_t pgsql_close_open_user_sessions(struct log_pgsql_params* params)
 {
     PGconn* ld = pgsql_conn_init(params);
     char request[INSERT_REQUEST_VALUES_SIZE];
@@ -176,7 +176,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t *module)
 /* 
  * Initialize connection to pgsql server
  */
-PGconn *pgsql_conn_init(struct log_pgsql_params* params){
+static PGconn *pgsql_conn_init(struct log_pgsql_params* params){
     char *pgsql_conninfo;
     PGconn *ld = NULL;
     int pgsql_status;
@@ -237,7 +237,7 @@ static gchar* generate_osname(gchar *Name, gchar *Version, gchar *Release)
     return quoted;
 }
 
-int pgsql_insert(PGconn *ld, connection_t *element, char *oob_prefix, tcp_state_t state,
+static int pgsql_insert(PGconn *ld, connection_t *element, char *oob_prefix, tcp_state_t state,
         struct log_pgsql_params* params)
 {
     char request_fields[INSERT_REQUEST_FIEDLS_SIZE];
@@ -371,7 +371,7 @@ int pgsql_insert(PGconn *ld, connection_t *element, char *oob_prefix, tcp_state_
     return 0;
 }
 
-int pgsql_update_close(PGconn *ld, connection_t *element,struct log_pgsql_params* params)
+static int pgsql_update_close(PGconn *ld, connection_t *element,struct log_pgsql_params* params)
 {
     struct in_addr addr;
     char ip_src[INET_ADDRSTRLEN+1];
@@ -413,7 +413,7 @@ int pgsql_update_close(PGconn *ld, connection_t *element,struct log_pgsql_params
 }    
 
 
-int pgsql_update_state(PGconn *ld, connection_t *element, 
+static int pgsql_update_state(PGconn *ld, connection_t *element, 
         tcp_state_t old_state, tcp_state_t new_state, 
         int reverse,struct log_pgsql_params* params)
 {
@@ -498,7 +498,7 @@ int pgsql_update_state(PGconn *ld, connection_t *element,
     return -1;
 }    
 
-PGconn *get_pgsql_handler(struct log_pgsql_params *params)
+static PGconn *get_pgsql_handler(struct log_pgsql_params *params)
 {    
     /* get/open postgresql connection */
     PGconn *ld = g_private_get (params->pgsql_priv);

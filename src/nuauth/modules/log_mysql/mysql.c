@@ -21,8 +21,8 @@
 #include <string.h>
 #include <errno.h>
 
-nu_error_t mysql_close_open_user_sessions(struct log_mysql_params* params);
-MYSQL* mysql_conn_init(struct log_mysql_params* params);
+static nu_error_t mysql_close_open_user_sessions(struct log_mysql_params* params);
+static MYSQL* mysql_conn_init(struct log_mysql_params* params);
 
 /**
  *
@@ -64,7 +64,7 @@ G_MODULE_EXPORT gchar* unload_module_with_params(gpointer params_p)
  * \return A nu_error_t
  */
 
-nu_error_t mysql_close_open_user_sessions(struct log_mysql_params* params)
+static nu_error_t mysql_close_open_user_sessions(struct log_mysql_params* params)
 {
     MYSQL* ld = mysql_conn_init(params);
     char request[LONG_REQUEST_SIZE];
@@ -172,7 +172,7 @@ init_module_from_conf(module_t *module)
 /* 
  * Initialize connection to mysql server
  */
-MYSQL* mysql_conn_init(struct log_mysql_params* params)
+static MYSQL* mysql_conn_init(struct log_mysql_params* params)
 {
     MYSQL *ld = NULL;
 
@@ -221,7 +221,7 @@ static gchar* generate_appname(gchar *appname)
     }
 }
 
-char* quote_string(MYSQL *mysql, char *text)
+static char* quote_string(MYSQL *mysql, char *text)
 {
     unsigned int length = strlen(text);
     char *quoted;
@@ -236,7 +236,7 @@ char* quote_string(MYSQL *mysql, char *text)
     return quoted;
 }    
 
-char* build_insert_request(
+static char* build_insert_request(
         MYSQL *ld, connection_t *element,
         tcp_state_t state,
         char *auth_oob_prefix,
@@ -361,7 +361,7 @@ char* build_insert_request(
     return g_strconcat(request_fields, "\n", request_values, NULL);
 }    
 
-inline int log_state_open(MYSQL *ld, connection_t *element,struct log_mysql_params* params)
+static inline int log_state_open(MYSQL *ld, connection_t *element,struct log_mysql_params* params)
 {
     char *request;
     int mysql_ret;
@@ -424,7 +424,7 @@ inline int log_state_open(MYSQL *ld, connection_t *element,struct log_mysql_para
     return 0;
 }    
 
-inline int log_state_established(MYSQL *ld, connection_t *element,struct log_mysql_params* params)
+static inline int log_state_established(MYSQL *ld, connection_t *element,struct log_mysql_params* params)
 {
     char request[LONG_REQUEST_SIZE];
     int Result;
@@ -472,7 +472,7 @@ inline int log_state_established(MYSQL *ld, connection_t *element,struct log_mys
     return 0;
 }    
 
-inline int log_state_close(MYSQL *ld, connection_t *element,struct log_mysql_params *params)
+static inline int log_state_close(MYSQL *ld, connection_t *element,struct log_mysql_params *params)
 {
     char request[LONG_REQUEST_SIZE];
     int Result;
@@ -522,7 +522,7 @@ inline int log_state_close(MYSQL *ld, connection_t *element,struct log_mysql_par
     return 0;
 }    
 
-int log_state_drop(MYSQL *ld, connection_t *element, struct log_mysql_params* params)
+static int log_state_drop(MYSQL *ld, connection_t *element, struct log_mysql_params* params)
 {
     int mysql_ret;
 
@@ -552,7 +552,7 @@ int log_state_drop(MYSQL *ld, connection_t *element, struct log_mysql_params* pa
     return 0;
 }    
 
-MYSQL* get_mysql_handler(struct log_mysql_params* params)
+static MYSQL* get_mysql_handler(struct log_mysql_params* params)
 {
     MYSQL *ld = g_private_get (params->mysql_priv);
     if (ld != NULL) {

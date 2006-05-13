@@ -2,6 +2,7 @@
 	- nuauth : add sanity check on type of field contained in a packet
 	- libnuclient : fix MacOSX port
 	- nuauth SQL user session logging : close opened user session when leaving or when starting
+	- nuauth modules : systematic use of static declared function to avoid conflict
 2.0-rc1 (2006/05/04)
 	- nufw : fix possible problem with connection fixed timeout and NAT
 	- nufw : add -M option to use mark to select conntrack event to be sent to

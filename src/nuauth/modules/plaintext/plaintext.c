@@ -35,7 +35,7 @@
  * Returns a pointer on stripped line or
  * NULL if the line should be skipped and acceptnull is true.
  */
-char *strip_line(char *line, int acceptnull)
+static char *strip_line(char *line, int acceptnull)
 {
   char *p_tmp;
 
@@ -68,7 +68,7 @@ char *strip_line(char *line, int acceptnull)
  * prefix is displayed in front of the log messages.
  * Returns 0 if successful.
  */
-int parse_ints(char *intline, GSList **p_intlist, char *prefix)
+static int parse_ints(char *intline, GSList **p_intlist, char *prefix)
 {
   char *p_nextint;
   char *p_ints = intline;
@@ -113,7 +113,7 @@ int parse_ints(char *intline, GSList **p_intlist, char *prefix)
  * prefix is displayed in front of the log messages.
  * Returns 0 if successful.
  */
-int parse_ports(char *portsline, GSList **p_portslist, char *prefix)
+static int parse_ports(char *portsline, GSList **p_portslist, char *prefix)
 {
   char *p_nextports;
   char *p_ports = portsline;
@@ -178,7 +178,7 @@ int parse_ports(char *portsline, GSList **p_portslist, char *prefix)
  * prefix is displayed in front of the log messages.
  * Returns 0 if successful.
  */
-int parse_ips(char *ipsline, GSList **p_ipslist, char *prefix)
+static int parse_ips(char *ipsline, GSList **p_ipslist, char *prefix)
 {
   char *p_nextip;
   char *p_ip = ipsline;
@@ -261,7 +261,7 @@ int parse_ips(char *ipsline, GSList **p_ipslist, char *prefix)
  * Returns 0 if successful.
  * Line format: "username:passwd:gid1,gid2,gid3" (gid are numbers)
  */
-int read_user_list(struct plaintext_params* params)
+static int read_user_list(struct plaintext_params* params)
 {
   struct T_plaintext_user *plaintext_user;
   FILE *fd;
@@ -376,7 +376,7 @@ int read_user_list(struct plaintext_params* params)
  * ACL begins with "[ACL name]", then each line should have the structure
  * "key = value".  For example "proto = 6".
  */
-int read_acl_list(struct plaintext_params* params)
+static int read_acl_list(struct plaintext_params* params)
 {
   FILE *fd;
   char line[1024];
@@ -755,7 +755,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
 }
 
 /*  This function is used by g_slist_find_custom() in user_check(). */
-gint find_by_username(struct T_plaintext_user *a, struct T_plaintext_user *b)
+static gint find_by_username(struct T_plaintext_user *a, struct T_plaintext_user *b)
 {
   return strcmp(a->username, b->username);
 }
