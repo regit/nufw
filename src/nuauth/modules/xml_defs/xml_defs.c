@@ -198,6 +198,18 @@ static GMarkupParser period_parser = {
 	NULL
 };
 
+/**
+ * \brief Period parsing function
+ *
+ * This function is exported by the module and fill the hash table containing the periods.
+ * 
+ * \param periods A hash table containing all the periods.
+ * \param params_p A pointer to the parameters of the module instance we're working for
+ *
+ * The hash table keys are the name of the periods.
+ *
+ * \remark The conflict between period definition (with same name) is not resolved.
+ */
 G_MODULE_EXPORT void define_periods(GHashTable* periods,gpointer params_p)
 {
 	GMarkupParseContext *context;

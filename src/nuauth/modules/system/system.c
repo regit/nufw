@@ -24,7 +24,12 @@
  *
  * @{ */
 
-
+/**
+ * \file system.c
+ *
+ * \brief Core file for system module
+ *
+ */
 
 #include "../../nuauth_gcrypt.h"
 

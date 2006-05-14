@@ -20,6 +20,9 @@
  *
  * \ingroup AuthNuauthModules
  * \defgroup IPauthModule Ident authentication module
+ * \brief This module authenticates user by doing an ident request
+ *
+ * \warning This is a proof of concept. Do not use it in production environnement.
  *
  * @{ */
 
@@ -30,12 +33,11 @@
 #include <ident.h>
 
 /**
- * \todo conf read for timeout
- */
-
-/**
  * ident check of user. 
  *
+ * \param ipheader Pointer to the IP parameter of the packet to authenticate
+ * \param params Pointer to module instance parameters
+ * \return The "assumed" name of the user which has sent the packet 
  */
 
   G_MODULE_EXPORT 

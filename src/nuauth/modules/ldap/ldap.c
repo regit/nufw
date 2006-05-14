@@ -24,7 +24,18 @@
 
 /**
  * \ingroup NuauthModules
- * \defgroup AuthNuauthModules Authentication modules
+ * \defgroup AuthNuauthModules Authentication and acls checking modules
+ *
+ * \brief These type modules permit user authentication and acl checking
+ *
+ * It can export :
+ *  - an user check function named user_check() function which realise user authentication.
+ *  - an acl checking function named acl_check() function to get the acls matching a packet. 
+ *
+ * \par
+ * A special case is the ip authentication mechanism which require the export of function called ip_authentication(). 
+ * It is used to authenticate people based on a method which does not involve a NuFW client. For the moment, only an ident
+ * module is available.
  */
 
 /**
@@ -33,6 +44,12 @@
  * \defgroup LdapModule LDAP authentication and acl module
  *
  * @{ */
+
+/**
+ *
+ * \file ldap.c
+ * \brief Contains all LDAP modules functions
+ */
 
 G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
 {
@@ -133,7 +150,7 @@ G_MODULE_EXPORT gchar* g_module_unload(void)
  * Initialize connection to ldap server.
  */
 
-G_MODULE_EXPORT LDAP* ldap_conn_init(struct ldap_params* params)
+static LDAP* ldap_conn_init(struct ldap_params* params)
 {
   LDAP* ld = NULL;
   int err,version=3;
@@ -171,7 +188,17 @@ G_MODULE_EXPORT LDAP* ldap_conn_init(struct ldap_params* params)
 }
 
 /**
- * acl check function.
+ * \brief Acl check function
+ *
+ * This function realise the matching of a packet against the set of rules. It is exported 
+ * by the modules and called by nuauth core.
+ * 
+ * \param element A pointer to a connection_t: which contains all informations available about the packet
+ * \param params_p A pointer to the parameters of the module instance we're working for
+ * \return A chained list of struct acl_group: which is the set of acl that match the given packet
+ *
+ * The returned GSList has to be ordered because take_decision() will do a interative loop on the chained list. This
+ * can be used to achieve complicated setup.
  */
 G_MODULE_EXPORT GSList* acl_check (connection_t* element,gpointer params_p)
 {
@@ -382,14 +409,17 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element,gpointer params_p)
 
 
 /**
- *  user_check.
+ * \brief user_check realise user authentication
  *  
- *  - arg 1 : user name string
- *  - arg 2 : user provided password
- *  - arg 3 : password length
- *  - arg 4 : pointer to user groups list
- *  - return : SASL_OK if password is correct, other return are authentication failure
- *  - modify : groups to return the list of user group
+ * It has to be exported by all user authentication modules
+ *  
+ *  \param username User name string
+ *  \param pass User provided password
+ *  \param passlen Password length
+ *  \param uid Pointer to user numeric id (this need to be fill in)
+ *  \param groups Pointer to user groups list (this need to be fill in)
+ *  \param params_p Pointer to the parameter of the module instance
+ *  \return SASL_OK if password is correct, other return are authentication failure
  */
 
 G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned passlen,uint32_t *uid,GSList **groups,gpointer params_p)

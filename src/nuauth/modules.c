@@ -37,6 +37,21 @@
  *
  * \ingroup  Nuauth
  * \defgroup NuauthModules Nuauth Modules
+ *
+ * \brief Modules are used for every interaction with the outside. They are implemented using Glib modules.
+ *
+ * A module has to export a set of functions to be able to initialize :
+ *  - init_module_from_conf() : Init module with respect to a configuration file
+ *  - unload_module_with_params() : Clean a module instance and free related parameter
+ * Optionally, the initialisation function of the glib can be used
+ * 
+ * After this, it has to export the functions that are used by hook :
+ *  - define_periods() : define period that can be used in time-based acls
+ *  - user_check() : verify user credentials and found groups the user belong to
+ *  - acl_check() : verify acl for a packet
+ *  - user_session_logs() : log user connection and disconnection
+ *  - user_packet_logs() : log packet
+ * 
  * @{
  */
 

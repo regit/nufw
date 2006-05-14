@@ -465,7 +465,25 @@ static int generate_dh_params(void)
 }
 
 /**
- * Destroy an client session: free all memory
+ * \defgroup nuclientAPI API of libnuclient
+ * \brief The high level API of libnuclient can be used to build a NuFW client
+ *
+ * A client needs to call a few functions in the correct order to be able to authenticate:
+ *  - nu_client_global_init() : To be called once at program start
+ *  - nu_client_init2() : start user session
+ *  - nu_client_check() : do a check, it has to be run at regular interval
+ *  - nu_client_free() : free a user session
+ */
+
+/**
+ * \ingroup nuclientAPI
+ * \brief Destroy a client session: free all used memory
+ *
+ * This destroy a session and free all related structure.
+ *
+ * \param session a NuAuth: session to be cleaned
+ * \param err A pointer to a nuclient_error: which contains error after exit
+ * 
  */
 void nu_client_free(NuAuth *session, nuclient_error *err)
 {
@@ -473,14 +491,19 @@ void nu_client_free(NuAuth *session, nuclient_error *err)
         ask_session_end(session);
         /* all threads are dead, we are the one who can access to it */
         /* destroy session */
-	nu_exit_clean(session);
+        nu_exit_clean(session);
         SET_ERROR(err, INTERNAL_ERROR, NO_ERR);
 }
 
 /**
- * Global initialisation
+ * \ingroup nuclientAPI
+ * \brief global initialisation function
  *
- * Warning: to be called once.
+ * This function inits all library needed to initiate a connection to a nuauth server
+ *
+ * \param err A pointer to a nuclient_error: which contains at exit the error
+ *
+ * \warning To be called only once.
  */
 void nu_client_global_init(nuclient_error *err)
 {
@@ -884,6 +907,20 @@ int set_host(NuAuth * session, nuclient_error *err,
 }
 
 /**
+ * \ingroup nuclientAPI
+ * \brief Init connection to nuauth server
+ *
+ * \param hostname String containing hostname of nuauth server
+ * \param port Port where nuauth server is listening
+ * \param keyfile Complete path to a key file stored in PEM format
+ * \param certfile Complete path to a certificate file stored in PEM format
+ * \param username_callback Pointer to a function that will be used to get user name
+ * \param passwd_callback Pointer to a function that will be used to get user password 
+ * \param tlscred_callback Pointer to a function that can be used to get certificate password (currently untested)
+ * \param err Pointer to a nuclient_error: which contains the error
+ * \return A pointer to a valid NuAuth: structure or NULL if init has failed
+ * 
+ * \par Internal
  * Initialisation of nufw authentication session: set basic fields and then
  * call:
  *    - set_host() ;

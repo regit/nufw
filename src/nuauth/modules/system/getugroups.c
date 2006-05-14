@@ -21,6 +21,17 @@
 
 /* Written by David MacKenzie. */
 
+/**
+ * \ingroup SystemModule
+ * @{
+ */
+
+/**
+ * \file getugroups.c
+ *
+ * \brief Contains getugroups() which is used to retrieve user's group
+ */
+
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -48,12 +59,20 @@ struct group *getgrent ();
 
 GStaticMutex group_mutex;
 
-/* Like `getgroups', but for user USERNAME instead of for the current
+/**
+ * \brief Get list of group a user belong to
+ * 
+ * Like `getgroups', but for user USERNAME instead of for the current
    process.  Store at most MAXCOUNT group IDs in the GROUPLIST array.
    If GID is not -1, store it first (if possible).  GID should be the
    group ID (pw_gid) obtained from getpwuid, in case USERNAME is not
    listed in /etc/groups.
-   Always return the number of groups of which USERNAME is a member.  */
+   Always return the number of groups of which USERNAME is a member.  
+ 
+   \param username String containing the username
+   \param gid This is the primary group of the user
+   \return A list of group under the form of a GSList
+ */
 
   GSList *
 getugroups (char *username, gid_t gid)
@@ -103,3 +122,7 @@ getugroups (char *username, gid_t gid)
 
   return grouplist;
 }
+
+/**
+ * @}
+ */
