@@ -1039,7 +1039,8 @@ void ask_session_end(NuAuth* session)
 }
 
 /**
- * Allocate a structure to store client error
+ * \ingroup nuclientAPI
+ * \brief Allocate a structure to store client error
  */
 int nuclient_error_init(nuclient_error **err)
 {
@@ -1050,7 +1051,8 @@ int nuclient_error_init(nuclient_error **err)
 }
 
 /**
- * Destroy an error (free memory)
+ * \ingroup nuclientAPI
+ * \brief Destroy an error (free memory)
  */
 void nuclient_error_destroy(nuclient_error *err)
 {
@@ -1059,7 +1061,8 @@ void nuclient_error_destroy(nuclient_error *err)
 }
 
 /**
- * Convert an error to an human readable string
+ * \ingroup nuclientAPI
+ * \brief Convert an error to an human readable string
  */
 const char* nuclient_strerror (nuclient_error *err)
 {
