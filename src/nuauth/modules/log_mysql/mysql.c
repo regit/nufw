@@ -575,8 +575,8 @@ static MYSQL* get_mysql_handler(struct log_mysql_params* params)
  *
  * This function is exported by the module and called by nuauth core when a packet needs to be logged
  *
- * \param element A pointer to a connection_t: containing all information about the packet to be logged
- * \param state A tcp_state_t: that indicate the state of the packet
+ * \param element A pointer to a ::connection_t containing all information about the packet to be logged
+ * \param state A ::tcp_state_t that indicate the state of the packet
  * \param params_p A pointer to the parameters of the module instance we're working for
  * \return -1 in case of error, 0 if there is no problem
  */
@@ -621,8 +621,8 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state,
  *
  * This function is exported by the module and called by nuauth core when a user connect or disconnect
  *
- * \param c_session A pointer to a user_session_t: containing all information about the user
- * \param state A session_state_t: that indicate the state of the user session (basically starting or ending)
+ * \param c_session A pointer to a ::user_session_t containing all information about the user
+ * \param state A ::session_state_t that indicate the state of the user session (basically starting or ending)
  * \param params_p A pointer to the parameters of the module instance we're working for
  * \return -1 in case of error, 1 if there is no problem
  */

@@ -193,9 +193,9 @@ static LDAP* ldap_conn_init(struct ldap_params* params)
  * This function realise the matching of a packet against the set of rules. It is exported 
  * by the modules and called by nuauth core.
  * 
- * \param element A pointer to a connection_t: which contains all informations available about the packet
+ * \param element A pointer to a ::connection_t which contains all informations available about the packet
  * \param params_p A pointer to the parameters of the module instance we're working for
- * \return A chained list of struct acl_group: which is the set of acl that match the given packet
+ * \return A chained list of struct ::acl_group which is the set of acl that match the given packet
  *
  * The returned GSList has to be ordered because take_decision() will do a interative loop on the chained list. This
  * can be used to achieve complicated setup.

@@ -128,7 +128,7 @@ static GDBM_FILE dbm_file_init(struct dbm_params *params)
 }
 
 /**
- * \brief user_check realise user authentication
+ * \brief user_check realises user authentication
  *  
  * It has to be exported by all user authentication modules
  *  
@@ -136,7 +136,7 @@ static GDBM_FILE dbm_file_init(struct dbm_params *params)
  *  \param pass User provided password
  *  \param passlen Password length
  *  \param uid Pointer to user numeric id (this need to be fill in)
- *  \param groups Pointer to user groups list (this need to be fill in)
+ *  \param groups Pointer to user groups list (this need to be fill in), this is a list containing integer
  *  \param params_p Pointer to the parameter of the module instance
  *  \return SASL_OK if password is correct, other return are authentication failure
 */ 

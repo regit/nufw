@@ -23,7 +23,15 @@
 /**
  * \ingroup Nuauth
  * \defgroup NuauthCore Nuauth Core
+ * \brief This is the main part of nuauth, real core is search_and_fill().
+ * \author Éric Leblond
+ *
+ * The main functions are :
+ *  - search_and_fill() : used to aggregate dates coming from nufw and clients
+ *  - take_decision() : decide on packet based on policy coming from module
+ * 
  * @{
+ * 
  */
 
 /** \file auth_common.c

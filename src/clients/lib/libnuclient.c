@@ -38,7 +38,7 @@
   \brief Main file for libnuclient
 
   It contains all the exported functions
-  */
+*/
 
 
 #include "nuclient.h"
@@ -361,13 +361,13 @@ static int add_packet_to_send(NuAuth * session,conn_t** auth,int *count_p,conn_t
 }
 
 /**
- * Compare connection tables and send packets 
+ * \brief Compare connection tables and send packets 
  *
  * Compare the `old' and `new' tables, sending packet to nuauth 
  * if differences are found.
  *
- * Return -1 if error (then disconnect is needed) or the number of 
- * authenticated packets if it has succeed
+ * \return -1 if error (then disconnect is needed) or the number of 
+ * authenticated packets if it has succeeded
  */
 int compare (NuAuth * session,conntable_t *old, conntable_t *new, nuclient_error *err)
 {
@@ -469,19 +469,20 @@ static int generate_dh_params(void)
  * \brief The high level API of libnuclient can be used to build a NuFW client
  *
  * A client needs to call a few functions in the correct order to be able to authenticate:
- *  - nu_client_global_init() : To be called once at program start
- *  - nu_client_init2() : start user session
- *  - nu_client_check() : do a check, it has to be run at regular interval
- *  - nu_client_free() : free a user session
+ *  - nu_client_global_init(): To be called once at program start
+ *  - nu_client_init2(): start user session
+ *  - nu_client_check(): do a check, it has to be run at regular interval
+ *  - nu_client_free(): free a user session
+ *  - nu_client_global_deinit(): To be called once at program end
  */
 
 /**
  * \ingroup nuclientAPI
  * \brief Destroy a client session: free all used memory
  *
- * This destroy a session and free all related structure.
+ * This destroy a session and free all related structures.
  *
- * \param session a NuAuth: session to be cleaned
+ * \param session A ::NuAuth session to be cleaned
  * \param err A pointer to a nuclient_error: which contains error after exit
  * 
  */
@@ -501,7 +502,7 @@ void nu_client_free(NuAuth *session, nuclient_error *err)
  *
  * This function inits all library needed to initiate a connection to a nuauth server
  *
- * \param err A pointer to a nuclient_error: which contains at exit the error
+ * \param err A pointer to a ::nuclient_error which contains at exit the error
  *
  * \warning To be called only once.
  */
@@ -535,9 +536,10 @@ void nu_client_global_init(nuclient_error *err)
 }
 
 /**
- * Global de init 
+ * \ingroup nuclientAPI
+ * \brief  Global de init function 
  *
- * Warning: To be called once, when leaving.
+ * \warning To be called once, when leaving.
  */
 void nu_client_global_deinit(nuclient_error *err)
 {
@@ -626,7 +628,7 @@ int send_os(NuAuth * session, nuclient_error *err)
 }
 
 /**
- * Initialiaze TLS:
+ * Initialize TLS:
  *    - Set key filename (and test if the file does exist)
  *    - Set certificate filename (and test if the file does exist)
  *    - Allocate x509 credentials
@@ -918,7 +920,7 @@ int set_host(NuAuth * session, nuclient_error *err,
  * \param passwd_callback Pointer to a function that will be used to get user password 
  * \param tlscred_callback Pointer to a function that can be used to get certificate password (currently untested)
  * \param err Pointer to a nuclient_error: which contains the error
- * \return A pointer to a valid NuAuth: structure or NULL if init has failed
+ * \return A pointer to a valid ::NuAuth structure or NULL if init has failed
  * 
  * \par Internal
  * Initialisation of nufw authentication session: set basic fields and then

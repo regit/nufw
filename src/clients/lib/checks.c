@@ -127,9 +127,9 @@ void* recv_message(void *data)
  *  - In POLL mode, it is really doing the job. 
  *  - In PUSH mode, it is used to detect failure and send HELLO message
  *  
- * \param session A pointer to a valid NuAuth: session
- * \param err A pointer to a allocated nuclient_err:
- * \return -1 if a problem occurs. Session is destroyed if nu_client_check return -1;
+ * \param session A pointer to a valid ::NuAuth session
+ * \param err A pointer to a allocated ::nuclient_error
+ * \return -1 if a problem occurs. Session is destroyed if nu_client_check() return -1;
  *
  * \par Internal
  * It is in charge of cleaning session as the session may be used

@@ -140,7 +140,13 @@ static void tls_sasl_connect_ok(user_session_t* c_session, int c)
 }    
 
 /**
- * complete all user initation phase.
+ * \brief Complete all user connection from TLS to authentication.
+ * 
+ * The algorithm is the following :
+ * \image html tls_sasl_connect.png
+ * 
+ * \param userdata A client_connection:
+ * \param data Unused
  */
 void tls_sasl_connect(gpointer userdata, gpointer data) 
 {
