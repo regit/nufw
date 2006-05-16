@@ -21,6 +21,48 @@
 #include <string.h>
 #include <errno.h>
 
+/** Minimum buffer size to write an IPv6 in SQL syntax */
+#define IPV6_SQL_STRLEN (2+16*2+1)
+
+/**
+ * Convert an IPv6 address to SQL binary string.
+ * Eg. ::1 => "0x0000000000000001"
+ *
+ * \return Returns -1 if fails, 0 otherwise.
+ */
+static int ipv6_to_sql(struct in6_addr *addr, char *buffer, size_t buflen)
+{
+    unsigned char i;
+    unsigned char *addr8;
+    size_t written;
+    if (buflen < IPV6_SQL_STRLEN)
+    {
+        buffer[0] = 0;
+        return -1;
+    }
+    buffer[0] = '0';
+    buffer[1] = 'x';
+    buffer += 2;
+    addr8 = &addr->s6_addr[0];
+    for (i=0; i<4; i++)
+    {
+        written = sprintf(buffer, "%02x%02x%02x%02x", 
+                addr8[0],
+                addr8[1],
+                addr8[2],
+                addr8[3]);
+        if (written != 2*4)
+        {
+            buffer[0] = 0;
+            return -1;
+        }
+        buffer += written;
+        addr8 += 4;
+    }
+    buffer[0] = 0;
+    return 0;
+}
+
 G_MODULE_EXPORT gchar* module_params_unload(gpointer params_p)
 {
   struct log_mysql_params* params = (struct log_mysql_params*)params_p;
@@ -184,6 +226,8 @@ char* build_insert_request(
 {
     char request_fields[INSERT_REQUEST_FIEDLS_SIZE];
     char request_values[INSERT_REQUEST_VALUES_SIZE];
+    char src_ascii[IPV6_SQL_STRLEN];
+    char dst_ascii[IPV6_SQL_STRLEN];
     char tmp_buffer[REQUEST_TMP_BUFFER];
     gboolean ok;
 
@@ -194,13 +238,17 @@ char* build_insert_request(
     if (!ok) {
         return NULL;
     }
+    if (ipv6_to_sql(&element->tracking.saddr, src_ascii, sizeof(src_ascii)) != 0)
+        return NULL;
+    if (ipv6_to_sql(&element->tracking.daddr, dst_ascii, sizeof(dst_ascii)) != 0)
+        return NULL;
     ok = secure_snprintf(request_values, sizeof(request_values),
-            "VALUES ('%hu', '%lu', '%hu', '%lu', '%lu', ",
+            "VALUES ('%hu', '%lu', '%hu', %s, %s, ",
             (short unsigned int)state,
             (long unsigned int)element->timestamp,
             (short unsigned int)element->tracking.protocol,
-            (long unsigned int)element->tracking.saddr,
-            (long unsigned int)element->tracking.daddr);
+            src_ascii,
+            dst_ascii);
     if (!ok) {
         return NULL;
     }
@@ -310,14 +358,18 @@ inline int log_state_open(MYSQL *ld, connection_t *element,struct log_mysql_para
     {
         gboolean ok;
         char request[SHORT_REQUEST_SIZE];
+        char dst_ascii[IPV6_SQL_STRLEN];
+
+        if (ipv6_to_sql(&element->tracking.daddr, dst_ascii, sizeof(dst_ascii)) != 0)
+            return -1;
 
         ok = secure_snprintf(request, sizeof(request),
-                "UPDATE %s SET state=%hu, end_timestamp=FROM_UNIXTIME(%lu) "
-                "WHERE (ip_saddr=%lu AND tcp_sport=%u AND (state=1 OR state=2))",
+                "UPDATE %s SET state='%hu', end_timestamp=FROM_UNIXTIME('%lu') "
+                "WHERE (ip_saddr='%s' AND tcp_sport='%u' AND (state=1 OR state=2))",
                 params->mysql_table_name,
                 TCP_STATE_CLOSE,
                 element->timestamp,
-                (long unsigned int)element->tracking.daddr,
+                dst_ascii,
                 (element->tracking).source);
 
         /* need to update table to suppress double field */
@@ -366,22 +418,29 @@ inline int log_state_open(MYSQL *ld, connection_t *element,struct log_mysql_para
 inline int log_state_established(MYSQL *ld, connection_t *element,struct log_mysql_params* params)
 {
     char request[LONG_REQUEST_SIZE];
+    char src_ascii[IPV6_SQL_STRLEN];
+    char dst_ascii[IPV6_SQL_STRLEN];
     int Result;
     int update_status = 0;
     gboolean ok;
+
+    if (ipv6_to_sql(&element->tracking.saddr, src_ascii, sizeof(src_ascii)) != 0)
+        return -1;
+    if (ipv6_to_sql(&element->tracking.daddr, dst_ascii, sizeof(dst_ascii)) != 0)
+        return -1;
 
     while (update_status < 2){
         update_status++;
 
         ok = secure_snprintf(request, sizeof(request),
                 "UPDATE %s SET state=%hu,start_timestamp=FROM_UNIXTIME(%lu) "
-                "WHERE (ip_daddr=%lu AND ip_saddr=%lu "
-                "AND tcp_dport=%u AND tcp_sport=%u AND state=%hu)",
+                "WHERE (ip_daddr=%s AND ip_saddr=%s "
+                "AND tcp_dport='%hu' AND tcp_sport='%hu' AND state='%hu')",
                 params->mysql_table_name,
                 TCP_STATE_ESTABLISHED,
                 element->timestamp,
-                (long unsigned int)(element->tracking).saddr,
-                (long unsigned int)(element->tracking).daddr,
+                src_ascii,
+                dst_ascii,
                 (element->tracking).source,
                 (element->tracking).dest,
                 TCP_STATE_OPEN);
@@ -414,21 +473,28 @@ inline int log_state_established(MYSQL *ld, connection_t *element,struct log_mys
 inline int log_state_close(MYSQL *ld, connection_t *element,struct log_mysql_params *params)
 {
     char request[LONG_REQUEST_SIZE];
+    char src_ascii[IPV6_SQL_STRLEN];
+    char dst_ascii[IPV6_SQL_STRLEN];
     int Result;
     int update_status = 0;
     gboolean ok;
+
+    if (ipv6_to_sql(&element->tracking.saddr, src_ascii, sizeof(src_ascii)) != 0)
+        return -1;
+    if (ipv6_to_sql(&element->tracking.daddr, dst_ascii, sizeof(dst_ascii)) != 0)
+        return -1;
 
     while (update_status < 2){
         update_status++;
         ok = secure_snprintf(request, sizeof(request),
                 "UPDATE %s SET end_timestamp=FROM_UNIXTIME(%lu), state=%hu "
-                "WHERE (ip_saddr=%lu AND ip_daddr=%lu "
-                "AND tcp_sport=%u AND tcp_dport=%u AND state=%hu)",
+                "WHERE (ip_saddr=%s AND ip_daddr=%s "
+                "AND tcp_sport='%hu' AND tcp_dport='%hu' AND state='%hu')",
                 params->mysql_table_name,
                 element->timestamp,
                 TCP_STATE_CLOSE,
-                (long unsigned int)(element->tracking).saddr,
-                (long unsigned int)(element->tracking).daddr,
+                src_ascii,
+                dst_ascii,
                 (element->tracking).source,
                 (element->tracking).dest,
                 TCP_STATE_ESTABLISHED);
@@ -547,8 +613,9 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state,
 
 G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t state,gpointer params_p)
 {
-  struct log_mysql_params* params = (struct log_mysql_params*)params_p;
+    struct log_mysql_params* params = (struct log_mysql_params*)params_p;
     char request[LONG_REQUEST_SIZE];
+    char ip_ascii[IPV6_SQL_STRLEN];
     int mysql_ret;
     MYSQL *ld;
     gboolean ok;
@@ -558,17 +625,20 @@ G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t
         return -1;
     }
 
+    if (ipv6_to_sql(&c_session->addr, ip_ascii, sizeof(ip_ascii)) != 0)
+        return -1;
+
     switch (state) {
         case SESSION_OPEN:
             /* create new user session */
             ok = secure_snprintf(request, sizeof(request),
                     "INSERT INTO %s (user_id, username, ip_saddr, "
                     "os_sysname, os_release, os_version, first_time) "
-                    "VALUES ('%lu', '%s', '%u', '%s', '%s', '%s', FROM_UNIXTIME(%lu))",
+                    "VALUES ('%lu', '%s', %s, '%s', '%s', '%s', FROM_UNIXTIME(%lu))",
                     params->mysql_users_table_name,
                     c_session->user_id,
                     c_session->user_name,
-                    c_session->addr,
+                    ip_ascii,
                     c_session->sysname,
                     c_session->release,
                     c_session->version,
@@ -579,10 +649,10 @@ G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t
             /* update existing user session */
             ok = secure_snprintf(request, sizeof(request),
                     "UPDATE %s SET last_time=FROM_UNIXTIME(%lu) "
-                    "WHERE ip_saddr=%u",
+                    "WHERE ip_saddr=%s",
                     params->mysql_users_table_name,
                     time(NULL),
-                    c_session->addr);
+                    ip_ascii);
             break;
 
         default:
