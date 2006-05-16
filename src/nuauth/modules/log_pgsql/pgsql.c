@@ -29,6 +29,7 @@
 #include <errno.h>
 #include <time.h>
 #include "security.h"
+
 G_MODULE_EXPORT gboolean module_params_unload(gpointer params_p)
 {
   struct log_pgsql_params *params = (struct log_pgsql_params*)params_p;
@@ -136,7 +137,7 @@ PGconn *pgsql_conn_init(struct log_pgsql_params* params){
     return ld;
 }
 
-char* quote_string(char *text)
+static char* quote_pgsql_string(char *text)
 {
     unsigned int length = strlen(text);
     char *quoted = (char *)malloc(length*2 + 1);
@@ -157,7 +158,7 @@ static gchar* generate_osname(gchar *Name, gchar *Version, gchar *Release)
         return g_strdup("");
     }
     all = g_strjoin("-",Name,Version,Release,NULL);
-    quoted = quote_string(all);
+    quoted = quote_pgsql_string(all);
     g_free(all);
     return quoted;
 }
@@ -168,16 +169,16 @@ int pgsql_insert(PGconn *ld, connection_t *element, char *oob_prefix, tcp_state_
     char request_fields[INSERT_REQUEST_FIEDLS_SIZE];
     char request_values[INSERT_REQUEST_VALUES_SIZE];
     char tmp_buffer[INSERT_REQUEST_VALUES_SIZE];
-    struct in_addr ip_addr;
-    char ip_src[INET_ADDRSTRLEN+1], ip_dest[INET_ADDRSTRLEN+1];
+    char ip_src[INET6_ADDRSTRLEN];
+    char ip_dst[INET6_ADDRSTRLEN];
     gboolean ok;
     PGresult *Result;
     char *sql_query;
 
-    ip_addr.s_addr = ntohl(element->tracking.saddr);
-    SECURE_STRNCPY(ip_src, inet_ntoa(ip_addr), sizeof(ip_src)) ;
-    ip_addr.s_addr = ntohl(element->tracking.daddr);
-    SECURE_STRNCPY(ip_dest, inet_ntoa(ip_addr), sizeof(ip_dest));
+    if (inet_ntop(AF_INET6, &element->tracking.saddr, ip_src, sizeof(ip_src)) == NULL)
+        return -1;
+    if (inet_ntop(AF_INET6, &element->tracking.daddr, ip_dst, sizeof(ip_dst)) == NULL)
+        return -1;
 
     /* Write common informations */
     ok = secure_snprintf(request_fields, sizeof(request_fields),
@@ -192,10 +193,10 @@ int pgsql_insert(PGconn *ld, connection_t *element, char *oob_prefix, tcp_state_
     ok = secure_snprintf(request_values, sizeof(request_values),
             "VALUES ('%s', '%hu', "
             "'%lu', '0', '%lu', "
-            "'%u','%s','%s'",
+            "'%u', '%s', '%s'",
             oob_prefix, state,
             element->timestamp, element->timestamp,
-            element->tracking.protocol, ip_src, ip_dest);
+            element->tracking.protocol, ip_src, ip_dst);
     if (!ok) {
         return -1;
     }
@@ -203,7 +204,7 @@ int pgsql_insert(PGconn *ld, connection_t *element, char *oob_prefix, tcp_state_
     /* Add user informations */ 
     if (element->username) {
         /* Get OS and application names */
-        char *quoted_username = quote_string(element->username);
+        char *quoted_username = quote_pgsql_string(element->username);
         char *quoted_osname = generate_osname(
                 element->os_sysname,
                 element->os_version,
@@ -211,7 +212,7 @@ int pgsql_insert(PGconn *ld, connection_t *element, char *oob_prefix, tcp_state_
         char *quoted_appname;
         
         if (element->app_name != NULL  && strlen(element->app_name) < APPNAME_MAX_SIZE)
-            quoted_appname = quote_string(element->app_name);
+            quoted_appname = quote_pgsql_string(element->app_name);
         else
             quoted_appname = g_strdup("");
 
@@ -298,14 +299,13 @@ int pgsql_insert(PGconn *ld, connection_t *element, char *oob_prefix, tcp_state_
 
 int pgsql_update_close(PGconn *ld, connection_t *element,struct log_pgsql_params* params)
 {
-    struct in_addr addr;
-    char ip_src[INET_ADDRSTRLEN+1];
+    char ip_src[INET6_ADDRSTRLEN];
     char request[SHORT_REQUEST_SIZE];
     PGresult *Result;
     gboolean ok;
 
-    addr.s_addr = ntohl(element->tracking.saddr);
-    SECURE_STRNCPY(ip_src, inet_ntoa(addr), sizeof(ip_src)) ;
+    if (inet_ntop(AF_INET6, &element->tracking.saddr, ip_src, sizeof(ip_src)) == NULL)
+        return -1;
 
     ok = secure_snprintf(request, sizeof(request),
             "UPDATE %s SET state='%hu', end_timestamp='%lu' "
@@ -344,8 +344,8 @@ int pgsql_update_state(PGconn *ld, connection_t *element,
 {
     char request[SHORT_REQUEST_SIZE];
     PGresult *Result;
-    struct in_addr ip_addr;
-    char tmp_inet1[INET_ADDRSTRLEN+1], tmp_inet2[INET_ADDRSTRLEN+1];
+    char tmp_inet1[INET_ADDRSTRLEN+1];
+    char tmp_inet2[INET_ADDRSTRLEN+1];
     u_int16_t tcp_src, tcp_dst;
     char *ip_src, *ip_dst;
     int nb_try = 0;
@@ -353,10 +353,11 @@ int pgsql_update_state(PGconn *ld, connection_t *element,
     gboolean ok;
 
     /* setup IP/TCP parameters */
-    ip_addr.s_addr=ntohl((element->tracking).saddr);
-    SECURE_STRNCPY(tmp_inet1, inet_ntoa(ip_addr), sizeof(tmp_inet1)) ;
-    ip_addr.s_addr=ntohl((element->tracking).daddr);
-    SECURE_STRNCPY(tmp_inet2, inet_ntoa(ip_addr), sizeof(tmp_inet2));
+    if (inet_ntop(AF_INET6, &element->tracking.saddr, tmp_inet1, sizeof(tmp_inet1)) == NULL)
+        return -1;
+    if (inet_ntop(AF_INET6, &element->tracking.daddr, tmp_inet2, sizeof(tmp_inet2)) == NULL)
+        return -1;
+
     if (reverse) { 
         ip_src = tmp_inet2;
         ip_dst = tmp_inet1;
@@ -483,6 +484,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state,
 G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t state,gpointer params_p)
 {
     char request[INSERT_REQUEST_VALUES_SIZE];
+    char addr_ascii[INET6_ADDRSTRLEN];
     struct log_pgsql_params *params = (struct log_pgsql_params*)params_p;
     gboolean ok;
     PGresult *Result;
@@ -490,17 +492,20 @@ G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t
     if (ld == NULL)
         return -1;
 
+    if (inet_ntop(AF_INET6, &c_session->addr, addr_ascii, sizeof(addr_ascii)) == NULL)
+        return -1;
+    
     switch (state) {
         case SESSION_OPEN:
             /* create new user session */
             ok = secure_snprintf(request, sizeof(request),
                     "INSERT INTO %s (user_id, username, ip_saddr, "
                     "os_sysname, os_release, os_version, first_time) "
-                    "VALUES ('%lu', '%s', '%u', '%s', '%s', '%s', ABSTIME(%lu))",
+                    "VALUES ('%lu', '%s', '%s', '%s', '%s', '%s', ABSTIME(%lu))",
                     params->pgsql_users_table_name,
                     c_session->user_id,
                     c_session->user_name,
-                    c_session->addr,
+                    addr_ascii,
                     c_session->sysname,
                     c_session->release,
                     c_session->version,
@@ -511,10 +516,10 @@ G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t
             /* update existing user session */
             ok = secure_snprintf(request, sizeof(request),
                     "UPDATE %s SET last_time=ABSTIME(%lu) "
-                    "WHERE ip_saddr=%u",
+                    "WHERE ip_saddr='%s';",
                     params->pgsql_users_table_name,
                     time(NULL),
-                    c_session->addr);
+                    addr_ascii);
             break;
 
         default:

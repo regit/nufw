@@ -202,7 +202,7 @@ static gchar* generate_appname(gchar *appname)
     }
 }
 
-char* quote_string(MYSQL *mysql, char *text)
+static char* quote_string(MYSQL *mysql, char *text)
 {
     unsigned int length = strlen(text);
     char *quoted;
