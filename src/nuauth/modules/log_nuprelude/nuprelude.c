@@ -208,7 +208,6 @@ idmef_message_t *create_session_template()
 {
     char buffer[50];
     idmef_message_t *idmef = create_alert_template();
-    struct in_addr ipaddr;
 
     add_idmef_object(idmef, "alert.target(0).process.name", "nuauth");
     if (secure_snprintf(buffer, sizeof(buffer), "%lu", (unsigned long)getpid())) {
@@ -249,7 +248,7 @@ idmef_message_t *create_message_packet(
     idmef_alert_t *alert;
     int ret;
     char buffer[50];
-    struct in_addr ipaddr;
+    char ip_ascii[INET6_ADDRSTRLEN];
     char *tmp_buffer;
     unsigned short psrc, pdst;
 
@@ -284,10 +283,10 @@ idmef_message_t *create_message_packet(
     add_idmef_object(idmef, "alert.assessment.impact.description", impact);
 
     /* IP source/dest */
-    ipaddr.s_addr = ntohl(conn->tracking.saddr);
-    add_idmef_object(idmef, "alert.source(0).node.address(0).address", inet_ntoa(ipaddr));
-    ipaddr.s_addr = ntohl(conn->tracking.daddr);
-    add_idmef_object(idmef, "alert.target(0).node.address(0).address", inet_ntoa(ipaddr));
+    if (inet_ntop(AF_INET6, &conn->tracking.saddr, ip_ascii, sizeof(ip_ascii)) != NULL)
+        add_idmef_object(idmef, "alert.source(0).node.address(0).address", ip_ascii);
+    if (inet_ntop(AF_INET6, &conn->tracking.saddr, ip_ascii, sizeof(ip_ascii)) != NULL)
+        add_idmef_object(idmef, "alert.target(0).node.address(0).address", ip_ascii);
     
     /* IP protocol */
     if (secure_snprintf(buffer, sizeof(buffer), "%hu", conn->tracking.protocol)) {
