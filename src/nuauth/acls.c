@@ -60,19 +60,10 @@ struct acl_key {
  * Params : a "struct acl_key"
  * Return : the associated key
  */
-
-inline  guint hash_acl(gconstpointer key)
+inline guint hash_acl(gconstpointer key)
 {
-    /* @@@@HAYPO@@@@@ */
-#if 0
-	tracking_t* headers=((struct acl_key*)key)->acl_tracking;
-	return (jhash_3words(headers->saddr,
-				(headers->daddr ^ headers->protocol),
-				(headers->dest << 16),
-				32));
-#else
-        return 0;
-#endif        
+    guint32 *data32 = (guint32 *)((struct acl_key*)key)->acl_tracking;
+	return jhash2(data32, sizeof(tracking_t)/4, 0);
 }
 
 /**

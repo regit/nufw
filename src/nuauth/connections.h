@@ -74,6 +74,8 @@ typedef struct {
   u_int8_t code;            /*!< ICMP code type */
 
   char payload[PAYLOAD_SAMPLE];  /*!< First 8 bytes of protocol payload used for ICMP reject */
+
+  char padding[1];          /*!< Padding to 32 bits alignment */
 } tracking_t;
 
 /** 

@@ -19,16 +19,8 @@ void search_and_fill_catchall(connection_t *new, connection_t *packet)
  */
 inline guint hash_connection(gconstpointer data)
 {
-#if 0
-    /*@@@@HAYPO@@@@*/
-    const tracking_t *headers = (tracking_t *)data;
-    return jhash_3words(headers->saddr,
-            headers->daddr ^ headers->protocol,
-            headers->dest | (headers->source << 16),
-            32);
-#else
-    return 0;
-#endif
+    guint32 *data32 = (guint32* )(tracking_t *)data;
+	return jhash2(data32, sizeof(tracking_t)/4, 0);
 }
 
 /**
