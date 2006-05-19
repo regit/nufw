@@ -70,7 +70,7 @@ void auth_process_answer(char *dgram, int dgram_size)
                 "[!] Packet without a known ID: %u", packet_id);
         return;
     }
-answer->decision = DECISION_ACCEPT;
+
     switch (answer->decision)
     {
     case DECISION_ACCEPT:
