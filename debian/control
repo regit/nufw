@@ -120,3 +120,17 @@ Description: client library for nufw authentication
  access the network, instead caring only about the originating IP addresses.
  .
  This library provides a convenient system to build NuFW authentication client.
+
+Package: libpam-nufw20
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: Pluggable Authentication Module for nufw authentication
+ NuFW is an authenticating gateway, which means that connections are
+ authenticated before being forwarded through the gateway.  Classical packet
+ filtering systems disregard the identity of the user who may be attempting to
+ access the network, instead caring only about the originating IP addresses.
+ .
+ This module allows to open a client connection to the nufw authentication gateway.
+ When network traffic leaves the machine, it deals with it and sends
+ authenticating data to the nuauth server.
+
