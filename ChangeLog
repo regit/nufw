@@ -1,6 +1,7 @@
 2.0
 	- nuauth : fix period handling
 	- libnuclient : fix crash when specified hostname is unvalid
+	- pam_nufw : initial release
 2.0-rc2 (2006/05/15)
 	- nuauth : add sanity check on type of field contained in a packet
 	- libnuclient : fix MacOSX port

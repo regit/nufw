@@ -4,6 +4,10 @@ regit@inl.fr
 Vincent Deffontaines (aka gryzor)
 http://www.gryzor.com
 
-Mikael Berthe (aka McKael)
-
 Victor Stinner (aka Haypo)
+
+Mikael Berthe (aka McKael)
+    original author of plaintext module
+
+Jean Gillaux
+    author of pam_nufw module

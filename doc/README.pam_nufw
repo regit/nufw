@@ -1,0 +1,29 @@
+PAM_NUFW Documentation
+
+pam_nufw accepts following options on the command line:
+server=nuauth_ip
+port=nuauth_port
+lock=.pam_nufw
+
+default port is 4130
+default lockfile is .pam_nufw, located in $home/.nufw/
+
+
+configuration example:
+
+#%PAM-1.0
+auth    requisite       pam_nologin.so
+auth    required        pam_env.so
+@include common-auth
+auth optional pam_nufw.so server=192.168.1.2 port=4130
+@include common-account
+session required        pam_limits.so
+@include common-session
+session optional pam_nufw.so server=192.168.1.2 port=4130
+@include common-password
+
+
+
+We use auth because we have to know user's password in order to authenticate on nuauth
+The pam module closes the connection to nuauth when the application closes the pam session.
+Comment the session line to suppress disconnection at logout.
