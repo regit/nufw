@@ -63,19 +63,19 @@ typedef enum
  * identification.
  */
 typedef struct {
+  /* Group informations about destination to make
+   * ACL hash function faster. If you change this
+   * structure, please also change hash_acl() */
   struct in6_addr saddr;    /*!< IPv6 source address */
   struct in6_addr daddr;    /*!< IPv6 destination address */
   u_int8_t protocol;        /*!< IP protocol */
-
-  u_int16_t source;         /*!< TCP/UDP source port */
+  char padding[1];          /*!< Padding to 32 bits alignment */
   u_int16_t dest;           /*!< TCP/UDP destination port */
 
+  u_int16_t source;         /*!< TCP/UDP source port */
   u_int8_t type;            /*!< ICMP message type */
   u_int8_t code;            /*!< ICMP code type */
-
   char payload[PAYLOAD_SAMPLE];  /*!< First 8 bytes of protocol payload used for ICMP reject */
-
-  char padding[1];          /*!< Padding to 32 bits alignment */
 } tracking_t;
 
 /** 
