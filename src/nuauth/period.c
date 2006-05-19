@@ -45,8 +45,10 @@ static inline unsigned int get_start_of_day_from_time_t(time_t pckt_time)
 
 /**
  * Compute end of period for a given time (second since epoch)
- * - return 0 if time not in period
- * - return -1 if there's no end
+ *
+ * \return return value of end period 
+ *  - 0 if time not in period
+ *  - -1 if there's no end
  */
 
 static time_t get_end_of_period_item_for_time(struct period_item* perioditem,time_t pckt_time)
@@ -74,25 +76,29 @@ static time_t get_end_of_period_item_for_time(struct period_item* perioditem,tim
       localtime_r(&pckt_time, &tmtime);
 
       /* compare day if this is not a time only period */
-      if (perioditem->start_day!= -1){
+      if (perioditem->start_day != -1){
           if(perioditem->start_day<=perioditem->end_day){
               if ((tmtime.tm_wday>=perioditem->start_day) && (tmtime.tm_wday <= perioditem->end_day)){
-                        endtime=get_start_of_day_from_time_t(pckt_time)+86400*(perioditem->end_day-tmtime.tm_wday+1);
-              }       
+                  endtime=get_start_of_day_from_time_t(pckt_time)+86400*(perioditem->end_day-tmtime.tm_wday+1);
+              } else {
+                  return 0;
+              }
           } else {
               if (tmtime.tm_wday>=perioditem->start_day){
-                        endtime=get_start_of_day_from_time_t(pckt_time)+86400*(6-tmtime.tm_wday+1+perioditem->end_day);
-              }      else  if (tmtime.tm_wday >= perioditem->end_day){
-                        endtime=get_start_of_day_from_time_t(pckt_time)+86400*(perioditem->end_day-tmtime.tm_wday+1);
+                  endtime=get_start_of_day_from_time_t(pckt_time)+86400*(6-tmtime.tm_wday+1+perioditem->end_day);
+              } else  if (tmtime.tm_wday >= perioditem->end_day){
+                  endtime=get_start_of_day_from_time_t(pckt_time)+86400*(perioditem->end_day-tmtime.tm_wday+1);
+              } else {
+                  return 0;
               }
           }
       }
       
       /* compare time */
-      if (perioditem->start_hour!=-1){
-          if ((tmtime.tm_hour>=perioditem->start_hour) && ( (tmtime.tm_hour<=perioditem->end_hour) || (perioditem->end_hour==-1)) ){
+      if (perioditem->start_hour !=-1){
+          if ((tmtime.tm_hour>=perioditem->start_hour) && ( (tmtime.tm_hour<perioditem->end_hour) || (perioditem->end_hour==-1)) ){
               if (perioditem->end_hour==-1){
-                  return -1;
+                  return endtime;
               } else {
                   return get_start_of_day_from_time_t(pckt_time)+3600*perioditem->end_hour; 
               }
