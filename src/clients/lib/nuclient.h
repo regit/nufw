@@ -173,7 +173,7 @@ typedef struct {
 	char *username;  /** Username, stored in UTF-8 */
 	char *password;  /** Password, stored in UTF-8 */
 	
-        gnutls_session tls; /** TLS session over TCP socket */
+    gnutls_session tls; /** TLS session over TCP socket */
 	gnutls_certificate_credentials cred; /** TLS credentials */
 
 	char* (*username_callback)(); /** Callback used to get username */
@@ -184,7 +184,7 @@ typedef struct {
 	struct sockaddr_in adr_srv; /** nuauth server address */
 	conntable_t *ct;         /** connection table */
 	unsigned long packet_id; /** packet sequence number (start at zero) */
-        int auth_by_default;
+    int auth_by_default;
 	unsigned char mode;
 	
 	/*------------- PRIVATE MEMBERS ----------------*/
@@ -244,15 +244,15 @@ void nu_client_global_init(nuclient_error *err);
 void nu_client_global_deinit(nuclient_error *err);
 
 NuAuth* nu_client_init2(
-		const char *hostname, 
-                unsigned int port,
-		char* keyfile, 
-                char* certfile,
-		void* username_callback,
-                void * passwd_callback, 
-                void* tlscred_callback,
-                nuclient_error *err
-		);
+        const char *hostname, 
+        unsigned int port,
+        char* keyfile, 
+        char* certfile,
+        void* username_callback,
+        void * passwd_callback, 
+        void* tlscred_callback,
+        nuclient_error *err
+        );
 
 const char* nuclient_strerror (nuclient_error *err);
 

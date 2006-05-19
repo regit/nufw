@@ -183,10 +183,7 @@ void do_panic(const char *filename, unsigned long line, const char *fmt, ...)
 
 void nu_exit_clean(NuAuth * session)
 {
-        gnutls_certificate_free_keys(session->cred);
-        gnutls_certificate_free_credentials(session->cred);
-	gnutls_deinit(session->tls);
-	if(session->ct){
+    if(session->ct){
 		tcptable_free (session->ct);
 	}
 	if (session->socket>0){
@@ -200,6 +197,12 @@ void nu_exit_clean(NuAuth * session)
 	if (session->password){
 		free(session->password);
 	}
+
+    gnutls_certificate_free_keys(session->cred);
+    gnutls_certificate_free_credentials(session->cred);
+
+	gnutls_deinit(session->tls);
+
 	if (session->mode == SRV_TYPE_PUSH){
 		pthread_mutex_destroy(&(session->check_count_mutex));
 		pthread_cond_destroy(&(session->check_cond));
@@ -971,17 +974,19 @@ NuAuth* nu_client_init2(
 	/* create session mutex */
 	pthread_mutex_init(&(session->mutex),NULL);
 
-	/* set field about host */
-	if (!set_host(session, err, hostname, port)) {
-		nu_exit_clean(session);
-		return NULL;
-	}
-
 	/* set fields about TLS and certificates */
 	if (!init_tls_cert(session, err, keyfile, certfile)) {
 		nu_exit_clean(session);
 		return NULL;
 	}
+
+    /* set field about host */
+	if (!set_host(session, err, hostname, port)) {
+		nu_exit_clean(session);
+		return NULL;
+	}
+
+
 
 	if (!init_socket(session, err)) {
 		nu_exit_clean(session);
