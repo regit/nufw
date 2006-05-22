@@ -133,7 +133,7 @@ void leave_client()
         free(runpid);
     }
     nu_client_global_deinit(err);
-    nuclient_error_destroy(err);
+    nu_client_error_destroy(err);
     free(saved_username);
     free(saved_password);
 }
@@ -386,7 +386,7 @@ int main (int argc, char *argv[])
 		exit(1);
 	}
 
-        if (nuclient_error_init(&err) != 0)
+        if (nu_client_error_init(&err) != 0)
         {
             printf("Cannot init error structure!\n");
             exit(-1);
@@ -396,7 +396,7 @@ int main (int argc, char *argv[])
         nu_client_global_init(err);
         
         printf("Connecting to NuFw gateway\n");
-	session = nu_client_init2(
+        session = nu_client_init2(
 			srv_addr,
 			port,
 			NULL,
@@ -409,7 +409,7 @@ int main (int argc, char *argv[])
 
 	if (!session){
 		printf("\nCan not initiate connection to NuFW gateway\n");
-                printf("Problem: %s\n",nuclient_strerror(err));
+                printf("Problem: %s\n",nu_client_strerror(err));
 		exit(EXIT_FAILURE);
 	}
 
@@ -484,21 +484,24 @@ int main (int argc, char *argv[])
 					&get_username,
 					&get_password,
 					NULL,
-                                        err
+                    err
 					);
 			if (session!=NULL){
 				tempo=1;
-			}else{
-                            printf("%s\n",nuclient_strerror(err));
-                        }
+			} else {
+                printf("%s\n",nu_client_strerror(err));
+                if (err->error == BAD_CREDENTIALS_ERR){
+                    break;
+                }
+            }
 		} else {
 			if (nu_client_check(session,err)<0){
 				session=NULL;
-                                printf("%s\n",nuclient_strerror(err));
+                                printf("%s\n",nu_client_strerror(err));
 			}
 		}
 	}
-        leave_client();
+    leave_client();
 	exit (EXIT_SUCCESS);
 }
 

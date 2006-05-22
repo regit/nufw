@@ -234,14 +234,14 @@ typedef struct
 } nuclient_error;
 
 /* Exported functions */
-int	nu_client_check(NuAuth * session, nuclient_error *err);
+int 	nu_client_check(NuAuth * session, nuclient_error *err);
 void 	nu_client_free(NuAuth *session, nuclient_error *err);
 
-int     nuclient_error_init(nuclient_error **err);
-void    nuclient_error_destroy(nuclient_error *err);
+int     nu_client_error_init(nuclient_error **err);
+void    nu_client_error_destroy(nuclient_error *err);
 
-void nu_client_global_init(nuclient_error *err);
-void nu_client_global_deinit(nuclient_error *err);
+void    nu_client_global_init(nuclient_error *err);
+void    nu_client_global_deinit(nuclient_error *err);
 
 NuAuth* nu_client_init2(
         const char *hostname, 
@@ -254,7 +254,7 @@ NuAuth* nu_client_init2(
         nuclient_error *err
         );
 
-const char* nuclient_strerror (nuclient_error *err);
+const char* nu_client_strerror (nuclient_error *err);
 
 #ifdef __cplusplus
 }

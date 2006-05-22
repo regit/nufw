@@ -1049,7 +1049,7 @@ void ask_session_end(NuAuth* session)
  * \ingroup nuclientAPI
  * \brief Allocate a structure to store client error
  */
-int nuclient_error_init(nuclient_error **err)
+int nu_client_error_init(nuclient_error **err)
 {
       if (*err != NULL)
           return -1;
@@ -1061,7 +1061,7 @@ int nuclient_error_init(nuclient_error **err)
  * \ingroup nuclientAPI
  * \brief Destroy an error (free memory)
  */
-void nuclient_error_destroy(nuclient_error *err)
+void nu_client_error_destroy(nuclient_error *err)
 {
     if (err!=NULL)
       free(err);
@@ -1071,7 +1071,7 @@ void nuclient_error_destroy(nuclient_error *err)
  * \ingroup nuclientAPI
  * \brief Convert an error to an human readable string
  */
-const char* nuclient_strerror (nuclient_error *err)
+const char* nu_client_strerror (nuclient_error *err)
 {
   if (err==NULL)
       return "Error structure was not initialised";

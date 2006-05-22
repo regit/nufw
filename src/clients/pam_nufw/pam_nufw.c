@@ -282,7 +282,7 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
                           err
                           );
                   if (session==NULL){/* quit if password is wrong. to not lock user account */
-                      syslog(LOG_ERR,"(pam_nufw) unable to reconnect to server: %s",nuclient_strerror(err));
+                      syslog(LOG_ERR,"(pam_nufw) unable to reconnect to server: %s",nu_client_strerror(err));
                       if (err->error == BAD_CREDENTIALS_ERR){
                             syslog(LOG_ERR,"(pam_nufw) bad credentials: leaving");
                             exit_client();
@@ -293,7 +293,7 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
               } else {
                   if (nu_client_check(session,err)<0){
                       session=NULL;
-                      syslog(LOG_ERR,"(pam_nufw) libnuclient error: %s",nuclient_strerror(err));
+                      syslog(LOG_ERR,"(pam_nufw) libnuclient error: %s",nu_client_strerror(err));
                   }
               }
           }
