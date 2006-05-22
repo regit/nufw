@@ -544,30 +544,31 @@ int send_os(NuAuth * session, nuclient_error *err)
 	uname(&info);
 
     /* encode OS informations in base64 */
-	stringlen = strlen(info.sysname)+strlen(info.release)+strlen(info.version)+3;
+	stringlen = strlen(info.sysname) + 1 
+        + strlen(info.release) + 1 + strlen(info.version) + 1;
 	oses = alloca(stringlen);
-	enc_oses = calloc(4*stringlen,sizeof(char));
+	enc_oses = calloc(4*stringlen, sizeof(char));
 	(void)secure_snprintf(oses, stringlen,
                           "%s;%s;%s",
                           info.sysname, info.release, info.version);
-	if (sasl_encode64(oses,strlen(oses), enc_oses, 4*stringlen, &actuallen) == SASL_BUFOVER){
-		enc_oses=realloc(enc_oses,actuallen);
-		sasl_encode64(oses,strlen(oses),enc_oses,actuallen,&actuallen);
+	if (sasl_encode64(oses, strlen(oses), enc_oses, 4*stringlen, &actuallen) == SASL_BUFOVER){
+		enc_oses=realloc(enc_oses, actuallen);
+		sasl_encode64(oses, strlen(oses), enc_oses, actuallen, &actuallen);
 	}
 
     /* build packet header */
-	osfield.type=OS_FIELD;
-	osfield.option=OS_SRV;
-	osfield.length=4+actuallen;
+	osfield.type = OS_FIELD;
+	osfield.option = OS_SRV;
+	osfield.length = sizeof(osfield) + actuallen;
 
     /* add packet body */
-	buf=alloca(osfield.length);
-	osfield_length=osfield.length;
-	osfield.length=htons(osfield.length);
+	buf = alloca(osfield.length);
+	osfield_length = osfield.length;
+	osfield.length = htons(osfield.length);
 	pointer = buf ;
-	memcpy(buf,&osfield,sizeof osfield);
-	pointer+=sizeof osfield;
-	memcpy(pointer,enc_oses,actuallen);
+	memcpy(buf, &osfield, sizeof osfield);
+	pointer += sizeof osfield;
+	memcpy(pointer, enc_oses, actuallen);
 	free(enc_oses);
 
     /* Send OS field over network */
