@@ -346,27 +346,31 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
 }
 
 /**
- * tcptable_init ()
- *
- * Initialise a connection table (hashtable).
+ * Create a connection table: allocate memory with zero bytes,
+ * and init. each list with NULL pointer.
+ * 
+ * \return Returns 0 on error (no more memory), 1 otherwise.
  */
 int tcptable_init (conntable_t **ct)
 {
 	int i;
 
 	(* ct) = (conntable_t *) calloc(1,sizeof(conntable_t));
-	assert (*ct != NULL);
+    if (*ct == NULL)
+    {
+        return 0;
+    }
 
 	for (i = 0; i < CONNTABLE_BUCKETS; i++)
+    {
 		(*ct)->buckets[i] = NULL;
-
-	return 1;
+    }
+    return 1;
 }
 
-/*
- * tcptable_hash ()
- *
- * Simple hash function for connections.
+/**
+ * Compute connection hash (index in a connection table, see ::conntable_t).
+ * Hash is an integer in interval 0..(::CONNTABLE_BUCKETS-1).
  */
 inline int tcptable_hash (conn_t *c)
 {
@@ -377,10 +381,8 @@ inline int tcptable_hash (conn_t *c)
                 32)) % CONNTABLE_BUCKETS;
 }
 
-/*
- * tcptable_add ()
- *
- * Add a connection to the connection table.
+/**
+ * Add a connection entry to a connection table.
  */
 void tcptable_add (conntable_t *ct, conn_t *c)
 {
@@ -404,10 +406,10 @@ void tcptable_add (conntable_t *ct, conn_t *c)
 	ct->buckets[bi]->next = old;
 }
 
-/*
- * tcptable_find ()
+/**
+ * Find a connection in a table.
  *
- * Find a connection in a table, return connection if found, NULL otherwise.
+ * \return The connection if found, NULL if it doesn't exist
  */
 conn_t* tcptable_find (conntable_t *ct, conn_t *c)
 {
@@ -432,10 +434,8 @@ conn_t* tcptable_find (conntable_t *ct, conn_t *c)
 	return NULL;
 }
 
-/*
- * tcptable_free ()
- *
- * Free a connection table.
+/**
+ * Destroy a connection table (free memory).
  */
 void tcptable_free (conntable_t *ct)
 {

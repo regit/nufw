@@ -134,6 +134,18 @@ typedef struct conn
     struct conn *next;        
 } conn_t;
 
+/**
+ * A connection table: hash table of single-linked connection lists,
+ * a list stops with NULL value.
+ *
+ * Methods:
+ *   - tcptable_init(): create a structure (allocate memory) ;
+ *   - tcptable_hash(): compute a connection hash (index in this table) ;
+ *   - tcptable_add(): add a new entry ;
+ *   - tcptable_find(): fin a connection in a table ;
+ *   - tcptable_read(): feed the table using /proc/net/ files (under Linux) ;
+ *   - tcptable_free(): destroy a table (free memory).
+ */
 typedef struct conntable {
 	conn_t *buckets[CONNTABLE_BUCKETS];
 } conntable_t;
