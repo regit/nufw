@@ -904,7 +904,7 @@ NuAuth* nu_client_init2(
 	session->connected = 1;
     session->count_msg_cond = -1;
 	session->auth_by_default = 1;
-	session->packet_id = 0;
+	session->packet_seq = 0;
 	session->tls=NULL;
 	session->ct = NULL;
 	session->protocol = PROTO_VERSION;

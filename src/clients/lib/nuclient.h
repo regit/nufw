@@ -189,7 +189,7 @@ typedef struct {
 	
 	int socket;              /*!< TCP socket used to exchange message with nuauth */
 	conntable_t *ct;         /*!< Connection table */
-	unsigned long packet_id; /*!< Packet sequence number (start at zero) */
+	u_int32_t packet_seq;    /*!< Packet sequence number (start at zero) */
     int auth_by_default;     /*!< Auth. by default (=1) */
 
     /** Server mode: #SRV_TYPE_POLL or #SRV_TYPE_PUSH */

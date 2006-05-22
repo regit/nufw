@@ -103,19 +103,19 @@ int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
       header->length+=sizeof(struct nuv2_authreq)+sizeof(struct nuv2_authfield_ipv6);
       
       authreq = (struct nuv2_authreq *)pointer;
-      authreq->packet_id=session->packet_id++;
-      authreq->packet_length=sizeof(struct nuv2_authreq)+sizeof(struct nuv2_authfield_ipv6);
+      authreq->packet_seq = session->packet_seq++;
+      authreq->packet_length = sizeof(struct nuv2_authreq)+sizeof(struct nuv2_authfield_ipv6);
      
       authfield = (struct nuv2_authfield_ipv6 *)(authreq+1);
-      authfield->type=IPV6_FIELD;
-      authfield->option=0;
-      authfield->src=carray[item]->ip_src;
-      authfield->dst=carray[item]->ip_dst;
-      authfield->proto=carray[item]->protocol;
-      authfield->flags=0;
-      authfield->FUSE=0;
-      authfield->sport=htons(carray[item]->port_src);
-      authfield->dport=htons(carray[item]->port_dst);
+      authfield->type = IPV6_FIELD;
+      authfield->option = 0;
+      authfield->src = carray[item]->ip_src;
+      authfield->dst = carray[item]->ip_dst;
+      authfield->proto = carray[item]->protocol;
+      authfield->flags = 0;
+      authfield->FUSE = 0;
+      authfield->sport = htons(carray[item]->port_src);
+      authfield->dport = htons(carray[item]->port_dst);
 
       /* application field  */
       appfield = (struct nuv2_authfield_app *)(authfield+1); 

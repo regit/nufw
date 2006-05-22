@@ -46,7 +46,7 @@ typedef void (*pthread_cleanup_push_arg1_t) (void *);
 
 void* recv_message(void *data)
 {
-        NuAuth* session=(NuAuth*)data;
+    NuAuth* session=(NuAuth*)data;
 	int ret;
 	char dgram[512];
 	const size_t message_length= sizeof(struct nuv2_header)+sizeof(struct nuv2_authfield_hello)+sizeof(struct nuv2_authreq);
@@ -56,14 +56,14 @@ void* recv_message(void *data)
 	struct nuv2_authfield_hello *hellofield;
 
 	/* fill struct */
-        header = (struct nuv2_header *)message;
+    header = (struct nuv2_header *)message;
 	header->proto=PROTO_VERSION;
 	header->msg_type=USER_REQUEST;
 	header->option=0;
 	header->length=htons(message_length);
 
-     authreq = (struct nuv2_authreq *)(header + 1);
-	authreq->packet_id=session->packet_id++;
+    authreq = (struct nuv2_authreq *)(header + 1);
+	authreq->packet_seq = session->packet_seq++;
 	authreq->packet_length = htons(sizeof(struct nuv2_authreq)+sizeof(struct nuv2_authfield_hello));
 
     hellofield = (struct nuv2_authfield_hello *)(authreq + 1);
