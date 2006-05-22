@@ -1016,7 +1016,7 @@ const char* nuclient_strerror (nuclient_error *err)
       break;
     case INTERNAL_ERROR:
       switch (err->error){
-        case NOERR: return "No error";
+        case NO_ERR: return "No error";
         case SESSION_NOT_CONNECTED_ERR:  return "Session not connected";
         case TIMEOUT_ERR:      return "Connection timeout";
         case DNS_RESOLUTION_ERR: return "DNS resolution error";

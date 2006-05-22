@@ -217,7 +217,6 @@ typedef enum
 /* INTERNAL ERROR CODES */
 enum
 {
-    NOERR = 0,
     NO_ERR  = 0,                     /** No error */
     SESSION_NOT_CONNECTED_ERR  = 1,  /** Session not connected */
     UNKNOWN_ERR = 2,                 /** Unkown error */
