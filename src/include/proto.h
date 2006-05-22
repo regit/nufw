@@ -119,7 +119,7 @@ typedef enum
 #define APP_TYPE_SHA1 0x2 
 
 struct nuv2_authreq {
-    uint16_t packet_id;
+    uint16_t packet_seq;
     uint16_t packet_length; /*!< Length of the whole packet including this header */
 };
 
