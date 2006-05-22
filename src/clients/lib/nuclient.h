@@ -174,24 +174,26 @@ enum
 
 typedef struct {
 	/*--------------- PUBLIC MEMBERS -------------------*/
-	u_int8_t protocol; /** Version of nuauth protocol (equals to #PROTO_VERSION) */
+	u_int8_t protocol; /*!< Version of nuauth protocol (#PROTO_VERSION) */
 
-	unsigned long localuserid; /** Local user identifier (getuid()) */
-	char *username;  /** Username, stored in UTF-8 */
-	char *password;  /** Password, stored in UTF-8 */
+	u_int32_t userid;  /*!< Local user identifier (getuid()) */
+	char *username;    /*!< Username (encoded in UTF-8) */
+	char *password;    /*!< Password,(encoded in UTF-8) */
 	
-        gnutls_session tls; /** TLS session over TCP socket */
-	gnutls_certificate_credentials cred; /** TLS credentials */
+    gnutls_session tls; /*!< TLS session over TCP socket */
+	gnutls_certificate_credentials cred; /*!< TLS credentials */
 
-	char* (*username_callback)(); /** Callback used to get username */
-	char* (*passwd_callback)();   /** Callback used to get password */
-	char* (*tls_passwd_callback)(); /** Callback used to get TLS password */
+	char* (*username_callback)();   /*!< Callback used to get username */
+	char* (*passwd_callback)();     /*!< Callback used to get password */
+	char* (*tls_passwd_callback)(); /*!< Callback used to get TLS password */
 	
-	int socket;              /** TCP socket used to exchange message with nuauth */
-	conntable_t *ct;         /** connection table */
-	unsigned long packet_id; /** packet sequence number (start at zero) */
-        int auth_by_default;
-	unsigned char mode;
+	int socket;              /*!< TCP socket used to exchange message with nuauth */
+	conntable_t *ct;         /*!< Connection table */
+	unsigned long packet_id; /*!< Packet sequence number (start at zero) */
+    int auth_by_default;     /*!< Auth. by default (=1) */
+
+    /** Server mode: #SRV_TYPE_POLL or #SRV_TYPE_PUSH */
+	u_int8_t server_mode;
 	
 	/*------------- PRIVATE MEMBERS ----------------*/
 	pthread_mutex_t mutex;
@@ -203,7 +205,9 @@ typedef struct {
 	int count_msg_cond;
 	pthread_t checkthread;
 	pthread_t recvthread;
-	time_t timestamp_last_sent; /** Timestamp (Epoch format) of last packet send to nuauth */
+
+    /** Timestamp (Epoch format) of last packet send to nuauth */
+	time_t timestamp_last_sent;
 } NuAuth;
 
 /** Error family */

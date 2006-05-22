@@ -195,7 +195,7 @@ void nu_exit_clean(NuAuth * session)
 	if (session->password){
 		free(session->password);
 	}
-	if (session->mode == SRV_TYPE_PUSH){
+	if (session->server_mode == SRV_TYPE_PUSH){
 		pthread_mutex_destroy(&(session->check_count_mutex));
 		pthread_cond_destroy(&(session->check_cond));
 	}
@@ -573,13 +573,13 @@ int send_os(NuAuth * session, nuclient_error *err)
 		errno=EACCES;
 		SET_ERROR(err, GNUTLS_ERROR, ret);
 		return 0;
-	} else {
-		if (*buf == SRV_TYPE) {
-			session->mode=*(buf+1);
-		} else {
-			session->mode=SRV_TYPE_POLL;
-		}
 	}
+    
+    if (buf[0] == SRV_TYPE) {
+        session->server_mode = buf[1];
+    } else {
+        session->server_mode = SRV_TYPE_POLL;
+    }
 	return 1;
 }
 
@@ -900,9 +900,9 @@ NuAuth* nu_client_init2(
 	}
 
 	/* Set basic fields */
-	session->localuserid = getuid();
+	session->userid = getuid();
 	session->connected = 1;
-        session->count_msg_cond = -1;
+    session->count_msg_cond = -1;
 	session->auth_by_default = 1;
 	session->packet_id = 0;
 	session->tls=NULL;
@@ -965,7 +965,7 @@ void ask_session_end(NuAuth* session)
 			pthread_cancel(session->recvthread);
 			pthread_join(session->recvthread,NULL);
 		}
-		if (session->mode == SRV_TYPE_PUSH) {
+		if (session->server_mode == SRV_TYPE_PUSH) {
 			if(! pthread_equal(session->checkthread,self_thread)){
 				pthread_cancel(session->checkthread);
 				pthread_join(session->checkthread,NULL);
@@ -973,7 +973,7 @@ void ask_session_end(NuAuth* session)
 		}
 		pthread_mutex_unlock(&(session->mutex));
 		if (pthread_equal(session->recvthread,self_thread) ||
-				((session->mode == SRV_TYPE_PUSH) && pthread_equal(session->checkthread,self_thread))
+				((session->server_mode == SRV_TYPE_PUSH) && pthread_equal(session->checkthread,self_thread))
 		   ) {
 			pthread_exit(NULL);
 		}

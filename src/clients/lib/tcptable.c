@@ -110,7 +110,7 @@ int parse_tcptable_file(NuAuth* session, conntable_t *ct, char *filename, FILE *
         panic ("%s: missing header!", filename);
 
     /* convert session user identifier to string */
-    secure_snprintf(session_uid, sizeof(session_uid), "%5lu", session->localuserid);
+    secure_snprintf(session_uid, sizeof(session_uid), "%5lu", session->userid);
     session_uid_len = strlen(session_uid);
 
     /* get state field position in header */
@@ -231,7 +231,7 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
   assert (ct != NULL);
   assert (TCP_SYN_SENT == 2);
 #endif
-  if ( session->mode==SRV_TYPE_PUSH){
+  if ( session->server_mode == SRV_TYPE_PUSH){
       /* need to set check_cond */
       pthread_mutex_lock(&(session->check_count_mutex));
       session->count_msg_cond=0;
@@ -284,7 +284,7 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
       return 0;
   }
 
-  if ( session->mode==SRV_TYPE_PUSH){
+  if ( session->server_mode == SRV_TYPE_PUSH){
       /* need to set check_cond */
       pthread_mutex_lock(session->check_count_mutex);
       session->count_msg_cond=0;

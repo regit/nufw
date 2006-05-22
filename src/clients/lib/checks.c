@@ -118,20 +118,16 @@ void* recv_message(void *data)
 /**
  * Function call by client to initiate a check
  *
- *
  * It is in charge of cleaning session as the session may be used
  * by user and we have no control of it. It has to be called for the first
  * time AFTER all forks occurs to create the working threads. This is 
  * mandatory and occurs because fork does not replicate the threads.
  * 
- * - In poll mode :
- * 	this is just a wrapper to nu_client_real_check
- * - In push mode :
- * 	It is used to send HELLO message
+ *   - Poll mode: this is just a wrapper to nu_client_real_check
+ *   - Push mode: It is used to send HELLO message
  * 
  * Return -1 if a problem occurs. Session is destroyed if nu_client_check return -1;
  */
-
 int nu_client_check(NuAuth * session, nuclient_error *err)
 {
 		pthread_mutex_lock(&(session->mutex));
@@ -145,7 +141,7 @@ int nu_client_check(NuAuth * session, nuclient_error *err)
                 } 
                 /* test if we need to create the working thread */
                 if (session->count_msg_cond == -1){ /* if set to -1 then we've just leave init */
-			if (session->mode == SRV_TYPE_PUSH) {
+			if (session->server_mode == SRV_TYPE_PUSH) {
 				pthread_mutex_init(&(session->check_count_mutex),NULL);
 				pthread_cond_init(&(session->check_cond),NULL);
 				pthread_create(&(session->checkthread), NULL, nu_client_thread_check, session);
@@ -154,7 +150,7 @@ int nu_client_check(NuAuth * session, nuclient_error *err)
 		}
 	
 		pthread_mutex_unlock(&(session->mutex));
-		if (session->mode == SRV_TYPE_POLL) {
+		if (session->server_mode == SRV_TYPE_POLL) {
 			int checkreturn;
 			checkreturn = nu_client_real_check(session, err);
 			if (checkreturn == -1){
