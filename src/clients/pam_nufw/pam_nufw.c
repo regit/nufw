@@ -256,7 +256,7 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
           return PAM_SUCCESS;
       }else{
           /* session opened to nuauth */
-          syslog(LOG_INFO,"(pam_nufw) session to NuAuth server open, username=%s, server=%s",session->username,pn_s.nuauth_srv);
+          syslog(LOG_INFO,"(pam_nufw) session to NuAuth server opened, username=%s, server=%s",session->username,pn_s.nuauth_srv);
           /* write pid in lockfile */
           int mypid;
           FILE* RunD;
@@ -281,8 +281,14 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
                           NULL,
                           err
                           );
-                  if (session!=NULL){
-                      tempo=1;
+                  if (session==NULL){/* quit if password is wrong. to not lock user account */
+                      syslog(LOG_ERR,"(pam_nufw) unable to reconnect to server: %s",nuclient_strerror(err));
+                      if (err->error == BAD_CREDENTIALS_ERR){
+                            syslog(LOG_ERR,"(pam_nufw) bad credentials: leaving");
+                            exit_client();
+                      }
+                  }else{
+                      tempo = 1;
                   }
               } else {
                   if (nu_client_check(session,err)<0){
