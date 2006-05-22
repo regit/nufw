@@ -2,7 +2,7 @@
 	- nuauth : fix period handling
 	- libnuclient : fix crash when specified hostname is unvalid
 	- nutcpc : do not try to reconnect if password has changed, this will
-	  avoid to block account after multiple retry
+	  avoid to block user account after multiple retries
 	- pam_nufw : initial release
 2.0-rc2 (2006/05/15)
 	- nuauth : add sanity check on type of field contained in a packet
