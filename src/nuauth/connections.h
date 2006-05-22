@@ -69,7 +69,7 @@ typedef struct {
   struct in6_addr saddr;    /*!< IPv6 source address */
   struct in6_addr daddr;    /*!< IPv6 destination address */
   u_int8_t protocol;        /*!< IP protocol */
-  char padding[1];          /*!< Padding to 32 bits alignment */
+  u_int8_t padding;         /*!< Padding to 32 bits alignment */
   u_int16_t dest;           /*!< TCP/UDP destination port */
 
   u_int16_t source;         /*!< TCP/UDP source port */
