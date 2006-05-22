@@ -59,14 +59,17 @@ int send_hello_pckt(NuAuth * session){
     return 1;
 }
 
-/*
- * send_user_pckt
+
+/**
+ * Send connections to nuauth: between 1 and #CONN_MAX connections
+ * in a big packet of format:
+ *   [ nuv2_header + nuv2_authfield_ipv6 * N ]
  */
 int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
 {
   char datas[PACKET_SIZE];
   char *pointer;
-  int item;
+  unsigned int item;
   struct nuv2_header *header;
   struct nuv2_authreq *authreq;
   struct nuv2_authfield_ipv6 *authfield;
@@ -83,10 +86,10 @@ int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
   }
 
   header = (struct nuv2_header *)datas;
-  header->proto=PROTO_VERSION;
-  header->msg_type=USER_REQUEST;
-  header->option=0;
-  header->length=sizeof(struct nuv2_header);
+  header->proto = PROTO_VERSION;
+  header->msg_type = USER_REQUEST;
+  header->option = 0;
+  header->length = sizeof(struct nuv2_header);
   pointer = (char*)(header + 1);
 
   for (item=0; ((item<CONN_MAX) && carray[item] != NULL); item++)

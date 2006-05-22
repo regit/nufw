@@ -398,9 +398,8 @@ int main (int argc, char *argv[])
 			NULL,
 			&get_username,
 			&get_password,
-			NULL,
-                        err
-			);
+            NULL,
+            err);
 
 	if (!session){
 		printf("\nCan not initiate connection to NuFW gateway\n");
@@ -478,9 +477,8 @@ int main (int argc, char *argv[])
 					NULL,
 					&get_username,
 					&get_password,
-					NULL,
-                                        err
-					);
+                    NULL,
+                    err);
 			if (session!=NULL){
 				tempo=1;
 			}else{

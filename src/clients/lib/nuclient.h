@@ -103,8 +103,8 @@ extern "C" {
 #define CONNTABLE_BUCKETS 5003
 #endif
 
-/** Default address (IPv4) of nuauth */
-#define NUAUTH_IP "2002::192.168.1.1"
+/** Default nuauth IP address */
+#define NUAUTH_IP "192.168.1.1"
 
 /** Default filename of key */
 #define KEYFILE "key.pem"
@@ -120,18 +120,18 @@ extern "C" {
  */
 typedef struct conn 
 {
-    unsigned int protocol;     /** IPv4 protocol */
-    struct in6_addr ip_src;    /** Local address IPv4 */
-    unsigned short port_src;   /** Local address port */
-    struct in6_addr ip_dst;    /** Remote address IPv4 */
-    unsigned short port_dst;   /** Remote address port */
-    unsigned long uid;         /** User identifier */
-    unsigned long inode;       /** Inode */
-    unsigned int retransmit;   /** Restransmit */
-    time_t createtime;         /** Creation time (Epoch format) */
+    unsigned int protocol;     /*!< IPv4 protocol */
+    struct in6_addr ip_src;    /*!< Local address IPv4 */
+    unsigned short port_src;   /*!< Local address port */
+    struct in6_addr ip_dst;    /*!< Remote address IPv4 */
+    unsigned short port_dst;   /*!< Remote address port */
+    unsigned long uid;         /*!< User identifier */
+    unsigned long inode;       /*!< Inode */
+    unsigned int retransmit;   /*!< Restransmit */
+    time_t createtime;         /*!< Creation time (Epoch format) */
 
     /** Pointer to next connection (NULL if it's as the end) */
-    struct conn *next;        
+    struct conn *next;
 } conn_t;
 
 /**
@@ -183,8 +183,8 @@ typedef struct {
     gnutls_session tls; /*!< TLS session over TCP socket */
 	gnutls_certificate_credentials cred; /*!< TLS credentials */
 
-	char* (*username_callback)();   /*!< Callback used to get username */
-	char* (*passwd_callback)();     /*!< Callback used to get password */
+	char* (*username_callback)();   /*!< Callback used to get user name */
+	char* (*passwd_callback)();     /*!< Callback used to get user password */
 	char* (*tls_passwd_callback)(); /*!< Callback used to get TLS password */
 	
 	int socket;              /*!< TCP socket used to exchange message with nuauth */
@@ -253,15 +253,21 @@ void nu_client_global_init(nuclient_error *err);
 void nu_client_global_deinit(nuclient_error *err);
 
 NuAuth* nu_client_init2(
-		const char *hostname, 
-                const char *service,
-		char* keyfile, 
-                char* certfile,
-		void* username_callback,
-                void * passwd_callback, 
-                void* tlscred_callback,
-                nuclient_error *err
-		);
+        const char *hostname, /*!< Nuauth hostname (default: #NUAUTH_IP) */
+        const char *service,  /*!< Nuauth port service (default: #USERPCKT_PORT) */
+        char* keyfile,        /*!< Client key filename (can be NULL) */ 
+        char* certfile,       /*!< Client certificate filename (can be NULL) */
+        
+        /** Callback to get user name, prototype: char* func() */
+        void* username_callback,
+        
+        /** Callback to get user password, prototype: char* func() */
+        void * passwd_callback, 
+        
+        /** Callback to get TLS password, prototype: char* func() */
+        void * tls_passwd_callback, 
+        
+        nuclient_error *err); /*!< Structure to store error (if any) */
 
 const char* nuclient_strerror (nuclient_error *err);
 

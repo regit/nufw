@@ -880,11 +880,14 @@ int tls_handshake(NuAuth * session, nuclient_error *err)
  * If everything is ok, create the connection table using tcptable_init(). 
  */
 NuAuth* nu_client_init2(
-		const char *hostname, const char *service,
-		char* keyfile, char* certfile,
-		void* username_callback,void * passwd_callback, 
-                void* tlscred_callback, nuclient_error *err
-		)
+        const char *hostname, 
+        const char *service,
+        char* keyfile, 
+        char* certfile,
+        void* username_callback,
+        void* passwd_callback, 
+        void* tls_passwd_callback, 
+        nuclient_error *err)
 {
 	conntable_t *new;
 	NuAuth * session;
@@ -910,7 +913,7 @@ NuAuth* nu_client_init2(
 	session->protocol = PROTO_VERSION;
 	session->username_callback = username_callback;
 	session->passwd_callback = passwd_callback;
-	session->tls_passwd_callback = tlscred_callback;
+	session->tls_passwd_callback = tls_passwd_callback;
 	session->timestamp_last_sent = time(NULL);
 
 	/* create session mutex */
