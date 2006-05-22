@@ -21,7 +21,7 @@
  */
 
 
-#define _GNU_SOURCE
+/*#define _GNU_SOURCE*/
 #include "../lib/nuclient.h"
 #include <stdio.h>
 #include <syslog.h>
@@ -163,6 +163,7 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
   struct sigaction no_action;
   const char *user = NULL;
   const char *password = NULL;
+  const void *password2 = NULL;
   int uid,gid=0;
   NuAuth *session;
   struct passwd *pw;
@@ -189,10 +190,11 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
       pam_set_item(pamh, PAM_USER, (const void *) DEFAULT_USER);
   }
 
-  if (pam_get_item(pamh, PAM_AUTHTOK, (const void **)&password) == PAM_SUCCESS){
+  if (pam_get_item(pamh, PAM_AUTHTOK, &password2) == PAM_SUCCESS){
 #ifdef DEBUG
       /*syslog(LOG_INFO, "(pam_nufw) got password %s.",password);*/
 #endif
+      password = (char *) password2;
       if (password == NULL)
           syslog(LOG_ERR, "(pam_nufw) password is NULL!");
   }else{
@@ -285,6 +287,7 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
               } else {
                   if (nu_client_check(session,err)<0){
                       session=NULL;
+                      syslog(LOG_ERR,"(pam_nufw) libnuclient error: %s",nuclient_strerror(err));
                   }
               }
           }
