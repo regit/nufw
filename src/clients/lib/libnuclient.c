@@ -540,20 +540,27 @@ int send_os(NuAuth * session, nuclient_error *err)
 	int osfield_length;
 	int ret;
 
-	/* get info */
+    /* read OS informations */
 	uname(&info);
-	/* build packet */
-	stringlen=strlen(info.sysname)+strlen(info.release)+strlen(info.version)+3;
-	oses=alloca(stringlen);
-	enc_oses=calloc(4*stringlen,sizeof(char));
-	(void)secure_snprintf(oses,stringlen,"%s;%s;%s",info.sysname, info.release, info.version);
-	if (sasl_encode64(oses,strlen(oses),enc_oses,4*stringlen,&actuallen) == SASL_BUFOVER){
+
+    /* encode OS informations in base64 */
+	stringlen = strlen(info.sysname)+strlen(info.release)+strlen(info.version)+3;
+	oses = alloca(stringlen);
+	enc_oses = calloc(4*stringlen,sizeof(char));
+	(void)secure_snprintf(oses, stringlen,
+                          "%s;%s;%s",
+                          info.sysname, info.release, info.version);
+	if (sasl_encode64(oses,strlen(oses), enc_oses, 4*stringlen, &actuallen) == SASL_BUFOVER){
 		enc_oses=realloc(enc_oses,actuallen);
 		sasl_encode64(oses,strlen(oses),enc_oses,actuallen,&actuallen);
 	}
+
+    /* build packet header */
 	osfield.type=OS_FIELD;
 	osfield.option=OS_SRV;
 	osfield.length=4+actuallen;
+
+    /* add packet body */
 	buf=alloca(osfield.length);
 	osfield_length=osfield.length;
 	osfield.length=htons(osfield.length);
@@ -562,6 +569,8 @@ int send_os(NuAuth * session, nuclient_error *err)
 	pointer+=sizeof osfield;
 	memcpy(pointer,enc_oses,actuallen);
 	free(enc_oses);
+
+    /* Send OS field over network */
 	ret = gnutls_record_send(session->tls,buf,osfield_length);
 	if (ret < 0)
 	{
