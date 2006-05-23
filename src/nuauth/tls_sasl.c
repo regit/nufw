@@ -79,7 +79,7 @@ static void tls_sasl_connect_ok(user_session_t* c_session, int c)
             
         case POLICY_PER_IP_ONE_LOGIN:
             /* Allow only an user session per IP (test connection IP) */
-            if (get_client_sockets_by_ip(c_session->addr) ){
+            if (get_client_sockets_by_ip(&c_session->addr) ){
                 policy_refuse_user(c_session,c);
                 return;
             }
@@ -163,7 +163,7 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
     c_session->tls = session;
     c_session->socket=c;
     c_session->tls_lock = g_mutex_new();
-    c_session->addr = ((struct client_connection*)userdata)->addr.sin_addr.s_addr;
+    c_session->addr = ((struct client_connection*)userdata)->addr;
     c_session->groups = NULL;
     c_session->user_name = NULL;
     c_session->user_id = 0;

@@ -65,14 +65,12 @@ struct acl_key {
  * Params : a "struct acl_key"
  * Return : the associated key
  */
-
-inline  guint hash_acl(gconstpointer key)
+inline guint32 hash_acl(gconstpointer key)
 {
-	tracking_t* headers=((struct acl_key*)key)->acl_tracking;
-	return (jhash_3words(headers->saddr,
-				(headers->daddr ^ headers->protocol),
-				(headers->dest << 16),
-				32));
+    tracking_t *tracking = (tracking_t *)((struct acl_key*)key)->acl_tracking;
+    return jhash2((guint32 *)tracking, 
+        (sizeof(struct in6_addr)*2 +4)/4, 
+        0);
 }
 
 /**
@@ -86,8 +84,8 @@ gboolean compare_tracking(gconstpointer a, gconstpointer b){
     tracking_t *tracking1 = (tracking_t *)a;
     tracking_t *tracking2 = (tracking_t *)b;
     
-	/* compare IP source address */
-	if (tracking1->saddr != tracking2->saddr) return FALSE;
+    /* compare IP source address */
+    if (memcmp(&tracking1->saddr, &tracking2->saddr, sizeof(tracking1->saddr)) != 0) return FALSE;
 
     /* compare proto */
     if (tracking1->protocol !=
@@ -97,14 +95,14 @@ gboolean compare_tracking(gconstpointer a, gconstpointer b){
     switch ( tracking1->protocol) {
         case IPPROTO_TCP:
             if (tracking1->dest == tracking2->dest
-                && tracking1->daddr == tracking2->daddr) 
+                && memcmp(&tracking1->daddr, &tracking2->daddr, sizeof(tracking1->daddr)) != 0)
                 return TRUE;
             else
                 return FALSE;
 
         case IPPROTO_UDP:
             if (tracking1->dest == tracking2->dest
-                && tracking1->daddr == tracking2->daddr) 
+                && memcmp(&tracking1->daddr, &tracking2->daddr, sizeof(tracking1->daddr)) != 0)
                 return TRUE;
             else
                 return FALSE;
@@ -112,7 +110,7 @@ gboolean compare_tracking(gconstpointer a, gconstpointer b){
         case IPPROTO_ICMP:
             if (tracking1->type == tracking2->type
                 && tracking1->code == tracking2->code
-                && tracking1->daddr == tracking2->daddr) 
+                && memcmp(&tracking1->daddr, &tracking2->daddr, sizeof(tracking1->daddr)) != 0)
                 return TRUE;
             else
                 return FALSE;

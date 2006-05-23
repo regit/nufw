@@ -35,7 +35,6 @@ int build_nuauthconf(struct nuauth_params * nuauthconf,
                 char* nuauth_multi_users,
                 char* nuauth_multi_servers)
 {
-  struct hostent *nufw_list_srv, *client_list_srv;
   if((!  nuauthconf->push) && nuauthconf->hello_authentication ){
       g_message("nuauth_hello_authentication required nuauth_push to be 1, resetting to 0");
       nuauthconf->hello_authentication=0;
@@ -47,34 +46,47 @@ int build_nuauthconf(struct nuauth_params * nuauthconf,
   }
 
   /* hostname conversion */
-  if (nuauth_client_listen_addr){
-      client_list_srv=gethostbyname(nuauth_client_listen_addr);
-      if (client_list_srv != NULL){
-          nuauthconf->client_srv=g_memdup(client_list_srv->h_addr_list[0],sizeof(struct in_addr));
+  if (nuauth_client_listen_addr != NULL)
+  {
+      struct addrinfo *res;
+      struct addrinfo hints;
+      int ecode;
 
-          if (nuauthconf->client_srv->s_addr == INADDR_NONE ){
-              log_message(CRITICAL, AREA_MAIN, "Bad Address was passed for client listening address. Ignored. Using INADDR_ANY instead!");
-              nuauthconf->client_srv->s_addr = INADDR_ANY;
-          }
+      memset(&hints, 0, sizeof hints);
+      hints.ai_flags = AI_PASSIVE;
+      hints.ai_socktype = SOCK_STREAM;
+      hints.ai_family = PF_UNSPEC;
+      ecode = getaddrinfo(nuauth_client_listen_addr, NULL, &hints, &res);
+      if (ecode != 0)
+      {
+          g_error("Bad Address was passed for client listening address: %s\n",
+                  gai_strerror(ecode));
+          exit(EXIT_SUCCESS);
+          nuauthconf->client_srv = in6addr_any;
       } else {
-          log_message(CRITICAL, AREA_MAIN, "Can not resolve client listening address (%s). Ignored. Using INADDR_ANY instead!", nuauth_client_listen_addr);
-          nuauthconf->client_srv->s_addr = INADDR_ANY;
+          memcpy(&nuauthconf->client_srv, &res->ai_addr, res->ai_addrlen);
       }
   }
 
   /* hostname conversion */
-  if (nuauth_nufw_listen_addr){
-      nufw_list_srv=gethostbyname(nuauth_nufw_listen_addr);
-      if (nufw_list_srv != NULL){
-          nuauthconf->nufw_srv=g_memdup(nufw_list_srv->h_addr_list[0], sizeof(struct in_addr));
+  if (nuauth_nufw_listen_addr != NULL){
+      struct addrinfo *res;
+      struct addrinfo hints;
+      int ecode;
 
-          if (nuauthconf->nufw_srv->s_addr == INADDR_NONE ){
-              log_message(CRITICAL, AREA_MAIN, "Bad Address was passed for nufw listening address. Ignored. Using INADDR_ANY instead!");
-              nuauthconf->nufw_srv->s_addr = INADDR_ANY;
-          }
+      memset(&hints, 0, sizeof hints);
+      hints.ai_flags = AI_PASSIVE;
+      hints.ai_socktype = SOCK_STREAM;
+      hints.ai_family = PF_UNSPEC;
+      ecode = getaddrinfo(nuauth_nufw_listen_addr, NULL, &hints, &res);
+      if (ecode != 0)
+      {
+          g_error("Bad Address was passed for nufw listening address: %s\n",
+                  gai_strerror(ecode));
+          exit(EXIT_SUCCESS);
+          nuauthconf->nufw_srv = in6addr_any;
       } else {
-          log_message(CRITICAL, AREA_MAIN, "Bad Address was passed for nufw listening address. Ignored. Using INADDR_ANY instead!");
-          nuauthconf->nufw_srv->s_addr = INADDR_ANY;
+          memcpy(&nuauthconf->nufw_srv, &res->ai_addr, res->ai_addrlen);
       }
   }
 
@@ -105,8 +117,8 @@ void init_nuauthconf(struct nuauth_params **result)
   confparams nuauth_vars[] = {
       { "nuauth_client_listen_addr" ,  G_TOKEN_STRING, 0 , g_strdup(AUTHREQ_CLIENT_LISTEN_ADDR) },
       { "nuauth_nufw_listen_addr" ,  G_TOKEN_STRING, 0 , g_strdup(AUTHREQ_NUFW_LISTEN_ADDR) },
-      { "nuauth_gw_packet_port" , G_TOKEN_INT , AUTHREQ_PORT,NULL },
-      { "nuauth_user_packet_port" , G_TOKEN_INT , USERPCKT_PORT ,NULL},
+      { "nuauth_gw_packet_port" , G_TOKEN_STRING, 0, g_strdup(AUTHREQ_PORT) },
+      { "nuauth_user_packet_port" , G_TOKEN_STRING , 0, g_strdup(USERPCKT_PORT) },
       { "nufw_gw_addr" , G_TOKEN_STRING , 0, g_strdup(GWSRV_ADDR) },
       { "nuauth_packet_timeout" , G_TOKEN_INT , PACKET_TIMEOUT, NULL },
       { "nuauth_session_duration" , G_TOKEN_INT , SESSION_DURATION, NULL },
@@ -146,7 +158,6 @@ void init_nuauthconf(struct nuauth_params **result)
 
   conf=g_new0(struct nuauth_params,1);
   *result = conf;
-
   
   /* parse conf file */
   parse_conffile(DEFAULT_CONF_FILE, nb_params, nuauth_vars);
@@ -159,9 +170,9 @@ void init_nuauthconf(struct nuauth_params **result)
   gwsrv_addr = (char *)READ_CONF("nufw_gw_addr");
   nuauth_multi_users = (char *)READ_CONF("nuauth_multi_users");
   nuauth_multi_servers = (char *)READ_CONF("nuauth_multi_servers");
-
-  conf->authreq_port = *(int*)READ_CONF("nuauth_gw_packet_port");
-  conf->userpckt_port = *(int*)READ_CONF("nuauth_user_packet_port");
+  conf->authreq_port = (char *)READ_CONF("nuauth_gw_packet_port");
+  conf->userpckt_port = (char *)READ_CONF("nuauth_user_packet_port");
+  
   conf->nbuser_check = *(int*)READ_CONF("nuauth_number_usercheckers");
   conf->nbacl_check = *(int*)READ_CONF("nuauth_number_aclcheckers");
   conf->nbipauth_check = *(int*)READ_CONF("nuauth_number_ipauthcheckers");
@@ -206,8 +217,6 @@ void init_nuauthconf(struct nuauth_params **result)
 
 void free_nuauth_params(struct nuauth_params* data)
 {
-	g_free(data->nufw_srv);
-	g_free(data->client_srv);
 	g_free(data->authorized_servers);
 	g_strfreev(data->multi_users_array);
 	g_free(data->multi_servers_array);
@@ -280,12 +289,12 @@ void nuauth_reload( int signal ) {
 static struct nuauth_params* compare_and_update_nuauthparams(struct nuauth_params* current,struct nuauth_params* new)
 {
   gboolean restart=FALSE;
-  if( current->authreq_port != new->authreq_port ){
+  if( strcmp(current->authreq_port, new->authreq_port) != 0){
       g_warning("authreq_port has changed, please restart");
       restart=TRUE;
   }
 
-  if( current->userpckt_port != new->userpckt_port ){
+  if( strcmp(current->userpckt_port, new->userpckt_port) !=0 ){
       g_warning("userpckt_port has changed, please restart");
       restart=TRUE;
   }
@@ -325,14 +334,12 @@ static struct nuauth_params* compare_and_update_nuauthparams(struct nuauth_param
       restart=TRUE;
   }
 
-  if( (current->nufw_srv)->s_addr != (new->nufw_srv)->s_addr  ){
+  if( memcmp(&current->nufw_srv, &new->nufw_srv, sizeof(new->nufw_srv)) != 0  ){
       g_warning("nufw listening ip has changed, please restart");
-      g_message("was %s",inet_ntoa(*(current->nufw_srv)));
-      g_message("want %s",inet_ntoa(*(new->nufw_srv)));
       restart=TRUE;
   }
 
-  if( (current->client_srv)->s_addr != (new->client_srv)->s_addr  ){
+  if( memcmp(&current->client_srv, &new->client_srv, sizeof(new->client_srv)) != 0 ){
       g_warning("client listening ip has changed, please restart");
       restart=TRUE;
   }

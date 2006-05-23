@@ -50,7 +50,7 @@ typedef void (*pthread_cleanup_push_arg1_t) (void *);
 
 void* recv_message(void *data)
 {
-        NuAuth* session=(NuAuth*)data;
+    NuAuth* session=(NuAuth*)data;
 	int ret;
 	char dgram[512];
 	const size_t message_length= sizeof(struct nuv2_header)+sizeof(struct nuv2_authfield_hello)+sizeof(struct nuv2_authreq);
@@ -60,14 +60,14 @@ void* recv_message(void *data)
 	struct nuv2_authfield_hello *hellofield;
 
 	/* fill struct */
-        header = (struct nuv2_header *)message;
+    header = (struct nuv2_header *)message;
 	header->proto=PROTO_VERSION;
 	header->msg_type=USER_REQUEST;
 	header->option=0;
 	header->length=htons(message_length);
 
-     authreq = (struct nuv2_authreq *)(header + 1);
-	authreq->packet_id=session->packet_id++;
+    authreq = (struct nuv2_authreq *)(header + 1);
+	authreq->packet_seq = session->packet_seq++;
 	authreq->packet_length = htons(sizeof(struct nuv2_authreq)+sizeof(struct nuv2_authfield_hello));
 
     hellofield = (struct nuv2_authfield_hello *)(authreq + 1);
@@ -137,13 +137,10 @@ void* recv_message(void *data)
  * time AFTER all forks occurs to create the working threads. This is 
  * mandatory and occurs because fork does not replicate the threads.
  * 
- * - In poll mode :
- * 	this is just a wrapper to nu_client_real_check
- * - In push mode :
- * 	It is used to send HELLO message
+ *  - Poll mode: this is just a wrapper to nu_client_real_check
+ *  - Push mode: It is used to send HELLO message
  *
  */
-
 int nu_client_check(NuAuth * session, nuclient_error *err)
 {
 		pthread_mutex_lock(&(session->mutex));
@@ -157,7 +154,7 @@ int nu_client_check(NuAuth * session, nuclient_error *err)
                 } 
                 /* test if we need to create the working thread */
                 if (session->count_msg_cond == -1){ /* if set to -1 then we've just leave init */
-			if (session->mode == SRV_TYPE_PUSH) {
+			if (session->server_mode == SRV_TYPE_PUSH) {
 				pthread_mutex_init(&(session->check_count_mutex),NULL);
 				pthread_cond_init(&(session->check_cond),NULL);
 				pthread_create(&(session->checkthread), NULL, nu_client_thread_check, session);
@@ -166,7 +163,7 @@ int nu_client_check(NuAuth * session, nuclient_error *err)
 		}
 	
 		pthread_mutex_unlock(&(session->mutex));
-		if (session->mode == SRV_TYPE_POLL) {
+		if (session->server_mode == SRV_TYPE_POLL) {
 			int checkreturn;
 			checkreturn = nu_client_real_check(session, err);
 			if (checkreturn == -1){

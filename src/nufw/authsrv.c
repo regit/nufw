@@ -45,13 +45,14 @@ void auth_process_answer(char *dgram, int dgram_size)
     }
     answer = (nuauth_decision_response_t *)dgram;
 
+
     /* check payload length */
     payload_len = ntohs(answer->payload_len);
     if (dgram_size < (int)(sizeof(nuauth_decision_response_t) + payload_len)
-            || ((payload_len != 0) && (payload_len != (20+8))))
+            || ((payload_len != 0) && (payload_len != (20+8)) && (payload_len != (40+8))))
     {
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING, 
-                "Packet with improper size");
+                "[!] Packet with improper size");
         return;
     }
     
@@ -66,7 +67,7 @@ void auth_process_answer(char *dgram, int dgram_size)
     if (!sandf)
     {
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING, 
-                "Packet without a known ID: %u", packet_id);
+                "[!] Packet without a known ID: %u", packet_id);
         return;
     }
 
@@ -75,11 +76,11 @@ void auth_process_answer(char *dgram, int dgram_size)
     case DECISION_ACCEPT:
         /* accept packet */
         debug_log_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
-                "Accepting packet with id=%u", packet_id);
+                "(*) Accepting packet with id=%u", packet_id);
 #if HAVE_LIBIPQ_MARK || USE_NFQUEUE
         if (nufw_set_mark) {
             debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
-                    "Marking packet with %d",
+                    "(*) Marking packet with %d",
                     user_id);
             /* we put the userid mark at the end of the mark, not changing the 16 first big bits */
             nfmark = (nfmark & 0xffff0000 ) | user_id;
@@ -96,7 +97,7 @@ void auth_process_answer(char *dgram, int dgram_size)
     case DECISION_REJECT:
         /* Packet is rejected, ie. dropped and ICMP signalized */
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
-                "Rejecting %lu", packet_id);
+                "(*) Rejecting %lu", packet_id);
         IPQ_SET_VERDICT(packet_id, NF_DROP);
         send_icmp_unreach(dgram + sizeof(nuauth_decision_response_t));
         break;
@@ -104,21 +105,42 @@ void auth_process_answer(char *dgram, int dgram_size)
     default:
         /* drop packet */
         debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
-                "Drop packet %u", packet_id);
+                "(*) Drop packet %u", packet_id);
         IPQ_SET_VERDICT(packet_id, NF_DROP);
     }
 }    
 
 #ifdef HAVE_LIBCONNTRACK
 
+/**
+ * Check if a IPv6 address is a IPv4 or not.
+ *
+ * \return 1 for IPv4 and 0 for IPv6
+ */
+int is_ipv4(struct in6_addr *addr)
+{
+    if (addr->s6_addr32[2] != 0xffff0000)
+        return 0;
+    if (addr->s6_addr32[0] != 0 || addr->s6_addr32[1] != 0)
+        return 0;
+    return 1;
+}
+
 int build_nfct_tuple_from_message(struct nfct_tuple* orig,struct nu_conntrack_message_t* packet_hdr)
 {
-    orig->l3protonum = AF_INET;
-    orig->protonum = packet_hdr->ipv4_protocol;
-    orig->src.v4 = packet_hdr->ipv4_src;
-    orig->dst.v4 = packet_hdr->ipv4_dst;
+    orig->protonum = packet_hdr->ip_protocol;
+    if (is_ipv4(&packet_hdr->ip_src) && is_ipv4(&packet_hdr->ip_dst))
+    {
+        orig->l3protonum = AF_INET;
+        orig->src.v4 = packet_hdr->ip_src.s6_addr32[3];
+        orig->dst.v4 = packet_hdr->ip_dst.s6_addr32[3];
+    } else {
+        orig->l3protonum = AF_INET6;
+        memcpy(&orig->src.v6, &packet_hdr->ip_src, sizeof(orig->src.v6));
+        memcpy(&orig->dst.v6, &packet_hdr->ip_dst, sizeof(orig->dst.v6));
+    }
 
-    switch (packet_hdr->ipv4_protocol)
+    switch (packet_hdr->ip_protocol)
     {
         case IPPROTO_TCP:
             orig->l4src.tcp.port=packet_hdr->src_port;  

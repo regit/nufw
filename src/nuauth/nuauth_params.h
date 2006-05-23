@@ -40,8 +40,8 @@ typedef enum
 struct nuauth_params
 {
     /* Sockets related */
-    int authreq_port;
-    int userpckt_port;
+    char* authreq_port;
+    char* userpckt_port;
 
     /* global configuration variables */
     int packet_timeout;
@@ -91,8 +91,8 @@ struct nuauth_params
     int push;
     int do_ip_authentication;
     int hello_authentication;
-    struct in_addr* nufw_srv;
-    struct in_addr* client_srv;
+    struct in6_addr nufw_srv;
+    struct in6_addr client_srv;
     
     /* cache setting */
     int datas_persistance;
@@ -100,9 +100,9 @@ struct nuauth_params
     int user_cache;  /* cache variables for user cache */
     
     /* Multi user related variables */
-    struct in_addr *authorized_servers;  /* authorized server list */
+    struct in6_addr *authorized_servers;  /* authorized server list */
     char** multi_users_array;            /* multi users clients */
-    struct in_addr * multi_servers_array;
+    struct in6_addr *multi_servers_array;
     
     /* period definition */
     GHashTable* periods;

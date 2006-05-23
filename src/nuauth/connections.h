@@ -55,7 +55,9 @@ typedef enum
 } tcp_state_t;
 
 #define PAYLOAD_SAMPLE 8
+#define PAYLOAD6_SAMPLE PAYLOAD_SAMPLE
 #define IPHDR_REJECT_LENGTH 20
+#define IP6HDR_REJECT_LENGTH 40
 /**
  * this is IPHDR_REJECT_LENGTH / 4
  */
@@ -66,16 +68,18 @@ typedef enum
  * identification.
  */
 typedef struct {
-  u_int32_t saddr;    /*!< IPv4 source address */
-  u_int32_t daddr;    /*!< IPv4 destination address */
-  u_int8_t protocol;  /*!< IPv4 protocol */
+  /* Group informations about destination to make
+   * ACL hash function faster. If you change this
+   * structure, please also change hash_acl() */
+  struct in6_addr saddr;    /*!< IPv6 source address */
+  struct in6_addr daddr;    /*!< IPv6 destination address */
+  u_int8_t protocol;        /*!< IP protocol */
+  u_int8_t padding;         /*!< Padding to 32 bits alignment */
+  u_int16_t dest;           /*!< TCP/UDP destination port */
 
-  u_int16_t source;   /*!< TCP/UDP source port */
-  u_int16_t dest;     /*!< TCP/UDP destination port */
-
-  u_int8_t type;      /*!< ICMP message type */
-  u_int8_t code;      /*!< ICMP code type */
-
+  u_int16_t source;         /*!< TCP/UDP source port */
+  u_int8_t type;            /*!< ICMP message type */
+  u_int8_t code;            /*!< ICMP code type */
   char payload[PAYLOAD_SAMPLE];  /*!< First 8 bytes of protocol payload used for ICMP reject */
 } tracking_t;
 

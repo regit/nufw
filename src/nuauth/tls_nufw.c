@@ -35,7 +35,6 @@
 struct tls_nufw_context_t {
     int mx;
     int sck_inet;
-    struct sockaddr_in addr_inet;
     fd_set tls_rx_set; /* read set */
 };
 
@@ -151,24 +150,37 @@ void clean_nufw_session(nufw_session_t * c_session)
 int tls_nufw_accept(struct tls_nufw_context_t *context) 
 {
     int conn_fd;
-    struct sockaddr_in addr_clnt;
+    struct sockaddr_storage sockaddr;
+    struct sockaddr_in *sockaddr4 = (struct sockaddr_in *)&sockaddr;
+    struct sockaddr_in6 *sockaddr6 = (struct sockaddr_in6 *)&sockaddr;
+    struct in6_addr addr;
+    char addr_ascii[INET6_ADDRSTRLEN];
     unsigned int len_inet;
     nufw_session_t *nu_session;
 
-    /*
-     * Wait for a connect
-     */
-    len_inet = sizeof addr_clnt;
+    /* Accept the connection */
+    len_inet = sizeof sockaddr;
     conn_fd = accept (context->sck_inet,
-            (struct sockaddr *)&addr_clnt,
+            (struct sockaddr *)&sockaddr,
             &len_inet);
     if (conn_fd == -1){
         log_message(WARNING, AREA_MAIN, "accept");
     }
+   
+    /* Extract client address (convert it to IPv6 if it's IPv4) */
+    if (sockaddr6->sin6_family == AF_INET) {
+        addr.s6_addr32[0] = 0;
+        addr.s6_addr32[1] = 0;
+        addr.s6_addr32[2] = 0xffff0000;
+        addr.s6_addr32[3] = ntohl(sockaddr4->sin_addr.s_addr);
+    } else {
+        addr = sockaddr6->sin6_addr;
+    }
 
     /* test if server is in the list of authorized servers */
-    if (! check_inaddr_in_array(addr_clnt.sin_addr,nuauthconf->authorized_servers)){
-        log_message(WARNING, AREA_MAIN, "unwanted server (%s)\n",inet_ntoa(addr_clnt.sin_addr));
+    if (!check_inaddr_in_array(&addr, nuauthconf->authorized_servers)){
+        if (inet_ntop(AF_INET6, &addr, addr_ascii, sizeof(addr_ascii)) != NULL)
+            log_message(WARNING, AREA_MAIN, "unwanted nufw server (%s)", addr_ascii);
         close(conn_fd);
         return 1;
     }
@@ -184,7 +196,7 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
     nu_session = g_new0(nufw_session_t, 1);
     nu_session->usage=0;
     nu_session->alive=TRUE;
-    nu_session->peername.s_addr=addr_clnt.sin_addr.s_addr;
+    nu_session->peername = addr;
     if (tls_connect(conn_fd,&(nu_session->tls)) == SASL_OK){
 	nu_session->tls_lock = g_mutex_new();
         g_mutex_lock(nufw_servers_mutex);
@@ -309,6 +321,21 @@ void tls_nufw_init(struct tls_nufw_context_t *context)
 {    
     int socket_fd;
     gint option_value;
+    struct addrinfo *res;
+    struct addrinfo hints;
+    int ecode;
+
+    memset(&hints, 0, sizeof hints);
+    hints.ai_flags = AI_PASSIVE;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_family = PF_UNSPEC;
+    ecode = getaddrinfo(NULL, nuauthconf->authreq_port, &hints, &res);
+    if (ecode != 0)
+    {
+	g_error("Fail to init. user server address: %s\n", gai_strerror(ecode));
+	exit(EXIT_SUCCESS);
+    }
+
 #if 0
     struct sigaction action;
 
@@ -348,7 +375,7 @@ void tls_nufw_init(struct tls_nufw_context_t *context)
 #endif
 
     /* open the socket */
-    context->sck_inet = socket (AF_INET, SOCK_STREAM, 0);
+    context->sck_inet = socket (res->ai_family, res->ai_socktype, res->ai_protocol);
     if (context->sck_inet == -1)
     {
         g_warning("socket() failed, exiting");
@@ -359,16 +386,10 @@ void tls_nufw_init(struct tls_nufw_context_t *context)
     setsockopt (context->sck_inet, SOL_SOCKET, SO_REUSEADDR, 
             &option_value,	sizeof(option_value));
 
-    memset(&context->addr_inet,0,sizeof context->addr_inet);
-    context->addr_inet.sin_family = AF_INET;
-    context->addr_inet.sin_port = htons(nuauthconf->authreq_port);
-    context->addr_inet.sin_addr.s_addr = nuauthconf->nufw_srv->s_addr;
-    socket_fd = bind (context->sck_inet,
-            (struct sockaddr *)&context->addr_inet,
-            sizeof context->addr_inet);
-    if (socket_fd == -1)
+    socket_fd = bind (context->sck_inet, res->ai_addr, res->ai_addrlen);
+    if (socket_fd < 0)
     {
-        g_warning ("nufw bind() failed to %s:%d, exiting",inet_ntoa(context->addr_inet.sin_addr),nuauthconf->authreq_port);
+        g_warning ("nufw bind() failed on port %s, exiting", nuauthconf->authreq_port);
         exit(EXIT_FAILURE);
     }
 

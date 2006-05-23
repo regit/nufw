@@ -109,7 +109,7 @@ extern "C" {
 #define CONNTABLE_BUCKETS 5003
 #endif
 
-/** Default address (IPv4) of nuauth */
+/** Default nuauth IP address */
 #define NUAUTH_IP "192.168.1.1"
 
 /** Default filename of key */
@@ -124,21 +124,34 @@ extern "C" {
  * We use unsigned int and long (instead of exact type) to make
  * hashing easier.
  */
-typedef struct conn {
-    unsigned int proto;        /** IPv4 protocol */
-    unsigned long lcl;         /** Local address IPv4 */
-    unsigned int lclp;         /** Local address port */
-    unsigned long rmt;         /** Remote address IPv4 */
-    unsigned int rmtp;         /** Remote address port */
-    unsigned long uid;         /** User identifier */
-    unsigned long ino;         /** Inode */
-    unsigned int retransmit;   /** Restransmit */
-    time_t createtime;         /** Creation time (Epoch format) */
+typedef struct conn 
+{
+    unsigned int protocol;     /*!< IPv4 protocol */
+    struct in6_addr ip_src;    /*!< Local address IPv4 */
+    unsigned short port_src;   /*!< Local address port */
+    struct in6_addr ip_dst;    /*!< Remote address IPv4 */
+    unsigned short port_dst;   /*!< Remote address port */
+    unsigned long uid;         /*!< User identifier */
+    unsigned long inode;       /*!< Inode */
+    unsigned int retransmit;   /*!< Restransmit */
+    time_t createtime;         /*!< Creation time (Epoch format) */
 
     /** Pointer to next connection (NULL if it's as the end) */
-    struct conn *next;        
+    struct conn *next;
 } conn_t;
 
+/**
+ * A connection table: hash table of single-linked connection lists,
+ * a list stops with NULL value.
+ *
+ * Methods:
+ *   - tcptable_init(): create a structure (allocate memory) ;
+ *   - tcptable_hash(): compute a connection hash (index in this table) ;
+ *   - tcptable_add(): add a new entry ;
+ *   - tcptable_find(): fin a connection in a table ;
+ *   - tcptable_read(): feed the table using /proc/net/ files (under Linux) ;
+ *   - tcptable_free(): destroy a table (free memory).
+ */
 typedef struct conntable {
 	conn_t *buckets[CONNTABLE_BUCKETS];
 } conntable_t;
@@ -147,7 +160,7 @@ typedef struct conntable {
 
 #ifndef USE_SHA1
 #  define PACKET_ITEM_MAXSIZE \
-     ( sizeof(struct nuv2_authreq) + sizeof(struct nuv2_authfield_ipv4) \
+     ( sizeof(struct nuv2_authreq) + sizeof(struct nuv2_authfield_ipv6) \
        + sizeof(struct nuv2_authfield_app) + PROGNAME_BASE64_WIDTH )
 #else
 #  error "TODO: Compute PACKET_ITEM_MAXSIZE with SHA1 checksum"
@@ -167,25 +180,26 @@ enum
 
 typedef struct {
 	/*--------------- PUBLIC MEMBERS -------------------*/
-	u_int8_t protocol; /** Version of nuauth protocol (equals to #PROTO_VERSION) */
+	u_int8_t protocol; /*!< Version of nuauth protocol (#PROTO_VERSION) */
 
-	unsigned long localuserid; /** Local user identifier (getuid()) */
-	char *username;  /** Username, stored in UTF-8 */
-	char *password;  /** Password, stored in UTF-8 */
+	u_int32_t userid;  /*!< Local user identifier (getuid()) */
+	char *username;    /*!< Username (encoded in UTF-8) */
+	char *password;    /*!< Password,(encoded in UTF-8) */
 	
-    gnutls_session tls; /** TLS session over TCP socket */
-	gnutls_certificate_credentials cred; /** TLS credentials */
+    gnutls_session tls; /*!< TLS session over TCP socket */
+	gnutls_certificate_credentials cred; /*!< TLS credentials */
 
-	char* (*username_callback)(); /** Callback used to get username */
-	char* (*passwd_callback)();   /** Callback used to get password */
-	char* (*tls_passwd_callback)(); /** Callback used to get TLS password */
+	char* (*username_callback)();   /*!< Callback used to get user name */
+	char* (*passwd_callback)();     /*!< Callback used to get user password */
+	char* (*tls_passwd_callback)(); /*!< Callback used to get TLS password */
 	
-	int socket;              /** TCP socket used to exchange message with nuauth */
-	struct sockaddr_in adr_srv; /** nuauth server address */
-	conntable_t *ct;         /** connection table */
-	unsigned long packet_id; /** packet sequence number (start at zero) */
-    int auth_by_default;
-	unsigned char mode;
+	int socket;              /*!< TCP socket used to exchange message with nuauth */
+	conntable_t *ct;         /*!< Connection table */
+	u_int32_t packet_seq;    /*!< Packet sequence number (start at zero) */
+    int auth_by_default;     /*!< Auth. by default (=1) */
+
+    /** Server mode: #SRV_TYPE_POLL or #SRV_TYPE_PUSH */
+	u_int8_t server_mode;
 	
 	/*------------- PRIVATE MEMBERS ----------------*/
 	pthread_mutex_t mutex;
@@ -197,7 +211,9 @@ typedef struct {
 	int count_msg_cond;
 	pthread_t checkthread;
 	pthread_t recvthread;
-	time_t timestamp_last_sent; /** Timestamp (Epoch format) of last packet send to nuauth */
+
+    /** Timestamp (Epoch format) of last packet send to nuauth */
+	time_t timestamp_last_sent;
 } NuAuth;
 
 /** Error family */
@@ -211,7 +227,6 @@ typedef enum
 /* INTERNAL ERROR CODES */
 enum
 {
-    NOERR = 0,
     NO_ERR  = 0,                     /** No error */
     SESSION_NOT_CONNECTED_ERR  = 1,  /** Session not connected */
     UNKNOWN_ERR = 2,                 /** Unkown error */
@@ -244,15 +259,21 @@ void    nu_client_global_init(nuclient_error *err);
 void    nu_client_global_deinit(nuclient_error *err);
 
 NuAuth* nu_client_init2(
-        const char *hostname, 
-        unsigned int port,
-        char* keyfile, 
-        char* certfile,
+        const char *hostname, /*!< Nuauth hostname (default: #NUAUTH_IP) */
+        const char *service,  /*!< Nuauth port service (default: #USERPCKT_PORT) */
+        char* keyfile,        /*!< Client key filename (can be NULL) */ 
+        char* certfile,       /*!< Client certificate filename (can be NULL) */
+        
+        /** Callback to get user name, prototype: char* func() */
         void* username_callback,
-        void * passwd_callback, 
-        void* tlscred_callback,
-        nuclient_error *err
-        );
+        
+        /** Callback to get user password, prototype: char* func() */
+        void* passwd_callback, 
+        
+        /** Callback to get TLS password, prototype: char* func() */
+        void* tls_passwd_callback, 
+        
+        nuclient_error *err); /*!< Structure to store error (if any) */
 
 const char* nu_client_strerror (nuclient_error *err);
 

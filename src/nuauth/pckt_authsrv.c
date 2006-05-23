@@ -31,6 +31,7 @@
 
 #include <auth_srv.h>
 #include <netinet/ip.h>
+#include <netinet/ip6.h>
 #include <netinet/tcp.h>
 #include <netinet/udp.h>
 #include <netinet/ip_icmp.h> 
@@ -49,6 +50,7 @@
 unsigned int get_ip_headers(tracking_t *tracking, unsigned char *dgram, unsigned int dgram_size)
 {
     struct iphdr *ip = (struct iphdr *)dgram;
+    struct ip6_hdr *ip6 = (struct ip6_hdr *)dgram;
 
     /* check ip headers minimum size */
     if (dgram_size < (20+8))
@@ -56,12 +58,35 @@ unsigned int get_ip_headers(tracking_t *tracking, unsigned char *dgram, unsigned
 
     /* check IP version (should be IPv4) */
     if (ip->version == 4){
-        tracking->saddr = ntohl(ip->saddr);
-        tracking->daddr = ntohl(ip->daddr);
+        /* create IPv6 addresses like "::ffff:[ipv4]" */
+        tracking->saddr.s6_addr32[0] = 0;
+        tracking->saddr.s6_addr32[1] = 0;
+        tracking->saddr.s6_addr32[2] = 0xffff0000;
+        tracking->saddr.s6_addr32[3] = ip->saddr;
+        
+        tracking->daddr.s6_addr32[0] = 0;
+        tracking->daddr.s6_addr32[1] = 0;
+        tracking->daddr.s6_addr32[2] = 0xffff0000;
+        tracking->daddr.s6_addr32[3] = ip->daddr;
+
         tracking->protocol = ip->protocol;
         memcpy(tracking->payload, dgram + 4*ip->ihl, sizeof(tracking->payload));
         return 4*ip->ihl;
     }
+
+    if (ip->version == 6)
+    {
+        if (dgram_size < (40+8))
+            return 0;
+        unsigned short plen = ntohs(ip6->ip6_plen);
+        tracking->saddr = ip6->ip6_src;
+        tracking->daddr = ip6->ip6_dst;
+
+        tracking->protocol = ip6->ip6_nxt;
+        memcpy(tracking->payload, dgram + plen, sizeof(tracking->payload));
+        return plen;
+    }
+    
     debug_log_message(DEBUG, AREA_PACKET, "IP version is %d, ihl : %d", ip->version, ip->ihl);
     return 0;
 }
@@ -317,10 +342,19 @@ void authpckt_conntrack (unsigned char *dgram, unsigned int dgram_size)
     conntrack = (struct nu_conntrack_message_t*)dgram;
     datas = g_new0(tracking_t, 1);
     message = g_new0(struct internal_message, 1);
-    datas->protocol = conntrack->ipv4_protocol;
-    datas->saddr = ntohl(conntrack->ipv4_src);
-    datas->daddr = ntohl(conntrack->ipv4_dst);
-    if (conntrack->ipv4_protocol == IPPROTO_ICMP) {
+    datas->protocol = conntrack->ip_protocol;
+
+    datas->saddr.s6_addr32[0] = ntohl(conntrack->ip_src.s6_addr32[0]);
+    datas->saddr.s6_addr32[1] = ntohl(conntrack->ip_src.s6_addr32[1]);
+    datas->saddr.s6_addr32[2] = ntohl(conntrack->ip_src.s6_addr32[2]);
+    datas->saddr.s6_addr32[3] = ntohl(conntrack->ip_src.s6_addr32[3]);
+
+    datas->daddr.s6_addr32[0] = ntohl(conntrack->ip_dst.s6_addr32[0]);
+    datas->daddr.s6_addr32[1] = ntohl(conntrack->ip_dst.s6_addr32[1]);
+    datas->daddr.s6_addr32[2] = ntohl(conntrack->ip_dst.s6_addr32[2]);
+    datas->daddr.s6_addr32[3] = ntohl(conntrack->ip_dst.s6_addr32[3]);
+    
+    if (conntrack->ip_protocol == IPPROTO_ICMP) {
         datas->type = ntohs(conntrack->src_port);
         datas->code = ntohs(conntrack->dest_port);
     } else {

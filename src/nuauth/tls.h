@@ -53,8 +53,8 @@ struct client_connection {
     /** Socket file descriptor, init. with accept() and set to SO_KEEPALIVE mode */
     int socket;             
 
-    /** IPv4 address */
-    struct sockaddr_in addr; 
+    /** IPv6 address */
+    struct in6_addr addr; 
 };
 
 /**
@@ -64,22 +64,22 @@ struct client_connection {
  */
 struct tls_buffer_read {
     int socket;           /*!< Socket file descriptor (value from accept()) */
-    uint32_t ipv4_addr;   /*!< User IPv4 address */
-    gnutls_session *tls;  /*!< TLS session */
-    char *user_name;      /*!< User name string */
-    uint32_t user_id;     /*!< User identifier (16 bits */
-    GSList *groups;       /*!< User groups */
-    char *os_sysname;     /*!< Operation system name */
-    char *os_release;     /*!< Operation system release */
-    char *os_version;     /*!< Operation system version */
-    char *buffer;         /*!< Content of the received packet */
-    int32_t buffer_len;   /*!< Length of the buffer */
+    struct in6_addr ip_addr;  /*!< User IPv6 address */
+    gnutls_session *tls;      /*!< TLS session */
+    char *user_name;          /*!< User name string */
+    uint32_t user_id;         /*!< User identifier (16 bits */
+    GSList *groups;           /*!< User groups */
+    char *os_sysname;         /*!< Operation system name */
+    char *os_release;         /*!< Operation system release */
+    char *os_version;         /*!< Operation system version */
+    char *buffer;             /*!< Content of the received packet */
+    int32_t buffer_len;       /*!< Length of the buffer */
 };
 
 typedef struct Nufw_session {
     gnutls_session* tls;
     GMutex* tls_lock;
-    struct in_addr peername;
+    struct in6_addr peername;
     gint usage;
     gboolean alive;
 } nufw_session_t;

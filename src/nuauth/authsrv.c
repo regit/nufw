@@ -352,7 +352,6 @@ void parse_options(int argc, char **argv, command_line_params_t *params)
     char* version=VERSION;
     char * options_list = "DhVvl:L:C:p:t:T:";
     int option;
-    int value;
 
     /*parse options */
     while((option = getopt ( argc, argv, options_list)) != -1 ){
@@ -369,9 +368,8 @@ void parse_options(int argc, char **argv, command_line_params_t *params)
 
             case 'l' :
                 /* port we listen for auth answer */
-                sscanf(optarg,"%d",&value);
-                printf("Waiting for user packets on TCP port %d\n",value);
-                nuauthconf->userpckt_port=value;
+                printf("Waiting for user packets on TCP port %s\n",optarg);
+                SECURE_STRNCPY(nuauthconf->userpckt_port, optarg, sizeof(nuauthconf->userpckt_port));
                 break;
 
             case 'L' :

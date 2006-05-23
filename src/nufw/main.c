@@ -103,6 +103,7 @@ void nufw_prepare_quit()
     free(key_file);
     free(cert_file);
     free(ca_file);
+    freeaddrinfo(adr_srv);
 
     /* destroy pid file */
     unlink(NUFW_PID_FILE);
@@ -323,6 +324,29 @@ void nufw_daemonize()
     (void) close(2);
 }    
 
+
+/** 
+ * Create nuauth address: ::adr_srv 
+ */
+void create_nuauth_address()
+{
+    int ecode;
+    struct addrinfo hints;
+    memset(&hints, 0, sizeof hints);
+    hints.ai_flags = AI_PASSIVE;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_family = PF_UNSPEC;
+
+    ecode = getaddrinfo(authreq_addr, authreq_port, &hints, &adr_srv);
+    if (ecode != 0)
+    {
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
+                "Can not resolve NuAuth hostname \"%s\"!", authreq_addr);
+        exit(EXIT_FAILURE);
+    }
+}
+
+
 /**
  * Main function of NuFW:
  *   - Initialize variables
@@ -350,7 +374,6 @@ void nufw_daemonize()
  */
 int main(int argc,char * argv[])
 {
-    struct hostent *authreq_srv;
     /* option */
 #if USE_NFQUEUE
     char * options_list = "DhVvmq:c:k:a:n:d:p:t:T:CM";
@@ -358,13 +381,12 @@ int main(int argc,char * argv[])
     char * options_list = "DhVvmc:k:a:n:d:p:t:T:";
 #endif
     int option,daemonize = 0;
-    int value;
     char* version=PACKAGE_VERSION;
 
     /* initialize variables */
 
     log_engine = LOG_TO_STD; /* default is to send debug messages to stdout + stderr */
-    authreq_port = AUTHREQ_PORT;
+    SECURE_STRNCPY(authreq_port, AUTHREQ_PORT, sizeof(authreq_port));
     packet_timeout = PACKET_TIMEOUT;
     track_size = TRACK_SIZE;
     cert_file=NULL;
@@ -429,9 +451,7 @@ int main(int argc,char * argv[])
             debug_level+=1;
             break;
           case 'p' :
-            sscanf(optarg,"%d",&value);
-            printf("Auth requests sent to port %d\n",value);
-            authreq_port=value;
+            SECURE_STRNCPY(authreq_port, optarg, sizeof(authreq_port));
             break;
             /* destination IP */
           case 'd' :
@@ -509,28 +529,26 @@ int main(int argc,char * argv[])
 
     init_log_engine();
 
-    /* create socket for sending ICMP messages */
-    raw_sock = socket(PF_INET, SOCK_RAW, 1);
-    if (raw_sock == -1)
+    /* open ICMP (IPv4) socket */
+    raw_sock4 = socket(PF_INET, SOCK_RAW, 1); /* 1: ICMP protocol */
+    if (raw_sock4 == -1)
+    {
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
-                "socket() on raw_sock creation failure!");
-
-    /* Create address adr_srv */
-    memset(&adr_srv,0,sizeof adr_srv);
-    adr_srv.sin_family = AF_INET;
-    adr_srv.sin_port = htons(authreq_port);
-    /* hostname conversion */
-    authreq_srv=gethostbyname(authreq_addr);
-    if (authreq_srv == NULL) {
-        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
-                "Can not resolve NuAuth hostname \"%s\"!", authreq_addr);
+                "Fail to create socket for ICMP!");
         exit(EXIT_FAILURE);
     }
-    adr_srv.sin_addr=*(struct in_addr *)authreq_srv->h_addr;
-    if (adr_srv.sin_addr.s_addr == INADDR_NONE ) {
+    
+    /* open ICMPv6 socket */
+    raw_sock6 = socket(PF_INET6, SOCK_RAW, 58); /* 58: ICMPv6 protocol */
+    if (raw_sock6 == -1)
+    {
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
-                "Bad Address in configuration for adr_srv");
+                "Fail to create socket for ICMPv6!");
+        exit(EXIT_FAILURE);
     }
+    
+    /* Create address adr_srv */
+    create_nuauth_address();
     
     /* create packet list */
     packets_list.start=NULL;

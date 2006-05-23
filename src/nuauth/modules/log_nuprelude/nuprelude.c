@@ -217,7 +217,6 @@ static idmef_message_t *create_session_template()
 {
     char buffer[50];
     idmef_message_t *idmef = create_alert_template();
-    struct in_addr ipaddr;
 
     add_idmef_object(idmef, "alert.target(0).process.name", "nuauth");
     if (secure_snprintf(buffer, sizeof(buffer), "%lu", (unsigned long)getpid())) {
@@ -228,8 +227,8 @@ static idmef_message_t *create_session_template()
     add_idmef_object(idmef, "alert.source(0).service.name", "nufw-client");
     add_idmef_object(idmef, "alert.source(0).process.name", "nutcpc");
 
-    inet_aton("127.0.0.1", &ipaddr);
-    add_idmef_object(idmef, "alert.target(0).node.address(0).address", inet_ntoa(ipaddr));
+    /* TODO: Maybe write real IPv6 of nuauth :-) */
+    add_idmef_object(idmef, "alert.target(0).node.address(0).address", "::1");
     add_idmef_object(idmef, "alert.target(0).service.protocol", "tcp"); 
 
     if (secure_snprintf(buffer, sizeof(buffer), "%hu", nuauthconf->userpckt_port)) {
@@ -258,7 +257,7 @@ static idmef_message_t *create_message_packet(
     idmef_alert_t *alert;
     int ret;
     char buffer[50];
-    struct in_addr ipaddr;
+    char ip_ascii[INET6_ADDRSTRLEN];
     char *tmp_buffer;
     unsigned short psrc, pdst;
 
@@ -293,10 +292,10 @@ static idmef_message_t *create_message_packet(
     add_idmef_object(idmef, "alert.assessment.impact.description", impact);
 
     /* IP source/dest */
-    ipaddr.s_addr = ntohl(conn->tracking.saddr);
-    add_idmef_object(idmef, "alert.source(0).node.address(0).address", inet_ntoa(ipaddr));
-    ipaddr.s_addr = ntohl(conn->tracking.daddr);
-    add_idmef_object(idmef, "alert.target(0).node.address(0).address", inet_ntoa(ipaddr));
+    if (inet_ntop(AF_INET6, &conn->tracking.saddr, ip_ascii, sizeof(ip_ascii)) != NULL)
+        add_idmef_object(idmef, "alert.source(0).node.address(0).address", ip_ascii);
+    if (inet_ntop(AF_INET6, &conn->tracking.saddr, ip_ascii, sizeof(ip_ascii)) != NULL)
+        add_idmef_object(idmef, "alert.target(0).node.address(0).address", ip_ascii);
     
     /* IP protocol */
     if (secure_snprintf(buffer, sizeof(buffer), "%hu", conn->tracking.protocol)) {
@@ -384,7 +383,7 @@ static idmef_message_t *create_message_session(
     idmef_alert_t *alert;
     int ret;
     char buffer[50];
-    struct in_addr ipaddr;
+    char ip_ascii[INET6_ADDRSTRLEN];
 
     /* duplicate message */
     idmef = idmef_message_ref(tpl);
@@ -418,8 +417,10 @@ static idmef_message_t *create_message_session(
     add_idmef_object(idmef, "alert.assessment.impact.description", impact);
 
     /* source address/service */    
-    ipaddr.s_addr = session->addr;
-    add_idmef_object(idmef, "alert.source(0).node.address(0).address", inet_ntoa(ipaddr));
+    if (inet_ntop(AF_INET6, &session->addr, ip_ascii, sizeof(ip_ascii)) != NULL)
+    {
+        add_idmef_object(idmef, "alert.source(0).node.address(0).address", ip_ascii);
+    }
 
     /* set user informations */
     if (session->user_name != NULL) {

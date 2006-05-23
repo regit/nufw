@@ -64,17 +64,20 @@ int send_hello_pckt(NuAuth * session){
     return 1;
 }
 
-/*
- * send_user_pckt
+
+/**
+ * Send connections to nuauth: between 1 and #CONN_MAX connections
+ * in a big packet of format:
+ *   [ nuv2_header + nuv2_authfield_ipv6 * N ]
  */
 int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
 {
   char datas[PACKET_SIZE];
   char *pointer;
-  int item;
+  unsigned int item;
   struct nuv2_header *header;
   struct nuv2_authreq *authreq;
-  struct nuv2_authfield_ipv4 *authfield;
+  struct nuv2_authfield_ipv6 *authfield;
   struct nuv2_authfield_app *appfield;
   size_t len;
   const char *appname;
@@ -88,10 +91,10 @@ int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
   }
 
   header = (struct nuv2_header *)datas;
-  header->proto=PROTO_VERSION;
-  header->msg_type=USER_REQUEST;
-  header->option=0;
-  header->length=sizeof(struct nuv2_header);
+  header->proto = PROTO_VERSION;
+  header->msg_type = USER_REQUEST;
+  header->option = 0;
+  header->length = sizeof(struct nuv2_header);
   pointer = (char*)(header + 1);
 
   for (item=0; ((item<CONN_MAX) && carray[item] != NULL); item++)
@@ -101,26 +104,26 @@ int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
 #endif
 #ifdef LINUX
       /* get application name from inode */
-      appname = prg_cache_get(carray[item]->ino);
+      appname = prg_cache_get(carray[item]->inode);
 #else
       appname="UNKNOWN";
 #endif
-      header->length+=sizeof(struct nuv2_authreq)+sizeof(struct nuv2_authfield_ipv4);
+      header->length+=sizeof(struct nuv2_authreq)+sizeof(struct nuv2_authfield_ipv6);
       
       authreq = (struct nuv2_authreq *)pointer;
-      authreq->packet_id=session->packet_id++;
-      authreq->packet_length=sizeof(struct nuv2_authreq)+sizeof(struct nuv2_authfield_ipv4);
+      authreq->packet_seq = session->packet_seq++;
+      authreq->packet_length = sizeof(struct nuv2_authreq)+sizeof(struct nuv2_authfield_ipv6);
      
-      authfield = (struct nuv2_authfield_ipv4 *)(authreq+1);
-      authfield->type=IPV4_FIELD;
-      authfield->option=0;
-      authfield->src=htonl(carray[item]->lcl);
-      authfield->dst=htonl(carray[item]->rmt);
-      authfield->proto=carray[item]->proto;
-      authfield->flags=0;
-      authfield->FUSE=0;
-      authfield->sport=htons(carray[item]->lclp);
-      authfield->dport=htons(carray[item]->rmtp);
+      authfield = (struct nuv2_authfield_ipv6 *)(authreq+1);
+      authfield->type = IPV6_FIELD;
+      authfield->option = 0;
+      authfield->src = carray[item]->ip_src;
+      authfield->dst = carray[item]->ip_dst;
+      authfield->proto = carray[item]->protocol;
+      authfield->flags = 0;
+      authfield->FUSE = 0;
+      authfield->sport = htons(carray[item]->port_src);
+      authfield->dport = htons(carray[item]->port_dst);
 
       /* application field  */
       appfield = (struct nuv2_authfield_app *)(authfield+1); 
@@ -150,7 +153,7 @@ int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
 
       appfield->length=htons(appfield->length);
       authreq->packet_length=htons(authreq->packet_length);
-      authfield->length=htons(sizeof(struct nuv2_authfield_ipv4));
+      authfield->length=htons(sizeof(struct nuv2_authfield_ipv6));
   }
   header->length=htons(header->length);
 

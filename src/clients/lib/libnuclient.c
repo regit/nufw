@@ -203,7 +203,7 @@ void nu_exit_clean(NuAuth * session)
 
 	gnutls_deinit(session->tls);
 
-	if (session->mode == SRV_TYPE_PUSH){
+	if (session->server_mode == SRV_TYPE_PUSH){
 		pthread_mutex_destroy(&(session->check_count_mutex));
 		pthread_cond_destroy(&(session->check_cond));
 	}
@@ -412,7 +412,7 @@ int compare (NuAuth * session,conntable_t *old, conntable_t *new, nuclient_error
 				}
 
 				/* solve timeout issue on UDP */
-				if (bucket->proto == IPPROTO_UDP){
+				if (bucket->protocol == IPPROTO_UDP){
 					/* send an auth packet if netfilter timeout may have been reached */
 					if (same_bucket->createtime<time(NULL)-UDP_TIMEOUT){
 #if DEBUG
@@ -438,7 +438,7 @@ int compare (NuAuth * session,conntable_t *old, conntable_t *new, nuclient_error
 			/* error sending */
 			return -1;
 		}
-	}
+        }
 	return nb_packets;
 }
 
@@ -570,39 +570,50 @@ int send_os(NuAuth * session, nuclient_error *err)
 	int osfield_length;
 	int ret;
 
-	/* get info */
+    /* read OS informations */
 	uname(&info);
-	/* build packet */
-	stringlen=strlen(info.sysname)+strlen(info.release)+strlen(info.version)+3;
+
+    /* encode OS informations in base64 */
+	stringlen = strlen(info.sysname) + 1 
+        + strlen(info.release) + 1 + strlen(info.version) + 1;
 #ifdef LINUX
 	oses=alloca(stringlen);
 #else 
 	oses=calloc(stringlen,sizeof(char));
 #endif
-	enc_oses=calloc(4*stringlen,sizeof(char));
-	(void)secure_snprintf(oses,stringlen,"%s;%s;%s",info.sysname, info.release, info.version);
-	if (sasl_encode64(oses,strlen(oses),enc_oses,4*stringlen,&actuallen) == SASL_BUFOVER){
-		enc_oses=realloc(enc_oses,actuallen);
-		sasl_encode64(oses,strlen(oses),enc_oses,actuallen,&actuallen);
+	enc_oses = calloc(4*stringlen, sizeof(char));
+	(void)secure_snprintf(oses, stringlen,
+                          "%s;%s;%s",
+                          info.sysname, info.release, info.version);
+	if (sasl_encode64(oses, strlen(oses), enc_oses, 4*stringlen, &actuallen) == SASL_BUFOVER){
+		enc_oses=realloc(enc_oses, actuallen);
+		sasl_encode64(oses, strlen(oses), enc_oses, actuallen, &actuallen);
 	}
+
 #ifndef LINUX
 	free(oses);
 #endif
-	osfield.type=OS_FIELD;
-	osfield.option=OS_SRV;
-	osfield.length=4+actuallen;
+
+    /* build packet header */
+	osfield.type = OS_FIELD;
+	osfield.option = OS_SRV;
+	osfield.length = sizeof(osfield) + actuallen;
+
+    /* add packet body */
 #ifdef LINUX
 	buf=alloca(osfield.length); 
 #else
 	buf=calloc(osfield.length,sizeof(char));
 #endif
-	osfield_length=osfield.length;
-	osfield.length=htons(osfield.length);
+	osfield_length = osfield.length;
+	osfield.length = htons(osfield.length);
 	pointer = buf ;
-	memcpy(buf,&osfield,sizeof osfield);
-	pointer+=sizeof osfield;
-	memcpy(pointer,enc_oses,actuallen);
+	memcpy(buf, &osfield, sizeof osfield);
+	pointer += sizeof osfield;
+	memcpy(pointer, enc_oses, actuallen);
 	free(enc_oses);
+
+    /* Send OS field over network */
 	ret = gnutls_record_send(session->tls,buf,osfield_length);
 	if (ret < 0)
 	{
@@ -617,16 +628,16 @@ int send_os(NuAuth * session, nuclient_error *err)
 		free(buf);
 #endif
 		return 0;
-	} else {
-		if (*buf == SRV_TYPE) {
-			session->mode=*(buf+1);
-		} else {
-			session->mode=SRV_TYPE_POLL;
-		}
 	}
 #ifndef LINUX
 		free(buf);
 #endif
+    
+    if (buf[0] == SRV_TYPE) {
+        session->server_mode = buf[1];
+    } else {
+        session->server_mode = SRV_TYPE_POLL;
+    }
 	return 1;
 }
 
@@ -819,40 +830,71 @@ int init_sasl(NuAuth * session, nuclient_error *err)
  * Create a socket to nuauth, and try to connect. The function also set 
  * SIGPIPE handler: ignore these signals.
  */
-int init_socket(NuAuth * session, nuclient_error *err)
+int init_socket(NuAuth * session, nuclient_error *err,
+		const char *hostname, const char *service)
 {
-	int option_value;
-	struct sigaction no_action;
+    int option_value;
+    struct sigaction no_action;
+    int ecode;
+    struct addrinfo *res;
+    struct addrinfo hints = {
+        0,
+        PF_UNSPEC,
+        SOCK_STREAM,
+        0,
+        0,
+        NULL,
+        NULL,
+        NULL
+    };
 
-	/* ignore SIGPIPE */
-	no_action.sa_handler = SIG_IGN;
-	sigemptyset( & (no_action.sa_mask));
-	no_action.sa_flags = 0;
-	(void)sigaction( SIGPIPE, & no_action, NULL);
+    /* get address informations */
+    ecode = getaddrinfo(hostname, service, &hints, &res);
+    if (ecode != 0)
+    {
+	fprintf(stderr, "Fail to create host address: %s\n",
+		gai_strerror(ecode));
+	fprintf(stderr, "(host=\"%s\", service=\"%s\")\n",
+		hostname, service);
+	SET_ERROR(err, INTERNAL_ERROR, DNS_RESOLUTION_ERR);
+	return 0;
+    }
 
-	/* create socket to nuauth */
-	session->socket = socket (AF_INET,SOCK_STREAM,0);
-	if (session->socket <= 0){
-		errno=EADDRNOTAVAIL;
-                SET_ERROR(err, INTERNAL_ERROR, CANT_CONNECT_ERR);
-		return 0;
-	}
-	option_value=1;
-	setsockopt (
-			session->socket,
-			SOL_SOCKET,
-			SO_KEEPALIVE,
-			&option_value,
-			sizeof(option_value));
+    /* ignore SIGPIPE */
+    no_action.sa_handler = SIG_IGN;
+    sigemptyset( & (no_action.sa_mask));
+    no_action.sa_flags = 0;
+    (void)sigaction( SIGPIPE, & no_action, NULL);
 
-	/* connect to nuauth */
-	if ( connect(session->socket,(struct sockaddr *)(&session->adr_srv),sizeof(session->adr_srv)) == -1){
-		errno=ENOTCONN;
-                SET_ERROR(err, INTERNAL_ERROR, CANT_CONNECT_ERR);
-		return 0;
-	}
+    /* create socket to nuauth */
+    if (res->ai_family  == PF_INET)
+	printf("Create IPv4 socket\n");
+    else if (res->ai_family  == PF_INET6)
+	printf("Create IPv6 socket\n");
+    session->socket = socket (res->ai_family, res->ai_socktype, res->ai_protocol);
+    if (session->socket <= 0){
+	errno=EADDRNOTAVAIL;
+	freeaddrinfo(res);
+	SET_ERROR(err, INTERNAL_ERROR, CANT_CONNECT_ERR);
+	return 0;
+    }
+    option_value=1;
+    setsockopt (
+	    session->socket,
+	    SOL_SOCKET,
+	    SO_KEEPALIVE,
+	    &option_value,
+	    sizeof(option_value));
 
-	return 1;
+    /* connect to nuauth */
+    if ( connect(session->socket, res->ai_addr, res->ai_addrlen) == -1){
+	errno=ENOTCONN;
+	SET_ERROR(err, INTERNAL_ERROR, CANT_CONNECT_ERR);
+	freeaddrinfo(res);
+	return 0;
+    }
+    freeaddrinfo(res);
+    return 1;
 }
 
 /**
@@ -885,33 +927,6 @@ int tls_handshake(NuAuth * session, nuclient_error *err)
 }
 
 /**
- * Set host address: convert hostname string to IPv4 address
- */
-int set_host(NuAuth * session, nuclient_error *err,
-		const char *hostname, unsigned int port)
-{
-	struct hostent *host = gethostbyname(hostname);
-	if (host == NULL)
-	{
-/*		fprintf(stderr, "*** An error occured when resolving the provided hostname\n");*/
-                SET_ERROR(err, INTERNAL_ERROR, DNS_RESOLUTION_ERR);
-		return 0;
-	}
-
-	(session->adr_srv).sin_family = AF_INET;
-	(session->adr_srv).sin_port = htons(port);
-	(session->adr_srv).sin_addr = *(struct in_addr *)host->h_addr_list[0];
-	if ((session->adr_srv).sin_addr.s_addr == 0) {
-	/* if ((session->adr_srv).sin_addr.s_addr == INADDR_NONE) { */
-
-                SET_ERROR(err, INTERNAL_ERROR, NO_ADDR_ERR);
-		return 0;
-	}
-	
-	return 1;
-}
-
-/**
  * \ingroup nuclientAPI
  * \brief Init connection to nuauth server
  *
@@ -928,9 +943,8 @@ int set_host(NuAuth * session, nuclient_error *err,
  * \par Internal
  * Initialisation of nufw authentication session: set basic fields and then
  * call:
- *    - set_host() ;
- *    - init_tls_cert() ;
  *    - init_socket() ;
+ *    - init_tls_cert() ;
  *    - tls_handshake() ;
  *    - init_sasl() ;
  *    - send_os().
@@ -938,11 +952,14 @@ int set_host(NuAuth * session, nuclient_error *err,
  * If everything is ok, create the connection table using tcptable_init(). 
  */
 NuAuth* nu_client_init2(
-		const char *hostname, unsigned int port,
-		char* keyfile, char* certfile,
-		void* username_callback,void * passwd_callback, 
-                void* tlscred_callback, nuclient_error *err
-		)
+        const char *hostname, 
+        const char *service,
+        char* keyfile, 
+        char* certfile,
+        void* username_callback,
+        void* passwd_callback, 
+        void* tls_passwd_callback, 
+        nuclient_error *err)
 {
 	conntable_t *new;
 	NuAuth * session;
@@ -958,17 +975,17 @@ NuAuth* nu_client_init2(
 	}
 
 	/* Set basic fields */
-	session->localuserid = getuid();
+	session->userid = getuid();
 	session->connected = 1;
-        session->count_msg_cond = -1;
+    session->count_msg_cond = -1;
 	session->auth_by_default = 1;
-	session->packet_id = 0;
+	session->packet_seq = 0;
 	session->tls=NULL;
 	session->ct = NULL;
 	session->protocol = PROTO_VERSION;
 	session->username_callback = username_callback;
 	session->passwd_callback = passwd_callback;
-	session->tls_passwd_callback = tlscred_callback;
+	session->tls_passwd_callback = tls_passwd_callback;
 	session->timestamp_last_sent = time(NULL);
 
 	/* create session mutex */
@@ -980,15 +997,8 @@ NuAuth* nu_client_init2(
 		return NULL;
 	}
 
-    /* set field about host */
-	if (!set_host(session, err, hostname, port)) {
-		nu_exit_clean(session);
-		return NULL;
-	}
-
-
-
-	if (!init_socket(session, err)) {
+	/* set field about host */
+	if (!init_socket(session, err, hostname, service)) {
 		nu_exit_clean(session);
 		return NULL;
 	}
@@ -1030,7 +1040,7 @@ void ask_session_end(NuAuth* session)
 			pthread_cancel(session->recvthread);
 			pthread_join(session->recvthread,NULL);
 		}
-		if (session->mode == SRV_TYPE_PUSH) {
+		if (session->server_mode == SRV_TYPE_PUSH) {
 			if(! pthread_equal(session->checkthread,self_thread)){
 				pthread_cancel(session->checkthread);
 				pthread_join(session->checkthread,NULL);
@@ -1038,7 +1048,7 @@ void ask_session_end(NuAuth* session)
 		}
 		pthread_mutex_unlock(&(session->mutex));
 		if (pthread_equal(session->recvthread,self_thread) ||
-				((session->mode == SRV_TYPE_PUSH) && pthread_equal(session->checkthread,self_thread))
+				((session->server_mode == SRV_TYPE_PUSH) && pthread_equal(session->checkthread,self_thread))
 		   ) {
 			pthread_exit(NULL);
 		}
@@ -1084,7 +1094,7 @@ const char* nu_client_strerror (nuclient_error *err)
       break;
     case INTERNAL_ERROR:
       switch (err->error){
-        case NOERR: return "No error";
+        case NO_ERR: return "No error";
         case SESSION_NOT_CONNECTED_ERR:  return "Session not connected";
         case TIMEOUT_ERR:      return "Connection timeout";
         case DNS_RESOLUTION_ERR: return "DNS resolution error";
@@ -1100,7 +1110,7 @@ const char* nu_client_strerror (nuclient_error *err)
       }
     break;
     default:
-      return "Unkown family error";
+      return "Unknown family error";
   }
 }
 

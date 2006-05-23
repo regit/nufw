@@ -38,6 +38,18 @@
  * module is available.
  */
 
+/*--- Decimal string <-> Base 10^n number type config --*/
+typedef unsigned long digit_t;
+#define BASE 1000000     /** Use 6 decimal digits in each number digit */
+#define BASE_LOG10 6
+#define BASE2STR "%06lu"
+#define DIGIT_COUNT 7    /** BASE ^ DIGIT_COUNT should be able to store 2 ^ 128 */
+#define INIT_NUMBER {0, 0, 0, 0, 0, 0, 0}
+#if ULONG_MAX < (BASE*256)
+#  error "Base is too big"
+#endif
+typedef digit_t number_t[DIGIT_COUNT];
+
 /**
  * 
  * \ingroup AuthNuauthModules
@@ -46,10 +58,99 @@
  * @{ */
 
 /**
+ * Multiply a "Base 10^n" number by a factor
+ */
+void number_multiply(number_t number, digit_t factor)
+{
+    unsigned char index;
+    digit_t value = 0;
+    for (index=0; index < DIGIT_COUNT; index++)
+    {
+        value += (number[index] * factor);
+        number[index] = value % BASE;
+        value /= BASE;
+    }
+}
+
+/**
  *
  * \file ldap.c
  * \brief Contains all LDAP modules functions
  */
+
+/**
+ * Add a value to a "Base 10^n" number
+ *
+ * \return Returns 0 on error, 1 otherwise
+ */
+int number_add(number_t number, digit_t value)
+{
+    unsigned char index = 0;
+    for (; value != 0; index++)
+    {
+        value += number[index];
+        number[index] = value % BASE;
+        value /= BASE; 
+        if (index == DIGIT_COUNT)
+        {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+/**
+ * Convert a "Base 10^n" number to decimal string.
+ * 
+ * \return Returns new allocated string
+ */
+char* number_to_decimal(number_t number)
+{
+    char ascii[DIGIT_COUNT*BASE_LOG10 + 1];
+    char *text;
+    signed char index;
+    for (index=DIGIT_COUNT-1; 0 <= index; index--)
+    {
+        sprintf(ascii + (DIGIT_COUNT-index-1)*BASE_LOG10, BASE2STR, number[index]);
+    }
+    text = ascii;
+    while (text[0] == '0') text++;
+    return strdup(text);
+}
+
+/**
+ * Convert a decimal string to a "Base 10^n" number.
+ * 
+ * \return Returns 0 on error, 1 otherwise
+ */
+int decimal_to_number(const char* orig_decimal, number_t number)
+{
+    ssize_t decimal_len = strlen(orig_decimal);
+    char *decimal = strdup(orig_decimal);
+    char *err;
+    unsigned char index;
+    for (index=0; index < DIGIT_COUNT; index++) number[index] = 0;
+    index = 0;
+    while (BASE_LOG10 < decimal_len)
+    {
+        decimal[decimal_len] = 0;
+        decimal_len -= BASE_LOG10;
+        number[index] = strtol(decimal + decimal_len, &err, 10);
+        index++;
+        if (err == NULL || *err != 0 || DIGIT_COUNT <= index)
+        {
+            free(decimal);
+            return 0;
+        }
+    }
+    decimal[decimal_len] = 0;
+    number[index] = strtol(decimal, &err, 10);
+    free(decimal);
+    if (err == NULL || *err != 0)
+        return 0;
+    else
+        return 1;
+}
 
 G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
 {
@@ -187,6 +288,21 @@ static LDAP* ldap_conn_init(struct ldap_params* params)
   return ld;
 }
 
+static char *ipv6_to_base10(struct in6_addr *addr)
+{
+    number_t number = INIT_NUMBER;
+    unsigned char index = 0;
+
+    for (index=0; index<16; index++)
+    {
+        if (number_add(number, addr->s6_addr[index]) != 1)
+            return NULL;
+        number_multiply(number, 256);
+    }
+
+    return number_to_decimal(number);
+}
+
 /**
  * \brief Acl check function
  *
@@ -212,7 +328,9 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element,gpointer params_p)
   int err;
   struct ldap_params* params=(struct ldap_params*)params_p;
   LDAP *ld = g_private_get (params->ldap_priv);
-
+  char *ip_src;
+  char *ip_dst;
+     
   if (ld == NULL){
       /* init ldap has never been done */
       ld = ldap_conn_init(params);
@@ -222,41 +340,53 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element,gpointer params_p)
       }
       g_private_set(	params->ldap_priv,ld);
   }
+
+  ip_src = ipv6_to_base10(&element->tracking.saddr);
+  ip_dst = ipv6_to_base10(&element->tracking.daddr);
+  if (ip_src == NULL || ip_dst == NULL)
+  {
+      free(ip_src);
+      free(ip_dst);
+      return NULL;
+  }
+  
   /* contruct filter */
   if ((element->tracking).protocol == IPPROTO_TCP || (element->tracking).protocol == IPPROTO_UDP ){
       switch (params->ldap_filter_type){
         case 1:
             if (snprintf(filter,LDAP_QUERY_SIZE-1,
 #if USE_SOURCE_PORT
-                        "(&(objectClass=NuAccessControlList)(Proto=%d)(DstPort=%d)(SrcIPStart<=%lu)(SrcIPEnd>=%lu)(DstIPStart<=%lu)(DstIPEnd>=%lu)(SrcPortStart<=%d)(SrcPortEnd>=%d)",
+                        "(&(objectClass=NuAccessControlList)(Proto=%d)(DstPort=%d)(SrcIPStart<=%s)(SrcIPEnd>=%s)(DstIPStart<=%s)(DstIPEnd>=%s)(SrcPortStart<=%d)(SrcPortEnd>=%d)",
 #endif 
-                        "(&(objectClass=NuAccessControlList)(Proto=%d)(DstPort=%d)(SrcIPStart<=%lu)(SrcIPEnd>=%lu)(DstIPStart<=%lu)(DstIPEnd>=%lu)",
+                        "(&(objectClass=NuAccessControlList)(Proto=%d)(DstPort=%d)(SrcIPStart<=%s)(SrcIPEnd>=%s)(DstIPStart<=%s)(DstIPEnd>=%s)",
 
                         (element->tracking).protocol,
                         (element->tracking).dest,
-                        (long unsigned int)(element->tracking).saddr,
-                        (long unsigned int)(element->tracking).saddr,
-                        (long unsigned int)(element->tracking).daddr,
-                        (long unsigned int)(element->tracking).daddr
+                        ip_src,
+                        ip_src,
+                        ip_dst,
+                        ip_dst
 #if USE_SOURCE_PORT	
                         , (element->tracking).source,
                         (element->tracking).source
 #endif
                         ) >= (LDAP_QUERY_SIZE -1)){
                 log_message(WARNING, AREA_MAIN, "LDAP query too big (more than %d bytes)\n",LDAP_QUERY_SIZE);
+                free(ip_src);
+                free(ip_dst);
                 return NULL;
             }
             break;
         case 0:
             if (snprintf(filter,LDAP_QUERY_SIZE-1,
 #if USE_SOURCE_PORT
-                        "(&(objectClass=NuAccessControlList)(SrcIPStart<=%lu)(SrcIPEnd>=%lu)(DstIPStart<=%lu)(DstIPEnd>=%lu)(Proto=%d)(SrcPortStart<=%d)(SrcPortEnd>=%d)(DstPortStart<=%d)(DstPortEnd>=%d)",
+                        "(&(objectClass=NuAccessControlList)(SrcIPStart<=%s)(SrcIPEnd>=%s)(DstIPStart<=%s)(DstIPEnd>=%s)(Proto=%d)(SrcPortStart<=%d)(SrcPortEnd>=%d)(DstPortStart<=%d)(DstPortEnd>=%d)",
 #endif 
-                        "(&(objectClass=NuAccessControlList)(SrcIPStart<=%lu)(SrcIPEnd>=%lu)(DstIPStart<=%lu)(DstIPEnd>=%lu)(Proto=%d)(DstPortStart<=%d)(DstPortEnd>=%d)",
-                        (long unsigned int)(element->tracking).saddr,
-                        (long unsigned int)(element->tracking).saddr,
-                        (long unsigned int)(element->tracking).daddr,
-                        (long unsigned int)(element->tracking).daddr,
+                        "(&(objectClass=NuAccessControlList)(SrcIPStart<=%s)(SrcIPEnd>=%s)(DstIPStart<=%s)(DstIPEnd>=%s)(Proto=%d)(DstPortStart<=%d)(DstPortEnd>=%d)",
+                        ip_src,
+                        ip_src,
+                        ip_dst,
+                        ip_dst,
                         (element->tracking).protocol,
 #if USE_SOURCE_PORT
                         (element->tracking).source,
@@ -266,9 +396,14 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element,gpointer params_p)
                         (element->tracking).dest
                         ) >= (LDAP_QUERY_SIZE -1)){
                 log_message(WARNING, AREA_MAIN, "LDAP query too big (more than %d bytes)\n",LDAP_QUERY_SIZE);
+                free(ip_src);
+                free(ip_dst);
                 return NULL;
             }
       }
+      free(ip_src);
+      free(ip_dst);
+
       /* finish filter */
       if (element->os_sysname){
           g_strlcat(filter,"(|(&(OsName=*)(OsName=",LDAP_QUERY_SIZE);
@@ -312,20 +447,25 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element,gpointer params_p)
 
   } else if ((element->tracking).protocol == IPPROTO_ICMP ) {
       if (snprintf(filter,LDAP_QUERY_SIZE-1,
-                  "(&(objectClass=NuAccessControlList)(SrcIPStart<=%lu)(SrcIPEnd>=%lu)(DstIPStart<=%lu)(DstIPEnd>=%lu)(Proto=%d)(SrcPortStart<=%d)(SrcPortEnd>=%d)(DstPortStart<=%d)(DstPortEnd>=%d))",
-                  (long unsigned int)(element->tracking).saddr,
-                  (long unsigned int)(element->tracking).saddr,
-                  (long unsigned int)(element->tracking).daddr,
-                  (long unsigned int)(element->tracking).daddr,
+                  "(&(objectClass=NuAccessControlList)"
+                  "(SrcIPStart<=%s)(SrcIPEnd>=%s)"
+                  "(DstIPStart<=%s)(DstIPEnd>=%s)"
+                  "(Proto=%d)"
+                  "(SrcPortStart<=%d)(SrcPortEnd>=%d)"
+                  "(DstPortStart<=%d)(DstPortEnd>=%d))",
+                  ip_src, ip_src,
+                  ip_dst, ip_dst,
                   (element->tracking).protocol,
-                  (element->tracking).type,
-                  (element->tracking).type,
-                  (element->tracking).code,
-                  (element->tracking).code
+                  (element->tracking).type, (element->tracking).type,
+                  (element->tracking).code, (element->tracking).code
                   ) >= (LDAP_QUERY_SIZE-1)){
           log_message(WARNING, AREA_MAIN, "LDAP query too big (more than %d bytes)\n",LDAP_QUERY_SIZE);
+          free(ip_src);
+          free(ip_dst);
           return NULL;
       }
+      free(ip_src);
+      free(ip_dst);
   }
 
   /* send query and wait result */

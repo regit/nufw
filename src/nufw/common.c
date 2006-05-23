@@ -31,6 +31,9 @@
 #include <stdlib.h>
 #include <time.h>
 #include <linux/icmp.h> /* icmphdr */
+#include <netinet/icmp6.h> /* icmp6_hdr */
+#include <netinet/ip.h> /* iphdr */
+#include <netinet/ip6.h> /* ip6_hdr */
 
 /* datas stuffs */
 
@@ -256,7 +259,7 @@ __u16 icmp_cksum(__u16 *buf, int nbytes)
         return (__u16) ~sum;
 }
 
-int send_icmp_unreach(char *payload)
+int send_icmp_ipv4_unreach(char *payload)
 {
     struct sockaddr_in to;
     char buffer[sizeof(struct icmphdr)+20+8];
@@ -266,7 +269,7 @@ int send_icmp_unreach(char *payload)
     /* write ICMP header */
     icmp->type = 3;
     icmp->code = 0;
-    icmp->checksum = 0x0000; /* TODO: Compute checksum */
+    icmp->checksum = 0x0000;
     icmp->un.frag.__unused = 0;
     icmp->un.frag.mtu = 0;
     
@@ -274,7 +277,7 @@ int send_icmp_unreach(char *payload)
     memcpy(buffer + sizeof(struct icmphdr), payload, 20+8);
 
     /* get destination IPv4 address */
-    memset(&to, 0, sizeof(struct sockaddr_in));
+    memset(&to, 0, sizeof(to));
     to.sin_family = AF_INET;
     to.sin_addr.s_addr = ip->saddr;
 
@@ -282,7 +285,51 @@ int send_icmp_unreach(char *payload)
     icmp->checksum = icmp_cksum( (__u16*)buffer, sizeof(buffer));
 
     /* send packet */
-    return sendto (raw_sock, buffer, sizeof(buffer), 0,
+    return sendto (raw_sock4, buffer, sizeof(buffer), 0,
             (struct sockaddr *)&to,
-            sizeof (struct sockaddr_in));
+            sizeof(to));
 }
+
+int send_icmp_ipv6_unreach(char *payload)
+{
+    struct sockaddr_in6 to;
+    char buffer[sizeof(struct icmp6_hdr)+40+8];
+    struct ip6_hdr *ip = (struct ip6_hdr *)payload;
+    struct icmp6_hdr *icmp = (struct icmp6_hdr *)buffer;
+
+    /* write ICMP header */
+    memset(icmp, 0, sizeof(*icmp));
+    icmp->icmp6_type = 1;
+    icmp->icmp6_code = 0;
+    /* checksum and data are nul */
+    
+    /* copy old packet header */
+    memcpy(buffer + sizeof(*icmp), payload, 40+8);
+
+    /* get destination IPv4 address */
+    memset(&to, 0, sizeof(to));
+    to.sin6_family = AF_INET6;
+    to.sin6_addr = ip->ip6_src;
+
+#ifdef LINUX   
+    /* don't compute icmp checksum, Linux do it for us */
+#else
+#  error "You may compute the checksum!"
+#endif
+
+    /* send packet */
+    return sendto (raw_sock6, buffer, sizeof(buffer), 0,
+            (struct sockaddr *)&to,
+            sizeof(to));
+}
+
+int send_icmp_unreach(char *payload)
+{
+    struct iphdr *ip4 = (struct iphdr *)payload;
+    if (ip4->version == 4) {
+        return send_icmp_ipv4_unreach(payload);
+    } else {
+        return send_icmp_ipv6_unreach(payload);
+    }
+}
+

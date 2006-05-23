@@ -130,8 +130,6 @@ typedef enum
 
 #define AUTHREQ_CLIENT_LISTEN_ADDR "0.0.0.0"
 #define AUTHREQ_NUFW_LISTEN_ADDR "127.0.0.1"
-#define AUTHREQ_PORT 4129
-#define USERPCKT_PORT 4130
 #define GWSRV_ADDR "127.0.0.1"
 
 /** Maximum length of a hostname (including final '\\0') */

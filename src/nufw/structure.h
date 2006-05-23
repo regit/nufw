@@ -49,7 +49,6 @@
 #include "proto.h"
 
 #define AUTHREQ_ADDR  "127.0.0.1" /*!< Default value of ::authreq_addr */
-#define AUTHREQ_PORT 4129   /*!< Default value of  ::authreq_port */
 #define TRACK_SIZE 1000     /*!< Default value of ::track_size */
 #define PACKET_TIMEOUT 15   /*!< Default value of ::packet_timeout */
 #define HOSTNAME_SIZE 256   /*!< Maximum size of hostnames (::authreq_addr) */
@@ -64,7 +63,7 @@ char *nuauth_cert_dn;   /*!< NuAuth certificate filename, default value: NULL */
 char authreq_addr[HOSTNAME_SIZE];
 
 /*! Port of NuAuth server address (::adr_srv), default value: #AUTHREQ_PORT */
-u_int16_t authreq_port;
+char authreq_port[20];
 
 /*! Number of second before a packet is dropped, default value: #PACKET_TIMEOUT */
 int packet_timeout;

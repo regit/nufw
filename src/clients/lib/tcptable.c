@@ -59,12 +59,35 @@
  */
 
 #ifdef LINUX 
+
+/**
+ * Convert an IPv6 address in "Linux format" (with no ":") into
+ * in6_addr structure.
+ *
+ * \return Returns 0 if fails, 1 otherwise
+ */
+int str2ipv6(char *text, struct in6_addr *ip)
+{
+    if (sscanf(text +8*3, "%08lx", (unsigned long*)&ip->s6_addr32[3]) != 1)
+        return 0;
+    text[8*3] = 0;
+    if (sscanf(text +8*2, "%08lx", (unsigned long*)&ip->s6_addr32[2]) != 1)
+        return 0;
+    text[8*2] = 0;
+    if (sscanf(text +8, "%08lx", (unsigned long*)&ip->s6_addr32[1]) != 1)
+        return 0;
+    text[8] = 0;
+    if (sscanf(text, "%08lx", (unsigned long*)&ip->s6_addr32[0]) != 1)
+        return 0;
+    return 1;
+}
+
 /**
  * Parse a Linux connection table (/proc/net/tcp or /proc/net/udp) and filter
  * connection: only keep session user connections in state "SYN packet sent".
  * Add connections to the our table using tcptable_add().
  */
-int parse_tcptable_file(NuAuth* session, conntable_t *ct, char *filename, FILE **file, int protocol)
+int parse_tcptable_file(NuAuth* session, conntable_t *ct, char *filename, FILE **file, int protocol, int use_ipv6)
 {
     char buf[1024];
     conn_t c;
@@ -75,7 +98,7 @@ int parse_tcptable_file(NuAuth* session, conntable_t *ct, char *filename, FILE *
     int session_uid_len;
     int ret;
     char *pos;
-
+    
     /* open file if it's not already opened */
     if (*file == NULL) {
         *file = fopen (filename, "r");
@@ -90,10 +113,10 @@ int parse_tcptable_file(NuAuth* session, conntable_t *ct, char *filename, FILE *
 
     /* read header */
     if (fgets (buf, sizeof (buf), *file) == NULL)
-        panic ("/proc/net/tcp: missing header!");
+        panic ("%s: missing header!", filename);
 
     /* convert session user identifier to string */
-    secure_snprintf(session_uid, sizeof(session_uid), "%5lu", session->localuserid);
+    secure_snprintf(session_uid, sizeof(session_uid), "%5lu", session->userid);
     session_uid_len = strlen(session_uid);
 
     /* get state field position in header */
@@ -125,15 +148,54 @@ int parse_tcptable_file(NuAuth* session, conntable_t *ct, char *filename, FILE *
         }
 
         /* get all fields */
-        ret = sscanf (buf, 
-                "%*d: %lx:%x %lx:%x %*x %*x:%*x %*x:%*x %x %lu %*d %lu",
-                &c.lcl, &c.lclp, &c.rmt, &c.rmtp, &c.retransmit, &c.uid, &c.ino);
-        if (ret != 7) {
-            continue;
+        if (!use_ipv6) {
+            c.ip_src.s6_addr32[0] = 0;
+            c.ip_src.s6_addr32[1] = 0;
+            c.ip_src.s6_addr32[2] = 0xffff0000;
+            c.ip_dst.s6_addr32[0] = 0;
+            c.ip_dst.s6_addr32[1] = 0;
+            c.ip_dst.s6_addr32[2] = 0xffff0000;
+            ret = sscanf (buf, 
+                    "%*d: "
+                    "%lx:%hx "
+                    "%lx:%hx "
+                    "%*x %*x:%*x %*x:%*x %x "
+                    "%lu %*d %lu",
+                    (long *)&c.ip_src.s6_addr32[3], &c.port_src,
+                    (long *)&c.ip_dst.s6_addr32[3], &c.port_dst,
+                    &c.retransmit,
+                    &c.uid, &c.inode);
+            if (ret != 7) {
+                continue;
+            }
+        } else {
+            char ip_src[33];
+            char ip_dst[33];
+            ret = sscanf (buf, 
+                    "%*d: "
+                    "%32s"
+                    ":%hx "
+                    "%32s"
+                    ":%hx "
+                    "%*x %*x:%*x %*x:%*x %x "
+                    "%lu %*d %lu",
+                    ip_src,
+                    &c.port_src,
+                    ip_dst,
+                    &c.port_dst,
+                    &c.retransmit,
+                    &c.uid, &c.inode);
+            if (ret != 7) {
+                continue;
+            }
+            if (!str2ipv6(ip_src, &c.ip_src))
+                continue;
+            if (!str2ipv6(ip_dst, &c.ip_dst))
+                continue;
         }
 
         /* skip nul inodes */
-        if (c.ino == 0) {
+        if (c.inode == 0) {
             continue;
         }
 
@@ -150,9 +212,7 @@ int parse_tcptable_file(NuAuth* session, conntable_t *ct, char *filename, FILE *
         if (!session->auth_by_default && !seen)
             continue;
 #endif
-        c.proto=protocol;
-        c.lcl=ntohl(c.lcl);
-        c.rmt=ntohl(c.rmt);
+        c.protocol=protocol;
         tcptable_add (ct, &c);
     }
     return 1;
@@ -169,23 +229,26 @@ int parse_tcptable_file(NuAuth* session, conntable_t *ct, char *filename, FILE *
 int tcptable_read (NuAuth* session, conntable_t *ct)
 {
 #ifdef LINUX 
-  static FILE *fp = NULL;
-  static FILE *fq = NULL;
+  static FILE *fd_tcp = NULL;
+  static FILE *fd_tcp6 = NULL;
+  static FILE *fd_udp = NULL;
   
 #if DEBUG
   assert (ct != NULL);
   assert (TCP_SYN_SENT == 2);
 #endif
-  if ( session->mode==SRV_TYPE_PUSH){
+  if ( session->server_mode == SRV_TYPE_PUSH){
       /* need to set check_cond */
       pthread_mutex_lock(&(session->check_count_mutex));
       session->count_msg_cond=0;
       pthread_mutex_unlock(&(session->check_count_mutex));
   }
 
-  if (!parse_tcptable_file(session, ct, "/proc/net/tcp", &fp, IPPROTO_TCP))
+  if (!parse_tcptable_file(session, ct, "/proc/net/tcp", &fd_tcp, IPPROTO_TCP, 0))
       return 0;
-  if (!parse_tcptable_file(session, ct, "/proc/net/udp", &fq, IPPROTO_UDP))
+  if (!parse_tcptable_file(session, ct, "/proc/net/tcp6", &fd_tcp6, IPPROTO_TCP, 1))
+      return 0;
+  if (!parse_tcptable_file(session, ct, "/proc/net/udp", &fd_udp, IPPROTO_UDP, 0))
       return 0;          
   return 1;
 #elif defined(FREEBSD)
@@ -227,7 +290,7 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
       return 0;
   }
 
-  if ( session->mode==SRV_TYPE_PUSH){
+  if ( session->server_mode == SRV_TYPE_PUSH){
       /* need to set check_cond */
       pthread_mutex_lock(&(session->check_count_mutex));
       session->count_msg_cond=0;
@@ -286,40 +349,43 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
 }
 
 /**
- * tcptable_init ()
- *
- * Initialise a connection table (hashtable).
+ * Create a connection table: allocate memory with zero bytes,
+ * and init. each list with NULL pointer.
+ * 
+ * \return Returns 0 on error (no more memory), 1 otherwise.
  */
 int tcptable_init (conntable_t **ct)
 {
 	int i;
 
 	(* ct) = (conntable_t *) calloc(1,sizeof(conntable_t));
-	assert (*ct != NULL);
+    if (*ct == NULL)
+    {
+        return 0;
+    }
 
 	for (i = 0; i < CONNTABLE_BUCKETS; i++)
+    {
 		(*ct)->buckets[i] = NULL;
-
-	return 1;
+    }
+    return 1;
 }
 
-/*
- * tcptable_hash ()
- *
- * Simple hash function for connections.
+/**
+ * Compute connection hash (index in a connection table, see ::conntable_t).
+ * Hash is an integer in interval 0..(::CONNTABLE_BUCKETS-1).
  */
 inline int tcptable_hash (conn_t *c)
 {
-	return (jhash_3words(c->lcl,
-				c->rmt,
-				(c->rmtp | c->lclp << 16),
-				32)) % CONNTABLE_BUCKETS;
+    /* TODO: Hash the whole ip address! */
+    return (jhash_3words(c->ip_src.s6_addr32[3],
+                c->ip_dst.s6_addr32[3],
+                (c->port_dst | c->port_src << 16),
+                32)) % CONNTABLE_BUCKETS;
 }
 
-/*
- * tcptable_add ()
- *
- * Add a connection to the connection table.
+/**
+ * Add a connection entry to a connection table.
  */
 void tcptable_add (conntable_t *ct, conn_t *c)
 {
@@ -343,10 +409,10 @@ void tcptable_add (conntable_t *ct, conn_t *c)
 	ct->buckets[bi]->next = old;
 }
 
-/*
- * tcptable_find ()
+/**
+ * Find a connection in a table.
  *
- * Find a connection in a table, return connection if found, NULL otherwise.
+ * \return The connection if found, NULL if it doesn't exist
  */
 conn_t* tcptable_find (conntable_t *ct, conn_t *c)
 {
@@ -357,9 +423,11 @@ conn_t* tcptable_find (conntable_t *ct, conn_t *c)
 #endif
 	bucket = ct->buckets[tcptable_hash (c)];
 	while (bucket != NULL) {
-		if ( (c->proto == bucket->proto) &&
-				(c->rmt == bucket->rmt) && (c->rmtp == bucket->rmtp) &&
-				(c->lcl == bucket->lcl) && (c->lclp == bucket->lclp)
+		if ((c->protocol == bucket->protocol) 
+                    && memcmp(&c->ip_dst, &bucket->ip_dst, sizeof(c->ip_dst)) == 0
+                    && (c->port_dst == bucket->port_dst)
+		    && memcmp(&c->ip_src, &bucket->ip_src, sizeof(c->ip_src)) == 0
+                    && (c->port_src == bucket->port_src)
 		   ) {
 			return bucket;
 		}
@@ -369,10 +437,8 @@ conn_t* tcptable_find (conntable_t *ct, conn_t *c)
 	return NULL;
 }
 
-/*
- * tcptable_free ()
- *
- * Free a connection table.
+/**
+ * Destroy a connection table (free memory).
  */
 void tcptable_free (conntable_t *ct)
 {

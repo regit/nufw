@@ -62,16 +62,15 @@ void user_check_and_decide (gpointer userdata, gpointer data)
               struct internal_message *message = g_new0(struct internal_message,1);
               /* We assume the source address we try to authenticate is source address
                * of client connection */
-              conn_elt->tracking.saddr = ((struct tls_buffer_read *)userdata)->ipv4_addr;
+              conn_elt->tracking.saddr = ((struct tls_buffer_read *)userdata)->ip_addr;
               message->type=INSERT_MESSAGE;
               message->datas=conn_elt;
               g_async_queue_push (nuauthdatas->localid_auth_queue,message);
               continue;
       } 
       /* Sanity check : verify source IP equality */
-      if  (  ((struct tls_buffer_read *)userdata)->ipv4_addr 
-              ==
-              htonl(conn_elt->tracking.saddr) ){
+      if  ( memcmp(& ((struct tls_buffer_read *)userdata)->ip_addr,
+              &conn_elt->tracking.saddr, sizeof(conn_elt->tracking.saddr)) == 0 ){
 #ifdef DEBUG_ENABLE
           if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_PACKET)){
               g_message("User : %s",conn_elt->username);
@@ -81,11 +80,14 @@ void user_check_and_decide (gpointer userdata, gpointer data)
           g_async_queue_push (nuauthdatas->connections_queue,conn_elt);
       } else {
           if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER)){
-              struct in_addr badaddr;
-              badaddr.s_addr=((struct tls_buffer_read *)userdata)->ipv4_addr;
-              g_message("User %s on %s tried to authenticate packet from other ip",
-                      conn_elt->username,
-                      inet_ntoa(badaddr));
+              char ip_ascii[INET6_ADDRSTRLEN];
+
+              if (inet_ntop(AF_INET6, &((struct tls_buffer_read *)userdata)->ip_addr, ip_ascii, sizeof(ip_ascii)) != NULL)
+              {
+                  g_message("User %s on %s tried to authenticate packet from other ip",
+                          conn_elt->username,
+                          ip_ascii);
+              }
               print_connection(conn_elt,NULL);
           }
           /* free connection */
@@ -159,10 +161,10 @@ int user_process_field_username(
     return 1;
 }    
 
-void user_process_field_ipv4(connection_t* connection, struct nuv2_authfield_ipv4 *ipfield)
+void user_process_field_ipv6(connection_t* connection, struct nuv2_authfield_ipv6 *ipfield)
 {
-    connection->tracking.saddr = ntohl(ipfield->src);
-    connection->tracking.daddr = ntohl(ipfield->dst);
+    connection->tracking.saddr = ipfield->src;
+    connection->tracking.daddr = ipfield->dst;
     connection->tracking.protocol = ipfield->proto;
 
     debug_log_message (VERBOSE_DEBUG, AREA_USER, "\tgot IPv4 field");
@@ -252,11 +254,11 @@ int user_process_field(
     }
 
     switch (field->type) {
-        case IPV4_FIELD:
-            if (auth_buffer_len < (int)sizeof(struct nuv2_authfield_ipv4)) {
+        case IPV6_FIELD:
+            if (auth_buffer_len < (int)sizeof(struct nuv2_authfield_ipv6)) {
                 return -1;
             }
-            user_process_field_ipv4(connection, (struct nuv2_authfield_ipv4 *)field);
+            user_process_field_ipv6(connection, (struct nuv2_authfield_ipv6 *)field);
             break;
 
         case APP_FIELD:
@@ -379,7 +381,7 @@ GSList* user_request(struct tls_buffer_read *datas)
 	 * We destroy all the received message and stop parsing */
 	if (
 			(
-			 (connection->tracking.saddr == INADDR_ANY) 
+			 memcmp(&connection->tracking.saddr, &in6addr_any, sizeof(connection->tracking.saddr)) == 0
 			 ||
 			 (connection->app_name == NULL)
 			)
