@@ -129,7 +129,7 @@ static nu_error_t mysql_close_open_user_sessions(struct log_mysql_params* params
     mysql_ret = mysql_real_query(ld, request, strlen(request));
     if (mysql_ret != 0){
         log_message (SERIOUS_WARNING, AREA_MAIN,
-            "Can execute request : %s\n", mysql_error(ld));
+            "[MySQL] Cannot execute request: %s", mysql_error(ld));
         mysql_close(ld);
         return NU_EXIT_ERROR;
     }
@@ -444,7 +444,7 @@ static inline int log_state_open(MYSQL *ld, connection_t *element,struct log_mys
         mysql_ret = mysql_real_query(ld, request, strlen(request));
         if (mysql_ret != 0){
             log_message (SERIOUS_WARNING, AREA_MAIN,
-                    "Can not update Data: %s\n", mysql_error(ld));
+                    "[MySQL] Cannot update data: %s", mysql_error(ld));
             return -1;
         }
     }
@@ -469,7 +469,7 @@ static inline int log_state_open(MYSQL *ld, connection_t *element,struct log_mys
     if (mysql_ret != 0)
     {
         log_message (SERIOUS_WARNING, AREA_MAIN,
-                "Error when inserting data in MySQL: %s\n",
+                "[MySQL] Cannot insert data: %s",
                 mysql_error(ld));
         return -1;
     }
@@ -611,7 +611,7 @@ static int log_state_drop(MYSQL *ld, connection_t *element, struct log_mysql_par
     if (mysql_ret != 0)
     {
         log_message (SERIOUS_WARNING, AREA_MAIN,
-                "Error when inserting data in MySQL: %s\n",
+                "[MySQL] Cannot insert data: %s",
                 mysql_error(ld));
         return -1;
     }
@@ -749,7 +749,7 @@ G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t
     mysql_ret = mysql_real_query(ld, request, strlen(request));
     if (mysql_ret != 0){
         log_message (SERIOUS_WARNING, AREA_MAIN,
-            "Can execute request : %s\n", mysql_error(ld));
+            "[MySQL] Cannot execute request: %s", mysql_error(ld));
         return -1;
     }
     return 1;

@@ -98,7 +98,7 @@ static nu_error_t pgsql_close_open_user_sessions(struct log_pgsql_params* params
     /* check error */
     if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK){
         log_message (SERIOUS_WARNING, AREA_MAIN,
-                "Can not insert session in PostgreSQL: %s",
+                "[PostgreSQL] Cannot insert session: %s",
                 PQerrorMessage(ld));
         PQclear(Result);
         PQfinish(ld);
@@ -357,7 +357,7 @@ static int pgsql_insert(PGconn *ld, connection_t *element, char *oob_prefix, tcp
     /* check error */
     if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK){
         log_message (SERIOUS_WARNING, AREA_MAIN,
-                "Can not insert Data in PostgreSQL: %s",
+                "[PostgreSQL] Cannot insert data: %s",
                 PQerrorMessage(ld));
         PQclear(Result);
         return -1;
@@ -395,7 +395,7 @@ static int pgsql_update_close(PGconn *ld, connection_t *element,struct log_pgsql
     Result = PQexec(ld, request);
     if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK){
         log_message (SERIOUS_WARNING, AREA_MAIN,
-                "Can not update PostgreSQL data: %s",
+                "[PostgreSQL] Cannot update data: %s",
                 PQerrorMessage(ld));
         PQclear(Result);
         return -1;
@@ -464,7 +464,7 @@ static int pgsql_update_state(PGconn *ld, connection_t *element,
         Result = PQexec(ld, request);
         if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK){
             log_message (SERIOUS_WARNING, AREA_MAIN,
-                "Can not update data: %s",
+                "[PostgreSQL] Cannot update data: %s",
                 PQerrorMessage(ld));
             PQclear(Result);
             return -1;
@@ -604,7 +604,7 @@ G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t
     /* check error */
     if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK){
         log_message (SERIOUS_WARNING, AREA_MAIN,
-                "Can not insert session in PostgreSQL: %s",
+                "[PostgreSQL] Cannot insert session: %s",
                 PQerrorMessage(ld));
         PQclear(Result);
         return -1;
