@@ -959,6 +959,7 @@ NuAuth* nu_client_init2(
         void* username_callback,
         void* passwd_callback, 
         void* tls_passwd_callback, 
+        unsigned char debug_mode,
         nuclient_error *err)
 {
 	conntable_t *new;
@@ -986,6 +987,7 @@ NuAuth* nu_client_init2(
 	session->username_callback = username_callback;
 	session->passwd_callback = passwd_callback;
 	session->tls_passwd_callback = tls_passwd_callback;
+    session->debug_mode = debug_mode;
 	session->timestamp_last_sent = time(NULL);
 
 	/* create session mutex */

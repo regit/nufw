@@ -250,6 +250,10 @@ int nu_client_real_check(NuAuth *session, nuclient_error *err)
 {
 	conntable_t *new;
 	int nb_packets=0;
+    if (session->debug_mode)
+    {
+        printf("[+] Client is asked to send new connections.\n");
+    }
 	if (tcptable_init (&new) == 0)
         {
             SET_ERROR(err, INTERNAL_ERROR, MEMORY_ERR);

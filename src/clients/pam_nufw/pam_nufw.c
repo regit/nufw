@@ -239,14 +239,10 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
       /* libnuclient init function */
       nu_client_global_init(err);
       session = nu_client_init2(
-              pn_s.nuauth_srv,
-              pn_s.nuauth_port,
-              NULL,
-              NULL,
-              &get_username,
-              &get_password,
-              NULL,
-              err);
+              pn_s.nuauth_srv, pn_s.nuauth_port,
+              NULL, NULL,
+              &get_username, &get_password,
+              NULL, 0, err);
 
       /*syslog(LOG_INFO,"(pam_nufw) after nu_client_init2");*/
       if(session == NULL){
@@ -273,15 +269,10 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
                       tempo=tempo*2;
                   }
                   session = nu_client_init2(
-                          pn_s.nuauth_srv,
-                          pn_s.nuauth_port,
-                          NULL,
-                          NULL,
-                          &get_username,
-                          &get_password,
-                          NULL,
-                          err
-                          );
+                          pn_s.nuauth_srv, pn_s.nuauth_port,
+                          NULL, NULL,
+                          &get_username, &get_password,
+                          NULL, 0, err);
                   if (session==NULL){/* quit if password is wrong. to not lock user account */
                       syslog(LOG_ERR,"(pam_nufw) unable to reconnect to server: %s",nu_client_strerror(err));
                       if (err->error == BAD_CREDENTIALS_ERR){

@@ -197,6 +197,7 @@ typedef struct {
 	conntable_t *ct;         /*!< Connection table */
 	u_int32_t packet_seq;    /*!< Packet sequence number (start at zero) */
     int auth_by_default;     /*!< Auth. by default (=1) */
+    unsigned char debug_mode; /*!< Debug mode, enabled if different than zero */
 
     /** Server mode: #SRV_TYPE_POLL or #SRV_TYPE_PUSH */
 	u_int8_t server_mode;
@@ -272,6 +273,9 @@ NuAuth* nu_client_init2(
         
         /** Callback to get TLS password, prototype: char* func() */
         void* tls_passwd_callback, 
+    
+        /** Debug mode, enabled if different than zero */
+        unsigned char debug_mode,
         
         nuclient_error *err); /*!< Structure to store error (if any) */
 

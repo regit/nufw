@@ -156,6 +156,10 @@ int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
       authfield->length=htons(sizeof(struct nuv2_authfield_ipv6));
   }
   header->length=htons(header->length);
+  if (session->debug_mode)
+  {
+      printf("[+] Send %u connection(s) (in SYN_SENT state) to nuauth\n", item);
+  }
 
   /* and send it */
   if(session->tls){

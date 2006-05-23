@@ -420,6 +420,7 @@ void main_loop(nutcpc_context_t *context)
                     &get_username,
                     &get_password,
                     NULL,
+                    context->debug_mode,
                     err);
             if (session!=NULL){
                 context->tempo = 1;
@@ -509,6 +510,7 @@ void init_library(nutcpc_context_t *context)
             context->srv_addr, context->port,
             NULL, NULL,
             &get_username, &get_password,  NULL,
+            context->debug_mode,
             err);
 
     /* Library failure? */
