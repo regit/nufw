@@ -18,6 +18,11 @@
 #ifndef CONNECTIONS_H
 #define CONNECTIONS_H
 
+/**
+ * \addtogroup NuauthCore
+ * @{
+ */
+
 /** 
  * State of a connection (type ::connection_t) in the authentification server.
  * See field state of a structure ::connection_t and function
@@ -128,5 +133,7 @@ typedef struct
 } connection_t;
 
 GSList * ALLGROUP;
+
+/** @} */
 
 #endif

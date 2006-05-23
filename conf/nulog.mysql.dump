@@ -51,6 +51,7 @@ CREATE TABLE tcp_ports (
 
 CREATE TABLE users (
   ip_saddr binary(16) NOT NULL,
+  socket int(10) unsigned NOT NULL,
   user_id int(10) unsigned default NULL,
   username varchar(30) default NULL,
   bad_conns int(10) unsigned not NULL default '0',

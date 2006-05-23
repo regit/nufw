@@ -29,11 +29,16 @@
  *
  */
 
+/**
+ * \defgroup libnuclient Libnuclient
+ * @{
+ */
+
 /*! \file libnuclient.c
   \brief Main file for libnuclient
 
   It contains all the exported functions
-  */
+*/
 
 
 #include "nuclient.h"
@@ -178,10 +183,7 @@ void do_panic(const char *filename, unsigned long line, const char *fmt, ...)
 
 void nu_exit_clean(NuAuth * session)
 {
-        gnutls_certificate_free_keys(session->cred);
-        gnutls_certificate_free_credentials(session->cred);
-	gnutls_deinit(session->tls);
-	if(session->ct){
+    if(session->ct){
 		tcptable_free (session->ct);
 	}
 	if (session->socket>0){
@@ -195,6 +197,12 @@ void nu_exit_clean(NuAuth * session)
 	if (session->password){
 		free(session->password);
 	}
+
+    gnutls_certificate_free_keys(session->cred);
+    gnutls_certificate_free_credentials(session->cred);
+
+	gnutls_deinit(session->tls);
+
 	if (session->server_mode == SRV_TYPE_PUSH){
 		pthread_mutex_destroy(&(session->check_count_mutex));
 		pthread_cond_destroy(&(session->check_cond));
@@ -356,13 +364,13 @@ static int add_packet_to_send(NuAuth * session,conn_t** auth,int *count_p,conn_t
 }
 
 /**
- * Compare connection tables and send packets 
+ * \brief Compare connection tables and send packets 
  *
  * Compare the `old' and `new' tables, sending packet to nuauth 
  * if differences are found.
  *
- * Return -1 if error (then disconnect is needed) or the number of 
- * authenticated packets if it has succeed
+ * \return -1 if error (then disconnect is needed) or the number of 
+ * authenticated packets if it has succeeded
  */
 int compare (NuAuth * session,conntable_t *old, conntable_t *new, nuclient_error *err)
 {
@@ -389,9 +397,7 @@ int compare (NuAuth * session,conntable_t *old, conntable_t *new, nuclient_error
 					return -1;
 				}
 				nb_packets++;
-			} 
-#ifdef LINUX
-			else {
+			} else {
 				/* compare values of retransmit */
 				if (bucket->retransmit > same_bucket->retransmit) {
 #if DEBUG
@@ -421,7 +427,6 @@ int compare (NuAuth * session,conntable_t *old, conntable_t *new, nuclient_error
 					}
 				}
 			}
-#endif /* LINUX */
 			bucket = bucket->next;
 		}
 	}
@@ -463,7 +468,26 @@ static int generate_dh_params(void)
 }
 
 /**
- * Destroy an client session: free all memory
+ * \defgroup nuclientAPI API of libnuclient
+ * \brief The high level API of libnuclient can be used to build a NuFW client
+ *
+ * A client needs to call a few functions in the correct order to be able to authenticate:
+ *  - nu_client_global_init(): To be called once at program start
+ *  - nu_client_init2(): start user session
+ *  - nu_client_check(): do a check, it has to be run at regular interval
+ *  - nu_client_free(): free a user session
+ *  - nu_client_global_deinit(): To be called once at program end
+ */
+
+/**
+ * \ingroup nuclientAPI
+ * \brief Destroy a client session: free all used memory
+ *
+ * This destroy a session and free all related structures.
+ *
+ * \param session A ::NuAuth session to be cleaned
+ * \param err A pointer to a nuclient_error: which contains error after exit
+ * 
  */
 void nu_client_free(NuAuth *session, nuclient_error *err)
 {
@@ -471,14 +495,19 @@ void nu_client_free(NuAuth *session, nuclient_error *err)
         ask_session_end(session);
         /* all threads are dead, we are the one who can access to it */
         /* destroy session */
-	nu_exit_clean(session);
+        nu_exit_clean(session);
         SET_ERROR(err, INTERNAL_ERROR, NO_ERR);
 }
 
 /**
- * Global initialisation
+ * \ingroup nuclientAPI
+ * \brief global initialisation function
  *
- * Warning: to be called once.
+ * This function inits all library needed to initiate a connection to a nuauth server
+ *
+ * \param err A pointer to a ::nuclient_error which contains at exit the error
+ *
+ * \warning To be called only once.
  */
 void nu_client_global_init(nuclient_error *err)
 {
@@ -510,9 +539,10 @@ void nu_client_global_init(nuclient_error *err)
 }
 
 /**
- * Global de init 
+ * \ingroup nuclientAPI
+ * \brief  Global de init function 
  *
- * Warning: To be called once, when leaving.
+ * \warning To be called once, when leaving.
  */
 void nu_client_global_deinit(nuclient_error *err)
 {
@@ -546,7 +576,11 @@ int send_os(NuAuth * session, nuclient_error *err)
     /* encode OS informations in base64 */
 	stringlen = strlen(info.sysname) + 1 
         + strlen(info.release) + 1 + strlen(info.version) + 1;
-	oses = alloca(stringlen);
+#ifdef LINUX
+	oses=alloca(stringlen);
+#else 
+	oses=calloc(stringlen,sizeof(char));
+#endif
 	enc_oses = calloc(4*stringlen, sizeof(char));
 	(void)secure_snprintf(oses, stringlen,
                           "%s;%s;%s",
@@ -556,13 +590,21 @@ int send_os(NuAuth * session, nuclient_error *err)
 		sasl_encode64(oses, strlen(oses), enc_oses, actuallen, &actuallen);
 	}
 
+#ifndef LINUX
+	free(oses);
+#endif
+
     /* build packet header */
 	osfield.type = OS_FIELD;
 	osfield.option = OS_SRV;
 	osfield.length = sizeof(osfield) + actuallen;
 
     /* add packet body */
-	buf = alloca(osfield.length);
+#ifdef LINUX
+	buf=alloca(osfield.length); 
+#else
+	buf=calloc(osfield.length,sizeof(char));
+#endif
 	osfield_length = osfield.length;
 	osfield.length = htons(osfield.length);
 	pointer = buf ;
@@ -582,8 +624,14 @@ int send_os(NuAuth * session, nuclient_error *err)
 	if (gnutls_record_recv(session->tls,buf,osfield_length)<=0){
 		errno=EACCES;
 		SET_ERROR(err, GNUTLS_ERROR, ret);
+#ifndef LINUX
+		free(buf);
+#endif
 		return 0;
 	}
+#ifndef LINUX
+		free(buf);
+#endif
     
     if (buf[0] == SRV_TYPE) {
         session->server_mode = buf[1];
@@ -594,7 +642,7 @@ int send_os(NuAuth * session, nuclient_error *err)
 }
 
 /**
- * Initialiaze TLS:
+ * Initialize TLS:
  *    - Set key filename (and test if the file does exist)
  *    - Set certificate filename (and test if the file does exist)
  *    - Allocate x509 credentials
@@ -879,6 +927,47 @@ int tls_handshake(NuAuth * session, nuclient_error *err)
 }
 
 /**
+ * Set host address: convert hostname string to IPv4 address
+ */
+int set_host(NuAuth * session, nuclient_error *err,
+		const char *hostname, unsigned int port)
+{
+	struct hostent *host = gethostbyname(hostname);
+	if (host == NULL)
+	{
+/*		fprintf(stderr, "*** An error occured when resolving the provided hostname\n");*/
+                SET_ERROR(err, INTERNAL_ERROR, DNS_RESOLUTION_ERR);
+		return 0;
+	}
+
+	(session->adr_srv).sin_family = AF_INET;
+	(session->adr_srv).sin_port = htons(port);
+	(session->adr_srv).sin_addr = *(struct in_addr *)host->h_addr_list[0];
+	if ((session->adr_srv).sin_addr.s_addr == 0) {
+	/* if ((session->adr_srv).sin_addr.s_addr == INADDR_NONE) { */
+
+                SET_ERROR(err, INTERNAL_ERROR, NO_ADDR_ERR);
+		return 0;
+	}
+	
+	return 1;
+}
+
+/**
+ * \ingroup nuclientAPI
+ * \brief Init connection to nuauth server
+ *
+ * \param hostname String containing hostname of nuauth server
+ * \param port Port where nuauth server is listening
+ * \param keyfile Complete path to a key file stored in PEM format
+ * \param certfile Complete path to a certificate file stored in PEM format
+ * \param username_callback Pointer to a function that will be used to get user name
+ * \param passwd_callback Pointer to a function that will be used to get user password 
+ * \param tlscred_callback Pointer to a function that can be used to get certificate password (currently untested)
+ * \param err Pointer to a nuclient_error: which contains the error
+ * \return A pointer to a valid ::NuAuth structure or NULL if init has failed
+ * 
+ * \par Internal
  * Initialisation of nufw authentication session: set basic fields and then
  * call:
  *    - init_socket() ;
@@ -931,6 +1020,12 @@ NuAuth* nu_client_init2(
 
 	/* set fields about TLS and certificates */
 	if (!init_tls_cert(session, err, keyfile, certfile)) {
+		nu_exit_clean(session);
+		return NULL;
+	}
+
+    /* set field about host */
+	if (!set_host(session, err, hostname, port)) {
 		nu_exit_clean(session);
 		return NULL;
 	}
@@ -994,9 +1089,32 @@ void ask_session_end(NuAuth* session)
 }
 
 /**
- * Convert an error to an human readable string
+ * \ingroup nuclientAPI
+ * \brief Allocate a structure to store client error
  */
-const char* nuclient_strerror (nuclient_error *err)
+int nu_client_error_init(nuclient_error **err)
+{
+      if (*err != NULL)
+          return -1;
+      *err=malloc(sizeof(nuclient_error));
+      return 0;
+}
+
+/**
+ * \ingroup nuclientAPI
+ * \brief Destroy an error (free memory)
+ */
+void nu_client_error_destroy(nuclient_error *err)
+{
+    if (err!=NULL)
+      free(err);
+}
+
+/**
+ * \ingroup nuclientAPI
+ * \brief Convert an error to an human readable string
+ */
+const char* nu_client_strerror (nuclient_error *err)
 {
   if (err==NULL)
       return "Error structure was not initialised";
@@ -1025,7 +1143,8 @@ const char* nuclient_strerror (nuclient_error *err)
       }
     break;
     default:
-      return "Unkown family error";
+      return "Unknown family error";
   }
 }
 
+/** @} */

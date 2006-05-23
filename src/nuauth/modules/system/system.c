@@ -18,6 +18,19 @@
 
 #include <auth_srv.h>
 
+/**
+ * \ingroup AuthNuauthModules
+ * \defgroup SystemModule PAM+NSS authentication module
+ *
+ * @{ */
+
+/**
+ * \file system.c
+ *
+ * \brief Core file for system module
+ *
+ */
+
 #include "../../nuauth_gcrypt.h"
 
 #include <pwd.h>
@@ -204,7 +217,7 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass
 	return SASL_OK;
 }
 
-G_MODULE_EXPORT gboolean module_params_unload(gpointer params_p)
+G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
 {
   return TRUE;
 }
@@ -213,3 +226,5 @@ G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
 {
   return TRUE;
 }
+
+/** @} */

@@ -21,6 +21,15 @@
 #include <prelude-log.h>
 #include <idmef-tree-wrap.h>
 
+/**
+ *
+ * \ingroup LoggingNuauthModules
+ * \defgroup PreludeModule Prelude logging module
+ *
+ * @{ */
+
+
+
 confparams mysql_nuauth_vars[] = {
     /*    { "prelude_..." , G_TOKEN_STRING, 0 , PRELUDE_... }, */
 };
@@ -28,7 +37,7 @@ confparams mysql_nuauth_vars[] = {
 GMutex *global_client_mutex;
 prelude_client_t *global_client; /* private pointer for mysql database access */
 
-G_MODULE_EXPORT gchar* module_params_unload(gpointer params_ptr)
+G_MODULE_EXPORT gchar* unload_module_with_params(gpointer params_ptr)
 {
     return NULL;
 }
@@ -143,7 +152,7 @@ static int add_idmef_object(idmef_message_t *message, const char *object, const 
     return ret;
 }
 
-int feed_template(idmef_message_t *idmef)
+static int feed_template(idmef_message_t *idmef)
 {
 #if 0    
     char buffer[50];
@@ -177,7 +186,7 @@ int feed_template(idmef_message_t *idmef)
     return 1;
 }
 
-idmef_message_t *create_alert_template()
+static idmef_message_t *create_alert_template()
 {
     idmef_message_t *idmef;
     int ret;
@@ -197,14 +206,14 @@ idmef_message_t *create_alert_template()
     return idmef;
 }
 
-idmef_message_t *create_packet_template()
+static idmef_message_t *create_packet_template()
 {
     idmef_message_t *idmef = create_alert_template();
         
     return idmef;
 }
 
-idmef_message_t *create_session_template()
+static idmef_message_t *create_session_template()
 {
     char buffer[50];
     idmef_message_t *idmef = create_alert_template();
@@ -236,7 +245,7 @@ idmef_message_t *create_session_template()
     return idmef;
 }
 
-idmef_message_t *create_message_packet(
+static idmef_message_t *create_message_packet(
         idmef_message_t *tpl,
         tcp_state_t state, connection_t* conn, 
         char *state_text, char *impact,  char *severity)
@@ -362,7 +371,7 @@ idmef_message_t *create_message_packet(
     return idmef;
 }
 
-idmef_message_t *create_message_session(
+static idmef_message_t *create_message_session(
         idmef_message_t *tpl,
         user_session_t *session,
         char *state_text, char *impact,  char *severity)
@@ -607,3 +616,4 @@ G_MODULE_EXPORT gchar* g_module_check_init()
     return NULL;
 }
 
+/** @} */

@@ -20,8 +20,23 @@
 #include "cache.h"
 
 /**
+ * \addtogroup Cache
+ * @{
+ */
+
+/** 
+ * \file users.c
+ * \brief User cache system
+ *
+ * Functions necessary to cache user information
+ */
+
+/**
  * used when destroying value from hash
  * hash value is a gslist of entry
+ *
+ * \param datas Pointer to struct user_cached_datas:
+ * \param userdata Not used
  */
 
 void free_user_struct(gpointer datas,gpointer userdata)
@@ -144,3 +159,5 @@ int init_user_cache()
 			exit(EXIT_FAILURE);
 		return 1;
 }
+
+/** @} */

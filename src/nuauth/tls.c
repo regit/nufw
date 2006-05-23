@@ -27,6 +27,18 @@
 #include <unistd.h>
 
 
+/**
+ * \addtogroup TLS
+ * @{
+ */
+
+/**
+ * \file nuauth/tls.c
+ * \brief Functions use to create/destroy a TLS connection
+ *
+ * Contain common functions tor TLS handling
+ */
+
 
 /* These are global */
 struct nuauth_tls_t nuauth_tls; 
@@ -190,6 +202,8 @@ static ssize_t tls_push_func(gnutls_transport_ptr ptr, const void *buf, size_t c
  * Finally checks the certificate using check_certs_for_tls_session() 
  * if needed.
  * 
+ * \param socket_fd Socket to established TLS session on
+ * \param session_ptr Pointer of pointer to a gnutls session
  * \return Returns SASL_BADPARAM if fails, SASL_OK otherwise.
  */
 int tls_connect(int socket_fd,gnutls_session** session_ptr) 
@@ -209,7 +223,6 @@ int tls_connect(int socket_fd,gnutls_session** session_ptr)
 
     /* init. tls session */
     session = initialize_tls_session();
-    *session_ptr = session;
     if (session == NULL)
     {
         log_message (INFO, AREA_MAIN,
@@ -220,6 +233,8 @@ int tls_connect(int socket_fd,gnutls_session** session_ptr)
 
     gnutls_transport_set_ptr( *session, GINT_TO_POINTER(socket_fd));
     gnutls_transport_set_push_function (* session, tls_push_func);
+
+    *session_ptr = session;
 
     debug_log_message (DEBUG, AREA_MAIN, "NuFW TLS Handshaking");
     ret = gnutls_handshake( *session);
@@ -260,6 +275,7 @@ int tls_connect(int socket_fd,gnutls_session** session_ptr)
     } else {
 	debug_log_message (DEBUG, AREA_MAIN, "Certificate verification is not done as requested");
     }
+
     return SASL_OK;
 }
 
@@ -483,3 +499,4 @@ void end_tls()
     gnutls_dh_params_deinit(nuauth_tls.dh_params);
     gnutls_global_deinit();
 }
+/**@}*/

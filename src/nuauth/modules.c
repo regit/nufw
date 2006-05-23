@@ -33,6 +33,28 @@
  **
  */
 
+/**
+ *
+ * \ingroup  Nuauth
+ * \defgroup NuauthModules Nuauth Modules
+ *
+ * \brief Modules are used for every interaction with the outside. They are implemented using Glib modules.
+ *
+ * A module has to export a set of functions to be able to initialize :
+ *  - init_module_from_conf() : Init module with respect to a configuration file
+ *  - unload_module_with_params() : Clean a module instance and free related parameter
+ * Optionally, the initialisation function of the glib can be used
+ * 
+ * After this, it has to export the functions that are used by hook :
+ *  - define_periods() : define period that can be used in time-based acls
+ *  - user_check() : verify user credentials and found groups the user belong to
+ *  - acl_check() : verify acl for a packet
+ *  - user_session_logs() : log user connection and disconnection
+ *  - user_packet_logs() : log packet
+ * 
+ * @{
+ */
+
 /** 
  * \file modules.c
  * \brief Take care of interaction with modules
@@ -302,7 +324,7 @@ static int load_modules_from(gchar* confvar, gchar* func,GSList** target)
         }
         
         /* get params for module by calling module exported function */
-        if (!g_module_symbol (current_module->module, MODULE_PARAMS_UNLOAD, (gpointer*)&(current_module->free_params))) {
+        if (!g_module_symbol (current_module->module, "unload_module_with_params", (gpointer*)&(current_module->free_params))) {
             log_message(WARNING, AREA_MAIN,
                     "No init function for module %s: PLEASE UPGRADE!",
                     current_module->module_name);
@@ -430,7 +452,26 @@ void unload_modules()
     g_mutex_unlock(modules_mutex);
 }
 
+/**
+ * \brief Test if this is initial start of nuauth
+ *
+ * \return TRUE if this is the initial start, FALSE if this is not the case
+ */
+gboolean nuauth_is_reloading()
+{
+  gboolean reloading=FALSE;
+  g_mutex_lock(nuauthdatas->reload_cond_mutex);
+  if (nuauthdatas->need_reload){
+      reloading = TRUE;
+  }
+  g_mutex_unlock(nuauthdatas->reload_cond_mutex);
+  return reloading;
+}
 
+/**
+ * \brief Block till reload is over
+ *
+ */
 void block_on_conf_reload()
 {
     g_mutex_lock(nuauthdatas->reload_cond_mutex);
@@ -444,3 +485,4 @@ void block_on_conf_reload()
     g_mutex_unlock(nuauthdatas->reload_cond_mutex);
 }
 
+/* @} */

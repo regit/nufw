@@ -118,6 +118,7 @@ SELECT pg_catalog.setval ('seq_ulog', 36, true);
 
 CREATE TABLE users (
     ip_saddr inet NOT NULL,
+    socket bigint NOT NULL,
     user_id bigint,
     username character varying(30),
     bad_conns integer DEFAULT 0 NOT NULL,

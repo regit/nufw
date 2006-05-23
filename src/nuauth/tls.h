@@ -18,6 +18,13 @@
 #define TLS_H
 
 /**
+ * \ingroup Nuauth
+ * \defgroup TLS TLS servers
+ *
+ */
+ 
+
+/**
  * Number of bits for use in an Diffie Hellman key exchange,
  * used in gnutls_dh_set_prime_bits() call.
  */

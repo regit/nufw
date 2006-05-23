@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
-AC_INIT(NuFW, 2.0-beta2, nufw-devel@nongnu.org)
+AC_INIT(NuFW, 2.0, nufw-devel@nongnu.org)
 AM_CONFIG_HEADER(src/include/config.h)
 AC_CONFIG_SRCDIR([src/nufw/main.c])
 
@@ -10,6 +10,7 @@ AC_CONFIG_SRCDIR([src/nufw/main.c])
 AC_PROG_CC
 
 AC_PROG_LIBTOOL
+AM_PROG_LIBTOOL
 AC_PROG_INSTALL
 
 # Checks for endianess
@@ -17,8 +18,9 @@ AC_C_BIGENDIAN()
 
 case $host in
 *-*-linux*) AC_DEFINE([LINUX],[1],[Target is Linux]) ;;
+*-*-darwin*) AC_DEFINE([FREEBSD],[1],[Target is darwin (freebsd like)]) ;;
 *-*-freebsd*) AC_DEFINE([FREEBSD],[1],[Target is freebsd]) ;;
-*) AC_MSG_ERROR([Linux or FreeBSD only, dude!]);;
+*) AC_MSG_ERROR([Linux, FreeBSD, Darwin only, dude!]);;
 esac
 
 # check to see if struct dirent has the d_type member
@@ -79,6 +81,7 @@ AC_ARG_ENABLE(nufw,   [AC_HELP_STRING(--disable-nufw, Don't build nufw (default 
 AC_ARG_ENABLE(nuauth, [AC_HELP_STRING(--disable-nuauth, Don't build nuauth (default is to build))],build_nuauth=$enableval, build_nuauth="yes")
 AC_ARG_ENABLE(libnuclient,   [AC_HELP_STRING(--disable-libnuclient, Don't build libnuclient (default is to build))],build_libnuclient=$enableval, build_libnuclient="yes")
 AC_ARG_ENABLE(nutcpc,   [AC_HELP_STRING(--disable-nutcpc, Don't build nutcpc (default is to build))],build_nutcpc=$enableval, build_nutcpc="yes" )
+AC_ARG_ENABLE(pam-nufw,   [AC_HELP_STRING(--disable-pam-nufw, Don't build pam_nufw (default is to build))],build_pam_nufw=$enableval, build_pam_nufw="yes" )
 
 AC_ARG_WITH(perf-display, 
     [AC_HELP_STRING(--with-perf-display, Enable benchmark of user authentification)],
@@ -175,10 +178,16 @@ if test "${have_conntrack}" = "yes"; then
 	fi
 fi
 
+if test "${build_pam_nufw}" = "yes"; then
+    #AC_CHECK_LIB([pam], [pam_sm_authenticate],AC_DEFINE([HAVE_LIBRARY_PAM],[1],[Pam lib flag]),AC_MSG_ERROR([pam library needed for pam module]))
+    AC_CHECK_LIB([pam],[pam_start],AC_DEFINE([HAVE_LIBRARY_PAM],[1],[pam lib flag]),AC_MSG_ERROR([PAM library needed for pam module]))
+fi
+
 AM_CONDITIONAL(BUILD_NUFW, test x${build_nufw} = xyes)
 AM_CONDITIONAL(BUILD_NUAUTH, test x${build_nuauth} = xyes)
 AM_CONDITIONAL(BUILD_NUTCPC, test x${build_nutcpc} = xyes)
 AM_CONDITIONAL(BUILD_LIBNUCLIENT, test x${build_libnuclient} = xyes)
+AM_CONDITIONAL(BUILD_PAM_NUFW, test x${build_pam_nufw} = xyes)
 
 AM_CONDITIONAL(HAVE_IPQ,test x$have_ipq = xyes && test x$have_conntrack = x )
 AM_CONDITIONAL(USE_USER_MARK, test x$enable_user_mark = xyes)
@@ -233,6 +242,7 @@ AC_CONFIG_FILES([Makefile
         src/clients/Makefile
         src/clients/lib/Makefile
         src/clients/nutcpc/Makefile
+        src/clients/pam_nufw/Makefile
         src/nufw/Makefile
         src/support/Makefile
         src/support/dbm/Makefile
@@ -309,8 +319,12 @@ if test "${build_libnuclient}" = "yes"; then
 	AC_MSG_RESULT([* Compiling libnuclient])
 fi
 
-if test "${build_nutpcc}" = "yes"; then
+if test "${build_nutcpc}" = "yes"; then
 	AC_MSG_RESULT([* Compiling nutcpc])
+fi
+
+if test "${build_pam_nufw}" = "yes"; then
+	AC_MSG_RESULT([* Compiling pam_nufw])
 fi
 
 AC_MSG_RESULT([

@@ -21,11 +21,20 @@
 #include "auth_plaintext.h"
 
 /**
+ *
+ * \ingroup AuthNuauthModules
+ * \defgroup PlaintextModule Plaintext authentication and acl module
+ *
+ * @{ */
+
+
+
+/**
  * strip_line()
  * Returns a pointer on stripped line or
  * NULL if the line should be skipped and acceptnull is true.
  */
-char *strip_line(char *line, int acceptnull)
+static char *strip_line(char *line, int acceptnull)
 {
   char *p_tmp;
 
@@ -58,7 +67,7 @@ char *strip_line(char *line, int acceptnull)
  * prefix is displayed in front of the log messages.
  * Returns 0 if successful.
  */
-int parse_ints(char *intline, GSList **p_intlist, char *prefix)
+static int parse_ints(char *intline, GSList **p_intlist, char *prefix)
 {
   char *p_nextint;
   char *p_ints = intline;
@@ -103,7 +112,7 @@ int parse_ints(char *intline, GSList **p_intlist, char *prefix)
  * prefix is displayed in front of the log messages.
  * Returns 0 if successful.
  */
-int parse_ports(char *portsline, GSList **p_portslist, char *prefix)
+static int parse_ports(char *portsline, GSList **p_portslist, char *prefix)
 {
   char *p_nextports;
   char *p_ports = portsline;
@@ -201,7 +210,7 @@ int match_ip(GSList *ip_list, struct in6_addr *addr)
  * prefix is displayed in front of the log messages.
  * Returns 0 if successful.
  */
-int parse_ips(char *ipsline, GSList **ip_list, char *prefix)
+static int parse_ips(char *ipsline, GSList **ip_list, char *prefix)
 {
   char *p_nextip;
   struct in_addr ip_addr4;
@@ -315,7 +324,7 @@ int parse_ips(char *ipsline, GSList **ip_list, char *prefix)
  * Returns 0 if successful.
  * Line format: "username:passwd:gid1,gid2,gid3" (gid are numbers)
  */
-int read_user_list(struct plaintext_params* params)
+static int read_user_list(struct plaintext_params* params)
 {
   struct T_plaintext_user *plaintext_user;
   FILE *fd;
@@ -430,7 +439,7 @@ int read_user_list(struct plaintext_params* params)
  * ACL begins with "[ACL name]", then each line should have the structure
  * "key = value".  For example "proto = 6".
  */
-int read_acl_list(struct plaintext_params* params)
+static int read_acl_list(struct plaintext_params* params)
 {
   FILE *fd;
   char line[1024];
@@ -695,7 +704,7 @@ int read_acl_list(struct plaintext_params* params)
   return 0;
 }
 
-G_MODULE_EXPORT gboolean module_params_unload(gpointer params_p)
+G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
 {
   struct plaintext_params* params=(struct plaintext_params*)params_p;
   /*  Free user list */
@@ -808,7 +817,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
 }
 
 /*  This function is used by g_slist_find_custom() in user_check(). */
-gint find_by_username(struct T_plaintext_user *a, struct T_plaintext_user *b)
+static gint find_by_username(struct T_plaintext_user *a, struct T_plaintext_user *b)
 {
   return strcmp(a->username, b->username);
 }
@@ -1095,3 +1104,4 @@ G_MODULE_EXPORT GSList* acl_check(connection_t* element,gpointer params)
   return g_list;
 }
 
+/** @} */

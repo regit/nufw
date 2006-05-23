@@ -1,8 +1,21 @@
-2.0-rc1 (2006/05/03)
+2.0 (2005/05/22)
+	- nuauth : fix period handling
+	- libnuclient : fix crash when specified hostname is unvalid
+	- nutcpc : do not try to reconnect if password has changed, this will
+	  avoid to block user account after multiple retries
+	- pam_nufw : initial release
+2.0-rc2 (2006/05/15)
+	- nuauth : add sanity check on type of field contained in a packet
+	- libnuclient : fix MacOSX port
+	- nuauth SQL user session logging : close opened user session when leaving or when starting
+	- nuauth modules : systematic use of static declared function to avoid conflict
+2.0-rc1 (2006/05/04)
 	- nufw : fix possible problem with connection fixed timeout and NAT
 	- nufw : add -M option to use mark to select conntrack event to be sent to
 	  nuauth
 	- NuFW : fix hello mode authentication
+	- doxygen documentation improvement
+	- nuauth : add antispoofing test to hello mode authentication
 2.0-beta2 (2006/06/27)
 	- nuauth : fix period reloading
 	- nuauth : fix logging as UNAUTHENTICATED DROP of established packet

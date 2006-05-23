@@ -22,6 +22,22 @@
 #include <auth_ldap.h>
 #include "security.h"
 
+/**
+ * \ingroup NuauthModules
+ * \defgroup AuthNuauthModules Authentication and acls checking modules
+ *
+ * \brief These type modules permit user authentication and acl checking
+ *
+ * It can export :
+ *  - an user check function named user_check() function which realise user authentication.
+ *  - an acl checking function named acl_check() function to get the acls matching a packet. 
+ *
+ * \par
+ * A special case is the ip authentication mechanism which require the export of function called ip_authentication(). 
+ * It is used to authenticate people based on a method which does not involve a NuFW client. For the moment, only an ident
+ * module is available.
+ */
+
 /*--- Decimal string <-> Base 10^n number type config --*/
 typedef unsigned long digit_t;
 #define BASE 1000000     /** Use 6 decimal digits in each number digit */
@@ -33,6 +49,13 @@ typedef unsigned long digit_t;
 #  error "Base is too big"
 #endif
 typedef digit_t number_t[DIGIT_COUNT];
+
+/**
+ * 
+ * \ingroup AuthNuauthModules
+ * \defgroup LdapModule LDAP authentication and acl module
+ *
+ * @{ */
 
 /**
  * Multiply a "Base 10^n" number by a factor
@@ -48,6 +71,12 @@ void number_multiply(number_t number, digit_t factor)
         value /= BASE;
     }
 }
+
+/**
+ *
+ * \file ldap.c
+ * \brief Contains all LDAP modules functions
+ */
 
 /**
  * Add a value to a "Base 10^n" number
@@ -123,7 +152,7 @@ int decimal_to_number(const char* orig_decimal, number_t number)
         return 1;
 }
 
-G_MODULE_EXPORT gboolean module_params_unload(gpointer params_p)
+G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
 {
   struct ldap_params* params=(struct ldap_params*)params_p;
   if (params) {
@@ -222,7 +251,7 @@ G_MODULE_EXPORT gchar* g_module_unload(void)
  * Initialize connection to ldap server.
  */
 
-G_MODULE_EXPORT LDAP* ldap_conn_init(struct ldap_params* params)
+static LDAP* ldap_conn_init(struct ldap_params* params)
 {
   LDAP* ld = NULL;
   int err,version=3;
@@ -275,7 +304,17 @@ static char *ipv6_to_base10(struct in6_addr *addr)
 }
 
 /**
- * acl check function.
+ * \brief Acl check function
+ *
+ * This function realise the matching of a packet against the set of rules. It is exported 
+ * by the modules and called by nuauth core.
+ * 
+ * \param element A pointer to a ::connection_t which contains all informations available about the packet
+ * \param params_p A pointer to the parameters of the module instance we're working for
+ * \return A chained list of struct ::acl_group which is the set of acl that match the given packet
+ *
+ * The returned GSList has to be ordered because take_decision() will do a interative loop on the chained list. This
+ * can be used to achieve complicated setup.
  */
 G_MODULE_EXPORT GSList* acl_check (connection_t* element,gpointer params_p)
 {
@@ -510,14 +549,17 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element,gpointer params_p)
 
 
 /**
- *  user_check.
+ * \brief user_check realise user authentication
  *  
- *  - arg 1 : user name string
- *  - arg 2 : user provided password
- *  - arg 3 : password length
- *  - arg 4 : pointer to user groups list
- *  - return : SASL_OK if password is correct, other return are authentication failure
- *  - modify : groups to return the list of user group
+ * It has to be exported by all user authentication modules
+ *  
+ *  \param username User name string
+ *  \param pass User provided password
+ *  \param passlen Password length
+ *  \param uid Pointer to user numeric id (this need to be fill in)
+ *  \param groups Pointer to user groups list (this need to be fill in)
+ *  \param params_p Pointer to the parameter of the module instance
+ *  \return SASL_OK if password is correct, other return are authentication failure
  */
 
 G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned passlen,uint32_t *uid,GSList **groups,gpointer params_p)
@@ -624,3 +666,5 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned p
 
   return SASL_BADAUTH;
 }
+
+/* @} */

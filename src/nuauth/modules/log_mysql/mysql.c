@@ -63,10 +63,27 @@ static int ipv6_to_sql(struct in6_addr *addr, char *buffer, size_t buflen)
     return 0;
 }
 
-G_MODULE_EXPORT gchar* module_params_unload(gpointer params_p)
+static nu_error_t mysql_close_open_user_sessions(struct log_mysql_params* params);
+static MYSQL* mysql_conn_init(struct log_mysql_params* params);
+
+/**
+ *
+ * \ingroup LoggingNuauthModules
+ * \defgroup SQLModule MySQL logging module
+ *
+ * @{ */
+
+G_MODULE_EXPORT gchar* unload_module_with_params(gpointer params_p)
 {
   struct log_mysql_params* params = (struct log_mysql_params*)params_p;
+  
   if (params){
+    if (! nuauth_is_reloading()){
+      if ( mysql_close_open_user_sessions(params) != NU_EXIT_OK){
+            log_message(WARNING, AREA_MAIN,
+                    "Could not close session when unloading module");
+      }
+    }
   g_free(params->mysql_user);
   g_free(params->mysql_passwd);
   g_free(params->mysql_server);
@@ -81,6 +98,44 @@ G_MODULE_EXPORT gchar* module_params_unload(gpointer params_p)
   }
   g_free(params);
   return NULL;
+}
+
+/**
+ * \brief Close all open user sessions
+ *
+ * \return A nu_error_t
+ */
+
+static nu_error_t mysql_close_open_user_sessions(struct log_mysql_params* params)
+{
+    MYSQL* ld = mysql_conn_init(params);
+    char request[LONG_REQUEST_SIZE];
+    int mysql_ret;
+    int ok;
+
+    if (! ld){
+        return NU_EXIT_ERROR;
+    }
+
+    ok = secure_snprintf(request, sizeof(request),
+                    "UPDATE %s SET last_time=FROM_UNIXTIME(%lu) where last_time is NULL",
+                    params->mysql_users_table_name,
+                    time(NULL));
+    if (!ok) {
+        return NU_EXIT_ERROR;
+    }
+
+    /* execute query */
+    mysql_ret = mysql_real_query(ld, request, strlen(request));
+    if (mysql_ret != 0){
+        log_message (SERIOUS_WARNING, AREA_MAIN,
+            "Can execute request : %s\n", mysql_error(ld));
+        mysql_close(ld);
+        return NU_EXIT_ERROR;
+    }
+    mysql_close(ld);
+    return NU_EXIT_OK;
+
 }
 
 /* Init mysql system */
@@ -146,6 +201,12 @@ init_module_from_conf(module_t *module)
     /* init thread private stuff */
     params->mysql_priv = g_private_new ((GDestroyNotify)mysql_close); 
     log_message(DEBUG, AREA_MAIN, "mysql part of the config file is parsed\n");
+
+    /* do initial update of user session if needed */
+    if (! nuauth_is_reloading()){
+        mysql_close_open_user_sessions(params);
+    }
+    
     module->params=(gpointer)params;
     return TRUE;
 }
@@ -153,7 +214,7 @@ init_module_from_conf(module_t *module)
 /* 
  * Initialize connection to mysql server
  */
-MYSQL* mysql_conn_init(struct log_mysql_params* params)
+static MYSQL* mysql_conn_init(struct log_mysql_params* params)
 {
     MYSQL *ld = NULL;
 
@@ -217,7 +278,7 @@ static char* quote_string(MYSQL *mysql, char *text)
     return quoted;
 }    
 
-char* build_insert_request(
+static char* build_insert_request(
         MYSQL *ld, connection_t *element,
         tcp_state_t state,
         char *auth_oob_prefix,
@@ -348,7 +409,7 @@ char* build_insert_request(
     return g_strconcat(request_fields, "\n", request_values, NULL);
 }    
 
-inline int log_state_open(MYSQL *ld, connection_t *element,struct log_mysql_params* params)
+static inline int log_state_open(MYSQL *ld, connection_t *element,struct log_mysql_params* params)
 {
     char *request;
     int mysql_ret;
@@ -415,7 +476,7 @@ inline int log_state_open(MYSQL *ld, connection_t *element,struct log_mysql_para
     return 0;
 }    
 
-inline int log_state_established(MYSQL *ld, connection_t *element,struct log_mysql_params* params)
+static inline int log_state_established(MYSQL *ld, connection_t *element,struct log_mysql_params* params)
 {
     char request[LONG_REQUEST_SIZE];
     char src_ascii[IPV6_SQL_STRLEN];
@@ -470,7 +531,7 @@ inline int log_state_established(MYSQL *ld, connection_t *element,struct log_mys
     return 0;
 }    
 
-inline int log_state_close(MYSQL *ld, connection_t *element,struct log_mysql_params *params)
+static inline int log_state_close(MYSQL *ld, connection_t *element,struct log_mysql_params *params)
 {
     char request[LONG_REQUEST_SIZE];
     char src_ascii[IPV6_SQL_STRLEN];
@@ -527,7 +588,7 @@ inline int log_state_close(MYSQL *ld, connection_t *element,struct log_mysql_par
     return 0;
 }    
 
-int log_state_drop(MYSQL *ld, connection_t *element, struct log_mysql_params* params)
+static int log_state_drop(MYSQL *ld, connection_t *element, struct log_mysql_params* params)
 {
     int mysql_ret;
 
@@ -557,7 +618,7 @@ int log_state_drop(MYSQL *ld, connection_t *element, struct log_mysql_params* pa
     return 0;
 }    
 
-MYSQL* get_mysql_handler(struct log_mysql_params* params)
+static MYSQL* get_mysql_handler(struct log_mysql_params* params)
 {
     MYSQL *ld = g_private_get (params->mysql_priv);
     if (ld != NULL) {
@@ -575,6 +636,16 @@ MYSQL* get_mysql_handler(struct log_mysql_params* params)
 
 }    
 
+/**
+ * \brief User packet logging
+ *
+ * This function is exported by the module and called by nuauth core when a packet needs to be logged
+ *
+ * \param element A pointer to a ::connection_t containing all information about the packet to be logged
+ * \param state A ::tcp_state_t that indicate the state of the packet
+ * \param params_p A pointer to the parameters of the module instance we're working for
+ * \return -1 in case of error, 0 if there is no problem
+ */
 G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state,gpointer params_p)
 {
   struct log_mysql_params* params = (struct log_mysql_params*)params_p;
@@ -611,6 +682,16 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state,
     }
 }
 
+/**
+ * \brief User session logging
+ *
+ * This function is exported by the module and called by nuauth core when a user connect or disconnect
+ *
+ * \param c_session A pointer to a ::user_session_t containing all information about the user
+ * \param state A ::session_state_t that indicate the state of the user session (basically starting or ending)
+ * \param params_p A pointer to the parameters of the module instance we're working for
+ * \return -1 in case of error, 1 if there is no problem
+ */
 G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t state,gpointer params_p)
 {
     struct log_mysql_params* params = (struct log_mysql_params*)params_p;
@@ -633,8 +714,8 @@ G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t
             /* create new user session */
             ok = secure_snprintf(request, sizeof(request),
                     "INSERT INTO %s (user_id, username, ip_saddr, "
-                    "os_sysname, os_release, os_version, first_time) "
-                    "VALUES ('%lu', '%s', %s, '%s', '%s', '%s', FROM_UNIXTIME(%lu))",
+                    "os_sysname, os_release, os_version, socket, first_time) "
+                    "VALUES ('%lu', '%s', '%u', '%s', '%s', '%s', '%u', FROM_UNIXTIME(%lu))",
                     params->mysql_users_table_name,
                     c_session->user_id,
                     c_session->user_name,
@@ -642,6 +723,7 @@ G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t
                     c_session->sysname,
                     c_session->release,
                     c_session->version,
+                    c_session->socket,
                     time(NULL));
             break;
             
@@ -649,9 +731,10 @@ G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t
             /* update existing user session */
             ok = secure_snprintf(request, sizeof(request),
                     "UPDATE %s SET last_time=FROM_UNIXTIME(%lu) "
-                    "WHERE ip_saddr=%s",
+                    "WHERE socket=%u AND ip_saddr=%s",
                     params->mysql_users_table_name,
                     time(NULL),
+                    c_session->socket,
                     ip_ascii);
             break;
 
@@ -672,4 +755,4 @@ G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t
     return 1;
 }
 
-
+/** @} */

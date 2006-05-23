@@ -16,6 +16,11 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/**
+ * \addtogroup Cache
+ * @{
+ */
+
 /*! \file acls.c
     \brief Acls manipulations and cache
     
@@ -311,3 +316,5 @@ int init_acl_cache()
         exit(EXIT_FAILURE);
     return 1;
 }
+
+/** @} */

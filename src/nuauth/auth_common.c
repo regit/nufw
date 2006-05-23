@@ -21,8 +21,22 @@
 #include <netinet/ip.h>
 #include <netinet/ip6.h>
 
+/**
+ * \ingroup Nuauth
+ * \defgroup NuauthCore Nuauth Core
+ * \brief This is the main part of nuauth, real core is search_and_fill().
+ * \author Éric Leblond
+ *
+ * The main functions are :
+ *  - search_and_fill() : used to aggregate dates coming from nufw and clients
+ *  - take_decision() : decide on packet based on policy coming from module
+ * 
+ * @{
+ * 
+ */
+
 /** \file auth_common.c
- *  \brief Various functions used in NuAuth.
+ *  \brief Core functions of NuAuth, contain search_and_fill() .
  */
 
 
@@ -710,3 +724,4 @@ gboolean secure_snprintf(char *buffer, unsigned int buffer_size, char *format, .
         return FALSE;
 }    
 
+/** @} */

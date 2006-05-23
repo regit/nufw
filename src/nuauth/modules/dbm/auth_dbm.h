@@ -36,7 +36,7 @@ struct dbm_data_struct{
 	GSList *outelt;
 };
 
-int analyse_dbm_char(char *data, struct dbm_data_struct *mystruct);
+static int analyse_dbm_char(char *data, struct dbm_data_struct *mystruct);
 
 struct dbm_params {
     char * users_file;

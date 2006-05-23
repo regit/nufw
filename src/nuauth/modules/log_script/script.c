@@ -20,6 +20,15 @@
 #include <string.h>
 #include <errno.h>
 
+/**
+ *
+ * \ingroup LoggingNuauthModules
+ * \defgroup ScriptModule Script logging module
+ *
+ * @{ */
+
+
+
 G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t state,gpointer params)
 {
     char address[INET6_ADDRSTRLEN];
@@ -52,7 +61,7 @@ G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t
 }
 
 
-G_MODULE_EXPORT gboolean module_params_unload(gpointer params_p)
+G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
 {
   return TRUE;
 }
@@ -61,3 +70,5 @@ G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
 {
   return TRUE;
 }
+
+/** @} */

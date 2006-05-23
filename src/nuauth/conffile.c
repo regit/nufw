@@ -20,7 +20,17 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+/**
+ * \ingroup Nuauth
+ * \defgroup NuauthConf Configuration handling
+ * @{
+ *
+ */
 
+/** \file conffile.c
+ * \brief Configuration file parsing
+ *
+ */
 
 
 /**
@@ -155,3 +165,4 @@ int free_confparams(confparams symbols[],gint array_size)
     return 0;
 }
 
+/** @} */

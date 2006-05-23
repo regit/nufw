@@ -19,6 +19,11 @@
 #ifndef CLIENT_MNGR_H
 #define CLIENT_MNGR_H
 
+/**
+ * \addtogroup NuauthCore
+ * @{
+ */
+
 void init_client_struct();
 
 void add_client(int socket, gpointer datas);
@@ -48,5 +53,7 @@ void close_clients();
 void kill_expired_clients_session();
 
 guint get_number_of_clients();
+
+/** @} */
 
 #endif

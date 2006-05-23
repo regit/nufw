@@ -18,6 +18,10 @@
 #ifndef NUAUTH_PARAMS_H
 #define NUAUTH_PARAMS_H
 
+/** \addtogroup NuauthConf
+ * @{
+ */
+
 /** Polity rule, see tls_sasl_connect_ok() */
 typedef enum
 {
@@ -171,4 +175,7 @@ struct nuauth_datas
 
 struct nuauth_params *nuauthconf;
 struct nuauth_datas *nuauthdatas;
+
+/** @} */
+
 #endif

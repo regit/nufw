@@ -36,6 +36,18 @@
 #include <auth_srv.h>
 #include <jhash.h>
 
+/**
+ * \addtogroup NuauthCore
+ * @{
+ */
+
+/** \file client_mngr.c
+ * \brief Manage client related structure
+ *
+ * Provide a set of functions that are used to interact with client related structure.
+ * This aims to provide an abstraction to avoid change in other parts of the code.
+ */
+
 /** global lock for client hash. */
 GMutex* client_mutex;
 /** Client structure */
@@ -235,3 +247,5 @@ void kill_expired_clients_session()
     g_hash_table_foreach_remove (
             client_conn_hash, is_expired_client, &current_time);
 }
+
+/** @} */

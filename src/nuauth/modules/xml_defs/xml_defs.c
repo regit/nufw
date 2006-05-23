@@ -20,9 +20,23 @@
 #include <auth_srv.h>
 #include "xml_defs.h"
 
+/**
+ * \ingroup NuauthModules
+ * \defgroup PeriodNuauthModules Period definition modules
+ */
+
+/**
+ * 
+ * \ingroup PeriodNuauthModules
+ * \defgroup XMLModule XML period definition module
+ *
+ * @{ */
+
+
+
 #define XML_DEFS_PERIODFILE CONFIG_DIR "/" "periods.xml"
 
-G_MODULE_EXPORT gboolean module_params_unload(gpointer params_p)
+G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
 {
   struct xml_defs_params* params=(struct xml_defs_params*)params_p;
   /*  Free user list */
@@ -184,6 +198,18 @@ static GMarkupParser period_parser = {
 	NULL
 };
 
+/**
+ * \brief Period parsing function
+ *
+ * This function is exported by the module and fill the hash table containing the periods.
+ * 
+ * \param periods A hash table containing all the periods.
+ * \param params_p A pointer to the parameters of the module instance we're working for
+ *
+ * The hash table keys are the name of the periods.
+ *
+ * \remark The conflict between period definition (with same name) is not resolved.
+ */
 G_MODULE_EXPORT void define_periods(GHashTable* periods,gpointer params_p)
 {
 	GMarkupParseContext *context;
@@ -214,3 +240,5 @@ G_MODULE_EXPORT void define_periods(GHashTable* periods,gpointer params_p)
 
     return;
 }
+
+/** @} */

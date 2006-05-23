@@ -33,10 +33,11 @@
 #include <jhash.h>
 #ifdef FREEBSD
 
-#include <sys/param.h>
-#include <sys/queue.h>
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/socketvar.h>
+#include <sys/param.h>
+#include <sys/queue.h>
 #include <sys/sysctl.h>
 #include <sys/protosw.h>
 
@@ -44,6 +45,11 @@
 #include <netinet/in_pcb.h>
 #include <netinet/tcp_var.h>
 #endif
+
+/**
+ * \addtogroup libnuclient
+ * @{
+ */
 
 /** \file tcptable.c
  * \brief TCP parsing function
@@ -286,9 +292,9 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
 
   if ( session->server_mode == SRV_TYPE_PUSH){
       /* need to set check_cond */
-      pthread_mutex_lock(session->check_count_mutex);
+      pthread_mutex_lock(&(session->check_count_mutex));
       session->count_msg_cond=0;
-      pthread_mutex_unlock(session->check_count_mutex);
+      pthread_mutex_unlock(&(session->check_count_mutex));
   }
   
   /* read connection table */
@@ -335,10 +341,7 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
       c.rmtp = inp->inp_fport;
       c.proto=IPPROTO_TCP;
 
-      if (tcptable_add (ct, &c) == 0){
-          free(buf);
-              return 0;
-      }
+      tcptable_add (ct, &c);
   }
   free(buf);	
   return 1;
@@ -460,3 +463,4 @@ void tcptable_free (conntable_t *ct)
 	free(ct);
 }
 
+/** @} */

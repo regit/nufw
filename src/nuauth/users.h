@@ -40,6 +40,7 @@ struct user_cached_datas {
 typedef struct 
 {
     struct in6_addr addr;    /*!< IPv6 address of the client */
+    int socket;              /*!< socket that is used by tls session. It identify the client */ 
     gnutls_session *tls;     /*!< TLS session opened with tls_connect() */ 
     GMutex *tls_lock;        /*!< Mutex to lock use of TLS */
     char *user_name;         /*!< User name */

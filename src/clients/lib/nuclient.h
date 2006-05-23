@@ -31,11 +31,17 @@
 #ifndef NUCLIENT_H
 #define NUCLIENT_H
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif 
+
 /*
  * Use POSIX standard, version "IEEE 1003.1-2004",
  * needed to get sigaction for example
  */
+#ifdef LINUX
 #define _POSIX_C_SOURCE 200112L
+#endif
 
 /**
  * Use 4.3BSD standard, needed to get snprintf for example
@@ -243,11 +249,14 @@ typedef struct
 } nuclient_error;
 
 /* Exported functions */
-int	nu_client_check(NuAuth * session, nuclient_error *err);
+int 	nu_client_check(NuAuth * session, nuclient_error *err);
 void 	nu_client_free(NuAuth *session, nuclient_error *err);
 
-void nu_client_global_init(nuclient_error *err);
-void nu_client_global_deinit(nuclient_error *err);
+int     nu_client_error_init(nuclient_error **err);
+void    nu_client_error_destroy(nuclient_error *err);
+
+void    nu_client_global_init(nuclient_error *err);
+void    nu_client_global_deinit(nuclient_error *err);
 
 NuAuth* nu_client_init2(
         const char *hostname, /*!< Nuauth hostname (default: #NUAUTH_IP) */
@@ -266,7 +275,7 @@ NuAuth* nu_client_init2(
         
         nuclient_error *err); /*!< Structure to store error (if any) */
 
-const char* nuclient_strerror (nuclient_error *err);
+const char* nu_client_strerror (nuclient_error *err);
 
 #ifdef __cplusplus
 }

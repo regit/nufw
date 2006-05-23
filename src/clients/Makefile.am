@@ -1,1 +1,1 @@
-SUBDIRS = lib nutcpc
+SUBDIRS = lib nutcpc pam_nufw

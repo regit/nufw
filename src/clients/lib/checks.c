@@ -34,6 +34,10 @@
 #include "proc.h"
 #include "client.h"
 
+/** \addtogroup libnuclient
+ * @{
+ */
+
 typedef void (*pthread_cleanup_push_arg1_t) (void *);
 
 /**
@@ -116,17 +120,26 @@ void* recv_message(void *data)
 
 
 /**
- * Function call by client to initiate a check
+ * \ingroup nuclientAPI
+ * \brief Function called by client to initiate a check
  *
+ * It has to be run at regular interval :
+ *  - In POLL mode, it is really doing the job. 
+ *  - In PUSH mode, it is used to detect failure and send HELLO message
+ *  
+ * \param session A pointer to a valid ::NuAuth session
+ * \param err A pointer to a allocated ::nuclient_error
+ * \return -1 if a problem occurs. Session is destroyed if nu_client_check() return -1;
+ *
+ * \par Internal
  * It is in charge of cleaning session as the session may be used
  * by user and we have no control of it. It has to be called for the first
  * time AFTER all forks occurs to create the working threads. This is 
  * mandatory and occurs because fork does not replicate the threads.
  * 
- *   - Poll mode: this is just a wrapper to nu_client_real_check
- *   - Push mode: It is used to send HELLO message
- * 
- * Return -1 if a problem occurs. Session is destroyed if nu_client_check return -1;
+ *  - Poll mode: this is just a wrapper to nu_client_real_check
+ *  - Push mode: It is used to send HELLO message
+ *
  */
 int nu_client_check(NuAuth * session, nuclient_error *err)
 {
@@ -292,3 +305,4 @@ int secure_snprintf(char *buffer, unsigned int buffer_size, char *format, ...)
         return 0;
 }    
 
+/** @} */

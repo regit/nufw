@@ -20,8 +20,14 @@
 
 #include "auth_srv.h"
 
+/** 
+ * \ingroup TLS
+ * \defgroup TLSNufw TLS Nufw server
+ * @{
+ */
+
 /** \file tls_nufw.c
- *  \brief Manage NuFW firewall connections and messages.
+ * \brief Manage NuFW firewall connections and messages.
  *   
  * The main thread is tls_nufw_authsrv() which call tls_nufw_main_loop().
  */
@@ -416,3 +422,6 @@ void* tls_nufw_authsrv(GMutex *mutex)
     return NULL;
 }
 
+/**
+ * @} 
+ */

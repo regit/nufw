@@ -19,11 +19,18 @@
 #ifndef MODULES_H
 #define MODULES_H
 
+/**
+ * \ingroup NuauthModulesHandling
+ * @{
+ */
+
 #define INIT_MODULE_FROM_CONF "init_module_from_conf"
-#define MODULE_PARAMS_UNLOAD "module_params_unload"
 
 typedef gboolean module_params_unload_t (gpointer params);
 
+/**
+ * Structure use to store a module instance
+ */
 typedef struct module_T {
     /**
      * Module name
@@ -89,10 +96,15 @@ int modules_check_certificate (gnutls_session session, gnutls_x509_crt cert);
 
 gchar* modules_certificate_to_uid (gnutls_session session, gnutls_x509_crt cert);
 
+gboolean nuauth_is_reloading();
 void block_on_conf_reload();
 
 typedef void (*cleanup_func_t) (void);
 void cleanup_func_push(cleanup_func_t func);
 void cleanup_func_remove(cleanup_func_t func);
+
+/**
+ * @}
+ */
 
 #endif
