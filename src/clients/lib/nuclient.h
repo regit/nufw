@@ -268,10 +268,10 @@ NuAuth* nu_client_init2(
         void* username_callback,
         
         /** Callback to get user password, prototype: char* func() */
-        void * passwd_callback, 
+        void* passwd_callback, 
         
         /** Callback to get TLS password, prototype: char* func() */
-        void * tls_passwd_callback, 
+        void* tls_passwd_callback, 
         
         nuclient_error *err); /*!< Structure to store error (if any) */
 

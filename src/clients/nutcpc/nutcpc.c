@@ -155,7 +155,7 @@ void leave_client()
         free(runpid);
     }
     nu_client_global_deinit(err);
-    nuclient_error_destroy(err);
+    nu_client_error_destroy(err);
     free(saved_username);
     free(saved_password);
 }
@@ -424,12 +424,12 @@ void main_loop(nutcpc_context_t *context)
             if (session!=NULL){
                 context->tempo = 1;
             }else{
-                printf("%s\n",nuclient_strerror(err));
+                printf("%s\n",nu_client_strerror(err));
             }
         } else {
             if (nu_client_check(session,err)<0){
                 session=NULL;
-                printf("%s\n",nuclient_strerror(err));
+                printf("%s\n",nu_client_strerror(err));
             }
         }
     }
@@ -494,7 +494,7 @@ void parse_cmdline_options(int argc, char **argv, nutcpc_context_t *context)
 void init_library(nutcpc_context_t *context)
 {
     /* Prepare error structure */
-    if (nuclient_error_init(&err) != 0)
+    if (nu_client_error_init(&err) != 0)
     {
         printf("Cannot init error structure!\n");
         exit(EXIT_FAILURE);
@@ -515,7 +515,7 @@ void init_library(nutcpc_context_t *context)
     if (session == NULL)
     {
         printf("Unable to initiate connection to NuFW gateway\n");
-        printf("Problem: %s\n",nuclient_strerror(err));
+        printf("Problem: %s\n",nu_client_strerror(err));
         exit(EXIT_FAILURE);
     }
 

@@ -28,6 +28,7 @@
 #include <pwd.h>
 #include <signal.h>
 #include <stdlib.h>
+#include "security.h"
 
 /*
  * here, we make definitions for the externally accessible functions
@@ -46,7 +47,7 @@
 
 
 #define NUAUTH_SRV "192.168.12.1"
-#define NUAUTH_PORT 4130
+#define NUAUTH_PORT "4130"
 #define FILE_LOCK ".pam_nufw"
 
 #define DEFAULT_USER "nobody"
@@ -59,7 +60,7 @@ struct pam_nufw_s pn_s;
 /* internal data */
 struct pam_nufw_s {
     char nuauth_srv[BUFSIZ]; /* auth server to connect to */
-    int nuauth_port;  /* port to use on auth server */
+    char nuauth_port[20];  /* port to use on auth server */
     char file_lock[BUFSIZ]; /* file lock used to store pid */
 };
 
@@ -76,9 +77,9 @@ char* get_username(){
 /* init pam_nufw info struct */
 static void _init_pam_nufw_s(struct pam_nufw_s *pn_s){
     memset(pn_s, 0, sizeof(pn_s));
-    strncpy(pn_s->nuauth_srv,NUAUTH_SRV, sizeof(pn_s->nuauth_srv)-1);
-    pn_s->nuauth_port = NUAUTH_PORT;
-    strncpy(pn_s->file_lock,FILE_LOCK, sizeof(pn_s->file_lock)-1);
+    SECURE_STRNCPY(pn_s->nuauth_srv,NUAUTH_SRV, sizeof(pn_s->nuauth_srv)-1);
+    SECURE_STRNCPY(pn_s->nuauth_port, NUAUTH_PORT, sizeof(pn_s->nuauth_port));
+    SECURE_STRNCPY(pn_s->file_lock,FILE_LOCK, sizeof(pn_s->file_lock)-1);
 }
 
 /*  function to parse arguments */
@@ -86,11 +87,11 @@ static int _pam_parse(int argc, const char** argv, struct pam_nufw_s *pn){
     int ctrl = 0;
     for(ctrl=0; argc-- > 0; ++argv){
         if(!strncmp(*argv,"server=",7)) {
-            strncpy(pn->nuauth_srv,*argv + 7, sizeof(pn->nuauth_srv)-1);
+            SECURE_STRNCPY(pn->nuauth_srv,*argv + 7, sizeof(pn->nuauth_srv)-1);
         }else if(!strncmp(*argv, "port=",5)){
-            pn->nuauth_port = atoi(*argv + 5);
+            SECURE_STRNCPY(pn->nuauth_port, *argv + 5, sizeof(pn->nuauth_port));
         }else if(!strncmp(*argv, "lock=", 5)){
-            strncpy(pn->file_lock,*argv + 5, sizeof(pn->file_lock)-1);
+            SECURE_STRNCPY(pn->file_lock,*argv + 5, sizeof(pn->file_lock)-1);
         }
     }
     return ctrl;
@@ -245,8 +246,8 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
               &get_username,
               &get_password,
               NULL,
-              err
-              );
+              err);
+
       /*syslog(LOG_INFO,"(pam_nufw) after nu_client_init2");*/
       if(session == NULL){
           syslog(LOG_ERR,"(pam_nufw) Cannot connect to NuAuth Server");

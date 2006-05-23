@@ -838,14 +838,14 @@ int init_socket(NuAuth * session, nuclient_error *err,
     int ecode;
     struct addrinfo *res;
     struct addrinfo hints = {
-	0,
-	PF_UNSPEC,
-	SOCK_STREAM,
-	0,
-	0,
-	NULL,
-	NULL,
-	NULL
+        0,
+        PF_UNSPEC,
+        SOCK_STREAM,
+        0,
+        0,
+        NULL,
+        NULL,
+        NULL
     };
 
     /* get address informations */
@@ -927,33 +927,6 @@ int tls_handshake(NuAuth * session, nuclient_error *err)
 }
 
 /**
- * Set host address: convert hostname string to IPv4 address
- */
-int set_host(NuAuth * session, nuclient_error *err,
-		const char *hostname, unsigned int port)
-{
-	struct hostent *host = gethostbyname(hostname);
-	if (host == NULL)
-	{
-/*		fprintf(stderr, "*** An error occured when resolving the provided hostname\n");*/
-                SET_ERROR(err, INTERNAL_ERROR, DNS_RESOLUTION_ERR);
-		return 0;
-	}
-
-	(session->adr_srv).sin_family = AF_INET;
-	(session->adr_srv).sin_port = htons(port);
-	(session->adr_srv).sin_addr = *(struct in_addr *)host->h_addr_list[0];
-	if ((session->adr_srv).sin_addr.s_addr == 0) {
-	/* if ((session->adr_srv).sin_addr.s_addr == INADDR_NONE) { */
-
-                SET_ERROR(err, INTERNAL_ERROR, NO_ADDR_ERR);
-		return 0;
-	}
-	
-	return 1;
-}
-
-/**
  * \ingroup nuclientAPI
  * \brief Init connection to nuauth server
  *
@@ -1020,12 +993,6 @@ NuAuth* nu_client_init2(
 
 	/* set fields about TLS and certificates */
 	if (!init_tls_cert(session, err, keyfile, certfile)) {
-		nu_exit_clean(session);
-		return NULL;
-	}
-
-    /* set field about host */
-	if (!set_host(session, err, hostname, port)) {
 		nu_exit_clean(session);
 		return NULL;
 	}

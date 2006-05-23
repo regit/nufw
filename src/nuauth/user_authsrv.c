@@ -62,7 +62,7 @@ void user_check_and_decide (gpointer userdata, gpointer data)
               struct internal_message *message = g_new0(struct internal_message,1);
               /* We assume the source address we try to authenticate is source address
                * of client connection */
-              conn_elt->tracking.saddr = ((struct tls_buffer_read *)userdata)->ipv4_addr;
+              conn_elt->tracking.saddr = ((struct tls_buffer_read *)userdata)->ip_addr;
               message->type=INSERT_MESSAGE;
               message->datas=conn_elt;
               g_async_queue_push (nuauthdatas->localid_auth_queue,message);
@@ -381,7 +381,7 @@ GSList* user_request(struct tls_buffer_read *datas)
 	 * We destroy all the received message and stop parsing */
 	if (
 			(
-			 (connection->tracking.saddr == INADDR_ANY) 
+			 memcmp(&connection->tracking.saddr, &in6addr_any, sizeof(connection->tracking.saddr)) == 0
 			 ||
 			 (connection->app_name == NULL)
 			)
