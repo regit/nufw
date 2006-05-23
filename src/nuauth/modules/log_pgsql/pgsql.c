@@ -92,9 +92,7 @@ static nu_error_t pgsql_close_open_user_sessions(struct log_pgsql_params* params
         return NU_EXIT_ERROR;
     }
 
-/* do the query */
-    debug_log_message(DEBUG, AREA_MAIN, 
-            "PostgreSQL: do insert session \"%s\".", request);
+    /* do the query */
     Result = PQexec(ld, request);
 
     /* check error */
@@ -354,7 +352,6 @@ static int pgsql_insert(PGconn *ld, connection_t *element, char *oob_prefix, tcp
     }
     
     /* do the query */
-    log_message(DEBUG, AREA_MAIN, "PostgreSQL: do insert \"%s\".", sql_query);
     Result = PQexec(ld, sql_query);
 
     /* check error */
@@ -394,9 +391,7 @@ static int pgsql_update_close(PGconn *ld, connection_t *element,struct log_pgsql
         return -1;
     }
     
-    debug_log_message(DEBUG, AREA_MAIN, 
-            "PostgreSQL: update (close) \"%s\".", request);
-
+    /* do the query */
     Result = PQexec(ld, request);
     if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK){
         log_message (SERIOUS_WARNING, AREA_MAIN,
@@ -604,8 +599,6 @@ G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t
     }
 
     /* do the query */
-    debug_log_message(DEBUG, AREA_MAIN, 
-            "PostgreSQL: do insert session \"%s\".", request);
     Result = PQexec(ld, request);
 
     /* check error */
