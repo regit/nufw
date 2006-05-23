@@ -994,26 +994,6 @@ void ask_session_end(NuAuth* session)
 }
 
 /**
- * Allocate a structure to store client error
- */
-int nuclient_error_init(nuclient_error **err)
-{
-      if (*err != NULL)
-          return -1;
-      *err=malloc(sizeof(nuclient_error));
-      return 0;
-}
-
-/**
- * Destroy an error (free memory)
- */
-void nuclient_error_destroy(nuclient_error *err)
-{
-    if (err!=NULL)
-      free(err);
-}
-
-/**
  * Convert an error to an human readable string
  */
 const char* nuclient_strerror (nuclient_error *err)

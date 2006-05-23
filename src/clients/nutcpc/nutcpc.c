@@ -35,7 +35,7 @@
 
 struct termios orig;
 NuAuth *session = NULL;
-nuclient_error *err=NULL;
+nuclient_error nuerror;
 struct sigaction old_sigterm;
 struct sigaction old_sigint;
 char *saved_username = NULL;
@@ -145,7 +145,7 @@ void leave_client()
     }
 
     if (session){
-        nu_client_free(session,err);
+        nu_client_free(session,&nuerror);
     }
 
     runpid = compute_run_pid();
@@ -154,8 +154,7 @@ void leave_client()
         unlink(runpid);
         free(runpid);
     }
-    nu_client_global_deinit(err);
-    nuclient_error_destroy(err);
+    nu_client_global_deinit(&nuerror);
     free(saved_username);
     free(saved_password);
 }
@@ -420,16 +419,16 @@ void main_loop(nutcpc_context_t *context)
                     &get_username,
                     &get_password,
                     NULL,
-                    err);
+                    &nuerror);
             if (session!=NULL){
                 context->tempo = 1;
             }else{
-                printf("%s\n",nuclient_strerror(err));
+                printf("%s\n",nuclient_strerror(&nuerror));
             }
         } else {
-            if (nu_client_check(session,err)<0){
+            if (nu_client_check(session,&nuerror)<0){
                 session=NULL;
-                printf("%s\n",nuclient_strerror(err));
+                printf("%s\n",nuclient_strerror(&nuerror));
             }
         }
     }
@@ -493,15 +492,8 @@ void parse_cmdline_options(int argc, char **argv, nutcpc_context_t *context)
  */
 void init_library(nutcpc_context_t *context)
 {
-    /* Prepare error structure */
-    if (nuclient_error_init(&err) != 0)
-    {
-        printf("Cannot init error structure!\n");
-        exit(EXIT_FAILURE);
-    }
-
     /* global libnuclient init */
-    nu_client_global_init(err);
+    nu_client_global_init(&nuerror);
 
     /* Init. library */
     printf("Connecting to NuFw gateway\n");
@@ -509,13 +501,13 @@ void init_library(nutcpc_context_t *context)
             context->srv_addr, context->port,
             NULL, NULL,
             &get_username, &get_password,  NULL,
-            err);
+            &nuerror);
 
     /* Library failure? */
     if (session == NULL)
     {
         printf("Unable to initiate connection to NuFW gateway\n");
-        printf("Problem: %s\n",nuclient_strerror(err));
+        printf("Problem: %s\n",nuclient_strerror(&nuerror));
         exit(EXIT_FAILURE);
     }
 
