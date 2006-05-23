@@ -1,0 +1,173 @@
+# Mysterious ld bug ...
+{
+   mysterious_ld_bug
+   Memcheck:Cond
+   obj:/lib/ld-*
+   obj:/lib/ld-*
+   obj:/lib/ld-*
+   obj:/lib/ld-*
+   obj:/lib/ld-*
+}
+
+# *dlopen and *dlsym()
+{
+    sasl_get_plugin_cond_quiet
+    Memcheck:Cond
+    obj:/lib/*
+    obj:/lib/*
+    obj:/lib/*
+    obj:/lib/*
+    obj:/lib/*
+    obj:/lib/*
+    obj:/lib/*
+    obj:/lib/*
+    obj:/lib/*
+    fun: *sasl_get_plugin
+}    
+
+{
+   ld_level2_cond_quiet
+   Memcheck:Cond
+   obj:/lib/ld-*
+   fun:_dl_open
+}
+
+{
+   dlopen_level5_cond_quiet
+   Memcheck:Cond
+   obj:/lib/ld-*
+   obj:/lib/ld-*
+   obj:*/libc-*
+   obj:/lib/ld-*
+   fun:_dl_open
+}
+
+{
+    dlsym_level4_cond_quiet
+    Memcheck:Cond
+    obj:/lib/ld-*
+    obj:/lib/ld-*
+    obj:/lib/ld-*
+    obj:*/libc-*
+    fun:*dl_sym
+}
+{
+    dlopen_level4_cond_quiet
+    Memcheck:Cond
+    obj:/lib/ld-*
+    obj:*/libc-*
+    obj:/lib/ld-*
+    fun:*dl_open
+}    
+{
+    dlopen_level5_quiet
+    Memcheck:Addr4
+    obj:/lib/ld-*
+    obj:/lib/ld-*
+    obj:*/libc-*
+    obj:/lib/ld-*
+    fun:*dl_open
+}
+{
+    dlopen_level5_cond_quiet
+    Memcheck:Cond
+    obj:/lib/ld-*
+    obj:/lib/ld-*
+    obj:/lib/ld-*
+    obj:*/libc-*
+    obj:/lib/ld-*
+    fun:*dl_open
+}
+{
+    dlopen_level6_addr4_quiet
+    Memcheck:Addr4
+    obj:/lib/ld-*
+    obj:/lib/ld-*
+    obj:/lib/ld-*
+    obj:*/libc-*
+    obj:/lib/ld-*
+    fun:*dl_open
+}
+
+{
+    dlopen_level9_value4_quiet
+    Memcheck:Value4
+    obj:/lib/ld-*
+    obj:/lib/ld-*
+    obj:/lib/ld-*
+    obj:/lib/ld-*
+    obj:/lib/ld-*
+    obj:/lib/ld-*
+    obj:*/libc-*
+    obj:/lib/ld-*
+    fun:*dl_open
+}
+
+{
+    dlopen_level8_quiet
+    Memcheck:Addr4
+    obj:/lib/ld-*
+    obj:/lib/ld-*
+    obj:/lib/ld-*
+    obj:/lib/ld-*
+    obj:/lib/ld-*
+    obj:/lib/ld-*
+    obj:*/libc-*
+    obj:/lib/ld-*
+    fun:*dl_open
+}
+{
+    dlsym_quiet
+    Memcheck:Addr4
+    obj:/lib/ld-*
+    obj:/lib/ld-*
+    obj:/lib/ld-*
+    obj:*/libc-*
+    fun:*dl_sym
+}
+
+# SASL and DB
+
+{
+    libsasl2_at_level1_cond_quiet
+    Memcheck:Cond
+    obj:/usr/lib/libsasl2.*
+}
+
+{
+    libdb_at_level2_cond_quiet
+    Memcheck:Cond
+    fun:*
+    obj:/usr/lib/libdb-4*
+}
+{
+    libdb_at_level2_value4_quiet
+    Memcheck:Value4
+    fun:*
+    obj:/usr/lib/libdb-4*
+}
+{
+    libsasl2_at_level2_cond_quiet
+    Memcheck:Cond
+    fun:*
+    obj:/usr/lib/libsasl2.*
+}
+{
+    libsasl2_at_level2_value4_quiet
+    Memcheck:Value4
+    fun:*
+    obj:/usr/lib/libsasl2.*
+}
+{
+    libsasldb_quiet
+    Memcheck:Value4
+    fun:*
+    obj:/usr/lib/sasl2/libsasldb*.so*
+}
+{
+    libsasldb_quiet
+    Memcheck:Cond
+    fun:*
+    obj:/usr/lib/sasl2/libsasldb*.so*
+}
+
