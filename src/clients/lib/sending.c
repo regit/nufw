@@ -158,7 +158,7 @@ int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
   header->length=htons(header->length);
   if (session->debug_mode)
   {
-      printf("[+] Send %u connection(s) (in SYN_SENT state) to nuauth\n", item);
+      printf("[+] Send %u new connection(s) to nuauth\n", item);
   }
 
   /* and send it */
