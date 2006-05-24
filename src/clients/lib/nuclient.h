@@ -263,8 +263,6 @@ void    nu_client_global_deinit(nuclient_error *err);
 NuAuth* nu_client_init2(
         const char *hostname, /*!< Nuauth hostname (default: #NUAUTH_IP) */
         const char *service,  /*!< Nuauth port service (default: #USERPCKT_PORT) */
-        char* keyfile,        /*!< Client key filename (can be NULL) */ 
-        char* certfile,       /*!< Client certificate filename (can be NULL) */
         
         /** Callback to get user name, prototype: char* func() */
         void* username_callback,
@@ -279,6 +277,11 @@ NuAuth* nu_client_init2(
         unsigned char debug_mode,
         
         nuclient_error *err); /*!< Structure to store error (if any) */
+
+int nu_client_setup_tls(NuAuth* session,
+        char* keyfile,
+        char* certfile,
+        nuclient_error *err);
 
 const char* nu_client_strerror (nuclient_error *err);
 

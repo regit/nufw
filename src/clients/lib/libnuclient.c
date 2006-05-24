@@ -619,13 +619,15 @@ int send_os(NuAuth * session, nuclient_error *err)
  * Initialize TLS:
  *    - Set key filename (and test if the file does exist)
  *    - Set certificate filename (and test if the file does exist)
- *    - Allocate x509 credentials
  *    - Set trust file of credentials (if needed)
  *    - Set certificate (if key and cert. are present)
- *    - Generate Diffie Hellman params
  *    - Init. TLS session
+ *
+ * \param keyfile Complete path to a key file stored in PEM format (can be NULL)
+ * \param certfile Complete path to a certificate file stored in PEM format (can be NULL)
+ * \return Returns 0 on error (error description in err), 1 otherwise
  */
-int init_tls_cert(NuAuth * session,
+int nu_client_setup_tls(NuAuth * session,
         char* keyfile, char* certfile,
         nuclient_error *err)
 {
@@ -878,8 +880,10 @@ int tls_handshake(NuAuth * session, nuclient_error *err)
  * \return A pointer to a valid ::NuAuth structure or NULL if init has failed
  * 
  * \par Internal
- * Initialisation of nufw authentication session: set basic fields and then
- * call:
+ * Initialisation of nufw authentication session:
+ *    - set basic fields and then ;
+ *    - allocate x509 credentials ;
+ *    - generate Diffie Hellman params ;
  *    - init_socket() ;
  *    - init_tls_cert() ;
  *    - tls_handshake() ;
@@ -891,17 +895,16 @@ int tls_handshake(NuAuth * session, nuclient_error *err)
 NuAuth* nu_client_init2(
         const char *hostname, 
         const char *service,
-        char* keyfile, 
-        char* certfile,
         void* username_callback,
         void* passwd_callback, 
         void* tls_passwd_callback, 
         unsigned char debug_mode,
         nuclient_error *err)
 {
+    const int cert_type_priority[3] = { GNUTLS_CRT_X509,  0 };
     conntable_t *new;
     NuAuth * session;
-    const int cert_type_priority[3] = { GNUTLS_CRT_X509,  0 };
+    int ret;
 
     /* First reset error */
     SET_ERROR(err, INTERNAL_ERROR, NO_ERR);
@@ -986,12 +989,6 @@ NuAuth* nu_client_init2(
         SET_ERROR(err, GNUTLS_ERROR, ret);
         return 0;
         /*printf("error setting tls cert type priority : %s\n",gnutls_strerror(ret));*/
-    }
-
-    /* set fields about TLS and certificates */
-    if (!init_tls_cert(session, keyfile, certfile, err)) {
-        nu_exit_clean(session);
-        return NULL;
     }
 
     /* set field about host */
