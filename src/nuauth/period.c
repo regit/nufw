@@ -129,19 +129,19 @@ time_t get_end_of_period_for_time_t(gchar* period,time_t pckt_time)
        GSList* pointer;
        time_t provend;
         /* iter on period_item */
-       for( pointer=pperiod->items ;pointer;pointer=pointer->next){
+       for (pointer=pperiod->items ;pointer;pointer=pointer->next){
            provend=get_end_of_period_item_for_time((struct period_item*)(pointer->data),pckt_time);
            switch (provend){
-             case 0:
-                     return 0;
-             case -1:
-                     break;
-             default:
-                     if ((result == -1) || (provend<result)){
-                         result=provend;
-                     }
+               case -1:
+                   return -1;
+               default: /* here provend is >= 0 */
+                   /* we modify result if and only if previous period items give
+                    * drop or if provend is more limitative than current result */
+                   if ((result == 0) || (provend<result)) {
+                       result=provend;
+                   }
            }
-        }
+       }
   }
   return result;
 }
