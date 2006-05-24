@@ -252,7 +252,6 @@ typedef struct
 
 /* Exported functions */
 int 	nu_client_check(NuAuth * session, nuclient_error *err);
-void 	nu_client_free(NuAuth *session, nuclient_error *err);
 
 int     nu_client_error_init(nuclient_error **err);
 void    nu_client_error_destroy(nuclient_error *err);
@@ -260,20 +259,11 @@ void    nu_client_error_destroy(nuclient_error *err);
 void    nu_client_global_init(nuclient_error *err);
 void    nu_client_global_deinit(nuclient_error *err);
 
-NuAuth* nu_client_init2(
-        const char *hostname, /*!< Nuauth hostname (default: #NUAUTH_IP) */
-        const char *service,  /*!< Nuauth port service (default: #USERPCKT_PORT) */
-        
-        /** Callback to get user name, prototype: char* func() */
+NuAuth* nu_client_new(
         void* username_callback,
-        
-        /** Callback to get user password, prototype: char* func() */
         void* passwd_callback, 
-        
-        /** Callback to get TLS password, prototype: char* func() */
         void* tls_passwd_callback, 
-    
-        nuclient_error *err); /*!< Structure to store error (if any) */
+        nuclient_error *err);
 
 void nu_client_set_debug(NuAuth* session, unsigned char enabled);
 
@@ -281,6 +271,13 @@ int nu_client_setup_tls(NuAuth* session,
         char* keyfile,
         char* certfile,
         nuclient_error *err);
+
+int nu_client_connect(NuAuth* session,
+        const char *hostname,
+        const char *service,
+        nuclient_error *err);
+
+void nu_client_delete(NuAuth *session);
 
 const char* nu_client_strerror (nuclient_error *err);
 

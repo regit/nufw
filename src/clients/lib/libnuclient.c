@@ -448,10 +448,14 @@ int compare (NuAuth * session,conntable_t *old, conntable_t *new, nuclient_error
  *
  * A client needs to call a few functions in the correct order to be able to authenticate:
  *  - nu_client_global_init(): To be called once at program start
- *  - nu_client_init2(): start user session
+ *  - nu_client_new(): start user session
+ *  - nu_client_setup_tls(): (optionnal) setup TLS key/certificate files
+ *  - nu_client_connect(): try to connect to nuauth server
  *  - nu_client_check(): do a check, it has to be run at regular interval
- *  - nu_client_free(): free a user session
+ *  - nu_client_delete(): free a user session
  *  - nu_client_global_deinit(): To be called once at program end
+ *
+ * On error, don't forget to delete session with nu_client_delete()
  */
 
 /**
@@ -464,14 +468,13 @@ int compare (NuAuth * session,conntable_t *old, conntable_t *new, nuclient_error
  * \param err A pointer to a nuclient_error: which contains error after exit
  * 
  */
-void nu_client_free(NuAuth *session, nuclient_error *err)
+void nu_client_delete(NuAuth *session)
 {
     /* kill all threads */
     ask_session_end(session);
     /* all threads are dead, we are the one who can access to it */
     /* destroy session */
     nu_exit_clean(session);
-    SET_ERROR(err, INTERNAL_ERROR, NO_ERR);
 }
 
 /**
@@ -892,9 +895,7 @@ int tls_handshake(NuAuth * session, nuclient_error *err)
  *
  * If everything is ok, create the connection table using tcptable_init(). 
  */
-NuAuth* nu_client_init2(
-        const char *hostname, 
-        const char *service,
+NuAuth* nu_client_new(
         void* username_callback,
         void* passwd_callback, 
         void* tls_passwd_callback, 
@@ -914,7 +915,7 @@ NuAuth* nu_client_init2(
         SET_ERROR(err, INTERNAL_ERROR, MEMORY_ERR);
         return NULL;
     }
-
+    
     /* Set basic fields */
     session->userid = getuid();
     session->connected = 1;
@@ -933,22 +934,31 @@ NuAuth* nu_client_init2(
     /* create session mutex */
     pthread_mutex_init(&(session->mutex),NULL);
 
+    if (tcptable_init (&new) == 0) {
+        SET_ERROR(err, INTERNAL_ERROR, MEMORY_ERR);
+        nu_exit_clean(session);
+        return NULL;
+    }
+    session->ct = new;
+
     /* X509 stuff */
     ret = gnutls_certificate_allocate_credentials(&(session->cred));
     if (ret != 0)
     {
-        SET_ERROR(err, GNUTLS_ERROR, ret);
-        return 0;
         /*printf("problem allocating gnutls credentials : %s\n",gnutls_strerror(ret));*/
+        SET_ERROR(err, GNUTLS_ERROR, ret);
+        nu_exit_clean(session);
+        return NULL;
     }
 
     /* Initialize TLS session */
     ret = gnutls_init(&session->tls, GNUTLS_CLIENT);
     if (ret != 0)
     {
-        SET_ERROR(err, GNUTLS_ERROR, ret);
-        return 0;
         /*printf("gnutls init error : %s\n",gnutls_strerror(ret));*/
+        SET_ERROR(err, GNUTLS_ERROR, ret);
+        nu_exit_clean(session);
+        return NULL;
     }
 
     /* allocate diffie hellman parameters */
@@ -957,7 +967,8 @@ NuAuth* nu_client_init2(
     {
         /*printf("Error in dh parameters init : %s\n",gnutls_strerror(ret));*/
         SET_ERROR(err, GNUTLS_ERROR, ret);
-        return 0;
+        nu_exit_clean(session);
+        return NULL;
     }
 
     /* Generate Diffie Hellman parameters - for use with DHE
@@ -970,7 +981,8 @@ NuAuth* nu_client_init2(
     {
         /*printf("Error in dh params generation : %s\n",gnutls_strerror(ret));*/
         SET_ERROR(err, GNUTLS_ERROR, ret);
-        return 0;
+        nu_exit_clean(session);
+        return NULL;
     }
     gnutls_certificate_set_dh_params( session->cred, session->dh_params);
 
@@ -978,7 +990,8 @@ NuAuth* nu_client_init2(
     if (ret < 0)
     {
         SET_ERROR(err, GNUTLS_ERROR, ret);
-        return 0;
+        nu_exit_clean(session);
+        return NULL;
         /*printf("error setting tls default priority : %s\n",gnutls_strerror(ret));*/
     }
 
@@ -986,34 +999,47 @@ NuAuth* nu_client_init2(
     if (ret < 0)
     {
         SET_ERROR(err, GNUTLS_ERROR, ret);
-        return 0;
-        /*printf("error setting tls cert type priority : %s\n",gnutls_strerror(ret));*/
-    }
-
-    /* set field about host */
-    if (!init_socket(session, err, hostname, service)) {
         nu_exit_clean(session);
         return NULL;
+        /*printf("error setting tls cert type priority : %s\n",gnutls_strerror(ret));*/
+    }
+    return session;
+}
+
+/**
+ * Try to connect to nuauth server:
+ *    - init_socket(): create socket to server ;
+ *    - tls_handshake(): TLS handshake ;
+ *    - init_sasl(): authentification with SASL ;
+ *    - send_os(): send OS field.
+ *
+ * \param hostname String containing hostname of nuauth server (default: #NUAUTH_IP)
+ * \param service Port number (or string) on which nuauth server is listening (default: #USERPCKT_PORT)
+ * \return Returns 0 on error (error description in err), 1 otherwise
+ */
+int nu_client_connect(NuAuth* session,
+        const char *hostname,
+        const char *service,
+        nuclient_error *err)
+{
+    /* set field about host */
+    if (!init_socket(session, err, hostname, service)) {
+        return 0;
     }
 
     if (!tls_handshake(session, err)) {
-        nu_exit_clean(session);
-        return NULL;
+        return 0;
     }
 
     if (!init_sasl(session, err)) {
-        nu_exit_clean(session);
-        return NULL;
+        return 0;
     }
 
     if (!send_os(session, err)) {
-        nu_exit_clean(session);
-        return NULL;
+        return 0;
     }
-
-    if (tcptable_init (&new) == 0) panic ("tcptable_init failed");
-    session->ct = new;
-    return session;
+    session->connected = 1;
+    return 1;
 }
 
 /**
@@ -1070,6 +1096,8 @@ int nu_client_error_init(nuclient_error **err)
     if (*err != NULL)
         return -1;
     *err=malloc(sizeof(nuclient_error));
+    if (*err == NULL)
+        return -1;
     return 0;
 }
 
