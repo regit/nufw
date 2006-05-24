@@ -898,7 +898,6 @@ NuAuth* nu_client_init2(
         void* username_callback,
         void* passwd_callback, 
         void* tls_passwd_callback, 
-        unsigned char debug_mode,
         nuclient_error *err)
 {
     const int cert_type_priority[3] = { GNUTLS_CRT_X509,  0 };
@@ -928,7 +927,7 @@ NuAuth* nu_client_init2(
     session->username_callback = username_callback;
     session->passwd_callback = passwd_callback;
     session->tls_passwd_callback = tls_passwd_callback;
-    session->debug_mode = debug_mode;
+    session->debug_mode = 0;
     session->timestamp_last_sent = time(NULL);
 
     /* create session mutex */
@@ -1015,6 +1014,16 @@ NuAuth* nu_client_init2(
     if (tcptable_init (&new) == 0) panic ("tcptable_init failed");
     session->ct = new;
     return session;
+}
+
+/**
+ * Enable or disabled debug mode
+ * 
+ * \param enabled Enable debug if different than zero (1), disable otherwise
+ */
+void nu_client_set_debug(NuAuth* session, unsigned char enabled)
+{
+    session->debug_mode = enabled;
 }
 
 void ask_session_end(NuAuth* session)

@@ -273,10 +273,9 @@ NuAuth* nu_client_init2(
         /** Callback to get TLS password, prototype: char* func() */
         void* tls_passwd_callback, 
     
-        /** Debug mode, enabled if different than zero */
-        unsigned char debug_mode,
-        
         nuclient_error *err); /*!< Structure to store error (if any) */
+
+void nu_client_set_debug(NuAuth* session, unsigned char enabled);
 
 int nu_client_setup_tls(NuAuth* session,
         char* keyfile,
