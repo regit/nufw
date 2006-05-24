@@ -631,7 +631,6 @@ int init_tls_cert(NuAuth * session,
 {
     char certstring[256];
     char keystring[256];
-    const int cert_type_priority[3] = { GNUTLS_CRT_X509,  0 };
     char *home = getenv("HOME");
     int ok;
     int ret;
@@ -672,91 +671,34 @@ int init_tls_cert(NuAuth * session,
 #endif
     }
 
-    /* X509 stuff */
-    ret = gnutls_certificate_allocate_credentials(&(session->cred));
-    if (ret != 0)
-    {
-        SET_ERROR(err, GNUTLS_ERROR, ret);
-        return 0;
-        /*printf("problem allocating gnutls credentials : %s\n",gnutls_strerror(ret));*/
-    }
-
     /* sets the trusted cas file */
 #if REQUEST_CERT
     ret = gnutls_certificate_set_x509_trust_file(session->cred, certfile, GNUTLS_X509_FMT_PEM);
     if (ret < 0)
     {
+        /*printf("problem setting x509 trust file : %s\n",gnutls_strerror(ret));*/
         SET_ERROR(err, GNUTLS_ERROR, ret);
         return 0;
-        /*printf("problem setting x509 trust file : %s\n",gnutls_strerror(ret));*/
     }
 #endif
     if (certfile != NULL && keyfile != NULL)
     {
         ret = gnutls_certificate_set_x509_key_file(session->cred, certfile, keyfile, GNUTLS_X509_FMT_PEM);
         if (ret <0){
+            /*printf("problem with keyfile : %s\n",gnutls_strerror(ret));*/
             SET_ERROR(err, GNUTLS_ERROR, ret);
             return 0;
-            /*printf("problem with keyfile : %s\n",gnutls_strerror(ret));*/
         }
     }
 
-    /* allocate diffie hellman parameters */
-    ret = gnutls_dh_params_init(&session->dh_params);
-    if (ret < 0)
-    {
-        /*printf("Error in dh parameters init : %s\n",gnutls_strerror(ret));*/
-        SET_ERROR(err, GNUTLS_ERROR, ret);
-        return 0;
-    }
-
-    /* Generate Diffie Hellman parameters - for use with DHE
-     * kx algorithms. These should be discarded and regenerated
-     * once a day, once a week or once a month. Depending on the
-     * security requirements.
-     */
-    ret = gnutls_dh_params_generate2(session->dh_params, DH_BITS);
-    if (ret < 0)
-    {
-        /*printf("Error in dh params generation : %s\n",gnutls_strerror(ret));*/
-        SET_ERROR(err, GNUTLS_ERROR, ret);
-        return 0;
-    }
-    gnutls_certificate_set_dh_params( session->cred, session->dh_params);
-
-    /* Initialize TLS session */
-    ret = gnutls_init(&(session->tls), GNUTLS_CLIENT);
-    if (ret != 0)
-    {
-        SET_ERROR(err, GNUTLS_ERROR, ret);
-        return 0;
-        /*printf("gnutls init error : %s\n",gnutls_strerror(ret));*/
-    }
-
-    ret = gnutls_set_default_priority(session->tls);
-    if (ret < 0)
-    {
-        SET_ERROR(err, GNUTLS_ERROR, ret);
-        return 0;
-        /*printf("error setting tls default priority : %s\n",gnutls_strerror(ret));*/
-    }
-
-    ret = gnutls_certificate_type_set_priority(session->tls, cert_type_priority);
-    if (ret < 0)
-    {
-        SET_ERROR(err, GNUTLS_ERROR, ret);
-        return 0;
-        /*printf("error setting tls cert type priority : %s\n",gnutls_strerror(ret));*/
-    }
     /* put the x509 credentials to the current session */
     ret = gnutls_credentials_set(session->tls, GNUTLS_CRD_CERTIFICATE, session->cred);
     if (ret < 0)
     {
+        /*printf("error setting tls credentials : %s\n",gnutls_strerror(ret));*/
         SET_ERROR(err, GNUTLS_ERROR, ret);
         return 0;
-        /*printf("error setting tls credentials : %s\n",gnutls_strerror(ret));*/
     }
-
     return 1;
 }
 
@@ -959,6 +901,7 @@ NuAuth* nu_client_init2(
 {
     conntable_t *new;
     NuAuth * session;
+    const int cert_type_priority[3] = { GNUTLS_CRT_X509,  0 };
 
     /* First reset error */
     SET_ERROR(err, INTERNAL_ERROR, NO_ERR);
@@ -987,6 +930,63 @@ NuAuth* nu_client_init2(
 
     /* create session mutex */
     pthread_mutex_init(&(session->mutex),NULL);
+
+    /* X509 stuff */
+    ret = gnutls_certificate_allocate_credentials(&(session->cred));
+    if (ret != 0)
+    {
+        SET_ERROR(err, GNUTLS_ERROR, ret);
+        return 0;
+        /*printf("problem allocating gnutls credentials : %s\n",gnutls_strerror(ret));*/
+    }
+
+    /* Initialize TLS session */
+    ret = gnutls_init(&session->tls, GNUTLS_CLIENT);
+    if (ret != 0)
+    {
+        SET_ERROR(err, GNUTLS_ERROR, ret);
+        return 0;
+        /*printf("gnutls init error : %s\n",gnutls_strerror(ret));*/
+    }
+
+    /* allocate diffie hellman parameters */
+    ret = gnutls_dh_params_init(&session->dh_params);
+    if (ret < 0)
+    {
+        /*printf("Error in dh parameters init : %s\n",gnutls_strerror(ret));*/
+        SET_ERROR(err, GNUTLS_ERROR, ret);
+        return 0;
+    }
+
+    /* Generate Diffie Hellman parameters - for use with DHE
+     * kx algorithms. These should be discarded and regenerated
+     * once a day, once a week or once a month. Depending on the
+     * security requirements.
+     */
+    ret = gnutls_dh_params_generate2(session->dh_params, DH_BITS);
+    if (ret < 0)
+    {
+        /*printf("Error in dh params generation : %s\n",gnutls_strerror(ret));*/
+        SET_ERROR(err, GNUTLS_ERROR, ret);
+        return 0;
+    }
+    gnutls_certificate_set_dh_params( session->cred, session->dh_params);
+
+    ret = gnutls_set_default_priority(session->tls);
+    if (ret < 0)
+    {
+        SET_ERROR(err, GNUTLS_ERROR, ret);
+        return 0;
+        /*printf("error setting tls default priority : %s\n",gnutls_strerror(ret));*/
+    }
+
+    ret = gnutls_certificate_type_set_priority(session->tls, cert_type_priority);
+    if (ret < 0)
+    {
+        SET_ERROR(err, GNUTLS_ERROR, ret);
+        return 0;
+        /*printf("error setting tls cert type priority : %s\n",gnutls_strerror(ret));*/
+    }
 
     /* set fields about TLS and certificates */
     if (!init_tls_cert(session, keyfile, certfile, err)) {
