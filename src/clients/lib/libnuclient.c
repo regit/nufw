@@ -705,6 +705,7 @@ int nu_client_setup_tls(NuAuth * session,
         SET_ERROR(err, GNUTLS_ERROR, ret);
         return 0;
     }
+    session->need_set_cred = 0;
     return 1;
 }
 
@@ -919,7 +920,7 @@ NuAuth* nu_client_new(
     
     /* Set basic fields */
     session->userid = getuid();
-    session->connected = 1;
+    session->connected = 0;
     session->count_msg_cond = -1;
     session->auth_by_default = 1;
     session->packet_seq = 0;
@@ -931,6 +932,7 @@ NuAuth* nu_client_new(
     session->tls_passwd_callback = tls_passwd_callback;
     session->debug_mode = 0;
     session->timestamp_last_sent = time(NULL);
+    session->need_set_cred = 1;
 
     /* create session mutex */
     pthread_mutex_init(&(session->mutex),NULL);
@@ -1023,6 +1025,19 @@ int nu_client_connect(NuAuth* session,
         const char *service,
         nuclient_error *err)
 {
+    if (session->need_set_cred)
+    {
+        /* put the x509 credentials to the current session */
+        int ret = gnutls_credentials_set(session->tls, GNUTLS_CRD_CERTIFICATE, session->cred);
+        if (ret < 0)
+        {
+            /*printf("error setting tls credentials : %s\n",gnutls_strerror(ret));*/
+            SET_ERROR(err, GNUTLS_ERROR, ret);
+            return 0;
+        }
+        session->need_set_cred = 0;
+    }
+
     /* set field about host */
     if (!init_socket(session, err, hostname, service)) {
         return 0;

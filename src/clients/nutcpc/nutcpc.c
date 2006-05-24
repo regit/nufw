@@ -417,8 +417,8 @@ NuAuth* do_connect(nutcpc_context_t *context)
 
     nu_client_set_debug(session, context->debug_mode);
 
-#if 0        
-    if (!nu_client_setup_tls(session, NULL, NULL)) 
+#if 0 
+    if (!nu_client_setup_tls(session, NULL, NULL, NULL, err)) 
     { 
         nu_client_delete(session);
         return NULL;
