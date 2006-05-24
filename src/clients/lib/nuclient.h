@@ -270,6 +270,7 @@ void nu_client_set_debug(NuAuth* session, unsigned char enabled);
 int nu_client_setup_tls(NuAuth* session,
         char* keyfile,
         char* certfile,
+        char* cafile,
         nuclient_error *err);
 
 int nu_client_connect(NuAuth* session,
