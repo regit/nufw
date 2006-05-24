@@ -106,12 +106,12 @@ attributetype ( 1.3.6.1.4.1.23812.1.18 NAME 'TimeRange'
 	DESC 'Name of Time Range to apply'
 	EQUALITY caseIgnoreMatch
 	SUBSTR caseIgnoreSubstringsMatch
-	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{256})
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{256} SINGLE-VALUE)
 
 objectclass ( 1.3.6.1.4.1.23812.2.1 NAME 'NuAccessControlList'
 	DESC 'An IP Acl'
 	MUST (cn $ SrcIPStart $ SrcIPEnd $ DstIPStart $ DstIPEnd $ Decision )
-	MAY (Proto $ SrcPortStart $ SrcPortEnd $ DstPortStart $ DstPortEnd $ DstPort $ SrcPort  $ OsName $ OsVersion $ OsRelease $ AppName $ AppSig $ Group $ description  ) )
+	MAY (Proto $ SrcPortStart $ SrcPortEnd $ DstPortStart $ DstPortEnd $ DstPort $ SrcPort  $ OsName $ OsVersion $ OsRelease $ AppName $ AppSig $ Group $ description $ TimeRange ) )
 
 objectclass ( 1.3.6.1.4.1.23812.2.2 NAME 'NuAccount' SUP top AUXILIARY
 	DESC 'Abstraction of an account with Nufw attributes'

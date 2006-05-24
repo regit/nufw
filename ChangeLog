@@ -1,6 +1,7 @@
 2.1.0
 	- fix period handling (user OR and and AND between period item of a
 	period)
+	- fix memory leak in ldap module
 2.0 (2005/05/22)
 	- nuauth : fix period handling
 	- libnuclient : fix crash when specified hostname is unvalid

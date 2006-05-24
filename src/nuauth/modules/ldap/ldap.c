@@ -507,7 +507,8 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element,gpointer params_p)
           if (attrs_array && *attrs_array){
               this_acl->period=g_strdup(*attrs_array);
           } 
-
+          ldap_value_free(attrs_array);
+          
           /* allocate a new acl_group */
           this_acl=g_new0(struct acl_group,1);
           g_assert(this_acl);
