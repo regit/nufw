@@ -145,7 +145,7 @@ void leave_client()
     }
 
     if (session){
-        nu_client_free(session,err);
+        nu_client_delete(session);
     }
 
     runpid = compute_run_pid();
@@ -247,7 +247,7 @@ ssize_t my_getpass (char **lineptr, size_t *linelen)
 #endif
 
 /**
- * Callback used in nu_client_init2() call: read password
+ * Callback used in nu_client_connect() call: read password
  *
  * \return New allocated buffer containing the password,
  *         or NULL if it fails
@@ -287,7 +287,7 @@ char* get_password()
 }
 
 /**
- * Callback used in nu_client_init2() call: read user name 
+ * Callback used in nu_client_connect() call: read user name 
  *
  * \return New allocated buffer containing the name,
  *         or NULL if it fails
@@ -403,6 +403,39 @@ void daemonize_process(nutcpc_context_t *context, char *runpid)
     (void)chdir ("/");
 }
 
+/**
+ * Try to connect to nuauth.
+ *
+ * \return The client session, or NULL on error (get description from ::err)
+ */
+NuAuth* do_connect(nutcpc_context_t *context)
+{
+    NuAuth* session = nu_client_new(&get_username, &get_password,  NULL, err);
+    if (session == NULL) {
+        return NULL;
+    }
+
+    nu_client_set_debug(session, context->debug_mode);
+
+#if 0        
+    if (!nu_client_setup_tls(session, NULL, NULL)) 
+    { 
+        nu_client_delete(session);
+        return NULL;
+    } 
+#endif        
+
+    if (!nu_client_connect(session, context->srv_addr, context->port, err))
+    {
+        nu_client_delete(session);
+        return NULL;
+    }
+    return session;
+}
+
+/**
+ * Main loop: program stay in this loop until it stops.
+ */
 void main_loop(nutcpc_context_t *context)
 {
     for (;;) {
@@ -412,16 +445,7 @@ void main_loop(nutcpc_context_t *context)
             if (context->tempo< MAX_RETRY_TIME) {
                 context->tempo *= 2;
             }
-            session = nu_client_init2(
-                    context->srv_addr,
-                    context->port,
-                    NULL,
-                    NULL,
-                    &get_username,
-                    &get_password,
-                    NULL,
-                    context->debug_mode,
-                    err);
+            session = do_connect(context);
             if (session!=NULL){
                 context->tempo = 1;
             }else{
@@ -506,12 +530,7 @@ void init_library(nutcpc_context_t *context)
 
     /* Init. library */
     printf("Connecting to NuFw gateway\n");
-    session = nu_client_init2(
-            context->srv_addr, context->port,
-            NULL, NULL,
-            &get_username, &get_password,  NULL,
-            context->debug_mode,
-            err);
+    session = do_connect(context);
 
     /* Library failure? */
     if (session == NULL)

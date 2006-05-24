@@ -151,10 +151,39 @@ void exit_client(){
 
 /* --- authentication management functions --- */
 
+/**
+ * Try to connect to nuauth.
+ *
+ * \return The client session, or NULL on error (get description from ::err)
+ */
+NuAuth* do_connect(nuclient_error *err)
+{
+    NuAuth* session = nu_client_new(&get_username, &get_password,  NULL, err);
+    if (session == NULL) {
+        return NULL;
+    }
+
+#if 0        
+    nu_client_set_debug(session, context->debug_mode);
+
+    if (!nu_client_setup_tls(session, NULL, NULL)) 
+    { 
+        nu_client_delete(session);
+        return NULL;
+    } 
+#endif        
+
+    if (!nu_client_connect(session, pn_s.nuauth_srv, pn_s.nuauth_port, err))
+    {
+        nu_client_delete(session);
+        return NULL;
+    }
+    return session;
+}
+
 /*
  * used to open the connection to the nuauth server
  */
-
 PAM_EXTERN
 int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
         ,const char **argv)
@@ -238,11 +267,7 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
 
       /* libnuclient init function */
       nu_client_global_init(err);
-      session = nu_client_init2(
-              pn_s.nuauth_srv, pn_s.nuauth_port,
-              NULL, NULL,
-              &get_username, &get_password,
-              NULL, 0, err);
+      session = do_connect(err);
 
       /*syslog(LOG_INFO,"(pam_nufw) after nu_client_init2");*/
       if(session == NULL){
@@ -268,11 +293,7 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
                   if (tempo< MAX_RETRY_TIME) {
                       tempo=tempo*2;
                   }
-                  session = nu_client_init2(
-                          pn_s.nuauth_srv, pn_s.nuauth_port,
-                          NULL, NULL,
-                          &get_username, &get_password,
-                          NULL, 0, err);
+                  session = do_connect(err);
                   if (session==NULL){/* quit if password is wrong. to not lock user account */
                       syslog(LOG_ERR,"(pam_nufw) unable to reconnect to server: %s",nu_client_strerror(err));
                       if (err->error == BAD_CREDENTIALS_ERR){
