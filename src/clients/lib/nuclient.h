@@ -212,6 +212,7 @@ typedef struct {
 	int count_msg_cond;
 	pthread_t checkthread;
 	pthread_t recvthread;
+    gnutls_dh_params dh_params;
 
     /** Timestamp (Epoch format) of last packet send to nuauth */
 	time_t timestamp_last_sent;

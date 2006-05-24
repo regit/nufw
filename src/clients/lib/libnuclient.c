@@ -200,7 +200,7 @@ void nu_exit_clean(NuAuth * session)
 
     gnutls_certificate_free_keys(session->cred);
     gnutls_certificate_free_credentials(session->cred);
-
+    gnutls_dh_params_deinit(session->dh_params);
     gnutls_deinit(session->tls);
 
     if (session->server_mode == SRV_TYPE_PUSH){
@@ -442,31 +442,6 @@ int compare (NuAuth * session,conntable_t *old, conntable_t *new, nuclient_error
     return nb_packets;
 }
 
-static gnutls_dh_params dh_params;
-
-static int generate_dh_params(void)
-{
-    int ret;
-
-    /* Generate Diffie Hellman parameters - for use with DHE
-     * kx algorithms. These should be discarded and regenerated
-     * once a day, once a week or once a month. Depending on the
-     * security requirements.
-     */
-    ret = gnutls_dh_params_init( &dh_params);
-    if (ret < 0)
-    {
-        printf("Error in dh parameters init : %s\n",gnutls_strerror(ret));
-    }
-    ret = gnutls_dh_params_generate2( dh_params, DH_BITS);
-    if (ret < 0)
-    {
-        printf("Error in dh params generation : %s\n",gnutls_strerror(ret));
-    }
-
-    return 0;
-}
-
 /**
  * \defgroup nuclientAPI API of libnuclient
  * \brief The high level API of libnuclient can be used to build a NuFW client
@@ -547,7 +522,6 @@ void nu_client_global_init(nuclient_error *err)
 void nu_client_global_deinit(nuclient_error *err)
 {
     sasl_done();
-    gnutls_dh_params_deinit(dh_params);
     gnutls_global_deinit();
     SET_ERROR(err, INTERNAL_ERROR, NO_ERR);
 }
@@ -651,8 +625,9 @@ int send_os(NuAuth * session, nuclient_error *err)
  *    - Generate Diffie Hellman params
  *    - Init. TLS session
  */
-int init_tls_cert(NuAuth * session, nuclient_error *err,
-        char* keyfile, char* certfile)
+int init_tls_cert(NuAuth * session,
+        char* keyfile, char* certfile,
+        nuclient_error *err)
 {
     char certstring[256];
     char keystring[256];
@@ -716,7 +691,8 @@ int init_tls_cert(NuAuth * session, nuclient_error *err,
         /*printf("problem setting x509 trust file : %s\n",gnutls_strerror(ret));*/
     }
 #endif
-    if (certfile && keyfile){
+    if (certfile != NULL && keyfile != NULL)
+    {
         ret = gnutls_certificate_set_x509_key_file(session->cred, certfile, keyfile, GNUTLS_X509_FMT_PEM);
         if (ret <0){
             SET_ERROR(err, GNUTLS_ERROR, ret);
@@ -725,9 +701,28 @@ int init_tls_cert(NuAuth * session, nuclient_error *err,
         }
     }
 
-    /* set Diffie Hellman params */
-    generate_dh_params();
-    gnutls_certificate_set_dh_params( session->cred, dh_params);
+    /* allocate diffie hellman parameters */
+    ret = gnutls_dh_params_init(&session->dh_params);
+    if (ret < 0)
+    {
+        /*printf("Error in dh parameters init : %s\n",gnutls_strerror(ret));*/
+        SET_ERROR(err, GNUTLS_ERROR, ret);
+        return 0;
+    }
+
+    /* Generate Diffie Hellman parameters - for use with DHE
+     * kx algorithms. These should be discarded and regenerated
+     * once a day, once a week or once a month. Depending on the
+     * security requirements.
+     */
+    ret = gnutls_dh_params_generate2(session->dh_params, DH_BITS);
+    if (ret < 0)
+    {
+        /*printf("Error in dh params generation : %s\n",gnutls_strerror(ret));*/
+        SET_ERROR(err, GNUTLS_ERROR, ret);
+        return 0;
+    }
+    gnutls_certificate_set_dh_params( session->cred, session->dh_params);
 
     /* Initialize TLS session */
     ret = gnutls_init(&(session->tls), GNUTLS_CLIENT);
@@ -994,7 +989,7 @@ NuAuth* nu_client_init2(
     pthread_mutex_init(&(session->mutex),NULL);
 
     /* set fields about TLS and certificates */
-    if (!init_tls_cert(session, err, keyfile, certfile)) {
+    if (!init_tls_cert(session, keyfile, certfile, err)) {
         nu_exit_clean(session);
         return NULL;
     }
