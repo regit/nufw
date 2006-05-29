@@ -191,6 +191,13 @@ inline user_session_t* look_for_username(const gchar* username)
     return ret;
 }
 
+/**
+ * Ask each client of global_msg address set to send their new connections
+ * (connections in stage "SYN SENT").
+ *
+ * \param global_msg Address set of clients
+ * \return Returns 0 on error, 1 otherwise
+ */
 char warn_clients(struct msg_addr_set * global_msg) 
 {
     GSList* ipsockets=NULL;
