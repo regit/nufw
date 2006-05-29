@@ -144,6 +144,12 @@ inline void search_and_fill_complete_of_authreq(connection_t *new, connection_t 
     }
 }
 
+/**
+ * An user tells that he is the owner of a connection:
+ *  - #AUTH_STATE_AUTHREQ: push a copy of the connection 'new' to nuauthdatas->acl_checkers 
+ *  - #AUTH_STATE_USERPCKT: that's a duplicate
+ *  - other: error!
+ */
 inline void search_and_fill_complete_of_userpckt(connection_t *new, connection_t *packet) 
 {
     switch (new->state){

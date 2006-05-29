@@ -32,7 +32,7 @@ typedef enum
 {
     AUTH_STATE_NONE = 0,    /*!< Unknow state (when a connection is created) */
     AUTH_STATE_AUTHREQ = 1, /*!< Waiting for authentification */
-    AUTH_STATE_USERPCKT,    /*!< (see user_request()) */
+    AUTH_STATE_USERPCKT,    /*!< Connection received from an user: see user_request() */
     AUTH_STATE_READY,       /*!< (see search_and_fill_completing()) */
 
     /** 

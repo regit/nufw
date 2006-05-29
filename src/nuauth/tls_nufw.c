@@ -52,6 +52,8 @@ static int treat_nufw_request (nufw_session_t *c_session)
 {
     unsigned char dgram[CLASSIC_NUFW_PACKET_SIZE];
     int dgram_size;
+    connection_t *current_conn;
+    int ret;
 
     if (c_session == NULL)
         return NU_EXIT_OK;
@@ -60,45 +62,48 @@ static int treat_nufw_request (nufw_session_t *c_session)
     g_mutex_lock(c_session->tls_lock);
     dgram_size = gnutls_record_recv(*(c_session->tls), dgram, CLASSIC_NUFW_PACKET_SIZE) ;
     g_mutex_unlock(c_session->tls_lock);
-    if (  dgram_size > 0 ){
-        connection_t *current_conn;
-        int ret = authpckt_decode(dgram , (unsigned int)dgram_size, &current_conn);
-        switch (ret){
-            case NU_EXIT_ERROR:
-                g_atomic_int_dec_and_test(&(c_session->usage));
-                return NU_EXIT_ERROR;
-            case NU_EXIT_OK:
-                if (current_conn != NULL){
-                    current_conn->socket=0;
-                    current_conn->tls=c_session;
-
-                    /* gonna feed the birds */
-                    if (current_conn->state == AUTH_STATE_HELLOMODE){
-                        debug_log_message(DEBUG, AREA_GW,
-                                "(*) NuFW auth request (hello mode): packetid=%u",
-                                (uint32_t)GPOINTER_TO_UINT(current_conn->packet_id->data));
-                        struct internal_message *message = g_new0(struct internal_message,1);
-                        message->type=INSERT_MESSAGE;
-                        message->datas=current_conn;
-                        current_conn->state = AUTH_STATE_AUTHREQ;
-                        g_async_queue_push (nuauthdatas->localid_auth_queue,message);
-                    } else {
-                        debug_log_message(DEBUG, AREA_GW,
-                                "(*) NuFW auth request (hello mode): packetid=%u",
-                                (uint32_t)GPOINTER_TO_UINT(current_conn->packet_id->data));
-                        g_async_queue_push (nuauthdatas->connections_queue, current_conn);
-                    }
-                } 
-                return NU_EXIT_OK;
-            case NU_EXIT_NO_RETURN:
-                g_atomic_int_dec_and_test(&(c_session->usage));
-        }
-    } else {
+    if (dgram_size <= 0)
+    {
         g_message("nufw failure at %s:%d",__FILE__,__LINE__);
         g_atomic_int_dec_and_test(&(c_session->usage));
         return NU_EXIT_ERROR;
     }
-    return NU_EXIT_OK;
+
+    ret = authpckt_decode(dgram , (unsigned int)dgram_size, &current_conn);
+    switch (ret)
+    {
+        case NU_EXIT_ERROR:
+            g_atomic_int_dec_and_test(&(c_session->usage));
+            return NU_EXIT_ERROR;
+            
+        case NU_EXIT_OK:
+            if (current_conn != NULL){
+                current_conn->socket=0;
+                current_conn->tls=c_session;
+
+                /* gonna feed the birds */
+                if (current_conn->state == AUTH_STATE_HELLOMODE){
+                    debug_log_message(DEBUG, AREA_GW,
+                            "(*) NuFW auth request (hello mode): packetid=%u",
+                            (uint32_t)GPOINTER_TO_UINT(current_conn->packet_id->data));
+                    struct internal_message *message = g_new0(struct internal_message,1);
+                    message->type=INSERT_MESSAGE;
+                    message->datas=current_conn;
+                    current_conn->state = AUTH_STATE_AUTHREQ;
+                    g_async_queue_push (nuauthdatas->localid_auth_queue,message);
+                } else {
+                    debug_log_message(DEBUG, AREA_GW,
+                            "(*) NuFW auth request (hello mode): packetid=%u",
+                            (uint32_t)GPOINTER_TO_UINT(current_conn->packet_id->data));
+                    g_async_queue_push (nuauthdatas->connections_queue, current_conn);
+                }
+            } 
+            return NU_EXIT_OK;
+            
+        case NU_EXIT_NO_RETURN:
+            g_atomic_int_dec_and_test(&(c_session->usage));
+            return NU_EXIT_OK;
+    }
 }
 
 /**
