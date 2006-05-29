@@ -465,8 +465,6 @@ int compare (NuAuth * session,conntable_t *old, conntable_t *new, nuclient_error
  * This destroy a session and free all related structures.
  *
  * \param session A ::NuAuth session to be cleaned
- * \param err A pointer to a nuclient_error: which contains error after exit
- * 
  */
 void nu_client_delete(NuAuth *session)
 {
@@ -532,6 +530,9 @@ void nu_client_global_deinit(nuclient_error *err)
 /**
  * Create the operating system packet and send it to nuauth.
  * Packet is in format ::nuv2_authfield.
+ *
+ * \param session Pointer to client session
+ * \param err Pointer to a nuclient_error: which contains the error
  */
 int send_os(NuAuth * session, nuclient_error *err)
 {
@@ -626,9 +627,11 @@ int send_os(NuAuth * session, nuclient_error *err)
  *    - Set certificate (if key and cert. are present)
  *    - Init. TLS session
  *
+ * \param session Pointer to client session
  * \param keyfile Complete path to a key file stored in PEM format (can be NULL)
  * \param certfile Complete path to a certificate file stored in PEM format (can be NULL)
  * \param cafile Complete path to a certificate authority file stored in PEM format (can be NULL)
+ * \param err Pointer to a nuclient_error: which contains the error
  * \return Returns 0 on error (error description in err), 1 otherwise
  */
 int nu_client_setup_tls(NuAuth * session,
@@ -712,6 +715,9 @@ int nu_client_setup_tls(NuAuth * session,
 /**
  * Initialiaze SASL: create an client, set properties 
  * and then call mysasl_negotiate()
+ *
+ * \param session Pointer to client session
+ * \param err Pointer to a nuclient_error: which contains the error
  */
 int init_sasl(NuAuth * session, nuclient_error *err)
 {
@@ -773,9 +779,15 @@ int init_sasl(NuAuth * session, nuclient_error *err)
 /**
  * Create a socket to nuauth, and try to connect. The function also set 
  * SIGPIPE handler: ignore these signals.
+ *
+ * \param session Pointer to client session
+ * \param hostname String containing hostname of nuauth server (default: #NUAUTH_IP)
+ * \param service Port number (or string) on which nuauth server is listening (default: #USERPCKT_PORT)
+ * \param err Pointer to a nuclient_error: which contains the error
  */
-int init_socket(NuAuth * session, nuclient_error *err,
-        const char *hostname, const char *service)
+int init_socket(NuAuth * session, 
+        const char *hostname, const char *service,
+        nuclient_error *err)
 {
     int option_value;
     struct sigaction no_action;
@@ -874,13 +886,9 @@ int tls_handshake(NuAuth * session, nuclient_error *err)
  * \ingroup nuclientAPI
  * \brief Init connection to nuauth server
  *
- * \param hostname String containing hostname of nuauth server
- * \param port Port where nuauth server is listening
- * \param keyfile Complete path to a key file stored in PEM format
- * \param certfile Complete path to a certificate file stored in PEM format
  * \param username_callback Pointer to a function that will be used to get user name
  * \param passwd_callback Pointer to a function that will be used to get user password 
- * \param tlscred_callback Pointer to a function that can be used to get certificate password (currently untested)
+ * \param tls_passwd_callback Pointer to a function that can be used to get certificate password (currently untested)
  * \param err Pointer to a nuclient_error: which contains the error
  * \return A pointer to a valid ::NuAuth structure or NULL if init has failed
  * 
@@ -1016,8 +1024,10 @@ NuAuth* nu_client_new(
  *    - init_sasl(): authentification with SASL ;
  *    - send_os(): send OS field.
  *
+ * \param session Pointer to client session
  * \param hostname String containing hostname of nuauth server (default: #NUAUTH_IP)
  * \param service Port number (or string) on which nuauth server is listening (default: #USERPCKT_PORT)
+ * \param err Pointer to a nuclient_error: which contains the error
  * \return Returns 0 on error (error description in err), 1 otherwise
  */
 int nu_client_connect(NuAuth* session,
@@ -1039,7 +1049,7 @@ int nu_client_connect(NuAuth* session,
     }
 
     /* set field about host */
-    if (!init_socket(session, err, hostname, service)) {
+    if (!init_socket(session, hostname, service, err)) {
         return 0;
     }
 
@@ -1061,6 +1071,7 @@ int nu_client_connect(NuAuth* session,
 /**
  * Enable or disabled debug mode
  * 
+ * \param session Pointer to client session
  * \param enabled Enable debug if different than zero (1), disable otherwise
  */
 void nu_client_set_debug(NuAuth* session, unsigned char enabled)

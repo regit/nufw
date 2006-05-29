@@ -259,7 +259,12 @@ inline void search_and_fill_ready(connection_t *new, connection_t *packet)
 }
 
 /**
- * Update an existring connection.
+ * Update an existing connection. Depending on connection state,
+ * call function:
+ * - #AUTH_STATE_AUTHREQ: search_and_fill_complete_of_authreq() ;
+ * - #AUTH_STATE_USERPCKT: search_and_fill_complete_of_userpckt() ;
+ * - #AUTH_STATE_COMPLETING: search_and_fill_completing() ;
+ * - #AUTH_STATE_READY: search_and_fill_ready().
  */
 void search_and_fill_update(connection_t *new, connection_t *packet)
 {
