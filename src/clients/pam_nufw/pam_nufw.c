@@ -56,6 +56,7 @@
 char* glob_pass; 
 char* glob_user;
 struct pam_nufw_s pn_s;
+NuAuth* session = NULL;
 
 /* internal data */
 struct pam_nufw_s {
@@ -140,6 +141,9 @@ static int _kill_nuclient(char *runpid){
 /* function used to kill client */
 void exit_client(){
     char* runpid;
+    if(session){
+        nu_client_delete(session);
+    }
     runpid = _get_runpid(&pn_s);
     if(runpid != NULL){
         unlink(runpid);
@@ -195,7 +199,6 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
   const char *password = NULL;
   const void *password2 = NULL;
   int uid,gid=0;
-  NuAuth *session;
   struct passwd *pw;
   unsigned long interval = 100;
   int tempo = 1;
