@@ -70,7 +70,7 @@ typedef enum
 typedef struct {
   /* Group informations about destination to make
    * ACL hash function faster. If you change this
-   * structure, please also change hash_acl() */
+   * structure, please also change hash_acl() and hash_connection() */
   struct in6_addr saddr;    /*!< IPv6 source address */
   struct in6_addr daddr;    /*!< IPv6 destination address */
   u_int8_t protocol;        /*!< IP protocol */

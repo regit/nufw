@@ -26,10 +26,11 @@ void search_and_fill_catchall(connection_t *new, connection_t *packet)
  * \param data IPv4 tracking headers (of type tracking_t) of a connection 
  * \return Comptuted hash
  */
-inline guint hash_connection(gconstpointer data)
+inline guint32 hash_connection(gconstpointer data)
 {
-    guint32 *data32 = (guint32* )(tracking_t *)data;
-	return jhash2(data32, sizeof(tracking_t)/4, 0);
+    tracking_t *tracking = (tracking_t *)data;
+    guint32 *data32 = (guint32 *)tracking;
+	return jhash2(data32, (sizeof(tracking_t) - PAYLOAD_SAMPLE)/4, tracking->source);
 }
 
 /**
