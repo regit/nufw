@@ -57,6 +57,7 @@ char* glob_pass;
 char* glob_user;
 struct pam_nufw_s pn_s;
 NuAuth* session = NULL;
+nuclient_error* nuerr = NULL;
 
 /* internal data */
 struct pam_nufw_s {
@@ -149,6 +150,8 @@ void exit_client(){
         unlink(runpid);
         free(runpid);
     }
+    nu_client_global_deinit(nuerr);
+    nu_client_error_destroy(nuerr);
     exit(EXIT_SUCCESS);
 }
 
@@ -205,6 +208,7 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
   int pdesc[2];
   int ctrl;
   nuclient_error *err=NULL;
+  int res_err;
 
   _init_pam_nufw_s(&pn_s);
 
@@ -268,6 +272,12 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
           return PAM_AUTH_ERR;
       }
 
+      /* init nuclient_error */
+      res_err = nu_client_error_init(&err);
+      if (res_err != 0 ){
+            syslog(LOG_ERR,"(pam_nufw) Cannot init error structure! %i",res_err);
+            exit(-1);
+      }
       /* libnuclient init function */
       nu_client_global_init(err);
       session = do_connect(err);
