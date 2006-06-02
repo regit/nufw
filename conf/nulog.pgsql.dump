@@ -130,5 +130,6 @@ CREATE TABLE users (
     os_version character varying(100)
 );
 CREATE INDEX ip_saddr ON users USING btree (ip_saddr);
+CREATE INDEX socket   ON users USING btree (socket);
 CREATE INDEX username ON users USING btree (username);
 
