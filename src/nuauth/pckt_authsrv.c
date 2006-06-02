@@ -51,14 +51,15 @@ unsigned int get_ip_headers(tracking_t *tracking, unsigned char *dgram, unsigned
 {
     struct iphdr *ip = (struct iphdr *)dgram;
     struct ip6_hdr *ip6 = (struct ip6_hdr *)dgram;
+    unsigned int offset;
 
     /* check ip headers minimum size */
-    if (dgram_size < (20+8))
+    if (dgram_size < sizeof(struct iphdr))
         return 0;
 
     /* check IP version (should be IPv4) */
     if (ip->version == 4){
-        /* create IPv6 addresses like "::ffff:[ipv4]" */
+        /* convert IPv4 addresses to IPv6 addresses in format "::ffff:IPv4" */
         tracking->saddr.s6_addr32[0] = 0;
         tracking->saddr.s6_addr32[1] = 0;
         tracking->saddr.s6_addr32[2] = 0xffff0000;
@@ -69,26 +70,88 @@ unsigned int get_ip_headers(tracking_t *tracking, unsigned char *dgram, unsigned
         tracking->daddr.s6_addr32[2] = 0xffff0000;
         tracking->daddr.s6_addr32[3] = ip->daddr;
 
+        /* compute offset to next header and copy protocol */
+        offset = 4*ip->ihl;
         tracking->protocol = ip->protocol;
-        memcpy(tracking->payload, dgram + 4*ip->ihl, sizeof(tracking->payload));
-        return 4*ip->ihl;
-    }
 
-    if (ip->version == 6)
-    {
-        if (dgram_size < (40+8))
+        /* copy payload if any, or fill payload with zero bytes */
+        if ((offset + sizeof(tracking->payload)) <= dgram_size)
+            memcpy(tracking->payload, dgram + offset, sizeof(tracking->payload));
+        else
+            memset(tracking->payload, 0, sizeof(tracking->payload));
+    } else if (ip->version == 6) {
+        unsigned char found_transport_layer = 0;
+        unsigned char copy_payload;
+        struct ip6_ext *generic_hdr;
+        struct ip6_frag *frag_hdr;
+        
+        /* check buffer underflow */
+        if (dgram_size < sizeof(struct ip6_hdr))
             return 0;
-        unsigned short plen = ntohs(ip6->ip6_plen);
+
+        /* copy ipv6 addresses */
         tracking->saddr = ip6->ip6_src;
         tracking->daddr = ip6->ip6_dst;
 
+        /* copy protocol */
         tracking->protocol = ip6->ip6_nxt;
-        memcpy(tracking->payload, dgram + plen, sizeof(tracking->payload));
-        return plen;
+        
+        /* compute offset of next interresting header (udp/tcp/icmp):
+         * skip custom ipv6 headers like Hop-by-hop */
+        offset = ntohs(ip6->ip6_plen);
+        found_transport_layer = 0;
+        copy_payload = 1;
+        do  
+        {
+            switch (tracking->protocol)
+            {
+                case IPPROTO_HOPOPTS:
+                case IPPROTO_ROUTING:
+                case IPPROTO_DSTOPTS:
+                case IPPROTO_AH:
+                    /* we can use generic extension header since we just need
+                     * next header and length of this header */
+                    generic_hdr = (struct ip6_ext *)(dgram + offset);
+                    tracking->protocol = generic_hdr->ip6e_nxt;
+                    offset += generic_hdr->ip6e_len;
+                    break;
+
+                case IPPROTO_FRAGMENT:
+                    frag_hdr = (struct ip6_frag *)(dgram + offset);
+                    tracking->protocol = frag_hdr->ip6f_nxt;
+                    offset += 8; /* fragment header has fixed size */
+                    break;
+
+                case IPPROTO_ESP:
+                case IPPROTO_NONE:
+                    /*
+                     * - RFC 2460 asks to ignore payload is last "Next Header" 
+                     *   is IPPROTO_NONE.
+                     * - For ESP, it's not possible to extract any useful
+                     *   informations to match ACLs
+                     */
+                    copy_payload = 0;
+                    found_transport_layer = 1;
+                    break;
+
+                default:
+                    /* TCP, UDP, ICMP */
+                    found_transport_layer = 1;
+                    break;
+            }
+        } while (!found_transport_layer);
+
+        if ((offset + sizeof(tracking->payload)) <= dgram_size
+                && copy_payload)  {
+            memcpy(tracking->payload, dgram + offset, sizeof(tracking->payload));
+        } else {
+            memset(tracking->payload, 0, sizeof(tracking->payload));
+        }
+    } else {
+        debug_log_message(DEBUG, AREA_PACKET, "IP version is %d, ihl : %d", ip->version, ip->ihl);
+        offset = 0;
     }
-    
-    debug_log_message(DEBUG, AREA_PACKET, "IP version is %d, ihl : %d", ip->version, ip->ihl);
-    return 0;
+    return offset;
 }
 
 /** 
