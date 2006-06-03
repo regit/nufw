@@ -53,8 +53,12 @@
 #define DEFAULT_USER "nobody"
 #define MAX_RETRY_TIME 30
 
+#define MAX_NOAUTH_USERS 10
+
 char* glob_pass; 
 char* glob_user;
+/*int noauth_cpt = 0;*/
+char ** no_auth_users = NULL;
 struct pam_nufw_s pn_s;
 NuAuth* session = NULL;
 nuclient_error* nuerr = NULL;
@@ -64,6 +68,8 @@ struct pam_nufw_s {
     char nuauth_srv[BUFSIZ]; /* auth server to connect to */
     char nuauth_port[20];  /* port to use on auth server */
     char file_lock[BUFSIZ]; /* file lock used to store pid */
+    char** no_auth_users;
+    int no_auth_cpt;
 };
 
 
@@ -82,11 +88,18 @@ static void _init_pam_nufw_s(struct pam_nufw_s *pn_s){
     SECURE_STRNCPY(pn_s->nuauth_srv,NUAUTH_SRV, sizeof(pn_s->nuauth_srv)-1);
     SECURE_STRNCPY(pn_s->nuauth_port, NUAUTH_PORT, sizeof(pn_s->nuauth_port));
     SECURE_STRNCPY(pn_s->file_lock,FILE_LOCK, sizeof(pn_s->file_lock)-1);
+    pn_s->no_auth_users = NULL;
+    pn_s->no_auth_cpt = 0;
 }
 
 /*  function to parse arguments */
 static int _pam_parse(int argc, const char** argv, struct pam_nufw_s *pn){
     int ctrl = 0;
+    char *noauth;
+    char *user;
+    char *search = ",";
+    int noauth_cpt = 0;
+    char ** no_auth_users = malloc(sizeof(char *) * MAX_NOAUTH_USERS);
     for(ctrl=0; argc-- > 0; ++argv){
         if(!strncmp(*argv,"server=",7)) {
             SECURE_STRNCPY(pn->nuauth_srv,*argv + 7, sizeof(pn->nuauth_srv)-1);
@@ -94,8 +107,21 @@ static int _pam_parse(int argc, const char** argv, struct pam_nufw_s *pn){
             SECURE_STRNCPY(pn->nuauth_port, *argv + 5, sizeof(pn->nuauth_port));
         }else if(!strncmp(*argv, "lock=", 5)){
             SECURE_STRNCPY(pn->file_lock,*argv + 5, sizeof(pn->file_lock)-1);
+        }else if(!strncmp(*argv, "noauth=",7)){
+            noauth = strdup(*argv + 7);
+            user = strtok(noauth, search);
+            if (user){
+                no_auth_users[noauth_cpt] = x_strdup(user);
+                noauth_cpt ++; 
+            }
+            while ( (user=strtok(NULL, search)) != NULL){
+                no_auth_users[noauth_cpt] = x_strdup(user);
+                noauth_cpt ++; 
+            }
         }
     }
+    pn->no_auth_cpt = noauth_cpt;
+    pn->no_auth_users = no_auth_users;
     return ctrl;
 }
 
@@ -139,7 +165,10 @@ static int _kill_nuclient(char *runpid){
     return 0;
 }
 
-/* function used to kill client */
+/* function used to 
+ * kill client 
+ * free nuauth session and nuerror
+ */
 void exit_client(){
     char* runpid;
     if(session){
@@ -153,6 +182,17 @@ void exit_client(){
     nu_client_global_deinit(nuerr);
     nu_client_error_destroy(nuerr);
     exit(EXIT_SUCCESS);
+}
+
+/* test if username is on the list of users that  don't have to be authenticated */
+int do_auth_on_user(const char *username){
+    int i;
+    for (i=0; i< pn_s.no_auth_cpt; i++){
+        if (strcmp(pn_s.no_auth_users[i], username) == 0){
+            return 1;
+        }   
+    }
+    return 0;
 }
 
 
@@ -207,7 +247,7 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
   int tempo = 1;
   int pdesc[2];
   int ctrl;
-  nuclient_error *err=NULL;
+  nuclient_error* err=NULL;
   int res_err;
 
   _init_pam_nufw_s(&pn_s);
@@ -225,6 +265,13 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
   }
   if (user == NULL || *user == '\0') {
       pam_set_item(pamh, PAM_USER, (const void *) DEFAULT_USER);
+  }
+
+  /* Test if we have to make a connection on nuauth for this user */
+  if(do_auth_on_user(user) !=0){
+      syslog(LOG_INFO, "(pam_nufw) no auth for user %s",user);
+      user = NULL;
+      return PAM_SUCCESS;
   }
 
   if (pam_get_item(pamh, PAM_AUTHTOK, &password2) == PAM_SUCCESS){
@@ -310,8 +357,8 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
                   if (session==NULL){/* quit if password is wrong. to not lock user account */
                       syslog(LOG_ERR,"(pam_nufw) unable to reconnect to server: %s",nu_client_strerror(err));
                       if (err->error == BAD_CREDENTIALS_ERR){
-                            syslog(LOG_ERR,"(pam_nufw) bad credentials: leaving");
-                            exit_client();
+                          syslog(LOG_ERR,"(pam_nufw) bad credentials: leaving");
+                          exit_client();
                       }
                   }else{
                       tempo = 1;
@@ -399,7 +446,9 @@ int pam_sm_close_session(pam_handle_t *pamh,int flags,int argc
 
   /* get username */
   retval = pam_get_user(pamh, &user, NULL);
-
+  if(do_auth_on_user(user) !=0){
+      return PAM_SUCCESS;
+  }
   pw = (struct passwd *)getpwnam(user);
   setenv("HOME",pw->pw_dir,1);
   /*syslog(LOG_INFO, "(pam_nufw) file_lock: %s",_get_runpid(&pn_s));*/
