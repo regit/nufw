@@ -98,7 +98,7 @@ unsigned int get_ip_headers(tracking_t *tracking, unsigned char *dgram, unsigned
         
         /* compute offset of next interresting header (udp/tcp/icmp):
          * skip custom ipv6 headers like Hop-by-hop */
-        offset = ntohs(ip6->ip6_plen);
+        offset = sizeof(struct ip6_hdr); /* offset=40 */
         found_transport_layer = 0;
         copy_payload = 1;
         do  
