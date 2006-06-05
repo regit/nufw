@@ -113,7 +113,7 @@ unsigned int get_ip_headers(tracking_t *tracking, unsigned char *dgram, unsigned
                      * next header and length of this header */
                     generic_hdr = (struct ip6_ext *)(dgram + offset);
                     tracking->protocol = generic_hdr->ip6e_nxt;
-                    offset += generic_hdr->ip6e_len;
+                    offset += (unsigned int)(generic_hdr->ip6e_len)*8;
                     break;
 
                 case IPPROTO_FRAGMENT:
