@@ -321,12 +321,10 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex *mutex)
     close(context->sck_inet);
 }    
 
-/**
- * Initialize the NuFW TLS servers thread
- */
-void tls_nufw_init(struct tls_nufw_context_t *context)
-{    
+int tls_nufw_bind(char **errmsg)
+{
     int socket_fd;
+    int sck_inet;
     gint option_value;
     struct addrinfo *res;
     struct addrinfo hints;
@@ -339,8 +337,45 @@ void tls_nufw_init(struct tls_nufw_context_t *context)
     ecode = getaddrinfo(NULL, nuauthconf->authreq_port, &hints, &res);
     if (ecode != 0)
     {
-	g_error("Fail to init. user server address: %s\n", gai_strerror(ecode));
-	exit(EXIT_SUCCESS);
+        *errmsg = g_strdup_printf("Fail to init. user server address: %s", gai_strerror(ecode));
+        return -1;
+    }
+
+    /* open the socket */
+    sck_inet = socket (res->ai_family, res->ai_socktype, res->ai_protocol);
+    if (sck_inet == -1)
+    {
+        *errmsg = g_strdup("socket creation failed");
+        return -1;
+    }
+
+    option_value=1;
+    setsockopt (sck_inet, SOL_SOCKET, SO_REUSEADDR, 
+            &option_value,	sizeof(option_value));
+
+    socket_fd = bind (sck_inet, res->ai_addr, res->ai_addrlen);
+    if (socket_fd < 0)
+    {
+        *errmsg = g_strdup_printf("bind failed on port %s", nuauthconf->authreq_port);
+        return -1;
+    }
+    freeaddrinfo(res);
+    return sck_inet;
+}
+
+/**
+ * Initialize the NuFW TLS servers thread
+ */
+void tls_nufw_init(struct tls_nufw_context_t *context)
+{    
+    int socket_fd;
+    char *errmsg;
+
+    context->sck_inet = tls_nufw_bind(&errmsg);
+    if (context->sck_inet < 0)
+    {
+        printf("Unable to bind nufw port: %s\n", errmsg);
+        exit(EXIT_FAILURE);
     }
 
 #if 0
@@ -381,30 +416,11 @@ void tls_nufw_init(struct tls_nufw_context_t *context)
     }
 #endif
 
-    /* open the socket */
-    context->sck_inet = socket (res->ai_family, res->ai_socktype, res->ai_protocol);
-    if (context->sck_inet == -1)
-    {
-        g_warning("socket() failed, exiting");
-        exit(EXIT_FAILURE);
-    }
-
-    option_value=1;
-    setsockopt (context->sck_inet, SOL_SOCKET, SO_REUSEADDR, 
-            &option_value,	sizeof(option_value));
-
-    socket_fd = bind (context->sck_inet, res->ai_addr, res->ai_addrlen);
-    if (socket_fd < 0)
-    {
-        g_warning ("nufw bind() failed on port %s, exiting", nuauthconf->authreq_port);
-        exit(EXIT_FAILURE);
-    }
-
     /* Listen ! */
     socket_fd = listen(context->sck_inet,20);
     if (socket_fd == -1)
     {
-        g_warning ("nufw listen() failed, exiting");
+        g_error("nufw listen() failed, exiting");
         exit(EXIT_FAILURE);
     }
 

@@ -55,7 +55,6 @@ struct tls_user_context_t {
     unsigned int nuauth_tls_max_clients;
     int nuauth_number_authcheckers;
     int nuauth_auth_nego_timeout;
-    gint option_value;
 };
 
 struct pre_client_elt {
@@ -274,6 +273,7 @@ int tls_user_accept(struct tls_user_context_t *context)
     struct client_connection* current_client_conn;
     struct pre_client_elt* new_pre_client;
     int socket;
+    gint option_value;
 
     /* Wait for a connect */
     socket = accept (context->sck_inet,
@@ -317,9 +317,10 @@ int tls_user_accept(struct tls_user_context_t *context)
         context->mx = socket + 1;
     
     /* Set KEEP ALIVE on connection */
+    option_value=1;
     setsockopt (socket,
             SOL_SOCKET, SO_KEEPALIVE,
-            &context->option_value,  sizeof(context->option_value));
+            &option_value,  sizeof(option_value));
     
     /* give the connection to a separate thread */
     /*  add element to pre_client 
@@ -489,6 +490,69 @@ void tls_user_main_loop(struct tls_user_context_t *context, GMutex *mutex)
     close(context->sck_inet);
 }
 
+int tls_user_bind(char **errmsg)
+{
+    struct addrinfo *res;
+    struct addrinfo hints;
+    int ecode;
+    int sck_inet;
+    gint option_value;
+    int result;
+
+    memset(&hints, 0, sizeof hints);
+    hints.ai_flags = AI_PASSIVE;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_family = PF_UNSPEC;
+    ecode = getaddrinfo(NULL, nuauthconf->userpckt_port, &hints, &res);
+    if (ecode != 0)
+    {
+        *errmsg = g_strdup_printf("Fail to init. user server address: %s", 
+                gai_strerror(ecode));
+        return -1;
+    }
+
+    /* open the socket */
+    if (res->ai_family == PF_INET)
+        printf("Create user server IPv4 socket\n");
+    else if (res->ai_family == PF_INET6)
+        printf("Create user server IPv6 socket\n");
+    else
+        printf("Create user server (any) socket\n");
+    sck_inet = socket (res->ai_family, res->ai_socktype, res->ai_protocol);
+    if (sck_inet == -1)
+    {
+        *errmsg = g_strdup("Socket creation failed.");
+        return -1;
+    }
+
+    /* set socket reuse and keep alive option */
+    option_value=1;
+    setsockopt (
+            sck_inet,
+            SOL_SOCKET,
+            SO_REUSEADDR,
+            &option_value,
+            sizeof(option_value));
+    setsockopt (
+            sck_inet,
+            SOL_SOCKET,
+            SO_KEEPALIVE,
+            &option_value,
+            sizeof(option_value));
+
+    /* bind */
+    result = bind (sck_inet, res->ai_addr, res->ai_addrlen);
+    if (result < 0)
+    {
+        *errmsg = g_strdup_printf("Unable to bind port %s.",
+                nuauthconf->userpckt_port);
+        close(sck_inet); 
+        return -1;
+    }
+    freeaddrinfo(res);
+    return sck_inet;
+}
+
 void tls_user_init(struct tls_user_context_t *context)
 {
     confparams nuauth_tls_vars[] = {
@@ -496,23 +560,17 @@ void tls_user_init(struct tls_user_context_t *context)
         { "nuauth_number_authcheckers" , G_TOKEN_INT ,NB_AUTHCHECK, NULL },
         { "nuauth_auth_nego_timeout" , G_TOKEN_INT ,AUTH_NEGO_TIMEOUT, NULL }
     };
-    struct addrinfo *res;
-    struct addrinfo hints;
     GThread *pre_client_thread;
+    char *errmsg;
     int result;
-    int ecode;
-    
-    memset(&hints, 0, sizeof hints);
-    hints.ai_flags = AI_PASSIVE;
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_family = PF_UNSPEC;
-    ecode = getaddrinfo(NULL, "4130", &hints, &res);
-    if (ecode != 0)
-    {
-	g_error("Fail to init. user server address: %s\n", gai_strerror(ecode));
-	exit(EXIT_SUCCESS);
-    }
 
+    context->sck_inet = tls_user_bind(&errmsg);
+    if (context->sck_inet < 0)
+    {
+        printf("User bind error: %s\n", errmsg);
+        exit(EXIT_FAILURE);
+    }
+    
     /* get config file setup */
     /* parse conf file */
     parse_conffile(DEFAULT_CONF_FILE, sizeof(nuauth_tls_vars)/sizeof(confparams),nuauth_tls_vars);
@@ -560,52 +618,13 @@ void tls_user_init(struct tls_user_context_t *context)
             TRUE,
             NULL);
 
-    /* open the socket */
-    if (res->ai_family == PF_INET)
-	printf("Create user server IPv4 socket\n");
-    else if (res->ai_family == PF_INET6)
-	printf("Create user server IPv6 socket\n");
-    else
-	printf("Create user server (any) socket\n");
-    context->sck_inet = socket (res->ai_family, res->ai_socktype, res->ai_protocol);
-    if (context->sck_inet == -1)
-    {
-        g_warning("socket() failed, exiting");
-        exit(-1);
-    }
-
-    /* set socket reuse and keep alive option */
-    context->option_value=1;
-    setsockopt (
-            context->sck_inet,
-            SOL_SOCKET,
-            SO_REUSEADDR,
-            &context->option_value,
-            sizeof(context->option_value));
-    setsockopt (
-            context->sck_inet,
-            SOL_SOCKET,
-            SO_KEEPALIVE,
-            &context->option_value,
-            sizeof(context->option_value));
-
-    /* bind */
-    result = bind (context->sck_inet, res->ai_addr, res->ai_addrlen);
-    if (result < 0)
-    {
-        g_warning ("user bind() failed to bind port %s (at %s:%d), exiting!",
-		nuauthconf->userpckt_port,__FILE__,__LINE__);
-        exit(EXIT_FAILURE);
-    }
-
     /* listen */
     result = listen(context->sck_inet,20);
     if (result == -1)
     {
-        g_warning ("user listen() failed, exiting");
+        g_error("user listen() failed, exiting");
         exit(EXIT_FAILURE);
     }
-    freeaddrinfo(res);
 
     /* init fd_set */
     FD_ZERO(&context->tls_rx_set);
