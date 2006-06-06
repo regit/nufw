@@ -863,13 +863,20 @@ int tls_handshake(NuAuth * session, nuclient_error *err)
     gnutls_transport_set_ptr( session->tls, (gnutls_transport_ptr)session->socket);
 
     /* Perform the TLS handshake */
-    ret = gnutls_handshake( session->tls);
-    if (ret < 0) {
+    ret = 0;
+    do
+    {
+        ret = gnutls_handshake(session->tls);
+    } while (ret < 0 && !gnutls_error_is_fatal(ret));
+    
+    if (ret < 0)
+    {
         gnutls_perror(ret);
         errno=ECONNRESET;
         SET_ERROR(err, GNUTLS_ERROR, ret);
         return 0;
     }
+
     /* certificate verification */
     ret = gnutls_certificate_verify_peers(session->tls);
     if (ret <0){
