@@ -1,7 +1,15 @@
 2.1.0
 	- fix period handling (user OR and and AND between period item of a
-	period)
+	  period)
 	- fix memory leak in ldap module
+	- IPv6 support:
+	  - clients, nufw and nuauth are able to communicate using IPv4 or IPv6
+	  - nuauth store all addresses in IPv6 structure, IPv4 use format
+	    "::ffff:[ipv4]"
+	  - MySQL store IP address in BINARY(16) instead of INTEGER field
+	  - Prelude, MySQL, PostgreSQL, etc. modules support IPv6 addresses
+	  - Plaintext module is able to parse IPv4 and IPv6 addresses
+	- support ICMPv6 protocol
 2.0 (2005/05/22)
 	- nuauth : fix period handling
 	- libnuclient : fix crash when specified hostname is unvalid
