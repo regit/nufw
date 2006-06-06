@@ -72,7 +72,7 @@ static void send_conntrack_message(struct limited_connection * lconn,unsigned ch
             message.ip_dst.s6_addr32[2] = htonl(lconn->tracking.daddr.s6_addr32[2]);
             message.ip_dst.s6_addr32[3] = htonl(lconn->tracking.daddr.s6_addr32[3]);
             
-            if (message.ip_protocol == IPPROTO_ICMP){
+            if ((message.ip_protocol == IPPROTO_ICMP) || (message.ip_protocol == IPPROTO_ICMPV6)) {
                 message.src_port = lconn->tracking.type;
                 message.dest_port = lconn->tracking.code;
             } else {

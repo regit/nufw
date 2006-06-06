@@ -108,6 +108,7 @@ gboolean compare_tracking(gconstpointer a, gconstpointer b){
                 return FALSE;
 
         case IPPROTO_ICMP:
+        case IPPROTO_ICMPV6:
             if (tracking1->type == tracking2->type
                 && tracking1->code == tracking2->code
                 && memcmp(&tracking1->daddr, &tracking2->daddr, sizeof(tracking1->daddr)) != 0)

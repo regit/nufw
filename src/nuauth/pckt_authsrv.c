@@ -35,7 +35,7 @@
 #include <netinet/tcp.h>
 #include <netinet/udp.h>
 #include <netinet/ip_icmp.h> 
-
+#include <netinet/icmp6.h> 
 #include <errno.h>
 
 /** 
@@ -194,7 +194,7 @@ tcp_state_t get_tcp_headers(tracking_t *tracking, unsigned char *dgram, unsigned
 {
     struct tcphdr *tcp = (struct tcphdr *)dgram;
 
-    /* check udp headers minimum size */
+    /* check icmp headers minimum size */
     if (dgram_size < sizeof(struct tcphdr))
         return TCP_STATE_UNKNOW;
 
@@ -240,6 +240,32 @@ int get_icmp_headers(tracking_t *tracking, unsigned char *dgram, unsigned int dg
     tracking->dest = 0;
     tracking->type = icmp->type;
     tracking->code = icmp->code;
+    return 0;
+}
+ 
+/** 
+ * Parse ICMPv6 header: extract type and code fields 
+ * for the connection tracking (::tracking_t) structure.
+ * 
+ * \param tracking Pointer to a connection tracking
+ * \param dgram Pointer to packet datas
+ * \param dgram_size Number of bytes in the packet
+ * \return If an error occurs return 1, else returns 0
+ */
+int get_icmpv6_headers(tracking_t *tracking, unsigned char *dgram, unsigned int dgram_size)
+{
+    struct icmp6_hdr *hdr = (struct icmp6_hdr *)dgram;
+    printf("Parser ICMPv6\n");
+
+    /* check icmp headers minimum size */
+    if (dgram_size < sizeof(struct icmp6_hdr))
+        return -1;
+
+    tracking->source = 0;
+    tracking->dest = 0;
+    tracking->type = hdr->icmp6_type;
+    tracking->code = hdr->icmp6_code;
+    printf("Parser ICMPv6: %u-%u\n", tracking->type, tracking->code);
     return 0;
 }
 
@@ -353,6 +379,13 @@ nu_error_t authpckt_new_connection(unsigned char *dgram, unsigned int dgram_size
             }
             break;
 
+        case IPPROTO_ICMPV6:
+            if (get_icmpv6_headers(&connection->tracking, dgram, dgram_size) < 0) {
+                free_connection(connection);
+                return NU_EXIT_OK;
+            }
+            break;
+
         default:
             if ( connection->state != AUTH_STATE_HELLOMODE){
                 log_message (WARNING, AREA_PACKET,
@@ -417,7 +450,7 @@ void authpckt_conntrack (unsigned char *dgram, unsigned int dgram_size)
     datas->daddr.s6_addr32[2] = ntohl(conntrack->ip_dst.s6_addr32[2]);
     datas->daddr.s6_addr32[3] = ntohl(conntrack->ip_dst.s6_addr32[3]);
     
-    if (conntrack->ip_protocol == IPPROTO_ICMP) {
+    if ((conntrack->ip_protocol == IPPROTO_ICMP) || (conntrack->ip_protocol == IPPROTO_ICMPV6)) {
         datas->type = ntohs(conntrack->src_port);
         datas->code = ntohs(conntrack->dest_port);
     } else {

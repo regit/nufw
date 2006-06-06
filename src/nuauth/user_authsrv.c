@@ -180,6 +180,7 @@ void user_process_field_ipv6(connection_t* connection, struct nuv2_authfield_ipv
             break;
             
         case IPPROTO_ICMP:
+        case IPPROTO_ICMPV6:
             connection->tracking.source=0;
             connection->tracking.dest=0;
             connection->tracking.type=ntohs(ipfield->sport);

@@ -72,6 +72,7 @@ gboolean compare_connection(gconstpointer a, gconstpointer b)
                 return FALSE;
 
         case IPPROTO_ICMP:
+        case IPPROTO_ICMPV6:
             if (trck1->type == trck2->type
                 && trck1->code == trck2->code
                 && memcmp(&trck1->daddr, &trck2->daddr, sizeof(trck1->daddr)) == 0)
