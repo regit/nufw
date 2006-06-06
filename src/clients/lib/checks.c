@@ -95,6 +95,10 @@ void* recv_message(void *data)
                       break;
                   case SRV_REQUIRED_HELLO:
                       hellofield->helloid = ((struct nuv2_srv_helloreq*)dgram)->helloid;
+                      if (session->debug_mode)
+                      {
+                          printf("[+] Send HELLO\n");
+                      }
                       /*  send it */
                       if(session->tls){
                           if( gnutls_record_send(session->tls,message,
