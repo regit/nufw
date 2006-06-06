@@ -235,32 +235,22 @@ int tls_connect(int socket_fd,gnutls_session** session_ptr)
     gnutls_transport_set_push_function (* session, tls_push_func);
 
     *session_ptr = session;
-
-    debug_log_message (DEBUG, AREA_MAIN, "NuFW TLS Handshaking");
-    ret = gnutls_handshake( *session);
+    ret = 0;
+    do
+    {
+        debug_log_message (DEBUG, AREA_MAIN, 
+                "NuFW TLS Handshaking (last error: %i)", ret);
+        ret = gnutls_handshake( *session);
+    } while (ret < 0 && !gnutls_error_is_fatal(ret));
     debug_log_message (DEBUG, AREA_MAIN, "NuFW TLS Handshaked");
 
-    while ((ret == GNUTLS_E_AGAIN) || (ret == GNUTLS_E_INTERRUPTED))
+    if (ret < 0) 
     {
-        ret = gnutls_handshake( *session);
-        count++;
-        if (count>10)
-            break;
-    }
-
-    if ((count>1) && ((ret == GNUTLS_E_GOT_APPLICATION_DATA) || (ret == GNUTLS_E_WARNING_ALERT_RECEIVED)))
-    {
-        debug_log_message (DEBUG, AREA_MAIN,
-                "NuFW TLS Handshake: needed several calls "
-                "and returned a nonfatal error. Trying to continue..");
-    } else {
-        if (ret < 0) {
-            close_tls_session(socket_fd, session);
-            log_message (DEBUG, AREA_MAIN,
-                    "NuFW TLS Handshake has failed (%s)\n\n",
-                    gnutls_strerror(ret)) ; 
-            return SASL_BADPARAM;
-        }
+        close_tls_session(socket_fd, session);
+        log_message (DEBUG, AREA_MAIN,
+                "NuFW TLS Handshake has failed (%s)\n\n",
+                gnutls_strerror(ret)) ; 
+        return SASL_BADPARAM;
     }
     debug_log_message (DEBUG, AREA_MAIN, "NuFW TLS Handshake was completed");
 
