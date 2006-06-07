@@ -73,7 +73,7 @@ int nu_getrealm(void *context __attribute__((unused)), int id,
 }
 
 /**
- * SASL callback used to get username and password
+ * SASL callback used to get password
  *
  * \return SASL_OK if ok, EXIT_FAILURE on error
  */
@@ -81,6 +81,7 @@ int nu_get_usersecret(sasl_conn_t *conn __attribute__((unused)),
         void *context __attribute__((unused)), int id,
         sasl_secret_t **psecret)
 {
+    size_t len;
     NuAuth* session=(NuAuth *)context;
     if(id != SASL_CB_PASS) {
         printf("getsecret not looking for pass");
@@ -90,16 +91,11 @@ int nu_get_usersecret(sasl_conn_t *conn __attribute__((unused)),
         return EXIT_FAILURE;
     }
     if(!psecret) return SASL_BADPARAM;
-    if (! session->password){
-        *psecret = (sasl_secret_t*)calloc(1,sizeof(sasl_secret_t) );
-        (*psecret)->len = 0;
-        (*psecret)->data[0] = 0;
-    } else {
-        *psecret = (sasl_secret_t*)calloc(sizeof(sasl_secret_t) + strlen(session->password)+1,sizeof(char));
-        (*psecret)->len = strlen(session->password);
-        SECURE_STRNCPY((char*)(*psecret)->data, session->password, (*psecret)->len +1 );
-    }
 
+    len = strlen(session->password);
+    *psecret = (sasl_secret_t*)calloc(sizeof(sasl_secret_t) + len+1, sizeof(char));
+    (*psecret)->len = len;
+    SECURE_STRNCPY((char*)(*psecret)->data, session->password, len+1);
     return SASL_OK;
 }
 
