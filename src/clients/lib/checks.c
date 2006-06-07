@@ -161,7 +161,6 @@ int nu_client_check(NuAuth * session, nuclient_error *err)
     /* test if we need to create the working thread */
     if (session->count_msg_cond == -1){ /* if set to -1 then we've just leave init */
         if (session->server_mode == SRV_TYPE_PUSH) {
-            pthread_cond_init(&(session->check_cond),NULL);
             pthread_create(&(session->checkthread), NULL, nu_client_thread_check, session);
         }
         pthread_create(&(session->recvthread), NULL, recv_message, session);

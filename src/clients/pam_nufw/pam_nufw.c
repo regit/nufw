@@ -388,7 +388,7 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
                   }
               } else {
                   if (nu_client_check(session,err)<0){
-                      nu_exit_delete(session);
+                      nu_client_delete(session);
                       session=NULL;
                       syslog(LOG_ERR,"(pam_nufw) libnuclient error: %s",nu_client_strerror(err));
                   }
