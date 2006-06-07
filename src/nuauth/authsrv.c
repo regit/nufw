@@ -36,6 +36,7 @@
 #include "tls.h"
 #include "sasl.h"
 #include "security.h"
+#include <sys/resource.h>   /* setrlimit() */
 
 typedef struct
 {
@@ -314,8 +315,6 @@ void daemonize()
         }
     }
 
-    chdir("/");
-
     setsid();
 
     set_glib_loghandlers();
@@ -486,6 +485,17 @@ void create_thread(struct nuauth_thread_t *thread, void* (*func) (GMutex*) )
 void configure_app(int argc, char **argv) 
 {
     command_line_params_t params;
+    struct rlimit core_limit;
+
+    /* Avoid creation of core file which may contains username and password */
+    if (getrlimit(RLIMIT_CORE, &core_limit) == 0)
+    {
+        core_limit.rlim_cur = 0;
+        setrlimit(RLIMIT_CORE, &core_limit);
+    }
+    
+    /* Move to root directory to not block current working directory */
+    (void)chdir("/");
 
     /* Initialize glib thread system */
     g_thread_init(NULL);
