@@ -154,7 +154,6 @@ int nu_client_check(NuAuth * session, nuclient_error *err)
     if (session->connected==0){
         /* if we are here, threads are dead */
         pthread_mutex_unlock(&(session->mutex));
-        nu_exit_clean(session);
         SET_ERROR(err, INTERNAL_ERROR, SESSION_NOT_CONNECTED_ERR);
         return -1;
     } 
@@ -162,7 +161,6 @@ int nu_client_check(NuAuth * session, nuclient_error *err)
     /* test if we need to create the working thread */
     if (session->count_msg_cond == -1){ /* if set to -1 then we've just leave init */
         if (session->server_mode == SRV_TYPE_PUSH) {
-            pthread_mutex_init(&(session->check_count_mutex),NULL);
             pthread_cond_init(&(session->check_cond),NULL);
             pthread_create(&(session->checkthread), NULL, nu_client_thread_check, session);
         }
@@ -175,10 +173,7 @@ int nu_client_check(NuAuth * session, nuclient_error *err)
         int checkreturn;
         checkreturn = nu_client_real_check(session, err);
         if (checkreturn < 0){
-            /* kill all threads */
-            ask_session_end(session);
-            /* cleaning up things */
-            nu_exit_clean(session);
+            /* error code filled by nu_client_real_check() */
             return -1;
         } else {
             SET_ERROR(err, INTERNAL_ERROR, NO_ERR);
@@ -187,10 +182,6 @@ int nu_client_check(NuAuth * session, nuclient_error *err)
     } else {
         if ((time(NULL) - session->timestamp_last_sent) > SENT_TEST_INTERVAL){
             if (! send_hello_pckt(session)){
-                /* kill all threads */
-                ask_session_end(session);
-                /* cleaning up things */
-                nu_exit_clean(session);
                 SET_ERROR(err, INTERNAL_ERROR, TIMEOUT_ERR);
                 return -1;
             }

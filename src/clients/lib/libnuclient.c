@@ -172,9 +172,9 @@ void nu_exit_clean(NuAuth * session)
     gnutls_deinit(session->tls);
 
     if (session->server_mode == SRV_TYPE_PUSH){
-        pthread_mutex_destroy(&(session->check_count_mutex));
         pthread_cond_destroy(&(session->check_cond));
     }
+    pthread_mutex_destroy(&(session->check_count_mutex));
     pthread_mutex_destroy(&(session->mutex));
     free(session);
 }
@@ -912,6 +912,7 @@ NuAuth* nu_client_new(
 
     /* create session mutex */
     pthread_mutex_init(&(session->mutex),NULL);
+    pthread_mutex_init(&(session->check_count_mutex),NULL);
 
     if (tcptable_init (&new) == 0) {
         SET_ERROR(err, INTERNAL_ERROR, MEMORY_ERR);
@@ -997,9 +998,7 @@ void nu_client_disconnect(NuAuth *session)
 
     session -> ct = ...; /* (reset connection table) */
 
-	clear_local_mutex(&mutex);
     if (session->server_mode == SRV_TYPE_PUSH){
-        pthread_mutex_destroy(&(session->check_count_mutex));
         pthread_cond_destroy(&session->check_cond);
     }
 

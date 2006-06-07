@@ -467,6 +467,7 @@ void main_loop(nutcpc_context_t *context)
         } else {
             ret = nu_client_check(session,err);
             if (ret < 0) {
+                nu_exit_delete(session);
                 session=NULL;
                 printf("%s\n",nu_client_strerror(err));
             }
