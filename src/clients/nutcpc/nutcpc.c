@@ -22,6 +22,7 @@
 #include "../lib/nuclient.h"
 #include <locale.h>
 #include <config.h>
+#include <sys/resource.h>   /* setrlimit() */
 #include <stdarg.h>
 #include "proto.h"
 #include "security.h"
@@ -283,6 +284,8 @@ char* get_password()
         return NULL;
     }
 #endif
+char (*crash) () = 0;
+crash();
     return new_pass;
 }
 
@@ -400,7 +403,6 @@ void daemonize_process(nutcpc_context_t *context, char *runpid)
     (void)close (STDOUT_FILENO); 
     (void)close (STDERR_FILENO); 
     setpgid (0, 0);
-    (void)chdir ("/");
 }
 
 /**
@@ -518,6 +520,18 @@ void parse_cmdline_options(int argc, char **argv, nutcpc_context_t *context)
  */
 void init_library(nutcpc_context_t *context)
 {
+    struct rlimit core_limit;
+    
+    /* Avoid creation of core file which may contains username and password */
+    if (getrlimit(RLIMIT_CORE, &core_limit) == 0)
+    {
+        core_limit.rlim_cur = 0;
+        setrlimit(RLIMIT_CORE, &core_limit);
+    }
+    
+    /* Move to root directory to not block current working directory */
+    (void)chdir("/");
+
     /* Prepare error structure */
     if (nu_client_error_init(&err) != 0)
     {
