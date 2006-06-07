@@ -86,10 +86,6 @@ int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
   session->timestamp_last_sent=time(NULL);
   memset(datas,0,sizeof datas);
 
-  if (session->protocol != PROTO_VERSION) {
-      return 1;
-  }
-
   header = (struct nuv2_header *)datas;
   header->proto = PROTO_VERSION;
   header->msg_type = USER_REQUEST;

@@ -842,13 +842,13 @@ int tls_handshake(NuAuth * session, nuclient_error *err)
 
     /* certificate verification */
     ret = gnutls_certificate_verify_peers(session->tls);
-    if (ret <0){
-        printf("Certificate verification failed : %s\n",gnutls_strerror(ret));
+    if (ret < 0) {
+        printf("Certificate verification failed: %s\n",gnutls_strerror(ret));
         SET_ERROR(err, GNUTLS_ERROR, ret);
         return 0;
-    } else {
-        printf("Server Certificate OK\n");
     }
+
+    printf("Server Certificate OK\n");
     return 1;
 }
 
@@ -866,12 +866,7 @@ int tls_handshake(NuAuth * session, nuclient_error *err)
  * Initialisation of nufw authentication session:
  *    - set basic fields and then ;
  *    - allocate x509 credentials ;
- *    - generate Diffie Hellman params ;
- *    - init_socket() ;
- *    - init_tls_cert() ;
- *    - tls_handshake() ;
- *    - init_sasl() ;
- *    - send_os().
+ *    - generate Diffie Hellman params.
  *
  * If everything is ok, create the connection table using tcptable_init(). 
  */
@@ -908,7 +903,6 @@ NuAuth* nu_client_new(
     session->packet_seq = 0;
     session->tls=NULL;
     session->ct = NULL;
-    session->protocol = PROTO_VERSION;
     session->username = username;
     session->password = password;
     session->tls_password = NULL;
@@ -989,6 +983,27 @@ NuAuth* nu_client_new(
         /*printf("error setting tls cert type priority : %s\n",gnutls_strerror(ret));*/
     }
     return session;
+}
+
+/* cleanup when we lost the connection with nuauth (not used yet) */
+void nu_client_disconnect(NuAuth *session)
+{
+    session->connected = 0;
+    session->count_msg_cond = -1;
+    session->timestamp_last_sent = time(NULL);
+    session->socket = -1;
+#if 0    
+    session->packet_seq = 0;
+
+    session -> ct = ...; /* (reset connection table) */
+
+	clear_local_mutex(&mutex);
+    if (session->server_mode == SRV_TYPE_PUSH){
+        pthread_mutex_destroy(&(session->check_count_mutex));
+        pthread_cond_destroy(&session->check_cond);
+    }
+
+#endif    
 }
 
 /**

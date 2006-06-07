@@ -143,65 +143,66 @@ void* recv_message(void *data)
  * 
  *  - Poll mode: this is just a wrapper to nu_client_real_check
  *  - Push mode: It is used to send HELLO message
- *
  */
 int nu_client_check(NuAuth * session, nuclient_error *err)
 {
-		pthread_mutex_lock(&(session->mutex));
-                /* test is a thread has detected problem with the session */
-                if (session->connected==0){
-                    /* if we are here, threads are dead */
-                    pthread_mutex_unlock(&(session->mutex));
-                    nu_exit_clean(session);
-                    SET_ERROR(err, INTERNAL_ERROR, SESSION_NOT_CONNECTED_ERR);
-                    return -1;
-                } 
-                /* test if we need to create the working thread */
-                if (session->count_msg_cond == -1){ /* if set to -1 then we've just leave init */
-			if (session->server_mode == SRV_TYPE_PUSH) {
-				pthread_mutex_init(&(session->check_count_mutex),NULL);
-				pthread_cond_init(&(session->check_cond),NULL);
-				pthread_create(&(session->checkthread), NULL, nu_client_thread_check, session);
-			}
-			pthread_create(&(session->recvthread), NULL, recv_message, session);
-		}
-	
-		pthread_mutex_unlock(&(session->mutex));
-		if (session->server_mode == SRV_TYPE_POLL) {
-			int checkreturn;
-			checkreturn = nu_client_real_check(session, err);
-			if (checkreturn == -1){
-				/* kill all threads */
-				ask_session_end(session);
-				/* cleaning up things */
-				nu_exit_clean(session);
-				return -1;
-			} else {
-                                SET_ERROR(err, INTERNAL_ERROR, NO_ERR);
-				return checkreturn;
-			}
-		} else {
-			if ((time(NULL) - session->timestamp_last_sent) > SENT_TEST_INTERVAL){
-				if (! send_hello_pckt(session)){
-					/* kill all threads */
-					ask_session_end(session);
-					/* cleaning up things */
-					nu_exit_clean(session);
-                                        SET_ERROR(err, INTERNAL_ERROR, TIMEOUT_ERR);
-					return -1;
-				}
-				session->timestamp_last_sent=time(NULL);
-			}
-		}
-                SET_ERROR(err, INTERNAL_ERROR, NO_ERR);
-		return 1;
-	
+    pthread_mutex_lock(&(session->mutex));
+
+    /* test is a thread has detected problem with the session */
+    if (session->connected==0){
+        /* if we are here, threads are dead */
+        pthread_mutex_unlock(&(session->mutex));
+        nu_exit_clean(session);
+        SET_ERROR(err, INTERNAL_ERROR, SESSION_NOT_CONNECTED_ERR);
+        return -1;
+    } 
+
+    /* test if we need to create the working thread */
+    if (session->count_msg_cond == -1){ /* if set to -1 then we've just leave init */
+        if (session->server_mode == SRV_TYPE_PUSH) {
+            pthread_mutex_init(&(session->check_count_mutex),NULL);
+            pthread_cond_init(&(session->check_cond),NULL);
+            pthread_create(&(session->checkthread), NULL, nu_client_thread_check, session);
+        }
+        pthread_create(&(session->recvthread), NULL, recv_message, session);
+    }
+
+    pthread_mutex_unlock(&(session->mutex));
+
+    if (session->server_mode == SRV_TYPE_POLL) {
+        int checkreturn;
+        checkreturn = nu_client_real_check(session, err);
+        if (checkreturn == -1){
+            /* kill all threads */
+            ask_session_end(session);
+            /* cleaning up things */
+            nu_exit_clean(session);
+            return -1;
+        } else {
+            SET_ERROR(err, INTERNAL_ERROR, NO_ERR);
+            return checkreturn;
+        }
+    } else {
+        if ((time(NULL) - session->timestamp_last_sent) > SENT_TEST_INTERVAL){
+            if (! send_hello_pckt(session)){
+                /* kill all threads */
+                ask_session_end(session);
+                /* cleaning up things */
+                nu_exit_clean(session);
+                SET_ERROR(err, INTERNAL_ERROR, TIMEOUT_ERR);
+                return -1;
+            }
+            session->timestamp_last_sent=time(NULL);
+        }
+    }
+    SET_ERROR(err, INTERNAL_ERROR, NO_ERR);
+    return 1;
 }
 
 void clear_local_mutex(void* mutex)
 {
-        pthread_mutex_unlock(mutex);
-        pthread_mutex_destroy(mutex);
+    pthread_mutex_unlock(mutex);
+    pthread_mutex_destroy(mutex);
 }
 
 /**

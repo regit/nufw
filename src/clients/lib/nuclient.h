@@ -180,8 +180,6 @@ enum
 
 typedef struct {
 	/*--------------- PUBLIC MEMBERS -------------------*/
-	u_int8_t protocol; /*!< Version of nuauth protocol (#PROTO_VERSION) */
-
 	u_int32_t userid;  /*!< Local user identifier (getuid()) */
 	char *username;    /*!< Username (encoded in UTF-8) */
 	char *password;    /*!< Password,(encoded in UTF-8) */
