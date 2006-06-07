@@ -1019,10 +1019,8 @@ void nu_client_disconnect(NuAuth *session)
  * \param err Pointer to a nuclient_error: which contains the error
  * \return Returns 0 on error (error description in err), 1 otherwise
  */
-int nu_client_connect(NuAuth* session,
-        const char *hostname,
-        const char *service,
-        nuclient_error *err)
+int nu_client_connect(NuAuth* session, 
+        const char *hostname, const char *service, nuclient_error *err)
 {
     if (session->need_set_cred)
     {

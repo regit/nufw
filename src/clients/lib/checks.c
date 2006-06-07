@@ -141,8 +141,10 @@ void* recv_message(void *data)
  * time AFTER all forks occurs to create the working threads. This is 
  * mandatory and occurs because fork does not replicate the threads.
  * 
- *  - Poll mode: this is just a wrapper to nu_client_real_check
+ *  - Poll mode: this is just a wrapper to nu_client_real_check()
  *  - Push mode: It is used to send HELLO message
+ *
+ * \return Returns -1 on error, 1 otherwise
  */
 int nu_client_check(NuAuth * session, nuclient_error *err)
 {
@@ -172,7 +174,7 @@ int nu_client_check(NuAuth * session, nuclient_error *err)
     if (session->server_mode == SRV_TYPE_POLL) {
         int checkreturn;
         checkreturn = nu_client_real_check(session, err);
-        if (checkreturn == -1){
+        if (checkreturn < 0){
             /* kill all threads */
             ask_session_end(session);
             /* cleaning up things */
@@ -180,7 +182,7 @@ int nu_client_check(NuAuth * session, nuclient_error *err)
             return -1;
         } else {
             SET_ERROR(err, INTERNAL_ERROR, NO_ERR);
-            return checkreturn;
+            return 1;
         }
     } else {
         if ((time(NULL) - session->timestamp_last_sent) > SENT_TEST_INTERVAL){
@@ -209,8 +211,7 @@ void clear_local_mutex(void* mutex)
  * Function used to launch check in push mode
  *
  * This is a thread waiting to a condition to awake and launch
- * nu_client_real_check
- *
+ * nu_client_real_check().
  */
 void* nu_client_thread_check(void *data)
 {
@@ -249,7 +250,7 @@ void* nu_client_thread_check(void *data)
  *    - Compare current table with old one (compare call) ;
  *    - Free and return.
  *
- * \return Number of authenticated packets, or negative number on failure
+ * \return Number of authenticated packets, or -1 on failure
  */
 int nu_client_real_check(NuAuth *session, nuclient_error *err)
 {

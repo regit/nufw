@@ -47,7 +47,7 @@ char* locale_charset = NULL;
 typedef struct
 {
     char port[10];              /*!< Port (service) number / name */
-    unsigned long interval;     /*!< Number of second for sleep() in main loop */
+    unsigned long interval;     /*!< Number of second for sleep in main loop */
     unsigned char donotuselock; /*!< Do not user lock */
     char srv_addr[512];         /*!< Nuauth server hostname */
     unsigned char debug_mode;   /*!< Debug mode enabled if different than zero */
@@ -450,21 +450,23 @@ NuAuth* do_connect(nutcpc_context_t *context)
  */
 void main_loop(nutcpc_context_t *context)
 {
+    int ret;
     for (;;) {
         usleep (context->interval * 1000);
         if (session == NULL){
-            sleep(context->tempo);
+            usleep(context->tempo * 1000);
             if (context->tempo< MAX_RETRY_TIME) {
                 context->tempo *= 2;
             }
             session = do_connect(context);
             if (session!=NULL){
-                context->tempo = 1;
+                context->tempo = 1; /* second */
             }else{
                 printf("%s\n",nu_client_strerror(err));
             }
         } else {
-            if (nu_client_check(session,err)<0){
+            ret = nu_client_check(session,err);
+            if (ret < 0) {
                 session=NULL;
                 printf("%s\n",nu_client_strerror(err));
             }
