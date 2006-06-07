@@ -487,12 +487,14 @@ void configure_app(int argc, char **argv)
     command_line_params_t params;
     struct rlimit core_limit;
 
+#ifndef DEBUG_ENABLE
     /* Avoid creation of core file which may contains username and password */
     if (getrlimit(RLIMIT_CORE, &core_limit) == 0)
     {
         core_limit.rlim_cur = 0;
         setrlimit(RLIMIT_CORE, &core_limit);
     }
+#endif    
     
     /* Move to root directory to not block current working directory */
     (void)chdir("/");
