@@ -49,9 +49,8 @@
  * \param inbuf Input buffer written in locale charset
  * \return New allocated buffer, which need to be freed
  */
-char* locale_to_utf8(char* inbuf)
+char* nu_client_to_utf8(const char* inbuf, char *from_charset)
 {
-    char* locale_charset;
     iconv_t ctx;
     size_t inlen=strlen(inbuf);
     size_t maxlen = inlen*4;
@@ -63,13 +62,8 @@ char* locale_to_utf8(char* inbuf)
     size_t outbufleft;
     int ret;
 
-    /* get local charset */
-    setlocale (LC_ALL, "");
-    locale_charset=nl_langinfo(CODESET);
-    nu_assert (locale_charset != NULL, "Can't get locale charset!");
-
     /* create an iconv context to convert locale charset to UTF-8 */
-    ctx = iconv_open("UTF-8",locale_charset);
+    ctx = iconv_open("UTF-8", from_charset);
 
     /* allocate a buffer */
     outbuf=calloc(outbuflen,sizeof(char));
@@ -78,7 +72,7 @@ char* locale_to_utf8(char* inbuf)
     /* iconv convert */
     outbufleft=outbuflen-1; /* -1 because we keep last byte for nul byte */
     targetbuf=outbuf;
-    ret = iconv (ctx, &inbuf, &inlen, &targetbuf, &outbufleft);
+    ret = iconv (ctx, (char **)&inbuf, &inlen, &targetbuf, &outbufleft);
     real_outlen = targetbuf -outbuf; 
  
     /* is buffer too small? */
@@ -107,7 +101,7 @@ char* locale_to_utf8(char* inbuf)
             /* run iconv once more */
             outbufleft=outbuflen - real_outlen - 1; /* -1 because we keep last byte for nul byte */
             targetbuf=outbuf + real_outlen;
-            ret = iconv (ctx, &inbuf, &inlen, &targetbuf, &outbufleft);
+            ret = iconv (ctx, (char **)&inbuf, &inlen, &targetbuf, &outbufleft);
             real_outlen = targetbuf -outbuf; 
         }
     }

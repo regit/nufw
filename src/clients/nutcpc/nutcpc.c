@@ -23,6 +23,7 @@
 #include <locale.h>
 #include <config.h>
 #include <sys/resource.h>   /* setrlimit() */
+#include <langinfo.h>
 #include <stdarg.h>
 #include "proto.h"
 #include "security.h"
@@ -41,6 +42,7 @@ struct sigaction old_sigterm;
 struct sigaction old_sigint;
 char *saved_username = NULL;
 char *saved_password = NULL;
+char* locale_charset = NULL;
 
 typedef struct
 {
@@ -410,13 +412,17 @@ void daemonize_process(nutcpc_context_t *context, char *runpid)
  */
 NuAuth* do_connect(nutcpc_context_t *context)
 {
-    char *username;
-    char *password;
+    char *username, *username_utf8;
+    char *password, *password_utf8;
 
     username = get_username();
     password = get_password();
+    username_utf8 = nu_client_to_utf8(username, locale_charset);
+    password_utf8 = nu_client_to_utf8(password, locale_charset);
+    free(username);
+    free(password);
 
-    NuAuth* session = nu_client_new(username, password,  err);
+    NuAuth* session = nu_client_new(username_utf8, password_utf8,  err);
     if (session == NULL) {
         return NULL;
     }
@@ -575,10 +581,16 @@ int main (int argc, char** argv)
     char* runpid = compute_run_pid();
     nutcpc_context_t context;
 
-#if USE_UTF8
     /* needed by iconv */
     setlocale (LC_ALL, "");
-#endif
+
+    /* get local charset */
+    locale_charset = nl_langinfo(CODESET);
+    if (locale_charset == NULL)
+    {
+        fprintf (stderr, "Can't get locale charset!\n");
+        exit(EXIT_FAILURE);
+    }
 
     parse_cmdline_options(argc, argv, &context);
 
@@ -617,3 +629,4 @@ int main (int argc, char** argv)
     leave_client();
     exit (EXIT_SUCCESS);
 }
+

@@ -25,6 +25,8 @@
 #include "../lib/nuclient.h"
 #include <sys/resource.h>   /* setrlimit() */
 #include <stdio.h>
+#include <locale.h>
+#include <langinfo.h>
 #include <syslog.h>
 #include <pwd.h>
 #include <signal.h>
@@ -56,13 +58,14 @@
 
 #define MAX_NOAUTH_USERS 10
 
-char* glob_pass; 
-char* glob_user;
+char* glob_pass = NULL; 
+char* glob_user = NULL;
 /*int noauth_cpt = 0;*/
 char ** no_auth_users = NULL;
 struct pam_nufw_s pn_s;
 NuAuth* session = NULL;
 nuclient_error* nuerr = NULL;
+char* locale_charset = NULL;
 
 /* internal data */
 struct pam_nufw_s {
@@ -73,10 +76,10 @@ struct pam_nufw_s {
     int no_auth_cpt;
 };
 
-/* init pam_nufw info struct */
-static void _init_pam_nufw_s(struct pam_nufw_s *pn_s){
+/* init pam_nufw info struct. returns error message, or NULL if no error occurs */
+static char* _init_pam_nufw_s(struct pam_nufw_s *pn_s){
     struct rlimit core_limit;
-    
+
     /* Avoid creation of core file which may contains username and password */
     if (getrlimit(RLIMIT_CORE, &core_limit) == 0)
     {
@@ -84,6 +87,15 @@ static void _init_pam_nufw_s(struct pam_nufw_s *pn_s){
         setrlimit(RLIMIT_CORE, &core_limit);
     }
     
+    /* Setup locale */
+    setlocale (LC_ALL, "");
+
+    /* get local charset */
+    locale_charset = nl_langinfo(CODESET);
+    if (locale_charset == NULL) {
+        return "Can't get locale charset!";
+    }
+
     /* Move to root directory to not block current working directory */
     (void)chdir("/");
 
@@ -93,6 +105,7 @@ static void _init_pam_nufw_s(struct pam_nufw_s *pn_s){
     SECURE_STRNCPY(pn_s->file_lock,FILE_LOCK, sizeof(pn_s->file_lock)-1);
     pn_s->no_auth_users = NULL;
     pn_s->no_auth_cpt = 0;
+    return NULL;
 }
 
 /*  function to parse arguments */
@@ -184,6 +197,8 @@ void exit_client(){
     }
     nu_client_global_deinit(nuerr);
     nu_client_error_destroy(nuerr);
+    free(glob_user);
+    free(glob_pass);
     exit(EXIT_SUCCESS);
 }
 
@@ -251,9 +266,14 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
   int pdesc[2];
   int ctrl;
   nuclient_error* err=NULL;
+  char *errmsg;
   int res_err;
 
-  _init_pam_nufw_s(&pn_s);
+  errmsg = _init_pam_nufw_s(&pn_s);
+  if (errmsg != NULL) {
+      syslog(LOG_ERR, "(pam nufw) init failure: %s", errmsg);
+      return PAM_AUTH_ERR;
+  }
 
   /*D(("(pam_nufw) sm_authenticate"));*/
   syslog(LOG_ERR,"pam_nufw authenticate");
@@ -294,8 +314,8 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
   gid = getgid();
   /*syslog(LOG_INFO,"(pam_nufw) uid=%i, gid=%i",uid,gid);*/
   setenv("HOME",pw->pw_dir,1);
-  glob_pass = (char*)password;
-  glob_user = (char*)user;
+  glob_user = nu_client_to_utf8(user, locale_charset);
+  glob_pass = nu_client_to_utf8(password, locale_charset);
 
   if (pipe(pdesc) == -1){
       syslog(LOG_ERR,"pipe failed %s",strerror(errno));
@@ -440,10 +460,16 @@ int pam_sm_close_session(pam_handle_t *pamh,int flags,int argc
   int ctrl;
   struct passwd *pw;
   const char* user = NULL;
+  char *errmsg;
   int retval;
 
   /* get parameters */
-  _init_pam_nufw_s(&pn_s);
+  errmsg = _init_pam_nufw_s(&pn_s);
+  if (errmsg != NULL) {
+      syslog(LOG_ERR, "(pam nufw) init failure: %s", errmsg);
+      return PAM_AUTH_ERR;
+  }
+
   /*syslog(LOG_INFO, "(pam_nufw) file_lock: %s",pn_s.file_lock);*/
   ctrl = _pam_parse(argc, argv, &pn_s);
 
@@ -480,3 +506,4 @@ struct pam_module _pam_permit_modstruct = {
 };
 
 #endif
+

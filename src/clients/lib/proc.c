@@ -33,7 +33,7 @@
 static struct prg_node {
     struct prg_node *next;     /** Pointer to next element in the single chained list */
     unsigned long inode;       /** Inode of the program executable binary */
-    char name[PROGNAME_WIDTH]; /** Name of the program (encoded in UTF-8 if using #USE_UTF8) */
+    char name[PROGNAME_WIDTH]; /** Name of the program (encoded in UTF-8) */
 } *prg_hash[PRG_HASH_SIZE];
 
 #define PROGNAME_WIDTHs PROGNAME_WIDTH1(PROGNAME_WIDTH)
@@ -72,13 +72,7 @@ static void prg_cache_add(unsigned long inode, char *name)
     pn=*pnp;
     pn->next=NULL;
     pn->inode=inode;
-#if USE_UTF8
-    name=locale_to_utf8(name);
-#endif
     SECURE_STRNCPY(pn->name, name, sizeof(pn->name));
-#if USE_UTF8
-    free(name);
-#endif
 }
 
 const char *prg_cache_get(unsigned long inode)

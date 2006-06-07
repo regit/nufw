@@ -280,6 +280,8 @@ void nu_client_delete(NuAuth *session);
 
 const char* nu_client_strerror (nuclient_error *err);
 
+char* nu_client_to_utf8(const char* inbuf, char *from_charset);
+
 #ifdef __cplusplus
 }
 #endif
