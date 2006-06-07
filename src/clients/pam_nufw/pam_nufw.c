@@ -23,6 +23,7 @@
 
 /*#define _GNU_SOURCE*/
 #include "../lib/nuclient.h"
+#include <sys/resource.h>   /* setrlimit() */
 #include <stdio.h>
 #include <syslog.h>
 #include <pwd.h>
@@ -84,6 +85,18 @@ char* get_username(){
 
 /* init pam_nufw info struct */
 static void _init_pam_nufw_s(struct pam_nufw_s *pn_s){
+    struct rlimit core_limit;
+    
+    /* Avoid creation of core file which may contains username and password */
+    if (getrlimit(RLIMIT_CORE, &core_limit) == 0)
+    {
+        core_limit.rlim_cur = 0;
+        setrlimit(RLIMIT_CORE, &core_limit);
+    }
+    
+    /* Move to root directory to not block current working directory */
+    (void)chdir("/");
+
     memset(pn_s, 0, sizeof(pn_s));
     SECURE_STRNCPY(pn_s->nuauth_srv,NUAUTH_SRV, sizeof(pn_s->nuauth_srv)-1);
     SECURE_STRNCPY(pn_s->nuauth_port, NUAUTH_PORT, sizeof(pn_s->nuauth_port));
