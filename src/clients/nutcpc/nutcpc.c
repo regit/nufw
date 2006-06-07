@@ -450,25 +450,29 @@ NuAuth* do_connect(nutcpc_context_t *context)
  */
 void main_loop(nutcpc_context_t *context)
 {
+    int connected = 1;
     int ret;
     for (;;) {
         usleep (context->interval * 1000);
-        if (session == NULL){
-            usleep(context->tempo * 1000);
+        if (!connected){
+            usleep((unsigned long)context->tempo * 1000000);
             if (context->tempo< MAX_RETRY_TIME) {
                 context->tempo *= 2;
             }
-            session = do_connect(context);
-            if (session!=NULL){
+
+            /* try to reconnect to nuauth */
+            if (nu_client_connect(session, context->srv_addr, context->port, err) != 0) {
+                connected = 1;
                 context->tempo = 1; /* second */
-            }else{
-                printf("%s\n",nu_client_strerror(err));
+            } else {
+                printf("Reconnection error: %s\n",nu_client_strerror(err));
             }
         } else {
             ret = nu_client_check(session,err);
             if (ret < 0) {
-                nu_client_delete(session);
-                session=NULL;
+                /* on error: reset the session */
+                nu_client_reset(session);
+                connected = 0;
                 printf("%s\n",nu_client_strerror(err));
             }
         }

@@ -55,6 +55,7 @@ GCRY_THREAD_OPTION_PTHREAD_IMPL;
 
 #define DH_BITS 1024
 #define REQUEST_CERT 0
+static const int cert_type_priority[3] = { GNUTLS_CRT_X509,  0 };
 
 #include <sys/utsname.h>
 
@@ -784,10 +785,6 @@ int init_socket(NuAuth * session,
     (void)sigaction( SIGPIPE, & no_action, NULL);
 
     /* create socket to nuauth */
-    if (res->ai_family  == PF_INET)
-        printf("Create IPv4 socket\n");
-    else if (res->ai_family  == PF_INET6)
-        printf("Create IPv6 socket\n");
     session->socket = socket (res->ai_family, res->ai_socktype, res->ai_protocol);
     if (session->socket <= 0){
         errno=EADDRNOTAVAIL;
@@ -873,7 +870,6 @@ NuAuth* nu_client_new(
         char* password, 
         nuclient_error *err)
 {
-    const int cert_type_priority[3] = { GNUTLS_CRT_X509,  0 };
     conntable_t *new;
     NuAuth * session;
     int ret;
@@ -920,26 +916,6 @@ NuAuth* nu_client_new(
     }
     session->ct = new;
 
-    /* X509 stuff */
-    ret = gnutls_certificate_allocate_credentials(&(session->cred));
-    if (ret != 0)
-    {
-        /*printf("problem allocating gnutls credentials : %s\n",gnutls_strerror(ret));*/
-        SET_ERROR(err, GNUTLS_ERROR, ret);
-        nu_exit_clean(session);
-        return NULL;
-    }
-
-    /* Initialize TLS session */
-    ret = gnutls_init(&session->tls, GNUTLS_CLIENT);
-    if (ret != 0)
-    {
-        /*printf("gnutls init error : %s\n",gnutls_strerror(ret));*/
-        SET_ERROR(err, GNUTLS_ERROR, ret);
-        nu_exit_clean(session);
-        return NULL;
-    }
-
     /* allocate diffie hellman parameters */
     ret = gnutls_dh_params_init(&session->dh_params);
     if (ret < 0)
@@ -963,7 +939,28 @@ NuAuth* nu_client_new(
         nu_exit_clean(session);
         return NULL;
     }
+
+    /* X509 stuff */
+    ret = gnutls_certificate_allocate_credentials(&(session->cred));
+    if (ret != 0)
+    {
+        /*printf("problem allocating gnutls credentials : %s\n",gnutls_strerror(ret));*/
+        SET_ERROR(err, GNUTLS_ERROR, ret);
+        nu_exit_clean(session);
+        return NULL;
+    }
+
     gnutls_certificate_set_dh_params( session->cred, session->dh_params);
+
+    /* Initialize TLS session */
+    ret = gnutls_init(&session->tls, GNUTLS_CLIENT);
+    if (ret != 0)
+    {
+        /*printf("gnutls init error : %s\n",gnutls_strerror(ret));*/
+        SET_ERROR(err, GNUTLS_ERROR, ret);
+        nu_exit_clean(session);
+        return NULL;
+    }
 
     ret = gnutls_set_default_priority(session->tls);
     if (ret < 0)
@@ -985,23 +982,34 @@ NuAuth* nu_client_new(
     return session;
 }
 
-/* cleanup when we lost the connection with nuauth (not used yet) */
-void nu_client_disconnect(NuAuth *session)
+/**
+ * Reset a session: close the connection and reset attributes. So the session
+ * can be used as nu_client_connect() input.
+ */
+void nu_client_reset(NuAuth *session)
 {
+    /* close TLS conneciton */
+    ask_session_end(session);
+
+    /* delete old TLS session and create a new TLS session */
+    gnutls_deinit(session->tls);
+    gnutls_init(&session->tls, GNUTLS_CLIENT);
+    gnutls_set_default_priority(session->tls);
+    gnutls_certificate_type_set_priority(session->tls, cert_type_priority);
+    session->need_set_cred = 1;
+
+    /* close socket */
+    if (session->socket>0)
+    {
+        shutdown(session->socket,SHUT_WR);
+        close(session->socket);
+    }
+
+    /* reset fields */
     session->connected = 0;
     session->count_msg_cond = -1;
     session->timestamp_last_sent = time(NULL);
     session->socket = -1;
-#if 0    
-    session->packet_seq = 0;
-
-    session -> ct = ...; /* (reset connection table) */
-
-    if (session->server_mode == SRV_TYPE_PUSH){
-        pthread_cond_destroy(&session->check_cond);
-    }
-
-#endif    
 }
 
 /**

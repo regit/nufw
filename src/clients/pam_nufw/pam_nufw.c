@@ -268,6 +268,7 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
   nuclient_error* err=NULL;
   char *errmsg;
   int res_err;
+  int connected;
 
   errmsg = _init_pam_nufw_s(&pn_s);
   if (errmsg != NULL) {
@@ -369,27 +370,30 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
           RunD=fopen(_get_runpid(&pn_s),"w");
           fprintf(RunD,"%d",mypid);
           fclose(RunD);
+          connected = 1;
           for (;;) {
               usleep (interval * 1000);
-              if (session == NULL){
+              if (!connected){
                   sleep(tempo);
                   if (tempo< MAX_RETRY_TIME) {
                       tempo=tempo*2;
                   }
-                  session = do_connect(err);
-                  if (session==NULL){/* quit if password is wrong. to not lock user account */
-                      syslog(LOG_ERR,"(pam_nufw) unable to reconnect to server: %s",nu_client_strerror(err));
+
+                  if (nu_client_connect(session, pn_s.nuauth_srv, pn_s.nuauth_port, err) != 0) {
+                      tempo = 1;
+                  } else {
+                      /* quit if password is wrong. to not lock user account */
+                      syslog(LOG_ERR,"(pam_nufw) unable to reconnect to server: %s",
+                              nu_client_strerror(err));
                       if (err->error == BAD_CREDENTIALS_ERR){
                           syslog(LOG_ERR,"(pam_nufw) bad credentials: leaving");
                           exit_client();
                       }
-                  }else{
-                      tempo = 1;
                   }
               } else {
                   if (nu_client_check(session,err)<0){
-                      nu_client_delete(session);
-                      session=NULL;
+                      nu_client_reset(session);
+                      connected = 0;
                       syslog(LOG_ERR,"(pam_nufw) libnuclient error: %s",nu_client_strerror(err));
                   }
               }

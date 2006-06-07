@@ -274,6 +274,8 @@ int nu_client_connect(NuAuth* session,
         const char *service,
         nuclient_error *err);
 
+void nu_client_reset(NuAuth *session);
+
 void nu_client_delete(NuAuth *session);
 
 const char* nu_client_strerror (nuclient_error *err);
