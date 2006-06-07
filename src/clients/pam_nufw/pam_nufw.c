@@ -73,16 +73,6 @@ struct pam_nufw_s {
     int no_auth_cpt;
 };
 
-
-/* Callback functions for libnuclient */
-char* get_password(){
-    return glob_pass;
-}
-
-char* get_username(){
-    return glob_user;
-}
-
 /* init pam_nufw info struct */
 static void _init_pam_nufw_s(struct pam_nufw_s *pn_s){
     struct rlimit core_limit;
@@ -218,7 +208,7 @@ int do_auth_on_user(const char *username){
  */
 NuAuth* do_connect(nuclient_error *err)
 {
-    NuAuth* session = nu_client_new(&get_username, &get_password,  NULL, err);
+    NuAuth* session = nu_client_new(glob_user, glob_pass,  err);
     if (session == NULL) {
         return NULL;
     }
@@ -226,7 +216,7 @@ NuAuth* do_connect(nuclient_error *err)
 #if 0        
     nu_client_set_debug(session, context->debug_mode);
 
-    if (!nu_client_setup_tls(session, NULL, NULL)) 
+    if (!nu_client_setup_tls(session, NULL, NULL, NULL, NULL, err)) 
     { 
         nu_client_delete(session);
         return NULL;

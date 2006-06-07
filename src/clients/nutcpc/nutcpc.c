@@ -284,8 +284,6 @@ char* get_password()
         return NULL;
     }
 #endif
-char (*crash) () = 0;
-crash();
     return new_pass;
 }
 
@@ -412,7 +410,13 @@ void daemonize_process(nutcpc_context_t *context, char *runpid)
  */
 NuAuth* do_connect(nutcpc_context_t *context)
 {
-    NuAuth* session = nu_client_new(&get_username, &get_password,  NULL, err);
+    char *username;
+    char *password;
+
+    username = get_username();
+    password = get_password();
+
+    NuAuth* session = nu_client_new(username, password,  err);
     if (session == NULL) {
         return NULL;
     }
@@ -420,7 +424,7 @@ NuAuth* do_connect(nutcpc_context_t *context)
     nu_client_set_debug(session, context->debug_mode);
 
 #if 0 
-    if (!nu_client_setup_tls(session, NULL, NULL, NULL, err)) 
+    if (!nu_client_setup_tls(session, NULL, NULL, NULL, NULL, err)) 
     { 
         nu_client_delete(session);
         return NULL;

@@ -10,6 +10,7 @@
 	  - Prelude, MySQL, PostgreSQL, etc. modules support IPv6 addresses
 	  - Plaintext module is able to parse IPv4 and IPv6 addresses
 	- support ICMPv6 protocol
+	- new client API: change all functions about session managment
 2.0 (2005/05/22)
 	- nuauth : fix period handling
 	- libnuclient : fix crash when specified hostname is unvalid

@@ -82,26 +82,11 @@ int nu_get_usersecret(sasl_conn_t *conn __attribute__((unused)),
         sasl_secret_t **psecret)
 {
     NuAuth* session=(NuAuth *)context;
-    if ((session->password == NULL) && session->passwd_callback) {
-#if USE_UTF8
-        char *utf8pass;
-#endif
-        char *givenpass=session->passwd_callback();
-        if (!givenpass){
-            return EXIT_FAILURE;
-        }
-#if USE_UTF8
-        utf8pass = locale_to_utf8(givenpass);
-        free(givenpass);
-        givenpass = utf8pass;
-        if (!givenpass){
-            return EXIT_FAILURE;
-        }
-#endif
-        session->password = givenpass;
-    }
     if(id != SASL_CB_PASS) {
         printf("getsecret not looking for pass");
+        return EXIT_FAILURE;
+    }
+    if (session->password == NULL) {
         return EXIT_FAILURE;
     }
     if(!psecret) return SASL_BADPARAM;
@@ -131,22 +116,9 @@ static int nu_get_userdatas(void *context __attribute__((unused)),
     switch (id) {
         case SASL_CB_USER:
         case SASL_CB_AUTHNAME:
-            if ((session->username == NULL) && session->username_callback) {
-#if USE_UTF8
-                char *utf8name;
-#endif
-                char *givenuser=session->username_callback();
-#if USE_UTF8
-                utf8name = locale_to_utf8(givenuser);
-                free(givenuser);
-                givenuser = utf8name;
-                if (givenuser == NULL){
-                    return EXIT_FAILURE;
-                }
-#endif
-                session->username=givenuser;
+            if (session->username == NULL) {
+                return EXIT_FAILURE;
             }
-
             *result=session->username;
             break;
         default:
@@ -635,7 +607,7 @@ int send_os(NuAuth * session, nuclient_error *err)
  * \return Returns 0 on error (error description in err), 1 otherwise
  */
 int nu_client_setup_tls(NuAuth * session,
-        char* keyfile, char* certfile, char* cafile,
+        char* keyfile, char* certfile, char* cafile, char *tls_password,
         nuclient_error *err)
 {
     char certstring[256];
@@ -643,6 +615,8 @@ int nu_client_setup_tls(NuAuth * session,
     char *home = getenv("HOME");
     int ok;
     int ret;
+    
+    session->tls_password = tls_password;
 
     /* compute patch keyfile */
     if (keyfile == NULL && home != NULL)
@@ -747,13 +721,6 @@ int init_sasl(NuAuth * session, nuclient_error *err)
        sasl_setprop(conn, SASL_SSF_EXTERNAL, &extprops); */
     /* set username taken from console */
 
-    if (! session->username){
-        if (session->username_callback){
-            session->username=session->username_callback();
-        } else {
-            printf("can't call username callback\n");
-        }
-    }
     sasl_setprop(conn,SASL_SSF_EXTERNAL,&extssf);
     ret = sasl_setprop(conn, SASL_AUTH_EXTERNAL,session->username);
     if (ret != SASL_OK) {
@@ -913,15 +880,19 @@ int tls_handshake(NuAuth * session, nuclient_error *err)
  * If everything is ok, create the connection table using tcptable_init(). 
  */
 NuAuth* nu_client_new(
-        void* username_callback,
-        void* passwd_callback, 
-        void* tls_passwd_callback, 
+        char* username,
+        char* password, 
         nuclient_error *err)
 {
     const int cert_type_priority[3] = { GNUTLS_CRT_X509,  0 };
     conntable_t *new;
     NuAuth * session;
     int ret;
+    
+    if (username == NULL || password == NULL) {
+        SET_ERROR(err, INTERNAL_ERROR, BAD_CREDENTIALS_ERR);
+        return NULL;
+    }
 
     /* First reset error */
     SET_ERROR(err, INTERNAL_ERROR, NO_ERR);
@@ -942,9 +913,9 @@ NuAuth* nu_client_new(
     session->tls=NULL;
     session->ct = NULL;
     session->protocol = PROTO_VERSION;
-    session->username_callback = username_callback;
-    session->passwd_callback = passwd_callback;
-    session->tls_passwd_callback = tls_passwd_callback;
+    session->username = username;
+    session->password = password;
+    session->tls_password = NULL;
     session->debug_mode = 0;
     session->timestamp_last_sent = time(NULL);
     session->need_set_cred = 1;

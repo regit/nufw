@@ -188,10 +188,7 @@ typedef struct {
 	
     gnutls_session tls; /*!< TLS session over TCP socket */
 	gnutls_certificate_credentials cred; /*!< TLS credentials */
-
-	char* (*username_callback)();   /*!< Callback used to get user name */
-	char* (*passwd_callback)();     /*!< Callback used to get user password */
-	char* (*tls_passwd_callback)(); /*!< Callback used to get TLS password */
+	char* tls_password;   /*!< TLS password */
 	
 	int socket;              /*!< TCP socket used to exchange message with nuauth */
 	conntable_t *ct;         /*!< Connection table */
@@ -261,14 +258,14 @@ void    nu_client_global_init(nuclient_error *err);
 void    nu_client_global_deinit(nuclient_error *err);
 
 NuAuth* nu_client_new(
-        void* username_callback,
-        void* passwd_callback, 
-        void* tls_passwd_callback, 
+        char* username,
+        char* password, 
         nuclient_error *err);
 
 void nu_client_set_debug(NuAuth* session, unsigned char enabled);
 
 int nu_client_setup_tls(NuAuth* session,
+        char* tls_passwd, 
         char* keyfile,
         char* certfile,
         char* cafile,
