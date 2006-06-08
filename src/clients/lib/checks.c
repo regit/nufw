@@ -82,7 +82,9 @@ void* recv_message(void *data)
         if (ret<=0){
             if ( gnutls_error_is_fatal(ret) ){
                 ask_session_end(session);
-                return NULL;
+                break;
+            } else {
+                continue;
             }
         } else {
             switch (dgram[0]){
