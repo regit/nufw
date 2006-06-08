@@ -21,6 +21,8 @@
 	    them on each reconnection): that's good because it looks to use lot of
 		CPU (and maybe /dev/random)
 	- don't make core dump on fatal errors (in nuauth, nutcpc and pam_nufw)
+	- libnuclient: use gcrypt_malloc_secure() to disallow username and
+	  password to be moved to the swap
 2.0 (2005/05/22)
 	- nuauth : fix period handling
 	- libnuclient : fix crash when specified hostname is unvalid

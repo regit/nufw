@@ -40,8 +40,6 @@ NuAuth *session = NULL;
 nuclient_error *err=NULL;
 struct sigaction old_sigterm;
 struct sigaction old_sigint;
-char *saved_username = NULL;
-char *saved_password = NULL;
 char* locale_charset = NULL;
 
 typedef struct
@@ -159,8 +157,6 @@ void leave_client()
     }
     nu_client_global_deinit();
     nu_client_error_destroy(err);
-    free(saved_username);
-    free(saved_password);
 }
 
 /**
@@ -266,11 +262,6 @@ char* get_password()
     int ret;
 #endif
 
-    /* if password was already read, send it to the library */
-    if (saved_password != NULL) {
-        return strdup(saved_password);
-    }
-
     new_pass=(char *)calloc(password_size, sizeof( char));
 #ifdef FREEBSD
     ret = readpassphrase(question, new_pass, password_size, RPP_REQUIRE_TTY);
@@ -300,11 +291,6 @@ char* get_username()
     char* username;
     int nread;
     size_t username_size=32;
-
-    /* if username was already read, send it to the library */
-    if (saved_username != NULL) {
-        return strdup(saved_username);
-    }
 
     printf("Enter username: ");
     username = (char *)calloc(username_size, sizeof(char));
@@ -410,13 +396,19 @@ void daemonize_process(nutcpc_context_t *context, char *runpid)
  *
  * \return The client session, or NULL on error (get description from ::err)
  */
-NuAuth* do_connect(nutcpc_context_t *context)
+NuAuth* do_connect(nutcpc_context_t *context, char *username)
 {
-    char *username, *username_utf8;
-    char *password, *password_utf8;
+    char *username_utf8;
+    char *password;
+    char *password_utf8;
 
-    username = get_username();
+    /* read username and password */
+    if (username == NULL) {
+        username = get_username();
+    }
     password = get_password();
+
+    /* convert to UTF-8 */
     username_utf8 = nu_client_to_utf8(username, locale_charset);
     password_utf8 = nu_client_to_utf8(password, locale_charset);
     free(username);
@@ -483,7 +475,7 @@ void main_loop(nutcpc_context_t *context)
 /**
  * Parse command line options
  */
-void parse_cmdline_options(int argc, char **argv, nutcpc_context_t *context)
+void parse_cmdline_options(int argc, char **argv, nutcpc_context_t *context, char **username)
 {
     int ch;
 
@@ -516,7 +508,7 @@ void parse_cmdline_options(int argc, char **argv, nutcpc_context_t *context)
                 context->donotuselock = 1;
                 break;
             case 'U':
-                saved_username = strdup(optarg);
+                *username = strdup(optarg);
                 break;
             case 'k':
                 kill_nutcpc();
@@ -536,7 +528,7 @@ void parse_cmdline_options(int argc, char **argv, nutcpc_context_t *context)
 /**
  * Initialize nuclient library
  */
-void init_library(nutcpc_context_t *context)
+void init_library(nutcpc_context_t *context, char *username)
 {
     struct rlimit core_limit;
     
@@ -562,7 +554,7 @@ void init_library(nutcpc_context_t *context)
 
     /* Init. library */
     printf("Connecting to NuFw gateway\n");
-    session = do_connect(context);
+    session = do_connect(context, username);
 
     /* Library failure? */
     if (session == NULL)
@@ -571,22 +563,12 @@ void init_library(nutcpc_context_t *context)
         printf("Problem: %s\n",nu_client_strerror(err));
         exit(EXIT_FAILURE);
     }
-
-    /* store username and password */
-    if (session->username != NULL) 
-    {
-        free(saved_username);
-        saved_username = strdup(session->username);
-    }
-    if (session->password != NULL) 
-    {
-        saved_password = strdup(session->password);
-    }
 }
 
 int main (int argc, char** argv)
 {
     char* runpid = compute_run_pid();
+    char *username = NULL;
     nutcpc_context_t context;
 
     /* needed by iconv */
@@ -600,7 +582,7 @@ int main (int argc, char** argv)
         exit(EXIT_FAILURE);
     }
 
-    parse_cmdline_options(argc, argv, &context);
+    parse_cmdline_options(argc, argv, &context, &username);
 
     if (!context.debug_mode)
     {
@@ -610,7 +592,7 @@ int main (int argc, char** argv)
                 printf("Lock file found: %s\n",runpid);
                 printf("Kill existing process with \"-k\" or ignore it with \"-l\" option\n");
                 free(runpid);
-                free(saved_username);
+                free(username);
                 exit(EXIT_FAILURE);
             }
         }
@@ -618,7 +600,7 @@ int main (int argc, char** argv)
 
     install_signals();
 
-    init_library(&context);
+    init_library(&context, username);
 
     /*
      * Become a daemon by double-forking and detaching completely from

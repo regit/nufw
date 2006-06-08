@@ -40,6 +40,11 @@
   It contains all the exported functions
   */
 
+/** 
+ * Use gcry_malloc_secure() to disallow a memory page 
+ * to be moved to the swap
+ */
+#define USE_GCRYPT_MALLOC_SECURE
 
 #include "nuclient.h"
 #include <sasl/saslutil.h>
@@ -597,6 +602,7 @@ int send_os(NuAuth * session, nuclient_error *err)
  * \param keyfile Complete path to a key file stored in PEM format (can be NULL)
  * \param certfile Complete path to a certificate file stored in PEM format (can be NULL)
  * \param cafile Complete path to a certificate authority file stored in PEM format (can be NULL)
+ * \param tls_passwd Certificate password string
  * \param err Pointer to a nuclient_error: which contains the error
  * \return Returns 0 on error (error description in err), 1 otherwise
  */
@@ -846,13 +852,37 @@ int tls_handshake(NuAuth * session, nuclient_error *err)
     return 1;
 }
 
+#ifdef USE_GCRYPT_MALLOC_SECURE
+/**
+ * Make a secure copy of a string:
+ * - allocate memory using gcry_calloc_secure(): disallow the memory page
+ *   to be copy on swap ;
+ * - wipe out old string (fill with zero) ;
+ * - free old string.
+ *
+ * Wipe out and free memory in every case (error or not).
+ *
+ * \return Fresh copy of the string, or NULL if fails.
+ */
+static char* secure_str_copy(char *orig)
+{
+    size_t len = strlen(orig);
+    char *new = gcry_calloc_secure(len+1, sizeof(char));
+    if (new != NULL) {
+        SECURE_STRNCPY(new, orig, len+1);
+    }
+    memset(orig, 0, len+1); /* important: wipe out old string */
+    free(orig);
+    return new;
+}
+#endif
+
 /**
  * \ingroup nuclientAPI
  * \brief Init connection to nuauth server
  *
- * \param username_callback Pointer to a function that will be used to get user name
- * \param passwd_callback Pointer to a function that will be used to get user password 
- * \param tls_passwd_callback Pointer to a function that can be used to get certificate password (currently untested)
+ * \param username User name string
+ * \param password Password string
  * \param err Pointer to a nuclient_error: which contains the error
  * \return A pointer to a valid ::NuAuth structure or NULL if init has failed
  * 
@@ -896,8 +926,17 @@ NuAuth* nu_client_new(
     session->packet_seq = 0;
     session->tls=NULL;
     session->ct = NULL;
+#ifdef USE_GCRYPT_MALLOC_SECURE
+    session->username = secure_str_copy(username);
+    session->password = secure_str_copy(password);
+    if (session->username == NULL || session->password == NULL) {
+        SET_ERROR(err, INTERNAL_ERROR, MEMORY_ERR);
+        return NULL;
+    }
+#else    
     session->username = username;
     session->password = password;
+#endif    
     session->tls_password = NULL;
     session->debug_mode = 0;
     session->timestamp_last_sent = time(NULL);
