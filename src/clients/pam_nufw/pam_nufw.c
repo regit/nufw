@@ -168,10 +168,10 @@ static int _kill_nuclient(char *runpid){
             ret = kill(pid,SIGTERM);
             ok = (ret == 0);
             if (ok) {
-                /*printf("nutcpc process killed (pid %lu)\n", (unsigned long)pid);*/
+                syslog(LOG_INFO,"(pam_nufw) process killed (pid %lu)\n", (unsigned long)pid);
                 return 0;
             } else {
-                printf("Fail to kill process: remove pid file\n");
+                syslog(LOG_ERR,"(pam_nufw) fail to kill process: remove pid file\n");
                 unlink(runpid);
                 return 1;
             }
@@ -362,7 +362,6 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
           return PAM_SUCCESS;
       }else{
           /* session opened to nuauth */
-          syslog(LOG_INFO,"(pam_nufw) session to NuAuth server opened, username=%s, server=%s",session->username,pn_s.nuauth_srv);
           /* write pid in lockfile */
           int mypid;
           FILE* RunD;
@@ -370,6 +369,8 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
           RunD=fopen(_get_runpid(&pn_s),"w");
           fprintf(RunD,"%d",mypid);
           fclose(RunD);
+          syslog(LOG_INFO,"(pam_nufw) session to NuAuth server opened, username=%s, server=%s (pid=%lu)",
+            session->username, pn_s.nuauth_srv, (unsigned long)mypid);
           connected = 1;
           for (;;) {
               usleep (interval * 1000);
