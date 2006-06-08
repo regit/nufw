@@ -1,16 +1,38 @@
 PAM_NUFW Documentation
+======================
+
+Events
+------
+
+pam_nufw is a library to authentificate an user on nuauth when he uses PAM
+(examples: connect with ssh, authentificate using gdm, su, etc.). pam_nufw
+use two PAM events:
+- authentification: line like "auth optionnal ..." in configuration file ;
+- session end: line like "session optionnal ..." in configuration file.
+
+First event does connect to nuauth (open a session), and the second does
+disconnect (close the session).
+
+Options
+-------
 
 pam_nufw accepts following options on the command line:
-server=nuauth_ip
-port=nuauth_port
-lock=.pam_nufw
+- server=nuauth_ip: Nuauth server IP/hostname
+- port=nuauth_port: Nuauth port/service name
+- lock=.pam_nufw: Lock filename
+- noauth=user1,user2,(...): Don't authentificate these users
 
-default port is 4130
-default lockfile is .pam_nufw, located in $home/.nufw/
+Default values:
+- port is 4130
+- lockfile is .pam_nufw, located in $HOME/.nufw/
 
+Configuration file example
+--------------------------
 
-configuration example:
+PAM configuration files are located in /etc/pam.d/. Each program which use PAM
+may have its own file (eg. /etc/pam.d/ssh and /etc/pam.d/kdm).
 
+------------------------------- 8< ---------------------------------
 #%PAM-1.0
 auth    requisite       pam_nologin.so
 auth    required        pam_env.so
@@ -21,9 +43,10 @@ session required        pam_limits.so
 @include common-session
 session optional pam_nufw.so server=192.168.1.2 port=4130
 @include common-password
+------------------------------- 8< ---------------------------------
 
+We use auth because we have to know user's password in order to authenticate
+on nuauth The pam module closes the connection to nuauth when the application
+closes the pam session. Comment the session line to suppress disconnection at
+logout.
 
-
-We use auth because we have to know user's password in order to authenticate on nuauth
-The pam module closes the connection to nuauth when the application closes the pam session.
-Comment the session line to suppress disconnection at logout.
