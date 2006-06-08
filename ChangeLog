@@ -10,9 +10,17 @@
 	  - Prelude, MySQL, PostgreSQL, etc. modules support IPv6 addresses
 	  - Plaintext module is able to parse IPv4 and IPv6 addresses
 	  - Rejectting a packet can send ICMP(v4) or ICMPv6 (depending on source
-	    address)
-	- support ICMPv6 protocol
-	- new client API: change all functions about session managment
+	    IP address type)
+	  - support ICMPv6 protocol
+	- new client API, main changes:
+	  - don't use callback to get username, password and tls password anymore:
+	    directly send the strings
+	  - don't delete the session when loosing connection: just delete old TLS
+	    session (and socket) using a "reset" function
+	  - keep same Diffie Hellman parameters for the session (don't regenerate
+	    them on each reconnection): that's good because it looks to use lot of
+		CPU (and maybe /dev/random)
+	- don't make core dump on fatal errors (in nuauth, nutcpc and pam_nufw)
 2.0 (2005/05/22)
 	- nuauth : fix period handling
 	- libnuclient : fix crash when specified hostname is unvalid
