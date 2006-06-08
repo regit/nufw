@@ -487,11 +487,10 @@ void nu_client_global_init(nuclient_error *err)
  *
  * \warning To be called once, when leaving.
  */
-void nu_client_global_deinit(nuclient_error *err)
+void nu_client_global_deinit()
 {
     sasl_done();
     gnutls_global_deinit();
-    SET_ERROR(err, INTERNAL_ERROR, NO_ERR);
 }
 
 /**

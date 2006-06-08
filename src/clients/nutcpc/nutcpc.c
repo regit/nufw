@@ -157,7 +157,7 @@ void leave_client()
         unlink(runpid);
         free(runpid);
     }
-    nu_client_global_deinit(err);
+    nu_client_global_deinit();
     nu_client_error_destroy(err);
     free(saved_username);
     free(saved_password);

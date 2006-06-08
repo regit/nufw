@@ -64,7 +64,6 @@ char* glob_user = NULL;
 char ** no_auth_users = NULL;
 struct pam_nufw_s pn_s;
 NuAuth* session = NULL;
-nuclient_error* nuerr = NULL;
 char* locale_charset = NULL;
 
 /* internal data */
@@ -74,12 +73,13 @@ struct pam_nufw_s {
     char file_lock[BUFSIZ]; /* file lock used to store pid */
     char** no_auth_users;
     int no_auth_cpt;
+    nuclient_error* err;
 };
 
 /* init pam_nufw info struct. returns error message, or NULL if no error occurs */
 static char* _init_pam_nufw_s(struct pam_nufw_s *pn_s){
     struct rlimit core_limit;
-
+    
     /* Avoid creation of core file which may contains username and password */
     if (getrlimit(RLIMIT_CORE, &core_limit) == 0)
     {
@@ -195,8 +195,8 @@ void exit_client(){
         unlink(runpid);
         free(runpid);
     }
-    nu_client_global_deinit(nuerr);
-    nu_client_error_destroy(nuerr);
+    nu_client_global_deinit();
+    nu_client_error_destroy(pn_s.err);
     free(glob_user);
     free(glob_pass);
     exit(EXIT_SUCCESS);
@@ -246,6 +246,41 @@ NuAuth* do_connect(nuclient_error *err)
     return session;
 }
 
+static void main_loop(struct pam_nufw_s *pn_s)
+{
+  int connected = 1;
+  int tempo = 1;
+  unsigned long interval = 100;
+
+  for (;;) {
+      usleep (interval * 1000);
+      if (!connected){
+          sleep(tempo);
+          if (tempo< MAX_RETRY_TIME) {
+              tempo=tempo*2;
+          }
+
+          if (nu_client_connect(session, pn_s->nuauth_srv, pn_s->nuauth_port, pn_s->err) != 0) {
+              tempo = 1;
+          } else {
+              /* quit if password is wrong. to not lock user account */
+              syslog(LOG_ERR,"(pam_nufw) unable to reconnect to server: %s",
+                      nu_client_strerror(pn_s->err));
+              if (pn_s->err->error == BAD_CREDENTIALS_ERR){
+                  syslog(LOG_ERR,"(pam_nufw) bad credentials: leaving");
+                  exit_client();
+              }
+          }
+      } else {
+          if (nu_client_check(session,pn_s->err)<0){
+              nu_client_reset(session);
+              connected = 0;
+              syslog(LOG_ERR,"(pam_nufw) libnuclient error: %s",nu_client_strerror(pn_s->err));
+          }
+      }
+  }
+}
+
 /*
  * used to open the connection to the nuauth server
  */
@@ -261,14 +296,10 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
   const void *password2 = NULL;
   int uid,gid=0;
   struct passwd *pw;
-  unsigned long interval = 100;
-  int tempo = 1;
   int pdesc[2];
   int ctrl;
-  nuclient_error* err=NULL;
   char *errmsg;
   int res_err;
-  int connected;
 
   errmsg = _init_pam_nufw_s(&pn_s);
   if (errmsg != NULL) {
@@ -344,14 +375,14 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
       }
 
       /* init nuclient_error */
-      res_err = nu_client_error_init(&err);
+      res_err = nu_client_error_init(&pn_s.err);
       if (res_err != 0 ){
             syslog(LOG_ERR,"(pam_nufw) Cannot init error structure! %i",res_err);
             exit(-1);
       }
       /* libnuclient init function */
-      nu_client_global_init(err);
-      session = do_connect(err);
+      nu_client_global_init(pn_s.err);
+      session = do_connect(pn_s.err);
 
       /*syslog(LOG_INFO,"(pam_nufw) after nu_client_init2");*/
       if(session == NULL){
@@ -371,37 +402,7 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
           fclose(RunD);
           syslog(LOG_INFO,"(pam_nufw) session to NuAuth server opened, username=%s, server=%s (pid=%lu)",
             session->username, pn_s.nuauth_srv, (unsigned long)mypid);
-          connected = 1;
-          for (;;) {
-              usleep (interval * 1000);
-              if (!connected){
-                  sleep(tempo);
-                  if (tempo< MAX_RETRY_TIME) {
-                      tempo=tempo*2;
-                  }
-
-                  if (nu_client_connect(session, pn_s.nuauth_srv, pn_s.nuauth_port, err) != 0) {
-                      tempo = 1;
-                  } else {
-                      /* quit if password is wrong. to not lock user account */
-                      syslog(LOG_ERR,"(pam_nufw) unable to reconnect to server: %s",
-                              nu_client_strerror(err));
-                      if (err->error == BAD_CREDENTIALS_ERR){
-                          syslog(LOG_ERR,"(pam_nufw) bad credentials: leaving");
-                          exit_client();
-                      }
-                  }
-              } else {
-                  if (nu_client_check(session,err)<0){
-                      nu_client_reset(session);
-                      connected = 0;
-                      syslog(LOG_ERR,"(pam_nufw) libnuclient error: %s",nu_client_strerror(err));
-                  }
-              }
-          }
-
-
-
+          main_loop(&pn_s);
       }
   }else{ /* in parent */
       /* nothing to do */
