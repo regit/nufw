@@ -466,6 +466,7 @@ void main_loop(nutcpc_context_t *context)
                 context->tempo = 1; /* second */
             } else {
                 printf("Reconnection error: %s\n",nu_client_strerror(err));
+                nu_client_reset(session);
             }
         } else {
             ret = nu_client_check(session,err);
