@@ -559,10 +559,11 @@ static inline int log_state_close(MYSQL *ld, connection_t *element,struct log_my
                 (element->tracking).source,
                 (element->tracking).dest,
                 TCP_STATE_ESTABLISHED);
-        if (!ok)
+        if (!ok){
             log_message (SERIOUS_WARNING, AREA_MAIN,
                     "Building mysql update query, the SHORT_REQUEST_SIZE limit was reached!\n");
-        return -1;
+            return -1;
+        }
     }
 
     Result = mysql_real_query(ld, request, strlen(request));
