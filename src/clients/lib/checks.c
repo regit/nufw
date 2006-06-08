@@ -51,75 +51,75 @@ typedef void (*pthread_cleanup_push_arg1_t) (void *);
 void* recv_message(void *data)
 {
     NuAuth* session=(NuAuth*)data;
-	int ret;
-	char dgram[512];
-	const size_t message_length= sizeof(struct nuv2_header)+sizeof(struct nuv2_authfield_hello)+sizeof(struct nuv2_authreq);
-	char message[message_length];
-	struct nuv2_header *header;
-	struct nuv2_authreq *authreq;
-	struct nuv2_authfield_hello *hellofield;
+    int ret;
+    char dgram[512];
+    const size_t message_length= sizeof(struct nuv2_header)+sizeof(struct nuv2_authfield_hello)+sizeof(struct nuv2_authreq);
+    char message[message_length];
+    struct nuv2_header *header;
+    struct nuv2_authreq *authreq;
+    struct nuv2_authfield_hello *hellofield;
 
-	/* fill struct */
+    /* fill struct */
     header = (struct nuv2_header *)message;
-	header->proto=PROTO_VERSION;
-	header->msg_type=USER_REQUEST;
-	header->option=0;
-	header->length=htons(message_length);
+    header->proto=PROTO_VERSION;
+    header->msg_type=USER_REQUEST;
+    header->option=0;
+    header->length=htons(message_length);
 
     authreq = (struct nuv2_authreq *)(header + 1);
-	authreq->packet_seq = session->packet_seq++;
-	authreq->packet_length = htons(sizeof(struct nuv2_authreq)+sizeof(struct nuv2_authfield_hello));
+    authreq->packet_seq = session->packet_seq++;
+    authreq->packet_length = htons(sizeof(struct nuv2_authreq)+sizeof(struct nuv2_authfield_hello));
 
     hellofield = (struct nuv2_authfield_hello *)(authreq + 1);
-	hellofield->type=HELLO_FIELD;
-	hellofield->option=0;
-	hellofield->length=htons(sizeof(struct nuv2_authfield_hello));
+    hellofield->type=HELLO_FIELD;
+    hellofield->option=0;
+    hellofield->length=htons(sizeof(struct nuv2_authfield_hello));
 
-        pthread_cleanup_push((pthread_cleanup_push_arg1_t)pthread_mutex_unlock, &session->check_count_mutex);
+    pthread_cleanup_push((pthread_cleanup_push_arg1_t)pthread_mutex_unlock, &session->check_count_mutex);
 
-        for (;;){
-            ret= gnutls_record_recv(session->tls,dgram,sizeof dgram);
-            if (ret<=0){
-                if ( gnutls_error_is_fatal(ret) ){
-                    ask_session_end(session);
-                    return NULL;
-                }
-            } else {
-                switch (dgram[0]){
-                  case SRV_REQUIRED_PACKET:
-                      /* wake up nu_client_real_check_tread */
-                      pthread_mutex_lock(&(session->check_count_mutex));
-                      session->count_msg_cond++;
-                      pthread_mutex_unlock(&(session->check_count_mutex));
-                      pthread_cond_signal(&(session->check_cond));
-                      break;
-                  case SRV_REQUIRED_HELLO:
-                      hellofield->helloid = ((struct nuv2_srv_helloreq*)dgram)->helloid;
-                      if (session->debug_mode)
-                      {
-                          printf("[+] Send HELLO\n");
-                      }
-                      /*  send it */
-                      if(session->tls){
-                          if( gnutls_record_send(session->tls,message,
-                                      message_length
-                                      )<=0){
+    for (;;){
+        ret= gnutls_record_recv(session->tls,dgram,sizeof dgram);
+        if (ret<=0){
+            if ( gnutls_error_is_fatal(ret) ){
+                ask_session_end(session);
+                return NULL;
+            }
+        } else {
+            switch (dgram[0]){
+                case SRV_REQUIRED_PACKET:
+                    /* wake up nu_client_real_check_tread */
+                    pthread_mutex_lock(&(session->check_count_mutex));
+                    session->count_msg_cond++;
+                    pthread_mutex_unlock(&(session->check_count_mutex));
+                    pthread_cond_signal(&(session->check_cond));
+                    break;
+                case SRV_REQUIRED_HELLO:
+                    hellofield->helloid = ((struct nuv2_srv_helloreq*)dgram)->helloid;
+                    if (session->debug_mode)
+                    {
+                        printf("[+] Send HELLO\n");
+                    }
+                    /*  send it */
+                    if(session->tls){
+                        if( gnutls_record_send(session->tls,message,
+                                    message_length
+                                    )<=0){
 #if DEBUG_ENABLE
-                              printf("write failed at %s:%d\n",__FILE__,__LINE__);
+                            printf("write failed at %s:%d\n",__FILE__,__LINE__);
 #endif
-                              ask_session_end(session);
-                              return NULL;
-                          }
-                      }
+                            ask_session_end(session);
+                            return NULL;
+                        }
+                    }
 
-                      break;
-                  default:
-                      printf("unknown message\n");
-                }
+                    break;
+                default:
+                    printf("unknown message\n");
             }
         }
-        pthread_cleanup_pop(1);
-	return NULL;
+    }
+    pthread_cleanup_pop(1);
+    return NULL;
 }
 
 
@@ -205,31 +205,31 @@ void clear_local_mutex(void* mutex)
  */
 void* nu_client_thread_check(void *data)
 {
-        NuAuth * session=(NuAuth*)data;
-	pthread_mutex_t check_mutex;
-	pthread_mutex_init(&check_mutex,NULL);
+    NuAuth * session=(NuAuth*)data;
+    pthread_mutex_t check_mutex;
+    pthread_mutex_init(&check_mutex,NULL);
 
-        pthread_cleanup_push((pthread_cleanup_push_arg1_t)pthread_mutex_unlock, &session->check_count_mutex);
-        pthread_cleanup_push((pthread_cleanup_push_arg1_t)clear_local_mutex, &check_mutex);
-	for(;;){
-		nu_client_real_check(session, NULL);
-	/* Do we need to do an other check ? */
-		pthread_mutex_lock(&(session->check_count_mutex));
-		if (session->count_msg_cond>0){
-			pthread_mutex_unlock(&(session->check_count_mutex));
-		} else {
-			pthread_mutex_unlock(&(session->check_count_mutex));
-			/* wait for cond */
-			pthread_mutex_lock(&check_mutex);
-			pthread_cond_wait(&(session->check_cond), &check_mutex);
-			pthread_mutex_unlock(&check_mutex);
-		}
-	}
+    pthread_cleanup_push((pthread_cleanup_push_arg1_t)pthread_mutex_unlock, &session->check_count_mutex);
+    pthread_cleanup_push((pthread_cleanup_push_arg1_t)clear_local_mutex, &check_mutex);
+    for(;;){
+        nu_client_real_check(session, NULL);
+        /* Do we need to do an other check ? */
+        pthread_mutex_lock(&(session->check_count_mutex));
+        if (session->count_msg_cond>0){
+            pthread_mutex_unlock(&(session->check_count_mutex));
+        } else {
+            pthread_mutex_unlock(&(session->check_count_mutex));
+            /* wait for cond */
+            pthread_mutex_lock(&check_mutex);
+            pthread_cond_wait(&(session->check_cond), &check_mutex);
+            pthread_mutex_unlock(&check_mutex);
+        }
+    }
 
-        pthread_cleanup_pop(1);
-        pthread_cleanup_pop(0);
+    pthread_cleanup_pop(1);
+    pthread_cleanup_pop(0);
 
-        return NULL;
+    return NULL;
 }
 
 /**
@@ -244,42 +244,42 @@ void* nu_client_thread_check(void *data)
  */
 int nu_client_real_check(NuAuth *session, nuclient_error *err)
 {
-	conntable_t *new;
-	int nb_packets=0;
+    conntable_t *new;
+    int nb_packets=0;
     if (session->debug_mode)
     {
         printf("[+] Client is asked to send new connections.\n");
     }
-	if (tcptable_init (&new) == 0)
-        {
-            SET_ERROR(err, INTERNAL_ERROR, MEMORY_ERR);
-            return -1;
-        }
-	if (tcptable_read (session,new) == 0)
-        {
-            SET_ERROR(err, INTERNAL_ERROR, TCPTABLE_ERR);
-            return -1;
-        }
+    if (tcptable_init (&new) == 0)
+    {
+        SET_ERROR(err, INTERNAL_ERROR, MEMORY_ERR);
+        return -1;
+    }
+    if (tcptable_read (session,new) == 0)
+    {
+        SET_ERROR(err, INTERNAL_ERROR, TCPTABLE_ERR);
+        return -1;
+    }
 #ifdef LINUX
-	/* update cache for link between proc and socket inode */
-	prg_cache_load();
+    /* update cache for link between proc and socket inode */
+    prg_cache_load();
 #endif
-	nb_packets = compare (session,session->ct, new, err);
-	/* free link between proc and socket inode */
+    nb_packets = compare (session,session->ct, new, err);
+    /* free link between proc and socket inode */
 #ifdef LINUX
-	prg_cache_clear();
+    prg_cache_clear();
 #endif
 
-	tcptable_free (session->ct);
+    tcptable_free (session->ct);
 
-        /* on error, we ask client to exit */
-	if (nb_packets < 0){
-		ask_session_end(session);
-		return nb_packets;
-	}
-	session->ct=new;
+    /* on error, we ask client to exit */
+    if (nb_packets < 0){
+        ask_session_end(session);
+        return nb_packets;
+    }
+    session->ct=new;
 
-	return nb_packets;
+    return nb_packets;
 }
 
 /**
