@@ -86,38 +86,39 @@ void* recv_message(void *data)
             } else {
                 continue;
             }
-        } else {
-            switch (dgram[0]){
-                case SRV_REQUIRED_PACKET:
-                    /* wake up nu_client_real_check_tread */
-                    pthread_mutex_lock(&(session->check_count_mutex));
-                    session->count_msg_cond++;
-                    pthread_mutex_unlock(&(session->check_count_mutex));
-                    pthread_cond_signal(&(session->check_cond));
-                    break;
-                case SRV_REQUIRED_HELLO:
-                    hellofield->helloid = ((struct nuv2_srv_helloreq*)dgram)->helloid;
-                    if (session->debug_mode)
-                    {
-                        printf("[+] Send HELLO\n");
-                    }
-                    /*  send it */
-                    if(session->tls){
-                        if( gnutls_record_send(session->tls,message,
-                                    message_length
-                                    )<=0){
-#if DEBUG_ENABLE
-                            printf("write failed at %s:%d\n",__FILE__,__LINE__);
-#endif
-                            ask_session_end(session);
-                            return NULL;
-                        }
-                    }
+        }
 
-                    break;
-                default:
-                    printf("unknown message\n");
-            }
+        switch (dgram[0]){
+            case SRV_REQUIRED_PACKET:
+                /* wake up nu_client_real_check_tread */
+                pthread_mutex_lock(&(session->check_count_mutex));
+                session->count_msg_cond++;
+                pthread_mutex_unlock(&(session->check_count_mutex));
+                pthread_cond_signal(&(session->check_cond));
+                break;
+
+            case SRV_REQUIRED_HELLO:
+                hellofield->helloid = ((struct nuv2_srv_helloreq*)dgram)->helloid;
+                if (session->debug_mode) {
+                    printf("[+] Send HELLO\n");
+                }
+
+                /*  send it */
+                if(session->tls){
+                    ret = gnutls_record_send(session->tls,message, message_length);
+                    if(ret <=0)
+                    {
+#if DEBUG_ENABLE
+                        printf("write failed at %s:%d\n",__FILE__,__LINE__);
+#endif
+                        ask_session_end(session);
+                        return NULL;
+                    }
+                }
+                break;
+
+            default:
+                printf("unknown message\n");
         }
     }
     pthread_cleanup_pop(1);
