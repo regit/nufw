@@ -262,7 +262,9 @@ static void main_loop(struct pam_nufw_s *pn_s)
 
           if (nu_client_connect(session, pn_s->nuauth_srv, pn_s->nuauth_port, pn_s->err) != 0) {
               tempo = 1;
+              connected = 1;
           } else {
+              nu_client_reset(session);
               /* quit if password is wrong. to not lock user account */
               syslog(LOG_ERR,"(pam_nufw) unable to reconnect to server: %s",
                       nu_client_strerror(pn_s->err));
@@ -377,7 +379,7 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
   if ( sigaction( SIGINT, & no_action , NULL ) != 0
     || sigaction( SIGTERM, & no_action , NULL ) != 0) 
   {
-      syslog(LOG_ERR, "Erro setting sigaction");
+      syslog(LOG_ERR, "Fail to set sigaction");
       return PAM_AUTH_ERR;
   }
 
