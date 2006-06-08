@@ -58,8 +58,6 @@
 
 #define MAX_NOAUTH_USERS 10
 
-char* glob_pass = NULL; 
-char* glob_user = NULL;
 /*int noauth_cpt = 0;*/
 char ** no_auth_users = NULL;
 struct pam_nufw_s pn_s;
@@ -197,8 +195,6 @@ void exit_client(){
     }
     nu_client_global_deinit();
     nu_client_error_destroy(pn_s.err);
-    free(glob_user);
-    free(glob_pass);
     exit(EXIT_SUCCESS);
 }
 
@@ -221,9 +217,9 @@ int do_auth_on_user(const char *username){
  *
  * \return The client session, or NULL on error (get description from ::err)
  */
-NuAuth* do_connect(nuclient_error *err)
+NuAuth* do_connect(char *username, char *password, nuclient_error *err)
 {
-    NuAuth* session = nu_client_new(glob_user, glob_pass,  err);
+    NuAuth* session = nu_client_new(username, password,  err);
     if (session == NULL) {
         return NULL;
     }
@@ -293,9 +289,8 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
   int retval = PAM_AUTH_ERR;
   int p;
   struct sigaction no_action;
-  const char *user = NULL;
-  const char *password = NULL;
-  const void *password2 = NULL;
+  char *user = NULL;
+  char *password = NULL;
   uid_t uid;
   gid_t gid;
   struct passwd *pw;
@@ -318,7 +313,7 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
   ctrl = _pam_parse(argc, argv, &pn_s);
 
   /* authentication requires we know who the user wants to be */
-  retval = pam_get_user(pamh, &user, NULL);
+  retval = pam_get_user(pamh, (const char**)&user, NULL);
   if (retval != PAM_SUCCESS) {
       syslog(LOG_ERR,"get user returned error: %s", pam_strerror(pamh,retval));
       return retval;
@@ -335,8 +330,7 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
   }
 
   /* read password, user and group identifier */
-  if (pam_get_item(pamh, PAM_AUTHTOK, &password2) == PAM_SUCCESS) {
-      password = (char *) password2;
+  if (pam_get_item(pamh, PAM_AUTHTOK, (const void**)&password) == PAM_SUCCESS) {
       if (password == NULL)
           syslog(LOG_ERR, "(pam_nufw) password is NULL!");
   }else{
@@ -346,10 +340,6 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
   uid = pw->pw_uid;
   gid = getgid();
   setenv("HOME",pw->pw_dir,1);
-
-  /* convert username and password to UTF-8 */
-  glob_user = nu_client_to_utf8(user, locale_charset);
-  glob_pass = nu_client_to_utf8(password, locale_charset);
 
   if (pipe(pdesc) == -1){
       syslog(LOG_ERR,"pipe failed %s",strerror(errno));
@@ -392,7 +382,18 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
 
   /* libnuclient init function */
   nu_client_global_init(pn_s.err);
-  session = do_connect(pn_s.err);
+
+  /* convert username and password to UTF-8 */
+  session = do_connect(
+          nu_client_to_utf8(user, locale_charset), 
+          nu_client_to_utf8(password, locale_charset), 
+          pn_s.err);
+
+  /* delete old username and password copy: wipe out memory and then free it */
+  memset(user, 0, strlen(user));
+  memset(password, 0, strlen(password));
+  free(user);
+  free(password);
 
   if(session == NULL){
       int errno_copy = errno;
