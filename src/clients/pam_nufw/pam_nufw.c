@@ -303,6 +303,31 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
 
   syslog(LOG_ERR,"pam_nufw authenticate");
 
+  /* signal management */
+  no_action.sa_handler = exit_client;
+  sigemptyset( & (no_action.sa_mask));
+  no_action.sa_flags = 0;
+  if ( sigaction( SIGINT, & no_action , NULL ) != 0
+    || sigaction( SIGTERM, & no_action , NULL ) != 0) 
+  {
+      syslog(LOG_ERR, "Fail to set sigaction");
+      return PAM_AUTH_ERR;
+  }
+
+  if (pipe(pdesc) == -1){
+      syslog(LOG_ERR,"pipe failed %s",strerror(errno));
+  }
+
+  /* init nuclient_error */
+  res_err = nu_client_error_init(&pn_s.err);
+  if (res_err != 0 ){
+        syslog(LOG_ERR,"(pam_nufw) Cannot init error structure! %i",res_err);
+        exit(EXIT_FAILURE);
+  }
+
+  /* libnuclient init function */
+  nu_client_global_init(pn_s.err);
+
   errmsg = _init_pam_nufw_s(&pn_s);
   if (errmsg != NULL) {
       syslog(LOG_ERR, "(pam nufw) init failure: %s", errmsg);
@@ -339,11 +364,6 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
   pw = (struct passwd *)getpwnam(user);
   uid = pw->pw_uid;
   gid = getgid();
-  setenv("HOME",pw->pw_dir,1);
-
-  if (pipe(pdesc) == -1){
-      syslog(LOG_ERR,"pipe failed %s",strerror(errno));
-  }
 
   p = fork();
   if (p < 0){
@@ -358,30 +378,10 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
 
   /* --- in fork child --- */
 
-  /* set user and group identifier */
+  /* set home, and user and group identifier */
+  setenv("HOME",pw->pw_dir,1);
   setuid(uid);
   setgid(uid);
-
-  /* signal management */
-  no_action.sa_handler = exit_client;
-  sigemptyset( & (no_action.sa_mask));
-  no_action.sa_flags = 0;
-  if ( sigaction( SIGINT, & no_action , NULL ) != 0
-    || sigaction( SIGTERM, & no_action , NULL ) != 0) 
-  {
-      syslog(LOG_ERR, "Fail to set sigaction");
-      return PAM_AUTH_ERR;
-  }
-
-  /* init nuclient_error */
-  res_err = nu_client_error_init(&pn_s.err);
-  if (res_err != 0 ){
-        syslog(LOG_ERR,"(pam_nufw) Cannot init error structure! %i",res_err);
-        exit(-1);
-  }
-
-  /* libnuclient init function */
-  nu_client_global_init(pn_s.err);
 
   /* convert username and password to UTF-8 */
   session = do_connect(
@@ -395,6 +395,7 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
   free(user);
   free(password);
 
+  /* fails to connect to nuauth? */
   if(session == NULL){
       int errno_copy = errno;
       syslog(LOG_ERR,"(pam_nufw) Cannot connect to NuAuth Server");
@@ -402,14 +403,17 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
       return PAM_SUCCESS; /* PAM_AUTH_ERR */
   }
 
-  /* session opened to nuauth */
-  /* write pid in lockfile */
+  /* session opened to nuauth: write pid in lockfile */
   mypid = getpid();
-  RunD=fopen(_get_runpid(&pn_s),"w");
-  fprintf(RunD,"%d",mypid);
-  fclose(RunD);
-  syslog(LOG_INFO,"(pam_nufw) session to NuAuth server opened, username=%s, server=%s (pid=%lu)",
-    session->username, pn_s.nuauth_srv, (unsigned long)mypid);
+  RunD = fopen(_get_runpid(&pn_s), "w");
+  if (RunD != NULL) {
+      fprintf(RunD,"%d",mypid);
+      fclose(RunD);
+      syslog(LOG_INFO,"(pam_nufw) session to NuAuth server opened, username=%s, server=%s (pid=%lu)",
+              session->username, pn_s.nuauth_srv, (unsigned long)mypid);
+  }
+
+  /* and then stay in main loop ... */
   main_loop(&pn_s);
   user = NULL;
   return PAM_SUCCESS;
