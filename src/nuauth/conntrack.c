@@ -129,9 +129,8 @@ void destroy_expired_connection(GHashTable* lim_conn_list)
 
 
 /**
- * Thread waiting for message
- *
- * Only thread to be able to access to list of connections to expire.
+ *\brief Unique thread to be able to access to list of connections to expire.
+ * Wait for messages
  */
 void* limited_connection_handler(GMutex *mutex)
 {
@@ -190,10 +189,12 @@ void* limited_connection_handler(GMutex *mutex)
                 if (elt == NULL){
                     debug_log_message(VERBOSE_DEBUG, AREA_GW, "Can't find conntrack entry to update");
                 } else {
-                    send_conntrack_message(elt,AUTH_CONN_UPDATE);
-                    /* this has to be removed from hash */
-                    g_hash_table_steal(lim_conn_list,message->datas);
-                    g_free(elt);
+                    if (nuauthconf->nufw_has_fixed_timeout){
+                        send_conntrack_message(elt,AUTH_CONN_UPDATE);
+                        /* this has to be removed from hash */
+                        g_hash_table_steal(lim_conn_list,message->datas);
+                        g_free(elt);
+                    }
                 }
                 break;
 

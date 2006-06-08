@@ -681,7 +681,9 @@ void init_nuauthdatas()
     /* create thread for client request sender */
     create_thread (&nuauthdatas->tls_pusher, push_worker);
 
-    create_thread (&nuauthdatas->limited_connections_handler, limited_connection_handler);
+    if (nuauthconf->nufw_has_conntrack){
+        create_thread (&nuauthdatas->limited_connections_handler, limited_connection_handler);
+    }
 
     /* create TLS authentification server threads (auth + nufw) */
     log_message (VERBOSE_DEBUG, AREA_MAIN, "Creating tls authentication server thread");
@@ -733,10 +735,12 @@ void main_cleanup()
         g_async_queue_push(nuauthdatas->localid_auth_queue,int_message);
     }
 
-    /* refresh limited_connections_queue queue */
-    int_message = g_new0(struct internal_message,1);
-    int_message->type = REFRESH_MESSAGE;
-    g_async_queue_push(nuauthdatas->limited_connections_queue,int_message);
+    if (nuauthconf->nufw_has_conntrack){
+        /* refresh limited_connections_queue queue */
+        int_message = g_new0(struct internal_message,1);
+        int_message->type = REFRESH_MESSAGE;
+        g_async_queue_push(nuauthdatas->limited_connections_queue,int_message);
+    }
 }
 
 /**

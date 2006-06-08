@@ -68,11 +68,23 @@ void log_user_packet (connection_t* element, tcp_state_t state)
 
 
 /**
+ * \brief log user packet from a single ::tracking_t
+ */
+void log_user_packet_from_tracking_t(tracking_t* datas,tcp_state_t pstate)
+{
+    connection_t *element=g_new0(connection_t,1);
+    debug_log_message(WARNING, AREA_PACKET,
+            "Logging conntrack event: state %d",pstate);
+    element->tracking=*datas;
+    log_user_packet (element,pstate);
+}
+
+/**
  * interface to logging module function for thread pool worker.
  * 
- * Argument 1 : struct Conn_State
- * Argument 2 : unused 
- * Return : None
+ * \param struct ::Conn_State
+ * \param Unused 
+ * \return None
  */
 
 void real_log_user_packet (gpointer userdata, gpointer data)

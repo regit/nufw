@@ -103,9 +103,13 @@ struct nuauth_params
     struct in6_addr *authorized_servers;  /* authorized server list */
     char** multi_users_array;            /* multi users clients */
     struct in6_addr *multi_servers_array;
-    
+
     /* period definition */
     GHashTable* periods;
+
+    /* option related of how nufw handle periods */
+    gint nufw_has_conntrack;
+    gint nufw_has_fixed_timeout;
 
     /* performance tuning */
     int nbacl_check;

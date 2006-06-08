@@ -105,6 +105,9 @@ int build_nuauthconf(struct nuauth_params * nuauthconf,
   if (!(nuauthconf->user_cache &&  (nuauth_multi_users && nuauth_multi_servers) )){
       nuauthconf->user_cache=0;
   }
+  if (nuauthconf->nufw_has_fixed_timeout){
+    nuauthconf->nufw_has_conntrack;
+  }
   return 1;
 }
 
@@ -150,6 +153,8 @@ void init_nuauthconf(struct nuauth_params **result)
       {"nuauth_debug_areas", G_TOKEN_INT, DEFAULT_DEBUG_AREAS, NULL},
       {"nuauth_debug_level", G_TOKEN_INT, 0, NULL},
       { "nuauth_hello_authentication" , G_TOKEN_INT , 0,NULL },
+      { "nufw_has_conntrack" , G_TOKEN_INT , 1,NULL },
+      { "nufw_has_fixed_timeout" , G_TOKEN_INT , 1,NULL },
 
   };
   const unsigned int nb_params = sizeof(nuauth_vars)/sizeof(confparams);
@@ -197,6 +202,8 @@ void init_nuauthconf(struct nuauth_params **result)
   conf->hello_authentication = *(int*)READ_CONF("nuauth_hello_authentication");
   conf->debug_areas = *(int*)READ_CONF("nuauth_debug_areas");
   conf->debug_level = *(int*)READ_CONF("nuauth_debug_level");
+  conf->nufw_has_conntrack = *(int*)READ_CONF("nufw_has_conntrack");
+  conf->nufw_has_fixed_timeout = *(int*)READ_CONF("nufw_has_fixed_timeout");
 #undef READ_CONF
   
   if (conf->debug_level>9){
@@ -343,6 +350,12 @@ static struct nuauth_params* compare_and_update_nuauthparams(struct nuauth_param
       g_warning("client listening ip has changed, please restart");
       restart=TRUE;
   }
+
+  if( current->nufw_has_conntrack != new->nufw_has_conntrack  ){
+      g_warning("nufw conntrack mode has changed, please restart");
+      restart=TRUE;
+  }
+
 
   if (restart == FALSE){
       /* checking nuauth tuning parameters */

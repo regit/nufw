@@ -573,17 +573,19 @@ gint take_decision(connection_t *element, packet_place_t place)
     }
     /* we must put element in expire list if needed before decision is taken */
     if (expire>0) {
-        struct limited_connection* datas=g_new0(struct limited_connection,1);
-        struct internal_message  *message=g_new0(struct internal_message,1);
+        if (nuauthconf->nufw_has_conntrack){
+            struct limited_connection* datas=g_new0(struct limited_connection,1);
+            struct internal_message  *message=g_new0(struct internal_message,1);
 
-        debug_log_message (VERBOSE_DEBUG, AREA_MAIN, 
-            "Sending connection with fixed timeout to thread");
-        memcpy(&(datas->tracking),&(element->tracking),sizeof(tracking_t));
-        datas->expire=expire;
-        datas->gwaddr=element->tls->peername;
-        message->datas=datas;
-        message->type=INSERT_MESSAGE;
-        g_async_queue_push (nuauthdatas->limited_connections_queue, message);
+            debug_log_message (VERBOSE_DEBUG, AREA_MAIN, 
+                    "Sending connection with fixed timeout to thread");
+            memcpy(&(datas->tracking),&(element->tracking),sizeof(tracking_t));
+            datas->expire=expire;
+            datas->gwaddr=element->tls->peername;
+            message->datas=datas;
+            message->type=INSERT_MESSAGE;
+            g_async_queue_push (nuauthdatas->limited_connections_queue, message);
+        }
     }
 
     if (nuauthconf->log_users_sync) {
