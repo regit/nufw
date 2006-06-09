@@ -165,12 +165,14 @@ void nu_exit_clean(NuAuth * session)
         close(session->socket);
         session->socket=0;
     }
-    if (session->username){
-        free(session->username);
-    }
-    if (session->password){
-        free(session->password);
-    }
+
+#ifdef USE_GCRYPT_MALLOC_SECURE
+    gcry_free(session->username);
+    gcry_free(session->password);
+#else
+    free(session->username);
+    free(session->password);
+#endif
 
     gnutls_certificate_free_keys(session->cred);
     gnutls_certificate_free_credentials(session->cred);
@@ -861,6 +863,8 @@ int tls_handshake(NuAuth * session, nuclient_error *err)
  * - free old string.
  *
  * Wipe out and free memory in every case (error or not).
+ *
+ * New allocated memory have to be freed using gcry_free() and not free().
  *
  * \return Fresh copy of the string, or NULL if fails.
  */
