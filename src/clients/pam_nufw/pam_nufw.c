@@ -140,18 +140,28 @@ static int _pam_parse(int argc, const char** argv, struct pam_nufw_s *pn){
     return ctrl;
 }
 
-char * _get_runpid(struct pam_nufw_s *pn_s){
-    char path_dir[254];
-    char *home = getenv("HOME");
-    if (home == NULL)
-        return NULL;            
+char * _get_runpid(struct pam_nufw_s *pn_s, char *home){
+    char path_dir[1024];
+    if (home == NULL) {
+        home = getenv("HOME");
+    }
+    if (home == NULL) {
+        return NULL;  
+    }
+
+    /* create directory path */
     snprintf(path_dir,sizeof(path_dir),"%s/.nufw", home);
+    path_dir[sizeof(path_dir)-1] = 0;
+
+    /* if the directory doesn't exist, create it */
     if (access(path_dir,R_OK)){
         mkdir(path_dir,S_IRWXU);
     }
+
+    /* create pid file full path */
     snprintf(path_dir, sizeof(path_dir), "%s/.nufw/%s", home, pn_s->file_lock);
-    return (char*) (strdup(path_dir));
-    /*return strdup(path_dir);*/
+    path_dir[sizeof(path_dir)-1] = 0;
+    return (char*)strdup(path_dir);
 }
 
 static int _kill_nuclient(char *runpid){
@@ -189,7 +199,7 @@ void exit_client(){
     if(session){
         nu_client_delete(session);
     }
-    runpid = _get_runpid(&pn_s);
+    runpid = _get_runpid(&pn_s, NULL);
     if(runpid != NULL){
         unlink(runpid);
         free(runpid);
@@ -280,110 +290,36 @@ static void main_loop(struct pam_nufw_s *pn_s)
   }
 }
 
-/*
- * used to open the connection to the nuauth server
- */
-PAM_EXTERN
-int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
-        ,const char **argv)
+struct user_info_s
 {
-  int retval = PAM_AUTH_ERR;
-  int p;
-  struct sigaction no_action;
-  const char *user = NULL;
-  const char *password = NULL;
+  const char *username;
+  const char *password;
   uid_t uid;
   gid_t gid;
-  struct passwd *pw;
-  int ctrl;
-  char *errmsg;
-  int res_err;
+  char *home_dir;
+};
+
+static void clear_user_info(struct user_info_s *user_info)
+{
+    memset(user_info, 0, sizeof(*user_info));
+}
+
+static int nufw_client_func(struct pam_nufw_s *pn_s, struct user_info_s *user_info)
+{
   int mypid;
   FILE* RunD;
 
-  syslog(LOG_ERR,"pam_nufw authenticate");
-
-  /* signal management */
-  no_action.sa_handler = exit_client;
-  sigemptyset( & (no_action.sa_mask));
-  no_action.sa_flags = 0;
-  if ( sigaction( SIGINT, & no_action , NULL ) != 0
-    || sigaction( SIGTERM, & no_action , NULL ) != 0) 
-  {
-      syslog(LOG_ERR, "Fail to set sigaction");
-      return PAM_AUTH_ERR;
-  }
-
-  /* init nuclient_error */
-  res_err = nu_client_error_init(&pn_s.err);
-  if (res_err != 0 ){
-        syslog(LOG_ERR,"(pam_nufw) Cannot init error structure! %i",res_err);
-        exit(EXIT_FAILURE);
-  }
-
-  /* libnuclient init function */
-  nu_client_global_init(pn_s.err);
-
-  errmsg = _init_pam_nufw_s(&pn_s);
-  if (errmsg != NULL) {
-      syslog(LOG_ERR, "(pam nufw) init failure: %s", errmsg);
-      return PAM_AUTH_ERR;
-  }
-
-  /* init. pam with pam arguments */
-  ctrl = _pam_parse(argc, argv, &pn_s);
-
-  /* authentication requires we know who the user wants to be */
-  retval = pam_get_user(pamh, &user, NULL);
-  if (retval != PAM_SUCCESS) {
-      syslog(LOG_ERR,"get user returned error: %s", pam_strerror(pamh,retval));
-      return retval;
-  }
-  if (user == NULL || *user == '\0') {
-      pam_set_item(pamh, PAM_USER, DEFAULT_USER);
-  }
-
-  /* Test if we have to make a connection on nuauth for this user */
-  if(do_auth_on_user(user) !=0){
-      syslog(LOG_INFO, "(pam_nufw) no auth for user %s",user);
-      user = NULL;
-      return PAM_SUCCESS;
-  }
-
-  /* read password, user and group identifier */
-  if (pam_get_item(pamh, PAM_AUTHTOK, (const void **)&password) == PAM_SUCCESS) {
-      if (password == NULL)
-          syslog(LOG_ERR, "(pam_nufw) password is NULL!");
-  }else{
-      syslog(LOG_ERR, "pam_nufw failed to get password");
-  }
-  pw = (struct passwd *)getpwnam(user);
-  uid = pw->pw_uid;
-  gid = getgid();
-
-  p = fork();
-  if (p < 0){
-      syslog(LOG_ERR, "(pam_nufw) fork failed");
-      return PAM_AUTH_ERR;
-  }
-  if (p != 0){
-      /* in fork parent */
-      user = NULL;
-      return PAM_SUCCESS;
-  }
-
-  /* --- in fork child --- */
-
   /* set home, and user and group identifier */
-  setenv("HOME",pw->pw_dir,1);
-  setuid(uid);
-  setgid(uid);
+  setenv("HOME", user_info->home_dir,1);
+  setuid(user_info->uid);
+  setgid(user_info->gid);
 
   /* convert username and password to UTF-8 */
   session = do_connect(
-          nu_client_to_utf8(user, locale_charset), 
-          nu_client_to_utf8(password, locale_charset), 
-          pn_s.err);
+          nu_client_to_utf8(user_info->username, locale_charset), 
+          nu_client_to_utf8(user_info->password, locale_charset), 
+          pn_s->err);
+  clear_user_info(&user_info);
 
   /* fails to connect to nuauth? */
   if(session == NULL){
@@ -395,18 +331,116 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
 
   /* session opened to nuauth: write pid in lockfile */
   mypid = getpid();
-  RunD = fopen(_get_runpid(&pn_s), "w");
+  RunD = fopen(_get_runpid(pn_s, user_info->home_dir), "w");
   if (RunD != NULL) {
       fprintf(RunD,"%d",mypid);
       fclose(RunD);
       syslog(LOG_INFO,"(pam_nufw) session to NuAuth server opened, username=%s, server=%s (pid=%lu)",
-              session->username, pn_s.nuauth_srv, (unsigned long)mypid);
+              session->username, pn_s->nuauth_srv, (unsigned long)mypid);
   }
 
   /* and then stay in main loop ... */
-  main_loop(&pn_s);
-  user = NULL;
+  main_loop(pn_s);
   return PAM_SUCCESS;
+}
+
+/*
+ * used to open the connection to the nuauth server
+ */
+PAM_EXTERN
+int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
+        ,const char **argv)
+{
+  int retval = PAM_AUTH_ERR;
+  int p;
+  struct sigaction no_action;
+  struct passwd *pw;
+  int ctrl;
+  char *errmsg;
+  int res_err;
+  struct user_info_s user_info;
+
+  syslog(LOG_ERR,"(pam_nufw) do authenticate");
+
+  /* signal management */
+  no_action.sa_handler = exit_client;
+  sigemptyset( & (no_action.sa_mask));
+  no_action.sa_flags = 0;
+  if ( sigaction( SIGINT, & no_action , NULL ) != 0
+    || sigaction( SIGTERM, & no_action , NULL ) != 0) 
+  {
+      syslog(LOG_ERR, "(pam_nufw) Fail to set sigaction");
+      clear_user_info(&user_info);
+      return PAM_AUTH_ERR;
+  }
+
+  /* init nuclient_error */
+  res_err = nu_client_error_init(&pn_s.err);
+  if (res_err != 0 ){
+      syslog(LOG_ERR,"(pam_nufw) Cannot init error structure! %i",res_err);
+      clear_user_info(&user_info);
+      return PAM_AUTH_ERR;
+  }
+
+  /* libnuclient init function */
+  nu_client_global_init(pn_s.err);
+
+  errmsg = _init_pam_nufw_s(&pn_s);
+  if (errmsg != NULL) {
+      syslog(LOG_ERR, "(pam nufw) init failure: %s", errmsg);
+      clear_user_info(&user_info);
+      return PAM_AUTH_ERR;
+  }
+
+  /* init. pam with pam arguments */
+  ctrl = _pam_parse(argc, argv, &pn_s);
+
+  /* authentication requires we know who the user wants to be */
+  retval = pam_get_user(pamh, &user_info.username, NULL);
+  if (retval != PAM_SUCCESS) {
+      syslog(LOG_ERR,"get user returned error: %s", pam_strerror(pamh,retval));
+      clear_user_info(&user_info);
+      return retval;
+  }
+  if (user_info.username == NULL || user_info.username[0] == '\0') {
+      pam_set_item(pamh, PAM_USER, DEFAULT_USER);
+  }
+
+  /* Test if we have to make a connection on nuauth for this user */
+  if(do_auth_on_user(user_info.username) !=0){
+      syslog(LOG_INFO, "(pam_nufw) no auth for user %s", user_info.username);
+      clear_user_info(&user_info);
+      return PAM_SUCCESS;
+  }
+
+  /* read password, user and group identifier */
+  if (pam_get_item(pamh, PAM_AUTHTOK, (const void **)&user_info.password) == PAM_SUCCESS) {
+      if (user_info.password == NULL)
+          syslog(LOG_ERR, "(pam_nufw) password is NULL!");
+  }else{
+      syslog(LOG_ERR, "pam_nufw failed to get password");
+  }
+  pw = (struct passwd *)getpwnam(user_info.username);
+  user_info.uid = pw->pw_uid;
+  user_info.gid = pw->pw_gid;
+  user_info.home_dir = pw->pw_dir;
+
+  /* do fork */
+  p = fork();
+  if (p < 0){
+      syslog(LOG_ERR, "(pam_nufw) fork failed");
+      clear_user_info(&user_info);
+      return PAM_AUTH_ERR;
+  }
+
+  if (p != 0){
+      /* in fork parent */
+      clear_user_info(&user_info);
+      return PAM_SUCCESS;
+  } else {
+      /* in fork child */
+      return nufw_client_func(&pn_s, &user_info);
+  }
 }
 
 PAM_EXTERN
@@ -486,7 +520,7 @@ int pam_sm_close_session(pam_handle_t *pamh,int flags,int argc
   /*syslog(LOG_INFO, "(pam_nufw) file_lock: %s",_get_runpid(&pn_s));*/
 
   /* kill client */
-  _kill_nuclient(_get_runpid(&pn_s));
+  _kill_nuclient(_get_runpid(&pn_s, pw->pw_dir));
 
   syslog(LOG_INFO, "(pam_nufw) session closed");
   return PAM_SUCCESS;
