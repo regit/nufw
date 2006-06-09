@@ -53,10 +53,11 @@
 #define NUAUTH_PORT "4130"
 #define FILE_LOCK ".pam_nufw"
 
-#define DEFAULT_USER "nobody"
 #define MAX_RETRY_TIME 30
 
 #define MAX_NOAUTH_USERS 10
+
+const char *DEFAULT_USER = "nobody";
 
 /*int noauth_cpt = 0;*/
 char ** no_auth_users = NULL;
@@ -289,8 +290,8 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
   int retval = PAM_AUTH_ERR;
   int p;
   struct sigaction no_action;
-  char *user = NULL;
-  char *password = NULL;
+  const char *user = NULL;
+  const char *password = NULL;
   uid_t uid;
   gid_t gid;
   struct passwd *pw;
@@ -338,13 +339,13 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
   ctrl = _pam_parse(argc, argv, &pn_s);
 
   /* authentication requires we know who the user wants to be */
-  retval = pam_get_user(pamh, (const char**)&user, NULL);
+  retval = pam_get_user(pamh, &user, NULL);
   if (retval != PAM_SUCCESS) {
       syslog(LOG_ERR,"get user returned error: %s", pam_strerror(pamh,retval));
       return retval;
   }
   if (user == NULL || *user == '\0') {
-      pam_set_item(pamh, PAM_USER, (const void *) DEFAULT_USER);
+      pam_set_item(pamh, PAM_USER, DEFAULT_USER);
   }
 
   /* Test if we have to make a connection on nuauth for this user */
@@ -355,7 +356,7 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
   }
 
   /* read password, user and group identifier */
-  if (pam_get_item(pamh, PAM_AUTHTOK, (const void**)&password) == PAM_SUCCESS) {
+  if (pam_get_item(pamh, PAM_AUTHTOK, (const void **)&password) == PAM_SUCCESS) {
       if (password == NULL)
           syslog(LOG_ERR, "(pam_nufw) password is NULL!");
   }else{
@@ -388,12 +389,6 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
           nu_client_to_utf8(user, locale_charset), 
           nu_client_to_utf8(password, locale_charset), 
           pn_s.err);
-
-  /* delete old username and password copy: wipe out memory and then free it */
-  memset(user, 0, strlen(user));
-  memset(password, 0, strlen(password));
-  free(user);
-  free(password);
 
   /* fails to connect to nuauth? */
   if(session == NULL){
