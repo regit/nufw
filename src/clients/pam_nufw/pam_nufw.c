@@ -295,7 +295,6 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
   uid_t uid;
   gid_t gid;
   struct passwd *pw;
-  int pdesc[2];
   int ctrl;
   char *errmsg;
   int res_err;
@@ -313,10 +312,6 @@ int pam_sm_authenticate(pam_handle_t *pamh,int flags,int argc
   {
       syslog(LOG_ERR, "Fail to set sigaction");
       return PAM_AUTH_ERR;
-  }
-
-  if (pipe(pdesc) == -1){
-      syslog(LOG_ERR,"pipe failed %s",strerror(errno));
   }
 
   /* init nuclient_error */
