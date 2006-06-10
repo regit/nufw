@@ -550,7 +550,7 @@ static inline int log_state_close(MYSQL *ld, connection_t *element,struct log_my
         ok = secure_snprintf(request, sizeof(request),
                 "UPDATE %s SET end_timestamp=FROM_UNIXTIME(%lu), state=%hu "
                 "WHERE (ip_saddr=%s AND ip_daddr=%s "
-                "AND tcp_sport='%hu' AND tcp_dport='%hu' AND state='%hu')",
+                "AND tcp_sport='%hu' AND tcp_dport='%hu' AND (state='%hu' OR state='%hu')",
                 params->mysql_table_name,
                 element->timestamp,
                 TCP_STATE_CLOSE,
@@ -558,7 +558,7 @@ static inline int log_state_close(MYSQL *ld, connection_t *element,struct log_my
                 dst_ascii,
                 (element->tracking).source,
                 (element->tracking).dest,
-                TCP_STATE_ESTABLISHED);
+                TCP_STATE_ESTABLISHED,TCP_STATE_OPEN);
         if (!ok){
             log_message (SERIOUS_WARNING, AREA_MAIN,
                     "Building mysql update query, the SHORT_REQUEST_SIZE limit was reached!\n");
