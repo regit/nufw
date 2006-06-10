@@ -29,6 +29,7 @@ my $mysql_host="localhost";
 my $mysql_database="ulogd";
 my $actif_table="conntrack_ulog";
 my $archive_table="ulog";
+my $new_timeout=120;
 
 my $mysql_rows="raw_mac, oob_time_sec, oob_time_usec, oob_prefix, oob_mark, oob_in, oob_out,
 		ip_saddr, ip_daddr, ip_protocol, ip_tos, ip_ttl, ip_totlen, ip_ihl, ip_csum,
@@ -68,3 +69,12 @@ $sth->execute or die "[!] Couldn't execute statement: " . $sth->errstr;
 #
 $sth = $dbh->prepare("DELETE FROM $actif_table WHERE id <= $max_id AND (state=0 OR state=3)");
 $sth->execute or die "[!] Couldn't execute statement: " . $sth->errstr;
+
+#
+## Update connection without reply
+#
+
+$sth = $dbh->prepare("UPDATE $actif_table SET state=3 WHERE state=1 AND timestamp<DATE_ADD(NOW(),INTERVAL $new_timeout SECOND)");
+$sth->execute or die "[!] Couldn't execute statement: " . $sth->errstr;
+
+
