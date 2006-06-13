@@ -151,6 +151,7 @@ if test "${use_nfqueue}" = "yes"; then
         # if we don't have we can't build nufw
 	AC_CHECK_LIB([nfnetlink], [nfnl_open], have_nfqueue="yes", build_nufw="")
 	AC_CHECK_LIB([netfilter_queue], [nfq_open], have_nfqueue="yes", have_nfqueue="",[-lnfnetlink])
+	AC_CHECK_LIB([netfilter_queue], [nfq_set_queue_maxlen],AC_DEFINE_UNQUOTED([HAVE_QUEUE_MAXLEN],[1],[Found queue max length support in netfilter_queue]) ,,[-lnfnetlink])
 	AC_DEFINE_UNQUOTED([USE_NFQUEUE],[1],[Will use netlink queue support instead of libipq])
 else
 

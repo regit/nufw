@@ -376,7 +376,14 @@ int main(int argc,char * argv[])
 {
     /* option */
 #if USE_NFQUEUE
-    char * options_list = "DhVvmq:c:k:a:n:d:p:t:T:CM";
+    char * options_list = "DhVvmq:"
+#ifdef HAVE_QUEUE_MAXLEN 
+        "L:"
+#endif
+        "c:k:a:n:d:p:t:T:"
+#ifdef HAVE_LIBCONNTRACK
+        "CM";
+#endif
 #else
     char * options_list = "DhVvmc:k:a:n:d:p:t:T:";
 #endif
@@ -401,6 +408,9 @@ int main(int argc,char * argv[])
 #ifdef HAVE_LIBCONNTRACK
     handle_conntrack_event=CONNTRACK_HANDLE_DEFAULT;
     nufw_conntrack_uses_mark = 0;
+#endif
+#ifdef HAVE_QUEUE_MAXLEN
+    queue_maxlen = QUEUE_MAXLEN;
 #endif
 #endif
     nufw_set_mark = 0;
@@ -485,10 +495,26 @@ int main(int argc,char * argv[])
             nufw_set_mark=1;
             break;
 #endif /* HAVE_LIBCONNTRACK */
+#ifdef HAVE_QUEUE_MAXLEN
+          case 'L':
+            sscanf(optarg,"%u",&queue_maxlen);
+            break;
+#endif
 #endif /* USE_NFQUEUE */
  
           case 'h' :
-            fprintf (stdout ,"%s [-hVcCMv[v[v[v[v[v[v[v[v[v]]]]]]]]]] [-d remote_addr] [-p remote_port]  [-t packet_timeout] [-T track_size]\n\
+            fprintf (stdout ,"%s [-hVc"
+#ifdef HAVE_LIBCONNTRACK
+                    "CM"
+#endif
+                    "v[v[v[v[v[v[v[v[v[v]]]]]]]]]] [-d remote_addr] [-p remote_port]  [-t packet_timeout] [-T track_size]"
+#ifdef USE_NFQUEUE
+                    " [-q queue_num]"
+#ifdef HAVE_QUEUE_MAXLEN
+                    " [-L queue_maxlen]"
+#endif
+#endif
+                    "\n\
 \t-h: display this help and exit\n\
 \t-V: display version and exit\n\
 \t-D: daemonize\n\
@@ -506,9 +532,12 @@ int main(int argc,char * argv[])
 \t-p: remote port we send auth requests to (TCP port nuauth server listens on) (default: 4128)\n"
 #if USE_NFQUEUE
 "\t-q: use nfqueue number (default: 0)\n"
+#ifdef HAVE_QUEUE_MAXLEN
+		"\t-L : set queue max len (default : 1024)\n"
 #endif
-"\t-t: timeout to forget about packets when they don't match (default: 15 s)\n\
-\t-T: track size (default: 1000)\n",PACKAGE_TARNAME);
+#endif
+                "\t-t : timeout to forget about packets when they don't match (default : 15 s)\n\
+\t-T : track size (default : 1000)\n",PACKAGE_TARNAME);
 
             exit(EXIT_SUCCESS);
         }

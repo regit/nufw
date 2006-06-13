@@ -1,5 +1,5 @@
 /*
- ** Copyright (C) 2002-2005 Eric Leblond <eric@regit.org>
+ ** Copyright (C) 2002-2006 Eric Leblond <eric@regit.org>
  **		      Vincent Deffontaines <vincent@gryzor.com>
  **                    INL http://www.inl.fr/
  ** This program is free software; you can redistribute it and/or modify
@@ -34,6 +34,8 @@
  * Parse an packet and check if it's TCP in IPv4 packet with TCP flag
  * ACK, FIN or RST set.
  *
+ * \param dgram Pointer to data to parse
+ * \param datalen Length of the data
  * \return If the TCP if the packet matchs, returns 1. Else, returns 0.
  */
 int look_for_tcp_flags(unsigned char* dgram, unsigned int datalen){
@@ -206,6 +208,14 @@ int packetsrv_open()
                 "[!] Can't set packet_copy mode");
         return -1;
     }
+#ifdef HAVE_QUEUE_MAXLEN
+    /* setting queue length */
+    if (nfq_set_queue_maxlen(hndl, queue_maxlen) < 0) {
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
+                "[!] Can't set queue length");
+        return -1;
+    }
+#endif
 
     nh = nfq_nfnlh(h);
     return nfnl_fd(nh);
