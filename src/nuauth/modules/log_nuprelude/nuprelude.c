@@ -30,12 +30,8 @@
 
 
 
-confparams mysql_nuauth_vars[] = {
-    /*    { "prelude_..." , G_TOKEN_STRING, 0 , PRELUDE_... }, */
-};
-
 GMutex *global_client_mutex;
-prelude_client_t *global_client; /* private pointer for mysql database access */
+prelude_client_t *global_client; /* private pointer for prelude client connection */
 
 G_MODULE_EXPORT gchar* unload_module_with_params(gpointer params_ptr)
 {
@@ -80,20 +76,6 @@ void destroy_idmef (idmef_message_t *idmef)
 G_MODULE_EXPORT gboolean init_module_from_conf(module_t *module)
 {
     struct log_prelude_params* params=g_new0(struct log_prelude_params, 1);
-#if 0
-    char *configfile=DEFAULT_CONF_FILE;
-    if (params == NULL)
-        return FALSE;
-
-    /* parse conf file */
-    if (module->configfile){
-        parse_conffile(module->configfile,sizeof(mysql_nuauth_vars)/sizeof(confparams),mysql_nuauth_vars);
-    } else {
-        parse_conffile(configfile,sizeof(mysql_nuauth_vars)/sizeof(confparams),mysql_nuauth_vars);
-    }
-
-    params->... = (char *)READ_CONF("prelude_...");
-#endif
     params->packet_tpl = g_private_new((GDestroyNotify)destroy_idmef);
     params->session_tpl = g_private_new((GDestroyNotify)destroy_idmef);
     module->params=(gpointer)params;

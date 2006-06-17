@@ -9,10 +9,18 @@
       <email>regit@inl.fr</email>
     </author>
     <copyright>
-      <year>2005</year>
+      <year>2005-2006</year>
       <holder>INL</holder>
     </copyright>
     <revhistory>
+ <revision>
+	<revnumber>0.5</revnumber>
+	<date>2006/06/18</date>
+	<revdescription>
+	  <para>Add new option from 2.0</para>
+	</revdescription>
+      </revision>
+
  <revision>
 	<revnumber>0.4</revnumber>
 	<date>2006/01/25</date>
@@ -48,7 +56,7 @@
     <para>
 the nufw server has no configuration file as it as only a restricted set of options :
 <screen>
-nufw [-nChVv[v[v[v[v[v[v[v[v[v]]]]]]]]]] [-l local_port] [-L local_addr] [-d remote_addr] [-p remote_port]  [-t packet_timeout] [-T track_size] [-n DN name]</screen>
+nufw [-nCMhVv[v[v[v[v[v[v[v[v[v]]]]]]]]]] [-l local_port] [-L local_addr] [-d remote_addr] [-p remote_port] [-L queue_maxlen] [-t packet_timeout] [-T track_size] [-n DN name]</screen>
 <itemizedlist>
 <listitem><para>-h : display this help and exit</para>	</listitem>
  <listitem><para>-v : increase verbosity (maximum 9)</para>
@@ -70,9 +78,7 @@ nufw [-nChVv[v[v[v[v[v[v[v[v[v]]]]]]]]]] [-l local_port] [-L local_addr] [-d rem
 	</listitem>
   <listitem><para>-m : mark packet with userid</para>
 	</listitem>
-  <listitem><para>-l : specify listening UDP port (default : 4129)</para>
-	</listitem>
-    <listitem><para>-L : specify listening address (default : 127.0.0.1)</para>
+    <listitem><para>-L : specify queue maximum length (default: 1024)</para>
 	</listitem>
    <listitem><para>-d : remote address we send auth requests to (adress of the nuauth server) (default : 127.0.0.1)</para>
 	</listitem>
@@ -86,6 +92,8 @@ nufw [-nChVv[v[v[v[v[v[v[v[v[v]]]]]]]]]] [-l local_port] [-L local_addr] [-d rem
 	</listitem>
   <listitem><para>-C : send conntrack destroy event to nuauth</para>
 	</listitem>
+   <listitem><para>-M : only report event on marked connections to nuauth (implies -C and -
+m)</para></listitem>
       </itemizedlist>
 
 
@@ -134,6 +142,7 @@ on the nuauth server. For example :
 	</section>
 
       </section>
+      </section>
       <section><title>TLS options</title>
 	<section><title>nuauth_tls_key</title>
 	  <para>
@@ -181,8 +190,36 @@ authentication by password is done.
 </para>
 	</section>
       </section>
+<section><title>nufw related option</title>
+      <section><title>nufw_has_conntrack</title>
+      <para>
+      Set <option>nufw_has_conntrack</option> to 1 if nufw is able to modify conntrack entry.
+      This requires a kernel release superior to 2.6.14 on nufw side.
+      </para>
+      </section>
+      <section><title>nufw_has_fixed_timeout</title>
+      <para>
+      Set <option>nufw_has_conntrack</option> to 1 if nufw is able to give  a fixed timeout to a conntrack entry.
+      This requires at least kernel release superior to 2.6.14 on nufw side.
+      </para>
+      </section>
+</section>
+
+    <section><title>Modules choice</title>
+    <section><title>Syntax description</title>
+    <para>
+The syntax is the following: Each option that set up the use of a hook is
+a list of modules separated by space.</para>
+<para>For each module type, the syntax is the following:
+<option>name[:type[:config file]]</option>
+If syntax is :
+<itemizedlist>
+<listitem><para><option>name</option>: load module "name" with config file included in nuauth.conf</para></listitem>
+<listitem><para><option>name:type</option>: load module "type" with config file CONFIG_DIR/modules/name.conf</para></listitem>
+<listitem><para><option>name:type:conf</option>: load module "type" with config file "conf"</para></listitem>
+</itemizedlist>
+    </para>
     </section>
-    <section><title>modules choice</title>
       <section><title>nuauth_user_check_module</title>
 	<para>
 This variable is used by nuauth to choose the authentication module for user. It has to be chosen in :
@@ -236,6 +273,9 @@ Only SQL modules permit to evolve to a SSO system. Acceptable values for this pa
 	    </listitem>
 <listitem><para>syslog</para>
 	    </listitem>
+
+<listitem><para>nuprelude</para>
+	    </listitem>
 	  </itemizedlist>
 </para><para>Default: <computeroutput>nuauth_user_logs_module="syslog"</computeroutput>
 </para>
@@ -248,11 +288,37 @@ The available modules are :
 <listitem><para>syslog</para></listitem>
 <listitem><para>script : run a custom script at user connection  (CONFDIR/user-up.sh) and disconnection (CONFDIR/user-down.sh)</para></listitem>
 <listitem><para>mysql</para></listitem>
+<listitem><para>nuprelude</para></listitem>
 </itemizedlist>
 </para>
 <para>Default: <computeroutput>nuauth_user_session_logs_module="syslog"</computeroutput>
 </para>
     </section>
+    <section><title>nuauth_certificate_check_module</title>
+<para>
+ These modules check client certificate and issue verdict on validity.
+It is recommanded to keep <option>x509_std</option> as first module as it is 
+usually wanted checks.
+</para>
+<para>Default: <computeroutput>nuauth_certificate_check_module="x509_std"</computeroutput>
+</para>
+    </section>
+        <section><title>nuauth_certificate_to_uid_module</title>
+<para>
+ These modules get username from client certificate.
+ Currently, there is only on provided module: <option>x509_std</option>.
+</para>
+<para>Default: <computeroutput>nuauth_certificate_to_uid_module="x509_std"</computeroutput></para>
+    </section>
+
+        <section><title>nuauth_periods_module</title>
+<para>
+These modules define a set of periods that can be used in acl to check packet against the given period
+of time. Currently only <option>xml_defs</option> is available. It stores period definition in a XML file.
+</para>
+
+<para>Default: <computeroutput>nuauth_periods_module="xml_defs"</computeroutput></para>
+        </section>
     </section>
     <section><title>Underlying options of nuauth</title>
 <section><title>nuauth_prio_to_nok</title>
@@ -283,6 +349,7 @@ This is used to choose the user connection policy :
 <listitem><para>2 : one login per ip and per user</para></listitem>
 </itemizedlist>
 </para>
+</section>
 <section><title>nuauth_hello_authentication</title>
 <para>
 This is a fallback hello authentication mode for non NuFW supported
@@ -292,7 +359,7 @@ protocols. This brings authentication for all protocols based on IP
 <para>Default: <computeroutput>nuauth_hello_authentication=0</computeroutput></para>
  <section><title>Warning</title>
  <para>
-Authentication is <emphasis>FAR</emphasis> less strict than nufw original protocol :
+This authentication is <emphasis>FAR</emphasis> less strict than nufw original protocol :
 <itemizedlist>
 <listitem><para>It authenticates NATed computer (and every computers behind the same firewall)</para></listitem>
 <listitem><para>It is strictly MONO user</para></listitem>
@@ -335,6 +402,15 @@ For example :
 </para><para>Default: <computeroutput>none</computeroutput></para>
 
       </section>
+<section><title>nuauth_session_timeout</title>
+<para>This option if set to a non null value causes nuauth to close a user session
+after the specified time. The user client has then to reconnect (transparently or not).
+This permit for example to disconnect users when their account has been cancelled.</para>
+
+<para>Default: <computeroutput>nuauth_session_timeout=0</computeroutput>
+</para>
+	</section>
+
 
 
 
@@ -469,18 +545,6 @@ username before logging.</para>
 <para>Default: <computeroutput>nuauth_log_users_without_realm=1</computeroutput>
 </para>
 	</section>
-
-<section><title>nuauth_session_timeout</title>
-<para>This option if set to a non null value causes nuauth to close a user session
-after the specified time. The user client has then to reconnect (transparently or not).
-This permit for example to disconnect users when their account has been cancelled.</para>
-
-<para>Default: <computeroutput>nuauth_session_timeout=0</computeroutput>
-</para>
-	</section>
-
-
-      </section>
       </section>
   </chapter>
   <chapter><title>Modules configuration</title>
@@ -494,13 +558,20 @@ This permit for example to disconnect users when their account has been cancelle
 <para>Default: <computeroutput>plaintext_aclfile="/etc/nufw/acls.nufw"</computeroutput></para>
       </section>
     </section>
-   <section><title>ssytem</title>
+   <section><title>system</title>
       <section><title>system_convert_username_to_uppercase</title>
 <para>This option can be used to convert username to uppercase before authentication.
 You can set it to 1 if needed.
 </para>
 <para>Default: <computeroutput>system_convert_username_to_uppercase=0</computeroutput></para>
       </section>
+      <section><title>system_convert_username_to_lowercase</title>
+<para>This option can be used to convert username to lowercase before authentication.
+You can set it to 1 if needed.
+</para>
+<para>Default: <computeroutput>system_convert_username_to_lowercase=0</computeroutput></para>
+      </section>
+
 
     </section>
 
@@ -601,10 +672,17 @@ This is the name of MySQL database to connect to.
       </section>
       <section><title>mysql_table_name</title><para>
 This set the name of table to connect to. It must belong to the chosen database.
-The specified user must have rights on this table
+The specified user must have rights on this table.
 </para><para>Default: <computeroutput>mysql_table_name="ulog"</computeroutput>
 </para>
       </section>
+  <section><title>mysql_users_table_name</title><para>
+This set the name of table to log users session into. It must belong to the chosen database.
+The specified user must have rights on this table.
+</para><para>Default: <computeroutput>mysql_users_table_name="users"</computeroutput>
+</para>
+      </section>
+
       <section><title>mysql_request_timeout</title><para>T
 This set the time in seconds we consider connection to the database to be lost if we have no
 answer.
@@ -697,12 +775,43 @@ The specified user must have rights on this table.
 </para><para>Default: <computeroutput>pgsql_table_name="ulog"</computeroutput>
 </para>
       </section>
+
+  <section><title>pgsql_users_table_name</title><para>
+This set the name of table to log users session into. It must belong to the chosen database.
+The specified user must have rights on this table.
+</para><para>Default: <computeroutput>pgsql_users_table_name="users"</computeroutput>
+</para>
+      </section>
+
+
       <section><title>pgsql_request_timeout</title><para>
 This is the time in seconds after which  the connection to the database is 
 assumed to be lost if we have no answer.
 </para><para>Default: <computeroutput>pgsql_request_timeout=5</computeroutput>
 </para>
       </section>
+    </section>
+    <section><title>xml_defs</title>
+  <section><title>xml_defs_periodfile</title><para>
+This set the complete filename
+of the file containing the definitions of periods.
+</para>
+<para>Default: <computeroutput>xml_defs_periodfile="CONFIG_DIR/periods.xml"</computeroutput>
+</para>
+      </section>
+    </section>
+    <section><title>nuprelude</title>
+    <para>
+No option.
+    </para>
+    </section>
+    <section><title>x509_std</title>
+ <section><title>   nuauth_tls_trusted_issuer_dn</title><para>
+This option is used to match issuer of a certificate against this string.
+It there is a match, then we trust the give certificate.
+    </para>
+    <para>No default</para>
+    </section>
     </section>
   </chapter>
 </book>
