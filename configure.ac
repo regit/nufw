@@ -66,7 +66,6 @@ AC_ARG_WITH(system-auth, [AC_HELP_STRING(--with-system-auth,  Support PAM+NSS au
 
 AC_ARG_WITH(ldap,   [AC_HELP_STRING(--with-ldap,  Support LDAP directory for users and acl lookup)],ldap="yes", ldap="")
 AC_ARG_WITH(gdbm,   [AC_HELP_STRING(--with-gdbm, Support gdbm users lookup)],gdbm="yes", gdbm="")
-AC_ARG_WITH(ident,   [AC_HELP_STRING(--with-ident,  Support ident users authentication)],ident="yes", ident="")
 
 
 AC_ARG_WITH(nfqueue,   [AC_HELP_STRING(--with-nfqueue, Compile for NFQUEUE instead of QUEUE)],use_nfqueue="yes", use_nfqueue="")
@@ -102,10 +101,6 @@ if test "${build_nuauth}" = "yes"; then
                 AC_CHECK_LIB([gdbm],[gdbm_fetch], AC_DEFINE([HAVE_LIBRARY_GDBM],[1],[ldap lib flag] ) ,AC_MSG_ERROR([dbm library needed for authentication]))
         fi
 
-        if test "${ident}" = "yes"; then
-                AC_CHECK_LIB([ident],[id_open], AC_DEFINE([HAVE_LIBRARY_IDENT],[1],[ident lib flag] )    ,AC_MSG_ERROR([ident library needed for ident user authentication]))
-        fi
-
         if test "$enable_mysql_log" = "yes"; then
                 AC_CHECK_LIB([mysqlclient],[mysql_real_connect],AC_DEFINE([HAVE_LIBRARY_MYSQLCLIENT],[1],[mysql lib flag] )  ,AC_MSG_ERROR([mysqlclient library needed if selected]))
                 AC_CHECK_LIB([mysqlclient],[mysql_ssl_set],AC_DEFINE_UNQUOTED([HAVE_MYSQL_SSL],[1],[Will compile mysql log module with ssl support]),AC_MSG_NOTICE([mysqlclient has no ssl support]))
@@ -138,7 +133,6 @@ fi
 AM_CONDITIONAL(USE_SYSTEM_AUTH, test x$enable_system_auth = xyes)
 AM_CONDITIONAL(USE_LDAP, test x$ldap = xyes)
 AM_CONDITIONAL(USE_GDBM, test x$gdbm = xyes)
-AM_CONDITIONAL(USE_IDENT, test x$ident = xyes)
 AM_CONDITIONAL(USE_PRELUDE_LOG, test x$enable_prelude_log = xyes)
 AM_CONDITIONAL(USE_MYSQL_LOG, test x$enable_mysql_log = xyes)
 AM_CONDITIONAL(USE_PGSQL_LOG, test x$enable_pgsql_log = xyes)
@@ -273,10 +267,6 @@ if test "${build_nuauth}" = "yes"; then
 
         if test "${gdbm}" = "yes"; then
         	AC_MSG_RESULT([  - NuAuth: compile module dbm])
-        fi
-
-        if test "${ident}" = "yes"; then
-        	AC_MSG_RESULT([  - NuAuth: compile (fallback) module ident])
         fi
 
         if test "${enable_prelude_log}" = "yes"; then
