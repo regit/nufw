@@ -516,8 +516,8 @@ int send_os(NuAuth * session, nuclient_error *err)
     char *enc_oses;
     char *pointer;
     char *buf;
-    size_t stringlen;
-    size_t actuallen;
+    unsigned stringlen;
+    unsigned actuallen;
     int osfield_length;
     int ret;
 
