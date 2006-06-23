@@ -167,7 +167,7 @@ int passwd_crypt(int pass_crypt,char **pass)
    crypted=gcry_md_read(hd,algo);
    sasl_encode64((char *)crypted,strlen((char *)crypted),decoded,30,&len);
    free(*pass);
-   *pass = (char *)calloc(35,sizeof(char));
+   *pass = (char *)calloc(36,sizeof(char));
    if (*pass == NULL)
        fatal_e("Could not malloc");
    sprintf(*pass,"%s%s",prestring,decoded);
