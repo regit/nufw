@@ -79,7 +79,7 @@ int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
   struct nuv2_authreq *authreq;
   struct nuv2_authfield_ipv6 *authfield;
   struct nuv2_authfield_app *appfield;
-  size_t len;
+  unsigned len;
   const char *appname;
   char *app_ptr;
 
