@@ -101,8 +101,11 @@ void get_users_from_cache (connection_t* conn_elt)
 
 		/* cache wants an update 
 		 * external check of user */
-		if (modules_user_check(conn_elt->username,NULL,0,&(userdatas->uid),&(userdatas->groups))!=SASL_OK){
-			/*user has not been found or problem occurs we must fail 
+        userdatas->uid = modules_get_user_id(conn_elt->username);
+        userdatas->groups = modules_get_user_groups(conn_elt->username);
+
+        if (userdatas->groups == NULL){
+            /*user has not been found or problem occurs we must fail 
 			 * returning NULL is enough (don't want to be DOSsed)*/
 			log_message(WARNING, AREA_PACKET, "User not found");
 			return;

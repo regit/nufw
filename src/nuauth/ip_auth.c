@@ -49,8 +49,8 @@ void external_ip_auth(gpointer userdata, gpointer data)
              */
             /* get groups by calling user_check module with a empty password */
 	     
-            if(modules_user_check(username,NULL,0,&uid,&groups)!=SASL_OK)
-                  groups=NULL;
+            uid = modules_get_user_id(username);
+            groups = modules_get_user_groups(username);
             /* if search succeed process to packet transmission */
             if (groups){
                 connection_t* connection=g_new0(connection_t,1);

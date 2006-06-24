@@ -25,6 +25,10 @@
 
 GSList* user_check_modules;
 
+GSList* get_user_groups_modules;
+
+GSList* get_user_id_modules;
+
 GSList* acl_check_modules;
 
 /** this is the list of module which are used to define time period
@@ -48,7 +52,11 @@ GMutex *modules_mutex;
 
 typedef gboolean init_module_from_conf_t (module_t* module);
 
-typedef int user_check_callback (const char *user, const char *pass,unsigned passlen,uint32_t *uid,GSList **groups,gpointer params);
+typedef int user_check_callback (const char *user, const char *pass,unsigned passlen,gpointer params);
+
+typedef GSList * get_user_groups_callback (const char *user,gpointer params);
+
+typedef uint32_t get_user_id_callback (const char *user,gpointer params);
 
 typedef GSList * acl_check_callback (connection_t* element,gpointer params);
 

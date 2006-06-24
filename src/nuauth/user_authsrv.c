@@ -411,12 +411,9 @@ GSList* user_request(struct tls_buffer_read *datas)
                 if ( nuauthconf->user_cache ){
                     get_users_from_cache(connection);
                 } else {
-                    if (modules_user_check(
-                                connection->username,
-                                NULL,0,
-                                &(connection->user_id),
-                                &(connection->user_groups))!=SASL_OK)
-                    {
+                    connection->user_groups = modules_get_user_groups(connection->username);
+                    connection->user_id = modules_get_user_id(connection->username);
+                    if (connection->user_groups == NULL){
                         log_message (INFO, AREA_PACKET, "User not found");
                     }
                 }

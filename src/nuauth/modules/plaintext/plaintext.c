@@ -822,25 +822,38 @@ static gint find_by_username(struct T_plaintext_user *a, struct T_plaintext_user
   return strcmp(a->username, b->username);
 }
 
+static GSList* fill_user_by_username(const char* username,gpointer params)
+{
+  struct T_plaintext_user ref;
+  GSList *res;
+  /* strip username from domain */
+  ref.username = get_rid_of_domain((char*)username);
+  /*  Let's look for the first node with matching username */
+  res = g_slist_find_custom(((struct plaintext_params*)params)->plaintext_userlist, &ref,
+          (GCompareFunc)find_by_username);
+  free(ref.username);
+  if (!res) {
+      log_message(WARNING, AREA_AUTH, "Unknown user [%s]!", username);
+      return NULL;
+  }
+  return res;
+}
+
 
 /**
  *  user_check()
  *  arg 1 : user name string
  *  arg 2 : user provided password
  *  arg 3 : password length
- *  arg 4 : pointer to user id
- *  arg 5 : pointer to user groups list
  *  return : SASL_OK if password is correct, other values are authentication
  *           failures
  *  modify : groups to return the list of user groups,
  *           uid to return the user id
  */
 G_MODULE_EXPORT int user_check(const char *username, const char *clientpass,
-        unsigned passlen, uint32_t* uid, GSList **groups,gpointer params)
+        unsigned passlen, gpointer params)
 {
-  GSList *outelt = *groups;
-  GSList *res;
-  struct T_plaintext_user ref;
+  GSList* res;
   char *realpass;
   int initstatus;
   static GStaticMutex plaintext_initmutex = G_STATIC_MUTEX_INIT;
@@ -858,16 +871,8 @@ G_MODULE_EXPORT int user_check(const char *username, const char *clientpass,
   }
   g_static_mutex_unlock (&plaintext_initmutex);
 
-  /* strip username from domain */
-  ref.username = get_rid_of_domain((char*)username);
-  debug_log_message(VERBOSE_DEBUG, AREA_AUTH,
-          "Looking for group(s) for user %s", ref.username);
-  /*  Let's look for the first node with matching username */
-  res = g_slist_find_custom(((struct plaintext_params*)params)->plaintext_userlist, &ref,
-          (GCompareFunc)find_by_username);
-  free(ref.username);
-  if (!res) {
-      log_message(WARNING, AREA_AUTH, "Unknown user [%s]!", username);
+  res = fill_user_by_username(username,params);
+  if (res == NULL){
       return SASL_BADAUTH;
   }
 
@@ -889,15 +894,63 @@ G_MODULE_EXPORT int user_check(const char *username, const char *clientpass,
       }
   }
 
-  outelt = g_slist_copy(((struct T_plaintext_user*)res->data)->groups);
 
   debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
           "We are leaving (plaintext) user_check()");
 
-  *groups = outelt;
-  *uid = ((struct T_plaintext_user*)res->data)->uid;
-
   return SASL_OK;
+}
+
+G_MODULE_EXPORT uint32_t  get_user_id(const char *username,gpointer params) 
+{
+  GSList *res;
+  int initstatus;
+  static GStaticMutex plaintext_initmutex = G_STATIC_MUTEX_INIT;
+  /* init has only to be done once */
+  g_static_mutex_lock (&plaintext_initmutex);
+  /*  Initialization if the user list is empty */
+  if (!((struct plaintext_params*)params)->plaintext_userlist) {
+      initstatus = read_user_list(params);
+      if (initstatus) {
+          log_message(SERIOUS_WARNING, AREA_AUTH,
+                  "Can't parse users file [%s]",((struct plaintext_params*)params)->plaintext_userfile);
+          return SASL_BADAUTH;
+      }
+  }
+  g_static_mutex_unlock (&plaintext_initmutex);
+
+  res = fill_user_by_username(username,params);
+  if (res == NULL){
+      return 0;
+  }
+
+  return ((struct T_plaintext_user*)res->data)->uid;
+}
+
+
+G_MODULE_EXPORT GSList ** get_user_groups(const char *username,gpointer params)
+{
+  GSList *res;
+  int initstatus;
+  static GStaticMutex plaintext_initmutex = G_STATIC_MUTEX_INIT;
+  /* init has only to be done once */
+  g_static_mutex_lock (&plaintext_initmutex);
+  /*  Initialization if the user list is empty */
+  if (!((struct plaintext_params*)params)->plaintext_userlist) {
+      initstatus = read_user_list(params);
+      if (initstatus) {
+          log_message(SERIOUS_WARNING, AREA_AUTH,
+                  "Can't parse users file [%s]",((struct plaintext_params*)params)->plaintext_userfile);
+          return SASL_BADAUTH;
+      }
+  }
+  g_static_mutex_unlock (&plaintext_initmutex);
+
+  res = fill_user_by_username(username,params);
+  if (res == NULL){
+      return NULL;
+  }
+  return g_slist_copy(((struct T_plaintext_user*)res->data)->groups);
 }
 
 /*  acl_check() */

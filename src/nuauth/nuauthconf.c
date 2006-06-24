@@ -106,7 +106,7 @@ int build_nuauthconf(struct nuauth_params * nuauthconf,
       nuauthconf->user_cache=0;
   }
   if (nuauthconf->nufw_has_fixed_timeout){
-    nuauthconf->nufw_has_conntrack;
+    nuauthconf->nufw_has_conntrack=1;
   }
   return 1;
 }

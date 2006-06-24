@@ -47,7 +47,9 @@
  * 
  * After this, it has to export the functions that are used by hook :
  *  - define_periods() : define period that can be used in time-based acls
- *  - user_check() : verify user credentials and found groups the user belong to
+ *  - user_check() : verify user credentials
+ *  - get_user_groups() : found groups the user belong to
+ *  - get_user_id() : get user id
  *  - acl_check() : verify acl for a packet
  *  - user_session_logs() : log user connection and disconnection
  *  - user_packet_logs() : log packet
@@ -68,23 +70,58 @@
 
 /**
  * Check a user/password against the list of modules used for user authentication
- *  It returns the decision using SASL define return value and fill uid and list of groups
- *  the user belongs to.
+ *  It returns the decision using SASL defined return value.
  */
-int modules_user_check (const char *user, const char *pass,unsigned passlen, uint32_t *uid, GSList **groups)
+int modules_user_check (const char *user, const char *pass,unsigned passlen)
 {
     /* iter through module list and stop when user is found */
     GSList *walker=user_check_modules;
     int walker_return=0;
     for (;walker!=NULL;walker=walker->next ){
         walker_return=(*(user_check_callback*)(((module_t*)walker->data))->func)(user,
-                pass,passlen,uid,groups,((module_t*)walker->data)->params);
+                pass,passlen,((module_t*)walker->data)->params);
         if (walker_return == SASL_OK)
             return SASL_OK;
     }
     return SASL_NOAUTHZ;
 }
 
+/**
+ * Get group for a given user 
+ */
+GSList* modules_get_user_groups(const char *user)
+{
+    /* iter through module list and stop when an acl is found */
+    GSList *walker=get_user_groups_modules;
+    GSList* walker_return=NULL;
+
+    for (;walker!=NULL;walker=walker->next ){
+        walker_return=(*(get_user_groups_callback*)(((module_t*)walker->data))->func)(user,
+                ((module_t*)walker->data)->params);
+        if (walker_return)
+            return walker_return;
+    }
+
+    return NULL;
+
+}
+
+uint32_t modules_get_user_id(const char *user)
+{
+    /* iter through module list and stop when an acl is found */
+    GSList *walker=get_user_id_modules;
+    uint32_t walker_return=0;
+
+    for (;walker!=NULL;walker=walker->next ){
+        walker_return=(*(get_user_id_callback*)(((module_t*)walker->data))->func)(user,
+                ((module_t*)walker->data)->params);
+        if (walker_return)
+            return walker_return;
+    }
+
+    return 0;
+
+}
 /**
  * Check a connection and return a list of acl that match the information
  * contained in the connection.
@@ -237,6 +274,8 @@ int init_modules_system()
     /* init modules list mutex */
     modules_mutex = g_mutex_new ();
     user_check_modules=NULL;
+    get_user_groups_modules=NULL;
+    get_user_id_modules=NULL;
     acl_check_modules=NULL;
     period_modules=NULL;
     ip_auth_modules=NULL;
@@ -349,6 +388,8 @@ int load_modules()
 {
     confparams nuauth_vars[] = {
         { "nuauth_user_check_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_USERAUTH_MODULE) },
+        { "nuauth_get_user_groups_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_USERAUTH_MODULE) },
+        { "nuauth_get_user_id_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_USERAUTH_MODULE) },
         { "nuauth_acl_check_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_ACLS_MODULE) },
         { "nuauth_periods_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_PERIODS_MODULE) },
         { "nuauth_user_logs_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_LOGS_MODULE) },
@@ -359,6 +400,8 @@ int load_modules()
     };
     char *nuauth_acl_check_module;
     char *nuauth_user_check_module;
+    char *nuauth_get_user_groups_module;
+    char *nuauth_get_user_id_module;
     char *nuauth_user_logs_module;
     char *nuauth_user_session_logs_module;
     char *nuauth_ip_authentication_module;
@@ -374,7 +417,8 @@ int load_modules()
     get_confvar_value(nuauth_vars, sizeof(nuauth_vars)/sizeof(confparams), KEY);
 
     nuauth_user_check_module = (char*)READ_CONF("nuauth_user_check_module");
-    nuauth_user_check_module = (char*)READ_CONF("nuauth_user_check_module");
+    nuauth_get_user_groups_module = (char*)READ_CONF("nuauth_get_user_groups_module");
+    nuauth_get_user_id_module = (char*)READ_CONF("nuauth_get_user_id_module");
     nuauth_user_logs_module = (char*)READ_CONF("nuauth_user_logs_module");
     nuauth_user_session_logs_module = (char*)READ_CONF("nuauth_user_session_logs_module");
     nuauth_acl_check_module = (char*)READ_CONF("nuauth_acl_check_module");
@@ -397,6 +441,10 @@ int load_modules()
     /* loading modules */
     LOAD_MODULE (nuauth_user_check_module, user_check_modules, 
             "user_check", "user checking");
+    LOAD_MODULE (nuauth_get_user_groups_module, get_user_groups_modules, 
+            "get_user_groups", "user groups fetching");
+    LOAD_MODULE (nuauth_get_user_id_module, get_user_id_modules, 
+            "get_user_id", "user id fetching");
     LOAD_MODULE (nuauth_acl_check_module, acl_check_modules, 
             "acl_check", "acls checking");
     LOAD_MODULE (nuauth_periods_module, period_modules, 

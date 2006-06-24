@@ -557,13 +557,11 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element,gpointer params_p)
  *  \param username User name string
  *  \param pass User provided password
  *  \param passlen Password length
- *  \param uid Pointer to user numeric id (this need to be fill in)
- *  \param groups Pointer to user groups list (this need to be fill in)
  *  \param params_p Pointer to the parameter of the module instance
  *  \return SASL_OK if password is correct, other return are authentication failure
  */
 
-G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned passlen,uint32_t *uid,GSList **groups,gpointer params_p)
+G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned passlen,gpointer params_p)
 {
   char filter[LDAP_QUERY_SIZE];
   struct ldap_params* params=(struct ldap_params*)params_p;

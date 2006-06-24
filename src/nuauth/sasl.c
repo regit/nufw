@@ -54,8 +54,6 @@
 gchar * mech_string_internal;
 gchar * mech_string_external;
 
-GPrivate* group_priv;
-GPrivate* user_priv;
 
 /* sasl init function */
 void *sasl_gthread_mutex_init(void)
@@ -112,8 +110,6 @@ static int userdb_checkpass(sasl_conn_t *conn,
 		unsigned passlen,
 		struct propctx *propctx)
 {
-	GSList *groups=NULL;
-	uint32_t uid=0;
 	char *dec_user=NULL;
 
 	/*
@@ -146,9 +142,7 @@ static int userdb_checkpass(sasl_conn_t *conn,
 	}
 
 
-	if ( modules_user_check(dec_user,pass,passlen,&uid,&groups) == SASL_OK){
-		g_private_set(group_priv,groups);
-		g_private_set(user_priv,GUINT_TO_POINTER(uid));
+	if ( modules_user_check(dec_user,pass,passlen) == SASL_OK){
 		/* we're done */
 		if (nuauthconf->uses_utf8) g_free(dec_user);
 		return SASL_OK;
@@ -181,9 +175,6 @@ void my_sasl_init()
 	mech_string_internal=g_strdup("plain");
 	mech_string_external=g_strdup("external");
 
-	/* init private stuff, here to be made only once */
-	group_priv = g_private_new(g_free);
-	user_priv = g_private_new(g_free);
 }
 
 
@@ -381,22 +372,20 @@ static int mysasl_negotiate(user_session_t * c_session , sasl_conn_t *conn)
 
 	/* in case no call to user_checkdb has been done we need to fill the group */
 
-	if (external_auth == FALSE){
-		c_session->groups=g_private_get(group_priv);
-		c_session->user_id=GPOINTER_TO_UINT(g_private_get(user_priv));
-		if (c_session->user_id == 0) 
-		{
-			log_message(INFO, AREA_AUTH, "Couldn't get user ID!");
-		}
-		if (c_session->groups == NULL){
-			if(modules_user_check(c_session->user_name,NULL,0,&(c_session->user_id),&(c_session->groups))!=SASL_OK){
-				debug_log_message(DEBUG, AREA_AUTH, "error when searching user groups");
-				if (gnutls_record_send(session,"N", 1) <= 0) /* send NO to client */
-					return SASL_FAIL;
-				return SASL_BADAUTH;
-			}
-		}
-	}
+    if (external_auth == FALSE){
+        c_session->groups=modules_get_user_groups(c_session->user_name);
+        if (c_session->groups == NULL){
+            debug_log_message(DEBUG, AREA_AUTH, "error when searching user groups");
+            if (gnutls_record_send(session,"N", 1) <= 0) /* send NO to client */
+                return SASL_FAIL;
+            return SASL_BADAUTH;
+        }
+        c_session->user_id = modules_get_user_id(c_session->user_name);
+        if (c_session->user_id == 0) 
+        {
+            log_message(INFO, AREA_AUTH, "Couldn't get user ID!");
+        }
+    }
 
 	if (gnutls_record_send(session,"O", 1) <= 0) /* send YES to client */
 		return SASL_FAIL;
@@ -533,7 +522,7 @@ int sasl_user_check(user_session_t* c_session)
 	char buf[1024];
 	int ret, buf_size;
 	sasl_callback_t internal_callbacks[] = {
-		{ SASL_CB_GETOPT, &internal_get_opt, NULL },
+		{ SASL_CB_GETOPT, &internal_get_opt, NULL }, 
 		{ SASL_CB_SERVER_USERDB_CHECKPASS, &userdb_checkpass,NULL}, 
 		{ SASL_CB_LIST_END, NULL, NULL }
 	};

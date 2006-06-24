@@ -180,9 +180,9 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
             /* parsing complete */ 
             if (username){
                 debug_log_message(VERBOSE_DEBUG, AREA_USER, "Using username %s from certificate",username);
-                if(  modules_user_check(username, NULL, 0,
-                            &(c_session->user_id), &(c_session->groups)
-                            )!=SASL_OK) {
+                 c_session->groups = modules_get_user_groups(username);
+                 c_session->user_id = modules_get_user_id(username);
+                 if (c_session->groups == NULL) {
                     debug_log_message(DEBUG, AREA_MAIN, "error when searching user groups");
                     c_session->groups=NULL;
                     c_session->user_id=0;

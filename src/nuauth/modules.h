@@ -82,7 +82,10 @@ int init_modules_system();
 int load_modules();
 void unload_modules();
 
-int modules_user_check (const char *user, const char *pass,unsigned passlen,uint32_t *uid,GSList **groups);
+int modules_user_check (const char *user, const char *pass,unsigned passlen);
+uint32_t modules_get_user_id (const char *user);
+GSList* modules_get_user_groups (const char *user);
+
 GSList * modules_acl_check (connection_t* element);
 /* ip auth */
 gchar* modules_ip_auth(tracking_t *tracking);

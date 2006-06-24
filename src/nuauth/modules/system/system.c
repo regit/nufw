@@ -145,31 +145,35 @@ int auth_pam_talker(int num_msg,
 	return PAM_SUCCESS;
 }
 
+static char* normalize_username(const char * username)
+{
+  /* compute user name */
+  char * user = get_rid_of_domain(username);
+  if (! user)
+      return NULL;
+
+  if (system_convert_username_to_uppercase){
+      /* User need to be pass in upper case to winbind */
+      g_strup(user);
+  }
+  if (system_convert_username_to_lowercase){
+      /* User need to be pass in lower case to winbind */
+      g_strdown(user);
+  }
+
+  return user;
+}
 
 G_MODULE_EXPORT int user_check(const char *username, const char *pass
-		,unsigned passlen, uint32_t *userid, GSList **groups,gpointer params)
+		,unsigned passlen, gpointer params)
 {
 	char* user;
 	int ret; 
-	char buffer[512];
-	struct passwd result_buf;
-	struct passwd *result_bufp=NULL;
 
-	/* compute user name */
-	user = get_rid_of_domain(username);
-	if (! user)
-		return SASL_BADAUTH;
-
-        if (system_convert_username_to_uppercase){
-	/* User need to be pass in upper case to winbind */
-	  g_strup(user);
-        }
-        if (system_convert_username_to_lowercase){
-            /* User need to be pass in lower case to winbind */
-            g_strdown(user);
-        }
-
-
+    user=normalize_username(username);
+    if (user == NULL){
+        return SASL_BADAUTH;
+    }
 
 	if (pass != NULL) {
 		auth_pam_userinfo userinfo;
@@ -206,15 +210,45 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass
 		}
 
 	}
+
+	return SASL_OK;
+}
+
+G_MODULE_EXPORT uint32_t  get_user_id(const char *username,gpointer params) 
+{
+	int ret; 
+    char* user;
+	char buffer[512];
+	struct passwd result_buf;
+	struct passwd *result_bufp=NULL;
+
+    user=normalize_username(username);
+    
 	ret = getpwnam_r(user, &result_buf, buffer, sizeof(buffer), &result_bufp);
 	if (ret != 0 || (! result_bufp)){
 		return SASL_BADAUTH;
 	}
 
-	*groups = getugroups(user,result_bufp->pw_gid);
-	*userid = result_bufp->pw_uid;
+	return result_bufp->pw_uid;
+}
 
-	return SASL_OK;
+G_MODULE_EXPORT GSList * get_user_groups(const char *username,gpointer params)
+{
+
+	int ret; 
+    char* user;
+	char buffer[512];
+	struct passwd result_buf;
+	struct passwd *result_bufp=NULL;
+
+    user=normalize_username(username);
+
+	ret = getpwnam_r(user, &result_buf, buffer, sizeof(buffer), &result_bufp);
+	if (ret != 0 || (! result_bufp)){
+		return NULL;
+	}
+
+    return getugroups(user,result_bufp->pw_gid);
 }
 
 G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)

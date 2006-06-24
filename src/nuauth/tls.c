@@ -209,7 +209,6 @@ static ssize_t tls_push_func(gnutls_transport_ptr ptr, const void *buf, size_t c
 int tls_connect(int socket_fd,gnutls_session** session_ptr) 
 {
     int ret;
-    int count=0;
     gnutls_session* session;
 
     /* check arguments */
