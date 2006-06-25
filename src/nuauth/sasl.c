@@ -232,16 +232,17 @@ static int mysasl_negotiate(user_session_t * c_session , sasl_conn_t *conn)
 	const char *data=NULL;
 	int tls_len=0;
     unsigned sasl_len=0;
-	int r = SASL_FAIL;
 	int count;
 	int ret=0;
 	gnutls_session session=*(c_session->tls);
 	gboolean external_auth=FALSE;
 	ssize_t record_send;
 	char address[INET6_ADDRSTRLEN];
+    unsigned len = tls_len;
+    int result;
 
-	r = sasl_listmech(conn,NULL, NULL, ",", NULL, &data,&sasl_len, &count);
-	if (r != SASL_OK) {
+	result = sasl_listmech(conn,NULL, NULL, ",", NULL, &data,&sasl_len, &count);
+	if (result != SASL_OK) {
 		log_message(WARNING, AREA_AUTH, "generating mechanism list");
 		return SASL_BADPARAM;
 	}
@@ -274,12 +275,6 @@ static int mysasl_negotiate(user_session_t * c_session , sasl_conn_t *conn)
 	} 
 	debug_log_message(VERBOSE_DEBUG, AREA_AUTH, "client chose mechanism %s",buf);
 
-#if 1 /* sasl sample algo */
-
-    {
-        const char* data;
-        unsigned len = tls_len;
-        int result;
         if (strlen(buf) < len) {
             /* Hmm, there's an initial response here */
             data = buf + strlen(buf) + 1;
@@ -299,34 +294,29 @@ static int mysasl_negotiate(user_session_t * c_session , sasl_conn_t *conn)
 
         while (result == SASL_CONTINUE) {
             if (data) {
-                puts("Sending response...");
                 samp_send(session,data, len);
-            } else
-                g_message("No data to send--something's wrong");
-            g_message("Waiting for client reply...");
+            } else{
+                log_message(WARNING,AREA_AUTH,"No data to send--something's wrong");
+            }
+            debug_log_message(VERBOSE_DEBUG,AREA_AUTH,"Waiting for client reply...");
             len = samp_recv(session, buf, sizeof(buf));
             data = NULL;
             result = sasl_server_step(conn, buf, len,
                     &data, &len);
             if (result != SASL_OK && result != SASL_CONTINUE){
-                g_message("Performing SASL negotiation %s", sasl_errstring(result,NULL,NULL));
-                if (samp_send(session,"N", 1) <= 0) /* send NO to client */
-                    return result;
+                log_message(INFO,AREA_AUTH,"SASL error %s", sasl_errstring(result,NULL,NULL));
+                if (samp_send(session,data, len) <= 0) /* send NO to client */
+                    return SASL_FAIL;
+                return SASL_BADAUTH;
             }
         }
-        puts("Negotiation complete");
 
-	if (result != SASL_OK) {
-		debug_log_message(VERBOSE_DEBUG, AREA_AUTH, "incorrect authentication");
-		if (samp_send(session,"N", 1) <= 0) /* send NO to client */
-			return SASL_FAIL;
-		return SASL_BADAUTH;
-	}
-
-    }
-
-
-#endif /* sasl sample algo */
+        if (result != SASL_OK) {
+            debug_log_message(VERBOSE_DEBUG, AREA_AUTH, "incorrect authentication");
+            if (samp_send(session,"N", 1) <= 0) /* send NO to client */
+                return SASL_FAIL;
+            return SASL_BADAUTH;
+        }
 
 	if (c_session->user_name)
 		external_auth=TRUE;
@@ -517,7 +507,7 @@ int sasl_user_check(user_session_t* c_session)
 	char buf[1024];
 	int ret, buf_size;
 	sasl_callback_t internal_callbacks[] = {
-/*		{ SASL_CB_GETOPT, &internal_get_opt, NULL },   */
+		{ SASL_CB_GETOPT, &internal_get_opt, NULL },   
 		{ SASL_CB_SERVER_USERDB_CHECKPASS, &userdb_checkpass,NULL}, 
 		{ SASL_CB_LIST_END, NULL, NULL }
 	};
@@ -535,11 +525,11 @@ int sasl_user_check(user_session_t* c_session)
         callbacks = internal_callbacks;
 	}
     
-#if 0
-    ret = sasl_server_new(service, myhostname, myrealm, NULL, NULL, callbacks, 0, &conn);
-#else
-    ret = sasl_server_new(service, myhostname, myrealm, NULL, NULL, NULL, 0, &conn);
-#endif
+    if (nuauthconf->nuauth_uses_fake_sasl){
+        ret = sasl_server_new(service, myhostname, myrealm, NULL, NULL, callbacks, 0, &conn);
+    } else {
+        ret = sasl_server_new(service, myhostname, myrealm, NULL, NULL, NULL, 0, &conn);
+}
 	if (ret != SASL_OK) {
 		g_warning("allocating connection state - failure at sasl_server_new()");
 	}

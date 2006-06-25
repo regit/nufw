@@ -83,7 +83,8 @@ struct nuauth_params
      *  Default value is 0. */
     int reject_authenticated_drop;
 
-
+    /* authentication use OLD compatble sasl method ? */
+    int nuauth_uses_fake_sasl;
 
     /* Use UTF-8 charset in exchanges */
     int uses_utf8;

@@ -238,7 +238,7 @@ int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn, nuclient_error *
     const char *data;
     const char *chosenmech;
     int len;
-    int result, ret;
+    int result;
 
     memset(buf,0,sizeof buf);
     /* get the capability list */
@@ -246,7 +246,7 @@ int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn, nuclient_error *
     if (len < 0)
     {
         SET_ERROR(err, GNUTLS_ERROR, len);
-        return EXIT_FAILURE;
+        return SASL_FAIL;
     }
 
     result = sasl_client_start(conn,
@@ -260,15 +260,14 @@ int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn, nuclient_error *
         printf("starting SASL negotiation");
         printf("\n%s\n", sasl_errdetail(conn));
         SET_ERROR(err, SASL_ERROR, result);
-        return EXIT_FAILURE;
+        return SASL_FAIL;
     }
 
     strcpy(buf, chosenmech);
     if (data) {
         if (8192 - strlen(buf) - 1 < len){
-            return EXIT_FAILURE;
+            return SASL_FAIL;
         }
-        puts("Preparing initial.");
         memcpy(buf + strlen(buf) + 1, data, len);
         len += (unsigned) strlen(buf) + 1;
         data = NULL;
@@ -276,7 +275,6 @@ int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn, nuclient_error *
         len = (unsigned) strlen(buf);
     }
 
-    puts("Sending initial response...");
     samp_send(session,buf, len);
 
     while (result == SASL_CONTINUE) {
@@ -286,8 +284,8 @@ int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn, nuclient_error *
                 &data, &len);
         if (result != SASL_OK && result != SASL_CONTINUE){
             printf("Performing SASL negotiation");
-             SET_ERROR(err,INTERNAL_ERROR,UNKNOWN_ERR);
-             return EXIT_FAILURE;
+            SET_ERROR(err,INTERNAL_ERROR,UNKNOWN_ERR);
+            return SASL_FAIL;
         }
         if (data && len) {
             puts("Sending response...");
