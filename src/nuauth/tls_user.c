@@ -513,11 +513,11 @@ int tls_user_bind(char **errmsg)
 
     /* open the socket */
     if (res->ai_family == PF_INET)
-        printf("Create user server IPv4 socket\n");
+        log_message(DEBUG,AREA_MAIN,"Create user server IPv4 socket\n");
     else if (res->ai_family == PF_INET6)
-        printf("Create user server IPv6 socket\n");
+        log_message(DEBUG,AREA_MAIN,"Create user server IPv6 socket\n");
     else
-        printf("Create user server (any) socket\n");
+        log_message(DEBUG,AREA_MAIN,"Create user server (any) socket\n");
     sck_inet = socket (res->ai_family, res->ai_socktype, res->ai_protocol);
     if (sck_inet == -1)
     {

@@ -374,7 +374,7 @@ void tls_nufw_init(struct tls_nufw_context_t *context)
     context->sck_inet = tls_nufw_bind(&errmsg);
     if (context->sck_inet < 0)
     {
-        printf("Unable to bind nufw port: %s\n", errmsg);
+        g_warning("Unable to bind nufw port: %s\n", errmsg);
         exit(EXIT_FAILURE);
     }
 
