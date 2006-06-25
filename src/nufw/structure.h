@@ -75,6 +75,17 @@ int track_size;
 int nufw_set_mark;
 
 /**
+ * This enum is used to code the state of  a packet
+ * with respect to nufw nuauth interaction
+ */
+typedef enum {
+    PCKT_NONE=0,
+    PCKT_WAITING,
+    PCKT_SENT,
+    PCKT_ANSWERED
+} pckt_state_t;
+
+/**
  * Informations about one packet: unique identifier in netfilter queue,
  * timestamp (initialized by NuFW) and mark (if NuFW compiled with
  * mark support).
@@ -84,6 +95,8 @@ typedef struct Packet_Ids {
   /*! Unique identifier in netfilter queue, comes 
    * from nfq_get_msg_packet_hdr() */
   unsigned long id;
+
+  pckt_state_t state;
 
   /*! Timestamp in Epoch format, value comes from netfilter or time(NULL) */
   long timestamp;      

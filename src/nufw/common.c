@@ -145,7 +145,8 @@ unsigned long padd (packet_idl *current){
  * 
  * \return Returns 1 and the mark (in nfmark) if the packet can be found, 0 else.
  */
-int psearch_and_destroy (uint32_t packet_id,uint32_t * nfmark){
+int psearch_and_destroy (uint32_t packet_id,uint32_t * nfmark)
+{
   packet_idl *current=packets_list.start,* previous=NULL;
   int timestamp=time(NULL);
 

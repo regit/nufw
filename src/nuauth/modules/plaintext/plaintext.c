@@ -928,7 +928,7 @@ G_MODULE_EXPORT uint32_t  get_user_id(const char *username,gpointer params)
 }
 
 
-G_MODULE_EXPORT GSList ** get_user_groups(const char *username,gpointer params)
+G_MODULE_EXPORT GSList *get_user_groups(const char *username,gpointer params)
 {
   GSList *res;
   int initstatus;

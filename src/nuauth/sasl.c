@@ -177,6 +177,49 @@ void my_sasl_init()
 
 }
 
+static int samp_send(gnutls_session session, const char *buffer,
+	  unsigned length)
+{
+  char *buf;
+  unsigned len, alloclen;
+  int result;
+
+  alloclen = ((length / 3) + 1) * 4 + 1;
+  buf = malloc(alloclen);
+  if (! buf)
+    exit(0);
+
+  result = sasl_encode64(buffer, length, buf, alloclen, &len);
+  if (result != SASL_OK){
+    log_message(WARNING, AREA_AUTH, "Encoding data in base64");
+    free(buf);
+    return result;
+  }
+  result = gnutls_record_send(session, buf, len);
+  free(buf);
+  return result;
+}
+
+static unsigned samp_recv(gnutls_session session, char* buf,int bufsize)
+{
+  unsigned len;
+  int result;
+  
+  len = gnutls_record_recv(session, buf, bufsize);
+  if (len<=0){
+      return 0;
+  }
+
+  result = sasl_decode64(buf, (unsigned) strlen(buf), buf,
+			 bufsize, &len);
+  if (result != SASL_OK){
+    log_message(INFO, AREA_AUTH, "Decoding data in base64");
+    return 0;
+  }
+  buf[len] = '\0';
+  return len;
+}
+
 
 /**
  * do the sasl negotiation.
@@ -186,7 +229,6 @@ void my_sasl_init()
 static int mysasl_negotiate(user_session_t * c_session , sasl_conn_t *conn)
 {
 	char buf[8192];
-	char chosenmech[128];
 	const char *data=NULL;
 	int tls_len=0;
     unsigned sasl_len=0;
@@ -198,18 +240,18 @@ static int mysasl_negotiate(user_session_t * c_session , sasl_conn_t *conn)
 	ssize_t record_send;
 	char address[INET6_ADDRSTRLEN];
 
-	r = sasl_listmech(conn, NULL, "(", ",", ")", &data,&sasl_len, &count);
+	r = sasl_listmech(conn,NULL, NULL, ",", NULL, &data,&sasl_len, &count);
 	if (r != SASL_OK) {
 		log_message(WARNING, AREA_AUTH, "generating mechanism list");
 		return SASL_BADPARAM;
 	}
-	debug_log_message(VERBOSE_DEBUG, AREA_AUTH, "%d mechanisms : %s", count,data);
-	tls_len=sasl_len;
+	debug_log_message(VERBOSE_DEBUG, AREA_AUTH, "%d mechanisms : %s (length: %d)", count,data,sasl_len);
 	/* send capability list to client */
-	record_send = gnutls_record_send(session, data, tls_len);
+	record_send = samp_send(session, data, sasl_len);
+	tls_len=sasl_len;
 	if (( record_send == GNUTLS_E_INTERRUPTED ) || ( record_send == GNUTLS_E_AGAIN)){
 		debug_log_message(VERBOSE_DEBUG, AREA_AUTH, "sasl nego : need to resend packet");
-		record_send = gnutls_record_send(session, data, tls_len);
+		record_send = samp_send(session, data, tls_len);
 	}
 	if (record_send<0) 
 	{
@@ -217,12 +259,12 @@ static int mysasl_negotiate(user_session_t * c_session , sasl_conn_t *conn)
 	}
 	debug_log_message(VERBOSE_DEBUG, AREA_AUTH, "Now we know record_send >= 0");
 
-	memset(chosenmech,0,sizeof chosenmech);
-	tls_len = gnutls_record_recv(session, chosenmech, sizeof chosenmech);
+	memset(buf,0,sizeof(buf));
+	tls_len = samp_recv(session, buf, sizeof(buf));
 	if (tls_len <= 0) {
 		if (tls_len==0){
 			log_message(INFO, AREA_AUTH, "client didn't choose mechanism");
-			if (gnutls_record_send(session,"N", 1) <= 0) /* send NO to client */
+			if (samp_send(session,"N", 1) <= 0) /* send NO to client */
 				return SASL_FAIL;
 			return SASL_BADPARAM;
 		} else {
@@ -230,108 +272,61 @@ static int mysasl_negotiate(user_session_t * c_session , sasl_conn_t *conn)
 			return SASL_FAIL; 
 		}
 	} 
-	debug_log_message(VERBOSE_DEBUG, AREA_AUTH, "client chose mechanism %s",chosenmech);
+	debug_log_message(VERBOSE_DEBUG, AREA_AUTH, "client chose mechanism %s",buf);
 
-	memset(buf,0,sizeof buf);
-	tls_len = gnutls_record_recv(session, buf, sizeof(buf));
-	if(tls_len != 1) {
-		if (tls_len<0){
-			return SASL_FAIL;
-		}
-		debug_log_message(DEBUG, AREA_AUTH, "didn't receive first-sent parameter correctly");
-		if (gnutls_record_send(session,"N", 1) <= 0) /* send NO to client */
-			return SASL_FAIL;
-		return SASL_BADPARAM;
-	}
+#if 1 /* sasl sample algo */
 
-	if(buf[0] == 'Y') {
-		/* receive initial response (if any) */
+    {
+        const char* data;
+        unsigned len = tls_len;
+        int result;
+        if (strlen(buf) < len) {
+            /* Hmm, there's an initial response here */
+            data = buf + strlen(buf) + 1;
+            len = len - strlen(buf) - 1;
+        } else {
+            data = NULL;
+            len = 0;
+        }
+        result = sasl_server_start(conn,
+                buf,
+                data,
+                len,
+                &data,
+                (unsigned*)&len);
+        if (result != SASL_OK && result != SASL_CONTINUE)
+            g_message("Starting SASL negotiation %s", sasl_errstring(result,NULL,NULL));
 
+        while (result == SASL_CONTINUE) {
+            if (data) {
+                puts("Sending response...");
+                samp_send(session,data, len);
+            } else
+                g_message("No data to send--something's wrong");
+            g_message("Waiting for client reply...");
+            len = samp_recv(session, buf, sizeof(buf));
+            data = NULL;
+            result = sasl_server_step(conn, buf, len,
+                    &data, &len);
+            if (result != SASL_OK && result != SASL_CONTINUE){
+                g_message("Performing SASL negotiation %s", sasl_errstring(result,NULL,NULL));
+                if (samp_send(session,"N", 1) <= 0) /* send NO to client */
+                    return result;
+            }
+        }
+        puts("Negotiation complete");
 
-		memset(buf,0,sizeof(buf));
-		tls_len = gnutls_record_recv(session, buf, sizeof(buf));
-		if (tls_len<0){
-			return SASL_FAIL;
-		}
-		/* start libsasl negotiation */
-		r = sasl_server_start(conn, chosenmech, buf, tls_len, &data, &sasl_len);
-	} else {
-		debug_log_message(DEBUG, AREA_AUTH, "start with no msg");
-		r = sasl_server_start(conn, chosenmech, NULL, 0, &data, &sasl_len);
-	}
-
-	if (r != SASL_OK && r != SASL_CONTINUE) {
-		gchar * user_name;
-
-		log_message(INFO, AREA_AUTH, "sasl negotiation error: %d",r);
-		ret = sasl_getprop(conn, SASL_USERNAME, (const void **)	&(user_name));
-		c_session->user_name = g_strdup(user_name);
-		/*		ret = sasl_getprop(conn, SASL_USERNAME, (const void **)	&(c_session->user_name)); */
-		if (ret == SASL_OK){
-			if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_AUTH)){
-				if (inet_ntop(AF_INET6, &c_session->addr, address, sizeof(address)) != NULL)
-                                    g_warning("%s at %s is a badguy",c_session->user_name,address);
-			}
-		}else{
-			if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_AUTH)){
-				if (inet_ntop(AF_INET6, &c_session->addr, address, sizeof(address)) != NULL)
-                                    g_warning("unidentified badguy(?) from %s",address);
-			}
-		}
-		if (gnutls_record_send(session,"N", 1)<=0) /* send NO to client */
-			return SASL_FAIL;
-		return SASL_BADPARAM;
-	}
-
-
-
-	while (r == SASL_CONTINUE) {
-
-		if (data) {
-			if (gnutls_record_send(session,"C", 1)<=0) /* send CONTINUE to client */
-				return SASL_FAIL;
-			if (gnutls_record_send(session, data, tls_len)<0)
-				return SASL_FAIL;
-		} else {
-			if (gnutls_record_send(session,"C", 1)<=0) /* send CONTINUE to client */
-				return SASL_FAIL;
-			if (gnutls_record_send(session, "", 0)<0)
-				return SASL_FAIL;
-		}
-
-
-		memset(buf,0,sizeof buf);
-		tls_len = gnutls_record_recv(session, buf, sizeof buf);
-		if (tls_len <= 0) {
-#ifdef DEBUG_ENABLE
-			if (!tls_len){
-				log_message(VERBOSE_DEBUG, AREA_AUTH, "Client disconnected during sasl negotiation");
-			} else {
-				log_message(VERBOSE_DEBUG, AREA_AUTH, "TLS error during sasl negotiation");
-			}
-#endif
-			return SASL_FAIL;
-		}
-
-		r = sasl_server_step(conn, buf, tls_len, &data, &sasl_len);
-		if (r != SASL_OK && r != SASL_CONTINUE) {
-#ifdef DEBUG_ENABLE
-			log_message(VERBOSE_DEBUG, AREA_AUTH, "error performing SASL negotiation: %s", sasl_errdetail(conn));
-#endif
-			if (gnutls_record_send(session,"N", 1) <= 0) /* send NO to client */
-				return SASL_FAIL;
-			return SASL_BADPARAM;
-		}
-	} /* while continue */
-
-
-	if (r != SASL_OK) {
+	if (result != SASL_OK) {
 		debug_log_message(VERBOSE_DEBUG, AREA_AUTH, "incorrect authentication");
-		if (gnutls_record_send(session,"N", 1) <= 0) /* send NO to client */
+		if (samp_send(session,"N", 1) <= 0) /* send NO to client */
 			return SASL_FAIL;
 		return SASL_BADAUTH;
 	}
 
+    }
+
+
+#endif /* sasl sample algo */
 
 	if (c_session->user_name)
 		external_auth=TRUE;
@@ -513,7 +508,7 @@ int sasl_parse_user_os(user_session_t* c_session, char *buf, int buf_size)
 
 int sasl_user_check(user_session_t* c_session)
 {
-	char *service="nufw";
+	char *service="nuauth";
 	char *myhostname="nuserver";
 	char *myrealm="nufw";
 	sasl_conn_t * conn=NULL;
@@ -522,7 +517,7 @@ int sasl_user_check(user_session_t* c_session)
 	char buf[1024];
 	int ret, buf_size;
 	sasl_callback_t internal_callbacks[] = {
-		{ SASL_CB_GETOPT, &internal_get_opt, NULL }, 
+/*		{ SASL_CB_GETOPT, &internal_get_opt, NULL },   */
 		{ SASL_CB_SERVER_USERDB_CHECKPASS, &userdb_checkpass,NULL}, 
 		{ SASL_CB_LIST_END, NULL, NULL }
 	};
@@ -540,7 +535,11 @@ int sasl_user_check(user_session_t* c_session)
         callbacks = internal_callbacks;
 	}
     
+#if 0
     ret = sasl_server_new(service, myhostname, myrealm, NULL, NULL, callbacks, 0, &conn);
+#else
+    ret = sasl_server_new(service, myhostname, myrealm, NULL, NULL, NULL, 0, &conn);
+#endif
 	if (ret != SASL_OK) {
 		g_warning("allocating connection state - failure at sasl_server_new()");
 	}

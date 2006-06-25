@@ -74,7 +74,7 @@ int nu_getrealm(void *context __attribute__((unused)), int id,
         return EXIT_FAILURE;
     }
     if(!result) return SASL_BADPARAM;
-    *result = "NuPik";
+    *result = "nufw";
     return SASL_OK;
 }
 
@@ -185,131 +185,117 @@ void nu_exit_clean(NuAuth * session)
     free(session);
 }
 
+
+static int samp_send(gnutls_session session, const char *buffer,
+	  unsigned length)
+{
+  char *buf;
+  unsigned len, alloclen;
+  int result;
+
+  alloclen = ((length / 3) + 1) * 4 + 1;
+  buf = malloc(alloclen);
+  if (! buf)
+    exit(0);
+
+  result = sasl_encode64(buffer, length, buf, alloclen, &len);
+  if (result != SASL_OK){
+      free(buf);
+      return 0;
+  }
+  result = gnutls_record_send(session, buf, len);
+  free(buf);
+  return result;
+}
+
+
+
+static unsigned samp_recv(gnutls_session session, char* buf,int bufsize)
+{
+  unsigned len;
+  int result;
+  int tls_len;
+  
+  tls_len = gnutls_record_recv(session, buf, bufsize);
+  if (tls_len<=0){
+      return 0;
+  }
+
+  result = sasl_decode64(buf, (unsigned) tls_len, buf,
+			 bufsize, &len);
+  if (result != SASL_OK){
+    return 0;
+  }
+  buf[len] = '\0';
+  return len;
+}
+
+
+
 int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn, nuclient_error *err)
 {
     char buf[8192];
     const char *data;
     const char *chosenmech;
     int len;
-    int r, ret;
+    int result, ret;
 
     memset(buf,0,sizeof buf);
     /* get the capability list */
-    len = gnutls_record_recv(session, buf, sizeof buf);
+    len = samp_recv(session, buf, 8192);
     if (len < 0)
     {
         SET_ERROR(err, GNUTLS_ERROR, len);
         return EXIT_FAILURE;
     }
 
-    r = sasl_client_start(conn, buf, NULL, &data, (unsigned int *)&len, &chosenmech);
-    if (r != SASL_OK && r != SASL_CONTINUE) {
+    result = sasl_client_start(conn,
+            buf,
+            NULL,
+            &data,
+            (unsigned *)&len,
+            &chosenmech);
+    
+    if (result != SASL_OK && result != SASL_CONTINUE) {
         printf("starting SASL negotiation");
         printf("\n%s\n", sasl_errdetail(conn));
-        SET_ERROR(err, SASL_ERROR, r);
+        SET_ERROR(err, SASL_ERROR, result);
         return EXIT_FAILURE;
     }
 
-
-    /* we send up to 3 strings;
-       the mechanism chosen, the presence of initial response,
-       and optionally the initial response */
-    ret = gnutls_record_send(session, chosenmech, strlen(chosenmech));
-    if (ret < 0)
-    {
-        printf("gnutls_record send problem 1 : %s\n",gnutls_strerror(ret));
-        SET_ERROR(err,GNUTLS_ERROR, ret);
-        return EXIT_FAILURE;
-    }
-    if(data) {
-        ret = gnutls_record_send(session, "Y", 1);
-        if (ret < 0)
-        {
-            printf("gnutls_record send problem Y : %s\n",gnutls_strerror(ret));
-            SET_ERROR(err,GNUTLS_ERROR, ret);
+    strcpy(buf, chosenmech);
+    if (data) {
+        if (8192 - strlen(buf) - 1 < len){
             return EXIT_FAILURE;
         }
-        ret = gnutls_record_send(session, data, len);
-        if (ret < 0)
-        {
-            printf("gnutls_record send problem Y1 : %s\n",gnutls_strerror(ret));
-            SET_ERROR(err,GNUTLS_ERROR, ret);
-            return EXIT_FAILURE;
-        }
+        puts("Preparing initial.");
+        memcpy(buf + strlen(buf) + 1, data, len);
+        len += (unsigned) strlen(buf) + 1;
+        data = NULL;
     } else {
-        ret = gnutls_record_send(session, "N", 1);
-        if (ret < 0)
-        {
-            printf("gnutls_record send problem N : %s\n",gnutls_strerror(ret));
-            SET_ERROR(err,GNUTLS_ERROR, ret);
-            return EXIT_FAILURE;
-        }
+        len = (unsigned) strlen(buf);
     }
 
-    r=SASL_CONTINUE;
-    for (;;) {
+    puts("Sending initial response...");
+    samp_send(session,buf, len);
 
-        memset(buf,0,sizeof buf);
-        len = gnutls_record_recv(session, buf, 1);
-        if (len < 0){
-            return EXIT_FAILURE;
-            SET_ERROR(err,GNUTLS_ERROR, len);
-            return EXIT_FAILURE;
+    while (result == SASL_CONTINUE) {
+        puts("Waiting for server reply...");
+        len = samp_recv(session,buf,sizeof(buf));
+        result = sasl_client_step(conn, buf, len, NULL,
+                &data, &len);
+        if (result != SASL_OK && result != SASL_CONTINUE){
+            printf("Performing SASL negotiation");
+             SET_ERROR(err,INTERNAL_ERROR,UNKNOWN_ERR);
+             return EXIT_FAILURE;
         }
-        switch (buf[0]) {
-            case 'O':
-                return SASL_OK;
-                break;
-            case 'N':
-                SET_ERROR(err,INTERNAL_ERROR,BAD_CREDENTIALS_ERR);
-                return SASL_BADAUTH;
-                break;
-            case 'C': /* continue authentication */
-                break;
-            default:
-                SET_ERROR(err,INTERNAL_ERROR,UNKNOWN_ERR);
-                return EXIT_FAILURE;
-                break;
-        }
-
-        memset(buf,0,sizeof buf);
-        len = gnutls_record_recv(session, buf, sizeof buf);
-        if (len < 0){
-            SET_ERROR(err,GNUTLS_ERROR,len);
-            return EXIT_FAILURE;
-        }
-        r = sasl_client_step(conn, buf, len, NULL, &data, (unsigned int *)&len);
-        if (r != SASL_OK && r != SASL_CONTINUE) {
-            SET_ERROR(err,SASL_ERROR,r);
-            if (r == SASL_INTERACT){
-                return EXIT_FAILURE;
-            }
-            printf("error performing SASL negotiation");
-            printf("\n%s\n", sasl_errdetail(conn));
-            return EXIT_FAILURE;
-        }
-
-        if (data ) {
-            if (!len) len++;
-            ret = gnutls_record_send(session, data, len);
-            if (ret < 0)
-            {
-                printf("gnutls_record_send problem 2 : %s\n",gnutls_strerror(ret));
-                SET_ERROR(err,SASL_ERROR,ret);
-                return EXIT_FAILURE;
-            }
-        } else {
-            ret = gnutls_record_send(session, "", 1);
-            if (ret < 0)
-            {
-                printf("gnutls_record_send problem 3 : %s\n",gnutls_strerror(ret));
-                SET_ERROR(err,SASL_ERROR,ret);
-                return EXIT_FAILURE;
-            }
-        }
+        if (data && len) {
+            puts("Sending response...");
+            samp_send(session,data, len);
+        } 
     }
-    SET_ERROR(err,INTERNAL_ERROR,UNKNOWN_ERR);
-    return EXIT_FAILURE;
+
+    return SASL_OK;
 }
 
 static int add_packet_to_send(NuAuth * session,conn_t** auth,int *count_p,conn_t *bucket )
@@ -711,7 +697,7 @@ int init_sasl(NuAuth * session, nuclient_error *err)
     };
 
     /* client new connection */
-    ret = sasl_client_new("NuFW", "myserver", NULL, NULL, callbacks, 0, &conn);
+    ret = sasl_client_new("nuauth", "myserver", NULL, NULL, callbacks, 0, &conn);
     if (ret != SASL_OK) {
         printf("Failed allocating connection state");
         errno=EAGAIN;
