@@ -146,7 +146,7 @@ typedef enum
  * option "nuauth_session_duration". See member session_duration of ::nuauth_params. 
  */
 #define SESSION_DURATION 0
-#define DEFAULT_USERAUTH_MODULE "libsystem"
+#define DEFAULT_USERAUTH_MODULE "libplaintext"
 #define DEFAULT_ACLS_MODULE "libplaintext"
 #define DEFAULT_PERIODS_MODULE "libxml_defs"
 #define DEFAULT_LOGS_MODULE "libsyslog"
