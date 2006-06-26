@@ -215,7 +215,7 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
         g_mutex_lock(element->tls->tls_lock);
         gnutls_record_send(*(element->tls->tls), response, total_size);
         g_mutex_unlock(element->tls->tls_lock);
-        g_atomic_int_dec_and_test(&(element->tls->usage));
+        (void)g_atomic_int_dec_and_test(&(element->tls->usage));
     } else {
         if (g_atomic_int_dec_and_test(&(element->tls->usage))){
             clean_nufw_session(element->tls);			

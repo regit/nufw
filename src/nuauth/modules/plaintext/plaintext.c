@@ -941,7 +941,7 @@ G_MODULE_EXPORT GSList *get_user_groups(const char *username,gpointer params)
       if (initstatus) {
           log_message(SERIOUS_WARNING, AREA_AUTH,
                   "Can't parse users file [%s]",((struct plaintext_params*)params)->plaintext_userfile);
-          return SASL_BADAUTH;
+          return NULL;
       }
   }
   g_static_mutex_unlock (&plaintext_initmutex);

@@ -64,12 +64,10 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state,
     	  str_state="Unknown ";
     } 
 
-    /* convert IPv4 source and destination address to string */
-    /* @@@HAYPO@@@@ -- oneip.s_addr=htonl((element->tracking).saddr); */
+    /* convert IP source and destination addresses to string */
     if (inet_ntop(AF_INET6, &element->tracking.saddr, source_addr, sizeof(source_addr)) == NULL)
             return 1;
-    /* @@@HAYPO@@@@ -- oneip.s_addr=htonl((element->tracking).daddr); */
-    if (inet_ntop(AF_INET6, &element->tracking.daddr,dest_addr, sizeof(dest_addr)) == NULL)
+    if (inet_ntop(AF_INET6, &element->tracking.daddr, dest_addr, sizeof(dest_addr)) == NULL)
             return 1;
     
     if ( ((element->tracking).protocol == IPPROTO_TCP) || ((element->tracking).protocol == IPPROTO_UDP) ) {

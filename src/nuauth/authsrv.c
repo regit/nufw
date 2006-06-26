@@ -248,7 +248,7 @@ void nuauth_atexit()
  */
 void nuauth_cleanup( int signal ) 
 {
-    g_atomic_int_dec_and_test (&nuauth_running);
+    (void)g_atomic_int_dec_and_test (&nuauth_running);
     /* first of all, reinstall old handlers (ignore errors) */
     (void)sigaction(SIGTERM, &nuauthdatas->old_sigterm_hdl, NULL);
     (void)sigaction(SIGINT, &nuauthdatas->old_sigint_hdl, NULL);
@@ -485,9 +485,9 @@ void create_thread(struct nuauth_thread_t *thread, void* (*func) (GMutex*) )
 void configure_app(int argc, char **argv) 
 {
     command_line_params_t params;
+#ifndef DEBUG_ENABLE
     struct rlimit core_limit;
 
-#ifndef DEBUG_ENABLE
     /* Avoid creation of core file which may contains username and password */
     if (getrlimit(RLIMIT_CORE, &core_limit) == 0)
     {

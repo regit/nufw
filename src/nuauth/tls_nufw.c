@@ -65,7 +65,7 @@ static int treat_nufw_request (nufw_session_t *c_session)
     if (dgram_size <= 0)
     {
         g_message("nufw failure at %s:%d",__FILE__,__LINE__);
-        g_atomic_int_dec_and_test(&(c_session->usage));
+        (void)g_atomic_int_dec_and_test(&(c_session->usage));
         return NU_EXIT_ERROR;
     }
 
@@ -73,7 +73,7 @@ static int treat_nufw_request (nufw_session_t *c_session)
     ret = authpckt_decode(dgram , (unsigned int)dgram_size, &current_conn);
     if (ret != NU_EXIT_OK)
     {
-        g_atomic_int_dec_and_test(&(c_session->usage));
+        (void)g_atomic_int_dec_and_test(&(c_session->usage));
         if (ret == NU_EXIT_ERROR)
             return NU_EXIT_ERROR;
         else /* NU_EXIT_NO_RETURN */
