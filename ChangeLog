@@ -20,6 +20,7 @@
 	  - keep same Diffie Hellman parameters for the session (don't regenerate
 	    them on each reconnection): that's good because it looks to use lot of
 		CPU (and maybe /dev/random)
+	  - the client send username and password in UTF-8
 	- don't make core dump on fatal errors (in nuauth, nutcpc and pam_nufw)
 	- libnuclient: use gcrypt_malloc_secure() to disallow username and
 	  password to be moved to the swap
