@@ -51,8 +51,8 @@
 /** global lock for client hash. */
 GMutex* client_mutex;
 /** Client structure */
-GHashTable* client_conn_hash;
-GHashTable* client_ip_hash;
+GHashTable* client_conn_hash = NULL;
+GHashTable* client_ip_hash = NULL;
 
 static uint32_t hash_ipv6(struct in6_addr *addr)
 {
@@ -234,7 +234,10 @@ char warn_clients(struct msg_addr_set * global_msg)
 
 void close_clients(int signal)
 {
-    g_hash_table_destroy(client_conn_hash);
+    if (client_conn_hash != NULL)
+        g_hash_table_destroy(client_conn_hash);
+    if (client_ip_hash != NULL)
+        g_hash_table_destroy(client_ip_hash);
 }
 
 gboolean   is_expired_client (gpointer key,

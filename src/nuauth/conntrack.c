@@ -43,12 +43,12 @@ static void send_conntrack_message(struct limited_connection * lconn,unsigned ch
     nufw_session_t* session=NULL;
 
     debug_log_message(VERBOSE_DEBUG, AREA_GW, "going to send conntrack message");
-    g_mutex_lock(nufw_servers_mutex);
+    g_static_mutex_lock (&nufw_servers_mutex);
     if (nufw_servers){
         session = g_hash_table_find (nufw_servers,
                 get_nufw_server_by_addr,
                 &lconn->gwaddr);
-        g_mutex_unlock(nufw_servers_mutex);
+        g_static_mutex_unlock (&nufw_servers_mutex);
         if (session){
             struct nu_conntrack_message_t message;
             /* send message */
@@ -86,7 +86,7 @@ static void send_conntrack_message(struct limited_connection * lconn,unsigned ch
             log_message(WARNING, AREA_GW, "correct session not found among nufw servers");
         }
     } else {
-        g_mutex_unlock(nufw_servers_mutex);
+        g_static_mutex_unlock (&nufw_servers_mutex);
     }
 }
 
