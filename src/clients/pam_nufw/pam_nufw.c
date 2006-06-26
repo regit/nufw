@@ -439,7 +439,6 @@ int pam_sm_authenticate(pam_handle_t *pamh, int flags,
   errmsg = _init_pam_nufw_s(&pn_s);
   if (errmsg != NULL) {
       syslog(LOG_ERR, "(pam nufw) init failure: %s", errmsg);
-      clear_user_info(&user_info);
       return PAM_AUTH_ERR;
   }
 
