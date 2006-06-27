@@ -207,4 +207,6 @@ typedef enum
  */
 #define NUAUTH_SSL_MAX_CLIENTS 256
 
+void nuauth_ask_exit();
+
 #endif

@@ -273,9 +273,11 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex *mutex)
                     g_message("Not enough memory");
                     break;
             }
-            g_warning("select() failed, exiting at %s:%d in %s (errno=%i)\n",
+            log_message(FATAL, AREA_MAIN, 
+                    "select() failed, exiting at %s:%d in %s (errno=%i)",
                     __FILE__,__LINE__,__func__,errno);
-            exit(EXIT_FAILURE);
+            nuauth_ask_exit();
+            break;
         } else if (!n) {
             continue;
         }
@@ -370,7 +372,7 @@ int tls_nufw_bind(char **errmsg)
 /**
  * Initialize the NuFW TLS servers thread
  */
-void tls_nufw_init(struct tls_nufw_context_t *context)
+int tls_nufw_init(struct tls_nufw_context_t *context)
 {    
     int socket_fd;
     char *errmsg;
@@ -378,8 +380,12 @@ void tls_nufw_init(struct tls_nufw_context_t *context)
     context->sck_inet = tls_nufw_bind(&errmsg);
     if (context->sck_inet < 0)
     {
-        g_warning("Unable to bind nufw port: %s\n", errmsg);
-        exit(EXIT_FAILURE);
+        log_message(FATAL, AREA_MAIN, 
+            "FATAL ERROR: NuFW bind error: %s",
+            errmsg);
+        log_message(FATAL, AREA_MAIN, 
+            "Check that nuauth is not running twice. Exit nuauth!");
+        return 0;
     }
 
 #if 0
@@ -404,7 +410,7 @@ void tls_nufw_init(struct tls_nufw_context_t *context)
     if (socket_fd == -1)
     {
         g_error("nufw listen() failed, exiting");
-        exit(EXIT_FAILURE);
+        return 0;
     }
 
     /* build servers hash */
@@ -420,6 +426,7 @@ void tls_nufw_init(struct tls_nufw_context_t *context)
 
     FD_ZERO(&context->tls_rx_set);
     FD_SET(context->sck_inet,&context->tls_rx_set);
+    return 1;
 }
 
 /**
@@ -431,8 +438,13 @@ void tls_nufw_init(struct tls_nufw_context_t *context)
 void* tls_nufw_authsrv(GMutex *mutex)
 {
     struct tls_nufw_context_t context;
-    tls_nufw_init(&context);
-    tls_nufw_main_loop(&context, mutex);
+    int ok;
+    ok = tls_nufw_init(&context);
+    if (ok) {
+        tls_nufw_main_loop(&context, mutex);
+    } else {
+        nuauth_ask_exit();
+    }
     return NULL;
 }
 

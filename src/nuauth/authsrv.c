@@ -227,6 +227,16 @@ void nuauth_deinit(gboolean soft)
 }
 
 /**
+ * Call this function to stop nuauth.
+ */
+void nuauth_ask_exit()
+{
+  if (g_atomic_int_compare_and_exchange (&nuauth_running,1,0)){
+      kill(getpid(), SIGTERM);
+  }
+}
+
+/**
  * This is exit() handler. It's used on fatal error of NuAuth.
  * nuauth_cleanup() also call it, but this call is ignored,
  * because nuauth_cleanup() set nuauth_running to 0.
@@ -234,7 +244,7 @@ void nuauth_deinit(gboolean soft)
 void nuauth_atexit()
 {
   if (g_atomic_int_compare_and_exchange (&nuauth_running,1,0)){
-      log_message(CRITICAL, AREA_MAIN, "[+] Stop NuAuth server (exit)");
+      log_message(FATAL, AREA_MAIN, "[+] Stop NuAuth server (exit)");
       nuauth_deinit(FALSE);
   }
 }

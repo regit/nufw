@@ -452,9 +452,11 @@ void tls_user_main_loop(struct tls_user_context_t *context, GMutex *mutex)
                     g_message("Not enough memory");
                     break;
             }
-            g_warning("select() failed, exiting at %s:%d in %s (errno %i)\n",
+            log_message(FATAL, AREA_MAIN, 
+                    "select() failed, exiting at %s:%d in %s (errno %i)",
                     __FILE__,__LINE__,__func__, errno);
-            exit(EXIT_FAILURE);
+            nuauth_ask_exit();
+            break;
         }
         if (nb_active_clients == 0) {
             /* timeout, just continue */
@@ -553,7 +555,7 @@ int tls_user_bind(char **errmsg)
     return sck_inet;
 }
 
-void tls_user_init(struct tls_user_context_t *context)
+int tls_user_init(struct tls_user_context_t *context)
 {
     confparams nuauth_tls_vars[] = {
         { "nuauth_tls_max_clients" , G_TOKEN_INT ,NUAUTH_TLS_MAX_CLIENTS, NULL },
@@ -567,8 +569,12 @@ void tls_user_init(struct tls_user_context_t *context)
     context->sck_inet = tls_user_bind(&errmsg);
     if (context->sck_inet < 0)
     {
-        printf("User bind error: %s\n", errmsg);
-        exit(EXIT_FAILURE);
+        log_message(FATAL, AREA_MAIN, 
+            "FATAL ERROR: User bind error: %s",
+            errmsg);
+        log_message(FATAL, AREA_MAIN, 
+            "Check that nuauth is not running twice. Exit nuauth!");
+        return 0;
     }
     
     /* get config file setup */
@@ -608,8 +614,9 @@ void tls_user_init(struct tls_user_context_t *context)
             NULL,
             FALSE,
             NULL);
-    if (! pre_client_thread )
-        exit(EXIT_FAILURE);
+    if (! pre_client_thread ) {
+        return 0;
+    }
 
     /* create tls sasl worker thread pool */
     nuauthdatas->tls_sasl_worker = g_thread_pool_new  ((GFunc) tls_sasl_connect,
@@ -623,7 +630,7 @@ void tls_user_init(struct tls_user_context_t *context)
     if (result == -1)
     {
         g_error("user listen() failed, exiting");
-        exit(EXIT_FAILURE);
+        return 0;
     }
 
     /* init fd_set */
@@ -631,6 +638,7 @@ void tls_user_init(struct tls_user_context_t *context)
     FD_SET(context->sck_inet,&context->tls_rx_set);
     context->mx=context->sck_inet+1;
     mx_queue=g_async_queue_new ();
+    return 1;
 }
 
 /**
@@ -642,8 +650,12 @@ void tls_user_init(struct tls_user_context_t *context)
 void* tls_user_authsrv(GMutex *mutex)
 {
     struct tls_user_context_t context;
-    tls_user_init(&context);
-    tls_user_main_loop(&context, mutex);
+    int ok = tls_user_init(&context);
+    if (ok) {
+        tls_user_main_loop(&context, mutex);
+    } else {
+        nuauth_ask_exit();
+    }
     return NULL;
 }
 
