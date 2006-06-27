@@ -237,13 +237,13 @@ int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn, nuclient_error *
     char buf[8192];
     const char *data;
     const char *chosenmech;
-    int len;
+    unsigned len;
     int result;
 
     memset(buf,0,sizeof buf);
     /* get the capability list */
     len = samp_recv(session, buf, 8192);
-    if (len < 0)
+    if (len == 0)
     {
         SET_ERROR(err, GNUTLS_ERROR, len);
         return SASL_FAIL;
