@@ -180,13 +180,13 @@ enum
 
 typedef struct {
 	/*--------------- PUBLIC MEMBERS -------------------*/
-	u_int32_t userid;  /*!< Local user identifier (getuid()) */
-	char *username;    /*!< Username (encoded in UTF-8) */
-	char *password;    /*!< Password,(encoded in UTF-8) */
+	u_int32_t userid;        /*!< Local user identifier (getuid()) */
+	char *username;          /*!< Username (encoded in UTF-8) */
+	char *password;          /*!< Password,(encoded in UTF-8) */
 	
-    gnutls_session tls; /*!< TLS session over TCP socket */
+    gnutls_session tls;      /*!< TLS session over TCP socket */
 	gnutls_certificate_credentials cred; /*!< TLS credentials */
-	char* tls_password;   /*!< TLS password */
+	char* tls_password;      /*!< TLS password */
 	
 	int socket;              /*!< TCP socket used to exchange message with nuauth */
 	conntable_t *ct;         /*!< Connection table */
@@ -198,16 +198,43 @@ typedef struct {
 	u_int8_t server_mode;
 	
 	/*------------- PRIVATE MEMBERS ----------------*/
+
+    /** Mutex used in session destruction */
 	pthread_mutex_t mutex;
+
+    /**
+     * Flag to signal if user is connected or not.
+     * Connected means that TLS tunnel is opened 
+     * and that authentification is done.
+     */
 	unsigned char connected;
-	/* condition and associated mutex used to know when a check
-	 * is necessary */
+
+	/** 
+     * Condition and associated mutex used to know when a check is necessary
+     */
 	pthread_cond_t check_cond;
 	pthread_mutex_t check_count_mutex;
 	int count_msg_cond;
+
+    /**
+     * Thread which check connection with nuauth,
+     * see function nu_client_thread_check().
+     */
 	pthread_t checkthread;
+
+    /**
+     * Thread which receive messages from nuauth, see function recv_message().
+     */
 	pthread_t recvthread;
+
+    /**
+     * Diffie Hellman parameters used to establish TLS tunnel.
+     */
     gnutls_dh_params dh_params;
+
+    /**
+     * Does we need to set credentials to current gnutls session?
+     */
     unsigned char need_set_cred;
 
     /** Timestamp (Epoch format) of last packet send to nuauth */
