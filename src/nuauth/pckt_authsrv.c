@@ -255,7 +255,6 @@ int get_icmp_headers(tracking_t *tracking, unsigned char *dgram, unsigned int dg
 int get_icmpv6_headers(tracking_t *tracking, unsigned char *dgram, unsigned int dgram_size)
 {
     struct icmp6_hdr *hdr = (struct icmp6_hdr *)dgram;
-    printf("Parser ICMPv6\n");
 
     /* check icmp headers minimum size */
     if (dgram_size < sizeof(struct icmp6_hdr))
@@ -265,7 +264,6 @@ int get_icmpv6_headers(tracking_t *tracking, unsigned char *dgram, unsigned int 
     tracking->dest = 0;
     tracking->type = hdr->icmp6_type;
     tracking->code = hdr->icmp6_code;
-    printf("Parser ICMPv6: %u-%u\n", tracking->type, tracking->code);
     return 0;
 }
 
