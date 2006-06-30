@@ -47,8 +47,9 @@
 #  define LOCAL_STATE_DIR "/usr/local/var"
 #endif
 
-#  define MODULES_CONF_DIR "modules"
-#  define MODULES_CONF_EXTENSION ".conf"
+#define MODULES_CONF_DIR "modules"
+#define MODULES_CONF_EXTENSION ".conf"
+#define TRACKING_WITH_PAYLOAD
 
 /* Use glib to treat data structures */
 #include <glib.h>

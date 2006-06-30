@@ -18,6 +18,8 @@
 #ifndef CONNECTIONS_H
 #define CONNECTIONS_H
 
+#include "packet_parser.h"   /* tracking_t structure and packet parsing functions */
+
 /**
  * \addtogroup NuauthCore
  * @{
@@ -44,44 +46,12 @@ typedef enum
     AUTH_STATE_HELLOMODE  
 } auth_state_t;
 
-/** State of a connection */
-typedef enum
-{
-    TCP_STATE_DROP = 0,    /*!< NuAuth decide to drop the connection */
-    TCP_STATE_OPEN,        /*!< A new connection is just created (SYN) */
-    TCP_STATE_ESTABLISHED, /*!< The connection is established (SYN,ACK) */
-    TCP_STATE_CLOSE,       /*!< The connection is closed (RST) */
-    TCP_STATE_UNKNOW       /*!< Error code of get_tcp_headers() function */
-} tcp_state_t;
-
-#define PAYLOAD_SAMPLE 8
-#define PAYLOAD6_SAMPLE PAYLOAD_SAMPLE
 #define IPHDR_REJECT_LENGTH 20
 #define IP6HDR_REJECT_LENGTH 40
 /**
  * this is IPHDR_REJECT_LENGTH / 4
  */
 #define IPHDR_REJECT_LENGTH_BWORD 5
-
-/**
- * Informations about an IPv4 connection used as key for connection
- * identification.
- */
-typedef struct {
-  /* Group informations about destination to make
-   * ACL hash function faster. If you change this
-   * structure, please also change hash_acl() and hash_connection() */
-  struct in6_addr saddr;    /*!< IPv6 source address */
-  struct in6_addr daddr;    /*!< IPv6 destination address */
-  u_int8_t protocol;        /*!< IP protocol */
-  u_int8_t padding;         /*!< Padding to 32 bits alignment */
-  u_int16_t dest;           /*!< TCP/UDP destination port */
-
-  u_int16_t source;         /*!< TCP/UDP source port */
-  u_int8_t type;            /*!< ICMP message type */
-  u_int8_t code;            /*!< ICMP code type */
-  char payload[PAYLOAD_SAMPLE];  /*!< First 8 bytes of protocol payload used for ICMP reject */
-} tracking_t;
 
 /** 
  * Used to store the acl that apply for a packet
