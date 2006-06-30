@@ -42,7 +42,7 @@
  * \param dgram_size Number of bytes in the packet
  * \return Offset to next type of headers, or 0 if the packet is not recognized 
  */
-unsigned int get_ip_headers(tracking_t *tracking, unsigned char *dgram, unsigned int dgram_size)
+unsigned int get_ip_headers(tracking_t *tracking, const unsigned char *dgram, unsigned int dgram_size)
 {
     struct iphdr *ip = (struct iphdr *)dgram;
     struct ip6_hdr *ip6 = (struct ip6_hdr *)dgram;
@@ -164,7 +164,7 @@ unsigned int get_ip_headers(tracking_t *tracking, unsigned char *dgram, unsigned
  * \param dgram_size Number of bytes in the packet
  * \return If an error occurs return 1, else returns 0
  */
-int get_udp_headers(tracking_t *tracking, unsigned char *dgram, unsigned int dgram_size)
+int get_udp_headers(tracking_t *tracking, const unsigned char *dgram, unsigned int dgram_size)
 {
     struct udphdr *udp = (struct udphdr *)dgram;
 
@@ -191,7 +191,7 @@ int get_udp_headers(tracking_t *tracking, unsigned char *dgram, unsigned int dgr
  *         #TCP_STATE_ESTABLISHED, #TCP_STATE_CLOSE), or #TCP_STATE_UNKNOW
  *         if an error occurs.
  */
-tcp_state_t get_tcp_headers(tracking_t *tracking, unsigned char *dgram, unsigned int dgram_size)
+tcp_state_t get_tcp_headers(tracking_t *tracking, const unsigned char *dgram, unsigned int dgram_size)
 {
     struct tcphdr *tcp = (struct tcphdr *)dgram;
 
@@ -229,7 +229,7 @@ tcp_state_t get_tcp_headers(tracking_t *tracking, unsigned char *dgram, unsigned
  * \param dgram_size Number of bytes in the packet
  * \return If an error occurs return 1, else returns 0
  */
-int get_icmp_headers(tracking_t *tracking, unsigned char *dgram, unsigned int dgram_size)
+int get_icmp_headers(tracking_t *tracking, const unsigned char *dgram, unsigned int dgram_size)
 {
     struct icmphdr *icmp = (struct icmphdr *)dgram;
 
@@ -253,7 +253,7 @@ int get_icmp_headers(tracking_t *tracking, unsigned char *dgram, unsigned int dg
  * \param dgram_size Number of bytes in the packet
  * \return If an error occurs return 1, else returns 0
  */
-int get_icmpv6_headers(tracking_t *tracking, unsigned char *dgram, unsigned int dgram_size)
+int get_icmpv6_headers(tracking_t *tracking, const unsigned char *dgram, unsigned int dgram_size)
 {
     struct icmp6_hdr *hdr = (struct icmp6_hdr *)dgram;
 

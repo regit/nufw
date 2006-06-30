@@ -76,11 +76,11 @@ typedef struct {
 #endif
 } tracking_t;
 
-unsigned int get_ip_headers(tracking_t *tracking, unsigned char *dgram, unsigned int dgram_size);
-int get_udp_headers(tracking_t *tracking, unsigned char *dgram, unsigned int dgram_size);
-tcp_state_t get_tcp_headers(tracking_t *tracking, unsigned char *dgram, unsigned int dgram_size);
-int get_icmp_headers(tracking_t *tracking, unsigned char *dgram, unsigned int dgram_size);
-int get_icmpv6_headers(tracking_t *tracking, unsigned char *dgram, unsigned int dgram_size);
+unsigned int get_ip_headers(tracking_t *tracking, const unsigned char *dgram, unsigned int dgram_size);
+int get_udp_headers(tracking_t *tracking, const unsigned char *dgram, unsigned int dgram_size);
+tcp_state_t get_tcp_headers(tracking_t *tracking, const unsigned char *dgram, unsigned int dgram_size);
+int get_icmp_headers(tracking_t *tracking, const unsigned char *dgram, unsigned int dgram_size);
+int get_icmpv6_headers(tracking_t *tracking, const unsigned char *dgram, unsigned int dgram_size);
 
 #endif
 
