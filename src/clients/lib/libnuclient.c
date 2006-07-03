@@ -457,14 +457,8 @@ int nu_client_global_init(nuclient_error *err)
 
     /* initialize the sasl library */
     ret = sasl_client_init(NULL);
-
     if (ret != SASL_OK) {
         SET_ERROR(err, SASL_ERROR, ret);
-        if (err != NULL)
-        {
-            err->family=INTERNAL_ERROR;
-            err->error=NO_ERR;
-        }
         return 0;
     }
 
