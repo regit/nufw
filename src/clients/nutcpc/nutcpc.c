@@ -45,7 +45,7 @@ char* locale_charset = NULL;
 typedef struct
 {
     char port[10];              /*!< Port (service) number / name */
-    unsigned long interval;     /*!< Number of second for sleep in main loop */
+    unsigned long interval;     /*!< Number of millisecond for sleep in main loop (default value: 100ms) */
     unsigned char donotuselock; /*!< Do not user lock */
     char srv_addr[512];         /*!< Nuauth server hostname */
     unsigned char debug_mode;   /*!< Debug mode enabled if different than zero */
@@ -550,7 +550,12 @@ void init_library(nutcpc_context_t *context, char *username)
     }
 
     /* global libnuclient init */
-    nu_client_global_init(err);
+    if (!nu_client_global_init(err))
+    {
+        printf("Unable to initiate nuclient library!\n");
+        printf("Problem: %s\n", nu_client_strerror(err));
+        exit(EXIT_FAILURE);
+    }
 
     /* Init. library */
     printf("Connecting to NuFw gateway\n");

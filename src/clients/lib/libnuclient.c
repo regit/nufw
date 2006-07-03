@@ -443,9 +443,8 @@ void nu_client_delete(NuAuth *session)
  *
  * \warning To be called only once.
  */
-void nu_client_global_init(nuclient_error *err)
+int nu_client_global_init(nuclient_error *err)
 {
-
     int ret;
 
     gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);
@@ -453,8 +452,7 @@ void nu_client_global_init(nuclient_error *err)
     if (ret != 0)
     {
         SET_ERROR(err, GNUTLS_ERROR, ret);
-        return;
-        /*            printf("gnutls init failing : %s\n",gnutls_strerror(ret)); */
+        return 0;
     }
 
     /* initialize the sasl library */
@@ -467,9 +465,10 @@ void nu_client_global_init(nuclient_error *err)
             err->family=INTERNAL_ERROR;
             err->error=NO_ERR;
         }
-        return;
-        /*            exit(0);*/
+        return 0;
     }
+
+    return 1;
 }
 
 /**

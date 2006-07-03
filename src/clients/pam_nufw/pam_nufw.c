@@ -338,7 +338,11 @@ static int nufw_client_func(struct pam_nufw_s *pn_s, struct user_info_s *user_in
   }
 
   /* libnuclient init function */
-  nu_client_global_init(pn_s->err);
+  if (!nu_client_global_init(pn_s->err)) {
+      syslog(LOG_ERR,"(pam_nufw) Cannot init nuclient library: %s",
+              nu_client_strerror(pn_s->err));
+      return PAM_AUTH_ERR;
+  }
 
   /* create libnuclient session (connection to nuauth) */
   session = do_connect(
