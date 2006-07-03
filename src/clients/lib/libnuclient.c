@@ -190,7 +190,7 @@ void nu_exit_clean(NuAuth * session)
 
 
 static int samp_send(gnutls_session session, const char *buffer,
-	  unsigned length)
+	  unsigned length, nuclient_error *err)
 {
   char *buf;
   unsigned len, alloclen;
@@ -198,22 +198,29 @@ static int samp_send(gnutls_session session, const char *buffer,
 
   alloclen = ((length / 3) + 1) * 4 + 1;
   buf = malloc(alloclen);
-  if (! buf)
-    exit(0);
+  if (buf == NULL) {
+    SET_ERROR(err, INTERNAL_ERROR, MEMORY_ERR);
+    return 0;
+  }
 
   result = sasl_encode64(buffer, length, buf, alloclen, &len);
   if (result != SASL_OK){
+      SET_ERROR(err, SASL_ERROR, result);
       free(buf);
       return 0;
   }
   result = gnutls_record_send(session, buf, len);
   free(buf);
-  return result;
+  if (result < 0) {
+    SET_ERROR(err, GNUTLS_ERROR, result);
+    return 0;
+  }
+  return 1;
 }
 
 
 
-static unsigned samp_recv(gnutls_session session, char* buf,int bufsize)
+static unsigned samp_recv(gnutls_session session, char* buf,int bufsize, nuclient_error *err)
 {
   unsigned len;
   int result;
@@ -221,15 +228,18 @@ static unsigned samp_recv(gnutls_session session, char* buf,int bufsize)
   
   tls_len = gnutls_record_recv(session, buf, bufsize);
   if (tls_len<=0){
+      SET_ERROR(err, GNUTLS_ERROR, tls_len);
       return 0;
   }
 
   result = sasl_decode64(buf, (unsigned) tls_len, buf,
 			 bufsize, &len);
   if (result != SASL_OK){
+      SET_ERROR(err, SASL_ERROR, result);
     return 0;
   }
   buf[len] = '\0';
+  printf("RECEIVE >>>%s<<<\n", buf);
   return len;
 }
 
@@ -246,10 +256,8 @@ int mysasl_negotiate(NuAuth* user_session, sasl_conn_t *conn, nuclient_error *er
 
     memset(buf,0,sizeof buf);
     /* get the capability list */
-    len = samp_recv(session, buf, 8192);
-    if (len == 0)
-    {
-        SET_ERROR(err, GNUTLS_ERROR, len);
+    len = samp_recv(session, buf, 8192, err);
+    if (len == 0) {
         return SASL_FAIL;
     }
 
@@ -281,13 +289,18 @@ int mysasl_negotiate(NuAuth* user_session, sasl_conn_t *conn, nuclient_error *er
         len = (unsigned) strlen(buf);
     }
 
-    samp_send(session,buf, len);
+    if (!samp_send(session,buf, len, err)) {
+        return SASL_FAIL;
+    }
 
     while (result == SASL_CONTINUE) {
         if (user_session->verbose) {
             puts("Waiting for server reply...");
         }
-        len = samp_recv(session,buf,sizeof(buf));
+        len = samp_recv(session, buf, sizeof(buf), err);
+        if (len == 0) {
+            return SASL_FAIL;
+        }
         result = sasl_client_step(conn, buf, len, NULL,
                 &data, &len);
         if (result != SASL_OK && result != SASL_CONTINUE){
@@ -299,7 +312,9 @@ int mysasl_negotiate(NuAuth* user_session, sasl_conn_t *conn, nuclient_error *er
         if (data && len) {
             if (user_session->verbose)
                 puts("Sending response...");
-            samp_send(session,data, len);
+            if (!samp_send(session,data, len, err)) {
+                return SASL_FAIL;
+            }
         } 
     }
 
@@ -557,6 +572,8 @@ int send_os(NuAuth * session, nuclient_error *err)
     {
         if (session->verbose)
             printf("Error sending tls data: %s",gnutls_strerror(ret));
+        SET_ERROR(err, GNUTLS_ERROR, ret);
+        return 0;
     }
 
     /* wait for message of server about mode */
