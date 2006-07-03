@@ -193,6 +193,7 @@ typedef struct {
 	u_int32_t packet_seq;    /*!< Packet sequence number (start at zero) */
     int auth_by_default;     /*!< Auth. by default (=1) */
     unsigned char debug_mode; /*!< Debug mode, enabled if different than zero */
+    unsigned char verbose;   /*!< Verbose mode (default: enabled) */
 
     /** Server mode: #SRV_TYPE_POLL or #SRV_TYPE_PUSH */
 	u_int8_t server_mode;
@@ -288,6 +289,7 @@ NuAuth* nu_client_new(
         nuclient_error *err);
 
 void nu_client_set_debug(NuAuth* session, unsigned char enabled);
+void nu_client_set_verbose(NuAuth* session, unsigned char enabled);
 
 int nu_client_setup_tls(NuAuth* session,
         char* tls_passwd, 

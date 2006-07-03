@@ -70,7 +70,9 @@ int nu_getrealm(void *context __attribute__((unused)), int id,
         const char **result)
 {
     if(id != SASL_CB_GETREALM) {
+#if DEBUG    
         printf("nu_getrealm not looking for realm");
+#endif        
         return EXIT_FAILURE;
     }
     if(!result) return SASL_BADPARAM;
@@ -90,7 +92,8 @@ int nu_get_usersecret(sasl_conn_t *conn __attribute__((unused)),
     size_t len;
     NuAuth* session=(NuAuth *)context;
     if(id != SASL_CB_PASS) {
-        printf("getsecret not looking for pass");
+        if (session->verbose)
+            printf("getsecret not looking for pass");
         return EXIT_FAILURE;
     }
     if (session->password == NULL) {
@@ -232,13 +235,14 @@ static unsigned samp_recv(gnutls_session session, char* buf,int bufsize)
 
 
 
-int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn, nuclient_error *err)
+int mysasl_negotiate(NuAuth* user_session, sasl_conn_t *conn, nuclient_error *err)
 {
     char buf[8192];
     const char *data;
     const char *chosenmech;
     unsigned len;
     int result;
+    gnutls_session session = user_session->tls;
 
     memset(buf,0,sizeof buf);
     /* get the capability list */
@@ -257,8 +261,10 @@ int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn, nuclient_error *
             &chosenmech);
     
     if (result != SASL_OK && result != SASL_CONTINUE) {
-        printf("starting SASL negotiation");
-        printf("\n%s\n", sasl_errdetail(conn));
+        if (user_session->verbose) {
+            printf("starting SASL negotiation");
+            printf("\n%s\n", sasl_errdetail(conn));
+        }
         SET_ERROR(err, SASL_ERROR, result);
         return SASL_FAIL;
     }
@@ -278,17 +284,21 @@ int mysasl_negotiate(gnutls_session session, sasl_conn_t *conn, nuclient_error *
     samp_send(session,buf, len);
 
     while (result == SASL_CONTINUE) {
-        puts("Waiting for server reply...");
+        if (user_session->verbose) {
+            puts("Waiting for server reply...");
+        }
         len = samp_recv(session,buf,sizeof(buf));
         result = sasl_client_step(conn, buf, len, NULL,
                 &data, &len);
         if (result != SASL_OK && result != SASL_CONTINUE){
-            printf("Performing SASL negotiation");
-            SET_ERROR(err,INTERNAL_ERROR,UNKNOWN_ERR);
+            if (user_session->verbose)
+                printf("Performing SASL negotiation");
+            SET_ERROR(err, SASL_ERROR, result);
             return SASL_FAIL;
         }
         if (data && len) {
-            puts("Sending response...");
+            if (user_session->verbose)
+                puts("Sending response...");
             samp_send(session,data, len);
         } 
     }
@@ -545,7 +555,8 @@ int send_os(NuAuth * session, nuclient_error *err)
     ret = gnutls_record_send(session->tls,buf,osfield_length);
     if (ret < 0)
     {
-        printf("Error sending tls data : %s",gnutls_strerror(ret));
+        if (session->verbose)
+            printf("Error sending tls data: %s",gnutls_strerror(ret));
     }
 
     /* wait for message of server about mode */
@@ -638,7 +649,6 @@ int nu_client_setup_tls(NuAuth * session,
     ret = gnutls_certificate_set_x509_trust_file(session->cred, certfile, GNUTLS_X509_FMT_PEM);
     if (ret < 0)
     {
-        /*printf("problem setting x509 trust file : %s\n",gnutls_strerror(ret));*/
         SET_ERROR(err, GNUTLS_ERROR, ret);
         return 0;
     }
@@ -647,7 +657,6 @@ int nu_client_setup_tls(NuAuth * session,
     {
         ret = gnutls_certificate_set_x509_key_file(session->cred, certfile, keyfile, GNUTLS_X509_FMT_PEM);
         if (ret <0){
-            /*printf("problem with keyfile : %s\n",gnutls_strerror(ret));*/
             SET_ERROR(err, GNUTLS_ERROR, ret);
             return 0;
         }
@@ -657,7 +666,6 @@ int nu_client_setup_tls(NuAuth * session,
     ret = gnutls_credentials_set(session->tls, GNUTLS_CRD_CERTIFICATE, session->cred);
     if (ret < 0)
     {
-        /*printf("error setting tls credentials : %s\n",gnutls_strerror(ret));*/
         SET_ERROR(err, GNUTLS_ERROR, ret);
         return 0;
     }
@@ -672,7 +680,7 @@ int nu_client_setup_tls(NuAuth * session,
  * \param session Pointer to client session
  * \param err Pointer to a nuclient_error: which contains the error
  */
-int init_sasl(NuAuth * session, nuclient_error *err)
+int init_sasl(NuAuth* session, nuclient_error *err)
 {
     int ret;
     sasl_conn_t *conn;
@@ -690,7 +698,8 @@ int init_sasl(NuAuth * session, nuclient_error *err)
     /* client new connection */
     ret = sasl_client_new("nuauth", "myserver", NULL, NULL, callbacks, 0, &conn);
     if (ret != SASL_OK) {
-        printf("Failed allocating connection state");
+        if (session->verbose)
+            printf("Failed allocating connection state");
         errno=EAGAIN;
         SET_ERROR(err, SASL_ERROR, ret);
         return 0;
@@ -712,7 +721,7 @@ int init_sasl(NuAuth * session, nuclient_error *err)
     /* set required security properties here
        sasl_setprop(conn, SASL_SEC_PROPS, &secprops); */
 
-    ret = mysasl_negotiate(session->tls, conn,err);
+    ret = mysasl_negotiate(session, conn,err);
     if (ret != SASL_OK) {
         errno=EACCES;
         /*        SET_ERROR(err, SASL_ERROR, ret); */
@@ -754,10 +763,12 @@ int init_socket(NuAuth * session,
     ecode = getaddrinfo(hostname, service, &hints, &res);
     if (ecode != 0)
     {
-        fprintf(stderr, "Fail to create host address: %s\n",
-                gai_strerror(ecode));
-        fprintf(stderr, "(host=\"%s\", service=\"%s\")\n",
-                hostname, service);
+        if (session->verbose) {
+            fprintf(stderr, "Fail to create host address: %s\n",
+                    gai_strerror(ecode));
+            fprintf(stderr, "(host=\"%s\", service=\"%s\")\n",
+                    hostname, service);
+        }
         SET_ERROR(err, INTERNAL_ERROR, DNS_RESOLUTION_ERR);
         return 0;
     }
@@ -822,12 +833,15 @@ int tls_handshake(NuAuth * session, nuclient_error *err)
     /* certificate verification */
     ret = gnutls_certificate_verify_peers(session->tls);
     if (ret < 0) {
-        printf("Certificate verification failed: %s\n",gnutls_strerror(ret));
+        if (session->verbose) {
+            printf("Certificate verification failed: %s\n",gnutls_strerror(ret));
+        }
         SET_ERROR(err, GNUTLS_ERROR, ret);
         return 0;
     }
 
-    printf("Server Certificate OK\n");
+    if (session->verbose)
+        printf("Server Certificate OK\n");
     return 1;
 }
 
@@ -920,6 +934,7 @@ NuAuth* nu_client_new(
 #endif    
     session->tls_password = NULL;
     session->debug_mode = 0;
+    session->verbose = 1;
     session->timestamp_last_sent = time(NULL);
     session->need_set_cred = 1;
 
@@ -937,9 +952,7 @@ NuAuth* nu_client_new(
 
     /* allocate diffie hellman parameters */
     ret = gnutls_dh_params_init(&session->dh_params);
-    if (ret < 0)
-    {
-        /*printf("Error in dh parameters init : %s\n",gnutls_strerror(ret));*/
+    if (ret < 0) {
         SET_ERROR(err, GNUTLS_ERROR, ret);
         nu_exit_clean(session);
         return NULL;
@@ -951,9 +964,7 @@ NuAuth* nu_client_new(
      * security requirements.
      */
     ret = gnutls_dh_params_generate2(session->dh_params, DH_BITS);
-    if (ret < 0)
-    {
-        /*printf("Error in dh params generation : %s\n",gnutls_strerror(ret));*/
+    if (ret < 0) {
         SET_ERROR(err, GNUTLS_ERROR, ret);
         nu_exit_clean(session);
         return NULL;
@@ -963,7 +974,6 @@ NuAuth* nu_client_new(
     ret = gnutls_certificate_allocate_credentials(&(session->cred));
     if (ret != 0)
     {
-        /*printf("problem allocating gnutls credentials : %s\n",gnutls_strerror(ret));*/
         SET_ERROR(err, GNUTLS_ERROR, ret);
         nu_exit_clean(session);
         return NULL;
@@ -975,7 +985,6 @@ NuAuth* nu_client_new(
     ret = gnutls_init(&session->tls, GNUTLS_CLIENT);
     if (ret != 0)
     {
-        /*printf("gnutls init error : %s\n",gnutls_strerror(ret));*/
         SET_ERROR(err, GNUTLS_ERROR, ret);
         nu_exit_clean(session);
         return NULL;
@@ -987,7 +996,6 @@ NuAuth* nu_client_new(
         SET_ERROR(err, GNUTLS_ERROR, ret);
         nu_exit_clean(session);
         return NULL;
-        /*printf("error setting tls default priority : %s\n",gnutls_strerror(ret));*/
     }
 
     ret = gnutls_certificate_type_set_priority(session->tls, cert_type_priority);
@@ -996,7 +1004,6 @@ NuAuth* nu_client_new(
         SET_ERROR(err, GNUTLS_ERROR, ret);
         nu_exit_clean(session);
         return NULL;
-        /*printf("error setting tls cert type priority : %s\n",gnutls_strerror(ret));*/
     }
     return session;
 }
@@ -1055,7 +1062,6 @@ int nu_client_connect(NuAuth* session,
         int ret = gnutls_credentials_set(session->tls, GNUTLS_CRD_CERTIFICATE, session->cred);
         if (ret < 0)
         {
-            /*printf("error setting tls credentials : %s\n",gnutls_strerror(ret));*/
             SET_ERROR(err, GNUTLS_ERROR, ret);
             return 0;
         }
@@ -1091,6 +1097,18 @@ int nu_client_connect(NuAuth* session,
 void nu_client_set_debug(NuAuth* session, unsigned char enabled)
 {
     session->debug_mode = enabled;
+}
+
+
+/**
+ * Enable or disabled verbose mode
+ * 
+ * \param session Pointer to client session
+ * \param enabled Enable verbose mode if different than zero (1), disable otherwise
+ */
+void nu_client_set_verbose(NuAuth* session, unsigned char enabled)
+{
+    session->verbose = enabled;
 }
 
 void ask_session_end(NuAuth* session)
