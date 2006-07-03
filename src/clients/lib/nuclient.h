@@ -283,8 +283,8 @@ int  nu_client_global_init(nuclient_error *err);
 void nu_client_global_deinit();
 
 NuAuth* nu_client_new(
-        char* username,
-        char* password, 
+        const char* username,
+        const char* password, 
         nuclient_error *err);
 
 void nu_client_set_debug(NuAuth* session, unsigned char enabled);

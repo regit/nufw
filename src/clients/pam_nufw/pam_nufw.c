@@ -235,6 +235,12 @@ NuAuth* do_connect(char *username, char *password, nuclient_error *err)
         return NULL;
     }
 
+    /* wipe out username and password, and then freee memory */
+    memset(username, 0, strlen(username));
+    memset(password, 0, strlen(password));
+    free(username);
+    free(password);
+
 #if 0        
     nu_client_set_debug(session, context->debug_mode);
 

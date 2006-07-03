@@ -845,15 +845,13 @@ int tls_handshake(NuAuth * session, nuclient_error *err)
  *
  * \return Fresh copy of the string, or NULL if fails.
  */
-static char* secure_str_copy(char *orig)
+static char* secure_str_copy(const char *orig)
 {
     size_t len = strlen(orig);
     char *new = gcry_calloc_secure(len+1, sizeof(char));
     if (new != NULL) {
         SECURE_STRNCPY(new, orig, len+1);
     }
-    memset(orig, 0, len+1); /* important: wipe out old string */
-    free(orig);
     return new;
 }
 #endif
@@ -876,8 +874,8 @@ static char* secure_str_copy(char *orig)
  * If everything is ok, create the connection table using tcptable_init(). 
  */
 NuAuth* nu_client_new(
-        char* username,
-        char* password, 
+        const char* username,
+        const char* password, 
         nuclient_error *err)
 {
     conntable_t *new;
@@ -917,8 +915,8 @@ NuAuth* nu_client_new(
         return NULL;
     }
 #else    
-    session->username = username;
-    session->password = password;
+    session->username = strdup(username);
+    session->password = strdup(password);
 #endif    
     session->tls_password = NULL;
     session->debug_mode = 0;

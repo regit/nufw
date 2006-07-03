@@ -401,6 +401,7 @@ NuAuth* do_connect(nutcpc_context_t *context, char *username)
     char *username_utf8;
     char *password;
     char *password_utf8;
+    NuAuth* session;
 
     /* read username and password */
     if (username == NULL) {
@@ -414,10 +415,16 @@ NuAuth* do_connect(nutcpc_context_t *context, char *username)
     free(username);
     free(password);
 
-    NuAuth* session = nu_client_new(username_utf8, password_utf8,  err);
+    session = nu_client_new(username_utf8, password_utf8,  err);
     if (session == NULL) {
         return NULL;
     }
+
+    /* wipe out username and password, and then freee memory */
+    memset(username_utf8, 0, strlen(username_utf8));
+    memset(password_utf8, 0, strlen(password_utf8));
+    free(username_utf8);
+    free(password_utf8);
 
     nu_client_set_debug(session, context->debug_mode);
 
