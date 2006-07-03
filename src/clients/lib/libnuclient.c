@@ -912,6 +912,8 @@ NuAuth* nu_client_new(
     session->count_msg_cond = -1;
     session->auth_by_default = 1;
     session->packet_seq = 0;
+    session->checkthread = 0;
+    session->recvthread = 0;
     session->tls=NULL;
     session->ct = NULL;
 #ifdef USE_GCRYPT_MALLOC_SECURE
@@ -1036,6 +1038,8 @@ void nu_client_reset(NuAuth *session)
     session->count_msg_cond = -1;
     session->timestamp_last_sent = time(NULL);
     session->socket = -1;
+    session->checkthread = 0;
+    session->recvthread = 0;
 }
 
 /**
