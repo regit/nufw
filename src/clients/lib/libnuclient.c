@@ -46,6 +46,8 @@
  */
 #define USE_GCRYPT_MALLOC_SECURE
 
+#define NULL_THREAD 0
+
 #include "nuclient.h"
 #include <sasl/saslutil.h>
 #include <stdarg.h> /* va_list, va_start, ... */
@@ -239,7 +241,6 @@ static unsigned samp_recv(gnutls_session session, char* buf,int bufsize, nuclien
     return 0;
   }
   buf[len] = '\0';
-  printf("RECEIVE >>>%s<<<\n", buf);
   return len;
 }
 
@@ -934,8 +935,8 @@ NuAuth* nu_client_new(
     session->count_msg_cond = -1;
     session->auth_by_default = 1;
     session->packet_seq = 0;
-    session->checkthread = 0;
-    session->recvthread = 0;
+    session->checkthread = NULL_THREAD;
+    session->recvthread = NULL_THREAD;
     session->tls=NULL;
     session->ct = NULL;
 #ifdef USE_GCRYPT_MALLOC_SECURE
@@ -1144,13 +1145,13 @@ void ask_session_end(NuAuth* session)
     pthread_mutex_lock(&(session->mutex));
     session->connected=0;
     gnutls_bye(session->tls,GNUTLS_SHUT_WR);
-    if(! pthread_equal(session->recvthread,self_thread)){
+    if (session->recvthread != NULL_THREAD && !pthread_equal(session->recvthread,self_thread)) {
         /* destroy thread */
         pthread_cancel(session->recvthread);
         pthread_join(session->recvthread,NULL);
     }
     if (session->server_mode == SRV_TYPE_PUSH) {
-        if(! pthread_equal(session->checkthread,self_thread)){
+        if(session->checkthread != NULL_THREAD && !pthread_equal(session->checkthread,self_thread)){
             pthread_cancel(session->checkthread);
             pthread_join(session->checkthread,NULL);
         }
