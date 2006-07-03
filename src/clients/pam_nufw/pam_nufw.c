@@ -230,7 +230,7 @@ int do_auth_on_user(const char *username){
  */
 NuAuth* do_connect(char *username, char *password, nuclient_error *err)
 {
-    NuAuth* session = nu_client_new(username, password,  err);
+    NuAuth* session = nu_client_new(username, password,  1, err);
     if (session == NULL) {
         return NULL;
     }

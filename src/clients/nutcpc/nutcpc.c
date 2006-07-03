@@ -415,7 +415,7 @@ NuAuth* do_connect(nutcpc_context_t *context, char *username)
     free(username);
     free(password);
 
-    session = nu_client_new(username_utf8, password_utf8,  err);
+    session = nu_client_new(username_utf8, password_utf8,  1, err);
     if (session == NULL) {
         return NULL;
     }
