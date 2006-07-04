@@ -504,10 +504,10 @@ void configure_app(int argc, char **argv)
         core_limit.rlim_cur = 0;
         setrlimit(RLIMIT_CORE, &core_limit);
     }
-#endif    
     
     /* Move to root directory to not block current working directory */
     (void)chdir("/");
+#endif    
 
     /* Initialize glib thread system */
     g_thread_init(NULL);
