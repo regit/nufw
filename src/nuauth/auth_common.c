@@ -424,10 +424,15 @@ void clean_connections_list ()
     {
         gpointer key = iterator->data;
         gpointer value = g_hash_table_lookup(conn_list, key);
-        g_hash_table_steal(conn_list, key);
-        old_conn_list = g_slist_prepend(old_conn_list, value);        
+        if (value != NULL) {
+            g_hash_table_steal(conn_list, key);
+            old_conn_list = g_slist_prepend(old_conn_list, value);        
+            nb_deleted += 1;
+        } else {
+            log_message(WARNING, AREA_MAIN,  
+                    "Clean connection: no entry found in hash ");
+        }
         iterator = iterator->next;
-        nb_deleted += 1;
     }
     g_static_mutex_unlock (&insert_mutex);
     g_slist_free(old_keyconn_list);

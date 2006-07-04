@@ -161,7 +161,7 @@ int user_process_field_username(
     return 1;
 }    
 
-void user_process_field_ipv6(connection_t* connection, struct nuv2_authfield_ipv6 *ipfield)
+int user_process_field_ipv6(connection_t* connection, struct nuv2_authfield_ipv6 *ipfield)
 {
     connection->tracking.saddr = ipfield->src;
     connection->tracking.daddr = ipfield->dst;
@@ -172,7 +172,6 @@ void user_process_field_ipv6(connection_t* connection, struct nuv2_authfield_ipv
     {
         case IPPROTO_TCP:
         case IPPROTO_UDP:
-        default:
             connection->tracking.source=ntohs(ipfield->sport);
             connection->tracking.dest=ntohs(ipfield->dport);
             connection->tracking.type=0;
@@ -186,7 +185,11 @@ void user_process_field_ipv6(connection_t* connection, struct nuv2_authfield_ipv
             connection->tracking.type=ntohs(ipfield->sport);
             connection->tracking.code=ntohs(ipfield->dport);
             break;
+
+        default: 
+            return -1;
     }
+    return 0;
 }    
 
 int user_process_field_app(
@@ -259,7 +262,8 @@ int user_process_field(
             if (auth_buffer_len < (int)sizeof(struct nuv2_authfield_ipv6)) {
                 return -1;
             }
-            user_process_field_ipv6(connection, (struct nuv2_authfield_ipv6 *)field);
+            if (user_process_field_ipv6(connection, (struct nuv2_authfield_ipv6 *)field))
+                return -1;
             break;
 
         case APP_FIELD:
