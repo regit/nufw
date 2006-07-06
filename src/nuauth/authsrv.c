@@ -495,6 +495,7 @@ void create_thread(struct nuauth_thread_t *thread, void* (*func) (GMutex*) )
 void configure_app(int argc, char **argv) 
 {
     command_line_params_t params;
+    int err;
 #ifndef DEBUG_ENABLE
     struct rlimit core_limit;
 
@@ -535,8 +536,11 @@ void configure_app(int argc, char **argv)
     gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_gthread);
 #endif
 
-    if (gnutls_global_init() != 0) {
-        fprintf(stderr, "FATAL ERROR: gnutls global initialisation failed!\n");
+    err = gnutls_global_init();
+    if (err) {
+        fprintf(stderr, 
+                "FATAL ERROR: gnutls global initialisation failed:\n%s\n", 
+                gnutls_strerror(err));
         exit(EXIT_FAILURE);
     }
 
