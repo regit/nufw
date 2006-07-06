@@ -24,18 +24,18 @@
     
 */
 
-#if 0
-#ifdef G_THREADS_IMPL_POSIX
-/* #warning "this may be a source of problems" */
+/*#define GCRYPT_PTHEAD_IMPLEMENTATION */
+
+#ifdef GCRYPT_PTHEAD_IMPLEMENTATION
+
 #include <pthread.h>
-#ifndef GCRY_THREAD
-#define GCRY_THREAD 1
+
+/****************** gcrypt use 'pthread' thread implementation *************/
 GCRY_THREAD_OPTION_PTHREAD_IMPL;
-#endif
+
 #else
-#error "Code need to be written to have gcrypt support other threading type"
-#endif
-#endif
+
+/****************** gcrypt use 'glib' thread implementation ****************/
 
 /* gcrypt init function */
 static int gcry_gthread_mutex_init (void **priv)			     /* to check */
@@ -73,5 +73,6 @@ static struct gcry_thread_cbs gcry_threads_gthread =
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
 
-#endif
+#endif   /* #ifdef GCRYPT_PTHEAD_IMPLEMENTATION */
+#endif   /* #ifndef GCRYPT_NUAUTH_H */
 

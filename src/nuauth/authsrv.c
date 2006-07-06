@@ -529,9 +529,16 @@ void configure_app(int argc, char **argv)
     log_message (INFO, AREA_MAIN, "Start NuAuth server.");
     
     /* init gcrypt and gnutls */
+#ifdef GCRYPT_PTHEAD_IMPLEMENTATION
+    gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);
+#else
     gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_gthread);
+#endif
 
-    gnutls_global_init();
+    if (gnutls_global_init() != 0) {
+        fprintf(stderr, "FATAL ERROR: gnutls global initialisation failed!\n");
+        exit(EXIT_FAILURE);
+    }
 
     parse_options(argc, argv, &params);
 
