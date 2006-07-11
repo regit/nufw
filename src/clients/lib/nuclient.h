@@ -35,28 +35,13 @@
 #include <config.h>
 #endif 
 
-/*
- * Use POSIX standard, version "IEEE 1003.1-2004",
- * needed to get sigaction for example
- */
-#ifdef LINUX
-#define _POSIX_C_SOURCE 200112L
-#endif
-
-/**
- * Use 4.3BSD standard, needed to get snprintf for example
- */
-#define _BSD_SOURCE
-
-/* Disable inline keyword when compiling in strict ANSI conformance */
-#if defined(__STRICT_ANSI__) && !defined(__cplusplus)
-#  define inline
-#endif
+#include "nufw_source.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#include <features.h>
 #include <arpa/inet.h>
 #include <assert.h>
 #include <ctype.h>

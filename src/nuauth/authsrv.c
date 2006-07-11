@@ -539,7 +539,8 @@ void configure_app(int argc, char **argv)
     err = gnutls_global_init();
     if (err) {
         fprintf(stderr, 
-                "FATAL ERROR: gnutls global initialisation failed:\n%s\n", 
+                "FATAL ERROR: gnutls global initialisation failed:\n"
+                "%s\n", 
                 gnutls_strerror(err));
         exit(EXIT_FAILURE);
     }

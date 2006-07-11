@@ -18,26 +18,7 @@
 #ifndef AUTH_SRV_H
 #define AUTH_SRV_H
 
-/**
- * Use Posix standard, version "IEEE Std 1003.1b-1993" 
- * Neded by sigaction (signal.h) and timespec (time.h) for example
- */
-#define _POSIX_C_SOURCE 199309L
-
-/**
- * Use 4.3BSD standard, needed by strcasecmp
- */
-#define _BSD_SOURCE
-
-/**
- * Use ISO C99 standard, needed by snprintf for example
- */
-#define _ISOC99_SOURCE
-
-/* Disable inline keyword when compiling in strict ANSI conformance */
-#ifdef __STRICT_ANSI__
-#  define inline
-#endif
+#include "nufw_source.h"
 
 /* workaround SPlint error (don't know __gnuc_va_list) */
 #ifdef S_SPLINT_S

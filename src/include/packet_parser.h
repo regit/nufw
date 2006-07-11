@@ -26,17 +26,7 @@
 #ifndef PACKET_PARSER_H
 #define PACKET_PARSER_H
 
-/**
- * Use Posix standard, version "IEEE Std 1003.1b-1993" 
- * Neded by sigaction (signal.h) and timespec (time.h) for example
- */
-#define _POSIX_C_SOURCE 199309L
-
-/**
- * Use 4.3BSD standard, needed to get 'tcphdr' structure. 
- */
-#define _BSD_SOURCE
-
+#include "nufw_source.h"
 #include <netinet/in.h>
 
 #ifdef TRACKING_WITH_PAYLOAD
