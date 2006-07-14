@@ -246,8 +246,9 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
 
   if (!parse_tcptable_file(session, ct, "/proc/net/tcp", &fd_tcp, IPPROTO_TCP, 0))
       return 0;
-  if (!parse_tcptable_file(session, ct, "/proc/net/tcp6", &fd_tcp6, IPPROTO_TCP, 1))
-      return 0;
+
+  parse_tcptable_file(session, ct, "/proc/net/tcp6", &fd_tcp6, IPPROTO_TCP, 1);
+      
   if (!parse_tcptable_file(session, ct, "/proc/net/udp", &fd_udp, IPPROTO_UDP, 0))
       return 0;          
   return 1;
