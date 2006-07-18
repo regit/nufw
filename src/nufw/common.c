@@ -307,7 +307,7 @@ int send_icmp_ipv6_unreach(char *payload)
     /* copy old packet header */
     memcpy(buffer + sizeof(*icmp), payload, 40+8);
 
-    /* get destination IPv4 address */
+    /* get destination IPv6 address */
     memset(&to, 0, sizeof(to));
     to.sin6_family = AF_INET6;
     to.sin6_addr = ip->ip6_src;
