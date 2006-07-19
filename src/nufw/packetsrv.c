@@ -168,6 +168,8 @@ int packetsrv_open()
 
     log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_SERIOUS_MESSAGE,
             "Open netfilter queue socket");
+    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_SERIOUS_WARNING,
+            "Don't forget to load kernel modules nfnetlink and nfnetlink_queue (using modprobe command)");
 
     /* opening library handle */
     h = nfq_open();
@@ -388,6 +390,8 @@ void* packetsrv(void *void_arg)
 
     log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_MESSAGE,
             "Try to connect to netlink (IPQ)");
+    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_SERIOUS_WARNING,
+            "Don't forget to load Linux kernel module ip_queue (using modprobe command)");
 
     /* init netlink connection */
     hndl = ipq_create_handle(0,PF_INET);
