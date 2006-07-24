@@ -344,9 +344,13 @@ void* packetsrv(void *void_arg)
         select_result = select(fd+1,&wk_set,NULL,NULL,&tv);
         if (select_result == -1)
         {
+	    int err = errno;
+	    if (err == EINTR) {
+		    continue;
+	    }
             log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
                     "[!] FATAL ERROR: Error of select() in netfilter queue thread (code %i)!",
-                    errno);
+                    err);
             fatal_error = 1;
             break;
         }

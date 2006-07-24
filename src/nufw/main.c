@@ -608,8 +608,12 @@ int main(int argc,char * argv[])
     pckt_tx=pckt_rx=0;
     while (1 == 1) 
     {
+	int stat = pckt_tx;
+	const int seconds = 5;
        
-        sleep(5);	
+        sleep(seconds);
+
+	stat = pckt_tx - stat;
         
         /* clean old packets */
         pthread_mutex_lock(&packets_list.mutex);
@@ -618,6 +622,7 @@ int main(int argc,char * argv[])
 
         /* display stats */
         process_poll(0);
+	printf("Average: %u\n", stat/seconds);
     }
 
     nufw_stop_thread();

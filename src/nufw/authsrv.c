@@ -324,6 +324,12 @@ void* authsrv(void* data)
         select_result = select(socket+1,&wk_set,NULL,NULL,&tv);
         if (select_result == -1)
         {
+	    int err = errno;
+	    if (err == EINTR) {
+		    continue;
+	    }
+		log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
+				"[+] select() in authsrv.c failure: code %u", errno);
             break;
         }
 

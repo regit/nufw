@@ -27,7 +27,7 @@
 #  define inline
 #endif
 
-#define PERF_DISPLAY_ENABLE 1
+/*#define PERF_DISPLAY_ENABLE 1*/
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
