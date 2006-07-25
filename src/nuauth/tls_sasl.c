@@ -197,7 +197,11 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 
     ret = sasl_user_check(c_session);
 
-    remove_socket_from_pre_client_list(c);
+    if (remove_socket_from_pre_client_list(c) == FALSE){
+        /* connection has disappear, let's return */
+        clean_session(c_session);
+        return;
+    }
     switch (ret){
         case SASL_OK:
             /* remove socket from the list of pre auth socket */
@@ -206,10 +210,13 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 
         case SASL_FAIL:
         default:
-            if (ret == SASL_FAIL)
+#ifdef DEBUG_ENABLE
+            if (ret == SASL_FAIL) {
                 debug_log_message(VERBOSE_DEBUG, AREA_USER, "Crash on user side, closing socket");
-            else
+            }  else {
                 debug_log_message(VERBOSE_DEBUG, AREA_USER, "Problem with user, closing socket");
+            }
+#endif
             close_tls_session(c,c_session->tls);
             c_session->tls=NULL;
             clean_session(c_session);
