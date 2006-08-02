@@ -831,7 +831,7 @@ static GSList* fill_user_by_username(const char* username,gpointer params)
   /*  Let's look for the first node with matching username */
   res = g_slist_find_custom(((struct plaintext_params*)params)->plaintext_userlist, &ref,
           (GCompareFunc)find_by_username);
-  free(ref.username);
+  g_free(ref.username);
   if (!res) {
       log_message(WARNING, AREA_AUTH, "Unknown user [%s]!", username);
       return NULL;
