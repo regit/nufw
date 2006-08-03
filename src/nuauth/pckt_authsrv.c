@@ -253,8 +253,10 @@ void authpckt_conntrack (unsigned char *dgram, unsigned int dgram_size)
  *   - #NU_EXIT_OK if ok and conn created
  *   - #NU_EXIT_NO_RETURN if no conn is needed but work is ok
  */
-nu_error_t authpckt_decode(unsigned char *dgram, unsigned int dgram_size, connection_t** conn)
+nu_error_t authpckt_decode(unsigned char **pdgram, unsigned int * pdgram_size, connection_t** conn)
 {
+	unsigned char* dgram=*pdgram;
+	unsigned int dgram_size=*pdgram_size;
     nufw_to_nuauth_message_header_t *header;
 
     /* Check message header size */
@@ -266,29 +268,32 @@ nu_error_t authpckt_decode(unsigned char *dgram, unsigned int dgram_size, connec
     if (header->protocol_version != PROTO_VERSION)
         return NU_EXIT_ERROR;
 
-    /* Check if message length looks correct */
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_PACKET)){
-        uint16_t msg_length = ntohs(header->msg_length);
-        if (msg_length != dgram_size){
-            g_warning("packet seems to contain other datas, left %d byte(s) (announced : %d, get : %d)",
-                    dgram_size - msg_length,
-                    msg_length,
-                    dgram_size);
-        }
-    }
-
     switch (header->msg_type){
         case AUTH_REQUEST:
         case AUTH_CONTROL:
-            return  authpckt_new_connection(dgram, dgram_size,conn);
+		authpckt_new_connection(dgram, dgram_size,conn);
+		if (ntohs(header->msg_length) < dgram_size){
+			*pdgram_size = dgram_size - ntohs(header->msg_length);
+			*pdgram = dgram + ntohs(header->msg_length);
+		} else {
+			*pdgram_size=0;
+		}
+		return NU_EXIT_OK;
+
             break;
         case AUTH_CONN_DESTROY:
         case AUTH_CONN_UPDATE:
             authpckt_conntrack(dgram, dgram_size);
             *conn = NULL;
+	    if (ntohs(header->msg_length) < dgram_size){
+		    *pdgram_size = dgram_size - ntohs(header->msg_length);
+		    *pdgram = dgram + ntohs(header->msg_length);
+	    } else {
+		    *pdgram_size=0;
+	    }
             return NU_EXIT_NO_RETURN;
         default:
-            log_message(VERBOSE_DEBUG, AREA_PACKET, "Not for us");
+            log_message(VERBOSE_DEBUG, AREA_PACKET, "NuFW packet type is unknown");
             return 0;
     }
     return NU_EXIT_OK;

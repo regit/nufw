@@ -53,7 +53,8 @@ struct tls_nufw_context_t {
  */
 static int treat_nufw_request (nufw_session_t *c_session)
 {
-    unsigned char dgram[CLASSIC_NUFW_PACKET_SIZE];
+    unsigned char cdgram[CLASSIC_NUFW_PACKET_SIZE];
+    unsigned char* dgram=cdgram;
     int dgram_size;
     connection_t *current_conn;
     int ret;
@@ -73,41 +74,43 @@ static int treat_nufw_request (nufw_session_t *c_session)
     }
 
     /* decode data */
-    ret = authpckt_decode(dgram , (unsigned int)dgram_size, &current_conn);
-    if (ret != NU_EXIT_OK)
-    {
-        (void)g_atomic_int_dec_and_test(&(c_session->usage));
-        if (ret == NU_EXIT_ERROR)
-            return NU_EXIT_ERROR;
-        else /* NU_EXIT_NO_RETURN */
-            return NU_EXIT_OK;
-    }
+	do {
+		ret = authpckt_decode(&dgram , (unsigned int *)&dgram_size, &current_conn);
+		switch (ret){
+			case NU_EXIT_ERROR:
+				g_atomic_int_dec_and_test(&(c_session->usage));
+				return NU_EXIT_ERROR;
+			case NU_EXIT_OK:
+				if (current_conn != NULL){
+					current_conn->socket=0;
+					current_conn->tls=c_session;
 
-    /* nothing to do? just exit */
-    if (current_conn == NULL)
-    {
-        return NU_EXIT_OK;
-    }
+					/* gonna feed the birds */
+					if (current_conn->state == AUTH_STATE_HELLOMODE){
+						debug_log_message(DEBUG, AREA_GW,
+								"(*) NuFW auth request (hello mode): packetid=%u",
+								(uint32_t)GPOINTER_TO_UINT(current_conn->packet_id->data));
+						struct internal_message *message = g_new0(struct internal_message,1);
+						message->type=INSERT_MESSAGE;
+						message->datas=current_conn;
+						current_conn->state = AUTH_STATE_AUTHREQ;
+						g_async_queue_push (nuauthdatas->localid_auth_queue,message);
+					} else {
+						debug_log_message(DEBUG, AREA_GW,
+								"(*) NuFW auth request (hello mode): packetid=%u",
+								(uint32_t)GPOINTER_TO_UINT(current_conn->packet_id->data));
+						g_async_queue_push (nuauthdatas->connections_queue, current_conn);
+					}
+				} 
+				break;
+			case NU_EXIT_NO_RETURN:
+				g_atomic_int_dec_and_test(&(c_session->usage));
+		}
+#if 0
+		g_message("dgram_size at %d: %d",__LINE__,dgram_size);
+#endif
+	} while (dgram_size>0);
 
-    current_conn->socket=0;
-    current_conn->tls=c_session;
-
-    /* gonna feed the birds */
-    if (current_conn->state == AUTH_STATE_HELLOMODE){
-        debug_log_message(DEBUG, AREA_GW,
-                "(*) NuFW auth request (hello mode): packetid=%u",
-                (uint32_t)GPOINTER_TO_UINT(current_conn->packet_id->data));
-        struct internal_message *message = g_new0(struct internal_message,1);
-        message->type=INSERT_MESSAGE;
-        message->datas=current_conn;
-        current_conn->state = AUTH_STATE_AUTHREQ;
-        g_async_queue_push (nuauthdatas->localid_auth_queue,message);
-    } else {
-        debug_log_message(DEBUG, AREA_GW,
-                "(*) NuFW auth request (hello mode): packetid=%u",
-                (uint32_t)GPOINTER_TO_UINT(current_conn->packet_id->data));
-        g_async_queue_push (nuauthdatas->connections_queue, current_conn);
-    }
     return NU_EXIT_OK;
 }
 

@@ -535,7 +535,7 @@ int auth_request_send(uint8_t type, uint32_t packet_id, char* payload, unsigned 
     memcpy(msg_content, payload, payload_len);    
 
     /* Display message */
-    debug_log_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, 
+    debug_log_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_VERBOSE_DEBUG, 
             "Sending request for %lu", packet_id);
 
     /* cleaning up current session : auth_server has detected a problem */
