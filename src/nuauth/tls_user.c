@@ -363,7 +363,6 @@ void tls_user_check_activity(struct tls_user_context_t *context, int socket)
 
     u_request = treat_user_request( c_session );
     if (u_request == EOF) {
-        log_user_session(c_session,SESSION_CLOSE);
         debug_log_message(VERBOSE_DEBUG, AREA_USER, "client disconnect on socket %d",socket);
         FD_CLR(socket,&context->tls_rx_set);
         /* clean client structure */

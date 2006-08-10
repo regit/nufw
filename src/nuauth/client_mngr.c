@@ -138,12 +138,16 @@ void delete_client_by_socket(int socket)
         /* update hash */
         g_hash_table_replace (client_ip_hash, IPV6_TO_POINTER(&session->addr), ipsockets);
         /* remove entry from hash */
-        g_hash_table_remove(client_conn_hash,GINT_TO_POINTER(socket));
+        g_hash_table_steal(client_conn_hash,GINT_TO_POINTER(socket));
+        log_user_session(session,SESSION_CLOSE);
     } else {
         log_message(WARNING,AREA_USER,"Could not found user session in hash");
     }
 
     g_mutex_unlock(client_mutex);
+
+    shutdown(socket, SHUT_RDWR); 
+    close(socket); 
 }
 
 inline user_session_t * get_client_datas_by_socket(int socket)
