@@ -55,24 +55,26 @@ AC_CHECK_LIB([sasl2],[sasl_server_init],AC_DEFINE([HAVE_LIBRARY_SASL2],[1],[SASL
 AC_ARG_WITH(prelude-log,
         [AC_HELP_STRING(--with-prelude-log,  
         Support user activity logging in Prelude)], 
-        enable_prelude_log="yes", 
+        enable_prelude_log=$withval, 
         enable_prelude_log="")
-AC_ARG_WITH(mysql-log, [AC_HELP_STRING(--with-mysql-log,  Support user activity logging in Mysql database)], enable_mysql_log="yes", enable_mysql_log="")
-AC_ARG_WITH(syslog-log, [AC_HELP_STRING(--with-syslog-log,  Support user activity logging in syslog)], enable_syslog_log="yes", enable_syslog_log="")
-AC_ARG_WITH(plaintext-auth, [AC_HELP_STRING(--with-plaintext-auth,  Support for authentification with plaintext file)], enable_plaintext_auth="yes", enable_plaintext_auth="")
-AC_ARG_WITH(pgsql-log, [AC_HELP_STRING(--with-pgsql-log,  Support user activity logging in PostgreSQL database)], enable_pgsql_log="yes", enable_pgsql_log="")
 
-AC_ARG_WITH(system-auth, [AC_HELP_STRING(--with-system-auth,  Support PAM+NSS authentication)], enable_system_auth="yes", enable_system_auth="")
+AC_ARG_WITH(mysql-log, [AC_HELP_STRING(--with-mysql-log,  Support user activity logging in Mysql database)], enable_mysql_log=$withval, enable_mysql_log="")
+AC_ARG_WITH(pgsql-log, [AC_HELP_STRING(--with-pgsql-log,  Support user activity logging in PostgreSQL database)], enable_pgsql_log=$withval, enable_pgsql_log="")
+AC_ARG_WITH(syslog-log, [AC_HELP_STRING(--with-syslog-log,  Support user activity logging in syslog)], enable_syslog_log=$withval, enable_syslog_log="yes")
 
-AC_ARG_WITH(ldap,   [AC_HELP_STRING(--with-ldap,  Support LDAP directory for users and acl lookup)],ldap="yes", ldap="")
-AC_ARG_WITH(gdbm,   [AC_HELP_STRING(--with-gdbm, Support gdbm users lookup)],gdbm="yes", gdbm="")
+AC_ARG_WITH(plaintext-auth, [AC_HELP_STRING(--with-plaintext-auth,  Support for authentification with plaintext file)], enable_plaintext_auth=$withval, enable_plaintext_auth="yes")
+AC_ARG_WITH(system-auth, [AC_HELP_STRING(--with-system-auth,  Support PAM+NSS authentication)], enable_system_auth=$withval, enable_system_auth="yes")
+
+AC_ARG_WITH(ldap,   [AC_HELP_STRING(--with-ldap,  Support LDAP directory for users and acl lookup)],ldap=$withval, ldap="")
+AC_ARG_WITH(gdbm,   [AC_HELP_STRING(--with-gdbm, Support gdbm users lookup)],gdbm=$withval, gdbm="")
 
 
-AC_ARG_WITH(nfqueue,   [AC_HELP_STRING(--with-nfqueue, Compile for NFQUEUE instead of QUEUE)],use_nfqueue="yes", use_nfqueue="")
+AC_ARG_WITH(nfqueue,   [AC_HELP_STRING(--with-nfqueue, Compile for NFQUEUE instead of QUEUE)],use_nfqueue=$withval, use_nfqueue="")
+AC_ARG_WITH(nfconntrack,   [AC_HELP_STRING(--with-nfconntrack, Compile with netfilter_conntrack)],use_nfconntrack=$withval, use_nfconntrack="")
 
 
 AC_ARG_WITH(utf8,   [AC_HELP_STRING(--with-utf8, Use UTF8 exchange between client and server)], AC_DEFINE_UNQUOTED([USE_UTF8],[1],[Will use UTF8 exchange]))
-AC_ARG_WITH(fixedtimeout,   [AC_HELP_STRING(--with-fixedtimeout, Assume libconntrack has fixed timeout extension )],have_conntrack_fixedtimeout="yes" )
+AC_ARG_WITH(fixedtimeout,   [AC_HELP_STRING(--with-fixedtimeout, Assume libconntrack has fixed timeout extension )],have_conntrack_fixedtimeout=$withval )
 
 
 AC_ARG_ENABLE(debug,   [AC_HELP_STRING(--enable-debug, Add development debug messages (default no))],debug=$enableval, debug="")
@@ -164,7 +166,11 @@ else
 fi
 fi
 
-AC_CHECK_LIB([netfilter_conntrack], [nfct_dump_conntrack_table], have_conntrack="yes", have_conntrack="",[-ldl -lnfnetlink])
+if test "${use_nfconntrack}" = "yes"; then
+	AC_CHECK_LIB([netfilter_conntrack], [nfct_dump_conntrack_table], have_conntrack="yes", have_conntrack="",[-ldl -lnfnetlink])
+else
+	have_conntrack=""
+fi
 
 if test "${have_conntrack}" = "yes"; then
         AC_DEFINE_UNQUOTED([HAVE_LIBCONNTRACK],[1],[libconntrack has been found])
