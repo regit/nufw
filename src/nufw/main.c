@@ -382,8 +382,9 @@ int main(int argc,char * argv[])
 #endif
         "c:k:a:n:d:p:t:T:"
 #ifdef HAVE_LIBCONNTRACK
-        "CM";
+        "CM"
 #endif
+;
 #else
     char * options_list = "DhVvmc:k:a:n:d:p:t:T:";
 #endif

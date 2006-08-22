@@ -68,7 +68,7 @@ int send_hello_pckt(NuAuth * session){
 /**
  * Send connections to nuauth: between 1 and #CONN_MAX connections
  * in a big packet of format:
- *   [ nu_header + nuv4_authfield_ipv6 * N ]
+ *   [ nu_header + nu_authfield_ipv6 * N ]
  */
 int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
 {
@@ -76,9 +76,9 @@ int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
   char *pointer;
   unsigned int item;
   struct nu_header *header;
-  struct nuv4_authreq *authreq;
-  struct nuv4_authfield_ipv6 *authfield;
-  struct nuv4_authfield_app *appfield;
+  struct nu_authreq *authreq;
+  struct nu_authfield_ipv6 *authfield;
+  struct nu_authfield_app *appfield;
   unsigned len;
   const char *appname;
   char *app_ptr;
@@ -104,13 +104,13 @@ int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
 #else
       appname="UNKNOWN";
 #endif
-      header->length+=sizeof(struct nuv4_authreq)+sizeof(struct nuv4_authfield_ipv6);
+      header->length+=sizeof(struct nu_authreq)+sizeof(struct nu_authfield_ipv6);
       
-      authreq = (struct nuv4_authreq *)pointer;
+      authreq = (struct nu_authreq *)pointer;
       authreq->packet_seq = session->packet_seq++;
-      authreq->packet_length = sizeof(struct nuv4_authreq)+sizeof(struct nuv4_authfield_ipv6);
+      authreq->packet_length = sizeof(struct nu_authreq)+sizeof(struct nu_authfield_ipv6);
      
-      authfield = (struct nuv4_authfield_ipv6 *)(authreq+1);
+      authfield = (struct nu_authfield_ipv6 *)(authreq+1);
       authfield->type = IPV6_FIELD;
       authfield->option = 0;
       authfield->src = carray[item]->ip_src;
@@ -122,7 +122,7 @@ int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
       authfield->dport = htons(carray[item]->port_dst);
 
       /* application field  */
-      appfield = (struct nuv4_authfield_app *)(authfield+1); 
+      appfield = (struct nu_authfield_app *)(authfield+1); 
       appfield->type=APP_FIELD;
 #ifdef USE_SHA1
       appfield->option=APP_TYPE_SHA1;
@@ -149,7 +149,7 @@ int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
 
       appfield->length=htons(appfield->length);
       authreq->packet_length=htons(authreq->packet_length);
-      authfield->length=htons(sizeof(struct nuv4_authfield_ipv6));
+      authfield->length=htons(sizeof(struct nu_authfield_ipv6));
   }
   header->length=htons(header->length);
   if (session->debug_mode)

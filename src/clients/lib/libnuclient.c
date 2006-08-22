@@ -309,7 +309,7 @@ int mysasl_negotiate(NuAuth* user_session, sasl_conn_t *conn, nuclient_error *er
         }
 	memset(buf,0,sizeof(buf));
         len = samp_recv(session, buf, sizeof(buf), err);
-        if (len < 0) {
+        if (len <= 0) {
             printf("server problem, recv fail...\n");
             return SASL_FAIL;
         }
@@ -536,7 +536,7 @@ int send_os(NuAuth * session, nuclient_error *err)
 {
     /* announce our OS */
     struct utsname info;
-    struct nuv4_authfield osfield;
+    struct nu_authfield osfield;
     char *oses;
     char *enc_oses;
     char *pointer;

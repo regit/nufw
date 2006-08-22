@@ -53,11 +53,11 @@ void* recv_message(void *data)
     NuAuth* session=(NuAuth*)data;
     int ret;
     char dgram[512];
-    const size_t message_length= sizeof(struct nu_header)+sizeof(struct nuv4_authfield_hello)+sizeof(struct nuv4_authreq);
+    const size_t message_length= sizeof(struct nu_header)+sizeof(struct nu_authfield_hello)+sizeof(struct nu_authreq);
     char message[message_length];
     struct nu_header *header;
-    struct nuv4_authreq *authreq;
-    struct nuv4_authfield_hello *hellofield;
+    struct nu_authreq *authreq;
+    struct nu_authfield_hello *hellofield;
 
     /* fill struct */
     header = (struct nu_header *)message;
@@ -66,14 +66,14 @@ void* recv_message(void *data)
     header->option=0;
     header->length=htons(message_length);
 
-    authreq = (struct nuv4_authreq *)(header + 1);
+    authreq = (struct nu_authreq *)(header + 1);
     authreq->packet_seq = session->packet_seq++;
-    authreq->packet_length = htons(sizeof(struct nuv4_authreq)+sizeof(struct nuv4_authfield_hello));
+    authreq->packet_length = htons(sizeof(struct nu_authreq)+sizeof(struct nu_authfield_hello));
 
-    hellofield = (struct nuv4_authfield_hello *)(authreq + 1);
+    hellofield = (struct nu_authfield_hello *)(authreq + 1);
     hellofield->type=HELLO_FIELD;
     hellofield->option=0;
-    hellofield->length=htons(sizeof(struct nuv4_authfield_hello));
+    hellofield->length=htons(sizeof(struct nu_authfield_hello));
 
     pthread_cleanup_push((pthread_cleanup_push_arg1_t)pthread_mutex_unlock, &session->check_count_mutex);
 
@@ -98,7 +98,7 @@ void* recv_message(void *data)
                 break;
 
             case SRV_REQUIRED_HELLO:
-                hellofield->helloid = ((struct nuv4_srv_helloreq*)dgram)->helloid;
+                hellofield->helloid = ((struct nu_srv_helloreq*)dgram)->helloid;
                 if (session->debug_mode) {
                     printf("[+] Send HELLO\n");
                 }
