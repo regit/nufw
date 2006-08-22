@@ -105,8 +105,14 @@ if test "${build_nuauth}" = "yes"; then
         fi
 
         if test "$enable_mysql_log" = "yes"; then
-                AC_CHECK_LIB([mysqlclient],[mysql_real_connect],AC_DEFINE([HAVE_LIBRARY_MYSQLCLIENT],[1],[mysql lib flag] )  ,AC_MSG_ERROR([mysqlclient library needed if selected]))
-                AC_CHECK_LIB([mysqlclient],[mysql_ssl_set],AC_DEFINE_UNQUOTED([HAVE_MYSQL_SSL],[1],[Will compile mysql log module with ssl support]),AC_MSG_NOTICE([mysqlclient has no ssl support]))
+			if which mysql_config 1>/dev/null; then 
+				AC_CHECK_LIB([mysqlclient],[mysql_real_connect],AC_DEFINE([HAVE_LIBRARY_MYSQLCLIENT],[1],[mysql lib flag] )  ,AC_MSG_ERROR([mysqlclient library needed if selected]),[$(mysql_config --libs)])
+                		AC_CHECK_LIB([mysqlclient],[mysql_ssl_set],AC_DEFINE_UNQUOTED([HAVE_MYSQL_SSL],[1],[Will compile mysql log module with ssl support]),AC_MSG_NOTICE([mysqlclient has no ssl support]),[$(mysql_config --libs)])
+				have_mysql_config="yes"
+			else
+                		AC_CHECK_LIB([mysqlclient],[mysql_real_connect],AC_DEFINE([HAVE_LIBRARY_MYSQLCLIENT],[1],[mysql lib flag] )  ,AC_MSG_ERROR([mysqlclient library needed if selected]))
+                		AC_CHECK_LIB([mysqlclient],[mysql_ssl_set],AC_DEFINE_UNQUOTED([HAVE_MYSQL_SSL],[1],[Will compile mysql log module with ssl support]),AC_MSG_NOTICE([mysqlclient has no ssl support]))
+		fi
         fi
   
         if test "$enable_prelude_log" = "yes"; then
@@ -138,6 +144,8 @@ AM_CONDITIONAL(USE_LDAP, test x$ldap = xyes)
 AM_CONDITIONAL(USE_GDBM, test x$gdbm = xyes)
 AM_CONDITIONAL(USE_PRELUDE_LOG, test x$enable_prelude_log = xyes)
 AM_CONDITIONAL(USE_MYSQL_LOG, test x$enable_mysql_log = xyes)
+AM_CONDITIONAL(HAVE_MYSQL_CONFIG, test x$have_mysql_config = xyes)
+
 AM_CONDITIONAL(USE_BOFH_MYSQL, test x$enable_bofh_mysql = xyes)
 AM_CONDITIONAL(USE_PGSQL_LOG, test x$enable_pgsql_log = xyes)
 AM_CONDITIONAL(USE_PLAINTEXT_AUTH, test x$enable_plaintext_auth = xyes)
