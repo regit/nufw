@@ -220,11 +220,88 @@ static unsigned samp_recv(gnutls_session session, char* buf,int bufsize)
   return len;
 }
 
+/** 
+ *  fetch protocol version (or guess)
+ *
+ *  - start a select waiting for protocol announce from client
+ *  - if there is nothing it is PROTO_V20 else get datas and fetch PROTO 
+ *
+ * \param a ::user_session_t
+ * \return a ::nu_error_t set to NU_EXIT_OK if there is no problem
+ */
+
+#define MAX_WAIT_ITER 5
+#define PROTO_WAIT_DELAY 100000
+nu_error_t get_proto_info(user_session_t * c_session)
+{
+	int ret;
+	fd_set wk_set; /* working set */
+	struct timeval tv;
+
+	/* wait new events during 1 second */
+        FD_ZERO(&wk_set);
+	FD_SET(c_session->socket,&wk_set);
+        tv.tv_sec=1;
+        tv.tv_usec=0;
+        ret = select(c_session->socket+1,&wk_set,NULL,NULL,&tv);
+	/* catch select() error */
+	switch (ret) {
+		case -1:
+			{
+				if (errno == EINTR) {
+					log_message(CRITICAL, AREA_MAIN,
+							"Warning: tls user select() failed: signal was catched.");
+					break;
+				} else {
+					return NU_EXIT_ERROR;
+				}
+			}
+		case 0:
+			{
+				debug_log_message(VERBOSE_DEBUG, AREA_AUTH, "Falling back to v3 protocol");
+				c_session->client_version = PROTO_VERSION_V20;
+			}
+			break;
+		default:
+			{
+
+				if (FD_ISSET(c_session->socket,&wk_set) ){
+					int buffersize=128;
+					char buffer[buffersize];
+					debug_log_message(VERBOSE_DEBUG, AREA_AUTH, "Getting protocol information");
+					ret = gnutls_record_recv(*(c_session->tls),buffer,buffersize);
+					if (ret<0){
+						return NU_EXIT_ERROR;
+					}
+					if (strncmp(buffer,PROTO_STRING,strlen(PROTO_STRING)) == 0){
+						c_session->client_version = atoi((char*)buffer + strlen(PROTO_STRING));
+
+						debug_log_message(VERBOSE_DEBUG, AREA_AUTH, "Protocol information: %d",c_session->client_version);
+						/* sanity check on know protocol */
+						if (c_session->client_version != PROTO_VERSION_V22){
+							debug_log_message(INFO, AREA_AUTH, "Bad protocol, announced %d",c_session->client_version);
+							return NU_EXIT_ERROR;
+						}
+						return NU_EXIT_OK;
+					} else {
+						log_message(INFO, AREA_AUTH, "Error bad proto string");
+						return NU_EXIT_ERROR;
+					}
+				}
+			}
+	}
+	return NU_EXIT_OK;
+}
+
+#undef MAX_WAIT_ITER
+#undef PROTO_WAIT_DELAY
 
 /**
  * do the sasl negotiation.
  *
- * return -1 if it fails
+ * \param a ::user_session_t
+ * \param a ::sasl_conn_t
+ * \return -1 if it fails
  */
 static int mysasl_negotiate(user_session_t * c_session , sasl_conn_t *conn)
 {
@@ -240,7 +317,6 @@ static int mysasl_negotiate(user_session_t * c_session , sasl_conn_t *conn)
 	char address[INET6_ADDRSTRLEN];
 	unsigned len = tls_len;
 	int result;
-
 	result = sasl_listmech(conn,NULL, NULL, ",", NULL, &data,&sasl_len, &count);
 	if (result != SASL_OK) {
 		log_message(WARNING, AREA_AUTH, "generating mechanism list");
@@ -301,10 +377,9 @@ static int mysasl_negotiate(user_session_t * c_session , sasl_conn_t *conn)
             debug_log_message(VERBOSE_DEBUG,AREA_AUTH,"Waiting for client reply...");
             len = samp_recv(session, buf, sizeof(buf));
             data = NULL;
-            result = sasl_server_step(conn, buf, len,
-                    &data, &len);
+            result = sasl_server_step(conn, buf, len, &data, &len);
             if (result != SASL_OK && result != SASL_CONTINUE){
-                log_message(INFO,AREA_AUTH,"SASL error %s", sasl_errstring(result,NULL,NULL));
+                log_message(INFO,AREA_AUTH,"SASL error: %s", sasl_errstring(result,NULL,NULL));
                 if (samp_send(session,data, len) <= 0) /* send NO to client */
                     return SASL_FAIL;
                 return SASL_BADAUTH;
@@ -519,20 +594,20 @@ int sasl_user_check(user_session_t* c_session)
 		{ SASL_CB_SERVER_USERDB_CHECKPASS, &userdb_checkpass,NULL}, 
 		{ SASL_CB_LIST_END, NULL, NULL }
 	};
-    sasl_callback_t *callbacks;
+	sasl_callback_t *callbacks;
 
 	if (c_session->user_name) {
 		external_auth=TRUE;
-        callbacks = external_callbacks;
+		callbacks = external_callbacks;
 	} else { 
-        callbacks = internal_callbacks;
+		callbacks = internal_callbacks;
 	}
-    
-    if (nuauthconf->nuauth_uses_fake_sasl){
-        ret = sasl_server_new(service, myhostname, myrealm, NULL, NULL, callbacks, 0, &conn);
-    } else {
-        ret = sasl_server_new(service, myhostname, myrealm, NULL, NULL, NULL, 0, &conn);
-}
+
+	if (nuauthconf->nuauth_uses_fake_sasl){
+		ret = sasl_server_new(service, myhostname, myrealm, NULL, NULL, callbacks, 0, &conn);
+	} else {
+		ret = sasl_server_new(service, myhostname, myrealm, NULL, NULL, NULL, 0, &conn);
+	}
 	if (ret != SASL_OK) {
 		g_warning("allocating connection state - failure at sasl_server_new()");
 	}
@@ -560,10 +635,17 @@ int sasl_user_check(user_session_t* c_session)
 		if (ret != SASL_OK){
 			log_message(INFO, AREA_AUTH, "Error setting external SSF");
 		}
-		ret = mysasl_negotiate(c_session, conn);
-	} else {
-		ret = mysasl_negotiate(c_session, conn);
+	} 
+
+	ret = get_proto_info(c_session);
+
+	if (ret != NU_EXIT_OK){
+		sasl_dispose(&conn);
+		log_message(INFO, AREA_AUTH, "Could not fetch proto info");
+		return ret;
 	}
+
+	ret = mysasl_negotiate(c_session, conn);
 	sasl_dispose(&conn);
 	if ( ret != SASL_OK )
 		return ret;
