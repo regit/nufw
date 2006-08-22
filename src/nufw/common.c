@@ -318,10 +318,14 @@ int send_icmp_ipv6_unreach(char *payload)
 #  error "You may compute the checksum!"
 #endif
 
-    /* send packet */
-    return sendto (raw_sock6, buffer, sizeof(buffer), 0,
-            (struct sockaddr *)&to,
-            sizeof(to));
+    if (raw_sock6 >0) {
+	    /* send packet */
+	    return sendto (raw_sock6, buffer, sizeof(buffer), 0,
+			    (struct sockaddr *)&to,
+			    sizeof(to));
+    } else {
+	    return 0;
+    }
 }
 
 int send_icmp_unreach(char *payload)

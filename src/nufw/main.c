@@ -573,7 +573,6 @@ int main(int argc,char * argv[])
     {
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
                 "Fail to create socket for ICMPv6!");
-        exit(EXIT_FAILURE);
     }
     
     /* Create address adr_srv */
