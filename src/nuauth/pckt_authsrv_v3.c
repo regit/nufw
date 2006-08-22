@@ -56,6 +56,7 @@ nu_error_t authpckt_new_connection_v3(unsigned char *dgram, unsigned int dgram_s
 #ifdef PERF_DISPLAY_ENABLE
     gettimeofday(&(connection->arrival_time),NULL);
 #endif
+    connection->username = NULL;
     connection->acl_groups = NULL;
     connection->user_groups = NULL;
     connection->expire = -1;
@@ -74,12 +75,10 @@ nu_error_t authpckt_new_connection_v3(unsigned char *dgram, unsigned int dgram_s
     connection->nufw_version =  PROTO_VERSION_V20;
 
     ret = parse_dgram(connection,dgram,dgram_size,conn,msg->msg_type);
-    if (ret != NU_EXIT_OK){
+    if (ret != NU_EXIT_CONTINUE){
 	return ret;
     }
 
-    connection->user_groups = ALLGROUP;
-    
 #ifdef DEBUG_ENABLE
     if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)){
         g_message("Packet: ");
