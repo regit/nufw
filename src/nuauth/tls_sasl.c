@@ -88,7 +88,7 @@ static void tls_sasl_connect_ok(user_session_t* c_session, int c)
             }
             break;
     }
-
+	
     if (nuauthconf->push) {
         struct internal_message* message=g_new0(struct internal_message,1);
         struct tls_insert_data * datas=g_new0(struct tls_insert_data,1);
@@ -205,8 +205,6 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
         case SASL_OK:
             /* remove socket from the list of pre auth socket */
             tls_sasl_connect_ok(c_session, c);
-	    /** \todo Send session to module list to be able to modify the ::user_session_t */
-	    modules_user_session_modify(c_session);
             break;
 
         case SASL_FAIL:

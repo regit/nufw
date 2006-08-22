@@ -625,7 +625,7 @@ gint take_decision(connection_t *element, packet_place_t place)
     element->decision=answer;
 
 
-    /* Call modules to do final tuning of packet (setting mark, ...) */
+    /* Call modules to do final tuning of packet (setting mark, expire modification ...) */
     modules_finalise_packet(element);
 
     if ((element->expire != -1) && (element->expire < expire)){

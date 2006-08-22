@@ -828,15 +828,15 @@ int sasl_user_check(user_session_t* c_session)
         return SASL_FAIL;
     }
 
+	/* parse and validate OS */
     ret = sasl_parse_user_os(c_session, buf, buf_size);
     if (ret != SASL_OK)
         return ret;
 
-    if (nuauthconf->session_duration){
-        c_session->expire=time(NULL)+nuauthconf->session_duration;
-    } else {
-        c_session->expire=-1;
-    }
+    /* Tuning of user_session */
+    ret = modules_user_session_modify(c_session);
+    if (ret != SASL_OK)
+        return ret;
 
     /* sasl connection is not used anymore */
     return SASL_OK;
