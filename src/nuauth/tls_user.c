@@ -283,19 +283,19 @@ int tls_user_accept(struct tls_user_context_t *context)
         log_message(WARNING, AREA_MAIN, "accept");
     }
 
-    if ( get_number_of_clients() >= context->nuauth_tls_max_clients ) {
-        log_message(WARNING, AREA_MAIN, "too many clients (%d configured)\n",context->nuauth_tls_max_clients);
-        shutdown(socket, SHUT_RDWR); 
-        close(socket);
-        return 1;
-    }
-
     /* if system is in reload: drop new client */
     if (nuauthdatas->need_reload)
     {
         shutdown(socket,SHUT_RDWR);
         close(socket);
         return 0;
+    }
+
+    if ( get_number_of_clients() >= context->nuauth_tls_max_clients ) {
+        log_message(WARNING, AREA_MAIN, "too many clients (%d configured)\n",context->nuauth_tls_max_clients);
+        shutdown(socket, SHUT_RDWR); 
+        close(socket);
+        return 1;
     }
    
     /* Extract client address (convert it to IPv6 if it's IPv4) */
