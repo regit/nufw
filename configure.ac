@@ -240,6 +240,7 @@ AC_CONFIG_FILES([Makefile
         src/nuauth/modules/log_script/Makefile
         src/nuauth/modules/xml_defs/Makefile
         src/nuauth/modules/x509_std/Makefile
+        src/nuauth/modules/libmark_uid/Makefile
         src/clients/Makefile
         src/clients/lib/Makefile
         src/clients/nutcpc/Makefile

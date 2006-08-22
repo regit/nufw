@@ -75,7 +75,7 @@ typedef struct
   int socket;             /*!< Socket (file descriptor) from which NuFW request is coming */
   nufw_session_t *tls;    /*!< TLS connection to NuFW from which comes the packet */
   tracking_t tracking;    /*!< IPv4 connection tracking (headers) */
-  uint32_t user_id;       /*!< User numeric identity used for marking */
+  uint32_t mark;       /*!< Number used for marking set to user numeric identity at start */
   char *username;         /*!< User name */
   
  /**

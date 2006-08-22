@@ -145,11 +145,11 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 				nuv3_nuauth_decision_response_t* response = NULL;
 				uint16_t uid16;
 				/* check if user id fit in 16 bits */
-				if (0xFFFF < element->user_id) {
+				if (0xFFFF < element->mark) {
 					log_message(WARNING, AREA_MAIN,
 							"User identifier don't fit in 16 bits, not to truncate the value.");
 				}
-				uid16 = (0xFFFF && element->user_id);
+				uid16 = (0xFFFF && element->mark);
 				if (element->decision == DECISION_REJECT){
 					payload_size = IPHDR_REJECT_LENGTH + PAYLOAD_SAMPLE;
 				}
@@ -193,7 +193,7 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 	{
 		nuv4_nuauth_decision_response_t* response = NULL;
 		int use_icmp6;
-		uint32_t uid16=element->user_id;
+		uint32_t mark=element->mark;
 
 		use_icmp6 = (!is_ipv4(&element->tracking.saddr) || !is_ipv4(&element->tracking.daddr));
 
@@ -208,7 +208,7 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 		response=g_alloca(total_size);
 		response->protocol_version = PROTO_VERSION;
 		response->msg_type = AUTH_ANSWER;
-		response->tcmark = htonl(uid16);
+		response->tcmark = htonl(mark);
 		response->decision = element->decision;
 		response->priority = 1;
 		response->padding = 0;
@@ -624,10 +624,15 @@ gint take_decision(connection_t *element, packet_place_t place)
     }
     element->decision=answer;
 
+
+    /* Call modules to do final tuning of packet (setting mark, ...) */
+    modules_finalise_packet(element);
+
     if ((element->expire != -1) && (element->expire < expire)){
         debug_log_message(DEBUG, AREA_MAIN, " taken expire from element");
         expire=element->expire;
     }
+	
     /* we must put element in expire list if needed before decision is taken */
     if (expire>0) {
         if (nuauthconf->nufw_has_conntrack){

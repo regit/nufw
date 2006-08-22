@@ -396,7 +396,7 @@ GSList* user_request(struct tls_buffer_read *datas)
         if (connection->username == NULL){	
             connection->username=g_strdup(datas->user_name);
         }
-        connection->user_id=datas->user_id;
+        connection->mark=datas->user_id;
         connection->user_groups = g_slist_copy(datas->groups);
         connection->os_sysname=g_strdup(datas->os_sysname);
         connection->os_release=g_strdup(datas->os_release);
@@ -413,7 +413,7 @@ GSList* user_request(struct tls_buffer_read *datas)
                     get_users_from_cache(connection);
                 } else {
                     connection->user_groups = modules_get_user_groups(connection->username);
-                    connection->user_id = modules_get_user_id(connection->username);
+                    connection->mark = modules_get_user_id(connection->username);
                     if (connection->user_groups == NULL){
                         log_message (INFO, AREA_PACKET, "User not found");
                     }

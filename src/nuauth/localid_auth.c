@@ -76,7 +76,7 @@ void localid_insert_message(connection_t *pckt,
                 if (memcmp(&element->tracking.saddr, &pckt->tracking.saddr, sizeof(pckt->tracking.saddr)) == 0)
                 {	
                     element->state=AUTH_STATE_HELLOMODE;	
-                    element->user_id=pckt->user_id;
+                    element->mark=pckt->mark;
                     element->username=pckt->username;
                     element->user_groups=pckt->user_groups;
                     /* do asynchronous call to acl check */

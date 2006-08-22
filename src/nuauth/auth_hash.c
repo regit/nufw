@@ -126,7 +126,7 @@ inline void search_and_fill_complete_of_authreq(connection_t *new, connection_t 
             packet->state = AUTH_STATE_COMPLETING;
 
             packet->user_groups = new->user_groups;
-            packet->user_id = new->user_id;
+            packet->mark = new->mark;
             packet->username = new->username;
             /* application */
             packet->app_name = new->app_name;

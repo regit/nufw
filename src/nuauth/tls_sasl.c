@@ -205,6 +205,8 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
         case SASL_OK:
             /* remove socket from the list of pre auth socket */
             tls_sasl_connect_ok(c_session, c);
+	    /** \todo Send session to module list to be able to modify the ::user_session_t */
+	    modules_user_session_modify(c_session);
             break;
 
         case SASL_FAIL:

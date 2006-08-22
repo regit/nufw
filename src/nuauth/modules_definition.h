@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2005 Eric Leblond <regit@inl.fr>
+ ** Copyright(C) 2005-2006 Eric Leblond <regit@inl.fr>
  **                  INL http://www.inl.fr/
  **
  ** This program is free software; you can redistribute it and/or modify
@@ -46,6 +46,10 @@ GSList* user_session_logs_modules;
 GSList* certificate_check_modules;
 GSList* certificate_to_uid_modules;
 
+GSList* user_session_modify_modules;
+
+GSList* finalise_packet_modules;
+
 GMutex *modules_mutex;
 
 /** callback definition */
@@ -73,6 +77,10 @@ typedef int user_session_logs_callback (user_session_t* element, session_state_t
 typedef int certificate_check_callback (gnutls_session session, gnutls_x509_crt cert,gpointer params);
 /* certificate to uid function */
 typedef gchar* certificate_to_uid_callback (gnutls_session session, gnutls_x509_crt cert,gpointer params);
+
+typedef nu_error_t user_session_modify_callback (user_session_t* session,gpointer params);
+
+typedef nu_error_t finalise_packet_callback (connection_t* session,gpointer params);
 
 /** @} */
 

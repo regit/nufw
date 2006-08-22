@@ -18,7 +18,7 @@
 
 
 #include <auth_srv.h>
-#include "session_uid.h"
+#include "mark_uid.h"
 
 /**
  * \ingroup NuauthModules
@@ -29,23 +29,18 @@
 
 G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
 {
-  struct xml_defs_params* params=(struct xml_defs_params*)params_p;
-  /*  Free user list */
-  if (params){
-      g_free(params->xml_defs_periodfile);
-  }
-  g_free(params);
   return TRUE;
 }
 
 G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
 {
-
+	return TRUE;
 }
 
-G_MODULE_EXPORT nu_error_t user_session_modify (user_session_t* session,gpointer params)
+G_MODULE_EXPORT nu_error_t finalise_packet (connection_t* connection,gpointer params)
 {
-	session->tcmark = session->tcmark & 0xffff0000;
+	connection->mark = connection->mark & 0xffff0000;
+	return NU_EXIT_OK;
 }
 
 /** @} */
