@@ -41,6 +41,7 @@ static gboolean get_nufw_server_by_addr(gpointer key,gpointer value,gpointer use
 static void send_conntrack_message(struct limited_connection * lconn,unsigned char msgtype)
 {
     nufw_session_t* session=NULL;
+    /** \todo proto v3 compat */
 
     debug_log_message(VERBOSE_DEBUG, AREA_GW, "going to send conntrack message");
     g_static_mutex_lock (&nufw_servers_mutex);
@@ -120,7 +121,6 @@ static gboolean get_old_entry(gpointer key,gpointer value,gpointer user_data)
 
 void destroy_expired_connection(GHashTable* lim_conn_list)
 {
-
     g_hash_table_foreach_remove     (lim_conn_list,
             get_old_entry,
             GUINT_TO_POINTER(time(NULL)));

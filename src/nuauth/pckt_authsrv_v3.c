@@ -41,7 +41,7 @@ nu_error_t authpckt_new_connection_v3(unsigned char *dgram, unsigned int dgram_s
 
     if (dgram_size < sizeof(nuv3_nufw_to_nuauth_auth_message_t))
     {
-        /** \todo Display warning message */
+        log_message (INFO, AREA_PACKET, "Undersized message from nufw server");
         return NU_EXIT_ERROR;
     }
     dgram += sizeof(nuv3_nufw_to_nuauth_auth_message_t);
@@ -125,12 +125,12 @@ void authpckt_conntrack_v3 (unsigned char *dgram, unsigned int dgram_size)
     datas->saddr.s6_addr32[0] = 0;
     datas->saddr.s6_addr32[1] = 0;
     datas->saddr.s6_addr32[2] = 0xffff0000;
-    datas->saddr.s6_addr32[3] = ntohl(conntrack->ipv4_src);
+    datas->saddr.s6_addr32[3] = conntrack->ipv4_src;
 
     datas->daddr.s6_addr32[0] = 0;
     datas->daddr.s6_addr32[1] = 0;
     datas->daddr.s6_addr32[2] = 0xffff0000;
-    datas->daddr.s6_addr32[3] = ntohl(conntrack->ipv4_dst);
+    datas->daddr.s6_addr32[3] = conntrack->ipv4_dst;
     
     if (conntrack->ipv4_protocol == IPPROTO_ICMP)  {
         datas->type = ntohs(conntrack->src_port);

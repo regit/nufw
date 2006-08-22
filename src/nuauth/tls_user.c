@@ -143,6 +143,7 @@ static int treat_user_request (user_session_t * c_session)
     datas->socket=0;
     datas->tls=c_session->tls;
     datas->ip_addr=c_session->addr;
+    datas->client_version = c_session->client_version;
     
     /* copy packet datas */
     datas->buffer = g_new0(char, CLASSIC_NUFW_PACKET_SIZE);
@@ -290,7 +291,7 @@ int tls_user_accept(struct tls_user_context_t *context)
         addr.s6_addr32[0] = 0;
         addr.s6_addr32[1] = 0;
         addr.s6_addr32[2] = 0xffff0000;
-        addr.s6_addr32[3] = ntohl(sockaddr4->sin_addr.s_addr);
+        addr.s6_addr32[3] = sockaddr4->sin_addr.s_addr;
     } else {
         addr = sockaddr6->sin6_addr;
     }

@@ -61,9 +61,9 @@ static void  policy_refuse_user(user_session_t* c_session,int c)
 static void tls_sasl_connect_ok(user_session_t* c_session, int c) 
 {
 /** \todo
- * proto v3 compat
+ * Check if work is needed for a full proto v3 compatibility (if proto v4 change)
  */
-    struct nuv4_srv_message msg;
+    struct nu_srv_message msg;
     /* Success place */
 
     /* checking policy rule on multiuser usage */
@@ -198,7 +198,6 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
         }
     }
 
-    /** \todo Analyse first send packet to check if client announces a valid proto */
     ret = sasl_user_check(c_session);
 
     remove_socket_from_pre_client_list(c);

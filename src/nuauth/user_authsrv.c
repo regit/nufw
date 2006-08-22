@@ -97,74 +97,13 @@ void user_check_and_decide (gpointer userdata, gpointer data)
   free_buffer_read(userdata);
 }
 
-/** \todo v3 compat */
-void user_process_field_hello(connection_t* connection, struct nuv4_authfield_hello* hellofield)
+void user_process_field_hello(connection_t* connection, struct nu_authfield_hello* hellofield)
 {
     debug_log_message (VERBOSE_DEBUG, AREA_USER, "\tgot hello field");
     connection->packet_id=g_slist_prepend(NULL,GINT_TO_POINTER(hellofield->helloid));
 }    
 
-/**
- * \return If an error occurs returns -1, returns 1 otherwise
- */
-int user_process_field_username(
-        connection_t* connection, 
-        uint8_t header_option,
-        gboolean *multiclient_ok,
-        struct nuv4_authfield_username *usernamefield)
-{
-/** \todo v3 compat */
-    unsigned int len;
-    gchar* dec_fieldname=NULL;
-    unsigned int reallen=0;
-    
-    debug_log_message (VERBOSE_DEBUG, AREA_USER, "\tgot Username field");
-    if (header_option != 0x1)
-    {
-        /* should not be here */
-        log_message (INFO, AREA_USER,
-            "not multiuser client but sent username field");
-        return -1;
-    }
-
-    len=usernamefield->length-4;
-    if (8*len > 2048 || (len <= 0))
-    {
-        /* it is reaaally long, we ignore packet (too lasy to kill client) */
-        log_message (INFO, AREA_USER,
-                "user packet length announced is bad : %d\n",len);
-        return -1;
-    }
-
-    dec_fieldname =	g_new0(gchar,8*len);
-    if (sasl_decode64((char*)usernamefield+4,len, dec_fieldname,8*len,&reallen) 
-            ==
-            SASL_BUFOVER) {
-        dec_fieldname=g_try_realloc(dec_fieldname,reallen+1);
-        if (dec_fieldname)
-            sasl_decode64((char*)usernamefield+4,len, dec_fieldname,reallen,&reallen) ;
-    } else {
-        dec_fieldname=g_try_realloc(dec_fieldname,reallen+1);
-    }
-    dec_fieldname[reallen]=0;
-
-    if (dec_fieldname != NULL)
-    {
-        connection->username= string_escape(dec_fieldname);
-        if (connection->username == NULL)
-            log_message(WARNING, AREA_USER, "user packet received an invalid username\n");
-    }else {
-        g_free(dec_fieldname);
-        log_message(INFO, AREA_USER, "rejected packet, invalid username field");
-        return -1;
-    }
-    g_free(dec_fieldname);
-    *multiclient_ok=TRUE;
-    return 1;
-}    
-
-/** \todo v3 compat */
-int user_process_field_ipv6(connection_t* connection, struct nuv4_authfield_ipv6 *ipfield)
+int user_process_field_ipv6(connection_t* connection, struct nu_authfield_ipv6 *ipfield)
 {
     connection->tracking.saddr = ipfield->src;
     connection->tracking.daddr = ipfield->dst;
@@ -195,12 +134,50 @@ int user_process_field_ipv6(connection_t* connection, struct nuv4_authfield_ipv6
     return 0;
 }    
 
-/** \todo v3 compat */
+int user_process_field_ipv4(connection_t* connection, struct nu_authfield_ipv4 *ipfield)
+{
+
+    connection->tracking.saddr.s6_addr32[0] = 0;
+    connection->tracking.saddr.s6_addr32[1] = 0;
+    connection->tracking.saddr.s6_addr32[2] = 0xffff0000;
+    connection->tracking.saddr.s6_addr32[3] = ipfield->src;
+
+    connection->tracking.daddr.s6_addr32[0] = 0;
+    connection->tracking.daddr.s6_addr32[1] = 0;
+    connection->tracking.daddr.s6_addr32[2] = 0xffff0000;
+    connection->tracking.daddr.s6_addr32[3] = ipfield->dst;
+
+    connection->tracking.protocol = ipfield->proto;
+
+    debug_log_message (VERBOSE_DEBUG, AREA_USER, "\tgot IPv4 field");
+    switch (connection->tracking.protocol) 
+    {
+        case IPPROTO_TCP:
+        case IPPROTO_UDP:
+            connection->tracking.source=ntohs(ipfield->sport);
+            connection->tracking.dest=ntohs(ipfield->dport);
+            connection->tracking.type=0;
+            connection->tracking.code=0;
+            break;
+            
+        case IPPROTO_ICMP:
+            connection->tracking.source=0;
+            connection->tracking.dest=0;
+            connection->tracking.type=ntohs(ipfield->sport);
+            connection->tracking.code=ntohs(ipfield->dport);
+            break;
+	/* Non supported protocol HAVE to be rejected */
+        default:
+	    return -1;
+    }
+    return 0;
+}    
+
 int user_process_field_app(
-        struct nuv4_authreq* authreq,
+        struct nu_authreq* authreq,
         connection_t* connection, 
         int field_buffer_len,
-        struct nuv4_authfield_app *appfield)
+        struct nu_authfield_app *appfield)
 {
     unsigned int reallen=0;
     gchar* dec_appname=NULL;
@@ -246,14 +223,13 @@ int user_process_field_app(
 }    
 
 
-/** \todo v3 compat */
 int user_process_field(
-        struct nuv4_authreq* authreq, 
+        struct nu_authreq* authreq, 
         uint8_t header_option,
         connection_t* connection, 
         gboolean *multiclient_ok,
         int auth_buffer_len,
-        struct nuv4_authfield* field)
+        struct nu_authfield* field)
 {
     /* check field length */
     field->length = ntohs(field->length);
@@ -264,35 +240,47 @@ int user_process_field(
 
     switch (field->type) {
         case IPV6_FIELD:
-            if (auth_buffer_len < (int)sizeof(struct nuv4_authfield_ipv6)) {
+            if (auth_buffer_len < (int)sizeof(struct nu_authfield_ipv6)) {
                 return -1;
             }
-            if (user_process_field_ipv6(connection, (struct nuv4_authfield_ipv6 *)field))
+            if (user_process_field_ipv6(connection, (struct nu_authfield_ipv6 *)field))
                 return -1;
             break;
 
-        case APP_FIELD:
-            if (auth_buffer_len < (int)sizeof(struct nuv4_authfield_app)) {
+	case IPV4_FIELD:
+            if (auth_buffer_len < (int)sizeof(struct nu_authfield_ipv6)) {
                 return -1;
             }
-            if (user_process_field_app(authreq, connection, field->length, (struct nuv4_authfield_app *)field) < 0)
+	    switch (connection->client_version){
+	    	case PROTO_VERSION_V22:
+			log_message(WARNING,AREA_USER,"Proto V4 user sends an IPV4_FIELD");
+			return -1;
+		case PROTO_VERSION_V20:
+			if (user_process_field_ipv4(connection, (struct nu_authfield_ipv4 *)field))
+				return -1;
+			break;
+		default:
+			log_message(WARNING,AREA_USER,"Unknown protocol %d client has sent an IPV4_FIELD",connection->client_version);
+	    }
+            break;
+
+        case APP_FIELD:
+            if (auth_buffer_len < (int)sizeof(struct nu_authfield_app)) {
+                return -1;
+            }
+            if (user_process_field_app(authreq, connection, field->length, (struct nu_authfield_app *)field) < 0)
                 return -1;
             break;
 
         case USERNAME_FIELD:
-            if (auth_buffer_len < (int)sizeof(struct nuv4_authfield_username)) {
-                return -1;
-            }
-            if (user_process_field_username(connection, header_option, multiclient_ok, 
-                        (struct nuv4_authfield_username *)field) < 0)
-                return -1;
-            break;
+	    log_message(WARNING,AREA_USER,"Received USERNAME_FIELD, this is BAD! multiuser client are born-dead");
+	    return -1;
 
         case HELLO_FIELD:
-            if (auth_buffer_len < (int)sizeof(struct nuv4_authfield_hello)) {
+            if (auth_buffer_len < (int)sizeof(struct nu_authfield_hello)) {
                 return -1;
             }
-            user_process_field_hello(connection, (struct nuv4_authfield_hello *)field);
+            user_process_field_hello(connection, (struct nu_authfield_hello *)field);
             break;
 
         default:
@@ -318,8 +306,7 @@ GSList* user_request(struct tls_buffer_read *datas)
     int buffer_len = datas->buffer_len;
     int auth_buffer_len;
     int field_length;
-/** \todo v3 compat */
-    struct nuv4_authreq* authreq;
+    struct nu_authreq* authreq;
     char *req_start;
 
     for (start = dgram + sizeof(struct nu_header), buffer_len -= sizeof(struct nu_header); 
@@ -327,12 +314,12 @@ GSList* user_request(struct tls_buffer_read *datas)
          start += authreq->packet_length, buffer_len -= authreq->packet_length)
     {
         /* check buffer underflow */
-        if (buffer_len < (int)sizeof(struct nuv4_authreq))
+        if (buffer_len < (int)sizeof(struct nu_authreq))
         {
             free_connection_list(conn_elts);
             return NULL;
         }
-        authreq=(struct nuv4_authreq* )start;
+        authreq=(struct nu_authreq* )start;
 
         authreq->packet_length=ntohs(authreq->packet_length);
         if (authreq->packet_length == 0
@@ -354,22 +341,23 @@ GSList* user_request(struct tls_buffer_read *datas)
         connection->cacheduserdatas=NULL;
         connection->packet_id=NULL;
         connection->expire=-1;
+	connection->client_version = datas->client_version;
 #ifdef PERF_DISPLAY_ENABLE
         gettimeofday(&(connection->arrival_time),NULL);
 #endif
        
         /*** process all fields ***/
         debug_log_message (VERBOSE_DEBUG, AREA_USER, "Authreq start");
-        req_start = start + sizeof(struct nuv4_authreq);
-        auth_buffer_len = authreq->packet_length - sizeof(struct nuv4_authreq);
+        req_start = start + sizeof(struct nu_authreq);
+        auth_buffer_len = authreq->packet_length - sizeof(struct nu_authreq);
         for (; 
                 0 < auth_buffer_len; 
                 req_start += field_length, auth_buffer_len -= field_length)
         {
-            struct nuv4_authfield* field = (struct nuv4_authfield* )req_start;
+            struct nu_authfield* field = (struct nu_authfield* )req_start;
 
             /* check buffer underflow */
-            if (auth_buffer_len < (int)sizeof(struct nuv4_authfield))
+            if (auth_buffer_len < (int)sizeof(struct nu_authfield))
             {
                 free_connection_list(conn_elts);
                 free_connection(connection);
@@ -413,6 +401,9 @@ GSList* user_request(struct tls_buffer_read *datas)
         connection->os_sysname=g_strdup(datas->os_sysname);
         connection->os_release=g_strdup(datas->os_release);
         connection->os_version=g_strdup(datas->os_version);
+	/* copy client version information */
+        connection->client_version=datas->client_version;
+
         if (connection->user_groups == NULL) {
             if ((header->option == 0x1) && multiclient_ok) {
                 /* group is not fill in multi users mode
@@ -465,7 +456,7 @@ static GSList* userpckt_decode(struct tls_buffer_read *datas)
     }
 
     /* check protocol version */
-    if (header->proto != PROTO_VERSION)
+    if ((header->proto != PROTO_VERSION) && (header->proto != PROTO_VERSION_V20))
     {
         log_message (INFO, AREA_USER,
             "unsupported protocol, got protocol %d (msg %d) with option %d (length %d)",

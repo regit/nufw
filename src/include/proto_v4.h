@@ -27,80 +27,10 @@
  *
  * Value of field protocol_version of ::nufw_to_nuauth_message_header_t
  */
-#define PROTO_VERSION 4
 
 /* 
  * Protocol 4 definition 
  */
-struct nuv4_authreq {
-    uint16_t packet_seq;
-    uint16_t packet_length; /*!< Length of the whole packet including this header */
-};
-
-/**
- * Header of one field.
- * See also the header of the whole packet: ::nuv2_authreq
- */
-struct nuv4_authfield {
-    uint8_t type;    /*!< Field type identifier: see ::nuv4_field_identifier_t */
-    uint8_t option;  /*!< Option: equals to 0 to #OS_SRV */
-    uint16_t length; /*!< Length of one field */
-};
-
-/* TODO : inject struct nuv2_authfield ? */
-struct nuv4_authfield_ipv6 {
-    uint8_t type;
-    uint8_t option;
-    uint16_t length;   /*!< Length of one field */
-    struct in6_addr src;
-    struct in6_addr dst;
-    uint8_t proto;
-    uint8_t flags;
-    uint16_t FUSE;
-    uint16_t sport;
-    uint16_t dport;
-};
-
-/**
- * Application field datas
- */
-struct nuv4_authfield_app {
-    uint8_t type;
-    uint8_t option;
-    uint16_t length;   /*!< Length of content */
-
-    /* after that is the application content */
-};
-
-/** 
- * Username field data
- */ 
-struct nuv4_authfield_username {
-    uint8_t type;
-    uint8_t option;
-    uint16_t length;   /*!< Length of one field */
-    char *datas;
-};
-
-struct nuv4_authfield_hello {
-    uint8_t type;
-    uint8_t option;
-    uint16_t length;
-    uint32_t helloid;   /*!< Length of one field */
-};
-
-
-struct nuv4_srv_message {
-    uint8_t type;
-    uint8_t option;
-    uint16_t length;
-};
-
-struct nuv4_srv_helloreq {
-    uint8_t type,option;
-    uint16_t length;
-    uint32_t helloid;
-};
 
 /**
  * Message of type #AUTH_CONN_DESTROY or #AUTH_CONN_UPDATE send 

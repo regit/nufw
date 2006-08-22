@@ -438,16 +438,16 @@ int sasl_parse_user_os(user_session_t* c_session, char *buf, int buf_size)
  */
     unsigned int len;
     int decode;
-    struct nuv4_authfield* osfield;
+    struct nu_authfield* osfield;
     gchar* dec_buf=NULL;
     gchar** os_strings;
     int dec_buf_size;
     char address[INET6_ADDRSTRLEN];
     
-    osfield=(struct nuv4_authfield*)buf;
+    osfield=(struct nu_authfield*)buf;
 
     /* check buffer underflow */
-    if (buf_size < (int)sizeof(struct nuv4_authfield)) {
+    if (buf_size < (int)sizeof(struct nu_authfield)) {
         if (inet_ntop(AF_INET6, &c_session->addr, address, sizeof(address)) != NULL)
             g_message("%s sent a too small osfield",address);
         return SASL_FAIL;

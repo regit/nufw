@@ -405,12 +405,8 @@ void create_x509_credentials()
  */
 void* push_worker(GMutex *mutex) 
 {
-/**
- * \todo
- * proto v3 compat
- */
     struct msg_addr_set *global_msg=g_new0(struct msg_addr_set,1);
-    struct nuv4_srv_message *msg=g_new0(struct nuv4_srv_message,1);
+    struct nu_srv_message *msg=g_new0(struct nu_srv_message,1);
     struct internal_message * message;
     GTimeVal tv;
 
