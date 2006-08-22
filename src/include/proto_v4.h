@@ -17,7 +17,7 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef NUFW_PROTOCOL_v4_H
+#ifndef NUFW_PROTOCOL_V4_H
 #define NUFW_PROTOCOL_V4_H
 
 #include <netinet/in.h>    /* struct in6addr */
