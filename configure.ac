@@ -59,6 +59,7 @@ AC_ARG_WITH(prelude-log,
         enable_prelude_log="")
 
 AC_ARG_WITH(mysql-log, [AC_HELP_STRING(--with-mysql-log,  Support user activity logging in Mysql database)], enable_mysql_log=$withval, enable_mysql_log="")
+AC_ARG_WITH(bofh-mysql, [AC_HELP_STRING(--with-mysql-log,  Support user connection killing from Mysql database)], enable_bofh_mysql=$withval, enable_bofh_mysql="")
 AC_ARG_WITH(pgsql-log, [AC_HELP_STRING(--with-pgsql-log,  Support user activity logging in PostgreSQL database)], enable_pgsql_log=$withval, enable_pgsql_log="")
 AC_ARG_WITH(syslog-log, [AC_HELP_STRING(--with-syslog-log,  Support user activity logging in syslog)], enable_syslog_log=$withval, enable_syslog_log="yes")
 
@@ -137,6 +138,7 @@ AM_CONDITIONAL(USE_LDAP, test x$ldap = xyes)
 AM_CONDITIONAL(USE_GDBM, test x$gdbm = xyes)
 AM_CONDITIONAL(USE_PRELUDE_LOG, test x$enable_prelude_log = xyes)
 AM_CONDITIONAL(USE_MYSQL_LOG, test x$enable_mysql_log = xyes)
+AM_CONDITIONAL(USE_BOFH_MYSQL, test x$enable_bofh_mysql = xyes)
 AM_CONDITIONAL(USE_PGSQL_LOG, test x$enable_pgsql_log = xyes)
 AM_CONDITIONAL(USE_PLAINTEXT_AUTH, test x$enable_plaintext_auth = xyes)
 AM_CONDITIONAL(USE_SYSLOG_LOG, test x$enable_syslog_log = xyes)
@@ -242,6 +244,7 @@ AC_CONFIG_FILES([Makefile
         src/nuauth/modules/x509_std/Makefile
         src/nuauth/modules/libmark_uid/Makefile
         src/nuauth/modules/libsession_expire/Makefile
+        src/nuauth/modules/log_bofh_mysql/Makefile
         src/clients/Makefile
         src/clients/lib/Makefile
         src/clients/nutcpc/Makefile
