@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2004,2005,2006 INL
+ ** Copyright(C) 2004-2006 INL
  ** written by  Eric Leblond <regit@inl.fr>
  **             Vincent Deffontaines <gryzor@inl.fr>
  **
@@ -143,13 +143,6 @@ static int treat_user_request (user_session_t * c_session)
     datas->socket=0;
     datas->tls=c_session->tls;
     datas->ip_addr=c_session->addr;
-#ifdef DEBUG_ENABLE
-    if (!c_session->multiusers) {
-        if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_USER))
-            g_message("(*) New packet from user %s",
-                    c_session->user_name);
-    }
-#endif
     
     /* copy packet datas */
     datas->buffer = g_new0(char, CLASSIC_NUFW_PACKET_SIZE);
@@ -188,7 +181,7 @@ static int treat_user_request (user_session_t * c_session)
         
         /* we realloc and get what we miss */
         datas->buffer=g_realloc(datas->buffer, header_length);
-        header = (struct nuv2_header* )datas->buffer;
+        header = (struct nu_header* )datas->buffer;
         
         g_mutex_lock(c_session->tls_lock);
         tmp_len = gnutls_record_recv( *(c_session->tls), datas->buffer+CLASSIC_NUFW_PACKET_SIZE,
@@ -207,18 +200,12 @@ static int treat_user_request (user_session_t * c_session)
     }
 
     /* check authorization if we're facing a multi user packet */ 
-    if ( (header->option == 0x0) || ((header->option == 0x1) && c_session->multiusers)) {
-        /* this is an authorized packet we fill the buffer_read structure */
-        if (c_session->multiusers) {
-            datas->user_name=NULL;
-            datas->user_id=0;
-            datas->groups=NULL;
-        } else {
-            datas->user_name = g_strdup(c_session->user_name);
-            datas->user_id = c_session->user_id;
-            datas->groups = g_slist_copy(c_session->groups);
-        }
-        if (c_session->sysname){
+    if (header->option == 0x0)  {
+	    /* this is an authorized packet we fill the buffer_read structure */
+	    datas->user_name = g_strdup(c_session->user_name);
+	    datas->user_id = c_session->user_id;
+	    datas->groups = g_slist_copy(c_session->groups);
+	    if (c_session->sysname){
             datas->os_sysname=g_strdup(c_session->sysname);
             if (datas->os_sysname == NULL){
                 free_buffer_read(datas);

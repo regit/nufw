@@ -203,20 +203,23 @@ static int samp_send(gnutls_session session, const char *buffer,
   unsigned len, alloclen;
   int result;
 
-  alloclen = ((length / 3) + 1) * 4 + 1;
+  alloclen = ((length / 3) + 1) * 4 + 4;
   buf = malloc(alloclen);
   if (buf == NULL) {
     SET_ERROR(err, INTERNAL_ERROR, MEMORY_ERR);
     return 0;
   }
 
-  result = sasl_encode64(buffer, length, buf, alloclen, &len);
+  result = sasl_encode64(buffer, length, buf+3, alloclen, &len);
   if (result != SASL_OK){
       SET_ERROR(err, SASL_ERROR, result);
       free(buf);
       return 0;
   }
-  result = gnutls_record_send(session, buf, len);
+
+  memcpy(buf,"C: ",3);
+  
+  result = gnutls_record_send(session, buf, len+3);
   free(buf);
   if (result < 0) {
     SET_ERROR(err, GNUTLS_ERROR, result);
@@ -239,7 +242,7 @@ static unsigned samp_recv(gnutls_session session, char* buf,int bufsize, nuclien
       return 0;
   }
 
-  result = sasl_decode64(buf, (unsigned) tls_len, buf,
+  result = sasl_decode64(buf+3, (unsigned) strlen(buf+3), buf,
 			 bufsize, &len);
   if (result != SASL_OK){
       SET_ERROR(err, SASL_ERROR, result);
@@ -270,13 +273,14 @@ int mysasl_negotiate(NuAuth* user_session, sasl_conn_t *conn, nuclient_error *er
     result = sasl_client_start(conn,
             buf,
             NULL,
-            &data,
-            (unsigned *)&len,
+            &data, 
+            &len,
             &chosenmech);
     
+    printf("Using mechanism %s\n", chosenmech);
     if (result != SASL_OK && result != SASL_CONTINUE) {
         if (user_session->verbose) {
-            printf("starting SASL negotiation");
+            printf("Error starting SASL negotiation");
             printf("\n%s\n", sasl_errdetail(conn));
         }
         SET_ERROR(err, SASL_ERROR, result);
@@ -301,27 +305,40 @@ int mysasl_negotiate(NuAuth* user_session, sasl_conn_t *conn, nuclient_error *er
 
     while (result == SASL_CONTINUE) {
         if (user_session->verbose) {
-            puts("Waiting for server reply...");
+            printf("Waiting for server reply...\n");
         }
+	memset(buf,0,sizeof(buf));
         len = samp_recv(session, buf, sizeof(buf), err);
-        if (len == 0) {
+        if (len < 0) {
+            printf("server problem, recv fail...\n");
             return SASL_FAIL;
         }
-        result = sasl_client_step(conn, buf, len, NULL,
-                &data, &len);
+        result = sasl_client_step(conn, buf, len, NULL, &data, &len);
         if (result != SASL_OK && result != SASL_CONTINUE){
             if (user_session->verbose)
-                printf("Performing SASL negotiation");
+                printf("Performing SASL negotiation\n");
             SET_ERROR(err, SASL_ERROR, result);
-            return SASL_FAIL;
         }
         if (data && len) {
             if (user_session->verbose)
-                puts("Sending response...");
+                puts("Sending response...\n");
             if (!samp_send(session,data, len, err)) {
                 return SASL_FAIL;
             }
-        } 
+        } else if (result != SASL_OK) {
+            if (!samp_send(session,"", 0, err)) {
+                return SASL_FAIL;
+	    }
+	}
+    }
+
+    if (result != SASL_OK){
+	    if (user_session->verbose)
+		    puts("Authentication failed...");
+	    return SASL_FAIL;
+    } else {
+	    if (user_session->verbose)
+		    puts("Authentication started...\n");
     }
 
     return SASL_OK;
@@ -718,8 +735,19 @@ int init_sasl(NuAuth* session, nuclient_error *err)
         { SASL_CB_LIST_END, NULL, NULL }
     };
 
+    /*
+     * gnutls_record_send(session->tls,PROTO_STRING " " PROTO_VERSION,
+    				strlen(PROTO_STRING " " PROTO_VERSION));
+				*/
+
+    gnutls_record_send(session->tls,"PROTO 4",strlen("PROTO 4"));
+
+    /* set external properties here
+       sasl_setprop(conn, SASL_SSF_EXTERNAL, &extprops); */
+    /* set username taken from console */
+
     /* client new connection */
-    ret = sasl_client_new("nuauth", "myserver", NULL, NULL, callbacks, 0, &conn);
+    ret = sasl_client_new("nuauth", "", NULL, NULL, callbacks, 0, &conn);
     if (ret != SASL_OK) {
         if (session->verbose)
             printf("Failed allocating connection state");
@@ -727,10 +755,6 @@ int init_sasl(NuAuth* session, nuclient_error *err)
         SET_ERROR(err, SASL_ERROR, ret);
         return 0;
     }
-
-    /* set external properties here
-       sasl_setprop(conn, SASL_SSF_EXTERNAL, &extprops); */
-    /* set username taken from console */
 
     sasl_setprop(conn,SASL_SSF_EXTERNAL,&extssf);
     ret = sasl_setprop(conn, SASL_AUTH_EXTERNAL,session->username);

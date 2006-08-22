@@ -49,7 +49,6 @@ typedef struct
     gchar *sysname;          /*!< OS system name (eg. "Linux") */
     gchar *release;          /*!< OS release (eg. "2.6.12") */
     gchar *version;          /*!< OS full version */
-    gboolean multiusers;     /*!< Multi-user session? */
     time_t expire;           /*!< Timeout of the session (-1 means unlimited) */
     int client_version;	     /*!< Client protocol version */
 } user_session_t;

@@ -198,6 +198,7 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
         }
     }
 
+    /** \todo Analyse first send packet to check if client announces a valid proto */
     ret = sasl_user_check(c_session);
 
     remove_socket_from_pre_client_list(c);
