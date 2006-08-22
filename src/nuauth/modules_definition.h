@@ -47,7 +47,6 @@ GSList* certificate_check_modules;
 GSList* certificate_to_uid_modules;
 
 GSList* user_session_modify_modules;
-
 GSList* finalise_packet_modules;
 
 GMutex *modules_mutex;

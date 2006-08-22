@@ -250,7 +250,7 @@ gchar* modules_certificate_to_uid (gnutls_session session, gnutls_x509_crt cert)
  * Modify user session
  *
  */
-nu_error_t modules_user_session_modify(user_session_t* c_session)
+int modules_user_session_modify(user_session_t* c_session)
 {
 	/* iter through all modules list */
 	GSList *walker=user_session_modify_modules;
@@ -259,7 +259,7 @@ nu_error_t modules_user_session_modify(user_session_t* c_session)
 		handler (c_session, ((module_t*)walker->data)->params);
 	}
 
-	return NU_EXIT_OK;
+	return SASL_OK;
 }
 
 /** 
@@ -495,10 +495,10 @@ int load_modules()
             "certificate_check", "certificate check");
     LOAD_MODULE(nuauth_certificate_to_uid_module, certificate_to_uid_modules,
             "certificate_to_uid", "certificate to uid");
-    LOAD_MODULE(nuauth_user_session_modify_module, user_session_modify_modules,
-            "user_session_modify", "user session modify");
     LOAD_MODULE(nuauth_finalise_packet_module, finalise_packet_modules,
             "finalise_packet", "finalise packet");
+    LOAD_MODULE(nuauth_user_session_modify_module, user_session_modify_modules,
+            "user_session_modify", "user session modify");
     if (nuauthconf->do_ip_authentication){
         LOAD_MODULE(nuauth_ip_authentication_module, ip_auth_modules, 
                 "ip_authentication", "ip authentication");

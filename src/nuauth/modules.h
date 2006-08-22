@@ -99,7 +99,7 @@ int modules_check_certificate (gnutls_session session, gnutls_x509_crt cert);
 
 gchar* modules_certificate_to_uid (gnutls_session session, gnutls_x509_crt cert);
 
-nu_error_t modules_user_session_modify(user_session_t* c_session);
+int modules_user_session_modify(user_session_t* c_session);
 
 nu_error_t modules_finalise_packet(connection_t* connection);
 
