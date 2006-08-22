@@ -17,12 +17,8 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef NUFW_PROTOCOL_H
-#define NUFW_PROTOCOL_H
-
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
+#ifndef NUFW_PROTOCOL_V3_H
+#define NUFW_PROTOCOL_V3_H
 
 #ifdef LINUX 
 #  include <endian.h>
@@ -30,96 +26,18 @@
 #  include <machine/endian.h>
 #endif
 
-#include <netinet/in.h>    /* struct in6addr */
-
 /** 
  * Protocol version of message exchanged between NuFW and NuAuth.
  *
  * Value of field protocol_version of ::nufw_to_nuauth_message_header_t
  */
-#define PROTO_VERSION 3
-
-/**
- * Message type : stored on 4 bits
- *
- * Used in ::nufw_to_nuauth_message_header_t
- */
-typedef enum
-{
-    AUTH_REQUEST=0x1,
-    AUTH_ANSWER,
-    USER_REQUEST,
-    AUTH_CONTROL,
-    USER_HELLO,
-    AUTH_CONN_DESTROY,
-    AUTH_CONN_UPDATE,
-    AUTH_CONN_FIXED_TIMEOUT
-} nufw_message_t;
-
-typedef enum
-{
-    DECISION_DROP=0,    /*!< NuAuth decision answer: drop packet */
-    DECISION_ACCEPT,    /*!< NuAuth decision answer: packet accepted */
-    DECISION_NODECIDE,  /*!< NuAuth decision answer: can't decide! */
-    DECISION_REJECT     /*!< NuAuth decision answer: reject the packet */ 
-} decision_t;    
-
-#define AUTHREQ_PORT "4129"
-#define USERPCKT_PORT "4130"
 
 /* 
- * Protocol 2 definition 
+ * Protocol 3 definition 
  */
 
-/* header common for all packets
-   1         4            8            16          24     32
-   |         |            |            |           |      |
-   |  Proto  |Msg Type    | Msg option |    packet length |
-
-   message type is one of :
-
-AUTHREQ : user send packet
-
-*/
-
-struct nuv2_header {
-#ifdef WORDS_BIGENDIAN	
-    uint8_t msg_type:4;
-    uint8_t proto:4;
-#else
-    uint8_t proto:4;
-    uint8_t msg_type:4;
-#endif
-    uint8_t option;
-    uint16_t length;
-};
-
-typedef enum
-{
-    IPV4_FIELD=1,
-    IPV6_FIELD,
-    APP_FIELD,
-    OS_FIELD,
-    USERNAME_FIELD,
-    HELLO_FIELD
-} field_identifier_t;    
-
-/**
- * (possible value of the option member of ::nuv2_authfield)
- */
-#define OS_SRV 0x1
-
-#define APP_TYPE_NAME 0x1 /** application is defined by full path.  */
-
-/**
- * Application is defined by full path and SHA1 sig of binary.
- *
- * Format is : "full_path_app;SHA1 sig" each filed being base64 encoded
- */
-#define APP_TYPE_SHA1 0x2 
-
-struct nuv2_authreq {
-    uint16_t packet_seq;
+struct nuv3_authreq {
+    uint16_t packet_id;
     uint16_t packet_length; /*!< Length of the whole packet including this header */
 };
 
@@ -127,19 +45,19 @@ struct nuv2_authreq {
  * Header of one field.
  * See also the header of the whole packet: ::nuv2_authreq
  */
-struct nuv2_authfield {
-    uint8_t type;    /*!< Field type identifier: see ::field_identifier_t */
+struct nuv3_authfield {
+    uint8_t type;    /*!< Field type identifier: see ::nuv3_field_identifier_t */
     uint8_t option;  /*!< Option: equals to 0 to #OS_SRV */
     uint16_t length; /*!< Length of one field */
 };
 
 /* TODO : inject struct nuv2_authfield ? */
-struct nuv2_authfield_ipv6 {
+struct nuv3_authfield_ipv4 {
     uint8_t type;
     uint8_t option;
     uint16_t length;   /*!< Length of one field */
-    struct in6_addr src;
-    struct in6_addr dst;
+    uint32_t src;
+    uint32_t dst;
     uint8_t proto;
     uint8_t flags;
     uint16_t FUSE;
@@ -150,7 +68,7 @@ struct nuv2_authfield_ipv6 {
 /**
  * Application field datas
  */
-struct nuv2_authfield_app {
+struct nuv3_authfield_app {
     uint8_t type;
     uint8_t option;
     uint16_t length;   /*!< Length of content */
@@ -161,14 +79,14 @@ struct nuv2_authfield_app {
 /** 
  * Username field data
  */ 
-struct nuv2_authfield_username {
+struct nuv3_authfield_username {
     uint8_t type;
     uint8_t option;
     uint16_t length;   /*!< Length of one field */
     char *datas;
 };
 
-struct nuv2_authfield_hello {
+struct nuv3_authfield_hello {
     uint8_t type;
     uint8_t option;
     uint16_t length;
@@ -177,57 +95,23 @@ struct nuv2_authfield_hello {
 
 
 /* sender to client message */
-
-/* type message */
-typedef enum
-{
-    SRV_TYPE = 1,               /*!< Send server mode: #SRV_TYPE_PUSH or #SRV_TYPE_POLL */
-    SRV_REQUIRED_PACKET,
-    SRV_REQUIRED_DISCONNECT,
-    SRV_REQUIRED_HELLO
-} nuv2_type_t;
-
-/** Server mode, value of with #SRV_TYPE (::nuv2_srv_message) message type */
-typedef enum
-{
-    SRV_TYPE_POLL=0,   /*!< Server works in POLL mode (default) */
-    SRV_TYPE_PUSH      /*!< Server works in PUSH mode */
-} nuv2_server_mode_t;
-
-struct nuv2_srv_message {
+struct nuv3_srv_message {
     uint8_t type;
     uint8_t option;
     uint16_t length;
 };
 
-struct nuv2_srv_helloreq {
+struct nuv3_srv_helloreq {
     uint8_t type,option;
     uint16_t length;
     uint32_t helloid;
 };
 
-/** 
- * Header of message send by NuFW to NuAuth 
- *
- * See also structures ::nufw_to_nuauth_conntrack_message_t and
- * ::nufw_to_nuauth_auth_message_t which include message content.
- */
-typedef struct {
-    /** Version of the protocol (#PROTO_VERSION) */
-    uint8_t protocol_version;
-
-    /** Message type (from ::nufw_message_t) */
-    uint8_t msg_type;
-
-    /** Message length including header (in bytes) */
-    uint16_t msg_length;
-} nufw_to_nuauth_message_header_t;
-
 /**
  * Message of type #AUTH_CONN_DESTROY or #AUTH_CONN_UPDATE send 
  * by NuFW to NuAuth
  */
-struct nu_conntrack_message_t {
+struct nuv3_conntrack_message_t {
     /* Copy/paste nufw_to_nuauth_message_header_t content */
     uint8_t protocol_version; /*!< Version of the protocol (#PROTO_VERSION) */
     uint8_t msg_type;         /*!< Message type (from ::nufw_message_t) */
@@ -235,9 +119,9 @@ struct nu_conntrack_message_t {
 
     /* Conntrack fields */
     uint32_t timeout;        /*!< Timeout (Epoch format) */
-    struct in6_addr ip_src;  /*!< IPv6 source IP */
-    struct in6_addr ip_dst;  /*!< IPv6 destination IP */
-    uint8_t  ip_protocol;    /*!< IP protocol number */
+    uint32_t ipv4_src;       /*!< IPv4 source IP */
+    uint32_t ipv4_dst;       /*!< IPv4 destination IP */
+    uint8_t  ipv4_protocol;  /*!< IPv4 protocol number */
     uint16_t src_port;       /*!< TCP/UDP source port or ICMP type */
     uint16_t dest_port;      /*!< TCP/UDP destionation port or ICMP code */
 };
@@ -257,7 +141,7 @@ typedef struct {
     uint32_t timestamp;      /*!< Timestamp (Epoch format) */
 
     /* (...): packet content (maybe truncated) */
-} nufw_to_nuauth_auth_message_t;
+} nuv3_nufw_to_nuauth_auth_message_t;
 
 /**
  * Send NuAuth decision to NuFW
@@ -274,7 +158,7 @@ typedef struct {
     uint16_t payload_len;       /*!< Indicate the length of datas in the recv buffer after 
                                   the end of the structure that contains the payload of packet. Set
                                   to 0 to treat the following datas as a new decision response */
-} nuauth_decision_response_t;    
+} nuv3_nuauth_decision_response_t;    
 
-#endif
+#endif /* NUFW_PROTOCOL_V3_H */
 

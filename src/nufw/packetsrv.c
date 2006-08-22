@@ -179,6 +179,20 @@ int packetsrv_open()
         return -1;
     }
 
+    /* unbinding existing nf_queue handler for AF_INET (if any) */
+    if (nfq_unbind_pf(h, AF_INET) < 0) {
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
+                "[!] Error during nfq_unbind_pf()");
+        return -1;
+    }
+
+    /* binding nfnetlink_queue as nf_queue handler for AF_INET */
+    if (nfq_bind_pf(h, AF_INET) < 0) {
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
+                "[!] Error during nfq_bind_pf()");
+        return -1;
+    }
+
     /* unbinding existing nf_queue handler for AF_INET6 (if any) */
     if (nfq_unbind_pf(h, AF_INET6) < 0) {
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
@@ -192,6 +206,7 @@ int packetsrv_open()
                 "[!] Error during nfq_bind_pf()");
         return -1;
     }
+
 
 
     /* binding this socket to queue number ::nfqueue_num 
@@ -504,11 +519,11 @@ void shutdown_tls()
 int auth_request_send(uint8_t type, uint32_t packet_id, char* payload, unsigned int payload_len)
 {
     unsigned char datas[512];
-    nufw_to_nuauth_auth_message_t *msg_header = (nufw_to_nuauth_auth_message_t *)&datas;
-    unsigned char *msg_content = datas + sizeof(nufw_to_nuauth_auth_message_t);
+    nuv4_nufw_to_nuauth_auth_message_t *msg_header = (nuv4_nufw_to_nuauth_auth_message_t *)&datas;
+    unsigned char *msg_content = datas + sizeof(nuv4_nufw_to_nuauth_auth_message_t);
     int msg_length;
 
-    /* Drop non-IPv4 packet */
+    /* Drop non-IPv(4|6) packet */
     if ((((struct iphdr *)payload)->version != 4) && ( ((struct iphdr *)payload)->version != 6)) {
         debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, 
                 "Dropping non-IPv4/non-IPv6 packet (version %u)",
@@ -517,12 +532,12 @@ int auth_request_send(uint8_t type, uint32_t packet_id, char* payload, unsigned 
     } 
 
     /* Truncate packet content if needed */
-    if (sizeof(datas) - sizeof(nufw_to_nuauth_auth_message_t) < payload_len) {
+    if (sizeof(datas) - sizeof(nuv4_nufw_to_nuauth_auth_message_t) < payload_len) {
         debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, 
                 "Very long packet: truncating!");
-        payload_len = sizeof(datas) - sizeof(nufw_to_nuauth_auth_message_t);
+        payload_len = sizeof(datas) - sizeof(nuv4_nufw_to_nuauth_auth_message_t);
     }
-    msg_length = sizeof(nufw_to_nuauth_auth_message_t) + payload_len;
+    msg_length = sizeof(nuv4_nufw_to_nuauth_auth_message_t) + payload_len;
 
     /* Fill message header */
     msg_header->protocol_version = PROTO_VERSION;

@@ -44,17 +44,17 @@ int count;
 #endif
 
 int send_hello_pckt(NuAuth * session){
-    struct nuv2_header header;
+    struct nu_header header;
 
     /* fill struct */
     header.proto=PROTO_VERSION;
     header.msg_type=USER_HELLO;
     header.option=0;
-    header.length=htons(sizeof(struct nuv2_header));
+    header.length=htons(sizeof(struct nu_header));
 
     /*  send it */
     if(session->tls){
-        if( gnutls_record_send(session->tls,&header,sizeof(struct nuv2_header))<=0){
+        if( gnutls_record_send(session->tls,&header,sizeof(struct nu_header))<=0){
 #if DEBUG_ENABLE
             printf("write failed at %s:%d\n",__FILE__,__LINE__);
 #endif
@@ -68,17 +68,17 @@ int send_hello_pckt(NuAuth * session){
 /**
  * Send connections to nuauth: between 1 and #CONN_MAX connections
  * in a big packet of format:
- *   [ nuv2_header + nuv2_authfield_ipv6 * N ]
+ *   [ nu_header + nuv4_authfield_ipv6 * N ]
  */
 int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
 {
   char datas[PACKET_SIZE];
   char *pointer;
   unsigned int item;
-  struct nuv2_header *header;
-  struct nuv2_authreq *authreq;
-  struct nuv2_authfield_ipv6 *authfield;
-  struct nuv2_authfield_app *appfield;
+  struct nu_header *header;
+  struct nuv4_authreq *authreq;
+  struct nuv4_authfield_ipv6 *authfield;
+  struct nuv4_authfield_app *appfield;
   unsigned len;
   const char *appname;
   char *app_ptr;
@@ -86,11 +86,11 @@ int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
   session->timestamp_last_sent=time(NULL);
   memset(datas,0,sizeof datas);
 
-  header = (struct nuv2_header *)datas;
+  header = (struct nu_header *)datas;
   header->proto = PROTO_VERSION;
   header->msg_type = USER_REQUEST;
   header->option = 0;
-  header->length = sizeof(struct nuv2_header);
+  header->length = sizeof(struct nu_header);
   pointer = (char*)(header + 1);
 
   for (item=0; ((item<CONN_MAX) && carray[item] != NULL); item++)
@@ -104,13 +104,13 @@ int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
 #else
       appname="UNKNOWN";
 #endif
-      header->length+=sizeof(struct nuv2_authreq)+sizeof(struct nuv2_authfield_ipv6);
+      header->length+=sizeof(struct nuv4_authreq)+sizeof(struct nuv4_authfield_ipv6);
       
-      authreq = (struct nuv2_authreq *)pointer;
+      authreq = (struct nuv4_authreq *)pointer;
       authreq->packet_seq = session->packet_seq++;
-      authreq->packet_length = sizeof(struct nuv2_authreq)+sizeof(struct nuv2_authfield_ipv6);
+      authreq->packet_length = sizeof(struct nuv4_authreq)+sizeof(struct nuv4_authfield_ipv6);
      
-      authfield = (struct nuv2_authfield_ipv6 *)(authreq+1);
+      authfield = (struct nuv4_authfield_ipv6 *)(authreq+1);
       authfield->type = IPV6_FIELD;
       authfield->option = 0;
       authfield->src = carray[item]->ip_src;
@@ -122,7 +122,7 @@ int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
       authfield->dport = htons(carray[item]->port_dst);
 
       /* application field  */
-      appfield = (struct nuv2_authfield_app *)(authfield+1); 
+      appfield = (struct nuv4_authfield_app *)(authfield+1); 
       appfield->type=APP_FIELD;
 #ifdef USE_SHA1
       appfield->option=APP_TYPE_SHA1;
@@ -149,7 +149,7 @@ int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
 
       appfield->length=htons(appfield->length);
       authreq->packet_length=htons(authreq->packet_length);
-      authfield->length=htons(sizeof(struct nuv2_authfield_ipv6));
+      authfield->length=htons(sizeof(struct nuv4_authfield_ipv6));
   }
   header->length=htons(header->length);
   if (session->debug_mode)

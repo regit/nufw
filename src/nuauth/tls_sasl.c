@@ -60,7 +60,10 @@ static void  policy_refuse_user(user_session_t* c_session,int c)
 
 static void tls_sasl_connect_ok(user_session_t* c_session, int c) 
 {
-    struct nuv2_srv_message msg;
+/** \todo
+ * proto v3 compat
+ */
+    struct nuv4_srv_message msg;
     /* Success place */
 
     /* checking policy rule on multiuser usage */

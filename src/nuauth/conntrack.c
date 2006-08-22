@@ -50,7 +50,7 @@ static void send_conntrack_message(struct limited_connection * lconn,unsigned ch
                 &lconn->gwaddr);
         g_static_mutex_unlock (&nufw_servers_mutex);
         if (session){
-            struct nu_conntrack_message_t message;
+            struct nuv4_conntrack_message_t message;
             /* send message */
             message.protocol_version = PROTO_VERSION;
             message.msg_type = msgtype;

@@ -133,79 +133,131 @@ int is_ipv4(struct in6_addr *addr)
  */
 void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 {
-    connection_t * element = (connection_t *) userdata;
-    nuauth_decision_response_t* response = NULL;
-    uint32_t packet_id = GPOINTER_TO_UINT(packet_id_ptr);
-    uint16_t uid16;
-    int payload_size = 0;
-    int total_size;
-    int use_icmp6;
+	connection_t * element = (connection_t *) userdata;
+	uint32_t packet_id = GPOINTER_TO_UINT(packet_id_ptr);
+	int payload_size = 0;
+	int total_size=0;
+	char* buffer=NULL;
 
-    /* check if user id fit in 16 bits */
-    if (0xFFFF < element->user_id) {
-        log_message(WARNING, AREA_MAIN,
-                "User identifier don't fit in 16 bits, not to truncate the value.");
-    }
-    uid16 = (element->user_id & 0xFFFF);
+	switch(element->nufw_version){
+		case PROTO_VERSION_V20:
+			{
+				nuv3_nuauth_decision_response_t* response = NULL;
+				uint16_t uid16;
+				/* check if user id fit in 16 bits */
+				if (0xFFFF < element->user_id) {
+					log_message(WARNING, AREA_MAIN,
+							"User identifier don't fit in 16 bits, not to truncate the value.");
+				}
+				uid16 = (0xFFFF && element->user_id);
+				if (element->decision == DECISION_REJECT){
+					payload_size = IPHDR_REJECT_LENGTH + PAYLOAD_SAMPLE;
+				}
+				/* allocate */
+				total_size = sizeof(nuv3_nuauth_decision_response_t)+payload_size;
+				response=g_alloca(total_size);
+				response->protocol_version = PROTO_VERSION_V20;
+				response->msg_type = AUTH_ANSWER;
+				response->user_id = htons(uid16);
+				response->decision = element->decision;
+				response->priority = 1;
+				response->padding = 0;
+				response->packet_id = htonl(packet_id);
+				response->payload_len = htons(payload_size);
+				if (element->decision == DECISION_REJECT){
+					char payload[IPHDR_REJECT_LENGTH + PAYLOAD_SAMPLE];
+					struct iphdr *ip = (struct iphdr *)payload;
 
-    use_icmp6 = (!is_ipv4(&element->tracking.saddr) || !is_ipv4(&element->tracking.daddr));
+					/* create ip header */
+					memset(payload, 0, IPHDR_REJECT_LENGTH );
+					ip->version = 4;
+					ip->ihl = IPHDR_REJECT_LENGTH_BWORD;
+					ip->tot_len = htons( IPHDR_REJECT_LENGTH + PAYLOAD_SAMPLE);
+					ip->ttl = 64; /* write dummy ttl */
+					ip->protocol = element->tracking.protocol;
+					/* dummy convert to IPv4 as nufw on the other side does not support IPv6 at all */
+					ip->saddr = htonl(element->tracking.saddr.s6_addr32[3]);
+					ip->daddr = htonl(element->tracking.daddr.s6_addr32[3]);
 
-    if (element->decision == DECISION_REJECT){
-        if (use_icmp6)
-            payload_size = IP6HDR_REJECT_LENGTH + PAYLOAD6_SAMPLE;
-        else
-            payload_size = IPHDR_REJECT_LENGTH + PAYLOAD_SAMPLE;
-    }
-    /* allocate */
-    total_size = sizeof(nuauth_decision_response_t)+payload_size;
-    response=g_alloca(total_size);
-    response->protocol_version = PROTO_VERSION;
-    response->msg_type = AUTH_ANSWER;
-    response->user_id = htons(uid16);
-    response->decision = element->decision;
-    response->priority = 1;
-    response->padding = 0;
-    response->packet_id = htonl(packet_id);
-    response->payload_len = htons(payload_size);
-    if (element->decision == DECISION_REJECT){
-        if (use_icmp6) {
-            char payload[IP6HDR_REJECT_LENGTH + PAYLOAD6_SAMPLE];
-            struct ip6_hdr *ip = (struct ip6_hdr *)payload;
+					/* write transport layer */
+					memcpy(payload+IPHDR_REJECT_LENGTH, element->tracking.payload, PAYLOAD_SAMPLE);
 
-            /* create ip header */
-            memset(payload, 0, IPHDR_REJECT_LENGTH );
-            ip->ip6_flow = 0x60000000;
-            ip->ip6_plen = htons(payload_size);
-            ip->ip6_hops = 64; /* write dummy hop limit */
-            ip->ip6_nxt = element->tracking.protocol;
-            ip->ip6_src = element->tracking.saddr;
-            ip->ip6_dst = element->tracking.daddr;
+					/* write icmp reject packet */
+					memcpy((char*)response+sizeof(nuv3_nuauth_decision_response_t), payload, payload_size);
+				}
 
-            /* write transport layer */
-            memcpy(payload+IP6HDR_REJECT_LENGTH, element->tracking.payload, PAYLOAD6_SAMPLE);
+			buffer = (void*)response;
+			}
+			break;
+	case PROTO_VERSION_V22:
+	{
+		nuv4_nuauth_decision_response_t* response = NULL;
+		int use_icmp6;
+		uint32_t uid16=element->user_id;
 
-            /* write icmp reject packet */
-            memcpy((char*)response+sizeof(nuauth_decision_response_t), payload, payload_size);
-        } else {
-            char payload[IPHDR_REJECT_LENGTH + PAYLOAD_SAMPLE];
-            struct iphdr *ip = (struct iphdr *)payload;
+		use_icmp6 = (!is_ipv4(&element->tracking.saddr) || !is_ipv4(&element->tracking.daddr));
 
-            /* create ip header */
-            memset(payload, 0, IPHDR_REJECT_LENGTH );
-            ip->version = 4;
-            ip->ihl = IPHDR_REJECT_LENGTH_BWORD;
-            ip->tot_len = htons( IPHDR_REJECT_LENGTH + PAYLOAD_SAMPLE);
-            ip->ttl = 64; /* write dummy ttl */
-            ip->protocol = element->tracking.protocol;
-            ip->saddr = htonl(element->tracking.saddr.s6_addr32[3]);
-            ip->daddr = htonl(element->tracking.daddr.s6_addr32[3]);
+		if (element->decision == DECISION_REJECT){
+			if (use_icmp6)
+				payload_size = IP6HDR_REJECT_LENGTH + PAYLOAD6_SAMPLE;
+			else
+				payload_size = IPHDR_REJECT_LENGTH + PAYLOAD_SAMPLE;
+		}
+		/* allocate */
+		total_size = sizeof(nuv4_nuauth_decision_response_t)+payload_size;
+		response=g_alloca(total_size);
+		response->protocol_version = PROTO_VERSION;
+		response->msg_type = AUTH_ANSWER;
+		response->tcmark = htonl(uid16);
+		response->decision = element->decision;
+		response->priority = 1;
+		response->padding = 0;
+		response->packet_id = htonl(packet_id);
+		response->payload_len = htons(payload_size);
+		if (element->decision == DECISION_REJECT){
+			if (use_icmp6) {
+				char payload[IP6HDR_REJECT_LENGTH + PAYLOAD6_SAMPLE];
+				struct ip6_hdr *ip = (struct ip6_hdr *)payload;
 
-            /* write transport layer */
-            memcpy(payload+IPHDR_REJECT_LENGTH, element->tracking.payload, PAYLOAD_SAMPLE);
+				/* create ip header */
+				memset(payload, 0, IPHDR_REJECT_LENGTH );
+				ip->ip6_flow = 0x60000000;
+				ip->ip6_plen = htons(payload_size);
+				ip->ip6_hops = 64; /* write dummy hop limit */
+				ip->ip6_nxt = element->tracking.protocol;
+				ip->ip6_src = element->tracking.saddr;
+				ip->ip6_dst = element->tracking.daddr;
 
-            /* write icmp reject packet */
-            memcpy((char*)response+sizeof(nuauth_decision_response_t), payload, payload_size);
-        }
+				/* write transport layer */
+				memcpy(payload+IP6HDR_REJECT_LENGTH, element->tracking.payload, PAYLOAD6_SAMPLE);
+
+				/* write icmp reject packet */
+				memcpy((char*)response+sizeof(nuv4_nuauth_decision_response_t), payload, payload_size);
+			} else {
+				char payload[IPHDR_REJECT_LENGTH + PAYLOAD_SAMPLE];
+				struct iphdr *ip = (struct iphdr *)payload;
+
+				/* create ip header */
+				memset(payload, 0, IPHDR_REJECT_LENGTH );
+				ip->version = 4;
+				ip->ihl = IPHDR_REJECT_LENGTH_BWORD;
+				ip->tot_len = htons( IPHDR_REJECT_LENGTH + PAYLOAD_SAMPLE);
+				ip->ttl = 64; /* write dummy ttl */
+				ip->protocol = element->tracking.protocol;
+				ip->saddr = htonl(element->tracking.saddr.s6_addr32[3]);
+				ip->daddr = htonl(element->tracking.daddr.s6_addr32[3]);
+
+				/* write transport layer */
+				memcpy(payload+IPHDR_REJECT_LENGTH, element->tracking.payload, PAYLOAD_SAMPLE);
+
+				/* write icmp reject packet */
+				memcpy((char*)response+sizeof(nuv4_nuauth_decision_response_t), payload, payload_size);
+			}
+		}
+
+		buffer = (void*)response;
+	}
+	break;
     }
 
     debug_log_message (DEBUG, AREA_MAIN, 
@@ -213,7 +265,7 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
             element->decision, packet_id, element->tls);
     if (element->tls->alive){
         g_mutex_lock(element->tls->tls_lock);
-        gnutls_record_send(*(element->tls->tls), response, total_size);
+        gnutls_record_send(*(element->tls->tls), buffer, total_size);
         g_mutex_unlock(element->tls->tls_lock);
         (void)g_atomic_int_dec_and_test(&(element->tls->usage));
     } else {

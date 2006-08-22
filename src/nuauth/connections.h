@@ -97,6 +97,9 @@ typedef struct
   decision_t decision;    /*!< Decision on packet. */
   time_t expire;          /*!< Expire time (never: -1) */
 
+
+  int nufw_version;
+  int client_version;
 #ifdef PERF_DISPLAY_ENABLE
   struct timeval arrival_time;   /*!< Performance datas */
 #endif

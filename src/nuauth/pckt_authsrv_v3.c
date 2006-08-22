@@ -1,0 +1,156 @@
+/*
+ ** Copyright(C) 2006, INL
+ **		written by Eric Leblond <regit@inl.fr>
+ **             INL http://www.inl.fr/
+ **
+ ** This program is free software; you can redistribute it and/or modify
+ ** it under the terms of the GNU General Public License as published by
+ ** the Free Software Foundation, version 2 of the License.
+ **
+ ** This program is distributed in the hope that it will be useful,
+ ** but WITHOUT ANY WARRANTY; without even the implied warranty of
+ ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ ** GNU General Public License for more details.
+ **
+ ** You should have received a copy of the GNU General Public License
+ ** along with this program; if not, write to the Free Software
+ ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
+
+#include <auth_srv.h>
+#include <errno.h>
+
+#include "pckt_authsrv_v3.h"
+
+nu_error_t parse_dgram(connection_t* connection,unsigned char* dgram, unsigned int dgram_size,connection_t** conn,nufw_message_t msg_type);
+
+/**
+ * Parse message content for message of type #AUTH_REQUEST or #AUTH_CONTROL
+ * using structure ::nufw_to_nuauth_auth_message_t. 
+ * 
+ * \param dgram Pointer to packet datas
+ * \param dgram_size Number of bytes in the packet
+ * \param conn Pointer of pointer to the ::connection_t that we have to authenticate
+ * \return A nu_error_t
+ */
+nu_error_t authpckt_new_connection_v3(unsigned char *dgram, unsigned int dgram_size,connection_t **conn)
+{
+    nuv3_nufw_to_nuauth_auth_message_t *msg = (nuv3_nufw_to_nuauth_auth_message_t *)dgram;
+    connection_t *connection;
+    nu_error_t ret;
+
+    if (dgram_size < sizeof(nuv3_nufw_to_nuauth_auth_message_t))
+    {
+        /** \todo Display warning message */
+        return NU_EXIT_ERROR;
+    }
+    dgram += sizeof(nuv3_nufw_to_nuauth_auth_message_t);
+    dgram_size -= sizeof(nuv3_nufw_to_nuauth_auth_message_t);
+
+    /* allocate new connection */
+    connection = g_new0(connection_t, 1);
+    if (connection == NULL){
+        log_message (WARNING, AREA_PACKET, "Can not allocate connection");
+        return NU_EXIT_ERROR;
+    }
+#ifdef PERF_DISPLAY_ENABLE
+    gettimeofday(&(connection->arrival_time),NULL);
+#endif
+    connection->acl_groups = NULL;
+    connection->user_groups = NULL;
+    connection->expire = -1;
+
+    connection->packet_id = g_slist_append(NULL, GUINT_TO_POINTER(ntohl(msg->packet_id)));
+    debug_log_message(DEBUG, AREA_PACKET,
+        "Auth pckt: Working on new connection (id=%u)",
+        (uint32_t)GPOINTER_TO_UINT(connection->packet_id->data));
+
+    /* timestamp */
+    connection->timestamp = ntohl(msg->timestamp);
+    if ( connection->timestamp == 0 )
+        connection->timestamp = time(NULL);
+
+    /* compat version: nufw is v2.0 */
+    connection->nufw_version =  PROTO_VERSION_V20;
+
+    ret = parse_dgram(connection,dgram,dgram_size,conn,msg->msg_type);
+    if (ret != NU_EXIT_OK){
+	return ret;
+    }
+
+    connection->user_groups = ALLGROUP;
+    
+#ifdef DEBUG_ENABLE
+    if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)){
+        g_message("Packet: ");
+        print_connection(connection,NULL);
+    }
+#endif
+    *conn = connection;
+    return NU_EXIT_OK;
+}
+
+/**
+ * Parse message content for message of type #AUTH_CONN_DESTROY 
+ * or #AUTH_CONN_UPDATE using structure ::nu_conntrack_message_t structure.
+ *
+ * Send a message FREE_MESSAGE or UPDATE_MESSAGE to limited_connections_queue
+ * (member of ::nuauthdatas).
+ * 
+ * \param dgram Pointer to packet datas
+ * \param dgram_size Number of bytes in the packet
+ */
+void authpckt_conntrack_v3 (unsigned char *dgram, unsigned int dgram_size)
+{
+    struct nuv3_conntrack_message_t* conntrack;
+    tracking_t* datas;
+    struct internal_message *message;
+
+    debug_log_message(VERBOSE_DEBUG, AREA_PACKET,
+        "Auth conntrack: Working on new packet");
+
+    /* Check message content size */
+    if (dgram_size != sizeof(struct nuv4_conntrack_message_t))
+    {
+        debug_log_message(WARNING, AREA_PACKET,
+            "Auth conntrack: Improper length of packet");
+        return;
+    }
+    
+    /* Create a message for limited_connexions_queue */
+    conntrack = (struct nuv3_conntrack_message_t*)dgram;
+    datas = g_new0(tracking_t, 1);
+    message = g_new0(struct internal_message, 1);
+    datas->protocol = conntrack->ipv4_protocol;
+
+    datas->saddr.s6_addr32[0] = 0;
+    datas->saddr.s6_addr32[1] = 0;
+    datas->saddr.s6_addr32[2] = 0xffff0000;
+    datas->saddr.s6_addr32[3] = ntohl(conntrack->ipv4_src);
+
+    datas->daddr.s6_addr32[0] = 0;
+    datas->daddr.s6_addr32[1] = 0;
+    datas->daddr.s6_addr32[2] = 0xffff0000;
+    datas->daddr.s6_addr32[3] = ntohl(conntrack->ipv4_dst);
+    
+    if (conntrack->ipv4_protocol == IPPROTO_ICMP)  {
+        datas->type = ntohs(conntrack->src_port);
+        datas->code = ntohs(conntrack->dest_port);
+    } else {
+        datas->source = ntohs(conntrack->src_port);
+        datas->dest = ntohs(conntrack->dest_port);
+    }               
+    message->datas = datas;
+    if (conntrack->msg_type == AUTH_CONN_DESTROY) {
+        message->type = FREE_MESSAGE;
+        debug_log_message(VERBOSE_DEBUG, AREA_PACKET,
+                "Auth conntrack: Sending free message");
+    } else {
+        message->type = UPDATE_MESSAGE;
+        debug_log_message(VERBOSE_DEBUG, AREA_PACKET,
+                "Auth conntrack: Sending Update message");
+    }
+    g_async_queue_push (nuauthdatas->limited_connections_queue, message);
+}
+
+

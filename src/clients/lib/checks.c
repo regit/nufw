@@ -53,27 +53,27 @@ void* recv_message(void *data)
     NuAuth* session=(NuAuth*)data;
     int ret;
     char dgram[512];
-    const size_t message_length= sizeof(struct nuv2_header)+sizeof(struct nuv2_authfield_hello)+sizeof(struct nuv2_authreq);
+    const size_t message_length= sizeof(struct nu_header)+sizeof(struct nuv4_authfield_hello)+sizeof(struct nuv4_authreq);
     char message[message_length];
-    struct nuv2_header *header;
-    struct nuv2_authreq *authreq;
-    struct nuv2_authfield_hello *hellofield;
+    struct nu_header *header;
+    struct nuv4_authreq *authreq;
+    struct nuv4_authfield_hello *hellofield;
 
     /* fill struct */
-    header = (struct nuv2_header *)message;
+    header = (struct nu_header *)message;
     header->proto=PROTO_VERSION;
     header->msg_type=USER_REQUEST;
     header->option=0;
     header->length=htons(message_length);
 
-    authreq = (struct nuv2_authreq *)(header + 1);
+    authreq = (struct nuv4_authreq *)(header + 1);
     authreq->packet_seq = session->packet_seq++;
-    authreq->packet_length = htons(sizeof(struct nuv2_authreq)+sizeof(struct nuv2_authfield_hello));
+    authreq->packet_length = htons(sizeof(struct nuv4_authreq)+sizeof(struct nuv4_authfield_hello));
 
-    hellofield = (struct nuv2_authfield_hello *)(authreq + 1);
+    hellofield = (struct nuv4_authfield_hello *)(authreq + 1);
     hellofield->type=HELLO_FIELD;
     hellofield->option=0;
-    hellofield->length=htons(sizeof(struct nuv2_authfield_hello));
+    hellofield->length=htons(sizeof(struct nuv4_authfield_hello));
 
     pthread_cleanup_push((pthread_cleanup_push_arg1_t)pthread_mutex_unlock, &session->check_count_mutex);
 
@@ -98,7 +98,7 @@ void* recv_message(void *data)
                 break;
 
             case SRV_REQUIRED_HELLO:
-                hellofield->helloid = ((struct nuv2_srv_helloreq*)dgram)->helloid;
+                hellofield->helloid = ((struct nuv4_srv_helloreq*)dgram)->helloid;
                 if (session->debug_mode) {
                     printf("[+] Send HELLO\n");
                 }

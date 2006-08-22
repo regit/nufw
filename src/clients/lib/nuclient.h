@@ -145,14 +145,14 @@ typedef struct conntable {
 
 #ifndef USE_SHA1
 #  define PACKET_ITEM_MAXSIZE \
-     ( sizeof(struct nuv2_authreq) + sizeof(struct nuv2_authfield_ipv6) \
-       + sizeof(struct nuv2_authfield_app) + PROGNAME_BASE64_WIDTH )
+     ( sizeof(struct nuv4_authreq) + sizeof(struct nuv4_authfield_ipv6) \
+       + sizeof(struct nuv4_authfield_app) + PROGNAME_BASE64_WIDTH )
 #else
 #  error "TODO: Compute PACKET_ITEM_MAXSIZE with SHA1 checksum"
 #endif
 
 #define PACKET_SIZE \
-    ( sizeof(struct nuv2_header) + CONN_MAX * PACKET_ITEM_MAXSIZE )
+    ( sizeof(struct nu_header) + CONN_MAX * PACKET_ITEM_MAXSIZE )
 
 enum
 {

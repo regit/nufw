@@ -32,52 +32,15 @@
 #include <auth_srv.h>
 #include <errno.h>
 
+#include "pckt_authsrv_v3.h"
+
 /**
- * Parse message content for message of type #AUTH_REQUEST or #AUTH_CONTROL
- * using structure ::nufw_to_nuauth_auth_message_t. 
- * 
- * \param dgram Pointer to packet datas
- * \param dgram_size Number of bytes in the packet
- * \param conn Pointer of pointer to the ::connection_t that we have to authenticate
- * \return A new connection or NULL if fails 
+ * Parse packet payload 
  */
-nu_error_t authpckt_new_connection(unsigned char *dgram, unsigned int dgram_size,connection_t **conn)
+
+nu_error_t parse_dgram(connection_t* connection,unsigned char* dgram, unsigned int dgram_size,connection_t** conn,nufw_message_t msg_type)
 {
-    nufw_to_nuauth_auth_message_t *msg = (nufw_to_nuauth_auth_message_t *)dgram;
     unsigned int ip_hdr_size; 
-    connection_t *connection;
-
-    if (dgram_size < sizeof(nufw_to_nuauth_auth_message_t))
-    {
-        /* TODO: Display warning message */
-        return NU_EXIT_ERROR;
-    }
-    dgram += sizeof(nufw_to_nuauth_auth_message_t);
-    dgram_size -= sizeof(nufw_to_nuauth_auth_message_t);
-
-    /* allocate new connection */
-    connection = g_new0(connection_t, 1);
-    if (connection == NULL){
-        log_message (WARNING, AREA_PACKET, "Can not allocate connection");
-        return NU_EXIT_ERROR;
-    }
-#ifdef PERF_DISPLAY_ENABLE
-    gettimeofday(&(connection->arrival_time),NULL);
-#endif
-    connection->acl_groups = NULL;
-    connection->user_groups = NULL;
-    connection->expire = -1;
-
-    connection->packet_id = g_slist_append(NULL, GUINT_TO_POINTER(ntohl(msg->packet_id)));
-    debug_log_message(DEBUG, AREA_PACKET,
-        "Auth pckt: Working on new connection (id=%u)",
-        (uint32_t)GPOINTER_TO_UINT(connection->packet_id->data));
-
-    /* timestamp */
-    connection->timestamp = ntohl(msg->timestamp);
-    if ( connection->timestamp == 0 )
-        connection->timestamp = time(NULL);
-
     /* get ip headers till tracking is filled */
     ip_hdr_size = get_ip_headers(&connection->tracking, dgram, dgram_size);
     if (ip_hdr_size == 0)  {
@@ -104,7 +67,7 @@ nu_error_t authpckt_new_connection(unsigned char *dgram, unsigned int dgram_size
                 case TCP_STATE_OPEN:
                     break; 
                 case TCP_STATE_CLOSE:
-                    if (msg->msg_type == AUTH_CONTROL ){
+                    if (msg_type == AUTH_CONTROL ){
 			connection->state = AUTH_STATE_DONE;
                         log_user_packet(connection, TCP_STATE_CLOSE);
                         free_connection(connection);
@@ -112,7 +75,7 @@ nu_error_t authpckt_new_connection(unsigned char *dgram, unsigned int dgram_size
                     }
                     break;
                 case TCP_STATE_ESTABLISHED:
-                    if (msg->msg_type == AUTH_CONTROL ){
+                    if (msg_type == AUTH_CONTROL ){
 			connection->state = AUTH_STATE_DONE;
                         log_user_packet(connection, TCP_STATE_ESTABLISHED);
                         free_connection(connection);
@@ -150,7 +113,7 @@ nu_error_t authpckt_new_connection(unsigned char *dgram, unsigned int dgram_size
             break;
 
         default:
-            if ( connection->state != AUTH_STATE_HELLOMODE){
+            if (connection->state != AUTH_STATE_HELLOMODE) {
                 log_message (WARNING, AREA_PACKET,
                         "Can't parse protocol %u",
                         connection->tracking.protocol);
@@ -158,6 +121,65 @@ nu_error_t authpckt_new_connection(unsigned char *dgram, unsigned int dgram_size
                 return NU_EXIT_ERROR;
             }
     }
+    return NU_EXIT_CONTINUE;
+}
+
+/**
+ * Parse message content for message of type #AUTH_REQUEST or #AUTH_CONTROL
+ * using structure ::nufw_to_nuauth_auth_message_t. 
+ * 
+ * \param dgram Pointer to packet datas
+ * \param dgram_size Number of bytes in the packet
+ * \param conn Pointer of pointer to the ::connection_t that we have to authenticate
+ * \return A nu_error_t
+ */
+nu_error_t authpckt_new_connection(unsigned char *dgram, unsigned int dgram_size,connection_t **conn)
+{
+    nuv4_nufw_to_nuauth_auth_message_t *msg = (nuv4_nufw_to_nuauth_auth_message_t *)dgram;
+    connection_t *connection;
+    nu_error_t ret;
+
+    if (dgram_size < sizeof(nuv4_nufw_to_nuauth_auth_message_t))
+    {
+        /** \todo Display warning message */
+        return NU_EXIT_ERROR;
+    }
+    dgram += sizeof(nuv4_nufw_to_nuauth_auth_message_t);
+    dgram_size -= sizeof(nuv4_nufw_to_nuauth_auth_message_t);
+
+    /* allocate new connection */
+    connection = g_new0(connection_t, 1);
+    if (connection == NULL){
+        log_message (WARNING, AREA_PACKET, "Can not allocate connection");
+        return NU_EXIT_ERROR;
+    }
+#ifdef PERF_DISPLAY_ENABLE
+    gettimeofday(&(connection->arrival_time),NULL);
+#endif
+    connection->acl_groups = NULL;
+    connection->user_groups = NULL;
+    connection->expire = -1;
+
+    connection->packet_id = g_slist_append(NULL, GUINT_TO_POINTER(ntohl(msg->packet_id)));
+    debug_log_message(DEBUG, AREA_PACKET,
+        "Auth pckt: Working on new connection (id=%u)",
+        (uint32_t)GPOINTER_TO_UINT(connection->packet_id->data));
+
+    /* timestamp */
+    connection->timestamp = ntohl(msg->timestamp);
+    if ( connection->timestamp == 0 )
+        connection->timestamp = time(NULL);
+
+/* connection is proto v4 because we are here */
+	connection->nufw_version =  PROTO_VERSION_V22;
+
+    ret = parse_dgram(connection,dgram,dgram_size,conn,msg->msg_type);
+    if (ret != NU_EXIT_CONTINUE){
+	return ret;
+    }
+
+    /** \todo parse supplementary fields */
+
     connection->user_groups = ALLGROUP;
     
 #ifdef DEBUG_ENABLE
@@ -169,6 +191,7 @@ nu_error_t authpckt_new_connection(unsigned char *dgram, unsigned int dgram_size
     *conn = connection;
     return NU_EXIT_OK;
 }
+
 
 /**
  * Parse message content for message of type #AUTH_CONN_DESTROY 
@@ -182,7 +205,7 @@ nu_error_t authpckt_new_connection(unsigned char *dgram, unsigned int dgram_size
  */
 void authpckt_conntrack (unsigned char *dgram, unsigned int dgram_size)
 {
-    struct nu_conntrack_message_t* conntrack;
+    struct nuv4_conntrack_message_t* conntrack;
     tracking_t* datas;
     struct internal_message *message;
 
@@ -190,7 +213,7 @@ void authpckt_conntrack (unsigned char *dgram, unsigned int dgram_size)
         "Auth conntrack: Working on new packet");
 
     /* Check message content size */
-    if (dgram_size != sizeof(struct nu_conntrack_message_t))
+    if (dgram_size != sizeof(struct nuv4_conntrack_message_t))
     {
         debug_log_message(WARNING, AREA_PACKET,
             "Auth conntrack: Improper length of packet");
@@ -198,7 +221,7 @@ void authpckt_conntrack (unsigned char *dgram, unsigned int dgram_size)
     }
     
     /* Create a message for limited_connexions_queue */
-    conntrack = (struct nu_conntrack_message_t*)dgram;
+    conntrack = (struct nuv4_conntrack_message_t*)dgram;
     datas = g_new0(tracking_t, 1);
     message = g_new0(struct internal_message, 1);
     datas->protocol = conntrack->ip_protocol;
@@ -257,45 +280,76 @@ nu_error_t authpckt_decode(unsigned char **pdgram, unsigned int * pdgram_size, c
 {
 	unsigned char* dgram=*pdgram;
 	unsigned int dgram_size=*pdgram_size;
-    nufw_to_nuauth_message_header_t *header;
+	nufw_to_nuauth_message_header_t *header;
 
-    /* Check message header size */
-    if (dgram_size < sizeof(nufw_to_nuauth_message_header_t))
-        return NU_EXIT_ERROR;
-    
-    /* Check protocol version */
-    header = (nufw_to_nuauth_message_header_t *)dgram;
-    if (header->protocol_version != PROTO_VERSION)
-        return NU_EXIT_ERROR;
+	/* Check protocol version */
+	header = (nufw_to_nuauth_message_header_t *)dgram;
+	switch (header->protocol_version){
+		case PROTO_VERSION_V22:
+			switch (header->msg_type){
+				case AUTH_REQUEST:
+				case AUTH_CONTROL:
+					authpckt_new_connection(dgram, dgram_size,conn);
+					if (ntohs(header->msg_length) < dgram_size){
+						*pdgram_size = dgram_size - ntohs(header->msg_length);
+						*pdgram = dgram + ntohs(header->msg_length);
+					} else {
+						*pdgram_size=0;
+					}
+					return NU_EXIT_OK;
 
-    switch (header->msg_type){
-        case AUTH_REQUEST:
-        case AUTH_CONTROL:
-		authpckt_new_connection(dgram, dgram_size,conn);
-		if (ntohs(header->msg_length) < dgram_size){
-			*pdgram_size = dgram_size - ntohs(header->msg_length);
-			*pdgram = dgram + ntohs(header->msg_length);
-		} else {
-			*pdgram_size=0;
+					break;
+				case AUTH_CONN_DESTROY:
+				case AUTH_CONN_UPDATE:
+					authpckt_conntrack(dgram, dgram_size);
+					*conn = NULL;
+					if (ntohs(header->msg_length) < dgram_size){
+						*pdgram_size = dgram_size - ntohs(header->msg_length);
+						*pdgram = dgram + ntohs(header->msg_length);
+					} else {
+						*pdgram_size=0;
+					}
+					return NU_EXIT_NO_RETURN;
+				default:
+					log_message(VERBOSE_DEBUG, AREA_PACKET, "NuFW packet type is unknown");
+					return NU_EXIT_ERROR;
+			}
+			return NU_EXIT_OK;
+		case PROTO_VERSION_V20:
+			switch (header->msg_type){
+				case AUTH_REQUEST:
+				case AUTH_CONTROL:
+					authpckt_new_connection_v3(dgram, dgram_size,conn);
+					if (ntohs(header->msg_length) < dgram_size){
+						*pdgram_size = dgram_size - ntohs(header->msg_length);
+						*pdgram = dgram + ntohs(header->msg_length);
+					} else {
+						*pdgram_size=0;
+					}
+					return NU_EXIT_OK;
+
+					break;
+				case AUTH_CONN_DESTROY:
+				case AUTH_CONN_UPDATE:
+					authpckt_conntrack_v3(dgram, dgram_size);
+					*conn = NULL;
+					if (ntohs(header->msg_length) < dgram_size){
+						*pdgram_size = dgram_size - ntohs(header->msg_length);
+						*pdgram = dgram + ntohs(header->msg_length);
+					} else {
+						*pdgram_size=0;
+					}
+					return NU_EXIT_NO_RETURN;
+				default:
+					log_message(VERBOSE_DEBUG, AREA_PACKET, "NuFW packet type is unknown");
+					return NU_EXIT_ERROR;
+			}
+			return NU_EXIT_OK;
+		default:
+		{
+			log_message(WARNING, AREA_PACKET, "NuFW protocol is unknown");
 		}
-		return NU_EXIT_OK;
 
-            break;
-        case AUTH_CONN_DESTROY:
-        case AUTH_CONN_UPDATE:
-            authpckt_conntrack(dgram, dgram_size);
-            *conn = NULL;
-	    if (ntohs(header->msg_length) < dgram_size){
-		    *pdgram_size = dgram_size - ntohs(header->msg_length);
-		    *pdgram = dgram + ntohs(header->msg_length);
-	    } else {
-		    *pdgram_size=0;
-	    }
-            return NU_EXIT_NO_RETURN;
-        default:
-            log_message(VERBOSE_DEBUG, AREA_PACKET, "NuFW packet type is unknown");
-            return 0;
-    }
-    return NU_EXIT_OK;
+	}
+	return NU_EXIT_OK;
 }
-

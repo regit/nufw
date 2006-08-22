@@ -97,7 +97,8 @@ void user_check_and_decide (gpointer userdata, gpointer data)
   free_buffer_read(userdata);
 }
 
-void user_process_field_hello(connection_t* connection, struct nuv2_authfield_hello* hellofield)
+/** \todo v3 compat */
+void user_process_field_hello(connection_t* connection, struct nuv4_authfield_hello* hellofield)
 {
     debug_log_message (VERBOSE_DEBUG, AREA_USER, "\tgot hello field");
     connection->packet_id=g_slist_prepend(NULL,GINT_TO_POINTER(hellofield->helloid));
@@ -110,8 +111,9 @@ int user_process_field_username(
         connection_t* connection, 
         uint8_t header_option,
         gboolean *multiclient_ok,
-        struct nuv2_authfield_username *usernamefield)
+        struct nuv4_authfield_username *usernamefield)
 {
+/** \todo v3 compat */
     unsigned int len;
     gchar* dec_fieldname=NULL;
     unsigned int reallen=0;
@@ -161,7 +163,8 @@ int user_process_field_username(
     return 1;
 }    
 
-int user_process_field_ipv6(connection_t* connection, struct nuv2_authfield_ipv6 *ipfield)
+/** \todo v3 compat */
+int user_process_field_ipv6(connection_t* connection, struct nuv4_authfield_ipv6 *ipfield)
 {
     connection->tracking.saddr = ipfield->src;
     connection->tracking.daddr = ipfield->dst;
@@ -192,11 +195,12 @@ int user_process_field_ipv6(connection_t* connection, struct nuv2_authfield_ipv6
     return 0;
 }    
 
+/** \todo v3 compat */
 int user_process_field_app(
-        struct nuv2_authreq* authreq,
+        struct nuv4_authreq* authreq,
         connection_t* connection, 
         int field_buffer_len,
-        struct nuv2_authfield_app *appfield)
+        struct nuv4_authfield_app *appfield)
 {
     unsigned int reallen=0;
     gchar* dec_appname=NULL;
@@ -242,13 +246,14 @@ int user_process_field_app(
 }    
 
 
+/** \todo v3 compat */
 int user_process_field(
-        struct nuv2_authreq* authreq, 
+        struct nuv4_authreq* authreq, 
         uint8_t header_option,
         connection_t* connection, 
         gboolean *multiclient_ok,
         int auth_buffer_len,
-        struct nuv2_authfield* field)
+        struct nuv4_authfield* field)
 {
     /* check field length */
     field->length = ntohs(field->length);
@@ -259,35 +264,35 @@ int user_process_field(
 
     switch (field->type) {
         case IPV6_FIELD:
-            if (auth_buffer_len < (int)sizeof(struct nuv2_authfield_ipv6)) {
+            if (auth_buffer_len < (int)sizeof(struct nuv4_authfield_ipv6)) {
                 return -1;
             }
-            if (user_process_field_ipv6(connection, (struct nuv2_authfield_ipv6 *)field))
+            if (user_process_field_ipv6(connection, (struct nuv4_authfield_ipv6 *)field))
                 return -1;
             break;
 
         case APP_FIELD:
-            if (auth_buffer_len < (int)sizeof(struct nuv2_authfield_app)) {
+            if (auth_buffer_len < (int)sizeof(struct nuv4_authfield_app)) {
                 return -1;
             }
-            if (user_process_field_app(authreq, connection, field->length, (struct nuv2_authfield_app *)field) < 0)
+            if (user_process_field_app(authreq, connection, field->length, (struct nuv4_authfield_app *)field) < 0)
                 return -1;
             break;
 
         case USERNAME_FIELD:
-            if (auth_buffer_len < (int)sizeof(struct nuv2_authfield_username)) {
+            if (auth_buffer_len < (int)sizeof(struct nuv4_authfield_username)) {
                 return -1;
             }
             if (user_process_field_username(connection, header_option, multiclient_ok, 
-                        (struct nuv2_authfield_username *)field) < 0)
+                        (struct nuv4_authfield_username *)field) < 0)
                 return -1;
             break;
 
         case HELLO_FIELD:
-            if (auth_buffer_len < (int)sizeof(struct nuv2_authfield_hello)) {
+            if (auth_buffer_len < (int)sizeof(struct nuv4_authfield_hello)) {
                 return -1;
             }
-            user_process_field_hello(connection, (struct nuv2_authfield_hello *)field);
+            user_process_field_hello(connection, (struct nuv4_authfield_hello *)field);
             break;
 
         default:
@@ -305,7 +310,7 @@ int user_process_field(
 GSList* user_request(struct tls_buffer_read *datas)
 {
     char * dgram = datas->buffer;
-    struct nuv2_header* header = (struct nuv2_header *)dgram;
+    struct nu_header* header = (struct nu_header *)dgram;
     GSList* conn_elts=NULL;
     connection_t* connection=NULL;
     char* start;
@@ -313,20 +318,21 @@ GSList* user_request(struct tls_buffer_read *datas)
     int buffer_len = datas->buffer_len;
     int auth_buffer_len;
     int field_length;
-    struct nuv2_authreq* authreq;
+/** \todo v3 compat */
+    struct nuv4_authreq* authreq;
     char *req_start;
 
-    for (start = dgram + sizeof(struct nuv2_header), buffer_len -= sizeof(struct nuv2_header); 
+    for (start = dgram + sizeof(struct nu_header), buffer_len -= sizeof(struct nu_header); 
          0 < buffer_len; 
          start += authreq->packet_length, buffer_len -= authreq->packet_length)
     {
         /* check buffer underflow */
-        if (buffer_len < (int)sizeof(struct nuv2_authreq))
+        if (buffer_len < (int)sizeof(struct nuv4_authreq))
         {
             free_connection_list(conn_elts);
             return NULL;
         }
-        authreq=(struct nuv2_authreq* )start;
+        authreq=(struct nuv4_authreq* )start;
 
         authreq->packet_length=ntohs(authreq->packet_length);
         if (authreq->packet_length == 0
@@ -354,16 +360,16 @@ GSList* user_request(struct tls_buffer_read *datas)
        
         /*** process all fields ***/
         debug_log_message (VERBOSE_DEBUG, AREA_USER, "Authreq start");
-        req_start = start + sizeof(struct nuv2_authreq);
-        auth_buffer_len = authreq->packet_length - sizeof(struct nuv2_authreq);
+        req_start = start + sizeof(struct nuv4_authreq);
+        auth_buffer_len = authreq->packet_length - sizeof(struct nuv4_authreq);
         for (; 
                 0 < auth_buffer_len; 
                 req_start += field_length, auth_buffer_len -= field_length)
         {
-            struct nuv2_authfield* field = (struct nuv2_authfield* )req_start;
+            struct nuv4_authfield* field = (struct nuv4_authfield* )req_start;
 
             /* check buffer underflow */
-            if (auth_buffer_len < (int)sizeof(struct nuv2_authfield))
+            if (auth_buffer_len < (int)sizeof(struct nuv4_authfield))
             {
                 free_connection_list(conn_elts);
                 free_connection(connection);
@@ -450,10 +456,10 @@ GSList* user_request(struct tls_buffer_read *datas)
 static GSList* userpckt_decode(struct tls_buffer_read *datas)
 {
     char * dgram = datas->buffer;
-    struct nuv2_header* header=(struct nuv2_header*)dgram;
+    struct nu_header* header=(struct nu_header*)dgram;
 
     /* check buffer underflow */
-    if (datas->buffer_len < (int)sizeof(struct nuv2_header))
+    if (datas->buffer_len < (int)sizeof(struct nu_header))
     {
         return NULL;
     }

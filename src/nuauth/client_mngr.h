@@ -41,7 +41,7 @@ void clean_session(user_session_t*);
 
 struct msg_addr_set {
 	struct in6_addr addr;
-	struct nuv2_srv_message* msg;
+	struct nuv4_srv_message* msg;
 	gboolean found;
 };
 

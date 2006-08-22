@@ -46,7 +46,7 @@ void localid_insert_message(connection_t *pckt,
     connection_t *element = NULL;
     u_int32_t randomid;
 
-    switch ( pckt->state){
+    switch (pckt->state){
         case AUTH_STATE_AUTHREQ:
             /* add in struct */
             
@@ -56,7 +56,7 @@ void localid_insert_message(connection_t *pckt,
                 randomid++;
             }
             /* send message to clients */
-            ((struct nuv2_srv_helloreq*)global_msg->msg)->helloid = randomid;
+            ((struct nuv4_srv_helloreq*)global_msg->msg)->helloid = randomid;
             global_msg->addr = pckt->tracking.saddr;
             global_msg->found = FALSE;
             /* if return is 1 we have somebody connected */
@@ -128,16 +128,19 @@ void* localid_auth(GMutex *mutex)
 {
     connection_t *pckt = NULL;
     struct msg_addr_set global_msg;
-    struct nuv2_srv_helloreq *msg = g_new0(struct nuv2_srv_helloreq,1);
+    struct nuv4_srv_helloreq *msg = g_new0(struct nuv4_srv_helloreq,1);
     GHashTable *localid_auth_hash;
     struct internal_message *message=NULL;
     long current_timestamp;
     GTimeVal tv;
 
-    global_msg.msg = (struct nuv2_srv_message*) msg;
+/** \todo 
+ * protocol v3 compatibility */
+
+    global_msg.msg = (struct nuv4_srv_message*) msg;
     msg->type = SRV_REQUIRED_HELLO;
     msg->option = 0;
-    msg->length = htons(sizeof(struct nuv2_srv_helloreq));
+    msg->length = htons(sizeof(struct nuv4_srv_helloreq));
 
     /* init hash table */
     localid_auth_hash=g_hash_table_new(NULL,NULL);

@@ -40,7 +40,7 @@ int update_handler (void *arg, unsigned int flags, int type,void *data)
 char ascii[INET6_ADDRSTRLEN];
 #endif
     struct nfct_conntrack *conn = arg;
-    struct nu_conntrack_message_t message;
+    struct nuv4_conntrack_message_t message;
     int ret;
 
     /* if nufw_conntrack_uses_mark is set we should have mark set here 
@@ -51,7 +51,7 @@ char ascii[INET6_ADDRSTRLEN];
         }
     }
     message.protocol_version=PROTO_VERSION;
-    message.msg_length= htons(sizeof(struct nu_conntrack_message_t));
+    message.msg_length= htons(sizeof(struct nuv4_conntrack_message_t));
     switch (type) {
         case NFCT_MSG_DESTROY:
             message.msg_type=AUTH_CONN_DESTROY;
@@ -128,7 +128,7 @@ char ascii[INET6_ADDRSTRLEN];
             ret = gnutls_record_send(
                     *(tls.session),
                     &message,
-                    sizeof(struct nu_conntrack_message_t)
+                    sizeof(struct nuv4_conntrack_message_t)
                     ); 
             if (ret <0){
                 if ( gnutls_error_is_fatal(ret) ){

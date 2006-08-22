@@ -133,7 +133,7 @@ static int treat_user_request (user_session_t * c_session)
 {
     struct tls_buffer_read *datas;
     int header_length;
-    struct nuv2_header* header;
+    struct nu_header* header;
 
     if (c_session == NULL) return 1;
 
@@ -160,7 +160,7 @@ static int treat_user_request (user_session_t * c_session)
     g_mutex_lock(c_session->tls_lock);
     datas->buffer_len = gnutls_record_recv(*(c_session->tls), datas->buffer, CLASSIC_NUFW_PACKET_SIZE);
     g_mutex_unlock(c_session->tls_lock);
-    if ( datas->buffer_len < (int)sizeof(struct nuv2_header)) {
+    if ( datas->buffer_len < (int)sizeof(struct nu_header)) {
 #ifdef DEBUG_ENABLE
         if (datas->buffer_len <0) 
             log_message(DEBUG, AREA_USER, "Received error from user %s", c_session->user_name);
@@ -170,7 +170,7 @@ static int treat_user_request (user_session_t * c_session)
     }
 
     /* get header to check if we need to get more datas */
-    header = (struct nuv2_header* )datas->buffer;
+    header = (struct nu_header* )datas->buffer;
     header_length=ntohs(header->length);
 
     /* is it an "USER HELLO" message ? */

@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2005 Eric Leblond <regit@inl.fr>
+ ** Copyright(C) 2005-2006 Eric Leblond <regit@inl.fr>
  **                  INL http://www.inl.fr/
  **
  ** This program is free software; you can redistribute it and/or modify
@@ -51,6 +51,7 @@ typedef struct
     gchar *version;          /*!< OS full version */
     gboolean multiusers;     /*!< Multi-user session? */
     time_t expire;           /*!< Timeout of the session (-1 means unlimited) */
+    int client_version;	     /*!< Client protocol version */
 } user_session_t;
 
 #endif

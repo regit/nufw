@@ -519,7 +519,7 @@ int send_os(NuAuth * session, nuclient_error *err)
 {
     /* announce our OS */
     struct utsname info;
-    struct nuv2_authfield osfield;
+    struct nuv4_authfield osfield;
     char *oses;
     char *enc_oses;
     char *pointer;

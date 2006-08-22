@@ -212,7 +212,7 @@ int match_ip(GSList *ip_list, struct in6_addr *addr)
  */
 static int parse_ips(char *ipsline, GSList **ip_list, char *prefix)
 {
-  char *p_nextip;
+  char *p_nextip=NULL;
   struct in_addr ip_addr4;
   uint32_t *p_netmask;
   struct in6_addr ip_addr6;

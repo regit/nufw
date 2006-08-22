@@ -31,7 +31,7 @@
  */
 int auth_process_answer(char *dgram, int dgram_size)
 {
-    nuauth_decision_response_t *answer;
+    nuv4_nuauth_decision_response_t *answer;
     uint32_t nfmark;
     int sandf;
     u_int32_t packet_id;
@@ -39,16 +39,16 @@ int auth_process_answer(char *dgram, int dgram_size)
     int payload_len;
 
     /* check packet size */
-    if (dgram_size < (int)sizeof(nuauth_decision_response_t))
+    if (dgram_size < (int)sizeof(nuv4_nuauth_decision_response_t))
     {
         return -1;
     }
-    answer = (nuauth_decision_response_t *)dgram;
+    answer = (nuv4_nuauth_decision_response_t *)dgram;
 
 
     /* check payload length */
     payload_len = ntohs(answer->payload_len);
-    if (dgram_size < (int)(sizeof(nuauth_decision_response_t) + payload_len)
+    if (dgram_size < (int)(sizeof(nuv4_nuauth_decision_response_t) + payload_len)
             || ((payload_len != 0) && (payload_len != (20+8)) && (payload_len != (40+8))))
     {
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING, 
@@ -58,7 +58,7 @@ int auth_process_answer(char *dgram, int dgram_size)
     
     /* get packet id and user id */
     packet_id = ntohl(answer->packet_id);
-    user_id = ntohs(answer->user_id);
+    user_id = ntohs(answer->tcmark);
 
     /* search and destroy packet by packet_id */
     pthread_mutex_lock(&packets_list.mutex);
@@ -82,6 +82,7 @@ int auth_process_answer(char *dgram, int dgram_size)
             debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_VERBOSE_DEBUG,
                     "(*) Marking packet with %d",
                     user_id);
+		    /* \todo Overwrite whole mark */
             /* we put the userid mark at the end of the mark, not changing the 16 first big bits */
             nfmark = (nfmark & 0xffff0000 ) | user_id;
             IPQ_SET_VWMARK(packet_id, NF_ACCEPT, htonl(nfmark)); 
@@ -99,7 +100,7 @@ int auth_process_answer(char *dgram, int dgram_size)
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_VERBOSE_DEBUG,
                 "(*) Rejecting %lu", packet_id);
         IPQ_SET_VERDICT(packet_id, NF_DROP);
-        send_icmp_unreach(dgram + sizeof(nuauth_decision_response_t));
+        send_icmp_unreach(dgram + sizeof(nuv4_nuauth_decision_response_t));
         break;
         
     default:
@@ -108,7 +109,7 @@ int auth_process_answer(char *dgram, int dgram_size)
                 "(*) Drop packet %u", packet_id);
         IPQ_SET_VERDICT(packet_id, NF_DROP);
     }
-    return sizeof(nuauth_decision_response_t) + payload_len;
+    return sizeof(nuv4_nuauth_decision_response_t) + payload_len;
 }    
 
 #ifdef HAVE_LIBCONNTRACK
@@ -127,7 +128,7 @@ int is_ipv4(struct in6_addr *addr)
     return 1;
 }
 
-int build_nfct_tuple_from_message(struct nfct_tuple* orig,struct nu_conntrack_message_t* packet_hdr)
+int build_nfct_tuple_from_message(struct nfct_tuple* orig,struct nuv4_conntrack_message_t* packet_hdr)
 {
     orig->protonum = packet_hdr->ip_protocol;
     if (is_ipv4(&packet_hdr->ip_src) && is_ipv4(&packet_hdr->ip_dst))
@@ -163,15 +164,15 @@ int build_nfct_tuple_from_message(struct nfct_tuple* orig,struct nu_conntrack_me
  */
 int auth_process_conn_destroy(char *dgram, int dgram_size)
 {
-    struct nu_conntrack_message_t* packet_hdr;
+    struct nuv4_conntrack_message_t* packet_hdr;
     struct nfct_tuple orig;
     int id=0;
 
     /* check packet size */
-    if (dgram_size < (int)sizeof(struct nu_conntrack_message_t)) {
+    if (dgram_size < (int)sizeof(struct nuv4_conntrack_message_t)) {
         return -1;
     }
-    packet_hdr = (struct nu_conntrack_message_t*)dgram;
+    packet_hdr = (struct nuv4_conntrack_message_t*)dgram;
     
     if (build_nfct_tuple_from_message(&orig,packet_hdr)){
         debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_VERBOSE_DEBUG, 
@@ -186,7 +187,7 @@ int auth_process_conn_destroy(char *dgram, int dgram_size)
  */
 int auth_process_conn_update(char *dgram, int dgram_size)
 {
-    struct nu_conntrack_message_t* packet_hdr;
+    struct nuv4_conntrack_message_t* packet_hdr;
     struct nfct_conntrack *ct;
     struct nfct_tuple orig;
     struct nfct_tuple reply;
@@ -194,12 +195,12 @@ int auth_process_conn_update(char *dgram, int dgram_size)
 
 
     /* check packet size */
-    if (dgram_size < (int)sizeof(struct nu_conntrack_message_t)) {
+    if (dgram_size < (int)sizeof(struct nuv4_conntrack_message_t)) {
         debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, 
                 "NuAuth sent too small message");
         return -1;
     }
-    packet_hdr = (struct nu_conntrack_message_t*)dgram;
+    packet_hdr = (struct nuv4_conntrack_message_t*)dgram;
     
     if (build_nfct_tuple_from_message(&orig,packet_hdr)){
         /* generate reply : this is stupid but done by conntrack tool */

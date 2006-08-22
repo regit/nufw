@@ -231,15 +231,15 @@ static int mysasl_negotiate(user_session_t * c_session , sasl_conn_t *conn)
 	char buf[8192];
 	const char *data=NULL;
 	int tls_len=0;
-    unsigned sasl_len=0;
+	unsigned sasl_len=0;
 	int count;
 	int ret=0;
 	gnutls_session session=*(c_session->tls);
 	gboolean external_auth=FALSE;
 	ssize_t record_send;
 	char address[INET6_ADDRSTRLEN];
-    unsigned len = tls_len;
-    int result;
+	unsigned len = tls_len;
+	int result;
 
 	result = sasl_listmech(conn,NULL, NULL, ",", NULL, &data,&sasl_len, &count);
 	if (result != SASL_OK) {
@@ -381,18 +381,21 @@ static int mysasl_negotiate(user_session_t * c_session , sasl_conn_t *conn)
 
 int sasl_parse_user_os(user_session_t* c_session, char *buf, int buf_size)
 {
+/** \todo
+ * v3 compat
+ */
     unsigned int len;
     int decode;
-    struct nuv2_authfield* osfield;
+    struct nuv4_authfield* osfield;
     gchar* dec_buf=NULL;
     gchar** os_strings;
     int dec_buf_size;
     char address[INET6_ADDRSTRLEN];
     
-    osfield=(struct nuv2_authfield*)buf;
+    osfield=(struct nuv4_authfield*)buf;
 
     /* check buffer underflow */
-    if (buf_size < (int)sizeof(struct nuv2_authfield)) {
+    if (buf_size < (int)sizeof(struct nuv4_authfield)) {
         if (inet_ntop(AF_INET6, &c_session->addr, address, sizeof(address)) != NULL)
             g_message("%s sent a too small osfield",address);
         return SASL_FAIL;
