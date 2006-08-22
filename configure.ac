@@ -241,6 +241,7 @@ AC_CONFIG_FILES([Makefile
         src/nuauth/modules/xml_defs/Makefile
         src/nuauth/modules/x509_std/Makefile
         src/nuauth/modules/libmark_uid/Makefile
+        src/nuauth/modules/libsession_expire/Makefile
         src/clients/Makefile
         src/clients/lib/Makefile
         src/clients/nutcpc/Makefile

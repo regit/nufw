@@ -23,9 +23,9 @@ G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
 G_MODULE_EXPORT int user_session_modify(user_session_t* session, gpointer params)
 {
     if (nuauthconf->session_duration){
-        c_session->expire=time(NULL)+nuauthconf->session_duration;
+        session->expire=time(NULL)+nuauthconf->session_duration;
     } else {
-        c_session->expire=-1;
+        session->expire=-1;
     }
     return SASL_OK;
 }
