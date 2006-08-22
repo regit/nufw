@@ -9,4 +9,4 @@ plugin_LTLIBRARIES = libmark_uid.la
 libmark_uid_la_SOURCES = mark_uid.c
 
 libmark_uid.la: $(libmark_uid_la_OBJECTS) $(libmark_uid_la_DEPENDENCIES) 
-	$(LINK) -rpath $(plugindir) $(lib_mark_uid_la_LDFLAGS) $(lib_mark_uid_la_OBJECTS) $(libsessin_uid_la_LIBADD)
+	$(LINK) -rpath $(plugindir) $(libmark_uid_la_LDFLAGS) $(libmark_uid_la_OBJECTS) $(libmark_uid_la_LIBADD)

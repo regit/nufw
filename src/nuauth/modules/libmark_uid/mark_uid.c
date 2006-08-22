@@ -18,7 +18,6 @@
 
 
 #include <auth_srv.h>
-#include "mark_uid.h"
 
 /**
  * \ingroup NuauthModules
