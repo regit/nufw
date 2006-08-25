@@ -121,6 +121,14 @@ char ascii[INET6_ADDRSTRLEN];
             break;
     }
 
+    message.mark = conn->mark;
+
+    message.packets_in = conn->counters[0].packets;
+    message.bytes_in = conn->counters[0].bytes;
+
+    message.packets_out = cout->counters[1].packets;
+    message.bytes_out = conn->counters[1].bytes;
+
     if (pthread_mutex_trylock(&tls.mutex) != EBUSY){
         if (tls.session){
             debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,

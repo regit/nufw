@@ -36,6 +36,7 @@
 /* define here last proto */
 
 #define PROTO_STRING "PROTO"
+#define PROTO_UNKNOWN 0
 
 #define PROTO_VERSION_V20 3
 #define PROTO_VERSION_V22 4

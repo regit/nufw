@@ -35,7 +35,6 @@
   b -= c; b -= a; b ^= (a<<10); \
   c -= a; c -= b; c ^= (b>>15); \
 }
-
 /* The golden ration: an arbitrary value */
 #define JHASH_GOLDEN_RATIO	0x9e3779b9
 

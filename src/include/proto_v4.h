@@ -50,6 +50,15 @@ struct nuv4_conntrack_message_t {
     uint16_t src_port;       /*!< TCP/UDP source port or ICMP type */
     uint16_t dest_port;      /*!< TCP/UDP destionation port or ICMP code */
 
+    /* mark field */
+    u_int32_t	mark;
+
+    /* counters fields */
+    u_int64_t packets_in;
+    u_int64_t bytes_in;
+    u_int64_t packets_out;
+    u_int64_t bytes_out;
+
 };
 
 /**
