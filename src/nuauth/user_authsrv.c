@@ -456,7 +456,7 @@ static GSList* userpckt_decode(struct tls_buffer_read *datas)
     }
 
     /* check protocol version */
-    if ((header->proto != PROTO_VERSION) && (header->proto != PROTO_VERSION_V20))
+    if (check_protocol_version(header->proto) != NU_EXIT_OK)
     {
         log_message (INFO, AREA_USER,
             "unsupported protocol, got protocol %d (msg %d) with option %d (length %d)",

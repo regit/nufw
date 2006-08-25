@@ -282,7 +282,7 @@ nu_error_t authpckt_decode(unsigned char **pdgram, unsigned int * pdgram_size, c
 	unsigned int dgram_size=*pdgram_size;
 	nufw_to_nuauth_message_header_t *header;
 
-	/* Check protocol version */
+	/* Switch following protocol version */
 	header = (nufw_to_nuauth_message_header_t *)dgram;
 	switch (header->protocol_version){
 		case PROTO_VERSION_V22:
@@ -352,4 +352,24 @@ nu_error_t authpckt_decode(unsigned char **pdgram, unsigned int * pdgram_size, c
 
 	}
 	return NU_EXIT_OK;
+}
+
+/**
+ * \return 0 if there is an error, value of protocol elsewhere
+ */
+unsigned char get_proto_version_from_packet(char* dgram,size_t dgram_size)
+{
+	nufw_to_nuauth_message_header_t *header;
+
+	if (dgram_size<sizeof(nufw_to_nuauth_message_header_t)){
+		return 0;		
+	}
+	/* Check protocol version */
+	header = (nufw_to_nuauth_message_header_t *)dgram;
+	/* Is protocol supported */
+	if ( check_protocol_version(header->protocol_version) == NU_EXIT_OK ){
+		return header->protocol_version;
+	} else {
+		return 0;
+	}
 }

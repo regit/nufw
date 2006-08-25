@@ -66,4 +66,6 @@ GStaticMutex insert_mutex;
 int timeval_substract (struct timeval *result,struct timeval *x,struct timeval *y);
 #endif
 
+nu_error_t check_protocol_version(int version);
+
 #endif

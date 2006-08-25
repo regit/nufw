@@ -72,7 +72,14 @@ static int treat_nufw_request (nufw_session_t *c_session)
         (void)g_atomic_int_dec_and_test(&(c_session->usage));
         return NU_EXIT_ERROR;
     }
-
+    /* Bad luck, this is first packet, we have to test nufw proto version */
+    if (c_session->proto_version == PROTO_UNKNOWN){
+		c_session->proto_version = get_proto_version_from_packet(dgram,(size_t)dgram_size);	
+		if (! c_session->proto_version){
+			(void)g_atomic_int_dec_and_test(&(c_session->usage));
+			return NU_EXIT_ERROR;
+		}
+    }
     /* decode data */
 	do {
 		ret = authpckt_decode(&dgram , (unsigned int *)&dgram_size, &current_conn);
@@ -211,6 +218,8 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
     nu_session->usage=0;
     nu_session->alive=TRUE;
     nu_session->peername = addr;
+    /* We have to wait the first packet */
+    nu_session->proto_version=PROTO_UNKNOWN;
     if (tls_connect(conn_fd,&(nu_session->tls)) == SASL_OK){
 	nu_session->tls_lock = g_mutex_new();
         g_static_mutex_lock (&nufw_servers_mutex);

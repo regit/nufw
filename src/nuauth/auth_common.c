@@ -788,4 +788,19 @@ gboolean secure_snprintf(char *buffer, unsigned int buffer_size, char *format, .
         return FALSE;
 }    
 
+/**
+ * Check Protocol version agains supported one
+ * \param A integer coding protocol version to test
+ * \return a ::nu_error_t
+ */
+
+nu_error_t check_protocol_version(int version)
+{
+	if ((version != PROTO_VERSION) && (version != PROTO_VERSION_V20)){
+		return NU_EXIT_ERROR;
+	} else {
+		return NU_EXIT_OK;
+	}
+}
+
 /** @} */

@@ -81,6 +81,7 @@ typedef struct Nufw_session {
     gnutls_session* tls;
     GMutex* tls_lock;
     struct in6_addr peername;
+    unsigned char proto_version;
     gint usage;
     gboolean alive;
 } nufw_session_t;
