@@ -31,7 +31,6 @@
 #include "nuclient.h"
 #include <sasl/saslutil.h>
 #include <proto.h>
-#include <jhash.h>
 #include "client.h"
 
 /**
