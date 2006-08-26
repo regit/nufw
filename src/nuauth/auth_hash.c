@@ -1,4 +1,5 @@
 #include "auth_srv.h"
+#define USE_JHASH2
 #include <jhash.h>
 
 /**

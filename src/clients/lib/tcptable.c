@@ -30,6 +30,7 @@
 #include "client.h"
 #include "libnuclient.h"
 #include <proto.h>
+#define USE_JHASH3
 #include <jhash.h>
 #ifdef FREEBSD
 

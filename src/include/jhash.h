@@ -38,6 +38,7 @@
 /* The golden ration: an arbitrary value */
 #define JHASH_GOLDEN_RATIO	0x9e3779b9
 
+#ifdef USE_JHASH3
 /**
  * A special ultra-optimized versions that knows they are hashing exactly
  * 3, 2 or 1 word(s).
@@ -55,6 +56,9 @@ static uint32_t jhash_3words(uint32_t a, uint32_t b, uint32_t c, uint32_t initva
 	
 	return c;
 }
+#endif /* USE_JHASH3 */
+
+#ifdef USE_JHASH2
 
 /* A special optimized version that handles 1 or more of uint32_ts.
  * The length parameter here is the number of uint32_ts in the key.
@@ -86,6 +90,7 @@ static inline uint32_t jhash2(uint32_t *k, uint32_t length, uint32_t initval)
 
         return c;
 }
+#endif /* USE_JHASH2 */
 
 #endif
 
