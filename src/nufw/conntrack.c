@@ -123,11 +123,11 @@ char ascii[INET6_ADDRSTRLEN];
 
     message.mark = conn->mark;
 
-    message.packets_in = conn->counters[0].packets;
-    message.bytes_in = conn->counters[0].bytes;
+    message.packets_in = conn->counters[1].packets;
+    message.bytes_in = conn->counters[1].bytes;
 
-    message.packets_out = cout->counters[1].packets;
-    message.bytes_out = conn->counters[1].bytes;
+    message.packets_out = cout->counters[0].packets;
+    message.bytes_out = conn->counters[0].bytes;
 
     if (pthread_mutex_trylock(&tls.mutex) != EBUSY){
         if (tls.session){
