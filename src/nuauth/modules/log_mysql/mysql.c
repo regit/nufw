@@ -476,7 +476,7 @@ static inline int log_state_open(MYSQL *ld, connection_t *element,struct log_mys
     return 0;
 }    
 
-static inline int log_state_established(MYSQL *ld, connection_t *element,struct log_mysql_params* params)
+static inline int log_state_established(MYSQL *ld, struct accounted_connection *element,struct log_mysql_params* params)
 {
     char request[LONG_REQUEST_SIZE];
     char src_ascii[IPV6_SQL_STRLEN];
@@ -531,7 +531,8 @@ static inline int log_state_established(MYSQL *ld, connection_t *element,struct 
     return 0;
 }    
 
-static inline int log_state_close(MYSQL *ld, connection_t *element,struct log_mysql_params *params)
+/** \todo Dump accounting counters in the table */
+static inline int log_state_close(MYSQL *ld, struct accounted_connection *element,struct log_mysql_params *params)
 {
     char request[LONG_REQUEST_SIZE];
     char src_ascii[IPV6_SQL_STRLEN];
@@ -647,7 +648,7 @@ static MYSQL* get_mysql_handler(struct log_mysql_params* params)
  * \param params_p A pointer to the parameters of the module instance we're working for
  * \return -1 in case of error, 0 if there is no problem
  */
-G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state,gpointer params_p)
+G_MODULE_EXPORT gint user_packet_logs (void* element, tcp_state_t state,gpointer params_p)
 {
   struct log_mysql_params* params = (struct log_mysql_params*)params_p;
     MYSQL *ld = get_mysql_handler(params);
@@ -658,24 +659,24 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state,
     /* contruct request */
     switch (state) {
         case TCP_STATE_OPEN:
-            return log_state_open(ld, element,params);
+            return log_state_open(ld, (connection_t *) element,params);
 
         case TCP_STATE_ESTABLISHED: 
-            if ((element->tracking).protocol == IPPROTO_TCP){
-                return log_state_established(ld, element,params);
+            if ((((struct accounted_connection*)element)->tracking).protocol == IPPROTO_TCP){
+                return log_state_established(ld, (struct accounted_connection*) element,params);
             } else {
                 return 0;
             }
 
         case TCP_STATE_CLOSE: 
-            if ((element->tracking).protocol == IPPROTO_TCP){
-                return log_state_close(ld, element, params);
+            if ((((struct accounted_connection*)element)->tracking).protocol == IPPROTO_TCP){
+                return log_state_close(ld, (struct accounted_connection*) element, params);
             } else {
                 return 0;
             }
 
         case TCP_STATE_DROP:
-            return log_state_drop(ld, element, params);
+            return log_state_drop(ld, (connection_t *) element, params);
 
         default:
 			/* Ignore other states */

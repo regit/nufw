@@ -34,7 +34,12 @@
 
 
 
-G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state,gpointer params)
+
+/** \todo Take into account connection_t* to void* change 
+ *
+ * This one forgot the treatment of ESTABLISHED and CLOSE case.
+ * */
+G_MODULE_EXPORT gint user_packet_logs (void* element, tcp_state_t state,gpointer params)
 {
     char *prefix = "[nuauth] ";
     char *str_state;
@@ -65,34 +70,51 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state,
     } 
 
     /* convert IP source and destination addresses to string */
-    if (inet_ntop(AF_INET6, &element->tracking.saddr, source_addr, sizeof(source_addr)) == NULL)
+    if (inet_ntop(AF_INET6, &(((connection_t*)element)->tracking.saddr), source_addr, sizeof(source_addr)) == NULL)
             return 1;
-    if (inet_ntop(AF_INET6, &element->tracking.daddr, dest_addr, sizeof(dest_addr)) == NULL)
+    if (inet_ntop(AF_INET6, &(((connection_t*)element)->tracking.daddr), dest_addr, sizeof(dest_addr)) == NULL)
             return 1;
     
-    if ( ((element->tracking).protocol == IPPROTO_TCP) || ((element->tracking).protocol == IPPROTO_UDP) ) {
+    if ( ((((connection_t*)element)->tracking).protocol == IPPROTO_TCP) || ((((connection_t *)element)->tracking).protocol == IPPROTO_UDP) ) {
         if (state==TCP_STATE_ESTABLISHED){
             saddr = dest_addr;
             daddr = source_addr;
-            sport = (element->tracking).dest;
-            dport = (element->tracking).source;
+            sport = ((struct accounted_connection*)element)->tracking.dest;
+            dport = ((struct accounted_connection*)element)->tracking.source;
         } else {
             saddr = source_addr;
             daddr = dest_addr;
-            sport = (element->tracking).source;
-            dport = (element->tracking).dest;
+            sport = (((connection_t*)element)->tracking).source;
+            dport = (((connection_t*)element)->tracking).dest;
         }
-        g_message("%s%s[%s] %ld : SRC=%s DST=%s PROTO=%d SPT=%u DPT=%u",
-            prefix, str_state,
-            element->username, element->timestamp,
-            saddr, daddr, element->tracking.protocol,
-            sport, dport);
+	if ((state == TCP_STATE_OPEN) || (state == TCP_STATE_DROP)){
+		g_message("%s%s[%s] %ld : SRC=%s DST=%s PROTO=%d SPT=%u DPT=%u",
+				prefix, str_state,
+				((connection_t*)element)->username,((connection_t*)element)->timestamp,
+				saddr, daddr, ((connection_t*)element)->tracking.protocol,
+				sport, dport);
+	} else {
+		g_message("%s%s %ld : SRC=%s DST=%s PROTO=%d SPT=%u DPT=%u",
+				prefix, str_state,
+				((struct accounted_connection*)element)->timestamp,
+				saddr, daddr, ((struct accounted_connection*)element)->tracking.protocol,
+				sport, dport);
+	}
     } else {
-        g_message("%s%s[%s] %ld : SRC=%s DST=%s PROTO=%d",
-            prefix, str_state,
-            element->username, element->timestamp,
-            source_addr, dest_addr,
-            (element->tracking).protocol);
+	    if ((state == TCP_STATE_OPEN) || (state == TCP_STATE_DROP)){
+		    g_message("%s%s[%s] %ld : SRC=%s DST=%s PROTO=%d",
+				    prefix, str_state,
+				    ((connection_t*)element)->username, ((connection_t*)element)->timestamp,
+				    source_addr, dest_addr,
+				    ((connection_t*)element)->tracking.protocol);
+	    } else {
+		    g_message("%s%s %ld : SRC=%s DST=%s PROTO=%d",
+				    prefix, str_state,
+				    ((struct accounted_connection*)element)->timestamp,
+				    source_addr, dest_addr,
+				    ((struct accounted_connection*)element)->tracking.protocol);
+
+	    }
     }
     return 0;
 }

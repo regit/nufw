@@ -68,7 +68,7 @@ typedef void define_period_callback (GHashTable* periods,gpointer params);
 /* ip auth */
 typedef gchar* ip_auth_callback (tracking_t * header,gpointer params);
 
-typedef int user_logs_callback (connection_t* element, tcp_state_t state,gpointer params);
+typedef int user_logs_callback (void* element, tcp_state_t state,gpointer params);
 typedef int user_session_logs_callback (user_session_t* element, session_state_t state,gpointer params);
 
 /* certificate stuff */

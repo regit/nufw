@@ -161,7 +161,7 @@ gchar* modules_ip_auth(tracking_t * header)
 /**
  * log authenticated packets
  */
-int modules_user_logs (connection_t* element, tcp_state_t state)
+int modules_user_logs (void* element, tcp_state_t state)
 {
     /* iter through all modules list */
     GSList *walker=user_logs_modules;

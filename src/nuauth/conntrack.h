@@ -21,10 +21,22 @@
 
 
 struct limited_connection {
+	/** \todo check that having address is enough (two nufw on same computer) */
         struct in6_addr gwaddr;
         time_t expire; /**< expiration time of connection */
         tracking_t tracking;
 };
+
+struct accounted_connection {
+	tracking_t tracking;
+	time_t timestamp;
+	/* counters fields */
+	u_int64_t packets_in;
+	u_int64_t bytes_in;
+	u_int64_t packets_out;
+	u_int64_t bytes_out;
+};
+
 
 
 void* limited_connection_handler(GMutex *mutex);

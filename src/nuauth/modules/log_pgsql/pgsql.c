@@ -507,6 +507,7 @@ static PGconn *get_pgsql_handler(struct log_pgsql_params *params)
     return ld;
 }
 
+/** \todo Take into account connection_t* to void* change */
 G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state,gpointer params_p)
 {
     struct log_pgsql_params *params = (struct log_pgsql_params*)params_p;

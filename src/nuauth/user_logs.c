@@ -23,7 +23,7 @@
 #include <time.h>
 
 struct Conn_State { 
-	connection_t* conn;
+	void* conn;
 	tcp_state_t state;
 };
 
@@ -51,7 +51,7 @@ void log_user_packet (connection_t* element, tcp_state_t state)
            ) {
             struct Conn_State * conn_state_copy;
             conn_state_copy=g_new0(struct Conn_State,1);
-            conn_state_copy->conn=duplicate_connection(element);
+            conn_state_copy->conn=(void*)duplicate_connection(element);
             if (! conn_state_copy->conn){
                 g_free(conn_state_copy);
                 return;
@@ -66,18 +66,30 @@ void log_user_packet (connection_t* element, tcp_state_t state)
 	/* end */
 }
 
-
 /**
- * \brief log user packet from a single ::tracking_t
+ * \brief log user packet from a single ::accounted_connection
+ *
+ * This is always asynchronous and we directly push the ::accounted_connection to the
+ * user_loggers pool.
  */
-void log_user_packet_from_tracking_t(tracking_t* datas,tcp_state_t pstate)
+void log_user_packet_from_accounted_connection(struct accounted_connection* datas,tcp_state_t state)
 {
-    connection_t *element=g_new0(connection_t,1);
-    debug_log_message(WARNING, AREA_PACKET,
-            "Logging conntrack event: state %d",pstate);
-    element->tracking=*datas;
-    log_user_packet (element,pstate);
+	struct Conn_State * conn_state_copy;
+	conn_state_copy=g_new0(struct Conn_State,1);
+	conn_state_copy->conn=g_memdup(datas,sizeof(*datas));
+	if (! conn_state_copy->conn){
+		g_free(conn_state_copy);
+		return;
+	}
+	conn_state_copy->state=state;
+
+	g_thread_pool_push(nuauthdatas->user_loggers,
+			conn_state_copy,
+			NULL);
+
 }
+
+
 
 /**
  * interface to logging module function for thread pool worker.
@@ -95,8 +107,11 @@ void real_log_user_packet (gpointer userdata, gpointer data)
           ((struct Conn_State *)userdata)->state
           );
   /* free userdata */
-  ((struct Conn_State *)userdata)->conn->state=AUTH_STATE_DONE;
-  free_connection(((struct Conn_State *)userdata)->conn);
+  if ((((struct Conn_State *)userdata)->state == TCP_STATE_OPEN) ||
+		  (((struct Conn_State *)userdata)->state == TCP_STATE_DROP )){
+	  ((connection_t*)((struct Conn_State *)userdata)->conn)->state=AUTH_STATE_DONE;
+	  free_connection((connection_t*)((struct Conn_State *)userdata)->conn);
+  }
   g_free(userdata);
 }
 

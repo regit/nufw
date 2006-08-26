@@ -90,7 +90,7 @@ GSList * modules_acl_check (connection_t* element);
 /* ip auth */
 gchar* modules_ip_auth(tracking_t *tracking);
 
-int modules_user_logs (connection_t* element, tcp_state_t state);
+int modules_user_logs (void* element, tcp_state_t state);
 int modules_user_session_logs(user_session_t* user, session_state_t state);
 
 void modules_parse_periods(GHashTable* periods);

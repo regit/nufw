@@ -206,8 +206,9 @@ nu_error_t authpckt_new_connection(unsigned char *dgram, unsigned int dgram_size
 void authpckt_conntrack (unsigned char *dgram, unsigned int dgram_size)
 {
     struct nuv4_conntrack_message_t* conntrack;
-    tracking_t* datas;
+    struct accounted_connection* datas;
     struct internal_message *message;
+    tcp_state_t pstate; 
 
     debug_log_message(VERBOSE_DEBUG, AREA_PACKET,
         "Auth conntrack: Working on new packet");
@@ -222,37 +223,48 @@ void authpckt_conntrack (unsigned char *dgram, unsigned int dgram_size)
     
     /* Create a message for limited_connexions_queue */
     conntrack = (struct nuv4_conntrack_message_t*)dgram;
-    datas = g_new0(tracking_t, 1);
+    datas = g_new0(struct accounted_connection, 1);
     message = g_new0(struct internal_message, 1);
-    datas->protocol = conntrack->ip_protocol;
+    datas->tracking.protocol = conntrack->ip_protocol;
 
-    datas->saddr.s6_addr32[0] = ntohl(conntrack->ip_src.s6_addr32[0]);
-    datas->saddr.s6_addr32[1] = ntohl(conntrack->ip_src.s6_addr32[1]);
-    datas->saddr.s6_addr32[2] = ntohl(conntrack->ip_src.s6_addr32[2]);
-    datas->saddr.s6_addr32[3] = ntohl(conntrack->ip_src.s6_addr32[3]);
+    datas->tracking.saddr.s6_addr32[0] = ntohl(conntrack->ip_src.s6_addr32[0]);
+    datas->tracking.saddr.s6_addr32[1] = ntohl(conntrack->ip_src.s6_addr32[1]);
+    datas->tracking.saddr.s6_addr32[2] = ntohl(conntrack->ip_src.s6_addr32[2]);
+    datas->tracking.saddr.s6_addr32[3] = ntohl(conntrack->ip_src.s6_addr32[3]);
 
-    datas->daddr.s6_addr32[0] = ntohl(conntrack->ip_dst.s6_addr32[0]);
-    datas->daddr.s6_addr32[1] = ntohl(conntrack->ip_dst.s6_addr32[1]);
-    datas->daddr.s6_addr32[2] = ntohl(conntrack->ip_dst.s6_addr32[2]);
-    datas->daddr.s6_addr32[3] = ntohl(conntrack->ip_dst.s6_addr32[3]);
+    datas->tracking.daddr.s6_addr32[0] = ntohl(conntrack->ip_dst.s6_addr32[0]);
+    datas->tracking.daddr.s6_addr32[1] = ntohl(conntrack->ip_dst.s6_addr32[1]);
+    datas->tracking.daddr.s6_addr32[2] = ntohl(conntrack->ip_dst.s6_addr32[2]);
+    datas->tracking.daddr.s6_addr32[3] = ntohl(conntrack->ip_dst.s6_addr32[3]);
     
     if ((conntrack->ip_protocol == IPPROTO_ICMP) || (conntrack->ip_protocol == IPPROTO_ICMPV6)) {
-        datas->type = ntohs(conntrack->src_port);
-        datas->code = ntohs(conntrack->dest_port);
+        datas->tracking.type = ntohs(conntrack->src_port);
+        datas->tracking.code = ntohs(conntrack->dest_port);
     } else {
-        datas->source = ntohs(conntrack->src_port);
-        datas->dest = ntohs(conntrack->dest_port);
+        datas->tracking.source = ntohs(conntrack->src_port);
+        datas->tracking.dest = ntohs(conntrack->dest_port);
     }               
+
+    datas->packets_in=conntrack->packets_in;
+    datas->bytes_in=conntrack->bytes_in;
+    datas->packets_out=conntrack->packets_out;
+    datas->bytes_out=conntrack->bytes_out;
+
     message->datas = datas;
+
     if (conntrack->msg_type == AUTH_CONN_DESTROY) {
         message->type = FREE_MESSAGE;
         debug_log_message(VERBOSE_DEBUG, AREA_PACKET,
                 "Auth conntrack: Sending free message");
+        pstate=TCP_STATE_CLOSE;
     } else {
         message->type = UPDATE_MESSAGE;
         debug_log_message(VERBOSE_DEBUG, AREA_PACKET,
                 "Auth conntrack: Sending Update message");
+        pstate=TCP_STATE_ESTABLISHED;
     }
+
+    log_user_packet_from_accounted_connection(datas,pstate);
     g_async_queue_push (nuauthdatas->limited_connections_queue, message);
 }
 

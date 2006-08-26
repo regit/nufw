@@ -422,8 +422,8 @@ static idmef_message_t *create_message_session(
     add_idmef_object(idmef, "alert.additional_data(2).data", session->version);
     return idmef;
 }
-
-G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state, gpointer params_ptr)
+/** \todo Take into account connection_t* to void* change */
+G_MODULE_EXPORT gint user_packet_logs (void* element, tcp_state_t state, gpointer params_ptr)
 {
     struct log_prelude_params *params = params_ptr;
     idmef_message_t *tpl;
