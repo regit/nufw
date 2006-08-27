@@ -280,8 +280,8 @@ void authpckt_conntrack (unsigned char *dgram, unsigned int dgram_size)
  *   - authpckt_conntrack(): Message type #AUTH_CONN_DESTROY
  *     or #AUTH_CONN_UPDATE
  * 
- * \param dgram Pointer to datagram
- * \param dgram_size Size of the datagram (in bytes)
+ * \param pdgram Pointer to datagram
+ * \param pdgram_size Pointer to size of the datagram (in bytes)
  * \param conn Pointer of pointer to the ::connection_t that will be modified
  * \return 
  *   - #NU_EXIT_ERROR if failure

@@ -47,6 +47,7 @@
  * Maximum length of output buffer is four times of inbuf length.
  *
  * \param inbuf Input buffer written in locale charset
+ * \param from_charset Target charset
  * \return New allocated buffer, which need to be freed
  */
 char* nu_client_to_utf8(const char* inbuf, char *from_charset)

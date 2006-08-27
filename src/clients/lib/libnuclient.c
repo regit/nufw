@@ -632,7 +632,7 @@ int send_os(NuAuth * session, nuclient_error *err)
  * \param keyfile Complete path to a key file stored in PEM format (can be NULL)
  * \param certfile Complete path to a certificate file stored in PEM format (can be NULL)
  * \param cafile Complete path to a certificate authority file stored in PEM format (can be NULL)
- * \param tls_passwd Certificate password string
+ * \param tls_password Certificate password string
  * \param err Pointer to a nuclient_error: which contains the error
  * \return Returns 0 on error (error description in err), 1 otherwise
  */

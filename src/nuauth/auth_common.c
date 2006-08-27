@@ -790,7 +790,7 @@ gboolean secure_snprintf(char *buffer, unsigned int buffer_size, char *format, .
 
 /**
  * Check Protocol version agains supported one
- * \param A integer coding protocol version to test
+ * \param version A integer coding protocol version to test
  * \return a ::nu_error_t
  */
 

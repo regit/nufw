@@ -300,8 +300,8 @@ nu_error_t get_proto_info(user_session_t * c_session)
 /**
  * do the sasl negotiation.
  *
- * \param a ::user_session_t
- * \param a ::sasl_conn_t
+ * \param c_session A ::user_session_t
+ * \param conn A ::sasl_conn_t
  * \return -1 if it fails
  */
 static int mysasl_negotiate(user_session_t * c_session , sasl_conn_t *conn)

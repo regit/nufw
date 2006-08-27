@@ -94,8 +94,8 @@ void log_user_packet_from_accounted_connection(struct accounted_connection* data
 /**
  * interface to logging module function for thread pool worker.
  * 
- * \param struct ::Conn_State
- * \param Unused 
+ * \param userdata A ::Conn_State
+ * \param data Unused 
  * \return None
  */
 
