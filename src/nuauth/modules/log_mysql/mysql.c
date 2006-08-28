@@ -69,7 +69,7 @@ static MYSQL* mysql_conn_init(struct log_mysql_params* params);
 /**
  *
  * \ingroup LoggingNuauthModules
- * \defgroup SQLModule MySQL logging module
+ * \defgroup MySQLModule MySQL logging module
  *
  * @{ */
 

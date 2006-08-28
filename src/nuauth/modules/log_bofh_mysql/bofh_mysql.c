@@ -21,15 +21,9 @@
 #include <string.h>
 #include <errno.h>
 
-/** Minimum buffer size to write an IPv6 in SQL syntax */
+/** \todo factorise with log_mysql code */
 #define IPV6_SQL_STRLEN (2+16*2+1)
 
-/**
- * Convert an IPv6 address to SQL binary string.
- * Eg. ::1 => "0x0000000000000001"
- *
- * \return Returns -1 if fails, 0 otherwise.
- */
 static int ipv6_to_sql(struct in6_addr *addr, char *buffer, size_t buflen)
 {
     unsigned char i;
@@ -69,7 +63,6 @@ static MYSQL* mysql_conn_init(struct log_mysql_params* params);
 /**
  *
  * \ingroup LoggingNuauthModules
- * \defgroup SQLModule MySQL logging module
  *
  * @{ */
 
@@ -98,44 +91,6 @@ G_MODULE_EXPORT gchar* unload_module_with_params(gpointer params_p)
   }
   g_free(params);
   return NULL;
-}
-
-/**
- * \brief Close all open user sessions
- *
- * \return A nu_error_t
- */
-
-static nu_error_t mysql_close_open_user_sessions(struct log_mysql_params* params)
-{
-    MYSQL* ld = mysql_conn_init(params);
-    char request[LONG_REQUEST_SIZE];
-    int mysql_ret;
-    int ok;
-
-    if (! ld){
-        return NU_EXIT_ERROR;
-    }
-
-    ok = secure_snprintf(request, sizeof(request),
-                    "UPDATE %s SET last_time=FROM_UNIXTIME(%lu) where last_time is NULL",
-                    params->mysql_users_table_name,
-                    time(NULL));
-    if (!ok) {
-        return NU_EXIT_ERROR;
-    }
-
-    /* execute query */
-    mysql_ret = mysql_real_query(ld, request, strlen(request));
-    if (mysql_ret != 0){
-        log_message (SERIOUS_WARNING, AREA_MAIN,
-            "[MySQL] Cannot execute request: %s", mysql_error(ld));
-        mysql_close(ld);
-        return NU_EXIT_ERROR;
-    }
-    mysql_close(ld);
-    return NU_EXIT_OK;
-
 }
 
 /* Init mysql system */
@@ -279,16 +234,6 @@ static MYSQL* get_mysql_handler(struct log_mysql_params* params)
 
 }    
 
-/**
- * \brief User session logging
- *
- * This function is exported by the module and called by nuauth core when a user connect or disconnect
- *
- * \param c_session A pointer to a ::user_session_t containing all information about the user
- * \param state A ::session_state_t that indicate the state of the user session (basically starting or ending)
- * \param params_p A pointer to the parameters of the module instance we're working for
- * \return -1 in case of error, 1 if there is no problem
- */
 G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t state,gpointer params_p)
 {
     struct log_mysql_params* params = (struct log_mysql_params*)params_p;
