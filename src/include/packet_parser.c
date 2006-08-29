@@ -16,7 +16,7 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/** \file pckt_authsrv.c
+/** \file packet_parser.c
  *  \brief Functions to parse a network packet
  * 
  * Functions fill ::tracking_t structure fields. Parser are: IPv4, IPv6, UDP,
