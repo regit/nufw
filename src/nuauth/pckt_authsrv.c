@@ -225,17 +225,18 @@ void authpckt_conntrack (unsigned char *dgram, unsigned int dgram_size)
     conntrack = (struct nuv4_conntrack_message_t*)dgram;
     datas = g_new0(struct accounted_connection, 1);
     message = g_new0(struct internal_message, 1);
+
     datas->tracking.protocol = conntrack->ip_protocol;
 
-    datas->tracking.saddr.s6_addr32[0] = ntohl(conntrack->ip_src.s6_addr32[0]);
-    datas->tracking.saddr.s6_addr32[1] = ntohl(conntrack->ip_src.s6_addr32[1]);
-    datas->tracking.saddr.s6_addr32[2] = ntohl(conntrack->ip_src.s6_addr32[2]);
-    datas->tracking.saddr.s6_addr32[3] = ntohl(conntrack->ip_src.s6_addr32[3]);
+    datas->tracking.saddr.s6_addr32[0] = conntrack->ip_src.s6_addr32[0];
+    datas->tracking.saddr.s6_addr32[1] = conntrack->ip_src.s6_addr32[1];
+    datas->tracking.saddr.s6_addr32[2] = conntrack->ip_src.s6_addr32[2];
+    datas->tracking.saddr.s6_addr32[3] = conntrack->ip_src.s6_addr32[3];
 
-    datas->tracking.daddr.s6_addr32[0] = ntohl(conntrack->ip_dst.s6_addr32[0]);
-    datas->tracking.daddr.s6_addr32[1] = ntohl(conntrack->ip_dst.s6_addr32[1]);
-    datas->tracking.daddr.s6_addr32[2] = ntohl(conntrack->ip_dst.s6_addr32[2]);
-    datas->tracking.daddr.s6_addr32[3] = ntohl(conntrack->ip_dst.s6_addr32[3]);
+    datas->tracking.daddr.s6_addr32[0] = conntrack->ip_dst.s6_addr32[0];
+    datas->tracking.daddr.s6_addr32[1] = conntrack->ip_dst.s6_addr32[1];
+    datas->tracking.daddr.s6_addr32[2] = conntrack->ip_dst.s6_addr32[2];
+    datas->tracking.daddr.s6_addr32[3] = conntrack->ip_dst.s6_addr32[3];
     
     if ((conntrack->ip_protocol == IPPROTO_ICMP) || (conntrack->ip_protocol == IPPROTO_ICMPV6)) {
         datas->tracking.type = ntohs(conntrack->src_port);
