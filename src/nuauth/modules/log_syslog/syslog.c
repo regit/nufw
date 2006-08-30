@@ -69,60 +69,67 @@ G_MODULE_EXPORT gint user_packet_logs (void* element, tcp_state_t state,gpointer
     	  str_state="Unknown ";
     } 
 
-    /* convert IP source and destination addresses to string */
-    if (inet_ntop(AF_INET6, &(((connection_t*)element)->tracking.saddr), source_addr, sizeof(source_addr)) == NULL)
-            return 1;
-    if (inet_ntop(AF_INET6, &(((connection_t*)element)->tracking.daddr), dest_addr, sizeof(dest_addr)) == NULL)
-            return 1;
-    
-    if ( ((((connection_t*)element)->tracking).protocol == IPPROTO_TCP) || ((((connection_t *)element)->tracking).protocol == IPPROTO_UDP) ) {
-        if (state==TCP_STATE_ESTABLISHED){
-            saddr = dest_addr;
-            daddr = source_addr;
-            sport = ((struct accounted_connection*)element)->tracking.dest;
-            dport = ((struct accounted_connection*)element)->tracking.source;
-        } else {
-            saddr = source_addr;
-            daddr = dest_addr;
-            sport = (((connection_t*)element)->tracking).source;
-            dport = (((connection_t*)element)->tracking).dest;
-        }
-        if ((state == TCP_STATE_OPEN) || (state == TCP_STATE_DROP)){
-            g_message("%s%s[%s] %ld : SRC=%s DST=%s PROTO=%d SPT=%u DPT=%u",
-                    prefix, str_state,
-                    ((connection_t*)element)->username,((connection_t*)element)->timestamp,
-                    saddr, daddr, ((connection_t*)element)->tracking.protocol,
-                    sport, dport);
-        } else {
-            g_message("%s%s %ld : SRC=%s DST=%s PROTO=%d SPT=%u DPT=%u (in: %llu pckts/%llu bytes, out: %llu pckts/%llu bytes)",
-                    prefix, str_state,
-                    ((struct accounted_connection*)element)->timestamp,
-                    saddr, daddr, ((struct accounted_connection*)element)->tracking.protocol,
-                    sport, dport,
-                    ((struct accounted_connection*)element)->packets_in,
-                    ((struct accounted_connection*)element)->bytes_in,
-                    ((struct accounted_connection*)element)->packets_out,
-                    ((struct accounted_connection*)element)->bytes_out
-                    );
-        }
-    } else {
-	    if ((state == TCP_STATE_OPEN) || (state == TCP_STATE_DROP)){
+    if ((state == TCP_STATE_OPEN) || (state == TCP_STATE_DROP)){
+	    /* convert IP source and destination addresses to string */
+	    if (inet_ntop(AF_INET6, &(((connection_t*)element)->tracking.saddr), source_addr, sizeof(source_addr)) == NULL)
+		    return 1;
+	    if (inet_ntop(AF_INET6, &(((connection_t*)element)->tracking.daddr), dest_addr, sizeof(dest_addr)) == NULL)
+		    return 1;
+
+
+	    saddr = source_addr;
+	    daddr = dest_addr;
+	    if ( ((((connection_t*)element)->tracking).protocol == IPPROTO_TCP) || ((((connection_t *)element)->tracking).protocol == IPPROTO_UDP) ) {
+		    sport = (((connection_t*)element)->tracking).source;
+		    dport = (((connection_t*)element)->tracking).dest;
+		    g_message("%s%s[%s] %ld : SRC=%s DST=%s PROTO=%d SPT=%u DPT=%u",
+				    prefix, str_state,
+				    ((connection_t*)element)->username,((connection_t*)element)->timestamp,
+				    saddr, daddr, ((connection_t*)element)->tracking.protocol,
+				    sport, dport);
+	    } else {
 		    g_message("%s%s[%s] %ld : SRC=%s DST=%s PROTO=%d",
 				    prefix, str_state,
 				    ((connection_t*)element)->username, ((connection_t*)element)->timestamp,
 				    source_addr, dest_addr,
 				    ((connection_t*)element)->tracking.protocol);
-	    } else {
+
+	    }
+    } else {
+	    /* convert IP source and destination addresses to string */
+	    if (inet_ntop(AF_INET6, &(((struct accounted_connection*)element)->tracking.saddr), source_addr, sizeof(source_addr)) == NULL)
+		    return 1;
+	    if (inet_ntop(AF_INET6, &(((struct accounted_connection*)element)->tracking.daddr), dest_addr, sizeof(dest_addr)) == NULL)
+		    return 1;
+
+	    saddr = dest_addr;
+	    daddr = source_addr;
+	    if ( ((((struct accounted_connection*)element)->tracking).protocol == IPPROTO_TCP) || ((((struct accounted_connection *)element)->tracking).protocol == IPPROTO_UDP) ) {
+
+		    sport = ((struct accounted_connection*)element)->tracking.dest;
+		    dport = ((struct accounted_connection*)element)->tracking.source;
+		    g_message("%s%s %ld : SRC=%s DST=%s PROTO=%d SPT=%u DPT=%u (in: %llu pckts/%llu bytes, out: %llu pckts/%llu bytes)",
+				    prefix, str_state,
+				    ((struct accounted_connection*)element)->timestamp,
+				    saddr, daddr, ((struct accounted_connection*)element)->tracking.protocol,
+				    sport, dport,
+				    ((struct accounted_connection*)element)->packets_in,
+				    ((struct accounted_connection*)element)->bytes_in,
+				    ((struct accounted_connection*)element)->packets_out,
+				    ((struct accounted_connection*)element)->bytes_out
+			     );
+	    }
+	    else { 
 		    g_message("%s%s %ld : SRC=%s DST=%s PROTO=%d (in: %llu pckts/%llu bytes, out: %llu pckts/%llu bytes)",
 				    prefix, str_state,
 				    ((struct accounted_connection*)element)->timestamp,
 				    source_addr, dest_addr,
 				    ((struct accounted_connection*)element)->tracking.protocol,
-                    ((struct accounted_connection*)element)->packets_in,
-                    ((struct accounted_connection*)element)->bytes_in,
-                    ((struct accounted_connection*)element)->packets_out,
-                    ((struct accounted_connection*)element)->bytes_out
-                    );
+				    ((struct accounted_connection*)element)->packets_in,
+				    ((struct accounted_connection*)element)->bytes_in,
+				    ((struct accounted_connection*)element)->packets_out,
+				    ((struct accounted_connection*)element)->bytes_out
+			     );
 
 	    }
     }
