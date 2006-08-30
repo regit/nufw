@@ -81,6 +81,7 @@ int update_handler (void *arg, unsigned int flags, int type,void *data)
             return 0;
     }
     message.ip_protocol=conn->tuple[0].protonum;
+
 #ifdef DEBUG_CONNTRACK
     printf("(*) New packet ; ");
     if (inet_ntop(conn->tuple[0].l3protonum, &conn->tuple[0].src, ascii, sizeof(ascii)))
@@ -93,6 +94,7 @@ int update_handler (void *arg, unsigned int flags, int type,void *data)
     }
     printf("\n");
 #endif    
+
     if (conn->tuple[0].l3protonum == AF_INET) {
 #ifdef DEBUG_CONNTRACK
 	printf("Convert IPV4 to IPV6\n");
@@ -134,26 +136,26 @@ int update_handler (void *arg, unsigned int flags, int type,void *data)
     message.packets_out = conn->counters[0].packets;
     message.bytes_out = conn->counters[0].bytes;
 
-        pthread_mutex_lock(&tls.mutex);
-        if (tls.session){
-            debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
-                    "Sending conntrack event to nuauth.");
-            ret = gnutls_record_send(
-                    *(tls.session),
-                    &message,
-                    sizeof(struct nuv4_conntrack_message_t)
-                    ); 
-            if (ret <0){
-                if ( gnutls_error_is_fatal(ret) ){
-                    /* warn sender thread that it will need to reconnect at next access */
-                    tls.auth_server_running=0;
-                    pthread_cancel(tls.auth_server);
-                    pthread_mutex_unlock(&tls.mutex);
-                    return 0;
-                }
-            }
-        }
-        pthread_mutex_unlock(&tls.mutex);
+    pthread_mutex_lock(&tls.mutex);
+    if (tls.session){
+	    debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
+			    "Sending conntrack event to nuauth.");
+	    ret = gnutls_record_send(
+			    *(tls.session),
+			    &message,
+			    sizeof(struct nuv4_conntrack_message_t)
+			    ); 
+	    if (ret <0){
+		    if ( gnutls_error_is_fatal(ret) ){
+			    /* warn sender thread that it will need to reconnect at next access */
+			    tls.auth_server_running=0;
+			    pthread_cancel(tls.auth_server);
+			    pthread_mutex_unlock(&tls.mutex);
+			    return 0;
+		    }
+	    }
+    }
+    pthread_mutex_unlock(&tls.mutex);
     return 0;
 }
 
