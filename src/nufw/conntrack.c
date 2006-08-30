@@ -22,6 +22,8 @@
  * Connection tracking function if NuFW is compiled with \#HAVE_LIBCONNTRACK.
  */
 
+#define DEBUG_CONNTRACK
+
 #include "nufw.h"
 #ifdef HAVE_LIBCONNTRACK
 
@@ -36,8 +38,8 @@
  */
 int update_handler (void *arg, unsigned int flags, int type,void *data)
 {
-#if 1
-char ascii[INET6_ADDRSTRLEN];
+#ifdef DEBUG_CONNTRACK
+	char ascii[INET6_ADDRSTRLEN];
 #endif
     struct nfct_conntrack *conn = arg;
     struct nuv4_conntrack_message_t message;
@@ -79,7 +81,7 @@ char ascii[INET6_ADDRSTRLEN];
             return 0;
     }
     message.ip_protocol=conn->tuple[0].protonum;
-#if 1     
+#ifdef DEBUG_CONNTRACK
     printf("(*) New packet ; ");
     if (inet_ntop(conn->tuple[0].l3protonum, &conn->tuple[0].src, ascii, sizeof(ascii)))
     {
@@ -91,7 +93,10 @@ char ascii[INET6_ADDRSTRLEN];
     }
     printf("\n");
 #endif    
-    if (conn->tuple[0].l3protonum == AF_INET6) {
+    if (conn->tuple[0].l3protonum == AF_INET) {
+#ifdef DEBUG_CONNTRACK
+	printf("Convert IPV4 to IPV6\n");
+#endif
         message.ip_src.s6_addr32[0] = 0;
         message.ip_src.s6_addr32[1] = 0;
         message.ip_src.s6_addr32[2] = 0xffff0000;
@@ -129,7 +134,7 @@ char ascii[INET6_ADDRSTRLEN];
     message.packets_out = conn->counters[0].packets;
     message.bytes_out = conn->counters[0].bytes;
 
-    if (pthread_mutex_trylock(&tls.mutex) != EBUSY){
+        pthread_mutex_lock(&tls.mutex);
         if (tls.session){
             debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
                     "Sending conntrack event to nuauth.");
@@ -144,12 +149,11 @@ char ascii[INET6_ADDRSTRLEN];
                     tls.auth_server_running=0;
                     pthread_cancel(tls.auth_server);
                     pthread_mutex_unlock(&tls.mutex);
-                    return -1;
+                    return 0;
                 }
             }
         }
         pthread_mutex_unlock(&tls.mutex);
-    } 
     return 0;
 }
 
