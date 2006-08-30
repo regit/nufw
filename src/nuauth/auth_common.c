@@ -170,7 +170,7 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 
 					/* create ip header */
 					memset(payload, 0, IPHDR_REJECT_LENGTH );
-					ip->version = 4;
+					ip->version = AF_INET;
 					ip->ihl = IPHDR_REJECT_LENGTH_BWORD;
 					ip->tot_len = htons( IPHDR_REJECT_LENGTH + PAYLOAD_SAMPLE);
 					ip->ttl = 64; /* write dummy ttl */
@@ -239,7 +239,7 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 
 				/* create ip header */
 				memset(payload, 0, IPHDR_REJECT_LENGTH );
-				ip->version = 4;
+				ip->version = AF_INET;
 				ip->ihl = IPHDR_REJECT_LENGTH_BWORD;
 				ip->tot_len = htons( IPHDR_REJECT_LENGTH + PAYLOAD_SAMPLE);
 				ip->ttl = 64; /* write dummy ttl */
