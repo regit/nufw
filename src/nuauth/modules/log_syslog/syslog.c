@@ -94,7 +94,7 @@ G_MODULE_EXPORT gint user_packet_logs (void* element, tcp_state_t state,gpointer
                     saddr, daddr, ((connection_t*)element)->tracking.protocol,
                     sport, dport);
         } else {
-            g_message("%s%s %ld : SRC=%s DST=%s PROTO=%d SPT=%u DPT=%u (in: %d pckts/%d bytes, out: %d pckts/%d bytes)",
+            g_message("%s%s %ld : SRC=%s DST=%s PROTO=%d SPT=%u DPT=%u (in: %llu pckts/%llu bytes, out: %llu pckts/%llu bytes)",
                     prefix, str_state,
                     ((struct accounted_connection*)element)->timestamp,
                     saddr, daddr, ((struct accounted_connection*)element)->tracking.protocol,
@@ -113,7 +113,7 @@ G_MODULE_EXPORT gint user_packet_logs (void* element, tcp_state_t state,gpointer
 				    source_addr, dest_addr,
 				    ((connection_t*)element)->tracking.protocol);
 	    } else {
-		    g_message("%s%s %ld : SRC=%s DST=%s PROTO=%d (in: %d pckts/%d bytes, out: %d pckts/%d bytes)",
+		    g_message("%s%s %ld : SRC=%s DST=%s PROTO=%d (in: %llu pckts/%llu bytes, out: %llu pckts/%llu bytes)",
 				    prefix, str_state,
 				    ((struct accounted_connection*)element)->timestamp,
 				    source_addr, dest_addr,
