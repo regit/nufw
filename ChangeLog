@@ -1,4 +1,4 @@
-2.1.0
+2.1.0 (2006/09/01)
 	- fix period handling (user OR and and AND between period item of a
 	  period)
 	- fix memory leak in ldap module
@@ -24,12 +24,14 @@
 	- don't make core dump on fatal errors (in nuauth, nutcpc and pam_nufw)
 	- libnuclient: use gcrypt_malloc_secure() to disallow username and
 	  password to be moved to the swap
-	- protocol v3 compatibility 
+	- protocol v3 compatibility (for client and nufw server)
 	- Introduce two new modules type:
 	 - user_session_modify : called when auth is successfull this module
 	 can modify all params (usefull to set expire or something else)
 	 - finalise_packet: modify packet content just before decision (useful
 	 to set mark and/or expire according to advanced policy)
+	 - Accounting capabilities: conntrack is now dumping accounting
+	 information
 2.0 (2005/05/22)
 	- nuauth : fix period handling
 	- libnuclient : fix crash when specified hostname is unvalid

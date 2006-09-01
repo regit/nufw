@@ -5,8 +5,5 @@
 
 - nuauth : do not send hello message if multiple instance runs on the same computer
 
-# Modules
-- libdb -> load all in cache and close the file straight away
-
 # TLS
 password protected certificat support
