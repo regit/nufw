@@ -548,6 +548,7 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element,gpointer params_p)
   return NULL;
 }
 
+#if 0
 
 /**
  * \brief user_check realise user authentication
@@ -665,5 +666,6 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass,unsigned p
 
   return SASL_BADAUTH;
 }
+#endif
 
 /* @} */
