@@ -234,6 +234,25 @@ static MYSQL* get_mysql_handler(struct log_mysql_params* params)
 
 }    
 
+#define CONN_SELECT_FIELDS "*"
+
+static nu_error_t build_conntrack_message_from_mysql_row(MYSQL_ROW row,struct limited_connection* msgdatas)
+{
+	unsigned int num_fields;
+	unsigned int i;
+	unsigned long *lengths;
+
+	/** \todo convert row to limited_connection and found a way to get nufw server addr (oups) */
+	lengths = mysql_fetch_lengths(result);
+	for(i = 0; i < num_fields; i++)
+	{
+		printf("[%.*s] ", (int) lengths[i], row[i] ? row[i] : "NULL");
+	}
+	printf("\n");
+
+	return NU_EXIT_OK;
+}
+
 G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t state,gpointer params_p)
 {
     struct log_mysql_params* params = (struct log_mysql_params*)params_p;
@@ -258,7 +277,7 @@ G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t
         case SESSION_CLOSE:
             /* update existing user session */
             ok = secure_snprintf(request, sizeof(request),
-                    "SELECT * FROM  %s"
+                    "SELECT " CONN_SELECT_FIELDS " FROM  %s"
                     "WHERE socket=%u AND ip_saddr=%s"
 		    "AND (state = 1 OR state =2)",
                     params->mysql_users_table_name,
@@ -280,14 +299,30 @@ G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t
         log_message (SERIOUS_WARNING, AREA_MAIN,
             "[MySQL] Cannot execute request: %s", mysql_error(ld));
         return -1;
-    }
+    } else {
     /** \todo Loop on answer:
      * 
      * For each answer:
      *  - generate conntrack message
      *  - send destroy message to nufw
      */
-
+    	struct limited_connection msgdatas;
+	MYSQL_ROW row;
+	MYSQL_RES *result = mysql_store_result(ld);
+	num_fields = mysql_num_fields(result);
+	while ((row = mysql_fetch_row(result)))
+	{
+		if (build_conntrack_message_from_mysql_row(row,&msgdatas) != NU_EXIT_OK){
+			/** \todo log error treatment */
+			return -1;
+		}
+		if (send_conntrack_message(&msgdatas,AUTH_CONN_DESTROY) != NU_EXIT_OK){
+			/** \todo log error treatment */
+			return -1;
+		}
+	}
+	mysql_free_result(result);
+    }
     return 1;
 }
 
