@@ -38,7 +38,14 @@ static gboolean get_nufw_server_by_addr(gpointer key,gpointer value,gpointer use
     }
 }
 
-static void send_conntrack_message(struct limited_connection * lconn,unsigned char msgtype)
+/** Send conntrack message to nufw server 
+ *
+ * \param lconn Pointer to a ::limited_connection which contains informations about the connection to modify
+ * \param msgtype Action to take against connection
+ * \return a ::nu_error_t
+ */
+
+nu_error_t send_conntrack_message(struct limited_connection * lconn,unsigned char msgtype)
 {
 	nufw_session_t* session=NULL;
 
@@ -118,13 +125,18 @@ static void send_conntrack_message(struct limited_connection * lconn,unsigned ch
 					break;
 				default:
 					log_message(WARNING, AREA_GW, "Invalid protocol %d",session->proto_version);
+					return NU_EXIT_ERROR;
 			}
 		} else {
 			log_message(WARNING, AREA_GW, "correct session not found among nufw servers");
+			return NU_EXIT_ERROR;
 		}
 	} else {
 		g_static_mutex_unlock (&nufw_servers_mutex);
+		return NU_EXIT_ERROR;
 	}
+
+	return NU_EXIT_OK;
 }
 
 void  send_destroy_message_and_free(gpointer user_data)

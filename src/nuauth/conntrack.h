@@ -37,8 +37,9 @@ struct accounted_connection {
 	u_int64_t bytes_out;
 };
 
-
-
 void* limited_connection_handler(GMutex *mutex);
+
+nu_error_t send_conntrack_message(struct limited_connection * lconn,unsigned char msgtype);
+
 
 #endif /* CONNTRACK_H */
