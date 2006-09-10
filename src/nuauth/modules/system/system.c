@@ -164,6 +164,18 @@ static char* normalize_username(const char * username)
   return user;
 }
 
+/**
+ * \brief user_check realise user authentication
+ *  
+ * It has to be exported by all user authentication modules
+ *  
+ *  \param username User name string
+ *  \param pass User provided password
+ *  \param passlen Password length
+ *  \param params Pointer to the parameter of the module instance
+ *  \return SASL_OK if password is correct, other return are authentication failure
+ */
+
 G_MODULE_EXPORT int user_check(const char *username, const char *pass
 		,unsigned passlen, gpointer params)
 {

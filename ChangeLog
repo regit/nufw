@@ -1,3 +1,5 @@
+2.1.1
+	- suppress ldap authentication code
 2.1.0 (2006/09/01)
 	- fix period handling (user OR and and AND between period item of a
 	  period)
