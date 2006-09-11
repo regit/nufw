@@ -226,7 +226,7 @@ void* limited_connection_handler(GMutex *mutex)
                     log_message(VERBOSE_DEBUG, AREA_USER, "connection not found can not be destroyed");
                 }
 #endif
-                g_free(message->datas);
+		g_free(message->datas);
                 break;
 
             case UPDATE_MESSAGE:
@@ -244,9 +244,12 @@ void* limited_connection_handler(GMutex *mutex)
                         g_free(elt);
                     }
                 }
+
+		g_free(message->datas);
                 break;
 
             default:
+		g_free(message->datas);
                 break;
         }
         g_free(message);
