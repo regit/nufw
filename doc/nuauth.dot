@@ -1,0 +1,36 @@
+digraph transducteur {
+ //rankdir="LR";  // La racine est à gauche plutôt qu'en haut.
+
+ packet_nufw [shape=box]
+ packet_user [shape=box];
+ acl [shape=Mcircle];
+ 
+ AUTH_STATE_AUTHREQ [style="bold"];
+ AUTH_STATE_USERPCKT  [style="bold"];
+ AUTH_STATE_READY [style="bold"];
+ AUTH_STATE_COMPLETING [style="bold"];
+ AUTH_STATE_DONE [style="bold"];
+ AUTH_STATE_HELLOMODE [style="bold"];
+ 
+ packet_user -> AUTH_STATE_USERPCKT [label="auth: not in hash"];
+ packet_user -> AUTH_STATE_HELLOMODE [label="hello", style=bold];
+
+ packet_nufw -> AUTH_STATE_AUTHREQ [label="Supported proto"];
+ packet_nufw -> AUTH_STATE_HELLOMODE [label="Unsupported proto"];
+ packet_nufw -> AUTH_STATE_USERPCKT [label="In hash",shape="dot"];
+
+ AUTH_STATE_AUTHREQ -> AUTH_STATE_COMPLETING;
+ AUTH_STATE_AUTHREQ -> acl [label="request"];
+ acl -> AUTH_STATE_COMPLETING [label="answer"];
+ 
+ AUTH_STATE_USERPCKT -> AUTH_STATE_COMPLETING;
+ AUTH_STATE_USERPCKT -> acl [label="request"];
+ 
+ AUTH_STATE_COMPLETING -> AUTH_STATE_READY [label="Rcv packet COMPLETING from acl"];
+ 
+ AUTH_STATE_HELLOMODE -> AUTH_STATE_COMPLETING [label="Rcv User Hello packet"];
+
+ AUTH_STATE_READY -> AUTH_STATE_DONE [label="Take decision"];
+ 
+ AUTH_STATE_DONE -> Free
+}
