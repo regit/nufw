@@ -463,11 +463,11 @@ void clean_connections_list ()
     GSList *old_keyconn_list = NULL;
     GSList *old_conn_list = NULL;
     GSList *iterator;
-    int conn_list_size, nb_deleted;
+    int nb_deleted;
     
     /* extract the list of old connections */
     g_static_mutex_lock (&insert_mutex);
-    conn_list_size = g_hash_table_size(conn_list);
+
     g_hash_table_foreach(conn_list, clean_connection_list_callback, &old_keyconn_list);
 
     /* remove old connections from connection list */
