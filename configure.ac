@@ -53,9 +53,9 @@ AC_CHECK_LIB([sasl2],[sasl_server_init],AC_DEFINE([HAVE_LIBRARY_SASL2],[1],[SASL
 
 #Configure database support, depending on user input
 AC_ARG_WITH(prelude-log,
-        [AC_HELP_STRING(--with-prelude-log,  
-        Support user activity logging in Prelude)], 
-        enable_prelude_log=$withval, 
+        [AC_HELP_STRING(--with-prelude-log,
+        Support user activity logging in Prelude)],
+        enable_prelude_log=$withval,
         enable_prelude_log="")
 
 AC_ARG_WITH(mysql-log, [AC_HELP_STRING(--with-mysql-log,  Support user activity logging in Mysql database)], enable_mysql_log=$withval, enable_mysql_log="")
@@ -67,7 +67,6 @@ AC_ARG_WITH(plaintext-auth, [AC_HELP_STRING(--with-plaintext-auth,  Support for 
 AC_ARG_WITH(system-auth, [AC_HELP_STRING(--with-system-auth,  Support PAM+NSS authentication)], enable_system_auth=$withval, enable_system_auth="yes")
 
 AC_ARG_WITH(ldap,   [AC_HELP_STRING(--with-ldap,  Support LDAP directory for users and acl lookup)],ldap=$withval, ldap="")
-AC_ARG_WITH(gdbm,   [AC_HELP_STRING(--with-gdbm, Support gdbm users lookup)],gdbm=$withval, gdbm="")
 
 
 AC_ARG_WITH(nfqueue,   [AC_HELP_STRING(--with-nfqueue, Compile for NFQUEUE instead of QUEUE)],use_nfqueue=$withval, use_nfqueue="")
@@ -85,7 +84,7 @@ AC_ARG_ENABLE(libnuclient,   [AC_HELP_STRING(--disable-libnuclient, Don't build 
 AC_ARG_ENABLE(nutcpc,   [AC_HELP_STRING(--disable-nutcpc, Don't build nutcpc (default is to build))],build_nutcpc=$enableval, build_nutcpc="yes" )
 AC_ARG_ENABLE(pam-nufw,   [AC_HELP_STRING(--disable-pam-nufw, Don't build pam_nufw (default is to build))],build_pam_nufw=$enableval, build_pam_nufw="yes" )
 
-AC_ARG_WITH(perf-display, 
+AC_ARG_WITH(perf-display,
     [AC_HELP_STRING(--with-perf-display, Enable benchmark of user authentification)],
     AC_DEFINE_UNQUOTED([PERF_DISPLAY_ENABLE],[1],[Benchmark of user authentification]))
 
@@ -100,12 +99,8 @@ if test "${build_nuauth}" = "yes"; then
                  AC_CHECK_LIB([ldap],[ldap_simple_bind_s],AC_DEFINE([HAVE_LIBRARY_LDAP],[1],[ldap lib flag]),AC_MSG_ERROR([ldap library needed for authentication]))
         fi
 
-        if test "${gdbm}" = "yes"; then
-                AC_CHECK_LIB([gdbm],[gdbm_fetch], AC_DEFINE([HAVE_LIBRARY_GDBM],[1],[ldap lib flag] ) ,AC_MSG_ERROR([dbm library needed for authentication]))
-        fi
-
         if test "$enable_mysql_log" = "yes"; then
-			if which mysql_config 1>/dev/null; then 
+			if which mysql_config 1>/dev/null; then
 				AC_CHECK_LIB([mysqlclient],[mysql_real_connect],AC_DEFINE([HAVE_LIBRARY_MYSQLCLIENT],[1],[mysql lib flag] )  ,AC_MSG_ERROR([mysqlclient library needed if selected]),[$(mysql_config --libs)])
                 		AC_CHECK_LIB([mysqlclient],[mysql_ssl_set],AC_DEFINE_UNQUOTED([HAVE_MYSQL_SSL],[1],[Will compile mysql log module with ssl support]),AC_MSG_NOTICE([mysqlclient has no ssl support]),[$(mysql_config --libs)])
 				have_mysql_config="yes"
@@ -114,7 +109,7 @@ if test "${build_nuauth}" = "yes"; then
                 		AC_CHECK_LIB([mysqlclient],[mysql_ssl_set],AC_DEFINE_UNQUOTED([HAVE_MYSQL_SSL],[1],[Will compile mysql log module with ssl support]),AC_MSG_NOTICE([mysqlclient has no ssl support]))
 		fi
         fi
-  
+
         if test "$enable_prelude_log" = "yes"; then
                 # Evil hack to check if /usr/include/libprelude/prelude.h does exist.
                 # TODO: Be able to change this directory and send this directory
@@ -133,7 +128,7 @@ if test "${build_nuauth}" = "yes"; then
                 CFLAGS="$OLDCFLAGS"
                 CPPFLAGS="$OLDCPPFLAGS"
         fi
-  
+
         if test "$enable_pgsql_log" = "yes"; then
                 AC_CHECK_LIB([pq],[PQconnectdb],AC_DEFINE([HAVE_LIBRARY_PQ],[1],[pgsql lib flag] )   ,AC_MSG_ERROR([libpq library needed if PostgreSQL support selected]))
         fi
@@ -141,7 +136,6 @@ fi
 
 AM_CONDITIONAL(USE_SYSTEM_AUTH, test x$enable_system_auth = xyes)
 AM_CONDITIONAL(USE_LDAP, test x$ldap = xyes)
-AM_CONDITIONAL(USE_GDBM, test x$gdbm = xyes)
 AM_CONDITIONAL(USE_PRELUDE_LOG, test x$enable_prelude_log = xyes)
 AM_CONDITIONAL(USE_MYSQL_LOG, test x$enable_mysql_log = xyes)
 AM_CONDITIONAL(HAVE_MYSQL_CONFIG, test x$have_mysql_config = xyes)
@@ -208,7 +202,7 @@ AM_CONDITIONAL(HAVE_CONNTRACK_ONLY, test x$have_nfqueue = x && test x$have_connt
 
 if test "x$GCC" = "xyes"; then
 
-	dnl get gcc version 
+	dnl get gcc version
 	AC_MSG_CHECKING([gcc version])
 		gccver=$($CC -dumpversion)
 		gccvermajor=$(echo $gccver | cut -d . -f1)
@@ -217,7 +211,7 @@ if test "x$GCC" = "xyes"; then
 	AC_MSG_RESULT($gccver)
 
     CFLAGS="$CFLAGS -ansi -Wall"
-    
+
 	if test "$gccvernum" -ge "400"; then
 		dnl gcc 4.0 or later
         CFLAGS="$CFLAGS -Wextra"
@@ -230,7 +224,7 @@ fi
 if test "${debug}" = "yes"; then
 	AC_DEFINE_UNQUOTED([DEBUG_ENABLE],[1],[Will compile development debug message])
 	CFLAGS="$CFLAGS -O0 -g"
-else	
+else
 	CFLAGS="$CFLAGS -O2"
 fi
 
@@ -240,7 +234,6 @@ AC_CONFIG_FILES([Makefile
         src/nuauth/Makefile
         src/nuauth/modules/Makefile
         src/nuauth/modules/ldap/Makefile
-        src/nuauth/modules/dbm/Makefile
         src/nuauth/modules/plaintext/Makefile
         src/nuauth/modules/system/Makefile
         src/nuauth/modules/log_pgsql/Makefile
@@ -259,7 +252,6 @@ AC_CONFIG_FILES([Makefile
         src/clients/pam_nufw/Makefile
         src/nufw/Makefile
         src/support/Makefile
-        src/support/dbm/Makefile
 ])
 
 AM_INIT_AUTOMAKE(1.9)
@@ -282,10 +274,6 @@ if test "${build_nuauth}" = "yes"; then
 
         if test "${ldap}" = "yes"; then
         	AC_MSG_RESULT([  - NuAuth: compile module ldap])
-        fi
-
-        if test "${gdbm}" = "yes"; then
-        	AC_MSG_RESULT([  - NuAuth: compile module dbm])
         fi
 
         if test "${enable_prelude_log}" = "yes"; then
