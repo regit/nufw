@@ -41,7 +41,7 @@
 
 
 /* These are global */
-struct nuauth_tls_t nuauth_tls; 
+struct nuauth_tls_t nuauth_tls;
 
 /**
  * Strictly close a TLS session: call gnutls_deinit() and free memory.
@@ -50,7 +50,7 @@ struct nuauth_tls_t nuauth_tls;
  * \param session A session with a client
  * \param socket_fd File descriptor of the connection (created by accept() syscall)
  */
-void close_tls_session(int socket_fd, gnutls_session* session) 
+void close_tls_session(int socket_fd, gnutls_session* session)
 {
     if (close(socket_fd))
         log_message(VERBOSE_DEBUG, AREA_USER, "close_tls_session: close() failed (error code %i)!", errno);
@@ -61,11 +61,11 @@ void close_tls_session(int socket_fd, gnutls_session* session)
 }
 
 /**
- * Check certificates of a session. Only accept certificate of type x509. 
- * 
+ * Check certificates of a session. Only accept certificate of type x509.
+ *
  * \return SASL_OK if ok, SASL error code else
  */
-gint check_certs_for_tls_session(gnutls_session session) 
+gint check_certs_for_tls_session(gnutls_session session)
 {
     unsigned int status;
     int ret;
@@ -108,7 +108,7 @@ gint check_certs_for_tls_session(gnutls_session session)
  *
  * \return Pointer to the TLS session
  */
-gnutls_session* initialize_tls_session() 
+gnutls_session* initialize_tls_session()
 {
     gnutls_session* session;
 #if 0
@@ -142,7 +142,7 @@ gnutls_session* initialize_tls_session()
         g_free(session);
         return NULL;
     }
-    /* request client certificate if any.  */ 
+    /* request client certificate if any.  */
     gnutls_certificate_server_set_request( *session, nuauth_tls.request_cert);
 
     gnutls_dh_set_prime_bits( *session, DH_BITS);
@@ -152,13 +152,13 @@ gnutls_session* initialize_tls_session()
 
 /**
  * Generate Diffie Hellman parameters - for use with DHE
- * (Ephemeral Diffie Hellman) kx algorithms. These should be discarded 
+ * (Ephemeral Diffie Hellman) kx algorithms. These should be discarded
  * and regenerated once a day, once a week or once a month. Depending on
  * the security requirements.
  *
  * \return If an error occurs returns -1, else return 0
  */
-static int generate_dh_params(gnutls_dh_params *dh_params)  
+static int generate_dh_params(gnutls_dh_params *dh_params)
 {
     if (gnutls_dh_params_init(dh_params)<0)
         return -1;
@@ -178,7 +178,7 @@ void refresh_crl_file()
 	    struct stat stats;
 	    stat(nuauth_tls.crl_file,&stats);
 	    if (nuauth_tls.crl_file_mtime<stats.st_mtime){
-		    gnutls_certificate_set_x509_crl_file(nuauth_tls.x509_cred, nuauth_tls.crl_file, 
+		    gnutls_certificate_set_x509_crl_file(nuauth_tls.x509_cred, nuauth_tls.crl_file,
 				    GNUTLS_X509_FMT_PEM);
 	    }
 	nuauth_tls.crl_refresh_counter=0;
@@ -195,18 +195,18 @@ static ssize_t tls_push_func(gnutls_transport_ptr ptr, const void *buf, size_t c
 }
 
 /**
- * Realize a tls connection: call initialize_tls_session(), set tranport 
+ * Realize a tls connection: call initialize_tls_session(), set tranport
  * pointer to the socket file descriptor (socket_fd), set push function to
  * tls_push_func(), then do the gnutls_handshake().
  *
- * Finally checks the certificate using check_certs_for_tls_session() 
+ * Finally checks the certificate using check_certs_for_tls_session()
  * if needed.
- * 
+ *
  * \param socket_fd Socket to established TLS session on
  * \param session_ptr Pointer of pointer to a gnutls session
  * \return Returns SASL_BADPARAM if fails, SASL_OK otherwise.
  */
-int tls_connect(int socket_fd,gnutls_session** session_ptr) 
+int tls_connect(int socket_fd,gnutls_session** session_ptr)
 {
     int ret;
     gnutls_session* session;
@@ -237,18 +237,18 @@ int tls_connect(int socket_fd,gnutls_session** session_ptr)
     ret = 0;
     do
     {
-        debug_log_message (DEBUG, AREA_MAIN, 
+        debug_log_message (DEBUG, AREA_MAIN,
                 "NuFW TLS Handshaking (last error: %i)", ret);
         ret = gnutls_handshake( *session);
     } while (ret < 0 && !gnutls_error_is_fatal(ret));
     debug_log_message (DEBUG, AREA_MAIN, "NuFW TLS Handshaked");
 
-    if (ret < 0) 
+    if (ret < 0)
     {
         close_tls_session(socket_fd, session);
         log_message (DEBUG, AREA_MAIN,
                 "NuFW TLS Handshake has failed (%s)\n\n",
-                gnutls_strerror(ret)) ; 
+                gnutls_strerror(ret)) ;
         return SASL_BADPARAM;
     }
     debug_log_message (DEBUG, AREA_MAIN, "NuFW TLS Handshake was completed");
@@ -332,7 +332,7 @@ void create_x509_credentials()
 	}
     }
 
-    ret = gnutls_certificate_set_x509_trust_file(nuauth_tls.x509_cred,  nuauth_tls_cacert , 
+    ret = gnutls_certificate_set_x509_trust_file(nuauth_tls.x509_cred,  nuauth_tls_cacert ,
 	    GNUTLS_X509_FMT_PEM);
     if(ret<=0){
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER)){
@@ -340,7 +340,7 @@ void create_x509_credentials()
 		    gnutls_strerror(ret));
 	}
     }
-    ret = gnutls_certificate_set_x509_key_file(nuauth_tls.x509_cred, nuauth_tls_cert,nuauth_tls_key, 
+    ret = gnutls_certificate_set_x509_key_file(nuauth_tls.x509_cred, nuauth_tls_cert,nuauth_tls_key,
 	    GNUTLS_X509_FMT_PEM);
     if (ret <0){
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING,DEBUG_AREA_USER)){
@@ -373,7 +373,7 @@ void create_x509_credentials()
 	    g_error("[%i] TLS : can not access crl file %s\n",getpid(),nuauth_tls_crl);
 	}
 	nuauth_tls.crl_file=nuauth_tls_crl;
-	gnutls_certificate_set_x509_crl_file(nuauth_tls.x509_cred, nuauth_tls.crl_file, 
+	gnutls_certificate_set_x509_crl_file(nuauth_tls.x509_cred, nuauth_tls.crl_file,
 		GNUTLS_X509_FMT_PEM);
     }
     ret = generate_dh_params(&nuauth_tls.dh_params);
@@ -382,7 +382,7 @@ void create_x509_credentials()
 	log_message (INFO, AREA_USER, "generate_dh_params() failed");
 #endif
 
-    /* 
+    /*
      * Gryzor doesnt understand wht dh_params is passed as 2nd argument, where a gnutls_dh_params_t structure is awaited
      * gnutls_certificate_set_dh_params( x509_cred, 0);
      */
@@ -394,7 +394,7 @@ void create_x509_credentials()
 /**
  * Thread which process addresses on tls push queue (tls_push_queue member
  * of ::nuauthdatas) which need an authentification.
- * 
+ *
  * Lock is only needed when modifications are done, because when this thread
  * work (push mode) it's the only one who can modify the hash.
  *
@@ -403,7 +403,7 @@ void create_x509_credentials()
  *   - #FREE_MESSAGE: call delete_client_by_socket()
  *   - #INSERT_MESSAGE: call add_client()
  */
-void* push_worker(GMutex *mutex) 
+void* push_worker(GMutex *mutex)
 {
     struct msg_addr_set *global_msg=g_new0(struct msg_addr_set,1);
     struct nu_srv_message *msg=g_new0(struct nu_srv_message,1);
@@ -418,7 +418,7 @@ void* push_worker(GMutex *mutex)
     g_async_queue_ref (nuauthdatas->tls_push_queue);
 
     /* wait for message */
-    while (g_mutex_trylock(mutex)) 
+    while (g_mutex_trylock(mutex))
     {
         g_mutex_unlock(mutex);
 
@@ -473,7 +473,7 @@ void* push_worker(GMutex *mutex)
     }
 
     g_free (msg);
-    g_free (global_msg);    
+    g_free (global_msg);
     g_async_queue_unref (nuauthdatas->tls_push_queue);
     return NULL;
 }

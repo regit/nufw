@@ -23,7 +23,7 @@
  *  @{
  */
 
-/** 
+/**
  * \file nuauth/conntrack.c
  * \brief Conntrack handling (used for fixed timeout)
  */
@@ -38,7 +38,7 @@ static gboolean get_nufw_server_by_addr(gpointer key,gpointer value,gpointer use
     }
 }
 
-/** Send conntrack message to nufw server 
+/** Send conntrack message to nufw server
  *
  * \param lconn Pointer to a ::limited_connection which contains informations about the connection to modify
  * \param msgtype Action to take against connection
@@ -92,11 +92,11 @@ nu_error_t send_conntrack_message(struct limited_connection * lconn,unsigned cha
 						g_mutex_lock(session->tls_lock);
 						gnutls_record_send( *(session->tls) , &message, sizeof(message));
 						g_mutex_unlock(session->tls_lock);
-					} 
+					}
 
 					break;
 				case PROTO_VERSION_V20:
-					{            
+					{
 						struct nuv3_conntrack_message_t message;
 						/* send message */
 						message.protocol_version = PROTO_VERSION;
@@ -149,7 +149,7 @@ void  send_destroy_message_and_free(gpointer user_data)
     g_free(data);
 }
 
-/** 
+/**
  * get old entry
  */
 
@@ -163,8 +163,8 @@ static gboolean get_old_entry(gpointer key,gpointer value,gpointer user_data)
     }
 }
 
-/** 
- * search and destroy expired connections 
+/**
+ * search and destroy expired connections
  */
 
 void destroy_expired_connection(GHashTable* lim_conn_list)
@@ -192,10 +192,10 @@ void* limited_connection_handler(GMutex *mutex)
     lim_conn_list = g_hash_table_new_full ((GHashFunc)hash_connection,
             compare_connection,
             NULL,
-            (GDestroyNotify) send_destroy_message_and_free); 
+            (GDestroyNotify) send_destroy_message_and_free);
     g_async_queue_ref (nuauthdatas->limited_connections_queue);
 
-    while (g_mutex_trylock(mutex)) 
+    while (g_mutex_trylock(mutex))
     {
         g_mutex_unlock(mutex);
 
@@ -220,7 +220,7 @@ void* limited_connection_handler(GMutex *mutex)
                 if (elt){
                     elt->expire=0;
                     g_hash_table_remove(lim_conn_list,message->datas);
-                } 
+                }
 #ifdef DEBUG_ENABLE
                 else {
                     log_message(VERBOSE_DEBUG, AREA_USER, "connection not found can not be destroyed");
@@ -230,7 +230,7 @@ void* limited_connection_handler(GMutex *mutex)
                 break;
 
             case UPDATE_MESSAGE:
-                /** here we get message from nufw kernel connection is ASSURED 
+                /** here we get message from nufw kernel connection is ASSURED
                  * we have to limit it if needed and log the state change if needed */
                 debug_log_message(VERBOSE_DEBUG, AREA_GW, "received update message for a conntrack entry");
                 elt = (struct limited_connection*)g_hash_table_lookup(lim_conn_list,message->datas);
@@ -255,7 +255,7 @@ void* limited_connection_handler(GMutex *mutex)
         g_free(message);
     }
     g_async_queue_unref (nuauthdatas->limited_connections_queue);
-    g_hash_table_destroy(lim_conn_list); 
+    g_hash_table_destroy(lim_conn_list);
     return NULL;
 }
 

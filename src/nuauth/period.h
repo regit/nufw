@@ -24,7 +24,7 @@
 /** define a period item
  *
  * This is a interval of days linked to a hour period
- * 
+ *
  */
 struct period_item {
     time_t duration; /**< specify that connection will expire after duration delay */
@@ -36,7 +36,7 @@ struct period_item {
     char end_hour; /**< O-24 end hour, set to -1 to ignore */
 };
 
-/** 
+/**
  * define a period
  * - this is a GSList of period_item
  * - a name
@@ -49,7 +49,7 @@ struct period {
     gchar* name;
     gboolean used;
 };
-    
+
 gboolean is_time_t_in_period(gchar* period,time_t time);
 
 time_t get_end_of_period_for_time_t(gchar* period,time_t time);

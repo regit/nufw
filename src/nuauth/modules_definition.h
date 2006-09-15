@@ -32,8 +32,8 @@ GSList* get_user_id_modules;
 GSList* acl_check_modules;
 
 /** this is the list of module which are used to define time period
- * as this is used by other modules there is no need to have a special locking 
- * mechanism for them. It will not be used if usage of all other modules (specifically acls and user one) 
+ * as this is used by other modules there is no need to have a special locking
+ * mechanism for them. It will not be used if usage of all other modules (specifically acls and user one)
  * is blocked.
  */
 GSList* period_modules;

@@ -35,7 +35,7 @@
 
 
 
-/** \todo Take into account connection_t* to void* change 
+/** \todo Take into account connection_t* to void* change
  *
  * This one forgot the treatment of ESTABLISHED and CLOSE case.
  * */
@@ -67,7 +67,7 @@ G_MODULE_EXPORT gint user_packet_logs (void* element, tcp_state_t state,gpointer
 	  break;
       default:
     	  str_state="Unknown ";
-    } 
+    }
 
     if ((state == TCP_STATE_OPEN) || (state == TCP_STATE_DROP)){
 	    /* convert IP source and destination addresses to string */
@@ -119,7 +119,7 @@ G_MODULE_EXPORT gint user_packet_logs (void* element, tcp_state_t state,gpointer
 				    ((struct accounted_connection*)element)->bytes_out
 			     );
 	    }
-	    else { 
+	    else {
 		    g_message("%s%s %ld : SRC=%s DST=%s PROTO=%d (in: %llu pckts/%llu bytes, out: %llu pckts/%llu bytes)",
 				    prefix, str_state,
 				    ((struct accounted_connection*)element)->timestamp,

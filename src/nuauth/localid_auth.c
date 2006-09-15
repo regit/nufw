@@ -39,7 +39,7 @@ char localid_authenticated_protocol(int protocol)
  *    - State #AUTH_STATE_USERPCKT: Add connection to acl_checkers queue (see
  *      acl_check_and_decide())
  */
-void localid_insert_message(connection_t *pckt, 
+void localid_insert_message(connection_t *pckt,
         GHashTable *localid_auth_hash,
         struct msg_addr_set *global_msg)
 {
@@ -49,7 +49,7 @@ void localid_insert_message(connection_t *pckt,
     switch (pckt->state){
         case AUTH_STATE_AUTHREQ:
             /* add in struct */
-            
+
             /* generete an unique identifier (32 bits) */
             randomid = random();
             while(g_hash_table_lookup(localid_auth_hash,GINT_TO_POINTER(randomid))){
@@ -74,8 +74,8 @@ void localid_insert_message(connection_t *pckt,
             if (element){
                 /* TODO : do a check on saddr */
                 if (memcmp(&element->tracking.saddr, &pckt->tracking.saddr, sizeof(pckt->tracking.saddr)) == 0)
-                {	
-                    element->state=AUTH_STATE_HELLOMODE;	
+                {
+                    element->state=AUTH_STATE_HELLOMODE;
                     element->mark=pckt->mark;
                     element->username=pckt->username;
                     element->user_groups=pckt->user_groups;
@@ -110,8 +110,8 @@ void localid_insert_message(connection_t *pckt,
 
         default:
             g_warning("Should not have this at %s:%d.\n",__FILE__,__LINE__);
-    } 
-}    
+    }
+}
 
 /**
  * Local id auth. Process messages on localid_auth_queue queue:
@@ -119,7 +119,7 @@ void localid_insert_message(connection_t *pckt,
  *    - #REFRESH_MESSAGE: delete all old messages, use get_old_conn() to check
  *      if a connection is expired or not.
  *
- * Thread running until mutex (function argument) is locked. 
+ * Thread running until mutex (function argument) is locked.
  *
  * \param mutex Mutex used to stop the thread
  * \return NULL
@@ -134,7 +134,7 @@ void* localid_auth(GMutex *mutex)
     long current_timestamp;
     GTimeVal tv;
 
-/** \todo 
+/** \todo
  * protocol v3 compatibility */
 
     global_msg.msg = (struct nu_srv_message*) msg;
@@ -158,13 +158,13 @@ void* localid_auth(GMutex *mutex)
         if (message == NULL)
             continue;
 
-        switch (message->type) { 
+        switch (message->type) {
             case INSERT_MESSAGE:
                 pckt=message->datas;
                 g_free(message);
                 localid_insert_message(pckt, localid_auth_hash, &global_msg);
                 break;
-                
+
             case REFRESH_MESSAGE:
                 g_free(message);
                 current_timestamp=time(NULL);

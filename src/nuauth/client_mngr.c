@@ -78,7 +78,7 @@ void clean_session(user_session_t * c_session)
     g_mutex_free(c_session->tls_lock);
 
     if (c_session){
-        g_free(c_session); 
+        g_free(c_session);
     }
 }
 
@@ -86,8 +86,8 @@ static void hash_clean_session(user_session_t * c_session)
 {
     int socket = (int)gnutls_transport_get_ptr(*c_session->tls);
     clean_session(c_session);
-    shutdown(socket, SHUT_RDWR); 
-    close(socket); 
+    shutdown(socket, SHUT_RDWR);
+    close(socket);
 }
 
 
@@ -122,11 +122,11 @@ void add_client(int socket, gpointer datas)
 void delete_client_by_socket(int socket)
 {
     GSList * ipsockets;
-    user_session_t * session; 
+    user_session_t * session;
 
     g_mutex_lock(client_mutex);
 
-    /* get addr of of client 
+    /* get addr of of client
      *  get element
      *  get addr field
      */
@@ -147,8 +147,8 @@ void delete_client_by_socket(int socket)
 
     g_mutex_unlock(client_mutex);
 
-    shutdown(socket, SHUT_RDWR); 
-    close(socket); 
+    shutdown(socket, SHUT_RDWR);
+    close(socket);
 }
 
 inline user_session_t * get_client_datas_by_socket(int socket)
@@ -203,7 +203,7 @@ inline user_session_t* look_for_username(const gchar* username)
  * \param global_msg Address set of clients
  * \return Returns 0 on error, 1 otherwise
  */
-char warn_clients(struct msg_addr_set * global_msg) 
+char warn_clients(struct msg_addr_set * global_msg)
 {
     GSList* ipsockets=NULL;
 #if DEBUG_ENABLE

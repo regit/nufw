@@ -18,13 +18,13 @@
 #ifndef INTERNAL_MESSAGES_H
 #define INTERNAL_MESSAGES_H
 
-/* 
+/*
  * message structure for async communication
- * between cache thread and others 
+ * between cache thread and others
  *
  * See push_worker().
  */
-typedef enum 
+typedef enum
 {
     FREE_MESSAGE=0,   /*!< Call delete_client_by_socket() / used in cache_manager() */
     WARN_MESSAGE,     /*!< Warn clients: see warn_clients() */

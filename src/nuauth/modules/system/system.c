@@ -69,11 +69,11 @@ confparams system_nuauth_vars[] = {
   vpointer = get_confvar_value(system_nuauth_vars,
           sizeof(system_nuauth_vars)/sizeof(confparams),
           "system_convert_username_to_uppercase");
-  system_convert_username_to_uppercase = *(int *)(vpointer); 
+  system_convert_username_to_uppercase = *(int *)(vpointer);
  vpointer = get_confvar_value(system_nuauth_vars,
           sizeof(system_nuauth_vars)/sizeof(confparams),
           "system_convert_username_to_lowercase");
-  system_convert_username_to_lowercase = *(int *)(vpointer); 
+  system_convert_username_to_lowercase = *(int *)(vpointer);
   if (system_convert_username_to_lowercase && system_convert_username_to_uppercase){
     system_convert_username_to_lowercase=0;
     system_convert_username_to_uppercase=0;
@@ -85,7 +85,7 @@ confparams system_nuauth_vars[] = {
   vpointer = get_confvar_value(system_nuauth_vars,
           sizeof(system_nuauth_vars)/sizeof(confparams),
           "system_pam_module_not_threadsafe");
-  system_pam_module_not_threadsafe = *(int *)(vpointer); 
+  system_pam_module_not_threadsafe = *(int *)(vpointer);
 
   return NULL;
 }
@@ -166,9 +166,9 @@ static char* normalize_username(const char * username)
 
 /**
  * \brief user_check realise user authentication
- *  
+ *
  * It has to be exported by all user authentication modules
- *  
+ *
  *  \param username User name string
  *  \param pass User provided password
  *  \param passlen Password length
@@ -180,7 +180,7 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass
 		,unsigned passlen, gpointer params)
 {
 	char* user;
-	int ret; 
+	int ret;
 
     user=normalize_username(username);
     if (user == NULL){
@@ -216,7 +216,7 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass
 			return SASL_BADAUTH;
 		}
 		pam_end(pamh,PAM_DATA_SILENT);
-		
+
 		if (system_pam_module_not_threadsafe){
 			g_static_mutex_unlock (&pam_mutex);
 		}
@@ -226,16 +226,16 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass
 	return SASL_OK;
 }
 
-G_MODULE_EXPORT uint32_t  get_user_id(const char *username,gpointer params) 
+G_MODULE_EXPORT uint32_t  get_user_id(const char *username,gpointer params)
 {
-	int ret; 
+	int ret;
     char* user;
 	char buffer[512];
 	struct passwd result_buf;
 	struct passwd *result_bufp=NULL;
 
     user=normalize_username(username);
-    
+
 	ret = getpwnam_r(user, &result_buf, buffer, sizeof(buffer), &result_bufp);
 	if (ret != 0 || (! result_bufp)){
 		return SASL_BADAUTH;
@@ -247,7 +247,7 @@ G_MODULE_EXPORT uint32_t  get_user_id(const char *username,gpointer params)
 G_MODULE_EXPORT GSList * get_user_groups(const char *username,gpointer params)
 {
 
-	int ret; 
+	int ret;
     char* user;
 	char buffer[512];
 	struct passwd result_buf;

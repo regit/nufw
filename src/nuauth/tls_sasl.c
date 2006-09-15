@@ -39,7 +39,7 @@ extern struct nuauth_tls_t nuauth_tls;
  *
  * Extract the username from the provided certificate
  */
-gchar* get_username_from_tls_session(gnutls_session session) 
+gchar* get_username_from_tls_session(gnutls_session session)
 {
     if (gnutls_certificate_type_get(session) == GNUTLS_CRT_X509){
         return get_username_from_x509_certificate(session);
@@ -58,7 +58,7 @@ static void  policy_refuse_user(user_session_t* c_session,int c)
 }
 
 
-static void tls_sasl_connect_ok(user_session_t* c_session, int c) 
+static void tls_sasl_connect_ok(user_session_t* c_session, int c)
 {
 /** \todo
  * Check if work is needed for a full proto v3 compatibility (if proto v4 change)
@@ -71,7 +71,7 @@ static void tls_sasl_connect_ok(user_session_t* c_session, int c)
         case POLICY_MULTIPLE_LOGIN:
             /* Accept all connections */
             break;
-            
+
         case POLICY_ONE_LOGIN:
             /* Allow an user can only be connected once (test username) */
             if (look_for_username(c_session->user_name)){
@@ -79,7 +79,7 @@ static void tls_sasl_connect_ok(user_session_t* c_session, int c)
                 return;
             }
             break;
-            
+
         case POLICY_PER_IP_ONE_LOGIN:
             /* Allow only an user session per IP (test connection IP) */
             if (get_client_sockets_by_ip(&c_session->addr) ){
@@ -88,7 +88,7 @@ static void tls_sasl_connect_ok(user_session_t* c_session, int c)
             }
             break;
     }
-	
+
     if (nuauthconf->push) {
         struct internal_message* message=g_new0(struct internal_message,1);
         struct tls_insert_data * datas=g_new0(struct tls_insert_data,1);
@@ -115,7 +115,7 @@ static void tls_sasl_connect_ok(user_session_t* c_session, int c)
     }
     msg.length=0;
     /* send mode to client */
-    if (gnutls_record_send(*(c_session->tls),&msg,sizeof(msg)) < 0){ 
+    if (gnutls_record_send(*(c_session->tls),&msg,sizeof(msg)) < 0){
 #ifdef DEBUG_ENABLE
         log_message(WARNING, AREA_USER, "gnutls_record_send() failure at %s:%d",__FILE__,__LINE__);
 #endif
@@ -140,15 +140,15 @@ static void tls_sasl_connect_ok(user_session_t* c_session, int c)
     log_user_session(c_session,SESSION_OPEN);
     debug_log_message(VERBOSE_DEBUG, AREA_USER, "Says we need to work on %d",c);
     g_async_queue_push(mx_queue,GINT_TO_POINTER(c));
-}    
+}
 
 /**
  * \brief Complete all user connection from TLS to authentication.
- * 
+ *
  * \param userdata A client_connection:
  * \param data Unused
  */
-void tls_sasl_connect(gpointer userdata, gpointer data) 
+void tls_sasl_connect(gpointer userdata, gpointer data)
 {
     gnutls_session * session;
     user_session_t* c_session;
@@ -161,7 +161,7 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
         remove_socket_from_pre_client_list(c);
         return;
     }
-    
+
     c_session = g_new0(user_session_t,1);
     c_session->tls = session;
     c_session->socket=c;
@@ -180,7 +180,7 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
             gchar* username=NULL;
             /* need to parse the certificate to see if it is a sufficient credential */
             username=get_username_from_tls_session(*session);
-            /* parsing complete */ 
+            /* parsing complete */
             if (username){
                 debug_log_message(VERBOSE_DEBUG, AREA_USER, "Using username %s from certificate",username);
                  c_session->groups = modules_get_user_groups(username);

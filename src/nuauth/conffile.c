@@ -35,14 +35,14 @@
 
 /**
  * Taken a conf file and hash containing options, fill the hash with options values.
- * 
+ *
  * \param filename File name
  * \param array_size Size of the array
  * \param symbols (Pointer to) Hash containing options
  * \return 1 if OK, 0 otherwise
  */
 
-int parse_conffile(char * filename,gint array_size,confparams* symbols) 
+int parse_conffile(char * filename,gint array_size,confparams* symbols)
 {
 	GScanner*  scanner;
 	GTokenType dnentry=G_TOKEN_NONE;
@@ -77,9 +77,9 @@ int parse_conffile(char * filename,gint array_size,confparams* symbols)
 				}
 			}
 			if (current_symbol != NULL){
-				dnentry=g_scanner_get_next_token (scanner); 
-				if (dnentry ==  G_TOKEN_EQUAL_SIGN){ 
-					dnentry=g_scanner_get_next_token (scanner); 
+				dnentry=g_scanner_get_next_token (scanner);
+				if (dnentry ==  G_TOKEN_EQUAL_SIGN){
+					dnentry=g_scanner_get_next_token (scanner);
 					switch (dnentry){
 						case G_TOKEN_STRING :
 							/* test if element want a string */
@@ -123,8 +123,8 @@ int parse_conffile(char * filename,gint array_size,confparams* symbols)
 
 /**
  * Fetch value of an option and return a pointer to it.
- * 
- * \param symbols Option array 
+ *
+ * \param symbols Option array
  * \param array_size Number of entries in symbols
  * \param confparam String identifier of parameter to get
  * \return Pointer to parameter value
@@ -147,7 +147,7 @@ gpointer get_confvar_value(confparams* symbols,gint array_size,gchar * confparam
 				default :
 					value=NULL;
 					break;
-			} 
+			}
 			return value;
 		}
 	}

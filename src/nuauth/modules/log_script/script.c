@@ -37,7 +37,7 @@ G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t
     char *quoted_address;
     char *format;
     gboolean ok;
-    
+
     const char *err = inet_ntop(AF_INET6, &c_session->addr, address, sizeof(address));
     if (err == NULL) {
         return -1;

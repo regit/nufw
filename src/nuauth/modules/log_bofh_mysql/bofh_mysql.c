@@ -40,7 +40,7 @@ static int ipv6_to_sql(struct in6_addr *addr, char *buffer, size_t buflen)
     addr8 = &addr->s6_addr[0];
     for (i=0; i<4; i++)
     {
-        written = sprintf(buffer, "%02x%02x%02x%02x", 
+        written = sprintf(buffer, "%02x%02x%02x%02x",
                 addr8[0],
                 addr8[1],
                 addr8[2],
@@ -69,7 +69,7 @@ static MYSQL* mysql_conn_init(struct log_mysql_params* params);
 G_MODULE_EXPORT gchar* unload_module_with_params(gpointer params_p)
 {
   struct log_mysql_params* params = (struct log_mysql_params*)params_p;
-  
+
   if (params){
     if (! nuauth_is_reloading()){
       if ( mysql_close_open_user_sessions(params) != NU_EXIT_OK){
@@ -94,7 +94,7 @@ G_MODULE_EXPORT gchar* unload_module_with_params(gpointer params_p)
 }
 
 /* Init mysql system */
-G_MODULE_EXPORT gboolean 
+G_MODULE_EXPORT gboolean
 init_module_from_conf(module_t *module)
 {
   confparams mysql_nuauth_vars[] = {
@@ -154,19 +154,19 @@ init_module_from_conf(module_t *module)
     free_confparams(mysql_nuauth_vars,sizeof(mysql_nuauth_vars)/sizeof(confparams));
 
     /* init thread private stuff */
-    params->mysql_priv = g_private_new ((GDestroyNotify)mysql_close); 
+    params->mysql_priv = g_private_new ((GDestroyNotify)mysql_close);
     log_message(DEBUG, AREA_MAIN, "mysql part of the config file is parsed\n");
 
     /* do initial update of user session if needed */
     if (! nuauth_is_reloading()){
         mysql_close_open_user_sessions(params);
     }
-    
+
     module->params=(gpointer)params;
     return TRUE;
 }
 
-/* 
+/*
  * Initialize connection to mysql server
  */
 static MYSQL* mysql_conn_init(struct log_mysql_params* params)
@@ -174,7 +174,7 @@ static MYSQL* mysql_conn_init(struct log_mysql_params* params)
     MYSQL *ld = NULL;
 
     /* init connection */
-    ld = mysql_init(ld);     
+    ld = mysql_init(ld);
     if (ld == NULL) {
         log_message(WARNING, AREA_MAIN, "mysql init error : %s\n",strerror(errno));
         return NULL;
@@ -212,9 +212,9 @@ static char* quote_string(MYSQL *mysql, char *text)
         return NULL;
     }
     return quoted;
-}    
+}
 
-    
+
 
 static MYSQL* get_mysql_handler(struct log_mysql_params* params)
 {
@@ -222,7 +222,7 @@ static MYSQL* get_mysql_handler(struct log_mysql_params* params)
     if (ld != NULL) {
         return ld;
     }
-    
+
     ld = mysql_conn_init(params);
     if (ld == NULL){
         log_message (SERIOUS_WARNING, AREA_MAIN,
@@ -232,7 +232,7 @@ static MYSQL* get_mysql_handler(struct log_mysql_params* params)
     g_private_set(params->mysql_priv,ld);
     return ld;
 
-}    
+}
 
 #define CONN_SELECT_FIELDS "*"
 
@@ -261,7 +261,7 @@ G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t
     int mysql_ret;
     MYSQL *ld;
     gboolean ok;
-    
+
     ld = get_mysql_handler(params);
     if (ld == NULL) {
         return -1;
@@ -273,7 +273,7 @@ G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t
     switch (state) {
         case SESSION_OPEN:
 		return 0;
-            
+
         case SESSION_CLOSE:
             /* update existing user session */
             ok = secure_snprintf(request, sizeof(request),
@@ -301,7 +301,7 @@ G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t
         return -1;
     } else {
     /** \todo Loop on answer:
-     * 
+     *
      * For each answer:
      *  - generate conntrack message
      *  - send destroy message to nufw

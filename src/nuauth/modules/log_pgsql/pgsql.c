@@ -19,8 +19,8 @@
 
 
 /* SSL notes :
- * the client cert needs to go in 
- *                $HOME/.postgresql/root.crt see the comments at the top of 
+ * the client cert needs to go in
+ *                $HOME/.postgresql/root.crt see the comments at the top of
  *                               src/interfaces/libpq/fe-secure.c */
 
 #include <auth_srv.h>
@@ -58,7 +58,7 @@ G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
       g_free(params->pgsql_db_name);
       g_free(params->pgsql_table_name);
       g_free(params->pgsql_users_table_name);
-  } 
+  }
   g_free(params);
 
   return TRUE;
@@ -163,13 +163,13 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t *module)
     if (! nuauth_is_reloading()){
         pgsql_close_open_user_sessions(params);
     }
-    
+
     module->params=(gpointer)params;
     return TRUE;
 }
 
 
-/* 
+/*
  * Initialize connection to pgsql server
  */
 static PGconn *pgsql_conn_init(struct log_pgsql_params* params){
@@ -217,7 +217,7 @@ static char* quote_pgsql_string(char *text)
         return NULL;
     }
     return quoted;
-}    
+}
 
 static gchar* generate_osname(gchar *Name, gchar *Version, gchar *Release)
 {
@@ -271,7 +271,7 @@ static int pgsql_insert(PGconn *ld, connection_t *element, char *oob_prefix, tcp
         return -1;
     }
 
-    /* Add user informations */ 
+    /* Add user informations */
     if (element->username) {
         /* Get OS and application names */
         char *quoted_username = quote_pgsql_string(element->username);
@@ -280,16 +280,16 @@ static int pgsql_insert(PGconn *ld, connection_t *element, char *oob_prefix, tcp
                 element->os_version,
                 element->os_release);
         char *quoted_appname;
-        
+
         if (element->app_name != NULL  && strlen(element->app_name) < APPNAME_MAX_SIZE)
             quoted_appname = quote_pgsql_string(element->app_name);
         else
             quoted_appname = g_strdup("");
 
-        /* Quote strings send to MySQL */ 
+        /* Quote strings send to MySQL */
         g_strlcat(
-                request_fields, 
-                ", user_id, username, client_os, client_app", 
+                request_fields,
+                ", user_id, username, client_os, client_app",
                 sizeof(request_fields));
         ok = secure_snprintf(tmp_buffer, sizeof(tmp_buffer),
                 ", '%u', '%s', '%s', '%s'",
@@ -308,22 +308,22 @@ static int pgsql_insert(PGconn *ld, connection_t *element, char *oob_prefix, tcp
     }
 
     /* Add TCP/UDP parameters */
-    if ((element->tracking.protocol == IPPROTO_TCP) 
+    if ((element->tracking.protocol == IPPROTO_TCP)
             || (element->tracking.protocol == IPPROTO_UDP))
     {
         if (element->tracking.protocol == IPPROTO_TCP) {
             g_strlcat(
-                    request_fields, 
-                    ", tcp_sport, tcp_dport)", 
+                    request_fields,
+                    ", tcp_sport, tcp_dport)",
                     sizeof(request_fields));
         } else {
             g_strlcat(
-                    request_fields, 
-                    ", udp_sport, udp_dport)", 
+                    request_fields,
+                    ", udp_sport, udp_dport)",
                     sizeof(request_fields));
         }
         ok = secure_snprintf(tmp_buffer, sizeof(tmp_buffer),
-                ", '%hu', '%hu');", 
+                ", '%hu', '%hu');",
                 element->tracking.source,
                 element->tracking.dest);
         if (!ok) {
@@ -350,7 +350,7 @@ static int pgsql_insert(PGconn *ld, connection_t *element, char *oob_prefix, tcp
                 "Fail to build PostgreSQL query (maybe too long)!");
         return -1;
     }
-    
+
     /* do the query */
     Result = PQexec(ld, sql_query);
 
@@ -390,7 +390,7 @@ static int pgsql_update_close(PGconn *ld, connection_t *element,struct log_pgsql
                 "Fail to build PostgreSQL query (maybe too long)!");
         return -1;
     }
-    
+
     /* do the query */
     Result = PQexec(ld, request);
     if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK){
@@ -402,11 +402,11 @@ static int pgsql_update_close(PGconn *ld, connection_t *element,struct log_pgsql
     }
     PQclear(Result);
     return 0;
-}    
+}
 
 
-static int pgsql_update_state(PGconn *ld, connection_t *element, 
-        tcp_state_t old_state, tcp_state_t new_state, 
+static int pgsql_update_state(PGconn *ld, connection_t *element,
+        tcp_state_t old_state, tcp_state_t new_state,
         int reverse,struct log_pgsql_params* params)
 {
     char request[SHORT_REQUEST_SIZE];
@@ -425,7 +425,7 @@ static int pgsql_update_state(PGconn *ld, connection_t *element,
     if (inet_ntop(AF_INET6, &element->tracking.daddr, tmp_inet2, sizeof(tmp_inet2)) == NULL)
         return -1;
 
-    if (reverse) { 
+    if (reverse) {
         ip_src = tmp_inet2;
         ip_dst = tmp_inet1;
         tcp_src = element->tracking.dest;
@@ -435,7 +435,7 @@ static int pgsql_update_state(PGconn *ld, connection_t *element,
         ip_dst = tmp_inet2;
         tcp_src = element->tracking.source;
         tcp_dst = element->tracking.dest;
-    }       
+    }
 
     /* build sql query */
     ok = secure_snprintf(request, sizeof(request),
@@ -452,8 +452,8 @@ static int pgsql_update_state(PGconn *ld, connection_t *element,
                 "Fail to build PostgreSQL query (maybe too long)!");
         return -1;
     }
-    
-    debug_log_message(DEBUG, AREA_MAIN, 
+
+    debug_log_message(DEBUG, AREA_MAIN,
             "PostgreSQL: update state \"%s\".", request);
 
     while (nb_try < 2){
@@ -471,12 +471,12 @@ static int pgsql_update_state(PGconn *ld, connection_t *element,
         }
         nb_tuple = atoi(PQcmdTuples(Result));
         PQclear(Result);
-        
+
         /* ok */
         if (nb_tuple >= 1){
             return 0;
         }
-        
+
         /* error */
         if (nb_try<2) {
             /* Sleep for 1/3 sec */
@@ -489,10 +489,10 @@ static int pgsql_update_state(PGconn *ld, connection_t *element,
     debug_log_message (WARNING, AREA_MAIN,
             "Tried to update PGSQL entry twice, looks like data to update wasn't inserted");
     return -1;
-}    
+}
 
 static PGconn *get_pgsql_handler(struct log_pgsql_params *params)
-{    
+{
     /* get/open postgresql connection */
     PGconn *ld = g_private_get (params->pgsql_priv);
     if (ld == NULL){
@@ -517,7 +517,7 @@ G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state,
 
     switch (state){
         case TCP_STATE_OPEN:
-            if (element->tracking.protocol == IPPROTO_TCP 
+            if (element->tracking.protocol == IPPROTO_TCP
                 && nuauthconf->log_users_strict)
             {
                 int ret = pgsql_update_close(ld, element,params);
@@ -562,7 +562,7 @@ G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t
 
     if (inet_ntop(AF_INET6, &c_session->addr, addr_ascii, sizeof(addr_ascii)) == NULL)
         return -1;
-    
+
     switch (state) {
         case SESSION_OPEN:
             /* create new user session */

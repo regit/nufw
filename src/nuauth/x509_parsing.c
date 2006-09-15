@@ -11,7 +11,7 @@ gint get_first_x509_cert_from_tls_session(gnutls_session session,gnutls_x509_crt
 {
 	const gnutls_datum *cert_list;
 	unsigned int cert_list_size = 0;
-	
+
 	if (gnutls_certificate_type_get(session) != GNUTLS_CRT_X509)
 		return SASL_BADPARAM;
 
@@ -32,7 +32,7 @@ gint get_first_x509_cert_from_tls_session(gnutls_session session,gnutls_x509_crt
 
 
 /**
- * Given a pointer to a x509 certificate, it checks 
+ * Given a pointer to a x509 certificate, it checks
  * the validity :
  * - expiration time
  * - activation time

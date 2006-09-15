@@ -29,10 +29,10 @@ typedef enum
     POLICY_MULTIPLE_LOGIN=0,
 
     /** Allow an user can only be connected once (test based on username) */
-    POLICY_ONE_LOGIN,         
-    
+    POLICY_ONE_LOGIN,
+
     /** Allow only an user session per IP (test based on IP) */
-    POLICY_PER_IP_ONE_LOGIN    
+    POLICY_PER_IP_ONE_LOGIN
 } policy_t;
 
 
@@ -46,7 +46,7 @@ struct nuauth_params
     /* global configuration variables */
     int packet_timeout;
 
-    /** 
+    /**
      * User session duration in second, default value: ::SESSION_DURATION
      */
     int session_duration;
@@ -73,13 +73,13 @@ struct nuauth_params
      */
     policy_t connect_policy;
 
-    /** When timeout is reached, use #DECISION_REJECT instead 
-     *  of #DECISION_DROP (if different than 0). 
+    /** When timeout is reached, use #DECISION_REJECT instead
+     *  of #DECISION_DROP (if different than 0).
      *  Default value is 0. */
     int reject_after_timeout;
 
-    /** When an acl match but user is not in correct group, use #DECISION_REJECT instead 
-     *  of #DECISION_DROP (if different than 0). 
+    /** When an acl match but user is not in correct group, use #DECISION_REJECT instead
+     *  of #DECISION_DROP (if different than 0).
      *  Default value is 0. */
     int reject_authenticated_drop;
 
@@ -94,12 +94,12 @@ struct nuauth_params
     int hello_authentication;
     struct in6_addr nufw_srv;
     struct in6_addr client_srv;
-    
+
     /* cache setting */
     int datas_persistance;
     int acl_cache;   /* cache variables for acl cache */
     int user_cache;  /* cache variables for user cache */
-    
+
     /* Multi user related variables */
     struct in6_addr *authorized_servers;  /* authorized server list */
     char** multi_users_array;            /* multi users clients */
@@ -124,7 +124,7 @@ struct nuauth_thread_t
 {
     GThread *thread;
     GMutex *mutex;
-};    
+};
 
 struct nuauth_datas
 {
@@ -146,8 +146,8 @@ struct nuauth_datas
      * pools of thread which treat nufw packet.
      */
     GThreadPool* acl_checkers;
-    GThreadPool* user_loggers; 
-    GThreadPool* user_session_loggers; 
+    GThreadPool* user_loggers;
+    GThreadPool* user_session_loggers;
     GThreadPool* decisions_workers;
     GThreadPool*  ip_authentication_workers;
 

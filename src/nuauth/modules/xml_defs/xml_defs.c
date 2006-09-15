@@ -26,7 +26,7 @@
  */
 
 /**
- * 
+ *
  * \ingroup PeriodNuauthModules
  * \defgroup XMLModule XML period definition module
  *
@@ -77,7 +77,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
   /* free config struct */
   free_confparams(xml_defs_nuauth_vars,sizeof(xml_defs_nuauth_vars)/sizeof(confparams));
 
-  module->params = (gpointer) params; 
+  module->params = (gpointer) params;
   return TRUE;
 }
 
@@ -93,7 +93,7 @@ static void period_start_element_handler (GMarkupParseContext *context,
 		const gchar **attribute_names,
 		const gchar **attribute_values,
 		gpointer user_data,
-		GError **error) 
+		GError **error)
 {
 
     struct xml_period_context* curcontext=(struct xml_period_context*)user_data;
@@ -109,7 +109,7 @@ static void period_start_element_handler (GMarkupParseContext *context,
                 p_desc = attribute_values[i];
             }
 
-        } 
+        }
         if (p_name ){
             if (!p_desc){
                 p_desc="";
@@ -133,7 +133,7 @@ static void period_start_element_handler (GMarkupParseContext *context,
                     curcontext->perioditem->start_day=atoi(attribute_values[i]);
                 } else if (!strcmp(attribute_names[i], "end")) {
                     curcontext->perioditem->end_day=atoi(attribute_values[i]);
-                } 
+                }
             }
         }
     } else if (! strcmp(element_name, "hours")) {
@@ -143,7 +143,7 @@ static void period_start_element_handler (GMarkupParseContext *context,
                     curcontext->perioditem->start_hour=atoi(attribute_values[i]);
                 } else if (!strcmp(attribute_names[i], "end")) {
                     curcontext->perioditem->end_hour=atoi(attribute_values[i]);
-                } 
+                }
             }
         }
     } else if (! strcmp(element_name, "dates")) {
@@ -153,7 +153,7 @@ static void period_start_element_handler (GMarkupParseContext *context,
                     curcontext->perioditem->start_date=atoi(attribute_values[i]);
                 } else if (!strcmp(attribute_names[i], "end")) {
                     curcontext->perioditem->end_date=atoi(attribute_values[i]);
-                } 
+                }
             }
         }
     } else if (! strcmp(element_name, "duration")) {
@@ -171,10 +171,10 @@ static void period_start_element_handler (GMarkupParseContext *context,
 static void period_end_element_handler (GMarkupParseContext *context,
 		const gchar *element_name,
 		gpointer user_data,
-		GError **error) 
+		GError **error)
 {
     struct xml_period_context* curcontext=(struct xml_period_context*)user_data;
-            
+
     if(! strcmp(element_name, "perioditem")) {
         if (curcontext->periodname){
             add_perioditem_to_period(curcontext->periods,g_strdup(curcontext->periodname),curcontext->perioditem);
@@ -202,7 +202,7 @@ static GMarkupParser period_parser = {
  * \brief Period parsing function
  *
  * This function is exported by the module and fill the hash table containing the periods.
- * 
+ *
  * \param periods A hash table containing all the periods.
  * \param params_p A pointer to the parameters of the module instance we're working for
  *

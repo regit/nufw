@@ -30,9 +30,9 @@
  * The main functions are :
  *  - search_and_fill() : used to aggregate dates coming from nufw and clients
  *  - take_decision() : decide on packet based on policy coming from module
- * 
+ *
  * @{
- * 
+ *
  */
 
 /** \file auth_common.c
@@ -93,7 +93,7 @@ gint print_connection(gpointer data,gpointer userdata)
         if (inet_ntop(AF_INET6, &conn->tracking.daddr, dst_ascii, sizeof(dst_ascii)) == NULL)
             return -1;
 
-        g_message( "Connection: src=%s dst=%s proto=%u", 
+        g_message( "Connection: src=%s dst=%s proto=%u",
                 src_ascii, dst_ascii, conn->tracking.protocol);
         if (conn->tracking.protocol == IPPROTO_TCP){
             g_message("sport=%d dport=%d", conn->tracking.source,
@@ -124,10 +124,10 @@ int is_ipv4(struct in6_addr *addr)
 }
 
 /**
- * Send authentification response (decision of type ::decision_t) to the NuFW. 
+ * Send authentification response (decision of type ::decision_t) to the NuFW.
  *
  * Use ::nuauth_decision_response_t structure to build the packet.
- * 
+ *
  * \param packet_id_ptr NetFilter packet unique identifier (32 bits)
  * \param userdata Pointer to an answer of type ::auth_answer
  */
@@ -260,7 +260,7 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 	break;
     }
 
-    debug_log_message (DEBUG, AREA_MAIN, 
+    debug_log_message (DEBUG, AREA_MAIN,
             "Sending auth answer %d for packet %u on socket %p",
             element->decision, packet_id, element->tls);
     if (element->tls->alive){
@@ -270,7 +270,7 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
         (void)g_atomic_int_dec_and_test(&(element->tls->usage));
     } else {
         if (g_atomic_int_dec_and_test(&(element->tls->usage))){
-            clean_nufw_session(element->tls);			
+            clean_nufw_session(element->tls);
         }
     }
 }
@@ -293,7 +293,7 @@ void free_connection_list(GSList *list)
  *
  * May call log_user_packet() with #TCP_STATE_DROP state if connection was
  * waiting for its authentification.
- * 
+ *
  * \param conn Pointer to a connection
  */
 void free_connection(connection_t *conn)
@@ -306,7 +306,7 @@ void free_connection(connection_t *conn)
         /* copy message */
         log_user_packet(conn,TCP_STATE_DROP);
     }
-    /* 
+    /*
      * tell cache we don't use the ressource anymore
      */
     if (conn->acl_groups && nuauthconf->acl_cache){
@@ -351,8 +351,8 @@ void free_connection(connection_t *conn)
     g_free(conn);
 }
 
-/** used for logging purpose 
- * it DOES NOT duplicate internal data 
+/** used for logging purpose
+ * it DOES NOT duplicate internal data
  */
 
 connection_t* duplicate_connection(connection_t* element)
@@ -402,7 +402,7 @@ inline int conn_cl_remove(gconstpointer conn)
  * \return Returns 1 if succeeded, 0 otherwise
  */
 
-int conn_cl_delete(gconstpointer conn) 
+int conn_cl_delete(gconstpointer conn)
 {
     g_assert (conn != NULL);
 
@@ -410,7 +410,7 @@ int conn_cl_delete(gconstpointer conn)
         return 0;
     }
 
-    /* free isolated structure */ 
+    /* free isolated structure */
     free_connection((connection_t *)conn);
     return 1;
 }
@@ -419,9 +419,9 @@ int conn_cl_delete(gconstpointer conn)
  * This function is used by clean_connections_list() to check if a
  * connection is 'old' (outdated) or not. It checks timeout with current
  * timestamp (see member packet_timeout of ::nuauthconf) and skip connection
- * in state ::AUTH_STATE_COMPLETING (because of an evil hack in 
+ * in state ::AUTH_STATE_COMPLETING (because of an evil hack in
  * search_and_fill_complete_of_userpckt() :-)).
- * 
+ *
  * \param key Key in hash of the connection (not used in the function)
  * \param value Pointer to the connection
  * \param user_data Current timestamp (get by time(NULL))
@@ -432,12 +432,12 @@ gboolean get_old_conn (gpointer key, gpointer value, gpointer user_data)
     long current_timestamp = GPOINTER_TO_INT(user_data);
 
     /* Don't remove connection in state AUTH_STATE_COMPLETING because of
-     * an evil hack in search_and_fill_complete_of_userpckt() :-)  
-     */ 
+     * an evil hack in search_and_fill_complete_of_userpckt() :-)
+     */
     if (
-            ( current_timestamp - ((connection_t *)value)->timestamp > nuauthconf->packet_timeout)  
+            ( current_timestamp - ((connection_t *)value)->timestamp > nuauthconf->packet_timeout)
             &&
-            (((connection_t *)value)->state!=AUTH_STATE_COMPLETING)		    
+            (((connection_t *)value)->state!=AUTH_STATE_COMPLETING)
        ){
         return TRUE;
     }
@@ -464,7 +464,7 @@ void clean_connections_list ()
     GSList *old_conn_list = NULL;
     GSList *iterator;
     int nb_deleted;
-    
+
     /* extract the list of old connections */
     g_static_mutex_lock (&insert_mutex);
 
@@ -478,10 +478,10 @@ void clean_connections_list ()
         gpointer value = g_hash_table_lookup(conn_list, key);
         if (value != NULL) {
             g_hash_table_steal(conn_list, key);
-            old_conn_list = g_slist_prepend(old_conn_list, value);        
+            old_conn_list = g_slist_prepend(old_conn_list, value);
             nb_deleted += 1;
         } else {
-            log_message(WARNING, AREA_MAIN,  
+            log_message(WARNING, AREA_MAIN,
                     "Clean connection: no entry found in hash ");
         }
         iterator = iterator->next;
@@ -502,10 +502,10 @@ void clean_connections_list ()
         free_connection(element);
     }
     g_slist_free(old_conn_list);
-   
+
     /* display number of deleted elements */
     if (0 < nb_deleted) {
-        log_message(INFO, AREA_MAIN, 
+        log_message(INFO, AREA_MAIN,
                 "Clean connection list: %d connection(s) suppressed", nb_deleted);
     }
 }
@@ -520,13 +520,13 @@ typedef enum {
  *
  * The process may be asynchronous (using decisions_workers,
  * member of ::nuauthdatas)
- * 
+ *
  * \param element A connection
  * \param place Place where the connection is stored
  *              (PACKET_ALONE or PACKET_IN_HASH)
  * \return Returns -1 if fails, 1 otherwise
  */
-gint take_decision(connection_t *element, packet_place_t place) 
+gint take_decision(connection_t *element, packet_place_t place)
 {
     GSList * parcours=NULL;
     decision_t answer = DECISION_NODECIDE;
@@ -554,8 +554,8 @@ gint take_decision(connection_t *element, packet_place_t place)
             stop_test=DECISION_ACCEPT;
         }
         test=TEST_NODECIDE;
-        for  ( parcours = element->acl_groups; 
-                ( parcours != NULL  && test == TEST_NODECIDE ); 
+        for  ( parcours = element->acl_groups;
+                ( parcours != NULL  && test == TEST_NODECIDE );
                 parcours = g_slist_next(parcours) ) {
             /* for each user  group */
             if (parcours->data != NULL) {
@@ -590,8 +590,8 @@ gint take_decision(connection_t *element, packet_place_t place)
 
                                 }
                             }
-                            if ( 
-                                    (expire == -1) || 
+                            if (
+                                    (expire == -1) ||
                                     ((periodend != -1) && (expire !=-1) && (expire > periodend ))
                                ) {
                                 debug_log_message(DEBUG, AREA_MAIN, " ... modifying expire");
@@ -632,14 +632,14 @@ gint take_decision(connection_t *element, packet_place_t place)
         debug_log_message(DEBUG, AREA_MAIN, " taken expire from element");
         expire=element->expire;
     }
-	
+
     /* we must put element in expire list if needed before decision is taken */
     if (expire>0) {
         if (nuauthconf->nufw_has_conntrack){
             struct limited_connection* datas=g_new0(struct limited_connection,1);
             struct internal_message  *message=g_new0(struct internal_message,1);
 
-            debug_log_message (VERBOSE_DEBUG, AREA_MAIN, 
+            debug_log_message (VERBOSE_DEBUG, AREA_MAIN,
                     "Sending connection with fixed timeout to thread");
             memcpy(&(datas->tracking),&(element->tracking),sizeof(tracking_t));
             datas->expire=expire;
@@ -672,10 +672,10 @@ gint take_decision(connection_t *element, packet_place_t place)
     return 1;
 }
 
-/** 
+/**
  * Log (using log_user_packet()) and send answer (using send_auth_response())
  * for a given connection.
- * 
+ *
  * \param element A connection
  * \return Returns 1
  */
@@ -698,7 +698,7 @@ gint apply_decision(connection_t *element)
 #ifdef PERF_DISPLAY_ENABLE
     gettimeofday(&leave_time,NULL);
     timeval_substract (&elapsed_time,&leave_time,&(element->arrival_time));
-    log_message(INFO, AREA_MAIN, 
+    log_message(INFO, AREA_MAIN,
             "Treatment time for conn : %ld.%03ld sec",
             elapsed_time.tv_sec,elapsed_time.tv_usec);
 #endif
@@ -712,11 +712,11 @@ gint apply_decision(connection_t *element)
 }
 
 /**
- * This is a callback to apply a decision from the decision thread 
+ * This is a callback to apply a decision from the decision thread
  * pool (decisions_workers member of ::nuauthdatas).
  *
  * The queue is feeded by take_decision().
- * 
+ *
  * \param userdata Pointer to a connection (of type ::connection_t)
  * \param data NULL pointer (unused)
  */
@@ -776,7 +776,7 @@ void free_buffer_read(struct tls_buffer_read* datas)
  */
 gboolean secure_snprintf(char *buffer, unsigned int buffer_size, char *format, ...)
 {
-    va_list args;  
+    va_list args;
     int ret;
     va_start(args, format);
     ret = g_vsnprintf(buffer, buffer_size, format, args);
@@ -786,7 +786,7 @@ gboolean secure_snprintf(char *buffer, unsigned int buffer_size, char *format, .
         return TRUE;
     else
         return FALSE;
-}    
+}
 
 /**
  * Check Protocol version agains supported one

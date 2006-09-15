@@ -28,7 +28,7 @@
  */
 
 /**
- * 
+ *
  * \ingroup X509NuauthModules
  * \defgroup X509STDModule X509 standard checking module
  *
@@ -79,7 +79,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
     /* free config struct */
     free_confparams(x509_std_nuauth_vars,sizeof(x509_std_nuauth_vars)/sizeof(confparams));
 
-    module->params = (gpointer) params; 
+    module->params = (gpointer) params;
 
     return TRUE;
 
@@ -138,7 +138,7 @@ G_MODULE_EXPORT gchar* certificate_to_uid (gnutls_session session, gnutls_x509_c
 	gnutls_x509_crt_get_dn( cert, dn, &size);
 
 	log_message(VERBOSE_DEBUG, AREA_USER, "\tDN: %s", dn);
-	
+
 	/* parse DN and extract username is there is one */
 	pointer=g_strrstr_len(dn,DN_LENGTH-1,",CN=");
 	if (pointer){

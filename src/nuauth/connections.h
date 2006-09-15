@@ -25,7 +25,7 @@
  * @{
  */
 
-/** 
+/**
  * State of a connection (type ::connection_t) in the authentification server.
  * See field state of a structure ::connection_t and function
  * change_state().
@@ -37,13 +37,13 @@ typedef enum
     AUTH_STATE_USERPCKT,    /*!< Connection received from an user: see user_request() */
     AUTH_STATE_READY,       /*!< (see search_and_fill_completing()) */
 
-    /** 
+    /**
      * State used when a connection is send to acl_checkers queue: read ACLs
      * from cache or external source. See acl_check_and_decide().
      */
     AUTH_STATE_COMPLETING,
-    AUTH_STATE_DONE,       
-    AUTH_STATE_HELLOMODE  
+    AUTH_STATE_DONE,
+    AUTH_STATE_HELLOMODE
 } auth_state_t;
 
 #define IPHDR_REJECT_LENGTH 20
@@ -53,9 +53,9 @@ typedef enum
  */
 #define IPHDR_REJECT_LENGTH_BWORD 5
 
-/** 
+/**
  * Used to store the acl that apply for a packet
- */ 
+ */
 struct acl_group {
   GSList *groups;
   decision_t answer;
@@ -63,9 +63,9 @@ struct acl_group {
 };
 
 /**
- * This is a packet blocked by NuFW and waiting for an authentification 
+ * This is a packet blocked by NuFW and waiting for an authentification
  * of NuAuth. They are created in authpckt_new_connection().
- * 
+ *
  * It contains all datas relative to a packet
  */
 typedef struct
@@ -77,7 +77,7 @@ typedef struct
   tracking_t tracking;    /*!< IPv4 connection tracking (headers) */
   uint32_t mark;       /*!< Number used for marking set to user numeric identity at start */
   char *username;         /*!< User name */
-  
+
  /**
   * ACL related groups.
   *
@@ -86,7 +86,7 @@ typedef struct
   GSList *acl_groups;     /*!< ACL group list (of type ::acl_group) */
   GSList *user_groups;    /*!< User groups */
   struct user_cached_datas *cacheduserdatas;  /* Pointer to cache */
-  
+
   gchar *os_sysname;      /*!< Operating system name */
   gchar *os_release;      /*!< Operating system release */
   gchar *os_version;      /*!< Operating system version */

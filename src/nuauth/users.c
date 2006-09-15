@@ -1,4 +1,4 @@
-/** 
+/**
  ** Copyright(C) 2005 INL
  ** Written by Eric Leblond <regit@inl.fr>
  **
@@ -24,7 +24,7 @@
  * @{
  */
 
-/** 
+/**
  * \file users.c
  * \brief User cache system
  *
@@ -61,7 +61,7 @@ void free_user_cache(gpointer datas)
 
 
 /**
- * handle discussion with user cache 
+ * handle discussion with user cache
  */
 
 void get_users_from_cache (connection_t* conn_elt)
@@ -90,7 +90,7 @@ void get_users_from_cache (connection_t* conn_elt)
 	if (conn_elt->cacheduserdatas == null_queue_datas){
 		debug_log_message(VERBOSE_DEBUG, AREA_PACKET, "[user cache] setting cached user datas to NULL");
 		conn_elt->cacheduserdatas=NULL;
-	} 
+	}
 	/* check if answer is NULL */
 	if (conn_elt->cacheduserdatas==null_message){
 		struct cache_message * rmessage;
@@ -99,13 +99,13 @@ void get_users_from_cache (connection_t* conn_elt)
 		userdatas->groups=NULL;
 		userdatas->uid=0;
 
-		/* cache wants an update 
+		/* cache wants an update
 		 * external check of user */
         userdatas->uid = modules_get_user_id(conn_elt->username);
         userdatas->groups = modules_get_user_groups(conn_elt->username);
 
         if (userdatas->groups == NULL){
-            /*user has not been found or problem occurs we must fail 
+            /*user has not been found or problem occurs we must fail
 			 * returning NULL is enough (don't want to be DOSsed)*/
 			log_message(WARNING, AREA_PACKET, "User not found");
 			return;
@@ -146,7 +146,7 @@ int init_user_cache()
 		nuauthdatas->user_cache->hash=g_hash_table_new_full((GHashFunc)g_str_hash,
 				g_str_equal,
 				(GDestroyNotify) g_free,
-				(GDestroyNotify) free_user_cache); 
+				(GDestroyNotify) free_user_cache);
 		nuauthdatas->user_cache->queue=g_async_queue_new();
 		nuauthdatas->user_cache->delete_elt=free_user_struct;
 		nuauthdatas->user_cache->duplicate_key=user_duplicate_key;

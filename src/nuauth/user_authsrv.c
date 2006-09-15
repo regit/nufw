@@ -27,7 +27,7 @@ static GSList * userpckt_decode(struct tls_buffer_read * datas);
 /**
  * Get user datas (containing datagram) and goes till inclusion
  * (or decision) on packet.
- * 
+ *
  * Call userpckt_decode()
  *
  * \param userdata Pointer to a struct tls_buffer_read: containing the datagram
@@ -40,7 +40,7 @@ void user_check_and_decide (gpointer userdata, gpointer data)
   connection_t* conn_elt;
 
   debug_log_message (VERBOSE_DEBUG, AREA_USER, "entering user_check");
-  
+
   /* reload condition */
   block_on_conf_reload();
   conn_elts = userpckt_decode(userdata);
@@ -51,7 +51,7 @@ void user_check_and_decide (gpointer userdata, gpointer data)
       log_message (INFO, AREA_USER, "User packet decoding failed");
       return;
   }
-  
+
   /* if OK search and fill */
   for (conn_elt_l=conn_elts; conn_elt_l!=NULL; conn_elt_l=conn_elt_l->next)
   {
@@ -67,7 +67,7 @@ void user_check_and_decide (gpointer userdata, gpointer data)
               message->datas=conn_elt;
               g_async_queue_push (nuauthdatas->localid_auth_queue,message);
               continue;
-      } 
+      }
       /* Sanity check : verify source IP equality */
       if  ( memcmp(& ((struct tls_buffer_read *)userdata)->ip_addr,
               &conn_elt->tracking.saddr, sizeof(conn_elt->tracking.saddr)) == 0 ){
@@ -101,7 +101,7 @@ void user_process_field_hello(connection_t* connection, struct nu_authfield_hell
 {
     debug_log_message (VERBOSE_DEBUG, AREA_USER, "\tgot hello field");
     connection->packet_id=g_slist_prepend(NULL,GINT_TO_POINTER(hellofield->helloid));
-}    
+}
 
 int user_process_field_ipv6(connection_t* connection, struct nu_authfield_ipv6 *ipfield)
 {
@@ -110,7 +110,7 @@ int user_process_field_ipv6(connection_t* connection, struct nu_authfield_ipv6 *
     connection->tracking.protocol = ipfield->proto;
 
     debug_log_message (VERBOSE_DEBUG, AREA_USER, "\tgot IPv4 field");
-    switch (connection->tracking.protocol) 
+    switch (connection->tracking.protocol)
     {
         case IPPROTO_TCP:
         case IPPROTO_UDP:
@@ -119,7 +119,7 @@ int user_process_field_ipv6(connection_t* connection, struct nu_authfield_ipv6 *
             connection->tracking.type=0;
             connection->tracking.code=0;
             break;
-            
+
         case IPPROTO_ICMP:
         case IPPROTO_ICMPV6:
             connection->tracking.source=0;
@@ -128,11 +128,11 @@ int user_process_field_ipv6(connection_t* connection, struct nu_authfield_ipv6 *
             connection->tracking.code=ntohs(ipfield->dport);
             break;
 
-        default: 
+        default:
             return -1;
     }
     return 0;
-}    
+}
 
 int user_process_field_ipv4(connection_t* connection, struct nu_authfield_ipv4 *ipfield)
 {
@@ -150,7 +150,7 @@ int user_process_field_ipv4(connection_t* connection, struct nu_authfield_ipv4 *
     connection->tracking.protocol = ipfield->proto;
 
     debug_log_message (VERBOSE_DEBUG, AREA_USER, "\tgot IPv4 field");
-    switch (connection->tracking.protocol) 
+    switch (connection->tracking.protocol)
     {
         case IPPROTO_TCP:
         case IPPROTO_UDP:
@@ -159,7 +159,7 @@ int user_process_field_ipv4(connection_t* connection, struct nu_authfield_ipv4 *
             connection->tracking.type=0;
             connection->tracking.code=0;
             break;
-            
+
         case IPPROTO_ICMP:
             connection->tracking.source=0;
             connection->tracking.dest=0;
@@ -171,11 +171,11 @@ int user_process_field_ipv4(connection_t* connection, struct nu_authfield_ipv4 *
 	    return -1;
     }
     return 0;
-}    
+}
 
 int user_process_field_app(
         struct nu_authreq* authreq,
-        connection_t* connection, 
+        connection_t* connection,
         int field_buffer_len,
         struct nu_authfield_app *appfield)
 {
@@ -198,7 +198,7 @@ int user_process_field_app(
         return -1;
     }
     dec_appname = g_new0(gchar,len);
-    if (sasl_decode64((char*)appfield+4,len, dec_appname,len,&reallen) 
+    if (sasl_decode64((char*)appfield+4,len, dec_appname,len,&reallen)
             ==
             SASL_BUFOVER) {
         dec_appname=g_try_realloc(dec_appname,reallen+1);
@@ -220,13 +220,13 @@ int user_process_field_app(
     g_free(dec_appname);
     connection->app_md5=NULL;
     return 1;
-}    
+}
 
 
 int user_process_field(
-        struct nu_authreq* authreq, 
+        struct nu_authreq* authreq,
         uint8_t header_option,
-        connection_t* connection, 
+        connection_t* connection,
         gboolean *multiclient_ok,
         int auth_buffer_len,
         struct nu_authfield* field)
@@ -289,7 +289,7 @@ int user_process_field(
             return -1;
     }
     return field->length;
-}    
+}
 
 /**
  * \param datas Buffer read on a TLS socket
@@ -309,8 +309,8 @@ GSList* user_request(struct tls_buffer_read *datas)
     struct nu_authreq* authreq;
     char *req_start;
 
-    for (start = dgram + sizeof(struct nu_header), buffer_len -= sizeof(struct nu_header); 
-         0 < buffer_len; 
+    for (start = dgram + sizeof(struct nu_header), buffer_len -= sizeof(struct nu_header);
+         0 < buffer_len;
          start += authreq->packet_length, buffer_len -= authreq->packet_length)
     {
         /* check buffer underflow */
@@ -345,13 +345,13 @@ GSList* user_request(struct tls_buffer_read *datas)
 #ifdef PERF_DISPLAY_ENABLE
         gettimeofday(&(connection->arrival_time),NULL);
 #endif
-       
+
         /*** process all fields ***/
         debug_log_message (VERBOSE_DEBUG, AREA_USER, "Authreq start");
         req_start = start + sizeof(struct nu_authreq);
         auth_buffer_len = authreq->packet_length - sizeof(struct nu_authreq);
-        for (; 
-                0 < auth_buffer_len; 
+        for (;
+                0 < auth_buffer_len;
                 req_start += field_length, auth_buffer_len -= field_length)
         {
             struct nu_authfield* field = (struct nu_authfield* )req_start;
@@ -365,7 +365,7 @@ GSList* user_request(struct tls_buffer_read *datas)
             }
 
             /* process field */
-            field_length = user_process_field (authreq, header->option, 
+            field_length = user_process_field (authreq, header->option,
                     connection, &multiclient_ok, auth_buffer_len, field);
             if (field_length < 0) {
                 free_connection_list(conn_elts);
@@ -375,8 +375,8 @@ GSList* user_request(struct tls_buffer_read *datas)
         }
 
 	/* Sanity check on received packet :
-	 * Source address can be 0 only if it's a hello mode packet 
-	 * we also want to have APPNAME defined 
+	 * Source address can be 0 only if it's a hello mode packet
+	 * we also want to have APPNAME defined
 	 * We destroy all the received message and stop parsing */
 	if (
 			(
@@ -384,7 +384,7 @@ GSList* user_request(struct tls_buffer_read *datas)
 			 ||
 			 (connection->app_name == NULL)
 			)
-			&& 
+			&&
 			(connection->packet_id == NULL)
 	   ) {
 		free_connection_list(conn_elts);
@@ -393,7 +393,7 @@ GSList* user_request(struct tls_buffer_read *datas)
 	}
 
         /* here all packet related information are filled-in */
-        if (connection->username == NULL){	
+        if (connection->username == NULL){
             connection->username=g_strdup(datas->user_name);
         }
         connection->mark=datas->user_id;
@@ -425,7 +425,7 @@ GSList* user_request(struct tls_buffer_read *datas)
                 return NULL;
             }
         }
-        
+
         connection->state=AUTH_STATE_USERPCKT;
 
         connection->acl_groups=NULL;            /* acl part is NULL */
@@ -435,7 +435,7 @@ GSList* user_request(struct tls_buffer_read *datas)
         debug_log_message (VERBOSE_DEBUG, AREA_USER, "Authreq end");
     }
     return conn_elts;
-}    
+}
 
 /**
  * Decode user datagram packet and fill a connection with datas

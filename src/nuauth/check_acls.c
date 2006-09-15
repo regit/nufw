@@ -13,7 +13,7 @@
 ** You should have received a copy of the GNU General Public License
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-*/	
+*/
 
 #include <auth_srv.h>
 
@@ -24,12 +24,12 @@
 
 /**
  * \file check_acls.c
- * \brief check packet contained in element against an external base 
+ * \brief check packet contained in element against an external base
  */
 
 /**
  * Fill in acl_groups of a connection by calling external module.
- * 
+ *
  * Argument : a connection
  * Return : 1 if OK, 0 otherwise
  */
@@ -51,13 +51,13 @@ int external_acl_groups (connection_t * element){
 
 /**
  * (acl_ckeckers function).
- * Treat a connection from insertion to decision 
+ * Treat a connection from insertion to decision
  *
  *  We use this function when :
  *  - decision is ready to be taken for the connection
- *  - 
- * 
- * - Argument 1 : a connection 
+ *  -
+ *
+ * - Argument 1 : a connection
  * - Argument 2 : unused
  * - Return : None
  */
@@ -70,12 +70,12 @@ void acl_check_and_decide (gpointer userdata, gpointer data)
 	if (conn_elt == NULL){
 		log_message(WARNING, AREA_PACKET, "This is no good : elt is NULL at %s:%d",__FILE__,__LINE__);
         } else {
-            /* if AUTH_STATE_COMPLETING packet comes from search and fill 
+            /* if AUTH_STATE_COMPLETING packet comes from search and fill
              * research need to be done, same if state is AUTH_STATE_HELLOMODE
              * but here this is a packet from localid_auth_queue
              * */
             if ((conn_elt->state == AUTH_STATE_COMPLETING) ||
-                    (nuauthconf->hello_authentication && (conn_elt->state == AUTH_STATE_HELLOMODE)) 
+                    (nuauthconf->hello_authentication && (conn_elt->state == AUTH_STATE_HELLOMODE))
                ){
                 if (nuauthconf->acl_cache){
                     get_acls_from_cache(conn_elt);

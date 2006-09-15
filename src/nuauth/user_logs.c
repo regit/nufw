@@ -1,6 +1,6 @@
 /*
  ** Copyright(C) 2003-2006 INL
- **         written by 
+ **         written by
  **             Eric Leblond <eric@regit.org>
  **		        Vincent Deffontaines <vincent@gryzor.com>
  **         INL http://www.inl.fr/
@@ -22,15 +22,15 @@
 #include <auth_srv.h>
 #include <time.h>
 
-struct Conn_State { 
+struct Conn_State {
 	void* conn;
 	tcp_state_t state;
 };
 
 /**
- * log user packet or by a direct call to log module or by sending log 
+ * log user packet or by a direct call to log module or by sending log
  * message to logger thread pool.
- * 
+ *
  * \param element A connection
  * \param state TCP state of the connection
  */
@@ -43,11 +43,11 @@ void log_user_packet (connection_t* element, tcp_state_t state)
             }
 	} else {
         if (
-                ((nuauthconf->log_users & 2) && (state == TCP_STATE_DROP)) 
-                || 
-                ((nuauthconf->log_users & 4) && (state == TCP_STATE_OPEN)) 
-                || 
-                (nuauthconf->log_users & 8) 
+                ((nuauthconf->log_users & 2) && (state == TCP_STATE_DROP))
+                ||
+                ((nuauthconf->log_users & 4) && (state == TCP_STATE_OPEN))
+                ||
+                (nuauthconf->log_users & 8)
            ) {
             struct Conn_State * conn_state_copy;
             conn_state_copy=g_new0(struct Conn_State,1);
@@ -93,9 +93,9 @@ void log_user_packet_from_accounted_connection(struct accounted_connection* data
 
 /**
  * interface to logging module function for thread pool worker.
- * 
+ *
  * \param userdata A ::Conn_State
- * \param data Unused 
+ * \param data Unused
  * \return None
  */
 
@@ -103,7 +103,7 @@ void real_log_user_packet (gpointer userdata, gpointer data)
 {
   block_on_conf_reload();
   modules_user_logs (
-          ((struct Conn_State *)userdata)->conn, 
+          ((struct Conn_State *)userdata)->conn,
           ((struct Conn_State *)userdata)->state
           );
   /* free userdata */
@@ -117,9 +117,9 @@ void real_log_user_packet (gpointer userdata, gpointer data)
 
 /**
  * High level function used to log an user session (connect / disconnect).
- * 
- * It duplicate the user session and push it in 
- * nuauthdatas->user_session_loggers thread pool: it will call 
+ *
+ * It duplicate the user session and push it in
+ * nuauthdatas->user_session_loggers thread pool: it will call
  * log_user_session_thread().
  */
 void log_user_session(user_session_t* usession, session_state_t state)
@@ -132,7 +132,7 @@ void log_user_session(user_session_t* usession, session_state_t state)
     else
         log_message(MESSAGE, AREA_USER,
                 "[+] User \"%s\" disconnected.", usession->user_name);
-    
+
     if ((nuauthconf->log_users & 1) == 0){
         if (state == SESSION_CLOSE){
                 clean_session(usession);

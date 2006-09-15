@@ -3,7 +3,7 @@
 
 /**
  * Print performance information.
- * This is the handler of SIGPOLL signal. 
+ * This is the handler of SIGPOLL signal.
  */
 void nuauth_process_poll(int signum)
 {
@@ -32,7 +32,7 @@ void nuauth_process_poll(int signum)
 
 /**
  * Increase debug level (see ::nuauthconf->debug_level).
- * This is the handler of SIGUSR1 signal. 
+ * This is the handler of SIGUSR1 signal.
  */
 void nuauth_process_usr1(int signum)
 {
@@ -45,7 +45,7 @@ void nuauth_process_usr1(int signum)
 
 /**
  * Decrease debug level (see ::nuauthconf->debug_level).
- * This is the handler of SIGUSR2 signal. 
+ * This is the handler of SIGUSR2 signal.
  */
 void nuauth_process_usr2(int signum)
 {

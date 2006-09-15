@@ -27,14 +27,14 @@ GPrivate* ldap_priv; /* private pointer to ldap connection */
 /*#define LDAP_USER NULL
 #define LDAP_CRED NULL */
 #define LDAP_USER "cn=admin,dc=nufw,dc=org"
-#define LDAP_CRED "mypassword" 
+#define LDAP_CRED "mypassword"
 #define LDAP_REQUEST_TIMEOUT 10
 #define LDAP_BASE "dc=nufw,dc=org"
 
 /* Maximum size of a LDAP query */
 #define LDAP_QUERY_SIZE 512
 
-struct ldap_params { 
+struct ldap_params {
     int ldap_request_timeout;
     char * binddn;
     char * bindpasswd;

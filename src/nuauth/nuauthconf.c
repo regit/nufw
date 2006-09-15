@@ -147,7 +147,7 @@ void init_nuauthconf(struct nuauth_params **result)
       { "nuauth_user_cache" , G_TOKEN_INT , 0,NULL },
 #if USE_UTF8
       { "nuauth_uses_utf8" , G_TOKEN_INT , 1,NULL },
-#else 
+#else
       { "nuauth_uses_utf8" , G_TOKEN_INT , 0,NULL },
 #endif
       {"nuauth_debug_areas", G_TOKEN_INT, DEFAULT_DEBUG_AREAS, NULL},
@@ -164,12 +164,12 @@ void init_nuauthconf(struct nuauth_params **result)
 
   conf=g_new0(struct nuauth_params,1);
   *result = conf;
-  
+
   /* parse conf file */
   parse_conffile(DEFAULT_CONF_FILE, nb_params, nuauth_vars);
-  
+
 #define READ_CONF(KEY) \
-  get_confvar_value(nuauth_vars, nb_params, KEY)  
+  get_confvar_value(nuauth_vars, nb_params, KEY)
 
   nuauth_client_listen_addr = (char *)READ_CONF("nuauth_client_listen_addr");
   nuauth_nufw_listen_addr = (char *)READ_CONF("nuauth_nufw_listen_addr");
@@ -178,7 +178,7 @@ void init_nuauthconf(struct nuauth_params **result)
   nuauth_multi_servers = (char *)READ_CONF("nuauth_multi_servers");
   conf->authreq_port = (char *)READ_CONF("nuauth_gw_packet_port");
   conf->userpckt_port = (char *)READ_CONF("nuauth_user_packet_port");
-  
+
   conf->nbuser_check = *(int*)READ_CONF("nuauth_number_usercheckers");
   conf->nbacl_check = *(int*)READ_CONF("nuauth_number_aclcheckers");
   conf->nbipauth_check = *(int*)READ_CONF("nuauth_number_ipauthcheckers");
@@ -207,13 +207,13 @@ void init_nuauthconf(struct nuauth_params **result)
   conf->nufw_has_fixed_timeout = *(int*)READ_CONF("nufw_has_fixed_timeout");
   conf->nuauth_uses_fake_sasl = *(int*)READ_CONF("nuauth_uses_fake_sasl");
 #undef READ_CONF
-  
+
   if (conf->debug_level>9){
         conf->debug_level=9;
   }
   /* free config struct */
   free_confparams(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams));
-  
+
   build_nuauthconf(conf,nuauth_client_listen_addr,nuauth_nufw_listen_addr,
                   gwsrv_addr,nuauth_multi_users,nuauth_multi_servers);
 
@@ -235,7 +235,7 @@ static struct nuauth_params* compare_and_update_nuauthparams(struct nuauth_param
 
 /**
  * exit function if a signal is received in daemon mode.
- * 
+ *
  * Argument : a signal
  * Return : None
  */
@@ -246,7 +246,7 @@ void nuauth_reload( int signal ) {
     struct timespec sleep;
     sleep.tv_sec = 0;
     sleep.tv_nsec = 100000000;  /* 0.1 second */
-    
+
     init_nuauthconf(&newconf);
     g_message("nuauth module reloading");
 
@@ -265,7 +265,7 @@ void nuauth_reload( int signal ) {
                 + g_thread_pool_get_num_threads(nuauthdatas->user_loggers);
                 + g_thread_pool_get_num_threads(nuauthdatas->user_session_loggers);
         if (nuauthconf->do_ip_authentication){
-            pool_threads_num+=g_thread_pool_get_num_threads(nuauthdatas->ip_authentication_workers); 
+            pool_threads_num+=g_thread_pool_get_num_threads(nuauthdatas->ip_authentication_workers);
         }
         if ( nuauthconf->log_users_sync ){
             pool_threads_num+= g_thread_pool_get_num_threads(nuauthdatas->decisions_workers);

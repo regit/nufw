@@ -27,9 +27,9 @@
 /*#define LDAP_USER NULL
 #define LDAP_CRED NULL */
 #define PGSQL_USER "nufw"
-#define PGSQL_PASSWD "mypassword" 
+#define PGSQL_PASSWD "mypassword"
 #define PGSQL_SSL "prefer"
-#define PGSQL_DB_NAME "nufw" 
+#define PGSQL_DB_NAME "nufw"
 #define PGSQL_REQUEST_TIMEOUT 10
 #define PGSQL_TABLE_NAME "ulog"
 #define PGSQL_USERS_TABLE_NAME "users"
@@ -37,7 +37,7 @@
 #define OSNAME_MAX_SIZE 64
 #define APPNAME_MAX_SIZE 256
 
-#define SHORT_REQUEST_SIZE 400 
+#define SHORT_REQUEST_SIZE 400
 #define INSERT_REQUEST_FIEDLS_SIZE 200
 #define INSERT_REQUEST_VALUES_SIZE 800
 

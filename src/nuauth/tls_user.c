@@ -28,7 +28,7 @@
 
 /** \file tls_user.c
  *  \brief Manage clients connections and messages.
- *   
+ *
  * The thread tls_user_authsrv() wait for clients in tls_user_main_loop().
  */
 
@@ -65,7 +65,7 @@ struct pre_client_elt {
 /**
  * Drop a client from the ::pre_client_list.
  */
-gboolean remove_socket_from_pre_client_list(int socket) 
+gboolean remove_socket_from_pre_client_list(int socket)
 {
     GSList * client_runner=NULL;
     g_static_mutex_lock (&pre_client_list_mutex);
@@ -78,7 +78,7 @@ gboolean remove_socket_from_pre_client_list(int socket)
                 pre_client_list=g_slist_remove_all(pre_client_list,NULL);
                 g_static_mutex_unlock (&pre_client_list_mutex);
                 return TRUE;
-            } 
+            }
         }
     }
     g_static_mutex_unlock (&pre_client_list_mutex);
@@ -111,7 +111,7 @@ void pre_client_check()
                     close(((struct pre_client_elt*)(client_runner->data))->socket);
                     g_free(client_runner->data);
                     client_runner->data=NULL;
-                } 
+                }
             }
         }
         pre_client_list=g_slist_remove_all(pre_client_list,NULL);
@@ -123,7 +123,7 @@ void pre_client_check()
 }
 
 /**
- * get RX paquet from a TLS client connection and send it to user 
+ * get RX paquet from a TLS client connection and send it to user
  * authentication threads.
  *
  * \param c_session SSL RX packet
@@ -144,7 +144,7 @@ static int treat_user_request (user_session_t * c_session)
     datas->tls=c_session->tls;
     datas->ip_addr=c_session->addr;
     datas->client_version = c_session->client_version;
-    
+
     /* copy packet datas */
     datas->buffer = g_new0(char, CLASSIC_NUFW_PACKET_SIZE);
     if (datas->buffer == NULL){
@@ -156,7 +156,7 @@ static int treat_user_request (user_session_t * c_session)
     g_mutex_unlock(c_session->tls_lock);
     if ( datas->buffer_len < (int)sizeof(struct nu_header)) {
 #ifdef DEBUG_ENABLE
-        if (datas->buffer_len <0) 
+        if (datas->buffer_len <0)
             log_message(DEBUG, AREA_USER, "Received error from user %s", c_session->user_name);
 #endif
         free_buffer_read(datas);
@@ -179,11 +179,11 @@ static int treat_user_request (user_session_t * c_session)
     /* continue to read the content */
     if (header->proto==PROTO_VERSION && header_length> datas->buffer_len && header_length<MAX_NUFW_PACKET_SIZE  ){
         int tmp_len;
-        
+
         /* we realloc and get what we miss */
         datas->buffer=g_realloc(datas->buffer, header_length);
         header = (struct nu_header* )datas->buffer;
-        
+
         g_mutex_lock(c_session->tls_lock);
         tmp_len = gnutls_record_recv( *(c_session->tls), datas->buffer+CLASSIC_NUFW_PACKET_SIZE,
                 header_length - datas->buffer_len);
@@ -194,13 +194,13 @@ static int treat_user_request (user_session_t * c_session)
         }
         datas->buffer_len += tmp_len;
     }
-    
+
     /* check message type because USER_HELLO has to be ignored */
     if ( header->msg_type == USER_HELLO){
         return 1;
     }
 
-    /* check authorization if we're facing a multi user packet */ 
+    /* check authorization if we're facing a multi user packet */
     if (header->option == 0x0)  {
 	    /* this is an authorized packet we fill the buffer_read structure */
 	    datas->user_name = g_strdup(c_session->user_name);
@@ -230,7 +230,7 @@ static int treat_user_request (user_session_t * c_session)
 
         debug_log_message(VERBOSE_DEBUG, AREA_MAIN, "Pushing packet to user_checker");
         g_thread_pool_push (nuauthdatas->user_checkers,
-                datas,	
+                datas,
                 NULL
                 );
     } else {
@@ -248,10 +248,10 @@ static int treat_user_request (user_session_t * c_session)
  *    - Create a client_connection structure
  *    - Add client to ::pre_client_list
  *    - Add client to ::tls_sasl_worker queue (see sasl_worker())
- * 
+ *
  * \return If an error occurs returns 1, else returns 0.
  */
-int tls_user_accept(struct tls_user_context_t *context) 
+int tls_user_accept(struct tls_user_context_t *context)
 {
     struct sockaddr_storage sockaddr;
     struct sockaddr_in *sockaddr4 = (struct sockaddr_in *)&sockaddr;
@@ -281,11 +281,11 @@ int tls_user_accept(struct tls_user_context_t *context)
 
     if ( get_number_of_clients() >= context->nuauth_tls_max_clients ) {
         log_message(WARNING, AREA_MAIN, "too many clients (%d configured)\n",context->nuauth_tls_max_clients);
-        shutdown(socket, SHUT_RDWR); 
+        shutdown(socket, SHUT_RDWR);
         close(socket);
         return 1;
     }
-   
+
     /* Extract client address (convert it to IPv6 if it's IPv4) */
     if (sockaddr6->sin6_family == AF_INET) {
         addr.s6_addr32[0] = 0;
@@ -303,15 +303,15 @@ int tls_user_accept(struct tls_user_context_t *context)
     /* Update mx number if needed */
     if ( socket+1 > context->mx )
         context->mx = socket + 1;
-    
+
     /* Set KEEP ALIVE on connection */
     option_value=1;
     setsockopt (socket,
             SOL_SOCKET, SO_KEEPALIVE,
             &option_value,  sizeof(option_value));
-    
+
     /* give the connection to a separate thread */
-    /*  add element to pre_client 
+    /*  add element to pre_client
         create pre_client_elt */
     new_pre_client = g_new0(struct pre_client_elt,1);
     new_pre_client->socket = socket;
@@ -324,7 +324,7 @@ int tls_user_accept(struct tls_user_context_t *context)
     g_thread_pool_push (nuauthdatas->tls_sasl_worker,
             current_client_conn, NULL);
     return 0;
-}    
+}
 
 /**
  * Process client events:
@@ -339,7 +339,7 @@ void tls_user_check_activity(struct tls_user_context_t *context, int socket)
     int u_request;
     debug_log_message(VERBOSE_DEBUG, AREA_USER, "user activity on socket %d",socket);
 
-    /* we lock here but can do other thing on hash as it is not destructive 
+    /* we lock here but can do other thing on hash as it is not destructive
      * in push mode modification of hash are done in push_worker */
     c_session = get_client_datas_by_socket(socket);
 
@@ -373,23 +373,23 @@ void tls_user_check_activity(struct tls_user_context_t *context, int socket)
  * Wait for new client connection or client event using ::mx_queue
  * and select().
  *
- * It calls tls_user_accept() on new client connection, and 
+ * It calls tls_user_accept() on new client connection, and
  * tls_user_check_activity() on user event.
  */
 void tls_user_main_loop(struct tls_user_context_t *context, GMutex *mutex)
-{    
+{
     gpointer c_pop;
     int i, nb_active_clients;
     fd_set wk_set; /* working set */
     struct timeval tv;
 
     log_message(INFO, AREA_MAIN, "[+] NuAuth is waiting for client connections.");
-    while (g_mutex_trylock(mutex)) 
+    while (g_mutex_trylock(mutex))
     {
         g_mutex_unlock(mutex);
 
-        /* 
-         * Try to get new file descriptor to update set. Messages come from 
+        /*
+         * Try to get new file descriptor to update set. Messages come from
          * tls_sasl_connect_ok() and are send when a new user is connected.
          */
         c_pop = g_async_queue_try_pop (mx_queue);
@@ -439,7 +439,7 @@ void tls_user_main_loop(struct tls_user_context_t *context, GMutex *mutex)
                     g_message("Not enough memory");
                     break;
             }
-            log_message(FATAL, AREA_MAIN, 
+            log_message(FATAL, AREA_MAIN,
                     "select() failed, exiting at %s:%d in %s (errno %i)",
                     __FILE__,__LINE__,__func__, errno);
             nuauth_ask_exit();
@@ -495,7 +495,7 @@ int tls_user_bind(char **errmsg)
     ecode = getaddrinfo(NULL, nuauthconf->userpckt_port, &hints, &res);
     if (ecode != 0)
     {
-        *errmsg = g_strdup_printf("Fail to init. user server address: %s", 
+        *errmsg = g_strdup_printf("Fail to init. user server address: %s",
                 gai_strerror(ecode));
         return -1;
     }
@@ -535,7 +535,7 @@ int tls_user_bind(char **errmsg)
     {
         *errmsg = g_strdup_printf("Unable to bind port %s.",
                 nuauthconf->userpckt_port);
-        close(sck_inet); 
+        close(sck_inet);
         return -1;
     }
     freeaddrinfo(res);
@@ -556,30 +556,30 @@ int tls_user_init(struct tls_user_context_t *context)
     context->sck_inet = tls_user_bind(&errmsg);
     if (context->sck_inet < 0)
     {
-        log_message(FATAL, AREA_MAIN, 
+        log_message(FATAL, AREA_MAIN,
             "FATAL ERROR: User bind error: %s",
             errmsg);
-        log_message(FATAL, AREA_MAIN, 
+        log_message(FATAL, AREA_MAIN,
             "Check that nuauth is not running twice. Exit nuauth!");
         return 0;
     }
-    
+
     /* get config file setup */
     /* parse conf file */
     parse_conffile(DEFAULT_CONF_FILE, sizeof(nuauth_tls_vars)/sizeof(confparams),nuauth_tls_vars);
-    
+
 #define READ_CONF(KEY) \
 	get_confvar_value(nuauth_tls_vars, sizeof(nuauth_tls_vars)/sizeof(confparams), KEY)
 
     context->nuauth_tls_max_clients = *(unsigned int*)READ_CONF("nuauth_tls_max_clients");
     context->nuauth_number_authcheckers = *(int*)READ_CONF("nuauth_number_authcheckers");
     context->nuauth_auth_nego_timeout = *(int*)READ_CONF("nuauth_auth_nego_timeout");
-#undef READ_CONF    
+#undef READ_CONF
 
     /* free config struct */
     free_confparams(nuauth_tls_vars,sizeof(nuauth_tls_vars)/sizeof(confparams));
 
-    /* init sasl stuff */	
+    /* init sasl stuff */
     my_sasl_init();
 
     init_client_struct();
@@ -629,9 +629,9 @@ int tls_user_init(struct tls_user_context_t *context)
 }
 
 /**
- * TLS user packet server. 
+ * TLS user packet server.
  * Thread function serving user connection.
- * 
+ *
  * \return NULL
  */
 void* tls_user_authsrv(GMutex *mutex)

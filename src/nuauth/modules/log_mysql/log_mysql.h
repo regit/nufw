@@ -25,10 +25,10 @@
 /*#define LDAP_USER NULL
 #define LDAP_CRED NULL */
 #define MYSQL_USER "nufw"
-#define MYSQL_PASSWD "mypassword" 
-#define MYSQL_DB_NAME "nufw" 
-#define MYSQL_TABLE_NAME "ulog" 
-#define MYSQL_USERS_TABLE_NAME "users" 
+#define MYSQL_PASSWD "mypassword"
+#define MYSQL_DB_NAME "nufw"
+#define MYSQL_TABLE_NAME "ulog"
+#define MYSQL_USERS_TABLE_NAME "users"
 #define MYSQL_REQUEST_TIMEOUT 10
 
 /* SSL options */
@@ -39,15 +39,15 @@
 #define MYSQL_SSL_CAPATH  NULL
 #define MYSQL_SSL_CIPHER "ALL:!ADH:+RC4:@STRENGTH"
 
-#define OSNAME_MAX_SIZE 100 
+#define OSNAME_MAX_SIZE 100
 #define APPNAME_MAX_SIZE 256
 
 #define SHORT_REQUEST_SIZE 512
 #define LONG_REQUEST_SIZE 1024
 
-#define INSERT_REQUEST_FIEDLS_SIZE 200 
-#define INSERT_REQUEST_VALUES_SIZE 800 
-#define REQUEST_TMP_BUFFER 500 
+#define INSERT_REQUEST_FIEDLS_SIZE 200
+#define INSERT_REQUEST_VALUES_SIZE 800
+#define REQUEST_TMP_BUFFER 500
 
 struct log_mysql_params {
     int mysql_request_timeout;

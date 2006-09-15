@@ -41,9 +41,9 @@
 int verify_user_password(const char* given,const char* ours){
 	gcry_md_hd_t hd;
 	char * res;
-	char* decoded; 
+	char* decoded;
 	size_t len;
-	char **splitted_secret; 
+	char **splitted_secret;
 	int algo=0;
 
 	if (g_str_has_prefix(ours,"{")) {
@@ -122,7 +122,7 @@ int verify_user_password(const char* given,const char* ours){
 					&bwritten,
 					NULL);
 			if (traduc){
-				g_free(decoded);	
+				g_free(decoded);
 				decoded=traduc;
 			} else {
 				log_message(WARNING, AREA_MAIN, "can not convert password %s at %s:%d",decoded,__FILE__,__LINE__);

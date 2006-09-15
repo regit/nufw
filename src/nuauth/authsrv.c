@@ -43,7 +43,7 @@ typedef struct
     int daemonize;
     char* nuauth_client_listen_addr;
     char* nuauth_nufw_listen_addr;
-} command_line_params_t;    
+} command_line_params_t;
 
 int nuauth_running = 1;
 
@@ -51,8 +51,8 @@ GList *cleanup_func_list = NULL;
 
 /**
  * Add a cleanup function: it would be called every second.
- * Functions are stored in ::cleanup_func_list list. 
- * 
+ * Functions are stored in ::cleanup_func_list list.
+ *
  * See also cleanup_func_remove()
  */
 void cleanup_func_push(cleanup_func_t func)
@@ -61,8 +61,8 @@ void cleanup_func_push(cleanup_func_t func)
 }
 
 /**
- * Remove a cleanup function from ::cleanup_func_list list. 
- * 
+ * Remove a cleanup function from ::cleanup_func_list list.
+ *
  * See also cleanup_func_push()
  */
 void cleanup_func_remove(cleanup_func_t func)
@@ -71,13 +71,13 @@ void cleanup_func_remove(cleanup_func_t func)
 }
 
 /**
- * Ask all threads to stop (by locking their mutex), and then wait 
- * until they really stop (if wait is TRUE) using g_thread_join() 
+ * Ask all threads to stop (by locking their mutex), and then wait
+ * until they really stop (if wait is TRUE) using g_thread_join()
  * and g_thread_pool_free().
- * 
+ *
  * \param wait If wait is TRUE, the function will block until all threads
  *             stopped. Else, it will just ask all threads to stop.
- */ 
+ */
 void stop_threads(gboolean wait)
 {
     /* ask theads to stop */
@@ -85,12 +85,12 @@ void stop_threads(gboolean wait)
     if (nuauthconf->push && nuauthconf->hello_authentication) {
         g_mutex_lock (nuauthdatas->localid_auth_thread.mutex);
     }
-    
+
     /* wait thread end */
     if (wait) {
         log_message(INFO, AREA_MAIN, "Wait thread end ...");
     }
-    
+
     /* kill push worker */
     g_mutex_lock (nuauthdatas->tls_pusher.mutex);
     if (wait) {
@@ -101,7 +101,7 @@ void stop_threads(gboolean wait)
     /* kill entries point */
     g_mutex_lock (nuauthdatas->tls_auth_server.mutex);
     g_mutex_lock (nuauthdatas->tls_nufw_server.mutex);
-    
+
     if (wait) {
         log_message(DEBUG, AREA_MAIN, "Wait thread 'tls auth server'");
         g_thread_join (nuauthdatas->tls_auth_server.thread);
@@ -109,7 +109,7 @@ void stop_threads(gboolean wait)
         log_message(DEBUG, AREA_MAIN, "Wait thread 'tls nufw server'");
         g_thread_join (nuauthdatas->tls_nufw_server.thread);
     }
-    
+
     /* end logging threads */
     if (wait) {
         log_message(DEBUG, AREA_MAIN, "Stop thread pool 'user session loggers'");
@@ -121,7 +121,7 @@ void stop_threads(gboolean wait)
         log_message(DEBUG, AREA_MAIN, "Stop thread pool 'acl checkers'");
         g_thread_pool_free(nuauthdatas->acl_checkers, TRUE, wait);
     }
-    
+
     g_mutex_lock (nuauthdatas->limited_connections_handler.mutex);
     g_mutex_lock (nuauthdatas->search_and_fill_worker.mutex);
     if (wait) {
@@ -137,7 +137,7 @@ void stop_threads(gboolean wait)
         log_message(DEBUG, AREA_MAIN, "Stop thread pool 'ip auth workers'");
         g_thread_pool_free(nuauthdatas->ip_authentication_workers, TRUE, wait);
     }
-    
+
     if (nuauthconf->push && nuauthconf->hello_authentication && wait) {
         log_message(DEBUG, AREA_MAIN, "Wait thread 'localid'");
         g_thread_join (nuauthdatas->localid_auth_thread.thread);
@@ -145,14 +145,14 @@ void stop_threads(gboolean wait)
 
     /* done! */
     log_message(INFO, AREA_MAIN, "Threads stopped.");
-}    
+}
 
 void free_threads()
 {
     /* free all thread mutex */
     g_mutex_unlock (nuauthdatas->tls_pusher.mutex);
     g_mutex_free (nuauthdatas->tls_pusher.mutex);
-    
+
     g_mutex_unlock (nuauthdatas->search_and_fill_worker.mutex);
     g_mutex_free (nuauthdatas->search_and_fill_worker.mutex);
 
@@ -164,12 +164,12 @@ void free_threads()
 
     g_mutex_unlock (nuauthdatas->limited_connections_handler.mutex);
     g_mutex_free (nuauthdatas->limited_connections_handler.mutex);
-    
+
     if (nuauthconf->push && nuauthconf->hello_authentication) {
         g_mutex_unlock (nuauthdatas->localid_auth_thread.mutex);
         g_mutex_free (nuauthdatas->localid_auth_thread.mutex);
     }
-}    
+}
 
 /**
  * Delete all items (call g_free()) of nuauthdatas->tls_push_queue queue.
@@ -181,12 +181,12 @@ void clear_push_queue()
     {
         g_free(message->datas);
     }
-}    
+}
 
 /**
  * Deinit NuAuth:
  *    - Stop NuAuth: close_nufw_servers(), close_clients(), end_tls(), end_audit() ;
- *    - Free memory ; 
+ *    - Free memory ;
  *    - Unload modules: unload_modules() ;
  *    - Destroy pid file ;
  *    - And finally exit.
@@ -195,7 +195,7 @@ void clear_push_queue()
 void nuauth_deinit(gboolean soft)
 {
     stop_threads(soft);
-    
+
     /* free nufw server hash */
     log_message(CRITICAL, AREA_MAIN, "[+] NuAuth deinit");
     close_nufw_servers();
@@ -206,7 +206,7 @@ void nuauth_deinit(gboolean soft)
 
     log_message(INFO, AREA_MAIN, "Unload modules");
     unload_modules();
-    
+
     log_message(INFO, AREA_MAIN, "End TLS and audit");
     end_tls();
     end_audit();
@@ -253,10 +253,10 @@ void nuauth_atexit()
  * Function called when a SIGTERM or SIGINT is received:
  *    - Reinstall old signal handlers (for SIGTERM and SIGINT) ;
  *    - Deinit NuAuth: call nuauth_deinit() (in soft mode)
- * 
+ *
  * \param signal Code of raised signal
  */
-void nuauth_cleanup( int signal ) 
+void nuauth_cleanup( int signal )
 {
     (void)g_atomic_int_dec_and_test (&nuauth_running);
     /* first of all, reinstall old handlers (ignore errors) */
@@ -269,7 +269,7 @@ void nuauth_cleanup( int signal )
         log_message(CRITICAL, AREA_MAIN, "[+] Stop NuAuth server (SIGTERM)");
 
     nuauth_deinit(TRUE);
-    
+
     g_message("[+] NuAuth exit");
     exit(EXIT_SUCCESS);
 }
@@ -284,7 +284,7 @@ void nuauth_cleanup( int signal )
  *    - Install log handler: call set_glib_loghandlers(),
  *      close stdin, stdout and stderr
  */
-void daemonize() 
+void daemonize()
 {
     FILE* pf;
     pid_t pidf;
@@ -318,7 +318,7 @@ void daemonize()
                 fprintf (pf, "%d\n", (int)pidf);
                 fclose (pf);
             } else {
-                printf ("Dying, can not create PID file \"" NUAUTH_PID_FILE "\".\n"); 
+                printf ("Dying, can not create PID file \"" NUAUTH_PID_FILE "\".\n");
                 exit(EXIT_FAILURE);
             }
             exit(EXIT_SUCCESS);
@@ -338,7 +338,7 @@ void daemonize()
 /**
  * Display all command line options of NuAuth
  */
-void print_usage() 
+void print_usage()
 {
     fprintf (stdout,
             "nuauth [-hDVv[v[v[v[v[v[v[v[v]]]]]]]]] [-l user_packet_port] [-C local_addr] [-L local_addr] \n"
@@ -356,7 +356,7 @@ void print_usage()
 /**
  * Parse command line options using getopt library.
  */
-void parse_options(int argc, char **argv, command_line_params_t *params) 
+void parse_options(int argc, char **argv, command_line_params_t *params)
 {
     char* version=VERSION;
     char * options_list = "DhVvl:L:C:p:t:T:";
@@ -417,7 +417,7 @@ void parse_options(int argc, char **argv, command_line_params_t *params)
 
             case 'h' :
                 print_usage();
-                exit(EXIT_SUCCESS);                
+                exit(EXIT_SUCCESS);
         }
     }
 }
@@ -430,7 +430,7 @@ void parse_options(int argc, char **argv, command_line_params_t *params)
  *
  * \see init_audit()
  */
-void nuauth_install_signals() 
+void nuauth_install_signals()
 {
     struct sigaction action;
 
@@ -492,7 +492,7 @@ void create_thread(struct nuauth_thread_t *thread, void* (*func) (GMutex*) )
  *   - Build configuartion options: build_nuauthconf() ;
  *   - Daemonize the process if asked: daemonize().
  */
-void configure_app(int argc, char **argv) 
+void configure_app(int argc, char **argv)
 {
     command_line_params_t params;
     int err;
@@ -505,10 +505,10 @@ void configure_app(int argc, char **argv)
         core_limit.rlim_cur = 0;
         setrlimit(RLIMIT_CORE, &core_limit);
     }
-    
+
     /* Move to root directory to not block current working directory */
     (void)chdir("/");
-#endif    
+#endif
 
     /* Initialize glib thread system */
     g_thread_init(NULL);
@@ -528,7 +528,7 @@ void configure_app(int argc, char **argv)
     init_nuauthconf(&nuauthconf);
 
     log_message (INFO, AREA_MAIN, "Start NuAuth server.");
-    
+
     /* init gcrypt and gnutls */
 #ifdef GCRYPT_PTHEAD_IMPLEMENTATION
     gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);
@@ -538,22 +538,22 @@ void configure_app(int argc, char **argv)
 
     err = gnutls_global_init();
     if (err) {
-        fprintf(stderr, 
+        fprintf(stderr,
                 "FATAL ERROR: gnutls global initialisation failed:\n"
-                "%s\n", 
+                "%s\n",
                 gnutls_strerror(err));
         exit(EXIT_FAILURE);
     }
 
     parse_options(argc, argv, &params);
 
-    build_nuauthconf(nuauthconf, 
+    build_nuauthconf(nuauthconf,
             params.nuauth_client_listen_addr,
             params.nuauth_nufw_listen_addr,
             NULL, NULL, NULL);
 
     if (nuauthconf->uses_utf8){
-        setlocale(LC_ALL,"");	
+        setlocale(LC_ALL,"");
     }
 
     /* debug cannot be above 10 */
@@ -576,7 +576,7 @@ void configure_app(int argc, char **argv)
 /**
  * Initialize all datas:
  *   - Create different queues:
- *      - tls_push_queue: read in push_worker() ; 
+ *      - tls_push_queue: read in push_worker() ;
  *      - connections_queue: read in search_and_fill() ;
  *      - localid_auth_queue: read in localid_auth().
  *   - Create hash table ::conn_list
@@ -601,7 +601,7 @@ void configure_app(int argc, char **argv)
  * Other queue, threads, etc. are created elsewhere:
  *      - in tls_user_init(): tls_sasl_worker thread pool, tls_sasl_connect().
  */
-void init_nuauthdatas() 
+void init_nuauthdatas()
 {
     nuauthdatas->tls_push_queue = g_async_queue_new();
     if (!nuauthdatas->tls_push_queue)
@@ -611,7 +611,7 @@ void init_nuauthdatas()
     conn_list = g_hash_table_new_full ((GHashFunc)hash_connection,
             compare_connection,
             NULL,
-            (GDestroyNotify) free_connection); 
+            (GDestroyNotify) free_connection);
 
     /* async queue initialisation */
     nuauthdatas->connections_queue = g_async_queue_new();
@@ -722,16 +722,16 @@ void init_nuauthdatas()
  *   - remove old connections
  *   - refresh ACL cache
  *   - refresh localid auth cache
- *   - refresh limited connection 
+ *   - refresh limited connection
  */
 void main_cleanup()
 {
     struct cache_message *cmessage;
     struct internal_message * int_message;
-    
+
     /* remove old connections */
     clean_connections_list();
-    
+
     /* info message about thread pools */
     if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
         if (g_thread_pool_unprocessed(nuauthdatas->user_checkers) || g_thread_pool_unprocessed(nuauthdatas->acl_checkers)){
@@ -739,7 +739,7 @@ void main_cleanup()
                     g_thread_pool_unprocessed(nuauthdatas->user_checkers),
                     g_thread_pool_unprocessed(nuauthdatas->acl_checkers),
                     g_hash_table_size(conn_list)
-                    );  
+                    );
         }
     }
 
@@ -785,18 +785,18 @@ void nuauth_main_loop()
     sleep.tv_sec = 1;
     sleep.tv_nsec = 0;
 
-    /* 
+    /*
      * Main loop: call functions listed in ::cleanup_func_list every second.
      * If functions take long time, next sleep will be shorter.
      */
     for(;;){
         /* a little sleep (one second) */
-        nanosleep(&sleep, NULL);	
-        
+        nanosleep(&sleep, NULL);
+
         /* remove old connections */
         g_timer_start(timer);
-        for (cleanup_it = cleanup_func_list; 
-                cleanup_it != NULL; 
+        for (cleanup_it = cleanup_func_list;
+                cleanup_it != NULL;
                 cleanup_it = cleanup_it->next)
         {
             cleanup_func_t cleanup = cleanup_it->data;
@@ -808,11 +808,11 @@ void nuauth_main_loop()
         sec = g_timer_elapsed(timer, &ms);
         if (1 <= sec) {
             sleep.tv_sec = 0;
-            sleep.tv_nsec = 0; 
+            sleep.tv_nsec = 0;
         } else {
             sleep.tv_sec = 0;
             sleep.tv_nsec = (1000000-ms)*1000;
-        }        
+        }
     }
     g_timer_destroy(timer);
 }
@@ -825,7 +825,7 @@ void nuauth_main_loop()
  *   - Init. autdit: init_audit()
  *   - Run main loop: nuauth_main_loop()
  */
-int main(int argc,char * argv[]) 
+int main(int argc,char * argv[])
 {
     configure_app(argc, argv);
     init_nuauthdatas();

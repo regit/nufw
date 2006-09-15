@@ -30,10 +30,10 @@
  *
  * It can export :
  *  - an user check function named user_check() function which realise user authentication.
- *  - an acl checking function named acl_check() function to get the acls matching a packet. 
+ *  - an acl checking function named acl_check() function to get the acls matching a packet.
  *
  * \par
- * A special case is the ip authentication mechanism which require the export of function called ip_authentication(). 
+ * A special case is the ip authentication mechanism which require the export of function called ip_authentication().
  * It is used to authenticate people based on a method which does not involve a NuFW client. For the moment, only an ident
  * module is available.
  */
@@ -51,7 +51,7 @@ typedef unsigned long digit_t;
 typedef digit_t number_t[DIGIT_COUNT];
 
 /**
- * 
+ *
  * \ingroup AuthNuauthModules
  * \defgroup LdapModule LDAP authentication and acl module
  *
@@ -90,7 +90,7 @@ int number_add(number_t number, digit_t value)
     {
         value += number[index];
         number[index] = value % BASE;
-        value /= BASE; 
+        value /= BASE;
         if (index == DIGIT_COUNT)
         {
             return 0;
@@ -101,7 +101,7 @@ int number_add(number_t number, digit_t value)
 
 /**
  * Convert a "Base 10^n" number to decimal string.
- * 
+ *
  * \return Returns new allocated string
  */
 char* number_to_decimal(number_t number)
@@ -120,7 +120,7 @@ char* number_to_decimal(number_t number)
 
 /**
  * Convert a decimal string to a "Base 10^n" number.
- * 
+ *
  * \return Returns 0 on error, 1 otherwise
  */
 int decimal_to_number(const char* orig_decimal, number_t number)
@@ -172,7 +172,7 @@ G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
 G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
 {
   char *configfile=NULL;
-  gpointer vpointer; 
+  gpointer vpointer;
   struct ldap_params* params=g_new0(struct ldap_params,1);
   char *ldap_base_dn=LDAP_BASE;
   confparams ldap_nuauth_vars[] = {
@@ -280,7 +280,7 @@ static LDAP* ldap_conn_init(struct ldap_params* params)
               ld=NULL;
               g_private_set(	params->ldap_priv,ld);
               return NULL;
-          } 
+          }
           log_message(SERIOUS_WARNING, AREA_AUTH, "ldap bind error : %s \n",ldap_err2string(err));
           return NULL;
       }
@@ -306,9 +306,9 @@ static char *ipv6_to_base10(struct in6_addr *addr)
 /**
  * \brief Acl check function
  *
- * This function realise the matching of a packet against the set of rules. It is exported 
+ * This function realise the matching of a packet against the set of rules. It is exported
  * by the modules and called by nuauth core.
- * 
+ *
  * \param element A pointer to a ::connection_t which contains all informations available about the packet
  * \param params_p A pointer to the parameters of the module instance we're working for
  * \return A chained list of struct ::acl_group which is the set of acl that match the given packet
@@ -330,7 +330,7 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element,gpointer params_p)
   LDAP *ld = g_private_get (params->ldap_priv);
   char *ip_src;
   char *ip_dst;
-     
+
   if (ld == NULL){
       /* init ldap has never been done */
       ld = ldap_conn_init(params);
@@ -349,7 +349,7 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element,gpointer params_p)
       free(ip_dst);
       return NULL;
   }
-  
+
   /* contruct filter */
   if ((element->tracking).protocol == IPPROTO_TCP || (element->tracking).protocol == IPPROTO_UDP ){
       switch (params->ldap_filter_type){
@@ -357,7 +357,7 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element,gpointer params_p)
             if (snprintf(filter,LDAP_QUERY_SIZE-1,
 #if USE_SOURCE_PORT
                         "(&(objectClass=NuAccessControlList)(Proto=%d)(DstPort=%d)(SrcIPStart<=%s)(SrcIPEnd>=%s)(DstIPStart<=%s)(DstIPEnd>=%s)(SrcPortStart<=%d)(SrcPortEnd>=%d)",
-#endif 
+#endif
                         "(&(objectClass=NuAccessControlList)(Proto=%d)(DstPort=%d)(SrcIPStart<=%s)(SrcIPEnd>=%s)(DstIPStart<=%s)(DstIPEnd>=%s)",
 
                         (element->tracking).protocol,
@@ -366,7 +366,7 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element,gpointer params_p)
                         ip_src,
                         ip_dst,
                         ip_dst
-#if USE_SOURCE_PORT	
+#if USE_SOURCE_PORT
                         , (element->tracking).source,
                         (element->tracking).source
 #endif
@@ -381,7 +381,7 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element,gpointer params_p)
             if (snprintf(filter,LDAP_QUERY_SIZE-1,
 #if USE_SOURCE_PORT
                         "(&(objectClass=NuAccessControlList)(SrcIPStart<=%s)(SrcIPEnd>=%s)(DstIPStart<=%s)(DstIPEnd>=%s)(Proto=%d)(SrcPortStart<=%d)(SrcPortEnd>=%d)(DstPortStart<=%d)(DstPortEnd>=%d)",
-#endif 
+#endif
                         "(&(objectClass=NuAccessControlList)(SrcIPStart<=%s)(SrcIPEnd>=%s)(DstIPStart<=%s)(DstIPEnd>=%s)(Proto=%d)(DstPortStart<=%d)(DstPortEnd>=%d)",
                         ip_src,
                         ip_src,
@@ -506,15 +506,15 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element,gpointer params_p)
           attrs_array=ldap_get_values(ld, result, "TimeRange");
           if (attrs_array && *attrs_array){
               this_acl->period=g_strdup(*attrs_array);
-          } 
+          }
           ldap_value_free(attrs_array);
-          
+
           /* allocate a new acl_group */
           this_acl=g_new0(struct acl_group,1);
           g_assert(this_acl);
           this_acl->groups = NULL;
           this_acl->period = NULL;
-	 
+
           /* get decision */
           attrs_array=ldap_get_values(ld, result, "Decision");
           sscanf(*attrs_array,"%d",(int *)&(this_acl->answer));

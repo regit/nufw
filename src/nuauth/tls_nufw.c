@@ -20,7 +20,7 @@
 
 #include "auth_srv.h"
 
-/** 
+/**
  * \ingroup TLS
  * \defgroup TLSNufw TLS Nufw server
  * @{
@@ -28,7 +28,7 @@
 
 /** \file tls_nufw.c
  * \brief Manage NuFW firewall connections and messages.
- *   
+ *
  * The main thread is tls_nufw_authsrv() which call tls_nufw_main_loop().
  */
 
@@ -41,7 +41,7 @@ struct tls_nufw_context_t {
     fd_set tls_rx_set; /* read set */
 };
 
-/** 
+/**
  * Get RX paquet from a TLS client connection and send it to user
  * authentication threads:
  *   - nuauthdatas->localid_auth_queue (see ::localid_auth()), if connection
@@ -61,7 +61,7 @@ static int treat_nufw_request (nufw_session_t *c_session)
 
     if (c_session == NULL)
         return NU_EXIT_OK;
-    
+
     /* read data from nufw */
     g_mutex_lock(c_session->tls_lock);
     dgram_size = gnutls_record_recv(*(c_session->tls), dgram, CLASSIC_NUFW_PACKET_SIZE) ;
@@ -74,7 +74,7 @@ static int treat_nufw_request (nufw_session_t *c_session)
     }
     /* Bad luck, this is first packet, we have to test nufw proto version */
     if (c_session->proto_version == PROTO_UNKNOWN){
-		c_session->proto_version = get_proto_version_from_packet(dgram,(size_t)dgram_size);	
+		c_session->proto_version = get_proto_version_from_packet(dgram,(size_t)dgram_size);
 		if (! c_session->proto_version){
 			(void)g_atomic_int_dec_and_test(&(c_session->usage));
 			return NU_EXIT_ERROR;
@@ -108,7 +108,7 @@ static int treat_nufw_request (nufw_session_t *c_session)
 								(uint32_t)GPOINTER_TO_UINT(current_conn->packet_id->data));
 						g_async_queue_push (nuauthdatas->connections_queue, current_conn);
 					}
-				} 
+				}
 				break;
 			case NU_EXIT_NO_RETURN:
 				g_atomic_int_dec_and_test(&(c_session->usage));
@@ -124,7 +124,7 @@ static int treat_nufw_request (nufw_session_t *c_session)
 /**
  * Close the TLS NuFW servers
  */
-void close_nufw_servers() 
+void close_nufw_servers()
 {
     g_static_mutex_lock (&nufw_servers_mutex);
     if (nufw_servers != NULL)
@@ -137,7 +137,7 @@ void close_nufw_servers()
  * Clean a NuFW TLS session: send "bye", deinit the connection
  * and free the memory.
  */
-void clean_nufw_session(nufw_session_t * c_session) 
+void clean_nufw_session(nufw_session_t * c_session)
 {
     gnutls_transport_ptr socket_tls;
     socket_tls=gnutls_transport_get_ptr(*(c_session->tls));
@@ -145,10 +145,10 @@ void clean_nufw_session(nufw_session_t * c_session)
     debug_log_message(VERBOSE_DEBUG, AREA_GW, "close nufw session calling");
     if (c_session->tls ){
         gnutls_bye(
-                *(c_session->tls)	
+                *(c_session->tls)
                 , GNUTLS_SHUT_RDWR);
         gnutls_deinit(
-                *(c_session->tls)	
+                *(c_session->tls)
                 );
         g_free(c_session->tls);
     } else {
@@ -165,10 +165,10 @@ void clean_nufw_session(nufw_session_t * c_session)
 /**
  * Function called on new NuFW connection: create a new TLS session using
  * tls_connect().
- * 
+ *
  * \return If an error occurs returns 1, else returns 0.
  */
-int tls_nufw_accept(struct tls_nufw_context_t *context) 
+int tls_nufw_accept(struct tls_nufw_context_t *context)
 {
     int conn_fd;
     struct sockaddr_storage sockaddr;
@@ -187,7 +187,7 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
     if (conn_fd == -1){
         log_message(WARNING, AREA_MAIN, "accept");
     }
-   
+
     /* Extract client address (convert it to IPv6 if it's IPv4) */
     if (sockaddr6->sin6_family == AF_INET) {
         addr.s6_addr32[0] = 0;
@@ -233,7 +233,7 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
         g_free(nu_session);
     }
     return 0;
-}    
+}
 
 /**
  * NuFW TLS thread main loop:
@@ -242,7 +242,7 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
  *   - Accept new connections: call tls_nufw_accept()
  *   - Read and process new packets using treat_nufw_request()
  */
-void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex *mutex) 
+void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex *mutex)
 {
     int n,c,z;
     fd_set wk_set; /* working set */
@@ -285,7 +285,7 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex *mutex)
                     g_message("Not enough memory");
                     break;
             }
-            log_message(FATAL, AREA_MAIN, 
+            log_message(FATAL, AREA_MAIN,
                     "select() failed, exiting at %s:%d in %s (errno=%i)",
                     __FILE__,__LINE__,__func__,errno);
             nuauth_ask_exit();
@@ -337,7 +337,7 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex *mutex)
         }
     }
     close(context->sck_inet);
-}    
+}
 
 int tls_nufw_bind(char **errmsg)
 {
@@ -368,7 +368,7 @@ int tls_nufw_bind(char **errmsg)
     }
 
     option_value=1;
-    setsockopt (sck_inet, SOL_SOCKET, SO_REUSEADDR, 
+    setsockopt (sck_inet, SOL_SOCKET, SO_REUSEADDR,
             &option_value,	sizeof(option_value));
 
     socket_fd = bind (sck_inet, res->ai_addr, res->ai_addrlen);
@@ -385,17 +385,17 @@ int tls_nufw_bind(char **errmsg)
  * Initialize the NuFW TLS servers thread
  */
 int tls_nufw_init(struct tls_nufw_context_t *context)
-{    
+{
     int socket_fd;
     char *errmsg;
 
     context->sck_inet = tls_nufw_bind(&errmsg);
     if (context->sck_inet < 0)
     {
-        log_message(FATAL, AREA_MAIN, 
+        log_message(FATAL, AREA_MAIN,
             "FATAL ERROR: NuFW bind error: %s",
             errmsg);
-        log_message(FATAL, AREA_MAIN, 
+        log_message(FATAL, AREA_MAIN,
             "Check that nuauth is not running twice. Exit nuauth!");
         return 0;
     }
@@ -461,5 +461,5 @@ void* tls_nufw_authsrv(GMutex *mutex)
 }
 
 /**
- * @} 
+ * @}
  */

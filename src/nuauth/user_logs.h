@@ -22,13 +22,13 @@
 typedef enum {
     SESSION_CLOSE=0,
     SESSION_OPEN     /* =1 */
-} session_state_t;    
+} session_state_t;
 
 struct session_event {
 	user_session_t* session;
 	session_state_t state;
 };
- 
+
 int check_fill_user_counters(u_int16_t userid,long time,unsigned long packet_id,u_int32_t ip);
 void print_users_list();
 

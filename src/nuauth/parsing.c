@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) INL 2005 
+ ** Copyright(C) INL 2005
  ** written by  Eric Leblond <regit@inl.fr>
  **             Vincent Deffontaines <gryzor@inl.fr>
  **
@@ -28,7 +28,7 @@
 /*
  * Parse a string containing a list of addresses (separated by spaces).
  * Skip invalid addresses.
- * 
+ *
  * \return Returns an array of in_addr, or NULL if no valid address has been found.
  * The array always finish with an INADDR_NONE value.
  */
@@ -51,7 +51,7 @@ struct in6_addr* generate_inaddr_list(gchar* gwsrv_addr)
     /* compute array length */
     for (iter = gwsrv_addr_list; *iter != NULL; iter++)
     {
-        if (0 < inet_pton(AF_INET6, *iter, &addr6) 
+        if (0 < inet_pton(AF_INET6, *iter, &addr6)
          || 0 < inet_pton(AF_INET, *iter, &addr4))
         {
             count++;
@@ -67,15 +67,15 @@ struct in6_addr* generate_inaddr_list(gchar* gwsrv_addr)
         {
             if (0 < inet_pton(AF_INET6, *iter, &addr6)) {
                 *authorized_server = addr6;
-                authorized_server++;                
+                authorized_server++;
             } else if (0 < inet_pton(AF_INET, *iter, &addr4)) {
                 authorized_server->s6_addr32[0] = 0;
                 authorized_server->s6_addr32[1] = 0;
                 authorized_server->s6_addr32[2] = 0xffff0000;
                 authorized_server->s6_addr32[3] = addr4.s_addr;
-                authorized_server++;                
+                authorized_server++;
             }
- 
+
         }
         *authorized_server = in6addr_any;
     }
@@ -95,7 +95,7 @@ gboolean check_inaddr_in_array(struct in6_addr *check_ip, struct in6_addr *iparr
             if (memcmp(ipitem, check_ip, sizeof(*ipitem)) == 0)
                 return TRUE;
             ipitem++;
-        } 
+        }
     }
     return FALSE;
 }
@@ -110,7 +110,7 @@ gboolean check_string_in_array(gchar* checkstring,gchar** stringarray)
             if ( !strcmp(*stringitem,checkstring))
                 return TRUE;
             stringitem++;
-        } 
+        }
     }
     return FALSE;
 

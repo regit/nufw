@@ -61,7 +61,7 @@ gboolean is_old_cache_entry                    (gpointer key,
 
 struct cache_message {
 	guint type; /* message type */
-	gpointer key; /* key that identify datas in hash */ 
+	gpointer key; /* key that identify datas in hash */
 	gpointer datas; /* datas to store */
 	GAsyncQueue* reply_queue; /* reply has to be sent to */
 };

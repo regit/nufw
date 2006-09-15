@@ -44,7 +44,7 @@ typedef struct module_T {
 
     /**
      * glib module structure
-     */ 
+     */
     GModule* module;
 
     /**
@@ -53,7 +53,7 @@ typedef struct module_T {
      */
     gchar* configfile;
 
-    /** 
+    /**
      * Function used in the module:
      *   - user_check(): prototype is ::user_check_callback ;
      *   - acl_check(): prototype is ::acl_check_callback ;

@@ -26,8 +26,8 @@ nu_error_t parse_dgram(connection_t* connection,unsigned char* dgram, unsigned i
 
 /**
  * Parse message content for message of type #AUTH_REQUEST or #AUTH_CONTROL
- * using structure ::nufw_to_nuauth_auth_message_t. 
- * 
+ * using structure ::nufw_to_nuauth_auth_message_t.
+ *
  * \param dgram Pointer to packet datas
  * \param dgram_size Number of bytes in the packet
  * \param conn Pointer of pointer to the ::connection_t that we have to authenticate
@@ -90,12 +90,12 @@ nu_error_t authpckt_new_connection_v3(unsigned char *dgram, unsigned int dgram_s
 }
 
 /**
- * Parse message content for message of type #AUTH_CONN_DESTROY 
+ * Parse message content for message of type #AUTH_CONN_DESTROY
  * or #AUTH_CONN_UPDATE using structure ::nu_conntrack_message_t structure.
  *
  * Send a message FREE_MESSAGE or UPDATE_MESSAGE to limited_connections_queue
  * (member of ::nuauthdatas).
- * 
+ *
  * \param dgram Pointer to packet datas
  * \param dgram_size Number of bytes in the packet
  */
@@ -104,7 +104,7 @@ void authpckt_conntrack_v3 (unsigned char *dgram, unsigned int dgram_size)
     struct nuv3_conntrack_message_t* conntrack;
     struct accounted_connection* datas;
     struct internal_message *message;
-    tcp_state_t pstate; 
+    tcp_state_t pstate;
 
     debug_log_message(VERBOSE_DEBUG, AREA_PACKET,
         "Auth conntrack: Working on new packet");
@@ -116,7 +116,7 @@ void authpckt_conntrack_v3 (unsigned char *dgram, unsigned int dgram_size)
             "Auth conntrack: Improper length of packet");
         return;
     }
-    
+
     /* Create a message for limited_connexions_queue */
     conntrack = (struct nuv3_conntrack_message_t*)dgram;
     datas = g_new0(struct accounted_connection, 1);
@@ -132,14 +132,14 @@ void authpckt_conntrack_v3 (unsigned char *dgram, unsigned int dgram_size)
     datas->tracking.daddr.s6_addr32[1] = 0;
     datas->tracking.daddr.s6_addr32[2] = 0xffff0000;
     datas->tracking.daddr.s6_addr32[3] = conntrack->ipv4_dst;
-    
+
     if (conntrack->ipv4_protocol == IPPROTO_ICMP)  {
         datas->tracking.type = ntohs(conntrack->src_port);
         datas->tracking.code = ntohs(conntrack->dest_port);
     } else {
         datas->tracking.source = ntohs(conntrack->src_port);
         datas->tracking.dest = ntohs(conntrack->dest_port);
-    }               
+    }
 
     datas->packets_in=0;
     datas->bytes_in=0;

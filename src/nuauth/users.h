@@ -37,11 +37,11 @@ struct user_cached_datas {
  *
  * An "user" is a person authentified with a NuFW client.
  */
-typedef struct 
+typedef struct
 {
     struct in6_addr addr;    /*!< IPv6 address of the client */
-    int socket;              /*!< socket that is used by tls session. It identify the client */ 
-    gnutls_session *tls;     /*!< TLS session opened with tls_connect() */ 
+    int socket;              /*!< socket that is used by tls session. It identify the client */
+    gnutls_session *tls;     /*!< TLS session opened with tls_connect() */
     GMutex *tls_lock;        /*!< Mutex to lock use of TLS */
     char *user_name;         /*!< User name */
     uint32_t user_id;        /*!< User identifier */

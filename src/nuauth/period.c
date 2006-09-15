@@ -16,7 +16,7 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include "auth_srv.h" 
+#include "auth_srv.h"
 
 /**
  * \addtogroup NuauthConntrack
@@ -25,7 +25,7 @@
 
 /**
  * \file period.c
- * \brief Provide a set of functions for period and time calculation 
+ * \brief Provide a set of functions for period and time calculation
  */
 
 gboolean is_time_t_in_period(gchar* periodname,time_t pckt_time)
@@ -46,7 +46,7 @@ static inline unsigned int get_start_of_day_from_time_t(time_t pckt_time)
 /**
  * Compute end of period for a given time (second since epoch)
  *
- * \return return value of end period 
+ * \return return value of end period
  *  - 0 if time not in period
  *  - -1 if there's no end
  */
@@ -93,20 +93,20 @@ static time_t get_end_of_period_item_for_time(struct period_item* perioditem,tim
               }
           }
       }
-      
+
       /* compare time */
       if (perioditem->start_hour !=-1){
           if ((tmtime.tm_hour>=perioditem->start_hour) && ( (tmtime.tm_hour<perioditem->end_hour) || (perioditem->end_hour==-1)) ){
               if (perioditem->end_hour==-1){
                   return endtime;
               } else {
-                  return get_start_of_day_from_time_t(pckt_time)+3600*perioditem->end_hour; 
+                  return get_start_of_day_from_time_t(pckt_time)+3600*perioditem->end_hour;
               }
           } else {
               /* out of bound */
                 return 0;
           }
-      } 
+      }
   }
   return endtime;
 }
@@ -204,9 +204,9 @@ GHashTable *init_periods( )
                   g_str_equal,
                   g_free,
                   (GDestroyNotify) free_period);
-  
+
   modules_parse_periods(periods);
-    
+
   return periods;
 }
 

@@ -1,4 +1,4 @@
-/* 
+/*
  ** Copyright(C) 2004,2005 INL
  ** Written by Eric Leblond <regit@inl.fr>
  **
@@ -23,11 +23,11 @@
 
 /*! \file acls.c
     \brief Acls manipulations and cache
-    
+
     It implements the functions needed to activate cache for acls and basic
     acl manipulations tasks
-    
-    
+
+
 */
 
 
@@ -62,21 +62,21 @@ struct acl_key {
 
 /**
  * Function used for connection hash.
- * 
+ *
  * Params : a "struct acl_key"
  * Return : the associated key
  */
 inline guint32 hash_acl(gconstpointer key)
 {
     tracking_t *tracking = (tracking_t *)((struct acl_key*)key)->acl_tracking;
-    return jhash2((guint32 *)tracking, 
-        (sizeof(struct in6_addr)*2 +4)/4, 
+    return jhash2((guint32 *)tracking,
+        (sizeof(struct in6_addr)*2 +4)/4,
         0);
 }
 
 /**
  * Find if two acls decision are equal.
- * 
+ *
  * Params : two ip headers
  * Return : TRUE is ip headers are equal, FALSE otherwise
  */
@@ -84,7 +84,7 @@ inline guint32 hash_acl(gconstpointer key)
 gboolean compare_tracking(gconstpointer a, gconstpointer b){
     tracking_t *tracking1 = (tracking_t *)a;
     tracking_t *tracking2 = (tracking_t *)b;
-    
+
     /* compare IP source address */
     if (memcmp(&tracking1->saddr, &tracking2->saddr, sizeof(tracking1->saddr)) != 0) return FALSE;
 
@@ -132,7 +132,7 @@ gint strcmp_null(gchar* a,gchar* b){
 		else
 			return TRUE;
 	} else {
-		if (b)	
+		if (b)
 			return strcmp(a,b);
 		else
 			return TRUE;
@@ -230,7 +230,7 @@ gpointer acl_duplicate_key(gpointer datas)
 {
 	struct acl_key *key = g_new0(struct acl_key,1);
 	struct acl_key *kdatas = (struct acl_key*)datas;
-    
+
 	key->acl_tracking =
         g_memdup(kdatas->acl_tracking, sizeof(*kdatas->acl_tracking));
     key->sysname = g_strdup(kdatas->sysname);
@@ -270,10 +270,10 @@ void get_acls_from_cache (connection_t* conn_elt)
 
 	if (conn_elt->acl_groups == null_queue_datas){
 		conn_elt->acl_groups=NULL;
-	} 
+	}
 	if (conn_elt->acl_groups==null_message){
 		struct cache_message * rmessage;
-		/* cache wants an update 
+		/* cache wants an update
 		 * external check of acl */
 		external_acl_groups(conn_elt);
 
@@ -302,7 +302,7 @@ int init_acl_cache()
     nuauthdatas->acl_cache->hash=g_hash_table_new_full((GHashFunc)hash_acl,
             compare_acls,
             (GDestroyNotify) free_acl_key,
-            (GDestroyNotify) free_acl_cache); 
+            (GDestroyNotify) free_acl_cache);
     nuauthdatas->acl_cache->queue=g_async_queue_new();
     nuauthdatas->acl_cache->delete_elt=free_acl_struct;
     nuauthdatas->acl_cache->duplicate_key=acl_duplicate_key;

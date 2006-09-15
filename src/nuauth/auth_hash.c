@@ -23,8 +23,8 @@ void search_and_fill_catchall(connection_t *new, connection_t *packet)
 
 /**
  * Compute the key (hash) of a connection tracking.
- * 
- * \param data IPv4 tracking headers (of type tracking_t) of a connection 
+ *
+ * \param data IPv4 tracking headers (of type tracking_t) of a connection
  * \return Comptuted hash
  */
 inline guint32 hash_connection(gconstpointer data)
@@ -36,7 +36,7 @@ inline guint32 hash_connection(gconstpointer data)
 
 /**
  * Check if two connections are equal.
- * 
+ *
  * \param a Tracking headers (type ::tracking_t) compared with b
  * \param b Tracking headers (type ::tracking_t) compared with a
  * \return TRUE is IPv4 headers are equal, FALSE otherwise
@@ -47,17 +47,17 @@ gboolean compare_connection(gconstpointer a, gconstpointer b)
     tracking_t *trck2 = (tracking_t *)b;
 
     /* compare IPheaders */
-    if (memcmp(&trck1->saddr, &trck2->saddr, sizeof(trck1->saddr)) != 0) 
+    if (memcmp(&trck1->saddr, &trck2->saddr, sizeof(trck1->saddr)) != 0)
         return FALSE;
 
     /* compare proto */
-    if (trck1->protocol != trck2->protocol) 
+    if (trck1->protocol != trck2->protocol)
         return FALSE;
 
     /* compare proto headers */
     switch ( trck1->protocol) {
         case IPPROTO_TCP:
-            if (trck1->source == trck2->source 
+            if (trck1->source == trck2->source
                 && memcmp(&trck1->daddr, &trck2->daddr, sizeof(trck1->daddr)) == 0
                 && trck1->dest == trck2->dest)
                 return TRUE;
@@ -89,9 +89,9 @@ gboolean compare_connection(gconstpointer a, gconstpointer b)
 /**
  * Send the a #WARN_MESSAGE to nuauthdatas->tls_push_queue (see ::push_worker()).
  */
-void search_and_push(connection_t *new) 
+void search_and_push(connection_t *new)
 {
-    /* push data to sender */ 
+    /* push data to sender */
     struct internal_message *message = g_new0(struct internal_message, 1);
     if (!message){
         log_message (CRITICAL, AREA_USER, "search&push: Couldn't g_new0(). No more memory?");
@@ -110,7 +110,7 @@ void search_and_push(connection_t *new)
     }
 }
 
-inline void search_and_fill_complete_of_authreq(connection_t *new, connection_t *packet) 
+inline void search_and_fill_complete_of_authreq(connection_t *new, connection_t *packet)
 {
     switch (new->state){
         case  AUTH_STATE_AUTHREQ:
@@ -149,19 +149,19 @@ inline void search_and_fill_complete_of_authreq(connection_t *new, connection_t 
 
 /**
  * An user tells that he is the owner of a connection:
- *  - #AUTH_STATE_AUTHREQ: push a copy of the connection 'new' to nuauthdatas->acl_checkers 
+ *  - #AUTH_STATE_AUTHREQ: push a copy of the connection 'new' to nuauthdatas->acl_checkers
  *  - #AUTH_STATE_USERPCKT: that's a duplicate
  *  - other: error!
  */
-inline void search_and_fill_complete_of_userpckt(connection_t *new, connection_t *packet) 
+inline void search_and_fill_complete_of_userpckt(connection_t *new, connection_t *packet)
 {
     switch (new->state){
         case  AUTH_STATE_AUTHREQ:
             packet->state = AUTH_STATE_COMPLETING;
 
             /* Copy packet members needed by ACL checker into new.
-             * We don't use strdup/free because it's slow. 
-             * So clean_connections_list() don't remove connection 
+             * We don't use strdup/free because it's slow.
+             * So clean_connections_list() don't remove connection
              * in state AUTH_STATE_COMPLETING :-)
              */
             new->state = AUTH_STATE_COMPLETING;
@@ -178,7 +178,7 @@ inline void search_and_fill_complete_of_userpckt(connection_t *new, connection_t
             packet->socket = new->socket;
             packet->tls = new->tls;
             break;
-            
+
         case AUTH_STATE_USERPCKT:
             debug_log_message (VERBOSE_DEBUG, AREA_MAIN,
                     "Complete user packet: Found a duplicate user packet");
@@ -190,12 +190,12 @@ inline void search_and_fill_complete_of_userpckt(connection_t *new, connection_t
     }
 }
 
-inline void search_and_fill_done(connection_t *new, connection_t *packet) 
-{    
+inline void search_and_fill_done(connection_t *new, connection_t *packet)
+{
     /* if new is a nufw request respond with correct decision */
     switch (new->state){
         case AUTH_STATE_AUTHREQ:
-            { 
+            {
                 g_slist_foreach(new->packet_id,
                         (GFunc) send_auth_response,
                         packet);
@@ -212,7 +212,7 @@ inline void search_and_fill_done(connection_t *new, connection_t *packet)
     }
 }
 
-inline void search_and_fill_completing(connection_t *new, connection_t *packet) 
+inline void search_and_fill_completing(connection_t *new, connection_t *packet)
 {
     switch (new->state){
         case  AUTH_STATE_COMPLETING:
@@ -230,12 +230,12 @@ inline void search_and_fill_completing(connection_t *new, connection_t *packet)
                 g_slist_prepend(packet->packet_id, GINT_TO_POINTER((new->packet_id)->data));
             free_connection(new);
             break;
-            
+
         case AUTH_STATE_USERPCKT:
             log_message (DEBUG, AREA_MAIN, "Completing (user): User packet in state completing");
             free_connection(new);
             break;
-            
+
         default:
             search_and_fill_catchall(new, packet);
     }
@@ -255,12 +255,12 @@ inline void search_and_fill_ready(connection_t *new, connection_t *packet)
                 g_slist_prepend(packet->packet_id, GUINT_TO_POINTER((new->packet_id)->data));
             free_connection(new);
             break;
-            
+
         case AUTH_STATE_USERPCKT:
             debug_log_message (VERBOSE_DEBUG, AREA_MAIN,
                     "seach&fill ready: Need only cleaning");
             free_connection(new);
-            break;           
+            break;
 
         default:
             search_and_fill_catchall(new, packet);
@@ -285,19 +285,19 @@ void search_and_fill_update(connection_t *new, connection_t *packet)
         case AUTH_STATE_USERPCKT:
             search_and_fill_complete_of_userpckt(new, packet);
             break;
-            
+
         case AUTH_STATE_DONE:
             search_and_fill_done(new, packet);
             break;
-            
+
         case AUTH_STATE_COMPLETING:
             search_and_fill_completing(new, packet);
             break;
-            
-        case AUTH_STATE_READY: 
+
+        case AUTH_STATE_READY:
             search_and_fill_ready(new, packet);
             break;
-            
+
         default:
             search_and_fill_catchall(new, packet);
     }
@@ -311,7 +311,7 @@ void search_and_fill_update(connection_t *new, connection_t *packet)
  * Call search_and_fill_update() if the connection exists in ::conn_list,
  * else call search_and_push().
  */
-void* search_and_fill(GMutex* mutex) 
+void* search_and_fill(GMutex* mutex)
 {
     connection_t *packet;
     connection_t *new;
@@ -331,7 +331,7 @@ void* search_and_fill(GMutex* mutex)
         new = g_async_queue_timed_pop(nuauthdatas->connections_queue, &tv);
         if (new == NULL)
             continue;
-        
+
         /* search pckt */
         g_static_mutex_lock (&insert_mutex);
         debug_log_message (VERBOSE_DEBUG, AREA_MAIN,
@@ -344,7 +344,7 @@ void* search_and_fill(GMutex* mutex)
             if (nuauthconf->push && new->state == AUTH_STATE_AUTHREQ) {
                 search_and_push(new);
             }
-        } else { 
+        } else {
             search_and_fill_update(new, packet);
             g_static_mutex_unlock (&insert_mutex);
         }

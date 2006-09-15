@@ -44,7 +44,7 @@
  *  - init_module_from_conf() : Init module with respect to a configuration file
  *  - unload_module_with_params() : Clean a module instance and free related parameter
  * Optionally, the initialisation function of the glib can be used
- * 
+ *
  * After this, it has to export the functions that are used by hook :
  *  - define_periods() : define period that can be used in time-based acls
  *  - user_check() : verify user credentials
@@ -53,15 +53,15 @@
  *  - acl_check() : verify acl for a packet
  *  - user_session_logs() : log user connection and disconnection
  *  - user_packet_logs() : log packet
- * 
+ *
  * @{
  */
 
-/** 
+/**
  * \file modules.c
  * \brief Take care of interaction with modules
  *
- * It contains the functions that load and unload modules as well as all 
+ * It contains the functions that load and unload modules as well as all
  * ..._check functions use in the code to interact with the modules
  */
 
@@ -87,7 +87,7 @@ int modules_user_check (const char *user, const char *pass,unsigned passlen)
 }
 
 /**
- * Get group for a given user 
+ * Get group for a given user
  */
 GSList* modules_get_user_groups(const char *user)
 {
@@ -186,7 +186,7 @@ int modules_user_session_logs(user_session_t* user, session_state_t state)
     return 0;
 }
 
-/** 
+/**
  * parse time period configuration for each module
  * and fille the given hash (first argument)
  */
@@ -229,7 +229,7 @@ int modules_check_certificate (gnutls_session session, gnutls_x509_crt cert)
  *
  * \param session TLS connection
  * \param cert x509 certificate
- * \return uid 
+ * \return uid
  */
 gchar* modules_certificate_to_uid (gnutls_session session, gnutls_x509_crt cert)
 {
@@ -246,7 +246,7 @@ gchar* modules_certificate_to_uid (gnutls_session session, gnutls_x509_crt cert)
     return NULL;
 }
 
-/** 
+/**
  * Modify user session
  *
  */
@@ -262,7 +262,7 @@ int modules_user_session_modify(user_session_t* c_session)
 	return SASL_OK;
 }
 
-/** 
+/**
  * Compute packet mark
  *
  */
@@ -358,7 +358,7 @@ static int load_modules_from(gchar* confvar, gchar* func,GSList** target)
         module_path = g_module_build_path(MODULE_PATH, current_module->module_name);
         current_module->module = g_module_open (module_path, 0);
         g_free(module_path);
-        
+
         log_message(VERBOSE_DEBUG,AREA_MAIN,
                 "\tmodule %s: using %s with configfile %s",
                 current_module->name,
@@ -393,14 +393,14 @@ static int load_modules_from(gchar* confvar, gchar* func,GSList** target)
                     current_module->module_name);
             current_module->params=NULL;
         }
-        
+
         /* get params for module by calling module exported function */
         if (!g_module_symbol (current_module->module, "unload_module_with_params", (gpointer*)&(current_module->free_params))) {
             log_message(WARNING, AREA_MAIN,
                     "No init function for module %s: PLEASE UPGRADE!",
                     current_module->module_name);
             current_module->free_params=NULL;
-        } 
+        }
 
         /* store module in module list */
         *target=g_slist_append(*target,(gpointer)current_module);
@@ -475,23 +475,23 @@ int load_modules()
     log_message(VERBOSE_DEBUG, AREA_MAIN, "Loading " TEXT " modules:"); \
     load_modules_from(VAR, KEY, &(LIST)); \
     g_free(VAR);
-    
+
     /* loading modules */
-    LOAD_MODULE (nuauth_user_check_module, user_check_modules, 
+    LOAD_MODULE (nuauth_user_check_module, user_check_modules,
             "user_check", "user checking");
-    LOAD_MODULE (nuauth_get_user_groups_module, get_user_groups_modules, 
+    LOAD_MODULE (nuauth_get_user_groups_module, get_user_groups_modules,
             "get_user_groups", "user groups fetching");
-    LOAD_MODULE (nuauth_get_user_id_module, get_user_id_modules, 
+    LOAD_MODULE (nuauth_get_user_id_module, get_user_id_modules,
             "get_user_id", "user id fetching");
-    LOAD_MODULE (nuauth_acl_check_module, acl_check_modules, 
+    LOAD_MODULE (nuauth_acl_check_module, acl_check_modules,
             "acl_check", "acls checking");
-    LOAD_MODULE (nuauth_periods_module, period_modules, 
+    LOAD_MODULE (nuauth_periods_module, period_modules,
             "define_periods", "define periods checking");
-    LOAD_MODULE (nuauth_user_logs_module, user_logs_modules, 
+    LOAD_MODULE (nuauth_user_logs_module, user_logs_modules,
             "user_packet_logs", "user packet logging");
-    LOAD_MODULE (nuauth_user_session_logs_module, user_session_logs_modules, 
+    LOAD_MODULE (nuauth_user_session_logs_module, user_session_logs_modules,
             "user_session_logs", "user session logging");
-    LOAD_MODULE(nuauth_certificate_check_module, certificate_check_modules, 
+    LOAD_MODULE(nuauth_certificate_check_module, certificate_check_modules,
             "certificate_check", "certificate check");
     LOAD_MODULE(nuauth_certificate_to_uid_module, certificate_to_uid_modules,
             "certificate_to_uid", "certificate to uid");
@@ -500,7 +500,7 @@ int load_modules()
     LOAD_MODULE(nuauth_user_session_modify_module, user_session_modify_modules,
             "user_session_modify", "user session modify");
     if (nuauthconf->do_ip_authentication){
-        LOAD_MODULE(nuauth_ip_authentication_module, ip_auth_modules, 
+        LOAD_MODULE(nuauth_ip_authentication_module, ip_auth_modules,
                 "ip_authentication", "ip authentication");
     }
 

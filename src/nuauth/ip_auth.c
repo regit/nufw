@@ -22,7 +22,7 @@
 /**
  * check given ip for ip authentication.
  *
- * Use module to check if we can found the user logged on ip. 
+ * Use module to check if we can found the user logged on ip.
  *
  * Algorithm :
  *  - Send request to module provided function
@@ -31,24 +31,24 @@
  *    - build corresponding connection structure
  *    - feed search_and_fill with it
  *  - else free header (userdata)
- * 
+ *
  */
 void external_ip_auth(gpointer userdata, gpointer data)
 {
         char* username=NULL;
-        
+
         block_on_conf_reload();
         username=modules_ip_auth(userdata);
         if (username){
             GSList* groups=NULL;
 	    uint32_t uid;
             /**
-	     * \todo 
+	     * \todo
              *  switch to a list of modules
-             *  set a cache for such query 
+             *  set a cache for such query
              */
             /* get groups by calling user_check module with a empty password */
-	     
+
             uid = modules_get_user_id(username);
             groups = modules_get_user_groups(username);
             /* if search succeed process to packet transmission */
@@ -63,7 +63,7 @@ void external_ip_auth(gpointer userdata, gpointer data)
                 /* copy ipv4 header */
                 memcpy(&(connection->tracking), (tracking_t *)userdata, sizeof(tracking_t));
                 g_async_queue_push (nuauthdatas->connections_queue,connection);
-            } 
-        } 
+            }
+        }
         g_free(userdata);
 }

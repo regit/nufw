@@ -22,7 +22,7 @@
 
 /* workaround SPlint error (don't know __gnuc_va_list) */
 #ifdef S_SPLINT_S
-#  include <err.h> 
+#  include <err.h>
 #  define CONFIG_DIR "/etc/nufw"
 #  define MODULE_DIR "/usr/local/lib"
 #  define LOCAL_STATE_DIR "/usr/local/var"
@@ -54,8 +54,8 @@
 #include <locale.h>
 #include <sys/time.h>
 
-typedef enum 
-{   
+typedef enum
+{
     NU_EXIT_ERROR,
     NU_EXIT_OK,
     NU_EXIT_NO_RETURN,
@@ -120,15 +120,15 @@ typedef enum
 /** Maximum length of a hostname (including final '\\0') */
 #define HOSTNAME_SIZE 128
 
-/** 
- * Default value of packet timeout (in second), 
+/**
+ * Default value of packet timeout (in second),
  * option "nuauth_packet_timeout"
  */
 #define PACKET_TIMEOUT 15
 
 /**
  * Default value of session duration (in second),
- * option "nuauth_session_duration". See member session_duration of ::nuauth_params. 
+ * option "nuauth_session_duration". See member session_duration of ::nuauth_params.
  */
 #define SESSION_DURATION 0
 #define DEFAULT_USERAUTH_MODULE "libplaintext"
@@ -166,29 +166,29 @@ typedef enum
  * Maximum size of buffer used to store one packet read
  * on TLS connection (from NuFW or the users)
  */
-#define MAX_NUFW_PACKET_SIZE 1800 
+#define MAX_NUFW_PACKET_SIZE 1800
 
 /*----------------------- SSL stuffs ----------------------------------*/
 
-/** 
+/**
  * Default value for "nuauth_tls_key" option: filename of
  * the key file. Value used in ::create_x509_credentials().
  */
 #define NUAUTH_KEYFILE CONFIG_DIR "/nuauth-key.pem"
 
-/** 
+/**
  * Default value for "nuauth_tls_cert" option: file name of the
  * certification. Value used in ::create_x509_credentials().
  */
 #define NUAUTH_CERTFILE CONFIG_DIR "/nuauth-cert.pem"
 
-/** 
+/**
  * Default value for "nuauth_tls_cacert" option: filename of the
  * CA certificate. Value used in ::create_x509_credentials().
  */
 #define NUAUTH_CACERTFILE CONFIG_DIR "/NuFW-cacert.pem"
 
-/** 
+/**
  * Default value for "nuauth_tls_max_clients" option: maximum number
  * of SSL users. Value used in ::tls_user_init().
  */

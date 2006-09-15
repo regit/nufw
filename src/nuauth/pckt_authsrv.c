@@ -17,8 +17,8 @@
  */
 
 /** \file pckt_authsrv.c
- *  \brief Functions to parse a packet sent by NuFW 
- * 
+ *  \brief Functions to parse a packet sent by NuFW
+ *
  * Function authpckt_decode() parse a packet sent by NuFW. Depends on
  * message type (see ::nufw_message_t), send a message to
  * limited_connections_queue (member of ::nuauthdatas), may log packet
@@ -35,12 +35,12 @@
 #include "pckt_authsrv_v3.h"
 
 /**
- * Parse packet payload 
+ * Parse packet payload
  */
 
 nu_error_t parse_dgram(connection_t* connection,unsigned char* dgram, unsigned int dgram_size,connection_t** conn,nufw_message_t msg_type)
 {
-    unsigned int ip_hdr_size; 
+    unsigned int ip_hdr_size;
     /* get ip headers till tracking is filled */
     ip_hdr_size = get_ip_headers(&connection->tracking, dgram, dgram_size);
     if (ip_hdr_size == 0)  {
@@ -65,7 +65,7 @@ nu_error_t parse_dgram(connection_t* connection,unsigned char* dgram, unsigned i
             tcp_state_t tcp_state = get_tcp_headers(&connection->tracking, dgram, dgram_size);
             switch (tcp_state){
                 case TCP_STATE_OPEN:
-                    break; 
+                    break;
                 case TCP_STATE_CLOSE:
                     if (msg_type == AUTH_CONTROL ){
 			connection->state = AUTH_STATE_DONE;
@@ -126,8 +126,8 @@ nu_error_t parse_dgram(connection_t* connection,unsigned char* dgram, unsigned i
 
 /**
  * Parse message content for message of type #AUTH_REQUEST or #AUTH_CONTROL
- * using structure ::nufw_to_nuauth_auth_message_t. 
- * 
+ * using structure ::nufw_to_nuauth_auth_message_t.
+ *
  * \param dgram Pointer to packet datas
  * \param dgram_size Number of bytes in the packet
  * \param conn Pointer of pointer to the ::connection_t that we have to authenticate
@@ -181,7 +181,7 @@ nu_error_t authpckt_new_connection(unsigned char *dgram, unsigned int dgram_size
     /** \todo parse supplementary fields */
 
     connection->user_groups = ALLGROUP;
-    
+
 #ifdef DEBUG_ENABLE
     if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)){
         g_message("Packet: ");
@@ -194,12 +194,12 @@ nu_error_t authpckt_new_connection(unsigned char *dgram, unsigned int dgram_size
 
 
 /**
- * Parse message content for message of type #AUTH_CONN_DESTROY 
+ * Parse message content for message of type #AUTH_CONN_DESTROY
  * or #AUTH_CONN_UPDATE using structure ::nu_conntrack_message_t structure.
  *
  * Send a message FREE_MESSAGE or UPDATE_MESSAGE to limited_connections_queue
  * (member of ::nuauthdatas).
- * 
+ *
  * \param dgram Pointer to packet datas
  * \param dgram_size Number of bytes in the packet
  */
@@ -208,7 +208,7 @@ void authpckt_conntrack (unsigned char *dgram, unsigned int dgram_size)
     struct nuv4_conntrack_message_t* conntrack;
     struct accounted_connection* datas;
     struct internal_message *message;
-    tcp_state_t pstate; 
+    tcp_state_t pstate;
 
     debug_log_message(VERBOSE_DEBUG, AREA_PACKET,
         "Auth conntrack: Working on new packet");
@@ -220,7 +220,7 @@ void authpckt_conntrack (unsigned char *dgram, unsigned int dgram_size)
             "Auth conntrack: Improper length of packet");
         return;
     }
-    
+
     /* Create a message for limited_connexions_queue */
     conntrack = (struct nuv4_conntrack_message_t*)dgram;
     datas = g_new0(struct accounted_connection, 1);
@@ -237,14 +237,14 @@ void authpckt_conntrack (unsigned char *dgram, unsigned int dgram_size)
     datas->tracking.daddr.s6_addr32[1] = conntrack->ip_dst.s6_addr32[1];
     datas->tracking.daddr.s6_addr32[2] = conntrack->ip_dst.s6_addr32[2];
     datas->tracking.daddr.s6_addr32[3] = conntrack->ip_dst.s6_addr32[3];
-    
+
     if ((conntrack->ip_protocol == IPPROTO_ICMP) || (conntrack->ip_protocol == IPPROTO_ICMPV6)) {
         datas->tracking.type = ntohs(conntrack->src_port);
         datas->tracking.code = ntohs(conntrack->dest_port);
     } else {
         datas->tracking.source = ntohs(conntrack->src_port);
         datas->tracking.dest = ntohs(conntrack->dest_port);
-    }               
+    }
 
     datas->packets_in=conntrack->packets_in;
     datas->bytes_in=conntrack->bytes_in;
@@ -270,21 +270,21 @@ void authpckt_conntrack (unsigned char *dgram, unsigned int dgram_size)
 }
 
 /**
- * Parse a datagram packet from NuFW using structure 
+ * Parse a datagram packet from NuFW using structure
  * ::nufw_to_nuauth_message_header_t. Create a connection
  * (type ::connection_t) for message of type #AUTH_REQUEST or #AUTH_CONTROL.
- * Update conntrack for message of type #AUTH_CONN_DESTROY 
+ * Update conntrack for message of type #AUTH_CONN_DESTROY
  * or #AUTH_CONN_UPDATE.
  *
  * Call:
  *   - authpckt_new_connection(): Message type #AUTH_REQUEST or #AUTH_CONTROL
  *   - authpckt_conntrack(): Message type #AUTH_CONN_DESTROY
  *     or #AUTH_CONN_UPDATE
- * 
+ *
  * \param pdgram Pointer to datagram
  * \param pdgram_size Pointer to size of the datagram (in bytes)
  * \param conn Pointer of pointer to the ::connection_t that will be modified
- * \return 
+ * \return
  *   - #NU_EXIT_ERROR if failure
  *   - #NU_EXIT_OK if ok and conn created
  *   - #NU_EXIT_NO_RETURN if no conn is needed but work is ok
@@ -375,7 +375,7 @@ unsigned char get_proto_version_from_packet(char* dgram,size_t dgram_size)
 	nufw_to_nuauth_message_header_t *header;
 
 	if (dgram_size<sizeof(nufw_to_nuauth_message_header_t)){
-		return 0;		
+		return 0;
 	}
 	/* Check protocol version */
 	header = (nufw_to_nuauth_message_header_t *)dgram;

@@ -46,7 +46,7 @@ static int ipv6_to_sql(struct in6_addr *addr, char *buffer, size_t buflen)
     addr8 = &addr->s6_addr[0];
     for (i=0; i<4; i++)
     {
-        written = sprintf(buffer, "%02x%02x%02x%02x", 
+        written = sprintf(buffer, "%02x%02x%02x%02x",
                 addr8[0],
                 addr8[1],
                 addr8[2],
@@ -76,7 +76,7 @@ static MYSQL* mysql_conn_init(struct log_mysql_params* params);
 G_MODULE_EXPORT gchar* unload_module_with_params(gpointer params_p)
 {
   struct log_mysql_params* params = (struct log_mysql_params*)params_p;
-  
+
   if (params){
     if (! nuauth_is_reloading()){
       if ( mysql_close_open_user_sessions(params) != NU_EXIT_OK){
@@ -139,7 +139,7 @@ static nu_error_t mysql_close_open_user_sessions(struct log_mysql_params* params
 }
 
 /* Init mysql system */
-G_MODULE_EXPORT gboolean 
+G_MODULE_EXPORT gboolean
 init_module_from_conf(module_t *module)
 {
   confparams mysql_nuauth_vars[] = {
@@ -199,19 +199,19 @@ init_module_from_conf(module_t *module)
     free_confparams(mysql_nuauth_vars,sizeof(mysql_nuauth_vars)/sizeof(confparams));
 
     /* init thread private stuff */
-    params->mysql_priv = g_private_new ((GDestroyNotify)mysql_close); 
+    params->mysql_priv = g_private_new ((GDestroyNotify)mysql_close);
     log_message(DEBUG, AREA_MAIN, "mysql part of the config file is parsed\n");
 
     /* do initial update of user session if needed */
     if (! nuauth_is_reloading()){
         mysql_close_open_user_sessions(params);
     }
-    
+
     module->params=(gpointer)params;
     return TRUE;
 }
 
-/* 
+/*
  * Initialize connection to mysql server
  */
 static MYSQL* mysql_conn_init(struct log_mysql_params* params)
@@ -219,7 +219,7 @@ static MYSQL* mysql_conn_init(struct log_mysql_params* params)
     MYSQL *ld = NULL;
 
     /* init connection */
-    ld = mysql_init(ld);     
+    ld = mysql_init(ld);
     if (ld == NULL) {
         log_message(WARNING, AREA_MAIN, "mysql init error : %s\n",strerror(errno));
         return NULL;
@@ -255,7 +255,7 @@ static gchar * generate_osname(gchar *Name, gchar *Version, gchar *Release)
 }
 
 static gchar* generate_appname(gchar *appname)
-{ 
+{
     if (appname != NULL && strlen(appname) < APPNAME_MAX_SIZE) {
         return g_strdup(appname);
     } else {
@@ -276,7 +276,7 @@ static char* quote_string(MYSQL *mysql, char *text)
         return NULL;
     }
     return quoted;
-}    
+}
 
 static char* build_insert_request(
         MYSQL *ld, connection_t *element,
@@ -314,8 +314,8 @@ static char* build_insert_request(
         return NULL;
     }
 
-    /* Add user informations */ 
-    if (element->username) {        
+    /* Add user informations */
+    if (element->username) {
         /* Get OS and application names */
         char *osname = generate_osname(
                 element->os_sysname,
@@ -335,8 +335,8 @@ static char* build_insert_request(
         {
             /* Add oob prefix, informations about user, OS an application */
             g_strlcat(
-                    request_fields, 
-                    "oob_prefix, user_id, username, client_os, client_app", 
+                    request_fields,
+                    "oob_prefix, user_id, username, client_os, client_app",
                     sizeof(request_fields));
             ok = secure_snprintf(tmp_buffer, sizeof(tmp_buffer),
                     "'%s', '%lu', '%s', '%s', '%s'",
@@ -356,12 +356,12 @@ static char* build_insert_request(
     } else {
         /* Add oob prefix */
         g_strlcat(
-                request_fields, 
-                "oob_prefix", 
+                request_fields,
+                "oob_prefix",
                 sizeof(request_fields));
         ok = secure_snprintf(tmp_buffer, sizeof(tmp_buffer),
                 "'%s'",
-                unauth_oob_prefix);        
+                unauth_oob_prefix);
         if (!ok) {
             return NULL;
         }
@@ -369,23 +369,23 @@ static char* build_insert_request(
     }
 
     /* Add TCP/UDP parameters */
-    if ((element->tracking.protocol == IPPROTO_TCP) 
+    if ((element->tracking.protocol == IPPROTO_TCP)
             || (element->tracking.protocol == IPPROTO_UDP))
     {
         if (element->tracking.protocol == IPPROTO_TCP)
         {
             g_strlcat(
-                    request_fields, 
-                    ", tcp_sport, tcp_dport)", 
+                    request_fields,
+                    ", tcp_sport, tcp_dport)",
                     sizeof(request_fields));
         } else {
             g_strlcat(
-                    request_fields, 
-                    ", udp_sport, udp_dport)", 
+                    request_fields,
+                    ", udp_sport, udp_dport)",
                     sizeof(request_fields));
         }
         ok = secure_snprintf(tmp_buffer, sizeof(tmp_buffer),
-                ", '%hu', '%hu')", 
+                ", '%hu', '%hu')",
                 element->tracking.source,
                 element->tracking.dest);
         if (!ok) {
@@ -407,7 +407,7 @@ static char* build_insert_request(
 
     /* do the mysql request */
     return g_strconcat(request_fields, "\n", request_values, NULL);
-}    
+}
 
 static inline int log_state_open(MYSQL *ld, connection_t *element,struct log_mysql_params* params)
 {
@@ -460,7 +460,7 @@ static inline int log_state_open(MYSQL *ld, connection_t *element,struct log_mys
         return -1;
     }
 
-    /* do query */ 
+    /* do query */
     mysql_ret = mysql_real_query(ld, request, strlen(request));
     g_free(request);
 
@@ -474,7 +474,7 @@ static inline int log_state_open(MYSQL *ld, connection_t *element,struct log_mys
         return -1;
     }
     return 0;
-}    
+}
 
 static inline int log_state_established(MYSQL *ld, struct accounted_connection *element,struct log_mysql_params* params)
 {
@@ -529,7 +529,7 @@ static inline int log_state_established(MYSQL *ld, struct accounted_connection *
         }
     }
     return 0;
-}    
+}
 
 /** \todo Dump accounting counters in the table */
 static inline int log_state_close(MYSQL *ld, struct accounted_connection *element,struct log_mysql_params *params)
@@ -588,7 +588,7 @@ static inline int log_state_close(MYSQL *ld, struct accounted_connection *elemen
         }
     }
     return 0;
-}    
+}
 
 static int log_state_drop(MYSQL *ld, connection_t *element, struct log_mysql_params* params)
 {
@@ -596,7 +596,7 @@ static int log_state_drop(MYSQL *ld, connection_t *element, struct log_mysql_par
 
     /* build sql request */
     char *request = build_insert_request(
-            ld, element, 
+            ld, element,
             TCP_STATE_DROP, "DROP", "UNAUTHENTICATED DROP",params);
     if (request == NULL)
     {
@@ -605,7 +605,7 @@ static int log_state_drop(MYSQL *ld, connection_t *element, struct log_mysql_par
         return -1;
     }
 
-    /* do query */ 
+    /* do query */
     mysql_ret = mysql_real_query(ld, request, strlen(request));
     g_free(request);
 
@@ -618,7 +618,7 @@ static int log_state_drop(MYSQL *ld, connection_t *element, struct log_mysql_par
         return -1;
     }
     return 0;
-}    
+}
 
 static MYSQL* get_mysql_handler(struct log_mysql_params* params)
 {
@@ -626,7 +626,7 @@ static MYSQL* get_mysql_handler(struct log_mysql_params* params)
     if (ld != NULL) {
         return ld;
     }
-    
+
     ld = mysql_conn_init(params);
     if (ld == NULL){
         log_message (SERIOUS_WARNING, AREA_MAIN,
@@ -636,7 +636,7 @@ static MYSQL* get_mysql_handler(struct log_mysql_params* params)
     g_private_set(params->mysql_priv,ld);
     return ld;
 
-}    
+}
 
 /**
  * \brief User packet logging
@@ -661,14 +661,14 @@ G_MODULE_EXPORT gint user_packet_logs (void* element, tcp_state_t state,gpointer
         case TCP_STATE_OPEN:
             return log_state_open(ld, (connection_t *) element,params);
 
-        case TCP_STATE_ESTABLISHED: 
+        case TCP_STATE_ESTABLISHED:
             if ((((struct accounted_connection*)element)->tracking).protocol == IPPROTO_TCP){
                 return log_state_established(ld, (struct accounted_connection*) element,params);
             } else {
                 return 0;
             }
 
-        case TCP_STATE_CLOSE: 
+        case TCP_STATE_CLOSE:
             if ((((struct accounted_connection*)element)->tracking).protocol == IPPROTO_TCP){
                 return log_state_close(ld, (struct accounted_connection*) element, params);
             } else {
@@ -702,7 +702,7 @@ G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t
     int mysql_ret;
     MYSQL *ld;
     gboolean ok;
-    
+
     ld = get_mysql_handler(params);
     if (ld == NULL) {
         return -1;
@@ -728,7 +728,7 @@ G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t
                     c_session->socket,
                     time(NULL));
             break;
-            
+
         case SESSION_CLOSE:
             /* update existing user session */
             ok = secure_snprintf(request, sizeof(request),

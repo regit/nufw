@@ -22,7 +22,7 @@
  * \defgroup TLS TLS servers
  *
  */
- 
+
 
 /**
  * Number of bits for use in an Diffie Hellman key exchange,
@@ -51,10 +51,10 @@ int tls_connect(int c,gnutls_session** session_ptr);
 /* cache system related */
 struct client_connection {
     /** Socket file descriptor, init. with accept() and set to SO_KEEPALIVE mode */
-    int socket;             
+    int socket;
 
     /** IPv6 address */
-    struct in6_addr addr; 
+    struct in6_addr addr;
 };
 
 /**
@@ -86,7 +86,7 @@ typedef struct Nufw_session {
     gboolean alive;
 } nufw_session_t;
 
-struct tls_insert_data { 
+struct tls_insert_data {
     int socket;
     gpointer data;
 };

@@ -61,14 +61,14 @@ GStaticMutex group_mutex;
 
 /**
  * \brief Get list of group a user belong to
- * 
+ *
  * Like `getgroups', but for user USERNAME instead of for the current
    process.  Store at most MAXCOUNT group IDs in the GROUPLIST array.
    If GID is not -1, store it first (if possible).  GID should be the
    group ID (pw_gid) obtained from getpwuid, in case USERNAME is not
    listed in /etc/groups.
-   Always return the number of groups of which USERNAME is a member.  
- 
+   Always return the number of groups of which USERNAME is a member.
+
    \param username String containing the username
    \param gid This is the primary group of the user
    \return A list of group under the form of a GSList

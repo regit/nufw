@@ -188,14 +188,14 @@ int compare_ipv6_with_mask(struct in6_addr *addr1, struct in6_addr *addr2, struc
 
 /**
  * Try to match an address from an IP/mask list.
- * 
+ *
  * \param ip_list Single linked list of T_ip items
  * \param addr Address to match
  * \return 1 if addr match ip_list, 0 otherwise
  */
 int match_ip(GSList *ip_list, struct in6_addr *addr)
 {
-    for (; ip_list != NULL; ip_list = g_slist_next(ip_list)) 
+    for (; ip_list != NULL; ip_list = g_slist_next(ip_list))
     {
         struct T_ip *item = (struct T_ip*)ip_list->data;
         if (compare_ipv6_with_mask(&item->addr, addr, &item->netmask) == 0)
@@ -255,10 +255,10 @@ static int parse_ips(char *ipsline, GSList **ip_list, char *prefix)
           }
           if (32 < mask)
               mask = 32;
-#if 0          
+#if 0
           mask = 32-mask;
           mask += (128-32);
-#endif          
+#endif
       } else if (0 < inet_pton(AF_INET6, line, &ip_addr6)) {
           this_ip.addr = ip_addr6;
       } else {
@@ -280,7 +280,7 @@ static int parse_ips(char *ipsline, GSList **ip_list, char *prefix)
       memset(&this_ip.netmask, 0, sizeof(this_ip.netmask));
       p_netmask = &this_ip.netmask.s6_addr32[0];
       for (; 32 < mask; mask -= 32) {
-          *p_netmask = 0xffffffff; 
+          *p_netmask = 0xffffffff;
           p_netmask++;
       }
       for (n = 0 ; n < (int)mask ; n++) {
@@ -308,11 +308,11 @@ static int parse_ips(char *ipsline, GSList **ip_list, char *prefix)
               && inet_ntop(PF_INET6, &this_ip_copy->netmask, mask_ascii, sizeof(mask_ascii)) != NULL)
           {
               log_message(VERBOSE_DEBUG, AREA_MAIN,
-                      "%s Adding IP = %s, netmask = %s", 
+                      "%s Adding IP = %s, netmask = %s",
                       prefix, addr_ascii, mask_ascii);
           }
       }
-#endif      
+#endif
   }
   g_strfreev(ip_items);
   return 0;
@@ -537,7 +537,7 @@ static int read_acl_list(struct plaintext_params* params)
       /*  Ok.  Let's study the key/value we've found, now. */
       if (!strcasecmp("decision", p_key)) {                     /*  Decision */
           unsigned int decis = atoi(p_value);
-          
+
           switch (decis){
               case DECISION_ACCEPT:
                   newacl->decision = DECISION_ACCEPT;
@@ -811,8 +811,8 @@ G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
 
   /* free config struct */
   free_confparams(plaintext_nuauth_vars,sizeof(plaintext_nuauth_vars)/sizeof(confparams));
-  
-  module->params = (gpointer) params; 
+
+  module->params = (gpointer) params;
   return TRUE;
 }
 
@@ -901,7 +901,7 @@ G_MODULE_EXPORT int user_check(const char *username, const char *clientpass,
   return SASL_OK;
 }
 
-G_MODULE_EXPORT uint32_t  get_user_id(const char *username,gpointer params) 
+G_MODULE_EXPORT uint32_t  get_user_id(const char *username,gpointer params)
 {
   GSList *res;
   int initstatus;
@@ -1013,7 +1013,7 @@ G_MODULE_EXPORT GSList* acl_check(connection_t* element,gpointer params)
                   if (GPOINTER_TO_INT(sl_type->data) == netdata->type) {
                       found = 1;
                       break;
-                  } 
+                  }
               }
               if (!found)
                   continue;
