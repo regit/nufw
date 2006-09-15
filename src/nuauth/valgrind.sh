@@ -13,10 +13,14 @@ function stop_valgrind
 {
     echo "NuAuth in Valgrind stopped with CTRL+C"
     echo "Output written in file $LOG"
-}    
+}
 
 trap stop_valgrind SIGINT SIGTERM
-    
+
+# glib don't use slices, use classic malloc() instead
+# so Valgrind is able to match memory leaks
+export G_SLICE=always-malloc
+
 # Some interesting options:
 #    --gen-suppressions=yes
 #    --gen-suppressions=yes \
