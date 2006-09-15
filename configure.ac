@@ -33,7 +33,7 @@ AC_CHECK_MEMBER([struct dirent.d_type],
 
 # Checks for libraries.
 
-AC_CHECK_LIB([pthread], [pthread_mutex_init])
+AC_CHECK_LIB([pthread], [pthread_mutex_init],, check_pthread=no)
 
 # Checks for header files.
 AC_HEADER_STDC
@@ -47,9 +47,9 @@ AC_FUNC_MALLOC
 AC_FUNC_STAT
 AC_CHECK_FUNCS([gethostbyname memset socket strcasecmp strspn])
 
-AC_CHECK_LIB([gcrypt], [gcry_md_open],AC_DEFINE([HAVE_LIBRARY_GCRYPT],[1],[Gcrypt lib flag]),AC_MSG_ERROR([gcrypt library needed for encryption]),[-L/usr/local/lib])
-AC_CHECK_LIB([gnutls], [gnutls_init],AC_DEFINE([HAVE_LIBRARY_GNUTLS],[1],[Gnutls lib flag]),AC_MSG_ERROR([gnutls library needed for encryption]))
-AC_CHECK_LIB([sasl2],[sasl_server_init],AC_DEFINE([HAVE_LIBRARY_SASL2],[1],[SASL lib flag]),AC_MSG_ERROR([sasl library needed for authentication]))
+AC_CHECK_LIB([gcrypt], [gcry_md_open],AC_DEFINE([HAVE_LIBRARY_GCRYPT],[1],[Gcrypt lib flag]), check_gcrypt=no,[-L/usr/local/lib])
+AC_CHECK_LIB([gnutls], [gnutls_init],AC_DEFINE([HAVE_LIBRARY_GNUTLS],[1],[Gnutls lib flag]), check_gnutls=no)
+AC_CHECK_LIB([sasl2],[sasl_server_init],AC_DEFINE([HAVE_LIBRARY_SASL2],[1],[SASL lib flag]), check_sasl=no)
 
 #Configure database support, depending on user input
 AC_ARG_WITH(prelude-log,
@@ -90,24 +90,24 @@ AC_ARG_WITH(perf-display,
 
 if test "${build_nuauth}" = "yes"; then
         # glib stuff
-        AM_PATH_GLIB_2_0(2.4.0, , AC_MSG_ERROR([glib is required in order to compile nuauth]),[gthread gmodule])
+        AM_PATH_GLIB_2_0(2.4.0, , check_glib=no,[gthread gmodule])
         if test "$enable_system_auth" = "yes"; then
-                AC_CHECK_LIB([pam],[pam_start],AC_DEFINE([HAVE_LIBRARY_PAM],[1],[pam lib flag]),AC_MSG_ERROR([PAM library needed for system authentication]))
+                AC_CHECK_LIB([pam],[pam_start],AC_DEFINE([HAVE_LIBRARY_PAM],[1],[pam lib flag]), check_pam=no)
         fi
 
         if test "${ldap}" = "yes"; then
-                 AC_CHECK_LIB([ldap],[ldap_simple_bind_s],AC_DEFINE([HAVE_LIBRARY_LDAP],[1],[ldap lib flag]),AC_MSG_ERROR([ldap library needed for authentication]))
+                 AC_CHECK_LIB([ldap],[ldap_simple_bind_s],AC_DEFINE([HAVE_LIBRARY_LDAP],[1],[ldap lib flag]), check_ldap=no)
         fi
 
         if test "$enable_mysql_log" = "yes"; then
 			if which mysql_config 1>/dev/null; then
-				AC_CHECK_LIB([mysqlclient],[mysql_real_connect],AC_DEFINE([HAVE_LIBRARY_MYSQLCLIENT],[1],[mysql lib flag] )  ,AC_MSG_ERROR([mysqlclient library needed if selected]),[$(mysql_config --libs)])
+				AC_CHECK_LIB([mysqlclient],[mysql_real_connect],AC_DEFINE([HAVE_LIBRARY_MYSQLCLIENT],[1],[mysql lib flag] )  , check_mysql=no,[$(mysql_config --libs)])
                 		AC_CHECK_LIB([mysqlclient],[mysql_ssl_set],AC_DEFINE_UNQUOTED([HAVE_MYSQL_SSL],[1],[Will compile mysql log module with ssl support]),AC_MSG_NOTICE([mysqlclient has no ssl support]),[$(mysql_config --libs)])
 				have_mysql_config="yes"
 			else
-                		AC_CHECK_LIB([mysqlclient],[mysql_real_connect],AC_DEFINE([HAVE_LIBRARY_MYSQLCLIENT],[1],[mysql lib flag] )  ,AC_MSG_ERROR([mysqlclient library needed if selected]))
+                		AC_CHECK_LIB([mysqlclient],[mysql_real_connect],AC_DEFINE([HAVE_LIBRARY_MYSQLCLIENT],[1],[mysql lib flag] ), check_mysql=no)
                 		AC_CHECK_LIB([mysqlclient],[mysql_ssl_set],AC_DEFINE_UNQUOTED([HAVE_MYSQL_SSL],[1],[Will compile mysql log module with ssl support]),AC_MSG_NOTICE([mysqlclient has no ssl support]))
-		fi
+		    fi
         fi
 
         if test "$enable_prelude_log" = "yes"; then
@@ -118,19 +118,18 @@ if test "${build_nuauth}" = "yes"; then
                 OLDCPPFLAGS="$CPPFLAGS"
                 CFLAGS="$CFLAGS -I/usr/include/libprelude/"
                 CPPFLAGS="$CFLAGS -I/usr/include/libprelude/"
-                AC_CHECK_HEADER(prelude.h,,
-                        AC_MSG_ERROR([libprelude headers are missing]))
+                AC_CHECK_HEADER(prelude.h,, check_prelude=no)
 
                 # Check for prelude_init() function libprelude.so
                 AC_CHECK_LIB([prelude],[prelude_init],
                         AC_DEFINE([HAVE_LIBRARY_PRELUDE],[1],[prelude library flag]),
-                        AC_MSG_ERROR([libprelude library needed if Prelude logging selected]))
+                        check_prelude=no)
                 CFLAGS="$OLDCFLAGS"
                 CPPFLAGS="$OLDCPPFLAGS"
         fi
 
         if test "$enable_pgsql_log" = "yes"; then
-                AC_CHECK_LIB([pq],[PQconnectdb],AC_DEFINE([HAVE_LIBRARY_PQ],[1],[pgsql lib flag] )   ,AC_MSG_ERROR([libpq library needed if PostgreSQL support selected]))
+                AC_CHECK_LIB([pq],[PQconnectdb],AC_DEFINE([HAVE_LIBRARY_PQ],[1],[pgsql lib flag]), check_pgsql=no)
         fi
 fi
 
@@ -147,14 +146,13 @@ AM_CONDITIONAL(USE_SYSLOG_LOG, test x$enable_syslog_log = xyes)
 
 AM_CONDITIONAL(HAVE_NFQUEUE,test x$have_nfqueue = xyes)
 if test "${build_nufw}" = "yes"; then
-if test "${use_nfqueue}" = "yes"; then
+    if test "${use_nfqueue}" = "yes"; then
         # if we don't have we can't build nufw
-	AC_CHECK_LIB([nfnetlink], [nfnl_open], have_nfqueue="yes", build_nufw="")
-	AC_CHECK_LIB([netfilter_queue], [nfq_open], have_nfqueue="yes", have_nfqueue="",[-lnfnetlink])
-	AC_CHECK_LIB([netfilter_queue], [nfq_set_queue_maxlen],AC_DEFINE_UNQUOTED([HAVE_QUEUE_MAXLEN],[1],[Found queue max length support in netfilter_queue]) ,,[-lnfnetlink])
-	AC_DEFINE_UNQUOTED([USE_NFQUEUE],[1],[Will use netlink queue support instead of libipq])
-else
-
+        AC_CHECK_LIB([nfnetlink], [nfnl_open], have_nfqueue="yes", build_nufw="")
+        AC_CHECK_LIB([netfilter_queue], [nfq_open], have_nfqueue="yes", have_nfqueue="",[-lnfnetlink])
+        AC_CHECK_LIB([netfilter_queue], [nfq_set_queue_maxlen],AC_DEFINE_UNQUOTED([HAVE_QUEUE_MAXLEN],[1],[Found queue max length support in netfilter_queue]) ,,[-lnfnetlink])
+        AC_DEFINE_UNQUOTED([USE_NFQUEUE],[1],[Will use netlink queue support instead of libipq])
+    else
         AC_CHECK_HEADERS([libipq/libipq.h libipq.h])
         # if we don't have we can't build nufw
         AC_CHECK_LIB([ipq], [ipq_message_type], have_ipq="yes", build_nufw="")
@@ -167,7 +165,7 @@ else
                         AC_CHECK_LIB([ipq], [ipq_set_vwmark],AC_DEFINE_UNQUOTED([HAVE_LIBIPQ_MARK],[1],[libipq has support for mark]),AC_MSG_RESULT([libipq has no support for mark]))
                 fi
         fi
-fi
+    fi
 fi
 
 if test "${use_nfconntrack}" = "yes"; then
@@ -184,8 +182,8 @@ if test "${have_conntrack}" = "yes"; then
 fi
 
 if test "${build_pam_nufw}" = "yes"; then
-    #AC_CHECK_LIB([pam], [pam_sm_authenticate],AC_DEFINE([HAVE_LIBRARY_PAM],[1],[Pam lib flag]),AC_MSG_ERROR([pam library needed for pam module]))
-    AC_CHECK_LIB([pam],[pam_start],AC_DEFINE([HAVE_LIBRARY_PAM],[1],[pam lib flag]),AC_MSG_ERROR([PAM library needed for pam module]))
+    #AC_CHECK_LIB([pam], [pam_sm_authenticate],AC_DEFINE([HAVE_LIBRARY_PAM],[1],[Pam lib flag]), check_pam=no)
+    AC_CHECK_LIB([pam],[pam_start],AC_DEFINE([HAVE_LIBRARY_PAM],[1],[pam lib flag]), check_pam=no)
 fi
 
 AM_CONDITIONAL(BUILD_NUFW, test x${build_nufw} = xyes)
@@ -253,6 +251,53 @@ AC_CONFIG_FILES([Makefile
         src/nufw/Makefile
         src/support/Makefile
 ])
+
+# Display errors if any library is missing
+if test \
+       x${check_sasl} = xno \
+    -o x${check_pthread} = xno \
+    -o x${check_glib} = xno \
+    -o x${check_mysql} = xno \
+    -o x${check_pgsql} = xno \
+    -o x${check_prelude} = xno \
+    -o x${check_ldap} = xno \
+    -o x${check_gcrypt} = xno \
+    -o x${check_gnutls} = xno \
+    -o x${check_pam} = xno \
+; then
+    AC_MSG_RESULT([])
+    if test x${check_pthread} = xno; then
+        AC_MSG_RESULT([ERROR: pthread library needed])
+    fi
+    if test x${check_sasl} = xno; then
+        AC_MSG_RESULT([ERROR: sasl library needed for authentication])
+    fi
+    if test x${check_gcrypt} = xno; then
+        AC_MSG_RESULT([ERROR: gcrypt library needed for encryption])
+    fi
+    if test x${check_pam} = xno; then
+        AC_MSG_RESULT([ERROR: PAM library needed for system authentication])
+    fi
+    if test x${check_gnutls} = xno; then
+        AC_MSG_RESULT([ERROR: gnutls library needed for encryption])
+    fi
+    if test x${check_ldap} = xno; then
+        AC_MSG_RESULT([ERROR: ldap library needed for authentication])
+    fi
+    if test x${check_glib} = xno; then
+        AC_MSG_RESULT([ERROR: glib is required in order to compile nuauth])
+    fi
+    if test x${check_mysql} = xno; then
+        AC_MSG_RESULT([ERROR: mysqlclient library needed if selected])
+    fi
+    if test x${check_prelude} = xno; then
+        AC_MSG_RESULT([ERROR: libprelude library needed if Prelude logging selected])
+    fi
+    if test x${check_pgsql} = xno; then
+        AC_MSG_ERROR([libpq library needed if PostgreSQL support selected])
+    fi
+    exit 1
+fi
 
 AM_INIT_AUTOMAKE(1.9)
 
