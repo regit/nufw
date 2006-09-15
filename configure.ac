@@ -9,7 +9,6 @@ AC_CONFIG_SRCDIR([src/nufw/main.c])
 # Checks for programs.
 AC_PROG_CC
 
-AC_PROG_LIBTOOL
 AM_PROG_LIBTOOL
 AC_PROG_INSTALL
 
