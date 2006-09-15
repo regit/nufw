@@ -510,6 +510,10 @@ void configure_app(int argc, char **argv)
     (void)chdir("/");
 #endif
 
+#ifdef DEBUG_MEMORY
+    g_mem_set_vtable(glib_mem_profiler_table);
+#endif
+
     /* Initialize glib thread system */
     g_thread_init(NULL);
     g_thread_pool_set_max_unused_threads (5);
