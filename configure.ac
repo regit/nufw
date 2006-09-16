@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
-AC_INIT(NuFW, 2.1.0, nufw-devel@nongnu.org)
+AC_INIT(NuFW, 2.1.1, nufw-devel@nongnu.org)
 AM_CONFIG_HEADER(src/include/config.h)
 AC_CONFIG_SRCDIR([src/nufw/main.c])
 
@@ -248,7 +248,6 @@ AC_CONFIG_FILES([Makefile
         src/clients/nutcpc/Makefile
         src/clients/pam_nufw/Makefile
         src/nufw/Makefile
-        src/support/Makefile
 ])
 
 # Display errors if any library is missing
