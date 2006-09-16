@@ -1,7 +1,9 @@
 /*
- ** Copyright(C) 2003-2005 Eric Leblond <regit@inl.fr>
- **		     Vincent Deffontaines <vincent@gryzor.com>
- **                  INL http://www.inl.fr/
+ ** Copyright(C) 2003-2006, INL
+ **          written by Eric Leblond <regit@inl.fr>
+ **		                Vincent Deffontaines <vincent@gryzor.com>
+ **
+ **    INL http://www.inl.fr/
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -31,7 +33,7 @@
  * \file cache.c
  * \brief Generic cache system
  *
- * A implementation of a generic cache system
+ * An implementation of a generic cache system
  */
 
 void free_cache_elt(gpointer data,gpointer userdata)
@@ -174,17 +176,20 @@ void cache_free_message(struct cache_init_datas *cache_datas,
             compare_cache_datas);
     struct cache_datas *data = (struct cache_datas *)concerned_datas->data;
 
-    if (concerned_datas == NULL) return;
+	if (concerned_datas == NULL){
+		return;
+	}
+
 
     if (data->usage == 1){
-        /* if it is not actual element, we delete it */
+        /* if it is not first element (thus more recent) , we delete it */
         if (concerned_datas != cache_datas_list){
             /* free datas */
             cache_datas->delete_elt(data->datas, NULL);
             g_free(data);
             return_list->datas  = g_slist_delete_link(return_list->datas,concerned_datas);
         } else {
-            /* it's actual element, we do anything but decrease usage */
+            /* it's the most recent element, we do anything but decrease usage */
             data->usage = 0;
         }
     } else {
@@ -205,7 +210,7 @@ void cache_refresh(struct cache_init_datas *cache_datas,
 
     /* update NULL element waiting for completion */
     elt->datas = message->datas;
-    elt->usage=1;
+    elt->usage = 1;
     /* answer to waiting thread */
     for (p_local_queue = *local_queue;p_local_queue;p_local_queue = p_local_queue->next){
         struct cache_message* datas = (struct cache_message*)(p_local_queue->data);
@@ -214,11 +219,12 @@ void cache_refresh(struct cache_init_datas *cache_datas,
             g_async_queue_push(datas->reply_queue,
                     message->datas);
             elt->usage++;
-            /*remove  message */
+            /* set data to NULL to initiate message removal */
             p_local_queue->data=NULL;
         }
     }
 
+    /* remove message with data equal to NULL */
     *local_queue = g_slist_remove_all(*local_queue, NULL);
     return_list->datas = g_slist_prepend(return_list->datas,elt);
     return_list->refreshing = FALSE;
