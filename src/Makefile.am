@@ -1,5 +1,5 @@
 if BUILD_NUAUTH
-SUBDIRS = nuauth nufw clients support
+SUBDIRS = nuauth nufw clients
 else
-SUBDIRS = nufw clients support
+SUBDIRS = nufw clients
 endif
