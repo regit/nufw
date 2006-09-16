@@ -651,8 +651,8 @@ void init_nuauthdatas()
                 NULL);
 
     /* init private datas for pool thread */
-    nuauthdatas->aclqueue = g_private_new(g_free);
-    nuauthdatas->userqueue = g_private_new(g_free);
+    nuauthdatas->aclqueue = g_private_new((GDestroyNotify)g_async_queue_unref);
+    nuauthdatas->userqueue = g_private_new((GDestroyNotify)g_async_queue_unref);
 
     /* create thread for search_and_fill thread */
     log_message (VERBOSE_DEBUG, AREA_MAIN, "Creating search_and_fill thread");
