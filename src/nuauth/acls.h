@@ -23,7 +23,7 @@
 int init_acl_cache();
 
 void free_acl_cache(gpointer datas);
-void free_acl_groups(GList *acl_groups, gpointer uda);
+void free_acl_groups(GSList *acl_groups, gpointer uda);
 void free_acl_key(gpointer datas);
 gboolean compare_acls(gconstpointer tracking_hdrs1, gconstpointer tracking_hdrs2);
 

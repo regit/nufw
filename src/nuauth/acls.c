@@ -180,7 +180,7 @@ void free_one_acl_group(struct acl_group *acl, gpointer userdata)
 	}
 }
 
-void free_acl_groups(GList *acl_groups, gpointer userdata)
+void free_acl_groups(GSList *acl_groups, gpointer userdata)
 {
     g_slist_foreach(acl_groups,(GFunc) free_one_acl_group, NULL);
     g_slist_free(acl_groups);

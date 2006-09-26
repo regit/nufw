@@ -309,7 +309,7 @@ void free_connection(connection_t *conn)
     /*
      * tell cache we don't use the ressource anymore
      */
-    if (conn->acl_groups)
+    if (conn->acl_groups) {
         if (nuauthconf->acl_cache) {
             struct cache_message * message=g_new0(struct cache_message,1);
             debug_log_message (VERBOSE_DEBUG, AREA_MAIN,
