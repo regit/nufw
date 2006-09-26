@@ -174,11 +174,12 @@ void cache_free_message(struct cache_init_datas *cache_datas,
     GSList* concerned_datas = g_slist_find_custom (cache_datas_list,
             message->datas,
             compare_cache_datas);
-    struct cache_datas *data = (struct cache_datas *)concerned_datas->data;
+    struct cache_datas *data;
 
 	if (concerned_datas == NULL){
 		return;
 	}
+    data = (struct cache_datas *)concerned_datas->data;
 
 
     if (data->usage == 1){
