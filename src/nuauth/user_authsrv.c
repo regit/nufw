@@ -94,6 +94,7 @@ void user_check_and_decide (gpointer userdata, gpointer data)
           free_connection(conn_elt);
       }
   }
+  g_slist_free(conn_elts);
   free_buffer_read(userdata);
 }
 
