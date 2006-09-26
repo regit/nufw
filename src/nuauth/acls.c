@@ -274,7 +274,7 @@ void get_acls_from_cache (connection_t* conn_elt)
 		struct cache_message * rmessage;
 		/* cache wants an update
 		 * external check of acl */
-		external_acl_groups(conn_elt);
+        conn_elt->acl_groups = modules_acl_check(conn_elt);
 
 		debug_log_message(VERBOSE_DEBUG, AREA_PACKET, "[acl cache] We are about to search entry");
 		rmessage = g_new0(struct cache_message,1);

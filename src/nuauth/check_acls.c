@@ -28,28 +28,6 @@
  */
 
 /**
- * Fill in acl_groups of a connection by calling external module.
- *
- * Argument : a connection
- * Return : 1 if OK, 0 otherwise
- */
-
-int external_acl_groups (connection_t * element){
-  GSList * acl_groups=NULL;
-
-  /* query external authority */
-
-  acl_groups = modules_acl_check(element);
-
-  element->acl_groups=acl_groups;
-  if (acl_groups != NULL){
-	return 1;
-  }
-  return 0;
-}
-
-
-/**
  * (acl_ckeckers function).
  * Treat a connection from insertion to decision
  *
@@ -80,7 +58,7 @@ void acl_check_and_decide (gpointer userdata, gpointer data)
                 if (nuauthconf->acl_cache){
                     get_acls_from_cache(conn_elt);
                 } else {
-                    external_acl_groups(conn_elt);
+                    conn_elt->acl_groups = modules_acl_check(conn_elt);
                 }
                 switch(conn_elt->state){
                     /* packet is coming from hello authentication, sending it back */
