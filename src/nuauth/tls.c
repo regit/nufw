@@ -464,6 +464,7 @@ void* push_worker(GMutex *mutex)
                     if (datas->data){
                         add_client(datas->socket,datas->data);
                     }
+                    g_free(datas);
                 }
                 break;
             default:

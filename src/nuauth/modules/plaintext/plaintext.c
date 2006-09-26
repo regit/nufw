@@ -732,6 +732,8 @@ G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
       /*  Free acl list */
       if (params->plaintext_acllist) {
           GSList *p_acllist;
+          GSList *p_app;
+          GSList *p_os;
           struct T_plaintext_acl *p_acl;
 
           debug_log_message(VERBOSE_DEBUG, AREA_MAIN, "Freeing ACLs");
@@ -741,20 +743,27 @@ G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
                   p_acllist = g_slist_next(p_acllist)) {
               p_acl = (struct T_plaintext_acl*) p_acllist->data;
               g_free(p_acl->aclname);
+              g_free(p_acl->period);
               if (p_acl->groups)
                   g_slist_free(p_acl->groups);
-              /*  Let's free each appname(/appmd5) */
-              if (p_acl->apps) {
-                  GSList *p_app = p_acl->apps;
-                  for ( ; p_app ; p_app = g_slist_next(p_app)) {
-                      /*  Free AppName string */
-                      g_free(((struct T_app*)p_app->data)->appname);
-                      /*  Free MD5 string if there is one */
-                      if (((struct T_app*)p_app->data)->appmd5)
-                          g_free(((struct T_app*)p_app->data)->appmd5);
-                  }
-                  g_slist_free(p_acl->apps);
+
+              /*  Let's free app attributes */
+              for (p_app = p_acl->apps; p_app != NULL; p_app = g_slist_next(p_app)) {
+                  struct T_app* app = (struct T_app*)(p_app->data);
+                  g_free(app->appname);
+                  g_free(app->appmd5);
               }
+              g_slist_free(p_acl->apps);
+
+              /*  Let's free os attributes */
+              for (p_os = p_acl->os; p_os != NULL; p_os = g_slist_next(p_os)) {
+                  struct T_os* os = (struct T_os*)(p_os->data);
+                  g_free(os->version);
+                  g_free(os->release);
+                  g_free(os->sysname);
+              }
+              g_slist_free(p_acl->os);
+
               /*  Free Src IPs */
               if (p_acl->src_ip)
                   g_slist_free(p_acl->src_ip);

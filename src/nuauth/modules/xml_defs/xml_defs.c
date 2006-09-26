@@ -230,15 +230,10 @@ G_MODULE_EXPORT void define_periods(GHashTable* periods,gpointer params_p)
 
 	context = g_markup_parse_context_new(&period_parser, 0, curcontext, NULL);
 
-	if(!g_markup_parse_context_parse(context, contents, length, NULL)) {
-		g_markup_parse_context_free(context);
-		g_free(contents);
-        g_free(curcontext);
-		return;
-	}
+    (void)g_markup_parse_context_parse(context, contents, length, NULL);
+    g_markup_parse_context_free(context);
+    g_free(contents);
     g_free(curcontext);
-
-    return;
 }
 
 /** @} */
