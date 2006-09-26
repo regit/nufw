@@ -704,80 +704,91 @@ static int read_acl_list(struct plaintext_params* params)
   return 0;
 }
 
-G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
+G_MODULE_EXPORT gboolean unload_module_with_params(struct plaintext_params* params)
 {
-  struct plaintext_params* params=(struct plaintext_params*)params_p;
-  /*  Free user list */
-  if (params){
-      if (params->plaintext_userlist) {
-          GSList *p_userlist;
-          struct T_plaintext_user *p_user;
-
-          debug_log_message(VERBOSE_DEBUG, AREA_MAIN, "Freeing users list");
-
-          /*  Let's free each node separately */
-          for (p_userlist = params->plaintext_userlist ; p_userlist ;
-                  p_userlist = g_slist_next(p_userlist)) {
-              p_user = (struct T_plaintext_user*) p_userlist->data;
-              g_free(p_user->passwd);
-              g_free(p_user->username);
-              if (p_user->groups)
-                  g_slist_free(p_user->groups);
-          }
-          /*  Now we can free the list */
-          g_slist_free(params->plaintext_userlist);
-      }
-
-      /*  Free acl list */
-      if (params->plaintext_acllist) {
-          GSList *p_acllist;
-          GSList *p_app;
-          GSList *p_os;
-          struct T_plaintext_acl *p_acl;
-
-          debug_log_message(VERBOSE_DEBUG, AREA_MAIN, "Freeing ACLs");
-
-          /*  Let's free each node separately */
-          for (p_acllist = params->plaintext_acllist ; p_acllist ;
-                  p_acllist = g_slist_next(p_acllist)) {
-              p_acl = (struct T_plaintext_acl*) p_acllist->data;
-              g_free(p_acl->aclname);
-              g_free(p_acl->period);
-              if (p_acl->groups)
-                  g_slist_free(p_acl->groups);
-
-              /*  Let's free app attributes */
-              for (p_app = p_acl->apps; p_app != NULL; p_app = g_slist_next(p_app)) {
-                  struct T_app* app = (struct T_app*)(p_app->data);
-                  g_free(app->appname);
-                  g_free(app->appmd5);
-              }
-              g_slist_free(p_acl->apps);
-
-              /*  Let's free os attributes */
-              for (p_os = p_acl->os; p_os != NULL; p_os = g_slist_next(p_os)) {
-                  struct T_os* os = (struct T_os*)(p_os->data);
-                  g_free(os->version);
-                  g_free(os->release);
-                  g_free(os->sysname);
-              }
-              g_slist_free(p_acl->os);
-
-              /* Free IP and port lists */
-              g_slist_free(p_acl->src_ip);
-              g_slist_free(p_acl->dst_ip);
-              g_slist_free(p_acl->src_ports);
-              g_slist_free(p_acl->dst_ports);
-              g_free(p_acl);
-          }
-          /*  Now we can free the list */
-          g_slist_free(params->plaintext_acllist);
-          params->plaintext_acllist = NULL;
-      }
-      g_free(params->plaintext_userfile);
-      g_free(params->plaintext_aclfile);
-      g_free(params);
+  if (!params){
+      return TRUE;
   }
+
+  if (params->plaintext_userlist)
+  {
+      GSList *p_userlist;
+      struct T_plaintext_user *p_user;
+
+      debug_log_message(VERBOSE_DEBUG, AREA_MAIN, "Freeing users list");
+
+      /*  Let's free each node separately */
+      for (p_userlist = params->plaintext_userlist ; p_userlist ;
+              p_userlist = g_slist_next(p_userlist)) {
+          p_user = (struct T_plaintext_user*) p_userlist->data;
+          g_free(p_user->passwd);
+          g_free(p_user->username);
+          if (p_user->groups)
+              g_slist_free(p_user->groups);
+      }
+      /*  Now we can free the list */
+      g_slist_free(params->plaintext_userlist);
+  }
+
+  /*  Free acl list */
+  if (params->plaintext_acllist)
+  {
+      GSList *p_acllist;
+      GSList *p_app;
+      GSList *p_os;
+      GSList *p_ip;
+      struct T_plaintext_acl *p_acl;
+
+      debug_log_message(VERBOSE_DEBUG, AREA_MAIN, "Freeing ACLs");
+
+      /*  Let's free each node separately */
+      for (p_acllist = params->plaintext_acllist ; p_acllist ;
+              p_acllist = g_slist_next(p_acllist))
+      {
+          p_acl = (struct T_plaintext_acl*) p_acllist->data;
+
+          /*  Let's free app attributes */
+          for (p_app = p_acl->apps; p_app != NULL; p_app = g_slist_next(p_app)) {
+              struct T_app* app = p_app->data;
+              g_free(app->appname);
+              g_free(app->appmd5);
+              g_free(app);
+          }
+          /*  Free OS attributes */
+          for (p_os = p_acl->os; p_os != NULL; p_os = g_slist_next(p_os)) {
+              struct T_os* os = p_os->data;
+              g_free(os->version);
+              g_free(os->release);
+              g_free(os->sysname);
+              g_free(os);
+          }
+          /*  Free IPs */
+          p_ip = p_acl->src_ip;
+          for (; p_ip != NULL; p_ip = g_slist_next(p_ip)) {
+              g_free(p_ip->data);
+          }
+          p_ip = p_acl->dst_ip;
+          for (; p_ip != NULL; p_ip = g_slist_next(p_ip)) {
+              g_free(p_ip->data);
+          }
+          g_slist_free(p_acl->apps);
+          g_slist_free(p_acl->os);
+          g_slist_free(p_acl->types);
+          g_slist_free(p_acl->src_ip);
+          g_slist_free(p_acl->dst_ip);
+          g_slist_free(p_acl->src_ports);
+          g_slist_free(p_acl->dst_ports);
+          g_slist_free(p_acl->groups);
+          g_free(p_acl->aclname);
+          g_free(p_acl->period);
+          g_free(p_acl);
+      }
+      /*  Now we can free the list */
+      g_slist_free(params->plaintext_acllist);
+  }
+  g_free(params->plaintext_userfile);
+  g_free(params->plaintext_aclfile);
+  g_free(params);
   return TRUE;
 }
 

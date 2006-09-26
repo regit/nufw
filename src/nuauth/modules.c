@@ -544,6 +544,7 @@ void unload_modules()
 
     for(c_module=nuauthdatas->modules;c_module;c_module=c_module->next) {
         free_module_t((module_t *)c_module->data);
+        g_free(c_module->data);
     }
     g_slist_free(nuauthdatas->modules);
     nuauthdatas->modules=NULL;
