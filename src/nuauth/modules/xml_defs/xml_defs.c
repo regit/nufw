@@ -210,30 +210,28 @@ static GMarkupParser period_parser = {
  *
  * \remark The conflict between period definition (with same name) is not resolved.
  */
-G_MODULE_EXPORT void define_periods(GHashTable* periods,gpointer params_p)
+G_MODULE_EXPORT void define_periods(GHashTable* periods, struct xml_defs_params* params)
 {
-	GMarkupParseContext *context;
-    struct xml_defs_params* params=(struct xml_defs_params *) params_p;
 	gchar *contents = NULL;
-	gsize length;
 	GError *error = NULL;
-    struct xml_period_context * curcontext=g_new0(struct xml_period_context,1);
+	gsize length;
 
+    if (g_file_get_contents(params->xml_defs_periodfile, &contents, &length, &error)) {
+        GMarkupParseContext *context;
+        struct xml_period_context *curcontext;
 
-    curcontext->periods=periods;
-    if (!g_file_get_contents(params->xml_defs_periodfile, &contents, &length, &error)) {
+        curcontext = g_new0(struct xml_period_context,1);
+        curcontext -> periods = periods;
+        context = g_markup_parse_context_new(&period_parser, 0, curcontext, NULL);
+        (void)g_markup_parse_context_parse(context, contents, length, NULL);
+        g_markup_parse_context_free(context);
+        g_free(curcontext);
+    } else {
         log_message(SERIOUS_WARNING, AREA_MAIN,"Error reading period: %s",
                 error->message);
-        g_error_free(error);
-        return;
     }
-
-	context = g_markup_parse_context_new(&period_parser, 0, curcontext, NULL);
-
-    (void)g_markup_parse_context_parse(context, contents, length, NULL);
-    g_markup_parse_context_free(context);
+    g_error_free(error);
     g_free(contents);
-    g_free(curcontext);
 }
 
 /** @} */
