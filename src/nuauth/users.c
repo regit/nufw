@@ -121,12 +121,12 @@ void get_users_from_cache (connection_t* conn_elt)
 		/* reply to the cache */
 		g_async_queue_push(nuauthdatas->user_cache->queue,rmessage);
 		/* fill connection datas */
-		conn_elt->user_groups = g_slist_copy(userdatas->groups);
+		conn_elt->user_groups = userdatas->groups;
 		conn_elt->mark=userdatas->uid;
 		conn_elt->cacheduserdatas=userdatas;
 	} else {
 		debug_log_message(VERBOSE_DEBUG, AREA_PACKET, "[user cache] cache call succedeed");
-		conn_elt->user_groups = g_slist_copy(conn_elt->cacheduserdatas->groups);
+		conn_elt->user_groups = conn_elt->cacheduserdatas->groups;
 		conn_elt->mark=(conn_elt->cacheduserdatas)->uid;
 
 		g_atomic_int_inc(&(myaudit->cache_hit_nb));
