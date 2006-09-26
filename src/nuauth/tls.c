@@ -356,13 +356,9 @@ void create_x509_credentials()
 	    g_message("TLS require cert from client");
     }
 #endif
-    if (nuauth_tls_key){
 	g_free(nuauth_tls_key);
-    }
-
-    if (nuauth_tls_cert){
 	g_free(nuauth_tls_cert);
-    }
+    g_free(nuauth_tls_cacert);
 
     if (nuauth_tls_crl){
 	log_message (VERBOSE_DEBUG, AREA_USER,
