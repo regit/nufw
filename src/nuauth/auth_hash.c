@@ -18,7 +18,6 @@ void search_and_fill_catchall(connection_t *new, connection_t *packet)
         g_warning("%s:%d Should not have this. Please email Nufw developpers!",__FILE__,__LINE__);
         g_message("state of new packet: %d, state of existring packet: %d",new->state, packet->state);
     }
-    free_connection(new);
 }
 
 /**
@@ -117,7 +116,6 @@ inline void search_and_fill_complete_of_authreq(connection_t *new, connection_t 
             debug_log_message (DEBUG, AREA_MAIN, "Complete authreq: Adding a packet_id to a connection");
             packet->packet_id =
                 g_slist_prepend(packet->packet_id, GINT_TO_POINTER((new->packet_id)->data));
-            free_connection(new);
             break;
 
         case AUTH_STATE_USERPCKT:
@@ -140,11 +138,12 @@ inline void search_and_fill_complete_of_authreq(connection_t *new, connection_t 
             packet->cacheduserdatas = new->cacheduserdatas;
 
             g_thread_pool_push (nuauthdatas->acl_checkers, new, NULL);
-            break;
+            return; /* don't free new connection */
 
         default:
             search_and_fill_catchall(new, packet);
     }
+    free_connection(new);
 }
 
 /**
@@ -177,17 +176,17 @@ inline void search_and_fill_complete_of_userpckt(connection_t *new, connection_t
             packet->packet_id = new->packet_id;
             packet->socket = new->socket;
             packet->tls = new->tls;
-            break;
+            return; /* don't free connection */
 
         case AUTH_STATE_USERPCKT:
             debug_log_message (VERBOSE_DEBUG, AREA_MAIN,
                     "Complete user packet: Found a duplicate user packet");
-            free_connection(new);
             break;
 
         default:
             search_and_fill_catchall(new, packet);
     }
+    free_connection(new);
 }
 
 inline void search_and_fill_done(connection_t *new, connection_t *packet)
@@ -195,21 +194,18 @@ inline void search_and_fill_done(connection_t *new, connection_t *packet)
     /* if new is a nufw request respond with correct decision */
     switch (new->state){
         case AUTH_STATE_AUTHREQ:
-            {
-                g_slist_foreach(new->packet_id,
-                        (GFunc) send_auth_response,
-                        packet);
-                free_connection(new);
-                break;
-            }
+            g_slist_foreach(new->packet_id,
+                    (GFunc) send_auth_response,
+                    packet);
+            break;
 
         case AUTH_STATE_USERPCKT:
-            free_connection(new);
             break;
 
         default:
             search_and_fill_catchall(new, packet);
     }
+    free_connection(new);
 }
 
 inline void search_and_fill_completing(connection_t *new, connection_t *packet)
@@ -220,25 +216,24 @@ inline void search_and_fill_completing(connection_t *new, connection_t *packet)
             packet->acl_groups = new->acl_groups;
             g_free(new);
             packet->state = AUTH_STATE_READY;
-            take_decision(packet,PACKET_IN_HASH);
-            break;
+            take_decision(packet, PACKET_IN_HASH);
+            return;
 
         case  AUTH_STATE_AUTHREQ:
             debug_log_message (DEBUG, AREA_MAIN,
                     "Completing (auth): Adding a packet_id to a completing connection");
             packet->packet_id =
                 g_slist_prepend(packet->packet_id, GINT_TO_POINTER((new->packet_id)->data));
-            free_connection(new);
             break;
 
         case AUTH_STATE_USERPCKT:
             log_message (DEBUG, AREA_MAIN, "Completing (user): User packet in state completing");
-            free_connection(new);
             break;
 
         default:
             search_and_fill_catchall(new, packet);
     }
+    free_connection(new);
 }
 
 inline void search_and_fill_ready(connection_t *new, connection_t *packet)
@@ -253,18 +248,17 @@ inline void search_and_fill_ready(connection_t *new, connection_t *packet)
                     "seach&fill ready: Adding a packet_id to a connection");
             packet->packet_id =
                 g_slist_prepend(packet->packet_id, GUINT_TO_POINTER((new->packet_id)->data));
-            free_connection(new);
             break;
 
         case AUTH_STATE_USERPCKT:
             debug_log_message (VERBOSE_DEBUG, AREA_MAIN,
                     "seach&fill ready: Need only cleaning");
-            free_connection(new);
             break;
 
         default:
             search_and_fill_catchall(new, packet);
     }
+    free_connection(new);
 }
 
 /**
@@ -300,6 +294,7 @@ void search_and_fill_update(connection_t *new, connection_t *packet)
 
         default:
             search_and_fill_catchall(new, packet);
+            free_connection(new);
     }
 }
 

@@ -309,14 +309,18 @@ void free_connection(connection_t *conn)
     /*
      * tell cache we don't use the ressource anymore
      */
-    if (conn->acl_groups && nuauthconf->acl_cache){
-        struct cache_message * message=g_new0(struct cache_message,1);
-        debug_log_message (VERBOSE_DEBUG, AREA_MAIN,
-                "Sending free to acl cache");
-        message->key=acl_create_and_alloc_key(conn);
-        message->type=FREE_MESSAGE;
-        message->datas=conn->acl_groups;
-        g_async_queue_push(nuauthdatas->acl_cache->queue,message);
+    if (conn->acl_groups)
+        if (nuauthconf->acl_cache) {
+            struct cache_message * message=g_new0(struct cache_message,1);
+            debug_log_message (VERBOSE_DEBUG, AREA_MAIN,
+                    "Sending free to acl cache");
+            message->key=acl_create_and_alloc_key(conn);
+            message->type=FREE_MESSAGE;
+            message->datas=conn->acl_groups;
+            g_async_queue_push(nuauthdatas->acl_cache->queue,message);
+        } else {
+            free_acl_groups(conn->acl_groups, NULL);
+        }
     }
     /* free user group */
     if (conn->cacheduserdatas){

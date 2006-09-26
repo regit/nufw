@@ -171,20 +171,19 @@ void free_acl_key(gpointer datas)
 	g_free(kdatas);
 }
 
-void free_acl_group(gpointer data,gpointer userdata){
-	if (data){
-		g_slist_free(((struct acl_group*)(data))->groups);
-		g_free(((struct acl_group*)(data))->period);
-		g_free(data);
+void free_one_acl_group(struct acl_group *acl, gpointer userdata)
+{
+	if (acl){
+		g_slist_free(acl->groups);
+		g_free(acl->period);
+        g_free(acl);
 	}
 }
 
-
-void free_acl_struct(gpointer data,gpointer userdata){
-	if (data){
-		g_slist_foreach((GSList*)data,(GFunc) free_acl_group,NULL);
-		g_slist_free((GSList*)data);
-	}
+void free_acl_groups(GList *acl_groups, gpointer userdata)
+{
+    g_slist_foreach(acl_groups,(GFunc) free_one_acl_group, NULL);
+    g_slist_free(acl_groups);
 }
 
 /**
@@ -195,7 +194,7 @@ void free_acl_cache(gpointer datas)
 {
 	GSList * dataslist=((struct cache_element *)datas)->datas;
 	if ( dataslist  != NULL ){
-		g_slist_foreach(dataslist,(GFunc) free_cache_elt,free_acl_struct);
+		g_slist_foreach(dataslist,(GFunc) free_cache_elt,free_acl_groups);
 		g_slist_free (dataslist);
 	}
 	g_free(datas);
@@ -304,7 +303,7 @@ int init_acl_cache()
             (GDestroyNotify) free_acl_key,
             (GDestroyNotify) free_acl_cache);
     nuauthdatas->acl_cache->queue=g_async_queue_new();
-    nuauthdatas->acl_cache->delete_elt=free_acl_struct;
+    nuauthdatas->acl_cache->delete_elt=free_acl_groups;
     nuauthdatas->acl_cache->duplicate_key=acl_duplicate_key;
     nuauthdatas->acl_cache->free_key=free_acl_key;
     nuauthdatas->acl_cache->equal_key=compare_acls;
