@@ -726,7 +726,6 @@ G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
           }
           /*  Now we can free the list */
           g_slist_free(params->plaintext_userlist);
-          params->plaintext_userlist = NULL;
       }
 
       /*  Free acl list */
@@ -764,26 +763,21 @@ G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
               }
               g_slist_free(p_acl->os);
 
-              /*  Free Src IPs */
-              if (p_acl->src_ip)
-                  g_slist_free(p_acl->src_ip);
-              /*  Free Dst IPs */
-              if (p_acl->dst_ip)
-                  g_slist_free(p_acl->dst_ip);
-              /*  Free Src ports */
-              if (p_acl->src_ports)
-                  g_slist_free(p_acl->src_ports);
-              /*  Free Dst ports */
-              if (p_acl->dst_ports)
-                  g_slist_free(p_acl->dst_ports);
+              /* Free IP and port lists */
+              g_slist_free(p_acl->src_ip);
+              g_slist_free(p_acl->dst_ip);
+              g_slist_free(p_acl->src_ports);
+              g_slist_free(p_acl->dst_ports);
               g_free(p_acl);
           }
           /*  Now we can free the list */
           g_slist_free(params->plaintext_acllist);
           params->plaintext_acllist = NULL;
       }
+      g_free(params->plaintext_userfile);
+      g_free(params->plaintext_aclfile);
+      g_free(params);
   }
-  g_free(params);
   return TRUE;
 }
 

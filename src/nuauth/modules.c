@@ -438,7 +438,7 @@ int load_modules()
     char *nuauth_get_user_id_module;
     char *nuauth_user_logs_module;
     char *nuauth_user_session_logs_module;
-    char *nuauth_ip_authentication_module;
+    char *nuauth_ip_authentication_module = NULL;
     char *nuauth_periods_module;
     char *nuauth_certificate_check_module;
     char *nuauth_certificate_to_uid_module;
@@ -459,7 +459,9 @@ int load_modules()
     nuauth_user_session_logs_module = (char*)READ_CONF("nuauth_user_session_logs_module");
     nuauth_acl_check_module = (char*)READ_CONF("nuauth_acl_check_module");
     nuauth_periods_module = (char*)READ_CONF("nuauth_periods_module");
-    nuauth_ip_authentication_module = (char*)READ_CONF("nuauth_ip_authentication_module");
+    if (nuauthconf->do_ip_authentication){
+        nuauth_ip_authentication_module = (char*)READ_CONF("nuauth_ip_authentication_module");
+    }
     nuauth_certificate_check_module = (char*)READ_CONF("nuauth_certificate_check_module");
     nuauth_certificate_to_uid_module = (char*)READ_CONF("nuauth_certificate_to_uid_module");
     nuauth_user_session_modify_module = (char*)READ_CONF("nuauth_user_session_modify_module");
