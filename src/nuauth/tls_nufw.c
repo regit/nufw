@@ -158,6 +158,7 @@ void clean_nufw_session(nufw_session_t * c_session)
 
     }
     g_mutex_free(c_session->tls_lock);
+    g_free(c_session);
 
     debug_log_message(VERBOSE_DEBUG, AREA_GW, "close nufw session: done");
 }

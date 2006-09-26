@@ -110,10 +110,10 @@ void add_client(int socket, gpointer datas)
     g_mutex_lock (client_mutex);
 
     g_hash_table_insert(client_conn_hash,GINT_TO_POINTER(socket),datas);
+
     /* need to create entry in ip hash */
     ipsockets = g_hash_table_lookup(client_ip_hash, IPV6_TO_POINTER(&c_session->addr));
     ipsockets = g_slist_prepend(ipsockets,c_session->tls);
-
     g_hash_table_replace (client_ip_hash, IPV6_TO_POINTER(&c_session->addr), ipsockets);
 
     g_mutex_unlock (client_mutex);
@@ -132,12 +132,15 @@ void delete_client_by_socket(int socket)
      */
     session = (user_session_t*)(g_hash_table_lookup(client_conn_hash ,GINT_TO_POINTER(socket)));
     if (session) {
-        /* walk on IP based struct to find the socket */
+        /* destroy entry in IP hash */
         ipsockets = g_hash_table_lookup(client_ip_hash, IPV6_TO_POINTER(&session->addr));
-        /* destroy entry */
-        ipsockets = g_slist_remove(ipsockets , session->tls);
-        /* update hash */
-        g_hash_table_replace (client_ip_hash, IPV6_TO_POINTER(&session->addr), ipsockets);
+        ipsockets = g_slist_remove(ipsockets , session);
+        if (ipsockets != NULL) {
+            g_hash_table_replace (client_ip_hash, IPV6_TO_POINTER(&session->addr), ipsockets);
+        } else {
+            g_hash_table_remove(client_ip_hash, IPV6_TO_POINTER(&session->addr));
+        }
+
         /* remove entry from hash */
         g_hash_table_steal(client_conn_hash,GINT_TO_POINTER(socket));
         log_user_session(session,SESSION_CLOSE);
@@ -237,12 +240,20 @@ char warn_clients(struct msg_addr_set * global_msg)
     }
 }
 
+gboolean hash_delete_client(gpointer key, gpointer value, gpointer userdata)
+{
+    g_slist_free(value);
+    return TRUE;
+}
+
 void close_clients(int signal)
 {
     if (client_conn_hash != NULL)
         g_hash_table_destroy(client_conn_hash);
-    if (client_ip_hash != NULL)
+    if (client_ip_hash != NULL) {
+        g_hash_table_foreach_remove(client_ip_hash, hash_delete_client, NULL);
         g_hash_table_destroy(client_ip_hash);
+    }
 }
 
 gboolean   is_expired_client (gpointer key,
