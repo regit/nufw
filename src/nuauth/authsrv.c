@@ -110,6 +110,21 @@ void stop_threads(gboolean wait)
         g_thread_join (nuauthdatas->tls_nufw_server.thread);
     }
 
+    g_mutex_lock (nuauthdatas->limited_connections_handler.mutex);
+    g_mutex_lock (nuauthdatas->search_and_fill_worker.mutex);
+    if (wait) {
+        log_message(DEBUG, AREA_MAIN, "Wait thread 'limited connections'");
+        g_thread_join (nuauthdatas->limited_connections_handler.thread);
+
+        log_message(DEBUG, AREA_MAIN, "Wait thread 'search&fill'");
+        g_thread_join (nuauthdatas->search_and_fill_worker.thread);
+    }
+
+    if (nuauthconf->push && nuauthconf->hello_authentication && wait) {
+        log_message(DEBUG, AREA_MAIN, "Wait thread 'localid'");
+        g_thread_join (nuauthdatas->localid_auth_thread.thread);
+    }
+
     /* end logging threads */
     if (wait) {
         log_message(DEBUG, AREA_MAIN, "Stop thread pool 'user session loggers'");
@@ -122,25 +137,10 @@ void stop_threads(gboolean wait)
         g_thread_pool_free(nuauthdatas->acl_checkers, TRUE, wait);
     }
 
-    g_mutex_lock (nuauthdatas->limited_connections_handler.mutex);
-    g_mutex_lock (nuauthdatas->search_and_fill_worker.mutex);
-    if (wait) {
-        log_message(DEBUG, AREA_MAIN, "Wait thread 'limited connections'");
-        g_thread_join (nuauthdatas->limited_connections_handler.thread);
-
-        log_message(DEBUG, AREA_MAIN, "Wait thread 'search&fill'");
-        g_thread_join (nuauthdatas->search_and_fill_worker.thread);
-    }
-
     /* working  */
     if (nuauthconf->do_ip_authentication && wait) {
         log_message(DEBUG, AREA_MAIN, "Stop thread pool 'ip auth workers'");
         g_thread_pool_free(nuauthdatas->ip_authentication_workers, TRUE, wait);
-    }
-
-    if (nuauthconf->push && nuauthconf->hello_authentication && wait) {
-        log_message(DEBUG, AREA_MAIN, "Wait thread 'localid'");
-        g_thread_join (nuauthdatas->localid_auth_thread.thread);
     }
 
     /* done! */
