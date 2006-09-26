@@ -344,9 +344,8 @@ void free_connection(connection_t *conn)
     } else {
         g_free(conn->username);
     }
-    if (conn->packet_id != NULL )
-        g_slist_free (conn->packet_id);
-
+    g_slist_free (conn->packet_id);
+    g_slist_free (conn->user_groups);
     g_free(conn->app_name);
     g_free(conn->app_md5);
     g_free(conn->os_sysname);
