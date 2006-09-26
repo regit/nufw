@@ -180,8 +180,6 @@ nu_error_t authpckt_new_connection(unsigned char *dgram, unsigned int dgram_size
 
     /** \todo parse supplementary fields */
 
-    connection->user_groups = ALLGROUP;
-
 #ifdef DEBUG_ENABLE
     if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)){
         g_message("Packet: ");
@@ -370,7 +368,7 @@ nu_error_t authpckt_decode(unsigned char **pdgram, unsigned int * pdgram_size, c
 /**
  * \return 0 if there is an error, value of protocol elsewhere
  */
-unsigned char get_proto_version_from_packet(char* dgram,size_t dgram_size)
+unsigned char get_proto_version_from_packet(const unsigned char* dgram,size_t dgram_size)
 {
 	nufw_to_nuauth_message_header_t *header;
 

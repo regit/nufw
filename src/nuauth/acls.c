@@ -302,7 +302,7 @@ int init_acl_cache()
             (GDestroyNotify) free_acl_key,
             (GDestroyNotify) free_acl_cache);
     nuauthdatas->acl_cache->queue=g_async_queue_new();
-    nuauthdatas->acl_cache->delete_elt=free_acl_groups;
+    nuauthdatas->acl_cache->delete_elt = (GFunc)free_acl_groups;
     nuauthdatas->acl_cache->duplicate_key=acl_duplicate_key;
     nuauthdatas->acl_cache->free_key=free_acl_key;
     nuauthdatas->acl_cache->equal_key=compare_acls;

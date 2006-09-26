@@ -272,12 +272,16 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex *mutex)
                         "Warning: tls nufw select() failed: signal was catched.");
                 continue;
             }
+            /* Bad file descriptor error: ignore it */
+            if (errno == EBADF)
+            {
+                log_message(CRITICAL, AREA_MAIN,
+                        "Warning: tls user select() failed: bad file descriptor.");
+                continue;
+            }
 
             switch(errno)
             {
-                case EBADF:
-                    g_message("Bad file descriptor in one of the set.");
-                    break;
                 case EINVAL:
                     g_message("Negative value for socket");
                     break;

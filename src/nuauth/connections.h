@@ -105,8 +105,6 @@ typedef struct
 #endif
 } connection_t;
 
-GSList * ALLGROUP;
-
 /** @} */
 
 #endif

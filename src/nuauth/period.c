@@ -28,7 +28,7 @@
  * \brief Provide a set of functions for period and time calculation
  */
 
-gboolean is_time_t_in_period(gchar* periodname,time_t pckt_time)
+gboolean is_time_t_in_period(const gchar* periodname,time_t pckt_time)
 {
   if (get_end_of_period_for_time_t(periodname,pckt_time)){
         return TRUE;
@@ -117,7 +117,7 @@ static time_t get_end_of_period_item_for_time(struct period_item* perioditem,tim
  * - -1 if no limit
  */
 
-time_t get_end_of_period_for_time_t(gchar* period,time_t pckt_time)
+time_t get_end_of_period_for_time_t(const gchar* period,time_t pckt_time)
 {
   struct period* pperiod=NULL;
   time_t result=-1;

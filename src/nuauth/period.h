@@ -50,9 +50,9 @@ struct period {
     gboolean used;
 };
 
-gboolean is_time_t_in_period(gchar* period,time_t time);
+gboolean is_time_t_in_period(const gchar* period,time_t time);
 
-time_t get_end_of_period_for_time_t(gchar* period,time_t time);
+time_t get_end_of_period_for_time_t(const gchar* period,time_t time);
 
 gboolean define_new_period(GHashTable* periods,gchar* name,gchar* description);
 

@@ -79,6 +79,7 @@ void localid_insert_message(connection_t *pckt,
                     element->mark=pckt->mark;
                     element->username=pckt->username;
                     element->user_groups=pckt->user_groups;
+                    pckt->user_groups = NULL;
                     /* do asynchronous call to acl check */
                     g_thread_pool_push (nuauthdatas->acl_checkers, element, NULL);
                     /* remove element from hash without destroy */

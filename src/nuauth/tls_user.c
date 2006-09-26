@@ -427,11 +427,16 @@ void tls_user_main_loop(struct tls_user_context_t *context, GMutex *mutex)
                         "Warning: tls user select() failed: signal was catched.");
                 continue;
             }
+            /* Bad file descriptor error: ignore it */
+            if (errno == EBADF)
+            {
+                log_message(CRITICAL, AREA_MAIN,
+                        "Warning: tls user select() failed: bad file descriptor.");
+                continue;
+            }
+
 
             switch(errno){
-                case EBADF:
-                    g_message("Bad file descriptor");
-                    break;
                 case EINVAL:
                     g_message("Negative value for socket");
                     break;
