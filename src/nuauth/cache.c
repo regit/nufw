@@ -47,18 +47,18 @@ void cache_entry_content_destroy(struct cache_datas* item, GFunc free_datas)
 /**
  * compare cache datas
  */
-int cache_entry_content_compare(gconstpointer a, gconstpointer b)
+int cache_entry_content_compare(const struct cache_datas *content, gconstpointer data)
 {
-    if (a) {
-        return (b-((struct cache_datas *)a)->datas);
+    if (content) {
+        return (data - content->datas);
     } else {
         return 1;
     }
 }
 
-int cache_entry_content_used(gconstpointer a, gconstpointer b)
+int cache_entry_content_used(const struct cache_datas *content, gconstpointer b)
 {
-    return  ((struct cache_datas *)a)->usage;
+    return content->usage;
 }
 
 /**
@@ -71,14 +71,15 @@ gboolean cache_entry_is_old(gpointer key, gpointer value, gpointer user_data)
             &&
             ( ((struct cache_element *)value)->refresh_timestamp < time(NULL) )
        ) {
-        GSList * stored_datas = ((struct cache_element *)value)->datas;
+        GSList *list = ((struct cache_element *)value)->datas;
         /* test if datas are all unused :
          * next element has to be NULL (elsewhere it should have been freed)
          * element usage is NULL */
-        if (stored_datas){
-            if ( (stored_datas->next == NULL)
+        if (list){
+            struct cache_datas* data = list->data;
+            if ( (list->next == NULL)
                     &&
-                    (((struct cache_datas*)(stored_datas->data))->usage == 0 )
+                    (data->usage == 0 )
                ){
                 return TRUE;
             }
@@ -87,7 +88,7 @@ gboolean cache_entry_is_old(gpointer key, gpointer value, gpointer user_data)
     return FALSE;
 }
 
-void cache_insert(struct cache_init_datas* cache_datas, struct cache_message *message)
+void cache_insert(struct cache_init_datas* this, struct cache_message *message)
 {
     /* nothing in cache */
     struct cache_element* cache_elt = NULL;
@@ -100,15 +101,15 @@ void cache_insert(struct cache_init_datas* cache_datas, struct cache_message *me
     cache_elt->refresh_timestamp = cache_elt->create_timestamp + nuauthconf->datas_persistance;
     cache_elt->refreshing = TRUE;
     cache_elt->datas = NULL;
-    key = cache_datas->duplicate_key(message->key);
-    g_hash_table_insert(cache_datas->hash,
+    key = this->duplicate_key(message->key);
+    g_hash_table_insert(this->hash,
             key,
             cache_elt);
     /* return we don't have */
     g_async_queue_push( message->reply_queue, null_message );
 }
 
-void cache_get(struct cache_init_datas *cache_datas,
+void cache_get(struct cache_init_datas *this,
         struct cache_element *return_list,
         struct cache_message *message,
         GSList** local_queue)
@@ -144,7 +145,7 @@ void cache_get(struct cache_init_datas *cache_datas,
             /* delete item if needed */
             item = iter->data;
             if (item->datas != NULL) {
-                GFunc free_datas = (GFunc)cache_datas->delete_elt;
+                GFunc free_datas = (GFunc)this->delete_elt;
                 free_datas(item->datas, NULL);
             }
             list = g_slist_remove(list, item);
@@ -168,7 +169,7 @@ void cache_get(struct cache_init_datas *cache_datas,
     }
 }
 
-void cache_message_destroy(struct cache_init_datas *cache_datas,
+void cache_message_destroy(struct cache_init_datas *this,
         struct cache_element *return_list,
         struct cache_message *message)
 {
@@ -193,12 +194,12 @@ void cache_message_destroy(struct cache_init_datas *cache_datas,
     }
 
     /* free datas */
-    cache_datas->delete_elt(data->datas, NULL);
+    this->delete_elt(data->datas, NULL);
     g_free(data);
     return_list->datas  = g_slist_delete_link(return_list->datas,concerned_datas);
 }
 
-void cache_refresh(struct cache_init_datas *cache_datas,
+void cache_refresh(struct cache_init_datas *this,
         struct cache_element *return_list,
         struct cache_message *message,
         GSList** local_queue)
@@ -218,7 +219,7 @@ void cache_refresh(struct cache_init_datas *cache_datas,
         struct cache_message* datas = (struct cache_message*)(iter->data);
 
         /*  where message->key is the same reply */
-        if (cache_datas->equal_key(message->key,datas->key))
+        if (this->equal_key(message->key,datas->key))
         {
             g_async_queue_push(datas->reply_queue, message->datas);
             elt->usage++;
@@ -241,69 +242,68 @@ void cache_refresh(struct cache_init_datas *cache_datas,
  *      - If we found something, we send it back
  *      - If not we warn the client to look by itself and give us the answer when it has found it
  */
-void cache_manager (gpointer datas) {
-    struct cache_init_datas *cache_datas = datas;
+void cache_manager (struct cache_init_datas *this) {
     struct cache_message *message;
     struct cache_element *return_list;
     GSList* local_queue = NULL;
 
     /* wait for message */
-    while ( (message = g_async_queue_pop(cache_datas->queue)) ) {
+    while ( (message = g_async_queue_pop(this->queue)) ) {
         switch(message->type){
             case GET_MESSAGE:
                 /* look for datas */
-                return_list = g_hash_table_lookup(cache_datas->hash,message->key);
+                return_list = g_hash_table_lookup(this->hash, message->key);
                 if (return_list == NULL) {
-                    cache_insert(cache_datas, message);
+                    cache_insert(this, message);
                 } else {
-                    cache_get(cache_datas, return_list, message, &local_queue);
+                    cache_get(this, return_list, message, &local_queue);
                 }
                 break;
 
             case INSERT_MESSAGE:
                 /* look for datas */
-                return_list = g_hash_table_lookup(cache_datas->hash, message->key);
+                return_list = g_hash_table_lookup(this->hash, message->key);
                 g_assert(return_list != NULL);
                 if (return_list->refreshing) {
-                    cache_refresh(cache_datas, return_list, message, &local_queue);
+                    cache_refresh(this, return_list, message, &local_queue);
                 } else {
                     g_error("a thread lost its mind");
                 }
-                cache_datas->free_key(message->key);
+                this->free_key(message->key);
                 g_free(message);
                 break;
 
             case FREE_MESSAGE:
-                return_list = g_hash_table_lookup(cache_datas->hash,message->key);
+                return_list = g_hash_table_lookup(this->hash, message->key);
                 if (return_list != NULL){
-                    cache_message_destroy(cache_datas, return_list, message);
+                    cache_message_destroy(this, return_list, message);
                 }
-                cache_datas->free_key(message->key);
+                this->free_key(message->key);
                 g_free(message);
                 break;
 
             case REFRESH_MESSAGE:
                 /* iter on each element */
                 g_hash_table_foreach_remove (
-                        cache_datas->hash, cache_entry_is_old, NULL);
+                        this->hash, cache_entry_is_old, NULL);
                 g_free(message);
                 break;
         }
     }
 }
 
-void cache_destroy(struct cache_init_datas *cache_datas)
+void cache_destroy(struct cache_init_datas *this)
 {
     struct cache_message *message;
 
-    if (cache_datas == NULL)
+    if (this == NULL)
         return;
 
-    while ( (message = g_async_queue_try_pop(cache_datas->queue)) != NULL ) {
+    while ( (message = g_async_queue_try_pop(this->queue)) != NULL ) {
         g_free(message);
     }
 
-	g_hash_table_destroy (cache_datas->hash);
+	g_hash_table_destroy (this->hash);
 }
 
 /** @} */

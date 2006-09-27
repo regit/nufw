@@ -39,24 +39,21 @@
  * \param userdata Not used
  */
 
-void free_user_struct(gpointer datas,gpointer userdata)
+void free_user_struct(struct user_cached_datas *datas, gpointer userdata)
 {
-	/* free user group */
-	if (((struct user_cached_datas*)datas)->groups){
-		g_slist_free(((struct user_cached_datas*)datas)->groups);
-	}
+    g_slist_free(datas->groups);
 	g_free(datas);
 }
 
-void free_user_cache(gpointer datas)
+void free_user_cache(struct cache_element *entry)
 {
-	GSList * dataslist=((struct cache_element *)datas)->datas;
-	if ( dataslist  != NULL ){
-		g_slist_foreach(dataslist, (GFunc)cache_entry_content_destroy, free_user_struct);
-		g_slist_free (dataslist);
-		debug_log_message(DEBUG, AREA_MAIN, "user datas freed %p",dataslist);
+	GSList *list = entry->datas;
+	if (list != NULL) {
+		g_slist_foreach(list, (GFunc)cache_entry_content_destroy, free_user_struct);
+		g_slist_free (list);
+		debug_log_message(DEBUG, AREA_MAIN, "user datas freed %p", list);
 	}
-	g_free(datas);
+	g_free(entry);
 }
 
 
@@ -148,7 +145,7 @@ int init_user_cache()
 				(GDestroyNotify) g_free,
 				(GDestroyNotify) free_user_cache);
 		nuauthdatas->user_cache->queue=g_async_queue_new();
-		nuauthdatas->user_cache->delete_elt=free_user_struct;
+		nuauthdatas->user_cache->delete_elt = (CacheDeleteFunc)free_user_struct;
 		nuauthdatas->user_cache->duplicate_key=user_duplicate_key;
 		nuauthdatas->user_cache->free_key=g_free;
                 nuauthdatas->user_cache->equal_key=g_str_equal;

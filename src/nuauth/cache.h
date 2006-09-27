@@ -38,17 +38,22 @@ struct cache_datas {
 
 void cache_entry_content_destroy(struct cache_datas* item, GFunc free_datas);
 
+typedef void (*CacheDeleteFunc)(gpointer, gpointer);
+
 /**
  * struct needed for initialisation of cache manager occurence
  */
 struct cache_init_datas {
 	GAsyncQueue * queue;
 	GHashTable*  hash;
-	void (*delete_elt)(gpointer,gpointer);
+	CacheDeleteFunc delete_elt;
 	void* (*duplicate_key)(gpointer);
 	void (*free_key)(gpointer);
 	gboolean (*equal_key)(gconstpointer,gconstpointer);
 };
+
+void cache_manager(struct cache_init_datas *this);
+void cache_destroy(struct cache_init_datas *datas);
 
 /**
  * generic message send between thread working with the
@@ -63,9 +68,6 @@ struct cache_message {
 
 gpointer null_message;
 gpointer null_queue_datas;
-
-void cache_manager (gpointer datas);
-void cache_destroy(struct cache_init_datas *datas);
 
 /** @} */
 

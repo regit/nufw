@@ -19,10 +19,10 @@
 #ifndef USERS_H
 #define USERS_H
 
+#include "cache.h"
+
 int init_user_cache();
 
-void free_user_cache(gpointer datas);
-void free_user_struct(gpointer datas,gpointer uda);
 void get_users_from_cache (connection_t* conn_elt);
 gpointer user_duplicate_key(gpointer datas);
 
