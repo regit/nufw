@@ -31,13 +31,12 @@
  * (acl_ckeckers function).
  * Treat a connection from insertion to decision
  *
- *  We use this function when :
- *  - decision is ready to be taken for the connection
- *  -
+ *  We use this function when 
+ *  decision is ready to be taken for the connection
  *
- * - Argument 1 : a connection
- * - Argument 2 : unused
- * - Return : None
+ * \param userdata a connection
+ * \param data unused
+ * \return None
  */
 
 void acl_check_and_decide (gpointer userdata, gpointer data)
