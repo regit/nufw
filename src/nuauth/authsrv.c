@@ -214,10 +214,10 @@ void nuauth_deinit(gboolean soft)
     log_message(INFO, AREA_MAIN, "Free memory");
     free_nuauth_params (nuauthconf);
     if (nuauthconf->acl_cache){
-        clear_cache(nuauthdatas->acl_cache);
+        cache_destroy(nuauthdatas->acl_cache);
     }
     if (nuauthconf->user_cache){
-        clear_cache(nuauthdatas->user_cache);
+        cache_destroy(nuauthdatas->user_cache);
     }
     free_threads();
     clear_push_queue();

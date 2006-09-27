@@ -36,6 +36,8 @@ struct cache_datas {
     guint usage;
 };
 
+void cache_entry_content_destroy(struct cache_datas* item, GFunc free_datas);
+
 /**
  * struct needed for initialisation of cache manager occurence
  */
@@ -48,31 +50,22 @@ struct cache_init_datas {
 	gboolean (*equal_key)(gconstpointer,gconstpointer);
 };
 
-
-
-gboolean is_old_cache_entry                    (gpointer key,
-    gpointer value,
-    gpointer user_data);
-
 /**
  * generic message send between thread working with the
  * cache system
  */
-
 struct cache_message {
-	guint type; /* message type */
-	gpointer key; /* key that identify datas in hash */
-	gpointer datas; /* datas to store */
-	GAsyncQueue* reply_queue; /* reply has to be sent to */
+	guint type;                /*< message type */
+	gpointer key;              /*< key that identify datas in hash */
+	gpointer datas;            /*< datas to store */
+	GAsyncQueue* reply_queue;  /*< reply has to be sent to */
 };
 
 gpointer null_message;
 gpointer null_queue_datas;
 
-void free_cache_elt(struct cache_datas* item, GFunc free_datas);
-
-void clear_cache (struct cache_init_datas *datas);
 void cache_manager (gpointer datas);
+void cache_destroy(struct cache_init_datas *datas);
 
 /** @} */
 

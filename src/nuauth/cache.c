@@ -35,7 +35,7 @@
  *
  * An implementation of a generic cache system
  */
-void free_cache_elt(struct cache_datas* item, GFunc free_datas)
+void cache_entry_content_destroy(struct cache_datas* item, GFunc free_datas)
 {
     if(item != NULL && item->datas != NULL){
         free_datas(item->datas, NULL);
@@ -47,7 +47,7 @@ void free_cache_elt(struct cache_datas* item, GFunc free_datas)
 /**
  * compare cache datas
  */
-int compare_cache_datas(gconstpointer a, gconstpointer b)
+int cache_entry_content_compare(gconstpointer a, gconstpointer b)
 {
     if (a) {
         return (b-((struct cache_datas *)a)->datas);
@@ -56,7 +56,7 @@ int compare_cache_datas(gconstpointer a, gconstpointer b)
     }
 }
 
-int used_cache_datas(gconstpointer a, gconstpointer b)
+int cache_entry_content_used(gconstpointer a, gconstpointer b)
 {
     return  ((struct cache_datas *)a)->usage;
 }
@@ -64,7 +64,7 @@ int used_cache_datas(gconstpointer a, gconstpointer b)
 /**
  * cleaning purpose function, find if an entry is old an unused.
  */
-gboolean is_old_cache_entry (gpointer key, gpointer value, gpointer user_data)
+gboolean cache_entry_is_old(gpointer key, gpointer value, gpointer user_data)
 {
     /* test if refresh is too late */
     if ( (! ((struct cache_element *)value)->refreshing)
@@ -136,7 +136,7 @@ void cache_get(struct cache_init_datas *cache_datas,
         do
         {
             /* find unused items */
-            iter = g_slist_find_custom(list, GUINT_TO_POINTER(0), used_cache_datas);
+            iter = g_slist_find_custom(list, GUINT_TO_POINTER(0), (GCompareFunc)cache_entry_content_used);
             if (iter == NULL) {
                 break;
              }
@@ -168,14 +168,14 @@ void cache_get(struct cache_init_datas *cache_datas,
     }
 }
 
-void cache_free_message(struct cache_init_datas *cache_datas,
+void cache_message_destroy(struct cache_init_datas *cache_datas,
         struct cache_element *return_list,
         struct cache_message *message)
 {
     struct cache_datas *data;
     GSList* cache_datas_list = return_list->datas;
     GSList* concerned_datas = g_slist_find_custom (cache_datas_list,
-            message->datas, compare_cache_datas);
+            message->datas, (GCompareFunc)cache_entry_content_compare);
 	if (concerned_datas == NULL){
 		return;
 	}
@@ -276,7 +276,7 @@ void cache_manager (gpointer datas) {
             case FREE_MESSAGE:
                 return_list = g_hash_table_lookup(cache_datas->hash,message->key);
                 if (return_list != NULL){
-                    cache_free_message(cache_datas, return_list, message);
+                    cache_message_destroy(cache_datas, return_list, message);
                 }
                 cache_datas->free_key(message->key);
                 g_free(message);
@@ -285,14 +285,14 @@ void cache_manager (gpointer datas) {
             case REFRESH_MESSAGE:
                 /* iter on each element */
                 g_hash_table_foreach_remove (
-                        cache_datas->hash, is_old_cache_entry, NULL);
+                        cache_datas->hash, cache_entry_is_old, NULL);
                 g_free(message);
                 break;
         }
     }
 }
 
-void clear_cache (struct cache_init_datas *cache_datas)
+void cache_destroy(struct cache_init_datas *cache_datas)
 {
     struct cache_message *message;
 

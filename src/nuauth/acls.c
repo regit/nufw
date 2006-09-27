@@ -193,7 +193,7 @@ void free_acl_cache(gpointer datas)
 {
 	GSList * dataslist = ((struct cache_element *)datas)->datas;
 	if ( dataslist  != NULL ){
-		g_slist_foreach(dataslist,(GFunc) free_cache_elt,free_acl_groups);
+		g_slist_foreach(dataslist, (GFunc)cache_entry_content_destroy, free_acl_groups);
 		g_slist_free (dataslist);
 	}
 	g_free(datas);

@@ -52,7 +52,7 @@ void free_user_cache(gpointer datas)
 {
 	GSList * dataslist=((struct cache_element *)datas)->datas;
 	if ( dataslist  != NULL ){
-		g_slist_foreach(dataslist,(GFunc) free_cache_elt,free_user_struct);
+		g_slist_foreach(dataslist, (GFunc)cache_entry_content_destroy, free_user_struct);
 		g_slist_free (dataslist);
 		debug_log_message(DEBUG, AREA_MAIN, "user datas freed %p",dataslist);
 	}
