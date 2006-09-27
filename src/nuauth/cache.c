@@ -35,7 +35,6 @@
  *
  * An implementation of a generic cache system
  */
-
 void free_cache_elt(struct cache_datas* item, GFunc free_datas)
 {
     if(item != NULL && item->datas != NULL){
@@ -114,52 +113,57 @@ void cache_get(struct cache_init_datas *cache_datas,
         struct cache_message *message,
         GSList** local_queue)
 {
-    GSList *cache_datas_list;
+    GSList *list;
+    struct cache_datas* item;
 
-    if (return_list->refreshing){
+    if (return_list->refreshing)
+    {
         /* don't answer now. wait till datas is put by working thread
-         * put message in local queue
-         */
+         * put message in local queue */
         *local_queue = g_slist_append(*local_queue,message);
         return;
     }
+    list = return_list->datas;
 
-    if (return_list->refresh_timestamp < time(NULL)){
+    if (return_list->refresh_timestamp < time(NULL)) {
         /* we need refresh */
-        GSList *p_cache_datas_list = NULL;
-        cache_datas_list = return_list->datas;
+        GSList *iter;
 
         /* we need refresh is element in use ? */
         return_list->refreshing = TRUE;
 
-        /* delete very element of the list which is not used */
-        for(p_cache_datas_list = g_slist_find_custom(cache_datas_list,GUINT_TO_POINTER(0),used_cache_datas);
-                p_cache_datas_list;
-                p_cache_datas_list = g_slist_find_custom(cache_datas_list,GUINT_TO_POINTER(0),used_cache_datas)){
-            if (((struct cache_datas*)p_cache_datas_list->data)->datas){
-                GFunc free_datas = (GFunc) *(cache_datas->delete_elt);
-                free_datas(((struct cache_datas*)p_cache_datas_list->data)->datas,NULL);
-                cache_datas_list = g_slist_remove(cache_datas_list,p_cache_datas_list->data);
-            } else {
-                cache_datas_list = g_slist_remove(cache_datas_list,p_cache_datas_list->data);
+        /* delete all elements of the list which are unused */
+        do
+        {
+            /* find unused items */
+            iter = g_slist_find_custom(list, GUINT_TO_POINTER(0), used_cache_datas);
+            if (iter == NULL) {
+                break;
+             }
+
+            /* delete item if needed */
+            item = iter->data;
+            if (item->datas != NULL) {
+                GFunc free_datas = (GFunc)cache_datas->delete_elt;
+                free_datas(item->datas, NULL);
             }
-        }
-        return_list->datas = cache_datas_list;
-        /* prepend null container element */
-        /* and ask refresh */
-        g_async_queue_push(message->reply_queue,null_message);
+            list = g_slist_remove(list, item);
+        } while (1);
+        return_list->datas = list;
+
+        /* prepend null container element, and ask refresh */
+        g_async_queue_push(message->reply_queue, null_message);
     } else {
-        cache_datas_list = return_list->datas;
+        item = list->data;
 
         /* cache is clean, increase usage */
-        ((struct cache_datas *)(cache_datas_list->data))->usage++;
+        item->usage++;
 
         /* and push datas to queue */
-        if (((struct cache_datas *)(cache_datas_list->data))->datas){
-            g_async_queue_push(message->reply_queue,
-                    ((struct cache_datas *)(cache_datas_list->data))->datas);
+        if (item->datas) {
+            g_async_queue_push(message->reply_queue, item->datas);
         } else {
-            g_async_queue_push(message->reply_queue,null_queue_datas);
+            g_async_queue_push(message->reply_queue, null_queue_datas);
         }
     }
 }
@@ -168,32 +172,30 @@ void cache_free_message(struct cache_init_datas *cache_datas,
         struct cache_element *return_list,
         struct cache_message *message)
 {
+    struct cache_datas *data;
     GSList* cache_datas_list = return_list->datas;
     GSList* concerned_datas = g_slist_find_custom (cache_datas_list,
-            message->datas,
-            compare_cache_datas);
-    struct cache_datas *data;
-
+            message->datas, compare_cache_datas);
 	if (concerned_datas == NULL){
 		return;
 	}
+
     data = (struct cache_datas *)concerned_datas->data;
-
-
-    if (data->usage == 1){
-        /* if it is not first element (thus more recent) , we delete it */
-        if (concerned_datas != cache_datas_list){
-            /* free datas */
-            cache_datas->delete_elt(data->datas, NULL);
-            g_free(data);
-            return_list->datas  = g_slist_delete_link(return_list->datas,concerned_datas);
-        } else {
-            /* it's the most recent element, we do anything but decrease usage */
-            data->usage = 0;
-        }
-    } else {
+    if (data->usage != 1){
         data->usage--;
+        return;
     }
+
+    /* it's the most recent element, we do anything but decrease usage */
+    if (concerned_datas == cache_datas_list){
+        data->usage = 0;
+        return;
+    }
+
+    /* free datas */
+    cache_datas->delete_elt(data->datas, NULL);
+    g_free(data);
+    return_list->datas  = g_slist_delete_link(return_list->datas,concerned_datas);
 }
 
 void cache_refresh(struct cache_init_datas *cache_datas,
@@ -201,33 +203,35 @@ void cache_refresh(struct cache_init_datas *cache_datas,
         struct cache_message *message,
         GSList** local_queue)
 {
-    GSList* p_local_queue;
+    GSList* iter;
 
-    /* fine we really wait message and can update */
-    /* alloc cache_datas element */
-    struct cache_datas * elt = g_new0(struct cache_datas,1);
+    /* fine we really wait message and can update, alloc cache_datas element */
+    struct cache_datas* elt = g_new0(struct cache_datas,1);
 
     /* update NULL element waiting for completion */
     elt->datas = message->datas;
     elt->usage = 1;
+
     /* answer to waiting thread */
-    for (p_local_queue = *local_queue;p_local_queue;p_local_queue = p_local_queue->next){
-        struct cache_message* datas = (struct cache_message*)(p_local_queue->data);
+    for (iter = *local_queue;iter;iter = iter->next)
+    {
+        struct cache_message* datas = (struct cache_message*)(iter->data);
+
         /*  where message->key is the same reply */
-        if (cache_datas->equal_key(message->key,datas->key)){
-            g_async_queue_push(datas->reply_queue,
-                    message->datas);
+        if (cache_datas->equal_key(message->key,datas->key))
+        {
+            g_async_queue_push(datas->reply_queue, message->datas);
             elt->usage++;
             /* set data to NULL to initiate message removal */
-            p_local_queue->data=NULL;
+            iter->data=NULL;
         }
     }
 
     /* remove message with data equal to NULL */
     *local_queue = g_slist_remove_all(*local_queue, NULL);
-    return_list->datas = g_slist_prepend(return_list->datas,elt);
+    return_list->datas = g_slist_prepend(return_list->datas, elt);
     return_list->refreshing = FALSE;
-    return_list->refresh_timestamp = time(NULL)+nuauthconf->datas_persistance;
+    return_list->refresh_timestamp = time(NULL) + nuauthconf->datas_persistance;
 }
 
 /**

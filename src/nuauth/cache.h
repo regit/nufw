@@ -69,7 +69,7 @@ struct cache_message {
 gpointer null_message;
 gpointer null_queue_datas;
 
-void free_cache_elt(gpointer data,gpointer userdata);
+void free_cache_elt(struct cache_datas* item, GFunc free_datas);
 
 void clear_cache (struct cache_init_datas *datas);
 void cache_manager (gpointer datas);
