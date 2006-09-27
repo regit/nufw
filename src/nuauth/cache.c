@@ -66,72 +66,71 @@ int cache_entry_content_used(const struct cache_datas *content, gconstpointer b)
  */
 gboolean cache_entry_is_old(gpointer key, gpointer value, gpointer user_data)
 {
+    struct cache_element *entry = value;
+    struct cache_datas* data;
+    GSList *list;
+
     /* test if refresh is too late */
-    if ( (! ((struct cache_element *)value)->refreshing)
-            &&
-            ( ((struct cache_element *)value)->refresh_timestamp < time(NULL) )
-       ) {
-        GSList *list = ((struct cache_element *)value)->datas;
-        /* test if datas are all unused :
-         * next element has to be NULL (elsewhere it should have been freed)
-         * element usage is NULL */
-        if (list){
-            struct cache_datas* data = list->data;
-            if ( (list->next == NULL)
-                    &&
-                    (data->usage == 0 )
-               ){
-                return TRUE;
-            }
-        }
+    if (entry->refreshing || (time(NULL) <= entry->refresh_timestamp)) {
+        return FALSE;
     }
-    return FALSE;
+
+    list = entry->datas;
+    if (!list) {
+        return FALSE;
+    }
+
+    /* test if datas are all unused */
+    data = list->data;
+    if ((list->next == NULL) && (data->usage == 0)) {
+        return TRUE;
+    } else {
+        return FALSE;
+    }
 }
 
 void cache_insert(struct cache_init_datas* this, struct cache_message *message)
 {
     /* nothing in cache */
-    struct cache_element* cache_elt = NULL;
-    gpointer key = NULL;
+    struct cache_element* cache_elt;
+    gpointer key;
+
     /* creating container for datas */
-    /* alloc */
-    cache_elt = g_new0(struct cache_element,1);
-    /* initialize */
+    cache_elt = g_new0(struct cache_element, 1);
     cache_elt->create_timestamp = time(NULL);
     cache_elt->refresh_timestamp = cache_elt->create_timestamp + nuauthconf->datas_persistance;
     cache_elt->refreshing = TRUE;
     cache_elt->datas = NULL;
     key = this->duplicate_key(message->key);
-    g_hash_table_insert(this->hash,
-            key,
-            cache_elt);
+    g_hash_table_insert(this->hash, key, cache_elt);
+
     /* return we don't have */
     g_async_queue_push( message->reply_queue, null_message );
 }
 
 void cache_get(struct cache_init_datas *this,
-        struct cache_element *return_list,
+        struct cache_element *entry,
         struct cache_message *message,
         GSList** local_queue)
 {
     GSList *list;
     struct cache_datas* item;
 
-    if (return_list->refreshing)
+    if (entry->refreshing)
     {
         /* don't answer now. wait till datas is put by working thread
          * put message in local queue */
         *local_queue = g_slist_append(*local_queue,message);
         return;
     }
-    list = return_list->datas;
+    list = entry->datas;
 
-    if (return_list->refresh_timestamp < time(NULL)) {
+    if (entry->refresh_timestamp < time(NULL)) {
         /* we need refresh */
         GSList *iter;
 
         /* we need refresh is element in use ? */
-        return_list->refreshing = TRUE;
+        entry->refreshing = TRUE;
 
         /* delete all elements of the list which are unused */
         do
@@ -150,7 +149,7 @@ void cache_get(struct cache_init_datas *this,
             }
             list = g_slist_remove(list, item);
         } while (1);
-        return_list->datas = list;
+        entry->datas = list;
 
         /* prepend null container element, and ask refresh */
         g_async_queue_push(message->reply_queue, null_message);
@@ -170,37 +169,37 @@ void cache_get(struct cache_init_datas *this,
 }
 
 void cache_message_destroy(struct cache_init_datas *this,
-        struct cache_element *return_list,
+        struct cache_element *entry,
         struct cache_message *message)
 {
-    struct cache_datas *data;
-    GSList* cache_datas_list = return_list->datas;
+    struct cache_datas *content;
+    GSList* cache_datas_list = entry->datas;
     GSList* concerned_datas = g_slist_find_custom (cache_datas_list,
             message->datas, (GCompareFunc)cache_entry_content_compare);
-	if (concerned_datas == NULL){
+	if (concerned_datas == NULL) {
 		return;
 	}
 
-    data = (struct cache_datas *)concerned_datas->data;
-    if (data->usage != 1){
-        data->usage--;
+    content = concerned_datas->data;
+    if (content->usage != 1){
+        content->usage--;
         return;
     }
 
     /* it's the most recent element, we do anything but decrease usage */
     if (concerned_datas == cache_datas_list){
-        data->usage = 0;
+        content->usage = 0;
         return;
     }
 
     /* free datas */
-    this->delete_elt(data->datas, NULL);
-    g_free(data);
-    return_list->datas  = g_slist_delete_link(return_list->datas,concerned_datas);
+    this->delete_elt(content->datas, NULL);
+    g_free(content);
+    entry->datas = g_slist_delete_link(entry->datas, concerned_datas);
 }
 
 void cache_refresh(struct cache_init_datas *this,
-        struct cache_element *return_list,
+        struct cache_element *entry,
         struct cache_message *message,
         GSList** local_queue)
 {
@@ -230,9 +229,9 @@ void cache_refresh(struct cache_init_datas *this,
 
     /* remove message with data equal to NULL */
     *local_queue = g_slist_remove_all(*local_queue, NULL);
-    return_list->datas = g_slist_prepend(return_list->datas, elt);
-    return_list->refreshing = FALSE;
-    return_list->refresh_timestamp = time(NULL) + nuauthconf->datas_persistance;
+    entry->datas = g_slist_prepend(entry->datas, elt);
+    entry->refreshing = FALSE;
+    entry->refresh_timestamp = time(NULL) + nuauthconf->datas_persistance;
 }
 
 /**
@@ -242,30 +241,37 @@ void cache_refresh(struct cache_init_datas *this,
  *      - If we found something, we send it back
  *      - If not we warn the client to look by itself and give us the answer when it has found it
  */
-void cache_manager (struct cache_init_datas *this) {
+void cache_manager (struct cache_init_datas *this)
+{
     struct cache_message *message;
-    struct cache_element *return_list;
+    struct cache_element *entry;
     GSList* local_queue = NULL;
 
     /* wait for message */
-    while ( (message = g_async_queue_pop(this->queue)) ) {
+    while (1)
+    {
+        message = g_async_queue_pop(this->queue);
+        if (message == NULL) {
+            /* should never appens */
+            continue;
+        }
         switch(message->type){
             case GET_MESSAGE:
                 /* look for datas */
-                return_list = g_hash_table_lookup(this->hash, message->key);
-                if (return_list == NULL) {
+                entry = g_hash_table_lookup(this->hash, message->key);
+                if (entry == NULL) {
                     cache_insert(this, message);
                 } else {
-                    cache_get(this, return_list, message, &local_queue);
+                    cache_get(this, entry, message, &local_queue);
                 }
                 break;
 
             case INSERT_MESSAGE:
                 /* look for datas */
-                return_list = g_hash_table_lookup(this->hash, message->key);
-                g_assert(return_list != NULL);
-                if (return_list->refreshing) {
-                    cache_refresh(this, return_list, message, &local_queue);
+                entry = g_hash_table_lookup(this->hash, message->key);
+                g_assert(entry != NULL);
+                if (entry->refreshing) {
+                    cache_refresh(this, entry, message, &local_queue);
                 } else {
                     g_error("a thread lost its mind");
                 }
@@ -274,9 +280,9 @@ void cache_manager (struct cache_init_datas *this) {
                 break;
 
             case FREE_MESSAGE:
-                return_list = g_hash_table_lookup(this->hash, message->key);
-                if (return_list != NULL){
-                    cache_message_destroy(this, return_list, message);
+                entry = g_hash_table_lookup(this->hash, message->key);
+                if (entry != NULL){
+                    cache_message_destroy(this, entry, message);
                 }
                 this->free_key(message->key);
                 g_free(message);
