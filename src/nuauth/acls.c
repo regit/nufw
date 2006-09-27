@@ -266,10 +266,9 @@ void get_acls_from_cache (connection_t* conn_elt)
 	/* wait for answer */
 	conn_elt->acl_groups=g_async_queue_pop(message.reply_queue);
 
-	if (conn_elt->acl_groups == null_queue_datas){
+	if (conn_elt->acl_groups == null_queue_datas) {
 		conn_elt->acl_groups=NULL;
-	}
-	if (conn_elt->acl_groups==null_message){
+	} else if (conn_elt->acl_groups==null_message) {
 		struct cache_message * rmessage;
 		/* cache wants an update
 		 * external check of acl */
