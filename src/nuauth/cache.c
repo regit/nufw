@@ -36,15 +36,13 @@
  * An implementation of a generic cache system
  */
 
-void free_cache_elt(gpointer data,gpointer userdata)
+void free_cache_elt(struct cache_datas* item, GFunc free_datas)
 {
-    GFunc free_datas = (GFunc) userdata;
-    if(data){
-        if (((struct cache_datas*)data)->datas){
-            free_datas(((struct cache_datas*)data)->datas,NULL);
-        }
-        g_free(data);
+    if(item != NULL && item->datas != NULL){
+        free_datas(item->datas, NULL);
+        item->datas = NULL;
     }
+    g_free(item);
 }
 
 /**
