@@ -82,7 +82,7 @@ int timeval_substract (struct timeval *result,struct timeval *x,struct timeval *
  */
 gint print_connection(gpointer data,gpointer userdata)
 {
-    connection_t * conn=(connection_t *) data;
+    connection_t * conn = (connection_t *) data;
     if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
     {
         char src_ascii[INET6_ADDRSTRLEN];
@@ -136,8 +136,8 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 	connection_t * element = (connection_t *) userdata;
 	uint32_t packet_id = GPOINTER_TO_UINT(packet_id_ptr);
 	int payload_size = 0;
-	int total_size=0;
-	char* buffer=NULL;
+	int total_size = 0;
+	char* buffer = NULL;
 
 	switch(element->nufw_version){
 		case PROTO_VERSION_V20:
@@ -155,7 +155,7 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 				}
 				/* allocate */
 				total_size = sizeof(nuv3_nuauth_decision_response_t)+payload_size;
-				response=g_alloca(total_size);
+				response = g_alloca(total_size);
 				response->protocol_version = PROTO_VERSION_V20;
 				response->msg_type = AUTH_ANSWER;
 				response->user_id = htons(uid16);
@@ -193,7 +193,7 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 	{
 		nuv4_nuauth_decision_response_t* response = NULL;
 		int use_icmp6;
-		uint32_t mark=element->mark;
+		uint32_t mark = element->mark;
 
 		use_icmp6 = (!is_ipv4(&element->tracking.saddr) || !is_ipv4(&element->tracking.daddr));
 
@@ -205,7 +205,7 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 		}
 		/* allocate */
 		total_size = sizeof(nuv4_nuauth_decision_response_t)+payload_size;
-		response=g_alloca(total_size);
+		response = g_alloca(total_size);
 		response->protocol_version = PROTO_VERSION;
 		response->msg_type = AUTH_ANSWER;
 		response->tcmark = htonl(mark);
@@ -311,12 +311,12 @@ void free_connection(connection_t *conn)
      */
     if (conn->acl_groups) {
         if (nuauthconf->acl_cache) {
-            struct cache_message * message=g_new0(struct cache_message,1);
+            struct cache_message * message = g_new0(struct cache_message,1);
             debug_log_message (VERBOSE_DEBUG, AREA_MAIN,
                     "Sending free to acl cache");
-            message->key=acl_create_and_alloc_key(conn);
-            message->type=FREE_MESSAGE;
-            message->datas=conn->acl_groups;
+            message->key = acl_create_and_alloc_key(conn);
+            message->type = FREE_MESSAGE;
+            message->datas = conn->acl_groups;
             g_async_queue_push(nuauthdatas->acl_cache->queue,message);
         } else {
             free_acl_groups(conn->acl_groups, NULL);
@@ -325,16 +325,16 @@ void free_connection(connection_t *conn)
     /* free user group */
     if (conn->cacheduserdatas){
         if(conn->username){
-            struct cache_message * message=g_new0(struct cache_message,1);
+            struct cache_message * message = g_new0(struct cache_message,1);
             if (!message){
                 log_message(CRITICAL, AREA_MAIN, "Could not g_new0(). No more memory?");
                 /* GRYZOR should we do something special here? */
             } else {
                 debug_log_message (VERBOSE_DEBUG, AREA_MAIN,
                         "Sending free to user cache");
-                message->key=g_strdup(conn->username);
-                message->type=FREE_MESSAGE;
-                message->datas=conn->cacheduserdatas;
+                message->key = g_strdup(conn->username);
+                message->type = FREE_MESSAGE;
+                message->datas = conn->cacheduserdatas;
                 g_async_queue_push(nuauthdatas->user_cache->queue,message);
             }
         } else {
@@ -360,7 +360,7 @@ void free_connection(connection_t *conn)
 
 connection_t* duplicate_connection(connection_t* element)
 {
-    connection_t * conn_copy=g_memdup(element, sizeof(*element));
+    connection_t * conn_copy = g_memdup(element, sizeof(*element));
     if (conn_copy == NULL){
         log_message(WARNING, AREA_MAIN, "memory duplication failed");
         return NULL;
@@ -373,11 +373,11 @@ connection_t* duplicate_connection(connection_t* element)
     conn_copy->os_version = g_strdup(element->os_version);
 
     /* Nullify needed internal field */
-    conn_copy->acl_groups=NULL;
-    conn_copy->user_groups=NULL;
-    conn_copy->packet_id=NULL;
-    conn_copy->cacheduserdatas=NULL;
-    conn_copy->state=AUTH_STATE_DONE;
+    conn_copy->acl_groups = NULL;
+    conn_copy->user_groups = NULL;
+    conn_copy->packet_id = NULL;
+    conn_copy->cacheduserdatas = NULL;
+    conn_copy->state = AUTH_STATE_DONE;
     return conn_copy;
 }
 
@@ -409,7 +409,7 @@ int conn_cl_delete(gconstpointer conn)
 {
     g_assert (conn != NULL);
 
-    if (conn_cl_remove(conn)==0){
+    if (conn_cl_remove(conn) == 0){
         return 0;
     }
 
@@ -440,7 +440,7 @@ gboolean get_old_conn (gpointer key, gpointer value, gpointer user_data)
     if (
             ( current_timestamp - ((connection_t *)value)->timestamp > nuauthconf->packet_timeout)
             &&
-            (((connection_t *)value)->state!=AUTH_STATE_COMPLETING)
+            (((connection_t *)value)->state != AUTH_STATE_COMPLETING)
        ){
         return TRUE;
     }
@@ -531,11 +531,11 @@ typedef enum {
  */
 gint take_decision(connection_t *element, packet_place_t place)
 {
-    GSList * parcours=NULL;
+    GSList * parcours = NULL;
     decision_t answer = DECISION_NODECIDE;
     test_t test;
-    GSList * user_group=element->user_groups;
-    time_t expire=-1; /* no expiration by default */
+    GSList * user_group = element->user_groups;
+    time_t expire = -1; /* no expiration by default */
 
     debug_log_message (DEBUG, AREA_MAIN,
             "Trying to take decision on %p", element);
@@ -550,13 +550,13 @@ gint take_decision(connection_t *element, packet_place_t place)
     } else {
         decision_t start_test,stop_test;
         if (nuauthconf->prio_to_nok == 1){
-            start_test=DECISION_ACCEPT;
-            stop_test=DECISION_DROP;
+            start_test = DECISION_ACCEPT;
+            stop_test = DECISION_DROP;
         } else {
-            start_test=DECISION_DROP;
-            stop_test=DECISION_ACCEPT;
+            start_test = DECISION_DROP;
+            stop_test = DECISION_ACCEPT;
         }
-        test=TEST_NODECIDE;
+        test = TEST_NODECIDE;
         for  ( parcours = element->acl_groups;
                 ( parcours != NULL  && test == TEST_NODECIDE );
                 parcours = g_slist_next(parcours) ) {
@@ -571,19 +571,19 @@ gint take_decision(connection_t *element, packet_place_t place)
                         answer = ((struct acl_group *)(parcours->data))->answer ;
                         if (nuauthconf->prio_to_nok == 1){
                             if ((answer == DECISION_DROP) || (answer == DECISION_REJECT)){
-                                test=TEST_DECIDED;
+                                test = TEST_DECIDED;
                             }
                         } else {
                             if (answer == DECISION_ACCEPT){
-                                test=TEST_DECIDED;
+                                test = TEST_DECIDED;
                             }
                         }
                         if (answer == DECISION_ACCEPT){
-                            time_t periodend=-1;
+                            time_t periodend = -1;
                             /* compute end of period for this acl */
                             if (((struct acl_group *)(parcours->data))->period){
-                                periodend=get_end_of_period_for_time_t(((struct acl_group *)(parcours->data))->period,time(NULL));
-                                if (periodend==0){
+                                periodend = get_end_of_period_for_time_t(((struct acl_group *)(parcours->data))->period,time(NULL));
+                                if (periodend == 0){
                                     /* this is not a correct time going to drop */
                                     answer = DECISION_NODECIDE;
                                     test = TEST_DECIDED;
@@ -605,8 +605,8 @@ gint take_decision(connection_t *element, packet_place_t place)
                 }
             } else {
                 debug_log_message(DEBUG, AREA_MAIN, "Empty acl : bad things ...");
-                answer=DECISION_DROP;
-                test=TEST_DECIDED;
+                answer = DECISION_DROP;
+                test = TEST_DECIDED;
             }
         }
     }
@@ -615,17 +615,17 @@ gint take_decision(connection_t *element, packet_place_t place)
 	    if (nuauthconf->reject_authenticated_drop){
 		    answer = DECISION_REJECT;
 	    } else {
-		    answer=DECISION_DROP;
+		    answer = DECISION_DROP;
 	    }
     }
     if (expire == 0){
 	    if (nuauthconf->reject_authenticated_drop){
 		    answer = DECISION_REJECT;
 	    } else {
-		    answer=DECISION_DROP;
+		    answer = DECISION_DROP;
 	    }
     }
-    element->decision=answer;
+    element->decision = answer;
 
 
     /* Call modules to do final tuning of packet (setting mark, expire modification ...) */
@@ -633,22 +633,22 @@ gint take_decision(connection_t *element, packet_place_t place)
 
     if ((element->expire != -1) && (element->expire < expire)){
         debug_log_message(DEBUG, AREA_MAIN, " taken expire from element");
-        expire=element->expire;
+        expire = element->expire;
     }
 
     /* we must put element in expire list if needed before decision is taken */
     if (expire>0) {
         if (nuauthconf->nufw_has_conntrack){
-            struct limited_connection* datas=g_new0(struct limited_connection,1);
-            struct internal_message  *message=g_new0(struct internal_message,1);
+            struct limited_connection* datas = g_new0(struct limited_connection,1);
+            struct internal_message  *message = g_new0(struct internal_message,1);
 
             debug_log_message (VERBOSE_DEBUG, AREA_MAIN,
                     "Sending connection with fixed timeout to thread");
             memcpy(&(datas->tracking),&(element->tracking),sizeof(tracking_t));
-            datas->expire=expire;
-            datas->gwaddr=element->tls->peername;
-            message->datas=datas;
-            message->type=INSERT_MESSAGE;
+            datas->expire = expire;
+            datas->gwaddr = element->tls->peername;
+            message->datas = datas;
+            message->type = INSERT_MESSAGE;
             g_async_queue_push (nuauthdatas->limited_connections_queue, message);
         }
     }
@@ -664,7 +664,7 @@ gint take_decision(connection_t *element, packet_place_t place)
                 NULL);
     } else {
         apply_decision(element);
-        element->packet_id=NULL;
+        element->packet_id = NULL;
         if (place == PACKET_IN_HASH){
             conn_cl_delete(element);
         } else {
@@ -684,7 +684,7 @@ gint take_decision(connection_t *element, packet_place_t place)
  */
 gint apply_decision(connection_t *element)
 {
-    decision_t decision=element->decision;
+    decision_t decision = element->decision;
 #ifdef PERF_DISPLAY_ENABLE
     struct timeval leave_time,elapsed_time;
 #endif
@@ -709,7 +709,7 @@ gint apply_decision(connection_t *element)
     /* free packet_id */
     if (element->packet_id != NULL ){
         g_slist_free (element->packet_id);
-        element->packet_id=NULL;
+        element->packet_id = NULL;
     }
     return 1;
 }
@@ -725,7 +725,7 @@ gint apply_decision(connection_t *element)
  */
 void decisions_queue_work (gpointer userdata, gpointer data)
 {
-    connection_t* element=(connection_t *)userdata;
+    connection_t* element = (connection_t *)userdata;
 
     block_on_conf_reload();
     apply_decision(element);
@@ -740,9 +740,9 @@ void decisions_queue_work (gpointer userdata, gpointer data)
  */
 char * get_rid_of_domain(const char* user_domain)
 {
-    char *username=NULL;
+    char *username = NULL;
     char **user_realm;
-    user_realm=g_strsplit(user_domain, "@", 2);
+    user_realm = g_strsplit(user_domain, "@", 2);
     if (user_realm[0] != NULL){
         username = g_strdup(user_realm[0]);
     } else {

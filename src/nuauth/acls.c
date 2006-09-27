@@ -127,7 +127,7 @@ gboolean compare_tracking(gconstpointer a, gconstpointer b){
  */
 gint strcmp_null(gchar* a,gchar* b){
 	if (a == NULL ) {
-		if (b==NULL)
+		if (b == NULL)
 			return FALSE;
 		else
 			return TRUE;
@@ -161,7 +161,7 @@ gboolean compare_acls(gconstpointer a, gconstpointer b)
 
 void free_acl_key(gpointer datas)
 {
-	struct acl_key * kdatas=(struct acl_key*)datas;
+	struct acl_key * kdatas = (struct acl_key*)datas;
 	g_free(kdatas->acl_tracking);
     g_free(kdatas->sysname);
     g_free(kdatas->release);
@@ -191,7 +191,7 @@ void free_acl_groups(GSList *acl_groups, gpointer userdata)
  */
 void free_acl_cache(gpointer datas)
 {
-	GSList * dataslist=((struct cache_element *)datas)->datas;
+	GSList * dataslist = ((struct cache_element *)datas)->datas;
 	if ( dataslist  != NULL ){
 		g_slist_foreach(dataslist,(GFunc) free_cache_elt,free_acl_groups);
 		g_slist_free (dataslist);
@@ -201,25 +201,25 @@ void free_acl_cache(gpointer datas)
 
 struct acl_key* acl_create_key(connection_t *kdatas)
 {
-	struct acl_key * key=g_new0(struct acl_key,1);
-	key->acl_tracking=&(kdatas->tracking);
-	key->sysname=kdatas->os_sysname;
-	key->release=kdatas->os_release;
-	key->version=kdatas->os_version;
-	key->appname=kdatas->app_name;
-	key->appmd5=kdatas->app_md5;
+	struct acl_key * key = g_new0(struct acl_key,1);
+	key->acl_tracking = &(kdatas->tracking);
+	key->sysname = kdatas->os_sysname;
+	key->release = kdatas->os_release;
+	key->version = kdatas->os_version;
+	key->appname = kdatas->app_name;
+	key->appmd5 = kdatas->app_md5;
 	return key;
 }
 
 gpointer acl_create_and_alloc_key(connection_t* kdatas)
 {
 	struct acl_key key;
-	key.acl_tracking=&(kdatas->tracking);
-	key.sysname=kdatas->os_sysname;
-	key.release=kdatas->os_release;
-	key.version=kdatas->os_version;
-	key.appname=kdatas->app_name;
-	key.appmd5=kdatas->app_md5;
+	key.acl_tracking = &(kdatas->tracking);
+	key.sysname = kdatas->os_sysname;
+	key.release = kdatas->os_release;
+	key.version = kdatas->os_version;
+	key.appname = kdatas->app_name;
+	key.appmd5 = kdatas->app_md5;
 	return acl_duplicate_key(&key);
 }
 
@@ -248,12 +248,12 @@ void get_acls_from_cache (connection_t* conn_elt)
 	struct cache_message message;
 	/* Going to ask to the cache */
 	/* prepare message */
-	message.type=GET_MESSAGE;
-	message.key=acl_create_key(conn_elt);
-	message.datas=NULL;
-	message.reply_queue=g_private_get(nuauthdatas->aclqueue);
-	if (message.reply_queue==NULL){
-		message.reply_queue=g_async_queue_new();
+	message.type = GET_MESSAGE;
+	message.key = acl_create_key(conn_elt);
+	message.datas = NULL;
+	message.reply_queue = g_private_get(nuauthdatas->aclqueue);
+	if (message.reply_queue == NULL){
+		message.reply_queue = g_async_queue_new();
 		g_private_set(nuauthdatas->aclqueue,message.reply_queue);
 	}
 	/* send message */
@@ -264,11 +264,11 @@ void get_acls_from_cache (connection_t* conn_elt)
 	/*release */
 	debug_log_message(VERBOSE_DEBUG, AREA_PACKET, "[acl cache] request sent");
 	/* wait for answer */
-	conn_elt->acl_groups=g_async_queue_pop(message.reply_queue);
+	conn_elt->acl_groups = g_async_queue_pop(message.reply_queue);
 
 	if (conn_elt->acl_groups == null_queue_datas) {
-		conn_elt->acl_groups=NULL;
-	} else if (conn_elt->acl_groups==null_message) {
+		conn_elt->acl_groups = NULL;
+	} else if (conn_elt->acl_groups == null_message) {
 		struct cache_message * rmessage;
 		/* cache wants an update
 		 * external check of acl */
@@ -295,16 +295,16 @@ int init_acl_cache()
     GThread *acl_cache_thread;
     /* create acl cache thread */
     log_message(VERBOSE_DEBUG, AREA_MAIN, "creating acl cache thread");
-    nuauthdatas->acl_cache=g_new0(struct cache_init_datas,1);
-    nuauthdatas->acl_cache->hash=g_hash_table_new_full((GHashFunc)hash_acl,
+    nuauthdatas->acl_cache = g_new0(struct cache_init_datas,1);
+    nuauthdatas->acl_cache->hash = g_hash_table_new_full((GHashFunc)hash_acl,
             compare_acls,
             (GDestroyNotify) free_acl_key,
             (GDestroyNotify) free_acl_cache);
-    nuauthdatas->acl_cache->queue=g_async_queue_new();
+    nuauthdatas->acl_cache->queue = g_async_queue_new();
     nuauthdatas->acl_cache->delete_elt = (GFunc)free_acl_groups;
-    nuauthdatas->acl_cache->duplicate_key=acl_duplicate_key;
-    nuauthdatas->acl_cache->free_key=free_acl_key;
-    nuauthdatas->acl_cache->equal_key=compare_acls;
+    nuauthdatas->acl_cache->duplicate_key = acl_duplicate_key;
+    nuauthdatas->acl_cache->free_key = free_acl_key;
+    nuauthdatas->acl_cache->equal_key = compare_acls;
 
 
     acl_cache_thread = g_thread_create ( (GThreadFunc) cache_manager,
