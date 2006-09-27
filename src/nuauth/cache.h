@@ -24,36 +24,36 @@
  * @{
  */
 
-struct cache_element {
+typedef struct {
 	GSList* datas;
 	time_t create_timestamp;
 	time_t refresh_timestamp;
 	gboolean refreshing;
-};
+} cache_entry_t;
 
-struct cache_datas {
+typedef struct {
     gpointer datas;
     guint usage;
-};
+} cache_entry_content_t;
 
-void cache_entry_content_destroy(struct cache_datas* item, GFunc free_datas);
+void cache_entry_content_destroy(cache_entry_content_t* content, GFunc free_datas);
 
 typedef void (*CacheDeleteFunc)(gpointer, gpointer);
 
 /**
  * struct needed for initialisation of cache manager occurence
  */
-struct cache_init_datas {
-	GAsyncQueue * queue;
-	GHashTable*  hash;
+typedef struct {
+	GAsyncQueue* queue;
+	GHashTable* hash;
 	CacheDeleteFunc delete_elt;
 	void* (*duplicate_key)(gpointer);
 	void (*free_key)(gpointer);
 	gboolean (*equal_key)(gconstpointer,gconstpointer);
-};
+} cache_class_t;
 
-void cache_manager(struct cache_init_datas *this);
-void cache_destroy(struct cache_init_datas *datas);
+void cache_manager(cache_class_t *this);
+void cache_destroy(cache_class_t *datas);
 
 /**
  * generic message send between thread working with the

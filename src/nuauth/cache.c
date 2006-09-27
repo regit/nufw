@@ -35,7 +35,7 @@
  *
  * An implementation of a generic cache system
  */
-void cache_entry_content_destroy(struct cache_datas* item, GFunc free_datas)
+void cache_entry_content_destroy(cache_entry_content_t* item, GFunc free_datas)
 {
     if(item != NULL && item->datas != NULL){
         free_datas(item->datas, NULL);
@@ -47,7 +47,7 @@ void cache_entry_content_destroy(struct cache_datas* item, GFunc free_datas)
 /**
  * compare cache datas
  */
-int cache_entry_content_compare(const struct cache_datas *content, gconstpointer data)
+int cache_entry_content_compare(const cache_entry_content_t *content, gconstpointer data)
 {
     if (content) {
         return (data - content->datas);
@@ -56,7 +56,7 @@ int cache_entry_content_compare(const struct cache_datas *content, gconstpointer
     }
 }
 
-int cache_entry_content_used(const struct cache_datas *content, gconstpointer b)
+int cache_entry_content_used(const cache_entry_content_t *content, gconstpointer b)
 {
     return content->usage;
 }
@@ -66,8 +66,8 @@ int cache_entry_content_used(const struct cache_datas *content, gconstpointer b)
  */
 gboolean cache_entry_is_old(gpointer key, gpointer value, gpointer user_data)
 {
-    struct cache_element *entry = value;
-    struct cache_datas* data;
+    cache_entry_t *entry = value;
+    cache_entry_content_t* data;
     GSList *list;
 
     /* test if refresh is too late */
@@ -89,14 +89,14 @@ gboolean cache_entry_is_old(gpointer key, gpointer value, gpointer user_data)
     }
 }
 
-void cache_insert(struct cache_init_datas* this, struct cache_message *message)
+void cache_insert(cache_class_t* this, struct cache_message *message)
 {
     /* nothing in cache */
-    struct cache_element* cache_elt;
+    cache_entry_t* cache_elt;
     gpointer key;
 
     /* creating container for datas */
-    cache_elt = g_new0(struct cache_element, 1);
+    cache_elt = g_new0(cache_entry_t, 1);
     cache_elt->create_timestamp = time(NULL);
     cache_elt->refresh_timestamp = cache_elt->create_timestamp + nuauthconf->datas_persistance;
     cache_elt->refreshing = TRUE;
@@ -108,13 +108,13 @@ void cache_insert(struct cache_init_datas* this, struct cache_message *message)
     g_async_queue_push( message->reply_queue, null_message );
 }
 
-void cache_get(struct cache_init_datas *this,
-        struct cache_element *entry,
+void cache_get(cache_class_t *this,
+        cache_entry_t *entry,
         struct cache_message *message,
         GSList** local_queue)
 {
     GSList *list;
-    struct cache_datas* item;
+    cache_entry_content_t* item;
 
     if (entry->refreshing)
     {
@@ -168,11 +168,11 @@ void cache_get(struct cache_init_datas *this,
     }
 }
 
-void cache_message_destroy(struct cache_init_datas *this,
-        struct cache_element *entry,
+void cache_message_destroy(cache_class_t *this,
+        cache_entry_t *entry,
         struct cache_message *message)
 {
-    struct cache_datas *content;
+    cache_entry_content_t *content;
     GSList* cache_datas_list = entry->datas;
     GSList* concerned_datas = g_slist_find_custom (cache_datas_list,
             message->datas, (GCompareFunc)cache_entry_content_compare);
@@ -198,15 +198,15 @@ void cache_message_destroy(struct cache_init_datas *this,
     entry->datas = g_slist_delete_link(entry->datas, concerned_datas);
 }
 
-void cache_refresh(struct cache_init_datas *this,
-        struct cache_element *entry,
+void cache_refresh(cache_class_t *this,
+        cache_entry_t *entry,
         struct cache_message *message,
         GSList** local_queue)
 {
     GSList* iter;
 
     /* fine we really wait message and can update, alloc cache_datas element */
-    struct cache_datas* elt = g_new0(struct cache_datas,1);
+    cache_entry_content_t* elt = g_new0(cache_entry_content_t, 1);
 
     /* update NULL element waiting for completion */
     elt->datas = message->datas;
@@ -241,10 +241,10 @@ void cache_refresh(struct cache_init_datas *this,
  *      - If we found something, we send it back
  *      - If not we warn the client to look by itself and give us the answer when it has found it
  */
-void cache_manager (struct cache_init_datas *this)
+void cache_manager (cache_class_t *this)
 {
     struct cache_message *message;
-    struct cache_element *entry;
+    cache_entry_t *entry;
     GSList* local_queue = NULL;
 
     /* wait for message */
@@ -298,7 +298,7 @@ void cache_manager (struct cache_init_datas *this)
     }
 }
 
-void cache_destroy(struct cache_init_datas *this)
+void cache_destroy(cache_class_t *this)
 {
     struct cache_message *message;
 

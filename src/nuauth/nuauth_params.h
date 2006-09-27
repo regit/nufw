@@ -161,8 +161,8 @@ struct nuauth_datas
     GAsyncQueue* localid_auth_queue;
 
     /* cache related structure */
-    struct cache_init_datas *user_cache;
-    struct cache_init_datas *acl_cache;
+    cache_class_t *user_cache;
+    cache_class_t *acl_cache;
 
     /* reload related */
     gint need_reload;

@@ -45,7 +45,7 @@ void free_user_struct(struct user_cached_datas *datas, gpointer userdata)
 	g_free(datas);
 }
 
-void free_user_cache(struct cache_element *entry)
+void free_user_cache(cache_entry_t *entry)
 {
 	GSList *list = entry->datas;
 	if (list != NULL) {
@@ -138,26 +138,25 @@ gpointer user_duplicate_key(gpointer datas)
 int init_user_cache()
 {
 	GThread *user_cache_thread;
-		log_message(VERBOSE_DEBUG, AREA_MAIN, "creating user cache thread");
-		nuauthdatas->user_cache=g_new0(struct cache_init_datas,1);
-		nuauthdatas->user_cache->hash=g_hash_table_new_full((GHashFunc)g_str_hash,
-				g_str_equal,
-				(GDestroyNotify) g_free,
-				(GDestroyNotify) free_user_cache);
-		nuauthdatas->user_cache->queue=g_async_queue_new();
-		nuauthdatas->user_cache->delete_elt = (CacheDeleteFunc)free_user_struct;
-		nuauthdatas->user_cache->duplicate_key=user_duplicate_key;
-		nuauthdatas->user_cache->free_key=g_free;
-                nuauthdatas->user_cache->equal_key=g_str_equal;
+    log_message(VERBOSE_DEBUG, AREA_MAIN, "creating user cache thread");
+    nuauthdatas->user_cache=g_new0(cache_class_t, 1);
+    nuauthdatas->user_cache->hash=g_hash_table_new_full((GHashFunc)g_str_hash,
+            g_str_equal,
+            (GDestroyNotify)g_free,
+            (GDestroyNotify)free_user_cache);
+    nuauthdatas->user_cache->queue=g_async_queue_new();
+    nuauthdatas->user_cache->delete_elt = (CacheDeleteFunc)free_user_struct;
+    nuauthdatas->user_cache->duplicate_key=user_duplicate_key;
+    nuauthdatas->user_cache->free_key=g_free;
+    nuauthdatas->user_cache->equal_key=g_str_equal;
 
-
-		user_cache_thread = g_thread_create ( (GThreadFunc) cache_manager,
-				nuauthdatas->user_cache,
-				FALSE,
-				NULL);
-		if (! user_cache_thread )
-			exit(EXIT_FAILURE);
-		return 1;
+    user_cache_thread = g_thread_create ( (GThreadFunc) cache_manager,
+            nuauthdatas->user_cache,
+            FALSE,
+            NULL);
+    if (! user_cache_thread )
+        exit(EXIT_FAILURE);
+    return 1;
 }
 
 /** @} */

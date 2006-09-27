@@ -189,14 +189,14 @@ void free_acl_groups(GSList *acl_groups, gpointer userdata)
  * destroy function for acl cache datas.
  * hash value is a gslist of entry
  */
-void free_acl_cache(gpointer datas)
+void free_acl_cache(cache_entry_t *entry)
 {
-	GSList * dataslist = ((struct cache_element *)datas)->datas;
-	if ( dataslist  != NULL ){
-		g_slist_foreach(dataslist, (GFunc)cache_entry_content_destroy, free_acl_groups);
-		g_slist_free (dataslist);
+	GSList* list = entry->datas;
+	if (list != NULL) {
+		g_slist_foreach(list, (GFunc)cache_entry_content_destroy, free_acl_groups);
+		g_slist_free (list);
 	}
-	g_free(datas);
+	g_free(entry);
 }
 
 struct acl_key* acl_create_key(connection_t *kdatas)
@@ -269,7 +269,7 @@ void get_acls_from_cache (connection_t* conn_elt)
 	if (conn_elt->acl_groups == null_queue_datas) {
 		conn_elt->acl_groups = NULL;
 	} else if (conn_elt->acl_groups == null_message) {
-		struct cache_message * rmessage;
+		struct cache_message* rmessage;
 		/* cache wants an update
 		 * external check of acl */
         conn_elt->acl_groups = modules_acl_check(conn_elt);
@@ -295,7 +295,7 @@ int init_acl_cache()
     GThread *acl_cache_thread;
     /* create acl cache thread */
     log_message(VERBOSE_DEBUG, AREA_MAIN, "creating acl cache thread");
-    nuauthdatas->acl_cache = g_new0(struct cache_init_datas,1);
+    nuauthdatas->acl_cache = g_new0(cache_class_t, 1);
     nuauthdatas->acl_cache->hash = g_hash_table_new_full((GHashFunc)hash_acl,
             compare_acls,
             (GDestroyNotify) free_acl_key,
