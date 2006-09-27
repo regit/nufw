@@ -210,7 +210,9 @@ int tls_connect(int socket_fd,gnutls_session** session_ptr)
 {
     int ret;
     gnutls_session* session;
-
+#ifdef PERF_DISPLAY_ENABLE
+    struct timeval leave_time,entry_time,elapsed_time;
+#endif
     /* check arguments */
     if (session_ptr==NULL)
     {
@@ -235,12 +237,23 @@ int tls_connect(int socket_fd,gnutls_session** session_ptr)
 
     *session_ptr = session;
     ret = 0;
+
+#ifdef PERF_DISPLAY_ENABLE
+    gettimeofday(&entry_time,NULL);
+#endif
     do
     {
         debug_log_message (DEBUG, AREA_MAIN,
                 "NuFW TLS Handshaking (last error: %i)", ret);
         ret = gnutls_handshake( *session);
     } while (ret < 0 && !gnutls_error_is_fatal(ret));
+#ifdef PERF_DISPLAY_ENABLE
+    gettimeofday(&leave_time,NULL);
+    timeval_substract (&elapsed_time,&leave_time,&entry_time);
+    log_message(INFO, AREA_MAIN, 
+            "Handshake duration : %ld sec %03ld msec",
+            elapsed_time.tv_sec,elapsed_time.tv_usec/1000);
+#endif
     debug_log_message (DEBUG, AREA_MAIN, "NuFW TLS Handshaked");
 
     if (ret < 0)
