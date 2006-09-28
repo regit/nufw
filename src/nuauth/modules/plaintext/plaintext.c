@@ -1157,7 +1157,7 @@ G_MODULE_EXPORT GSList* acl_check(connection_t* element,gpointer params)
       this_acl->answer = p_acl->decision;
       this_acl->groups = g_slist_copy(p_acl->groups);
       if (p_acl->period) {
-          this_acl->period = p_acl->period;
+          this_acl->period = g_strdup(p_acl->period);
       } else {
           this_acl->period = NULL;
       }

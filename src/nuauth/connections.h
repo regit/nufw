@@ -59,7 +59,7 @@ typedef enum
 struct acl_group {
   GSList *groups;
   decision_t answer;
-  const gchar *period;
+  gchar *period;
 };
 
 /**
