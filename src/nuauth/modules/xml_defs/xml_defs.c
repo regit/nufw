@@ -204,7 +204,7 @@ static GMarkupParser period_parser = {
  * This function is exported by the module and fill the hash table containing the periods.
  *
  * \param periods A hash table containing all the periods.
- * \param params_p A pointer to the parameters of the module instance we're working for
+ * \param params A pointer to the parameters of the module instance we're working for
  *
  * The hash table keys are the name of the periods.
  *
