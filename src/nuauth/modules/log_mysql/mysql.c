@@ -65,6 +65,7 @@ static int ipv6_to_sql(struct in6_addr *addr, char *buffer, size_t buflen)
 
 static nu_error_t mysql_close_open_user_sessions(struct log_mysql_params* params);
 static MYSQL* mysql_conn_init(struct log_mysql_params* params);
+static MYSQL* get_mysql_handler(struct log_mysql_params* params);
 
 /**
  *
@@ -108,7 +109,7 @@ G_MODULE_EXPORT gchar* unload_module_with_params(gpointer params_p)
 
 static nu_error_t mysql_close_open_user_sessions(struct log_mysql_params* params)
 {
-    MYSQL* ld = mysql_conn_init(params);
+    MYSQL* ld = get_mysql_handler(params);
     char request[LONG_REQUEST_SIZE];
     int mysql_ret;
     int ok;
@@ -130,10 +131,8 @@ static nu_error_t mysql_close_open_user_sessions(struct log_mysql_params* params
     if (mysql_ret != 0){
         log_message (SERIOUS_WARNING, AREA_MAIN,
             "[MySQL] Cannot execute request: %s", mysql_error(ld));
-        mysql_close(ld);
         return NU_EXIT_ERROR;
     }
-    mysql_close(ld);
     return NU_EXIT_OK;
 
 }

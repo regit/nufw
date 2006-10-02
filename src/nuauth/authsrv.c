@@ -135,13 +135,18 @@ void stop_threads(gboolean wait)
         g_thread_pool_free(nuauthdatas->decisions_workers, TRUE, wait);
         log_message(DEBUG, AREA_MAIN, "Stop thread pool 'acl checkers'");
         g_thread_pool_free(nuauthdatas->acl_checkers, TRUE, wait);
-    }
 
-    /* working  */
-    if (nuauthconf->do_ip_authentication && wait) {
-        log_message(DEBUG, AREA_MAIN, "Stop thread pool 'ip auth workers'");
-        g_thread_pool_free(nuauthdatas->ip_authentication_workers, TRUE, wait);
+        if ( nuauthconf->log_users_sync) {
+            log_message(DEBUG, AREA_MAIN, "Stop thread pool 'decision workers'");
+            g_thread_pool_free(nuauthdatas->decisions_workers, TRUE, wait);
+        }
+
+        if (nuauthconf->do_ip_authentication) {
+            log_message(DEBUG, AREA_MAIN, "Stop thread pool 'ip auth workers'");
+            g_thread_pool_free(nuauthdatas->ip_authentication_workers, TRUE, wait);
+        }
     }
+    g_thread_pool_stop_unused_threads();
 
     /* done! */
     log_message(INFO, AREA_MAIN, "Threads stopped.");
@@ -639,13 +644,14 @@ void init_nuauthdatas()
     null_message = g_new0(struct cache_message, 1);
     null_queue_datas = g_new0(gchar,1);
 
-    if (nuauthconf->do_ip_authentication)
+    if (nuauthconf->do_ip_authentication) {
         /* create thread of pool */
         nuauthdatas->ip_authentication_workers = g_thread_pool_new ((GFunc) external_ip_auth,
                 NULL,
                 nuauthconf->nbipauth_check,
                 POOL_TYPE,
                 NULL);
+    }
 
     /* init private datas for pool thread */
     nuauthdatas->aclqueue = g_private_new((GDestroyNotify)g_async_queue_unref);

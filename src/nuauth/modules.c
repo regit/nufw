@@ -288,7 +288,9 @@ void free_module_t(module_t* module)
         g_free(module->module_name);
         g_free(module->name);
         g_free(module->configfile);
+#ifndef DEBUG_WITH_VALGRIND
         g_module_close(module->module);
+#endif
     }
 }
 

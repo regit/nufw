@@ -776,7 +776,9 @@ G_MODULE_EXPORT gboolean unload_module_with_params(struct plaintext_params* para
           g_slist_free(p_acl->types);
           g_slist_free(p_acl->src_ip);
           g_slist_free(p_acl->dst_ip);
+          g_slist_foreach(p_acl->src_ports, (GFunc)g_free, NULL);
           g_slist_free(p_acl->src_ports);
+          g_slist_foreach(p_acl->dst_ports, (GFunc)g_free, NULL);
           g_slist_free(p_acl->dst_ports);
           g_slist_free(p_acl->groups);
           g_free(p_acl->aclname);

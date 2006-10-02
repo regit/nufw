@@ -92,13 +92,13 @@ void log_user_packet_from_accounted_connection(struct accounted_connection* data
 
 
 /**
- * interface to logging module function for thread pool worker.
+ * Interface to logging module function for thread pool worker.
+ * This function is used in nuauthdatas->user_loggers thread pool.
  *
  * \param userdata A ::Conn_State
  * \param data Unused
  * \return None
  */
-
 void real_log_user_packet (gpointer userdata, gpointer data)
 {
   block_on_conf_reload();

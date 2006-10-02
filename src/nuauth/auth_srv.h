@@ -54,6 +54,11 @@
 #include <locale.h>
 #include <sys/time.h>
 
+#ifdef DEBUG_ENABLE
+/* Some code change to help debug using Valgrind */
+#  define DEBUG_WITH_VALGRIND
+#endif
+
 typedef enum
 {
     NU_EXIT_ERROR,
