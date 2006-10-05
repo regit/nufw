@@ -619,10 +619,13 @@ int main(int argc,char * argv[])
         pthread_mutex_lock(&packets_list.mutex);
         clean_old_packets ();
         pthread_mutex_unlock(&packets_list.mutex);
-
+#ifdef DEBUG_ENABLE
         /* display stats */
         process_poll(0);
-	printf("Average: %u\n", stat/seconds);
+#ifdef PERF_DISPLAY_ENABLE
+        printf("Average: %u\n", stat/seconds);
+#endif
+#endif
     }
 
     nufw_stop_thread();
