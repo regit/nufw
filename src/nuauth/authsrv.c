@@ -366,6 +366,7 @@ void parse_options(int argc, char **argv, command_line_params_t *params)
     char* version=VERSION;
     char * options_list = "DhVvl:L:C:p:t:T:";
     int option;
+    int local_debug_level=0;
 
     /*parse options */
     while((option = getopt ( argc, argv, options_list)) != -1 ){
@@ -377,7 +378,7 @@ void parse_options(int argc, char **argv, command_line_params_t *params)
 
             case 'v' :
                 /*fprintf (stdout, "Debug should be On (++)\n");*/
-                nuauthconf->debug_level+=1;
+                local_debug_level++;
                 break;
 
             case 'l' :
@@ -424,6 +425,9 @@ void parse_options(int argc, char **argv, command_line_params_t *params)
                 print_usage();
                 exit(EXIT_SUCCESS);
         }
+    }
+    if (local_debug_level){
+        nuauthconf->debug_level = local_debug_level;
     }
 }
 
