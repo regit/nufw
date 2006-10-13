@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2005 INL
+ ** Copyright(C) 2005-2006 INL
  ** Written by Eric Leblond <regit@inl.fr>
  **
  ** This program is free software; you can redistribute it and/or modify
@@ -28,21 +28,21 @@
  * \brief Contain functions used to regenerate configuration and reload
  */
 
-int build_nuauthconf(struct nuauth_params * nuauthconf,
+int build_prenuauthconf(struct nuauth_params * prenuauthconf,
                 char* nuauth_client_listen_addr,
                 char* nuauth_nufw_listen_addr,
                 char* gwsrv_addr,
                 char* nuauth_multi_users,
                 char* nuauth_multi_servers)
 {
-  if((!  nuauthconf->push) && nuauthconf->hello_authentication ){
+  if((!  prenuauthconf->push) && prenuauthconf->hello_authentication ){
       g_message("nuauth_hello_authentication required nuauth_push to be 1, resetting to 0");
-      nuauthconf->hello_authentication=0;
+      prenuauthconf->hello_authentication=0;
   }
 
   if (gwsrv_addr) {
       /* parse nufw server address */
-      nuauthconf->authorized_servers= generate_inaddr_list(gwsrv_addr);
+      prenuauthconf->authorized_servers= generate_inaddr_list(gwsrv_addr);
   }
 
   /* hostname conversion */
@@ -62,9 +62,9 @@ int build_nuauthconf(struct nuauth_params * nuauthconf,
           g_error("Bad Address was passed for client listening address: %s\n",
                   gai_strerror(ecode));
           exit(EXIT_SUCCESS);
-          nuauthconf->client_srv = in6addr_any;
+          prenuauthconf->client_srv = in6addr_any;
       } else {
-          memcpy(&nuauthconf->client_srv, &res->ai_addr, res->ai_addrlen);
+          memcpy(&prenuauthconf->client_srv, &res->ai_addr, res->ai_addrlen);
       }
   }
 
@@ -84,9 +84,9 @@ int build_nuauthconf(struct nuauth_params * nuauthconf,
           g_error("Bad Address was passed for nufw listening address: %s\n",
                   gai_strerror(ecode));
           exit(EXIT_SUCCESS);
-          nuauthconf->nufw_srv = in6addr_any;
+          prenuauthconf->nufw_srv = in6addr_any;
       } else {
-          memcpy(&nuauthconf->nufw_srv, &res->ai_addr, res->ai_addrlen);
+          memcpy(&prenuauthconf->nufw_srv, &res->ai_addr, res->ai_addrlen);
       }
   }
 
@@ -95,18 +95,18 @@ int build_nuauthconf(struct nuauth_params * nuauthconf,
   } else {
       /* parse multi user auth users */
       if (nuauth_multi_users){
-          nuauthconf->multi_users_array =  g_strsplit(nuauth_multi_users,",",0);
+          prenuauthconf->multi_users_array =  g_strsplit(nuauth_multi_users,",",0);
       }
       /* parse multi user clients */
       if (nuauth_multi_servers){
-          nuauthconf->multi_servers_array =  generate_inaddr_list(nuauth_multi_servers);
+          prenuauthconf->multi_servers_array =  generate_inaddr_list(nuauth_multi_servers);
       }
   }
-  if (!(nuauthconf->user_cache &&  (nuauth_multi_users && nuauth_multi_servers) )){
-      nuauthconf->user_cache=0;
+  if (!(prenuauthconf->user_cache &&  (nuauth_multi_users && nuauth_multi_servers) )){
+      prenuauthconf->user_cache=0;
   }
-  if (nuauthconf->nufw_has_fixed_timeout){
-    nuauthconf->nufw_has_conntrack=1;
+  if (prenuauthconf->nufw_has_fixed_timeout){
+    prenuauthconf->nufw_has_conntrack=1;
   }
   return 1;
 }
