@@ -303,6 +303,67 @@ static char *ipv6_to_base10(struct in6_addr *addr)
     return number_to_decimal(number);
 }
 
+
+/** 
+ * \brief Escape character to protect them in query
+ *
+ *  Abstract from RFC 2254
+           Character       ASCII value
+           ---------------------------
+           *               0x2a
+           (               0x28
+           )               0x29
+           \               0x5c
+           NUL             0x00
+    For example * is coded \2a
+ *
+ * \param basestring the string to convert
+ * \return a newly allocated string
+ */
+
+gchar* escape_string_for_ldap(const gchar* basestring)
+{
+    int length=strlen(basestring)+1;
+    gchar* result = g_new0(gchar,length);
+    const gchar *c_char = basestring;
+    int i = 0;
+
+    while (*c_char){
+        switch(*c_char){
+            case '*':
+                length+=2;
+                result = g_realloc(result,length);
+                g_strlcat(result,"\\2a",length);
+                i+=3;
+                break;
+            case '(':
+                length+=2;
+                result = g_realloc(result,length);
+                g_strlcat(result,"\\28",length);
+                i+=3;
+                break;
+            case ')':
+                length+=2;
+                result = g_realloc(result,length);
+                g_strlcat(result,"\\29",length);
+                i+=3;
+                break;
+            case '\\':
+                length+=2;
+                result = g_realloc(result,length);
+                g_strlcat(result,"\\5c",length);
+                i+=3;
+                break;
+            default: 
+                result[i] = *c_char;
+                i++;
+        }
+        c_char++;
+    }
+    result[length-1]=0;
+    return result;
+}
+
 /**
  * \brief Acl check function
  *
@@ -328,8 +389,9 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element,gpointer params_p)
   int err;
   struct ldap_params* params=(struct ldap_params*)params_p;
   LDAP *ld = g_private_get (params->ldap_priv);
-  char *ip_src;
-  char *ip_dst;
+  gchar *ip_src;
+  gchar *ip_dst;
+  gchar* prov_string;
 
   if (ld == NULL){
       /* init ldap has never been done */
@@ -407,35 +469,45 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element,gpointer params_p)
       /* finish filter */
       if (element->os_sysname){
           g_strlcat(filter,"(|(&(OsName=*)(OsName=",LDAP_QUERY_SIZE);
-          g_strlcat(filter,element->os_sysname,LDAP_QUERY_SIZE);
+          prov_string = escape_string_for_ldap(element->os_sysname);
+          g_strlcat(filter,prov_string,LDAP_QUERY_SIZE);
+          g_free(prov_string);
           g_strlcat(filter,"))(!(OsName=*)))",LDAP_QUERY_SIZE);
       } else {
           g_strlcat(filter,"(!(OsName=*))",LDAP_QUERY_SIZE);
       }
       if (element->app_name){
           g_strlcat(filter,"(|(&(AppName=*)(AppName=",LDAP_QUERY_SIZE);
-          g_strlcat(filter,element->app_name,LDAP_QUERY_SIZE);
+          prov_string = escape_string_for_ldap(element->app_name);
+          g_strlcat(filter,prov_string,LDAP_QUERY_SIZE);
+          g_free(prov_string);
           g_strlcat(filter,"))(!(AppName=*)))",LDAP_QUERY_SIZE);
       } else {
           g_strlcat(filter,"(!(AppName=*))",LDAP_QUERY_SIZE);
       }
       if (element->os_release){
           g_strlcat(filter,"(|(&(OsRelease=*)(OsRelease=",LDAP_QUERY_SIZE);
-          g_strlcat(filter,element->os_release,LDAP_QUERY_SIZE);
+          prov_string = escape_string_for_ldap(element->os_release);
+          g_strlcat(filter,prov_string,LDAP_QUERY_SIZE);
+          g_free(prov_string);
           g_strlcat(filter,"))(!(OsRelease=*)))",LDAP_QUERY_SIZE);
       } else {
           g_strlcat(filter,"(!(OsRelease=*))",LDAP_QUERY_SIZE);
       }
       if (element->os_version){
           g_strlcat(filter,"(|(&(OsVersion=*)(OsVersion=",LDAP_QUERY_SIZE);
-          g_strlcat(filter,element->os_version,LDAP_QUERY_SIZE);
+          prov_string = escape_string_for_ldap(element->os_version);
+          g_strlcat(filter,prov_string,LDAP_QUERY_SIZE);
+          g_free(prov_string);
           g_strlcat(filter,"))(!(OsVersion=*)))",LDAP_QUERY_SIZE);
       } else {
           g_strlcat(filter,"(!(OsVersion=*))",LDAP_QUERY_SIZE);
       }
       if (element->app_md5){
           g_strlcat(filter,"(|(&(AppSig=*)(AppSig=",LDAP_QUERY_SIZE);
-          g_strlcat(filter,element->app_md5,LDAP_QUERY_SIZE);
+          prov_string = escape_string_for_ldap(element->app_md5);
+          g_strlcat(filter,prov_string,LDAP_QUERY_SIZE);
+          g_free(prov_string);
           g_strlcat(filter,"))(!(AppSig=*)))",LDAP_QUERY_SIZE);
       } else {
           g_strlcat(filter,"(!(AppSig=*))",LDAP_QUERY_SIZE);
@@ -518,7 +590,7 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element,gpointer params_p)
           /* get decision */
           attrs_array=ldap_get_values(ld, result, "Decision");
           sscanf(*attrs_array,"%d",(int *)&(this_acl->answer));
-          debug_log_message(DEBUG, AREA_AUTH, "Acl found with decision %d\n",this_acl->answer);
+          debug_log_message(DEBUG, AREA_AUTH, "Acl found with decision %d (timerange: %s)\n",this_acl->answer,this_acl->period);
           ldap_value_free(attrs_array);
           /* build groups  list */
           attrs_array = ldap_get_values(ld, result, "Group");
