@@ -151,7 +151,7 @@ void init_nuauthconf(struct nuauth_params **result)
       { "nuauth_uses_utf8" , G_TOKEN_INT , 0,NULL },
 #endif
       {"nuauth_debug_areas", G_TOKEN_INT, DEFAULT_DEBUG_AREAS, NULL},
-      {"nuauth_debug_level", G_TOKEN_INT, 0, NULL},
+      {"nuauth_debug_level", G_TOKEN_INT, DEFAULT_DEBUG_LEVEL, NULL},
       { "nuauth_hello_authentication" , G_TOKEN_INT , 0,NULL },
       { "nufw_has_conntrack" , G_TOKEN_INT , 1,NULL },
       { "nufw_has_fixed_timeout" , G_TOKEN_INT , 1,NULL },
