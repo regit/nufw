@@ -3,30 +3,19 @@
  *	written by Eric Leblond <regit@inl.fr>
  *	           Vincent Deffontaines <vincent@inl.fr>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
- * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
- * AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
- * THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
+ ** This program is free software; you can redistribute it and/or modify
+ ** it under the terms of the GNU General Public License as published by
+ ** the Free Software Foundation, version 2 of the License.
+ **
+ ** This program is distributed in the hope that it will be useful,
+ ** but WITHOUT ANY WARRANTY; without even the implied warranty of
+ ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ ** GNU General Public License for more details.
+ **
+ ** You should have received a copy of the GNU General Public License
+ ** along with this program; if not, write to the Free Software
+ ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
-
 
 #include "nuclient.h"
 #include <sasl/saslutil.h>
@@ -95,7 +84,7 @@ int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
   for (item=0; ((item<CONN_MAX) && carray[item] != NULL); item++)
   {
 #if DEBUG
-      printf("adding one authreq\n"); 
+      printf("adding one authreq\n");
 #endif
 #ifdef LINUX
       /* get application name from inode */
@@ -104,11 +93,11 @@ int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
       appname="UNKNOWN";
 #endif
       header->length+=sizeof(struct nu_authreq)+sizeof(struct nu_authfield_ipv6);
-      
+
       authreq = (struct nu_authreq *)pointer;
       authreq->packet_seq = session->packet_seq++;
       authreq->packet_length = sizeof(struct nu_authreq)+sizeof(struct nu_authfield_ipv6);
-     
+
       authfield = (struct nu_authfield_ipv6 *)(authreq+1);
       authfield->type = IPV6_FIELD;
       authfield->option = 0;
@@ -121,13 +110,13 @@ int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
       authfield->dport = htons(carray[item]->port_dst);
 
       /* application field  */
-      appfield = (struct nu_authfield_app *)(authfield+1); 
+      appfield = (struct nu_authfield_app *)(authfield+1);
       appfield->type=APP_FIELD;
 #ifdef USE_SHA1
       appfield->option=APP_TYPE_SHA1;
 #else
       appfield->option=APP_TYPE_NAME;
-#endif          
+#endif
       app_ptr = (char*)(appfield+1);
       sasl_encode64(appname,strlen(appname),app_ptr, PROGNAME_BASE64_WIDTH, &len);
 #ifdef USE_SHA1

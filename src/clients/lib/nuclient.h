@@ -4,28 +4,18 @@
  *	written by Eric Leblond <regit@inl.fr>
  *	           Vincent Deffontaines <vincent@inl.fr>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
- * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
- * AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
- * THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
+ ** This program is free software; you can redistribute it and/or modify
+ ** it under the terms of the GNU General Public License as published by
+ ** the Free Software Foundation, version 2 of the License.
+ **
+ ** This program is distributed in the hope that it will be useful,
+ ** but WITHOUT ANY WARRANTY; without even the implied warranty of
+ ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ ** GNU General Public License for more details.
+ **
+ ** You should have received a copy of the GNU General Public License
+ ** along with this program; if not, write to the Free Software
+ ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
 #ifndef NUCLIENT_H
@@ -33,7 +23,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
-#endif 
+#endif
 
 #include "nufw_source.h"
 
@@ -109,7 +99,7 @@ extern "C" {
  * We use unsigned int and long (instead of exact type) to make
  * hashing easier.
  */
-typedef struct conn 
+typedef struct conn
 {
     unsigned int protocol;     /*!< IPv4 protocol */
     struct in6_addr ip_src;    /*!< Local address IPv4 */
@@ -168,11 +158,11 @@ typedef struct {
 	u_int32_t userid;        /*!< Local user identifier (getuid()) */
 	char *username;          /*!< Username (encoded in UTF-8) */
 	char *password;          /*!< Password,(encoded in UTF-8) */
-	
+
     gnutls_session tls;      /*!< TLS session over TCP socket */
 	gnutls_certificate_credentials cred; /*!< TLS credentials */
 	char* tls_password;      /*!< TLS password */
-	
+
 	int socket;              /*!< TCP socket used to exchange message with nuauth */
 	conntable_t *ct;         /*!< Connection table */
 	u_int32_t packet_seq;    /*!< Packet sequence number (start at zero) */
@@ -183,7 +173,7 @@ typedef struct {
 
     /** Server mode: #SRV_TYPE_POLL or #SRV_TYPE_PUSH */
 	u_int8_t server_mode;
-	
+
 	/*------------- PRIVATE MEMBERS ----------------*/
 
     /** Mutex used in session destruction */
@@ -191,12 +181,12 @@ typedef struct {
 
     /**
      * Flag to signal if user is connected or not.
-     * Connected means that TLS tunnel is opened 
+     * Connected means that TLS tunnel is opened
      * and that authentification is done.
      */
 	unsigned char connected;
 
-	/** 
+	/**
      * Condition and associated mutex used to know when a check is necessary
      */
 	pthread_cond_t check_cond;
@@ -271,7 +261,7 @@ void nu_client_global_deinit();
 
 NuAuth* nu_client_new(
         const char* username,
-        const char* password, 
+        const char* password,
         unsigned char diffie_hellman,
         nuclient_error *err);
 
@@ -279,7 +269,7 @@ void nu_client_set_debug(NuAuth* session, unsigned char enabled);
 void nu_client_set_verbose(NuAuth* session, unsigned char enabled);
 
 int nu_client_setup_tls(NuAuth* session,
-        char* tls_passwd, 
+        char* tls_passwd,
         char* keyfile,
         char* certfile,
         char* cafile,

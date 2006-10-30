@@ -3,28 +3,18 @@
  *	written by Eric Leblond <regit@inl.fr>
  *	           Vincent Deffontaines <vincent@inl.fr>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
- * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
- * AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
- * THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
+ ** This program is free software; you can redistribute it and/or modify
+ ** it under the terms of the GNU General Public License as published by
+ ** the Free Software Foundation, version 2 of the License.
+ **
+ ** This program is distributed in the hope that it will be useful,
+ ** but WITHOUT ANY WARRANTY; without even the implied warranty of
+ ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ ** GNU General Public License for more details.
+ **
+ ** You should have received a copy of the GNU General Public License
+ ** along with this program; if not, write to the Free Software
+ ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 #include "nuclient.h"
 #include "client.h"
@@ -59,7 +49,7 @@
  *  Main function is tcptable_read().
  */
 
-#ifdef LINUX 
+#ifdef LINUX
 
 /**
  * Convert an IPv6 address in "Linux format" (with no ":") into
@@ -99,7 +89,7 @@ int parse_tcptable_file(NuAuth* session, conntable_t *ct, char *filename, FILE *
     int session_uid_len;
     int ret;
     char *pos;
-    
+
     /* open file if it's not already opened */
     if (*file == NULL) {
         *file = fopen (filename, "r");
@@ -156,7 +146,7 @@ int parse_tcptable_file(NuAuth* session, conntable_t *ct, char *filename, FILE *
             c.ip_dst.s6_addr32[0] = 0;
             c.ip_dst.s6_addr32[1] = 0;
             c.ip_dst.s6_addr32[2] = 0xffff0000;
-            ret = sscanf (buf, 
+            ret = sscanf (buf,
                     "%*d: "
                     "%lx:%hx "
                     "%lx:%hx "
@@ -172,7 +162,7 @@ int parse_tcptable_file(NuAuth* session, conntable_t *ct, char *filename, FILE *
         } else {
             char ip_src[33];
             char ip_dst[33];
-            ret = sscanf (buf, 
+            ret = sscanf (buf,
                     "%*d: "
                     "%32s"
                     ":%hx "
@@ -224,16 +214,16 @@ int parse_tcptable_file(NuAuth* session, conntable_t *ct, char *filename, FILE *
  * On Linux: Parse connection table /proc/net/tcp and /proc/net/udp to get
  * connections in state "SYN sent" from session user.
  *
- * On FreeBSD: Use sysctl with "net.inet.tcp.pcblist" to get the connection 
+ * On FreeBSD: Use sysctl with "net.inet.tcp.pcblist" to get the connection
  * table. Add connections to the our table using tcptable_add().
  */
 int tcptable_read (NuAuth* session, conntable_t *ct)
 {
-#ifdef LINUX 
+#ifdef LINUX
   static FILE *fd_tcp = NULL;
   static FILE *fd_tcp6 = NULL;
   static FILE *fd_udp = NULL;
-  
+
 #if DEBUG
   assert (ct != NULL);
   assert (TCP_SYN_SENT == 2);
@@ -249,9 +239,9 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
       return 0;
 
   parse_tcptable_file(session, ct, "/proc/net/tcp6", &fd_tcp6, IPPROTO_TCP, 1);
-      
+
   if (!parse_tcptable_file(session, ct, "/proc/net/udp", &fd_udp, IPPROTO_UDP, 0))
-      return 0;          
+      return 0;
   return 1;
 #elif defined(FREEBSD)
   conn_t c;
@@ -286,7 +276,7 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
       return 0;
   }
   buf = malloc(len);
-  if (buf == NULL) 
+  if (buf == NULL)
   {
       printf("malloc %lu bytes", (u_long)len);
       return 0;
@@ -298,7 +288,7 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
       session->count_msg_cond=0;
       pthread_mutex_unlock(&(session->check_count_mutex));
   }
-  
+
   /* read connection table */
   if (sysctlbyname(mibvar, buf, &len, 0, 0) < 0) {
       printf("sysctl: %s", mibvar);
@@ -345,7 +335,7 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
 
       tcptable_add (ct, &c);
   }
-  free(buf);	
+  free(buf);
   return 1;
 #endif
 }
@@ -353,7 +343,7 @@ int tcptable_read (NuAuth* session, conntable_t *ct)
 /**
  * Create a connection table: allocate memory with zero bytes,
  * and init. each list with NULL pointer.
- * 
+ *
  * \return Returns 0 on error (no more memory), 1 otherwise.
  */
 int tcptable_init (conntable_t **ct)
@@ -425,7 +415,7 @@ conn_t* tcptable_find (conntable_t *ct, conn_t *c)
 #endif
 	bucket = ct->buckets[tcptable_hash (c)];
 	while (bucket != NULL) {
-		if ((c->protocol == bucket->protocol) 
+		if ((c->protocol == bucket->protocol)
                     && memcmp(&c->ip_dst, &bucket->ip_dst, sizeof(c->ip_dst)) == 0
                     && (c->port_dst == bucket->port_dst)
 		    && memcmp(&c->ip_src, &bucket->ip_src, sizeof(c->ip_src)) == 0

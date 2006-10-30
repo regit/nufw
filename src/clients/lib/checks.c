@@ -3,28 +3,18 @@
  *	written by Eric Leblond <regit@inl.fr>
  *	           Vincent Deffontaines <vincent@inl.fr>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
- * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
- * AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
- * THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
+ ** This program is free software; you can redistribute it and/or modify
+ ** it under the terms of the GNU General Public License as published by
+ ** the Free Software Foundation, version 2 of the License.
+ **
+ ** This program is distributed in the hope that it will be useful,
+ ** but WITHOUT ANY WARRANTY; without even the implied warranty of
+ ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ ** GNU General Public License for more details.
+ **
+ ** You should have received a copy of the GNU General Public License
+ ** along with this program; if not, write to the Free Software
+ ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
 #include "nuclient.h"
@@ -130,9 +120,9 @@ void* recv_message(void *data)
  * \brief Function called by client to initiate a check
  *
  * It has to be run at regular interval :
- *  - In POLL mode, it is really doing the job. 
+ *  - In POLL mode, it is really doing the job.
  *  - In PUSH mode, it is used to detect failure and send HELLO message
- *  
+ *
  * \param session A pointer to a valid ::NuAuth session
  * \param err A pointer to a allocated ::nuclient_error
  * \return -1 if a problem occurs. Session is destroyed if nu_client_check() return -1;
@@ -140,9 +130,9 @@ void* recv_message(void *data)
  * \par Internal
  * It is in charge of cleaning session as the session may be used
  * by user and we have no control of it. It has to be called for the first
- * time AFTER all forks occurs to create the working threads. This is 
+ * time AFTER all forks occurs to create the working threads. This is
  * mandatory and occurs because fork does not replicate the threads.
- * 
+ *
  *  - Poll mode: this is just a wrapper to nu_client_real_check()
  *  - Push mode: It is used to send HELLO message
  *
@@ -158,7 +148,7 @@ int nu_client_check(NuAuth * session, nuclient_error *err)
         pthread_mutex_unlock(&(session->mutex));
         SET_ERROR(err, INTERNAL_ERROR, SESSION_NOT_CONNECTED_ERR);
         return -1;
-    } 
+    }
 
     /* test if we need to create the working thread */
     if (session->count_msg_cond == -1){ /* if set to -1 then we've just leave init */
@@ -236,7 +226,7 @@ void* nu_client_thread_check(void *data)
 
 /**
  * Function that check connections table and send authentication packets:
- *    - Read the list of connections and build a conntrack table 
+ *    - Read the list of connections and build a conntrack table
  *      (call to tcptable_read()) ;
  *    - Initialize program list (/proc/ reading) ;
  *    - Compare current table with old one (compare call) ;
@@ -295,7 +285,7 @@ int nu_client_real_check(NuAuth *session, nuclient_error *err)
  */
 int secure_snprintf(char *buffer, unsigned int buffer_size, char *format, ...)
 {
-    va_list args;  
+    va_list args;
     int ret;
     va_start(args, format);
     ret = vsnprintf(buffer, buffer_size, format, args);
@@ -305,6 +295,6 @@ int secure_snprintf(char *buffer, unsigned int buffer_size, char *format, ...)
         return 1;
     else
         return 0;
-}    
+}
 
 /** @} */

@@ -5,28 +5,18 @@
  *	written by Eric Leblond <regit@inl.fr>
  *	           Vincent Deffontaines <vincent@inl.fr>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
- * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
- * AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
- * THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
+ ** This program is free software; you can redistribute it and/or modify
+ ** it under the terms of the GNU General Public License as published by
+ ** the Free Software Foundation, version 2 of the License.
+ **
+ ** This program is distributed in the hope that it will be useful,
+ ** but WITHOUT ANY WARRANTY; without even the implied warranty of
+ ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ ** GNU General Public License for more details.
+ **
+ ** You should have received a copy of the GNU General Public License
+ ** along with this program; if not, write to the Free Software
+ ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
 /**
@@ -40,8 +30,8 @@
   It contains all the exported functions
   */
 
-/** 
- * Use gcry_malloc_secure() to disallow a memory page 
+/**
+ * Use gcry_malloc_secure() to disallow a memory page
  * to be moved to the swap
  */
 #define USE_GCRYPT_MALLOC_SECURE
@@ -75,9 +65,9 @@ int nu_getrealm(void *context __attribute__((unused)), int id,
         const char **result)
 {
     if(id != SASL_CB_GETREALM) {
-#if DEBUG    
+#if DEBUG
         printf("nu_getrealm not looking for realm");
-#endif        
+#endif
         return EXIT_FAILURE;
     }
     if(!result) return SASL_BADPARAM;
@@ -149,14 +139,14 @@ static int nu_get_userdatas(void *context __attribute__((unused)),
  */
 void do_panic(const char *filename, unsigned long line, const char *fmt, ...)
 {
-    va_list args;  
+    va_list args;
     va_start(args, fmt);
     printf("\n");
     if (filename != NULL && line != 0) {
         printf("%s:%lu:", filename, line);
     }
     printf("Fatal error: ");
-    vprintf(fmt, args);            
+    vprintf(fmt, args);
     printf("\n");
     fflush(stdout);
     exit(EXIT_FAILURE);
@@ -218,7 +208,7 @@ static int samp_send(gnutls_session session, const char *buffer,
   }
 
   memcpy(buf,"C: ",3);
-  
+
   result = gnutls_record_send(session, buf, len+3);
   free(buf);
   if (result < 0) {
@@ -235,7 +225,7 @@ static unsigned samp_recv(gnutls_session session, char* buf,int bufsize, nuclien
   unsigned len;
   int result;
   int tls_len;
-  
+
   tls_len = gnutls_record_recv(session, buf, bufsize);
   if (tls_len<=0){
       SET_ERROR(err, GNUTLS_ERROR, tls_len);
@@ -273,10 +263,10 @@ int mysasl_negotiate(NuAuth* user_session, sasl_conn_t *conn, nuclient_error *er
     result = sasl_client_start(conn,
             buf,
             NULL,
-            &data, 
+            &data,
             &len,
             &chosenmech);
-    
+
     printf("Using mechanism %s\n", chosenmech);
     if (result != SASL_OK && result != SASL_CONTINUE) {
         if (user_session->verbose) {
@@ -370,12 +360,12 @@ static int add_packet_to_send(NuAuth * session,conn_t** auth,int *count_p,conn_t
 }
 
 /**
- * \brief Compare connection tables and send packets 
+ * \brief Compare connection tables and send packets
  *
- * Compare the `old' and `new' tables, sending packet to nuauth 
+ * Compare the `old' and `new' tables, sending packet to nuauth
  * if differences are found.
  *
- * \return -1 if error (then disconnect is needed) or the number of 
+ * \return -1 if error (then disconnect is needed) or the number of
  * authenticated packets if it has succeeded
  */
 int compare (NuAuth * session,conntable_t *old, conntable_t *new, nuclient_error *err)
@@ -399,7 +389,7 @@ int compare (NuAuth * session,conntable_t *old, conntable_t *new, nuclient_error
                 printf("sending new\n");
 #endif
                 if (add_packet_to_send(session,auth,&count,bucket) ==-1){
-                    /* problem when sending we exit */	      
+                    /* problem when sending we exit */
                     return -1;
                 }
                 nb_packets++;
@@ -410,7 +400,7 @@ int compare (NuAuth * session,conntable_t *old, conntable_t *new, nuclient_error
                     printf("sending retransmit\n");
 #endif
                     if (add_packet_to_send(session,auth,&count,bucket) == -1){
-                        /* problem when sending we exit */	      
+                        /* problem when sending we exit */
                         return -1;
 
                     }
@@ -515,7 +505,7 @@ int nu_client_global_init(nuclient_error *err)
 
 /**
  * \ingroup nuclientAPI
- * \brief  Global de init function 
+ * \brief  Global de init function
  *
  * \warning To be called once, when leaving.
  */
@@ -550,11 +540,11 @@ int send_os(NuAuth * session, nuclient_error *err)
     uname(&info);
 
     /* encode OS informations in base64 */
-    stringlen = strlen(info.sysname) + 1 
+    stringlen = strlen(info.sysname) + 1
         + strlen(info.release) + 1 + strlen(info.version) + 1;
 #ifdef LINUX
     oses=alloca(stringlen);
-#else 
+#else
     oses=calloc(stringlen,sizeof(char));
 #endif
     enc_oses = calloc(4*stringlen, sizeof(char));
@@ -577,7 +567,7 @@ int send_os(NuAuth * session, nuclient_error *err)
 
     /* add packet body */
 #ifdef LINUX
-    buf=alloca(osfield.length); 
+    buf=alloca(osfield.length);
 #else
     buf=calloc(osfield.length,sizeof(char));
 #endif
@@ -645,7 +635,7 @@ int nu_client_setup_tls(NuAuth * session,
     char *home = getenv("HOME");
     int ok;
     int ret;
-    
+
     session->tls_password = tls_password;
 
     /* compute patch keyfile */
@@ -714,7 +704,7 @@ int nu_client_setup_tls(NuAuth * session,
 }
 
 /**
- * Initialiaze SASL: create an client, set properties 
+ * Initialiaze SASL: create an client, set properties
  * and then call mysasl_negotiate()
  *
  * \param session Pointer to client session
@@ -779,7 +769,7 @@ int init_sasl(NuAuth* session, nuclient_error *err)
 }
 
 /**
- * Create a socket to nuauth, and try to connect. The function also set 
+ * Create a socket to nuauth, and try to connect. The function also set
  * SIGPIPE handler: ignore these signals.
  *
  * \param session Pointer to client session
@@ -787,7 +777,7 @@ int init_sasl(NuAuth* session, nuclient_error *err)
  * \param service Port number (or string) on which nuauth server is listening (default: #USERPCKT_PORT)
  * \param err Pointer to a nuclient_error: which contains the error
  */
-int init_socket(NuAuth * session, 
+int init_socket(NuAuth * session,
         const char *hostname, const char *service,
         nuclient_error *err)
 {
@@ -868,7 +858,7 @@ int tls_handshake(NuAuth * session, nuclient_error *err)
     {
         ret = gnutls_handshake(session->tls);
     } while (ret < 0 && !gnutls_error_is_fatal(ret));
-    
+
     if (ret < 0)
     {
         gnutls_perror(ret);
@@ -927,25 +917,25 @@ static char* secure_str_copy(const char *orig)
  * (very secure but initialization is slower)
  * \param err Pointer to a nuclient_error: which contains the error
  * \return A pointer to a valid ::NuAuth structure or NULL if init has failed
- * 
+ *
  * \par Internal
  * Initialisation of nufw authentication session:
  *    - set basic fields and then ;
  *    - allocate x509 credentials ;
  *    - generate Diffie Hellman params.
  *
- * If everything is ok, create the connection table using tcptable_init(). 
+ * If everything is ok, create the connection table using tcptable_init().
  */
 NuAuth* nu_client_new(
         const char* username,
-        const char* password, 
+        const char* password,
         unsigned char diffie_hellman,
         nuclient_error *err)
 {
     conntable_t *new;
     NuAuth * session;
     int ret;
-    
+
     if (username == NULL || password == NULL) {
         SET_ERROR(err, INTERNAL_ERROR, BAD_CREDENTIALS_ERR);
         return NULL;
@@ -960,7 +950,7 @@ NuAuth* nu_client_new(
         SET_ERROR(err, INTERNAL_ERROR, MEMORY_ERR);
         return NULL;
     }
-    
+
     /* Set basic fields */
     session->userid = getuid();
     session->connected = 0;
@@ -979,10 +969,10 @@ NuAuth* nu_client_new(
         SET_ERROR(err, INTERNAL_ERROR, MEMORY_ERR);
         return NULL;
     }
-#else    
+#else
     session->username = strdup(username);
     session->password = strdup(password);
-#endif    
+#endif
     session->tls_password = NULL;
     session->debug_mode = 0;
     session->verbose = 1;
@@ -1106,7 +1096,7 @@ void nu_client_reset(NuAuth *session)
  * \param err Pointer to a nuclient_error: which contains the error
  * \return Returns 0 on error (error description in err), 1 otherwise
  */
-int nu_client_connect(NuAuth* session, 
+int nu_client_connect(NuAuth* session,
         const char *hostname, const char *service, nuclient_error *err)
 {
     if (session->need_set_cred)
@@ -1143,7 +1133,7 @@ int nu_client_connect(NuAuth* session,
 
 /**
  * Enable or disabled debug mode
- * 
+ *
  * \param session Pointer to client session
  * \param enabled Enable debug if different than zero (1), disable otherwise
  */
@@ -1155,7 +1145,7 @@ void nu_client_set_debug(NuAuth* session, unsigned char enabled)
 
 /**
  * Enable or disabled verbose mode
- * 
+ *
  * \param session Pointer to client session
  * \param enabled Enable verbose mode if different than zero (1), disable otherwise
  */
@@ -1168,7 +1158,7 @@ void ask_session_end(NuAuth* session)
 {
     pthread_t self_thread=pthread_self();
     /* we kill thread thus lock will be lost if another thread reach this point */
-    
+
     /* sanity checks */
     if (session == NULL) {
         return;
