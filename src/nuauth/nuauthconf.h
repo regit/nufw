@@ -19,7 +19,7 @@
 #ifndef NUAUTHCONF_H
 #define NUAUTHCONF_H
 
-int build_nuauthconf(struct nuauth_params * nuauthconf,
+int build_prenuauthconf(struct nuauth_params * nuauthconf,
                 char* nuauth_client_listen_addr,
                 char* nuauth_nufw_listen_addr,
                 char* gwsrv_addr,

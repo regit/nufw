@@ -214,7 +214,7 @@ void init_nuauthconf(struct nuauth_params **result)
   /* free config struct */
   free_confparams(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams));
 
-  build_nuauthconf(conf,nuauth_client_listen_addr,nuauth_nufw_listen_addr,
+  build_prenuauthconf(conf,nuauth_client_listen_addr,nuauth_nufw_listen_addr,
                   gwsrv_addr,nuauth_multi_users,nuauth_multi_servers);
 
   g_free(nuauth_client_listen_addr);

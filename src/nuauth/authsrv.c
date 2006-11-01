@@ -498,7 +498,7 @@ void create_thread(struct nuauth_thread_t *thread, void* (*func) (GMutex*) )
  *   - Init GNU TLS library: gnutls_global_init() ;
  *   - Create credentials: create_x509_credentials() ;
  *   - Read command line options: parse_options() ;
- *   - Build configuartion options: build_nuauthconf() ;
+ *   - Build configuration options: build_prenuauthconf() ;
  *   - Daemonize the process if asked: daemonize().
  */
 void configure_app(int argc, char **argv)
@@ -560,7 +560,7 @@ void configure_app(int argc, char **argv)
 
     parse_options(argc, argv, &params);
 
-    build_nuauthconf(nuauthconf,
+    build_prenuauthconf(nuauthconf,
             params.nuauth_client_listen_addr,
             params.nuauth_nufw_listen_addr,
             NULL, NULL, NULL);
