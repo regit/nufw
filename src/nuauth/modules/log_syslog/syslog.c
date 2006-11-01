@@ -47,6 +47,7 @@ G_MODULE_EXPORT gint user_packet_logs (void* element, tcp_state_t state,gpointer
     char dest_addr[INET6_ADDRSTRLEN];
     char *saddr;
     char* daddr;
+    char* log_prefix="Default";
     u_int16_t sport;
     u_int16_t dport;
 
@@ -76,20 +77,23 @@ G_MODULE_EXPORT gint user_packet_logs (void* element, tcp_state_t state,gpointer
 	    if (inet_ntop(AF_INET6, &(((connection_t*)element)->tracking.daddr), dest_addr, sizeof(dest_addr)) == NULL)
 		    return 1;
 
+        if (((connection_t*)element)->log_prefix) {
+            log_prefix = ((connection_t*)element)->log_prefix;
+        }
 
 	    saddr = source_addr;
 	    daddr = dest_addr;
 	    if ( ((((connection_t*)element)->tracking).protocol == IPPROTO_TCP) || ((((connection_t *)element)->tracking).protocol == IPPROTO_UDP) ) {
 		    sport = (((connection_t*)element)->tracking).source;
 		    dport = (((connection_t*)element)->tracking).dest;
-		    g_message("%s%s[%s] %ld : SRC=%s DST=%s PROTO=%d SPT=%u DPT=%u",
-				    prefix, str_state,
+		    g_message("%s%s %s[%s] %ld : SRC=%s DST=%s PROTO=%d SPT=%u DPT=%u",
+				    prefix, log_prefix, str_state,
 				    ((connection_t*)element)->username,((connection_t*)element)->timestamp,
 				    saddr, daddr, ((connection_t*)element)->tracking.protocol,
 				    sport, dport);
 	    } else {
-		    g_message("%s%s[%s] %ld : SRC=%s DST=%s PROTO=%d",
-				    prefix, str_state,
+		    g_message("%s%s %s[%s] %ld : SRC=%s DST=%s PROTO=%d",
+				    prefix, log_prefix, str_state,  
 				    ((connection_t*)element)->username, ((connection_t*)element)->timestamp,
 				    source_addr, dest_addr,
 				    ((connection_t*)element)->tracking.protocol);
