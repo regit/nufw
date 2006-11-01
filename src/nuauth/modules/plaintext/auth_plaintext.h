@@ -67,6 +67,7 @@ struct T_plaintext_acl {
     GSList *dst_ports;
 
     gchar* period;
+    gchar* log_prefix;
 };
 
 struct plaintext_params {

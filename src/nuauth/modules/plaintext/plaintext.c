@@ -508,6 +508,7 @@ static int read_acl_list(struct plaintext_params* params)
 
           newacl->aclname = g_strdup(p_key);
           newacl->period=NULL;
+          newacl->log_prefix=NULL;
           debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
                   "L.%d: ACL name found: [%s]", ln, newacl->aclname);
           /*  We're done with this line */
@@ -674,6 +675,10 @@ static int read_acl_list(struct plaintext_params* params)
           newacl->period = g_strdup(p_value);
           debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
                   "L.%d: Read  period [%s]", ln, newacl->period);
+      } else if (!strcasecmp("log_prefix", p_key)) {
+          newacl->log_prefix = g_strdup(p_value);
+          debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+                  "L.%d: Read log_prefix [%s]", ln, newacl->log_prefix);
       } else {
           log_message(SERIOUS_WARNING, AREA_MAIN,
                   "L.%d: Unknown key [%s] in ACL %s",
@@ -1163,6 +1168,12 @@ G_MODULE_EXPORT GSList* acl_check(connection_t* element,gpointer params)
       } else {
           this_acl->period = NULL;
       }
+      if (p_acl->log_prefix) {
+          this_acl->log_prefix = g_strdup(p_acl->log_prefix);
+      } else {
+          this_acl->log_prefix = NULL;
+      }
+
       g_list = g_slist_prepend(g_list, this_acl);
   }
 
