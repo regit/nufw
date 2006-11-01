@@ -106,8 +106,18 @@ int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
       authfield->proto = carray[item]->protocol;
       authfield->flags = 0;
       authfield->FUSE = 0;
+#ifdef _I386__ENDIAN_H_
+#ifdef __DARWIN_LITTLE_ENDIAN
+      authfield->sport = carray[item]->port_src;
+      authfield->dport = carray[item]->port_dst;
+#else
       authfield->sport = htons(carray[item]->port_src);
       authfield->dport = htons(carray[item]->port_dst);
+#endif /* DARWIN LITTLE ENDIAN */
+#else
+      authfield->sport = htons(carray[item]->port_src);
+      authfield->dport = htons(carray[item]->port_dst);
+#endif /* I386 ENDIAN */
 
       /* application field  */
       appfield = (struct nu_authfield_app *)(authfield+1);
