@@ -83,6 +83,7 @@ typedef enum
 #include "connections.h"
 #include "conntrack.h"
 #include "auth_common.h"
+#include "take_decision.h"
 #include "period.h"
 #include "users.h"
 #include "user_logs.h"

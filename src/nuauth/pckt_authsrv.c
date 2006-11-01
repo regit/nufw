@@ -68,7 +68,7 @@ nu_error_t parse_dgram(connection_t* connection,unsigned char* dgram, unsigned i
                     break;
                 case TCP_STATE_CLOSE:
                     if (msg_type == AUTH_CONTROL ){
-			connection->state = AUTH_STATE_DONE;
+                        connection->state = AUTH_STATE_DONE;
                         log_user_packet(connection, TCP_STATE_CLOSE);
                         free_connection(connection);
                         return NU_EXIT_NO_RETURN;

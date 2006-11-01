@@ -28,10 +28,9 @@ void* search_and_fill (GMutex *mutex);
 
 gboolean compare_connection(gconstpointer conn1, gconstpointer conn2);
 int sck_auth_reply;
-void send_auth_response(gpointer data, gpointer userdata);
+int conn_cl_remove(gconstpointer conn);
 int conn_cl_delete(gconstpointer conn);
 inline char get_state(connection_t *elt);
-gint take_decision(connection_t * element, packet_place_t place);
 gint print_connection(gpointer data,gpointer userdata);
 void free_connection_list(GSList *list);
 connection_t* duplicate_connection(connection_t* element);
@@ -39,9 +38,10 @@ void free_connection(connection_t * conn);
 int lock_and_free_connection(connection_t * conn);
 void clean_connections_list ();
 guint hash_connection(gconstpointer conn_p);
-void decisions_queue_work (gpointer userdata, gpointer data);
 
 char * get_rid_of_domain(const char* user);
+
+int is_ipv4(struct in6_addr *addr);
 
 gboolean  get_old_conn (gpointer key,
 		gpointer value,
