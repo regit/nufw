@@ -93,17 +93,17 @@ gboolean compare_tracking(gconstpointer a, gconstpointer b){
             tracking2->protocol) return FALSE;
 
     /* compare proto headers */
-    switch ( tracking1->protocol) {
+    switch (tracking1->protocol) {
         case IPPROTO_TCP:
             if (tracking1->dest == tracking2->dest
-                && memcmp(&tracking1->daddr, &tracking2->daddr, sizeof(tracking1->daddr)) != 0)
+                && (memcmp(&tracking1->daddr, &tracking2->daddr, sizeof(tracking1->daddr)) == 0))
                 return TRUE;
             else
                 return FALSE;
 
         case IPPROTO_UDP:
             if (tracking1->dest == tracking2->dest
-                && memcmp(&tracking1->daddr, &tracking2->daddr, sizeof(tracking1->daddr)) != 0)
+                && (memcmp(&tracking1->daddr, &tracking2->daddr, sizeof(tracking1->daddr)) == 0))
                 return TRUE;
             else
                 return FALSE;
@@ -112,7 +112,7 @@ gboolean compare_tracking(gconstpointer a, gconstpointer b){
         case IPPROTO_ICMPV6:
             if (tracking1->type == tracking2->type
                 && tracking1->code == tracking2->code
-                && memcmp(&tracking1->daddr, &tracking2->daddr, sizeof(tracking1->daddr)) != 0)
+                && (memcmp(&tracking1->daddr, &tracking2->daddr, sizeof(tracking1->daddr)) == 0))
                 return TRUE;
             else
                 return FALSE;
@@ -125,7 +125,7 @@ gboolean compare_tracking(gconstpointer a, gconstpointer b){
 /**
  * Internal string comparison function
  */
-gint strcmp_null(gchar* a,gchar* b){
+inline gint strcmp_null(gchar* a,gchar* b){
 	if (a == NULL ) {
 		if (b == NULL)
 			return FALSE;
@@ -144,8 +144,9 @@ gboolean compare_acls(gconstpointer a, gconstpointer b)
     struct acl_key *acl_key1 = (struct acl_key *)a;
     struct acl_key *acl_key2 = (struct acl_key *)b;
 
-	if (!compare_tracking(acl_key1->acl_tracking, acl_key2->acl_tracking))
+	if (!compare_tracking(acl_key1->acl_tracking, acl_key2->acl_tracking)){
         return FALSE;
+    }
     if (strcmp_null(acl_key1->appname, acl_key2->appname))
         return FALSE;
     if (strcmp_null(acl_key1->appmd5, acl_key2->appmd5))
@@ -232,7 +233,7 @@ gpointer acl_duplicate_key(gpointer datas)
 	struct acl_key *kdatas = (struct acl_key*)datas;
 
 	key->acl_tracking =
-        g_memdup(kdatas->acl_tracking, sizeof(*kdatas->acl_tracking));
+        g_memdup(kdatas->acl_tracking, sizeof(*(kdatas->acl_tracking)));
     key->sysname = g_strdup(kdatas->sysname);
     key->release = g_strdup(kdatas->release);
     key->version = g_strdup(kdatas->version);
@@ -272,11 +273,12 @@ void get_acls_from_cache (connection_t* conn_elt)
 		conn_elt->acl_groups = NULL;
 	} else if (conn_elt->acl_groups == null_message) {
 		struct cache_message* rmessage;
+
+		debug_log_message(VERBOSE_DEBUG, AREA_PACKET, "[acl cache] We are about to search entry");
 		/* cache wants an update
 		 * external check of acl */
         conn_elt->acl_groups = modules_acl_check(conn_elt);
 
-		debug_log_message(VERBOSE_DEBUG, AREA_PACKET, "[acl cache] We are about to search entry");
 		rmessage = g_new0(struct cache_message,1);
 		rmessage->type = INSERT_MESSAGE;
 		rmessage->key = acl_duplicate_key(message.key);
