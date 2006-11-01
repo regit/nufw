@@ -29,6 +29,6 @@ gboolean check_string_in_array(gchar* checkstring,gchar** stringarray);
  * Returns NULL is the original string contains ' or ;
  * Else returns escaped char (with glib function g_strescape()
  */
-gchar *string_escape(gchar *orig);
+gchar *string_escape(const gchar *orig);
 
 #endif
