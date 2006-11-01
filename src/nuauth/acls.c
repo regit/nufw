@@ -176,6 +176,7 @@ void free_one_acl_group(struct acl_group *acl, gpointer userdata)
 	if (acl){
 		g_slist_free(acl->groups);
 		g_free(acl->period);
+        g_free(acl->log_prefix);
         g_free(acl);
 	}
 }

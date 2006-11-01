@@ -60,6 +60,7 @@ struct acl_group {
   GSList *groups;
   decision_t answer;
   gchar *period;
+  gchar *log_prefix;
 };
 
 /**
@@ -94,7 +95,10 @@ typedef struct
   gchar *app_md5;         /*!< Application binary MD5 checksum */
 
   auth_state_t state;     /*!< State of the packet */
+
   decision_t decision;    /*!< Decision on packet. */
+  gchar* log_prefix;          /*!< Log prefix. */
+
   time_t expire;          /*!< Expire time (never: -1) */
 
 

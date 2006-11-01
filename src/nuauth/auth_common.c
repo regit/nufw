@@ -351,6 +351,7 @@ void free_connection(connection_t *conn)
     g_free(conn->os_sysname);
     g_free(conn->os_release);
     g_free(conn->os_version);
+    g_free(conn->log_prefix);
     g_free(conn);
 }
 
@@ -371,6 +372,8 @@ connection_t* duplicate_connection(connection_t* element)
     conn_copy->os_sysname = g_strdup(element->os_sysname);
     conn_copy->os_release = g_strdup(element->os_release);
     conn_copy->os_version = g_strdup(element->os_version);
+
+    conn_copy->log_prefix = g_strdup(element->log_prefix);
 
     /* Nullify needed internal field */
     conn_copy->acl_groups = NULL;
@@ -513,6 +516,16 @@ void clean_connections_list ()
     }
 }
 
+static inline void update_connection_log_prefix(connection_t* element,const gchar* prefix)
+{
+  if (prefix) {
+      g_free(element->log_prefix);
+      element->log_prefix = g_strdup(prefix);
+      debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+                "Setting log prefix to %s", prefix);
+  }
+}
+
 typedef enum {
     TEST_NODECIDE,
     TEST_DECIDED
@@ -568,16 +581,30 @@ gint take_decision(connection_t *element, packet_place_t place)
                     /* search user group in acl_groups */
                     g_assert(((struct acl_group *)(parcours->data))->groups);
                     if (g_slist_find(((struct acl_group *)(parcours->data))->groups,(gconstpointer)user_group->data)) {
+                        /* find a group match, time to update decision */
                         answer = ((struct acl_group *)(parcours->data))->answer ;
                         if (nuauthconf->prio_to_nok == 1){
                             if ((answer == DECISION_DROP) || (answer == DECISION_REJECT)){
+                                /* if prio is to not ok, then a DROP or REJECT is a final decision */
                                 test = TEST_DECIDED;
+                                update_connection_log_prefix(element,
+                                        ((struct acl_group *)(parcours->data))->log_prefix
+                                        );
+                            } else {
+                                /* we can have multiple accpet, last one with a log prefix will be displayed */
+                                update_connection_log_prefix(element,
+                                        ((struct acl_group *)(parcours->data))->log_prefix
+                                        );
                             }
                         } else {
                             if (answer == DECISION_ACCEPT){
                                 test = TEST_DECIDED;
+                                update_connection_log_prefix(element,
+                                        ((struct acl_group *)(parcours->data))->log_prefix
+                                        );
                             }
                         }
+                        /* complete decision with check on period (This can change an ACCEPT answer) */
                         if (answer == DECISION_ACCEPT){
                             time_t periodend = -1;
                             /* compute end of period for this acl */
@@ -587,6 +614,9 @@ gint take_decision(connection_t *element, packet_place_t place)
                                     /* this is not a correct time going to drop */
                                     answer = DECISION_NODECIDE;
                                     test = TEST_DECIDED;
+                                    update_connection_log_prefix(element,
+                                        ((struct acl_group *)(parcours->data))->log_prefix
+                                        );
                                 } else {
                                     debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
                                             "end of period for %s in %ld", ((struct acl_group *)(parcours->data))->period,periodend);
@@ -598,20 +628,27 @@ gint take_decision(connection_t *element, packet_place_t place)
                                     ((periodend != -1) && (expire !=-1) && (expire > periodend ))
                                ) {
                                 debug_log_message(DEBUG, AREA_MAIN, " ... modifying expire");
-                                expire =  periodend;
+                                expire = periodend;
                             }
                         }
+                    } else {
+                        if (answer == DECISION_NODECIDE) {
+                            update_connection_log_prefix(element,
+                                    ((struct acl_group *)(parcours->data))->log_prefix
+                                    );
+                        }
                     }
-                }
+                } /* end of user group loop */
             } else {
                 debug_log_message(DEBUG, AREA_MAIN, "Empty acl : bad things ...");
                 answer = DECISION_DROP;
                 test = TEST_DECIDED;
             }
-        }
+        } /* end of acl groups loop */
     }
+
     /* answer is DECISION_NODECIDE if we did not found any matching group */
-    if(answer == DECISION_NODECIDE){
+    if (answer == DECISION_NODECIDE){
 	    if (nuauthconf->reject_authenticated_drop){
 		    answer = DECISION_REJECT;
 	    } else {
