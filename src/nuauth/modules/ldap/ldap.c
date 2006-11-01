@@ -307,15 +307,17 @@ static char *ipv6_to_base10(struct in6_addr *addr)
 /** 
  * \brief Escape character to protect them in query
  *
- *  Abstract from RFC 2254
-           Character       ASCII value
-           ---------------------------
-           *               0x2a
-           (               0x28
-           )               0x29
-           \               0x5c
-           NUL             0x00
-    For example * is coded \2a
+ * \verbatim
+Abstract from RFC 2254
+   Character       ASCII value
+   ---------------------------
+    *               0x2a
+    (               0x28
+    )               0x29
+    \               0x5c
+    NUL             0x00
+For example * is coded \2a
+\endverbatim
  *
  * \param basestring the string to convert
  * \return a newly allocated string
