@@ -583,11 +583,19 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element,gpointer params_p)
           }
           ldap_value_free(attrs_array);
 
+          /* get description (log prefix) */
+          attrs_array=ldap_get_values(ld, result, "description");
+          if (attrs_array && *attrs_array){
+              this_acl->log_prefix=g_strdup(*attrs_array);
+          }
+          ldap_value_free(attrs_array);
+
           /* allocate a new acl_group */
           this_acl=g_new0(struct acl_group,1);
           g_assert(this_acl);
           this_acl->groups = NULL;
           this_acl->period = NULL;
+          this_acl->log_prefix = NULL;
 
           /* get decision */
           attrs_array=ldap_get_values(ld, result, "Decision");
