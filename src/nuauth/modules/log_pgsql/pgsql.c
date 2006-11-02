@@ -244,11 +244,16 @@ static int pgsql_insert(PGconn *ld, connection_t *element, char *oob_prefix, tcp
     gboolean ok;
     PGresult *Result;
     char *sql_query;
+    char *log_prefix="Default";
 
     if (inet_ntop(AF_INET6, &element->tracking.saddr, ip_src, sizeof(ip_src)) == NULL)
         return -1;
     if (inet_ntop(AF_INET6, &element->tracking.daddr, ip_dst, sizeof(ip_dst)) == NULL)
         return -1;
+
+    if (element->log_prefix) {
+            log_prefix = element->log_prefix;
+    }
 
     /* Write common informations */
     ok = secure_snprintf(request_fields, sizeof(request_fields),
@@ -261,10 +266,10 @@ static int pgsql_insert(PGconn *ld, connection_t *element, char *oob_prefix, tcp
         return -1;
     }
     ok = secure_snprintf(request_values, sizeof(request_values),
-            "VALUES ('%s', '%hu', "
+            "VALUES ('%s %s', '%hu', "
             "'%lu', '0', '%lu', "
             "'%u', '%s', '%s'",
-            oob_prefix, state,
+            log_prefix, oob_prefix, state,
             element->timestamp, element->timestamp,
             element->tracking.protocol, ip_src, ip_dst);
     if (!ok) {
@@ -293,7 +298,7 @@ static int pgsql_insert(PGconn *ld, connection_t *element, char *oob_prefix, tcp
                 sizeof(request_fields));
         ok = secure_snprintf(tmp_buffer, sizeof(tmp_buffer),
                 ", '%u', '%s', '%s', '%s'",
-                element->user_id,
+                element->mark,
                 quoted_username,
                 quoted_osname,
                 quoted_appname
