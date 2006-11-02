@@ -289,6 +289,7 @@ static char* build_insert_request(
     char src_ascii[IPV6_SQL_STRLEN];
     char dst_ascii[IPV6_SQL_STRLEN];
     char tmp_buffer[REQUEST_TMP_BUFFER];
+    char *log_prefix="Default";
     gboolean ok;
 
     /* Write common informations */
@@ -311,6 +312,10 @@ static char* build_insert_request(
             dst_ascii);
     if (!ok) {
         return NULL;
+    }
+
+    if (element->log_prefix) {
+            log_prefix = element->log_prefix;
     }
 
     /* Add user informations */
@@ -338,8 +343,8 @@ static char* build_insert_request(
                     "oob_prefix, user_id, username, client_os, client_app",
                     sizeof(request_fields));
             ok = secure_snprintf(tmp_buffer, sizeof(tmp_buffer),
-                    "'%s', '%lu', '%s', '%s', '%s'",
-                    auth_oob_prefix,
+                    "'%s %s', '%lu', '%s', '%s', '%s'",
+                    log_prefix,auth_oob_prefix,
                     (long unsigned int)element->mark,
                     quoted_username,
                     quoted_osname,
@@ -359,8 +364,8 @@ static char* build_insert_request(
                 "oob_prefix",
                 sizeof(request_fields));
         ok = secure_snprintf(tmp_buffer, sizeof(tmp_buffer),
-                "'%s'",
-                unauth_oob_prefix);
+                "'%s %s'",
+                log_prefix,unauth_oob_prefix);
         if (!ok) {
             return NULL;
         }
