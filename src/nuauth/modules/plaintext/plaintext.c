@@ -283,11 +283,9 @@ static int parse_ips(char *ipsline, GSList **ip_list, char *prefix)
           *p_netmask = 0xffffffff;
           p_netmask++;
       }
-      for (n = 0 ; n < (int)mask ; n++) {
-          *p_netmask <<= 1;
-          *p_netmask |= 1;
+      if (mask != 0) {
+		    *p_netmask = htonl(0xFFFFFFFF << (32 - mask));
       }
-
 
       if (compare_ipv6_with_mask(&this_ip.addr, &this_ip.addr, &this_ip.netmask) != 0)
       {
