@@ -15,7 +15,7 @@
 /*
  * Use POSIX standard, version "IEEE 1003.1-2004"
  */
-#define _POSIX_C_SOURCE 200112L
+#define _POSIX_C_SOURCE 199506L
 
 /**
  * Use 4.3BSD standard

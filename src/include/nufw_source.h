@@ -24,7 +24,7 @@
  * Neded by sigaction (signal.h) and timespec (time.h) for example
  */
 #ifdef __linux__
-#  define _POSIX_C_SOURCE 200112L
+#  define _POSIX_C_SOURCE 199506L
 #endif
 
 /**
