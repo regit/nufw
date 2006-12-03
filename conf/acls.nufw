@@ -36,7 +36,8 @@
 #  OS = Linux ; 2.6.8 ; #3 Fri Aug 27 20:37:38 CEST 2004
 ## * (Several OS can be given)
 #
-#
+# Log prefix:
+# log_prefix = drop ssh
 
 
 
