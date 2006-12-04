@@ -31,9 +31,14 @@ struct ipauth_guest_params {
  * @{ */
 
 
-G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
+G_MODULE_EXPORT gchar* unload_module_with_params(gpointer params_p)
 {
-  return TRUE;
+  struct ipauth_guest_params* params = (struct ipauth_guest_params*)params_p;
+
+  g_free(params->username);
+  g_free(params);
+ 
+  return NULL;
 }
 
 G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
