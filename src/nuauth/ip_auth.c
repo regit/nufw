@@ -41,13 +41,11 @@ void external_ip_auth(gpointer userdata, gpointer data)
         username=modules_ip_auth(userdata);
         if (username){
             GSList* groups=NULL;
-	    uint32_t uid;
+            uint32_t uid;
             /**
-	     * \todo
-             *  switch to a list of modules
+             * \todo
              *  set a cache for such query
              */
-            /* get groups by calling user_check module with a empty password */
 
             uid = modules_get_user_id(username);
             groups = modules_get_user_groups(username);

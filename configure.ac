@@ -243,6 +243,7 @@ AC_CONFIG_FILES([Makefile
         src/nuauth/modules/libmark_uid/Makefile
         src/nuauth/modules/libsession_expire/Makefile
         src/nuauth/modules/log_bofh_mysql/Makefile
+        src/nuauth/modules/ipauth_guest/Makefile
         src/clients/Makefile
         src/clients/lib/Makefile
         src/clients/nutcpc/Makefile
