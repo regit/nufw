@@ -1,8 +1,8 @@
 Source: nufw20
 Section: net
 Priority: optional
-Maintainer: Jean-Michel Kelbert <kelbert@debian.org> 
-Build-Depends: debhelper (>= 4.1.16),po-debconf, automake1.9, libldap2-dev, libgdbm-dev, libglib2.0-dev, libmysqlclient-dev, postgresql-dev, iptables-dev, libtool, libident-dev, libgnutls11-dev, libsasl2-dev, libpam0g-dev
+Maintainer: Jean-Michel Kelbert <kelbert@debian.org>
+Build-Depends: debhelper (>= 4.1.16),po-debconf, automake1.9, libldap2-dev, libgdbm-dev, libglib2.0-dev, libmysqlclient-dev, postgresql-dev, iptables-dev, libtool, libident-dev, libgnutls11-dev|libgnutls-dev, libsasl2-dev, libpam0g-dev
 Standards-Version: 3.6.0
 
 Package: nufw20
@@ -16,8 +16,8 @@ Description: a per-user firewalling daemon that interfers with libipq
  access the network, instead caring only about the originating IP addresses.
  .
  Nufw is the daemon that receives some network packets through the QUEUE
- netfilter rule.  Informations about those packets are forwarded to the 
- nuauth daemon, which decides if packets should be accepted or denied, 
+ netfilter rule.  Informations about those packets are forwarded to the
+ nuauth daemon, which decides if packets should be accepted or denied,
  sends back the information to Nufw that applies decisions.
 
 Package: nuauth20
