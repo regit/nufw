@@ -27,10 +27,6 @@ struct ipauth_guest_params {
     gchar* username;
 };
 
-/**
- * @{ */
-
-
 G_MODULE_EXPORT gchar* unload_module_with_params(gpointer params_p)
 {
   struct ipauth_guest_params* params = (struct ipauth_guest_params*)params_p;
@@ -67,6 +63,9 @@ G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
   module->params=(gpointer)params;
   return TRUE;
 }
+
+/**
+ * @{ */
 
 G_MODULE_EXPORT gchar* ip_authentication(tracking_t * header,struct ipauth_guest_params* params)
 {
