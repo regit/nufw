@@ -2,13 +2,13 @@ Source: nufw20
 Section: net
 Priority: optional
 Maintainer: Jean-Michel Kelbert <kelbert@debian.org>
-Build-Depends: debhelper (>= 4.1.16),po-debconf, automake1.9, libldap2-dev, libgdbm-dev, libglib2.0-dev, libmysqlclient-dev, postgresql-dev, iptables-dev, libtool, libident-dev, libgnutls11-dev|libgnutls-dev, libsasl2-dev, libpam0g-dev
+Build-Depends: debhelper (>= 4.1.16),po-debconf, automake1.9, libldap2-dev, libgdbm-dev, libglib2.0-dev, libmysqlclient-dev||libmysqlclient14-dev, postgresql-dev, iptables-dev, libtool, libident-dev, libgnutls11-dev|libgnutls-dev, libsasl2-dev, libpam0g-dev, libnetfilter-conntrack-dev, libnetfilter-queue-dev, libnfnetlink-dev
 Standards-Version: 3.6.0
 
 Package: nufw20
 Architecture: any
-Conflicts: nufw
-Depends: ${shlibs:Depends}, debconf
+Conflicts: nufw, nufw20-nfqueue
+Depends: ${shlibs:Depends}, debconf, ssl-cert, openssl
 Description: a per-user firewalling daemon that interfers with libipq
  NuFW is an authenticating gateway, which means that connections are
  authenticated before being forwarded through the gateway.  Classical packet
@@ -19,11 +19,33 @@ Description: a per-user firewalling daemon that interfers with libipq
  netfilter rule.  Informations about those packets are forwarded to the
  nuauth daemon, which decides if packets should be accepted or denied,
  sends back the information to Nufw that applies decisions.
+ .
+ Use this package and the Netfilter QUEUE target only if you run an "old"
+ kernel (<2.6.18). It is better to use a recent kernel and the nufw20-nfqueue
+ package.
+
+Package: nufw20-nfqueue
+Architecture: any
+Conflicts: nufw, nufw20
+Depends: ${shlibs:Depends}, debconf, ssl-cert, openssl, libnetfilter-conntrack1, libnetfilter-queue0, libnfnetlink0
+Description: a per-user firewalling daemon that interfers with libipq
+ NuFW is an authenticating gateway, which means that connections are
+ authenticated before being forwarded through the gateway.  Classical packet
+ filtering systems disregard the identity of the user who may be attempting to
+ access the network, instead caring only about the originating IP addresses.
+ .
+ Nufw is the daemon that receives some network packets through the NFQUEUE
+ netfilter rule.  Informations about those packets are forwarded to the
+ nuauth daemon, which decides if packets should be accepted or denied,
+ sends back the information to Nufw that applies decisions.
+ .
+ It is advised that you use this package rather than nufw20 if you use a recent
+ kernel (2.6.18 is prefered)
 
 Package: nuauth20
 Architecture: any
 Conflicts: nuauth
-Depends: ${shlibs:Depends}, debconf, libsasl2-modules
+Depends: ${shlibs:Depends}, debconf, libsasl2-modules, ssl-cert, openssl
 Recommends: nuauth20-utils
 Description: The authentication daemon from the nufw package
  NuFW is an authenticating gateway, which means that connections are

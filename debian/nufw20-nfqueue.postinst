@@ -29,21 +29,21 @@ fi
 # optimisations possibles simples. Le cp avant
 # le sed permet de s'assurer que l'on ne dtruise
 # pas le systme des droits du fichier config.
-db_get nufw20/start_at_boot
+db_get nufw20-nfqueue/start_at_boot
 NUFW_START="$RET"
-db_get nufw20/verbosity
+db_get nufw20-nfqueue/verbosity
 NUFW_VERBOSITY="$RET"
 #db_get nufw/listen_port
 #NUFW_LISTEN_UDP_PORT="$RET"
 #db_get nufw/listen_address
 #NUFW_LISTEN_ADDRESS="$RET"
-db_get nufw20/nuauth_address
+db_get nufw20-nfqueue/nuauth_address
 NUFW_NUAUTH_ADDRESS="$RET"
-db_get nufw20/nuauth_port
+db_get nufw20-nfqueue/nuauth_port
 NUFW_NUAUTH_UDP_PORT="$RET"
-db_get nufw20/timeout
+db_get nufw20-nfqueue/timeout
 NUFW_TIMEOUT="$RET"
-db_get nufw20/tracksize
+db_get nufw20-nfqueue/tracksize
 NUFW_TRACK_SIZE="$RET"
 cp -a -f $CONFIGFILE $CONFIGFILE.tmp
 #  -e "s/^ *BAR=.*/BAR=\"$BAR\"/" \

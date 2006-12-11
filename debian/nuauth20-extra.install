@@ -1,15 +1,15 @@
-usr/lib/nuauth20/modules/libplaintext.so.0.0.0
-usr/lib/nuauth20/modules/libplaintext.so.0
-usr/lib/nuauth20/modules/libplaintext.so
-usr/lib/nuauth20/modules/libplaintext.la
-usr/lib/nuauth20/modules/libplaintext.a
-usr/lib/nuauth20/modules/libipauthident.so.0.0.0
-usr/lib/nuauth20/modules/libipauthident.so.0
-usr/lib/nuauth20/modules/libipauthident.so
-usr/lib/nuauth20/modules/libipauthident.la
-usr/lib/nuauth20/modules/libipauthident.a
-usr/lib/nuauth20/modules/libsystem.so.0.0.0
-usr/lib/nuauth20/modules/libsystem.so.0
-usr/lib/nuauth20/modules/libsystem.so
-usr/lib/nuauth20/modules/libsystem.la
-usr/lib/nuauth20/modules/libsystem.a
+src/nuauth/modules/plaintext/.libs/libplaintext.so.0.0.0 usr/lib/nuauth/modules
+src/nuauth/modules/plaintext/.libs/libplaintext.so.0 usr/lib/nuauth/modules
+src/nuauth/modules/plaintext/.libs/libplaintext.so usr/lib/nuauth/modules
+src/nuauth/modules/plaintext/libplaintext.la usr/lib/nuauth/modules
+src/nuauth/modules/plaintext/.libs/libplaintext.a usr/lib/nuauth/modules
+src/nuauth/modules/ipauth_ident/.libs/libipauthident.so.0.0.0 usr/lib/nuauth/modules
+src/nuauth/modules/ipauth_ident/.libs/libipauthident.so.0 usr/lib/nuauth/modules
+src/nuauth/modules/ipauth_ident/.libs/libipauthident.so usr/lib/nuauth/modules
+src/nuauth/modules/ipauth_ident/libipauthident.la usr/lib/nuauth/modules
+src/nuauth/modules/ipauth_ident/.libs/libipauthident.a usr/lib/nuauth/modules
+src/nuauth/modules/system/.libs/libsystem.so.0.0.0 usr/lib/nuauth/modules
+src/nuauth/modules/system/.libs/libsystem.so.0 usr/lib/nuauth/modules
+src/nuauth/modules/system/.libs/libsystem.so usr/lib/nuauth/modules
+src/nuauth/modules/system/libsystem.la usr/lib/nuauth/modules
+src/nuauth/modules/system/.libs/libsystem.a usr/lib/nuauth/modules

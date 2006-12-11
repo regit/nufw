@@ -1,1 +1,1 @@
-lib/security/pam_nufw.so
+src/clients/pam_nufw/.libs/pam_nufw.so lib/security

@@ -1,3 +1,65 @@
+nufw20 (2.0.11-1) stable; urgency=low
+
+  * New upstream release
+  * New packaging system : generate nufw20-nfqueue package
+
+ -- Vincent Deffontaines <gryzor@inl.fr>  Mon, 20 Nov 2006 23:29:38 +0100
+
+nufw20 (2.0.9-1) stable; urgency=low
+
+  * New upstream release
+
+ -- Eric Leblond <regit@inl.fr>  Tue,  5 Sep 2006 10:05:47 +0200
+
+nufw20 (2.0.8-1) stable; urgency=low
+
+  * new upstream release
+
+ -- Eric Leblond <regit@inl.fr>  Fri, 11 Aug 2006 10:39:36 +0200
+
+nufw20 (2.0.7-1) stable; urgency=low
+
+  * New upstream release
+
+ -- Eric Leblond <regit@inl.fr>  Mon, 31 Jul 2006 23:46:47 +0200
+
+nufw20 (2.0.6-1) stable;  urgency=low
+
+  * New upstream release
+
+ -- Eric Leblond <regit@inl.fr>  Thu,  6 Jul 2006 19:05:49 +0200
+
+nufw20 (2.0.5-1) stable; urgency=low
+
+  * New upstream release
+
+ -- Eric Leblond <regit@inl.fr>  Thu,  6 Jul 2006 15:18:35 +0200
+
+nufw20 (2.0.4-1) stable; urgency=low
+
+  * New upstream release
+
+ -- Regit <regit@inl.fr>  Tue,  4 Jul 2006 15:26:08 +0200
+
+nufw20 (2.0.3-1) stable; urgency=low
+
+  * New upstream release
+
+ -- Vincent Deffontaines <gryzor@inl.fr>  Fri, 23 Jun 2006 22:37:38 +0200
+
+nufw20 (2.0.2-1) stable; urgency=low
+
+  * New Upstream release
+  * Two fixes in the nuauth20 package
+
+ -- Eric Leblond <regit@inl.fr>  Tue,  6 Jun 2006 22:41:45 +0200
+
+nufw20 (2.0.1-2) stable; urgency=low
+
+  * New Upstream release
+
+ -- Regit <regit@inl.fr>  Wed, 24 May 2006 19:35:53 +0200
+
 nufw20 (2.0-1) stable; urgency=low
 
   * New Upstream release

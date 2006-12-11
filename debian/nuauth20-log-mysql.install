@@ -1,5 +1,5 @@
-usr/lib/nuauth20/modules/libmysql.a
-usr/lib/nuauth20/modules/libmysql.la
-usr/lib/nuauth20/modules/libmysql.so.0.0.0
-usr/lib/nuauth20/modules/libmysql.so
-usr/lib/nuauth20/modules/libmysql.so.0
+src/nuauth/modules/log_mysql/.libs/libmysql.a usr/lib/nuauth/modules
+src/nuauth/modules/log_mysql/libmysql.la usr/lib/nuauth/modules
+src/nuauth/modules/log_mysql/.libs/libmysql.so.0.0.0 usr/lib/nuauth/modules
+src/nuauth/modules/log_mysql/.libs/libmysql.so.0 usr/lib/nuauth/modules
+src/nuauth/modules/log_mysql/.libs/libmysql.so usr/lib/nuauth/modules

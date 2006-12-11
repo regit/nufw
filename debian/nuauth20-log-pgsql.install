@@ -1,5 +1,5 @@
-usr/lib/nuauth20/modules/libpgsql.a
-usr/lib/nuauth20/modules/libpgsql.la
-usr/lib/nuauth20/modules/libpgsql.so.0.0.0
-usr/lib/nuauth20/modules/libpgsql.so
-usr/lib/nuauth20/modules/libpgsql.so.0
+src/nuauth/modules/log_pgsql/.libs/libpgsql.a  usr/lib/nuauth/modules
+src/nuauth/modules/log_pgsql/libpgsql.la  usr/lib/nuauth/modules
+src/nuauth/modules/log_pgsql/.libs/libpgsql.so.0.0.0  usr/lib/nuauth/modules
+src/nuauth/modules/log_pgsql/.libs/libpgsql.so.0  usr/lib/nuauth/modules
+src/nuauth/modules/log_pgsql/.libs/libpgsql.so  usr/lib/nuauth/modules

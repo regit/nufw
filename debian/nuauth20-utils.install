@@ -1,4 +1,5 @@
-etc/nufw20/nuaclgen.conf
-etc/nufw20/nutop.conf
-usr/bin/nuaclgen
-usr/bin/nutop
+conf/nuaclgen.conf etc/nufw20
+conf/nutop.conf etc/nufw20
+scripts/nuaclgen usr/bin
+scripts/nutop usr/bin
+scripts/clean_conntrack.pl usr/sbin

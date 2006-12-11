@@ -10,6 +10,7 @@
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 DAEMON=/usr/sbin/nufw
 NAME=nufw20
+PID=nufw
 DESC=nufw20
 NUFW_START="false"
 
@@ -54,20 +55,21 @@ if [ ! "NUFW_TRACK_SIZE" ]; then
 fi
 
 DAEMON_OPTS="-D -$NUFW_VERBOSITY  \
-    -d $NUFW_NUAUTH_ADDRESS -p $NUFW_NUAUTH_UDP_PORT  -t $NUFW_TIMEOUT -T $NUFW_TRACK_SIZE"
+    -d $NUFW_NUAUTH_ADDRESS -p $NUFW_NUAUTH_UDP_PORT  -t $NUFW_TIMEOUT -T $NUFW_TRACK_SIZE\
+    -k $NUFW_SSL_KEY -c $NUFW_SSL_CERTIFICATE"
 
 set -e
 
 case "$1" in
   start)
 	echo -n "Starting $DESC: "
-	start-stop-daemon --start --quiet --pidfile /var/run/$NAME.pid \
+	start-stop-daemon --start --quiet --pidfile /var/run/$PID.pid \
 		--exec $DAEMON -- $DAEMON_OPTS
 	echo "$NAME."
 	;;
   stop)
 	echo -n "Stopping $DESC: "
-	start-stop-daemon --stop --quiet --pidfile /var/run/$NAME.pid \
+	start-stop-daemon --stop --quiet --pidfile /var/run/$PID.pid \
 		--exec $DAEMON
 	echo "$NAME."
 	;;
@@ -91,10 +93,10 @@ case "$1" in
 	#
 	echo -n "Restarting $DESC: "
 	start-stop-daemon --stop --quiet --pidfile \
-		/var/run/$NAME.pid --exec $DAEMON || /bin/true
+		/var/run/$PID.pid --exec $DAEMON || /bin/true
 	sleep 1
 	start-stop-daemon --start --quiet --pidfile \
-		/var/run/$NAME.pid --exec $DAEMON -- $DAEMON_OPTS
+		/var/run/$PID.pid --exec $DAEMON -- $DAEMON_OPTS
 	echo "$NAME."
 	;;
   *)

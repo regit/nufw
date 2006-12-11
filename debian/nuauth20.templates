@@ -76,14 +76,6 @@ _Description: Nufw daemon IP address
  nufw and nuauth on the same box, leave it at default value of 127.0.0.1.
  Else enter an IP address.
 
-Template: nuauth20/nufw_gw_port
-Type: string
-_Default: 4128
-_Description: Nufw daemon port
- This must be the port number nufw is configured to listen on your
- installation. On most installations, the default value of 4128 will be
- correct. Please input a numeric port number.
-
 Template: nuauth20/prio
 Type: string
 _Default: 1
@@ -117,41 +109,58 @@ _Description: Nuauth gateway request threads number
 
 Template: nuauth20/user_check_module
 Type: select
-_Choices: libldap, libdbm
-Default: libldap
+_Choices: system, libldap, libdbm, plaintext
+Default: system
 _Description: User check module
  Here are possible plugins, which are ways of authenticating users of your
  network. You must choose one, which will be used by nuauth to check
  user/group relationships.
+ If testing and willing to use plaintext, edit nuauth.conf later on.
 
 Template: nuauth20/acl_check_module
 Type: select
-_Choices: libldap
+_Choices: libldap, plaintext
 Default: libldap
 _Description: ACL check module
- Here are possible plugins for ACLs definitions. One single of them must be
- chosen. For now the choice is easy, as only "libldap" is available ;-)
+ Here are possible plugins for ACLs definitions. One of them must be
+ chosen. Ldap requests that you import NuFW-specific schemes in your LDAP tree, 
+ and is advised for production systems. Plaintext is probably the best for testing.
 
-Template: nuauth20/use_ssl
-Type: select
-_Choices: 0, 1
-Default: 1
-_Description: SSL communications with clients
- If you set this to 1, only SSL encrypted authentications will be accepted
- from clients. If you set this to 0, a hash will be used. It is strongly
- advised to use SSL encryption, which is the default.
-
-Template: nuauth20/ssl_key
+Template: nuauth20/plaintext_aclfile
 Type: string
-_Default: /etc/nufw20/nuauth.pem
-_Description: SSL key for clients communication
- Please enter the full path of the private key that will be used for
- clients communications.
+Default: /etc/nufw20/acls.nufw
+_Description: The file to use for the plaintext ACLs module.
+ This file should contain ACLs, for each group of users. You will need
+ to edit it by hand. (A default file is provided, and probably will not 
+ suit your needs).
 
-Template: nuauth20/ssl_key_passwd
+Template: nuauth20/plaintext_userfile
+Type: string
+Default: /etc/nufw20/users-plaintext.nufw
+_Description: The file to use for the plaintext users module.
+ This file should contain user definitions, their passwords, and groups. You will need
+ to edit it by hand. (A default file is provided, and definetely will not 
+ suit your needs).
+
+Template: nuauth20/tls_key
+Type: string
+Default: /etc/nufw20/certs/nuauth-key.pem
+Description: TLS key for clients communication
+ Please enter the full path of the private key that will be used for
+ clients communications. Note that the default value should be good at least for testing :
+ debconf will generate this key in a moment.
+
+Template: nuauth20/tls_cert
+Type: string
+_Default: /etc/nufw20/certs/nuauth-cert.pem
+_Description: TLS certificate for clients communication
+ Please enter the full path of the certificate key that will be used for
+ clients communications. Note that the default value should be good at least for testing :
+ debconf will generate this certificate in a moment.
+
+Template: nuauth20/tls_key_passwd
 Type: password
-_Default: /etc/nufw20/nuauth.pem
-_Description: Password of the SSL key for clients communication
+_Description: Password of the TLS key for clients communication
  Please enter password to use with specified key. Keep empty if there is no
  password. Please be aware that your password cannot contain the slash "/"
  character when set from debconf (it can contain it if you edit config file
@@ -416,3 +425,86 @@ Type: string
 _Default: 1
 _Description: Name of the PostgreSQL table to keep track of logged in users
  Enter the name of the PostgreSQL to store users session in.
+
+Template: nuauth20/nuauth_reject_after_timeout
+Type: select
+Choices: 0, 1
+_Default: 0
+_Description: What to do when a connection is not authenticated
+ 0 means Drop : say nothing to the client (this is the default)
+ 1 means Reject : have the nufw daemon send a polite ICMP datagram to the client
+
+Template: nuauth20/nufw_has_conntrack
+Type: select
+Choices: 0, 1
+_Default: 0
+_Description: Does the nufw daemon have conntrack extensions?
+ say yes (1) if nufw is able to use libnetfilter_conntrack. This probably means you
+ run a > 2.6.14 kernel, and use the nufw20-nfqueue package, not the nufw20 package. If you meet
+ these conditions, it is advised you set this to 1 and set an appropriate Netfilter ruleset (see
+ nuface for help, or read the nufw howto).
+
+Template: nuauth20/nufw_has_fixed_timeout
+Type: select
+Choices: 0, 1
+_Default: 0
+_Description: Does the nufw daemon have fixed timeout?
+ say yes (1) if nufw is able to use libnetfilter_conntrack with fixed timeout. Fixed timeout is a 
+ kernel patch that appeared in linux 2.6.18 vanilla, so it is probably safe to say yes if you run a kernel >=
+ 2.6.18 AND use NFQUEUE. Otherwise, say no.
+
+Template: nuauth20/nuauth_debug_level
+Type: string
+_Default: 0
+_Description: Nuauth debug level
+ you probably want to set this to 0 for production. You can increase it up to 9 to get more verbosity
+ from nuauth.
+
+Template: nuauth20/nuauth_reject_authenticated_drop
+Type: select
+Choices: 0, 1
+_Default: 0
+_Description: Reject authenticated drops?
+ What should nuauth do if a user authenticates a packet that should be refused? Default (0) is to just DROP
+ the packet. If you set this to 1, user will receive a polite REJECT, through ICMP.
+
+Template: nuauth20/nuauth_hello_authentication
+Type: select
+Choices: 0, 1
+_Default: 0
+_Description: Hello authentication (say no)
+ NuFW is designed for strict authentication. This allows for a fallback to simple "Helo" authentication.
+ THIS SHOULD NOT BE USED AS IT BREAKS THE WHOLE SECURITY OF NUFW. JUST USE A CLASSICAL FIREWALL if so.
+
+Template: nuauth20/nuauth_number_session_loggers
+Type: string
+_Default: 1
+_Description: Number of threads dedicaced to logging. Change this if you know what you are doing.
+
+Template: nuauth20/nuauth_user_session_logs_module
+Type: select
+Choices: mysql, pgsql, syslog
+_Default: syslog
+_Description: Where to log user connection and disconnection (not user traffic, but rather user running their clients).
+
+Template: nuauth20/system_convert_username_to_uppercase
+Type: select
+Choices: 0, 1
+_Default: 0
+_Description: Whether to convert usernames to uppercase. Don't set this unless you know what you are doing.
+
+Template: nuauth20/ldap_acls_timerange_base_dn
+Type: string
+_Default: "dc=timeranges,dc=edenwall,dc=com"
+_Description: If you use timerange ACLs, where are they stored in LDAP?
+
+Template: nuauth20/mysql_users_table_name
+Type: string
+_Default: users
+_Description: The MySQL table where user connection/disconnection should be logged.
+
+Template: nuauth20/pgsql_users_table_name
+Type: string
+_Default: users
+_Description: The PostGreSQL table where user connection/disconnection should be logged.
+

@@ -1,17 +1,30 @@
-etc/nufw20/nuauth.conf
-usr/sbin/nuauth
-usr/lib/nuauth20/modules/libldap.so.0.0.0
-usr/lib/nuauth20/modules/libldap.la
-usr/lib/nuauth20/modules/libldap.a
-usr/lib/nuauth20/modules/libdbm.so.0.0.0
-usr/lib/nuauth20/modules/libdbm.la
-usr/lib/nuauth20/modules/libdbm.a
-usr/lib/nuauth20/modules/libsyslog.so.0.0.0
-usr/lib/nuauth20/modules/libsyslog.la
-usr/lib/nuauth20/modules/libsyslog.a
-usr/lib/nuauth20/modules/libldap.so.0
-usr/lib/nuauth20/modules/libldap.so
-usr/lib/nuauth20/modules/libdbm.so.0
-usr/lib/nuauth20/modules/libdbm.so
-usr/lib/nuauth20/modules/libsyslog.so.0
-usr/lib/nuauth20/modules/libsyslog.so
+conf/nuauth.conf etc/nufw20
+conf/periods.xml etc/nufw20
+conf/acls.nufw etc/nufw20
+conf/users-plaintext.nufw etc/nufw20
+src/nuauth/nuauth usr/sbin
+src/nuauth/modules/ldap/.libs/libldap.so.0.0.0 usr/lib/nuauth/modules
+src/nuauth/modules/ldap/.libs/libldap.so.0 usr/lib/nuauth/modules
+src/nuauth/modules/ldap/.libs/libldap.so usr/lib/nuauth/modules
+src/nuauth/modules/ldap/libldap.la usr/lib/nuauth/modules
+src/nuauth/modules/ldap/.libs/libldap.a usr/lib/nuauth/modules
+src/nuauth/modules/dbm/.libs/libdbm.so.0.0.0 usr/lib/nuauth/modules
+src/nuauth/modules/dbm/.libs/libdbm.so.0 usr/lib/nuauth/modules
+src/nuauth/modules/dbm/.libs/libdbm.so usr/lib/nuauth/modules
+src/nuauth/modules/dbm/libdbm.la usr/lib/nuauth/modules
+src/nuauth/modules/dbm/.libs/libdbm.a usr/lib/nuauth/modules
+src/nuauth/modules/log_syslog/.libs/libsyslog.so.0.0.0 usr/lib/nuauth/modules
+src/nuauth/modules/log_syslog/.libs/libsyslog.so.0 usr/lib/nuauth/modules
+src/nuauth/modules/log_syslog/.libs/libsyslog.so usr/lib/nuauth/modules
+src/nuauth/modules/log_syslog/libsyslog.la usr/lib/nuauth/modules
+src/nuauth/modules/log_syslog/.libs/libsyslog.a usr/lib/nuauth/modules
+src/nuauth/modules/xml_defs/.libs/libxml_defs.so usr/lib/nuauth/modules
+src/nuauth/modules/xml_defs/.libs/libxml_defs.so.0 usr/lib/nuauth/modules
+src/nuauth/modules/xml_defs/.libs/libxml_defs.so.0.0.0 usr/lib/nuauth/modules
+src/nuauth/modules/xml_defs/.libs/libxml_defs.a usr/lib/nuauth/modules
+src/nuauth/modules/xml_defs/libxml_defs.la usr/lib/nuauth/modules
+src/nuauth/modules/x509_std/.libs/libx509_std.so usr/lib/nuauth/modules
+src/nuauth/modules/x509_std/.libs/libx509_std.so.0 usr/lib/nuauth/modules
+src/nuauth/modules/x509_std/.libs/libx509_std.so.0.0.0 usr/lib/nuauth/modules
+src/nuauth/modules/x509_std/.libs/libx509_std.a usr/lib/nuauth/modules
+src/nuauth/modules/x509_std/libx509_std.la usr/lib/nuauth/modules
