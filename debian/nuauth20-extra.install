@@ -3,11 +3,11 @@ src/nuauth/modules/plaintext/.libs/libplaintext.so.0 usr/lib/nuauth/modules
 src/nuauth/modules/plaintext/.libs/libplaintext.so usr/lib/nuauth/modules
 src/nuauth/modules/plaintext/libplaintext.la usr/lib/nuauth/modules
 src/nuauth/modules/plaintext/.libs/libplaintext.a usr/lib/nuauth/modules
-src/nuauth/modules/ipauth_ident/.libs/libipauthident.so.0.0.0 usr/lib/nuauth/modules
-src/nuauth/modules/ipauth_ident/.libs/libipauthident.so.0 usr/lib/nuauth/modules
-src/nuauth/modules/ipauth_ident/.libs/libipauthident.so usr/lib/nuauth/modules
-src/nuauth/modules/ipauth_ident/libipauthident.la usr/lib/nuauth/modules
-src/nuauth/modules/ipauth_ident/.libs/libipauthident.a usr/lib/nuauth/modules
+src/nuauth/modules/ipauth_guest/.libs/libipauth_guest.so.0.0.0 usr/lib/nuauth/modules
+src/nuauth/modules/ipauth_guest/.libs/libipauth_guest.so.0 usr/lib/nuauth/modules
+src/nuauth/modules/ipauth_guest/.libs/libipauth_guest.so usr/lib/nuauth/modules
+src/nuauth/modules/ipauth_guest/libipauth_guest.la usr/lib/nuauth/modules
+src/nuauth/modules/ipauth_guest/.libs/libipauth_guest.a usr/lib/nuauth/modules
 src/nuauth/modules/system/.libs/libsystem.so.0.0.0 usr/lib/nuauth/modules
 src/nuauth/modules/system/.libs/libsystem.so.0 usr/lib/nuauth/modules
 src/nuauth/modules/system/.libs/libsystem.so usr/lib/nuauth/modules

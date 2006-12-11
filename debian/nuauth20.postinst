@@ -58,7 +58,6 @@ if [ ! -e $CONFIGFILE2 ]; then
         echo "ldap_acls_base_dn=" >> $CONFIGFILE2
         echo "ldap_users_base_dn=" >> $CONFIGFILE2
         echo "ldap_acls_timerange_base_dn=" >> $CONFIGFILE2
-        echo "dbm_users_file=" >> $CONFIGFILE2
         echo "mysql_server_addr=" >> $CONFIGFILE2
         echo "mysql_server_port=" >> $CONFIGFILE2
         echo "mysql_db_name=" >> $CONFIGFILE2
@@ -164,8 +163,6 @@ db_get nuauth20/tls_cert
 nuauth_tls_cert="$RET"
 db_get nuauth20/ldap_acls_base_dn
 ldap_acls_base_dn="$RET"
-db_get nuauth20/dbm_users_file
-dbm_users_file="$RET"
 db_get nuauth20/mysql_server_addr
 mysql_server_addr="$RET"
 db_get nuauth20/mysql_server_port
@@ -245,7 +242,6 @@ sed -e "s/^ *nuauth_client_listen_addr=.*/nuauth_client_listen_addr=\"$nuauth_cl
  -e "s/^ *ldap_basedn=.*/ldap_basedn=\"$ldap_basedn\"/" \
  -e "s/^ *ldap_acls_base_dn=.*/ldap_acls_base_dn=\"$ldap_acls_base_dn\"/" \
  -e "s/^ *ldap_users_base_dn=.*/ldap_users_base_dn=\"$ldap_users_base_dn\"/" \
- -e "sµ^ *dbm_users_file=.*µdbm_users_file=\"$dbm_users_file\"µ" \
  -e "s/^ *mysql_server_addr=.*/mysql_server_addr=\"$mysql_server_addr\"/" \
  -e "s/^ *mysql_server_port=.*/mysql_server_port=$mysql_server_port/" \
  -e "s/^ *mysql_db_name=.*/mysql_db_name=\"$mysql_db_name\"/" \

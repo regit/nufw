@@ -8,11 +8,6 @@ src/nuauth/modules/ldap/.libs/libldap.so.0 usr/lib/nuauth/modules
 src/nuauth/modules/ldap/.libs/libldap.so usr/lib/nuauth/modules
 src/nuauth/modules/ldap/libldap.la usr/lib/nuauth/modules
 src/nuauth/modules/ldap/.libs/libldap.a usr/lib/nuauth/modules
-src/nuauth/modules/dbm/.libs/libdbm.so.0.0.0 usr/lib/nuauth/modules
-src/nuauth/modules/dbm/.libs/libdbm.so.0 usr/lib/nuauth/modules
-src/nuauth/modules/dbm/.libs/libdbm.so usr/lib/nuauth/modules
-src/nuauth/modules/dbm/libdbm.la usr/lib/nuauth/modules
-src/nuauth/modules/dbm/.libs/libdbm.a usr/lib/nuauth/modules
 src/nuauth/modules/log_syslog/.libs/libsyslog.so.0.0.0 usr/lib/nuauth/modules
 src/nuauth/modules/log_syslog/.libs/libsyslog.so.0 usr/lib/nuauth/modules
 src/nuauth/modules/log_syslog/.libs/libsyslog.so usr/lib/nuauth/modules

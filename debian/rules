@@ -31,12 +31,12 @@ endif
 CONFIGURE       = CFLAGS='$(CFLAGS)' ./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --prefix=/usr \
 			--mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info --localstatedir=/var \
 			--sysconfdir=/etc/nufw20/ --with-mysql-log --with-pgsql-log --with-system-auth --with-ldap \
-			--with-gdbm --with-ident --with-utf8 --without-nfqueue --without-nfconntrack --without-fixedtimeout
+			--with-utf8 --without-nfqueue --without-nfconntrack --without-fixedtimeout
 		  
 CONFIGURENF       = CFLAGS='$(CFLAGS)' ./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --prefix=/usr \
 			--mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info --localstatedir=/var \
 			--sysconfdir=/etc/nufw20/ --with-mysql-log --with-pgsql-log --with-system-auth --with-ldap \
-			--with-gdbm --with-ident --with-utf8 --with-nfqueue --with-nfconntrack --without-fixedtimeout
+			--with-utf8 --with-nfqueue --with-nfconntrack --without-fixedtimeout
 			#--with-gdbm --with-ident --with-utf8 --with-nfqueue --with-nfconntrack --with-fixedtimeout #FIXME : THIS line should be used
 
 config.status: configure
@@ -45,7 +45,7 @@ config.status: configure
 	CFLAGS="$(CFLAGS)" ./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --prefix=/usr \
 		--mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info --localstatedir=/var \
 		--sysconfdir=/etc/nufw20/ --with-mysql-log --with-pgsql-log --with-system-auth --with-ldap \
-		--with-gdbm --with-ident --with-utf8
+		--with-utf8
 
 config.status-nfqueue: configure
 	dh_testdir
@@ -53,7 +53,7 @@ config.status-nfqueue: configure
 	CFLAGS="$(CFLAGS)" ./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --prefix=/usr \
 		--mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info --localstatedir=/var \
 		--sysconfdir=/etc/nufw20/ --with-mysql-log --with-pgsql-log --with-system-auth --with-ldap \
-		--with-gdbm --with-ident --with-nfqueue --with-nfconntrack --with-fixedtimeout --with-utf8
+		--with-nfqueue --with-nfconntrack --with-fixedtimeout --with-utf8
 
 build: build-stamp
 
