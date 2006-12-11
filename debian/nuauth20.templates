@@ -109,7 +109,7 @@ _Description: Nuauth gateway request threads number
 
 Template: nuauth20/user_check_module
 Type: select
-_Choices: system, libldap, libdbm, plaintext
+_Choices: system, libldap, plaintext
 Default: system
 _Description: User check module
  Here are possible plugins, which are ways of authenticating users of your
@@ -259,11 +259,6 @@ Template: nuauth20/ldap_users_base_dn
 Type: string
 _Default: dc=users,dc=yourdomain,dc=com
 _Description: Base DN for users search requests
-
-Template: nuauth20/dbm_users_file
-Type: string
-_Default: /etc/nufw20/users.dbm
-_Description: DBM file with users/groups definition
 
 Template: nuauth20/prio_to_nok
 Type: select

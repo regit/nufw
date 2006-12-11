@@ -121,7 +121,6 @@ nufw20:
 #	dh_install -p$@ -P$(b)/$@
 #	rm debian/$@/usr/sbin/nufw
 	/usr/bin/install -m 755 src/nufw/nufw.plain debian/nufw20/usr/sbin/nufw
-	/usr/bin/install -m 755 src/support/dbm/nufw_dbm debian/nufw20/usr/bin
 #	dh_installmenu
 	dh_installdebconf -p$@ -P$(b)/$@
 #	dh_installlogrotate
@@ -132,7 +131,6 @@ nufw20:
 #	dh_installcron
 #	dh_installinfo
 	dh_installman -pnufw20 doc/nufw.1
-	dh_installman -pnufw20 doc/nufw_dbm.1
 	dh_link -p$@ -P$(b)/$@
 	dh_strip -p$@ -P$(b)/$@
 	dh_compress -p$@ -P$(b)/$@
@@ -158,7 +156,6 @@ nufw20-nfqueue:
 #	dh_install -p$@ -P$(b)/$@
 #	rm debian/$@/usr/sbin/nufw
 	/usr/bin/install -m 755 src/nufw/nufw.nfqueue debian/nufw20-nfqueue/usr/sbin/nufw
-	/usr/bin/install -m 755 src/support/dbm/nufw_dbm debian/nufw20-nfqueue/usr/bin
 #	dh_installmenu
 	dh_installdebconf -p$@ -P$(b)/$@
 #	dh_installlogrotate
@@ -171,7 +168,6 @@ nufw20-nfqueue:
 #	dh_installcron
 #	dh_installinfo
 	dh_installman -pnufw20-nfqueue doc/nufw.1
-	dh_installman -pnufw20-nfqueue doc/nufw_dbm.1
 	dh_link -p$@ -P$(b)/$@
 	dh_strip -p$@ -P$(b)/$@
 	dh_compress -p$@ -P$(b)/$@
