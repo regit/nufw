@@ -37,7 +37,7 @@ CONFIGURENF       = CFLAGS='$(CFLAGS)' ./configure --host=$(DEB_HOST_GNU_TYPE) -
 			--mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info --localstatedir=/var \
 			--sysconfdir=/etc/nufw20/ --with-mysql-log --with-pgsql-log --with-system-auth --with-ldap \
 			--with-utf8 --with-nfqueue --with-nfconntrack --without-fixedtimeout
-			#--with-gdbm --with-ident --with-utf8 --with-nfqueue --with-nfconntrack --with-fixedtimeout #FIXME : THIS line should be used
+			# --with-utf8 --with-nfqueue --with-nfconntrack --with-fixedtimeout #FIXME : THIS line should be used
 
 config.status: configure
 	dh_testdir
@@ -495,9 +495,7 @@ binary-arch: build install
 ##	dh_installcron
 ##	dh_installinfo
 #	dh_installman -pnufw20 doc/nufw.1
-#	dh_installman -pnufw20 doc/nufw_dbm.1
 #	dh_installman -pnufw20-nfqueue doc/nufw.1
-#	dh_installman -pnufw20-nfqueue doc/nufw_dbm.1
 #	dh_installman -pnuauth20 doc/nuauth.1
 #	dh_installman -pnutcpc20 doc/nutcpc.1
 #	dh_installman -pnuauth20-utils doc/nuaclgen.1
