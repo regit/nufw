@@ -63,6 +63,7 @@ AC_ARG_WITH(pgsql-log, [AC_HELP_STRING(--with-pgsql-log,  Support user activity 
 AC_ARG_WITH(syslog-log, [AC_HELP_STRING(--with-syslog-log,  Support user activity logging in syslog)], enable_syslog_log=$withval, enable_syslog_log="yes")
 
 AC_ARG_WITH(plaintext-auth, [AC_HELP_STRING(--with-plaintext-auth,  Support for authentification with plaintext file)], enable_plaintext_auth=$withval, enable_plaintext_auth="yes")
+AC_ARG_WITH(mark-group, [AC_HELP_STRING(--with-mark-group,  Support mark packet by group)], enable_mark_group=$withval, enable_mark_group="yes")
 AC_ARG_WITH(system-auth, [AC_HELP_STRING(--with-system-auth,  Support PAM+NSS authentication)], enable_system_auth=$withval, enable_system_auth="yes")
 
 AC_ARG_WITH(ldap,   [AC_HELP_STRING(--with-ldap,  Support LDAP directory for users and acl lookup)],ldap=$withval, ldap="")
@@ -141,6 +142,7 @@ AM_CONDITIONAL(HAVE_MYSQL_CONFIG, test x$have_mysql_config = xyes)
 AM_CONDITIONAL(USE_BOFH_MYSQL, test x$enable_bofh_mysql = xyes)
 AM_CONDITIONAL(USE_PGSQL_LOG, test x$enable_pgsql_log = xyes)
 AM_CONDITIONAL(USE_PLAINTEXT_AUTH, test x$enable_plaintext_auth = xyes)
+AM_CONDITIONAL(USE_MARK_GROUP, test x$enable_mark_group = xyes)
 AM_CONDITIONAL(USE_SYSLOG_LOG, test x$enable_syslog_log = xyes)
 
 AM_CONDITIONAL(HAVE_NFQUEUE,test x$have_nfqueue = xyes)
@@ -232,6 +234,7 @@ AC_CONFIG_FILES([Makefile
         src/nuauth/modules/Makefile
         src/nuauth/modules/ldap/Makefile
         src/nuauth/modules/plaintext/Makefile
+        src/nuauth/modules/mark_group/Makefile
         src/nuauth/modules/system/Makefile
         src/nuauth/modules/log_pgsql/Makefile
         src/nuauth/modules/log_mysql/Makefile
@@ -338,6 +341,10 @@ if test "${build_nuauth}" = "yes"; then
 
         if test "${enable_plaintext_auth}" = "yes"; then
         	AC_MSG_RESULT([  - NuAuth: compile plaintext auth module])
+        fi
+
+        if test "${enable_mark_group}" = "yes"; then
+        	AC_MSG_RESULT([  - NuAuth: compile mark group module])
         fi
 fi
 
