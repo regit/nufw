@@ -20,11 +20,24 @@
 #include "mark_group.h"
 
 typedef struct {
+    gchar *group;
+    uint32_t mark;
+} group_mark_t;
+
+typedef struct {
+    unsigned int shift;
+    unsigned int nbits;
+    uint32_t default_mark;
+    GList *groups;
 } mark_group_config_t;
 
 G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
 {
     mark_group_config_t* config = g_new0(mark_group_config_t, 1);
+    config->shift = 0;
+    config->nbits = 32;
+    config->default_mark = 0;
+    config->groups = NULL;
     module->params = config;
     return TRUE;
 }
@@ -34,14 +47,23 @@ G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params)
 {
     mark_group_config_t* config = params;
     if (config) {
+        group_mark_t *group;
+        GList *iter;
+        for (iter=config->groups; iter != NULL; iter = iter->next)
+        {
+            group = iter->data;
+            g_free(group->group);
+        }
+        g_list_free(config->groups);
     }
     g_free(config);
     return TRUE;
 }
 
 
-nu_error_t finalise_packet(connection_t* session,gpointer params)
+nu_error_t finalise_packet(connection_t* conn, gpointer params)
 {
+    conn->mark = 42;
     return NU_EXIT_OK;
 }
 
