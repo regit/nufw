@@ -66,7 +66,7 @@ int str2int32(const char *text, uint32_t *value)
 }
 
 /**
- * Parse group list file. Line format is "gid:mark",
+ * Parse group list file. Line format is "gid1,gid2,...,gidn:mark",
  * where gid and mark are integers in [0; 4294967295].
  *
  * Spaces are not allowed between group name and ":", but are allowed
@@ -93,6 +93,8 @@ void parse_group_file(mark_group_config_t *config, const char *filename)
         size_t len;
         uint32_t group_id;
         uint32_t mark;
+	gchar** groups_list;
+	gchar** groups_item;
 
         /* update line number */
         line_number++;
@@ -119,21 +121,26 @@ void parse_group_file(mark_group_config_t *config, const char *filename)
                 filename, line_number, separator+1);
             continue;
         }
+	
+	groups_list=g_strsplit(line,",",0);
+	groups_item = groups_list;
+	while ( *groups_item) {
+		/* read group */
+		if (!str2int32(*groups_item, &group_id)){
+			log_message (WARNING, AREA_MAIN,
+					"mark_group:%s:%u: Invalid group identifier (%s), skip line.",
+					filename, line_number, *groups_item);
+			continue;
+		}
 
-        /* read group */
-        if (!str2int32(line, &group_id))
-        {
-            log_message (WARNING, AREA_MAIN,
-                "mark_group:%s:%u: Invalid group identifier (%s), skip line.",
-                filename, line_number, line);
-            continue;
-        }
-
-        /* add group */
-        group = g_new(group_mark_t, 1);
-        group->id = group_id;
-        group->mark = mark;
-        config->groups = g_list_append(config->groups, group);
+		/* add group */
+		group = g_new(group_mark_t, 1);
+		group->id = group_id;
+		group->mark = mark;
+		config->groups = g_list_append(config->groups, group);
+		groups_item++;
+	}
+	g_strfreev(groups_list);
     }
     fclose(file);
 }
