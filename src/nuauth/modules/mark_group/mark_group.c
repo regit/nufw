@@ -1,7 +1,8 @@
 /* $Id$ */
 
 /*
-** Copyright(C) 2004 Mikael Berthe <mikael+nufw@lists.lilotux.net>
+** Copyright(C) 2006, INL
+**	Written by Victor Stinner <vstinner@inl.fr>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
