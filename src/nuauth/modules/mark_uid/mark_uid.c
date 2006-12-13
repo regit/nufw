@@ -36,7 +36,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
 	return TRUE;
 }
 
-G_MODULE_EXPORT nu_error_t finalise_packet (connection_t* connection,gpointer params)
+G_MODULE_EXPORT nu_error_t finalize_packet (connection_t* connection,gpointer params)
 {
 	connection->mark = connection->mark & 0xffff0000;
 	return NU_EXIT_OK;
