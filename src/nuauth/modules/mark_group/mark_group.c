@@ -22,14 +22,24 @@
 #include <ctype.h>
 
 typedef struct {
+    /** Identifier of the group */
     uint32_t id;
+
+    /** The mark (truncated the 'nbits' bits) */
     uint32_t mark;
 } group_mark_t;
 
 typedef struct {
+    /** position of the mark (in bits) in the packet mark */
     unsigned int shift;
+
+    /** mask to remove current mark of the packet */
     uint32_t mask;
+
+    /** default mark if no group does match */
     uint32_t default_mark;
+
+    /** list of group with a known mark */
     GList *groups;
 } mark_group_config_t;
 
@@ -127,6 +137,9 @@ void parse_group_file(mark_group_config_t *config, const char *filename)
     fclose(file);
 }
 
+/**
+ * Load configuration of the module
+ */
 G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
 {
     confparams vars[] = {
@@ -174,7 +187,9 @@ G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
     return TRUE;
 }
 
-
+/**
+ * Function called when the module is unloaded: free memory
+ */
 G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params)
 {
     mark_group_config_t* config = params;
@@ -192,6 +207,12 @@ G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params)
     return TRUE;
 }
 
+/**
+ * Check if one of the user groups of the connection match our group
+ * with mark. If yes use the mark, otherwise use default mark.
+ *
+ * Change the mark of the packet in all cases.
+ */
 nu_error_t finalize_packet(connection_t* conn, gpointer params)
 {
     mark_group_config_t* config = params;
