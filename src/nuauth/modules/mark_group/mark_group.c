@@ -26,7 +26,7 @@ typedef struct {
 
 typedef struct {
     unsigned int shift;
-    unsigned int nbits;
+    uint32_t mask;
     uint32_t default_mark;
     GList *groups;
 } mark_group_config_t;
@@ -34,10 +34,15 @@ typedef struct {
 G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
 {
     mark_group_config_t* config = g_new0(mark_group_config_t, 1);
+    uint32_t mask;
+    unsigned int nbits;
     config->shift = 0;
-    config->nbits = 32;
+    nbits = 32;
     config->default_mark = 0;
     config->groups = NULL;
+    // Create mask to remove nbits at position shift
+    config->mask = (0xFFFFFFFF >> (32 - config->shift)) \
+                 | (0xFFFFFFFF << (nbits + config->shift));
     module->params = config;
     return TRUE;
 }
@@ -63,7 +68,14 @@ G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params)
 
 nu_error_t finalise_packet(connection_t* conn, gpointer params)
 {
-    conn->mark = 42;
+    mark_group_config_t* config = params;
+    uint32_t mark = config->default_mark;
+
+    mark = 42;
+
+    conn->mark = (conn->mark & config->mask) \
+               | ((mark << config->shift) & ~config->mask);
+    conn->mark |= (mark << config->shift);
     return NU_EXIT_OK;
 }
 
