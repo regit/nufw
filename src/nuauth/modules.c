@@ -266,12 +266,12 @@ int modules_user_session_modify(user_session_t* c_session)
  * Compute packet mark
  *
  */
-nu_error_t modules_finalise_packet(connection_t* connection)
+nu_error_t modules_finalize_packet(connection_t* connection)
 {
 	/* iter through all modules list */
-	GSList *walker=finalise_packet_modules;
+	GSList *walker=finalize_packet_modules;
 	for (; walker!=NULL; walker=walker->next ){
-		finalise_packet_callback *handler = (finalise_packet_callback*)(((module_t*)walker->data)->func);
+		finalize_packet_callback *handler = (finalize_packet_callback*)(((module_t*)walker->data)->func);
 		handler (connection, ((module_t*)walker->data)->params);
 	}
 
@@ -316,7 +316,7 @@ int init_modules_system()
     certificate_to_uid_modules=NULL;
     certificate_check_modules=NULL;
     user_session_modify_modules=NULL;
-    finalise_packet_modules=NULL;
+    finalize_packet_modules=NULL;
 
     return 1;
 }
@@ -432,7 +432,7 @@ int load_modules()
         { "nuauth_certificate_check_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_CERTIFICATE_CHECK_MODULE) },
         { "nuauth_certificate_to_uid_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_CERTIFICATE_TO_UID_MODULE) },
         { "nuauth_user_session_modify_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_USER_SESSION_MODIFY_MODULE) },
-        { "nuauth_finalise_packet_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_FINALISE_PACKET_MODULE) }
+        { "nuauth_finalize_packet_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_FINALIZE_PACKET_MODULE) }
     };
     char *nuauth_acl_check_module;
     char *nuauth_user_check_module;
@@ -445,7 +445,7 @@ int load_modules()
     char *nuauth_certificate_check_module;
     char *nuauth_certificate_to_uid_module;
     char *nuauth_user_session_modify_module;
-    char *nuauth_finalise_packet_module;
+    char *nuauth_finalize_packet_module;
     char *configfile=DEFAULT_CONF_FILE;
 
     /* parse conf file */
@@ -467,7 +467,7 @@ int load_modules()
     nuauth_certificate_check_module = (char*)READ_CONF("nuauth_certificate_check_module");
     nuauth_certificate_to_uid_module = (char*)READ_CONF("nuauth_certificate_to_uid_module");
     nuauth_user_session_modify_module = (char*)READ_CONF("nuauth_user_session_modify_module");
-    nuauth_finalise_packet_module = (char*)READ_CONF("nuauth_finalise_packet_module");
+    nuauth_finalize_packet_module = (char*)READ_CONF("nuauth_finalize_packet_module");
 
     /* free config struct */
     free_confparams(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams));
@@ -499,8 +499,8 @@ int load_modules()
             "certificate_check", "certificate check");
     LOAD_MODULE(nuauth_certificate_to_uid_module, certificate_to_uid_modules,
             "certificate_to_uid", "certificate to uid");
-    LOAD_MODULE(nuauth_finalise_packet_module, finalise_packet_modules,
-            "finalise_packet", "finalise packet");
+    LOAD_MODULE(nuauth_finalize_packet_module, finalize_packet_modules,
+            "finalize_packet", "finalize packet");
     LOAD_MODULE(nuauth_user_session_modify_module, user_session_modify_modules,
             "user_session_modify", "user session modify");
     if (nuauthconf->do_ip_authentication){
@@ -541,8 +541,8 @@ void unload_modules()
     g_slist_free(user_session_modify_modules);
     user_session_modify_modules=NULL;
 
-    g_slist_free(finalise_packet_modules);
-    finalise_packet_modules=NULL;
+    g_slist_free(finalize_packet_modules);
+    finalize_packet_modules=NULL;
 
     for(c_module=nuauthdatas->modules;c_module;c_module=c_module->next) {
         free_module_t((module_t *)c_module->data);

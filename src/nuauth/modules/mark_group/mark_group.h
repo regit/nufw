@@ -22,7 +22,9 @@
 
 #include <auth_srv.h>
 
-nu_error_t finalise_packet(connection_t* session,gpointer params);
+#define MARK_GROUP_CONF (CONFIG_DIR "/mark_group.conf")
+
+nu_error_t finalize_packet(connection_t* session,gpointer params);
 
 #endif
 

@@ -144,7 +144,7 @@ typedef enum
 #define DEFAULT_CERTIFICATE_CHECK_MODULE "libx509_std"
 #define DEFAULT_CERTIFICATE_TO_UID_MODULE "libx509_std"
 #define DEFAULT_USER_SESSION_MODIFY_MODULE "libsession_expire"
-#define DEFAULT_FINALISE_PACKET_MODULE "libmark_uid"
+#define DEFAULT_FINALIZE_PACKET_MODULE "libmark_uid"
 
 #define MODULE_PATH MODULE_DIR "/nuauth/modules"
 

@@ -37,7 +37,7 @@ GHashTable * confvarlist;
 
 /* functions */
 
-int parse_conffile(char * filename,gint array_size,confparams symbols[]);
+int parse_conffile(const char * filename,gint array_size,confparams symbols[]);
 gpointer get_confvar_value(confparams symbols[],gint array_size,gchar * confparam);
 int free_confparams(confparams symbols[],gint array_size);
 
