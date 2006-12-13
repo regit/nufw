@@ -1,3 +1,9 @@
+nufw20 (2.1.1-2) stable; urgency=low
+
+  * Add mark_uid, session_expire and mark_group modules to nuauth20
+
+ -- Eric Leblond <regit@inl.fr>  Wed, 13 Dec 2006 15:52:19 +0100
+
 nufw20 (2.1.1-1) stable; urgency=low
 
   * New upstream release

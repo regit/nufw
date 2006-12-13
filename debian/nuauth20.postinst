@@ -215,8 +215,8 @@ cp -a -f $CONFIGFILE2 $CONFIGFILE2.tmp
 
 sed -e "s/^ *nuauth_client_listen_addr=.*/nuauth_client_listen_addr=\"$nuauth_client_listen_addr\"/" \
  -e "s/^ *nuauth_nufw_listen_addr=.*/nuauth_nufw_listen_addr=\"$nuauth_nufw_listen_addr\"/" \
- -e "s/^ *nuauth_gw_packet_port=.*/nuauth_gw_packet_port=$nuauth_gw_packet_port/" \
- -e "s/^ *nuauth_user_packet_port=.*/nuauth_user_packet_port=$nuauth_user_packet_port/" \
+ -e "s/^ *nuauth_gw_packet_port=.*/nuauth_gw_packet_port=\"$nuauth_gw_packet_port\"/" \
+ -e "s/^ *nuauth_user_packet_port=.*/nuauth_user_packet_port=\"$nuauth_user_packet_port\"/" \
  -e "s/^ *nufw_gw_addr=.*/nufw_gw_addr=\"$nufw_gw_addr\"/" \
  -e "s/^ *nuauth_prio=.*/nuauth_prio=$nuauth_prio/" \
  -e "s/^ *nuauth_prio_to_nok=.*/nuauth_prio_to_nok=$nuauth_prio_to_nok/" \

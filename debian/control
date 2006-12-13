@@ -27,7 +27,7 @@ Description: a per-user firewalling daemon that interfers with libipq
 Package: nufw20-nfqueue
 Architecture: any
 Conflicts: nufw, nufw20
-Depends: ${shlibs:Depends}, debconf, ssl-cert, openssl, libnetfilter-conntrack1, libnetfilter-queue0, libnfnetlink0
+Depends: ${shlibs:Depends}, debconf, ssl-cert, openssl, libnetfilter-conntrack1, libnetfilter-queue1, libnfnetlink1
 Description: a per-user firewalling daemon that interfers with libipq
  NuFW is an authenticating gateway, which means that connections are
  authenticated before being forwarded through the gateway.  Classical packet
