@@ -64,7 +64,7 @@ int build_prenuauthconf(struct nuauth_params * prenuauthconf,
           exit(EXIT_SUCCESS);
           prenuauthconf->client_srv = in6addr_any;
       } else {
-          memcpy(&prenuauthconf->client_srv, &res->ai_addr, res->ai_addrlen);
+          memcpy(&prenuauthconf->client_srv, res->ai_addr, res->ai_addrlen);
       }
   }
 
@@ -86,7 +86,7 @@ int build_prenuauthconf(struct nuauth_params * prenuauthconf,
           exit(EXIT_SUCCESS);
           prenuauthconf->nufw_srv = in6addr_any;
       } else {
-          memcpy(&prenuauthconf->nufw_srv, &res->ai_addr, res->ai_addrlen);
+          memcpy(&prenuauthconf->nufw_srv, res->ai_addr, res->ai_addrlen);
       }
   }
 
