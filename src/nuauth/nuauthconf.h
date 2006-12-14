@@ -19,13 +19,6 @@
 #ifndef NUAUTHCONF_H
 #define NUAUTHCONF_H
 
-int build_prenuauthconf(struct nuauth_params * nuauthconf,
-                char* nuauth_client_listen_addr,
-                char* nuauth_nufw_listen_addr,
-                char* gwsrv_addr,
-                char* nuauth_multi_users,
-                char* nuauth_multi_servers);
-
 void init_nuauthconf(struct nuauth_params**);
 
 void nuauth_reload( int signal );

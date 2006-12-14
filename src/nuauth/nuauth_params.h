@@ -92,8 +92,8 @@ struct nuauth_params
     int push;
     int do_ip_authentication;
     int hello_authentication;
-    struct in6_addr nufw_srv;
-    struct in6_addr client_srv;
+    char* nufw_srv;
+    char* client_srv;
 
     /* cache setting */
     int datas_persistance;

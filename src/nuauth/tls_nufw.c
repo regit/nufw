@@ -357,10 +357,12 @@ int tls_nufw_bind(char **errmsg)
     hints.ai_flags = AI_PASSIVE;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_family = PF_UNSPEC;
-    ecode = getaddrinfo(NULL, nuauthconf->authreq_port, &hints, &res);
+    ecode = getaddrinfo(nuauthconf->nufw_srv, nuauthconf->authreq_port, &hints, &res);
     if (ecode != 0)
     {
-        *errmsg = g_strdup_printf("Fail to init. user server address: %s", gai_strerror(ecode));
+        *errmsg = g_strdup_printf("Invalid nufw servers listening address %s:%s, error: %s",
+                nuauthconf->nufw_srv, nuauthconf->authreq_port,
+                gai_strerror(ecode));
         return -1;
     }
 

@@ -497,10 +497,11 @@ int tls_user_bind(char **errmsg)
     hints.ai_flags = AI_PASSIVE;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_family = PF_UNSPEC;
-    ecode = getaddrinfo(NULL, nuauthconf->userpckt_port, &hints, &res);
+    ecode = getaddrinfo(nuauthconf->client_srv, nuauthconf->userpckt_port, &hints, &res);
     if (ecode != 0)
     {
-        *errmsg = g_strdup_printf("Fail to init. user server address: %s",
+        *errmsg = g_strdup_printf("Invalid clients listening address %s:%s, error: %s",
+                nuauthconf->client_srv, nuauthconf->userpckt_port,
                 gai_strerror(ecode));
         return -1;
     }
@@ -538,8 +539,8 @@ int tls_user_bind(char **errmsg)
     result = bind (sck_inet, res->ai_addr, res->ai_addrlen);
     if (result < 0)
     {
-        *errmsg = g_strdup_printf("Unable to bind port %s.",
-                nuauthconf->userpckt_port);
+        *errmsg = g_strdup_printf("Unable to bind %s:%s.",
+                nuauthconf->client_srv, nuauthconf->userpckt_port);
         close(sck_inet);
         return -1;
     }

@@ -29,8 +29,6 @@
  */
 
 int build_prenuauthconf(struct nuauth_params * prenuauthconf,
-                char* nuauth_client_listen_addr,
-                char* nuauth_nufw_listen_addr,
                 char* gwsrv_addr,
                 char* nuauth_multi_users,
                 char* nuauth_multi_servers)
@@ -43,51 +41,6 @@ int build_prenuauthconf(struct nuauth_params * prenuauthconf,
   if (gwsrv_addr) {
       /* parse nufw server address */
       prenuauthconf->authorized_servers= generate_inaddr_list(gwsrv_addr);
-  }
-
-  /* hostname conversion */
-  if (nuauth_client_listen_addr != NULL)
-  {
-      struct addrinfo *res;
-      struct addrinfo hints;
-      int ecode;
-
-      memset(&hints, 0, sizeof hints);
-      hints.ai_flags = AI_PASSIVE;
-      hints.ai_socktype = SOCK_STREAM;
-      hints.ai_family = PF_UNSPEC;
-      ecode = getaddrinfo(nuauth_client_listen_addr, NULL, &hints, &res);
-      if (ecode != 0)
-      {
-          g_error("Bad Address was passed for client listening address: %s\n",
-                  gai_strerror(ecode));
-          exit(EXIT_SUCCESS);
-          prenuauthconf->client_srv = in6addr_any;
-      } else {
-          memcpy(&prenuauthconf->client_srv, res->ai_addr, res->ai_addrlen);
-      }
-  }
-
-  /* hostname conversion */
-  if (nuauth_nufw_listen_addr != NULL){
-      struct addrinfo *res;
-      struct addrinfo hints;
-      int ecode;
-
-      memset(&hints, 0, sizeof hints);
-      hints.ai_flags = AI_PASSIVE;
-      hints.ai_socktype = SOCK_STREAM;
-      hints.ai_family = PF_UNSPEC;
-      ecode = getaddrinfo(nuauth_nufw_listen_addr, NULL, &hints, &res);
-      if (ecode != 0)
-      {
-          g_error("Bad Address was passed for nufw listening address: %s\n",
-                  gai_strerror(ecode));
-          exit(EXIT_SUCCESS);
-          prenuauthconf->nufw_srv = in6addr_any;
-      } else {
-          memcpy(&prenuauthconf->nufw_srv, res->ai_addr, res->ai_addrlen);
-      }
   }
 
   if ((nuauth_multi_users || nuauth_multi_servers)&&(!(nuauth_multi_servers&&nuauth_multi_users))){
@@ -114,8 +67,6 @@ int build_prenuauthconf(struct nuauth_params * prenuauthconf,
 void init_nuauthconf(struct nuauth_params **result)
 {
   struct nuauth_params* conf;
-  char* nuauth_client_listen_addr = NULL;
-  char* nuauth_nufw_listen_addr = NULL;
   char* gwsrv_addr = NULL;
   confparams nuauth_vars[] = {
       { "nuauth_client_listen_addr" ,  G_TOKEN_STRING, 0 , g_strdup(AUTHREQ_CLIENT_LISTEN_ADDR) },
@@ -171,8 +122,8 @@ void init_nuauthconf(struct nuauth_params **result)
 #define READ_CONF(KEY) \
   get_confvar_value(nuauth_vars, nb_params, KEY)
 
-  nuauth_client_listen_addr = (char *)READ_CONF("nuauth_client_listen_addr");
-  nuauth_nufw_listen_addr = (char *)READ_CONF("nuauth_nufw_listen_addr");
+  conf->client_srv = (char *)READ_CONF("nuauth_client_listen_addr");
+  conf->nufw_srv = (char *)READ_CONF("nuauth_nufw_listen_addr");
   gwsrv_addr = (char *)READ_CONF("nufw_gw_addr");
   nuauth_multi_users = (char *)READ_CONF("nuauth_multi_users");
   nuauth_multi_servers = (char *)READ_CONF("nuauth_multi_servers");
@@ -214,11 +165,8 @@ void init_nuauthconf(struct nuauth_params **result)
   /* free config struct */
   free_confparams(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams));
 
-  build_prenuauthconf(conf,nuauth_client_listen_addr,nuauth_nufw_listen_addr,
-                  gwsrv_addr,nuauth_multi_users,nuauth_multi_servers);
+  build_prenuauthconf(conf, gwsrv_addr, nuauth_multi_users, nuauth_multi_servers);
 
-  g_free(nuauth_client_listen_addr);
-  g_free(nuauth_nufw_listen_addr);
   g_free(gwsrv_addr);
   g_free(nuauth_multi_users);
   g_free(nuauth_multi_servers);
@@ -343,12 +291,12 @@ static struct nuauth_params* compare_and_update_nuauthparams(struct nuauth_param
       restart=TRUE;
   }
 
-  if( memcmp(&current->nufw_srv, &new->nufw_srv, sizeof(new->nufw_srv)) != 0  ){
+  if( strcmp(current->nufw_srv, new->nufw_srv) != 0  ){
       g_warning("nufw listening ip has changed, please restart");
       restart=TRUE;
   }
 
-  if( memcmp(&current->client_srv, &new->client_srv, sizeof(new->client_srv)) != 0 ){
+  if( strcmp(current->client_srv, new->client_srv) != 0 ){
       g_warning("client listening ip has changed, please restart");
       restart=TRUE;
   }
