@@ -54,8 +54,6 @@ CREATE TABLE users (
   socket int(10) unsigned NOT NULL,
   user_id int(10) unsigned default NULL,
   username varchar(30) default NULL,
-  bad_conns int(10) unsigned not NULL default '0',
-  good_conns int(10) unsigned not NULL default '0',
   first_time DATETIME default NULL,
   last_time DATETIME default NULL,
   os_sysname varchar(40) default NULL,
@@ -63,6 +61,22 @@ CREATE TABLE users (
   os_version varchar(100) default NULL,
   KEY `user_id` (user_id),
   KEY `username` (username)
+) TYPE=MyISAM;
+
+
+--
+-- Table structure for table 'usersstats'
+--
+
+CREATE TABLE usersstats (
+  user_id smallint(5) unsigned default NULL,
+  username varchar(30) default NULL,
+  bad_conns int(10) unsigned not NULL default '0',
+  good_conns int(10) unsigned not NULL default '0',
+  first_time int(10) unsigned default NULL,
+  last_time int(10) unsigned default NULL,
+  PRIMARY KEY  (user_id),
+  KEY username (username)
 ) TYPE=MyISAM;
 
 --
