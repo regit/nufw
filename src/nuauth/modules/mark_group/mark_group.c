@@ -21,6 +21,7 @@
 #include "mark_group.h"
 #include <glib.h>
 #include <ctype.h>
+#include <limits.h>
 
 typedef struct {
     /** Identifier of the group */
@@ -59,7 +60,7 @@ int str2int32(const char *text, uint32_t *value)
     long_value = strtol(text, &err, 10);
     if (err == NULL || *err != '\0')
         return 0;
-    if ((long_value < 0L) || ((long)0xFFFFFFFF < long_value))
+    if ((long_value < INT_MIN) || (INT_MAX < long_value))
         return 0;
     *value = long_value;
     return 1;
@@ -103,6 +104,11 @@ void parse_group_file(mark_group_config_t *config, const char *filename)
         len = strlen(line);
         if (0 < len && line[len-1] == '\n') line[len-1] = 0;
 
+        if (line[0] == 0) {
+            /* skip empty lines */
+            continue;
+        }
+
         /* find separator */
         if (separator == NULL) {
             log_message (SERIOUS_WARNING, AREA_MAIN,
@@ -121,7 +127,7 @@ void parse_group_file(mark_group_config_t *config, const char *filename)
                 filename, line_number, separator+1);
             continue;
         }
-	
+
 	groups_list=g_strsplit(line,",",0);
 	groups_item = groups_list;
 	while ( *groups_item) {
