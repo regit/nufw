@@ -45,6 +45,9 @@ typedef struct {
     GList *groups;
 } mark_group_config_t;
 
+#define SHL32(x, n) (((n) < 32)?((x) << (n)):0)
+#define SHR32(x, n) (((n) < 32)?((x) >> (n)):0)
+
 /**
  * Convert a string to a 32-bit integer, skip spaces before.
  * Returns 0 on error, 1 otherwise.
@@ -94,8 +97,8 @@ void parse_group_file(mark_group_config_t *config, const char *filename)
         size_t len;
         uint32_t group_id;
         uint32_t mark;
-	gchar** groups_list;
-	gchar** groups_item;
+        gchar** groups_list;
+        gchar** groups_item;
 
         /* update line number */
         line_number++;
@@ -112,8 +115,8 @@ void parse_group_file(mark_group_config_t *config, const char *filename)
         /* find separator */
         if (separator == NULL) {
             log_message (SERIOUS_WARNING, AREA_MAIN,
-                "mark_group:%s:%u: Unable to find separator ':' in group list, stop parser.",
-                filename, line_number);
+                    "mark_group:%s:%u: Unable to find separator ':' in group list, stop parser.",
+                    filename, line_number);
             break;
         }
 
@@ -123,30 +126,30 @@ void parse_group_file(mark_group_config_t *config, const char *filename)
         if (!str2int32(separator+1, &mark))
         {
             log_message (WARNING, AREA_MAIN,
-                "mark_group:%s:%u: Invalid mark (%s), skip line.",
-                filename, line_number, separator+1);
+                    "mark_group:%s:%u: Invalid mark (%s), skip line.",
+                    filename, line_number, separator+1);
             continue;
         }
 
-	groups_list=g_strsplit(line,",",0);
-	groups_item = groups_list;
-	while ( *groups_item) {
-		/* read group */
-		if (!str2int32(*groups_item, &group_id)){
-			log_message (WARNING, AREA_MAIN,
-					"mark_group:%s:%u: Invalid group identifier (%s), skip line.",
-					filename, line_number, *groups_item);
-			continue;
-		}
+        groups_list=g_strsplit(line,",",0);
+        groups_item = groups_list;
+        while ( *groups_item) {
+            /* read group */
+            if (!str2int32(*groups_item, &group_id)){
+                log_message (WARNING, AREA_MAIN,
+                        "mark_group:%s:%u: Invalid group identifier (%s), skip line.",
+                        filename, line_number, *groups_item);
+                continue;
+            }
 
-		/* add group */
-		group = g_new(group_mark_t, 1);
-		group->id = group_id;
-		group->mark = mark;
-		config->groups = g_list_append(config->groups, group);
-		groups_item++;
-	}
-	g_strfreev(groups_list);
+            /* add group */
+            group = g_new(group_mark_t, 1);
+            group->id = group_id;
+            group->mark = mark;
+            config->groups = g_list_append(config->groups, group);
+            groups_item++;
+        }
+        g_strfreev(groups_list);
     }
     fclose(file);
 }
@@ -189,8 +192,8 @@ G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
     free_confparams(vars, nb_vars);
 
     /* create mask to remove nbits at position shift */
-    config->mask = (0xFFFFFFFF >> (32 - config->shift)) \
-                 | (0xFFFFFFFF << (nbits + config->shift));
+    config->mask = SHR32(0xFFFFFFFF, 32 - config->shift) | SHL32(0xFFFFFFFF, nbits + config->shift);
+    g_message("mask = %08x\n", config->mask);
 
     /* parse group list */
     parse_group_file(config, group_filename);
