@@ -35,7 +35,6 @@ int auth_process_answer(char *dgram, int dgram_size)
     uint32_t nfmark;
     int sandf;
     u_int32_t packet_id;
-    u_int16_t user_id;
     int payload_len;
 
     /* check packet size */
@@ -58,7 +57,6 @@ int auth_process_answer(char *dgram, int dgram_size)
     
     /* get packet id and user id */
     packet_id = ntohl(answer->packet_id);
-    user_id = ntohs(answer->tcmark);
 
     /* search and destroy packet by packet_id */
     pthread_mutex_lock(&packets_list.mutex);
@@ -81,11 +79,9 @@ int auth_process_answer(char *dgram, int dgram_size)
         if (nufw_set_mark) {
             debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_VERBOSE_DEBUG,
                     "(*) Marking packet with %d",
-                    user_id);
+                    ntohl(answer->tcmark));
 		    /* \todo Overwrite whole mark */
-            /* we put the userid mark at the end of the mark, not changing the 16 first big bits */
-            nfmark = (nfmark & 0xffff0000 ) | user_id;
-            IPQ_SET_VWMARK(packet_id, NF_ACCEPT, htonl(nfmark)); 
+            IPQ_SET_VWMARK(packet_id, NF_ACCEPT, answer->tcmark); 
         } else {
             IPQ_SET_VERDICT(packet_id, NF_ACCEPT);
         }
