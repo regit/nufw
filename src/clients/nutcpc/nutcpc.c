@@ -27,7 +27,7 @@
 #include <stdarg.h>
 #include "proto.h"
 #include "security.h"
-#define NUTCPC_VERSION PACKAGE_VERSION 
+#define NUTCPC_VERSION PACKAGE_VERSION
 
 #ifdef FREEBSD
 #include <readpassphrase.h>
@@ -58,11 +58,11 @@ typedef struct
  */
 void panic(const char *fmt, ...)
 {
-    va_list args;  
+    va_list args;
     va_start(args, fmt);
     printf("\n");
     printf("Fatal error: ");
-    vprintf(fmt, args);            
+    vprintf(fmt, args);
     printf("\n");
     fflush(stdout);
     exit(EXIT_FAILURE);
@@ -77,7 +77,7 @@ char* compute_run_pid()
     char path_dir[254];
     char *home = getenv("HOME");
     if (home == NULL)
-        return NULL;            
+        return NULL;
     snprintf(path_dir, sizeof(path_dir)," %s/.nufw", home);
     if (access(path_dir,R_OK) != 0)
     {
@@ -88,8 +88,8 @@ char* compute_run_pid()
 }
 
 /**
- * Kill existing instance of nutcpc: read pid file, 
- * and then send SIGTERM to the process. 
+ * Kill existing instance of nutcpc: read pid file,
+ * and then send SIGTERM to the process.
  *
  * Exit the program at the end of this function.
  */
@@ -139,7 +139,7 @@ void leave_client()
     struct termios term;
 
     /* restore ECHO mode */
-    if (tcgetattr (fileno (stdin), &term) == 0) 
+    if (tcgetattr (fileno (stdin), &term) == 0)
     {
         term.c_lflag |= ECHO;
         (void)tcsetattr (fileno (stdin), TCSAFLUSH, &term);
@@ -271,7 +271,7 @@ char* get_password()
 #else
     printf(question);
     ret = my_getpass(&new_pass,&password_size);
-    if (ret < 0) 
+    if (ret < 0)
     {
         free(new_pass);
         return NULL;
@@ -281,7 +281,7 @@ char* get_password()
 }
 
 /**
- * Callback used in nu_client_connect() call: read user name 
+ * Callback used in nu_client_connect() call: read user name
  *
  * \return New allocated buffer containing the name,
  *         or NULL if it fails
@@ -295,7 +295,7 @@ char* get_username()
     printf("Enter username: ");
     username = (char *)calloc(username_size, sizeof(char));
     nread = getline (&username, &username_size, stdin);
-    if (nread < 0) 
+    if (nread < 0)
     {
         free(username);
         return NULL;
@@ -335,7 +335,7 @@ void install_signals()
     if (err == 0) err = sigaction( SIGTERM, &action , &old_sigterm);
 
     /* error? */
-    if (err != 0) 
+    if (err != 0)
     {
         fprintf(stderr, "Unable to  install signal handlers!\n");
         exit(EXIT_FAILURE);
@@ -344,7 +344,7 @@ void install_signals()
 
 /**
  * Daemonize the process
- */ 
+ */
 void daemonize_process(nutcpc_context_t *context, char *runpid)
 {
     pid_t p;
@@ -385,9 +385,9 @@ void daemonize_process(nutcpc_context_t *context, char *runpid)
      * set currente directory to root directory */
     setsid();
     ioctl (STDIN_FILENO, TIOCNOTTY, NULL);
-    (void)close (STDIN_FILENO); 
-    (void)close (STDOUT_FILENO); 
-    (void)close (STDERR_FILENO); 
+    (void)close (STDIN_FILENO);
+    (void)close (STDOUT_FILENO);
+    (void)close (STDERR_FILENO);
     setpgid (0, 0);
 }
 
@@ -428,13 +428,13 @@ NuAuth* do_connect(nutcpc_context_t *context, char *username)
 
     nu_client_set_debug(session, context->debug_mode);
 
-#if 0 
-    if (!nu_client_setup_tls(session, NULL, NULL, NULL, NULL, err)) 
-    { 
+#if 0
+    if (!nu_client_setup_tls(session, NULL, NULL, NULL, NULL, err))
+    {
         nu_client_delete(session);
         return NULL;
-    } 
-#endif        
+    }
+#endif
 
     if (!nu_client_connect(session, context->srv_addr, context->port, err))
     {
@@ -487,7 +487,7 @@ void parse_cmdline_options(int argc, char **argv, nutcpc_context_t *context, cha
     int ch;
 
     /* set default values */
-    SECURE_STRNCPY(context->port, USERPCKT_PORT, sizeof(context->port));            
+    SECURE_STRNCPY(context->port, USERPCKT_PORT, sizeof(context->port));
     SECURE_STRNCPY(context->srv_addr, NUAUTH_IP, sizeof(context->srv_addr));
     context->interval = 100;
     context->donotuselock = 0;
@@ -538,14 +538,14 @@ void parse_cmdline_options(int argc, char **argv, nutcpc_context_t *context, cha
 void init_library(nutcpc_context_t *context, char *username)
 {
     struct rlimit core_limit;
-    
+
     /* Avoid creation of core file which may contains username and password */
     if (getrlimit(RLIMIT_CORE, &core_limit) == 0)
     {
         core_limit.rlim_cur = 0;
         setrlimit(RLIMIT_CORE, &core_limit);
     }
-    
+
     /* Move to root directory to not block current working directory */
     (void)chdir("/");
 
@@ -598,14 +598,26 @@ int main (int argc, char** argv)
 
     if (!context.debug_mode)
     {
-        if (context.donotuselock == 0) {
-            if (access(runpid,R_OK) == 0)
-            {                
+        if (donotuselock == 0) {
+            if (! access(runpid,R_OK)) {
+                FILE* fd;
                 printf("Lock file found: %s\n",runpid);
-                printf("Kill existing process with \"-k\" or ignore it with \"-l\" option\n");
-                free(runpid);
-                free(username);
-                exit(EXIT_FAILURE);
+                if ( (fd=fopen(runpid,"r") )) {
+                    char line[20];
+                    if (fgets(line,19,fd)) {
+                        pid_t pid=(pid_t) atoi(line);
+                        fclose(fd);
+                        if ( kill(pid,0) ){
+                            printf("No running process, starting anyway (deleting lockfile)\n");
+                            unlink(runpid);
+                            free(runpid);
+                        } else {
+                            printf("Kill existing process with \"-k\" or ignore it with \"-l\" option\n");
+                            free(saved_username);
+                            exit(EXIT_FAILURE);
+                        }
+                    }
+                }
             }
         }
     }
