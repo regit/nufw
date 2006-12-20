@@ -1,3 +1,9 @@
+nufw20 (2.1.1-3) stable; urgency=low
+
+  * Fix nutcpc binary path in nutcpc20.install
+
+ -- Victor Stinner <haypo@localhost>  Wed, 20 Dec 2006 16:16:14 +0100
+
 nufw20 (2.1.1-2) stable; urgency=low
 
   * Add mark_uid, session_expire and mark_group modules to nuauth20
