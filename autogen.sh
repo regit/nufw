@@ -33,9 +33,9 @@ find_tool_version()
 
 #-----------------------------------------------------------------------------
 
-AUTOMAKE_MIN_VERSION="1.6"
-AUTOMAKE_OK_VERSIONS="-1.9 19 -1.8 18 -1.7 17 -1.6 16 -1.5 15"
-AUTOMAKE_NOK_REGEXP='0|0.*|1|1.[0-5]*'
+AUTOMAKE_MIN_VERSION="1.8"
+AUTOMAKE_OK_VERSIONS="-1.9 19 -1.8 18"
+AUTOMAKE_NOK_REGEXP='0|0.*|1|1.[0-7]*'
 
 AUTOCONF_MIN_VERSION="2.58"
 AUTOCONF_OK_VERSIONS="258 259"
