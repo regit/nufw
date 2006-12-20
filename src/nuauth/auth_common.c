@@ -349,7 +349,9 @@ void clean_connections_list ()
             element->decision = DECISION_REJECT;
         else
             element->decision = DECISION_DROP;
-        apply_decision(element);
+        if (element->state == AUTH_STATE_AUTHREQ){
+            apply_decision(element);
+        }
         free_connection(element);
     }
     g_slist_free(old_conn_list);

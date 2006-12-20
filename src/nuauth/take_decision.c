@@ -240,6 +240,12 @@ gint apply_decision(connection_t *element)
     struct timeval leave_time,elapsed_time;
 #endif
 
+    if (element->state == AUTH_STATE_USERPCKT){
+        debug_log_message( WARNING, AREA_MAIN,
+                "BUG: Should not be in apply_decision for user only packet");
+        return 1;
+    }
+
     if (decision == DECISION_ACCEPT){
         log_user_packet(element,TCP_STATE_OPEN);
     } else {
