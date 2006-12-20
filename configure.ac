@@ -361,7 +361,11 @@ if test "${build_nufw}" = "yes"; then
                 fi
         fi
 else
-	AC_MSG_RESULT([!!! WARNING !!! NuFW daemon WON'T be compiled: libipq or libnetfilter_queue not present])
+    if test "${use_nfconntrack}" = "yes"; then
+        AC_MSG_RESULT([!!! WARNING !!! NuFW daemon WON'T be compiled: libnetfilter_queue not present])
+    else
+        AC_MSG_RESULT([!!! WARNING !!! NuFW daemon WON'T be compiled: libipq not present])
+    fi
 fi
 
 if test "${build_libnuclient}" = "yes"; then
