@@ -598,7 +598,7 @@ int main (int argc, char** argv)
 
     if (!context.debug_mode)
     {
-        if (donotuselock == 0) {
+        if (context.donotuselock == 0) {
             if (! access(runpid,R_OK)) {
                 FILE* fd;
                 printf("Lock file found: %s\n",runpid);
@@ -613,7 +613,6 @@ int main (int argc, char** argv)
                             free(runpid);
                         } else {
                             printf("Kill existing process with \"-k\" or ignore it with \"-l\" option\n");
-                            free(saved_username);
                             exit(EXIT_FAILURE);
                         }
                     }
