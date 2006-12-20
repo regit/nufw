@@ -2,7 +2,7 @@
 
 /*
  * pam_nufw.c PAM module auth client
- * 
+ *
  * Written by Jean Gillaux <jean@inl.fr>
  * Based on pam_permit by Andrew Morgan <morgan@parc.power.net> 1996/3/11
  *
@@ -78,14 +78,14 @@ struct pam_nufw_s {
 /* init pam_nufw info struct. returns error message, or NULL if no error occurs */
 static char* _init_pam_nufw_s(struct pam_nufw_s *pn_s){
     struct rlimit core_limit;
-    
+
     /* Avoid creation of core file which may contains username and password */
     if (getrlimit(RLIMIT_CORE, &core_limit) == 0)
     {
         core_limit.rlim_cur = 0;
         setrlimit(RLIMIT_CORE, &core_limit);
     }
-    
+
     /* Setup locale */
     setlocale (LC_ALL, "");
 
@@ -127,11 +127,11 @@ static int _pam_parse(int argc, const char** argv, struct pam_nufw_s *pn){
             user = strtok(noauth, search);
             if (user){
                 no_auth_users[noauth_cpt] = x_strdup(user);
-                noauth_cpt ++; 
+                noauth_cpt ++;
             }
             while ( (user=strtok(NULL, search)) != NULL){
                 no_auth_users[noauth_cpt] = x_strdup(user);
-                noauth_cpt ++; 
+                noauth_cpt ++;
             }
         }
     }
@@ -146,7 +146,7 @@ char * _get_runpid(struct pam_nufw_s *pn_s, char *home){
         home = getenv("HOME");
     }
     if (home == NULL) {
-        return NULL;  
+        return NULL;
     }
 
     /* create directory path */
@@ -190,8 +190,8 @@ static int _kill_nuclient(char *runpid){
     return 0;
 }
 
-/* function used to 
- * kill client 
+/* function used to
+ * kill client
  * free nuauth session and nuerror
  */
 void exit_client(){
@@ -215,7 +215,7 @@ int do_auth_on_user(const char *username){
     for (i=0; i< pn_s.no_auth_cpt; i++){
         if (strcmp(pn_s.no_auth_users[i], username) == 0){
             return 1;
-        }   
+        }
     }
     return 0;
 }
@@ -241,15 +241,15 @@ NuAuth* do_connect(char *username, char *password, nuclient_error *err)
     free(username);
     free(password);
 
-#if 0        
+#if 0
     nu_client_set_debug(session, context->debug_mode);
 
-    if (!nu_client_setup_tls(session, NULL, NULL, NULL, NULL, err)) 
-    { 
+    if (!nu_client_setup_tls(session, NULL, NULL, NULL, NULL, err))
+    {
         nu_client_delete(session);
         return NULL;
-    } 
-#endif        
+    }
+#endif
 
     if (!nu_client_connect(session, pn_s.nuauth_srv, pn_s.nuauth_port, err))
     {
@@ -330,7 +330,7 @@ static int nufw_client_func(struct pam_nufw_s *pn_s, struct user_info_s *user_in
   sigemptyset( & (no_action.sa_mask));
   no_action.sa_flags = 0;
   if ( sigaction( SIGINT, & no_action , NULL ) != 0
-    || sigaction( SIGTERM, & no_action , NULL ) != 0) 
+    || sigaction( SIGTERM, & no_action , NULL ) != 0)
   {
       syslog(LOG_ERR, "(pam_nufw) Fail to set sigaction");
       return PAM_AUTH_ERR;
@@ -352,8 +352,8 @@ static int nufw_client_func(struct pam_nufw_s *pn_s, struct user_info_s *user_in
 
   /* create libnuclient session (connection to nuauth) */
   session = do_connect(
-          nu_client_to_utf8(user_info->username, locale_charset), 
-          nu_client_to_utf8(user_info->password, locale_charset), 
+          nu_client_to_utf8(user_info->username, locale_charset),
+          nu_client_to_utf8(user_info->password, locale_charset),
           pn_s->err);
   clear_user_info(user_info);
 
@@ -380,9 +380,9 @@ static int nufw_client_func(struct pam_nufw_s *pn_s, struct user_info_s *user_in
   return PAM_SUCCESS;
 }
 
-static int read_user_info(struct user_info_s *user_info, 
+static int read_user_info(struct user_info_s *user_info,
         pam_handle_t *pamh,
-        int argc, const char **argv, 
+        int argc, const char **argv,
         int *pam_result)
 {
   struct passwd *pw;
@@ -421,7 +421,7 @@ static int read_user_info(struct user_info_s *user_info,
       *pam_result = PAM_AUTH_ERR;
       return 0;
   }
-  
+
   /* read password, user and group identifier */
   pw = (struct passwd *)getpwnam(user_info->username);
   user_info->uid = pw->pw_uid;
@@ -451,6 +451,25 @@ int pam_sm_authenticate(pam_handle_t *pamh, int flags,
       syslog(LOG_ERR, "(pam nufw) init failure: %s", errmsg);
       return PAM_AUTH_ERR;
   }
+
+  /* test if lock file exists */
+  if (! access(pn_s.file_lock,R_OK)){
+      FILE* fd;
+      if ( (fd=fopen(pn_s.file_lock,"r") )){
+          char line[20];
+          if (fgets(line,19,fd)){
+              pid_t pid=(pid_t) atoi(line);
+              fclose(fd);
+              if ( kill(pid,0) ){
+                  unlink(pn_s.file_lock);
+              } else {
+                return PAM_SUCCESS;
+              }
+          }
+      }
+  }
+
+  /* test if program is running */
 
   /* read user informations */
   if (!read_user_info(&user_info, pamh, argc, argv, &retval)) {
@@ -519,7 +538,7 @@ int pam_sm_open_session(pam_handle_t *pamh,int flags,int argc
   return PAM_SUCCESS;
 }
 
-/* 
+/*
  * On session closing, we want to close the connection
  * -> get pid file, and kill process
  */
