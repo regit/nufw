@@ -157,7 +157,8 @@ typedef struct {
 	/*--------------- PUBLIC MEMBERS -------------------*/
 	u_int32_t userid;        /*!< Local user identifier (getuid()) */
 	char *username;          /*!< Username (encoded in UTF-8) */
-	char *password;          /*!< Password,(encoded in UTF-8) */
+	char *password;          /*!< Password (encoded in UTF-8) */
+    char *realm;             /*!< Realm, (encoded in UTF-8) */
 
     gnutls_session tls;      /*!< TLS session over TCP socket */
 	gnutls_certificate_credentials cred; /*!< TLS credentials */
@@ -265,6 +266,7 @@ NuAuth* nu_client_new(
         unsigned char diffie_hellman,
         nuclient_error *err);
 
+void nu_client_set_realm(NuAuth* session, char *realm);
 void nu_client_set_debug(NuAuth* session, unsigned char enabled);
 void nu_client_set_verbose(NuAuth* session, unsigned char enabled);
 

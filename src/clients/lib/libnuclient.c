@@ -59,19 +59,35 @@ static const int cert_type_priority[3] = { GNUTLS_CRT_X509,  0 };
 
 #include <sys/utsname.h>
 
+/**
+ * Free a string allocated by secure_str_copy().
+ *
+ * If USE_GCRYPT_MALLOC_SECURE compilation option in not set,
+ * free() is used.
+ *
+ * \return Copy of the string, or NULL on error.
+ */
+#ifdef USE_GCRYPT_MALLOC_SECURE
+#   define secure_str_free(text) gcry_free(text)
+#else
+#   define secure_str_free(text) free(text)
+#endif
+
+
 /* callbacks we support */
-int nu_getrealm(void *context __attribute__((unused)), int id,
+int nu_getrealm(void *context, int id,
         const char **availrealms __attribute__((unused)),
         const char **result)
 {
+    NuAuth* session=(NuAuth *)context;
     if(id != SASL_CB_GETREALM) {
 #if DEBUG
         printf("nu_getrealm not looking for realm");
 #endif
-        return EXIT_FAILURE;
+        return SASL_BADPARAM;
     }
     if(!result) return SASL_BADPARAM;
-    *result = "nufw";
+    *result = session->realm;
     return SASL_OK;
 }
 
@@ -89,10 +105,10 @@ int nu_get_usersecret(sasl_conn_t *conn __attribute__((unused)),
     if(id != SASL_CB_PASS) {
         if (session->verbose)
             printf("getsecret not looking for pass");
-        return EXIT_FAILURE;
+        return SASL_BADPARAM;
     }
     if (session->password == NULL) {
-        return EXIT_FAILURE;
+        return SASL_FAIL;
     }
     if(!psecret) return SASL_BADPARAM;
 
@@ -117,7 +133,7 @@ static int nu_get_userdatas(void *context __attribute__((unused)),
         case SASL_CB_USER:
         case SASL_CB_AUTHNAME:
             if (session->username == NULL) {
-                return EXIT_FAILURE;
+                return SASL_FAIL;
             }
             *result=session->username;
             break;
@@ -164,13 +180,9 @@ void nu_exit_clean(NuAuth * session)
         session->socket=0;
     }
 
-#ifdef USE_GCRYPT_MALLOC_SECURE
-    gcry_free(session->username);
-    gcry_free(session->password);
-#else
-    free(session->username);
-    free(session->password);
-#endif
+    secure_str_free(session->username);
+    secure_str_free(session->password);
+    secure_str_free(session->realm);
 
     gnutls_certificate_free_keys(session->cred);
     gnutls_certificate_free_credentials(session->cred);
@@ -882,30 +894,30 @@ int tls_handshake(NuAuth * session, nuclient_error *err)
     return 1;
 }
 
-#ifdef USE_GCRYPT_MALLOC_SECURE
 /**
- * Make a secure copy of a string:
- * - allocate memory using gcry_calloc_secure(): disallow the memory page
- *   to be copy on swap ;
- * - wipe out old string (fill with zero) ;
- * - free old string.
+ * Make a copy in a string in a secure memory buffer, ie. buffer never moved
+ * to swap (hard drive). Use secure_str_free() to free the memory when you
+ * don't need the string anymore.
  *
- * Wipe out and free memory in every case (error or not).
+ * If USE_GCRYPT_MALLOC_SECURE compilation option in not set,
+ * strdup() is used.
  *
- * New allocated memory have to be freed using gcry_free() and not free().
- *
- * \return Fresh copy of the string, or NULL if fails.
+ * \return Copy of the string, or NULL on error.
  */
 static char* secure_str_copy(const char *orig)
 {
+#ifdef USE_GCRYPT_MALLOC_SECURE
     size_t len = strlen(orig);
     char *new = gcry_calloc_secure(len+1, sizeof(char));
     if (new != NULL) {
         SECURE_STRNCPY(new, orig, len+1);
     }
     return new;
-}
+#else
+    return strdup(orig);
 #endif
+}
+
 
 /**
  * \ingroup nuclientAPI
@@ -962,17 +974,13 @@ NuAuth* nu_client_new(
     session->recvthread = NULL_THREAD;
     session->tls=NULL;
     session->ct = NULL;
-#ifdef USE_GCRYPT_MALLOC_SECURE
     session->username = secure_str_copy(username);
     session->password = secure_str_copy(password);
+    session->realm = secure_str_copy("nufw");
     if (session->username == NULL || session->password == NULL) {
         SET_ERROR(err, INTERNAL_ERROR, MEMORY_ERR);
         return NULL;
     }
-#else
-    session->username = strdup(username);
-    session->password = strdup(password);
-#endif
     session->tls_password = NULL;
     session->debug_mode = 0;
     session->verbose = 1;
@@ -1140,6 +1148,19 @@ int nu_client_connect(NuAuth* session,
 void nu_client_set_debug(NuAuth* session, unsigned char enabled)
 {
     session->debug_mode = enabled;
+}
+
+
+/**
+ * Set realm: domain of authentification
+ *
+ * \param session Pointer to client session
+ * \param realm realm string encoded in UTF-8
+ */
+void nu_client_set_realm(NuAuth* session, char *realm)
+{
+    secure_str_free(session->realm);
+    session->realm = secure_str_copy(realm);
 }
 
 
