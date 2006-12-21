@@ -53,6 +53,12 @@ char* nu_client_to_utf8(const char* inbuf, char *from_charset)
     size_t outbufleft;
     int ret;
 
+    /* just returns NULL if input is NULL */
+    if (inbuf == NULL)
+    {
+        return inbuf;
+    }
+
     /* create an iconv context to convert locale charset to UTF-8 */
     ctx = iconv_open("UTF-8", from_charset);
 
