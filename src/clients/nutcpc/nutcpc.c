@@ -313,7 +313,7 @@ char* get_username()
 static void usage (void)
 {
     fprintf (stderr, "usage: nutcpc [-kldV]  [-I interval] "
-            "[-U username ] [-H nuauth_srv]\n");
+            "[-U username ] [-H nuauth_srv] [-r realm]\n");
     exit (EXIT_FAILURE);
 }
 
@@ -396,7 +396,7 @@ void daemonize_process(nutcpc_context_t *context, char *runpid)
  *
  * \return The client session, or NULL on error (get description from ::err)
  */
-NuAuth* do_connect(nutcpc_context_t *context, char *username)
+NuAuth* do_connect(nutcpc_context_t *context, char *username, char *realm)
 {
     char *username_utf8;
     char *password;
@@ -418,6 +418,15 @@ NuAuth* do_connect(nutcpc_context_t *context, char *username)
     session = nu_client_new(username_utf8, password_utf8,  1, err);
     if (session == NULL) {
         return NULL;
+    }
+
+    /* set realm if it's defined */
+    if (realm)
+    {
+        char *realm_utf8;
+        realm_utf8 = nu_client_to_utf8(realm, locale_charset);
+        nu_client_set_realm(session, realm_utf8);
+        free(realm);
     }
 
     /* wipe out username and password, and then freee memory */
@@ -482,7 +491,10 @@ void main_loop(nutcpc_context_t *context)
 /**
  * Parse command line options
  */
-void parse_cmdline_options(int argc, char **argv, nutcpc_context_t *context, char **username)
+void parse_cmdline_options(int argc, char **argv,
+        nutcpc_context_t *context,
+        char **username,
+        char **realm)
 {
     int ch;
 
@@ -496,7 +508,7 @@ void parse_cmdline_options(int argc, char **argv, nutcpc_context_t *context, cha
 
     /* Parse all command line arguments */
     opterr = 0;
-    while ((ch = getopt (argc, argv, "kldVu:H:I:U:p:")) != -1) {
+    while ((ch = getopt (argc, argv, "kldVu:H:I:U:p:r:")) != -1) {
         switch (ch) {
             case 'H':
                 SECURE_STRNCPY(context->srv_addr, optarg, sizeof(context->srv_addr));
@@ -526,6 +538,9 @@ void parse_cmdline_options(int argc, char **argv, nutcpc_context_t *context, cha
             case 'p':
                 SECURE_STRNCPY(context->port, optarg, sizeof(context->port));
                 break;
+            case 'r':
+                *realm = strdup(optarg);
+                break;
             default:
                 usage();
         }
@@ -535,7 +550,7 @@ void parse_cmdline_options(int argc, char **argv, nutcpc_context_t *context, cha
 /**
  * Initialize nuclient library
  */
-void init_library(nutcpc_context_t *context, char *username)
+void init_library(nutcpc_context_t *context, char *username, char *realm)
 {
     struct rlimit core_limit;
 
@@ -566,7 +581,7 @@ void init_library(nutcpc_context_t *context, char *username)
 
     /* Init. library */
     printf("Connecting to NuFW gateway (%s)\n", context->srv_addr);
-    session = do_connect(context, username);
+    session = do_connect(context, username, realm);
 
     /* Library failure? */
     if (session == NULL)
@@ -581,6 +596,7 @@ int main (int argc, char** argv)
 {
     char* runpid = compute_run_pid();
     char *username = NULL;
+    char *realm = NULL;
     nutcpc_context_t context;
 
     /* needed by iconv */
@@ -602,7 +618,7 @@ int main (int argc, char** argv)
         exit(EXIT_FAILURE);
     }
 
-    parse_cmdline_options(argc, argv, &context, &username);
+    parse_cmdline_options(argc, argv, &context, &username, &realm);
 
     if (!context.debug_mode)
     {
@@ -631,7 +647,7 @@ int main (int argc, char** argv)
 
     install_signals();
 
-    init_library(&context, username);
+    init_library(&context, username, realm);
 
     /*
      * Become a daemon by double-forking and detaching completely from
