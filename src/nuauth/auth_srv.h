@@ -18,6 +18,12 @@
 #ifndef AUTH_SRV_H
 #define AUTH_SRV_H
 
+/**
+ * Version of nuauth API, used by module to check if
+ * everybody have the same API version.
+ */
+#define NUAUTH_API_VERSION "2.1.1-3"
+
 #include "nufw_source.h"
 
 /* workaround SPlint error (don't know __gnuc_va_list) */

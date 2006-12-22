@@ -38,6 +38,14 @@
 
 #define DN_LENGTH 256
 
+/**
+ * Returns version of nuauth API
+ */
+const char* get_api_version()
+{
+    return NUAUTH_API_VERSION;
+}
+
 G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
 {
   struct x509_std_params* params=(struct x509_std_params*)params_p;

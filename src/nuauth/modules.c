@@ -322,6 +322,36 @@ int init_modules_system()
 }
 
 /**
+ * Check API version of a module: should be NUAUTH_API_VERSION.
+ * Use the function 'get_api_version' of the module.
+ *
+ * \return Returns 0 if the function missing or the function is different,
+ * and 1 otherwise.
+ */
+int check_module_version(GModule *module)
+{
+    get_module_version_func_t get_version;
+    const char *api_version;
+
+    /* get module function handler */
+    if (!g_module_symbol (module, "get_api_version", (gpointer*)&get_version)) {
+        g_error ("Unable to load function 'get_api_version' from module %s",
+                g_module_name(module));
+        return 0;
+    }
+
+    api_version = get_version();
+    if (strcmp(NUAUTH_API_VERSION, api_version) != 0)
+    {
+        g_error("Don't load module %s: wrong API version (%s instead of %s)",
+                g_module_name(module),
+                api_version, NUAUTH_API_VERSION);
+        return 0;
+    }
+    return 1;
+}
+
+/**
  * Load module for a task
  *
  * Please note that last args is a pointer of pointer
@@ -368,6 +398,13 @@ static int load_modules_from(gchar* confvar, gchar* func,GSList** target)
                 current_module->configfile);
         if (current_module->module == NULL) {
             g_error("Unable to load module %s in %s",modules_list[i],MODULE_PATH);
+            free_module_t(current_module);
+            continue;
+        }
+
+        /* check module version */
+        if (!check_module_version(current_module->module))
+        {
             free_module_t(current_module);
             continue;
         }

@@ -24,6 +24,13 @@
 /**
  * @{ */
 
+/**
+ * Returns version of nuauth API
+ */
+const char* get_api_version()
+{
+    return NUAUTH_API_VERSION;
+}
 
 G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
 {

@@ -49,6 +49,14 @@ typedef struct {
 #define SHR32(x, n) (((n) < 32)?((x) >> (n)):0)
 
 /**
+ * Returns version of nuauth API
+ */
+const char* get_api_version()
+{
+    return NUAUTH_API_VERSION;
+}
+
+/**
  * Convert a string to a 32-bit integer, skip spaces before.
  * Returns 0 on error, 1 otherwise.
  */

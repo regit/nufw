@@ -28,6 +28,15 @@
  * @{ */
 
 
+/**
+ * Returns version of nuauth API
+ */
+const char* get_api_version()
+{
+    return NUAUTH_API_VERSION;
+}
+
+
 
 G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t state,gpointer params)
 {

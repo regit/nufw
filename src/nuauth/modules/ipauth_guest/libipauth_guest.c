@@ -27,13 +27,22 @@ struct ipauth_guest_params {
     gchar* username;
 };
 
+/**
+ * Returns version of nuauth API
+ */
+const char* get_api_version()
+{
+    return NUAUTH_API_VERSION;
+}
+
+
 G_MODULE_EXPORT gchar* unload_module_with_params(gpointer params_p)
 {
   struct ipauth_guest_params* params = (struct ipauth_guest_params*)params_p;
 
   g_free(params->username);
   g_free(params);
- 
+
   return NULL;
 }
 

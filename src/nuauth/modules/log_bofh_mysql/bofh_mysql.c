@@ -24,6 +24,15 @@
 /** \todo factorise with log_mysql code */
 #define IPV6_SQL_STRLEN (2+16*2+1)
 
+/**
+ * Returns version of nuauth API
+ */
+const char* get_api_version()
+{
+    return NUAUTH_API_VERSION;
+}
+
+
 static int ipv6_to_sql(struct in6_addr *addr, char *buffer, size_t buflen)
 {
     unsigned char i;

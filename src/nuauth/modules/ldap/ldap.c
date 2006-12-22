@@ -51,6 +51,15 @@ typedef unsigned long digit_t;
 typedef digit_t number_t[DIGIT_COUNT];
 
 /**
+ * Returns version of nuauth API
+ */
+const char* get_api_version()
+{
+    return NUAUTH_API_VERSION;
+}
+
+
+/**
  *
  * \ingroup AuthNuauthModules
  * \defgroup LdapModule LDAP authentication and acl module
@@ -304,7 +313,7 @@ static char *ipv6_to_base10(struct in6_addr *addr)
 }
 
 
-/** 
+/**
  * \brief Escape character to protect them in query
  *
  * \verbatim
@@ -356,7 +365,7 @@ gchar* escape_string_for_ldap(const gchar* basestring)
                 g_strlcat(result,"\\5c",length);
                 i+=3;
                 break;
-            default: 
+            default:
                 result[i] = *c_char;
                 i++;
         }

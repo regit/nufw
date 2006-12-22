@@ -33,6 +33,13 @@
  * @{ */
 
 
+/**
+ * Returns version of nuauth API
+ */
+const char* get_api_version()
+{
+    return NUAUTH_API_VERSION;
+}
 
 
 /** \todo Take into account connection_t* to void* change
@@ -93,7 +100,7 @@ G_MODULE_EXPORT gint user_packet_logs (void* element, tcp_state_t state,gpointer
 				    sport, dport);
 	    } else {
 		    g_message("%s%s %s[%s] %ld : SRC=%s DST=%s PROTO=%d",
-				    prefix, log_prefix, str_state,  
+				    prefix, log_prefix, str_state,
 				    ((connection_t*)element)->username, ((connection_t*)element)->timestamp,
 				    source_addr, dest_addr,
 				    ((connection_t*)element)->tracking.protocol);

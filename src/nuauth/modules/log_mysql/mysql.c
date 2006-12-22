@@ -25,6 +25,15 @@
 #define IPV6_SQL_STRLEN (2+16*2+1)
 
 /**
+ * Returns version of nuauth API
+ */
+const char* get_api_version()
+{
+    return NUAUTH_API_VERSION;
+}
+
+
+/**
  * Convert an IPv6 address to SQL binary string.
  * Eg. ::1 => "0x0000000000000001"
  *

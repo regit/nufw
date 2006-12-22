@@ -33,6 +33,15 @@
 GMutex *global_client_mutex;
 prelude_client_t *global_client; /* private pointer for prelude client connection */
 
+/**
+ * Returns version of nuauth API
+ */
+const char* get_api_version()
+{
+    return NUAUTH_API_VERSION;
+}
+
+
 G_MODULE_EXPORT gchar* unload_module_with_params(gpointer params_ptr)
 {
     return NULL;
