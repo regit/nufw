@@ -193,7 +193,6 @@ G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
 
     /* create mask to remove nbits at position shift */
     config->mask = SHR32(0xFFFFFFFF, 32 - config->shift) | SHL32(0xFFFFFFFF, nbits + config->shift);
-    g_message("mask = %08x\n", config->mask);
 
     /* parse group list */
     parse_group_file(config, group_filename);
