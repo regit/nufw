@@ -77,6 +77,7 @@ extern "C" {
 #include <gnutls/gnutls.h>
 #include <sasl/sasl.h>
 
+#define NUCLIENT_VERSION "2.1.1-3"
 #define DEBUG 0
 
 #ifndef CONNTABLE_BUCKETS
@@ -289,6 +290,9 @@ void nu_client_delete(NuAuth *session);
 const char* nu_client_strerror (nuclient_error *err);
 
 char* nu_client_to_utf8(const char* inbuf, char *from_charset);
+
+const char *nu_get_version();
+int nu_check_version(const char *version);
 
 #ifdef __cplusplus
 }

@@ -565,7 +565,7 @@ void init_library(nutcpc_context_t *context, char *username)
     }
 
     /* Init. library */
-    printf("Connecting to NuFw gateway\n");
+    printf("Connecting to NuFW gateway (%s)\n", context->srv_addr);
     session = do_connect(context, username);
 
     /* Library failure? */
@@ -585,6 +585,14 @@ int main (int argc, char** argv)
 
     /* needed by iconv */
     setlocale (LC_ALL, "");
+
+    if (!nu_check_version(NUCLIENT_VERSION))
+    {
+        fprintf(stderr, "Wrong version of libnuclient (%s instead of %s)\n",
+                nu_get_version(), NUCLIENT_VERSION);
+        exit(EXIT_FAILURE);
+    }
+
 
     /* get local charset */
     locale_charset = nl_langinfo(CODESET);

@@ -445,6 +445,14 @@ int pam_sm_authenticate(pam_handle_t *pamh, int flags,
 
   syslog(LOG_ERR,"(pam_nufw) do authenticate");
 
+  /* check libnuclient version */
+  if (!nu_check_version(NUCLIENT_VERSION))
+  {
+      syslog(LOG_ERR, "(pam nufw) Wrong version of libnuclient (%s instead of %s)",
+              nu_get_version(), NUCLIENT_VERSION);
+      return PAM_AUTH_ERR;
+  }
+
   /* init. our structure */
   errmsg = _init_pam_nufw_s(&pn_s);
   if (errmsg != NULL) {
@@ -530,10 +538,6 @@ PAM_EXTERN
 int pam_sm_open_session(pam_handle_t *pamh,int flags,int argc
         ,const char **argv)
 {
-  /*const char *password = NULL; */
-  /*D(("pam_nufw sm_open_session"));*/
-  /*pam_get_item(pamh, PAM_AUTHTOK, (const void **)&password);
-    syslog(LOG_INFO, "(pam_nufw) passwd: %s",password);*/
   syslog(LOG_INFO,"(pam_nufw) session opened");
   return PAM_SUCCESS;
 }

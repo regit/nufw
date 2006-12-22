@@ -1271,4 +1271,28 @@ const char* nu_client_strerror (nuclient_error *err)
     }
 }
 
+/**
+ * Get version of nuclient library (eg. "2.1.1-3")
+ *
+ * \return Nuclient version string
+ */
+const char *nu_get_version()
+{
+    return NUCLIENT_VERSION;
+}
+
+/**
+ * Check if libnuclient if the specified version. Use #NUCLIENT_VERSION
+ * as argument. See also function nu_get_version().
+ *
+ * \return Return 1 if ok, 0 if versions are different.
+ */
+int nu_check_version(const char *version)
+{
+    if (strcmp(NUCLIENT_VERSION, version) == 0)
+        return 1;
+    else
+        return 0;
+}
+
 /** @} */
