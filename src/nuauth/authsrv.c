@@ -131,8 +131,6 @@ void stop_threads(gboolean wait)
         g_thread_pool_free(nuauthdatas->user_session_loggers, TRUE, wait);
         log_message(DEBUG, AREA_MAIN, "Stop thread pool 'user loggers'");
         g_thread_pool_free(nuauthdatas->user_loggers, TRUE, wait);
-        log_message(DEBUG, AREA_MAIN, "Stop thread pool 'decision workers'");
-        g_thread_pool_free(nuauthdatas->decisions_workers, TRUE, wait);
         log_message(DEBUG, AREA_MAIN, "Stop thread pool 'acl checkers'");
         g_thread_pool_free(nuauthdatas->acl_checkers, TRUE, wait);
 
