@@ -113,6 +113,21 @@ struct nuauth_conn {
         gnutls_certificate_credentials xcred;
 };
 
+struct queued_pckt {
+	uint32_t packet_id; 
+
+	char indev[IFNAMSIZ];
+	char physindev[IFNAMSIZ];
+	char outdev[IFNAMSIZ];
+	char physoutdev[IFNAMSIZ];
+	u_int32_t mark;
+
+	time_t timestamp;
+
+	char* payload;
+	int payload_len;
+};
+
 struct nuauth_conn tls;
 
 gnutls_session * tls_connect();
@@ -144,7 +159,7 @@ void* packetsrv(void *data);
 void* authsrv(void* data);
 
 /* send an auth request packet given a payload (raw packet) */
-int auth_request_send(uint8_t type,uint32_t packet_id, char* payload, unsigned int data_len);
+int auth_request_send(uint8_t type,struct queued_pckt* pckt);
 
 void close_tls_session();
 

@@ -21,6 +21,12 @@
 #define NUFW_PROTOCOL_V4_H
 
 #include <netinet/in.h>    /* struct in6addr */
+/** \todo Fix this for nuauth on non Linux computer */
+#ifdef LINUX
+#include <linux/if.h>
+#else
+#define IFNAMSIZ 16
+#endif
 
 /** 
  * Protocol version of message exchanged between NuFW and NuAuth.
@@ -75,10 +81,15 @@ typedef struct {
     uint32_t packet_id;      /*!< Netfilter packet unique identifier */
     uint32_t timestamp;      /*!< Timestamp (Epoch format) */
 
-    /* TODO Internal fields */
-    /* hwmac
-     * interfaces
+    u_int32_t mark;
+    char indev[IFNAMSIZ] ;
+    char physindev[IFNAMSIZ] ;
+    char outdev[IFNAMSIZ] ;
+    char physoutdev[IFNAMSIZ] ;
+    /* \todo Internal fields 
+    	 hwmac
      */
+
     /* (...): packet content (maybe truncated) */
 } nuv4_nufw_to_nuauth_auth_message_t;
 

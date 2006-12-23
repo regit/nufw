@@ -76,8 +76,7 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
     packet_idl * current;
     uint32_t pcktid;
     uint32_t c_mark;
-    char *payload;
-    int payload_len;
+    struct queued_pckt q_pckt;
     struct nfqnl_msg_packet_hdr *ph;
     struct timeval timestamp;
     int ret;
@@ -85,18 +84,16 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
     debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_VERBOSE_DEBUG,
             "(*) New packet");
 
-    payload_len =  nfq_get_payload(nfa,&payload);
-    if (payload_len == -1){
+    q_pckt.payload_len =  nfq_get_payload(nfa,&(q_pckt.payload));
+    if (q_pckt.payload_len == -1){
         return 0;
     }
 
-    if (look_for_tcp_flags((unsigned char*)payload,payload_len)){
+    if (look_for_tcp_flags((unsigned char*)q_pckt.payload,q_pckt.payload_len)){
         ph = nfq_get_msg_packet_hdr(nfa);
         if (ph){
-            pcktid = ntohl(ph->packet_id);
-            auth_request_send(AUTH_CONTROL,
-                    pcktid,
-                    payload, payload_len);
+            q_pckt.packet_id = ntohl(ph->packet_id);
+            auth_request_send(AUTH_CONTROL,&q_pckt);
             IPQ_SET_VERDICT(pcktid,NF_ACCEPT);
             return 1;
         } else {
@@ -124,15 +121,16 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
         return 0;
     }
 
-    current->nfmark=nfq_get_nfmark(nfa);
+    q_pckt.mark = current->nfmark = nfq_get_nfmark(nfa);
+
+    /** \todo Add interfaces information */
+    get_interface_information(&q_pckt, nfa);
 
     ret = nfq_get_timestamp(nfa, &timestamp);
     if (ret == 0){
-        current->timestamp=timestamp.tv_sec;
+        q_pckt.timestamp = current->timestamp = timestamp.tv_sec;
     }else {
-        debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_INFO,
-                "Can not get timestamp for message");
-        current->timestamp=time(NULL);
+        q_pckt.timestamp = current->timestamp = time(NULL);
     }
 
     /* Try to add the packet to the list */
@@ -142,7 +140,7 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 
     if (pcktid){
         /* send an auth request packet */
-        if (! auth_request_send(AUTH_REQUEST,pcktid,payload,payload_len)){
+        if (! auth_request_send(AUTH_REQUEST,&q_pckt)){
             int sandf=0;
             /* we fail to send the packet so we free packet related to current */
             pthread_mutex_lock(&packets_list.mutex);
@@ -257,14 +255,18 @@ void packetsrv_ipq_process(unsigned char *buffer)
 {
     ipq_packet_msg_t *msg_p = NULL ;
     packet_idl *current;
+    struct queued_pckt q_pckt;
     uint32_t pcktid;
 
     pckt_rx++ ;
     /* printf("Working on IP packet\n"); */
     msg_p = ipq_get_packet(buffer);
+    q_pckt.packet_id = msg_p->packet_id;
+    q_pckt.payload = (char*)msg_p->payload;
+    q_pckt.payload_len = msg_p->data_len;
     /* need to parse to see if it's an end connection packet */
     if (look_for_tcp_flags(msg_p->payload,msg_p->data_len)){
-        auth_request_send(AUTH_CONTROL,msg_p->packet_id,(char*)msg_p->payload,msg_p->data_len);
+        auth_request_send(AUTH_CONTROL,&q_pckt); 
         IPQ_SET_VERDICT( msg_p->packet_id,NF_ACCEPT);
         return;
     }
@@ -285,7 +287,7 @@ void packetsrv_ipq_process(unsigned char *buffer)
     current->nfmark=msg_p->mark;
 #endif
 
-    /* Adding packet to list  */
+    /* Adding packet to list */
     pthread_mutex_lock(&packets_list.mutex);
     pcktid=padd(current);
     pthread_mutex_unlock(&packets_list.mutex);
@@ -295,7 +297,7 @@ void packetsrv_ipq_process(unsigned char *buffer)
     }
 
     /* send an auth request packet */
-    if (! auth_request_send(AUTH_REQUEST,msg_p->packet_id,(char*)msg_p->payload,msg_p->data_len)){
+    if (! auth_request_send(AUTH_REQUEST,&q_pckt)){
         int sandf=0;
         /* we fail to send the packet so we free packet related to current */
         pthread_mutex_lock(&packets_list.mutex);
@@ -516,7 +518,7 @@ void shutdown_tls()
  * \param payload_len Size of packet content in bytes
  * \return If an error occurs returns 0, else return 1.
  */
-int auth_request_send(uint8_t type, uint32_t packet_id, char* payload, unsigned int payload_len)
+int auth_request_send(uint8_t type, struct queued_pckt* pckt_datas)
 {
     unsigned char datas[512];
     nuv4_nufw_to_nuauth_auth_message_t *msg_header = (nuv4_nufw_to_nuauth_auth_message_t *)&datas;
@@ -524,34 +526,36 @@ int auth_request_send(uint8_t type, uint32_t packet_id, char* payload, unsigned 
     int msg_length;
 
     /* Drop non-IPv(4|6) packet */
-    if ((((struct iphdr *)payload)->version != 4) && ( ((struct iphdr *)payload)->version != 6)) {
+    if ((((struct iphdr *)(pckt_datas->payload))->version != 4) && ( ((struct iphdr *)(pckt_datas->payload))->version != 6)) {
         debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, 
                 "Dropping non-IPv4/non-IPv6 packet (version %u)",
-                ((struct iphdr *)payload)->version);
+                ((struct iphdr *)(pckt_datas->payload))->version);
         return 0;
     } 
 
     /* Truncate packet content if needed */
-    if (sizeof(datas) - sizeof(nuv4_nufw_to_nuauth_auth_message_t) < payload_len) {
+    if (sizeof(datas) < sizeof(nuv4_nufw_to_nuauth_auth_message_t) + pckt_datas->payload_len) {
         debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, 
                 "Very long packet: truncating!");
-        payload_len = sizeof(datas) - sizeof(nuv4_nufw_to_nuauth_auth_message_t);
+        pckt_datas->payload_len = sizeof(datas) - sizeof(nuv4_nufw_to_nuauth_auth_message_t);
     }
-    msg_length = sizeof(nuv4_nufw_to_nuauth_auth_message_t) + payload_len;
+    msg_length = sizeof(nuv4_nufw_to_nuauth_auth_message_t) + pckt_datas->payload_len;
 
     /* Fill message header */
     msg_header->protocol_version = PROTO_VERSION;
     msg_header->msg_type = type;
     msg_header->msg_length = htons(msg_length);    
-    msg_header->packet_id = htonl(packet_id);
-    msg_header->timestamp = htonl( time(NULL) );
+    msg_header->packet_id = htonl(pckt_datas->packet_id);
+    msg_header->timestamp = htonl(pckt_datas->timestamp);
+
+	/** \todo Add info about interfaces */
 
     /* Copy (maybe truncated) packet content */
-    memcpy(msg_content, payload, payload_len);    
+    memcpy(msg_content, pckt_datas->payload, pckt_datas->payload_len);    
 
     /* Display message */
     debug_log_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_VERBOSE_DEBUG, 
-            "Sending request for %lu", packet_id);
+            "Sending request for %lu", pckt_datas->packet_id);
 
     /* cleaning up current session : auth_server has detected a problem */
     pthread_mutex_lock(&tls.mutex);
