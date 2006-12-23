@@ -2,6 +2,7 @@
 	- suppress ldap authentication code
 	- add support for log prefix
 	- add support for guest group
+	- mark_group: new module dedicated to packet marking
 2.1.0 (2006/09/01)
 	- fix period handling (user OR and and AND between period item of a
 	  period)
