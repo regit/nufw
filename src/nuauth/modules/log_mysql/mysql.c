@@ -432,9 +432,9 @@ static inline int log_state_open(MYSQL *ld, connection_t *element,struct log_mys
     {
         gboolean ok;
         char request[SHORT_REQUEST_SIZE];
-        char dst_ascii[IPV6_SQL_STRLEN];
+        char src_ascii[IPV6_SQL_STRLEN];
 
-        if (ipv6_to_sql(&element->tracking.daddr, dst_ascii, sizeof(dst_ascii)) != 0)
+        if (ipv6_to_sql(&element->tracking.saddr, src_ascii, sizeof(src_ascii)) != 0)
             return -1;
 
         ok = secure_snprintf(request, sizeof(request),
@@ -443,7 +443,7 @@ static inline int log_state_open(MYSQL *ld, connection_t *element,struct log_mys
                 params->mysql_table_name,
                 TCP_STATE_CLOSE,
                 element->timestamp,
-                dst_ascii,
+                src_ascii,
                 (element->tracking).source);
 
         /* need to update table to suppress double field */
