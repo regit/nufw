@@ -200,7 +200,7 @@ $config{'databasetype'} =~ /mysql/ and
 push @connection_query,('user_id','ip_saddr','ip_daddr','tcp_sport','tcp_dport','DATE_FORMAT(start_timestamp,\'%D %M %Y %H:%i:%S\')','state');
 $config{'databasetype'} =~ /pgsql/ and
 push @connection_query,('user_id','ip_saddr','ip_daddr','tcp_sport','tcp_dport','start_timestamp','state');
-my %connection_query_info=(number=>["Number",12],username=>["Name",12],user_id=>["ID",6],ip_saddr=>["Source IP",17],ip_daddr=>["Destination IP",17],ip_protocol=>["Proto",7],oob_time_sec=>["Open Time",11], tcp_sport=>["Sport",8], tcp_dport=>["Dport",8],id=>["Id Packet",12],'DATE_FORMAT(start_timestamp,\'%D %M %Y %H:%I:%S\')'=>["Start Time", 30],start_timestamp=>["Start Time",13],state=>["State",6]);
+my %connection_query_info=(number=>["Number",12],username=>["Name",12],user_id=>["ID",6],ip_saddr=>["Source IP",17],ip_daddr=>["Destination IP",17],ip_protocol=>["Proto",7],oob_time_sec=>["Open Time",11], tcp_sport=>["Sport",8], tcp_dport=>["Dport",8],id=>["Id Packet",12],'DATE_FORMAT(start_timestamp,\'%D %M %Y %H:%i:%S\')'=>["Start Time", 30],start_timestamp=>["Start Time",13],state=>["State",6]);
 
 my @users_query=();
 push @users_query,'username' if $config{'version'} == 2;
