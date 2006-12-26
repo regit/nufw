@@ -129,7 +129,7 @@ if (stat($config{'configfile'}))
       $$config_hash{$1} = $2;
       $modified_conf++;
     }
-    return %$config_hash; 
+    return %$config_hash;
   }
   %config = Parse_Config_File(\%config);
 }
@@ -183,9 +183,9 @@ if (!$modified_conf)
 my $dbh;
 {
   my $datasource;
-  $config{'databasetype'} =~ /mysql/ and 
+  $config{'databasetype'} =~ /mysql/ and
     $datasource = "dbi:mysql:database=".$config{'databasename'}.";host=".$config{'host'}.";port=".$config{'port'};
-  $config{'databasetype'} =~ /pgsql/ and 
+  $config{'databasetype'} =~ /pgsql/ and
     $datasource = "dbi:Pg:dbname=".$config{'databasename'}.";host=".$config{'host'}.";port=".$config{'port'};
   $dbh = DBI->connect($datasource, $config{'user'}, $config{'pass'}) or die_politely($DBI::errstr);
 }
@@ -197,10 +197,10 @@ my $delayswitch=-1;
 my @connection_query=();
 push @connection_query,'username' if $config{'version'} == 2;
 $config{'databasetype'} =~ /mysql/ and
-push @connection_query,('user_id','ip_saddr','ip_daddr','tcp_sport','tcp_dport','DATE_FORMAT(start_timestamp,\'%D %M %Y %H:%I:%S\')','state');
+push @connection_query,('user_id','ip_saddr','ip_daddr','tcp_sport','tcp_dport','DATE_FORMAT(start_timestamp,\'%D %M %Y %H:%i:%S\')','state');
 $config{'databasetype'} =~ /pgsql/ and
 push @connection_query,('user_id','ip_saddr','ip_daddr','tcp_sport','tcp_dport','start_timestamp','state');
-my %connection_query_info=(number=>["Number",12],username=>["Name",12],user_id=>["ID",6],ip_saddr=>["Source IP",17],ip_daddr=>["Destination IP",17],ip_protocol=>["Proto",7],oob_time_sec=>["Open Time",11], tcp_sport=>["Sport",8], tcp_dport=>["Dport",8],id=>["Id Packet",12],'DATE_FORMAT(start_timestamp,\'%D %M %Y %H:%I:%S\')'=>["Start Time", 30],start_timestamp=>["Start Time",13],state=>["State",6]); 
+my %connection_query_info=(number=>["Number",12],username=>["Name",12],user_id=>["ID",6],ip_saddr=>["Source IP",17],ip_daddr=>["Destination IP",17],ip_protocol=>["Proto",7],oob_time_sec=>["Open Time",11], tcp_sport=>["Sport",8], tcp_dport=>["Dport",8],id=>["Id Packet",12],'DATE_FORMAT(start_timestamp,\'%D %M %Y %H:%I:%S\')'=>["Start Time", 30],start_timestamp=>["Start Time",13],state=>["State",6]);
 
 my @users_query=();
 push @users_query,'username' if $config{'version'} == 2;
@@ -208,7 +208,7 @@ push @users_query,('user_id','state');
 
 
 my $gal_query="select ".join (',' ,@connection_query) ." from ".$config{'tablename'};
-$config{'databasetype'} =~ /pgsql/ and 
+$config{'databasetype'} =~ /pgsql/ and
   $gal_query="select ".join (',' ,@connection_query) ." from ". $config{'tablename'};
 
 my $time_cond_query = " order by oob_time_sec DESC,oob_time_usec DESC limit 0,".$config{'line'};
@@ -266,7 +266,7 @@ while (1)
   addstr($count,0," "x90);
   my $query = $gal_query;
   $mode eq 'users' and $query=$users_cond_query_start.' WHERE'.$time_users_cond_start.$delays[$delayswitch].$time_users_cond_end;
-  if ($proto eq 'tcp') 
+  if ($proto eq 'tcp')
   {
     if ($mode eq 'time')
     {
@@ -334,7 +334,7 @@ while (1)
     exit 0;
   }
   $in eq 't' and $mode='time';
-  if ($in eq 'u') 
+  if ($in eq 'u')
   {
     $delayswitch++;
     $mode='users';
