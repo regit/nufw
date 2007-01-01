@@ -550,7 +550,31 @@ int auth_request_send(uint8_t type, struct queued_pckt* pckt_datas)
     msg_header->packet_id = htonl(pckt_datas->packet_id);
     msg_header->timestamp = htonl(pckt_datas->timestamp);
 
-	/** \todo Add info about interfaces */
+    /* Add info about interfaces */
+    if (pckt_datas->indev){
+        memcpy(msg_header->indev,pckt_datas->indev,IFNAMSIZ*sizeof(char));
+    } else {
+        memset(msg_header->indev,0,IFNAMSIZ*sizeof(char));
+    }
+
+    if (pckt_datas->outdev){
+        memcpy(msg_header->outdev,pckt_datas->outdev,IFNAMSIZ*sizeof(char));
+    } else {
+        memset(msg_header->indev,0,IFNAMSIZ*sizeof(char));
+    }
+
+    if (pckt_datas->physindev){
+        memcpy(msg_header->physindev,pckt_datas->physindev,IFNAMSIZ*sizeof(char));
+    } else {
+        memset(msg_header->indev,0,IFNAMSIZ*sizeof(char));
+    }
+
+    if (pckt_datas->physoutdev){
+        memcpy(msg_header->physoutdev,pckt_datas->physoutdev,IFNAMSIZ*sizeof(char));
+    } else {
+        memset(msg_header->indev,0,IFNAMSIZ*sizeof(char));
+    }
+
 
     /* Copy (maybe truncated) packet content */
     memcpy(msg_content, pckt_datas->payload, pckt_datas->payload_len);    
