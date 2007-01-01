@@ -3,6 +3,7 @@
 #ifdef USE_NFQUEUE
 int get_interface_information(struct queued_pckt* q_pckt, struct nfq_data *nfad)
 {
+#ifdef HAVE_NFQ_GET_INDEV_NAME
 	q_pckt->indev = nfq_get_indev_name(nfad);
 	if (! q_pckt->indev){
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
@@ -32,7 +33,7 @@ int get_interface_information(struct queued_pckt* q_pckt, struct nfq_data *nfad)
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
                 "Get physoutdev information: %s",q_pckt->physoutdev);
 	}
-
+#endif
 	return 1;
 }
 
