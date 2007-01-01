@@ -76,7 +76,7 @@ nu_error_t parse_dgram(connection_t* connection,unsigned char* dgram, unsigned i
                     break;
                 case TCP_STATE_ESTABLISHED:
                     if (msg_type == AUTH_CONTROL ){
-			connection->state = AUTH_STATE_DONE;
+                        connection->state = AUTH_STATE_DONE;
                         log_user_packet(connection, TCP_STATE_ESTABLISHED);
                         free_connection(connection);
                         return NU_EXIT_NO_RETURN;
@@ -89,7 +89,7 @@ nu_error_t parse_dgram(connection_t* connection,unsigned char* dgram, unsigned i
             }
             break;
         }
-	break;
+        break;
 
         case IPPROTO_UDP:
             if (get_udp_headers(&connection->tracking, dgram, dgram_size) < 0) {
@@ -167,15 +167,16 @@ nu_error_t authpckt_new_connection(unsigned char *dgram, unsigned int dgram_size
 
     /* timestamp */
     connection->timestamp = ntohl(msg->timestamp);
-    if ( connection->timestamp == 0 )
+    if ( connection->timestamp == 0 ){
         connection->timestamp = time(NULL);
+    }
 
-/* connection is proto v4 because we are here */
-	connection->nufw_version =  PROTO_VERSION_V22;
+    /* connection is proto v4 because we are here */
+    connection->nufw_version =  PROTO_VERSION_V22;
 
     ret = parse_dgram(connection,dgram,dgram_size,conn,msg->msg_type);
     if (ret != NU_EXIT_CONTINUE){
-	return ret;
+        return ret;
     }
 
     /** \todo parse supplementary fields */
@@ -212,8 +213,7 @@ void authpckt_conntrack (unsigned char *dgram, unsigned int dgram_size)
         "Auth conntrack: Working on new packet");
 
     /* Check message content size */
-    if (dgram_size != sizeof(struct nuv4_conntrack_message_t))
-    {
+    if (dgram_size != sizeof(struct nuv4_conntrack_message_t)){
         debug_log_message(WARNING, AREA_PACKET,
             "Auth conntrack: Improper length of packet");
         return;
@@ -289,80 +289,80 @@ void authpckt_conntrack (unsigned char *dgram, unsigned int dgram_size)
  */
 nu_error_t authpckt_decode(unsigned char **pdgram, unsigned int * pdgram_size, connection_t** conn)
 {
-	unsigned char* dgram=*pdgram;
-	unsigned int dgram_size=*pdgram_size;
-	nufw_to_nuauth_message_header_t *header;
+  unsigned char* dgram=*pdgram;
+  unsigned int dgram_size=*pdgram_size;
+  nufw_to_nuauth_message_header_t *header;
 
-	/* Switch following protocol version */
-	header = (nufw_to_nuauth_message_header_t *)dgram;
-	switch (header->protocol_version){
-		case PROTO_VERSION_V22:
-			switch (header->msg_type){
-				case AUTH_REQUEST:
-				case AUTH_CONTROL:
-					authpckt_new_connection(dgram, dgram_size,conn);
-					if (ntohs(header->msg_length) < dgram_size){
-						*pdgram_size = dgram_size - ntohs(header->msg_length);
-						*pdgram = dgram + ntohs(header->msg_length);
-					} else {
-						*pdgram_size=0;
-					}
-					return NU_EXIT_OK;
+  /* Switch following protocol version */
+  header = (nufw_to_nuauth_message_header_t *)dgram;
+  switch (header->protocol_version){
+    case PROTO_VERSION_V22:
+        switch (header->msg_type){
+          case AUTH_REQUEST:
+          case AUTH_CONTROL:
+              authpckt_new_connection(dgram, dgram_size,conn);
+              if (ntohs(header->msg_length) < dgram_size){
+                  *pdgram_size = dgram_size - ntohs(header->msg_length);
+                  *pdgram = dgram + ntohs(header->msg_length);
+              } else {
+                  *pdgram_size=0;
+              }
+              return NU_EXIT_OK;
 
-					break;
-				case AUTH_CONN_DESTROY:
-				case AUTH_CONN_UPDATE:
-					authpckt_conntrack(dgram, dgram_size);
-					*conn = NULL;
-					if (ntohs(header->msg_length) < dgram_size){
-						*pdgram_size = dgram_size - ntohs(header->msg_length);
-						*pdgram = dgram + ntohs(header->msg_length);
-					} else {
-						*pdgram_size=0;
-					}
-					return NU_EXIT_NO_RETURN;
-				default:
-					log_message(VERBOSE_DEBUG, AREA_PACKET, "NuFW packet type is unknown");
-					return NU_EXIT_ERROR;
-			}
-			return NU_EXIT_OK;
-		case PROTO_VERSION_V20:
-			switch (header->msg_type){
-				case AUTH_REQUEST:
-				case AUTH_CONTROL:
-					authpckt_new_connection_v3(dgram, dgram_size,conn);
-					if (ntohs(header->msg_length) < dgram_size){
-						*pdgram_size = dgram_size - ntohs(header->msg_length);
-						*pdgram = dgram + ntohs(header->msg_length);
-					} else {
-						*pdgram_size=0;
-					}
-					return NU_EXIT_OK;
+              break;
+          case AUTH_CONN_DESTROY:
+          case AUTH_CONN_UPDATE:
+              authpckt_conntrack(dgram, dgram_size);
+              *conn = NULL;
+              if (ntohs(header->msg_length) < dgram_size){
+                  *pdgram_size = dgram_size - ntohs(header->msg_length);
+                  *pdgram = dgram + ntohs(header->msg_length);
+              } else {
+                  *pdgram_size=0;
+              }
+              return NU_EXIT_NO_RETURN;
+          default:
+              log_message(VERBOSE_DEBUG, AREA_PACKET, "NuFW packet type is unknown");
+              return NU_EXIT_ERROR;
+        }
+        return NU_EXIT_OK;
+    case PROTO_VERSION_V20:
+        switch (header->msg_type){
+          case AUTH_REQUEST:
+          case AUTH_CONTROL:
+              authpckt_new_connection_v3(dgram, dgram_size,conn);
+              if (ntohs(header->msg_length) < dgram_size){
+                  *pdgram_size = dgram_size - ntohs(header->msg_length);
+                  *pdgram = dgram + ntohs(header->msg_length);
+              } else {
+                  *pdgram_size=0;
+              }
+              return NU_EXIT_OK;
 
-					break;
-				case AUTH_CONN_DESTROY:
-				case AUTH_CONN_UPDATE:
-					authpckt_conntrack_v3(dgram, dgram_size);
-					*conn = NULL;
-					if (ntohs(header->msg_length) < dgram_size){
-						*pdgram_size = dgram_size - ntohs(header->msg_length);
-						*pdgram = dgram + ntohs(header->msg_length);
-					} else {
-						*pdgram_size=0;
-					}
-					return NU_EXIT_NO_RETURN;
-				default:
-					log_message(VERBOSE_DEBUG, AREA_PACKET, "NuFW packet type is unknown");
-					return NU_EXIT_ERROR;
-			}
-			return NU_EXIT_OK;
-		default:
-		{
-			log_message(WARNING, AREA_PACKET, "NuFW protocol is unknown");
-		}
+              break;
+          case AUTH_CONN_DESTROY:
+          case AUTH_CONN_UPDATE:
+              authpckt_conntrack_v3(dgram, dgram_size);
+              *conn = NULL;
+              if (ntohs(header->msg_length) < dgram_size){
+                  *pdgram_size = dgram_size - ntohs(header->msg_length);
+                  *pdgram = dgram + ntohs(header->msg_length);
+              } else {
+                  *pdgram_size=0;
+              }
+              return NU_EXIT_NO_RETURN;
+          default:
+              log_message(VERBOSE_DEBUG, AREA_PACKET, "NuFW packet type is unknown");
+              return NU_EXIT_ERROR;
+        }
+        return NU_EXIT_OK;
+    default:
+        {
+            log_message(WARNING, AREA_PACKET, "NuFW protocol is unknown");
+        }
 
-	}
-	return NU_EXIT_OK;
+  }
+  return NU_EXIT_OK;
 }
 
 /**
@@ -370,17 +370,17 @@ nu_error_t authpckt_decode(unsigned char **pdgram, unsigned int * pdgram_size, c
  */
 unsigned char get_proto_version_from_packet(const unsigned char* dgram,size_t dgram_size)
 {
-	nufw_to_nuauth_message_header_t *header;
+  nufw_to_nuauth_message_header_t *header;
 
-	if (dgram_size<sizeof(nufw_to_nuauth_message_header_t)){
-		return 0;
-	}
-	/* Check protocol version */
-	header = (nufw_to_nuauth_message_header_t *)dgram;
-	/* Is protocol supported */
-	if ( check_protocol_version(header->protocol_version) == NU_EXIT_OK ){
-		return header->protocol_version;
-	} else {
-		return 0;
-	}
+  if (dgram_size<sizeof(nufw_to_nuauth_message_header_t)){
+      return 0;
+  }
+  /* Check protocol version */
+  header = (nufw_to_nuauth_message_header_t *)dgram;
+  /* Is protocol supported */
+  if ( check_protocol_version(header->protocol_version) == NU_EXIT_OK ){
+      return header->protocol_version;
+  } else {
+      return 0;
+  }
 }
