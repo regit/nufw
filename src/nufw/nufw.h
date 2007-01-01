@@ -92,6 +92,7 @@ uint32_t queue_maxlen;
 #include <sys/socket.h>
 #include <netdb.h>
 
+
 /** If equals to 1, compile with x509 certificate support */
 #define USE_X509 1
 
@@ -116,10 +117,10 @@ struct nuauth_conn {
 struct queued_pckt {
 	uint32_t packet_id; 
 
-	char indev[IFNAMSIZ];
-	char physindev[IFNAMSIZ];
-	char outdev[IFNAMSIZ];
-	char physoutdev[IFNAMSIZ];
+	char *indev;
+	char *physindev;
+	char *outdev;
+	char *physoutdev;
 	u_int32_t mark;
 
 	time_t timestamp;
@@ -127,6 +128,10 @@ struct queued_pckt {
 	char* payload;
 	int payload_len;
 };
+
+#if USE_NFQUEUE
+int get_interface_information(struct queued_pckt* q_pckt, struct nfq_data *nfad);
+#endif
 
 struct nuauth_conn tls;
 

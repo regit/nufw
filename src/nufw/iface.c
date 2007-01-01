@@ -1,33 +1,39 @@
+#include "nufw.h"
 
-int set_iface_name(u_int32_t iface,char* ifacename)
-{
-
-}
-
-
+#ifdef USE_NFQUEUE
 int get_interface_information(struct queued_pckt* q_pckt, struct nfq_data *nfad)
 {
-	u_int32_t iface;
-	iface = nfq_get_indev(nfad);
-	if (! set_iface_name(iface,q_pckt->indev)){
-		return 0;
+	q_pckt->indev = nfq_get_indev_name(nfad);
+	if (! q_pckt->indev){
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
+                "Can not get indev information");
 	}
 
-	iface = nfq_get_physindev(nfad);
-	if (! set_iface_name(iface,q_pckt->physindev)){
-
-		return 0;
+	q_pckt->physindev = nfq_get_physindev_name(nfad);
+	if (! q_pckt->physindev){
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
+                "Can not get physindev information");
 	}
 
-	iface = nfq_get_outdev(nfad);
-	if (! set_iface_name(iface,q_pckt->outdev)){
-		return 0;
+	q_pckt->outdev = nfq_get_outdev_name(nfad);
+	if (! q_pckt->outdev){
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
+                "Can not get outdev information");
+	} else {
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
+                "Get outdev information: %s", q_pckt->outdev);
 	}
 
-	iface = nfq_get_physoutdev(nfad);
-	if (! set_iface_name(iface,q_pckt->physoutdev)){
-		return 0;
+	q_pckt->physoutdev = nfq_get_physoutdev_name(nfad);
+	if (! q_pckt->physoutdev){
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
+                "Can not get physoutdev information");
+	} else {
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
+                "Get physoutdev information: %s",q_pckt->physoutdev);
 	}
 
 	return 1;
 }
+
+#endif

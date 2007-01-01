@@ -123,8 +123,12 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 
     q_pckt.mark = current->nfmark = nfq_get_nfmark(nfa);
 
-    /** \todo Add interfaces information */
-    get_interface_information(&q_pckt, nfa);
+    if (! get_interface_information(&q_pckt, nfa)){
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_INFO,
+                "Can not get interfaces information for message");
+        free(current);
+		return 0;
+	}
 
     ret = nfq_get_timestamp(nfa, &timestamp);
     if (ret == 0){
