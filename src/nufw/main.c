@@ -377,7 +377,7 @@ int main(int argc,char * argv[])
     /* option */
 #if USE_NFQUEUE
     char * options_list = "DhVvmq:"
-#ifdef HAVE_QUEUE_MAXLEN 
+#ifdef HAVE_NFQ_SET_QUEUE_MAXLEN
         "L:"
 #endif
         "c:k:a:n:d:p:t:T:"
@@ -410,7 +410,8 @@ int main(int argc,char * argv[])
     handle_conntrack_event=CONNTRACK_HANDLE_DEFAULT;
     nufw_conntrack_uses_mark = 0;
 #endif
-#ifdef HAVE_QUEUE_MAXLEN
+#ifdef HAVE_NFQ_SET_QUEUE_MAXLEN
+
     queue_maxlen = QUEUE_MAXLEN;
 #endif
 #endif
@@ -496,7 +497,7 @@ int main(int argc,char * argv[])
             nufw_set_mark=1;
             break;
 #endif /* HAVE_LIBCONNTRACK */
-#ifdef HAVE_QUEUE_MAXLEN
+#ifdef HAVE_NFQ_SET_QUEUE_MAXLEN
           case 'L':
             sscanf(optarg,"%u",&queue_maxlen);
             break;
@@ -511,7 +512,7 @@ int main(int argc,char * argv[])
                     "v[v[v[v[v[v[v[v[v[v]]]]]]]]]] [-d remote_addr] [-p remote_port]  [-t packet_timeout] [-T track_size]"
 #ifdef USE_NFQUEUE
                     " [-q queue_num]"
-#ifdef HAVE_QUEUE_MAXLEN
+#ifdef HAVE_NFQ_SET_QUEUE_MAXLEN
                     " [-L queue_maxlen]"
 #endif
 #endif
@@ -533,7 +534,7 @@ int main(int argc,char * argv[])
 \t-p: remote port we send auth requests to (TCP port nuauth server listens on) (default: 4128)\n"
 #if USE_NFQUEUE
 "\t-q: use nfqueue number (default: 0)\n"
-#ifdef HAVE_QUEUE_MAXLEN
+#ifdef HAVE_NFQ_SET_QUEUE_MAXLEN
 		"\t-L : set queue max len (default : 1024)\n"
 #endif
 #endif
