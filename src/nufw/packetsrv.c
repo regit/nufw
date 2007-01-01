@@ -74,8 +74,6 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
         struct nfq_data *nfa, void *data)
 {
     packet_idl * current;
-    uint32_t pcktid;
-    uint32_t c_mark;
     struct queued_pckt q_pckt;
     struct nfqnl_msg_packet_hdr *ph;
     struct timeval timestamp;
@@ -94,7 +92,7 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
         if (ph){
             q_pckt.packet_id = ntohl(ph->packet_id);
             auth_request_send(AUTH_CONTROL,&q_pckt);
-            IPQ_SET_VERDICT(pcktid,NF_ACCEPT);
+            IPQ_SET_VERDICT(q_pckt.packet_id,NF_ACCEPT);
             return 1;
         } else {
             return 0;
@@ -139,22 +137,22 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 
     /* Try to add the packet to the list */
     pthread_mutex_lock(&packets_list.mutex);
-    pcktid=padd(current);
+    q_pckt.packet_id=padd(current);
     pthread_mutex_unlock(&packets_list.mutex);
 
-    if (pcktid){
+    if (q_pckt.packet_id){
         /* send an auth request packet */
         if (! auth_request_send(AUTH_REQUEST,&q_pckt)){
             int sandf=0;
             /* we fail to send the packet so we free packet related to current */
             pthread_mutex_lock(&packets_list.mutex);
             /* search and destroy packet by packet_id */
-            sandf = psearch_and_destroy (pcktid,&c_mark);
+            sandf = psearch_and_destroy (q_pckt.packet_id,&(q_pckt.mark));
             pthread_mutex_unlock(&packets_list.mutex);
 
             if (!sandf){
                 log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING, \
-                        "Packet could not be removed: %u", pcktid);
+                        "Packet could not be removed: %u", q_pckt.packet_id);
             }
         }
     }
@@ -548,7 +546,7 @@ int auth_request_send(uint8_t type, struct queued_pckt* pckt_datas)
     /* Fill message header */
     msg_header->protocol_version = PROTO_VERSION;
     msg_header->msg_type = type;
-    msg_header->msg_length = htons(msg_length);    
+    msg_header->msg_length = htons(msg_length);
     msg_header->packet_id = htonl(pckt_datas->packet_id);
     msg_header->timestamp = htonl(pckt_datas->timestamp);
 
@@ -570,7 +568,7 @@ int auth_request_send(uint8_t type, struct queued_pckt* pckt_datas)
 
     /* negotiate TLS connection if needed */
     if (!tls.session){
-        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_INFO, 
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_INFO,
                 "Not connected, trying TLS connection");
         tls.session = tls_connect();
 
