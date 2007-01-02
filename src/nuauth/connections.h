@@ -63,7 +63,7 @@ struct acl_group {
   gchar *log_prefix;
 };
 
-typedef struct Iface_Nfo {
+typedef struct {
   char *indev;     /*!< Input device set to NULL if not available */
   char *physindev; /*!< Input physical device set to NULL if not available */
   char *outdev; /*!< Output device set to NULL if not available */
