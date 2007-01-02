@@ -428,7 +428,7 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
     }
 
     debug_log_message (DEBUG, AREA_MAIN,
-            "Sending auth answer %d for packet %u on socket %p",
+            "Sending auth answer %d for packet %u on TLS session %p",
             element->decision, packet_id, element->tls);
     if (element->tls->alive){
         g_mutex_lock(element->tls->tls_lock);

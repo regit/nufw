@@ -212,6 +212,22 @@ void free_connection(connection_t *conn)
     g_free(conn);
 }
 
+#define COPY_IFACE_NAME(copy, orig, iface) \
+    do { if (orig->iface) \
+            { copy->iface = g_strndup(orig->iface,IFNAMSIZ); }  \
+        else { copy->iface = NULL; } \
+    } while (0)
+
+duplicate_iface_nfo(iface_nfo_t* copy,iface_nfo_t* orig)
+{
+  COPY_IFACE_NAME(copy,orig,indev);
+  COPY_IFACE_NAME(copy,orig,outdev);
+  COPY_IFACE_NAME(copy,orig,physindev);
+  COPY_IFACE_NAME(copy,orig,physoutdev);
+}
+
+#undef COPY_IFACE_NAME
+
 /** used for logging purpose
  * it DOES NOT duplicate internal data
  */
@@ -231,6 +247,8 @@ connection_t* duplicate_connection(connection_t* element)
     conn_copy->os_version = g_strdup(element->os_version);
 
     conn_copy->log_prefix = g_strdup(element->log_prefix);
+
+    duplicate_iface_nfo(&(conn_copy->iface_nfo),&(element->iface_nfo));
 
     /* Nullify needed internal field */
     conn_copy->acl_groups = NULL;
