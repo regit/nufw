@@ -33,10 +33,10 @@
 static nu_error_t pgsql_close_open_user_sessions(struct log_pgsql_params* params);
 static PGconn *pgsql_conn_init(struct log_pgsql_params* params);
 
-/**
+/*
  * Returns version of nuauth API
  */
-const char* get_api_version()
+G_MODULE_EXPORT const char* get_api_version()
 {
     return NUAUTH_API_VERSION;
 }

@@ -36,10 +36,10 @@
 
 #define XML_DEFS_PERIODFILE CONFIG_DIR "/" "periods.xml"
 
-/**
+/*
  * Returns version of nuauth API
  */
-const char* get_api_version()
+G_MODULE_EXPORT const char* get_api_version()
 {
     return NUAUTH_API_VERSION;
 }

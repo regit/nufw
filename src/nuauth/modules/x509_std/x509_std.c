@@ -38,10 +38,10 @@
 
 #define DN_LENGTH 256
 
-/**
+/*
  * Returns version of nuauth API
  */
-const char* get_api_version()
+G_MODULE_EXPORT const char* get_api_version()
 {
     return NUAUTH_API_VERSION;
 }

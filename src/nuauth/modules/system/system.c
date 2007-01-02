@@ -49,10 +49,10 @@ gint system_convert_username_to_uppercase;
 gint system_convert_username_to_lowercase;
 gint system_pam_module_not_threadsafe;
 
-/**
+/*
  * Returns version of nuauth API
  */
-const char* get_api_version()
+G_MODULE_EXPORT const char* get_api_version()
 {
     return NUAUTH_API_VERSION;
 }
