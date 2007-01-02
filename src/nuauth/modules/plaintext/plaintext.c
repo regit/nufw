@@ -28,7 +28,7 @@
  * @{ */
 
 
-/*
+/**
  * Returns version of nuauth API
  */
 G_MODULE_EXPORT const char* get_api_version()
