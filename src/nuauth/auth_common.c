@@ -143,13 +143,22 @@ void free_iface_nfo_t(iface_nfo_t* track)
 }
 
 /**
- * Delete a connection and all of its memory.
+ * Delete a connection and free all the memory used.
  *
- * May call log_user_packet() with #TCP_STATE_DROP state if connection was
+ * This is the output function for every connection_t::. It
+ * \b must be called to destroy every connection.
+ *
+ * This includes:
+ *  - Connection created after nufw and client request
+ *  - Connection created after a call do duplicate_connection()
+ *
+ * May call log_user_packet() with ::TCP_STATE_DROP state if connection was
  * waiting for its authentification.
  *
  * \param conn Pointer to a connection
+ * \return None
  */
+
 void free_connection(connection_t *conn)
 {
     g_assert (conn != NULL );
@@ -218,7 +227,15 @@ void free_connection(connection_t *conn)
         else { copy->iface = NULL; } \
     } while (0)
 
-duplicate_iface_nfo(iface_nfo_t* copy,iface_nfo_t* orig)
+/** Duplicate an iface_nfo
+ *
+ * Do a copy of field only if it is not NULL
+ *
+ * \param copy pointer to the target ::iface_nfo_t (MUST be allocated before)
+ * \param orig pointer to the ::iface_nfo_t to copy
+ */
+
+void duplicate_iface_nfo(iface_nfo_t* copy,iface_nfo_t* orig)
 {
   COPY_IFACE_NAME(copy,orig,indev);
   COPY_IFACE_NAME(copy,orig,outdev);
@@ -228,8 +245,22 @@ duplicate_iface_nfo(iface_nfo_t* copy,iface_nfo_t* orig)
 
 #undef COPY_IFACE_NAME
 
-/** used for logging purpose
- * it DOES NOT duplicate internal data
+/** Used for logging purpose \b ONLY.
+ *
+ * It <b>DOES NOT</b> duplicate internal data. This includes all
+ * cache datas used to take the decision
+ *  - connection_t::acl_groups
+ *  - connection_t::user_groups
+ *  - ...
+ *
+ * connection_t::state is switched to ::AUTH_STATE_DONE as the
+ * connection will be used for logging only.
+ *
+ * We call duplicate_iface_nfo() because the copy will be
+ * sent to free_connection() like the original.
+ *
+ * \param element a pointer to a connection_t
+ * \return the duplicated connection_t
  */
 
 connection_t* duplicate_connection(connection_t* element)

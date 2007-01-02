@@ -35,23 +35,26 @@
  *    - Create all queues and threads: init_nuauthdatas()
  *    - Main loop: nuauth_main_loop()
  *
- * \section libnuclient_sec libnuclient
+ * \section client_sec Client
+ * \subsection libnuclient_sec Libnuclient
  *
  * Libnuclient is a library used by nuauth on client side to read active
- * connection. The library is used by nutcpc client. Public API is 
+ * connection. The library is used by nutcpc client. Public API is
  * defined in file nuclient.h.
  *
  * To initialize the library, use:
- *    NuAuth *session = NULL;
- *    struct nuclient_error nuerror;
- *    nu_client_global_init(&nuerror);
- *    session = nu_client_init2(
- *           "hostname", "4130",
- *           NULL, NULL,
- *           &get_username, &get_password,  NULL,
- *           &nuerror);
+\verbatim
+NuAuth *session = NULL;
+struct nuclient_error nuerror;
+nu_client_global_init(&nuerror);
+session = nu_client_init2(
+           "hostname", "4130",
+           NULL, NULL,
+           &get_username, &get_password,  NULL,
+           &nuerror);
+\endverbatim
  *
- * \section nutcpc_sec nutcpc client 
+ * \subsection nutcpc_sec nutcpc client 
  *
  * Nutcpc is the Linux and FreeBSD command line client. 
  */
