@@ -56,11 +56,14 @@ typedef struct {
   struct in6_addr daddr;    /*!< IPv6 destination address */
   u_int8_t protocol;        /*!< IP protocol */
   u_int8_t padding;         /*!< Padding to 32 bits alignment */
-  u_int16_t dest;           /*!< TCP/UDP destination port */
 
+  u_int16_t dest;           /*!< TCP/UDP destination port */
   u_int16_t source;         /*!< TCP/UDP source port */
+
   u_int8_t type;            /*!< ICMP message type */
   u_int8_t code;            /*!< ICMP code type */
+
+
 #ifdef TRACKING_WITH_PAYLOAD
   char payload[PAYLOAD_SAMPLE];  /*!< First 8 bytes of protocol payload used for ICMP reject */
 #endif

@@ -63,6 +63,13 @@ struct acl_group {
   gchar *log_prefix;
 };
 
+typedef struct Iface_Nfo {
+  char *indev;     /*!< Input device set to NULL if not available */
+  char *physindev; /*!< Input physical device set to NULL if not available */
+  char *outdev; /*!< Output device set to NULL if not available */
+  char *physoutdev; /*!< Output physical device set to NULL if not available */
+} iface_nfo_t;
+
 /**
  * This is a packet blocked by NuFW and waiting for an authentification
  * of NuAuth. They are created in authpckt_new_connection().
@@ -75,7 +82,11 @@ typedef struct
   long timestamp;         /*!< Packet arrival time (seconds) */
   int socket;             /*!< Socket (file descriptor) from which NuFW request is coming */
   nufw_session_t *tls;    /*!< TLS connection to NuFW from which comes the packet */
+
   tracking_t tracking;    /*!< IPv4 connection tracking (headers) */
+
+  iface_nfo_t iface_nfo; /*!< Information about network interfaces */
+
   uint32_t mark;       /*!< Number used for marking set to user numeric identity at start */
   char *username;         /*!< User name */
 

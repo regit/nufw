@@ -124,6 +124,37 @@ nu_error_t parse_dgram(connection_t* connection,unsigned char* dgram, unsigned i
     return NU_EXIT_CONTINUE;
 }
 
+#define GET_IFACE_FROM_MSG(conn, msg, iface) \
+    do { if (msg->iface) \
+            { conn->iface_nfo.iface = g_strndup(msg->iface,IFNAMSIZ); }  \
+        else { conn->iface_nfo.iface = NULL; } \
+    } while (0)
+
+/**
+ * Parse fields of the message
+ *
+ * Add mark and interface information to the
+ * connection
+ *
+ * \param msg the message from nufw
+ * \param conn the connection to be filled
+ * \return a nu_error_t
+ */
+
+nu_error_t parse_v4_fields(nuv4_nufw_to_nuauth_auth_message_t* msg,connection_t *conn)
+{
+    conn->mark=ntohl(msg->mark);
+
+    GET_IFACE_FROM_MSG(conn,msg,indev);
+    GET_IFACE_FROM_MSG(conn,msg,physindev);
+    GET_IFACE_FROM_MSG(conn,msg,outdev);
+    GET_IFACE_FROM_MSG(conn,msg,physoutdev);
+
+    return NU_EXIT_OK;
+}
+
+#undef GET_IFACE_FROM_MSG
+
 /**
  * Parse message content for message of type #AUTH_REQUEST or #AUTH_CONTROL
  * using structure ::nufw_to_nuauth_auth_message_t.
@@ -179,7 +210,11 @@ nu_error_t authpckt_new_connection(unsigned char *dgram, unsigned int dgram_size
         return ret;
     }
 
-    /** \todo parse supplementary fields */
+    /* parse supplementary fields */
+    if (parse_v4_fields(msg,connection) != NU_EXIT_OK)
+    {
+        return ret;
+    }
 
 #ifdef DEBUG_ENABLE
     if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)){

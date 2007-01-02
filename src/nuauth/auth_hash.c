@@ -172,6 +172,8 @@ inline void search_and_fill_complete_of_userpckt(connection_t *new, connection_t
             new->os_sysname = packet->os_sysname ;
             new->os_release = packet->os_release ;
             new->os_version = packet->os_version ;
+            /* copy iface info */
+            memcpy(&(new->iface_nfo),&(packet->iface_nfo),sizeof(iface_nfo_t));
 
             g_thread_pool_push (nuauthdatas->acl_checkers, new, NULL);
             packet->packet_id = new->packet_id;

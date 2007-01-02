@@ -576,7 +576,7 @@ G_MODULE_EXPORT GSList* acl_check (connection_t* element,gpointer params_p)
           log_message(WARNING, AREA_MAIN, "disabling current connection");
           ldap_unbind(ld);
           ld=NULL;
-          g_private_set(	params->ldap_priv,ld);
+          g_private_set(params->ldap_priv,ld);
       }
       log_message(WARNING, AREA_MAIN, "invalid return from ldap_search_st : %s\n",ldap_err2string(err));
       return NULL;
