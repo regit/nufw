@@ -42,8 +42,8 @@ typedef enum
      * from cache or external source. See acl_check_and_decide().
      */
     AUTH_STATE_COMPLETING,
-    AUTH_STATE_DONE, /*<! This state is set when the connection will be only used for logging purpose */
-    AUTH_STATE_HELLOMODE /*<! This connection is treated in HELLO authentication mode */
+    AUTH_STATE_DONE, /*!< This state is set when the connection will be only used for logging purpose */
+    AUTH_STATE_HELLOMODE /*!< This connection is treated by the HELLO authentication mode */
 } auth_state_t;
 
 #define IPHDR_REJECT_LENGTH 20
