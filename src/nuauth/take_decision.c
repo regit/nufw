@@ -41,19 +41,27 @@ static inline void update_connection_log_prefix(connection_t* element,const gcha
 }
 
 typedef enum {
-    TEST_NODECIDE,
-    TEST_DECIDED
+    TEST_NODECIDE, /*<! Decision is not yet taken on packet */
+    TEST_DECIDED /*<! Decision is taken on packet */
 } test_t;
 
 /**
- * Take a decision of a connection authentification, and send it to NuFW.
+ * \brief Take a decision of a connection authentification, and send it to NuFW.
  *
  * The process may be asynchronous (using decisions_workers,
  * member of ::nuauthdatas)
  *
- * \param element A connection
- * \param place Place where the connection is stored
- *              (PACKET_ALONE or PACKET_IN_HASH)
+ * It iters on each element of connection_t::acl_groups.
+ * For each element, it test every groups to check
+ * if the users belongs to one of them.
+ * When a match is found, there is two cases:
+ *  - if nuauth_params::prio_to_nok is set to one, we stop if the decision is to
+ *  block the packet.
+ *  - if nuauth_params::prio_to_nok is 0 then we continue till we fing a acl with 
+ *  ACCEPT decision.
+ *
+ * \param element A pointer to a ::connection_t
+ * \param place Place where the connection is stored, see ::packet_place_t
  * \return Returns -1 if fails, 1 otherwise
  */
 gint take_decision(connection_t *element, packet_place_t place)
@@ -105,7 +113,7 @@ gint take_decision(connection_t *element, packet_place_t place)
                                         ((struct acl_group *)(parcours->data))->log_prefix
                                         );
                             } else {
-                                /* we can have multiple accpet, last one with a log prefix will be displayed */
+                                /* we can have multiple accept, last one with a log prefix will be displayed */
                                 update_connection_log_prefix(element,
                                         ((struct acl_group *)(parcours->data))->log_prefix
                                         );
@@ -230,7 +238,7 @@ gint take_decision(connection_t *element, packet_place_t place)
  * Log (using log_user_packet()) and send answer (using send_auth_response())
  * for a given connection.
  *
- * \param element A connection
+ * \param element A pointer to a ::connection_t
  * \return Returns 1
  */
 gint apply_decision(connection_t *element)

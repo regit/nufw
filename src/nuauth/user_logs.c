@@ -28,14 +28,24 @@ struct Conn_State {
 };
 
 /**
- * log user packet or by a direct call to log module or by sending log
+ * \brief Log user packet via modules
+ *
+ * Log user packet or by a direct call to log module or by sending log
  * message to logger thread pool.
  *
+ * If nuauth_params::log_user_sync is set to 1, we log synchronously
+ * to be sure that the packet is logged by all the modules before
+ * the decision leaves nuauth and reach nufw. This is only done for
+ * packet which initiate a connection (in Netfilter meaning).
+ *
+ * If nuauth_params::log_user_sync is set to 0, log_user_packet() directly
+ * sends packet to the pool of threads waiting for logging.
+ *
  * \param element A connection
- * \param state TCP state of the connection
+ * \param state A ::tcp_state_t, TCP state of the connection
  */
 
-void log_user_packet (connection_t* element, tcp_state_t state)
+void log_user_packet(connection_t* element, tcp_state_t state)
 {
 	if ((nuauthconf->log_users_sync) && (state == TCP_STATE_OPEN) ){
             if ( nuauthconf->log_users &  8 ){
@@ -92,7 +102,8 @@ void log_user_packet_from_accounted_connection(struct accounted_connection* data
 
 
 /**
- * Interface to logging module function for thread pool worker.
+ * \brief Interface to logging module function for thread pool worker.
+ *
  * This function is used in nuauthdatas->user_loggers thread pool.
  *
  * \param userdata A ::Conn_State
@@ -116,11 +127,13 @@ void real_log_user_packet (gpointer userdata, gpointer data)
 }
 
 /**
- * High level function used to log an user session (connect / disconnect).
+ * \brief High level function used to log an user session
  *
- * It duplicate the user session and push it in
- * nuauthdatas->user_session_loggers thread pool: it will call
- * log_user_session_thread().
+ * It logs connection and disconnection of user.
+ *
+ * It duplicates the user session and push it in
+ * nuauthdatas->user_session_loggers thread pool.
+ * This calls log_user_session_thread() on the session.
  */
 void log_user_session(user_session_t* usession, session_state_t state)
 {
@@ -140,7 +153,7 @@ void log_user_session(user_session_t* usession, session_state_t state)
         return;
     }
 
-    /* copy interresting informations of the session */
+    /* copy interesting informations of the session */
     sessevent=g_new0(struct session_event,1);
     if (sessevent == NULL) {
         /* no more memory :-( */
@@ -167,10 +180,14 @@ void log_user_session(user_session_t* usession, session_state_t state)
 }
 
 /**
- * Thread of nuauthdatas->user_session_loggers thread pool:
- * call modules_user_session_logs() and the free memory.
+ * \brief Function of session loggers thread pool
  *
- * Don't use this function directly! Use log_user_session().
+ * Thread of nuauthdatas->user_session_loggers thread pool:
+ *  - block during nuauth reload
+ *  - call modules_user_session_logs()
+ *  - free memory
+ *
+ * \attention Don't use this function directly! Use log_user_session().
  */
 void log_user_session_thread (gpointer event_ptr, gpointer unused_optional)
 {

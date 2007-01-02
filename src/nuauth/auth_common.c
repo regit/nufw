@@ -229,7 +229,7 @@ void free_connection(connection_t *conn)
 
 /** Duplicate an iface_nfo
  *
- * Do a copy of field only if it is not NULL
+ * Do a copy of field \b only if it is not NULL
  *
  * \param copy pointer to the target ::iface_nfo_t (MUST be allocated before)
  * \param orig pointer to the ::iface_nfo_t to copy
@@ -245,9 +245,9 @@ void duplicate_iface_nfo(iface_nfo_t* copy,iface_nfo_t* orig)
 
 #undef COPY_IFACE_NAME
 
-/** Used for logging purpose \b ONLY.
+/** Used for logging purpose \b only.
  *
- * It <b>DOES NOT</b> duplicate internal data. This includes all
+ * It <b>does not</b> duplicate internal data. This includes all
  * cache datas used to take the decision
  *  - connection_t::acl_groups
  *  - connection_t::user_groups
@@ -293,7 +293,13 @@ connection_t* duplicate_connection(connection_t* element)
 
 
 /**
- * remove element from hash table
+ * Remove element from hash table
+ *
+ * It only steal the ::connection_t from the connection
+ * hash ::conn_list
+ *
+ * \param conn a pointer to a ::connection_t
+ * \return Returns 1 if success, 0 if it fails
  */
 
 inline int conn_cl_remove(gconstpointer conn)
@@ -310,7 +316,7 @@ inline int conn_cl_remove(gconstpointer conn)
  * Remove a connection from the connection hash table (::conn_list)
  * and free its memory using free_connection().
  *
- * \param conn A connection
+ * \param conn A ::connection_t
  * \return Returns 1 if succeeded, 0 otherwise
  */
 
@@ -328,14 +334,18 @@ int conn_cl_delete(gconstpointer conn)
 }
 
 /**
- * This function is used by clean_connections_list() to check if a
- * connection is 'old' (outdated) or not. It checks timeout with current
+ * \brief This function is used by clean_connections_list() to check if a
+ * connection is 'old' (outdated) or not.
+ *
+ * It checks timeout with current
  * timestamp (see member packet_timeout of ::nuauthconf) and skip connection
  * in state ::AUTH_STATE_COMPLETING (because of an evil hack in
  * search_and_fill_complete_of_userpckt() :-)).
+ * It is needed as we can't suppress an entry which is not currently
+ * proceeded by the search_and_fill() thread and its associates.
  *
  * \param key Key in hash of the connection (not used in the function)
- * \param value Pointer to the connection
+ * \param value Pointer to a ::connection_t
  * \param user_data Current timestamp (get by time(NULL))
  * \return TRUE if the connection is old, FALSE else
  */
@@ -367,7 +377,11 @@ void clean_connection_list_callback(gpointer key, gpointer value, gpointer data)
 }
 
 /**
- * Find old connection and delete them.
+ * \brief Find old connection and delete them.
+ *
+ * This function is called periodically by main thread to
+ * clean the connection table ::conn_list.
+ *
  * It uses get_old_conn() to check if a connection is 'old' or not.
  */
 void clean_connections_list ()
@@ -484,6 +498,7 @@ gboolean secure_snprintf(char *buffer, unsigned int buffer_size, char *format, .
 
 /**
  * Check Protocol version agains supported one
+ *
  * \param version A integer coding protocol version to test
  * \return a ::nu_error_t
  */

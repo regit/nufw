@@ -57,10 +57,10 @@ typedef enum
  * Used to store the acl that apply for a packet
  */
 struct acl_group {
-  GSList *groups;
-  decision_t answer;
-  gchar *period;
-  gchar *log_prefix;
+  GSList *groups; /*!< List of users groups on which the acl apply */
+  decision_t answer; /*!< Answer relative to the acl */
+  gchar *period; /*!< Period linked to the acl */
+  gchar *log_prefix; /*!< Log prefix used for the acl */
 };
 
 typedef struct {
@@ -105,16 +105,16 @@ typedef struct
   gchar *app_name;        /*!< Application name (full path) */
   gchar *app_md5;         /*!< Application binary MD5 checksum */
 
-  auth_state_t state;     /*!< State of the packet */
+  auth_state_t state;   /*!< State of the packet */
 
-  decision_t decision;    /*!< Decision on packet. */
-  gchar* log_prefix;          /*!< Log prefix. */
+  decision_t decision;  /*!< Decision on packet. */
+  gchar* log_prefix;    /*!< Log prefix. */
 
-  time_t expire;          /*!< Expire time (never: -1) */
+  time_t expire;        /*!< Expire time (never: -1) */
 
 
-  int nufw_version;
-  int client_version;
+  int nufw_version;     /*!< Store the version of the nufw server which has sent the request */
+  int client_version;   /*!< Store version of the client which has sent the packet */
 #ifdef PERF_DISPLAY_ENABLE
   struct timeval arrival_time;   /*!< Performance datas */
 #endif

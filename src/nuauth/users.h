@@ -32,25 +32,36 @@ struct user_cached_datas {
 };
 
 /**
- * stores all information relative to a TLS user session
- * so we don't have to get this information at each packet
+ * \brief Stores all information relative to a TLS user session.
+ *
+ * We don't want to have this information in all authentication packet.
+ * Thus, once a user has managed to authenticate and has given
+ * all the informations nuauth needs, we store it in this structure for
+ * later use.
+ *
+ * When an authentication packet is received from the socket link to the user,
+ * we add the informations contained in this strucuture to the just created
+ * ::connection_t (see user_request()).
  *
  * An "user" is a person authentified with a NuFW client.
  */
 typedef struct
 {
-    struct in6_addr addr;    /*!< IPv6 address of the client */
-    int socket;              /*!< socket that is used by tls session. It identify the client */
-    gnutls_session *tls;     /*!< TLS session opened with tls_connect() */
-    GMutex *tls_lock;        /*!< Mutex to lock use of TLS */
-    char *user_name;         /*!< User name */
-    uint32_t user_id;        /*!< User identifier */
-    GSList *groups;          /*!< List of groups */
-    gchar *sysname;          /*!< OS system name (eg. "Linux") */
-    gchar *release;          /*!< OS release (eg. "2.6.12") */
-    gchar *version;          /*!< OS full version */
-    time_t expire;           /*!< Timeout of the session (-1 means unlimited) */
-    int client_version;	     /*!< Client protocol version */
+    struct in6_addr addr;    /*!< \brief IPv6 address of the client */
+    /** \brief socket used by tls session.
+     * It identify the client and it is used as the key
+     */
+    int socket;
+    gnutls_session *tls;     /*!< \brief TLS session opened with tls_connect() */
+    GMutex *tls_lock;        /*!< \brief Mutex to lock use of TLS */
+    char *user_name;         /*!< \brief User name */
+    uint32_t user_id;        /*!< \brief User identifier */
+    GSList *groups;          /*!< \brief List of groups the user belongs to*/
+    gchar *sysname;          /*!< \brief OS system name (eg. "Linux") */
+    gchar *release;          /*!< \brief OS release (eg. "2.6.12") */
+    gchar *version;          /*!< \brief OS full version */
+    time_t expire;           /*!< \brief Timeout of the session (-1 means unlimited) */
+    int client_version;	     /*!< \brief Client protocol version */
 } user_session_t;
 
 #endif

@@ -20,7 +20,7 @@
 
 /** \file packetsrv.c
  *  \brief Packet server thread
- *   
+ *
  * packetsrv() is a thread which read packet from netfilter queue. If packet
  * content match to IPv4 TCP/UDP, add it to the packet list (::packets_list)
  * and ask NuAuth an authentification or control using auth_request_send().
@@ -58,11 +58,11 @@ int look_for_tcp_flags(unsigned char* dgram, unsigned int datalen){
 
 #ifdef USE_NFQUEUE
 /**
- * Callback called by NetFilter when a packet with target QUEUE is matched.
+ * \brief Callback called by NetFilter when a packet with target QUEUE is matched.
  *
  * For TCP packet with flags different than SYN, just send it to NuAuth and
  * accept it.
- * 
+ *
  * For other packet: First of all, fill a structure ::packet_idl (identifier,
  * timestamp, ...). Try to add the new packet to ::packets_list (fails if the
  * list is full). Ask an authentification to NuAuth using auth_request_send(),
@@ -97,7 +97,7 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
         } else {
             return 0;
         }
-    } 
+    }
     current=calloc(1,sizeof( packet_idl));
     current->id=0;
     if (current == NULL){
@@ -207,8 +207,6 @@ int packetsrv_open()
         return -1;
     }
 
-
-
     /* binding this socket to queue number ::nfqueue_num 
      * and install our packet handler */
     hndl = nfq_create_queue(h,  nfqueue_num, (nfq_callback *)&treat_packet, NULL);
@@ -236,7 +234,7 @@ int packetsrv_open()
 
     nh = nfq_nfnlh(h);
     return nfnl_fd(nh);
-}    
+}
 
 void packetsrv_close(int smart)
 {
@@ -245,7 +243,7 @@ void packetsrv_close(int smart)
     if (smart)
         nfq_destroy_queue(hndl);
     nfq_close(h);
-}    
+}
 
 #else /* USE_NFQUEUE */
 
@@ -313,16 +311,18 @@ void packetsrv_ipq_process(unsigned char *buffer)
                     msg_p->packet_id);
         }
     }
-}    
+}
 #endif /* USE_NFQUEUE */
 
 /**
- * Packet server thread. Connect to netfilter to ask a netlink. Read packet
+ * \brief Packet server thread function.
+ *
+ * Connect to netfilter to ask a netlink. Read packet
  * on this link. Check if packet useful for NuFW. If yes, add it to packet 
  * list and/or send it to NuAuth.
  *
- * When using NetFilter queue, use treat_packet() callback.
- * Else, use internal packet parser and process mechanism.
+ * When using NetFilter queue, it uses treat_packet() as callback.
+ * In ipq mode it uses an internal packet parser and process mechanism.
  *
  * \return NULL
  */

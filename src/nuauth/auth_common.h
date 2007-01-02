@@ -20,8 +20,8 @@
 #define AUTH_COMMON_H
 
 typedef enum {
-  PACKET_ALONE=0,
-  PACKET_IN_HASH
+  PACKET_ALONE=0, /*!< The packet is not linked with the main hash ::conn_list */
+  PACKET_IN_HASH /*!< Packet is stored inside ::conn_list */
 } packet_place_t;
 
 void* search_and_fill (GMutex *mutex);

@@ -293,8 +293,10 @@ int user_process_field(
 }
 
 /**
+ * \brief Parse user request
+ *
  * \param datas Buffer read on a TLS socket
- * \return Single linked list of connections (of type connection_t:).
+ * \return Single linked list of connections (of type ::connection_t).
  */
 GSList* user_request(struct tls_buffer_read *datas)
 {
@@ -342,7 +344,7 @@ GSList* user_request(struct tls_buffer_read *datas)
         connection->cacheduserdatas=NULL;
         connection->packet_id=NULL;
         connection->expire=-1;
-	connection->client_version = datas->client_version;
+        connection->client_version = datas->client_version;
 #ifdef PERF_DISPLAY_ENABLE
         gettimeofday(&(connection->arrival_time),NULL);
 #endif

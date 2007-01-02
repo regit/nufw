@@ -40,14 +40,19 @@ typedef enum
 struct nuauth_params
 {
     /* Sockets related */
-    char* authreq_port;
-    char* userpckt_port;
+    char* authreq_port; /*<! Port used by nufw server to connect to nuauth */
+    char* userpckt_port; /*<! Port used by user to connect to nuauth */
 
     /* global configuration variables */
-    int packet_timeout;
+    int packet_timeout; /*<! Timeout after which packet is cleaned by clean_connections_list() */
 
     /**
-     * User session duration in second, default value: ::SESSION_DURATION
+     * \brief User session duration in second
+     *
+     * Default value: ::SESSION_DURATION.
+     *
+     * A user
+     * session is automatically disconnected after this duration.
      */
     int session_duration;
 
@@ -57,13 +62,21 @@ struct nuauth_params
 
     /* logging related */
     int log_users;
+    /** \brief See log_user_packet() */
     int log_users_sync;
 
-    /* TODO switch this on a per-module basis */
+    /* \todo Switch this on a per-module basis */
     int log_users_strict;
     int log_users_without_realm;
 
-    /* decision related */
+    /** decision related, see take_decision() 
+     *
+     * It is used to set acl policy:
+     *  - if set to 1: if a DROP acl matches, the packet
+     *  is dropped
+     *  - if set to 0: if an ACCEPT acl matches, the packet
+     *  is accepted
+     */
     int prio_to_nok;
 
     /** policy on user connection, one of
@@ -78,34 +91,36 @@ struct nuauth_params
      *  Default value is 0. */
     int reject_after_timeout;
 
-    /** When an acl match but user is not in correct group, use #DECISION_REJECT instead
+    /** \brief Uses REJECT instead of DROP if set.
+     *
+     * When an acl match but user is not in correct group, use #DECISION_REJECT instead
      *  of #DECISION_DROP (if different than 0).
      *  Default value is 0. */
     int reject_authenticated_drop;
 
-    /* authentication use OLD compatble sasl method ? */
+    /** \brief Authentication use OLD compatble sasl method if set to 1 */
     int nuauth_uses_fake_sasl;
 
-    /* Use UTF-8 charset in exchanges */
+    /** \brief Use UTF-8 charset in exchanges if set to 1 */
     int uses_utf8;
 
+    /** nuauth uses push mode if set to 1, else
+     * the old poll mode is used */
     int push;
-    int do_ip_authentication;
+    int do_ip_authentication; /*<! nuauth uses ip_authentication
+                                fallback mode if set to 1 */
     int hello_authentication;
     char* nufw_srv;
     char* client_srv;
 
     /* cache setting */
-    int datas_persistance;
-    int acl_cache;   /* cache variables for acl cache */
-    int user_cache;  /* cache variables for user cache */
+    int datas_persistance; /*<! time to keep data in cache before asking a refresh */
+    int acl_cache;   /*<! nuauth uses acl cache  if set to 1*/
+    int user_cache;  /*<! nuauth uses user cache if set to 1*/
 
-    /* Multi user related variables */
-    struct in6_addr *authorized_servers;  /* authorized server list */
-    char** multi_users_array;            /* multi users clients */
-    struct in6_addr *multi_servers_array;
+    struct in6_addr *authorized_servers;  /*<! authorized nufw server list */
 
-    /* period definition */
+    /** Hash containing period definition */
     GHashTable* periods;
 
     /* option related of how nufw handle periods */
@@ -149,7 +164,7 @@ struct nuauth_datas
     GThreadPool* user_loggers;
     GThreadPool* user_session_loggers;
     GThreadPool* decisions_workers;
-    GThreadPool*  ip_authentication_workers;
+    GThreadPool* ip_authentication_workers;
 
     /* private datas */
     GPrivate *aclqueue;
