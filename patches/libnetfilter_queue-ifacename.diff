@@ -1,0 +1,64 @@
+Index: include/libnetfilter_queue/linux_nfnetlink_queue.h
+===================================================================
+--- include/libnetfilter_queue/linux_nfnetlink_queue.h	(révision 6720)
++++ include/libnetfilter_queue/linux_nfnetlink_queue.h	(copie de travail)
+@@ -45,6 +45,10 @@
+ 	NFQA_IFINDEX_PHYSOUTDEV,	/* u_int32_t ifindex */
+ 	NFQA_HWADDR,			/* nfqnl_msg_packet_hw */
+ 	NFQA_PAYLOAD,			/* opaque data payload */
++	NFQA_IFNAME_INDEV,		/* string name of iface */
++	NFQA_IFNAME_OUTDEV,		/*  string name of iface  */
++	NFQA_IFNAME_PHYSINDEV,	/* string name of iface */
++	NFQA_IFNAME_PHYSOUTDEV,	/* string name of iface */
+
+ 	__NFQA_MAX
+ };
+Index: include/libnetfilter_queue/libnetfilter_queue.h
+===================================================================
+--- include/libnetfilter_queue/libnetfilter_queue.h	(révision 6720)
++++ include/libnetfilter_queue/libnetfilter_queue.h	(copie de travail)
+@@ -80,6 +80,13 @@
+ extern u_int32_t nfq_get_outdev(struct nfq_data *nfad);
+ extern u_int32_t nfq_get_physoutdev(struct nfq_data *nfad);
+
++/* return NULL if not set */
++extern char* nfq_get_indev_name(struct nfq_data *nfad);
++extern char* nfq_get_physindev_name(struct nfq_data *nfad);
++extern char* nfq_get_outdev_name(struct nfq_data *nfad);
++extern char* nfq_get_physoutdev_name(struct nfq_data *nfad);
++
++
+ extern struct nfqnl_msg_packet_hw *nfq_get_packet_hw(struct nfq_data *nfad);
+
+ /* return -1 if problem, length otherwise */
+Index: src/libnetfilter_queue.c
+===================================================================
+--- src/libnetfilter_queue.c	(révision 6720)
++++ src/libnetfilter_queue.c	(copie de travail)
+@@ -419,6 +419,26 @@
+ 	return ntohl(nfnl_get_data(nfad->data, NFQA_IFINDEX_PHYSOUTDEV, u_int32_t));
+ }
+
++char* nfq_get_indev_name(struct nfq_data *nfad)
++{
++	return nfnl_get_pointer_to_data(nfad->data, NFQA_IFNAME_INDEV, char);
++}
++
++char* nfq_get_physindev_name(struct nfq_data *nfad)
++{
++	return nfnl_get_pointer_to_data(nfad->data, NFQA_IFNAME_PHYSINDEV, char);
++}
++
++char* nfq_get_outdev_name(struct nfq_data *nfad)
++{
++	return nfnl_get_pointer_to_data(nfad->data, NFQA_IFNAME_OUTDEV, char);
++}
++
++char* nfq_get_physoutdev_name(struct nfq_data *nfad)
++{
++	return nfnl_get_pointer_to_data(nfad->data, NFQA_IFNAME_PHYSOUTDEV, char);
++}
++
+ struct nfqnl_msg_packet_hw *nfq_get_packet_hw(struct nfq_data *nfad)
+ {
+ 	return nfnl_get_pointer_to_data(nfad->data, NFQA_HWADDR,
