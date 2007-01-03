@@ -40,7 +40,7 @@
  */
 int look_for_tcp_flags(unsigned char* dgram, unsigned int datalen){
     struct iphdr * iphdrs = (struct iphdr *) dgram;
-    /* check need some datas */    
+    /* check need some datas */
     if (datalen < sizeof(struct iphdr) +sizeof(struct tcphdr)){
         return 0;
     }
@@ -174,40 +174,40 @@ int packetsrv_open()
     /* opening library handle */
     h = nfq_open();
     if (!h) {
-        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
                 "[!] Error during nfq_open()");
         return -1;
     }
 
     /* unbinding existing nf_queue handler for AF_INET (if any) */
     if (nfq_unbind_pf(h, AF_INET) < 0) {
-        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
                 "[!] Error during nfq_unbind_pf()");
         return -1;
     }
 
     /* binding nfnetlink_queue as nf_queue handler for AF_INET */
     if (nfq_bind_pf(h, AF_INET) < 0) {
-        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
                 "[!] Error during nfq_bind_pf()");
         return -1;
     }
 
     /* unbinding existing nf_queue handler for AF_INET6 (if any) */
     if (nfq_unbind_pf(h, AF_INET6) < 0) {
-        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
                 "[!] Error during nfq_unbind_pf()");
         return -1;
     }
 
     /* binding nfnetlink_queue as nf_queue handler for AF_INET6 */
     if (nfq_bind_pf(h, AF_INET6) < 0) {
-        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
                 "[!] Error during nfq_bind_pf()");
         return -1;
     }
 
-    /* binding this socket to queue number ::nfqueue_num 
+    /* binding this socket to queue number ::nfqueue_num
      * and install our packet handler */
     hndl = nfq_create_queue(h,  nfqueue_num, (nfq_callback *)&treat_packet, NULL);
     if (!hndl) {
@@ -266,7 +266,7 @@ void packetsrv_ipq_process(unsigned char *buffer)
     q_pckt.payload_len = msg_p->data_len;
     /* need to parse to see if it's an end connection packet */
     if (look_for_tcp_flags(msg_p->payload,msg_p->data_len)){
-        auth_request_send(AUTH_CONTROL,&q_pckt); 
+        auth_request_send(AUTH_CONTROL,&q_pckt);
         IPQ_SET_VERDICT( msg_p->packet_id,NF_ACCEPT);
         return;
     }
@@ -307,7 +307,7 @@ void packetsrv_ipq_process(unsigned char *buffer)
 
         if (!sandf){
             log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
-                    "Packet could not be removed: %lu", 
+                    "Packet could not be removed: %lu",
                     msg_p->packet_id);
         }
     }
@@ -318,7 +318,7 @@ void packetsrv_ipq_process(unsigned char *buffer)
  * \brief Packet server thread function.
  *
  * Connect to netfilter to ask a netlink. Read packet
- * on this link. Check if packet useful for NuFW. If yes, add it to packet 
+ * on this link. Check if packet useful for NuFW. If yes, add it to packet
  * list and/or send it to NuAuth.
  *
  * When using NetFilter queue, it uses treat_packet() as callback.
@@ -340,7 +340,7 @@ void* packetsrv(void *void_arg)
     fd_set wk_set;
 
     fd = packetsrv_open();
-    if (fd < 0) 
+    if (fd < 0)
     {
         exit(EXIT_FAILURE);
     }
@@ -367,7 +367,7 @@ void* packetsrv(void *void_arg)
 	    if (err == EINTR) {
 		    continue;
 	    }
-            log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
+            log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
                     "[!] FATAL ERROR: Error of select() in netfilter queue thread (code %i)!",
                     err);
             fatal_error = 1;
@@ -384,16 +384,16 @@ void* packetsrv(void *void_arg)
         rv = recv(fd, buffer, sizeof(buffer), 0);
         if (rv < 0)
         {
-            log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING, 
+            log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
                     "[!] Error of read on netfilter queue socket (code %i)!",
                     rv);
-            log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_SERIOUS_MESSAGE, 
+            log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_SERIOUS_MESSAGE,
                     "Reopen netlink connection.");
             packetsrv_close(0);
             fd = packetsrv_open();
             if (fd < 0)
             {
-                log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
+                log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
                         "[!] FATAL ERROR: Fail to reopen netlink connection!");
                 fatal_error = 1;
                 break;
@@ -425,8 +425,8 @@ void* packetsrv(void *void_arg)
         kill(thread_arg->parent_pid, SIGTERM);
         pthread_exit (NULL);
     }
-    
-    ipq_set_mode(hndl, IPQ_COPY_PACKET,BUFSIZ);  
+
+    ipq_set_mode(hndl, IPQ_COPY_PACKET,BUFSIZ);
 
     log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
             "[+] Packet server started");
@@ -442,7 +442,7 @@ void* packetsrv(void *void_arg)
         /* is timeout recheaded */
         if (size == 0) {
             continue;
-        }          
+        }
 
         /* Check buffer size */
         if (size == -1)
@@ -464,7 +464,7 @@ void* packetsrv(void *void_arg)
             /* if it's an error, display it and stop NuFW !!! */
             if (ipq_message_type(buffer) == NLMSG_ERROR)
             {
-                log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, 
+                log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
                         "[!] FATAL ERROR: libipq error (code %d)!",
                         ipq_get_msgerr(buffer));
                 fatal_error = 1;
@@ -476,7 +476,7 @@ void* packetsrv(void *void_arg)
         /* process packet */
         packetsrv_ipq_process(buffer);
     }
-    ipq_destroy_handle( hndl );  
+    ipq_destroy_handle( hndl );
 #endif
     log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
             "[+] Leave packet server thread");
@@ -484,7 +484,7 @@ void* packetsrv(void *void_arg)
         kill(thread_arg->parent_pid, SIGTERM);
     }
     pthread_exit (NULL);
-}   
+}
 
 /**
  * Halt TLS threads and close socket
@@ -511,7 +511,7 @@ void shutdown_tls()
  *
  * Create the thread authsrv() when opening a new session.
  *
- * Packet maximum size is 512 bytes, 
+ * Packet maximum size is 512 bytes,
  * and it's structure is ::nufw_to_nuauth_auth_message_t.
  *
  * \param type Type of request (::AUTH_REQUEST, ::AUTH_CONTROL, ...)
@@ -527,15 +527,15 @@ int auth_request_send(uint8_t type, struct queued_pckt* pckt_datas)
 
     /* Drop non-IPv(4|6) packet */
     if ((((struct iphdr *)(pckt_datas->payload))->version != 4) && ( ((struct iphdr *)(pckt_datas->payload))->version != 6)) {
-        debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, 
+        debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
                 "Dropping non-IPv4/non-IPv6 packet (version %u)",
                 ((struct iphdr *)(pckt_datas->payload))->version);
         return 0;
-    } 
+    }
 
     /* Truncate packet content if needed */
     if (sizeof(datas) < sizeof(nuv4_nufw_to_nuauth_auth_message_t) + pckt_datas->payload_len) {
-        debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, 
+        debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
                 "Very long packet: truncating!");
         pckt_datas->payload_len = sizeof(datas) - sizeof(nuv4_nufw_to_nuauth_auth_message_t);
     }
@@ -575,10 +575,10 @@ int auth_request_send(uint8_t type, struct queued_pckt* pckt_datas)
 
 
     /* Copy (maybe truncated) packet content */
-    memcpy(msg_content, pckt_datas->payload, pckt_datas->payload_len);    
+    memcpy(msg_content, pckt_datas->payload, pckt_datas->payload_len);
 
     /* Display message */
-    debug_log_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_VERBOSE_DEBUG, 
+    debug_log_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_VERBOSE_DEBUG,
             "Sending request for %lu", pckt_datas->packet_id);
 
     /* cleaning up current session : auth_server has detected a problem */
@@ -602,7 +602,7 @@ int auth_request_send(uint8_t type, struct queued_pckt* pckt_datas)
             log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_INFO,
                     "Connection to nuauth restored");
             tls.auth_server_running=1;
-            
+
             /* create joinable thread for auth server */
             pthread_mutex_init(&tls.auth_server_mutex, NULL);
             if (pthread_create(&tls.auth_server, &attr, authsrv, NULL) == EAGAIN){

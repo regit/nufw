@@ -33,6 +33,11 @@ int get_interface_information(struct queued_pckt* q_pckt, struct nfq_data *nfad)
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
                 "Get physoutdev information: %s",q_pckt->physoutdev);
 	}
+#else
+    q_pckt->indev = NULL;
+    q_pckt->outdev = NULL;
+    q_pckt->physindev = NULL;
+    q_pckt->physoutdev = NULL;
 #endif
 	return 1;
 }
