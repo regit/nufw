@@ -29,9 +29,7 @@
  */
 
 int build_prenuauthconf(struct nuauth_params * prenuauthconf,
-                char* gwsrv_addr,
-                char* nuauth_multi_users,
-                char* nuauth_multi_servers)
+                char* gwsrv_addr)
 {
   if((!  prenuauthconf->push) && prenuauthconf->hello_authentication ){
       g_message("nuauth_hello_authentication required nuauth_push to be 1, resetting to 0");
@@ -43,21 +41,6 @@ int build_prenuauthconf(struct nuauth_params * prenuauthconf,
       prenuauthconf->authorized_servers= generate_inaddr_list(gwsrv_addr);
   }
 
-  if ((nuauth_multi_users || nuauth_multi_servers)&&(!(nuauth_multi_servers&&nuauth_multi_users))){
-      g_warning("The two options nuauth_multi_users and nuauth_multi_servers need to set simultaneoulsy");
-  } else {
-      /* parse multi user auth users */
-      if (nuauth_multi_users){
-          prenuauthconf->multi_users_array =  g_strsplit(nuauth_multi_users,",",0);
-      }
-      /* parse multi user clients */
-      if (nuauth_multi_servers){
-          prenuauthconf->multi_servers_array =  generate_inaddr_list(nuauth_multi_servers);
-      }
-  }
-  if (!(prenuauthconf->user_cache &&  (nuauth_multi_users && nuauth_multi_servers) )){
-      prenuauthconf->user_cache=0;
-  }
   if (prenuauthconf->nufw_has_fixed_timeout){
     prenuauthconf->nufw_has_conntrack=1;
   }
@@ -92,8 +75,6 @@ void init_nuauthconf(struct nuauth_params **result)
       { "nuauth_datas_persistance" , G_TOKEN_INT , 9, NULL },
       { "nuauth_push_to_client" , G_TOKEN_INT , 1,NULL },
       { "nuauth_do_ip_authentication" , G_TOKEN_INT , 0,NULL },
-      { "nuauth_multi_users" , G_TOKEN_STRING , 1, NULL },
-      { "nuauth_multi_servers" , G_TOKEN_STRING , 1, NULL },
       { "nuauth_acl_cache" , G_TOKEN_INT , 0,NULL },
       { "nuauth_user_cache" , G_TOKEN_INT , 0,NULL },
 #if USE_UTF8
@@ -110,8 +91,6 @@ void init_nuauthconf(struct nuauth_params **result)
 
   };
   const unsigned int nb_params = sizeof(nuauth_vars)/sizeof(confparams);
-  gchar *nuauth_multi_users=NULL;
-  gchar *nuauth_multi_servers=NULL;
 
   conf=g_new0(struct nuauth_params,1);
   *result = conf;
@@ -125,8 +104,6 @@ void init_nuauthconf(struct nuauth_params **result)
   conf->client_srv = (char *)READ_CONF("nuauth_client_listen_addr");
   conf->nufw_srv = (char *)READ_CONF("nuauth_nufw_listen_addr");
   gwsrv_addr = (char *)READ_CONF("nufw_gw_addr");
-  nuauth_multi_users = (char *)READ_CONF("nuauth_multi_users");
-  nuauth_multi_servers = (char *)READ_CONF("nuauth_multi_servers");
   conf->authreq_port = (char *)READ_CONF("nuauth_gw_packet_port");
   conf->userpckt_port = (char *)READ_CONF("nuauth_user_packet_port");
 
@@ -165,18 +142,14 @@ void init_nuauthconf(struct nuauth_params **result)
   /* free config struct */
   free_confparams(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams));
 
-  build_prenuauthconf(conf, gwsrv_addr, nuauth_multi_users, nuauth_multi_servers);
+  build_prenuauthconf(conf, gwsrv_addr);
 
   g_free(gwsrv_addr);
-  g_free(nuauth_multi_users);
-  g_free(nuauth_multi_servers);
 }
 
 void free_nuauth_params(struct nuauth_params* data)
 {
 	g_free(data->authorized_servers);
-	g_strfreev(data->multi_users_array);
-	g_free(data->multi_servers_array);
 }
 
 static struct nuauth_params* compare_and_update_nuauthparams(struct nuauth_params* current,struct nuauth_params* new);

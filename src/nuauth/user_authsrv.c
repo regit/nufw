@@ -228,7 +228,6 @@ int user_process_field(
         struct nu_authreq* authreq,
         uint8_t header_option,
         connection_t* connection,
-        gboolean *multiclient_ok,
         int auth_buffer_len,
         struct nu_authfield* field)
 {
@@ -274,8 +273,8 @@ int user_process_field(
             break;
 
         case USERNAME_FIELD:
-	    log_message(WARNING,AREA_USER,"Received USERNAME_FIELD, this is BAD! multiuser client are born-dead");
-	    return -1;
+            log_message(WARNING,AREA_USER,"Received USERNAME_FIELD, this is BAD! multiuser client are born-dead");
+            return -1;
 
         case HELLO_FIELD:
             if (auth_buffer_len < (int)sizeof(struct nu_authfield_hello)) {
@@ -305,7 +304,6 @@ GSList* user_request(struct tls_buffer_read *datas)
     GSList* conn_elts=NULL;
     connection_t* connection=NULL;
     char* start;
-    gboolean multiclient_ok=FALSE;
     int buffer_len = datas->buffer_len;
     int auth_buffer_len;
     int field_length;
@@ -369,7 +367,7 @@ GSList* user_request(struct tls_buffer_read *datas)
 
             /* process field */
             field_length = user_process_field (authreq, header->option,
-                    connection, &multiclient_ok, auth_buffer_len, field);
+                    connection, auth_buffer_len, field);
             if (field_length < 0) {
                 free_connection_list(conn_elts);
                 free_connection(connection);
@@ -404,29 +402,14 @@ GSList* user_request(struct tls_buffer_read *datas)
         connection->os_sysname=g_strdup(datas->os_sysname);
         connection->os_release=g_strdup(datas->os_release);
         connection->os_version=g_strdup(datas->os_version);
-	/* copy client version information */
+        /* copy client version information */
         connection->client_version=datas->client_version;
 
         if (connection->user_groups == NULL) {
-            if ((header->option == 0x1) && multiclient_ok) {
-                /* group is not fill in multi users mode
-                 * need to be done now */
-                log_message (INFO, AREA_USER, "Get users info");
-                if ( nuauthconf->user_cache ){
-                    get_users_from_cache(connection);
-                } else {
-                    connection->user_groups = modules_get_user_groups(connection->username);
-                    connection->mark = modules_get_user_id(connection->username);
-                    if (connection->user_groups == NULL){
-                        log_message (INFO, AREA_PACKET, "User not found");
-                    }
-                }
-            } else {
-                log_message (INFO, AREA_USER, "User_check return is bad");
-                free_connection_list(conn_elts);
-                free_connection(connection);
-                return NULL;
-            }
+            log_message (INFO, AREA_USER, "User_check return is bad");
+            free_connection_list(conn_elts);
+            free_connection(connection);
+            return NULL;
         }
 
         connection->state=AUTH_STATE_USERPCKT;
