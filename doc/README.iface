@@ -1,0 +1,17 @@
+Experimental support of transmission of interface name from kernel to NuFW
+is available.
+
+Patches found in the patches directory need to be applied to
+be able to use the feature.
+
+You first need to patch kernel with :
+    nfnetlink_queue-ifacename.diff
+
+Then you can patch libnetfilter_queue with :
+    libnetfilter_queue-ifacename.diff
+
+Compile patched kernel and libnetfilter_queue.
+
+
+NuFW's configure will autodetect the presence of a modified
+version and use the feature if available.
