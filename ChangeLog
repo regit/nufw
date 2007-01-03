@@ -1,8 +1,10 @@
-2.1.1
+2.1.1 (2006/01/03)
 	- suppress ldap authentication code
 	- add support for log prefix
 	- add support for guest group
 	- mark_group: new module dedicated to packet marking
+	- NuFW: doxygen documentation improvement
+	- NuFW: support for interface name transmission from kernel to nuauth
 2.1.0 (2006/09/01)
 	- fix period handling (user OR and and AND between period item of a
 	  period)
@@ -110,7 +112,7 @@
 	- use pointer and not object during logging
 	- bugfix:nuauth: don't crash anymore if configuration file doesn't exist
 	- nuauth: fix gnutls problem (multithread writing and reading)
-	- nuauth: multiple modules with separate conf 
+	- nuauth: multiple modules with separate conf
 	- nuauth: stop threads (and thread pools) before exiting NuAuth. Use a
 	mutex to ask a thread to stop. Each thread use timeout of one second,
 	and don't use any blocking function anymore (use function with timeout
@@ -142,7 +144,7 @@
 	- nufw : new switch -C to handle conntrack destroy event by sending a
 	  message to nuauth. This is mandatory for connection expiration
 	  system.
-	- nuauth : handle nufw destroy message 
+	- nuauth : handle nufw destroy message
 	- nufw : restore compilation of nufw in libipq mode
 	- nuauth : introduce a ppol of thread for user session logging
 	- nuauth : fix a stupid but critical bug on module reloading
@@ -180,7 +182,7 @@
 	- nutcpc : add -l option to disable use of lock
 	- NuFW : all exchanges between clients and nuauth are now done in
 	UTF-8 by default. Use --with-utf8 at configure time to select this
-	behaviour on client side.  
+	behaviour on client side.
 	- plaintext module : cleaning and icmp support
 	- increase internal message usage instead of sending directly
 	structure to queue.
@@ -200,7 +202,7 @@
 	- nufw : added option -n to permit a strict match of the nuauth
 	certificat
 	- nuauth : client certificat check is stricter
-	- nuauth : better handling on incorrect user OS announce 
+	- nuauth : better handling on incorrect user OS announce
 1.0.10, "Michel Rocard" release (2005/07/13)
 	- libnuclient : ignore SIGPIPE to avoid crash when HELLO packet can
 	not be sent
@@ -269,7 +271,7 @@
 	- remove useless AC_DEFUN in configure.ac
 	- nuaclgen display modified for equality filter
 1.0.0-rc2 (2005/03/01)
-	- works on autoconf to solve excessive linking 
+	- works on autoconf to solve excessive linking
 	- nufw answer correctly to -V and -h
 	- nufw compilation is not done if libipq is not present
 	- authentication by certs now fallback to password based
@@ -323,7 +325,7 @@
 	- nuauth : OS filtering support (modules : plaintext)
 0.9.2 (2004/09/08)
 	- change unused field id_gw to a packet_length field in nufw->nuauth
-	packet. 
+	packet.
 	- libnuclient works correctly now (nuapplet and nutcpc are ok)
 	- nufw_gw_addr is now a list : first entry is udp server AND all
 	entries are authorized nufw servers
@@ -391,7 +393,7 @@
 0.5.3 (2003/10/29)
 	- nuauth conntrack modification
 0.5.2 (2003/10/20)
-	- added capability to mark packet with userid 
+	- added capability to mark packet with userid
 0.5.1 (2003/10/02)
 	- new GDBM user check modules
 	- external modules structure fixed
