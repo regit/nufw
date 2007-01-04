@@ -1,4 +1,4 @@
-2.1.1 (2006/01/03)
+2.1.1 (2007/01/03)
 	- suppress ldap authentication code
 	- add support for log prefix
 	- add support for guest group
