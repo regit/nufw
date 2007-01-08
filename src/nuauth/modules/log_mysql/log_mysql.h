@@ -30,6 +30,7 @@
 #define MYSQL_TABLE_NAME "ulog"
 #define MYSQL_USERS_TABLE_NAME "users"
 #define MYSQL_REQUEST_TIMEOUT 10
+#define MYSQL_USE_IPV4_SCHEMA 1 /* use IPV4 schema by default for compatibility */
 
 /* SSL options */
 #define MYSQL_USE_SSL 1 /* use ssl by default */
@@ -58,7 +59,8 @@ struct log_mysql_params {
     char * mysql_table_name;
     char * mysql_users_table_name;
     int mysql_server_port;
-    int mysql_use_ssl;
+    unsigned char mysql_use_ipv4_schema;
+    unsigned char mysql_use_ssl;
     char * mysql_ssl_keyfile;
     char * mysql_ssl_certfile;
     char * mysql_ssl_ca;
