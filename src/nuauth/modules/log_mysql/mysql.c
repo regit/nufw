@@ -210,7 +210,7 @@ init_module_from_conf(module_t *module)
 
     /* init thread private stuff */
     params->mysql_priv = g_private_new ((GDestroyNotify)mysql_close);
-    log_message(DEBUG, AREA_MAIN, "mysql part of the config file is parsed\n");
+    log_message(DEBUG, AREA_MAIN, "mysql part of the config file is parsed");
 
     /* do initial update of user session if needed */
     if (! nuauth_is_reloading()){
@@ -231,7 +231,7 @@ static MYSQL* mysql_conn_init(struct log_mysql_params* params)
     /* init connection */
     ld = mysql_init(ld);
     if (ld == NULL) {
-        log_message(WARNING, AREA_MAIN, "mysql init error : %s\n",strerror(errno));
+        log_message(WARNING, AREA_MAIN, "mysql init error : %s",strerror(errno));
         return NULL;
     }
 #if HAVE_MYSQL_SSL
@@ -242,13 +242,13 @@ static MYSQL* mysql_conn_init(struct log_mysql_params* params)
 #if 0
     /* Set MYSQL object properties */
     if (mysql_options(ld,MYSQL_OPT_CONNECT_TIMEOUT,mysql_conninfo) != 0){
-        log_message(WARNING, AREA_MAIN, "mysql options setting failed : %s\n",mysql_error(ld));
+        log_message(WARNING, AREA_MAIN, "mysql options setting failed : %s",mysql_error(ld));
     }
 #endif
     if (!mysql_real_connect(ld,params->mysql_server,params->mysql_user,
                 params->mysql_passwd,params->mysql_db_name,
                 params->mysql_server_port,NULL,0)) {
-        log_message(WARNING, AREA_MAIN, "mysql connection failed : %s\n",mysql_error(ld));
+        log_message(WARNING, AREA_MAIN, "mysql connection failed : %s",mysql_error(ld));
         return NULL;
     }
     return ld;
@@ -538,12 +538,12 @@ static inline int log_state_established(MYSQL *ld, struct accounted_connection *
                 (element->tracking).dest,
                 TCP_STATE_OPEN);
         if (!ok) {
-            log_message(SERIOUS_WARNING, AREA_MAIN, "Building mysql update query, the SHORT_REQUEST_SIZE limit was reached!\n");
+            log_message(SERIOUS_WARNING, AREA_MAIN, "Building mysql update query, the SHORT_REQUEST_SIZE limit was reached!");
             return -1;
         }
         Result = mysql_real_query(ld, request, strlen(request));
         if (Result != 0){
-            log_message(SERIOUS_WARNING, AREA_MAIN, "Can not update Data : %s\n",mysql_error(ld));
+            log_message(SERIOUS_WARNING, AREA_MAIN, "Can not update Data : %s",mysql_error(ld));
             return -1;
         }
         if (mysql_affected_rows(ld) >= 1){
@@ -556,7 +556,7 @@ static inline int log_state_established(MYSQL *ld, struct accounted_connection *
                 sleep.tv_nsec = 333333333;
                 nanosleep(&sleep, NULL);
             }else{
-                debug_log_message(DEBUG, AREA_MAIN, "Tried to update MYSQL entry twice, looks like data to update wasn't inserted\n");
+                debug_log_message(DEBUG, AREA_MAIN, "Tried to update MYSQL entry twice, looks like data to update wasn't inserted");
             }
         }
     }
@@ -617,14 +617,14 @@ static inline int log_state_close(MYSQL *ld, struct accounted_connection *elemen
         }
         if (!ok){
             log_message (SERIOUS_WARNING, AREA_MAIN,
-                    "Building mysql update query, the SHORT_REQUEST_SIZE limit was reached!\n");
+                    "Building mysql update query, the SHORT_REQUEST_SIZE limit was reached!");
             return -1;
         }
     }
 
     Result = mysql_real_query(ld, request, strlen(request));
     if (Result != 0){
-        log_message(SERIOUS_WARNING, AREA_MAIN, "Can not update Data : %s\n",mysql_error(ld));
+        log_message(SERIOUS_WARNING, AREA_MAIN, "Can not update Data : %s",mysql_error(ld));
         return -1;
     }
     if (mysql_affected_rows(ld) >= 1){
@@ -639,7 +639,7 @@ static inline int log_state_close(MYSQL *ld, struct accounted_connection *elemen
         }else{
             debug_log_message (WARNING, AREA_MAIN,
                 "Tried to update MYSQL entry twice, "
-                "looks like data to update wasn't inserted\n");
+                "looks like data to update wasn't inserted");
         }
     }
     return 0;

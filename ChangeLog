@@ -1,3 +1,6 @@
+2.1.2
+	- log_mysql: add option to log by default in SQL
+	database with IPV4 schema
 2.1.1 (2007/01/03)
 	- suppress ldap authentication code
 	- add support for log prefix
