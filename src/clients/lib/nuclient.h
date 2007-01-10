@@ -159,7 +159,6 @@ typedef struct {
 	u_int32_t userid;        /*!< Local user identifier (getuid()) */
 	char *username;          /*!< Username (encoded in UTF-8) */
 	char *password;          /*!< Password (encoded in UTF-8) */
-    char *realm;             /*!< Realm, (encoded in UTF-8) */
 
     gnutls_session tls;      /*!< TLS session over TCP socket */
 	gnutls_certificate_credentials cred; /*!< TLS credentials */

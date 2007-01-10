@@ -73,24 +73,6 @@ static const int cert_type_priority[3] = { GNUTLS_CRT_X509,  0 };
 #   define secure_str_free(text) free(text)
 #endif
 
-
-/* callbacks we support */
-int nu_getrealm(void *context, int id,
-        const char **availrealms __attribute__((unused)),
-        const char **result)
-{
-    NuAuth* session=(NuAuth *)context;
-    if(id != SASL_CB_GETREALM) {
-#if DEBUG
-        printf("nu_getrealm not looking for realm");
-#endif
-        return SASL_BADPARAM;
-    }
-    if(!result) return SASL_BADPARAM;
-    *result = session->realm;
-    return SASL_OK;
-}
-
 /**
  * SASL callback used to get password
  *
@@ -182,7 +164,6 @@ void nu_exit_clean(NuAuth * session)
 
     secure_str_free(session->username);
     secure_str_free(session->password);
-    secure_str_free(session->realm);
 
     gnutls_certificate_free_keys(session->cred);
     gnutls_certificate_free_credentials(session->cred);
@@ -730,7 +711,6 @@ int init_sasl(NuAuth* session, nuclient_error *err)
 
     /* SASL time */
     sasl_callback_t callbacks[] = {
-        { SASL_CB_GETREALM, &nu_getrealm, session },
         { SASL_CB_USER, &nu_get_userdatas, session },
         { SASL_CB_AUTHNAME, &nu_get_userdatas, session },
         { SASL_CB_PASS, &nu_get_usersecret, session },
@@ -976,7 +956,6 @@ NuAuth* nu_client_new(
     session->ct = NULL;
     session->username = secure_str_copy(username);
     session->password = secure_str_copy(password);
-    session->realm = secure_str_copy("nufw");
     if (session->username == NULL || session->password == NULL) {
         SET_ERROR(err, INTERNAL_ERROR, MEMORY_ERR);
         return NULL;
@@ -1148,19 +1127,6 @@ int nu_client_connect(NuAuth* session,
 void nu_client_set_debug(NuAuth* session, unsigned char enabled)
 {
     session->debug_mode = enabled;
-}
-
-
-/**
- * Set realm: domain of authentification
- *
- * \param session Pointer to client session
- * \param realm realm string encoded in UTF-8
- */
-void nu_client_set_realm(NuAuth* session, char *realm)
-{
-    secure_str_free(session->realm);
-    session->realm = secure_str_copy(realm);
 }
 
 
