@@ -24,11 +24,11 @@ esac
 
 # check to see if struct dirent has the d_type member
 AC_CHECK_MEMBER([struct dirent.d_type],
-		[AC_DEFINE([HAVE_STRUCT_DIRENT_D_TYPE],
-		           [1],
-                           [Define if struct dirent has member d_type])],
-                ,
-		[#include <dirent.h>])
+        [AC_DEFINE([HAVE_STRUCT_DIRENT_D_TYPE],
+        [1],
+        [Define if struct dirent has member d_type])],
+        ,
+        [#include <dirent.h>])
 
 # Checks for libraries.
 
