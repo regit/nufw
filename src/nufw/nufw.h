@@ -2,8 +2,8 @@
 #define NUFW_HEADER_H
 
 /** \file nufw.h
- *  \brief Common functions and variables to NuFW 
- *   
+ *  \brief Common functions and variables to NuFW
+ *
  * Some structures, functions, global variables and \#define common to NuFW.
  */
 
@@ -69,23 +69,23 @@ uint32_t queue_maxlen;
 #else
 
 /* redhat like hack */
-#ifdef HAVE_LIBIPQ_LIBIPQ_H 
-#  include <libipq/libipq.h>
-#else
-#  ifdef HAVE_LIBIPQ_H
-#    include <libipq.h>
-#  else
-#    error "libipq needed for NuFW compilation"
-#  endif      /* ifdef HAVE_LIBIPQ_H */
-#endif      /* ifdef HAVE_LIBIPQ_LIBIPQ_H  */            
+#   ifdef HAVE_LIBIPQ_LIBIPQ_H
+#       include <libipq/libipq.h>
+#   else
+#       ifdef HAVE_LIBIPQ_H
+#           include <libipq.h>
+#       else
+#           error "libipq needed for NuFW compilation"
+#       endif      /* ifdef HAVE_LIBIPQ_H */
+#   endif      /* ifdef HAVE_LIBIPQ_LIBIPQ_H  */
 #endif   /* if USE_NFQUEUE */
 
 /* conntrack things */
 #ifdef HAVE_LIBCONNTRACK
 #  include <libnetfilter_conntrack/libnetfilter_conntrack.h>
    struct nfct_handle *cth;
-   unsigned char handle_conntrack_event; 
-   unsigned char nufw_conntrack_uses_mark; 
+   unsigned char handle_conntrack_event;
+   unsigned char nufw_conntrack_uses_mark;
    void* conntrack_event_handler(void *data);
 #endif
 
@@ -97,10 +97,10 @@ uint32_t queue_maxlen;
 #define USE_X509 1
 
 /** Default value, prefixed with CONFIG_DIR, of ::key_file */
-#define KEYFILE "/nufw-key.pem"  
+#define KEYFILE "/nufw-key.pem"
 
 /** Default value, prefixed with CONFIG_DIR, of ::cert_file */
-#define CERTFILE "/nufw-cert.pem"  
+#define CERTFILE "/nufw-cert.pem"
 
 struct nuauth_conn {
         gnutls_session * session;
@@ -115,7 +115,7 @@ struct nuauth_conn {
 };
 
 struct queued_pckt {
-	uint32_t packet_id; 
+	uint32_t packet_id;
 
 	char *indev;
 	char *physindev;
@@ -141,7 +141,7 @@ pthread_cond_t *session_active_cond;
 pthread_mutex_t *session_destroyed_mutex;
 pthread_mutex_t *session_active_mutex;
 
-/** 
+/**
  * Address informations of NuAuth server: hostname ::authreq_addr,
  * port ::authreq_port. Used in tls_connect().
  */
@@ -153,8 +153,8 @@ int raw_sock4;
 /* Raw IPv6 socket we use for sending ICMPv6 messages */
 int raw_sock6;
 
-/* 
- * all functions 
+/*
+ * all functions
  */
 
 /* IP packet catcher */
