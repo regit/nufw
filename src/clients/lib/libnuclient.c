@@ -1261,4 +1261,28 @@ int nu_check_version(const char *version)
         return 0;
 }
 
+/**
+ * Get user home directory
+ *
+ * \return A string that need to be freed
+ */
+
+char* nu_get_home_dir()
+{
+    uid_t uid;
+    struct passwd *pwd;
+    char* dir = NULL;
+    
+    uid = getuid();
+    if (!(pwd = getpwuid(uid))) {
+        printf("Unable to get password file record\n");
+        endpwent();
+        return NULL;
+    }
+    dir = strdup(pwd->pw_dir);
+    endpwent();
+    return dir;
+}
+
+
 /** @} */

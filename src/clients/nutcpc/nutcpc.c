@@ -69,32 +69,13 @@ void panic(const char *fmt, ...)
     va_end(args);
 }
 
-char* get_home_dir()
-{
-    uid_t uid;
-    struct passwd *pwd;
-    char* dir = NULL;
-    
-    uid = getuid();
-    if (!(pwd = getpwuid(uid))) {
-        printf("Unable to get password file record\n");
-        endpwent();
-        return NULL;
-    }
-    dir = strdup(pwd->pw_dir);
-    endpwent();
-    return dir;
-}
-
-
-
 /**
  * Compure run pid filename: "$HOME/.nufw/nutcpc"
  */
 char* compute_run_pid()
 {
     char path_dir[254];
-    char *home = get_home_dir();
+    char *home = nu_get_home_dir();
     if (home == NULL)
         return NULL;
     snprintf(path_dir, sizeof(path_dir)," %s/.nufw", home);

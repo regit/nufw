@@ -293,6 +293,8 @@ char* nu_client_to_utf8(const char* inbuf, char *from_charset);
 const char *nu_get_version();
 int nu_check_version(const char *version);
 
+char* nu_get_home_dir();
+
 #ifdef __cplusplus
 }
 #endif
