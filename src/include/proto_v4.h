@@ -23,7 +23,11 @@
 #include <netinet/in.h>    /* struct in6addr */
 /** \todo Fix this for nuauth on non Linux computer */
 #ifdef LINUX
-#include <linux/if.h>
+#   ifdef USE_NFQUEUE
+#       include <linux/if.h>
+#   else
+#       define IFNAMSIZ 16
+#   endif
 #else
 #define IFNAMSIZ 16
 #endif
