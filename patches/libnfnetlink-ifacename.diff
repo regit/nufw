@@ -1,0 +1,219 @@
+Index: include/libnfnetlink/libnfnetlink.h
+===================================================================
+--- include/libnfnetlink/libnfnetlink.h	(révision 6736)
++++ include/libnfnetlink/libnfnetlink.h	(copie de travail)
+@@ -176,6 +176,13 @@
+ 
+ extern void nfnl_dump_packet(struct nlmsghdr *, int, char *);
+ 
++int nlif_table_init(void);
++void nlif_table_fini(void);
++
++char *nlif_index_2name(unsigned int index);
++int nlif_treat_msg(int fd);
++
++
+ /* Pablo: What is the equivalence of be64_to_cpu in userspace?
+  * 
+  * Harald: Good question.  I don't think there's a standard way [yet?], 
+Index: src/rtnl.c
+===================================================================
+--- src/rtnl.c	(révision 6736)
++++ src/rtnl.c	(copie de travail)
+@@ -116,7 +116,7 @@
+         struct sockaddr_nl nladdr;
+ 
+         memset(&nladdr, 0, sizeof(nladdr));
+-	memset(&req, 0, sizeof(req));
++        memset(&req, 0, sizeof(req));
+         nladdr.nl_family = AF_NETLINK;
+ 
+         req.nlh.nlmsg_len = sizeof(req);
+@@ -127,11 +127,11 @@
+         req.g.rtgen_family = AF_INET;
+ 
+         return sendto(rtnl_fd, (void*)&req, sizeof(req), 0, 
+-		      (struct sockaddr*)&nladdr, sizeof(nladdr));
++                (struct sockaddr*)&nladdr, sizeof(nladdr));
+ }
+ 
+ /* rtnl_receive - receive netlink packets from rtnetlink socket */
+-int rtnl_receive()
++int rtnl_receive(int rtnl_fd)
+ {
+ 	int status;
+ 	char buf[8192];
+Index: src/iftable.c
+===================================================================
+--- src/iftable.c	(révision 6736)
++++ src/iftable.c	(copie de travail)
+@@ -2,7 +2,7 @@
+  *
+  * (C) 2004 by Astaro AG, written by Harald Welte <hwelte@astaro.com>
+  *
+- * This software is Free Software and licensed under GNU GPLv2. 
++ * This software is Free Software and licensed under GNU GPLv2.
+  *
+  */
+ 
+@@ -23,8 +23,8 @@
+ 
+ #define iftb_log(x, ...)
+ 
+-struct ifindex_map {
+-	struct ifindex_map *next;
++struct ifindex_map_t {
++	struct ifindex_map_t *next;
+ 
+ 	u_int32_t	index;
+ 	u_int32_t	type;
+@@ -34,7 +34,7 @@
+ 	char		name[16];
+ };
+ 
+-static struct ifindex_map *ifindex_map[16];
++static struct ifindex_map_t *ifindex_map[16];
+ 
+ /* iftable_dump - Dump the interface table to a given file stream
+  * @outfd:	file stream to which table should be dumped
+@@ -44,7 +44,7 @@
+ 	int i;
+ 
+ 	for (i = 0; i < 16; i++) {
+-		struct ifindex_map *im;
++		struct ifindex_map_t *im;
+ 		for (im = ifindex_map[i]; im; im = im->next) {
+ 			fprintf(outfd, "%u %s", im->index, im->name);
+ 			if (!(im->flags & IFF_UP))
+@@ -67,7 +67,7 @@
+ {
+ 	unsigned int hash;
+ 	struct ifinfomsg *ifi_msg = NLMSG_DATA(n);
+-	struct ifindex_map *im, **imp;
++	struct ifindex_map_t *im, **imp;
+ 	struct rtattr *cb[IFLA_MAX+1];
+ 
+ 	if (n->nlmsg_type != RTM_NEWLINK)
+@@ -108,7 +108,7 @@
+ 		iftb_log(LOG_DEBUG, "creating new iftable (ifindex=%u)",
+ 			 im->index);
+ 	}
+-	
++
+ 	im->type = ifi_msg->ifi_type;
+ 	im->flags = ifi_msg->ifi_flags;
+ 	if (cb[IFLA_ADDRESS]) {
+@@ -129,14 +129,13 @@
+  * @n:		netlink message header of a RTM_DELLINK nlmsg
+  * @arg:	not used
+  *
+- * Delete an entry from the interface table.  
++ * Delete an entry from the interface table.
+  * Returns -1 on error, 0 if no matching entry was found or 1 on success.
+  */
+ int iftable_del(struct nlmsghdr *n, void *arg)
+ {
+ 	struct ifinfomsg *ifi_msg = NLMSG_DATA(n);
+ 	struct rtattr *cb[IFLA_MAX+1];
+-	struct ifindex_map *im;
+ 
+ 	if (n->nlmsg_type != RTM_DELLINK) {
+ 		iftb_log(LOG_ERROR,
+@@ -157,15 +156,15 @@
+ 
+ 	return 1;
+ }
+-	
+-/* ifindex_2name - get the name for an ifindex
++
++/* nl_ifindex_2name - get the name for an ifindex
+  * @index:	ifindex to be resolved
+  *
+  * Return value: character string containing name of interface
+  */
+-char *ifindex_2name(unsigned int index)
++char *nlif_index_2name(unsigned int index)
+ {
+-	struct ifindex_map *im;
++	struct ifindex_map_t *im;
+ 
+ 	if (index == 0)
+ 		return "*";
+@@ -183,7 +182,7 @@
+  */
+ int  iftable_up(unsigned int index)
+ {
+-	struct ifindex_map *im;
++	struct ifindex_map_t *im;
+ 
+ 	for (im = ifindex_map[index&0xF]; im; im = im->next) {
+ 		if (im->index == index) {
+@@ -208,6 +207,14 @@
+ 	if (fini)
+ 		goto cleanup;
+ 
++	memset(ifindex_map,0,sizeof(ifindex_map));
++
++	ret = rtnl_init();
++
++	if (ret == -1) {
++		goto cleanup_none;
++	}
++
+ 	if (rtnl_handler_register(&handlers[0]) < 0) {
+ 		ret = -1;
+ 		goto cleanup_none;
+@@ -223,7 +230,7 @@
+ 		goto cleanup_1;
+ 	}
+ 
+-	return 0;
++	return ret;
+ 
+ #if 0
+ 	if (rtnl_wilddump_requet(rtnl_fd, AF_UNSPEC, RTM_GETLINK) < 0) {
+@@ -243,19 +250,30 @@
+ 	return ret;
+ }
+ 
+-/* iftable_init - Initialize interface table
++/** nl_iftable_init - Initialize interface table
++ *
++ * Initialize rtnl interface and interface table
++ *
++ * \return file descriptor to netlink socket
+  */
+-int iftable_init(void)
++int nlif_table_init(void)
+ {
+ 	iftb_log(LOG_DEBUG, "%s", __FUNCTION__);
+ 	return init_or_fini(0);
+ }
+ 
+-/* iftable_fini - Destructor of interface table
++/* nl_iftable_fini - Destructor of interface table
+  */
+-void iftable_fini(void)
++void nlif_table_fini(void)
+ {
+ 	init_or_fini(1);
+ }
+ 
++/**
++ * \return 0 if OK
++ */
++int nlif_treat_msg(int fd)
++{
++	return rtnl_receive(fd);
++}
+ 
+Index: src/Makefile.am
+===================================================================
+--- src/Makefile.am	(révision 6736)
++++ src/Makefile.am	(copie de travail)
+@@ -8,4 +8,4 @@
+ 
+ libnfnetlink_la_LDFLAGS = -Wc,-nostartfiles	\
+ 			  -version-info $(LIBVERSION)
+-libnfnetlink_la_SOURCES = libnfnetlink.c 
++libnfnetlink_la_SOURCES = libnfnetlink.c iftable.c rtnl.c
