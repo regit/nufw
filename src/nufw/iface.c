@@ -42,4 +42,24 @@ int get_interface_information(struct queued_pckt* q_pckt, struct nfq_data *nfad)
 	return 1;
 }
 
+int iface_table_open()
+{
+    int iftable_fd;
+    /* opening ifname resolution handle */
+    iftable_fd = nlif_table_init();
+    if (iftable_fd <= 0) {
+        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
+                "[!] Error during nlif_table_init()");
+        return -1;
+    }
+    /* treat initial rtnetlink message */
+    nlif_treat_msg(iftable_fd);
+
+    return iftable_fd;
+}
+
+int iface_treat_message(int fd)
+{
+   return nlif_treat_msg(fd);
+}
 #endif

@@ -18,6 +18,8 @@
 
 #include "nufw.h"
 
+#include "iface.h"
+
 /** \file packetsrv.c
  *  \brief Packet server thread
  *
@@ -158,6 +160,7 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
     }
     return 1;
 }
+
 
 /**
  * Open a netlink connection and returns file descriptor
@@ -335,6 +338,7 @@ void* packetsrv(void *void_arg)
     unsigned char buffer[BUFSIZ];
     struct timeval tv;
     int fd;
+    int if_fd;
     int rv;
     int select_result;
     fd_set wk_set;
@@ -344,6 +348,13 @@ void* packetsrv(void *void_arg)
     {
         exit(EXIT_FAILURE);
     }
+#ifdef HAVE_NFQ_GET_INDEV_NAME
+    if_fd = iface_table_open();
+
+    if (if_fd < 0) {
+        exit(EXIT_FAILURE);
+    }
+#endif
 
     log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
             "[+] Packet server started");
@@ -360,6 +371,9 @@ void* packetsrv(void *void_arg)
         /* wait new event on socket */
         FD_ZERO(&wk_set);
         FD_SET(fd,&wk_set);
+#ifdef HAVE_NFQ_GET_INDEV_NAME
+        FD_SET(if_fd,&wk_set);
+#endif
         select_result = select(fd+1,&wk_set,NULL,NULL,&tv);
         if (select_result == -1)
         {
@@ -380,6 +394,12 @@ void* packetsrv(void *void_arg)
             continue;
         }
 
+#ifdef HAVE_NFQ_GET_INDEV_NAME
+        if (FD_ISSET(if_fd,&wk_set)){
+            iface_treat_message(if_fd);
+            continue;
+        }
+#endif
         /* read one packet */
         rv = recv(fd, buffer, sizeof(buffer), 0);
         if (rv < 0)
