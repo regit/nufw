@@ -1,6 +1,10 @@
 2.1.2
 	- log_mysql: add option to log by default in SQL
 	database with IPV4 schema
+	- libnuclient: add nu_get_home_dir function which is not
+	dependant of HOME environment variable
+	- nufw: fix compilation in ipq mode (workaround ipq.h problem)
+	- nufw: modify interface name fetching code
 2.1.1 (2007/01/03)
 	- suppress ldap authentication code
 	- add support for log prefix
