@@ -77,7 +77,7 @@ G_MODULE_EXPORT gint user_packet_logs (void* element, tcp_state_t state,gpointer
     	  str_state="Unknown ";
     }
 
-    if ((state == TCP_STATE_OPEN) || (state == TCP_STATE_DROP)){
+    if ((state == TCP_STATE_OPEN) || (state == TCP_STATE_DROP)) {
 	    /* convert IP source and destination addresses to string */
 	    if (inet_ntop(AF_INET6, &(((connection_t*)element)->tracking.saddr), source_addr, sizeof(source_addr)) == NULL)
 		    return 1;
@@ -93,15 +93,19 @@ G_MODULE_EXPORT gint user_packet_logs (void* element, tcp_state_t state,gpointer
 	    if ( ((((connection_t*)element)->tracking).protocol == IPPROTO_TCP) || ((((connection_t *)element)->tracking).protocol == IPPROTO_UDP) ) {
 		    sport = (((connection_t*)element)->tracking).source;
 		    dport = (((connection_t*)element)->tracking).dest;
-		    g_message("%s%s %s[%s] %ld : SRC=%s DST=%s PROTO=%d SPT=%u DPT=%u",
+		    g_message("%s%s %s[%s] %ld : IN=%s OUT=%s SRC=%s DST=%s PROTO=%d SPT=%u DPT=%u",
 				    prefix, log_prefix, str_state,
 				    ((connection_t*)element)->username,((connection_t*)element)->timestamp,
+                    ((connection_t*)element)->iface_nfo.indev,
+                    ((connection_t*)element)->iface_nfo.outdev,
 				    saddr, daddr, ((connection_t*)element)->tracking.protocol,
 				    sport, dport);
 	    } else {
-		    g_message("%s%s %s[%s] %ld : SRC=%s DST=%s PROTO=%d",
+		    g_message("%s%s %s[%s] %ld : IN=%s OUT=%s SRC=%s DST=%s PROTO=%d",
 				    prefix, log_prefix, str_state,
 				    ((connection_t*)element)->username, ((connection_t*)element)->timestamp,
+                    ((connection_t*)element)->iface_nfo.indev,
+                    ((connection_t*)element)->iface_nfo.outdev,
 				    source_addr, dest_addr,
 				    ((connection_t*)element)->tracking.protocol);
 
