@@ -303,12 +303,12 @@ static char* build_insert_request(
 
     /* Write common informations */
     ok = secure_snprintf(request_fields, sizeof(request_fields),
-            "INSERT INTO %s (state, oob_time_sec, ip_protocol, ip_saddr, ip_daddr, ",
+            "INSERT INTO %s (state, oob_time_sec, ip_protocol, ip_saddr, ip_daddr, oob_in, oob_out, ",
             params->mysql_table_name);
     if (!ok) {
         return NULL;
     }
-    if (! params->mysql_use_ipv4_schema){
+    if (! params->mysql_use_ipv4_schema) {
         char src_ascii[IPV6_SQL_STRLEN];
         char dst_ascii[IPV6_SQL_STRLEN];
         if (ipv6_to_sql(&element->tracking.saddr, src_ascii, sizeof(src_ascii)) != 0)
@@ -316,22 +316,27 @@ static char* build_insert_request(
         if (ipv6_to_sql(&element->tracking.daddr, dst_ascii, sizeof(dst_ascii)) != 0)
             return NULL;
         ok = secure_snprintf(request_values, sizeof(request_values),
-                "VALUES ('%hu', '%lu', '%hu', %s, %s, ",
+                "VALUES ('%hu', '%lu', '%hu', %s, %s, '%s', '%s', ",
                 (short unsigned int)state,
                 (long unsigned int)element->timestamp,
                 (short unsigned int)element->tracking.protocol,
                 src_ascii,
-                dst_ascii);
+                dst_ascii,
+                element->iface_nfo.indev,
+                element->iface_nfo.outdev);
     } else {
         if ((is_ipv4(&element->tracking.saddr) ) && 
                 (is_ipv4(&element->tracking.daddr) )){
             ok = secure_snprintf(request_values, sizeof(request_values),
-                    "VALUES ('%hu', '%lu', '%hu', '%lu', '%lu', ",
+                    "VALUES ('%hu', '%lu', '%hu', '%lu', '%lu', '%s', '%s', ",
                     (short unsigned int)state,
                     (long unsigned int)element->timestamp,
                     (short unsigned int)element->tracking.protocol,
                     (&element->tracking.saddr)->s6_addr32[3],
-                    (&element->tracking.daddr)->s6_addr32[3]);
+                    (&element->tracking.daddr)->s6_addr32[3],
+                    element->iface_nfo.indev,
+                    element->iface_nfo.outdev
+                    );
         } else {
             log_message (SERIOUS_WARNING, AREA_MAIN,
                     "MySQL INSERT, IPV6 packet but IPV4 only MySQL schema");
