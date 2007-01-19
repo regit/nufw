@@ -338,7 +338,9 @@ void* packetsrv(void *void_arg)
     unsigned char buffer[BUFSIZ];
     struct timeval tv;
     int fd;
+#ifdef HAVE_NFQ_GET_INDEV_NAME
     int if_fd;
+#endif
     int rv;
     int select_result;
     fd_set wk_set;

@@ -172,6 +172,7 @@ fi
 
 if test "${use_nfconntrack}" = "yes"; then
 	AC_CHECK_LIB([netfilter_conntrack], [nfct_dump_conntrack_table], have_conntrack="yes", have_conntrack="",[-ldl -lnfnetlink])
+	AC_CHECK_LIB([netfilter_conntrack], [nfct_callback_register], have_new_conntrack_api="yes", have_new_conntrack_api="", [-ldl -lnfnetlink])
 else
 	have_conntrack=""
 fi
@@ -181,6 +182,9 @@ if test "${have_conntrack}" = "yes"; then
 	if test "${have_conntrack_fixedtimeout}" = "yes"; then
         	AC_DEFINE_UNQUOTED([HAVE_LIBCONNTRACK_FIXEDTIMEOUT],[1],[libconntrack with fixed timeout extension has been choosen])
 	fi
+        if test "${have_new_conntrack_api}" = "yes"; then
+                AC_DEFINE_UNQUOTED([HAVE_NEW_NFCT_API],[1],[libconntrack new API has been found])
+        fi
 fi
 
 if test "${build_pam_nufw}" = "yes"; then
