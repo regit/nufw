@@ -46,7 +46,7 @@ session optional pam_nufw.so server=192.168.1.2 port=4130
 ------------------------------- 8< ---------------------------------
 
 We use auth because we have to know user's password in order to authenticate
-on nuauth The pam module closes the connection to nuauth when the application
+on nuauth. The pam module closes the connection to nuauth when the application
 closes the pam session. Comment the session line to suppress disconnection at
 logout.
 
