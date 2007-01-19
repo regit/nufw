@@ -58,7 +58,7 @@ AC_ARG_WITH(prelude-log,
         enable_prelude_log="")
 
 AC_ARG_WITH(mysql-log, [AC_HELP_STRING(--with-mysql-log,  Support user activity logging in Mysql database)], enable_mysql_log=$withval, enable_mysql_log="")
-AC_ARG_WITH(bofh-mysql, [AC_HELP_STRING(--with-mysql-log,  Support user connection killing from Mysql database)], enable_bofh_mysql=$withval, enable_bofh_mysql="")
+AC_ARG_WITH(bofh-mysql, [AC_HELP_STRING(--with-bofh-mysql-log,  Support user connection killing from Mysql database)], enable_bofh_mysql=$withval, enable_bofh_mysql="")
 AC_ARG_WITH(pgsql-log, [AC_HELP_STRING(--with-pgsql-log,  Support user activity logging in PostgreSQL database)], enable_pgsql_log=$withval, enable_pgsql_log="")
 AC_ARG_WITH(syslog-log, [AC_HELP_STRING(--with-syslog-log,  Support user activity logging in syslog)], enable_syslog_log=$withval, enable_syslog_log="yes")
 
@@ -330,6 +330,10 @@ if test "${build_nuauth}" = "yes"; then
 
         if test "${enable_mysql_log}" = "yes"; then
         	AC_MSG_RESULT([  - NuAuth: compile log module mysql])
+        fi
+
+        if test "${enable_bofh_mysql_log}" = "yes"; then
+        	AC_MSG_RESULT([  - NuAuth: compile log module bofh-mysql])
         fi
 
         if test "${enable_pgsql_log}" = "yes"; then
