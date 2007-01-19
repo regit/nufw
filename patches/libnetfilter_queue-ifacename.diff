@@ -6,10 +6,10 @@ Index: include/libnetfilter_queue/libnetfilter_queue.h
  extern u_int32_t nfq_get_outdev(struct nfq_data *nfad);
  extern u_int32_t nfq_get_physoutdev(struct nfq_data *nfad);
  
-+extern char* nfq_get_indev_name(struct nfq_data *nfad);
-+extern char* nfq_get_physindev_name(struct nfq_data *nfad);
-+extern char* nfq_get_outdev_name(struct nfq_data *nfad);
-+extern char* nfq_get_physoutdev_name(struct nfq_data *nfad);
++extern char *nfq_get_indev_name(struct nfq_data *nfad);
++extern char *nfq_get_physindev_name(struct nfq_data *nfad);
++extern char *nfq_get_outdev_name(struct nfq_data *nfad);
++extern char *nfq_get_physoutdev_name(struct nfq_data *nfad);
 +
  extern struct nfqnl_msg_packet_hw *nfq_get_packet_hw(struct nfq_data *nfad);
  
@@ -22,25 +22,25 @@ Index: src/libnetfilter_queue.c
  	return ntohl(nfnl_get_data(nfad->data, NFQA_IFINDEX_PHYSOUTDEV, u_int32_t));
  }
  
-+char* nfq_get_indev_name(struct nfq_data *nfad)
++char *nfq_get_indev_name(struct nfq_data *nfad)
 +{
 +	u_int32_t ifindex = nfq_get_indev(nfad);
 +	return nlif_index_2name(ifindex);
 +}
 +
-+char* nfq_get_physindev_name(struct nfq_data *nfad)
++char *nfq_get_physindev_name(struct nfq_data *nfad)
 +{
 +	u_int32_t ifindex = nfq_get_physindev(nfad);
 +	return nlif_index_2name(ifindex);
 +}
 +
-+char* nfq_get_outdev_name(struct nfq_data *nfad)
++char *nfq_get_outdev_name(struct nfq_data *nfad)
 +{
 +	u_int32_t ifindex = nfq_get_outdev(nfad);
 +	return nlif_index_2name(ifindex);
 +}
 +
-+char* nfq_get_physoutdev_name(struct nfq_data *nfad)
++char *nfq_get_physoutdev_name(struct nfq_data *nfad)
 +{
 +	u_int32_t ifindex = nfq_get_physoutdev(nfad);
 +	return nlif_index_2name(ifindex);
