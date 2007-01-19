@@ -559,6 +559,10 @@ void unload_modules()
     g_mutex_lock(modules_mutex);
     g_slist_free(user_check_modules);
     user_check_modules=NULL;
+    g_slist_free(get_user_groups_modules);
+    get_user_groups_modules=NULL;
+    g_slist_free(get_user_id_modules);
+    get_user_id_modules=NULL;
     g_slist_free(acl_check_modules);
     acl_check_modules=NULL;
     g_slist_free(period_modules);
