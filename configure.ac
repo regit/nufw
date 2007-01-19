@@ -354,7 +354,10 @@ if test "${build_nuauth}" = "yes"; then
 fi
 
 if test "${build_nufw}" = "yes"; then
-		AC_MSG_RESULT([* Compiling NuFW])
+        AC_MSG_RESULT([* Compiling NuFW])
+        if test "${have_conntrack}" = "yes"; then
+        	AC_MSG_RESULT([  - NuFW: libnetfilter_conntrack support])
+        fi
         if test "${have_nfqueue}" = "yes"; then
         	AC_MSG_RESULT([  - NuFW: libnetfilter_queue support])
         else
