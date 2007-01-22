@@ -323,6 +323,7 @@ static void usage (void)
     fprintf (stderr, "-k: kill active client\n");
     fprintf (stderr, "-l: don't create lock file\n");
     fprintf (stderr, "-d: debug mode (don't go to foreground, daemon)\n");
+    fprintf (stderr, "-q: do not display running nutcpc options on \"ps\"\n");
     exit (EXIT_FAILURE);
 }
 
@@ -507,6 +508,7 @@ void parse_cmdline_options(int argc, char **argv, nutcpc_context_t *context, cha
 {
     int ch;
     int index;
+    int stealth=0;
 
     /* set default values */
     SECURE_STRNCPY(context->port, USERPCKT_PORT, sizeof(context->port));
@@ -519,13 +521,14 @@ void parse_cmdline_options(int argc, char **argv, nutcpc_context_t *context, cha
 
     /* Parse all command line arguments */
     opterr = 0;
-    while ((ch = getopt (argc, argv, "kldVu:H:I:U:p:P:")) != -1) {
+    while ((ch = getopt (argc, argv, "kldqVu:H:I:U:p:P:")) != -1) {
         switch (ch) {
             case 'H':
                 SECURE_STRNCPY(context->srv_addr, optarg, sizeof(context->srv_addr));
                 break;
             case 'P':
                 SECURE_STRNCPY(context->password, optarg, sizeof(context->password));
+                stealth=1;
                 break;
             case 'd':
                 context->debug_mode = 1;
@@ -552,6 +555,9 @@ void parse_cmdline_options(int argc, char **argv, nutcpc_context_t *context, cha
             case 'p':
                 SECURE_STRNCPY(context->port, optarg, sizeof(context->port));
                 break;
+            case 'q':
+                stealth=1;
+                break;
             default:
                 usage();
         }
@@ -563,8 +569,10 @@ void parse_cmdline_options(int argc, char **argv, nutcpc_context_t *context, cha
     }
 
     /* fill argument with nul byte */
-    for (index=argc; 1<index; index--) {
-        memset(argv[index-1], '\0', strlen(argv[index-1]));
+    if (stealth == 1) {
+        for (index=argc; 1<index; index--) {
+            memset(argv[index-1], '\0', strlen(argv[index-1]));
+        }
     }
 }
 
