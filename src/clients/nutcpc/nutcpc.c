@@ -506,6 +506,7 @@ void main_loop(nutcpc_context_t *context)
 void parse_cmdline_options(int argc, char **argv, nutcpc_context_t *context, char **username)
 {
     int ch;
+    int index;
 
     /* set default values */
     SECURE_STRNCPY(context->port, USERPCKT_PORT, sizeof(context->port));
@@ -525,7 +526,6 @@ void parse_cmdline_options(int argc, char **argv, nutcpc_context_t *context, cha
                 break;
             case 'P':
                 SECURE_STRNCPY(context->password, optarg, sizeof(context->password));
-                memset(optarg, '*', strlen(context->password));
                 break;
             case 'd':
                 context->debug_mode = 1;
@@ -560,6 +560,11 @@ void parse_cmdline_options(int argc, char **argv, nutcpc_context_t *context, cha
     {
         fprintf(stderr, "Don't use -P option outside debugging, it's not safe!\n");
         exit(1);
+    }
+
+    /* fill argument with nul byte */
+    for (index=argc; 1<index; index--) {
+        memset(argv[index-1], '\0', strlen(argv[index-1]));
     }
 }
 
@@ -637,6 +642,7 @@ int main (int argc, char** argv)
         exit(EXIT_FAILURE);
     }
 
+    /* parse command line options */
     parse_cmdline_options(argc, argv, &context, &username);
 
     if (!context.debug_mode)
