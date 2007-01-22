@@ -48,6 +48,7 @@ typedef struct
     unsigned long interval;     /*!< Number of millisecond for sleep in main loop (default value: 100ms) */
     unsigned char donotuselock; /*!< Do not user lock */
     char srv_addr[512];         /*!< Nuauth server hostname */
+    char password[100];
     unsigned char debug_mode;   /*!< Debug mode enabled if different than zero */
     int tempo;                  /*!< Number of second between each connection retry */
 } nutcpc_context_t;
@@ -313,8 +314,15 @@ char* get_username()
  */
 static void usage (void)
 {
-    fprintf (stderr, "usage: nutcpc [-kldV]  [-I interval] "
-            "[-U username ] [-H nuauth_srv]\n");
+    fprintf (stderr, "usage: nutcpc [-kldV] "
+            "[-U username ] [-H nuauth_srv] "
+            "[-P password] [-p port] [-I interval]\n");
+    fprintf (stderr, "\n");
+    fprintf (stderr, "options:\n");
+    fprintf (stderr, "-V: display version\n");
+    fprintf (stderr, "-k: kill active client\n");
+    fprintf (stderr, "-l: don't create lock file\n");
+    fprintf (stderr, "-d: debug mode (don't go to foreground, daemon)\n");
     exit (EXIT_FAILURE);
 }
 
@@ -392,6 +400,11 @@ void daemonize_process(nutcpc_context_t *context, char *runpid)
     setpgid (0, 0);
 }
 
+void wipe(void *data, size_t datalen)
+{
+    memset(data, 0, datalen);
+}
+
 /**
  * Try to connect to nuauth.
  *
@@ -408,11 +421,18 @@ NuAuth* do_connect(nutcpc_context_t *context, char *username)
     if (username == NULL) {
         username = get_username();
     }
-    password = get_password();
+    if (context->password[0] != 0) {
+        password = strdup(context->password);
+        wipe(context->password, sizeof(password));
+    } else {
+        password = get_password();
+    }
 
     /* convert to UTF-8 */
     username_utf8 = nu_client_to_utf8(username, locale_charset);
     password_utf8 = nu_client_to_utf8(password, locale_charset);
+    wipe(password, strlen(password));
+    wipe(username, strlen(username));
     free(username);
     free(password);
 
@@ -422,8 +442,8 @@ NuAuth* do_connect(nutcpc_context_t *context, char *username)
     }
 
     /* wipe out username and password, and then freee memory */
-    memset(username_utf8, 0, strlen(username_utf8));
-    memset(password_utf8, 0, strlen(password_utf8));
+    wipe(username_utf8, strlen(username_utf8));
+    wipe(password_utf8, strlen(password_utf8));
     free(username_utf8);
     free(password_utf8);
 
@@ -490,6 +510,7 @@ void parse_cmdline_options(int argc, char **argv, nutcpc_context_t *context, cha
     /* set default values */
     SECURE_STRNCPY(context->port, USERPCKT_PORT, sizeof(context->port));
     SECURE_STRNCPY(context->srv_addr, NUAUTH_IP, sizeof(context->srv_addr));
+    context->password[0] = 0;
     context->interval = 100;
     context->donotuselock = 0;
     context->debug_mode = 0;
@@ -497,10 +518,14 @@ void parse_cmdline_options(int argc, char **argv, nutcpc_context_t *context, cha
 
     /* Parse all command line arguments */
     opterr = 0;
-    while ((ch = getopt (argc, argv, "kldVu:H:I:U:p:")) != -1) {
+    while ((ch = getopt (argc, argv, "kldVu:H:I:U:p:P:")) != -1) {
         switch (ch) {
             case 'H':
                 SECURE_STRNCPY(context->srv_addr, optarg, sizeof(context->srv_addr));
+                break;
+            case 'P':
+                SECURE_STRNCPY(context->password, optarg, sizeof(context->password));
+                memset(optarg, '*', strlen(context->password));
                 break;
             case 'd':
                 context->debug_mode = 1;
@@ -530,6 +555,11 @@ void parse_cmdline_options(int argc, char **argv, nutcpc_context_t *context, cha
             default:
                 usage();
         }
+    }
+    if (context->password[0] != 0 && !context->debug_mode)
+    {
+        fprintf(stderr, "Don't use -P option outside debugging, it's not safe!\n");
+        exit(1);
     }
 }
 
