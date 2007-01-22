@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 echo "Run nuauth in Valgrind"
 echo
