@@ -42,6 +42,7 @@ int get_interface_information(struct queued_pckt* q_pckt, struct nfq_data *nfad)
 	return 1;
 }
 
+#ifdef HAVE_NFQ_GET_INDEV_NAME
 int iface_table_open()
 {
     int iftable_fd;
@@ -62,4 +63,6 @@ int iface_treat_message(int fd)
 {
    return nlif_treat_msg(fd);
 }
-#endif
+#endif   /* #ifdef HAVE_NFQ_GET_INDEV_NAME */
+#endif   /* #ifdef USE_NFQUEUE */
+
