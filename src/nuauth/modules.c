@@ -331,7 +331,7 @@ int init_modules_system()
 int check_module_version(GModule *module)
 {
     get_module_version_func_t get_version;
-    const char *api_version;
+    uint32_t api_version;
 
     /* get module function handler */
     if (!g_module_symbol (module, "get_api_version", (gpointer*)&get_version)) {
@@ -341,9 +341,9 @@ int check_module_version(GModule *module)
     }
 
     api_version = get_version();
-    if (strcmp(NUAUTH_API_VERSION, api_version) != 0)
+    if (NUAUTH_API_VERSION != api_version)
     {
-        g_error("Don't load module %s: wrong API version (%s instead of %s)",
+        g_error("Don't load module %s: wrong API version (%u instead of %u)",
                 g_module_name(module),
                 api_version, NUAUTH_API_VERSION);
         return 0;

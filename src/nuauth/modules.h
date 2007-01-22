@@ -110,7 +110,7 @@ typedef void (*cleanup_func_t) (void);
 void cleanup_func_push(cleanup_func_t func);
 void cleanup_func_remove(cleanup_func_t func);
 
-typedef const char* (*get_module_version_func_t) (void);
+typedef uint32_t (*get_module_version_func_t) (void);
 
 /**
  * @}

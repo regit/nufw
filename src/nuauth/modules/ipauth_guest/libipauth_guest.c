@@ -30,7 +30,7 @@ struct ipauth_guest_params {
 /*
  * Returns version of nuauth API
  */
-G_MODULE_EXPORT const char* get_api_version()
+G_MODULE_EXPORT uint32_t get_api_version()
 {
     return NUAUTH_API_VERSION;
 }

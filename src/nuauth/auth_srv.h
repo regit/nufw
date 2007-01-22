@@ -18,12 +18,6 @@
 #ifndef AUTH_SRV_H
 #define AUTH_SRV_H
 
-/**
- * Version of nuauth API, used by module to check if
- * everybody have the same API version.
- */
-#define NUAUTH_API_VERSION "2.1.1-3"
-
 #include "nufw_source.h"
 
 /* workaround SPlint error (don't know __gnuc_va_list) */
@@ -204,6 +198,19 @@ typedef enum
  * of SSL users. Value used in ::tls_user_init().
  */
 #define NUAUTH_SSL_MAX_CLIENTS 256
+
+/**
+ * Identifier used to generate #NUAUTH_API_VERSION value. Increment it
+ * if you changed API internals (eg. change public function prototype).
+ */
+#define _NUAUTH_API_ID 20001000
+
+/**
+ * Version of nuauth API, used by module to check if
+ * everybody have the same API version.
+ */
+#define NUAUTH_API_VERSION ((uint32_t)( _NUAUTH_API_ID + sizeof(connection_t) \
+    + sizeof(module_t) + sizeof(nufw_session_t) + sizeof(tracking_t) ))
 
 void nuauth_ask_exit();
 
