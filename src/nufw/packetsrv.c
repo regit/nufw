@@ -442,6 +442,11 @@ void* packetsrv(void *void_arg)
         pckt_rx++ ;
     }
 
+#ifdef HAVE_NFQ_GET_INDEV_NAME
+    iface_table_close(nlif_inst);
+#endif
+
+
     packetsrv_close(!fatal_error);
 #else /* USE_NFQUEUE */
     unsigned char buffer[BUFSIZ];

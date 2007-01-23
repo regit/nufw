@@ -34,10 +34,10 @@ int get_interface_information(struct nlif_inst *inst, struct queued_pckt* q_pckt
                 "Get physoutdev information: %s",q_pckt->physoutdev);
 	}
 #else
-    q_pckt->indev = NULL;
-    q_pckt->outdev = NULL;
-    q_pckt->physindev = NULL;
-    q_pckt->physoutdev = NULL;
+	q_pckt->indev = NULL;
+	q_pckt->outdev = NULL;
+	q_pckt->physindev = NULL;
+	q_pckt->physoutdev = NULL;
 #endif
 	return 1;
 }
@@ -63,6 +63,14 @@ int iface_treat_message(struct nlif_inst *inst)
 {
    return nlif_treat_msg(inst);
 }
+
+void iface_table_close(struct nlif_inst *inst)
+{
+        debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
+		"Free iface resolution instance");
+	nlif_table_fini(inst);
+}
+
 #endif   /* #ifdef HAVE_NFQ_GET_INDEV_NAME */
 #endif   /* #ifdef USE_NFQUEUE */
 
