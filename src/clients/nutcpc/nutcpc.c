@@ -314,7 +314,7 @@ char* get_username()
  */
 static void usage (void)
 {
-    fprintf (stderr, "usage: nutcpc [-kldV] "
+    fprintf (stderr, "usage: nutcpc [-qkldV] "
             "[-U username ] [-H nuauth_srv] "
             "[-P password] [-p port] [-I interval]\n");
     fprintf (stderr, "\n");
