@@ -169,7 +169,7 @@
 +		
 +	nlif_inst = calloc(1,  sizeof(struct nlif_inst));
 +	if (!nlif_inst)
-+		goto cleanup;
++		goto cleanup_none;
 +
 +	nlif_inst->ifadd_handler = calloc(1, sizeof(struct rtnl_handler));
 +	nlif_inst->ifadd_handler->nlmsg_type = RTM_NEWLINK;
@@ -207,15 +207,20 @@
  
  #if 0
  	if (rtnl_wilddump_requet(rtnl_fd, AF_UNSPEC, RTM_GETLINK) < 0) {
-@@ -236,26 +233,47 @@
+@@ -236,26 +233,52 @@
  cleanup:
  
  cleanup_1:
 -	rtnl_handler_unregister(&handlers[1]);
 +	rtnl_handler_unregister(nlif_inst->rtnl_inst, nlif_inst->ifadd_handler);
++	free(nlif_inst->ifadd_handler);
  cleanup_0:
 -	rtnl_handler_unregister(&handlers[0]);
 +	rtnl_handler_unregister(nlif_inst->rtnl_inst, nlif_inst->ifdel_handler);
++	free(nlif_inst->ifdel_handler);
++	rtnl_fini(nlif_inst->rtnl_inst);
++	free(nlif_inst);
++
  cleanup_none:
 -	return ret;
 +	return nlif_inst;
