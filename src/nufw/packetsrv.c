@@ -236,7 +236,6 @@ int packetsrv_open(void *data)
     if (nfq_set_queue_maxlen(hndl, queue_maxlen) < 0) {
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
                 "[!] Can't set queue length");
-        return -1;
     }
 #endif
 
