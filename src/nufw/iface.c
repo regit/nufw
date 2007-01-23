@@ -1,22 +1,22 @@
 #include "nufw.h"
 
 #ifdef USE_NFQUEUE
-int get_interface_information(struct queued_pckt* q_pckt, struct nfq_data *nfad)
+int get_interface_information(struct nlif_inst *inst, struct queued_pckt* q_pckt, struct nfq_data *nfad)
 {
 #ifdef HAVE_NFQ_GET_INDEV_NAME
-	q_pckt->indev = nfq_get_indev_name(nfad);
+	q_pckt->indev = nfq_get_indev_name(inst, nfad);
 	if (! q_pckt->indev){
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
                 "Can not get indev information");
 	}
 
-	q_pckt->physindev = nfq_get_physindev_name(nfad);
+	q_pckt->physindev = nfq_get_physindev_name(inst, nfad);
 	if (! q_pckt->physindev){
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
                 "Can not get physindev information");
 	}
 
-	q_pckt->outdev = nfq_get_outdev_name(nfad);
+	q_pckt->outdev = nfq_get_outdev_name(inst, nfad);
 	if (! q_pckt->outdev){
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
                 "Can not get outdev information");
@@ -25,7 +25,7 @@ int get_interface_information(struct queued_pckt* q_pckt, struct nfq_data *nfad)
                 "Get outdev information: %s", q_pckt->outdev);
 	}
 
-	q_pckt->physoutdev = nfq_get_physoutdev_name(nfad);
+	q_pckt->physoutdev = nfq_get_physoutdev_name(inst, nfad);
 	if (! q_pckt->physoutdev){
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
                 "Can not get physoutdev information");
@@ -43,25 +43,25 @@ int get_interface_information(struct queued_pckt* q_pckt, struct nfq_data *nfad)
 }
 
 #ifdef HAVE_NFQ_GET_INDEV_NAME
-int iface_table_open()
+struct nlif_inst *iface_table_open()
 {
-    int iftable_fd;
+    struct nlif_inst *inst;
     /* opening ifname resolution handle */
-    iftable_fd = nlif_table_init();
-    if (iftable_fd <= 0) {
+    inst = nlif_table_init();
+    if (inst == NULL) {
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
                 "[!] Error during nlif_table_init()");
-        return -1;
+        return NULL;
     }
     /* treat initial rtnetlink message */
-    nlif_treat_msg(iftable_fd);
+    nlif_treat_msg(inst);
 
-    return iftable_fd;
+    return inst;
 }
 
-int iface_treat_message(int fd)
+int iface_treat_message(struct nlif_inst *inst)
 {
-   return nlif_treat_msg(fd);
+   return nlif_treat_msg(inst);
 }
 #endif   /* #ifdef HAVE_NFQ_GET_INDEV_NAME */
 #endif   /* #ifdef USE_NFQUEUE */

@@ -27,8 +27,6 @@
 #include "nufw.h"
 #ifdef HAVE_LIBCONNTRACK
 
-#define HAVE_NEW_NFCT_API
-
 void fill_message(struct nuv4_conntrack_message_t *message, struct nf_conntrack *conn)
 {
 #ifdef DEBUG_CONNTRACK

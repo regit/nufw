@@ -129,10 +129,6 @@ struct queued_pckt {
 	int payload_len;
 };
 
-#if USE_NFQUEUE
-int get_interface_information(struct queued_pckt* q_pckt, struct nfq_data *nfad);
-#endif
-
 struct nuauth_conn tls;
 
 gnutls_session * tls_connect();

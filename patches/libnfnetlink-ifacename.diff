@@ -1,179 +1,224 @@
-Index: include/libnfnetlink/libnfnetlink.h
-===================================================================
---- include/libnfnetlink/libnfnetlink.h	(révision 6736)
-+++ include/libnfnetlink/libnfnetlink.h	(copie de travail)
-@@ -176,6 +176,13 @@
+=== include/libnfnetlink/libnfnetlink.h
+==================================================================
+--- include/libnfnetlink/libnfnetlink.h	(revision 5686)
++++ include/libnfnetlink/libnfnetlink.h	(local)
+@@ -176,6 +176,22 @@
  
  extern void nfnl_dump_packet(struct nlmsghdr *, int, char *);
  
-+int nlif_table_init(void);
-+void nlif_table_fini(void);
++struct nlif_inst {
++	struct ifindex_map *ifindex_map[16];
++	struct rtnl_inst *rtnl_inst;
++	struct rtnl_handler *ifadd_handler;
++	struct rtnl_handler *ifdel_handler;
++};
 +
-+char *nlif_index_2name(unsigned int index);
-+int nlif_treat_msg(int fd);
++struct nlif_inst *nlif_table_init(void);
++void nlif_table_fini(struct nlif_inst *orig);
++int nlif_get_fd(struct nlif_inst *nlif_inst);
++
++
++char *nlif_index_2name(struct nlif_inst *nlif_inst, unsigned int index);
++int nlif_treat_msg(struct nlif_inst *nlif_inst);
 +
 +
  /* Pablo: What is the equivalence of be64_to_cpu in userspace?
   * 
   * Harald: Good question.  I don't think there's a standard way [yet?], 
-Index: src/rtnl.c
-===================================================================
---- src/rtnl.c	(révision 6736)
-+++ src/rtnl.c	(copie de travail)
-@@ -116,7 +116,7 @@
-         struct sockaddr_nl nladdr;
+=== src/Makefile.am
+==================================================================
+--- src/Makefile.am	(revision 5686)
++++ src/Makefile.am	(local)
+@@ -8,4 +8,4 @@
  
-         memset(&nladdr, 0, sizeof(nladdr));
--	memset(&req, 0, sizeof(req));
-+        memset(&req, 0, sizeof(req));
-         nladdr.nl_family = AF_NETLINK;
+ libnfnetlink_la_LDFLAGS = -Wc,-nostartfiles	\
+ 			  -version-info $(LIBVERSION)
+-libnfnetlink_la_SOURCES = libnfnetlink.c 
++libnfnetlink_la_SOURCES = libnfnetlink.c iftable.c rtnl.c
+=== src/iftable.c
+==================================================================
+--- src/iftable.c	(revision 5686)
++++ src/iftable.c	(local)
+@@ -19,6 +19,7 @@
  
-         req.nlh.nlmsg_len = sizeof(req);
-@@ -127,11 +127,11 @@
-         req.g.rtgen_family = AF_INET;
+ #include <linux/netdevice.h>
  
-         return sendto(rtnl_fd, (void*)&req, sizeof(req), 0, 
--		      (struct sockaddr*)&nladdr, sizeof(nladdr));
-+                (struct sockaddr*)&nladdr, sizeof(nladdr));
- }
- 
- /* rtnl_receive - receive netlink packets from rtnetlink socket */
--int rtnl_receive()
-+int rtnl_receive(int rtnl_fd)
- {
- 	int status;
- 	char buf[8192];
-Index: src/iftable.c
-===================================================================
---- src/iftable.c	(révision 6736)
-+++ src/iftable.c	(copie de travail)
-@@ -2,7 +2,7 @@
-  *
-  * (C) 2004 by Astaro AG, written by Harald Welte <hwelte@astaro.com>
-  *
-- * This software is Free Software and licensed under GNU GPLv2. 
-+ * This software is Free Software and licensed under GNU GPLv2.
-  *
-  */
- 
-@@ -23,8 +23,8 @@
++#include <libnfnetlink/libnfnetlink.h>
+ #include "rtnl.h"
  
  #define iftb_log(x, ...)
- 
--struct ifindex_map {
--	struct ifindex_map *next;
-+struct ifindex_map_t {
-+	struct ifindex_map_t *next;
- 
- 	u_int32_t	index;
- 	u_int32_t	type;
-@@ -34,7 +34,7 @@
+@@ -34,28 +35,6 @@
  	char		name[16];
  };
  
 -static struct ifindex_map *ifindex_map[16];
-+static struct ifindex_map_t *ifindex_map[16];
- 
- /* iftable_dump - Dump the interface table to a given file stream
-  * @outfd:	file stream to which table should be dumped
-@@ -44,7 +44,7 @@
- 	int i;
- 
- 	for (i = 0; i < 16; i++) {
+-
+-/* iftable_dump - Dump the interface table to a given file stream
+- * @outfd:	file stream to which table should be dumped
+- */
+-int iftable_dump(FILE *outfd)
+-{
+-	int i;
+-
+-	for (i = 0; i < 16; i++) {
 -		struct ifindex_map *im;
-+		struct ifindex_map_t *im;
- 		for (im = ifindex_map[i]; im; im = im->next) {
- 			fprintf(outfd, "%u %s", im->index, im->name);
- 			if (!(im->flags & IFF_UP))
-@@ -67,7 +67,7 @@
- {
- 	unsigned int hash;
+-		for (im = ifindex_map[i]; im; im = im->next) {
+-			fprintf(outfd, "%u %s", im->index, im->name);
+-			if (!(im->flags & IFF_UP))
+-				fputs(" DOWN", outfd);
+-			fputc('\n', outfd);
+-		}
+-	}
+-	fflush(outfd);
+-	return 0;
+-}
+-
+ /* iftable_add - Add/Update an entry to/in the interface table
+  * @n:		netlink message header of a RTM_NEWLINK message
+  * @arg:	not used
+@@ -69,6 +48,7 @@
  	struct ifinfomsg *ifi_msg = NLMSG_DATA(n);
--	struct ifindex_map *im, **imp;
-+	struct ifindex_map_t *im, **imp;
+ 	struct ifindex_map *im, **imp;
  	struct rtattr *cb[IFLA_MAX+1];
++	struct nlif_inst *nlif_inst = (struct nlif_inst *)arg;
  
  	if (n->nlmsg_type != RTM_NEWLINK)
-@@ -108,7 +108,7 @@
- 		iftb_log(LOG_DEBUG, "creating new iftable (ifindex=%u)",
- 			 im->index);
+ 		return -1;
+@@ -87,7 +67,7 @@
  	}
--	
-+
- 	im->type = ifi_msg->ifi_type;
- 	im->flags = ifi_msg->ifi_flags;
- 	if (cb[IFLA_ADDRESS]) {
-@@ -129,14 +129,13 @@
-  * @n:		netlink message header of a RTM_DELLINK nlmsg
-  * @arg:	not used
-  *
-- * Delete an entry from the interface table.  
-+ * Delete an entry from the interface table.
-  * Returns -1 on error, 0 if no matching entry was found or 1 on success.
-  */
- int iftable_del(struct nlmsghdr *n, void *arg)
+ 
+ 	hash = ifi_msg->ifi_index&0xF;
+-	for (imp = &ifindex_map[hash]; (im=*imp)!=NULL; imp = &im->next) {
++	for (imp = &((nlif_inst->ifindex_map)[hash]); (im=*imp)!=NULL; imp = &im->next) {
+ 		if (im->index == ifi_msg->ifi_index) {
+ 			iftb_log(LOG_DEBUG,
+ 				 "updating iftable (ifindex=%u)", im->index);
+@@ -136,7 +116,7 @@
  {
  	struct ifinfomsg *ifi_msg = NLMSG_DATA(n);
  	struct rtattr *cb[IFLA_MAX+1];
 -	struct ifindex_map *im;
++	struct nlif_inst *nlif_inst = (struct nlif_inst *)arg;
  
  	if (n->nlmsg_type != RTM_DELLINK) {
  		iftb_log(LOG_ERROR,
-@@ -157,15 +156,15 @@
+@@ -153,23 +133,22 @@
+ 	memset(&cb, 0, sizeof(cb));
+ 	rtnl_parse_rtattr(cb, IFLA_MAX, IFLA_RTA(ifi_msg), IFLA_PAYLOAD(n));
+ 
+-	/* FIXME */
++	/* FIXME really suppress entry */
  
  	return 1;
  }
 -	
 -/* ifindex_2name - get the name for an ifindex
-+
 +/* nl_ifindex_2name - get the name for an ifindex
   * @index:	ifindex to be resolved
   *
   * Return value: character string containing name of interface
   */
 -char *ifindex_2name(unsigned int index)
-+char *nlif_index_2name(unsigned int index)
++char *nlif_index_2name(struct nlif_inst *nlif_inst, unsigned int index)
  {
--	struct ifindex_map *im;
-+	struct ifindex_map_t *im;
+ 	struct ifindex_map *im;
  
  	if (index == 0)
  		return "*";
-@@ -183,7 +182,7 @@
+-	for (im = ifindex_map[index&0xF]; im; im = im->next)
++	for (im = (nlif_inst->ifindex_map)[index&0xF]; im; im = im->next)
+ 		if (im->index == index)
+ 			return im->name;
+ 
+@@ -181,11 +160,11 @@
+  *
+  * Return value: -1 if interface unknown, 1 if interface up, 0 if not.
   */
- int  iftable_up(unsigned int index)
+-int  iftable_up(unsigned int index)
++int  iftable_up(struct nlif_inst *nlif_inst, unsigned int index)
  {
--	struct ifindex_map *im;
-+	struct ifindex_map_t *im;
+ 	struct ifindex_map *im;
  
- 	for (im = ifindex_map[index&0xF]; im; im = im->next) {
+-	for (im = ifindex_map[index&0xF]; im; im = im->next) {
++	for (im = nlif_inst->ifindex_map[index&0xF]; im; im = im->next) {
  		if (im->index == index) {
-@@ -208,6 +207,14 @@
- 	if (fini)
- 		goto cleanup;
+ 			if (im->flags & IFF_UP)
+ 				return 1;
+@@ -196,34 +175,52 @@
+ 	return -1;
+ }
  
-+	memset(ifindex_map,0,sizeof(ifindex_map));
-+
-+	ret = rtnl_init();
-+
-+	if (ret == -1) {
-+		goto cleanup_none;
+-static struct rtnl_handler handlers[] = {
+-	{ .nlmsg_type = RTM_NEWLINK, .handlefn = &iftable_add },
+-	{ .nlmsg_type = RTM_DELLINK, .handlefn = &iftable_del },
+-};
+ 
+-static int init_or_fini(int fini)
++static struct nlif_inst *init_or_fini(struct nlif_inst *orig)
+ {
++	struct nlif_inst *nlif_inst;
+ 	int ret = 0;
+ 
+-	if (fini)
++	if (orig) {
++		nlif_inst = orig;
+ 		goto cleanup;
 +	}
+ 
+-	if (rtnl_handler_register(&handlers[0]) < 0) {
++		
++	nlif_inst = calloc(1,  sizeof(struct nlif_inst));
++	if (!nlif_inst)
++		goto cleanup;
 +
- 	if (rtnl_handler_register(&handlers[0]) < 0) {
++	nlif_inst->ifadd_handler = calloc(1, sizeof(struct rtnl_handler));
++	nlif_inst->ifadd_handler->nlmsg_type = RTM_NEWLINK;
++	nlif_inst->ifadd_handler->handlefn = &iftable_add;
++	nlif_inst->ifadd_handler->arg = nlif_inst;
++	nlif_inst->ifdel_handler = calloc(1, sizeof(struct rtnl_handler));
++	nlif_inst->ifdel_handler->nlmsg_type = RTM_DELLINK;
++	nlif_inst->ifdel_handler->handlefn = &iftable_del;
++	nlif_inst->ifdel_handler->arg = nlif_inst;
++
++	nlif_inst->rtnl_inst = rtnl_init();
++
++	if (! nlif_inst->rtnl_inst)
++		goto cleanup_none;
++
++	if (rtnl_handler_register(nlif_inst->rtnl_inst, nlif_inst->ifadd_handler) < 0) {
  		ret = -1;
  		goto cleanup_none;
-@@ -223,7 +230,7 @@
+ 	}
+ 
+-	if (rtnl_handler_register(&handlers[1]) < 0) {
++	if (rtnl_handler_register(nlif_inst->rtnl_inst, nlif_inst->ifdel_handler) < 0) {
+ 		ret = -1;
+ 		goto cleanup_0;
+ 	}
+ 
+-	if (rtnl_dump_type(RTM_GETLINK) < 0) {
++	if (rtnl_dump_type(nlif_inst->rtnl_inst, RTM_GETLINK) < 0) {
+ 		ret = -1;
  		goto cleanup_1;
  	}
  
 -	return 0;
-+	return ret;
++	return nlif_inst;
  
  #if 0
  	if (rtnl_wilddump_requet(rtnl_fd, AF_UNSPEC, RTM_GETLINK) < 0) {
-@@ -243,19 +250,30 @@
- 	return ret;
+@@ -236,26 +233,47 @@
+ cleanup:
+ 
+ cleanup_1:
+-	rtnl_handler_unregister(&handlers[1]);
++	rtnl_handler_unregister(nlif_inst->rtnl_inst, nlif_inst->ifadd_handler);
+ cleanup_0:
+-	rtnl_handler_unregister(&handlers[0]);
++	rtnl_handler_unregister(nlif_inst->rtnl_inst, nlif_inst->ifdel_handler);
+ cleanup_none:
+-	return ret;
++	return nlif_inst;
  }
  
 -/* iftable_init - Initialize interface table
@@ -184,36 +229,284 @@ Index: src/iftable.c
 + * \return file descriptor to netlink socket
   */
 -int iftable_init(void)
-+int nlif_table_init(void)
++struct nlif_inst *nlif_table_init(void)
  {
  	iftb_log(LOG_DEBUG, "%s", __FUNCTION__);
- 	return init_or_fini(0);
+-	return init_or_fini(0);
++	return init_or_fini(NULL);
  }
  
 -/* iftable_fini - Destructor of interface table
 +/* nl_iftable_fini - Destructor of interface table
   */
 -void iftable_fini(void)
-+void nlif_table_fini(void)
++void nlif_table_fini(struct nlif_inst *nlif_inst)
  {
- 	init_or_fini(1);
+-	init_or_fini(1);
++	init_or_fini(nlif_inst);
  }
  
 +/**
 + * \return 0 if OK
 + */
-+int nlif_treat_msg(int fd)
++int nlif_treat_msg(struct nlif_inst *nlif_inst)
 +{
-+	return rtnl_receive(fd);
++	if (nlif_inst && nlif_inst->rtnl_inst)
++		return rtnl_receive(nlif_inst->rtnl_inst);
++	else
++		return -1;
 +}
  
-Index: src/Makefile.am
-===================================================================
---- src/Makefile.am	(révision 6736)
-+++ src/Makefile.am	(copie de travail)
-@@ -8,4 +8,4 @@
++int nlif_get_fd(struct nlif_inst *nlif_inst)
++{
++	if (nlif_inst && nlif_inst->rtnl_inst)
++		return nlif_inst->rtnl_inst->rtnl_fd;
++	else
++		return -1;
++}
+=== src/rtnl.c
+==================================================================
+--- src/rtnl.c	(revision 5686)
++++ src/rtnl.c	(local)
+@@ -1,6 +1,8 @@
+ /* rtnl - rtnetlink utility functions
+  *
+  * (C) 2004 by Astaro AG, written by Harald Welte <hwelte@astaro.com>
++ * 
++ * Adapted to nfnetlink by Eric Leblond <eric@inl.fr>
+  *
+  * This software is free software and licensed under GNU GPLv2. 
+  *
+@@ -26,26 +28,21 @@
  
- libnfnetlink_la_LDFLAGS = -Wc,-nostartfiles	\
- 			  -version-info $(LIBVERSION)
--libnfnetlink_la_SOURCES = libnfnetlink.c 
-+libnfnetlink_la_SOURCES = libnfnetlink.c iftable.c rtnl.c
+ #define rtnl_log(x, ...)
+ 
+-static int rtnl_fd;
+-static int rtnl_seq = 0;
+-static int rtnl_dump;
+-static struct sockaddr_nl rtnl_local;
+-
+-static struct rtnl_handler *handlers = NULL;
+-
+-static inline struct rtnl_handler *find_handler(u_int16_t type)
++static inline struct rtnl_handler *find_handler(struct rtnl_inst *rtnl_inst,
++							u_int16_t type)
+ {
+ 	struct rtnl_handler *h;
+-	for (h = handlers; h; h = h->next) {
++	for (h = rtnl_inst->handlers; h; h = h->next) {
+ 		if (h->nlmsg_type == type)
+ 			return h;
+ 	}
+ 	return NULL;
+ }
+ 
+-static int call_handler(u_int16_t type, struct nlmsghdr *hdr)
++static int call_handler(struct rtnl_inst *rtnl_inst, u_int16_t type,
++					struct nlmsghdr *hdr)
+ {
+-	struct rtnl_handler *h = find_handler(type);
++	struct rtnl_handler *h = find_handler(rtnl_inst, type);
+ 
+ 	if (!h) {
+ 		rtnl_log(LOG_DEBUG, "no registered handler for type %u",
+@@ -59,31 +56,31 @@
+ /* rtnl_handler_register - register handler for given nlmsg type
+  * @hdlr:	handler structure
+  */
+-int rtnl_handler_register(struct rtnl_handler *hdlr)
++int rtnl_handler_register(struct rtnl_inst *rtnl_inst, struct rtnl_handler *hdlr)
+ {
+ 	rtnl_log(LOG_DEBUG, "registering handler for type %u",
+ 		 hdlr->nlmsg_type);
+-	hdlr->next = handlers;
+-	handlers = hdlr;
++	hdlr->next = rtnl_inst->handlers;
++	rtnl_inst->handlers = hdlr;
+ 	return 1;
+ }
+ 
+ /* rtnl_handler_unregister - unregister handler for given nlmst type
+  * @hdlr:	handler structure
+  */
+-int rtnl_handler_unregister(struct rtnl_handler *hdlr)
++int rtnl_handler_unregister(struct rtnl_inst *rtnl_inst, struct rtnl_handler *hdlr)
+ {
+ 	struct rtnl_handler *h, *prev = NULL;
+ 
+ 	rtnl_log(LOG_DEBUG, "unregistering handler for type %u",
+ 		 hdlr->nlmsg_type);
+ 
+-	for (h = handlers; h; h = h->next) {
++	for (h = rtnl_inst->handlers; h; h = h->next) {
+ 		if (h == hdlr) {
+ 			if (prev)
+ 				prev->next = h->next;
+ 			else
+-				handlers = h->next;
++				rtnl_inst->handlers = h->next;
+ 			return 1;
+ 		}
+ 		prev = h;
+@@ -107,7 +104,7 @@
+ /* rtnl_dump_type - ask rtnetlink to dump a specific table
+  * @type:	type of table to be dumped
+  */
+-int rtnl_dump_type(unsigned int type)
++int rtnl_dump_type(struct rtnl_inst *rtnl_inst, unsigned int type)
+ {
+         struct {
+                 struct nlmsghdr nlh;
+@@ -123,15 +120,15 @@
+         req.nlh.nlmsg_type = type;
+         req.nlh.nlmsg_flags = NLM_F_ROOT|NLM_F_MATCH|NLM_F_REQUEST;
+         req.nlh.nlmsg_pid = 0;
+-        req.nlh.nlmsg_seq = rtnl_dump = ++rtnl_seq;
++        req.nlh.nlmsg_seq = rtnl_inst->rtnl_dump = ++(rtnl_inst->rtnl_seq);
+         req.g.rtgen_family = AF_INET;
+ 
+-        return sendto(rtnl_fd, (void*)&req, sizeof(req), 0, 
++        return sendto(rtnl_inst->rtnl_fd, (void*)&req, sizeof(req), 0, 
+ 		      (struct sockaddr*)&nladdr, sizeof(nladdr));
+ }
+ 
+ /* rtnl_receive - receive netlink packets from rtnetlink socket */
+-int rtnl_receive()
++int rtnl_receive(struct rtnl_inst *rtnl_inst)
+ {
+ 	int status;
+ 	char buf[8192];
+@@ -146,7 +143,7 @@
+ 		0
+ 	};
+ 
+-	status = recvmsg(rtnl_fd, &msg, 0);
++	status = recvmsg(rtnl_inst->rtnl_fd, &msg, 0);
+ 	if (status < 0) {
+ 		if (errno == EINTR)
+ 			return 0;
+@@ -184,7 +181,7 @@
+ 			return -1;
+ 		}
+ 
+-		if (call_handler(h->nlmsg_type, h) == 0) 
++		if (call_handler(rtnl_inst, h->nlmsg_type, h) == 0) 
+ 			rtnl_log(LOG_NOTICE, "unhandled nlmsg_type %u",
+ 				 h->nlmsg_type);
+ 		h = NLMSG_NEXT(h, status);
+@@ -193,52 +190,59 @@
+ }
+ 
+ /* rtnl_init - constructor of rtnetlink module */
+-int rtnl_init(void)
++struct rtnl_inst *rtnl_init(void)
+ {
+ 	int addr_len;
++	struct rtnl_inst *rtnl_inst = calloc(1, sizeof(struct rtnl_inst));
+ 
+-	rtnl_local.nl_pid = getpid();
+-	rtnl_fd = socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
+-	if (rtnl_fd < 0) {
++	if (! rtnl_inst)
++		return NULL;
++
++	rtnl_inst->rtnl_seq = 0;
++	rtnl_inst->handlers = NULL;
++
++	rtnl_inst->rtnl_local.nl_pid = getpid();
++	rtnl_inst->rtnl_fd = socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
++	if (rtnl_inst->rtnl_fd < 0) {
+ 		rtnl_log(LOG_ERROR, "unable to create rtnetlink socket");
+ 		return -1;
+ 	}
+ 
+-	memset(&rtnl_local, 0, sizeof(rtnl_local));
+-	rtnl_local.nl_family = AF_NETLINK;
+-	rtnl_local.nl_groups = RTMGRP_IPV4_ROUTE|RTMGRP_IPV4_IFADDR|RTMGRP_LINK;
+-
+-	if (bind(rtnl_fd, (struct sockaddr *)&rtnl_local, sizeof(rtnl_local)) < 0) {
++	memset(&(rtnl_inst->rtnl_local), 0, sizeof(rtnl_inst->rtnl_local));
++	rtnl_inst->rtnl_local.nl_family = AF_NETLINK;
++	rtnl_inst->rtnl_local.nl_groups = RTMGRP_IPV4_ROUTE|RTMGRP_IPV4_IFADDR|RTMGRP_LINK;
++	if (bind(rtnl_inst->rtnl_fd, (struct sockaddr *)&(rtnl_inst->rtnl_local), sizeof(rtnl_inst->rtnl_local)) < 0) {
+ 		rtnl_log(LOG_ERROR, "unable to bind rtnetlink socket");
+ 		return -1;
+ 	}
+ 
+-	addr_len = sizeof(rtnl_local);
+-	if (getsockname(rtnl_fd, (struct sockaddr *)&rtnl_local, 
++	addr_len = sizeof(rtnl_inst->rtnl_local);
++	if (getsockname(rtnl_inst->rtnl_fd, (struct sockaddr *)&(rtnl_inst->rtnl_local), 
+ 			&addr_len) < 0) {
+ 		rtnl_log(LOG_ERROR, "cannot gescockname(rtnl_socket)");
+ 		return -1;
+ 	}
+ 
+-	if (addr_len != sizeof(rtnl_local)) {
++	if (addr_len != sizeof(rtnl_inst->rtnl_local)) {
+ 		rtnl_log(LOG_ERROR, "invalid address size %u", addr_len);
+ 		return -1;
+ 	}
+ 
+-	if (rtnl_local.nl_family != AF_NETLINK) {
+-		rtnl_log(LOG_ERROR, "invalid AF %u", rtnl_local.nl_family);
++	if (rtnl_inst->rtnl_local.nl_family != AF_NETLINK) {
++		rtnl_log(LOG_ERROR, "invalid AF %u", rtnl_inst->rtnl_local.nl_family);
+ 		return -1;
+ 	}
+ 
+-	rtnl_seq = time(NULL);
++	rtnl_inst->rtnl_seq = time(NULL);
+ 
+-	return rtnl_fd;
++	return rtnl_inst;
+ }
+ 
+ /* rtnl_fini - destructor of rtnetlink module */
+-void rtnl_fini(void)
++void rtnl_fini(struct rtnl_inst *rtnl_inst)
+ {
+-	close(rtnl_fd);
++	close(rtnl_inst->rtnl_fd);
++	free(rtnl_inst);
+ 	return;
+ }
+ 
+=== src/rtnl.h
+==================================================================
+--- src/rtnl.h	(revision 5686)
++++ src/rtnl.h	(local)
+@@ -12,17 +12,27 @@
+ 	void		*arg;
+ };
+ 
++struct rtnl_inst {
++	int rtnl_fd;
++	int rtnl_seq;
++	int rtnl_dump;
++	struct sockaddr_nl rtnl_local;
++	struct rtnl_handler *handlers;
++};
+ 
++
++
++
+ /* api for handler plugins */
+-int rtnl_handler_register(struct rtnl_handler *hdlr);
+-int rtnl_handler_unregister(struct rtnl_handler *hdlr);
++int rtnl_handler_register(struct rtnl_inst *rtnl_inst,struct rtnl_handler *hdlr);
++int rtnl_handler_unregister(struct rtnl_inst *rtnl_inst, struct rtnl_handler *hdlr);
+ int rtnl_parse_rtattr(struct rtattr *tb[], int max, struct rtattr *rta, int len);
+-int rtnl_dump_type(unsigned int type);
++int rtnl_dump_type(struct rtnl_inst *rtnl_inst, unsigned int type);
+ 
+ /* api for core program */
+-int rtnl_init(void);
+-void rtnl_fini(void);
+-int rtnl_receive();
++struct rtnl_inst *rtnl_init(void);
++void rtnl_fini(struct rtnl_inst *rtnl_inst);
++int rtnl_receive(struct rtnl_inst *rtnl_inst);
+   
+ 
+ #endif

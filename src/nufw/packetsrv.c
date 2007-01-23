@@ -80,6 +80,9 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
     struct nfqnl_msg_packet_hdr *ph;
     struct timeval timestamp;
     int ret;
+#ifdef HAVE_NFQ_GET_INDEV_NAME
+    struct nlif_inst *nlif_inst = (struct nlif_inst *) data;
+#endif
 
     debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_VERBOSE_DEBUG,
             "(*) New packet");
@@ -123,12 +126,14 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 
     q_pckt.mark = current->nfmark = nfq_get_nfmark(nfa);
 
-    if (! get_interface_information(&q_pckt, nfa)){
+#ifdef HAVE_NFQ_GET_INDEV_NAME
+    if (! get_interface_information(nlif_inst, &q_pckt, nfa)){
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_INFO,
                 "Can not get interfaces information for message");
         free(current);
 		return 0;
-	}
+    }
+#endif
 
     ret = nfq_get_timestamp(nfa, &timestamp);
     if (ret == 0){
@@ -165,7 +170,7 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 /**
  * Open a netlink connection and returns file descriptor
  */
-int packetsrv_open()
+int packetsrv_open(void *data)
 {
     struct nfnl_handle *nh;
 
@@ -212,7 +217,7 @@ int packetsrv_open()
 
     /* binding this socket to queue number ::nfqueue_num
      * and install our packet handler */
-    hndl = nfq_create_queue(h,  nfqueue_num, (nfq_callback *)&treat_packet, NULL);
+    hndl = nfq_create_queue(h,  nfqueue_num, (nfq_callback *)&treat_packet, data);
     if (!hndl) {
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
                 "[!] Error during nfq_create_queue() (queue %d busy ?)",
@@ -339,24 +344,33 @@ void* packetsrv(void *void_arg)
     struct timeval tv;
     int fd;
 #ifdef HAVE_NFQ_GET_INDEV_NAME
+    struct nlif_inst *nlif_inst;
     int if_fd;
 #endif
     int rv;
     int select_result;
     fd_set wk_set;
 
-    fd = packetsrv_open();
+#ifdef HAVE_NFQ_GET_INDEV_NAME
+    nlif_inst = iface_table_open();
+
+    if (! nlif_inst) 
+        exit(EXIT_FAILURE);
+
+    if_fd = nlif_get_fd(nlif_inst);
+    if (if_fd < 0) {
+        exit(EXIT_FAILURE);
+    }
+
+    fd = packetsrv_open((void *)nlif_inst);
+#else
+    fd = packetsrv_open(NULL);
+#endif
+
     if (fd < 0)
     {
         exit(EXIT_FAILURE);
     }
-#ifdef HAVE_NFQ_GET_INDEV_NAME
-    if_fd = iface_table_open();
-
-    if (if_fd < 0) {
-        exit(EXIT_FAILURE);
-    }
-#endif
 
     log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
             "[+] Packet server started");
@@ -398,7 +412,7 @@ void* packetsrv(void *void_arg)
 
 #ifdef HAVE_NFQ_GET_INDEV_NAME
         if (FD_ISSET(if_fd,&wk_set)){
-            iface_treat_message(if_fd);
+            iface_treat_message(nlif_inst);
             continue;
         }
 #endif
@@ -412,7 +426,7 @@ void* packetsrv(void *void_arg)
             log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_SERIOUS_MESSAGE,
                     "Reopen netlink connection.");
             packetsrv_close(0);
-            fd = packetsrv_open();
+            fd = packetsrv_open(nlif_inst);
             if (fd < 0)
             {
                 log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
