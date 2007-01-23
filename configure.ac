@@ -145,7 +145,6 @@ AM_CONDITIONAL(USE_PLAINTEXT_AUTH, test x$enable_plaintext_auth = xyes)
 AM_CONDITIONAL(USE_MARK_GROUP, test x$enable_mark_group = xyes)
 AM_CONDITIONAL(USE_SYSLOG_LOG, test x$enable_syslog_log = xyes)
 
-AM_CONDITIONAL(HAVE_NFQUEUE,test x$have_nfqueue = xyes)
 if test "${build_nufw}" = "yes"; then
     if test "${use_nfqueue}" = "yes"; then
         # if we don't have we can't build nufw
@@ -172,13 +171,13 @@ fi
 
 if test "${use_nfconntrack}" = "yes"; then
 	AC_CHECK_LIB([netfilter_conntrack], [nfct_dump_conntrack_table], have_conntrack="yes", have_conntrack="",[-ldl -lnfnetlink])
-	AC_CHECK_LIB([netfilter_conntrack], [nfct_callback_register], have_new_conntrack_api="yes", have_new_conntrack_api="", [-ldl -lnfnetlink])
 else
 	have_conntrack=""
 fi
 
 if test "${have_conntrack}" = "yes"; then
         AC_DEFINE_UNQUOTED([HAVE_LIBCONNTRACK],[1],[libconntrack has been found])
+	AC_CHECK_LIB([netfilter_conntrack], [nfct_callback_register], have_new_conntrack_api="yes", have_new_conntrack_api="", [-ldl -lnfnetlink])
 	if test "${have_conntrack_fixedtimeout}" = "yes"; then
         	AC_DEFINE_UNQUOTED([HAVE_LIBCONNTRACK_FIXEDTIMEOUT],[1],[libconntrack with fixed timeout extension has been choosen])
 	fi
