@@ -27,6 +27,14 @@
 #include "nufw.h"
 #ifdef HAVE_LIBCONNTRACK
 
+#ifdef HAVE_NEW_NFCT_API
+#  define MSG_DESTROY NFCT_T_DESTROY
+#  define MSG_UPDATE NFCT_T_UPDATE
+#else
+#  define MSG_DESTROY NFCT_MSG_DESTROY
+#  define MSG_UPDATE NFCT_MSG_UPDATE
+#endif
+
 void fill_message(struct nuv4_conntrack_message_t *message, struct nf_conntrack *conn)
 {
 #ifdef DEBUG_CONNTRACK
@@ -113,7 +121,7 @@ void fill_message(struct nuv4_conntrack_message_t *message, struct nf_conntrack 
 #endif
 
 #ifdef DEBUG_CONNTRACK
-    printf("(*) New packet: ");
+    printf("(*) New conntrack event: ");
     if (inet_ntop(AF_INET6, &message->ip_src, ascii, sizeof(ascii)))
     {
         printf(" src=%s", ascii);
@@ -143,31 +151,36 @@ int update_handler (struct nf_conntrack *conn, unsigned int flags, int type,void
 {
     struct nuv4_conntrack_message_t message;
     int ret;
+#ifdef HAVE_NEW_NFCT_API
+    int callback_ret = NFCT_CB_CONTINUE;
+#else
+    int callback_ret = 0;
+#endif
 
     /* if nufw_conntrack_uses_mark is set we should have mark set here
      * This REQUIRES correct CONNMARK rules and correct kernel */
     if (nufw_conntrack_uses_mark == 1){
 #ifdef HAVE_NEW_NFCT_API
-        if (nfct_get_attr_u32(conn, ATTR_MARK) == 0) return 0;
+        if (nfct_get_attr_u32(conn, ATTR_MARK) == 0) return callback_ret;
 #else
-        if (conn->mark == 0) return 0;
+        if (conn->mark == 0) return callback_ret;
 #endif
     }
     message.protocol_version=PROTO_VERSION;
     message.msg_length= htons(sizeof(struct nuv4_conntrack_message_t));
     switch (type) {
-        case NFCT_MSG_DESTROY:
+        case MSG_DESTROY:
             message.msg_type=AUTH_CONN_DESTROY;
             debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_VERBOSE_DEBUG,
                     "Destroy event to be send to nuauth.");
             break;
-        case NFCT_MSG_UPDATE:
+        case MSG_UPDATE:
 #ifdef HAVE_NEW_NFCT_API
              if (! (nfct_get_attr_u32(conn, ATTR_STATUS) & IPS_ASSURED)) {
 #else
              if (! (conn->status & IPS_ASSURED)) {
 #endif
-                 return 0;
+                 return callback_ret;
              }
             message.msg_type=AUTH_CONN_UPDATE;
             debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_VERBOSE_DEBUG,
@@ -175,8 +188,9 @@ int update_handler (struct nf_conntrack *conn, unsigned int flags, int type,void
             break;
         default:
             debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_INFO,
-                        "Strange, get message (type %d) not %d or %d",type,NFCT_MSG_DESTROY,NFCT_MSG_UPDATE);
-            return 0;
+                        "Strange, get message (type %d) not %d or %d",
+                        type, MSG_DESTROY, MSG_UPDATE);
+            return callback_ret;
     }
     fill_message(&message, conn);
 
@@ -195,12 +209,12 @@ int update_handler (struct nf_conntrack *conn, unsigned int flags, int type,void
 			    tls.auth_server_running=0;
 			    pthread_cancel(tls.auth_server);
 			    pthread_mutex_unlock(&tls.mutex);
-			    return 0;
+			    return callback_ret;
 		    }
 	    }
     }
     pthread_mutex_unlock(&tls.mutex);
-    return 0;
+    return callback_ret;
 }
 
 /**
@@ -219,10 +233,11 @@ void* conntrack_event_handler(void *data)
         log_printf(DEBUG_LEVEL_WARNING, "Not enough memory to open netfilter conntrack");
 #ifdef HAVE_NEW_NFCT_API
     nfct_callback_register(cth, NFCT_T_UPDATE | NFCT_T_DESTROY, update_handler, NULL);
+    res = nfct_catch(cth);
 #else
     nfct_register_callback(cth, update_handler, NULL);
-#endif
     res = nfct_event_conntrack(cth);
+#endif
     nfct_close(cth);
     debug_log_printf(DEBUG_AREA_MAIN,DEBUG_LEVEL_VERBOSE_DEBUG, "Conntrack thread has exited");
     return NULL;
