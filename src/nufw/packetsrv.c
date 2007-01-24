@@ -18,7 +18,9 @@
 
 #include "nufw.h"
 
-#include "iface.h"
+#ifdef HAVE_NFQ_GET_INDEV_NAME
+#  include "iface.h"
+#endif
 
 /** \file packetsrv.c
  *  \brief Packet server thread
@@ -353,7 +355,7 @@ void* packetsrv(void *void_arg)
 #ifdef HAVE_NFQ_GET_INDEV_NAME
     nlif_inst = iface_table_open();
 
-    if (! nlif_inst) 
+    if (! nlif_inst)
         exit(EXIT_FAILURE);
 
     if_fd = nlif_get_fd(nlif_inst);
@@ -425,7 +427,11 @@ void* packetsrv(void *void_arg)
             log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_SERIOUS_MESSAGE,
                     "Reopen netlink connection.");
             packetsrv_close(0);
+#ifdef HAVE_NFQ_GET_INDEV_NAME
             fd = packetsrv_open(nlif_inst);
+#else
+            fd = packetsrv_open(NULL);
+#endif
             if (fd < 0)
             {
                 log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
