@@ -1,7 +1,7 @@
 #include "nufw.h"
 
 #ifdef USE_NFQUEUE
-int get_interface_information(struct nlif_inst *inst, struct queued_pckt* q_pckt, struct nfq_data *nfad)
+int get_interface_information(struct nlif_handle *inst, struct queued_pckt* q_pckt, struct nfq_data *nfad)
 {
 #ifdef HAVE_NFQ_GET_INDEV_NAME
 	q_pckt->indev = nfq_get_indev_name(inst, nfad);
@@ -43,32 +43,34 @@ int get_interface_information(struct nlif_inst *inst, struct queued_pckt* q_pckt
 }
 
 #ifdef HAVE_NFQ_GET_INDEV_NAME
-struct nlif_inst *iface_table_open()
+struct nlif_handle *iface_table_open()
 {
-    struct nlif_inst *inst;
+    struct nlif_handle *inst;
     /* opening ifname resolution handle */
-    inst = nlif_table_init();
+    inst = nlif_open();
     if (inst == NULL) {
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
                 "[!] Error during nlif_table_init()");
         return NULL;
     }
     /* treat initial rtnetlink message */
-    nlif_treat_msg(inst);
+    nlif_catch(inst);
 
     return inst;
 }
 
-int iface_treat_message(struct nlif_inst *inst)
+int iface_treat_message(struct nlif_handle *inst)
 {
-   return nlif_treat_msg(inst);
+   debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
+		"Network interface event");
+   return nlif_catch(inst);
 }
 
-void iface_table_close(struct nlif_inst *inst)
+void iface_table_close(struct nlif_handle *inst)
 {
         debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
 		"Free iface resolution instance");
-	nlif_table_fini(inst);
+	nlif_close(inst);
 }
 
 #endif   /* #ifdef HAVE_NFQ_GET_INDEV_NAME */

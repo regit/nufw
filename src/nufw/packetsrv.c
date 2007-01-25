@@ -83,7 +83,7 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
     struct timeval timestamp;
     int ret;
 #ifdef HAVE_NFQ_GET_INDEV_NAME
-    struct nlif_inst *nlif_inst = (struct nlif_inst *) data;
+    struct nlif_handle *nlif_handle = (struct nlif_handle *) data;
 #endif
 
     debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_VERBOSE_DEBUG,
@@ -129,7 +129,7 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
     q_pckt.mark = current->nfmark = nfq_get_nfmark(nfa);
 
 #ifdef HAVE_NFQ_GET_INDEV_NAME
-    if (! get_interface_information(nlif_inst, &q_pckt, nfa)){
+    if (! get_interface_information(nlif_handle, &q_pckt, nfa)){
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_INFO,
                 "Can not get interfaces information for message");
         free(current);
@@ -345,7 +345,7 @@ void* packetsrv(void *void_arg)
     struct timeval tv;
     int fd;
 #ifdef HAVE_NFQ_GET_INDEV_NAME
-    struct nlif_inst *nlif_inst;
+    struct nlif_handle *nlif_handle;
     int if_fd;
 #endif
     int rv;
@@ -353,17 +353,17 @@ void* packetsrv(void *void_arg)
     fd_set wk_set;
 
 #ifdef HAVE_NFQ_GET_INDEV_NAME
-    nlif_inst = iface_table_open();
+    nlif_handle = iface_table_open();
 
-    if (! nlif_inst)
+    if (! nlif_handle) 
         exit(EXIT_FAILURE);
 
-    if_fd = nlif_get_fd(nlif_inst);
+    if_fd = nlif_fd(nlif_handle);
     if (if_fd < 0) {
         exit(EXIT_FAILURE);
     }
 
-    fd = packetsrv_open((void *)nlif_inst);
+    fd = packetsrv_open((void *)nlif_handle);
 #else
     fd = packetsrv_open(NULL);
 #endif
@@ -413,7 +413,7 @@ void* packetsrv(void *void_arg)
 
 #ifdef HAVE_NFQ_GET_INDEV_NAME
         if (FD_ISSET(if_fd,&wk_set)){
-            iface_treat_message(nlif_inst);
+            iface_treat_message(nlif_handle);
             continue;
         }
 #endif
@@ -428,7 +428,7 @@ void* packetsrv(void *void_arg)
                     "Reopen netlink connection.");
             packetsrv_close(0);
 #ifdef HAVE_NFQ_GET_INDEV_NAME
-            fd = packetsrv_open(nlif_inst);
+            fd = packetsrv_open(nlif_handle);
 #else
             fd = packetsrv_open(NULL);
 #endif
@@ -448,7 +448,7 @@ void* packetsrv(void *void_arg)
     }
 
 #ifdef HAVE_NFQ_GET_INDEV_NAME
-    iface_table_close(nlif_inst);
+    iface_table_close(nlif_handle);
 #endif
 
 
