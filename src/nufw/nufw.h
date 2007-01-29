@@ -117,10 +117,10 @@ struct nuauth_conn {
 struct queued_pckt {
 	uint32_t packet_id;
 
-	char *indev;
-	char *physindev;
-	char *outdev;
-	char *physoutdev;
+	char indev[IFNAMSIZ];
+	char physindev[IFNAMSIZ];
+	char outdev[IFNAMSIZ];
+	char physoutdev[IFNAMSIZ];
 	u_int32_t mark;
 
 	time_t timestamp;

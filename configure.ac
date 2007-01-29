@@ -151,7 +151,15 @@ if test "${build_nufw}" = "yes"; then
         AC_CHECK_LIB([nfnetlink], [nfnl_open], have_nfqueue="yes", build_nufw="")
         AC_CHECK_LIB([netfilter_queue], [nfq_open], have_nfqueue="yes", have_nfqueue="",[-lnfnetlink])
         AC_CHECK_LIB([netfilter_queue], [nfq_set_queue_maxlen],AC_DEFINE_UNQUOTED([HAVE_NFQ_SET_QUEUE_MAXLEN],[1],[Found queue max length support in netfilter_queue]) ,,[-lnfnetlink])
-        AC_CHECK_LIB([netfilter_queue], [nfq_get_indev_name],AC_DEFINE_UNQUOTED([HAVE_NFQ_GET_INDEV_NAME],[1],[Found nfq_get_indev_name in netfilter_queue]) ,,[-lnfnetlink])
+        AC_CHECK_LIB([nfnetlink], [nlif_catch],have_nlif_catch="yes")
+        if test "${have_nlif_catch}" = "yes"; then
+            AC_CHECK_LIB([netfilter_queue], [nfq_get_indev_name],have_nfq_indev_name="yes",, [-lnfnetlink])
+            if test "${have_nfq_indev_name}" = "yes"; then
+                AC_DEFINE_UNQUOTED([HAVE_NLIF_CATCH],[1],[Found iface resolution in nfnetlink and libnetfilter_queue])
+            else
+                AC_ERROR("Support of interface resolution in nfnetlink but not in netfilter_queue")
+            fi
+        fi
         AC_DEFINE_UNQUOTED([USE_NFQUEUE],[1],[Will use netlink queue support instead of libipq])
     else
         AC_CHECK_HEADERS([libipq/libipq.h libipq.h])

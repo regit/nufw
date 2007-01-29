@@ -18,7 +18,7 @@
 
 #include "nufw.h"
 
-#ifdef HAVE_NFQ_GET_INDEV_NAME
+#ifdef HAVE_NLIF_CATCH
 #  include "iface.h"
 #endif
 
@@ -82,7 +82,7 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
     struct nfqnl_msg_packet_hdr *ph;
     struct timeval timestamp;
     int ret;
-#ifdef HAVE_NFQ_GET_INDEV_NAME
+#ifdef HAVE_NLIF_CATCH
     struct nlif_handle *nlif_handle = (struct nlif_handle *) data;
 #endif
 
@@ -128,7 +128,7 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 
     q_pckt.mark = current->nfmark = nfq_get_nfmark(nfa);
 
-#ifdef HAVE_NFQ_GET_INDEV_NAME
+#ifdef HAVE_NLIF_CATCH
     if (! get_interface_information(nlif_handle, &q_pckt, nfa)){
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_INFO,
                 "Can not get interfaces information for message");
@@ -344,7 +344,7 @@ void* packetsrv(void *void_arg)
     unsigned char buffer[BUFSIZ];
     struct timeval tv;
     int fd;
-#ifdef HAVE_NFQ_GET_INDEV_NAME
+#ifdef HAVE_NLIF_CATCH
     struct nlif_handle *nlif_handle;
     int if_fd;
 #endif
@@ -352,7 +352,7 @@ void* packetsrv(void *void_arg)
     int select_result;
     fd_set wk_set;
 
-#ifdef HAVE_NFQ_GET_INDEV_NAME
+#ifdef HAVE_NLIF_CATCH
     nlif_handle = iface_table_open();
 
     if (! nlif_handle) 
@@ -388,7 +388,7 @@ void* packetsrv(void *void_arg)
         /* wait new event on socket */
         FD_ZERO(&wk_set);
         FD_SET(fd,&wk_set);
-#ifdef HAVE_NFQ_GET_INDEV_NAME
+#ifdef HAVE_NLIF_CATCH
         FD_SET(if_fd,&wk_set);
 #endif
         select_result = select(fd+1,&wk_set,NULL,NULL,&tv);
@@ -411,7 +411,7 @@ void* packetsrv(void *void_arg)
             continue;
         }
 
-#ifdef HAVE_NFQ_GET_INDEV_NAME
+#ifdef HAVE_NLIF_CATCH
         if (FD_ISSET(if_fd,&wk_set)){
             iface_treat_message(nlif_handle);
             continue;
@@ -427,7 +427,7 @@ void* packetsrv(void *void_arg)
             log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_SERIOUS_MESSAGE,
                     "Reopen netlink connection.");
             packetsrv_close(0);
-#ifdef HAVE_NFQ_GET_INDEV_NAME
+#ifdef HAVE_NLIF_CATCH
             fd = packetsrv_open(nlif_handle);
 #else
             fd = packetsrv_open(NULL);
@@ -447,7 +447,7 @@ void* packetsrv(void *void_arg)
         pckt_rx++ ;
     }
 
-#ifdef HAVE_NFQ_GET_INDEV_NAME
+#ifdef HAVE_NLIF_CATCH
     iface_table_close(nlif_handle);
 #endif
 
@@ -595,30 +595,10 @@ int auth_request_send(uint8_t type, struct queued_pckt* pckt_datas)
     msg_header->timestamp = htonl(pckt_datas->timestamp);
 
     /* Add info about interfaces */
-    if (pckt_datas->indev){
-        memcpy(msg_header->indev,pckt_datas->indev,IFNAMSIZ*sizeof(char));
-    } else {
-        memset(msg_header->indev,0,IFNAMSIZ*sizeof(char));
-    }
-
-    if (pckt_datas->outdev){
-        memcpy(msg_header->outdev,pckt_datas->outdev,IFNAMSIZ*sizeof(char));
-    } else {
-        memset(msg_header->indev,0,IFNAMSIZ*sizeof(char));
-    }
-
-    if (pckt_datas->physindev){
-        memcpy(msg_header->physindev,pckt_datas->physindev,IFNAMSIZ*sizeof(char));
-    } else {
-        memset(msg_header->indev,0,IFNAMSIZ*sizeof(char));
-    }
-
-    if (pckt_datas->physoutdev){
-        memcpy(msg_header->physoutdev,pckt_datas->physoutdev,IFNAMSIZ*sizeof(char));
-    } else {
-        memset(msg_header->indev,0,IFNAMSIZ*sizeof(char));
-    }
-
+    memcpy(msg_header->indev,pckt_datas->indev,IFNAMSIZ*sizeof(char));
+    memcpy(msg_header->outdev,pckt_datas->outdev,IFNAMSIZ*sizeof(char));
+    memcpy(msg_header->physindev,pckt_datas->physindev,IFNAMSIZ*sizeof(char));
+    memcpy(msg_header->physoutdev,pckt_datas->physoutdev,IFNAMSIZ*sizeof(char));
 
     /* Copy (maybe truncated) packet content */
     memcpy(msg_content, pckt_datas->payload, pckt_datas->payload_len);
