@@ -303,7 +303,7 @@ static char* build_insert_request(
 
     /* Write common informations */
     ok = secure_snprintf(request_fields, sizeof(request_fields),
-            "INSERT INTO %s (state, oob_time_sec, ip_protocol, ip_saddr, ip_daddr, oob_in, oob_out, ",
+            "INSERT INTO %s (state, oob_time_sec, ip_protocol, ip_saddr, ip_daddr, ",
             params->mysql_table_name);
     if (!ok) {
         return NULL;
@@ -316,27 +316,22 @@ static char* build_insert_request(
         if (ipv6_to_sql(&element->tracking.daddr, dst_ascii, sizeof(dst_ascii)) != 0)
             return NULL;
         ok = secure_snprintf(request_values, sizeof(request_values),
-                "VALUES ('%hu', '%lu', '%hu', %s, %s, '%s', '%s', ",
+                "VALUES ('%hu', '%lu', '%hu', %s, %s, ",
                 (short unsigned int)state,
                 (long unsigned int)element->timestamp,
                 (short unsigned int)element->tracking.protocol,
                 src_ascii,
-                dst_ascii,
-                element->iface_nfo.indev,
-                element->iface_nfo.outdev);
+                dst_ascii);
     } else {
         if ((is_ipv4(&element->tracking.saddr) ) && 
                 (is_ipv4(&element->tracking.daddr) )){
             ok = secure_snprintf(request_values, sizeof(request_values),
-                    "VALUES ('%hu', '%lu', '%hu', '%lu', '%lu', '%s', '%s', ",
+                    "VALUES ('%hu', '%lu', '%hu', '%lu', '%lu',",
                     (short unsigned int)state,
                     (long unsigned int)element->timestamp,
                     (short unsigned int)element->tracking.protocol,
                     (&element->tracking.saddr)->s6_addr32[3],
-                    (&element->tracking.daddr)->s6_addr32[3],
-                    element->iface_nfo.indev,
-                    element->iface_nfo.outdev
-                    );
+                    (&element->tracking.daddr)->s6_addr32[3]);
         } else {
             log_message (SERIOUS_WARNING, AREA_MAIN,
                     "MySQL INSERT, IPV6 packet but IPV4 only MySQL schema");
@@ -345,6 +340,20 @@ static char* build_insert_request(
     }
     if (!ok) {
         return NULL;
+    }
+
+    if (element->iface_nfo.indev) {
+	    g_strlcat(request_fields,"oob_in, ",INSERT_REQUEST_FIEDLS_SIZE);
+	    g_strlcat(request_values,"'",INSERT_REQUEST_VALUES_SIZE);
+	    g_strlcat(request_values,element->iface_nfo.indev,INSERT_REQUEST_VALUES_SIZE);
+	    g_strlcat(request_values,"', ",INSERT_REQUEST_VALUES_SIZE);
+    }
+
+    if (element->iface_nfo.outdev) {
+	    g_strlcat(request_fields,"oob_out,",INSERT_REQUEST_FIEDLS_SIZE);
+	    g_strlcat(request_values,"'",INSERT_REQUEST_VALUES_SIZE);
+	    g_strlcat(request_values,element->iface_nfo.outdev,INSERT_REQUEST_VALUES_SIZE);
+	    g_strlcat(request_values,"', ",INSERT_REQUEST_VALUES_SIZE);
     }
 
     if (element->log_prefix) {
