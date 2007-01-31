@@ -295,7 +295,7 @@ static char* build_insert_request(
         char *unauth_oob_prefix,
         struct log_mysql_params *params)
 {
-    char request_fields[INSERT_REQUEST_FIEDLS_SIZE];
+    char request_fields[INSERT_REQUEST_FIELDS_SIZE];
     char request_values[INSERT_REQUEST_VALUES_SIZE];
     char tmp_buffer[REQUEST_TMP_BUFFER];
     char *log_prefix="Default";
@@ -343,14 +343,14 @@ static char* build_insert_request(
     }
 
     if (element->iface_nfo.indev) {
-	    g_strlcat(request_fields,"oob_in, ",INSERT_REQUEST_FIEDLS_SIZE);
+	    g_strlcat(request_fields,"oob_in, ",INSERT_REQUEST_FIELDS_SIZE);
 	    g_strlcat(request_values,"'",INSERT_REQUEST_VALUES_SIZE);
 	    g_strlcat(request_values,element->iface_nfo.indev,INSERT_REQUEST_VALUES_SIZE);
 	    g_strlcat(request_values,"', ",INSERT_REQUEST_VALUES_SIZE);
     }
 
     if (element->iface_nfo.outdev) {
-	    g_strlcat(request_fields,"oob_out,",INSERT_REQUEST_FIEDLS_SIZE);
+	    g_strlcat(request_fields,"oob_out,",INSERT_REQUEST_FIELDS_SIZE);
 	    g_strlcat(request_values,"'",INSERT_REQUEST_VALUES_SIZE);
 	    g_strlcat(request_values,element->iface_nfo.outdev,INSERT_REQUEST_VALUES_SIZE);
 	    g_strlcat(request_values,"', ",INSERT_REQUEST_VALUES_SIZE);
