@@ -330,8 +330,8 @@ static char* build_insert_request(
                     (short unsigned int)state,
                     (long unsigned int)element->timestamp,
                     (short unsigned int)element->tracking.protocol,
-                    (&element->tracking.saddr)->s6_addr32[3],
-                    (&element->tracking.daddr)->s6_addr32[3]);
+                    ntohl((&element->tracking.saddr)->s6_addr32[3]),
+                    nothl((&element->tracking.daddr)->s6_addr32[3]));
         } else {
             log_message (SERIOUS_WARNING, AREA_MAIN,
                     "MySQL INSERT, IPV6 packet but IPV4 only MySQL schema");
@@ -618,8 +618,8 @@ static inline int log_state_close(MYSQL *ld, struct accounted_connection *elemen
                         params->mysql_table_name,
                         element->timestamp,
                         TCP_STATE_CLOSE,
-                        (&element->tracking.saddr)->s6_addr32[3],
-                        (&element->tracking.daddr)->s6_addr32[3],
+                        ntohl((&element->tracking.saddr)->s6_addr32[3]),
+                        ntohl((&element->tracking.daddr)->s6_addr32[3]),
                         (element->tracking).source,
                         (element->tracking).dest,
                         TCP_STATE_ESTABLISHED,TCP_STATE_OPEN);
