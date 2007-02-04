@@ -48,13 +48,28 @@ gchar* get_username_from_tls_session(gnutls_session session)
     }
 }
 
-static void  policy_refuse_user(user_session_t* c_session,int c)
+static void  policy_refuse_user(user_session_t* c_session,int c, policy_t reason)
 {
-            debug_log_message(VERBOSE_DEBUG, AREA_USER, "User %s already connected, closing socket",c_session->user_name);
-            /* get rid of client */
-            close_tls_session(c,c_session->tls);
-            c_session->tls=NULL;
-            clean_session(c_session);
+  switch (reason) {
+    case POLICY_ONE_LOGIN:
+            log_message(INFO, AREA_USER,
+			    "User %s already connected, closing socket",
+			    c_session->user_name);
+	    break;
+    case POLICY_PER_IP_ONE_LOGIN:
+            log_message(INFO, AREA_USER,
+			    "User %s try to connect from already used IP, closing socket",
+			    c_session->user_name);
+	    break;
+    default:
+            log_message(WARNING, AREA_USER,
+			    "User %s has to disconnect for UNKNOWN reason, closing socket",
+			    c_session->user_name);
+  }
+  /* get rid of client */
+  close_tls_session(c,c_session->tls);
+  c_session->tls=NULL;
+  clean_session(c_session);
 }
 
 
@@ -66,6 +81,12 @@ static void tls_sasl_connect_ok(user_session_t* c_session, int c)
     struct nu_srv_message msg;
     /* Success place */
 
+    if (nuauthconf->log_users_without_realm){
+        gchar *username = get_rid_of_domain(c_session->user_name);
+        g_free(c_session->user_name);
+        c_session->user_name=username;
+    }
+
     /* checking policy rule on multiuser usage */
     switch (nuauthconf->connect_policy){
         case POLICY_MULTIPLE_LOGIN:
@@ -75,7 +96,7 @@ static void tls_sasl_connect_ok(user_session_t* c_session, int c)
         case POLICY_ONE_LOGIN:
             /* Allow an user can only be connected once (test username) */
             if (look_for_username(c_session->user_name)){
-                policy_refuse_user(c_session,c);
+                policy_refuse_user(c_session,c,POLICY_ONE_LOGIN);
                 return;
             }
             break;
@@ -83,7 +104,7 @@ static void tls_sasl_connect_ok(user_session_t* c_session, int c)
         case POLICY_PER_IP_ONE_LOGIN:
             /* Allow only an user session per IP (test connection IP) */
             if (get_client_sockets_by_ip(&c_session->addr) ){
-                policy_refuse_user(c_session,c);
+                policy_refuse_user(c_session,c,POLICY_PER_IP_ONE_LOGIN);
                 return;
             }
             break;
@@ -130,11 +151,6 @@ static void tls_sasl_connect_ok(user_session_t* c_session, int c)
         }
     }
 
-    if (nuauthconf->log_users_without_realm){
-        gchar *username = get_rid_of_domain(c_session->user_name);
-        g_free(c_session->user_name);
-        c_session->user_name=username;
-    }
 
     /* send new valid session to user session logging system */
     log_user_session(c_session,SESSION_OPEN);
