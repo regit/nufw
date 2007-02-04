@@ -53,17 +53,17 @@ static void  policy_refuse_user(user_session_t* c_session,int c, policy_t reason
   switch (reason) {
     case POLICY_ONE_LOGIN:
             log_message(INFO, AREA_USER,
-			    "User %s already connected, closing socket",
+			    "Policy: User %s already connected, closing socket",
 			    c_session->user_name);
 	    break;
     case POLICY_PER_IP_ONE_LOGIN:
             log_message(INFO, AREA_USER,
-			    "User %s try to connect from already used IP, closing socket",
+			    "Policy: User %s try to connect from already used IP, closing socket",
 			    c_session->user_name);
 	    break;
     default:
             log_message(WARNING, AREA_USER,
-			    "User %s has to disconnect for UNKNOWN reason, closing socket",
+			    "Policy: User %s has to disconnect for UNKNOWN reason, closing socket",
 			    c_session->user_name);
   }
   /* get rid of client */
