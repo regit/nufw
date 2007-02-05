@@ -385,7 +385,7 @@ static char* build_insert_request(
                     "oob_prefix, user_id, username, client_os, client_app",
                     sizeof(request_fields));
             ok = secure_snprintf(tmp_buffer, sizeof(tmp_buffer),
-                    "'%s %s', '%lu', '%s', '%s', '%s'",
+                    "'%s: %s', '%lu', '%s', '%s', '%s'",
                     log_prefix,auth_oob_prefix,
                     (long unsigned int)element->mark,
                     quoted_username,
