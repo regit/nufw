@@ -128,7 +128,7 @@ static nu_error_t mysql_close_open_user_sessions(struct log_mysql_params* params
     }
 
     ok = secure_snprintf(request, sizeof(request),
-                    "UPDATE %s SET last_time=FROM_UNIXTIME(%lu) where last_time is NULL",
+                    "UPDATE %s SET end_time=FROM_UNIXTIME(%lu) where end_time is NULL",
                     params->mysql_users_table_name,
                     time(NULL));
     if (!ok) {
@@ -785,7 +785,7 @@ G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t
             /* create new user session */
             ok = secure_snprintf(request, sizeof(request),
                     "INSERT INTO %s (user_id, username, ip_saddr, "
-                    "os_sysname, os_release, os_version, socket, first_time) "
+                    "os_sysname, os_release, os_version, socket, start_time) "
                     "VALUES ('%lu', '%s', '%u', '%s', '%s', '%s', '%u', FROM_UNIXTIME(%lu))",
                     params->mysql_users_table_name,
                     c_session->user_id,
@@ -801,7 +801,7 @@ G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t
         case SESSION_CLOSE:
             /* update existing user session */
             ok = secure_snprintf(request, sizeof(request),
-                    "UPDATE %s SET last_time=FROM_UNIXTIME(%lu) "
+                    "UPDATE %s SET end_time=FROM_UNIXTIME(%lu) "
                     "WHERE socket=%u AND ip_saddr=%s",
                     params->mysql_users_table_name,
                     time(NULL),
