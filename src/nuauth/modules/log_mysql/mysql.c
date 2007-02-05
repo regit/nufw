@@ -323,7 +323,7 @@ static char* build_insert_request(
                 src_ascii,
                 dst_ascii);
     } else {
-        if ((is_ipv4(&element->tracking.saddr) ) && 
+        if ((is_ipv4(&element->tracking.saddr) ) &&
                 (is_ipv4(&element->tracking.daddr) )){
             ok = secure_snprintf(request_values, sizeof(request_values),
                     "VALUES ('%hu', '%lu', '%hu', '%lu', '%lu',",
@@ -331,7 +331,7 @@ static char* build_insert_request(
                     (long unsigned int)element->timestamp,
                     (short unsigned int)element->tracking.protocol,
                     ntohl((&element->tracking.saddr)->s6_addr32[3]),
-                    nothl((&element->tracking.daddr)->s6_addr32[3]));
+                    ntohl((&element->tracking.daddr)->s6_addr32[3]));
         } else {
             log_message (SERIOUS_WARNING, AREA_MAIN,
                     "MySQL INSERT, IPV6 packet but IPV4 only MySQL schema");
@@ -609,7 +609,7 @@ static inline int log_state_close(MYSQL *ld, struct accounted_connection *elemen
                     (element->tracking).dest,
                     TCP_STATE_ESTABLISHED,TCP_STATE_OPEN);
         } else {
-            if ((is_ipv4(&element->tracking.saddr) ) && 
+            if ((is_ipv4(&element->tracking.saddr) ) &&
                     (is_ipv4(&element->tracking.daddr) )){
                 ok = secure_snprintf(request, sizeof(request),
                         "UPDATE %s SET end_timestamp=FROM_UNIXTIME(%lu), state=%hu "
