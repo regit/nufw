@@ -551,7 +551,7 @@ G_MODULE_EXPORT gchar* g_module_check_init()
 
     version = prelude_check_version (PRELUDE_VERSION_REQUIRE);
     if (version == NULL) {
-        log_message(CRITICAL, AREA_MAIN,
+        log_message(FATAL, AREA_MAIN,
                 "Fatal error: Prelude module needs prelude version %s (installed version is %s)!",
                 PRELUDE_VERSION_REQUIRE,
                 prelude_check_version(NULL));
@@ -560,7 +560,7 @@ G_MODULE_EXPORT gchar* g_module_check_init()
 
     ret = prelude_init(&argc, argv);
     if ( ret < 0 ) {
-        log_message(CRITICAL, AREA_MAIN,
+        log_message(FATAL, AREA_MAIN,
                 "Fatal error: Fail to init Prelude module: %s!",
                 prelude_strerror(ret));
         exit(EXIT_FAILURE);
@@ -577,7 +577,7 @@ G_MODULE_EXPORT gchar* g_module_check_init()
     global_client_mutex = g_mutex_new();
     ret = prelude_client_new(&global_client, "nufw");
     if ( ! global_client ) {
-        log_message(CRITICAL, AREA_MAIN,
+        log_message(FATAL, AREA_MAIN,
                 "Fatal error: Unable to create a prelude client object: %s!",
                 prelude_strerror(ret));
         exit(EXIT_FAILURE);
@@ -585,7 +585,7 @@ G_MODULE_EXPORT gchar* g_module_check_init()
 
     ret = prelude_client_start(global_client);
     if ( ret < 0 ) {
-        log_message(CRITICAL, AREA_MAIN,
+        log_message(FATAL, AREA_MAIN,
                 "Fatal error: Unable to start prelude client: %s!",
                 prelude_strerror(ret));
         exit(EXIT_FAILURE);
