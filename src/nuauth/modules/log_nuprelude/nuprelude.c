@@ -325,7 +325,7 @@ static idmef_message_t *create_message_packet(
         add_idmef_object(idmef, "alert.source(0).user.user_id(0).type", "current-user");
         add_idmef_object(idmef, "alert.source(0).user.category", "application");  /* os-device */
         add_idmef_object(idmef, "alert.source(0).user.user_id(0).name", conn->username);
-        if (secure_snprintf(buffer, sizeof(buffer), "%lu", conn->user_id)) {
+        if (secure_snprintf(buffer, sizeof(buffer), "%lu", conn->mark)) {
             add_idmef_object(idmef, "alert.source(0).user.user_id(0).number", buffer);
         }
     } else {
@@ -432,7 +432,7 @@ static idmef_message_t *create_message_session(
     return idmef;
 }
 /** \todo Take into account connection_t* to void* change */
-G_MODULE_EXPORT gint user_packet_logs (void* element, tcp_state_t state, gpointer params_ptr)
+G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state, gpointer params_ptr)
 {
     struct log_prelude_params *params = params_ptr;
     idmef_message_t *tpl;
