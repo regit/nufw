@@ -418,7 +418,7 @@ int main(int argc,char * argv[])
     nufw_set_mark = 0;
 
     
-    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
+    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_VERBOSE_DEBUG,
             "[+] Start NuFW");
     
     /*parse options */

@@ -166,8 +166,10 @@ gnutls_session* tls_connect()
     ret = 0;
     do
     {
-        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_MESSAGE,
-            "TLS: gnutls_handshake() ... (last error: %i)", ret);
+	if (ret != 0) {
+        	log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_INFO,
+            		"TLS: gnutls_handshake() ... (last error: %i)", ret);
+	}
         ret = gnutls_handshake( *(tls_session));
     } while (ret < 0 && !gnutls_error_is_fatal(ret));
 

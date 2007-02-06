@@ -176,10 +176,10 @@ int packetsrv_open(void *data)
 {
     struct nfnl_handle *nh;
 
-    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_SERIOUS_MESSAGE,
+    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
             "Open netfilter queue socket");
-    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_SERIOUS_WARNING,
-            "Don't forget to load kernel modules nfnetlink and nfnetlink_queue (using modprobe command)");
+    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
+            "[!] Don't forget to load kernel modules nfnetlink and nfnetlink_queue (using modprobe command)");
 
     /* opening library handle */
     h = nfq_open();
@@ -237,7 +237,7 @@ int packetsrv_open(void *data)
     /* setting queue length */
     if (nfq_set_queue_maxlen(hndl, queue_maxlen) < 0) {
         log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
-                "[!] Can't set queue length");
+                "[!] Can't set queue length, continuing anyway");
     }
 #endif
 
@@ -373,7 +373,7 @@ void* packetsrv(void *void_arg)
         exit(EXIT_FAILURE);
     }
 
-    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
+    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
             "[+] Packet server started");
 
     /* loop until main process ask to stop */
@@ -604,7 +604,7 @@ int auth_request_send(uint8_t type, struct queued_pckt* pckt_datas)
     memcpy(msg_content, pckt_datas->payload, pckt_datas->payload_len);
 
     /* Display message */
-    debug_log_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_VERBOSE_DEBUG,
+    log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
             "Sending request for %lu", pckt_datas->packet_id);
 
     /* cleaning up current session : auth_server has detected a problem */
@@ -625,8 +625,8 @@ int auth_request_send(uint8_t type, struct queued_pckt* pckt_datas)
             pthread_attr_init(&attr);
             pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
-            log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_INFO,
-                    "Connection to nuauth restored");
+            log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
+                    "[+] TLS connection to nuauth restored");
             tls.auth_server_running=1;
 
             /* create joinable thread for auth server */
@@ -635,6 +635,8 @@ int auth_request_send(uint8_t type, struct queued_pckt* pckt_datas)
                 exit(EXIT_FAILURE);
             }
        } else {
+            log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
+                    "[!] TLS connection to nuauth can NOT be restored");
             return 0;
         }
     }

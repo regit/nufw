@@ -307,7 +307,7 @@ void* authsrv(void* data)
     int select_result;
     struct timeval tv;
 
-    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
+    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_VERBOSE_DEBUG,
             "[+] Start auth server thread");
 
     while (pthread_mutex_trylock(&tls.auth_server_mutex) == 0)
@@ -360,7 +360,7 @@ void* authsrv(void* data)
 	dgram=cdgram;
     }
     
-    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
+    log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_VERBOSE_DEBUG,
             "[+] Leave auth server thread");
     
     pthread_mutex_lock(&tls.mutex);

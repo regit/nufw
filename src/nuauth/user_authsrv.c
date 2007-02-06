@@ -71,12 +71,10 @@ void user_check_and_decide (gpointer userdata, gpointer data)
       /* Sanity check : verify source IP equality */
       if  ( memcmp(& ((struct tls_buffer_read *)userdata)->ip_addr,
               &conn_elt->tracking.saddr, sizeof(conn_elt->tracking.saddr)) == 0 ){
-#ifdef DEBUG_ENABLE
-          if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG,DEBUG_AREA_PACKET)){
+          if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)){
               g_message("User : %s",conn_elt->username);
               print_connection(conn_elt,NULL);
           }
-#endif
           g_async_queue_push (nuauthdatas->connections_queue,conn_elt);
       } else {
           if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_USER)){

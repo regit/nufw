@@ -217,12 +217,10 @@ nu_error_t authpckt_new_connection(unsigned char *dgram, unsigned int dgram_size
         return ret;
     }
 
-#ifdef DEBUG_ENABLE
     if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)){
         g_message("Packet: ");
         print_connection(connection,NULL);
     }
-#endif
     *conn = connection;
     return NU_EXIT_OK;
 }

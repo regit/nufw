@@ -97,6 +97,11 @@ gint print_connection(gpointer data,gpointer userdata)
                     conn->tracking.dest);
         }
         g_message("IN=%s OUT=%s",conn->iface_nfo.indev,conn->iface_nfo.outdev);
+
+	if (conn->packet_id) {
+	    g_message("packet id: %d",GPOINTER_TO_UINT(conn->packet_id->data));
+	}
+
         if (conn->os_sysname && conn->os_release && conn->os_version ){
             g_message("OS: %s %s %s",conn->os_sysname ,conn->os_release , conn->os_version );
         }
