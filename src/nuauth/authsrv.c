@@ -364,7 +364,7 @@ void print_usage()
  */
 void parse_options(int argc, char **argv, command_line_params_t *params)
 {
-    char* version=VERSION;
+    char* version=VERSION " ($Revision$)";
     char * options_list = "DhVvl:L:C:p:t:T:";
     int option;
     int local_debug_level=0;
@@ -583,7 +583,7 @@ void configure_app(int argc, char **argv)
     if (params.daemonize == 1) {
         daemonize();
     } else {
-        g_message("[+] Starting nuauth " VERSION);
+        g_message("[+] Starting nuauth " VERSION " ($Revision$)");
     }
 }
 
