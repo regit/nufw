@@ -56,6 +56,8 @@
    You lose!  */
 struct group *getgrent ();
 
+gint system_is_case_insensitive;
+
 #include <string.h>
 
 GStaticMutex group_mutex;
@@ -96,8 +98,13 @@ getugroups (char *username, gid_t gid)
       for (cp = grp->gr_mem; *cp; ++cp) {
           GSList * item;
 
-          if ( strcmp(username, *cp))
-              continue;
+          if (system_is_case_insensitive) {
+              if ( g_strncasecmp (username, *cp, strlen(username)))
+                  continue;
+          } else {
+              if ( strcmp(username, *cp))
+                  continue;
+          }
 
           /* See if this group number is already on the list.  */
           for (item = grouplist; item ; item=item->next){
