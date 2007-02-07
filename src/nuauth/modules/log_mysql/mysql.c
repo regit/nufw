@@ -2,6 +2,8 @@
  ** Copyright(C) 2003-2006 Eric Leblond <eric@regit.org>
  **		     Vincent Deffontaines <vincent@gryzor.com>
  **
+ ** $Id$
+ **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
  ** the Free Software Foundation, version 2 of the License.
@@ -171,6 +173,7 @@ init_module_from_conf(module_t *module)
     /* char *ldap_base_dn=LDAP_BASE; */
     struct log_mysql_params* params=g_new0(struct log_mysql_params,1);
 
+    log_message(VERBOSE_DEBUG, AREA_MAIN,"Log_mysql module ($Revision$)");
     /* init global variables */
     params->mysql_ssl_cipher=MYSQL_SSL_CIPHER;
 

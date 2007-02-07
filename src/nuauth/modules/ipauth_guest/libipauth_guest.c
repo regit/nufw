@@ -1,6 +1,8 @@
 /*
  ** Copyright(C) 2006 INL
- **	written by Eric Leblond <regit@inl.fr>
+ ** written by Eric Leblond <regit@inl.fr>
+ **
+ ** $Id$
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -54,6 +56,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
   char *configfile=DEFAULT_CONF_FILE;
   struct ipauth_guest_params* params = g_new0(struct ipauth_guest_params,1);
 
+  log_message(VERBOSE_DEBUG, AREA_MAIN,"Ipauth_guest module ($Revision$)");
   /* parse conf file */
   if (module->configfile){
       parse_conffile(module->configfile,sizeof(ipauth_guest_vars)/sizeof(confparams),ipauth_guest_vars);

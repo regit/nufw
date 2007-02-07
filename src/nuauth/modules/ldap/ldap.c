@@ -1,7 +1,10 @@
 
 /*
- ** Copyright(C) 2003-2006 Eric Leblond <eric@regit.org>
- **		     Vincent Deffontaines <vincent@gryzor.com>
+ ** Copyright(C) 2003-2006 INL
+ **     written by Eric Leblond <eric@regit.org>
+ **                Vincent Deffontaines <vincent@gryzor.com>
+ **
+ ** $Id$
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -197,6 +200,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
   };
 
 
+  log_message(VERBOSE_DEBUG, AREA_MAIN,"Ldap module ($Revision$)");
   if (! module->configfile){
       configfile = DEFAULT_CONF_FILE;
   } else {

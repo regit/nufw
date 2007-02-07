@@ -2,6 +2,8 @@
 ** Copyright(C) 2006 INL
 **          written by Eric Leblond <regit@inl.fr>
 **
+** $Id$
+**
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
 ** the Free Software Foundation; version 2 of the License.
@@ -66,7 +68,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
     gpointer vpointer;
     struct x509_std_params* params=g_new0(struct x509_std_params,1);
 
-    log_message(VERBOSE_DEBUG,AREA_MAIN,"Loading x509 std configuration");
+    log_message(VERBOSE_DEBUG,AREA_MAIN,"X509_std module ($Revision$)");
 
     /*  parse conf file */
     if (module->configfile){

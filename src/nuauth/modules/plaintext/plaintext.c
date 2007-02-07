@@ -2,6 +2,8 @@
  **  "plaintext" module
  ** Copyright(C) 2004-2005 Mikael Berthe <mikael+nufw@lists.lilotux.net>
  **
+ ** $Id$
+ **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
  ** the Free Software Foundation, version 2 of the License.
@@ -814,6 +816,8 @@ G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
       { "plaintext_aclfile",  G_TOKEN_STRING, 0, g_strdup(TEXT_ACLFILE) }
   };
 
+
+  log_message(VERBOSE_DEBUG, AREA_MAIN,"Plaintext module ($Revision$)");
   /*  parse conf file */
   if (module->configfile){
       parse_conffile(module->configfile,

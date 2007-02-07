@@ -1,8 +1,8 @@
-/* $Id$ */
-
 /*
 ** Copyright(C) 2006, INL
 **	Written by Victor Stinner <vstinner@inl.fr>
+**
+** $Id$
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -179,6 +179,8 @@ G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
     unsigned int nbits;
     char *group_filename;
 
+
+    log_message(VERBOSE_DEBUG, AREA_MAIN,"Mark_group module ($Revision$)");
     /* parse config file */
     if (module->configfile){
         configfile = module->configfile;

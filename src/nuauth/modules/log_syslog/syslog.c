@@ -2,6 +2,8 @@
  ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
  **		     Vincent Deffontaines <vincent@gryzor.com>
  **
+ ** $Id$
+ **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
  ** the Free Software Foundation, version 2 of the License.
@@ -177,6 +179,7 @@ G_MODULE_EXPORT gchar* g_module_unload(void)
 
 G_MODULE_EXPORT gboolean init_module_from_conf(module_t* module)
 {
+    log_message(VERBOSE_DEBUG, AREA_MAIN,"Log_syslog module ($Revision$)");
         return TRUE;
 }
 

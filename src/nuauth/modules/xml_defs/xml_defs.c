@@ -2,6 +2,8 @@
 ** Copyright(C) 2006 INL
 **          written by Eric Leblond <regit@inl.fr>
 **
+** $Id$
+**
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
 ** the Free Software Foundation; version 2 of the License.
@@ -63,6 +65,8 @@ G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
   gpointer vpointer;
   struct xml_defs_params* params=g_new0(struct xml_defs_params,1);
 
+
+  log_message(VERBOSE_DEBUG, AREA_MAIN,"Xml_defs module ($Revision$)");
   /*  init global variables */
   params->xml_defs_periodfile = XML_DEFS_PERIODFILE;
 

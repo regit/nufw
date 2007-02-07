@@ -2,6 +2,8 @@
  ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
  **		     Vincent Deffontaines <vincent@gryzor.com>
  **
+ ** $Id$
+ **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
  ** the Free Software Foundation, version 2 of the License.
@@ -77,6 +79,7 @@ G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
 
 G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
 {
+  log_message(VERBOSE_DEBUG, AREA_MAIN,"Log_script module ($Revision$)");
   return TRUE;
 }
 

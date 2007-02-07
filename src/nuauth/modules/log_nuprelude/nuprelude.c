@@ -2,6 +2,8 @@
  ** Copyright(C) 2006 INL
  **	written by Victor Stinner <victor.stinner AT haypocalc.com>
  **
+ ** $Id$
+ **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
  ** the Free Software Foundation, version 2 of the License.
@@ -85,6 +87,10 @@ void destroy_idmef (idmef_message_t *idmef)
 G_MODULE_EXPORT gboolean init_module_from_conf(module_t *module)
 {
     struct log_prelude_params* params=g_new0(struct log_prelude_params, 1);
+
+
+    log_message(VERBOSE_DEBUG, AREA_MAIN,"Log_nuprelude module ($Revision$)");
+
     params->packet_tpl = g_private_new((GDestroyNotify)destroy_idmef);
     params->session_tpl = g_private_new((GDestroyNotify)destroy_idmef);
     module->params=(gpointer)params;
