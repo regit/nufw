@@ -603,7 +603,7 @@ int main(int argc,char * argv[])
     /* create packet server thread */
     create_thread();
     log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
-            "[+] NuFW started");
+            "[+] NuFW " VERSION " started");
 
     /* control stuff */
     pckt_tx=pckt_rx=0;

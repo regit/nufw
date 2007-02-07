@@ -580,7 +580,7 @@ void configure_app(int argc, char **argv)
     if (params.daemonize == 1) {
         daemonize();
     } else {
-        g_message("[+] Starting nuauth");
+        g_message("[+] Starting nuauth " VERSION);
     }
 }
 
