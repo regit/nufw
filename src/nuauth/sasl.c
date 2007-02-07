@@ -267,14 +267,15 @@ nu_error_t get_proto_info(user_session_t * c_session)
 			{
 
 				if (FD_ISSET(c_session->socket,&wk_set) ){
-					int buffersize=128;
-					char buffer[buffersize];
+					char buffer[20];
 					debug_log_message(VERBOSE_DEBUG, AREA_AUTH, "Getting protocol information");
-					ret = gnutls_record_recv(*(c_session->tls),buffer,buffersize);
+					ret = gnutls_record_recv(*(c_session->tls),buffer,sizeof(buffer)-1);
 					if (ret<0){
 						return NU_EXIT_ERROR;
 					}
-					if (strncmp(buffer,PROTO_STRING,strlen(PROTO_STRING)) == 0){
+					if ((strlen(PROTO_STRING)+2) <= ret
+                                        && strncmp(buffer,PROTO_STRING,strlen(PROTO_STRING)) == 0){
+                                                buffer[ret] = 0;
 						c_session->client_version = atoi((char*)buffer + strlen(PROTO_STRING));
 
 						debug_log_message(VERBOSE_DEBUG, AREA_AUTH, "Protocol information: %d",c_session->client_version);
