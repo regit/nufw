@@ -126,6 +126,12 @@ void real_log_user_packet (gpointer userdata, gpointer data)
   g_free(userdata);
 }
 
+static void print_group(gpointer group, gpointer userdata)
+{
+	    log_message(DEBUG, AREA_USER,"      Group: %d",
+                GPOINTER_TO_INT(group));
+}
+
 /**
  * \brief High level function used to log an user session
  *
@@ -139,10 +145,13 @@ void log_user_session(user_session_t* usession, session_state_t state)
 {
     struct session_event* sessevent;
 
-    if (state == SESSION_OPEN)
+    if (state == SESSION_OPEN) {
         log_message(MESSAGE, AREA_USER,
                 "[+] User \"%s\" connected.", usession->user_name);
-    else
+        if (usession->groups) {
+            g_slist_foreach(usession->groups,print_group,NULL);
+        }
+    } else
         log_message(MESSAGE, AREA_USER,
                 "[+] User \"%s\" disconnected.", usession->user_name);
 
