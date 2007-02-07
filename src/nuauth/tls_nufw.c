@@ -85,7 +85,7 @@ static int treat_nufw_request (nufw_session_t *c_session)
 		ret = authpckt_decode(&dgram , (unsigned int *)&dgram_size, &current_conn);
 		switch (ret){
 			case NU_EXIT_ERROR:
-				g_atomic_int_dec_and_test(&(c_session->usage));
+				(void)g_atomic_int_dec_and_test(&(c_session->usage));
 				return NU_EXIT_ERROR;
 			case NU_EXIT_OK:
 				if (current_conn != NULL){
@@ -111,7 +111,7 @@ static int treat_nufw_request (nufw_session_t *c_session)
 				}
 				break;
 			case NU_EXIT_NO_RETURN:
-				g_atomic_int_dec_and_test(&(c_session->usage));
+				(void)g_atomic_int_dec_and_test(&(c_session->usage));
 		}
 #if 0
 		g_message("dgram_size at %d: %d",__LINE__,dgram_size);

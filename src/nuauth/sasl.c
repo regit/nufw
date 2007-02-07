@@ -273,7 +273,7 @@ nu_error_t get_proto_info(user_session_t * c_session)
 					if (ret<0){
 						return NU_EXIT_ERROR;
 					}
-					if ((strlen(PROTO_STRING)+2) <= ret
+					if (((int)strlen(PROTO_STRING)+2) <= ret
                                         && strncmp(buffer,PROTO_STRING,strlen(PROTO_STRING)) == 0){
                                                 buffer[ret] = 0;
 						c_session->client_version = atoi((char*)buffer + strlen(PROTO_STRING));

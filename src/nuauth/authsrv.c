@@ -560,10 +560,7 @@ void configure_app(int argc, char **argv)
 
     parse_options(argc, argv, &params);
 
-    build_prenuauthconf(nuauthconf,
-            params.nuauth_client_listen_addr,
-            params.nuauth_nufw_listen_addr,
-            NULL, NULL, NULL);
+    build_prenuauthconf(nuauthconf, NULL);
 
     if (nuauthconf->uses_utf8){
         setlocale(LC_ALL,"");
