@@ -320,11 +320,11 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 				nuv3_nuauth_decision_response_t* response = NULL;
 				uint16_t uid16;
 				/* check if user id fit in 16 bits */
-				if (0xFFFF < element->user_id) {
+				if (0xFFFF < element->mark) {
 					log_message(WARNING, AREA_MAIN,
-							"User identifier don't fit in 16 bits, not to truncate the value.");
+							"Mark don't fit in 16 bits, not to truncate the value.");
 				}
-				uid16 = (element->user_id & 0xFFFF);
+				uid16 = (element->mark & 0xFFFF);
 				if (element->decision == DECISION_REJECT){
 					payload_size = IPHDR_REJECT_LENGTH + PAYLOAD_SAMPLE;
 				}
