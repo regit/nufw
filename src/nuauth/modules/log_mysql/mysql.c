@@ -390,7 +390,7 @@ static char* build_insert_request(
             ok = secure_snprintf(tmp_buffer, sizeof(tmp_buffer),
                     "'%s: %s', '%lu', '%s', '%s', '%s'",
                     log_prefix,auth_oob_prefix,
-                    (long unsigned int)element->mark,
+                    (long unsigned int)element->user_id,
                     quoted_username,
                     quoted_osname,
                     quoted_appname);

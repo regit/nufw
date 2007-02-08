@@ -331,7 +331,7 @@ static idmef_message_t *create_message_packet(
         add_idmef_object(idmef, "alert.source(0).user.user_id(0).type", "current-user");
         add_idmef_object(idmef, "alert.source(0).user.category", "application");  /* os-device */
         add_idmef_object(idmef, "alert.source(0).user.user_id(0).name", conn->username);
-        if (secure_snprintf(buffer, sizeof(buffer), "%lu", conn->mark)) {
+        if (secure_snprintf(buffer, sizeof(buffer), "%lu", conn->user_id)) {
             add_idmef_object(idmef, "alert.source(0).user.user_id(0).number", buffer);
         }
     } else {

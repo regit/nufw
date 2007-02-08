@@ -87,8 +87,9 @@ typedef struct
 
   iface_nfo_t iface_nfo; /*!< Information about network interfaces */
 
-  uint32_t mark;       /*!< Number used for marking set to user numeric identity at start */
-  char *username;         /*!< User name */
+  uint32_t user_id;      /*!< User identifier (32-bit) */
+  uint32_t mark;         /*!< Number used for marking set to user numeric identity at start */
+  char *username;        /*!< User name */
 
  /**
   * ACL related groups.

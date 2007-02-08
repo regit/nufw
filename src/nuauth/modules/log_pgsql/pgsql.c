@@ -309,7 +309,7 @@ static int pgsql_insert(PGconn *ld, connection_t *element, char *oob_prefix, tcp
                 sizeof(request_fields));
         ok = secure_snprintf(tmp_buffer, sizeof(tmp_buffer),
                 ", '%u', '%s', '%s', '%s'",
-                element->mark,
+                element->user_id,
                 quoted_username,
                 quoted_osname,
                 quoted_appname

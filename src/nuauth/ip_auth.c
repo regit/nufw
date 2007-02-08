@@ -54,7 +54,7 @@ void external_ip_auth(gpointer userdata, gpointer data)
                 connection_t* connection=g_new0(connection_t,1);
                 connection->state=AUTH_STATE_USERPCKT;
                 connection->user_groups = groups;
-                connection->mark=uid;
+                connection->user_id = uid;
                 connection->username=username;
                 connection->os_sysname=NULL;
                 connection->app_name=NULL;

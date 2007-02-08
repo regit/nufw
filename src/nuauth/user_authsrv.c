@@ -395,7 +395,7 @@ GSList* user_request(struct tls_buffer_read *datas)
         if (connection->username == NULL){
             connection->username=g_strdup(datas->user_name);
         }
-        connection->mark=datas->user_id;
+        connection->user_id=datas->user_id;
         connection->user_groups = g_slist_copy(datas->groups);
         connection->os_sysname=g_strdup(datas->os_sysname);
         connection->os_release=g_strdup(datas->os_release);

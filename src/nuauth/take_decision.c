@@ -57,7 +57,7 @@ typedef enum {
  * When a match is found, there is two cases:
  *  - if nuauth_params::prio_to_nok is set to one, we stop if the decision is to
  *  block the packet.
- *  - if nuauth_params::prio_to_nok is 0 then we continue till we fing a acl with 
+ *  - if nuauth_params::prio_to_nok is 0 then we continue till we fing a acl with
  *  ACCEPT decision.
  *
  * \param element A pointer to a ::connection_t
@@ -320,11 +320,11 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 				nuv3_nuauth_decision_response_t* response = NULL;
 				uint16_t uid16;
 				/* check if user id fit in 16 bits */
-				if (0xFFFF < element->mark) {
+				if (0xFFFF < element->user_id) {
 					log_message(WARNING, AREA_MAIN,
 							"User identifier don't fit in 16 bits, not to truncate the value.");
 				}
-				uid16 = (0xFFFF && element->mark);
+				uid16 = (element->user_id & 0xFFFF);
 				if (element->decision == DECISION_REJECT){
 					payload_size = IPHDR_REJECT_LENGTH + PAYLOAD_SAMPLE;
 				}
