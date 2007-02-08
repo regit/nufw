@@ -318,13 +318,13 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 		case PROTO_VERSION_V20:
 			{
 				nuv3_nuauth_decision_response_t* response = NULL;
-				uint16_t uid16;
+				uint16_t mark16;
 				/* check if user id fit in 16 bits */
 				if (0xFFFF < element->mark) {
 					log_message(WARNING, AREA_MAIN,
 							"Mark don't fit in 16 bits, not to truncate the value.");
 				}
-				uid16 = (element->mark & 0xFFFF);
+				mark16 = (element->mark & 0xFFFF);
 				if (element->decision == DECISION_REJECT){
 					payload_size = IPHDR_REJECT_LENGTH + PAYLOAD_SAMPLE;
 				}
@@ -333,7 +333,7 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 				response = g_alloca(total_size);
 				response->protocol_version = PROTO_VERSION_V20;
 				response->msg_type = AUTH_ANSWER;
-				response->user_id = htons(uid16);
+				response->user_id = htons(mark16);
 				response->decision = element->decision;
 				response->priority = 1;
 				response->padding = 0;
