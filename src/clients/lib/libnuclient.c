@@ -762,6 +762,7 @@ int init_sasl(NuAuth* session, nuclient_error *err)
         /*        SET_ERROR(err, SASL_ERROR, ret); */
         return 0;
     }
+    sasl_dispose(&conn);
 
     return 1;
 }
