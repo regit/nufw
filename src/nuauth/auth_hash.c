@@ -127,7 +127,6 @@ inline void search_and_fill_complete_of_authreq(connection_t *new, connection_t 
             packet->user_groups = new->user_groups;
             new->user_groups = NULL;
             packet->user_id = new->user_id;
-            packet->mark = new->mark;
             packet->username = new->username;
             /* application */
             packet->app_name = new->app_name;
@@ -178,6 +177,7 @@ inline void search_and_fill_complete_of_userpckt(connection_t *new, connection_t
 
             g_thread_pool_push (nuauthdatas->acl_checkers, new, NULL);
             packet->packet_id = new->packet_id;
+            packet->mark = new->mark;
             packet->socket = new->socket;
             packet->tls = new->tls;
             return; /* don't free connection */
