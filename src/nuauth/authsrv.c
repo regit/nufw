@@ -505,16 +505,19 @@ void configure_app(int argc, char **argv)
 {
     command_line_params_t params;
     int err;
-#ifndef DEBUG_ENABLE
     struct rlimit core_limit;
-
     /* Avoid creation of core file which may contains username and password */
     if (getrlimit(RLIMIT_CORE, &core_limit) == 0)
     {
+#ifdef DEBUG_ENABLE
+        core_limit.rlim_cur = -1;
+#else
         core_limit.rlim_cur = 0;
+#endif
         setrlimit(RLIMIT_CORE, &core_limit);
     }
 
+#ifndef DEBUG_ENABLE
     /* Move to root directory to not block current working directory */
     (void)chdir("/");
 #endif
