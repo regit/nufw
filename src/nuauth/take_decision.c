@@ -333,7 +333,7 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 				response = g_alloca(total_size);
 				response->protocol_version = PROTO_VERSION_V20;
 				response->msg_type = AUTH_ANSWER;
-				response->user_id = htons(mark16);
+				response->mark = htons(mark16);
 				response->decision = element->decision;
 				response->priority = 1;
 				response->padding = 0;
