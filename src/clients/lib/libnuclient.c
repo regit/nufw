@@ -583,7 +583,8 @@ int send_os(NuAuth * session, nuclient_error *err)
     }
 
     /* wait for message of server about mode */
-    if (gnutls_record_recv(session->tls,buf,osfield_length)<=0){
+    ret = gnutls_record_recv(session->tls,buf,osfield_length);
+    if (ret<=0){
         errno=EACCES;
         SET_ERROR(err, GNUTLS_ERROR, ret);
 #ifndef LINUX
@@ -722,7 +723,12 @@ int init_sasl(NuAuth* session, nuclient_error *err)
     				strlen(PROTO_STRING " " PROTO_VERSION));
 				*/
 
-    gnutls_record_send(session->tls,"PROTO 4",strlen("PROTO 4"));
+    ret = gnutls_record_send(session->tls,"PROTO 4",strlen("PROTO 4"));
+    if (ret < 0)
+    {
+        SET_ERROR(err, GNUTLS_ERROR, ret);
+        return 0;
+    }
 
     /* set external properties here
        sasl_setprop(conn, SASL_SSF_EXTERNAL, &extprops); */
@@ -1272,7 +1278,7 @@ char* nu_get_home_dir()
     uid_t uid;
     struct passwd *pwd;
     char* dir = NULL;
-    
+
     uid = getuid();
     if (!(pwd = getpwuid(uid))) {
         printf("Unable to get password file record\n");
