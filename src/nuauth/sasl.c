@@ -312,7 +312,6 @@ static int mysasl_negotiate(user_session_t * c_session , sasl_conn_t *conn)
 	int tls_len=0;
 	unsigned sasl_len=0;
 	int count;
-	int ret=0;
 	gnutls_session session=*(c_session->tls);
 	gboolean external_auth=FALSE;
 	ssize_t record_send;
@@ -321,7 +320,7 @@ static int mysasl_negotiate(user_session_t * c_session , sasl_conn_t *conn)
 	result = sasl_listmech(conn,NULL, NULL, ",", NULL, &data,&sasl_len, &count);
 	if (result != SASL_OK) {
 		log_message(WARNING, AREA_AUTH, "generating mechanism list");
-		return SASL_BADPARAM;
+		return result;
 	}
 	debug_log_message(VERBOSE_DEBUG, AREA_AUTH, "%d mechanisms : %s (length: %d)", count,data,sasl_len);
 	/* send capability list to client */
@@ -382,16 +381,13 @@ static int mysasl_negotiate(user_session_t * c_session , sasl_conn_t *conn)
             len = samp_recv(session, buf, sizeof(buf));
             data = NULL;
             result = sasl_server_step(conn, buf, len, &data, &len);
-            if (result != SASL_OK && result != SASL_CONTINUE){
-                log_message(INFO,AREA_AUTH,"SASL error: %s", sasl_errstring(result,NULL,NULL));
-            }
         }
 
         if (result != SASL_OK) {
             debug_log_message(VERBOSE_DEBUG, AREA_AUTH, "incorrect authentication");
-            return SASL_BADAUTH;
+            return result;
         } else {
-		debug_log_message(VERBOSE_DEBUG, AREA_AUTH, "correct authentication");
+            debug_log_message(VERBOSE_DEBUG, AREA_AUTH, "correct authentication");
 	}
 
 	if (c_session->user_name)
@@ -399,10 +395,10 @@ static int mysasl_negotiate(user_session_t * c_session , sasl_conn_t *conn)
 
 	if (external_auth == FALSE){
 		char * tempname=NULL;
-		ret = sasl_getprop(conn, SASL_USERNAME, (const void **)	&(tempname));
-		if (ret != SASL_OK){
+		result = sasl_getprop(conn, SASL_USERNAME, (const void **)	&(tempname));
+		if (result != SASL_OK){
 			g_warning("get user failed");
-			return SASL_FAIL;
+			return result;
 		}else{
 			c_session->user_name=g_strdup(tempname);
 		}
@@ -806,6 +802,15 @@ int sasl_user_check(user_session_t* c_session)
 	switch (c_session->client_version){
 		case PROTO_VERSION_V22:
 			ret = mysasl_negotiate(c_session, conn);
+                        if (ret != SASL_OK)
+                        {
+                            if (ret == SASL_BADAUTH || ret == SASL_NOUSER) {
+                                /* wrong login/password */
+                                printf("ERREUR LOGIN OU PASS\n");
+                            } else {
+                                /* process interrupted */
+                            }
+                        }
 			break;
 		case PROTO_VERSION_V20:
 			ret = mysasl_negotiate_v3(c_session, conn);
