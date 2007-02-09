@@ -73,6 +73,23 @@ void cleanup_func_remove(cleanup_func_t func)
 }
 
 /**
+ * Wait the end of thread using g_thread_join(). Avoid deadlock: if the
+ * active thread is the thread to join, we just skip it.
+ */
+void wait_thread_end(const char* name, struct nuauth_thread_t *thread)
+{
+    GThread *self;
+    log_message(DEBUG, AREA_MAIN, "Wait end of thread '%s'", name);
+    self = g_thread_self();
+    if (self == thread->thread)
+    {
+        log_message(INFO, AREA_MAIN, "Information: Avoid deadlock: don't wait end of active thread!");
+        return;
+    }
+    g_thread_join (thread->thread);
+}
+
+/**
  * Ask all threads to stop (by locking their mutex), and then wait
  * until they really stop (if wait is TRUE) using g_thread_join()
  * and g_thread_pool_free().
@@ -104,27 +121,27 @@ void stop_threads(gboolean wait)
     g_mutex_lock (nuauthdatas->tls_auth_server.mutex);
     g_mutex_lock (nuauthdatas->tls_nufw_server.mutex);
 
-    if (wait) {
-        log_message(DEBUG, AREA_MAIN, "Wait thread 'tls auth server'");
-        g_thread_join (nuauthdatas->tls_auth_server.thread);
+    /* Close nufw and client connections */
+    log_message(INFO, AREA_MAIN, "Close nufw connections");
+    close_nufw_servers();
 
-        log_message(DEBUG, AREA_MAIN, "Wait thread 'tls nufw server'");
-        g_thread_join (nuauthdatas->tls_nufw_server.thread);
+    log_message(INFO, AREA_MAIN, "Close client connections");
+    close_clients();
+
+    if (wait) {
+        wait_thread_end("tls auth server", &nuauthdatas->tls_auth_server);
+        wait_thread_end("tls nufw server", &nuauthdatas->tls_nufw_server);
     }
 
     g_mutex_lock (nuauthdatas->limited_connections_handler.mutex);
     g_mutex_lock (nuauthdatas->search_and_fill_worker.mutex);
     if (wait) {
-        log_message(DEBUG, AREA_MAIN, "Wait thread 'limited connections'");
-        g_thread_join (nuauthdatas->limited_connections_handler.thread);
-
-        log_message(DEBUG, AREA_MAIN, "Wait thread 'search&fill'");
-        g_thread_join (nuauthdatas->search_and_fill_worker.thread);
+        wait_thread_end("limited connections", &nuauthdatas->limited_connections_handler);
+        wait_thread_end("search&fill", &nuauthdatas->search_and_fill_worker);
     }
 
     if (nuauthconf->push && nuauthconf->hello_authentication && wait) {
-        log_message(DEBUG, AREA_MAIN, "Wait thread 'localid'");
-        g_thread_join (nuauthdatas->localid_auth_thread.thread);
+        wait_thread_end("localid", &nuauthdatas->localid_auth_thread);
     }
 
     /* end logging threads */
@@ -199,15 +216,9 @@ void clear_push_queue()
  */
 void nuauth_deinit(gboolean soft)
 {
-    stop_threads(soft);
-
-    /* free nufw server hash */
     log_message(CRITICAL, AREA_MAIN, "[+] NuAuth deinit");
-    close_nufw_servers();
 
-    /* free client hash */
-    log_message(INFO, AREA_MAIN, "Close client connections");
-    close_clients();
+    stop_threads(soft);
 
     log_message(INFO, AREA_MAIN, "Unload modules");
     unload_modules();
