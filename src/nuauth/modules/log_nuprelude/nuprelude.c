@@ -210,6 +210,24 @@ static idmef_message_t *create_packet_template()
     return idmef;
 }
 
+static idmef_message_t *create_autherr_template()
+{
+    idmef_message_t *idmef = create_alert_template();
+    char buffer[50];
+
+    add_idmef_object(idmef, "alert.source(0).process.name", "nufw client");
+    add_idmef_object(idmef, "alert.source(0).service.iana_protocol_number", "6");
+    add_idmef_object(idmef, "alert.target(0).node.address(0).address", "::1");
+    add_idmef_object(idmef, "alert.target(0).service.iana_protocol_number", "6");
+    add_idmef_object(idmef, "alert.source(0).user.category", "application");
+
+    add_idmef_object(idmef, "alert.target(0).process.name", "nuauth");
+    if (secure_snprintf(buffer, sizeof(buffer), "%lu", (unsigned long)getpid())) {
+        add_idmef_object(idmef, "alert.target(0).process.pid", buffer);
+    }
+    return idmef;
+}
+
 static idmef_message_t *create_session_template()
 {
     char buffer[50];
@@ -437,6 +455,33 @@ static idmef_message_t *create_message_session(
     add_idmef_object(idmef, "alert.additional_data(2).data", session->version);
     return idmef;
 }
+
+static idmef_message_t *create_message_autherr(
+        idmef_message_t *tpl,
+        user_session_t *session,
+        const char *text,
+        const char *severity)
+{
+    idmef_message_t *idmef;
+    char ip_ascii[INET6_ADDRSTRLEN];
+
+    /* duplicate message */
+    idmef = idmef_message_ref(tpl);
+
+    add_idmef_object(idmef, "alert.assessment.impact.severity", severity);
+
+    add_idmef_object(idmef, "alert.classification.text", "Authentification error");
+    add_idmef_object(idmef, "alert.assessment.impact.description", text);
+
+    /* source address/service */
+    if (inet_ntop(AF_INET6, &session->addr, ip_ascii, sizeof(ip_ascii)) != NULL)
+    {
+        add_idmef_object(idmef, "alert.source(0).node.address(0).address", ip_ascii);
+    }
+
+    return idmef;
+}
+
 /** \todo Take into account connection_t* to void* change */
 G_MODULE_EXPORT gint user_packet_logs (connection_t* element, tcp_state_t state, gpointer params_ptr)
 {
@@ -611,6 +656,37 @@ G_MODULE_EXPORT gchar* g_module_check_init()
 #endif
 
     return NULL;
+}
+
+G_MODULE_EXPORT void auth_error_log (user_session_t *session, nuauth_auth_error_t error, const char *text, gpointer params_ptr)
+{
+    struct log_prelude_params *params = params_ptr;
+    idmef_message_t *tpl;
+    idmef_message_t *message;
+    const char *severity;
+
+    /* get message template (or create it if needed) */
+    tpl = g_private_get(params->autherr_tpl);
+    if (tpl == NULL) {
+        tpl = create_autherr_template();
+        g_private_set(params->autherr_tpl, tpl);
+    }
+
+    /* feed message fields */
+    if (error == AUTH_ERROR_CREDENTIALS)
+        severity = "high";
+    else
+        severity = "medium";
+    message = create_message_autherr(tpl, session, text, severity);
+    if (message == NULL) {
+        return;
+    }
+
+    /* send message */
+    g_mutex_lock(global_client_mutex);
+    prelude_client_send_idmef(global_client, message);
+    g_mutex_unlock(global_client_mutex);
+    idmef_message_destroy(message);
 }
 
 /** @} */
