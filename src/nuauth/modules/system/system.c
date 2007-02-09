@@ -47,10 +47,8 @@ typedef struct _auth_pam_userinfo {
 	const char* pw;
 } auth_pam_userinfo;
 
-gint system_convert_username_to_uppercase;
-gint system_convert_username_to_lowercase;
-gint system_is_case_insensitive;
 gint system_pam_module_not_threadsafe;
+gint system_glibc_cant_guess_maxgroups;
 
 /*
  * Returns version of nuauth API
@@ -65,15 +63,10 @@ G_MODULE_EXPORT gchar* g_module_check_init(GModule *module)
 {
   gpointer vpointer;
 confparams system_nuauth_vars[] = {
-  { "system_convert_username_to_uppercase", G_TOKEN_INT, 0, 0 },
-  { "system_convert_username_to_lowercase", G_TOKEN_INT, 0, 0 },
-  { "system_is_case_insensitive", G_TOKEN_INT, 0, 0 },
+  { "system_glibc_cant_guess_maxgroups", G_TOKEN_INT, 0, 0 },
   { "system_pam_module_not_threadsafe", G_TOKEN_INT, 1, 0 }
 };
 
-  system_convert_username_to_uppercase=0;
-  system_convert_username_to_lowercase=0;
-  system_is_case_insensitive=0;
   /*  parse conf file */
   parse_conffile(DEFAULT_CONF_FILE,
           sizeof(system_nuauth_vars)/sizeof(confparams),
@@ -81,29 +74,15 @@ confparams system_nuauth_vars[] = {
   /*  set variables */
   vpointer = get_confvar_value(system_nuauth_vars,
           sizeof(system_nuauth_vars)/sizeof(confparams),
-          "system_convert_username_to_uppercase");
-  system_convert_username_to_uppercase = *(int *)(vpointer);
- vpointer = get_confvar_value(system_nuauth_vars,
-          sizeof(system_nuauth_vars)/sizeof(confparams),
-          "system_convert_username_to_lowercase");
-  system_convert_username_to_lowercase = *(int *)(vpointer);
- vpointer = get_confvar_value(system_nuauth_vars,
-          sizeof(system_nuauth_vars)/sizeof(confparams),
-          "system_is_case_insensitive");
-  system_is_case_insensitive = *(int *)(vpointer);
-
-  if (system_convert_username_to_lowercase && system_convert_username_to_uppercase){
-    system_convert_username_to_lowercase=0;
-    system_convert_username_to_uppercase=0;
-    g_message("Can not convert simultaneously username to upper and lower case");
-  }
-
-
+          "system_pam_module_not_threadsafe");
+  system_pam_module_not_threadsafe = *(int *)(vpointer);
 
   vpointer = get_confvar_value(system_nuauth_vars,
           sizeof(system_nuauth_vars)/sizeof(confparams),
-          "system_pam_module_not_threadsafe");
-  system_pam_module_not_threadsafe = *(int *)(vpointer);
+          "system_glibc_cant_guess_maxgroups");
+  system_glibc_cant_guess_maxgroups = *(int *)(vpointer);
+
+
 
   return NULL;
 }
@@ -169,15 +148,6 @@ static char* normalize_username(const char * username)
   char * user = get_rid_of_domain(username);
   if (! user)
       return NULL;
-
-  if (system_convert_username_to_uppercase){
-      /* User need to be pass in upper case to winbind */
-      g_strup(user);
-  }
-  if (system_convert_username_to_lowercase){
-      /* User need to be pass in lower case to winbind */
-      g_strdown(user);
-  }
 
   return user;
 }
