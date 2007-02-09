@@ -77,6 +77,11 @@ typedef struct module_T {
     module_params_unload_t* free_params;
 } module_t;
 
+typedef enum {
+    AUTH_ERROR_CREDENTIALS,
+    AUTH_ERROR_INTERRUPTED
+} nuauth_auth_error_t;
+
 
 int init_modules_system();
 int load_modules();
@@ -102,6 +107,8 @@ gchar* modules_certificate_to_uid (gnutls_session session, gnutls_x509_crt cert)
 int modules_user_session_modify(user_session_t* c_session);
 
 nu_error_t modules_finalize_packet(connection_t* connection);
+
+void modules_auth_error_log(user_session_t *session, nuauth_auth_error_t error, const char *message);
 
 gboolean nuauth_is_reloading();
 void block_on_conf_reload();

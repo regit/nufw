@@ -566,7 +566,7 @@ static int mysasl_negotiate_v3(user_session_t * c_session , sasl_conn_t *conn)
 	r = sasl_listmech(conn, NULL, "(", ",", ")", &data,&sasl_len, &count);
 	if (r != SASL_OK) {
 		log_message(WARNING, AREA_AUTH, "generating mechanism list");
-		return SASL_BADPARAM;
+		return r;
 	}
 	debug_log_message(VERBOSE_DEBUG, AREA_AUTH, "%d mechanisms : %s", count,data);
 	tls_len=sasl_len;
@@ -694,7 +694,7 @@ static int mysasl_negotiate_v3(user_session_t * c_session , sasl_conn_t *conn)
 		ret = sasl_getprop(conn, SASL_USERNAME, (const void **)	&(tempname));
 		if (ret != SASL_OK){
 			g_warning("get user failed");
-			return SASL_FAIL;
+			return ret;
 		}else{
 			c_session->user_name=g_strdup(tempname);
 		}
@@ -802,23 +802,28 @@ int sasl_user_check(user_session_t* c_session)
 	switch (c_session->client_version){
 		case PROTO_VERSION_V22:
 			ret = mysasl_negotiate(c_session, conn);
-                        if (ret != SASL_OK)
-                        {
-                            if (ret == SASL_BADAUTH || ret == SASL_NOUSER) {
-                                /* wrong login/password */
-                                printf("ERREUR LOGIN OU PASS\n");
-                            } else {
-                                /* process interrupted */
-                            }
-                        }
 			break;
 		case PROTO_VERSION_V20:
 			ret = mysasl_negotiate_v3(c_session, conn);
 			break;
 		default:
 			log_message(WARNING, AREA_AUTH, "Unknown protocol");
-			ret = NU_EXIT_ERROR;
+			ret = SASL_BADPARAM;
 	}
+
+        if (ret != SASL_OK)
+        {
+            nuauth_auth_error_t err;
+            const char *message;
+            if (ret == SASL_BADAUTH || ret == SASL_NOUSER) {
+                err = AUTH_ERROR_CREDENTIALS;
+                message = "SASL error: invalid credentials (username or password)";
+            } else {
+                err = AUTH_ERROR_INTERRUPTED;
+                message = "SASL error: authentification process interrupted";
+            }
+            modules_auth_error_log(c_session, err, message);
+        }
 
 	sasl_dispose(&conn);
 

@@ -48,6 +48,7 @@ GSList* certificate_to_uid_modules;
 
 GSList* user_session_modify_modules;
 GSList* finalize_packet_modules;
+GSList* auth_error_log_modules;
 
 GMutex *modules_mutex;
 
@@ -80,6 +81,8 @@ typedef gchar* certificate_to_uid_callback (gnutls_session session, gnutls_x509_
 typedef nu_error_t user_session_modify_callback (user_session_t* session,gpointer params);
 
 typedef nu_error_t finalize_packet_callback (connection_t* session,gpointer params);
+
+typedef void auth_error_log_callback (user_session_t *session, nuauth_auth_error_t error, const char *message,gpointer params);
 
 /** @} */
 
