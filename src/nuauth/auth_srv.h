@@ -56,7 +56,7 @@
 
 #ifdef DEBUG_ENABLE
 /* Some code change to help debug using Valgrind */
-#  define DEBUG_WITH_VALGRIND
+/*#  define DEBUG_WITH_VALGRIND*/
 #endif
 
 typedef enum
