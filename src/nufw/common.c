@@ -1,10 +1,11 @@
-/* $Id: common.c,v 1.3 2003/10/21 23:06:05 regit Exp $ */
-
 /*
 **
+** Copyright 2002 - 2007 INL
 ** Written by Eric Leblond <eric@regit.org>
-**	      Vincent Deffontaines <vincent@gryzor.com>
-** Copyright 2002 - 2005 INL http://www.inl.fr/
+**            Vincent Deffontaines <vincent@gryzor.com>
+** INL http://www.inl.fr/
+**
+** $Id$
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by

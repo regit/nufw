@@ -1,7 +1,9 @@
-/* $Id: structure.h,v 1.8 2003/11/28 13:10:23 gryzor Exp $ */
-
 /*
-** Copyright (C) 2002, Éric Leblond <eric@regit.org>
+** Copyright (C) 2002-2007 INL
+** Written by Éric Leblond <regit@inl.fr>
+** INL http://www.inl.fr/
+**
+** $Id$
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
