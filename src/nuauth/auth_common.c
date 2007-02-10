@@ -1,7 +1,10 @@
 /*
- ** Copyright(C) 2003-2006 Eric Leblond <regit@inl.fr>
- **		     Vincent Deffontaines <vincent@gryzor.com>
- **                  INL : http://www.inl.fr/
+ ** Copyright(C) 2003-2007 INL
+ ** Written by Eric Leblond <regit@inl.fr>
+ **            Vincent Deffontaines <vincent@gryzor.com>
+ **     INL : http://www.inl.fr/
+ **
+ ** $Id$
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by

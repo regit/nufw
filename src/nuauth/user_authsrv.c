@@ -1,7 +1,9 @@
 /*
- * Copyright(C) 2004-2006 INL http://www.inl.fr/
- ** written by  Eric Leblond <regit@inl.fr>
+ ** Copyright(C) 2004-2006 INL http://www.inl.fr/
+ ** Written by  Eric Leblond <regit@inl.fr>
  **             Vincent Deffontaines <vincent@inl.fr>
+ **
+ ** $Id$
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by

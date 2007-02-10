@@ -1,6 +1,9 @@
 /*
 **
+** Copyright(C) 2005 INL
 ** Written by Vincent Deffontaines <vincent@gryzor.com>
+**
+** $Id$
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
