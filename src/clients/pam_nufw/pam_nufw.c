@@ -1,11 +1,11 @@
-/* pam_nufw module */
-
 /*
- * pam_nufw.c PAM module auth client
- *
- * Written by Jean Gillaux <jean@inl.fr>
- * Based on pam_permit by Andrew Morgan <morgan@parc.power.net> 1996/3/11
- *
+ ** Copyright 2006 - INL
+ ** Written by Jean Gillaux <jean@inl.fr>
+ ** INL http://www.inl.fr/
+ ** Based on pam_permit by Andrew Morgan <morgan@parc.power.net> 1996/3/11
+ **
+ ** $Id$
+ **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
  ** the Free Software Foundation, version 2 of the License.

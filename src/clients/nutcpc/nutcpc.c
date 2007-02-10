@@ -1,9 +1,10 @@
 /*
- * nutcpc.c - TCP/IP connection auth client.
- *
- * Copyright 2004-2006 - INL
- * 	written by Eric Leblond <eric.leblond@inl.fr>
- * 	           Vincent Deffontaines <vincent@inl.fr>
+ ** Copyright 2004-2006 - INL
+ ** Written by Eric Leblond <eric.leblond@inl.fr>
+ **            Vincent Deffontaines <vincent@inl.fr>
+ ** INL http://www.inl.fr/
+ **
+ ** $Id$
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
