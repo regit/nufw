@@ -2,6 +2,8 @@
  *
  * Copyright (C) 1996 Bob Jenkins (bob_jenkins@burtleburtle.net)
  *
+ * $Id$
+ *
  * http://burtleburtle.net/bob/hash/
  *
  * These are the credits from Bob's sources:
