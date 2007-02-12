@@ -219,7 +219,6 @@ static idmef_message_t *create_autherr_template()
     add_idmef_object(idmef, "alert.source(0).service.iana_protocol_number", "6");
     add_idmef_object(idmef, "alert.target(0).node.address(0).address", "::1");
     add_idmef_object(idmef, "alert.target(0).service.iana_protocol_number", "6");
-    add_idmef_object(idmef, "alert.source(0).user.category", "application");
 
     add_idmef_object(idmef, "alert.target(0).process.name", "nuauth");
     if (secure_snprintf(buffer, sizeof(buffer), "%lu", (unsigned long)getpid())) {
