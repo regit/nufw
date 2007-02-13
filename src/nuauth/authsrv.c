@@ -121,17 +121,17 @@ void stop_threads(gboolean wait)
     g_mutex_lock (nuauthdatas->tls_auth_server.mutex);
     g_mutex_lock (nuauthdatas->tls_nufw_server.mutex);
 
+    if (wait) {
+        wait_thread_end("tls auth server", &nuauthdatas->tls_auth_server);
+        wait_thread_end("tls nufw server", &nuauthdatas->tls_nufw_server);
+    }
+
     /* Close nufw and client connections */
     log_message(INFO, AREA_MAIN, "Close nufw connections");
     close_nufw_servers();
 
     log_message(INFO, AREA_MAIN, "Close client connections");
     close_clients();
-
-    if (wait) {
-        wait_thread_end("tls auth server", &nuauthdatas->tls_auth_server);
-        wait_thread_end("tls nufw server", &nuauthdatas->tls_nufw_server);
-    }
 
     g_mutex_lock (nuauthdatas->limited_connections_handler.mutex);
     g_mutex_lock (nuauthdatas->search_and_fill_worker.mutex);
