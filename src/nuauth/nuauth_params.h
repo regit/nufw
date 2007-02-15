@@ -71,7 +71,7 @@ struct nuauth_params
     int log_users_strict;
     int log_users_without_realm;
 
-    /** decision related, see take_decision() 
+    /** decision related, see take_decision()
      *
      * It is used to set acl policy:
      *  - if set to 1: if a DROP acl matches, the packet
@@ -114,6 +114,7 @@ struct nuauth_params
     int hello_authentication;
     char* nufw_srv;
     char* client_srv;
+    int use_command_server;  /*<! Use command server? */
 
     /* cache setting */
     int datas_persistance; /*<! time to keep data in cache before asking a refresh */
@@ -152,6 +153,7 @@ struct nuauth_datas
     struct nuauth_thread_t search_and_fill_worker;
     struct nuauth_thread_t localid_auth_thread;
     struct nuauth_thread_t limited_connections_handler;
+    struct nuauth_thread_t command_thread;
 
     /**
      * pools of thread which treat user packet.

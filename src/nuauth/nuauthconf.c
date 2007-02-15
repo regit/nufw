@@ -86,11 +86,11 @@ void init_nuauthconf(struct nuauth_params **result)
 #endif
       {"nuauth_debug_areas", G_TOKEN_INT, DEFAULT_DEBUG_AREAS, NULL},
       {"nuauth_debug_level", G_TOKEN_INT, DEFAULT_DEBUG_LEVEL, NULL},
-      { "nuauth_hello_authentication" , G_TOKEN_INT , 0,NULL },
-      { "nufw_has_conntrack" , G_TOKEN_INT , 1,NULL },
-      { "nufw_has_fixed_timeout" , G_TOKEN_INT , 1,NULL },
-      { "nuauth_uses_fake_sasl" , G_TOKEN_INT , 0,NULL },
-
+      { "nuauth_hello_authentication" , G_TOKEN_INT , 0, NULL },
+      { "nufw_has_conntrack" , G_TOKEN_INT , 1, NULL },
+      { "nufw_has_fixed_timeout" , G_TOKEN_INT , 1, NULL },
+      { "nuauth_uses_fake_sasl" , G_TOKEN_INT , 0, NULL },
+      { "nuauth_use_command_server" , G_TOKEN_INT , 0, NULL },
   };
   const unsigned int nb_params = sizeof(nuauth_vars)/sizeof(confparams);
 
@@ -136,6 +136,7 @@ void init_nuauthconf(struct nuauth_params **result)
   conf->nufw_has_conntrack = *(int*)READ_CONF("nufw_has_conntrack");
   conf->nufw_has_fixed_timeout = *(int*)READ_CONF("nufw_has_fixed_timeout");
   conf->nuauth_uses_fake_sasl = *(int*)READ_CONF("nuauth_uses_fake_sasl");
+  conf->nuauth_uses_fake_sasl = *(int*)READ_CONF("nuauth_use_command_server");
 #undef READ_CONF
 
   if (conf->debug_level>9){

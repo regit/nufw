@@ -99,8 +99,14 @@ void wait_thread_end(const char* name, struct nuauth_thread_t *thread)
  */
 void stop_threads(gboolean wait)
 {
-    /* ask theads to stop */
     log_message(INFO, AREA_MAIN, "Ask threads to stop.");
+
+    /* stop command server */
+    if (nuauthconf->use_command_server) {
+        g_mutex_lock (nuauthdatas->command_thread.mutex);
+    }
+
+    /* ask theads to stop */
     if (nuauthconf->push && nuauthconf->hello_authentication) {
         g_mutex_lock (nuauthdatas->localid_auth_thread.mutex);
     }
@@ -140,6 +146,9 @@ void stop_threads(gboolean wait)
         wait_thread_end("search&fill", &nuauthdatas->search_and_fill_worker);
     }
 
+    if (nuauthconf->use_command_server) {
+        wait_thread_end("command", &nuauthdatas->command_thread);
+    }
     if (nuauthconf->push && nuauthconf->hello_authentication && wait) {
         wait_thread_end("localid", &nuauthdatas->localid_auth_thread);
     }
@@ -720,6 +729,11 @@ void init_nuauthdatas()
         log_message(VERBOSE_DEBUG, AREA_MAIN, "Creating hello mode authentication thread");
         nuauthdatas->localid_auth_queue = g_async_queue_new ();
         create_thread (&nuauthdatas->localid_auth_thread, localid_auth);
+    }
+
+    if (nuauthconf->use_command_server && nuauthconf->hello_authentication){
+        log_message(VERBOSE_DEBUG, AREA_MAIN, "Creating command thread");
+        create_thread (&nuauthdatas->command_thread, command_server);
     }
 
     /* create thread for client request sender */

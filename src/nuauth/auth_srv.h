@@ -103,6 +103,7 @@ typedef enum
 #include "localid_auth.h"
 #include "audit.h"
 #include "sasl.h"
+#include "command.h"
 
 #include "nuauth_params.h"
 #include "nuauthconf.h"
