@@ -136,7 +136,7 @@ void init_nuauthconf(struct nuauth_params **result)
   conf->nufw_has_conntrack = *(int*)READ_CONF("nufw_has_conntrack");
   conf->nufw_has_fixed_timeout = *(int*)READ_CONF("nufw_has_fixed_timeout");
   conf->nuauth_uses_fake_sasl = *(int*)READ_CONF("nuauth_uses_fake_sasl");
-  conf->nuauth_uses_fake_sasl = *(int*)READ_CONF("nuauth_use_command_server");
+  conf->use_command_server = *(int*)READ_CONF("nuauth_use_command_server");
 #undef READ_CONF
 
   if (conf->debug_level>9){

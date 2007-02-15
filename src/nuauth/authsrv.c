@@ -731,7 +731,7 @@ void init_nuauthdatas()
         create_thread (&nuauthdatas->localid_auth_thread, localid_auth);
     }
 
-    if (nuauthconf->use_command_server && nuauthconf->hello_authentication){
+    if (nuauthconf->use_command_server){
         log_message(VERBOSE_DEBUG, AREA_MAIN, "Creating command thread");
         create_thread (&nuauthdatas->command_thread, command_server);
     }
