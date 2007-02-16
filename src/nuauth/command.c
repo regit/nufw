@@ -25,6 +25,7 @@
 #define SOCKET_FILENAME "/tmp/nuauth-command.socket"
 
 typedef struct {
+    struct tm start_timestamp;
     int socket;
     int client;
     struct sockaddr_un client_addr;
@@ -38,7 +39,10 @@ int command_new(command_t *this)
     int len;
     int res;
     int on = 1;
+    time_t curtime;
 
+    curtime = time(NULL);
+    localtime_r(&curtime, &this->start_timestamp);
     this->socket = -1;
     this->client = -1;
     this->select_max = 0;
@@ -116,17 +120,32 @@ void command_client_close(command_t *this)
 void command_execute(command_t *this, char *command)
 {
     char *buffer="ok";
+    static char static_buffer[1024];
+    char* help=
+"reload: reload nuauth configuration\n"
+"help: display this help\n"
+"quit: disconnect";
     int ret;
 
     /* process command */
-    if (strcmp(command, "quit") == 0)
-    {
+    if (strcmp(command, "quit") == 0) {
         command_client_close(this);
         return;
+    } else if (strcmp(command, "help") == 0) {
+        buffer = help;
+    } else if (strcmp(command, "uptime") == 0) {
+        char format[sizeof(static_buffer)];
+        secure_snprintf(format, sizeof(format), "Nuauth %s, started at %%F %%H:%%M:%%S", NUAUTH_FULL_VERSION);
+        ret = strftime(static_buffer, sizeof(static_buffer)-1, format, &this->start_timestamp);
+        static_buffer[ret] = 0;
+        buffer = static_buffer;
+    } else if (strcmp(command, "reload") == 0) {
+        buffer = "reloaded";
+        /* todo */
     }
 
     /* send answer */
-    ret = send(this->client, buffer, 3, 0);
+    ret = send(this->client, buffer, strlen(buffer), 0);
     if (ret < 0)
     {
         log_message(WARNING, AREA_MAIN,

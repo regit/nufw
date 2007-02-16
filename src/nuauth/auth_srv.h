@@ -215,6 +215,11 @@ typedef enum
 #define NUAUTH_API_VERSION ((uint32_t)( _NUAUTH_API_ID + sizeof(connection_t) \
     + sizeof(module_t) + sizeof(nufw_session_t) + sizeof(tracking_t) ))
 
+/**
+ * Nuauth full version, eg. "nuauth 2.1.2 (Revision: 2730)"
+ */
+#define NUAUTH_FULL_VERSION (VERSION " ($Revision$)")
+
 void nuauth_ask_exit();
 
 #endif

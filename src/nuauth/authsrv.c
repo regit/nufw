@@ -383,7 +383,6 @@ void print_usage()
  */
 void parse_options(int argc, char **argv, command_line_params_t *params)
 {
-    char* version=VERSION " ($Revision$)";
     char * options_list = "DhVvl:L:C:p:t:T:";
     int option;
     int local_debug_level=0;
@@ -392,7 +391,7 @@ void parse_options(int argc, char **argv, command_line_params_t *params)
     while((option = getopt ( argc, argv, options_list)) != -1 ){
         switch (option){
             case 'V' :
-                fprintf (stdout, "nuauth (version %s)\n",version);
+                fprintf (stdout, "nuauth (version %s)\n", NUAUTH_FULL_VERSION);
                 exit(EXIT_SUCCESS);
                 break;
 
