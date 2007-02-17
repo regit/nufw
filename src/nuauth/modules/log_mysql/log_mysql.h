@@ -30,10 +30,10 @@
 #define MYSQL_TABLE_NAME "ulog"
 #define MYSQL_USERS_TABLE_NAME "users"
 #define MYSQL_REQUEST_TIMEOUT 10
-#define MYSQL_USE_IPV4_SCHEMA 1 /* use IPV4 schema by default for compatibility */
+#define MYSQL_USE_IPV4_SCHEMA 1	/* use IPV4 schema by default for compatibility */
 
 /* SSL options */
-#define MYSQL_USE_SSL 1 /* use ssl by default */
+#define MYSQL_USE_SSL 1		/* use ssl by default */
 #define MYSQL_SSL_KEYFILE NULL
 #define MYSQL_SSL_CERTFILE NULL
 #define MYSQL_SSL_CA      NULL
@@ -51,20 +51,20 @@
 #define REQUEST_TMP_BUFFER 500
 
 struct log_mysql_params {
-    int mysql_request_timeout;
-    char * mysql_user;
-    char * mysql_passwd;
-    char * mysql_server;
-    char * mysql_db_name;
-    char * mysql_table_name;
-    char * mysql_users_table_name;
-    int mysql_server_port;
-    unsigned char mysql_use_ipv4_schema;
-    unsigned char mysql_use_ssl;
-    char * mysql_ssl_keyfile;
-    char * mysql_ssl_certfile;
-    char * mysql_ssl_ca;
-    char * mysql_ssl_capath;
-    char * mysql_ssl_cipher;
-    GPrivate* mysql_priv; /* private pointer for mysql database access */
+	int mysql_request_timeout;
+	char *mysql_user;
+	char *mysql_passwd;
+	char *mysql_server;
+	char *mysql_db_name;
+	char *mysql_table_name;
+	char *mysql_users_table_name;
+	int mysql_server_port;
+	unsigned char mysql_use_ipv4_schema;
+	unsigned char mysql_use_ssl;
+	char *mysql_ssl_keyfile;
+	char *mysql_ssl_certfile;
+	char *mysql_ssl_ca;
+	char *mysql_ssl_capath;
+	char *mysql_ssl_cipher;
+	GPrivate *mysql_priv;	/* private pointer for mysql database access */
 };

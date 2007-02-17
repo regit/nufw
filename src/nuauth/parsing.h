@@ -21,9 +21,10 @@
 #define PARSING_H
 
 /* parsing function */
-struct in6_addr* generate_inaddr_list(gchar* gwsrv_addr);
-gboolean check_inaddr_in_array(struct in6_addr *check_ip, struct in6_addr *iparray);
-gboolean check_string_in_array(gchar* checkstring,gchar** stringarray);
+struct in6_addr *generate_inaddr_list(gchar * gwsrv_addr);
+gboolean check_inaddr_in_array(struct in6_addr *check_ip,
+			       struct in6_addr *iparray);
+gboolean check_string_in_array(gchar * checkstring, gchar ** stringarray);
 
 /**
  * Check validity of data before inserting them to SQL
@@ -31,6 +32,6 @@ gboolean check_string_in_array(gchar* checkstring,gchar** stringarray);
  * Returns NULL is the original string contains ' or ;
  * Else returns escaped char (with glib function g_strescape()
  */
-gchar *string_escape(const gchar *orig);
+gchar *string_escape(const gchar * orig);
 
 #endif

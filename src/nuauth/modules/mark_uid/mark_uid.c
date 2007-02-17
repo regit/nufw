@@ -33,23 +33,27 @@
  */
 G_MODULE_EXPORT uint32_t get_api_version()
 {
-    return NUAUTH_API_VERSION;
+	return NUAUTH_API_VERSION;
 }
 
 G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
 {
-  return TRUE;
-}
-
-G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
-{
-    log_message(VERBOSE_DEBUG, AREA_MAIN,"Mark_uid module ($Revision$)");
 	return TRUE;
 }
 
-G_MODULE_EXPORT nu_error_t finalize_packet (connection_t* connection,gpointer params)
+G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 {
-	connection->mark = (connection->user_id & 0xFFFF) | (connection->mark & 0xffff0000);
+	log_message(VERBOSE_DEBUG, AREA_MAIN,
+		    "Mark_uid module ($Revision$)");
+	return TRUE;
+}
+
+G_MODULE_EXPORT nu_error_t finalize_packet(connection_t * connection,
+					   gpointer params)
+{
+	connection->mark =
+	    (connection->user_id & 0xFFFF) | (connection->
+					      mark & 0xffff0000);
 	return NU_EXIT_OK;
 }
 

@@ -50,16 +50,16 @@
 
 #include "proto.h"
 
-#define AUTHREQ_ADDR  "127.0.0.1" /*!< Default value of ::authreq_addr */
-#define TRACK_SIZE 1000     /*!< Default value of ::track_size */
-#define PACKET_TIMEOUT 15   /*!< Default value of ::packet_timeout */
-#define HOSTNAME_SIZE 256   /*!< Maximum size of hostnames (::authreq_addr) */
-#define FILENAME_SIZE 256   /*!< Maximum length of filenames */
+#define AUTHREQ_ADDR  "127.0.0.1"	/*!< Default value of ::authreq_addr */
+#define TRACK_SIZE 1000		/*!< Default value of ::track_size */
+#define PACKET_TIMEOUT 15	/*!< Default value of ::packet_timeout */
+#define HOSTNAME_SIZE 256	/*!< Maximum size of hostnames (::authreq_addr) */
+#define FILENAME_SIZE 256	/*!< Maximum length of filenames */
 
-extern char *cert_file;   /*!< Certificatename used in TLS connection, default value: NULL */
-extern char *key_file;  /*!< Key filename used in TLS connection, default value: NULL */
-char *ca_file;   /*!< Trust filename used in TLS connection, default value: NULL */
-char *nuauth_cert_dn;   /*!< NuAuth certificate filename, default value: NULL */
+extern char *cert_file;		/*!< Certificatename used in TLS connection, default value: NULL */
+extern char *key_file;		/*!< Key filename used in TLS connection, default value: NULL */
+char *ca_file;			/*!< Trust filename used in TLS connection, default value: NULL */
+char *nuauth_cert_dn;		/*!< NuAuth certificate filename, default value: NULL */
 
 /*! IP or hostname of NuAuth server address (::adr_srv), default value: #AUTHREQ_ADDR */
 char authreq_addr[HOSTNAME_SIZE];
@@ -81,10 +81,10 @@ int nufw_set_mark;
  * with respect to nufw nuauth interaction
  */
 typedef enum {
-    PCKT_NONE=0,
-    PCKT_WAITING,
-    PCKT_SENT,
-    PCKT_ANSWERED
+	PCKT_NONE = 0,
+	PCKT_WAITING,
+	PCKT_SENT,
+	PCKT_ANSWERED
 } pckt_state_t;
 
 /**
@@ -94,26 +94,26 @@ typedef enum {
  */
 /* TODO use a kind of HASH */
 typedef struct Packet_Ids {
-  /*! Unique identifier in netfilter queue, comes 
-   * from nfq_get_msg_packet_hdr() */
-  unsigned long id;
+	/*! Unique identifier in netfilter queue, comes 
+	 * from nfq_get_msg_packet_hdr() */
+	unsigned long id;
 
-  pckt_state_t state;
+	pckt_state_t state;
 
-  /*! Timestamp in Epoch format, value comes from netfilter or time(NULL) */
-  long timestamp;      
+	/*! Timestamp in Epoch format, value comes from netfilter or time(NULL) */
+	long timestamp;
 #ifdef PERF_DISPLAY_ENABLE
-  struct timeval arrival_time;
+	struct timeval arrival_time;
 #endif
 
 #if (HAVE_LIBIPQ_MARK || USE_NFQUEUE)
-  /*! Packet mark, comes from nfq_get_nfmark() */
-  unsigned long nfmark;
+	/*! Packet mark, comes from nfq_get_nfmark() */
+	unsigned long nfmark;
 #endif
 
-  /*! Pointer to next packet entry in ::packets_list, 
-   * set by padd() and psuppress() */
-  struct Packet_Ids *next;
+	/*! Pointer to next packet entry in ::packets_list, 
+	 * set by padd() and psuppress() */
+	struct Packet_Ids *next;
 } packet_idl;
 
 /***** Pack list ****/
@@ -123,21 +123,19 @@ typedef struct Packet_Ids {
  * clean_old_packets() and psearch_and_destroy() remove old packets (after 
  * ::packet_timeout secondes).
  */
-struct packets_list_t 
-{
-  packet_idl * start;    /*!< Begin of the list (NULL if the list is empty) */
-  packet_idl * end;      /*!< End of the list (NULL if the list is empty) */
-  int length;            /*!< Length of the list */
-  pthread_mutex_t mutex;
+struct packets_list_t {
+	packet_idl *start;	/*!< Begin of the list (NULL if the list is empty) */
+	packet_idl *end;	/*!< End of the list (NULL if the list is empty) */
+	int length;		/*!< Length of the list */
+	pthread_mutex_t mutex;
 } packets_list;
 
 /**
  * Store old signal handlers
  */
-struct Signals
-{
-    struct sigaction old_sigterm_hdl;
-    struct sigaction old_sigint_hdl;
+struct Signals {
+	struct sigaction old_sigterm_hdl;
+	struct sigaction old_sigint_hdl;
 };
 
 #if USE_NFQUEUE
@@ -150,20 +148,18 @@ struct ipq_handle *hndl;
 /**
  * All data of a thread (use for packetsrv()) 
  */
-struct ThreadType
-{
-    pthread_t thread;
-    pthread_mutex_t mutex;
+struct ThreadType {
+	pthread_t thread;
+	pthread_mutex_t mutex;
 };
 
 /**
  * Structure to send arguments to the thread.
  */
-struct ThreadArgument
-{
-    struct ThreadType *thread;
-    int parent_pid;
-};    
+struct ThreadArgument {
+	struct ThreadType *thread;
+	int parent_pid;
+};
 
 /* mutex */
 pthread_mutex_t hndl_mutex;
@@ -183,7 +179,7 @@ pthread_mutex_t hndl_mutex;
 #define IPQ_SET_VERDICT(PACKETID, DECISION) \
     nfq_set_verdict(hndl, PACKETID, DECISION, 0 , NULL)
 #define IPQ_SET_VWMARK(PACKETID, DECISION, NFMARK) \
-    nfq_set_verdict_mark(hndl, PACKETID, DECISION, NFMARK, 0, NULL) 
+    nfq_set_verdict_mark(hndl, PACKETID, DECISION, NFMARK, 0, NULL)
 #else
 #define	IPQ_SET_VERDICT(PACKETID, DECISION) \
     ipq_set_verdict(hndl, PACKETID, DECISION,0,NULL)
@@ -191,8 +187,7 @@ pthread_mutex_t hndl_mutex;
     ipq_set_vwmark(hndl, PACKETID, DECISION, NFMARK,0,NULL)
 #endif
 
-int pckt_tx;   /*!< Number of transmitted packets since NuFW is running */
-int pckt_rx;   /*!< Number of received packets since NuFW is running */
+int pckt_tx;			/*!< Number of transmitted packets since NuFW is running */
+int pckt_rx;			/*!< Number of received packets since NuFW is running */
 
-#endif   /* ifndef STRUCTURE_HEADER */
-
+#endif				/* ifndef STRUCTURE_HEADER */

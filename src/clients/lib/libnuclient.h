@@ -27,9 +27,11 @@
 
 void nu_exit_clean(NuAuth * session);
 
-int compare (NuAuth *session,conntable_t *old, conntable_t *new, nuclient_error *err);
+int compare(NuAuth * session, conntable_t * old, conntable_t * new,
+	    nuclient_error * err);
 
-void do_panic(const char *filename, unsigned long line, const char *fmt, ...);
+void do_panic(const char *filename, unsigned long line, const char *fmt,
+	      ...);
 
 /**
  * \def panic(format, ...)
@@ -47,7 +49,6 @@ void do_panic(const char *filename, unsigned long line, const char *fmt, ...);
 #define nu_assert(test, format, args...) \
     do { if (!(test)) do_panic(__FILE__, __LINE__, format, ##args ); } while (0)
 
-void ask_session_end(NuAuth* session);
+void ask_session_end(NuAuth * session);
 
 #endif
-

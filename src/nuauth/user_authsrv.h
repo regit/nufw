@@ -20,6 +20,6 @@
 #ifndef USER_AUTHSRV_H
 #define USER_AUTHSRV_H
 
-void user_check_and_decide (gpointer userdata ,gpointer data);
+void user_check_and_decide(gpointer userdata, gpointer data);
 
 #endif

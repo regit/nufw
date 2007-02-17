@@ -31,7 +31,7 @@
 
 #define PRG_HASH_SIZE 211
 
-int     prg_cache_loaded;
+int prg_cache_loaded;
 
 
 void prg_cache_load(void);

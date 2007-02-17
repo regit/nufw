@@ -41,77 +41,77 @@
  * \param from_charset Target charset
  * \return New allocated buffer, which need to be freed
  */
-char* nu_client_to_utf8(const char* inbuf, char *from_charset)
+char *nu_client_to_utf8(const char *inbuf, char *from_charset)
 {
-    iconv_t ctx;
-    size_t inlen=strlen(inbuf);
-    size_t maxlen = inlen*4;
-    char *outbuf;
-    char *targetbuf;
-    size_t real_outlen;
-    size_t orig_inlen = inlen;
-    size_t outbuflen=3;
-    size_t outbufleft;
-    int ret;
+	iconv_t ctx;
+	size_t inlen = strlen(inbuf);
+	size_t maxlen = inlen * 4;
+	char *outbuf;
+	char *targetbuf;
+	size_t real_outlen;
+	size_t orig_inlen = inlen;
+	size_t outbuflen = 3;
+	size_t outbufleft;
+	int ret;
 
-    /* just returns NULL if input is NULL */
-    if (inbuf == NULL)
-    {
-        return inbuf;
-    }
+	/* just returns NULL if input is NULL */
+	if (inbuf == NULL) {
+		return inbuf;
+	}
 
-    /* create an iconv context to convert locale charset to UTF-8 */
-    ctx = iconv_open("UTF-8", from_charset);
+	/* create an iconv context to convert locale charset to UTF-8 */
+	ctx = iconv_open("UTF-8", from_charset);
 
-    /* allocate a buffer */
-    outbuf=calloc(outbuflen,sizeof(char));
-    nu_assert (outbuf != NULL, "iconv fail to allocate output buffer!");
+	/* allocate a buffer */
+	outbuf = calloc(outbuflen, sizeof(char));
+	nu_assert(outbuf != NULL, "iconv fail to allocate output buffer!");
 
-    /* iconv convert */
-    outbufleft=outbuflen-1; /* -1 because we keep last byte for nul byte */
-    targetbuf=outbuf;
-    ret = iconv (ctx, (char **)&inbuf, &inlen, &targetbuf, &outbufleft);
-    real_outlen = targetbuf -outbuf;
+	/* iconv convert */
+	outbufleft = outbuflen - 1;	/* -1 because we keep last byte for nul byte */
+	targetbuf = outbuf;
+	ret =
+	    iconv(ctx, (char **) &inbuf, &inlen, &targetbuf, &outbufleft);
+	real_outlen = targetbuf - outbuf;
 
-    /* is buffer too small? */
-    if (ret == -1)
-    {
-        if (errno!=E2BIG)
-        {
-            free(outbuf);
-            iconv_close(ctx);
-            panic("iconv error code %i!", ret);
-        }
+	/* is buffer too small? */
+	if (ret == -1) {
+		if (errno != E2BIG) {
+			free(outbuf);
+			iconv_close(ctx);
+			panic("iconv error code %i!", ret);
+		}
 
-        /* TODO : put a good value here */
-        while((ret == -1) && (errno == E2BIG) &&(outbuflen < maxlen))
-        {
-            /* realloc outbuf */
-            outbuflen+=orig_inlen;
-            outbuf=realloc(outbuf,outbuflen);
-            if (outbuf == NULL)
-            {
-                free(outbuf);
-                iconv_close(ctx);
-                panic("iconv error: can't rellocate buffer!");
-            }
+		/* TODO : put a good value here */
+		while ((ret == -1) && (errno == E2BIG)
+		       && (outbuflen < maxlen)) {
+			/* realloc outbuf */
+			outbuflen += orig_inlen;
+			outbuf = realloc(outbuf, outbuflen);
+			if (outbuf == NULL) {
+				free(outbuf);
+				iconv_close(ctx);
+				panic
+				    ("iconv error: can't rellocate buffer!");
+			}
 
-            /* run iconv once more */
-            outbufleft=outbuflen - real_outlen - 1; /* -1 because we keep last byte for nul byte */
-            targetbuf=outbuf + real_outlen;
-            ret = iconv (ctx, (char **)&inbuf, &inlen, &targetbuf, &outbufleft);
-            real_outlen = targetbuf -outbuf;
-        }
-    }
+			/* run iconv once more */
+			outbufleft = outbuflen - real_outlen - 1;	/* -1 because we keep last byte for nul byte */
+			targetbuf = outbuf + real_outlen;
+			ret =
+			    iconv(ctx, (char **) &inbuf, &inlen,
+				  &targetbuf, &outbufleft);
+			real_outlen = targetbuf - outbuf;
+		}
+	}
 
-    /* close iconv context */
-    iconv_close(ctx);
+	/* close iconv context */
+	iconv_close(ctx);
 
-    /* realloc output to have a correct size */
-    outbuflen = real_outlen+1;
-    outbuf = realloc(outbuf, outbuflen);
-    outbuf[outbuflen-1]=0;
-    return outbuf;
+	/* realloc output to have a correct size */
+	outbuflen = real_outlen + 1;
+	outbuf = realloc(outbuf, outbuflen);
+	outbuf[outbuflen - 1] = 0;
+	return outbuf;
 }
 
 /** @} */

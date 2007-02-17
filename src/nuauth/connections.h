@@ -20,7 +20,7 @@
 #ifndef CONNECTIONS_H
 #define CONNECTIONS_H
 
-#include "packet_parser.h"   /* tracking_t structure and packet parsing functions */
+#include "packet_parser.h"	/* tracking_t structure and packet parsing functions */
 
 /**
  * \addtogroup NuauthCore
@@ -32,20 +32,19 @@
  * See field state of a structure ::connection_t and function
  * change_state().
  */
-typedef enum
-{
-    AUTH_STATE_NONE = 0,    /*!< Unknow state (when a connection is created) */
-    AUTH_STATE_AUTHREQ = 1, /*!< Waiting for authentification */
-    AUTH_STATE_USERPCKT,    /*!< Connection received from an user: see user_request() */
-    AUTH_STATE_READY,       /*!< (see search_and_fill_completing()) */
+typedef enum {
+	AUTH_STATE_NONE = 0,	/*!< Unknow state (when a connection is created) */
+	AUTH_STATE_AUTHREQ = 1,	/*!< Waiting for authentification */
+	AUTH_STATE_USERPCKT,	/*!< Connection received from an user: see user_request() */
+	AUTH_STATE_READY,	/*!< (see search_and_fill_completing()) */
 
     /**
      * State used when a connection is send to acl_checkers queue: read ACLs
      * from cache or external source. See acl_check_and_decide().
      */
-    AUTH_STATE_COMPLETING,
-    AUTH_STATE_DONE, /*!< This state is set when the connection will be only used for logging purpose */
-    AUTH_STATE_HELLOMODE /*!< This connection is treated by the HELLO authentication mode */
+	AUTH_STATE_COMPLETING,
+	AUTH_STATE_DONE,	/*!< This state is set when the connection will be only used for logging purpose */
+	AUTH_STATE_HELLOMODE	/*!< This connection is treated by the HELLO authentication mode */
 } auth_state_t;
 
 #define IPHDR_REJECT_LENGTH 20
@@ -59,17 +58,17 @@ typedef enum
  * Used to store the acl that apply for a packet
  */
 struct acl_group {
-  GSList *groups; /*!< List of users groups on which the acl apply */
-  decision_t answer; /*!< Answer relative to the acl */
-  gchar *period; /*!< Period linked to the acl */
-  gchar *log_prefix; /*!< Log prefix used for the acl */
+	GSList *groups;		/*!< List of users groups on which the acl apply */
+	decision_t answer;	/*!< Answer relative to the acl */
+	gchar *period;		/*!< Period linked to the acl */
+	gchar *log_prefix;	/*!< Log prefix used for the acl */
 };
 
 typedef struct {
-  char *indev;     /*!< Input device set to NULL if not available */
-  char *physindev; /*!< Input physical device set to NULL if not available */
-  char *outdev; /*!< Output device set to NULL if not available */
-  char *physoutdev; /*!< Output physical device set to NULL if not available */
+	char *indev;		/*!< Input device set to NULL if not available */
+	char *physindev;	/*!< Input physical device set to NULL if not available */
+	char *outdev;		/*!< Output device set to NULL if not available */
+	char *physoutdev;	/*!< Output physical device set to NULL if not available */
 } iface_nfo_t;
 
 /**
@@ -78,48 +77,47 @@ typedef struct {
  *
  * It contains all datas relative to a packet
  */
-typedef struct
-{
-  GSList *packet_id;      /*!< Netfilter unique identifier */
-  long timestamp;         /*!< Packet arrival time (seconds) */
-  int socket;             /*!< Socket (file descriptor) from which NuFW request is coming */
-  nufw_session_t *tls;    /*!< TLS connection to NuFW from which comes the packet */
+typedef struct {
+	GSList *packet_id;	/*!< Netfilter unique identifier */
+	long timestamp;		/*!< Packet arrival time (seconds) */
+	int socket;		/*!< Socket (file descriptor) from which NuFW request is coming */
+	nufw_session_t *tls;	/*!< TLS connection to NuFW from which comes the packet */
 
-  tracking_t tracking;    /*!< IPv4 connection tracking (headers) */
+	tracking_t tracking;	/*!< IPv4 connection tracking (headers) */
 
-  iface_nfo_t iface_nfo; /*!< Information about network interfaces */
+	iface_nfo_t iface_nfo;	/*!< Information about network interfaces */
 
-  uint32_t user_id;      /*!< User identifier (32-bit) */
-  uint32_t mark;         /*!< Number used for marking set to user numeric identity at start */
-  char *username;        /*!< User name */
+	uint32_t user_id;	/*!< User identifier (32-bit) */
+	uint32_t mark;		/*!< Number used for marking set to user numeric identity at start */
+	char *username;		/*!< User name */
 
  /**
   * ACL related groups.
   *
   * Contains the list of acl corresponding to the IPv4 header
   */
-  GSList *acl_groups;     /*!< ACL group list (of type ::acl_group) */
-  GSList *user_groups;    /*!< User groups */
-  struct user_cached_datas *cacheduserdatas;  /* Pointer to cache */
+	GSList *acl_groups;	/*!< ACL group list (of type ::acl_group) */
+	GSList *user_groups;	/*!< User groups */
+	struct user_cached_datas *cacheduserdatas;	/* Pointer to cache */
 
-  gchar *os_sysname;      /*!< Operating system name */
-  gchar *os_release;      /*!< Operating system release */
-  gchar *os_version;      /*!< Operating system version */
-  gchar *app_name;        /*!< Application name (full path) */
-  gchar *app_md5;         /*!< Application binary MD5 checksum */
+	gchar *os_sysname;	/*!< Operating system name */
+	gchar *os_release;	/*!< Operating system release */
+	gchar *os_version;	/*!< Operating system version */
+	gchar *app_name;	/*!< Application name (full path) */
+	gchar *app_md5;		/*!< Application binary MD5 checksum */
 
-  auth_state_t state;   /*!< State of the packet */
+	auth_state_t state;	/*!< State of the packet */
 
-  decision_t decision;  /*!< Decision on packet. */
-  gchar* log_prefix;    /*!< Log prefix. */
+	decision_t decision;	/*!< Decision on packet. */
+	gchar *log_prefix;	/*!< Log prefix. */
 
-  time_t expire;        /*!< Expire time (never: -1) */
+	time_t expire;		/*!< Expire time (never: -1) */
 
 
-  int nufw_version;     /*!< Store the version of the nufw server which has sent the request */
-  int client_version;   /*!< Store version of the client which has sent the packet */
+	int nufw_version;	/*!< Store the version of the nufw server which has sent the request */
+	int client_version;	/*!< Store version of the client which has sent the packet */
 #ifdef PERF_DISPLAY_ENABLE
-  struct timeval arrival_time;   /*!< Performance datas */
+	struct timeval arrival_time;	/*!< Performance datas */
 #endif
 } connection_t;
 

@@ -36,10 +36,10 @@
  */
 
 #define SYSLOG_OPTS \
-    LOG_CONS||LOG_PID     /*!< Syslog options of NuFW */
-#define LOG_ID "nufw"     /*!< Syslog identifier of NuFW */
-#define LOG_TO_STD	  1   /*!< Value of ::log_engine when using printf() */
-#define LOG_TO_SYSLOG 2   /*!< Value of ::log_engine when using syslog() */
+    LOG_CONS||LOG_PID		/*!< Syslog options of NuFW */
+#define LOG_ID "nufw"		/*!< Syslog identifier of NuFW */
+#define LOG_TO_STD	  1	/*!< Value of ::log_engine when using printf() */
+#define LOG_TO_SYSLOG 2		/*!< Value of ::log_engine when using syslog() */
 
 /**
  * Log engine used:
@@ -49,12 +49,13 @@
  */
 int log_engine;
 
-int debug_level; /*!< Debug level, default valut: #DEFAULT_DEBUG_LEVEL */
-int debug_areas; /*!< Debug areas, default value: #DEFAULT_DEBUG_AREAS (all areas) */
+int debug_level;		/*!< Debug level, default valut: #DEFAULT_DEBUG_LEVEL */
+int debug_areas;		/*!< Debug areas, default value: #DEFAULT_DEBUG_AREAS (all areas) */
 
 void init_log_engine();
 void log_printf(debug_level_t priority, char *format, ...);
-void log_area_printf(debug_area_t area, debug_level_t priority, char *format, ...);
+void log_area_printf(debug_area_t area, debug_level_t priority,
+		     char *format, ...);
 
 /** \def debug_log_printf(area, priority, format, ...)
  * Call log_area_printf(area, priority, ...) if DEBUG_ENABLE is defined 
@@ -66,5 +67,4 @@ void log_area_printf(debug_area_t area, debug_level_t priority, char *format, ..
 #  define debug_log_printf(area, priority, format, ...)
 #endif
 
-#endif /* ifndef NUFW_LOG_HEADER */
-
+#endif				/* ifndef NUFW_LOG_HEADER */

@@ -48,51 +48,55 @@
  * NOTE: In partilar the "c += length; __jhash_mix(a,b,c);" normally
  *       done at the end is not done here.
  */
-static uint32_t jhash_3words(uint32_t a, uint32_t b, uint32_t c, uint32_t initval)
+static uint32_t jhash_3words(uint32_t a, uint32_t b, uint32_t c,
+			     uint32_t initval)
 {
 	a += JHASH_GOLDEN_RATIO;
 	b += JHASH_GOLDEN_RATIO;
 	c += initval;
 
 	__jhash_mix(a, b, c);
-	
+
 	return c;
 }
-#endif /* USE_JHASH3 */
+#endif				/* USE_JHASH3 */
 
 #ifdef USE_JHASH2
 
 /* A special optimized version that handles 1 or more of uint32_ts.
  * The length parameter here is the number of uint32_ts in the key.
  */
-static inline uint32_t jhash2(uint32_t *k, uint32_t length, uint32_t initval)
+static inline uint32_t jhash2(uint32_t * k, uint32_t length,
+			      uint32_t initval)
 {
-        uint32_t a, b, c, len;
+	uint32_t a, b, c, len;
 
-        a = b = JHASH_GOLDEN_RATIO;
-        c = initval;
-        len = length;
+	a = b = JHASH_GOLDEN_RATIO;
+	c = initval;
+	len = length;
 
-        while (len >= 3) {
-                a += k[0];
-                b += k[1];
-                c += k[2];
-                __jhash_mix(a, b, c);
-                k += 3; len -= 3;
-        }
+	while (len >= 3) {
+		a += k[0];
+		b += k[1];
+		c += k[2];
+		__jhash_mix(a, b, c);
+		k += 3;
+		len -= 3;
+	}
 
-        c += length * 4;
+	c += length * 4;
 
-        switch (len) {
-        case 2 : b += k[1];
-        case 1 : a += k[0];
-        };
+	switch (len) {
+	case 2:
+		b += k[1];
+	case 1:
+		a += k[0];
+	};
 
-        __jhash_mix(a,b,c);
+	__jhash_mix(a, b, c);
 
-        return c;
+	return c;
 }
-#endif /* USE_JHASH2 */
+#endif				/* USE_JHASH2 */
 
 #endif
-

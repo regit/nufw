@@ -29,13 +29,20 @@
  *
  */
 struct period_item {
-    time_t duration; /**< specify that connection will expire after duration delay */
-    time_t start_date; /**< specify an interval in date, set to -1 to ignore */
-    time_t end_date; /**< end of date interval set to -1 to ignore */
-    int start_day; /**< week day start, set to -1 to ignore interval check, day from O (sunday) to 6 (saturday) */
-    int end_day; /**< week day end, set to -1 to ignore */
-    char start_hour; /**< 0-24 start hour, set to -1 to ignore */
-    char end_hour; /**< O-24 end hour, set to -1 to ignore */
+	time_t duration;
+		     /**< specify that connection will expire after duration delay */
+	time_t start_date;
+		       /**< specify an interval in date, set to -1 to ignore */
+	time_t end_date;
+		     /**< end of date interval set to -1 to ignore */
+	int start_day;
+		   /**< week day start, set to -1 to ignore interval check, day from O (sunday) to 6 (saturday) */
+	int end_day;
+		 /**< week day end, set to -1 to ignore */
+	char start_hour;
+		     /**< 0-24 start hour, set to -1 to ignore */
+	char end_hour;
+		   /**< O-24 end hour, set to -1 to ignore */
 };
 
 /**
@@ -46,23 +53,25 @@ struct period_item {
  * - a flag to indicate if is is used or not
  */
 struct period {
-    GSList* items;
-    gchar* description;
-    gchar* name;
-    gboolean used;
+	GSList *items;
+	gchar *description;
+	gchar *name;
+	gboolean used;
 };
 
-gboolean is_time_t_in_period(const gchar* period,time_t time);
+gboolean is_time_t_in_period(const gchar * period, time_t time);
 
-time_t get_end_of_period_for_time_t(const gchar* period,time_t time);
+time_t get_end_of_period_for_time_t(const gchar * period, time_t time);
 
-gboolean define_new_period(GHashTable* periods,gchar* name,gchar* description);
+gboolean define_new_period(GHashTable * periods, gchar * name,
+			   gchar * description);
 
-gboolean add_perioditem_to_period(GHashTable* periods,gchar* name,struct period_item* perioditem);
+gboolean add_perioditem_to_period(GHashTable * periods, gchar * name,
+				  struct period_item *perioditem);
 
-gboolean delete_period(GHashTable* periods,gchar* name);
+gboolean delete_period(GHashTable * periods, gchar * name);
 
-gboolean destroy_periods(GHashTable* periods);
-GHashTable * init_periods();
+gboolean destroy_periods(GHashTable * periods);
+GHashTable *init_periods();
 
 #endif

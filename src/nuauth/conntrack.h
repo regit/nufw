@@ -24,9 +24,9 @@
 
 struct limited_connection {
 	/** \todo check that having address is enough (two nufw on same computer) */
-        struct in6_addr gwaddr;
-        time_t expire; /**< expiration time of connection */
-        tracking_t tracking;
+	struct in6_addr gwaddr;
+	time_t expire; /**< expiration time of connection */
+	tracking_t tracking;
 };
 
 struct accounted_connection {
@@ -39,9 +39,10 @@ struct accounted_connection {
 	u_int64_t bytes_out;
 };
 
-void* limited_connection_handler(GMutex *mutex);
+void *limited_connection_handler(GMutex * mutex);
 
-nu_error_t send_conntrack_message(struct limited_connection * lconn,unsigned char msgtype);
+nu_error_t send_conntrack_message(struct limited_connection *lconn,
+				  unsigned char msgtype);
 
 
-#endif /* CONNTRACK_H */
+#endif				/* CONNTRACK_H */

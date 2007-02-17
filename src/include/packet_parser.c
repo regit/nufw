@@ -33,8 +33,8 @@
 #include <netinet/ip.h>
 #include <netinet/ip6.h>
 #include <netinet/udp.h>
-#include <netinet/ip_icmp.h> 
-#include <netinet/icmp6.h> 
+#include <netinet/ip_icmp.h>
+#include <netinet/icmp6.h>
 
 
 /** 
@@ -46,117 +46,125 @@
  * \param dgram_size Number of bytes in the packet
  * \return Offset to next type of headers, or 0 if the packet is not recognized 
  */
-unsigned int get_ip_headers(tracking_t *tracking, const unsigned char *dgram, unsigned int dgram_size)
+unsigned int get_ip_headers(tracking_t * tracking,
+			    const unsigned char *dgram,
+			    unsigned int dgram_size)
 {
-    struct iphdr *ip = (struct iphdr *)dgram;
-    struct ip6_hdr *ip6 = (struct ip6_hdr *)dgram;
-    unsigned int offset;
+	struct iphdr *ip = (struct iphdr *) dgram;
+	struct ip6_hdr *ip6 = (struct ip6_hdr *) dgram;
+	unsigned int offset;
 
-    /* check ip headers minimum size */
-    if (dgram_size < sizeof(struct iphdr))
-        return 0;
+	/* check ip headers minimum size */
+	if (dgram_size < sizeof(struct iphdr))
+		return 0;
 
-    /* check IP version (should be IPv4) */
-    if (ip->version == 4){
-        /* convert IPv4 addresses to IPv6 addresses in format "::ffff:IPv4" */
-        tracking->saddr.s6_addr32[0] = 0;
-        tracking->saddr.s6_addr32[1] = 0;
-        tracking->saddr.s6_addr32[2] = 0xffff0000;
-        tracking->saddr.s6_addr32[3] = ip->saddr;
-        
-        tracking->daddr.s6_addr32[0] = 0;
-        tracking->daddr.s6_addr32[1] = 0;
-        tracking->daddr.s6_addr32[2] = 0xffff0000;
-        tracking->daddr.s6_addr32[3] = ip->daddr;
+	/* check IP version (should be IPv4) */
+	if (ip->version == 4) {
+		/* convert IPv4 addresses to IPv6 addresses in format "::ffff:IPv4" */
+		tracking->saddr.s6_addr32[0] = 0;
+		tracking->saddr.s6_addr32[1] = 0;
+		tracking->saddr.s6_addr32[2] = 0xffff0000;
+		tracking->saddr.s6_addr32[3] = ip->saddr;
 
-        /* compute offset to next header and copy protocol */
-        offset = 4*ip->ihl;
-        tracking->protocol = ip->protocol;
+		tracking->daddr.s6_addr32[0] = 0;
+		tracking->daddr.s6_addr32[1] = 0;
+		tracking->daddr.s6_addr32[2] = 0xffff0000;
+		tracking->daddr.s6_addr32[3] = ip->daddr;
 
-#ifdef TRACKING_WITH_PAYLOAD
-        /* copy payload if any, or fill payload with zero bytes */
-        if ((offset + sizeof(tracking->payload)) <= dgram_size)
-            memcpy(tracking->payload, dgram + offset, sizeof(tracking->payload));
-        else
-            memset(tracking->payload, 0, sizeof(tracking->payload));
-#endif            
-    } else if (ip->version == 6) {
-        unsigned char found_transport_layer = 0;
-#ifdef TRACKING_WITH_PAYLOAD
-        unsigned char copy_payload = 1;
-#endif        
-        struct ip6_ext *generic_hdr;
-        struct ip6_frag *frag_hdr;
-        
-        /* check buffer underflow */
-        if (dgram_size < sizeof(struct ip6_hdr))
-            return 0;
-
-        /* copy ipv6 addresses */
-        tracking->saddr = ip6->ip6_src;
-        tracking->daddr = ip6->ip6_dst;
-
-        /* copy protocol */
-        tracking->protocol = ip6->ip6_nxt;
-        
-        /* compute offset of next interresting header (udp/tcp/icmp):
-         * skip custom ipv6 headers like Hop-by-hop */
-        offset = sizeof(struct ip6_hdr); /* offset=40 */
-        found_transport_layer = 0;
-        do  
-        {
-            switch (tracking->protocol)
-            {
-                case IPPROTO_HOPOPTS:
-                case IPPROTO_ROUTING:
-                case IPPROTO_DSTOPTS:
-                case IPPROTO_AH:
-                    /* we can use generic extension header since we just need
-                     * next header and length of this header */
-                    generic_hdr = (struct ip6_ext *)(dgram + offset);
-                    tracking->protocol = generic_hdr->ip6e_nxt;
-                    offset += (unsigned int)(generic_hdr->ip6e_len)*8;
-                    break;
-
-                case IPPROTO_FRAGMENT:
-                    frag_hdr = (struct ip6_frag *)(dgram + offset);
-                    tracking->protocol = frag_hdr->ip6f_nxt;
-                    offset += 8; /* fragment header has fixed size */
-                    break;
-
-                case IPPROTO_ESP:
-                case IPPROTO_NONE:
-                    /*
-                     * - RFC 2460 asks to ignore payload is last "Next Header" 
-                     *   is IPPROTO_NONE.
-                     * - For ESP, it's not possible to extract any useful
-                     *   informations to match ACLs
-                     */
-#ifdef TRACKING_WITH_PAYLOAD
-                    copy_payload = 0;
-#endif                    
-                    found_transport_layer = 1;
-                    break;
-
-                default:
-                    /* TCP, UDP, ICMP */
-                    found_transport_layer = 1;
-                    break;
-            }
-        } while (!found_transport_layer);
+		/* compute offset to next header and copy protocol */
+		offset = 4 * ip->ihl;
+		tracking->protocol = ip->protocol;
 
 #ifdef TRACKING_WITH_PAYLOAD
-        if ((offset + sizeof(tracking->payload)) <= dgram_size
-                && copy_payload)  {
-            memcpy(tracking->payload, dgram + offset, sizeof(tracking->payload));
-        } else {
-            memset(tracking->payload, 0, sizeof(tracking->payload));
-        }
-#endif        
-    } else {
-        offset = 0;
-    }
-    return offset;
+		/* copy payload if any, or fill payload with zero bytes */
+		if ((offset + sizeof(tracking->payload)) <= dgram_size)
+			memcpy(tracking->payload, dgram + offset,
+			       sizeof(tracking->payload));
+		else
+			memset(tracking->payload, 0,
+			       sizeof(tracking->payload));
+#endif
+	} else if (ip->version == 6) {
+		unsigned char found_transport_layer = 0;
+#ifdef TRACKING_WITH_PAYLOAD
+		unsigned char copy_payload = 1;
+#endif
+		struct ip6_ext *generic_hdr;
+		struct ip6_frag *frag_hdr;
+
+		/* check buffer underflow */
+		if (dgram_size < sizeof(struct ip6_hdr))
+			return 0;
+
+		/* copy ipv6 addresses */
+		tracking->saddr = ip6->ip6_src;
+		tracking->daddr = ip6->ip6_dst;
+
+		/* copy protocol */
+		tracking->protocol = ip6->ip6_nxt;
+
+		/* compute offset of next interresting header (udp/tcp/icmp):
+		 * skip custom ipv6 headers like Hop-by-hop */
+		offset = sizeof(struct ip6_hdr);	/* offset=40 */
+		found_transport_layer = 0;
+		do {
+			switch (tracking->protocol) {
+			case IPPROTO_HOPOPTS:
+			case IPPROTO_ROUTING:
+			case IPPROTO_DSTOPTS:
+			case IPPROTO_AH:
+				/* we can use generic extension header since we just need
+				 * next header and length of this header */
+				generic_hdr =
+				    (struct ip6_ext *) (dgram + offset);
+				tracking->protocol = generic_hdr->ip6e_nxt;
+				offset +=
+				    (unsigned int) (generic_hdr->
+						    ip6e_len) * 8;
+				break;
+
+			case IPPROTO_FRAGMENT:
+				frag_hdr =
+				    (struct ip6_frag *) (dgram + offset);
+				tracking->protocol = frag_hdr->ip6f_nxt;
+				offset += 8;	/* fragment header has fixed size */
+				break;
+
+			case IPPROTO_ESP:
+			case IPPROTO_NONE:
+				/*
+				 * - RFC 2460 asks to ignore payload is last "Next Header" 
+				 *   is IPPROTO_NONE.
+				 * - For ESP, it's not possible to extract any useful
+				 *   informations to match ACLs
+				 */
+#ifdef TRACKING_WITH_PAYLOAD
+				copy_payload = 0;
+#endif
+				found_transport_layer = 1;
+				break;
+
+			default:
+				/* TCP, UDP, ICMP */
+				found_transport_layer = 1;
+				break;
+			}
+		} while (!found_transport_layer);
+
+#ifdef TRACKING_WITH_PAYLOAD
+		if ((offset + sizeof(tracking->payload)) <= dgram_size
+		    && copy_payload) {
+			memcpy(tracking->payload, dgram + offset,
+			       sizeof(tracking->payload));
+		} else {
+			memset(tracking->payload, 0,
+			       sizeof(tracking->payload));
+		}
+#endif
+	} else {
+		offset = 0;
+	}
+	return offset;
 }
 
 /** 
@@ -168,19 +176,20 @@ unsigned int get_ip_headers(tracking_t *tracking, const unsigned char *dgram, un
  * \param dgram_size Number of bytes in the packet
  * \return If an error occurs return 1, else returns 0
  */
-int get_udp_headers(tracking_t *tracking, const unsigned char *dgram, unsigned int dgram_size)
+int get_udp_headers(tracking_t * tracking, const unsigned char *dgram,
+		    unsigned int dgram_size)
 {
-    struct udphdr *udp = (struct udphdr *)dgram;
+	struct udphdr *udp = (struct udphdr *) dgram;
 
-    /* check udp headers minimum size */
-    if (dgram_size < sizeof(struct udphdr))
-        return -1;
+	/* check udp headers minimum size */
+	if (dgram_size < sizeof(struct udphdr))
+		return -1;
 
-    tracking->source = ntohs(udp->source);
-    tracking->dest = ntohs(udp->dest);
-    tracking->type = 0;
-    tracking->code = 0;
-    return 0;
+	tracking->source = ntohs(udp->source);
+	tracking->dest = ntohs(udp->dest);
+	tracking->type = 0;
+	tracking->code = 0;
+	return 0;
 }
 
 
@@ -195,33 +204,35 @@ int get_udp_headers(tracking_t *tracking, const unsigned char *dgram, unsigned i
  *         #TCP_STATE_ESTABLISHED, #TCP_STATE_CLOSE), or #TCP_STATE_UNKNOW
  *         if an error occurs.
  */
-tcp_state_t get_tcp_headers(tracking_t *tracking, const unsigned char *dgram, unsigned int dgram_size)
+tcp_state_t get_tcp_headers(tracking_t * tracking,
+			    const unsigned char *dgram,
+			    unsigned int dgram_size)
 {
-    struct tcphdr *tcp = (struct tcphdr *)dgram;
+	struct tcphdr *tcp = (struct tcphdr *) dgram;
 
-    /* check icmp headers minimum size */
-    if (dgram_size < sizeof(struct tcphdr))
-        return TCP_STATE_UNKNOW;
+	/* check icmp headers minimum size */
+	if (dgram_size < sizeof(struct tcphdr))
+		return TCP_STATE_UNKNOW;
 
-    tracking->source = ntohs(tcp->source);
-    tracking->dest = ntohs(tcp->dest);
-    tracking->type = 0;
-    tracking->code = 0;
+	tracking->source = ntohs(tcp->source);
+	tracking->dest = ntohs(tcp->dest);
+	tracking->type = 0;
+	tracking->code = 0;
 
-    /* test if fin ack or syn */
-    /* if fin ack return 0 end of connection */
-    if (tcp->fin || tcp->rst )
-        return TCP_STATE_CLOSE;
+	/* test if fin ack or syn */
+	/* if fin ack return 0 end of connection */
+	if (tcp->fin || tcp->rst)
+		return TCP_STATE_CLOSE;
 
-    /* if syn return 1 */
-    if (tcp->syn) {
-        if (tcp->ack){
-            return TCP_STATE_ESTABLISHED;
-        } else {
-            return TCP_STATE_OPEN;
-        }
-    }
-    return TCP_STATE_UNKNOW;
+	/* if syn return 1 */
+	if (tcp->syn) {
+		if (tcp->ack) {
+			return TCP_STATE_ESTABLISHED;
+		} else {
+			return TCP_STATE_OPEN;
+		}
+	}
+	return TCP_STATE_UNKNOW;
 }
 
 /** 
@@ -233,21 +244,22 @@ tcp_state_t get_tcp_headers(tracking_t *tracking, const unsigned char *dgram, un
  * \param dgram_size Number of bytes in the packet
  * \return If an error occurs return 1, else returns 0
  */
-int get_icmp_headers(tracking_t *tracking, const unsigned char *dgram, unsigned int dgram_size)
+int get_icmp_headers(tracking_t * tracking, const unsigned char *dgram,
+		     unsigned int dgram_size)
 {
-    struct icmphdr *icmp = (struct icmphdr *)dgram;
+	struct icmphdr *icmp = (struct icmphdr *) dgram;
 
-    /* check udp headers minimum size */
-    if (dgram_size < sizeof(struct icmphdr))
-        return -1;
+	/* check udp headers minimum size */
+	if (dgram_size < sizeof(struct icmphdr))
+		return -1;
 
-    tracking->source = 0;
-    tracking->dest = 0;
-    tracking->type = icmp->type;
-    tracking->code = icmp->code;
-    return 0;
+	tracking->source = 0;
+	tracking->dest = 0;
+	tracking->type = icmp->type;
+	tracking->code = icmp->code;
+	return 0;
 }
- 
+
 /** 
  * Parse ICMPv6 header: extract type and code fields 
  * for the connection tracking (::tracking_t) structure.
@@ -257,18 +269,18 @@ int get_icmp_headers(tracking_t *tracking, const unsigned char *dgram, unsigned 
  * \param dgram_size Number of bytes in the packet
  * \return If an error occurs return 1, else returns 0
  */
-int get_icmpv6_headers(tracking_t *tracking, const unsigned char *dgram, unsigned int dgram_size)
+int get_icmpv6_headers(tracking_t * tracking, const unsigned char *dgram,
+		       unsigned int dgram_size)
 {
-    struct icmp6_hdr *hdr = (struct icmp6_hdr *)dgram;
+	struct icmp6_hdr *hdr = (struct icmp6_hdr *) dgram;
 
-    /* check icmp headers minimum size */
-    if (dgram_size < sizeof(struct icmp6_hdr))
-        return -1;
+	/* check icmp headers minimum size */
+	if (dgram_size < sizeof(struct icmp6_hdr))
+		return -1;
 
-    tracking->source = 0;
-    tracking->dest = 0;
-    tracking->type = hdr->icmp6_type;
-    tracking->code = hdr->icmp6_code;
-    return 0;
+	tracking->source = 0;
+	tracking->dest = 0;
+	tracking->type = hdr->icmp6_type;
+	tracking->code = hdr->icmp6_code;
+	return 0;
 }
-

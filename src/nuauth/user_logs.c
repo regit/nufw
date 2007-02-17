@@ -24,7 +24,7 @@
 #include <time.h>
 
 struct Conn_State {
-	void* conn;
+	void *conn;
 	tcp_state_t state;
 };
 
@@ -46,33 +46,32 @@ struct Conn_State {
  * \param state A ::tcp_state_t, TCP state of the connection
  */
 
-void log_user_packet(connection_t* element, tcp_state_t state)
+void log_user_packet(connection_t * element, tcp_state_t state)
 {
-	if ((nuauthconf->log_users_sync) && (state == TCP_STATE_OPEN) ){
-            if ( nuauthconf->log_users &  8 ){
-                modules_user_logs ( element, state);
-            }
+	if ((nuauthconf->log_users_sync) && (state == TCP_STATE_OPEN)) {
+		if (nuauthconf->log_users & 8) {
+			modules_user_logs(element, state);
+		}
 	} else {
-        if (
-                ((nuauthconf->log_users & 2) && (state == TCP_STATE_DROP))
-                ||
-                ((nuauthconf->log_users & 4) && (state == TCP_STATE_OPEN))
-                ||
-                (nuauthconf->log_users & 8)
-           ) {
-            struct Conn_State * conn_state_copy;
-            conn_state_copy=g_new0(struct Conn_State,1);
-            conn_state_copy->conn=(void*)duplicate_connection(element);
-            if (! conn_state_copy->conn){
-                g_free(conn_state_copy);
-                return;
-            }
-            conn_state_copy->state=state;
+		if (((nuauthconf->log_users & 2)
+		     && (state == TCP_STATE_DROP))
+		    || ((nuauthconf->log_users & 4)
+			&& (state == TCP_STATE_OPEN))
+		    || (nuauthconf->log_users & 8)
+		    ) {
+			struct Conn_State *conn_state_copy;
+			conn_state_copy = g_new0(struct Conn_State, 1);
+			conn_state_copy->conn =
+			    (void *) duplicate_connection(element);
+			if (!conn_state_copy->conn) {
+				g_free(conn_state_copy);
+				return;
+			}
+			conn_state_copy->state = state;
 
-            g_thread_pool_push(nuauthdatas->user_loggers,
-                    conn_state_copy,
-                    NULL);
-        }
+			g_thread_pool_push(nuauthdatas->user_loggers,
+					   conn_state_copy, NULL);
+		}
 	}
 	/* end */
 }
@@ -83,20 +82,20 @@ void log_user_packet(connection_t* element, tcp_state_t state)
  * This is always asynchronous and we directly push the ::accounted_connection to the
  * user_loggers pool.
  */
-void log_user_packet_from_accounted_connection(struct accounted_connection* datas,tcp_state_t state)
+void log_user_packet_from_accounted_connection(struct accounted_connection
+					       *datas, tcp_state_t state)
 {
-	struct Conn_State * conn_state_copy;
-	conn_state_copy=g_new0(struct Conn_State,1);
-	conn_state_copy->conn=g_memdup(datas,sizeof(*datas));
-	if (! conn_state_copy->conn){
+	struct Conn_State *conn_state_copy;
+	conn_state_copy = g_new0(struct Conn_State, 1);
+	conn_state_copy->conn = g_memdup(datas, sizeof(*datas));
+	if (!conn_state_copy->conn) {
 		g_free(conn_state_copy);
 		return;
 	}
-	conn_state_copy->state=state;
+	conn_state_copy->state = state;
 
 	g_thread_pool_push(nuauthdatas->user_loggers,
-			conn_state_copy,
-			NULL);
+			   conn_state_copy, NULL);
 
 }
 
@@ -111,26 +110,26 @@ void log_user_packet_from_accounted_connection(struct accounted_connection* data
  * \param data Unused
  * \return None
  */
-void real_log_user_packet (gpointer userdata, gpointer data)
+void real_log_user_packet(gpointer userdata, gpointer data)
 {
-  block_on_conf_reload();
-  modules_user_logs (
-          ((struct Conn_State *)userdata)->conn,
-          ((struct Conn_State *)userdata)->state
-          );
-  /* free userdata */
-  if ((((struct Conn_State *)userdata)->state == TCP_STATE_OPEN) ||
-		  (((struct Conn_State *)userdata)->state == TCP_STATE_DROP )){
-	  ((connection_t*)((struct Conn_State *)userdata)->conn)->state=AUTH_STATE_DONE;
-	  free_connection((connection_t*)((struct Conn_State *)userdata)->conn);
-  }
-  g_free(userdata);
+	block_on_conf_reload();
+	modules_user_logs(((struct Conn_State *) userdata)->conn,
+			  ((struct Conn_State *) userdata)->state);
+	/* free userdata */
+	if ((((struct Conn_State *) userdata)->state == TCP_STATE_OPEN) ||
+	    (((struct Conn_State *) userdata)->state == TCP_STATE_DROP)) {
+		((connection_t *) ((struct Conn_State *) userdata)->conn)->
+		    state = AUTH_STATE_DONE;
+		free_connection((connection_t *) ((struct Conn_State *)
+						  userdata)->conn);
+	}
+	g_free(userdata);
 }
 
 static void print_group(gpointer group, gpointer userdata)
 {
-	    log_message(DEBUG, AREA_USER,"      Group: %d",
-                GPOINTER_TO_INT(group));
+	log_message(DEBUG, AREA_USER, "      Group: %d",
+		    GPOINTER_TO_INT(group));
 }
 
 /**
@@ -142,51 +141,54 @@ static void print_group(gpointer group, gpointer userdata)
  * nuauthdatas->user_session_loggers thread pool.
  * This calls log_user_session_thread() on the session.
  */
-void log_user_session(user_session_t* usession, session_state_t state)
+void log_user_session(user_session_t * usession, session_state_t state)
 {
-    struct session_event* sessevent;
+	struct session_event *sessevent;
 
-    if (state == SESSION_OPEN) {
-        log_message(MESSAGE, AREA_USER,
-                "[+] User \"%s\" connected.", usession->user_name);
-        if (usession->groups) {
-            g_slist_foreach(usession->groups,print_group,NULL);
-        }
-    } else
-        log_message(MESSAGE, AREA_USER,
-                "[+] User \"%s\" disconnected.", usession->user_name);
+	if (state == SESSION_OPEN) {
+		log_message(MESSAGE, AREA_USER,
+			    "[+] User \"%s\" connected.",
+			    usession->user_name);
+		if (usession->groups) {
+			g_slist_foreach(usession->groups, print_group,
+					NULL);
+		}
+	} else
+		log_message(MESSAGE, AREA_USER,
+			    "[+] User \"%s\" disconnected.",
+			    usession->user_name);
 
-    if ((nuauthconf->log_users & 1) == 0){
-        if (state == SESSION_CLOSE){
-                clean_session(usession);
-        }
-        return;
-    }
+	if ((nuauthconf->log_users & 1) == 0) {
+		if (state == SESSION_CLOSE) {
+			clean_session(usession);
+		}
+		return;
+	}
 
-    /* copy interesting informations of the session */
-    sessevent=g_new0(struct session_event,1);
-    if (sessevent == NULL) {
-        /* no more memory :-( */
-        return;
-    }
-    if (state == SESSION_OPEN) {
-        sessevent->session=g_memdup(usession, sizeof(*usession));
-        sessevent->session->user_name  = g_strdup(usession->user_name);
-        sessevent->session->tls = NULL;
-        sessevent->session->socket = usession->socket;
-        sessevent->session->groups = NULL;
-        sessevent->session->sysname = g_strdup(usession->sysname);
-        sessevent->session->version = g_strdup(usession->version);
-        sessevent->session->release = g_strdup(usession->release);
-    } else {
-        /* closing we do not need to duplicate */
-        sessevent->session = usession;
-    }
-    sessevent->state=state;
-     /* feed thread pool */
-    g_thread_pool_push(nuauthdatas->user_session_loggers,
-            sessevent,
-            NULL);
+	/* copy interesting informations of the session */
+	sessevent = g_new0(struct session_event, 1);
+	if (sessevent == NULL) {
+		/* no more memory :-( */
+		return;
+	}
+	if (state == SESSION_OPEN) {
+		sessevent->session = g_memdup(usession, sizeof(*usession));
+		sessevent->session->user_name =
+		    g_strdup(usession->user_name);
+		sessevent->session->tls = NULL;
+		sessevent->session->socket = usession->socket;
+		sessevent->session->groups = NULL;
+		sessevent->session->sysname = g_strdup(usession->sysname);
+		sessevent->session->version = g_strdup(usession->version);
+		sessevent->session->release = g_strdup(usession->release);
+	} else {
+		/* closing we do not need to duplicate */
+		sessevent->session = usession;
+	}
+	sessevent->state = state;
+	/* feed thread pool */
+	g_thread_pool_push(nuauthdatas->user_session_loggers,
+			   sessevent, NULL);
 }
 
 /**
@@ -199,17 +201,16 @@ void log_user_session(user_session_t* usession, session_state_t state)
  *
  * \attention Don't use this function directly! Use log_user_session().
  */
-void log_user_session_thread (gpointer event_ptr, gpointer unused_optional)
+void log_user_session_thread(gpointer event_ptr, gpointer unused_optional)
 {
-    struct session_event *event = (struct session_event*)event_ptr;
-    user_session_t* session = event->session;
-    block_on_conf_reload();
-    modules_user_session_logs(session, event->state);
-    g_free(session->user_name);
-    g_free(session->sysname);
-    g_free(session->version);
-    g_free(session->release);
-    g_free(session);
-    g_free(event);
+	struct session_event *event = (struct session_event *) event_ptr;
+	user_session_t *session = event->session;
+	block_on_conf_reload();
+	modules_user_session_logs(session, event->state);
+	g_free(session->user_name);
+	g_free(session->sysname);
+	g_free(session->version);
+	g_free(session->release);
+	g_free(session);
+	g_free(event);
 }
-

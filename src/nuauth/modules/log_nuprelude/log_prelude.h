@@ -23,12 +23,10 @@
 /** Prelude version required for the module */
 #define PRELUDE_VERSION_REQUIRE "0.9.0"
 
-struct log_prelude_params
-{
-    GPrivate *packet_tpl;
-    GPrivate *session_tpl;
-    GPrivate *autherr_tpl;
+struct log_prelude_params {
+	GPrivate *packet_tpl;
+	GPrivate *session_tpl;
+	GPrivate *autherr_tpl;
 };
 
 #endif
-

@@ -21,13 +21,13 @@
 #ifndef NUAUTHCONF_H
 #define NUAUTHCONF_H
 
-void init_nuauthconf(struct nuauth_params**);
+void init_nuauthconf(struct nuauth_params **);
 
-int build_prenuauthconf(struct nuauth_params * prenuauthconf,
-                char* gwsrv_addr);
+int build_prenuauthconf(struct nuauth_params *prenuauthconf,
+			char *gwsrv_addr);
 
-void nuauth_reload( int signal );
+void nuauth_reload(int signal);
 
-void free_nuauth_params(struct nuauth_params* data);
+void free_nuauth_params(struct nuauth_params *data);
 
 #endif

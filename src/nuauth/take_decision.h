@@ -22,9 +22,9 @@
 #ifndef TAKE_DECISION_H
 #define TAKE_DECISION_H
 
-gint take_decision(connection_t *element, packet_place_t place);
-gint apply_decision(connection_t *element);
-void decisions_queue_work (gpointer userdata, gpointer data);
+gint take_decision(connection_t * element, packet_place_t place);
+gint apply_decision(connection_t * element);
+void decisions_queue_work(gpointer userdata, gpointer data);
 void send_auth_response(gpointer data, gpointer userdata);
 
 #endif

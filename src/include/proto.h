@@ -26,7 +26,7 @@
 #  include "config.h"
 #endif
 
-#ifdef LINUX 
+#ifdef LINUX
 #  include <endian.h>
 #else
 #  include <machine/endian.h>
@@ -57,15 +57,15 @@ AUTHREQ : user send packet
 */
 
 struct nu_header {
-#ifdef WORDS_BIGENDIAN	
-    uint8_t msg_type:4;
-    uint8_t proto:4;
+#ifdef WORDS_BIGENDIAN
+	uint8_t msg_type:4;
+	uint8_t proto:4;
 #else
-    uint8_t proto:4;
-    uint8_t msg_type:4;
+	uint8_t proto:4;
+	uint8_t msg_type:4;
 #endif
-    uint8_t option;
-    uint16_t length;
+	uint8_t option;
+	uint16_t length;
 };
 
 
@@ -78,13 +78,13 @@ struct nu_header {
  */
 typedef struct {
     /** Version of the protocol (#PROTO_VERSION) */
-    uint8_t protocol_version;
+	uint8_t protocol_version;
 
     /** Message type (from ::nufw_message_t) */
-    uint8_t msg_type;
+	uint8_t msg_type;
 
     /** Message length including header (in bytes) */
-    uint16_t msg_length;
+	uint16_t msg_length;
 } nufw_to_nuauth_message_header_t;
 
 /* TODO switch to enum specific to protocol */
@@ -100,15 +100,14 @@ typedef struct {
  *
  * Format is : "full_path_app;SHA1 sig" each filed being base64 encoded
  */
-#define APP_TYPE_SHA1 0x2 
+#define APP_TYPE_SHA1 0x2
 
-typedef enum
-{
-    DECISION_DROP=0,    /*!< NuAuth decision answer: drop packet */
-    DECISION_ACCEPT,    /*!< NuAuth decision answer: packet accepted */
-    DECISION_NODECIDE,  /*!< NuAuth decision answer: can't decide! */
-    DECISION_REJECT     /*!< NuAuth decision answer: reject the packet */ 
-} decision_t;    
+typedef enum {
+	DECISION_DROP = 0,	/*!< NuAuth decision answer: drop packet */
+	DECISION_ACCEPT,	/*!< NuAuth decision answer: packet accepted */
+	DECISION_NODECIDE,	/*!< NuAuth decision answer: can't decide! */
+	DECISION_REJECT		/*!< NuAuth decision answer: reject the packet */
+} decision_t;
 
 
 /**
@@ -116,32 +115,30 @@ typedef enum
  *
  * Used in ::nufw_to_nuauth_message_header_t
  */
-typedef enum
-{
-    AUTH_REQUEST=0x1,
-    AUTH_ANSWER,
-    USER_REQUEST,
-    AUTH_CONTROL,
-    USER_HELLO,
-    AUTH_CONN_DESTROY,
-    AUTH_CONN_UPDATE,
-    AUTH_CONN_FIXED_TIMEOUT
+typedef enum {
+	AUTH_REQUEST = 0x1,
+	AUTH_ANSWER,
+	USER_REQUEST,
+	AUTH_CONTROL,
+	USER_HELLO,
+	AUTH_CONN_DESTROY,
+	AUTH_CONN_UPDATE,
+	AUTH_CONN_FIXED_TIMEOUT
 } nufw_message_t;
 
 
-typedef enum
-{
-    IPV4_FIELD=1,
-    IPV6_FIELD,
-    APP_FIELD,
-    OS_FIELD,
-    USERNAME_FIELD,
-    HELLO_FIELD
-} nu_field_identifier_t;    
+typedef enum {
+	IPV4_FIELD = 1,
+	IPV6_FIELD,
+	APP_FIELD,
+	OS_FIELD,
+	USERNAME_FIELD,
+	HELLO_FIELD
+} nu_field_identifier_t;
 
 struct nu_authreq {
-    uint16_t packet_seq;
-    uint16_t packet_length; /*!< Length of the whole packet including this header */
+	uint16_t packet_seq;
+	uint16_t packet_length;	/*!< Length of the whole packet including this header */
 };
 
 /**
@@ -149,35 +146,35 @@ struct nu_authreq {
  * See also the header of the whole packet: ::nu_authreq
  */
 struct nu_authfield {
-    uint8_t type;    /*!< Field type identifier: see ::nuv4_field_identifier_t */
-    uint8_t option;  /*!< Option: equals to 0 to #OS_SRV */
-    uint16_t length; /*!< Length of one field */
+	uint8_t type;		/*!< Field type identifier: see ::nuv4_field_identifier_t */
+	uint8_t option;		/*!< Option: equals to 0 to #OS_SRV */
+	uint16_t length;	/*!< Length of one field */
 };
 
 struct nu_authfield_ipv6 {
-    uint8_t type;
-    uint8_t option;
-    uint16_t length;   /*!< Length of one field */
-    struct in6_addr src;
-    struct in6_addr dst;
-    uint8_t proto;
-    uint8_t flags;
-    uint16_t FUSE;
-    uint16_t sport;
-    uint16_t dport;
+	uint8_t type;
+	uint8_t option;
+	uint16_t length;	/*!< Length of one field */
+	struct in6_addr src;
+	struct in6_addr dst;
+	uint8_t proto;
+	uint8_t flags;
+	uint16_t FUSE;
+	uint16_t sport;
+	uint16_t dport;
 };
 
 struct nu_authfield_ipv4 {
-    uint8_t type;
-    uint8_t option;
-    uint16_t length;   /*!< Length of one field */
-    uint32_t src;
-    uint32_t dst;
-    uint8_t proto;
-    uint8_t flags;
-    uint16_t FUSE;
-    uint16_t sport;
-    uint16_t dport;
+	uint8_t type;
+	uint8_t option;
+	uint16_t length;	/*!< Length of one field */
+	uint32_t src;
+	uint32_t dst;
+	uint8_t proto;
+	uint8_t flags;
+	uint16_t FUSE;
+	uint16_t sport;
+	uint16_t dport;
 };
 
 
@@ -186,49 +183,47 @@ struct nu_authfield_ipv4 {
  * Application field datas
  */
 struct nu_authfield_app {
-    uint8_t type;
-    uint8_t option;
-    uint16_t length;   /*!< Length of content */
+	uint8_t type;
+	uint8_t option;
+	uint16_t length;	/*!< Length of content */
 
-    /* after that is the application content */
+	/* after that is the application content */
 };
 
 struct nu_authfield_hello {
-    uint8_t type;
-    uint8_t option;
-    uint16_t length;
-    uint32_t helloid;   /*!< Length of one field */
+	uint8_t type;
+	uint8_t option;
+	uint16_t length;
+	uint32_t helloid;	/*!< Length of one field */
 };
 
 
 /* sender to client message */
 
 /* type message */
-typedef enum
-{
-    SRV_TYPE = 1,               /*!< Send server mode: #SRV_TYPE_PUSH or #SRV_TYPE_POLL */
-    SRV_REQUIRED_PACKET,
-    SRV_REQUIRED_DISCONNECT,
-    SRV_REQUIRED_HELLO
+typedef enum {
+	SRV_TYPE = 1,		/*!< Send server mode: #SRV_TYPE_PUSH or #SRV_TYPE_POLL */
+	SRV_REQUIRED_PACKET,
+	SRV_REQUIRED_DISCONNECT,
+	SRV_REQUIRED_HELLO
 } nu_type_t;
 
 /** Server mode, value of with #SRV_TYPE (::nuv2_srv_message) message type */
-typedef enum
-{
-    SRV_TYPE_POLL=0,   /*!< Server works in POLL mode (default) */
-    SRV_TYPE_PUSH      /*!< Server works in PUSH mode */
+typedef enum {
+	SRV_TYPE_POLL = 0,	/*!< Server works in POLL mode (default) */
+	SRV_TYPE_PUSH		/*!< Server works in PUSH mode */
 } nu_server_mode_t;
 
 struct nu_srv_message {
-    uint8_t type;
-    uint8_t option;
-    uint16_t length;
+	uint8_t type;
+	uint8_t option;
+	uint16_t length;
 };
 
 struct nu_srv_helloreq {
-    uint8_t type,option;
-    uint16_t length;
-    uint32_t helloid;
+	uint8_t type, option;
+	uint16_t length;
+	uint32_t helloid;
 };
 
 /* include definition for NuFW 2.0 */

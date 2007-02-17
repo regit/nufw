@@ -40,90 +40,106 @@
  * Parse packet payload
  */
 
-nu_error_t parse_dgram(connection_t* connection,unsigned char* dgram, unsigned int dgram_size,connection_t** conn,nufw_message_t msg_type)
+nu_error_t parse_dgram(connection_t * connection, unsigned char *dgram,
+		       unsigned int dgram_size, connection_t ** conn,
+		       nufw_message_t msg_type)
 {
-    unsigned int ip_hdr_size;
-    /* get ip headers till tracking is filled */
-    ip_hdr_size = get_ip_headers(&connection->tracking, dgram, dgram_size);
-    if (ip_hdr_size == 0)  {
-        log_message (WARNING, AREA_PACKET, "Can't parse IP headers");
-        free_connection(connection);
-        return NU_EXIT_ERROR;
-    }
-    dgram += ip_hdr_size;
-    dgram_size -= ip_hdr_size;
+	unsigned int ip_hdr_size;
+	/* get ip headers till tracking is filled */
+	ip_hdr_size =
+	    get_ip_headers(&connection->tracking, dgram, dgram_size);
+	if (ip_hdr_size == 0) {
+		log_message(WARNING, AREA_PACKET,
+			    "Can't parse IP headers");
+		free_connection(connection);
+		return NU_EXIT_ERROR;
+	}
+	dgram += ip_hdr_size;
+	dgram_size -= ip_hdr_size;
 
-    /* get saddr and daddr */
-    /* check if proto is in Hello mode list (when hello authentication is used) */
-    if ( nuauthconf->hello_authentication &&  localid_authenticated_protocol(connection->tracking.protocol) ) {
-        connection->state = AUTH_STATE_HELLOMODE;
-        *conn = connection;
-    } else {
-        connection->state = AUTH_STATE_AUTHREQ;
-    }
-    switch (connection->tracking.protocol) {
-        case IPPROTO_TCP:
-        {
-            tcp_state_t tcp_state = get_tcp_headers(&connection->tracking, dgram, dgram_size);
-            switch (tcp_state){
-                case TCP_STATE_OPEN:
-                    break;
-                case TCP_STATE_CLOSE:
-                    if (msg_type == AUTH_CONTROL ){
-                        connection->state = AUTH_STATE_DONE;
-                        log_user_packet(connection, TCP_STATE_CLOSE);
-                        free_connection(connection);
-                        return NU_EXIT_NO_RETURN;
-                    }
-                    break;
-                case TCP_STATE_ESTABLISHED:
-                    if (msg_type == AUTH_CONTROL ){
-                        connection->state = AUTH_STATE_DONE;
-                        log_user_packet(connection, TCP_STATE_ESTABLISHED);
-                        free_connection(connection);
-                        return NU_EXIT_NO_RETURN;
-                    }
-                    break;
-                default:
-                    log_message(WARNING, AREA_PACKET, "Can't parse TCP headers\n");
-                    free_connection(connection);
-                    return NU_EXIT_ERROR;
-            }
-            break;
-        }
-        break;
+	/* get saddr and daddr */
+	/* check if proto is in Hello mode list (when hello authentication is used) */
+	if (nuauthconf->hello_authentication
+	    && localid_authenticated_protocol(connection->tracking.
+					      protocol)) {
+		connection->state = AUTH_STATE_HELLOMODE;
+		*conn = connection;
+	} else {
+		connection->state = AUTH_STATE_AUTHREQ;
+	}
+	switch (connection->tracking.protocol) {
+	case IPPROTO_TCP:
+		{
+			tcp_state_t tcp_state =
+			    get_tcp_headers(&connection->tracking, dgram,
+					    dgram_size);
+			switch (tcp_state) {
+			case TCP_STATE_OPEN:
+				break;
+			case TCP_STATE_CLOSE:
+				if (msg_type == AUTH_CONTROL) {
+					connection->state =
+					    AUTH_STATE_DONE;
+					log_user_packet(connection,
+							TCP_STATE_CLOSE);
+					free_connection(connection);
+					return NU_EXIT_NO_RETURN;
+				}
+				break;
+			case TCP_STATE_ESTABLISHED:
+				if (msg_type == AUTH_CONTROL) {
+					connection->state =
+					    AUTH_STATE_DONE;
+					log_user_packet(connection,
+							TCP_STATE_ESTABLISHED);
+					free_connection(connection);
+					return NU_EXIT_NO_RETURN;
+				}
+				break;
+			default:
+				log_message(WARNING, AREA_PACKET,
+					    "Can't parse TCP headers\n");
+				free_connection(connection);
+				return NU_EXIT_ERROR;
+			}
+			break;
+		}
+		break;
 
-        case IPPROTO_UDP:
-            if (get_udp_headers(&connection->tracking, dgram, dgram_size) < 0) {
-                free_connection(connection);
-                return NU_EXIT_OK;
-            }
-            break;
+	case IPPROTO_UDP:
+		if (get_udp_headers
+		    (&connection->tracking, dgram, dgram_size) < 0) {
+			free_connection(connection);
+			return NU_EXIT_OK;
+		}
+		break;
 
-        case IPPROTO_ICMP:
-            if (get_icmp_headers(&connection->tracking, dgram, dgram_size) < 0) {
-                free_connection(connection);
-                return NU_EXIT_OK;
-            }
-            break;
+	case IPPROTO_ICMP:
+		if (get_icmp_headers
+		    (&connection->tracking, dgram, dgram_size) < 0) {
+			free_connection(connection);
+			return NU_EXIT_OK;
+		}
+		break;
 
-        case IPPROTO_ICMPV6:
-            if (get_icmpv6_headers(&connection->tracking, dgram, dgram_size) < 0) {
-                free_connection(connection);
-                return NU_EXIT_OK;
-            }
-            break;
+	case IPPROTO_ICMPV6:
+		if (get_icmpv6_headers
+		    (&connection->tracking, dgram, dgram_size) < 0) {
+			free_connection(connection);
+			return NU_EXIT_OK;
+		}
+		break;
 
-        default:
-            if (connection->state != AUTH_STATE_HELLOMODE) {
-                log_message (WARNING, AREA_PACKET,
-                        "Can't parse protocol %u",
-                        connection->tracking.protocol);
-                free_connection(connection);
-                return NU_EXIT_ERROR;
-            }
-    }
-    return NU_EXIT_CONTINUE;
+	default:
+		if (connection->state != AUTH_STATE_HELLOMODE) {
+			log_message(WARNING, AREA_PACKET,
+				    "Can't parse protocol %u",
+				    connection->tracking.protocol);
+			free_connection(connection);
+			return NU_EXIT_ERROR;
+		}
+	}
+	return NU_EXIT_CONTINUE;
 }
 
 #define GET_IFACE_FROM_MSG(conn, msg, iface) \
@@ -144,16 +160,17 @@ nu_error_t parse_dgram(connection_t* connection,unsigned char* dgram, unsigned i
  * \return a nu_error_t
  */
 
-nu_error_t parse_v4_fields(nuv4_nufw_to_nuauth_auth_message_t* msg,connection_t *conn)
+nu_error_t parse_v4_fields(nuv4_nufw_to_nuauth_auth_message_t * msg,
+			   connection_t * conn)
 {
-    conn->mark=ntohl(msg->mark);
+	conn->mark = ntohl(msg->mark);
 
-    GET_IFACE_FROM_MSG(conn,msg,indev);
-    GET_IFACE_FROM_MSG(conn,msg,physindev);
-    GET_IFACE_FROM_MSG(conn,msg,outdev);
-    GET_IFACE_FROM_MSG(conn,msg,physoutdev);
+	GET_IFACE_FROM_MSG(conn, msg, indev);
+	GET_IFACE_FROM_MSG(conn, msg, physindev);
+	GET_IFACE_FROM_MSG(conn, msg, outdev);
+	GET_IFACE_FROM_MSG(conn, msg, physoutdev);
 
-    return NU_EXIT_OK;
+	return NU_EXIT_OK;
 }
 
 #undef GET_IFACE_FROM_MSG
@@ -167,64 +184,70 @@ nu_error_t parse_v4_fields(nuv4_nufw_to_nuauth_auth_message_t* msg,connection_t 
  * \param conn Pointer of pointer to the ::connection_t that we have to authenticate
  * \return A nu_error_t
  */
-nu_error_t authpckt_new_connection(unsigned char *dgram, unsigned int dgram_size,connection_t **conn)
+nu_error_t authpckt_new_connection(unsigned char *dgram,
+				   unsigned int dgram_size,
+				   connection_t ** conn)
 {
-    nuv4_nufw_to_nuauth_auth_message_t *msg = (nuv4_nufw_to_nuauth_auth_message_t *)dgram;
-    connection_t *connection;
-    nu_error_t ret;
+	nuv4_nufw_to_nuauth_auth_message_t *msg =
+	    (nuv4_nufw_to_nuauth_auth_message_t *) dgram;
+	connection_t *connection;
+	nu_error_t ret;
 
-    if (dgram_size < sizeof(nuv4_nufw_to_nuauth_auth_message_t))
-    {
-        /** \todo Display warning message */
-        return NU_EXIT_ERROR;
-    }
-    dgram += sizeof(nuv4_nufw_to_nuauth_auth_message_t);
-    dgram_size -= sizeof(nuv4_nufw_to_nuauth_auth_message_t);
+	if (dgram_size < sizeof(nuv4_nufw_to_nuauth_auth_message_t)) {
+	/** \todo Display warning message */
+		return NU_EXIT_ERROR;
+	}
+	dgram += sizeof(nuv4_nufw_to_nuauth_auth_message_t);
+	dgram_size -= sizeof(nuv4_nufw_to_nuauth_auth_message_t);
 
-    /* allocate new connection */
-    connection = g_new0(connection_t, 1);
-    if (connection == NULL){
-        log_message (WARNING, AREA_PACKET, "Can not allocate connection");
-        return NU_EXIT_ERROR;
-    }
+	/* allocate new connection */
+	connection = g_new0(connection_t, 1);
+	if (connection == NULL) {
+		log_message(WARNING, AREA_PACKET,
+			    "Can not allocate connection");
+		return NU_EXIT_ERROR;
+	}
 #ifdef PERF_DISPLAY_ENABLE
-    gettimeofday(&(connection->arrival_time),NULL);
+	gettimeofday(&(connection->arrival_time), NULL);
 #endif
-    connection->acl_groups = NULL;
-    connection->user_groups = NULL;
-    connection->expire = -1;
+	connection->acl_groups = NULL;
+	connection->user_groups = NULL;
+	connection->expire = -1;
 
-    connection->packet_id = g_slist_append(NULL, GUINT_TO_POINTER(ntohl(msg->packet_id)));
-    debug_log_message(DEBUG, AREA_PACKET,
-        "Auth pckt: Working on new connection (id=%u)",
-        (uint32_t)GPOINTER_TO_UINT(connection->packet_id->data));
+	connection->packet_id =
+	    g_slist_append(NULL, GUINT_TO_POINTER(ntohl(msg->packet_id)));
+	debug_log_message(DEBUG, AREA_PACKET,
+			  "Auth pckt: Working on new connection (id=%u)",
+			  (uint32_t) GPOINTER_TO_UINT(connection->
+						      packet_id->data));
 
-    /* timestamp */
-    connection->timestamp = ntohl(msg->timestamp);
-    if ( connection->timestamp == 0 ){
-        connection->timestamp = time(NULL);
-    }
+	/* timestamp */
+	connection->timestamp = ntohl(msg->timestamp);
+	if (connection->timestamp == 0) {
+		connection->timestamp = time(NULL);
+	}
 
-    /* connection is proto v4 because we are here */
-    connection->nufw_version =  PROTO_VERSION_V22;
+	/* connection is proto v4 because we are here */
+	connection->nufw_version = PROTO_VERSION_V22;
 
-    ret = parse_dgram(connection,dgram,dgram_size,conn,msg->msg_type);
-    if (ret != NU_EXIT_CONTINUE){
-        return ret;
-    }
+	ret =
+	    parse_dgram(connection, dgram, dgram_size, conn,
+			msg->msg_type);
+	if (ret != NU_EXIT_CONTINUE) {
+		return ret;
+	}
 
-    /* parse supplementary fields */
-    if (parse_v4_fields(msg,connection) != NU_EXIT_OK)
-    {
-        return ret;
-    }
+	/* parse supplementary fields */
+	if (parse_v4_fields(msg, connection) != NU_EXIT_OK) {
+		return ret;
+	}
 
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_PACKET)){
-        g_message("Packet: ");
-        print_connection(connection,NULL);
-    }
-    *conn = connection;
-    return NU_EXIT_OK;
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG, DEBUG_AREA_PACKET)) {
+		g_message("Packet: ");
+		print_connection(connection, NULL);
+	}
+	*conn = connection;
+	return NU_EXIT_OK;
 }
 
 
@@ -238,69 +261,79 @@ nu_error_t authpckt_new_connection(unsigned char *dgram, unsigned int dgram_size
  * \param dgram Pointer to packet datas
  * \param dgram_size Number of bytes in the packet
  */
-void authpckt_conntrack (unsigned char *dgram, unsigned int dgram_size)
+void authpckt_conntrack(unsigned char *dgram, unsigned int dgram_size)
 {
-    struct nuv4_conntrack_message_t* conntrack;
-    struct accounted_connection* datas;
-    struct internal_message *message;
-    tcp_state_t pstate;
+	struct nuv4_conntrack_message_t *conntrack;
+	struct accounted_connection *datas;
+	struct internal_message *message;
+	tcp_state_t pstate;
 
-    debug_log_message(VERBOSE_DEBUG, AREA_PACKET,
-        "Auth conntrack: Working on new packet");
+	debug_log_message(VERBOSE_DEBUG, AREA_PACKET,
+			  "Auth conntrack: Working on new packet");
 
-    /* Check message content size */
-    if (dgram_size != sizeof(struct nuv4_conntrack_message_t)){
-        debug_log_message(WARNING, AREA_PACKET,
-            "Auth conntrack: Improper length of packet");
-        return;
-    }
+	/* Check message content size */
+	if (dgram_size != sizeof(struct nuv4_conntrack_message_t)) {
+		debug_log_message(WARNING, AREA_PACKET,
+				  "Auth conntrack: Improper length of packet");
+		return;
+	}
 
-    /* Create a message for limited_connexions_queue */
-    conntrack = (struct nuv4_conntrack_message_t*)dgram;
-    datas = g_new0(struct accounted_connection, 1);
-    message = g_new0(struct internal_message, 1);
+	/* Create a message for limited_connexions_queue */
+	conntrack = (struct nuv4_conntrack_message_t *) dgram;
+	datas = g_new0(struct accounted_connection, 1);
+	message = g_new0(struct internal_message, 1);
 
-    datas->tracking.protocol = conntrack->ip_protocol;
+	datas->tracking.protocol = conntrack->ip_protocol;
 
-    datas->tracking.saddr.s6_addr32[0] = conntrack->ip_src.s6_addr32[0];
-    datas->tracking.saddr.s6_addr32[1] = conntrack->ip_src.s6_addr32[1];
-    datas->tracking.saddr.s6_addr32[2] = conntrack->ip_src.s6_addr32[2];
-    datas->tracking.saddr.s6_addr32[3] = conntrack->ip_src.s6_addr32[3];
+	datas->tracking.saddr.s6_addr32[0] =
+	    conntrack->ip_src.s6_addr32[0];
+	datas->tracking.saddr.s6_addr32[1] =
+	    conntrack->ip_src.s6_addr32[1];
+	datas->tracking.saddr.s6_addr32[2] =
+	    conntrack->ip_src.s6_addr32[2];
+	datas->tracking.saddr.s6_addr32[3] =
+	    conntrack->ip_src.s6_addr32[3];
 
-    datas->tracking.daddr.s6_addr32[0] = conntrack->ip_dst.s6_addr32[0];
-    datas->tracking.daddr.s6_addr32[1] = conntrack->ip_dst.s6_addr32[1];
-    datas->tracking.daddr.s6_addr32[2] = conntrack->ip_dst.s6_addr32[2];
-    datas->tracking.daddr.s6_addr32[3] = conntrack->ip_dst.s6_addr32[3];
+	datas->tracking.daddr.s6_addr32[0] =
+	    conntrack->ip_dst.s6_addr32[0];
+	datas->tracking.daddr.s6_addr32[1] =
+	    conntrack->ip_dst.s6_addr32[1];
+	datas->tracking.daddr.s6_addr32[2] =
+	    conntrack->ip_dst.s6_addr32[2];
+	datas->tracking.daddr.s6_addr32[3] =
+	    conntrack->ip_dst.s6_addr32[3];
 
-    if ((conntrack->ip_protocol == IPPROTO_ICMP) || (conntrack->ip_protocol == IPPROTO_ICMPV6)) {
-        datas->tracking.type = ntohs(conntrack->src_port);
-        datas->tracking.code = ntohs(conntrack->dest_port);
-    } else {
-        datas->tracking.source = ntohs(conntrack->src_port);
-        datas->tracking.dest = ntohs(conntrack->dest_port);
-    }
+	if ((conntrack->ip_protocol == IPPROTO_ICMP)
+	    || (conntrack->ip_protocol == IPPROTO_ICMPV6)) {
+		datas->tracking.type = ntohs(conntrack->src_port);
+		datas->tracking.code = ntohs(conntrack->dest_port);
+	} else {
+		datas->tracking.source = ntohs(conntrack->src_port);
+		datas->tracking.dest = ntohs(conntrack->dest_port);
+	}
 
-    datas->packets_in=conntrack->packets_in;
-    datas->bytes_in=conntrack->bytes_in;
-    datas->packets_out=conntrack->packets_out;
-    datas->bytes_out=conntrack->bytes_out;
+	datas->packets_in = conntrack->packets_in;
+	datas->bytes_in = conntrack->bytes_in;
+	datas->packets_out = conntrack->packets_out;
+	datas->bytes_out = conntrack->bytes_out;
 
-    message->datas = datas;
+	message->datas = datas;
 
-    if (conntrack->msg_type == AUTH_CONN_DESTROY) {
-        message->type = FREE_MESSAGE;
-        debug_log_message(VERBOSE_DEBUG, AREA_PACKET,
-                "Auth conntrack: Sending free message");
-        pstate=TCP_STATE_CLOSE;
-    } else {
-        message->type = UPDATE_MESSAGE;
-        debug_log_message(VERBOSE_DEBUG, AREA_PACKET,
-                "Auth conntrack: Sending Update message");
-        pstate=TCP_STATE_ESTABLISHED;
-    }
+	if (conntrack->msg_type == AUTH_CONN_DESTROY) {
+		message->type = FREE_MESSAGE;
+		debug_log_message(VERBOSE_DEBUG, AREA_PACKET,
+				  "Auth conntrack: Sending free message");
+		pstate = TCP_STATE_CLOSE;
+	} else {
+		message->type = UPDATE_MESSAGE;
+		debug_log_message(VERBOSE_DEBUG, AREA_PACKET,
+				  "Auth conntrack: Sending Update message");
+		pstate = TCP_STATE_ESTABLISHED;
+	}
 
-    log_user_packet_from_accounted_connection(datas,pstate);
-    g_async_queue_push (nuauthdatas->limited_connections_queue, message);
+	log_user_packet_from_accounted_connection(datas, pstate);
+	g_async_queue_push(nuauthdatas->limited_connections_queue,
+			   message);
 }
 
 /**
@@ -323,100 +356,114 @@ void authpckt_conntrack (unsigned char *dgram, unsigned int dgram_size)
  *   - #NU_EXIT_OK if ok and conn created
  *   - #NU_EXIT_NO_RETURN if no conn is needed but work is ok
  */
-nu_error_t authpckt_decode(unsigned char **pdgram, unsigned int * pdgram_size, connection_t** conn)
+nu_error_t authpckt_decode(unsigned char **pdgram,
+			   unsigned int *pdgram_size, connection_t ** conn)
 {
-  unsigned char* dgram=*pdgram;
-  unsigned int dgram_size=*pdgram_size;
-  nufw_to_nuauth_message_header_t *header;
+	unsigned char *dgram = *pdgram;
+	unsigned int dgram_size = *pdgram_size;
+	nufw_to_nuauth_message_header_t *header;
 
-  /* Switch following protocol version */
-  header = (nufw_to_nuauth_message_header_t *)dgram;
-  switch (header->protocol_version){
-    case PROTO_VERSION_V22:
-        switch (header->msg_type){
-          case AUTH_REQUEST:
-          case AUTH_CONTROL:
-              authpckt_new_connection(dgram, dgram_size,conn);
-              if (ntohs(header->msg_length) < dgram_size){
-                  *pdgram_size = dgram_size - ntohs(header->msg_length);
-                  *pdgram = dgram + ntohs(header->msg_length);
-              } else {
-                  *pdgram_size=0;
-              }
-              return NU_EXIT_OK;
+	/* Switch following protocol version */
+	header = (nufw_to_nuauth_message_header_t *) dgram;
+	switch (header->protocol_version) {
+	case PROTO_VERSION_V22:
+		switch (header->msg_type) {
+		case AUTH_REQUEST:
+		case AUTH_CONTROL:
+			authpckt_new_connection(dgram, dgram_size, conn);
+			if (ntohs(header->msg_length) < dgram_size) {
+				*pdgram_size =
+				    dgram_size - ntohs(header->msg_length);
+				*pdgram =
+				    dgram + ntohs(header->msg_length);
+			} else {
+				*pdgram_size = 0;
+			}
+			return NU_EXIT_OK;
 
-              break;
-          case AUTH_CONN_DESTROY:
-          case AUTH_CONN_UPDATE:
-              authpckt_conntrack(dgram, dgram_size);
-              *conn = NULL;
-              if (ntohs(header->msg_length) < dgram_size){
-                  *pdgram_size = dgram_size - ntohs(header->msg_length);
-                  *pdgram = dgram + ntohs(header->msg_length);
-              } else {
-                  *pdgram_size=0;
-              }
-              return NU_EXIT_NO_RETURN;
-          default:
-              log_message(VERBOSE_DEBUG, AREA_PACKET, "NuFW packet type is unknown");
-              return NU_EXIT_ERROR;
-        }
-        return NU_EXIT_OK;
-    case PROTO_VERSION_V20:
-        switch (header->msg_type){
-          case AUTH_REQUEST:
-          case AUTH_CONTROL:
-              authpckt_new_connection_v3(dgram, dgram_size,conn);
-              if (ntohs(header->msg_length) < dgram_size){
-                  *pdgram_size = dgram_size - ntohs(header->msg_length);
-                  *pdgram = dgram + ntohs(header->msg_length);
-              } else {
-                  *pdgram_size=0;
-              }
-              return NU_EXIT_OK;
+			break;
+		case AUTH_CONN_DESTROY:
+		case AUTH_CONN_UPDATE:
+			authpckt_conntrack(dgram, dgram_size);
+			*conn = NULL;
+			if (ntohs(header->msg_length) < dgram_size) {
+				*pdgram_size =
+				    dgram_size - ntohs(header->msg_length);
+				*pdgram =
+				    dgram + ntohs(header->msg_length);
+			} else {
+				*pdgram_size = 0;
+			}
+			return NU_EXIT_NO_RETURN;
+		default:
+			log_message(VERBOSE_DEBUG, AREA_PACKET,
+				    "NuFW packet type is unknown");
+			return NU_EXIT_ERROR;
+		}
+		return NU_EXIT_OK;
+	case PROTO_VERSION_V20:
+		switch (header->msg_type) {
+		case AUTH_REQUEST:
+		case AUTH_CONTROL:
+			authpckt_new_connection_v3(dgram, dgram_size,
+						   conn);
+			if (ntohs(header->msg_length) < dgram_size) {
+				*pdgram_size =
+				    dgram_size - ntohs(header->msg_length);
+				*pdgram =
+				    dgram + ntohs(header->msg_length);
+			} else {
+				*pdgram_size = 0;
+			}
+			return NU_EXIT_OK;
 
-              break;
-          case AUTH_CONN_DESTROY:
-          case AUTH_CONN_UPDATE:
-              authpckt_conntrack_v3(dgram, dgram_size);
-              *conn = NULL;
-              if (ntohs(header->msg_length) < dgram_size){
-                  *pdgram_size = dgram_size - ntohs(header->msg_length);
-                  *pdgram = dgram + ntohs(header->msg_length);
-              } else {
-                  *pdgram_size=0;
-              }
-              return NU_EXIT_NO_RETURN;
-          default:
-              log_message(VERBOSE_DEBUG, AREA_PACKET, "NuFW packet type is unknown");
-              return NU_EXIT_ERROR;
-        }
-        return NU_EXIT_OK;
-    default:
-        {
-            log_message(WARNING, AREA_PACKET, "NuFW protocol is unknown");
-        }
+			break;
+		case AUTH_CONN_DESTROY:
+		case AUTH_CONN_UPDATE:
+			authpckt_conntrack_v3(dgram, dgram_size);
+			*conn = NULL;
+			if (ntohs(header->msg_length) < dgram_size) {
+				*pdgram_size =
+				    dgram_size - ntohs(header->msg_length);
+				*pdgram =
+				    dgram + ntohs(header->msg_length);
+			} else {
+				*pdgram_size = 0;
+			}
+			return NU_EXIT_NO_RETURN;
+		default:
+			log_message(VERBOSE_DEBUG, AREA_PACKET,
+				    "NuFW packet type is unknown");
+			return NU_EXIT_ERROR;
+		}
+		return NU_EXIT_OK;
+	default:
+		{
+			log_message(WARNING, AREA_PACKET,
+				    "NuFW protocol is unknown");
+		}
 
-  }
-  return NU_EXIT_OK;
+	}
+	return NU_EXIT_OK;
 }
 
 /**
  * \return 0 if there is an error, value of protocol elsewhere
  */
-unsigned char get_proto_version_from_packet(const unsigned char* dgram,size_t dgram_size)
+unsigned char get_proto_version_from_packet(const unsigned char *dgram,
+					    size_t dgram_size)
 {
-  nufw_to_nuauth_message_header_t *header;
+	nufw_to_nuauth_message_header_t *header;
 
-  if (dgram_size<sizeof(nufw_to_nuauth_message_header_t)){
-      return 0;
-  }
-  /* Check protocol version */
-  header = (nufw_to_nuauth_message_header_t *)dgram;
-  /* Is protocol supported */
-  if ( check_protocol_version(header->protocol_version) == NU_EXIT_OK ){
-      return header->protocol_version;
-  } else {
-      return 0;
-  }
+	if (dgram_size < sizeof(nufw_to_nuauth_message_header_t)) {
+		return 0;
+	}
+	/* Check protocol version */
+	header = (nufw_to_nuauth_message_header_t *) dgram;
+	/* Is protocol supported */
+	if (check_protocol_version(header->protocol_version) == NU_EXIT_OK) {
+		return header->protocol_version;
+	} else {
+		return 0;
+	}
 }

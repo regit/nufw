@@ -26,14 +26,13 @@
  *
  * See push_worker().
  */
-typedef enum
-{
-    FREE_MESSAGE=0,   /*!< Call delete_client_by_socket() / used in cache_manager() */
-    WARN_MESSAGE,     /*!< Warn clients: see warn_clients() */
-    INSERT_MESSAGE,   /*!< Call add_client() / used in cache_manager() */
-    UPDATE_MESSAGE,   /*!< Used in cache_manager() */
-    GET_MESSAGE,      /*!< Used in cache_manager() */
-    REFRESH_MESSAGE   /*!< Used in cache_manager() */
+typedef enum {
+	FREE_MESSAGE = 0,	/*!< Call delete_client_by_socket() / used in cache_manager() */
+	WARN_MESSAGE,		/*!< Warn clients: see warn_clients() */
+	INSERT_MESSAGE,		/*!< Call add_client() / used in cache_manager() */
+	UPDATE_MESSAGE,		/*!< Used in cache_manager() */
+	GET_MESSAGE,		/*!< Used in cache_manager() */
+	REFRESH_MESSAGE		/*!< Used in cache_manager() */
 } internal_message_type_t;
 
 struct internal_message {

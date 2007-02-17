@@ -70,7 +70,7 @@
 #include "structure.h"
 
 #if USE_NFQUEUE
-#include <linux/netfilter.h>		/* for NF_ACCEPT */
+#include <linux/netfilter.h>	/* for NF_ACCEPT */
 #include <libnetfilter_queue/libnetfilter_queue.h>
 
 /** Default value of ::nfqueue_num */
@@ -98,17 +98,17 @@ uint32_t queue_maxlen;
 #           include <libipq.h>
 #       else
 #           error "libipq needed for NuFW compilation"
-#       endif      /* ifdef HAVE_LIBIPQ_H */
-#   endif      /* ifdef HAVE_LIBIPQ_LIBIPQ_H  */
-#endif   /* if USE_NFQUEUE */
+#       endif			/* ifdef HAVE_LIBIPQ_H */
+#   endif			/* ifdef HAVE_LIBIPQ_LIBIPQ_H  */
+#endif				/* if USE_NFQUEUE */
 
 /* conntrack things */
 #ifdef HAVE_LIBCONNTRACK
 #  include <libnetfilter_conntrack/libnetfilter_conntrack.h>
-   struct nfct_handle *cth;
-   unsigned char handle_conntrack_event;
-   unsigned char nufw_conntrack_uses_mark;
-   void* conntrack_event_handler(void *data);
+struct nfct_handle *cth;
+unsigned char handle_conntrack_event;
+unsigned char nufw_conntrack_uses_mark;
+void *conntrack_event_handler(void *data);
 #endif
 
 #include <sys/socket.h>
@@ -125,15 +125,15 @@ uint32_t queue_maxlen;
 #define CERTFILE "/nufw-cert.pem"
 
 struct nuauth_conn {
-        gnutls_session * session;
-        pthread_mutex_t mutex;
-        unsigned char auth_server_running;
-        pthread_t auth_server;
-        pthread_mutex_t auth_server_mutex;
+	gnutls_session *session;
+	pthread_mutex_t mutex;
+	unsigned char auth_server_running;
+	pthread_t auth_server;
+	pthread_mutex_t auth_server_mutex;
 #ifdef HAVE_LIBCONNTRACK
-        pthread_t conntrack_event_handler;
+	pthread_t conntrack_event_handler;
 #endif
-        gnutls_certificate_credentials xcred;
+	gnutls_certificate_credentials xcred;
 };
 
 struct queued_pckt {
@@ -147,13 +147,13 @@ struct queued_pckt {
 
 	time_t timestamp;
 
-	char* payload;
+	char *payload;
 	int payload_len;
 };
 
 struct nuauth_conn tls;
 
-gnutls_session * tls_connect();
+gnutls_session *tls_connect();
 pthread_cond_t *session_destroyed_cond;
 pthread_cond_t *session_active_cond;
 pthread_mutex_t *session_destroyed_mutex;
@@ -176,20 +176,20 @@ int raw_sock6;
  */
 
 /* IP packet catcher */
-void* packetsrv(void *data);
+void *packetsrv(void *data);
 
 /* IP auth server */
-void* authsrv(void* data);
+void *authsrv(void *data);
 
 /* send an auth request packet given a payload (raw packet) */
-int auth_request_send(uint8_t type,struct queued_pckt* pckt);
+int auth_request_send(uint8_t type, struct queued_pckt *pckt);
 
 void close_tls_session();
 
-unsigned long padd ( packet_idl * packet);
-int psearch_and_destroy (uint32_t packet_id,uint32_t * mark);
-void clear_packet_list ();
-void clean_old_packets ();
+unsigned long padd(packet_idl * packet);
+int psearch_and_destroy(uint32_t packet_id, uint32_t * mark);
+void clear_packet_list();
+void clean_old_packets();
 
 void process_usr1(int signum);
 void process_usr2(int signum);
@@ -197,5 +197,4 @@ void process_poll(int signum);
 
 int send_icmp_unreach(char *payload);
 
-#endif   /* _NUFW_HEADER_H */
-
+#endif				/* _NUFW_HEADER_H */

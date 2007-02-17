@@ -23,14 +23,14 @@
 #ifndef CHECKS_H
 #define CHECKS_H
 
-void* recv_message(void* session);
+void *recv_message(void *session);
 
-int nu_client_check(NuAuth * session, nuclient_error *err);
-void* nu_client_thread_check(void * session);
+int nu_client_check(NuAuth * session, nuclient_error * err);
+void *nu_client_thread_check(void *session);
 
-int nu_client_real_check(NuAuth * session, nuclient_error *err);
+int nu_client_real_check(NuAuth * session, nuclient_error * err);
 
-int secure_snprintf(char *buffer, unsigned int buffer_size, char *format, ...);
+int secure_snprintf(char *buffer, unsigned int buffer_size, char *format,
+		    ...);
 
 #endif
-

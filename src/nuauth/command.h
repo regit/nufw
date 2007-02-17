@@ -21,7 +21,6 @@
 #ifndef COMMAND_SERVER_H
 #define COMMAND_SERVER_H
 
-void* command_server(GMutex* mutex);
+void *command_server(GMutex * mutex);
 
-#endif  /* COMMAND_SERVER_H */
-
+#endif				/* COMMAND_SERVER_H */

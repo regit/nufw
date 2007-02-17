@@ -23,14 +23,14 @@
 
 /* AUDIT */
 
-struct audit_struct{
-  GThreadPool *users;
-  GThreadPool *acls;
-  GThreadPool *loggers;
-  GHashTable *conn_list;
-  GHashTable *aclcache;
-  gint cache_req_nb;
-  gint cache_hit_nb;
+struct audit_struct {
+	GThreadPool *users;
+	GThreadPool *acls;
+	GThreadPool *loggers;
+	GHashTable *conn_list;
+	GHashTable *aclcache;
+	gint cache_req_nb;
+	gint cache_hit_nb;
 };
 
 struct audit_struct *myaudit;

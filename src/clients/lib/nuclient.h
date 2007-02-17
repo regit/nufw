@@ -102,21 +102,20 @@ extern "C" {
  * We use unsigned int and long (instead of exact type) to make
  * hashing easier.
  */
-typedef struct conn
-{
-    unsigned int protocol;     /*!< IPv4 protocol */
-    struct in6_addr ip_src;    /*!< Local address IPv4 */
-    unsigned short port_src;   /*!< Local address port */
-    struct in6_addr ip_dst;    /*!< Remote address IPv4 */
-    unsigned short port_dst;   /*!< Remote address port */
-    unsigned long uid;         /*!< User identifier */
-    unsigned long inode;       /*!< Inode */
-    unsigned int retransmit;   /*!< Restransmit */
-    time_t createtime;         /*!< Creation time (Epoch format) */
+	typedef struct conn {
+		unsigned int protocol;	/*!< IPv4 protocol */
+		struct in6_addr ip_src;	/*!< Local address IPv4 */
+		unsigned short port_src;	/*!< Local address port */
+		struct in6_addr ip_dst;	/*!< Remote address IPv4 */
+		unsigned short port_dst;	/*!< Remote address port */
+		unsigned long uid;	/*!< User identifier */
+		unsigned long inode;	/*!< Inode */
+		unsigned int retransmit;	/*!< Restransmit */
+		time_t createtime;	/*!< Creation time (Epoch format) */
 
     /** Pointer to next connection (NULL if it's as the end) */
-    struct conn *next;
-} conn_t;
+		struct conn *next;
+	} conn_t;
 
 /**
  * A connection table: hash table of single-linked connection lists,
@@ -130,9 +129,9 @@ typedef struct conn
  *   - tcptable_read(): feed the table using /proc/net/ files (under Linux) ;
  *   - tcptable_free(): destroy a table (free memory).
  */
-typedef struct conntable {
-	conn_t *buckets[CONNTABLE_BUCKETS];
-} conntable_t;
+	typedef struct conntable {
+		conn_t *buckets[CONNTABLE_BUCKETS];
+	} conntable_t;
 
 /* only publicly seen structure but datas are private */
 
@@ -147,158 +146,153 @@ typedef struct conntable {
 #define PACKET_SIZE \
     ( sizeof(struct nu_header) + CONN_MAX * PACKET_ITEM_MAXSIZE )
 
-enum
-{
-    ERROR_OK = 0,
-    ERROR_LOGIN = 1,
-    ERROR_NETWORK = 2
-};
+	enum {
+		ERROR_OK = 0,
+		ERROR_LOGIN = 1,
+		ERROR_NETWORK = 2
+	};
 
 /* NuAuth structure */
 
-typedef struct {
+	typedef struct {
 	/*--------------- PUBLIC MEMBERS -------------------*/
-	u_int32_t userid;        /*!< Local user identifier (getuid()) */
-	char *username;          /*!< Username (encoded in UTF-8) */
-	char *password;          /*!< Password (encoded in UTF-8) */
+		u_int32_t userid;	/*!< Local user identifier (getuid()) */
+		char *username;	/*!< Username (encoded in UTF-8) */
+		char *password;	/*!< Password (encoded in UTF-8) */
 
-    gnutls_session tls;      /*!< TLS session over TCP socket */
-	gnutls_certificate_credentials cred; /*!< TLS credentials */
-	char* tls_password;      /*!< TLS password */
+		gnutls_session tls;	/*!< TLS session over TCP socket */
+		gnutls_certificate_credentials cred;	/*!< TLS credentials */
+		char *tls_password;	/*!< TLS password */
 
-	int socket;              /*!< TCP socket used to exchange message with nuauth */
-	conntable_t *ct;         /*!< Connection table */
-	u_int32_t packet_seq;    /*!< Packet sequence number (start at zero) */
-    int auth_by_default;     /*!< Auth. by default (=1) */
-    unsigned char debug_mode; /*!< Debug mode, enabled if different than zero */
-    unsigned char verbose;   /*!< Verbose mode (default: enabled) */
-    unsigned char diffie_hellman;   /*!< Use Diffie Hellman for key exchange? */
+		int socket;	/*!< TCP socket used to exchange message with nuauth */
+		conntable_t *ct;	/*!< Connection table */
+		u_int32_t packet_seq;	/*!< Packet sequence number (start at zero) */
+		int auth_by_default;	/*!< Auth. by default (=1) */
+		unsigned char debug_mode;	/*!< Debug mode, enabled if different than zero */
+		unsigned char verbose;	/*!< Verbose mode (default: enabled) */
+		unsigned char diffie_hellman;	/*!< Use Diffie Hellman for key exchange? */
 
     /** Server mode: #SRV_TYPE_POLL or #SRV_TYPE_PUSH */
-	u_int8_t server_mode;
+		u_int8_t server_mode;
 
 	/*------------- PRIVATE MEMBERS ----------------*/
 
     /** Mutex used in session destruction */
-	pthread_mutex_t mutex;
+		pthread_mutex_t mutex;
 
     /**
      * Flag to signal if user is connected or not.
      * Connected means that TLS tunnel is opened
      * and that authentification is done.
      */
-	unsigned char connected;
+		unsigned char connected;
 
 	/**
      * Condition and associated mutex used to know when a check is necessary
      */
-	pthread_cond_t check_cond;
-	pthread_mutex_t check_count_mutex;
-	int count_msg_cond;
+		pthread_cond_t check_cond;
+		pthread_mutex_t check_count_mutex;
+		int count_msg_cond;
 
     /**
      * Thread which check connection with nuauth,
      * see function nu_client_thread_check().
      */
-	pthread_t checkthread;
+		pthread_t checkthread;
 
     /**
      * Thread which receive messages from nuauth, see function recv_message().
      */
-	pthread_t recvthread;
+		pthread_t recvthread;
 
     /**
      * Diffie Hellman parameters used to establish TLS tunnel.
      */
-    gnutls_dh_params dh_params;
+		gnutls_dh_params dh_params;
 
     /**
      * Does we need to set credentials to current gnutls session?
      */
-    unsigned char need_set_cred;
+		unsigned char need_set_cred;
 
     /** Timestamp (Epoch format) of last packet send to nuauth */
-	time_t timestamp_last_sent;
-} NuAuth;
+		time_t timestamp_last_sent;
+	} NuAuth;
 
 /** Error family */
-typedef enum
-{
-    INTERNAL_ERROR = 0,
-    GNUTLS_ERROR = 1,
-    SASL_ERROR = 2
-} nuclient_error_family_t;
+	typedef enum {
+		INTERNAL_ERROR = 0,
+		GNUTLS_ERROR = 1,
+		SASL_ERROR = 2
+	} nuclient_error_family_t;
 
 /* INTERNAL ERROR CODES */
-enum
-{
-    NO_ERR  = 0,                     /** No error */
-    SESSION_NOT_CONNECTED_ERR  = 1,  /** Session not connected */
-    UNKNOWN_ERR = 2,                 /** Unkown error */
-    TIMEOUT_ERR = 3,                 /** Connection timeout */
-    DNS_RESOLUTION_ERR = 4,          /** DNS resolution error */
-    NO_ADDR_ERR = 5,                 /** Address not recognized */
-    FILE_ACCESS_ERR = 6,             /** File access error */
-    CANT_CONNECT_ERR  = 7,           /** Connection failed */
-    MEMORY_ERR  = 8,                 /** No more memory */
-    TCPTABLE_ERR  = 9,               /** Fail to read connection table */
-    SEND_ERR = 10,                   /** Fail to send packet to nuauth */
-    BAD_CREDENTIALS_ERR = 11
-};
+	enum {
+		NO_ERR = 0,	     /** No error */
+		SESSION_NOT_CONNECTED_ERR = 1,
+				     /** Session not connected */
+		UNKNOWN_ERR = 2,     /** Unkown error */
+		TIMEOUT_ERR = 3,     /** Connection timeout */
+		DNS_RESOLUTION_ERR = 4,
+				     /** DNS resolution error */
+		NO_ADDR_ERR = 5,     /** Address not recognized */
+		FILE_ACCESS_ERR = 6, /** File access error */
+		CANT_CONNECT_ERR = 7,/** Connection failed */
+		MEMORY_ERR = 8,	     /** No more memory */
+		TCPTABLE_ERR = 9,    /** Fail to read connection table */
+		SEND_ERR = 10,	     /** Fail to send packet to nuauth */
+		BAD_CREDENTIALS_ERR = 11
+	};
 
 /* libnuclient return code structure */
-typedef struct
-{
-    nuclient_error_family_t family;
-    int error;
-} nuclient_error;
+	typedef struct {
+		nuclient_error_family_t family;
+		int error;
+	} nuclient_error;
 
 /* Exported functions */
-int 	nu_client_check(NuAuth * session, nuclient_error *err);
+	int nu_client_check(NuAuth * session, nuclient_error * err);
 
-int     nu_client_error_init(nuclient_error **err);
-void    nu_client_error_destroy(nuclient_error *err);
+	int nu_client_error_init(nuclient_error ** err);
+	void nu_client_error_destroy(nuclient_error * err);
 
-int  nu_client_global_init(nuclient_error *err);
-void nu_client_global_deinit();
+	int nu_client_global_init(nuclient_error * err);
+	void nu_client_global_deinit();
 
-NuAuth* nu_client_new(
-        const char* username,
-        const char* password,
-        unsigned char diffie_hellman,
-        nuclient_error *err);
+	NuAuth *nu_client_new(const char *username,
+			      const char *password,
+			      unsigned char diffie_hellman,
+			      nuclient_error * err);
 
-void nu_client_set_realm(NuAuth* session, char *realm);
-void nu_client_set_debug(NuAuth* session, unsigned char enabled);
-void nu_client_set_verbose(NuAuth* session, unsigned char enabled);
+	void nu_client_set_realm(NuAuth * session, char *realm);
+	void nu_client_set_debug(NuAuth * session, unsigned char enabled);
+	void nu_client_set_verbose(NuAuth * session,
+				   unsigned char enabled);
 
-int nu_client_setup_tls(NuAuth* session,
-        char* tls_passwd,
-        char* keyfile,
-        char* certfile,
-        char* cafile,
-        nuclient_error *err);
+	int nu_client_setup_tls(NuAuth * session,
+				char *tls_passwd,
+				char *keyfile,
+				char *certfile,
+				char *cafile, nuclient_error * err);
 
-int nu_client_connect(NuAuth* session,
-        const char *hostname,
-        const char *service,
-        nuclient_error *err);
+	int nu_client_connect(NuAuth * session,
+			      const char *hostname,
+			      const char *service, nuclient_error * err);
 
-void nu_client_reset(NuAuth *session);
+	void nu_client_reset(NuAuth * session);
 
-void nu_client_delete(NuAuth *session);
+	void nu_client_delete(NuAuth * session);
 
-const char* nu_client_strerror (nuclient_error *err);
+	const char *nu_client_strerror(nuclient_error * err);
 
-char* nu_client_to_utf8(const char* inbuf, char *from_charset);
+	char *nu_client_to_utf8(const char *inbuf, char *from_charset);
 
-const char *nu_get_version();
-int nu_check_version(const char *version);
+	const char *nu_get_version();
+	int nu_check_version(const char *version);
 
-char* nu_get_home_dir();
+	char *nu_get_home_dir();
 
 #ifdef __cplusplus
 }
 #endif
-
 #endif

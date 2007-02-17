@@ -74,132 +74,159 @@
  * Check a user/password against the list of modules used for user authentication
  *  It returns the decision using SASL defined return value.
  */
-int modules_user_check (const char *user, const char *pass,unsigned passlen)
+int modules_user_check(const char *user, const char *pass,
+		       unsigned passlen)
 {
-    /* iter through module list and stop when user is found */
-    GSList *walker=user_check_modules;
-    int walker_return=0;
-    for (;walker!=NULL;walker=walker->next ){
-        walker_return=(*(user_check_callback*)(((module_t*)walker->data))->func)(user,
-                pass,passlen,((module_t*)walker->data)->params);
-        if (walker_return == SASL_OK)
-            return SASL_OK;
-    }
-    return SASL_NOAUTHZ;
+	/* iter through module list and stop when user is found */
+	GSList *walker = user_check_modules;
+	int walker_return = 0;
+	for (; walker != NULL; walker = walker->next) {
+		walker_return =
+		    (*(user_check_callback *)
+		     (((module_t *) walker->data))->func) (user, pass,
+							   passlen,
+							   ((module_t *)
+							    walker->data)->
+							   params);
+		if (walker_return == SASL_OK)
+			return SASL_OK;
+	}
+	return SASL_NOAUTHZ;
 }
 
 /**
  * Get group for a given user
  */
-GSList* modules_get_user_groups(const char *user)
+GSList *modules_get_user_groups(const char *user)
 {
-    /* iter through module list and stop when an acl is found */
-    GSList *walker=get_user_groups_modules;
-    GSList* walker_return=NULL;
+	/* iter through module list and stop when an acl is found */
+	GSList *walker = get_user_groups_modules;
+	GSList *walker_return = NULL;
 
-    for (;walker!=NULL;walker=walker->next ){
-        walker_return=(*(get_user_groups_callback*)(((module_t*)walker->data))->func)(user,
-                ((module_t*)walker->data)->params);
-        if (walker_return)
-            return walker_return;
-    }
+	for (; walker != NULL; walker = walker->next) {
+		walker_return =
+		    (*(get_user_groups_callback *)
+		     (((module_t *) walker->data))->func) (user,
+							   ((module_t *)
+							    walker->data)->
+							   params);
+		if (walker_return)
+			return walker_return;
+	}
 
-    return NULL;
+	return NULL;
 
 }
 
 uint32_t modules_get_user_id(const char *user)
 {
-    /* iter through module list and stop when an acl is found */
-    GSList *walker=get_user_id_modules;
-    uint32_t walker_return=0;
+	/* iter through module list and stop when an acl is found */
+	GSList *walker = get_user_id_modules;
+	uint32_t walker_return = 0;
 
-    for (;walker!=NULL;walker=walker->next ){
-        walker_return=(*(get_user_id_callback*)(((module_t*)walker->data))->func)(user,
-                ((module_t*)walker->data)->params);
-        if (walker_return)
-            return walker_return;
-    }
+	for (; walker != NULL; walker = walker->next) {
+		walker_return =
+		    (*(get_user_id_callback *)
+		     (((module_t *) walker->data))->func) (user,
+							   ((module_t *)
+							    walker->data)->
+							   params);
+		if (walker_return)
+			return walker_return;
+	}
 
-    return 0;
+	return 0;
 
 }
+
 /**
  * Check a connection and return a list of acl that match the information
  * contained in the connection.
  */
-GSList* modules_acl_check (connection_t* element)
+GSList *modules_acl_check(connection_t * element)
 {
-    /* iter through module list and stop when an acl is found */
-    GSList *walker=acl_check_modules;
-    GSList* walker_return=NULL;
+	/* iter through module list and stop when an acl is found */
+	GSList *walker = acl_check_modules;
+	GSList *walker_return = NULL;
 
-    for (;walker!=NULL;walker=walker->next ){
-        walker_return=(*(acl_check_callback*)(((module_t*)walker->data))->func)(element,
-                ((module_t*)walker->data)->params);
-        if (walker_return)
-            return walker_return;
-    }
+	for (; walker != NULL; walker = walker->next) {
+		walker_return =
+		    (*(acl_check_callback *)
+		     (((module_t *) walker->data))->func) (element,
+							   ((module_t *)
+							    walker->data)->
+							   params);
+		if (walker_return)
+			return walker_return;
+	}
 
-    return NULL;
+	return NULL;
 }
 
 /* ip auth */
-gchar* modules_ip_auth(tracking_t * header)
+gchar *modules_ip_auth(tracking_t * header)
 {
-    /* iter through module list and stop when decision is made */
-    GSList *walker=ip_auth_modules;
-    gchar* walker_return=NULL;
-    for (;walker!=NULL;walker=walker->next ){
-        walker_return=(*(ip_auth_callback*)(((module_t*)walker->data))->func)(header,
-                ((module_t*)walker->data)->params);
-        if (walker_return)
-            return walker_return;
-    }
-    return NULL;
+	/* iter through module list and stop when decision is made */
+	GSList *walker = ip_auth_modules;
+	gchar *walker_return = NULL;
+	for (; walker != NULL; walker = walker->next) {
+		walker_return =
+		    (*(ip_auth_callback *) (((module_t *) walker->data))->
+		     func) (header, ((module_t *) walker->data)->params);
+		if (walker_return)
+			return walker_return;
+	}
+	return NULL;
 }
 
 
 /**
  * log authenticated packets
  */
-int modules_user_logs (void* element, tcp_state_t state)
+int modules_user_logs(void *element, tcp_state_t state)
 {
-    /* iter through all modules list */
-    GSList *walker=user_logs_modules;
-    for (; walker!=NULL; walker=walker->next) {
-        user_logs_callback *handler = (user_logs_callback*)((module_t*)walker->data)->func;
-        handler (element, state, ((module_t*)walker->data)->params);
-    }
-    return 0;
+	/* iter through all modules list */
+	GSList *walker = user_logs_modules;
+	for (; walker != NULL; walker = walker->next) {
+		user_logs_callback *handler =
+		    (user_logs_callback *) ((module_t *) walker->data)->
+		    func;
+		handler(element, state,
+			((module_t *) walker->data)->params);
+	}
+	return 0;
 }
 
 /**
  * log user connection and disconnection
  */
-int modules_user_session_logs(user_session_t* user, session_state_t state)
+int modules_user_session_logs(user_session_t * user, session_state_t state)
 {
-    /* iter through all modules list */
-    GSList *walker=user_session_logs_modules;
-    for (; walker!=NULL; walker=walker->next) {
-        user_session_logs_callback *handler = (user_session_logs_callback*)((module_t*)walker->data)->func;
-        handler (user, state, ((module_t*)walker->data)->params);
-    }
-    return 0;
+	/* iter through all modules list */
+	GSList *walker = user_session_logs_modules;
+	for (; walker != NULL; walker = walker->next) {
+		user_session_logs_callback *handler =
+		    (user_session_logs_callback *) ((module_t *) walker->
+						    data)->func;
+		handler(user, state, ((module_t *) walker->data)->params);
+	}
+	return 0;
 }
 
 /**
  * parse time period configuration for each module
  * and fille the given hash (first argument)
  */
-void modules_parse_periods(GHashTable* periods)
+void modules_parse_periods(GHashTable * periods)
 {
-    /* iter through all modules list */
-    GSList *walker=period_modules;
-    for (; walker!=NULL; walker=walker->next ){
-        define_period_callback *handler = (define_period_callback*)(((module_t*)walker->data)->func);
-        handler (periods,((module_t*)walker->data)->params);
-    }
+	/* iter through all modules list */
+	GSList *walker = period_modules;
+	for (; walker != NULL; walker = walker->next) {
+		define_period_callback *handler =
+		    (define_period_callback
+		     *) (((module_t *) walker->data)->func);
+		handler(periods, ((module_t *) walker->data)->params);
+	}
 }
 
 /**
@@ -209,21 +236,25 @@ void modules_parse_periods(GHashTable* periods)
  * \param cert x509 certificate
  * \return SASL_OK if certificate is correct
  */
-int modules_check_certificate (gnutls_session session, gnutls_x509_crt cert)
+int modules_check_certificate(gnutls_session session, gnutls_x509_crt cert)
 {
-    /* iter through all modules list */
-    GSList *walker=certificate_check_modules;
-    int ret;
+	/* iter through all modules list */
+	GSList *walker = certificate_check_modules;
+	int ret;
 
-    log_message(VERBOSE_DEBUG,AREA_MAIN,"module check certificate");
-    for (; walker!=NULL; walker=walker->next) {
-        certificate_check_callback *handler = (certificate_check_callback*)((module_t*)walker->data)->func;
-        ret = handler (session, cert, ((module_t*)walker->data)->params);
-        if (ret != SASL_OK){
-            return ret;
-        }
-    }
-    return SASL_OK;
+	log_message(VERBOSE_DEBUG, AREA_MAIN, "module check certificate");
+	for (; walker != NULL; walker = walker->next) {
+		certificate_check_callback *handler =
+		    (certificate_check_callback *) ((module_t *) walker->
+						    data)->func;
+		ret =
+		    handler(session, cert,
+			    ((module_t *) walker->data)->params);
+		if (ret != SASL_OK) {
+			return ret;
+		}
+	}
+	return SASL_OK;
 }
 
 /**
@@ -233,32 +264,39 @@ int modules_check_certificate (gnutls_session session, gnutls_x509_crt cert)
  * \param cert x509 certificate
  * \return uid
  */
-gchar* modules_certificate_to_uid (gnutls_session session, gnutls_x509_crt cert)
+gchar *modules_certificate_to_uid(gnutls_session session,
+				  gnutls_x509_crt cert)
 {
-    /* iter through all modules list */
-    GSList *walker=certificate_to_uid_modules;
-    gchar* uid;
-    for (; walker!=NULL; walker=walker->next) {
-        certificate_to_uid_callback *handler = (certificate_to_uid_callback*)((module_t*)walker->data)->func;
-        uid = handler (session, cert, ((module_t*)walker->data)->params);
-        if (uid){
-            return uid;
-        }
-    }
-    return NULL;
+	/* iter through all modules list */
+	GSList *walker = certificate_to_uid_modules;
+	gchar *uid;
+	for (; walker != NULL; walker = walker->next) {
+		certificate_to_uid_callback *handler =
+		    (certificate_to_uid_callback *) ((module_t *) walker->
+						     data)->func;
+		uid =
+		    handler(session, cert,
+			    ((module_t *) walker->data)->params);
+		if (uid) {
+			return uid;
+		}
+	}
+	return NULL;
 }
 
 /**
  * Modify user session
  *
  */
-int modules_user_session_modify(user_session_t* c_session)
+int modules_user_session_modify(user_session_t * c_session)
 {
 	/* iter through all modules list */
-	GSList *walker=user_session_modify_modules;
-	for (; walker!=NULL; walker=walker->next ){
-		user_session_modify_callback *handler = (user_session_modify_callback*)(((module_t*)walker->data)->func);
-		handler (c_session, ((module_t*)walker->data)->params);
+	GSList *walker = user_session_modify_modules;
+	for (; walker != NULL; walker = walker->next) {
+		user_session_modify_callback *handler =
+		    (user_session_modify_callback
+		     *) (((module_t *) walker->data)->func);
+		handler(c_session, ((module_t *) walker->data)->params);
 	}
 
 	return SASL_OK;
@@ -268,13 +306,15 @@ int modules_user_session_modify(user_session_t* c_session)
  * Compute packet mark
  *
  */
-nu_error_t modules_finalize_packet(connection_t* connection)
+nu_error_t modules_finalize_packet(connection_t * connection)
 {
 	/* iter through all modules list */
-	GSList *walker=finalize_packet_modules;
-	for (; walker!=NULL; walker=walker->next ){
-		finalize_packet_callback *handler = (finalize_packet_callback*)(((module_t*)walker->data)->func);
-		handler (connection, ((module_t*)walker->data)->params);
+	GSList *walker = finalize_packet_modules;
+	for (; walker != NULL; walker = walker->next) {
+		finalize_packet_callback *handler =
+		    (finalize_packet_callback
+		     *) (((module_t *) walker->data)->func);
+		handler(connection, ((module_t *) walker->data)->params);
 	}
 
 	return NU_EXIT_OK;
@@ -283,30 +323,33 @@ nu_error_t modules_finalize_packet(connection_t* connection)
 /**
  * Log authentification error
  */
-void modules_auth_error_log(user_session_t *session, nuauth_auth_error_t error, const char *message)
+void modules_auth_error_log(user_session_t * session,
+			    nuauth_auth_error_t error, const char *message)
 {
-    GSList *walker = auth_error_log_modules;
-    for (; walker!=NULL; walker=walker->next)
-    {
-        auth_error_log_callback *handler = (auth_error_log_callback*)(((module_t*)walker->data)->func);
-        handler (session, error, message, ((module_t*)walker->data)->params);
-    }
+	GSList *walker = auth_error_log_modules;
+	for (; walker != NULL; walker = walker->next) {
+		auth_error_log_callback *handler =
+		    (auth_error_log_callback
+		     *) (((module_t *) walker->data)->func);
+		handler(session, error, message,
+			((module_t *) walker->data)->params);
+	}
 }
 
-void free_module_t(module_t* module)
+void free_module_t(module_t * module)
 {
-    if (module){
-        if (module->free_params){
-            module->free_params(module->params);
-            module->params = NULL;
-        }
-        g_free(module->module_name);
-        g_free(module->name);
-        g_free(module->configfile);
+	if (module) {
+		if (module->free_params) {
+			module->free_params(module->params);
+			module->params = NULL;
+		}
+		g_free(module->module_name);
+		g_free(module->name);
+		g_free(module->configfile);
 #ifndef DEBUG_WITH_VALGRIND
-        g_module_close(module->module);
+		g_module_close(module->module);
 #endif
-    }
+	}
 }
 
 /**
@@ -318,23 +361,23 @@ void free_module_t(module_t* module)
 
 int init_modules_system()
 {
-    /* init modules list mutex */
-    modules_mutex = g_mutex_new ();
-    user_check_modules=NULL;
-    get_user_groups_modules=NULL;
-    get_user_id_modules=NULL;
-    acl_check_modules=NULL;
-    period_modules=NULL;
-    ip_auth_modules=NULL;
-    user_logs_modules=NULL;
-    user_session_logs_modules=NULL;
-    certificate_to_uid_modules=NULL;
-    certificate_check_modules=NULL;
-    user_session_modify_modules=NULL;
-    finalize_packet_modules=NULL;
-    auth_error_log_modules=NULL;
+	/* init modules list mutex */
+	modules_mutex = g_mutex_new();
+	user_check_modules = NULL;
+	get_user_groups_modules = NULL;
+	get_user_id_modules = NULL;
+	acl_check_modules = NULL;
+	period_modules = NULL;
+	ip_auth_modules = NULL;
+	user_logs_modules = NULL;
+	user_session_logs_modules = NULL;
+	certificate_to_uid_modules = NULL;
+	certificate_check_modules = NULL;
+	user_session_modify_modules = NULL;
+	finalize_packet_modules = NULL;
+	auth_error_log_modules = NULL;
 
-    return 1;
+	return 1;
 }
 
 /**
@@ -344,27 +387,29 @@ int init_modules_system()
  * \return Returns 0 if the function missing or the function is different,
  * and 1 otherwise.
  */
-int check_module_version(GModule *module)
+int check_module_version(GModule * module)
 {
-    get_module_version_func_t get_version;
-    uint32_t api_version;
+	get_module_version_func_t get_version;
+	uint32_t api_version;
 
-    /* get module function handler */
-    if (!g_module_symbol (module, "get_api_version", (gpointer*)&get_version)) {
-        g_warning ("Unable to load function 'get_api_version' from module %s",
-                g_module_name(module));
-        exit(-1);
-    }
+	/* get module function handler */
+	if (!g_module_symbol
+	    (module, "get_api_version", (gpointer *) & get_version)) {
+		g_warning
+		    ("Unable to load function 'get_api_version' from module %s",
+		     g_module_name(module));
+		exit(-1);
+	}
 
-    api_version = get_version();
-    if (NUAUTH_API_VERSION != api_version)
-    {
-        g_warning("Don't load module %s: wrong API version (%u instead of %u)",
-                g_module_name(module),
-                api_version, NUAUTH_API_VERSION);
-        exit(-1);
-    }
-    return 1;
+	api_version = get_version();
+	if (NUAUTH_API_VERSION != api_version) {
+		g_warning
+		    ("Don't load module %s: wrong API version (%u instead of %u)",
+		     g_module_name(module), api_version,
+		     NUAUTH_API_VERSION);
+		exit(-1);
+	}
+	return 1;
 }
 
 /**
@@ -372,202 +417,254 @@ int check_module_version(GModule *module)
  *
  * Please note that last args is a pointer of pointer
  */
-static int load_modules_from(gchar* confvar, gchar* func,GSList** target)
+static int load_modules_from(gchar * confvar, gchar * func,
+			     GSList ** target)
 {
-    gchar** modules_list=g_strsplit(confvar," ",0);
-    gchar* module_path;
-    init_module_from_conf_t* initmod;
-    gchar **params_list;
-    module_t *current_module;
-    int i;
+	gchar **modules_list = g_strsplit(confvar, " ", 0);
+	gchar *module_path;
+	init_module_from_conf_t *initmod;
+	gchar **params_list;
+	module_t *current_module;
+	int i;
 
-    for (i=0;modules_list[i]!=NULL;i++) {
-        current_module = g_new0(module_t,1);
+	for (i = 0; modules_list[i] != NULL; i++) {
+		current_module = g_new0(module_t, 1);
 
-        /* var format is NAME:MODULE:CONFFILE */
-        params_list = g_strsplit(modules_list[i],":",3);
-        current_module->name=g_strdup(params_list[0]);
-        if (params_list[1]) {
-            current_module->module_name=g_strdup(params_list[1]);
-            if (params_list[2]) {
-                current_module->configfile=g_strdup(params_list[2]);
-            } else {
-                /* we build config file name */
-                current_module->configfile=g_strjoin(
-                        NULL, CONFIG_DIR, "/", MODULES_CONF_DIR, "/",
-                        current_module->name, MODULES_CONF_EXTENSION, NULL);
-            }
-        } else {
-            current_module->module_name=g_strdup(current_module->name);
-            current_module->configfile=NULL;
-        }
+		/* var format is NAME:MODULE:CONFFILE */
+		params_list = g_strsplit(modules_list[i], ":", 3);
+		current_module->name = g_strdup(params_list[0]);
+		if (params_list[1]) {
+			current_module->module_name =
+			    g_strdup(params_list[1]);
+			if (params_list[2]) {
+				current_module->configfile =
+				    g_strdup(params_list[2]);
+			} else {
+				/* we build config file name */
+				current_module->configfile =
+				    g_strjoin(NULL, CONFIG_DIR, "/",
+					      MODULES_CONF_DIR, "/",
+					      current_module->name,
+					      MODULES_CONF_EXTENSION,
+					      NULL);
+			}
+		} else {
+			current_module->module_name =
+			    g_strdup(current_module->name);
+			current_module->configfile = NULL;
+		}
 
-        /* Open dynamic library */
-        module_path = g_module_build_path(MODULE_PATH, current_module->module_name);
-        current_module->module = g_module_open (module_path, 0);
-        g_free(module_path);
+		/* Open dynamic library */
+		module_path =
+		    g_module_build_path(MODULE_PATH,
+					current_module->module_name);
+		current_module->module = g_module_open(module_path, 0);
+		g_free(module_path);
 
-        log_message(VERBOSE_DEBUG,AREA_MAIN,
-                "\tmodule %s: using %s with configfile %s",
-                current_module->name,
-                current_module->module_name,
-                current_module->configfile);
-        if (current_module->module == NULL) {
-            g_error("Unable to load module %s in %s",modules_list[i],MODULE_PATH);
-            free_module_t(current_module);
-            continue;
-        }
+		log_message(VERBOSE_DEBUG, AREA_MAIN,
+			    "\tmodule %s: using %s with configfile %s",
+			    current_module->name,
+			    current_module->module_name,
+			    current_module->configfile);
+		if (current_module->module == NULL) {
+			g_error("Unable to load module %s in %s",
+				modules_list[i], MODULE_PATH);
+			free_module_t(current_module);
+			continue;
+		}
 
-        /* check module version */
-        if (!check_module_version(current_module->module))
-        {
-            free_module_t(current_module);
-            continue;
-        }
+		/* check module version */
+		if (!check_module_version(current_module->module)) {
+			free_module_t(current_module);
+			continue;
+		}
 
-        /* get module function handler */
-        if (!g_module_symbol (current_module->module, func, (gpointer*)&current_module->func)) {
-            g_error ("Unable to load function %s in %s",
-                    func,
-                    g_module_name(current_module->module));
-            free_module_t(current_module);
-            g_strfreev(params_list);
-            continue;
-        }
+		/* get module function handler */
+		if (!g_module_symbol
+		    (current_module->module, func,
+		     (gpointer *) & current_module->func)) {
+			g_error("Unable to load function %s in %s", func,
+				g_module_name(current_module->module));
+			free_module_t(current_module);
+			g_strfreev(params_list);
+			continue;
+		}
 
-        /* get params for module by calling module exported function */
-        if (g_module_symbol (current_module->module, INIT_MODULE_FROM_CONF, (gpointer*)&initmod)) {
-            /* Initialize module */
-            if (! initmod(current_module) ) {
-                g_warning("Unable to init module, continuing anyway");
-                current_module->params=NULL;
-            }
-        } else {
-            log_message(WARNING,AREA_MAIN,
-                    "No init function for module %s: PLEASE UPGRADE!",
-                    current_module->module_name);
-            current_module->params=NULL;
-        }
+		/* get params for module by calling module exported function */
+		if (g_module_symbol
+		    (current_module->module, INIT_MODULE_FROM_CONF,
+		     (gpointer *) & initmod)) {
+			/* Initialize module */
+			if (!initmod(current_module)) {
+				g_warning
+				    ("Unable to init module, continuing anyway");
+				current_module->params = NULL;
+			}
+		} else {
+			log_message(WARNING, AREA_MAIN,
+				    "No init function for module %s: PLEASE UPGRADE!",
+				    current_module->module_name);
+			current_module->params = NULL;
+		}
 
-        /* get params for module by calling module exported function */
-        if (!g_module_symbol (current_module->module, "unload_module_with_params", (gpointer*)&(current_module->free_params))) {
-            log_message(WARNING, AREA_MAIN,
-                    "No init function for module %s: PLEASE UPGRADE!",
-                    current_module->module_name);
-            current_module->free_params=NULL;
-        }
+		/* get params for module by calling module exported function */
+		if (!g_module_symbol
+		    (current_module->module, "unload_module_with_params",
+		     (gpointer *) & (current_module->free_params))) {
+			log_message(WARNING, AREA_MAIN,
+				    "No init function for module %s: PLEASE UPGRADE!",
+				    current_module->module_name);
+			current_module->free_params = NULL;
+		}
 
-        /* store module in module list */
-        *target=g_slist_append(*target,(gpointer)current_module);
-        nuauthdatas->modules=g_slist_prepend(nuauthdatas->modules,current_module);
+		/* store module in module list */
+		*target =
+		    g_slist_append(*target, (gpointer) current_module);
+		nuauthdatas->modules =
+		    g_slist_prepend(nuauthdatas->modules, current_module);
 
-        /* free memory */
-        g_strfreev(params_list);
-    }
-    g_strfreev(modules_list);
-    return 1;
+		/* free memory */
+		g_strfreev(params_list);
+	}
+	g_strfreev(modules_list);
+	return 1;
 
 }
+
 /**
  * Load modules for user and acl checking as well as for user logging and ip authentication
  */
 int load_modules()
 {
-    confparams nuauth_vars[] = {
-        { "nuauth_user_check_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_USERAUTH_MODULE) },
-        { "nuauth_get_user_groups_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_USERAUTH_MODULE) },
-        { "nuauth_get_user_id_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_USERAUTH_MODULE) },
-        { "nuauth_acl_check_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_ACLS_MODULE) },
-        { "nuauth_periods_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_PERIODS_MODULE) },
-        { "nuauth_user_logs_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_LOGS_MODULE) },
-        { "nuauth_user_session_logs_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_LOGS_MODULE) },
-        { "nuauth_ip_authentication_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_IPAUTH_MODULE) },
-        { "nuauth_certificate_check_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_CERTIFICATE_CHECK_MODULE) },
-        { "nuauth_certificate_to_uid_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_CERTIFICATE_TO_UID_MODULE) },
-        { "nuauth_user_session_modify_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_USER_SESSION_MODIFY_MODULE) },
-        { "nuauth_finalize_packet_module" , G_TOKEN_STRING , 1, g_strdup(DEFAULT_FINALIZE_PACKET_MODULE) },
-        { "nuauth_auth_error_log_module" , G_TOKEN_STRING , 1, g_strdup("") }
-    };
-    char *nuauth_acl_check_module;
-    char *nuauth_user_check_module;
-    char *nuauth_get_user_groups_module;
-    char *nuauth_get_user_id_module;
-    char *nuauth_user_logs_module;
-    char *nuauth_user_session_logs_module;
-    char *nuauth_ip_authentication_module = NULL;
-    char *nuauth_periods_module;
-    char *nuauth_certificate_check_module;
-    char *nuauth_certificate_to_uid_module;
-    char *nuauth_user_session_modify_module;
-    char *nuauth_finalize_packet_module;
-    char *nuauth_auth_error_log_module;
-    char *configfile=DEFAULT_CONF_FILE;
+	confparams nuauth_vars[] = {
+		{"nuauth_user_check_module", G_TOKEN_STRING, 1,
+		 g_strdup(DEFAULT_USERAUTH_MODULE)},
+		{"nuauth_get_user_groups_module", G_TOKEN_STRING, 1,
+		 g_strdup(DEFAULT_USERAUTH_MODULE)},
+		{"nuauth_get_user_id_module", G_TOKEN_STRING, 1,
+		 g_strdup(DEFAULT_USERAUTH_MODULE)},
+		{"nuauth_acl_check_module", G_TOKEN_STRING, 1,
+		 g_strdup(DEFAULT_ACLS_MODULE)},
+		{"nuauth_periods_module", G_TOKEN_STRING, 1,
+		 g_strdup(DEFAULT_PERIODS_MODULE)},
+		{"nuauth_user_logs_module", G_TOKEN_STRING, 1,
+		 g_strdup(DEFAULT_LOGS_MODULE)},
+		{"nuauth_user_session_logs_module", G_TOKEN_STRING, 1,
+		 g_strdup(DEFAULT_LOGS_MODULE)},
+		{"nuauth_ip_authentication_module", G_TOKEN_STRING, 1,
+		 g_strdup(DEFAULT_IPAUTH_MODULE)},
+		{"nuauth_certificate_check_module", G_TOKEN_STRING, 1,
+		 g_strdup(DEFAULT_CERTIFICATE_CHECK_MODULE)},
+		{"nuauth_certificate_to_uid_module", G_TOKEN_STRING, 1,
+		 g_strdup(DEFAULT_CERTIFICATE_TO_UID_MODULE)},
+		{"nuauth_user_session_modify_module", G_TOKEN_STRING, 1,
+		 g_strdup(DEFAULT_USER_SESSION_MODIFY_MODULE)},
+		{"nuauth_finalize_packet_module", G_TOKEN_STRING, 1,
+		 g_strdup(DEFAULT_FINALIZE_PACKET_MODULE)},
+		{"nuauth_auth_error_log_module", G_TOKEN_STRING, 1,
+		 g_strdup("")}
+	};
+	char *nuauth_acl_check_module;
+	char *nuauth_user_check_module;
+	char *nuauth_get_user_groups_module;
+	char *nuauth_get_user_id_module;
+	char *nuauth_user_logs_module;
+	char *nuauth_user_session_logs_module;
+	char *nuauth_ip_authentication_module = NULL;
+	char *nuauth_periods_module;
+	char *nuauth_certificate_check_module;
+	char *nuauth_certificate_to_uid_module;
+	char *nuauth_user_session_modify_module;
+	char *nuauth_finalize_packet_module;
+	char *nuauth_auth_error_log_module;
+	char *configfile = DEFAULT_CONF_FILE;
 
-    /* parse conf file */
-    parse_conffile(configfile,sizeof(nuauth_vars)/sizeof(confparams),nuauth_vars);
+	/* parse conf file */
+	parse_conffile(configfile,
+		       sizeof(nuauth_vars) / sizeof(confparams),
+		       nuauth_vars);
 
 #define READ_CONF(KEY) \
     get_confvar_value(nuauth_vars, sizeof(nuauth_vars)/sizeof(confparams), KEY);
 
-    nuauth_user_check_module = (char*)READ_CONF("nuauth_user_check_module");
-    nuauth_get_user_groups_module = (char*)READ_CONF("nuauth_get_user_groups_module");
-    nuauth_get_user_id_module = (char*)READ_CONF("nuauth_get_user_id_module");
-    nuauth_user_logs_module = (char*)READ_CONF("nuauth_user_logs_module");
-    nuauth_user_session_logs_module = (char*)READ_CONF("nuauth_user_session_logs_module");
-    nuauth_acl_check_module = (char*)READ_CONF("nuauth_acl_check_module");
-    nuauth_periods_module = (char*)READ_CONF("nuauth_periods_module");
-    if (nuauthconf->do_ip_authentication){
-        nuauth_ip_authentication_module = (char*)READ_CONF("nuauth_ip_authentication_module");
-    }
-    nuauth_certificate_check_module = (char*)READ_CONF("nuauth_certificate_check_module");
-    nuauth_certificate_to_uid_module = (char*)READ_CONF("nuauth_certificate_to_uid_module");
-    nuauth_user_session_modify_module = (char*)READ_CONF("nuauth_user_session_modify_module");
-    nuauth_finalize_packet_module = (char*)READ_CONF("nuauth_finalize_packet_module");
-    nuauth_auth_error_log_module = (char*)READ_CONF("nuauth_auth_error_log_module");
+	nuauth_user_check_module =
+	    (char *) READ_CONF("nuauth_user_check_module");
+	nuauth_get_user_groups_module =
+	    (char *) READ_CONF("nuauth_get_user_groups_module");
+	nuauth_get_user_id_module =
+	    (char *) READ_CONF("nuauth_get_user_id_module");
+	nuauth_user_logs_module =
+	    (char *) READ_CONF("nuauth_user_logs_module");
+	nuauth_user_session_logs_module =
+	    (char *) READ_CONF("nuauth_user_session_logs_module");
+	nuauth_acl_check_module =
+	    (char *) READ_CONF("nuauth_acl_check_module");
+	nuauth_periods_module =
+	    (char *) READ_CONF("nuauth_periods_module");
+	if (nuauthconf->do_ip_authentication) {
+		nuauth_ip_authentication_module =
+		    (char *) READ_CONF("nuauth_ip_authentication_module");
+	}
+	nuauth_certificate_check_module =
+	    (char *) READ_CONF("nuauth_certificate_check_module");
+	nuauth_certificate_to_uid_module =
+	    (char *) READ_CONF("nuauth_certificate_to_uid_module");
+	nuauth_user_session_modify_module =
+	    (char *) READ_CONF("nuauth_user_session_modify_module");
+	nuauth_finalize_packet_module =
+	    (char *) READ_CONF("nuauth_finalize_packet_module");
+	nuauth_auth_error_log_module =
+	    (char *) READ_CONF("nuauth_auth_error_log_module");
 
-    /* free config struct */
-    free_confparams(nuauth_vars,sizeof(nuauth_vars)/sizeof(confparams));
+	/* free config struct */
+	free_confparams(nuauth_vars,
+			sizeof(nuauth_vars) / sizeof(confparams));
 
-    /* external auth module loading */
-    g_mutex_lock(modules_mutex);
+	/* external auth module loading */
+	g_mutex_lock(modules_mutex);
 
 #define LOAD_MODULE(VAR, LIST, KEY, TEXT) \
     log_message(VERBOSE_DEBUG, AREA_MAIN, "Loading " TEXT " modules:"); \
     load_modules_from(VAR, KEY, &(LIST)); \
     g_free(VAR);
 
-    /* loading modules */
-    LOAD_MODULE (nuauth_user_check_module, user_check_modules,
-            "user_check", "user checking");
-    LOAD_MODULE (nuauth_get_user_groups_module, get_user_groups_modules,
-            "get_user_groups", "user groups fetching");
-    LOAD_MODULE (nuauth_get_user_id_module, get_user_id_modules,
-            "get_user_id", "user id fetching");
-    LOAD_MODULE (nuauth_acl_check_module, acl_check_modules,
-            "acl_check", "acls checking");
-    LOAD_MODULE (nuauth_periods_module, period_modules,
-            "define_periods", "define periods checking");
-    LOAD_MODULE (nuauth_user_logs_module, user_logs_modules,
-            "user_packet_logs", "user packet logging");
-    LOAD_MODULE (nuauth_user_session_logs_module, user_session_logs_modules,
-            "user_session_logs", "user session logging");
-    LOAD_MODULE(nuauth_certificate_check_module, certificate_check_modules,
-            "certificate_check", "certificate check");
-    LOAD_MODULE(nuauth_certificate_to_uid_module, certificate_to_uid_modules,
-            "certificate_to_uid", "certificate to uid");
-    LOAD_MODULE(nuauth_finalize_packet_module, finalize_packet_modules,
-            "finalize_packet", "finalize packet");
-    LOAD_MODULE(nuauth_auth_error_log_module, auth_error_log_modules,
-            "auth_error_log", "auth error log");
-    LOAD_MODULE(nuauth_user_session_modify_module, user_session_modify_modules,
-            "user_session_modify", "user session modify");
-    if (nuauthconf->do_ip_authentication){
-        LOAD_MODULE(nuauth_ip_authentication_module, ip_auth_modules,
-                "ip_authentication", "ip authentication");
-    }
+	/* loading modules */
+	LOAD_MODULE(nuauth_user_check_module, user_check_modules,
+		    "user_check", "user checking");
+	LOAD_MODULE(nuauth_get_user_groups_module, get_user_groups_modules,
+		    "get_user_groups", "user groups fetching");
+	LOAD_MODULE(nuauth_get_user_id_module, get_user_id_modules,
+		    "get_user_id", "user id fetching");
+	LOAD_MODULE(nuauth_acl_check_module, acl_check_modules,
+		    "acl_check", "acls checking");
+	LOAD_MODULE(nuauth_periods_module, period_modules,
+		    "define_periods", "define periods checking");
+	LOAD_MODULE(nuauth_user_logs_module, user_logs_modules,
+		    "user_packet_logs", "user packet logging");
+	LOAD_MODULE(nuauth_user_session_logs_module,
+		    user_session_logs_modules, "user_session_logs",
+		    "user session logging");
+	LOAD_MODULE(nuauth_certificate_check_module,
+		    certificate_check_modules, "certificate_check",
+		    "certificate check");
+	LOAD_MODULE(nuauth_certificate_to_uid_module,
+		    certificate_to_uid_modules, "certificate_to_uid",
+		    "certificate to uid");
+	LOAD_MODULE(nuauth_finalize_packet_module, finalize_packet_modules,
+		    "finalize_packet", "finalize packet");
+	LOAD_MODULE(nuauth_auth_error_log_module, auth_error_log_modules,
+		    "auth_error_log", "auth error log");
+	LOAD_MODULE(nuauth_user_session_modify_module,
+		    user_session_modify_modules, "user_session_modify",
+		    "user session modify");
+	if (nuauthconf->do_ip_authentication) {
+		LOAD_MODULE(nuauth_ip_authentication_module,
+			    ip_auth_modules, "ip_authentication",
+			    "ip authentication");
+	}
 
-    g_mutex_unlock(modules_mutex);
-    return 1;
+	g_mutex_unlock(modules_mutex);
+	return 1;
 }
 
 /**
@@ -575,47 +672,48 @@ int load_modules()
  */
 void unload_modules()
 {
-    GSList *c_module;
+	GSList *c_module;
 
-    g_mutex_lock(modules_mutex);
-    g_slist_free(user_check_modules);
-    user_check_modules=NULL;
-    g_slist_free(get_user_groups_modules);
-    get_user_groups_modules=NULL;
-    g_slist_free(get_user_id_modules);
-    get_user_id_modules=NULL;
-    g_slist_free(acl_check_modules);
-    acl_check_modules=NULL;
-    g_slist_free(period_modules);
-    period_modules=NULL;
-    g_slist_free(ip_auth_modules);
-    ip_auth_modules=NULL;
-    g_slist_free(user_logs_modules);
-    user_logs_modules=NULL;
-    g_slist_free(user_session_logs_modules);
-    user_session_logs_modules=NULL;
+	g_mutex_lock(modules_mutex);
+	g_slist_free(user_check_modules);
+	user_check_modules = NULL;
+	g_slist_free(get_user_groups_modules);
+	get_user_groups_modules = NULL;
+	g_slist_free(get_user_id_modules);
+	get_user_id_modules = NULL;
+	g_slist_free(acl_check_modules);
+	acl_check_modules = NULL;
+	g_slist_free(period_modules);
+	period_modules = NULL;
+	g_slist_free(ip_auth_modules);
+	ip_auth_modules = NULL;
+	g_slist_free(user_logs_modules);
+	user_logs_modules = NULL;
+	g_slist_free(user_session_logs_modules);
+	user_session_logs_modules = NULL;
 
-    g_slist_free(certificate_check_modules);
-    certificate_check_modules=NULL;
-    g_slist_free(certificate_to_uid_modules);
-    certificate_to_uid_modules=NULL;
+	g_slist_free(certificate_check_modules);
+	certificate_check_modules = NULL;
+	g_slist_free(certificate_to_uid_modules);
+	certificate_to_uid_modules = NULL;
 
-    g_slist_free(user_session_modify_modules);
-    user_session_modify_modules=NULL;
+	g_slist_free(user_session_modify_modules);
+	user_session_modify_modules = NULL;
 
-    g_slist_free(finalize_packet_modules);
-    finalize_packet_modules=NULL;
+	g_slist_free(finalize_packet_modules);
+	finalize_packet_modules = NULL;
 
-    g_slist_free(auth_error_log_modules);
-    auth_error_log_modules=NULL;
+	g_slist_free(auth_error_log_modules);
+	auth_error_log_modules = NULL;
 
-    for(c_module=nuauthdatas->modules;c_module;c_module=c_module->next) {
-        free_module_t((module_t *)c_module->data);
-        g_free(c_module->data);
-    }
-    g_slist_free(nuauthdatas->modules);
-    nuauthdatas->modules=NULL;
-    g_mutex_unlock(modules_mutex);
+	for (c_module = nuauthdatas->modules; c_module;
+	     c_module = c_module->next) {
+		free_module_t((module_t *) c_module->data);
+		g_free(c_module->data);
+	}
+	g_slist_free(nuauthdatas->modules);
+	nuauthdatas->modules = NULL;
+	g_mutex_unlock(modules_mutex);
 }
 
 /**
@@ -625,13 +723,13 @@ void unload_modules()
  */
 gboolean nuauth_is_reloading()
 {
-  gboolean reloading=FALSE;
-  g_mutex_lock(nuauthdatas->reload_cond_mutex);
-  if (nuauthdatas->need_reload){
-      reloading = TRUE;
-  }
-  g_mutex_unlock(nuauthdatas->reload_cond_mutex);
-  return reloading;
+	gboolean reloading = FALSE;
+	g_mutex_lock(nuauthdatas->reload_cond_mutex);
+	if (nuauthdatas->need_reload) {
+		reloading = TRUE;
+	}
+	g_mutex_unlock(nuauthdatas->reload_cond_mutex);
+	return reloading;
 }
 
 /**
@@ -640,15 +738,16 @@ gboolean nuauth_is_reloading()
  */
 void block_on_conf_reload()
 {
-    g_mutex_lock(nuauthdatas->reload_cond_mutex);
-    if (nuauthdatas->need_reload){
-        g_mutex_unlock(nuauthdatas->reload_cond_mutex);
-        g_atomic_int_inc(&(nuauthdatas->locked_threads_number));
-        while(nuauthdatas->need_reload){
-            g_cond_wait (nuauthdatas->reload_cond, nuauthdatas->reload_cond_mutex);
-        }
-    }
-    g_mutex_unlock(nuauthdatas->reload_cond_mutex);
+	g_mutex_lock(nuauthdatas->reload_cond_mutex);
+	if (nuauthdatas->need_reload) {
+		g_mutex_unlock(nuauthdatas->reload_cond_mutex);
+		g_atomic_int_inc(&(nuauthdatas->locked_threads_number));
+		while (nuauthdatas->need_reload) {
+			g_cond_wait(nuauthdatas->reload_cond,
+				    nuauthdatas->reload_cond_mutex);
+		}
+	}
+	g_mutex_unlock(nuauthdatas->reload_cond_mutex);
 }
 
 /* @} */

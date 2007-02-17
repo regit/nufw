@@ -22,6 +22,6 @@
 #define NU_GCRYPT_H
 /* crypt */
 
-int verify_user_password(const char* given,const char* ours);
+int verify_user_password(const char *given, const char *ours);
 
 #endif

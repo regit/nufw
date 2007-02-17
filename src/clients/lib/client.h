@@ -33,7 +33,7 @@
 #include "checks.h"
 #include "sending.h"
 
-char * locale_to_utf8(char* inbuf);
+char *locale_to_utf8(char *inbuf);
 
 #define SET_ERROR(ERR, FAMILY, CODE) \
         if (ERR != NULL) \
@@ -43,4 +43,3 @@ char * locale_to_utf8(char* inbuf);
         }
 
 #endif
-

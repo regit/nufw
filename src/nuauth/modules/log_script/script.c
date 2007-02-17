@@ -35,52 +35,59 @@
  */
 G_MODULE_EXPORT uint32_t get_api_version()
 {
-    return NUAUTH_API_VERSION;
+	return NUAUTH_API_VERSION;
 }
 
 
 
-G_MODULE_EXPORT int user_session_logs(user_session_t *c_session, session_state_t state,gpointer params)
+G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
+				      session_state_t state,
+				      gpointer params)
 {
-    char address[INET6_ADDRSTRLEN];
-    char cmdbuffer[200];
-    char *quoted_username = g_shell_quote(c_session->user_name);
-    char *quoted_address;
-    char *format;
-    gboolean ok;
+	char address[INET6_ADDRSTRLEN];
+	char cmdbuffer[200];
+	char *quoted_username = g_shell_quote(c_session->user_name);
+	char *quoted_address;
+	char *format;
+	gboolean ok;
 
-    const char *err = inet_ntop(AF_INET6, &c_session->addr, address, sizeof(address));
-    if (err == NULL) {
-        return -1;
-    }
-    quoted_address = g_shell_quote(address);
+	const char *err =
+	    inet_ntop(AF_INET6, &c_session->addr, address,
+		      sizeof(address));
+	if (err == NULL) {
+		return -1;
+	}
+	quoted_address = g_shell_quote(address);
 
-    if (state == SESSION_OPEN) {
-        format = CONFIG_DIR "/user-up.sh %s %s";
-    } else { /* state == SESSION_CLOSE */
-        format = CONFIG_DIR "/user-down.sh %s %s";
-    }
-    ok = secure_snprintf(cmdbuffer, sizeof(cmdbuffer), format, quoted_username,quoted_address);
-    if (ok) {
-        system(cmdbuffer);
-    } else {
-        log_message(WARNING, AREA_MAIN, "Can't call script, command line truncated!");
-    }
-    g_free(quoted_username);
-    g_free(quoted_address);
-    return 1;
+	if (state == SESSION_OPEN) {
+		format = CONFIG_DIR "/user-up.sh %s %s";
+	} else {		/* state == SESSION_CLOSE */
+		format = CONFIG_DIR "/user-down.sh %s %s";
+	}
+	ok = secure_snprintf(cmdbuffer, sizeof(cmdbuffer), format,
+			     quoted_username, quoted_address);
+	if (ok) {
+		system(cmdbuffer);
+	} else {
+		log_message(WARNING, AREA_MAIN,
+			    "Can't call script, command line truncated!");
+	}
+	g_free(quoted_username);
+	g_free(quoted_address);
+	return 1;
 }
 
 
 G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
 {
-  return TRUE;
+	return TRUE;
 }
 
-G_MODULE_EXPORT gboolean init_module_from_conf (module_t* module)
+G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 {
-  log_message(VERBOSE_DEBUG, AREA_MAIN,"Log_script module ($Revision$)");
-  return TRUE;
+	log_message(VERBOSE_DEBUG, AREA_MAIN,
+		    "Log_script module ($Revision$)");
+	return TRUE;
 }
 
 /** @} */

@@ -23,7 +23,7 @@
 #ifndef NUFW_PROTOCOL_V4_H
 #define NUFW_PROTOCOL_V4_H
 
-#include <netinet/in.h>    /* struct in6addr */
+#include <netinet/in.h>		/* struct in6addr */
 /** \todo Fix this for nuauth on non Linux computer */
 #ifdef LINUX
 #   ifdef USE_NFQUEUE
@@ -50,27 +50,27 @@
  * by NuFW to NuAuth
  */
 struct nuv4_conntrack_message_t {
-    /* Copy/paste nufw_to_nuauth_message_header_t content */
-    uint8_t protocol_version; /*!< Version of the protocol (#PROTO_VERSION) */
-    uint8_t msg_type;         /*!< Message type (from ::nufw_message_t) */
-    uint16_t msg_length;      /*!< Message length including header (in bytes) */
+	/* Copy/paste nufw_to_nuauth_message_header_t content */
+	uint8_t protocol_version;	/*!< Version of the protocol (#PROTO_VERSION) */
+	uint8_t msg_type;	/*!< Message type (from ::nufw_message_t) */
+	uint16_t msg_length;	/*!< Message length including header (in bytes) */
 
-    /* Conntrack fields */
-    uint32_t timeout;        /*!< Timeout (Epoch format) */
-    struct in6_addr ip_src;  /*!< IPv6 source IP */
-    struct in6_addr ip_dst;  /*!< IPv6 destination IP */
-    uint8_t  ip_protocol;    /*!< IP protocol number */
-    uint16_t src_port;       /*!< TCP/UDP source port or ICMP type */
-    uint16_t dest_port;      /*!< TCP/UDP destionation port or ICMP code */
+	/* Conntrack fields */
+	uint32_t timeout;	/*!< Timeout (Epoch format) */
+	struct in6_addr ip_src;	/*!< IPv6 source IP */
+	struct in6_addr ip_dst;	/*!< IPv6 destination IP */
+	uint8_t ip_protocol;	/*!< IP protocol number */
+	uint16_t src_port;	/*!< TCP/UDP source port or ICMP type */
+	uint16_t dest_port;	/*!< TCP/UDP destionation port or ICMP code */
 
-    /* mark field */
-    u_int32_t	mark;
+	/* mark field */
+	u_int32_t mark;
 
-    /* counters fields */
-    u_int64_t packets_in;
-    u_int64_t bytes_in;
-    u_int64_t packets_out;
-    u_int64_t bytes_out;
+	/* counters fields */
+	u_int64_t packets_in;
+	u_int64_t bytes_in;
+	u_int64_t packets_out;
+	u_int64_t bytes_out;
 
 };
 
@@ -79,42 +79,41 @@ struct nuv4_conntrack_message_t {
  * send by NuFW to NuAuth
  */
 typedef struct {
-    /* Copy/paste nufw_to_nuauth_message_header_t content */
-    uint8_t protocol_version; /*!< Version of the protocol (#PROTO_VERSION) */
-    uint8_t msg_type;         /*!< Message type (from ::nufw_message_t) */
-    uint16_t msg_length;      /*!< Message length including header (in bytes) */
+	/* Copy/paste nufw_to_nuauth_message_header_t content */
+	uint8_t protocol_version;	/*!< Version of the protocol (#PROTO_VERSION) */
+	uint8_t msg_type;	/*!< Message type (from ::nufw_message_t) */
+	uint16_t msg_length;	/*!< Message length including header (in bytes) */
 
-    /* Authentification fields */
-    uint32_t packet_id;      /*!< Netfilter packet unique identifier */
-    uint32_t timestamp;      /*!< Timestamp (Epoch format) */
+	/* Authentification fields */
+	uint32_t packet_id;	/*!< Netfilter packet unique identifier */
+	uint32_t timestamp;	/*!< Timestamp (Epoch format) */
 
-    u_int32_t mark;
-    char indev[IFNAMSIZ] ;
-    char physindev[IFNAMSIZ] ;
-    char outdev[IFNAMSIZ] ;
-    char physoutdev[IFNAMSIZ] ;
-    /* \todo Internal fields 
-    	 hwmac
-     */
+	u_int32_t mark;
+	char indev[IFNAMSIZ];
+	char physindev[IFNAMSIZ];
+	char outdev[IFNAMSIZ];
+	char physoutdev[IFNAMSIZ];
+	/* \todo Internal fields 
+	   hwmac
+	 */
 
-    /* (...): packet content (maybe truncated) */
+	/* (...): packet content (maybe truncated) */
 } nuv4_nufw_to_nuauth_auth_message_t;
 
 /**
  * Send NuAuth decision to NuFW
  */
 typedef struct {
-    uint8_t protocol_version;   /*!< Version of the protocol (#PROTO_VERSION) */
-    uint8_t msg_type;           /*!< Message type (#AUTH_ANSWER) */
-    u_int8_t decision;          /*!< NuAuth decision (see ::decision_t) */
-    u_int8_t priority;          /*!< priority (See if there is an interest of having this in the scope of asynchronous message) */
-    uint32_t packet_id;         /*!< NetFilter packet unique identifier */
-    u_int32_t tcmark;          /*!< User identifier */
-    uint16_t payload_len;       /*!< Indicate the length of datas in the recv buffer after 
-                                  the end of the structure that contains the payload of packet. Set
-                                  to 0 to treat the following datas as a new decision response */
-    uint16_t padding;		/*!< 0x00000000 */
-} nuv4_nuauth_decision_response_t;    
+	uint8_t protocol_version;	/*!< Version of the protocol (#PROTO_VERSION) */
+	uint8_t msg_type;	/*!< Message type (#AUTH_ANSWER) */
+	u_int8_t decision;	/*!< NuAuth decision (see ::decision_t) */
+	u_int8_t priority;	/*!< priority (See if there is an interest of having this in the scope of asynchronous message) */
+	uint32_t packet_id;	/*!< NetFilter packet unique identifier */
+	u_int32_t tcmark;	/*!< User identifier */
+	uint16_t payload_len;	/*!< Indicate the length of datas in the recv buffer after 
+				   the end of the structure that contains the payload of packet. Set
+				   to 0 to treat the following datas as a new decision response */
+	uint16_t padding;	/*!< 0x00000000 */
+} nuv4_nuauth_decision_response_t;
 
 #endif
-

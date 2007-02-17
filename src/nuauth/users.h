@@ -25,12 +25,12 @@
 
 int init_user_cache();
 
-void get_users_from_cache (connection_t* conn_elt);
+void get_users_from_cache(connection_t * conn_elt);
 gpointer user_duplicate_key(gpointer datas);
 
 struct user_cached_datas {
-    uint32_t uid;
-    GSList * groups;
+	uint32_t uid;
+	GSList *groups;
 };
 
 /**
@@ -47,24 +47,22 @@ struct user_cached_datas {
  *
  * An "user" is a person authentified with a NuFW client.
  */
-typedef struct
-{
-    struct in6_addr addr;    /*!< \brief IPv6 address of the client */
+typedef struct {
+	struct in6_addr addr;	/*!< \brief IPv6 address of the client */
     /** \brief socket used by tls session.
      * It identify the client and it is used as the key
      */
-    int socket;
-    gnutls_session *tls;     /*!< \brief TLS session opened with tls_connect() */
-    GMutex *tls_lock;        /*!< \brief Mutex to lock use of TLS */
-    char *user_name;         /*!< \brief User name */
-    uint32_t user_id;        /*!< \brief User identifier */
-    GSList *groups;          /*!< \brief List of groups the user belongs to*/
-    gchar *sysname;          /*!< \brief OS system name (eg. "Linux") */
-    gchar *release;          /*!< \brief OS release (eg. "2.6.12") */
-    gchar *version;          /*!< \brief OS full version */
-    time_t expire;           /*!< \brief Timeout of the session (-1 means unlimited) */
-    int client_version;	     /*!< \brief Client protocol version */
+	int socket;
+	gnutls_session *tls;	/*!< \brief TLS session opened with tls_connect() */
+	GMutex *tls_lock;	/*!< \brief Mutex to lock use of TLS */
+	char *user_name;	/*!< \brief User name */
+	uint32_t user_id;	/*!< \brief User identifier */
+	GSList *groups;		/*!< \brief List of groups the user belongs to */
+	gchar *sysname;		/*!< \brief OS system name (eg. "Linux") */
+	gchar *release;		/*!< \brief OS release (eg. "2.6.12") */
+	gchar *version;		/*!< \brief OS full version */
+	time_t expire;		/*!< \brief Timeout of the session (-1 means unlimited) */
+	int client_version;	/*!< \brief Client protocol version */
 } user_session_t;
 
 #endif
-

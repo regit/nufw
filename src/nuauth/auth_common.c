@@ -47,27 +47,28 @@
  *         storing the result in RESULT.
  *                 Return 1 if the difference is negative, otherwise 0.  */
 
-int timeval_substract (struct timeval *result,struct timeval *x,struct timeval *y)
+int timeval_substract(struct timeval *result, struct timeval *x,
+		      struct timeval *y)
 {
-    /* Perform the carry for the later subtraction by updating y. */
-    if (x->tv_usec < y->tv_usec) {
-        int nsec = (y->tv_usec - x->tv_usec) / 1000000 + 1;
-        y->tv_usec -= 1000000 * nsec;
-        y->tv_sec += nsec;
-    }
-    if (x->tv_usec - y->tv_usec > 1000000) {
-        int nsec = (x->tv_usec - y->tv_usec) / 1000000;
-        y->tv_usec += 1000000 * nsec;
-        y->tv_sec -= nsec;
-    }
+	/* Perform the carry for the later subtraction by updating y. */
+	if (x->tv_usec < y->tv_usec) {
+		int nsec = (y->tv_usec - x->tv_usec) / 1000000 + 1;
+		y->tv_usec -= 1000000 * nsec;
+		y->tv_sec += nsec;
+	}
+	if (x->tv_usec - y->tv_usec > 1000000) {
+		int nsec = (x->tv_usec - y->tv_usec) / 1000000;
+		y->tv_usec += 1000000 * nsec;
+		y->tv_sec -= nsec;
+	}
 
-    /* Compute the time remaining to wait.
-     *           tv_usec is certainly positive. */
-    result->tv_sec = x->tv_sec - y->tv_sec;
-    result->tv_usec = x->tv_usec - y->tv_usec;
+	/* Compute the time remaining to wait.
+	 *           tv_usec is certainly positive. */
+	result->tv_sec = x->tv_sec - y->tv_sec;
+	result->tv_usec = x->tv_usec - y->tv_usec;
 
-    /* Return 1 if result is negative. */
-    return x->tv_sec < y->tv_sec;
+	/* Return 1 if result is negative. */
+	return x->tv_sec < y->tv_sec;
 }
 #endif
 
@@ -80,39 +81,47 @@ int timeval_substract (struct timeval *result,struct timeval *x,struct timeval *
  *
  * \return Returns -1 if an error occurs, 1 else.
  */
-gint print_connection(gpointer data,gpointer userdata)
+gint print_connection(gpointer data, gpointer userdata)
 {
-    connection_t * conn = (connection_t *) data;
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG,DEBUG_AREA_MAIN))
-    {
-        char src_ascii[INET6_ADDRSTRLEN];
-        char dst_ascii[INET6_ADDRSTRLEN];
+	connection_t *conn = (connection_t *) data;
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG, DEBUG_AREA_MAIN)) {
+		char src_ascii[INET6_ADDRSTRLEN];
+		char dst_ascii[INET6_ADDRSTRLEN];
 
-        if (inet_ntop(AF_INET6, &conn->tracking.saddr, src_ascii, sizeof(src_ascii)) == NULL)
-            return -1;
-        if (inet_ntop(AF_INET6, &conn->tracking.daddr, dst_ascii, sizeof(dst_ascii)) == NULL)
-            return -1;
+		if (inet_ntop
+		    (AF_INET6, &conn->tracking.saddr, src_ascii,
+		     sizeof(src_ascii)) == NULL)
+			return -1;
+		if (inet_ntop
+		    (AF_INET6, &conn->tracking.daddr, dst_ascii,
+		     sizeof(dst_ascii)) == NULL)
+			return -1;
 
-        g_message( "Connection: src=%s dst=%s proto=%u",
-                src_ascii, dst_ascii, conn->tracking.protocol);
-        if (conn->tracking.protocol == IPPROTO_TCP){
-            g_message("sport=%d dport=%d", conn->tracking.source,
-                    conn->tracking.dest);
-        }
-        g_message("IN=%s OUT=%s",conn->iface_nfo.indev,conn->iface_nfo.outdev);
+		g_message("Connection: src=%s dst=%s proto=%u",
+			  src_ascii, dst_ascii, conn->tracking.protocol);
+		if (conn->tracking.protocol == IPPROTO_TCP) {
+			g_message("sport=%d dport=%d",
+				  conn->tracking.source,
+				  conn->tracking.dest);
+		}
+		g_message("IN=%s OUT=%s", conn->iface_nfo.indev,
+			  conn->iface_nfo.outdev);
 
-	if (conn->packet_id) {
-	    g_message("packet id: %d",GPOINTER_TO_UINT(conn->packet_id->data));
+		if (conn->packet_id) {
+			g_message("packet id: %d",
+				  GPOINTER_TO_UINT(conn->packet_id->data));
+		}
+
+		if (conn->os_sysname && conn->os_release
+		    && conn->os_version) {
+			g_message("OS: %s %s %s", conn->os_sysname,
+				  conn->os_release, conn->os_version);
+		}
+		if (conn->app_name) {
+			g_message("Application: %s", conn->app_name);
+		}
 	}
-
-        if (conn->os_sysname && conn->os_release && conn->os_version ){
-            g_message("OS: %s %s %s",conn->os_sysname ,conn->os_release , conn->os_version );
-        }
-        if (conn->app_name){
-            g_message("Application: %s",conn->app_name);
-        }
-    }
-    return 1;
+	return 1;
 }
 
 /**
@@ -122,32 +131,32 @@ gint print_connection(gpointer data,gpointer userdata)
  */
 int is_ipv4(struct in6_addr *addr)
 {
-    if (addr->s6_addr32[2] != 0xffff0000)
-        return 0;
-    if (addr->s6_addr32[0] != 0 || addr->s6_addr32[1] != 0)
-        return 0;
-    return 1;
+	if (addr->s6_addr32[2] != 0xffff0000)
+		return 0;
+	if (addr->s6_addr32[0] != 0 || addr->s6_addr32[1] != 0)
+		return 0;
+	return 1;
 }
 
 void free_connection_callback(gpointer conn, gpointer unused)
 {
-    free_connection((connection_t *)conn);
+	free_connection((connection_t *) conn);
 }
 
-void free_connection_list(GSList *list)
+void free_connection_list(GSList * list)
 {
-    if (list == NULL)
-        return;
-    g_slist_foreach(list, free_connection_callback, NULL);
-    g_slist_free(list);
+	if (list == NULL)
+		return;
+	g_slist_foreach(list, free_connection_callback, NULL);
+	g_slist_free(list);
 }
 
-void free_iface_nfo_t(iface_nfo_t* track)
+void free_iface_nfo_t(iface_nfo_t * track)
 {
-    g_free(track->indev);
-    g_free(track->outdev);
-    g_free(track->physindev);
-    g_free(track->physoutdev);
+	g_free(track->indev);
+	g_free(track->outdev);
+	g_free(track->physindev);
+	g_free(track->physoutdev);
 }
 
 /**
@@ -167,66 +176,72 @@ void free_iface_nfo_t(iface_nfo_t* track)
  * \return None
  */
 
-void free_connection(connection_t *conn)
+void free_connection(connection_t * conn)
 {
-    g_assert (conn != NULL );
+	g_assert(conn != NULL);
 
-    /* log if necessary (only state authreq) with user log module
-     * AUTH_STATE_COMPLETING is reached when no acl is found for packet */
-    if (conn->state == AUTH_STATE_AUTHREQ){
-        /* copy message */
-        log_user_packet(conn,TCP_STATE_DROP);
-    }
-    /*
-     * tell cache we don't use the ressource anymore
-     */
-    if (conn->acl_groups) {
-        if (nuauthconf->acl_cache) {
-            struct cache_message * message = g_new0(struct cache_message,1);
-            debug_log_message (VERBOSE_DEBUG, AREA_MAIN,
-                    "Sending free to acl cache");
-            message->key = acl_create_and_alloc_key(conn);
-            message->type = FREE_MESSAGE;
-            message->datas = conn->acl_groups;
-            g_async_queue_push(nuauthdatas->acl_cache->queue,message);
-        } else {
-            free_acl_groups(conn->acl_groups, NULL);
-        }
-    }
-    /* free user group */
-    if (conn->cacheduserdatas){
-        if(conn->username){
-            struct cache_message * message = g_new0(struct cache_message,1);
-            if (!message){
-                log_message(CRITICAL, AREA_MAIN, "Could not g_new0(). No more memory?");
-                /* GRYZOR should we do something special here? */
-            } else {
-                debug_log_message (VERBOSE_DEBUG, AREA_MAIN,
-                        "Sending free to user cache");
-                message->key = g_strdup(conn->username);
-                message->type = FREE_MESSAGE;
-                message->datas = conn->cacheduserdatas;
-                g_async_queue_push(nuauthdatas->user_cache->queue,message);
-            }
-        } else {
-            debug_log_message (VERBOSE_DEBUG, AREA_MAIN,
-                    "Can not free user cache, username is null");
-        }
-    } else {
-        g_free(conn->username);
-    }
-    g_slist_free (conn->packet_id);
-    g_slist_free (conn->user_groups);
-    g_free(conn->app_name);
-    g_free(conn->app_md5);
-    g_free(conn->os_sysname);
-    g_free(conn->os_release);
-    g_free(conn->os_version);
-    g_free(conn->log_prefix);
+	/* log if necessary (only state authreq) with user log module
+	 * AUTH_STATE_COMPLETING is reached when no acl is found for packet */
+	if (conn->state == AUTH_STATE_AUTHREQ) {
+		/* copy message */
+		log_user_packet(conn, TCP_STATE_DROP);
+	}
+	/*
+	 * tell cache we don't use the ressource anymore
+	 */
+	if (conn->acl_groups) {
+		if (nuauthconf->acl_cache) {
+			struct cache_message *message =
+			    g_new0(struct cache_message, 1);
+			debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+					  "Sending free to acl cache");
+			message->key = acl_create_and_alloc_key(conn);
+			message->type = FREE_MESSAGE;
+			message->datas = conn->acl_groups;
+			g_async_queue_push(nuauthdatas->acl_cache->queue,
+					   message);
+		} else {
+			free_acl_groups(conn->acl_groups, NULL);
+		}
+	}
+	/* free user group */
+	if (conn->cacheduserdatas) {
+		if (conn->username) {
+			struct cache_message *message =
+			    g_new0(struct cache_message, 1);
+			if (!message) {
+				log_message(CRITICAL, AREA_MAIN,
+					    "Could not g_new0(). No more memory?");
+				/* GRYZOR should we do something special here? */
+			} else {
+				debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+						  "Sending free to user cache");
+				message->key = g_strdup(conn->username);
+				message->type = FREE_MESSAGE;
+				message->datas = conn->cacheduserdatas;
+				g_async_queue_push(nuauthdatas->
+						   user_cache->queue,
+						   message);
+			}
+		} else {
+			debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+					  "Can not free user cache, username is null");
+		}
+	} else {
+		g_free(conn->username);
+	}
+	g_slist_free(conn->packet_id);
+	g_slist_free(conn->user_groups);
+	g_free(conn->app_name);
+	g_free(conn->app_md5);
+	g_free(conn->os_sysname);
+	g_free(conn->os_release);
+	g_free(conn->os_version);
+	g_free(conn->log_prefix);
 
-   free_iface_nfo_t(&(conn->iface_nfo));
+	free_iface_nfo_t(&(conn->iface_nfo));
 
-    g_free(conn);
+	g_free(conn);
 }
 
 #define COPY_IFACE_NAME(copy, orig, iface) \
@@ -243,12 +258,12 @@ void free_connection(connection_t *conn)
  * \param orig pointer to the ::iface_nfo_t to copy
  */
 
-void duplicate_iface_nfo(iface_nfo_t* copy,iface_nfo_t* orig)
+void duplicate_iface_nfo(iface_nfo_t * copy, iface_nfo_t * orig)
 {
-  COPY_IFACE_NAME(copy,orig,indev);
-  COPY_IFACE_NAME(copy,orig,outdev);
-  COPY_IFACE_NAME(copy,orig,physindev);
-  COPY_IFACE_NAME(copy,orig,physoutdev);
+	COPY_IFACE_NAME(copy, orig, indev);
+	COPY_IFACE_NAME(copy, orig, outdev);
+	COPY_IFACE_NAME(copy, orig, physindev);
+	COPY_IFACE_NAME(copy, orig, physoutdev);
 }
 
 #undef COPY_IFACE_NAME
@@ -271,31 +286,33 @@ void duplicate_iface_nfo(iface_nfo_t* copy,iface_nfo_t* orig)
  * \return the duplicated connection_t
  */
 
-connection_t* duplicate_connection(connection_t* element)
+connection_t *duplicate_connection(connection_t * element)
 {
-    connection_t * conn_copy = g_memdup(element, sizeof(*element));
-    if (conn_copy == NULL){
-        log_message(WARNING, AREA_MAIN, "memory duplication failed");
-        return NULL;
-    }
-    conn_copy->username = g_strdup(element->username);
-    conn_copy->app_name = g_strdup(element->app_name);
-    conn_copy->app_md5 = g_strdup(element->app_md5);
-    conn_copy->os_sysname = g_strdup(element->os_sysname);
-    conn_copy->os_release = g_strdup(element->os_release);
-    conn_copy->os_version = g_strdup(element->os_version);
+	connection_t *conn_copy = g_memdup(element, sizeof(*element));
+	if (conn_copy == NULL) {
+		log_message(WARNING, AREA_MAIN,
+			    "memory duplication failed");
+		return NULL;
+	}
+	conn_copy->username = g_strdup(element->username);
+	conn_copy->app_name = g_strdup(element->app_name);
+	conn_copy->app_md5 = g_strdup(element->app_md5);
+	conn_copy->os_sysname = g_strdup(element->os_sysname);
+	conn_copy->os_release = g_strdup(element->os_release);
+	conn_copy->os_version = g_strdup(element->os_version);
 
-    conn_copy->log_prefix = g_strdup(element->log_prefix);
+	conn_copy->log_prefix = g_strdup(element->log_prefix);
 
-    duplicate_iface_nfo(&(conn_copy->iface_nfo),&(element->iface_nfo));
+	duplicate_iface_nfo(&(conn_copy->iface_nfo),
+			    &(element->iface_nfo));
 
-    /* Nullify needed internal field */
-    conn_copy->acl_groups = NULL;
-    conn_copy->user_groups = NULL;
-    conn_copy->packet_id = NULL;
-    conn_copy->cacheduserdatas = NULL;
-    conn_copy->state = AUTH_STATE_DONE;
-    return conn_copy;
+	/* Nullify needed internal field */
+	conn_copy->acl_groups = NULL;
+	conn_copy->user_groups = NULL;
+	conn_copy->packet_id = NULL;
+	conn_copy->cacheduserdatas = NULL;
+	conn_copy->state = AUTH_STATE_DONE;
+	return conn_copy;
 }
 
 
@@ -312,12 +329,13 @@ connection_t* duplicate_connection(connection_t* element)
 
 inline int conn_cl_remove(gconstpointer conn)
 {
-  if (!  g_hash_table_steal (conn_list,
-                &(((connection_t *)conn)->tracking)) ){
-        log_message(WARNING, AREA_MAIN, "Removal of conn in hash failed\n");
-        return 0;
-    }
-    return 1;
+	if (!g_hash_table_steal(conn_list,
+				&(((connection_t *) conn)->tracking))) {
+		log_message(WARNING, AREA_MAIN,
+			    "Removal of conn in hash failed\n");
+		return 0;
+	}
+	return 1;
 }
 
 /**
@@ -330,15 +348,15 @@ inline int conn_cl_remove(gconstpointer conn)
 
 int conn_cl_delete(gconstpointer conn)
 {
-    g_assert (conn != NULL);
+	g_assert(conn != NULL);
 
-    if (conn_cl_remove(conn) == 0){
-        return 0;
-    }
+	if (conn_cl_remove(conn) == 0) {
+		return 0;
+	}
 
-    /* free isolated structure */
-    free_connection((connection_t *)conn);
-    return 1;
+	/* free isolated structure */
+	free_connection((connection_t *) conn);
+	return 1;
 }
 
 /**
@@ -357,31 +375,30 @@ int conn_cl_delete(gconstpointer conn)
  * \param user_data Current timestamp (get by time(NULL))
  * \return TRUE if the connection is old, FALSE else
  */
-gboolean get_old_conn (gpointer key, gpointer value, gpointer user_data)
+gboolean get_old_conn(gpointer key, gpointer value, gpointer user_data)
 {
-    long current_timestamp = GPOINTER_TO_INT(user_data);
+	long current_timestamp = GPOINTER_TO_INT(user_data);
 
-    /* Don't remove connection in state AUTH_STATE_COMPLETING because of
-     * an evil hack in search_and_fill_complete_of_userpckt() :-)
-     */
-    if (
-            ( current_timestamp - ((connection_t *)value)->timestamp > nuauthconf->packet_timeout)
-            &&
-            (((connection_t *)value)->state != AUTH_STATE_COMPLETING)
-       ){
-        return TRUE;
-    }
-    return FALSE;
+	/* Don't remove connection in state AUTH_STATE_COMPLETING because of
+	 * an evil hack in search_and_fill_complete_of_userpckt() :-)
+	 */
+	if ((current_timestamp - ((connection_t *) value)->timestamp >
+	     nuauthconf->packet_timeout)
+	    && (((connection_t *) value)->state != AUTH_STATE_COMPLETING)
+	    ) {
+		return TRUE;
+	}
+	return FALSE;
 }
 
-void clean_connection_list_callback(gpointer key, gpointer value, gpointer data)
+void clean_connection_list_callback(gpointer key, gpointer value,
+				    gpointer data)
 {
-    GSList **list_ptr = (GSList **)data;
-    long current_timestamp = time(NULL);
-    if (get_old_conn(key, value, GINT_TO_POINTER(current_timestamp)))
-    {
-        *list_ptr = g_slist_prepend(*list_ptr, key);
-    }
+	GSList **list_ptr = (GSList **) data;
+	long current_timestamp = time(NULL);
+	if (get_old_conn(key, value, GINT_TO_POINTER(current_timestamp))) {
+		*list_ptr = g_slist_prepend(*list_ptr, key);
+	}
 }
 
 /**
@@ -392,58 +409,59 @@ void clean_connection_list_callback(gpointer key, gpointer value, gpointer data)
  *
  * It uses get_old_conn() to check if a connection is 'old' or not.
  */
-void clean_connections_list ()
+void clean_connections_list()
 {
-    GSList *old_keyconn_list = NULL;
-    GSList *old_conn_list = NULL;
-    GSList *iterator;
-    int nb_deleted;
+	GSList *old_keyconn_list = NULL;
+	GSList *old_conn_list = NULL;
+	GSList *iterator;
+	int nb_deleted;
 
-    /* extract the list of old connections */
-    g_static_mutex_lock (&insert_mutex);
+	/* extract the list of old connections */
+	g_static_mutex_lock(&insert_mutex);
 
-    g_hash_table_foreach(conn_list, clean_connection_list_callback, &old_keyconn_list);
+	g_hash_table_foreach(conn_list, clean_connection_list_callback,
+			     &old_keyconn_list);
 
-    /* remove old connections from connection list */
-    nb_deleted = 0;
-    for (iterator = old_keyconn_list; iterator != NULL; )
-    {
-        gpointer key = iterator->data;
-        gpointer value = g_hash_table_lookup(conn_list, key);
-        if (value != NULL) {
-            g_hash_table_steal(conn_list, key);
-            old_conn_list = g_slist_prepend(old_conn_list, value);
-            nb_deleted += 1;
-        } else {
-            log_message(WARNING, AREA_MAIN,
-                    "Clean connection: no entry found in hash ");
-        }
-        iterator = iterator->next;
-    }
-    g_static_mutex_unlock (&insert_mutex);
-    g_slist_free(old_keyconn_list);
+	/* remove old connections from connection list */
+	nb_deleted = 0;
+	for (iterator = old_keyconn_list; iterator != NULL;) {
+		gpointer key = iterator->data;
+		gpointer value = g_hash_table_lookup(conn_list, key);
+		if (value != NULL) {
+			g_hash_table_steal(conn_list, key);
+			old_conn_list =
+			    g_slist_prepend(old_conn_list, value);
+			nb_deleted += 1;
+		} else {
+			log_message(WARNING, AREA_MAIN,
+				    "Clean connection: no entry found in hash ");
+		}
+		iterator = iterator->next;
+	}
+	g_static_mutex_unlock(&insert_mutex);
+	g_slist_free(old_keyconn_list);
 
-    /* reject all old connections */
-    for (iterator = old_conn_list; iterator != NULL; )
-    {
-        connection_t *element = iterator->data;
-        iterator = iterator->next;
-        if (nuauthconf->reject_after_timeout != 0)
-            element->decision = DECISION_REJECT;
-        else
-            element->decision = DECISION_DROP;
-        if (element->state == AUTH_STATE_AUTHREQ){
-            apply_decision(element);
-        }
-        free_connection(element);
-    }
-    g_slist_free(old_conn_list);
+	/* reject all old connections */
+	for (iterator = old_conn_list; iterator != NULL;) {
+		connection_t *element = iterator->data;
+		iterator = iterator->next;
+		if (nuauthconf->reject_after_timeout != 0)
+			element->decision = DECISION_REJECT;
+		else
+			element->decision = DECISION_DROP;
+		if (element->state == AUTH_STATE_AUTHREQ) {
+			apply_decision(element);
+		}
+		free_connection(element);
+	}
+	g_slist_free(old_conn_list);
 
-    /* display number of deleted elements */
-    if (0 < nb_deleted) {
-        log_message(INFO, AREA_MAIN,
-                "Clean connection list: %d connection(s) suppressed", nb_deleted);
-    }
+	/* display number of deleted elements */
+	if (0 < nb_deleted) {
+		log_message(INFO, AREA_MAIN,
+			    "Clean connection list: %d connection(s) suppressed",
+			    nb_deleted);
+	}
 }
 
 /**
@@ -451,18 +469,18 @@ void clean_connections_list ()
  *
  * \return Username which need to be freeded
  */
-char * get_rid_of_domain(const char* user_domain)
+char *get_rid_of_domain(const char *user_domain)
 {
-    char *username = NULL;
-    char **user_realm;
-    user_realm = g_strsplit(user_domain, "@", 2);
-    if (user_realm[0] != NULL){
-        username = g_strdup(user_realm[0]);
-    } else {
-        username = g_strdup(user_domain);
-    }
-    g_strfreev(user_realm);
-    return username;
+	char *username = NULL;
+	char **user_realm;
+	user_realm = g_strsplit(user_domain, "@", 2);
+	if (user_realm[0] != NULL) {
+		username = g_strdup(user_realm[0]);
+	} else {
+		username = g_strdup(user_domain);
+	}
+	g_strfreev(user_realm);
+	return username;
 }
 
 /**
@@ -470,34 +488,34 @@ char * get_rid_of_domain(const char* user_domain)
  *
  * \return Username which need to be freeded
  */
-char * get_rid_of_prefix_domain(const char* user_domain)
+char *get_rid_of_prefix_domain(const char *user_domain)
 {
-    char *username=NULL;
-    char **user_realm;
-    user_realm=g_strsplit(user_domain, "\\", 2);
-    if (user_realm[0] && user_realm[1]){
-        username = g_strdup(user_realm[1]);
-    } else {
-        username = g_strdup(user_domain);
-    }
-    g_strfreev(user_realm);
-    return username;
+	char *username = NULL;
+	char **user_realm;
+	user_realm = g_strsplit(user_domain, "\\", 2);
+	if (user_realm[0] && user_realm[1]) {
+		username = g_strdup(user_realm[1]);
+	} else {
+		username = g_strdup(user_domain);
+	}
+	g_strfreev(user_realm);
+	return username;
 }
 
 /**
  * Free a ::tls_buffer_read buffer and all of its memory.
  */
-void free_buffer_read(struct tls_buffer_read* datas)
+void free_buffer_read(struct tls_buffer_read *datas)
 {
-    g_free(datas->os_sysname);
-    g_free(datas->os_release);
-    g_free(datas->os_version);
-    g_free(datas->buffer);
-    g_free(datas->user_name);
-    if (datas->groups != NULL){
-        g_slist_free(datas->groups);
-    }
-    g_free(datas);
+	g_free(datas->os_sysname);
+	g_free(datas->os_release);
+	g_free(datas->os_version);
+	g_free(datas->buffer);
+	g_free(datas->user_name);
+	if (datas->groups != NULL) {
+		g_slist_free(datas->groups);
+	}
+	g_free(datas);
 }
 
 /**
@@ -509,18 +527,19 @@ void free_buffer_read(struct tls_buffer_read* datas)
  * \param format Format string (see printf() documentation)
  * \return Returns FALSE if a buffer overflow occurs, TRUE is everything goes fine.
  */
-gboolean secure_snprintf(char *buffer, unsigned int buffer_size, char *format, ...)
+gboolean secure_snprintf(char *buffer, unsigned int buffer_size,
+			 char *format, ...)
 {
-    va_list args;
-    int ret;
-    va_start(args, format);
-    ret = g_vsnprintf(buffer, buffer_size, format, args);
-    va_end(args);
-    buffer[buffer_size-1] = '\0';
-    if (0 <= ret && ret <= ((int)buffer_size-1))
-        return TRUE;
-    else
-        return FALSE;
+	va_list args;
+	int ret;
+	va_start(args, format);
+	ret = g_vsnprintf(buffer, buffer_size, format, args);
+	va_end(args);
+	buffer[buffer_size - 1] = '\0';
+	if (0 <= ret && ret <= ((int) buffer_size - 1))
+		return TRUE;
+	else
+		return FALSE;
 }
 
 /**
@@ -532,7 +551,7 @@ gboolean secure_snprintf(char *buffer, unsigned int buffer_size, char *format, .
 
 nu_error_t check_protocol_version(int version)
 {
-	if ((version != PROTO_VERSION) && (version != PROTO_VERSION_V20)){
+	if ((version != PROTO_VERSION) && (version != PROTO_VERSION_V20)) {
 		return NU_EXIT_ERROR;
 	} else {
 		return NU_EXIT_OK;

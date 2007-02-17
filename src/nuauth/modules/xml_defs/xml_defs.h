@@ -17,5 +17,5 @@
 */
 
 struct xml_defs_params {
-    char* xml_defs_periodfile;
+	char *xml_defs_periodfile;
 };

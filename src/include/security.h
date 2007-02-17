@@ -34,4 +34,4 @@
 #define SECURE_STRNCPY(dst, src, size) \
     do { strncpy(dst, src, (size)-1); (dst)[(size)-1] = '\0'; } while (0)
 
-#endif   /* of ifndef _NUFW_SECURITY_H */
+#endif				/* of ifndef _NUFW_SECURITY_H */

@@ -20,7 +20,7 @@
 #include <ldap.h>
 
 
-GPrivate* ldap_priv; /* private pointer to ldap connection */
+GPrivate *ldap_priv;		/* private pointer to ldap connection */
 
 #define LDAP_SERVER "127.0.0.1"
 #define LDAP_SERVER_PORT 389
@@ -35,14 +35,14 @@ GPrivate* ldap_priv; /* private pointer to ldap connection */
 #define LDAP_QUERY_SIZE 512
 
 struct ldap_params {
-    int ldap_request_timeout;
-    char * binddn;
-    char * bindpasswd;
-    char * ldap_server;
-    char* ldap_acls_base_dn;
-    char* ldap_acls_timerange_base_dn;
-    char* ldap_users_base_dn;
-    int ldap_server_port;
-    int ldap_filter_type;
-    GPrivate* ldap_priv;
+	int ldap_request_timeout;
+	char *binddn;
+	char *bindpasswd;
+	char *ldap_server;
+	char *ldap_acls_base_dn;
+	char *ldap_acls_timerange_base_dn;
+	char *ldap_users_base_dn;
+	int ldap_server_port;
+	int ldap_filter_type;
+	GPrivate *ldap_priv;
 };

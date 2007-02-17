@@ -40,41 +40,39 @@ GCRY_THREAD_OPTION_PTHREAD_IMPL;
 /****************** gcrypt use 'glib' thread implementation ****************/
 
 /* gcrypt init function */
-static int gcry_gthread_mutex_init (void **priv)			     /* to check */
-{
-	GMutex* lock = g_mutex_new();
+static int gcry_gthread_mutex_init(void **priv)
+{				/* to check */
+	GMutex *lock = g_mutex_new();
 	if (!lock)
 		return ENOMEM;
 	*priv = lock;
 	return 0;
 }
 
-static int gcry_gthread_mutex_destroy (void **lock)
+static int gcry_gthread_mutex_destroy(void **lock)
 {
-	g_mutex_free (*lock);
+	g_mutex_free(*lock);
 	return 0;
 }
 
-static int gcry_gthread_mutex_lock (void **lock)
+static int gcry_gthread_mutex_lock(void **lock)
 {
 	g_mutex_lock(*lock);
 	return 0;
 }
 
-static int gcry_gthread_mutex_unlock (void **lock)
+static int gcry_gthread_mutex_unlock(void **lock)
 {
 	g_mutex_unlock(*lock);
 	return 0;
 }
 
-static struct gcry_thread_cbs gcry_threads_gthread =
-{
+static struct gcry_thread_cbs gcry_threads_gthread = {
 	GCRY_THREAD_OPTION_USER, NULL,
 	gcry_gthread_mutex_init, gcry_gthread_mutex_destroy,
 	gcry_gthread_mutex_lock, gcry_gthread_mutex_unlock,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
 
-#endif   /* #ifdef GCRYPT_PTHEAD_IMPLEMENTATION */
-#endif   /* #ifndef GCRYPT_NUAUTH_H */
-
+#endif				/* #ifdef GCRYPT_PTHEAD_IMPLEMENTATION */
+#endif				/* #ifndef GCRYPT_NUAUTH_H */

@@ -17,6 +17,5 @@
 */
 
 struct x509_std_params {
-    gchar* trusted_issuer_dn;
+	gchar *trusted_issuer_dn;
 };
-

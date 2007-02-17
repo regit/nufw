@@ -46,17 +46,17 @@
  * Queue used to exchange messages between tls_sasl_connect_ok()
  * function and tls_user_authsrv() thread
  */
-GAsyncQueue* mx_queue;
+GAsyncQueue *mx_queue;
 
-int tls_connect(int c,gnutls_session** session_ptr);
+int tls_connect(int c, gnutls_session ** session_ptr);
 
 /* cache system related */
 struct client_connection {
     /** Socket file descriptor, init. with accept() and set to SO_KEEPALIVE mode */
-    int socket;
+	int socket;
 
     /** IPv6 address */
-    struct in6_addr addr;
+	struct in6_addr addr;
 };
 
 /**
@@ -65,53 +65,52 @@ struct client_connection {
  * the thread tls_user_authsrv().
  */
 struct tls_buffer_read {
-    int socket;           /*!< Socket file descriptor (value from accept()) */
-    struct in6_addr ip_addr;  /*!< User IPv6 address */
-    gnutls_session *tls;      /*!< TLS session */
-    char *user_name;          /*!< User name string */
-    uint32_t user_id;         /*!< User identifier (16 bits */
-    GSList *groups;           /*!< User groups */
-    char *os_sysname;         /*!< Operation system name */
-    char *os_release;         /*!< Operation system release */
-    char *os_version;         /*!< Operation system version */
-    char *buffer;             /*!< Content of the received packet */
-    int32_t buffer_len;       /*!< Length of the buffer */
-    int client_version;   /*!< Protocol version of client */
+	int socket;		/*!< Socket file descriptor (value from accept()) */
+	struct in6_addr ip_addr;	/*!< User IPv6 address */
+	gnutls_session *tls;	/*!< TLS session */
+	char *user_name;	/*!< User name string */
+	uint32_t user_id;	/*!< User identifier (16 bits */
+	GSList *groups;		/*!< User groups */
+	char *os_sysname;	/*!< Operation system name */
+	char *os_release;	/*!< Operation system release */
+	char *os_version;	/*!< Operation system version */
+	char *buffer;		/*!< Content of the received packet */
+	int32_t buffer_len;	/*!< Length of the buffer */
+	int client_version;	/*!< Protocol version of client */
 };
 
 typedef struct Nufw_session {
-    gnutls_session* tls;
-    GMutex* tls_lock;
-    struct in6_addr peername;
-    unsigned char proto_version;
-    gint usage;
-    gboolean alive;
+	gnutls_session *tls;
+	GMutex *tls_lock;
+	struct in6_addr peername;
+	unsigned char proto_version;
+	gint usage;
+	gboolean alive;
 } nufw_session_t;
 
 struct tls_insert_data {
-    int socket;
-    gpointer data;
+	int socket;
+	gpointer data;
 };
 
-struct nuauth_tls_t
-{
-    gnutls_certificate_credentials x509_cred;
-    int request_cert;
-    int auth_by_cert;
-    int crl_refresh;
-    int crl_refresh_counter;
-    gchar* crl_file;
-    time_t crl_file_mtime;
-    gnutls_dh_params dh_params;
+struct nuauth_tls_t {
+	gnutls_certificate_credentials x509_cred;
+	int request_cert;
+	int auth_by_cert;
+	int crl_refresh;
+	int crl_refresh_counter;
+	gchar *crl_file;
+	time_t crl_file_mtime;
+	gnutls_dh_params dh_params;
 };
 
-void clean_nufw_session(nufw_session_t *c_session);
+void clean_nufw_session(nufw_session_t * c_session);
 
 
 void create_x509_credentials();
-void* tls_nufw_authsrv(GMutex *mutex);
+void *tls_nufw_authsrv(GMutex * mutex);
 
-extern GHashTable* nufw_servers;
+extern GHashTable *nufw_servers;
 extern GStaticMutex nufw_servers_mutex;
 
 void close_nufw_servers();
@@ -120,8 +119,8 @@ void close_nufw_servers();
  * For user authentication
  */
 
-void* tls_user_authsrv(GMutex *mutex);
-void* push_worker (GMutex *mutex);
+void *tls_user_authsrv(GMutex * mutex);
+void *push_worker(GMutex * mutex);
 
 
 /** end tls stuff */
@@ -131,7 +130,7 @@ gboolean remove_socket_from_pre_client_list(int c);
 
 void tls_sasl_connect(gpointer userdata, gpointer data);
 gint check_certs_for_tls_session(gnutls_session session);
-void close_tls_session(int c,gnutls_session* session);
+void close_tls_session(int c, gnutls_session * session);
 
 void refresh_crl_file();
 

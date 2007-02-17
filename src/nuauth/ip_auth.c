@@ -37,33 +37,36 @@
  */
 void external_ip_auth(gpointer userdata, gpointer data)
 {
-        char* username=NULL;
+	char *username = NULL;
 
-        block_on_conf_reload();
-        username=modules_ip_auth(userdata);
-        if (username){
-            GSList* groups=NULL;
-            uint32_t uid;
-            /**
+	block_on_conf_reload();
+	username = modules_ip_auth(userdata);
+	if (username) {
+		GSList *groups = NULL;
+		uint32_t uid;
+	    /**
              * \todo
              *  set a cache for such query
              */
 
-            uid = modules_get_user_id(username);
-            groups = modules_get_user_groups(username);
-            /* if search succeed process to packet transmission */
-            if (groups){
-                connection_t* connection=g_new0(connection_t,1);
-                connection->state=AUTH_STATE_USERPCKT;
-                connection->user_groups = groups;
-                connection->user_id = uid;
-                connection->username=username;
-                connection->os_sysname=NULL;
-                connection->app_name=NULL;
-                /* copy ipv4 header */
-                memcpy(&(connection->tracking), (tracking_t *)userdata, sizeof(tracking_t));
-                g_async_queue_push (nuauthdatas->connections_queue,connection);
-            }
-        }
-        g_free(userdata);
+		uid = modules_get_user_id(username);
+		groups = modules_get_user_groups(username);
+		/* if search succeed process to packet transmission */
+		if (groups) {
+			connection_t *connection = g_new0(connection_t, 1);
+			connection->state = AUTH_STATE_USERPCKT;
+			connection->user_groups = groups;
+			connection->user_id = uid;
+			connection->username = username;
+			connection->os_sysname = NULL;
+			connection->app_name = NULL;
+			/* copy ipv4 header */
+			memcpy(&(connection->tracking),
+			       (tracking_t *) userdata,
+			       sizeof(tracking_t));
+			g_async_queue_push(nuauthdatas->connections_queue,
+					   connection);
+		}
+	}
+	g_free(userdata);
 }

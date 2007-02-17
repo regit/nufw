@@ -21,8 +21,10 @@
 
 #ifndef PCKT_AUTHSRV_V3_H
 #define  PCKT_AUTHSRV_V3_H
-void authpckt_conntrack_v3 (unsigned char *dgram, unsigned int dgram_size);
+void authpckt_conntrack_v3(unsigned char *dgram, unsigned int dgram_size);
 
-nu_error_t authpckt_new_connection_v3(unsigned char *dgram, unsigned int dgram_size,connection_t **conn);
+nu_error_t authpckt_new_connection_v3(unsigned char *dgram,
+				      unsigned int dgram_size,
+				      connection_t ** conn);
 
 #endif

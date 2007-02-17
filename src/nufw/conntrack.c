@@ -38,102 +38,115 @@
 #  define MSG_UPDATE NFCT_MSG_UPDATE
 #endif
 
-void fill_message(struct nuv4_conntrack_message_t *message, struct nf_conntrack *conn)
+void fill_message(struct nuv4_conntrack_message_t *message,
+		  struct nf_conntrack *conn)
 {
 #ifdef DEBUG_CONNTRACK
-    char ascii[INET6_ADDRSTRLEN];
+	char ascii[INET6_ADDRSTRLEN];
 #endif
 
 #ifdef HAVE_NEW_NFCT_API
-    message->ip_protocol = nfct_get_attr_u8(conn, ATTR_ORIG_L4PROTO);
+	message->ip_protocol = nfct_get_attr_u8(conn, ATTR_ORIG_L4PROTO);
 
-    if (nfct_get_attr_u8(conn, ATTR_ORIG_L3PROTO) == AF_INET) {
-        message->ip_src.s6_addr32[0] = 0;
-        message->ip_src.s6_addr32[1] = 0;
-        message->ip_src.s6_addr32[2] = 0xffff0000;
-        message->ip_src.s6_addr32[3] = nfct_get_attr_u32(conn, ATTR_ORIG_IPV4_SRC);
+	if (nfct_get_attr_u8(conn, ATTR_ORIG_L3PROTO) == AF_INET) {
+		message->ip_src.s6_addr32[0] = 0;
+		message->ip_src.s6_addr32[1] = 0;
+		message->ip_src.s6_addr32[2] = 0xffff0000;
+		message->ip_src.s6_addr32[3] =
+		    nfct_get_attr_u32(conn, ATTR_ORIG_IPV4_SRC);
 
-        message->ip_dst.s6_addr32[0] = 0;
-        message->ip_dst.s6_addr32[1] = 0;
-        message->ip_dst.s6_addr32[2] = 0xffff0000;
-        message->ip_dst.s6_addr32[3] = nfct_get_attr_u32(conn, ATTR_ORIG_IPV4_DST);
-    } else {
-        memcpy(&message->ip_src, nfct_get_attr(conn, ATTR_ORIG_IPV6_SRC), sizeof(message->ip_src));
-        memcpy(&message->ip_dst, nfct_get_attr(conn, ATTR_ORIG_IPV6_DST), sizeof(message->ip_dst));
-    }
+		message->ip_dst.s6_addr32[0] = 0;
+		message->ip_dst.s6_addr32[1] = 0;
+		message->ip_dst.s6_addr32[2] = 0xffff0000;
+		message->ip_dst.s6_addr32[3] =
+		    nfct_get_attr_u32(conn, ATTR_ORIG_IPV4_DST);
+	} else {
+		memcpy(&message->ip_src,
+		       nfct_get_attr(conn, ATTR_ORIG_IPV6_SRC),
+		       sizeof(message->ip_src));
+		memcpy(&message->ip_dst,
+		       nfct_get_attr(conn, ATTR_ORIG_IPV6_DST),
+		       sizeof(message->ip_dst));
+	}
 
-    switch (message->ip_protocol){
-        case IPPROTO_TCP :
-        case IPPROTO_UDP :
-            message->src_port = nfct_get_attr_u16(conn, ATTR_ORIG_PORT_SRC);
-            message->dest_port = nfct_get_attr_u16(conn, ATTR_ORIG_PORT_DST);
-            break;
-        default :
-            message->src_port = 0;
-            message->dest_port = 0;
-            break;
-    }
+	switch (message->ip_protocol) {
+	case IPPROTO_TCP:
+	case IPPROTO_UDP:
+		message->src_port =
+		    nfct_get_attr_u16(conn, ATTR_ORIG_PORT_SRC);
+		message->dest_port =
+		    nfct_get_attr_u16(conn, ATTR_ORIG_PORT_DST);
+		break;
+	default:
+		message->src_port = 0;
+		message->dest_port = 0;
+		break;
+	}
 
-    message->mark = nfct_get_attr_u32(conn, ATTR_MARK);
+	message->mark = nfct_get_attr_u32(conn, ATTR_MARK);
 
-    message->packets_in = nfct_get_attr_u32(conn, ATTR_ORIG_COUNTER_PACKETS);
-    message->bytes_in = nfct_get_attr_u32(conn, ATTR_ORIG_COUNTER_BYTES);
+	message->packets_in =
+	    nfct_get_attr_u32(conn, ATTR_ORIG_COUNTER_PACKETS);
+	message->bytes_in =
+	    nfct_get_attr_u32(conn, ATTR_ORIG_COUNTER_BYTES);
 
-    message->packets_out = nfct_get_attr_u32(conn, ATTR_REPL_COUNTER_PACKETS);
-    message->bytes_out = nfct_get_attr_u32(conn, ATTR_REPL_COUNTER_BYTES);
+	message->packets_out =
+	    nfct_get_attr_u32(conn, ATTR_REPL_COUNTER_PACKETS);
+	message->bytes_out =
+	    nfct_get_attr_u32(conn, ATTR_REPL_COUNTER_BYTES);
 #else
-    message->ip_protocol=conn->tuple[0].protonum;
+	message->ip_protocol = conn->tuple[0].protonum;
 
-    if (conn->tuple[0].l3protonum == AF_INET) {
-        message->ip_src.s6_addr32[0] = 0;
-        message->ip_src.s6_addr32[1] = 0;
-        message->ip_src.s6_addr32[2] = 0xffff0000;
-        message->ip_src.s6_addr32[3] = conn->tuple[0].src.v4;
+	if (conn->tuple[0].l3protonum == AF_INET) {
+		message->ip_src.s6_addr32[0] = 0;
+		message->ip_src.s6_addr32[1] = 0;
+		message->ip_src.s6_addr32[2] = 0xffff0000;
+		message->ip_src.s6_addr32[3] = conn->tuple[0].src.v4;
 
-        message->ip_dst.s6_addr32[0] = 0;
-        message->ip_dst.s6_addr32[1] = 0;
-        message->ip_dst.s6_addr32[2] = 0xffff0000;
-        message->ip_dst.s6_addr32[3] = conn->tuple[0].dst.v4;
-    } else {
-        memcpy(&message->ip_src, &conn->tuple[0].src.v6, sizeof(message->ip_src));
-        memcpy(&message->ip_dst, &conn->tuple[0].dst.v6, sizeof(message->ip_dst));
-    }
+		message->ip_dst.s6_addr32[0] = 0;
+		message->ip_dst.s6_addr32[1] = 0;
+		message->ip_dst.s6_addr32[2] = 0xffff0000;
+		message->ip_dst.s6_addr32[3] = conn->tuple[0].dst.v4;
+	} else {
+		memcpy(&message->ip_src, &conn->tuple[0].src.v6,
+		       sizeof(message->ip_src));
+		memcpy(&message->ip_dst, &conn->tuple[0].dst.v6,
+		       sizeof(message->ip_dst));
+	}
 
-    switch (message->ip_protocol){
-        case IPPROTO_TCP :
-            message->src_port = conn->tuple[0].l4src.tcp.port;
-            message->dest_port = conn->tuple[0].l4dst.tcp.port;
-            break;
-        case IPPROTO_UDP :
-            message->src_port = conn->tuple[0].l4src.udp.port;
-            message->dest_port = conn->tuple[0].l4dst.udp.port;
-            break;
-        default :
-            message->src_port = 0;
-            message->dest_port = 0;
-            break;
-    }
+	switch (message->ip_protocol) {
+	case IPPROTO_TCP:
+		message->src_port = conn->tuple[0].l4src.tcp.port;
+		message->dest_port = conn->tuple[0].l4dst.tcp.port;
+		break;
+	case IPPROTO_UDP:
+		message->src_port = conn->tuple[0].l4src.udp.port;
+		message->dest_port = conn->tuple[0].l4dst.udp.port;
+		break;
+	default:
+		message->src_port = 0;
+		message->dest_port = 0;
+		break;
+	}
 
-    message->mark = conn->mark;
+	message->mark = conn->mark;
 
-    message->packets_in = conn->counters[1].packets;
-    message->bytes_in = conn->counters[1].bytes;
+	message->packets_in = conn->counters[1].packets;
+	message->bytes_in = conn->counters[1].bytes;
 
-    message->packets_out = conn->counters[0].packets;
-    message->bytes_out = conn->counters[0].bytes;
+	message->packets_out = conn->counters[0].packets;
+	message->bytes_out = conn->counters[0].bytes;
 #endif
 
 #ifdef DEBUG_CONNTRACK
-    printf("(*) New conntrack event: ");
-    if (inet_ntop(AF_INET6, &message->ip_src, ascii, sizeof(ascii)))
-    {
-        printf(" src=%s", ascii);
-    }
-    if (inet_ntop(AF_INET6, &message->ip_dst, ascii, sizeof(ascii)))
-    {
-        printf(" dst=%s", ascii);
-    }
-    printf("\n");
+	printf("(*) New conntrack event: ");
+	if (inet_ntop(AF_INET6, &message->ip_src, ascii, sizeof(ascii))) {
+		printf(" src=%s", ascii);
+	}
+	if (inet_ntop(AF_INET6, &message->ip_dst, ascii, sizeof(ascii))) {
+		printf(" dst=%s", ascii);
+	}
+	printf("\n");
 #endif
 }
 
@@ -147,77 +160,84 @@ void fill_message(struct nuv4_conntrack_message_t *message, struct nf_conntrack 
  * \return If an error occurs returns -1, else returns 0
  */
 #ifdef HAVE_NEW_NFCT_API
-int update_handler (enum nf_conntrack_msg_type type, struct nf_conntrack *conn, void *data)
+int update_handler(enum nf_conntrack_msg_type type,
+		   struct nf_conntrack *conn, void *data)
 #else
-int update_handler (struct nf_conntrack *conn, unsigned int flags, int type,void *data)
+int update_handler(struct nf_conntrack *conn, unsigned int flags, int type,
+		   void *data)
 #endif
 {
-    struct nuv4_conntrack_message_t message;
-    int ret;
+	struct nuv4_conntrack_message_t message;
+	int ret;
 #ifdef HAVE_NEW_NFCT_API
-    int callback_ret = NFCT_CB_CONTINUE;
+	int callback_ret = NFCT_CB_CONTINUE;
 #else
-    int callback_ret = 0;
+	int callback_ret = 0;
 #endif
 
-    /* if nufw_conntrack_uses_mark is set we should have mark set here
-     * This REQUIRES correct CONNMARK rules and correct kernel */
-    if (nufw_conntrack_uses_mark == 1){
+	/* if nufw_conntrack_uses_mark is set we should have mark set here
+	 * This REQUIRES correct CONNMARK rules and correct kernel */
+	if (nufw_conntrack_uses_mark == 1) {
 #ifdef HAVE_NEW_NFCT_API
-        if (nfct_get_attr_u32(conn, ATTR_MARK) == 0) return callback_ret;
+		if (nfct_get_attr_u32(conn, ATTR_MARK) == 0)
+			return callback_ret;
 #else
-        if (conn->mark == 0) return callback_ret;
+		if (conn->mark == 0)
+			return callback_ret;
 #endif
-    }
-    message.protocol_version=PROTO_VERSION;
-    message.msg_length= htons(sizeof(struct nuv4_conntrack_message_t));
-    switch (type) {
-        case MSG_DESTROY:
-            message.msg_type=AUTH_CONN_DESTROY;
-            debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_VERBOSE_DEBUG,
-                    "Destroy event to be send to nuauth.");
-            break;
-        case MSG_UPDATE:
+	}
+	message.protocol_version = PROTO_VERSION;
+	message.msg_length =
+	    htons(sizeof(struct nuv4_conntrack_message_t));
+	switch (type) {
+	case MSG_DESTROY:
+		message.msg_type = AUTH_CONN_DESTROY;
+		debug_log_printf(DEBUG_AREA_MAIN,
+				 DEBUG_LEVEL_VERBOSE_DEBUG,
+				 "Destroy event to be send to nuauth.");
+		break;
+	case MSG_UPDATE:
 #ifdef HAVE_NEW_NFCT_API
-             if (! (nfct_get_attr_u32(conn, ATTR_STATUS) & IPS_ASSURED)) {
+		if (!(nfct_get_attr_u32(conn, ATTR_STATUS) & IPS_ASSURED)) {
 #else
-             if (! (conn->status & IPS_ASSURED)) {
+		if (!(conn->status & IPS_ASSURED)) {
 #endif
-                 return callback_ret;
-             }
-            message.msg_type=AUTH_CONN_UPDATE;
-            debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_VERBOSE_DEBUG,
-                    "Update event to be send to nuauth.");
-            break;
-        default:
-            debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_INFO,
-                        "Strange, get message (type %d) not %d or %d",
-                        type, MSG_DESTROY, MSG_UPDATE);
-            return callback_ret;
-    }
-    fill_message(&message, conn);
+			return callback_ret;
+		}
+		message.msg_type = AUTH_CONN_UPDATE;
+		debug_log_printf(DEBUG_AREA_MAIN,
+				 DEBUG_LEVEL_VERBOSE_DEBUG,
+				 "Update event to be send to nuauth.");
+		break;
+	default:
+		debug_log_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_INFO,
+				 "Strange, get message (type %d) not %d or %d",
+				 type, MSG_DESTROY, MSG_UPDATE);
+		return callback_ret;
+	}
+	fill_message(&message, conn);
 
-    pthread_mutex_lock(&tls.mutex);
-    if (tls.session){
-	    debug_log_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
-			    "Sending conntrack event to nuauth.");
-	    ret = gnutls_record_send(
-			    *(tls.session),
-			    &message,
-			    sizeof(struct nuv4_conntrack_message_t)
-			    );
-	    if (ret <0){
-		    if ( gnutls_error_is_fatal(ret) ){
-			    /* warn sender thread that it will need to reconnect at next access */
-			    tls.auth_server_running=0;
-			    pthread_cancel(tls.auth_server);
-			    pthread_mutex_unlock(&tls.mutex);
-			    return callback_ret;
-		    }
-	    }
-    }
-    pthread_mutex_unlock(&tls.mutex);
-    return callback_ret;
+	pthread_mutex_lock(&tls.mutex);
+	if (tls.session) {
+		debug_log_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
+				 "Sending conntrack event to nuauth.");
+		ret = gnutls_record_send(*(tls.session),
+					 &message,
+					 sizeof(struct
+						nuv4_conntrack_message_t)
+		    );
+		if (ret < 0) {
+			if (gnutls_error_is_fatal(ret)) {
+				/* warn sender thread that it will need to reconnect at next access */
+				tls.auth_server_running = 0;
+				pthread_cancel(tls.auth_server);
+				pthread_mutex_unlock(&tls.mutex);
+				return callback_ret;
+			}
+		}
+	}
+	pthread_mutex_unlock(&tls.mutex);
+	return callback_ret;
 }
 
 /**
@@ -225,25 +245,32 @@ int update_handler (struct nf_conntrack *conn, unsigned int flags, int type,void
  *
  * \return NULL pointer
  */
-void* conntrack_event_handler(void *data)
+void *conntrack_event_handler(void *data)
 {
-    struct nfct_handle *cth;
-    int res;
+	struct nfct_handle *cth;
+	int res;
 
-    debug_log_printf(DEBUG_AREA_MAIN,DEBUG_LEVEL_VERBOSE_DEBUG, "Starting conntrack thread");
-    cth = nfct_open(CONNTRACK, NF_NETLINK_CONNTRACK_DESTROY|NF_NETLINK_CONNTRACK_UPDATE);
-    if (!cth)
-        log_printf(DEBUG_LEVEL_WARNING, "Not enough memory to open netfilter conntrack");
+	debug_log_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_VERBOSE_DEBUG,
+			 "Starting conntrack thread");
+	cth =
+	    nfct_open(CONNTRACK,
+		      NF_NETLINK_CONNTRACK_DESTROY |
+		      NF_NETLINK_CONNTRACK_UPDATE);
+	if (!cth)
+		log_printf(DEBUG_LEVEL_WARNING,
+			   "Not enough memory to open netfilter conntrack");
 #ifdef HAVE_NEW_NFCT_API
-    nfct_callback_register(cth, NFCT_T_UPDATE | NFCT_T_DESTROY, update_handler, NULL);
-    res = nfct_catch(cth);
+	nfct_callback_register(cth, NFCT_T_UPDATE | NFCT_T_DESTROY,
+			       update_handler, NULL);
+	res = nfct_catch(cth);
 #else
-    nfct_register_callback(cth, update_handler, NULL);
-    res = nfct_event_conntrack(cth);
+	nfct_register_callback(cth, update_handler, NULL);
+	res = nfct_event_conntrack(cth);
 #endif
-    nfct_close(cth);
-    debug_log_printf(DEBUG_AREA_MAIN,DEBUG_LEVEL_VERBOSE_DEBUG, "Conntrack thread has exited");
-    return NULL;
+	nfct_close(cth);
+	debug_log_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_VERBOSE_DEBUG,
+			 "Conntrack thread has exited");
+	return NULL;
 }
 
-#endif   /* ifdef HAVE_LIBCONNTRACK */
+#endif				/* ifdef HAVE_LIBCONNTRACK */

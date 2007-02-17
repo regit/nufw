@@ -24,13 +24,14 @@
 
 int init_acl_cache();
 
-void free_acl_groups(GSList *acl_groups, gpointer uda);
-gboolean compare_acls(gconstpointer tracking_hdrs1, gconstpointer tracking_hdrs2);
+void free_acl_groups(GSList * acl_groups, gpointer uda);
+gboolean compare_acls(gconstpointer tracking_hdrs1,
+		      gconstpointer tracking_hdrs2);
 
-gpointer acl_create_and_alloc_key(connection_t* kdatas);
-inline  guint hash_acl(gconstpointer headers);
-void free_acl_list(void * datas);
-void get_acls_from_cache (connection_t* conn_elt);
+gpointer acl_create_and_alloc_key(connection_t * kdatas);
+inline guint hash_acl(gconstpointer headers);
+void free_acl_list(void *datas);
+void get_acls_from_cache(connection_t * conn_elt);
 gpointer acl_duplicate_key(gpointer datas);
 
 #endif

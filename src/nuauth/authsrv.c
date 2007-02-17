@@ -38,13 +38,12 @@
 #include "tls.h"
 #include "sasl.h"
 #include "security.h"
-#include <sys/resource.h>   /* setrlimit() */
+#include <sys/resource.h>	/* setrlimit() */
 
-typedef struct
-{
-    int daemonize;
-    char* nuauth_client_listen_addr;
-    char* nuauth_nufw_listen_addr;
+typedef struct {
+	int daemonize;
+	char *nuauth_client_listen_addr;
+	char *nuauth_nufw_listen_addr;
 } command_line_params_t;
 
 int nuauth_running = 1;
@@ -59,7 +58,7 @@ GList *cleanup_func_list = NULL;
  */
 void cleanup_func_push(cleanup_func_t func)
 {
-    cleanup_func_list = g_list_append(cleanup_func_list, func);
+	cleanup_func_list = g_list_append(cleanup_func_list, func);
 }
 
 /**
@@ -69,24 +68,24 @@ void cleanup_func_push(cleanup_func_t func)
  */
 void cleanup_func_remove(cleanup_func_t func)
 {
-    cleanup_func_list = g_list_remove(cleanup_func_list, func);
+	cleanup_func_list = g_list_remove(cleanup_func_list, func);
 }
 
 /**
  * Wait the end of thread using g_thread_join(). Avoid deadlock: if the
  * active thread is the thread to join, we just skip it.
  */
-void wait_thread_end(const char* name, struct nuauth_thread_t *thread)
+void wait_thread_end(const char *name, struct nuauth_thread_t *thread)
 {
-    GThread *self;
-    log_message(DEBUG, AREA_MAIN, "Wait end of thread '%s'", name);
-    self = g_thread_self();
-    if (self == thread->thread)
-    {
-        log_message(INFO, AREA_MAIN, "Information: Avoid deadlock: don't wait end of active thread!");
-        return;
-    }
-    g_thread_join (thread->thread);
+	GThread *self;
+	log_message(DEBUG, AREA_MAIN, "Wait end of thread '%s'", name);
+	self = g_thread_self();
+	if (self == thread->thread) {
+		log_message(INFO, AREA_MAIN,
+			    "Information: Avoid deadlock: don't wait end of active thread!");
+		return;
+	}
+	g_thread_join(thread->thread);
 }
 
 /**
@@ -99,107 +98,121 @@ void wait_thread_end(const char* name, struct nuauth_thread_t *thread)
  */
 void stop_threads(gboolean wait)
 {
-    log_message(INFO, AREA_MAIN, "Ask threads to stop.");
+	log_message(INFO, AREA_MAIN, "Ask threads to stop.");
 
-    /* stop command server */
-    if (nuauthconf->use_command_server) {
-        g_mutex_lock (nuauthdatas->command_thread.mutex);
-    }
+	/* stop command server */
+	if (nuauthconf->use_command_server) {
+		g_mutex_lock(nuauthdatas->command_thread.mutex);
+	}
 
-    /* ask theads to stop */
-    if (nuauthconf->push && nuauthconf->hello_authentication) {
-        g_mutex_lock (nuauthdatas->localid_auth_thread.mutex);
-    }
+	/* ask theads to stop */
+	if (nuauthconf->push && nuauthconf->hello_authentication) {
+		g_mutex_lock(nuauthdatas->localid_auth_thread.mutex);
+	}
 
-    /* wait thread end */
-    if (wait) {
-        log_message(INFO, AREA_MAIN, "Wait thread end ...");
-    }
+	/* wait thread end */
+	if (wait) {
+		log_message(INFO, AREA_MAIN, "Wait thread end ...");
+	}
 
-    /* kill push worker */
-    g_mutex_lock (nuauthdatas->tls_pusher.mutex);
-    if (wait) {
-        log_message(DEBUG, AREA_MAIN, "Wait thread 'tls pusher'");
-        g_thread_join (nuauthdatas->tls_pusher.thread);
-    }
+	/* kill push worker */
+	g_mutex_lock(nuauthdatas->tls_pusher.mutex);
+	if (wait) {
+		log_message(DEBUG, AREA_MAIN, "Wait thread 'tls pusher'");
+		g_thread_join(nuauthdatas->tls_pusher.thread);
+	}
 
-    /* kill entries point */
-    g_mutex_lock (nuauthdatas->tls_auth_server.mutex);
-    g_mutex_lock (nuauthdatas->tls_nufw_server.mutex);
+	/* kill entries point */
+	g_mutex_lock(nuauthdatas->tls_auth_server.mutex);
+	g_mutex_lock(nuauthdatas->tls_nufw_server.mutex);
 
-    if (wait) {
-        wait_thread_end("tls auth server", &nuauthdatas->tls_auth_server);
-        wait_thread_end("tls nufw server", &nuauthdatas->tls_nufw_server);
-    }
+	if (wait) {
+		wait_thread_end("tls auth server",
+				&nuauthdatas->tls_auth_server);
+		wait_thread_end("tls nufw server",
+				&nuauthdatas->tls_nufw_server);
+	}
 
-    /* Close nufw and client connections */
-    log_message(INFO, AREA_MAIN, "Close nufw connections");
-    close_nufw_servers();
+	/* Close nufw and client connections */
+	log_message(INFO, AREA_MAIN, "Close nufw connections");
+	close_nufw_servers();
 
-    log_message(INFO, AREA_MAIN, "Close client connections");
-    close_clients();
+	log_message(INFO, AREA_MAIN, "Close client connections");
+	close_clients();
 
-    g_mutex_lock (nuauthdatas->limited_connections_handler.mutex);
-    g_mutex_lock (nuauthdatas->search_and_fill_worker.mutex);
-    if (wait) {
-        wait_thread_end("limited connections", &nuauthdatas->limited_connections_handler);
-        wait_thread_end("search&fill", &nuauthdatas->search_and_fill_worker);
-    }
+	g_mutex_lock(nuauthdatas->limited_connections_handler.mutex);
+	g_mutex_lock(nuauthdatas->search_and_fill_worker.mutex);
+	if (wait) {
+		wait_thread_end("limited connections",
+				&nuauthdatas->limited_connections_handler);
+		wait_thread_end("search&fill",
+				&nuauthdatas->search_and_fill_worker);
+	}
 
-    if (nuauthconf->use_command_server) {
-        wait_thread_end("command", &nuauthdatas->command_thread);
-    }
-    if (nuauthconf->push && nuauthconf->hello_authentication && wait) {
-        wait_thread_end("localid", &nuauthdatas->localid_auth_thread);
-    }
+	if (nuauthconf->use_command_server) {
+		wait_thread_end("command", &nuauthdatas->command_thread);
+	}
+	if (nuauthconf->push && nuauthconf->hello_authentication && wait) {
+		wait_thread_end("localid",
+				&nuauthdatas->localid_auth_thread);
+	}
 
-    /* end logging threads */
-    if (wait) {
-        log_message(DEBUG, AREA_MAIN, "Stop thread pool 'user session loggers'");
-        g_thread_pool_free(nuauthdatas->user_session_loggers, TRUE, wait);
-        log_message(DEBUG, AREA_MAIN, "Stop thread pool 'user loggers'");
-        g_thread_pool_free(nuauthdatas->user_loggers, TRUE, wait);
-        log_message(DEBUG, AREA_MAIN, "Stop thread pool 'acl checkers'");
-        g_thread_pool_free(nuauthdatas->acl_checkers, TRUE, wait);
+	/* end logging threads */
+	if (wait) {
+		log_message(DEBUG, AREA_MAIN,
+			    "Stop thread pool 'user session loggers'");
+		g_thread_pool_free(nuauthdatas->user_session_loggers, TRUE,
+				   wait);
+		log_message(DEBUG, AREA_MAIN,
+			    "Stop thread pool 'user loggers'");
+		g_thread_pool_free(nuauthdatas->user_loggers, TRUE, wait);
+		log_message(DEBUG, AREA_MAIN,
+			    "Stop thread pool 'acl checkers'");
+		g_thread_pool_free(nuauthdatas->acl_checkers, TRUE, wait);
 
-        if ( nuauthconf->log_users_sync) {
-            log_message(DEBUG, AREA_MAIN, "Stop thread pool 'decision workers'");
-            g_thread_pool_free(nuauthdatas->decisions_workers, TRUE, wait);
-        }
+		if (nuauthconf->log_users_sync) {
+			log_message(DEBUG, AREA_MAIN,
+				    "Stop thread pool 'decision workers'");
+			g_thread_pool_free(nuauthdatas->decisions_workers,
+					   TRUE, wait);
+		}
 
-        if (nuauthconf->do_ip_authentication) {
-            log_message(DEBUG, AREA_MAIN, "Stop thread pool 'ip auth workers'");
-            g_thread_pool_free(nuauthdatas->ip_authentication_workers, TRUE, wait);
-        }
-    }
-    g_thread_pool_stop_unused_threads();
+		if (nuauthconf->do_ip_authentication) {
+			log_message(DEBUG, AREA_MAIN,
+				    "Stop thread pool 'ip auth workers'");
+			g_thread_pool_free(nuauthdatas->
+					   ip_authentication_workers, TRUE,
+					   wait);
+		}
+	}
+	g_thread_pool_stop_unused_threads();
 
-    /* done! */
-    log_message(INFO, AREA_MAIN, "Threads stopped.");
+	/* done! */
+	log_message(INFO, AREA_MAIN, "Threads stopped.");
 }
 
 void free_threads()
 {
-    /* free all thread mutex */
-    g_mutex_unlock (nuauthdatas->tls_pusher.mutex);
-    g_mutex_free (nuauthdatas->tls_pusher.mutex);
+	/* free all thread mutex */
+	g_mutex_unlock(nuauthdatas->tls_pusher.mutex);
+	g_mutex_free(nuauthdatas->tls_pusher.mutex);
 
-    g_mutex_unlock (nuauthdatas->search_and_fill_worker.mutex);
-    g_mutex_free (nuauthdatas->search_and_fill_worker.mutex);
+	g_mutex_unlock(nuauthdatas->search_and_fill_worker.mutex);
+	g_mutex_free(nuauthdatas->search_and_fill_worker.mutex);
 
-    g_mutex_unlock (nuauthdatas->tls_auth_server.mutex);
-    g_mutex_free (nuauthdatas->tls_auth_server.mutex);
+	g_mutex_unlock(nuauthdatas->tls_auth_server.mutex);
+	g_mutex_free(nuauthdatas->tls_auth_server.mutex);
 
-    g_mutex_unlock (nuauthdatas->tls_nufw_server.mutex);
-    g_mutex_free (nuauthdatas->tls_nufw_server.mutex);
+	g_mutex_unlock(nuauthdatas->tls_nufw_server.mutex);
+	g_mutex_free(nuauthdatas->tls_nufw_server.mutex);
 
-    g_mutex_unlock (nuauthdatas->limited_connections_handler.mutex);
-    g_mutex_free (nuauthdatas->limited_connections_handler.mutex);
+	g_mutex_unlock(nuauthdatas->limited_connections_handler.mutex);
+	g_mutex_free(nuauthdatas->limited_connections_handler.mutex);
 
-    if (nuauthconf->push && nuauthconf->hello_authentication) {
-        g_mutex_unlock (nuauthdatas->localid_auth_thread.mutex);
-        g_mutex_free (nuauthdatas->localid_auth_thread.mutex);
-    }
+	if (nuauthconf->push && nuauthconf->hello_authentication) {
+		g_mutex_unlock(nuauthdatas->localid_auth_thread.mutex);
+		g_mutex_free(nuauthdatas->localid_auth_thread.mutex);
+	}
 }
 
 /**
@@ -207,11 +220,12 @@ void free_threads()
  */
 void clear_push_queue()
 {
-    struct internal_message* message;
-    while ( (message=g_async_queue_try_pop(nuauthdatas->tls_push_queue)) != NULL)
-    {
-        g_free(message->datas);
-    }
+	struct internal_message *message;
+	while ((message =
+		g_async_queue_try_pop(nuauthdatas->tls_push_queue)) !=
+	       NULL) {
+		g_free(message->datas);
+	}
 }
 
 /**
@@ -225,30 +239,30 @@ void clear_push_queue()
  */
 void nuauth_deinit(gboolean soft)
 {
-    log_message(CRITICAL, AREA_MAIN, "[+] NuAuth deinit");
+	log_message(CRITICAL, AREA_MAIN, "[+] NuAuth deinit");
 
-    stop_threads(soft);
+	stop_threads(soft);
 
-    log_message(INFO, AREA_MAIN, "Unload modules");
-    unload_modules();
+	log_message(INFO, AREA_MAIN, "Unload modules");
+	unload_modules();
 
-    log_message(INFO, AREA_MAIN, "End TLS and audit");
-    end_tls();
-    end_audit();
+	log_message(INFO, AREA_MAIN, "End TLS and audit");
+	end_tls();
+	end_audit();
 
-    log_message(INFO, AREA_MAIN, "Free memory");
-    free_nuauth_params (nuauthconf);
-    if (nuauthconf->acl_cache){
-        cache_destroy(nuauthdatas->acl_cache);
-    }
-    if (nuauthconf->user_cache){
-        cache_destroy(nuauthdatas->user_cache);
-    }
-    free_threads();
-    clear_push_queue();
+	log_message(INFO, AREA_MAIN, "Free memory");
+	free_nuauth_params(nuauthconf);
+	if (nuauthconf->acl_cache) {
+		cache_destroy(nuauthdatas->acl_cache);
+	}
+	if (nuauthconf->user_cache) {
+		cache_destroy(nuauthdatas->user_cache);
+	}
+	free_threads();
+	clear_push_queue();
 
-    /* destroy pid file */
-    unlink(NUAUTH_PID_FILE);
+	/* destroy pid file */
+	unlink(NUAUTH_PID_FILE);
 }
 
 /**
@@ -256,9 +270,9 @@ void nuauth_deinit(gboolean soft)
  */
 void nuauth_ask_exit()
 {
-  if (g_atomic_int_compare_and_exchange (&nuauth_running,1,0)){
-      kill(getpid(), SIGTERM);
-  }
+	if (g_atomic_int_compare_and_exchange(&nuauth_running, 1, 0)) {
+		kill(getpid(), SIGTERM);
+	}
 }
 
 /**
@@ -268,10 +282,11 @@ void nuauth_ask_exit()
  */
 void nuauth_atexit()
 {
-  if (g_atomic_int_compare_and_exchange (&nuauth_running,1,0)){
-      log_message(FATAL, AREA_MAIN, "[+] Stop NuAuth server (exit)");
-      nuauth_deinit(FALSE);
-  }
+	if (g_atomic_int_compare_and_exchange(&nuauth_running, 1, 0)) {
+		log_message(FATAL, AREA_MAIN,
+			    "[+] Stop NuAuth server (exit)");
+		nuauth_deinit(FALSE);
+	}
 }
 
 /**
@@ -281,22 +296,24 @@ void nuauth_atexit()
  *
  * \param signal Code of raised signal
  */
-void nuauth_cleanup( int signal )
+void nuauth_cleanup(int signal)
 {
-    (void)g_atomic_int_dec_and_test (&nuauth_running);
-    /* first of all, reinstall old handlers (ignore errors) */
-    (void)sigaction(SIGTERM, &nuauthdatas->old_sigterm_hdl, NULL);
-    (void)sigaction(SIGINT, &nuauthdatas->old_sigint_hdl, NULL);
+	(void) g_atomic_int_dec_and_test(&nuauth_running);
+	/* first of all, reinstall old handlers (ignore errors) */
+	(void) sigaction(SIGTERM, &nuauthdatas->old_sigterm_hdl, NULL);
+	(void) sigaction(SIGINT, &nuauthdatas->old_sigint_hdl, NULL);
 
-    if (signal == SIGINT)
-        log_message(CRITICAL, AREA_MAIN, "[+] Stop NuAuth server (SIGINT)");
-    else if (signal == SIGTERM)
-        log_message(CRITICAL, AREA_MAIN, "[+] Stop NuAuth server (SIGTERM)");
+	if (signal == SIGINT)
+		log_message(CRITICAL, AREA_MAIN,
+			    "[+] Stop NuAuth server (SIGINT)");
+	else if (signal == SIGTERM)
+		log_message(CRITICAL, AREA_MAIN,
+			    "[+] Stop NuAuth server (SIGTERM)");
 
-    nuauth_deinit(TRUE);
+	nuauth_deinit(TRUE);
 
-    g_message("[+] NuAuth exit");
-    exit(EXIT_SUCCESS);
+	g_message("[+] NuAuth exit");
+	exit(EXIT_SUCCESS);
 }
 
 /**
@@ -311,53 +328,54 @@ void nuauth_cleanup( int signal )
  */
 void daemonize()
 {
-    FILE* pf;
-    pid_t pidf;
+	FILE *pf;
+	pid_t pidf;
 
-    if (access (NUAUTH_PID_FILE, R_OK) == 0) {
-        /* Check if the existing process is still alive. */
-        pid_t pidv;
+	if (access(NUAUTH_PID_FILE, R_OK) == 0) {
+		/* Check if the existing process is still alive. */
+		pid_t pidv;
 
-        pf = fopen (NUAUTH_PID_FILE, "r");
-        if (pf != NULL &&
-                fscanf (pf, "%d", &pidv) == 1 &&
-                kill (pidv, 0) == 0 ) {
-            fclose (pf);
-            printf ("pid file exists. Is nuauth already running? Aborting!\n");
-            exit(EXIT_FAILURE);
-        }
+		pf = fopen(NUAUTH_PID_FILE, "r");
+		if (pf != NULL &&
+		    fscanf(pf, "%d", &pidv) == 1 && kill(pidv, 0) == 0) {
+			fclose(pf);
+			printf
+			    ("pid file exists. Is nuauth already running? Aborting!\n");
+			exit(EXIT_FAILURE);
+		}
 
-        if (pf != NULL)
-            fclose (pf);
-    }
+		if (pf != NULL)
+			fclose(pf);
+	}
 
-    pidf = fork();
-    if (pidf < 0) {
-        g_error("Unable to fork\n");
-        exit (EXIT_FAILURE); /* this should be useless !! */
-    } else {
-        if (pidf > 0) {
-            /* child process */
-            pf = fopen (NUAUTH_PID_FILE, "w");
-            if (pf != NULL) {
-                fprintf (pf, "%d\n", (int)pidf);
-                fclose (pf);
-            } else {
-                printf ("Dying, can not create PID file \"" NUAUTH_PID_FILE "\".\n");
-                exit(EXIT_FAILURE);
-            }
-            exit(EXIT_SUCCESS);
-        }
-    }
+	pidf = fork();
+	if (pidf < 0) {
+		g_error("Unable to fork\n");
+		exit(EXIT_FAILURE);	/* this should be useless !! */
+	} else {
+		if (pidf > 0) {
+			/* child process */
+			pf = fopen(NUAUTH_PID_FILE, "w");
+			if (pf != NULL) {
+				fprintf(pf, "%d\n", (int) pidf);
+				fclose(pf);
+			} else {
+				printf("Dying, can not create PID file \""
+				       NUAUTH_PID_FILE "\".\n");
+				exit(EXIT_FAILURE);
+			}
+			exit(EXIT_SUCCESS);
+		}
+	}
 
-    setsid();
+	setsid();
 
-    set_glib_loghandlers();
+	set_glib_loghandlers();
 
-    /* Close stdin, stdout, stderr. */
-    (void) close(0);
-    (void) close(1);
-    (void) close(2);
+	/* Close stdin, stdout, stderr. */
+	(void) close(0);
+	(void) close(1);
+	(void) close(2);
 }
 
 /**
@@ -365,89 +383,97 @@ void daemonize()
  */
 void print_usage()
 {
-    fprintf (stdout,
-            "nuauth [-hDVv[v[v[v[v[v[v[v[v]]]]]]]]] [-l user_packet_port] [-C local_addr] [-L local_addr] \n"
-            "\t\t[-t packet_timeout]\n"
-            "\t-h : display this help and exit\n"
-            "\t-D : run as a daemon, send debug messages to syslog (else stdout/stderr)\n"
-            "\t-V : display version and exit\n"
-            "\t-v : increase debug level (+1 for each 'v') (max useful number : 10)\n"
-            "\t-l : specify listening TCP port (this port waits for clients) (default : 4130)\n"
-            "\t-L : specify NUFW listening IP address (local) (this address waits for nufw data) (default : 127.0.0.1)\n"
-            "\t-C : specify clients listening IP address (local) (this address waits for clients auth) (default : 0.0.0.0)\n"
-            "\t-t : timeout to forget about packets when they don't match (default : 15 s)\n");
+	fprintf(stdout,
+		"nuauth [-hDVv[v[v[v[v[v[v[v[v]]]]]]]]] [-l user_packet_port] [-C local_addr] [-L local_addr] \n"
+		"\t\t[-t packet_timeout]\n"
+		"\t-h : display this help and exit\n"
+		"\t-D : run as a daemon, send debug messages to syslog (else stdout/stderr)\n"
+		"\t-V : display version and exit\n"
+		"\t-v : increase debug level (+1 for each 'v') (max useful number : 10)\n"
+		"\t-l : specify listening TCP port (this port waits for clients) (default : 4130)\n"
+		"\t-L : specify NUFW listening IP address (local) (this address waits for nufw data) (default : 127.0.0.1)\n"
+		"\t-C : specify clients listening IP address (local) (this address waits for clients auth) (default : 0.0.0.0)\n"
+		"\t-t : timeout to forget about packets when they don't match (default : 15 s)\n");
 }
 
 /**
  * Parse command line options using getopt library.
  */
-void parse_options(int argc, char **argv, command_line_params_t *params)
+void parse_options(int argc, char **argv, command_line_params_t * params)
 {
-    char * options_list = "DhVvl:L:C:p:t:T:";
-    int option;
-    int local_debug_level=0;
+	char *options_list = "DhVvl:L:C:p:t:T:";
+	int option;
+	int local_debug_level = 0;
 
-    /*parse options */
-    while((option = getopt ( argc, argv, options_list)) != -1 ){
-        switch (option){
-            case 'V' :
-                fprintf (stdout, "nuauth (version %s)\n", NUAUTH_FULL_VERSION);
-                exit(EXIT_SUCCESS);
-                break;
+	/*parse options */
+	while ((option = getopt(argc, argv, options_list)) != -1) {
+		switch (option) {
+		case 'V':
+			fprintf(stdout, "nuauth (version %s)\n",
+				NUAUTH_FULL_VERSION);
+			exit(EXIT_SUCCESS);
+			break;
 
-            case 'v' :
-                /*fprintf (stdout, "Debug should be On (++)\n");*/
-                local_debug_level++;
-                break;
+		case 'v':
+			/*fprintf (stdout, "Debug should be On (++)\n"); */
+			local_debug_level++;
+			break;
 
-            case 'l' :
-                /* port we listen for auth answer */
-                printf("Waiting for user packets on TCP port %s\n",optarg);
-                SECURE_STRNCPY(nuauthconf->userpckt_port, optarg, sizeof(nuauthconf->userpckt_port));
-                break;
+		case 'l':
+			/* port we listen for auth answer */
+			printf("Waiting for user packets on TCP port %s\n",
+			       optarg);
+			SECURE_STRNCPY(nuauthconf->userpckt_port, optarg,
+				       sizeof(nuauthconf->userpckt_port));
+			break;
 
-            case 'L' :
-                /* Adress we listen for NUFW originating packets */
-                /* SECURE_STRNCPY(nufw_listen_address, optarg, HOSTNAME_SIZE); */
-                params->nuauth_nufw_listen_addr = (char *)calloc(HOSTNAME_SIZE, sizeof(char));
-                if (params->nuauth_nufw_listen_addr == NULL)
-                {
-                    /* TODO: Error message and free memory? */
-                    exit(EXIT_FAILURE);
-                }
-                SECURE_STRNCPY (params->nuauth_nufw_listen_addr, optarg, HOSTNAME_SIZE);
-                printf("Waiting for Nufw daemon packets on %s\n", params->nuauth_nufw_listen_addr);
-                break;
+		case 'L':
+			/* Adress we listen for NUFW originating packets */
+			/* SECURE_STRNCPY(nufw_listen_address, optarg, HOSTNAME_SIZE); */
+			params->nuauth_nufw_listen_addr =
+			    (char *) calloc(HOSTNAME_SIZE, sizeof(char));
+			if (params->nuauth_nufw_listen_addr == NULL) {
+				/* TODO: Error message and free memory? */
+				exit(EXIT_FAILURE);
+			}
+			SECURE_STRNCPY(params->nuauth_nufw_listen_addr,
+				       optarg, HOSTNAME_SIZE);
+			printf("Waiting for Nufw daemon packets on %s\n",
+			       params->nuauth_nufw_listen_addr);
+			break;
 
-            case 'C' :
-                /* Adress we listen for NUFW originating packets */
-                params->nuauth_client_listen_addr = (char *)calloc(HOSTNAME_SIZE, sizeof(char));
-                if (params->nuauth_client_listen_addr == NULL)
-                {
-                    /* TODO: Error message and free memory? */
-                    exit(EXIT_FAILURE);
-                }
-                SECURE_STRNCPY(params->nuauth_client_listen_addr, optarg, HOSTNAME_SIZE);
-                printf("Waiting for clients auth packets on %s\n", params->nuauth_client_listen_addr);
-                break;
+		case 'C':
+			/* Adress we listen for NUFW originating packets */
+			params->nuauth_client_listen_addr =
+			    (char *) calloc(HOSTNAME_SIZE, sizeof(char));
+			if (params->nuauth_client_listen_addr == NULL) {
+				/* TODO: Error message and free memory? */
+				exit(EXIT_FAILURE);
+			}
+			SECURE_STRNCPY(params->nuauth_client_listen_addr,
+				       optarg, HOSTNAME_SIZE);
+			printf("Waiting for clients auth packets on %s\n",
+			       params->nuauth_client_listen_addr);
+			break;
 
-            case 't' :
-                /* packet timeout */
-                sscanf(optarg,"%d",&(nuauthconf->packet_timeout));
-                break;
+		case 't':
+			/* packet timeout */
+			sscanf(optarg, "%d",
+			       &(nuauthconf->packet_timeout));
+			break;
 
-            case 'D' :
-                params->daemonize=1;
-                break;
+		case 'D':
+			params->daemonize = 1;
+			break;
 
-            case 'h' :
-                print_usage();
-                exit(EXIT_SUCCESS);
-        }
-    }
-    if (local_debug_level){
-        nuauthconf->debug_level = local_debug_level;
-    }
+		case 'h':
+			print_usage();
+			exit(EXIT_SUCCESS);
+		}
+	}
+	if (local_debug_level) {
+		nuauthconf->debug_level = local_debug_level;
+	}
 }
 
 /**
@@ -460,39 +486,40 @@ void parse_options(int argc, char **argv, command_line_params_t *params)
  */
 void nuauth_install_signals()
 {
-    struct sigaction action;
+	struct sigaction action;
 
-    atexit(nuauth_atexit);
+	atexit(nuauth_atexit);
 
-    memset(&action, 0, sizeof(action));
-    action.sa_handler = nuauth_cleanup;
-    sigemptyset( & (action.sa_mask));
-    action.sa_flags = 0;
+	memset(&action, 0, sizeof(action));
+	action.sa_handler = nuauth_cleanup;
+	sigemptyset(&(action.sa_mask));
+	action.sa_flags = 0;
 
-    /* intercept SIGTERM */
-    if ( sigaction(SIGTERM, &action, &nuauthdatas->old_sigterm_hdl) != 0) {
-        printf("Error\n");
-        exit(EXIT_FAILURE);
-    }
+	/* intercept SIGTERM */
+	if (sigaction(SIGTERM, &action, &nuauthdatas->old_sigterm_hdl) !=
+	    0) {
+		printf("Error\n");
+		exit(EXIT_FAILURE);
+	}
 
-    /* intercept SIGINT */
-    if ( sigaction(SIGINT, &action, &nuauthdatas->old_sigint_hdl) != 0) {
-        printf("Error\n");
-        exit(EXIT_FAILURE);
-    }
+	/* intercept SIGINT */
+	if (sigaction(SIGINT, &action, &nuauthdatas->old_sigint_hdl) != 0) {
+		printf("Error\n");
+		exit(EXIT_FAILURE);
+	}
 
-    /* intercept SIGHUP */
-    memset(&action, 0, sizeof(action));
-    action.sa_handler = nuauth_reload;
-    sigemptyset( & (action.sa_mask));
-    action.sa_flags = 0;
-    if ( sigaction(SIGHUP, &action, NULL) != 0) {
-        printf("Error\n");
-        exit(EXIT_FAILURE);
-    }
+	/* intercept SIGHUP */
+	memset(&action, 0, sizeof(action));
+	action.sa_handler = nuauth_reload;
+	sigemptyset(&(action.sa_mask));
+	action.sa_flags = 0;
+	if (sigaction(SIGHUP, &action, NULL) != 0) {
+		printf("Error\n");
+		exit(EXIT_FAILURE);
+	}
 
-    /* ignore SIGPIPE */
-    signal(SIGPIPE,SIG_IGN);
+	/* ignore SIGPIPE */
+	signal(SIGPIPE, SIG_IGN);
 }
 
 /**
@@ -502,12 +529,14 @@ void nuauth_install_signals()
  *
  * The mutex is used to stop a thread: to stop a thread, just lock its mutex.
  */
-void create_thread(struct nuauth_thread_t *thread, void* (*func) (GMutex*) )
+void create_thread(struct nuauth_thread_t *thread,
+		   void *(*func) (GMutex *))
 {
-    thread->mutex = g_mutex_new();
-    thread->thread = g_thread_create ((GThreadFunc)func, thread->mutex, TRUE, NULL);
-    if (thread->thread == NULL)
-        exit(EXIT_FAILURE);
+	thread->mutex = g_mutex_new();
+	thread->thread =
+	    g_thread_create((GThreadFunc) func, thread->mutex, TRUE, NULL);
+	if (thread->thread == NULL)
+		exit(EXIT_FAILURE);
 }
 
 /**
@@ -522,87 +551,86 @@ void create_thread(struct nuauth_thread_t *thread, void* (*func) (GMutex*) )
  */
 void configure_app(int argc, char **argv)
 {
-    command_line_params_t params;
-    int err;
-    struct rlimit core_limit;
-    /* Avoid creation of core file which may contains username and password */
-    if (getrlimit(RLIMIT_CORE, &core_limit) == 0)
-    {
+	command_line_params_t params;
+	int err;
+	struct rlimit core_limit;
+	/* Avoid creation of core file which may contains username and password */
+	if (getrlimit(RLIMIT_CORE, &core_limit) == 0) {
 #ifdef DEBUG_ENABLE
-        core_limit.rlim_cur = -1;
+		core_limit.rlim_cur = -1;
 #else
-        core_limit.rlim_cur = 0;
+		core_limit.rlim_cur = 0;
 #endif
-        setrlimit(RLIMIT_CORE, &core_limit);
-    }
-
+		setrlimit(RLIMIT_CORE, &core_limit);
+	}
 #ifndef DEBUG_ENABLE
-    /* Move to root directory to not block current working directory */
-    (void)chdir("/");
+	/* Move to root directory to not block current working directory */
+	(void) chdir("/");
 #endif
 
 #ifdef DEBUG_MEMORY
-    g_mem_set_vtable(glib_mem_profiler_table);
+	g_mem_set_vtable(glib_mem_profiler_table);
 #endif
 
-    /* Initialize glib thread system */
-    g_thread_init(NULL);
-    g_thread_pool_set_max_unused_threads (5);
+	/* Initialize glib thread system */
+	g_thread_init(NULL);
+	g_thread_pool_set_max_unused_threads(5);
 
-    /* init nuauthdatas */
-    nuauthdatas=g_new0(struct nuauth_datas,1);
-    nuauthdatas->reload_cond=g_cond_new ();
-    nuauthdatas->reload_cond_mutex=g_mutex_new ();
+	/* init nuauthdatas */
+	nuauthdatas = g_new0(struct nuauth_datas, 1);
+	nuauthdatas->reload_cond = g_cond_new();
+	nuauthdatas->reload_cond_mutex = g_mutex_new();
 
-    /* set default parameters */
-    params.daemonize = 0;
-    params.nuauth_client_listen_addr=NULL;
-    params.nuauth_nufw_listen_addr=NULL;
+	/* set default parameters */
+	params.daemonize = 0;
+	params.nuauth_client_listen_addr = NULL;
+	params.nuauth_nufw_listen_addr = NULL;
 
-    /* load configuration */
-    init_nuauthconf(&nuauthconf);
+	/* load configuration */
+	init_nuauthconf(&nuauthconf);
 
-    log_message (INFO, AREA_MAIN, "Start NuAuth server.");
+	log_message(INFO, AREA_MAIN, "Start NuAuth server.");
 
-    /* init gcrypt and gnutls */
+	/* init gcrypt and gnutls */
 #ifdef GCRYPT_PTHEAD_IMPLEMENTATION
-    gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);
+	gcry_control(GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);
 #else
-    gcry_control (GCRYCTL_SET_THREAD_CBS, &gcry_threads_gthread);
+	gcry_control(GCRYCTL_SET_THREAD_CBS, &gcry_threads_gthread);
 #endif
 
-    err = gnutls_global_init();
-    if (err) {
-        fprintf(stderr,
-                "FATAL ERROR: gnutls global initialisation failed:\n"
-                "%s\n",
-                gnutls_strerror(err));
-        exit(EXIT_FAILURE);
-    }
+	err = gnutls_global_init();
+	if (err) {
+		fprintf(stderr,
+			"FATAL ERROR: gnutls global initialisation failed:\n"
+			"%s\n", gnutls_strerror(err));
+		exit(EXIT_FAILURE);
+	}
 
-    parse_options(argc, argv, &params);
+	parse_options(argc, argv, &params);
 
-    build_prenuauthconf(nuauthconf, NULL);
+	build_prenuauthconf(nuauthconf, NULL);
 
-    if (nuauthconf->uses_utf8){
-        setlocale(LC_ALL,"");
-    }
+	if (nuauthconf->uses_utf8) {
+		setlocale(LC_ALL, "");
+	}
 
-    /* debug cannot be above 10 */
-    if (nuauthconf->debug_level > MAX_DEBUG_LEVEL)
-        nuauthconf->debug_level=MAX_DEBUG_LEVEL;
-    if (nuauthconf->debug_level < MIN_DEBUG_LEVEL)
-        nuauthconf->debug_level=MIN_DEBUG_LEVEL;
-    log_message(INFO, AREA_MAIN, "debug_level is %i",nuauthconf->debug_level);
+	/* debug cannot be above 10 */
+	if (nuauthconf->debug_level > MAX_DEBUG_LEVEL)
+		nuauthconf->debug_level = MAX_DEBUG_LEVEL;
+	if (nuauthconf->debug_level < MIN_DEBUG_LEVEL)
+		nuauthconf->debug_level = MIN_DEBUG_LEVEL;
+	log_message(INFO, AREA_MAIN, "debug_level is %i",
+		    nuauthconf->debug_level);
 
-    /* init credential */
-    create_x509_credentials();
+	/* init credential */
+	create_x509_credentials();
 
-    if (params.daemonize == 1) {
-        daemonize();
-    } else {
-        g_message("[+] Starting nuauth " VERSION " ($Revision$)");
-    }
+	if (params.daemonize == 1) {
+		daemonize();
+	} else {
+		g_message("[+] Starting nuauth " VERSION
+			  " ($Revision$)");
+	}
 }
 
 /**
@@ -635,121 +663,129 @@ void configure_app(int argc, char **argv)
  */
 void init_nuauthdatas()
 {
-    nuauthdatas->tls_push_queue = g_async_queue_new();
-    if (!nuauthdatas->tls_push_queue)
-        exit(EXIT_FAILURE);
+	nuauthdatas->tls_push_queue = g_async_queue_new();
+	if (!nuauthdatas->tls_push_queue)
+		exit(EXIT_FAILURE);
 
-    /* initialize packets list */
-    conn_list = g_hash_table_new_full ((GHashFunc)hash_connection,
-            compare_connection,
-            NULL,
-            (GDestroyNotify) free_connection);
+	/* initialize packets list */
+	conn_list = g_hash_table_new_full((GHashFunc) hash_connection,
+					  compare_connection,
+					  NULL, (GDestroyNotify)
+					  free_connection);
 
-    /* async queue initialisation */
-    nuauthdatas->connections_queue = g_async_queue_new();
-    if (!nuauthdatas->connections_queue)
-        exit(EXIT_FAILURE);
+	/* async queue initialisation */
+	nuauthdatas->connections_queue = g_async_queue_new();
+	if (!nuauthdatas->connections_queue)
+		exit(EXIT_FAILURE);
 
-    /* init and load modules */
-    init_modules_system();
-    load_modules();
+	/* init and load modules */
+	init_modules_system();
+	load_modules();
 
-    /* init periods */
-    nuauthconf->periods=init_periods(nuauthconf);
+	/* init periods */
+	nuauthconf->periods = init_periods(nuauthconf);
 
-    if (nuauthconf->acl_cache)
-        init_acl_cache();
+	if (nuauthconf->acl_cache)
+		init_acl_cache();
 
-    /* create user cache thread */
-    if (nuauthconf->user_cache)
-        init_user_cache();
+	/* create user cache thread */
+	if (nuauthconf->user_cache)
+		init_user_cache();
 
-    null_message = g_new0(struct cache_message, 1);
-    null_queue_datas = g_new0(gchar,1);
+	null_message = g_new0(struct cache_message, 1);
+	null_queue_datas = g_new0(gchar, 1);
 
-    if (nuauthconf->do_ip_authentication) {
-        /* create thread of pool */
-        nuauthdatas->ip_authentication_workers = g_thread_pool_new ((GFunc) external_ip_auth,
-                NULL,
-                nuauthconf->nbipauth_check,
-                POOL_TYPE,
-                NULL);
-    }
+	if (nuauthconf->do_ip_authentication) {
+		/* create thread of pool */
+		nuauthdatas->ip_authentication_workers =
+		    g_thread_pool_new((GFunc) external_ip_auth, NULL,
+				      nuauthconf->nbipauth_check,
+				      POOL_TYPE, NULL);
+	}
 
-    /* init private datas for pool thread */
-    nuauthdatas->aclqueue = g_private_new((GDestroyNotify)g_async_queue_unref);
-    nuauthdatas->userqueue = g_private_new((GDestroyNotify)g_async_queue_unref);
+	/* init private datas for pool thread */
+	nuauthdatas->aclqueue =
+	    g_private_new((GDestroyNotify) g_async_queue_unref);
+	nuauthdatas->userqueue =
+	    g_private_new((GDestroyNotify) g_async_queue_unref);
 
-    /* create thread for search_and_fill thread */
-    log_message (VERBOSE_DEBUG, AREA_MAIN, "Creating search_and_fill thread");
-    create_thread (&nuauthdatas->search_and_fill_worker, search_and_fill);
+	/* create thread for search_and_fill thread */
+	log_message(VERBOSE_DEBUG, AREA_MAIN,
+		    "Creating search_and_fill thread");
+	create_thread(&nuauthdatas->search_and_fill_worker,
+		      search_and_fill);
 
-    /* create acl checker workers */
-    log_message(VERBOSE_DEBUG, AREA_MAIN, "Creating %d acl checkers",nuauthconf->nbacl_check);
-    nuauthdatas->acl_checkers = g_thread_pool_new ((GFunc)acl_check_and_decide,
-            NULL,
-            nuauthconf->nbacl_check,
-            POOL_TYPE,
-            NULL);
+	/* create acl checker workers */
+	log_message(VERBOSE_DEBUG, AREA_MAIN, "Creating %d acl checkers",
+		    nuauthconf->nbacl_check);
+	nuauthdatas->acl_checkers =
+	    g_thread_pool_new((GFunc) acl_check_and_decide, NULL,
+			      nuauthconf->nbacl_check, POOL_TYPE, NULL);
 
-    /* create user checker workers */
-    log_message(VERBOSE_DEBUG, AREA_MAIN, "Creating %d user checkers",nuauthconf->nbuser_check);
-    nuauthdatas->user_checkers = g_thread_pool_new ((GFunc)user_check_and_decide,
-            NULL,
-            nuauthconf->nbuser_check,
-            POOL_TYPE,
-            NULL);
+	/* create user checker workers */
+	log_message(VERBOSE_DEBUG, AREA_MAIN, "Creating %d user checkers",
+		    nuauthconf->nbuser_check);
+	nuauthdatas->user_checkers =
+	    g_thread_pool_new((GFunc) user_check_and_decide, NULL,
+			      nuauthconf->nbuser_check, POOL_TYPE, NULL);
 
-    /* create user logger workers */
-    log_message(VERBOSE_DEBUG, AREA_MAIN, "Creating %d user loggers", nuauthconf->nbloggers);
-    nuauthdatas->user_loggers = g_thread_pool_new ((GFunc)real_log_user_packet,
-            NULL,
-            nuauthconf->nbloggers,
-            POOL_TYPE,
-            NULL);
-    log_message(VERBOSE_DEBUG, AREA_MAIN, "Creating %d user session loggers", nuauthconf->nbloggers);
-    nuauthdatas->user_session_loggers = g_thread_pool_new  ((GFunc)  log_user_session_thread,
-            NULL,
-            nuauthconf->nbloggers,
-            POOL_TYPE,
-            NULL);
+	/* create user logger workers */
+	log_message(VERBOSE_DEBUG, AREA_MAIN, "Creating %d user loggers",
+		    nuauthconf->nbloggers);
+	nuauthdatas->user_loggers =
+	    g_thread_pool_new((GFunc) real_log_user_packet, NULL,
+			      nuauthconf->nbloggers, POOL_TYPE, NULL);
+	log_message(VERBOSE_DEBUG, AREA_MAIN,
+		    "Creating %d user session loggers",
+		    nuauthconf->nbloggers);
+	nuauthdatas->user_session_loggers =
+	    g_thread_pool_new((GFunc) log_user_session_thread, NULL,
+			      nuauthconf->nbloggers, POOL_TYPE, NULL);
 
-    /* create decisions workers (if needed) */
-    if ( nuauthconf->log_users_sync ){
-        log_message(VERBOSE_DEBUG, AREA_MAIN, "Creating %d decision workers", nuauthconf->nbloggers);
-        nuauthdatas->decisions_workers = g_thread_pool_new  ((GFunc)  decisions_queue_work,
-                NULL,
-                nuauthconf->nbloggers,
-                POOL_TYPE,
-                NULL);
-    }
+	/* create decisions workers (if needed) */
+	if (nuauthconf->log_users_sync) {
+		log_message(VERBOSE_DEBUG, AREA_MAIN,
+			    "Creating %d decision workers",
+			    nuauthconf->nbloggers);
+		nuauthdatas->decisions_workers =
+		    g_thread_pool_new((GFunc) decisions_queue_work, NULL,
+				      nuauthconf->nbloggers, POOL_TYPE,
+				      NULL);
+	}
 
-    if (nuauthconf->push && nuauthconf->hello_authentication){
-        log_message(VERBOSE_DEBUG, AREA_MAIN, "Creating hello mode authentication thread");
-        nuauthdatas->localid_auth_queue = g_async_queue_new ();
-        create_thread (&nuauthdatas->localid_auth_thread, localid_auth);
-    }
+	if (nuauthconf->push && nuauthconf->hello_authentication) {
+		log_message(VERBOSE_DEBUG, AREA_MAIN,
+			    "Creating hello mode authentication thread");
+		nuauthdatas->localid_auth_queue = g_async_queue_new();
+		create_thread(&nuauthdatas->localid_auth_thread,
+			      localid_auth);
+	}
 
-    if (nuauthconf->use_command_server){
-        log_message(VERBOSE_DEBUG, AREA_MAIN, "Creating command thread");
-        create_thread (&nuauthdatas->command_thread, command_server);
-    }
+	if (nuauthconf->use_command_server) {
+		log_message(VERBOSE_DEBUG, AREA_MAIN,
+			    "Creating command thread");
+		create_thread(&nuauthdatas->command_thread,
+			      command_server);
+	}
 
-    /* create thread for client request sender */
-    create_thread (&nuauthdatas->tls_pusher, push_worker);
+	/* create thread for client request sender */
+	create_thread(&nuauthdatas->tls_pusher, push_worker);
 
-    if (nuauthconf->nufw_has_conntrack){
-        create_thread (&nuauthdatas->limited_connections_handler, limited_connection_handler);
-    }
+	if (nuauthconf->nufw_has_conntrack) {
+		create_thread(&nuauthdatas->limited_connections_handler,
+			      limited_connection_handler);
+	}
 
-    /* create TLS authentification server threads (auth + nufw) */
-    log_message (VERBOSE_DEBUG, AREA_MAIN, "Creating tls authentication server thread");
-    create_thread (&nuauthdatas->tls_auth_server, tls_user_authsrv);
+	/* create TLS authentification server threads (auth + nufw) */
+	log_message(VERBOSE_DEBUG, AREA_MAIN,
+		    "Creating tls authentication server thread");
+	create_thread(&nuauthdatas->tls_auth_server, tls_user_authsrv);
 
-    log_message (VERBOSE_DEBUG, AREA_MAIN, "Creating tls nufw server thread");
-    create_thread (&nuauthdatas->tls_nufw_server, tls_nufw_authsrv);
+	log_message(VERBOSE_DEBUG, AREA_MAIN,
+		    "Creating tls nufw server thread");
+	create_thread(&nuauthdatas->tls_nufw_server, tls_nufw_authsrv);
 
-    log_message (INFO, AREA_MAIN, "Threads system started");
+	log_message(INFO, AREA_MAIN, "Threads system started");
 }
 
 /**
@@ -761,43 +797,51 @@ void init_nuauthdatas()
  */
 void main_cleanup()
 {
-    struct cache_message *cmessage;
-    struct internal_message * int_message;
+	struct cache_message *cmessage;
+	struct internal_message *int_message;
 
-    /* remove old connections */
-    clean_connections_list();
+	/* remove old connections */
+	clean_connections_list();
 
-    /* info message about thread pools */
-    if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO,DEBUG_AREA_MAIN)){
-        if (g_thread_pool_unprocessed(nuauthdatas->user_checkers) || g_thread_pool_unprocessed(nuauthdatas->acl_checkers)){
-            g_message("%u user/%u acl unassigned task(s), %d connection(s)",
-                    g_thread_pool_unprocessed(nuauthdatas->user_checkers),
-                    g_thread_pool_unprocessed(nuauthdatas->acl_checkers),
-                    g_hash_table_size(conn_list)
-                    );
-        }
-    }
+	/* info message about thread pools */
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO, DEBUG_AREA_MAIN)) {
+		if (g_thread_pool_unprocessed(nuauthdatas->user_checkers)
+		    || g_thread_pool_unprocessed(nuauthdatas->
+						 acl_checkers)) {
+			g_message
+			    ("%u user/%u acl unassigned task(s), %d connection(s)",
+			     g_thread_pool_unprocessed(nuauthdatas->
+						       user_checkers),
+			     g_thread_pool_unprocessed(nuauthdatas->
+						       acl_checkers),
+			     g_hash_table_size(conn_list)
+			    );
+		}
+	}
 
-    if (nuauthconf->acl_cache){
-        /* send refresh message to acl cache thread */
-        cmessage=g_new0(struct cache_message,1);
-        cmessage->type=REFRESH_MESSAGE;
-        g_async_queue_push(nuauthdatas->acl_cache->queue, cmessage);
-    }
+	if (nuauthconf->acl_cache) {
+		/* send refresh message to acl cache thread */
+		cmessage = g_new0(struct cache_message, 1);
+		cmessage->type = REFRESH_MESSAGE;
+		g_async_queue_push(nuauthdatas->acl_cache->queue,
+				   cmessage);
+	}
 
-    if (nuauthconf->push && nuauthconf->hello_authentication) {
-        /* refresh localid_auth_queue queue */
-        int_message = g_new0(struct internal_message,1);
-        int_message->type = REFRESH_MESSAGE;
-        g_async_queue_push(nuauthdatas->localid_auth_queue,int_message);
-    }
+	if (nuauthconf->push && nuauthconf->hello_authentication) {
+		/* refresh localid_auth_queue queue */
+		int_message = g_new0(struct internal_message, 1);
+		int_message->type = REFRESH_MESSAGE;
+		g_async_queue_push(nuauthdatas->localid_auth_queue,
+				   int_message);
+	}
 
-    if (nuauthconf->nufw_has_conntrack){
-        /* refresh limited_connections_queue queue */
-        int_message = g_new0(struct internal_message,1);
-        int_message->type = REFRESH_MESSAGE;
-        g_async_queue_push(nuauthdatas->limited_connections_queue,int_message);
-    }
+	if (nuauthconf->nufw_has_conntrack) {
+		/* refresh limited_connections_queue queue */
+		int_message = g_new0(struct internal_message, 1);
+		int_message->type = REFRESH_MESSAGE;
+		g_async_queue_push(nuauthdatas->limited_connections_queue,
+				   int_message);
+	}
 }
 
 /**
@@ -805,51 +849,50 @@ void main_cleanup()
  */
 void nuauth_main_loop()
 {
-    struct timespec sleep;
-    GList* cleanup_it;
-    GTimer *timer;
-    double sec; unsigned long ms;
+	struct timespec sleep;
+	GList *cleanup_it;
+	GTimer *timer;
+	double sec;
+	unsigned long ms;
 
-    g_message("[+] NuAuth started.");
+	g_message("[+] NuAuth started.");
 
-    /* create timer and add main cleanup function to cleanup list */
-    timer = g_timer_new();
-    cleanup_func_push(main_cleanup);
+	/* create timer and add main cleanup function to cleanup list */
+	timer = g_timer_new();
+	cleanup_func_push(main_cleanup);
 
-    /* first sleep is one full second */
-    sleep.tv_sec = 1;
-    sleep.tv_nsec = 0;
+	/* first sleep is one full second */
+	sleep.tv_sec = 1;
+	sleep.tv_nsec = 0;
 
-    /*
-     * Main loop: call functions listed in ::cleanup_func_list every second.
-     * If functions take long time, next sleep will be shorter.
-     */
-    for(;;){
-        /* a little sleep (one second) */
-        nanosleep(&sleep, NULL);
+	/*
+	 * Main loop: call functions listed in ::cleanup_func_list every second.
+	 * If functions take long time, next sleep will be shorter.
+	 */
+	for (;;) {
+		/* a little sleep (one second) */
+		nanosleep(&sleep, NULL);
 
-        /* remove old connections */
-        g_timer_start(timer);
-        for (cleanup_it = cleanup_func_list;
-                cleanup_it != NULL;
-                cleanup_it = cleanup_it->next)
-        {
-            cleanup_func_t cleanup = cleanup_it->data;
-            cleanup();
-        }
-        g_timer_stop(timer);
+		/* remove old connections */
+		g_timer_start(timer);
+		for (cleanup_it = cleanup_func_list;
+		     cleanup_it != NULL; cleanup_it = cleanup_it->next) {
+			cleanup_func_t cleanup = cleanup_it->data;
+			cleanup();
+		}
+		g_timer_stop(timer);
 
-        /* compute next sleep: one second minus (elasped time) */
-        sec = g_timer_elapsed(timer, &ms);
-        if (1 <= sec) {
-            sleep.tv_sec = 0;
-            sleep.tv_nsec = 0;
-        } else {
-            sleep.tv_sec = 0;
-            sleep.tv_nsec = (1000000-ms)*1000;
-        }
-    }
-    g_timer_destroy(timer);
+		/* compute next sleep: one second minus (elasped time) */
+		sec = g_timer_elapsed(timer, &ms);
+		if (1 <= sec) {
+			sleep.tv_sec = 0;
+			sleep.tv_nsec = 0;
+		} else {
+			sleep.tv_sec = 0;
+			sleep.tv_nsec = (1000000 - ms) * 1000;
+		}
+	}
+	g_timer_destroy(timer);
 }
 
 /**
@@ -860,14 +903,14 @@ void nuauth_main_loop()
  *   - Init. autdit: init_audit()
  *   - Run main loop: nuauth_main_loop()
  */
-int main(int argc,char * argv[])
+int main(int argc, char *argv[])
 {
-    configure_app(argc, argv);
-    init_nuauthdatas();
-    nuauth_install_signals();
-    init_audit();
-    nuauth_main_loop();
-    return EXIT_SUCCESS;
+	configure_app(argc, argv);
+	init_nuauthdatas();
+	nuauth_install_signals();
+	init_audit();
+	nuauth_main_loop();
+	return EXIT_SUCCESS;
 }
 
 /** @} */

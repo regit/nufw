@@ -80,5 +80,4 @@ session = nu_client_init2(
  * Nutcpc is the Linux and FreeBSD command line client. 
  */
 
-#endif  /* of ifndef DOCUMENTATION_H */
-
+#endif				/* of ifndef DOCUMENTATION_H */

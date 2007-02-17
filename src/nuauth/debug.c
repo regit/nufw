@@ -25,17 +25,17 @@
 #include <math.h>
 
 /* sweet formula : GLIB_LOG_LEVEL=2^SYSLOG_LOG_LEVEL */
-void process_g_syslog (const gchar *log_domain, GLogLevelFlags log_level, const gchar *message, gpointer user_data)
+void process_g_syslog(const gchar * log_domain, GLogLevelFlags log_level,
+		      const gchar * message, gpointer user_data)
 {
-  int syslog_level;
-  syslog_level = rint(log(log_level)/log(2));
-  syslog(LOG_FACILITY || syslog_level,message);
+	int syslog_level;
+	syslog_level = rint(log(log_level) / log(2));
+	syslog(LOG_FACILITY || syslog_level, message);
 }
 
 void set_glib_loghandlers()
 {
-	openlog("nuauth",LOG_CONS||LOG_PID,LOG_DAEMON);
-	g_log_set_handler (NULL, G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL
-                     | G_LOG_FLAG_RECURSION, process_g_syslog, NULL);
+	openlog("nuauth", LOG_CONS || LOG_PID, LOG_DAEMON);
+	g_log_set_handler(NULL, G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL
+			  | G_LOG_FLAG_RECURSION, process_g_syslog, NULL);
 }
-

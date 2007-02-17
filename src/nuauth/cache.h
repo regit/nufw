@@ -27,45 +27,46 @@
  */
 
 typedef struct {
-	GSList* datas;
+	GSList *datas;
 	time_t create_timestamp;
 	time_t refresh_timestamp;
 	gboolean refreshing;
 } cache_entry_t;
 
 typedef struct {
-    gpointer datas;
-    guint usage;
+	gpointer datas;
+	guint usage;
 } cache_entry_content_t;
 
-void cache_entry_content_destroy(cache_entry_content_t* content, GFunc free_datas);
+void cache_entry_content_destroy(cache_entry_content_t * content,
+				 GFunc free_datas);
 
-typedef void (*CacheDeleteFunc)(gpointer, gpointer);
+typedef void (*CacheDeleteFunc) (gpointer, gpointer);
 
 /**
  * struct needed for initialisation of cache manager occurence
  */
 typedef struct {
-	GAsyncQueue* queue;
-	GHashTable* hash;
+	GAsyncQueue *queue;
+	GHashTable *hash;
 	CacheDeleteFunc delete_elt;
-	void* (*duplicate_key)(gpointer);
-	void (*free_key)(gpointer);
-	gboolean (*equal_key)(gconstpointer,gconstpointer);
+	void *(*duplicate_key) (gpointer);
+	void (*free_key) (gpointer);
+	 gboolean(*equal_key) (gconstpointer, gconstpointer);
 } cache_class_t;
 
-void cache_manager(cache_class_t *this);
-void cache_destroy(cache_class_t *datas);
+void cache_manager(cache_class_t * this);
+void cache_destroy(cache_class_t * datas);
 
 /**
  * generic message send between thread working with the
  * cache system
  */
 struct cache_message {
-	guint type;                /*< message type */
-	gpointer key;              /*< key that identify datas in hash */
-	gpointer datas;            /*< datas to store */
-	GAsyncQueue* reply_queue;  /*< reply has to be sent to */
+	guint type;		/*< message type */
+	gpointer key;		/*< key that identify datas in hash */
+	gpointer datas;		/*< datas to store */
+	GAsyncQueue *reply_queue;	/*< reply has to be sent to */
 };
 
 gpointer null_message;
@@ -74,4 +75,3 @@ gpointer null_queue_datas;
 /** @} */
 
 #endif
-

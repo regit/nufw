@@ -61,12 +61,11 @@
 /*#  define DEBUG_WITH_VALGRIND*/
 #endif
 
-typedef enum
-{
-    NU_EXIT_ERROR,
-    NU_EXIT_OK,
-    NU_EXIT_NO_RETURN,
-    NU_EXIT_CONTINUE
+typedef enum {
+	NU_EXIT_ERROR,
+	NU_EXIT_OK,
+	NU_EXIT_NO_RETURN,
+	NU_EXIT_CONTINUE
 } nu_error_t;
 
 #define PROTO_IPV4 4

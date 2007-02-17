@@ -22,6 +22,6 @@
 
 gint check_x509_certificate_validity(gnutls_session session);
 
-gchar *	get_username_from_x509_certificate(gnutls_session session);
+gchar *get_username_from_x509_certificate(gnutls_session session);
 
 #endif

@@ -22,58 +22,57 @@
 #define TEXT_ACLFILE    CONFIG_DIR "/acls.nufw"
 
 struct T_plaintext_user {
-    char *username;
-    char *passwd;
-    u_int32_t uid;
-    GSList *groups;
+	char *username;
+	char *passwd;
+	u_int32_t uid;
+	GSList *groups;
 };
 
 struct T_app {
-    gchar *appname;
-    gchar *appmd5;
+	gchar *appname;
+	gchar *appmd5;
 };
 
 struct T_os {
-    char *sysname;
-    char *release;
-    char *version;
+	char *sysname;
+	char *release;
+	char *version;
 };
 
 struct T_ip {
-    struct in6_addr addr;
-    struct in6_addr netmask;
+	struct in6_addr addr;
+	struct in6_addr netmask;
 };
 
 struct T_ports {
-    uint16_t firstport;
-    int nbports;
+	uint16_t firstport;
+	int nbports;
 };
 
 struct T_plaintext_acl {
-    char *aclname;
-    decision_t decision;
-    int proto;
+	char *aclname;
+	decision_t decision;
+	int proto;
 
-    GSList *groups;
-    GSList *apps;
-    GSList *os;
+	GSList *groups;
+	GSList *apps;
+	GSList *os;
 
-    GSList *types;
+	GSList *types;
 
-    GSList *src_ip;
-    GSList *src_ports;
+	GSList *src_ip;
+	GSList *src_ports;
 
-    GSList *dst_ip;
-    GSList *dst_ports;
+	GSList *dst_ip;
+	GSList *dst_ports;
 
-    gchar* period;
-    gchar* log_prefix;
+	gchar *period;
+	gchar *log_prefix;
 };
 
 struct plaintext_params {
-    char    *plaintext_userfile;
-    char    *plaintext_aclfile;
-    GSList  *plaintext_userlist;
-    GSList  *plaintext_acllist;
+	char *plaintext_userfile;
+	char *plaintext_aclfile;
+	GSList *plaintext_userlist;
+	GSList *plaintext_acllist;
 };
-

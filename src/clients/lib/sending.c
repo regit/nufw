@@ -34,25 +34,29 @@
 int count;
 #endif
 
-int send_hello_pckt(NuAuth * session){
-    struct nu_header header;
+int send_hello_pckt(NuAuth * session)
+{
+	struct nu_header header;
 
-    /* fill struct */
-    header.proto=PROTO_VERSION;
-    header.msg_type=USER_HELLO;
-    header.option=0;
-    header.length=htons(sizeof(struct nu_header));
+	/* fill struct */
+	header.proto = PROTO_VERSION;
+	header.msg_type = USER_HELLO;
+	header.option = 0;
+	header.length = htons(sizeof(struct nu_header));
 
-    /*  send it */
-    if(session->tls){
-        if( gnutls_record_send(session->tls,&header,sizeof(struct nu_header))<=0){
+	/*  send it */
+	if (session->tls) {
+		if (gnutls_record_send
+		    (session->tls, &header,
+		     sizeof(struct nu_header)) <= 0) {
 #if DEBUG_ENABLE
-            printf("write failed at %s:%d\n",__FILE__,__LINE__);
+			printf("write failed at %s:%d\n", __FILE__,
+			       __LINE__);
 #endif
-            return 0;
-        }
-    }
-    return 1;
+			return 0;
+		}
+	}
+	return 1;
 }
 
 
@@ -61,111 +65,116 @@ int send_hello_pckt(NuAuth * session){
  * in a big packet of format:
  *   [ nu_header + nu_authfield_ipv6 * N ]
  */
-int send_user_pckt(NuAuth * session,conn_t* carray[CONN_MAX])
+int send_user_pckt(NuAuth * session, conn_t * carray[CONN_MAX])
 {
-  char datas[PACKET_SIZE];
-  char *pointer;
-  unsigned int item;
-  struct nu_header *header;
-  struct nu_authreq *authreq;
-  struct nu_authfield_ipv6 *authfield;
-  struct nu_authfield_app *appfield;
-  unsigned len;
-  const char *appname;
-  char *app_ptr;
+	char datas[PACKET_SIZE];
+	char *pointer;
+	unsigned int item;
+	struct nu_header *header;
+	struct nu_authreq *authreq;
+	struct nu_authfield_ipv6 *authfield;
+	struct nu_authfield_app *appfield;
+	unsigned len;
+	const char *appname;
+	char *app_ptr;
 
-  session->timestamp_last_sent=time(NULL);
-  memset(datas,0,sizeof datas);
+	session->timestamp_last_sent = time(NULL);
+	memset(datas, 0, sizeof datas);
 
-  header = (struct nu_header *)datas;
-  header->proto = PROTO_VERSION;
-  header->msg_type = USER_REQUEST;
-  header->option = 0;
-  header->length = sizeof(struct nu_header);
-  pointer = (char*)(header + 1);
+	header = (struct nu_header *) datas;
+	header->proto = PROTO_VERSION;
+	header->msg_type = USER_REQUEST;
+	header->option = 0;
+	header->length = sizeof(struct nu_header);
+	pointer = (char *) (header + 1);
 
-  for (item=0; ((item<CONN_MAX) && carray[item] != NULL); item++)
-  {
+	for (item = 0; ((item < CONN_MAX) && carray[item] != NULL); item++) {
 #if DEBUG
-      printf("adding one authreq\n");
+		printf("adding one authreq\n");
 #endif
 #ifdef LINUX
-      /* get application name from inode */
-      appname = prg_cache_get(carray[item]->inode);
+		/* get application name from inode */
+		appname = prg_cache_get(carray[item]->inode);
 #else
-      appname="UNKNOWN";
+		appname = "UNKNOWN";
 #endif
-      header->length+=sizeof(struct nu_authreq)+sizeof(struct nu_authfield_ipv6);
+		header->length +=
+		    sizeof(struct nu_authreq) +
+		    sizeof(struct nu_authfield_ipv6);
 
-      authreq = (struct nu_authreq *)pointer;
-      authreq->packet_seq = session->packet_seq++;
-      authreq->packet_length = sizeof(struct nu_authreq)+sizeof(struct nu_authfield_ipv6);
+		authreq = (struct nu_authreq *) pointer;
+		authreq->packet_seq = session->packet_seq++;
+		authreq->packet_length =
+		    sizeof(struct nu_authreq) +
+		    sizeof(struct nu_authfield_ipv6);
 
-      authfield = (struct nu_authfield_ipv6 *)(authreq+1);
-      authfield->type = IPV6_FIELD;
-      authfield->option = 0;
-      authfield->src = carray[item]->ip_src;
-      authfield->dst = carray[item]->ip_dst;
-      authfield->proto = carray[item]->protocol;
-      authfield->flags = 0;
-      authfield->FUSE = 0;
+		authfield = (struct nu_authfield_ipv6 *) (authreq + 1);
+		authfield->type = IPV6_FIELD;
+		authfield->option = 0;
+		authfield->src = carray[item]->ip_src;
+		authfield->dst = carray[item]->ip_dst;
+		authfield->proto = carray[item]->protocol;
+		authfield->flags = 0;
+		authfield->FUSE = 0;
 #ifdef _I386__ENDIAN_H_
 #ifdef __DARWIN_LITTLE_ENDIAN
-      authfield->sport = carray[item]->port_src;
-      authfield->dport = carray[item]->port_dst;
+		authfield->sport = carray[item]->port_src;
+		authfield->dport = carray[item]->port_dst;
 #else
-      authfield->sport = htons(carray[item]->port_src);
-      authfield->dport = htons(carray[item]->port_dst);
-#endif /* DARWIN LITTLE ENDIAN */
+		authfield->sport = htons(carray[item]->port_src);
+		authfield->dport = htons(carray[item]->port_dst);
+#endif				/* DARWIN LITTLE ENDIAN */
 #else
-      authfield->sport = htons(carray[item]->port_src);
-      authfield->dport = htons(carray[item]->port_dst);
-#endif /* I386 ENDIAN */
+		authfield->sport = htons(carray[item]->port_src);
+		authfield->dport = htons(carray[item]->port_dst);
+#endif				/* I386 ENDIAN */
 
-      /* application field  */
-      appfield = (struct nu_authfield_app *)(authfield+1);
-      appfield->type=APP_FIELD;
+		/* application field  */
+		appfield = (struct nu_authfield_app *) (authfield + 1);
+		appfield->type = APP_FIELD;
 #ifdef USE_SHA1
-      appfield->option=APP_TYPE_SHA1;
+		appfield->option = APP_TYPE_SHA1;
 #else
-      appfield->option=APP_TYPE_NAME;
+		appfield->option = APP_TYPE_NAME;
 #endif
-      app_ptr = (char*)(appfield+1);
-      sasl_encode64(appname,strlen(appname),app_ptr, PROGNAME_BASE64_WIDTH, &len);
+		app_ptr = (char *) (appfield + 1);
+		sasl_encode64(appname, strlen(appname), app_ptr,
+			      PROGNAME_BASE64_WIDTH, &len);
 #ifdef USE_SHA1
-      *(app_ptr+len) = ';';
-      len++;
-      strcpy(app_ptr+len, sha1_sig);
-      len += strlen(sha1_sig);
+		*(app_ptr + len) = ';';
+		len++;
+		strcpy(app_ptr + len, sha1_sig);
+		len += strlen(sha1_sig);
 #endif
-      appfield->length=sizeof(appfield)+len;
-      authreq->packet_length+=appfield->length;
+		appfield->length = sizeof(appfield) + len;
+		authreq->packet_length += appfield->length;
 
-      /* glue piece together on data if packet is not too long */
-      header->length+=appfield->length;
+		/* glue piece together on data if packet is not too long */
+		header->length += appfield->length;
 
-      assert (header->length < PACKET_SIZE);
+		assert(header->length < PACKET_SIZE);
 
-      pointer += authreq->packet_length;
+		pointer += authreq->packet_length;
 
-      appfield->length=htons(appfield->length);
-      authreq->packet_length=htons(authreq->packet_length);
-      authfield->length=htons(sizeof(struct nu_authfield_ipv6));
-  }
-  header->length=htons(header->length);
-  if (session->debug_mode)
-  {
-      printf("[+] Send %u new connection(s) to nuauth\n", item);
-  }
+		appfield->length = htons(appfield->length);
+		authreq->packet_length = htons(authreq->packet_length);
+		authfield->length =
+		    htons(sizeof(struct nu_authfield_ipv6));
+	}
+	header->length = htons(header->length);
+	if (session->debug_mode) {
+		printf("[+] Send %u new connection(s) to nuauth\n", item);
+	}
 
-  /* and send it */
-  if(session->tls){
-      if( gnutls_record_send(session->tls,datas,pointer-datas)<=0){
-          printf("write failed\n");
-          return 0;
-      }
-  }
-  return 1;
+	/* and send it */
+	if (session->tls) {
+		if (gnutls_record_send
+		    (session->tls, datas, pointer - datas) <= 0) {
+			printf("write failed\n");
+			return 0;
+		}
+	}
+	return 1;
 }
 
 /** @} */

@@ -21,10 +21,12 @@
 #ifndef PCKT_AUTHSR_H
 #define PCKT_AUTHSR_H
 
-void* packet_authsrv();
-nu_error_t authpckt_decode(unsigned char **dgram, unsigned int* dgramsize, connection_t **);
-void acl_check_and_decide (gpointer userdata , gpointer data);
+void *packet_authsrv();
+nu_error_t authpckt_decode(unsigned char **dgram, unsigned int *dgramsize,
+			   connection_t **);
+void acl_check_and_decide(gpointer userdata, gpointer data);
 
-unsigned char get_proto_version_from_packet(const unsigned char* dgram,size_t dgram_size);
+unsigned char get_proto_version_from_packet(const unsigned char *dgram,
+					    size_t dgram_size);
 
 #endif

@@ -40,220 +40,273 @@
  *
  * \return Pointer to a gnutls_session session, or NULL if an error occurs.
  */
-gnutls_session* tls_connect()
+gnutls_session *tls_connect()
 {
-    gnutls_session* tls_session;
-    int tls_socket,ret;
+	gnutls_session *tls_session;
+	int tls_socket, ret;
 #if USE_X509
-    const int cert_type_priority[3] = { GNUTLS_CRT_X509, 0 };
+	const int cert_type_priority[3] = { GNUTLS_CRT_X509, 0 };
 
-    /* compute patch key_file */
-    if (!key_file) {
-        key_file=(char*)calloc(strlen(CONFIG_DIR)+strlen(KEYFILE)+2,sizeof(char));
-        if (!key_file)
-        {
-            log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, "Couldn't malloc for key_file!");
-            return NULL;
-        }
-        strcat(key_file,CONFIG_DIR);
-        strcat(key_file,"/");
-        strcat(key_file,KEYFILE);
-    }
-    if (!cert_file) {
-        cert_file=(char*)calloc(strlen(CONFIG_DIR)+strlen(CERTFILE)+2,sizeof(char));
-        if (!cert_file)
-        {
-            log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG, 
-                    "Couldn't malloc for cert_file!");
-            return NULL;
-        }
-        strcat(cert_file,CONFIG_DIR);
-        strcat(cert_file,"/");
-        strcat(cert_file,CERTFILE);
-    }
-    
-    /* test if key exists */
-    if (access(key_file,R_OK)){
-        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING, 
-                "TLS: can not access key file \"%s\"!", key_file);
-        return NULL;
-    }
-    if (access(cert_file,R_OK)){
-        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
-                "TLS: can not access cert file \"%s\"!", cert_file);
-        return NULL;
-    }
-
-    /* X509 stuff */
-    ret = gnutls_certificate_allocate_credentials(&tls.xcred);
-    if (ret != 0)
-    {
-        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
-                "TLS: can not allocate gnutls credentials : %s", gnutls_strerror(ret));
-        return NULL;
-    }
-
-    /* sets the trusted cas file */
-    if (ca_file){
-        ret = gnutls_certificate_set_x509_trust_file(tls.xcred, ca_file, GNUTLS_X509_FMT_PEM);
-        if (ret < 0)
-        {
-          log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
-                "TLS: can not set gnutls trust file : %s", gnutls_strerror(ret));
-        }
-    }
-    ret = gnutls_certificate_set_x509_key_file(tls.xcred,cert_file,key_file,GNUTLS_X509_FMT_PEM);
-    if (ret < 0)
-    {
-        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
-            "TLS: can not set cert/key file : %s", gnutls_strerror(ret));
-        return NULL;
-
-    }
-#endif
-
-    /* Initialize TLS session */
-    tls_session=(gnutls_session*)calloc(1,sizeof(gnutls_session));
-    if (tls_session==NULL)
-    {
-        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
-            "TLS: can not calloc!");
-        return NULL;
-    }
-    ret = gnutls_init(tls_session, GNUTLS_CLIENT);
-    if (ret!=0)
-    {
-        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
-            "TLS: init failed : %s",gnutls_strerror(ret));
-        return NULL;
-    }
-    tls_socket = socket (adr_srv->ai_family, adr_srv->ai_socktype, adr_srv->ai_protocol);
-
-    /* connect */
-    if (tls_socket <= 0)
-        return NULL;
-    if ( connect(tls_socket, adr_srv->ai_addr, adr_srv->ai_addrlen) == -1){
-        return NULL;
-    }
-
-    ret = gnutls_set_default_priority(*(tls_session));
-    if (ret < 0)
-    {
-        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
-            "TLS: priority setting failed : %s",gnutls_strerror(ret));
-        return NULL;
-    }
-#if USE_X509
-    ret = gnutls_certificate_type_set_priority(*(tls_session), cert_type_priority);
-    if (ret < 0)
-    {
-        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
-            "TLS: gnutls_certificate_type_set_priority() failed : %s",gnutls_strerror(ret));
-        return NULL;
-    }
-
-    /* put the x509 credentials to the current session */
-    ret = gnutls_credentials_set(*(tls_session), GNUTLS_CRD_CERTIFICATE, tls.xcred);
-    if (ret < 0)
-    {
-        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
-            "TLS: Failed to configure credentials : %s",gnutls_strerror(ret));
-        return NULL;
-    }
-#endif
-
-    /* This function returns void */
-    gnutls_transport_set_ptr( *(tls_session), (gnutls_transport_ptr)tls_socket);
-
-    /* Perform the TLS handshake */
-    ret = 0;
-    do
-    {
-	if (ret != 0) {
-        	log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_INFO,
-            		"TLS: gnutls_handshake() ... (last error: %i)", ret);
+	/* compute patch key_file */
+	if (!key_file) {
+		key_file =
+		    (char *) calloc(strlen(CONFIG_DIR) + strlen(KEYFILE) +
+				    2, sizeof(char));
+		if (!key_file) {
+			log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
+					"Couldn't malloc for key_file!");
+			return NULL;
+		}
+		strcat(key_file, CONFIG_DIR);
+		strcat(key_file, "/");
+		strcat(key_file, KEYFILE);
 	}
-        ret = gnutls_handshake( *(tls_session));
-    } while (ret < 0 && !gnutls_error_is_fatal(ret));
+	if (!cert_file) {
+		cert_file =
+		    (char *) calloc(strlen(CONFIG_DIR) + strlen(CERTFILE) +
+				    2, sizeof(char));
+		if (!cert_file) {
+			log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
+					"Couldn't malloc for cert_file!");
+			return NULL;
+		}
+		strcat(cert_file, CONFIG_DIR);
+		strcat(cert_file, "/");
+		strcat(cert_file, CERTFILE);
+	}
 
-    if (ret < 0) {
-        gnutls_perror(ret);
-        return NULL;
-    } else {
+	/* test if key exists */
+	if (access(key_file, R_OK)) {
+		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
+				"TLS: can not access key file \"%s\"!",
+				key_file);
+		return NULL;
+	}
+	if (access(cert_file, R_OK)) {
+		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
+				"TLS: can not access cert file \"%s\"!",
+				cert_file);
+		return NULL;
+	}
+
+	/* X509 stuff */
+	ret = gnutls_certificate_allocate_credentials(&tls.xcred);
+	if (ret != 0) {
+		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
+				"TLS: can not allocate gnutls credentials : %s",
+				gnutls_strerror(ret));
+		return NULL;
+	}
+
+	/* sets the trusted cas file */
+	if (ca_file) {
+		ret =
+		    gnutls_certificate_set_x509_trust_file(tls.xcred,
+							   ca_file,
+							   GNUTLS_X509_FMT_PEM);
+		if (ret < 0) {
+			log_area_printf(DEBUG_AREA_MAIN,
+					DEBUG_LEVEL_WARNING,
+					"TLS: can not set gnutls trust file : %s",
+					gnutls_strerror(ret));
+		}
+	}
+	ret =
+	    gnutls_certificate_set_x509_key_file(tls.xcred, cert_file,
+						 key_file,
+						 GNUTLS_X509_FMT_PEM);
+	if (ret < 0) {
+		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
+				"TLS: can not set cert/key file : %s",
+				gnutls_strerror(ret));
+		return NULL;
+
+	}
+#endif
+
+	/* Initialize TLS session */
+	tls_session = (gnutls_session *) calloc(1, sizeof(gnutls_session));
+	if (tls_session == NULL) {
+		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
+				"TLS: can not calloc!");
+		return NULL;
+	}
+	ret = gnutls_init(tls_session, GNUTLS_CLIENT);
+	if (ret != 0) {
+		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
+				"TLS: init failed : %s",
+				gnutls_strerror(ret));
+		return NULL;
+	}
+	tls_socket =
+	    socket(adr_srv->ai_family, adr_srv->ai_socktype,
+		   adr_srv->ai_protocol);
+
+	/* connect */
+	if (tls_socket <= 0)
+		return NULL;
+	if (connect(tls_socket, adr_srv->ai_addr, adr_srv->ai_addrlen) ==
+	    -1) {
+		return NULL;
+	}
+
+	ret = gnutls_set_default_priority(*(tls_session));
+	if (ret < 0) {
+		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
+				"TLS: priority setting failed : %s",
+				gnutls_strerror(ret));
+		return NULL;
+	}
 #if USE_X509
-        if (ca_file){
-            /* we need to verify received certificates */
-            if( gnutls_certificate_verify_peers(*tls_session) !=0){
-                log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING, "TLS: invalid certificates received from nuauth server");
-                return NULL;
-            } else {
-                if (nuauth_cert_dn){
-                    /* we check that dn provided in nuauth certificate is valid */
-                    char dn[128];
-                    size_t size;
-#if 0
-                    unsigned int algo, bits;
-                    time_t expiration_time, activation_time;
+	ret =
+	    gnutls_certificate_type_set_priority(*(tls_session),
+						 cert_type_priority);
+	if (ret < 0) {
+		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
+				"TLS: gnutls_certificate_type_set_priority() failed : %s",
+				gnutls_strerror(ret));
+		return NULL;
+	}
+
+	/* put the x509 credentials to the current session */
+	ret =
+	    gnutls_credentials_set(*(tls_session), GNUTLS_CRD_CERTIFICATE,
+				   tls.xcred);
+	if (ret < 0) {
+		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
+				"TLS: Failed to configure credentials : %s",
+				gnutls_strerror(ret));
+		return NULL;
+	}
 #endif
-                    const gnutls_datum *cert_list;
-                    unsigned int cert_list_size = 0;
-                    gnutls_x509_crt cert;
 
-                    /* This function only works for X.509 certificates.
-                    */
-                    if (gnutls_certificate_type_get(*tls_session) != GNUTLS_CRT_X509)
-                        return NULL;
+	/* This function returns void */
+	gnutls_transport_set_ptr(*(tls_session),
+				 (gnutls_transport_ptr) tls_socket);
 
-                    cert_list = gnutls_certificate_get_peers(*tls_session, &cert_list_size);
+	/* Perform the TLS handshake */
+	ret = 0;
+	do {
+		if (ret != 0) {
+			log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_INFO,
+					"TLS: gnutls_handshake() ... (last error: %i)",
+					ret);
+		}
+		ret = gnutls_handshake(*(tls_session));
+	} while (ret < 0 && !gnutls_error_is_fatal(ret));
 
-                    if (cert_list_size > 0) {
-
-                        /* we only print information about the first certificate.
-                        */
-                        ret = gnutls_x509_crt_init( &cert);
-                        if (ret != 0)
-                        {
-                          log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING, 
-                              "TLS: cannot init x509 cert : %s",gnutls_strerror(ret));
-                          return NULL;
-                        }
-
-                        ret = gnutls_x509_crt_import( cert, &cert_list[0],GNUTLS_X509_FMT_DER);
-                        if (ret != 0)
-                        {
-                          log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING, 
-                              "TLS: cannot import x509 cert : %s",gnutls_strerror(ret));
-                          return NULL;
-                        }
+	if (ret < 0) {
+		gnutls_perror(ret);
+		return NULL;
+	} else {
+#if USE_X509
+		if (ca_file) {
+			/* we need to verify received certificates */
+			if (gnutls_certificate_verify_peers(*tls_session)
+			    != 0) {
+				log_area_printf(DEBUG_AREA_MAIN,
+						DEBUG_LEVEL_WARNING,
+						"TLS: invalid certificates received from nuauth server");
+				return NULL;
+			} else {
+				if (nuauth_cert_dn) {
+					/* we check that dn provided in nuauth certificate is valid */
+					char dn[128];
+					size_t size;
 #if 0
-                        expiration_time = gnutls_x509_crt_get_expiration_time( cert);
-                        activation_time = gnutls_x509_crt_get_activation_time( cert);
-
-                        /* TODO: verify date */
-
-                        /* Extract some of the public key algorithm's parameters
-                        */
-                        algo = gnutls_x509_crt_get_pk_algorithm(cert, &bits);
-#endif 
-                        size = sizeof(dn);
-                        ret = gnutls_x509_crt_get_dn( cert, dn, &size);
-                        if (ret != 0)
-                        {
-                          log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING, 
-                              "TLS: cannot copy x509 cert name into buffer : %s",gnutls_strerror(ret));
-                          return NULL;
-                        }
-                        if (strcmp(dn,nuauth_cert_dn)){
-                            log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
-                                    "TLS : bad certificate DN received from nuauth server: %s", dn);
-                            return NULL;
-                        }
-                    }
-                }
-            }
-        }
+					unsigned int algo, bits;
+					time_t expiration_time,
+					    activation_time;
 #endif
-        return tls_session;
-    }
+					const gnutls_datum *cert_list;
+					unsigned int cert_list_size = 0;
+					gnutls_x509_crt cert;
+
+					/* This function only works for X.509 certificates.
+					 */
+					if (gnutls_certificate_type_get
+					    (*tls_session) !=
+					    GNUTLS_CRT_X509)
+						return NULL;
+
+					cert_list =
+					    gnutls_certificate_get_peers
+					    (*tls_session,
+					     &cert_list_size);
+
+					if (cert_list_size > 0) {
+
+						/* we only print information about the first certificate.
+						 */
+						ret =
+						    gnutls_x509_crt_init
+						    (&cert);
+						if (ret != 0) {
+							log_area_printf
+							    (DEBUG_AREA_MAIN,
+							     DEBUG_LEVEL_WARNING,
+							     "TLS: cannot init x509 cert : %s",
+							     gnutls_strerror
+							     (ret));
+							return NULL;
+						}
+
+						ret =
+						    gnutls_x509_crt_import
+						    (cert, &cert_list[0],
+						     GNUTLS_X509_FMT_DER);
+						if (ret != 0) {
+							log_area_printf
+							    (DEBUG_AREA_MAIN,
+							     DEBUG_LEVEL_WARNING,
+							     "TLS: cannot import x509 cert : %s",
+							     gnutls_strerror
+							     (ret));
+							return NULL;
+						}
+#if 0
+						expiration_time =
+						    gnutls_x509_crt_get_expiration_time
+						    (cert);
+						activation_time =
+						    gnutls_x509_crt_get_activation_time
+						    (cert);
+
+						/* TODO: verify date */
+
+						/* Extract some of the public key algorithm's parameters
+						 */
+						algo =
+						    gnutls_x509_crt_get_pk_algorithm
+						    (cert, &bits);
+#endif
+						size = sizeof(dn);
+						ret =
+						    gnutls_x509_crt_get_dn
+						    (cert, dn, &size);
+						if (ret != 0) {
+							log_area_printf
+							    (DEBUG_AREA_MAIN,
+							     DEBUG_LEVEL_WARNING,
+							     "TLS: cannot copy x509 cert name into buffer : %s",
+							     gnutls_strerror
+							     (ret));
+							return NULL;
+						}
+						if (strcmp
+						    (dn, nuauth_cert_dn)) {
+							log_area_printf
+							    (DEBUG_AREA_MAIN,
+							     DEBUG_LEVEL_WARNING,
+							     "TLS : bad certificate DN received from nuauth server: %s",
+							     dn);
+							return NULL;
+						}
+					}
+				}
+			}
+		}
+#endif
+		return tls_session;
+	}
 }
-
