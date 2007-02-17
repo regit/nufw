@@ -251,12 +251,7 @@ int tls_connect(int socket_fd,gnutls_session** session_ptr)
     } while (ret < 0 && !gnutls_error_is_fatal(ret));
 #ifdef PERF_DISPLAY_ENABLE
     gettimeofday(&leave_time,NULL);
-    timeval_substract (&elapsed_time,&leave_time,&entry_time);
-    log_message(INFO, AREA_MAIN, 
-            "Handshake duration : %ld sec %03ld msec",
-            elapsed_time.tv_sec,elapsed_time.tv_usec/1000);
 #endif
-    debug_log_message (DEBUG, AREA_MAIN, "NuFW TLS Handshaked");
 
     if (ret < 0)
     {
@@ -266,6 +261,18 @@ int tls_connect(int socket_fd,gnutls_session** session_ptr)
                 gnutls_strerror(ret)) ;
         return SASL_BADPARAM;
     }
+#ifdef PERF_DISPLAY_ENABLE
+    timeval_substract (&elapsed_time,&leave_time,&entry_time);
+    log_message(INFO, AREA_MAIN, 
+            "Handshake duration : %ld sec %03ld msec",
+            elapsed_time.tv_sec,elapsed_time.tv_usec/1000);
+#endif
+
+    debug_log_message (DEBUG, AREA_MAIN, "NuFW TLS Handshaked");
+
+    debug_log_message(VERBOSE_DEBUG,AREA_MAIN,"NuFW TLS mac: %s",gnutls_mac_get_name(gnutls_mac_get(*session)));
+    debug_log_message(VERBOSE_DEBUG,AREA_MAIN,"NuFW TLS kx: %s",gnutls_kx_get_name(gnutls_kx_get(*session)));
+
     debug_log_message (DEBUG, AREA_MAIN, "NuFW TLS Handshake was completed");
 
     if (nuauth_tls.request_cert == GNUTLS_CERT_REQUIRE){

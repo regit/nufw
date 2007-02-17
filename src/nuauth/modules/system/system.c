@@ -49,6 +49,7 @@ typedef struct _auth_pam_userinfo {
 
 gint system_pam_module_not_threadsafe;
 gint system_glibc_cant_guess_maxgroups;
+gint system_suppress_prefixed_domain;
 
 /*
  * Returns version of nuauth API
@@ -64,7 +65,8 @@ G_MODULE_EXPORT gchar* g_module_check_init(GModule *module)
   gpointer vpointer;
 confparams system_nuauth_vars[] = {
   { "system_glibc_cant_guess_maxgroups", G_TOKEN_INT, 0, 0 },
-  { "system_pam_module_not_threadsafe", G_TOKEN_INT, 1, 0 }
+  { "system_pam_module_not_threadsafe", G_TOKEN_INT, 1, 0 },
+  { "system_suppress_prefixed_domain", G_TOKEN_INT, 0, 0 }
 };
 
   /*  parse conf file */
@@ -82,7 +84,10 @@ confparams system_nuauth_vars[] = {
           "system_glibc_cant_guess_maxgroups");
   system_glibc_cant_guess_maxgroups = *(int *)(vpointer);
 
-
+  vpointer = get_confvar_value(system_nuauth_vars,
+          sizeof(system_nuauth_vars)/sizeof(confparams),
+            "system_suppress_prefixed_domain");
+  system_suppress_prefixed_domain = *(int *)(vpointer);
 
   return NULL;
 }
@@ -175,6 +180,12 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass
         return SASL_BADAUTH;
     }
 
+    if (system_suppress_prefixed_domain) {
+        char *pv_user=get_rid_of_prefix_domain(user);
+        g_free(user);
+        user = pv_user;
+    }
+
 	if (pass != NULL) {
 		auth_pam_userinfo userinfo;
 		pam_handle_t *pamh;
@@ -186,6 +197,12 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass
 		if (system_pam_module_not_threadsafe){
 			g_static_mutex_lock (&pam_mutex);
 		}
+#ifdef PERF_DISPLAY_ENABLE
+		{
+			struct timeval  tvstart,tvend,result;
+			gettimeofday(&tvstart, NULL);
+#endif
+
 
 		ret = pam_start("nuauth", user, &conv_info, &pamh);
 		if (ret != PAM_SUCCESS){
@@ -208,6 +225,16 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass
 		if (system_pam_module_not_threadsafe){
 			g_static_mutex_unlock (&pam_mutex);
 		}
+
+#ifdef PERF_DISPLAY_ENABLE
+      gettimeofday(&tvend, NULL);
+      timeval_substract (&result ,&tvend, &tvstart);
+      log_message(INFO, AREA_MAIN, 
+            "PAM Auth duration: %ld sec %03ld msec",
+            result.tv_sec,result.tv_usec/1000);
+  }
+#endif
+
 
 	}
 
@@ -240,6 +267,7 @@ G_MODULE_EXPORT GSList * get_user_groups(const char *username,gpointer params)
 	char buffer[512];
 	struct passwd result_buf;
 	struct passwd *result_bufp=NULL;
+	GSList * userlist;
 
     user=normalize_username(username);
 
@@ -248,7 +276,14 @@ G_MODULE_EXPORT GSList * get_user_groups(const char *username,gpointer params)
 		return NULL;
 	}
 
-    return getugroups(user,result_bufp->pw_gid);
+	/** \todo Check that protection by mutex is necessary */
+	if (system_pam_module_not_threadsafe){
+	    g_static_mutex_lock (&pam_mutex);
+	    userlist = getugroups(user,result_bufp->pw_gid);
+	    g_static_mutex_unlock (&pam_mutex);
+	} else {
+	    return getugroups(user,result_bufp->pw_gid);
+	}
 }
 
 G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)

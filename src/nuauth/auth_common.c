@@ -466,6 +466,25 @@ char * get_rid_of_domain(const char* user_domain)
 }
 
 /**
+ * Suppress domain from "DOMAIN\user" string (returns "user").
+ *
+ * \return Username which need to be freeded
+ */
+char * get_rid_of_prefix_domain(const char* user_domain)
+{
+    char *username=NULL;
+    char **user_realm;
+    user_realm=g_strsplit(user_domain, "\\", 2);
+    if (user_realm[0] && user_realm[1]){
+        username = g_strdup(user_realm[1]);
+    } else {
+        username = g_strdup(user_domain);
+    }
+    g_strfreev(user_realm);
+    return username;
+}
+
+/**
  * Free a ::tls_buffer_read buffer and all of its memory.
  */
 void free_buffer_read(struct tls_buffer_read* datas)

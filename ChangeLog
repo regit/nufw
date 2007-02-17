@@ -5,6 +5,7 @@
 	dependant of HOME environment variable
 	- nufw: fix compilation in ipq mode (workaround ipq.h problem)
 	- nufw: modify interface name fetching code
+	- NuFW: Port of 2.0 modifications (from r2715 to r2728)
 2.1.1 (2007/01/03)
 	- suppress ldap authentication code
 	- add support for log prefix

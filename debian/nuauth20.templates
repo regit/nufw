@@ -167,7 +167,7 @@ _Description: Password of the TLS key for clients communication
  by hand).
 
 Template: nuauth20/log_users
-Type: select
+Type: string
 _Choices: 0, 1, 2, 4
 Default: 1
 _Description: Users activity logging

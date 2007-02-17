@@ -75,6 +75,11 @@ getugroups (char *username, gid_t gid)
   /* need to lock as position is common to all thread */
   g_static_mutex_lock(&group_mutex);
 
+#ifdef PERF_DISPLAY_ENABLE
+  {
+      struct timeval  tvstart,tvend,result;
+      gettimeofday(&tvstart, NULL);
+#endif
   if (system_glibc_cant_guess_maxgroups) {
       ng = system_glibc_cant_guess_maxgroups;
   } else {
@@ -92,6 +97,15 @@ getugroups (char *username, gid_t gid)
 
   g_free(groups);
   
+#ifdef PERF_DISPLAY_ENABLE
+      gettimeofday(&tvend, NULL);
+      timeval_substract (&result ,&tvend, &tvstart);
+      log_message(INFO, AREA_MAIN, 
+            "Group list fetching duration: %ld sec %03ld msec",
+            result.tv_sec,result.tv_usec/1000);
+  }
+#endif
+
   /* release lock */
   g_static_mutex_unlock (&group_mutex);
 

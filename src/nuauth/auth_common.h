@@ -42,6 +42,7 @@ void clean_connections_list ();
 guint hash_connection(gconstpointer conn_p);
 
 char * get_rid_of_domain(const char* user);
+char * get_rid_of_prefix_domain(const char* user);
 
 int is_ipv4(struct in6_addr *addr);
 

@@ -105,10 +105,7 @@ void pre_client_check()
             /* if entry older than delay then close socket */
             if (client_runner->data){
                 if ( ((struct pre_client_elt*)(client_runner->data))->validity < current_timestamp){
-
-#ifdef DEBUG_ENABLE
-                    log_message(VERBOSE_DEBUG, AREA_USER, "closing socket %d due to timeout",((struct pre_client_elt*)(client_runner->data))->socket);
-#endif
+                    log_message(INFO, AREA_USER, "closing socket %d due to timeout",((struct pre_client_elt*)(client_runner->data))->socket);
                     shutdown(((struct pre_client_elt*)(client_runner->data))->socket,SHUT_RDWR);
                     close(((struct pre_client_elt*)(client_runner->data))->socket);
                     g_free(client_runner->data);

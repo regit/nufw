@@ -628,12 +628,15 @@ static int mysasl_negotiate_v3(user_session_t * c_session , sasl_conn_t *conn)
 	}
 
 	if (r != SASL_OK && r != SASL_CONTINUE) {
-		gchar * user_name;
+		gchar * user_name = NULL;
 
 		log_message(INFO, AREA_AUTH, "sasl negotiation error: %d",r);
 		ret = sasl_getprop(conn, SASL_USERNAME, (const void **)	&(user_name));
-		c_session->user_name = g_strdup(user_name);
-		/*		ret = sasl_getprop(conn, SASL_USERNAME, (const void **)	&(c_session->user_name)); */
+		if (ret == SASL_OK) {
+		    c_session->user_name = g_strdup(user_name);
+		} else {
+		    c_session->user_name = NULL;
+		}
 
 		if (gnutls_record_send(session,"N", 1)<=0) /* send NO to client */
 			return SASL_FAIL;

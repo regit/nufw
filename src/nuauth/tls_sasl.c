@@ -111,6 +111,26 @@ static void tls_sasl_connect_ok(user_session_t* c_session, int c)
             }
             break;
     }
+    /* unlock hash client */
+    msg.type=SRV_TYPE;
+    if (nuauthconf->push){
+        msg.option = SRV_TYPE_PUSH ;
+    } else {
+        msg.option = SRV_TYPE_POLL ;
+    }
+    msg.length=0;
+    /* send mode to client */
+    if (gnutls_record_send(*(c_session->tls),&msg,sizeof(msg)) < 0){
+        log_message(WARNING, AREA_USER, "gnutls_record_send() failure at %s:%d",__FILE__,__LINE__);
+        if (nuauthconf->push){
+            close_tls_session(c,c_session->tls);
+            c_session->tls=NULL;
+            clean_session(c_session);
+            return;
+        } else {
+            return;
+        }
+    }
 
     if (nuauthconf->push) {
         struct internal_message* message=g_new0(struct internal_message,1);
@@ -129,30 +149,6 @@ static void tls_sasl_connect_ok(user_session_t* c_session, int c)
     } else {
         add_client(c,c_session);
     }
-    /* unlock hash client */
-    msg.type=SRV_TYPE;
-    if (nuauthconf->push){
-        msg.option = SRV_TYPE_PUSH ;
-    } else {
-        msg.option = SRV_TYPE_POLL ;
-    }
-    msg.length=0;
-    /* send mode to client */
-    if (gnutls_record_send(*(c_session->tls),&msg,sizeof(msg)) < 0){
-#ifdef DEBUG_ENABLE
-        log_message(WARNING, AREA_USER, "gnutls_record_send() failure at %s:%d",__FILE__,__LINE__);
-#endif
-        if (nuauthconf->push){
-            close_tls_session(c,c_session->tls);
-            c_session->tls=NULL;
-            clean_session(c_session);
-            return;
-        } else {
-            delete_client_by_socket(c);
-            return;
-        }
-    }
-
 
     /* send new valid session to user session logging system */
     log_user_session(c_session,SESSION_OPEN);

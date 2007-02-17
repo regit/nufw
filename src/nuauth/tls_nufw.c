@@ -279,7 +279,7 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex *mutex)
             if (errno == EBADF)
             {
                 log_message(CRITICAL, AREA_MAIN,
-                        "Warning: tls user select() failed: bad file descriptor.");
+                        "Warning: tls nufw select() failed: bad file descriptor.");
                 continue;
             }
 
