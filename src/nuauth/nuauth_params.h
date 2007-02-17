@@ -1,5 +1,6 @@
 /*
- ** Copyright(C) 2003-2005 Eric Leblond <regit@inl.fr>
+ ** Copyright(C) 2003-2007 INL
+ ** Written by Eric Leblond <regit@inl.fr>
  **
  ** $Id$
  **
