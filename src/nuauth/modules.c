@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2005,2006 INL
+ ** Copyright(C) 2005,2006,2007 INL
  ** Written by  Eric Leblond <regit@inl.fr>
  **
  ** $Id$
@@ -351,18 +351,18 @@ int check_module_version(GModule *module)
 
     /* get module function handler */
     if (!g_module_symbol (module, "get_api_version", (gpointer*)&get_version)) {
-        g_error ("Unable to load function 'get_api_version' from module %s",
+        g_warning ("Unable to load function 'get_api_version' from module %s",
                 g_module_name(module));
-        return 0;
+        exit(-1);
     }
 
     api_version = get_version();
     if (NUAUTH_API_VERSION != api_version)
     {
-        g_error("Don't load module %s: wrong API version (%u instead of %u)",
+        g_warning("Don't load module %s: wrong API version (%u instead of %u)",
                 g_module_name(module),
                 api_version, NUAUTH_API_VERSION);
-        return 0;
+        exit(-1);
     }
     return 1;
 }
