@@ -154,28 +154,6 @@ static int add_idmef_object(idmef_message_t * message, const char *object,
 
 static int feed_template(idmef_message_t * idmef)
 {
-#if 0
-	char buffer[50];
-
-	/* analyzer */
-	add_idmef_object(idmef, "alert.analyzer.name", "nuauth");
-	add_idmef_object(idmef, "alert.analyzer.analyzer.name", "nuauth");
-	add_idmef_object(idmef, "alert.analyzer.manufacturer",
-			 "http://www.nufw.org/");
-	add_idmef_object(idmef, "alert.analyzer.model",
-			 "authentification server");
-	add_idmef_object(idmef, "alert.analyzer.version", "2.0");
-	add_idmef_object(idmef, "alert.analyzer.class", "server");
-	add_idmef_object(idmef, "alert.analyzer.ostype", "Linux");
-	add_idmef_object(idmef, "alert.analyzer.osversion", "2.6");
-	add_idmef_object(idmef, "alert.analyzer.process.name", "nuauth");
-	if (secure_snprintf
-	    (buffer, sizeof(buffer), "%lu", (unsigned long) getpid())) {
-		add_idmef_object(idmef, "alert.analyzer.process.pid",
-				 buffer);
-	}
-#endif
-
 	/* source address/service */
 	add_idmef_object(idmef, "alert.source(0).node.address(0).category",
 			 "ipv6-addr");
@@ -213,61 +191,61 @@ static idmef_message_t *create_alert_template()
 
 static idmef_message_t *create_packet_template()
 {
-	idmef_message_t *idmef = create_alert_template();
+	return create_alert_template();
+}
 
-	return idmef;
+static void feed_source_libnuclient(idmef_message_t *idmef)
+{
+	add_idmef_object(idmef,
+			 "alert.source(0).service.iana_protocol_number",
+			 "6");
+	add_idmef_object(idmef, "alert.source(0).service.protocol", "tcp");
+	add_idmef_object(idmef, "alert.source(0).service.name",
+			 "nufw-client");
+}
+
+static void feed_target_nuauth(idmef_message_t *idmef)
+{
+	char buffer[50];
+	char *process_name;
+
+	add_idmef_object(idmef, "alert.target(0).process.path",
+		nuauthdatas->program_fullpath);
+	process_name = g_path_get_basename(nuauthdatas->program_fullpath);
+	add_idmef_object(idmef, "alert.target(0).process.name",
+		process_name);
+	g_free(process_name);
+
+	secure_snprintf(buffer, sizeof(buffer), "%lu", (unsigned long) getpid());
+	add_idmef_object(idmef, "alert.target(0).process.pid", buffer);
+
+	add_idmef_object(idmef, "alert.target(0).service.port", nuauthconf->userpckt_port);
+
+	/* TODO: Maybe write real IPv6 of nuauth :-) */
+	add_idmef_object(idmef,
+			 "alert.target(0).service.iana_protocol_number",
+			 "6");
+	add_idmef_object(idmef, "alert.target(0).node.address(0).address",
+			 "::1");
+	add_idmef_object(idmef, "alert.target(0).service.protocol", "tcp");
 }
 
 static idmef_message_t *create_autherr_template()
 {
 	idmef_message_t *idmef = create_alert_template();
-	char buffer[50];
 
-	add_idmef_object(idmef,
-			 "alert.source(0).service.iana_protocol_number",
-			 "6");
-	add_idmef_object(idmef, "alert.target(0).node.address(0).address",
-			 "::1");
-	add_idmef_object(idmef,
-			 "alert.target(0).service.iana_protocol_number",
-			 "6");
+	feed_source_libnuclient(idmef);
+	feed_target_nuauth(idmef);
 
-	add_idmef_object(idmef, "alert.target(0).process.name", "nuauth");
-	if (secure_snprintf
-	    (buffer, sizeof(buffer), "%lu", (unsigned long) getpid())) {
-		add_idmef_object(idmef, "alert.target(0).process.pid",
-				 buffer);
-	}
 	return idmef;
 }
 
 static idmef_message_t *create_session_template()
 {
-	char buffer[50];
 	idmef_message_t *idmef = create_alert_template();
 
-	add_idmef_object(idmef, "alert.target(0).process.name", "nuauth");
-	if (secure_snprintf
-	    (buffer, sizeof(buffer), "%lu", (unsigned long) getpid())) {
-		add_idmef_object(idmef, "alert.target(0).process.pid",
-				 buffer);
-	}
-
-	add_idmef_object(idmef, "alert.source(0).service.protocol", "tcp");
-	add_idmef_object(idmef, "alert.source(0).service.name",
-			 "nufw-client");
-	add_idmef_object(idmef, "alert.source(0).process.name", "nutcpc");
-
-	/* TODO: Maybe write real IPv6 of nuauth :-) */
-	add_idmef_object(idmef, "alert.target(0).node.address(0).address",
-			 "::1");
-	add_idmef_object(idmef, "alert.target(0).service.protocol", "tcp");
-
-	if (secure_snprintf
-	    (buffer, sizeof(buffer), "%hu", nuauthconf->userpckt_port)) {
-		add_idmef_object(idmef, "alert.target(0).service.port",
-				 buffer);
-	}
+	feed_source_libnuclient(idmef);
+	feed_target_nuauth(idmef);
 
 	add_idmef_object(idmef, "alert.additional_data(0).type", "string");
 	add_idmef_object(idmef, "alert.additional_data(0).meaning",
@@ -326,23 +304,19 @@ static idmef_message_t *create_message_packet(idmef_message_t * tpl,
 	idmef_time_set_from_time(detect_time, &stdlib_time);
 
 	add_idmef_object(idmef, "alert.classification.text", state_text);
-	add_idmef_object(idmef, "alert.assessment.impact.severity", severity);	/* info | low | medium | high */
+	add_idmef_object(idmef, "alert.assessment.impact.severity", severity);
 	add_idmef_object(idmef, "alert.assessment.impact.description",
 			 impact);
 
 	/* IP source/dest */
-	if (inet_ntop
-	    (AF_INET6, &conn->tracking.saddr, ip_ascii,
-	     sizeof(ip_ascii)) != NULL)
-		add_idmef_object(idmef,
-				 "alert.source(0).node.address(0).address",
-				 ip_ascii);
-	if (inet_ntop
-	    (AF_INET6, &conn->tracking.saddr, ip_ascii,
-	     sizeof(ip_ascii)) != NULL)
-		add_idmef_object(idmef,
-				 "alert.target(0).node.address(0).address",
-				 ip_ascii);
+	inet_ntop (AF_INET6, &conn->tracking.saddr, ip_ascii, sizeof(ip_ascii));
+	add_idmef_object(idmef,
+			 "alert.source(0).node.address(0).address",
+			 ip_ascii);
+	inet_ntop (AF_INET6, &conn->tracking.daddr, ip_ascii, sizeof(ip_ascii));
+	add_idmef_object(idmef,
+			 "alert.target(0).node.address(0).address",
+			 ip_ascii);
 
 	/* IP protocol */
 	if (secure_snprintf
@@ -498,12 +472,12 @@ static idmef_message_t *create_message_session(idmef_message_t * tpl,
 			 impact);
 
 	/* source address/service */
-	if (inet_ntop(AF_INET6, &session->addr, ip_ascii, sizeof(ip_ascii))
-	    != NULL) {
-		add_idmef_object(idmef,
-				 "alert.source(0).node.address(0).address",
-				 ip_ascii);
-	}
+	secure_snprintf(buffer, sizeof(buffer), "%hu", session->sport);
+	add_idmef_object(idmef,	"alert.source(0).service.port", buffer);
+
+	inet_ntop(AF_INET6, &session->addr, ip_ascii, sizeof(ip_ascii));
+	add_idmef_object(idmef,	"alert.source(0).node.address(0).address",
+			ip_ascii);
 
 	/* set user informations */
 	if (session->user_name != NULL) {
@@ -553,13 +527,10 @@ static idmef_message_t *create_message_autherr(idmef_message_t * tpl,
 	add_idmef_object(idmef, "alert.assessment.impact.description",
 			 text);
 
-	/* source address/service */
-	if (inet_ntop(AF_INET6, &session->addr, ip_ascii, sizeof(ip_ascii))
-	    != NULL) {
-		add_idmef_object(idmef,
-				 "alert.source(0).node.address(0).address",
-				 ip_ascii);
-	}
+	/* source address */
+	inet_ntop(AF_INET6, &session->addr, ip_ascii, sizeof(ip_ascii));
+	add_idmef_object(idmef, "alert.source(0).node.address(0).address",
+			ip_ascii);
 
 	return idmef;
 }
