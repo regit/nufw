@@ -260,6 +260,40 @@ static idmef_message_t *create_session_template()
 	return idmef;
 }
 
+int alert_set_time(idmef_message_t *idmef, time_t *creation_timestamp)
+{
+	idmef_alert_t *alert;
+	idmef_time_t *create_time;
+	idmef_time_t *detect_time;
+	time_t now;
+	int ret;
+
+	now = time(NULL);
+
+	ret = idmef_message_new_alert(idmef, &alert);
+	if (ret < 0) {
+		return 0;
+	}
+
+	/* set create time */
+	if (!creation_timestamp) {
+		creation_timestamp = &now;
+	}
+	ret = idmef_time_new_from_time(&create_time, creation_timestamp);
+	if (ret < 0) {
+		return 0;
+	}
+	idmef_alert_set_create_time(alert, create_time);
+
+	/* set detect time */
+	ret = idmef_alert_new_detect_time(alert, &detect_time);
+	if (ret < 0) {
+		return 0;
+	}
+	idmef_time_set_from_time(detect_time, &now);
+	return 1;
+}
+
 static idmef_message_t *create_message_packet(idmef_message_t * tpl,
 					      tcp_state_t state,
 					      connection_t * conn,
@@ -267,11 +301,6 @@ static idmef_message_t *create_message_packet(idmef_message_t * tpl,
 					      char *impact, char *severity)
 {
 	idmef_message_t *idmef;
-	time_t stdlib_time;
-	idmef_time_t *create_time;
-	idmef_time_t *detect_time;
-	idmef_alert_t *alert;
-	int ret;
 	char buffer[50];
 	char ip_ascii[INET6_ADDRSTRLEN];
 	char *tmp_buffer;
@@ -280,28 +309,11 @@ static idmef_message_t *create_message_packet(idmef_message_t * tpl,
 	/* duplicate message */
 	idmef = idmef_message_ref(tpl);
 
-	ret = idmef_message_new_alert(idmef, &alert);
-	if (ret < 0) {
+	if (!alert_set_time(idmef, &conn->timestamp))
+	{
 		idmef_message_destroy(idmef);
 		return NULL;
 	}
-
-	/* set create time */
-	ret = idmef_time_new_from_time(&create_time, &conn->timestamp);
-	if (ret < 0) {
-		idmef_message_destroy(idmef);
-		return NULL;
-	}
-	idmef_alert_set_create_time(alert, create_time);
-
-	/* set detect time */
-	ret = idmef_alert_new_detect_time(alert, &detect_time);
-	if (ret < 0) {
-		idmef_message_destroy(idmef);
-		return NULL;
-	}
-	stdlib_time = time(NULL);
-	idmef_time_set_from_time(detect_time, &stdlib_time);
 
 	add_idmef_object(idmef, "alert.classification.text", state_text);
 	add_idmef_object(idmef, "alert.assessment.impact.severity", severity);
@@ -431,40 +443,17 @@ static idmef_message_t *create_message_session(idmef_message_t * tpl,
 					       char *severity)
 {
 	idmef_message_t *idmef;
-	time_t stdlib_time;
-	idmef_time_t *create_time;
-	idmef_time_t *detect_time;
-	idmef_alert_t *alert;
-	int ret;
 	char buffer[50];
 	char ip_ascii[INET6_ADDRSTRLEN];
 
 	/* duplicate message */
 	idmef = idmef_message_ref(tpl);
 
-	ret = idmef_message_new_alert(idmef, &alert);
-	if (ret < 0) {
+	if (!alert_set_time(idmef, NULL))
+	{
 		idmef_message_destroy(idmef);
 		return NULL;
 	}
-
-	/* set create time */
-	stdlib_time = time(NULL);
-	idmef_time_new_from_time(&create_time, &stdlib_time);
-	if (ret < 0) {
-		idmef_message_destroy(idmef);
-		return NULL;
-	}
-	idmef_alert_set_create_time(alert, create_time);
-
-	/* set detect time */
-	ret = idmef_alert_new_detect_time(alert, &detect_time);
-	if (ret < 0) {
-		idmef_message_destroy(idmef);
-		return NULL;
-	}
-	idmef_time_set_from_time(detect_time, &stdlib_time);
-
 
 	add_idmef_object(idmef, "alert.classification.text", state_text);
 	add_idmef_object(idmef, "alert.assessment.impact.severity", severity);	/* info | low | medium | high */
@@ -519,6 +508,12 @@ static idmef_message_t *create_message_autherr(idmef_message_t * tpl,
 
 	/* duplicate message */
 	idmef = idmef_message_ref(tpl);
+
+	if (!alert_set_time(idmef, NULL))
+	{
+		idmef_message_destroy(idmef);
+		return NULL;
+	}
 
 	add_idmef_object(idmef, "alert.assessment.impact.severity",
 			 severity);
