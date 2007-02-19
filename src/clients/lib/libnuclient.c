@@ -799,6 +799,7 @@ int init_sasl(NuAuth * session, nuclient_error * err)
  */
 int init_socket(NuAuth * session,
 		const char *hostname, const char *service,
+		struct sockaddr_in6* src_addr,
 		nuclient_error * err)
 {
 	int option_value;
@@ -849,6 +850,16 @@ int init_socket(NuAuth * session,
 	setsockopt(session->socket,
 		   SOL_SOCKET,
 		   SO_KEEPALIVE, &option_value, sizeof(option_value));
+
+	if (src_addr)
+	{
+		int result = bind(session->socket, (struct sockaddr *)src_addr, sizeof(*src_addr));
+		if (result != 0)
+		{
+			SET_ERROR(err, INTERNAL_ERROR, BINDING_ERR);
+			return 0;
+		}
+	}
 
 	/* connect to nuauth */
 	if (connect(session->socket, res->ai_addr, res->ai_addrlen) == -1) {
@@ -1110,6 +1121,7 @@ void nu_client_reset(NuAuth * session)
  */
 int nu_client_connect(NuAuth * session,
 		      const char *hostname, const char *service,
+		      struct sockaddr_in6* src_addr,
 		      nuclient_error * err)
 {
 	if (session->need_set_cred) {
@@ -1126,7 +1138,7 @@ int nu_client_connect(NuAuth * session,
 	}
 
 	/* set field about host */
-	if (!init_socket(session, hostname, service, err)) {
+	if (!init_socket(session, hostname, service, src_addr, err)) {
 		return 0;
 	}
 
@@ -1269,7 +1281,8 @@ const char *nu_client_strerror(nuclient_error * err)
 			return "Unable to send packet to nuauth";
 		case BAD_CREDENTIALS_ERR:
 			return "Bad credentials";
-			/*        case UNKNOWN_ERR:       return "Unknown error"; */
+		case BINDING_ERR:
+			return "Binding (source address) error";
 		default:
 			return "Unknown internal error code";
 		}

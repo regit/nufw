@@ -241,7 +241,8 @@ extern "C" {
 		MEMORY_ERR = 8,	     /** No more memory */
 		TCPTABLE_ERR = 9,    /** Fail to read connection table */
 		SEND_ERR = 10,	     /** Fail to send packet to nuauth */
-		BAD_CREDENTIALS_ERR = 11
+		BAD_CREDENTIALS_ERR, /** Username/password error */
+		BINDING_ERR,	     /** bind() call failed */
 	};
 
 /* libnuclient return code structure */
@@ -277,7 +278,9 @@ extern "C" {
 
 	int nu_client_connect(NuAuth * session,
 			      const char *hostname,
-			      const char *service, nuclient_error * err);
+			      const char *service,
+			      struct sockaddr_in6* src_addr,
+			      nuclient_error * err);
 
 	void nu_client_reset(NuAuth * session);
 
