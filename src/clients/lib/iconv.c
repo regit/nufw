@@ -56,7 +56,7 @@ char *nu_client_to_utf8(const char *inbuf, char *from_charset)
 
 	/* just returns NULL if input is NULL */
 	if (inbuf == NULL) {
-		return inbuf;
+		return NULL;
 	}
 
 	/* create an iconv context to convert locale charset to UTF-8 */
