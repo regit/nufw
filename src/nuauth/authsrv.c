@@ -309,6 +309,7 @@ void nuauth_cleanup(int signal)
 	else if (signal == SIGTERM)
 		log_message(CRITICAL, AREA_MAIN,
 			    "[+] Stop NuAuth server (SIGTERM)");
+	g_message("[+] Stop NuAuth server");
 
 	nuauth_deinit(TRUE);
 
