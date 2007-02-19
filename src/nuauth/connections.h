@@ -79,7 +79,7 @@ typedef struct {
  */
 typedef struct {
 	GSList *packet_id;	/*!< Netfilter unique identifier */
-	long timestamp;		/*!< Packet arrival time (seconds) */
+	time_t timestamp;	/*!< Packet arrival time (seconds) */
 	int socket;		/*!< Socket (file descriptor) from which NuFW request is coming */
 	nufw_session_t *tls;	/*!< TLS connection to NuFW from which comes the packet */
 

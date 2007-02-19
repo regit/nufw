@@ -395,7 +395,7 @@ void clean_connection_list_callback(gpointer key, gpointer value,
 				    gpointer data)
 {
 	GSList **list_ptr = (GSList **) data;
-	long current_timestamp = time(NULL);
+	time_t current_timestamp = time(NULL);
 	if (get_old_conn(key, value, GINT_TO_POINTER(current_timestamp))) {
 		*list_ptr = g_slist_prepend(*list_ptr, key);
 	}
