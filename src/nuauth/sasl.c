@@ -436,9 +436,13 @@ static int mysasl_negotiate(user_session_t * c_session, sasl_conn_t * conn)
 		if (result != SASL_OK) {
 			g_warning("get user failed");
 			return result;
-		} else {
-			c_session->user_name = g_strdup(tempname);
 		}
+		if (tempname == NULL)
+		{
+			g_warning("sasl_getprop(SASL_USERNAME): username is NULL!");
+			return SASL_BADPARAM;
+		}
+		c_session->user_name = g_strdup(tempname);
 
 		/* in case no call to user_checkdb has been done we need to fill the group */
 
