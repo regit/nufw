@@ -515,6 +515,7 @@ static idmef_message_t *create_message_autherr(idmef_message_t * tpl,
 {
 	idmef_message_t *idmef;
 	char ip_ascii[INET6_ADDRSTRLEN];
+	char buffer[50];
 
 	/* duplicate message */
 	idmef = idmef_message_ref(tpl);
@@ -531,6 +532,10 @@ static idmef_message_t *create_message_autherr(idmef_message_t * tpl,
 	inet_ntop(AF_INET6, &session->addr, ip_ascii, sizeof(ip_ascii));
 	add_idmef_object(idmef, "alert.source(0).node.address(0).address",
 			ip_ascii);
+
+	secure_snprintf(buffer, sizeof(buffer), "%hu", session->sport);
+	add_idmef_object(idmef,	"alert.source(0).service.port", buffer);
+
 
 	return idmef;
 }

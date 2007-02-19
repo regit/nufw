@@ -324,10 +324,10 @@ int tls_user_accept(struct tls_user_context_t *context)
 		addr.s6_addr32[1] = 0;
 		addr.s6_addr32[2] = 0xffff0000;
 		addr.s6_addr32[3] = sockaddr4->sin_addr.s_addr;
-		sport = sockaddr4->sin_port;
+		sport = ntohs(sockaddr4->sin_port);
 	} else {
 		addr = sockaddr6->sin6_addr;
-		sport = sockaddr6->sin6_port;
+		sport = ntohs(sockaddr6->sin6_port);
 	}
 
 	current_client_conn = g_new0(struct client_connection, 1);
