@@ -52,11 +52,14 @@ int tls_connect(int c, gnutls_session ** session_ptr);
 
 /* cache system related */
 struct client_connection {
-    /** Socket file descriptor, init. with accept() and set to SO_KEEPALIVE mode */
+	/** Socket file descriptor, init. with accept() and set to SO_KEEPALIVE mode */
 	int socket;
 
-    /** IPv6 address */
+	/** IPv6 address */
 	struct in6_addr addr;
+
+	/** Source port */
+	int sport;
 };
 
 /**

@@ -258,6 +258,7 @@ void nuauth_deinit(gboolean soft)
 	if (nuauthconf->user_cache) {
 		cache_destroy(nuauthdatas->user_cache);
 	}
+	g_free(nuauthdatas->program_fullpath);
 	free_threads();
 	clear_push_queue();
 
@@ -581,6 +582,8 @@ void configure_app(int argc, char **argv)
 	nuauthdatas = g_new0(struct nuauth_datas, 1);
 	nuauthdatas->reload_cond = g_cond_new();
 	nuauthdatas->reload_cond_mutex = g_mutex_new();
+	nuauthdatas->program_fullpath = g_strdup(argv[0]);
+
 
 	/* set default parameters */
 	params.daemonize = 0;

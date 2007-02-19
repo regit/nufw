@@ -175,6 +175,7 @@ struct nuauth_datas {
 	GAsyncQueue *limited_connections_queue;
 	GAsyncQueue *tls_push_queue;
 	GAsyncQueue *localid_auth_queue;
+	char *program_fullpath;
 
 	/* cache related structure */
 	cache_class_t *user_cache;

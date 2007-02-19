@@ -176,6 +176,7 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 	int ret;
 	unsigned int size = 1;
 	int c = ((struct client_connection *) userdata)->socket;
+	struct client_connection *client = (struct client_connection *)userdata;
 
 	if (tls_connect(c, &session) == SASL_BADPARAM) {
 		g_free(userdata);
@@ -187,7 +188,8 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 	c_session->tls = session;
 	c_session->socket = c;
 	c_session->tls_lock = g_mutex_new();
-	c_session->addr = ((struct client_connection *) userdata)->addr;
+	c_session->addr = client->addr;
+	c_session->sport = client->sport;
 	c_session->groups = NULL;
 	c_session->user_name = NULL;
 	c_session->user_id = 0;

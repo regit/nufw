@@ -293,6 +293,7 @@ int tls_user_accept(struct tls_user_context_t *context)
 	struct pre_client_elt *new_pre_client;
 	int socket;
 	gint option_value;
+	unsigned short sport;
 
 	/* Wait for a connect */
 	socket = accept(context->sck_inet,
@@ -318,18 +319,21 @@ int tls_user_accept(struct tls_user_context_t *context)
 	}
 
 	/* Extract client address (convert it to IPv6 if it's IPv4) */
-	if (sockaddr6->sin6_family == AF_INET) {
+	if (sockaddr.ss_family == AF_INET) {
 		addr.s6_addr32[0] = 0;
 		addr.s6_addr32[1] = 0;
 		addr.s6_addr32[2] = 0xffff0000;
 		addr.s6_addr32[3] = sockaddr4->sin_addr.s_addr;
+		sport = sockaddr4->sin_port;
 	} else {
 		addr = sockaddr6->sin6_addr;
+		sport = sockaddr6->sin6_port;
 	}
 
 	current_client_conn = g_new0(struct client_connection, 1);
 	current_client_conn->socket = socket;
 	current_client_conn->addr = addr;
+	current_client_conn->sport = sport;
 
 	/* Update mx number if needed */
 	if (socket + 1 > context->mx)
