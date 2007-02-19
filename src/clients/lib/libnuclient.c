@@ -830,6 +830,16 @@ int init_socket(NuAuth * session,
 		SET_ERROR(err, INTERNAL_ERROR, DNS_RESOLUTION_ERR);
 		return 0;
 	}
+	if (src_addr && res->ai_family != AF_INET6)
+	{
+		if (session->verbose) {
+			fprintf(stderr,
+				"Unable to set source address: host (%s) is not IPv6!",
+				hostname);
+		}
+		SET_ERROR(err, INTERNAL_ERROR, BINDING_ERR);
+		return 0;
+	}
 
 	/* ignore SIGPIPE */
 	no_action.sa_handler = SIG_IGN;
