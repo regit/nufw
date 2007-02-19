@@ -25,7 +25,7 @@
 #define SOCKET_FILENAME "/tmp/nuauth-command.socket"
 
 typedef struct {
-	struct tm start_timestamp;
+	time_t start_timestamp;
 	int socket;
 	int client;
 	struct sockaddr_un client_addr;
@@ -39,10 +39,8 @@ int command_new(command_t * this)
 	int len;
 	int res;
 	int on = 1;
-	time_t curtime;
 
-	curtime = time(NULL);
-	localtime_r(&curtime, &this->start_timestamp);
+	this->start_timestamp = time(NULL);
 	this->socket = -1;
 	this->client = -1;
 	this->select_max = 0;
@@ -126,8 +124,11 @@ void command_execute(command_t * this, char *command)
 	char *buffer = "ok";
 	static char static_buffer[1024];
 	char *help =
-	    "reload: reload nuauth configuration\n"
-	    "help: display this help\n" "quit: disconnect";
+"version: display nuauth version\n"
+"uptime: display nuauth starting time and uptime\n"
+"reload: reload nuauth configuration\n"
+"help: display this help\n"
+"quit: disconnect";
 	int ret;
 
 	/* process command */
@@ -137,18 +138,33 @@ void command_execute(command_t * this, char *command)
 	} else if (strcmp(command, "help") == 0) {
 		buffer = help;
 	} else if (strcmp(command, "uptime") == 0) {
-		char format[sizeof(static_buffer)];
-		secure_snprintf(format, sizeof(format),
-				"Nuauth %s, started at %%F %%H:%%M:%%S",
-				NUAUTH_FULL_VERSION);
-		ret =
-		    strftime(static_buffer, sizeof(static_buffer) - 1,
-			     format, &this->start_timestamp);
-		static_buffer[ret] = 0;
+		char time_text[sizeof(static_buffer)];
+		time_t diff;
+		struct tm timestamp;
+
+		/* compute uptime and format starting time */
+		diff = time(NULL) - this->start_timestamp;
+		localtime_r(&this->start_timestamp, &timestamp);
+		ret = strftime(time_text, sizeof(time_text)-1,
+			       "%F %H:%M:%S", &timestamp);
+		time_text[ret] = 0;
+
+		/* create answer message */
+		(void)secure_snprintf(static_buffer, sizeof(static_buffer),
+				"%u sec since %s", diff, time_text);
+		buffer = static_buffer;
+	} else if (strcmp(command, "version") == 0) {
+		secure_snprintf(static_buffer, sizeof(static_buffer),
+				"Nuauth %s", NUAUTH_FULL_VERSION);
 		buffer = static_buffer;
 	} else if (strcmp(command, "reload") == 0) {
-		buffer = "reloaded";
-		/* todo */
+		nuauth_reload(0);
+		buffer = "Reload configuration";
+	} else {
+		(void)secure_snprintf(static_buffer, sizeof(static_buffer)-1,
+				      "Error: Unknown command \"%s\"",
+				      command);
+		buffer = static_buffer;
 	}
 
 	/* send answer */
@@ -163,22 +179,29 @@ void command_execute(command_t * this, char *command)
 
 void command_client_run(command_t * this)
 {
-	char buffer[1024];
+	char buffer[40];
 	int ret;
 	ret = recv(this->client, buffer, sizeof(buffer) - 1, 0);
 	printf("CLIENT recv=%i\n", ret);
 	if (ret <= 0) {
 		if (ret == 0) {
-			log_message(WARNING, AREA_MAIN,
-				    "Command server: lost connection with client");
+			log_message(WARNING, AREA_MAIN, "Command server: "
+				    "lost connection with client");
 			printf("lost\n");
 		} else {
-			log_message(WARNING, AREA_MAIN,
-				    "Command server: error on recv() from client: %s",
+			log_message(WARNING, AREA_MAIN, "Command server: "
+				    "error on recv() from client: %s",
 				    g_strerror(errno));
 		}
 		command_client_close(this);
 		return;
+	}
+	if (ret == (sizeof(buffer)-1))
+	{
+		log_message(WARNING, AREA_MAIN,
+			    "Command server: client command is too long, "
+			    "disconnect him.");
+		command_client_close(this);
 	}
 	buffer[ret] = 0;
 	printf("CLIENT command: >>%s<<\n", buffer);
