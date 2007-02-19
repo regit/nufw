@@ -178,17 +178,16 @@ static int feed_template(idmef_message_t * idmef)
 
 	/* source address/service */
 	add_idmef_object(idmef, "alert.source(0).node.address(0).category",
-			 "ipv4-addr");
-	add_idmef_object(idmef, "alert.source(0).service.ip_version", "4");
+			 "ipv6-addr");
+	add_idmef_object(idmef, "alert.source(0).service.ip_version", "6");
 
 	/* target address/service */
 	add_idmef_object(idmef, "alert.target(0).node.address(0).category",
-			 "ipv4-addr");
-	add_idmef_object(idmef, "alert.target(0).service.ip_version", "4");
+			 "ipv6-addr");
+	add_idmef_object(idmef, "alert.target(0).service.ip_version", "6");
 
 	/* set assessment */
-	add_idmef_object(idmef, "alert.assessment.impact.completion", "succeeded");	/* failed | succeeded */
-	add_idmef_object(idmef, "alert.assessment.impact.type", "user");	/* admin | dos | file | recon | user | other */
+	add_idmef_object(idmef, "alert.assessment.impact.type", "user");
 	return 1;
 }
 
@@ -224,8 +223,6 @@ static idmef_message_t *create_autherr_template()
 	idmef_message_t *idmef = create_alert_template();
 	char buffer[50];
 
-	add_idmef_object(idmef, "alert.source(0).process.name",
-			 "nufw client");
 	add_idmef_object(idmef,
 			 "alert.source(0).service.iana_protocol_number",
 			 "6");
