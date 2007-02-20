@@ -20,11 +20,11 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/** 
+/**
  *  \defgroup Nufw Nufw
  *  \file main.c
- *  \brief Function main() 
- *   
+ *  \brief Function main()
+ *
  * See function main().
  */
 
@@ -49,7 +49,7 @@ struct ThreadType thread;
 /* packet server thread */
 struct Signals signals;
 
-/*! Name of pid file prefixed by LOCAL_STATE_DIR (variable defined 
+/*! Name of pid file prefixed by LOCAL_STATE_DIR (variable defined
  * during compilation/installation) */
 #define NUFW_PID_FILE  LOCAL_STATE_DIR "/run/nufw.pid"
 
@@ -78,7 +78,7 @@ void nufw_stop_thread()
  */
 void nufw_prepare_quit()
 {
-	/* clear packet list: use trylock() instead of lock() because the 
+	/* clear packet list: use trylock() instead of lock() because the
 	 * mutex may already be locked */
 	clear_packet_list();
 	pthread_mutex_destroy(&packets_list.mutex);
@@ -267,6 +267,26 @@ void install_signals()
 		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
 				"Warning: Could not set signal POLL");
 	}
+
+#ifdef HAVE_LIBCONNTRACK
+	/* intercpet SIGSYS */
+	memset(&action, 0, sizeof(action));
+	action.sa_handler = &process_sys;
+	action.sa_flags = SIGSYS;
+	if (sigaction(SIGSYS, &action, NULL) == -1) {
+		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
+				"Warning: Could not set signal SYS");
+	}
+
+	/* intercpet SIGWINCH */
+	memset(&action, 0, sizeof(action));
+	action.sa_handler = &process_winch;
+	action.sa_flags = SIGWINCH;
+	if (sigaction(SIGWINCH, &action, NULL) == -1) {
+		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
+				"Warning: Could not set signal WINCH");
+	}
+#endif
 }
 
 /**
@@ -327,8 +347,8 @@ void nufw_daemonize()
 }
 
 
-/** 
- * Create nuauth address: ::adr_srv 
+/**
+ * Create nuauth address: ::adr_srv
  */
 void create_nuauth_address()
 {
@@ -365,14 +385,14 @@ void create_nuauth_address()
  *      - SIGPOLL display statistics (see process_poll())
  *   - Open conntrack
  *   - Create packet server thread: packetsrv()
- *   - Run main loop 
+ *   - Run main loop
  *
- * When NuFW is running, main loop and two threads (packetsrv() and 
+ * When NuFW is running, main loop and two threads (packetsrv() and
  * authsrv()) and  are running.
- * 
+ *
  * The most interresting things are done in the packet server (thread
  * packetsrv()). The main loop just clean up old packets and display
- * statistics. 
+ * statistics.
  */
 int main(int argc, char *argv[])
 {

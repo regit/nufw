@@ -22,7 +22,7 @@
 
 /** \file nufw/audit.c
  *  \brief Signal handlers (SIGPOLL, SIGUSR1, SIGUSR2).
- *   
+ *
  * Signal handlers:
  *   - process_poll() is called by SIGPOLL
  *   - process_usr1() is called by SIGUSR1
@@ -69,3 +69,26 @@ void process_usr2(int signum)
 	log_printf(DEBUG_LEVEL_INFO, "USR2: Setting debug level to %d",
 		   debug_level);
 }
+
+#ifdef HAVE_LIBCONNTRACK
+/**
+ * Remove -M : set nufw_conntrack_uses_mark to 0
+ */
+
+void process_sys(int signum)
+{
+        nufw_conntrack_uses_mark = 0;
+	log_printf(DEBUG_LEVEL_INFO, "SYS:   Setting nufw_conntrack_uses_mark level to 0 (this cancels the -M switch)",
+		   debug_level);
+}
+
+/**
+ * Reset -M : set nufw_conntrack_uses_mark to 1
+ */
+void process_winch(int signum)
+{
+        nufw_conntrack_uses_mark = 1;
+	log_printf(DEBUG_LEVEL_INFO, "WINCH: Setting nufw_conntrack_uses_mark level to 1 (this activates the -M switch)",
+		   debug_level);
+}
+#endif

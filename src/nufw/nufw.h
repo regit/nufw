@@ -194,6 +194,10 @@ void clean_old_packets();
 void process_usr1(int signum);
 void process_usr2(int signum);
 void process_poll(int signum);
+#ifdef HAVE_LIBCONNTRACK
+void process_sys(int signum);
+void process_winch(int signum);
+#endif
 
 int send_icmp_unreach(char *payload);
 
