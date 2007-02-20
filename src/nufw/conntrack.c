@@ -178,7 +178,14 @@ int update_handler(struct nfct_conntrack *conn, unsigned int flags, int type,
 #else
 	int callback_ret = 0;
 #endif
-
+	/* switch can be done with a signal */
+	if (handle_conntrack_event == 0) {
+#ifdef HAVE_NEW_NFCT_API
+		return NFCT_CB_STOP;
+#else
+		return -1;
+#endif
+	}
 	/* if nufw_conntrack_uses_mark is set we should have mark set here
 	 * This REQUIRES correct CONNMARK rules and correct kernel */
 	if (nufw_conntrack_uses_mark == 1) {
@@ -274,13 +281,6 @@ void *conntrack_event_handler(void *data)
 	nfct_close(cth);
 	debug_log_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_VERBOSE_DEBUG,
 			 "Conntrack thread has exited");
-	if (handle_conntrack_event == 0) {
-#ifdef HAVE_NEW_NFCT_API
-		return NFCT_CB_STOP;
-#else
-		return -1;
-#endif
-	}
 	return NULL;
 }
 
