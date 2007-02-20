@@ -953,13 +953,13 @@ static GSList *fill_user_by_username(const char *username, gpointer params)
 
 /**
  *  user_check()
- *  arg 1 : user name string
- *  arg 2 : user provided password
- *  arg 3 : password length
- *  return : SASL_OK if password is correct, other values are authentication
+ *  
+ *  \param username user name string
+ *  \param clientpass user provided password
+ *  \param passlen password length
+ *  \param params module related parameter
+ *  \return SASL_OK if password is correct, other values are authentication
  *           failures
- *  modify : groups to return the list of user groups,
- *           uid to return the user id
  */
 G_MODULE_EXPORT int user_check(const char *username,
 			       const char *clientpass, unsigned passlen,
