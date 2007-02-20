@@ -77,13 +77,13 @@ void process_usr2(int signum)
 
 void process_sys(int signum)
 {
-        if (nufw_conntrack_uses_mark != 0)
+        if (handle_conntrack_event != 0)
         {
-          nufw_conntrack_uses_mark = 0;
-	  log_printf(DEBUG_LEVEL_INFO, "SYS:   Setting nufw_conntrack_uses_mark level to 0 (this cancels the -M switch)",
+          handle_conntrack_event = 0;
+	  log_printf(DEBUG_LEVEL_INFO, "SYS:   Setting handle_conntrack_event level to 0 (this cancels the -C switch)",
 		   debug_level);
         }else{
-	  log_printf(DEBUG_LEVEL_INFO, "SYS:   doing nothing (nufw_conntrack_uses_mark is already zeroed)",
+	  log_printf(DEBUG_LEVEL_INFO, "SYS:   doing nothing (handle_conntrack_event is already zeroed)",
 		   debug_level);
         }
 }
@@ -93,14 +93,19 @@ void process_sys(int signum)
  */
 void process_winch(int signum)
 {
-        if (nufw_conntrack_uses_mark == 0)
+        if (handle_conntrack_event == 0)
         {
-          nufw_conntrack_uses_mark = 1;
+          handle_conntrack_event = 1;
+	  if (pthread_create
+		    (&(tls.conntrack_event_handler), NULL,
+		     conntrack_event_handler, NULL) == EAGAIN) {
+			exit(EXIT_FAILURE);
+	  }
 
-	  log_printf(DEBUG_LEVEL_INFO, "WINCH: Setting nufw_conntrack_uses_mark level to 1 (this activates the -M switch)",
+	  log_printf(DEBUG_LEVEL_INFO, "WINCH: Setting handle_conntrack_event level to 1 (this activates the -C switch)",
 		   debug_level);
         }else{
-	  log_printf(DEBUG_LEVEL_INFO, "WINCH: doing nothing (nufw_conntrack_uses_mark already set)",
+	  log_printf(DEBUG_LEVEL_INFO, "WINCH: doing nothing (handle_conntrack_event already set)",
 		   debug_level);
         }
 }
