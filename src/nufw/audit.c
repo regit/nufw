@@ -77,9 +77,15 @@ void process_usr2(int signum)
 
 void process_sys(int signum)
 {
-        nufw_conntrack_uses_mark = 0;
-	log_printf(DEBUG_LEVEL_INFO, "SYS:   Setting nufw_conntrack_uses_mark level to 0 (this cancels the -M switch)",
+        if (nufw_conntrack_uses_mark != 0)
+        {
+          nufw_conntrack_uses_mark = 0;
+	  log_printf(DEBUG_LEVEL_INFO, "SYS:   Setting nufw_conntrack_uses_mark level to 0 (this cancels the -M switch)",
 		   debug_level);
+        }else{
+	  log_printf(DEBUG_LEVEL_INFO, "SYS:   doing nothing (nufw_conntrack_uses_mark is already zeroed)",
+		   debug_level);
+        }
 }
 
 /**
@@ -87,8 +93,15 @@ void process_sys(int signum)
  */
 void process_winch(int signum)
 {
-        nufw_conntrack_uses_mark = 1;
-	log_printf(DEBUG_LEVEL_INFO, "WINCH: Setting nufw_conntrack_uses_mark level to 1 (this activates the -M switch)",
+        if (nufw_conntrack_uses_mark == 0)
+        {
+          nufw_conntrack_uses_mark = 1;
+
+	  log_printf(DEBUG_LEVEL_INFO, "WINCH: Setting nufw_conntrack_uses_mark level to 1 (this activates the -M switch)",
 		   debug_level);
+        }else{
+	  log_printf(DEBUG_LEVEL_INFO, "WINCH: doing nothing (nufw_conntrack_uses_mark already set)",
+		   debug_level);
+        }
 }
 #endif
