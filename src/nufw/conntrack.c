@@ -39,7 +39,11 @@
 #endif
 
 void fill_message(struct nuv4_conntrack_message_t *message,
+#ifdef HAVE_NEW_NFCT_API
 		  struct nf_conntrack *conn)
+#else
+		  struct nfct_conntrack *conn)
+#endif
 {
 #ifdef DEBUG_CONNTRACK
 	char ascii[INET6_ADDRSTRLEN];
@@ -163,7 +167,7 @@ void fill_message(struct nuv4_conntrack_message_t *message,
 int update_handler(enum nf_conntrack_msg_type type,
 		   struct nf_conntrack *conn, void *data)
 #else
-int update_handler(struct nf_conntrack *conn, unsigned int flags, int type,
+int update_handler(struct nfct_conntrack *conn, unsigned int flags, int type,
 		   void *data)
 #endif
 {
