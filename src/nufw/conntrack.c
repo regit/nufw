@@ -274,14 +274,13 @@ void *conntrack_event_handler(void *data)
 	nfct_close(cth);
 	debug_log_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_VERBOSE_DEBUG,
 			 "Conntrack thread has exited");
-        if (handle_conntrack_event == 0)
-        {
+	if (handle_conntrack_event == 0) {
 #ifdef HAVE_NEW_NFCT_API
-            return(NFCT_CB_STOP);
+		return NFCT_CB_STOP;
 #else
-            return(-1);
+		return -1;
 #endif
-        }
+	}
 	return NULL;
 }
 
