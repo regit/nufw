@@ -914,11 +914,10 @@ int sasl_user_check(user_session_t * c_session)
 	}
 
 	ret = get_proto_info(c_session);
-
 	if (ret != NU_EXIT_OK) {
 		sasl_dispose(&conn);
 		log_message(INFO, AREA_AUTH, "Could not fetch proto info");
-		return ret;
+		return SASL_BADPARAM;
 	}
 
 	switch (c_session->client_version) {
