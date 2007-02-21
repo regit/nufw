@@ -2,8 +2,8 @@ Source: nufw20
 Section: net
 Priority: optional
 Maintainer: Jean-Michel Kelbert <kelbert@debian.org>
-Build-Depends: debhelper (>= 4.1.16),po-debconf, automake1.9, libldap2-dev, libglib2.0-dev, libmysqlclient15-dev||libmysqlclient14-dev, postgresql-dev, iptables-dev, libtool, libgnutls11-dev|libgnutls-dev, libsasl2-dev, libpam0g-dev, libnetfilter-conntrack-dev, libnetfilter-queue-dev, libnfnetlink-dev
-Standards-Version: 3.6.0
+Build-Depends: debhelper (>= 4.1.16),po-debconf, automake1.9, libldap2-dev, libglib2.0-dev, libmysqlclient15-dev|libmysqlclient14-dev, postgresql-dev, iptables-dev, libtool, libgnutls11-dev|libgnutls-dev, libsasl2-dev, libpam0g-dev, libnetfilter-conntrack-dev, libnetfilter-queue-dev, libnfnetlink-dev
+Standards-Version: 3.7.2
 
 Package: nufw20
 Architecture: any
@@ -23,6 +23,8 @@ Description: a per-user firewalling daemon that interfers with libipq
  Use this package and the Netfilter QUEUE target only if you run an "old"
  kernel (<2.6.18). It is better to use a recent kernel and the nufw20-nfqueue
  package.
+ .
+  Homepage http://www.nufw.org/
 
 Package: nufw20-nfqueue
 Architecture: any
