@@ -664,6 +664,13 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 	if (ldap_count_entries(ld, res) >= 1) {
 		result = ldap_first_entry(ld, res);
 		while (result) {
+			/* allocate a new acl_group */
+			this_acl = g_new0(struct acl_group, 1);
+			g_assert(this_acl);
+			this_acl->groups = NULL;
+			this_acl->period = NULL;
+			this_acl->log_prefix = NULL;
+
 			/* get period */
 			attrs_array =
 			    ldap_get_values(ld, result, "TimeRange");
@@ -680,13 +687,6 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 				    g_strdup(*attrs_array);
 			}
 			ldap_value_free(attrs_array);
-
-			/* allocate a new acl_group */
-			this_acl = g_new0(struct acl_group, 1);
-			g_assert(this_acl);
-			this_acl->groups = NULL;
-			this_acl->period = NULL;
-			this_acl->log_prefix = NULL;
 
 			/* get decision */
 			attrs_array =
