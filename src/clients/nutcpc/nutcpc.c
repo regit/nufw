@@ -457,7 +457,7 @@ NuAuth *do_connect(nutcpc_context_t * context, char *username)
 #endif
 
 	if (!nu_client_connect
-	    (session, context->srv_addr, context->port, NULL, err)) {
+	    (session, context->srv_addr, context->port, err)) {
 		nu_client_delete(session);
 		return NULL;
 	}
@@ -482,7 +482,7 @@ void main_loop(nutcpc_context_t * context)
 			/* try to reconnect to nuauth */
 			if (nu_client_connect
 			    (session, context->srv_addr, context->port,
-			     NULL, err) != 0) {
+			     err) != 0) {
 				connected = 1;
 				context->tempo = 1;	/* second */
 			} else {

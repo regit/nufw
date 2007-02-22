@@ -267,7 +267,7 @@ NuAuth *do_connect(char *username, char *password, nuclient_error * err)
 #endif
 
 	if (!nu_client_connect
-	    (session, pn_s.nuauth_srv, pn_s.nuauth_port, NULL, err)) {
+	    (session, pn_s.nuauth_srv, pn_s.nuauth_port, err)) {
 		nu_client_delete(session);
 		return NULL;
 	}
@@ -290,7 +290,7 @@ static void main_loop(struct pam_nufw_s *pn_s)
 
 			if (nu_client_connect
 			    (session, pn_s->nuauth_srv, pn_s->nuauth_port,
-			     NULL, pn_s->err) != 0) {
+			     pn_s->err) != 0) {
 				tempo = 1;
 				connected = 1;
 			} else {
