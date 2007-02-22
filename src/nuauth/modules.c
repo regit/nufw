@@ -404,7 +404,7 @@ int check_module_version(GModule * module)
 	api_version = get_version();
 	if (NUAUTH_API_VERSION != api_version) {
 		g_warning
-		    ("Don't load module %s: wrong API version (%u instead of %u)",
+		    ("Not loading module %s: wrong API version (%u instead of %u)",
 		     g_module_name(module), api_version,
 		     NUAUTH_API_VERSION);
 		exit(-1);
