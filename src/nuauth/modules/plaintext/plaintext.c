@@ -1280,7 +1280,7 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element, gpointer params)
 				    element->app_name);
 
 			for (; p_app; p_app = g_slist_next(p_app)) {
-				if (!strcasecmp
+				if (g_pattern_match_simple
 				    (((struct T_app *) p_app->data)->
 				     appname, element->app_name)) {
 					found = 1;
