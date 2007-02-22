@@ -74,6 +74,7 @@ static const int cert_type_priority[3] = { GNUTLS_CRT_X509, 0 };
 #   define secure_str_free(text) free(text)
 #endif
 
+
 /**
  * SASL callback used to get password
  *
@@ -263,7 +264,10 @@ int mysasl_negotiate(NuAuth * user_session, sasl_conn_t * conn,
 	result = sasl_client_start(conn,
 				   buf, NULL, &data, &len, &chosenmech);
 
-	printf("Using mechanism %s\n", chosenmech);
+	if (user_session->verbose) {
+		printf("Using mechanism %s\n", chosenmech);
+	}
+
 	if (result != SASL_OK && result != SASL_CONTINUE) {
 		if (user_session->verbose) {
 			printf("Error starting SASL negotiation");
@@ -788,6 +792,12 @@ int init_sasl(NuAuth * session, nuclient_error * err)
 	return 1;
 }
 
+void nu_client_set_source(NuAuth *session, struct sockaddr_storage *addr)
+{
+	session->has_src_addr = 1;
+	session->src_addr = *addr;
+}
+
 /**
  * Create a socket to nuauth, and try to connect. The function also set
  * SIGPIPE handler: ignore these signals.
@@ -799,8 +809,7 @@ int init_sasl(NuAuth * session, nuclient_error * err)
  */
 int init_socket(NuAuth * session,
 		const char *hostname, const char *service,
-		struct sockaddr_in6* src_addr,
-		nuclient_error * err)
+		nuclient_error *err)
 {
 	int option_value;
 	struct sigaction no_action;
@@ -830,15 +839,34 @@ int init_socket(NuAuth * session,
 		SET_ERROR(err, INTERNAL_ERROR, DNS_RESOLUTION_ERR);
 		return 0;
 	}
-	if (src_addr && res->ai_family != AF_INET6)
+	if (session->has_src_addr && session->src_addr.ss_family != res->ai_family)
 	{
-		if (session->verbose) {
-			fprintf(stderr,
-				"Unable to set source address: host (%s) is not IPv6!",
-				hostname);
+		struct sockaddr_in *src4 = (struct sockaddr_in *)&session->src_addr;
+		struct sockaddr_in6 *src6 = (struct sockaddr_in6 *)&session->src_addr;
+		if (res->ai_family == AF_INET
+		    && session->src_addr.ss_family == AF_INET6
+		    && memcmp(&src6->sin6_addr, "\0\0\0\0\0\0\0\0\0\0\xff\xff", 12) == 0)
+		{
+			struct in_addr addr;
+			addr.s_addr = src6->sin6_addr.s6_addr32[3];
+			src4->sin_family = AF_INET;
+			src4->sin_addr = addr;
+		} else if (res->ai_family == AF_INET6 && session->src_addr.ss_family == AF_INET) {
+			struct in_addr addr;
+			addr.s_addr = src4->sin_addr.s_addr;
+			src6->sin6_addr.s6_addr32[0] = 0;
+			src6->sin6_addr.s6_addr32[0] = 0;
+			src6->sin6_addr.s6_addr32[2] = 0xffff0000;
+			src6->sin6_addr.s6_addr32[3] = addr.s_addr;
+		} else {
+			if (session->verbose) {
+				fprintf(stderr,
+						"Unable to set source address: host (%s) is not IPv6!",
+						hostname);
+			}
+			SET_ERROR(err, INTERNAL_ERROR, BINDING_ERR);
+			return 0;
 		}
-		SET_ERROR(err, INTERNAL_ERROR, BINDING_ERR);
-		return 0;
 	}
 
 	/* ignore SIGPIPE */
@@ -861,9 +889,10 @@ int init_socket(NuAuth * session,
 		   SOL_SOCKET,
 		   SO_KEEPALIVE, &option_value, sizeof(option_value));
 
-	if (src_addr)
+	if (session->has_src_addr)
 	{
-		int result = bind(session->socket, (struct sockaddr *)src_addr, sizeof(*src_addr));
+		int result = bind(session->socket,
+				  (struct sockaddr*)&session->src_addr, sizeof(session->src_addr));
 		if (result != 0)
 		{
 			SET_ERROR(err, INTERNAL_ERROR, BINDING_ERR);
@@ -943,6 +972,31 @@ static char *secure_str_copy(const char *orig)
 #else
 	return strdup(orig);
 #endif
+}
+
+int nu_client_reset_tls(NuAuth *session)
+{
+	int ret;
+	session->need_set_cred = 1;
+
+	/* Initialize TLS session */
+	ret = gnutls_init(&session->tls, GNUTLS_CLIENT);
+	if (ret != 0) {
+		return 0;
+	}
+
+	ret = gnutls_set_default_priority(session->tls);
+	if (ret < 0) {
+		return 0;
+	}
+
+	ret =
+	    gnutls_certificate_type_set_priority(session->tls,
+						 cert_type_priority);
+	if (ret < 0) {
+		return 0;
+	}
+	return 1;
 }
 
 
@@ -1058,28 +1112,10 @@ NuAuth *nu_client_new(const char *username,
 						 session->dh_params);
 	}
 
-	/* Initialize TLS session */
-	ret = gnutls_init(&session->tls, GNUTLS_CLIENT);
-	if (ret != 0) {
+	if (!nu_client_reset_tls(session))
+	{
 		SET_ERROR(err, GNUTLS_ERROR, ret);
 		nu_exit_clean(session);
-		return NULL;
-	}
-
-	ret = gnutls_set_default_priority(session->tls);
-	if (ret < 0) {
-		SET_ERROR(err, GNUTLS_ERROR, ret);
-		nu_exit_clean(session);
-		return NULL;
-	}
-
-	ret =
-	    gnutls_certificate_type_set_priority(session->tls,
-						 cert_type_priority);
-	if (ret < 0) {
-		SET_ERROR(err, GNUTLS_ERROR, ret);
-		nu_exit_clean(session);
-		return NULL;
 	}
 	return session;
 }
@@ -1131,7 +1167,6 @@ void nu_client_reset(NuAuth * session)
  */
 int nu_client_connect(NuAuth * session,
 		      const char *hostname, const char *service,
-		      struct sockaddr_in6* src_addr,
 		      nuclient_error * err)
 {
 	if (session->need_set_cred) {
@@ -1148,7 +1183,7 @@ int nu_client_connect(NuAuth * session,
 	}
 
 	/* set field about host */
-	if (!init_socket(session, hostname, service, src_addr, err)) {
+	if (!init_socket(session, hostname, service, err)) {
 		return 0;
 	}
 

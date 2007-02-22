@@ -171,6 +171,8 @@ extern "C" {
 		unsigned char debug_mode;	/*!< Debug mode, enabled if different than zero */
 		unsigned char verbose;	/*!< Verbose mode (default: enabled) */
 		unsigned char diffie_hellman;	/*!< Use Diffie Hellman for key exchange? */
+		int has_src_addr;		/*!< Has source address? */
+		struct sockaddr_storage src_addr;	/*!< Source address */
 
     /** Server mode: #SRV_TYPE_POLL or #SRV_TYPE_PUSH */
 		u_int8_t server_mode;
@@ -269,6 +271,7 @@ extern "C" {
 	void nu_client_set_debug(NuAuth * session, unsigned char enabled);
 	void nu_client_set_verbose(NuAuth * session,
 				   unsigned char enabled);
+	void nu_client_set_source(NuAuth *session, struct sockaddr_storage *addr);
 
 	int nu_client_setup_tls(NuAuth * session,
 				char *tls_passwd,
@@ -279,7 +282,6 @@ extern "C" {
 	int nu_client_connect(NuAuth * session,
 			      const char *hostname,
 			      const char *service,
-			      struct sockaddr_in6* src_addr,
 			      nuclient_error * err);
 
 	void nu_client_reset(NuAuth * session);
