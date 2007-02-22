@@ -540,16 +540,7 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 			g_strlcat(filter, "(!(OsName=*))",
 				  LDAP_QUERY_SIZE);
 		}
-		if (element->app_name) {
-			g_strlcat(filter, "(|(&(AppName=*)(AppName=",
-				  LDAP_QUERY_SIZE);
-			prov_string =
-			    escape_string_for_ldap(element->app_name);
-			g_strlcat(filter, prov_string, LDAP_QUERY_SIZE);
-			g_free(prov_string);
-			g_strlcat(filter, "))(!(AppName=*)))",
-				  LDAP_QUERY_SIZE);
-		} else {
+		if (! element->app_name) {
 			g_strlcat(filter, "(!(AppName=*))",
 				  LDAP_QUERY_SIZE);
 		}
@@ -664,6 +655,32 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 	if (ldap_count_entries(ld, res) >= 1) {
 		result = ldap_first_entry(ld, res);
 		while (result) {
+			gboolean break_loop = FALSE;
+			/* get period */
+			attrs_array =
+			    ldap_get_values(ld, result, "AppName");
+			if (attrs_array && *attrs_array) {
+				char **pattrs_array = attrs_array;
+				while (*pattrs_array) {
+					if (g_pattern_match_simple(
+								*attrs_array,
+								element->app_name
+								)) {
+						break_loop = FALSE;
+						break;
+					} else {
+						break_loop = TRUE;
+					}
+					pattrs_array++;
+				}
+			}
+			ldap_value_free(attrs_array);
+
+			if (break_loop) {
+				break;
+			}
+
+
 			/* allocate a new acl_group */
 			this_acl = g_new0(struct acl_group, 1);
 			g_assert(this_acl);
