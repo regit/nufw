@@ -177,6 +177,7 @@ nu_error_t suppress_nufw_session(nufw_session_t * session)
 					session->socket));
 	}
 	g_static_mutex_unlock(&nufw_servers_mutex);
+	return NU_EXIT_OK;
 }
 
 /**
@@ -380,7 +381,7 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex * mutex)
 							  "nufw server disconnect on %d",
 							  c);
 					FD_CLR(c, &context->tls_rx_set);
-					suppress_nufw_session(session);
+					suppress_nufw_session(c_session);
 				}
 			}
 		}
