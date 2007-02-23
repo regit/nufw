@@ -633,7 +633,8 @@ void configure_app(int argc, char **argv)
 		daemonize();
 	} else {
 		g_message("[+] Starting nuauth " VERSION
-			  " ($Revision$)");
+			  " ($Revision$) with config "
+			  DEFAULT_CONF_FILE );
 	}
 }
 
