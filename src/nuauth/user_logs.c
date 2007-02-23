@@ -48,7 +48,8 @@ struct Conn_State {
 
 void log_user_packet(connection_t * element, tcp_state_t state)
 {
-	if ((nuauthconf->log_users_sync) && (state == TCP_STATE_OPEN)) {
+	if ((nuauthconf->log_users_sync) && (state == TCP_STATE_OPEN)
+			&& (!(element->flags & ACL_FLAGS_ASYNC))) {
 		if (nuauthconf->log_users & 8) {
 			modules_user_logs(element, state);
 		}

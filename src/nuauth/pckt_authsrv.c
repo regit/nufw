@@ -227,6 +227,7 @@ nu_error_t authpckt_new_connection(unsigned char *dgram,
 		connection->timestamp = time(NULL);
 	}
 
+	connection->flags = ACL_FLAGS_NONE;
 	/* connection is proto v4 because we are here */
 	connection->nufw_version = PROTO_VERSION_V22;
 

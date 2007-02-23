@@ -302,6 +302,7 @@ connection_t *duplicate_connection(connection_t * element)
 	conn_copy->os_version = g_strdup(element->os_version);
 
 	conn_copy->log_prefix = g_strdup(element->log_prefix);
+	conn_copy->flags = element->flags;
 
 	duplicate_iface_nfo(&(conn_copy->iface_nfo),
 			    &(element->iface_nfo));

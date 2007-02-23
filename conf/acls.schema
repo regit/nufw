@@ -107,6 +107,11 @@ attributetype ( 1.3.6.1.4.1.23812.1.18 NAME 'TimeRange'
 	SUBSTR caseIgnoreSubstringsMatch
 	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{256} SINGLE-VALUE)
 
+attributetype ( 1.3.6.1.4.1.23812.1.19 NAME 'AclFlags'
+	DESC 'An integer defining acl flags'
+	EQUALITY integerMatch
+        SYNTAX 1.3.6.1.4.1.1466.115.121.1.27)
+
 objectclass ( 1.3.6.1.4.1.23812.2.1 NAME 'NuAccessControlList'
 	DESC 'An IP Acl'
 	MUST (cn $ SrcIPStart $ SrcIPEnd $ DstIPStart $ DstIPEnd $ Decision )

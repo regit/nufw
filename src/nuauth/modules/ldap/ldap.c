@@ -687,6 +687,7 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 			this_acl->groups = NULL;
 			this_acl->period = NULL;
 			this_acl->log_prefix = NULL;
+			this_acl->flags = ACL_FLAGS_NONE;
 
 			/* get period */
 			attrs_array =
@@ -702,6 +703,15 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 			if (attrs_array && *attrs_array) {
 				this_acl->log_prefix =
 				    g_strdup(*attrs_array);
+			}
+			ldap_value_free(attrs_array);
+
+			/* get flags */
+			attrs_array =
+			    ldap_get_values(ld, result, "AclFlags");
+			if (attrs_array && *attrs_array) {
+				sscanf(*attrs_array, "%d",
+						(int *) &(this_acl->flags));
 			}
 			ldap_value_free(attrs_array);
 

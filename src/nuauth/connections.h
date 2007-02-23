@@ -47,6 +47,14 @@ typedef enum {
 	AUTH_STATE_HELLOMODE	/*!< This connection is treated by the HELLO authentication mode */
 } auth_state_t;
 
+typedef enum {
+	ACL_FLAGS_NONE = 0,
+	/* This ACL wants asynchronous logging */
+	ACL_FLAGS_ASYNC_BIT = 0,
+	ACL_FLAGS_ASYNC = (1 << ACL_FLAGS_ASYNC_BIT)
+} acl_flags_t;
+
+
 #define IPHDR_REJECT_LENGTH 20
 #define IP6HDR_REJECT_LENGTH 40
 /**
@@ -62,6 +70,7 @@ struct acl_group {
 	decision_t answer;	/*!< Answer relative to the acl */
 	gchar *period;		/*!< Period linked to the acl */
 	gchar *log_prefix;	/*!< Log prefix used for the acl */
+	gint flags;		/*!< flags used to set some acl properties */
 };
 
 typedef struct {
@@ -110,6 +119,7 @@ typedef struct {
 
 	decision_t decision;	/*!< Decision on packet. */
 	gchar *log_prefix;	/*!< Log prefix. */
+	gint flags;		/*!< Flags used to store some properties */
 
 	time_t expire;		/*!< Expire time (never: -1) */
 

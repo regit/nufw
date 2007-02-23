@@ -32,14 +32,15 @@
  * @{
  */
 
-static inline void update_connection_log_prefix(connection_t * element,
-						const gchar * prefix)
+static inline void update_connection_datas(connection_t *element,
+					   struct acl_group *datas)
 {
-	if (prefix) {
+	if (datas->log_prefix) {
 		g_free(element->log_prefix);
-		element->log_prefix = g_strdup(prefix);
+		element->log_prefix = g_strdup(datas->log_prefix);
 		debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
-				  "Setting log prefix to %s", prefix);
+				  "Setting log prefix to %s", datas->log_prefix);
+		element->flags = datas->flags;
 	}
 }
 
@@ -130,14 +131,14 @@ gint take_decision(connection_t * element, packet_place_t place)
 								/* if prio is to not ok, then a DROP or REJECT is a final decision */
 								test =
 								    TEST_DECIDED;
-								update_connection_log_prefix
+								update_connection_datas
 								    (element,
-								     ((struct acl_group *) (parcours->data))->log_prefix);
+								     (struct acl_group *) (parcours->data));
 							} else {
 								/* we can have multiple accept, last one with a log prefix will be displayed */
-								update_connection_log_prefix
+								update_connection_datas
 								    (element,
-								     ((struct acl_group *) (parcours->data))->log_prefix);
+								     (struct acl_group *) (parcours->data));
 							}
 						} else {
 							if (answer ==
@@ -145,9 +146,9 @@ gint take_decision(connection_t * element, packet_place_t place)
 							{
 								test =
 								    TEST_DECIDED;
-								update_connection_log_prefix
+								update_connection_datas
 								    (element,
-								     ((struct acl_group *) (parcours->data))->log_prefix);
+								     (struct acl_group *) (parcours->data));
 							}
 						}
 						/* complete decision with check on period (This can change an ACCEPT answer) */
@@ -171,9 +172,9 @@ gint take_decision(connection_t * element, packet_place_t place)
 									    =
 									    DECISION_NODECIDE;
 									test = TEST_DECIDED;
-									update_connection_log_prefix
+									update_connection_datas
 									    (element,
-									     ((struct acl_group *) (parcours->data))->log_prefix);
+									     (struct acl_group *) (parcours->data));
 								} else {
 									debug_log_message
 									    (VERBOSE_DEBUG,
@@ -203,14 +204,13 @@ gint take_decision(connection_t * element, packet_place_t place)
 					} else {
 						if (answer ==
 						    DECISION_NODECIDE) {
-							update_connection_log_prefix
+							update_connection_datas
 							    (element,
 							     ((struct
 							       acl_group
 							       *)
 							      (parcours->
-							       data))->
-							     log_prefix);
+							       data)));
 						}
 					}
 				}	/* end of user group loop */

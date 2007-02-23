@@ -60,6 +60,7 @@ void external_ip_auth(gpointer userdata, gpointer data)
 			connection->username = username;
 			connection->os_sysname = NULL;
 			connection->app_name = NULL;
+			connection->flags = ACL_FLAGS_NONE;
 			/* copy ipv4 header */
 			memcpy(&(connection->tracking),
 			       (tracking_t *) userdata,

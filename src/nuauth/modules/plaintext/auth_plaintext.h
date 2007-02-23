@@ -68,6 +68,8 @@ struct T_plaintext_acl {
 
 	gchar *period;
 	gchar *log_prefix;
+
+	gint flags;
 };
 
 struct plaintext_params {

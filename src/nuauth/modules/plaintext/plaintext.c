@@ -548,6 +548,7 @@ static int read_acl_list(struct plaintext_params *params)
 			newacl->aclname = g_strdup(p_key);
 			newacl->period = NULL;
 			newacl->log_prefix = NULL;
+			newacl->flags = ACL_FLAGS_NONE;
 			debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
 					  "L.%d: ACL name found: [%s]", ln,
 					  newacl->aclname);
@@ -744,6 +745,16 @@ static int read_acl_list(struct plaintext_params *params)
 			debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
 					  "L.%d: Read log_prefix [%s]", ln,
 					  newacl->log_prefix);
+		} else if (!strcasecmp("flags", p_key)) {
+			if (sscanf(p_value, "%d", &newacl->flags) != 1) {
+				log_message(WARNING, AREA_MAIN,
+						"L.%d: Malformed line (flags should be a number)",
+						ln);
+				fclose(fd);
+				return 2;
+			}
+			debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+					"L.%d: Read acl flags [%d]", ln, newacl->flags);
 		} else {
 			log_message(SERIOUS_WARNING, AREA_MAIN,
 				    "L.%d: Unknown key [%s] in ACL %s",
@@ -1317,6 +1328,7 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element, gpointer params)
 		} else {
 			this_acl->log_prefix = NULL;
 		}
+		this_acl->flags = p_acl->flags;
 
 		g_list = g_slist_prepend(g_list, this_acl);
 	}

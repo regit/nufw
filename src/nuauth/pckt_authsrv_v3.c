@@ -68,6 +68,7 @@ nu_error_t authpckt_new_connection_v3(unsigned char *dgram,
 	connection->acl_groups = NULL;
 	connection->user_groups = NULL;
 	connection->expire = -1;
+	connection->flags = ACL_FLAGS_NONE;
 
 	connection->packet_id =
 	    g_slist_append(NULL, GUINT_TO_POINTER(ntohl(msg->packet_id)));
