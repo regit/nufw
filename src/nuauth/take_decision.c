@@ -523,11 +523,15 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 			  "Sending auth answer %d for packet %u on TLS session %p",
 			  element->decision, packet_id, element->tls);
 	if (element->tls->alive) {
+		int ret;
 		g_mutex_lock(element->tls->tls_lock);
-		gnutls_record_send(*(element->tls->tls), buffer,
+		ret = gnutls_record_send(*(element->tls->tls), buffer,
 				   total_size);
 		g_mutex_unlock(element->tls->tls_lock);
-		(void) g_atomic_int_dec_and_test(&(element->tls->usage));
+		if (g_atomic_int_dec_and_test(&(element->tls->usage))
+		    && (ret < 0)) {
+			clean_nufw_session(element->tls);
+		}
 	} else {
 		if (g_atomic_int_dec_and_test(&(element->tls->usage))) {
 			clean_nufw_session(element->tls);

@@ -108,8 +108,8 @@ struct nuauth_tls_t {
 	gnutls_dh_params dh_params;
 };
 
+nu_error_t suppress_nufw_session(nufw_session_t * session);
 void clean_nufw_session(nufw_session_t * c_session);
-
 
 void create_x509_credentials();
 void *tls_nufw_authsrv(GMutex * mutex);

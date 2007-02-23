@@ -160,6 +160,26 @@ void close_nufw_servers()
 }
 
 /**
+ * Suppress entry from nufw_servers hash when a 
+ * problem occurs
+ */
+nu_error_t suppress_nufw_session(nufw_session_t * session)
+{
+	g_static_mutex_lock(&nufw_servers_mutex);
+	if (g_atomic_int_get (&(session->usage)) == 0) {
+		g_hash_table_remove(nufw_servers,
+				GINT_TO_POINTER
+				(session->socket));
+	} else {
+		session->alive = FALSE;
+		g_hash_table_steal(nufw_servers,
+				GINT_TO_POINTER(
+					session->socket));
+	}
+	g_static_mutex_unlock(&nufw_servers_mutex);
+}
+
+/**
  * Clean a NuFW TLS session: send "bye", deinit the connection
  * and free the memory.
  */
@@ -360,23 +380,7 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex * mutex)
 							  "nufw server disconnect on %d",
 							  c);
 					FD_CLR(c, &context->tls_rx_set);
-					g_static_mutex_lock
-					    (&nufw_servers_mutex);
-					if (g_atomic_int_get
-					    (&(c_session->usage)) == 0) {
-						/* clean client structure */
-						g_hash_table_remove
-						    (nufw_servers,
-						     GINT_TO_POINTER(c));
-					} else {
-						g_hash_table_steal
-						    (nufw_servers,
-						     GINT_TO_POINTER(c));
-						c_session->alive = FALSE;
-					}
-					g_static_mutex_unlock
-					    (&nufw_servers_mutex);
-					close(c);
+					suppress_nufw_session(session);
 				}
 			}
 		}

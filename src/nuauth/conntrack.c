@@ -136,11 +136,7 @@ nu_error_t send_conntrack_message(struct limited_connection * lconn,
 								 (message));
 					g_mutex_unlock(session->tls_lock);
 					if (ret < 0) {
-						g_static_mutex_lock(&nufw_servers_mutex);
-						g_hash_table_remove(nufw_servers,
-								GINT_TO_POINTER(
-								session->socket));
-						g_static_mutex_unlock(&nufw_servers_mutex);
+						suppress_nufw_session(session);
 						return NU_EXIT_ERROR;
 					}
 				}
@@ -193,11 +189,7 @@ nu_error_t send_conntrack_message(struct limited_connection * lconn,
 							   (message));
 					g_mutex_unlock(session->tls_lock);
 					if (ret < 0) {
-						g_static_mutex_lock(&nufw_servers_mutex);
-						g_hash_table_remove(nufw_servers,
-								GINT_TO_POINTER(
-								session->socket));
-						g_static_mutex_unlock(&nufw_servers_mutex);
+						suppress_nufw_session(session);
 						return NU_EXIT_ERROR;
 					}
 
