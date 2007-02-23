@@ -62,8 +62,8 @@
 #endif
 
 typedef enum {
-	NU_EXIT_ERROR,
-	NU_EXIT_OK,
+	NU_EXIT_ERROR = -1,
+	NU_EXIT_OK = 0,
 	NU_EXIT_NO_RETURN,
 	NU_EXIT_CONTINUE
 } nu_error_t;
