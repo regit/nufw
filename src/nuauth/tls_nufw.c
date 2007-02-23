@@ -251,6 +251,7 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 	nu_session->usage = 0;
 	nu_session->alive = TRUE;
 	nu_session->peername = addr;
+	nu_session->socket = conn_fd;
 	/* We have to wait the first packet */
 	nu_session->proto_version = PROTO_UNKNOWN;
 	if (tls_connect(conn_fd, &(nu_session->tls)) == SASL_OK) {

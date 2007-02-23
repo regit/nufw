@@ -54,6 +54,7 @@ nu_error_t send_conntrack_message(struct limited_connection * lconn,
 				  unsigned char msgtype)
 {
 	nufw_session_t *session = NULL;
+	int ret = 0;
 
 	debug_log_message(VERBOSE_DEBUG, AREA_GW,
 			  "going to send conntrack message");
@@ -129,11 +130,19 @@ nu_error_t send_conntrack_message(struct limited_connection * lconn,
 							  dest);
 					}
 					g_mutex_lock(session->tls_lock);
-					gnutls_record_send(*(session->tls),
-							   &message,
-							   sizeof
-							   (message));
+					ret = gnutls_record_send(*(session->tls),
+								 &message,
+								 sizeof
+								 (message));
 					g_mutex_unlock(session->tls_lock);
+					if (ret < 0) {
+						g_static_mutex_lock(&nufw_servers_mutex);
+						g_hash_table_remove(nufw_servers,
+								GINT_TO_POINTER(
+								session->socket));
+						g_static_mutex_unlock(&nufw_servers_mutex);
+						return NU_EXIT_ERROR;
+					}
 				}
 
 				break;
@@ -178,11 +187,20 @@ nu_error_t send_conntrack_message(struct limited_connection * lconn,
 							  dest);
 					}
 					g_mutex_lock(session->tls_lock);
-					gnutls_record_send(*(session->tls),
+					ret = gnutls_record_send(*(session->tls),
 							   &message,
 							   sizeof
 							   (message));
 					g_mutex_unlock(session->tls_lock);
+					if (ret < 0) {
+						g_static_mutex_lock(&nufw_servers_mutex);
+						g_hash_table_remove(nufw_servers,
+								GINT_TO_POINTER(
+								session->socket));
+						g_static_mutex_unlock(&nufw_servers_mutex);
+						return NU_EXIT_ERROR;
+					}
+
 				}
 
 				break;

@@ -83,6 +83,7 @@ struct tls_buffer_read {
 };
 
 typedef struct Nufw_session {
+	int socket;
 	gnutls_session *tls;
 	GMutex *tls_lock;
 	struct in6_addr peername;
