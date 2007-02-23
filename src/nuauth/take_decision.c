@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2006 INL
+ ** Copyright(C) 2006,2007 INL
  ** Written by Eric Leblond <regit@inl.fr>
  ** INL : http://www.inl.fr/
  **
@@ -49,6 +49,75 @@ typedef enum {
 	TEST_DECIDED		/*<! Decision is taken on packet */
 } test_t;
 
+static void search_user_group_in_acl_groups(struct acl_group *datas,
+					    decision_t *answer,
+					    test_t *test,
+					    connection_t *element,
+					    time_t *expire,
+					    GSList *user_group)
+{
+	if (g_slist_find(datas->
+			 groups,
+			 (gconstpointer) user_group->data)) {
+		/* find a group match, time to update decision */
+		*answer = datas->answer;
+		if (nuauthconf->prio_to_nok == 1) {
+			if ((*answer ==	DECISION_DROP)
+			   || (*answer == DECISION_REJECT)) {
+				/* if prio is to not ok, then a DROP or REJECT is a final decision */
+				*test = TEST_DECIDED;
+				update_connection_datas (element,datas);
+			} else {
+				/* we can have multiple accept, last one with a log prefix will be displayed */
+				update_connection_datas (element,datas);
+			}
+		} else {
+			if (*answer == DECISION_ACCEPT) {
+				*test = TEST_DECIDED;
+				update_connection_datas (element,datas);
+			}
+		}
+		/* complete decision with check on period (This can change an ACCEPT answer) */
+		if (*answer == DECISION_ACCEPT) {
+			time_t periodend = -1;
+			/* compute end of period for this acl */
+			if (datas->period) {
+				periodend = get_end_of_period_for_time_t(
+					datas->period, time(NULL));
+				if (periodend == 0) {
+					/* this is not a correct time going to drop */
+					*answer = DECISION_NODECIDE;
+					*test = TEST_DECIDED;
+					update_connection_datas (element,datas);
+				} else {
+					debug_log_message
+						(VERBOSE_DEBUG,
+						 AREA_MAIN,
+						 "end of period for %s in %ld",
+						 datas->period, periodend);
+
+				}
+			}
+			if ((*expire == -1) || ((periodend != -1)
+					 && (*expire !=
+						 -1)
+					 && (*expire >
+						 periodend))) {
+				debug_log_message
+					(DEBUG,
+					 AREA_MAIN,
+					 " ... modifying expire");
+				*expire = periodend;
+			}
+		}
+	} else {
+		if (*answer == DECISION_NODECIDE) {
+			update_connection_datas (element,datas);
+		}
+	}
+}
+
+
 /**
  * \brief Take a decision of a connection authentification, and send it to NuFW.
  *
@@ -66,9 +135,9 @@ typedef enum {
  *
  * \param element A pointer to a ::connection_t
  * \param place Place where the connection is stored, see ::packet_place_t
- * \return Returns -1 if fails, 1 otherwise
+ * \return Returns a ::nu_error_t
  */
-gint take_decision(connection_t * element, packet_place_t place)
+nu_error_t take_decision(connection_t * element, packet_place_t place)
 {
 	GSList *parcours = NULL;
 	decision_t answer = DECISION_NODECIDE;
@@ -81,7 +150,7 @@ gint take_decision(connection_t * element, packet_place_t place)
 
 	/*even firster we check if we have an actual element */
 	if (element == NULL)
-		return -1;
+		return NU_EXIT_ERROR;
 
 	/* first check if we have found acl */
 	if (element->acl_groups == NULL) {
@@ -110,109 +179,13 @@ gint take_decision(connection_t * element, packet_place_t place)
 					g_assert(((struct acl_group
 						   *) (parcours->data))->
 						 groups);
-					if (g_slist_find
-					    (((struct acl_group
-					       *) (parcours->data))->
-					     groups,
-					     (gconstpointer) user_group->
-					     data)) {
-						/* find a group match, time to update decision */
-						answer =
-						    ((struct acl_group
-						      *) (parcours->
-							  data))->answer;
-						if (nuauthconf->
-						    prio_to_nok == 1) {
-							if ((answer ==
-							     DECISION_DROP)
-							    || (answer ==
-								DECISION_REJECT))
-							{
-								/* if prio is to not ok, then a DROP or REJECT is a final decision */
-								test =
-								    TEST_DECIDED;
-								update_connection_datas
-								    (element,
-								     (struct acl_group *) (parcours->data));
-							} else {
-								/* we can have multiple accept, last one with a log prefix will be displayed */
-								update_connection_datas
-								    (element,
-								     (struct acl_group *) (parcours->data));
-							}
-						} else {
-							if (answer ==
-							    DECISION_ACCEPT)
-							{
-								test =
-								    TEST_DECIDED;
-								update_connection_datas
-								    (element,
-								     (struct acl_group *) (parcours->data));
-							}
-						}
-						/* complete decision with check on period (This can change an ACCEPT answer) */
-						if (answer ==
-						    DECISION_ACCEPT) {
-							time_t periodend =
-							    -1;
-							/* compute end of period for this acl */
-							if (((struct
-							      acl_group
-							      *)
-							     (parcours->
-							      data))->
-							    period) {
-								periodend =
-								    get_end_of_period_for_time_t
-								    (((struct acl_group *) (parcours->data))->period, time(NULL));
-								if (periodend == 0) {
-									/* this is not a correct time going to drop */
-									answer
-									    =
-									    DECISION_NODECIDE;
-									test = TEST_DECIDED;
-									update_connection_datas
-									    (element,
-									     (struct acl_group *) (parcours->data));
-								} else {
-									debug_log_message
-									    (VERBOSE_DEBUG,
-									     AREA_MAIN,
-									     "end of period for %s in %ld",
-									     ((struct acl_group *) (parcours->data))->period, periodend);
-
-								}
-							}
-							if ((expire == -1)
-							    ||
-							    ((periodend !=
-							      -1)
-							     && (expire !=
-								 -1)
-							     && (expire >
-								 periodend))
-							    ) {
-								debug_log_message
-								    (DEBUG,
-								     AREA_MAIN,
-								     " ... modifying expire");
-								expire =
-								    periodend;
-							}
-						}
-					} else {
-						if (answer ==
-						    DECISION_NODECIDE) {
-							update_connection_datas
-							    (element,
-							     ((struct
-							       acl_group
-							       *)
-							      (parcours->
-							       data)));
-						}
-					}
+					search_user_group_in_acl_groups(((struct acl_group *)(parcours->data)),
+									&answer,
+									&test,
+									element,
+									&expire,
+									user_group);
+					
 				}	/* end of user group loop */
 			} else {
 				debug_log_message(DEBUG, AREA_MAIN,
@@ -290,7 +263,7 @@ gint take_decision(connection_t * element, packet_place_t place)
 		}
 
 	}
-	return 1;
+	return NU_EXIT_OK;
 }
 
 /**
@@ -298,9 +271,9 @@ gint take_decision(connection_t * element, packet_place_t place)
  * for a given connection.
  *
  * \param element A pointer to a ::connection_t
- * \return Returns 1
+ * \return Returns a ::nu_error_t
  */
-gint apply_decision(connection_t * element)
+nu_error_t apply_decision(connection_t * element)
 {
 	decision_t decision = element->decision;
 #ifdef PERF_DISPLAY_ENABLE
@@ -310,7 +283,7 @@ gint apply_decision(connection_t * element)
 	if (element->state == AUTH_STATE_USERPCKT) {
 		debug_log_message(WARNING, AREA_MAIN,
 				  "BUG: Should not be in apply_decision for user only packet");
-		return 1;
+		return NU_EXIT_ERROR;
 	}
 
 	if (decision == DECISION_ACCEPT) {
@@ -334,7 +307,7 @@ gint apply_decision(connection_t * element)
 		g_slist_free(element->packet_id);
 		element->packet_id = NULL;
 	}
-	return 1;
+	return NU_EXIT_OK;
 }
 
 /**
