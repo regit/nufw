@@ -126,6 +126,26 @@ void add_client(int socket, gpointer datas)
 	g_mutex_unlock(client_mutex);
 }
 
+static GSList *delete_ipsockets_from_hash(GSList *ipsockets, user_session_t *session)
+{
+	ipsockets = g_slist_remove(ipsockets, session);
+	if (ipsockets != NULL) {
+		g_hash_table_replace(client_ip_hash,
+				IPV6_TO_POINTER(&session->
+					addr),
+				ipsockets);
+	} else {
+		g_hash_table_remove(client_ip_hash,
+				IPV6_TO_POINTER(&session->
+					addr));
+	}
+	/* remove entry from hash */
+	g_hash_table_steal(client_conn_hash,
+			GINT_TO_POINTER(socket));
+	log_user_session(session, SESSION_CLOSE);
+	return ipsockets;
+}
+
 void delete_client_by_socket(int socket)
 {
 	GSList *ipsockets;
@@ -144,27 +164,12 @@ void delete_client_by_socket(int socket)
 	if (session) {
 		/* destroy entry in IP hash */
 		ipsockets =
-		    g_hash_table_lookup(client_ip_hash,
+			g_hash_table_lookup(client_ip_hash,
 					IPV6_TO_POINTER(&session->addr));
-		ipsockets = g_slist_remove(ipsockets, session);
-		if (ipsockets != NULL) {
-			g_hash_table_replace(client_ip_hash,
-					     IPV6_TO_POINTER(&session->
-							     addr),
-					     ipsockets);
-		} else {
-			g_hash_table_remove(client_ip_hash,
-					    IPV6_TO_POINTER(&session->
-							    addr));
-		}
-
-		/* remove entry from hash */
-		g_hash_table_steal(client_conn_hash,
-				   GINT_TO_POINTER(socket));
-		log_user_session(session, SESSION_CLOSE);
+		delete_ipsockets_from_hash(ipsockets, session);
 	} else {
 		log_message(WARNING, AREA_USER,
-			    "Could not found user session in hash");
+				"Could not found user session in hash");
 	}
 
 	g_mutex_unlock(client_mutex);
@@ -230,7 +235,9 @@ inline user_session_t *look_for_username(const gchar * username)
  */
 char warn_clients(struct msg_addr_set *global_msg)
 {
+	GSList *start_ipsockets = NULL;
 	GSList *ipsockets = NULL;
+	GSList *badsockets = NULL;
 #if DEBUG_ENABLE
 	char addr_ascii[INET6_ADDRSTRLEN];
 
@@ -242,11 +249,12 @@ char warn_clients(struct msg_addr_set *global_msg)
 #endif
 
 	g_mutex_lock(client_mutex);
-	ipsockets =
+	start_ipsockets =
 	    g_hash_table_lookup(client_ip_hash,
 				IPV6_TO_POINTER(&global_msg->addr));
-	if (ipsockets) {
+	if (start_ipsockets) {
 		global_msg->found = TRUE;
+		ipsockets = start_ipsockets;
 		while (ipsockets) {
 			int ret =
 			    gnutls_record_send(*(gnutls_session *)
@@ -254,10 +262,20 @@ char warn_clients(struct msg_addr_set *global_msg)
 					       global_msg->msg,
 					       ntohs(global_msg->msg->
 						     length));
-			if (ret < 0)
+			if (ret < 0) {
 				log_message(WARNING, AREA_USER,
 					    "Fails to send warning to client(s).");
+				badsockets = g_slist_prepend(badsockets, ipsockets->data);
+			}
 			ipsockets = ipsockets->next;
+		}
+		if (badsockets) {
+			while (badsockets) {
+				start_ipsockets = delete_ipsockets_from_hash(start_ipsockets,
+							   badsockets->data);
+				badsockets = badsockets->next;
+			}
+			g_slist_free(badsockets);
 		}
 		g_mutex_unlock(client_mutex);
 		return 1;
