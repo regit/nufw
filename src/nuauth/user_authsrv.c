@@ -224,7 +224,11 @@ int user_process_field_app(struct nu_authreq *authreq,
 	} else {
 		dec_appname = g_try_realloc(dec_appname, reallen + 1);
 	}
-	dec_appname[reallen] = 0;
+	if (reallen) {
+		dec_appname[reallen] = 0;
+	} else {
+		dec_appname[len-1] = 0;
+	}
 
 	if (dec_appname != NULL) {
 		connection->app_name = string_escape(dec_appname);
@@ -232,6 +236,8 @@ int user_process_field_app(struct nu_authreq *authreq,
 			log_message(WARNING, AREA_USER,
 				    "user packet received an invalid app name\n");
 	} else {
+		log_message(WARNING, AREA_USER,
+			    "User packet contained an undecodable app name\n");
 		connection->app_name = NULL;
 	}
 	g_free(dec_appname);
