@@ -72,7 +72,7 @@ struct pam_nufw_s {
 	char file_lock[BUFSIZ];	/* file lock used to store pid */
 	char **no_auth_users;
 	int no_auth_cpt;
-	nuclient_error *err;
+	nuclient_error_t *err;
 };
 
 /* init pam_nufw info struct. returns error message, or NULL if no error occurs */
@@ -244,7 +244,7 @@ int do_auth_on_user(const char *username)
  *
  * \return The client session, or NULL on error (get description from ::err)
  */
-NuAuth *do_connect(char *username, char *password, nuclient_error * err)
+NuAuth *do_connect(char *username, char *password, nuclient_error_t * err)
 {
 	NuAuth *session = nu_client_new(username, password, 1, err);
 	if (session == NULL) {
@@ -357,7 +357,7 @@ static int nufw_client_func(struct pam_nufw_s *pn_s,
 		return PAM_AUTH_ERR;
 	}
 
-	/* init nuclient_error */
+	/* init nuclient_error_t */
 	res_err = nu_client_error_init(&pn_s->err);
 	if (res_err != 0) {
 		syslog(LOG_ERR,

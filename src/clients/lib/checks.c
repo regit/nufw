@@ -140,7 +140,7 @@ void *recv_message(void *data)
  *  - In PUSH mode, it is used to detect failure and send HELLO message
  *
  * \param session A pointer to a valid ::NuAuth session
- * \param err A pointer to a allocated ::nuclient_error
+ * \param err A pointer to a allocated ::nuclient_error_t
  * \return -1 if a problem occurs. Session is destroyed if nu_client_check() return -1;
  *
  * \par Internal
@@ -154,7 +154,7 @@ void *recv_message(void *data)
  *
  * \return Returns -1 on error, 1 otherwise
  */
-int nu_client_check(NuAuth * session, nuclient_error * err)
+int nu_client_check(NuAuth * session, nuclient_error_t * err)
 {
 	pthread_mutex_lock(&(session->mutex));
 
@@ -260,7 +260,7 @@ void *nu_client_thread_check(void *data)
  *
  * \return Number of authenticated packets, or -1 on failure
  */
-int nu_client_real_check(NuAuth * session, nuclient_error * err)
+int nu_client_real_check(NuAuth * session, nuclient_error_t * err)
 {
 	conntable_t *new;
 	int nb_packets = 0;

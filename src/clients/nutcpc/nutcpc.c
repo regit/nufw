@@ -38,7 +38,7 @@
 
 struct termios orig;
 NuAuth *session = NULL;
-nuclient_error *err = NULL;
+nuclient_error_t *err = NULL;
 struct sigaction old_sigterm;
 struct sigaction old_sigint;
 char *locale_charset = NULL;

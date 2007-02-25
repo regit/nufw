@@ -186,7 +186,7 @@ void nu_exit_clean(NuAuth * session)
 
 
 static int samp_send(gnutls_session session, const char *buffer,
-		     unsigned length, nuclient_error * err)
+		     unsigned length, nuclient_error_t * err)
 {
 	char *buf;
 	unsigned len, alloclen;
@@ -220,7 +220,7 @@ static int samp_send(gnutls_session session, const char *buffer,
 
 
 static unsigned samp_recv(gnutls_session session, char *buf, int bufsize,
-			  nuclient_error * err)
+			  nuclient_error_t * err)
 {
 	unsigned len;
 	int result;
@@ -245,7 +245,7 @@ static unsigned samp_recv(gnutls_session session, char *buf, int bufsize,
 
 
 int mysasl_negotiate(NuAuth * user_session, sasl_conn_t * conn,
-		     nuclient_error * err)
+		     nuclient_error_t * err)
 {
 	char buf[8192];
 	const char *data;
@@ -371,7 +371,7 @@ static int add_packet_to_send(NuAuth * session, conn_t ** auth,
  * authenticated packets if it has succeeded
  */
 int compare(NuAuth * session, conntable_t * old, conntable_t * new,
-	    nuclient_error * err)
+	    nuclient_error_t * err)
 {
 	int i;
 	int count = 0;
@@ -491,11 +491,11 @@ void nu_client_delete(NuAuth * session)
  *
  * This function inits all library needed to initiate a connection to a nuauth server
  *
- * \param err A pointer to a ::nuclient_error which contains at exit the error
+ * \param err A pointer to a ::nuclient_error_t which contains at exit the error
  *
  * \warning To be called only once.
  */
-int nu_client_global_init(nuclient_error * err)
+int nu_client_global_init(nuclient_error_t * err)
 {
 	int ret;
 
@@ -533,9 +533,9 @@ void nu_client_global_deinit()
  * Packet is in format ::nuv2_authfield.
  *
  * \param session Pointer to client session
- * \param err Pointer to a nuclient_error: which contains the error
+ * \param err Pointer to a nuclient_error_t: which contains the error
  */
-int send_os(NuAuth * session, nuclient_error * err)
+int send_os(NuAuth * session, nuclient_error_t * err)
 {
 	/* announce our OS */
 	struct utsname info;
@@ -639,12 +639,12 @@ int send_os(NuAuth * session, nuclient_error * err)
  * \param certfile Complete path to a certificate file stored in PEM format (can be NULL)
  * \param cafile Complete path to a certificate authority file stored in PEM format (can be NULL)
  * \param tls_password Certificate password string
- * \param err Pointer to a nuclient_error: which contains the error
+ * \param err Pointer to a nuclient_error_t: which contains the error
  * \return Returns 0 on error (error description in err), 1 otherwise
  */
 int nu_client_setup_tls(NuAuth * session,
 			char *keyfile, char *certfile, char *cafile,
-			char *tls_password, nuclient_error * err)
+			char *tls_password, nuclient_error_t * err)
 {
 	char certstring[256];
 	char keystring[256];
@@ -726,9 +726,9 @@ int nu_client_setup_tls(NuAuth * session,
  * and then call mysasl_negotiate()
  *
  * \param session Pointer to client session
- * \param err Pointer to a nuclient_error: which contains the error
+ * \param err Pointer to a nuclient_error_t: which contains the error
  */
-int init_sasl(NuAuth * session, nuclient_error * err)
+int init_sasl(NuAuth * session, nuclient_error_t * err)
 {
 	int ret;
 	sasl_conn_t *conn;
@@ -805,11 +805,11 @@ void nu_client_set_source(NuAuth *session, struct sockaddr_storage *addr)
  * \param session Pointer to client session
  * \param hostname String containing hostname of nuauth server (default: #NUAUTH_IP)
  * \param service Port number (or string) on which nuauth server is listening (default: #USERPCKT_PORT)
- * \param err Pointer to a nuclient_error: which contains the error
+ * \param err Pointer to a nuclient_error_t: which contains the error
  */
 int init_socket(NuAuth * session,
 		const char *hostname, const char *service,
-		nuclient_error *err)
+		nuclient_error_t *err)
 {
 	int option_value;
 	struct sigaction no_action;
@@ -914,7 +914,7 @@ int init_socket(NuAuth * session,
 /**
  * Do the TLS handshake and check server certificate
  */
-int tls_handshake(NuAuth * session, nuclient_error * err)
+int tls_handshake(NuAuth * session, nuclient_error_t * err)
 {
 	int ret;
 
@@ -1008,7 +1008,7 @@ int nu_client_reset_tls(NuAuth *session)
  * \param password Password string
  * \param diffie_hellman If equals to 1, use Diffie Hellman for key exchange
  * (very secure but initialization is slower)
- * \param err Pointer to a nuclient_error: which contains the error
+ * \param err Pointer to a nuclient_error_t: which contains the error
  * \return A pointer to a valid ::NuAuth structure or NULL if init has failed
  *
  * \par Internal
@@ -1021,7 +1021,7 @@ int nu_client_reset_tls(NuAuth *session)
  */
 NuAuth *nu_client_new(const char *username,
 		      const char *password,
-		      unsigned char diffie_hellman, nuclient_error * err)
+		      unsigned char diffie_hellman, nuclient_error_t * err)
 {
 	conntable_t *new;
 	NuAuth *session;
@@ -1162,12 +1162,12 @@ void nu_client_reset(NuAuth * session)
  * \param session Pointer to client session
  * \param hostname String containing hostname of nuauth server (default: #NUAUTH_IP)
  * \param service Port number (or string) on which nuauth server is listening (default: #USERPCKT_PORT)
- * \param err Pointer to a nuclient_error: which contains the error
+ * \param err Pointer to a nuclient_error_t: which contains the error
  * \return Returns 0 on error (error description in err), 1 otherwise
  */
 int nu_client_connect(NuAuth * session,
 		      const char *hostname, const char *service,
-		      nuclient_error * err)
+		      nuclient_error_t * err)
 {
 	if (session->need_set_cred) {
 		/* put the x509 credentials to the current session */
@@ -1267,11 +1267,11 @@ void ask_session_end(NuAuth * session)
  * \ingroup nuclientAPI
  * \brief Allocate a structure to store client error
  */
-int nu_client_error_init(nuclient_error ** err)
+int nu_client_error_init(nuclient_error_t ** err)
 {
 	if (*err != NULL)
 		return -1;
-	*err = malloc(sizeof(nuclient_error));
+	*err = malloc(sizeof(nuclient_error_t));
 	if (*err == NULL)
 		return -1;
 	return 0;
@@ -1281,7 +1281,7 @@ int nu_client_error_init(nuclient_error ** err)
  * \ingroup nuclientAPI
  * \brief Destroy an error (free memory)
  */
-void nu_client_error_destroy(nuclient_error * err)
+void nu_client_error_destroy(nuclient_error_t * err)
 {
 	if (err != NULL)
 		free(err);
@@ -1291,7 +1291,7 @@ void nu_client_error_destroy(nuclient_error * err)
  * \ingroup nuclientAPI
  * \brief Convert an error to an human readable string
  */
-const char *nu_client_strerror(nuclient_error * err)
+const char *nu_client_strerror(nuclient_error_t * err)
 {
 	if (err == NULL)
 		return "Error structure was not initialised";

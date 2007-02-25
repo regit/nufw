@@ -102,7 +102,7 @@ extern "C" {
  * We use unsigned int and long (instead of exact type) to make
  * hashing easier.
  */
-	typedef struct conn {
+	typedef struct {
 		unsigned int protocol;	/*!< IPv4 protocol */
 		struct in6_addr ip_src;	/*!< Local address IPv4 */
 		unsigned short port_src;	/*!< Local address port */
@@ -129,7 +129,7 @@ extern "C" {
  *   - tcptable_read(): feed the table using /proc/net/ files (under Linux) ;
  *   - tcptable_free(): destroy a table (free memory).
  */
-	typedef struct conntable {
+	typedef struct {
 		conn_t *buckets[CONNTABLE_BUCKETS];
 	} conntable_t;
 
@@ -247,25 +247,28 @@ extern "C" {
 		BINDING_ERR,	     /** bind() call failed */
 	};
 
+/* Define for backward compability */
+	#define nuclient_error nuclient_error_t
+
 /* libnuclient return code structure */
 	typedef struct {
 		nuclient_error_family_t family;
 		int error;
-	} nuclient_error;
+	} nuclient_error_t;
 
 /* Exported functions */
-	int nu_client_check(NuAuth * session, nuclient_error * err);
+	int nu_client_check(NuAuth *session, nuclient_error_t *err);
 
-	int nu_client_error_init(nuclient_error ** err);
-	void nu_client_error_destroy(nuclient_error * err);
+	int nu_client_error_init(nuclient_error_t **err);
+	void nu_client_error_destroy(nuclient_error_t *err);
 
-	int nu_client_global_init(nuclient_error * err);
+	int nu_client_global_init(nuclient_error_t *err);
 	void nu_client_global_deinit();
 
 	NuAuth *nu_client_new(const char *username,
 			      const char *password,
 			      unsigned char diffie_hellman,
-			      nuclient_error * err);
+			      nuclient_error_t *err);
 
 	void nu_client_set_realm(NuAuth * session, char *realm);
 	void nu_client_set_debug(NuAuth * session, unsigned char enabled);
@@ -277,18 +280,18 @@ extern "C" {
 				char *tls_passwd,
 				char *keyfile,
 				char *certfile,
-				char *cafile, nuclient_error * err);
+				char *cafile, nuclient_error_t *err);
 
 	int nu_client_connect(NuAuth * session,
 			      const char *hostname,
 			      const char *service,
-			      nuclient_error * err);
+			      nuclient_error_t *err);
 
 	void nu_client_reset(NuAuth * session);
 
 	void nu_client_delete(NuAuth * session);
 
-	const char *nu_client_strerror(nuclient_error * err);
+	const char *nu_client_strerror(nuclient_error_t *err);
 
 	char *nu_client_to_utf8(const char *inbuf, char *from_charset);
 
