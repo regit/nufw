@@ -33,49 +33,49 @@ typedef gboolean module_params_unload_t(gpointer params);
 /**
  * Structure use to store a module instance
  */
-typedef struct module_T {
-    /**
-     * Module name
-     */
+typedef struct {
+	/**
+	 * Module name
+	 */
 	gchar *name;
 
-    /**
-     * Module name
-     */
+	/**
+	 * Module name
+	 */
 	gchar *module_name;
 
-    /**
-     * glib module structure
-     */
+	/**
+	 * glib module structure
+	 */
 	GModule *module;
 
-    /**
-     * Filename of configuration file. If it's NULL,
-     * you should use #DEFAULT_CONF_FILE.
-     */
+	/**
+	 * Filename of configuration file. If it's NULL,
+	 * you should use #DEFAULT_CONF_FILE.
+	 */
 	gchar *configfile;
 
-    /**
-     * Function used in the module:
-     *   - user_check(): prototype is ::user_check_callback ;
-     *   - acl_check(): prototype is ::acl_check_callback ;
-     *   - define_periods(): prototype is ::define_period_callback ;
-     *   - user_packet_logs(): prototype is ::user_logs_callback ;
-     *   - user_session_logs(): prototype is ::user_session_logs_callback ;
-     *   - ip_authentication(): prototype is ::ip_auth_callback ;
-     *   - certificate_check(): prototype is ::certificate_check_callback ;
-     *   - certificate_to_uid(): prototype is ::certificate_to_uid_callback.
-     */
+	/**
+	 * Function used in the module:
+	 *   - user_check(): prototype is ::user_check_callback ;
+	 *   - acl_check(): prototype is ::acl_check_callback ;
+	 *   - define_periods(): prototype is ::define_period_callback ;
+	 *   - user_packet_logs(): prototype is ::user_logs_callback ;
+	 *   - user_session_logs(): prototype is ::user_session_logs_callback ;
+	 *   - ip_authentication(): prototype is ::ip_auth_callback ;
+	 *   - certificate_check(): prototype is ::certificate_check_callback ;
+	 *   - certificate_to_uid(): prototype is ::certificate_to_uid_callback.
+	 */
 	gpointer func;
 
-    /**
-     * Structure where module store all its options
-     */
+	/**
+	 * Structure where module store all its options
+	 */
 	gpointer params;
 
-    /**
-     * Function used to unload module parameters
-     */
+	/**
+	 * Function used to unload module parameters
+	 */
 	module_params_unload_t *free_params;
 } module_t;
 

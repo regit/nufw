@@ -93,7 +93,7 @@ typedef enum {
  * mark support).
  */
 /* TODO use a kind of HASH */
-typedef struct Packet_Ids {
+typedef struct {
 	/*! Unique identifier in netfilter queue, comes 
 	 * from nfq_get_msg_packet_hdr() */
 	unsigned long id;

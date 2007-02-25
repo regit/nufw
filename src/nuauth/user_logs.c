@@ -23,7 +23,7 @@
 #include <auth_srv.h>
 #include <time.h>
 
-struct Conn_State {
+struct conn_state {
 	void *conn;
 	tcp_state_t state;
 };
@@ -60,8 +60,8 @@ void log_user_packet(connection_t * element, tcp_state_t state)
 			&& (state == TCP_STATE_OPEN))
 		    || (nuauthconf->log_users & 8)
 		    ) {
-			struct Conn_State *conn_state_copy;
-			conn_state_copy = g_new0(struct Conn_State, 1);
+			struct conn_state *conn_state_copy;
+			conn_state_copy = g_new0(struct conn_state, 1);
 			conn_state_copy->conn =
 			    (void *) duplicate_connection(element);
 			if (!conn_state_copy->conn) {
@@ -86,8 +86,8 @@ void log_user_packet(connection_t * element, tcp_state_t state)
 void log_user_packet_from_accounted_connection(struct accounted_connection
 					       *datas, tcp_state_t state)
 {
-	struct Conn_State *conn_state_copy;
-	conn_state_copy = g_new0(struct Conn_State, 1);
+	struct conn_state *conn_state_copy;
+	conn_state_copy = g_new0(struct conn_state, 1);
 	conn_state_copy->conn = g_memdup(datas, sizeof(*datas));
 	if (!conn_state_copy->conn) {
 		g_free(conn_state_copy);
@@ -107,21 +107,21 @@ void log_user_packet_from_accounted_connection(struct accounted_connection
  *
  * This function is used in nuauthdatas->user_loggers thread pool.
  *
- * \param userdata A ::Conn_State
+ * \param userdata A ::conn_state
  * \param data Unused
  * \return None
  */
 void real_log_user_packet(gpointer userdata, gpointer data)
 {
 	block_on_conf_reload();
-	modules_user_logs(((struct Conn_State *) userdata)->conn,
-			  ((struct Conn_State *) userdata)->state);
+	modules_user_logs(((struct conn_state *) userdata)->conn,
+			  ((struct conn_state *) userdata)->state);
 	/* free userdata */
-	if ((((struct Conn_State *) userdata)->state == TCP_STATE_OPEN) ||
-	    (((struct Conn_State *) userdata)->state == TCP_STATE_DROP)) {
-		((connection_t *) ((struct Conn_State *) userdata)->conn)->
+	if ((((struct conn_state *) userdata)->state == TCP_STATE_OPEN) ||
+	    (((struct conn_state *) userdata)->state == TCP_STATE_DROP)) {
+		((connection_t *) ((struct conn_state *) userdata)->conn)->
 		    state = AUTH_STATE_DONE;
-		free_connection((connection_t *) ((struct Conn_State *)
+		free_connection((connection_t *) ((struct conn_state *)
 						  userdata)->conn);
 	}
 	g_free(userdata);
