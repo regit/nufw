@@ -594,7 +594,7 @@ int tls_user_bind(char **errmsg)
 
 int tls_user_init(struct tls_user_context_t *context)
 {
-	confparams nuauth_tls_vars[] = {
+	confparams_t nuauth_tls_vars[] = {
 		{"nuauth_tls_max_clients", G_TOKEN_INT,
 		 NUAUTH_TLS_MAX_CLIENTS, NULL},
 		{"nuauth_number_authcheckers", G_TOKEN_INT, NB_AUTHCHECK,

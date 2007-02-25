@@ -1,5 +1,6 @@
 /*
-** Copyright(C) 2005 Eric Leblond <regit@inl.fr>
+** Copyright(C) 2005,2006,2007 INL
+** Written by Eric Leblond <regit@inl.fr>
 **
 ** $Id$
 **
@@ -82,13 +83,30 @@ struct tls_buffer_read {
 	int client_version;	/*!< Protocol version of client */
 };
 
-typedef struct Nufw_session {
+/**
+ * This structure stores all information relative to a connection
+ * from a nufw server.
+ */
+typedef struct {
 	int socket;
 	gnutls_session *tls;
+	/**
+	 * This lock has to be used before any call to gnutls_record function
+	 * on TLS session pointed by the ::nufw_session_t
+	 */
 	GMutex *tls_lock;
 	struct in6_addr peername;
 	unsigned char proto_version;
+	/**
+	 * usage stores the number of packets currently depending of this session
+	 * for their answer. It is modified by atomic operation.
+	 */
 	gint usage;
+	/** This flag is used to indicate that current session is dead and
+	 * wait for cleaning (when set to FALSE). This is needed to avoid a
+	 * structure destruction whereas there is ::connection_t that depends
+	 * on it to send answer to nufw server.
+	 */
 	gboolean alive;
 } nufw_session_t;
 

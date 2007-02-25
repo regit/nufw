@@ -63,7 +63,7 @@ G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
 
 G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 {
-	confparams x509_std_nuauth_vars[] = {
+	confparams_t x509_std_nuauth_vars[] = {
 		{"nuauth_tls_trusted_issuer_dn", G_TOKEN_STRING, 0, NULL}
 	};
 	gpointer vpointer;

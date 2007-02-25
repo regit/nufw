@@ -149,7 +149,7 @@ static nu_error_t mysql_close_open_user_sessions(struct log_mysql_params
 /* Init mysql system */
 G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 {
-	confparams mysql_nuauth_vars[] = {
+	confparams_t mysql_nuauth_vars[] = {
 		{"mysql_server_addr", G_TOKEN_STRING, 0,
 		 g_strdup(MYSQL_SERVER)}
 		,

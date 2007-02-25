@@ -46,13 +46,13 @@
  */
 
 int parse_conffile(const char *filename, gint array_size,
-		   confparams * symbols)
+		   confparams_t * symbols)
 {
 	GScanner *scanner;
 	GTokenType dnentry = G_TOKEN_NONE;
 	int fd, i;
 	gboolean done;
-	confparams *current_symbol = NULL;
+	confparams_t *current_symbol = NULL;
 
 	scanner = g_scanner_new(NULL);
 	fd = open(filename, O_RDONLY);
@@ -165,7 +165,7 @@ int parse_conffile(const char *filename, gint array_size,
  * \param confparam String identifier of parameter to get
  * \return Pointer to parameter value
  */
-gpointer get_confvar_value(confparams * symbols, gint array_size,
+gpointer get_confvar_value(confparams_t * symbols, gint array_size,
 			   gchar * confparam)
 {
 	gpointer value = NULL;
@@ -192,7 +192,7 @@ gpointer get_confvar_value(confparams * symbols, gint array_size,
 	return NULL;
 }
 
-int free_confparams(confparams symbols[], gint array_size)
+int free_confparams(confparams_t symbols[], gint array_size)
 {
 	int i;
 	for (i = 0; i < array_size; i++) {

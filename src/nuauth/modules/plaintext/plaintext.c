@@ -889,7 +889,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	gpointer vpointer;
 	struct plaintext_params *params =
 	    g_new0(struct plaintext_params, 1);
-	confparams plaintext_nuauth_vars[] = {
+	confparams_t plaintext_nuauth_vars[] = {
 		{"plaintext_userfile", G_TOKEN_STRING, 0,
 		 g_strdup(TEXT_USERFILE)},
 		{"plaintext_aclfile", G_TOKEN_STRING, 0,

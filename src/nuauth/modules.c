@@ -536,7 +536,7 @@ static int load_modules_from(gchar * confvar, gchar * func,
  */
 int load_modules()
 {
-	confparams nuauth_vars[] = {
+	confparams_t nuauth_vars[] = {
 		{"nuauth_user_check_module", G_TOKEN_STRING, 1,
 		 g_strdup(DEFAULT_USERAUTH_MODULE)},
 		{"nuauth_get_user_groups_module", G_TOKEN_STRING, 1,

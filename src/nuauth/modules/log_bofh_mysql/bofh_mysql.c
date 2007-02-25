@@ -102,7 +102,7 @@ G_MODULE_EXPORT gchar *unload_module_with_params(gpointer params_p)
 /* Init mysql system */
 G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 {
-	confparams mysql_nuauth_vars[] = {
+	confparams_t mysql_nuauth_vars[] = {
 		{"mysql_server_addr", G_TOKEN_STRING, 0,
 		 g_strdup(MYSQL_SERVER)}
 		,

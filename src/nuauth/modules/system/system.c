@@ -63,7 +63,7 @@ G_MODULE_EXPORT uint32_t get_api_version()
 G_MODULE_EXPORT gchar *g_module_check_init(GModule * module)
 {
 	gpointer vpointer;
-	confparams system_nuauth_vars[] = {
+	confparams_t system_nuauth_vars[] = {
 		{"system_glibc_cant_guess_maxgroups", G_TOKEN_INT, 0, 0}
 		,
 		{"system_pam_module_not_threadsafe", G_TOKEN_INT, 1, 0}

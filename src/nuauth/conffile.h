@@ -22,13 +22,13 @@
 
 #define DEFAULT_CONF_FILE   CONFIG_DIR "/nuauth.conf"
 
-typedef struct Conf_Params {
+typedef struct {
 	gchar *name;
 	/*  guint token; */
 	guint value_type;
 	gint v_int;
 	gchar *v_char;
-} confparams;
+} confparams_t;
 
 /* hash table to stock variable def */
 GHashTable *confvarlist;
@@ -39,9 +39,9 @@ GHashTable *confvarlist;
 /* functions */
 
 int parse_conffile(const char *filename, gint array_size,
-		   confparams symbols[]);
-gpointer get_confvar_value(confparams symbols[], gint array_size,
+		   confparams_t symbols[]);
+gpointer get_confvar_value(confparams_t symbols[], gint array_size,
 			   gchar * confparam);
-int free_confparams(confparams symbols[], gint array_size);
+int free_confparams(confparams_t symbols[], gint array_size);
 
 #endif

@@ -55,7 +55,7 @@ void init_nuauthconf(struct nuauth_params **result)
 {
 	struct nuauth_params *conf;
 	char *gwsrv_addr = NULL;
-	confparams nuauth_vars[] = {
+	confparams_t nuauth_vars[] = {
 		{"nuauth_client_listen_addr", G_TOKEN_STRING, 0,
 		 g_strdup(AUTHREQ_CLIENT_LISTEN_ADDR)},
 		{"nuauth_nufw_listen_addr", G_TOKEN_STRING, 0,

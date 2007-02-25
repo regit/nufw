@@ -464,7 +464,7 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 
 	char *configfile = DEFAULT_CONF_FILE;
 	gpointer vpointer;
-	confparams nuauth_tls_vars[] = {
+	confparams_t nuauth_tls_vars[] = {
 		{"nuauth_tls_max_servers", G_TOKEN_INT,
 		 NUAUTH_TLS_MAX_SERVERS, NULL}
 	};

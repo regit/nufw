@@ -168,7 +168,7 @@ void parse_group_file(mark_group_config_t * config, const char *filename)
  */
 G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 {
-	confparams vars[] = {
+	confparams_t vars[] = {
 		{"mark_group_group_file", G_TOKEN_STRING, 0,
 		 g_strdup(MARK_GROUP_CONF)}
 		,

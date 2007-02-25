@@ -184,7 +184,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	gpointer vpointer;
 	struct ldap_params *params = g_new0(struct ldap_params, 1);
 	char *ldap_base_dn = LDAP_BASE;
-	confparams ldap_nuauth_vars[] = {
+	confparams_t ldap_nuauth_vars[] = {
 		{"ldap_server_addr", G_TOKEN_STRING, 0,
 		 g_strdup(LDAP_SERVER)},
 		{"ldap_server_port", G_TOKEN_INT, LDAP_SERVER_PORT, NULL},

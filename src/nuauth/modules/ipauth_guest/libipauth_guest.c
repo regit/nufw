@@ -51,7 +51,7 @@ G_MODULE_EXPORT gchar *unload_module_with_params(gpointer params_p)
 
 G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 {
-	confparams ipauth_guest_vars[] = {
+	confparams_t ipauth_guest_vars[] = {
 		{"ipauth_guest_username", G_TOKEN_STRING, 0,
 		 g_strdup(IP_AUTH_GUEST_USERNAME)}
 		,

@@ -126,7 +126,7 @@ static nu_error_t pgsql_close_open_user_sessions(struct log_pgsql_params
 /* Init pgsql system */
 G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 {
-	confparams pgsql_nuauth_vars[] = {
+	confparams_t pgsql_nuauth_vars[] = {
 		{"pgsql_server_addr", G_TOKEN_STRING, 0,
 		 g_strdup(PGSQL_SERVER)}
 		,
