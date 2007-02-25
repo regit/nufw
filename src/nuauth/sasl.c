@@ -473,9 +473,6 @@ static int mysasl_negotiate(user_session_t * c_session, sasl_conn_t * conn)
 
 int sasl_parse_user_os(user_session_t * c_session, char *buf, int buf_size)
 {
-/** \todo
- * v3 compat
- */
 	unsigned int len;
 	int decode;
 	struct nu_authfield *osfield;
