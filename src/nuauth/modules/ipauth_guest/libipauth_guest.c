@@ -66,16 +66,16 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	if (module->configfile) {
 		parse_conffile(module->configfile,
 			       sizeof(ipauth_guest_vars) /
-			       sizeof(confparams), ipauth_guest_vars);
+			       sizeof(confparams_t), ipauth_guest_vars);
 	} else {
 		parse_conffile(configfile,
 			       sizeof(ipauth_guest_vars) /
-			       sizeof(confparams), ipauth_guest_vars);
+			       sizeof(confparams_t), ipauth_guest_vars);
 	}
 	/* set variables */
 
 #define READ_CONF(KEY) \
-  get_confvar_value(ipauth_guest_vars, sizeof(ipauth_guest_vars)/sizeof(confparams), KEY)
+  get_confvar_value(ipauth_guest_vars, sizeof(ipauth_guest_vars)/sizeof(confparams_t), KEY)
 
 	params->username = (char *) READ_CONF("ipauth_guest_username");
 

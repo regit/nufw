@@ -204,16 +204,16 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	if (module->configfile) {
 		parse_conffile(module->configfile,
 			       sizeof(mysql_nuauth_vars) /
-			       sizeof(confparams), mysql_nuauth_vars);
+			       sizeof(confparams_t), mysql_nuauth_vars);
 	} else {
 		parse_conffile(configfile,
 			       sizeof(mysql_nuauth_vars) /
-			       sizeof(confparams), mysql_nuauth_vars);
+			       sizeof(confparams_t), mysql_nuauth_vars);
 	}
 	/* set variables */
 
 #define READ_CONF(KEY) \
-    get_confvar_value(mysql_nuauth_vars, sizeof(mysql_nuauth_vars)/sizeof(confparams), KEY)
+    get_confvar_value(mysql_nuauth_vars, sizeof(mysql_nuauth_vars)/sizeof(confparams_t), KEY)
 #define READ_CONF_INT(VAR, KEY, DEFAULT) \
     do { gpointer vpointer = READ_CONF(KEY); if (vpointer) VAR = *(int *)vpointer; else VAR = DEFAULT; } while (0)
 
@@ -244,7 +244,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 
 	/* free config struct */
 	free_confparams(mysql_nuauth_vars,
-			sizeof(mysql_nuauth_vars) / sizeof(confparams));
+			sizeof(mysql_nuauth_vars) / sizeof(confparams_t));
 
 	/* init thread private stuff */
 	params->mysql_priv = g_private_new((GDestroyNotify) mysql_close);

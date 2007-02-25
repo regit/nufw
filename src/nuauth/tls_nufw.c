@@ -472,12 +472,12 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 	/* get config file setup */
 	/* parse conf file */
 	parse_conffile(configfile,
-		       sizeof(nuauth_tls_vars) / sizeof(confparams),
+		       sizeof(nuauth_tls_vars) / sizeof(confparams_t),
 		       nuauth_tls_vars);
 	/* set variable value from config file */
 	vpointer =
 	    get_confvar_value(nuauth_tls_vars,
-			      sizeof(nuauth_tls_vars) / sizeof(confparams),
+			      sizeof(nuauth_tls_vars) / sizeof(confparams_t),
 			      "nuauth_tls_max_servers");
 	nuauth_tls_max_servers =
 	    *(int *) (vpointer ? vpointer : &nuauth_tls_max_servers);

@@ -76,22 +76,22 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	if (module->configfile) {
 		parse_conffile(module->configfile,
 			       sizeof(x509_std_nuauth_vars) /
-			       sizeof(confparams), x509_std_nuauth_vars);
+			       sizeof(confparams_t), x509_std_nuauth_vars);
 	} else {
 		parse_conffile(DEFAULT_CONF_FILE,
 			       sizeof(x509_std_nuauth_vars) /
-			       sizeof(confparams), x509_std_nuauth_vars);
+			       sizeof(confparams_t), x509_std_nuauth_vars);
 	}
 	/*  set variables */
 	vpointer = get_confvar_value(x509_std_nuauth_vars,
 				     sizeof(x509_std_nuauth_vars) /
-				     sizeof(confparams),
+				     sizeof(confparams_t),
 				     "nauth_tls_trusted_issuer_dn");
 	params->trusted_issuer_dn = (gchar *) (vpointer);
 
 	/* free config struct */
 	free_confparams(x509_std_nuauth_vars,
-			sizeof(x509_std_nuauth_vars) / sizeof(confparams));
+			sizeof(x509_std_nuauth_vars) / sizeof(confparams_t));
 
 	module->params = (gpointer) params;
 

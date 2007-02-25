@@ -73,24 +73,24 @@ G_MODULE_EXPORT gchar *g_module_check_init(GModule * module)
 
 	/*  parse conf file */
 	parse_conffile(DEFAULT_CONF_FILE,
-		       sizeof(system_nuauth_vars) / sizeof(confparams),
+		       sizeof(system_nuauth_vars) / sizeof(confparams_t),
 		       system_nuauth_vars);
 	/*  set variables */
 	vpointer = get_confvar_value(system_nuauth_vars,
 				     sizeof(system_nuauth_vars) /
-				     sizeof(confparams),
+				     sizeof(confparams_t),
 				     "system_pam_module_not_threadsafe");
 	system_pam_module_not_threadsafe = *(int *) (vpointer);
 
 	vpointer = get_confvar_value(system_nuauth_vars,
 				     sizeof(system_nuauth_vars) /
-				     sizeof(confparams),
+				     sizeof(confparams_t),
 				     "system_glibc_cant_guess_maxgroups");
 	system_glibc_cant_guess_maxgroups = *(int *) (vpointer);
 
 	vpointer = get_confvar_value(system_nuauth_vars,
 				     sizeof(system_nuauth_vars) /
-				     sizeof(confparams),
+				     sizeof(confparams_t),
 				     "system_suppress_prefixed_domain");
 	system_suppress_prefixed_domain = *(int *) (vpointer);
 

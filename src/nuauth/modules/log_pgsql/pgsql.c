@@ -151,7 +151,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 		 PGSQL_REQUEST_TIMEOUT, NULL}
 	};
 	unsigned int nb_params =
-	    sizeof(pgsql_nuauth_vars) / sizeof(confparams);
+	    sizeof(pgsql_nuauth_vars) / sizeof(confparams_t);
 	struct log_pgsql_params *params =
 	    g_new0(struct log_pgsql_params, 1);
 	module->params = params;
@@ -188,7 +188,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 
 	/* free config struct */
 	free_confparams(pgsql_nuauth_vars,
-			sizeof(pgsql_nuauth_vars) / sizeof(confparams));
+			sizeof(pgsql_nuauth_vars) / sizeof(confparams_t));
 #undef READ_CONF
 #undef READ_CONF_INT
 

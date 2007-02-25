@@ -618,11 +618,11 @@ int tls_user_init(struct tls_user_context_t *context)
 	/* get config file setup */
 	/* parse conf file */
 	parse_conffile(DEFAULT_CONF_FILE,
-		       sizeof(nuauth_tls_vars) / sizeof(confparams),
+		       sizeof(nuauth_tls_vars) / sizeof(confparams_t),
 		       nuauth_tls_vars);
 
 #define READ_CONF(KEY) \
-	get_confvar_value(nuauth_tls_vars, sizeof(nuauth_tls_vars)/sizeof(confparams), KEY)
+	get_confvar_value(nuauth_tls_vars, sizeof(nuauth_tls_vars)/sizeof(confparams_t), KEY)
 
 	context->nuauth_tls_max_clients =
 	    *(unsigned int *) READ_CONF("nuauth_tls_max_clients");
@@ -634,7 +634,7 @@ int tls_user_init(struct tls_user_context_t *context)
 
 	/* free config struct */
 	free_confparams(nuauth_tls_vars,
-			sizeof(nuauth_tls_vars) / sizeof(confparams));
+			sizeof(nuauth_tls_vars) / sizeof(confparams_t));
 
 	/* init sasl stuff */
 	my_sasl_init();

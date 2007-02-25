@@ -327,7 +327,7 @@ void create_x509_credentials()
 		{"nuauth_tls_auth_by_cert", G_TOKEN_INT, FALSE, NULL}
 	};
 	const unsigned int nb_params =
-	    sizeof(nuauth_tls_vars) / sizeof(confparams);
+	    sizeof(nuauth_tls_vars) / sizeof(confparams_t);
 
 	parse_conffile(configfile, nb_params, nuauth_tls_vars);
 
@@ -350,7 +350,7 @@ void create_x509_credentials()
 
 	/* free config struct */
 	free_confparams(nuauth_tls_vars,
-			sizeof(nuauth_tls_vars) / sizeof(confparams));
+			sizeof(nuauth_tls_vars) / sizeof(confparams_t));
 
 	if (access(nuauth_tls_key, R_OK)) {
 		g_error("[%i] TLS : can not access key file %s\n",

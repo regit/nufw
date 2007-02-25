@@ -108,7 +108,7 @@ void init_nuauthconf(struct nuauth_params **result)
 		{"nuauth_use_command_server", G_TOKEN_INT, 0, NULL},
 	};
 	const unsigned int nb_params =
-	    sizeof(nuauth_vars) / sizeof(confparams);
+	    sizeof(nuauth_vars) / sizeof(confparams_t);
 
 	conf = g_new0(struct nuauth_params, 1);
 	*result = conf;
@@ -177,7 +177,7 @@ void init_nuauthconf(struct nuauth_params **result)
 	}
 	/* free config struct */
 	free_confparams(nuauth_vars,
-			sizeof(nuauth_vars) / sizeof(confparams));
+			sizeof(nuauth_vars) / sizeof(confparams_t));
 
 	build_prenuauthconf(conf, gwsrv_addr);
 

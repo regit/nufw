@@ -903,23 +903,23 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	if (module->configfile) {
 		parse_conffile(module->configfile,
 			       sizeof(plaintext_nuauth_vars) /
-			       sizeof(confparams), plaintext_nuauth_vars);
+			       sizeof(confparams_t), plaintext_nuauth_vars);
 	} else {
 		parse_conffile(DEFAULT_CONF_FILE,
 			       sizeof(plaintext_nuauth_vars) /
-			       sizeof(confparams), plaintext_nuauth_vars);
+			       sizeof(confparams_t), plaintext_nuauth_vars);
 	}
 	/*  set variables */
 	vpointer = get_confvar_value(plaintext_nuauth_vars,
 				     sizeof(plaintext_nuauth_vars) /
-				     sizeof(confparams),
+				     sizeof(confparams_t),
 				     "plaintext_userfile");
 	params->plaintext_userfile =
 	    (char *) (vpointer ? vpointer : params->plaintext_userfile);
 	vpointer =
 	    get_confvar_value(plaintext_nuauth_vars,
 			      sizeof(plaintext_nuauth_vars) /
-			      sizeof(confparams), "plaintext_aclfile");
+			      sizeof(confparams_t), "plaintext_aclfile");
 	params->plaintext_aclfile =
 	    (char *) (vpointer ? vpointer : params->plaintext_aclfile);
 	params->plaintext_userlist = NULL;
@@ -928,7 +928,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	/* free config struct */
 	free_confparams(plaintext_nuauth_vars,
 			sizeof(plaintext_nuauth_vars) /
-			sizeof(confparams));
+			sizeof(confparams_t));
 
 	module->params = (gpointer) params;
 	return TRUE;

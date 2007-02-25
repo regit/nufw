@@ -581,11 +581,11 @@ int load_modules()
 
 	/* parse conf file */
 	parse_conffile(configfile,
-		       sizeof(nuauth_vars) / sizeof(confparams),
+		       sizeof(nuauth_vars) / sizeof(confparams_t),
 		       nuauth_vars);
 
 #define READ_CONF(KEY) \
-    get_confvar_value(nuauth_vars, sizeof(nuauth_vars)/sizeof(confparams), KEY);
+    get_confvar_value(nuauth_vars, sizeof(nuauth_vars)/sizeof(confparams_t), KEY);
 
 	nuauth_user_check_module =
 	    (char *) READ_CONF("nuauth_user_check_module");
@@ -618,7 +618,7 @@ int load_modules()
 
 	/* free config struct */
 	free_confparams(nuauth_vars,
-			sizeof(nuauth_vars) / sizeof(confparams));
+			sizeof(nuauth_vars) / sizeof(confparams_t));
 
 	/* external auth module loading */
 	g_mutex_lock(modules_mutex);

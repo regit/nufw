@@ -179,7 +179,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 		{"mark_group_default_mark", G_TOKEN_INT, 0, NULL}
 		,
 	};
-	const int nb_vars = sizeof(vars) / sizeof(confparams);
+	const int nb_vars = sizeof(vars) / sizeof(confparams_t);
 	const char *configfile = DEFAULT_CONF_FILE;
 	mark_group_config_t *config = g_new0(mark_group_config_t, 1);
 	unsigned int nbits;

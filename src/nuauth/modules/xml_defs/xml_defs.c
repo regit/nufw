@@ -77,22 +77,22 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	if (module->configfile) {
 		parse_conffile(module->configfile,
 			       sizeof(xml_defs_nuauth_vars) /
-			       sizeof(confparams), xml_defs_nuauth_vars);
+			       sizeof(confparams_t), xml_defs_nuauth_vars);
 	} else {
 		parse_conffile(DEFAULT_CONF_FILE,
 			       sizeof(xml_defs_nuauth_vars) /
-			       sizeof(confparams), xml_defs_nuauth_vars);
+			       sizeof(confparams_t), xml_defs_nuauth_vars);
 	}
 	/*  set variables */
 	vpointer = get_confvar_value(xml_defs_nuauth_vars,
 				     sizeof(xml_defs_nuauth_vars) /
-				     sizeof(confparams),
+				     sizeof(confparams_t),
 				     "xml_defs_periodfile");
 	params->xml_defs_periodfile = (char *) (vpointer);
 
 	/* free config struct */
 	free_confparams(xml_defs_nuauth_vars,
-			sizeof(xml_defs_nuauth_vars) / sizeof(confparams));
+			sizeof(xml_defs_nuauth_vars) / sizeof(confparams_t));
 
 	module->params = (gpointer) params;
 	return TRUE;

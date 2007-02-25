@@ -213,41 +213,41 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 
 	/* parse conf file */
 	parse_conffile(configfile,
-		       sizeof(ldap_nuauth_vars) / sizeof(confparams),
+		       sizeof(ldap_nuauth_vars) / sizeof(confparams_t),
 		       ldap_nuauth_vars);
 	/* set variables */
 	vpointer =
 	    get_confvar_value(ldap_nuauth_vars,
 			      sizeof(ldap_nuauth_vars) /
-			      sizeof(confparams), "ldap_server_addr");
+			      sizeof(confparams_t), "ldap_server_addr");
 	params->ldap_server =
 	    (char *) (vpointer ? vpointer : params->ldap_server);
 	vpointer =
 	    get_confvar_value(ldap_nuauth_vars,
 			      sizeof(ldap_nuauth_vars) /
-			      sizeof(confparams), "ldap_server_port");
+			      sizeof(confparams_t), "ldap_server_port");
 	params->ldap_server_port =
 	    *(int *) (vpointer ? vpointer : &params->ldap_server_port);
 	vpointer =
 	    get_confvar_value(ldap_nuauth_vars,
 			      sizeof(ldap_nuauth_vars) /
-			      sizeof(confparams), "ldap_bind_dn");
+			      sizeof(confparams_t), "ldap_bind_dn");
 	params->binddn = (char *) (vpointer ? vpointer : params->binddn);
 	vpointer =
 	    get_confvar_value(ldap_nuauth_vars,
 			      sizeof(ldap_nuauth_vars) /
-			      sizeof(confparams), "ldap_base_dn");
+			      sizeof(confparams_t), "ldap_base_dn");
 	ldap_base_dn = (char *) (vpointer ? vpointer : ldap_base_dn);
 	vpointer =
 	    get_confvar_value(ldap_nuauth_vars,
 			      sizeof(ldap_nuauth_vars) /
-			      sizeof(confparams), "ldap_users_base_dn");
+			      sizeof(confparams_t), "ldap_users_base_dn");
 	params->ldap_users_base_dn =
 	    (char *) (vpointer ? vpointer : params->ldap_users_base_dn);
 	vpointer =
 	    get_confvar_value(ldap_nuauth_vars,
 			      sizeof(ldap_nuauth_vars) /
-			      sizeof(confparams), "ldap_acls_base_dn");
+			      sizeof(confparams_t), "ldap_acls_base_dn");
 	params->ldap_acls_base_dn =
 	    (char *) (vpointer ? vpointer : params->ldap_acls_base_dn);
 
@@ -261,27 +261,27 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	vpointer =
 	    get_confvar_value(ldap_nuauth_vars,
 			      sizeof(ldap_nuauth_vars) /
-			      sizeof(confparams), "ldap_bind_password");
+			      sizeof(confparams_t), "ldap_bind_password");
 	params->bindpasswd =
 	    (char *) (vpointer ? vpointer : params->bindpasswd);
 	params->ldap_request_timeout = LDAP_REQUEST_TIMEOUT;
 	vpointer =
 	    get_confvar_value(ldap_nuauth_vars,
 			      sizeof(ldap_nuauth_vars) /
-			      sizeof(confparams), "ldap_request_timeout");
+			      sizeof(confparams_t), "ldap_request_timeout");
 	params->ldap_request_timeout =
 	    *(int *) (vpointer ? vpointer : &params->ldap_request_timeout);
 
 	vpointer =
 	    get_confvar_value(ldap_nuauth_vars,
 			      sizeof(ldap_nuauth_vars) /
-			      sizeof(confparams), "ldap_filter_type");
+			      sizeof(confparams_t), "ldap_filter_type");
 	params->ldap_filter_type =
 	    *(int *) (vpointer ? vpointer : &params->ldap_filter_type);
 
 	/* free config struct */
 	free_confparams(ldap_nuauth_vars,
-			sizeof(ldap_nuauth_vars) / sizeof(confparams));
+			sizeof(ldap_nuauth_vars) / sizeof(confparams_t));
 
 
 	/* init thread private stuff */
