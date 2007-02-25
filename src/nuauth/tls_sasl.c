@@ -78,9 +78,6 @@ static void policy_refuse_user(user_session_t * c_session, int c,
 
 static void tls_sasl_connect_ok(user_session_t * c_session, int c)
 {
-/** \todo
- * Check if work is needed for a full proto v3 compatibility (if proto v4 change)
- */
 	struct nu_srv_message msg;
 	/* Success place */
 

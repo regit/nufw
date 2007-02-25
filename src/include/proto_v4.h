@@ -24,7 +24,6 @@
 #define NUFW_PROTOCOL_V4_H
 
 #include <netinet/in.h>		/* struct in6addr */
-/** \todo Fix this for nuauth on non Linux computer */
 #ifdef LINUX
 #   ifdef USE_NFQUEUE
 #       include <linux/if.h>
