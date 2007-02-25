@@ -42,7 +42,7 @@ GStaticMutex pam_mutex;
 
 GSList *getugroups(char *username, gid_t gid);
 
-typedef struct _auth_pam_userinfo {
+typedef struct {
 	char *name;
 	const char *pw;
 } auth_pam_userinfo;
