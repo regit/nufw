@@ -1,5 +1,5 @@
 /*
-** Copyright(C) 2005 Eric Leblond <regit@inl.fr>
+** Copyright(C) 2005,2006,2007 Eric Leblond <regit@inl.fr>
 **
 ** $Id$
 **
