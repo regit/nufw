@@ -559,4 +559,20 @@ nu_error_t check_protocol_version(int version)
 	}
 }
 
+/**
+ * Convert a string to integer number (value in INT_MIN..INT_MAX).
+ * Return 0 on error, 1 otherwise.
+ */
+int str_to_int(const char *text, int *value)
+{
+	char *err = NULL;
+	long longvalue = strtol(text, &err, 10);
+	if (err == NULL || *err != 0)
+		return 0;
+	if (longvalue < INT_MIN || INT_MAX < longvalue)
+		return 0;
+	*value = (int)longvalue;
+	return 1;
+}
+
 /** @} */

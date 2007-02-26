@@ -158,6 +158,7 @@ void delete_client_by_socket(int socket)
 
 	g_mutex_unlock(client_mutex);
 
+	FD_CLR(socket, &tls_user_context.tls_rx_set);
 	shutdown(socket, SHUT_RDWR);
 	close(socket);
 }

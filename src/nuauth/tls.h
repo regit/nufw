@@ -156,4 +156,15 @@ void close_tls_session(int c, gnutls_session * session);
 
 void refresh_crl_file();
 
+struct tls_user_context_t {
+	int mx;
+	int sck_inet;
+	fd_set tls_rx_set;	/* read set */
+	unsigned int nuauth_tls_max_clients;
+	int nuauth_number_authcheckers;
+	int nuauth_auth_nego_timeout;
+};
+
+extern struct tls_user_context_t tls_user_context;
+
 #endif

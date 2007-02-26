@@ -35,6 +35,7 @@
  */
 
 extern int nuauth_tls_auth_by_cert;
+struct tls_user_context_t tls_user_context;
 
 /**
  * List of new clients which are in authentification state. This list is
@@ -49,15 +50,6 @@ GSList *pre_client_list;
  * Mutex used to access ::pre_client_list.
  */
 GStaticMutex pre_client_list_mutex;
-
-struct tls_user_context_t {
-	int mx;
-	int sck_inet;
-	fd_set tls_rx_set;	/* read set */
-	unsigned int nuauth_tls_max_clients;
-	int nuauth_number_authcheckers;
-	int nuauth_auth_nego_timeout;
-};
 
 struct pre_client_elt {
 	int socket;
@@ -382,7 +374,6 @@ void tls_user_check_activity(struct tls_user_context_t *context,
 	c_session = get_client_datas_by_socket(socket);
 
 	if (nuauthconf->session_duration && c_session->expire < time(NULL)) {
-		FD_CLR(socket, &context->tls_rx_set);
 		delete_client_by_socket(socket);
 		return;
 	}
@@ -392,7 +383,6 @@ void tls_user_check_activity(struct tls_user_context_t *context,
 		debug_log_message(VERBOSE_DEBUG, AREA_USER,
 				  "client disconnect on socket %d",
 				  socket);
-		FD_CLR(socket, &context->tls_rx_set);
 		/* clean client structure */
 		if (nuauthconf->push) {
 			struct internal_message *message =
@@ -471,25 +461,10 @@ void tls_user_main_loop(struct tls_user_context_t *context, GMutex * mutex)
 					    "Warning: tls user select() failed: signal was catched.");
 				continue;
 			}
-			/* Bad file descriptor error: ignore it */
-			if (errno == EBADF) {
-				log_message(CRITICAL, AREA_MAIN,
-					    "Warning: tls user select() failed: bad file descriptor.");
-				continue;
-			}
 
-
-			switch (errno) {
-			case EINVAL:
-				g_message("Negative value for socket");
-				break;
-			case ENOMEM:
-				g_message("Not enough memory");
-				break;
-			}
 			log_message(FATAL, AREA_MAIN,
-				    "select() failed, exiting at %s:%d in %s (errno %i)",
-				    __FILE__, __LINE__, __func__, errno);
+				    "select() %s:%d failure: %s",
+				    __FILE__, __LINE__, g_strerror(errno));
 			nuauth_ask_exit();
 			break;
 		}
@@ -689,10 +664,9 @@ int tls_user_init(struct tls_user_context_t *context)
  */
 void *tls_user_authsrv(GMutex * mutex)
 {
-	struct tls_user_context_t context;
-	int ok = tls_user_init(&context);
+	int ok = tls_user_init(&tls_user_context);
 	if (ok) {
-		tls_user_main_loop(&context, mutex);
+		tls_user_main_loop(&tls_user_context, mutex);
 	} else {
 		nuauth_ask_exit();
 	}

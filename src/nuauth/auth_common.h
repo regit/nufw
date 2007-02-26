@@ -71,4 +71,6 @@ int timeval_substract(struct timeval *result, struct timeval *x,
 
 nu_error_t check_protocol_version(int version);
 
+int str_to_int(const char *text, int *value);
+
 #endif

@@ -152,7 +152,8 @@ void command_users_callback(int sock, user_session_t *session, user_callback_dat
 	GSList *group;
 	inet_ntop (AF_INET6, &session->addr, addr, sizeof(addr));
 	len = snprintf(data->buffer, data->buflen,
-			"%s: ip=%s, port=%hu, uid=%u",
+			"#%i: name=%s, ip=%s, port=%hu, uid=%u",
+			sock,
 			session->user_name,
 			addr, session->sport,
 			session->user_id);
@@ -194,13 +195,23 @@ char *command_users(command_t *this, char *buffer, size_t buflen)
 	return buffer;
 }
 
+const char *command_disconnect(command_t *this, char *command)
+{
+	int sock;
+	if (!str_to_int(command, &sock))
+		return NULL;
+	delete_client_by_socket(sock);
+	return "disconnected";
+}
+
 void command_execute(command_t * this, char *command)
 {
-	char *buffer = "ok";
+	const char *buffer = "ok";
 	static char static_buffer[1024];
 	char *help =
 "version: display nuauth version\n"
 "users: list connected users\n"
+"disconnect ID: disconnect an user with his session identifier\n"
 "uptime: display nuauth starting time and uptime\n"
 "reload: reload nuauth configuration\n"
 "help: display this help\n"
@@ -209,8 +220,7 @@ void command_execute(command_t * this, char *command)
 
 	/* process command */
 	if (strcmp(command, "quit") == 0) {
-		command_client_close(this);
-		return;
+		buffer = NULL;
 	} else if (strcmp(command, "help") == 0) {
 		buffer = help;
 	} else if (strcmp(command, "uptime") == 0) {
@@ -221,6 +231,8 @@ void command_execute(command_t * this, char *command)
 		secure_snprintf(static_buffer, sizeof(static_buffer),
 				"Nuauth %s", NUAUTH_FULL_VERSION);
 		buffer = static_buffer;
+	} else if (strncmp(command, "disconnect ", 10) == 0) {
+		buffer = command_disconnect(this, command+10);
 	} else if (strcmp(command, "reload") == 0) {
 		nuauth_reload(0);
 		buffer = "Reload configuration";
@@ -229,6 +241,13 @@ void command_execute(command_t * this, char *command)
 				      "Error: Unknown command \"%s\"",
 				      command);
 		buffer = static_buffer;
+	}
+
+	/* on error (invalid input): disconnect client */
+	if (!buffer)
+	{
+		command_client_close(this);
+		return;
 	}
 
 	/* send answer */
