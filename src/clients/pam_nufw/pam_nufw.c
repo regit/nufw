@@ -62,7 +62,7 @@ const char *DEFAULT_USER = "nobody";
 /*int noauth_cpt = 0;*/
 char **no_auth_users = NULL;
 struct pam_nufw_s pn_s;
-NuAuth *session = NULL;
+nuauth_session_t *session = NULL;
 char *locale_charset = NULL;
 
 /* internal data */
@@ -244,9 +244,9 @@ int do_auth_on_user(const char *username)
  *
  * \return The client session, or NULL on error (get description from ::err)
  */
-NuAuth *do_connect(char *username, char *password, nuclient_error_t * err)
+nuauth_session_t *do_connect(char *username, char *password, nuclient_error_t * err)
 {
-	NuAuth *session = nu_client_new(username, password, 1, err);
+	nuauth_session_t *session = nu_client_new(username, password, 1, err);
 	if (session == NULL) {
 		return NULL;
 	}
@@ -386,7 +386,7 @@ static int nufw_client_func(struct pam_nufw_s *pn_s,
 	if (session == NULL) {
 		int errno_copy = errno;
 		syslog(LOG_ERR,
-		       "(pam_nufw) Cannot connect to NuAuth Server");
+		       "(pam_nufw) Cannot connect to nuauth_session_t Server");
 		syslog(LOG_ERR, "(pam_nufw) Problem: %s\n",
 		       strerror(errno_copy));
 		return PAM_SUCCESS;	/* PAM_AUTH_ERR */
@@ -399,7 +399,7 @@ static int nufw_client_func(struct pam_nufw_s *pn_s,
 		fprintf(RunD, "%d", mypid);
 		fclose(RunD);
 		syslog(LOG_INFO,
-		       "(pam_nufw) session to NuAuth server opened, username=%s, server=%s (pid=%lu)",
+		       "(pam_nufw) session to Nuauth server opened, username=%s, server=%s (pid=%lu)",
 		       session->username, pn_s->nuauth_srv,
 		       (unsigned long) mypid);
 	}

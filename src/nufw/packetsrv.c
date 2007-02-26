@@ -353,8 +353,8 @@ void packetsrv_ipq_process(unsigned char *buffer)
  */
 void *packetsrv(void *void_arg)
 {
-	struct ThreadArgument *thread_arg = void_arg;
-	struct ThreadType *this = thread_arg->thread;
+	struct nufw_threadargument *thread_arg = void_arg;
+	struct nufw_threadtype *this = thread_arg->thread;
 	int fatal_error = 0;
 #ifdef USE_NFQUEUE
 	unsigned char buffer[BUFSIZ];

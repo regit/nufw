@@ -96,13 +96,15 @@ extern "C" {
 /** Timeout of UDP connections */
 #define UDP_TIMEOUT 30
 
-/*
+/**
  * This structure holds everything we need to know about a connection.
  *
  * We use unsigned int and long (instead of exact type) to make
  * hashing easier.
+ *
+ * \see ::conn_t
  */
-	typedef struct {
+	typedef struct conn_type {
 		unsigned int protocol;	/*!< IPv4 protocol */
 		struct in6_addr ip_src;	/*!< Local address IPv4 */
 		unsigned short port_src;	/*!< Local address port */
@@ -114,7 +116,7 @@ extern "C" {
 		time_t createtime;	/*!< Creation time (Epoch format) */
 
     /** Pointer to next connection (NULL if it's as the end) */
-		struct conn *next;
+		struct conn_type *next;
 	} conn_t;
 
 /**
@@ -152,7 +154,7 @@ extern "C" {
 		ERROR_NETWORK = 2
 	};
 
-/* NuAuth structure */
+/* nuauth_session_t structure */
 
 	typedef struct {
 	/*--------------- PUBLIC MEMBERS -------------------*/
@@ -219,7 +221,9 @@ extern "C" {
 
     /** Timestamp (Epoch format) of last packet send to nuauth */
 		time_t timestamp_last_sent;
-	} NuAuth;
+	} nuauth_session_t;
+
+#define NuAuth nuauth_session_t
 
 /** Error family */
 	typedef enum {
@@ -257,7 +261,7 @@ extern "C" {
 	} nuclient_error_t;
 
 /* Exported functions */
-	int nu_client_check(NuAuth *session, nuclient_error_t *err);
+	int nu_client_check(nuauth_session_t *session, nuclient_error_t *err);
 
 	int nu_client_error_init(nuclient_error_t **err);
 	void nu_client_error_destroy(nuclient_error_t *err);
@@ -265,31 +269,31 @@ extern "C" {
 	int nu_client_global_init(nuclient_error_t *err);
 	void nu_client_global_deinit();
 
-	NuAuth *nu_client_new(const char *username,
+	nuauth_session_t *nu_client_new(const char *username,
 			      const char *password,
 			      unsigned char diffie_hellman,
 			      nuclient_error_t *err);
 
-	void nu_client_set_realm(NuAuth * session, char *realm);
-	void nu_client_set_debug(NuAuth * session, unsigned char enabled);
-	void nu_client_set_verbose(NuAuth * session,
+	void nu_client_set_realm(nuauth_session_t * session, char *realm);
+	void nu_client_set_debug(nuauth_session_t * session, unsigned char enabled);
+	void nu_client_set_verbose(nuauth_session_t * session,
 				   unsigned char enabled);
-	void nu_client_set_source(NuAuth *session, struct sockaddr_storage *addr);
+	void nu_client_set_source(nuauth_session_t *session, struct sockaddr_storage *addr);
 
-	int nu_client_setup_tls(NuAuth * session,
+	int nu_client_setup_tls(nuauth_session_t * session,
 				char *tls_passwd,
 				char *keyfile,
 				char *certfile,
 				char *cafile, nuclient_error_t *err);
 
-	int nu_client_connect(NuAuth * session,
+	int nu_client_connect(nuauth_session_t * session,
 			      const char *hostname,
 			      const char *service,
 			      nuclient_error_t *err);
 
-	void nu_client_reset(NuAuth * session);
+	void nu_client_reset(nuauth_session_t * session);
 
-	void nu_client_delete(NuAuth * session);
+	void nu_client_delete(nuauth_session_t * session);
 
 	const char *nu_client_strerror(nuclient_error_t *err);
 

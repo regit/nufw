@@ -129,7 +129,7 @@ static int parse_ports(char *portsline, GSList ** p_portslist,
 	char *p_nextports;
 	char *p_ports = portsline;
 	GSList *portslist = *p_portslist;
-	struct T_ports ports;
+	struct plaintext_ports ports;
 	int n, fport, lastport;
 
 	/*  parsing ports */
@@ -154,7 +154,7 @@ static int parse_ports(char *portsline, GSList ** p_portslist,
 				    "%s parse_ports: Garbarge at end of line",
 				    prefix);
 		} else {
-			struct T_ports *this_port;
+			struct plaintext_ports *this_port;
 			/*  One port or ports range to add... */
 			if (n == 2) {	/*  That's a range */
 				if (lastport >= fport) {
@@ -169,7 +169,7 @@ static int parse_ports(char *portsline, GSList ** p_portslist,
 				ports.nbports = 0;
 
 			if (ports.nbports >= 0) {
-				this_port = g_new0(struct T_ports, 1);
+				this_port = g_new0(struct plaintext_ports, 1);
 				this_port->firstport = ports.firstport;
 				this_port->nbports = ports.nbports;
 				portslist =
@@ -207,14 +207,14 @@ int compare_ipv6_with_mask(struct in6_addr *addr1, struct in6_addr *addr2,
 /**
  * Try to match an address from an IP/mask list.
  *
- * \param ip_list Single linked list of T_ip items
+ * \param ip_list Single linked list of plaintext_ip items
  * \param addr Address to match
  * \return 1 if addr match ip_list, 0 otherwise
  */
 int match_ip(GSList * ip_list, struct in6_addr *addr)
 {
 	for (; ip_list != NULL; ip_list = g_slist_next(ip_list)) {
-		struct T_ip *item = (struct T_ip *) ip_list->data;
+		struct plaintext_ip *item = (struct plaintext_ip *) ip_list->data;
 		if (compare_ipv6_with_mask
 		    (&item->addr, addr, &item->netmask) == 0)
 			return 1;
@@ -238,7 +238,7 @@ static int parse_ips(char *ipsline, GSList ** ip_list, char *prefix)
 	gchar **ip_items = g_strsplit(ipsline, ",", 0);
 	gchar **iter = ip_items;
 	gchar *line;
-	struct T_ip this_ip, *this_ip_copy;
+	struct plaintext_ip this_ip, *this_ip_copy;
 
 	/*  parsing IPs */
 	for (iter = ip_items; iter != NULL && *iter != NULL; iter++) {
@@ -348,7 +348,7 @@ static int parse_ips(char *ipsline, GSList ** ip_list, char *prefix)
  */
 static int read_user_list(struct plaintext_params *params)
 {
-	struct T_plaintext_user *plaintext_user;
+	struct plaintext_user *plaintext_user;
 	FILE *fd;
 	char line[1024];
 	char *p_username, *p_passwd, *p_uid, *p_groups;
@@ -430,10 +430,10 @@ static int read_user_list(struct plaintext_params *params)
 				  ln, p_username, uid);
 
 		/*  Let's create an user node */
-		plaintext_user = g_new0(struct T_plaintext_user, 1);
+		plaintext_user = g_new0(struct plaintext_user, 1);
 		if (!plaintext_user) {
 			log_message(WARNING, AREA_AUTH,
-				    "read_user_list: Cannot allocate T_plaintext_user!");
+				    "read_user_list: Cannot allocate plaintext_user!");
 			fclose(fd);
 			return 5;
 		}
@@ -475,7 +475,7 @@ static int read_acl_list(struct plaintext_params *params)
 	FILE *fd;
 	char line[1024];
 	char *p_key, *p_value, *p_tmp;
-	struct T_plaintext_acl *newacl = NULL;
+	struct plaintext_acl *newacl = NULL;
 	int ln = 0;		/*  Line number */
 
 	log_message(VERBOSE_DEBUG, AREA_MAIN,
@@ -537,10 +537,10 @@ static int read_acl_list(struct plaintext_params *params)
 			}
 			*p_tmp = 0;
 			/*  Ok, new ACL declaration here.  Let's allocate a structure! */
-			newacl = g_new0(struct T_plaintext_acl, 1);
+			newacl = g_new0(struct plaintext_acl, 1);
 			if (!newacl) {
 				log_message(WARNING, AREA_MAIN,
-					    "read_acl_list: Cannot allocate T_plaintext_acl!");
+					    "read_acl_list: Cannot allocate plaintext_acl!");
 				fclose(fd);
 				return 5;
 			}
@@ -677,7 +677,7 @@ static int read_acl_list(struct plaintext_params *params)
 			}
 		} else if (!strcasecmp("app", p_key)) {	/*  App */
 			char *sep;
-			struct T_app *newapp = g_new0(struct T_app, 1);
+			struct plaintext_app *newapp = g_new0(struct plaintext_app, 1);
 
 			sep = strchr(p_value, ';');
 			if (sep)
@@ -701,7 +701,7 @@ static int read_acl_list(struct plaintext_params *params)
 			    g_slist_prepend(newacl->apps, newapp);
 		} else if (!strcasecmp("os", p_key)) {	/*  OS */
 			char *sep;
-			struct T_os *newos = g_new0(struct T_os, 1);
+			struct plaintext_os *newos = g_new0(struct plaintext_os, 1);
 
 			sep = strchr(p_value, ';');
 			if (sep)
@@ -798,7 +798,7 @@ G_MODULE_EXPORT gboolean unload_module_with_params(struct plaintext_params
 
 	if (params->plaintext_userlist) {
 		GSList *p_userlist;
-		struct T_plaintext_user *p_user;
+		struct plaintext_user *p_user;
 
 		debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
 				  "Freeing users list");
@@ -807,7 +807,7 @@ G_MODULE_EXPORT gboolean unload_module_with_params(struct plaintext_params
 		for (p_userlist = params->plaintext_userlist; p_userlist;
 		     p_userlist = g_slist_next(p_userlist)) {
 			p_user =
-			    (struct T_plaintext_user *) p_userlist->data;
+			    (struct plaintext_user *) p_userlist->data;
 			g_free(p_user->passwd);
 			g_free(p_user->username);
 			if (p_user->groups)
@@ -823,7 +823,7 @@ G_MODULE_EXPORT gboolean unload_module_with_params(struct plaintext_params
 		GSList *p_app;
 		GSList *p_os;
 		GSList *p_ip;
-		struct T_plaintext_acl *p_acl;
+		struct plaintext_acl *p_acl;
 
 		debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
 				  "Freeing ACLs");
@@ -831,12 +831,12 @@ G_MODULE_EXPORT gboolean unload_module_with_params(struct plaintext_params
 		/*  Let's free each node separately */
 		for (p_acllist = params->plaintext_acllist; p_acllist;
 		     p_acllist = g_slist_next(p_acllist)) {
-			p_acl = (struct T_plaintext_acl *) p_acllist->data;
+			p_acl = (struct plaintext_acl *) p_acllist->data;
 
 			/*  Let's free app attributes */
 			for (p_app = p_acl->apps; p_app != NULL;
 			     p_app = g_slist_next(p_app)) {
-				struct T_app *app = p_app->data;
+				struct plaintext_app *app = p_app->data;
 				g_free(app->appname);
 				g_free(app->appmd5);
 				g_free(app);
@@ -844,7 +844,7 @@ G_MODULE_EXPORT gboolean unload_module_with_params(struct plaintext_params
 			/*  Free OS attributes */
 			for (p_os = p_acl->os; p_os != NULL;
 			     p_os = g_slist_next(p_os)) {
-				struct T_os *os = p_os->data;
+				struct plaintext_os *os = p_os->data;
 				g_free(os->version);
 				g_free(os->release);
 				g_free(os->sysname);
@@ -891,9 +891,9 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	    g_new0(struct plaintext_params, 1);
 	confparams_t plaintext_nuauth_vars[] = {
 		{"plaintext_userfile", G_TOKEN_STRING, 0,
-		 g_strdup(TEXT_USERFILE)},
+		 g_strdup(TEXplaintext_USERFILE)},
 		{"plaintext_aclfile", G_TOKEN_STRING, 0,
-		 g_strdup(TEXT_ACLFILE)}
+		 g_strdup(TEXplaintext_ACLFILE)}
 	};
 
 
@@ -935,15 +935,15 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 }
 
 /*  This function is used by g_slist_find_custom() in user_check(). */
-static gint find_by_username(struct T_plaintext_user *a,
-			     struct T_plaintext_user *b)
+static gint find_by_username(struct plaintext_user *a,
+			     struct plaintext_user *b)
 {
 	return strcmp(a->username, b->username);
 }
 
 static GSList *fill_user_by_username(const char *username, gpointer params)
 {
-	struct T_plaintext_user ref;
+	struct plaintext_user ref;
 	GSList *res;
 	/* strip username from domain */
 	ref.username = get_rid_of_domain((char *) username);
@@ -1001,7 +1001,7 @@ G_MODULE_EXPORT int user_check(const char *username,
 		return SASL_BADAUTH;
 	}
 
-	realpass = ((struct T_plaintext_user *) res->data)->passwd;
+	realpass = ((struct plaintext_user *) res->data)->passwd;
 
 	if (!strcmp(realpass, "*") || !strcmp(realpass, "!")) {
 		log_message(INFO, AREA_AUTH,
@@ -1053,7 +1053,7 @@ G_MODULE_EXPORT uint32_t get_user_id(const char *username, gpointer params)
 		return 0;
 	}
 
-	return ((struct T_plaintext_user *) res->data)->uid;
+	return ((struct plaintext_user *) res->data)->uid;
 }
 
 
@@ -1082,7 +1082,7 @@ G_MODULE_EXPORT GSList *get_user_groups(const char *username,
 	if (res == NULL) {
 		return NULL;
 	}
-	return g_slist_copy(((struct T_plaintext_user *) res->data)->
+	return g_slist_copy(((struct plaintext_user *) res->data)->
 			    groups);
 }
 
@@ -1093,7 +1093,7 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element, gpointer params)
 	GSList *p_acllist;
 	struct acl_group *this_acl;
 	tracking_t *netdata = &element->tracking;
-	struct T_plaintext_acl *p_acl;
+	struct plaintext_acl *p_acl;
 	int initstatus;
 	static GStaticMutex plaintext_initmutex = G_STATIC_MUTEX_INIT;
 
@@ -1124,7 +1124,7 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element, gpointer params)
 	for (p_acllist =
 	     ((struct plaintext_params *) params)->plaintext_acllist;
 	     p_acllist; p_acllist = g_slist_next(p_acllist)) {
-		p_acl = (struct T_plaintext_acl *) p_acllist->data;
+		p_acl = (struct plaintext_acl *) p_acllist->data;
 
 		if (netdata->protocol != p_acl->proto)
 			continue;
@@ -1170,12 +1170,12 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element, gpointer params)
 			/*  Check source port */
 			if (p_acl->src_ports) {
 				int found = 0;
-				struct T_ports *p_ports;
+				struct plaintext_ports *p_ports;
 				GSList *pl_ports = p_acl->src_ports;
 				for (; pl_ports;
 				     pl_ports = g_slist_next(pl_ports)) {
 					p_ports =
-					    (struct T_ports *) pl_ports->
+					    (struct plaintext_ports *) pl_ports->
 					    data;
 					if (!p_ports->firstport
 					    ||
@@ -1194,12 +1194,12 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element, gpointer params)
 			/*  Check destination port */
 			if (p_acl->dst_ports) {
 				int found = 0;
-				struct T_ports *p_ports;
+				struct plaintext_ports *p_ports;
 				GSList *pl_ports = p_acl->dst_ports;
 				for (; pl_ports;
 				     pl_ports = g_slist_next(pl_ports)) {
 					p_ports =
-					    (struct T_ports *) pl_ports->
+					    (struct plaintext_ports *) pl_ports->
 					    data;
 					if (!p_ports->firstport
 					    ||
@@ -1234,11 +1234,11 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element, gpointer params)
 
 			for (; p_os; p_os = g_slist_next(p_os)) {
 				p_sysname =
-				    ((struct T_os *) p_os->data)->sysname;
+				    ((struct plaintext_os *) p_os->data)->sysname;
 				p_release =
-				    ((struct T_os *) p_os->data)->release;
+				    ((struct plaintext_os *) p_os->data)->release;
 				p_version =
-				    ((struct T_os *) p_os->data)->version;
+				    ((struct plaintext_os *) p_os->data)->version;
 				if (!strcasecmp
 				    (p_sysname, element->os_sysname)) {
 					if (element->os_release
@@ -1292,7 +1292,7 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element, gpointer params)
 
 			for (; p_app; p_app = g_slist_next(p_app)) {
 				if (g_pattern_match_simple
-				    (((struct T_app *) p_app->data)->
+				    (((struct plaintext_app *) p_app->data)->
 				     appname, element->app_name)) {
 					found = 1;
 					break;

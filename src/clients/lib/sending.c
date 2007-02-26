@@ -34,7 +34,7 @@
 int count;
 #endif
 
-int send_hello_pckt(NuAuth * session)
+int send_hello_pckt(nuauth_session_t * session)
 {
 	struct nu_header header;
 
@@ -65,7 +65,7 @@ int send_hello_pckt(NuAuth * session)
  * in a big packet of format:
  *   [ nu_header + nu_authfield_ipv6 * N ]
  */
-int send_user_pckt(NuAuth * session, conn_t * carray[CONN_MAX])
+int send_user_pckt(nuauth_session_t * session, conn_t * carray[CONN_MAX])
 {
 	char datas[PACKET_SIZE];
 	char *pointer;

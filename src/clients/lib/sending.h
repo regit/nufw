@@ -25,8 +25,8 @@
 
 #define CONN_MAX 10		/*> max number of packets to authenticate in a single tls packet */
 
-int send_hello_pckt(NuAuth * session);
+int send_hello_pckt(nuauth_session_t * session);
 
-int send_user_pckt(NuAuth * session, conn_t * c[CONN_MAX]);
+int send_user_pckt(nuauth_session_t * session, conn_t * c[CONN_MAX]);
 
 #endif

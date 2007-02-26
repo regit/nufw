@@ -133,7 +133,7 @@ struct packets_list_t {
 /**
  * Store old signal handlers
  */
-struct Signals {
+struct nufw_signals {
 	struct sigaction old_sigterm_hdl;
 	struct sigaction old_sigint_hdl;
 };
@@ -148,7 +148,7 @@ struct ipq_handle *hndl;
 /**
  * All data of a thread (use for packetsrv()) 
  */
-struct ThreadType {
+struct nufw_threadtype {
 	pthread_t thread;
 	pthread_mutex_t mutex;
 };
@@ -156,8 +156,8 @@ struct ThreadType {
 /**
  * Structure to send arguments to the thread.
  */
-struct ThreadArgument {
-	struct ThreadType *thread;
+struct nufw_threadargument {
+	struct nufw_threadtype *thread;
 	int parent_pid;
 };
 

@@ -37,7 +37,7 @@
 #define MAX_RETRY_TIME 30
 
 struct termios orig;
-NuAuth *session = NULL;
+nuauth_session_t *session = NULL;
 nuclient_error_t *err = NULL;
 struct sigaction old_sigterm;
 struct sigaction old_sigint;
@@ -410,12 +410,12 @@ void wipe(void *data, size_t datalen)
  *
  * \return The client session, or NULL on error (get description from ::err)
  */
-NuAuth *do_connect(nutcpc_context_t * context, char *username)
+nuauth_session_t *do_connect(nutcpc_context_t * context, char *username)
 {
 	char *username_utf8;
 	char *password;
 	char *password_utf8;
-	NuAuth *session;
+	nuauth_session_t *session;
 
 	/* read username and password */
 	if (username == NULL) {

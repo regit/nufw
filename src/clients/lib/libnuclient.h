@@ -25,9 +25,9 @@
 
 #include "nuclient.h"
 
-void nu_exit_clean(NuAuth * session);
+void nu_exit_clean(nuauth_session_t * session);
 
-int compare(NuAuth * session, conntable_t * old, conntable_t * new,
+int compare(nuauth_session_t * session, conntable_t * old, conntable_t * new,
 	    nuclient_error * err);
 
 void do_panic(const char *filename, unsigned long line, const char *fmt,
@@ -49,6 +49,6 @@ void do_panic(const char *filename, unsigned long line, const char *fmt,
 #define nu_assert(test, format, args...) \
     do { if (!(test)) do_panic(__FILE__, __LINE__, format, ##args ); } while (0)
 
-void ask_session_end(NuAuth * session);
+void ask_session_end(nuauth_session_t * session);
 
 #endif

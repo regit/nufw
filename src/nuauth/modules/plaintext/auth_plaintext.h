@@ -18,38 +18,38 @@
 */
 
 
-#define TEXT_USERFILE   CONFIG_DIR "/users.nufw"
-#define TEXT_ACLFILE    CONFIG_DIR "/acls.nufw"
+#define TEXplaintext_USERFILE   CONFIG_DIR "/users.nufw"
+#define TEXplaintext_ACLFILE    CONFIG_DIR "/acls.nufw"
 
-struct T_plaintext_user {
+struct plaintext_user {
 	char *username;
 	char *passwd;
 	u_int32_t uid;
 	GSList *groups;
 };
 
-struct T_app {
+struct plaintext_app {
 	gchar *appname;
 	gchar *appmd5;
 };
 
-struct T_os {
+struct plaintext_os {
 	char *sysname;
 	char *release;
 	char *version;
 };
 
-struct T_ip {
+struct plaintext_ip {
 	struct in6_addr addr;
 	struct in6_addr netmask;
 };
 
-struct T_ports {
+struct plaintext_ports {
 	uint16_t firstport;
 	int nbports;
 };
 
-struct T_plaintext_acl {
+struct plaintext_acl {
 	char *aclname;
 	decision_t decision;
 	int proto;

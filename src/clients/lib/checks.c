@@ -43,7 +43,7 @@ typedef void (*pthread_cleanup_push_arg1_t) (void *);
 
 void *recv_message(void *data)
 {
-	NuAuth *session = (NuAuth *) data;
+	nuauth_session_t *session = (nuauth_session_t *) data;
 	int ret;
 	char dgram[512];
 	const size_t message_length =
@@ -139,7 +139,7 @@ void *recv_message(void *data)
  *  - In POLL mode, it is really doing the job.
  *  - In PUSH mode, it is used to detect failure and send HELLO message
  *
- * \param session A pointer to a valid ::NuAuth session
+ * \param session A pointer to a valid ::nuauth_session_t session
  * \param err A pointer to a allocated ::nuclient_error_t
  * \return -1 if a problem occurs. Session is destroyed if nu_client_check() return -1;
  *
@@ -154,7 +154,7 @@ void *recv_message(void *data)
  *
  * \return Returns -1 on error, 1 otherwise
  */
-int nu_client_check(NuAuth * session, nuclient_error_t * err)
+int nu_client_check(nuauth_session_t * session, nuclient_error_t * err)
 {
 	pthread_mutex_lock(&(session->mutex));
 
@@ -217,7 +217,7 @@ void clear_local_mutex(void *mutex)
  */
 void *nu_client_thread_check(void *data)
 {
-	NuAuth *session = (NuAuth *) data;
+	nuauth_session_t *session = (nuauth_session_t *) data;
 	pthread_mutex_t check_mutex;
 	pthread_mutex_init(&check_mutex, NULL);
 
@@ -260,7 +260,7 @@ void *nu_client_thread_check(void *data)
  *
  * \return Number of authenticated packets, or -1 on failure
  */
-int nu_client_real_check(NuAuth * session, nuclient_error_t * err)
+int nu_client_real_check(nuauth_session_t * session, nuclient_error_t * err)
 {
 	conntable_t *new;
 	int nb_packets = 0;

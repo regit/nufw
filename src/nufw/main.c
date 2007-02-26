@@ -44,10 +44,10 @@ char *key_file = NULL;
 char *cert_file = NULL;
 
 /* packet server thread */
-struct ThreadType thread;
+struct nufw_threadtype thread;
 
 /* packet server thread */
-struct Signals signals;
+struct nufw_signals signals;
 
 /*! Name of pid file prefixed by LOCAL_STATE_DIR (variable defined
  * during compilation/installation) */
@@ -170,7 +170,7 @@ void nufw_cleanup(int signal)
 void create_thread()
 {
 	/* should be static because thread may read data after this function exits */
-	static struct ThreadArgument arg;
+	static struct nufw_threadargument arg;
 	arg.thread = &thread;
 	arg.parent_pid = getpid();
 

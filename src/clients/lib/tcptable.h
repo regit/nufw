@@ -23,7 +23,7 @@
 #define TCPTABLE_H
 
 int tcptable_init(conntable_t ** ct);
-int tcptable_read(NuAuth * session, conntable_t * ct);
+int tcptable_read(nuauth_session_t * session, conntable_t * ct);
 void tcptable_add(conntable_t * ct, conn_t * c);
 void tcptable_free(conntable_t * ct);
 int tcptable_hash(conn_t * c);

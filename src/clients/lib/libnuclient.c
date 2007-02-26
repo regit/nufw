@@ -85,7 +85,7 @@ int nu_get_usersecret(sasl_conn_t * conn __attribute__ ((unused)),
 		      sasl_secret_t ** psecret)
 {
 	size_t len;
-	NuAuth *session = (NuAuth *) context;
+	nuauth_session_t *session = (nuauth_session_t *) context;
 	if (id != SASL_CB_PASS) {
 		if (session->verbose)
 			printf("getsecret not looking for pass");
@@ -110,7 +110,7 @@ int nu_get_usersecret(sasl_conn_t * conn __attribute__ ((unused)),
 static int nu_get_userdatas(void *context __attribute__ ((unused)),
 			    int id, const char **result, unsigned *len)
 {
-	NuAuth *session = (NuAuth *) context;
+	nuauth_session_t *session = (nuauth_session_t *) context;
 	/* paranoia check */
 	if (!result)
 		return SASL_BADPARAM;
@@ -157,7 +157,7 @@ void do_panic(const char *filename, unsigned long line, const char *fmt,
 	va_end(args);
 }
 
-void nu_exit_clean(NuAuth * session)
+void nu_exit_clean(nuauth_session_t * session)
 {
 	if (session->ct) {
 		tcptable_free(session->ct);
@@ -244,7 +244,7 @@ static unsigned samp_recv(gnutls_session session, char *buf, int bufsize,
 
 
 
-int mysasl_negotiate(NuAuth * user_session, sasl_conn_t * conn,
+int mysasl_negotiate(nuauth_session_t * user_session, sasl_conn_t * conn,
 		     nuclient_error_t * err)
 {
 	char buf[8192];
@@ -335,7 +335,7 @@ int mysasl_negotiate(NuAuth * user_session, sasl_conn_t * conn,
 	return SASL_OK;
 }
 
-static int add_packet_to_send(NuAuth * session, conn_t ** auth,
+static int add_packet_to_send(nuauth_session_t * session, conn_t ** auth,
 			      int *count_p, conn_t * bucket)
 {
 	int count = *count_p;
@@ -370,7 +370,7 @@ static int add_packet_to_send(NuAuth * session, conn_t ** auth,
  * \return -1 if error (then disconnect is needed) or the number of
  * authenticated packets if it has succeeded
  */
-int compare(NuAuth * session, conntable_t * old, conntable_t * new,
+int compare(nuauth_session_t * session, conntable_t * old, conntable_t * new,
 	    nuclient_error_t * err)
 {
 	int i;
@@ -474,9 +474,9 @@ int compare(NuAuth * session, conntable_t * old, conntable_t * new,
  *
  * This destroy a session and free all related structures.
  *
- * \param session A ::NuAuth session to be cleaned
+ * \param session A ::nuauth_session_t session to be cleaned
  */
-void nu_client_delete(NuAuth * session)
+void nu_client_delete(nuauth_session_t * session)
 {
 	/* kill all threads */
 	ask_session_end(session);
@@ -535,7 +535,7 @@ void nu_client_global_deinit()
  * \param session Pointer to client session
  * \param err Pointer to a nuclient_error_t: which contains the error
  */
-int send_os(NuAuth * session, nuclient_error_t * err)
+int send_os(nuauth_session_t * session, nuclient_error_t * err)
 {
 	/* announce our OS */
 	struct utsname info;
@@ -642,7 +642,7 @@ int send_os(NuAuth * session, nuclient_error_t * err)
  * \param err Pointer to a nuclient_error_t: which contains the error
  * \return Returns 0 on error (error description in err), 1 otherwise
  */
-int nu_client_setup_tls(NuAuth * session,
+int nu_client_setup_tls(nuauth_session_t * session,
 			char *keyfile, char *certfile, char *cafile,
 			char *tls_password, nuclient_error_t * err)
 {
@@ -728,7 +728,7 @@ int nu_client_setup_tls(NuAuth * session,
  * \param session Pointer to client session
  * \param err Pointer to a nuclient_error_t: which contains the error
  */
-int init_sasl(NuAuth * session, nuclient_error_t * err)
+int init_sasl(nuauth_session_t * session, nuclient_error_t * err)
 {
 	int ret;
 	sasl_conn_t *conn;
@@ -792,7 +792,7 @@ int init_sasl(NuAuth * session, nuclient_error_t * err)
 	return 1;
 }
 
-void nu_client_set_source(NuAuth *session, struct sockaddr_storage *addr)
+void nu_client_set_source(nuauth_session_t *session, struct sockaddr_storage *addr)
 {
 	session->has_src_addr = 1;
 	session->src_addr = *addr;
@@ -807,7 +807,7 @@ void nu_client_set_source(NuAuth *session, struct sockaddr_storage *addr)
  * \param service Port number (or string) on which nuauth server is listening (default: #USERPCKT_PORT)
  * \param err Pointer to a nuclient_error_t: which contains the error
  */
-int init_socket(NuAuth * session,
+int init_socket(nuauth_session_t * session,
 		const char *hostname, const char *service,
 		nuclient_error_t *err)
 {
@@ -914,7 +914,7 @@ int init_socket(NuAuth * session,
 /**
  * Do the TLS handshake and check server certificate
  */
-int tls_handshake(NuAuth * session, nuclient_error_t * err)
+int tls_handshake(nuauth_session_t * session, nuclient_error_t * err)
 {
 	int ret;
 
@@ -974,7 +974,7 @@ static char *secure_str_copy(const char *orig)
 #endif
 }
 
-int nu_client_reset_tls(NuAuth *session)
+int nu_client_reset_tls(nuauth_session_t *session)
 {
 	int ret;
 	session->need_set_cred = 1;
@@ -1009,7 +1009,7 @@ int nu_client_reset_tls(NuAuth *session)
  * \param diffie_hellman If equals to 1, use Diffie Hellman for key exchange
  * (very secure but initialization is slower)
  * \param err Pointer to a nuclient_error_t: which contains the error
- * \return A pointer to a valid ::NuAuth structure or NULL if init has failed
+ * \return A pointer to a valid ::nuauth_session_t structure or NULL if init has failed
  *
  * \par Internal
  * Initialisation of nufw authentication session:
@@ -1019,12 +1019,12 @@ int nu_client_reset_tls(NuAuth *session)
  *
  * If everything is ok, create the connection table using tcptable_init().
  */
-NuAuth *nu_client_new(const char *username,
+nuauth_session_t *nu_client_new(const char *username,
 		      const char *password,
 		      unsigned char diffie_hellman, nuclient_error_t * err)
 {
 	conntable_t *new;
-	NuAuth *session;
+	nuauth_session_t *session;
 	int ret;
 
 	if (username == NULL || password == NULL) {
@@ -1036,7 +1036,7 @@ NuAuth *nu_client_new(const char *username,
 	SET_ERROR(err, INTERNAL_ERROR, NO_ERR);
 
 	/* Allocate a new session */
-	session = (NuAuth *) calloc(1, sizeof(NuAuth));
+	session = (nuauth_session_t *) calloc(1, sizeof(nuauth_session_t));
 	if (session == NULL) {
 		SET_ERROR(err, INTERNAL_ERROR, MEMORY_ERR);
 		return NULL;
@@ -1124,7 +1124,7 @@ NuAuth *nu_client_new(const char *username,
  * Reset a session: close the connection and reset attributes. So the session
  * can be used as nu_client_connect() input.
  */
-void nu_client_reset(NuAuth * session)
+void nu_client_reset(nuauth_session_t * session)
 {
 	/* close TLS conneciton */
 	ask_session_end(session);
@@ -1165,7 +1165,7 @@ void nu_client_reset(NuAuth * session)
  * \param err Pointer to a nuclient_error_t: which contains the error
  * \return Returns 0 on error (error description in err), 1 otherwise
  */
-int nu_client_connect(NuAuth * session,
+int nu_client_connect(nuauth_session_t * session,
 		      const char *hostname, const char *service,
 		      nuclient_error_t * err)
 {
@@ -1208,7 +1208,7 @@ int nu_client_connect(NuAuth * session,
  * \param session Pointer to client session
  * \param enabled Enable debug if different than zero (1), disable otherwise
  */
-void nu_client_set_debug(NuAuth * session, unsigned char enabled)
+void nu_client_set_debug(nuauth_session_t * session, unsigned char enabled)
 {
 	session->debug_mode = enabled;
 }
@@ -1220,12 +1220,12 @@ void nu_client_set_debug(NuAuth * session, unsigned char enabled)
  * \param session Pointer to client session
  * \param enabled Enable verbose mode if different than zero (1), disable otherwise
  */
-void nu_client_set_verbose(NuAuth * session, unsigned char enabled)
+void nu_client_set_verbose(nuauth_session_t * session, unsigned char enabled)
 {
 	session->verbose = enabled;
 }
 
-void ask_session_end(NuAuth * session)
+void ask_session_end(nuauth_session_t * session)
 {
 	pthread_t self_thread = pthread_self();
 	/* we kill thread thus lock will be lost if another thread reach this point */

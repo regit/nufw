@@ -88,7 +88,7 @@ int str2ipv6(char *text, struct in6_addr *ip)
  * connection: only keep session user connections in state "SYN packet sent".
  * Add connections to the our table using tcptable_add().
  */
-int parse_tcptable_file(NuAuth * session, conntable_t * ct, char *filename,
+int parse_tcptable_file(nuauth_session_t * session, conntable_t * ct, char *filename,
 			FILE ** file, int protocol, int use_ipv6)
 {
 	char buf[1024];
@@ -231,7 +231,7 @@ int parse_tcptable_file(NuAuth * session, conntable_t * ct, char *filename,
  * On FreeBSD: Use sysctl with "net.inet.tcp.pcblist" to get the connection
  * table. Add connections to the our table using tcptable_add().
  */
-int tcptable_read(NuAuth * session, conntable_t * ct)
+int tcptable_read(nuauth_session_t * session, conntable_t * ct)
 {
 #ifdef LINUX
 	static FILE *fd_tcp = NULL;
