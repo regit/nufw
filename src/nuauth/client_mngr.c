@@ -17,22 +17,6 @@
  ** along with this program; if not, write to the Free Software
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  **
- ** In addition, as a special exception, the copyright holders give
- ** permission to link the code of portions of this program with the
- ** Cyrus SASL library under certain conditions as described in each
- ** individual source file, and distribute linked combinations
- ** including the two.
- ** You must obey the GNU General Public License in all respects
- ** for all of the code used other than Cyrus SASL.  If you modify
- ** file(s) with this exception, you may extend this exception to your
- ** version of the file(s), but you are not obligated to do so.  If you
- ** do not wish to do so, delete this exception statement from your
- ** version.  If you delete this exception statement from all source
- ** files in the program, then also delete it here.
- **
- ** This product includes software developed by Computing Services
- ** at Carnegie Mellon University (http://www.cmu.edu/computing/).
- **
  */
 
 #include <auth_srv.h>
@@ -141,7 +125,7 @@ static GSList *delete_ipsockets_from_hash(GSList *ipsockets, user_session_t *ses
 	}
 	/* remove entry from hash */
 	g_hash_table_steal(client_conn_hash,
-			GINT_TO_POINTER(socket));
+			GINT_TO_POINTER(session->socket));
 	log_user_session(session, SESSION_CLOSE);
 	return ipsockets;
 }
