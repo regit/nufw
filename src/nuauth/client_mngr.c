@@ -153,7 +153,8 @@ nu_error_t delete_client_by_socket(int socket)
 		delete_ipsockets_from_hash(ipsockets, session);
 	} else {
 		log_message(WARNING, AREA_USER,
-				"Could not found user session in hash");
+				"Could not find user session in hash");
+		g_mutex_unlock(client_mutex);
 		return NU_EXIT_ERROR;
 	}
 
