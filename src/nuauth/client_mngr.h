@@ -30,7 +30,7 @@ void init_client_struct();
 
 void add_client(int socket, gpointer datas);
 
-void delete_client_by_socket(int c);
+nu_error_t delete_client_by_socket(int c);
 
 inline user_session_t *get_client_datas_by_socket(int c);
 

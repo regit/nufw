@@ -200,7 +200,9 @@ const char *command_disconnect(command_t *this, char *command)
 	int sock;
 	if (!str_to_int(command, &sock))
 		return NULL;
-	delete_client_by_socket(sock);
+	if (delete_client_by_socket(sock) != NU_EXIT_OK){
+		return "not found";
+	}
 	return "disconnected";
 }
 

@@ -130,7 +130,7 @@ static GSList *delete_ipsockets_from_hash(GSList *ipsockets, user_session_t *ses
 	return ipsockets;
 }
 
-void delete_client_by_socket(int socket)
+nu_error_t delete_client_by_socket(int socket)
 {
 	GSList *ipsockets;
 	user_session_t *session;
@@ -154,6 +154,7 @@ void delete_client_by_socket(int socket)
 	} else {
 		log_message(WARNING, AREA_USER,
 				"Could not found user session in hash");
+		return NU_EXIT_ERROR;
 	}
 
 	g_mutex_unlock(client_mutex);
@@ -161,6 +162,8 @@ void delete_client_by_socket(int socket)
 	FD_CLR(socket, &tls_user_context.tls_rx_set);
 	shutdown(socket, SHUT_RDWR);
 	close(socket);
+
+	return NU_EXIT_OK;
 }
 
 inline user_session_t *get_client_datas_by_socket(int socket)

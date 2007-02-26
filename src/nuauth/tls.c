@@ -511,8 +511,10 @@ void *push_worker(GMutex * mutex)
 			break;
 
 		case FREE_MESSAGE:
-			delete_client_by_socket(GPOINTER_TO_INT
-						(message->datas));
+			if (delete_client_by_socket(GPOINTER_TO_INT
+						(message->datas)) != NU_EXIT_OK)
+				log_message(WARNING, AREA_USER,
+					    "FREE_MESSAGE failed: con't delete client");
 			break;
 
 		case INSERT_MESSAGE:
