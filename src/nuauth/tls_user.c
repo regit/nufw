@@ -384,21 +384,14 @@ void tls_user_check_activity(struct tls_user_context_t *context,
 				  "client disconnect on socket %d",
 				  socket);
 		/* clean client structure */
-		if (nuauthconf->push) {
-			struct internal_message *message =
-			    g_new0(struct internal_message, 1);
-			message->type = FREE_MESSAGE;
-			message->datas = GINT_TO_POINTER(socket);
-			g_async_queue_push(nuauthdatas->tls_push_queue,
-					   message);
-		} else {
-			delete_client_by_socket(socket);
-		}
+		delete_client_by_socket(socket);
 	} else if (u_request < 0) {
 #ifdef DEBUG_ENABLE
 		log_message(VERBOSE_DEBUG, AREA_USER,
 			    "treat_user_request() failure");
 #endif
+		/* better to disconnect: cleaning client structure */
+		delete_client_by_socket(socket);
 	}
 }
 
