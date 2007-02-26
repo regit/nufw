@@ -104,7 +104,7 @@ static int parse_ints(char *intline, GSList ** p_intlist, char *prefix)
 		} else {
 			/*  One number (group, integer...) to add */
 			intlist = g_slist_prepend(intlist,
-						  GINT_TO_POINTER((u_int32_t) number));
+						  GUINT_TO_POINTER((u_int32_t) number));
 			debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
 					  "%s Added group/int %d", prefix,
 					  number);
@@ -964,7 +964,7 @@ static GSList *fill_user_by_username(const char *username, gpointer params)
 
 /**
  *  user_check()
- *  
+ *
  *  \param username user name string
  *  \param clientpass user provided password
  *  \param passlen password length
