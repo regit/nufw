@@ -172,7 +172,7 @@ void command_users_callback(int sock, user_session_t *session, user_callback_dat
 					", groups=%i", gid);
 		} else {
 			len = snprintf(data->buffer, data->buflen,
-					", %i", gid);
+					":%i", gid);
 		}
 		data->buffer += len; data->buflen -= len;
 	}
