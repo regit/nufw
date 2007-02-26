@@ -674,12 +674,18 @@ static inline int log_state_close(MYSQL * ld,
 			     sizeof(dst_ascii)) != 0)
 				return -1;
 			ok = secure_snprintf(request, sizeof(request),
-					     "UPDATE %s SET end_timestamp=FROM_UNIXTIME(%lu), state=%hu "
+					     "UPDATE %s SET end_timestamp=FROM_UNIXTIME(%lu), state=%hu,"
+					     " packets_in=%d, packets_out=%d,"
+					     " bytes_in=%d, bytes_out=%d "
 					     "WHERE (ip_saddr=%s AND ip_daddr=%s "
 					     "AND tcp_sport='%hu' AND tcp_dport='%hu' AND (state='%hu' OR state='%hu')",
 					     params->mysql_table_name,
 					     element->timestamp,
 					     TCP_STATE_CLOSE,
+					     element->packets_in,
+					     element->packets_out,
+					     element->bytes_in,
+					     element->bytes_out,
 					     src_ascii,
 					     dst_ascii,
 					     (element->tracking).source,
@@ -691,13 +697,19 @@ static inline int log_state_close(MYSQL * ld,
 			    (is_ipv4(&element->tracking.daddr))) {
 				ok = secure_snprintf(request,
 						     sizeof(request),
-						     "UPDATE %s SET end_timestamp=FROM_UNIXTIME(%lu), state=%hu "
+						     "UPDATE %s SET end_timestamp=FROM_UNIXTIME(%lu), state=%hu, "
+						     "packets_in=%d, packets_out=%d"
+						     ", bytes_in=%d, bytes_out=%d "
 						     "WHERE (ip_saddr='%lu' AND ip_daddr='%lu' "
 						     "AND tcp_sport='%hu' AND tcp_dport='%hu' AND (state='%hu' OR state='%hu')",
 						     params->
 						     mysql_table_name,
 						     element->timestamp,
 						     TCP_STATE_CLOSE,
+						     element->packets_in,
+						     element->packets_out,
+						     element->bytes_in,
+						     element->bytes_out,
 						     ntohl((&element->
 							    tracking.
 							    saddr)->
