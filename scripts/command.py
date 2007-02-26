@@ -70,7 +70,7 @@ class Client:
             data = "".join(alldata)
             self.socket.setblocking(1)
         if data != "ok":
-            print data
+            print data.strip()
         return True
 
     def send(self, data, retry=True):
@@ -133,7 +133,7 @@ class Client:
         err = self.mainLoop()
         if err:
             print err
-    print "[+] Quit"
+        print "[+] Quit"
 
 def main():
     client = Client()
