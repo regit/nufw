@@ -40,6 +40,7 @@ user_session_t *look_for_username(const gchar * username);
 
 void clean_session(user_session_t *);
 
+void foreach_session(GHFunc callback, void *data);
 
 struct msg_addr_set {
 	struct in6_addr addr;

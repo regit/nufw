@@ -320,4 +320,11 @@ void kill_expired_clients_session()
 				    &current_time);
 }
 
+void foreach_session(GHFunc callback, void *data)
+{
+	g_mutex_lock(client_mutex);
+	g_hash_table_foreach(client_conn_hash, callback, data);
+	g_mutex_unlock(client_mutex);
+}
+
 /** @} */

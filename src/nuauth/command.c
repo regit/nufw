@@ -119,12 +119,91 @@ void command_client_close(command_t * this)
 	this->select_max = this->socket + 1;
 }
 
+char *command_uptime(command_t *this, char *buffer, size_t buflen)
+{
+	char time_text[100];
+	time_t diff;
+	struct tm timestamp;
+	int len;
+
+	/* compute uptime and format starting time */
+	diff = time(NULL) - this->start_timestamp;
+	localtime_r(&this->start_timestamp, &timestamp);
+	len = strftime(time_text, sizeof(time_text)-1,
+			"%F %H:%M:%S", &timestamp);
+	time_text[len] = 0;
+
+	/* create answer message */
+	(void)secure_snprintf(buffer, buflen,
+			"%u sec since %s", diff, time_text);
+	return buffer;
+}
+
+typedef struct {
+	char *buffer;
+	size_t buflen;
+} user_callback_data_t;
+
+void command_users_callback(int sock, user_session_t *session, user_callback_data_t *data)
+{
+	char addr[INET6_ADDRSTRLEN];
+	int len;
+	int counter;
+	GSList *group;
+	printf("session %p\n", session);
+	inet_ntop (AF_INET6, &session->addr, addr, sizeof(addr));
+	len = snprintf(data->buffer, data->buflen,
+			"%s: ip=%s, port=%hu, uid=%u",
+			session->user_name,
+			addr, session->sport,
+			session->user_id);
+	data->buffer += len; data->buflen -= len;
+	if (0 <= session->expire) {
+		len = snprintf(data->buffer, data->buflen,
+				", expire=%i sec",
+				(int)session->expire);
+		data->buffer += len; data->buflen -= len;
+	}
+	counter = 0;
+	for (group=session->groups; group; group=g_slist_next(group)) {
+		unsigned int gid = GPOINTER_TO_UINT(group->data);
+		counter += 1;
+		printf("gid %p=>%i (next %p)\n", group, gid, group->next);
+		if (counter == 1) {
+			len = snprintf(data->buffer, data->buflen,
+					", groups=%i", gid);
+		} else {
+			len = snprintf(data->buffer, data->buflen,
+					", %i", gid);
+		}
+		data->buffer += len; data->buflen -= len;
+	}
+	len = snprintf(data->buffer, data->buflen,
+		", proto version=%i\n",
+		session->client_version);
+	data->buffer += len; data->buflen -= len;
+
+}
+
+char *command_users(command_t *this, char *buffer, size_t buflen)
+{
+	user_callback_data_t data;
+	buffer[buflen-1] = 0;
+	data.buffer = buffer;
+	data.buflen = buflen-1;
+	printf("foreach\n");
+	secure_snprintf(buffer, buflen, "(no user)");
+	foreach_session((GHFunc)command_users_callback, (gpointer)&data);
+	return buffer;
+}
+
 void command_execute(command_t * this, char *command)
 {
 	char *buffer = "ok";
 	static char static_buffer[1024];
 	char *help =
 "version: display nuauth version\n"
+"users: list connected users\n"
 "uptime: display nuauth starting time and uptime\n"
 "reload: reload nuauth configuration\n"
 "help: display this help\n"
@@ -138,21 +217,9 @@ void command_execute(command_t * this, char *command)
 	} else if (strcmp(command, "help") == 0) {
 		buffer = help;
 	} else if (strcmp(command, "uptime") == 0) {
-		char time_text[sizeof(static_buffer)];
-		time_t diff;
-		struct tm timestamp;
-
-		/* compute uptime and format starting time */
-		diff = time(NULL) - this->start_timestamp;
-		localtime_r(&this->start_timestamp, &timestamp);
-		ret = strftime(time_text, sizeof(time_text)-1,
-			       "%F %H:%M:%S", &timestamp);
-		time_text[ret] = 0;
-
-		/* create answer message */
-		(void)secure_snprintf(static_buffer, sizeof(static_buffer),
-				"%u sec since %s", diff, time_text);
-		buffer = static_buffer;
+		buffer = command_uptime(this, static_buffer, sizeof(static_buffer));
+	} else if (strcmp(command, "users") == 0) {
+		buffer = command_users(this, static_buffer, sizeof(static_buffer));
 	} else if (strcmp(command, "version") == 0) {
 		secure_snprintf(static_buffer, sizeof(static_buffer),
 				"Nuauth %s", NUAUTH_FULL_VERSION);
