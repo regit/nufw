@@ -84,7 +84,11 @@ CREATE TABLE ulog (
     state smallint,
     username character varying(30),
     client_os character varying(128),
-    client_app character varying(128)
+    client_app character varying(128),
+    packets_in bigint,
+    packets_out bigint,
+    bytes_in bigint,
+    bytes_out bigint,
 );
 
 
@@ -121,10 +125,8 @@ CREATE TABLE users (
     socket bigint NOT NULL,
     user_id bigint,
     username character varying(30),
-    bad_conns integer DEFAULT 0 NOT NULL,
-    good_conns integer DEFAULT 0 NOT NULL,
-    first_time timestamp without time zone,
-    last_time timestamp without time zone,
+    start_time timestamp without time zone,
+    end_time timestamp without time zone,
     os_sysname character varying(40),
     os_release character varying(40),
     os_version character varying(100)

@@ -96,7 +96,7 @@ static nu_error_t pgsql_close_open_user_sessions(struct log_pgsql_params
 	}
 
 	ok = secure_snprintf(request, sizeof(request),
-			     "UPDATE %s SET last_time=ABSTIME(%lu) WHERE last_time is NULL",
+			     "UPDATE %s SET end_time=ABSTIME(%lu) WHERE end_time is NULL",
 			     params->pgsql_users_table_name, time(NULL));
 	if (!ok) {
 		if (ld) {
@@ -422,11 +422,17 @@ static int pgsql_update_close(PGconn * ld, connection_t * element,
 		return -1;
 
 	ok = secure_snprintf(request, sizeof(request),
-			     "UPDATE %s SET state='%hu', end_timestamp='%lu' "
+			     "UPDATE %s SET state='%hu', end_timestamp='%lu' ,"
+			     " packets_in=%d, packets_out=%d,"
+			     " bytes_in=%d, bytes_out=%d "
 			     "WHERE (ip_saddr='%s' AND tcp_sport='%u' "
 			     "AND (state=1 OR state=2));",
 			     params->pgsql_table_name,
 			     TCP_STATE_CLOSE,
+			     element->packets_in,
+			     element->packets_out,
+			     element->bytes_in,
+			     element->bytes_out,
 			     element->timestamp,
 			     ip_src, element->tracking.source);
 	if (!ok) {
@@ -487,7 +493,7 @@ static int pgsql_update_state(PGconn * ld, connection_t * element,
 
 	/* build sql query */
 	ok = secure_snprintf(request, sizeof(request),
-			     "UPDATE %s SET state='%hu', start_timestamp='%lu' "
+			     "UPDATE %s SET state='%hu', start_time='%lu' "
 			     "WHERE (ip_daddr='%s' AND ip_saddr='%s' "
 			     "AND tcp_dport='%hu' AND tcp_sport='%hu' AND state='%hu');",
 			     params->pgsql_table_name,
@@ -626,7 +632,7 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 		/* create new user session */
 		ok = secure_snprintf(request, sizeof(request),
 				     "INSERT INTO %s (user_id, username, ip_saddr, "
-				     "os_sysname, os_release, os_version, socket, first_time) "
+				     "os_sysname, os_release, os_version, socket, start_time) "
 				     "VALUES ('%lu', '%s', '%s', '%s', '%s', '%s', '%u', ABSTIME(%lu))",
 				     params->pgsql_users_table_name,
 				     c_session->user_id,
@@ -641,7 +647,7 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 	case SESSION_CLOSE:
 		/* update existing user session */
 		ok = secure_snprintf(request, sizeof(request),
-				     "UPDATE %s SET last_time=ABSTIME(%lu) "
+				     "UPDATE %s SET end_time=ABSTIME(%lu) "
 				     "WHERE socket=%u and ip_saddr=%u",
 				     params->pgsql_users_table_name,
 				     time(NULL),
