@@ -7,7 +7,6 @@ echo "!!! Use NuAuth with plaintext auth"
 echo
 
 LOG=valgrind.log
-NUAUTH_OPT=-vvvvvvvvvvvvvvv
 
 function stop_valgrind
 {
@@ -35,7 +34,7 @@ valgrind \
     --run-libc-freeres=no \
     --leak-check=full \
     --verbose \
-    ./nuauth $NUAUTH_OPT 2>&1
+    ./nuauth "$@" 2>&1
 
 trap - SIGINT SIGTERM
 
