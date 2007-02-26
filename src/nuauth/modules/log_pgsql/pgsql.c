@@ -422,17 +422,11 @@ static int pgsql_update_close(PGconn * ld, connection_t * element,
 		return -1;
 
 	ok = secure_snprintf(request, sizeof(request),
-			     "UPDATE %s SET state='%hu', end_timestamp='%lu' ,"
-			     " packets_in=%d, packets_out=%d,"
-			     " bytes_in=%d, bytes_out=%d "
+			     "UPDATE %s SET state='%hu', end_timestamp='%lu' "
 			     "WHERE (ip_saddr='%s' AND tcp_sport='%u' "
 			     "AND (state=1 OR state=2));",
 			     params->pgsql_table_name,
 			     TCP_STATE_CLOSE,
-			     element->packets_in,
-			     element->packets_out,
-			     element->bytes_in,
-			     element->bytes_out,
 			     element->timestamp,
 			     ip_src, element->tracking.source);
 	if (!ok) {
@@ -455,7 +449,8 @@ static int pgsql_update_close(PGconn * ld, connection_t * element,
 }
 
 
-static int pgsql_update_state(PGconn * ld, connection_t * element,
+static int pgsql_update_state(PGconn * ld,
+			      struct accounted_connection *element,
 			      tcp_state_t old_state, tcp_state_t new_state,
 			      int reverse, struct log_pgsql_params *params)
 {
@@ -492,13 +487,35 @@ static int pgsql_update_state(PGconn * ld, connection_t * element,
 	}
 
 	/* build sql query */
-	ok = secure_snprintf(request, sizeof(request),
-			     "UPDATE %s SET state='%hu', start_time='%lu' "
-			     "WHERE (ip_daddr='%s' AND ip_saddr='%s' "
-			     "AND tcp_dport='%hu' AND tcp_sport='%hu' AND state='%hu');",
-			     params->pgsql_table_name,
-			     new_state, element->timestamp,
-			     ip_src, ip_dst, tcp_src, tcp_dst, old_state);
+	switch (new_state) {
+	case TCP_STATE_ESTABLISHED:
+		ok = secure_snprintf(request, sizeof(request),
+				"UPDATE %s SET state='%hu', start_timestamp='%lu' "
+				"WHERE (ip_daddr='%s' AND ip_saddr='%s' "
+				"AND tcp_dport='%hu' AND tcp_sport='%hu' AND state='%hu');",
+				params->pgsql_table_name,
+				new_state, element->timestamp,
+				ip_src, ip_dst, tcp_src, tcp_dst, old_state);
+		break;
+	case TCP_STATE_CLOSE:
+		ok = secure_snprintf(request, sizeof(request),
+				"UPDATE %s SET state='%hu', end_timestamp='%lu',"
+				" packets_in=%d, packets_out=%d,"
+				" bytes_in=%d, bytes_out=%d "
+				"WHERE (ip_daddr='%s' AND ip_saddr='%s' "
+				"AND tcp_dport='%hu' AND tcp_sport='%hu' AND state='%hu');",
+				params->pgsql_table_name,
+				new_state, element->timestamp,
+				element->packets_in,
+				element->packets_out,
+				element->bytes_in,
+				element->bytes_out,
+				ip_src, ip_dst, tcp_src, tcp_dst, old_state);
+		break;
+	default:
+		log_message(SERIOUS_WARNING, AREA_MAIN,
+			    "Unknown tcp state, should not be there");
+	}
 	if (!ok) {
 		log_message(SERIOUS_WARNING, AREA_MAIN,
 			    "Fail to build PostgreSQL query (maybe too long)!");
@@ -559,8 +576,7 @@ static PGconn *get_pgsql_handler(struct log_pgsql_params *params)
 	return ld;
 }
 
-/** \todo Take into account connection_t* to void* change */
-G_MODULE_EXPORT gint user_packet_logs(connection_t * element,
+G_MODULE_EXPORT gint user_packet_logs(void *element,
 				      tcp_state_t state, gpointer params_p)
 {
 	struct log_pgsql_params *params =
@@ -571,19 +587,24 @@ G_MODULE_EXPORT gint user_packet_logs(connection_t * element,
 
 	switch (state) {
 	case TCP_STATE_OPEN:
-		if (element->tracking.protocol == IPPROTO_TCP
+		if (((connection_t *)element)->tracking.protocol == IPPROTO_TCP
 		    && nuauthconf->log_users_strict) {
-			int ret = pgsql_update_close(ld, element, params);
+			int ret = pgsql_update_close(ld,
+						     (connection_t *)element,
+						     params);
 			if (ret != 0) {
 				return ret;
 			}
 		}
 
-		return pgsql_insert(ld, element, "ACCEPT", state, params);
+		return pgsql_insert(ld, (connection_t *)element,
+				    "ACCEPT", state, params);
 
 	case TCP_STATE_ESTABLISHED:
-		if (element->tracking.protocol == IPPROTO_TCP)
-			return pgsql_update_state(ld, element,
+		if (((struct accounted_connection *)element)
+				->tracking.protocol == IPPROTO_TCP)
+			return pgsql_update_state(ld, 
+						  (struct accounted_connection *) element,
 						  TCP_STATE_OPEN,
 						  TCP_STATE_ESTABLISHED, 0,
 						  params);
@@ -591,8 +612,10 @@ G_MODULE_EXPORT gint user_packet_logs(connection_t * element,
 			return 0;
 
 	case TCP_STATE_CLOSE:
-		if (element->tracking.protocol == IPPROTO_TCP)
-			return pgsql_update_state(ld, element,
+		if (((struct accounted_connection *)element)
+				->tracking.protocol == IPPROTO_TCP)
+			return pgsql_update_state(ld,
+						  (struct accounted_connection *) element,
 						  TCP_STATE_ESTABLISHED,
 						  TCP_STATE_CLOSE, 1,
 						  params);
@@ -600,7 +623,8 @@ G_MODULE_EXPORT gint user_packet_logs(connection_t * element,
 			return 0;
 
 	case TCP_STATE_DROP:
-		return pgsql_insert(ld, element, "DROP", state, params);
+		return pgsql_insert(ld, (connection_t *)element,
+				    "DROP", state, params);
 
 		/* Skip other messages */
 	default:
