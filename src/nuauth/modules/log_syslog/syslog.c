@@ -44,8 +44,7 @@ G_MODULE_EXPORT uint32_t get_api_version()
 }
 
 
-/** \todo Take into account connection_t* to void* change
- *
+/** 
  * This one forgot the treatment of ESTABLISHED and CLOSE case.
  * */
 G_MODULE_EXPORT gint user_packet_logs(void *element, tcp_state_t state,
