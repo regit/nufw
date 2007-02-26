@@ -150,7 +150,6 @@ void command_users_callback(int sock, user_session_t *session, user_callback_dat
 	int len;
 	int counter;
 	GSList *group;
-	printf("session %p\n", session);
 	inet_ntop (AF_INET6, &session->addr, addr, sizeof(addr));
 	len = snprintf(data->buffer, data->buflen,
 			"%s: ip=%s, port=%hu, uid=%u",
@@ -168,7 +167,6 @@ void command_users_callback(int sock, user_session_t *session, user_callback_dat
 	for (group=session->groups; group; group=g_slist_next(group)) {
 		unsigned int gid = GPOINTER_TO_UINT(group->data);
 		counter += 1;
-		printf("gid %p=>%i (next %p)\n", group, gid, group->next);
 		if (counter == 1) {
 			len = snprintf(data->buffer, data->buflen,
 					", groups=%i", gid);
@@ -191,7 +189,6 @@ char *command_users(command_t *this, char *buffer, size_t buflen)
 	buffer[buflen-1] = 0;
 	data.buffer = buffer;
 	data.buflen = buflen-1;
-	printf("foreach\n");
 	secure_snprintf(buffer, buflen, "(no user)");
 	foreach_session((GHFunc)command_users_callback, (gpointer)&data);
 	return buffer;
@@ -249,12 +246,10 @@ void command_client_run(command_t * this)
 	char buffer[40];
 	int ret;
 	ret = recv(this->client, buffer, sizeof(buffer) - 1, 0);
-	printf("CLIENT recv=%i\n", ret);
 	if (ret <= 0) {
 		if (ret == 0) {
 			log_message(WARNING, AREA_MAIN, "Command server: "
 				    "lost connection with client");
-			printf("lost\n");
 		} else {
 			log_message(WARNING, AREA_MAIN, "Command server: "
 				    "error on recv() from client: %s",
@@ -271,7 +266,6 @@ void command_client_run(command_t * this)
 		command_client_close(this);
 	}
 	buffer[ret] = 0;
-	printf("CLIENT command: >>%s<<\n", buffer);
 	command_execute(this, buffer);
 }
 
