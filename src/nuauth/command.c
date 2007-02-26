@@ -152,11 +152,12 @@ void command_users_callback(int sock, user_session_t *session, user_callback_dat
 	GSList *group;
 	inet_ntop (AF_INET6, &session->addr, addr, sizeof(addr));
 	len = snprintf(data->buffer, data->buflen,
-			"#%i: name=%s, ip=%s, port=%hu, uid=%u",
+			"#%i: name=%s, ip=%s, port=%hu, uid=%u, connected=%ld",
 			sock,
 			session->user_name,
 			addr, session->sport,
-			session->user_id);
+			session->user_id,
+			session->connect_timestamp);
 	data->buffer += len; data->buflen -= len;
 	if (0 <= session->expire) {
 		len = snprintf(data->buffer, data->buflen,
@@ -200,9 +201,8 @@ const char *command_disconnect(command_t *this, char *command)
 	int sock;
 	if (!str_to_int(command, &sock))
 		return NULL;
-	if (delete_client_by_socket(sock) != NU_EXIT_OK){
+	if (delete_client_by_socket(sock) != NU_EXIT_OK)
 		return "not found";
-	}
 	return "disconnected";
 }
 

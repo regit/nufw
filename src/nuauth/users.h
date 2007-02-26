@@ -64,6 +64,7 @@ typedef struct {
 	gchar *version;		/*!< \brief OS full version */
 	time_t expire;		/*!< \brief Timeout of the session (-1 means unlimited) */
 	int client_version;	/*!< \brief Client protocol version */
+	time_t connect_timestamp;
 } user_session_t;
 
 #endif

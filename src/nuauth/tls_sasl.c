@@ -153,6 +153,7 @@ static void tls_sasl_connect_ok(user_session_t * c_session, int c)
 		add_client(c, c_session);
 	}
 
+	c_session->connect_timestamp = time(NULL);
 	/* send new valid session to user session logging system */
 	log_user_session(c_session, SESSION_OPEN);
 	debug_log_message(VERBOSE_DEBUG, AREA_USER,
