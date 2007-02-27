@@ -53,6 +53,7 @@ char warn_clients(struct msg_addr_set *global_msg);
 
 void close_clients();
 
+void kill_all_clients();
 void kill_expired_clients_session();
 
 guint get_number_of_clients();
