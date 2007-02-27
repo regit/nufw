@@ -157,6 +157,7 @@ class Client:
             return
         if not self.execute("uptime"):
             return
+        print
         while True:
             # Read command from user
             try:
@@ -173,6 +174,7 @@ class Client:
                 return
             if command == "quit":
                 return
+            print
 
     def reconnect(self):
         del self.socket

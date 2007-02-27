@@ -28,6 +28,7 @@
 const char* COMMAND_HELP =
 "version: display nuauth version\n"
 "users: list connected users\n"
+"refresh cache: refresh all caches\n"
 "disconnect ID: disconnect an user with his session identifier\n"
 "uptime: display nuauth starting time and uptime\n"
 "reload: reload nuauth configuration\n"
@@ -220,6 +221,13 @@ void command_execute(command_t * this, char *command)
 	} else if (strcmp(command, "reload") == 0) {
 		nuauth_reload(0);
 		encoder_add_string(encoder, "Configuration reloaded");
+	} else if (strcmp(command, "refresh cache") == 0) {
+		if (nuauthconf->acl_cache) {
+			cache_reset(nuauthdatas->acl_cache);
+			encoder_add_string(encoder, "Cache refreshed");
+		} else {
+			encoder_add_string(encoder, "Cache disabled");
+		}
 	} else {
 		ok = 0;
 		encoder_add_string(encoder, "Unknown command");
