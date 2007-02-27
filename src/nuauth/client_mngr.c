@@ -157,7 +157,8 @@ nu_error_t delete_client_by_socket_ext(int socket, int use_lock)
 	} else {
 		log_message(WARNING, AREA_USER,
 				"Could not find user session in hash");
-		g_mutex_unlock(client_mutex);
+		if (use_lock)
+			g_mutex_unlock(client_mutex);
 		return NU_EXIT_ERROR;
 	}
 
@@ -166,8 +167,11 @@ nu_error_t delete_client_by_socket_ext(int socket, int use_lock)
 	}
 
 	tls_user_remove_client(&tls_user_context, socket);
-	shutdown(socket, SHUT_RDWR);
-	close(socket);
+	if (shutdown(socket, SHUT_RDWR) == 0)
+		close(socket); 
+	else
+		log_message(VERBOSE_DEBUG, AREA_USER,
+				"Could not shutdown socket");
 
 	return NU_EXIT_OK;
 }
