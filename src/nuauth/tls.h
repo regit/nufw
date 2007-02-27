@@ -167,4 +167,6 @@ struct tls_user_context_t {
 
 extern struct tls_user_context_t tls_user_context;
 
+void tls_user_remove_client(struct tls_user_context_t *this, int sock);
+
 #endif

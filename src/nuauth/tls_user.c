@@ -396,6 +396,36 @@ void tls_user_check_activity(struct tls_user_context_t *context,
 }
 
 /**
+ * Fix this->mx value if needed (after changing this->tls_rx_set)
+ *
+ * This function has to be called when mutex is locked.
+ */
+void tls_user_update_mx(struct tls_user_context_t *this)
+{
+	int i;
+	for (i = this->mx - 1;
+			i >= 0 && !FD_ISSET(i, &this->tls_rx_set);
+			i = this->mx - 1) {
+		debug_log_message(VERBOSE_DEBUG, AREA_USER,
+				"setting mx to %d", i);
+		printf("SET MX TO %i\n", i);
+		this->mx = i;
+	}
+}
+
+/**
+ * Remove a client from rx set
+ *
+ * This function has to be called when mutex is locked.
+ */
+void tls_user_remove_client(struct tls_user_context_t *this, int sock)
+{
+	printf("REMOVE CLIENT %i\n", sock);
+	FD_CLR(sock, &this->tls_rx_set);
+	tls_user_update_mx(this);
+}
+
+/**
  * Wait for new client connection or client event using ::mx_queue
  * and select().
  *
@@ -484,18 +514,15 @@ void tls_user_main_loop(struct tls_user_context_t *context, GMutex * mutex)
 				tls_user_check_activity(context, i);
 		}
 
-		for (i = context->mx - 1;
-		     i >= 0 && !FD_ISSET(i, &context->tls_rx_set);
-		     i = context->mx - 1) {
-			debug_log_message(VERBOSE_DEBUG, AREA_USER,
-					  "setting mx to %d", i);
-			context->mx = i;
-		}
+		tls_user_update_mx(context);
 	}
 
 	close(context->sck_inet);
 }
 
+/**
+ * Bind TLS user socket
+ */
 int tls_user_bind(char **errmsg)
 {
 	struct addrinfo *res;
@@ -560,6 +587,9 @@ int tls_user_bind(char **errmsg)
 	return sck_inet;
 }
 
+/**
+ * Create TLS user context.
+ */
 int tls_user_init(struct tls_user_context_t *context)
 {
 	confparams_t nuauth_tls_vars[] = {

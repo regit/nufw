@@ -160,7 +160,7 @@ nu_error_t delete_client_by_socket(int socket)
 
 	g_mutex_unlock(client_mutex);
 
-	FD_CLR(socket, &tls_user_context.tls_rx_set);
+	tls_user_remove_client(&tls_user_context, socket);
 	shutdown(socket, SHUT_RDWR);
 	close(socket);
 
