@@ -276,7 +276,7 @@ G_MODULE_EXPORT GSList *get_user_groups(const char *username,
 	char buffer[512];
 	struct passwd result_buf;
 	struct passwd *result_bufp = NULL;
-	GSList *userlist;
+	GSList *userlist = NULL;
 
 	user = normalize_username(username);
 
