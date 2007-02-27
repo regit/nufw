@@ -10,8 +10,7 @@ You first need to patch kernel with :
 Then you can patch libnetfilter_queue with :
     libnetfilter_queue-ifacename.diff
 
-Compile patched kernel and libnetfilter_queue.
-
+Compile patched libnfnetlink and libnetfilter_queue.
 
 NuFW's configure will autodetect the presence of a modified
 version and use the feature if available.
