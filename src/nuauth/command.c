@@ -20,9 +20,19 @@
 
 #include "auth_srv.h"
 #include "command.h"
+#include "command_enc.h"
 #include <sys/un.h>		/* unix socket */
 
 #define SOCKET_FILENAME "/tmp/nuauth-command.socket"
+
+const char* COMMAND_HELP =
+"version: display nuauth version\n"
+"users: list connected users\n"
+"disconnect ID: disconnect an user with his session identifier\n"
+"uptime: display nuauth starting time and uptime\n"
+"reload: reload nuauth configuration\n"
+"help: display this help\n"
+"quit: disconnect";
 
 typedef struct {
 	time_t start_timestamp;
@@ -119,147 +129,93 @@ void command_client_close(command_t * this)
 	this->select_max = this->socket + 1;
 }
 
-char *command_uptime(command_t *this, char *buffer, size_t buflen)
+encoder_t* command_uptime(command_t *this)
 {
-	char time_text[100];
-	time_t diff;
-	struct tm timestamp;
-	int len;
-
-	/* compute uptime and format starting time */
-	diff = time(NULL) - this->start_timestamp;
-	localtime_r(&this->start_timestamp, &timestamp);
-	len = strftime(time_text, sizeof(time_text)-1,
-			"%F %H:%M:%S", &timestamp);
-	time_text[len] = 0;
-
-	/* create answer message */
-	(void)secure_snprintf(buffer, buflen,
-			"%u sec since %s", diff, time_text);
-	return buffer;
+	time_t diff = time(NULL) - this->start_timestamp;
+	return encode_uptime(this->start_timestamp, diff);
 }
 
-typedef struct {
-	char *buffer;
-	size_t buflen;
-} user_callback_data_t;
-
-void command_users_callback(int sock, user_session_t *session, user_callback_data_t *data)
+void command_users_callback(int sock, user_session_t *session, GSList **users)
 {
-	char addr[INET6_ADDRSTRLEN];
-	int len;
-	int counter;
-	GSList *group;
-	inet_ntop (AF_INET6, &session->addr, addr, sizeof(addr));
-	len = snprintf(data->buffer, data->buflen,
-			"#%i: name=%s, ip=%s, port=%hu, uid=%u, connected=%ld",
-			sock,
-			session->user_name,
-			addr, session->sport,
-			session->user_id,
-			session->connect_timestamp);
-	data->buffer += len; data->buflen -= len;
-	if (0 <= session->expire) {
-		len = snprintf(data->buffer, data->buflen,
-				", expire=%i sec",
-				(int)session->expire);
-		data->buffer += len; data->buflen -= len;
-	}
-	counter = 0;
-	for (group=session->groups; group; group=g_slist_next(group)) {
-		unsigned int gid = GPOINTER_TO_UINT(group->data);
-		counter += 1;
-		if (counter == 1) {
-			len = snprintf(data->buffer, data->buflen,
-					", groups=%i", gid);
-		} else {
-			len = snprintf(data->buffer, data->buflen,
-					":%i", gid);
-		}
-		data->buffer += len; data->buflen -= len;
-	}
-	len = snprintf(data->buffer, data->buflen,
-		", proto version=%i\n",
-		session->client_version);
-	data->buffer += len; data->buflen -= len;
-
+	encoder_t *encoder = encode_user(session);
+	*users = g_slist_prepend(*users, encoder);
 }
 
-char *command_users(command_t *this, char *buffer, size_t buflen)
+void command_users(command_t *this, encoder_t *encoder)
 {
-	user_callback_data_t data;
-	buffer[buflen-1] = 0;
-	data.buffer = buffer;
-	data.buflen = buflen-1;
-	secure_snprintf(buffer, buflen, "(no user)");
-	foreach_session((GHFunc)command_users_callback, (gpointer)&data);
-	return buffer;
+	/* read user list */
+	GSList *users = NULL;
+	foreach_session((GHFunc)command_users_callback, &users);
+
+	/* encode user list */
+	encoder_add_tuple_from_slist(encoder, users);
+	encoder_slist_destroy(users);
 }
 
-const char *command_disconnect(command_t *this, char *command)
+int command_disconnect(command_t *this, encoder_t *encoder, char *command)
 {
 	int sock;
-	if (!str_to_int(command, &sock))
-		return NULL;
-	if (delete_client_by_socket(sock) != NU_EXIT_OK)
-		return "not found";
-	return "disconnected";
+	if (!str_to_int(command, &sock)) {
+		return 0;
+	}
+	if (delete_client_by_socket(sock) != NU_EXIT_OK) {
+		encoder_add_string(encoder, "user not found");
+		return 0;
+	}
+	encoder_add_string(encoder, "user disconnected");
+	return 1;
 }
 
 void command_execute(command_t * this, char *command)
 {
-	const char *buffer = "ok";
-	static char static_buffer[1024];
-	char *help =
-"version: display nuauth version\n"
-"users: list connected users\n"
-"disconnect ID: disconnect an user with his session identifier\n"
-"uptime: display nuauth starting time and uptime\n"
-"reload: reload nuauth configuration\n"
-"help: display this help\n"
-"quit: disconnect";
+	encoder_t *encoder, *answer;
 	int ret;
+	int ok;
 
 	/* process command */
+	ok = 1;
+	encoder = encoder_new();
 	if (strcmp(command, "quit") == 0) {
-		buffer = NULL;
+		/* nothing */
 	} else if (strcmp(command, "help") == 0) {
-		buffer = help;
+		encoder_add_string(encoder, COMMAND_HELP);
 	} else if (strcmp(command, "uptime") == 0) {
-		buffer = command_uptime(this, static_buffer, sizeof(static_buffer));
+		encoder = command_uptime(this);
 	} else if (strcmp(command, "users") == 0) {
-		buffer = command_users(this, static_buffer, sizeof(static_buffer));
+		command_users(this, encoder);
 	} else if (strcmp(command, "version") == 0) {
-		secure_snprintf(static_buffer, sizeof(static_buffer),
-				"Nuauth %s", NUAUTH_FULL_VERSION);
-		buffer = static_buffer;
+		encoder_add_string(encoder, NUAUTH_FULL_VERSION);
 	} else if (strncmp(command, "disconnect ", 10) == 0) {
-		buffer = command_disconnect(this, command+10);
+		ok = command_disconnect(this, encoder, command+10);
 	} else if (strcmp(command, "reload") == 0) {
 		nuauth_reload(0);
-		buffer = "Reload configuration";
+		encoder_add_string(encoder, "Configuration reloaded");
 	} else {
-		(void)secure_snprintf(static_buffer, sizeof(static_buffer)-1,
-				      "Error: Unknown command \"%s\"",
-				      command);
-		buffer = static_buffer;
+		ok = 0;
+		encoder_add_string(encoder, "Unknown command");
 	}
 
 	/* on error (invalid input): disconnect client */
-	if (!buffer)
+	if (encoder->size == 0)
 	{
 		command_client_close(this);
+		encoder_destroy(encoder);
 		return;
 	}
 
+	/* create answer */
+	answer = encode_answer(ok, encoder);
+	encoder_destroy(encoder);
+
 	/* send answer */
-	ret = send(this->client, buffer, strlen(buffer), 0);
+	ret = send(this->client, answer->data, answer->size, 0);
 	if (ret < 0) {
 		log_message(WARNING, AREA_MAIN,
 			    "Command server: client send() error: %s",
 			    g_strerror(errno));
 		command_client_close(this);
 	}
+	encoder_destroy(answer);
 }
 
 void command_client_run(command_t * this)

@@ -650,9 +650,7 @@ int main(int argc, char *argv[])
 #ifdef DEBUG_ENABLE
 		/* display stats */
 		process_poll(0);
-#ifdef PERF_DISPLAY_ENABLE
 		printf("Average: %u\n", stat / seconds);
-#endif
 #endif
 	}
 

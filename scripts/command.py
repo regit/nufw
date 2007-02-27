@@ -23,34 +23,18 @@
 
 from socket import socket, AF_UNIX, error
 from sys import exit
+from command_dec import decode, Answer
 
-class Client:
-    SOCKET_FILENAME = "/tmp/nuauth-command.socket"
+class NuauthSocket:
+    def __init__(self, filename):
+        self.socket = socket(AF_UNIX)
+        self.socket.connect(filename)
 
-    def __init__(self):
-        self.debug = True
-
-    def connect(self, verbose=True):
-        try:
-            self.socket = socket(AF_UNIX)
-            self.socket.connect(self.SOCKET_FILENAME)
-        except error, err:
-            if verbose:
-                print "[!] Connection error: %s" % err
-            return False
-        if verbose:
-            print "[+] Connected"
-        return True
-
-    def readAnswer(self):
+    def recv(self):
         size = 10
         data = self.socket.recv(size)
         if data == '':
-            if self.reconnect():
-                return True
-        if data == '':
-            print "[!] lost connection with server"
-            return False
+            return ("no data", None)
         if len(data) == size:
             self.socket.setblocking(0)
             alldata = [data]
@@ -62,16 +46,13 @@ class Client:
                     if code == 11:
                         data = ''
                     else:
-                        print "[!] recv() error: %s" % err
-                        return False
+                        return (str(err), None)
                 if not data:
                     break
                 alldata.append(data)
-            data = "".join(alldata)
             self.socket.setblocking(1)
-        if data != "ok":
-            print data.strip()
-        return True
+            data = "".join(alldata)
+        return (None, data)
 
     def send(self, data, retry=True):
         err = ""
@@ -80,25 +61,71 @@ class Client:
         except error, err:
             code = err[0]
             if code == 32:
-                err = "[!] lost connection with server"
+                return "lost connection with server"
             else:
-                err = "[!] send() error: %s" % err
-        if err and retry and self.reconnect():
-            try:
-                self.socket.send(data)
-                err = ''
-            except error, err:
-                pass
+                return str(err)
+        return None
+
+class Client:
+    SOCKET_FILENAME = "/tmp/nuauth-command.socket"
+
+    def __init__(self):
+        self.debug = True
+        self.socket = None
+
+    def connect(self, verbose=True):
+        try:
+            self.socket = NuauthSocket(self.SOCKET_FILENAME)
+        except error, err:
+            if verbose:
+                print "[!] Connection error: %s" % err
+            return False
+        if verbose:
+            print "[+] Connected"
+        return True
+
+    def _execute(self, command):
+        # Send command
+        err = self.socket.send(command)
         if err:
-            print err
+            print "[!] send() error: %s" % err
+            return False
+
+        if command == "quit":
+            return True
+
+        # Read answer
+        err, data = self.socket.recv()
+        if err:
+            print "[!] recv() error: %s" % err
+            return False
+        value = decode(data)
+
+        # Print answer
+        if value.__class__ != Answer:
+            print "[!] invalid answer format: %r" % answer
+        if not value.ok:
+            print "[!] Error: %s" % value.content
+        else:
+            print value.content
+        return True
+
+    def execute(self, command):
+        ok = self._execute(command)
+        if not ok:
+            ok = self.reconnect()
+            if ok:
+                ok = self._execute(command)
+        if not ok:
+            print "[!] execute(%r) error" % command
             return False
         return True
 
     def mainLoop(self):
-        if not(self.send("version") and self.readAnswer()):
-            return "[!] Error on 'version' command"
-        if not(self.send("uptime") and self.readAnswer()):
-            return "[!] Error on 'uptime' command"
+        if not self.execute("version"):
+            return
+        if not self.execute("uptime"):
+            return
         while True:
             # Read command from user
             try:
@@ -111,19 +138,13 @@ class Client:
                 continue
 
             # Send command
-            if not self.send(command, command!="quit"):
+            if not self.execute(command):
                 return
-
-            # Leave on "quit" command
             if command == "quit":
                 return
 
-            # Wait answer
-            if not self.readAnswer():
-                return
-
     def reconnect(self):
-        self.socket.close()
+        del self.socket
         ok = self.connect(False)
         if ok:
             print "[+] Server restart: reconnect"
