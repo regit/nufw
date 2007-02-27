@@ -295,6 +295,7 @@ G_MODULE_EXPORT GSList *get_user_groups(const char *username,
 	} else {
 		return getugroups(user, result_bufp->pw_gid);
 	}
+	return userlist;
 }
 
 G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)

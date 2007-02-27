@@ -32,7 +32,8 @@ typedef enum {
 	INSERT_MESSAGE,		/*!< Call add_client() / used in cache_manager() */
 	UPDATE_MESSAGE,		/*!< Used in cache_manager() */
 	GET_MESSAGE,		/*!< Used in cache_manager() */
-	REFRESH_MESSAGE		/*!< Used in cache_manager() */
+	REFRESH_MESSAGE,		/*!< Used in cache_manager() */
+	RESET_MESSAGE		/*!< Used in cache_manager() to make all entry perish */
 } internal_message_type_t;
 
 struct internal_message {

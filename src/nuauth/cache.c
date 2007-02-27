@@ -95,6 +95,14 @@ gboolean cache_entry_is_old(gpointer key, gpointer value,
 	}
 }
 
+void cache_reset_timestamp(gpointer key, gpointer value,
+			    gpointer user_data)
+{
+	cache_entry_t *entry = value;
+
+	entry->refresh_timestamp = 0;
+}
+
 void cache_insert(cache_class_t * this, struct cache_message *message)
 {
 	/* nothing in cache */
@@ -310,6 +318,15 @@ void cache_manager(cache_class_t * this)
 			g_hash_table_foreach_remove(this->hash,
 						    cache_entry_is_old,
 						    NULL);
+			g_free(message);
+			break;
+		case RESET_MESSAGE:
+			/* iter on each element */
+			g_hash_table_foreach(this->hash,
+					     cache_reset_timestamp,
+					     NULL);
+			log_message(VERBOSE_DEBUG, AREA_MAIN,
+					"Cache reset done");
 			g_free(message);
 			break;
 		}

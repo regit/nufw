@@ -267,6 +267,15 @@ void nuauth_reload(int signal)
 	load_modules();
 	/* init period */
 	nuauthconf->periods = init_periods(nuauthconf);
+	/* ask cache to reset */
+	if (nuauthconf->acl_cache) {
+		struct cache_message *cmessage;
+		/* send refresh message to acl cache thread */
+		cmessage = g_new0(struct cache_message, 1);
+		cmessage->type = RESET_MESSAGE;
+		g_async_queue_push(nuauthdatas->acl_cache->queue,
+				   cmessage);
+	}
 	/* liberate threads by broadcasting condition */
 	nuauthdatas->need_reload = 0;
 	g_mutex_lock(nuauthdatas->reload_cond_mutex);
