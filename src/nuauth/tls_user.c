@@ -327,10 +327,6 @@ int tls_user_accept(struct tls_user_context_t *context)
 	current_client_conn->addr = addr;
 	current_client_conn->sport = sport;
 
-	/* Update mx number if needed */
-	if (socket + 1 > context->mx)
-		context->mx = socket + 1;
-
 	/* Set KEEP ALIVE on connection */
 	option_value = 1;
 	setsockopt(socket,
@@ -638,17 +634,6 @@ int tls_user_init(struct tls_user_context_t *context)
 	my_sasl_init();
 
 	init_client_struct();
-
-#if 0
-	/* intercept SIGTERM */
-	action.sa_handler = tls_nuauth_cleanup;
-	sigemptyset(&(action.sa_mask));
-	action.sa_flags = 0;
-	if (sigaction(SIGTERM, &action, NULL) != 0) {
-		printf("Error\n");
-		exit(EXIT_FAILURE);
-	}
-#endif
 
 	/* pre client list */
 	pre_client_list = NULL;

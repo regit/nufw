@@ -148,13 +148,7 @@ nu_error_t delete_client_by_socket_ext(int socket, int use_lock)
 	    (user_session_t
 	     *) (g_hash_table_lookup(client_conn_hash,
 				     GINT_TO_POINTER(socket)));
-	if (session) {
-		/* destroy entry in IP hash */
-		ipsockets =
-			g_hash_table_lookup(client_ip_hash,
-					IPV6_TO_POINTER(&session->addr));
-		delete_ipsockets_from_hash(ipsockets, session);
-	} else {
+	if (!session) {
 		log_message(WARNING, AREA_USER,
 				"Could not find user session in hash");
 		if (use_lock)
@@ -162,13 +156,19 @@ nu_error_t delete_client_by_socket_ext(int socket, int use_lock)
 		return NU_EXIT_ERROR;
 	}
 
+	/* destroy entry in IP hash */
+	ipsockets =
+		g_hash_table_lookup(client_ip_hash,
+				IPV6_TO_POINTER(&session->addr));
+	delete_ipsockets_from_hash(ipsockets, session);
+
 	if (use_lock) {
 		g_mutex_unlock(client_mutex);
 	}
 
 	tls_user_remove_client(&tls_user_context, socket);
 	if (shutdown(socket, SHUT_RDWR) == 0)
-		close(socket); 
+		close(socket);
 	else
 		log_message(VERBOSE_DEBUG, AREA_USER,
 				"Could not shutdown socket");
@@ -337,12 +337,7 @@ void kill_all_clients_cb(int sock, user_session_t* session, gpointer data)
 
 void kill_all_clients()
 {
-/*	printf("KILL ALL CLIENTS: wait lock %p\n", tls_user_context.mutex);
-	g_mutex_lock(tls_user_context.mutex);
-	printf("KILL ALL CLIENTS: get lock\n"); */
 	foreach_session((GHFunc)kill_all_clients_cb, NULL);
-/*	g_mutex_unlock(tls_user_context.mutex);
-	printf("KILL ALL CLIENTS: lock %p released\n", tls_user_context.mutex); */
 }
 
 /** @} */
