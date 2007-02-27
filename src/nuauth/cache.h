@@ -52,11 +52,12 @@ typedef struct {
 	CacheDeleteFunc delete_elt;
 	void *(*duplicate_key) (gpointer);
 	void (*free_key) (gpointer);
-	 gboolean(*equal_key) (gconstpointer, gconstpointer);
+	gboolean(*equal_key) (gconstpointer, gconstpointer);
 } cache_class_t;
 
 void cache_manager(cache_class_t * this);
 void cache_destroy(cache_class_t * datas);
+void cache_reset(cache_class_t * this);
 
 /**
  * generic message send between thread working with the

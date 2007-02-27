@@ -347,4 +347,13 @@ void cache_destroy(cache_class_t * this)
 	g_hash_table_destroy(this->hash);
 }
 
+void cache_reset(cache_class_t * this)
+{
+	struct cache_message *cmessage;
+	/* send refresh message to acl cache thread */
+	cmessage = g_new0(struct cache_message, 1);
+	cmessage->type = RESET_MESSAGE;
+	g_async_queue_push(this->queue, cmessage);
+}
+
 /** @} */
