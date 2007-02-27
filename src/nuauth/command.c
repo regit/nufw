@@ -34,6 +34,8 @@ const char* COMMAND_HELP =
 "help: display this help\n"
 "quit: disconnect";
 
+const char* PYTHON_PROTO_VERSION = "NuFW 0.0";
+
 typedef struct {
 	time_t start_timestamp;
 	int socket;
@@ -98,10 +100,22 @@ int command_new(command_t * this)
 	return 1;
 }
 
+void command_client_close(command_t * this)
+{
+	log_message(WARNING, AREA_MAIN,
+		    "Command server: close client connection");
+	close(this->client);
+	this->client = -1;
+	this->select_max = this->socket + 1;
+}
+
 int command_client_accept(command_t * this)
 {
-	socklen_t len = sizeof(this->client_addr);
+	char buffer[8];
+	int ret;
 
+	/* accept client socket */
+	socklen_t len = sizeof(this->client_addr);
 	this->client =
 	    accept(this->socket, (struct sockaddr *) &this->client_addr,
 		   &len);
@@ -111,22 +125,38 @@ int command_client_accept(command_t * this)
 			    g_strerror(errno));
 		return 0;
 	}
+	log_message(WARNING, AREA_MAIN,
+		    "Command server: client connection");
+
+	/* read client version */
+	ret = recv(this->client, buffer, sizeof(buffer), 0);
+	if (ret < 0) {
+		log_message(CRITICAL, AREA_MAIN,
+			    "Command server: client doesn't send version");
+		command_client_close(this);
+		return 0;
+	}
+
+	/* send server version */
+	send(this->client, PYTHON_PROTO_VERSION, 8, 0);
+
+	/* check client version */
+	if (ret != sizeof(buffer)
+	    || strcmp(buffer, PYTHON_PROTO_VERSION) != 0) {
+		log_message(CRITICAL, AREA_MAIN,
+			    "Command server: invalid client version");
+		command_client_close(this);
+		return 0;
+	}
+
+	/* client connected */
+	log_message(WARNING, AREA_MAIN,
+		    "Command server: client connected");
 	if (this->socket < this->client)
 		this->select_max = this->client + 1;
 	else
 		this->select_max = this->socket + 1;
-	log_message(WARNING, AREA_MAIN,
-		    "Command server: client connected");
 	return 1;
-}
-
-void command_client_close(command_t * this)
-{
-	log_message(WARNING, AREA_MAIN,
-		    "Command server: close client connection");
-	close(this->client);
-	this->client = -1;
-	this->select_max = this->socket + 1;
 }
 
 encoder_t* command_uptime(command_t *this)

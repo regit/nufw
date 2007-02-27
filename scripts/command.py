@@ -18,12 +18,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-
-
-
 from socket import socket, AF_UNIX, error
 from sys import exit
 from command_dec import decode, Answer
+
+PROTO_VERSION = "NuFW 0.0"
 
 class NuauthSocket:
     def __init__(self, filename):
@@ -32,7 +31,15 @@ class NuauthSocket:
 
     def recv(self):
         size = 10
-        data = self.socket.recv(size)
+        try:
+            data = self.socket.recv(size)
+        except error, err:
+            code = err[0]
+            if code == 104:
+                err = "lost connection"
+            else:
+                err = str(err)
+            return (err, None)
         if data == '':
             return ("no data", None)
         if len(data) == size:
@@ -78,7 +85,28 @@ class Client:
             self.socket = NuauthSocket(self.SOCKET_FILENAME)
         except error, err:
             if verbose:
+                code = err[0]
+                if code == 111:
+                    err = "Server is not running"
                 print "[!] Connection error: %s" % err
+            return False
+
+        # Send client version
+        err = self.socket.send(PROTO_VERSION)
+        if err:
+            print "[!] Unable to send client version: %s" % err
+            return False
+
+        # Read client version
+        err, version = self.socket.recv()
+        if err:
+            print "[!] Unable to read server version: %s" % err
+            return False
+
+        # Check versions
+        if version != PROTO_VERSION:
+            print "[!] Server version %r != client version %r: please upgrade." % (
+                version, PROTO_VERSION)
             return False
         if verbose:
             print "[+] Connected"
@@ -88,36 +116,39 @@ class Client:
         # Send command
         err = self.socket.send(command)
         if err:
-            print "[!] send() error: %s" % err
-            return False
+            return "send() error: %s" % err
 
         if command == "quit":
-            return True
+            return ""
 
         # Read answer
         err, data = self.socket.recv()
         if err:
-            print "[!] recv() error: %s" % err
-            return False
+            return "recv() error: %s" % err
         value = decode(data)
 
         # Print answer
         if value.__class__ != Answer:
             print "[!] invalid answer format: %r" % answer
-        if not value.ok:
-            print "[!] Error: %s" % value.content
+        if value.ok:
+            value = value.content
+            if isinstance(value, list):
+                for item in value:
+                    print str(item)
+            else:
+                print str(value)
         else:
-            print value.content
-        return True
+            print "[!] Error: %s" % value.content
+        return ""
 
     def execute(self, command):
-        ok = self._execute(command)
-        if not ok:
+        err = self._execute(command)
+        if err:
             ok = self.reconnect()
             if ok:
-                ok = self._execute(command)
-        if not ok:
-            print "[!] execute(%r) error" % command
+                err = self._execute(command)
+        if err:
+            print "[!] execute(%r) error: %s" % (command, err)
             return False
         return True
 
