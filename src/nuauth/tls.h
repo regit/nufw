@@ -163,6 +163,7 @@ struct tls_user_context_t {
 	unsigned int nuauth_tls_max_clients;
 	int nuauth_number_authcheckers;
 	int nuauth_auth_nego_timeout;
+	GAsyncQueue* cmd_queue;
 };
 
 extern struct tls_user_context_t tls_user_context;

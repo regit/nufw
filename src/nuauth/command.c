@@ -188,7 +188,8 @@ void command_users(command_t *this, encoder_t *encoder)
 
 int command_disconnect_all(command_t *this, encoder_t *encoder)
 {
-	kill_all_clients();
+	g_async_queue_push(tls_user_context.cmd_queue,GINT_TO_POINTER(-1));
+	/** \todo wait for select action */
 	encoder_add_string(encoder, "done");
 	return 1;
 }
@@ -199,10 +200,14 @@ int command_disconnect(command_t *this, encoder_t *encoder, char *command)
 	if (!str_to_int(command, &sock)) {
 		return 0;
 	}
+	g_async_queue_push(tls_user_context.cmd_queue,GINT_TO_POINTER(sock));
+	/** \todo wait for select action */
+#if 0
 	if (delete_client_by_socket(sock) != NU_EXIT_OK) {
 		encoder_add_string(encoder, "user not found");
 		return 0;
 	}
+#endif
 	encoder_add_string(encoder, "user disconnected");
 	return 1;
 }

@@ -460,6 +460,16 @@ void tls_user_main_loop(struct tls_user_context_t *context, GMutex * mutex)
 			c_pop = g_async_queue_try_pop(mx_queue);
 		}
 
+		/*
+		 * execute client destruction task 
+		 */
+		while (i = g_async_queue_try_pop(context->cmd_queue)){
+			if (GPOINTER_TO_INT(i) == -1)
+				kill_all_clients();
+			else 
+				delete_client_by_socket(GPOINTER_TO_INT(i));
+			/** \todo Warn command about result */
+		}
 
 		/* wait new events during 1 second */
 		FD_ZERO(&wk_set);
@@ -467,8 +477,8 @@ void tls_user_main_loop(struct tls_user_context_t *context, GMutex * mutex)
 			if (FD_ISSET(i, &context->tls_rx_set))
 				FD_SET(i, &wk_set);
 		}
-		tv.tv_sec = 1;
-		tv.tv_usec = 0;
+		tv.tv_sec = 0;
+		tv.tv_usec = 250000;
 		nb_active_clients =
 		    select(context->mx, &wk_set, NULL, NULL, &tv);
 
@@ -486,30 +496,25 @@ void tls_user_main_loop(struct tls_user_context_t *context, GMutex * mutex)
 				    __FILE__, __LINE__, g_strerror(errno));
 			nuauth_ask_exit();
 			break;
-		}
-		if (nb_active_clients == 0) {
-			/* timeout, just continue */
-			continue;
-		}
+		} else if (nb_active_clients > 0) {
+			/*
+			 * Check if a connect has occured
+			 */
+			if (FD_ISSET(context->sck_inet, &wk_set)) {
+				if (tls_user_accept(context) != 0)
+					continue;
+			}
 
-		/*
-		 * Check if a connect has occured
-		 */
-		if (FD_ISSET(context->sck_inet, &wk_set)) {
-			if (tls_user_accept(context) != 0)
-				continue;
+			/*
+			 * check for client activity
+			 */
+			for (i = 0; i < context->mx; ++i) {
+				if (i == context->sck_inet)
+					continue;
+				if (FD_ISSET(i, &wk_set))
+					tls_user_check_activity(context, i);
+			}
 		}
-
-		/*
-		 * check for client activity
-		 */
-		for (i = 0; i < context->mx; ++i) {
-			if (i == context->sck_inet)
-				continue;
-			if (FD_ISSET(i, &wk_set))
-				tls_user_check_activity(context, i);
-		}
-
 		tls_user_update_mx(context);
 	}
 
@@ -630,6 +635,7 @@ int tls_user_init(struct tls_user_context_t *context)
 	free_confparams(nuauth_tls_vars,
 			sizeof(nuauth_tls_vars) / sizeof(confparams_t));
 
+	context->cmd_queue =  g_async_queue_new();
 	/* init sasl stuff */
 	my_sasl_init();
 

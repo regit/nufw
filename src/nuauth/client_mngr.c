@@ -71,7 +71,7 @@ void clean_session(user_session_t * c_session)
 static void hash_clean_session(user_session_t * c_session)
 {
 	int socket = (int) gnutls_transport_get_ptr(*c_session->tls);
-	clean_session(c_session);
+	log_user_session(c_session, SESSION_CLOSE);
 	shutdown(socket, SHUT_RDWR);
 	close(socket);
 }
@@ -110,7 +110,9 @@ void add_client(int socket, gpointer datas)
 	g_mutex_unlock(client_mutex);
 }
 
-static GSList *delete_ipsockets_from_hash(GSList *ipsockets, user_session_t *session)
+static GSList *delete_ipsockets_from_hash(GSList *ipsockets,
+					  user_session_t *session,
+					  int destroy)
 {
 	ipsockets = g_slist_remove(ipsockets, session);
 	if (ipsockets != NULL) {
@@ -123,14 +125,16 @@ static GSList *delete_ipsockets_from_hash(GSList *ipsockets, user_session_t *ses
 				IPV6_TO_POINTER(&session->
 					addr));
 	}
-	/* remove entry from hash */
-	g_hash_table_steal(client_conn_hash,
-			GINT_TO_POINTER(session->socket));
-	log_user_session(session, SESSION_CLOSE);
+	if (destroy) {
+		/* remove entry from hash */
+		g_hash_table_steal(client_conn_hash,
+				GINT_TO_POINTER(session->socket));
+		log_user_session(session, SESSION_CLOSE);
+	}
 	return ipsockets;
 }
 
-nu_error_t delete_client_by_socket_ext(int socket, int use_lock, GSList **data)
+nu_error_t delete_client_by_socket_ext(int socket, int use_lock)
 {
 	GSList *ipsockets;
 	user_session_t *session;
@@ -140,10 +144,6 @@ nu_error_t delete_client_by_socket_ext(int socket, int use_lock, GSList **data)
 		g_mutex_lock(client_mutex);
 	}
 
-	/* get addr of of client
-	 *  get element
-	 *  get addr field
-	 */
 	session =
 	    (user_session_t
 	     *) (g_hash_table_lookup(client_conn_hash,
@@ -160,28 +160,27 @@ nu_error_t delete_client_by_socket_ext(int socket, int use_lock, GSList **data)
 	ipsockets =
 		g_hash_table_lookup(client_ip_hash,
 				IPV6_TO_POINTER(&session->addr));
-	delete_ipsockets_from_hash(ipsockets, session);
+	delete_ipsockets_from_hash(ipsockets, session, use_lock);
 
 	if (use_lock) {
 		g_mutex_unlock(client_mutex);
 	}
 
 	tls_user_remove_client(&tls_user_context, socket);
-	if (shutdown(socket, SHUT_RDWR) == 0)
-		close(socket);
-	else
-		log_message(VERBOSE_DEBUG, AREA_USER,
-				"Could not shutdown socket");
-
-	if (data)
-		*data = g_slist_prepend(*data, GINT_TO_POINTER(socket));
+	if (use_lock) {
+		if (shutdown(socket, SHUT_RDWR) == 0)
+			close(socket);
+		else
+			log_message(VERBOSE_DEBUG, AREA_USER,
+					"Could not shutdown socket");
+	}
 
 	return NU_EXIT_OK;
 }
 
 inline nu_error_t delete_client_by_socket(int socket)
 {
-	return delete_client_by_socket_ext(socket, 1, NULL);
+	return delete_client_by_socket_ext(socket, 1);
 }
 
 inline user_session_t *get_client_datas_by_socket(int socket)
@@ -278,7 +277,7 @@ char warn_clients(struct msg_addr_set *global_msg)
 		if (badsockets) {
 			while (badsockets) {
 				start_ipsockets = delete_ipsockets_from_hash(start_ipsockets,
-							   badsockets->data);
+							   badsockets->data, 1);
 				badsockets = badsockets->next;
 			}
 			g_slist_free(badsockets);
@@ -333,23 +332,19 @@ void foreach_session(GHFunc callback, void *data)
 	g_mutex_unlock(client_mutex);
 }
 
-void kill_all_clients_cb(int sock, user_session_t* session, gpointer data)
+gboolean kill_all_clients_cb(gpointer sock, user_session_t* session, gpointer data)
 {
-	delete_client_by_socket_ext(sock, 0, data);
+	if (delete_client_by_socket_ext(GPOINTER_TO_INT(sock), 0) == NU_EXIT_OK)
+		return TRUE;
+	else
+		return FALSE;
 }
 
 void kill_all_clients()
 {
-	GSList *sessions_list = NULL;
-	GSList *pointer_list;
-
-	foreach_session((GHFunc)kill_all_clients_cb, &sessions_list);
-	pointer_list = sessions_list;
-	while (pointer_list) {
-		g_hash_table_remove(client_conn_hash,pointer_list->data);
-		pointer_list = pointer_list->next;
-	}
-	g_slist_free(sessions_list);
+	g_mutex_lock(client_mutex);
+	g_hash_table_foreach_remove(client_conn_hash, kill_all_clients_cb, NULL);
+	g_mutex_unlock(client_mutex);
 }
 
 /** @} */
