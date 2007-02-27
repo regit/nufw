@@ -30,6 +30,7 @@ const char* COMMAND_HELP =
 "users: list connected users\n"
 "refresh cache: refresh all caches\n"
 "disconnect ID: disconnect an user with his session identifier\n"
+"disconnect all: disconnect all users\n"
 "uptime: display nuauth starting time and uptime\n"
 "reload: reload nuauth configuration\n"
 "help: display this help\n"
@@ -185,6 +186,13 @@ void command_users(command_t *this, encoder_t *encoder)
 	encoder_slist_destroy(users);
 }
 
+int command_disconnect_all(command_t *this, encoder_t *encoder)
+{
+	kill_all_clients();
+	encoder_add_string(encoder, "done");
+	return 1;
+}
+
 int command_disconnect(command_t *this, encoder_t *encoder, char *command)
 {
 	int sock;
@@ -218,6 +226,8 @@ void command_execute(command_t * this, char *command)
 		command_users(this, encoder);
 	} else if (strcmp(command, "version") == 0) {
 		encoder_add_string(encoder, NUAUTH_FULL_VERSION);
+	} else if (strcmp(command, "disconnect all") == 0) {
+		ok = command_disconnect_all(this, encoder);
 	} else if (strncmp(command, "disconnect ", 10) == 0) {
 		ok = command_disconnect(this, encoder, command+10);
 	} else if (strcmp(command, "reload") == 0) {

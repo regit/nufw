@@ -130,12 +130,15 @@ static GSList *delete_ipsockets_from_hash(GSList *ipsockets, user_session_t *ses
 	return ipsockets;
 }
 
-nu_error_t delete_client_by_socket(int socket)
+nu_error_t delete_client_by_socket_ext(int socket, int use_lock)
 {
 	GSList *ipsockets;
 	user_session_t *session;
 
-	g_mutex_lock(client_mutex);
+
+	if (use_lock) {
+		g_mutex_lock(client_mutex);
+	}
 
 	/* get addr of of client
 	 *  get element
@@ -158,13 +161,20 @@ nu_error_t delete_client_by_socket(int socket)
 		return NU_EXIT_ERROR;
 	}
 
-	g_mutex_unlock(client_mutex);
+	if (use_lock) {
+		g_mutex_unlock(client_mutex);
+	}
 
 	tls_user_remove_client(&tls_user_context, socket);
 	shutdown(socket, SHUT_RDWR);
 	close(socket);
 
 	return NU_EXIT_OK;
+}
+
+inline nu_error_t delete_client_by_socket(int socket)
+{
+	return delete_client_by_socket_ext(socket, 1);
 }
 
 inline user_session_t *get_client_datas_by_socket(int socket)
@@ -314,6 +324,21 @@ void foreach_session(GHFunc callback, void *data)
 	g_mutex_lock(client_mutex);
 	g_hash_table_foreach(client_conn_hash, callback, data);
 	g_mutex_unlock(client_mutex);
+}
+
+void kill_all_clients_cb(int sock, user_session_t* session, gpointer data)
+{
+	delete_client_by_socket_ext(sock, 0);
+}
+
+void kill_all_clients()
+{
+/*	printf("KILL ALL CLIENTS: wait lock %p\n", tls_user_context.mutex);
+	g_mutex_lock(tls_user_context.mutex);
+	printf("KILL ALL CLIENTS: get lock\n"); */
+	foreach_session((GHFunc)kill_all_clients_cb, NULL);
+/*	g_mutex_unlock(tls_user_context.mutex);
+	printf("KILL ALL CLIENTS: lock %p released\n", tls_user_context.mutex); */
 }
 
 /** @} */
