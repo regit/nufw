@@ -23,7 +23,7 @@ class Uptime(Message):
         self.diff = datetime.timedelta(seconds=diff)
 
     def __str__(self):
-        return "start=%s diff=%s sec" % (self.start, self.diff)
+        return "start=%s diff=%s" % (self.start, self.diff)
 
 class User(Message):
     def __init__(self, client_version, socket, name, addr, sport, uid, groups, connect_timestamp, expire):
@@ -43,7 +43,7 @@ class User(Message):
     def __str__(self):
         keys = ("client_version", "socket", "name", "sport",
             "addr", "uid", "groups", "connect_timestamp", "expire")
-        return ", ".join( "%s=%s" % (key, getattr(self, key)) for key in keys)
+        return ", ".join([ "%s=%s" % (key, getattr(self, key)) for key in keys])
 
 class Decoder:
     def __init__(self, data):
