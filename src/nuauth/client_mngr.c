@@ -130,7 +130,7 @@ static GSList *delete_ipsockets_from_hash(GSList *ipsockets, user_session_t *ses
 	return ipsockets;
 }
 
-nu_error_t delete_client_by_socket_ext(int socket, int use_lock)
+nu_error_t delete_client_by_socket_ext(int socket, int use_lock, GSList **data)
 {
 	GSList *ipsockets;
 	user_session_t *session;
@@ -173,12 +173,15 @@ nu_error_t delete_client_by_socket_ext(int socket, int use_lock)
 		log_message(VERBOSE_DEBUG, AREA_USER,
 				"Could not shutdown socket");
 
+	if (data)
+		*data = g_slist_prepend(*data, GINT_TO_POINTER(socket));
+
 	return NU_EXIT_OK;
 }
 
 inline nu_error_t delete_client_by_socket(int socket)
 {
-	return delete_client_by_socket_ext(socket, 1);
+	return delete_client_by_socket_ext(socket, 1, NULL);
 }
 
 inline user_session_t *get_client_datas_by_socket(int socket)
@@ -332,12 +335,21 @@ void foreach_session(GHFunc callback, void *data)
 
 void kill_all_clients_cb(int sock, user_session_t* session, gpointer data)
 {
-	delete_client_by_socket_ext(sock, 0);
+	delete_client_by_socket_ext(sock, 0, data);
 }
 
 void kill_all_clients()
 {
-	foreach_session((GHFunc)kill_all_clients_cb, NULL);
+	GSList *sessions_list = NULL;
+	GSList *pointer_list;
+
+	foreach_session((GHFunc)kill_all_clients_cb, &sessions_list);
+	pointer_list = sessions_list;
+	while (pointer_list) {
+		g_hash_table_remove(client_conn_hash,pointer_list->data);
+		pointer_list = pointer_list->next;
+	}
+	g_slist_free(sessions_list);
 }
 
 /** @} */
