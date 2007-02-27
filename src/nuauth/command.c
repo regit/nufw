@@ -112,7 +112,7 @@ void command_client_close(command_t * this)
 
 int command_client_accept(command_t * this)
 {
-	char buffer[8];
+	char buffer[9];
 	int ret;
 
 	/* accept client socket */
@@ -130,22 +130,24 @@ int command_client_accept(command_t * this)
 		    "Command server: client connection");
 
 	/* read client version */
-	ret = recv(this->client, buffer, sizeof(buffer), 0);
+	buffer[sizeof(buffer)-1] = 0;
+	ret = recv(this->client, buffer, sizeof(buffer)-1, 0);
 	if (ret < 0) {
 		log_message(CRITICAL, AREA_MAIN,
 			    "Command server: client doesn't send version");
 		command_client_close(this);
 		return 0;
 	}
+	buffer[ret] = 0;
 
 	/* send server version */
 	send(this->client, PYTHON_PROTO_VERSION, 8, 0);
 
 	/* check client version */
-	if (ret != sizeof(buffer)
-	    || strcmp(buffer, PYTHON_PROTO_VERSION) != 0) {
+	if (strcmp(buffer, PYTHON_PROTO_VERSION) != 0) {
 		log_message(CRITICAL, AREA_MAIN,
-			    "Command server: invalid client version");
+			    "Command server: invalid client version: \"%s\"",
+			    buffer);
 		command_client_close(this);
 		return 0;
 	}
