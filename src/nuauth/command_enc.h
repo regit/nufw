@@ -38,11 +38,10 @@ void encoder_add_ipv6(encoder_t* encoder, const struct in6_addr *ipv6);
 void encoder_add_string(encoder_t* encoder, const char *string);
 void encoder_add_tuple(encoder_t* encoder, size_t count, encoder_t *items);
 void encoder_add_tuple_from_slist(encoder_t* encoder, GSList *item_list);
+void encoder_add_uptime(encoder_t* encoder, time_t start, time_t diff);
 
 encoder_t* encode_answer(uint8_t ok, encoder_t *data);
-encoder_t* encode_uptime(time_t start, time_t diff);
 encoder_t* encode_user(user_session_t *session);
-encoder_t* encode_text(const char* text);
 
 #endif /* COMMAND_NEW_H */
 

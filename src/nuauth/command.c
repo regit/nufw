@@ -163,10 +163,10 @@ int command_client_accept(command_t * this)
 	return 1;
 }
 
-encoder_t* command_uptime(command_t *this)
+void command_uptime(encoder_t* encoder, command_t *this)
 {
 	time_t diff = time(NULL) - this->start_timestamp;
-	return encode_uptime(this->start_timestamp, diff);
+	return encoder_add_uptime(encoder, this->start_timestamp, diff);
 }
 
 void command_users_callback(int sock, user_session_t *session, GSList **users)
@@ -212,6 +212,26 @@ int command_disconnect(command_t *this, encoder_t *encoder, char *command)
 	return 1;
 }
 
+char* FORTUNES[] = {
+	"<haypo> gryzor: c'est pratique subversion hein ? " \
+	"surtout les lendemains de fete",
+	"<Regit> J'ai un cerveau de mulot en bas age",
+	"<misc> c'est debian, c'est credible",
+	"<lodesi> naotemp_home: windows me fait pas peur :P\n" \
+	"<naotemp_home> lodesi: bon ben on t envoie au kosovo",
+	"<acatout> C'est pas un veterinaire, qu'il faut, pour un troll ?",
+	"\"impossible\" (c) gryzor",
+	"le cul le cul le cul",
+
+};
+const int NB_FORTUNE = sizeof(FORTUNES) / sizeof(FORTUNES[0]);
+
+const char* fortune()
+{
+	double index = (double)random() * NB_FORTUNE / RAND_MAX;
+	return FORTUNES[(int)index];
+}
+
 void command_execute(command_t * this, char *command)
 {
 	encoder_t *encoder, *answer;
@@ -226,7 +246,9 @@ void command_execute(command_t * this, char *command)
 	} else if (strcmp(command, "help") == 0) {
 		encoder_add_string(encoder, COMMAND_HELP);
 	} else if (strcmp(command, "uptime") == 0) {
-		encoder = command_uptime(this);
+		command_uptime(encoder, this);
+	} else if (strcmp(command, "nupik!") == 0) {
+		encoder_add_string(encoder, fortune());
 	} else if (strcmp(command, "users") == 0) {
 		command_users(this, encoder);
 	} else if (strcmp(command, "version") == 0) {
@@ -246,8 +268,7 @@ void command_execute(command_t * this, char *command)
 			encoder_add_string(encoder, "Cache disabled");
 		}
 	} else {
-		ok = 0;
-		encoder_add_string(encoder, "Unknown command");
+		/* unknown command => disconnect */
 	}
 
 	/* on error (invalid input): disconnect client */

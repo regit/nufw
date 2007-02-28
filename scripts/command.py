@@ -29,7 +29,7 @@ PROTO_VERSION = "NuFW 0.0"
 COMMANDS_COMPLETION = ("version", "users", "refresh cache",
     "disconnect ", "uptime", "reload", "help", "quit")
 COMMANDS_REGEX = re.compile(
-    "(?:version|users|refresh cache|"
+    "(?:version|users|refresh cache|nupik!|"
     "disconnect (?:[0-9]+|all)|uptime|reload|help|quit)")
 
 class Completer:
@@ -204,8 +204,8 @@ class Client:
 
             # Send command
             if COMMANDS_REGEX.match(command):
-                result = self.execute(command)
-                if not result or command == "quit":
+                ok, result = self.execute(command)
+                if not ok or command == "quit":
                     return
             else:
                 # Invalid command: remove item from history

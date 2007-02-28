@@ -183,13 +183,11 @@ encoder_t* encode_answer(uint8_t ok, encoder_t *data)
 /**
  * Add uptime message: ('U', start, diff)
  */
-encoder_t* encode_uptime(time_t start, time_t diff)
+void encoder_add_uptime(encoder_t *encoder, time_t start, time_t diff)
 {
-	encoder_t* encoder = encoder_new();
 	encoder_add_bytecode(encoder, BYTECODE_UPTIME);
 	encoder_add_int32(encoder, start);
 	encoder_add_int32(encoder, diff);
-	return encoder;
 }
 
 /**
@@ -197,7 +195,7 @@ encoder_t* encode_uptime(time_t start, time_t diff)
  */
 encoder_t* encode_user(user_session_t* session)
 {
-	encoder_t *encoder;
+	encoder_t* encoder = encoder_new();
 	GSList *group;
 	GSList *groups = NULL;
 
@@ -212,7 +210,6 @@ encoder_t* encode_user(user_session_t* session)
 	}
 
 	/* encode user entry */
-	encoder = encoder_new();
 	encoder_add_bytecode(encoder, BYTECODE_USER);
 	encoder_add_int32(encoder, session->client_version);
 	encoder_add_int32(encoder, session->socket);
@@ -227,16 +224,6 @@ encoder_t* encode_user(user_session_t* session)
 
 	/* destroy group list */
 	encoder_slist_destroy(groups);
-	return encoder;
-}
-
-/**
- * Encode a text
- */
-encoder_t* encode_text(const char* text)
-{
-	encoder_t* encoder = encoder_new();
-	encoder_add_string(encoder, text);
 	return encoder;
 }
 
