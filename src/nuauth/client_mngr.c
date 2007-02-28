@@ -334,6 +334,9 @@ void foreach_session(GHFunc callback, void *data)
 
 gboolean kill_all_clients_cb(gpointer sock, user_session_t* session, gpointer data)
 {
+	if (session->activated == FALSE)
+		return FALSE;
+
 	if (delete_client_by_socket_ext(GPOINTER_TO_INT(sock), 0) == NU_EXIT_OK)
 		return TRUE;
 	else
@@ -345,6 +348,22 @@ void kill_all_clients()
 	g_mutex_lock(client_mutex);
 	g_hash_table_foreach_remove(client_conn_hash, kill_all_clients_cb, NULL);
 	g_mutex_unlock(client_mutex);
+}
+
+nu_error_t activate_client_by_socket(int socket)
+{
+	g_mutex_lock(client_mutex);
+	user_session_t *session =
+	    (user_session_t
+	     *) (g_hash_table_lookup(client_conn_hash,
+				     GINT_TO_POINTER(socket)));
+	if (session) {
+		session->activated = TRUE;
+		g_mutex_unlock(client_mutex);
+		return NU_EXIT_OK;
+	}
+	g_mutex_unlock(client_mutex);
+	return NU_EXIT_ERROR;
 }
 
 /** @} */

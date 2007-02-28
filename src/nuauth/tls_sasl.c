@@ -146,6 +146,7 @@ static void tls_sasl_connect_ok(user_session_t * c_session, int c)
 		}
 		datas->socket = c;
 		datas->data = c_session;
+		c_session->activated = FALSE;
 		message->datas = datas;
 		message->type = INSERT_MESSAGE;
 		g_async_queue_push(nuauthdatas->tls_push_queue, message);

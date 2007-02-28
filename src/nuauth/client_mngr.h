@@ -55,6 +55,7 @@ void close_clients();
 
 void kill_all_clients();
 void kill_expired_clients_session();
+nu_error_t activate_client_by_socket(int socket);
 
 guint get_number_of_clients();
 

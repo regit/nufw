@@ -404,7 +404,6 @@ void tls_user_update_mx(struct tls_user_context_t *this)
 			i = this->mx - 1) {
 		debug_log_message(VERBOSE_DEBUG, AREA_USER,
 				"setting mx to %d", i);
-		printf("SET MX TO %i\n", i);
 		this->mx = i;
 	}
 }
@@ -416,7 +415,6 @@ void tls_user_update_mx(struct tls_user_context_t *this)
  */
 void tls_user_remove_client(struct tls_user_context_t *this, int sock)
 {
-	printf("REMOVE CLIENT %i\n", sock);
 	FD_CLR(sock, &this->tls_rx_set);
 	tls_user_update_mx(this);
 }
@@ -457,6 +455,7 @@ void tls_user_main_loop(struct tls_user_context_t *context, GMutex * mutex)
 			 * change FD_SET
 			 */
 			FD_SET(socket, &context->tls_rx_set);
+			activate_client_by_socket(socket);
 			c_pop = g_async_queue_try_pop(mx_queue);
 		}
 
