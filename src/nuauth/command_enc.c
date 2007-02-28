@@ -156,7 +156,7 @@ void encoder_add_tuple_from_slist(encoder_t* encoder, GSList *item_list)
 	}
 
 	/* write data */
-	encoder_grow(encoder, 1 + size);
+	encoder_grow(encoder, 5 + size);
 	encoder_write_bytecode(encoder, BYTECODE_TUPLE);
 	encoder_write_int32(encoder, count);
 	for (iter=item_list; iter; iter=iter->next)
