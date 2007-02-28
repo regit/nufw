@@ -33,6 +33,10 @@ const char* COMMAND_HELP =
 "disconnect all: disconnect all users\n"
 "uptime: display nuauth starting time and uptime\n"
 "reload: reload nuauth configuration\n"
+"display debug_level\n"
+"display debug_areas\n"
+"debug_level LEVEL\n"
+"debug_areas AREAS\n"
 "help: display this help\n"
 "quit: disconnect";
 
@@ -305,6 +309,34 @@ void command_execute(command_t * this, char *command)
 		} else {
 			encoder_add_string(encoder, "Cache disabled");
 		}
+	} else if (strncmp(command, "debug_level", 11) == 0) {
+		int debug_level = atoi(command+11);
+		if ((0 < debug_level) && (debug_level <= 9)) {
+			nuauthconf->debug_level = debug_level;
+			log_message(INFO, AREA_MAIN,
+			    "Debug level set to %d",
+			    debug_level);
+			encoder_add_int32(encoder,nuauthconf->debug_level);
+		} else {
+			encoder_add_int32(encoder,nuauthconf->debug_level);
+			ok = 0;
+		}
+	}  else if (strncmp(command, "debug_areas", 11) == 0) {
+		int debug_areas = atoi(command+11);
+		if (debug_areas > 0) {
+			nuauthconf->debug_areas = debug_areas;
+			log_message(INFO, AREA_MAIN,
+			    "Debug areas set to %d",
+			    debug_areas);
+			encoder_add_string(encoder,"done");
+		} else {
+			encoder_add_string(encoder,"Improper debug areas");
+			ok = 0;
+		}
+	} else if (strcmp(command, "display debug_level") == 0) {
+		encoder_add_int32(encoder, nuauthconf->debug_level);
+	} else if (strcmp(command, "display debug_areas") == 0) {
+		encoder_add_int32(encoder, nuauthconf->debug_areas);
 	} else {
 		/* unknown command => disconnect */
 	}

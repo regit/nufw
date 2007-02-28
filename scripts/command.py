@@ -27,9 +27,12 @@ import readline
 PROTO_VERSION = "NuFW 0.0"
 
 COMMANDS_COMPLETION = ("version", "users", "refresh cache",
-    "disconnect ", "uptime", "reload", "help", "quit")
+    "disconnect ", "uptime", "reload", "help", "quit",
+    "display debug_level", "display debug_areas", "debug_level",
+    "debug_areas")
 COMMANDS_REGEX = re.compile(
-    "^(?:version|users|refresh cache|nupik!|"
+    "^(?:version|users|refresh cache|nupik!|display debug_.+|"
+    "debug_level [0-9]+|debug_areas [0-9]+|"
     "disconnect (?:[0-9]+|all)|uptime|reload|help|quit)$")
 
 class Completer:
