@@ -34,22 +34,6 @@ G_MODULE_EXPORT uint32_t get_api_version()
 	return NUAUTH_API_VERSION;
 }
 
-int do_mysql_real_query(MYSQL* ld,char* request,int length)
-{
-	char* esc_request = g_new0(char, length*2+1);
-	int mysql_ret = 0;
-
-	mysql_real_escape_string(ld, esc_request, request, length);
-		
-	mysql_ret = mysql_real_query(ld, esc_request, strlen(esc_request));
-	if (mysql_ret != 0) {
-		log_message(SERIOUS_WARNING, AREA_MAIN,
-			    "[MySQL] Cannot execute request: %s",
-			    mysql_error(ld));
-	}
-	g_free(esc_request);
-	return mysql_ret;
-}
 
 /**
  * Convert an IPv6 address to SQL binary string.
@@ -151,7 +135,13 @@ static nu_error_t mysql_close_open_user_sessions(struct log_mysql_params
 	}
 
 	/* execute query */
-	mysql_ret = do_mysql_real_query(ld, request, strlen(request));
+	mysql_ret = mysql_real_query(ld, request, strlen(request));
+	if (mysql_ret != 0) {
+		log_message(SERIOUS_WARNING, AREA_MAIN,
+			    "[MySQL] Cannot execute request: %s",
+			    mysql_error(ld));
+		return NU_EXIT_ERROR;
+	}
 	return NU_EXIT_OK;
 
 }
@@ -560,7 +550,7 @@ static inline int log_state_open(MYSQL * ld, connection_t * element,
 			return -1;
 		}
 
-		mysql_ret = do_mysql_real_query(ld, request, strlen(request));
+		mysql_ret = mysql_real_query(ld, request, strlen(request));
 		if (mysql_ret != 0) {
 			log_message(SERIOUS_WARNING, AREA_MAIN,
 				    "[MySQL] Cannot update data: %s",
@@ -580,7 +570,7 @@ static inline int log_state_open(MYSQL * ld, connection_t * element,
 	}
 
 	/* do query */
-	mysql_ret = do_mysql_real_query(ld, request, strlen(request));
+	mysql_ret = mysql_real_query(ld, request, strlen(request));
 	g_free(request);
 
 
@@ -633,7 +623,7 @@ static inline int log_state_established(MYSQL * ld,
 				    "Building mysql update query, the SHORT_REQUEST_SIZE limit was reached!");
 			return -1;
 		}
-		Result = do_mysql_real_query(ld, request, strlen(request));
+		Result = mysql_real_query(ld, request, strlen(request));
 		if (Result != 0) {
 			log_message(SERIOUS_WARNING, AREA_MAIN,
 				    "Can not update Data : %s",
@@ -747,7 +737,7 @@ static inline int log_state_close(MYSQL * ld,
 		}
 	}
 
-	Result = do_mysql_real_query(ld, request, strlen(request));
+	Result = mysql_real_query(ld, request, strlen(request));
 	if (Result != 0) {
 		log_message(SERIOUS_WARNING, AREA_MAIN,
 			    "Can not update Data : %s", mysql_error(ld));
@@ -788,7 +778,7 @@ static int log_state_drop(MYSQL * ld, connection_t * element,
 	}
 
 	/* do query */
-	mysql_ret = do_mysql_real_query(ld, request, strlen(request));
+	mysql_ret = mysql_real_query(ld, request, strlen(request));
 	g_free(request);
 
 	/* check request error code */
@@ -941,7 +931,7 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 	}
 
 	/* execute query */
-	mysql_ret = do_mysql_real_query(ld, request, strlen(request));
+	mysql_ret = mysql_real_query(ld, request, strlen(request));
 	if (mysql_ret != 0) {
 		log_message(SERIOUS_WARNING, AREA_MAIN,
 			    "[MySQL] Cannot execute request: %s",
