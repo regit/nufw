@@ -21,6 +21,7 @@
 from socket import socket, AF_UNIX, error
 from sys import exit
 from command_dec import decode, Answer
+import re
 
 PROTO_VERSION = "NuFW 0.0"
 
@@ -75,6 +76,9 @@ class NuauthSocket:
 
 class Client:
     SOCKET_FILENAME = "/tmp/nuauth-command.socket"
+    NUAUTH_COMMAND = re.compile(
+        "(?:version|users|refresh cache|"
+        "disconnect (?:[0-9]+|all)|uptime|reload|help|quit)")
 
     def __init__(self):
         self.debug = True
@@ -112,45 +116,56 @@ class Client:
             print "[+] Connected"
         return True
 
-    def _execute(self, command):
+    def execute(self, command):
+        if self.NUAUTH_COMMAND.match(command):
+            return self.send_command(command)
+        else:
+            print "[!] Unknown command: %s" % command
+            return ""
+
+    def send_command(self, command):
+        err, result = self._send_command(command)
+        if err:
+            ok = self.reconnect()
+            if ok:
+                err, result = self._send_command(command)
+        if err:
+            print "[!] execute(%r) error: %s" % (command, err)
+            return None
+        return result
+
+    def _send_command(self, command):
         # Send command
         err = self.socket.send(command)
         if err:
-            return "send() error: %s" % err
+            return "send() error: %s" % err, None
 
         if command == "quit":
-            return ""
+            return "", None
 
         # Read answer
         err, data = self.socket.recv()
         if err:
-            return "recv() error: %s" % err
+            return "recv() error: %s" % err, None
         value = decode(data)
 
         # Print answer
         if value.__class__ != Answer:
             print "[!] invalid answer format: %r" % answer
-        if value.ok:
-            value = value.content
-            if isinstance(value, list):
+        if not value.ok:
+            err = value.content
+            print "[!] Error: %s" % err
+            return err, None
+        value = value.content
+        if isinstance(value, list):
+            if value:
                 for item in value:
                     print str(item)
             else:
-                print str(value)
+                print "(empty list)"
         else:
-            print "[!] Error: %s" % value.content
-        return ""
-
-    def execute(self, command):
-        err = self._execute(command)
-        if err:
-            ok = self.reconnect()
-            if ok:
-                err = self._execute(command)
-        if err:
-            print "[!] execute(%r) error: %s" % (command, err)
-            return False
-        return True
+            print str(value)
+        return "", value
 
     def mainLoop(self):
         if not self.execute("version"):
@@ -170,7 +185,7 @@ class Client:
                 continue
 
             # Send command
-            if not self.execute(command):
+            if self.execute(command) is None:
                 return
             if command == "quit":
                 return
