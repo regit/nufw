@@ -222,6 +222,7 @@ encoder_t* encode_user(user_session_t* session)
 	encoder_add_int32(encoder, session->user_id);
 	encoder_add_tuple_from_slist(encoder, groups);
 	encoder_add_int32(encoder, session->connect_timestamp);
+	encoder_add_int32(encoder, time(NULL) - session->connect_timestamp);
 	encoder_add_int32(encoder, session->expire);
 
 	/* destroy group list */

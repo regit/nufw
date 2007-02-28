@@ -26,7 +26,7 @@ class Uptime(Message):
         return "Uptime: %s second since %s" % (self.diff, self.start)
 
 class User(Message):
-    def __init__(self, client_version, socket, name, addr, sport, uid, groups, connect_timestamp, expire):
+    def __init__(self, client_version, socket, name, addr, sport, uid, groups, connect_timestamp, uptime, expire):
         self.client_version = client_version
         self.socket = socket
         self.name = name
@@ -35,10 +35,11 @@ class User(Message):
         self.uid = uid
         self.groups = groups
         self.connect_timestamp = datetime.datetime.fromtimestamp(connect_timestamp)
+        self.uptime = datetime.timedelta(seconds=uptime)
         if expire < 0:
             self.expire = None
         else:
-            self.expire = datetime.timedelta(second=expire)
+            self.expire = datetime.timedelta(seconds=expire)
 
     def __str__(self):
         addr = self.addr.strCompressed()
@@ -47,8 +48,9 @@ class User(Message):
             expire = ", %s" % self.expire
         else:
             expire = ""
-        return "#%s: %r at %s (port %s) since %s\n   id: %s, groups: %s%s" % (
-            self.socket, self.name, addr, self.sport, self.connect_timestamp,
+        return "#%s: %r at %s (port %s) %s since %s\n   id: %s, groups: %s%s" % (
+            self.socket, self.name, addr,
+            self.sport, self.uptime, self.connect_timestamp,
             self.uid, groups, expire)
 
 class Decoder:
@@ -158,8 +160,10 @@ class Decoder:
         uid = self.readInt32()
         groups = self.readTuple()
         timestamp = self.readInt32()
+        uptime = self.readInt32()
         expire = self.readInt32()
-        return User(version, socket, name, addr, sport, uid, groups, timestamp, expire)
+        return User(version, socket, name, addr, sport,
+            uid, groups, timestamp, uptime, expire)
 
     DECODER = {
         'i': decode_int32,
