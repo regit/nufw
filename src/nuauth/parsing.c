@@ -118,7 +118,7 @@ gboolean check_string_in_array(gchar * checkstring, gchar ** stringarray)
 
 gchar *string_escape(const gchar * orig)
 {
-	gchar *traduc, *result;
+	gchar *traduc;
 	/* convert from utf-8 to locale if needed */
 	if (nuauthconf->uses_utf8) {
 		size_t bwritten;
@@ -134,11 +134,7 @@ gchar *string_escape(const gchar * orig)
 		traduc = g_strdup(orig);
 	}
 
-#define VALID_CHARS """@#$%^&*()_+1234567890-={}[]:,.<>/?abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ "
-	traduc = g_strcanon(traduc, VALID_CHARS, '_');
-	result = g_strescape(traduc, "");
-	g_free(traduc);
-	return result;
+	return traduc;
 }
 
 /** @} */
