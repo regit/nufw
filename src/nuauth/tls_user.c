@@ -680,7 +680,6 @@ int tls_user_init(struct tls_user_context_t *context)
  *
  * Use a switch:
  *   - #WARN_MESSAGE: call warn_clients() (and may call ip_authentication_workers())
- *   - #FREE_MESSAGE: call delete_client_by_socket()
  *   - #INSERT_MESSAGE: call add_client()
  */
 void *push_worker(GMutex * mutex)
@@ -737,13 +736,6 @@ void *push_worker(GMutex * mutex)
 					g_free(message->datas);
 				}
 			}
-			break;
-
-		case FREE_MESSAGE:
-			if (delete_client_by_socket(GPOINTER_TO_INT
-						(message->datas)) != NU_EXIT_OK)
-				log_message(WARNING, AREA_USER,
-					    "FREE_MESSAGE failed: can't delete client");
 			break;
 
 		case INSERT_MESSAGE:

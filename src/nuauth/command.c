@@ -195,7 +195,7 @@ int command_do_disconnect(int sock)
 
 	/* send query to disconnect all users */
 	disconnect_user_msg_t *msg = g_new(disconnect_user_msg_t, 1);
-	msg->socket = -1;
+	msg->socket = sock;
 	msg->mutex = g_mutex_new();
 	g_async_queue_push(tls_user_context.cmd_queue, msg);
 
@@ -235,7 +235,6 @@ int command_disconnect_all(command_t *this, encoder_t *encoder)
 int command_disconnect(command_t *this, encoder_t *encoder, char *command)
 {
 	int sock;
-	int ok;
 
 	/* convert socket number to integer and create mutex */
 	if (!str_to_int(command, &sock)) {
