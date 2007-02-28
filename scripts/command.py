@@ -57,7 +57,7 @@ class NuauthSocket:
         self.socket.connect(filename)
 
     def recv(self):
-        size = 10
+        size = 4096
         try:
             data = self.socket.recv(size)
         except error, err:
