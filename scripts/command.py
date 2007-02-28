@@ -29,8 +29,8 @@ PROTO_VERSION = "NuFW 0.0"
 COMMANDS_COMPLETION = ("version", "users", "refresh cache",
     "disconnect ", "uptime", "reload", "help", "quit")
 COMMANDS_REGEX = re.compile(
-    "(?:version|users|refresh cache|nupik!|"
-    "disconnect (?:[0-9]+|all)|uptime|reload|help|quit)")
+    "^(?:version|users|refresh cache|nupik!|"
+    "disconnect (?:[0-9]+|all)|uptime|reload|help|quit)$")
 
 class Completer:
     def __init__(self, words):
@@ -229,7 +229,7 @@ class Client:
             err = None
         if err:
             print err
-        print "[+] Quit"
+        print "[+] Quit command client"
 
 def main():
     client = Client()
