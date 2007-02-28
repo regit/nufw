@@ -171,7 +171,7 @@ class Client:
         if not value.ok:
             err = value.content
             print "[!] Error: %s" % err
-            return err, None
+            return "", None
         value = value.content
         if isinstance(value, list):
             for item in value:
