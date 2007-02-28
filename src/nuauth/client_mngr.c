@@ -345,11 +345,20 @@ gboolean kill_all_clients_cb(gpointer sock, user_session_t* session, gpointer da
 		return FALSE;
 }
 
-void kill_all_clients()
+/**
+ * Delete all client sessions in hash tables
+ * Return NU_EXIT_ERROR if tables were empty, NU_EXIT_OK otherwise.
+ */
+nu_error_t kill_all_clients()
 {
+	int count;
 	g_mutex_lock(client_mutex);
-	g_hash_table_foreach_remove(client_conn_hash, kill_all_clients_cb, NULL);
+	count = g_hash_table_foreach_remove(client_conn_hash, (GHRFunc)kill_all_clients_cb, NULL);
 	g_mutex_unlock(client_mutex);
+	if (count)
+		return NU_EXIT_OK;
+	else
+		return NU_EXIT_ERROR;
 }
 
 nu_error_t activate_client_by_socket(int socket)

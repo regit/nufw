@@ -53,7 +53,7 @@ char warn_clients(struct msg_addr_set *global_msg);
 
 void close_clients();
 
-void kill_all_clients();
+nu_error_t kill_all_clients();
 void kill_expired_clients_session();
 nu_error_t activate_client_by_socket(int socket);
 

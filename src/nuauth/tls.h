@@ -166,6 +166,12 @@ struct tls_user_context_t {
 	GAsyncQueue* cmd_queue;
 };
 
+typedef struct {
+	int socket;
+	GMutex *mutex;
+	int result;
+} disconnect_user_msg_t;
+
 extern struct tls_user_context_t tls_user_context;
 
 void tls_user_remove_client(struct tls_user_context_t *this, int sock);

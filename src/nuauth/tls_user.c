@@ -432,6 +432,7 @@ void tls_user_main_loop(struct tls_user_context_t *context, GMutex * mutex)
 	int i, nb_active_clients;
 	fd_set wk_set;		/* working set */
 	struct timeval tv;
+	disconnect_user_msg_t *disconnect_msg;
 
 	log_message(INFO, AREA_MAIN,
 		    "[+] NuAuth is waiting for client connections.");
@@ -460,14 +461,15 @@ void tls_user_main_loop(struct tls_user_context_t *context, GMutex * mutex)
 		}
 
 		/*
-		 * execute client destruction task 
+		 * execute client destruction task
 		 */
-		while (i = g_async_queue_try_pop(context->cmd_queue)){
-			if (GPOINTER_TO_INT(i) == -1)
-				kill_all_clients();
-			else 
-				delete_client_by_socket(GPOINTER_TO_INT(i));
-			/** \todo Warn command about result */
+		while ((disconnect_msg = g_async_queue_try_pop(context->cmd_queue)) != NULL){
+			if (disconnect_msg->socket == -1) {
+				disconnect_msg->result = kill_all_clients();
+			} else {
+				disconnect_msg->result = delete_client_by_socket(disconnect_msg->socket);
+			}
+			g_mutex_unlock(disconnect_msg->mutex);
 		}
 
 		/* wait new events during 1 second */

@@ -186,30 +186,69 @@ void command_users(command_t *this, encoder_t *encoder)
 	encoder_slist_destroy(users);
 }
 
-int command_disconnect_all(command_t *this, encoder_t *encoder)
+/**
+ * Internal function do disconnect a client
+ */
+int command_do_disconnect(int sock)
 {
-	g_async_queue_push(tls_user_context.cmd_queue,GINT_TO_POINTER(-1));
-	/** \todo wait for select action */
-	encoder_add_string(encoder, "done");
-	return 1;
+	int ok;
+
+	/* send query to disconnect all users */
+	disconnect_user_msg_t *msg = g_new(disconnect_user_msg_t, 1);
+	msg->socket = -1;
+	msg->mutex = g_mutex_new();
+	g_async_queue_push(tls_user_context.cmd_queue, msg);
+
+	/* wait until clients are disconnected */
+	g_mutex_lock(msg->mutex);
+	g_mutex_lock(msg->mutex);
+	g_mutex_unlock(msg->mutex);
+	g_mutex_free(msg->mutex);
+
+	/* write answer */
+	if (msg->result == NU_EXIT_OK) {
+		ok = 1;
+	} else {
+		ok = 0;
+	}
+	g_free(msg);
+	return ok;
 }
 
+/**
+ * Disconnect all client
+ **/
+int command_disconnect_all(command_t *this, encoder_t *encoder)
+{
+	if (command_do_disconnect(-1)) {
+		encoder_add_string(encoder, "users disconnected");
+		return 1;
+	} else {
+		encoder_add_string(encoder, "no user connected");
+		return 0;
+	}
+}
+
+/**
+ * Disconnect a client
+ */
 int command_disconnect(command_t *this, encoder_t *encoder, char *command)
 {
 	int sock;
+	int ok;
+
+	/* convert socket number to integer and create mutex */
 	if (!str_to_int(command, &sock)) {
 		return 0;
 	}
-	g_async_queue_push(tls_user_context.cmd_queue,GINT_TO_POINTER(sock));
-	/** \todo wait for select action */
-#if 0
-	if (delete_client_by_socket(sock) != NU_EXIT_OK) {
-		encoder_add_string(encoder, "user not found");
+
+	if (command_do_disconnect(sock)) {
+		encoder_add_string(encoder, "users disconnected");
+		return 1;
+	} else {
+		encoder_add_string(encoder, "no user connected");
 		return 0;
 	}
-#endif
-	encoder_add_string(encoder, "user disconnected");
-	return 1;
 }
 
 char* FORTUNES[] = {
