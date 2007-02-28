@@ -160,9 +160,6 @@ void log_user_session(user_session_t * usession, session_state_t state)
 			    usession->user_name);
 
 	if ((nuauthconf->log_users & 1) == 0) {
-		if (state == SESSION_CLOSE) {
-			clean_session(usession);
-		}
 		return;
 	}
 
@@ -172,20 +169,15 @@ void log_user_session(user_session_t * usession, session_state_t state)
 		/* no more memory :-( */
 		return;
 	}
-	if (state == SESSION_OPEN) {
-		sessevent->session = g_memdup(usession, sizeof(*usession));
-		sessevent->session->user_name =
-		    g_strdup(usession->user_name);
-		sessevent->session->tls = NULL;
-		sessevent->session->socket = usession->socket;
-		sessevent->session->groups = NULL;
-		sessevent->session->sysname = g_strdup(usession->sysname);
-		sessevent->session->version = g_strdup(usession->version);
-		sessevent->session->release = g_strdup(usession->release);
-	} else {
-		/* closing we do not need to duplicate */
-		sessevent->session = usession;
-	}
+	sessevent->session = g_memdup(usession, sizeof(*usession));
+	sessevent->session->user_name =
+		g_strdup(usession->user_name);
+	sessevent->session->tls = NULL;
+	sessevent->session->socket = usession->socket;
+	sessevent->session->groups = NULL;
+	sessevent->session->sysname = g_strdup(usession->sysname);
+	sessevent->session->version = g_strdup(usession->version);
+	sessevent->session->release = g_strdup(usession->release);
 	sessevent->state = state;
 	/* feed thread pool */
 	g_thread_pool_push(nuauthdatas->user_session_loggers,

@@ -72,6 +72,7 @@ static void hash_clean_session(user_session_t * c_session)
 {
 	int socket = (int) gnutls_transport_get_ptr(*c_session->tls);
 	log_user_session(c_session, SESSION_CLOSE);
+	clean_session(c_session);
 	shutdown(socket, SHUT_RDWR);
 	close(socket);
 }
@@ -130,6 +131,7 @@ static GSList *delete_ipsockets_from_hash(GSList *ipsockets,
 		g_hash_table_steal(client_conn_hash,
 				GINT_TO_POINTER(session->socket));
 		log_user_session(session, SESSION_CLOSE);
+		clean_session(session);
 	}
 	return ipsockets;
 }
