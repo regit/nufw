@@ -68,6 +68,10 @@ void clean_session(user_session_t * c_session)
 	}
 }
 
+/**
+ * Destroy function for #client_conn_hash
+ */
+
 static void hash_clean_session(user_session_t * c_session)
 {
 	int socket = (int) gnutls_transport_get_ptr(*c_session->tls);
@@ -347,7 +351,8 @@ gboolean kill_all_clients_cb(gpointer sock, user_session_t* session, gpointer da
 
 /**
  * Delete all client sessions in hash tables
- * Return NU_EXIT_ERROR if tables were empty, NU_EXIT_OK otherwise.
+ *
+ * \return NU_EXIT_ERROR if tables were empty, NU_EXIT_OK otherwise.
  */
 nu_error_t kill_all_clients()
 {
