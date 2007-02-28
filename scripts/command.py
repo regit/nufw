@@ -22,8 +22,34 @@ from socket import socket, AF_UNIX, error
 from sys import exit
 from command_dec import decode, Answer
 import re
+import readline
 
 PROTO_VERSION = "NuFW 0.0"
+
+COMMANDS_COMPLETION = ("version", "users", "refresh cache",
+    "disconnect ", "uptime", "reload", "help", "quit")
+COMMANDS_REGEX = re.compile(
+    "(?:version|users|refresh cache|"
+    "disconnect (?:[0-9]+|all)|uptime|reload|help|quit)")
+
+class Completer:
+    def __init__(self, words):
+        self.words = words
+        self.generator = None
+
+    def complete(self, text):
+        for word in self.words:
+            if word.startswith(text):
+                yield word
+
+    def __call__(self, text, state):
+        if state == 0:
+            self.generator = self.complete(text)
+        try:
+            return self.generator.next()
+        except StopIteration:
+            return None
+        return None
 
 class NuauthSocket:
     def __init__(self, filename):
@@ -76,9 +102,6 @@ class NuauthSocket:
 
 class Client:
     SOCKET_FILENAME = "/tmp/nuauth-command.socket"
-    NUAUTH_COMMAND = re.compile(
-        "(?:version|users|refresh cache|"
-        "disconnect (?:[0-9]+|all)|uptime|reload|help|quit)")
 
     def __init__(self):
         self.debug = True
@@ -117,13 +140,6 @@ class Client:
         return True
 
     def execute(self, command):
-        if self.NUAUTH_COMMAND.match(command):
-            return self.send_command(command)
-        else:
-            print "[!] Unknown command: %s" % command
-            return ""
-
-    def send_command(self, command):
         err, result = self._send_command(command)
         if err:
             ok = self.reconnect()
@@ -131,8 +147,8 @@ class Client:
                 err, result = self._send_command(command)
         if err:
             print "[!] execute(%r) error: %s" % (command, err)
-            return None
-        return result
+            return False, None
+        return True, result
 
     def _send_command(self, command):
         # Send command
@@ -158,11 +174,9 @@ class Client:
             return err, None
         value = value.content
         if isinstance(value, list):
-            if value:
-                for item in value:
-                    print str(item)
-            else:
-                print "(empty list)"
+            for item in value:
+                print str(item)
+            print "(list: %s items)" % len(value)
         else:
             print str(value)
         return "", value
@@ -173,22 +187,31 @@ class Client:
         if not self.execute("uptime"):
             return
         print
+        readline.set_completer(Completer(COMMANDS_COMPLETION))
+        readline.set_completer_delims(";")
+        readline.parse_and_bind('tab: complete')
         while True:
             # Read command from user
             try:
                 command = raw_input(">>> ").strip()
             except (EOFError, KeyboardInterrupt):
                 # CTRL+C or CTRL+D
-                print "quit"
+                print
+                print "[!] Interrupted: quit"
                 command = "quit"
             if command == '':
                 continue
 
             # Send command
-            if self.execute(command) is None:
-                return
-            if command == "quit":
-                return
+            if COMMANDS_REGEX.match(command):
+                result = self.execute(command)
+                if not result or command == "quit":
+                    return
+            else:
+                # Invalid command: remove item from history
+                count = readline.get_current_history_length()
+                readline.remove_history_item(count-1)
+                print "[!] Unknown command: %s" % command
             print
 
     def reconnect(self):
@@ -199,7 +222,11 @@ class Client:
         return ok
 
     def run(self):
-        err = self.mainLoop()
+        try:
+            err = self.mainLoop()
+        except KeyboardInterrupt:
+            print "[!] Interrupted"
+            err = None
         if err:
             print err
         print "[+] Quit"

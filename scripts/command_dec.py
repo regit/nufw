@@ -23,7 +23,7 @@ class Uptime(Message):
         self.diff = datetime.timedelta(seconds=diff)
 
     def __str__(self):
-        return "Uptime: %s second since %s" % (self.diff, self.start)
+        return "Uptime: %s since %s" % (self.diff, self.start)
 
 class User(Message):
     def __init__(self, client_version, socket, name, addr, sport, uid, groups, connect_timestamp, uptime, expire):
