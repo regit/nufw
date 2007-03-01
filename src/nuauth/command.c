@@ -309,26 +309,26 @@ void command_execute(command_t * this, char *command)
 		} else {
 			encoder_add_string(encoder, "Cache disabled");
 		}
-	} else if (strncmp(command, "debug_level", 11) == 0) {
-		int debug_level = atoi(command+11);
+	} else if (strncmp(command, "debug_level ", 12) == 0) {
+		int debug_level = atoi(command+12);
 		if ((0 < debug_level) && (debug_level <= 9)) {
 			nuauthconf->debug_level = debug_level;
 			log_message(INFO, AREA_MAIN,
 			    "Debug level set to %d",
 			    debug_level);
-			encoder_add_int32(encoder,nuauthconf->debug_level);
+			encoder_add_string(encoder,"Debug level changed");
 		} else {
-			encoder_add_int32(encoder,nuauthconf->debug_level);
+			encoder_add_string(encoder,"Improper debug level (not in 1..9)");
 			ok = 0;
 		}
-	}  else if (strncmp(command, "debug_areas", 11) == 0) {
-		int debug_areas = atoi(command+11);
+	}  else if (strncmp(command, "debug_areas ", 12) == 0) {
+		int debug_areas = atoi(command+12);
 		if (debug_areas > 0) {
 			nuauthconf->debug_areas = debug_areas;
 			log_message(INFO, AREA_MAIN,
 			    "Debug areas set to %d",
 			    debug_areas);
-			encoder_add_string(encoder,"done");
+			encoder_add_string(encoder,"Debug areas changed");
 		} else {
 			encoder_add_string(encoder,"Improper debug areas");
 			ok = 0;

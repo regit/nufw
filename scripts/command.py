@@ -31,7 +31,7 @@ COMMANDS_COMPLETION = ("version", "users", "refresh cache",
     "display debug_level", "display debug_areas", "debug_level",
     "debug_areas")
 COMMANDS_REGEX = re.compile(
-    "^(?:version|users|refresh cache|nupik!|display debug_.+|"
+    "^(?:version|users|refresh cache|nupik!|display debug_(?:level|areas)|"
     "debug_level [0-9]+|debug_areas [0-9]+|"
     "disconnect (?:[0-9]+|all)|uptime|reload|help|quit)$")
 
@@ -211,9 +211,6 @@ class Client:
                 if not ok or command == "quit":
                     return
             else:
-                # Invalid command: remove item from history
-                count = readline.get_current_history_length()
-                readline.remove_history_item(count-1)
                 print "[!] Unknown command: %s" % command
             print
 
