@@ -14,13 +14,15 @@ class Process:
         else:
             self.program_args = []
 
-    def start(self):
+    def start(self, restart=True):
         """
         Run process and waits until it is ready
         """
-        if self.process:
-            # Already running? just exit
-            return
+        # If it's already running, stop it
+        if self.isRunning():
+            if not restart:
+                return
+            self.stop()
 
         # Run nuauth
         args = [self.program] + self.program_args
@@ -34,7 +36,6 @@ class Process:
                 self.stop()
                 raise RuntimeError("Unable to run %s"
                     % basename(self.program))
-        print "%s ready: PID %s" % (basename(self.program), self.process.pid)
 
     def _readline(self, name, blocking):
         if not self.isRunning():
