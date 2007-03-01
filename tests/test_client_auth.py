@@ -1,3 +1,4 @@
+#!/usr/bin/python2.4
 from unittest import TestCase, main
 from sys import stderr
 from common import nuauth, client
