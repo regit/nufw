@@ -13,6 +13,7 @@ class Process:
             self.program_args = list(args)
         else:
             self.program_args = []
+        self.popen_args = {'stdin': PIPE, 'stdout': PIPE, 'stderr': PIPE}
 
     def start(self, restart=True):
         """
@@ -26,7 +27,7 @@ class Process:
 
         # Run nuauth
         args = [self.program] + self.program_args
-        self.process = Popen(args, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        self.process = Popen(args, **self.popen_args)
 
         # Wait until it's ready
         while not self.isReady():
