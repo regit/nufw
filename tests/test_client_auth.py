@@ -1,33 +1,27 @@
 #!/usr/bin/python2.4
 from unittest import TestCase, main
 from sys import stderr
-from common import nuauth, client
+from common import startNuauth, createClient, connectClient
 
 class TestClientAuth(TestCase):
-    def connect(self):
-        try:
-            nuauth.start(False)
-            try:
-                client.start()
-            except RuntimeError, err:
-                return False
-            return True
-        finally:
-            client.stop()
+    def setUp(self):
+        # Load nuauth
+        startNuauth()
+
+        # Create client
+        self.client = createClient()
+        self.client.setUsername("haypo")
+
+    def tearDown(self):
+        self.client.stop()
 
     def testValidPass(self):
-        client.setUsername("haypo")
-        client.setPassword("haypo")
-        self.assert_(self.connect())
+        self.client.setPassword("haypo")
+        self.assert_(connectClient(self.client))
 
     def testInvalidPass(self):
-        client.setUsername("haypo")
-        client.setPassword("xxxxx")
-        self.assert_(not self.connect())
-
-    def __del__(self):
-        nuauth.stop()
-        assert not client.isRunning()
+        self.client.setPassword("xxxxx")
+        self.assert_(not connectClient(self.client))
 
 if __name__ == "__main__":
     print "Test client authentification"
