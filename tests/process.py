@@ -1,5 +1,5 @@
 from os import kill, waitpid, P_NOWAIT
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, STDOUT
 from time import sleep, time
 from signal import SIGINT
 from os.path import basename
@@ -13,9 +13,9 @@ class Process:
             self.program_args = list(args)
         else:
             self.program_args = []
-        self.popen_args = {'stdin': PIPE, 'stdout': PIPE, 'stderr': PIPE}
+        self.popen_args = {'stdin': PIPE, 'stdout': PIPE, 'stderr': STDOUT}
 
-    def start(self, restart=True):
+    def start(self, restart=True, timeout=None):
         """
         Run process and waits until it is ready
         """
@@ -30,30 +30,45 @@ class Process:
         self.process = Popen(args, **self.popen_args)
 
         # Wait until it's ready
+        start = time()
         while not self.isReady():
-            sleep(0.250)
-            if not self.isRunning():
-                # Process failure
+            err = None
+            if not err and not self.isRunning():
+                err = "Unable to run %s (program exited)"
+            if not err:
+                try:
+                    sleep(0.250)
+                except KeyboardInterrupt:
+                    err = "%s interrupted"
+                if not err and timeout and timeout < time() - start:
+                    err = "Unable to run %s (timeout)"
+            if err:
                 self.stop()
-                raise RuntimeError("Unable to run %s"
-                    % basename(self.program))
+                raise RuntimeError(err % basename(self.program))
 
-    def _readline(self, name, blocking):
-        if not self.isRunning():
+    def readline(self, timeout, stream="stdin"):
+        """
+        Read one line from specified stream ('stdout' by default).
+
+        timeout argument:
+        - 0 (default): non-blocking read
+        - None: blocking read
+        - (float value): read with specified timeout in second
+
+        Return a string with new line or empty string if their is no data.
+
+        Code based on this code:
+           http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/440554
+        """
+        if not self.process:
             return ''
+
         out = getattr(self.process, name)
-        if not blocking:
-            out.flush()
-            ready = select([out.fileno()], tuple(), tuple(), 0)[0]
+        if timeout is not None:
+            ready = select([out.fileno()], tuple(), tuple(), timeout)[0]
             if not ready:
                 return ''
         return out.readline()
-
-    def readlineStdout(self, blocking=False):
-        return self._readline('stdout', blocking)
-
-    def readlineStderr(self, blocking=False):
-        return self._readline('stderr', blocking)
 
     def isRunning(self):
         if not self.process:
@@ -85,6 +100,12 @@ class Process:
                 # Send second SIGINT
                 kill(self.process.pid, SIGINT)
                 step = 2
-            sleep(0.250)
+            try:
+                sleep(0.250)
+            except KeyboardInterrupt:
+                step += 1
         self.process = None
+
+    def __del__(self):
+        self.stop()
 
