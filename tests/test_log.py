@@ -44,12 +44,8 @@ class TestLog(TestCase):
             line = line.rstrip()
             if match_login in line:
                 matched += 1
-                print "########## %s" % line
             elif match_logout in line:
                 matched += 1
-                print "########## %s" % line
-            else:
-                print "log> %s" % line
 
 if __name__ == "__main__":
     print "Test client authentification"
