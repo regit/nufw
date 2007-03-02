@@ -631,6 +631,9 @@ int main(int argc, char **argv)
 	char *username = NULL;
 	nutcpc_context_t context;
 
+	/* stdout: flush buffer on new line */
+	setvbuf(stdout, NULL, _IOLBF, 0);
+
 	/* needed by iconv */
 	setlocale(LC_ALL, "");
 
