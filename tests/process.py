@@ -6,13 +6,10 @@ from os.path import basename
 from select import select
 
 class Process(object):
-    def __init__(self, program, args=None):
+    def __init__(self, program, *args):
         self.program = program
         self.process = None
-        if args:
-            self.program_args = list(args)
-        else:
-            self.program_args = []
+        self.program_args = list(args)
         self.popen_args = {'stdin': PIPE, 'stdout': PIPE, 'stderr': STDOUT}
 
     def __str__(self):

@@ -1,4 +1,3 @@
-from tools import try_rename
 from os import rename, chmod
 from errno import ENOENT, EACCES
 
@@ -29,9 +28,6 @@ class ReplaceFile:
         self.filename_old = self.filename + ".old"
         self.mode = mode
         self.new_content = new_content
-
-    def writeContent(self, output):
-        raise NotImplementedError()
 
     def install(self):
         if self.installed:

@@ -8,9 +8,9 @@ from os import path
 from replace_file import ReplaceFile
 
 USER_FILENAME = path.join(CONF_DIR, "users.nufw")
-USER1, PASS1 = "username", "password"
+USER, UID, GID, PASS = "username", 42, 42, "password"
 USER2, PASS2 = "username2", "password2"
-USER_DB  = "%s:%s:42:4242,101\n" % (USER1, PASS1)
+USER_DB  = "%s:%s:%u:%u\n" % (USER, PASS, UID, GID)
 USER_DB += "%s:%s:1:2,3\n" % (USER2, PASS2)
 
 class TestPlaintextAuth(TestCase):
@@ -36,30 +36,22 @@ class TestPlaintextAuth(TestCase):
         self.users.install()
 
         # Test user1
-        client = createClient()
-        client.username = USER1
-        client.password = PASS1
+        client = createClient(USER, PASS)
         self.assert_(connectClient(client))
         client.stop()
 
         # Test user2
-        client = createClient()
-        client.username = USER2
-        client.password = PASS2
+        client = createClient(USER2, PASS2)
         self.assert_(connectClient(client))
         client.stop()
 
         # Test invalid username
-        client = createClient()
-        client.username = USER1+"x"
-        client.password = PASS1
+        client = createClient(USER+"x", PASS)
         self.assert_(not connectClient(client))
         client.stop()
 
         # Test invalid password
-        client = createClient()
-        client.username = USER2
-        client.password = PASS2+"x"
+        client = createClient(USER2, PASS2+"x")
         self.assert_(not connectClient(client))
         client.stop()
 

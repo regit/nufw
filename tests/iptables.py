@@ -2,12 +2,11 @@ from subprocess import call
 
 class Iptables:
     def __init__(self):
-        self.dirty = False
+        self.dirty = True
         self.flush()
 
     def __del__(self):
-        if self.dirty:
-            self.flush()
+        self.flush()
 
     def _run(self, *args):
         args = ["/sbin/iptables"] + list(args)
@@ -25,6 +24,8 @@ class Iptables:
         self.dirty = True
 
     def flush(self):
+        if not self.dirty:
+            return
         self._run("-X")
         self._run("-F")
         self.dirty = False
