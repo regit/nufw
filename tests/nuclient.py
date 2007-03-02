@@ -8,13 +8,19 @@ class Nuclient(Process):
         Process.__init__(self, program)
         self.updateArgs()
 
-    def setUsername(self, username):
+    def _setUsername(self, username):
         self._username = username
         self.updateArgs()
+    def _getUsername(self):
+        return self._username
+    username = property(_getUsername, _setUsername)
 
-    def setPassword(self, password):
+    def _setPassword(self, password):
         self._password = password
         self.updateArgs()
+    def _getPassword(self):
+        return self._password
+    password = property(_getPassword, _setPassword)
 
     def updateArgs(self):
         self.program_args = [
@@ -24,10 +30,12 @@ class Nuclient(Process):
             "-d"]
 
     def isReady(self):
-        while self.isRunning():
-            err = self.readlineStderr().rstrip()
-            if "started" in err:
+        while True:
+            out = self.readline()
+            if not out:
+                break
+            out = out.rstrip()
+            if "Client is asked to send new connections" in out:
                 return True
-            if not err:
-                return False
+        return False
 

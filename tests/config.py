@@ -37,7 +37,6 @@ class NuauthConf:
                 raise
         self.replaced = True
 
-        print "WRITE %s" % self.filename
         output = open(self.filename, 'w')
         for key, value in self.content.iteritems():
             output.write("%s=%s\n" % (key, value))

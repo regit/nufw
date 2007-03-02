@@ -5,7 +5,7 @@ from signal import SIGINT
 from os.path import basename
 from select import select
 
-class Process:
+class Process(object):
     def __init__(self, program, args=None):
         self.program = program
         self.process = None
@@ -46,7 +46,7 @@ class Process:
                 self.stop()
                 raise RuntimeError(err % basename(self.program))
 
-    def readline(self, timeout, stream="stdin"):
+    def readline(self, timeout=0, stream="stdout"):
         """
         Read one line from specified stream ('stdout' by default).
 
@@ -63,7 +63,7 @@ class Process:
         if not self.process:
             return ''
 
-        out = getattr(self.process, name)
+        out = getattr(self.process, stream)
         if timeout is not None:
             ready = select([out.fileno()], tuple(), tuple(), timeout)[0]
             if not ready:

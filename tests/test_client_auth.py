@@ -1,7 +1,7 @@
 #!/usr/bin/python2.4
 from unittest import TestCase, main
 from sys import stderr
-from common import startNuauth, createClient, connectClient
+from common import startNuauth, createClient, connectClient, PASSWORD
 
 class TestClientAuth(TestCase):
     def setUp(self):
@@ -10,17 +10,16 @@ class TestClientAuth(TestCase):
 
         # Create client
         self.client = createClient()
-        self.client.setUsername("haypo")
 
     def tearDown(self):
         self.client.stop()
 
     def testValidPass(self):
-        self.client.setPassword("haypo")
+        self.client.password = PASSWORD
         self.assert_(connectClient(self.client))
 
     def testInvalidPass(self):
-        self.client.setPassword("xxxxx")
+        self.client.password = "xxx%sxxx" % PASSWORD
         self.assert_(not connectClient(self.client))
 
 if __name__ == "__main__":
