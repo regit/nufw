@@ -160,7 +160,7 @@ void close_nufw_servers()
 }
 
 /**
- * Suppress entry from nufw_servers hash when a 
+ * Suppress entry from nufw_servers hash when a
  * problem occurs
  */
 nu_error_t suppress_nufw_session(nufw_session_t * session)
@@ -260,7 +260,7 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 #if 0
 	if (conn_fd >= nuauth_tls_max_servers) {
 		log_message(WARNING, AREA_MAIN,
-			    "too much servers (%d configured)\n",
+			    "too much servers (%d configured)",
 			    nuauth_tls_max_servers);
 		close(conn_fd);
 		continue;

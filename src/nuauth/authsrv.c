@@ -352,7 +352,7 @@ void daemonize()
 
 	pidf = fork();
 	if (pidf < 0) {
-		g_error("Unable to fork\n");
+		g_error("Unable to fork");
 		exit(EXIT_FAILURE);	/* this should be useless !! */
 	} else {
 		if (pidf > 0) {
@@ -375,9 +375,9 @@ void daemonize()
 	set_glib_loghandlers();
 
 	/* Close stdin, stdout, stderr. */
-	(void) close(0);
-	(void) close(1);
-	(void) close(2);
+	(void) close(STDIN_FILENO);
+	(void) close(STDOUT_FILENO);
+	(void) close(STDERR_FILENO);
 }
 
 /**
@@ -417,7 +417,6 @@ void parse_options(int argc, char **argv, command_line_params_t * params)
 			break;
 
 		case 'v':
-			/*fprintf (stdout, "Debug should be On (++)\n"); */
 			local_debug_level++;
 			break;
 
@@ -556,6 +555,7 @@ void configure_app(int argc, char **argv)
 	command_line_params_t params;
 	int err;
 	struct rlimit core_limit;
+
 	/* Avoid creation of core file which may contains username and password */
 	if (getrlimit(RLIMIT_CORE, &core_limit) == 0) {
 #ifdef DEBUG_ENABLE
@@ -565,6 +565,7 @@ void configure_app(int argc, char **argv)
 #endif
 		setrlimit(RLIMIT_CORE, &core_limit);
 	}
+
 #ifndef DEBUG_ENABLE
 	/* Move to root directory to not block current working directory */
 	(void) chdir("/");

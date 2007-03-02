@@ -303,7 +303,7 @@ int tls_user_accept(struct tls_user_context_t *context)
 
 	if (get_number_of_clients() >= context->nuauth_tls_max_clients) {
 		log_message(WARNING, AREA_MAIN,
-			    "too many clients (%d configured)\n",
+			    "too many clients (%d configured)",
 			    context->nuauth_tls_max_clients);
 		shutdown(socket, SHUT_RDWR);
 		close(socket);

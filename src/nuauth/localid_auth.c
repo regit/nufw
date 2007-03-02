@@ -128,7 +128,7 @@ void localid_insert_message(connection_t * pckt,
 		break;
 
 	default:
-		g_warning("Should not have this at %s:%d.\n", __FILE__,
+		g_warning("Should not have this at %s:%d.", __FILE__,
 			  __LINE__);
 	}
 }
@@ -197,7 +197,7 @@ void *localid_auth(GMutex * mutex)
 			break;
 
 		default:
-			g_warning("Should not have this at %s:%d.\n",
+			g_warning("Should not have this at %s:%d.",
 				  __FILE__, __LINE__);
 			g_free(message);
 		}

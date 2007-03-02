@@ -98,7 +98,7 @@ nu_error_t parse_dgram(connection_t * connection, unsigned char *dgram,
 				break;
 			default:
 				log_message(WARNING, AREA_PACKET,
-					    "Can't parse TCP headers\n");
+					    "Can't parse TCP headers");
 				free_connection(connection);
 				return NU_EXIT_ERROR;
 			}

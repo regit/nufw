@@ -333,7 +333,7 @@ inline int conn_cl_remove(gconstpointer conn)
 	if (!g_hash_table_steal(conn_list,
 				&(((connection_t *) conn)->tracking))) {
 		log_message(WARNING, AREA_MAIN,
-			    "Removal of conn in hash failed\n");
+			    "Removal of conn in hash failed");
 		return 0;
 	}
 	return 1;

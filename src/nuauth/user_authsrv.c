@@ -209,7 +209,7 @@ int user_process_field_app(struct nu_authreq *authreq,
 	if (len > 512 || (len <= 0)) {
 		/* it is reaaally long (or too short), we ignore packet (too lasy to kill client) */
 		log_message(INFO, AREA_USER,
-			    "user packet announced a bad length app name : %d\n",
+			    "user packet announced a bad length app name : %d",
 			    len);
 		return -1;
 	}
@@ -234,10 +234,10 @@ int user_process_field_app(struct nu_authreq *authreq,
 		connection->app_name = string_escape(dec_appname);
 		if (connection->app_name == NULL)
 			log_message(WARNING, AREA_USER,
-				    "user packet received an invalid app name\n");
+				    "user packet received an invalid app name");
 	} else {
 		log_message(WARNING, AREA_USER,
-			    "User packet contained an undecodable app name\n");
+			    "User packet contained an undecodable app name");
 		connection->app_name = NULL;
 	}
 	g_free(dec_appname);

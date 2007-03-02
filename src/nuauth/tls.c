@@ -80,7 +80,7 @@ gint check_certs_for_tls_session(gnutls_session session)
 	ret = gnutls_certificate_verify_peers2(session, &status);
 
 	if (ret < 0) {
-		g_warning("Certificate verification failed\n");
+		g_warning("Certificate verification failed");
 		return SASL_BADPARAM;
 	}
 
@@ -260,7 +260,7 @@ int tls_connect(int socket_fd, gnutls_session ** session_ptr)
 	if (ret < 0) {
 		close_tls_session(socket_fd, session);
 		log_message(DEBUG, AREA_MAIN,
-			    "NuFW TLS Handshake has failed (%s)\n\n",
+			    "NuFW TLS Handshake has failed (%s)",
 			    gnutls_strerror(ret));
 		return SASL_BADPARAM;
 	}
@@ -353,11 +353,11 @@ void create_x509_credentials()
 			sizeof(nuauth_tls_vars) / sizeof(confparams_t));
 
 	if (access(nuauth_tls_key, R_OK)) {
-		g_error("[%i] TLS : can not access key file %s\n",
+		g_error("[%i] TLS : can not access key file %s",
 			getpid(), nuauth_tls_key);
 	}
 	if (access(nuauth_tls_cert, R_OK)) {
-		g_error("[%i] TLS : can not access cert file %s\n",
+		g_error("[%i] TLS : can not access cert file %s",
 			getpid(), nuauth_tls_cert);
 	}
 
@@ -413,11 +413,11 @@ void create_x509_credentials()
 
 	if (nuauth_tls_crl) {
 		log_message(VERBOSE_DEBUG, AREA_USER,
-			    "Certificate revocation list: %s\n",
+			    "Certificate revocation list: %s",
 			    nuauth_tls_crl);
 
 		if (access(nuauth_tls_crl, R_OK)) {
-			g_error("[%i] TLS : can not access crl file %s\n",
+			g_error("[%i] TLS : can not access crl file %s",
 				getpid(), nuauth_tls_crl);
 		}
 		nuauth_tls.crl_file = nuauth_tls_crl;

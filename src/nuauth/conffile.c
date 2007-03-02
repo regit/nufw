@@ -140,8 +140,7 @@ int parse_conffile(const char *filename, gint array_size,
 						}
 						break;
 					default:
-						g_warning
-						    ("Bad argument !\n");
+						g_warning ("Bad argument !");
 					}
 				}
 			} else {
