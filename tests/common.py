@@ -2,7 +2,7 @@ from os import getcwd, path
 from signal import SIGHUP
 import atexit
 from nuauth import Nuauth
-from nuclient import Nuclient
+from client import Client
 
 CONF_DIR = "/etc/nufw"
 NUAUTH_CONF = path.join(CONF_DIR, "nuauth.conf")
@@ -51,7 +51,7 @@ def _stopNuauth():
     _nuauth = None
 
 def createClient():
-    return Nuclient(NUTCPC_PROG, NUAUTH_HOST, USERNAME, PASSWORD)
+    return Client(NUTCPC_PROG, NUAUTH_HOST, USERNAME, PASSWORD)
 
 def connectClient(client):
     try:

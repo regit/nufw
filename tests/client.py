@@ -1,6 +1,6 @@
 from process import Process
 
-class Nuclient(Process):
+class Client(Process):
     def __init__(self, program, hostname, username, password):
         self._username = username
         self._password = password
