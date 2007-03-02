@@ -30,12 +30,8 @@ class Nuclient(Process):
             "-d"]
 
     def isReady(self):
-        while True:
-            out = self.readline()
-            if not out:
-                break
-            out = out.rstrip()
-            if "Client is asked to send new connections" in out:
+        for line in self.readlines():
+            if "Client is asked to send new connections" in line:
                 return True
         return False
 

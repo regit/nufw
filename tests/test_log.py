@@ -6,8 +6,6 @@ from common import (
     createClient, connectClient)
 from config import NuauthConf
 
-SYSLOG = '/var/log/syslog'
-
 class TestLog(TestCase):
     def setUp(self):
         self.config = NuauthConf(NUAUTH_CONF)
@@ -18,36 +16,28 @@ class TestLog(TestCase):
 
     def tearDown(self):
         self.config.desinstall()
-        #reloadNuauth()
+        reloadNuauth()
+
+    def findLog(self, match):
+        matched = False
+        for line in self.nuauth.readlines():
+            if match in line:
+                matched = True
+        return matched
 
     def testLogin(self):
-        # Eat output
-        while self.nuauth.readline():
-            pass
-
-        # Connect client
+        # Client login
         client = createClient()
-        client.username = "haypo"
-        client.password = "haypo"
-
         self.assert_(connectClient(client))
-        client.stop()
 
-        # Check output
-        matched = 0
-        match_login = "[nuauth] User %s connect on " % client.username
-        match_logout = "[nuauth] User %s disconnect on " % client.username
-        while True:
-            line = self.nuauth.readline()
-            if not line:
-                break
-            line = line.rstrip()
-            if match_login in line:
-                matched += 1
-            elif match_logout in line:
-                matched += 1
+        # Check log output
+        self.assert_(self.findLog("[nuauth] User %s connect on " % client.username))
+
+        # Client logout
+        client.stop()
+        self.assert_(self.findLog("[nuauth] User %s disconnect on " % client.username))
 
 if __name__ == "__main__":
-    print "Test client authentification"
+    print "Test nuauth module 'log_syslog'"
     main()
 

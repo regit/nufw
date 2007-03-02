@@ -1,10 +1,11 @@
-from os import getcwd, path, kill
+from os import getcwd, path
 from signal import SIGHUP
 import atexit
 from nuauth import Nuauth
 from nuclient import Nuclient
 
-NUAUTH_CONF = "/etc/nufw/nuauth.conf"
+CONF_DIR = "/etc/nufw"
+NUAUTH_CONF = path.join(CONF_DIR, "nuauth.conf")
 ROOT_DIR = path.normpath(path.join(getcwd(), ".."))
 NUAUTH_PROG = path.join(ROOT_DIR, "src", "nuauth", "nuauth")
 NUTCPC_PROG = path.join(ROOT_DIR, "src", "clients", "nutcpc", "nutcpc")
@@ -22,7 +23,7 @@ def startNuauth():
     """
     global _nuauth
     if _nuauth:
-        return
+        return _nuauth
     _nuauth = Nuauth(NUAUTH_PROG)
     atexit.register(_stopNuauth)
     _nuauth.start()
@@ -39,7 +40,7 @@ def reloadNuauth():
     was_running = bool(_nuauth)
     nuauth = startNuauth()
     if was_running:
-        kill(nuauth.process.pid, SIGHUP)
+        nuauth.kill(SIGHUP)
     return nuauth
 
 def _stopNuauth():

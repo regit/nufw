@@ -15,6 +15,9 @@ class Process(object):
             self.program_args = []
         self.popen_args = {'stdin': PIPE, 'stdout': PIPE, 'stderr': STDOUT}
 
+    def __str__(self):
+        return basename(self.program)
+
     def start(self, restart=True, timeout=None):
         """
         Run process and waits until it is ready
@@ -44,7 +47,7 @@ class Process(object):
                     err = "Unable to run %s (timeout)"
             if err:
                 self.stop()
-                raise RuntimeError(err % basename(self.program))
+                raise RuntimeError(err % str(self))
 
     def readline(self, timeout=0, stream="stdout"):
         """
@@ -70,6 +73,20 @@ class Process(object):
                 return ''
         return out.readline()
 
+    def kill(self, signum, raise_error=True):
+        if not self.process:
+            if raise_error:
+                raise RuntimeError("Unable to kill %s: it's not running" % self)
+        else:
+            kill(self.process.pid, signum)
+
+    def readlines(self, timeout=0, stream="stdout"):
+        while True:
+            line = self.readline(timeout, stream)
+            if not line:
+                break
+            yield line.rstrip()
+
     def isRunning(self):
         if not self.process:
             return False
@@ -90,7 +107,7 @@ class Process(object):
             return
 
         # Send first SIGINT
-        kill(self.process.pid, SIGINT)
+        self.kill(SIGINT)
 
         # Wait until process ends
         step = 1
@@ -98,7 +115,7 @@ class Process(object):
         while self.isRunning():
             if step == 1 and 2.0 < (time() - start_time):
                 # Send second SIGINT
-                kill(self.process.pid, SIGINT)
+                self.kill(SIGINT)
                 step = 2
             try:
                 sleep(0.250)
