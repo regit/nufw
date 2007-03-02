@@ -24,6 +24,7 @@ class ReplaceFile:
     def __init__(self, filename, new_content, mode=None):
         self.has_original = False
         self.replaced = False
+        self.installed = False
         self.filename = filename
         self.filename_old = self.filename + ".old"
         self.mode = mode
@@ -33,6 +34,9 @@ class ReplaceFile:
         raise NotImplementedError()
 
     def install(self):
+        if self.installed:
+            return
+        self.installed = True
         self.replaced = try_rename(self.filename, self.filename_old)
         output = open(self.filename, 'w')
         if self.mode is not None:
@@ -47,6 +51,7 @@ class ReplaceFile:
         if not self.replaced:
             return
         self.replaced = False
+        self.installed = False
         #unlink(self.filename)
         rename(self.filename_old, self.filename)
 

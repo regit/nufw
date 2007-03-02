@@ -4,18 +4,16 @@ from common import (CONF_DIR,
     reloadNuauth, getNuauthConf,
     createClient, connectClient)
 from config import NuauthConf
-from os import rename, path, link, chmod
-from tools import try_rename
+from os import path
 from replace_file import ReplaceFile
 
 USER_FILENAME = path.join(CONF_DIR, "users.nufw")
-ACL_FILENAME = path.join(CONF_DIR, "acls.nufw")
 USER1, PASS1 = "username", "password"
 USER2, PASS2 = "username2", "password2"
 USER_DB  = "%s:%s:42:4242,101\n" % (USER1, PASS1)
 USER_DB += "%s:%s:1:2,3\n" % (USER2, PASS2)
 
-class TestLog(TestCase):
+class TestPlaintextAuth(TestCase):
     def setUp(self):
         # Prepare our user DB
         self.users = ReplaceFile(USER_FILENAME, USER_DB)
@@ -23,9 +21,7 @@ class TestLog(TestCase):
         # Start nuauth with new config
         self.config = getNuauthConf()
         self.config["plaintext_userfile"] = '"%s"' % USER_FILENAME
-        self.config["plaintext_aclfile"] = '"%s"' % ACL_FILENAME
         self.config["nuauth_user_check_module"] = '"plaintext"'
-        self.config["nuauth_acl_check_module"] = '"plaintext"'
         self.config.install()
         self.nuauth = reloadNuauth()
 
@@ -34,12 +30,6 @@ class TestLog(TestCase):
         self.users.desinstall()
         self.config.desinstall()
         reloadNuauth()
-
-    def checkScript(self, match):
-        for line in self.nuauth.readlines():
-            if line == match:
-                return True
-        return False
 
     def testLogin(self):
         # Install our scripts
@@ -74,6 +64,6 @@ class TestLog(TestCase):
         client.stop()
 
 if __name__ == "__main__":
-    print "Test nuauth module 'log_script'"
+    print "Test nuauth module 'plaintext' for AUTH"
     main()
 
