@@ -3,6 +3,7 @@ from signal import SIGHUP
 import atexit
 from nuauth import Nuauth
 from client import Client
+from config import NuauthConf
 
 CONF_DIR = "/etc/nufw"
 NUAUTH_CONF = path.join(CONF_DIR, "nuauth.conf")
@@ -60,4 +61,7 @@ def connectClient(client):
 #        print "[!] connectClient() error: %s" % err
         return False
     return True
+
+def getNuauthConf():
+    return NuauthConf(NUAUTH_CONF)
 

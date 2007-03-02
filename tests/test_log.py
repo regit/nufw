@@ -1,14 +1,10 @@
 #!/usr/bin/python2.4
 from unittest import TestCase, main
-from sys import stderr
-from common import (
-    startNuauth, reloadNuauth, NUAUTH_CONF,
-    createClient, connectClient)
-from config import NuauthConf
+from common import reloadNuauth, getNuauthConf, createClient, connectClient
 
 class TestLog(TestCase):
     def setUp(self):
-        self.config = NuauthConf(NUAUTH_CONF)
+        self.config = getNuauthConf()
         self.config["nuauth_user_logs_module"] = '"syslog"'
         self.config["nuauth_user_session_logs_module"] = '"syslog"'
         self.config.install()

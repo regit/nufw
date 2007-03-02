@@ -1,12 +1,9 @@
 #!/usr/bin/python2.4
 from unittest import TestCase, main
-from sys import stderr
 from common import (CONF_DIR,
-    startNuauth, reloadNuauth, NUAUTH_CONF,
+    startNuauth, reloadNuauth, getNuauthConf,
     createClient, connectClient)
-from config import NuauthConf
-from os import rename, path, link, chmod
-from tools import try_rename
+from os import path
 from replace_file import ReplaceFile
 
 ECHO_BIN = '/bin/echo'
@@ -23,7 +20,7 @@ class TestLog(TestCase):
         self.script_down = ReplaceFile(SCRIPT_DOWN, SCRIPT % "DOWN", MODE)
 
         # Start nuauth with new config
-        self.config = NuauthConf(NUAUTH_CONF)
+        self.config = getNuauthConf()
         self.config["nuauth_user_session_logs_module"] = '"script"'
         self.config.install()
         self.nuauth = reloadNuauth()
