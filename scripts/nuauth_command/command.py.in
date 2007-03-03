@@ -104,7 +104,7 @@ class NuauthSocket:
         return None
 
 class Client:
-    SOCKET_FILENAME = "/tmp/nuauth-command.socket"
+    SOCKET_FILENAME = "@localstatedir@/run/nuauth/nuauth-command.socket"
 
     def __init__(self):
         self.debug = True

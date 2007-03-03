@@ -264,6 +264,8 @@ AC_CONFIG_FILES([Makefile
         src/clients/nutcpc/Makefile
         src/clients/pam_nufw/Makefile
         src/nufw/Makefile
+	scripts/Makefile
+	scripts/nuauth_command/Makefile
 ])
 
 # Display errors if any library is missing
