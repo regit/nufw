@@ -10,6 +10,8 @@
 	- add support for flags on acl
 	- implement async logging following flag setting
 	- cache is now resetted during reload
+	- nuauth: command mode through a unix socket and a python script
+	is given as exemple
 2.1.1 (2007/01/03)
 	- suppress ldap authentication code
 	- add support for log prefix
