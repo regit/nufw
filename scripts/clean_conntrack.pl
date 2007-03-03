@@ -37,7 +37,8 @@ my $mysql_rows="raw_mac, oob_time_sec, oob_time_usec, oob_prefix, oob_mark, oob_
 		tcp_urg, tcp_urgp, tcp_ack, tcp_psh, tcp_rst, tcp_syn, tcp_fin, udp_sport,
 		udp_dport, udp_len, icmp_type, icmp_code, icmp_echoid, icmp_echoseq, icmp_gateway,
 		icmp_fragmtu, pwsniff_user, pwsniff_pass, ahesp_spi, timestamp, state, end_timestamp,
-		start_timestamp, username, user_id, client_os, client_app";
+		start_timestamp, username, user_id, client_os, client_app, bytes_in, bytes_out,
+		packets_in, packets_out";
 
 #
 ## Database initialisation.
