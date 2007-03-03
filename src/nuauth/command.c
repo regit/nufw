@@ -23,7 +23,7 @@
 #include "command_enc.h"
 #include <sys/un.h>		/* unix socket */
 
-#define SOCKET_FILENAME "/tmp/nuauth-command.socket"
+#define SOCKET_FILENAME LOCAL_STATE_DIR "/run/nuauth/nuauth-command.socket"
 
 const char* COMMAND_HELP =
 "version: display nuauth version\n"
