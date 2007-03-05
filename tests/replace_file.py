@@ -1,5 +1,6 @@
 from os import rename, chmod
 from errno import ENOENT, EACCES
+from logging import warning
 
 def try_rename(before, after):
     """
@@ -34,6 +35,10 @@ class ReplaceFile:
             return
         self.installed = True
         self.replaced = try_rename(self.filename, self.filename_old)
+        if self.replaced:
+            warning("Replace file %s" % self.filename)
+        else:
+            warning("Install file %s" % self.filename)
         output = open(self.filename, 'w')
         if self.mode is not None:
             chmod(self.filename, self.mode)
@@ -49,6 +54,7 @@ class ReplaceFile:
         self.replaced = False
         self.installed = False
         #unlink(self.filename)
+        warning("Restore old file %s" % self.filename)
         rename(self.filename_old, self.filename)
 
     def __del__(self):

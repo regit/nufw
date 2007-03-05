@@ -23,6 +23,8 @@ USERNAME = "haypo"
 PASSWORD = "haypo"
 
 LOG_FILENAME = 'tests.log'
+#LOG_FORMAT = '%(asctime)s %(levelname)s %(message)s'
+LOG_FORMAT = '%(created).3f| %(message)s'
 
 _nuauth = None
 _nufw = None
@@ -38,7 +40,7 @@ def setupLog():
     _setup_log = True
     basicConfig(
         level=DEBUG,
-        format='%(asctime)s %(levelname)s %(message)s',
+        format=LOG_FORMAT,
         filename=LOG_FILENAME,
         filemode='w')
     atexit.register(lambda: stdout.write("Log written to %s\n" % LOG_FILENAME))
@@ -56,6 +58,9 @@ def startNuauth(debug_level=9):
     _nuauth = Nuauth(NUAUTH_PROG, debug_level)
     atexit.register(_stopNuauth)
     _nuauth.start()
+    # Log output
+    for line in _nuauth.readlines():
+        pass
     return _nuauth
 
 def startNufw():
@@ -106,12 +111,13 @@ def createClient(username=USERNAME, password=PASSWORD):
     return Client(NUTCPC_PROG, NUAUTH_HOST, username, password)
 
 def connectClient(client):
+    client.warning("connectClient()")
     try:
         client.start(timeout=10.0)
-    except RuntimeError:
+    except RuntimeError, err:
+        client.warning("connectClient(): error: %s" % err)
         return False
-#    except RuntimeError, err:
-#        print "[!] connectClient() error: %s" % err
+    client.warning("connectClient(): success")
     return True
 
 def getNuauthConf():

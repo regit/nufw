@@ -1,10 +1,11 @@
-from os import kill, waitpid, P_NOWAIT
+from os import (kill, waitpid, P_NOWAIT,
+    WCOREDUMP, WIFSIGNALED, WSTOPSIG, WIFEXITED, WEXITSTATUS)
 from subprocess import Popen, PIPE, STDOUT
 from time import sleep, time
 from signal import SIGINT
 from os.path import basename
 from select import select
-from logging import info, warning
+from logging import info, warning, error
 
 class Process(object):
     def __init__(self, program, *args):
@@ -14,11 +15,16 @@ class Process(object):
         self.popen_args = {'stdin': PIPE, 'stdout': PIPE, 'stderr': STDOUT}
 
     def _log(self, func, message):
-        func("[%s] %s" % (basename(self.program), message))
+        if self.process:
+            func("[%s:%s] %s" % (basename(self.program), self.process.pid, message))
+        else:
+            func("[%s] %s" % (basename(self.program), message))
     def info(self, message):
         self._log(info, message)
     def warning(self, message):
         self._log(warning, message)
+    def error(self, message):
+        self._log(error, message)
 
     def __str__(self):
         return basename(self.program)
@@ -89,6 +95,7 @@ class Process(object):
             if raise_error:
                 raise RuntimeError("Unable to kill %s: it's not running" % self)
         else:
+            self.info("kill(%s)" % signum)
             kill(self.process.pid, signum)
 
     def readlines(self, timeout=0, stream="stdout"):
@@ -98,20 +105,34 @@ class Process(object):
                 break
             yield line.rstrip()
 
-    def _stop(self, status):
-        # Log last output
-        for line in self.readlines():
-            pass
-        self.warning("Exit (status %s)" % status)
-        self.process = None
-
     def isRunning(self):
         if not self.process:
             return False
         finished, status = waitpid(self.process.pid, P_NOWAIT)
         if finished == 0:
             return True
-        self._stop(status)
+
+        # Log last output
+        for line in self.readlines():
+            pass
+
+        # Log exit code
+        log_func = self.warning
+        info = []
+        if WCOREDUMP(status):
+            info.append("core dumped!")
+            log_func = self.error
+        if WIFSIGNALED(status):
+            info.append("signal %s" % WSTOPSIG(status))
+        if WIFEXITED(status):
+            info.append("exitcode=%s" % WEXITSTATUS(status))
+        if info:
+            log_func("Exit (%s)" % ", ".join(info))
+        else:
+            log_func("Exit")
+
+        # Delete process
+        self.process = None
         return False
 
     def isReady(self):
@@ -124,6 +145,10 @@ class Process(object):
         if not self.isRunning():
             return
         self.warning("stop()")
+
+        # Log output
+        for line in self.readlines():
+            pass
 
         # Send first SIGINT
         self.kill(SIGINT)

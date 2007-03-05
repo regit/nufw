@@ -1,5 +1,6 @@
 import re
 from replace_file import ReplaceFile
+from logging import info
 
 class NuauthConf(ReplaceFile):
     def __init__(self, filename):
@@ -26,5 +27,6 @@ class NuauthConf(ReplaceFile):
     def __setitem__(self, key, value):
         if key not in self.content:
             raise AttributeError("nuauth.conf has no key '%s'" % key)
+        info("nuauth.conf: set %s=%s" % (key, value))
         self.content[key] = value
 
