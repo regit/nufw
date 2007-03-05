@@ -250,7 +250,7 @@ static int treat_user_request(user_session_t * c_session)
 			}
 		}
 
-		debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+		debug_log_message(VERBOSE_DEBUG, AREA_MAIN | AREA_USER,
 				  "Pushing packet to user_checker");
 		g_thread_pool_push(nuauthdatas->user_checkers, datas,
 				   NULL);
@@ -291,7 +291,7 @@ int tls_user_accept(struct tls_user_context_t *context)
 	socket = accept(context->sck_inet,
 			(struct sockaddr *) &sockaddr, &len_inet);
 	if (socket == -1) {
-		log_message(WARNING, AREA_MAIN, "accept");
+		log_message(WARNING, AREA_USER, "accept");
 	}
 
 	/* if system is in reload: drop new client */
@@ -302,7 +302,7 @@ int tls_user_accept(struct tls_user_context_t *context)
 	}
 
 	if (get_number_of_clients() >= context->nuauth_tls_max_clients) {
-		log_message(WARNING, AREA_MAIN,
+		log_message(WARNING, AREA_MAIN | AREA_USER,
 			    "too many clients (%d configured)",
 			    context->nuauth_tls_max_clients);
 		shutdown(socket, SHUT_RDWR);
@@ -434,7 +434,7 @@ void tls_user_main_loop(struct tls_user_context_t *context, GMutex * mutex)
 	struct timeval tv;
 	disconnect_user_msg_t *disconnect_msg;
 
-	log_message(INFO, AREA_MAIN,
+	log_message(INFO, AREA_USER,
 		    "[+] NuAuth is waiting for client connections.");
 	while (g_mutex_trylock(mutex)) {
 		g_mutex_unlock(mutex);
@@ -487,12 +487,12 @@ void tls_user_main_loop(struct tls_user_context_t *context, GMutex * mutex)
 		if (nb_active_clients == -1) {
 			/* Signal was catched: just ignore it */
 			if (errno == EINTR) {
-				log_message(CRITICAL, AREA_MAIN,
+				log_message(CRITICAL, AREA_USER,
 					    "Warning: tls user select() failed: signal was catched.");
 				continue;
 			}
 
-			log_message(FATAL, AREA_MAIN,
+			log_message(FATAL, AREA_MAIN | AREA_USER,
 				    "select() %s:%d failure: %s",
 				    __FILE__, __LINE__, g_strerror(errno));
 			nuauth_ask_exit();
@@ -552,13 +552,13 @@ int tls_user_bind(char **errmsg)
 
 	/* open the socket */
 	if (res->ai_family == PF_INET)
-		log_message(DEBUG, AREA_MAIN,
+		log_message(DEBUG, AREA_USER | AREA_MAIN,
 			    "Create user server IPv4 socket");
 	else if (res->ai_family == PF_INET6)
-		log_message(DEBUG, AREA_MAIN,
+		log_message(DEBUG, AREA_USER | AREA_MAIN,
 			    "Create user server IPv6 socket");
-	else
-		log_message(DEBUG, AREA_MAIN,
+	
+		log_message(DEBUG, AREA_USER | AREA_MAIN,
 			    "Create user server (any) socket");
 	sck_inet =
 	    socket(res->ai_family, res->ai_socktype, res->ai_protocol);
@@ -608,9 +608,9 @@ int tls_user_init(struct tls_user_context_t *context)
 
 	context->sck_inet = tls_user_bind(&errmsg);
 	if (context->sck_inet < 0) {
-		log_message(FATAL, AREA_MAIN,
+		log_message(FATAL, AREA_MAIN | AREA_USER,
 			    "FATAL ERROR: User bind error: %s", errmsg);
-		log_message(FATAL, AREA_MAIN,
+		log_message(FATAL, AREA_MAIN | AREA_USER,
 			    "Check that nuauth is not running twice. Exit nuauth!");
 		return 0;
 	}

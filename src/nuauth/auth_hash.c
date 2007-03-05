@@ -150,7 +150,7 @@ inline void search_and_fill_complete_of_authreq(connection_t * new,
 {
 	switch (new->state) {
 	case AUTH_STATE_AUTHREQ:
-		debug_log_message(DEBUG, AREA_MAIN,
+		debug_log_message(DEBUG, AREA_PACKET,
 				  "Complete authreq: Adding a packet_id to a connection");
 		packet->packet_id =
 		    g_slist_prepend(packet->packet_id,
@@ -159,7 +159,7 @@ inline void search_and_fill_complete_of_authreq(connection_t * new,
 		break;
 
 	case AUTH_STATE_USERPCKT:
-		debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+		debug_log_message(VERBOSE_DEBUG, AREA_USER,
 				  "Complete authreq: Filling user data for %s",
 				  new->username);
 		new->state = AUTH_STATE_COMPLETING;
@@ -226,7 +226,7 @@ inline void search_and_fill_complete_of_userpckt(connection_t * new,
 		return;		/* don't free connection */
 
 	case AUTH_STATE_USERPCKT:
-		debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+		debug_log_message(VERBOSE_DEBUG, AREA_USER,
 				  "Complete user packet: Found a duplicate user packet");
 		break;
 
@@ -267,7 +267,7 @@ inline void search_and_fill_completing(connection_t * new,
 		return;
 
 	case AUTH_STATE_AUTHREQ:
-		debug_log_message(DEBUG, AREA_MAIN,
+		debug_log_message(DEBUG, AREA_GW,
 				  "Completing (auth): Adding a packet_id to a completing connection");
 		packet->packet_id =
 		    g_slist_prepend(packet->packet_id,
@@ -276,7 +276,7 @@ inline void search_and_fill_completing(connection_t * new,
 		break;
 
 	case AUTH_STATE_USERPCKT:
-		log_message(DEBUG, AREA_MAIN,
+		log_message(DEBUG, AREA_USER,
 			    "Completing (user): User packet in state completing");
 		break;
 
@@ -294,8 +294,8 @@ inline void search_and_fill_ready(connection_t * new,
 			  packet->state, new->state);
 	switch (new->state) {
 	case AUTH_STATE_AUTHREQ:
-		debug_log_message(DEBUG, AREA_MAIN,
-				  "seach&fill ready: Adding a packet_id to a connection");
+		debug_log_message(DEBUG, AREA_GW,
+				  "search&fill ready: Adding a packet_id to a connection");
 		packet->packet_id =
 		    g_slist_prepend(packet->packet_id,
 				    GUINT_TO_POINTER((new->packet_id)->
@@ -303,8 +303,8 @@ inline void search_and_fill_ready(connection_t * new,
 		break;
 
 	case AUTH_STATE_USERPCKT:
-		debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
-				  "seach&fill ready: Need only cleaning");
+		debug_log_message(VERBOSE_DEBUG, AREA_USER,
+				  "search&fill ready: Need only cleaning");
 		break;
 
 	default:

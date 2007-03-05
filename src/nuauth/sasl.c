@@ -254,7 +254,7 @@ nu_error_t get_proto_info(user_session_t * c_session)
 	case -1:
 		{
 			if (errno == EINTR) {
-				log_message(CRITICAL, AREA_MAIN,
+				log_message(CRITICAL, AREA_MAIN | AREA_AUTH,
 					    "Warning: tls user select() failed: signal was catched.");
 				break;
 			} else {
@@ -494,7 +494,7 @@ int sasl_parse_user_os(user_session_t * c_session, char *buf, int buf_size)
 
 	if (osfield->type != OS_FIELD) {
 #ifdef DEBUG_ENABLE
-		log_message(DEBUG, AREA_USER,
+		log_message(DEBUG, AREA_USER | AREA_AUTH,
 			    "osfield received %d,%d,%d from %s",
 			    osfield->type, osfield->option,
 			    ntohs(osfield->length), address);
@@ -507,16 +507,16 @@ int sasl_parse_user_os(user_session_t * c_session, char *buf, int buf_size)
 		if (inet_ntop
 		    (AF_INET6, &c_session->addr, address,
 		     sizeof(address)) != NULL)
-			log_message(WARNING, AREA_USER,
+			log_message(WARNING, AREA_USER | AREA_AUTH,
 				    "error osfield from %s is uncorrect, announced %d",
 				    address, ntohs(osfield->length));
 		/* One more gryzor hack */
 		if (dec_buf_size > 4096)
-			log_message(WARNING, AREA_USER,
+			log_message(WARNING, AREA_USER | AREA_AUTH,
 				    "   Is %s running a 1.0 client?",
 				    address);
 #ifdef DEBUG_ENABLE
-		log_message(DEBUG, AREA_USER,
+		log_message(DEBUG, AREA_USER | AREA_AUTH,
 			    "%s:%d osfield received %d,%d,%d ", __FILE__,
 			    __LINE__, osfield->type, osfield->option,
 			    ntohs(osfield->length));
@@ -547,7 +547,7 @@ int sasl_parse_user_os(user_session_t * c_session, char *buf, int buf_size)
 				if (inet_ntop
 				    (AF_INET6, &c_session->addr, address,
 				     sizeof(address)) != NULL)
-					log_message(WARNING, AREA_USER,
+					log_message(WARNING, AREA_USER | AREA_AUTH,
 						    "received sysname with invalid characters from %s",
 						    address);
 				g_free(dec_buf);
@@ -562,7 +562,7 @@ int sasl_parse_user_os(user_session_t * c_session, char *buf, int buf_size)
 				if (inet_ntop
 				    (AF_INET6, &c_session->addr, address,
 				     sizeof(address)) != NULL)
-					log_message(WARNING, AREA_USER,
+					log_message(WARNING, AREA_USER | AREA_AUTH,
 						    "received release with invalid characters from %s",
 						    address);
 				g_free(dec_buf);
@@ -577,7 +577,7 @@ int sasl_parse_user_os(user_session_t * c_session, char *buf, int buf_size)
 				if (inet_ntop
 				    (AF_INET6, &c_session->addr, address,
 				     sizeof(address)) != NULL)
-					log_message(WARNING, AREA_USER,
+					log_message(WARNING, AREA_USER | AREA_AUTH,
 						    "received version with invalid characters from %s",
 						    address);
 				g_free(dec_buf);
@@ -611,7 +611,7 @@ int sasl_parse_user_os(user_session_t * c_session, char *buf, int buf_size)
 		if (inet_ntop
 		    (AF_INET6, &c_session->addr, address,
 		     sizeof(address)) != NULL)
-			log_message(DEBUG, AREA_AUTH,
+			log_message(DEBUG, AREA_USER | AREA_AUTH,
 				    "from %s : osfield->option is not OS_SRV ?!",
 				    address);
 		g_free(dec_buf);
@@ -755,10 +755,10 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 		if (tls_len <= 0) {
 #ifdef DEBUG_ENABLE
 			if (!tls_len) {
-				log_message(VERBOSE_DEBUG, AREA_AUTH,
+				log_message(VERBOSE_DEBUG, AREA_USER | AREA_AUTH,
 					    "Client disconnected during sasl negotiation");
 			} else {
-				log_message(VERBOSE_DEBUG, AREA_AUTH,
+				log_message(VERBOSE_DEBUG, AREA_USER | AREA_AUTH,
 					    "TLS error during sasl negotiation");
 			}
 #endif
@@ -808,7 +808,7 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 		c_session->groups =
 		    modules_get_user_groups(c_session->user_name);
 		if (c_session->groups == NULL) {
-			debug_log_message(DEBUG, AREA_AUTH,
+			debug_log_message(DEBUG, AREA_USER | AREA_AUTH,
 					  "error when searching user groups");
 			if (gnutls_record_send(session, "N", 1) <= 0)	/* send NO to client */
 				return SASL_FAIL;
@@ -817,7 +817,7 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 		c_session->user_id =
 		    modules_get_user_id(c_session->user_name);
 		if (c_session->user_id == 0) {
-			log_message(INFO, AREA_AUTH,
+			log_message(INFO, AREA_USER | AREA_AUTH,
 				    "Couldn't get user ID!");
 		}
 	}

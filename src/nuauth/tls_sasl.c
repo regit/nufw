@@ -198,7 +198,7 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 		ret = check_certs_for_tls_session(*session);
 
 		if (ret != SASL_OK) {
-			log_message(INFO, AREA_MAIN,
+			log_message(INFO, AREA_USER,
 				    "Certificate verification failed : %s",
 				    gnutls_strerror(ret));
 		} else {
@@ -215,7 +215,7 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 				c_session->user_id =
 				    modules_get_user_id(username);
 				if (c_session->groups == NULL) {
-					debug_log_message(DEBUG, AREA_MAIN,
+					debug_log_message(DEBUG, AREA_USER,
 							  "error when searching user groups");
 					c_session->groups = NULL;
 					c_session->user_id = 0;

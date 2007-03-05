@@ -39,7 +39,7 @@ gint get_first_x509_cert_from_tls_session(gnutls_session session,
 
 	cert_list = gnutls_certificate_get_peers(session, &cert_list_size);
 
-	log_message(VERBOSE_DEBUG, AREA_MAIN,
+	log_message(VERBOSE_DEBUG, AREA_USER,
 		    "Peer provided %d certificates.", cert_list_size);
 
 	if (cert_list_size > 0) {

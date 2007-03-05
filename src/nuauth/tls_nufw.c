@@ -233,7 +233,7 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 	conn_fd = accept(context->sck_inet,
 			 (struct sockaddr *) &sockaddr, &len_inet);
 	if (conn_fd == -1) {
-		log_message(WARNING, AREA_MAIN, "accept");
+		log_message(WARNING, AREA_GW, "accept");
 	}
 
 	/* Extract client address (convert it to IPv6 if it's IPv4) */
@@ -251,7 +251,7 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 		if (inet_ntop
 		    (AF_INET6, &addr, addr_ascii,
 		     sizeof(addr_ascii)) != NULL)
-			log_message(WARNING, AREA_MAIN,
+			log_message(WARNING, AREA_GW,
 				    "unwanted nufw server (%s)",
 				    addr_ascii);
 		close(conn_fd);
@@ -259,7 +259,7 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 	}
 #if 0
 	if (conn_fd >= nuauth_tls_max_servers) {
-		log_message(WARNING, AREA_MAIN,
+		log_message(WARNING, AREA_GW,
 			    "too much servers (%d configured)",
 			    nuauth_tls_max_servers);
 		close(conn_fd);
@@ -305,7 +305,7 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex * mutex)
 	fd_set wk_set;		/* working set */
 	struct timeval tv;
 
-	log_message(INFO, AREA_MAIN,
+	log_message(INFO, AREA_GW,
 		    "[+] NuAuth is waiting for NuFW connections.");
 	while (g_mutex_trylock(mutex)) {
 		g_mutex_unlock(mutex);
@@ -324,13 +324,13 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex * mutex)
 		if (n == -1) {
 			/* Signal was catched: just ignore it */
 			if (errno == EINTR) {
-				log_message(CRITICAL, AREA_MAIN,
+				log_message(CRITICAL, AREA_GW,
 					    "Warning: tls nufw select() failed: signal was catched.");
 				continue;
 			}
 			/* Bad file descriptor error: ignore it */
 			if (errno == EBADF) {
-				log_message(CRITICAL, AREA_MAIN,
+				log_message(CRITICAL, AREA_GW,
 					    "Warning: tls nufw select() failed: bad file descriptor.");
 				continue;
 			}
@@ -343,7 +343,7 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex * mutex)
 				g_message("Not enough memory");
 				break;
 			}
-			log_message(FATAL, AREA_MAIN,
+			log_message(FATAL, AREA_MAIN | AREA_GW,
 				    "select() failed, exiting at %s:%d in %s (errno=%i)",
 				    __FILE__, __LINE__, __func__, errno);
 			nuauth_ask_exit();
@@ -453,9 +453,9 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 
 	context->sck_inet = tls_nufw_bind(&errmsg);
 	if (context->sck_inet < 0) {
-		log_message(FATAL, AREA_MAIN,
+		log_message(FATAL, AREA_GW | AREA_MAIN,
 			    "FATAL ERROR: NuFW bind error: %s", errmsg);
-		log_message(FATAL, AREA_MAIN,
+		log_message(FATAL, AREA_GW | AREA_MAIN,
 			    "Check that nuauth is not running twice. Exit nuauth!");
 		return 0;
 	}

@@ -219,7 +219,7 @@ void send_destroy_message_and_free(gpointer user_data)
 {
 	struct limited_connection *data =
 	    (struct limited_connection *) user_data;
-	debug_log_message(VERBOSE_DEBUG, AREA_USER,
+	debug_log_message(VERBOSE_DEBUG, AREA_PACKET | AREA_GW,
 			  "connection will be destroyed");
 	/* look for corresponding nufw tls session */
 	send_conntrack_message(data, AUTH_CONN_DESTROY);
@@ -236,7 +236,7 @@ static gboolean get_old_entry(gpointer key, gpointer value,
 {
 	if (((struct limited_connection *) value)->expire <
 	    GPOINTER_TO_INT(user_data)) {
-		debug_log_message(VERBOSE_DEBUG, AREA_USER,
+		debug_log_message(VERBOSE_DEBUG, AREA_PACKET | AREA_GW,
 				  "found connection to be destroyed");
 		return TRUE;
 	} else {
@@ -314,7 +314,7 @@ void *limited_connection_handler(GMutex * mutex)
 			}
 #ifdef DEBUG_ENABLE
 			else {
-				log_message(VERBOSE_DEBUG, AREA_USER,
+				log_message(VERBOSE_DEBUG, AREA_PACKET,
 					    "connection not found can not be destroyed");
 			}
 #endif
@@ -331,7 +331,7 @@ void *limited_connection_handler(GMutex * mutex)
 			    g_hash_table_lookup(lim_conn_list,
 						message->datas);
 			if (elt == NULL) {
-				debug_log_message(VERBOSE_DEBUG, AREA_GW,
+				debug_log_message(VERBOSE_DEBUG, AREA_GW | AREA_PACKET,
 						  "Can't find conntrack entry to update");
 			} else {
 				if (nuauthconf->nufw_has_fixed_timeout) {
