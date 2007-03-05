@@ -5,6 +5,7 @@ from common import (CONF_DIR,
     createClient, connectClient)
 from os import path
 from replace_file import ReplaceFile
+from logging import warning
 
 ECHO_BIN = '/bin/echo'
 SCRIPT_UP = path.join(CONF_DIR, "user-up.sh")
@@ -35,6 +36,7 @@ class TestLog(TestCase):
         reloadNuauth()
 
     def checkScript(self, match):
+        warning("checkScript(%r)" % match)
         for line in self.nuauth.readlines():
             if line == match:
                 return True
@@ -46,14 +48,14 @@ class TestLog(TestCase):
         self.assert_(connectClient(client))
 
         # Check log output
-        match = "SCRIPT UP COUNT=2 TEXT >>>%s ::ffff:127.0.0.1<<<" \
-            % client.username
+        match = "SCRIPT UP COUNT=2 TEXT >>>%s ::ffff:%s<<<" \
+            % (client.username, client.hostname)
         self.assert_(self.checkScript(match))
 
         # Client logout
         client.stop()
-        match = "SCRIPT DOWN COUNT=2 TEXT >>>%s ::ffff:127.0.0.1<<<" \
-            % client.username
+        match = "SCRIPT DOWN COUNT=2 TEXT >>>%s ::ffff:%s<<<" \
+            % (client.username, client.hostname)
         self.assert_(self.checkScript(match))
 
 if __name__ == "__main__":

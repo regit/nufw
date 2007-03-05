@@ -21,6 +21,7 @@ class Client(Process):
     def _getPassword(self):
         return self._password
     password = property(_getPassword, _setPassword)
+    hostname = property(lambda self: self._hostname)
 
     def updateArgs(self):
         self.program_args = [

@@ -2,10 +2,15 @@ from os import (kill, waitpid, P_NOWAIT,
     WCOREDUMP, WIFSIGNALED, WSTOPSIG, WIFEXITED, WEXITSTATUS)
 from subprocess import Popen, PIPE, STDOUT
 from time import sleep, time
-from signal import SIGINT
+from signal import SIGHUP, SIGINT
 from os.path import basename
 from select import select
 from logging import info, warning, error
+
+SIGNAME = {
+    SIGINT: "SIGINT",
+    SIGHUP: "SIGHUP",
+}
 
 class Process(object):
     def __init__(self, program, *args):
@@ -95,7 +100,7 @@ class Process(object):
             if raise_error:
                 raise RuntimeError("Unable to kill %s: it's not running" % self)
         else:
-            self.info("kill(%s)" % signum)
+            self.info("kill(%s)" % SIGNAME.get(signum, signum))
             kill(self.process.pid, signum)
 
     def readlines(self, timeout=0, stream="stdout"):

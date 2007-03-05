@@ -1,4 +1,5 @@
 from subprocess import call
+from logging import warning
 
 class Iptables:
     def __init__(self):
@@ -20,12 +21,14 @@ class Iptables:
         args = "-A %s -j NFQUEUE -p tcp --dport %u -m state --state new" \
             % (table, port)
         args = args.split()
+        warning("iptables %s" % " ".join(args))
         self._run(*args)
         self.dirty = True
 
     def flush(self):
         if not self.dirty:
             return
+        warning("iptables [flush]")
         self._run("-X")
         self._run("-F")
         self.dirty = False
