@@ -2,15 +2,20 @@ from os import (kill, waitpid, P_NOWAIT,
     WCOREDUMP, WIFSIGNALED, WSTOPSIG, WIFEXITED, WEXITSTATUS)
 from subprocess import Popen, PIPE, STDOUT
 from time import sleep, time
-from signal import SIGHUP, SIGINT
+from signal import SIGABRT, SIGFPE, SIGHUP, SIGINT, SIGSEGV, SIGKILL
 from os.path import basename
 from select import select
 from logging import info, warning, error
 
 SIGNAME = {
+    SIGABRT: "SIGABRT",
     SIGINT: "SIGINT",
     SIGHUP: "SIGHUP",
+    SIGFPE: "SIGFPE",
+    SIGKILL: "SIGKILL",
+    SIGSEGV: "SIGSEGV",
 }
+print SIGNAME
 
 class Process(object):
     def __init__(self, program, *args):
@@ -99,9 +104,17 @@ class Process(object):
         if not self.process:
             if raise_error:
                 raise RuntimeError("Unable to kill %s: it's not running" % self)
+
+        # Log action
+        name = SIGNAME.get(signum, signum)
+        if signum in (SIGINT, SIGHUP):
+            log_func = self.warning
         else:
-            self.info("kill(%s)" % SIGNAME.get(signum, signum))
-            kill(self.process.pid, signum)
+            log_func = self.error
+        log_func("kill(%s)" % name)
+
+        # Send signal
+        kill(self.process.pid, signum)
 
     def readlines(self, timeout=0, stream="stdout"):
         while True:
@@ -128,7 +141,9 @@ class Process(object):
             info.append("core dumped!")
             log_func = self.error
         if WIFSIGNALED(status):
-            info.append("signal %s" % WSTOPSIG(status))
+            signal = WSTOPSIG(status)
+            signal = SIGNAME.get(signal, signal)
+            info.append("signal %s" % signal)
         if WIFEXITED(status):
             info.append("exitcode=%s" % WEXITSTATUS(status))
         if info:
@@ -160,17 +175,23 @@ class Process(object):
 
         # Wait until process ends
         step = 1
+        signal = False
         start_time = time()
         while self.isRunning():
-            if step == 1 and 2.0 < (time() - start_time):
-                # Send second SIGINT
-                self.kill(SIGINT)
-                step = 2
+            if 2.0 < (time() - start_time):
+                signal = True
+                start_time = time()
+            if signal:
+                step += 1
+                if step <= 2:
+                    self.kill(SIGINT)
+                else:
+                    self.kill(SIGKILL)
             try:
                 sleep(0.250)
             except KeyboardInterrupt:
                 self.info("Interrupted (CTRL+C)")
-                step += 1
+                signal = True
 
     def __del__(self):
         self.stop()
