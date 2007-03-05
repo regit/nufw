@@ -15,7 +15,6 @@ SIGNAME = {
     SIGKILL: "SIGKILL",
     SIGSEGV: "SIGSEGV",
 }
-print SIGNAME
 
 class Process(object):
     def __init__(self, program, *args):
