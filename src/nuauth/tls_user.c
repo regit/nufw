@@ -106,7 +106,7 @@ void pre_client_check()
 				if (((struct pre_client_elt
 				      *) (client_runner->data))->validity <
 				    current_timestamp) {
-					log_message(INFO, AREA_USER,
+					log_message(INFO, DEBUG_AREA_USER,
 						    "closing socket %d due to timeout",
 						    ((struct pre_client_elt
 						      *) (client_runner->
@@ -170,7 +170,7 @@ static int treat_user_request(user_session_t * c_session)
 	if (datas->buffer_len < (int) sizeof(struct nu_header)) {
 #ifdef DEBUG_ENABLE
 		if (datas->buffer_len < 0)
-			log_message(DEBUG, AREA_USER,
+			log_message(DEBUG, DEBUG_AREA_USER,
 				    "Received error from user %s",
 				    c_session->user_name);
 #endif
@@ -185,7 +185,7 @@ static int treat_user_request(user_session_t * c_session)
 	/* is it an "USER HELLO" message ? */
 	if (header->proto == PROTO_VERSION
 	    && header->msg_type == USER_HELLO) {
-		debug_log_message(VERBOSE_DEBUG, AREA_USER,
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 				  "tls user: HELLO from %s",
 				  c_session->user_name);
 		free_buffer_read(datas);
@@ -250,12 +250,12 @@ static int treat_user_request(user_session_t * c_session)
 			}
 		}
 
-		debug_log_message(VERBOSE_DEBUG, AREA_MAIN | AREA_USER,
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
 				  "Pushing packet to user_checker");
 		g_thread_pool_push(nuauthdatas->user_checkers, datas,
 				   NULL);
 	} else {
-		log_message(INFO, AREA_USER,
+		log_message(INFO, DEBUG_AREA_USER,
 			    "Bad packet, option of header is not set or unauthorized option from user %s.",
 			    c_session->user_name);
 		free_buffer_read(datas);
@@ -291,7 +291,7 @@ int tls_user_accept(struct tls_user_context_t *context)
 	socket = accept(context->sck_inet,
 			(struct sockaddr *) &sockaddr, &len_inet);
 	if (socket == -1) {
-		log_message(WARNING, AREA_USER, "accept");
+		log_message(WARNING, DEBUG_AREA_USER, "accept");
 	}
 
 	/* if system is in reload: drop new client */
@@ -302,7 +302,7 @@ int tls_user_accept(struct tls_user_context_t *context)
 	}
 
 	if (get_number_of_clients() >= context->nuauth_tls_max_clients) {
-		log_message(WARNING, AREA_MAIN | AREA_USER,
+		log_message(WARNING, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
 			    "too many clients (%d configured)",
 			    context->nuauth_tls_max_clients);
 		shutdown(socket, SHUT_RDWR);
@@ -362,7 +362,7 @@ void tls_user_check_activity(struct tls_user_context_t *context,
 {
 	user_session_t *c_session;
 	int u_request;
-	debug_log_message(VERBOSE_DEBUG, AREA_USER,
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 			  "user activity on socket %d", socket);
 
 	/* we lock here but can do other thing on hash as it is not destructive
@@ -376,14 +376,14 @@ void tls_user_check_activity(struct tls_user_context_t *context,
 
 	u_request = treat_user_request(c_session);
 	if (u_request == EOF) {
-		debug_log_message(VERBOSE_DEBUG, AREA_USER,
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 				  "client disconnect on socket %d",
 				  socket);
 		/* clean client structure */
 		delete_client_by_socket(socket);
 	} else if (u_request < 0) {
 #ifdef DEBUG_ENABLE
-		log_message(VERBOSE_DEBUG, AREA_USER,
+		log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 			    "treat_user_request() failure");
 #endif
 		/* better to disconnect: cleaning client structure */
@@ -402,7 +402,7 @@ void tls_user_update_mx(struct tls_user_context_t *this)
 	for (i = this->mx - 1;
 			i >= 0 && !FD_ISSET(i, &this->tls_rx_set);
 			i = this->mx - 1) {
-		debug_log_message(VERBOSE_DEBUG, AREA_USER,
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 				"setting mx to %d", i);
 		this->mx = i;
 	}
@@ -434,7 +434,7 @@ void tls_user_main_loop(struct tls_user_context_t *context, GMutex * mutex)
 	struct timeval tv;
 	disconnect_user_msg_t *disconnect_msg;
 
-	log_message(INFO, AREA_USER,
+	log_message(INFO, DEBUG_AREA_USER,
 		    "[+] NuAuth is waiting for client connections.");
 	while (g_mutex_trylock(mutex)) {
 		g_mutex_unlock(mutex);
@@ -447,7 +447,7 @@ void tls_user_main_loop(struct tls_user_context_t *context, GMutex * mutex)
 		while (c_pop != NULL) {
 			int socket = GPOINTER_TO_INT(c_pop);
 
-			debug_log_message(VERBOSE_DEBUG, AREA_USER,
+			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 					  "checking mx against %d",
 					  socket);
 			if (socket + 1 > context->mx)
@@ -487,12 +487,12 @@ void tls_user_main_loop(struct tls_user_context_t *context, GMutex * mutex)
 		if (nb_active_clients == -1) {
 			/* Signal was catched: just ignore it */
 			if (errno == EINTR) {
-				log_message(CRITICAL, AREA_USER,
+				log_message(CRITICAL, DEBUG_AREA_USER,
 					    "Warning: tls user select() failed: signal was catched.");
 				continue;
 			}
 
-			log_message(FATAL, AREA_MAIN | AREA_USER,
+			log_message(FATAL, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
 				    "select() %s:%d failure: %s",
 				    __FILE__, __LINE__, g_strerror(errno));
 			nuauth_ask_exit();
@@ -552,13 +552,13 @@ int tls_user_bind(char **errmsg)
 
 	/* open the socket */
 	if (res->ai_family == PF_INET)
-		log_message(DEBUG, AREA_USER | AREA_MAIN,
+		log_message(DEBUG, DEBUG_AREA_USER | DEBUG_AREA_MAIN,
 			    "Create user server IPv4 socket");
 	else if (res->ai_family == PF_INET6)
-		log_message(DEBUG, AREA_USER | AREA_MAIN,
+		log_message(DEBUG, DEBUG_AREA_USER | DEBUG_AREA_MAIN,
 			    "Create user server IPv6 socket");
 	
-		log_message(DEBUG, AREA_USER | AREA_MAIN,
+		log_message(DEBUG, DEBUG_AREA_USER | DEBUG_AREA_MAIN,
 			    "Create user server (any) socket");
 	sck_inet =
 	    socket(res->ai_family, res->ai_socktype, res->ai_protocol);
@@ -608,9 +608,9 @@ int tls_user_init(struct tls_user_context_t *context)
 
 	context->sck_inet = tls_user_bind(&errmsg);
 	if (context->sck_inet < 0) {
-		log_message(FATAL, AREA_MAIN | AREA_USER,
+		log_message(FATAL, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
 			    "FATAL ERROR: User bind error: %s", errmsg);
-		log_message(FATAL, AREA_MAIN | AREA_USER,
+		log_message(FATAL, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
 			    "Check that nuauth is not running twice. Exit nuauth!");
 		return 0;
 	}

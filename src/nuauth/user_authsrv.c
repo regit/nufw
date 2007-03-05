@@ -41,7 +41,7 @@ void user_check_and_decide(gpointer userdata, gpointer data)
 	GSList *conn_elt_l;
 	connection_t *conn_elt;
 
-	debug_log_message(VERBOSE_DEBUG, AREA_USER, "entering user_check");
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER, "entering user_check");
 
 	/* reload condition */
 	block_on_conf_reload();
@@ -49,7 +49,7 @@ void user_check_and_decide(gpointer userdata, gpointer data)
 
 	if (conn_elts == NULL) {
 		free_buffer_read(userdata);
-		log_message(INFO, AREA_USER,
+		log_message(INFO, DEBUG_AREA_USER,
 			    "User packet decoding failed");
 		return;
 	}
@@ -112,7 +112,7 @@ void user_check_and_decide(gpointer userdata, gpointer data)
 void user_process_field_hello(connection_t * connection,
 			      struct nu_authfield_hello *hellofield)
 {
-	debug_log_message(VERBOSE_DEBUG, AREA_USER, "\tgot hello field");
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER, "\tgot hello field");
 	connection->packet_id =
 	    g_slist_prepend(NULL, GINT_TO_POINTER(hellofield->helloid));
 }
@@ -124,7 +124,7 @@ int user_process_field_ipv6(connection_t * connection,
 	connection->tracking.daddr = ipfield->dst;
 	connection->tracking.protocol = ipfield->proto;
 
-	debug_log_message(VERBOSE_DEBUG, AREA_USER, "\tgot IPv4 field");
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER, "\tgot IPv4 field");
 	switch (connection->tracking.protocol) {
 	case IPPROTO_TCP:
 	case IPPROTO_UDP:
@@ -164,7 +164,7 @@ int user_process_field_ipv4(connection_t * connection,
 
 	connection->tracking.protocol = ipfield->proto;
 
-	debug_log_message(VERBOSE_DEBUG, AREA_USER, "\tgot IPv4 field");
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER, "\tgot IPv4 field");
 	switch (connection->tracking.protocol) {
 	case IPPROTO_TCP:
 	case IPPROTO_UDP:
@@ -196,11 +196,11 @@ int user_process_field_app(struct nu_authreq *authreq,
 	gchar *dec_appname = NULL;
 	unsigned int len = appfield->length - 4;
 
-	debug_log_message(VERBOSE_DEBUG, AREA_USER, "\tgot APP field");
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER, "\tgot APP field");
 
 	/* this has to be smaller than field size */
 	if (field_buffer_len < (int) appfield->length) {
-		log_message(WARNING, AREA_USER,
+		log_message(WARNING, DEBUG_AREA_USER,
 			    "Improper application field length signaled in authreq header %d < %d",
 			    field_buffer_len, appfield->length);
 		return -1;
@@ -208,7 +208,7 @@ int user_process_field_app(struct nu_authreq *authreq,
 
 	if (len > 512 || (len <= 0)) {
 		/* it is reaaally long (or too short), we ignore packet (too lasy to kill client) */
-		log_message(INFO, AREA_USER,
+		log_message(INFO, DEBUG_AREA_USER,
 			    "user packet announced a bad length app name : %d",
 			    len);
 		return -1;
@@ -233,10 +233,10 @@ int user_process_field_app(struct nu_authreq *authreq,
 	if (dec_appname != NULL) {
 		connection->app_name = string_escape(dec_appname);
 		if (connection->app_name == NULL)
-			log_message(WARNING, AREA_USER,
+			log_message(WARNING, DEBUG_AREA_USER,
 				    "user packet received an invalid app name");
 	} else {
-		log_message(WARNING, AREA_USER,
+		log_message(WARNING, DEBUG_AREA_USER,
 			    "User packet contained an undecodable app name");
 		connection->app_name = NULL;
 	}
@@ -275,7 +275,7 @@ int user_process_field(struct nu_authreq *authreq,
 		}
 		switch (connection->client_version) {
 		case PROTO_VERSION_V22:
-			log_message(WARNING, AREA_USER,
+			log_message(WARNING, DEBUG_AREA_USER,
 				    "Proto V4 user sends an IPV4_FIELD");
 			return -1;
 		case PROTO_VERSION_V20:
@@ -285,7 +285,7 @@ int user_process_field(struct nu_authreq *authreq,
 				return -1;
 			break;
 		default:
-			log_message(WARNING, AREA_USER,
+			log_message(WARNING, DEBUG_AREA_USER,
 				    "Unknown protocol %d client has sent an IPV4_FIELD",
 				    connection->client_version);
 		}
@@ -303,7 +303,7 @@ int user_process_field(struct nu_authreq *authreq,
 		break;
 
 	case USERNAME_FIELD:
-		log_message(WARNING, AREA_USER,
+		log_message(WARNING, DEBUG_AREA_USER,
 			    "Received USERNAME_FIELD, this is BAD! multiuser client are born-dead");
 		return -1;
 
@@ -318,7 +318,7 @@ int user_process_field(struct nu_authreq *authreq,
 		break;
 
 	default:
-		log_message(INFO, AREA_USER,
+		log_message(INFO, DEBUG_AREA_USER,
 			    "unknown field type: %d", field->type);
 		return -1;
 	}
@@ -358,7 +358,7 @@ GSList *user_request(struct tls_buffer_read * datas)
 		authreq->packet_length = ntohs(authreq->packet_length);
 		if (authreq->packet_length == 0
 		    || buffer_len < (int) authreq->packet_length) {
-			log_message(WARNING, AREA_USER,
+			log_message(WARNING, DEBUG_AREA_USER,
 				    "Improper length signaled in authreq header: %d",
 				    authreq->packet_length);
 			free_connection_list(conn_elts);
@@ -381,7 +381,7 @@ GSList *user_request(struct tls_buffer_read * datas)
 #endif
 
 	/*** process all fields ***/
-		debug_log_message(VERBOSE_DEBUG, AREA_USER,
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 				  "Authreq start");
 		req_start = start + sizeof(struct nu_authreq);
 		auth_buffer_len =
@@ -441,7 +441,7 @@ GSList *user_request(struct tls_buffer_read * datas)
 		connection->client_version = datas->client_version;
 
 		if (connection->user_groups == NULL) {
-			log_message(INFO, AREA_USER,
+			log_message(INFO, DEBUG_AREA_USER,
 				    "User_check return is bad");
 			free_connection_list(conn_elts);
 			free_connection(connection);
@@ -454,7 +454,7 @@ GSList *user_request(struct tls_buffer_read * datas)
 		connection->timestamp = time(NULL);	/* first reset timestamp to now */
 		conn_elts = g_slist_prepend(conn_elts, connection);
 
-		debug_log_message(VERBOSE_DEBUG, AREA_USER, "Authreq end");
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER, "Authreq end");
 	}
 	return conn_elts;
 }
@@ -478,7 +478,7 @@ static GSList *userpckt_decode(struct tls_buffer_read *datas)
 
 	/* check protocol version */
 	if (check_protocol_version(header->proto) != NU_EXIT_OK) {
-		log_message(INFO, AREA_USER,
+		log_message(INFO, DEBUG_AREA_USER,
 			    "unsupported protocol, got protocol %d (msg %d) with option %d (length %d)",
 			    header->proto, header->msg_type,
 			    header->option, header->length);
@@ -488,13 +488,13 @@ static GSList *userpckt_decode(struct tls_buffer_read *datas)
 	header->length = ntohs(header->length);
 
 	if (header->length > MAX_NUFW_PACKET_SIZE) {
-		log_message(WARNING, AREA_USER,
+		log_message(WARNING, DEBUG_AREA_USER,
 			    "Improper length signaled in packet header");
 		return NULL;
 	}
 
 	if (header->msg_type != USER_REQUEST) {
-		log_message(INFO, AREA_USER, "unsupported message type");
+		log_message(INFO, DEBUG_AREA_USER, "unsupported message type");
 		return NULL;
 	}
 	return user_request(datas);

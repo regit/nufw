@@ -56,7 +56,7 @@ nu_error_t send_conntrack_message(struct limited_connection * lconn,
 	nufw_session_t *session = NULL;
 	int ret = 0;
 
-	debug_log_message(VERBOSE_DEBUG, AREA_GW,
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
 			  "going to send conntrack message");
 	g_static_mutex_lock(&nufw_servers_mutex);
 	if (nufw_servers) {
@@ -80,7 +80,7 @@ nu_error_t send_conntrack_message(struct limited_connection * lconn,
 							  time(NULL));
 					} else {
 						debug_log_message(WARNING,
-								  AREA_PACKET,
+								  DEBUG_AREA_PACKET,
 								  "not modifying fixed timeout");
 						message.timeout = 0;
 					}
@@ -156,7 +156,7 @@ nu_error_t send_conntrack_message(struct limited_connection * lconn,
 							  time(NULL));
 					} else {
 						debug_log_message(WARNING,
-								  AREA_PACKET,
+								  DEBUG_AREA_PACKET,
 								  "not modifying fixed timeout");
 						message.timeout = 0;
 					}
@@ -197,13 +197,13 @@ nu_error_t send_conntrack_message(struct limited_connection * lconn,
 
 				break;
 			default:
-				log_message(WARNING, AREA_GW,
+				log_message(WARNING, DEBUG_AREA_GW,
 					    "Invalid protocol %d",
 					    session->proto_version);
 				return NU_EXIT_ERROR;
 			}
 		} else {
-			log_message(WARNING, AREA_GW,
+			log_message(WARNING, DEBUG_AREA_GW,
 				    "correct session not found among nufw servers");
 			return NU_EXIT_ERROR;
 		}
@@ -219,7 +219,7 @@ void send_destroy_message_and_free(gpointer user_data)
 {
 	struct limited_connection *data =
 	    (struct limited_connection *) user_data;
-	debug_log_message(VERBOSE_DEBUG, AREA_PACKET | AREA_GW,
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_PACKET | DEBUG_AREA_GW,
 			  "connection will be destroyed");
 	/* look for corresponding nufw tls session */
 	send_conntrack_message(data, AUTH_CONN_DESTROY);
@@ -236,7 +236,7 @@ static gboolean get_old_entry(gpointer key, gpointer value,
 {
 	if (((struct limited_connection *) value)->expire <
 	    GPOINTER_TO_INT(user_data)) {
-		debug_log_message(VERBOSE_DEBUG, AREA_PACKET | AREA_GW,
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_PACKET | DEBUG_AREA_GW,
 				  "found connection to be destroyed");
 		return TRUE;
 	} else {
@@ -314,7 +314,7 @@ void *limited_connection_handler(GMutex * mutex)
 			}
 #ifdef DEBUG_ENABLE
 			else {
-				log_message(VERBOSE_DEBUG, AREA_PACKET,
+				log_message(VERBOSE_DEBUG, DEBUG_AREA_PACKET,
 					    "connection not found can not be destroyed");
 			}
 #endif
@@ -324,14 +324,14 @@ void *limited_connection_handler(GMutex * mutex)
 		case UPDATE_MESSAGE:
 		/** here we get message from nufw kernel connection is ASSURED
                  * we have to limit it if needed and log the state change if needed */
-			debug_log_message(VERBOSE_DEBUG, AREA_GW,
+			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
 					  "received update message for a conntrack entry");
 			elt =
 			    (struct limited_connection *)
 			    g_hash_table_lookup(lim_conn_list,
 						message->datas);
 			if (elt == NULL) {
-				debug_log_message(VERBOSE_DEBUG, AREA_GW | AREA_PACKET,
+				debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW | DEBUG_AREA_PACKET,
 						  "Can't find conntrack entry to update");
 			} else {
 				if (nuauthconf->nufw_has_fixed_timeout) {

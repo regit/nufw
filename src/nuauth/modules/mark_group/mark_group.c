@@ -122,7 +122,7 @@ void parse_group_file(mark_group_config_t * config, const char *filename)
 
 		/* find separator */
 		if (separator == NULL) {
-			log_message(SERIOUS_WARNING, AREA_MAIN,
+			log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 				    "mark_group:%s:%u: Unable to find separator ':' in group list, stop parser.",
 				    filename, line_number);
 			break;
@@ -132,7 +132,7 @@ void parse_group_file(mark_group_config_t * config, const char *filename)
 		*separator = 0;
 		mark_str = separator + 1;
 		if (!str2int32(separator + 1, &mark)) {
-			log_message(WARNING, AREA_MAIN,
+			log_message(WARNING, DEBUG_AREA_MAIN,
 				    "mark_group:%s:%u: Invalid mark (%s), skip line.",
 				    filename, line_number, separator + 1);
 			continue;
@@ -143,7 +143,7 @@ void parse_group_file(mark_group_config_t * config, const char *filename)
 		while (*groups_item) {
 			/* read group */
 			if (!str2int32(*groups_item, &group_id)) {
-				log_message(WARNING, AREA_MAIN,
+				log_message(WARNING, DEBUG_AREA_MAIN,
 					    "mark_group:%s:%u: Invalid group identifier (%s), skip line.",
 					    filename, line_number,
 					    *groups_item);
@@ -186,7 +186,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	char *group_filename;
 
 
-	log_message(VERBOSE_DEBUG, AREA_MAIN,
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 		    "Mark_group module ($Revision$)");
 	/* parse config file */
 	if (module->configfile) {

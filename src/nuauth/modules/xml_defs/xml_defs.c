@@ -68,7 +68,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	struct xml_defs_params *params = g_new0(struct xml_defs_params, 1);
 
 
-	log_message(VERBOSE_DEBUG, AREA_MAIN,
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 		    "Xml_defs module ($Revision$)");
 	/*  init global variables */
 	params->xml_defs_periodfile = XML_DEFS_PERIODFILE;
@@ -136,7 +136,7 @@ static void period_start_element_handler(GMarkupParseContext * context,
 					  g_strdup(p_name),
 					  g_strdup(p_desc));
 			curcontext->periodname = g_strdup(p_name);
-			log_message(DEBUG, AREA_MAIN,
+			log_message(DEBUG, DEBUG_AREA_MAIN,
 				    "Adding period %s (%s)", p_name,
 				    p_desc);
 		}
@@ -219,7 +219,7 @@ static void period_end_element_handler(GMarkupParseContext * context,
 							  periodname),
 						 curcontext->perioditem);
 		} else {
-			log_message(WARNING, AREA_MAIN,
+			log_message(WARNING, DEBUG_AREA_MAIN,
 				    "not in period but end of perioditem");
 		}
 		curcontext->perioditem = NULL;
@@ -273,7 +273,7 @@ G_MODULE_EXPORT void define_periods(GHashTable * periods,
 		g_markup_parse_context_free(context);
 		g_free(curcontext);
 	} else {
-		log_message(SERIOUS_WARNING, AREA_MAIN,
+		log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 			    "Error reading period: %s", error->message);
 	}
 	g_error_free(error);

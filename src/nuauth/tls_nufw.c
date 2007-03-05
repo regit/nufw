@@ -104,7 +104,7 @@ static int treat_nufw_request(nufw_session_t * c_session)
 				/* gonna feed the birds */
 				if (current_conn->state ==
 				    AUTH_STATE_HELLOMODE) {
-					debug_log_message(DEBUG, AREA_GW,
+					debug_log_message(DEBUG, DEBUG_AREA_GW,
 							  "(*) NuFW auth request (hello mode): packetid=%u",
 							  (uint32_t)
 							  GPOINTER_TO_UINT
@@ -122,7 +122,7 @@ static int treat_nufw_request(nufw_session_t * c_session)
 							   localid_auth_queue,
 							   message);
 				} else {
-					debug_log_message(DEBUG, AREA_GW,
+					debug_log_message(DEBUG, DEBUG_AREA_GW,
 							  "(*) NuFW auth request (hello mode): packetid=%u",
 							  (uint32_t)
 							  GPOINTER_TO_UINT
@@ -189,7 +189,7 @@ void clean_nufw_session(nufw_session_t * c_session)
 	gnutls_transport_ptr socket_tls;
 	socket_tls = gnutls_transport_get_ptr(*(c_session->tls));
 	close((int) socket_tls);
-	debug_log_message(VERBOSE_DEBUG, AREA_GW,
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
 			  "close nufw session calling");
 	if (c_session->tls) {
 		gnutls_bye(*(c_session->tls)
@@ -200,14 +200,14 @@ void clean_nufw_session(nufw_session_t * c_session)
 	} else {
 
 
-		debug_log_message(VERBOSE_DEBUG, AREA_GW,
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
 				  "close nufw session was called but NULL");
 
 	}
 	g_mutex_free(c_session->tls_lock);
 	g_free(c_session);
 
-	debug_log_message(VERBOSE_DEBUG, AREA_GW,
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
 			  "close nufw session: done");
 }
 
@@ -233,7 +233,7 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 	conn_fd = accept(context->sck_inet,
 			 (struct sockaddr *) &sockaddr, &len_inet);
 	if (conn_fd == -1) {
-		log_message(WARNING, AREA_GW, "accept");
+		log_message(WARNING, DEBUG_AREA_GW, "accept");
 	}
 
 	/* Extract client address (convert it to IPv6 if it's IPv4) */
@@ -251,7 +251,7 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 		if (inet_ntop
 		    (AF_INET6, &addr, addr_ascii,
 		     sizeof(addr_ascii)) != NULL)
-			log_message(WARNING, AREA_GW,
+			log_message(WARNING, DEBUG_AREA_GW,
 				    "unwanted nufw server (%s)",
 				    addr_ascii);
 		close(conn_fd);
@@ -259,7 +259,7 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 	}
 #if 0
 	if (conn_fd >= nuauth_tls_max_servers) {
-		log_message(WARNING, AREA_GW,
+		log_message(WARNING, DEBUG_AREA_GW,
 			    "too much servers (%d configured)",
 			    nuauth_tls_max_servers);
 		close(conn_fd);
@@ -305,7 +305,7 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex * mutex)
 	fd_set wk_set;		/* working set */
 	struct timeval tv;
 
-	log_message(INFO, AREA_GW,
+	log_message(INFO, DEBUG_AREA_GW,
 		    "[+] NuAuth is waiting for NuFW connections.");
 	while (g_mutex_trylock(mutex)) {
 		g_mutex_unlock(mutex);
@@ -324,13 +324,13 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex * mutex)
 		if (n == -1) {
 			/* Signal was catched: just ignore it */
 			if (errno == EINTR) {
-				log_message(CRITICAL, AREA_GW,
+				log_message(CRITICAL, DEBUG_AREA_GW,
 					    "Warning: tls nufw select() failed: signal was catched.");
 				continue;
 			}
 			/* Bad file descriptor error: ignore it */
 			if (errno == EBADF) {
-				log_message(CRITICAL, AREA_GW,
+				log_message(CRITICAL, DEBUG_AREA_GW,
 					    "Warning: tls nufw select() failed: bad file descriptor.");
 				continue;
 			}
@@ -343,7 +343,7 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex * mutex)
 				g_message("Not enough memory");
 				break;
 			}
-			log_message(FATAL, AREA_MAIN | AREA_GW,
+			log_message(FATAL, DEBUG_AREA_MAIN | DEBUG_AREA_GW,
 				    "select() failed, exiting at %s:%d in %s (errno=%i)",
 				    __FILE__, __LINE__, __func__, errno);
 			nuauth_ask_exit();
@@ -366,7 +366,7 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex * mutex)
 
 			if (FD_ISSET(c, &wk_set)) {
 				nufw_session_t *c_session;
-				debug_log_message(VERBOSE_DEBUG, AREA_GW,
+				debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
 						  "nufw activity on socket %d",
 						  c);
 				c_session =
@@ -377,7 +377,7 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex * mutex)
 				if (treat_nufw_request(c_session) ==
 				    NU_EXIT_ERROR) {
 					/* get session link with c */
-					debug_log_message(DEBUG, AREA_GW,
+					debug_log_message(DEBUG, DEBUG_AREA_GW,
 							  "nufw server disconnect on %d",
 							  c);
 					FD_CLR(c, &context->tls_rx_set);
@@ -453,9 +453,9 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 
 	context->sck_inet = tls_nufw_bind(&errmsg);
 	if (context->sck_inet < 0) {
-		log_message(FATAL, AREA_GW | AREA_MAIN,
+		log_message(FATAL, DEBUG_AREA_GW | DEBUG_AREA_MAIN,
 			    "FATAL ERROR: NuFW bind error: %s", errmsg);
-		log_message(FATAL, AREA_GW | AREA_MAIN,
+		log_message(FATAL, DEBUG_AREA_GW | DEBUG_AREA_MAIN,
 			    "Check that nuauth is not running twice. Exit nuauth!");
 		return 0;
 	}

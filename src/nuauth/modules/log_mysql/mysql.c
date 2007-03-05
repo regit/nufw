@@ -89,7 +89,7 @@ G_MODULE_EXPORT gchar *unload_module_with_params(gpointer params_p)
 		if (!nuauth_is_reloading()) {
 			if (mysql_close_open_user_sessions(params) !=
 			    NU_EXIT_OK) {
-				log_message(WARNING, AREA_MAIN,
+				log_message(WARNING, DEBUG_AREA_MAIN,
 					    "Could not close session when unloading module");
 			}
 		}
@@ -137,7 +137,7 @@ static nu_error_t mysql_close_open_user_sessions(struct log_mysql_params
 	/* execute query */
 	mysql_ret = mysql_real_query(ld, request, strlen(request));
 	if (mysql_ret != 0) {
-		log_message(SERIOUS_WARNING, AREA_MAIN,
+		log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 			    "[MySQL] Cannot execute request: %s",
 			    mysql_error(ld));
 		return NU_EXIT_ERROR;
@@ -195,7 +195,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	struct log_mysql_params *params =
 	    g_new0(struct log_mysql_params, 1);
 
-	log_message(VERBOSE_DEBUG, AREA_MAIN,
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 		    "Log_mysql module ($Revision$)");
 	/* init global variables */
 	params->mysql_ssl_cipher = MYSQL_SSL_CIPHER;
@@ -248,7 +248,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 
 	/* init thread private stuff */
 	params->mysql_priv = g_private_new((GDestroyNotify) mysql_close);
-	log_message(DEBUG, AREA_MAIN,
+	log_message(DEBUG, DEBUG_AREA_MAIN,
 		    "mysql part of the config file is parsed");
 
 	/* do initial update of user session if needed */
@@ -270,7 +270,7 @@ static MYSQL *mysql_conn_init(struct log_mysql_params *params)
 	/* init connection */
 	ld = mysql_init(ld);
 	if (ld == NULL) {
-		log_message(WARNING, AREA_MAIN, "mysql init error : %s",
+		log_message(WARNING, DEBUG_AREA_MAIN, "mysql init error : %s",
 			    strerror(errno));
 		return NULL;
 	}
@@ -287,7 +287,7 @@ static MYSQL *mysql_conn_init(struct log_mysql_params *params)
 	/* Set MYSQL object properties */
 	if (mysql_options(ld, MYSQL_OPT_CONNECT_TIMEOUT, mysql_conninfo) !=
 	    0) {
-		log_message(WARNING, AREA_MAIN,
+		log_message(WARNING, DEBUG_AREA_MAIN,
 			    "mysql options setting failed : %s",
 			    mysql_error(ld));
 	}
@@ -296,7 +296,7 @@ static MYSQL *mysql_conn_init(struct log_mysql_params *params)
 	    (ld, params->mysql_server, params->mysql_user,
 	     params->mysql_passwd, params->mysql_db_name,
 	     params->mysql_server_port, NULL, 0)) {
-		log_message(WARNING, AREA_MAIN,
+		log_message(WARNING, DEBUG_AREA_MAIN,
 			    "mysql connection failed : %s",
 			    mysql_error(ld));
 		return NULL;
@@ -394,7 +394,7 @@ static char *build_insert_request(MYSQL * ld, connection_t * element,
 					     ntohl((&element->tracking.
 						    daddr)->s6_addr32[3]));
 		} else {
-			log_message(SERIOUS_WARNING, AREA_MAIN,
+			log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 				    "MySQL INSERT, IPV6 packet but IPV4 only MySQL schema");
 			ok = 0;
 		}
@@ -545,14 +545,14 @@ static inline int log_state_open(MYSQL * ld, connection_t * element,
 
 		/* need to update table to suppress double field */
 		if (!ok) {
-			log_message(SERIOUS_WARNING, AREA_MAIN,
+			log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 				    "Building mysql update query, the SHORT_REQUEST_SIZE limit was reached!");
 			return -1;
 		}
 
 		mysql_ret = mysql_real_query(ld, request, strlen(request));
 		if (mysql_ret != 0) {
-			log_message(SERIOUS_WARNING, AREA_MAIN,
+			log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 				    "[MySQL] Cannot update data: %s",
 				    mysql_error(ld));
 			return -1;
@@ -564,7 +564,7 @@ static inline int log_state_open(MYSQL * ld, connection_t * element,
 				       TCP_STATE_OPEN, "ACCEPT", "ACCEPT",
 				       params);
 	if (request == NULL) {
-		log_message(SERIOUS_WARNING, AREA_MAIN,
+		log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 			    "Error while building MySQL insert query (state OPEN)!");
 		return -1;
 	}
@@ -576,7 +576,7 @@ static inline int log_state_open(MYSQL * ld, connection_t * element,
 
 	/* check request error code */
 	if (mysql_ret != 0) {
-		log_message(SERIOUS_WARNING, AREA_MAIN,
+		log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 			    "[MySQL] Cannot insert data: %s",
 			    mysql_error(ld));
 		return -1;
@@ -619,13 +619,13 @@ static inline int log_state_established(MYSQL * ld,
 				     (element->tracking).dest,
 				     TCP_STATE_OPEN);
 		if (!ok) {
-			log_message(SERIOUS_WARNING, AREA_MAIN,
+			log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 				    "Building mysql update query, the SHORT_REQUEST_SIZE limit was reached!");
 			return -1;
 		}
 		Result = mysql_real_query(ld, request, strlen(request));
 		if (Result != 0) {
-			log_message(SERIOUS_WARNING, AREA_MAIN,
+			log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 				    "Can not update Data : %s",
 				    mysql_error(ld));
 			return -1;
@@ -640,7 +640,7 @@ static inline int log_state_established(MYSQL * ld,
 				sleep.tv_nsec = 333333333;
 				nanosleep(&sleep, NULL);
 			} else {
-				debug_log_message(DEBUG, AREA_MAIN,
+				debug_log_message(DEBUG, DEBUG_AREA_MAIN,
 						  "Tried to update MYSQL entry twice, looks like data to update wasn't inserted");
 			}
 		}
@@ -725,13 +725,13 @@ static inline int log_state_close(MYSQL * ld,
 						     TCP_STATE_ESTABLISHED,
 						     TCP_STATE_OPEN);
 			} else {
-				log_message(SERIOUS_WARNING, AREA_MAIN,
+				log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 					    "MySQL Update, IPV6 packet but IPV4 only MySQL schema");
 				return -1;
 			}
 		}
 		if (!ok) {
-			log_message(SERIOUS_WARNING, AREA_MAIN,
+			log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 				    "Building mysql update query, the SHORT_REQUEST_SIZE limit was reached!");
 			return -1;
 		}
@@ -739,7 +739,7 @@ static inline int log_state_close(MYSQL * ld,
 
 	Result = mysql_real_query(ld, request, strlen(request));
 	if (Result != 0) {
-		log_message(SERIOUS_WARNING, AREA_MAIN,
+		log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 			    "Can not update Data : %s", mysql_error(ld));
 		return -1;
 	}
@@ -753,7 +753,7 @@ static inline int log_state_close(MYSQL * ld,
 			sleep.tv_nsec = 666666666;
 			nanosleep(&sleep, NULL);
 		} else {
-			debug_log_message(WARNING, AREA_MAIN,
+			debug_log_message(WARNING, DEBUG_AREA_MAIN,
 					  "Tried to update MYSQL entry twice, "
 					  "looks like data to update wasn't inserted");
 		}
@@ -772,7 +772,7 @@ static int log_state_drop(MYSQL * ld, connection_t * element,
 					     "UNAUTHENTICATED DROP",
 					     params);
 	if (request == NULL) {
-		log_message(SERIOUS_WARNING, AREA_MAIN,
+		log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 			    "Error while building MySQL insert query (state DROP)!");
 		return -1;
 	}
@@ -783,7 +783,7 @@ static int log_state_drop(MYSQL * ld, connection_t * element,
 
 	/* check request error code */
 	if (mysql_ret != 0) {
-		log_message(SERIOUS_WARNING, AREA_MAIN,
+		log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 			    "[MySQL] Cannot insert data: %s",
 			    mysql_error(ld));
 		return -1;
@@ -800,7 +800,7 @@ static MYSQL *get_mysql_handler(struct log_mysql_params *params)
 
 	ld = mysql_conn_init(params);
 	if (ld == NULL) {
-		log_message(SERIOUS_WARNING, AREA_MAIN,
+		log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 			    "Can not initiate MYSQL connection");
 		return NULL;
 	}
@@ -933,7 +933,7 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 	/* execute query */
 	mysql_ret = mysql_real_query(ld, request, strlen(request));
 	if (mysql_ret != 0) {
-		log_message(SERIOUS_WARNING, AREA_MAIN,
+		log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 			    "[MySQL] Cannot execute request: %s",
 			    mysql_error(ld));
 		return -1;

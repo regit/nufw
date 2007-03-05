@@ -218,7 +218,7 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass,
 			ret = pam_authenticate(pamh, 0);	/* is user really user? */
 			/* check auth */
 			if (ret != PAM_SUCCESS) {
-				log_message(INFO, AREA_AUTH,
+				log_message(INFO, DEBUG_AREA_AUTH,
 					    "Bad password for user \"%s\"",
 					    user);
 				pam_end(pamh, PAM_DATA_SILENT);
@@ -235,7 +235,7 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass,
 #ifdef PERF_DISPLAY_ENABLE
 			gettimeofday(&tvend, NULL);
 			timeval_substract(&result, &tvend, &tvstart);
-			log_message(INFO, AREA_MAIN,
+			log_message(INFO, DEBUG_AREA_MAIN,
 				    "PAM Auth duration: %ld sec %03ld msec",
 				    result.tv_sec, result.tv_usec / 1000);
 		}
@@ -305,7 +305,7 @@ G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
 
 G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 {
-	log_message(VERBOSE_DEBUG, AREA_MAIN,
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 		    "System module ($Revision$)");
 	return TRUE;
 }

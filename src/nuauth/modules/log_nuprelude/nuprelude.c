@@ -64,7 +64,7 @@ void update_prelude_timer()
  */
 G_MODULE_EXPORT void g_module_unload(GModule * module)
 {
-	log_message(SERIOUS_WARNING, AREA_MAIN,
+	log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 		    "[+] Prelude log: Close client connection");
 	prelude_client_destroy(global_client,
 			       PRELUDE_CLIENT_EXIT_STATUS_SUCCESS);
@@ -72,7 +72,7 @@ G_MODULE_EXPORT void g_module_unload(GModule * module)
 
 	cleanup_func_remove(update_prelude_timer);
 
-	log_message(SERIOUS_WARNING, AREA_MAIN,
+	log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 		    "[+] Prelude log: Deinit library");
 	prelude_deinit();
 }
@@ -91,7 +91,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	    g_new0(struct log_prelude_params, 1);
 
 
-	log_message(VERBOSE_DEBUG, AREA_MAIN,
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 		    "Log_nuprelude module ($Revision$)");
 
 	params->packet_tpl = g_private_new((GDestroyNotify) destroy_idmef);
@@ -125,7 +125,7 @@ static int add_idmef_object(idmef_message_t * message, const char *object,
 
 	ret = idmef_path_new(&path, object);
 	if (ret < 0) {
-		log_message(DEBUG, AREA_MAIN,
+		log_message(DEBUG, DEBUG_AREA_MAIN,
 			    "Prelude: Fail to set attribute %s=%s: %s",
 			    object, value, prelude_strerror(ret));
 		return -1;
@@ -140,7 +140,7 @@ static int add_idmef_object(idmef_message_t * message, const char *object,
 	/* set new value */
 	ret = idmef_value_new_from_path(&val, path, value);
 	if (ret < 0) {
-		log_message(DEBUG, AREA_MAIN,
+		log_message(DEBUG, DEBUG_AREA_MAIN,
 			    "Prelude: Fail to set attribute %s=%s: %s",
 			    object, value, prelude_strerror(ret));
 		idmef_path_destroy(path);
@@ -659,12 +659,12 @@ G_MODULE_EXPORT gchar *g_module_check_init()
 	char **argv = NULL;
 	int ret;
 
-	log_message(SERIOUS_WARNING, AREA_MAIN,
+	log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 		    "[+] Prelude log: Init Prelude library");
 
 	version = prelude_check_version(PRELUDE_VERSION_REQUIRE);
 	if (version == NULL) {
-		log_message(FATAL, AREA_MAIN,
+		log_message(FATAL, DEBUG_AREA_MAIN,
 			    "Fatal error: Prelude module needs prelude version %s (installed version is %s)!",
 			    PRELUDE_VERSION_REQUIRE,
 			    prelude_check_version(NULL));
@@ -673,14 +673,14 @@ G_MODULE_EXPORT gchar *g_module_check_init()
 
 	ret = prelude_init(&argc, argv);
 	if (ret < 0) {
-		log_message(FATAL, AREA_MAIN,
+		log_message(FATAL, DEBUG_AREA_MAIN,
 			    "Fatal error: Fail to init Prelude module: %s!",
 			    prelude_strerror(ret));
 		exit(EXIT_FAILURE);
 	}
 
 
-	log_message(SERIOUS_WARNING, AREA_MAIN,
+	log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 		    "[+] Prelude log: Open client connection");
 
 	/* Ask Prelude to don't log anything */
@@ -690,7 +690,7 @@ G_MODULE_EXPORT gchar *g_module_check_init()
 	global_client_mutex = g_mutex_new();
 	ret = prelude_client_new(&global_client, "nufw");
 	if (!global_client) {
-		log_message(FATAL, AREA_MAIN,
+		log_message(FATAL, DEBUG_AREA_MAIN,
 			    "Fatal error: Unable to create a prelude client object: %s!",
 			    prelude_strerror(ret));
 		exit(EXIT_FAILURE);
@@ -698,7 +698,7 @@ G_MODULE_EXPORT gchar *g_module_check_init()
 
 	ret = prelude_client_start(global_client);
 	if (ret < 0) {
-		log_message(FATAL, AREA_MAIN,
+		log_message(FATAL, DEBUG_AREA_MAIN,
 			    "Fatal error: Unable to start prelude client: %s!",
 			    prelude_strerror(ret));
 		exit(EXIT_FAILURE);
@@ -712,7 +712,7 @@ G_MODULE_EXPORT gchar *g_module_check_init()
 				       PRELUDE_CLIENT_FLAGS_ASYNC_SEND |
 				       PRELUDE_CLIENT_FLAGS_ASYNC_TIMER);
 	if (ret < 0) {
-		log_message(WARNING, AREA_MAIN,
+		log_message(WARNING, DEBUG_AREA_MAIN,
 			    "Prelude: Warning, unnable to set asynchronous send and timer: %s",
 			    prelude_strerror(ret));
 	}

@@ -102,7 +102,7 @@ void localid_insert_message(connection_t * pckt,
 						   GINT_TO_POINTER(pckt->
 								   packet_id));
 			} else {
-				log_message(WARNING, AREA_USER,
+				log_message(WARNING, DEBUG_AREA_USER,
 					    "Looks like a spoofing attempt from %s.",
 					    pckt->username);
 				/* TODO : kill bad guy */

@@ -155,7 +155,7 @@ nu_error_t delete_client_by_socket_ext(int socket, int use_lock)
 	     *) (g_hash_table_lookup(client_conn_hash,
 				     GINT_TO_POINTER(socket)));
 	if (!session) {
-		log_message(WARNING, AREA_USER,
+		log_message(WARNING, DEBUG_AREA_USER,
 				"Could not find user session in hash");
 		if (use_lock)
 			g_mutex_unlock(client_mutex);
@@ -177,7 +177,7 @@ nu_error_t delete_client_by_socket_ext(int socket, int use_lock)
 		if (shutdown(socket, SHUT_RDWR) == 0)
 			close(socket);
 		else
-			log_message(VERBOSE_DEBUG, AREA_USER,
+			log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 					"Could not shutdown socket");
 	}
 
@@ -274,7 +274,7 @@ char warn_clients(struct msg_addr_set *global_msg)
 					       ntohs(global_msg->msg->
 						     length));
 			if (ret < 0) {
-				log_message(WARNING, AREA_USER,
+				log_message(WARNING, DEBUG_AREA_USER,
 					    "Fails to send warning to client(s).");
 				badsockets = g_slist_prepend(badsockets, ipsockets->data);
 			}

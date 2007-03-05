@@ -78,7 +78,7 @@ int verify_user_password(const char *given, const char *ours)
 		else if (!(strcmp("{MD5", splitted_secret[0])))	/* MD5 */
 			algo = GCRY_MD_MD5;
 		else {
-			log_message(WARNING, AREA_AUTH,
+			log_message(WARNING, DEBUG_AREA_AUTH,
 				    "verify_user_password() : Unsupported hash algorithm");
 			g_strfreev(splitted_secret);
 			return SASL_BADAUTH;
@@ -95,7 +95,7 @@ int verify_user_password(const char *given, const char *ours)
 			    (splitted_secret[1],
 			     strlen(splitted_secret[1]), temp,
 			     sizeof(temp), &len) != SASL_OK) {
-				log_message(INFO, AREA_AUTH,
+				log_message(INFO, DEBUG_AREA_AUTH,
 					    "sasl_decode64 failed in gcrypt.c, where seeded SHA1 is used");
 				return (SASL_BADAUTH);
 			}
@@ -107,7 +107,7 @@ int verify_user_password(const char *given, const char *ours)
 			    (splitted_secret[1],
 			     strlen(splitted_secret[1]), temp,
 			     sizeof(temp), &len) != SASL_OK) {
-				log_message(INFO, AREA_AUTH,
+				log_message(INFO, DEBUG_AREA_AUTH,
 					    "sasl_decode64 failed in gcrypt.c, where seeded MD5 is used");
 				return (SASL_BADAUTH);
 			}
@@ -130,17 +130,17 @@ int verify_user_password(const char *given, const char *ours)
 				g_free(decoded);
 				decoded = traduc;
 			} else {
-				log_message(WARNING, AREA_AUTH,
+				log_message(WARNING, DEBUG_AREA_AUTH,
 					    "can not convert password %s at %s:%d",
 					    decoded, __FILE__, __LINE__);
 			}
 		}
-		debug_log_message(VERBOSE_DEBUG, AREA_AUTH,
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
 				  "given %s, hash %s, decoded %s, stored : %s",
 				  given, res, decoded, ours);
 
 		if (!seeded && !strcmp(decoded, splitted_secret[1])) {
-			debug_log_message(VERBOSE_DEBUG, AREA_AUTH,
+			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
 					  "%s == %s", decoded,
 					  splitted_secret[1]);
 
@@ -191,7 +191,7 @@ int verify_user_password(const char *given, const char *ours)
 			g_free(decoded);
 			return SASL_OK;
 		} else {
-			log_message(DEBUG, AREA_AUTH, "given != stored");
+			log_message(DEBUG, DEBUG_AREA_AUTH, "given != stored");
 
 			g_strfreev(splitted_secret);
 			g_free(decoded);

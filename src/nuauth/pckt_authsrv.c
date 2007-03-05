@@ -49,7 +49,7 @@ nu_error_t parse_dgram(connection_t * connection, unsigned char *dgram,
 	ip_hdr_size =
 	    get_ip_headers(&connection->tracking, dgram, dgram_size);
 	if (ip_hdr_size == 0) {
-		log_message(WARNING, AREA_PACKET | AREA_GW,
+		log_message(WARNING, DEBUG_AREA_PACKET | DEBUG_AREA_GW,
 			    "Can't parse IP headers");
 		free_connection(connection);
 		return NU_EXIT_ERROR;
@@ -97,7 +97,7 @@ nu_error_t parse_dgram(connection_t * connection, unsigned char *dgram,
 				}
 				break;
 			default:
-				log_message(WARNING, AREA_PACKET | AREA_GW,
+				log_message(WARNING, DEBUG_AREA_PACKET | DEBUG_AREA_GW,
 					    "Can't parse TCP headers");
 				free_connection(connection);
 				return NU_EXIT_ERROR;
@@ -132,7 +132,7 @@ nu_error_t parse_dgram(connection_t * connection, unsigned char *dgram,
 
 	default:
 		if (connection->state != AUTH_STATE_HELLOMODE) {
-			log_message(WARNING, AREA_PACKET | AREA_GW,
+			log_message(WARNING, DEBUG_AREA_PACKET | DEBUG_AREA_GW,
 				    "Can't parse protocol %u",
 				    connection->tracking.protocol);
 			free_connection(connection);
@@ -203,7 +203,7 @@ nu_error_t authpckt_new_connection(unsigned char *dgram,
 	/* allocate new connection */
 	connection = g_new0(connection_t, 1);
 	if (connection == NULL) {
-		log_message(WARNING, AREA_PACKET | AREA_GW,
+		log_message(WARNING, DEBUG_AREA_PACKET | DEBUG_AREA_GW,
 			    "Can not allocate connection");
 		return NU_EXIT_ERROR;
 	}
@@ -216,7 +216,7 @@ nu_error_t authpckt_new_connection(unsigned char *dgram,
 
 	connection->packet_id =
 	    g_slist_append(NULL, GUINT_TO_POINTER(ntohl(msg->packet_id)));
-	debug_log_message(DEBUG, AREA_PACKET | AREA_GW,
+	debug_log_message(DEBUG, DEBUG_AREA_PACKET | DEBUG_AREA_GW,
 			  "Auth pckt: Working on new connection (id=%u)",
 			  (uint32_t) GPOINTER_TO_UINT(connection->
 						      packet_id->data));
@@ -269,12 +269,12 @@ void authpckt_conntrack(unsigned char *dgram, unsigned int dgram_size)
 	struct internal_message *message;
 	tcp_state_t pstate;
 
-	debug_log_message(VERBOSE_DEBUG, AREA_PACKET,
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_PACKET,
 			  "Auth conntrack: Working on new packet");
 
 	/* Check message content size */
 	if (dgram_size != sizeof(struct nuv4_conntrack_message_t)) {
-		debug_log_message(WARNING, AREA_PACKET | AREA_GW,
+		debug_log_message(WARNING, DEBUG_AREA_PACKET | DEBUG_AREA_GW,
 				  "Auth conntrack: Improper length of packet");
 		return;
 	}
@@ -322,12 +322,12 @@ void authpckt_conntrack(unsigned char *dgram, unsigned int dgram_size)
 
 	if (conntrack->msg_type == AUTH_CONN_DESTROY) {
 		message->type = FREE_MESSAGE;
-		debug_log_message(VERBOSE_DEBUG, AREA_PACKET,
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_PACKET,
 				  "Auth conntrack: Sending free message");
 		pstate = TCP_STATE_CLOSE;
 	} else {
 		message->type = UPDATE_MESSAGE;
-		debug_log_message(VERBOSE_DEBUG, AREA_PACKET,
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_PACKET,
 				  "Auth conntrack: Sending Update message");
 		pstate = TCP_STATE_ESTABLISHED;
 	}
@@ -397,7 +397,7 @@ nu_error_t authpckt_decode(unsigned char **pdgram,
 			}
 			return NU_EXIT_NO_RETURN;
 		default:
-			log_message(VERBOSE_DEBUG, AREA_PACKET | AREA_GW,
+			log_message(VERBOSE_DEBUG, DEBUG_AREA_PACKET | DEBUG_AREA_GW,
 				    "NuFW packet type is unknown");
 			return NU_EXIT_ERROR;
 		}
@@ -433,14 +433,14 @@ nu_error_t authpckt_decode(unsigned char **pdgram,
 			}
 			return NU_EXIT_NO_RETURN;
 		default:
-			log_message(VERBOSE_DEBUG, AREA_PACKET | AREA_GW,
+			log_message(VERBOSE_DEBUG, DEBUG_AREA_PACKET | DEBUG_AREA_GW,
 				    "NuFW packet type is unknown");
 			return NU_EXIT_ERROR;
 		}
 		return NU_EXIT_OK;
 	default:
 		{
-			log_message(WARNING, AREA_PACKET | AREA_GW,
+			log_message(WARNING, DEBUG_AREA_PACKET | DEBUG_AREA_GW,
 				    "NuFW protocol is unknown");
 		}
 

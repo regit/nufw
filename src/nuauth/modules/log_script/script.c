@@ -69,7 +69,7 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 	if (ok) {
 		system(cmdbuffer);
 	} else {
-		log_message(WARNING, AREA_MAIN,
+		log_message(WARNING, DEBUG_AREA_MAIN,
 			    "Can't call script, command line truncated!");
 	}
 	g_free(quoted_username);
@@ -85,7 +85,7 @@ G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
 
 G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 {
-	log_message(VERBOSE_DEBUG, AREA_MAIN,
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 		    "Log_script module ($Revision$)");
 	return TRUE;
 }

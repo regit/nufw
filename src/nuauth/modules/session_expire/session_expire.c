@@ -41,7 +41,7 @@ G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
 
 G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 {
-	log_message(VERBOSE_DEBUG, AREA_MAIN,
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 		    "Session_expire module ($Revision$)");
 	return TRUE;
 }

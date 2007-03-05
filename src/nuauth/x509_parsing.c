@@ -39,7 +39,7 @@ gint get_first_x509_cert_from_tls_session(gnutls_session session,
 
 	cert_list = gnutls_certificate_get_peers(session, &cert_list_size);
 
-	log_message(VERBOSE_DEBUG, AREA_USER,
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 		    "Peer provided %d certificates.", cert_list_size);
 
 	if (cert_list_size > 0) {
@@ -69,7 +69,7 @@ gint check_x509_certificate_validity(gnutls_session session)
 
 	if (get_first_x509_cert_from_tls_session(session, &cert) !=
 	    SASL_OK) {
-		log_message(DEBUG, AREA_USER,
+		log_message(DEBUG, DEBUG_AREA_USER,
 			    "Can't get first cert from session");
 		return SASL_BADPARAM;
 	}
@@ -99,7 +99,7 @@ gchar *get_username_from_x509_certificate(gnutls_session session)
 	}
 	username = modules_certificate_to_uid(session, cert);
 	gnutls_x509_crt_deinit(cert);
-	log_message(VERBOSE_DEBUG, AREA_USER, "\tCN: %s", username);
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_USER, "\tCN: %s", username);
 	return username;
 }
 

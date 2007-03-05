@@ -79,7 +79,7 @@ G_MODULE_EXPORT gchar *unload_module_with_params(gpointer params_p)
 		if (!nuauth_is_reloading()) {
 			if (mysql_close_open_user_sessions(params) !=
 			    NU_EXIT_OK) {
-				log_message(WARNING, AREA_MAIN,
+				log_message(WARNING, DEBUG_AREA_MAIN,
 					    "Could not close session when unloading module");
 			}
 		}
@@ -194,7 +194,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 
 	/* init thread private stuff */
 	params->mysql_priv = g_private_new((GDestroyNotify) mysql_close);
-	log_message(DEBUG, AREA_MAIN,
+	log_message(DEBUG, DEBUG_AREA_MAIN,
 		    "mysql part of the config file is parsed\n");
 
 	/* do initial update of user session if needed */
@@ -216,7 +216,7 @@ static MYSQL *mysql_conn_init(struct log_mysql_params *params)
 	/* init connection */
 	ld = mysql_init(ld);
 	if (ld == NULL) {
-		log_message(WARNING, AREA_MAIN, "mysql init error : %s\n",
+		log_message(WARNING, DEBUG_AREA_MAIN, "mysql init error : %s\n",
 			    strerror(errno));
 		return NULL;
 	}
@@ -233,7 +233,7 @@ static MYSQL *mysql_conn_init(struct log_mysql_params *params)
 	/* Set MYSQL object properties */
 	if (mysql_options(ld, MYSQL_OPT_CONNECT_TIMEOUT, mysql_conninfo) !=
 	    0) {
-		log_message(WARNING, AREA_MAIN,
+		log_message(WARNING, DEBUG_AREA_MAIN,
 			    "mysql options setting failed : %s\n",
 			    mysql_error(ld));
 	}
@@ -242,7 +242,7 @@ static MYSQL *mysql_conn_init(struct log_mysql_params *params)
 	    (ld, params->mysql_server, params->mysql_user,
 	     params->mysql_passwd, params->mysql_db_name,
 	     params->mysql_server_port, NULL, 0)) {
-		log_message(WARNING, AREA_MAIN,
+		log_message(WARNING, DEBUG_AREA_MAIN,
 			    "mysql connection failed : %s\n",
 			    mysql_error(ld));
 		return NULL;
@@ -275,7 +275,7 @@ static MYSQL *get_mysql_handler(struct log_mysql_params *params)
 
 	ld = mysql_conn_init(params);
 	if (ld == NULL) {
-		log_message(SERIOUS_WARNING, AREA_MAIN,
+		log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 			    "Can not initiate MYSQL connection");
 		return NULL;
 	}
@@ -352,7 +352,7 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 	/* execute query */
 	mysql_ret = mysql_real_query(ld, request, strlen(request));
 	if (mysql_ret != 0) {
-		log_message(SERIOUS_WARNING, AREA_MAIN,
+		log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 			    "[MySQL] Cannot execute request: %s",
 			    mysql_error(ld));
 		return -1;

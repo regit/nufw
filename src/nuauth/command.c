@@ -75,7 +75,7 @@ int command_new(command_t * this)
 	/* create socket */
 	this->socket = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (this->socket == -1) {
-		log_message(CRITICAL, AREA_MAIN,
+		log_message(CRITICAL, DEBUG_AREA_MAIN,
 			    "Command server: enable to create UNIX socket %s: %s",
 			    addr.sun_path, g_strerror(errno));
 		return 0;
@@ -90,7 +90,7 @@ int command_new(command_t * this)
 	/* bind socket */
 	res = bind(this->socket, (struct sockaddr *) &addr, len);
 	if (res == -1) {
-		log_message(CRITICAL, AREA_MAIN,
+		log_message(CRITICAL, DEBUG_AREA_MAIN,
 			    "Command server: UNIX socket bind() error: %s",
 			    g_strerror(errno));
 		return 0;
@@ -98,7 +98,7 @@ int command_new(command_t * this)
 
 	/* listen */
 	if (listen(this->socket, 1) == -1) {
-		log_message(CRITICAL, AREA_MAIN,
+		log_message(CRITICAL, DEBUG_AREA_MAIN,
 			    "Command server: UNIX socket listen() error: %s",
 			    g_strerror(errno));
 		return 0;
@@ -108,7 +108,7 @@ int command_new(command_t * this)
 
 void command_client_close(command_t * this)
 {
-	log_message(WARNING, AREA_MAIN,
+	log_message(WARNING, DEBUG_AREA_MAIN,
 		    "Command server: close client connection");
 	close(this->client);
 	this->client = -1;
@@ -126,19 +126,19 @@ int command_client_accept(command_t * this)
 	    accept(this->socket, (struct sockaddr *) &this->client_addr,
 		   &len);
 	if (this->client < 0) {
-		log_message(CRITICAL, AREA_MAIN,
+		log_message(CRITICAL, DEBUG_AREA_MAIN,
 			    "Command server: accept() error: %s",
 			    g_strerror(errno));
 		return 0;
 	}
-	log_message(WARNING, AREA_MAIN,
+	log_message(WARNING, DEBUG_AREA_MAIN,
 		    "Command server: client connection");
 
 	/* read client version */
 	buffer[sizeof(buffer)-1] = 0;
 	ret = recv(this->client, buffer, sizeof(buffer)-1, 0);
 	if (ret < 0) {
-		log_message(CRITICAL, AREA_MAIN,
+		log_message(CRITICAL, DEBUG_AREA_MAIN,
 			    "Command server: client doesn't send version");
 		command_client_close(this);
 		return 0;
@@ -150,7 +150,7 @@ int command_client_accept(command_t * this)
 
 	/* check client version */
 	if (strcmp(buffer, PYTHON_PROTO_VERSION) != 0) {
-		log_message(CRITICAL, AREA_MAIN,
+		log_message(CRITICAL, DEBUG_AREA_MAIN,
 			    "Command server: invalid client version: \"%s\"",
 			    buffer);
 		command_client_close(this);
@@ -158,7 +158,7 @@ int command_client_accept(command_t * this)
 	}
 
 	/* client connected */
-	log_message(WARNING, AREA_MAIN,
+	log_message(WARNING, DEBUG_AREA_MAIN,
 		    "Command server: client connected");
 	if (this->socket < this->client)
 		this->select_max = this->client + 1;
@@ -312,7 +312,7 @@ void command_execute(command_t * this, char *command)
 		int debug_level = atoi(command+12);
 		if ((0 < debug_level) && (debug_level <= 9)) {
 			nuauthconf->debug_level = debug_level;
-			log_message(INFO, AREA_MAIN,
+			log_message(INFO, DEBUG_AREA_MAIN,
 			    "Debug level set to %d",
 			    debug_level);
 			encoder_add_string(encoder,"Debug level changed");
@@ -324,7 +324,7 @@ void command_execute(command_t * this, char *command)
 		int debug_areas = atoi(command+12);
 		if (debug_areas > 0) {
 			nuauthconf->debug_areas = debug_areas;
-			log_message(INFO, AREA_MAIN,
+			log_message(INFO, DEBUG_AREA_MAIN,
 			    "Debug areas set to %d",
 			    debug_areas);
 			encoder_add_string(encoder,"Debug areas changed");
@@ -355,7 +355,7 @@ void command_execute(command_t * this, char *command)
 	/* send answer */
 	ret = send(this->client, answer->data, answer->size, 0);
 	if (ret < 0) {
-		log_message(WARNING, AREA_MAIN,
+		log_message(WARNING, DEBUG_AREA_MAIN,
 			    "Command server: client send() error: %s",
 			    g_strerror(errno));
 		command_client_close(this);
@@ -370,10 +370,10 @@ void command_client_run(command_t * this)
 	ret = recv(this->client, buffer, sizeof(buffer) - 1, 0);
 	if (ret <= 0) {
 		if (ret == 0) {
-			log_message(WARNING, AREA_MAIN, "Command server: "
+			log_message(WARNING, DEBUG_AREA_MAIN, "Command server: "
 				    "lost connection with client");
 		} else {
-			log_message(WARNING, AREA_MAIN, "Command server: "
+			log_message(WARNING, DEBUG_AREA_MAIN, "Command server: "
 				    "error on recv() from client: %s",
 				    g_strerror(errno));
 		}
@@ -382,7 +382,7 @@ void command_client_run(command_t * this)
 	}
 	if (ret == (sizeof(buffer)-1))
 	{
-		log_message(WARNING, AREA_MAIN,
+		log_message(WARNING, DEBUG_AREA_MAIN,
 			    "Command server: client command is too long, "
 			    "disconnect him.");
 		command_client_close(this);
@@ -412,7 +412,7 @@ int command_main(command_t * this)
 			return 1;
 		}
 
-		log_message(CRITICAL, AREA_MAIN,
+		log_message(CRITICAL, DEBUG_AREA_MAIN,
 			    "Command server: select() fatal error: %s",
 			    g_strerror(errno));
 		return 0;

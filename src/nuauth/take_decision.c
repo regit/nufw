@@ -38,7 +38,7 @@ static inline void update_connection_datas(connection_t *element,
 	if (datas->log_prefix) {
 		g_free(element->log_prefix);
 		element->log_prefix = g_strdup(datas->log_prefix);
-		debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 				  "Setting log prefix to %s", datas->log_prefix);
 		element->flags = datas->flags;
 	}
@@ -92,7 +92,7 @@ static void search_user_group_in_acl_groups(struct acl_group *datas,
 				} else {
 					debug_log_message
 						(VERBOSE_DEBUG,
-						 AREA_MAIN,
+						 DEBUG_AREA_MAIN,
 						 "end of period for %s in %ld",
 						 datas->period, periodend);
 
@@ -105,7 +105,7 @@ static void search_user_group_in_acl_groups(struct acl_group *datas,
 						 periodend))) {
 				debug_log_message
 					(DEBUG,
-					 AREA_MAIN,
+					 DEBUG_AREA_MAIN,
 					 " ... modifying expire");
 				*expire = periodend;
 			}
@@ -145,7 +145,7 @@ nu_error_t take_decision(connection_t * element, packet_place_t place)
 	GSList *user_group = element->user_groups;
 	time_t expire = -1;	/* no expiration by default */
 
-	debug_log_message(DEBUG, AREA_MAIN,
+	debug_log_message(DEBUG, DEBUG_AREA_MAIN,
 			  "Trying to take decision on %p", element);
 
 	/*even firster we check if we have an actual element */
@@ -188,7 +188,7 @@ nu_error_t take_decision(connection_t * element, packet_place_t place)
 					
 				}	/* end of user group loop */
 			} else {
-				debug_log_message(DEBUG, AREA_MAIN,
+				debug_log_message(DEBUG, DEBUG_AREA_MAIN,
 						  "Empty acl : bad things ...");
 				answer = DECISION_DROP;
 				test = TEST_DECIDED;
@@ -218,7 +218,7 @@ nu_error_t take_decision(connection_t * element, packet_place_t place)
 	modules_finalize_packet(element);
 
 	if ((element->expire != -1) && (element->expire < expire)) {
-		debug_log_message(DEBUG, AREA_MAIN,
+		debug_log_message(DEBUG, DEBUG_AREA_MAIN,
 				  " taken expire from element");
 		expire = element->expire;
 	}
@@ -231,7 +231,7 @@ nu_error_t take_decision(connection_t * element, packet_place_t place)
 			struct internal_message *message =
 			    g_new0(struct internal_message, 1);
 
-			debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 					  "Sending connection with fixed timeout to thread");
 			memcpy(&(datas->tracking), &(element->tracking),
 			       sizeof(tracking_t));
@@ -281,7 +281,7 @@ nu_error_t apply_decision(connection_t * element)
 #endif
 
 	if (element->state == AUTH_STATE_USERPCKT) {
-		debug_log_message(WARNING, AREA_MAIN,
+		debug_log_message(WARNING, DEBUG_AREA_MAIN,
 				  "BUG: Should not be in apply_decision for user only packet");
 		return NU_EXIT_ERROR;
 	}
@@ -297,7 +297,7 @@ nu_error_t apply_decision(connection_t * element)
 	gettimeofday(&leave_time, NULL);
 	timeval_substract(&elapsed_time, &leave_time,
 			  &(element->arrival_time));
-	log_message(INFO, AREA_MAIN,
+	log_message(INFO, DEBUG_AREA_MAIN,
 		    "Treatment time for conn : %ld.%03ld sec",
 		    elapsed_time.tv_sec, elapsed_time.tv_usec);
 #endif
@@ -352,7 +352,7 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 			uint16_t mark16;
 			/* check if user id fit in 16 bits */
 			if (0xFFFF < element->mark) {
-				log_message(WARNING, AREA_MAIN,
+				log_message(WARNING, DEBUG_AREA_MAIN,
 					    "Mark don't fit in 16 bits, not to truncate the value.");
 			}
 			mark16 = (element->mark & 0xFFFF);
@@ -519,7 +519,7 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 		break;
 	}
 
-	debug_log_message(DEBUG, AREA_MAIN,
+	debug_log_message(DEBUG, DEBUG_AREA_MAIN,
 			  "Sending auth answer %d for packet %u on TLS session %p",
 			  element->decision, packet_id, element->tls);
 	if (element->tls->alive) {

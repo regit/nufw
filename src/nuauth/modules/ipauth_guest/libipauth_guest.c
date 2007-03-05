@@ -60,7 +60,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	struct ipauth_guest_params *params =
 	    g_new0(struct ipauth_guest_params, 1);
 
-	log_message(VERBOSE_DEBUG, AREA_MAIN,
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 		    "Ipauth_guest module ($Revision$)");
 	/* parse conf file */
 	if (module->configfile) {

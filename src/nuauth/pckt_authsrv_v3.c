@@ -47,7 +47,7 @@ nu_error_t authpckt_new_connection_v3(unsigned char *dgram,
 	nu_error_t ret;
 
 	if (dgram_size < sizeof(nuv3_nufw_to_nuauth_auth_message_t)) {
-		log_message(INFO, AREA_PACKET | AREA_GW,
+		log_message(INFO, DEBUG_AREA_PACKET | DEBUG_AREA_GW,
 			    "Undersized message from nufw server");
 		return NU_EXIT_ERROR;
 	}
@@ -57,7 +57,7 @@ nu_error_t authpckt_new_connection_v3(unsigned char *dgram,
 	/* allocate new connection */
 	connection = g_new0(connection_t, 1);
 	if (connection == NULL) {
-		log_message(WARNING, AREA_PACKET,
+		log_message(WARNING, DEBUG_AREA_PACKET,
 			    "Can not allocate connection");
 		return NU_EXIT_ERROR;
 	}
@@ -72,7 +72,7 @@ nu_error_t authpckt_new_connection_v3(unsigned char *dgram,
 
 	connection->packet_id =
 	    g_slist_append(NULL, GUINT_TO_POINTER(ntohl(msg->packet_id)));
-	debug_log_message(DEBUG, AREA_PACKET | AREA_GW,
+	debug_log_message(DEBUG, DEBUG_AREA_PACKET | DEBUG_AREA_GW,
 			  "Auth pckt: Working on new connection (id=%u)",
 			  (uint32_t) GPOINTER_TO_UINT(connection->
 						      packet_id->data));
@@ -118,12 +118,12 @@ void authpckt_conntrack_v3(unsigned char *dgram, unsigned int dgram_size)
 	struct internal_message *message;
 	tcp_state_t pstate;
 
-	debug_log_message(VERBOSE_DEBUG, AREA_PACKET | AREA_GW,
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_PACKET | DEBUG_AREA_GW,
 			  "Auth conntrack: Working on new packet");
 
 	/* Check message content size */
 	if (dgram_size != sizeof(struct nuv4_conntrack_message_t)) {
-		debug_log_message(WARNING, AREA_PACKET | AREA_GW,
+		debug_log_message(WARNING, DEBUG_AREA_PACKET | DEBUG_AREA_GW,
 				  "Auth conntrack: Improper length of packet");
 		return;
 	}
@@ -160,12 +160,12 @@ void authpckt_conntrack_v3(unsigned char *dgram, unsigned int dgram_size)
 	message->datas = datas;
 	if (conntrack->msg_type == AUTH_CONN_DESTROY) {
 		message->type = FREE_MESSAGE;
-		debug_log_message(VERBOSE_DEBUG, AREA_PACKET,
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_PACKET,
 				  "Auth conntrack: Sending free message");
 		pstate = TCP_STATE_CLOSE;
 	} else {
 		message->type = UPDATE_MESSAGE;
-		debug_log_message(VERBOSE_DEBUG, AREA_PACKET,
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_PACKET,
 				  "Auth conntrack: Sending Update message");
 		pstate = TCP_STATE_ESTABLISHED;
 	}

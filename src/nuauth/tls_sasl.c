@@ -55,17 +55,17 @@ static void policy_refuse_user(user_session_t * c_session, int c,
 {
 	switch (reason) {
 	case POLICY_ONE_LOGIN:
-		log_message(INFO, AREA_USER,
+		log_message(INFO, DEBUG_AREA_USER,
 			    "Policy: User %s already connected, closing socket",
 			    c_session->user_name);
 		break;
 	case POLICY_PER_IP_ONE_LOGIN:
-		log_message(INFO, AREA_USER,
+		log_message(INFO, DEBUG_AREA_USER,
 			    "Policy: User %s try to connect from already used IP, closing socket",
 			    c_session->user_name);
 		break;
 	default:
-		log_message(WARNING, AREA_USER,
+		log_message(WARNING, DEBUG_AREA_USER,
 			    "Policy: User %s has to disconnect for UNKNOWN reason, closing socket",
 			    c_session->user_name);
 	}
@@ -120,7 +120,7 @@ static void tls_sasl_connect_ok(user_session_t * c_session, int c)
 	msg.length = 0;
 	/* send mode to client */
 	if (gnutls_record_send(*(c_session->tls), &msg, sizeof(msg)) < 0) {
-		log_message(WARNING, AREA_USER,
+		log_message(WARNING, DEBUG_AREA_USER,
 			    "gnutls_record_send() failure at %s:%d",
 			    __FILE__, __LINE__);
 		if (nuauthconf->push) {
@@ -157,7 +157,7 @@ static void tls_sasl_connect_ok(user_session_t * c_session, int c)
 	c_session->connect_timestamp = time(NULL);
 	/* send new valid session to user session logging system */
 	log_user_session(c_session, SESSION_OPEN);
-	debug_log_message(VERBOSE_DEBUG, AREA_USER,
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 			  "Says we need to work on %d", c);
 	g_async_queue_push(mx_queue, GINT_TO_POINTER(c));
 }
@@ -198,7 +198,7 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 		ret = check_certs_for_tls_session(*session);
 
 		if (ret != SASL_OK) {
-			log_message(INFO, AREA_USER,
+			log_message(INFO, DEBUG_AREA_USER,
 				    "Certificate verification failed : %s",
 				    gnutls_strerror(ret));
 		} else {
@@ -207,7 +207,7 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 			username = get_username_from_tls_session(*session);
 			/* parsing complete */
 			if (username) {
-				debug_log_message(VERBOSE_DEBUG, AREA_USER,
+				debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 						  "Using username %s from certificate",
 						  username);
 				c_session->groups =
@@ -215,7 +215,7 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 				c_session->user_id =
 				    modules_get_user_id(username);
 				if (c_session->groups == NULL) {
-					debug_log_message(DEBUG, AREA_USER,
+					debug_log_message(DEBUG, DEBUG_AREA_USER,
 							  "error when searching user groups");
 					c_session->groups = NULL;
 					c_session->user_id = 0;
@@ -240,10 +240,10 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 	case SASL_FAIL:
 	default:
 		if (ret == SASL_FAIL) {
-			debug_log_message(VERBOSE_DEBUG, AREA_USER,
+			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 					  "Crash on user side, closing socket");
 		} else {
-			debug_log_message(VERBOSE_DEBUG, AREA_USER,
+			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 					  "Problem with user, closing socket");
 		}
 		close_tls_session(c, c_session->tls);

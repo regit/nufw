@@ -54,7 +54,7 @@ void free_user_cache(cache_entry_t * entry)
 		g_slist_foreach(list, (GFunc) cache_entry_content_destroy,
 				free_user_struct);
 		g_slist_free(list);
-		debug_log_message(DEBUG, AREA_MAIN | AREA_USER, "user datas freed %p",
+		debug_log_message(DEBUG, DEBUG_AREA_MAIN | DEBUG_AREA_USER, "user datas freed %p",
 				  list);
 	}
 	g_free(entry);
@@ -79,21 +79,21 @@ void get_users_from_cache(connection_t * conn_elt)
 		g_private_set(nuauthdatas->userqueue, message.reply_queue);
 	}
 	/* send message */
-	debug_log_message(VERBOSE_DEBUG, AREA_USER,
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 			  "[user cache] going to send cache request for %s",
 			  conn_elt->username);
 	g_async_queue_push(nuauthdatas->user_cache->queue, &message);
 	/* lock */
 	g_atomic_int_inc(&(myaudit->cache_req_nb));
 	/*release */
-	debug_log_message(VERBOSE_DEBUG, AREA_USER,
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 			  "[user cache] request sent");
 	/* wait for answer */
 	conn_elt->cacheduserdatas = g_async_queue_pop(message.reply_queue);
-	debug_log_message(VERBOSE_DEBUG, AREA_USER,
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 			  "[user cache] cache answered");
 	if (conn_elt->cacheduserdatas == null_queue_datas) {
-		debug_log_message(VERBOSE_DEBUG, AREA_USER,
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 				  "[user cache] setting cached user datas to NULL");
 		conn_elt->cacheduserdatas = NULL;
 	}
@@ -115,7 +115,7 @@ void get_users_from_cache(connection_t * conn_elt)
 		if (userdatas->groups == NULL) {
 			/*user has not been found or problem occurs we must fail
 			 * returning NULL is enough (don't want to be DOSsed)*/
-			log_message(WARNING, AREA_USER,
+			log_message(WARNING, DEBUG_AREA_USER,
 				    "User not found");
 			return;
 
@@ -126,7 +126,7 @@ void get_users_from_cache(connection_t * conn_elt)
 		rmessage->key = g_strdup(conn_elt->username);
 		rmessage->datas = userdatas;
 		rmessage->reply_queue = NULL;
-		debug_log_message(VERBOSE_DEBUG, AREA_USER,
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 				  "[user cache] answering for key %p",
 				  rmessage->key);
 		/* reply to the cache */
@@ -137,7 +137,7 @@ void get_users_from_cache(connection_t * conn_elt)
 		conn_elt->user_id = userdatas->uid;
 		conn_elt->cacheduserdatas = userdatas;
 	} else {
-		debug_log_message(VERBOSE_DEBUG, AREA_USER,
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 				  "[user cache] cache call succedeed");
 		conn_elt->user_groups = conn_elt->cacheduserdatas->groups;
 		conn_elt->user_id = (conn_elt->cacheduserdatas)->uid;
@@ -154,7 +154,7 @@ gpointer user_duplicate_key(gpointer datas)
 int init_user_cache()
 {
 	GThread *user_cache_thread;
-	log_message(VERBOSE_DEBUG, AREA_MAIN | AREA_USER,
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
 		    "creating user cache thread");
 	nuauthdatas->user_cache = g_new0(cache_class_t, 1);
 	nuauthdatas->user_cache->hash =

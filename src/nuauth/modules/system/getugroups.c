@@ -101,7 +101,7 @@ GSList *getugroups(char *username, gid_t gid)
 #ifdef PERF_DISPLAY_ENABLE
 		gettimeofday(&tvend, NULL);
 		timeval_substract(&result, &tvend, &tvstart);
-		log_message(INFO, AREA_MAIN,
+		log_message(INFO, DEBUG_AREA_MAIN,
 			    "Group list fetching duration: %ld sec %03ld msec",
 			    result.tv_sec, result.tv_usec / 1000);
 	}

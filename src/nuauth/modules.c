@@ -225,7 +225,7 @@ int modules_check_certificate(gnutls_session session, gnutls_x509_crt cert)
 	GSList *walker = certificate_check_modules;
 	int ret;
 
-	log_message(VERBOSE_DEBUG, AREA_MAIN, "module check certificate");
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN, "module check certificate");
 	for (; walker != NULL; walker = walker->next) {
 		certificate_check_callback *handler =
 		    (certificate_check_callback *) ((module_t *) walker->
@@ -444,7 +444,7 @@ static int load_modules_from(gchar * confvar, gchar * func,
 		current_module->module = g_module_open(module_path, 0);
 		g_free(module_path);
 
-		log_message(VERBOSE_DEBUG, AREA_MAIN,
+		log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 			    "\tmodule %s: using %s with configfile %s",
 			    current_module->name,
 			    current_module->module_name,
@@ -484,7 +484,7 @@ static int load_modules_from(gchar * confvar, gchar * func,
 				current_module->params = NULL;
 			}
 		} else {
-			log_message(WARNING, AREA_MAIN,
+			log_message(WARNING, DEBUG_AREA_MAIN,
 				    "No init function for module %s: PLEASE UPGRADE!",
 				    current_module->module_name);
 			current_module->params = NULL;
@@ -494,7 +494,7 @@ static int load_modules_from(gchar * confvar, gchar * func,
 		if (!g_module_symbol
 		    (current_module->module, "unload_module_with_params",
 		     (gpointer *) & (current_module->free_params))) {
-			log_message(WARNING, AREA_MAIN,
+			log_message(WARNING, DEBUG_AREA_MAIN,
 				    "No init function for module %s: PLEASE UPGRADE!",
 				    current_module->module_name);
 			current_module->free_params = NULL;
@@ -607,7 +607,7 @@ int load_modules()
 	g_mutex_lock(modules_mutex);
 
 #define LOAD_MODULE(VAR, LIST, KEY, TEXT) \
-    log_message(VERBOSE_DEBUG, AREA_MAIN, "Loading " TEXT " modules:"); \
+    log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN, "Loading " TEXT " modules:"); \
     load_modules_from(VAR, KEY, &(LIST)); \
     g_free(VAR);
 

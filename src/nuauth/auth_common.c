@@ -193,7 +193,7 @@ void free_connection(connection_t * conn)
 		if (nuauthconf->acl_cache) {
 			struct cache_message *message =
 			    g_new0(struct cache_message, 1);
-			debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 					  "Sending free to acl cache");
 			message->key = acl_create_and_alloc_key(conn);
 			message->type = FREE_MESSAGE;
@@ -210,11 +210,11 @@ void free_connection(connection_t * conn)
 			struct cache_message *message =
 			    g_new0(struct cache_message, 1);
 			if (!message) {
-				log_message(CRITICAL, AREA_MAIN,
+				log_message(CRITICAL, DEBUG_AREA_MAIN,
 					    "Could not g_new0(). No more memory?");
 				/* GRYZOR should we do something special here? */
 			} else {
-				debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+				debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 						  "Sending free to user cache");
 				message->key = g_strdup(conn->username);
 				message->type = FREE_MESSAGE;
@@ -224,7 +224,7 @@ void free_connection(connection_t * conn)
 						   message);
 			}
 		} else {
-			debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 					  "Can not free user cache, username is null");
 		}
 	} else {
@@ -290,7 +290,7 @@ connection_t *duplicate_connection(connection_t * element)
 {
 	connection_t *conn_copy = g_memdup(element, sizeof(*element));
 	if (conn_copy == NULL) {
-		log_message(WARNING, AREA_MAIN,
+		log_message(WARNING, DEBUG_AREA_MAIN,
 			    "memory duplication failed");
 		return NULL;
 	}
@@ -332,7 +332,7 @@ inline int conn_cl_remove(gconstpointer conn)
 {
 	if (!g_hash_table_steal(conn_list,
 				&(((connection_t *) conn)->tracking))) {
-		log_message(WARNING, AREA_MAIN,
+		log_message(WARNING, DEBUG_AREA_MAIN,
 			    "Removal of conn in hash failed");
 		return 0;
 	}
@@ -434,7 +434,7 @@ void clean_connections_list()
 			    g_slist_prepend(old_conn_list, value);
 			nb_deleted += 1;
 		} else {
-			log_message(WARNING, AREA_MAIN,
+			log_message(WARNING, DEBUG_AREA_MAIN,
 				    "Clean connection: no entry found in hash ");
 		}
 		iterator = iterator->next;
@@ -459,7 +459,7 @@ void clean_connections_list()
 
 	/* display number of deleted elements */
 	if (0 < nb_deleted) {
-		log_message(INFO, AREA_MAIN,
+		log_message(INFO, DEBUG_AREA_MAIN,
 			    "Clean connection list: %d connection(s) suppressed",
 			    nb_deleted);
 	}

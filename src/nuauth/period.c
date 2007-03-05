@@ -153,7 +153,7 @@ time_t get_end_of_period_for_time_t(const gchar * period, time_t pckt_time)
 	/* get period in hash */
 	pperiod = g_hash_table_lookup(nuauthconf->periods, period);
 	if (pperiod == NULL) {
-		log_message(WARNING, AREA_MAIN,
+		log_message(WARNING, DEBUG_AREA_MAIN,
 			    "period can not be found, typo ?");
 	} else {
 		GSList *pointer;
@@ -228,7 +228,7 @@ gboolean add_perioditem_to_period(GHashTable * periods, gchar * name,
 		    g_slist_prepend(periodelt->items, perioditem);
 		periodelt->used = TRUE;
 	} else {
-		log_message(WARNING, AREA_MAIN,
+		log_message(WARNING, DEBUG_AREA_MAIN,
 			    "Can not add period item (%p) to period (%s at %p)",
 			    perioditem, name, periodelt);
 		return FALSE;

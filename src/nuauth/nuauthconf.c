@@ -222,7 +222,7 @@ void nuauth_reload(int signal)
 	do {
 		nanosleep(&sleep, NULL);
 
-		log_message(VERBOSE_DEBUG, AREA_MAIN,
+		log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 			    "waiting for threads to finish at %s:%d",
 			    __FILE__, __LINE__);
 		/* 1. count thread in pool */
@@ -249,7 +249,7 @@ void nuauth_reload(int signal)
 		}
 		pool_threads_num -= g_thread_pool_get_num_unused_threads();
 
-		log_message(VERBOSE_DEBUG, AREA_MAIN, "got %d on %d",
+		log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN, "got %d on %d",
 			    nuauthdatas->locked_threads_number,
 			    pool_threads_num);
 		/* compare against thread in state lock */

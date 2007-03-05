@@ -55,12 +55,12 @@ struct nuauth_tls_t nuauth_tls;
 void close_tls_session(int socket_fd, gnutls_session * session)
 {
 	if (close(socket_fd))
-		log_message(VERBOSE_DEBUG, AREA_USER,
+		log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 			    "close_tls_session: close() failed (error code %i)!",
 			    errno);
 	gnutls_credentials_clear(*session);
 	gnutls_deinit(*session);
-	debug_log_message(VERBOSE_DEBUG, AREA_USER | AREA_GW,
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER | DEBUG_AREA_GW,
 			  "gnutls_deinit() was called");
 	g_free(session);
 }
@@ -223,7 +223,7 @@ int tls_connect(int socket_fd, gnutls_session ** session_ptr)
 #endif
 	/* check arguments */
 	if (session_ptr == NULL) {
-		log_message(INFO, AREA_GW | AREA_USER,
+		log_message(INFO, DEBUG_AREA_GW | DEBUG_AREA_USER,
 			    "NuFW TLS Init failure (session_ptr is NULL)");
 		close(socket_fd);
 		return SASL_BADPARAM;
@@ -232,7 +232,7 @@ int tls_connect(int socket_fd, gnutls_session ** session_ptr)
 	/* init. tls session */
 	session = initialize_tls_session();
 	if (session == NULL) {
-		log_message(INFO, AREA_GW | AREA_USER,
+		log_message(INFO, DEBUG_AREA_GW | DEBUG_AREA_USER,
 			    "NuFW TLS Init failure (initialize_tls_session())");
 		close(socket_fd);
 		return SASL_BADPARAM;
@@ -248,7 +248,7 @@ int tls_connect(int socket_fd, gnutls_session ** session_ptr)
 	gettimeofday(&entry_time, NULL);
 #endif
 	do {
-		debug_log_message(DEBUG, AREA_GW | AREA_USER,
+		debug_log_message(DEBUG, DEBUG_AREA_GW | DEBUG_AREA_USER,
 				  "NuFW TLS Handshaking (last error: %i)",
 				  ret);
 		ret = gnutls_handshake(*session);
@@ -259,40 +259,40 @@ int tls_connect(int socket_fd, gnutls_session ** session_ptr)
 
 	if (ret < 0) {
 		close_tls_session(socket_fd, session);
-		log_message(DEBUG, AREA_GW | AREA_USER,
+		log_message(DEBUG, DEBUG_AREA_GW | DEBUG_AREA_USER,
 			    "NuFW TLS Handshake has failed (%s)",
 			    gnutls_strerror(ret));
 		return SASL_BADPARAM;
 	}
 #ifdef PERF_DISPLAY_ENABLE
 	timeval_substract(&elapsed_time, &leave_time, &entry_time);
-	log_message(INFO, AREA_GW | AREA_USER,
+	log_message(INFO, DEBUG_AREA_GW | DEBUG_AREA_USER,
 		    "Handshake duration : %ld sec %03ld msec",
 		    elapsed_time.tv_sec, elapsed_time.tv_usec / 1000);
 #endif
 
-	debug_log_message(DEBUG, AREA_GW | AREA_USER, "NuFW TLS Handshaked");
+	debug_log_message(DEBUG, DEBUG_AREA_GW | DEBUG_AREA_USER, "NuFW TLS Handshaked");
 
-	debug_log_message(VERBOSE_DEBUG, AREA_GW | AREA_USER, "NuFW TLS mac: %s",
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW | DEBUG_AREA_USER, "NuFW TLS mac: %s",
 			  gnutls_mac_get_name(gnutls_mac_get(*session)));
-	debug_log_message(VERBOSE_DEBUG, AREA_GW | AREA_USER, "NuFW TLS kx: %s",
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW | DEBUG_AREA_USER, "NuFW TLS kx: %s",
 			  gnutls_kx_get_name(gnutls_kx_get(*session)));
 
-	debug_log_message(DEBUG, AREA_GW | AREA_USER,
+	debug_log_message(DEBUG, DEBUG_AREA_GW | DEBUG_AREA_USER,
 			  "NuFW TLS Handshake was completed");
 
 	if (nuauth_tls.request_cert == GNUTLS_CERT_REQUIRE) {
 		/* certicate verification */
 		ret = check_certs_for_tls_session(*session);
 		if (ret != 0) {
-			log_message(INFO, AREA_GW | AREA_USER,
+			log_message(INFO, DEBUG_AREA_GW | DEBUG_AREA_USER,
 				    "Certificate verification failed : %s",
 				    gnutls_strerror(ret));
 			close_tls_session(socket_fd, session);
 			return SASL_BADPARAM;
 		}
 	} else {
-		debug_log_message(DEBUG, AREA_GW | AREA_USER,
+		debug_log_message(DEBUG, DEBUG_AREA_GW | DEBUG_AREA_USER,
 				  "Certificate verification is not done as requested");
 	}
 
@@ -412,7 +412,7 @@ void create_x509_credentials()
 	g_free(nuauth_tls_cacert);
 
 	if (nuauth_tls_crl) {
-		log_message(VERBOSE_DEBUG, AREA_GW | AREA_USER,
+		log_message(VERBOSE_DEBUG, DEBUG_AREA_GW | DEBUG_AREA_USER,
 			    "Certificate revocation list: %s",
 			    nuauth_tls_crl);
 
@@ -428,7 +428,7 @@ void create_x509_credentials()
 	ret = generate_dh_params(&nuauth_tls.dh_params);
 #ifdef DEBUG_ENABLE
 	if (ret < 0)
-		log_message(INFO, AREA_GW | AREA_USER,
+		log_message(INFO, DEBUG_AREA_GW | DEBUG_AREA_USER,
 			    "generate_dh_params() failed");
 #endif
 

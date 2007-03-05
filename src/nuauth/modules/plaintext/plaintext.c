@@ -92,20 +92,20 @@ static int parse_ints(char *intline, GSList ** p_intlist, char *prefix)
 			/*  We can't read a number.  This will be an error only if we can */
 			/*   see a comma next. */
 			if (p_nextint) {
-				log_message(WARNING, AREA_MAIN,
+				log_message(WARNING, DEBUG_AREA_MAIN,
 					    "%s parse_ints: Malformed line",
 					    prefix);
 				*p_intlist = intlist;
 				return 1;
 			}
-			log_message(WARNING, AREA_MAIN,
+			log_message(WARNING, DEBUG_AREA_MAIN,
 				    "%s parse_ints: Garbarge at end of line",
 				    prefix);
 		} else {
 			/*  One number (group, integer...) to add */
 			intlist = g_slist_prepend(intlist,
 						  GUINT_TO_POINTER((u_int32_t) number));
-			debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 					  "%s Added group/int %d", prefix,
 					  number);
 		}
@@ -144,13 +144,13 @@ static int parse_ports(char *portsline, GSList ** p_portslist,
 			/*  We can't read a port number.  This will be an error only if we can */
 			/*   see a comma next. */
 			if (p_nextports) {
-				log_message(WARNING, AREA_MAIN,
+				log_message(WARNING, DEBUG_AREA_MAIN,
 					    "%s parse_ports: Malformed line",
 					    prefix);
 				*p_portslist = portslist;
 				return 1;
 			}
-			log_message(WARNING, AREA_MAIN,
+			log_message(WARNING, DEBUG_AREA_MAIN,
 				    "%s parse_ports: Garbarge at end of line",
 				    prefix);
 		} else {
@@ -161,7 +161,7 @@ static int parse_ports(char *portsline, GSList ** p_portslist,
 					ports.nbports = lastport - fport;
 				} else {
 					ports.nbports = -1;
-					log_message(WARNING, AREA_MAIN,
+					log_message(WARNING, DEBUG_AREA_MAIN,
 						    "%s parse_ports: Malformed line",
 						    prefix);
 				}
@@ -174,7 +174,7 @@ static int parse_ports(char *portsline, GSList ** p_portslist,
 				this_port->nbports = ports.nbports;
 				portslist =
 				    g_slist_prepend(portslist, this_port);
-				debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+				debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 						  "%s Adding Port = %d, number = %d",
 						  prefix, ports.firstport,
 						  ports.nbports);
@@ -253,7 +253,7 @@ static int parse_ips(char *ipsline, GSList ** ip_list, char *prefix)
 			*p_tmp++ = 0;
 			n = sscanf(p_tmp, "%u", &mask);
 			if (n != 1) {
-				log_message(WARNING, AREA_MAIN,
+				log_message(WARNING, DEBUG_AREA_MAIN,
 					    "plaintext warning: wrong network mask (%s)",
 					    p_tmp);
 				continue;
@@ -282,11 +282,11 @@ static int parse_ips(char *ipsline, GSList ** ip_list, char *prefix)
 			/*  We can't read an IP address.  This will be an error only if we can */
 			/*   see a comma next. */
 			if (p_nextip) {
-				log_message(WARNING, AREA_MAIN,
+				log_message(WARNING, DEBUG_AREA_MAIN,
 					    "%s parse_ips: Malformed line",
 					    prefix);
 			}
-			log_message(WARNING, AREA_MAIN,
+			log_message(WARNING, DEBUG_AREA_MAIN,
 				    "%s parse_ips: Garbarge at end of line",
 				    prefix);
 			continue;
@@ -309,7 +309,7 @@ static int parse_ips(char *ipsline, GSList ** ip_list, char *prefix)
 		if (compare_ipv6_with_mask
 		    (&this_ip.addr, &this_ip.addr,
 		     &this_ip.netmask) != 0) {
-			log_message(WARNING, AREA_MAIN,
+			log_message(WARNING, DEBUG_AREA_MAIN,
 				    "%s parse_ips: Invalid network specification!",
 				    prefix);
 			continue;
@@ -328,7 +328,7 @@ static int parse_ips(char *ipsline, GSList ** ip_list, char *prefix)
 			    && inet_ntop(PF_INET6, &this_ip_copy->netmask,
 					 mask_ascii,
 					 sizeof(mask_ascii)) != NULL) {
-				log_message(VERBOSE_DEBUG, AREA_MAIN,
+				log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 					    "%s Adding IP = %s, netmask = %s",
 					    prefix, addr_ascii,
 					    mask_ascii);
@@ -356,14 +356,14 @@ static int read_user_list(struct plaintext_params *params)
 	char log_prefix[16];
 	int ln = 0;		/*  Line number */
 
-	log_message(VERBOSE_DEBUG, AREA_AUTH,
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
 		    "[plaintext] read_user_list: reading [%s]",
 		    params->plaintext_userfile);
 
 	fd = fopen(params->plaintext_userfile, "r");
 
 	if (!fd) {
-		log_message(WARNING, AREA_AUTH,
+		log_message(WARNING, DEBUG_AREA_AUTH,
 			    "read_user_list: fopen error");
 		return 1;
 	}
@@ -378,7 +378,7 @@ static int read_user_list(struct plaintext_params *params)
 
 		/*  User Name */
 		if (!p_username) {
-			log_message(WARNING, AREA_AUTH,
+			log_message(WARNING, DEBUG_AREA_AUTH,
 				    "L.%d: read_user_list: Malformed line (no username)",
 				    ln);
 			fclose(fd);
@@ -388,7 +388,7 @@ static int read_user_list(struct plaintext_params *params)
 		/*  Password */
 		p_passwd = strchr(p_username, ':');
 		if (!p_passwd) {
-			log_message(WARNING, AREA_AUTH,
+			log_message(WARNING, DEBUG_AREA_AUTH,
 				    "L.%d: read_user_list: Malformed line (no passwd)",
 				    ln);
 			fclose(fd);
@@ -399,7 +399,7 @@ static int read_user_list(struct plaintext_params *params)
 		/*  UID */
 		p_uid = strchr(p_passwd, ':');
 		if (!p_uid) {
-			log_message(WARNING, AREA_AUTH,
+			log_message(WARNING, DEBUG_AREA_AUTH,
 				    "L.%d: read_user_list: Malformed line (no uid)",
 				    ln);
 			fclose(fd);
@@ -407,7 +407,7 @@ static int read_user_list(struct plaintext_params *params)
 		}
 		*p_uid++ = 0;
 		if (sscanf(p_uid, "%d", &uid) != 1) {
-			log_message(WARNING, AREA_AUTH,
+			log_message(WARNING, DEBUG_AREA_AUTH,
 				    "L.%d: read_user_list: Malformed line "
 				    "(uid should be a number)", ln);
 			fclose(fd);
@@ -417,7 +417,7 @@ static int read_user_list(struct plaintext_params *params)
 		/*  List of groups */
 		p_groups = strchr(p_uid, ':');
 		if (!p_groups) {
-			log_message(WARNING, AREA_AUTH,
+			log_message(WARNING, DEBUG_AREA_AUTH,
 				    "L.%d: read_user_list: Malformed line (no groups)",
 				    ln);
 			fclose(fd);
@@ -425,14 +425,14 @@ static int read_user_list(struct plaintext_params *params)
 		}
 		*p_groups++ = 0;
 
-		debug_log_message(VERBOSE_DEBUG, AREA_AUTH,
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
 				  "L.%d: Read username=[%s], uid=%d",
 				  ln, p_username, uid);
 
 		/*  Let's create an user node */
 		plaintext_user = g_new0(struct plaintext_user, 1);
 		if (!plaintext_user) {
-			log_message(WARNING, AREA_AUTH,
+			log_message(WARNING, DEBUG_AREA_AUTH,
 				    "read_user_list: Cannot allocate plaintext_user!");
 			fclose(fd);
 			return 5;
@@ -478,14 +478,14 @@ static int read_acl_list(struct plaintext_params *params)
 	struct plaintext_acl *newacl = NULL;
 	int ln = 0;		/*  Line number */
 
-	log_message(VERBOSE_DEBUG, AREA_MAIN,
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 		    "[plaintext] read_acl_list: reading [%s]",
 		    params->plaintext_aclfile);
 
 	fd = fopen(params->plaintext_aclfile, "r");
 
 	if (!fd) {
-		log_message(WARNING, AREA_MAIN,
+		log_message(WARNING, DEBUG_AREA_MAIN,
 			    "read_acl_list: fopen error");
 		return 1;
 	}
@@ -500,13 +500,13 @@ static int read_acl_list(struct plaintext_params *params)
 		/*  New ACL? */
 		if (p_key[0] == '[') {
 			if (newacl) {
-				debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+				debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 						  "Done with ACL [%s]",
 						  newacl->aclname);
 				/*  check if ACL node has minimal information */
 				/*  Warning: this code is duplicated after the loop */
 				if (!newacl->groups) {
-					log_message(WARNING, AREA_MAIN,
+					log_message(WARNING, DEBUG_AREA_MAIN,
 						    "No group(s) declared in ACL %s",
 						    newacl->aclname);
 				} else if (newacl->proto == IPPROTO_TCP ||
@@ -518,18 +518,18 @@ static int read_acl_list(struct plaintext_params *params)
 							    plaintext_acllist,
 							    newacl);
 				} else {
-					log_message(WARNING, AREA_MAIN,
+					log_message(WARNING, DEBUG_AREA_MAIN,
 						    "No valid protocol declared in ACL %s",
 						    newacl->aclname);
 				}
 			}
 
-			debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 					  "L.%d: New ACL", ln);
 
 			p_tmp = strchr(++p_key, ']');
 			if (!p_tmp) {
-				log_message(WARNING, AREA_MAIN,
+				log_message(WARNING, DEBUG_AREA_MAIN,
 					    "L.%d: Malformed line (ACLname)",
 					    ln);
 				fclose(fd);
@@ -539,7 +539,7 @@ static int read_acl_list(struct plaintext_params *params)
 			/*  Ok, new ACL declaration here.  Let's allocate a structure! */
 			newacl = g_new0(struct plaintext_acl, 1);
 			if (!newacl) {
-				log_message(WARNING, AREA_MAIN,
+				log_message(WARNING, DEBUG_AREA_MAIN,
 					    "read_acl_list: Cannot allocate plaintext_acl!");
 				fclose(fd);
 				return 5;
@@ -549,7 +549,7 @@ static int read_acl_list(struct plaintext_params *params)
 			newacl->period = NULL;
 			newacl->log_prefix = NULL;
 			newacl->flags = ACL_FLAGS_NONE;
-			debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 					  "L.%d: ACL name found: [%s]", ln,
 					  newacl->aclname);
 			/*  We're done with this line */
@@ -558,7 +558,7 @@ static int read_acl_list(struct plaintext_params *params)
 
 		/*  We shouldn't be here if we aren't in an ACL declaration */
 		if (!newacl) {
-			log_message(WARNING, AREA_MAIN,
+			log_message(WARNING, DEBUG_AREA_MAIN,
 				    "L.%d: Malformed line (Not in an ACL declaration)",
 				    ln);
 			fclose(fd);
@@ -567,7 +567,7 @@ static int read_acl_list(struct plaintext_params *params)
 
 		p_value = strchr(p_key, '=');
 		if (!p_value) {
-			log_message(WARNING, AREA_MAIN,
+			log_message(WARNING, DEBUG_AREA_MAIN,
 				    "L.%d: Malformed line (No '=' inside)",
 				    ln);
 			fclose(fd);
@@ -594,14 +594,14 @@ static int read_acl_list(struct plaintext_params *params)
 				break;
 			default:
 				{
-					log_message(WARNING, AREA_MAIN,
+					log_message(WARNING, DEBUG_AREA_MAIN,
 						    "L.%d: Malformed line (decision should be 0 or 1)",
 						    ln);
 					fclose(fd);
 					return 2;
 				}
 			}
-			debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 					  "L.%d: Read decision = %d", ln,
 					  newacl->decision);
 		} else if (!strcasecmp("gid", p_key)) {	/*  Groups */
@@ -616,13 +616,13 @@ static int read_acl_list(struct plaintext_params *params)
 			}
 		} else if (!strcasecmp("proto", p_key)) {	/*  Protocol */
 			if (sscanf(p_value, "%d", &newacl->proto) != 1) {
-				log_message(WARNING, AREA_MAIN,
+				log_message(WARNING, DEBUG_AREA_MAIN,
 					    "L.%d: Malformed line (proto should be a number)",
 					    ln);
 				fclose(fd);
 				return 2;
 			}
-			debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 					  "L.%d: Read proto = %d", ln,
 					  newacl->proto);
 		} else if (!strcasecmp("type", p_key)) {	/*  Type (icmp) */
@@ -683,7 +683,7 @@ static int read_acl_list(struct plaintext_params *params)
 			if (sep)
 				*sep++ = 0;
 			newapp->appname = g_strdup(strip_line(p_value, 0));
-			debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 					  "L.%d: Read App name [%s]", ln,
 					  newapp->appname);
 
@@ -692,7 +692,7 @@ static int read_acl_list(struct plaintext_params *params)
 				p_value = sep;
 				newapp->appmd5 =
 				    g_strdup(strip_line(p_value, 0));
-				debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+				debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 						  "L.%d: Read App MD5 [%s]",
 						  ln, newapp->appmd5);
 			}
@@ -707,7 +707,7 @@ static int read_acl_list(struct plaintext_params *params)
 			if (sep)
 				*sep++ = 0;
 			newos->sysname = g_strdup(strip_line(p_value, 0));
-			debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 					  "L.%d: Read OS sysname [%s]", ln,
 					  newos->sysname);
 
@@ -719,7 +719,7 @@ static int read_acl_list(struct plaintext_params *params)
 					*sep++ = 0;
 				newos->release =
 				    g_strdup(strip_line(p_value, 0));
-				debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+				debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 						  "L.%d: Read OS release [%s]",
 						  ln, newos->release);
 			}
@@ -728,7 +728,7 @@ static int read_acl_list(struct plaintext_params *params)
 				p_value = sep;
 				newos->version =
 				    g_strdup(strip_line(p_value, 0));
-				debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+				debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 						  "L.%d: Read OS version [%s]",
 						  ln, newos->version);
 			}
@@ -737,38 +737,38 @@ static int read_acl_list(struct plaintext_params *params)
 			newacl->os = g_slist_prepend(newacl->os, newos);
 		} else if (!strcasecmp("period", p_key)) {	/*  Period */
 			newacl->period = g_strdup(p_value);
-			debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 					  "L.%d: Read  period [%s]", ln,
 					  newacl->period);
 		} else if (!strcasecmp("log_prefix", p_key)) {
 			newacl->log_prefix = g_strdup(p_value);
-			debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 					  "L.%d: Read log_prefix [%s]", ln,
 					  newacl->log_prefix);
 		} else if (!strcasecmp("flags", p_key)) {
 			if (sscanf(p_value, "%d", &newacl->flags) != 1) {
-				log_message(WARNING, AREA_MAIN,
+				log_message(WARNING, DEBUG_AREA_MAIN,
 						"L.%d: Malformed line (flags should be a number)",
 						ln);
 				fclose(fd);
 				return 2;
 			}
-			debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 					"L.%d: Read acl flags [%d]", ln, newacl->flags);
 		} else {
-			log_message(SERIOUS_WARNING, AREA_MAIN,
+			log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 				    "L.%d: Unknown key [%s] in ACL %s",
 				    ln, p_key, newacl->aclname);
 		}		/*  End of key/value parsing */
 	}
 	if (newacl) {
 
-		debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 				  "Done with ACL [%s]", newacl->aclname);
 		/*  check if ACL node has minimal information */
 		/*  Warning: this code is duplicated after the loop */
 		if (!newacl->groups) {
-			log_message(WARNING, AREA_MAIN,
+			log_message(WARNING, DEBUG_AREA_MAIN,
 				    "No group(s) declared in ACL %s",
 				    newacl->aclname);
 		} else if (newacl->proto == IPPROTO_TCP
@@ -779,7 +779,7 @@ static int read_acl_list(struct plaintext_params *params)
 			    g_slist_prepend(params->plaintext_acllist,
 					    newacl);
 		} else {
-			log_message(WARNING, AREA_MAIN,
+			log_message(WARNING, DEBUG_AREA_MAIN,
 				    "No valid protocol declared in ACL %s",
 				    newacl->aclname);
 		}
@@ -800,7 +800,7 @@ G_MODULE_EXPORT gboolean unload_module_with_params(struct plaintext_params
 		GSList *p_userlist;
 		struct plaintext_user *p_user;
 
-		debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 				  "Freeing users list");
 
 		/*  Let's free each node separately */
@@ -825,7 +825,7 @@ G_MODULE_EXPORT gboolean unload_module_with_params(struct plaintext_params
 		GSList *p_ip;
 		struct plaintext_acl *p_acl;
 
-		debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 				  "Freeing ACLs");
 
 		/*  Let's free each node separately */
@@ -897,7 +897,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	};
 
 
-	log_message(VERBOSE_DEBUG, AREA_MAIN,
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 		    "Plaintext module ($Revision$)");
 	/*  parse conf file */
 	if (module->configfile) {
@@ -954,7 +954,7 @@ static GSList *fill_user_by_username(const char *username, gpointer params)
 				(GCompareFunc) find_by_username);
 	g_free(ref.username);
 	if (!res) {
-		log_message(WARNING, AREA_AUTH, "Unknown user [%s]!",
+		log_message(WARNING, DEBUG_AREA_AUTH, "Unknown user [%s]!",
 			    username);
 		return NULL;
 	}
@@ -987,7 +987,7 @@ G_MODULE_EXPORT int user_check(const char *username,
 	if (!((struct plaintext_params *) params)->plaintext_userlist) {
 		initstatus = read_user_list(params);
 		if (initstatus) {
-			log_message(SERIOUS_WARNING, AREA_AUTH,
+			log_message(SERIOUS_WARNING, DEBUG_AREA_AUTH,
 				    "Can't parse users file [%s]",
 				    ((struct plaintext_params *) params)->
 				    plaintext_userfile);
@@ -1004,7 +1004,7 @@ G_MODULE_EXPORT int user_check(const char *username,
 	realpass = ((struct plaintext_user *) res->data)->passwd;
 
 	if (!strcmp(realpass, "*") || !strcmp(realpass, "!")) {
-		log_message(INFO, AREA_AUTH,
+		log_message(INFO, DEBUG_AREA_AUTH,
 			    "user_check: Account is disabled (%s)",
 			    username);
 		return SASL_BADAUTH;
@@ -1014,7 +1014,7 @@ G_MODULE_EXPORT int user_check(const char *username,
 	/*  return the groups list (no checks needed) */
 	if (clientpass) {
 		if (verify_user_password(clientpass, realpass) != SASL_OK) {
-			log_message(INFO, AREA_AUTH,
+			log_message(INFO, DEBUG_AREA_AUTH,
 				    "user_check: Wrong password for %s",
 				    username);
 			return SASL_BADAUTH;
@@ -1022,7 +1022,7 @@ G_MODULE_EXPORT int user_check(const char *username,
 	}
 
 
-	debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 			  "We are leaving (plaintext) user_check()");
 
 	return SASL_OK;
@@ -1039,7 +1039,7 @@ G_MODULE_EXPORT uint32_t get_user_id(const char *username, gpointer params)
 	if (!((struct plaintext_params *) params)->plaintext_userlist) {
 		initstatus = read_user_list(params);
 		if (initstatus) {
-			log_message(SERIOUS_WARNING, AREA_AUTH,
+			log_message(SERIOUS_WARNING, DEBUG_AREA_AUTH,
 				    "Can't parse users file [%s]",
 				    ((struct plaintext_params *) params)->
 				    plaintext_userfile);
@@ -1069,7 +1069,7 @@ G_MODULE_EXPORT GSList *get_user_groups(const char *username,
 	if (!((struct plaintext_params *) params)->plaintext_userlist) {
 		initstatus = read_user_list(params);
 		if (initstatus) {
-			log_message(SERIOUS_WARNING, AREA_AUTH,
+			log_message(SERIOUS_WARNING, DEBUG_AREA_AUTH,
 				    "Can't parse users file [%s]",
 				    ((struct plaintext_params *) params)->
 				    plaintext_userfile);
@@ -1104,7 +1104,7 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element, gpointer params)
 		initstatus =
 		    read_acl_list((struct plaintext_params *) params);
 		if (initstatus) {
-			log_message(SERIOUS_WARNING, AREA_MAIN,
+			log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 				    "Can't parse ACLs file [%s]",
 				    ((struct plaintext_params *) params)->
 				    plaintext_aclfile);
@@ -1219,7 +1219,7 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element, gpointer params)
 		}
 
 		/*  O.S. filtering? */
-		debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 				  "(DBG) current ACL os=%p", p_acl->os);
 
 		if (element->os_sysname && p_acl->os) {
@@ -1228,7 +1228,7 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element, gpointer params)
 			int found = 0;
 
 			/*  sysname */
-			log_message(VERBOSE_DEBUG, AREA_MAIN,
+			log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 				    "[plaintext] Checking for OS sysname=[%s]",
 				    element->os_sysname);
 
@@ -1267,18 +1267,18 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element, gpointer params)
 					}
 				}
 			}
-			debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 					  "(DBG) Checking OS sysname ACL found=%d",
 					  found);
 			if (!found)
 				continue;
-			log_message(VERBOSE_DEBUG, AREA_MAIN,
+			log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 				    "[plaintext] OS match (%s)",
 				    element->os_sysname);
 		}
 
 		/*  Application filtering? */
-		debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 				  "(DBG) current ACL apps=%p",
 				  p_acl->apps);
 
@@ -1286,7 +1286,7 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element, gpointer params)
 			GSList *p_app = p_acl->apps;
 			int found = 0;
 
-			log_message(VERBOSE_DEBUG, AREA_MAIN,
+			log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 				    "[plaintext] Checking for App=[%s]",
 				    element->app_name);
 
@@ -1298,12 +1298,12 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element, gpointer params)
 					break;
 				}
 			}
-			log_message(VERBOSE_DEBUG, AREA_MAIN,
+			log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 				    "(DBG) Checking App ACL found=%d",
 				    found);
 			if (!found)
 				continue;
-			log_message(VERBOSE_DEBUG, AREA_MAIN,
+			log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 				    "[plaintext] App match (%s)",
 				    element->app_name);
 		}
@@ -1311,7 +1311,7 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element, gpointer params)
 		 * */
 
 		/*  We have a match 8-) */
-		log_message(VERBOSE_DEBUG, AREA_MAIN,
+		log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 			    "[plaintext] matching with decision %d",
 			    p_acl->decision);
 		this_acl = g_new0(struct acl_group, 1);
@@ -1333,9 +1333,9 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element, gpointer params)
 		g_list = g_slist_prepend(g_list, this_acl);
 	}
 
-	debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 			  "[plaintext] We are leaving acl_check()");
-	debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 			  "(DBG) [plaintext] check_acls leaves with %p",
 			  g_list);
 	return g_list;

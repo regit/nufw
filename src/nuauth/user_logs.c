@@ -129,7 +129,7 @@ void real_log_user_packet(gpointer userdata, gpointer data)
 
 static void print_group(gpointer group, gpointer userdata)
 {
-	log_message(DEBUG, AREA_USER, "      Group: %d",
+	log_message(DEBUG, DEBUG_AREA_USER, "      Group: %d",
 		    GPOINTER_TO_INT(group));
 }
 
@@ -147,7 +147,7 @@ void log_user_session(user_session_t * usession, session_state_t state)
 	struct session_event *sessevent;
 
 	if (state == SESSION_OPEN) {
-		log_message(MESSAGE, AREA_USER,
+		log_message(MESSAGE, DEBUG_AREA_USER,
 			    "[+] User \"%s\" connected.",
 			    usession->user_name);
 		if (usession->groups) {
@@ -155,7 +155,7 @@ void log_user_session(user_session_t * usession, session_state_t state)
 					NULL);
 		}
 	} else
-		log_message(MESSAGE, AREA_USER,
+		log_message(MESSAGE, DEBUG_AREA_USER,
 			    "[+] User \"%s\" disconnected.",
 			    usession->user_name);
 

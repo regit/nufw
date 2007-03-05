@@ -59,7 +59,7 @@ G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
 		if (!nuauth_is_reloading()) {
 			if (pgsql_close_open_user_sessions(params) !=
 			    NU_EXIT_OK) {
-				log_message(WARNING, AREA_MAIN,
+				log_message(WARNING, DEBUG_AREA_MAIN,
 					    "Could not close session when unloading module");
 			}
 		}
@@ -110,7 +110,7 @@ static nu_error_t pgsql_close_open_user_sessions(struct log_pgsql_params
 
 	/* check error */
 	if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK) {
-		log_message(SERIOUS_WARNING, AREA_MAIN,
+		log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 			    "[PostgreSQL] Cannot insert session: %s",
 			    PQerrorMessage(ld));
 		PQclear(Result);
@@ -156,7 +156,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	    g_new0(struct log_pgsql_params, 1);
 	module->params = params;
 
-	log_message(VERBOSE_DEBUG, AREA_MAIN,
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 		    "Log_pgsql module ($Revision$)");
 	/* parse conf file */
 	if (module->configfile) {
@@ -214,7 +214,7 @@ static PGconn *pgsql_conn_init(struct log_pgsql_params *params)
 	PGconn *ld = NULL;
 	int pgsql_status;
 
-	log_message(DEBUG, AREA_MAIN,
+	log_message(DEBUG, DEBUG_AREA_MAIN,
 		    "Going to init PostgreSQL connection.");
 
 	pgsql_conninfo =
@@ -232,13 +232,13 @@ static PGconn *pgsql_conn_init(struct log_pgsql_params *params)
 	ld = PQconnectdb(pgsql_conninfo);
 	pgsql_status = PQstatus(ld);
 	if (pgsql_status != CONNECTION_OK) {
-		log_message(WARNING, AREA_MAIN,
+		log_message(WARNING, DEBUG_AREA_MAIN,
 			    "PostgreSQL init error: %s", strerror(errno));
 		g_free(pgsql_conninfo);
 		PQfinish(ld);
 		return NULL;
 	}
-	log_message(DEBUG, AREA_MAIN, "PostgreSQL init done");
+	log_message(DEBUG, DEBUG_AREA_MAIN, "PostgreSQL init done");
 	g_free(pgsql_conninfo);
 	return ld;
 }
@@ -388,7 +388,7 @@ static int pgsql_insert(PGconn * ld, connection_t * element,
 	sql_query =
 	    g_strconcat(request_fields, "\n", request_values, NULL);
 	if (sql_query == NULL) {
-		log_message(SERIOUS_WARNING, AREA_MAIN,
+		log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 			    "Fail to build PostgreSQL query (maybe too long)!");
 		return -1;
 	}
@@ -398,7 +398,7 @@ static int pgsql_insert(PGconn * ld, connection_t * element,
 
 	/* check error */
 	if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK) {
-		log_message(SERIOUS_WARNING, AREA_MAIN,
+		log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 			    "[PostgreSQL] Cannot insert data: %s",
 			    PQerrorMessage(ld));
 		PQclear(Result);
@@ -430,7 +430,7 @@ static int pgsql_update_close(PGconn * ld, connection_t * element,
 			     element->timestamp,
 			     ip_src, element->tracking.source);
 	if (!ok) {
-		log_message(SERIOUS_WARNING, AREA_MAIN,
+		log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 			    "Fail to build PostgreSQL query (maybe too long)!");
 		return -1;
 	}
@@ -438,7 +438,7 @@ static int pgsql_update_close(PGconn * ld, connection_t * element,
 	/* do the query */
 	Result = PQexec(ld, request);
 	if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK) {
-		log_message(SERIOUS_WARNING, AREA_MAIN,
+		log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 			    "[PostgreSQL] Cannot update data: %s",
 			    PQerrorMessage(ld));
 		PQclear(Result);
@@ -513,16 +513,16 @@ static int pgsql_update_state(PGconn * ld,
 				ip_src, ip_dst, tcp_src, tcp_dst, old_state);
 		break;
 	default:
-		log_message(SERIOUS_WARNING, AREA_MAIN,
+		log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 			    "Unknown tcp state, should not be there");
 	}
 	if (!ok) {
-		log_message(SERIOUS_WARNING, AREA_MAIN,
+		log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 			    "Fail to build PostgreSQL query (maybe too long)!");
 		return -1;
 	}
 
-	debug_log_message(DEBUG, AREA_MAIN,
+	debug_log_message(DEBUG, DEBUG_AREA_MAIN,
 			  "PostgreSQL: update state \"%s\".", request);
 
 	while (nb_try < 2) {
@@ -532,7 +532,7 @@ static int pgsql_update_state(PGconn * ld,
 		/* do the query */
 		Result = PQexec(ld, request);
 		if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK) {
-			log_message(SERIOUS_WARNING, AREA_MAIN,
+			log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 				    "[PostgreSQL] Cannot update data: %s",
 				    PQerrorMessage(ld));
 			PQclear(Result);
@@ -555,7 +555,7 @@ static int pgsql_update_state(PGconn * ld,
 			nanosleep(&sleep, NULL);
 		}
 	}
-	debug_log_message(WARNING, AREA_MAIN,
+	debug_log_message(WARNING, DEBUG_AREA_MAIN,
 			  "Tried to update PGSQL entry twice, looks like data to update wasn't inserted");
 	return -1;
 }
@@ -567,7 +567,7 @@ static PGconn *get_pgsql_handler(struct log_pgsql_params *params)
 	if (ld == NULL) {
 		ld = pgsql_conn_init(params);
 		if (ld == NULL) {
-			log_message(SERIOUS_WARNING, AREA_MAIN,
+			log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 				    "Can not initiate PgSQL connection!");
 			return NULL;
 		}
@@ -690,7 +690,7 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 
 	/* check error */
 	if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK) {
-		log_message(SERIOUS_WARNING, AREA_MAIN,
+		log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 			    "[PostgreSQL] Cannot insert session: %s",
 			    PQerrorMessage(ld));
 		PQclear(Result);

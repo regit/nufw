@@ -225,7 +225,7 @@ G_MODULE_EXPORT gchar *g_module_unload(void)
 
 G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 {
-	log_message(VERBOSE_DEBUG, AREA_MAIN,
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 		    "Log_syslog module ($Revision$)");
 	return TRUE;
 }

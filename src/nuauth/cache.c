@@ -325,7 +325,7 @@ void cache_manager(cache_class_t * this)
 			g_hash_table_foreach(this->hash,
 					     cache_reset_timestamp,
 					     NULL);
-			log_message(VERBOSE_DEBUG, AREA_MAIN,
+			log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 					"Cache reset done");
 			g_free(message);
 			break;

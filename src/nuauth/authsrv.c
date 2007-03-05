@@ -78,10 +78,10 @@ void cleanup_func_remove(cleanup_func_t func)
 void wait_thread_end(const char *name, struct nuauth_thread_t *thread)
 {
 	GThread *self;
-	log_message(DEBUG, AREA_MAIN, "Wait end of thread '%s'", name);
+	log_message(DEBUG, DEBUG_AREA_MAIN, "Wait end of thread '%s'", name);
 	self = g_thread_self();
 	if (self == thread->thread) {
-		log_message(INFO, AREA_MAIN,
+		log_message(INFO, DEBUG_AREA_MAIN,
 			    "Information: Avoid deadlock: don't wait end of active thread!");
 		return;
 	}
@@ -98,7 +98,7 @@ void wait_thread_end(const char *name, struct nuauth_thread_t *thread)
  */
 void stop_threads(gboolean wait)
 {
-	log_message(INFO, AREA_MAIN, "Ask threads to stop.");
+	log_message(INFO, DEBUG_AREA_MAIN, "Ask threads to stop.");
 
 	/* stop command server */
 	if (nuauthconf->use_command_server) {
@@ -112,13 +112,13 @@ void stop_threads(gboolean wait)
 
 	/* wait thread end */
 	if (wait) {
-		log_message(INFO, AREA_MAIN, "Wait thread end ...");
+		log_message(INFO, DEBUG_AREA_MAIN, "Wait thread end ...");
 	}
 
 	/* kill push worker */
 	g_mutex_lock(nuauthdatas->tls_pusher.mutex);
 	if (wait) {
-		log_message(DEBUG, AREA_MAIN, "Wait thread 'tls pusher'");
+		log_message(DEBUG, DEBUG_AREA_MAIN, "Wait thread 'tls pusher'");
 		g_thread_join(nuauthdatas->tls_pusher.thread);
 	}
 
@@ -134,10 +134,10 @@ void stop_threads(gboolean wait)
 	}
 
 	/* Close nufw and client connections */
-	log_message(INFO, AREA_MAIN, "Close nufw connections");
+	log_message(INFO, DEBUG_AREA_MAIN, "Close nufw connections");
 	close_nufw_servers();
 
-	log_message(INFO, AREA_MAIN, "Close client connections");
+	log_message(INFO, DEBUG_AREA_MAIN, "Close client connections");
 	close_clients();
 
 	g_mutex_lock(nuauthdatas->limited_connections_handler.mutex);
@@ -159,26 +159,26 @@ void stop_threads(gboolean wait)
 
 	/* end logging threads */
 	if (wait) {
-		log_message(DEBUG, AREA_MAIN,
+		log_message(DEBUG, DEBUG_AREA_MAIN,
 			    "Stop thread pool 'user session loggers'");
 		g_thread_pool_free(nuauthdatas->user_session_loggers, TRUE,
 				   wait);
-		log_message(DEBUG, AREA_MAIN,
+		log_message(DEBUG, DEBUG_AREA_MAIN,
 			    "Stop thread pool 'user loggers'");
 		g_thread_pool_free(nuauthdatas->user_loggers, TRUE, wait);
-		log_message(DEBUG, AREA_MAIN,
+		log_message(DEBUG, DEBUG_AREA_MAIN,
 			    "Stop thread pool 'acl checkers'");
 		g_thread_pool_free(nuauthdatas->acl_checkers, TRUE, wait);
 
 		if (nuauthconf->log_users_sync) {
-			log_message(DEBUG, AREA_MAIN,
+			log_message(DEBUG, DEBUG_AREA_MAIN,
 				    "Stop thread pool 'decision workers'");
 			g_thread_pool_free(nuauthdatas->decisions_workers,
 					   TRUE, wait);
 		}
 
 		if (nuauthconf->do_ip_authentication) {
-			log_message(DEBUG, AREA_MAIN,
+			log_message(DEBUG, DEBUG_AREA_MAIN,
 				    "Stop thread pool 'ip auth workers'");
 			g_thread_pool_free(nuauthdatas->
 					   ip_authentication_workers, TRUE,
@@ -188,7 +188,7 @@ void stop_threads(gboolean wait)
 	g_thread_pool_stop_unused_threads();
 
 	/* done! */
-	log_message(INFO, AREA_MAIN, "Threads stopped.");
+	log_message(INFO, DEBUG_AREA_MAIN, "Threads stopped.");
 }
 
 void free_threads()
@@ -239,18 +239,18 @@ void clear_push_queue()
  */
 void nuauth_deinit(gboolean soft)
 {
-	log_message(CRITICAL, AREA_MAIN, "[+] NuAuth deinit");
+	log_message(CRITICAL, DEBUG_AREA_MAIN, "[+] NuAuth deinit");
 
 	stop_threads(soft);
 
-	log_message(INFO, AREA_MAIN, "Unload modules");
+	log_message(INFO, DEBUG_AREA_MAIN, "Unload modules");
 	unload_modules();
 
-	log_message(INFO, AREA_MAIN, "End TLS and audit");
+	log_message(INFO, DEBUG_AREA_MAIN, "End TLS and audit");
 	end_tls();
 	end_audit();
 
-	log_message(INFO, AREA_MAIN, "Free memory");
+	log_message(INFO, DEBUG_AREA_MAIN, "Free memory");
 	free_nuauth_params(nuauthconf);
 	if (nuauthconf->acl_cache) {
 		cache_destroy(nuauthdatas->acl_cache);
@@ -284,7 +284,7 @@ void nuauth_ask_exit()
 void nuauth_atexit()
 {
 	if (g_atomic_int_compare_and_exchange(&nuauth_running, 1, 0)) {
-		log_message(FATAL, AREA_MAIN,
+		log_message(FATAL, DEBUG_AREA_MAIN,
 			    "[+] Stop NuAuth server (exit)");
 		nuauth_deinit(FALSE);
 	}
@@ -305,10 +305,10 @@ void nuauth_cleanup(int signal)
 	(void) sigaction(SIGINT, &nuauthdatas->old_sigint_hdl, NULL);
 
 	if (signal == SIGINT)
-		log_message(CRITICAL, AREA_MAIN,
+		log_message(CRITICAL, DEBUG_AREA_MAIN,
 			    "[+] Stop NuAuth server (SIGINT)");
 	else if (signal == SIGTERM)
-		log_message(CRITICAL, AREA_MAIN,
+		log_message(CRITICAL, DEBUG_AREA_MAIN,
 			    "[+] Stop NuAuth server (SIGTERM)");
 	g_message("[+] Stop NuAuth server");
 
@@ -597,7 +597,7 @@ void configure_app(int argc, char **argv)
 	/* load configuration */
 	init_nuauthconf(&nuauthconf);
 
-	log_message(INFO, AREA_MAIN, "Start NuAuth server.");
+	log_message(INFO, DEBUG_AREA_MAIN, "Start NuAuth server.");
 
 	/* init gcrypt and gnutls */
 #ifdef GCRYPT_PTHEAD_IMPLEMENTATION
@@ -627,7 +627,7 @@ void configure_app(int argc, char **argv)
 		nuauthconf->debug_level = MAX_DEBUG_LEVEL;
 	if (nuauthconf->debug_level < MIN_DEBUG_LEVEL)
 		nuauthconf->debug_level = MIN_DEBUG_LEVEL;
-	log_message(INFO, AREA_MAIN, "debug_level is %i",
+	log_message(INFO, DEBUG_AREA_MAIN, "debug_level is %i",
 		    nuauthconf->debug_level);
 
 	/* init credential */
@@ -719,32 +719,32 @@ void init_nuauthdatas()
 	    g_private_new((GDestroyNotify) g_async_queue_unref);
 
 	/* create thread for search_and_fill thread */
-	log_message(VERBOSE_DEBUG, AREA_MAIN,
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 		    "Creating search_and_fill thread");
 	create_thread(&nuauthdatas->search_and_fill_worker,
 		      search_and_fill);
 
 	/* create acl checker workers */
-	log_message(VERBOSE_DEBUG, AREA_MAIN, "Creating %d acl checkers",
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN, "Creating %d acl checkers",
 		    nuauthconf->nbacl_check);
 	nuauthdatas->acl_checkers =
 	    g_thread_pool_new((GFunc) acl_check_and_decide, NULL,
 			      nuauthconf->nbacl_check, POOL_TYPE, NULL);
 
 	/* create user checker workers */
-	log_message(VERBOSE_DEBUG, AREA_MAIN, "Creating %d user checkers",
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN, "Creating %d user checkers",
 		    nuauthconf->nbuser_check);
 	nuauthdatas->user_checkers =
 	    g_thread_pool_new((GFunc) user_check_and_decide, NULL,
 			      nuauthconf->nbuser_check, POOL_TYPE, NULL);
 
 	/* create user logger workers */
-	log_message(VERBOSE_DEBUG, AREA_MAIN, "Creating %d user loggers",
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN, "Creating %d user loggers",
 		    nuauthconf->nbloggers);
 	nuauthdatas->user_loggers =
 	    g_thread_pool_new((GFunc) real_log_user_packet, NULL,
 			      nuauthconf->nbloggers, POOL_TYPE, NULL);
-	log_message(VERBOSE_DEBUG, AREA_MAIN,
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 		    "Creating %d user session loggers",
 		    nuauthconf->nbloggers);
 	nuauthdatas->user_session_loggers =
@@ -753,7 +753,7 @@ void init_nuauthdatas()
 
 	/* create decisions workers (if needed) */
 	if (nuauthconf->log_users_sync) {
-		log_message(VERBOSE_DEBUG, AREA_MAIN,
+		log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 			    "Creating %d decision workers",
 			    nuauthconf->nbloggers);
 		nuauthdatas->decisions_workers =
@@ -763,7 +763,7 @@ void init_nuauthdatas()
 	}
 
 	if (nuauthconf->push && nuauthconf->hello_authentication) {
-		log_message(VERBOSE_DEBUG, AREA_MAIN,
+		log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 			    "Creating hello mode authentication thread");
 		nuauthdatas->localid_auth_queue = g_async_queue_new();
 		create_thread(&nuauthdatas->localid_auth_thread,
@@ -771,7 +771,7 @@ void init_nuauthdatas()
 	}
 
 	if (nuauthconf->use_command_server) {
-		log_message(VERBOSE_DEBUG, AREA_MAIN,
+		log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 			    "Creating command thread");
 		create_thread(&nuauthdatas->command_thread,
 			      command_server);
@@ -786,15 +786,15 @@ void init_nuauthdatas()
 	}
 
 	/* create TLS authentification server threads (auth + nufw) */
-	log_message(VERBOSE_DEBUG, AREA_MAIN,
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 		    "Creating tls authentication server thread");
 	create_thread(&nuauthdatas->tls_auth_server, tls_user_authsrv);
 
-	log_message(VERBOSE_DEBUG, AREA_MAIN,
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 		    "Creating tls nufw server thread");
 	create_thread(&nuauthdatas->tls_nufw_server, tls_nufw_authsrv);
 
-	log_message(INFO, AREA_MAIN, "Threads system started");
+	log_message(INFO, DEBUG_AREA_MAIN, "Threads system started");
 }
 
 /**

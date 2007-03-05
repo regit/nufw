@@ -69,7 +69,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	gpointer vpointer;
 	struct x509_std_params *params = g_new0(struct x509_std_params, 1);
 
-	log_message(VERBOSE_DEBUG, AREA_MAIN,
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 		    "X509_std module ($Revision$)");
 
 	/*  parse conf file */
@@ -111,23 +111,23 @@ G_MODULE_EXPORT int certificate_check(gnutls_session session,
 	expiration_time = gnutls_x509_crt_get_expiration_time(cert);
 	activation_time = gnutls_x509_crt_get_activation_time(cert);
 
-	log_message(VERBOSE_DEBUG, AREA_MAIN,
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 		    "Certificate validity starts at: %s",
 		    ctime(&activation_time)
 	    );
-	log_message(VERBOSE_DEBUG, AREA_MAIN, "Certificate expires: %s",
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN, "Certificate expires: %s",
 		    ctime(&expiration_time));
 
 	/* verify date */
 	if (expiration_time < time(NULL)) {
-		log_message(INFO, AREA_USER, "Certificate expired at: %s",
+		log_message(INFO, DEBUG_AREA_USER, "Certificate expired at: %s",
 			    ctime(&expiration_time));
 		gnutls_x509_crt_deinit(cert);
 		return SASL_EXPIRED;
 	}
 
 	if (activation_time > time(NULL)) {
-		log_message(INFO, AREA_USER,
+		log_message(INFO, DEBUG_AREA_USER,
 			    "Certificate only activates at: %s",
 			    ctime(&activation_time));
 		gnutls_x509_crt_deinit(cert);
@@ -140,7 +140,7 @@ G_MODULE_EXPORT int certificate_check(gnutls_session session,
 		size = sizeof(dn);
 		gnutls_x509_crt_get_issuer_dn(cert, dn, &size);
 		if (strcmp(dn, params->trusted_issuer_dn)) {
-			log_message(VERBOSE_DEBUG, AREA_USER,
+			log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 				    "\tIssuer's DN is not trusted: %s",
 				    dn);
 			gnutls_x509_crt_deinit(cert);
@@ -162,7 +162,7 @@ G_MODULE_EXPORT gchar *certificate_to_uid(gnutls_session session,
 	size = sizeof(dn);
 	gnutls_x509_crt_get_dn(cert, dn, &size);
 
-	log_message(VERBOSE_DEBUG, AREA_USER, "\tDN: %s", dn);
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_USER, "\tDN: %s", dn);
 
 	/* parse DN and extract username is there is one */
 	pointer = g_strrstr_len(dn, DN_LENGTH - 1, ",CN=");

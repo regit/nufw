@@ -45,11 +45,11 @@
 void acl_check_and_decide(gpointer userdata, gpointer data)
 {
 	connection_t *conn_elt = userdata;
-	debug_log_message(VERBOSE_DEBUG, AREA_PACKET,
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_PACKET,
 			  "entering acl_check");
 	block_on_conf_reload();
 	if (conn_elt == NULL) {
-		log_message(WARNING, AREA_PACKET,
+		log_message(WARNING, DEBUG_AREA_PACKET,
 			    "This is no good : elt is NULL at %s:%d",
 			    __FILE__, __LINE__);
 	} else {
@@ -91,13 +91,13 @@ void acl_check_and_decide(gpointer userdata, gpointer data)
 				}
 				break;
 			default:
-				log_message(WARNING, AREA_PACKET,
+				log_message(WARNING, DEBUG_AREA_PACKET,
 					    "This is no good : conn state is unvalid at %s:%d",
 					    __FILE__, __LINE__);
 			}
 		}
 	}
-	debug_log_message(VERBOSE_DEBUG, AREA_PACKET, "leaving acl_check");
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_PACKET, "leaving acl_check");
 }
 
 /** @} */

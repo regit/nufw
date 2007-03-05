@@ -202,7 +202,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	};
 
 
-	log_message(VERBOSE_DEBUG, AREA_MAIN,
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 		    "Ldap module ($Revision$)");
 	if (!module->configfile) {
 		configfile = DEFAULT_CONF_FILE;
@@ -312,7 +312,7 @@ static LDAP *ldap_conn_init(struct ldap_params *params)
 	/* init connection */
 	ld = ldap_init(params->ldap_server, params->ldap_server_port);
 	if (!ld) {
-		log_message(WARNING, AREA_MAIN, "ldap init error\n");
+		log_message(WARNING, DEBUG_AREA_MAIN, "ldap init error\n");
 		return NULL;
 	}
 	if (ldap_set_option(ld, LDAP_OPT_PROTOCOL_VERSION,
@@ -337,7 +337,7 @@ static LDAP *ldap_conn_init(struct ldap_params *params)
 				g_private_set(params->ldap_priv, ld);
 				return NULL;
 			}
-			log_message(SERIOUS_WARNING, AREA_AUTH,
+			log_message(SERIOUS_WARNING, DEBUG_AREA_AUTH,
 				    "ldap bind error : %s \n",
 				    ldap_err2string(err));
 			return NULL;
@@ -457,7 +457,7 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 		/* init ldap has never been done */
 		ld = ldap_conn_init(params);
 		if (ld == NULL) {
-			log_message(SERIOUS_WARNING, AREA_AUTH,
+			log_message(SERIOUS_WARNING, DEBUG_AREA_AUTH,
 				    "Can not initiate LDAP conn\n");
 			return NULL;
 		}
@@ -490,7 +490,7 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 				     (element->tracking).source
 #endif
 			    ) >= (LDAP_QUERY_SIZE - 1)) {
-				log_message(WARNING, AREA_MAIN,
+				log_message(WARNING, DEBUG_AREA_MAIN,
 					    "LDAP query too big (more than %d bytes)\n",
 					    LDAP_QUERY_SIZE);
 				free(ip_src);
@@ -515,7 +515,7 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 				     (element->tracking).dest,
 				     (element->tracking).dest) >=
 			    (LDAP_QUERY_SIZE - 1)) {
-				log_message(WARNING, AREA_MAIN,
+				log_message(WARNING, DEBUG_AREA_MAIN,
 					    "LDAP query too big (more than %d bytes)\n",
 					    LDAP_QUERY_SIZE);
 				free(ip_src);
@@ -586,7 +586,7 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 
 
 		g_strlcat(filter, ")", LDAP_QUERY_SIZE);
-		debug_log_message(VERBOSE_DEBUG, AREA_MAIN,
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 				  "LDAP filter : \n%s\n", filter);
 
 	} else if ((element->tracking).protocol == IPPROTO_ICMP) {
@@ -605,7 +605,7 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 			     (element->tracking).code,
 			     (element->tracking).code) >=
 		    (LDAP_QUERY_SIZE - 1)) {
-			log_message(WARNING, AREA_MAIN,
+			log_message(WARNING, DEBUG_AREA_MAIN,
 				    "LDAP query too big (more than %d bytes)\n",
 				    LDAP_QUERY_SIZE);
 			free(ip_src);
@@ -640,13 +640,13 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 	if (err != LDAP_SUCCESS) {
 		if (err == LDAP_SERVER_DOWN) {
 			/* we lost connection, so disable current one */
-			log_message(WARNING, AREA_MAIN,
+			log_message(WARNING, DEBUG_AREA_MAIN,
 				    "disabling current connection");
 			ldap_unbind(ld);
 			ld = NULL;
 			g_private_set(params->ldap_priv, ld);
 		}
-		log_message(WARNING, AREA_MAIN,
+		log_message(WARNING, DEBUG_AREA_MAIN,
 			    "invalid return from ldap_search_st : %s\n",
 			    ldap_err2string(err));
 		return NULL;
@@ -720,7 +720,7 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 			    ldap_get_values(ld, result, "Decision");
 			sscanf(*attrs_array, "%d",
 			       (int *) &(this_acl->answer));
-			debug_log_message(DEBUG, AREA_AUTH,
+			debug_log_message(DEBUG, DEBUG_AREA_AUTH,
 					  "Acl found with decision %d (timerange: %s)\n",
 					  this_acl->answer,
 					  this_acl->period);
@@ -750,7 +750,7 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 		return g_list;
 	} else {
 
-		debug_log_message(DEBUG, AREA_AUTH, "No acl found\n");
+		debug_log_message(DEBUG, DEBUG_AREA_AUTH, "No acl found\n");
 		ldap_msgfree(res);
 	}
 	return NULL;
