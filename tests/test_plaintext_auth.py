@@ -15,14 +15,15 @@ USER_DB += "%s:%s:1:2,3\n" % (USER2, PASS2)
 
 class TestPlaintextAuth(TestCase):
     def setUp(self):
-        # Prepare our user DB
+        # Setup our user DB
         self.users = ReplaceFile(USER_FILENAME, USER_DB)
-
-        # Start nuauth with new config
         self.config = getNuauthConf()
+
+        # Start nuauth with our config
         self.config["plaintext_userfile"] = '"%s"' % USER_FILENAME
         self.config["nuauth_user_check_module"] = '"plaintext"'
         self.config.install()
+        self.users.install()
         self.nuauth = reloadNuauth()
 
     def tearDown(self):
@@ -32,9 +33,6 @@ class TestPlaintextAuth(TestCase):
         reloadNuauth()
 
     def testLogin(self):
-        # Install our scripts
-        self.users.install()
-
         # Test user1
         client = createClient(USER, PASS)
         self.assert_(connectClient(client))

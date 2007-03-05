@@ -54,7 +54,6 @@ def startNuauth(debug_level=9):
     global _nuauth
     if _nuauth:
         return _nuauth
-    setupLog()
     _nuauth = Nuauth(NUAUTH_PROG, debug_level)
     atexit.register(_stopNuauth)
     _nuauth.start()
@@ -72,7 +71,6 @@ def startNufw():
     global _nufw
     if _nufw:
         return _nufw
-    setupLog()
     _nufw = Nufw(NUFW_PROG)
     atexit.register(_stopNufw)
     _nufw.start()
@@ -107,19 +105,20 @@ def _stopNufw():
     _nufw = None
 
 def createClient(username=USERNAME, password=PASSWORD):
-    setupLog()
     return Client(NUTCPC_PROG, NUAUTH_HOST, username, password)
 
 def connectClient(client):
-    client.warning("connectClient()")
+    client.info("connectClient()")
     try:
         client.start(timeout=10.0)
     except RuntimeError, err:
         client.warning("connectClient(): error: %s" % err)
         return False
-    client.warning("connectClient(): success")
+    client.warning("connectClient(): connected")
     return True
 
 def getNuauthConf():
     return NuauthConf(NUAUTH_CONF)
+
+setupLog()
 

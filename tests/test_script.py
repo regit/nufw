@@ -18,11 +18,13 @@ class TestLog(TestCase):
         # Prepare our new scripts
         self.script_up = ReplaceFile(SCRIPT_UP, SCRIPT % "UP", MODE)
         self.script_down = ReplaceFile(SCRIPT_DOWN, SCRIPT % "DOWN", MODE)
-
-        # Start nuauth with new config
         self.config = getNuauthConf()
         self.config["nuauth_user_session_logs_module"] = '"script"'
+
+        # Start nuauth with new config
         self.config.install()
+        self.script_up.install()
+        self.script_down.install()
         self.nuauth = reloadNuauth()
 
     def tearDown(self):
@@ -39,10 +41,6 @@ class TestLog(TestCase):
         return False
 
     def testLogin(self):
-        # Install our scripts
-        self.script_up.install()
-        self.script_down.install()
-
         # Client login
         client = createClient()
         self.assert_(connectClient(client))

@@ -164,6 +164,7 @@ class Process(object):
             try:
                 sleep(0.250)
             except KeyboardInterrupt:
+                self.info("Interrupted (CTRL+C)")
                 step += 1
 
     def __del__(self):

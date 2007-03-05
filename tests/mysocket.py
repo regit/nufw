@@ -5,7 +5,6 @@ from logging import info
 
 def connectTcp(host, port, timeout=None):
     try:
-        info("connectTcp(%s, %s, timeout=%s)" % (host, port, timeout))
         conn = socket(AF_INET, SOCK_STREAM)
         conn.settimeout(timeout)
         conn.connect((host,port))

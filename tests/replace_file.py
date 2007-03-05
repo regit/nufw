@@ -1,6 +1,6 @@
 from os import rename, chmod
 from errno import ENOENT, EACCES
-from logging import warning
+from logging import info, warning
 
 def try_rename(before, after):
     """
@@ -14,7 +14,7 @@ def try_rename(before, after):
     except OSError, err:
         code = err[0]
         if code == ENOENT:
-            print "ENOENT"
+            info("Unable to rename %r to %r: original file doesn't exist" % (before, after))
             return False
         if code == EACCES:
             raise RuntimeError('Permission denied (retry program with root access)')
@@ -36,7 +36,7 @@ class ReplaceFile:
         self.installed = True
         self.replaced = try_rename(self.filename, self.filename_old)
         if self.replaced:
-            warning("Replace file %s" % self.filename)
+            warning("Replace file %s (existing renamed to %s)" % (self.filename, self.filename_old))
         else:
             warning("Install file %s" % self.filename)
         output = open(self.filename, 'w')

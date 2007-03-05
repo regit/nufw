@@ -30,14 +30,16 @@ class TestPlaintextAcl(TestCase):
         self.iptables = Iptables()
         self.users = ReplaceFile(USER_FILENAME, USER_DB)
         self.acls = ReplaceFile(ACL_FILENAME, ACLS)
-
-        # Start nuauth with new config
         self.config = getNuauthConf()
         self.config["plaintext_userfile"] = '"%s"' % USER_FILENAME
         self.config["plaintext_aclfile"] = '"%s"' % ACL_FILENAME
         self.config["nuauth_user_check_module"] = '"plaintext"'
         self.config["nuauth_acl_check_module"] = '"plaintext"'
+
+        # Start nuauth with new config
         self.config.install()
+        self.users.install()
+        self.acls.install()
         self.nuauth = reloadNuauth()
         self.nufw = startNufw()
 
@@ -50,10 +52,6 @@ class TestPlaintextAcl(TestCase):
         self.iptables.flush()
 
     def testFilter(self):
-        # Setup our config
-        self.users.install()
-        self.acls.install()
-
         # Enable iptables filtering (1/2)
         self.iptables.filterTcp(PORT)
 
