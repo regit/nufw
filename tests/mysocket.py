@@ -10,9 +10,7 @@ def connectTcp(host, port, timeout=None):
         conn.close()
         return True
     except socket_timeout:
-        print "timeout"
         return False
     except socket_error, err:
-        print "err: %s" % err
         return False
 

@@ -12,8 +12,9 @@ from replace_file import ReplaceFile
 
 ACL_FILENAME = path.join(CONF_DIR, "acls.nufw")
 PORT = 80
+PORT2 = 90
 HOST = "www.google.com"
-TIMEOUT = 5.0
+TIMEOUT = 1.0
 
 ACLS = """[web]
 decision=1
@@ -53,7 +54,7 @@ class TestPlaintextAcl(TestCase):
         self.users.install()
         self.acls.install()
 
-        # Enable iptables filtering
+        # Enable iptables filtering (1/2)
         self.iptables.filterTcp(PORT)
 
         # Connect user
@@ -61,7 +62,13 @@ class TestPlaintextAcl(TestCase):
         self.assert_(connectClient(client))
 
         # Create socket
-        self.assert_( connectTcp(HOST, PORT, TIMEOUT) )
+        self.assert_(connectTcp(HOST, PORT, TIMEOUT))
+
+        # Enable iptables filtering (2/2)
+        self.iptables.filterTcp(PORT2)
+
+        # Create socket
+        self.assert_(not connectTcp(HOST, PORT2, TIMEOUT))
 
         # Disconnect user
         client.stop()
