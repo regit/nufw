@@ -105,7 +105,7 @@ void init_nuauthconf(struct nuauth_params **result)
 		{"nufw_has_conntrack", G_TOKEN_INT, 1, NULL},
 		{"nufw_has_fixed_timeout", G_TOKEN_INT, 1, NULL},
 		{"nuauth_uses_fake_sasl", G_TOKEN_INT, 1, NULL},
-		{"nuauth_use_command_server", G_TOKEN_INT, 0, NULL},
+		{"nuauth_use_command_server", G_TOKEN_INT, 1, NULL},
 	};
 	const unsigned int nb_params =
 	    sizeof(nuauth_vars) / sizeof(confparams_t);
