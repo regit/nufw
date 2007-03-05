@@ -6,7 +6,7 @@ from nufw import Nufw
 from nuauth import Nuauth
 from client import Client
 from config import NuauthConf
-from logging import basicConfig, DEBUG
+from logging import basicConfig, DEBUG, ERROR, StreamHandler, getLogger
 
 CONF_DIR = "/etc/nufw"
 NUAUTH_CONF = path.join(CONF_DIR, "nuauth.conf")
@@ -30,6 +30,15 @@ _nuauth = None
 _nufw = None
 _setup_log = False
 
+class CustomLogHandler(StreamHandler):
+    def __init__(self):
+        StreamHandler.__init__(self)
+
+    def emit(self, record):
+        if record.levelno < ERROR:
+            return
+        print "%s: %s" % (record.levelname, record.msg)
+
 def setupLog():
     """
     Setup log system
@@ -43,6 +52,9 @@ def setupLog():
         format=LOG_FORMAT,
         filename=LOG_FILENAME,
         filemode='w')
+    logger = getLogger()
+    handler = CustomLogHandler()
+    logger.addHandler(handler)
     atexit.register(lambda: stdout.write("Log written to %s\n" % LOG_FILENAME))
 
 def startNuauth(debug_level=9):
