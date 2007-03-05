@@ -263,9 +263,8 @@ char* FORTUNES[] = {
 	"<naotemp_home> lodesi: bon ben on t envoie au kosovo",
 	"<acatout> C'est pas un veterinaire, qu'il faut, pour un troll ?",
 	"\"impossible\" (c) gryzor",
-	"le cul le cul le cul",
-
 };
+
 const int NB_FORTUNE = sizeof(FORTUNES) / sizeof(FORTUNES[0]);
 
 const char* fortune()
