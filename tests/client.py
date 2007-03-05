@@ -32,6 +32,7 @@ class Client(Process):
     def isReady(self):
         for line in self.readlines():
             if "Client is asked to send new connections" in line:
+                self.warning("Client is ready")
                 return True
         return False
 

@@ -1,10 +1,12 @@
 from os import getcwd, path
+from sys import stdout
 from signal import SIGHUP
 import atexit
 from nufw import Nufw
 from nuauth import Nuauth
 from client import Client
 from config import NuauthConf
+from logging import basicConfig, DEBUG
 
 CONF_DIR = "/etc/nufw"
 NUAUTH_CONF = path.join(CONF_DIR, "nuauth.conf")
@@ -20,10 +22,28 @@ NUAUTH_HOST = "192.168.0.2"
 USERNAME = "haypo"
 PASSWORD = "haypo"
 
+LOG_FILENAME = 'tests.log'
+
 _nuauth = None
 _nufw = None
+_setup_log = False
 
-def startNuauth():
+def setupLog():
+    """
+    Setup log system
+    """
+    global _setup_log
+    if _setup_log:
+        return
+    _setup_log = True
+    basicConfig(
+        level=DEBUG,
+        format='%(asctime)s %(levelname)s %(message)s',
+        filename=LOG_FILENAME,
+        filemode='w')
+    atexit.register(lambda: stdout.write("Log written to %s\n" % LOG_FILENAME))
+
+def startNuauth(debug_level=9):
     """
     Start nuauth. If nuauth is already running, do nothing.
 
@@ -32,7 +52,8 @@ def startNuauth():
     global _nuauth
     if _nuauth:
         return _nuauth
-    _nuauth = Nuauth(NUAUTH_PROG)
+    setupLog()
+    _nuauth = Nuauth(NUAUTH_PROG, debug_level)
     atexit.register(_stopNuauth)
     _nuauth.start()
     return _nuauth
@@ -46,6 +67,7 @@ def startNufw():
     global _nufw
     if _nufw:
         return _nufw
+    setupLog()
     _nufw = Nufw(NUFW_PROG)
     atexit.register(_stopNufw)
     _nufw.start()
@@ -80,6 +102,7 @@ def _stopNufw():
     _nufw = None
 
 def createClient(username=USERNAME, password=PASSWORD):
+    setupLog()
     return Client(NUTCPC_PROG, NUAUTH_HOST, username, password)
 
 def connectClient(client):

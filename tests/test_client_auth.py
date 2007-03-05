@@ -2,6 +2,7 @@
 from unittest import TestCase, main
 from sys import stderr
 from common import startNuauth, createClient, connectClient, PASSWORD
+from logging import info
 
 class TestClientAuth(TestCase):
     def setUp(self):

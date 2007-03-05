@@ -4,6 +4,7 @@ from time import sleep, time
 from signal import SIGINT
 from os.path import basename
 from select import select
+from logging import info, warning
 
 class Process(object):
     def __init__(self, program, *args):
@@ -11,6 +12,13 @@ class Process(object):
         self.process = None
         self.program_args = list(args)
         self.popen_args = {'stdin': PIPE, 'stdout': PIPE, 'stderr': STDOUT}
+
+    def _log(self, func, message):
+        func("[%s] %s" % (basename(self.program), message))
+    def info(self, message):
+        self._log(info, message)
+    def warning(self, message):
+        self._log(warning, message)
 
     def __str__(self):
         return basename(self.program)
@@ -26,6 +34,7 @@ class Process(object):
             self.stop()
 
         # Run nuauth
+        self.warning("start()")
         args = [self.program] + self.program_args
         self.process = Popen(args, **self.popen_args)
 
@@ -68,7 +77,12 @@ class Process(object):
             ready = select([out.fileno()], tuple(), tuple(), timeout)[0]
             if not ready:
                 return ''
-        return out.readline()
+        line = out.readline()
+        if line:
+            line = line.rstrip()
+            if line:
+                self.info("stdout: %s" % line)
+        return line
 
     def kill(self, signum, raise_error=True):
         if not self.process:
@@ -84,13 +98,20 @@ class Process(object):
                 break
             yield line.rstrip()
 
+    def _stop(self, status):
+        # Log last output
+        for line in self.readlines():
+            pass
+        self.warning("Exit (status %s)" % status)
+        self.process = None
+
     def isRunning(self):
         if not self.process:
             return False
         finished, status = waitpid(self.process.pid, P_NOWAIT)
         if finished == 0:
             return True
-        self.process = None
+        self._stop(status)
         return False
 
     def isReady(self):
@@ -102,6 +123,7 @@ class Process(object):
         """
         if not self.isRunning():
             return
+        self.warning("stop()")
 
         # Send first SIGINT
         self.kill(SIGINT)
@@ -118,7 +140,6 @@ class Process(object):
                 sleep(0.250)
             except KeyboardInterrupt:
                 step += 1
-        self.process = None
 
     def __del__(self):
         self.stop()
