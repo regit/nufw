@@ -187,12 +187,13 @@ struct nuauth_datas {
 	GCond *reload_cond;
 	GMutex *reload_cond_mutex;
 
-    /** list of loaded modules */
+	/** list of loaded modules */
 	GSList *modules;
 
 	/* signals */
 	struct sigaction old_sigint_hdl;
 	struct sigaction old_sigterm_hdl;
+	struct sigaction old_sighup_hdl;
 };
 
 struct nuauth_params *nuauthconf;
