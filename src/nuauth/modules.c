@@ -215,7 +215,6 @@ void modules_parse_periods(GHashTable * periods)
 	/* iter through all modules list */
 	GSList *walker = period_modules;
 
-	block_on_conf_reload();
 	for (; walker != NULL; walker = walker->next) {
 		define_period_callback *handler =
 		    (define_period_callback
