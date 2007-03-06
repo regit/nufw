@@ -325,7 +325,6 @@ void decisions_queue_work(gpointer userdata, gpointer data)
 
 	block_on_conf_reload();
 	apply_decision(element);
-
 	free_connection(element);
 }
 
