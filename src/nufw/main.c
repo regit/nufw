@@ -361,7 +361,7 @@ void create_nuauth_address()
 
 	ecode = getaddrinfo(authreq_addr, authreq_port, &hints, &adr_srv);
 	if (ecode != 0) {
-		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
+		log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_CRITICAL,
 				"Can not resolve NuAuth hostname \"%s\"!",
 				authreq_addr);
 		exit(EXIT_FAILURE);

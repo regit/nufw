@@ -77,13 +77,13 @@ gnutls_session *tls_connect()
 
 	/* test if key exists */
 	if (access(key_file, R_OK)) {
-		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
+		log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_WARNING,
 				"TLS: can not access key file \"%s\"!",
 				key_file);
 		return NULL;
 	}
 	if (access(cert_file, R_OK)) {
-		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
+		log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_WARNING,
 				"TLS: can not access cert file \"%s\"!",
 				cert_file);
 		return NULL;
@@ -188,7 +188,7 @@ gnutls_session *tls_connect()
 	ret = 0;
 	do {
 		if (ret != 0) {
-			log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_INFO,
+			log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_INFO,
 					"TLS: gnutls_handshake() ... (last error: %i)",
 					ret);
 		}
@@ -204,7 +204,7 @@ gnutls_session *tls_connect()
 			/* we need to verify received certificates */
 			if (gnutls_certificate_verify_peers(*tls_session)
 			    != 0) {
-				log_area_printf(DEBUG_AREA_MAIN,
+				log_area_printf(DEBUG_AREA_GW,
 						DEBUG_LEVEL_WARNING,
 						"TLS: invalid certificates received from nuauth server");
 				return NULL;

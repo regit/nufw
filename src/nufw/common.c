@@ -118,7 +118,7 @@ void psuppress(packet_idl * previous, packet_idl * current)
 unsigned long padd(packet_idl * current)
 {
 	if (track_size <= packets_list.length) {
-		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_MESSAGE,
+		log_area_printf(DEBUG_AREA_PACKET, DEBUG_LEVEL_MESSAGE,
 				"Warning: queue is full, drop element %d",
 				current->id);
 		IPQ_SET_VERDICT(current->id, NF_DROP);
@@ -174,7 +174,7 @@ int psearch_and_destroy(uint32_t packet_id, uint32_t * nfmark)
 						    arrival_time));
 				ms = (double) elapsed_time.tv_sec * 1000 +
 				    (double) elapsed_time.tv_usec / 1000;
-				log_area_printf(DEBUG_AREA_MAIN,
+				log_area_printf(DEBUG_AREA_PACKET,
 						DEBUG_LEVEL_INFO,
 						"Treatment time for connection: %.1f ms",
 						ms);
@@ -189,7 +189,7 @@ int psearch_and_destroy(uint32_t packet_id, uint32_t * nfmark)
 		} else if (timestamp - current->timestamp > packet_timeout) {
 			/* TODO : find a better place, does not satisfy me */
 			IPQ_SET_VERDICT(current->id, NF_DROP);
-			debug_log_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_INFO,
+			debug_log_printf(DEBUG_AREA_PACKET, DEBUG_LEVEL_INFO,
 					 "Dropped: %lu", current->id);
 			psuppress(previous, current);
 			current = packets_list.start;
@@ -230,7 +230,7 @@ void clean_old_packets()
 		/* we want to suppress first element if it is too old */
 		if (timestamp - current->timestamp > packet_timeout) {
 			IPQ_SET_VERDICT(current->id, NF_DROP);
-			debug_log_printf(DEBUG_AREA_MAIN,
+			debug_log_printf(DEBUG_AREA_PACKET,
 					 DEBUG_LEVEL_DEBUG, "Dropped: %lu",
 					 current->id);
 			psuppress(previous, current);

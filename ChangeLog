@@ -1,4 +1,4 @@
-2.2.0-rc1
+2.2.0-rc1 (2007/03/08)
 	- log_mysql: add option to log by default in SQL
 	database with IPV4 schema
 	- libnuclient: add nu_get_home_dir function which is not
@@ -12,6 +12,8 @@
 	- cache is now resetted during reload
 	- nuauth: command mode through a unix socket and a python script
 	is given as exemple
+	- nuauth: modify thread pools system (better handling of signals)
+	- nufw: add -A to set debug areas and adjust areas in code
 2.1.1 (2007/01/03)
 	- suppress ldap authentication code
 	- add support for log prefix

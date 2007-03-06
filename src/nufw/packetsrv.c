@@ -92,7 +92,7 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 	struct nlif_handle *nlif_handle = (struct nlif_handle *) data;
 #endif
 
-	debug_log_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_VERBOSE_DEBUG,
+	debug_log_printf(DEBUG_AREA_PACKET, DEBUG_LEVEL_VERBOSE_DEBUG,
 			 "(*) New packet");
 
 	q_pckt.payload_len = nfq_get_payload(nfa, &(q_pckt.payload));
@@ -127,7 +127,7 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 	if (ph) {
 		current->id = ntohl(ph->packet_id);
 	} else {
-		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_INFO,
+		log_area_printf(DEBUG_AREA_PACKET, DEBUG_LEVEL_INFO,
 				"Can not get id for message");
 		free(current);
 		return 0;
@@ -137,7 +137,7 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 
 #ifdef HAVE_NLIF_CATCH
 	if (!get_interface_information(nlif_handle, &q_pckt, nfa)) {
-		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_INFO,
+		log_area_printf(DEBUG_AREA_PACKET, DEBUG_LEVEL_INFO,
 				"Can not get interfaces information for message");
 		free(current);
 		return 0;
@@ -297,7 +297,7 @@ void packetsrv_ipq_process(unsigned char *buffer)
 	current = calloc(1, sizeof(packet_idl));
 	if (current == NULL) {
 		/* no more memory: drop packet and exit */
-		log_area_printf(DEBUG_AREA_MAIN,
+		log_area_printf(DEBUG_AREA_MAIN | DEBUG_AREA_PACKET,
 				DEBUG_LEVEL_SERIOUS_WARNING,
 				"[+] Can not allocate packet_id (drop packet)");
 		IPQ_SET_VERDICT(msg_p->packet_id, NF_DROP);
@@ -388,7 +388,7 @@ void *packetsrv(void *void_arg)
 		exit(EXIT_FAILURE);
 	}
 
-	log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
+	log_area_printf(DEBUG_AREA_MAIN | DEBUG_AREA_PACKET, DEBUG_LEVEL_DEBUG,
 			"[+] Packet server started");
 
 	/* loop until main process ask to stop */
@@ -487,7 +487,7 @@ void *packetsrv(void *void_arg)
 
 	ipq_set_mode(hndl, IPQ_COPY_PACKET, BUFSIZ);
 
-	log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
+	log_area_printf(DEBUG_AREA_MAIN | DEBUG_AREA_PACKET, DEBUG_LEVEL_FATAL,
 			"[+] Packet server started");
 
 	/* loop until main process ask this thread to stop using its mutex */
@@ -535,7 +535,8 @@ void *packetsrv(void *void_arg)
 	}
 	ipq_destroy_handle(hndl);
 #endif
-	log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
+	log_area_printf(DEBUG_AREA_MAIN | DEBUG_AREA_PACKET,
+			DEBUG_LEVEL_WARNING,
 			"[+] Leave packet server thread");
 	if (fatal_error) {
 		kill(thread_arg->parent_pid, SIGTERM);
@@ -548,7 +549,7 @@ void *packetsrv(void *void_arg)
  */
 void shutdown_tls()
 {
-	log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
+	log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_CRITICAL,
 			"tls send failure when sending request");
 	pthread_mutex_lock(&tls.mutex);
 
@@ -588,7 +589,7 @@ int auth_request_send(uint8_t type, struct queued_pckt *pckt_datas)
 	/* Drop non-IPv(4|6) packet */
 	if ((((struct iphdr *) (pckt_datas->payload))->version != 4)
 	    && (((struct iphdr *) (pckt_datas->payload))->version != 6)) {
-		debug_log_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
+		debug_log_printf(DEBUG_AREA_PACKET, DEBUG_LEVEL_DEBUG,
 				 "Dropping non-IPv4/non-IPv6 packet (version %u)",
 				 ((struct iphdr *) (pckt_datas->payload))->
 				 version);
@@ -599,7 +600,7 @@ int auth_request_send(uint8_t type, struct queued_pckt *pckt_datas)
 	if (sizeof(datas) <
 	    sizeof(nuv4_nufw_to_nuauth_auth_message_t) +
 	    pckt_datas->payload_len) {
-		debug_log_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
+		debug_log_printf(DEBUG_AREA_PACKET, DEBUG_LEVEL_DEBUG,
 				 "Very long packet: truncating!");
 		pckt_datas->payload_len =
 		    sizeof(datas) -
@@ -630,7 +631,7 @@ int auth_request_send(uint8_t type, struct queued_pckt *pckt_datas)
 	memcpy(msg_content, pckt_datas->payload, pckt_datas->payload_len);
 
 	/* Display message */
-	log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
+	log_area_printf(DEBUG_AREA_PACKET, DEBUG_LEVEL_DEBUG,
 			"Sending request for %lu", pckt_datas->packet_id);
 
 	/* cleaning up current session : auth_server has detected a problem */
@@ -642,7 +643,7 @@ int auth_request_send(uint8_t type, struct queued_pckt *pckt_datas)
 
 	/* negotiate TLS connection if needed */
 	if (!tls.session) {
-		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_INFO,
+		log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_INFO,
 				"Not connected, trying TLS connection");
 		tls.session = tls_connect();
 
@@ -652,7 +653,7 @@ int auth_request_send(uint8_t type, struct queued_pckt *pckt_datas)
 			pthread_attr_setdetachstate(&attr,
 						    PTHREAD_CREATE_JOINABLE);
 
-			log_area_printf(DEBUG_AREA_MAIN,
+			log_area_printf(DEBUG_AREA_GW,
 					DEBUG_LEVEL_WARNING,
 					"[+] TLS connection to nuauth restored");
 			tls.auth_server_running = 1;
@@ -665,7 +666,7 @@ int auth_request_send(uint8_t type, struct queued_pckt *pckt_datas)
 				exit(EXIT_FAILURE);
 			}
 		} else {
-			log_area_printf(DEBUG_AREA_MAIN,
+			log_area_printf(DEBUG_AREA_GW,
 					DEBUG_LEVEL_WARNING,
 					"[!] TLS connection to nuauth can NOT be restored");
 			return 0;
