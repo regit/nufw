@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2005-2006 INL
+ ** Copyright(C) 2005-2007 INL
  ** Written by Eric Leblond <regit@inl.fr>
  **
  ** $Id$
@@ -204,7 +204,6 @@ static struct nuauth_params *compare_and_update_nuauthparams(struct
  */
 void nuauth_reload(int signal)
 {
-	int pool_threads_num = 0;
 	struct nuauth_params *newconf = NULL;
 	struct nuauth_params *actconf;
 	struct timespec sleep;
@@ -217,49 +216,13 @@ void nuauth_reload(int signal)
 	g_message("nuauth module reloading");
 
 	/* set flag to block threads of pool at start */
-	g_atomic_int_set(&(nuauthdatas->need_reload), 1);
-	/* stop unused threads : now newly created threads will be locked */
-	g_thread_pool_stop_unused_threads();
+	nuauthdatas->need_reload = 1;
 	/* we have to wait that all threads are blocked */
-	do {
-		nanosleep(&sleep, NULL);
-
-		log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
-			    "waiting for threads to finish at %s:%d",
-			    __FILE__, __LINE__);
-		/* 1. count thread in pool */
-		pool_threads_num =
-		    g_thread_pool_get_num_threads(nuauthdatas->
-						  user_checkers)
-		    +
-		    g_thread_pool_get_num_threads(nuauthdatas->
-						  acl_checkers)
-		    +
-		    g_thread_pool_get_num_threads(nuauthdatas->
-						  user_loggers);
-		+g_thread_pool_get_num_threads(nuauthdatas->
-					       user_session_loggers);
-		if (nuauthconf->do_ip_authentication) {
-			pool_threads_num +=
-			    g_thread_pool_get_num_threads(nuauthdatas->
-							  ip_authentication_workers);
-		}
-		if (nuauthconf->log_users_sync) {
-			pool_threads_num +=
-			    g_thread_pool_get_num_threads(nuauthdatas->
-							  decisions_workers);
-		}
-		pool_threads_num -= g_thread_pool_get_num_unused_threads();
-
-		log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN, "got %d on %d",
-			    nuauthdatas->locked_threads_number,
-			    pool_threads_num);
-		/* compare against thread in state lock */
-	} while (nuauthdatas->locked_threads_number < pool_threads_num);
-	/* we've reached equality thus all threads are blocked now */
-	g_thread_pool_stop_unused_threads();
+	stop_pool_threads(TRUE);
 	/* unload modules */
 	unload_modules();
+	/* start "pure" pool threads */
+	start_pool_threads();
 	/* switch conf before loading modules */
 	actconf = compare_and_update_nuauthparams(nuauthconf, newconf);
 	if (actconf) {
@@ -275,7 +238,9 @@ void nuauth_reload(int signal)
 		cache_reset(nuauthdatas->acl_cache);
 	}
 	/* liberate threads by broadcasting condition */
-	g_atomic_int_set(&(nuauthdatas->need_reload), 0);
+	nuauthdatas->need_reload = 0;
+
+
 	g_mutex_lock(nuauthdatas->reload_cond_mutex);
 	g_cond_broadcast(nuauthdatas->reload_cond);
 	g_mutex_unlock(nuauthdatas->reload_cond_mutex);

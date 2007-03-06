@@ -221,5 +221,9 @@ typedef enum {
 #define NUAUTH_FULL_VERSION (VERSION " ($Revision$)")
 
 void nuauth_ask_exit();
+void stop_pool_threads(gboolean wait);
+void start_pool_threads();
+void nuauth_free_signal();
+void nuauth_install_signals();
 
 #endif

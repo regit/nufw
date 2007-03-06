@@ -70,6 +70,7 @@ void log_user_packet(connection_t * element, tcp_state_t state)
 			}
 			conn_state_copy->state = state;
 
+			block_on_conf_reload();
 			g_thread_pool_push(nuauthdatas->user_loggers,
 					   conn_state_copy, NULL);
 		}
@@ -95,6 +96,7 @@ void log_user_packet_from_accounted_connection(struct accounted_connection
 	}
 	conn_state_copy->state = state;
 
+	block_on_conf_reload();
 	g_thread_pool_push(nuauthdatas->user_loggers,
 			   conn_state_copy, NULL);
 
@@ -113,7 +115,6 @@ void log_user_packet_from_accounted_connection(struct accounted_connection
  */
 void real_log_user_packet(gpointer userdata, gpointer data)
 {
-	block_on_conf_reload();
 	modules_user_logs(((struct conn_state *) userdata)->conn,
 			  ((struct conn_state *) userdata)->state);
 	/* free userdata */
@@ -179,6 +180,7 @@ void log_user_session(user_session_t * usession, session_state_t state)
 	sessevent->session->version = g_strdup(usession->version);
 	sessevent->session->release = g_strdup(usession->release);
 	sessevent->state = state;
+	block_on_conf_reload();
 	/* feed thread pool */
 	g_thread_pool_push(nuauthdatas->user_session_loggers,
 			   sessevent, NULL);
@@ -198,7 +200,6 @@ void log_user_session_thread(gpointer event_ptr, gpointer unused_optional)
 {
 	struct session_event *event = (struct session_event *) event_ptr;
 	user_session_t *session = event->session;
-	block_on_conf_reload();
 	modules_user_session_logs(session, event->state);
 	g_free(session->user_name);
 	g_free(session->sysname);

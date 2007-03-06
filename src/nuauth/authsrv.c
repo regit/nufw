@@ -88,6 +88,86 @@ void wait_thread_end(const char *name, struct nuauth_thread_t *thread)
 	g_thread_join(thread->thread);
 }
 
+void start_pool_threads()
+{
+	if (nuauthconf->do_ip_authentication) {
+		/* create thread of pool */
+		nuauthdatas->ip_authentication_workers =
+		    g_thread_pool_new((GFunc) external_ip_auth, NULL,
+				      nuauthconf->nbipauth_check,
+				      POOL_TYPE, NULL);
+	}
+	/* create acl checker workers */
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN, "Creating %d acl checkers",
+		    nuauthconf->nbacl_check);
+	nuauthdatas->acl_checkers =
+	    g_thread_pool_new((GFunc) acl_check_and_decide, NULL,
+			      nuauthconf->nbacl_check, POOL_TYPE, NULL);
+
+	/* create user checker workers */
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN, "Creating %d user checkers",
+		    nuauthconf->nbuser_check);
+	nuauthdatas->user_checkers =
+	    g_thread_pool_new((GFunc) user_check_and_decide, NULL,
+			      nuauthconf->nbuser_check, POOL_TYPE, NULL);
+
+	/* create user logger workers */
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN, "Creating %d user loggers",
+		    nuauthconf->nbloggers);
+	nuauthdatas->user_loggers =
+	    g_thread_pool_new((GFunc) real_log_user_packet, NULL,
+			      nuauthconf->nbloggers, POOL_TYPE, NULL);
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
+		    "Creating %d user session loggers",
+		    nuauthconf->nbloggers);
+	nuauthdatas->user_session_loggers =
+	    g_thread_pool_new((GFunc) log_user_session_thread, NULL,
+			      nuauthconf->nbloggers, POOL_TYPE, NULL);
+
+	/* create decisions workers (if needed) */
+	if (nuauthconf->log_users_sync) {
+		log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
+			    "Creating %d decision workers",
+			    nuauthconf->nbloggers);
+		nuauthdatas->decisions_workers =
+		    g_thread_pool_new((GFunc) decisions_queue_work, NULL,
+				      nuauthconf->nbloggers, POOL_TYPE,
+				      NULL);
+	}
+}
+
+void stop_pool_threads(gboolean wait)
+{
+	/* end logging threads */
+	if (wait) {
+		log_message(DEBUG, DEBUG_AREA_MAIN,
+			    "Stop thread pool 'user session loggers'");
+		g_thread_pool_free(nuauthdatas->user_session_loggers, TRUE,
+				   wait);
+		log_message(DEBUG, DEBUG_AREA_MAIN,
+			    "Stop thread pool 'user loggers'");
+		g_thread_pool_free(nuauthdatas->user_loggers, TRUE, wait);
+		log_message(DEBUG, DEBUG_AREA_MAIN,
+			    "Stop thread pool 'acl checkers'");
+		g_thread_pool_free(nuauthdatas->acl_checkers, TRUE, wait);
+
+		if (nuauthconf->log_users_sync) {
+			log_message(DEBUG, DEBUG_AREA_MAIN,
+				    "Stop thread pool 'decision workers'");
+			g_thread_pool_free(nuauthdatas->decisions_workers,
+					   TRUE, wait);
+		}
+
+		if (nuauthconf->do_ip_authentication) {
+			log_message(DEBUG, DEBUG_AREA_MAIN,
+				    "Stop thread pool 'ip auth workers'");
+			g_thread_pool_free(nuauthdatas->
+					   ip_authentication_workers, TRUE,
+					   wait);
+		}
+	}
+	g_thread_pool_stop_unused_threads();
+}
 /**
  * Ask all threads to stop (by locking their mutex), and then wait
  * until they really stop (if wait is TRUE) using g_thread_join()
@@ -157,36 +237,7 @@ void stop_threads(gboolean wait)
 				&nuauthdatas->localid_auth_thread);
 	}
 
-	/* end logging threads */
-	if (wait) {
-		log_message(DEBUG, DEBUG_AREA_MAIN,
-			    "Stop thread pool 'user session loggers'");
-		g_thread_pool_free(nuauthdatas->user_session_loggers, TRUE,
-				   wait);
-		log_message(DEBUG, DEBUG_AREA_MAIN,
-			    "Stop thread pool 'user loggers'");
-		g_thread_pool_free(nuauthdatas->user_loggers, TRUE, wait);
-		log_message(DEBUG, DEBUG_AREA_MAIN,
-			    "Stop thread pool 'acl checkers'");
-		g_thread_pool_free(nuauthdatas->acl_checkers, TRUE, wait);
-
-		if (nuauthconf->log_users_sync) {
-			log_message(DEBUG, DEBUG_AREA_MAIN,
-				    "Stop thread pool 'decision workers'");
-			g_thread_pool_free(nuauthdatas->decisions_workers,
-					   TRUE, wait);
-		}
-
-		if (nuauthconf->do_ip_authentication) {
-			log_message(DEBUG, DEBUG_AREA_MAIN,
-				    "Stop thread pool 'ip auth workers'");
-			g_thread_pool_free(nuauthdatas->
-					   ip_authentication_workers, TRUE,
-					   wait);
-		}
-	}
-	g_thread_pool_stop_unused_threads();
-
+	stop_pool_threads(wait);
 	/* done! */
 	log_message(INFO, DEBUG_AREA_MAIN, "Threads stopped.");
 }
@@ -708,16 +759,10 @@ void init_nuauthdatas()
 	if (nuauthconf->user_cache)
 		init_user_cache();
 
+	start_pool_threads();
+
 	null_message = g_new0(struct cache_message, 1);
 	null_queue_datas = g_new0(gchar, 1);
-
-	if (nuauthconf->do_ip_authentication) {
-		/* create thread of pool */
-		nuauthdatas->ip_authentication_workers =
-		    g_thread_pool_new((GFunc) external_ip_auth, NULL,
-				      nuauthconf->nbipauth_check,
-				      POOL_TYPE, NULL);
-	}
 
 	/* init private datas for pool thread */
 	nuauthdatas->aclqueue =
@@ -730,44 +775,6 @@ void init_nuauthdatas()
 		    "Creating search_and_fill thread");
 	create_thread(&nuauthdatas->search_and_fill_worker,
 		      search_and_fill);
-
-	/* create acl checker workers */
-	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN, "Creating %d acl checkers",
-		    nuauthconf->nbacl_check);
-	nuauthdatas->acl_checkers =
-	    g_thread_pool_new((GFunc) acl_check_and_decide, NULL,
-			      nuauthconf->nbacl_check, POOL_TYPE, NULL);
-
-	/* create user checker workers */
-	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN, "Creating %d user checkers",
-		    nuauthconf->nbuser_check);
-	nuauthdatas->user_checkers =
-	    g_thread_pool_new((GFunc) user_check_and_decide, NULL,
-			      nuauthconf->nbuser_check, POOL_TYPE, NULL);
-
-	/* create user logger workers */
-	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN, "Creating %d user loggers",
-		    nuauthconf->nbloggers);
-	nuauthdatas->user_loggers =
-	    g_thread_pool_new((GFunc) real_log_user_packet, NULL,
-			      nuauthconf->nbloggers, POOL_TYPE, NULL);
-	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
-		    "Creating %d user session loggers",
-		    nuauthconf->nbloggers);
-	nuauthdatas->user_session_loggers =
-	    g_thread_pool_new((GFunc) log_user_session_thread, NULL,
-			      nuauthconf->nbloggers, POOL_TYPE, NULL);
-
-	/* create decisions workers (if needed) */
-	if (nuauthconf->log_users_sync) {
-		log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
-			    "Creating %d decision workers",
-			    nuauthconf->nbloggers);
-		nuauthdatas->decisions_workers =
-		    g_thread_pool_new((GFunc) decisions_queue_work, NULL,
-				      nuauthconf->nbloggers, POOL_TYPE,
-				      NULL);
-	}
 
 	if (nuauthconf->push && nuauthconf->hello_authentication) {
 		log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
