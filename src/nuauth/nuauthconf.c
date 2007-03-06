@@ -211,11 +211,13 @@ void nuauth_reload(int signal)
 	sleep.tv_sec = 0;
 	sleep.tv_nsec = 100000000;	/* 0.1 second */
 
+	nuauth_free_signal();
+
 	init_nuauthconf(&newconf);
 	g_message("nuauth module reloading");
 
 	/* set flag to block threads of pool at start */
-	nuauthdatas->need_reload = 1;
+	g_atomic_int_set(&(nuauthdatas->need_reload), 1);
 	/* stop unused threads : now newly created threads will be locked */
 	g_thread_pool_stop_unused_threads();
 	/* we have to wait that all threads are blocked */
@@ -255,6 +257,7 @@ void nuauth_reload(int signal)
 		/* compare against thread in state lock */
 	} while (nuauthdatas->locked_threads_number < pool_threads_num);
 	/* we've reached equality thus all threads are blocked now */
+	g_thread_pool_stop_unused_threads();
 	/* unload modules */
 	unload_modules();
 	/* switch conf before loading modules */
@@ -272,10 +275,14 @@ void nuauth_reload(int signal)
 		cache_reset(nuauthdatas->acl_cache);
 	}
 	/* liberate threads by broadcasting condition */
-	nuauthdatas->need_reload = 0;
+	g_atomic_int_set(&(nuauthdatas->need_reload), 0);
 	g_mutex_lock(nuauthdatas->reload_cond_mutex);
 	g_cond_broadcast(nuauthdatas->reload_cond);
 	g_mutex_unlock(nuauthdatas->reload_cond_mutex);
+
+	nuauth_install_signals();
+
+	g_message("nuauth reloaded");
 }
 
 static struct nuauth_params *compare_and_update_nuauthparams(struct

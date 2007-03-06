@@ -297,17 +297,16 @@ void nuauth_atexit()
  *
  * \param signal Code of raised signal
  */
-void nuauth_cleanup(int signal)
+void nuauth_cleanup(int recv_signal)
 {
 	(void) g_atomic_int_dec_and_test(&nuauth_running);
 	/* first of all, reinstall old handlers (ignore errors) */
-	(void) sigaction(SIGTERM, &nuauthdatas->old_sigterm_hdl, NULL);
-	(void) sigaction(SIGINT, &nuauthdatas->old_sigint_hdl, NULL);
+	nuauth_free_signal();
 
-	if (signal == SIGINT)
+	if (recv_signal == SIGINT)
 		log_message(CRITICAL, DEBUG_AREA_MAIN,
 			    "[+] Stop NuAuth server (SIGINT)");
-	else if (signal == SIGTERM)
+	else if (recv_signal == SIGTERM)
 		log_message(CRITICAL, DEBUG_AREA_MAIN,
 			    "[+] Stop NuAuth server (SIGTERM)");
 	g_message("[+] Stop NuAuth server");
@@ -499,13 +498,13 @@ void nuauth_install_signals()
 	/* intercept SIGTERM */
 	if (sigaction(SIGTERM, &action, &nuauthdatas->old_sigterm_hdl) !=
 	    0) {
-		printf("Error\n");
+		g_message("Error modifying sigaction");
 		exit(EXIT_FAILURE);
 	}
 
 	/* intercept SIGINT */
 	if (sigaction(SIGINT, &action, &nuauthdatas->old_sigint_hdl) != 0) {
-		printf("Error\n");
+		g_message("Error modifying sigaction");
 		exit(EXIT_FAILURE);
 	}
 
@@ -514,14 +513,22 @@ void nuauth_install_signals()
 	action.sa_handler = nuauth_reload;
 	sigemptyset(&(action.sa_mask));
 	action.sa_flags = 0;
-	if (sigaction(SIGHUP, &action, NULL) != 0) {
-		printf("Error\n");
+	if (sigaction(SIGHUP, &action, &nuauthdatas->old_sighup_hdl) != 0) {
+		g_message("Error modifying sigaction");
 		exit(EXIT_FAILURE);
 	}
 
 	/* ignore SIGPIPE */
 	signal(SIGPIPE, SIG_IGN);
 }
+
+void nuauth_free_signal()
+{
+	(void) sigaction(SIGTERM, &nuauthdatas->old_sigterm_hdl, NULL);
+	(void) sigaction(SIGINT, &nuauthdatas->old_sigint_hdl, NULL);
+	(void) sigaction(SIGHUP, &nuauthdatas->old_sighup_hdl, NULL);
+}
+
 
 /**
  * Create one NuAuth thread:
