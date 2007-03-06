@@ -193,7 +193,7 @@ static int parse_ports(char *portsline, GSList ** p_portslist,
  *
  * \return 0 if they match, integer different than zero otherwise (memcmp result)
  */
-int compare_ipv6_with_mask(struct in6_addr *addr1, struct in6_addr *addr2,
+static int compare_ipv6_with_mask(struct in6_addr *addr1, struct in6_addr *addr2,
 			   struct in6_addr *mask)
 {
 	struct in6_addr masked = *addr2;
@@ -211,7 +211,7 @@ int compare_ipv6_with_mask(struct in6_addr *addr1, struct in6_addr *addr2,
  * \param addr Address to match
  * \return 1 if addr match ip_list, 0 otherwise
  */
-int match_ip(GSList * ip_list, struct in6_addr *addr)
+static int match_ip(GSList * ip_list, struct in6_addr *addr)
 {
 	for (; ip_list != NULL; ip_list = g_slist_next(ip_list)) {
 		struct plaintext_ip *item = (struct plaintext_ip *) ip_list->data;
