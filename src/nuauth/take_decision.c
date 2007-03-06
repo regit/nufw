@@ -251,7 +251,7 @@ nu_error_t take_decision(connection_t * element, packet_place_t place)
 			conn_cl_remove(element);
 		}
 		/* push element to decision workers */
-		g_thread_pool_push(nuauthdatas->decisions_workers,
+		thread_pool_push(nuauthdatas->decisions_workers,
 				   element, NULL);
 	} else {
 		apply_decision(element);
@@ -323,7 +323,6 @@ void decisions_queue_work(gpointer userdata, gpointer data)
 {
 	connection_t *element = (connection_t *) userdata;
 
-	block_on_conf_reload();
 	apply_decision(element);
 	free_connection(element);
 }

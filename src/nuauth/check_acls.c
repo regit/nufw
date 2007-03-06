@@ -47,7 +47,7 @@ void acl_check_and_decide(gpointer userdata, gpointer data)
 	connection_t *conn_elt = userdata;
 	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_PACKET,
 			  "entering acl_check");
-	block_on_conf_reload();
+
 	if (conn_elt == NULL) {
 		log_message(WARNING, DEBUG_AREA_PACKET,
 			    "This is no good : elt is NULL at %s:%d",

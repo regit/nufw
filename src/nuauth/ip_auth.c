@@ -39,7 +39,6 @@ void external_ip_auth(gpointer userdata, gpointer data)
 {
 	char *username = NULL;
 
-	block_on_conf_reload();
 	username = modules_ip_auth(userdata);
 	if (username) {
 		GSList *groups = NULL;

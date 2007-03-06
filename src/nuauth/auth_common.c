@@ -575,4 +575,10 @@ int str_to_int(const char *text, int *value)
 	return 1;
 }
 
+void thread_pool_push(GThreadPool *pool, gpointer data, GError **error)
+{
+	block_on_conf_reload();
+	g_thread_pool_push(pool, data, error);
+}
+
 /** @} */

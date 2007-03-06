@@ -44,7 +44,6 @@ void user_check_and_decide(gpointer userdata, gpointer data)
 	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER, "entering user_check");
 
 	/* reload condition */
-	block_on_conf_reload();
 	conn_elts = userpckt_decode(userdata);
 
 	if (conn_elts == NULL) {

@@ -252,7 +252,7 @@ static int treat_user_request(user_session_t * c_session)
 
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
 				  "Pushing packet to user_checker");
-		g_thread_pool_push(nuauthdatas->user_checkers, datas,
+		thread_pool_push(nuauthdatas->user_checkers, datas,
 				   NULL);
 	} else {
 		log_message(INFO, DEBUG_AREA_USER,
@@ -345,7 +345,7 @@ int tls_user_accept(struct tls_user_context_t *context)
 	pre_client_list = g_slist_prepend(pre_client_list, new_pre_client);
 	g_static_mutex_unlock(&pre_client_list_mutex);
 
-	g_thread_pool_push(nuauthdatas->tls_sasl_worker,
+	thread_pool_push(nuauthdatas->tls_sasl_worker,
 			   current_client_conn, NULL);
 	return 0;
 }
@@ -724,7 +724,7 @@ void *push_worker(GMutex * mutex)
 					/* if we do ip authentication send request to pool */
 					if (nuauthconf->
 					    do_ip_authentication) {
-						g_thread_pool_push
+						thread_pool_push
 						    (nuauthdatas->
 						     ip_authentication_workers,
 						     message->datas, NULL);

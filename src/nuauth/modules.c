@@ -63,6 +63,7 @@ int modules_user_check(const char *user, const char *pass,
 	/* iter through module list and stop when user is found */
 	GSList *walker = user_check_modules;
 	int walker_return = 0;
+	block_on_conf_reload();
 	for (; walker != NULL; walker = walker->next) {
 		walker_return =
 		    (*(user_check_callback *)
@@ -86,6 +87,7 @@ GSList *modules_get_user_groups(const char *user)
 	GSList *walker = get_user_groups_modules;
 	GSList *walker_return = NULL;
 
+	block_on_conf_reload();
 	for (; walker != NULL; walker = walker->next) {
 		walker_return =
 		    (*(get_user_groups_callback *)
@@ -107,6 +109,7 @@ uint32_t modules_get_user_id(const char *user)
 	GSList *walker = get_user_id_modules;
 	uint32_t walker_return = 0;
 
+	block_on_conf_reload();
 	for (; walker != NULL; walker = walker->next) {
 		walker_return =
 		    (*(get_user_id_callback *)
@@ -132,6 +135,7 @@ GSList *modules_acl_check(connection_t * element)
 	GSList *walker = acl_check_modules;
 	GSList *walker_return = NULL;
 
+	block_on_conf_reload();
 	for (; walker != NULL; walker = walker->next) {
 		walker_return =
 		    (*(acl_check_callback *)
@@ -152,6 +156,8 @@ gchar *modules_ip_auth(tracking_t * header)
 	/* iter through module list and stop when decision is made */
 	GSList *walker = ip_auth_modules;
 	gchar *walker_return = NULL;
+
+	block_on_conf_reload();
 	for (; walker != NULL; walker = walker->next) {
 		walker_return =
 		    (*(ip_auth_callback *) (((module_t *) walker->data))->
@@ -170,6 +176,8 @@ int modules_user_logs(void *element, tcp_state_t state)
 {
 	/* iter through all modules list */
 	GSList *walker = user_logs_modules;
+
+	block_on_conf_reload();
 	for (; walker != NULL; walker = walker->next) {
 		user_logs_callback *handler =
 		    (user_logs_callback *) ((module_t *) walker->data)->
@@ -187,6 +195,8 @@ int modules_user_session_logs(user_session_t * user, session_state_t state)
 {
 	/* iter through all modules list */
 	GSList *walker = user_session_logs_modules;
+
+	block_on_conf_reload();
 	for (; walker != NULL; walker = walker->next) {
 		user_session_logs_callback *handler =
 		    (user_session_logs_callback *) ((module_t *) walker->
@@ -204,6 +214,8 @@ void modules_parse_periods(GHashTable * periods)
 {
 	/* iter through all modules list */
 	GSList *walker = period_modules;
+
+	block_on_conf_reload();
 	for (; walker != NULL; walker = walker->next) {
 		define_period_callback *handler =
 		    (define_period_callback
@@ -226,6 +238,8 @@ int modules_check_certificate(gnutls_session session, gnutls_x509_crt cert)
 	int ret;
 
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN, "module check certificate");
+
+	block_on_conf_reload();
 	for (; walker != NULL; walker = walker->next) {
 		certificate_check_callback *handler =
 		    (certificate_check_callback *) ((module_t *) walker->
@@ -253,6 +267,8 @@ gchar *modules_certificate_to_uid(gnutls_session session,
 	/* iter through all modules list */
 	GSList *walker = certificate_to_uid_modules;
 	gchar *uid;
+
+	block_on_conf_reload();
 	for (; walker != NULL; walker = walker->next) {
 		certificate_to_uid_callback *handler =
 		    (certificate_to_uid_callback *) ((module_t *) walker->
@@ -275,6 +291,8 @@ int modules_user_session_modify(user_session_t * c_session)
 {
 	/* iter through all modules list */
 	GSList *walker = user_session_modify_modules;
+
+	block_on_conf_reload();
 	for (; walker != NULL; walker = walker->next) {
 		user_session_modify_callback *handler =
 		    (user_session_modify_callback
@@ -293,6 +311,8 @@ nu_error_t modules_finalize_packet(connection_t * connection)
 {
 	/* iter through all modules list */
 	GSList *walker = finalize_packet_modules;
+
+	block_on_conf_reload();
 	for (; walker != NULL; walker = walker->next) {
 		finalize_packet_callback *handler =
 		    (finalize_packet_callback
@@ -310,6 +330,8 @@ void modules_auth_error_log(user_session_t * session,
 			    nuauth_auth_error_t error, const char *message)
 {
 	GSList *walker = auth_error_log_modules;
+
+	block_on_conf_reload();
 	for (; walker != NULL; walker = walker->next) {
 		auth_error_log_callback *handler =
 		    (auth_error_log_callback
