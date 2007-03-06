@@ -1,6 +1,7 @@
 /*
- ** Copyright(C) 2003-2006 Eric Leblond <eric@regit.org>
- **		     Vincent Deffontaines <vincent@gryzor.com>
+ ** Copyright(C) 2003-2007 INL
+ ** Written by Eric Leblond <regit@inl.fr>
+ **	       Vincent Deffontaines <vincent@gryzor.com>
  **
  ** $Id$
  **
@@ -86,7 +87,8 @@ G_MODULE_EXPORT gchar *unload_module_with_params(gpointer params_p)
 	    (struct log_mysql_params *) params_p;
 
 	if (params) {
-		if (!nuauth_is_reloading()) {
+		if ((!nuauth_is_reloading()) &&
+				(params->hook == MOD_LOG_SESSION)) {
 			if (mysql_close_open_user_sessions(params) !=
 			    NU_EXIT_OK) {
 				log_message(WARNING, DEBUG_AREA_MAIN,
@@ -118,10 +120,13 @@ G_MODULE_EXPORT gchar *unload_module_with_params(gpointer params_p)
 static nu_error_t mysql_close_open_user_sessions(struct log_mysql_params
 						 *params)
 {
-	MYSQL *ld = get_mysql_handler(params);
+	MYSQL *ld = NULL;
 	char request[LONG_REQUEST_SIZE];
 	int mysql_ret;
 	int ok;
+
+
+	ld = mysql_conn_init(params);
 
 	if (!ld) {
 		return NU_EXIT_ERROR;
@@ -131,6 +136,7 @@ static nu_error_t mysql_close_open_user_sessions(struct log_mysql_params
 			     "UPDATE %s SET end_time=FROM_UNIXTIME(%lu) where end_time is NULL",
 			     params->mysql_users_table_name, time(NULL));
 	if (!ok) {
+		mysql_close(ld);
 		return NU_EXIT_ERROR;
 	}
 
@@ -140,10 +146,18 @@ static nu_error_t mysql_close_open_user_sessions(struct log_mysql_params
 		log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 			    "[MySQL] Cannot execute request: %s",
 			    mysql_error(ld));
+		mysql_close(ld);
 		return NU_EXIT_ERROR;
 	}
+	mysql_close(ld);
 	return NU_EXIT_OK;
 
+}
+
+static void my_mysql_close(void *ld)
+{
+	mysql_close(ld);
+	ld = NULL;
 }
 
 /* Init mysql system */
@@ -199,6 +213,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 		    "Log_mysql module ($Revision$)");
 	/* init global variables */
 	params->mysql_ssl_cipher = MYSQL_SSL_CIPHER;
+	params->hook = module->hook;
 
 	/* parse conf file */
 	if (module->configfile) {
@@ -247,12 +262,12 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 			sizeof(mysql_nuauth_vars) / sizeof(confparams_t));
 
 	/* init thread private stuff */
-	params->mysql_priv = g_private_new((GDestroyNotify) mysql_close);
+	params->mysql_priv = g_private_new((GDestroyNotify) my_mysql_close);
 	log_message(DEBUG, DEBUG_AREA_MAIN,
 		    "mysql part of the config file is parsed");
 
 	/* do initial update of user session if needed */
-	if (!nuauth_is_reloading()) {
+	if ((!nuauth_is_reloading()) && (params->hook == MOD_LOG_SESSION)) {
 		mysql_close_open_user_sessions(params);
 	}
 
@@ -299,6 +314,7 @@ static MYSQL *mysql_conn_init(struct log_mysql_params *params)
 		log_message(WARNING, DEBUG_AREA_MAIN,
 			    "mysql connection failed : %s",
 			    mysql_error(ld));
+		mysql_close(ld);
 		return NULL;
 	}
 	return ld;

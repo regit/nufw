@@ -30,6 +30,22 @@
 
 typedef gboolean module_params_unload_t(gpointer params);
 
+typedef enum {
+	MOD_USER_CHECK,
+	MOD_USER_ID,
+	MOD_USER_GROUPS,
+	MOD_USER_FAIL,
+	MOD_ACL_CHECK,
+	MOD_SESSION_MODIFY,
+	MOD_LOG_PACKETS,
+	MOD_LOG_SESSION,
+	MOD_FINALIZE_PACKET,
+	MOD_PERIOD,
+	MOD_CERT_CHECK,
+	MOD_CERT_TO_UID,
+	MOD_IP_AUTH,
+} module_hook_t;
+
 /**
  * Structure use to store a module instance
  */
@@ -77,6 +93,11 @@ typedef struct {
 	 * Function used to unload module parameters
 	 */
 	module_params_unload_t *free_params;
+
+	/**
+	 * Role for module (which hook)
+	 */
+	module_hook_t hook;
 } module_t;
 
 typedef enum {

@@ -51,6 +51,7 @@
 #define REQUEST_TMP_BUFFER 500
 
 struct log_mysql_params {
+	module_hook_t hook;
 	int mysql_request_timeout;
 	char *mysql_user;
 	char *mysql_passwd;

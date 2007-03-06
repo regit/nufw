@@ -322,16 +322,29 @@ void modules_auth_error_log(user_session_t * session,
 void free_module_t(module_t * module)
 {
 	if (module) {
+		log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
+				"Module %s unloading (calling %p)",
+				module->name,
+				module->free_params);
 		if (module->free_params) {
 			module->free_params(module->params);
 			module->params = NULL;
 		}
+#ifndef DEBUG_WITH_VALGRIND
+		log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
+				"Module %s closing", module->name);
+		if (! g_module_close(module->module)) {
+			log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
+					"Module %s can't be closed", module->name);
+		} else {
+			log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
+					"Module %s closed", module->name);
+		}
+
+#endif
 		g_free(module->module_name);
 		g_free(module->name);
 		g_free(module->configfile);
-#ifndef DEBUG_WITH_VALGRIND
-		g_module_close(module->module);
-#endif
 	}
 }
 
@@ -401,7 +414,7 @@ int check_module_version(GModule * module)
  * Please note that last args is a pointer of pointer
  */
 static int load_modules_from(gchar * confvar, gchar * func,
-			     GSList ** target)
+			     GSList ** target, module_hook_t hook)
 {
 	gchar **modules_list = g_strsplit(confvar, " ", 0);
 	gchar *module_path;
@@ -441,7 +454,7 @@ static int load_modules_from(gchar * confvar, gchar * func,
 		module_path =
 		    g_module_build_path(MODULE_PATH,
 					current_module->module_name);
-		current_module->module = g_module_open(module_path, 0);
+		current_module->module = g_module_open(module_path, G_MODULE_BIND_LOCAL);
 		g_free(module_path);
 
 		log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
@@ -473,6 +486,8 @@ static int load_modules_from(gchar * confvar, gchar * func,
 			continue;
 		}
 
+		current_module->hook = hook;
+
 		/* get params for module by calling module exported function */
 		if (g_module_symbol
 		    (current_module->module, INIT_MODULE_FROM_CONF,
@@ -495,7 +510,7 @@ static int load_modules_from(gchar * confvar, gchar * func,
 		    (current_module->module, "unload_module_with_params",
 		     (gpointer *) & (current_module->free_params))) {
 			log_message(WARNING, DEBUG_AREA_MAIN,
-				    "No init function for module %s: PLEASE UPGRADE!",
+				    "No unload function for module %s: PLEASE UPGRADE!",
 				    current_module->module_name);
 			current_module->free_params = NULL;
 		}
@@ -551,8 +566,8 @@ int load_modules()
 	char *nuauth_user_check_module;
 	char *nuauth_get_user_groups_module;
 	char *nuauth_get_user_id_module;
-	char *nuauth_user_logs_module;
 	char *nuauth_user_session_logs_module;
+	char *nuauth_user_logs_module;
 	char *nuauth_ip_authentication_module = NULL;
 	char *nuauth_periods_module;
 	char *nuauth_certificate_check_module;
@@ -576,10 +591,10 @@ int load_modules()
 	    (char *) READ_CONF("nuauth_get_user_groups_module");
 	nuauth_get_user_id_module =
 	    (char *) READ_CONF("nuauth_get_user_id_module");
-	nuauth_user_logs_module =
-	    (char *) READ_CONF("nuauth_user_logs_module");
 	nuauth_user_session_logs_module =
 	    (char *) READ_CONF("nuauth_user_session_logs_module");
+	nuauth_user_logs_module =
+	    (char *) READ_CONF("nuauth_user_logs_module");
 	nuauth_acl_check_module =
 	    (char *) READ_CONF("nuauth_acl_check_module");
 	nuauth_periods_module =
@@ -606,44 +621,44 @@ int load_modules()
 	/* external auth module loading */
 	g_mutex_lock(modules_mutex);
 
-#define LOAD_MODULE(VAR, LIST, KEY, TEXT) \
+#define LOAD_MODULE(VAR, LIST, KEY, TEXT, HOOK) \
     log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN, "Loading " TEXT " modules:"); \
-    load_modules_from(VAR, KEY, &(LIST)); \
+    load_modules_from(VAR, KEY, &(LIST), HOOK); \
     g_free(VAR);
 
 	/* loading modules */
 	LOAD_MODULE(nuauth_user_check_module, user_check_modules,
-		    "user_check", "user checking");
+		    "user_check", "user checking", MOD_USER_CHECK);
 	LOAD_MODULE(nuauth_get_user_groups_module, get_user_groups_modules,
-		    "get_user_groups", "user groups fetching");
+		    "get_user_groups", "user groups fetching", MOD_USER_GROUPS);
 	LOAD_MODULE(nuauth_get_user_id_module, get_user_id_modules,
-		    "get_user_id", "user id fetching");
+		    "get_user_id", "user id fetching",MOD_USER_ID);
 	LOAD_MODULE(nuauth_acl_check_module, acl_check_modules,
-		    "acl_check", "acls checking");
+		    "acl_check", "acls checking", MOD_ACL_CHECK);
 	LOAD_MODULE(nuauth_periods_module, period_modules,
-		    "define_periods", "define periods checking");
-	LOAD_MODULE(nuauth_user_logs_module, user_logs_modules,
-		    "user_packet_logs", "user packet logging");
+		    "define_periods", "define periods checking", MOD_PERIOD);
 	LOAD_MODULE(nuauth_user_session_logs_module,
 		    user_session_logs_modules, "user_session_logs",
-		    "user session logging");
+		    "user session logging", MOD_LOG_SESSION);
+	LOAD_MODULE(nuauth_user_logs_module, user_logs_modules,
+		    "user_packet_logs", "user packet logging", MOD_LOG_PACKETS);
 	LOAD_MODULE(nuauth_certificate_check_module,
 		    certificate_check_modules, "certificate_check",
-		    "certificate check");
+		    "certificate check", MOD_CERT_CHECK);
 	LOAD_MODULE(nuauth_certificate_to_uid_module,
 		    certificate_to_uid_modules, "certificate_to_uid",
-		    "certificate to uid");
+		    "certificate to uid", MOD_CERT_TO_UID);
 	LOAD_MODULE(nuauth_finalize_packet_module, finalize_packet_modules,
-		    "finalize_packet", "finalize packet");
+		    "finalize_packet", "finalize packet", MOD_FINALIZE_PACKET);
 	LOAD_MODULE(nuauth_auth_error_log_module, auth_error_log_modules,
-		    "auth_error_log", "auth error log");
+		    "auth_error_log", "auth error log", MOD_USER_FAIL);
 	LOAD_MODULE(nuauth_user_session_modify_module,
 		    user_session_modify_modules, "user_session_modify",
-		    "user session modify");
+		    "user session modify", MOD_SESSION_MODIFY);
 	if (nuauthconf->do_ip_authentication) {
 		LOAD_MODULE(nuauth_ip_authentication_module,
 			    ip_auth_modules, "ip_authentication",
-			    "ip authentication");
+			    "ip authentication", MOD_IP_AUTH);
 	}
 
 	g_mutex_unlock(modules_mutex);
