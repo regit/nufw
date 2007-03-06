@@ -319,17 +319,23 @@ void modules_auth_error_log(user_session_t * session,
 	}
 }
 
-void free_module_t(module_t * module)
+void clean_module_t(module_t *module)
 {
 	if (module) {
 		log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
-				"Module %s unloading (calling %p)",
+				"Module %s cleaning (calling %p)",
 				module->name,
 				module->free_params);
 		if (module->free_params) {
 			module->free_params(module->params);
 			module->params = NULL;
 		}
+	}
+}
+
+void free_module_t(module_t * module)
+{
+	if (module) {
 #ifndef DEBUG_WITH_VALGRIND
 		log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 				"Module %s closing", module->name);
@@ -454,7 +460,7 @@ static int load_modules_from(gchar * confvar, gchar * func,
 		module_path =
 		    g_module_build_path(MODULE_PATH,
 					current_module->module_name);
-		current_module->module = g_module_open(module_path, G_MODULE_BIND_LOCAL);
+		current_module->module = g_module_open(module_path, 0);
 		g_free(module_path);
 
 		log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
@@ -704,6 +710,10 @@ void unload_modules()
 	g_slist_free(auth_error_log_modules);
 	auth_error_log_modules = NULL;
 
+	for (c_module = nuauthdatas->modules; c_module;
+	     c_module = c_module->next) {
+		clean_module_t((module_t *) c_module->data);
+	}
 	for (c_module = nuauthdatas->modules; c_module;
 	     c_module = c_module->next) {
 		free_module_t((module_t *) c_module->data);
