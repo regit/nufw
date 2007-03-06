@@ -218,11 +218,6 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 	return 1;
 }
 
-G_MODULE_EXPORT gchar *g_module_unload(void)
-{
-	return NULL;
-}
-
 G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 {
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
