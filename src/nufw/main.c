@@ -402,13 +402,13 @@ int main(int argc, char *argv[])
 #ifdef HAVE_NFQ_SET_QUEUE_MAXLEN
 	    "L:"
 #endif
-	    "c:k:a:n:d:p:t:T:"
+	    "c:k:a:n:d:p:t:T:A:"
 #ifdef HAVE_LIBCONNTRACK
 	    "CM"
 #endif
 	    ;
 #else
-	char *options_list = "DhVvmc:k:a:n:d:p:t:T:";
+	char *options_list = "DhVvmc:k:a:n:d:p:t:T:A:";
 #endif
 	int option, daemonize = 0;
 	char *version = PACKAGE_VERSION;
@@ -508,6 +508,9 @@ int main(int argc, char *argv[])
 		case 'T':
 			sscanf(optarg, "%d", &track_size);
 			break;
+		case 'A':
+			sscanf(optarg, "%d", &debug_areas);
+			break;
 		case 'm':
 			nufw_set_mark = 1;
 			break;
@@ -555,6 +558,7 @@ int main(int argc, char *argv[])
 \t-a: use specified file as ca file (strict checking is done if selected) (default: none)\n\
 \t-n: use specified string as the needed DN of nuauth (inforce certificate checking) (default: none)\n\
 \t-v: increase debug level (+1 for each 'v') (max useful number: 10)\n\
+\t-A: debug areas (see man page for details)\n\
 \t-m: mark packet with userid (needed for connection expiration)\n"
 #ifdef HAVE_LIBCONNTRACK
 				"\t-C: listen to conntrack events (needed for connection expiration)\n\

@@ -70,6 +70,7 @@ manpage.1: manpage.sgml
       <arg><option>-m</option></arg>
       <arg><option>-U</option></arg>
       <arg><option>-v[v...]</option></arg>
+      <arg><option>-A <replaceable>debug_area</replaceable></option></arg>
       <arg><option>-k <replaceable>keyfile</replaceable></option></arg>
       <arg><option>-c <replaceable>certfile</replaceable></option></arg>
       <arg><option>-a <replaceable>cafile</replaceable></option></arg>
@@ -155,6 +156,22 @@ manpage.1: manpage.sgml
 	  of them increases the debug level by one. Default debug level is 2, max is 10.</para>
         </listitem>
       </varlistentry>
+  <varlistentry>
+        <term><option>-A <replaceable>debug_areas</replaceable></option>
+        </term>
+        <listitem>
+          <para>Chooses debug_area. Default debug area is ALL. To select a subset add value from the following list:
+ <itemizedlist>
+	 <listitem><para>DEBUG_AREA_MAIN (1) main domain</para></listitem>
+	 <listitem><para>DEBUG_AREA_PACKET (2) packet domain</para></listitem>
+	 <listitem><para>DEBUG_AREA_USER (4) user domain</para></listitem>
+	 <listitem><para>DEBUG_AREA_GW (8) Gateway domain, interaction wit nufw servers.</para></listitem>
+	 <listitem><para>DEBUG_AREA_AUTH (16) Authentication domain</para></listitem>
+	 </itemizedlist>
+	  </para>
+        </listitem>
+      </varlistentry>
+
 <!--      <varlistentry>
         <term><option>-l <replaceable>port</replaceable></option>
         </term>
@@ -294,6 +311,7 @@ manpage.1: manpage.sgml
               configurations, when one firewall gets passive, for instance.</para>
             </listitem>
           </varlistentry>
+          <varlistentry>
             <term><option>WINCH</option>
             </term>
             <listitem>
