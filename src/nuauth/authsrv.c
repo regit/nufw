@@ -346,7 +346,7 @@ void nuauth_atexit()
  *    - Reinstall old signal handlers (for SIGTERM and SIGINT) ;
  *    - Deinit NuAuth: call nuauth_deinit() (in soft mode)
  *
- * \param signal Code of raised signal
+ * \param recv_signal Code of raised signal
  */
 void nuauth_cleanup(int recv_signal)
 {
