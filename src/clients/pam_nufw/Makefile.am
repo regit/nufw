@@ -8,11 +8,9 @@ pam_nufw_la_CFLAGS	= -I ../lib -I$(top_srcdir)/include $(DYNAMIC)
 
 modules_LTLIBRARIES	= pam_nufw.la
 
-AM_LDFLAGS = -L../lib/
-
 pam_nufw_la_SOURCES	= pam_nufw.c
 pam_nufw_la_LDFLAGS	= -avoid-version -module
-pam_nufw_la_LIBADD	= -lpam -lnuclient
+pam_nufw_la_LIBADD	= -L../lib/ -lpam -lnuclient
 
 CLEANFILES		= *~ $(TITLE).so
 
