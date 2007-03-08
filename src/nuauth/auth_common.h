@@ -73,4 +73,6 @@ nu_error_t check_protocol_version(int version);
 
 int str_to_int(const char *text, int *value);
 
+void thread_pool_push(GThreadPool *pool, gpointer data, GError **error);
+
 #endif
