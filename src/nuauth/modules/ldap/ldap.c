@@ -528,13 +528,13 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 
 		/* finish filter */
 		if (element->os_sysname) {
-			g_strlcat(filter, "(|(&(OsName=*)(OsName=",
+			g_strlcat(filter, "(|(OsName=",
 				  LDAP_QUERY_SIZE);
 			prov_string =
 			    escape_string_for_ldap(element->os_sysname);
 			g_strlcat(filter, prov_string, LDAP_QUERY_SIZE);
 			g_free(prov_string);
-			g_strlcat(filter, "))(!(OsName=*)))",
+			g_strlcat(filter, ")(!(OsName=*)))",
 				  LDAP_QUERY_SIZE);
 		} else {
 			g_strlcat(filter, "(!(OsName=*))",
@@ -545,39 +545,39 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 				  LDAP_QUERY_SIZE);
 		}
 		if (element->os_release) {
-			g_strlcat(filter, "(|(&(OsRelease=*)(OsRelease=",
+			g_strlcat(filter, "(|(OsRelease=",
 				  LDAP_QUERY_SIZE);
 			prov_string =
 			    escape_string_for_ldap(element->os_release);
 			g_strlcat(filter, prov_string, LDAP_QUERY_SIZE);
 			g_free(prov_string);
-			g_strlcat(filter, "))(!(OsRelease=*)))",
+			g_strlcat(filter, ")(!(OsRelease=*)))",
 				  LDAP_QUERY_SIZE);
 		} else {
 			g_strlcat(filter, "(!(OsRelease=*))",
 				  LDAP_QUERY_SIZE);
 		}
 		if (element->os_version) {
-			g_strlcat(filter, "(|(&(OsVersion=*)(OsVersion=",
+			g_strlcat(filter, "(|(OsVersion=",
 				  LDAP_QUERY_SIZE);
 			prov_string =
 			    escape_string_for_ldap(element->os_version);
 			g_strlcat(filter, prov_string, LDAP_QUERY_SIZE);
 			g_free(prov_string);
-			g_strlcat(filter, "))(!(OsVersion=*)))",
+			g_strlcat(filter, ")(!(OsVersion=*)))",
 				  LDAP_QUERY_SIZE);
 		} else {
 			g_strlcat(filter, "(!(OsVersion=*))",
 				  LDAP_QUERY_SIZE);
 		}
 		if (element->app_md5) {
-			g_strlcat(filter, "(|(&(AppSig=*)(AppSig=",
+			g_strlcat(filter, "(|(AppSig=",
 				  LDAP_QUERY_SIZE);
 			prov_string =
 			    escape_string_for_ldap(element->app_md5);
 			g_strlcat(filter, prov_string, LDAP_QUERY_SIZE);
 			g_free(prov_string);
-			g_strlcat(filter, "))(!(AppSig=*)))",
+			g_strlcat(filter, ")(!(AppSig=*)))",
 				  LDAP_QUERY_SIZE);
 		} else {
 			g_strlcat(filter, "(!(AppSig=*))",
