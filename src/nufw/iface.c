@@ -22,12 +22,11 @@
 
 #include "nufw.h"
 
-#ifdef USE_NFQUEUE
+#ifdef HAVE_NLIF_CATCH
 int get_interface_information(struct nlif_handle *inst,
 			      struct queued_pckt *q_pckt,
 			      struct nfq_data *nfad)
 {
-#ifdef HAVE_NLIF_CATCH
 	nfq_get_indev_name(inst, nfad, q_pckt->indev);
 	if (q_pckt->indev[0] == '*') {
 		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
@@ -59,16 +58,9 @@ int get_interface_information(struct nlif_handle *inst,
 				"Get physoutdev information: %s",
 				q_pckt->physoutdev);
 	}
-#else
-	q_pckt->indev[0] = '*';
-	q_pckt->outdev[0] = '*';
-	q_pckt->physindev[0] = '*';
-	q_pckt->physoutdev[0] = '*';
-#endif
 	return 1;
 }
 
-#ifdef HAVE_NLIF_CATCH
 struct nlif_handle *iface_table_open()
 {
 	struct nlif_handle *inst;
@@ -99,4 +91,3 @@ void iface_table_close(struct nlif_handle *inst)
 }
 
 #endif				/* #ifdef HAVE_NLIF_CATCH */
-#endif				/* #ifdef USE_NFQUEUE */
