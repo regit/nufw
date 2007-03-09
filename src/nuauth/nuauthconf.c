@@ -206,9 +206,6 @@ void nuauth_reload(int signal)
 {
 	struct nuauth_params *newconf = NULL;
 	struct nuauth_params *actconf;
-	struct timespec sleep;
-	sleep.tv_sec = 0;
-	sleep.tv_nsec = 100000000;	/* 0.1 second */
 
 	nuauth_free_signal();
 
@@ -240,14 +237,13 @@ void nuauth_reload(int signal)
 	/* liberate threads by broadcasting condition */
 	nuauthdatas->need_reload = 0;
 
-
 	g_mutex_lock(nuauthdatas->reload_cond_mutex);
 	g_cond_broadcast(nuauthdatas->reload_cond);
 	g_mutex_unlock(nuauthdatas->reload_cond_mutex);
 
 	nuauth_install_signals();
 
-	g_message("nuauth reloaded");
+	log_message(INFO, DEBUG_AREA_MAIN, "NuAuth server reloaded.");
 }
 
 static struct nuauth_params *compare_and_update_nuauthparams(struct
