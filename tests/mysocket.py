@@ -3,7 +3,10 @@ from socket import (socket,
     error as socket_error, timeout as socket_timeout)
 from logging import info
 
-def connectTcp(host, port, timeout=None):
+def connectTcp(host, port, timeout):
+    """
+    timeout can be 'None' (no timeout)
+    """
     try:
         conn = socket(AF_INET, SOCK_STREAM)
         conn.settimeout(timeout)

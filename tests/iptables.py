@@ -1,5 +1,6 @@
 from subprocess import call
 from logging import warning
+from common import IPTABLE_QUEUE
 
 class Iptables:
     def __init__(self):
@@ -18,8 +19,8 @@ class Iptables:
                 % (command, exitcode))
 
     def filterTcp(self, port, table="OUTPUT"):
-        args = "-A %s -j NFQUEUE -p tcp --dport %u -m state --state new" \
-            % (table, port)
+        args = "-A %s -j %s -p tcp --dport %u -m state --state new" \
+            % (table, IPTABLE_QUEUE, port)
         args = args.split()
         warning("iptables %s" % " ".join(args))
         self._run(*args)

@@ -11,6 +11,8 @@ from logging import basicConfig, DEBUG, ERROR, StreamHandler, getLogger
 CONF_DIR = "/etc/nufw"
 NUAUTH_CONF = path.join(CONF_DIR, "nuauth.conf")
 ROOT_DIR = path.normpath(path.join(getcwd(), ".."))
+USE_COVERAGE = False
+USE_VALGRIND = USE_COVERAGE
 
 NUFW_PROG = path.join(ROOT_DIR, "src", "nufw", "nufw")
 NUAUTH_PROG = path.join(ROOT_DIR, "src", "nuauth", "nuauth")
@@ -22,9 +24,17 @@ NUAUTH_HOST = "192.168.0.2"
 USERNAME = "haypo"
 PASSWORD = "haypo"
 
+if USE_VALGRIND:
+    NUAUTH_START_TIMEOUT = 60.0
+else:
+    NUAUTH_START_TIMEOUT = 10.0
+NUFW_START_TIMEOUT = 5.0
+
 LOG_FILENAME = 'tests.log'
 #LOG_FORMAT = '%(asctime)s %(levelname)s %(message)s'
 LOG_FORMAT = '%(created).3f| %(message)s'
+
+IPTABLE_QUEUE = "NFQUEUE"
 
 _nuauth = None
 _nufw = None
@@ -66,9 +76,9 @@ def startNuauth(debug_level=9):
     global _nuauth
     if _nuauth:
         return _nuauth
-    _nuauth = Nuauth(NUAUTH_PROG, debug_level)
+    _nuauth = Nuauth(NUAUTH_PROG, debug_level=debug_level, use_coverage=USE_COVERAGE)
     atexit.register(_stopNuauth)
-    _nuauth.start()
+    _nuauth.start(timeout=NUAUTH_START_TIMEOUT)
     # Log output
     for line in _nuauth.readlines():
         pass
@@ -85,7 +95,7 @@ def startNufw():
         return _nufw
     _nufw = Nufw(NUFW_PROG)
     atexit.register(_stopNufw)
-    _nufw.start()
+    _nufw.start(timeout=NUFW_START_TIMEOUT)
     return _nufw
 
 def reloadNuauth():

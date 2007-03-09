@@ -17,10 +17,13 @@ SIGNAME = {
 }
 
 class Process(object):
-    def __init__(self, program, *args):
+    def __init__(self, program, args=None):
         self.program = program
         self.process = None
-        self.program_args = list(args)
+        if args:
+            self.program_args = args
+        else:
+            self.program_args = []
         self.popen_args = {'stdin': PIPE, 'stdout': PIPE, 'stderr': STDOUT}
 
     def _log(self, func, message):
@@ -49,8 +52,8 @@ class Process(object):
             self.stop()
 
         # Run nuauth
-        self.warning("start()")
         args = [self.program] + self.program_args
+        self.warning("create process: %r" % args)
         self.process = Popen(args, **self.popen_args)
 
         # Wait until it's ready
@@ -69,6 +72,8 @@ class Process(object):
             if err:
                 self.stop()
                 raise RuntimeError(err % str(self))
+        diff = time() - start
+        self.warning("process started (%1.1f sec)" % diff)
 
     def readline(self, timeout=0, stream="stdout"):
         """
@@ -122,22 +127,16 @@ class Process(object):
                 break
             yield line.rstrip()
 
-    def isRunning(self):
-        if not self.process:
-            return False
-        finished, status = waitpid(self.process.pid, P_NOWAIT)
-        if finished == 0:
-            return True
-
+    def exited(self, status):
         # Log last output
         for line in self.readlines():
             pass
 
-        # Log exit code
+        # Display exit code
         log_func = self.warning
         info = []
         if WCOREDUMP(status):
-            info.append("core dumped!")
+            info.append("core.%s dumped!" % self.process.pid)
             log_func = self.error
         if WIFSIGNALED(status):
             signal = WSTOPSIG(status)
@@ -152,6 +151,16 @@ class Process(object):
 
         # Delete process
         self.process = None
+
+    def isRunning(self):
+        if not self.process:
+            return False
+        finished, status = waitpid(self.process.pid, P_NOWAIT)
+        if finished == 0:
+            return True
+
+        # Log exit code
+        self.exited(status)
         return False
 
     def isReady(self):

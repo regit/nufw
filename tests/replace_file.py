@@ -47,6 +47,7 @@ class ReplaceFile:
         else:
             self.new_content(output)
         output.close()
+        del self.new_content
 
     def desinstall(self):
         if not self.replaced:

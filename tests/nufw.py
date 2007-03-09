@@ -2,7 +2,7 @@ from process import Process
 
 class Nufw(Process):
     def __init__(self, program):
-        Process.__init__(self, program, "-vvvvv")
+        Process.__init__(self, program, ["-vvvvv"])
         # FIXME: Load kernel modules?
 
     def isReady(self):

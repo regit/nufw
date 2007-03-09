@@ -22,7 +22,6 @@ class NuauthConf(ReplaceFile):
     def writeContent(self, output):
         for key, value in self.content.iteritems():
             output.write("%s=%s\n" % (key, value))
-        output.close()
 
     def __setitem__(self, key, value):
         if key not in self.content:
