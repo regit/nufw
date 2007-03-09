@@ -42,30 +42,46 @@ G_MODULE_EXPORT uint32_t get_api_version()
  *
  * \return Returns -1 if fails, 0 otherwise.
  */
-static int ipv6_to_sql(struct in6_addr *addr, char *buffer, size_t buflen)
+static int ipv6_to_sql(struct log_mysql_params *params, struct in6_addr *addr, char *buffer, size_t buflen)
 {
 	unsigned char i;
 	unsigned char *addr8;
 	size_t written;
-	if (buflen < IPV6_SQL_STRLEN) {
-		buffer[0] = 0;
-		return -1;
-	}
-	buffer[0] = '0';
-	buffer[1] = 'x';
-	buffer += 2;
-	addr8 = &addr->s6_addr[0];
-	for (i = 0; i < 4; i++) {
-		written = sprintf(buffer, "%02x%02x%02x%02x",
-				  addr8[0], addr8[1], addr8[2], addr8[3]);
-		if (written != 2 * 4) {
+
+	if (!params->mysql_use_ipv4_schema) {
+		/* format IPv6 to BINARY(16) as "0x..." */
+		if (buflen < IPV6_SQL_STRLEN) {
 			buffer[0] = 0;
 			return -1;
 		}
-		buffer += written;
-		addr8 += 4;
+		buffer[0] = '0';
+		buffer[1] = 'x';
+		buffer += 2;
+		addr8 = &addr->s6_addr[0];
+		for (i = 0; i < 4; i++) {
+			written = sprintf(buffer, "%02x%02x%02x%02x",
+					addr8[0], addr8[1], addr8[2], addr8[3]);
+			if (written != 2 * 4) {
+				buffer[0] = 0;
+				return -1;
+			}
+			buffer += written;
+			addr8 += 4;
+		}
+		buffer[0] = 0;
+	} else {
+		int ok;
+
+		/* format IPv6 to "a.b.c.d" but only for IPv4 in IPv6 */
+		if (!is_ipv4(addr)) {
+			log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
+				    "MySQL: Packet has IPV6 address but MySQL use IPV4 only schema");
+			return -1;
+		}
+		ok = secure_snprintf(buffer, buflen, "%u",
+				addr->s6_addr32[3]);
+		if (!ok) return -1;
 	}
-	buffer[0] = 0;
 	return 0;
 }
 
@@ -363,6 +379,8 @@ static char *build_insert_request(MYSQL * ld, connection_t * element,
 {
 	char request_fields[INSERT_REQUEST_FIELDS_SIZE];
 	char request_values[INSERT_REQUEST_VALUES_SIZE];
+	char src_ascii[IPV6_SQL_STRLEN];
+	char dst_ascii[IPV6_SQL_STRLEN];
 	char tmp_buffer[REQUEST_TMP_BUFFER];
 	char *log_prefix = "Default";
 	gboolean ok;
@@ -374,47 +392,24 @@ static char *build_insert_request(MYSQL * ld, connection_t * element,
 	if (!ok) {
 		return NULL;
 	}
-	if (!params->mysql_use_ipv4_schema) {
-		char src_ascii[IPV6_SQL_STRLEN];
-		char dst_ascii[IPV6_SQL_STRLEN];
-		if (ipv6_to_sql
-		    (&element->tracking.saddr, src_ascii,
-		     sizeof(src_ascii)) != 0)
-			return NULL;
-		if (ipv6_to_sql
-		    (&element->tracking.daddr, dst_ascii,
-		     sizeof(dst_ascii)) != 0)
-			return NULL;
-		ok = secure_snprintf(request_values,
-				     sizeof(request_values),
-				     "VALUES ('%hu', '%lu', '%hu', %s, %s, ",
-				     (short unsigned int) state,
-				     (long unsigned int) element->
-				     timestamp,
-				     (short unsigned int) element->
-				     tracking.protocol, src_ascii,
-				     dst_ascii);
-	} else {
-		if ((is_ipv4(&element->tracking.saddr)) &&
-		    (is_ipv4(&element->tracking.daddr))) {
-			ok = secure_snprintf(request_values,
-					     sizeof(request_values),
-					     "VALUES ('%hu', '%lu', '%hu', '%lu', '%lu',",
-					     (short unsigned int) state,
-					     (long unsigned int) element->
-					     timestamp,
-					     (short unsigned int) element->
-					     tracking.protocol,
-					     ntohl((&element->tracking.
-						    saddr)->s6_addr32[3]),
-					     ntohl((&element->tracking.
-						    daddr)->s6_addr32[3]));
-		} else {
-			log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
-				    "MySQL INSERT, IPV6 packet but IPV4 only MySQL schema");
-			ok = 0;
-		}
-	}
+
+	if (ipv6_to_sql
+			(params, &element->tracking.saddr, src_ascii,
+			 sizeof(src_ascii)) != 0)
+		return NULL;
+	if (ipv6_to_sql
+			(params, &element->tracking.daddr, dst_ascii,
+			 sizeof(dst_ascii)) != 0)
+		return NULL;
+	ok = secure_snprintf(request_values,
+			sizeof(request_values),
+			"VALUES ('%hu', '%lu', '%hu', %s, %s, ",
+			(short unsigned int) state,
+			(long unsigned int) element->
+			timestamp,
+			(short unsigned int) element->
+			tracking.protocol, src_ascii,
+			dst_ascii);
 	if (!ok) {
 		return NULL;
 	}
@@ -546,13 +541,13 @@ static inline int log_state_open(MYSQL * ld, connection_t * element,
 		char src_ascii[IPV6_SQL_STRLEN];
 
 		if (ipv6_to_sql
-		    (&element->tracking.saddr, src_ascii,
+		    (params, &element->tracking.saddr, src_ascii,
 		     sizeof(src_ascii)) != 0)
 			return -1;
 
 		ok = secure_snprintf(request, sizeof(request),
 				     "UPDATE %s SET state='%hu', end_timestamp=FROM_UNIXTIME('%lu') "
-				     "WHERE (ip_saddr='%s' AND tcp_sport='%u' AND (state=1 OR state=2))",
+				     "WHERE (ip_saddr=%s AND tcp_sport='%u' AND (state=1 OR state=2))",
 				     params->mysql_table_name,
 				     TCP_STATE_CLOSE,
 				     element->timestamp,
@@ -613,10 +608,10 @@ static inline int log_state_established(MYSQL * ld,
 	gboolean ok;
 
 	if (ipv6_to_sql
-	    (&element->tracking.saddr, src_ascii, sizeof(src_ascii)) != 0)
+	    (params, &element->tracking.saddr, src_ascii, sizeof(src_ascii)) != 0)
 		return -1;
 	if (ipv6_to_sql
-	    (&element->tracking.daddr, dst_ascii, sizeof(dst_ascii)) != 0)
+	    (params, &element->tracking.daddr, dst_ascii, sizeof(dst_ascii)) != 0)
 		return -1;
 
 	while (update_status < 2) {
@@ -677,75 +672,36 @@ static inline int log_state_close(MYSQL * ld,
 
 	while (update_status < 2) {
 		update_status++;
-		if (!params->mysql_use_ipv4_schema) {
-			char src_ascii[IPV6_SQL_STRLEN];
-			char dst_ascii[IPV6_SQL_STRLEN];
+		char src_ascii[IPV6_SQL_STRLEN];
+		char dst_ascii[IPV6_SQL_STRLEN];
 
-			if (ipv6_to_sql
-			    (&element->tracking.saddr, src_ascii,
-			     sizeof(src_ascii)) != 0)
-				return -1;
-			if (ipv6_to_sql
-			    (&element->tracking.daddr, dst_ascii,
-			     sizeof(dst_ascii)) != 0)
-				return -1;
-			ok = secure_snprintf(request, sizeof(request),
-					     "UPDATE %s SET end_timestamp=FROM_UNIXTIME(%lu), state=%hu,"
-					     " packets_in=%d, packets_out=%d,"
-					     " bytes_in=%d, bytes_out=%d "
-					     "WHERE (ip_saddr=%s AND ip_daddr=%s "
-					     "AND tcp_sport='%hu' AND tcp_dport='%hu' AND (state='%hu' OR state='%hu')",
-					     params->mysql_table_name,
-					     element->timestamp,
-					     TCP_STATE_CLOSE,
-					     element->packets_in,
-					     element->packets_out,
-					     element->bytes_in,
-					     element->bytes_out,
-					     src_ascii,
-					     dst_ascii,
-					     (element->tracking).source,
-					     (element->tracking).dest,
-					     TCP_STATE_ESTABLISHED,
-					     TCP_STATE_OPEN);
-		} else {
-			if ((is_ipv4(&element->tracking.saddr)) &&
-			    (is_ipv4(&element->tracking.daddr))) {
-				ok = secure_snprintf(request,
-						     sizeof(request),
-						     "UPDATE %s SET end_timestamp=FROM_UNIXTIME(%lu), state=%hu, "
-						     "packets_in=%d, packets_out=%d"
-						     ", bytes_in=%d, bytes_out=%d "
-						     "WHERE (ip_saddr='%lu' AND ip_daddr='%lu' "
-						     "AND tcp_sport='%hu' AND tcp_dport='%hu' AND (state='%hu' OR state='%hu')",
-						     params->
-						     mysql_table_name,
-						     element->timestamp,
-						     TCP_STATE_CLOSE,
-						     element->packets_in,
-						     element->packets_out,
-						     element->bytes_in,
-						     element->bytes_out,
-						     ntohl((&element->
-							    tracking.
-							    saddr)->
-							   s6_addr32[3]),
-						     ntohl((&element->
-							    tracking.
-							    daddr)->
-							   s6_addr32[3]),
-						     (element->tracking).
-						     source,
-						     (element->tracking).
-						     dest,
-						     TCP_STATE_ESTABLISHED,
-						     TCP_STATE_OPEN);
-			} else {
-				log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
-					    "MySQL Update, IPV6 packet but IPV4 only MySQL schema");
-				return -1;
-			}
-		}
+		if (ipv6_to_sql
+				(params, &element->tracking.saddr, src_ascii,
+				 sizeof(src_ascii)) != 0)
+			return -1;
+		if (ipv6_to_sql
+				(params, &element->tracking.daddr, dst_ascii,
+				 sizeof(dst_ascii)) != 0)
+			return -1;
+		ok = secure_snprintf(request, sizeof(request),
+				"UPDATE %s SET end_timestamp=FROM_UNIXTIME(%lu), state=%hu,"
+				" packets_in=%d, packets_out=%d,"
+				" bytes_in=%d, bytes_out=%d "
+				"WHERE (ip_saddr=%s AND ip_daddr=%s "
+				"AND tcp_sport='%hu' AND tcp_dport='%hu' AND (state='%hu' OR state='%hu')",
+				params->mysql_table_name,
+				element->timestamp,
+				TCP_STATE_CLOSE,
+				element->packets_in,
+				element->packets_out,
+				element->bytes_in,
+				element->bytes_out,
+				src_ascii,
+				dst_ascii,
+				(element->tracking).source,
+				(element->tracking).dest,
+				TCP_STATE_ESTABLISHED,
+				TCP_STATE_OPEN);
 		if (!ok) {
 			log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 				    "Building mysql update query, the SHORT_REQUEST_SIZE limit was reached!");
@@ -909,7 +865,7 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 		return -1;
 	}
 
-	if (ipv6_to_sql(&c_session->addr, ip_ascii, sizeof(ip_ascii)) != 0)
+	if (ipv6_to_sql(params, &c_session->addr, ip_ascii, sizeof(ip_ascii)) != 0)
 		return -1;
 
 	switch (state) {
@@ -918,7 +874,7 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 		ok = secure_snprintf(request, sizeof(request),
 				     "INSERT INTO %s (user_id, username, ip_saddr, "
 				     "os_sysname, os_release, os_version, socket, start_time) "
-				     "VALUES ('%lu', '%s', '%u', '%s', '%s', '%s', '%u', FROM_UNIXTIME(%lu))",
+				     "VALUES ('%lu', '%s', '%s', '%s', '%s', '%s', '%u', FROM_UNIXTIME(%lu))",
 				     params->mysql_users_table_name,
 				     c_session->user_id,
 				     c_session->user_name,
