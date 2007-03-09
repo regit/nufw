@@ -12,10 +12,18 @@ class Nuauth(Process):
             program = "valgrind"
         Process.__init__(self, program, arg)
         self.hostname = "localhost"
+        self.need_reload = False
         self.nufw_port = 4129
         self.client_port = 4130
         if self.isReady():
             raise RuntimeError("nuauth is already running!")
+
+    def start(self, timeout=None):
+        is_new = Process.start(self, restart=False, timeout=timeout)
+        if not is_new and self.need_reload:
+            self.info("Reload")
+            self.kill(SIGHUP)
+        self.need_reload = False
 
     def isReady(self):
         """

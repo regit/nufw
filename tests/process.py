@@ -48,7 +48,7 @@ class Process(object):
         # If it's already running, stop it
         if self.isRunning():
             if not restart:
-                return
+                return False
             self.stop()
 
         # Run nuauth
@@ -74,6 +74,7 @@ class Process(object):
                 raise RuntimeError(err % str(self))
         diff = time() - start
         self.warning("process started (%1.1f sec)" % diff)
+        return True
 
     def readline(self, timeout=0, stream="stdout"):
         """

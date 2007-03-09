@@ -23,11 +23,13 @@ NUTCPC_PROG = path.join(ROOT_DIR, "src", "clients", "nutcpc", "nutcpc")
 NUAUTH_HOST = "192.168.0.2"
 USERNAME = "haypo"
 PASSWORD = "haypo"
+CLIENT_IP = NUAUTH_HOST
+CLIENT_USER_ID = 1000
 
 if USE_VALGRIND:
     NUAUTH_START_TIMEOUT = 60.0
 else:
-    NUAUTH_START_TIMEOUT = 10.0
+    NUAUTH_START_TIMEOUT = 5.0
 NUFW_START_TIMEOUT = 5.0
 
 LOG_FILENAME = 'tests.log'
@@ -109,7 +111,8 @@ def reloadNuauth():
     was_running = bool(_nuauth)
     nuauth = startNuauth()
     if was_running:
-        nuauth.kill(SIGHUP)
+        nuauth.need_reload = True
+        nuauth.info("Program reload on next start()")
     return nuauth
 
 def _stopNuauth():
