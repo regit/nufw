@@ -4,6 +4,7 @@ from common import reloadNuauth, getNuauthConf, createClient, connectClient
 from time import time
 from common import CLIENT_IP, CLIENT_USER_ID
 from socket import ntohl
+from datetime import datetime
 from IPy import IP
 import MySQLdb
 import platform
@@ -45,40 +46,58 @@ class TestMysqlLog(TestCase):
 
     def testLogin(self):
         cursor = self.conn.cursor()
+        start_time = int(time())
 
-        first_time = int(time())
+        # --- Login ---
 
         # Client login
         client = createClient()
         self.assert_(connectClient(client))
 
         # Get last MySQL row
-        print first_time
         SQL = \
             "SELECT ip_saddr, user_id, username, " \
-            "os_sysname, os_release, os_version " \
+            "os_sysname, os_release, os_version, end_time " \
             "FROM %s WHERE start_time >= FROM_UNIXTIME(%s) " \
-            "ORDER BY start_time DESC;" % (MYSQL_USER_TABLE, first_time)
-        print SQL
+            "ORDER BY start_time DESC;" % (MYSQL_USER_TABLE, start_time)
         cursor.execute(SQL)
 
         # Check number of rows
         self.assertEqual(cursor.rowcount, 1)
 
-        # Read read
-        ip_saddr, user_id, username, os_sysname, os_release, os_version = cursor.fetchone()
+        # Read row columns
+        (ip_saddr, user_id, username, os_sysname,
+            os_release, os_version, end_time) = cursor.fetchone()
+        ip_saddr = ntohl(ip_saddr) & 0xFFFFFFFF
 
         # Check values
-#        self.assertEqual(IP(ntohl(ip_saddr)), IP(CLIENT_IP))
+        self.assertEqual(IP(ip_saddr), IP(CLIENT_IP))
         self.assertEqual(user_id, CLIENT_USER_ID)
         self.assertEqual(username, client.username)
         self.assertEqual(os_sysname, OS_SYSNAME)
         self.assertEqual(os_release, OS_RELEASE)
         self.assertEqual(os_version, OS_VERSION)
 
-#        # Client logout
-#        client.stop()
-#        self.assert_(self.findLog("[nuauth] User %s disconnect on " % client.username))
+        # --- Logout ---
+
+        # Client logout
+        # Use datetime.fromtimestamp() with int(time()) to have microsecond=0
+        logout_before = datetime.fromtimestamp(int(time()))
+        client.stop()
+        logout_after = datetime.now()
+
+        # Get last MySQL row
+        cursor.execute(SQL)
+
+        # Check number of rows
+        self.assertEqual(cursor.rowcount, 1)
+
+        # Read row columns
+        (ip_saddr, user_id, username, os_sysname,
+            os_release, os_version, end_time) = cursor.fetchone()
+
+        # Check values
+        self.assert_(logout_before <= end_time <= logout_after)
 
 if __name__ == "__main__":
     print "Test nuauth module 'mysql' (log)"
