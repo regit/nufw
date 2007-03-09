@@ -21,7 +21,7 @@
 
 /** \file structure.h
  *  \brief Global variables with their default value
- *   
+ *
  * Global variables with their default value. Most important one is
  * the ::packets_list.
  */
@@ -93,8 +93,8 @@ typedef enum {
  * mark support).
  */
 /* TODO use a kind of HASH */
-typedef struct {
-	/*! Unique identifier in netfilter queue, comes 
+typedef struct Packet_Ids {
+	/*! Unique identifier in netfilter queue, comes
 	 * from nfq_get_msg_packet_hdr() */
 	unsigned long id;
 
@@ -111,7 +111,7 @@ typedef struct {
 	unsigned long nfmark;
 #endif
 
-	/*! Pointer to next packet entry in ::packets_list, 
+	/*! Pointer to next packet entry in ::packets_list,
 	 * set by padd() and psuppress() */
 	struct Packet_Ids *next;
 } packet_idl;
@@ -120,7 +120,7 @@ typedef struct {
 
 /**
  * Packet list used to store packet until NuAuth answer.
- * clean_old_packets() and psearch_and_destroy() remove old packets (after 
+ * clean_old_packets() and psearch_and_destroy() remove old packets (after
  * ::packet_timeout secondes).
  */
 struct packets_list_t {
@@ -146,7 +146,7 @@ struct ipq_handle *hndl;
 #endif
 
 /**
- * All data of a thread (use for packetsrv()) 
+ * All data of a thread (use for packetsrv())
  */
 struct nufw_threadtype {
 	pthread_t thread;
@@ -165,7 +165,7 @@ struct nufw_threadargument {
 pthread_mutex_t hndl_mutex;
 
 /** \def IPQ_SET_VERDICT(PACKETID, DECISION)
- * Set decision (NF_ACCEPT or NF_DROP) of a packet. Call nfq_set_verdict() 
+ * Set decision (NF_ACCEPT or NF_DROP) of a packet. Call nfq_set_verdict()
  * or ipq_set_verdict().
  */
 
