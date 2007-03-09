@@ -575,9 +575,9 @@ void nuauth_install_signals()
 
 void nuauth_free_signal()
 {
-	(void) sigaction(SIGTERM, &nuauthdatas->old_sigterm_hdl, NULL);
-	(void) sigaction(SIGINT, &nuauthdatas->old_sigint_hdl, NULL);
-	(void) sigaction(SIGHUP, &nuauthdatas->old_sighup_hdl, NULL);
+	signal(SIGTERM, SIG_IGN);
+	signal(SIGINT, SIG_IGN);
+	signal(SIGHUP, SIG_IGN);
 }
 
 
