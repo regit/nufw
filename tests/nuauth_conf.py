@@ -1,10 +1,11 @@
 import re
 from replace_file import ReplaceFile
 from logging import info
+from config import NUAUTH_CONF
 
 class NuauthConf(ReplaceFile):
-    def __init__(self, filename):
-        ReplaceFile.__init__(self, filename, self.writeContent)
+    def __init__(self):
+        ReplaceFile.__init__(self, NUAUTH_CONF, self.writeContent)
 
         # Load current configuration
         self.content = {}

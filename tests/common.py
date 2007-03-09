@@ -85,7 +85,7 @@ def connectClient(client):
     return True
 
 def getNuauthConf():
-    return NuauthConf(NUAUTH_CONF)
+    return NuauthConf()
 
 setupLog()
 
