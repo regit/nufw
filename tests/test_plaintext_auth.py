@@ -3,7 +3,6 @@ from unittest import TestCase, main
 from common import (CONF_DIR,
     reloadNuauth, getNuauthConf,
     createClient, connectClient)
-from config import NuauthConf
 from os import path
 from replace_file import ReplaceFile
 

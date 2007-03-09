@@ -6,15 +6,11 @@ from common import (CONF_DIR,
     createClient, connectClient)
 from iptables import Iptables
 from os import path
-from mysocket import connectTcp
+from filter import testAllowPort, testDisallowPort, VALID_PORT
 from test_plaintext_auth import USER_FILENAME, USER, PASS, GID, USER_DB
 from replace_file import ReplaceFile
 
 ACL_FILENAME = path.join(CONF_DIR, "acls.nufw")
-PORT = 80
-PORT2 = 90
-HOST = "www.google.com"
-TIMEOUT = 1.0
 
 ACLS = """[web]
 decision=1
@@ -23,7 +19,7 @@ proto=6
 SrcIP=0.0.0.0/0
 SrcPort=1024-65535
 DstIP=0.0.0.0/0
-DstPort=%u""" % (GID, PORT)
+DstPort=%u""" % (GID, VALID_PORT)
 
 class TestPlaintextAcl(TestCase):
     def setUp(self):
@@ -52,24 +48,9 @@ class TestPlaintextAcl(TestCase):
         self.iptables.flush()
 
     def testFilter(self):
-        # Enable iptables filtering (1/2)
-        self.iptables.filterTcp(PORT)
-
-        # Connect user
         client = createClient(USER, PASS)
-        self.assert_(connectClient(client))
-
-        # Create socket
-        self.assert_(connectTcp(HOST, PORT, TIMEOUT))
-
-        # Enable iptables filtering (2/2)
-        self.iptables.filterTcp(PORT2)
-
-        # Create socket
-        self.assert_(not connectTcp(HOST, PORT2, TIMEOUT))
-
-        # Disconnect user
-        client.stop()
+        testAllowPort(self, self.iptables, client)
+        testDisallowPort(self, self.iptables, client)
 
 if __name__ == "__main__":
     print "Test nuauth module 'plaintext' for ACL"

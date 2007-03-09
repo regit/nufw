@@ -1,4 +1,5 @@
 from process import Process
+from signal import SIGHUP
 from mysocket import connectTcp
 
 TIMEOUT = 0.100   # 100 ms
