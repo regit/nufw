@@ -1,6 +1,7 @@
 #!/usr/bin/python2.4
 from unittest import TestCase, main
-from common import (CONF_DIR,
+from config import CONF_DIR
+from common import (
     startNufw,
     reloadNuauth, getNuauthConf,
     createClient, connectClient)

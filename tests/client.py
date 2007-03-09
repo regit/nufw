@@ -1,11 +1,12 @@
 from process import Process
+from config import NUTCPC_PROG, NUAUTH_HOST
 
 class Client(Process):
-    def __init__(self, program, hostname, username, password):
+    def __init__(self, username, password):
         self._username = username
         self._password = password
-        self._hostname = hostname
-        Process.__init__(self, program)
+        self._hostname = NUAUTH_HOST
+        Process.__init__(self, NUTCPC_PROG)
         self.updateArgs()
 
     def _setUsername(self, username):

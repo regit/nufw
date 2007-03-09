@@ -1,8 +1,9 @@
 from process import Process
+from config import NUFW_PROG
 
 class Nufw(Process):
-    def __init__(self, program):
-        Process.__init__(self, program, ["-vvvvv"])
+    def __init__(self):
+        Process.__init__(self, NUFW_PROG, ["-vvvvv"])
         # FIXME: Load kernel modules?
 
     def isReady(self):

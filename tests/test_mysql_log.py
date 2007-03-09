@@ -3,7 +3,7 @@ from unittest import TestCase, main
 from common import reloadNuauth, getNuauthConf, createClient, connectClient
 from time import time
 from iptables import Iptables
-from common import CLIENT_IP, CLIENT_USER_ID
+from config import CLIENT_IP, CLIENT_USER_ID
 from socket import ntohl
 from filter import testAllowPort, testDisallowPort, VALID_PORT, INVALID_PORT
 from datetime import datetime

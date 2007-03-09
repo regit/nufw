@@ -1,36 +1,12 @@
-from os import getcwd, path
 import atexit
 from nufw import Nufw
 from nuauth import Nuauth
 from client import Client
 from nuauth_conf import NuauthConf
 from log import setupLog
+from config import (USERNAME, PASSWORD,
+    USE_COVERAGE, NUAUTH_START_TIMEOUT, NUFW_START_TIMEOUT)
 
-CONF_DIR = "/etc/nufw"
-NUAUTH_CONF = path.join(CONF_DIR, "nuauth.conf")
-ROOT_DIR = path.normpath(path.join(getcwd(), ".."))
-USE_COVERAGE = False
-USE_VALGRIND = USE_COVERAGE
-
-NUFW_PROG = path.join(ROOT_DIR, "src", "nufw", "nufw")
-NUAUTH_PROG = path.join(ROOT_DIR, "src", "nuauth", "nuauth")
-NUTCPC_PROG = path.join(ROOT_DIR, "src", "clients", "nutcpc", "nutcpc")
-
-# FIXME: Automatically get address
-# It's important to connect with right nuauth IP
-NUAUTH_HOST = "192.168.0.2"
-USERNAME = "haypo"
-PASSWORD = "haypo"
-CLIENT_IP = NUAUTH_HOST
-CLIENT_USER_ID = 1000
-
-if USE_VALGRIND:
-    NUAUTH_START_TIMEOUT = 60.0
-else:
-    NUAUTH_START_TIMEOUT = 5.0
-NUFW_START_TIMEOUT = 5.0
-
-IPTABLE_QUEUE = "NFQUEUE"
 
 _nuauth = None
 _nufw = None
@@ -44,7 +20,7 @@ def startNuauth(debug_level=9):
     global _nuauth
     if _nuauth:
         return _nuauth
-    _nuauth = Nuauth(NUAUTH_PROG, debug_level=debug_level, use_coverage=USE_COVERAGE)
+    _nuauth = Nuauth(debug_level=debug_level, use_coverage=USE_COVERAGE)
     atexit.register(_stopNuauth)
     _nuauth.start(timeout=NUAUTH_START_TIMEOUT)
     # Log output
@@ -61,7 +37,7 @@ def startNufw():
     global _nufw
     if _nufw:
         return _nufw
-    _nufw = Nufw(NUFW_PROG)
+    _nufw = Nufw()
     atexit.register(_stopNufw)
     _nufw.start(timeout=NUFW_START_TIMEOUT)
     return _nufw
@@ -96,7 +72,7 @@ def _stopNufw():
     _nufw = None
 
 def createClient(username=USERNAME, password=PASSWORD):
-    return Client(NUTCPC_PROG, NUAUTH_HOST, username, password)
+    return Client(username, password)
 
 def connectClient(client):
     client.info("connectClient()")

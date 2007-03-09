@@ -1,6 +1,6 @@
 from subprocess import call
 from logging import warning
-from common import IPTABLE_QUEUE
+from config import IPTABLE_QUEUE
 
 _iptables_dirty = True
 

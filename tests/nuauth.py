@@ -1,13 +1,15 @@
 from process import Process
 from signal import SIGHUP
 from mysocket import connectTcp
+from config import NUAUTH_PROG
 
 TIMEOUT = 0.100   # 100 ms
 
 class Nuauth(Process):
-    def __init__(self, program, use_coverage=True, debug_level=1):
+    def __init__(self, use_coverage=True, debug_level=1):
         arg = ["-" + "v" * min(max(debug_level, 1), 9)]
         self.use_coverage = use_coverage
+        program = NUAUTH_PROG
         if self.use_coverage:
             arg = ["--tool=callgrind", program] + arg
             program = "valgrind"
