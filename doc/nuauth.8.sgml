@@ -23,7 +23,7 @@ manpage.1: manpage.sgml
   <!ENTITY dhdate      "<date>october 2, 2003</date>">
   <!-- SECTION should be 1-8, maybe w/ subsection other parameters are
        allowed: see man(7), man(1). -->
-  <!ENTITY dhsection   "<manvolnum>1</manvolnum>">
+  <!ENTITY dhsection   "<manvolnum>8</manvolnum>">
   <!ENTITY dhemail     "<email>vincent@gryzor.com</email>">
   <!ENTITY dhemail2    "<email>eric@regit.org</email>">
   <!ENTITY dhusername  "Vincent Deffontaines">
@@ -217,11 +217,12 @@ manpage.1: manpage.sgml
               were received and sent since daemon startup.</para>
             </listitem>
           </varlistentry>
+	  </variablelist>
      </para>
   </refsect1>
   <refsect1>
     <title>SEE ALSO</title>
-    <para>nufw(1)</para>
+    <para>nufw(8)</para>
   </refsect1>
   <refsect1>
     <title>AUTHOR</title>

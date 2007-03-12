@@ -173,8 +173,8 @@ manpage.1: manpage.sgml
   </refsect1>
   <refsect1>
     <title>SEE ALSO</title>
-    <para>nufw(1)</para>
-    <para>nuauth(1)</para>
+    <para>nufw(8)</para>
+    <para>nuauth(8)</para>
   </refsect1>
   <refsect1>
     <title>AUTHOR</title>

@@ -23,7 +23,7 @@ manpage.1: manpage.sgml
   <!ENTITY dhdate      "<date>october 2, 2003</date>">
   <!-- SECTION should be 1-8, maybe w/ subsection other parameters are
        allowed: see man(7), man(1). -->
-  <!ENTITY dhsection   "<manvolnum>1</manvolnum>">
+  <!ENTITY dhsection   "<manvolnum>8</manvolnum>">
   <!ENTITY dhemail     "<email>vincent@inl.fr</email>">
   <!ENTITY dhemail2    "<email>eric@inl.fr</email>">
   <!ENTITY dhusername  "Vincent Deffontaines">
@@ -184,7 +184,7 @@ manpage.1: manpage.sgml
   </refsect1>
   <refsect1>
     <title>SEE ALSO</title>
-    <para>nuauth(1), nufw(1)</para>
+    <para>nuauth(8), nufw(8)</para>
   </refsect1>
   <refsect1>
     <title>AUTHOR</title>

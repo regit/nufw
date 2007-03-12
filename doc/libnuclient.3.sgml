@@ -113,7 +113,7 @@ an error occur when sending authentication packet. Applications MUST considered 
 
   <refsect1>
     <title>SEE ALSO</title>
-    <para>nuauth(1)</para>
+    <para>nuauth(8)</para>
   </refsect1>
   <refsect1>
     <title>AUTHOR</title>
