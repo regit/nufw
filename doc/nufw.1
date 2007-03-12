@@ -3,7 +3,7 @@
 .\" <http://shell.ipoline.com/~elmert/comp/docbook2X/> 
 .\" Please send any bug reports, improvements, comments, patches, 
 .\" etc. to Steve Cheng <steve@ggi-project.org>.
-.TH "NUFW" "1" "07 mars 2007" "" ""
+.TH "NUFW" "1" "12 mars 2007" "" ""
 
 .SH NAME
 nufw \- NUFW User filtering gateway server
@@ -96,10 +96,7 @@ Specifies timeout to forget packets not answered for by nuauth.
 Default value : 15 s.
 .TP
 \fB-T \fItrack_size\fB \fR
-Ask regit :) Default value : 1000.
-.TP
-\fB-I \fIServerID\fB \fR
-Ask regit :) Default value : 12345.
+Set maximum number of packets that can wait a decision in nufw. Default value : 1000.
 .TP
 \fB-q \fINfQueue number\fB \fR
 If Nufw was compiled with NfQueue support, Id of the NfQueue to

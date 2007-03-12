@@ -240,14 +240,7 @@ manpage.1: manpage.sgml
         <term><option>-T <replaceable>track_size</replaceable></option>
         </term>
         <listitem>
-          <para>Ask regit :) Default value : 1000.</para>
-        </listitem>
-      </varlistentry>
-      <varlistentry>
-        <term><option>-I <replaceable>ServerID</replaceable></option>
-        </term>
-        <listitem>
-          <para>Ask regit :) Default value : 12345.</para>
+          <para>Set maximum number of packets that can wait a decision in nufw. Default value : 1000.</para>
         </listitem>
       </varlistentry>
       <varlistentry>
