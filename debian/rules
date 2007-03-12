@@ -130,7 +130,7 @@ nufw20:
 	dh_installinit -p$@ -P$(b)/$@ -u"start 40 2 3 4 5 . stop 89 0 1 6 ."
 #	dh_installcron
 #	dh_installinfo
-	dh_installman -pnufw20 doc/nufw.1
+	dh_installman -pnufw20 doc/nufw.8
 	dh_link -p$@ -P$(b)/$@
 	dh_strip -p$@ -P$(b)/$@
 	dh_compress -p$@ -P$(b)/$@
@@ -167,7 +167,7 @@ nufw20-nfqueue:
 	dh_installinit -p$@ -P$(b)/$@ -u"start 40 2 3 4 5 . stop 89 0 1 6 ."
 #	dh_installcron
 #	dh_installinfo
-	dh_installman -pnufw20-nfqueue doc/nufw.1
+	dh_installman -pnufw20-nfqueue doc/nufw.8
 	dh_link -p$@ -P$(b)/$@
 	dh_strip -p$@ -P$(b)/$@
 	dh_compress -p$@ -P$(b)/$@
@@ -277,7 +277,7 @@ nuauth20:
 	dh_compress -p$@ -P$(b)/$@
 	dh_fixperms -p$@ -P$(b)/$@
 	dh_installinit -p$@ -P$(b)/$@ -u"start 40 2 3 4 5 . stop 89 0 1 6 ."
-	dh_installman -pnuauth20 doc/nuauth.1
+	dh_installman -pnuauth20 doc/nuauth.8
 #	dh_perl
 #	dh_python
 	dh_makeshlibs -p$@ -P$(b)/$@ -n
@@ -407,8 +407,8 @@ nuauth20-utils:
 	dh_strip -p$@ -P$(b)/$@
 	dh_compress -p$@ -P$(b)/$@
 	dh_fixperms -p$@ -P$(b)/$@
-	dh_installman -pnuauth20-utils doc/nuaclgen.1
-	dh_installman -pnuauth20-utils doc/nutop.1
+	dh_installman -pnuauth20-utils doc/nuaclgen.8
+	dh_installman -pnuauth20-utils doc/nutop.8
 #	dh_perl
 #	dh_python
 	dh_makeshlibs -p$@ -P$(b)/$@ -n
