@@ -1,4 +1,4 @@
-man_MANS = nuaclgen.1 nuauth.1 nufw.1 nufw_dbm.1 nutcpc.1 nutop.1 libnuclient.3
+man_MANS = nuaclgen.8 nuauth.8 nufw.8 nufw_dbm.8 nutcpc.1 nutop.8 libnuclient.3
 
 EXTRA_DIST = $(man_MANS)
 
