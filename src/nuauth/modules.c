@@ -699,6 +699,19 @@ void unload_modules()
 	GSList *c_module;
 
 	g_mutex_lock(modules_mutex);
+
+	/* call cleaning function before free */
+	for (c_module = nuauthdatas->modules; c_module;
+	     c_module = c_module->next) {
+		clean_module_t((module_t *) c_module->data);
+	}
+	for (c_module = nuauthdatas->modules; c_module;
+	     c_module = c_module->next) {
+		free_module_t((module_t *) c_module->data);
+		g_free(c_module->data);
+	}
+
+	/* free all lists */
 	g_slist_free(user_check_modules);
 	user_check_modules = NULL;
 	g_slist_free(get_user_groups_modules);
@@ -730,15 +743,6 @@ void unload_modules()
 	g_slist_free(auth_error_log_modules);
 	auth_error_log_modules = NULL;
 
-	for (c_module = nuauthdatas->modules; c_module;
-	     c_module = c_module->next) {
-		clean_module_t((module_t *) c_module->data);
-	}
-	for (c_module = nuauthdatas->modules; c_module;
-	     c_module = c_module->next) {
-		free_module_t((module_t *) c_module->data);
-		g_free(c_module->data);
-	}
 	g_slist_free(nuauthdatas->modules);
 	nuauthdatas->modules = NULL;
 	g_mutex_unlock(modules_mutex);
