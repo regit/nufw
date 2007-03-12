@@ -118,7 +118,7 @@ typedef enum {
 
 #define UNKNOWN_STRING "UNKNOWN"
 
-#define POOL_TYPE FALSE
+#define POOL_TYPE TRUE
 
 #define AUTHREQ_CLIENT_LISTEN_ADDR "0.0.0.0"
 #define AUTHREQ_NUFW_LISTEN_ADDR "127.0.0.1"
@@ -222,8 +222,9 @@ typedef enum {
 
 void nuauth_ask_exit();
 void stop_pool_threads(gboolean wait);
+void block_pool_threads();
 void start_pool_threads();
-void nuauth_free_signal();
-void nuauth_install_signals();
+void release_pool_threads();
+void nuauth_install_signals(gboolean action);
 
 #endif

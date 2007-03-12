@@ -207,13 +207,13 @@ void nuauth_reload(int signal)
 	struct nuauth_params *newconf = NULL;
 	struct nuauth_params *actconf;
 
-	nuauth_free_signal();
+	nuauth_install_signals(FALSE);
 
 	init_nuauthconf(&newconf);
 	g_message("nuauth module reloading");
 
-	/* set flag to block threads of pool at start */
-	nuauthdatas->need_reload = 1;
+	/* block threads of pool at start */
+	block_pool_threads();
 	/* we have to wait that all threads are blocked */
 	stop_pool_threads(TRUE);
 	/* unload modules */
@@ -234,14 +234,9 @@ void nuauth_reload(int signal)
 	if (nuauthconf->acl_cache) {
 		cache_reset(nuauthdatas->acl_cache);
 	}
-	/* liberate threads by broadcasting condition */
-	nuauthdatas->need_reload = 0;
 
-	g_mutex_lock(nuauthdatas->reload_cond_mutex);
-	g_cond_broadcast(nuauthdatas->reload_cond);
-	g_mutex_unlock(nuauthdatas->reload_cond_mutex);
-
-	nuauth_install_signals();
+	release_pool_threads();
+	nuauth_install_signals(TRUE);
 
 	log_message(INFO, DEBUG_AREA_MAIN, "NuAuth server reloaded.");
 }
@@ -318,6 +313,12 @@ static struct nuauth_params *compare_and_update_nuauthparams(struct
 	if (current->nufw_has_conntrack != new->nufw_has_conntrack) {
 		g_warning
 		    ("nufw conntrack mode has changed, please restart");
+		restart = TRUE;
+	}
+
+	if (current->use_command_server != new->use_command_server) {
+		g_warning
+		    ("command server option has been modified, please restart");
 		restart = TRUE;
 	}
 

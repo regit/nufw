@@ -88,6 +88,21 @@ void wait_thread_end(const char *name, struct nuauth_thread_t *thread)
 	g_thread_join(thread->thread);
 }
 
+void block_pool_threads()
+{
+	nuauthdatas->need_reload = 1;
+}
+
+void release_pool_threads()
+{
+	/* liberate threads by broadcasting condition */
+	nuauthdatas->need_reload = 0;
+
+	g_mutex_lock(nuauthdatas->reload_cond_mutex);
+	g_cond_broadcast(nuauthdatas->reload_cond);
+	g_mutex_unlock(nuauthdatas->reload_cond_mutex);
+}
+
 void start_pool_threads()
 {
 	if (nuauthconf->do_ip_authentication) {
@@ -352,7 +367,7 @@ void nuauth_cleanup(int recv_signal)
 {
 	(void) g_atomic_int_dec_and_test(&nuauth_running);
 	/* first of all, reinstall old handlers (ignore errors) */
-	nuauth_free_signal();
+	nuauth_install_signals(FALSE);
 
 	if (recv_signal == SIGINT)
 		log_message(CRITICAL, DEBUG_AREA_MAIN,
@@ -527,6 +542,8 @@ void parse_options(int argc, char **argv, command_line_params_t * params)
 	}
 }
 
+void no_action_signals(int recv_signal);
+
 /**
  * Install all signals used in NuAuth:
  *    - SIGTERM and SIGINT: install nuauth_cleanup() handler ;
@@ -535,14 +552,19 @@ void parse_options(int argc, char **argv, command_line_params_t * params)
  *
  * \see init_audit()
  */
-void nuauth_install_signals()
+void nuauth_install_signals(gboolean sig_action)
 {
 	struct sigaction action;
 
 	atexit(nuauth_atexit);
 
 	memset(&action, 0, sizeof(action));
-	action.sa_handler = nuauth_cleanup;
+
+	if (sig_action) {
+		action.sa_handler = nuauth_cleanup;
+	} else {
+		action.sa_handler = no_action_signals;
+	}
 	sigemptyset(&(action.sa_mask));
 	action.sa_flags = 0;
 
@@ -573,11 +595,22 @@ void nuauth_install_signals()
 	signal(SIGPIPE, SIG_IGN);
 }
 
-void nuauth_free_signal()
+void no_action_signals(int recv_signal)
 {
-	signal(SIGTERM, SIG_IGN);
-	signal(SIGINT, SIG_IGN);
-	signal(SIGHUP, SIG_IGN);
+	switch (recv_signal) {
+		case SIGINT:
+		log_message(CRITICAL, DEBUG_AREA_MAIN,
+			    "[+] Nuauth received SIGINT");
+		break;
+		case SIGTERM:
+		log_message(CRITICAL, DEBUG_AREA_MAIN,
+				"[+] Nuauth received SIGTERM");
+		break;
+		case SIGHUP:
+		log_message(CRITICAL, DEBUG_AREA_MAIN,
+				"[+] Nuauth received SIGHUP");
+		break;
+	}
 }
 
 
@@ -730,6 +763,7 @@ void configure_app(int argc, char **argv)
  */
 void init_nuauthdatas()
 {
+	block_pool_threads();
 	nuauthdatas->tls_push_queue = g_async_queue_new();
 	if (!nuauthdatas->tls_push_queue)
 		exit(EXIT_FAILURE);
@@ -798,6 +832,7 @@ void init_nuauthdatas()
 		create_thread(&nuauthdatas->limited_connections_handler,
 			      limited_connection_handler);
 	}
+	release_pool_threads();
 
 	/* create TLS authentification server threads (auth + nufw) */
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
@@ -930,7 +965,7 @@ int main(int argc, char *argv[])
 {
 	configure_app(argc, argv);
 	init_nuauthdatas();
-	nuauth_install_signals();
+	nuauth_install_signals(TRUE);
 	init_audit();
 	nuauth_main_loop();
 	return EXIT_SUCCESS;

@@ -344,9 +344,8 @@ void clean_module_t(module_t *module)
 {
 	if (module) {
 		log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
-				"Module %s cleaning (calling %p)",
-				module->name,
-				module->free_params);
+				"Module %s cleaning",
+				module->name);
 		if (module->free_params) {
 			module->free_params(module->params);
 			module->params = NULL;
