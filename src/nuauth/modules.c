@@ -373,6 +373,7 @@ void free_module_t(module_t * module)
 		g_free(module->configfile);
 	}
 	g_free(module);
+	module = NULL;
 }
 
 /**
