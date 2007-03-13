@@ -172,7 +172,8 @@ static nu_error_t mysql_close_open_user_sessions(struct log_mysql_params
 
 static void my_mysql_close(void *ld)
 {
-	mysql_close(ld);
+	if (ld)
+		mysql_close(ld);
 	ld = NULL;
 }
 
@@ -282,12 +283,13 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	log_message(DEBUG, DEBUG_AREA_MAIN,
 		    "mysql part of the config file is parsed");
 
+	module->params = (gpointer) params;
+
 	/* do initial update of user session if needed */
 	if ((!nuauth_is_reloading()) && (params->hook == MOD_LOG_SESSION)) {
 		mysql_close_open_user_sessions(params);
 	}
 
-	module->params = (gpointer) params;
 	return TRUE;
 }
 
