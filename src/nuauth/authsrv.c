@@ -220,12 +220,15 @@ void stop_threads(gboolean wait)
 	/* kill entries point */
 	g_mutex_lock(nuauthdatas->tls_auth_server.mutex);
 	g_mutex_lock(nuauthdatas->tls_nufw_server.mutex);
+	g_mutex_lock(nuauthdatas->pre_client_thread.mutex);
 
 	if (wait) {
 		wait_thread_end("tls auth server",
 				&nuauthdatas->tls_auth_server);
 		wait_thread_end("tls nufw server",
 				&nuauthdatas->tls_nufw_server);
+		wait_thread_end("pre client thread",
+				&nuauthdatas->pre_client_thread);
 	}
 
 	/* Close nufw and client connections */
@@ -306,8 +309,17 @@ void clear_push_queue()
 void nuauth_deinit(gboolean soft)
 {
 	log_message(CRITICAL, DEBUG_AREA_MAIN, "[+] NuAuth deinit");
+#if 0
+	signal(SIGTERM, SIG_DFL);
+	signal(SIGKILL, SIG_DFL);
+	signal(SIGHUP, SIG_DFL);
+#endif
 
 	stop_threads(soft);
+
+#if 0
+	block_pool_threads();
+#endif
 
 	log_message(INFO, DEBUG_AREA_MAIN, "Unload modules");
 	unload_modules();
@@ -600,15 +612,15 @@ void no_action_signals(int recv_signal)
 	switch (recv_signal) {
 		case SIGINT:
 		log_message(CRITICAL, DEBUG_AREA_MAIN,
-			    "[+] Nuauth received SIGINT");
+			    "[+] Nuauth received SIGINT (ignoring)");
 		break;
 		case SIGTERM:
 		log_message(CRITICAL, DEBUG_AREA_MAIN,
-				"[+] Nuauth received SIGTERM");
+				"[+] Nuauth received SIGTERM (ignoring)");
 		break;
 		case SIGHUP:
 		log_message(CRITICAL, DEBUG_AREA_MAIN,
-				"[+] Nuauth received SIGHUP");
+				"[+] Nuauth received SIGHUP (ignoring)");
 		break;
 	}
 }
@@ -832,7 +844,6 @@ void init_nuauthdatas()
 		create_thread(&nuauthdatas->limited_connections_handler,
 			      limited_connection_handler);
 	}
-	release_pool_threads();
 
 	/* create TLS authentification server threads (auth + nufw) */
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
@@ -844,6 +855,7 @@ void init_nuauthdatas()
 	create_thread(&nuauthdatas->tls_nufw_server, tls_nufw_authsrv);
 
 	log_message(INFO, DEBUG_AREA_MAIN, "Threads system started");
+	release_pool_threads();
 }
 
 /**

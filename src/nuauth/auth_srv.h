@@ -226,5 +226,8 @@ void block_pool_threads();
 void start_pool_threads();
 void release_pool_threads();
 void nuauth_install_signals(gboolean action);
+void create_thread(struct nuauth_thread_t *thread,
+		   void *(*func) (GMutex *));
+
 
 #endif

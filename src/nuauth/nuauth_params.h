@@ -151,6 +151,7 @@ struct nuauth_datas {
 	struct nuauth_thread_t localid_auth_thread;
 	struct nuauth_thread_t limited_connections_handler;
 	struct nuauth_thread_t command_thread;
+	struct nuauth_thread_t pre_client_thread;
 
     /**
      * pools of thread which treat user packet.

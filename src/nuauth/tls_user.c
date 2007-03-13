@@ -89,11 +89,14 @@ gboolean remove_socket_from_pre_client_list(int socket)
  * Check pre client list to disconnect connection
  * that are open since too long
  */
-void pre_client_check()
+void pre_client_check(GMutex *mutex)
 {
 	GSList *client_runner = NULL;
 	time_t current_timestamp;
-	for (;;) {
+
+	while (g_mutex_trylock(mutex)) {
+		g_mutex_unlock(mutex);
+
 		current_timestamp = time(NULL);
 
 		/* lock client list */
@@ -644,11 +647,8 @@ int tls_user_init(struct tls_user_context_t *context)
 
 	/* pre client list */
 	pre_client_list = NULL;
-	pre_client_thread = g_thread_create((GThreadFunc) pre_client_check,
-					    NULL, FALSE, NULL);
-	if (!pre_client_thread) {
-		return 0;
-	}
+
+	create_thread(&nuauthdatas->pre_client_thread, pre_client_check);
 
 	/* create tls sasl worker thread pool */
 	nuauthdatas->tls_sasl_worker =
