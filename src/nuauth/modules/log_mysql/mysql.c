@@ -27,8 +27,6 @@
 /** Minimum buffer size to write an IPv6 in SQL syntax */
 #define IPV6_SQL_STRLEN (2+16*2+1)
 
-GStaticMutex mysql_mutex;
-
 /*
  * Returns version of nuauth API
  */
@@ -143,6 +141,7 @@ static nu_error_t mysql_close_open_user_sessions(struct log_mysql_params
 	int mysql_ret;
 	int ok;
 
+
 	ld = mysql_conn_init(params);
 
 	if (!ld) {
@@ -168,6 +167,7 @@ static nu_error_t mysql_close_open_user_sessions(struct log_mysql_params
 	}
 	mysql_close(ld);
 	return NU_EXIT_OK;
+
 }
 
 static void my_mysql_close(void *ld)
@@ -299,9 +299,7 @@ static MYSQL *mysql_conn_init(struct log_mysql_params *params)
 	MYSQL *ld = NULL;
 
 	/* init connection */
-	g_static_mutex_lock(&mysql_mutex);
 	ld = mysql_init(ld);
-	g_static_mutex_unlock(&mysql_mutex);
 	if (ld == NULL) {
 		log_message(WARNING, DEBUG_AREA_MAIN, "mysql init error : %s",
 			    strerror(errno));
@@ -914,18 +912,5 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 	}
 	return 1;
 }
-
-G_MODULE_EXPORT gchar* g_module_check_init(GModule * module)
-{
-	g_static_mutex_init(&mysql_mutex);
-	return NULL;
-}
-
-G_MODULE_EXPORT void g_module_unload(GModule * module)
-{
-	mysql_server_end();
-}
-
-
 
 /** @} */
