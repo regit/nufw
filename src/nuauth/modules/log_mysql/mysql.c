@@ -915,4 +915,18 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 	return 1;
 }
 
+const gchar *g_module_check_init(GModule *module)
+{
+	/* Workaround nasty bug : make module permanent */
+	g_module_make_resident(module);
+
+	mysql_server_init(0, NULL, NULL);
+	return NULL;
+}
+
+void g_module_unload(GModule *module)
+{
+	mysql_server_end();
+}
+
 /** @} */
