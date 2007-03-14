@@ -229,6 +229,5 @@ void nuauth_install_signals(gboolean action);
 void create_thread(struct nuauth_thread_t *thread,
 		   void *(*func) (GMutex *));
 
-GPrivate *pools_priv;
 
 #endif

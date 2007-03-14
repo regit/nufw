@@ -774,10 +774,6 @@ void configure_app(int argc, char **argv)
 void init_nuauthdatas()
 {
 	block_pool_threads();
-
-	/* create private used by all threads in pool */
-	pools_priv = g_private_new(NULL);
-
 	nuauthdatas->tls_push_queue = g_async_queue_new();
 	if (!nuauthdatas->tls_push_queue)
 		exit(EXIT_FAILURE);
