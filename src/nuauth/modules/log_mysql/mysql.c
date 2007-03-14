@@ -278,8 +278,6 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	free_confparams(mysql_nuauth_vars,
 			sizeof(mysql_nuauth_vars) / sizeof(confparams_t));
 
-	/* init thread private stuff */
-	params->mysql_priv = g_private_new((GDestroyNotify) my_mysql_close);
 	log_message(DEBUG, DEBUG_AREA_MAIN,
 		    "mysql part of the config file is parsed");
 
@@ -767,7 +765,7 @@ static int log_state_drop(MYSQL * ld, connection_t * element,
 
 static MYSQL *get_mysql_handler(struct log_mysql_params *params)
 {
-	MYSQL *ld = g_private_get(params->mysql_priv);
+	MYSQL *ld = g_private_get(pools_priv);
 	if (ld != NULL) {
 		return ld;
 	}
@@ -778,7 +776,7 @@ static MYSQL *get_mysql_handler(struct log_mysql_params *params)
 			    "Can not initiate MYSQL connection");
 		return NULL;
 	}
-	g_private_set(params->mysql_priv, ld);
+	g_private_set(pools_priv, ld);
 	return ld;
 
 }
@@ -917,15 +915,15 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 
 const gchar *g_module_check_init(GModule *module)
 {
-	/* Workaround nasty bug : make module permanent */
-	g_module_make_resident(module);
-
 	mysql_server_init(0, NULL, NULL);
 	return NULL;
 }
 
 void g_module_unload(GModule *module)
 {
+
+	debug_log_message(DEBUG, DEBUG_AREA_MAIN,
+			  "Unloading function of mysql: calling mysql_server_end.");
 	mysql_server_end();
 }
 
