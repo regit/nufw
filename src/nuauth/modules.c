@@ -712,6 +712,10 @@ void unload_modules()
 		free_module_t((module_t *) c_module->data);
 	}
 
+	/* free nuauthdatas modules list */
+	g_slist_free(nuauthdatas->modules);
+	nuauthdatas->modules = NULL;
+
 	/* free all lists */
 	g_slist_free(user_check_modules);
 	user_check_modules = NULL;
@@ -744,9 +748,6 @@ void unload_modules()
 	g_slist_free(auth_error_log_modules);
 	auth_error_log_modules = NULL;
 
-	/* free nuauthdatas modules list */
-	g_slist_free(nuauthdatas->modules);
-	nuauthdatas->modules = NULL;
 	g_mutex_unlock(modules_mutex);
 }
 
