@@ -422,7 +422,7 @@ int check_module_version(GModule * module)
 		g_warning
 		    ("Unable to load function 'get_api_version' from module %s",
 		     g_module_name(module));
-		exit(-1);
+		exit(EXIT_FAILURE);
 	}
 
 	api_version = get_version();
@@ -431,7 +431,7 @@ int check_module_version(GModule * module)
 		    ("Not loading module %s: wrong API version (%u instead of %u)",
 		     g_module_name(module), api_version,
 		     NUAUTH_API_VERSION);
-		exit(-1);
+		exit(EXIT_FAILURE);
 	}
 	return 1;
 }
