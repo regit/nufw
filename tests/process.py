@@ -92,13 +92,13 @@ class Process(object):
         - None: blocking read
         - (float value): read with specified timeout in second
 
-        Return a string with new line or empty string if their is no data.
+        Return a string with new line or None if their is no data.
 
         Code based on this code:
            http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/440554
         """
         if not self.process:
-            return ''
+            return None
 
         out = getattr(self.process, stream)
         if not out:
@@ -106,12 +106,13 @@ class Process(object):
         if timeout is not None:
             ready = select([out.fileno()], tuple(), tuple(), timeout)[0]
             if not ready:
-                return ''
+                return None
         line = out.readline()
+        if not line:
+            return None
+        line = line.rstrip()
         if line:
-            line = line.rstrip()
-            if line:
-                self.info("stdout: %s" % line)
+            self.info("stdout: %s" % line.rstrip())
         return line
 
     def kill(self, signum, raise_error=True):
@@ -133,7 +134,7 @@ class Process(object):
     def readlines(self, timeout=0, stream="stdout"):
         while True:
             line = self.readline(timeout, stream)
-            if not line:
+            if line is None:
                 break
             yield line
 
