@@ -136,7 +136,9 @@ static int userdb_checkpass(sasl_conn_t * conn,
 				    __FILE__, __LINE__);
 
 			/* return to fallback */
-			return SASL_NOAUTHZ;
+			sasl_seterror(conn, 0,
+				      "Can not convert username to locale" );
+			return SASL_NOUSER;
 		}
 	} else {
 		dec_user = (char *) user;
@@ -154,7 +156,9 @@ static int userdb_checkpass(sasl_conn_t * conn,
 	/* return to fallback */
 	log_message(INFO, DEBUG_AREA_AUTH, "Bad auth from user at %s:%d",
 		    __FILE__, __LINE__);
-	return SASL_NOAUTHZ;
+
+	sasl_seterror(conn, 0, "Bad auth from user" );
+	return SASL_NOUSER;
 }
 
 
@@ -866,11 +870,11 @@ int sasl_user_check(user_session_t * c_session)
 
 	if (nuauthconf->nuauth_uses_fake_sasl) {
 		ret =
-		    sasl_server_new(service, myhostname, myrealm, NULL,
-				    NULL, callbacks, 0, &conn);
+		    sasl_server_new(service, myhostname, myrealm, myrealm,
+				    NULL, callbacks, O, &conn);
 	} else {
 		ret =
-		    sasl_server_new(service, myhostname, myrealm, NULL,
+		    sasl_server_new(service, myhostname, myrealm, myrealm,
 				    NULL, NULL, 0, &conn);
 	}
 	if (ret != SASL_OK) {
