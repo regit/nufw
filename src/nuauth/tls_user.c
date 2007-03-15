@@ -89,7 +89,7 @@ gboolean remove_socket_from_pre_client_list(int socket)
  * Check pre client list to disconnect connection
  * that are open since too long
  */
-void pre_client_check(GMutex *mutex)
+void* pre_client_check(GMutex *mutex)
 {
 	GSList *client_runner = NULL;
 	time_t current_timestamp;
@@ -133,6 +133,7 @@ void pre_client_check(GMutex *mutex)
 		/* sleep */
 		sleep(1);
 	}
+	return NULL;
 }
 
 /**
@@ -560,7 +561,7 @@ int tls_user_bind(char **errmsg)
 	else if (res->ai_family == PF_INET6)
 		log_message(DEBUG, DEBUG_AREA_USER | DEBUG_AREA_MAIN,
 			    "Create user server IPv6 socket");
-	
+
 		log_message(DEBUG, DEBUG_AREA_USER | DEBUG_AREA_MAIN,
 			    "Create user server (any) socket");
 	sck_inet =
@@ -605,7 +606,6 @@ int tls_user_init(struct tls_user_context_t *context)
 		{"nuauth_auth_nego_timeout", G_TOKEN_INT,
 		 AUTH_NEGO_TIMEOUT, NULL}
 	};
-	GThread *pre_client_thread;
 	char *errmsg;
 	int result;
 
