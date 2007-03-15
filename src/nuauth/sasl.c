@@ -194,13 +194,9 @@ static int samp_send(gnutls_session session, const char *buffer,
 
 	alloclen = ((length / 3) + 1) * 4 + 1;
 	buf = g_alloca(alloclen);
-	if (!buf)
-		exit(0);
-
 	result = sasl_encode64(buffer, length, buf + 3, alloclen, &len);
 	if (result != SASL_OK) {
 		log_message(WARNING, DEBUG_AREA_AUTH, "Encoding data in base64");
-		free(buf);
 		return result;
 	}
 	memcpy(buf, "S: ", 3);
