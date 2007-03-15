@@ -1,6 +1,7 @@
 from os import (kill, waitpid, P_NOWAIT,
     WCOREDUMP, WIFSIGNALED, WSTOPSIG, WIFEXITED, WEXITSTATUS)
 from subprocess import Popen, PIPE, STDOUT
+from errno import ENOENT
 from time import sleep, time
 from signal import SIGABRT, SIGFPE, SIGHUP, SIGINT, SIGSEGV, SIGKILL
 from os.path import basename
@@ -54,7 +55,13 @@ class Process(object):
         # Run nuauth
         args = [self.program] + self.program_args
         self.warning("create process: %r" % args)
-        self.process = Popen(args, **self.popen_args)
+        try:
+            self.process = Popen(args, **self.popen_args)
+        except OSError, err:
+            if err[0] == ENOENT:
+                raise RuntimeError("No such program: %s" % self.program)
+            else:
+                raise
 
         # Wait until it's ready
         start = time()
