@@ -328,6 +328,8 @@ static MYSQL *mysql_conn_init(struct log_mysql_params *params)
 		mysql_close(ld);
 		return NULL;
 	}
+	mysql_conn_list = g_slist_prepend(mysql_conn_list, ld);
+
 	return ld;
 }
 
@@ -914,6 +916,7 @@ const gchar *g_module_check_init(GModule *module)
 #if 0
 	g_module_make_resident(module);
 #endif
+	mysql_conn_list = NULL;
 
 	mysql_server_init(0, NULL, NULL);
 	return NULL;
@@ -921,6 +924,15 @@ const gchar *g_module_check_init(GModule *module)
 
 void g_module_unload(GModule *module)
 {
+	GSList* pointer = mysql_conn_list;
+
+	if (mysql_conn_list) {
+		while (pointer) {
+			mysql_close((MYSQL *)pointer->data);
+			pointer=pointer->next;
+		}
+		g_slist_free(mysql_conn_list);
+	}
 	mysql_server_end();
 }
 

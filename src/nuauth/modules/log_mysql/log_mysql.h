@@ -69,3 +69,5 @@ struct log_mysql_params {
 	char *mysql_ssl_cipher;
 	GPrivate *mysql_priv;	/* private pointer for mysql database access */
 };
+
+GSList *mysql_conn_list;
