@@ -272,7 +272,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 			sizeof(mysql_nuauth_vars) / sizeof(confparams_t));
 
 	/* init thread private stuff */
-	params->mysql_priv = g_private_new(NULL); 
+	params->mysql_priv = g_private_new(NULL);
 	log_message(DEBUG, DEBUG_AREA_MAIN,
 		    "mysql part of the config file is parsed");
 
@@ -380,6 +380,7 @@ static char *build_insert_request(MYSQL * ld, connection_t * element,
 	char dst_ascii[IPV6_SQL_STRLEN];
 	char tmp_buffer[REQUEST_TMP_BUFFER];
 	char *log_prefix = "Default";
+	short unsigned int proto;
 	gboolean ok;
 
 	/* Write common informations */
@@ -398,14 +399,18 @@ static char *build_insert_request(MYSQL * ld, connection_t * element,
 			(params, &element->tracking.daddr, dst_ascii,
 			 sizeof(dst_ascii)) != 0)
 		return NULL;
+	if (params->mysql_use_ipv4_schema) {
+		proto = AF_INET;
+	} else {
+		proto = (short unsigned int) element->tracking.protocol;
+	}
 	ok = secure_snprintf(request_values,
 			sizeof(request_values),
 			"VALUES ('%hu', '%lu', '%hu', %s, %s, ",
 			(short unsigned int) state,
 			(long unsigned int) element->
 			timestamp,
-			(short unsigned int) element->
-			tracking.protocol, src_ascii,
+			proto, src_ascii,
 			dst_ascii);
 	if (!ok) {
 		return NULL;
@@ -615,7 +620,7 @@ static inline int log_state_established(MYSQL * ld,
 		update_status++;
 
 		ok = secure_snprintf(request, sizeof(request),
-				     "UPDATE %s SET state=%hu,start_timestamp=FROM_UNIXTIME(%lu) "
+				     "UPDATE %s SET state=%hu, start_timestamp=FROM_UNIXTIME(%lu) "
 				     "WHERE (ip_daddr=%s AND ip_saddr=%s "
 				     "AND tcp_dport='%hu' AND tcp_sport='%hu' AND state='%hu')",
 				     params->mysql_table_name,
