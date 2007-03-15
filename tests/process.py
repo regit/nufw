@@ -111,8 +111,7 @@ class Process(object):
         if not line:
             return None
         line = line.rstrip()
-        if line:
-            self.info("stdout: %s" % line.rstrip())
+        self.info("stdout: %s" % line.rstrip())
         return line
 
     def kill(self, signum, raise_error=True):
