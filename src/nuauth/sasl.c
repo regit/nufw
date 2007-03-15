@@ -870,11 +870,11 @@ int sasl_user_check(user_session_t * c_session)
 
 	if (nuauthconf->nuauth_uses_fake_sasl) {
 		ret =
-		    sasl_server_new(service, myhostname, myrealm, "nufw",
+		    sasl_server_new(service, myhostname, myrealm, NULL,
 				    NULL, callbacks, 0, &conn);
 	} else {
 		ret =
-		    sasl_server_new(service, myhostname, myrealm, "nufw",
+		    sasl_server_new(service, myhostname, myrealm, NULL,
 				    NULL, NULL, 0, &conn);
 	}
 	if (ret != SASL_OK) {
