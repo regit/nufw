@@ -1,7 +1,8 @@
 #!/usr/bin/python2.4
 from unittest import TestCase, main
-from common import reloadNuauth, getNuauthConf, createClient, connectClient
-from time import time
+from common import reloadNuauth, getNuauthConf, createClient, connectClient, startNufw
+from logging import info
+from time import time, mktime
 from iptables import Iptables
 from config import CLIENT_IP, CLIENT_USER_ID
 from socket import ntohl
@@ -12,7 +13,11 @@ from IPy import IP
 import MySQLdb
 import platform
 from os.path import basename
-from sys import argv
+from sys import argv, executable
+
+def datetime2unix(timestamp):
+    tm = timestamp.timetuple()
+    return int(mktime(tm))
 
 MYSQL_PACKET_TABLE = "ulog"
 MYSQL_USER_TABLE = "users"
@@ -24,8 +29,9 @@ MYSQL_DB = "nufw"
 OS_SYSNAME = platform.system()    # 'Linux'
 OS_RELEASE = platform.release()   # '2.6.19.2-haypo'
 OS_VERSION = platform.version()   # '#2 Mon Feb 5 10:55:30 CET 2007'
-CLIENT_OS = " ".join( (OS_SYSNAME, OS_RELEASE, OS_VERSION) )
-CLIENT_APP = basename(argv[0])
+CLIENT_OS = "-".join( (OS_SYSNAME, OS_VERSION, OS_RELEASE) )
+CLIENT_APP = executable
+OOB_PREFIX = "2: ACCEPT"
 
 class MysqlLogUser(TestCase):
     def setUp(self):
@@ -39,6 +45,7 @@ class MysqlLogUser(TestCase):
         self.config["nuauth_user_session_logs_module"] = '"mysql"'
         self.config.install()
         self.nuauth = reloadNuauth()
+        startNufw()
 
     def tearDown(self):
         self.config.desinstall()
@@ -116,22 +123,28 @@ class MysqlLogPacket(MysqlLogUser):
         cursor = self.conn.cursor()
 
         # Open allowed port
-        timestamp_before = int(time())
+        time_before = int(time())
+        timestamp_before = datetime.now()
         testAllowPort(self, self.iptables, client)
-        timestamp_after = int(time())
+        timestamp_after = datetime.now()
 
-        # Read entry in database
+        # Query DB
         sql = \
             "SELECT username, user_id, client_os, client_app, " \
             "tcp_dport, ip_saddr, ip_daddr, oob_time_sec, ip_protocol, " \
             "timestamp, start_timestamp, end_timestamp, oob_prefix " \
             "FROM %s WHERE timestamp > from_unixtime(%s);" \
-            % (MYSQL_PACKET_TABLE, timestamp_before)
+            % (MYSQL_PACKET_TABLE, time_before)
+        info("MySQL query: %s" % sql)
         cursor.execute(sql)
+
+        # Read result
+        row = cursor.fetchone()
+        info("MySQL result: %s" % repr(row))
         self.assertEqual(cursor.rowcount, 1)
         (username, user_id, client_os, client_app,
-         tcp_dport, ip_saddr, oob_time_sec, ip_protocol,
-         timestamp, start_timestamp, end_timestamp, oob_prefix) = cursor.fetchone()
+         tcp_dport, ip_saddr, ip_daddr, oob_time_sec, ip_protocol,
+         timestamp, start_timestamp, end_timestamp, oob_prefix) = row
         ip_saddr = ntohl(ip_saddr) & 0xFFFFFFFF
 
         # Check values
@@ -140,15 +153,16 @@ class MysqlLogPacket(MysqlLogUser):
         self.assertEqual(client_os, CLIENT_OS)
         self.assertEqual(client_app, CLIENT_APP)
         self.assertEqual(tcp_dport, VALID_PORT)
-        self.assertEqual(ip_saddr, IP(CLIENT_IP))
-        self.assert_(timestamp_before <= oob_time_sec <= timestamp_after)
-        self.assertEqual(oob_time_sec, timestamp)
+        self.assertEqual(IP(ip_saddr), IP(CLIENT_IP))
+        self.assert_(timestamp_before <= datetime.fromtimestamp(oob_time_sec) <= timestamp_after)
+        self.assert_(timestamp_before <= timestamp <= timestamp_after)
         self.assertEqual(ip_protocol, AF_INET)
+        self.assertEqual(oob_prefix, OOB_PREFIX)
+        # TODO: Check these timestamps
 #        self.assertEqual(start_timestamp, ...)
 #        self.assertEqual(end_timestamp, ...)
-        self.assertEqual(oob_prefix, "Default: ACCEPT")
 
-        # Open disallowed port
+        # TODO: Open disallowed port
  #        testDisallowPort(self, self.iptables, client)
 
 if __name__ == "__main__":
