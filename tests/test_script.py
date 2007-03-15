@@ -15,7 +15,7 @@ SCRIPT_DOWN = path.join(CONF_DIR, "user-down.sh")
 MODE = 0111
 SCRIPT = "#!/bin/sh\necho \"SCRIPT %s COUNT=$# TEXT >>>$@<<<\""
 
-class TestLog(TestCase):
+class TestScript(TestCase):
     def setUp(self):
         # Prepare our new scripts
         self.script_up = ReplaceFile(SCRIPT_UP, SCRIPT % "UP", MODE)
