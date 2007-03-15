@@ -101,6 +101,8 @@ class Process(object):
             return ''
 
         out = getattr(self.process, stream)
+        if not out:
+            raise RuntimeError("Stream %s of process %s is not a pipe" % (stream, self))
         if timeout is not None:
             ready = select([out.fileno()], tuple(), tuple(), timeout)[0]
             if not ready:
@@ -133,7 +135,7 @@ class Process(object):
             line = self.readline(timeout, stream)
             if not line:
                 break
-            yield line.rstrip()
+            yield line
 
     def exited(self, status):
         # Log last output
