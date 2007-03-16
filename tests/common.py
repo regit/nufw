@@ -6,10 +6,15 @@ from nuauth_conf import NuauthConf
 from log import setupLog
 from config import (USERNAME, PASSWORD,
     USE_COVERAGE, NUAUTH_START_TIMEOUT, NUFW_START_TIMEOUT)
-
+from signal import SIGHUP
 
 _nuauth = None
 _nufw = None
+
+def _reloadNuauth(nuauth):
+    nuauth.info("Reload")
+    nuauth.kill(SIGHUP)
+    nuauth.need_reload = False
 
 def startNuauth(debug_level=9):
     """
@@ -19,6 +24,8 @@ def startNuauth(debug_level=9):
     """
     global _nuauth
     if _nuauth:
+        if _nuauth.need_reload:
+            _reloadNuauth(_nuauth)
         return _nuauth
     _nuauth = Nuauth(debug_level=debug_level, use_coverage=USE_COVERAGE)
     atexit.register(_stopNuauth)
@@ -53,8 +60,11 @@ def reloadNuauth():
     was_running = bool(_nuauth)
     nuauth = startNuauth()
     if was_running:
-        nuauth.need_reload = True
-        nuauth.info("Program reload on next start()")
+        if nuauth.need_reload:
+            _reloadNuauth(nuauth)
+        else:
+            nuauth.need_reload = True
+            nuauth.info("Program reload on next start()")
     return nuauth
 
 def _stopNuauth():
