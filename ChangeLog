@@ -1,3 +1,12 @@
+2.2.0-rc2
+	- nuauth: add declaration of thread_pool_push
+	- ldap: optimize filter
+	- NuFW is now compatible with automake1.10
+	- nufw: fix problem for host with libnetiflter_queue
+	but without the latest iface related modifications.
+	- nutcpc: add option -a to specify nuauth DN in certificate.
+	- log_mysql: set protocol information in compatibility mode
+
 2.2.0-rc1 (2007/03/08)
 	- log_mysql: add option to log by default in SQL
 	database with IPV4 schema
