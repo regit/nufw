@@ -863,16 +863,13 @@ int sasl_user_check(user_session_t * c_session)
 	} else {
 		callbacks = internal_callbacks;
 	}
-
-	if (nuauthconf->nuauth_uses_fake_sasl) {
-		ret =
-		    sasl_server_new(service, myhostname, myrealm, NULL,
-				    NULL, callbacks, 0, &conn);
-	} else {
-		ret =
-		    sasl_server_new(service, myhostname, myrealm, NULL,
-				    NULL, NULL, 0, &conn);
+	if (!nuauthconf->nuauth_uses_fake_sasl) {
+		callbacks = NULL;
 	}
+
+	ret =
+		sasl_server_new(service, myhostname, myrealm, NULL,
+				NULL, callbacks, 0, &conn);
 	if (ret != SASL_OK) {
 		g_warning
 		    ("allocating connection state - failure at sasl_server_new()");
