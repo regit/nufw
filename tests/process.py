@@ -1,7 +1,7 @@
 from os import (kill, waitpid, P_NOWAIT,
     WCOREDUMP, WIFSIGNALED, WSTOPSIG, WIFEXITED, WEXITSTATUS)
 from subprocess import Popen, PIPE, STDOUT
-from errno import ENOENT
+from errno import ENOENT, ECHILD
 from time import sleep, time
 from signal import SIGABRT, SIGFPE, SIGHUP, SIGINT, SIGSEGV, SIGKILL
 from os.path import basename
@@ -143,21 +143,24 @@ class Process(object):
             pass
 
         # Display exit code
-        log_func = self.warning
-        info = []
-        if WCOREDUMP(status):
-            info.append("core.%s dumped!" % self.process.pid)
-            log_func = self.error
-        if WIFSIGNALED(status):
-            signal = WSTOPSIG(status)
-            signal = SIGNAME.get(signal, signal)
-            info.append("signal %s" % signal)
-        if WIFEXITED(status):
-            info.append("exitcode=%s" % WEXITSTATUS(status))
-        if info:
-            log_func("Exit (%s)" % ", ".join(info))
+        if status is not None:
+            log_func = self.warning
+            info = []
+            if WCOREDUMP(status):
+                info.append("core.%s dumped!" % self.process.pid)
+                log_func = self.error
+            if WIFSIGNALED(status):
+                signal = WSTOPSIG(status)
+                signal = SIGNAME.get(signal, signal)
+                info.append("signal %s" % signal)
+            if WIFEXITED(status):
+                info.append("exitcode=%s" % WEXITSTATUS(status))
+            if info:
+                log_func("Exit (%s)" % ", ".join(info))
+            else:
+                log_func("Exit")
         else:
-            log_func("Exit")
+            self.error("Process exited (ECHILD error)")
 
         # Delete process
         self.process = None
@@ -165,7 +168,14 @@ class Process(object):
     def isRunning(self):
         if not self.process:
             return False
-        finished, status = waitpid(self.process.pid, P_NOWAIT)
+        try:
+            finished, status = waitpid(self.process.pid, P_NOWAIT)
+        except OSError, err:
+            if err[0] == ECHILD:
+                finished = True
+                status = None
+            else:
+                raise
         if finished == 0:
             return True
 
