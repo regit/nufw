@@ -42,6 +42,7 @@
 #include "nuclient.h"
 #include <sasl/saslutil.h>
 #include <stdarg.h>		/* va_list, va_start, ... */
+#include <gnutls/x509.h>
 #include <proto.h>
 #include "client.h"
 #include "security.h"
@@ -721,8 +722,18 @@ int nu_client_setup_tls(nuauth_session_t * session,
 	return 1;
 }
 
+int nu_client_set_nuauth_cert_dn(nuauth_session_t * session,
+				char *nuauth_cert_dn,
+				nuclient_error_t *err)
+{
+	if (*nuauth_cert_dn) {
+		session->nuauth_cert_dn = nuauth_cert_dn;
+	}
+	return 1;
+}
+
 /**
- * Initialiaze SASL: create an client, set properties
+ * Initialize SASL: create an client, set properties
  * and then call mysasl_negotiate()
  *
  * \param session Pointer to client session
@@ -911,6 +922,70 @@ int init_socket(nuauth_session_t * session,
 	return 1;
 }
 
+int get_first_x509_cert_from_tls_session(gnutls_session session,
+					  gnutls_x509_crt * cert)
+{
+	const gnutls_datum *cert_list;
+	unsigned int cert_list_size = 0;
+
+	if (gnutls_certificate_type_get(session) != GNUTLS_CRT_X509)
+		return SASL_BADPARAM;
+
+	cert_list = gnutls_certificate_get_peers(session, &cert_list_size);
+
+	if (cert_list_size > 0) {
+		/* we only print information about the first certificate. */
+		gnutls_x509_crt_init(cert);
+		gnutls_x509_crt_import(*cert, &cert_list[0],
+				       GNUTLS_X509_FMT_DER);
+	} else {
+		return SASL_BADPARAM;
+	}
+	return SASL_OK;
+}
+
+
+int certificate_check(nuauth_session_t *session)
+{
+	time_t expiration_time, activation_time;
+	gnutls_x509_crt cert;
+
+	if (get_first_x509_cert_from_tls_session(session->tls, &cert) 
+			!= SASL_OK) {
+		return SASL_BADPARAM;
+	}
+
+	expiration_time = gnutls_x509_crt_get_expiration_time(cert);
+	activation_time = gnutls_x509_crt_get_activation_time(cert);
+
+	/* verify date */
+	if (expiration_time < time(NULL)) {
+		gnutls_x509_crt_deinit(cert);
+		return SASL_EXPIRED;
+	}
+
+	if (activation_time > time(NULL)) {
+		gnutls_x509_crt_deinit(cert);
+		return SASL_DISABLED;
+	}
+
+	if (session->nuauth_cert_dn) {
+		size_t size;
+		char dn[512];
+		size = sizeof(dn);
+		gnutls_x509_crt_get_dn(cert, dn, &size);
+		if (session->verbose) {
+			printf("Certificate DN is: %s\n",dn);
+		}
+		if (strcmp(dn, session->nuauth_cert_dn)) {
+			gnutls_x509_crt_deinit(cert);
+			return SASL_DISABLED;
+		}
+	}
+
+	return SASL_OK;
+}
+
 /**
  * Do the TLS handshake and check server certificate
  */
@@ -939,6 +1014,15 @@ int tls_handshake(nuauth_session_t * session, nuclient_error_t * err)
 	if (ret < 0) {
 		if (session->verbose) {
 			printf("Certificate verification failed: %s\n",
+			       gnutls_strerror(ret));
+		}
+		SET_ERROR(err, GNUTLS_ERROR, ret);
+		return 0;
+	}
+	ret = certificate_check(session);
+	if (ret != SASL_OK) {
+		if (session->verbose) {
+			printf("Certificate check  failed: %s\n",
 			       gnutls_strerror(ret));
 		}
 		SET_ERROR(err, GNUTLS_ERROR, ret);

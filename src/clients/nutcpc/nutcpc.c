@@ -1,5 +1,5 @@
 /*
- ** Copyright 2004-2006 - INL
+ ** Copyright 2004-2007 - INL
  ** Written by Eric Leblond <eric.leblond@inl.fr>
  **            Vincent Deffontaines <vincent@inl.fr>
  ** INL http://www.inl.fr/
@@ -49,6 +49,7 @@ typedef struct {
 	unsigned char donotuselock;	/*!< Do not user lock */
 	char srv_addr[512];	/*!< Nuauth server hostname */
 	char password[100];
+	char nuauthdn[512];
 	unsigned char debug_mode;	/*!< Debug mode enabled if different than zero */
 	int tempo;		/*!< Number of second between each connection retry */
 } nutcpc_context_t;
@@ -310,7 +311,7 @@ char *get_username()
 static void usage(void)
 {
 	fprintf(stderr, "usage: nutcpc [-qkldV] "
-		"[-U username ] [-H nuauth_srv] "
+		"[-U username ] [-H nuauth_srv] [-a nuauth_dn]"
 		"[-P password] [-p port] [-I interval]\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "options:\n");
@@ -441,7 +442,7 @@ nuauth_session_t *do_connect(nutcpc_context_t * context, char *username)
 		return NULL;
 	}
 
-	/* wipe out username and password, and then freee memory */
+	/* wipe out username and password, and then free memory */
 	wipe(username_utf8, strlen(username_utf8));
 	wipe(password_utf8, strlen(password_utf8));
 	free(username_utf8);
@@ -449,12 +450,19 @@ nuauth_session_t *do_connect(nutcpc_context_t * context, char *username)
 
 	nu_client_set_debug(session, context->debug_mode);
 
-#if 0
 	if (!nu_client_setup_tls(session, NULL, NULL, NULL, NULL, err)) {
 		nu_client_delete(session);
 		return NULL;
 	}
-#endif
+
+	if (context->nuauthdn) {
+		if (!nu_client_set_nuauth_cert_dn(session, 
+						  context->nuauthdn,
+						  err)) {
+			nu_client_delete(session);
+			return NULL;
+		}
+	}
 
 	if (!nu_client_connect
 	    (session, context->srv_addr, context->port, err)) {
@@ -522,10 +530,11 @@ void parse_cmdline_options(int argc, char **argv,
 	context->donotuselock = 0;
 	context->debug_mode = 0;
 	context->tempo = 1;
+	context->nuauthdn[0] = 0;
 
 	/* Parse all command line arguments */
 	opterr = 0;
-	while ((ch = getopt(argc, argv, "kldqVu:H:I:U:p:P:")) != -1) {
+	while ((ch = getopt(argc, argv, "kldqVu:H:I:U:p:P:a:")) != -1) {
 		switch (ch) {
 		case 'H':
 			SECURE_STRNCPY(context->srv_addr, optarg,
@@ -564,6 +573,10 @@ void parse_cmdline_options(int argc, char **argv,
 			break;
 		case 'q':
 			stealth = 1;
+			break;
+		case 'a':
+			SECURE_STRNCPY(context->nuauthdn, optarg,
+				       sizeof(context->nuauthdn));
 			break;
 		default:
 			usage();

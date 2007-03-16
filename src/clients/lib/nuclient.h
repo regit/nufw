@@ -165,6 +165,7 @@ extern "C" {
 		gnutls_session tls;	/*!< TLS session over TCP socket */
 		gnutls_certificate_credentials cred;	/*!< TLS credentials */
 		char *tls_password;	/*!< TLS password */
+		char *nuauth_cert_dn; 
 
 		int socket;	/*!< TCP socket used to exchange message with nuauth */
 		conntable_t *ct;	/*!< Connection table */
@@ -274,7 +275,6 @@ extern "C" {
 			      unsigned char diffie_hellman,
 			      nuclient_error_t *err);
 
-	void nu_client_set_realm(nuauth_session_t * session, char *realm);
 	void nu_client_set_debug(nuauth_session_t * session, unsigned char enabled);
 	void nu_client_set_verbose(nuauth_session_t * session,
 				   unsigned char enabled);
@@ -285,6 +285,10 @@ extern "C" {
 				char *keyfile,
 				char *certfile,
 				char *cafile, nuclient_error_t *err);
+
+	int nu_client_set_nuauth_cert_dn(nuauth_session_t * session,
+				char *nuauth_cert_dn,
+				nuclient_error_t *err);
 
 	int nu_client_connect(nuauth_session_t * session,
 			      const char *hostname,
