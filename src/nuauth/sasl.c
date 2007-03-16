@@ -84,15 +84,15 @@ void sasl_gthread_mutex_free(void *lock)
 }
 
 /* where using private datas to avoid over allocating */
-
 static int external_get_opt(void *context, const char *plugin_name,
 			    const char *option,
 			    const char **result, unsigned *len)
 {
 	if (!strcmp(option, "mech_list")) {
 		*result = mech_string_external;
+		return SASL_OK;
 	}
-	return SASL_OK;
+	return SASL_FAIL;
 }
 
 static int internal_get_opt(void *context, const char *plugin_name,
@@ -101,8 +101,9 @@ static int internal_get_opt(void *context, const char *plugin_name,
 {
 	if (!strcmp(option, "mech_list")) {
 		*result = mech_string_internal;
+		return SASL_OK;
 	}
-	return SASL_OK;
+	return SASL_FAIL;
 }
 
 static int userdb_checkpass(sasl_conn_t * conn,
