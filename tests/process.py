@@ -1,7 +1,7 @@
 from os import (kill, waitpid, P_NOWAIT,
     WCOREDUMP, WIFSIGNALED, WSTOPSIG, WIFEXITED, WEXITSTATUS)
 from subprocess import Popen, PIPE, STDOUT
-from errno import ENOENT, ECHILD
+from errno import ENOENT, ECHILD, ESRCH
 from time import sleep, time
 from signal import SIGABRT, SIGFPE, SIGHUP, SIGINT, SIGSEGV, SIGKILL
 from os.path import basename
@@ -128,7 +128,16 @@ class Process(object):
         log_func("kill(%s)" % name)
 
         # Send signal
-        kill(self.process.pid, signum)
+        try:
+            kill(self.process.pid, signum)
+        except OSError, err:
+            if err[0] == ESRCH:
+                self.exited(None)
+                raise RuntimeError(
+                    "Unable to send signal %s to %s: process is dead"
+                    % (name, self))
+            else:
+                raise
 
     def readlines(self, timeout=0, stream="stdout"):
         while True:
