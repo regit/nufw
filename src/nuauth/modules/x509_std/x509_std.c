@@ -172,8 +172,8 @@ G_MODULE_EXPORT gchar *certificate_to_uid(gnutls_session session,
 		string_end = g_strrstr_len(pointer, dn - pointer, ",");
 		if (string_end) {
 			*string_end = 0;
-			return g_strdup(pointer);
 		}
+		return g_strdup(pointer);
 	}
 
 	return NULL;
