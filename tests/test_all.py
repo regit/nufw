@@ -38,7 +38,7 @@ def main():
     runner = TextTestRunner(descriptions=2, verbosity=2)
     result = runner.run(suite)
     if result.failures or result.errors:
-        sys.exit(1)
+        exit(1)
 
 if __name__ == "__main__":
     main()
