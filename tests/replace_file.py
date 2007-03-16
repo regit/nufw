@@ -1,6 +1,6 @@
 from os import rename, chmod
 from errno import ENOENT, EACCES
-from logging import info, warning
+from logging import info, warning, error
 
 def try_rename(before, after):
     """
@@ -56,7 +56,13 @@ class ReplaceFile:
         self.installed = False
         #unlink(self.filename)
         warning("Restore old file %s" % self.filename)
-        rename(self.filename_old, self.filename)
+        try:
+            rename(self.filename_old, self.filename)
+        except OSError, err:
+            if err[0] == ENOENT:
+                error("Unable to rename '%s' to '%s'" % (self.filename_old, self.filename))
+            else:
+                raise
 
     def __del__(self):
         self.desinstall()
