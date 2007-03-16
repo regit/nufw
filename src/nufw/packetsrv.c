@@ -143,10 +143,10 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 		return 0;
 	}
 #else
-	q_pckt->indev = "*";
-	q_pckt->physindev = "*";
-	q_pckt->outdev = "*";
-	q_pckt->physoutdev = "*";
+	snprintf(q_pckt.indev, sizeof(q_pckt.indev), "*");
+	snprintf(q_pckt.physindev, sizeof(q_pckt.physindev), "*");
+	snprintf(q_pckt.outdev, sizeof(q_pckt.outdev), "*");
+	snprintf(q_pckt.physoutdev, sizeof(q_pckt.physoutdev), "*");
 #endif
 
 	ret = nfq_get_timestamp(nfa, &timestamp);
