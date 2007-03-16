@@ -844,6 +844,9 @@ int sasl_user_check(user_session_t * c_session)
 	sasl_security_properties_t secprops;
 	gboolean external_auth = FALSE;
 	char buf[1024];
+	char *iplocalport = NULL;
+	char ipremoteport[INET6_ADDRSTRLEN+20];
+	int len;
 	int ret, buf_size;
 	sasl_callback_t internal_callbacks[] = {
 		{SASL_CB_GETOPT, &internal_get_opt, NULL},
@@ -867,9 +870,16 @@ int sasl_user_check(user_session_t * c_session)
 		callbacks = NULL;
 	}
 
+	/* format "ip;port" */
+	inet_ntop(AF_INET6, &c_session->addr, ipremoteport, INET6_ADDRSTRLEN);
+	len = strlen(ipremoteport);
+	secure_snprintf(ipremoteport+len, sizeof(ipremoteport)-len,
+		";%hu", c_session->sport);
+
 	ret =
-		sasl_server_new(service, myhostname, myrealm, NULL,
-				NULL, callbacks, 0, &conn);
+		sasl_server_new(service, myhostname, myrealm,
+			iplocalport, ipremoteport,
+			callbacks, 0, &conn);
 	if (ret != SASL_OK) {
 		g_warning
 		    ("allocating connection state - failure at sasl_server_new()");
