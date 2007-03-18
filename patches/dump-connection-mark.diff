@@ -1,0 +1,38 @@
+From 2d9fb2d58fd423b59f6003a205f2469ee3d2a098 Mon Sep 17 00:00:00 2001
+From: Eric Leblond <eric@inl.fr>
+Date: Fri, 23 Feb 2007 14:38:28 +0100
+Subject: [PATCH] Dump connection mark if not null or in case of MARK event.
+---
+ net/ipv4/netfilter/ip_conntrack_netlink.c |    2 +-
+ net/netfilter/nf_conntrack_netlink.c      |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/net/ipv4/netfilter/ip_conntrack_netlink.c b/net/ipv4/netfilter/ip_conntrack_netlink.c
+index 424f2fc..78a48ac 100644
+--- a/net/ipv4/netfilter/ip_conntrack_netlink.c
++++ b/net/ipv4/netfilter/ip_conntrack_netlink.c
+@@ -375,7 +375,7 @@ static int ctnetlink_conntrack_event(str
+ 	    ctnetlink_dump_counters(skb, ct, IP_CT_DIR_REPLY) < 0)
+ 		goto nfattr_failure;
+ 
+-	if (events & IPCT_MARK
++	if (((events & IPCT_MARK) || ct->mark)
+ 	    && ctnetlink_dump_mark(skb, ct) < 0)
+ 		goto nfattr_failure;
+ 
+diff --git a/net/netfilter/nf_conntrack_netlink.c b/net/netfilter/nf_conntrack_netlink.c
+index 4c2e69a..1541a26 100644
+--- a/net/netfilter/nf_conntrack_netlink.c
++++ b/net/netfilter/nf_conntrack_netlink.c
+@@ -385,7 +385,7 @@ static int ctnetlink_conntrack_event(str
+ 	    ctnetlink_dump_counters(skb, ct, IP_CT_DIR_REPLY) < 0)
+ 		goto nfattr_failure;
+ 
+-	if (events & IPCT_MARK
++	if (((events & IPCT_MARK) || ct->mark)
+ 	    && ctnetlink_dump_mark(skb, ct) < 0)
+ 		goto nfattr_failure;
+ 
+-- 
+1.4.1
+
