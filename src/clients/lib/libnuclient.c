@@ -1,5 +1,5 @@
 /*
- ** Copyright 2004-2006 - INL
+ ** Copyright 2004-2007 - INL
  ** Written by Eric Leblond <regit@inl.fr>
  **            Vincent Deffontaines <vincent@inl.fr>
  ** INL http://www.inl.fr/
@@ -58,6 +58,9 @@ GCRY_THREAD_OPTION_PTHREAD_IMPL;
 #endif
 
 #define REQUEST_CERT 0
+
+static char *secure_str_copy(const char *orig);
+
 static const int cert_type_priority[3] = { GNUTLS_CRT_X509, 0 };
 char* nu_locale_charset;
 
@@ -662,6 +665,24 @@ int send_os(nuauth_session_t * session, nuclient_error_t * err)
 	return 1;
 }
 
+void nu_client_set_username(nuauth_session_t *session,
+			    const char *username)
+{
+	char *utf8username = nu_client_to_utf8(username, nu_locale_charset);
+	session->username = secure_str_copy(utf8username);
+	free(utf8username);
+}
+
+void nu_client_set_password(nuauth_session_t *session,
+				    const char *password)
+{
+	char *utf8pass = nu_client_to_utf8(password, nu_locale_charset);
+	session->password = secure_str_copy(utf8pass);
+	free(utf8pass);
+}
+
+	void nu_client_set_debug(nuauth_session_t * session, unsigned char enabled);
+
 /**
  * Initialize TLS:
  *    - Set key filename (and test if the file does exist)
@@ -813,6 +834,15 @@ int init_sasl(nuauth_session_t * session, nuclient_error_t * err)
 		errno = EAGAIN;
 		SET_ERROR(err, SASL_ERROR, ret);
 		return 0;
+	}
+
+	if (! session->username){
+		if (session->username_callback){
+			session->username = session->username_callback();
+		} else {
+			if (session->verbose)
+				printf("Can't call username callback\n");
+		}
 	}
 
 	sasl_setprop(conn, SASL_SSF_EXTERNAL, &extssf);

@@ -443,6 +443,14 @@ nuauth_session_t *do_connect(nutcpc_context_t * context, char *username)
 		return NULL;
 	}
 
+	if (username) {
+		nu_client_set_username(session, username);
+	}
+	if (context->password[0] != 0) {
+		nu_client_set_password(session, context->password);
+	}
+
+
 #if 0
 	/* wipe out username and password, and then free memory */
 	wipe(username_utf8, strlen(username_utf8));

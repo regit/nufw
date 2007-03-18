@@ -284,6 +284,12 @@ extern "C" {
 			unsigned char diffie_hellman,
 			nuclient_error_t * err);
 
+	void nu_client_set_username(nuauth_session_t *session,
+				    const char *username);
+
+	void nu_client_set_password(nuauth_session_t *session,
+				    const char *password);
+
 	void nu_client_set_debug(nuauth_session_t * session, unsigned char enabled);
 	void nu_client_set_verbose(nuauth_session_t * session,
 				   unsigned char enabled);
