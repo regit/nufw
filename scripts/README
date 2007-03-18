@@ -1,0 +1,22 @@
+This directory contains some usefull scripts:
+
+ * clean_conntrack.pl *
+Move old entry from table conntrack_ulog to archive table ulog. It can be used
+with mysql logging module.
+
+ * nuaclgen *
+This script can be used to store ACLs in an LDAP directory.
+
+ * nuauth_command *
+It can be used to list and modify some properties of a running nuauth.
+
+ * nutop *
+This top-like perl script displays the list of of authenticated connections.
+
+ * ulog_rotate_daily.sh *
+This scripts move old datas from ulog table to an archive table (ulog_1). This
+ensure we only have 7 days of log in main table. Its place is in daily cron job.
+
+ * ulog_rotate_weekly.sh *
+It is in charge of doing a weekly rotation of all datas. Its place is in weekly
+cron job.
