@@ -211,7 +211,7 @@ class Client:
                 if not ok or command == "quit":
                     return
             else:
-                print "[!] Unknown command: %s" % command
+                print "[!] Unknown command: %s\n\t(try 'help' to have a list of commands)" % command
             print
 
     def reconnect(self):
