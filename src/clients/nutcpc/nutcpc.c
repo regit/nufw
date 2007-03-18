@@ -413,30 +413,6 @@ void wipe(void *data, size_t datalen)
 nuauth_session_t *do_connect(nutcpc_context_t * context, char *username)
 {
 	nuauth_session_t *session;
-#if 0
-	char *username_utf8;
-	char *password;
-	char *password_utf8;
-
-	/* read username and password */
-	if (username == NULL) {
-		username = get_username();
-	}
-	if (context->password[0] != 0) {
-		password = strdup(context->password);
-		wipe(context->password, sizeof(password));
-	} else {
-		password = get_password();
-	}
-
-	/* convert to UTF-8 */
-	username_utf8 = nu_client_to_utf8(username, locale_charset);
-	password_utf8 = nu_client_to_utf8(password, locale_charset);
-	wipe(password, strlen(password));
-	wipe(username, strlen(username));
-	free(username);
-	free(password);
-#endif
 
 	session = nu_client_new_callback(get_username, get_password, 1, err);
 	if (session == NULL) {
@@ -449,15 +425,6 @@ nuauth_session_t *do_connect(nutcpc_context_t * context, char *username)
 	if (context->password[0] != 0) {
 		nu_client_set_password(session, context->password);
 	}
-
-
-#if 0
-	/* wipe out username and password, and then free memory */
-	wipe(username_utf8, strlen(username_utf8));
-	wipe(password_utf8, strlen(password_utf8));
-	free(username_utf8);
-	free(password_utf8);
-#endif
 
 	nu_client_set_debug(session, context->debug_mode);
 
