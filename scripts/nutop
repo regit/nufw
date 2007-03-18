@@ -45,21 +45,21 @@ sub Print_Usage()
   print "\t-help\t\t\tDisplay this help message and exit\n";
   print "DATABASE RELATED OPTIONS\n";
   print "\t-version\t\tNuFW protocol version. 'Normal' is 2, use 1 for old version\n";
-  print "\t-databasetype\t\tdatabase choice (pgsql or mysql) default is pgsql)\n";
+  print "\t-databasetype\t\tdatabase choice (pgsql or mysql) [default is mysql]\n";
   print "\t-host\t\t\tdatabase adress (IP or name) default is 127.0.0.1)\n";
-  print "\t-user\t\t\tdatabase username (default is \'nufw\')\n";
+  print "\t-user\t\t\tdatabase username (default is \'nutop\')\n";
   print "\t-pass\t\t\tdatabase password (no default)\n";
-  print "\t-databasename\t\tdatabase to use (default is \'nufw\')\n";
-  print "\t-tablename\t\ttable to use (default is \'nufw\')\n";
+  print "\t-databasename\t\tdatabase to use (default is \'nulog\')\n";
+  print "\t-tablename\t\ttable to use (default is \'ulog\')\n";
   print "\t-port\t\t\tTCP port to use (default is 3306/5432 for mysql/pgsql respectively)\n";
 }
 
 my $modified_conf=0;
-my %config = ('databasetype' => 'pgsql',
+my %config = ('databasetype' => 'mysql',
               'host' => '127.0.0.1',
-              'user' => 'nufw',
-              'databasename' => 'nufw',
-              'tablename' => 'nufw',
+              'user' => 'nutop',
+              'databasename' => 'nulog',
+              'tablename' => 'ulog',
               'delay' => 2,
               'line' => 20,
               'version' => 2,
