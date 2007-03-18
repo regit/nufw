@@ -161,6 +161,10 @@ extern "C" {
 		u_int32_t userid;	/*!< Local user identifier (getuid()) */
 		char *username;	/*!< Username (encoded in UTF-8) */
 		char *password;	/*!< Password (encoded in UTF-8) */
+		/** Callback used to get username */
+		char* (*username_callback)();
+		/** Callback used to get password */
+		char* (*passwd_callback)(); 
 
 		gnutls_session tls;	/*!< TLS session over TCP socket */
 		gnutls_certificate_credentials cred;	/*!< TLS credentials */
@@ -274,6 +278,11 @@ extern "C" {
 			      const char *password,
 			      unsigned char diffie_hellman,
 			      nuclient_error_t *err);
+
+	nuauth_session_t *nu_client_new_callback(void *username_callback,
+			void *passwd_callback,
+			unsigned char diffie_hellman,
+			nuclient_error_t * err);
 
 	void nu_client_set_debug(nuauth_session_t * session, unsigned char enabled);
 	void nu_client_set_verbose(nuauth_session_t * session,

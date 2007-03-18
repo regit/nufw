@@ -28,7 +28,7 @@
 #include <stdarg.h>
 #include "proto.h"
 #include "security.h"
-#define NUTCPC_VERSION PACKAGE_VERSION
+#define NUTCPC_VERSION PACKAGE_VERSION " $Revision$"
 
 #ifdef FREEBSD
 #include <readpassphrase.h>
@@ -41,7 +41,6 @@ nuauth_session_t *session = NULL;
 nuclient_error_t *err = NULL;
 struct sigaction old_sigterm;
 struct sigaction old_sigint;
-char *locale_charset = NULL;
 
 typedef struct {
 	char port[10];		/*!< Port (service) number / name */
@@ -413,10 +412,11 @@ void wipe(void *data, size_t datalen)
  */
 nuauth_session_t *do_connect(nutcpc_context_t * context, char *username)
 {
+	nuauth_session_t *session;
+#if 0
 	char *username_utf8;
 	char *password;
 	char *password_utf8;
-	nuauth_session_t *session;
 
 	/* read username and password */
 	if (username == NULL) {
@@ -436,17 +436,20 @@ nuauth_session_t *do_connect(nutcpc_context_t * context, char *username)
 	wipe(username, strlen(username));
 	free(username);
 	free(password);
+#endif
 
-	session = nu_client_new(username_utf8, password_utf8, 1, err);
+	session = nu_client_new_callback(get_username, get_password, 1, err);
 	if (session == NULL) {
 		return NULL;
 	}
 
+#if 0
 	/* wipe out username and password, and then free memory */
 	wipe(username_utf8, strlen(username_utf8));
 	wipe(password_utf8, strlen(password_utf8));
 	free(username_utf8);
 	free(password_utf8);
+#endif
 
 	nu_client_set_debug(session, context->debug_mode);
 
@@ -662,12 +665,7 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	/* get local charset */
-	locale_charset = nl_langinfo(CODESET);
-	if (locale_charset == NULL) {
-		fprintf(stderr, "Can't get locale charset!\n");
-		exit(EXIT_FAILURE);
-	}
+	
 
 	/* parse command line options */
 	parse_cmdline_options(argc, argv, &context, &username);

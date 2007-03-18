@@ -43,6 +43,7 @@
 #include <sasl/saslutil.h>
 #include <stdarg.h>		/* va_list, va_start, ... */
 #include <gnutls/x509.h>
+#include <langinfo.h>
 #include <proto.h>
 #include "client.h"
 #include "security.h"
@@ -58,6 +59,7 @@ GCRY_THREAD_OPTION_PTHREAD_IMPL;
 
 #define REQUEST_CERT 0
 static const int cert_type_priority[3] = { GNUTLS_CRT_X509, 0 };
+char* nu_locale_charset;
 
 #include <sys/utsname.h>
 
@@ -92,8 +94,23 @@ int nu_get_usersecret(sasl_conn_t * conn __attribute__ ((unused)),
 			printf("getsecret not looking for pass");
 		return SASL_BADPARAM;
 	}
-	if (session->password == NULL) {
-		return SASL_FAIL;
+	if ((session->password == NULL) && session->passwd_callback) {
+#if USE_UTF8
+		char *utf8pass;
+#endif
+		char *givenpass=session->passwd_callback();
+		if (!givenpass){
+			return SASL_FAIL;
+		}
+#if USE_UTF8
+		utf8pass = nu_client_to_utf8(givenpass, nu_locale_charset);
+		free(givenpass);
+		givenpass = utf8pass;
+		if (!givenpass){
+			return SASL_FAIL;
+		}
+#endif
+		session->password = givenpass;
 	}
 	if (!psecret)
 		return SASL_BADPARAM;
@@ -119,8 +136,20 @@ static int nu_get_userdatas(void *context __attribute__ ((unused)),
 	switch (id) {
 	case SASL_CB_USER:
 	case SASL_CB_AUTHNAME:
-		if (session->username == NULL) {
-			return SASL_FAIL;
+		if ((session->username == NULL) && session->username_callback) {
+#if USE_UTF8
+			char *utf8name;
+#endif
+			char *givenuser=session->username_callback();
+#if USE_UTF8
+			utf8name = nu_client_to_utf8(givenuser, nu_locale_charset);
+			free(givenuser);
+			givenuser = utf8name;
+			if (givenuser == NULL){
+				return SASL_FAIL;
+			}
+#endif
+			session->username = givenuser;
 		}
 		*result = session->username;
 		break;
@@ -512,6 +541,12 @@ int nu_client_global_init(nuclient_error_t * err)
 	if (ret != SASL_OK) {
 		SET_ERROR(err, SASL_ERROR, ret);
 		return 0;
+	}
+	/* get local charset */
+	nu_locale_charset = nl_langinfo(CODESET);
+	if (nu_locale_charset == NULL) {
+		fprintf(stderr, "Can't get locale charset!\n");
+		exit(EXIT_FAILURE);
 	}
 
 	return 1;
@@ -1082,14 +1117,10 @@ int nu_client_reset_tls(nuauth_session_t *session)
 	}
 	return 1;
 }
-
-
 /**
  * \ingroup nuclientAPI
  * \brief Init connection to nuauth server
  *
- * \param username User name string
- * \param password Password string
  * \param diffie_hellman If equals to 1, use Diffie Hellman for key exchange
  * (very secure but initialization is slower)
  * \param err Pointer to a nuclient_error_t: which contains the error
@@ -1103,18 +1134,12 @@ int nu_client_reset_tls(nuauth_session_t *session)
  *
  * If everything is ok, create the connection table using tcptable_init().
  */
-nuauth_session_t *nu_client_new(const char *username,
-		      const char *password,
-		      unsigned char diffie_hellman, nuclient_error_t * err)
+nuauth_session_t *_nu_client_new(unsigned char diffie_hellman, nuclient_error_t * err)
 {
 	conntable_t *new;
 	nuauth_session_t *session;
 	int ret;
 
-	if (username == NULL || password == NULL) {
-		SET_ERROR(err, INTERNAL_ERROR, BAD_CREDENTIALS_ERR);
-		return NULL;
-	}
 
 	/* First reset error */
 	SET_ERROR(err, INTERNAL_ERROR, NO_ERR);
@@ -1137,12 +1162,6 @@ nuauth_session_t *nu_client_new(const char *username,
 	session->recvthread = NULL_THREAD;
 	session->tls = NULL;
 	session->ct = NULL;
-	session->username = secure_str_copy(username);
-	session->password = secure_str_copy(password);
-	if (session->username == NULL || session->password == NULL) {
-		SET_ERROR(err, INTERNAL_ERROR, MEMORY_ERR);
-		return NULL;
-	}
 	session->tls_password = NULL;
 	session->debug_mode = 0;
 	session->verbose = 1;
@@ -1203,6 +1222,56 @@ nuauth_session_t *nu_client_new(const char *username,
 	}
 	return session;
 }
+
+/**
+ *
+ * \param username User name string
+ * \param password Password string
+ */
+
+nuauth_session_t *nu_client_new_callback(void *username_callback,
+		      void *passwd_callback,
+		      unsigned char diffie_hellman, nuclient_error_t * err)
+{
+	nuauth_session_t *session = NULL;
+
+	if (username_callback == NULL || passwd_callback == NULL) {
+		SET_ERROR(err, INTERNAL_ERROR, BAD_CREDENTIALS_ERR);
+		return NULL;
+	}
+
+	session = _nu_client_new(diffie_hellman, err);
+
+	session->username_callback = username_callback;
+	session->passwd_callback = passwd_callback;
+
+	return session;
+}
+
+nuauth_session_t *nu_client_new(const char *username,
+		      const char *password,
+		      unsigned char diffie_hellman, nuclient_error_t * err)
+{
+	nuauth_session_t *session = NULL;
+
+	if (username == NULL || password == NULL) {
+		SET_ERROR(err, INTERNAL_ERROR, BAD_CREDENTIALS_ERR);
+		return NULL;
+	}
+
+	session = _nu_client_new(diffie_hellman, err);
+
+	session->username = secure_str_copy(username);
+	session->password = secure_str_copy(password);
+	if (session->username == NULL || session->password == NULL) {
+		SET_ERROR(err, INTERNAL_ERROR, MEMORY_ERR);
+		return NULL;
+	}
+
+	return session;
+}
+
+
 
 /**
  * Reset a session: close the connection and reset attributes. So the session
