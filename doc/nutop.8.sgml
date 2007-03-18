@@ -20,14 +20,14 @@ manpage.1: manpage.sgml
   <!ENTITY dhfirstname "<firstname>Vincent</firstname>">
   <!ENTITY dhsurname   "<surname>Deffontaines</surname>">
   <!-- Please adjust the date whenever revising the manpage. -->
-  <!ENTITY dhdate      "<date>october 2, 2003</date>">
+  <!ENTITY dhdate      "<date>march 18, 2007</date>">
   <!-- SECTION should be 1-8, maybe w/ subsection other parameters are
        allowed: see man(7), man(1). -->
   <!ENTITY dhsection   "<manvolnum>8</manvolnum>">
   <!ENTITY dhemail     "<email>vincent@inl.fr</email>">
   <!ENTITY dhemail2    "<email>eric@inl.fr</email>">
   <!ENTITY dhusername  "Vincent Deffontaines">
-  <!ENTITY dhucpackage "<refentrytitle>NUFW</refentrytitle>">
+  <!ENTITY dhucpackage "<refentrytitle>nutop</refentrytitle>">
   <!ENTITY dhpackage   "nutop">
 
   <!ENTITY gnu         "<acronym>GNU</acronym>">
@@ -87,7 +87,7 @@ manpage.1: manpage.sgml
       <para>Nutop is to be used by administrators willing to view users activity
       on a NuFW server, in real time. The display is designed to look a lot like
       the well known top command, as far as general layout is concerned.</para>
-      <para>The defaulkt configuration file (containing SQL connections
+      <para>The default configuration file (containing SQL connections
       parameters) is located at /etc/nufw/nutop.conf. If decided to
       customize it to their needs, care should be taken about file permissions
       on that file, as it might let any user of the system access to the NuFW
@@ -133,7 +133,7 @@ manpage.1: manpage.sgml
         <term><option>-databasetype <replaceable>mysql/pgsql</replaceable></option>
         </term>
         <listitem>
-          <para>Type of database to connect to. Default is pgsql. This setting
+          <para>Type of database to connect to. Default is mysql. This setting
           also sets the default port setting.</para>
         </listitem>
       </varlistentry>
@@ -148,7 +148,7 @@ manpage.1: manpage.sgml
         <term><option>-user <replaceable>username</replaceable></option>
         </term>
         <listitem>
-          <para>Database username to connect as. Default is "nufw"</para>
+          <para>Database username to connect as. Default is "nutop"</para>
         </listitem>
       </varlistentry>
       <varlistentry>
@@ -162,14 +162,14 @@ manpage.1: manpage.sgml
         <term><option>-databasename <replaceable>name of database</replaceable></option>
         </term>
         <listitem>
-          <para>Name of database we connect to. Default is "nufw"</para>
+          <para>Name of database we connect to. Default is "nulog"</para>
         </listitem>
       </varlistentry>
       <varlistentry>
         <term><option>-tablename <replaceable>name of table</replaceable></option>
         </term>
         <listitem>
-          <para>Name of SQL table to use for queries. Default is "nufw"</para>
+          <para>Name of SQL table to use for queries. Default is "ulog"</para>
         </listitem>
       </varlistentry>
       <varlistentry>
