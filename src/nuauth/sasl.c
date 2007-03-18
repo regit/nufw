@@ -866,9 +866,9 @@ int sasl_user_check(user_session_t * c_session)
 		callbacks = external_callbacks;
 	} else {
 		callbacks = internal_callbacks;
-	}
-	if (!nuauthconf->nuauth_uses_fake_sasl) {
-		callbacks = NULL;
+		if (!nuauthconf->nuauth_uses_fake_sasl) {
+			callbacks = NULL;
+		}
 	}
 
 	/* format "ip;port" */
