@@ -204,8 +204,10 @@ void nu_exit_clean(nuauth_session_t * session)
 	secure_str_free(session->username);
 	secure_str_free(session->password);
 
-	gnutls_certificate_free_keys(session->cred);
-	gnutls_certificate_free_credentials(session->cred);
+	if (session->cred) {
+		gnutls_certificate_free_keys(session->cred);
+		gnutls_certificate_free_credentials(session->cred);
+	}
 	if (session->diffie_hellman) {
 		gnutls_dh_params_deinit(session->dh_params);
 	}
@@ -1015,7 +1017,7 @@ int certificate_check(nuauth_session_t *session)
 	time_t expiration_time, activation_time;
 	gnutls_x509_crt cert;
 
-	if (get_first_x509_cert_from_tls_session(session->tls, &cert) 
+	if (get_first_x509_cert_from_tls_session(session->tls, &cert)
 			!= SASL_OK) {
 		return SASL_BADPARAM;
 	}
