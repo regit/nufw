@@ -1,9 +1,9 @@
 #!/usr/bin/python2.4
 from unittest import TestCase, main
-from common import reloadNuauth, getNuauthConf, createClient, connectClient, startNufw
+from common import createClient, connectClient, startNufw
 from logging import info
 from time import time, mktime
-from iptables import Iptables
+from inl_tests.iptables import Iptables
 from config import CLIENT_IP, CLIENT_USER_ID
 from socket import ntohl
 from filter import testAllowPort, testDisallowPort, VALID_PORT, INVALID_PORT
@@ -14,6 +14,8 @@ import MySQLdb
 import platform
 from os.path import basename
 from sys import argv, executable
+from nuauth import Nuauth
+from nuauth_conf import NuauthConf
 
 def datetime2unix(timestamp):
     tm = timestamp.timetuple()
@@ -40,16 +42,14 @@ class MysqlLogUser(TestCase):
             user=MYSQL_USER,
             passwd=MYSQL_PASSWORD,
             db=MYSQL_DB)
-        self.config = getNuauthConf()
-        self.config["nuauth_user_logs_module"] = '"mysql"'
-        self.config["nuauth_user_session_logs_module"] = '"mysql"'
-        self.config.install()
-        self.nuauth = reloadNuauth()
         startNufw()
+        config = NuauthConf()
+        config["nuauth_user_logs_module"] = '"mysql"'
+        config["nuauth_user_session_logs_module"] = '"mysql"'
+        self.nuauth = Nuauth(config)
 
     def tearDown(self):
-        self.config.desinstall()
-        reloadNuauth()
+        self.nuauth.stop()
         self.conn.close()
 
     def _login(self, sql):

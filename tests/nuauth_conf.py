@@ -1,5 +1,5 @@
 import re
-from replace_file import ReplaceFile
+from inl_tests.replace_file import ReplaceFile
 from logging import info
 from config import NUAUTH_CONF
 

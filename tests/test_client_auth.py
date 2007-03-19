@@ -1,19 +1,21 @@
 #!/usr/bin/python2.4
 from unittest import TestCase, main
 from sys import stderr
-from common import startNuauth, createClient, connectClient, PASSWORD
+from common import createClient, connectClient, PASSWORD
 from logging import info
+from nuauth import Nuauth
 
 class TestClientAuth(TestCase):
     def setUp(self):
         # Load nuauth
-        startNuauth()
+        self.nuauth = Nuauth()
 
         # Create client
         self.client = createClient()
 
     def tearDown(self):
         self.client.stop()
+        self.nuauth.stop()
 
     def testValidPass(self):
         self.client.password = PASSWORD

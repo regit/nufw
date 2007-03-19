@@ -1,7 +1,6 @@
 #!/usr/bin/python2.4
 from unittest import TestSuite, TestResult, TestLoader, TextTestRunner, TestCase
 from imp import load_source
-from test_script import TestScript
 from os import getuid
 from sys import exit, stderr
 
@@ -9,6 +8,11 @@ FILES = (
     "test_client_auth",
     "test_plaintext_acl", "test_plaintext_auth",
     "test_script", "test_log", "test_mysql_log",
+)
+
+FILES = (
+    "test_client_auth",
+    "test_log",
 )
 
 def loadTestcases(module):
