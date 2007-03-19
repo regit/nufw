@@ -11,9 +11,7 @@ class NuauthProcess(Process):
 
     @classmethod
     def getInstance(cls):
-        print "NUAUTH getInstance()"
         if cls.__instance is None:
-            print "NUAUTH create()"
             cls.__instance = NuauthProcess()
             atexit.register(cls._reallyStop)
         return cls.__instance
@@ -47,14 +45,12 @@ class NuauthProcess(Process):
         Process.exited(self, status)
 
     def reload(self):
-        print "RELOOOOOOOAD"
         self.info("Reload")
         self.kill(SIGHUP)
         self.need_reload = False
 
     @classmethod
     def _reallyStop(cls):
-        print "STOOOOOOOOOOOOOOOP!"
         cls.__instance.stop()
 
 class Nuauth:
@@ -63,16 +59,13 @@ class Nuauth:
         self.is_running = False
         self.conf = conf
         self.nuauth = NuauthProcess.getInstance()
-        print "NUAUTH %s" % id(self.nuauth)
 
         # Setup configuration
         if self.conf:
             self.conf.install()
 
         # Start nuauth process
-        print "START"
         was_running = self.nuauth.start(restart=False, timeout=NUAUTH_START_TIMEOUT)
-        print "START: done"
         self.is_running = True
 
         # Send SIGHUP if needed
