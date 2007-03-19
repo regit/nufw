@@ -3,37 +3,12 @@ from nufw import Nufw
 from nuauth import Nuauth
 from client import Client
 from nuauth_conf import NuauthConf
-from log import setupLog
+from inl_tests.log import setupLog
 from config import (USERNAME, PASSWORD,
     USE_COVERAGE, NUAUTH_START_TIMEOUT, NUFW_START_TIMEOUT)
-from signal import SIGHUP
 
 _nuauth = None
 _nufw = None
-
-def _reloadNuauth(nuauth):
-    nuauth.info("Reload")
-    nuauth.kill(SIGHUP)
-    nuauth.need_reload = False
-
-def startNuauth(debug_level=9):
-    """
-    Start nuauth. If nuauth is already running, do nothing.
-
-    Return nuauth process (Nuauth class).
-    """
-    global _nuauth
-    if _nuauth:
-        if _nuauth.need_reload:
-            _reloadNuauth(_nuauth)
-        return _nuauth
-    _nuauth = Nuauth(debug_level=debug_level, use_coverage=USE_COVERAGE)
-    atexit.register(_stopNuauth)
-    _nuauth.start(timeout=NUAUTH_START_TIMEOUT)
-    # Log output
-    for line in _nuauth.readlines():
-        pass
-    return _nuauth
 
 def startNufw():
     """
@@ -48,24 +23,6 @@ def startNufw():
     atexit.register(_stopNufw)
     _nufw.start(timeout=NUFW_START_TIMEOUT)
     return _nufw
-
-def reloadNuauth():
-    """
-    Reload nuauth configuration (send SIGHUP signal).
-    Just start nuauth if it wasn't running
-
-    Return nuauth process (Nuauth class).
-    """
-    global _nuauth
-    was_running = bool(_nuauth)
-    nuauth = startNuauth()
-    if was_running:
-        if nuauth.need_reload:
-            _reloadNuauth(nuauth)
-        else:
-            nuauth.need_reload = True
-            nuauth.info("Program reload on next start()")
-    return nuauth
 
 def _stopNuauth():
     global _nuauth
