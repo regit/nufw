@@ -1,15 +1,14 @@
 #!/usr/bin/python2.4
 from unittest import TestCase, main
 from config import CONF_DIR
-from common import (
-    startNufw,
-    reloadNuauth, getNuauthConf,
-    createClient, connectClient)
-from iptables import Iptables
+from common import startNufw, createClient, connectClient
+from nuauth import Nuauth
+from nuauth_conf import NuauthConf
+from inl_tests.iptables import Iptables
 from os import path
 from filter import testAllowPort, testDisallowPort, VALID_PORT
 from test_plaintext_auth import USER_FILENAME, USER, PASS, GID, USER_DB
-from replace_file import ReplaceFile
+from inl_tests.replace_file import ReplaceFile
 
 ACL_FILENAME = path.join(CONF_DIR, "acls.nufw")
 
@@ -27,25 +26,23 @@ class TestPlaintextAcl(TestCase):
         self.iptables = Iptables()
         self.users = ReplaceFile(USER_FILENAME, USER_DB)
         self.acls = ReplaceFile(ACL_FILENAME, ACLS)
-        self.config = getNuauthConf()
-        self.config["plaintext_userfile"] = '"%s"' % USER_FILENAME
-        self.config["plaintext_aclfile"] = '"%s"' % ACL_FILENAME
-        self.config["nuauth_user_check_module"] = '"plaintext"'
-        self.config["nuauth_acl_check_module"] = '"plaintext"'
+        config = NuauthConf()
+        config["plaintext_userfile"] = '"%s"' % USER_FILENAME
+        config["plaintext_aclfile"] = '"%s"' % ACL_FILENAME
+        config["nuauth_user_check_module"] = '"plaintext"'
+        config["nuauth_acl_check_module"] = '"plaintext"'
 
         # Start nuauth with new config
-        self.config.install()
         self.users.install()
         self.acls.install()
-        self.nuauth = reloadNuauth()
+        self.nuauth = Nuauth(config)
         self.nufw = startNufw()
 
     def tearDown(self):
         # Restore user DB and nuauth config
         self.users.desinstall()
         self.acls.desinstall()
-        self.config.desinstall()
-        reloadNuauth()
+        self.nuauth.stop()
         self.iptables.flush()
 
     def testFilter(self):

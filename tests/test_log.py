@@ -1,18 +1,18 @@
 #!/usr/bin/python2.4
 from unittest import TestCase, main
-from common import reloadNuauth, getNuauthConf, createClient, connectClient
+from common import getNuauthConf, createClient, connectClient
+from nuauth import Nuauth
+from nuauth_conf import NuauthConf
 
 class TestLog(TestCase):
     def setUp(self):
-        self.config = getNuauthConf()
-        self.config["nuauth_user_logs_module"] = '"syslog"'
-        self.config["nuauth_user_session_logs_module"] = '"syslog"'
-        self.config.install()
-        self.nuauth = reloadNuauth()
+        config = getNuauthConf()
+        config["nuauth_user_logs_module"] = '"syslog"'
+        config["nuauth_user_session_logs_module"] = '"syslog"'
+        self.nuauth = Nuauth(config)
 
     def tearDown(self):
-        self.config.desinstall()
-        reloadNuauth()
+        self.nuauth.stop()
 
     def findLog(self, match):
         matched = False

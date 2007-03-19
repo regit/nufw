@@ -1,11 +1,11 @@
 #!/usr/bin/python2.4
 from unittest import TestCase, main
 from config import CONF_DIR
-from common import (
-    reloadNuauth, getNuauthConf,
-    createClient, connectClient)
+from common import createClient, connectClient
+from nuauth import Nuauth
+from nuauth_conf import NuauthConf
 from os import path
-from replace_file import ReplaceFile
+from inl_tests.replace_file import ReplaceFile
 
 USER_FILENAME = path.join(CONF_DIR, "users.nufw")
 USER, UID, GID, PASS = "username", 42, 42, "password"
@@ -17,20 +17,19 @@ class TestPlaintextAuth(TestCase):
     def setUp(self):
         # Setup our user DB
         self.users = ReplaceFile(USER_FILENAME, USER_DB)
-        self.config = getNuauthConf()
+        config = NuauthConf()
 
         # Start nuauth with our config
-        self.config["plaintext_userfile"] = '"%s"' % USER_FILENAME
-        self.config["nuauth_user_check_module"] = '"plaintext"'
+        config["plaintext_userfile"] = '"%s"' % USER_FILENAME
+        config["nuauth_user_check_module"] = '"plaintext"'
         self.config.install()
         self.users.install()
-        self.nuauth = reloadNuauth()
+        self.nuauth = Nuauth(config)
 
     def tearDown(self):
         # Restore user DB and nuauth config
         self.users.desinstall()
-        self.config.desinstall()
-        reloadNuauth()
+        self.nuauth.stop()
 
     def testLogin(self):
         # Test user1
