@@ -206,6 +206,7 @@ void nuauth_reload(int signal)
 {
 	struct nuauth_params *newconf = NULL;
 	struct nuauth_params *actconf;
+	g_message("[+] Reload NuAuth server");
 
 	nuauth_install_signals(FALSE);
 
