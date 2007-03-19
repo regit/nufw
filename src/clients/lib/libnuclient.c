@@ -491,7 +491,7 @@ int compare(nuauth_session_t * session, conntable_t * old, conntable_t * new,
  *
  * A client needs to call a few functions in the correct order to be able to authenticate:
  *  - nu_client_global_init(): To be called once at program start
- *  - nu_client_new(): start user session
+ *  - nu_client_new() or nu_client_new_callback(): start user session 
  *  - nu_client_setup_tls(): (optionnal) setup TLS key/certificate files
  *  - nu_client_connect(): try to connect to nuauth server
  *  - nu_client_check(): do a check, it has to be run at regular interval
@@ -1254,9 +1254,17 @@ nuauth_session_t *_nu_client_new(unsigned char diffie_hellman, nuclient_error_t 
 }
 
 /**
+ * \brief Create new session and use callbacks.
  *
- * \param username User name string
- * \param password Password string
+ * Callbacks are used to fetch username and password if they are
+ * necessary for SASL negotiation.
+ *
+ * \param username_callback User name retrieving callback
+ * \param passwd_callback Password retrieving callback
+ * \param diffie_hellman If equals to 1, use Diffie Hellman for key exchange
+ * (very secure but initialization is slower)
+ * \param err Pointer to a nuclient_error_t: which contains the error
+ * \return A pointer to a valid ::nuauth_session_t structure or NULL if init has failed
  */
 
 nuauth_session_t *nu_client_new_callback(void *username_callback,
@@ -1277,6 +1285,21 @@ nuauth_session_t *nu_client_new_callback(void *username_callback,
 
 	return session;
 }
+
+/**
+ * \brief Create new session.
+ *
+ * This function has to be used to create a new ::nuauth_session_t if there
+ * is no plan to use a callback for getting username or password.
+ *
+ * \param username User name string
+ * \param password Password string
+ * \param diffie_hellman If equals to 1, use Diffie Hellman for key exchange
+ * (very secure but initialization is slower)
+ * \param err Pointer to a nuclient_error_t: which contains the error
+ * \return A pointer to a valid ::nuauth_session_t structure or NULL if init has failed
+ */
+
 
 nuauth_session_t *nu_client_new(const char *username,
 		      const char *password,
