@@ -153,11 +153,12 @@ CREATE TABLE `users` (
   `socket` int(10) unsigned NOT NULL,
   `user_id` int(10) unsigned default NULL,
   `username` varchar(30) default NULL,
-  `first_time` datetime default NULL,
-  `last_time` datetime default NULL,
+  `start_time` datetime default NULL,
+  `end_time` datetime default NULL,
   `os_sysname` varchar(40) default NULL,
   `os_release` varchar(40) default NULL,
   `os_version` varchar(100) default NULL,
+  KEY `socket` (socket),
   KEY `user_id` (`user_id`),
   KEY `username` (`username`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
