@@ -17,13 +17,12 @@ class TestPlaintextAuth(TestCase):
     def setUp(self):
         # Setup our user DB
         self.users = ReplaceFile(USER_FILENAME, USER_DB)
-        config = NuauthConf()
+        self.users.install()
 
         # Start nuauth with our config
+        config = NuauthConf()
         config["plaintext_userfile"] = '"%s"' % USER_FILENAME
         config["nuauth_user_check_module"] = '"plaintext"'
-        self.config.install()
-        self.users.install()
         self.nuauth = Nuauth(config)
 
     def tearDown(self):
