@@ -1,4 +1,4 @@
-from process import Process
+from inl_tests.process import Process
 from config import NUFW_PROG
 
 class Nufw(Process):

@@ -1,4 +1,4 @@
-from process import Process
+from inl_tests.process import Process
 from config import NUTCPC_PROG, NUAUTH_HOST
 
 class Client(Process):
