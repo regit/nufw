@@ -6,13 +6,11 @@ from sys import exit, stderr
 
 FILES = (
     "test_client_auth",
-    "test_plaintext_acl", "test_plaintext_auth",
-    "test_script", "test_log", "test_mysql_log",
-)
-
-FILES = (
-    "test_client_auth",
+    "test_plaintext_acl",
+    "test_plaintext_auth",
+    "test_script",
     "test_log",
+    "test_mysql_log",
 )
 
 def loadTestcases(module):

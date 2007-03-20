@@ -47,25 +47,41 @@ class MysqlLogUser(TestCase):
         config["nuauth_user_logs_module"] = '"mysql"'
         config["nuauth_user_session_logs_module"] = '"mysql"'
         self.nuauth = Nuauth(config)
+        self.start_time = int(time())
+
+    def query(self, sql):
+        info("MySQL query: %s" % sql)
+        cursor = self.conn.cursor()
+        cursor.execute(sql)
+        info("MySQL result: %s rows" % cursor.rowcount)
+        return cursor
+
+    def fetchone(self, cursor):
+        row = cursor.fetchone()
+        info("MySQL fetchone(): %s" % repr(row))
+        return row
 
     def tearDown(self):
+        # Stop nuauth
         self.nuauth.stop()
+
+        # Delete our entry in MySQL user session table
+        self.query("DELETE FROM %s WHERE start_time >= FROM_UNIXTIME(%s);" \
+            % (MYSQL_USER_TABLE, self.start_time))
         self.conn.close()
 
     def _login(self, sql):
-        cursor = self.conn.cursor()
-
         # Client login
         client = createClient()
         self.assert_(connectClient(client))
-        cursor.execute(sql)
+        cursor = self.query(sql)
 
         # Check number of rows
         self.assertEqual(cursor.rowcount, 1)
 
         # Read row columns
         (ip_saddr, user_id, username, os_sysname,
-            os_release, os_version, end_time) = cursor.fetchone()
+            os_release, os_version, end_time) = self.fetchone(cursor)
         ip_saddr = ntohl(ip_saddr) & 0xFFFFFFFF
 
         # Check values
@@ -78,8 +94,6 @@ class MysqlLogUser(TestCase):
         return client
 
     def _logout(self, sql, client):
-        cursor = self.conn.cursor()
-
         # Client logout
         # Use datetime.fromtimestamp() with int(time()) to have microsecond=0
         logout_before = datetime.fromtimestamp(int(time()))
@@ -87,25 +101,24 @@ class MysqlLogUser(TestCase):
         logout_after = datetime.now()
 
         # Get last MySQL row
-        cursor.execute(sql)
+        cursor = self.query(sql)
 
         # Check number of rows
         self.assertEqual(cursor.rowcount, 1)
 
         # Read row columns
         (ip_saddr, user_id, username, os_sysname,
-            os_release, os_version, end_time) = cursor.fetchone()
+            os_release, os_version, end_time) = self.fetchone(cursor)
 
         # Check values
         self.assert_(logout_before <= end_time <= logout_after)
 
     def testUserLogin(self):
-        start_time = int(time())
         sql = \
             "SELECT ip_saddr, user_id, username, " \
             "os_sysname, os_release, os_version, end_time " \
             "FROM %s WHERE start_time >= FROM_UNIXTIME(%s) " \
-            "ORDER BY start_time DESC;" % (MYSQL_USER_TABLE, start_time)
+            "ORDER BY start_time DESC;" % (MYSQL_USER_TABLE, self.start_time)
         client = self._login(sql)
         self._logout(sql, client)
 
@@ -120,7 +133,6 @@ class MysqlLogPacket(MysqlLogUser):
 
     def testFilter(self):
         client = createClient()
-        cursor = self.conn.cursor()
 
         # Open allowed port
         time_before = int(time())
@@ -135,12 +147,10 @@ class MysqlLogPacket(MysqlLogUser):
             "timestamp, start_timestamp, end_timestamp, oob_prefix " \
             "FROM %s WHERE timestamp > from_unixtime(%s);" \
             % (MYSQL_PACKET_TABLE, time_before)
-        info("MySQL query: %s" % sql)
-        cursor.execute(sql)
+        cursor = self.query(sql)
 
         # Read result
-        row = cursor.fetchone()
-        info("MySQL result: %s" % repr(row))
+        row = self.fetchone(cursor)
         self.assertEqual(cursor.rowcount, 1)
         (username, user_id, client_os, client_app,
          tcp_dport, ip_saddr, ip_daddr, oob_time_sec, ip_protocol,
