@@ -328,24 +328,10 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex * mutex)
 					    "Warning: tls nufw select() failed: signal was catched.");
 				continue;
 			}
-			/* Bad file descriptor error: ignore it */
-			if (errno == EBADF) {
-				log_message(CRITICAL, DEBUG_AREA_GW,
-					    "Warning: tls nufw select() failed: bad file descriptor.");
-				continue;
-			}
 
-			switch (errno) {
-			case EINVAL:
-				g_message("Negative value for socket");
-				break;
-			case ENOMEM:
-				g_message("Not enough memory");
-				break;
-			}
 			log_message(FATAL, DEBUG_AREA_MAIN | DEBUG_AREA_GW,
-				    "select() failed, exiting at %s:%d in %s (errno=%i)",
-				    __FILE__, __LINE__, __func__, errno);
+				    "select() %s:%u failure: %s",
+				    __FILE__, __LINE__, g_strerror(errno));
 			nuauth_ask_exit();
 			break;
 		} else if (!n) {
