@@ -5,7 +5,7 @@ from client import Client
 from nuauth_conf import NuauthConf
 from inl_tests.log import setupLog
 from config import (USERNAME, PASSWORD,
-    USE_COVERAGE, NUAUTH_START_TIMEOUT, NUFW_START_TIMEOUT)
+    NUAUTH_START_TIMEOUT, NUFW_START_TIMEOUT)
 
 _nuauth = None
 _nufw = None
