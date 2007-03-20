@@ -11,8 +11,8 @@ NUTCPC_PROG = path.join(ROOT_DIR, "src", "clients", "nutcpc", "nutcpc")
 
 # Nuauth options
 NUAUTH_HOST = "192.168.0.2"   # FIXME: Automatically get address
-USE_COVERAGE = True
-if USE_COVERAGE:
+USE_VALGRIND = False
+if USE_VALGRIND:
     NUAUTH_START_TIMEOUT = 60.0*2
 else:
     NUAUTH_START_TIMEOUT = 5.0

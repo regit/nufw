@@ -2,7 +2,7 @@ import atexit
 from inl_tests.process import Process
 from signal import SIGHUP
 from mysocket import connectTcp
-from config import NUAUTH_PROG, NUAUTH_START_TIMEOUT, USE_COVERAGE
+from config import NUAUTH_PROG, NUAUTH_START_TIMEOUT, USE_VALGRIND
 
 TIMEOUT = 0.100   # 100 ms
 
@@ -18,10 +18,11 @@ class NuauthProcess(Process):
 
     def __init__(self, debug_level=9):
         arg = ["-" + "v" * min(max(debug_level, 1), 9)]
-        self.use_coverage = USE_COVERAGE
         program = NUAUTH_PROG
-        if USE_COVERAGE:
-            arg = ["--tool=callgrind", program] + arg
+        if USE_VALGRIND:
+            #arg = ["--tool=callgrind", program] + arg
+            #program = "valgrind"
+            arg = ["--log-file-exactly=nuauth.valgrind.log", "--verbose", program] + arg
             program = "valgrind"
         Process.__init__(self, program, arg)
         self.hostname = "localhost"
@@ -40,7 +41,7 @@ class NuauthProcess(Process):
            and connectTcp(self.hostname, self.client_port, TIMEOUT)
 
     def exited(self, status):
-        if self.use_coverage:
+        if USE_VALGRIND:
             print "Callgrind logs written in callgrind.out.%s" % self.process.pid
         Process.exited(self, status)
 
