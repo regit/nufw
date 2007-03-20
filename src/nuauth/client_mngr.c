@@ -63,9 +63,7 @@ void clean_session(user_session_t * c_session)
 
 	g_mutex_free(c_session->tls_lock);
 
-	if (c_session) {
-		g_free(c_session);
-	}
+	g_free(c_session);
 }
 
 /**
@@ -108,7 +106,7 @@ void add_client(int socket, gpointer datas)
 	ipsockets =
 	    g_hash_table_lookup(client_ip_hash,
 				IPV6_TO_POINTER(&c_session->addr));
-	ipsockets = g_slist_prepend(ipsockets, c_session->tls);
+	ipsockets = g_slist_prepend(ipsockets, c_session);
 	g_hash_table_replace(client_ip_hash,
 			     IPV6_TO_POINTER(&c_session->addr), ipsockets);
 
@@ -119,21 +117,19 @@ static GSList *delete_ipsockets_from_hash(GSList *ipsockets,
 					  user_session_t *session,
 					  int destroy)
 {
+	gpointer key;
+	key = IPV6_TO_POINTER(&session->addr);
 	ipsockets = g_slist_remove(ipsockets, session);
 	if (ipsockets != NULL) {
 		g_hash_table_replace(client_ip_hash,
-				IPV6_TO_POINTER(&session->
-					addr),
-				ipsockets);
+				key, ipsockets);
 	} else {
-		g_hash_table_remove(client_ip_hash,
-				IPV6_TO_POINTER(&session->
-					addr));
+		g_hash_table_remove(client_ip_hash, key);
 	}
 	if (destroy) {
 		/* remove entry from hash */
-		g_hash_table_steal(client_conn_hash,
-				GINT_TO_POINTER(session->socket));
+		key = GINT_TO_POINTER(session->socket);
+		g_hash_table_steal(client_conn_hash, key);
 		log_user_session(session, SESSION_CLOSE);
 		clean_session(session);
 	}
@@ -265,32 +261,30 @@ char warn_clients(struct msg_addr_set *global_msg)
 				IPV6_TO_POINTER(&global_msg->addr));
 	if (start_ipsockets) {
 		global_msg->found = TRUE;
-		ipsockets = start_ipsockets;
-		while (ipsockets) {
-			int ret =
-			    gnutls_record_send(*(gnutls_session *)
-					       (ipsockets->data),
-					       global_msg->msg,
-					       ntohs(global_msg->msg->
-						     length));
+		for (ipsockets = start_ipsockets; ipsockets; ipsockets=ipsockets->next)
+		{
+			user_session_t *session = (user_session_t *)ipsockets->data;
+			gnutls_session_t tls = *session->tls;
+			int ret = gnutls_record_send(tls,
+					global_msg->msg,
+					ntohs(global_msg->msg->length));
 			if (ret < 0) {
 				log_message(WARNING, DEBUG_AREA_USER,
-					    "Fails to send warning to client(s).");
+						"Fails to send warning to client(s).");
 				badsockets = g_slist_prepend(badsockets, ipsockets->data);
 			}
-			ipsockets = ipsockets->next;
 		}
 		if (badsockets) {
-			while (badsockets) {
+			for (; badsockets; badsockets = badsockets->next) {
 				start_ipsockets = delete_ipsockets_from_hash(start_ipsockets,
 							   badsockets->data, 1);
-				badsockets = badsockets->next;
 			}
 			g_slist_free(badsockets);
 		}
 		g_mutex_unlock(client_mutex);
 		return 1;
 	} else {
+		global_msg->found = FALSE;
 		g_mutex_unlock(client_mutex);
 		return 0;
 	}
