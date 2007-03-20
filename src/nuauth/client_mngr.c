@@ -264,7 +264,7 @@ char warn_clients(struct msg_addr_set *global_msg)
 		for (ipsockets = start_ipsockets; ipsockets; ipsockets=ipsockets->next)
 		{
 			user_session_t *session = (user_session_t *)ipsockets->data;
-			gnutls_session_t tls = *session->tls;
+			gnutls_session tls = *session->tls;
 			int ret = gnutls_record_send(tls,
 					global_msg->msg,
 					ntohs(global_msg->msg->length));
