@@ -434,7 +434,7 @@ nuauth_session_t *do_connect(nutcpc_context_t * context, char *username)
 	}
 
 	if (context->nuauthdn) {
-		if (!nu_client_set_nuauth_cert_dn(session, 
+		if (!nu_client_set_nuauth_cert_dn(session,
 						  context->nuauthdn,
 						  err)) {
 			nu_client_delete(session);
@@ -622,9 +622,6 @@ int main(int argc, char **argv)
 	char *username = NULL;
 	nutcpc_context_t context;
 
-	/* stdout: flush buffer on new line */
-	setvbuf(stdout, NULL, _IOLBF, 0);
-
 	/* needed by iconv */
 	setlocale(LC_ALL, "");
 
@@ -640,7 +637,7 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	
+
 
 	/* parse command line options */
 	parse_cmdline_options(argc, argv, &context, &username);
