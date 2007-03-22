@@ -202,7 +202,11 @@ void cache_message_destroy(cache_class_t * this,
 
 	content = concerned_datas->data;
 
-	content->usage--;
+	
+	if (content->usage > 0) {
+		content->usage--;
+	}
+
 	if (content->usage) {
 		return;
 	}
