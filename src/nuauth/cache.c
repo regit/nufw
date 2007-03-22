@@ -164,6 +164,7 @@ void cache_get(cache_class_t * this,
 				free_datas(item->datas, NULL);
 			}
 			list = g_slist_remove(list, item);
+			g_free(item);
 		} while (1);
 		entry->datas = list;
 
@@ -202,12 +203,11 @@ void cache_message_destroy(cache_class_t * this,
 
 	content = concerned_datas->data;
 
-	
 	if (content->usage > 0) {
 		content->usage--;
 	}
 
-	if (content->usage) {
+	if (content->usage > 0) {
 		return;
 	}
 
