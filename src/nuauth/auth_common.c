@@ -560,6 +560,15 @@ nu_error_t check_protocol_version(int version)
 }
 
 /**
+ * Convert an integer to a string.
+ * Return 0 on error, 1 otherwise.
+ */
+char* int_to_str(int value)
+{
+	return g_strdup_printf("%i", value);
+}
+
+/**
  * Convert a string to integer number (value in INT_MIN..INT_MAX).
  * Return 0 on error, 1 otherwise.
  */

@@ -32,8 +32,8 @@
 #  include <machine/endian.h>
 #endif
 
-#define AUTHREQ_PORT "4129"
-#define USERPCKT_PORT "4130"
+#define AUTHREQ_PORT 4129
+#define USERPCKT_PORT 4130
 
 /* define here last proto */
 
@@ -70,8 +70,8 @@ struct nu_header {
 
 
 
-/** 
- * Header of message send by NuFW to NuAuth 
+/**
+ * Header of message send by NuFW to NuAuth
  *
  * See also structures ::nufw_to_nuauth_conntrack_message_t and
  * ::nufw_to_nuauth_auth_message_t which include message content.

@@ -55,15 +55,14 @@ void init_nuauthconf(struct nuauth_params **result)
 {
 	struct nuauth_params *conf;
 	char *gwsrv_addr = NULL;
+	int port;
 	confparams_t nuauth_vars[] = {
 		{"nuauth_client_listen_addr", G_TOKEN_STRING, 0,
 		 g_strdup(AUTHREQ_CLIENT_LISTEN_ADDR)},
 		{"nuauth_nufw_listen_addr", G_TOKEN_STRING, 0,
 		 g_strdup(AUTHREQ_NUFW_LISTEN_ADDR)},
-		{"nuauth_gw_packet_port", G_TOKEN_STRING, 0,
-		 g_strdup(AUTHREQ_PORT)},
-		{"nuauth_user_packet_port", G_TOKEN_STRING, 0,
-		 g_strdup(USERPCKT_PORT)},
+		{"nuauth_gw_packet_port", G_TOKEN_INT, AUTHREQ_PORT, 0},
+		{"nuauth_user_packet_port", G_TOKEN_INT, USERPCKT_PORT, 0},
 		{"nufw_gw_addr", G_TOKEN_STRING, 0, g_strdup(GWSRV_ADDR)},
 		{"nuauth_packet_timeout", G_TOKEN_INT, PACKET_TIMEOUT,
 		 NULL},
@@ -122,9 +121,10 @@ void init_nuauthconf(struct nuauth_params **result)
 	conf->client_srv = (char *) READ_CONF("nuauth_client_listen_addr");
 	conf->nufw_srv = (char *) READ_CONF("nuauth_nufw_listen_addr");
 	gwsrv_addr = (char *) READ_CONF("nufw_gw_addr");
-	conf->authreq_port = (char *) READ_CONF("nuauth_gw_packet_port");
-	conf->userpckt_port =
-	    (char *) READ_CONF("nuauth_user_packet_port");
+	port = *(int *) READ_CONF("nuauth_gw_packet_port");
+	conf->authreq_port = int_to_str(port);
+	port = *(int *) READ_CONF("nuauth_user_packet_port");
+	conf->authreq_port = int_to_str(port);
 
 	conf->nbuser_check =
 	    *(int *) READ_CONF("nuauth_number_usercheckers");
