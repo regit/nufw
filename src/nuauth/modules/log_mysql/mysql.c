@@ -272,7 +272,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 			sizeof(mysql_nuauth_vars) / sizeof(confparams_t));
 
 	/* init thread private stuff */
-	params->mysql_priv = g_private_new(NULL);
+	params->mysql_priv = g_private_new((GDestroyNotify)mysql_close);
 	log_message(DEBUG, DEBUG_AREA_MAIN,
 		    "mysql part of the config file is parsed");
 
@@ -328,7 +328,6 @@ static MYSQL *mysql_conn_init(struct log_mysql_params *params)
 		mysql_close(ld);
 		return NULL;
 	}
-	mysql_conn_list = g_slist_prepend(mysql_conn_list, ld);
 
 	return ld;
 }
@@ -917,27 +916,12 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 
 const gchar *g_module_check_init(GModule *module)
 {
-	/* Workaround nasty bug : make module permanent */
-#if 0
-	g_module_make_resident(module);
-#endif
-	mysql_conn_list = NULL;
-
 	mysql_server_init(0, NULL, NULL);
 	return NULL;
 }
 
 void g_module_unload(GModule *module)
 {
-	GSList* pointer = mysql_conn_list;
-
-	if (mysql_conn_list) {
-		while (pointer) {
-			mysql_close((MYSQL *)pointer->data);
-			pointer=pointer->next;
-		}
-		g_slist_free(mysql_conn_list);
-	}
 	mysql_server_end();
 }
 
