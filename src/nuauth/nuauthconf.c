@@ -124,7 +124,7 @@ void init_nuauthconf(struct nuauth_params **result)
 	port = *(int *) READ_CONF("nuauth_gw_packet_port");
 	conf->authreq_port = int_to_str(port);
 	port = *(int *) READ_CONF("nuauth_user_packet_port");
-	conf->authreq_port = int_to_str(port);
+	conf->userpckt_port = int_to_str(port);
 
 	conf->nbuser_check =
 	    *(int *) READ_CONF("nuauth_number_usercheckers");
