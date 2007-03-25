@@ -610,11 +610,13 @@ void no_action_signals(int recv_signal)
 	switch (recv_signal) {
 		case SIGINT:
 		log_message(CRITICAL, DEBUG_AREA_MAIN,
-			    "[+] Nuauth received SIGINT (ignoring)");
+			    "[+] Nuauth received SIGINT (leaving)");
+		exit(-1);
 		break;
 		case SIGTERM:
 		log_message(CRITICAL, DEBUG_AREA_MAIN,
-				"[+] Nuauth received SIGTERM (ignoring)");
+				"[+] Nuauth received SIGTERM (leaving)");
+		exit(-1);
 		break;
 		case SIGHUP:
 		log_message(CRITICAL, DEBUG_AREA_MAIN,
