@@ -33,6 +33,7 @@ int sck_auth_reply;
 int conn_cl_remove(gconstpointer conn);
 int conn_cl_delete(gconstpointer conn);
 inline char get_state(connection_t * elt);
+nu_error_t print_tracking_t(tracking_t *tracking);
 gint print_connection(gpointer data, gpointer userdata);
 void free_connection_list(GSList * list);
 connection_t *duplicate_connection(connection_t * element);

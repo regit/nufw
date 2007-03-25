@@ -72,6 +72,32 @@ int timeval_substract(struct timeval *result, struct timeval *x,
 }
 #endif
 
+
+nu_error_t print_tracking_t(tracking_t *tracking)
+{
+	char src_ascii[INET6_ADDRSTRLEN];
+	char dst_ascii[INET6_ADDRSTRLEN];
+	if (inet_ntop
+			(AF_INET6, &(tracking->saddr), src_ascii,
+			 sizeof(src_ascii)) == NULL)
+		return NU_EXIT_ERROR;
+	if (inet_ntop
+			(AF_INET6, &(tracking->daddr), dst_ascii,
+			 sizeof(dst_ascii)) == NULL)
+		return NU_EXIT_ERROR;
+
+	g_message("Connection: src=%s dst=%s proto=%u",
+			src_ascii, dst_ascii, tracking->protocol);
+	switch (tracking->protocol) {
+		case IPPROTO_TCP:
+		case IPPROTO_UDP:
+			g_message("sport=%d dport=%d",
+				tracking->source,
+				tracking->dest);
+	}
+	return NU_EXIT_OK;
+}
+
 /**
  * Display connection parameters using g_message(): IP+TCP/UDP headers,
  * OS name, OS release and OS version, and application name.
@@ -85,25 +111,10 @@ gint print_connection(gpointer data, gpointer userdata)
 {
 	connection_t *conn = (connection_t *) data;
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG, DEBUG_AREA_MAIN)) {
-		char src_ascii[INET6_ADDRSTRLEN];
-		char dst_ascii[INET6_ADDRSTRLEN];
-
-		if (inet_ntop
-		    (AF_INET6, &conn->tracking.saddr, src_ascii,
-		     sizeof(src_ascii)) == NULL)
+		if (print_tracking_t(&(conn->tracking))
+				==
+				NU_EXIT_ERROR)
 			return -1;
-		if (inet_ntop
-		    (AF_INET6, &conn->tracking.daddr, dst_ascii,
-		     sizeof(dst_ascii)) == NULL)
-			return -1;
-
-		g_message("Connection: src=%s dst=%s proto=%u",
-			  src_ascii, dst_ascii, conn->tracking.protocol);
-		if (conn->tracking.protocol == IPPROTO_TCP) {
-			g_message("sport=%d dport=%d",
-				  conn->tracking.source,
-				  conn->tracking.dest);
-		}
 		g_message("IN=%s OUT=%s", conn->iface_nfo.indev,
 			  conn->iface_nfo.outdev);
 
