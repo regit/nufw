@@ -180,6 +180,23 @@ nu_error_t suppress_nufw_session(nufw_session_t * session)
 	return NU_EXIT_OK;
 }
 
+
+gboolean ghrfunc_true(gpointer key, gpointer value, gpointer user_data)
+{
+	return TRUE;
+}
+
+nufw_session_t *get_nufw_session()
+{
+	gpointer value = NULL;
+	g_static_mutex_lock(&nufw_servers_mutex);
+	value = g_hash_table_find(nufw_servers, ghrfunc_true, NULL);
+	g_static_mutex_unlock(&nufw_servers_mutex);
+	if (value)
+		return (nufw_session_t *)value;
+	return NULL;
+}
+
 /**
  * Clean a NuFW TLS session: send "bye", deinit the connection
  * and free the memory.
