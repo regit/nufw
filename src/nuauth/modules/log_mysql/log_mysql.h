@@ -61,6 +61,7 @@ struct log_mysql_params {
 	char *mysql_users_table_name;
 	int mysql_server_port;
 	unsigned char mysql_use_ipv4_schema;
+	unsigned char mysql_admin_bofh;
 	unsigned char mysql_use_ssl;
 	char *mysql_ssl_keyfile;
 	char *mysql_ssl_certfile;

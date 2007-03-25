@@ -2,6 +2,7 @@
  ** Copyright(C) 2003-2007 INL
  ** Written by Eric Leblond <regit@inl.fr>
  **	       Vincent Deffontaines <vincent@gryzor.com>
+ **	       Victor Stinner <haypo@inl.fr>	
  **
  ** $Id$
  **
@@ -71,7 +72,6 @@ static int ipv6_to_sql(struct log_mysql_params *params, struct in6_addr *addr, c
 		buffer[0] = 0;
 	} else {
 		int ok;
-
 		/* format IPv6 to "a.b.c.d" but only for IPv4 in IPv6 */
 		if (!is_ipv4(addr)) {
 			log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
@@ -198,6 +198,9 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 		{"mysql_use_ipv4_schema", G_TOKEN_INT,
 		 MYSQL_USE_IPV4_SCHEMA, NULL}
 		,
+		{"mysql_admin_bofh", G_TOKEN_INT,
+		 0, NULL}
+		,
 		{"mysql_use_ssl", G_TOKEN_INT, MYSQL_USE_SSL, NULL}
 		,
 		{"mysql_ssl_keyfile", G_TOKEN_STRING, 0,
@@ -265,11 +268,18 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 		      MYSQL_USE_SSL);
 	READ_CONF_INT(params->mysql_use_ipv4_schema,
 		      "mysql_use_ipv4_schema", MYSQL_USE_IPV4_SCHEMA);
+	READ_CONF_INT(params->mysql_admin_bofh, "mysql_admin_bofh", 0);
 
 
 	/* free config struct */
 	free_confparams(mysql_nuauth_vars,
 			sizeof(mysql_nuauth_vars) / sizeof(confparams_t));
+
+	if (params->mysql_admin_bofh) {
+		/** \todo Reset mysql_admin_bofh if we more than one nufw */
+		log_message(WARNING, DEBUG_AREA_MAIN,
+			    "mysql_admin_bofh will not work properly if you have multiple nufw");
+	}
 
 	/* init thread private stuff */
 	params->mysql_priv = g_private_new((GDestroyNotify)mysql_close);
@@ -398,11 +408,9 @@ static char *build_insert_request(MYSQL * ld, connection_t * element,
 			(params, &element->tracking.daddr, dst_ascii,
 			 sizeof(dst_ascii)) != 0)
 		return NULL;
-	if (params->mysql_use_ipv4_schema) {
-		proto = AF_INET;
-	} else {
-		proto = (short unsigned int) element->tracking.protocol;
-	}
+
+	proto = (short unsigned int) element->tracking.protocol;
+
 	ok = secure_snprintf(request_values,
 			sizeof(request_values),
 			"VALUES ('%hu', '%lu', '%hu', %s, %s, ",
@@ -839,6 +847,140 @@ G_MODULE_EXPORT gint user_packet_logs(void *element, tcp_state_t state,
 	}
 }
 
+#define CONN_SELECT_FIELDS "ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,udp_sport,udp_dport,icmp_type,icmp_code"
+
+static nu_error_t build_conntrack_msg_from_mysql(MYSQL_ROW row,
+						 struct
+						 limited_connection
+						 *msgdatas,
+						 struct log_mysql_params 
+						 *params)
+{
+	/* clear tracking */
+	memset(&(msgdatas->tracking), 0, sizeof(tracking_t));
+	/* fill msgdatas.tracking with datas */
+	if (params->mysql_use_ipv4_schema) {
+		/* convert u32 to IPV6 */
+		msgdatas->tracking.saddr.s6_addr32[0] = 0;
+		msgdatas->tracking.saddr.s6_addr32[1] = 0;
+		msgdatas->tracking.saddr.s6_addr32[2] = 0xffff0000;
+		msgdatas->tracking.saddr.s6_addr32[3] = atol(row[1]);
+
+		msgdatas->tracking.daddr.s6_addr32[0] = 0;
+		msgdatas->tracking.daddr.s6_addr32[1] = 0;
+		msgdatas->tracking.daddr.s6_addr32[2] = 0xffff0000;
+		msgdatas->tracking.daddr.s6_addr32[3] = atol(row[2]);
+	} else {
+		/** \todo convert address mysql address to IPV6 */
+		return NU_EXIT_ERROR;
+	}
+	msgdatas->tracking.protocol = atoi(row[0]);
+	switch (msgdatas->tracking.protocol) {
+		case IPPROTO_TCP:
+			msgdatas->tracking.source = atoi(row[3]);
+			msgdatas->tracking.dest = atoi(row[4]);
+			break;
+		case IPPROTO_UDP:
+			msgdatas->tracking.source = atoi(row[5]);
+			msgdatas->tracking.dest = atoi(row[6]);
+			break;
+		case IPPROTO_ICMP:
+			msgdatas->tracking.source = atoi(row[7]);
+			msgdatas->tracking.dest = atoi(row[8]);
+			break;
+		default:
+			return NU_EXIT_ERROR;
+	}
+	print_tracking_t(&(msgdatas->tracking));
+
+	return NU_EXIT_OK;
+}
+
+
+
+/**
+ * Destroy all users connections when session terminate
+ */
+
+nu_error_t destroy_user_connections(user_session_t * c_session,
+				      session_state_t state,
+				      gpointer params_p)
+{
+	struct log_mysql_params *params =
+		(struct log_mysql_params *) params_p;
+	char request[LONG_REQUEST_SIZE];
+	char ip_ascii[IPV6_SQL_STRLEN];
+	MYSQL *ld;
+	gboolean ok;
+	struct limited_connection msgdatas;
+	nufw_session_t* nufw_session;
+	MYSQL_ROW row;
+
+	if (ipv6_to_sql(params, &c_session->addr, ip_ascii, sizeof(ip_ascii)) != 0)
+		return NU_EXIT_ERROR;
+
+
+	ld = get_mysql_handler(params);
+	if (ld == NULL) {
+		return NU_EXIT_ERROR;
+	}
+
+	/* select existing user connection */
+	ok = secure_snprintf(request, sizeof(request),
+			"SELECT " CONN_SELECT_FIELDS
+			" FROM  %s "
+			"WHERE ip_saddr=%s AND username='%s'"
+			" AND (state = 1 OR state =2)",
+			params->mysql_table_name,
+			ip_ascii,
+			c_session->user_name);
+
+	if (!ok) {
+		return NU_EXIT_ERROR;
+	}
+
+	nufw_session = get_nufw_session();
+	if (nufw_session == NULL)
+		return NU_EXIT_ERROR;
+	memcpy(&(msgdatas.gwaddr), &(nufw_session->peername),
+	       sizeof(struct in6_addr));
+	/* execute query */
+	ok = mysql_real_query(ld, request, strlen(request));
+	if (ok != 0) {
+		log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
+				"[MySQL] Cannot execute request: %s",
+				mysql_error(ld));
+		return NU_EXIT_ERROR;
+	} else {
+		 /*
+		 * For each answer:
+		 *  - generate conntrack message
+		 *  - send destroy message to nufw
+		 */
+		MYSQL_RES *result = mysql_store_result(ld);
+		while ((row = mysql_fetch_row(result))) {
+			if (build_conntrack_msg_from_mysql(row,
+							  &msgdatas,
+							  params)
+					!= NU_EXIT_OK) {
+				/** \todo log error treatment */
+				mysql_free_result(result);
+				return NU_EXIT_ERROR;
+			}
+			if (send_conntrack_message
+					(&msgdatas,
+					 AUTH_CONN_DESTROY) 
+					!= NU_EXIT_OK) {
+				/** \todo log error treatment */
+				mysql_free_result(result);
+				return NU_EXIT_ERROR;
+			}
+		}
+		mysql_free_result(result);
+	}
+	return NU_EXIT_OK;
+}
+
 /**
  * \brief User session logging
  *
@@ -910,6 +1052,12 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 			    "[MySQL] Cannot execute request: %s",
 			    mysql_error(ld));
 		return -1;
+	}
+
+	if (params->mysql_admin_bofh && (state == SESSION_CLOSE)) {
+		if (destroy_user_connections(c_session, state, params_p)
+				== NU_EXIT_ERROR)
+			return -1;
 	}
 	return 1;
 }
