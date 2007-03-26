@@ -900,8 +900,12 @@ static nu_error_t build_conntrack_msg_from_mysql(MYSQL_ROW row,
 		default:
 			return NU_EXIT_ERROR;
 	}
-	print_tracking_t(&(msgdatas->tracking));
-
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG, DEBUG_AREA_MAIN)) {
+		if (print_tracking_t(&(msgdatas->tracking))
+				==
+				NU_EXIT_ERROR)
+			return NU_EXIT_ERROR;
+	}
 	return NU_EXIT_OK;
 }
 
@@ -1068,7 +1072,8 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 			if (! g_slist_find(
 				c_session->groups,
 				GINT_TO_POINTER(
-					params->mysql_bofh_victim_group))) 
+					params->mysql_bofh_victim_group))
+				)
 				return 1;
 		if (destroy_user_connections(c_session, state, params_p)
 				== NU_EXIT_ERROR)
