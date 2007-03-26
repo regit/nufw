@@ -1,6 +1,6 @@
 # Code to get directories
 from os import getcwd, path
-CONF_DIR = "/etc/nufw/"
+CONF_DIR = "/etc/nufw"
 NUAUTH_CONF = path.join(CONF_DIR, "nuauth.conf")
 ROOT_DIR = path.normpath(path.join(getcwd(), ".."))
 
@@ -10,12 +10,12 @@ NUAUTH_PROG = path.join(ROOT_DIR, "src", "nuauth", "nuauth")
 NUTCPC_PROG = path.join(ROOT_DIR, "src", "clients", "nutcpc", "nutcpc")
 
 # Nuauth options
-NUAUTH_HOST = "192.168.1.2"   # FIXME: Automatically get address
+NUAUTH_HOST = "192.168.0.2"   # FIXME: Automatically get address
 USE_VALGRIND = False
 if USE_VALGRIND:
     NUAUTH_START_TIMEOUT = 60.0*2
 else:
-    NUAUTH_START_TIMEOUT = 10.0
+    NUAUTH_START_TIMEOUT = 5.0
 
 # Client options
 USERNAME = "haypo"
