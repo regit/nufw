@@ -648,8 +648,8 @@ int tls_user_init(struct tls_user_context_t *context)
 	/* pre client list */
 	pre_client_list = NULL;
 
-	create_thread(&nuauthdatas->pre_client_thread,
-		      "pre client thread", pre_client_check);
+	thread_new(&nuauthdatas->pre_client_thread,
+		   "pre client thread", pre_client_check);
 
 	/* create tls sasl worker thread pool */
 	nuauthdatas->tls_sasl_worker =

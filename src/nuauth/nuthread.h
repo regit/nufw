@@ -28,12 +28,11 @@ struct nuauth_thread_t {
 	const char *name;
 };
 
-void create_thread(struct nuauth_thread_t *thread,
-		   const char* name,
-		   void *(*func) (GMutex *));
-
-void wait_thread_end(struct nuauth_thread_t *thread);
-
+void thread_new(struct nuauth_thread_t *thread,
+		const char* name,
+		void *(*func) (GMutex *));
+void thread_stop(struct nuauth_thread_t *thread);
+void thread_wait_end(struct nuauth_thread_t *thread);
 void thread_destroy(struct nuauth_thread_t *thread);
 
 #endif

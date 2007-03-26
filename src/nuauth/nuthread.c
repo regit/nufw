@@ -28,25 +28,42 @@
  *
  * The mutex is used to stop a thread: to stop a thread, just lock its mutex.
  */
-void create_thread(struct nuauth_thread_t *thread,
-		   const char* name,
-		   void *(*func) (GMutex *))
+void thread_new(struct nuauth_thread_t *thread,
+		const char* name,
+		void *(*func) (GMutex *))
 {
 	thread->name = name;
 	thread->mutex = g_mutex_new();
 	thread->thread =
 	    g_thread_create((GThreadFunc) func, thread->mutex, TRUE, NULL);
 	if (thread->thread == NULL)
+	{
+		g_error("FATAL ERROR: Unable to create thread %s!",
+			name);
 		exit(EXIT_FAILURE);
+	}
+	thread->valid = 1;
+}
+
+/**
+ * Stop a thread: lock its mutex to ask it to leave.
+ */
+void thread_stop(struct nuauth_thread_t *thread)
+{
+	if (!thread->valid)
+		return;
+	(void)g_mutex_trylock(thread->mutex);
 }
 
 /**
  * Wait the end of thread using g_thread_join(). Avoid deadlock: if the
  * active thread is the thread to join, we just skip it.
  */
-void wait_thread_end(struct nuauth_thread_t *thread)
+void thread_wait_end(struct nuauth_thread_t *thread)
 {
 	GThread *self;
+	if (!thread->valid)
+		return;
 	log_message(DEBUG, DEBUG_AREA_MAIN, "Wait end of thread '%s'", thread->name);
 	self = g_thread_self();
 	if (self == thread->thread) {
@@ -63,11 +80,14 @@ void wait_thread_end(struct nuauth_thread_t *thread)
  */
 void thread_destroy(struct nuauth_thread_t *thread)
 {
+	if (!thread->valid)
+		return;
 	/* make sure that the mutex is unlocked */
 	(void)g_mutex_trylock(thread->mutex);
 	g_mutex_unlock(thread->mutex);
 
 	/* destroy the mutex */
 	g_mutex_free(thread->mutex);
+	thread->valid = 0;
 }
 
