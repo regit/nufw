@@ -499,7 +499,7 @@ void parse_cmdline_options(int argc, char **argv,
 	int stealth = 0;
 
 	/* set default values */
-	SECURE_STRNCPY(context->port, USERPCKT_PORT,
+	SECURE_STRNCPY(context->port, USERPCKT_SERVICE,
 		       sizeof(context->port));
 	SECURE_STRNCPY(context->srv_addr, NUAUTH_IP,
 		       sizeof(context->srv_addr));

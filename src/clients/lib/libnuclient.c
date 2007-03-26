@@ -882,7 +882,7 @@ void nu_client_set_source(nuauth_session_t *session, struct sockaddr_storage *ad
  *
  * \param session Pointer to client session
  * \param hostname String containing hostname of nuauth server (default: #NUAUTH_IP)
- * \param service Port number (or string) on which nuauth server is listening (default: #USERPCKT_PORT)
+ * \param service Port number (or string) on which nuauth server is listening (default: #USERPCKT_SERVICE)
  * \param err Pointer to a nuclient_error_t: which contains the error
  */
 int init_socket(nuauth_session_t * session,
@@ -1369,7 +1369,7 @@ void nu_client_reset(nuauth_session_t * session)
  *
  * \param session Pointer to client session
  * \param hostname String containing hostname of nuauth server (default: #NUAUTH_IP)
- * \param service Port number (or string) on which nuauth server is listening (default: #USERPCKT_PORT)
+ * \param service Port number (or string) on which nuauth server is listening (default: #USERPCKT_SERVICE)
  * \param err Pointer to a nuclient_error_t: which contains the error
  * \return Returns 0 on error (error description in err), 1 otherwise
  */
