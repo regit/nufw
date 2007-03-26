@@ -3,6 +3,7 @@ from inl_tests.process import Process
 from signal import SIGHUP
 from mysocket import connectTcp
 from config import NUAUTH_PROG, NUAUTH_START_TIMEOUT, USE_VALGRIND
+from time import time
 
 TIMEOUT = 0.100   # 100 ms
 
@@ -46,9 +47,23 @@ class NuauthProcess(Process):
         Process.exited(self, status)
 
     def reload(self):
+        # Eat output before sending SIGHUP message
+        for line in self.readlines():
+            pass
+
+        # Send SIGHUP signal
         self.info("Reload")
         self.kill(SIGHUP)
         self.need_reload = False
+
+        # Wait until nuauth is reloaded
+        message = "NuAuth server reloaded"
+        start = time()
+        while time()-start < 1.0:
+            for line in self.readlines(timeout=0.250):
+                if message in line:
+                    return
+        self.warning('nuauth doesn\'t write message "%s"' % message)
 
     @classmethod
     def _reallyStop(cls):
