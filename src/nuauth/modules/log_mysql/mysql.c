@@ -880,8 +880,12 @@ static nu_error_t build_conntrack_msg_from_mysql(MYSQL_ROW row,
 		msgdatas->tracking.daddr.s6_addr32[2] = 0xffff0000;
 		msgdatas->tracking.daddr.s6_addr32[3] = atol(row[2]);
 	} else {
-		/** \todo convert address mysql address to IPV6 */
-		return NU_EXIT_ERROR;
+		memcpy(&(msgdatas->tracking.saddr),
+				row[1],
+				sizeof(msgdatas->tracking.saddr));
+		memcpy(&(msgdatas->tracking.daddr),
+				row[2],
+				sizeof(msgdatas->tracking.daddr));
 	}
 	msgdatas->tracking.protocol = atoi(row[0]);
 	switch (msgdatas->tracking.protocol) {
