@@ -1,0 +1,20 @@
+== NuFW testing ==
+
+This implements a testing system for NuFW.
+
+Before running test, you need to get a separate component, inl_tests:
+
+svn co http://software.inl.fr/svn/mirror/tools/inl_tests
+
+Then, go to the directory and tape "make".
+
+You need to install NuFW and config files before running tests. Once
+this is done you can do :
+
+export PYTHONPATH=$PYTHONPATH:/MY_LOCAL_PATH_TO/inl_tests
+
+and run some tests :
+./test_plaintext_auth.py
+
+If you have a complete infrastructure with mysql server and/or ldap you can run:
+./test_all.py
