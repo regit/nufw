@@ -565,10 +565,6 @@ int load_modules()
 	confparams_t nuauth_vars[] = {
 		{"nuauth_user_check_module", G_TOKEN_STRING, 1,
 		 g_strdup(DEFAULT_USERAUTH_MODULE)},
-		{"nuauth_get_user_groups_module", G_TOKEN_STRING, 1,
-		 g_strdup(DEFAULT_USERAUTH_MODULE)},
-		{"nuauth_get_user_id_module", G_TOKEN_STRING, 1,
-		 g_strdup(DEFAULT_USERAUTH_MODULE)},
 		{"nuauth_acl_check_module", G_TOKEN_STRING, 1,
 		 g_strdup(DEFAULT_ACLS_MODULE)},
 		{"nuauth_periods_module", G_TOKEN_STRING, 1,
@@ -592,8 +588,8 @@ int load_modules()
 	};
 	char *nuauth_acl_check_module;
 	char *nuauth_user_check_module;
-	char *nuauth_get_user_groups_module;
-	char *nuauth_get_user_id_module;
+	char *nuauth_get_user_groups_module = NULL;
+	char *nuauth_get_user_id_module = NULL;
 	char *nuauth_user_session_logs_module;
 	char *nuauth_user_logs_module;
 	char *nuauth_ip_authentication_module = NULL;
@@ -615,10 +611,6 @@ int load_modules()
 
 	nuauth_user_check_module =
 	    (char *) READ_CONF("nuauth_user_check_module");
-	nuauth_get_user_groups_module =
-	    (char *) READ_CONF("nuauth_get_user_groups_module");
-	nuauth_get_user_id_module =
-	    (char *) READ_CONF("nuauth_get_user_id_module");
 	nuauth_user_session_logs_module =
 	    (char *) READ_CONF("nuauth_user_session_logs_module");
 	nuauth_user_logs_module =
@@ -646,6 +638,31 @@ int load_modules()
 	free_confparams(nuauth_vars,
 			sizeof(nuauth_vars) / sizeof(confparams_t));
 
+#undef READ_CONF
+#define READ_CONF(KEY) \
+    get_confvar_value(deps_check_vars, sizeof(deps_check_vars)/sizeof(confparams_t), KEY);
+
+	if (nuauth_user_check_module) {
+		confparams_t deps_check_vars[] = {
+			{"nuauth_get_user_groups_module", G_TOKEN_STRING, 1,
+				g_strdup(nuauth_user_check_module)},
+			{"nuauth_get_user_id_module", G_TOKEN_STRING, 1,
+				g_strdup(nuauth_user_check_module)},
+		};
+
+		/* parse conf file for user_check sub vars*/
+		parse_conffile(configfile,
+				sizeof(deps_check_vars) / sizeof(confparams_t),
+				deps_check_vars);
+		nuauth_get_user_groups_module =
+			(char *) READ_CONF("nuauth_get_user_groups_module");
+		nuauth_get_user_id_module =
+			(char *) READ_CONF("nuauth_get_user_id_module");
+		/* free config struct */
+		free_confparams(deps_check_vars,
+				sizeof(deps_check_vars) / sizeof(confparams_t));
+
+	}
 	/* external auth module loading */
 	g_mutex_lock(modules_mutex);
 
