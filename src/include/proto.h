@@ -34,6 +34,7 @@
 
 #define AUTHREQ_PORT 4129
 #define USERPCKT_PORT 4130
+#define USERPCKT_SERVICE "4130"
 
 /* define here last proto */
 
