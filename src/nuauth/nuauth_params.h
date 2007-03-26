@@ -137,11 +137,6 @@ struct nuauth_params {
 	int nb_session_loggers;
 };
 
-struct nuauth_thread_t {
-	GThread *thread;
-	GMutex *mutex;
-};
-
 struct nuauth_datas {
 	/* main threads */
 	struct nuauth_thread_t tls_auth_server;

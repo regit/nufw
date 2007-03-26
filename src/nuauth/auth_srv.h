@@ -78,6 +78,7 @@ typedef enum {
 #include "nuauth_debug.h"
 
 /* config file related */
+#include "nuthread.h"
 #include "conffile.h"
 #include "log.h"
 #include "tls.h"
@@ -226,8 +227,5 @@ void block_pool_threads();
 void start_pool_threads();
 void release_pool_threads();
 void nuauth_install_signals(gboolean action);
-void create_thread(struct nuauth_thread_t *thread,
-		   void *(*func) (GMutex *));
-
 
 #endif
