@@ -8,7 +8,6 @@ from config import CLIENT_IP, CLIENT_USER_ID
 from socket import ntohl
 from filter import testAllowPort, testDisallowPort, VALID_PORT, INVALID_PORT
 from datetime import datetime
-from socket import AF_INET
 from IPy import IP
 import MySQLdb
 import platform
@@ -166,7 +165,7 @@ class MysqlLogPacket(MysqlLogUser):
         self.assertEqual(IP(ip_saddr), IP(CLIENT_IP))
         self.assert_(timestamp_before <= datetime.fromtimestamp(oob_time_sec) <= timestamp_after)
         self.assert_(timestamp_before <= timestamp <= timestamp_after)
-        self.assertEqual(ip_protocol, AF_INET)
+        self.assertEqual(ip_protocol, 6)
         self.assertEqual(oob_prefix, OOB_PREFIX)
         # TODO: Check these timestamps
 #        self.assertEqual(start_timestamp, ...)
