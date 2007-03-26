@@ -27,6 +27,15 @@ export G_SLICE=always-malloc
 # Explains:
 #   --run-libc-freeres=no: Valgrind free all memory that libc allocates
 
+if [ -d /usr/lib/debug ]; then
+   export LD_LIBRARY_PATH=/usr/lib/debug:$LD_LIBRARY_PATH
+   if [ -e /usr/lib/debug/libdl-2.4.so ]; then
+      export LD_PRELOAD=/usr/lib/debug/libdl-2.4.so
+   fi
+else
+   echo "VALGRIND WARNING: /usr/lib/debug directory is missing, install libc6-dbg"
+fi
+
 valgrind \
     --show-reachable=yes -v \
     --suppressions=valgrind.supp \
@@ -35,6 +44,8 @@ valgrind \
     --leak-check=full \
     --verbose \
     ./nuauth "$@" 2>&1
+
+unset LD_PRELOAD LD_LIBRARY_PATH
 
 trap - SIGINT SIGTERM
 
