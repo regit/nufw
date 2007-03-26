@@ -46,7 +46,7 @@ class NuauthProcess(Process):
             print "Callgrind logs written in callgrind.out.%s" % self.process.pid
         Process.exited(self, status)
 
-    def reload(self):
+    def reload(self, timeout=1.0):
         # Eat output before sending SIGHUP message
         for line in self.readlines():
             pass
@@ -59,7 +59,7 @@ class NuauthProcess(Process):
         # Wait until nuauth is reloaded
         message = "NuAuth server reloaded"
         start = time()
-        while time()-start < 1.0:
+        while time()-start <= timeout:
             for line in self.readlines(timeout=0.250):
                 if message in line:
                     return
