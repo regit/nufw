@@ -239,7 +239,7 @@ void nuauth_reload(int signal)
 	release_pool_threads();
 	nuauth_install_signals(TRUE);
 
-	log_message(INFO, DEBUG_AREA_MAIN, "NuAuth server reloaded.");
+	g_message("[+] NuAuth server reloaded");
 }
 
 static struct nuauth_params *compare_and_update_nuauthparams(struct
