@@ -201,6 +201,9 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 		{"mysql_admin_bofh", G_TOKEN_INT,
 		 0, NULL}
 		,
+		{"mysql_bofh_victime_group", G_TOKEN_INT,
+		 0, NULL}
+		,
 		{"mysql_use_ssl", G_TOKEN_INT, MYSQL_USE_SSL, NULL}
 		,
 		{"mysql_ssl_keyfile", G_TOKEN_STRING, 0,
@@ -269,6 +272,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	READ_CONF_INT(params->mysql_use_ipv4_schema,
 		      "mysql_use_ipv4_schema", MYSQL_USE_IPV4_SCHEMA);
 	READ_CONF_INT(params->mysql_admin_bofh, "mysql_admin_bofh", 0);
+	READ_CONF_INT(params->mysql_bofh_victim_group, "mysql_bofh_victim_group", 0);
 
 
 	/* free config struct */
@@ -1060,9 +1064,16 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 	}
 
 	if (params->mysql_admin_bofh && (state == SESSION_CLOSE)) {
+		if (params->mysql_bofh_victim_group) {
+			if (! g_slist_find(
+				c_session->groups,
+				GINT_TO_POINTER(
+					params->mysql_bofh_victim_group))) 
+				return 1;
 		if (destroy_user_connections(c_session, state, params_p)
 				== NU_EXIT_ERROR)
 			return -1;
+					}
 	}
 	return 1;
 }
