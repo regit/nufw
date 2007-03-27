@@ -40,7 +40,7 @@ valgrind \
     --show-reachable=yes -v \
     --suppressions=valgrind.supp \
     --log-file-exactly=$LOG \
-    --run-libc-freeres=no \
+    --run-libc-freeres=yes \
     --leak-check=full \
     --verbose \
     ./nuauth "$@" 2>&1
