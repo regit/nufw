@@ -2,7 +2,7 @@
  ** Copyright(C) 2003-2007 INL
  ** Written by Eric Leblond <regit@inl.fr>
  **	       Vincent Deffontaines <vincent@gryzor.com>
- **	       Victor Stinner <haypo@inl.fr>	
+ **	       Victor Stinner <haypo@inl.fr>
  **
  ** $Id$
  **
@@ -862,7 +862,7 @@ static nu_error_t build_conntrack_msg_from_mysql(MYSQL_ROW row,
 						 struct
 						 limited_connection
 						 *msgdatas,
-						 struct log_mysql_params 
+						 struct log_mysql_params
 						 *params)
 {
 	/* clear tracking */
@@ -986,7 +986,7 @@ nu_error_t destroy_user_connections(user_session_t * c_session,
 			}
 			if (send_conntrack_message
 					(&msgdatas,
-					 AUTH_CONN_DESTROY) 
+					 AUTH_CONN_DESTROY)
 					!= NU_EXIT_OK) {
 				/** \todo log error treatment */
 				mysql_free_result(result);
