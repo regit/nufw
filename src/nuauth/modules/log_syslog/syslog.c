@@ -21,6 +21,9 @@
 #include <auth_srv.h>
 #include <string.h>
 #include <errno.h>
+
+#include <inttypes.h>
+
 #include "security.h"
 
 /**
@@ -157,7 +160,7 @@ G_MODULE_EXPORT gint user_packet_logs(void *element, tcp_state_t state,
 			    ((struct accounted_connection *) element)->
 			    tracking.source;
 			g_message
-			    ("%s%s %ld : SRC=%s DST=%s PROTO=%d SPT=%u DPT=%u (in: %llu pckts/%llu bytes, out: %llu pckts/%llu bytes)",
+			    ("%s%s %ld : SRC=%s DST=%s PROTO=%d SPT=%u DPT=%u (in: %" PRIu64 " pckts/%" PRIu64 " bytes, out: %" PRIu64 " pckts/%" PRIu64 " bytes)",
 			     prefix, str_state,
 			     ((struct accounted_connection *) element)->
 			     timestamp, saddr, daddr,
@@ -173,7 +176,7 @@ G_MODULE_EXPORT gint user_packet_logs(void *element, tcp_state_t state,
 			     bytes_out);
 		} else {
 			g_message
-			    ("%s%s %ld : SRC=%s DST=%s PROTO=%d (in: %llu pckts/%llu bytes, out: %llu pckts/%llu bytes)",
+			    ("%s%s %ld : SRC=%s DST=%s PROTO=%d (in: %" PRIu64 " pckts/%" PRIu64 " bytes, out: %" PRIu64 " pckts/%" PRIu64 " bytes)",
 			     prefix, str_state,
 			     ((struct accounted_connection *) element)->
 			     timestamp, source_addr, dest_addr,
