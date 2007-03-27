@@ -132,10 +132,14 @@ class MysqlLogPacket(MysqlLogUser):
 
     def testFilter(self):
         client = createClient()
-
-        # Open allowed port
         time_before = int(time())
         timestamp_before = datetime.now()
+
+        # Remove old entries
+        self.query("DELETE FROM %s WHERE timestamp > FROM_UNIXTIME(%s);"
+            % (MYSQL_PACKET_TABLE, time_before))
+
+        # Open allowed port
         testAllowPort(self, self.iptables, client)
         timestamp_after = datetime.now()
 
@@ -144,7 +148,7 @@ class MysqlLogPacket(MysqlLogUser):
             "SELECT username, user_id, client_os, client_app, " \
             "tcp_dport, ip_saddr, ip_daddr, oob_time_sec, ip_protocol, " \
             "timestamp, start_timestamp, end_timestamp, oob_prefix " \
-            "FROM %s WHERE timestamp > from_unixtime(%s);" \
+            "FROM %s WHERE timestamp > FROM_UNIXTIME(%s);" \
             % (MYSQL_PACKET_TABLE, time_before)
         cursor = self.query(sql)
 
