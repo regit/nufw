@@ -3,14 +3,15 @@ from unittest import TestSuite, TestResult, TestLoader, TextTestRunner, TestCase
 from imp import load_source
 from os import getuid
 from sys import exit, stderr
+from random import randint
 
 FILES = (
     "test_client_auth",
     "test_plaintext_acl",
     "test_plaintext_auth",
     "test_script",
-    "test_log",
-    "test_mysql_log",
+    "test_syslog",
+    "test_mysql",
 )
 
 def loadTestcases(module):
@@ -19,6 +20,14 @@ def loadTestcases(module):
         if isinstance(attr, type) \
         and issubclass(attr, TestCase) and attr != TestCase:
                 yield attr
+
+def randomize(data):
+    data = list(data) # copy and/or convert to list
+    newdata = []
+    while data:
+        index = randint(0, len(data)-1)
+        item = data.pop(index)
+        yield item
 
 def loadTests(loader):
     for filepy in FILES:
@@ -32,9 +41,8 @@ def main():
         exit(1)
 
     loader = TestLoader()
-
     suite = TestSuite()
-    for test in loadTests(loader.loadTestsFromTestCase):
+    for test in randomize(loadTests(loader.loadTestsFromTestCase)):
         suite.addTests(test)
 
     runner = TextTestRunner(descriptions=2, verbosity=2)
