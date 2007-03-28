@@ -1,5 +1,8 @@
 from inl_tests.process import Process
-from config import NUTCPC_PROG, NUAUTH_HOST
+from config import NUTCPC_PROG, NUAUTH_HOST, NUTCPC_VERSION
+import re
+
+STARTED_20_REGEX = re.compile("nutcpc .* started")
 
 class Client(Process):
     def __init__(self, username, password):
@@ -32,9 +35,17 @@ class Client(Process):
             "-d"]
 
     def isReady(self):
-        for line in self.readlines():
-            if "Client is asked to send new connections" in line:
-                self.warning("Client is ready")
-                return True
+        if NUTCPC_VERSION <= 20200:
+            # nutcpc < 2.2+
+            for line in self.readlines():
+                if STARTED_20_REGEX.match(line):
+                    self.warning("Client is ready")
+                    return True
+        else:
+            # nutcpc >= 2.2+
+            for line in self.readlines():
+                if "Client is asked to send new connections" in line:
+                    self.warning("Client is ready")
+                    return True
         return False
 

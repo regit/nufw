@@ -4,6 +4,11 @@ CONF_DIR = "/etc/nufw"
 NUAUTH_CONF = path.join(CONF_DIR, "nuauth.conf")
 ROOT_DIR = path.normpath(path.join(getcwd(), ".."))
 
+# Version
+NUFW_VERSION = 20000         # 2.0.0 (1.2.3 = 10203)
+NUAUTH_VERSION = NUFW_VERSION
+NUTCPC_VERSION = NUFW_VERSION
+
 # Program names
 NUFW_PROG = path.join(ROOT_DIR, "src", "nufw", "nufw")
 NUAUTH_PROG = path.join(ROOT_DIR, "src", "nuauth", "nuauth")
