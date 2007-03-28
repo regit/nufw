@@ -416,7 +416,7 @@ int main(int argc, char *argv[])
 	/* initialize variables */
 
 	log_engine = LOG_TO_STD;	/* default is to send debug messages to stdout + stderr */
-	SECURE_STRNCPY(authreq_port, AUTHREQ_PORT, sizeof(authreq_port));
+	snprintf(authreq_port, sizeof(authreq_port), "%hu", AUTHREQ_PORT);
 	packet_timeout = PACKET_TIMEOUT;
 	track_size = TRACK_SIZE;
 	cert_file = NULL;
