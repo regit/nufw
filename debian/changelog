@@ -1,8 +1,15 @@
 nufw20 (2.2.0-rc2) stable; urgency=low
 
   * New upstream release 
+  * Set myself as maintainer, with previous maintainer agreement
+  * Update libnuclient files location
+  * Update copyright file
+  * Update dependencies on debconf
+  * Spell check packages descriptions
+  * Add LSB sections to init scripts
+  * Remove dependencies on libnetfilter*, detected by dh_shlibdeps
 
- -- Regit <regit@inl.fr>  Thu,  8 Mar 2007 17:55:53 +0100
+ -- Pierre Chifflier <chifflier@inl.fr>  Wed, 28 Mar 2007 10:12:36 +0200
 
 nufw20 (2.2.0-rc1) stable; urgency=low
 
@@ -14,7 +21,7 @@ nufw20 (2.1.1-3) stable; urgency=low
 
   * Fix nutcpc binary path in nutcpc20.install
 
- -- Victor Stinner <haypo@localhost>  Wed, 20 Dec 2006 16:16:14 +0100
+ -- Victor Stinner <haypo@inl.fr>  Wed, 20 Dec 2006 16:16:14 +0100
 
 nufw20 (2.1.1-2) stable; urgency=low
 

@@ -1,15 +1,15 @@
 Source: nufw20
 Section: net
 Priority: optional
-Maintainer: Jean-Michel Kelbert <kelbert@debian.org>
+Maintainer: Pierre Chifflier <chifflier@inl.fr>
 Build-Depends: debhelper (>= 4.1.16),po-debconf, automake1.9, libldap2-dev, libglib2.0-dev, libmysqlclient15-dev|libmysqlclient14-dev, postgresql-dev, iptables-dev, libtool, libgnutls11-dev|libgnutls-dev, libsasl2-dev, libpam0g-dev, libnetfilter-conntrack-dev, libnetfilter-queue-dev, libnfnetlink-dev
 Standards-Version: 3.7.2
 
 Package: nufw20
 Architecture: any
 Conflicts: nufw, nufw20-nfqueue
-Depends: ${shlibs:Depends}, debconf, ssl-cert, openssl
-Description: a per-user firewalling daemon that interfers with libipq
+Depends: ${shlibs:Depends}, debconf (>= 1.3.22), ssl-cert, openssl
+Description: a per-user firewalling daemon that interferes with libipq
  NuFW is an authenticating gateway, which means that connections are
  authenticated before being forwarded through the gateway.  Classical packet
  filtering systems disregard the identity of the user who may be attempting to
@@ -29,8 +29,8 @@ Description: a per-user firewalling daemon that interfers with libipq
 Package: nufw20-nfqueue
 Architecture: any
 Conflicts: nufw, nufw20
-Depends: ${shlibs:Depends}, debconf, ssl-cert, openssl, libnetfilter-conntrack1, libnetfilter-queue1, libnfnetlink1
-Description: a per-user firewalling daemon that interfers with libipq
+Depends: ${shlibs:Depends}, debconf (>= 1.3.22), ssl-cert, openssl
+Description: a per-user firewalling daemon that interferes with libipq
  NuFW is an authenticating gateway, which means that connections are
  authenticated before being forwarded through the gateway.  Classical packet
  filtering systems disregard the identity of the user who may be attempting to
@@ -42,12 +42,13 @@ Description: a per-user firewalling daemon that interfers with libipq
  sends back the information to Nufw that applies decisions.
  .
  It is advised that you use this package rather than nufw20 if you use a recent
- kernel (2.6.18 is prefered)
+ kernel (2.6.18 is preferred)
 
 Package: nuauth20
 Architecture: any
 Conflicts: nuauth
-Depends: ${shlibs:Depends}, debconf, libsasl2-modules, ssl-cert, openssl
+Pre-Depends: adduser
+Depends: ${shlibs:Depends}, debconf (>= 1.3.22), libsasl2-modules, ssl-cert, openssl
 Recommends: nuauth20-utils
 Description: The authentication daemon from the nufw package
  NuFW is an authenticating gateway, which means that connections are
@@ -154,7 +155,7 @@ Description: Pluggable Authentication Module for nufw authentication
  filtering systems disregard the identity of the user who may be attempting to
  access the network, instead caring only about the originating IP addresses.
  .
- This module allows to open a client connection to the nufw authentication gateway.
- When network traffic leaves the machine, it deals with it and sends
+ This module allows to open a client connection to the nufw authentication
+ gateway.  When network traffic leaves the machine, it deals with it and sends
  authenticating data to the nuauth server.
 
