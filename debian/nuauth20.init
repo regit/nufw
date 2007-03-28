@@ -7,6 +7,19 @@
 #
 #
 
+### BEGIN INIT INFO
+# Provides:          nuauth20
+# Required-Start:    $syslog
+# Required-Stop:     $syslog
+# Should-Start:      $local_fs
+# Should-Stop:       $local_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Control script for nuauth
+# Description:       Init script to control (start/stop/reload)
+#                    the nuauth server.
+### END INIT INFO
+
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 DAEMON=/usr/sbin/nuauth
 PID=nuauth
