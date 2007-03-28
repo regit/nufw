@@ -79,7 +79,7 @@
 /** Default value of ::handle_conntrack_event */
 #define CONNTRACK_HANDLE_DEFAULT 0
 
-#define QUEUE_MAXLEN 1024
+#define QUEUE_MAXLEN 0
 
 /** NetFilter queue number, default value: #DEFAULT_NFQUEUE */
 uint16_t nfqueue_num;

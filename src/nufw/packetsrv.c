@@ -253,14 +253,16 @@ int packetsrv_open(void *data)
 	}
 #ifdef HAVE_NFQ_SET_QUEUE_MAXLEN
 	/* setting queue length */
-	if (nfq_set_queue_maxlen(hndl, queue_maxlen) < 0) {
-		if (nufw_set_mark) {
-			log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
-					"[!] Can't set queue length, and mark will be set, leaving !");
-			exit(EXIT_FAILURE);
-		} else {
-			log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
-					"[!] Can't set queue length, continuing anyway");
+	if (queue_maxlen) {
+		if (nfq_set_queue_maxlen(hndl, queue_maxlen) < 0) {
+			if (nufw_set_mark) {
+				log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
+						"[!] Can't set queue length, and mark will be set, leaving !");
+				exit(EXIT_FAILURE);
+			} else {
+				log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
+						"[!] Can't set queue length, continuing anyway");
+			}
 		}
 	}
 #endif

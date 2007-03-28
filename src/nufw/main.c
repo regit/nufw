@@ -565,7 +565,7 @@ int main(int argc, char *argv[])
 \t-M: only report event on marked connections to nuauth (implies -C and -m)\n"
 #endif
 				"\t-d: remote address we send auth requests to (address of the nuauth server) (default: 127.0.0.1)\n\
-\t-p: remote port we send auth requests to (TCP port nuauth server listens on) (default: 4128)\n"
+\t-p: remote port we send auth requests to (TCP port nuauth server listens on) (default: 4129)\n"
 #if USE_NFQUEUE
 				"\t-q: use nfqueue number (default: 0)\n"
 #ifdef HAVE_NFQ_SET_QUEUE_MAXLEN
