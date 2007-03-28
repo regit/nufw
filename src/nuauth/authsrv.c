@@ -255,11 +255,18 @@ void free_threads()
 void clear_push_queue()
 {
 	struct internal_message *message;
-	while ((message =
-		g_async_queue_try_pop(nuauthdatas->tls_push_queue)) !=
-	       NULL) {
-		g_free(message->datas);
-	}
+	do
+	{
+		message = g_async_queue_try_pop(nuauthdatas->tls_push_queue);
+		if (!message) break;
+
+		if (message->type == INSERT_MESSAGE
+		    || message->type == WARN_MESSAGE)
+		{
+			g_free(message->datas);
+		}
+		g_free(message);
+	} while (1);
 }
 
 /**
