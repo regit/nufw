@@ -3,6 +3,7 @@ from unittest import TestCase, main
 from common import getNuauthConf, createClient, connectClient
 from nuauth import Nuauth
 from nuauth_conf import NuauthConf
+from logging import warning
 
 class TestLog(TestCase):
     def setUp(self):
@@ -15,11 +16,12 @@ class TestLog(TestCase):
         self.nuauth.stop()
 
     def findLog(self, match):
+        warning("Search string >%s< in log" % match)
         matched = False
-        for line in self.nuauth.readlines():
+        for line in self.nuauth.readlines(total_timeout=2.0):
             if match in line:
-                matched = True
-        return matched
+                return True
+        return False
 
     def testLogin(self):
         # Client login

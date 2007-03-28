@@ -107,6 +107,6 @@ class Nuauth:
     def readline(self, timeout=0, stream="stdout"):
         return self.nuauth.readline(timeout, stream)
 
-    def readlines(self):
-        return self.nuauth.readlines()
+    def readlines(self, **kw):
+        return self.nuauth.readlines(**kw)
 
