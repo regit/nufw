@@ -405,10 +405,10 @@ nuauth20-utils:
 #	dh_installinfo
 	dh_link -p$@ -P$(b)/$@
 	dh_strip -p$@ -P$(b)/$@
-	dh_compress -p$@ -P$(b)/$@
-	dh_fixperms -p$@ -P$(b)/$@
 	dh_installman -pnuauth20-utils doc/nuaclgen.8
 	dh_installman -pnuauth20-utils doc/nutop.8
+	dh_compress -p$@ -P$(b)/$@
+	dh_fixperms -p$@ -P$(b)/$@
 #	dh_perl
 #	dh_python
 	dh_makeshlibs -p$@ -P$(b)/$@ -n
