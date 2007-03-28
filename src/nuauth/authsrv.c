@@ -280,8 +280,6 @@ void nuauth_deinit(gboolean soft)
 	signal(SIGHUP, SIG_DFL);
 #endif
 
-	block_pool_threads();
-
 	stop_threads(soft);
 
 	log_message(INFO, DEBUG_AREA_MAIN, "Unload modules");
