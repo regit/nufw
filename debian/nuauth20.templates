@@ -8,23 +8,23 @@ _Description: Should nuauth daemon be started at boot time?
 
 Template: nuauth20/verbosity
 Type: select
-_Choices: v, vv, vvv, vvvv, vvvvv, vvvvvv, vvvvvvv, vvvvvvvv
+Choices: v, vv, vvv, vvvv, vvvvv, vvvvvv, vvvvvvv, vvvvvvvv
 Default: vv
-_Description: Nuauth daemon verbosity level
+_Description: Nuauth daemon verbosity level:
  The more "v"s are passed at nuauth startup, the more verbose daemon logs
  will be. A good production value is "vv", increase it to get more details
  in case of problems.
 
 Template: nuauth20/user
 Type: string
-_Default: nuauth
-_Description: User that runs Nuauth
+Default: nuauth
+_Description: User that runs Nuauth:
  Name of the user that will run nuauth, please use a low-privileged user.
 
 Template: nuauth20/client_listen_addr
 Type: string
-_Default: 0.0.0.0
-_Description: Nuauth client listening address
+Default: 0.0.0.0
+_Description: Nuauth client listening address:
  Address nuauth should listen on for clients. This is useful if this
  machine owns several interfaces, and you want nuauth to only bind on one
  of them. Leave the default value "0.0.0.0" if you want nuauth to listen on
@@ -34,8 +34,8 @@ _Description: Nuauth client listening address
 
 Template: nuauth20/nufw_listen_addr
 Type: string
-_Default: 127.0.0.1
-_Description: Nuauth nufw listening address
+Default: 127.0.0.1
+_Description: Nuauth nufw listening address:
  Address nuauth should listen on for nufw packets. This is useful if this
  machine owns several interfaces, and you want nuauth to only bind on one
  of them. Leave the default value "0.0.0.0" if you want nuauth to listen on
@@ -46,8 +46,8 @@ _Description: Nuauth nufw listening address
 
 Template: nuauth20/gw_packet_port
 Type: string
-_Default: 4129
-_Description: Nuauth gateway listening port
+Default: 4129
+_Description: Nuauth gateway listening port:
  Nuauth needs to bind to an UDP port, to communicate with the nufw daemon.
  This is not an option, a port must always be listening. It is suggested
  you leave it at its default value (4129), which is very good for everyone
@@ -58,8 +58,8 @@ _Description: Nuauth gateway listening port
 
 Template: nuauth20/user_packet_port
 Type: string
-_Default: 4130
-_Description: Nuauth users listening port
+Default: 4130
+_Description: Nuauth users listening port:
  Nuauth needs to bind to an UDP port, to communicate with clients (users)
  that authenticate.  This is not an option, a port must always be
  listening. It is suggested you leave it at its default value (4130), which
@@ -70,23 +70,23 @@ _Description: Nuauth users listening port
 
 Template: nuauth20/nufw_gw_address
 Type: string
-_Default: 127.0.0.1
-_Description: Nufw daemon IP address
+Default: 127.0.0.1
+_Description: Nufw daemon IP address:
  This is the IP address where the Nufw daemon can be reached. If you run
  nufw and nuauth on the same box, leave it at default value of 127.0.0.1.
  Else enter an IP address.
 
 Template: nuauth20/prio
 Type: string
-_Default: 1
-_Description: Nuauth priority
+Default: 1
+_Description: Nuauth priority:
  This is the priority associated with nuauth's answers. Change this
  parameter only if you know what you are doing. Default value : 1.
 
 Template: nuauth20/packet_timeout
 Type: string
-_Default: 5
-_Description: Nuauth timeout delay
+Default: 5
+_Description: Nuauth timeout delay:
  This is the delay -in seconds- Nuauth should drop authentication packets
  from its "conntrack" when they match no actual packet. The default value
  of 5 looks like a good one.
@@ -95,15 +95,15 @@ _Description: Nuauth timeout delay
 
 Template: nuauth20/number_usercheckers
 Type: string
-_Default: 10
-_Description: Nuauth user request threads number
+Default: 10
+_Description: Nuauth user request threads number:
  This is the number of threads nuauth will run to deal with users requests.
  Change this parameter only if needed. Default value : 10.
 
 Template: nuauth20/number_aclcheckers
 Type: string
-_Default: 10
-_Description: Nuauth gateway request threads number
+Default: 10
+_Description: Nuauth gateway request threads number:
  This is the number of threads nuauth will run to deal with requests from
  Nufw. Change this parameter only if needed. Default value : 10.
 
@@ -111,7 +111,7 @@ Template: nuauth20/user_check_module
 Type: select
 _Choices: system, libldap, plaintext
 Default: system
-_Description: User check module
+_Description: User check module:
  Here are possible plugins, which are ways of authenticating users of your
  network. You must choose one, which will be used by nuauth to check
  user/group relationships.
@@ -121,7 +121,7 @@ Template: nuauth20/acl_check_module
 Type: select
 _Choices: libldap, plaintext
 Default: libldap
-_Description: ACL check module
+_Description: ACL check module:
  Here are possible plugins for ACLs definitions. One of them must be
  chosen. Ldap requests that you import NuFW-specific schemes in your LDAP tree, 
  and is advised for production systems. Plaintext is probably the best for testing.
@@ -129,7 +129,7 @@ _Description: ACL check module
 Template: nuauth20/plaintext_aclfile
 Type: string
 Default: /etc/nufw20/acls.nufw
-_Description: The file to use for the plaintext ACLs module.
+_Description: The file to use for the plaintext ACLs module:
  This file should contain ACLs, for each group of users. You will need
  to edit it by hand. (A default file is provided, and probably will not 
  suit your needs).
@@ -137,7 +137,7 @@ _Description: The file to use for the plaintext ACLs module.
 Template: nuauth20/plaintext_userfile
 Type: string
 Default: /etc/nufw20/users-plaintext.nufw
-_Description: The file to use for the plaintext users module.
+_Description: The file to use for the plaintext users module:
  This file should contain user definitions, their passwords, and groups. You will need
  to edit it by hand. (A default file is provided, and definetely will not 
  suit your needs).
@@ -145,22 +145,22 @@ _Description: The file to use for the plaintext users module.
 Template: nuauth20/tls_key
 Type: string
 Default: /etc/nufw20/certs/nuauth-key.pem
-Description: TLS key for clients communication
+Description: TLS key for clients communication:
  Please enter the full path of the private key that will be used for
  clients communications. Note that the default value should be good at least for testing :
  debconf will generate this key in a moment.
 
 Template: nuauth20/tls_cert
 Type: string
-_Default: /etc/nufw20/certs/nuauth-cert.pem
-_Description: TLS certificate for clients communication
+Default: /etc/nufw20/certs/nuauth-cert.pem
+_Description: TLS certificate for clients communication:
  Please enter the full path of the certificate key that will be used for
  clients communications. Note that the default value should be good at least for testing :
  debconf will generate this certificate in a moment.
 
 Template: nuauth20/tls_key_passwd
 Type: password
-_Description: Password of the TLS key for clients communication
+_Description: Password of the TLS key for clients communication:
  Please enter password to use with specified key. Keep empty if there is no
  password. Please be aware that your password cannot contain the slash "/"
  character when set from debconf (it can contain it if you edit config file
@@ -168,9 +168,9 @@ _Description: Password of the TLS key for clients communication
 
 Template: nuauth20/log_users
 Type: string
-_Choices: 0, 1, 2, 4
+Choices: 0, 1, 2, 4
 Default: 1
-_Description: Users activity logging
+_Description: Users activity logging:
  How to log users activity:
   - 0 : no log at all
   - 1 : log new user
@@ -180,9 +180,9 @@ _Description: Users activity logging
 
 Template: nuauth20/log_users_sync
 Type: select
-_Choices: 0, 1
+Choices: 0, 1
 Default: 1
-_Description: Whether to sync users logs
+_Description: Whether to sync users logs:
  Syncing users logs makes activities overall slower, but guarantees users
  logs (for instance, in SQL database) exist before the network packet is
  passed through. It is advised to set this option if you setup nuauth for
@@ -193,12 +193,12 @@ _Description: Whether to sync users logs
 
 Template: nuauth20/log_users_strict
 Type: select
-_Choices: 0, 1
+Choices: 0, 1
 Default: 1
-_Description: Whether to update logs automatically for consistency
+_Description: Whether to update logs automatically for consistency:
  If set to 1, whenever a connection already in conntrack (for TCP or UDP,
  same source IP, same source port) will be opened, existing connections
- that might already exist in our conntrack will be closed. If set to 0, no
+ that might already exist in the conntrack will be closed. If set to 0, no
  such update will be performed. The Safe option is to use 1. Setting this
  to 0 may cause SSO modules to refuse some connections, in some rare cases.
   - 0 : no update
@@ -207,64 +207,64 @@ _Description: Whether to update logs automatically for consistency
 
 Template: nuauth20/user_logs_module
 Type: select
-_Choices: syslog, mysql, pgsql
+Choices: syslog, mysql, pgsql
 Default: syslog
-_Description: Users logs module
+_Description: Users logs module:
  Choose the media users activity will be logged into. It is advised you log
  users activity into a database.
 
 Template: nuauth20/ldap_server_addr
 Type: string
-_Default: 127.0.0.1
-_Description: LDAP server address
+Default: 127.0.0.1
+_Description: LDAP server address:
  Please enter the IP address of the LDAP server
 
 Template: nuauth20/ldap_server_port
 Type: string
-_Default: 389
-_Description: LDAP server port
+Default: 389
+_Description: LDAP server port:
  Please enter the TCP port number of the LDAP server 389 is standard non
  encrypted LDAP port. If you set 636 as port, LDAP SSL will be used.
 
 Template: nuauth20/ldap_bind_dn
 Type: string
-_Default: cn=admin,dc=yourdomain,dc=com
-_Description: LDAP dn to bind ldap connection to
+Default: cn=admin,dc=yourdomain,dc=com
+_Description: LDAP dn to bind ldap connection to:
  Please enter the dn you want LDAP connections to bind to
 
 Template: nuauth20/ldap_bind_password
 Type: password
-_Description: LDAP password to use
+_Description: LDAP password to use:
  Please enter password that should be used to connect to the LDAP server.
  You will not be able to read password on the screen as you type it.
 
 Template: nuauth20/ldap_request_timeout
 Type: string
-_Default: 4
-_Description: LDAP request timeout
+Default: 4
+_Description: LDAP request timeout:
  Time after which LDAP connection will be considered to be lost when no
  reply is received.
 
 Template: nuauth20/ldap_basedn
 Type: string
-_Default: dc=yourdomain,dc=com
-_Description: Base DN for LDAP search requests
+Default: dc=yourdomain,dc=com
+_Description: Base DN for LDAP search requests:
 
 Template: nuauth20/ldap_acls_base_dn
 Type: string
-_Default: dc=acls,dc=yourdomain,dc=com
-_Description: Base DN for ACL search requests
+Default: dc=acls,dc=yourdomain,dc=com
+_Description: Base DN for ACL search requests:
 
 Template: nuauth20/ldap_users_base_dn
 Type: string
-_Default: dc=users,dc=yourdomain,dc=com
-_Description: Base DN for users search requests
+Default: dc=users,dc=yourdomain,dc=com
+_Description: Base DN for users search requests:
 
 Template: nuauth20/prio_to_nok
 Type: select
-_Choices: 0, 1
+Choices: 0, 1
 Default: 1
-_Description: Decision to accept when groups disagree
+_Description: Decision to accept when groups disagree:
  When a user is member of several groups, it can happen that some groups
  grant access for a connection, and others deny it. If you choose 1 here,
  connection will be denied in those cases. If you choose 0, connection will
@@ -273,91 +273,91 @@ _Description: Decision to accept when groups disagree
 
 Template: nuauth20/mysql_server_addr
 Type: string
-_Default: 127.0.0.1
-_Description: MySQL Server Address
+Default: 127.0.0.1
+_Description: MySQL Server Address:
  Please enter IP address (or DNS name) of your Mysql server.
 
 Template: nuauth20/mysql_server_port
 Type: string
-_Default: 3306
-_Description: Mysql Server port
+Default: 3306
+_Description: Mysql Server port:
  Please enter TCP port of your Mysql server.
 
 Template: nuauth20/mysql_db_name
 Type: string
-_Default: nufw
-_Description: Mysql Database Name
+Default: nufw
+_Description: Mysql Database Name:
  Please enter the database name to use to connect to MYSQL server
 
 Template: nuauth20/mysql_table_name
 Type: string
-_Default: nufw
-_Description: Mysql table name
+Default: nufw
+_Description: Mysql table name:
  Please enter the table name to use to connect to MYSQL server
 
 Template: nuauth20/mysql_user
 Type: string
-_Default: foo
-_Description: Mysql username
+Default: foo
+_Description: Mysql username:
  Please enter the username to use to connect to MYSQL server
 
 Template: nuauth20/mysql_passwd
 Type: password
-_Description: Mysql Password
+_Description: Mysql Password:
  Please enter the password to use to connect to MYSQL server
 
 Template: nuauth20/mysql_request_timeout
 Type: string
-_Default: 1
-_Description: Mysql Request timeout
+Default: 1
+_Description: Mysql Request timeout:
   Please enter the timeout (in seconds) for connections to the MYSQL server
 
 Template: nuauth20/mysql_use_ssl
 Type: select
-_Choices: 0, 1
+Choices: 0, 1
 Default: 1
-_Description: Use SSL for Mysql connections
+_Description: Use SSL for Mysql connections:
   Set this to 1 to wrap MySQL connections in SSL, or 0 if you don't want
  to.
 
 Template: nuauth20/mysql_ssl_keyfile
 Type: string
-_Default: /etc/nufw20/ssl/mysql.key
-_Description: Private Key used for Mysql SSL connections
+Default: /etc/nufw20/ssl/mysql.key
+_Description: Private Key used for Mysql SSL connections:
   Please specify the absolute filename of the private key to use for Mysql
   connections.
 
 Template: nuauth20/mysql_ssl_certfile
 Type: string
-_Default: /etc/nufw20/ssl/mysql.cert
-_Description: Public Certificate used for Mysql SSL connections
+Default: /etc/nufw20/ssl/mysql.cert
+_Description: Public Certificate used for Mysql SSL connections:
   Please specify the absolute filename of the public certificate to use for
  Mysql
   connections.
 
 Template: nuauth20/mysql_ssl_ca
 Type: string
-_Default: /etc/nufw20/ssl/mysql.ca
-_Description: Certificate Authority file used for Mysql SSL connections
+Default: /etc/nufw20/ssl/mysql.ca
+_Description: Certificate Authority file used for Mysql SSL connections:
   Please specify the absolute filename of the certificate authority file to
  use for Mysql
   connections. EMPTY THIS IF YOU DON'T INTEND TO USE ANY.
 
 Template: nuauth20/mysql_ssl_capath
 Type: string
-_Default: /etc/nufw20/ssl/mysql.cas/
-_Description: Certificate Authority files directory used for Mysql SSL connections
+Default: /etc/nufw20/ssl/mysql.cas/
+_Description: Certificate Authority files directory used for Mysql SSL connections:
   Please specify the absolute directory containing certificate authority
  files
   to use (in PEM format) for Mysql connections. EMPTY THIS IF YOU DON'T
  INTEND
   TO USE ANY. You must enter a directory name here.
 
-Template: nuauth20/mysql_ssl_cypher
+Template: nuauth20/mysql_ssl_cipher
 Type: string
-_Default: ALL:!ADH:+RC4:@STRENGTH
-_Description: SSL cypher to use for Mysql SSL connections
-  Enter the SSL cypher you want to use for Mysql SSL connections. For most
+Default: ALL:!ADH:+RC4:@STRENGTH
+_Description: SSL cipher to use for Mysql SSL connections:
+  Enter the SSL cipher you want to use for Mysql SSL connections. For most
  sites
   the default (ALL:!ADH:+RC4:@STRENGTH) is a good value. See openssl (1)
  for
@@ -365,51 +365,51 @@ _Description: SSL cypher to use for Mysql SSL connections
 
 Template: nuauth20/pgsql_server_addr
 Type: string
-_Default: 127.0.0.1
-_Description: PostgreSQL server address
+Default: 127.0.0.1
+_Description: PostgreSQL server address:
  Please enter IP address (or DNS name) of your PostgreSQL server.
 
 Template: nuauth20/pgsql_server_port
 Type: string
-_Default: 5432
-_Description: PostgreSQL server port
+Default: 5432
+_Description: PostgreSQL server port:
  Please enter TCP port of your PostgreSQL server.
 
 Template: nuauth20/pgsql_db_name
 Type: string
-_Default: nufw
-_Description: PostgreSQL database name
+Default: nufw
+_Description: PostgreSQL database name:
  Please enter the database name to use to connect to PostgreSQL server
 
 Template: nuauth20/pgsql_table_name
 Type: string
-_Default: nufw
-_Description: PostgreSQL table name
+Default: nufw
+_Description: PostgreSQL table name:
  Please enter the table name to use to connect to PostgreSQL server
 
 Template: nuauth20/pgsql_user
 Type: string
-_Default: foo
-_Description: PostgreSQL username
+Default: foo
+_Description: PostgreSQL username:
  Please enter the username to use to connect to PostgreSQL server
 
 Template: nuauth20/pgsql_passwd
 Type: password
-_Description: PostgreSQL password
+_Description: PostgreSQL password:
  Please enter the password to use to connect to PostgreSQL server
 
 Template: nuauth20/pgsql_request_timeout
 Type: string
-_Default: 1
-_Description: PostgreSQL timeout
+Default: 1
+_Description: PostgreSQL timeout:
  Please enter the timeout (in seconds) for connections to the PostgreSQL
  server
 
 Template: nuauth20/pgsql_ssl
 Type: select
 Choices: disallow, prefer, allow, require
-_Default: prefer
-_Description: PostgreSQL SSL wrapping
+Default: prefer
+_Description: PostgreSQL SSL wrapping:
  Whether to use SSL to wrap pgsql connections. Disallow prevents use of
  SSL, prefer attempts to use SSL, then fall backs to unencrypted operations
  if it fails, allow attemps to use unencrypted mode, then fallbacks to SSL
@@ -417,23 +417,23 @@ _Description: PostgreSQL SSL wrapping
 
 Template: nuauth20/pgsql_users_table_name
 Type: string
-_Default: 1
-_Description: Name of the PostgreSQL table to keep track of logged in users
+Default: 1
+_Description: Name of the PostgreSQL table to keep track of logged in users:
  Enter the name of the PostgreSQL to store users session in.
 
 Template: nuauth20/nuauth_reject_after_timeout
 Type: select
 Choices: 0, 1
-_Default: 0
-_Description: What to do when a connection is not authenticated
+Default: 0
+_Description: What to do when a connection is not authenticated:
  0 means Drop : say nothing to the client (this is the default)
  1 means Reject : have the nufw daemon send a polite ICMP datagram to the client
 
 Template: nuauth20/nufw_has_conntrack
 Type: select
 Choices: 0, 1
-_Default: 0
-_Description: Does the nufw daemon have conntrack extensions?
+Default: 0
+_Description: NuFW conntrack extensions:
  say yes (1) if nufw is able to use libnetfilter_conntrack. This probably means you
  run a > 2.6.14 kernel, and use the nufw20-nfqueue package, not the nufw20 package. If you meet
  these conditions, it is advised you set this to 1 and set an appropriate Netfilter ruleset (see
@@ -442,64 +442,70 @@ _Description: Does the nufw daemon have conntrack extensions?
 Template: nuauth20/nufw_has_fixed_timeout
 Type: select
 Choices: 0, 1
-_Default: 0
-_Description: Does the nufw daemon have fixed timeout?
+Default: 0
+_Description: Fixed timeout:
  say yes (1) if nufw is able to use libnetfilter_conntrack with fixed timeout. Fixed timeout is a 
  kernel patch that appeared in linux 2.6.18 vanilla, so it is probably safe to say yes if you run a kernel >=
  2.6.18 AND use NFQUEUE. Otherwise, say no.
 
 Template: nuauth20/nuauth_debug_level
 Type: string
-_Default: 0
-_Description: Nuauth debug level
+Default: 0
+_Description: Nuauth debug level:
  you probably want to set this to 0 for production. You can increase it up to 9 to get more verbosity
  from nuauth.
 
 Template: nuauth20/nuauth_reject_authenticated_drop
 Type: select
 Choices: 0, 1
-_Default: 0
-_Description: Reject authenticated drops?
+Default: 0
+_Description: Reject authenticated drops:
  What should nuauth do if a user authenticates a packet that should be refused? Default (0) is to just DROP
  the packet. If you set this to 1, user will receive a polite REJECT, through ICMP.
 
 Template: nuauth20/nuauth_hello_authentication
 Type: select
 Choices: 0, 1
-_Default: 0
-_Description: Hello authentication (say no)
+Default: 0
+_Description: Hello authentication:
  NuFW is designed for strict authentication. This allows for a fallback to simple "Helo" authentication.
  THIS SHOULD NOT BE USED AS IT BREAKS THE WHOLE SECURITY OF NUFW. JUST USE A CLASSICAL FIREWALL if so.
 
 Template: nuauth20/nuauth_number_session_loggers
 Type: string
-_Default: 1
-_Description: Number of threads dedicaced to logging. Change this if you know what you are doing.
+Default: 1
+_Description: Number of threads dedicaced to logging:
+ Change this if you know what you are doing.
 
 Template: nuauth20/nuauth_user_session_logs_module
 Type: select
 Choices: mysql, pgsql, syslog
-_Default: syslog
-_Description: Where to log user connection and disconnection (not user traffic, but rather user running their clients).
+Default: syslog
+_Description: Log user sessions:
+ Where to log user connection and disconnection (not user traffic, but rather user running their clients).
 
 Template: nuauth20/system_convert_username_to_uppercase
 Type: select
 Choices: 0, 1
-_Default: 0
-_Description: Whether to convert usernames to uppercase. Don't set this unless you know what you are doing.
+Default: 0
+_Description: Convert user names to uppercase:
+ Whether to convert usernames to uppercase. Don't set this unless you know what you are doing.
 
 Template: nuauth20/ldap_acls_timerange_base_dn
 Type: string
-_Default: "dc=timeranges,dc=edenwall,dc=com"
-_Description: If you use timerange ACLs, where are they stored in LDAP?
+Default: "dc=timeranges,dc=edenwall,dc=com"
+_Description: Timerange acl LDAP base DN:
+ The base DN location of the timerange ACLs, in the LDAP directory.
 
 Template: nuauth20/mysql_users_table_name
 Type: string
-_Default: users
-_Description: The MySQL table where user connection/disconnection should be logged.
+Default: users
+_Description: MySQL table for user sessions:
+ The MySQL table where user connection/disconnection should be logged.
 
 Template: nuauth20/pgsql_users_table_name
 Type: string
-_Default: users
-_Description: The PostGreSQL table where user connection/disconnection should be logged.
+Default: users
+_Description: PostgreSQL table for user sessions:
+ The PostGreSQL table where user connection/disconnection should be logged.
 
