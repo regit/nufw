@@ -274,10 +274,10 @@ nuauth20:
 #	dh_installinfo
 	dh_link -p$@ -P$(b)/$@
 	dh_strip -p$@ -P$(b)/$@
-	dh_compress -p$@ -P$(b)/$@
-	dh_fixperms -p$@ -P$(b)/$@
 	dh_installinit -p$@ -P$(b)/$@ -u"start 40 2 3 4 5 . stop 89 0 1 6 ."
 	dh_installman -pnuauth20 doc/nuauth.8
+	dh_compress -p$@ -P$(b)/$@
+	dh_fixperms -p$@ -P$(b)/$@
 #	dh_perl
 #	dh_python
 	dh_makeshlibs -p$@ -P$(b)/$@ -n
