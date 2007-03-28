@@ -43,7 +43,7 @@ if [ ! "NUFW_NUAUTH_ADDRESS" ]; then
 fi
 
 if [ ! "NUFW_NUAUTH_UDP_PORT" ]; then
-  NUFW_NUAUTH_UDP_PORT=4128
+  NUFW_NUAUTH_UDP_PORT=4129
 fi
 
 if [ ! "NUFW_TIMEOUT" ]; then
