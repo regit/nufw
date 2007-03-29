@@ -5,7 +5,10 @@ from client import Client
 from nuauth_conf import NuauthConf
 from inl_tests.log import setupLog
 from config import (USERNAME, PASSWORD,
-    NUAUTH_START_TIMEOUT, NUFW_START_TIMEOUT)
+    NUAUTH_START_TIMEOUT, NUFW_START_TIMEOUT, CLIENT_IP)
+from time import time, sleep
+from logging import warning
+from os import nice
 
 _nuauth = None
 _nufw = None
@@ -39,7 +42,7 @@ def _stopNufw():
     _nufw = None
 
 def createClient(username=USERNAME, password=PASSWORD):
-    return Client(username, password)
+    return Client(username, password, CLIENT_IP)
 
 def connectClient(client):
     client.info("connectClient()")
@@ -54,5 +57,19 @@ def connectClient(client):
 def getNuauthConf():
     return NuauthConf()
 
+def retry(timeout=1.0, step=0.250):
+    start = time()
+    while True:
+        when = time() - start
+        yield when
+        if timeout < when:
+            raise RuntimeError("Timeout (%.1f sec)!" % timeout)
+            return
+        if step:
+            warning("(retry) sleep(%.3f)" % step)
+            sleep(step)
+
 setupLog()
+warning("Be nice: os.nice(15)")
+nice(15)
 

@@ -1,14 +1,16 @@
 from inl_tests.process import Process
 from config import NUTCPC_PROG, NUAUTH_HOST, NUTCPC_VERSION
+from IPy import IP
 import re
 
 STARTED_20_REGEX = re.compile("nutcpc .* started")
 
 class Client(Process):
-    def __init__(self, username, password):
+    def __init__(self, username, password, ip):
         self._username = username
         self._password = password
         self._hostname = NUAUTH_HOST
+        self.ip = IP(ip)
         Process.__init__(self, NUTCPC_PROG)
         self.updateArgs()
 
