@@ -151,10 +151,10 @@ class MysqlLogPacket(MysqlLog):
             "FROM %s WHERE timestamp >= FROM_UNIXTIME(%s) AND state=1;" \
             % (MYSQL_PACKET_TABLE, time_before)
         cursor = self.query(sql)
-        timestamp_after = datetime.now()
 
         # Read result
         row = self.fetchone(cursor)
+        timestamp_after = datetime.now()
         self.assertEqual(cursor.rowcount, 1)
         (username, user_id, client_os, client_app,
          tcp_dport, ip_saddr, ip_daddr, oob_time_sec, ip_protocol,
