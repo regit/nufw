@@ -159,7 +159,7 @@ int psearch_and_destroy(uint32_t packet_id, uint32_t * nfmark)
 	 * list) wouldn't be faster than just a list when NuAuth is slow */
 	while (current != NULL) {
 		if (current->id == packet_id) {
-#ifdef HAVE_LIBIPQ_MARK || USE_NFQUEUE
+#if HAVE_LIBIPQ_MARK || USE_NFQUEUE
 			*nfmark = current->nfmark;
 #endif
 
