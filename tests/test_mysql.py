@@ -1,10 +1,10 @@
 #!/usr/bin/python2.4
 from unittest import TestCase, main
-from common import createClient, connectClient, startNufw
+from common import createClient, connectClient, startNufw, retry
 from logging import info
 from time import time, mktime
 from inl_tests.iptables import Iptables
-from config import CLIENT_IP, CLIENT_USER_ID
+from config import CLIENT_USER_ID, NUAUTH_VERSION
 from socket import ntohl
 from filter import testAllowPort, testDisallowPort, VALID_PORT, INVALID_PORT
 from datetime import datetime
@@ -34,7 +34,7 @@ CLIENT_OS = "-".join( (OS_SYSNAME, OS_VERSION, OS_RELEASE) )
 CLIENT_APP = executable
 OOB_PREFIX = "2: ACCEPT"
 
-class MysqlLogUser(TestCase):
+class MysqlLog(TestCase):
     def setUp(self):
         self.conn = MySQLdb.Connect(
             host=MYSQL_SERVER,
@@ -63,10 +63,6 @@ class MysqlLogUser(TestCase):
     def tearDown(self):
         # Stop nuauth
         self.nuauth.stop()
-
-        # Delete our entry in MySQL user session table
-        self.query("DELETE FROM %s WHERE start_time >= FROM_UNIXTIME(%s);" \
-            % (MYSQL_USER_TABLE, self.start_time))
         self.conn.close()
 
     def _login(self, sql):
@@ -84,7 +80,7 @@ class MysqlLogUser(TestCase):
         ip_saddr = ntohl(ip_saddr) & 0xFFFFFFFF
 
         # Check values
-        self.assertEqual(IP(ip_saddr), IP(CLIENT_IP))
+        self.assertEqual(IP(ip_saddr), client.ip)
         self.assertEqual(user_id, CLIENT_USER_ID)
         self.assertEqual(username, client.username)
         self.assertEqual(os_sysname, OS_SYSNAME)
@@ -97,22 +93,31 @@ class MysqlLogUser(TestCase):
         # Use datetime.fromtimestamp() with int(time()) to have microsecond=0
         logout_before = datetime.fromtimestamp(int(time()))
         client.stop()
-        logout_after = datetime.now()
 
-        # Get last MySQL row
-        cursor = self.query(sql)
+        for when in retry(timeout=2.0):
+            # Get last MySQL row
+            cursor = self.query(sql)
 
-        # Check number of rows
-        self.assertEqual(cursor.rowcount, 1)
+            # Check number of rows
+            self.assertEqual(cursor.rowcount, 1)
 
-        # Read row columns
-        (ip_saddr, user_id, username, os_sysname,
-            os_release, os_version, end_time) = self.fetchone(cursor)
+            # Read row columns
+            (ip_saddr, user_id, username, os_sysname,
+                os_release, os_version, end_time) = self.fetchone(cursor)
+            if not end_time:
+                continue
+            logout_after = datetime.now()
 
-        # Check values
-        self.assert_(logout_before <= end_time <= logout_after)
+            # Check values
+            self.assert_(logout_before <= end_time <= logout_after)
+            break
 
+class MysqlLogUser(MysqlLog):
     def testUserLogin(self):
+        # Delete old entries in MySQL user session table
+        self.query("DELETE FROM %s WHERE start_time >= FROM_UNIXTIME(%s);" \
+            % (MYSQL_USER_TABLE, self.start_time))
+
         sql = \
             "SELECT ip_saddr, user_id, username, " \
             "os_sysname, os_release, os_version, end_time " \
@@ -121,13 +126,13 @@ class MysqlLogUser(TestCase):
         client = self._login(sql)
         self._logout(sql, client)
 
-class MysqlLogPacket(MysqlLogUser):
+class MysqlLogPacket(MysqlLog):
     def setUp(self):
         self.iptables = Iptables()
-        MysqlLogUser.setUp(self)
+        MysqlLog.setUp(self)
 
     def tearDown(self):
-        MysqlLogUser.tearDown(self)
+        MysqlLog.tearDown(self)
         self.iptables.flush()
 
     def testFilter(self):
@@ -135,22 +140,18 @@ class MysqlLogPacket(MysqlLogUser):
         time_before = int(time())
         timestamp_before = datetime.now()
 
-        # Remove old entries
-        self.query("DELETE FROM %s WHERE timestamp > FROM_UNIXTIME(%s);"
-            % (MYSQL_PACKET_TABLE, time_before))
-
         # Open allowed port
         testAllowPort(self, self.iptables, client)
-        timestamp_after = datetime.now()
 
         # Query DB
         sql = \
             "SELECT username, user_id, client_os, client_app, " \
             "tcp_dport, ip_saddr, ip_daddr, oob_time_sec, ip_protocol, " \
             "timestamp, start_timestamp, end_timestamp, oob_prefix " \
-            "FROM %s WHERE timestamp > FROM_UNIXTIME(%s);" \
+            "FROM %s WHERE timestamp >= FROM_UNIXTIME(%s) AND state=1;" \
             % (MYSQL_PACKET_TABLE, time_before)
         cursor = self.query(sql)
+        timestamp_after = datetime.now()
 
         # Read result
         row = self.fetchone(cursor)
@@ -158,7 +159,8 @@ class MysqlLogPacket(MysqlLogUser):
         (username, user_id, client_os, client_app,
          tcp_dport, ip_saddr, ip_daddr, oob_time_sec, ip_protocol,
          timestamp, start_timestamp, end_timestamp, oob_prefix) = row
-        ip_saddr = ntohl(ip_saddr) & 0xFFFFFFFF
+        if 20200 <= NUAUTH_VERSION:
+            ip_saddr = ntohl(ip_saddr) & 0xFFFFFFFF
 
         # Check values
         self.assertEqual(username, client.username)
@@ -166,9 +168,9 @@ class MysqlLogPacket(MysqlLogUser):
         self.assertEqual(client_os, CLIENT_OS)
         self.assertEqual(client_app, CLIENT_APP)
         self.assertEqual(tcp_dport, VALID_PORT)
-        self.assertEqual(IP(ip_saddr), IP(CLIENT_IP))
+        self.assertEqual(IP(ip_saddr), client.ip)
         self.assert_(timestamp_before <= datetime.fromtimestamp(oob_time_sec) <= timestamp_after)
-        self.assert_(timestamp_before <= timestamp <= timestamp_after)
+        self.assert_(timestamp and timestamp_before <= timestamp <= timestamp_after)
         self.assertEqual(ip_protocol, 6)
         self.assertEqual(oob_prefix, OOB_PREFIX)
         # TODO: Check these timestamps

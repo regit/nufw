@@ -1,6 +1,6 @@
 #!/usr/bin/python2.4
 from unittest import TestCase, main
-from config import CONF_DIR
+from config import CONF_DIR, NUAUTH_VERSION
 from common import createClient, connectClient
 from os import path
 from inl_tests.replace_file import ReplaceFile
@@ -36,7 +36,7 @@ class TestScript(TestCase):
 
     def checkScript(self, match):
         warning("checkScript(%r)" % match)
-        for line in self.nuauth.readlines():
+        for line in self.nuauth.readlines(total_timeout=2.0):
             if line == match:
                 return True
         return False
@@ -47,14 +47,17 @@ class TestScript(TestCase):
         self.assert_(connectClient(client))
 
         # Check log output
-        match = "SCRIPT UP COUNT=2 TEXT >>>%s ::ffff:%s<<<" \
-            % (client.username, client.hostname)
+        client_ip = str(client.ip)
+        if 20200 <= NUAUTH_VERSION:
+            client_ip = "::ffff:%s" % client_ip
+        match = "SCRIPT UP COUNT=2 TEXT >>>%s %s<<<" \
+            % (client.username, client_ip)
         self.assert_(self.checkScript(match))
 
         # Client logout
         client.stop()
-        match = "SCRIPT DOWN COUNT=2 TEXT >>>%s ::ffff:%s<<<" \
-            % (client.username, client.hostname)
+        match = "SCRIPT DOWN COUNT=2 TEXT >>>%s %s<<<" \
+            % (client.username, client_ip)
         self.assert_(self.checkScript(match))
 
 if __name__ == "__main__":
