@@ -1032,30 +1032,25 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 	switch (state) {
 	case SESSION_OPEN:
 		{
+			/* create new user session */
 			char *quoted_username = quote_string(ld, c_session->user_name);
 			char *quoted_osname = quote_string(ld, c_session->sysname);
 
 			ok = (quoted_username != NULL) && (quoted_osname != NULL);
 			if (ok) {
-				g_free(quoted_username);
-				g_free(quoted_osname);
-				return -1;
+				ok = secure_snprintf(request, sizeof(request),
+						"INSERT INTO %s (user_id, username, ip_saddr, "
+						"os_sysname, os_release, os_version, socket, start_time) "
+						"VALUES ('%lu', '%s', '%s', '%s', '%s', '%s', '%u', FROM_UNIXTIME(%lu))",
+						params->mysql_users_table_name,
+						c_session->user_id,
+						quoted_username,
+						ip_ascii,
+						quoted_osname,
+						c_session->release,
+						c_session->version,
+						c_session->socket, time(NULL));
 			}
-
-			/* create new user session */
-			ok = secure_snprintf(request, sizeof(request),
-					"INSERT INTO %s (user_id, username, ip_saddr, "
-					"os_sysname, os_release, os_version, socket, start_time) "
-					"VALUES ('%lu', '%s', '%s', '%s', '%s', '%s', '%u', FROM_UNIXTIME(%lu))",
-					params->mysql_users_table_name,
-					c_session->user_id,
-					quoted_username,
-					ip_ascii,
-					quoted_osname,
-					c_session->release,
-					c_session->version,
-					c_session->socket, time(NULL));
-
 			g_free(quoted_username);
 			g_free(quoted_osname);
 		}
