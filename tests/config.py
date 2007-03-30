@@ -1,4 +1,10 @@
-from myconfig import ConfigParser
+from ConfigParser import RawConfigParser as ParentConfigParser
+
+class ConfigParser(ParentConfigParser):
+    def get(self, section, option):
+        value = ParentConfigParser.get(self, section, option)
+        return value.strip()
+
 config = ConfigParser()
 config.read(["defaults.cfg", "config.cfg"])
 from os import getcwd, path

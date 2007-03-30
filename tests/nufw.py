@@ -1,8 +1,6 @@
 from inl_tests.process import Process
 from config import NUFW_PROG
 
-print "BLA"
-
 class Nufw(Process):
     def __init__(self):
         Process.__init__(self, NUFW_PROG, ["-vvvvv"])
