@@ -1,7 +1,7 @@
 from common import connectClient
 from mysocket import connectTcp
 
-TIMEOUT = 3.0
+TIMEOUT = 2.0
 VALID_PORT = 80
 INVALID_PORT = 90
 HOST = "www.google.com"
