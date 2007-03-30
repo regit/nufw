@@ -24,7 +24,7 @@ NUTCPC_PROG = config.get("nutcpc", "prog")
 USERNAME = config.get("nutcpc", "username")
 PASSWORD = config.get("nutcpc", "password")
 CLIENT_IP = config.get("nutcpc", "ip")
-CLIENT_USER_ID = config.get("nutcpc", "userid")
+CLIENT_USER_ID = config.getint("nutcpc", "userid")
 
 # Nufw options
 NUFW_VERSION = config.getint("nufw", "version")
