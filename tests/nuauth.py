@@ -43,7 +43,7 @@ class NuauthProcess(Process):
 
     def exited(self, status):
         if USE_VALGRIND:
-            print "Callgrind logs written in callgrind.out.%s" % self.process.pid
+            print "Callgrind logs written in callgrind.out.%s" % self.pid
         Process.exited(self, status)
 
     def reload(self, timeout=2.0):
