@@ -12,6 +12,8 @@ FILES = (
     "test_script",
     "test_syslog",
     "test_mysql",
+    "test_system",
+    "test_user_policy",
 )
 
 def loadTestcases(module):
