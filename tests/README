@@ -1,20 +1,51 @@
-== NuFW testing ==
+NuFW testing
+============
 
 This implements a testing system for NuFW.
 
-Before running test, you need to get a separate component, inl_tests:
+Requirements
+------------
 
-svn co http://software.inl.fr/svn/mirror/tools/inl_tests
+ * NuFW 2.0 or 2.2
+ * inl_tests (Python module)
 
-Then, go to the directory and tape "make".
+To download latest version of inl_tests:
 
-You need to install NuFW and config files before running tests. Once
-this is done you can do :
+   svn co http://software.inl.fr/svn/mirror/tools/inl_tests
 
-export PYTHONPATH=$PYTHONPATH:/MY_LOCAL_PATH_TO/inl_tests
+You have to type "make" in inl_tests diectory to compile dynamic library.
 
-and run some tests :
-./test_plaintext_auth.py
 
-If you have a complete infrastructure with mysql server and/or ldap you can run:
-./test_all.py
+Write config.cfg
+----------------
+
+First, you need a valid installation of NuFW (version 2.0 or 2.2) with:
+ * nufw
+ * nuauth
+ * nutcpc
+
+You need a valid account to be able to run nutcpc.
+
+You may configure tests: write your own config based on defaults.cfg.
+
+   cp defaults.cfg config.cfg
+
+defaults.cfg is loaded before config.cfg. So you can just change few options
+in you config.cfg.
+
+
+Run tests
+---------
+
+To run tests, set PYTHONPATH environment variable:
+
+   export PYTHONPATH=$PYTHONPATH:/MY_LOCAL_PATH_TO/inl_tests
+
+Now you can run one test, example:
+
+    ./test_plaintext_auth.py
+
+Or to run all tests together:
+
+    ./test_all.py
+
