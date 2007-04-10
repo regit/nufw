@@ -19,12 +19,6 @@ class TestPlaintextAuth(TestCase):
         self.users = ReplaceFile(USER_FILENAME, USER_DB)
         self.users.install()
 
-        # Start nuauth with our config
-        config = NuauthConf()
-        config["plaintext_userfile"] = '"%s"' % USER_FILENAME
-        config["nuauth_user_check_module"] = '"plaintext"'
-        self.nuauth = Nuauth(config)
-
     def tearDown(self):
         # Restore user DB and nuauth config
         self.users.desinstall()
@@ -34,49 +28,49 @@ class TestPlaintextAuth(TestCase):
         # Change login policy to 0
         config = NuauthConf()
         config["nuauth_connect_policy"] = 0
+        config["plaintext_userfile"] = '"%s"' % USER_FILENAME
+        config["nuauth_user_check_module"] = '"plaintext"'
         self.nuauth = Nuauth(config)
 
         # Test user1
         client1 = createClient(USER, PASS)
-        self.assert_(connectClient(client))
+        self.assert_(connectClient(client1))
 
         # Test user2
         client2 = createClient(USER2, PASS2)
-        self.assert_(connectClient(client))
+        self.assert_(connectClient(client2))
 
         client1.stop()
         client2.stop()
 
-        # Change login policy to 1 
+        # Change login policy to 1
         # User can't log twice
-        config = NuauthConf()
         config["nuauth_connect_policy"] = 1
         self.nuauth = Nuauth(config)
 
         # Test user1
         client1 = createClient(USER, PASS)
-        self.assert_(connectClient(client))
+        self.assert_(connectClient(client1))
 
         # Test user1
         client2 = createClient(USER, PASS)
-        self.assert_(not connectClient(client))
+        self.assert_(not connectClient(client2))
 
         client1.stop()
         client2.stop()
 
         # Change login policy to 2
         # Different users can't log from same IP
-        config = NuauthConf()
         config["nuauth_connect_policy"] = 2
         self.nuauth = Nuauth(config)
 
         # Test user1
         client1 = createClient(USER, PASS)
-        self.assert_(connectClient(client))
+        self.assert_(connectClient(client1))
 
         # Test user2
         client2 = createClient(USER2, PASS2)
-        self.assert_(not connectClient(client))
+        self.assert_(not connectClient(client2))
 
         client1.stop()
         client2.stop()
