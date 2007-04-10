@@ -263,6 +263,7 @@ AC_CONFIG_FILES([Makefile
         src/nufw/Makefile
 	scripts/Makefile
 	scripts/nuauth_command/Makefile
+	tests/Makefile
 ])
 
 # Display errors if any library is missing
