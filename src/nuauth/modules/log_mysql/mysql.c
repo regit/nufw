@@ -79,7 +79,7 @@ static int ipv6_to_sql(struct log_mysql_params *params, struct in6_addr *addr, c
 			return -1;
 		}
 		ok = secure_snprintf(buffer, buflen, "%u",
-				addr->s6_addr32[3]);
+				ntohl(addr->s6_addr32[3]));
 		if (!ok) return -1;
 	}
 	return 0;
