@@ -13,7 +13,7 @@ SCRIPT_UP = path.join(CONF_DIR, "user-up.sh")
 SCRIPT_DOWN = path.join(CONF_DIR, "user-down.sh")
 
 MODE = 0111
-SCRIPT = "#!/bin/sh\necho \"SCRIPT %s COUNT=$# TEXT >>>$@<<<\""
+SCRIPT = "#!/bin/sh\necho \"SCRIPT %s COUNT=$# TEXT >>>$@<<<\"\n"
 
 class TestScript(TestCase):
     def setUp(self):
