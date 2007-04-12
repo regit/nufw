@@ -12,6 +12,7 @@
 	- log_mysql: add mysql_admin_bofh option to destroy user connections
 	when session finished
 	- mark_field: set mark on packet with glob matching on packet fields
+	- nuauth: fix possible problem on nufw disconnect on busy systems
 2.2.0-rc1 (2007/03/08)
 	- log_mysql: add option to log by default in SQL
 	database with IPV4 schema
