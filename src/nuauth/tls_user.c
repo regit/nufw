@@ -141,20 +141,20 @@ void* pre_client_check(GMutex *mutex)
  * authentication threads.
  *
  * \param c_session SSL RX packet
- * \return 1 if read done, EOF if read complete, -1 on error
+ * \return a nu_error_t::, NU_EXIT_CONTINUE if read done, NU_EXIT_OK if read complete, NU_EXIT_ERROR on error
  */
-static int treat_user_request(user_session_t * c_session)
+static nu_error_t treat_user_request(user_session_t * c_session)
 {
 	struct tls_buffer_read *datas;
 	int header_length;
 	struct nu_header *header;
 
 	if (c_session == NULL)
-		return 1;
+		return NU_EXIT_ERROR;
 
 	datas = g_new0(struct tls_buffer_read, 1);
 	if (datas == NULL)
-		return -1;
+		return NU_EXIT_ERROR;
 	datas->socket = 0;
 	datas->tls = c_session->tls;
 	datas->ip_addr = c_session->addr;
@@ -164,7 +164,7 @@ static int treat_user_request(user_session_t * c_session)
 	datas->buffer = g_new0(char, CLASSIC_NUFW_PACKET_SIZE);
 	if (datas->buffer == NULL) {
 		g_free(datas);
-		return -1;
+		return NU_EXIT_ERROR;
 	}
 	g_mutex_lock(c_session->tls_lock);
 	datas->buffer_len =
@@ -179,7 +179,7 @@ static int treat_user_request(user_session_t * c_session)
 				    c_session->user_name);
 #endif
 		free_buffer_read(datas);
-		return EOF;
+		return NU_EXIT_OK;
 	}
 
 	/* get header to check if we need to get more datas */
@@ -193,7 +193,7 @@ static int treat_user_request(user_session_t * c_session)
 				  "tls user: HELLO from %s",
 				  c_session->user_name);
 		free_buffer_read(datas);
-		return 1;
+		return NU_EXIT_CONTINUE;
 	}
 
 	/* if message content is bigger than CLASSIC_NUFW_PACKET_SIZE, */
@@ -216,14 +216,14 @@ static int treat_user_request(user_session_t * c_session)
 		g_mutex_unlock(c_session->tls_lock);
 		if (tmp_len < 0) {
 			free_buffer_read(datas);
-			return -1;
+			return NU_EXIT_ERROR;
 		}
 		datas->buffer_len += tmp_len;
 	}
 
 	/* check message type because USER_HELLO has to be ignored */
 	if (header->msg_type == USER_HELLO) {
-		return 1;
+		return NU_EXIT_CONTINUE;
 	}
 
 	/* check authorization if we're facing a multi user packet */
@@ -236,21 +236,21 @@ static int treat_user_request(user_session_t * c_session)
 			datas->os_sysname = g_strdup(c_session->sysname);
 			if (datas->os_sysname == NULL) {
 				free_buffer_read(datas);
-				return -1;
+				return NU_EXIT_ERROR;
 			}
 		}
 		if (c_session->release) {
 			datas->os_release = g_strdup(c_session->release);
 			if (datas->os_release == NULL) {
 				free_buffer_read(datas);
-				return -1;
+				return NU_EXIT_ERROR;
 			}
 		}
 		if (c_session->version) {
 			datas->os_version = g_strdup(c_session->version);
 			if (datas->os_version == NULL) {
 				free_buffer_read(datas);
-				return -1;
+				return NU_EXIT_ERROR;
 			}
 		}
 
@@ -263,9 +263,9 @@ static int treat_user_request(user_session_t * c_session)
 			    "Bad packet, option of header is not set or unauthorized option from user %s.",
 			    c_session->user_name);
 		free_buffer_read(datas);
-		return EOF;
+		return NU_EXIT_OK;
 	}
-	return 1;
+	return NU_EXIT_CONTINUE;
 }
 
 /**
@@ -379,13 +379,13 @@ void tls_user_check_activity(struct tls_user_context_t *context,
 	}
 
 	u_request = treat_user_request(c_session);
-	if (u_request == EOF) {
+	if (u_request == NU_EXIT_OK) {
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 				  "client disconnect on socket %d",
 				  socket);
 		/* clean client structure */
 		delete_client_by_socket(socket);
-	} else if (u_request < 0) {
+	} else if (u_request != NU_EXIT_CONTINUE) {
 #ifdef DEBUG_ENABLE
 		log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 			    "treat_user_request() failure");
