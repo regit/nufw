@@ -23,9 +23,6 @@
 #include <netinet/ip.h>
 #include <netinet/ip6.h>
 
-
-
-
 /**
  * \ingroup NuauthCore
  *
