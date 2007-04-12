@@ -34,6 +34,14 @@ CLIENT_OS = "-".join( (OS_SYSNAME, OS_VERSION, OS_RELEASE) )
 CLIENT_APP = executable
 OOB_PREFIX = "2: ACCEPT"
 
+def datetime_now(delta=0):
+    # Use datetime.fromtimestamp() with int(time()) to have microsecond=0
+    return datetime.fromtimestamp(int(time()+delta))
+def datetime_before():
+    return datetime_now(-1.1)
+def datetime_after():
+    return datetime_now(1.1)
+
 class MysqlLog(TestCase):
     def setUp(self):
         self.conn = MySQLdb.Connect(
@@ -91,7 +99,7 @@ class MysqlLog(TestCase):
     def _logout(self, sql, client):
         # Client logout
         # Use datetime.fromtimestamp() with int(time()) to have microsecond=0
-        logout_before = datetime.fromtimestamp(int(time()))
+        logout_before = datetime_before()
         client.stop()
 
         for when in retry(timeout=2.0):
@@ -106,7 +114,7 @@ class MysqlLog(TestCase):
                 os_release, os_version, end_time) = self.fetchone(cursor)
             if not end_time:
                 continue
-            logout_after = datetime.now()
+            logout_after = datetime_after()
 
             # Check values
             self.assert_(logout_before <= end_time <= logout_after)
@@ -138,7 +146,7 @@ class MysqlLogPacket(MysqlLog):
     def testFilter(self):
         client = createClient()
         time_before = int(time())
-        timestamp_before = datetime.now()
+        timestamp_before = datetime_before()
 
         # Open allowed port
         testAllowPort(self, self.iptables, client)
@@ -154,7 +162,7 @@ class MysqlLogPacket(MysqlLog):
 
         # Read result
         row = self.fetchone(cursor)
-        timestamp_after = datetime.now()
+        timestamp_after = datetime_after()
         self.assertEqual(cursor.rowcount, 1)
         (username, user_id, client_os, client_app,
          tcp_dport, ip_saddr, ip_daddr, oob_time_sec, ip_protocol,
