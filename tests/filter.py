@@ -1,10 +1,11 @@
 from common import connectClient
 from mysocket import connectTcp
+from config import config
 
-TIMEOUT = 2.0
-VALID_PORT = 80
-INVALID_PORT = 90
-HOST = "www.google.com"
+TIMEOUT = config.getfloat("filter", "timeout")
+VALID_PORT = config.getint("filter", "valid_port")
+INVALID_PORT = config.getint("filter", "invalid_port")
+HOST = config.get("filter", "host")
 
 def testPort(testcase, iptables, client, port, ok):
     # Enable iptables filtering

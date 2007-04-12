@@ -2,10 +2,11 @@ import atexit
 from inl_tests.process import Process
 from signal import SIGHUP
 from mysocket import connectTcp
-from config import NUAUTH_PROG, NUAUTH_START_TIMEOUT, USE_VALGRIND
+from config import config, NUAUTH_PROG, NUAUTH_START_TIMEOUT, USE_VALGRIND
 from time import time
 
-TIMEOUT = 0.100   # 100 ms
+RELOAD_TIMEOUT = config.getfloat("nuauth", "reload_timeout")
+INIT_TIMEOUT = 0.100   # 100 ms
 
 class NuauthProcess(Process):
     __instance = None
@@ -38,15 +39,15 @@ class NuauthProcess(Process):
         """
         Check that nuauth is running
         """
-        return connectTcp(self.hostname, self.nufw_port, TIMEOUT) \
-           and connectTcp(self.hostname, self.client_port, TIMEOUT)
+        return connectTcp(self.hostname, self.nufw_port, INIT_TIMEOUT) \
+           and connectTcp(self.hostname, self.client_port, INIT_TIMEOUT)
 
     def exited(self, status):
         if USE_VALGRIND:
             print "Callgrind logs written in callgrind.out.%s" % self.pid
         Process.exited(self, status)
 
-    def reload(self, timeout=2.0):
+    def reload(self, timeout=RELOAD_TIMEOUT):
         # Eat output before sending SIGHUP message
         for line in self.readlines():
             pass
