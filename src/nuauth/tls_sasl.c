@@ -193,7 +193,7 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 	c_session->user_name = NULL;
 	c_session->user_id = 0;
 	g_free(userdata);
-	if ((nuauth_tls.auth_by_cert == TRUE)
+	if ((nuauth_tls.auth_by_cert > NO_AUTH_BY_CERT)
 	    && gnutls_certificate_get_peers(*session, &size)) {
 		ret = check_certs_for_tls_session(*session);
 
@@ -228,7 +228,16 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 		}
 	}
 
-	ret = sasl_user_check(c_session);
+	if ((nuauth_tls.auth_by_cert == MANDATORY_AUTH_BY_CERT) &&
+			(c_session->groups == NULL)) {
+
+		log_message(INFO, DEBUG_AREA_AUTH | DEBUG_AREA_USER,
+			    "Certificate authentication failed, closing session");
+		gnutls_bye(*(c_session->tls), GNUTLS_SHUT_RDWR);
+		ret = SASL_BADAUTH;
+	} else {
+		ret = sasl_user_check(c_session);
+	}
 
 	remove_socket_from_pre_client_list(c);
 	switch (ret) {

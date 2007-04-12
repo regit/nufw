@@ -328,6 +328,7 @@ void create_x509_credentials()
 	};
 	const unsigned int nb_params =
 	    sizeof(nuauth_tls_vars) / sizeof(confparams_t);
+	int int_authcert;
 
 	parse_conffile(configfile, nb_params, nuauth_tls_vars);
 
@@ -344,9 +345,23 @@ void create_x509_credentials()
 	    *(int *) READ_CONF("nuauth_tls_request_cert");
 	nuauth_tls.crl_refresh =
 	    *(int *) READ_CONF("nuauth_tls_crl_refresh");
-	nuauth_tls.auth_by_cert =
-	    *(int *) READ_CONF("nuauth_tls_auth_by_cert");
+	int_authcert = *(int *) READ_CONF("nuauth_tls_auth_by_cert");
 #undef READ_CONF
+
+	if ((int_authcert >= NO_AUTH_BY_CERT) 
+			&& (int_authcert < MAX_AUTH_BY_CERT)) {
+		nuauth_tls.auth_by_cert = int_authcert;
+	} else {
+		g_error("[%i] config : invalid nuauth_tls_auth_by_cert value: %d",
+			getpid(), int_authcert);
+	}
+
+	if ((nuauth_tls.auth_by_cert == MANDATORY_AUTH_BY_CERT)
+			&& (nuauth_tls.request_cert != GNUTLS_CERT_REQUIRE)) {
+		log_message(INFO, DEBUG_AREA_AUTH | DEBUG_AREA_USER,
+			    "Mandatory certificate authentication asked, asking certificate");
+		nuauth_tls.request_cert = GNUTLS_CERT_REQUIRE;
+	}
 
 	/* free config struct */
 	free_confparams(nuauth_tls_vars,

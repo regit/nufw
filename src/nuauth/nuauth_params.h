@@ -37,8 +37,6 @@ typedef enum {
 	POLICY_PER_IP_ONE_LOGIN
 } policy_t;
 
-
-
 struct nuauth_params {
 	/* Sockets related */
 	char *authreq_port;	/*<! Port used by nufw server to connect to nuauth */

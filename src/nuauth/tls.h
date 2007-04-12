@@ -43,6 +43,13 @@
  */
 #define NB_AUTHCHECK 10
 
+typedef enum {
+	NO_AUTH_BY_CERT = 0x0,
+	DO_AUTH_BY_CERT = 0x1,
+	MANDATORY_AUTH_BY_CERT = 0x2,
+	MAX_AUTH_BY_CERT
+} auth_cert_type_t;
+
 /**
  * Queue used to exchange messages between tls_sasl_connect_ok()
  * function and tls_user_authsrv() thread
@@ -118,7 +125,7 @@ struct tls_insert_data {
 struct nuauth_tls_t {
 	gnutls_certificate_credentials x509_cred;
 	int request_cert;
-	int auth_by_cert;
+	auth_cert_type_t auth_by_cert;
 	int crl_refresh;
 	int crl_refresh_counter;
 	gchar *crl_file;
