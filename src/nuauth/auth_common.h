@@ -21,6 +21,9 @@
 #ifndef AUTH_COMMON_H
 #define AUTH_COMMON_H
 
+#define SHL32(x, n) (((n) < 32)?((x) << (n)):0)
+#define SHR32(x, n) (((n) < 32)?((x) >> (n)):0)
+
 typedef enum {
 	PACKET_ALONE = 0,	/*!< The packet is not linked with the main hash ::conn_list */
 	PACKET_IN_HASH		/*!< Packet is stored inside ::conn_list */
@@ -73,6 +76,9 @@ int timeval_substract(struct timeval *result, struct timeval *x,
 nu_error_t check_protocol_version(int version);
 
 int str_to_int(const char *text, int *value);
+int str_to_uint32(const char *text, uint32_t *value);
+int str_to_long(const char *text, long *value);
+int str_to_ulong(const char *text, unsigned long *value);
 char *int_to_str(int value);
 
 void thread_pool_push(GThreadPool *pool, gpointer data, GError **error);

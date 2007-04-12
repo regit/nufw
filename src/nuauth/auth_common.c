@@ -23,6 +23,7 @@
 #include "auth_srv.h"
 #include <netinet/ip.h>
 #include <netinet/ip6.h>
+#include <ctype.h>         /* isspace() */
 
 /**
  * \ingroup Nuauth
@@ -580,14 +581,58 @@ char* int_to_str(int value)
 }
 
 /**
+ * Convert a string to a signed long integer number.
+ * Skip spaces before first digit.
+ * Return 0 on error, 1 otherwise.
+ */
+int str_to_long(const char *text, long *value)
+{
+	char *err = NULL;
+	long longvalue;
+
+	/* skip spaces */
+	while (isspace(*text))
+		text++;
+
+	/* call strtol */
+	longvalue = strtol(text, &err, 10);
+	if (err == NULL || *err != 0)
+		return 0;
+	*value = longvalue;
+	return 1;
+}
+
+/**
+ * Convert a string to an unsigned long integer number.
+ * Skip spaces before first digit.
+ * Return 0 on error, 1 otherwise.
+ */
+int str_to_ulong(const char *text, unsigned long *value)
+{
+	char *err = NULL;
+	unsigned long ulongvalue;
+
+	/* skip spaces */
+	while (isspace(*text))
+		text++;
+
+	/* call strtol */
+	ulongvalue = strtoul(text, &err, 10);
+	if (err == NULL || *err != 0)
+		return 0;
+	*value = ulongvalue;
+	return 1;
+}
+
+/**
  * Convert a string to integer number (value in INT_MIN..INT_MAX).
+ * Skip spaces before number value if any.
  * Return 0 on error, 1 otherwise.
  */
 int str_to_int(const char *text, int *value)
 {
-	char *err = NULL;
-	long longvalue = strtol(text, &err, 10);
-	if (err == NULL || *err != 0)
+	long longvalue;
+	if (!str_to_long(text, &longvalue))
 		return 0;
 	if (longvalue < INT_MIN || INT_MAX < longvalue)
 		return 0;
@@ -595,6 +640,25 @@ int str_to_int(const char *text, int *value)
 	return 1;
 }
 
+/**
+ * Convert a string to a 32-bit unsigned integer (value in 0..4294967295).
+ * Skip spaces before number value if any.
+ * Returns 0 on error, 1 otherwise.
+ */
+int str_to_uint32(const char *text, uint32_t * value)
+{
+	unsigned long ulongvalue;
+	if (!str_to_ulong(text, &ulongvalue))
+		return 0;
+	if (4294967295UL < ulongvalue)
+		return 0;
+	*value = (uint32_t)ulongvalue;
+	return 1;
+}
+
+/**
+ * Wrapper to g_thread_pool_push(): block on server reload.
+ */
 void thread_pool_push(GThreadPool *pool, gpointer data, GError **error)
 {
 	block_on_conf_reload();

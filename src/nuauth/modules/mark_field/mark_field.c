@@ -21,39 +21,35 @@
 
 #include "mark_field.h"
 #include <glib.h>
-#include <ctype.h>
 #include <limits.h>
 
 typedef struct {
-    /** Identifier of the field */
+	/** Identifier of the field */
 	GPatternSpec* pattern;
 
-    /** The mark (truncated the 'nbits' bits) */
+	/** The mark (truncated the 'nbits' bits) */
 	uint32_t mark;
 } field_mark_t;
 
 typedef struct {
-    /** position of the mark (in bits) in the packet mark */
+	/** position of the mark (in bits) in the packet mark */
 	unsigned int shift;
 
-    /** field to match 
-     *  - 0: match on application name (default)
-     *  - 1: match on osname
-     */
+	/** field to match
+	 *  - 0: match on application name (default)
+	 *  - 1: match on osname
+	 */
 	gchar type;
 
-    /** mask to remove current mark of the packet */
+	/** mask to remove current mark of the packet */
 	uint32_t mask;
 
-    /** default mark if no field does match */
+	/** default mark if no field does match */
 	uint32_t default_mark;
 
-    /** list of pattern with associated mark */
+	/** list of pattern with associated mark */
 	GList *fields;
 } mark_field_config_t;
-
-#define SHL32(x, n) (((n) < 32)?((x) << (n)):0)
-#define SHR32(x, n) (((n) < 32)?((x) >> (n)):0)
 
 /**
  * Returns version of nuauth API
@@ -64,30 +60,8 @@ G_MODULE_EXPORT uint32_t get_api_version()
 }
 
 /**
- * Convert a string to a 32-bit integer, skip spaces before.
- * Returns 0 on error, 1 otherwise.
- */
-int str2int32(const char *text, uint32_t * value)
-{
-	long long_value;
-	char *err;
-
-	/* skip spaces */
-	while (isspace(*text))
-		text++;
-
-	long_value = strtol(text, &err, 10);
-	if (err == NULL || *err != '\0')
-		return 0;
-	if ((long_value < INT_MIN) || (INT_MAX < long_value))
-		return 0;
-	*value = long_value;
-	return 1;
-}
-
-/**
  * Parse field list file. Line format is "mark:blob",
- * where mark is integer in [0; 4294967295] and blob is a 
+ * where mark is integer in [0; 4294967295] and blob is a
  * free character string
  *
  * Spaces are not allowed.
@@ -135,7 +109,7 @@ void parse_field_file(mark_field_config_t * config, const char *filename)
 
 		/* read mark */
 		*separator = 0;
-		if (!str2int32(line, &mark)) {
+		if (!str_to_uint32(line, &mark)) {
 			log_message(WARNING, DEBUG_AREA_MAIN,
 				    "mark_field:%s:%u: Invalid mark (%s), skip line.",
 				    filename, line_number, line);
@@ -276,7 +250,7 @@ nu_error_t finalize_packet(connection_t * conn, gpointer params)
 	for (iter = config->fields; iter != NULL; iter = iter->next) {
 		gboolean result;
 		field_mark_t *field = iter->data;
-		
+
 		/* field in one of the user fields */
 		result = g_pattern_match_string(
 				((field_mark_t *)(iter->data))->pattern,

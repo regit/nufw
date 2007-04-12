@@ -20,7 +20,6 @@
 
 #include "mark_group.h"
 #include <glib.h>
-#include <ctype.h>
 #include <limits.h>
 
 typedef struct {
@@ -45,37 +44,12 @@ typedef struct {
 	GList *groups;
 } mark_group_config_t;
 
-#define SHL32(x, n) (((n) < 32)?((x) << (n)):0)
-#define SHR32(x, n) (((n) < 32)?((x) >> (n)):0)
-
 /**
  * Returns version of nuauth API
  */
 G_MODULE_EXPORT uint32_t get_api_version()
 {
 	return NUAUTH_API_VERSION;
-}
-
-/**
- * Convert a string to a 32-bit integer, skip spaces before.
- * Returns 0 on error, 1 otherwise.
- */
-int str2int32(const char *text, uint32_t * value)
-{
-	long long_value;
-	char *err;
-
-	/* skip spaces */
-	while (isspace(*text))
-		text++;
-
-	long_value = strtol(text, &err, 10);
-	if (err == NULL || *err != '\0')
-		return 0;
-	if ((long_value < INT_MIN) || (INT_MAX < long_value))
-		return 0;
-	*value = long_value;
-	return 1;
 }
 
 /**
@@ -131,7 +105,7 @@ void parse_group_file(mark_group_config_t * config, const char *filename)
 		/* read mark */
 		*separator = 0;
 		mark_str = separator + 1;
-		if (!str2int32(separator + 1, &mark)) {
+		if (!str_to_uint32(separator + 1, &mark)) {
 			log_message(WARNING, DEBUG_AREA_MAIN,
 				    "mark_group:%s:%u: Invalid mark (%s), skip line.",
 				    filename, line_number, separator + 1);
@@ -142,7 +116,7 @@ void parse_group_file(mark_group_config_t * config, const char *filename)
 		groups_item = groups_list;
 		while (*groups_item) {
 			/* read group */
-			if (!str2int32(*groups_item, &group_id)) {
+			if (!str_to_uint32(*groups_item, &group_id)) {
 				log_message(WARNING, DEBUG_AREA_MAIN,
 					    "mark_group:%s:%u: Invalid group identifier (%s), skip line.",
 					    filename, line_number,
