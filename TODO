@@ -1,9 +1,2 @@
-# Partial TODO List
-
-- nuauth : cache : configurable max number of cached entries
-                   configurable max number of cached entries per protocol?
-
-- nuauth : do not send hello message if multiple instance runs on the same computer
-
 # TLS
-password protected certificat support
+password protected certificate support

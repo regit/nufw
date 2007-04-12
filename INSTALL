@@ -9,7 +9,6 @@ Prerequisites :
 - libgnutls
 - libgcrypt
 - libpam-dev for system authentication module
-- libident-dev for ident external authentication module
 
 To compile, use the standard :
 ./autogen.sh
