@@ -32,7 +32,7 @@ OS_RELEASE = platform.release()   # '2.6.19.2-haypo'
 OS_VERSION = platform.version()   # '#2 Mon Feb 5 10:55:30 CET 2007'
 CLIENT_OS = "-".join( (OS_SYSNAME, OS_VERSION, OS_RELEASE) )
 CLIENT_APP = executable
-OOB_PREFIX = "2: ACCEPT"
+OOB_PREFIX = "Default: ACCEPT"
 
 def datetime_now(delta=0):
     # Use datetime.fromtimestamp() with int(time()) to have microsecond=0
