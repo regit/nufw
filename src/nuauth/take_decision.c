@@ -522,11 +522,14 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 		g_mutex_lock(element->tls->tls_lock);
 		ret = gnutls_record_send(*(element->tls->tls), buffer,
 				   total_size);
-		g_mutex_unlock(element->tls->tls_lock);
-		if (g_atomic_int_dec_and_test(&(element->tls->usage))
-		    && (ret < 0)) {
-			clean_nufw_session(element->tls);
+		(void) g_atomic_int_dec_and_test(&(element->tls->usage));
+		if (ret < 0) {
+			/* we simply shutdown to let select do the job */
+			shutdown((int)gnutls_transport_get_ptr(
+					*(element->tls->tls)),
+					SHUT_WR);
 		}
+		g_mutex_unlock(element->tls->tls_lock);
 	} else {
 		if (g_atomic_int_dec_and_test(&(element->tls->usage))) {
 			clean_nufw_session(element->tls);
