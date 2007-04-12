@@ -4,7 +4,7 @@ from common import createClient, connectClient, startNufw, retry
 from logging import info
 from time import time, mktime
 from inl_tests.iptables import Iptables
-from config import CLIENT_USER_ID, NUAUTH_VERSION
+from config import CLIENT_USER_ID
 from socket import ntohl
 from filter import testAllowPort, testDisallowPort, VALID_PORT, INVALID_PORT
 from datetime import datetime
@@ -159,8 +159,6 @@ class MysqlLogPacket(MysqlLog):
         (username, user_id, client_os, client_app,
          tcp_dport, ip_saddr, ip_daddr, oob_time_sec, ip_protocol,
          timestamp, start_timestamp, end_timestamp, oob_prefix) = row
-        if 20200 <= NUAUTH_VERSION:
-            ip_saddr = ntohl(ip_saddr) & 0xFFFFFFFF
 
         # Check values
         self.assertEqual(username, client.username)
