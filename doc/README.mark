@@ -1,0 +1,99 @@
+Introduction
+============
+
+NuFW is able to set a mark on each packet of a network connection. NuFW sets
+the mark on the first packet and Netfilter will set the mark on next packets
+from the same TCP/UDP connection.
+
+There are three different modules to set mark:
+ * user-mark: use user identifier
+    * configure option: --with-user-mark
+ * mark-group: use group mark
+    * configure option: --with-mark-group
+    * configuration file: /etc/nufw/mark_field.conf
+ * mark-field: use user application or operating system name
+    * configure option: --with-mark-field
+    * configuration file: /etc/nufw/mark_group.conf
+
+All modules are enabled by default.
+
+You can use the mark for quality of service (QoS):
+ * use different network depending on the mark,
+ * limit bandwidth,
+ * fix priorities,
+ * etc.
+
+Requirements
+============
+
+You need a Linux kernel (Netfilter) with NFQUEUE support. IPQ is supported
+but it is outdated and too complex to use mark conntrack, so use NFQUEUE!
+
+Kernel options to have connmark:
+ * CONFIG_NETFILTER_XT_TARGET_CONNMARK
+ * CONFIG_NETFILTER_XT_MATCH_CONNMARK
+
+iptables rules
+==============
+
+To keep mark on next packets of a connection, you have to use --save-mark
+and --restore-mark:
+
+   iptables -A PREROUTING -j CONNMARK --restore-mark
+   iptables -A POSTROUTING -m mark ! --mark 0x0 -j CONNMARK --save-mark
+
+mark-group
+==========
+
+Syntax of configuration file (/etc/nufw/mark_group.conf): each line is
+"groups;mark" with:
+ * groups: comma separated list of group identifiers
+ * mark: 32-bit unsigned integer
+
+Example:
+--------
+100:1
+1000:2
+1020,1050:3
+--------
+
+Group 100 will have the mark 1, group 1000 the mark 2, groups 1020 and 1050
+the mark 3, and other groups the mark 0 (defaut mark).
+
+
+You have more options in nuauth configuration file:
+ * mark_group_group_file: mark-group configuration file
+ * mark_group_shift and mark_group_nbits: define where the new mark is
+   written, example: shift=0 and nbits=8 will use the 8 lower bits. Default
+   is shift=0 and nbits=32 (use the whole mark).
+ * mark_group_default_mark: default mark (default: 0)
+
+
+mark-field
+==========
+
+Syntax of configuration file (/etc/nufw/mark_field.conf): each line is
+"mark:pattern" with:
+  * mark: 32-bit unsigned integer
+  * pattern: string with joker "*" (match any string
+
+Example with mark_field_type=0 (application):
+---
+1:*firefox*
+2:*telnet*
+---
+
+Application firefox will get the mark 1, telnet the mark 2 and other
+application the mark 0 (default mark).
+
+
+You have more options in nuauth configuration file:
+
+ * mark_field_type: 0 will use application name and 1 the operating system
+   name
+ * mark_field_file: mark-group configuration file
+ * mark_field_shift and mark_field_nbits: define where the new mark is
+   written, example: shift=0 and nbits=8 will use the 8 lower bits. Default
+   is shift=0 and nbits=32 (use the whole mark).
+ * mark_field_default_mark: default mark (default: 0)
+
