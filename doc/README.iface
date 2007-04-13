@@ -1,15 +1,10 @@
-Experimental support of transmission of interface name from kernel to NuFW
+Support of transmission of interface name from kernel to NuFW
 is available.
 
 It can be used by fetching libnfnetlink and libnetfilter_queue from 
-Netfilter's subversion:
- svn co https://svn.netfilter.org/netfilter/trunk/libnfnetlink
- svn co https://svn.netfilter.org/netfilter/trunk/libnetfilter_queue
-
-Please note, that any release strictly superior to:
+Netfilter with version superior to:
  * libnfnetlink-0.0.25
  * libnetfilter_queue-0.0.13
-will contain the necessary code.
 
 NuFW's configure will autodetect the presence of a modified
 version and use the feature if available.
