@@ -1,4 +1,4 @@
-2.2.0-rc2
+2.2.0-rc2 (2007/04/16)
 	- nuauth: add declaration of thread_pool_push
 	- ldap: optimize filter
 	- NuFW is now compatible with automake1.10
@@ -8,7 +8,7 @@
 	- log_mysql: set protocol information in compatibility mode
 	- libnuclient: restore some interesting features of 2.0 API
 	- NuFW: fix certificate authentication
-	- tests: new system for doing unitary test on NuFW
+	- tests: new system for doing unitary tests on NuFW
 	- log_mysql: add mysql_admin_bofh option to destroy user connections
 	when session finished
 	- mark_field: set mark on packet with glob matching on packet fields
