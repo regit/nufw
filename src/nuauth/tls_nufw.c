@@ -215,8 +215,6 @@ void clean_nufw_session(nufw_session_t * c_session)
 		    );
 		g_free(c_session->tls);
 	} else {
-
-
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
 				  "close nufw session was called but NULL");
 
