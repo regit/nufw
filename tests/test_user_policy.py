@@ -24,9 +24,9 @@ class TestPlaintextAuth(TestCase):
         self.users.desinstall()
         self.nuauth.stop()
 
-    def testLogin(self):
-        # Change login policy to 0
+    def testLoginNormal(self):
         config = NuauthConf()
+        # Change login policy to 0
         config["nuauth_connect_policy"] = 0
         config["plaintext_userfile"] = '"%s"' % USER_FILENAME
         config["nuauth_user_check_module"] = '"plaintext"'
@@ -43,11 +43,15 @@ class TestPlaintextAuth(TestCase):
         client1.stop()
         client2.stop()
 
+    def testLoginOne(self):
+	config = NuauthConf()
         # Change login policy to 1
-        # User can't log twice
         config["nuauth_connect_policy"] = 1
+        config["plaintext_userfile"] = '"%s"' % USER_FILENAME
+        config["nuauth_user_check_module"] = '"plaintext"'
         self.nuauth = Nuauth(config)
 
+        # User can't log twice
         # Test user1
         client1 = createClient(USER, PASS)
         self.assert_(connectClient(client1))
@@ -59,11 +63,16 @@ class TestPlaintextAuth(TestCase):
         client1.stop()
         client2.stop()
 
+
+    def testLoginIP(self):
+	config = NuauthConf()
         # Change login policy to 2
-        # Different users can't log from same IP
         config["nuauth_connect_policy"] = 2
+        config["plaintext_userfile"] = '"%s"' % USER_FILENAME
+        config["nuauth_user_check_module"] = '"plaintext"'
         self.nuauth = Nuauth(config)
 
+        # Different users can't log from same IP
         # Test user1
         client1 = createClient(USER, PASS)
         self.assert_(connectClient(client1))
