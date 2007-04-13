@@ -31,10 +31,10 @@ typedef enum {
 	POLICY_MULTIPLE_LOGIN = 0,
 
     /** Allow an user can only be connected once (test based on username) */
-	POLICY_ONE_LOGIN,
+	POLICY_ONE_LOGIN = 1,
 
     /** Allow only an user session per IP (test based on IP) */
-	POLICY_PER_IP_ONE_LOGIN
+	POLICY_PER_IP_ONE_LOGIN = 2
 } policy_t;
 
 struct nuauth_params {

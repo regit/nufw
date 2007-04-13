@@ -215,7 +215,7 @@ static gboolean look_for_username_callback(gpointer key,
 					   gpointer value,
 					   gpointer user_data)
 {
-	if (strcmp(((user_session_t *) value)->user_name, user_data) != 0) {
+	if (strcmp(((user_session_t *) value)->user_name, user_data) == 0) {
 		return TRUE;
 	} else {
 		return FALSE;
