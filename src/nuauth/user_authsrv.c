@@ -253,13 +253,19 @@ int user_process_field(struct nu_authreq *authreq,
 	/* check field length */
 	field->length = ntohs(field->length);
 	if (auth_buffer_len < (int) field->length) {
+		log_message(WARNING, DEBUG_AREA_USER,
+				"Too big field length: (%d>%d)",
+				field->length,
+				auth_buffer_len);
 		return -1;
 	}
 
 	switch (field->type) {
 	case IPV6_FIELD:
 		if (auth_buffer_len <
-		    (int) sizeof(struct nu_authfield_ipv6)) {
+				(int) sizeof(struct nu_authfield_ipv6)) {
+			log_message(WARNING, DEBUG_AREA_USER,
+					"Auth buffer too small for field type");
 			return -1;
 		}
 		if (user_process_field_ipv6
@@ -269,20 +275,22 @@ int user_process_field(struct nu_authreq *authreq,
 
 	case IPV4_FIELD:
 		if (auth_buffer_len <
-		    (int) sizeof(struct nu_authfield_ipv6)) {
+		    (int) sizeof(struct nu_authfield_ipv4)) {
+			log_message(WARNING, DEBUG_AREA_USER,
+					"Auth buffer too small for field type");
 			return -1;
 		}
 		switch (connection->client_version) {
-		case PROTO_VERSION_V22:
-			log_message(WARNING, DEBUG_AREA_USER,
-				    "Proto V4 user sends an IPV4_FIELD");
-			return -1;
 		case PROTO_VERSION_V20:
 			if (user_process_field_ipv4
 			    (connection,
 			     (struct nu_authfield_ipv4 *) field))
 				return -1;
 			break;
+		case PROTO_VERSION_V22:
+			log_message(WARNING, DEBUG_AREA_USER,
+				    "Proto V4 user sends an IPV4_FIELD");
+			return -1;
 		default:
 			log_message(WARNING, DEBUG_AREA_USER,
 				    "Unknown protocol %d client has sent an IPV4_FIELD",
@@ -350,6 +358,8 @@ GSList *user_request(struct tls_buffer_read * datas)
 		/* check buffer underflow */
 		if (buffer_len < (int) sizeof(struct nu_authreq)) {
 			free_connection_list(conn_elts);
+			log_message(WARNING, DEBUG_AREA_USER,
+			    "Received buffer too small to read request");
 			return NULL;
 		}
 		authreq = (struct nu_authreq *) start;
@@ -400,6 +410,8 @@ GSList *user_request(struct tls_buffer_read * datas)
 			    (int) sizeof(struct nu_authfield)) {
 				free_connection_list(conn_elts);
 				free_connection(connection);
+				log_message(WARNING, DEBUG_AREA_USER,
+						"Received buffer too small to read authfield");
 				return NULL;
 			}
 
@@ -411,6 +423,8 @@ GSList *user_request(struct tls_buffer_read * datas)
 			if (field_length < 0) {
 				free_connection_list(conn_elts);
 				free_connection(connection);
+				log_message(WARNING, DEBUG_AREA_USER,
+					"Error in parsing of user field");
 				return NULL;
 			}
 		}
@@ -428,6 +442,8 @@ GSList *user_request(struct tls_buffer_read * datas)
 		    ) {
 			free_connection_list(conn_elts);
 			free_connection(connection);
+			log_message(WARNING, DEBUG_AREA_USER,
+					"Invalid authentication request");
 			return NULL;
 		}
 
@@ -476,6 +492,8 @@ static GSList *userpckt_decode(struct tls_buffer_read *datas)
 
 	/* check buffer underflow */
 	if (datas->buffer_len < (int) sizeof(struct nu_header)) {
+		log_message(WARNING, DEBUG_AREA_USER,
+			    "Received buffer too small to read header");
 		return NULL;
 	}
 
