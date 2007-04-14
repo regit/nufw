@@ -484,7 +484,7 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 		snprintf(ip_src, 11, "%d", 
 				element->tracking.saddr.s6_addr32[3]);
 		ip_dst = g_new0(char,11);
-		snprintf(ip_src, 11, "%d", 
+		snprintf(ip_dst, 11, "%d", 
 				element->tracking.daddr.s6_addr32[3]);
 	} else {
 		ip_src = ipv6_to_base10(&element->tracking.saddr);
@@ -781,3 +781,4 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 }
 
 /* @} */
+
