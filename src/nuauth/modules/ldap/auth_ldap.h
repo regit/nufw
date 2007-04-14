@@ -1,5 +1,5 @@
 /*
-** Copyright(C) 2003-2006 INL
+** Copyright(C) 2003-2007 INL
 **              Written by Eric Leblond <regit@inl.fr>
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -44,5 +44,6 @@ struct ldap_params {
 	char *ldap_users_base_dn;
 	int ldap_server_port;
 	int ldap_filter_type;
+	int ldap_use_ipv4_schema;
 	GPrivate *ldap_priv;
 };

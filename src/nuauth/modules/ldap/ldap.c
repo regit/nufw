@@ -198,6 +198,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 		 g_strdup(LDAP_CRED)},
 		{"ldap_request_timeout", G_TOKEN_INT, LDAP_REQUEST_TIMEOUT,
 		 NULL},
+		{"ldap_use_ipv4_schema", G_TOKEN_INT, 1, NULL},
 		{"ldap_filter_type", G_TOKEN_INT, 1, NULL}
 	};
 
@@ -275,9 +276,17 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	vpointer =
 	    get_confvar_value(ldap_nuauth_vars,
 			      sizeof(ldap_nuauth_vars) /
+			      sizeof(confparams_t), "ldap_use_ipv4_schema");
+	params->ldap_use_ipv4_schema =
+	    *(int *) (vpointer ? vpointer : &params->ldap_use_ipv4_schema);
+
+	vpointer =
+	    get_confvar_value(ldap_nuauth_vars,
+			      sizeof(ldap_nuauth_vars) /
 			      sizeof(confparams_t), "ldap_filter_type");
 	params->ldap_filter_type =
 	    *(int *) (vpointer ? vpointer : &params->ldap_filter_type);
+
 
 	/* free config struct */
 	free_confparams(ldap_nuauth_vars,
@@ -464,8 +473,23 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 		g_private_set(params->ldap_priv, ld);
 	}
 
-	ip_src = ipv6_to_base10(&element->tracking.saddr);
-	ip_dst = ipv6_to_base10(&element->tracking.daddr);
+	if (params->ldap_use_ipv4_schema) {
+		if (!is_ipv4(&element->tracking.saddr) ||
+				!is_ipv4(&element->tracking.daddr)) {
+			log_message(SERIOUS_WARNING, DEBUG_AREA_AUTH,
+				    "ldap: IPv4 schema but IPv6 address\n");
+			return NULL;
+		}
+		ip_src = g_new0(char,11);
+		snprintf(ip_src, 11, "%d", 
+				element->tracking.saddr.s6_addr32[3]);
+		ip_dst = g_new0(char,11);
+		snprintf(ip_src, 11, "%d", 
+				element->tracking.daddr.s6_addr32[3]);
+	} else {
+		ip_src = ipv6_to_base10(&element->tracking.saddr);
+		ip_dst = ipv6_to_base10(&element->tracking.daddr);
+	}
 	if (ip_src == NULL || ip_dst == NULL) {
 		free(ip_src);
 		free(ip_dst);
