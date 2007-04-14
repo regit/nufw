@@ -481,10 +481,10 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 			return NULL;
 		}
 		ip_src = g_new0(char,11);
-		snprintf(ip_src, 11, "%d", 
+		snprintf(ip_src, 11, "%u", 
 				element->tracking.saddr.s6_addr32[3]);
 		ip_dst = g_new0(char,11);
-		snprintf(ip_dst, 11, "%d", 
+		snprintf(ip_dst, 11, "%u", 
 				element->tracking.daddr.s6_addr32[3]);
 	} else {
 		ip_src = ipv6_to_base10(&element->tracking.saddr);
