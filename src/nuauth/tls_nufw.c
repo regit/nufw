@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2004,2005 INL
+ ** Copyright(C) 2004-2007 INL
  ** Written by  Eric Leblond <regit@inl.fr>
  **             Vincent Deffontaines <gryzor@inl.fr>
  **
@@ -368,10 +368,13 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex * mutex)
 				debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
 						  "nufw activity on socket %d",
 						  c);
+				g_static_mutex_lock(&nufw_servers_mutex);
 				c_session =
 				    g_hash_table_lookup(nufw_servers,
 							GINT_TO_POINTER
 							(c));
+				g_static_mutex_unlock(&nufw_servers_mutex);
+				g_assert(c_session);
 				if (treat_nufw_request(c_session) ==
 				    NU_EXIT_ERROR) {
 					/* get session link with c */
