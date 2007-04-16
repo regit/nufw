@@ -1,0 +1,34 @@
+Introduction
+============
+
+nuauth_command is an interface to control some important features of nuauth
+daemon like get list of connected users or reload configuration.
+
+Commands
+========
+
+Main commands:
+
+ * quit: disconnect
+ * refresh cache: refresh all caches
+ * reload: reload nuauth configuration
+
+Information:
+
+ * help: display list of usable commands
+ * version: display nuauth version
+ * uptime: display nuauth starting time and uptime
+
+User managment:
+
+ * users: list connected users
+ * disconnect all: disconnect all users
+ * disconnect ID: disconnect an user with his session identifier
+
+Debug commands:
+
+ * display debug_level
+ * display debug_areas
+ * debug_level LEVEL
+ * debug_areas AREAS
+

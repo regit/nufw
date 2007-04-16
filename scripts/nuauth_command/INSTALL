@@ -1,0 +1,6 @@
+To install nuauth_command you need Python 2.3 or greater. Just type:
+  ./setup.py install
+
+To have command line completion, install readline Python module. On Linux,
+Python already includes it.
+
