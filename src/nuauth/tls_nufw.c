@@ -93,14 +93,14 @@ static int treat_nufw_request(nufw_session_t * c_session)
 				    &current_conn);
 		switch (ret) {
 		case NU_EXIT_ERROR:
-			(void)
-			    g_atomic_int_dec_and_test(&(c_session->usage));
 			return NU_EXIT_ERROR;
 		case NU_EXIT_OK:
 			if (current_conn != NULL) {
 				current_conn->socket = 0;
 				current_conn->tls = c_session;
 
+				/* session will be used by created element */
+				g_atomic_int_inc(&(c_session->usage));
 				/* gonna feed the birds */
 				if (current_conn->state ==
 				    AUTH_STATE_HELLOMODE) {
@@ -136,8 +136,9 @@ static int treat_nufw_request(nufw_session_t * c_session)
 			}
 			break;
 		case NU_EXIT_NO_RETURN:
-			(void)
-			    g_atomic_int_dec_and_test(&(c_session->usage));
+			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
+				"Nufw gateway send control message");
+			break;
 		}
 #if 0
 		g_message("dgram_size at %d: %d", __LINE__, dgram_size);
@@ -374,7 +375,6 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex * mutex)
 				    g_hash_table_lookup(nufw_servers,
 							GINT_TO_POINTER
 							(c));
-				g_atomic_int_inc(&(c_session->usage));
 				if (treat_nufw_request(c_session) ==
 				    NU_EXIT_ERROR) {
 					/* get session link with c */
