@@ -26,6 +26,7 @@
 #include <sys/resource.h>	/* setrlimit() */
 #include <langinfo.h>
 #include <stdarg.h>
+#include <signal.h>
 #include "proto.h"
 #include "security.h"
 #define NUTCPC_VERSION PACKAGE_VERSION " $Revision$"
@@ -331,22 +332,23 @@ static void usage(void)
  */
 void install_signals()
 {
-	int err;
 	struct sigaction action;
 	action.sa_handler = exit_clean;
 	sigemptyset(&(action.sa_mask));
 	action.sa_flags = 0;
 
 	/* install handlers */
-	err = sigaction(SIGINT, &action, &old_sigint);
-	if (err == 0)
-		err = sigaction(SIGTERM, &action, &old_sigterm);
-
-	/* error? */
-	if (err != 0) {
-		fprintf(stderr, "Unable to  install signal handlers!\n");
+	if (sigaction(SIGINT, &action, &old_sigint) != 0)
+        {
+		fprintf(stderr, "Unable to install SIGINT signal handler!\n");
 		exit(EXIT_FAILURE);
-	}
+        }
+        if (err = sigaction(SIGTERM, &action, &old_sigterm) != 0)
+        {
+		fprintf(stderr, "Unable to install SIGTERM signal handler!\n");
+		exit(EXIT_FAILURE);
+        }
+
 }
 
 /**
@@ -364,7 +366,7 @@ void daemonize_process(nutcpc_context_t * context, char *runpid)
 		exit(EXIT_FAILURE);
 	}
 
-	/* kill 1st process (keep 2nd) */
+      /* kill 1st process (keep 2nd) */
 	if (p != 0) {
 		exit(0);
 	}
