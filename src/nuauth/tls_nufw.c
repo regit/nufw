@@ -70,8 +70,16 @@ static int treat_nufw_request(nufw_session_t * c_session)
 	    gnutls_record_recv(*(c_session->tls), dgram,
 			       CLASSIC_NUFW_PACKET_SIZE);
 	g_mutex_unlock(c_session->tls_lock);
-	if (dgram_size <= 0) {
-		g_message("nufw failure at %s:%d", __FILE__, __LINE__);
+	if (dgram_size < 0) {
+		log_message(INFO, DEBUG_AREA_GW,
+			    "nufw failure at %s:%d (%s)", __FILE__,
+			    __LINE__,gnutls_strerror(dgram_size));
+		return NU_EXIT_ERROR;
+	} else if (dgram_size == 0) {
+		log_message(INFO, DEBUG_AREA_GW,
+			    "nufw disconnect at %s:%d",
+			    __FILE__,
+			    __LINE__);
 		return NU_EXIT_ERROR;
 	}
 	/* Bad luck, this is first packet, we have to test nufw proto version */
