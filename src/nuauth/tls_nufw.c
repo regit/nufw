@@ -72,7 +72,6 @@ static int treat_nufw_request(nufw_session_t * c_session)
 	g_mutex_unlock(c_session->tls_lock);
 	if (dgram_size <= 0) {
 		g_message("nufw failure at %s:%d", __FILE__, __LINE__);
-		(void) g_atomic_int_dec_and_test(&(c_session->usage));
 		return NU_EXIT_ERROR;
 	}
 	/* Bad luck, this is first packet, we have to test nufw proto version */
@@ -81,8 +80,6 @@ static int treat_nufw_request(nufw_session_t * c_session)
 		    get_proto_version_from_packet(dgram,
 						  (size_t) dgram_size);
 		if (!c_session->proto_version) {
-			(void)
-			    g_atomic_int_dec_and_test(&(c_session->usage));
 			return NU_EXIT_ERROR;
 		}
 	}
