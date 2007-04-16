@@ -8,7 +8,7 @@
 manpage.1: manpage.sgml
 	docbook-to-man $< > $@
 
-    
+
 	The docbook-to-man binary is found in the docbook-to-man package.
 	Please remember that if you create the nroff version in one of the
 	debian/rules file targets (such as build), you will need to include
@@ -45,7 +45,7 @@ manpage.1: manpage.sgml
       &dhsurname;
     </author>
     <copyright>
-      <year>2004-2005</year>
+      <year>2004-2007</year>
       <holder>&dhusername;</holder>
     </copyright>
     &dhdate;
@@ -73,7 +73,7 @@ manpage.1: manpage.sgml
        <arg><option>-U <replaceable>UserID</replaceable></option></arg>
        <arg><option>-I <replaceable>Interval</replaceable></option></arg>
 <!--       <arg><option>-u <replaceable>Local UserID </replaceable></option></arg> -->
-       
+
     </cmdsynopsis>
   </refsynopsisdiv>
   <refsect1>
@@ -170,6 +170,19 @@ manpage.1: manpage.sgml
   <refsect1>
     <title>LOCK FILE</title>
     <para>By default, the lock file set by nutcpc is at ~/.nutcpc/.nufw</para>
+  </refsect1>
+  <refsect1>
+    <title>SIGNALS</title>
+    <variablelist>
+      <varlistentry>
+        <term><option>HUP</option>
+        </term>
+        <listitem>
+          <para>When receiving this signal, nutcpc attempts to immediately
+          reconnect to the server, if disconnected. The signal is ignored in
+          other cases.</para>
+        </listitem>
+      </varlistentry>
   </refsect1>
   <refsect1>
     <title>SEE ALSO</title>
