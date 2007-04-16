@@ -343,7 +343,7 @@ void install_signals()
 		fprintf(stderr, "Unable to install SIGINT signal handler!\n");
 		exit(EXIT_FAILURE);
         }
-        if (err = sigaction(SIGTERM, &action, &old_sigterm) != 0)
+        if (sigaction(SIGTERM, &action, &old_sigterm) != 0)
         {
 		fprintf(stderr, "Unable to install SIGTERM signal handler!\n");
 		exit(EXIT_FAILURE);
