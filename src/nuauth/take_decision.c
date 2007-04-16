@@ -524,7 +524,9 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 				   total_size);
 		(void) g_atomic_int_dec_and_test(&(element->tls->usage));
 		if (ret < 0) {
-			/* we simply shutdown to let select do the job */
+			/* session's dead, baby, session's dead */
+			element->tls->alive = 0;
+			/* vroumm, we simply shutdown to let select do the job */
 			shutdown((int)gnutls_transport_get_ptr(
 					*(element->tls->tls)),
 					SHUT_WR);
