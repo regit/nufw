@@ -514,7 +514,7 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 		break;
 	}
 
-	debug_log_message(DEBUG, DEBUG_AREA_MAIN | DEBUG_AREA_GW,
+	debug_log_message(DEBUG, DEBUG_AREA_GW,
 			  "Sending auth answer %d for packetid=%u on TLS session %p",
 			  element->decision, packet_id, element->tls);
 	if (element->tls->alive) {
