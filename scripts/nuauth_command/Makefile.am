@@ -1,14 +1,14 @@
-all: command.py
+all: nuauth_command.py
 
 edit = sed \
         -e 's,@localstatedir\@,$(localstatedir),g' \
         -e 's,@prefix\@,$(prefix),g'
 
-command.py: command.py.in
-	rm -f command.py command.py.tmp
-	$(edit) command.py.in > command.py.tmp
-	mv command.py.tmp command.py
-	chmod +x command.py
+nuauth_command.py: nuauth_command.py.in
+	rm -f nuauth_command.py nuauth_command.py.tmp
+	$(edit) nuauth_command.py.in > nuauth_command.py.tmp
+	mv nuauth_command.py.tmp nuauth_command.py
+	chmod +x nuauth_command.py
 
 clean:
-	rm -f command.py command.py.tmp
+	rm -f nuauth_command.py nuauth_command.py.tmp

@@ -9,8 +9,7 @@ else:
     from distutils.core import setup
 
 # Open IPy.py to read version
-from imp import load_source
-IPy = load_source("IPy", "IPy.py")
+command = load_source("", "nuauth_command/__init__.py")
 
 LONG_DESCRIPTION = "Command line program to control nuauth daemon throw UNIX socket"
 CLASSIFIERS = [
@@ -25,7 +24,7 @@ CLASSIFIERS = [
 URL = "http://software.inl.fr/trac/trac.cgi/wiki/EdenWall/NuFW"
 
 setup(name="nuauth_command",
-      version=IPy.__version__,
+      version=command.__version__,
       description="Command line program to control NuFW firewall (nuauth)",
       long_description=LONG_DESCRIPTION,
       author="Victor Stinner",
@@ -35,5 +34,7 @@ setup(name="nuauth_command",
       url=URL,
       download_url=URL,
       classifiers= CLASSIFIERS,
-      py_modules=["IPy"])
+      scripts="nuauth_command.py",
+      packages=["nuauth_command"],
+      package_dir={"nuauth_command": "nuauth_command"})
 
