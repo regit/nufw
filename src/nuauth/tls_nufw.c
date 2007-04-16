@@ -128,7 +128,7 @@ static int treat_nufw_request(nufw_session_t * c_session)
 							   message);
 				} else {
 					debug_log_message(DEBUG, DEBUG_AREA_GW,
-							  "(*) NuFW auth request (hello mode): packetid=%u",
+							  "(*) NuFW auth request (nufw mode): packetid=%u",
 							  (uint32_t)
 							  GPOINTER_TO_UINT
 							  (current_conn->
