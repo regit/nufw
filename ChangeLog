@@ -16,6 +16,7 @@
 	- nuauth: can now have mandatory per-certificate authentication
 	- ldap module: add new option ldap_use_ipv4_schema to have compability with
 	  IPv4 tools
+	- nuauth: fix crash when nufw send concatenated requests
 2.2.0-rc1 (2007/03/08)
 	- log_mysql: add option to log by default in SQL
 	database with IPV4 schema
