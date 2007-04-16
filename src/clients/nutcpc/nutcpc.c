@@ -42,6 +42,7 @@ nuauth_session_t *session = NULL;
 nuclient_error_t *err = NULL;
 struct sigaction old_sigterm;
 struct sigaction old_sigint;
+int forced_reconnect = 0;
 
 typedef struct {
 	char port[10];		/*!< Port (service) number / name */
@@ -325,6 +326,11 @@ static void usage(void)
 	exit(EXIT_FAILURE);
 }
 
+void process_hup(int signum)
+{
+  forced_reconnect = 1;
+}
+
 /**
  * Install signal handlers:
  *   - SIGINT: call exit_clean() ;
@@ -348,7 +354,14 @@ void install_signals()
 		fprintf(stderr, "Unable to install SIGTERM signal handler!\n");
 		exit(EXIT_FAILURE);
         }
+        memset(&action, 0, sizeof(action));
+        action.sa_handler = &process_hup;
+        action.sa_flags = SIGHUP;
 
+        if (sigaction(SIGHUP, &action, NULL) != 0)
+        {
+		fprintf(stderr, "Warning : Unable to install SIGHUP signal handler!\n");
+        }
 }
 
 /**
@@ -460,9 +473,18 @@ void main_loop(nutcpc_context_t * context)
 	int connected = 1;
 	int ret;
 	for (;;) {
-		usleep(context->interval * 1000);
+                if (forced_reconnect == 0)
+                {
+		  usleep(context->interval * 1000);
+                }
 		if (!connected) {
-			usleep((unsigned long) context->tempo * 1000000);
+                        if (forced_reconnect == 0)
+                        {
+			  usleep((unsigned long) context->tempo * 1000000);
+                        }else{
+                          context->tempo = 1;
+                          forced_reconnect = 0;
+                        }
 			if (context->tempo < MAX_RETRY_TIME) {
 				context->tempo *= 2;
 			}
@@ -479,6 +501,7 @@ void main_loop(nutcpc_context_t * context)
 				nu_client_reset(session);
 			}
 		} else {
+                        forced_reconnect = 0;
 			ret = nu_client_check(session, err);
 			if (ret < 0) {
 				/* on error: reset the session */
