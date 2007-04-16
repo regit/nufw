@@ -83,6 +83,7 @@ AC_ARG_ENABLE(nuauth, [AC_HELP_STRING(--disable-nuauth, Don't build nuauth (defa
 AC_ARG_ENABLE(libnuclient,   [AC_HELP_STRING(--disable-libnuclient, Don't build libnuclient (default is to build))],build_libnuclient=$enableval, build_libnuclient="yes")
 AC_ARG_ENABLE(nutcpc,   [AC_HELP_STRING(--disable-nutcpc, Don't build nutcpc (default is to build))],build_nutcpc=$enableval, build_nutcpc="yes" )
 AC_ARG_ENABLE(pam-nufw,   [AC_HELP_STRING(--disable-pam-nufw, Don't build pam_nufw (default is to build))],build_pam_nufw=$enableval, build_pam_nufw="yes" )
+AC_ARG_ENABLE(nuauth-command,   [AC_HELP_STRING(--disable-nuauth-command, Don't build nuauth_command (default is to build))],build_nuauth_command=$enableval, build_nuauth_command="yes" )
 
 AC_ARG_WITH(perf-display,
     [AC_HELP_STRING(--with-perf-display, Enable benchmark of user authentification)],
@@ -204,6 +205,7 @@ AM_CONDITIONAL(BUILD_NUAUTH, test x${build_nuauth} = xyes)
 AM_CONDITIONAL(BUILD_NUTCPC, test x${build_nutcpc} = xyes)
 AM_CONDITIONAL(BUILD_LIBNUCLIENT, test x${build_libnuclient} = xyes)
 AM_CONDITIONAL(BUILD_PAM_NUFW, test x${build_pam_nufw} = xyes)
+AM_CONDITIONAL(BUILD_NUAUTH_COMMAND, test x${build_nuauth_command} = xyes)
 
 AM_CONDITIONAL(HAVE_IPQ,test x$have_ipq = xyes && test x$have_conntrack = x )
 AM_CONDITIONAL(USE_USER_MARK, test x$enable_user_mark = xyes)
