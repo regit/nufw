@@ -266,6 +266,7 @@ AC_CONFIG_FILES([Makefile
         src/nufw/Makefile
 	scripts/Makefile
 	scripts/nuauth_command/Makefile
+	scripts/nuauth_command/scripts/Makefile
 	tests/Makefile
 ])
 

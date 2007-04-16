@@ -3,7 +3,7 @@
 # Copyright(C) 2007 INL
 # Written by Victor Stinner <victor.stinner@inl.fr>
 #
-# $Id$
+# $Id: nuauth_command.py.in 3169 2007-04-16 13:31:05Z haypo $
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-from nuauth_command.client import Client
+from nuauth_command import Client
+from sys import exit
 
 def main():
     client = Client("@localstatedir@/run/nuauth/nuauth-command.socket")

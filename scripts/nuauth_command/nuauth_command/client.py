@@ -17,7 +17,6 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 from socket import socket, AF_UNIX, error
-from sys import exit
 from command_dec import decode, Answer
 import re
 import readline

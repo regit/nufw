@@ -91,8 +91,8 @@ int command_new(command_t * this)
 	res = bind(this->socket, (struct sockaddr *) &addr, len);
 	if (res == -1) {
 		log_message(CRITICAL, DEBUG_AREA_MAIN,
-			    "Command server: UNIX socket bind() error: %s",
-			    g_strerror(errno));
+			    "Command server: UNIX socket bind(%s) error: %s",
+			    SOCKET_FILENAME, g_strerror(errno));
 		return 0;
 	}
 
