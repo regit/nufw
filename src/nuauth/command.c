@@ -22,6 +22,7 @@
 #include "command.h"
 #include "command_enc.h"
 #include <sys/un.h>		/* unix socket */
+#include <sys/stat.h>		/* fchmod() */
 
 #define SOCKET_FILENAME LOCAL_STATE_DIR "/run/nuauth/nuauth-command.socket"
 
@@ -81,6 +82,9 @@ int command_new(command_t * this)
 		return 0;
 	}
 	this->select_max = this->socket + 1;
+
+	/* Set file mode */
+	(void)fchmod(this->socket, 0600);
 
 	/* set reuse option */
 	res =
