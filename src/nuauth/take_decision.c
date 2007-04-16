@@ -295,9 +295,8 @@ nu_error_t apply_decision(connection_t * element)
 	timeval_substract(&elapsed_time, &leave_time,
 			  &(element->arrival_time));
 	log_message(INFO, DEBUG_AREA_MAIN,
-		    "Treatment time for conn from %ld: %.1f msec",
-		    element->tracking.saddr
-		    ,(double)elapsed_time.tv_sec*1000+(double)(elapsed_time.tv_usec/));
+		    "Treatment time for conn: %.1f msec",
+		    (double)elapsed_time.tv_sec*1000+(double)(elapsed_time.tv_usec/1000));
 
 #endif
 
@@ -536,6 +535,8 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 		g_mutex_unlock(element->tls->tls_lock);
 	} else {
 		if (g_atomic_int_dec_and_test(&(element->tls->usage))) {
+			debug_log_message(DEBUG, DEBUG_AREA_GW,
+			  "Found dead unused nufw session, cleaning");
 			clean_nufw_session(element->tls);
 		}
 	}
