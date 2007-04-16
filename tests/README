@@ -49,3 +49,5 @@ Or to run all tests together:
 
     ./test_all.py
 
+The call to "make check" will also triggered the run of test_all.py.
+
