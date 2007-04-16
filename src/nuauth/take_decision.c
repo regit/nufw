@@ -340,6 +340,7 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 	int payload_size = 0;
 	int total_size = 0;
 	char *buffer = NULL;
+	nu_error_t ret = NU_EXIT_OK;
 
 	switch (element->nufw_version) {
 	case PROTO_VERSION_V20:
@@ -518,27 +519,11 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 	debug_log_message(DEBUG, DEBUG_AREA_GW,
 			  "Sending auth answer %d for packetid=%u on TLS session %p",
 			  element->decision, packet_id, element->tls);
-	if (element->tls->alive) {
-		int ret;
-		g_mutex_lock(element->tls->tls_lock);
-		ret = gnutls_record_send(*(element->tls->tls), buffer,
-				   total_size);
-		(void) g_atomic_int_dec_and_test(&(element->tls->usage));
-		if (ret < 0) {
-			/* session's dead, baby, session's dead */
-			element->tls->alive = 0;
-			/* vroumm, we simply shutdown to let select do the job */
-			shutdown((int)gnutls_transport_get_ptr(
-					*(element->tls->tls)),
-					SHUT_WR);
-		}
-		g_mutex_unlock(element->tls->tls_lock);
+	ret = nufw_session_send(element->tls, buffer, total_size);
+	if (ret != NU_EXIT_OK) {
+		declare_dead_nufw_session(element->tls);
 	} else {
-		if (g_atomic_int_dec_and_test(&(element->tls->usage))) {
-			debug_log_message(DEBUG, DEBUG_AREA_GW,
-			  "Found dead unused nufw session, cleaning");
-			clean_nufw_session(element->tls);
-		}
+		release_nufw_session(element->tls);
 	}
 }
 

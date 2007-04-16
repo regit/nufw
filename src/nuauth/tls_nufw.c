@@ -34,8 +34,6 @@
  * The main thread is tls_nufw_authsrv() which call tls_nufw_main_loop().
  */
 
-GHashTable *nufw_servers = NULL;
-GStaticMutex nufw_servers_mutex = G_STATIC_MUTEX_INIT;
 
 struct tls_nufw_context_t {
 	int mx;
@@ -102,10 +100,10 @@ static int treat_nufw_request(nufw_session_t * c_session)
 		case NU_EXIT_OK:
 			if (current_conn != NULL) {
 				current_conn->socket = 0;
+				/* session will be used by created element */
+				increase_nufw_session_usage(c_session);
 				current_conn->tls = c_session;
 
-				/* session will be used by created element */
-				g_atomic_int_inc(&(c_session->usage));
 				/* gonna feed the birds */
 				if (current_conn->state ==
 				    AUTH_STATE_HELLOMODE) {
@@ -153,55 +151,7 @@ static int treat_nufw_request(nufw_session_t * c_session)
 	return NU_EXIT_OK;
 }
 
-/**
- * Close the TLS NuFW servers
- */
-void close_nufw_servers()
-{
-	g_static_mutex_lock(&nufw_servers_mutex);
-	if (nufw_servers != NULL)
-		g_hash_table_destroy(nufw_servers);
-	nufw_servers = NULL;
-	g_static_mutex_unlock(&nufw_servers_mutex);
-}
 
-/**
- * Suppress entry from nufw_servers hash when a
- * problem occurs
- */
-nu_error_t suppress_nufw_session(nufw_session_t * session)
-{
-	g_static_mutex_lock(&nufw_servers_mutex);
-	if (g_atomic_int_get (&(session->usage)) == 0) {
-		g_hash_table_remove(nufw_servers,
-				GINT_TO_POINTER
-				(session->socket));
-	} else {
-		session->alive = FALSE;
-		g_hash_table_steal(nufw_servers,
-				GINT_TO_POINTER(
-					session->socket));
-	}
-	g_static_mutex_unlock(&nufw_servers_mutex);
-	return NU_EXIT_OK;
-}
-
-
-gboolean ghrfunc_true(gpointer key, gpointer value, gpointer user_data)
-{
-	return TRUE;
-}
-
-nufw_session_t *get_nufw_session()
-{
-	gpointer value = NULL;
-	g_static_mutex_lock(&nufw_servers_mutex);
-	value = g_hash_table_find(nufw_servers, ghrfunc_true, NULL);
-	g_static_mutex_unlock(&nufw_servers_mutex);
-	if (value)
-		return (nufw_session_t *)value;
-	return NULL;
-}
 
 /**
  * Clean a NuFW TLS session: send "bye", deinit the connection
@@ -290,7 +240,7 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 
 	/* initialize TLS */
 	nu_session = g_new0(nufw_session_t, 1);
-	nu_session->usage = 0;
+	nu_session->usage = 1;
 	nu_session->alive = TRUE;
 	nu_session->peername = addr;
 	nu_session->socket = conn_fd;
@@ -298,10 +248,7 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 	nu_session->proto_version = PROTO_UNKNOWN;
 	if (tls_connect(conn_fd, &(nu_session->tls)) == SASL_OK) {
 		nu_session->tls_lock = g_mutex_new();
-		g_static_mutex_lock(&nufw_servers_mutex);
-		g_hash_table_insert(nufw_servers, GINT_TO_POINTER(conn_fd),
-				    nu_session);
-		g_static_mutex_unlock(&nufw_servers_mutex);
+		add_nufw_server(conn_fd, nu_session);
 		FD_SET(conn_fd, &context->tls_rx_set);
 		if (conn_fd + 1 > context->mx)
 			context->mx = conn_fd + 1;
@@ -376,12 +323,8 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex * mutex)
 				debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
 						  "nufw activity on socket %d",
 						  c);
-				g_static_mutex_lock(&nufw_servers_mutex);
 				c_session =
-				    g_hash_table_lookup(nufw_servers,
-							GINT_TO_POINTER
-							(c));
-				g_static_mutex_unlock(&nufw_servers_mutex);
+					acquire_nufw_session_by_socket(c);
 				g_assert(c_session);
 				if (treat_nufw_request(c_session) ==
 				    NU_EXIT_ERROR) {
@@ -390,8 +333,9 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex * mutex)
 							  "nufw server disconnect on %d",
 							  c);
 					FD_CLR(c, &context->tls_rx_set);
-					suppress_nufw_session(c_session);
+					declare_dead_nufw_session(c_session);
 				}
+				release_nufw_session(c_session);
 			}
 		}
 
@@ -500,11 +444,7 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 	}
 
 	/* build servers hash */
-	nufw_servers = g_hash_table_new_full(NULL,
-					     NULL,
-					     NULL,
-					     (GDestroyNotify)
-					     clean_nufw_session);
+	init_nufw_servers();
 
 	/* init fd_set */
 	context->mx = context->sck_inet + 1;

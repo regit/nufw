@@ -82,6 +82,7 @@ typedef enum {
 #include "conffile.h"
 #include "log.h"
 #include "tls.h"
+#include "nufw_servers.h"
 #include "connections.h"
 #include "conntrack.h"
 #include "auth_common.h"
