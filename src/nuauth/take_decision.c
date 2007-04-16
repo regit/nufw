@@ -295,8 +295,10 @@ nu_error_t apply_decision(connection_t * element)
 	timeval_substract(&elapsed_time, &leave_time,
 			  &(element->arrival_time));
 	log_message(INFO, DEBUG_AREA_MAIN,
-		    "Treatment time for conn : %ld.%03ld sec",
-		    elapsed_time.tv_sec, elapsed_time.tv_usec);
+		    "Treatment time for conn from %ld: %.1f msec",
+		    element->tracking.saddr
+		    ,(double)elapsed_time.tv_sec*1000+(double)(elapsed_time.tv_usec/));
+
 #endif
 
 	/* free packet_id */
