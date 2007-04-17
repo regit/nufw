@@ -22,14 +22,17 @@
 #ifndef COMMAND_CODEC_H
 #define COMMAND_CODEC_H
 
+#define BYTECODE_BOOL 'b'
 #define BYTECODE_INT32 'i'
 #define BYTECODE_INT64 'I'
 #define BYTECODE_IPV6 'p'
 #define BYTECODE_STRING 's'
+#define BYTECODE_TIMESTAMP 't'
 #define BYTECODE_TUPLE '('
 
 #define BYTECODE_ANSWER 'a'
 #define BYTECODE_USER 'u'
+#define BYTECODE_NUFW 'w'
 #define BYTECODE_UPTIME 'U'
 
 #endif /* COMMAND_CODEC_H */

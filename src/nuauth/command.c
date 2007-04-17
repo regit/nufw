@@ -29,6 +29,7 @@
 const char* COMMAND_HELP =
 "version: display nuauth version\n"
 "users: list connected users\n"
+"firewalls: list connected nufw firewalls\n"
 "refresh cache: refresh all caches\n"
 "disconnect ID: disconnect an user with his session identifier\n"
 "disconnect all: disconnect all users\n"
@@ -41,7 +42,7 @@ const char* COMMAND_HELP =
 "help: display this help\n"
 "quit: disconnect";
 
-const char* PYTHON_PROTO_VERSION = "NuFW 0.0";
+const char* PYTHON_PROTO_VERSION = "NuFW 0.1";
 
 typedef struct {
 	time_t start_timestamp;
@@ -194,6 +195,23 @@ void command_users(command_t *this, encoder_t *encoder)
 	encoder_slist_destroy(users);
 }
 
+void command_server_callback(int sock, nufw_session_t *session, GSList **servers)
+{
+	encoder_t *encoder = encode_nufw(session);
+	*servers = g_slist_prepend(*servers, encoder);
+}
+
+void command_servers(command_t *this, encoder_t *encoder)
+{
+	/* read user list */
+	GSList *servers = NULL;
+	foreach_nufw_server((GHFunc)command_server_callback, &servers);
+
+	/* encode user list */
+	encoder_add_tuple_from_slist(encoder, servers);
+	encoder_slist_destroy(servers);
+}
+
 /**
  * Internal function do disconnect a client
  */
@@ -296,6 +314,8 @@ void command_execute(command_t * this, char *command)
 		encoder_add_string(encoder, fortune());
 	} else if (strcmp(command, "users") == 0) {
 		command_users(this, encoder);
+	} else if (strcmp(command, "firewalls") == 0) {
+		command_servers(this, encoder);
 	} else if (strcmp(command, "version") == 0) {
 		encoder_add_string(encoder, NUAUTH_FULL_VERSION);
 	} else if (strcmp(command, "disconnect all") == 0) {

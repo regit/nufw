@@ -54,6 +54,19 @@ void encoder_write_bytecode(encoder_t* encoder, char bytecode)
 }
 
 /**
+ * Write a boolean in the encoder
+ */
+void encoder_write_bool(encoder_t* encoder, int value)
+{
+	unsigned char *ptr = (unsigned char*)(encoder->data + encoder->size);
+	if (value != 0)
+		*ptr = 1;
+	else
+		*ptr = 0;
+	encoder->size += 1;
+}
+
+/**
  * Write a 32-bit integer in the encoder
  */
 void encoder_write_int32(encoder_t* encoder, int32_t value)
@@ -82,12 +95,32 @@ void encoder_add_bytecode(encoder_t* encoder, char bytecode)
 }
 
 /**
+ * Add a boolean to the encoder: ('b', value)
+ */
+void encoder_add_bool(encoder_t* encoder, int value)
+{
+	encoder_grow(encoder, 2);
+	encoder_write_bytecode(encoder, BYTECODE_BOOL);
+	encoder_write_bool(encoder, value);
+}
+
+/**
  * Add a 32-bit integer to the encoder: ('i', value)
  */
 void encoder_add_int32(encoder_t* encoder, uint32_t value)
 {
 	encoder_grow(encoder, 5);
 	encoder_write_bytecode(encoder, BYTECODE_INT32);
+	encoder_write_int32(encoder, value);
+}
+
+/**
+ * Add a (32-bit) timestamp to the encoder: ('t', value)
+ */
+void encoder_add_timestamp(encoder_t* encoder, time_t value)
+{
+	encoder_grow(encoder, 5);
+	encoder_write_bytecode(encoder, BYTECODE_TIMESTAMP);
 	encoder_write_int32(encoder, value);
 }
 
@@ -186,7 +219,7 @@ encoder_t* encode_answer(uint8_t ok, encoder_t *data)
 void encoder_add_uptime(encoder_t *encoder, time_t start, time_t diff)
 {
 	encoder_add_bytecode(encoder, BYTECODE_UPTIME);
-	encoder_add_int32(encoder, start);
+	encoder_add_timestamp(encoder, start);
 	encoder_add_int32(encoder, diff);
 }
 
@@ -218,12 +251,33 @@ encoder_t* encode_user(user_session_t* session)
 	encoder_add_int32(encoder, session->sport);
 	encoder_add_int32(encoder, session->user_id);
 	encoder_add_tuple_from_slist(encoder, groups);
-	encoder_add_int32(encoder, session->connect_timestamp);
+	encoder_add_timestamp(encoder, session->connect_timestamp);
 	encoder_add_int32(encoder, time(NULL) - session->connect_timestamp);
 	encoder_add_int32(encoder, session->expire);
+	encoder_add_string(encoder, session->sysname);
+	encoder_add_string(encoder, session->release);
+	encoder_add_string(encoder, session->version);
+	encoder_add_bool(encoder, session->activated);
 
 	/* destroy group list */
 	encoder_slist_destroy(groups);
+	return encoder;
+}
+
+/**
+ * Add nufw message: ('w', ...)
+ */
+encoder_t* encode_nufw(nufw_session_t* session)
+{
+	encoder_t* encoder = encoder_new();
+	encoder_add_bytecode(encoder, BYTECODE_NUFW);
+	encoder_add_int32(encoder, session->proto_version);
+	encoder_add_int32(encoder, session->socket);
+	encoder_add_ipv6(encoder, &session->peername);
+	encoder_add_timestamp(encoder, session->connect_timestamp);
+	encoder_add_int32(encoder, time(NULL) - session->connect_timestamp);
+	encoder_add_int32(encoder, session->usage);
+	encoder_add_bool(encoder, session->alive);
 	return encoder;
 }
 

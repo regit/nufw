@@ -42,6 +42,7 @@ void encoder_add_uptime(encoder_t* encoder, time_t start, time_t diff);
 
 encoder_t* encode_answer(uint8_t ok, encoder_t *data);
 encoder_t* encode_user(user_session_t *session);
+encoder_t* encode_nufw(nufw_session_t *session);
 
 #endif /* COMMAND_NEW_H */
 
