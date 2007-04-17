@@ -120,6 +120,21 @@ nu_error_t print_tracking_t(tracking_t *tracking)
 	return NU_EXIT_OK;
 }
 
+char * decision_to_str(decision_t decision)
+{
+	switch(decision) {
+		case DECISION_ACCEPT:
+			return g_strdup("ACCEPT");
+		case DECISION_REJECT:
+			return g_strdup("REJECT");
+		case DECISION_DROP:
+			return g_strdup("DROP");
+		case DECISION_NODECIDE:
+			break;
+	}
+	return NULL;
+}
+
 /**
  * Display connection parameters using g_message(): IP+TCP/UDP headers,
  * OS name, OS release and OS version, and application name.
@@ -134,6 +149,7 @@ gint print_connection(gpointer data, gpointer userdata)
 	connection_t *conn = (connection_t *) data;
 	char * prefix = userdata;
 	char * str_tracking = NULL;
+	char * str_state = NULL;
 	char * str_iface = NULL;
 	char * str_id = NULL;
 	char * str_user = NULL;
@@ -145,6 +161,14 @@ gint print_connection(gpointer data, gpointer userdata)
 
 	if (str_tracking == NULL)
 		return -1;
+
+	if (conn->decision != DECISION_NODECIDE) {
+		char * str_decision = decision_to_str(conn->decision);
+		str_state = g_strdup_printf(", decision=%s", str_decision);
+		g_free(str_decision);
+	} else {
+		str_state = g_strdup("");
+	}
 
 	if (conn->iface_nfo.indev && conn->iface_nfo.outdev) {
 		str_iface = g_strdup_printf(", IN=%s OUT=%s", conn->iface_nfo.indev,
@@ -173,15 +197,16 @@ gint print_connection(gpointer data, gpointer userdata)
 		str_os = g_strdup("");
 	}
 	if (conn->app_name) {
-		str_app = g_strdup_printf(", Application=%s", conn->app_name);
+		str_app = g_strdup_printf(", app=%s", conn->app_name);
 	} else {
 		str_user = g_strdup("");
 	}
 
-	message = g_strconcat(prefix, ":", str_tracking, str_iface,
+	message = g_strconcat(prefix, ":", str_tracking, str_state, str_iface,
 			      str_id, str_os, str_app, NULL);
 	g_free(str_tracking);	
 	g_free(str_iface);	
+	g_free(str_state);
 	g_free(str_id);	
 	g_free(str_os);	
 	g_free(str_app);	

@@ -54,6 +54,7 @@ void external_ip_auth(gpointer userdata, gpointer data)
 		if (groups) {
 			connection_t *connection = g_new0(connection_t, 1);
 			connection->state = AUTH_STATE_USERPCKT;
+			connection->decision = DECISION_NODECIDE;
 			connection->user_groups = groups;
 			connection->user_id = uid;
 			connection->username = username;

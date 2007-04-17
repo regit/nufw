@@ -145,6 +145,8 @@ nu_error_t take_decision(connection_t * element, packet_place_t place)
 	debug_log_message(DEBUG, DEBUG_AREA_MAIN,
 			  "Trying to take decision on %p", element);
 
+	element->decision = DECISION_NODECIDE;
+
 	/*even firster we check if we have an actual element */
 	if (element == NULL)
 		return NU_EXIT_ERROR;
@@ -295,8 +297,10 @@ nu_error_t apply_decision(connection_t * element)
 	timeval_substract(&elapsed_time, &leave_time,
 			  &(element->arrival_time));
 	log_message(INFO, DEBUG_AREA_MAIN,
-		    "Treatment time for conn: %.1f msec",
-		    (double)elapsed_time.tv_sec*1000+(double)(elapsed_time.tv_usec/1000));
+		    "Treatment time for packet_id=%u: %.1f msec",
+		    GPOINTER_TO_UINT(element->packet_id->data),
+		    (double)elapsed_time.tv_sec*1000+(double)(elapsed_time.tv_usec/1000)
+		    );
 
 #endif
 
@@ -516,9 +520,9 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 		break;
 	}
 
-	debug_log_message(DEBUG, DEBUG_AREA_GW,
-			  "Sending auth answer %d for packetid=%u on TLS session %p",
-			  element->decision, packet_id, element->tls);
+	if (DEBUG_OR_NOT (DEBUG_LEVEL_DEBUG, DEBUG_AREA_PACKET)) {
+		print_connection(element, "Answ Packet");
+	}
 	ret = nufw_session_send(element->tls, buffer, total_size);
 	if (ret != NU_EXIT_OK) {
 		declare_dead_nufw_session(element->tls);

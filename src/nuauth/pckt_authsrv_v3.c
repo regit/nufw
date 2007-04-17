@@ -67,6 +67,7 @@ nu_error_t authpckt_new_connection_v3(unsigned char *dgram,
 	connection->username = NULL;
 	connection->acl_groups = NULL;
 	connection->user_groups = NULL;
+	connection->decision = DECISION_NODECIDE;
 	connection->expire = -1;
 	connection->flags = ACL_FLAGS_NONE;
 
