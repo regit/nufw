@@ -156,6 +156,7 @@ inline void search_and_fill_complete_of_authreq(connection_t * new,
 		    g_slist_prepend(packet->packet_id,
 				    GINT_TO_POINTER((new->packet_id)->
 						    data));
+		increase_nufw_session_usage(packet->tls);
 		break;
 
 	case AUTH_STATE_USERPCKT:
@@ -218,11 +219,13 @@ inline void search_and_fill_complete_of_userpckt(connection_t * new,
 		memcpy(&(new->iface_nfo), &(packet->iface_nfo),
 		       sizeof(iface_nfo_t));
 
-		thread_pool_push(nuauthdatas->acl_checkers, new, NULL);
 		packet->packet_id = new->packet_id;
 		packet->mark = new->mark;
 		packet->socket = new->socket;
 		packet->tls = new->tls;
+		new->tls = NULL;
+
+		thread_pool_push(nuauthdatas->acl_checkers, new, NULL);
 		return;		/* don't free connection */
 
 	case AUTH_STATE_USERPCKT:
@@ -273,6 +276,7 @@ inline void search_and_fill_completing(connection_t * new,
 		    g_slist_prepend(packet->packet_id,
 				    GINT_TO_POINTER((new->packet_id)->
 						    data));
+		increase_nufw_session_usage(packet->tls);
 		break;
 
 	case AUTH_STATE_USERPCKT:
@@ -300,6 +304,7 @@ inline void search_and_fill_ready(connection_t * new,
 		    g_slist_prepend(packet->packet_id,
 				    GUINT_TO_POINTER((new->packet_id)->
 						     data));
+		increase_nufw_session_usage(packet->tls);
 		break;
 
 	case AUTH_STATE_USERPCKT:

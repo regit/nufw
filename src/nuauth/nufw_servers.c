@@ -30,7 +30,6 @@
  * \brief Manage nufw servers
  */
 
-
 GHashTable *nufw_servers = NULL;
 GStaticMutex nufw_servers_mutex = G_STATIC_MUTEX_INIT;
 
@@ -118,8 +117,9 @@ nufw_session_t *get_nufw_session()
 	nufw_session_t * value = NULL;
 	g_static_mutex_lock(&nufw_servers_mutex);
 	value = (nufw_session_t *) g_hash_table_find(nufw_servers, ghrfunc_true, NULL);
-	if (value)
+	if (value) {
 		g_atomic_int_inc(&(value->usage));
+	}
 	g_static_mutex_unlock(&nufw_servers_mutex);
 	return value;
 }
@@ -146,8 +146,9 @@ nufw_session_t * acquire_nufw_session_by_addr(struct  in6_addr * addr)
 	session = g_hash_table_find(nufw_servers,
 				    get_nufw_server_by_addr,
 				    addr);
-	if (session)
+	if (session) {
 		g_atomic_int_inc(&(session->usage));
+	}
 	g_static_mutex_unlock(&nufw_servers_mutex);
 	return session;
 }

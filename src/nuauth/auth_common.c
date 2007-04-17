@@ -242,6 +242,7 @@ void free_connection(connection_t * conn)
 	} else {
 		g_free(conn->username);
 	}
+
 	g_slist_free(conn->packet_id);
 	g_slist_free(conn->user_groups);
 	g_free(conn->app_name);
@@ -320,6 +321,7 @@ connection_t *duplicate_connection(connection_t * element)
 			    &(element->iface_nfo));
 
 	/* Nullify needed internal field */
+	conn_copy->tls = NULL;
 	conn_copy->acl_groups = NULL;
 	conn_copy->user_groups = NULL;
 	conn_copy->packet_id = NULL;
