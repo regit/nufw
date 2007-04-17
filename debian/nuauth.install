@@ -1,7 +1,7 @@
-conf/nuauth.conf etc/nufw20
-conf/periods.xml etc/nufw20
-conf/acls.nufw etc/nufw20
-conf/users-plaintext.nufw etc/nufw20
+conf/nuauth.conf etc/nufw
+conf/periods.xml etc/nufw
+conf/acls.nufw etc/nufw
+conf/users-plaintext.nufw etc/nufw
 src/nuauth/nuauth usr/sbin
 src/nuauth/modules/ldap/.libs/libldap.so.0.0.0 usr/lib/nuauth/modules
 src/nuauth/modules/ldap/.libs/libldap.so.0 usr/lib/nuauth/modules

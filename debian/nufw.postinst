@@ -1,5 +1,5 @@
 #!/bin/sh
-CONFIGFILE=/etc/default/nufw20
+CONFIGFILE=/etc/default/nufw
 
 set -e
 #set -x
@@ -20,8 +20,8 @@ if [ ! -e $CONFIGFILE ]; then
         echo "NUFW_NUAUTH_UDP_PORT=" >> $CONFIGFILE
         echo "NUFW_TIMEOUT=" >> $CONFIGFILE
         echo "NUFW_TRACK_SIZE=" >> $CONFIGFILE
-        echo "NUFW_SSL_CERTIFICATE=\"/etc/nufw20/certs/nufw-cert.pem\"" >> $CONFIGFILE
-        echo "NUFW_SSL_KEY=\"/etc/nufw20/certs/nufw-key.pem\"" >> $CONFIGFILE
+        echo "NUFW_SSL_CERTIFICATE=\"/etc/nufw/certs/nufw-cert.pem\"" >> $CONFIGFILE
+        echo "NUFW_SSL_KEY=\"/etc/nufw/certs/nufw-key.pem\"" >> $CONFIGFILE
 fi
 
 # Substitue les valeurs par celles dans la base
@@ -29,21 +29,21 @@ fi
 # optimisations possibles simples. Le cp avant
 # le sed permet de s'assurer que l'on ne dtruise
 # pas le systme des droits du fichier config.
-db_get nufw20-nfqueue/start_at_boot
+db_get nufw-nfqueue/start_at_boot
 NUFW_START="$RET"
-db_get nufw20-nfqueue/verbosity
+db_get nufw-nfqueue/verbosity
 NUFW_VERBOSITY="$RET"
 #db_get nufw/listen_port
 #NUFW_LISTEN_UDP_PORT="$RET"
 #db_get nufw/listen_address
 #NUFW_LISTEN_ADDRESS="$RET"
-db_get nufw20-nfqueue/nuauth_address
+db_get nufw-nfqueue/nuauth_address
 NUFW_NUAUTH_ADDRESS="$RET"
-db_get nufw20-nfqueue/nuauth_port
+db_get nufw-nfqueue/nuauth_port
 NUFW_NUAUTH_UDP_PORT="$RET"
-db_get nufw20-nfqueue/timeout
+db_get nufw-nfqueue/timeout
 NUFW_TIMEOUT="$RET"
-db_get nufw20-nfqueue/tracksize
+db_get nufw-nfqueue/tracksize
 NUFW_TRACK_SIZE="$RET"
 cp -a -f $CONFIGFILE $CONFIGFILE.tmp
 #  -e "s/^ *BAR=.*/BAR=\"$BAR\"/" \
@@ -63,7 +63,7 @@ mv -f $CONFIGFILE.tmp $CONFIGFILE
 
 #generation du certificat ssl
 if [ -x /usr/bin/openssl ]; then
-  if [ ! -e /etc/nufw20/certs/nufw-key.pem ]; then
+  if [ ! -e /etc/nufw/certs/nufw-key.pem ]; then
 
     db_capb backup
     db_settitle make-ssl-cert/title
@@ -124,8 +124,8 @@ if [ -x /usr/bin/openssl ]; then
         /usr/share/ssl-cert/ssleay.cnf > $TMPFILE
     
     export RANDFILE=/dev/random
-    /usr/bin/openssl req -config $TMPFILE -new -x509 -nodes -keyout /etc/nufw20/certs/nufw-key.pem -pubkey -out /etc/nufw20/certs/nufw-cert.pem -days 1095 || /bin/true
-    chmod 600 /etc/nufw20/certs/nufw-key.pem
+    /usr/bin/openssl req -config $TMPFILE -new -x509 -nodes -keyout /etc/nufw/certs/nufw-key.pem -pubkey -out /etc/nufw/certs/nufw-cert.pem -days 1095 || /bin/true
+    chmod 600 /etc/nufw/certs/nufw-key.pem
     rm -f $TMPFILE
   fi
 fi

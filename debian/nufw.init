@@ -8,7 +8,7 @@
 #
 
 ### BEGIN INIT INFO
-# Provides:          nufw20
+# Provides:          nufw-nfqueue
 # Required-Start:    $syslog
 # Required-Stop:     $syslog
 # Should-Start:      $local_fs
@@ -22,17 +22,17 @@
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 DAEMON=/usr/sbin/nufw
-NAME=nufw20
+NAME=nufw
 PID=nufw
-DESC=nufw20
+DESC=nufw
 NUFW_START="false"
 
 
 test -x $DAEMON || exit 0
 
 # Include nufw defaults if available
-if [ -f /etc/default/nufw20 ] ; then
-	. /etc/default/nufw20
+if [ -f /etc/default/nufw ] ; then
+	. /etc/default/nufw
 fi
 
 if [ "$NUFW_START" != "true" ]; then
@@ -56,7 +56,7 @@ if [ ! "NUFW_NUAUTH_ADDRESS" ]; then
 fi
 
 if [ ! "NUFW_NUAUTH_UDP_PORT" ]; then
-  NUFW_NUAUTH_UDP_PORT=4128
+  NUFW_NUAUTH_UDP_PORT=4129
 fi
 
 if [ ! "NUFW_TIMEOUT" ]; then
@@ -69,7 +69,7 @@ fi
 
 DAEMON_OPTS="-D -$NUFW_VERBOSITY  \
     -d $NUFW_NUAUTH_ADDRESS -p $NUFW_NUAUTH_UDP_PORT  -t $NUFW_TIMEOUT -T $NUFW_TRACK_SIZE\
-    -k $NUFW_SSL_KEY -c $NUFW_SSL_CERTIFICATE"
+    -k $NUFW_SSL_KEY -c $NUFW_SSL_CERTIFICATE -C -M -m"
 
 set -e
 

@@ -23,5 +23,5 @@ NUFW_TIMEOUT=15
 NUFW_TRACK_SIZE=1000
 
 #SSL certificates and keys
-NUFW_SSL_CERTIFICATE="/etc/nufw20/certs/nufw-cert.pem"
-NUFW_SSL_KEY="/etc/nufw20/certs/nufw-key.pem"
+NUFW_SSL_CERTIFICATE="/etc/nufw/certs/nufw-cert.pem"
+NUFW_SSL_KEY="/etc/nufw/certs/nufw-key.pem"

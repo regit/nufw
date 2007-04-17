@@ -1,4 +1,4 @@
-Template: nufw20/start_at_boot
+Template: nufw-nfqueue/start_at_boot
 Type: boolean
 Default: true
 _Description: Should nufw daemon be started at boot time?
@@ -6,7 +6,7 @@ _Description: Should nufw daemon be started at boot time?
  If you choose "False" you can start nufw by hand, by running
  /usr/sbin/nufw with appropriate options.
 
-Template: nufw20/verbosity
+Template: nufw-nfqueue/verbosity
 Type: select
 Choices: v, vv, vvv, vvvv, vvvvv, vvvvvv, vvvvvvv, vvvvvvvv
 Default: vv
@@ -15,7 +15,7 @@ _Description: Nufw daemon verbosity level:
  will be. A good production value is "vv", increase it to get more details
  in case of problems.
 
-Template: nufw20/nuauth_address
+Template: nufw-nfqueue/nuauth_address
 Type: string
 Default: 127.0.0.1
 _Description: Nuauth daemon IP address:
@@ -23,7 +23,7 @@ _Description: Nuauth daemon IP address:
  nufw and nuauth on the same box, leave it at default value of 127.0.0.1.
  Else enter an IP address.
 
-Template: nufw20/nuauth_port
+Template: nufw-nfqueue/nuauth_port
 Type: string
 Default: 4129
 _Description: Nuauth daemon port:
@@ -31,7 +31,7 @@ _Description: Nuauth daemon port:
  installation. On most installations, the default value of 4129 will be
  correct. Please input a numeric port number.
 
-Template: nufw20/timeout
+Template: nufw-nfqueue/timeout
 Type: string
 Default: 15
 _Description: Nufw timeout delay:
@@ -40,7 +40,7 @@ _Description: Nufw timeout delay:
  tune this parameter, except if your queues are really full. Default value
  is 15. Please enter a number (which will be interpreted as seconds).
 
-Template: nufw20/tracksize
+Template: nufw-nfqueue/tracksize
 Type: string
 Default: 1000
 _Description: Nufw Tracksize:

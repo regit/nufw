@@ -3,86 +3,65 @@
 #		Written by Miquel van Smoorenburg <miquels@cistron.nl>.
 #		Modified for Debian 
 #		by Ian Murdock <imurdock@gnu.ai.mit.edu>.
-#    Customized for nufw by Vincent Deffontaines <vincent@gryzor.com>
+#    Customized for nuauth by Vincent Deffontaines <vincent@gryzor.com>
 #
 #
 
 ### BEGIN INIT INFO
-# Provides:          nufw20-nfqueue
+# Provides:          nuauth
 # Required-Start:    $syslog
 # Required-Stop:     $syslog
 # Should-Start:      $local_fs
 # Should-Stop:       $local_fs
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: Control script for nufw
+# Short-Description: Control script for nuauth
 # Description:       Init script to control (start/stop/reload)
-#                    the nufw server.
+#                    the nuauth server.
 ### END INIT INFO
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-DAEMON=/usr/sbin/nufw
-NAME=nufw20
-PID=nufw
-DESC=nufw20
-NUFW_START="false"
+DAEMON=/usr/sbin/nuauth
+PID=nuauth
+NAME=nuauth
+DESC=nuauth
+NUAUTH_START="no"
 
 
 test -x $DAEMON || exit 0
 
-# Include nufw defaults if available
-if [ -f /etc/default/nufw20 ] ; then
-	. /etc/default/nufw20
+# Include nuauth defaults if available
+if [ -f /etc/default/nuauth ] ; then
+	. /etc/default/nuauth
 fi
 
-if [ "$NUFW_START" != "true" ]; then
+if [ "$NUAUTH_START" != "true" ]; then
   exit 0
 fi
 
-if [ ! "$NUFW_VERBOSITY" ]; then
-  NUFW_VERBOSITY="vv"
+if [ ! "$NUAUTH_VERBOSITY" ]; then
+  NUAUTH_VERBOSITY="vv"
 fi
 
-#if [ ! "NUFW_LISTEN_ADDRESS" ]; then
-#  NUFW_LISTEN_UDP_PORT="127.0.0.1"
-#fi
-
-#if [ ! "NUFW_LISTEN_UDP_PORT" ]; then
-#  NUFW_LISTEN_UDP_PORT=4129
-#fi
-
-if [ ! "NUFW_NUAUTH_ADDRESS" ]; then
-  NUFW_NUAUTH_ADDRESS="127.0.0.1"
+if [ ! "$NUAUTH_USER" ]; then
+  echo "No user configured to run nuauth... Trying \"nobody\" ..."
+  NUAUTH_USER="nobody"
 fi
 
-if [ ! "NUFW_NUAUTH_UDP_PORT" ]; then
-  NUFW_NUAUTH_UDP_PORT=4129
-fi
-
-if [ ! "NUFW_TIMEOUT" ]; then
-  NUFW_TIMEOUT=15
-fi
-
-if [ ! "NUFW_TRACK_SIZE" ]; then
-  NUFW_TRACK_SIZE=1000
-fi
-
-DAEMON_OPTS="-D -$NUFW_VERBOSITY  \
-    -d $NUFW_NUAUTH_ADDRESS -p $NUFW_NUAUTH_UDP_PORT  -t $NUFW_TIMEOUT -T $NUFW_TRACK_SIZE\
-    -k $NUFW_SSL_KEY -c $NUFW_SSL_CERTIFICATE -C -M -m"
+DAEMON_OPTS="-D -$NUAUTH_VERBOSITY"
 
 set -e
 
 case "$1" in
   start)
 	echo -n "Starting $DESC: "
-	start-stop-daemon --start --quiet --pidfile /var/run/$PID.pid \
-		--exec $DAEMON -- $DAEMON_OPTS
+	start-stop-daemon --start --quiet --pidfile /var/run/$PID/$PID.pid \
+		--chuid $NUAUTH_USER --exec $DAEMON -- $DAEMON_OPTS
 	echo "$NAME."
 	;;
   stop)
 	echo -n "Stopping $DESC: "
-	start-stop-daemon --stop --quiet --pidfile /var/run/$PID.pid \
+	start-stop-daemon --stop --quiet --pidfile /var/run/$PID/$PID.pid \
 		--exec $DAEMON
 	echo "$NAME."
 	;;
@@ -106,10 +85,10 @@ case "$1" in
 	#
 	echo -n "Restarting $DESC: "
 	start-stop-daemon --stop --quiet --pidfile \
-		/var/run/$PID.pid --exec $DAEMON || /bin/true
+		/var/run/$PID/$PID.pid --exec $DAEMON || /bin/true
 	sleep 1
-	start-stop-daemon --start --quiet --pidfile \
-		/var/run/$PID.pid --exec $DAEMON -- $DAEMON_OPTS
+	start-stop-daemon --start --quiet --pidfile /var/run/$PID/$PID.pid \
+                --chuid $NUAUTH_USER --exec $DAEMON -- $DAEMON_OPTS
 	echo "$NAME."
 	;;
   *)

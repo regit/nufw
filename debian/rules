@@ -30,12 +30,7 @@ endif
 
 CONFIGURE       = CFLAGS='$(CFLAGS)' ./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --prefix=/usr \
 			--mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info --localstatedir=/var \
-			--sysconfdir=/etc/nufw20/ --with-mysql-log --with-pgsql-log --with-system-auth --with-ldap \
-			--with-utf8 --without-nfqueue --without-nfconntrack --without-fixedtimeout --enable-debug
-		  
-CONFIGURENF       = CFLAGS='$(CFLAGS)' ./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --prefix=/usr \
-			--mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info --localstatedir=/var \
-			--sysconfdir=/etc/nufw20/ --with-mysql-log --with-pgsql-log --with-system-auth --with-ldap \
+			--sysconfdir=/etc/nufw/ --with-mysql-log --with-pgsql-log --with-system-auth --with-ldap \
 			--with-utf8 --with-nfqueue --with-nfconntrack --without-fixedtimeout --enable-debug
 			# --with-utf8 --with-nfqueue --with-nfconntrack --with-fixedtimeout #FIXME : THIS line should be used
 
@@ -44,15 +39,7 @@ config.status: configure
 	# Add here commands to configure the package.
 	CFLAGS="$(CFLAGS)" ./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --prefix=/usr \
 		--mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info --localstatedir=/var \
-		--sysconfdir=/etc/nufw20/ --with-mysql-log --with-pgsql-log --with-system-auth --with-ldap \
-		--with-utf8 --enable-debug
-
-config.status-nfqueue: configure
-	dh_testdir
-	# Add here commands to configure the package.
-	CFLAGS="$(CFLAGS)" ./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --prefix=/usr \
-		--mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info --localstatedir=/var \
-		--sysconfdir=/etc/nufw20/ --with-mysql-log --with-pgsql-log --with-system-auth --with-ldap \
+		--sysconfdir=/etc/nufw/ --with-mysql-log --with-pgsql-log --with-system-auth --with-ldap \
 		--with-nfqueue --with-nfconntrack --with-fixedtimeout --with-utf8 --enable-debug
 
 build: build-stamp
@@ -62,9 +49,7 @@ clean:
 	dh_testroot
 	rm -f build-stamp 
 	rm -f build-nufw 
-	rm -f build-nfqueue-nufw 
 	rm -f config-nufw-stamp 
-	rm -f config-nufw-nfqueue-stamp 
 
 	# Add here commands to clean up after the build process.
 	-$(MAKE) distclean
@@ -79,38 +64,23 @@ config-nufw-stamp:
 	$(CONFIGURE)
 	touch config-nufw-stamp
 
-config-nufw-nfqueue: config-nufw-nfqueue-stamp
-config-nufw-nfqueue-stamp:
-	dh_testdir -a
-	@echo "Doing $@"
-	-make clean
-	$(CONFIGURENF)
-	touch config-nufw-nfqueue-stamp
-
 build-nufw:build-nufw-stamp
 build-nufw-stamp: config-nufw-stamp
 	dh_testdir -a
 	@echo "Doing $@"
-	$(MAKE) && \
-	 (cd src/nufw && mv nufw nufw.plain);
+	$(MAKE)
+	#$(MAKE) && \
+	#(cd src/nufw && mv nufw nufw.plain);
 	touch build-nufw-stamp
 
-build-nufw-nfqueue:build-nufw-nfqueue-stamp
-build-nufw-nfqueue-stamp: config-nufw-nfqueue-stamp
-	dh_testdir -a
-	@echo "Doing $@"
-	$(MAKE) && \
-	 (cd src/nufw && mv nufw nufw.nfqueue);
-	touch build-nufw-nfqueue-stamp
-
-build-stamp: build-nufw build-nufw-nfqueue
+build-stamp: build-nufw
 	@echo "--- Compiling"
 	dh_testdir
 	touch build-stamp
 
-binary-arch: build nufw20 nufw20-nfqueue nuauth20 nutcpc20 libnuclient20 nuauth20-extra nuauth20-log-mysql nuauth20-log-pgsql nuauth20-utils libpam-nufw20
+binary-arch: build nufw nuauth nutcpc libnuclient3 nuauth-extra nuauth-log-mysql nuauth-log-pgsql nuauth-utils libpam-nufw
 
-nufw20:
+nufw:
 	@echo "--- Building: $@"
 	dh_installdirs           -p$@ -P$(b)/$@ 
 	dh_testdir -p$@ -P$(b)/$@
@@ -120,7 +90,7 @@ nufw20:
 	dh_installexamples -p$@ -P$(b)/$@
 #	dh_install -p$@ -P$(b)/$@
 #	rm debian/$@/usr/sbin/nufw
-	/usr/bin/install -m 755 src/nufw/nufw.plain debian/nufw20/usr/sbin/nufw
+	/usr/bin/install -m 755 src/nufw/nufw debian/nufw/usr/sbin/nufw
 #	dh_installmenu
 	dh_installdebconf -p$@ -P$(b)/$@
 #	dh_installlogrotate
@@ -130,7 +100,7 @@ nufw20:
 	dh_installinit -p$@ -P$(b)/$@ -u"start 40 2 3 4 5 . stop 89 0 1 6 ."
 #	dh_installcron
 #	dh_installinfo
-	dh_installman -pnufw20 doc/nufw.8
+	dh_installman -pnufw doc/nufw.8
 	dh_link -p$@ -P$(b)/$@
 	dh_strip -p$@ -P$(b)/$@
 	dh_compress -p$@ -P$(b)/$@
@@ -145,43 +115,7 @@ nufw20:
 	dh_builddeb -p$@ -P$(b)/$@
 	
 
-nufw20-nfqueue:
-	@echo "--- Building: $@"
-	dh_installdirs           -p$@ -P$(b)/$@ 
-	dh_testdir -p$@ -P$(b)/$@
-	dh_testroot -p$@ -P$(b)/$@
-	dh_installchangelogs -p$@ -P$(b)/$@ ChangeLog 
-	dh_installdocs -p$@ -P$(b)/$@
-	dh_installexamples -p$@ -P$(b)/$@
-#	dh_install -p$@ -P$(b)/$@
-#	rm debian/$@/usr/sbin/nufw
-	/usr/bin/install -m 755 src/nufw/nufw.nfqueue debian/nufw20-nfqueue/usr/sbin/nufw
-#	dh_installmenu
-	dh_installdebconf -p$@ -P$(b)/$@
-#	dh_installlogrotate
-#	dh_installemacsen
-#	dh_installpam
-#	dh_installmime
-
-
-	dh_installinit -p$@ -P$(b)/$@ -u"start 40 2 3 4 5 . stop 89 0 1 6 ."
-#	dh_installcron
-#	dh_installinfo
-	dh_installman -pnufw20-nfqueue doc/nufw.8
-	dh_link -p$@ -P$(b)/$@
-	dh_strip -p$@ -P$(b)/$@
-	dh_compress -p$@ -P$(b)/$@
-	dh_fixperms -p$@ -P$(b)/$@
-#	dh_perl
-#	dh_python
-	dh_makeshlibs -p$@ -P$(b)/$@ -n
-	dh_installdeb -p$@ -P$(b)/$@
-	dh_shlibdeps -p$@ -P$(b)/$@
-	dh_gencontrol -p$@ -P$(b)/$@
-	dh_md5sums -p$@ -P$(b)/$@
-	dh_builddeb -p$@ -P$(b)/$@
-	
-libnuclient20:
+libnuclient3:
 	@echo "--- Building: $@"
 	dh_installdirs           -p$@ -P$(b)/$@ 
 	dh_testdir -p$@ -P$(b)/$@
@@ -212,7 +146,7 @@ libnuclient20:
 	dh_md5sums -p$@ -P$(b)/$@
 	dh_builddeb -p$@ -P$(b)/$@
 
-libpam-nufw20:
+libpam-nufw:
 	@echo "--- Building: $@"
 	dh_installdirs           -p$@ -P$(b)/$@ 
 	dh_testdir -p$@ -P$(b)/$@
@@ -244,7 +178,7 @@ libpam-nufw20:
 	dh_md5sums -p$@ -P$(b)/$@
 	dh_builddeb -p$@ -P$(b)/$@
 
-nuauth20:
+nuauth:
 	@echo "--- Building: $@"
 	dh_installdirs           -p$@ -P$(b)/$@ 
 	dh_testdir -p$@ -P$(b)/$@
@@ -252,16 +186,16 @@ nuauth20:
 	dh_installchangelogs -p$@ -P$(b)/$@ ChangeLog 
 	dh_installdocs -p$@ -P$(b)/$@
 	dh_installexamples -p$@ -P$(b)/$@
-	mkdir -p $(CURDIR)/debian/$@/etc/nufw20/
+	mkdir -p $(CURDIR)/debian/$@/etc/nufw/
 	dh_install -p$@
-	sed -e "sµ^ *nuauth_tls_key=.*µnuauth_tls_key=\"/etc/nufw20/certs/nuauth-key.pem\"µ" \
-	    -e "sµ^ *nuauth_tls_cert=.*µnuauth_tls_cert=\"/etc/nufw20/certs/nuauth-cert.pem\"µ" \
-	    -e "sµ^ *plaintext_aclfile=.*µplaintext_aclfile=\"/etc/nufw20/acls.nufw\"µ" \
-	    -e "sµ^ *plaintext_userfile=.*µplaintext_userfile=\"/etc/nufw20/users-plaintext.nufw\"µ" \
-	     < $(CURDIR)/conf/nuauth.conf >$(CURDIR)/debian/$@/etc/nufw20/nuauth.conf
-	cp $(CURDIR)/conf/acls.nufw $(CURDIR)/debian/$@/etc/nufw20/
-	cp $(CURDIR)/conf/users-plaintext.nufw $(CURDIR)/debian/$@/etc/nufw20/
-	cp $(CURDIR)/conf/periods.xml $(CURDIR)/debian/$@/etc/nufw20/
+	sed -e "sµ^ *nuauth_tls_key=.*µnuauth_tls_key=\"/etc/nufw/certs/nuauth-key.pem\"µ" \
+	    -e "sµ^ *nuauth_tls_cert=.*µnuauth_tls_cert=\"/etc/nufw/certs/nuauth-cert.pem\"µ" \
+	    -e "sµ^ *plaintext_aclfile=.*µplaintext_aclfile=\"/etc/nufw/acls.nufw\"µ" \
+	    -e "sµ^ *plaintext_userfile=.*µplaintext_userfile=\"/etc/nufw/users-plaintext.nufw\"µ" \
+	     < $(CURDIR)/conf/nuauth.conf >$(CURDIR)/debian/$@/etc/nufw/nuauth.conf
+	cp $(CURDIR)/conf/acls.nufw $(CURDIR)/debian/$@/etc/nufw/
+	cp $(CURDIR)/conf/users-plaintext.nufw $(CURDIR)/debian/$@/etc/nufw/
+	cp $(CURDIR)/conf/periods.xml $(CURDIR)/debian/$@/etc/nufw/
 	pwd
 #	dh_install -p$@ -P$(b)/$@
 #	dh_installmenu
@@ -275,7 +209,7 @@ nuauth20:
 	dh_link -p$@ -P$(b)/$@
 	dh_strip -p$@ -P$(b)/$@
 	dh_installinit -p$@ -P$(b)/$@ -u"start 40 2 3 4 5 . stop 89 0 1 6 ."
-	dh_installman -pnuauth20 doc/nuauth.8
+	dh_installman -pnuauth doc/nuauth.8
 	dh_compress -p$@ -P$(b)/$@
 	dh_fixperms -p$@ -P$(b)/$@
 #	dh_perl
@@ -287,7 +221,7 @@ nuauth20:
 	dh_md5sums -p$@ -P$(b)/$@
 	dh_builddeb -p$@ -P$(b)/$@
 
-nuauth20-extra:
+nuauth-extra:
 	@echo "--- Building: $@"
 	dh_installdirs           -p$@ -P$(b)/$@ 
 	dh_testdir -p$@ -P$(b)/$@
@@ -318,7 +252,7 @@ nuauth20-extra:
 	dh_md5sums -p$@ -P$(b)/$@
 	dh_builddeb -p$@ -P$(b)/$@
 
-nuauth20-log-mysql:
+nuauth-log-mysql:
 	@echo "--- Building: $@"
 	dh_installdirs           -p$@ -P$(b)/$@ 
 	dh_testdir -p$@ -P$(b)/$@
@@ -349,7 +283,7 @@ nuauth20-log-mysql:
 	dh_md5sums -p$@ -P$(b)/$@
 	dh_builddeb -p$@ -P$(b)/$@
 
-nuauth20-log-pgsql:
+nuauth-log-pgsql:
 	@echo "--- Building: $@"
 	dh_installdirs           -p$@ -P$(b)/$@ 
 	dh_testdir -p$@ -P$(b)/$@
@@ -380,7 +314,7 @@ nuauth20-log-pgsql:
 	dh_md5sums -p$@ -P$(b)/$@
 	dh_builddeb -p$@ -P$(b)/$@
 
-nuauth20-utils:
+nuauth-utils:
 	@echo "--- Building: $@"
 	dh_installdirs           -p$@ -P$(b)/$@ 
 	dh_testdir -p$@ -P$(b)/$@
@@ -392,8 +326,8 @@ nuauth20-utils:
 #	rm debian/$@/usr/sbin/nufw
 #	dh_installmenu
 	dh_installdebconf -p$@ -P$(b)/$@
-	cp $(CURDIR)/conf/nuaclgen.conf $(CURDIR)/debian/$@/etc/nufw20/
-	cp $(CURDIR)/conf/nutop.conf $(CURDIR)/debian/$@/etc/nufw20/
+	cp $(CURDIR)/conf/nuaclgen.conf $(CURDIR)/debian/$@/etc/nufw/
+	cp $(CURDIR)/conf/nutop.conf $(CURDIR)/debian/$@/etc/nufw/
 	cp $(CURDIR)/scripts/nuaclgen $(CURDIR)/debian/$@/usr/bin
 	cp $(CURDIR)/scripts/nutop $(CURDIR)/debian/$@/usr/bin
 	cp $(CURDIR)/scripts/clean_conntrack.pl $(CURDIR)/debian/$@/usr/sbin
@@ -405,8 +339,8 @@ nuauth20-utils:
 #	dh_installinfo
 	dh_link -p$@ -P$(b)/$@
 	dh_strip -p$@ -P$(b)/$@
-	dh_installman -pnuauth20-utils doc/nuaclgen.8
-	dh_installman -pnuauth20-utils doc/nutop.8
+	dh_installman -pnuauth-utils doc/nuaclgen.8
+	dh_installman -pnuauth-utils doc/nutop.8
 	dh_compress -p$@ -P$(b)/$@
 	dh_fixperms -p$@ -P$(b)/$@
 #	dh_perl
@@ -418,7 +352,7 @@ nuauth20-utils:
 	dh_md5sums -p$@ -P$(b)/$@
 	dh_builddeb -p$@ -P$(b)/$@
 
-nutcpc20:
+nutcpc:
 	@echo "--- Building: $@"
 	dh_installdirs           -p$@ -P$(b)/$@ 
 	dh_testdir -p$@ -P$(b)/$@
@@ -429,7 +363,7 @@ nutcpc20:
 	dh_install -p$@
 #	rm debian/$@/usr/sbin/nufw
 #	dh_installmenu
-	dh_installman -pnutcpc20 doc/nutcpc.1
+	dh_installman -pnutcpc doc/nutcpc.1
 	dh_installdebconf -p$@ -P$(b)/$@
 #	dh_installlogrotate
 #	dh_installemacsen
@@ -461,15 +395,15 @@ install-stamp:
 	# Add here commands to install the package into debian/nufw.
 	#$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp/
 #default certificates
-#	cp $(CURDIR)/conf/certs/nufw-key.pem $(CURDIR)/debian/tmp/etc/nufw20/certs
-#	cp $(CURDIR)/conf/certs/nufw-cert.pem $(CURDIR)/debian/tmp/etc/nufw20/certs
-#	cp $(CURDIR)/conf/certs/nuauth-key.pem $(CURDIR)/debian/tmp/etc/nufw20/certs
-#	cp $(CURDIR)/conf/certs/nuauth-cert.pem $(CURDIR)/debian/tmp/etc/nufw20/certs
+#	cp $(CURDIR)/conf/certs/nufw-key.pem $(CURDIR)/debian/tmp/etc/nufw/certs
+#	cp $(CURDIR)/conf/certs/nufw-cert.pem $(CURDIR)/debian/tmp/etc/nufw/certs
+#	cp $(CURDIR)/conf/certs/nuauth-key.pem $(CURDIR)/debian/tmp/etc/nufw/certs
+#	cp $(CURDIR)/conf/certs/nuauth-cert.pem $(CURDIR)/debian/tmp/etc/nufw/certs
 	
 #	cp $(CURDIR)/conf/nufw.init $(CURDIR)/debian/tmp/etc/init.d/nufw
 #	cp $(CURDIR)/conf/nuauth $(CURDIR)/debian/tmp/etc/init.d/nuauth
 #	chmod 755 $(CURDIR)/debian/tmp/etc/init.d/*
-#	ln -s $(CURDIR)/debian/tmp/usr/lib/nuauth $(CURDIR)/debian/tmp/usr/lib/nuauth20
+#	ln -s $(CURDIR)/debian/tmp/usr/lib/nuauth $(CURDIR)/debian/tmp/usr/lib/nuauth
 	touch $(maindir)/install-stamp
 
 
@@ -494,12 +428,11 @@ binary-arch: build install
 #	dh_installinit $(dhbuildpackages) -u"start 40 2 3 4 5 . stop 89 0 1 6 ."
 ##	dh_installcron
 ##	dh_installinfo
-#	dh_installman -pnufw20 doc/nufw.1
-#	dh_installman -pnufw20-nfqueue doc/nufw.1
-#	dh_installman -pnuauth20 doc/nuauth.1
-#	dh_installman -pnutcpc20 doc/nutcpc.1
-#	dh_installman -pnuauth20-utils doc/nuaclgen.1
-#	dh_installman -pnuauth20-utils doc/nutop.1
+#	dh_installman -pnufw doc/nufw.1
+#	dh_installman -pnuauth doc/nuauth.1
+#	dh_installman -pnutcpc doc/nutcpc.1
+#	dh_installman -pnuauth-utils doc/nuaclgen.1
+#	dh_installman -pnuauth-utils doc/nutop.1
 #	dh_link $(dhbuildpackages)
 #	dh_strip $(dhbuildpackages)
 #	dh_compress $(dhbuildpackages)

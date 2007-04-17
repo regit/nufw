@@ -1,6 +1,3 @@
 src/clients/lib/.libs/libnuclient.so.3.0.0 usr/lib
 src/clients/lib/.libs/libnuclient.so.3 usr/lib
-src/clients/lib/.libs/libnuclient.so usr/lib
-src/clients/lib/.libs/libnuclient.a usr/lib
-src/clients/lib/libnuclient.la usr/lib
 src/clients/lib/nuclient.h usr/include
