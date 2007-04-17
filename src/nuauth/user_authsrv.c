@@ -77,9 +77,9 @@ void user_check_and_decide(gpointer userdata, gpointer data)
 			   &conn_elt->tracking.saddr,
 			   sizeof(conn_elt->tracking.saddr)) == 0) {
 			if (DEBUG_OR_NOT
-			    (DEBUG_LEVEL_VERBOSE_DEBUG,
+			    (DEBUG_LEVEL_DEBUG,
 			     DEBUG_AREA_PACKET)) {
-				print_connection(conn_elt, "User");
+				print_connection(conn_elt, "User Packet");
 			}
 			g_async_queue_push(nuauthdatas->connections_queue,
 					   conn_elt);
@@ -97,7 +97,7 @@ void user_check_and_decide(gpointer userdata, gpointer data)
 					    ("User %s on %s tried to authenticate packet from other ip",
 					     conn_elt->username, ip_ascii);
 				}
-				print_connection(conn_elt, "User spoof");
+				print_connection(conn_elt, "User spoofed Packet");
 			}
 			/* free connection */
 			free_connection(conn_elt);

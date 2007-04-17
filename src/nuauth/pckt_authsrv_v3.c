@@ -92,8 +92,8 @@ nu_error_t authpckt_new_connection_v3(unsigned char *dgram,
 		return ret;
 	}
 #ifdef DEBUG_ENABLE
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG, DEBUG_AREA_PACKET)) {
-		print_connection(connection, "Packet");
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG, DEBUG_AREA_PACKET)) {
+		print_connection(connection, "NuFW Packet");
 	}
 #endif
 	*conn = connection;

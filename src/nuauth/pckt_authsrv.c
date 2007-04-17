@@ -243,8 +243,8 @@ nu_error_t authpckt_new_connection(unsigned char *dgram,
 		return ret;
 	}
 
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG, DEBUG_AREA_PACKET)) {
-		print_connection(connection, "Packet");
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG, DEBUG_AREA_PACKET)) {
+		print_connection(connection, "NuFW Packet");
 	}
 	*conn = connection;
 	return NU_EXIT_OK;

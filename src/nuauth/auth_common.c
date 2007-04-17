@@ -88,7 +88,7 @@ char * str_print_tracking_t(tracking_t *tracking)
 			 sizeof(dst_ascii)) == NULL)
 		return NULL;
 
-	ip_header = g_strdup_printf("Connection: src=%s dst=%s proto=%u",
+	ip_header = g_strdup_printf(" src=%s dst=%s proto=%u",
 			src_ascii, dst_ascii, tracking->protocol);
 	switch (tracking->protocol) {
 		case IPPROTO_TCP:
@@ -136,22 +136,47 @@ gint print_connection(gpointer data, gpointer userdata)
 	char * str_tracking = NULL;
 	char * str_iface = NULL;
 	char * str_id = NULL;
+	char * str_user = NULL;
 	char * str_os = NULL;
 	char * str_app = NULL;
 	char * message = NULL;
-	if (str_tracking = str_print_tracking_t(&(conn->tracking))
-			==
-			NULL)
+
+	str_tracking = str_print_tracking_t(&(conn->tracking));
+
+	if (str_tracking == NULL)
 		return -1;
-	str_iface = g_strdup_printf(" IN=%s OUT=%s", conn->iface_nfo.indev,
-			conn->iface_nfo.outdev);
 
-	str_id = g_strdup_printf(" packet_id: %d",
-			GPOINTER_TO_UINT(conn->packet_id->data));
+	if (conn->iface_nfo.indev && conn->iface_nfo.outdev) {
+		str_iface = g_strdup_printf(", IN=%s OUT=%s", conn->iface_nfo.indev,
+				conn->iface_nfo.outdev);
+	} else {
+		str_iface = g_strdup("");
+	}
 
-	str_os = g_strdup_printf(" OS: %s %s %s", conn->os_sysname,
-			conn->os_release, conn->os_version);
-	str_app = g_strdup_printf(" Application: %s", conn->app_name);
+	if (conn->packet_id) {
+		str_id = g_strdup_printf(", packet_id=%d",
+				GPOINTER_TO_UINT(conn->packet_id->data));
+	} else {
+		str_id = g_strdup("");
+	}
+	
+	if (conn->username) {
+		str_user = g_strdup_printf(", user=%s", conn->username);
+	} else {
+		str_user = g_strdup("");
+	}
+
+	if (conn->os_sysname || conn->os_release || conn->os_version) {
+		str_os = g_strdup_printf(", OS=%s %s %s", conn->os_sysname,
+				conn->os_release, conn->os_version);
+	} else {
+		str_os = g_strdup("");
+	}
+	if (conn->app_name) {
+		str_app = g_strdup_printf(", Application=%s", conn->app_name);
+	} else {
+		str_user = g_strdup("");
+	}
 
 	message = g_strconcat(prefix, ":", str_tracking, str_iface,
 			      str_id, str_os, str_app, NULL);

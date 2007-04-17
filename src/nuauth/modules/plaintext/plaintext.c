@@ -1131,13 +1131,11 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element, gpointer params)
 
 		/*  Check source address */
 		if (!match_ip(p_acl->src_ip, &netdata->saddr)) {
-			printf("source don't match\n");
 			continue;
 		}
 
 		/*  Check destination address */
 		if (!match_ip(p_acl->dst_ip, &netdata->daddr)) {
-			printf("dest don't match\n");
 			continue;
 		}
 
