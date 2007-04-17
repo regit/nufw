@@ -17,18 +17,16 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 from socket import socket, AF_UNIX, error
-from command_dec import decode, Answer
+from command_dec import PROTO_VERSION, decode, Answer
 import re
 import readline
-
-PROTO_VERSION = "NuFW 0.0"
 
 COMMANDS_COMPLETION = ("version", "users", "refresh cache",
     "disconnect ", "uptime", "reload", "help", "quit",
     "display debug_level", "display debug_areas", "debug_level",
-    "debug_areas")
+    "debug_areas", "firewalls")
 COMMANDS_REGEX = re.compile(
-    "^(?:version|users|refresh cache|nupik!|display debug_(?:level|areas)|"
+    "^(?:version|users|firewalls|refresh cache|nupik!|display debug_(?:level|areas)|"
     "debug_level [0-9]+|debug_areas [0-9]+|"
     "disconnect (?:[0-9]+|all)|uptime|reload|help|quit)$")
 
