@@ -128,8 +128,17 @@ void real_log_user_packet(gpointer userdata, gpointer data)
 
 static void print_group(gpointer group, gpointer userdata)
 {
-	log_message(DEBUG, DEBUG_AREA_USER, "      Group: %d",
-		    GPOINTER_TO_INT(group));
+	char ** str_groups = (char **) userdata;
+	char * userdata_p = *(char **) userdata;
+	if (userdata_p) {
+		*str_groups = g_strdup_printf("%s,%d",
+				userdata_p,
+				GPOINTER_TO_INT(group));
+	} else {
+		*str_groups = g_strdup_printf("%d",
+				GPOINTER_TO_INT(group));
+	}
+	g_free(userdata_p);
 }
 
 /**
@@ -144,15 +153,17 @@ static void print_group(gpointer group, gpointer userdata)
 void log_user_session(user_session_t * usession, session_state_t state)
 {
 	struct session_event *sessevent;
+	char * str_groups = NULL;
 
 	if (state == SESSION_OPEN) {
-		log_message(MESSAGE, DEBUG_AREA_USER,
-			    "[+] User \"%s\" connected.",
-			    usession->user_name);
 		if (usession->groups) {
 			g_slist_foreach(usession->groups, print_group,
-					NULL);
+					&str_groups);
 		}
+		log_message(MESSAGE, DEBUG_AREA_USER,
+			    "[+] User \"%s\" connected, groups: %s",
+			    usession->user_name, str_groups);
+		g_free(str_groups);
 	} else
 		log_message(MESSAGE, DEBUG_AREA_USER,
 			    "[+] User \"%s\" disconnected.",
