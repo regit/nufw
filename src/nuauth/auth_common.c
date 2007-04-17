@@ -73,29 +73,50 @@ int timeval_substract(struct timeval *result, struct timeval *x,
 }
 #endif
 
-
-nu_error_t print_tracking_t(tracking_t *tracking)
+char * str_print_tracking_t(tracking_t *tracking)
 {
 	char src_ascii[INET6_ADDRSTRLEN];
 	char dst_ascii[INET6_ADDRSTRLEN];
+	char * ip_header, * proto_header, *message;
+
 	if (inet_ntop
 			(AF_INET6, &(tracking->saddr), src_ascii,
 			 sizeof(src_ascii)) == NULL)
-		return NU_EXIT_ERROR;
+		return NULL;
 	if (inet_ntop
 			(AF_INET6, &(tracking->daddr), dst_ascii,
 			 sizeof(dst_ascii)) == NULL)
-		return NU_EXIT_ERROR;
+		return NULL;
 
-	g_message("Connection: src=%s dst=%s proto=%u",
+	ip_header = g_strdup_printf("Connection: src=%s dst=%s proto=%u",
 			src_ascii, dst_ascii, tracking->protocol);
 	switch (tracking->protocol) {
 		case IPPROTO_TCP:
 		case IPPROTO_UDP:
-			g_message("sport=%d dport=%d",
+		proto_header =	g_strdup_printf(" sport=%d dport=%d",
 				tracking->source,
 				tracking->dest);
+		break;
+		default:
+		return ip_header;
 	}
+
+	message = g_strconcat(ip_header, proto_header, NULL);
+	g_free(ip_header);
+	g_free(proto_header);
+	return message;
+}
+
+nu_error_t print_tracking_t(tracking_t *tracking)
+{
+	char * tracking_display = str_print_tracking_t(tracking);
+
+	if (! tracking_display)
+		return NU_EXIT_ERROR;
+	
+	g_message(tracking_display);
+
+	g_free(tracking_display);
 	return NU_EXIT_OK;
 }
 
@@ -111,28 +132,38 @@ nu_error_t print_tracking_t(tracking_t *tracking)
 gint print_connection(gpointer data, gpointer userdata)
 {
 	connection_t *conn = (connection_t *) data;
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG, DEBUG_AREA_MAIN)) {
-		if (print_tracking_t(&(conn->tracking))
-				==
-				NU_EXIT_ERROR)
-			return -1;
-		g_message("IN=%s OUT=%s", conn->iface_nfo.indev,
-			  conn->iface_nfo.outdev);
+	char * prefix = userdata;
+	char * str_tracking = NULL;
+	char * str_iface = NULL;
+	char * str_id = NULL;
+	char * str_os = NULL;
+	char * str_app = NULL;
+	char * message = NULL;
+	if (str_tracking = str_print_tracking_t(&(conn->tracking))
+			==
+			NULL)
+		return -1;
+	str_iface = g_strdup_printf(" IN=%s OUT=%s", conn->iface_nfo.indev,
+			conn->iface_nfo.outdev);
 
-		if (conn->packet_id) {
-			g_message("packet id: %d",
-				  GPOINTER_TO_UINT(conn->packet_id->data));
-		}
+	str_id = g_strdup_printf(" packet_id: %d",
+			GPOINTER_TO_UINT(conn->packet_id->data));
 
-		if (conn->os_sysname && conn->os_release
-		    && conn->os_version) {
-			g_message("OS: %s %s %s", conn->os_sysname,
-				  conn->os_release, conn->os_version);
-		}
-		if (conn->app_name) {
-			g_message("Application: %s", conn->app_name);
-		}
-	}
+	str_os = g_strdup_printf(" OS: %s %s %s", conn->os_sysname,
+			conn->os_release, conn->os_version);
+	str_app = g_strdup_printf(" Application: %s", conn->app_name);
+
+	message = g_strconcat(prefix, ":", str_tracking, str_iface,
+			      str_id, str_os, str_app, NULL);
+	g_free(str_tracking);	
+	g_free(str_iface);	
+	g_free(str_id);	
+	g_free(str_os);	
+	g_free(str_app);	
+
+	g_message(message);
+
+	g_free(message);
 	return 1;
 }
 

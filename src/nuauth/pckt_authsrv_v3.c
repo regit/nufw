@@ -93,8 +93,7 @@ nu_error_t authpckt_new_connection_v3(unsigned char *dgram,
 	}
 #ifdef DEBUG_ENABLE
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG, DEBUG_AREA_PACKET)) {
-		g_message("Packet: ");
-		print_connection(connection, NULL);
+		print_connection(connection, "Packet");
 	}
 #endif
 	*conn = connection;

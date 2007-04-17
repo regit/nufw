@@ -244,8 +244,7 @@ nu_error_t authpckt_new_connection(unsigned char *dgram,
 	}
 
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG, DEBUG_AREA_PACKET)) {
-		g_message("Packet: ");
-		print_connection(connection, NULL);
+		print_connection(connection, "Packet");
 	}
 	*conn = connection;
 	return NU_EXIT_OK;
