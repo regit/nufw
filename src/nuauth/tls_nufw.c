@@ -154,35 +154,6 @@ static int treat_nufw_request(nufw_session_t * c_session)
 
 
 /**
- * Clean a NuFW TLS session: send "bye", deinit the connection
- * and free the memory.
- */
-void clean_nufw_session(nufw_session_t * c_session)
-{
-	gnutls_transport_ptr socket_tls;
-	socket_tls = gnutls_transport_get_ptr(*(c_session->tls));
-	close((int) socket_tls);
-	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
-			  "close nufw session calling");
-	if (c_session->tls) {
-		gnutls_bye(*(c_session->tls)
-			   , GNUTLS_SHUT_RDWR);
-		gnutls_deinit(*(c_session->tls)
-		    );
-		g_free(c_session->tls);
-	} else {
-		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
-				  "close nufw session was called but NULL");
-
-	}
-	g_mutex_free(c_session->tls_lock);
-	g_free(c_session);
-
-	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
-			  "close nufw session: done");
-}
-
-/**
  * Function called on new NuFW connection: create a new TLS session using
  * tls_connect().
  *

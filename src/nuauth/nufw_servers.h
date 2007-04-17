@@ -24,6 +24,7 @@
 
 void init_nufw_servers();
 
+nu_error_t add_nufw_server(int conn_fd, nufw_session_t * nu_session);
 
 nufw_session_t *get_nufw_session();
 nufw_session_t * acquire_nufw_session_by_addr(struct  in6_addr * addr);
@@ -38,6 +39,8 @@ nu_error_t nufw_session_send(nufw_session_t * session,
 void release_nufw_session(nufw_session_t * session);
 
 nu_error_t declare_dead_nufw_session(nufw_session_t * session);
+
+void clean_nufw_session(nufw_session_t * c_session);
 
 void close_nufw_servers();
 

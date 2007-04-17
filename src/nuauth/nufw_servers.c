@@ -74,10 +74,45 @@ static nu_error_t suppress_nufw_session(nufw_session_t * session)
 	return NU_EXIT_OK;
 }
 
+/**
+ * Clean a NuFW TLS session: send "bye", deinit the connection
+ * and free the memory.
+ */
+void clean_nufw_session(nufw_session_t * c_session)
+{
+	gnutls_transport_ptr socket_tls;
+	socket_tls = gnutls_transport_get_ptr(*(c_session->tls));
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
+			  "close nufw session calling");
+	if (c_session->tls) {
+		gnutls_bye(*(c_session->tls)
+			   , GNUTLS_SHUT_RDWR);
+		gnutls_deinit(*(c_session->tls)
+		    );
+		g_free(c_session->tls);
+	} else {
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
+				  "close nufw session was called but NULL");
+
+	}
+	close((int) socket_tls);
+	g_mutex_free(c_session->tls_lock);
+	g_free(c_session);
+
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
+			  "close nufw session: done");
+}
+
+
+
 nu_error_t declare_dead_nufw_session(nufw_session_t * session)
 {
 	g_static_mutex_lock(&nufw_servers_mutex);
 	session->alive = 0;
+
+	shutdown((int)gnutls_transport_get_ptr(
+				*(session->tls)),
+			SHUT_WR);
 	if (g_atomic_int_dec_and_test(&(session->usage))) {
 		suppress_nufw_session(session);
 	}
