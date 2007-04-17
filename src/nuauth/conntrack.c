@@ -113,7 +113,7 @@ nu_error_t send_conntrack_message(struct limited_connection * lconn,
 					}
 					ret = nufw_session_send(
 							session,
-							&message,
+							(char *) &message,
 							sizeof
 							(message));
 					if (ret != NU_EXIT_OK) {
@@ -167,7 +167,7 @@ nu_error_t send_conntrack_message(struct limited_connection * lconn,
 					}
 					ret = nufw_session_send(
 							session,
-							&message,
+							(char *) &message,
 							sizeof
 							(message));
 					if (ret != NU_EXIT_OK) {
