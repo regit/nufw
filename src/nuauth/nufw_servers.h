@@ -44,4 +44,6 @@ void clean_nufw_session(nufw_session_t * c_session);
 
 void close_nufw_servers();
 
+void foreach_nufw_server(GHFunc callback, void *data);
+
 #endif

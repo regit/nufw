@@ -325,6 +325,9 @@ void kill_expired_clients_session()
 				    &current_time);
 }
 
+/**
+ * Iterate on each client session using callback.
+ */
 void foreach_session(GHFunc callback, void *data)
 {
 	g_mutex_lock(client_mutex);

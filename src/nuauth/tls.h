@@ -115,6 +115,8 @@ typedef struct {
 	 * on it to send answer to nufw server.
 	 */
 	gboolean alive;
+	/** Connection timestamp */
+	time_t connect_timestamp;
 } nufw_session_t;
 
 struct tls_insert_data {

@@ -211,6 +211,7 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 
 	/* initialize TLS */
 	nu_session = g_new0(nufw_session_t, 1);
+	nu_session->connect_timestamp = time(NULL);
 	nu_session->usage = 1;
 	nu_session->alive = TRUE;
 	nu_session->peername = addr;

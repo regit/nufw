@@ -231,5 +231,15 @@ nu_error_t nufw_session_send(nufw_session_t * session, char* buffer, int length)
 }
 
 /**
+ * Iterate on each nufw using callback.
+ */
+void foreach_nufw_server(GHFunc callback, void *data)
+{
+	g_static_mutex_lock(&nufw_servers_mutex);
+	g_hash_table_foreach(nufw_servers, callback, data);
+	g_static_mutex_unlock(&nufw_servers_mutex);
+}
+
+/**
  * @}
  */
