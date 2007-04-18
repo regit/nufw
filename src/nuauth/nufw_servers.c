@@ -84,9 +84,8 @@ void clean_nufw_session(nufw_session_t * c_session)
 	socket_tls = gnutls_transport_get_ptr(*(c_session->tls));
 	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
 			  "close nufw session calling");
+	close((int) socket_tls);
 	if (c_session->tls) {
-		gnutls_bye(*(c_session->tls)
-			   , GNUTLS_SHUT_RDWR);
 		gnutls_deinit(*(c_session->tls)
 		    );
 		g_free(c_session->tls);
@@ -95,7 +94,6 @@ void clean_nufw_session(nufw_session_t * c_session)
 				  "close nufw session was called but NULL");
 
 	}
-	close((int) socket_tls);
 	g_mutex_free(c_session->tls_lock);
 	g_free(c_session);
 
