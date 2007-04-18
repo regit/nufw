@@ -451,7 +451,8 @@ static int mysasl_negotiate(user_session_t * c_session, sasl_conn_t * conn)
 		    modules_get_user_groups(c_session->user_name);
 		if (c_session->groups == NULL) {
 			debug_log_message(DEBUG, DEBUG_AREA_AUTH,
-					  "error when searching user groups");
+					  "error when searching user groups for %s",
+					  c_session->user_name);
 			if (gnutls_record_send(session, "N", 1) <= 0)	/* send NO to client */
 				return SASL_FAIL;
 			return SASL_BADAUTH;
@@ -647,10 +648,10 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 			  &count);
 	if (r != SASL_OK) {
 		log_message(WARNING, DEBUG_AREA_AUTH,
-			    "generating mechanism list");
+			    "proto v3: generating mechanism list");
 		return r;
 	}
-	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH, "%d mechanisms : %s",
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH, "proto v3: %d mechanisms : %s",
 			  count, data);
 	tls_len = sasl_len;
 	/* send capability list to client */
@@ -658,14 +659,14 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 	if ((record_send == GNUTLS_E_INTERRUPTED)
 	    || (record_send == GNUTLS_E_AGAIN)) {
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
-				  "sasl nego : need to resend packet");
+				  "proto v3: sasl nego : need to resend packet");
 		record_send = gnutls_record_send(session, data, tls_len);
 	}
 	if (record_send < 0) {
 		return SASL_FAIL;
 	}
 	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
-			  "Now we know record_send >= 0");
+			  "proto v3: Now we know record_send >= 0");
 
 	memset(chosenmech, 0, sizeof chosenmech);
 	tls_len =
@@ -673,18 +674,18 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 	if (tls_len <= 0) {
 		if (tls_len == 0) {
 			log_message(INFO, DEBUG_AREA_AUTH,
-				    "client didn't choose mechanism");
+				    "proto v3: client didn't choose mechanism");
 			if (gnutls_record_send(session, "N", 1) <= 0)	/* send NO to client */
 				return SASL_FAIL;
 			return SASL_BADPARAM;
 		} else {
 			log_message(INFO, DEBUG_AREA_AUTH,
-				    "sasl nego : tls crash");
+				    "proto v3: sasl nego : tls crash");
 			return SASL_FAIL;
 		}
 	}
 	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
-			  "client chose mechanism %s", chosenmech);
+			  "proto v3: client chose mechanism %s", chosenmech);
 
 	memset(buf, 0, sizeof buf);
 	tls_len = gnutls_record_recv(session, buf, sizeof(buf));
@@ -693,7 +694,7 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 			return SASL_FAIL;
 		}
 		debug_log_message(DEBUG, DEBUG_AREA_AUTH,
-				  "didn't receive first-sent parameter correctly");
+				  "proto v3: didn't receive first-sent parameter correctly");
 		if (gnutls_record_send(session, "N", 1) <= 0)	/* send NO to client */
 			return SASL_FAIL;
 		return SASL_BADPARAM;
@@ -712,7 +713,7 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 		r = sasl_server_start(conn, chosenmech, buf, tls_len,
 				      &data, &sasl_len);
 	} else {
-		debug_log_message(DEBUG, DEBUG_AREA_AUTH, "start with no msg");
+		debug_log_message(DEBUG, DEBUG_AREA_AUTH, "proto v3: start with no msg");
 		r = sasl_server_start(conn, chosenmech, NULL, 0, &data,
 				      &sasl_len);
 	}
@@ -720,7 +721,7 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 	if (r != SASL_OK && r != SASL_CONTINUE) {
 		gchar *user_name = NULL;
 
-		log_message(INFO, DEBUG_AREA_AUTH, "sasl negotiation error: %d",
+		log_message(INFO, DEBUG_AREA_AUTH, "proto v3: sasl negotiation error: %d",
 			    r);
 		ret =
 		    sasl_getprop(conn, SASL_USERNAME,
@@ -757,10 +758,10 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 #ifdef DEBUG_ENABLE
 			if (!tls_len) {
 				log_message(VERBOSE_DEBUG, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
-					    "Client disconnected during sasl negotiation");
+					    "proto v3: Client disconnected during sasl negotiation");
 			} else {
 				log_message(VERBOSE_DEBUG, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
-					    "TLS error during sasl negotiation");
+					    "proto v3: TLS error during sasl negotiation");
 			}
 #endif
 			return SASL_FAIL;
@@ -770,7 +771,7 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 		if (r != SASL_OK && r != SASL_CONTINUE) {
 #ifdef DEBUG_ENABLE
 			log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
-				    "error performing SASL negotiation: %s",
+				    "proto v3: error performing SASL negotiation: %s",
 				    sasl_errdetail(conn));
 #endif
 			if (gnutls_record_send(session, "N", 1) <= 0)	/* send NO to client */
@@ -782,7 +783,7 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 
 	if (r != SASL_OK) {
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
-				  "incorrect authentication");
+				  "proto v3: incorrect authentication");
 		if (gnutls_record_send(session, "N", 1) <= 0)	/* send NO to client */
 			return SASL_FAIL;
 		return SASL_BADAUTH;
@@ -798,7 +799,7 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 		    sasl_getprop(conn, SASL_USERNAME,
 				 (const void **) &(tempname));
 		if (ret != SASL_OK) {
-			g_warning("get user failed");
+			g_warning("proto v3: get user failed");
 			return ret;
 		} else {
 			c_session->user_name = g_strdup(tempname);
@@ -810,7 +811,7 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 		    modules_get_user_groups(c_session->user_name);
 		if (c_session->groups == NULL) {
 			debug_log_message(DEBUG, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
-					  "error when searching user groups");
+					  "proto v3: Couldn't get user groups");
 			if (gnutls_record_send(session, "N", 1) <= 0)	/* send NO to client */
 				return SASL_FAIL;
 			return SASL_BADAUTH;
@@ -819,7 +820,7 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 		    modules_get_user_id(c_session->user_name);
 		if (c_session->user_id == 0) {
 			log_message(INFO, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
-				    "Couldn't get user ID!");
+				    "proto v3: Couldn't get user ID!");
 		}
 	}
 
