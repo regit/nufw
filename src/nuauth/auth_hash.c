@@ -156,7 +156,6 @@ inline void search_and_fill_complete_of_authreq(connection_t * new,
 		    g_slist_prepend(packet->packet_id,
 				    GINT_TO_POINTER((new->packet_id)->
 						    data));
-		increase_nufw_session_usage(packet->tls);
 		break;
 
 	case AUTH_STATE_USERPCKT:
@@ -276,7 +275,6 @@ inline void search_and_fill_completing(connection_t * new,
 		    g_slist_prepend(packet->packet_id,
 				    GINT_TO_POINTER((new->packet_id)->
 						    data));
-		increase_nufw_session_usage(packet->tls);
 		break;
 
 	case AUTH_STATE_USERPCKT:
@@ -304,7 +302,6 @@ inline void search_and_fill_ready(connection_t * new,
 		    g_slist_prepend(packet->packet_id,
 				    GUINT_TO_POINTER((new->packet_id)->
 						     data));
-		increase_nufw_session_usage(packet->tls);
 		break;
 
 	case AUTH_STATE_USERPCKT:
