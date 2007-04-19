@@ -106,11 +106,13 @@ void clean_nufw_session(nufw_session_t * c_session)
 nu_error_t declare_dead_nufw_session(nufw_session_t * session)
 {
 	g_static_mutex_lock(&nufw_servers_mutex);
-	session->alive = 0;
 
-	shutdown((int)gnutls_transport_get_ptr(
-				*(session->tls)),
-			SHUT_WR);
+	if (session->alive) {
+		session->alive = 0;
+		shutdown((int)gnutls_transport_get_ptr(
+					*(session->tls)),
+				SHUT_WR);
+	}
 	if (g_atomic_int_dec_and_test(&(session->usage))) {
 		suppress_nufw_session(session);
 	}
