@@ -109,7 +109,7 @@ _Description: Nuauth gateway request threads number:
 
 Template: nuauth/user_check_module
 Type: select
-_Choices: system, libldap, plaintext
+Choices: system, libldap, plaintext
 Default: system
 _Description: User check module:
  Here are possible plugins, which are ways of authenticating users of your
@@ -119,7 +119,7 @@ _Description: User check module:
 
 Template: nuauth/acl_check_module
 Type: select
-_Choices: libldap, plaintext
+Choices: libldap, plaintext
 Default: libldap
 _Description: ACL check module:
  Here are possible plugins for ACLs definitions. One of them must be
