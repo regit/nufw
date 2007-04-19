@@ -19,7 +19,7 @@ Information:
  * version: display nuauth version
  * uptime: display nuauth starting time and uptime
 
-User managment:
+User management:
 
  * users: list connected users
  * disconnect all: disconnect all users
