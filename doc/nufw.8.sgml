@@ -264,7 +264,7 @@ manpage.1: manpage.sgml
         <listitem>
           <para>only report event on marked connections to nuauth (implies -C and -m)</para>
 		  <para>
-		  This is the way to do an efficient selection of events to be sent to nuauth but this REQUIRES a kernel with transmit_mark applied (should be ok for 2.6.18+) and the use of CONNMARK to propagate the initial mark accross all the packets of the connection.
+		  This is the way to do an efficient selection of events to be sent to nuauth but this REQUIRES a kernel with transmit_mark applied (should be ok for 2.6.18+) and the use of CONNMARK to propagate the initial mark across all the packets of the connection.
 		  </para>
         </listitem>
       </varlistentry>
