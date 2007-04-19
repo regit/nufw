@@ -29,14 +29,14 @@ o ACL ordering
 --------------
   
   Possible ways of ordering ACLs:
-  - first seen matches (this is not appliable to LDAP, where no order is
+  - first seen matches (this is not applicable to LDAP, where no order is
     guaranteed in server's answers)
   - ACls are given a weight, heaviest ACL is applied. In case two or more apply,
     the most restrictive decision of these ACLs is applied.
   - ACL hierarchy. Acls can be set as children of another ACL, the youngest
     generation is the applied one. In case two or more ACLs apply, the most
     restrictive of these ACLs is applied. This implies a recursive parsing of
-    ACLs everytime a decision must be made.
+    ACLs every time a decision must be made.
   - Group hierarchy. This is the chosen way. Groups can be set relative
     priorities, and the decision is the one of the highest priority group if a
     conflict arizes. In case two groups with same priority present conflicting
@@ -52,7 +52,7 @@ o ACL ordering
 o Abstraction à la Nagios
 -------------------------
 
-  Generic and often used schemes must be extractible, as for instance for working
+  Generic and often used schemes must be extractable, as for instance for working
   hours. This example is formal, and isnt claimed to work verbatim !
 
   #Define working hours as : monday to friday, 9am to 5pm.

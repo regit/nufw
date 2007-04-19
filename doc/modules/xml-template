@@ -5,7 +5,7 @@ This document describes structure and constraints about the structure of XMLed
 data for nufw's ACLs definitions.
 
 
-Orders of directives does not matter, exept proto must be specified before ports
+Orders of directives does not matter, except proto must be specified before ports
 or types.
 
 Order of directives can (and should) be optimized by the rules generator.
@@ -41,7 +41,7 @@ o All possible directives :
 o Rules :
 --------
 Not all directives need to be specified
-The two following examples are stricly equivalent :
+The two following examples are strictly equivalent :
 
 <protocol proto="tcp">
  <dstportstart port="1">

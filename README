@@ -15,7 +15,7 @@ to increase performances when doing session logging.
 
 Included documentation:
 scripts/README: describe usage of provided scripts
-doc/README.mark: small howto about QoS and routing capabilites of NuFW
+doc/README.mark: small howto about QoS and routing capabilities of NuFW
 doc/README.iface: informations about requirements for interface name logging
 doc/README.pam_nufw: how to use NuFW pam authentication module
 doc/README.ldap: information about ldap usage and tuning

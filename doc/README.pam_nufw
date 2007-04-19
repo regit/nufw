@@ -4,11 +4,11 @@ PAM_NUFW Documentation
 Events
 ------
 
-pam_nufw is a library to authentificate an user on nuauth when he uses PAM
-(examples: connect with ssh, authentificate using gdm, su, etc.). pam_nufw
+pam_nufw is a library to authenticate an user on nuauth when he uses PAM
+(examples: connect with ssh, authenticate using gdm, su, etc.). pam_nufw
 use two PAM events:
-- authentification: line like "auth optionnal ..." in configuration file ;
-- session end: line like "session optionnal ..." in configuration file.
+- authentication: line like "auth optional ..." in configuration file ;
+- session end: line like "session optional ..." in configuration file.
 
 First event does connect to nuauth (open a session), and the second does
 disconnect (close the session).
@@ -20,7 +20,7 @@ pam_nufw accepts following options on the command line:
 - server=nuauth_ip: Nuauth server IP/hostname
 - port=nuauth_port: Nuauth port/service name
 - lock=.pam_nufw: Lock filename
-- noauth=user1,user2,(...): Don't authentificate these users
+- noauth=user1,user2,(...): Don't authenticate these users
 
 Default values:
 - port is 4130

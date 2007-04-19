@@ -11,11 +11,11 @@
              Clean lock system
              NuFW send Control message when needed
 
-2003/12/02 : Mysql and PostgreSQL users activity logging fully functionnal and tested
+2003/12/02 : Mysql and PostgreSQL users activity logging fully functionxnal and tested
              Updated Config file so it suits all possible features
              Debugged some problems on ACL checking
 
-2003/11/28 : PostGresql Logging functionnal (tested)
-             Now bind adresses of both daemons are configurable.
+2003/11/28 : PostGresql Logging functional (tested)
+             Now bind addresses of both daemons are configurable.
 
 2003/09/01 : First alpha release approaching

@@ -1,7 +1,7 @@
 How to control Debugging on Nufw - Vincent Deffontaines 2003
 
 This document is a draft, written before any implementation, to fix what is
-goind to be done.
+going to be done.
 
 Two variables are defined to control debugging :
 DEBUG_LEVEL and DEBUG_AREAS
@@ -18,7 +18,7 @@ critical messages. Those will always be reported.
 
 
 DEBUG_AREAS defines which components of Nufw should be sent debug messages
-about. If you are debugging the authentcating part of nufw at DEBUG_LEVEL 8, you
+about. If you are debugging the authenticating part of nufw at DEBUG_LEVEL 8, you
 probably don't really care about debug messages from the ipq interface part.
 DEBUG_AREAS must be calculated as the sum of these :
 1	

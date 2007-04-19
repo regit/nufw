@@ -58,7 +58,7 @@ Example:
 --------
 
 Group 100 will have the mark 1, group 1000 the mark 2, groups 1020 and 1050
-the mark 3, and other groups the mark 0 (defaut mark).
+the mark 3, and other groups the mark 0 (default mark).
 
 
 You have more options in nuauth configuration file:
