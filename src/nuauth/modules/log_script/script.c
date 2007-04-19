@@ -1,6 +1,9 @@
 /*
- ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
- **		     Vincent Deffontaines <vincent@gryzor.com>
+ ** Copyright(C) 2005-2007 INL
+ ** 	written by  Eric Leblond <regit@inl.fr>
+ **
+ ** Changelog:
+ **	IPv6 port by Victor Stinner
  **
  ** $Id$
  **

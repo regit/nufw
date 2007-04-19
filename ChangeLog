@@ -1,4 +1,4 @@
-2.2.0-rc2 (2007/04/16)
+2.2.0-rc2 (2007/04/19)
 	- nuauth: add declaration of thread_pool_push
 	- ldap: optimize filter
 	- NuFW is now compatible with automake1.10
@@ -17,6 +17,7 @@
 	- ldap module: add new option ldap_use_ipv4_schema to have compability with
 	  IPv4 tools
 	- nuauth: fix crash when nufw send concatenated requests
+	- nuauth: improve debugging messages
 2.2.0-rc1 (2007/03/08)
 	- log_mysql: add option to log by default in SQL
 	database with IPV4 schema
