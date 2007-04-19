@@ -74,8 +74,9 @@ class NuFW:
 
     def __str__(self):
         addr = self.peername.strCompressed()
-        return "#%s: nufw at %s, %s since %s" % (
-            self.socket, addr, self.uptime, self.connect_timestamp)
+        return "#%s: nufw at %s, %s since %s (usage=%s, alive=%s)" % (
+            self.socket, addr, self.uptime, self.connect_timestamp,
+	    self.usage, self.alive)
 
 class Decoder:
     def __init__(self, data):
