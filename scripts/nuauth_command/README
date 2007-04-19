@@ -25,6 +25,10 @@ User managment:
  * disconnect all: disconnect all users
  * disconnect ID: disconnect an user with his session identifier
 
+Firewalls information:
+
+ * firewalls: list connected firewalls
+
 Debug commands:
 
  * display debug_level
