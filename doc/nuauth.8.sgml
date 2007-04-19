@@ -213,7 +213,7 @@ manpage.1: manpage.sgml
             <term><option>POLL</option>
             </term>
             <listitem>
-              <para>Logs an "audit" line, mentionning how many network datagrams
+              <para>Logs an "audit" line, mentioning how many network datagrams
               were received and sent since daemon startup.</para>
             </listitem>
           </varlistentry>

@@ -100,9 +100,9 @@ manpage.1: manpage.sgml
       netfilter target), and synchronizes with a nuauth server to check packet is
       authorized to travel through the gateway.</para>
       <para>The design of the NUFW package lets administrator filter network
-      trafic per user, not only per IP. This means you can now deal with different
+      traffic per user, not only per IP. This means you can now deal with different
       permissions for user A and user B, even if they work at the same moment,
-      on the same multiuser machine. In other words, this extends firewalling criterias to
+      on the same multiuser machine. In other words, this extends firewalling criteria to
       userID, at the network scale.</para>
       <para>Original packaging and informations and help can be found from http://www.nufw.org/</para>
 

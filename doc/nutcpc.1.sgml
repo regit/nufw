@@ -82,7 +82,7 @@ manpage.1: manpage.sgml
     <para>This manual page documents the
       <command>&dhpackage;</command> command.</para>
 
-      <para>&dhpackage; is a console-mode client for the the NUFW authenticating firewall. It sends
+      <para>&dhpackage; is a console-mode client for the NUFW authenticating firewall. It sends
       authentication packets to the nuauth server.
        </para>
 
