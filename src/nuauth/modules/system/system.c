@@ -235,7 +235,7 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass,
 #ifdef PERF_DISPLAY_ENABLE
 			gettimeofday(&tvend, NULL);
 			timeval_substract(&result, &tvend, &tvstart);
-			log_message(INFO, DEBUG_AREA_MAIN,
+			log_message(INFO, DEBUG_AREA_PERF,
 				    "PAM Auth duration: %ld sec %03ld msec",
 				    result.tv_sec, result.tv_usec / 1000);
 		}

@@ -86,8 +86,12 @@ AC_ARG_ENABLE(pam-nufw,   [AC_HELP_STRING(--disable-pam-nufw, Don't build pam_nu
 AC_ARG_ENABLE(nuauth-command,   [AC_HELP_STRING(--disable-nuauth-command, Don't build nuauth_command (default is to build))],build_nuauth_command=$enableval, build_nuauth_command="yes" )
 
 AC_ARG_WITH(perf-display,
-    [AC_HELP_STRING(--with-perf-display, Enable benchmark of user authentification)],
-    AC_DEFINE_UNQUOTED([PERF_DISPLAY_ENABLE],[1],[Benchmark of user authentification]))
+    [AC_HELP_STRING(--with-perf-display, Enable performance display (default yes))],
+    use_perf_display=$withval, use_perf_display="yes")
+
+if test "${use_perf_display}" = "yes"; then
+	AC_DEFINE_UNQUOTED([PERF_DISPLAY_ENABLE],[1],[Performance display])
+fi
 
 if test "${build_nuauth}" = "yes"; then
         # glib stuff

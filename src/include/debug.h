@@ -51,10 +51,13 @@ typedef enum {
 	DEBUG_AREA_USER = 4,	/*!< 4: User domain */
 	DEBUG_AREA_GW = 8,	/*!< 8: Gateway domain */
 	DEBUG_AREA_AUTH = 16,	/*!< 16: Auth. domain */
+	DEBUG_AREA_PERF = 32,	/*!< 32: Performance display domain */
 
-	DEBUG_AREA_ALL = DEBUG_AREA_MAIN | DEBUG_AREA_PACKET | DEBUG_AREA_USER | DEBUG_AREA_GW | DEBUG_AREA_AUTH,	/*!< All debug areas */
+	DEBUG_AREA_ALL = DEBUG_AREA_MAIN | DEBUG_AREA_PACKET | DEBUG_AREA_USER
+		| DEBUG_AREA_GW | DEBUG_AREA_AUTH | DEBUG_AREA_PERF,	/*!< All debug areas */
 
-	DEFAULT_DEBUG_AREAS = DEBUG_AREA_ALL	/*!< Default debug areas: all areas */
+	DEFAULT_DEBUG_AREAS = DEBUG_AREA_MAIN | DEBUG_AREA_PACKET | DEBUG_AREA_USER
+		| DEBUG_AREA_GW | DEBUG_AREA_AUTH	/*!< Default debug areas: all areas but not perf*/
 } debug_area_t;
 
 #define LOG_FACILITY LOG_DAEMON

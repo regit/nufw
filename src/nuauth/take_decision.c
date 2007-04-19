@@ -296,7 +296,7 @@ nu_error_t apply_decision(connection_t * element)
 	gettimeofday(&leave_time, NULL);
 	timeval_substract(&elapsed_time, &leave_time,
 			  &(element->arrival_time));
-	log_message(INFO, DEBUG_AREA_MAIN,
+	log_message(MESSAGE, DEBUG_AREA_PERF,
 		    "Treatment time for packet_id=%u: %.1f msec",
 		    GPOINTER_TO_UINT(element->packet_id->data),
 		    (double)elapsed_time.tv_sec*1000+(double)(elapsed_time.tv_usec/1000)

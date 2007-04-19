@@ -266,10 +266,10 @@ int tls_connect(int socket_fd, gnutls_session ** session_ptr)
 	}
 #ifdef PERF_DISPLAY_ENABLE
 	timeval_substract(&elapsed_time, &leave_time, &entry_time);
-	log_message(INFO, DEBUG_AREA_GW | DEBUG_AREA_USER,
+	log_message(INFO, DEBUG_AREA_PERF,
 		    "Handshake duration : %.1f msec",
 		    (double)elapsed_time.tv_sec*1000+
-		    		(double)(elapsed_time.tv_usec/1000));
+			(double)(elapsed_time.tv_usec/1000));
 #endif
 
 	debug_log_message(DEBUG, DEBUG_AREA_GW | DEBUG_AREA_USER, "NuFW TLS Handshaked");
