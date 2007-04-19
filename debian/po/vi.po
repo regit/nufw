@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: nufw 1.0-2\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-04-04 22:48+0200\n"
+"Report-Msgid-Bugs-To: chifflier@inl.fr\n"
+"POT-Creation-Date: 2007-04-19 22:21+0200\n"
 "PO-Revision-Date: 2005-06-30 15:09+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <gnomevi-list@lists.sourceforge.net>\n"
@@ -16,386 +16,383 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0\n"
 "X-Generator: LocFactoryEditor 1.2.2\n"
 
-#.Type: boolean
-#.Description
-#:../nuauth.templates:4
+#. Type: boolean
+#. Description
+#: ../nuauth.templates:1001
 msgid "Should nuauth daemon be started at boot time?"
-msgstr "Bạn có muốn khởi chạy trình nền «dæmon» nuauth khi khởi động máy không?"
+msgstr ""
+"Bạn có muốn khởi chạy trình nền «dæmon» nuauth khi khởi động máy không?"
 
-#.Type: boolean
-#.Description
-#:../nuauth.templates:4
+#. Type: boolean
+#. Description
+#: ../nuauth.templates:1001
 msgid ""
 "Choose \"True\" if you want Nuauth to be automatically started at boot time. "
 "If you choose \"False\" you can start nuauth by hand, by running /usr/sbin/"
 "nuauth with appropriate options."
-msgstr "Hãy chọn «Đúng» nếu bạn muốn Nuauth tự động khởi chạy khi khởi động máy. Nếu bạn chọn «Không đúng» thì có thể tự khởi chạy nuauth, bằng cách chạy «/usr/sbin/nuauth» với những tùy chọn thích hợp."
+msgstr ""
+"Hãy chọn «Đúng» nếu bạn muốn Nuauth tự động khởi chạy khi khởi động máy. Nếu "
+"bạn chọn «Không đúng» thì có thể tự khởi chạy nuauth, bằng cách chạy «/usr/"
+"sbin/nuauth» với những tùy chọn thích hợp."
 
-#.Type: select
-#.Choices
-#:../nuauth.templates:11
-msgid "v, vv, vvv, vvvv, vvvvv, vvvvvv, vvvvvvv, vvvvvvvv"
-msgstr "v, vv, vvv, vvvv, vvvvv, vvvvvv, vvvvvvv, vvvvvvvv"
-
-#.Type: select
-#.Description
-#:../nuauth.templates:13
-msgid "Nuauth daemon verbosity level"
+#. Type: select
+#. Description
+#: ../nuauth.templates:2001
+#, fuzzy
+msgid "Nuauth daemon verbosity level:"
 msgstr "Cấp chi tiết của trình nền Nuauth"
 
-#.Type: select
-#.Description
-#:../nuauth.templates:13
+#. Type: select
+#. Description
+#: ../nuauth.templates:2001
 msgid ""
 "The more \"v\"s are passed at nuauth startup, the more verbose daemon logs "
 "will be. A good production value is \"vv\", increase it to get more details "
 "in case of problems."
-msgstr "Càng nhiều chữ «v» được trả gởi khi trình nuauth khởi chạy, càng nhiều chi tiết nó sẽ ghi lưu. Một giá trị làm việc tốt là «vv». Nếu bạn gặp lỗi khi sử dụng nuauth, hãy tăng lên cấp chi tiết để xem dữ liệu gỡ lỗi nhiều."
+msgstr ""
+"Càng nhiều chữ «v» được trả gởi khi trình nuauth khởi chạy, càng nhiều chi "
+"tiết nó sẽ ghi lưu. Một giá trị làm việc tốt là «vv». Nếu bạn gặp lỗi khi sử "
+"dụng nuauth, hãy tăng lên cấp chi tiết để xem dữ liệu gỡ lỗi nhiều."
 
-#.Type: string
-#.Default
-#:../nuauth.templates:20
-msgid "nuauth"
-msgstr "nuauth"
-
-#.Type: string
-#.Description
-#:../nuauth.templates:21
-msgid "User that runs Nuauth"
+#. Type: string
+#. Description
+#: ../nuauth.templates:3001
+#, fuzzy
+msgid "User that runs Nuauth:"
 msgstr "Người dùng chạy Nuath"
 
-#.Type: string
-#.Description
-#:../nuauth.templates:21
+#. Type: string
+#. Description
+#: ../nuauth.templates:3001
 msgid ""
 "Name of the user that will run nuauth, please use a low-privileged user."
-msgstr "Tên của người dùng sẽ chạy trình nuauth. Hãy sử dụng một người dùng không có quyền truy cập đặc biệt."
+msgstr ""
+"Tên của người dùng sẽ chạy trình nuauth. Hãy sử dụng một người dùng không có "
+"quyền truy cập đặc biệt."
 
-#.Type: string
-#.Default
-#:../nuauth.templates:26
-msgid "0.0.0.0"
-msgstr "0.0.0.0"
-
-#.Type: string
-#.Description
-#:../nuauth.templates:27
-msgid "Nuauth client listening address"
+#. Type: string
+#. Description
+#: ../nuauth.templates:4001
+#, fuzzy
+msgid "Nuauth client listening address:"
 msgstr "Địa chỉ lắng nghe trình khách nuauth"
 
-#.Type: string
-#.Description
-#:../nuauth.templates:27
+#. Type: string
+#. Description
+#: ../nuauth.templates:4001
 msgid ""
 "Address nuauth should listen on for clients. This is useful if this machine "
 "owns several interfaces, and you want nuauth to only bind on one of them. "
 "Leave the default value \"0.0.0.0\" if you want nuauth to listen on all "
 "interfaces."
-msgstr "Nuauth nên lắng nghe trình khách trên địa chỉ này. Có ích nếu máy này có vài giao diện, và bạn muốn trình nuauth đóng kết đến chỉ một điều thôi. Hãy cho phép giá trị mặc định «0.0.0.0» còn lại nếu bạn muốn trình nuauth lắng nghe trên mọi giao diện."
+msgstr ""
+"Nuauth nên lắng nghe trình khách trên địa chỉ này. Có ích nếu máy này có vài "
+"giao diện, và bạn muốn trình nuauth đóng kết đến chỉ một điều thôi. Hãy cho "
+"phép giá trị mặc định «0.0.0.0» còn lại nếu bạn muốn trình nuauth lắng nghe "
+"trên mọi giao diện."
 
-#.Type: string
-#.Description
-#:../nuauth.templates:27
+#. Type: string
+#. Description
+#: ../nuauth.templates:4001
 msgid "Please enter an IP address of this system or \"0.0.0.0\""
 msgstr "Hãy nhập một địa chỉ IP của hệ thống này, hoặc «0.0.0.0»."
 
-#.Type: string
-#.Description
-#:../nuauth.templates:38
-msgid "Nuauth nufw listening address"
+#. Type: string
+#. Description
+#: ../nuauth.templates:5001
+#, fuzzy
+msgid "Nuauth nufw listening address:"
 msgstr "Địa chỉ lắng nghe nufw nuauth"
 
-#.Type: string
-#.Description
-#:../nuauth.templates:38
+#. Type: string
+#. Description
+#: ../nuauth.templates:5001
 msgid ""
 "Address nuauth should listen on for nufw packets. This is useful if this "
 "machine owns several interfaces, and you want nuauth to only bind on one of "
 "them. Leave the default value \"0.0.0.0\" if you want nuauth to listen on "
 "all interfaces (not advised)."
-msgstr "Trình nuauth nên lắng nghe gói tin nufw trên địa chỉ này. Có ích nếu máy này có vài giao diện, và bạn muốn trình nuauth đóng kết đến chỉ một điều thôi. Hãy cho phép giá trị mặc định «0.0.0.0» còn lại nếu bạn muốn trình nuauth lắng nghe trên mọi giao diện (không khuyên)."
+msgstr ""
+"Trình nuauth nên lắng nghe gói tin nufw trên địa chỉ này. Có ích nếu máy này "
+"có vài giao diện, và bạn muốn trình nuauth đóng kết đến chỉ một điều thôi. "
+"Hãy cho phép giá trị mặc định «0.0.0.0» còn lại nếu bạn muốn trình nuauth "
+"lắng nghe trên mọi giao diện (không khuyên)."
 
-#.Type: string
-#.Description
-#:../nuauth.templates:38
+#. Type: string
+#. Description
+#: ../nuauth.templates:5001
 msgid ""
 "Please enter an IP address of this system or \"0.0.0.0\". Default value : "
 "\"127.0.0.1\""
-msgstr "Hãy nhập một địa chỉ IP của hệ thống này, hoặc «0.0.0.0». Giá trị mặc định: «127.0.0.1»."
+msgstr ""
+"Hãy nhập một địa chỉ IP của hệ thống này, hoặc «0.0.0.0». Giá trị mặc định: "
+"«127.0.0.1»."
 
-#.Type: string
-#.Default
-#:../nuauth.templates:49
-msgid "4129"
-msgstr "4129"
-
-#.Type: string
-#.Description
-#:../nuauth.templates:50
-msgid "Nuauth gateway listening port"
+#. Type: string
+#. Description
+#: ../nuauth.templates:6001
+#, fuzzy
+msgid "Nuauth gateway listening port:"
 msgstr "Cổng lắng nghe cổng ra nuauth"
 
-#.Type: string
-#.Description
-#:../nuauth.templates:50
+#. Type: string
+#. Description
+#: ../nuauth.templates:6001
 msgid ""
 "Nuauth needs to bind to an UDP port, to communicate with the nufw daemon. "
 "This is not an option, a port must always be listening. It is suggested you "
 "leave it at its default value (4129), which is very good for everyone (or "
 "nearly). Don't forget to reconfigure your nufw installation, if you change "
 "this."
-msgstr "Trình nuauth cần đóng kết đến mốt cổng UDP, để truyền thông với trình nền nufw. Không phải tùy chọn: phải có một cổng lắng nghe suốt. Đệ nghị bạn sử dụng giá trị mặc định (4129), mà thích hợp gần mọi trường hợp. Đừng quên cấu hình lại bản cài đặt nufw, nếu bạn thay đổi giá trị này."
+msgstr ""
+"Trình nuauth cần đóng kết đến mốt cổng UDP, để truyền thông với trình nền "
+"nufw. Không phải tùy chọn: phải có một cổng lắng nghe suốt. Đệ nghị bạn sử "
+"dụng giá trị mặc định (4129), mà thích hợp gần mọi trường hợp. Đừng quên cấu "
+"hình lại bản cài đặt nufw, nếu bạn thay đổi giá trị này."
 
-#.Type: string
-#.Default
-#:../nuauth.templates:61
-msgid "4130"
-msgstr "4130"
+#. Type: string
+#. Description
+#. Type: string
+#. Description
+#: ../nuauth.templates:6001 ../nuauth.templates:7001
+msgid "Please input a numeric port number."
+msgstr "Hãy nhập một số hiệu cổng thuộc số."
 
-#.Type: string
-#.Description
-#:../nuauth.templates:62
-msgid "Nuauth users listening port"
+#. Type: string
+#. Description
+#: ../nuauth.templates:7001
+#, fuzzy
+msgid "Nuauth users listening port:"
 msgstr "Cổng lắng nghe người dùng nuauth"
 
-#.Type: string
-#.Description
-#:../nuauth.templates:62
+#. Type: string
+#. Description
+#: ../nuauth.templates:7001
 msgid ""
 "Nuauth needs to bind to an UDP port, to communicate with clients (users) "
 "that authenticate.  This is not an option, a port must always be listening. "
 "It is suggested you leave it at its default value (4130), which is very good "
 "for everyone (or nearly). Don't forget to reconfigure your clients "
 "installations, if you change this."
-msgstr "Trình nuauth cần đóng kết đến mốt cổng UDP, để truyền thông với trình khách (người dùng). Không phải tùy chọn: phải có một cổng lắng nghe suốt. Đệ nghị bạn sử dụng giá trị mặc định (4130), mà thích hợp gần mọi trường hợp. Đừng quên cấu hình lại bản cài đặt của mọi trình khách, nếu bạn thay đổi giá trị này."
+msgstr ""
+"Trình nuauth cần đóng kết đến mốt cổng UDP, để truyền thông với trình khách "
+"(người dùng). Không phải tùy chọn: phải có một cổng lắng nghe suốt. Đệ nghị "
+"bạn sử dụng giá trị mặc định (4130), mà thích hợp gần mọi trường hợp. Đừng "
+"quên cấu hình lại bản cài đặt của mọi trình khách, nếu bạn thay đổi giá trị "
+"này."
 
-#.Type: string
-#.Description
-#:../nuauth.templates:62 ../nufw.templates:34
-msgid "Please input a numeric port number."
-msgstr "Hãy nhập một số hiệu cổng thuộc số."
-
-#.Type: string
-#.Description
-#:../nuauth.templates:74
-msgid "Nufw daemon IP address"
+#. Type: string
+#. Description
+#: ../nuauth.templates:8001
+#, fuzzy
+msgid "Nufw daemon IP address:"
 msgstr "Địa chỉ IP trình nền nufw"
 
-#.Type: string
-#.Description
-#:../nuauth.templates:74
+#. Type: string
+#. Description
+#: ../nuauth.templates:8001
 msgid ""
 "This is the IP address where the Nufw daemon can be reached. If you run nufw "
 "and nuauth on the same box, leave it at default value of 127.0.0.1. Else "
 "enter an IP address."
-msgstr "Giá trị này là địa chỉ IP được dùng để tới trình nền Nufw. Nếu bạn có chạy hai trình nufw và nuauth trên cùng một máy, hãy sử dụng giá trị mặc định là «127.0.0.0». Nếu không thì hãy nhập một địa chỉ IP khác."
+msgstr ""
+"Giá trị này là địa chỉ IP được dùng để tới trình nền Nufw. Nếu bạn có chạy "
+"hai trình nufw và nuauth trên cùng một máy, hãy sử dụng giá trị mặc định là "
+"«127.0.0.0». Nếu không thì hãy nhập một địa chỉ IP khác."
 
-#.Type: string
-#.Default
-#:../nuauth.templates:81
-msgid "4128"
-msgstr "4128"
-
-#.Type: string
-#.Description
-#:../nuauth.templates:82
-msgid "Nufw daemon port"
-msgstr "Cổng trình nền nufw"
-
-#.Type: string
-#.Description
-#:../nuauth.templates:82
-msgid ""
-"This must be the port number nufw is configured to listen on your "
-"installation. On most installations, the default value of 4128 will be "
-"correct. Please input a numeric port number."
-msgstr "Giá trị này phải là số hiệu cổng nơi trình nufw được cấu hình để lắng nghe trong bản cài đặt bạn. Trong phần lớn bản cài đặt, giá trị mặc định «4128» là đúng. Hãy nhập một số hiệu cổng thuộc số."
-
-#.Type: string
-#.Description
-#:../nuauth.templates:90
-msgid "Nuauth priority"
+#. Type: string
+#. Description
+#: ../nuauth.templates:9001
+#, fuzzy
+msgid "Nuauth priority:"
 msgstr "Ưu tiên nuauth"
 
-#.Type: string
-#.Description
-#:../nuauth.templates:90
+#. Type: string
+#. Description
+#: ../nuauth.templates:9001
 msgid ""
 "This is the priority associated with nuauth's answers. Change this parameter "
 "only if you know what you are doing. Default value : 1."
-msgstr "Giá trị này là ưu tiên liên quan đến trả lời của trình nuauth. Chỉ hãy thay đổi tham số này nếu bạn hiểu được kết quả. Giá trị mặc định là «1»."
+msgstr ""
+"Giá trị này là ưu tiên liên quan đến trả lời của trình nuauth. Chỉ hãy thay "
+"đổi tham số này nếu bạn hiểu được kết quả. Giá trị mặc định là «1»."
 
-#.Type: string
-#.Default
-#:../nuauth.templates:96
-msgid "5"
-msgstr "5"
-
-#.Type: string
-#.Description
-#:../nuauth.templates:97
-msgid "Nuauth timeout delay"
+#. Type: string
+#. Description
+#: ../nuauth.templates:10001
+#, fuzzy
+msgid "Nuauth timeout delay:"
 msgstr "Khoảng đợi thời hạn nuauth"
 
-#.Type: string
-#.Description
-#:../nuauth.templates:97
+#. Type: string
+#. Description
+#: ../nuauth.templates:10001
 msgid ""
 "This is the delay -in seconds- Nuauth should drop authentication packets "
 "from its \"conntrack\" when they match no actual packet. The default value "
 "of 5 looks like a good one."
-msgstr "Giá trị này là khoảng đợi (theo giây) sau mà trình Nuauth nên bỏ gói tin xác thực ra «conntrack» (đường dẫn kết nối) của nó khi gói tin ấy không khớp với gói tin thật nào. Giá trị mặc định là 5 mà hữu ích."
+msgstr ""
+"Giá trị này là khoảng đợi (theo giây) sau mà trình Nuauth nên bỏ gói tin xác "
+"thực ra «conntrack» (đường dẫn kết nối) của nó khi gói tin ấy không khớp với "
+"gói tin thật nào. Giá trị mặc định là 5 mà hữu ích."
 
-#.Type: string
-#.Description
-#:../nuauth.templates:97
+#. Type: string
+#. Description
+#: ../nuauth.templates:10001
 msgid "Please specify a number here."
 msgstr "Hãy nhập một số nào đó vào đây."
 
-#.Type: string
-#.Description
-#:../nuauth.templates:107
-msgid "Nuauth user request threads number"
+#. Type: string
+#. Description
+#: ../nuauth.templates:11001
+#, fuzzy
+msgid "Nuauth user request threads number:"
 msgstr "Số mạch yêu cầu người dùng nuauth"
 
-#.Type: string
-#.Description
-#:../nuauth.templates:107
+#. Type: string
+#. Description
+#: ../nuauth.templates:11001
 msgid ""
 "This is the number of threads nuauth will run to deal with users requests. "
 "Change this parameter only if needed. Default value : 10."
-msgstr "Giá trị này là tổng số mạch mà trình nuauth sẽ chạy để xử lý các yêu cầu của người dùng. Bạn hãy thay đổi tham số này chỉ khi cần thiết thôi. Giá trị mặc định là 10."
+msgstr ""
+"Giá trị này là tổng số mạch mà trình nuauth sẽ chạy để xử lý các yêu cầu của "
+"người dùng. Bạn hãy thay đổi tham số này chỉ khi cần thiết thôi. Giá trị mặc "
+"định là 10."
 
-#.Type: string
-#.Default
-#:../nuauth.templates:113
-msgid "10"
-msgstr "10"
-
-#.Type: string
-#.Description
-#:../nuauth.templates:114
-msgid "Nuauth gateway request threads number"
+#. Type: string
+#. Description
+#: ../nuauth.templates:12001
+#, fuzzy
+msgid "Nuauth gateway request threads number:"
 msgstr "Số mạch yêu cầu cổng ra nuauth"
 
-#.Type: string
-#.Description
-#:../nuauth.templates:114
+#. Type: string
+#. Description
+#: ../nuauth.templates:12001
 msgid ""
 "This is the number of threads nuauth will run to deal with requests from "
 "Nufw. Change this parameter only if needed. Default value : 10."
-msgstr "Giá trị này là tổng số mạch mà trình nuauth sẽ chạy để xử lý các yêu cầu từ trình Nufw. Bạn nên thay đổi tham số này chỉ nếu cần thiết thôi. Giá trị mặc định là 10."
+msgstr ""
+"Giá trị này là tổng số mạch mà trình nuauth sẽ chạy để xử lý các yêu cầu từ "
+"trình Nufw. Bạn nên thay đổi tham số này chỉ nếu cần thiết thôi. Giá trị mặc "
+"định là 10."
 
-#.Type: select
-#.Choices
-#:../nuauth.templates:120
-# Name: don't translate / Tên: đừng dịch
-msgid "libldap, libdbm"
-msgstr "libldap, libdbm"
-
-#.Type: select
-#.Description
-#:../nuauth.templates:122
-msgid "User check module"
+#. Type: select
+#. Description
+#: ../nuauth.templates:13001
+#, fuzzy
+msgid "User check module:"
 msgstr "Mô-đun kiểm tra người dùng"
 
-#.Type: select
-#.Description
-#:../nuauth.templates:122
+#. Type: select
+#. Description
+#: ../nuauth.templates:13001
+#, fuzzy
 msgid ""
 "Here are possible plugins, which are ways of authenticating users of your "
 "network. You must choose one, which will be used by nuauth to check user/"
-"group relationships."
-msgstr "Tại đây có một số bộ cầm phít có thể, cung cấp cách xác thực người dùng mạng bạn. Bạn phải chọn một bộ, mà trình nuauth sẽ dùng để kiểm tra quan hệ giữa người dùng và nhóm."
+"group relationships. If testing and willing to use plaintext, edit nuauth."
+"conf later on."
+msgstr ""
+"Tại đây có một số bộ cầm phít có thể, cung cấp cách xác thực người dùng mạng "
+"bạn. Bạn phải chọn một bộ, mà trình nuauth sẽ dùng để kiểm tra quan hệ giữa "
+"người dùng và nhóm."
 
-#.Type: select
-#.Choices
-#:../nuauth.templates:129
-# Name: don't translate / Tên: đừng dịch
-msgid "libldap"
-msgstr "libldap"
-
-#.Type: select
-#.Description
-#:../nuauth.templates:131
-msgid "ACL check module"
+#. Type: select
+#. Description
+#: ../nuauth.templates:14001
+#, fuzzy
+msgid "ACL check module:"
 msgstr "Mô-đun kiểm tra ACL"
 
-#.Type: select
-#.Description
-#:../nuauth.templates:131
+#. Type: select
+#. Description
+#: ../nuauth.templates:14001
 msgid ""
-"Here are possible plugins for ACLs definitions. One single of them must be "
-"chosen. For now the choice is easy, as only \"libldap\" is available ;-)"
-msgstr "Tại đây có một số bô cầm phít có thể cho lời định nghĩa ACL. Bạn phải chọn chỉ một bộ thôi. Lúc này có thể chọn dễ dàng, vì chỉ có «libldap» sẵn sàng. :-)"
+"Here are possible plugins for ACLs definitions. One of them must be chosen. "
+"Ldap requests that you import NuFW-specific schemes in your LDAP tree,  and "
+"is advised for production systems. Plaintext is probably the best for "
+"testing."
+msgstr ""
 
-#.Type: select
-#.Description
-#:../nuauth.templates:139
-msgid "SSL communications with clients"
-msgstr "Truyền thông SSL với trình khách"
+#. Type: string
+#. Description
+#: ../nuauth.templates:15001
+msgid "The file to use for the plaintext ACLs module:"
+msgstr ""
 
-#.Type: select
-#.Description
-#:../nuauth.templates:139
+#. Type: string
+#. Description
+#: ../nuauth.templates:15001
 msgid ""
-"If you set this to 1, only SSL encrypted authentications will be accepted "
-"from clients. If you set this to 0, a hash will be used. It is strongly "
-"advised to use SSL encryption, which is the default."
-msgstr "Nếu bạn lập giá trị này là 1, trình nuauth sẽ chấp nhận chỉ cách xác thực mật mã bằng SSL từ trình khách. Nếu bạn lập nó là 0, sẽ dùng một băm. Khuyến khích bạn sử dụng mặt mã SSL, mà là mặc định."
+"This file should contain ACLs, for each group of users. You will need to "
+"edit it by hand. (A default file is provided, and probably will not  suit "
+"your needs)."
+msgstr ""
 
-#.Type: string
-#.Description
-#:../nuauth.templates:147
-msgid "SSL key for clients communication"
+#. Type: string
+#. Description
+#: ../nuauth.templates:16001
+msgid "The file to use for the plaintext users module:"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:16001
+msgid ""
+"This file should contain user definitions, their passwords, and groups. You "
+"will need to edit it by hand. (A default file is provided, and definetely "
+"will not  suit your needs)."
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:18001
+#, fuzzy
+msgid "TLS certificate for clients communication:"
 msgstr "Khóa SSL để truyền thông với trình khách"
 
-#.Type: string
-#.Description
-#:../nuauth.templates:147
+#. Type: string
+#. Description
+#: ../nuauth.templates:18001
 msgid ""
-"Please enter the full path of the private key that will be used for clients "
-"communications."
-msgstr "Hãy nhập đường dẫn đầy đủ tới khóa riêng sẽ được dùng để truyền thông với trình khách."
+"Please enter the full path of the certificate key that will be used for "
+"clients communications. Note that the default value should be good at least "
+"for testing : debconf will generate this certificate in a moment."
+msgstr ""
 
-#.Type: password
-#.Default
-#:../nuauth.templates:153
-# Name: don't translate / Tên: đừng dịch
-msgid "/etc/nufw/nuauth.pem"
-msgstr "/etc/nufw/nuauth.pem"
-
-#.Type: password
-#.Description
-#:../nuauth.templates:154
-msgid "Password of the SSL key for clients communication"
+#. Type: password
+#. Description
+#: ../nuauth.templates:19001
+#, fuzzy
+msgid "Password of the TLS key for clients communication:"
 msgstr "Mật khẩu của khóa SSL để truyền thông với trình khách"
 
-#.Type: password
-#.Description
-#:../nuauth.templates:154
+#. Type: password
+#. Description
+#: ../nuauth.templates:19001
 msgid ""
 "Please enter password to use with specified key. Keep empty if there is no "
 "password. Please be aware that your password cannot contain the slash \"/\" "
 "character when set from debconf (it can contain it if you edit config file "
 "by hand)."
-msgstr "Hãy nhập mật khẩu cần dùng với khóa đã ghi rõ. Có thể bỏ rỗng nếu không có mật khẩu. Hãy ghi chú rằng mật khẩu ấy không thể chứa ký tự xuyệc «/» khi được lập từ trình cấu hình debconf (còn có thể chứa nó khi tự hiệu chỉnh tập tin cấu hình)."
+msgstr ""
+"Hãy nhập mật khẩu cần dùng với khóa đã ghi rõ. Có thể bỏ rỗng nếu không có "
+"mật khẩu. Hãy ghi chú rằng mật khẩu ấy không thể chứa ký tự xuyệc «/» khi "
+"được lập từ trình cấu hình debconf (còn có thể chứa nó khi tự hiệu chỉnh tập "
+"tin cấu hình)."
 
-#.Type: select
-#.Choices
-#:../nuauth.templates:162
-msgid "0, 1, 2, 4"
-msgstr "0, 1, 2, 4"
-
-#.Type: select
-#.Description
-#:../nuauth.templates:164
-msgid "Users activity logging"
+#. Type: string
+#. Description
+#: ../nuauth.templates:20001
+#, fuzzy
+msgid "Users activity logging:"
 msgstr "Ghi lưu hoạt động người dùng"
 
-#.Type: select
-#.Description
-#:../nuauth.templates:164
+#. Type: string
+#. Description
+#: ../nuauth.templates:20001
 msgid ""
 "How to log users activity:\n"
 " - 0 : no log at all\n"
@@ -411,15 +408,16 @@ msgstr ""
 " • 4 : ghi lưu mọi gói tin\n"
 "Giá trị mặc định : 1"
 
-#.Type: select
-#.Description
-#:../nuauth.templates:176
-msgid "Whether to sync users logs"
+#. Type: select
+#. Description
+#: ../nuauth.templates:21001
+#, fuzzy
+msgid "Whether to sync users logs:"
 msgstr "Có nên đồng bộ hóa bản ghi người dùng hay không"
 
-#.Type: select
-#.Description
-#:../nuauth.templates:176
+#. Type: select
+#. Description
+#: ../nuauth.templates:21001
 msgid ""
 "Syncing users logs makes activities overall slower, but guarantees users "
 "logs (for instance, in SQL database) exist before the network packet is "
@@ -428,710 +426,1017 @@ msgid ""
 " - 0 : no sync\n"
 " - 1 : sync\n"
 "Default value : 1"
-msgstr "Đồng bộ hóa bản ghi người dùng giảm tốc độ toàn hoạt động, nhưng mà cũng đảm bảo đã có bản ghi người dùng (v.d. trong cơ sở dữ liệu SQL) trước khi gói tin mạng được gởi qua. Khuyên bạn lập tùy chọn này nếu định thiết lập trình nuauth cho SSO.\n"
+msgstr ""
+"Đồng bộ hóa bản ghi người dùng giảm tốc độ toàn hoạt động, nhưng mà cũng đảm "
+"bảo đã có bản ghi người dùng (v.d. trong cơ sở dữ liệu SQL) trước khi gói "
+"tin mạng được gởi qua. Khuyên bạn lập tùy chọn này nếu định thiết lập trình "
+"nuauth cho SSO.\n"
 " • 0 : không đồng bộ\n"
 " • 1 : đồng bộ\n"
 "Giá trị mặc định: 1"
 
-#.Type: select
-#.Description
-#:../nuauth.templates:189
-msgid "Whether to update logs automatically for consistency"
+#. Type: select
+#. Description
+#: ../nuauth.templates:22001
+#, fuzzy
+msgid "Whether to update logs automatically for consistency:"
 msgstr "Có nên tự động cập nhật bản ghi để đạt tính nhất quán hay không"
 
-#.Type: select
-#.Description
-#:../nuauth.templates:189
+#. Type: select
+#. Description
+#: ../nuauth.templates:22001
+#, fuzzy
 msgid ""
 "If set to 1, whenever a connection already in conntrack (for TCP or UDP, "
 "same source IP, same source port) will be opened, existing connections that "
-"might already exist in our conntrack will be closed. If set to 0, no such "
+"might already exist in the conntrack will be closed. If set to 0, no such "
 "update will be performed. The Safe option is to use 1. Setting this to 0 may "
 "cause SSO modules to refuse some connections, in some rare cases.\n"
 " - 0 : no update\n"
 " - 1 : strict update of existing 'old' connections\n"
 "Default value : 1"
-msgstr "Nếu bạn lập giá trị này là 1, khi mà mở một kết nối đã có trong đường dẫn kết nối (cho TCP hay UDP, cùng một địa chỉ IP nguồn, cùng một cổng nguồn), lúc ấy sẽ đóng mọi kết nối đã mở mà cũng đã có trong đường dẫn kết nối. "
+msgstr ""
+"Nếu bạn lập giá trị này là 1, khi mà mở một kết nối đã có trong đường dẫn "
+"kết nối (cho TCP hay UDP, cùng một địa chỉ IP nguồn, cùng một cổng nguồn), "
+"lúc ấy sẽ đóng mọi kết nối đã mở mà cũng đã có trong đường dẫn kết nối. "
 
-#.Type: select
-#.Choices
-#:../nuauth.templates:201
-# Name: don't translate / Tên: đừng dịch
-msgid "syslog, mysql, pgsql"
-msgstr "syslog, mysql, pgsql"
-
-#.Type: select
-#.Description
-#:../nuauth.templates:203
-msgid "Users logs module"
+#. Type: select
+#. Description
+#: ../nuauth.templates:23001
+#, fuzzy
+msgid "Users logs module:"
 msgstr "Mô-đun bản ghi người dùng"
 
-#.Type: select
-#.Description
-#:../nuauth.templates:203
+#. Type: select
+#. Description
+#: ../nuauth.templates:23001
 msgid ""
 "Choose the media users activity will be logged into. It is advised you log "
 "users activity into a database."
-msgstr "Hãy chọn lưu ghi hoạt động người dùng vào phương tiện nào. Khuyên bạn ghi lưu hoạt động người dùng vào một cơ sở dữ liệu."
+msgstr ""
+"Hãy chọn lưu ghi hoạt động người dùng vào phương tiện nào. Khuyên bạn ghi "
+"lưu hoạt động người dùng vào một cơ sở dữ liệu."
 
-#.Type: string
-#.Description
-#:../nuauth.templates:210
-msgid "LDAP server address"
+#. Type: string
+#. Description
+#: ../nuauth.templates:24001
+#, fuzzy
+msgid "LDAP server address:"
 msgstr "Địa chỉ máy phục vụ LDAP"
 
-#.Type: string
-#.Description
-#:../nuauth.templates:210
+#. Type: string
+#. Description
+#: ../nuauth.templates:24001
 msgid "Please enter the IP address of the LDAP server"
 msgstr "Hãy nhập địa chỉ IP của máy phục vụ LDAP"
 
-#.Type: string
-#.Default
-#:../nuauth.templates:215
-msgid "389"
-msgstr "389"
-
-#.Type: string
-#.Description
-#:../nuauth.templates:216
-msgid "LDAP server port"
+#. Type: string
+#. Description
+#: ../nuauth.templates:25001
+#, fuzzy
+msgid "LDAP server port:"
 msgstr "Cổng phục vụ LDAP"
 
-#.Type: string
-#.Description
-#:../nuauth.templates:216
+#. Type: string
+#. Description
+#: ../nuauth.templates:25001
 msgid ""
 "Please enter the TCP port number of the LDAP server 389 is standard non "
 "encrypted LDAP port. If you set 636 as port, LDAP SSL will be used."
-msgstr "Hãy nhập số hiệu cổng TCP của máy phục vụ LDAP. Số 389 là một cổng LDAP không mật mã chuẩn. Nếu bạn lập số 639 là cổng ấy thì sẽ dùng SSL LDAP."
+msgstr ""
+"Hãy nhập số hiệu cổng TCP của máy phục vụ LDAP. Số 389 là một cổng LDAP "
+"không mật mã chuẩn. Nếu bạn lập số 639 là cổng ấy thì sẽ dùng SSL LDAP."
 
-#.Type: string
-#.Default
-#:../nuauth.templates:222
-msgid "cn=admin,dc=yourdomain,dc=com"
-msgstr "cn=admin,dc=yourdomain,dc=com"
-
-#.Type: string
-#.Description
-#:../nuauth.templates:223
-msgid "LDAP dn to bind ldap connection to"
+#. Type: string
+#. Description
+#: ../nuauth.templates:26001
+#, fuzzy
+msgid "LDAP dn to bind ldap connection to:"
 msgstr "Đóng kết sự kết nối LDAP tới tên miền LDAP nào?"
 
-#.Type: string
-#.Description
-#:../nuauth.templates:223
+#. Type: string
+#. Description
+#: ../nuauth.templates:26001
 msgid "Please enter the dn you want LDAP connections to bind to"
 msgstr "Bạn có muốn mọi sự kết nối LDAP kết nối đến tên miền nào?"
 
-#.Type: password
-#.Description
-#:../nuauth.templates:228
-msgid "LDAP password to use"
+#. Type: password
+#. Description
+#: ../nuauth.templates:27001
+#, fuzzy
+msgid "LDAP password to use:"
 msgstr "Mật khẩu LDAP cần dùng"
 
-#.Type: password
-#.Description
-#:../nuauth.templates:228
+#. Type: password
+#. Description
+#: ../nuauth.templates:27001
 msgid ""
 "Please enter password that should be used to connect to the LDAP server. You "
 "will not be able to read password on the screen as you type it."
-msgstr "Hãy nhập mật khẩu sẽ được dùng để kết nối đến máy phục vụ LDAP. Khi gõ mật khẩu ấy, bạn sẽ không thể đọc nó trên màn hình."
+msgstr ""
+"Hãy nhập mật khẩu sẽ được dùng để kết nối đến máy phục vụ LDAP. Khi gõ mật "
+"khẩu ấy, bạn sẽ không thể đọc nó trên màn hình."
 
-#.Type: string
-#.Default
-#:../nuauth.templates:234
-msgid "4"
-msgstr "4"
-
-#.Type: string
-#.Description
-#:../nuauth.templates:235
-msgid "LDAP request timeout"
+#. Type: string
+#. Description
+#: ../nuauth.templates:28001
+#, fuzzy
+msgid "LDAP request timeout:"
 msgstr "Thời hạn yêu cầu LDAP"
 
-#.Type: string
-#.Description
-#:../nuauth.templates:235
+#. Type: string
+#. Description
+#: ../nuauth.templates:28001
 msgid ""
 "Time after which LDAP connection will be considered to be lost when no reply "
 "is received."
-msgstr "Nếu chưa nhận trả lời sau thời gian này, sự kết nối LDAP sẽ được phân loại đã bị mất."
+msgstr ""
+"Nếu chưa nhận trả lời sau thời gian này, sự kết nối LDAP sẽ được phân loại "
+"đã bị mất."
 
-#.Type: string
-#.Default
-#:../nuauth.templates:241
-msgid "dc=yourdomain,dc=com"
-msgstr "dc=yourdomain,dc=com"
-
-#.Type: string
-#.Description
-#:../nuauth.templates:242
-msgid "Base DN for LDAP search requests"
+#. Type: string
+#. Description
+#: ../nuauth.templates:29001
+#, fuzzy
+msgid "Base DN for LDAP search requests:"
 msgstr "Tên miền cơ bản cho mọi yêu cầu tìm kiếm LDAP"
 
-#.Type: string
-#.Default
-#:../nuauth.templates:246
-msgid "dc=acls,dc=yourdomain,dc=com"
-msgstr "dc=acls,dc=yourdomain,dc=com"
-
-#.Type: string
-#.Description
-#:../nuauth.templates:247
-msgid "Base DN for ACL search requests"
+#. Type: string
+#. Description
+#: ../nuauth.templates:30001
+#, fuzzy
+msgid "Base DN for ACL search requests:"
 msgstr "Tên miền cơ bản cho mọi yêu cầu tìm kiếm ACL"
 
-#.Type: string
-#.Default
-#:../nuauth.templates:251
-msgid "dc=users,dc=yourdomain,dc=com"
-msgstr "dc=users,dc=yourdomain,dc=com"
-
-#.Type: string
-#.Description
-#:../nuauth.templates:252
-msgid "Base DN for users search requests"
+#. Type: string
+#. Description
+#: ../nuauth.templates:31001
+#, fuzzy
+msgid "Base DN for users search requests:"
 msgstr "Tên miền cơ bản cho mọi yêu cầu tìm kiếm người dùng"
 
-#.Type: string
-#.Default
-#:../nuauth.templates:256
-# Name: don't translate / Tên: đừng dịch
-msgid "/etc/nufw/users.dbm"
-msgstr "/etc/nufw/users.dbm"
-
-#.Type: string
-#.Description
-#:../nuauth.templates:257
-msgid "DBM file with users/groups definition"
-msgstr "Tập tin cơ sở dữ liệu có lời định nghĩa người dùng/nhóm"
-
-#.Type: select
-#.Description
-#:../nuauth.templates:263
-msgid "Decision to accept when groups disagree"
+#. Type: select
+#. Description
+#: ../nuauth.templates:32001
+#, fuzzy
+msgid "Decision to accept when groups disagree:"
 msgstr "Quyết định chấp nhận khi nhóm không đồng ý"
 
-#.Type: select
-#.Description
-#:../nuauth.templates:263
+#. Type: select
+#. Description
+#: ../nuauth.templates:32001
 msgid ""
 "When a user is member of several groups, it can happen that some groups "
 "grant access for a connection, and others deny it. If you choose 1 here, "
 "connection will be denied in those cases. If you choose 0, connection will "
 "be granted as soon as one group user is member of grants the right to "
 "connect."
-msgstr "Khi một người dùng nào đó là thành viên của vài nhóm khác, một trường hợp có thể là một số nhóm ấy cho phép truy cập kết nối, còn một số nhóm khác từ chối truy cập. Nếu bạn chọn giá trị 1 tại đây thì sẽ từ chối khả năng kết nối trong mọi trường hợp loại ấy. Còn nếu bạn chọn số 0, sẽ cho phép kết nối một khi chỉ một nhóm của người dùng ấy cho phép quyền kết nối."
+msgstr ""
+"Khi một người dùng nào đó là thành viên của vài nhóm khác, một trường hợp có "
+"thể là một số nhóm ấy cho phép truy cập kết nối, còn một số nhóm khác từ "
+"chối truy cập. Nếu bạn chọn giá trị 1 tại đây thì sẽ từ chối khả năng kết "
+"nối trong mọi trường hợp loại ấy. Còn nếu bạn chọn số 0, sẽ cho phép kết nối "
+"một khi chỉ một nhóm của người dùng ấy cho phép quyền kết nối."
 
-#.Type: string
-#.Description
-#:../nuauth.templates:273
-msgid "MySQL Server Address"
+#. Type: string
+#. Description
+#: ../nuauth.templates:33001
+#, fuzzy
+msgid "MySQL Server Address:"
 msgstr "Địa chỉ máy phục vụ MySQL"
 
-#.Type: string
-#.Description
-#:../nuauth.templates:273
+#. Type: string
+#. Description
+#: ../nuauth.templates:33001
 msgid "Please enter IP address (or DNS name) of your Mysql server."
-msgstr "Hãy nhập địa chỉ IP (hay tên DNS: tên hệ thống tên miền) của máy phục vụ MySQL bạn."
+msgstr ""
+"Hãy nhập địa chỉ IP (hay tên DNS: tên hệ thống tên miền) của máy phục vụ "
+"MySQL bạn."
 
-#.Type: string
-#.Default
-#:../nuauth.templates:278
-msgid "3306"
-msgstr "3306"
-
-#.Type: string
-#.Description
-#:../nuauth.templates:279
-msgid "Mysql Server port"
+#. Type: string
+#. Description
+#: ../nuauth.templates:34001
+#, fuzzy
+msgid "Mysql Server port:"
 msgstr "Cổng máy phục vụ MySQL"
 
-#.Type: string
-#.Description
-#:../nuauth.templates:279
+#. Type: string
+#. Description
+#: ../nuauth.templates:34001
 msgid "Please enter TCP port of your Mysql server."
 msgstr "Hãy nhập cổng TCP của máy phục vụ MySQL."
 
-#.Type: string
-#.Description
-#:../nuauth.templates:285
-msgid "Mysql Database Name"
+#. Type: string
+#. Description
+#: ../nuauth.templates:35001
+#, fuzzy
+msgid "Mysql Database Name:"
 msgstr "Tên cơ sở dữ liệu MySQL"
 
-#.Type: string
-#.Description
-#:../nuauth.templates:285
+#. Type: string
+#. Description
+#: ../nuauth.templates:35001
 msgid "Please enter the database name to use to connect to MYSQL server"
-msgstr "Hãy nhập tên cơ sở dữ liệu MySQL cần dùng để kết nối đến máy phục vụ MySQL."
+msgstr ""
+"Hãy nhập tên cơ sở dữ liệu MySQL cần dùng để kết nối đến máy phục vụ MySQL."
 
-#.Type: string
-#.Description
-#:../nuauth.templates:291
-msgid "Mysql table name"
+#. Type: string
+#. Description
+#: ../nuauth.templates:36001
+#, fuzzy
+msgid "Mysql table name:"
 msgstr "Tên bảng MySQL"
 
-#.Type: string
-#.Description
-#:../nuauth.templates:291
+#. Type: string
+#. Description
+#: ../nuauth.templates:36001
 msgid "Please enter the table name to use to connect to MYSQL server"
 msgstr "Hãy nhập tên bảng cần dùng để kết nối đến máy phục vụ MySQL."
 
-#.Type: string
-#.Description
-#:../nuauth.templates:297
-msgid "Mysql username"
+#. Type: string
+#. Description
+#: ../nuauth.templates:37001
+#, fuzzy
+msgid "Mysql username:"
 msgstr "Tên người dùng MySQL"
 
-#.Type: string
-#.Description
-#:../nuauth.templates:297
+#. Type: string
+#. Description
+#: ../nuauth.templates:37001
 msgid "Please enter the username to use to connect to MYSQL server"
 msgstr "Hãy nhập tên người dùng cần dùng để kết nối đến máy phục vụ MySQL."
 
-#.Type: password
-#.Description
-#:../nuauth.templates:302
-msgid "Mysql Password"
+#. Type: password
+#. Description
+#: ../nuauth.templates:38001
+#, fuzzy
+msgid "Mysql Password:"
 msgstr "Mật khẩu MySQL"
 
-#.Type: password
-#.Description
-#:../nuauth.templates:302
+#. Type: password
+#. Description
+#: ../nuauth.templates:38001
 msgid "Please enter the password to use to connect to MYSQL server"
 msgstr "Hãy nhập mật khẩu cần dùng để kết nối đến máy phục vụ MySQL."
 
-#.Type: string
-#.Description
-#:../nuauth.templates:308
-msgid "Mysql Request timeout"
+#. Type: string
+#. Description
+#: ../nuauth.templates:39001
+#, fuzzy
+msgid "Mysql Request timeout:"
 msgstr "Thời hạn yêu cầu MySQL"
 
-#.Type: string
-#.Description
-#:../nuauth.templates:308
+#. Type: string
+#. Description
+#: ../nuauth.templates:39001
 msgid ""
 " Please enter the timeout (in seconds) for connections to the MYSQL server"
 msgstr "Hãy nhập thời hạn (theo giây) khi kết nối đến máy phục vụ MySQL."
 
-#.Type: select
-#.Choices
-#:../nuauth.templates:313
-msgid "0, 1"
-msgstr "0, 1"
-
-#.Type: select
-#.Description
-#:../nuauth.templates:315
-msgid "Use SSL for Mysql connections"
+#. Type: select
+#. Description
+#: ../nuauth.templates:40001
+#, fuzzy
+msgid "Use SSL for Mysql connections:"
 msgstr "Dùng SSL khi kết nối loại MySQL"
 
-#.Type: select
-#.Description
-#:../nuauth.templates:315
+#. Type: select
+#. Description
+#: ../nuauth.templates:40001
 msgid ""
 " Set this to 1 to wrap MySQL connections in SSL, or 0 if you don't want\n"
 "to."
-msgstr "Hãy lập giá trị này là 1 để bao bọc mọi sự kết nối MySQL dùng SSL; còn lập số 0 nếu bạn không muốn làm như thế."
+msgstr ""
+"Hãy lập giá trị này là 1 để bao bọc mọi sự kết nối MySQL dùng SSL; còn lập "
+"số 0 nếu bạn không muốn làm như thế."
 
-#.Type: string
-#.Default
-#:../nuauth.templates:321
-# Name: don't translate / Tên: đừng dịch
-msgid "/etc/nufw/ssl/mysql.key"
-msgstr "/etc/nufw/ssl/mysql.key"
-
-#.Type: string
-#.Description
-#:../nuauth.templates:322
-msgid "Private Key used for Mysql SSL connections"
+#. Type: string
+#. Description
+#: ../nuauth.templates:41001
+#, fuzzy
+msgid "Private Key used for Mysql SSL connections:"
 msgstr "Khóa riêng được dùng cho sự kết nối SSL MySQL"
 
-#.Type: string
-#.Description
-#:../nuauth.templates:322
+#. Type: string
+#. Description
+#: ../nuauth.templates:41001
 msgid ""
 " Please specify the absolute filename of the private key to use for Mysql\n"
 " connections."
-msgstr "Hãy ghi rõ tên tập tin tuyệt đối của khóa riêng cần dùng khi kết nối đến máy phục vụ MySQL."
+msgstr ""
+"Hãy ghi rõ tên tập tin tuyệt đối của khóa riêng cần dùng khi kết nối đến máy "
+"phục vụ MySQL."
 
-#.Type: string
-#.Default
-#:../nuauth.templates:328
-# Name: don't translate / Tên: đừng dịch
-msgid "/etc/nufw/ssl/mysql.cert"
-msgstr "/etc/nufw/ssl/mysql.cert"
-
-#.Type: string
-#.Description
-#:../nuauth.templates:329
-msgid "Public Certificate used for Mysql SSL connections"
+#. Type: string
+#. Description
+#: ../nuauth.templates:42001
+#, fuzzy
+msgid "Public Certificate used for Mysql SSL connections:"
 msgstr "Chứng nhận được dùng cho sự kết nối SSL MySQL"
 
-#.Type: string
-#.Description
-#:../nuauth.templates:329
+#. Type: string
+#. Description
+#: ../nuauth.templates:42001
 msgid ""
 " Please specify the absolute filename of the public certificate to use for\n"
 "Mysql\n"
 " connections."
-msgstr "Hãy ghi rõ tên tập tin tuyệt đối của chứng nhận công cần dùng khi kết nối đến máy phục vụ MySQL."
+msgstr ""
+"Hãy ghi rõ tên tập tin tuyệt đối của chứng nhận công cần dùng khi kết nối "
+"đến máy phục vụ MySQL."
 
-#.Type: string
-#.Default
-#:../nuauth.templates:336
-# Name: don't translate / Tên: đừng dịch
-msgid "/etc/nufw/ssl/mysql.ca"
-msgstr "/etc/nufw/ssl/mysql.ca"
-
-#.Type: string
-#.Description
-#:../nuauth.templates:337
-msgid "Certificate Authority file used for Mysql SSL connections"
+#. Type: string
+#. Description
+#: ../nuauth.templates:43001
+#, fuzzy
+msgid "Certificate Authority file used for Mysql SSL connections:"
 msgstr "Tập tin Nhà cầm quyền Chứng nhận được dùng cho sự kết nối SSL MySQL"
 
-#.Type: string
-#.Description
-#:../nuauth.templates:337
+#. Type: string
+#. Description
+#: ../nuauth.templates:43001
 msgid ""
 " Please specify the absolute filename of the certificate authority file to\n"
 "use for Mysql\n"
 " connections. EMPTY THIS IF YOU DON'T INTEND TO USE ANY."
-msgstr "Hãy ghi rõ tên tập tin tuyệt đối của tập tin Nhà cầm quyền Chứng nhận\n"
+msgstr ""
+"Hãy ghi rõ tên tập tin tuyệt đối của tập tin Nhà cầm quyền Chứng nhận\n"
 "(Certificate Authority: CA) cần dùng khi kết nối đến máy phục vụ MySQL.\n"
 "HÃY BỎ RỖNG NẾU BẠN KHÔNG ĐỊNH DÙNG NHÀ CẦM QUYỀN NÀO."
-""
 
-#.Type: string
-#.Default
-#:../nuauth.templates:344
-# Name: don't translate / Tên: đừng dịch
-msgid "/etc/nufw/ssl/mysql.cas/"
-msgstr "/etc/nufw/ssl/mysql.cas/"
+#. Type: string
+#. Description
+#: ../nuauth.templates:44001
+#, fuzzy
+msgid "Certificate Authority files directory used for Mysql SSL connections:"
+msgstr ""
+"Thư mục tập tin Nhà cầm quyền Chứng nhận được dùng cho sự kết nối SSL MySQL"
 
-#.Type: string
-#.Description
-#:../nuauth.templates:345
-msgid "Certificate Authority files directory used for Mysql SSL connections"
-msgstr "Thư mục tập tin Nhà cầm quyền Chứng nhận được dùng cho sự kết nối SSL MySQL"
-
-#.Type: string
-#.Description
-#:../nuauth.templates:345
+#. Type: string
+#. Description
+#: ../nuauth.templates:44001
 msgid ""
 " Please specify the absolute directory containing certificate authority\n"
 "files\n"
 " to use (in PEM format) for Mysql connections. EMPTY THIS IF YOU DON'T\n"
 "INTEND\n"
 " TO USE ANY. You must enter a directory name here."
-msgstr "Hãy ghi rõ tên thư mục tuyệt đối chứa tập tin Nhà cầm quyền Chứng nhận\n"
+msgstr ""
+"Hãy ghi rõ tên thư mục tuyệt đối chứa tập tin Nhà cầm quyền Chứng nhận\n"
 "(Certificate Authority: CA) cần dùng (có dạng PEM)\n"
 "khi kết nối đến máy phục vụ MySQL.\n"
 "HÃY BỎ RỖNG NẾU BẠN KHÔNG ĐỊNH DÙNG NHÀ CẦM QUYỀN NÀO."
 
-#.Type: string
-#.Default
-#:../nuauth.templates:354
-# Name: don't translate / Tên: đừng dịch
-msgid "ALL:!ADH:+RC4:@STRENGTH"
-msgstr "ALL:!ADH:+RC4:@STRENGTH"
-
-#.Type: string
-#.Description
-#:../nuauth.templates:355
-msgid "SSL cypher to use for Mysql SSL connections"
+#. Type: string
+#. Description
+#: ../nuauth.templates:45001
+#, fuzzy
+msgid "SSL cipher to use for Mysql SSL connections:"
 msgstr "Mật mã SSL cần dùng cho sự kết nối SSL MySQL"
 
-#.Type: string
-#.Description
-#:../nuauth.templates:355
+#. Type: string
+#. Description
+#: ../nuauth.templates:45001
+#, fuzzy
 msgid ""
-" Enter the SSL cypher you want to use for Mysql SSL connections. For most\n"
+" Enter the SSL cipher you want to use for Mysql SSL connections. For most\n"
 "sites\n"
 " the default (ALL:!ADH:+RC4:@STRENGTH) is a good value. See openssl (1)\n"
 "for\n"
 " details."
-msgstr "Hãy nhập mật mã SSL mà bạn muốn dùng khi kết nối đến\n"
+msgstr ""
+"Hãy nhập mật mã SSL mà bạn muốn dùng khi kết nối đến\n"
 "máy phục vụ MySQL dùng SSL.\n"
 "Giá trị mặc định (ALL:!ADH:+RC4:@STRENGTH)\n"
 "là một sự chọn tốt cho phần lớn nơi Mạng.\n"
 "Hãy xem trang hướng dẫn (man) «openssl (1)» để tìm chi tiết."
 
-#.Type: string
-#.Default
-#:../nuauth.templates:364
-msgid "127.0.0.1"
-msgstr "127.0.0.1"
-
-#.Type: string
-#.Description
-#:../nuauth.templates:365
-msgid "PostgreSQL server address"
+#. Type: string
+#. Description
+#: ../nuauth.templates:46001
+#, fuzzy
+msgid "PostgreSQL server address:"
 msgstr "Địa chỉ máy phục vụ PostgreSQL"
 
-#.Type: string
-#.Description
-#:../nuauth.templates:365
+#. Type: string
+#. Description
+#: ../nuauth.templates:46001
 msgid "Please enter IP address (or DNS name) of your PostgreSQL server."
-msgstr "Hãy nhập địa chỉ IP (hay tên DNS: tên hệ thống tên miền) của máy phục vụ PostgreSQL bạn."
+msgstr ""
+"Hãy nhập địa chỉ IP (hay tên DNS: tên hệ thống tên miền) của máy phục vụ "
+"PostgreSQL bạn."
 
-#.Type: string
-#.Default
-#:../nuauth.templates:370
-msgid "5432"
-msgstr "5432"
-
-#.Type: string
-#.Description
-#:../nuauth.templates:371
-msgid "PostgreSQL server port"
+#. Type: string
+#. Description
+#: ../nuauth.templates:47001
+#, fuzzy
+msgid "PostgreSQL server port:"
 msgstr "Cổng máy phục vụ PostgreSQL"
 
-#.Type: string
-#.Description
-#:../nuauth.templates:371
+#. Type: string
+#. Description
+#: ../nuauth.templates:47001
 msgid "Please enter TCP port of your PostgreSQL server."
 msgstr "Hãy nhập cổng TCP của máy phục vụ PostgreSQL."
 
-#.Type: string
-#.Description
-#:../nuauth.templates:377
-msgid "PostgreSQL database name"
+#. Type: string
+#. Description
+#: ../nuauth.templates:48001
+#, fuzzy
+msgid "PostgreSQL database name:"
 msgstr "Tên cơ sở dữ liệu PostgreSQL"
 
-#.Type: string
-#.Description
-#:../nuauth.templates:377
+#. Type: string
+#. Description
+#: ../nuauth.templates:48001
 msgid "Please enter the database name to use to connect to PostgreSQL server"
-msgstr "Hãy nhập tên cơ sở dữ liệu PostgreSQL cần dùng để kết nối đến máy phục vụ PostgreSQL."
+msgstr ""
+"Hãy nhập tên cơ sở dữ liệu PostgreSQL cần dùng để kết nối đến máy phục vụ "
+"PostgreSQL."
 
-#.Type: string
-#.Default
-#:../nuauth.templates:382
-# Name: don't translate / Tên: đừng dịch
-msgid "nufw"
-msgstr "nufw"
-
-#.Type: string
-#.Description
-#:../nuauth.templates:383
-msgid "PostgreSQL table name"
+#. Type: string
+#. Description
+#: ../nuauth.templates:49001
+#, fuzzy
+msgid "PostgreSQL table name:"
 msgstr "Tên bảng PostgreSQL"
 
-#.Type: string
-#.Description
-#:../nuauth.templates:383
+#. Type: string
+#. Description
+#: ../nuauth.templates:49001
 msgid "Please enter the table name to use to connect to PostgreSQL server"
 msgstr "Hãy nhập tên bảng cần dùng để kết nối đến máy phục vụ PostgreSQL."
 
-#.Type: string
-#.Default
-#:../nuauth.templates:388
-msgid "foo"
-msgstr "foo"
-
-#.Type: string
-#.Description
-#:../nuauth.templates:389
-msgid "PostgreSQL username"
+#. Type: string
+#. Description
+#: ../nuauth.templates:50001
+#, fuzzy
+msgid "PostgreSQL username:"
 msgstr "Tên người dùng PostgreSQL"
 
-#.Type: string
-#.Description
-#:../nuauth.templates:389
+#. Type: string
+#. Description
+#: ../nuauth.templates:50001
 msgid "Please enter the username to use to connect to PostgreSQL server"
-msgstr "Hãy nhập tên người dùng cần dùng để kết nối đến máy phục vụ PostgreSQL."
+msgstr ""
+"Hãy nhập tên người dùng cần dùng để kết nối đến máy phục vụ PostgreSQL."
 
-#.Type: password
-#.Description
-#:../nuauth.templates:394
-msgid "PostgreSQL password"
+#. Type: password
+#. Description
+#: ../nuauth.templates:51001
+#, fuzzy
+msgid "PostgreSQL password:"
 msgstr "Mật khẩu PostgreSQL"
 
-#.Type: password
-#.Description
-#:../nuauth.templates:394
+#. Type: password
+#. Description
+#: ../nuauth.templates:51001
 msgid "Please enter the password to use to connect to PostgreSQL server"
 msgstr "Hãy nhập mật khẩu cần dùng để kết nối đến máy phục vụ PostgreSQL."
 
-#.Type: string
-#.Default
-#:../nuauth.templates:399
-msgid "1"
-msgstr "1"
-
-#.Type: string
-#.Description
-#:../nuauth.templates:400
-msgid "PostgreSQL timeout"
+#. Type: string
+#. Description
+#: ../nuauth.templates:52001
+#, fuzzy
+msgid "PostgreSQL timeout:"
 msgstr "Thời hạn PostgreSQL"
 
-#.Type: string
-#.Description
-#:../nuauth.templates:400
+#. Type: string
+#. Description
+#: ../nuauth.templates:52001
 msgid ""
 "Please enter the timeout (in seconds) for connections to the PostgreSQL "
 "server"
 msgstr "Hãy nhập thời hạn (theo giây) khi kết nối đến máy phục vụ PostgreSQL."
 
-#.Type: select
-#.Default
-#:../nuauth.templates:407
-msgid "prefer"
-msgstr "thích hơn"
-
-#.Type: select
-#.Description
-#:../nuauth.templates:408
-msgid "PostgreSQL SSL wrapping"
+#. Type: select
+#. Description
+#: ../nuauth.templates:53001
+#, fuzzy
+msgid "PostgreSQL SSL wrapping:"
 msgstr "Bao bọc PostgreSQL bằng SSL"
 
-#.Type: select
-#.Description
-#:../nuauth.templates:408
+#. Type: select
+#. Description
+#: ../nuauth.templates:53001
 msgid ""
 "Whether to use SSL to wrap pgsql connections. Disallow prevents use of SSL, "
 "prefer attempts to use SSL, then fall backs to unencrypted operations if it "
 "fails, allow attemps to use unencrypted mode, then fallbacks to SSL if it "
 "fails, require forces the use of SSL."
-msgstr "Có nên dùng SSL để bao bọc sự kết nối PostgreSQL. Giá trị:\n"
+msgstr ""
+"Có nên dùng SSL để bao bọc sự kết nối PostgreSQL. Giá trị:\n"
 "\n"
-" • không cho phép 		trở ngại dùng SSL,\n"
-" • thích hơn 			cố dùng SSL, rồi phục hồi thao tác không mật mã\n"
-"						nếu không thành công, \n "
-" • cho phép 			cố dùng chế độ không mật mã, rồi phục hồi SSL\n"
-"						nếu không thành công,\n"
-" • cần đến			buộc dùng SSL."
+" • không cho phép \t\ttrở ngại dùng SSL,\n"
+" • thích hơn \t\t\tcố dùng SSL, rồi phục hồi thao tác không mật mã\n"
+"\t\t\t\t\t\tnếu không thành công, \n"
+"  • cho phép \t\t\tcố dùng chế độ không mật mã, rồi phục hồi SSL\n"
+"\t\t\t\t\t\tnếu không thành công,\n"
+" • cần đến\t\t\tbuộc dùng SSL."
 
-#.Type: boolean
-#.Description
-#:../nufw.templates:4
+#. Type: string
+#. Description
+#: ../nuauth.templates:54001
+msgid "Name of the PostgreSQL table to keep track of logged in users:"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:54001
+msgid "Enter the name of the PostgreSQL to store users session in."
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../nuauth.templates:55001
+msgid "What to do when a connection is not authenticated:"
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../nuauth.templates:55001
+msgid ""
+"0 means Drop : say nothing to the client (this is the default) 1 means "
+"Reject : have the nufw daemon send a polite ICMP datagram to the client"
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../nuauth.templates:56001
+msgid "NuFW conntrack extensions:"
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../nuauth.templates:56001
+msgid ""
+"say yes (1) if nufw is able to use libnetfilter_conntrack. This probably "
+"means you run a > 2.6.14 kernel, and use the nufw-nfqueue package, not the "
+"nufw package. If you meet these conditions, it is advised you set this to 1 "
+"and set an appropriate Netfilter ruleset (see nuface for help, or read the "
+"nufw howto)."
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../nuauth.templates:57001
+msgid "Fixed timeout:"
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../nuauth.templates:57001
+msgid ""
+"say yes (1) if nufw is able to use libnetfilter_conntrack with fixed "
+"timeout. Fixed timeout is a  kernel patch that appeared in linux 2.6.18 "
+"vanilla, so it is probably safe to say yes if you run a kernel >= 2.6.18 AND "
+"use NFQUEUE. Otherwise, say no."
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:58001
+#, fuzzy
+msgid "Nuauth debug level:"
+msgstr "Cấp chi tiết của trình nền Nuauth"
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:58001
+msgid ""
+"you probably want to set this to 0 for production. You can increase it up to "
+"9 to get more verbosity from nuauth."
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../nuauth.templates:59001
+msgid "Reject authenticated drops:"
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../nuauth.templates:59001
+msgid ""
+"What should nuauth do if a user authenticates a packet that should be "
+"refused? Default (0) is to just DROP the packet. If you set this to 1, user "
+"will receive a polite REJECT, through ICMP."
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../nuauth.templates:60001
+msgid "Hello authentication:"
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../nuauth.templates:60001
+msgid ""
+"NuFW is designed for strict authentication. This allows for a fallback to "
+"simple \"Helo\" authentication. THIS SHOULD NOT BE USED AS IT BREAKS THE "
+"WHOLE SECURITY OF NUFW. JUST USE A CLASSICAL FIREWALL if so."
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:61001
+msgid "Number of threads dedicaced to logging:"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:61001
+msgid "Change this if you know what you are doing."
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../nuauth.templates:62001
+msgid "Log user sessions:"
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../nuauth.templates:62001
+msgid ""
+"Where to log user connection and disconnection (not user traffic, but rather "
+"user running their clients)."
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../nuauth.templates:63001
+msgid "Convert user names to uppercase:"
+msgstr ""
+
+#. Type: select
+#. Description
+#: ../nuauth.templates:63001
+msgid ""
+"Whether to convert usernames to uppercase. Don't set this unless you know "
+"what you are doing."
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:64001
+msgid "Timerange acl LDAP base DN:"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:64001
+msgid "The base DN location of the timerange ACLs, in the LDAP directory."
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:65001
+msgid "MySQL table for user sessions:"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:65001
+msgid "The MySQL table where user connection/disconnection should be logged."
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:66001
+#, fuzzy
+msgid "PostgreSQL table for user sessions:"
+msgstr "Tên bảng PostgreSQL"
+
+#. Type: string
+#. Description
+#: ../nuauth.templates:66001
+msgid ""
+"The PostGreSQL table where user connection/disconnection should be logged."
+msgstr ""
+
+#. Type: boolean
+#. Description
+#: ../nufw.templates:1001
 msgid "Should nufw daemon be started at boot time?"
 msgstr "Bạn có muốn khởi chạy trình nền nufw khi khởi động máy không?"
 
-#.Type: boolean
-#.Description
-#:../nufw.templates:4
+#. Type: boolean
+#. Description
+#: ../nufw.templates:1001
+#, fuzzy
 msgid ""
-"Choose this option if you want Nufw to be automatically started at boot "
-"time. If you don't choose it, you can start nufw by hand, by running /usr/"
-"sbin/nufw with appropriate options."
-msgstr "Hãy chọn tùy chọn này nếu bạn muốn tự động khởi chạy trình Nufw khi khởi động máy. Còn nếu bạn không chọn tùy chọn này, bạn có thể tự khởi chạy trình nufw, bằng cách chạy lệnh «/usr/sbin/nufw» với một số tùy chọn thích hợp."
+"Choose \"True\" if you want Nufw to be automatically started at boot time. "
+"If you choose \"False\" you can start nufw by hand, by running /usr/sbin/"
+"nufw with appropriate options."
+msgstr ""
+"Hãy chọn «Đúng» nếu bạn muốn Nuauth tự động khởi chạy khi khởi động máy. Nếu "
+"bạn chọn «Không đúng» thì có thể tự khởi chạy nuauth, bằng cách chạy «/usr/"
+"sbin/nuauth» với những tùy chọn thích hợp."
 
-#.Type: select
-#.Description
-#:../nufw.templates:13
+#. Type: select
+#. Description
+#: ../nufw.templates:2001
 msgid "Nufw daemon verbosity level:"
 msgstr "Cấp chi tiết của trình nền Nufw:"
 
-#.Type: select
-#.Description
-#:../nufw.templates:13
+#. Type: select
+#. Description
+#: ../nufw.templates:2001
 msgid ""
 "The more \"v\"s are passed at nufw startup, the more verbose daemon logs "
 "will be. A good production value is \"vv\", increase it to get more details "
 "in case of problems."
-msgstr "Càng nhiều chữ «v» được trả gởi khi trình nufw khởi chạy, càng nhiều chi tiết nó sẽ ghi lưu. Một giá trị làm việc tốt là «vv». Nếu bạn gặp lỗi khi sử dụng nufw, hãy tăng lên cấp chi tiết để xem dữ liệu gỡ lỗi nhiều."
-""
+msgstr ""
+"Càng nhiều chữ «v» được trả gởi khi trình nufw khởi chạy, càng nhiều chi "
+"tiết nó sẽ ghi lưu. Một giá trị làm việc tốt là «vv». Nếu bạn gặp lỗi khi sử "
+"dụng nufw, hãy tăng lên cấp chi tiết để xem dữ liệu gỡ lỗi nhiều."
 
-#.Type: string
-#.Description
-#:../nufw.templates:21
-msgid "Nufw listening address:"
-msgstr "Địa chỉ lắng nghe Nufw:"
-
-#.Type: string
-#.Description
-#:../nufw.templates:21
-msgid ""
-"Nufw needs to bind to one IP address, to communicate with nuauth daemon. "
-"This is not an option, an address must always be listening. It is suggested "
-"to have it listening only on needed addresses, which means \"127.0.0.1\" is "
-"nuauth is installed on the same system as nufw, or an internal IP address in "
-"most cases. It is not advised to have nufw listen on all adresses, but it "
-"can be done specifiing \"0.0.0.0\"."
-msgstr "Trình Nufw cần phải đóng kết đến một địa chỉ IP nào đó, để truyền thông với trình nền nuauth. Thiết lập này không tùy chọn, vì phải có một địa chỉ luôn luôn lắng nghe. Đệ nghị nó lắng nghe chỉ trên những địa chỉ cần thiết, có nghĩa là «127.0.0.1» (nếu trình nuauth được cài đặt trong cùng một hệ thống với trình nufw) hoặc một địa chỉ IP nội bộ (trong phần lớn trường hợp). Không khuyên trình nufw lắng nghe trên mọi địa chỉ, nhưng mà có thể làm như thế bằng cách ghi rõ «0.0.0.0»."
-
-#.Type: string
-#.Description
-#:../nufw.templates:21
-msgid ""
-"Please input an IP address of this system. Default value is \"127.0.0.1\""
-msgstr "Hãy gõ một địa chỉ IP của hệ thống này. Giá trị mặc định là «127.0.0.1»."
-
-#.Type: string
-#.Description
-#:../nufw.templates:34
-msgid "Nufw listening port:"
-msgstr "Cổng lắng nghe Nufw:"
-
-#.Type: string
-#.Description
-#:../nufw.templates:34
-msgid ""
-"Nufw needs to bind to an UDP port, to communicate with nuauth daemon. This "
-"is not an option, a port must always be listening. It is suggested you leave "
-"it at its default value (4129), which is very good for everyone (or nearly). "
-"Don't forget to reconfigure your nuauth installation, if you change this."
-msgstr "Trình nufw cần đóng kết đến mốt cổng UDP, để truyền thông với trình nền nuauth. Không phải tùy chọn: phải có một cổng lắng nghe suốt. Đệ nghị bạn sử dụng giá trị mặc định (4129), mà thích hợp gần mọi trường hợp. Đừng quên cấu hình lại bản cài đặt nuauth, nếu bạn thay đổi giá trị này."
-
-#.Type: string
-#.Description
-#:../nufw.templates:46
+#. Type: string
+#. Description
+#: ../nufw.templates:3001
 msgid "Nuauth daemon IP address:"
 msgstr "Địa chỉ IP của trình nền nuauth:"
 
-#.Type: string
-#.Description
-#:../nufw.templates:46
+#. Type: string
+#. Description
+#: ../nufw.templates:3001
+#, fuzzy
 msgid ""
-"Please enterthe IP address where the Nuauth daemon can be reached. If you "
-"run nufw and nuauth on the same box, leave it at default value of 127.0.0.1. "
+"This is the IP address where the Nuauth daemon can be reached. If you run "
+"nufw and nuauth on the same box, leave it at default value of 127.0.0.1. "
 "Else enter an IP address."
-msgstr "Hãy nhập địa chỉ IP nơi có thể tới trình nền Nuauth. Nếu bạn có chạy hai trình nufw và nuauth trên cùng một máy, hãy dùng giá trị mặc định là «127.0.0.1». Nếu không thì hãy nhập một địa chỉ IP vào đây."
+msgstr ""
+"Giá trị này là địa chỉ IP được dùng để tới trình nền Nufw. Nếu bạn có chạy "
+"hai trình nufw và nuauth trên cùng một máy, hãy sử dụng giá trị mặc định là "
+"«127.0.0.0». Nếu không thì hãy nhập một địa chỉ IP khác."
 
-#.Type: string
-#.Description
-#:../nufw.templates:54
+#. Type: string
+#. Description
+#: ../nufw.templates:4001
 msgid "Nuauth daemon port:"
 msgstr "Cổng trình nền Nuauth:"
 
-#.Type: string
-#.Description
-#:../nufw.templates:54
+#. Type: string
+#. Description
+#: ../nufw.templates:4001
+#, fuzzy
 msgid ""
-"Please enter the port number nuauth is configured to listen on your "
-"installation. On most installations, the default value of 4128 will be "
+"This must be the port number nuauth is configured to listen on your "
+"installation. On most installations, the default value of 4129 will be "
 "correct. Please input a numeric port number."
-msgstr "Hãy nhập số hiệu cổng nơi đã cấu hình trình nuauth sẽ lắng nghe trong bản cài đặt bạn. Trong phần lớn bản cài đặt, giá trị mặc định (4128) là đúng. Hãy nhập một số cổng thuộc số."
+msgstr ""
+"Giá trị này phải là số hiệu cổng nơi trình nufw được cấu hình để lắng nghe "
+"trong bản cài đặt bạn. Trong phần lớn bản cài đặt, giá trị mặc định «4128» "
+"là đúng. Hãy nhập một số hiệu cổng thuộc số."
 
-#.Type: string
-#.Description
-#:../nufw.templates:62
+#. Type: string
+#. Description
+#: ../nufw.templates:5001
 msgid "Nufw timeout delay:"
 msgstr "Khoảng đợi thời hạn Nufw:"
 
-#.Type: string
-#.Description
-#:../nufw.templates:62
+#. Type: string
+#. Description
+#: ../nufw.templates:5001
+#, fuzzy
 msgid ""
-"Please enter the delay Nufw should \"forget\" about an IP packet that has "
-"been received, and has remained unauthenticated. You probably don't need to "
-"tune this parameter, except if your queues are really full. The default "
-"value is 15. Please enter a number (which will be interpreted as seconds)."
-msgstr "Hãy nhập thời gian mà trình nufw nên đợi trước khi «quên» một gói tin IP được nhận nhưng mà chưa được xác thực. Rất có thể là bạn không cần điều hưởng tinh tham số này, trừ nếu mọi hàng đợi bạn gần vượt quá. Giá trị mặc định là 15. Hãy nhập một số (mà sẽ được giải thích theo giây)."
+"This is the delay Nufw should \"forget\" about an IP packet that has been "
+"received, and has remained unauthenticated. You probably don't need to tune "
+"this parameter, except if your queues are really full. Default value is 15. "
+"Please enter a number (which will be interpreted as seconds)."
+msgstr ""
+"Hãy nhập thời gian mà trình nufw nên đợi trước khi «quên» một gói tin IP "
+"được nhận nhưng mà chưa được xác thực. Rất có thể là bạn không cần điều "
+"hưởng tinh tham số này, trừ nếu mọi hàng đợi bạn gần vượt quá. Giá trị mặc "
+"định là 15. Hãy nhập một số (mà sẽ được giải thích theo giây)."
 
-#.Type: string
-#.Description
-#:../nufw.templates:71
+#. Type: string
+#. Description
+#: ../nufw.templates:6001
 msgid "Nufw Tracksize:"
 msgstr "Kích thước đường dẫn Nufw:"
 
-#.Type: string
-#.Description
-#:../nufw.templates:71
+#. Type: string
+#. Description
+#: ../nufw.templates:6001
+#, fuzzy
 msgid ""
-"This tracksize parameter is suitable for most configs, and should be changed "
-"only if you know what you are doing. Default value : 1000"
-msgstr "Tham số kích thước đường dẫn này có thích hợp với phần lớn cấu hình, thì bạn hãy thay đổi nó chỉ khi bạn biết mọi kết quả thôi. Giá trị mặc định là 1000."
+"This parameter is suitable for most configs, and should be changed only if "
+"you know what you are doing. Default value : 1000"
+msgstr ""
+"Tham số kích thước đường dẫn này có thích hợp với phần lớn cấu hình, thì bạn "
+"hãy thay đổi nó chỉ khi bạn biết mọi kết quả thôi. Giá trị mặc định là 1000."
+
+# Name: don't translate / Tên: đừng dịch
+#, fuzzy
+#~ msgid "libldap, plaintext"
+#~ msgstr "libldap, libdbm"
+
+#~ msgid "v, vv, vvv, vvvv, vvvvv, vvvvvv, vvvvvvv, vvvvvvvv"
+#~ msgstr "v, vv, vvv, vvvv, vvvvv, vvvvvv, vvvvvvv, vvvvvvvv"
+
+#~ msgid "nuauth"
+#~ msgstr "nuauth"
+
+#~ msgid "0.0.0.0"
+#~ msgstr "0.0.0.0"
+
+#~ msgid "4129"
+#~ msgstr "4129"
+
+#~ msgid "4130"
+#~ msgstr "4130"
+
+#~ msgid "4128"
+#~ msgstr "4128"
+
+#~ msgid "Nufw daemon port"
+#~ msgstr "Cổng trình nền nufw"
+
+#~ msgid "5"
+#~ msgstr "5"
+
+#~ msgid "10"
+#~ msgstr "10"
+
+# Name: don't translate / Tên: đừng dịch
+#~ msgid "libldap"
+#~ msgstr "libldap"
+
+#~ msgid ""
+#~ "Here are possible plugins for ACLs definitions. One single of them must "
+#~ "be chosen. For now the choice is easy, as only \"libldap\" is "
+#~ "available ;-)"
+#~ msgstr ""
+#~ "Tại đây có một số bô cầm phít có thể cho lời định nghĩa ACL. Bạn phải "
+#~ "chọn chỉ một bộ thôi. Lúc này có thể chọn dễ dàng, vì chỉ có «libldap» "
+#~ "sẵn sàng. :-)"
+
+#~ msgid "SSL communications with clients"
+#~ msgstr "Truyền thông SSL với trình khách"
+
+#~ msgid ""
+#~ "If you set this to 1, only SSL encrypted authentications will be accepted "
+#~ "from clients. If you set this to 0, a hash will be used. It is strongly "
+#~ "advised to use SSL encryption, which is the default."
+#~ msgstr ""
+#~ "Nếu bạn lập giá trị này là 1, trình nuauth sẽ chấp nhận chỉ cách xác thực "
+#~ "mật mã bằng SSL từ trình khách. Nếu bạn lập nó là 0, sẽ dùng một băm. "
+#~ "Khuyến khích bạn sử dụng mặt mã SSL, mà là mặc định."
+
+#~ msgid ""
+#~ "Please enter the full path of the private key that will be used for "
+#~ "clients communications."
+#~ msgstr ""
+#~ "Hãy nhập đường dẫn đầy đủ tới khóa riêng sẽ được dùng để truyền thông với "
+#~ "trình khách."
+
+# Name: don't translate / Tên: đừng dịch
+#~ msgid "/etc/nufw/nuauth.pem"
+#~ msgstr "/etc/nufw/nuauth.pem"
+
+#~ msgid "0, 1, 2, 4"
+#~ msgstr "0, 1, 2, 4"
+
+# Name: don't translate / Tên: đừng dịch
+#~ msgid "syslog, mysql, pgsql"
+#~ msgstr "syslog, mysql, pgsql"
+
+#~ msgid "389"
+#~ msgstr "389"
+
+#~ msgid "cn=admin,dc=yourdomain,dc=com"
+#~ msgstr "cn=admin,dc=yourdomain,dc=com"
+
+#~ msgid "4"
+#~ msgstr "4"
+
+#~ msgid "dc=yourdomain,dc=com"
+#~ msgstr "dc=yourdomain,dc=com"
+
+#~ msgid "dc=acls,dc=yourdomain,dc=com"
+#~ msgstr "dc=acls,dc=yourdomain,dc=com"
+
+#~ msgid "dc=users,dc=yourdomain,dc=com"
+#~ msgstr "dc=users,dc=yourdomain,dc=com"
+
+# Name: don't translate / Tên: đừng dịch
+#~ msgid "/etc/nufw/users.dbm"
+#~ msgstr "/etc/nufw/users.dbm"
+
+#~ msgid "DBM file with users/groups definition"
+#~ msgstr "Tập tin cơ sở dữ liệu có lời định nghĩa người dùng/nhóm"
+
+#~ msgid "3306"
+#~ msgstr "3306"
+
+#~ msgid "0, 1"
+#~ msgstr "0, 1"
+
+# Name: don't translate / Tên: đừng dịch
+#~ msgid "/etc/nufw/ssl/mysql.key"
+#~ msgstr "/etc/nufw/ssl/mysql.key"
+
+# Name: don't translate / Tên: đừng dịch
+#~ msgid "/etc/nufw/ssl/mysql.cert"
+#~ msgstr "/etc/nufw/ssl/mysql.cert"
+
+# Name: don't translate / Tên: đừng dịch
+#~ msgid "/etc/nufw/ssl/mysql.ca"
+#~ msgstr "/etc/nufw/ssl/mysql.ca"
+
+# Name: don't translate / Tên: đừng dịch
+#~ msgid "/etc/nufw/ssl/mysql.cas/"
+#~ msgstr "/etc/nufw/ssl/mysql.cas/"
+
+# Name: don't translate / Tên: đừng dịch
+#~ msgid "ALL:!ADH:+RC4:@STRENGTH"
+#~ msgstr "ALL:!ADH:+RC4:@STRENGTH"
+
+#~ msgid "127.0.0.1"
+#~ msgstr "127.0.0.1"
+
+#~ msgid "5432"
+#~ msgstr "5432"
+
+# Name: don't translate / Tên: đừng dịch
+#~ msgid "nufw"
+#~ msgstr "nufw"
+
+#~ msgid "foo"
+#~ msgstr "foo"
+
+#~ msgid "1"
+#~ msgstr "1"
+
+#~ msgid "prefer"
+#~ msgstr "thích hơn"
+
+#~ msgid ""
+#~ "Choose this option if you want Nufw to be automatically started at boot "
+#~ "time. If you don't choose it, you can start nufw by hand, by running /usr/"
+#~ "sbin/nufw with appropriate options."
+#~ msgstr ""
+#~ "Hãy chọn tùy chọn này nếu bạn muốn tự động khởi chạy trình Nufw khi khởi "
+#~ "động máy. Còn nếu bạn không chọn tùy chọn này, bạn có thể tự khởi chạy "
+#~ "trình nufw, bằng cách chạy lệnh «/usr/sbin/nufw» với một số tùy chọn "
+#~ "thích hợp."
+
+#~ msgid "Nufw listening address:"
+#~ msgstr "Địa chỉ lắng nghe Nufw:"
+
+#~ msgid ""
+#~ "Nufw needs to bind to one IP address, to communicate with nuauth daemon. "
+#~ "This is not an option, an address must always be listening. It is "
+#~ "suggested to have it listening only on needed addresses, which means "
+#~ "\"127.0.0.1\" is nuauth is installed on the same system as nufw, or an "
+#~ "internal IP address in most cases. It is not advised to have nufw listen "
+#~ "on all adresses, but it can be done specifiing \"0.0.0.0\"."
+#~ msgstr ""
+#~ "Trình Nufw cần phải đóng kết đến một địa chỉ IP nào đó, để truyền thông "
+#~ "với trình nền nuauth. Thiết lập này không tùy chọn, vì phải có một địa "
+#~ "chỉ luôn luôn lắng nghe. Đệ nghị nó lắng nghe chỉ trên những địa chỉ cần "
+#~ "thiết, có nghĩa là «127.0.0.1» (nếu trình nuauth được cài đặt trong cùng "
+#~ "một hệ thống với trình nufw) hoặc một địa chỉ IP nội bộ (trong phần lớn "
+#~ "trường hợp). Không khuyên trình nufw lắng nghe trên mọi địa chỉ, nhưng mà "
+#~ "có thể làm như thế bằng cách ghi rõ «0.0.0.0»."
+
+#~ msgid ""
+#~ "Please input an IP address of this system. Default value is \"127.0.0.1\""
+#~ msgstr ""
+#~ "Hãy gõ một địa chỉ IP của hệ thống này. Giá trị mặc định là «127.0.0.1»."
+
+#~ msgid "Nufw listening port:"
+#~ msgstr "Cổng lắng nghe Nufw:"
+
+#~ msgid ""
+#~ "Nufw needs to bind to an UDP port, to communicate with nuauth daemon. "
+#~ "This is not an option, a port must always be listening. It is suggested "
+#~ "you leave it at its default value (4129), which is very good for everyone "
+#~ "(or nearly). Don't forget to reconfigure your nuauth installation, if you "
+#~ "change this."
+#~ msgstr ""
+#~ "Trình nufw cần đóng kết đến mốt cổng UDP, để truyền thông với trình nền "
+#~ "nuauth. Không phải tùy chọn: phải có một cổng lắng nghe suốt. Đệ nghị bạn "
+#~ "sử dụng giá trị mặc định (4129), mà thích hợp gần mọi trường hợp. Đừng "
+#~ "quên cấu hình lại bản cài đặt nuauth, nếu bạn thay đổi giá trị này."
+
+#~ msgid ""
+#~ "Please enterthe IP address where the Nuauth daemon can be reached. If you "
+#~ "run nufw and nuauth on the same box, leave it at default value of "
+#~ "127.0.0.1. Else enter an IP address."
+#~ msgstr ""
+#~ "Hãy nhập địa chỉ IP nơi có thể tới trình nền Nuauth. Nếu bạn có chạy hai "
+#~ "trình nufw và nuauth trên cùng một máy, hãy dùng giá trị mặc định là "
+#~ "«127.0.0.1». Nếu không thì hãy nhập một địa chỉ IP vào đây."
+
+#~ msgid ""
+#~ "Please enter the port number nuauth is configured to listen on your "
+#~ "installation. On most installations, the default value of 4128 will be "
+#~ "correct. Please input a numeric port number."
+#~ msgstr ""
+#~ "Hãy nhập số hiệu cổng nơi đã cấu hình trình nuauth sẽ lắng nghe trong bản "
+#~ "cài đặt bạn. Trong phần lớn bản cài đặt, giá trị mặc định (4128) là đúng. "
+#~ "Hãy nhập một số cổng thuộc số."
