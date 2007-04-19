@@ -132,7 +132,7 @@ static int userdb_checkpass(sasl_conn_t * conn,
 		dec_user = g_locale_from_utf8(user,
 					      -1, NULL, &bwritten, NULL);
 		if (!dec_user) {
-			log_message(WARNING, DEBUG_AREA_AUTH,
+			log_message(SERIOUS_WARNING, DEBUG_AREA_AUTH,
 				    "Can not convert username at %s:%d",
 				    __FILE__, __LINE__);
 
