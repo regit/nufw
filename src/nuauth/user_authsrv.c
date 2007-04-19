@@ -390,7 +390,9 @@ GSList *user_request(struct tls_buffer_read * datas)
 		connection->client_version = datas->client_version;
 		connection->decision = DECISION_NODECIDE;
 #ifdef PERF_DISPLAY_ENABLE
-		gettimeofday(&(connection->arrival_time), NULL);
+		if (nuauthconf->debug_areas & DEBUG_AREA_PERF) {
+			gettimeofday(&(connection->arrival_time), NULL);
+		}
 #endif
 
 	/*** process all fields ***/

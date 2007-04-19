@@ -205,7 +205,9 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass,
 #ifdef PERF_DISPLAY_ENABLE
 		{
 			struct timeval tvstart, tvend, result;
-			gettimeofday(&tvstart, NULL);
+			if (nuauthconf->debug_areas & DEBUG_AREA_PERF) {
+				gettimeofday(&tvstart, NULL);
+			}
 #endif
 
 
@@ -233,11 +235,14 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass,
 				g_static_mutex_unlock(&pam_mutex);
 			}
 #ifdef PERF_DISPLAY_ENABLE
-			gettimeofday(&tvend, NULL);
-			timeval_substract(&result, &tvend, &tvstart);
-			log_message(INFO, DEBUG_AREA_PERF,
-				    "PAM Auth duration: %ld sec %03ld msec",
-				    result.tv_sec, result.tv_usec / 1000);
+			if (nuauthconf->debug_areas & DEBUG_AREA_PERF) {
+				gettimeofday(&tvend, NULL);
+				timeval_substract(&result, &tvend, &tvstart);
+				log_message(INFO, DEBUG_AREA_PERF,
+						"PAM Auth duration: %.1f msec",
+						(double)result.tv_sec*1000+
+							(double)(result.tv_usec/1000));
+			}
 		}
 #endif
 

@@ -646,7 +646,9 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 #ifdef PERF_DISPLAY_ENABLE
 	{
 		struct timeval tvstart, tvend, result;
-		gettimeofday(&tvstart, NULL);
+		if (nuauthconf->debug_areas & DEBUG_AREA_PERF) {
+			gettimeofday(&tvstart, NULL);
+		}
 #endif
 
 		err =
@@ -655,10 +657,12 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 				   &timeout, &res);
 
 #ifdef PERF_DISPLAY_ENABLE
-		gettimeofday(&tvend, NULL);
-		timeval_substract(&result, &tvend, &tvstart);
-		log_message(INFO, DEBUG_AREA_PERF, "Ldap query time: %.1f msec",
-			    (double)result.tv_sec*1000+(double)(result.tv_usec/1000));
+		if (nuauthconf->debug_areas & DEBUG_AREA_PERF) {
+			gettimeofday(&tvend, NULL);
+			timeval_substract(&result, &tvend, &tvstart);
+			log_message(INFO, DEBUG_AREA_PERF, "Ldap query time: %.1f msec",
+					(double)result.tv_sec*1000+(double)(result.tv_usec/1000));
+		}
 	}
 #endif
 	if (err != LDAP_SUCCESS) {

@@ -245,7 +245,9 @@ int tls_connect(int socket_fd, gnutls_session ** session_ptr)
 	ret = 0;
 
 #ifdef PERF_DISPLAY_ENABLE
-	gettimeofday(&entry_time, NULL);
+	if (nuauthconf->debug_areas & DEBUG_AREA_PERF) {
+		gettimeofday(&entry_time, NULL);
+	}
 #endif
 	do {
 		debug_log_message(DEBUG, DEBUG_AREA_GW | DEBUG_AREA_USER,
@@ -254,7 +256,9 @@ int tls_connect(int socket_fd, gnutls_session ** session_ptr)
 		ret = gnutls_handshake(*session);
 	} while (ret < 0 && !gnutls_error_is_fatal(ret));
 #ifdef PERF_DISPLAY_ENABLE
-	gettimeofday(&leave_time, NULL);
+	if (nuauthconf->debug_areas & DEBUG_AREA_PERF) {
+		gettimeofday(&leave_time, NULL);
+	}
 #endif
 
 	if (ret < 0) {
@@ -265,11 +269,13 @@ int tls_connect(int socket_fd, gnutls_session ** session_ptr)
 		return SASL_BADPARAM;
 	}
 #ifdef PERF_DISPLAY_ENABLE
-	timeval_substract(&elapsed_time, &leave_time, &entry_time);
-	log_message(INFO, DEBUG_AREA_PERF,
-		    "Handshake duration : %.1f msec",
-		    (double)elapsed_time.tv_sec*1000+
-			(double)(elapsed_time.tv_usec/1000));
+	if (nuauthconf->debug_areas & DEBUG_AREA_PERF) {
+		timeval_substract(&elapsed_time, &leave_time, &entry_time);
+		log_message(INFO, DEBUG_AREA_PERF,
+				"TLS Handshake duration : %.1f msec",
+				(double)elapsed_time.tv_sec*1000+
+				(double)(elapsed_time.tv_usec/1000));
+	}
 #endif
 
 	debug_log_message(DEBUG, DEBUG_AREA_GW | DEBUG_AREA_USER, "NuFW TLS Handshaked");

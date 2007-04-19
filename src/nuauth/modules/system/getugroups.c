@@ -77,7 +77,9 @@ GSList *getugroups(char *username, gid_t gid)
 #ifdef PERF_DISPLAY_ENABLE
 	{
 		struct timeval tvstart, tvend, result;
-		gettimeofday(&tvstart, NULL);
+		if (nuauthconf->debug_areas & DEBUG_AREA_PERF) {
+			gettimeofday(&tvstart, NULL);
+		}
 #endif
 		if (system_glibc_cant_guess_maxgroups) {
 			ng = system_glibc_cant_guess_maxgroups;
@@ -99,11 +101,14 @@ GSList *getugroups(char *username, gid_t gid)
 		g_free(groups);
 
 #ifdef PERF_DISPLAY_ENABLE
-		gettimeofday(&tvend, NULL);
-		timeval_substract(&result, &tvend, &tvstart);
-		log_message(INFO, DEBUG_AREA_PERF,
-			    "Group list fetching duration: %ld sec %03ld msec",
-			    result.tv_sec, result.tv_usec / 1000);
+		if (nuauthconf->debug_areas & DEBUG_AREA_PERF) {
+			gettimeofday(&tvend, NULL);
+			timeval_substract(&result, &tvend, &tvstart);
+			log_message(INFO, DEBUG_AREA_PERF,
+					"Group list fetching duration: %.1f msec",
+					(double)result.tv_sec*1000+
+						(double)(result.tv_usec/1000));
+		}
 	}
 #endif
 

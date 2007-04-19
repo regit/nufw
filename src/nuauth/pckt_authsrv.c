@@ -208,7 +208,9 @@ nu_error_t authpckt_new_connection(unsigned char *dgram,
 		return NU_EXIT_ERROR;
 	}
 #ifdef PERF_DISPLAY_ENABLE
-	gettimeofday(&(connection->arrival_time), NULL);
+	if (nuauthconf->debug_areas & DEBUG_AREA_PERF) {
+		gettimeofday(&(connection->arrival_time), NULL);
+	}
 #endif
 	connection->acl_groups = NULL;
 	connection->user_groups = NULL;
