@@ -1,4 +1,4 @@
-#Change to "yes" for Nufw to be started
+#Change to "true" for Nufw to be started
 NUFW_START="true"
 
 #Add "v"s so nufw gets more verbose
