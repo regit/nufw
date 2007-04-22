@@ -82,7 +82,7 @@ case "$1" in
 	;;
   stop)
 	echo -n "Stopping $DESC: "
-	start-stop-daemon --stop --quiet --pidfile /var/run/$PID.pid \
+	start-stop-daemon --stop --quiet --oknodo --pidfile /var/run/$PID.pid \
 		--exec $DAEMON
 	echo "$NAME."
 	;;
@@ -105,8 +105,8 @@ case "$1" in
 	#	just the same as "restart".
 	#
 	echo -n "Restarting $DESC: "
-	start-stop-daemon --stop --quiet --pidfile \
-		/var/run/$PID.pid --exec $DAEMON || /bin/true
+	start-stop-daemon --stop --quiet --oknodo --pidfile \
+		/var/run/$PID.pid --exec $DAEMON
 	sleep 1
 	start-stop-daemon --start --quiet --pidfile \
 		/var/run/$PID.pid --exec $DAEMON -- $DAEMON_OPTS
