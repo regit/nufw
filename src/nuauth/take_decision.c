@@ -521,7 +521,7 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 		}
 		break;
 	default:
-		log_message(CRITICAL_WARNING, DEBUG_AREA_GW,
+		log_message(WARNING, DEBUG_AREA_GW,
 			    "Unknown nufw protocol at %s:%d", __FILE__, __LINE__);
 		return;
 	}
