@@ -131,6 +131,25 @@ typedef struct {
 #endif
 } connection_t;
 
+guint hash_connection(gconstpointer conn_p);
+/** hash table containing the connections. */
+GHashTable *conn_list;
+/** global lock for the conn list. */
+GStaticMutex insert_mutex;
+
+
+gboolean get_old_conn(gpointer key, gpointer value, gpointer user_data);
+gboolean compare_connection(gconstpointer conn1, gconstpointer conn2);
+int conn_cl_remove(gconstpointer conn);
+int conn_cl_delete(gconstpointer conn);
+nu_error_t print_tracking_t(tracking_t *tracking);
+gint print_connection(gpointer data, gpointer userdata);
+void free_connection_list(GSList * list);
+connection_t *duplicate_connection(connection_t * element);
+void free_connection(connection_t * conn);
+int lock_and_free_connection(connection_t * conn);
+void clean_connections_list();
+
 /** @} */
 
 #endif
