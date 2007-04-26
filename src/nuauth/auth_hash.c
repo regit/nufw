@@ -42,7 +42,7 @@ void search_and_fill_catchall(connection_t * new, connection_t * packet)
 		    ("%s:%d Should not have this. Please email Nufw developpers!",
 		     __FILE__, __LINE__);
 		g_message
-		    ("state of new packet: %d, state of existring packet: %d",
+		    ("state of new packet: %d, state of existing packet: %d",
 		     new->state, packet->state);
 	}
 }
@@ -219,8 +219,10 @@ inline void search_and_fill_complete_of_userpckt(connection_t * new,
 		       sizeof(iface_nfo_t));
 
 		packet->packet_id = new->packet_id;
+		new->packet_id = NULL;
 		packet->mark = new->mark;
 		packet->socket = new->socket;
+		/* transfert nufw tls session to initial packet */
 		packet->tls = new->tls;
 		new->tls = NULL;
 
