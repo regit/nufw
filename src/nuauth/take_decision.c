@@ -520,6 +520,10 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 			buffer = (void *) response;
 		}
 		break;
+	default:
+		log_message(CRITICAL_WARNING, DEBUG_AREA_GW,
+			    "Unknown nufw protocol at %s:%d", __FILE__, __LINE__);
+		return;
 	}
 
 	if (DEBUG_OR_NOT (DEBUG_LEVEL_DEBUG, DEBUG_AREA_PACKET)) {
