@@ -69,7 +69,7 @@ AC_ARG_WITH(system-auth, [AC_HELP_STRING(--with-system-auth,  Support PAM+NSS au
 AC_ARG_WITH(ldap,   [AC_HELP_STRING(--with-ldap,  Support LDAP directory for users and acl lookup)],ldap=$withval, ldap="")
 
 
-AC_ARG_WITH(nfqueue,   [AC_HELP_STRING(--with-nfqueue, Compile for NFQUEUE instead of QUEUE)],use_nfqueue=$withval, use_nfqueue="")
+AC_ARG_WITH(nfqueue,   [AC_HELP_STRING(--with-nfqueue, Compile for NFQUEUE instead of QUEUE)],use_nfqueue=$withval, use_nfqueue="yes")
 AC_ARG_WITH(nfconntrack,   [AC_HELP_STRING(--with-nfconntrack, Compile with netfilter_conntrack)],use_nfconntrack=$withval, use_nfconntrack="")
 
 
