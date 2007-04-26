@@ -107,8 +107,8 @@ nu_error_t declare_dead_nufw_session(nufw_session_t * session)
 {
 	g_static_mutex_lock(&nufw_servers_mutex);
 
-	if (session->alive) {
-		session->alive = 0;
+	if (session->alive == TRUE) {
+		session->alive = FALSE;
 		shutdown((int)gnutls_transport_get_ptr(
 					*(session->tls)),
 				SHUT_WR);
@@ -122,7 +122,7 @@ nu_error_t declare_dead_nufw_session(nufw_session_t * session)
 
 gboolean ghrfunc_true(gpointer key, gpointer value, gpointer user_data)
 {
-	if (((nufw_session_t *)value)->alive)
+	if (((nufw_session_t *)value)->alive == TRUE)
 		return TRUE;
 	else
 		return FALSE;
@@ -201,7 +201,7 @@ void release_nufw_session(nufw_session_t * session)
 {
 	g_static_mutex_lock(&nufw_servers_mutex);
 	if (g_atomic_int_dec_and_test(&(session->usage)) &&
-		(! session->alive)) {
+		(session->alive == FALSE)) {
 		suppress_nufw_session(session);
 	}
 	g_static_mutex_unlock(&nufw_servers_mutex);
@@ -211,7 +211,7 @@ nu_error_t nufw_session_send(nufw_session_t * session, char * buffer, int length
 {
 	int ret;
 
-	if (! session->alive)
+	if (session->alive == FALSE)
 		return NU_EXIT_ERROR;
 
 	g_mutex_lock(session->tls_lock);
