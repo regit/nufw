@@ -1,4 +1,4 @@
-2.2.0-rc2 (2007/04/19)
+2.2.0-rc2 (2007/04/27)
 	- nuauth: add declaration of thread_pool_push
 	- ldap: optimize filter
 	- NuFW is now compatible with automake1.10
@@ -14,10 +14,11 @@
 	- mark_field: set mark on packet with glob matching on packet fields
 	- nuauth: fix possible problem on nufw disconnect on busy systems
 	- nuauth: can now have mandatory per-certificate authentication
-	- ldap module: add new option ldap_use_ipv4_schema to have compability with
+	- ldap module: add new option ldap_use_ipv4_schema to have compatibility with
 	  IPv4 tools
 	- nuauth: fix crash when nufw send concatenated requests
 	- nuauth: improve debugging messages
+	- nuauth: fix bug when user packet comes first (nufw disconnection).
 2.2.0-rc1 (2007/03/08)
 	- log_mysql: add option to log by default in SQL
 	database with IPV4 schema
