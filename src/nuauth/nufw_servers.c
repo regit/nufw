@@ -147,7 +147,7 @@ static gboolean get_nufw_server_by_addr(gpointer key, gpointer value,
  * session need to be released with a call to release_nufw_session()
  */
 
-nufw_session_t *get_nufw_session()
+nufw_session_t * get_nufw_session()
 {
 	nufw_session_t * value = NULL;
 	g_static_mutex_lock(&nufw_servers_mutex);
@@ -207,7 +207,7 @@ void release_nufw_session(nufw_session_t * session)
 	g_static_mutex_unlock(&nufw_servers_mutex);
 }
 
-nu_error_t nufw_session_send(nufw_session_t * session, char* buffer, int length)
+nu_error_t nufw_session_send(nufw_session_t * session, char * buffer, int length)
 {
 	int ret;
 
@@ -233,7 +233,7 @@ nu_error_t nufw_session_send(nufw_session_t * session, char* buffer, int length)
 /**
  * Iterate on each nufw using callback.
  */
-void foreach_nufw_server(GHFunc callback, void *data)
+void foreach_nufw_server(GHFunc callback, void * data)
 {
 	g_static_mutex_lock(&nufw_servers_mutex);
 	g_hash_table_foreach(nufw_servers, callback, data);
