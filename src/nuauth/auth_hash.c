@@ -224,6 +224,7 @@ inline void search_and_fill_complete_of_userpckt(connection_t * new,
 		packet->socket = new->socket;
 		/* transfert nufw tls session to initial packet */
 		packet->tls = new->tls;
+		packet->nufw_version = new->nufw_version;
 		new->tls = NULL;
 
 		thread_pool_push(nuauthdatas->acl_checkers, new, NULL);
