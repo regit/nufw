@@ -24,11 +24,11 @@ import readline
 COMMANDS_COMPLETION = ("version", "users", "refresh cache",
     "disconnect ", "uptime", "reload", "help", "quit",
     "display debug_level", "display debug_areas", "debug_level",
-    "debug_areas", "firewalls")
+    "debug_areas", "firewalls", "packets count")
 COMMANDS_REGEX = re.compile(
     "^(?:version|users|firewalls|refresh cache|nupik!|display debug_(?:level|areas)|"
     "debug_level [0-9]+|debug_areas [0-9]+|"
-    "disconnect (?:[0-9]+|all)|uptime|reload|help|quit)$")
+    "disconnect (?:[0-9]+|all)|uptime|reload|help|quit|packets count)$")
 
 class Completer:
     def __init__(self, words):

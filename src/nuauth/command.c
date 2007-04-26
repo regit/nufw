@@ -30,6 +30,7 @@ const char* COMMAND_HELP =
 "version: display nuauth version\n"
 "users: list connected users\n"
 "firewalls: list connected nufw firewalls\n"
+"packets count: display number of decision waiting packets\n"
 "refresh cache: refresh all caches\n"
 "disconnect ID: disconnect an user with his session identifier\n"
 "disconnect all: disconnect all users\n"
@@ -360,6 +361,8 @@ void command_execute(command_t * this, char *command)
 		encoder_add_int32(encoder, nuauthconf->debug_level);
 	} else if (strcmp(command, "display debug_areas") == 0) {
 		encoder_add_int32(encoder, nuauthconf->debug_areas);
+	} else if (strcmp(command, "packets count") == 0) {
+		encoder_add_int32(encoder, g_hash_table_size(conn_list));
 	} else {
 		/* unknown command => disconnect */
 	}
