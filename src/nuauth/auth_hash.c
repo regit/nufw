@@ -294,7 +294,7 @@ inline void search_and_fill_ready(connection_t * new,
 				  connection_t * packet)
 {
 	debug_log_message(DEBUG, DEBUG_AREA_MAIN,
-			  "seach&fill ready: Element is in state %d but we received packet state %d",
+			  "search&fill ready: Element is in state %d but received packet has state %d",
 			  packet->state, new->state);
 	switch (new->state) {
 	case AUTH_STATE_AUTHREQ:
