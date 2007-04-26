@@ -278,6 +278,7 @@ gboolean get_old_conn(gpointer key, gpointer value, gpointer user_data)
 	if ((current_timestamp - ((connection_t *) value)->timestamp >
 	     nuauthconf->packet_timeout)
 	    && (((connection_t *) value)->state != AUTH_STATE_COMPLETING)
+	    && (((connection_t *) value)->state != AUTH_STATE_READY)
 	    ) {
 		return TRUE;
 	}
