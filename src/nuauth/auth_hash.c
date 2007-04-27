@@ -176,6 +176,7 @@ inline void search_and_fill_complete_of_authreq(connection_t * new,
 		packet->os_sysname = new->os_sysname;
 		packet->os_release = new->os_release;
 		packet->os_version = new->os_version;
+		packet->client_version = new->client_version;
 		/* user cache system */
 		packet->cacheduserdatas = new->cacheduserdatas;
 
@@ -214,6 +215,7 @@ inline void search_and_fill_complete_of_userpckt(connection_t * new,
 		new->os_sysname = packet->os_sysname;
 		new->os_release = packet->os_release;
 		new->os_version = packet->os_version;
+		new->client_version = packet->client_version;
 		/* copy iface info */
 		memcpy(&(new->iface_nfo), &(packet->iface_nfo),
 		       sizeof(iface_nfo_t));
