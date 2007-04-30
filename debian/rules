@@ -31,7 +31,7 @@ endif
 CONFIGURE       = CFLAGS='$(CFLAGS)' ./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --prefix=/usr \
 			--mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info --localstatedir=/var \
 			--sysconfdir=/etc/nufw/ --with-mysql-log --with-pgsql-log --with-system-auth --with-ldap \
-			--with-utf8 --with-nfqueue --with-nfconntrack --without-fixedtimeout --enable-debug
+			--with-utf8 --with-nfqueue --with-nfconntrack --without-fixedtimeout --enable-debug --enable-pam-nufw
 			# --with-utf8 --with-nfqueue --with-nfconntrack --with-fixedtimeout #FIXME : THIS line should be used
 
 config.status: configure
@@ -40,21 +40,21 @@ config.status: configure
 	CFLAGS="$(CFLAGS)" ./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --prefix=/usr \
 		--mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info --localstatedir=/var \
 		--sysconfdir=/etc/nufw/ --with-mysql-log --with-pgsql-log --with-system-auth --with-ldap \
-		--with-nfqueue --with-nfconntrack --with-fixedtimeout --with-utf8 --enable-debug
+		--with-nfqueue --with-nfconntrack --with-fixedtimeout --with-utf8 --enable-debug --enable-pam-nufw
 
 build: build-stamp
 
 clean:
 	dh_testdir
 	dh_testroot
-	rm -f build-stamp 
-	rm -f build-nufw 
-	rm -f config-nufw-stamp 
+	rm -f build-stamp
+	rm -f build-nufw
+	rm -f config-nufw-stamp
 
 	# Add here commands to clean up after the build process.
 	-$(MAKE) distclean
 
-	dh_clean 
+	dh_clean
 
 config-nufw: config-nufw-stamp
 config-nufw-stamp:
@@ -82,10 +82,10 @@ binary-arch: build nufw nuauth nutcpc libnuclient3 nuauth-extra nuauth-log-mysql
 
 nufw:
 	@echo "--- Building: $@"
-	dh_installdirs           -p$@ -P$(b)/$@ 
+	dh_installdirs           -p$@ -P$(b)/$@
 	dh_testdir -p$@ -P$(b)/$@
 	dh_testroot -p$@ -P$(b)/$@
-	dh_installchangelogs -p$@ -P$(b)/$@ ChangeLog 
+	dh_installchangelogs -p$@ -P$(b)/$@ ChangeLog
 	dh_installdocs -p$@ -P$(b)/$@
 	dh_installexamples -p$@ -P$(b)/$@
 #	dh_install -p$@ -P$(b)/$@
@@ -113,14 +113,14 @@ nufw:
 	dh_gencontrol -p$@ -P$(b)/$@
 	dh_md5sums -p$@ -P$(b)/$@
 	dh_builddeb -p$@ -P$(b)/$@
-	
+
 
 libnuclient3:
 	@echo "--- Building: $@"
-	dh_installdirs           -p$@ -P$(b)/$@ 
+	dh_installdirs           -p$@ -P$(b)/$@
 	dh_testdir -p$@ -P$(b)/$@
 	dh_testroot -p$@ -P$(b)/$@
-	dh_installchangelogs -p$@ -P$(b)/$@ ChangeLog 
+	dh_installchangelogs -p$@ -P$(b)/$@ ChangeLog
 	dh_installdocs -p$@ -P$(b)/$@
 	dh_installexamples -p$@ -P$(b)/$@
 	dh_install -p$@
@@ -148,10 +148,10 @@ libnuclient3:
 
 libpam-nufw:
 	@echo "--- Building: $@"
-	dh_installdirs           -p$@ -P$(b)/$@ 
+	dh_installdirs           -p$@ -P$(b)/$@
 	dh_testdir -p$@ -P$(b)/$@
 	dh_testroot -p$@ -P$(b)/$@
-	dh_installchangelogs -p$@ -P$(b)/$@ ChangeLog 
+	dh_installchangelogs -p$@ -P$(b)/$@ ChangeLog
 	dh_installdocs -p$@ -P$(b)/$@
 	dh_installexamples -p$@ -P$(b)/$@
 	dh_install -p$@
@@ -180,10 +180,10 @@ libpam-nufw:
 
 nuauth:
 	@echo "--- Building: $@"
-	dh_installdirs           -p$@ -P$(b)/$@ 
+	dh_installdirs           -p$@ -P$(b)/$@
 	dh_testdir -p$@ -P$(b)/$@
 	dh_testroot -p$@ -P$(b)/$@
-	dh_installchangelogs -p$@ -P$(b)/$@ ChangeLog 
+	dh_installchangelogs -p$@ -P$(b)/$@ ChangeLog
 	dh_installdocs -p$@ -P$(b)/$@
 	dh_installexamples -p$@ -P$(b)/$@
 	mkdir -p $(CURDIR)/debian/$@/etc/nufw/
@@ -223,10 +223,10 @@ nuauth:
 
 nuauth-extra:
 	@echo "--- Building: $@"
-	dh_installdirs           -p$@ -P$(b)/$@ 
+	dh_installdirs           -p$@ -P$(b)/$@
 	dh_testdir -p$@ -P$(b)/$@
 	dh_testroot -p$@ -P$(b)/$@
-	dh_installchangelogs -p$@ -P$(b)/$@ ChangeLog 
+	dh_installchangelogs -p$@ -P$(b)/$@ ChangeLog
 	dh_installdocs -p$@ -P$(b)/$@
 	dh_installexamples -p$@ -P$(b)/$@
 	dh_install -p$@
@@ -254,10 +254,10 @@ nuauth-extra:
 
 nuauth-log-mysql:
 	@echo "--- Building: $@"
-	dh_installdirs           -p$@ -P$(b)/$@ 
+	dh_installdirs           -p$@ -P$(b)/$@
 	dh_testdir -p$@ -P$(b)/$@
 	dh_testroot -p$@ -P$(b)/$@
-	dh_installchangelogs -p$@ -P$(b)/$@ ChangeLog 
+	dh_installchangelogs -p$@ -P$(b)/$@ ChangeLog
 	dh_installdocs -p$@ -P$(b)/$@
 	dh_installexamples -p$@ -P$(b)/$@
 	dh_install -p$@
@@ -285,10 +285,10 @@ nuauth-log-mysql:
 
 nuauth-log-pgsql:
 	@echo "--- Building: $@"
-	dh_installdirs           -p$@ -P$(b)/$@ 
+	dh_installdirs           -p$@ -P$(b)/$@
 	dh_testdir -p$@ -P$(b)/$@
 	dh_testroot -p$@ -P$(b)/$@
-	dh_installchangelogs -p$@ -P$(b)/$@ ChangeLog 
+	dh_installchangelogs -p$@ -P$(b)/$@ ChangeLog
 	dh_installdocs -p$@ -P$(b)/$@
 	dh_installexamples -p$@ -P$(b)/$@
 	dh_install -p$@
@@ -316,10 +316,10 @@ nuauth-log-pgsql:
 
 nuauth-utils:
 	@echo "--- Building: $@"
-	dh_installdirs           -p$@ -P$(b)/$@ 
+	dh_installdirs           -p$@ -P$(b)/$@
 	dh_testdir -p$@ -P$(b)/$@
 	dh_testroot -p$@ -P$(b)/$@
-	dh_installchangelogs -p$@ -P$(b)/$@ ChangeLog 
+	dh_installchangelogs -p$@ -P$(b)/$@ ChangeLog
 	dh_installdocs -p$@ -P$(b)/$@
 	dh_installexamples -p$@ -P$(b)/$@
 	dh_install -p$@
@@ -354,10 +354,10 @@ nuauth-utils:
 
 nutcpc:
 	@echo "--- Building: $@"
-	dh_installdirs           -p$@ -P$(b)/$@ 
+	dh_installdirs           -p$@ -P$(b)/$@
 	dh_testdir -p$@ -P$(b)/$@
 	dh_testroot -p$@ -P$(b)/$@
-	dh_installchangelogs -p$@ -P$(b)/$@ ChangeLog 
+	dh_installchangelogs -p$@ -P$(b)/$@ ChangeLog
 	dh_installdocs -p$@ -P$(b)/$@
 	dh_installexamples -p$@ -P$(b)/$@
 	dh_install -p$@
@@ -385,7 +385,7 @@ nutcpc:
 	dh_builddeb -p$@ -P$(b)/$@
 
 install: install-stamp
-install-stamp: 
+install-stamp:
 	dh_testdir -a
 	@echo "Installing $@"
 	dh_testroot -a
@@ -399,7 +399,7 @@ install-stamp:
 #	cp $(CURDIR)/conf/certs/nufw-cert.pem $(CURDIR)/debian/tmp/etc/nufw/certs
 #	cp $(CURDIR)/conf/certs/nuauth-key.pem $(CURDIR)/debian/tmp/etc/nufw/certs
 #	cp $(CURDIR)/conf/certs/nuauth-cert.pem $(CURDIR)/debian/tmp/etc/nufw/certs
-	
+
 #	cp $(CURDIR)/conf/nufw.init $(CURDIR)/debian/tmp/etc/init.d/nufw
 #	cp $(CURDIR)/conf/nuauth $(CURDIR)/debian/tmp/etc/init.d/nuauth
 #	chmod 755 $(CURDIR)/debian/tmp/etc/init.d/*
@@ -415,7 +415,7 @@ binary-indep: build install
 binary-arch: build install
 #	dh_testdir $(dhbuildpackages)
 #	dh_testroot $(dhbuildpackages)
-#	dh_installchangelogs $(dhbuildpackages) ChangeLog 
+#	dh_installchangelogs $(dhbuildpackages) ChangeLog
 #	dh_installdocs $(dhbuildpackages)
 #	dh_installexamples $(dhbuildpackages)
 #	dh_install $(dhbuildpackages) --sourcedir=debian/tmp
@@ -447,4 +447,4 @@ binary-arch: build install
 #	dh_builddeb $(dhbuildpackages)
 
 binary: binary-indep binary-arch
-.PHONY: build clean binary-indep binary-arch binary install 
+.PHONY: build clean binary-indep binary-arch binary install

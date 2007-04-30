@@ -82,7 +82,7 @@ AC_ARG_ENABLE(nufw,   [AC_HELP_STRING(--disable-nufw, Don't build nufw (default 
 AC_ARG_ENABLE(nuauth, [AC_HELP_STRING(--disable-nuauth, Don't build nuauth (default is to build))],build_nuauth=$enableval, build_nuauth="yes")
 AC_ARG_ENABLE(libnuclient,   [AC_HELP_STRING(--disable-libnuclient, Don't build libnuclient (default is to build))],build_libnuclient=$enableval, build_libnuclient="yes")
 AC_ARG_ENABLE(nutcpc,   [AC_HELP_STRING(--disable-nutcpc, Don't build nutcpc (default is to build))],build_nutcpc=$enableval, build_nutcpc="yes" )
-AC_ARG_ENABLE(pam-nufw,   [AC_HELP_STRING(--disable-pam-nufw, Don't build pam_nufw (default is to build))],build_pam_nufw=$enableval, build_pam_nufw="yes" )
+AC_ARG_ENABLE(pam-nufw,   [AC_HELP_STRING(--enable-pam-nufw, Build pam_nufw (default is not to build))],build_pam_nufw=$enableval, build_pam_nufw="no" )
 AC_ARG_ENABLE(nuauth-command,   [AC_HELP_STRING(--disable-nuauth-command, Don't build nuauth_command (default is to build))],build_nuauth_command=$enableval, build_nuauth_command="yes" )
 
 AC_ARG_WITH(perf-display,
