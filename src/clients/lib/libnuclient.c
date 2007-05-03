@@ -750,7 +750,7 @@ int nu_client_setup_tls(nuauth_session_t * session,
 
 	if (cafile == NULL && home != NULL) {
 		ok = secure_snprintf(castring, sizeof(castring),
-				     "%s/.nufw/ca.crt", home);
+				     "%s/.nufw/cacert.pem", home);
 		if (ok)
 			cafile = castring;
 	}
