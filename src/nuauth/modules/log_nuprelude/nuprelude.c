@@ -436,8 +436,8 @@ static idmef_message_t *create_message_packet(idmef_message_t * tpl,
 	return idmef;
 }
 
-static void add_user_information(idmef_messag_t * idmef,
-			    user_session_t * session)
+static void add_user_information(idmef_message_t * idmef,
+				 user_session_t * session)
 {
 	char buffer[50];
 	if (session->user_name != NULL) {
