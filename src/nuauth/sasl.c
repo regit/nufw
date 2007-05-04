@@ -340,7 +340,7 @@ static int mysasl_negotiate(user_session_t * c_session, sasl_conn_t * conn)
 	gboolean external_auth = FALSE;
 	ssize_t record_send;
 	unsigned len = tls_len;
-	int result;
+	int result, auth_result;
 	result =
 	    sasl_listmech(conn, NULL, NULL, ",", NULL, &data, &sasl_len,
 			  &count);
@@ -393,15 +393,15 @@ static int mysasl_negotiate(user_session_t * c_session, sasl_conn_t * conn)
 		data = NULL;
 		len = 0;
 	}
-	result = sasl_server_start(conn,
+	auth_result = sasl_server_start(conn,
 				   buf,
 				   data, len, &data, (unsigned *) &len);
 
-	if (result != SASL_OK && result != SASL_CONTINUE)
+	if (auth_result != SASL_OK && auth_result != SASL_CONTINUE)
 		g_message("Starting SASL negotiation %s",
 			  sasl_errstring(result, NULL, NULL));
 
-	while (result == SASL_CONTINUE) {
+	while (auth_result == SASL_CONTINUE) {
 		if (data) {
 			samp_send(session, data, len);
 		} else {
@@ -414,20 +414,23 @@ static int mysasl_negotiate(user_session_t * c_session, sasl_conn_t * conn)
 		memset(buf, 0, sizeof(buf));
 		len = samp_recv(session, buf, sizeof(buf));
 		data = NULL;
-		result = sasl_server_step(conn, buf, len, &data, &len);
+		auth_result = sasl_server_step(conn, buf, len, &data, &len);
 	}
 
-	if (result != SASL_OK) {
+	if (auth_result != SASL_OK) {
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
 				  "incorrect authentication");
-		return result;
 	} else {
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
 				  "correct authentication");
 	}
 
-	if (c_session->user_name)
+	if (c_session->user_name) {
 		external_auth = TRUE;
+		if (auth_result != SASL_OK) {
+			return auth_result;
+		}
+	}
 
 	if (external_auth == FALSE) {
 		char *tempname = NULL;
@@ -445,6 +448,9 @@ static int mysasl_negotiate(user_session_t * c_session, sasl_conn_t * conn)
 		}
 		c_session->user_name = g_strdup(tempname);
 
+		if (auth_result != SASL_OK) {
+			return auth_result;
+		}
 		/* in case no call to user_checkdb has been done we need to fill the group */
 
 		c_session->groups =
