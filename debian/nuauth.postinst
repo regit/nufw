@@ -46,7 +46,7 @@ else
 fi
 
 
-#generation du certificat ssl
+# ssl certificate generation
 if [ -x /usr/bin/openssl ]; then
   if [ ! -e $nuauth_tls_key ]; then
     if [ ! -e $nuauth_tls_cert ]; then
