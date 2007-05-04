@@ -436,6 +436,29 @@ static idmef_message_t *create_message_packet(idmef_message_t * tpl,
 	return idmef;
 }
 
+static void add_user_information(idmef_messag_t * idmef,
+			    user_session_t * session)
+{
+	char buffer[50];
+	if (session->user_name != NULL) {
+		add_idmef_object(idmef,
+				 "alert.source(0).user.user_id(0).type",
+				 "current-user");
+		add_idmef_object(idmef, "alert.source(0).user.category", "application");	/* os-device */
+		add_idmef_object(idmef,
+				 "alert.source(0).user.user_id(0).name",
+				 session->user_name);
+		if (secure_snprintf
+		    (buffer, sizeof(buffer), "%lu", session->user_id)) {
+			add_idmef_object(idmef,
+					 "alert.source(0).user.user_id(0).number",
+					 buffer);
+		}
+	} else {
+		del_idmef_object(idmef, "alert.source(0).user");
+	}
+}
+
 static idmef_message_t *create_message_session(idmef_message_t * tpl,
 					       user_session_t * session,
 					       char *state_text,
@@ -469,23 +492,7 @@ static idmef_message_t *create_message_session(idmef_message_t * tpl,
 			ip_ascii);
 
 	/* set user informations */
-	if (session->user_name != NULL) {
-		add_idmef_object(idmef,
-				 "alert.source(0).user.user_id(0).type",
-				 "current-user");
-		add_idmef_object(idmef, "alert.source(0).user.category", "application");	/* os-device */
-		add_idmef_object(idmef,
-				 "alert.source(0).user.user_id(0).name",
-				 session->user_name);
-		if (secure_snprintf
-		    (buffer, sizeof(buffer), "%lu", session->user_id)) {
-			add_idmef_object(idmef,
-					 "alert.source(0).user.user_id(0).number",
-					 buffer);
-		}
-	} else {
-		del_idmef_object(idmef, "alert.source(0).user");
-	}
+	add_user_information(idmef, session);
 
 	/* os informations */
 	add_idmef_object(idmef, "alert.additional_data(0).data",
@@ -531,6 +538,8 @@ static idmef_message_t *create_message_autherr(idmef_message_t * tpl,
 	secure_snprintf(buffer, sizeof(buffer), "%hu", session->sport);
 	add_idmef_object(idmef,	"alert.source(0).service.port", buffer);
 
+	/* set user informations */
+	add_user_information(idmef, session);
 
 	return idmef;
 }
