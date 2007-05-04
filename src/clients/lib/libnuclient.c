@@ -1105,25 +1105,25 @@ int tls_handshake(nuauth_session_t * session, nuclient_error_t * err)
 			       gnutls_strerror(ret));
 		}
 		SET_ERROR(err, GNUTLS_ERROR, ret);
-		return 0;
-	}
-	if (status != 0) {
-		if (session->verbose) {
-			printf("Certificate authority verification failed: ");
-			if( status & GNUTLS_CERT_INVALID )
-				printf("CERT_INVALID ");
-			if( status & GNUTLS_CERT_REVOKED )
-				printf("CERT_REVOKED ");
-			if( status & GNUTLS_CERT_SIGNER_NOT_FOUND )
-				printf("CERT_SIGNER_NOT_FOUND ");
-			if( status & GNUTLS_CERT_SIGNER_NOT_CA )
-				printf("CERT_SIGNER_NOT_CA ");
-			printf("\n");
 
+		if (status != 0) {
+			if (session->verbose) {
+				printf("Certificate authority verification failed: ");
+				if( status & GNUTLS_CERT_INVALID )
+					printf("CERT_INVALID ");
+				if( status & GNUTLS_CERT_REVOKED )
+					printf("CERT_REVOKED ");
+				if( status & GNUTLS_CERT_SIGNER_NOT_FOUND )
+					printf("CERT_SIGNER_NOT_FOUND ");
+				if( status & GNUTLS_CERT_SIGNER_NOT_CA )
+					printf("CERT_SIGNER_NOT_CA ");
+				printf("\n");
+
+			}
 		}
-		SET_ERROR(err, GNUTLS_ERROR, ret);
 		return 0;
 	}
+
 	ret = certificate_check(session);
 	if (ret != SASL_OK) {
 		if (session->verbose) {
