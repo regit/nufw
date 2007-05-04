@@ -4,13 +4,38 @@ CONFIGFILE2=/etc/nufw/nuauth.conf
 set -e
 . /usr/share/debconf/confmodule
 
+grepconf () {
+        w=" 	" # space tab
+        sq=/etc/nufw/nuauth.conf
+        # sed is cool.
+        res=`sed -ne '
+                s/^\s*'$1'\s*=\s*"\?\([^"]*\)\"$/\1/p;
+                t end;
+                d;
+                :end q' < $sq`
+        [ -n "$res" ] || res=$2
+        echo "$res"
+}
+
+grepdefault () {
+        w=" 	" # space tab
+        sq=/etc/default/nuauth
+        # sed is cool.
+        res=`sed -ne '
+                s/^\s*'$1'\s*=\s*"\?\([^"]*\)\"$/\1/p;
+                t end;
+                d;
+                :end q' < $sq`
+        [ -n "$res" ] || res=$2
+        echo "$res"
+}
+
 # Installing the config
 ucf --three-way --debconf-ok /usr/share/nuauth/nuauth.conf /etc/nufw/nuauth.conf
 
-# XXX
-NUAUTH_USER=nobody
-nuauth_tls_key="/etc/nufw/nuauth-key.pem"
-nuauth_tls_cert="/etc/nufw/nuauth-cert.pem"
+NUAUTH_USER=`grepdefault NUAUTH_USER nobody`
+nuauth_tls_key=`grepconf nuauth_tls_key /etc/nufw/nuauth-key.pem`
+nuauth_tls_cert=`grepconf nuauth_tls_cert /etc/nufw/nuauth-cert.pem`
 
 if grep -q -e "^$NUAUTH_USER:" /etc/passwd
 then
@@ -94,17 +119,6 @@ if [ -x /usr/bin/openssl ]; then
 fi
 
 db_stop
-
-# XXX set system module by default
-# FIXME use ucf magic to give user a chance to keep his preference
-nuauth_user_check_module="system"
-
-cp -a -f $CONFIGFILE2 $CONFIGFILE2.tmp
-
-sed \
- -e "s/^ *nuauth_user_check_module=.*/nuauth_user_check_module=\"$nuauth_user_check_module\"/" \
-  < $CONFIGFILE2 > $CONFIGFILE2.tmp
-mv -f $CONFIGFILE2.tmp $CONFIGFILE2
 
 #DEBHELPER#
 
