@@ -193,6 +193,7 @@ nuauth:
 	    -e "sµ^ *plaintext_aclfile=.*µplaintext_aclfile=\"/etc/nufw/acls.nufw\"µ" \
 	    -e "sµ^ *plaintext_userfile=.*µplaintext_userfile=\"/etc/nufw/users-plaintext.nufw\"µ" \
 	     < $(CURDIR)/conf/nuauth.conf >$(CURDIR)/debian/$@/etc/nufw/nuauth.conf
+	mv $(CURDIR)/debian/$@/etc/nufw/nuauth.conf $(CURDIR)/debian/$@/usr/share/nuauth/nuauth.conf
 	cp $(CURDIR)/conf/acls.nufw $(CURDIR)/debian/$@/etc/nufw/
 	cp $(CURDIR)/conf/users-plaintext.nufw $(CURDIR)/debian/$@/etc/nufw/
 	cp $(CURDIR)/conf/periods.xml $(CURDIR)/debian/$@/etc/nufw/

@@ -21,6 +21,16 @@ case "$1" in
 		
 #		update-rc.d -f nuauth remove >/dev/null
 		userdel nuauth 2>/dev/null || true
+		  for FILE in /etc/nufw/nuauth.conf; do
+                    # Taken from the ucf example postrm
+                    for ext in '~' '%' .bak .dpkg-tmp .dpkg-new .dpkg-old .dpkg-dist .ucf-dist;  do
+                        rm -f $FILE$ext
+                    done
+                    rm -f $FILE
+                    if which ucf >/dev/null 2>&1; then
+                        ucf --purge $FILE
+                    fi
+                  done
 		;;
        remove|upgrade|failed-upgrade|abort-install|abort-upgrade)
 		# nothing
