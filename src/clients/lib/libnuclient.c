@@ -776,7 +776,7 @@ int nu_client_setup_tls(nuauth_session_t * session,
 		}
 
 	}
-#if 0
+
 	if (certfile != NULL && keyfile != NULL) {
 		ret =
 		    gnutls_certificate_set_x509_key_file(session->cred,
@@ -787,7 +787,7 @@ int nu_client_setup_tls(nuauth_session_t * session,
 			return 0;
 		}
 	}
-#endif
+
 	/* put the x509 credentials to the current session */
 	ret =
 	    gnutls_credentials_set(session->tls, GNUTLS_CRD_CERTIFICATE,
@@ -1098,16 +1098,6 @@ int tls_handshake(nuauth_session_t * session, nuclient_error_t * err)
 	}
 
 	/* certificate verification */
-	ret = gnutls_certificate_verify_peers(session->tls);
-	if (ret < 0) {
-		if (session->verbose) {
-			printf("Certificate verification failed: %s\n",
-			       gnutls_strerror(ret));
-		}
-		SET_ERROR(err, GNUTLS_ERROR, ret);
-		return 0;
-	}
-	/* certificate verification */
 	ret = gnutls_certificate_verify_peers2(session->tls, &status);
 	if (ret < 0) {
 		if (session->verbose) {
@@ -1117,13 +1107,13 @@ int tls_handshake(nuauth_session_t * session, nuclient_error_t * err)
 		SET_ERROR(err, GNUTLS_ERROR, ret);
 		return 0;
 	}
-	if ( status != 0) {
+	if (status != 0) {
 		if (session->verbose) {
 			printf("Certificate authority verification failed: ");
 			if( status & GNUTLS_CERT_INVALID )
 				printf("CERT_INVALID ");
 			if( status & GNUTLS_CERT_REVOKED )
-				PRINTf("CERT_REVOKED ");
+				printf("CERT_REVOKED ");
 			if( status & GNUTLS_CERT_SIGNER_NOT_FOUND )
 				printf("CERT_SIGNER_NOT_FOUND ");
 			if( status & GNUTLS_CERT_SIGNER_NOT_CA )
