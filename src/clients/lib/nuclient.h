@@ -226,6 +226,9 @@ extern "C" {
 
     /** Timestamp (Epoch format) of last packet send to nuauth */
 		time_t timestamp_last_sent;
+    
+    /** Do we need to check the CA certificate */
+		unsigned char need_ca_verif;
 	} nuauth_session_t;
 
 #define NuAuth nuauth_session_t

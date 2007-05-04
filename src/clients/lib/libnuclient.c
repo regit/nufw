@@ -774,7 +774,7 @@ int nu_client_setup_tls(nuauth_session_t * session,
 			SET_ERROR(err, GNUTLS_ERROR, ret);
 			return 0;
 		}
-
+		session->need_ca_verif = 1;
 	}
 
 	if (certfile != NULL && keyfile != NULL) {
@@ -1079,7 +1079,7 @@ int certificate_check(nuauth_session_t *session)
 int tls_handshake(nuauth_session_t * session, nuclient_error_t * err)
 {
 	int ret;
-	int status;
+	unsigned int status;
 
 	gnutls_transport_set_ptr(session->tls,
 				 (gnutls_transport_ptr) session->socket);
@@ -1098,14 +1098,17 @@ int tls_handshake(nuauth_session_t * session, nuclient_error_t * err)
 	}
 
 	/* certificate verification */
-	ret = gnutls_certificate_verify_peers2(session->tls, &status);
-	if (ret < 0) {
-		if (session->verbose) {
-			printf("Certificate authority verification failed: %s\n",
-			       gnutls_strerror(ret));
+	if ( session->need_ca_verif )
+	{
+		ret = gnutls_certificate_verify_peers2(session->tls, &status);
+		if (ret < 0) {
+			if (session->verbose) {
+				printf("Certificate authority verification failed: %s\n",
+				       gnutls_strerror(ret));
+			}
+			SET_ERROR(err, GNUTLS_ERROR, ret);
+			return 0;
 		}
-		SET_ERROR(err, GNUTLS_ERROR, ret);
-
 		if (status != 0) {
 			if (session->verbose) {
 				printf("Certificate authority verification failed: ");
@@ -1118,10 +1121,10 @@ int tls_handshake(nuauth_session_t * session, nuclient_error_t * err)
 				if( status & GNUTLS_CERT_SIGNER_NOT_CA )
 					printf("CERT_SIGNER_NOT_CA ");
 				printf("\n");
-
 			}
+			SET_ERROR(err, GNUTLS_ERROR, ret);
+			return 0;
 		}
-		return 0;
 	}
 
 	ret = certificate_check(session);
@@ -1237,6 +1240,7 @@ nuauth_session_t *_nu_client_new(unsigned char diffie_hellman, nuclient_error_t 
 	session->verbose = 1;
 	session->timestamp_last_sent = time(NULL);
 	session->need_set_cred = 1;
+	session->need_ca_verif = 0;
 
 	/* create session mutex */
 	pthread_mutex_init(&(session->mutex), NULL);
