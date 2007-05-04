@@ -188,10 +188,11 @@ nuauth:
 	dh_installexamples -p$@ -P$(b)/$@
 	mkdir -p $(CURDIR)/debian/$@/etc/nufw/
 	dh_install -p$@
-	sed -e "sµ^ *nuauth_tls_key=.*µnuauth_tls_key=\"/etc/nufw/certs/nuauth-key.pem\"µ" \
-	    -e "sµ^ *nuauth_tls_cert=.*µnuauth_tls_cert=\"/etc/nufw/certs/nuauth-cert.pem\"µ" \
+	sed -e "sµ^#\? *nuauth_tls_key=.*µnuauth_tls_key=\"/etc/nufw/certs/nuauth-key.pem\"µ" \
+	    -e "sµ^#\? *nuauth_tls_cert=.*µnuauth_tls_cert=\"/etc/nufw/certs/nuauth-cert.pem\"µ" \
 	    -e "sµ^ *plaintext_aclfile=.*µplaintext_aclfile=\"/etc/nufw/acls.nufw\"µ" \
 	    -e "sµ^ *plaintext_userfile=.*µplaintext_userfile=\"/etc/nufw/users-plaintext.nufw\"µ" \
+	    -e "sµ^ *nuauth_user_check_module=.*µnuauth_user_check_module=\"system\"µ" \
 	     < $(CURDIR)/conf/nuauth.conf >$(CURDIR)/debian/$@/etc/nufw/nuauth.conf
 	mv $(CURDIR)/debian/$@/etc/nufw/nuauth.conf $(CURDIR)/debian/$@/usr/share/nuauth/nuauth.conf
 	cp $(CURDIR)/conf/acls.nufw $(CURDIR)/debian/$@/etc/nufw/
