@@ -3,7 +3,7 @@
 .\" <http://shell.ipoline.com/~elmert/comp/docbook2X/> 
 .\" Please send any bug reports, improvements, comments, patches, 
 .\" etc. to Steve Cheng <steve@ggi-project.org>.
-.TH "NUTCPC" "1" "16 avril 2007" "" ""
+.TH "NUTCPC" "1" "04 May 2007" "" ""
 
 .SH NAME
 nutcpc \- NUFW console-mode client for GNU/Linux systems
@@ -52,7 +52,10 @@ send authentication packet  to \fINuauth port\fR\&.
 Set nufw userid to \fIUser ID\fR\&.
 .SH "LOCK FILE"
 .PP
-By default, the lock file set by nutcpc is at ~/.nutcpc/.nufw
+By default, the lock file set by nutcpc is at ~/.nufw/nutcpc
+.SH "CERTIFICATE AUTHENTICATION"
+.PP
+User authentication can be done using a certificate and a private key. Such a method will be used, if nutcpc can find a certificate at ~/.nufw/cert.pem and the corresponding privat key at ~/.nufw/key.pem. The server identity will be checked if a CA certificate is provided in ~/.nufw/cacert.pem .
 .SH "SIGNALS"
 .TP
 \fBHUP \fR

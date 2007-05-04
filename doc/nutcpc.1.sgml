@@ -169,7 +169,11 @@ manpage.1: manpage.sgml
   </refsect1>
   <refsect1>
     <title>LOCK FILE</title>
-    <para>By default, the lock file set by nutcpc is at ~/.nutcpc/.nufw</para>
+    <para>By default, the lock file set by nutcpc is at ~/.nufw/nutcpc</para>
+  </refsect1>
+  <refsect1>
+    <title>CERTIFICATE AUTHENTICATION</title>
+    <para>User authentication can be done using a certificate and a private key. Such a method will be used, if nutcpc can find a certificate at ~/.nufw/cert.pem and the corresponding privat key at ~/.nufw/key.pem. The server identity will be checked if a CA certificate is provided in ~/.nufw/cacert.pem .</para>
   </refsect1>
   <refsect1>
     <title>SIGNALS</title>
