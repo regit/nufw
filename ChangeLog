@@ -1,4 +1,7 @@
+2.2.0-rc3
 	- By default, do not compile pam_nufw anymore.
+	- nutcpc does now check presence of certificate authority.
+	- complete rewrite of debian packaging
 2.2.0-rc2 (2007/04/27)
 	- nuauth: add declaration of thread_pool_push
 	- ldap: optimize filter
