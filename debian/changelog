@@ -1,4 +1,4 @@
-nufw (2.2.0~rc2-1) stable; urgency=low
+nufw (2.2.0~rc3-1) stable; urgency=low
 
   * New upstream release 
   * Set myself as maintainer, with previous maintainer agreement
@@ -10,6 +10,7 @@ nufw (2.2.0~rc2-1) stable; urgency=low
   * Remove dependencies on libnetfilter*, detected by dh_shlibdeps
   * Rename all -20 packages to simple name (e.g nuauth20 -> nuauth)
   * Rename libnuclient to libnuclient3
+  * Use ucf for nuauth.conf
 
  -- Pierre Chifflier <chifflier@inl.fr>  Wed, 28 Mar 2007 10:12:36 +0200
 
