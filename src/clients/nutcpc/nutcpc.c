@@ -53,6 +53,10 @@ typedef struct {
 	char nuauthdn[512];
 	unsigned char debug_mode;	/*!< Debug mode enabled if different than zero */
 	int tempo;		/*!< Number of second between each connection retry */
+	char *certfile;
+	char *keyfile;
+	char *cafile;
+	char *cert_password;
 } nutcpc_context_t;
 
 /**
@@ -81,11 +85,11 @@ char *compute_run_pid()
 	char *home = nu_get_home_dir();
 	if (home == NULL)
 		return NULL;
-	snprintf(path_dir, sizeof(path_dir), " %s/.nufw", home);
+	secure_snprintf(path_dir, sizeof(path_dir), " %s/.nufw", home);
 	if (access(path_dir, R_OK) != 0) {
 		mkdir(path_dir, S_IRWXU);
 	}
-	snprintf(path_dir, sizeof(path_dir), "%s/.nufw/nutcpc", home);
+	secure_snprintf(path_dir, sizeof(path_dir), "%s/.nufw/nutcpc", home);
 	free(home);
 	return strdup(path_dir);
 }
@@ -311,18 +315,27 @@ char *get_username()
  */
 static void usage(void)
 {
-	fprintf(stderr, "usage: nutcpc [-qkldV] "
-		"[-U username ] [-H nuauth_srv] [-a nuauth_dn]"
-		"[-P password] [-p port] [-I interval]\n");
+	fprintf(stderr, "usage: nutcpc -U username -H host\n");
 	fprintf(stderr, "\n");
-	fprintf(stderr, "options:\n");
-	fprintf(stderr, "-V: display version\n");
-	fprintf(stderr, "-k: kill active client\n");
-	fprintf(stderr, "-l: don't create lock file\n");
-	fprintf(stderr,
-		"-d: debug mode (don't go to foreground, daemon)\n");
-	fprintf(stderr,
-		"-q: do not display running nutcpc options on \"ps\"\n");
+	fprintf(stderr, "Options:\n");
+	fprintf(stderr, "  -k: kill active client\n");
+	fprintf(stderr, "  -l: don't create lock file\n");
+	fprintf(stderr, "  -V: display version\n");
+	fprintf(stderr, "\n");
+	fprintf(stderr, "Certificate options:\n");
+	fprintf(stderr, "  -C CERTFILE: certificate filanem\n");
+	fprintf(stderr, "  -A AUTHFILE: authority certificate filename\n");
+	fprintf(stderr, "  -K KEYFILE:  key filename\n");
+	fprintf(stderr, "  -W CERTPASS: certificate password\n");
+	fprintf(stderr, "\n");
+	fprintf(stderr, "Other options:\n");
+	fprintf(stderr, "  -p PORT: nuauth port number\n");
+	fprintf(stderr, "  -a AUTH_DN: authentification domain name\n");
+	fprintf(stderr, "  -I INTERVAL: check interval in milliseconds\n");
+	fprintf(stderr, "  -q: do not display running nutcpc options on \"ps\"\n");
+	fprintf(stderr, "  -P PASSWORD: specify password (only for debug purpose)\n");
+	fprintf(stderr, "  -d: debug mode (don't go to foreground, daemon)\n");
+	fprintf(stderr, "\n");
 	exit(EXIT_FAILURE);
 }
 
@@ -408,6 +421,7 @@ void daemonize_process(nutcpc_context_t * context, char *runpid)
 	/* Fix process user identifier, close stdin, stdout, stderr,
 	 * set currente directory to root directory */
 	setsid();
+	(void) chdir("/");
 	ioctl(STDIN_FILENO, TIOCNOTTY, NULL);
 	(void) close(STDIN_FILENO);
 	(void) close(STDOUT_FILENO);
@@ -443,7 +457,8 @@ nuauth_session_t *do_connect(nutcpc_context_t * context, char *username)
 
 	nu_client_set_debug(session, context->debug_mode);
 
-	if (!nu_client_setup_tls(session, NULL, NULL, NULL, NULL, err)) {
+	if (!nu_client_setup_tls(session, context->keyfile, context->certfile,
+	     context->cafile, context->cert_password, err)) {
 		nu_client_delete(session);
 		return NULL;
 	}
@@ -514,6 +529,29 @@ void main_loop(nutcpc_context_t * context)
 }
 
 /**
+ * Copy a filename given on the command line.
+ * If it doesn't start with '/', add current directory as prefix.
+ *
+ * Returns NULL on error, new allocated string otherwise.
+ */
+char* copy_filename(char* name)
+{
+	char cwd[PATH_MAX];
+	char buffer[PATH_MAX];
+	int ok;
+	char* ret;
+	if (name[0] != '/') {
+		ret = getcwd(cwd, sizeof(cwd));
+		if (!ret) return NULL;
+		ok = secure_snprintf(buffer, sizeof(buffer), "%s/%s", cwd, name);
+		if (!ok) return NULL;
+		return strdup(buffer);
+	} else {
+		return strdup(name);
+	}
+}
+
+/**
  * Parse command line options
  */
 void parse_cmdline_options(int argc, char **argv,
@@ -528,16 +566,14 @@ void parse_cmdline_options(int argc, char **argv,
 		       sizeof(context->port));
 	SECURE_STRNCPY(context->srv_addr, NUAUTH_IP,
 		       sizeof(context->srv_addr));
-	context->password[0] = 0;
 	context->interval = 100;
 	context->donotuselock = 0;
 	context->debug_mode = 0;
 	context->tempo = 1;
-	context->nuauthdn[0] = 0;
 
 	/* Parse all command line arguments */
 	opterr = 0;
-	while ((ch = getopt(argc, argv, "kldqVu:H:I:U:p:P:a:")) != -1) {
+	while ((ch = getopt(argc, argv, "kldqVu:H:I:U:p:P:a:K:C:A:W:")) != -1) {
 		switch (ch) {
 		case 'H':
 			SECURE_STRNCPY(context->srv_addr, optarg,
@@ -581,6 +617,18 @@ void parse_cmdline_options(int argc, char **argv,
 			SECURE_STRNCPY(context->nuauthdn, optarg,
 				       sizeof(context->nuauthdn));
 			break;
+		case 'C':
+			context->certfile = copy_filename(optarg);
+			break;
+		case 'K':
+			context->keyfile = copy_filename(optarg);
+			break;
+		case 'A':
+			context->cafile = copy_filename(optarg);
+			break;
+		case 'W':
+			context->cert_password = strdup(optarg);
+			break;
 		default:
 			usage();
 		}
@@ -613,9 +661,6 @@ void init_library(nutcpc_context_t * context, char *username)
 		setrlimit(RLIMIT_CORE, &core_limit);
 	}
 
-	/* Move to root directory to not block current working directory */
-	(void) chdir("/");
-
 	/* Prepare error structure */
 	if (nu_client_error_init(&err) != 0) {
 		printf("Cannot init error structure!\n");
@@ -646,6 +691,7 @@ int main(int argc, char **argv)
 	char *runpid = compute_run_pid();
 	char *username = NULL;
 	nutcpc_context_t context;
+	memset(&context, 0, sizeof(context));
 
 	/* needed by iconv */
 	setlocale(LC_ALL, "");
