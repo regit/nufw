@@ -1,6 +1,7 @@
 from inl_tests.process import Process
 from config import NUTCPC_PROG, NUAUTH_HOST, NUTCPC_VERSION
 from IPy import IP
+from os import getenv
 import re
 
 STARTED_20_REGEX = re.compile("nutcpc .* started")
@@ -12,7 +13,8 @@ class Client(Process):
         self._hostname = NUAUTH_HOST
         self.ip = IP(ip)
         Process.__init__(self, NUTCPC_PROG)
-        self.popen_args['shell'] = True
+        home = getenv('HOME')
+        self.setenv('HOME', home)
         self.updateArgs()
 
     def _setUsername(self, username):
