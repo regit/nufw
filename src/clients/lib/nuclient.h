@@ -164,12 +164,12 @@ extern "C" {
 		/** Callback used to get username */
 		char* (*username_callback)();
 		/** Callback used to get password */
-		char* (*passwd_callback)(); 
+		char* (*passwd_callback)();
 
 		gnutls_session tls;	/*!< TLS session over TCP socket */
 		gnutls_certificate_credentials cred;	/*!< TLS credentials */
 		char *tls_password;	/*!< TLS password */
-		char *nuauth_cert_dn; 
+		char *nuauth_cert_dn;
 
 		int socket;	/*!< TCP socket used to exchange message with nuauth */
 		conntable_t *ct;	/*!< Connection table */
@@ -226,7 +226,7 @@ extern "C" {
 
     /** Timestamp (Epoch format) of last packet send to nuauth */
 		time_t timestamp_last_sent;
-    
+
     /** Do we need to check the CA certificate */
 		unsigned char need_ca_verif;
 	} nuauth_session_t;
@@ -325,6 +325,9 @@ extern "C" {
 	int nu_check_version(const char *version);
 
 	char *nu_get_home_dir();
+
+	int secure_snprintf(char *buffer, unsigned int buffer_size,
+		char *format, ...);
 
 #ifdef __cplusplus
 }

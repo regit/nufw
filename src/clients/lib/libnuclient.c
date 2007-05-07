@@ -493,7 +493,7 @@ int compare(nuauth_session_t * session, conntable_t * old, conntable_t * new,
  *
  * A client needs to call a few functions in the correct order to be able to authenticate:
  *  - nu_client_global_init(): To be called once at program start
- *  - nu_client_new() or nu_client_new_callback(): start user session 
+ *  - nu_client_new() or nu_client_new_callback(): start user session
  *  - nu_client_setup_tls(): (optionnal) setup TLS key/certificate files
  *  - nu_client_connect(): try to connect to nuauth server
  *  - nu_client_check(): do a check, it has to be run at regular interval
@@ -723,7 +723,7 @@ int nu_client_setup_tls(nuauth_session_t * session,
 	}
 
 	/* test if key file exists */
-	if (access(keyfile, R_OK) != 0) {
+	if (keyfile != NULL && access(keyfile, R_OK) != 0) {
 		keyfile = NULL;
 #if REQUEST_CERT
 		SET_ERROR(err, INTERNAL_ERROR, FILE_ACCESS_ERR);
@@ -739,7 +739,7 @@ int nu_client_setup_tls(nuauth_session_t * session,
 			certfile = certstring;
 	}
 	/* test if cert exists */
-	if (access(certfile, R_OK) != 0) {
+	if (certfile != NULL && access(certfile, R_OK) != 0) {
 		certfile = NULL;
 #if REQUEST_CERT
 		SET_ERROR(err, INTERNAL_ERROR, FILE_ACCESS_ERR);
@@ -747,7 +747,6 @@ int nu_client_setup_tls(nuauth_session_t * session,
 		return 0;
 #endif
 	}
-
 	if (cafile == NULL && home != NULL) {
 		ok = secure_snprintf(castring, sizeof(castring),
 				     "%s/.nufw/cacert.pem", home);
@@ -755,7 +754,7 @@ int nu_client_setup_tls(nuauth_session_t * session,
 			cafile = castring;
 	}
 	/* test if cert exists */
-	if (access(cafile, R_OK) != 0) {
+	if (cafile != NULL && access(cafile, R_OK) != 0) {
 		cafile = NULL;
 #if REQUEST_CERT
 		SET_ERROR(err, INTERNAL_ERROR, FILE_ACCESS_ERR);
