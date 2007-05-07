@@ -683,7 +683,32 @@ void nu_client_set_password(nuauth_session_t *session,
 	free(utf8pass);
 }
 
-	void nu_client_set_debug(nuauth_session_t * session, unsigned char enabled);
+void nu_client_set_debug(nuauth_session_t * session, unsigned char enabled);
+
+/**
+ * Get user home directory
+ *
+ * \return A string that need to be freed
+ */
+
+char *nu_get_home_dir()
+{
+	uid_t uid;
+	struct passwd *pwd;
+	char *dir = NULL;
+
+	uid = getuid();
+	if (!(pwd = getpwuid(uid))) {
+		printf("Unable to get password file record\n");
+		endpwent();
+		return NULL;
+	}
+	dir = strdup(pwd->pw_dir);
+	endpwent();
+	return dir;
+}
+
+
 
 /**
  * Initialize TLS:
@@ -708,7 +733,7 @@ int nu_client_setup_tls(nuauth_session_t * session,
 	char castring[256];
 	char certstring[256];
 	char keystring[256];
-	char *home = getenv("HOME");
+	char *home = nu_get_home_dir();
 	int ok;
 	int ret;
 
@@ -727,6 +752,9 @@ int nu_client_setup_tls(nuauth_session_t * session,
 		keyfile = NULL;
 #if REQUEST_CERT
 		SET_ERROR(err, INTERNAL_ERROR, FILE_ACCESS_ERR);
+		if (home) {
+			free(home);
+		}
 		errno = EBADF;
 		return 0;
 #endif
@@ -743,6 +771,9 @@ int nu_client_setup_tls(nuauth_session_t * session,
 		certfile = NULL;
 #if REQUEST_CERT
 		SET_ERROR(err, INTERNAL_ERROR, FILE_ACCESS_ERR);
+		if (home) {
+			free(home);
+		}
 		errno = EBADF;
 		return 0;
 #endif
@@ -759,6 +790,9 @@ int nu_client_setup_tls(nuauth_session_t * session,
 #if REQUEST_CERT
 		SET_ERROR(err, INTERNAL_ERROR, FILE_ACCESS_ERR);
 		errno = EBADF;
+		if (home) {
+			free(home);
+		}
 		return 0;
 #endif
 	}
@@ -783,6 +817,9 @@ int nu_client_setup_tls(nuauth_session_t * session,
 							 GNUTLS_X509_FMT_PEM);
 		if (ret < 0) {
 			SET_ERROR(err, GNUTLS_ERROR, ret);
+			if (home) {
+				free(home);
+			}
 			return 0;
 		}
 	}
@@ -793,9 +830,15 @@ int nu_client_setup_tls(nuauth_session_t * session,
 				   session->cred);
 	if (ret < 0) {
 		SET_ERROR(err, GNUTLS_ERROR, ret);
+		if (home) {
+			free(home);
+		}
 		return 0;
 	}
 	session->need_set_cred = 0;
+	if (home) {
+		free(home);
+	}
 	return 1;
 }
 
@@ -1608,29 +1651,6 @@ int nu_check_version(const char *version)
 		return 1;
 	else
 		return 0;
-}
-
-/**
- * Get user home directory
- *
- * \return A string that need to be freed
- */
-
-char *nu_get_home_dir()
-{
-	uid_t uid;
-	struct passwd *pwd;
-	char *dir = NULL;
-
-	uid = getuid();
-	if (!(pwd = getpwuid(uid))) {
-		printf("Unable to get password file record\n");
-		endpwent();
-		return NULL;
-	}
-	dir = strdup(pwd->pw_dir);
-	endpwent();
-	return dir;
 }
 
 
