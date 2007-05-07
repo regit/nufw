@@ -5,6 +5,6 @@ NUAUTH_START="true"
 NUAUTH_VERBOSITY="vv"
 
 #User nuauth runs on. Change this to some entry existing in /etc/passwd
-NUAUTH_USER="nobody"
+NUAUTH_USER="nuauth"
 
 #EDIT /etc/nuauth/nuauth.conf for other options!
