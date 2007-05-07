@@ -7,10 +7,13 @@ import re
 STARTED_20_REGEX = re.compile("nutcpc .* started")
 
 class Client(Process):
-    def __init__(self, username, password, ip):
+    def __init__(self, username, password, ip, more_args=None):
         self._username = username
         self._password = password
         self._hostname = NUAUTH_HOST
+        if not more_args:
+            more_args = tuple()
+        self._more_args = more_args
         self.ip = IP(ip)
         Process.__init__(self, NUTCPC_PROG)
         home = getenv('HOME')
@@ -38,6 +41,7 @@ class Client(Process):
             "-U", self._username,
             "-P", self._password,
             "-d"]
+        self.program_args.extend(self._more_args)
 
     def isReady(self):
         if NUTCPC_VERSION <= 20200:

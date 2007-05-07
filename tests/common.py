@@ -41,8 +41,8 @@ def _stopNufw():
     _nufw.stop()
     _nufw = None
 
-def createClient(username=USERNAME, password=PASSWORD):
-    return Client(username, password, CLIENT_IP)
+def createClient(username=USERNAME, password=PASSWORD, more_args=None):
+    return Client(username, password, CLIENT_IP, more_args=more_args)
 
 def connectClient(client):
     client.info("connectClient()")
