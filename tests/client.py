@@ -12,6 +12,7 @@ class Client(Process):
         self._hostname = NUAUTH_HOST
         self.ip = IP(ip)
         Process.__init__(self, NUTCPC_PROG)
+        self.popen_args['shell'] = True
         self.updateArgs()
 
     def _setUsername(self, username):
