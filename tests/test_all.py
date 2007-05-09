@@ -14,6 +14,7 @@ FILES = (
     "test_mysql",
     "test_system",
     "test_user_policy",
+    "test_cert",
 )
 
 def loadTestcases(module):

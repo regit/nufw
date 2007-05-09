@@ -13,7 +13,7 @@ from os import nice
 _nuauth = None
 _nufw = None
 
-def startNufw():
+def startNufw(args=None):
     """
     Start nufw server. If it's already running, do nothing.
 
@@ -21,8 +21,11 @@ def startNufw():
     """
     global _nufw
     if _nufw:
-        return _nufw
-    _nufw = Nufw()
+        if args:
+            _stopNufw()
+        else:
+            return _nufw
+    _nufw = Nufw(args)
     atexit.register(_stopNufw)
     _nufw.start(timeout=NUFW_START_TIMEOUT)
     return _nufw
