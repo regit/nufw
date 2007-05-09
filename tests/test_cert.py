@@ -2,18 +2,12 @@
 from unittest import TestCase, main
 from sys import stderr
 from common import createClient, connectClient
-from logging import info
 from nuauth import Nuauth
-from config import config, CONF_DIR
-from os.path import expanduser, join as path_join
+from config import config
+from os.path import join as path_join
 
-CERT_FILENAME = path_join(CONF_DIR, "test-cert.pem")
-KEY_FILENAME = path_join(CONF_DIR, "test-key.pem")
-
-class TestClientAuth(TestCase):
+class TestClientCert(TestCase):
     def setUp(self):
-        # Create ~/.nufw/cacert.pem
-        # Create nuauth and client
         self.nuauth = Nuauth()
 
     def tearDown(self):
