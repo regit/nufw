@@ -15,12 +15,12 @@ class TestClientCert(TestCase):
         self.nuauth.stop()
 
     def testValidCert(self):
-        cacert = config.get("test_cert", "user_valid_cacert")
+        cacert = config.get("test_cert", "cacert")
         self.client = createClient(more_args=["-A", cacert])
         self.assert_(connectClient(self.client))
 
     def testInvalidCert(self):
-        cacert = config.get("test_cert", "user_invalid_cacert")
+        cacert = config.get("test_cert", "invalid_cacert")
         self.client = createClient(more_args=["-A", cacert])
         self.assert_(not connectClient(self.client))
 
