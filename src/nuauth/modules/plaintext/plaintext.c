@@ -514,7 +514,7 @@ static int read_acl_list(struct plaintext_params *params)
 					   newacl->proto == IPPROTO_ICMP) {
 					/*  ACL node is ready */
 					params->plaintext_acllist =
-					    g_slist_prepend(params->
+					    g_slist_append(params->
 							    plaintext_acllist,
 							    newacl);
 				} else {
@@ -776,7 +776,7 @@ static int read_acl_list(struct plaintext_params *params)
 			   || newacl->proto == IPPROTO_ICMP) {
 			/*  ACL node is ready */
 			params->plaintext_acllist =
-			    g_slist_prepend(params->plaintext_acllist,
+			    g_slist_append(params->plaintext_acllist,
 					    newacl);
 		} else {
 			log_message(WARNING, DEBUG_AREA_MAIN,
