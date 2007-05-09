@@ -7,11 +7,12 @@ from nuauth_conf import NuauthConf
 from inl_tests.iptables import Iptables
 from os import path
 from filter import testAllowPort, testDisallowPort, VALID_PORT
-from test_plaintext_auth import USER_FILENAME, USER, PASS, GID, USER_DB
+from test_plaintext_auth import USERDB
 from inl_tests.replace_file import ReplaceFile
 
 ACL_FILENAME = path.join(CONF_DIR, "acls.nufw")
 
+USER = USERDB[0]
 ACLS = """[web]
 decision=1
 gid=%u
@@ -19,15 +20,15 @@ proto=6
 SrcIP=0.0.0.0/0
 SrcPort=1024-65535
 DstIP=0.0.0.0/0
-DstPort=%u""" % (GID, VALID_PORT)
+DstPort=%u""" % (USER.gid, VALID_PORT)
 
 class TestPlaintextAcl(TestCase):
     def setUp(self):
         self.iptables = Iptables()
-        self.users = ReplaceFile(USER_FILENAME, USER_DB)
+        self.users = USERDB
         self.acls = ReplaceFile(ACL_FILENAME, ACLS)
         config = NuauthConf()
-        config["plaintext_userfile"] = '"%s"' % USER_FILENAME
+        config["plaintext_userfile"] = '"%s"' % self.users.filename
         config["plaintext_aclfile"] = '"%s"' % ACL_FILENAME
         config["nuauth_user_check_module"] = '"plaintext"'
         config["nuauth_acl_check_module"] = '"plaintext"'
@@ -46,7 +47,7 @@ class TestPlaintextAcl(TestCase):
         self.iptables.flush()
 
     def testFilter(self):
-        client = createClient(USER, PASS)
+        client = createClient(USER.login, USER.password)
         testAllowPort(self, self.iptables, client)
         testDisallowPort(self, self.iptables, client)
 

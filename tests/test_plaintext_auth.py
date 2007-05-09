@@ -7,47 +7,82 @@ from nuauth_conf import NuauthConf
 from os import path
 from inl_tests.replace_file import ReplaceFile
 
-USER_FILENAME = path.join(CONF_DIR, "users.nufw")
-USER, UID, GID, PASS = "username", 42, 42, "password"
-USER2, PASS2 = "username2", "password2"
-USER_DB  = "%s:%s:%u:%u\n" % (USER, PASS, UID, GID)
-USER_DB += "%s:%s:1:2,3\n" % (USER2, PASS2)
+class PlaintextUser:
+    def __init__(self, login, password, uid, gid):
+        self.login = login
+        self.password = password
+        self.uid = uid
+        self.gid = gid
+
+    def __str__(self):
+        return "%s:%s:%u:%u" % (self.login, self.password, self.uid, self.gid)
+
+class PlaintextUserDB:
+    def __init__(self):
+        self.filename = path.join(CONF_DIR, "users.nufw")
+        self.users = []
+        self.replace = None
+
+    def addUser(self, user):
+        self.users.append(user)
+
+    def install(self):
+        text = []
+        for user in self.users:
+            text.append(str(user))
+        text = "\n".join(text)+"\n"
+        self.replace = ReplaceFile(self.filename, text)
+        self.replace.install()
+
+    def desinstall(self):
+        if self.replace:
+            self.replace.desinstall()
+
+    def __getitem__(self, key):
+        return self.users[key]
+
+USERDB = PlaintextUserDB()
+USERDB.addUser( PlaintextUser("username", "password", 42, 42) )
+USERDB.addUser( PlaintextUser("username2", "password2", 43, 43) )
 
 class TestPlaintextAuth(TestCase):
     def setUp(self):
         # Setup our user DB
-        self.users = ReplaceFile(USER_FILENAME, USER_DB)
+        self.users = USERDB
         self.users.install()
 
         # Start nuauth with our config
         config = NuauthConf()
-        config["plaintext_userfile"] = '"%s"' % USER_FILENAME
+        config["plaintext_userfile"] = '"%s"' % self.users.filename
         config["nuauth_user_check_module"] = '"plaintext"'
         self.nuauth = Nuauth(config)
 
     def tearDown(self):
         # Restore user DB and nuauth config
-        self.users.desinstall()
         self.nuauth.stop()
+        self.users.desinstall()
 
-    def testLogin(self):
-        # Test user1
-        client = createClient(USER, PASS)
+    def testUser1(self):
+        user = USERDB[0]
+        client = createClient(user.login, user.password)
         self.assert_(connectClient(client))
         client.stop()
 
-        # Test user2
-        client = createClient(USER2, PASS2)
+    def testUser2(self):
+        user = USERDB[1]
+        client = createClient(user.login, user.password)
         self.assert_(connectClient(client))
         client.stop()
 
-        # Test invalid username
-        client = createClient(USER+"x", PASS)
+    def testInvalidLogin(self):
+        user = USERDB[0]
+        client = createClient(user.login+"x", user.password)
         self.assert_(not connectClient(client))
         client.stop()
 
-        # Test invalid password
-        client = createClient(USER2, PASS2+"x")
+    def testInvalidPass(self):
+        user = USERDB[1]
+        client = createClient(user.login, user.password+"x")
         self.assert_(not connectClient(client))
         client.stop()
 
