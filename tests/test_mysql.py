@@ -11,7 +11,7 @@ from datetime import datetime
 from IPy import IP
 import MySQLdb
 import platform
-from os.path import basename
+from os.path import basename, realpath
 from sys import argv, executable
 from nuauth import Nuauth
 from nuauth_conf import NuauthConf
@@ -20,18 +20,19 @@ def datetime2unix(timestamp):
     tm = timestamp.timetuple()
     return int(mktime(tm))
 
-MYSQL_PACKET_TABLE = "ulog"
-MYSQL_USER_TABLE = "users"
-MYSQL_SERVER = "localhost"
-MYSQL_USER = "root"
-MYSQL_PASSWORD = ""
-MYSQL_DB = "nufw"
+config = NuauthConf()
+MYSQL_PACKET_TABLE = config["mysql_table_name"]
+MYSQL_USER_TABLE = config["mysql_users_table_name"]
+MYSQL_SERVER = config["mysql_server_addr"]
+MYSQL_USER = config["mysql_user"]
+MYSQL_PASSWORD = config["mysql_passwd"]
+MYSQL_DB = config["mysql_db_name"]
 
 OS_SYSNAME = platform.system()    # 'Linux'
 OS_RELEASE = platform.release()   # '2.6.19.2-haypo'
 OS_VERSION = platform.version()   # '#2 Mon Feb 5 10:55:30 CET 2007'
 CLIENT_OS = "-".join( (OS_SYSNAME, OS_VERSION, OS_RELEASE) )
-CLIENT_APP = executable
+CLIENT_APP = realpath(executable)
 OOB_PREFIX = "Default: ACCEPT"
 
 def datetime_now(delta=0):

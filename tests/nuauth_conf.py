@@ -24,6 +24,15 @@ class NuauthConf(ReplaceFile):
         for key, value in self.content.iteritems():
             output.write("%s=%s\n" % (key, value))
 
+    def __getitem__(self, key):
+        try:
+            value = self.content[key]
+        except KeyError:
+            raise AttributeError("nuauth.conf has no key '%s'" % key)
+        if value.startswith('"') and value.endswith('"'):
+            value = value[1:-1]
+        return value
+
     def __setitem__(self, key, value):
 #        if key not in self.content:
 #            raise AttributeError("nuauth.conf has no key '%s'" % key)
