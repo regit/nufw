@@ -199,7 +199,6 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 		{"ldap_request_timeout", G_TOKEN_INT, LDAP_REQUEST_TIMEOUT,
 		 NULL},
 		{"ldap_use_ipv4_schema", G_TOKEN_INT, 1, NULL},
-		{"ldap_supports_weight", G_TOKEN_INT, 0, NULL},
 		{"ldap_filter_type", G_TOKEN_INT, 1, NULL}
 	};
 
@@ -280,17 +279,6 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 			      sizeof(confparams_t), "ldap_use_ipv4_schema");
 	params->ldap_use_ipv4_schema =
 	    *(int *) (vpointer ? vpointer : &params->ldap_use_ipv4_schema);
-
-	vpointer =
-	    get_confvar_value(ldap_nuauth_vars,
-			      sizeof(ldap_nuauth_vars) /
-			      sizeof(confparams_t), "ldap_supports_weight");
-	params->ldap_supports_weight =
-	    *(int *) (vpointer ? vpointer : &params->ldap_supports_weight);
-
-	if (nuauthconf->prio_to_nok == 2) {
-		params->ldap_supports_weight = 1;
-	}
 
 	vpointer =
 	    get_confvar_value(ldap_nuauth_vars,
@@ -742,7 +730,7 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 
 			/* allocate a new acl_group */
 			this_acl = g_new0(struct acl_group, 1);
-			if (params->ldap_supports_weight) {
+			if (nuauthconf->prio_to_nok == 2) {
 				this = g_new0(struct weighted_acl, 1);
 			}
 			g_assert(this_acl);
@@ -777,7 +765,7 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 			}
 			ldap_value_free(attrs_array);
 
-			if (params->ldap_supports_weight) {
+			if (nuauthconf->prio_to_nok == 2) {
 				/* get weight */
 				attrs_array =
 					ldap_get_values(ld, result, "AclWeight");
@@ -815,13 +803,13 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 			ldap_value_free(attrs_array);
 			result = ldap_next_entry(ld, result);
 
-			if (params->ldap_supports_weight) {
+			if (nuauthconf->prio_to_nok == 2) {
 				this->acl = this_acl;
 			}
 
 			/* add when acl is filled */
 			if (this_acl->groups != NULL) {
-				if (params->ldap_supports_weight) {
+				if (nuauthconf->prio_to_nok == 2) {
 					g_list = g_slist_insert_sorted(g_list,
 							this,
 							compare_acl_weight);
@@ -830,14 +818,14 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 				}
 			} else {
 				g_free(this_acl);
-				if (params->ldap_supports_weight) {
+				if (nuauthconf->prio_to_nok == 2) {
 					g_free(this);
 				}
 			}
 		}
 		ldap_msgfree(res);
 
-		if (params->ldap_supports_weight) {
+		if (nuauthconf->prio_to_nok == 2) {
 			for (temp_list = g_list; temp_list;
 			     temp_list = temp_list->next) {
 				g_acl_list = g_slist_append(
