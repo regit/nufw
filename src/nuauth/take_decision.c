@@ -58,7 +58,8 @@ static void search_user_group_in_acl_groups(struct acl_group *datas,
 			 (gconstpointer) user_group->data)) {
 		/* find a group match, time to update decision */
 		*answer = datas->answer;
-		if (nuauthconf->prio_to_nok == 1) {
+		switch (nuauthconf->prio_to_nok) {
+		case 1:
 			if ((*answer ==	DECISION_DROP)
 			   || (*answer == DECISION_REJECT)) {
 				/* if prio is to not ok, then a DROP or REJECT is a final decision */
@@ -68,11 +69,21 @@ static void search_user_group_in_acl_groups(struct acl_group *datas,
 				/* we can have multiple accept, last one with a log prefix will be displayed */
 				update_connection_datas (element,datas);
 			}
-		} else {
+			break;
+		case 0:
 			if (*answer == DECISION_ACCEPT) {
 				*test = TEST_DECIDED;
 				update_connection_datas (element,datas);
 			}
+			break;
+		case 2:
+			*test = TEST_DECIDED;
+			update_connection_datas (element,datas);
+			break;
+		default:
+			debug_log_message(WARNING, DEBUG_AREA_MAIN,
+				  "BUG: Should not have %s for prio_to_nok",
+				  nuauthconf->prio_to_nok);
 		}
 		/* complete decision with check on period (This can change an ACCEPT answer) */
 		if (*answer == DECISION_ACCEPT) {
@@ -125,10 +136,12 @@ static void search_user_group_in_acl_groups(struct acl_group *datas,
  * For each element, it test every groups to check
  * if the users belongs to one of them.
  * When a match is found, there is two cases:
- *  - if nuauth_params::prio_to_nok is set to one, we stop if the decision is to
- *  block the packet.
  *  - if nuauth_params::prio_to_nok is 0 then we continue till we fing a acl with
  *  ACCEPT decision.
+ *  - if nuauth_params::prio_to_nok is set to 1, we stop if the decision is to
+ *  block the packet.
+ *  - if nuauth_params::prio_to_nok is set to 2, we stop on first acl where a 
+ *  group matches
  *
  * \param element A pointer to a ::connection_t
  * \param place Place where the connection is stored, see ::packet_place_t
