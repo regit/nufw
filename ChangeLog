@@ -4,6 +4,7 @@
 	- Complete rewrite of debian packaging.
 	- log_nuprelude: Add user info to idmef message when there is
 	authentication failure.
+	- nuauth: implement acl ordering (prio_to_nok=2)
 2.2.0-rc2 (2007/04/27)
 	- nuauth: add declaration of thread_pool_push
 	- ldap: optimize filter

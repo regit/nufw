@@ -199,6 +199,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 		{"ldap_request_timeout", G_TOKEN_INT, LDAP_REQUEST_TIMEOUT,
 		 NULL},
 		{"ldap_use_ipv4_schema", G_TOKEN_INT, 1, NULL},
+		{"ldap_supports_weight", G_TOKEN_INT, 0, NULL},
 		{"ldap_filter_type", G_TOKEN_INT, 1, NULL}
 	};
 
@@ -279,6 +280,17 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 			      sizeof(confparams_t), "ldap_use_ipv4_schema");
 	params->ldap_use_ipv4_schema =
 	    *(int *) (vpointer ? vpointer : &params->ldap_use_ipv4_schema);
+
+	vpointer =
+	    get_confvar_value(ldap_nuauth_vars,
+			      sizeof(ldap_nuauth_vars) /
+			      sizeof(confparams_t), "ldap_supports_weight");
+	params->ldap_supports_weight =
+	    *(int *) (vpointer ? vpointer : &params->ldap_supports_weight);
+
+	if (nuauthconf->prio_to_nok == 2) {
+		params->ldap_supports_weight = 1;
+	}
 
 	vpointer =
 	    get_confvar_value(ldap_nuauth_vars,
@@ -432,6 +444,22 @@ gchar *escape_string_for_ldap(const gchar * basestring)
 	return result;
 }
 
+struct weighted_acl {
+	struct acl_group *acl;
+	int weight;
+};
+
+gint compare_acl_weight(gconstpointer data1, gconstpointer data2)
+{
+	return ((struct weighted_acl *)data2)->weight
+		- ((struct weighted_acl *)data1)->weight;
+}
+
+static void local_free(gpointer data, gpointer userdata)
+{
+	g_free(data);
+}
+
 /**
  * \brief Acl check function
  *
@@ -449,11 +477,14 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 				  gpointer params_p)
 {
 	GSList *g_list = NULL;
+	GSList *g_acl_list = NULL;
+	GSList *temp_list = NULL;
 	char filter[LDAP_QUERY_SIZE];
 	char **attrs_array, **walker;
 	int attrs_array_len, i, group;
 	struct timeval timeout;
 	struct acl_group *this_acl;
+	struct weighted_acl *this = NULL;
 	LDAPMessage *res, *result;
 	int err;
 	struct ldap_params *params = (struct ldap_params *) params_p;
@@ -711,6 +742,9 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 
 			/* allocate a new acl_group */
 			this_acl = g_new0(struct acl_group, 1);
+			if (params->ldap_supports_weight) {
+				this = g_new0(struct weighted_acl, 1);
+			}
 			g_assert(this_acl);
 			this_acl->groups = NULL;
 			this_acl->period = NULL;
@@ -743,6 +777,19 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 			}
 			ldap_value_free(attrs_array);
 
+			if (params->ldap_supports_weight) {
+				/* get weight */
+				attrs_array =
+					ldap_get_values(ld, result, "AclWeight");
+				if (attrs_array && *attrs_array) {
+					sscanf(*attrs_array, "%d",
+							(int *) &(this->weight));
+				} else {
+					this->weight = 0;
+				}
+				ldap_value_free(attrs_array);
+			}
+
 			/* get decision */
 			attrs_array =
 			    ldap_get_values(ld, result, "Decision");
@@ -767,17 +814,44 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 			}
 			ldap_value_free(attrs_array);
 			result = ldap_next_entry(ld, result);
+
+			if (params->ldap_supports_weight) {
+				this->acl = this_acl;
+			}
+
 			/* add when acl is filled */
 			if (this_acl->groups != NULL) {
-				g_list = g_slist_prepend(g_list, this_acl);
+				if (params->ldap_supports_weight) {
+					g_list = g_slist_insert_sorted(g_list,
+							this,
+							compare_acl_weight);
+				} else {
+					g_list = g_slist_prepend(g_list, this_acl);
+				}
 			} else {
 				g_free(this_acl);
+				if (params->ldap_supports_weight) {
+					g_free(this);
+				}
 			}
 		}
 		ldap_msgfree(res);
-		return g_list;
-	} else {
 
+		if (params->ldap_supports_weight) {
+			for (temp_list = g_list; temp_list;
+			     temp_list = temp_list->next) {
+				g_acl_list = g_slist_append(
+						g_acl_list,
+						((struct weighted_acl *)temp_list->data)->acl
+						);
+			}
+			g_slist_foreach(g_list, local_free, NULL);
+			g_slist_free(g_list);
+			return g_acl_list;
+		} else {
+			return g_list;
+		}
+	} else {
 		debug_log_message(DEBUG, DEBUG_AREA_AUTH, "No acl found\n");
 		ldap_msgfree(res);
 	}

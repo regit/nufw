@@ -45,5 +45,6 @@ struct ldap_params {
 	int ldap_server_port;
 	int ldap_filter_type;
 	int ldap_use_ipv4_schema;
+	int ldap_supports_weight;
 	GPrivate *ldap_priv;
 };
