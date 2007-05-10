@@ -9,6 +9,8 @@ from plaintext import PlaintextUserDB, PlaintextUser
 
 class TestClientCertAuth(TestCase):
     def setUp(self):
+        nuconfig = NuauthConf()
+
         # Certs
         cert = config.get("test_cert", "user_cert")
         key = config.get("test_cert", "user_key")
@@ -18,10 +20,9 @@ class TestClientCertAuth(TestCase):
         self.user = PlaintextUser("user", "nopassword", 42, 42)
         self.userdb = PlaintextUserDB()
         self.userdb.addUser(self.user)
-        self.userdb.install()
+        self.userdb.install(nuconfig)
 
         # Server
-        nuconfig = NuauthConf()
         nuconfig["plaintext_userfile"] = '"%s"' % self.userdb.filename
         nuconfig["nuauth_tls_auth_by_cert"] = "2"
         nuconfig["nuauth_tls_request_cert"] = "2"

@@ -15,6 +15,9 @@ FILES = (
     "test_system",
     "test_user_policy",
     "test_cert",
+#    "test_ipauth_guest",
+#    "test_cert_auth",
+#    "test_nufw_cert",
 )
 
 def loadTestcases(module):

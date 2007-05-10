@@ -7,18 +7,12 @@ from plaintext import USERDB
 
 class TestPlaintextAuth(TestCase):
     def setUp(self):
-        # Setup our user DB
-        self.users = USERDB
-        self.users.install()
-
-        # Start nuauth with our config
         config = NuauthConf()
-        config["plaintext_userfile"] = '"%s"' % self.users.filename
-        config["nuauth_user_check_module"] = '"plaintext"'
+        self.users = USERDB
+        self.users.install(config)
         self.nuauth = Nuauth(config)
 
     def tearDown(self):
-        # Restore user DB and nuauth config
         self.nuauth.stop()
         self.users.desinstall()
 

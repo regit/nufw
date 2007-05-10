@@ -8,8 +8,6 @@ from filter import testAllowPort, testDisallowPort, VALID_PORT
 from test_plaintext_auth import USERDB
 from plaintext import PlaintextAcl
 
-USER = USERDB[0]
-
 class TestPlaintextAcl(TestCase):
     def setUp(self):
         self.iptables = Iptables()
@@ -17,14 +15,10 @@ class TestPlaintextAcl(TestCase):
         self.acls = PlaintextAcl()
         self.acls.addAcl("web", VALID_PORT, self.users[0].gid)
         config = NuauthConf()
-        config["plaintext_userfile"] = '"%s"' % self.users.filename
-        config["plaintext_aclfile"] = '"%s"' % self.acls.filename
-        config["nuauth_user_check_module"] = '"plaintext"'
-        config["nuauth_acl_check_module"] = '"plaintext"'
 
         # Start nuauth with new config
-        self.users.install()
-        self.acls.install()
+        self.users.install(config)
+        self.acls.install(config)
         self.nuauth = Nuauth(config)
         self.nufw = startNufw()
 
@@ -36,7 +30,8 @@ class TestPlaintextAcl(TestCase):
         self.iptables.flush()
 
     def testFilter(self):
-        client = createClient(USER.login, USER.password)
+        user = self.users[0]
+        client = createClient(user.login, user.password)
         testAllowPort(self, self.iptables, client)
         testDisallowPort(self, self.iptables, client)
 
