@@ -1,49 +1,9 @@
 #!/usr/bin/python2.4
 from unittest import TestCase, main
-from config import CONF_DIR
 from common import createClient, connectClient
 from nuauth import Nuauth
 from nuauth_conf import NuauthConf
-from os import path
-from inl_tests.replace_file import ReplaceFile
-
-class PlaintextUser:
-    def __init__(self, login, password, uid, gid):
-        self.login = login
-        self.password = password
-        self.uid = uid
-        self.gid = gid
-
-    def __str__(self):
-        return "%s:%s:%u:%u" % (self.login, self.password, self.uid, self.gid)
-
-class PlaintextUserDB:
-    def __init__(self):
-        self.filename = path.join(CONF_DIR, "users.nufw")
-        self.users = []
-        self.replace = None
-
-    def addUser(self, user):
-        self.users.append(user)
-
-    def install(self):
-        text = []
-        for user in self.users:
-            text.append(str(user))
-        text = "\n".join(text)+"\n"
-        self.replace = ReplaceFile(self.filename, text)
-        self.replace.install()
-
-    def desinstall(self):
-        if self.replace:
-            self.replace.desinstall()
-
-    def __getitem__(self, key):
-        return self.users[key]
-
-USERDB = PlaintextUserDB()
-USERDB.addUser( PlaintextUser("username", "password", 42, 42) )
-USERDB.addUser( PlaintextUser("username2", "password2", 43, 43) )
+from plaintext import USERDB
 
 class TestPlaintextAuth(TestCase):
     def setUp(self):

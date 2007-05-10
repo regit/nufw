@@ -5,7 +5,7 @@ from common import createClient, connectClient
 from nuauth import Nuauth
 from nuauth_conf import NuauthConf
 from config import config
-from test_plaintext_auth import PlaintextUserDB, PlaintextUser
+from plaintext import PlaintextUserDB, PlaintextUser
 
 class TestClientCertAuth(TestCase):
     def setUp(self):
