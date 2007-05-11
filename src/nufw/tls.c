@@ -109,6 +109,7 @@ gnutls_session *tls_connect()
 					DEBUG_LEVEL_FATAL,
 					"TLS: can not set gnutls trust file: %s",
 					gnutls_strerror(ret));
+			return NULL;
 		}
 	}
 	ret =
