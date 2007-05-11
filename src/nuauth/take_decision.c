@@ -82,7 +82,7 @@ static void search_user_group_in_acl_groups(struct acl_group *datas,
 			break;
 		default:
 			debug_log_message(WARNING, DEBUG_AREA_MAIN,
-				  "BUG: Should not have %s for prio_to_nok",
+				  "BUG: Should not have %i for prio_to_nok",
 				  nuauthconf->prio_to_nok);
 		}
 		/* complete decision with check on period (This can change an ACCEPT answer) */
@@ -140,7 +140,7 @@ static void search_user_group_in_acl_groups(struct acl_group *datas,
  *  ACCEPT decision.
  *  - if nuauth_params::prio_to_nok is set to 1, we stop if the decision is to
  *  block the packet.
- *  - if nuauth_params::prio_to_nok is set to 2, we stop on first acl where a 
+ *  - if nuauth_params::prio_to_nok is set to 2, we stop on first acl where a
  *  group matches
  *
  * \param element A pointer to a ::connection_t
@@ -197,7 +197,7 @@ nu_error_t take_decision(connection_t * element, packet_place_t place)
 									element,
 									&expire,
 									user_group);
-					
+
 				}	/* end of user group loop */
 			} else {
 				debug_log_message(DEBUG, DEBUG_AREA_MAIN,
