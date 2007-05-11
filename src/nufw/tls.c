@@ -32,6 +32,78 @@
  */
 
 /**
+ * Check nuauth certification domain name (DN).
+ */
+unsigned int check_nuauth_cert_dn(gnutls_session *tls_session)
+{
+	/* we check that dn provided in nuauth certificate is valid */
+	char dn[128];
+	size_t size;
+	int ret;
+
+#if 0
+	unsigned int algo, bits;
+	time_t expiration_time,
+	       activation_time;
+#endif
+	const gnutls_datum *cert_list;
+	unsigned int cert_list_size = 0;
+	gnutls_x509_crt cert;
+
+	/* This function only works for X.509 certificates.
+	*/
+	if (gnutls_certificate_type_get(*tls_session) != GNUTLS_CRT_X509)
+		return 0;
+
+	cert_list = gnutls_certificate_get_peers(*tls_session, &cert_list_size);
+	if (cert_list_size == 0) {
+		return 1;
+	}
+
+	/* we only print information about the first certificate */
+	ret = gnutls_x509_crt_init(&cert);
+	if (ret != 0) {
+		log_area_printf	(DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
+				"TLS: cannot init x509 cert: %s",
+				gnutls_strerror(ret));
+		return 0;
+	}
+
+	ret = gnutls_x509_crt_import(cert, &cert_list[0], GNUTLS_X509_FMT_DER);
+	if (ret != 0) {
+		log_area_printf
+			(DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
+			 "TLS: cannot import x509 cert: %s",
+			 gnutls_strerror(ret));
+		return 0;
+	}
+
+	/* TODO: verify date */
+#if 0
+	expiration_time = gnutls_x509_crt_get_expiration_time(cert);
+	activation_time = gnutls_x509_crt_get_activation_time(cert);
+
+	/* Extract some of the public key algorithm's parameters */
+	algo = gnutls_x509_crt_get_pk_algorithm(cert, &bits);
+#endif
+	size = sizeof(dn);
+	ret = gnutls_x509_crt_get_dn(cert, dn, &size);
+	if (ret != 0) {
+		log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
+			 "TLS: cannot copy x509 cert name into buffer: %s",
+			 gnutls_strerror(ret));
+		return 0;
+	}
+	if (strcmp(dn, nuauth_cert_dn)) {
+		log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
+			 "TLS: bad certificate DN received from nuauth server: %s",
+			 dn);
+		return 0;
+	}
+	return 1;
+}
+
+/**
  * Create a TLS connection to NuAuth: create a TCP socket and connect
  * to NuAuth using ::adr_srv.
  *
@@ -199,115 +271,22 @@ gnutls_session *tls_connect()
 	if (ret < 0) {
 		gnutls_perror(ret);
 		return NULL;
-	} else {
+	}
 #if USE_X509
-		if (ca_file) {
-			/* we need to verify received certificates */
-			if (gnutls_certificate_verify_peers(*tls_session)
-			    != 0) {
-				log_area_printf(DEBUG_AREA_GW,
-						DEBUG_LEVEL_WARNING,
-						"TLS: invalid certificates received from nuauth server");
+	if (ca_file) {
+		/* we need to verify received certificates */
+		if (gnutls_certificate_verify_peers(*tls_session) < 0) {
+			log_area_printf(DEBUG_AREA_GW,
+					DEBUG_LEVEL_WARNING,
+					"TLS: invalid certificates received from nuauth server");
+			return NULL;
+		}
+		if (nuauth_cert_dn) {
+			if (!check_nuauth_cert_dn(tls_session)) {
 				return NULL;
-			} else {
-				if (nuauth_cert_dn) {
-					/* we check that dn provided in nuauth certificate is valid */
-					char dn[128];
-					size_t size;
-#if 0
-					unsigned int algo, bits;
-					time_t expiration_time,
-					    activation_time;
-#endif
-					const gnutls_datum *cert_list;
-					unsigned int cert_list_size = 0;
-					gnutls_x509_crt cert;
-
-					/* This function only works for X.509 certificates.
-					 */
-					if (gnutls_certificate_type_get
-					    (*tls_session) !=
-					    GNUTLS_CRT_X509)
-						return NULL;
-
-					cert_list =
-					    gnutls_certificate_get_peers
-					    (*tls_session,
-					     &cert_list_size);
-
-					if (cert_list_size > 0) {
-
-						/* we only print information about the first certificate.
-						 */
-						ret =
-						    gnutls_x509_crt_init
-						    (&cert);
-						if (ret != 0) {
-							log_area_printf
-							    (DEBUG_AREA_MAIN,
-							     DEBUG_LEVEL_WARNING,
-							     "TLS: cannot init x509 cert: %s",
-							     gnutls_strerror
-							     (ret));
-							return NULL;
-						}
-
-						ret =
-						    gnutls_x509_crt_import
-						    (cert, &cert_list[0],
-						     GNUTLS_X509_FMT_DER);
-						if (ret != 0) {
-							log_area_printf
-							    (DEBUG_AREA_MAIN,
-							     DEBUG_LEVEL_WARNING,
-							     "TLS: cannot import x509 cert: %s",
-							     gnutls_strerror
-							     (ret));
-							return NULL;
-						}
-#if 0
-						expiration_time =
-						    gnutls_x509_crt_get_expiration_time
-						    (cert);
-						activation_time =
-						    gnutls_x509_crt_get_activation_time
-						    (cert);
-
-						/* TODO: verify date */
-
-						/* Extract some of the public key algorithm's parameters
-						 */
-						algo =
-						    gnutls_x509_crt_get_pk_algorithm
-						    (cert, &bits);
-#endif
-						size = sizeof(dn);
-						ret =
-						    gnutls_x509_crt_get_dn
-						    (cert, dn, &size);
-						if (ret != 0) {
-							log_area_printf
-							    (DEBUG_AREA_MAIN,
-							     DEBUG_LEVEL_WARNING,
-							     "TLS: cannot copy x509 cert name into buffer: %s",
-							     gnutls_strerror
-							     (ret));
-							return NULL;
-						}
-						if (strcmp
-						    (dn, nuauth_cert_dn)) {
-							log_area_printf
-							    (DEBUG_AREA_MAIN,
-							     DEBUG_LEVEL_WARNING,
-							     "TLS: bad certificate DN received from nuauth server: %s",
-							     dn);
-							return NULL;
-						}
-					}
-				}
 			}
 		}
-#endif
-		return tls_session;
 	}
+#endif
+	return tls_session;
 }
