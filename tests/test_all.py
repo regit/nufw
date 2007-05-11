@@ -3,7 +3,7 @@ from unittest import TestSuite, TestResult, TestLoader, TextTestRunner, TestCase
 from imp import load_source
 from os import getuid
 from sys import exit, stderr
-from random import randint
+from random import randint, shuffle
 
 FILES = (
     "test_client_auth",
@@ -27,14 +27,6 @@ def loadTestcases(module):
         and issubclass(attr, TestCase) and attr != TestCase:
                 yield attr
 
-def randomize(data):
-    data = list(data) # copy and/or convert to list
-    newdata = []
-    while data:
-        index = randint(0, len(data)-1)
-        item = data.pop(index)
-        yield item
-
 def loadTests(loader):
     for filepy in FILES:
         module = load_source(filepy, filepy+".py")
@@ -48,7 +40,9 @@ def main():
 
     loader = TestLoader()
     suite = TestSuite()
-    for test in randomize(loadTests(loader.loadTestsFromTestCase)):
+    tests = list(loadTests(loader.loadTestsFromTestCase))
+    shuffle(tests)
+    for test in tests:
         suite.addTests(test)
 
     runner = TextTestRunner(descriptions=2, verbosity=2)
