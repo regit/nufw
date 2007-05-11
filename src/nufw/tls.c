@@ -94,6 +94,7 @@ unsigned int check_nuauth_cert_dn(gnutls_session *tls_session)
 			 gnutls_strerror(ret));
 		return 0;
 	}
+	dn[sizeof(dn)-1] = 0;
 	if (strcmp(dn, nuauth_cert_dn)) {
 		log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
 			 "TLS: bad certificate DN received from nuauth server: %s",
