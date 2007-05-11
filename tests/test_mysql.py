@@ -9,7 +9,6 @@ from socket import ntohl
 from filter import testAllowPort, testDisallowPort, VALID_PORT, INVALID_PORT
 from datetime import datetime
 from IPy import IP
-import MySQLdb
 import platform
 from os.path import basename, realpath
 from sys import argv, executable
@@ -20,13 +19,25 @@ def datetime2unix(timestamp):
     tm = timestamp.timetuple()
     return int(mktime(tm))
 
+POSTGRESQL = False
+
 config = NuauthConf()
-MYSQL_PACKET_TABLE = config["mysql_table_name"]
-MYSQL_USER_TABLE = config["mysql_users_table_name"]
-MYSQL_SERVER = config["mysql_server_addr"]
-MYSQL_USER = config["mysql_user"]
-MYSQL_PASSWORD = config["mysql_passwd"]
-MYSQL_DB = config["mysql_db_name"]
+if POSTGRESQL:
+    import pgdb
+    DB_PACKET_TABLE = config["pgsql_table_name"]
+    DB_USER_TABLE = config["pgsql_users_table_name"]
+    DB_SERVER = config["pgsql_server_addr"]
+    DB_USER = config["pgsql_user"]
+    DB_PASSWORD = config["pgsql_passwd"]
+    DB_DBNAME = config["pgsql_db_name"]
+else:
+    import MySQLdb
+    DB_PACKET_TABLE = config["mysql_table_name"]
+    DB_USER_TABLE = config["mysql_users_table_name"]
+    DB_SERVER = config["mysql_server_addr"]
+    DB_USER = config["mysql_user"]
+    DB_PASSWORD = config["mysql_passwd"]
+    DB_DBNAME = config["mysql_db_name"]
 
 OS_SYSNAME = platform.system()    # 'Linux'
 OS_RELEASE = platform.release()   # '2.6.19.2-haypo'
@@ -45,28 +56,47 @@ def datetime_after():
 
 class MysqlLog(TestCase):
     def setUp(self):
-        self.conn = MySQLdb.Connect(
-            host=MYSQL_SERVER,
-            user=MYSQL_USER,
-            passwd=MYSQL_PASSWORD,
-            db=MYSQL_DB)
         startNufw()
         config = NuauthConf()
-        config["nuauth_user_logs_module"] = '"mysql"'
-        config["nuauth_user_session_logs_module"] = '"mysql"'
+        if POSTGRESQL:
+            self.conn = pgdb.connect(
+                host=DB_SERVER,
+                user=DB_USER,
+                password=DB_PASSWORD,
+                database=DB_DBNAME)
+            config["nuauth_user_logs_module"] = '"pgsql"'
+            config["nuauth_user_session_logs_module"] = '"pgsql"'
+        else:
+            self.conn = MySQLdb.Connect(
+                host=DB_SERVER,
+                user=DB_USER,
+                passwd=DB_PASSWORD,
+                db=DB_DBNAME)
+            config["nuauth_user_logs_module"] = '"mysql"'
+            config["nuauth_user_session_logs_module"] = '"mysql"'
         self.nuauth = Nuauth(config)
         self.start_time = int(time())
 
     def query(self, sql):
-        info("MySQL query: %s" % sql)
-        cursor = self.conn.cursor()
-        cursor.execute(sql)
-        info("MySQL result: %s rows" % cursor.rowcount)
+        if POSTGRESQL:
+            info("PostgreSQL query: %s" % sql)
+            cursor = self.conn.cursor()
+            cursor.execute(sql)
+            info("PostgreSQL result: %s rows" % cursor.rowcount)
+        else:
+            info("MySQL query: %s" % sql)
+            cursor = self.conn.cursor()
+            cursor.execute(sql)
+            info("MySQL result: %s rows" % cursor.rowcount)
         return cursor
 
     def fetchone(self, cursor):
-        row = cursor.fetchone()
-        info("MySQL fetchone(): %s" % repr(row))
+        if POSTGRESQL:
+            row = cursor.fetchone()
+            info("PostgreSQL fetchone(): %s" % repr(row))
+        else:
+            row = cursor.fetchone()
+            info("MySQL fetchone(): %s" % repr(row))
         return row
 
     def tearDown(self):
@@ -125,13 +155,13 @@ class MysqlLogUser(MysqlLog):
     def testUserLogin(self):
         # Delete old entries in MySQL user session table
         self.query("DELETE FROM %s WHERE start_time >= FROM_UNIXTIME(%s);" \
-            % (MYSQL_USER_TABLE, self.start_time))
+            % (DB_USER_TABLE, self.start_time))
 
         sql = \
             "SELECT ip_saddr, user_id, username, " \
             "os_sysname, os_release, os_version, end_time " \
             "FROM %s WHERE start_time >= FROM_UNIXTIME(%s) " \
-            "ORDER BY start_time DESC;" % (MYSQL_USER_TABLE, self.start_time)
+            "ORDER BY start_time DESC;" % (DB_USER_TABLE, self.start_time)
         client = self._login(sql)
         self._logout(sql, client)
 
@@ -158,7 +188,7 @@ class MysqlLogPacket(MysqlLog):
             "tcp_dport, ip_saddr, ip_daddr, oob_time_sec, ip_protocol, " \
             "timestamp, start_timestamp, end_timestamp, oob_prefix " \
             "FROM %s WHERE timestamp >= FROM_UNIXTIME(%s) AND state=1;" \
-            % (MYSQL_PACKET_TABLE, time_before)
+            % (DB_PACKET_TABLE, time_before)
         cursor = self.query(sql)
 
         # Read result
