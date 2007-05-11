@@ -88,7 +88,7 @@ CREATE TABLE ulog (
     packets_in bigint,
     packets_out bigint,
     bytes_in bigint,
-    bytes_out bigint,
+    bytes_out bigint
 );
 
 
@@ -117,7 +117,7 @@ COPY ulog (id, user_id, oob_prefix, oob_time_sec, oob_time_usec, oob_mark, oob_i
 SELECT pg_catalog.setval ('seq_ulog', 36, true);
 
 --
--- Users session table 
+-- Users session table
 --
 
 CREATE TABLE users (
