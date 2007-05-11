@@ -288,12 +288,6 @@ static struct nuauth_params *compare_and_update_nuauthparams(struct
 		restart = TRUE;
 	}
 
-	if (current->do_ip_authentication != new->do_ip_authentication) {
-		g_warning
-		    ("switch on ip authentication feature has been asked, please restart");
-		restart = TRUE;
-	}
-
 	if (current->hello_authentication != new->hello_authentication) {
 		g_warning
 		    ("switch on ip authentication feature has been asked, please restart");
@@ -325,6 +319,22 @@ static struct nuauth_params *compare_and_update_nuauthparams(struct
 
 
 	if (restart == FALSE) {
+		if (current->do_ip_authentication != new->do_ip_authentication) {
+			if (current->do_ip_authentication) {
+				/* stop thread pool */
+				g_thread_pool_free(
+					nuauthdatas->ip_authentication_workers,
+					TRUE, TRUE);
+				nuauthdatas->ip_authentication_workers = NULL;
+			} else {
+				/* create thread pool */
+				nuauthdatas->ip_authentication_workers = g_thread_pool_new(
+					(GFunc) external_ip_auth, NULL,
+					nuauthconf->nbipauth_check,
+					POOL_TYPE, NULL);
+			}
+		}
+
 		/* checking nuauth tuning parameters */
 		g_thread_pool_set_max_threads(nuauthdatas->user_checkers,
 					      new->nbuser_check, NULL);

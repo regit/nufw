@@ -94,6 +94,8 @@ void start_pool_threads()
 		    g_thread_pool_new((GFunc) external_ip_auth, NULL,
 				      nuauthconf->nbipauth_check,
 				      POOL_TYPE, NULL);
+	} else {
+		nuauthdatas->ip_authentication_workers = NULL;
 	}
 	/* create acl checker workers */
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN, "Creating %d acl checkers",
