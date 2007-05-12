@@ -921,6 +921,12 @@ int init_sasl(nuauth_session_t * session, nuclient_error_t * err)
 	return 1;
 }
 
+/**
+ * Set IP source of the socket used to connect to nuauth server
+ *
+ * \param session Pointer to client session
+ * \param addr Address of the socket
+ */
 void nu_client_set_source(nuauth_session_t *session, struct sockaddr_storage *addr)
 {
 	session->has_src_addr = 1;
