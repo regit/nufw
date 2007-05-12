@@ -3,7 +3,8 @@ AM_CPPFLAGS = -DCONFIG_DIR=\"$(sysconfdir)\"
 
 lib_LTLIBRARIES = libnuclient.la
 
-libnuclient_la_SOURCES = libnuclient.c proc.c iconv.c checks.c sending.c tcptable.c
+libnuclient_la_SOURCES = libnuclient.c proc.c iconv.c checks.c sending.c tcptable.c \
+			 internal.c
 libnuclient_la_LIBADD = -lgcrypt -lgnutls -lsasl2 
 
 LIBNUCLIENT_AC=3
