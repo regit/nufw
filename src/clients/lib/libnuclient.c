@@ -873,21 +873,12 @@ int init_sasl(nuauth_session_t * session, nuclient_error_t * err)
 		{SASL_CB_LIST_END, NULL, NULL}
 	};
 
-	/*
-	 * gnutls_record_send(session->tls,PROTO_STRING " " PROTO_VERSION,
-	 strlen(PROTO_STRING " " PROTO_VERSION));
-	 */
-
 	ret =
 	    gnutls_record_send(session->tls, "PROTO 4", strlen("PROTO 4"));
 	if (ret < 0) {
 		SET_ERROR(err, GNUTLS_ERROR, ret);
 		return 0;
 	}
-
-	/* set external properties here
-	   sasl_setprop(conn, SASL_SSF_EXTERNAL, &extprops); */
-	/* set username taken from console */
 
 	/* client new connection */
 	ret =
@@ -901,6 +892,7 @@ int init_sasl(nuauth_session_t * session, nuclient_error_t * err)
 	}
 
 	if (! session->username){
+		/* set username taken from console */
 		if (session->username_callback){
 			session->username = session->username_callback();
 		} else {
@@ -917,9 +909,6 @@ int init_sasl(nuauth_session_t * session, nuclient_error_t * err)
 		return 0;
 	}
 
-
-	/* set required security properties here
-	   sasl_setprop(conn, SASL_SEC_PROPS, &secprops); */
 
 	ret = mysasl_negotiate(session, conn, err);
 	if (ret != SASL_OK) {
