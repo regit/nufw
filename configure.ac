@@ -64,6 +64,7 @@ AC_ARG_WITH(syslog-log, [AC_HELP_STRING(--with-syslog-log,  Support user activit
 AC_ARG_WITH(plaintext-auth, [AC_HELP_STRING(--with-plaintext-auth,  Support for authentification with plaintext file)], enable_plaintext_auth=$withval, enable_plaintext_auth="yes")
 AC_ARG_WITH(mark-group, [AC_HELP_STRING(--with-mark-group,  Support mark packet by group)], enable_mark_group=$withval, enable_mark_group="yes")
 AC_ARG_WITH(mark-field, [AC_HELP_STRING(--with-mark-field,  Support mark packet by packet field)], enable_mark_field=$withval, enable_mark_field="yes")
+AC_ARG_WITH(mark-flag, [AC_HELP_STRING(--with-mark-flag,  Support mark packet following acl indication)], enable_mark_flag=$withval, enable_mark_flag="yes")
 AC_ARG_WITH(system-auth, [AC_HELP_STRING(--with-system-auth,  Support PAM+NSS authentication)], enable_system_auth=$withval, enable_system_auth="yes")
 
 AC_ARG_WITH(ldap,   [AC_HELP_STRING(--with-ldap,  Support LDAP directory for users and acl lookup)],ldap=$withval, ldap="")
@@ -148,6 +149,7 @@ AM_CONDITIONAL(USE_PGSQL_LOG, test x$enable_pgsql_log = xyes)
 AM_CONDITIONAL(USE_PLAINTEXT_AUTH, test x$enable_plaintext_auth = xyes)
 AM_CONDITIONAL(USE_MARK_GROUP, test x$enable_mark_group = xyes)
 AM_CONDITIONAL(USE_MARK_FIELD, test x$enable_mark_field = xyes)
+AM_CONDITIONAL(USE_MARK_FLAG, test x$enable_mark_flag = xyes)
 AM_CONDITIONAL(USE_SYSLOG_LOG, test x$enable_syslog_log = xyes)
 
 if test "${build_nufw}" = "yes"; then
@@ -254,6 +256,7 @@ AC_CONFIG_FILES([Makefile
         src/nuauth/modules/plaintext/Makefile
         src/nuauth/modules/mark_group/Makefile
         src/nuauth/modules/mark_field/Makefile
+        src/nuauth/modules/mark_flag/Makefile
         src/nuauth/modules/system/Makefile
         src/nuauth/modules/log_pgsql/Makefile
         src/nuauth/modules/log_mysql/Makefile
@@ -371,6 +374,10 @@ if test "${build_nuauth}" = "yes"; then
 
         if test "${enable_mark_field}" = "yes"; then
         	AC_MSG_RESULT([  - NuAuth: compile mark field module])
+        fi
+
+        if test "${enable_mark_flag}" = "yes"; then
+        	AC_MSG_RESULT([  - NuAuth: compile mark flag module])
         fi
 fi
 
