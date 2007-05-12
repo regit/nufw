@@ -667,6 +667,11 @@ int send_os(nuauth_session_t * session, nuclient_error_t * err)
 	return 1;
 }
 
+/**
+ * \ingroup nuclientAPI
+ * \brief Set username
+ *
+ */
 void nu_client_set_username(nuauth_session_t *session,
 			    const char *username)
 {
@@ -675,6 +680,11 @@ void nu_client_set_username(nuauth_session_t *session,
 	free(utf8username);
 }
 
+/**
+ * \ingroup nuclientAPI
+ * \brief Set password
+ *
+ */
 void nu_client_set_password(nuauth_session_t *session,
 				    const char *password)
 {
@@ -686,6 +696,7 @@ void nu_client_set_password(nuauth_session_t *session,
 void nu_client_set_debug(nuauth_session_t * session, unsigned char enabled);
 
 /**
+ * \ingroup nuclientAPI
  * Get user home directory
  *
  * \return A string that need to be freed
@@ -711,6 +722,7 @@ char *nu_get_home_dir()
 
 
 /**
+ * \ingroup nuclientAPI
  * Initialize TLS:
  *    - Set key filename (and test if the file does exist)
  *    - Set certificate filename (and test if the file does exist)
@@ -841,7 +853,9 @@ int nu_client_setup_tls(nuauth_session_t * session,
 	}
 	return 1;
 }
-
+/**
+ * \ingroup nuclientAPI
+ */
 int nu_client_set_nuauth_cert_dn(nuauth_session_t * session,
 				char *nuauth_cert_dn,
 				nuclient_error_t *err)
@@ -922,6 +936,7 @@ int init_sasl(nuauth_session_t * session, nuclient_error_t * err)
 }
 
 /**
+ * \ingroup nuclientAPI
  * Set IP source of the socket used to connect to nuauth server
  *
  * \param session Pointer to client session
@@ -1203,6 +1218,9 @@ static char *secure_str_copy(const char *orig)
 #endif
 }
 
+/**
+ * \ingroup nuclientAPI
+ */
 int nu_client_reset_tls(nuauth_session_t *session)
 {
 	int ret;
@@ -1335,6 +1353,7 @@ nuauth_session_t *_nu_client_new(unsigned char diffie_hellman, nuclient_error_t 
 }
 
 /**
+ * \ingroup nuclientAPI
  * \brief Create new session and use callbacks.
  *
  * Callbacks are used to fetch username and password if they are
@@ -1368,6 +1387,7 @@ nuauth_session_t *nu_client_new_callback(void *username_callback,
 }
 
 /**
+ * \ingroup nuclientAPI
  * \brief Create new session.
  *
  * This function has to be used to create a new ::nuauth_session_t if there
@@ -1408,6 +1428,7 @@ nuauth_session_t *nu_client_new(const char *username,
 
 
 /**
+ * \ingroup nuclientAPI
  * Reset a session: close the connection and reset attributes. So the session
  * can be used as nu_client_connect() input.
  */
@@ -1440,6 +1461,7 @@ void nu_client_reset(nuauth_session_t * session)
 }
 
 /**
+ * \ingroup nuclientAPI
  * Try to connect to nuauth server:
  *    - init_socket(): create socket to server ;
  *    - tls_handshake(): TLS handshake ;
@@ -1490,6 +1512,7 @@ int nu_client_connect(nuauth_session_t * session,
 }
 
 /**
+ * \ingroup nuclientAPI
  * Enable or disabled debug mode
  *
  * \param session Pointer to client session
@@ -1502,6 +1525,7 @@ void nu_client_set_debug(nuauth_session_t * session, unsigned char enabled)
 
 
 /**
+ * \ingroup nuclientAPI
  * Enable or disabled verbose mode
  *
  * \param session Pointer to client session
@@ -1625,6 +1649,7 @@ const char *nu_client_strerror(nuclient_error_t * err)
 }
 
 /**
+ * \ingroup nuclientAPI
  * Get version of nuclient library (eg. "2.1.1-3")
  *
  * \return Nuclient version string
@@ -1635,6 +1660,7 @@ const char *nu_get_version()
 }
 
 /**
+ * \ingroup nuclientAPI
  * Check if libnuclient if the specified version. Use #NUCLIENT_VERSION
  * as argument. See also function nu_get_version().
  *
