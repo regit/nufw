@@ -52,7 +52,7 @@ G_MODULE_EXPORT nu_error_t finalize_packet(connection_t * connection,
 					   gpointer params)
 {
 	connection->mark =
-	    (connection->flag & 0xffff0000) | (connection->
+	    (connection->flags & 0xffff0000) | (connection->
 					      mark & 0xFFFF);
 	return NU_EXIT_OK;
 }
