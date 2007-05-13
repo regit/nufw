@@ -26,13 +26,13 @@ class TestClientCertAuth(TestCase):
         nuconfig["plaintext_userfile"] = '"%s"' % self.userdb.filename
         nuconfig["nuauth_tls_auth_by_cert"] = "2"
         nuconfig["nuauth_tls_request_cert"] = "2"
-        nuconfig["nuauth_tls_cacert"] = cacert
+        nuconfig["nuauth_tls_cacert"] = '"%s"' % cacert
         nuconfig["nuauth_user_check_module"] = '"plaintext"'
         self.nuauth = Nuauth(nuconfig)
 
         # Client
         args = ["-C", cert, "-K", key, "-A", cacert]
-        self.client = createClient(more_args=args)
+        self.client = createClient(username="user", more_args=args)
 
     def tearDown(self):
         self.client.stop()
