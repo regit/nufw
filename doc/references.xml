@@ -944,8 +944,70 @@ Position of the mark (in bits) in the packet mark.
     <para>No default</para>
     </section>
 
-
     </section>
+  <section><title>mark field</title>
+     <section><title>mark_field_file</title><para>
+     File to read configuration from.
+    </para>
+    <para>Default: <computeroutput>mark_field_file=CONFFILE/mark_field.conf</computeroutput></para>
+    </section>
+
+ <section><title>nuauth_field_shift</title>
+ <para>
+Position of the mark (in bits) in the packet mark.
+    </para>
+    <para>Default: <computeroutput>mark_field_shift=0</computeroutput></para>
+    </section>
+ <section><title>nuauth_field_nbits</title>
+ <para>
+ Number of bits to store the mark.
+    </para>
+    <para>Default: <computeroutput>mark_field_mark=32</computeroutput></para>
+    </section>
+ <section><title>nuauth_field_default_mark</title>
+ <para>
+ Default mark if no group does match.
+    </para>
+    <para>No default</para>
+    </section>
+<section><title>mark_field_type</title>
+<para>
+Type of match.
+<itemizedlist>
+<listitem><para>match on appname: 0</para></listitem>
+<listitem><para>match on osname: 1</para></listitem>
+</itemizedlist>
+</para>
+    </section>
+    </section>
+  <section><title>mark flag</title>
+ <section><title>nuauth_flag_mark_shift</title>
+ <para>
+Position of the mark (in bits) in the packet mark.
+    </para>
+    <para>Default: <computeroutput>mark_flag_mark_shift=16</computeroutput></para>
+    </section>
+ <section><title>nuauth_flag_mark_nbits</title>
+ <para>
+ Number of bits to store the mark.
+    </para>
+    <para>Default: <computeroutput>mark_flag_mark_nbits=16</computeroutput></para>
+    </section>
+ <section><title>nuauth_flag_flag_nbits</title>
+ <para>
+ Number of bits of the flag to use to obtain the mark.
+    </para>
+    <para>Default: <computeroutput>mark_flag_flag_nbits=16</computeroutput></para>
+    </section>
+
+ <section><title>nuauth_flag_flag_shift</title>
+ <para>
+Position of the mark (in bits) in the flag.
+    </para>
+    <para>Default: <computeroutput>mark_flag_flag_shift=16</computeroutput></para>
+    </section>
+    </section>
+
   </chapter>
 </book>
 
