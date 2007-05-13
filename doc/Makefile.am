@@ -13,7 +13,16 @@ references: references.xml
 howto: howto.xml
 	xsltproc ${PARAMS} --output howto.html ${STYLESHEET} howto.xml
 
-pdf: howto.xml references.xml
-	docbook2pdf howto.xml
-	docbook2pdf references.xml
+pdf: howto.pdf references.pdf
 
+%.pdf: %.xml
+	${DOCBOOK2PDF} $<
+
+%.8: %.8.sgml
+	${DOCBOOK2MAN} $<
+
+%.1: %.1.sgml
+	${DOCBOOK2MAN} $<
+
+%.3: %.3.sgml
+	${DOCBOOK2MAN} $<
