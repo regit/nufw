@@ -28,6 +28,18 @@
 /**
  * @{ */
 
+typedef struct {
+	/** position of the mark (in bits) in the packet mark */
+	unsigned int shift;
+
+	/** mask to remove current mark of the packet */
+	uint32_t mask;
+
+	/** mask to keep correct part of flag */
+	uint32_t flag_mask;
+} mark_flag_config_t;
+
+
 /*
  * Returns version of nuauth API
  */
@@ -43,17 +55,58 @@ G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
 
 G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 {
+	confparams_t vars[] = {
+		{"mark_flag_shift", G_TOKEN_INT, 0, NULL} ,
+		{"mark_flag_nbits", G_TOKEN_INT, 16, NULL} ,
+		{"mark_flag_mask", G_TOKEN_INT, 0xffff0000, NULL} ,
+	};
+
+	const int nb_vars = sizeof(vars) / sizeof(confparams_t);
+	const char *configfile = DEFAULT_CONF_FILE;
+	mark_flag_config_t *config = g_new0(mark_flag_config_t, 1);
+	unsigned int nbits;
+
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 		    "Mark_flag module ($Revision$)");
+	/* parse config file */
+	if (module->configfile) {
+		configfile = module->configfile;
+	}
+	parse_conffile(configfile, nb_vars, vars);
+
+#define READ_CONF(KEY) \
+    get_confvar_value(vars, nb_vars, KEY)
+#define READ_CONF_INT(VAR, KEY, DEFAULT) \
+    do { gpointer vpointer = READ_CONF(KEY); if (vpointer) VAR = *(int *)vpointer; else VAR = DEFAULT;} while (0)
+
+	/* read options */
+	READ_CONF_INT(nbits, "mark_flag_nbits", 32);
+	READ_CONF_INT(config->shift, "mark_flag_shift", 0);
+	READ_CONF_INT(config->flag_mask, "mark_flag_mask", 0);
+
+	/* free config struct */
+	free_confparams(vars, nb_vars);
+
+	/* create mask to remove nbits at position shift */
+	config->mask =
+	    SHR32(0xFFFFFFFF, 32 - config->shift) | SHL32(0xFFFFFFFF,
+							  nbits +
+							  config->shift);
+
+	/* store config and exit */
+	module->params = config;
 	return TRUE;
 }
 
 G_MODULE_EXPORT nu_error_t finalize_packet(connection_t * connection,
 					   gpointer params)
 {
+	mark_flag_config_t *config = (mark_flag_config_t *) params;
 	connection->mark =
-	    (connection->flags & 0xffff0000) | (connection->
-					      mark & 0xFFFF);
+	    (connection->mark & config->mask)
+	    | (((connection->flags & config->flag_mask)
+	    		<< config->shift) & ~config->mask);
+
 	return NU_EXIT_OK;
 }
 
