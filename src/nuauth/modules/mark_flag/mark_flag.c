@@ -82,16 +82,16 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
     do { gpointer vpointer = READ_CONF(KEY); if (vpointer) VAR = *(int *)vpointer; else VAR = DEFAULT;} while (0)
 
 	/* read options */
-	READ_CONF_INT(nbits, "mark_flag_mark_nbits", 32);
-	READ_CONF_INT(config->shift, "mark_flag_mark_shift", 0);
+	READ_CONF_INT(nbits, "mark_flag_mark_nbits", 16);
+	READ_CONF_INT(config->shift, "mark_flag_mark_shift", 16);
 
 	/* create mask to remove nbits at position shift */
 	config->mask =
 	    SHR32(0xFFFFFFFF, 32 - config->shift) | SHL32(0xFFFFFFFF,
 							  nbits +
 							  config->shift);
-	READ_CONF_INT(nbits, "mark_flag_flag_nbits", 0);
-	READ_CONF_INT(f_shift, "mark_flag_flag_shift", 0);
+	READ_CONF_INT(nbits, "mark_flag_flag_nbits", 16);
+	READ_CONF_INT(f_shift, "mark_flag_flag_shift", 16);
 	/* create mask to remove nbits at position shift */
 	config->flag_mask =
 	    SHR32(0xFFFFFFFF, 32 - f_shift) | SHL32(0xFFFFFFFF,
