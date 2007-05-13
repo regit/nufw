@@ -14,6 +14,15 @@
     </copyright>
     <revhistory>
  <revision>
+	<revnumber>0.7</revnumber>
+	<date>2007/05/13</date>
+	<revdescription>
+	  <para>Add new option and module from 2.2</para>
+	</revdescription>
+      </revision>
+
+
+ <revision>
 	<revnumber>0.6</revnumber>
 	<date>2007/03/05</date>
 	<revdescription>
@@ -188,12 +197,10 @@ The complete filename of the authority certificate
  <para>The default is  none.</para>
 	</section>
 	<section><title>nuauth_tls_request_cert</title><para>
-This variable if set to 1 force verification of clients certificate against
-the certificate define in <varname>nuauth_tls_cert</varname>.
-A client can only connect if the certificate is signed. In this case, nuauth
-try to check if the username provided with the certificat is known.
-If this is the case, the user is authenticated. If the user is not known, 
-authentication by password is done. 
+This variable if set to 1 ask clients to send certificate.
+</para>
+<para>
+If it is set to 2, then the client has to show a valid certificate.
 </para>
 <para>Default: <computeroutput>nuauth_tls_request_cert=0</computeroutput>
 </para>
@@ -201,7 +208,10 @@ authentication by password is done.
 This variable if set to 1 
 adds the capability to authenticate the client based on name 
 provided in certificate.
+The authentication can failed if there is no group corresponding to 
+the given user name.
 </para>
+<para>If set to 2, then per-certificate authentication is mandatory.</para>
 <para>Default: <computeroutput>nuauth_tls_auth_by_cert=0</computeroutput>
 </para>
 
@@ -369,6 +379,8 @@ of time. Currently only <option>xml_defs</option> is available. It stores period
 <itemizedlist>
 <listitem><para><option>mark_group</option>: set mark depending on user groups.</para></listitem>
 <listitem><para><option>mark_uid</option>: use next 16 bits of the mark to put the userid.</para></listitem>
+<listitem><para><option>mark_field</option>: set mark depending on application name or OS name.</para></listitem>
+<listitem><para><option>mark_flag</option>: use first 16 bit of the mark to put mark given by acl.</para></listitem>
 </itemizedlist>
 
 </para>
