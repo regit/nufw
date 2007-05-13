@@ -61,7 +61,6 @@ GCRY_THREAD_OPTION_PTHREAD_IMPL;
 #define REQUEST_CERT 0
 
 static const int cert_type_priority[3] = { GNUTLS_CRT_X509, 0 };
-char* nu_locale_charset;
 
 
 void nu_exit_clean(nuauth_session_t * session)
