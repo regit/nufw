@@ -1,7 +1,7 @@
 #!/usr/bin/python2.4
 from unittest import TestCase, main
 from sys import stderr
-from common import createClient, connectClient
+from common import connectClient
 from nuauth import Nuauth
 from nuauth_conf import NuauthConf
 from config import config
@@ -32,7 +32,7 @@ class TestClientCertAuth(TestCase):
 
         # Client
         args = ["-C", cert, "-K", key, "-A", cacert]
-        self.client = createClient(username="user", more_args=args)
+        self.client = self.user.createClient(more_args=args)
 
     def tearDown(self):
         self.client.stop()
