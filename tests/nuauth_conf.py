@@ -6,6 +6,7 @@ from config import NUAUTH_CONF
 class NuauthConf(ReplaceFile):
     def __init__(self):
         ReplaceFile.__init__(self, NUAUTH_CONF, self.writeContent)
+        self.need_restart = False
 
         # Load current configuration
         self.content = {}
@@ -33,9 +34,18 @@ class NuauthConf(ReplaceFile):
             value = value[1:-1]
         return value
 
+    def needRestart(self, key, oldvalue, newvalue):
+        if self.need_restart:
+            return True
+        if oldvalue == newvalue:
+            return False
+        if key in ("nuauth_tls_cacert", "nuauth_tls_key", "nuauth_tls_cert"):
+            return True
+        return False
+
     def __setitem__(self, key, value):
-#        if key not in self.content:
-#            raise AttributeError("nuauth.conf has no key '%s'" % key)
-        info("nuauth.conf: set %s=%s" % (key, value))
+        if key in self.content \
+        and self.needRestart(key, self.content[key], value):
+            self.need_restart = True
         self.content[key] = value
 

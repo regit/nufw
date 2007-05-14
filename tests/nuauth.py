@@ -12,6 +12,10 @@ class NuauthProcess(Process):
     __instance = None
 
     @classmethod
+    def hasInstance(cls):
+        return not(cls.__instance is None)
+
+    @classmethod
     def getInstance(cls):
         if cls.__instance is None:
             cls.__instance = NuauthProcess()
@@ -75,11 +79,20 @@ class Nuauth:
         # Create attributes
         self.is_running = False
         self.conf = conf
-        self.nuauth = NuauthProcess.getInstance()
 
         # Setup configuration
+        need_restart = False
         if self.conf:
             self.conf.install()
+            need_restart = self.conf.need_restart
+        if need_restart and NuauthProcess.hasInstance():
+            self.nuauth = NuauthProcess.getInstance()
+            self.nuauth.warning("RESTART NUAUTH: Stop running server")
+            self.nuauth.stop()
+            self.nuauth.warning("RESTART NUAUTH: Start new server")
+            self.nuauth = NuauthProcess.getInstance()
+        else:
+            self.nuauth = NuauthProcess.getInstance()
 
         # Start nuauth process
         was_running = self.nuauth.start(restart=False, timeout=NUAUTH_START_TIMEOUT)
