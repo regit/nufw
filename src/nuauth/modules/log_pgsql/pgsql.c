@@ -306,7 +306,7 @@ static int pgsql_insert(PGconn * ld, connection_t * element,
 		return -1;
 	}
 	ok = secure_snprintf(request_values, sizeof(request_values),
-			     "VALUES ('%s %s', '%hu', "
+			     "VALUES ('%s: %s', '%hu', "
 			     "'%lu', '0', '%lu', "
 			     "'%u', '%s', '%s'",
 			     log_prefix, oob_prefix, state,
@@ -603,7 +603,7 @@ G_MODULE_EXPORT gint user_packet_logs(void *element,
 	case TCP_STATE_ESTABLISHED:
 		if (((struct accounted_connection *)element)
 				->tracking.protocol == IPPROTO_TCP)
-			return pgsql_update_state(ld, 
+			return pgsql_update_state(ld,
 						  (struct accounted_connection *) element,
 						  TCP_STATE_OPEN,
 						  TCP_STATE_ESTABLISHED, 0,
