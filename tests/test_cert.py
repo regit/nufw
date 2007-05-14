@@ -9,9 +9,13 @@ from os.path import join as path_join
 
 class TestClientCert(TestCase):
     def setUp(self):
+        self.cacert = config.get("test_cert", "cacert")
         nuconfig = NuauthConf()
         nuconfig["nuauth_tls_auth_by_cert"] = "0"
         nuconfig["nuauth_tls_request_cert"] = "0"
+        nuconfig["nuauth_tls_cacert"] = '"%s"' % self.cacert
+        nuconfig["nuauth_tls_key"] = '"%s"' % config.get("test_cert", "nuauth_key")
+        nuconfig["nuauth_tls_cert"] = '"%s"' % config.get("test_cert", "nuauth_cert")
         self.nuauth = Nuauth(nuconfig)
 
     def tearDown(self):
@@ -19,8 +23,7 @@ class TestClientCert(TestCase):
         self.nuauth.stop()
 
     def testValidCert(self):
-        cacert = config.get("test_cert", "cacert")
-        self.client = createClient(more_args=["-A", cacert])
+        self.client = createClient(more_args=["-A", self.cacert])
         self.assert_(connectClient(self.client))
 
     def testInvalidCert(self):
