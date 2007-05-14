@@ -51,6 +51,45 @@ G_MODULE_EXPORT uint32_t get_api_version()
  *
  * @{ */
 
+/**
+ * Convert an IPv6 address to PostgreSQL SQL format.
+ *
+ * \return Returns 0 on error, 1 otherwise.
+ */
+static int formatINET(struct log_pgsql_params *params,
+	char *buffer, socklen_t buflen,
+	const struct in6_addr *addr6,
+	int use_ntohl)
+{
+	struct in_addr addr4;
+	int af;
+	const char *ret;
+	const void *addr;
+	if (params->pgsql_use_ipv4) {
+		if (!is_ipv4(addr6)) {
+			log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
+				    "MySQL: Packet has IPV6 address but MySQL use IPV4 only schema");
+			return 0;
+		}
+		addr4.s_addr = addr6->s6_addr32[3];
+		if (use_ntohl) {
+			addr4.s_addr = ntohl(addr4.s_addr);
+		}
+		af = AF_INET;
+		addr = &addr4;
+	} else {
+		af = AF_INET6;
+		addr = addr6;
+	}
+	ret = inet_ntop (af, addr, buffer, buflen);
+	if (ret == NULL) {
+		buffer[0] = 0;
+		return 0;
+	}
+	buffer[buflen-1] = 0;
+	return 1;
+}
+
 G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
 {
 	struct log_pgsql_params *params =
@@ -127,28 +166,16 @@ static nu_error_t pgsql_close_open_user_sessions(struct log_pgsql_params
 G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 {
 	confparams_t pgsql_nuauth_vars[] = {
-		{"pgsql_server_addr", G_TOKEN_STRING, 0,
-		 g_strdup(PGSQL_SERVER)}
-		,
-		{"pgsql_server_port", G_TOKEN_INT, PGSQL_SERVER_PORT, NULL}
-		,
-		{"pgsql_user", G_TOKEN_STRING, 0, g_strdup(PGSQL_USER)}
-		,
-		{"pgsql_passwd", G_TOKEN_STRING, 0, g_strdup(PGSQL_PASSWD)}
-		,
-		{"pgsql_ssl", G_TOKEN_STRING, 0, g_strdup(PGSQL_SSL)}
-		,
-		{"pgsql_db_name", G_TOKEN_STRING, 0,
-		 g_strdup(PGSQL_DB_NAME)}
-		,
-		{"pgsql_table_name", G_TOKEN_STRING, 0,
-		 g_strdup(PGSQL_TABLE_NAME)}
-		,
-		{"pgsql_users_table_name", G_TOKEN_STRING, 0,
-		 g_strdup(PGSQL_USERS_TABLE_NAME)}
-		,
-		{"pgsql_request_timeout", G_TOKEN_INT,
-		 PGSQL_REQUEST_TIMEOUT, NULL}
+		{"pgsql_server_addr", G_TOKEN_STRING, 0, g_strdup(PGSQL_SERVER)},
+		{"pgsql_server_port", G_TOKEN_INT, PGSQL_SERVER_PORT, NULL},
+		{"pgsql_user", G_TOKEN_STRING, 0, g_strdup(PGSQL_USER)},
+		{"pgsql_passwd", G_TOKEN_STRING, 0, g_strdup(PGSQL_PASSWD)},
+		{"pgsql_ssl", G_TOKEN_STRING, 0, g_strdup(PGSQL_SSL)},
+		{"pgsql_db_name", G_TOKEN_STRING, 0, g_strdup(PGSQL_DB_NAME)},
+		{"pgsql_table_name", G_TOKEN_STRING, 0, g_strdup(PGSQL_TABLE_NAME)},
+		{"pgsql_users_table_name", G_TOKEN_STRING, 0, g_strdup(PGSQL_USERS_TABLE_NAME)},
+		{"pgsql_request_timeout", G_TOKEN_INT, PGSQL_REQUEST_TIMEOUT, NULL},
+		{"pgsql_use_ipv4", G_TOKEN_INT, PGSQL_USE_IPV4, NULL}
 	};
 	unsigned int nb_params =
 	    sizeof(pgsql_nuauth_vars) / sizeof(confparams_t);
@@ -181,10 +208,9 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	params->pgsql_ssl = (char *) READ_CONF("pgsql_ssl");
 	params->pgsql_db_name = (char *) READ_CONF("pgsql_db_name");
 	params->pgsql_table_name = (char *) READ_CONF("pgsql_table_name");
-	params->pgsql_users_table_name =
-	    (char *) READ_CONF("pgsql_users_table_name");
-	READ_CONF_INT(params->pgsql_request_timeout,
-		      "pgsql_request_timeout", PGSQL_REQUEST_TIMEOUT);
+	params->pgsql_users_table_name = (char *) READ_CONF("pgsql_users_table_name");
+	READ_CONF_INT(params->pgsql_request_timeout, "pgsql_request_timeout", PGSQL_REQUEST_TIMEOUT);
+	READ_CONF_INT(params->pgsql_use_ipv4, "pgsql_use_ipv4", PGSQL_USE_IPV4);
 
 	/* free config struct */
 	free_confparams(pgsql_nuauth_vars,
@@ -283,14 +309,14 @@ static int pgsql_insert(PGconn * ld, connection_t * element,
 	char *sql_query;
 	char *log_prefix = "Default";
 
-	if (inet_ntop
-	    (AF_INET6, &element->tracking.saddr, ip_src,
-	     sizeof(ip_src)) == NULL)
+	if (!formatINET(params, ip_src, sizeof(ip_src),
+				&element->tracking.saddr, 0)) {
 		return -1;
-	if (inet_ntop
-	    (AF_INET6, &element->tracking.daddr, ip_dst,
-	     sizeof(ip_dst)) == NULL)
+	}
+	if (!formatINET(params, ip_dst, sizeof(ip_dst),
+				&element->tracking.daddr, 0)) {
 		return -1;
+	}
 
 	if (element->log_prefix) {
 		log_prefix = element->log_prefix;
@@ -416,10 +442,10 @@ static int pgsql_update_close(PGconn * ld, connection_t * element,
 	PGresult *Result;
 	gboolean ok;
 
-	if (inet_ntop
-	    (AF_INET6, &element->tracking.saddr, ip_src,
-	     sizeof(ip_src)) == NULL)
+	if (!formatINET(params, ip_src, sizeof(ip_src),
+				&element->tracking.saddr, 1)) {
 		return -1;
+	}
 
 	ok = secure_snprintf(request, sizeof(request),
 			     "UPDATE %s SET state='%hu', end_timestamp='%lu' "
@@ -465,14 +491,14 @@ static int pgsql_update_state(PGconn * ld,
 	gboolean ok;
 
 	/* setup IP/TCP parameters */
-	if (inet_ntop
-	    (AF_INET6, &element->tracking.saddr, tmp_inet1,
-	     sizeof(tmp_inet1)) == NULL)
+	if (!formatINET(params, tmp_inet1, sizeof(tmp_inet1),
+				&element->tracking.saddr, 1)) {
 		return -1;
-	if (inet_ntop
-	    (AF_INET6, &element->tracking.daddr, tmp_inet2,
-	     sizeof(tmp_inet2)) == NULL)
+	}
+	if (!formatINET(params, tmp_inet2, sizeof(tmp_inet2),
+				&element->tracking.daddr, 1)) {
 		return -1;
+	}
 
 	if (reverse) {
 		ip_src = tmp_inet2;
@@ -646,10 +672,10 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 	if (ld == NULL)
 		return -1;
 
-	if (inet_ntop
-	    (AF_INET6, &c_session->addr, addr_ascii,
-	     sizeof(addr_ascii)) == NULL)
+	if (!formatINET(params, addr_ascii, sizeof(addr_ascii),
+				&c_session->addr, 0)) {
 		return -1;
+	}
 
 	switch (state) {
 	case SESSION_OPEN:
@@ -672,7 +698,7 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 		/* update existing user session */
 		ok = secure_snprintf(request, sizeof(request),
 				     "UPDATE %s SET end_time=ABSTIME(%lu) "
-				     "WHERE socket='%u' and ip_saddr='%s'",
+				     "WHERE socket='%u' and ip_saddr='%s' AND end_time IS NULL",
 				     params->pgsql_users_table_name,
 				     time(NULL),
 				     c_session->socket, addr_ascii);
