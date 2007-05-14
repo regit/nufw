@@ -27,7 +27,7 @@ class PlaintextUserDB:
         self.users.append(user)
 
     def install(self, config):
-        info("Setup Plaintext users database")
+        info("Setup Plaintext user database")
         text = []
         for user in self.users:
             user_text = str(user)
@@ -42,6 +42,7 @@ class PlaintextUserDB:
 
     def desinstall(self):
         if self.replace:
+            info("Reset Plaintext user database")
             self.replace.desinstall()
 
     def __getitem__(self, key):
@@ -85,5 +86,6 @@ class PlaintextAcl:
 
     def desinstall(self):
         if self.replace:
+            info("Reset Plaintext ACL")
             self.replace.desinstall()
 

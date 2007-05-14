@@ -55,11 +55,18 @@ def datetime_before():
 def datetime_after():
     return datetime_now(1.1)
 
+def formatTimestamp(ts):
+    if POSTGRESQL:
+        return "ABSTIME(%s)" % ts
+    else:
+        return "FROM_UNIXTIME(%s)" % ts
+
 class MysqlLog(TestCase):
     def setUp(self):
         startNufw()
         config = NuauthConf()
         if POSTGRESQL:
+            config.need_restart = True
             self.conn = pgdb.connect(
                 host=DB_SERVER,
                 user=DB_USER,
@@ -82,27 +89,24 @@ class MysqlLog(TestCase):
         self.users.install(config)
         self.acls.install(config)
         self.nuauth = Nuauth(config)
-        self.start_time = int(time())
+        self.start_time = int(time()-1.1)
 
     def query(self, sql):
         if POSTGRESQL:
-            info("PostgreSQL query: %s" % sql)
-            cursor = self.conn.cursor()
-            cursor.execute(sql)
-            info("PostgreSQL result: %s rows" % cursor.rowcount)
+            prefix = "PostgreSQL"
         else:
-            info("MySQL query: %s" % sql)
-            cursor = self.conn.cursor()
-            cursor.execute(sql)
-            info("MySQL result: %s rows" % cursor.rowcount)
+            prefix = "MySQL"
+        info("%s query: %s" % (prefix, sql))
+        cursor = self.conn.cursor()
+        cursor.execute(sql)
+        info("%s result: %s rows" % (prefix, cursor.rowcount))
         return cursor
 
     def fetchone(self, cursor):
+        row = cursor.fetchone()
         if POSTGRESQL:
-            row = cursor.fetchone()
             info("PostgreSQL fetchone(): %s" % repr(row))
         else:
-            row = cursor.fetchone()
             info("MySQL fetchone(): %s" % repr(row))
         return row
 
@@ -117,15 +121,21 @@ class MysqlLog(TestCase):
         # Client login
         client = self.user.createClient()
         self.assert_(connectClient(client))
-        cursor = self.query(sql)
 
         # Check number of rows
+        for when in retry(timeout=2.0):
+            cursor = self.query(sql)
+            for line in self.nuauth.readlines():
+                pass
+            if cursor.rowcount >= 1:
+                break
         self.assertEqual(cursor.rowcount, 1)
 
         # Read row columns
         (ip_saddr, user_id, username, os_sysname,
             os_release, os_version, end_time) = self.fetchone(cursor)
-        ip_saddr = ntohl(ip_saddr) & 0xFFFFFFFF
+        if not POSTGRESQL:
+            ip_saddr = ntohl(ip_saddr) & 0xFFFFFFFF
 
         # Check values
         self.assertEqual(IP(ip_saddr), client.ip)
@@ -147,6 +157,8 @@ class MysqlLog(TestCase):
             cursor = self.query(sql)
 
             # Check number of rows
+            if cursor.rowcount < 1:
+                continue
             self.assertEqual(cursor.rowcount, 1)
 
             # Read row columns
@@ -157,14 +169,10 @@ class MysqlLog(TestCase):
             logout_after = datetime_after()
 
             # Check values
-            self.assert_(logout_before <= end_time <= logout_after)
+            if not POSTGRESQL:
+                # FIXME: Convert string to datetime for PostgreSQL
+                self.assert_(logout_before <= end_time <= logout_after)
             break
-
-def formatTimestamp(ts):
-    if POSTGRESQL:
-        return "%s" % ts
-    else:
-        return "FROM_UNIXTIME(%s)" % ts
 
 class MysqlLogUser(MysqlLog):
     def testUserLogin(self):
