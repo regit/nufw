@@ -1,6 +1,6 @@
 #!/usr/bin/python2.4
 from unittest import TestCase, main
-from common import startNufw, createClient, connectClient
+from common import startNufw, connectClient
 from nuauth import Nuauth
 from nuauth_conf import NuauthConf
 from inl_tests.iptables import Iptables
@@ -31,7 +31,7 @@ class TestPlaintextAcl(TestCase):
 
     def testFilter(self):
         user = self.users[0]
-        client = createClient(user.login, user.password)
+        client = user.createClient()
         testAllowPort(self, self.iptables, client)
         testDisallowPort(self, self.iptables, client)
 

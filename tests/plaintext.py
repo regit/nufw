@@ -11,8 +11,8 @@ class PlaintextUser:
         self.uid = uid
         self.gid = gid
 
-    def createClient(self):
-        return createClient(self.login, self.password)
+    def createClient(self, more_args=None):
+        return createClient(self.login, self.password, more_args=more_args)
 
     def __str__(self):
         return "%s:%s:%u:%u" % (self.login, self.password, self.uid, self.gid)

@@ -18,13 +18,13 @@ class TestPlaintextAuth(TestCase):
 
     def testUser1(self):
         user = USERDB[0]
-        client = createClient(user.login, user.password)
+        client = user.createClient()
         self.assert_(connectClient(client))
         client.stop()
 
     def testUser2(self):
         user = USERDB[1]
-        client = createClient(user.login, user.password)
+        client = user.createClient()
         self.assert_(connectClient(client))
         client.stop()
 
