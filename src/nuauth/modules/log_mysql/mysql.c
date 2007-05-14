@@ -1069,7 +1069,7 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 		/* update existing user session */
 		ok = secure_snprintf(request, sizeof(request),
 				     "UPDATE %s SET end_time=FROM_UNIXTIME(%lu) "
-				     "WHERE socket=%u AND ip_saddr=%s",
+				     "WHERE socket=%u AND ip_saddr=%s AND end_time IS NULL",
 				     params->mysql_users_table_name,
 				     time(NULL),
 				     c_session->socket, ip_ascii);
