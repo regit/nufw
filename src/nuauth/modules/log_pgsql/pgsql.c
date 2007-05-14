@@ -672,7 +672,7 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 		/* update existing user session */
 		ok = secure_snprintf(request, sizeof(request),
 				     "UPDATE %s SET end_time=ABSTIME(%lu) "
-				     "WHERE socket=%u and ip_saddr=%u",
+				     "WHERE socket='%u' and ip_saddr='%s'",
 				     params->pgsql_users_table_name,
 				     time(NULL),
 				     c_session->socket, addr_ascii);
