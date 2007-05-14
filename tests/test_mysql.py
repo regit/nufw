@@ -160,17 +160,23 @@ class MysqlLog(TestCase):
             self.assert_(logout_before <= end_time <= logout_after)
             break
 
+def formatTimestamp(ts):
+    if POSTGRESQL:
+        return "%s" % ts
+    else:
+        return "FROM_UNIXTIME(%s)" % ts
+
 class MysqlLogUser(MysqlLog):
     def testUserLogin(self):
         # Delete old entries in MySQL user session table
-        self.query("DELETE FROM %s WHERE start_time >= FROM_UNIXTIME(%s);" \
-            % (DB_USER_TABLE, self.start_time))
+        self.query("DELETE FROM %s WHERE start_time >= %s;" \
+            % (DB_USER_TABLE, formatTimestamp(self.start_time)))
 
         sql = \
             "SELECT ip_saddr, user_id, username, " \
             "os_sysname, os_release, os_version, end_time " \
-            "FROM %s WHERE start_time >= FROM_UNIXTIME(%s) " \
-            "ORDER BY start_time DESC;" % (DB_USER_TABLE, self.start_time)
+            "FROM %s WHERE start_time >= %s " \
+            "ORDER BY start_time DESC;" % (DB_USER_TABLE, formatTimestamp(self.start_time))
         client = self._login(sql)
         self._logout(sql, client)
 
@@ -192,21 +198,30 @@ class MysqlLogPacket(MysqlLog):
         testAllowPort(self, self.iptables, client)
 
         # Query DB
+        if not POSTGRESQL:
+            timestamp_field = "timestamp, "
+        else:
+            timestamp_field = ""
         sql = \
             "SELECT username, user_id, client_os, client_app, " \
             "tcp_dport, ip_saddr, ip_daddr, oob_time_sec, ip_protocol, " \
-            "timestamp, start_timestamp, end_timestamp, oob_prefix " \
-            "FROM %s WHERE timestamp >= FROM_UNIXTIME(%s) AND state=1;" \
-            % (DB_PACKET_TABLE, time_before)
+            "%sstart_timestamp, end_timestamp, oob_prefix " \
+            "FROM %s WHERE oob_time_sec >= %s AND state=1;" \
+            % (timestamp_field, DB_PACKET_TABLE, time_before)
         cursor = self.query(sql)
 
         # Read result
         row = self.fetchone(cursor)
         timestamp_after = datetime_after()
         self.assertEqual(cursor.rowcount, 1)
-        (username, user_id, client_os, client_app,
-         tcp_dport, ip_saddr, ip_daddr, oob_time_sec, ip_protocol,
-         timestamp, start_timestamp, end_timestamp, oob_prefix) = row
+        if POSTGRESQL:
+            (username, user_id, client_os, client_app,
+             tcp_dport, ip_saddr, ip_daddr, oob_time_sec, ip_protocol,
+             start_timestamp, end_timestamp, oob_prefix) = row
+        else:
+            (username, user_id, client_os, client_app,
+             tcp_dport, ip_saddr, ip_daddr, oob_time_sec, ip_protocol,
+             timestamp, start_timestamp, end_timestamp, oob_prefix) = row
 
         # Check values
         self.assertEqual(username, client.username)
@@ -216,7 +231,8 @@ class MysqlLogPacket(MysqlLog):
         self.assertEqual(tcp_dport, VALID_PORT)
         self.assertEqual(IP(ip_saddr), client.ip)
         self.assert_(timestamp_before <= datetime.fromtimestamp(oob_time_sec) <= timestamp_after)
-        self.assert_(timestamp and timestamp_before <= timestamp <= timestamp_after)
+        if not POSTGRESQL:
+            self.assert_(timestamp and timestamp_before <= timestamp <= timestamp_after)
         self.assertEqual(ip_protocol, 6)
         self.assertEqual(oob_prefix, OOB_PREFIX)
         # TODO: Check these timestamps
