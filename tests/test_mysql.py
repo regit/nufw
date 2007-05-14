@@ -1,10 +1,9 @@
 #!/usr/bin/python2.4
 from unittest import TestCase, main
-from common import createClient, connectClient, startNufw, retry
+from common import connectClient, startNufw, retry
 from logging import info
 from time import time, mktime
 from inl_tests.iptables import Iptables
-from config import CLIENT_USER_ID
 from socket import ntohl
 from filter import testAllowPort, testDisallowPort, VALID_PORT, INVALID_PORT
 from datetime import datetime
@@ -14,6 +13,7 @@ from os.path import basename, realpath
 from sys import argv, executable
 from nuauth import Nuauth
 from nuauth_conf import NuauthConf
+from plaintext import USERDB, PlaintextAcl
 
 def datetime2unix(timestamp):
     tm = timestamp.timetuple()
@@ -44,7 +44,8 @@ OS_RELEASE = platform.release()   # '2.6.19.2-haypo'
 OS_VERSION = platform.version()   # '#2 Mon Feb 5 10:55:30 CET 2007'
 CLIENT_OS = "-".join( (OS_SYSNAME, OS_VERSION, OS_RELEASE) )
 CLIENT_APP = realpath(executable)
-OOB_PREFIX = "Default: ACCEPT"
+LOG_PREFIX = 42
+OOB_PREFIX = "%u: ACCEPT" % LOG_PREFIX
 
 def datetime_now(delta=0):
     # Use datetime.fromtimestamp() with int(time()) to have microsecond=0
@@ -74,6 +75,12 @@ class MysqlLog(TestCase):
                 db=DB_DBNAME)
             config["nuauth_user_logs_module"] = '"mysql"'
             config["nuauth_user_session_logs_module"] = '"mysql"'
+        self.users = USERDB
+        self.user = self.users[0]
+        self.acls = PlaintextAcl()
+        self.acls.addAcl("web", VALID_PORT, self.user.gid, log_prefix=LOG_PREFIX)
+        self.users.install(config)
+        self.acls.install(config)
         self.nuauth = Nuauth(config)
         self.start_time = int(time())
 
@@ -103,10 +110,12 @@ class MysqlLog(TestCase):
         # Stop nuauth
         self.nuauth.stop()
         self.conn.close()
+        self.users.desinstall()
+        self.acls.desinstall()
 
     def _login(self, sql):
         # Client login
-        client = createClient()
+        client = self.user.createClient()
         self.assert_(connectClient(client))
         cursor = self.query(sql)
 
@@ -120,7 +129,7 @@ class MysqlLog(TestCase):
 
         # Check values
         self.assertEqual(IP(ip_saddr), client.ip)
-        self.assertEqual(user_id, CLIENT_USER_ID)
+        self.assertEqual(user_id, self.user.uid)
         self.assertEqual(username, client.username)
         self.assertEqual(os_sysname, OS_SYSNAME)
         self.assertEqual(os_release, OS_RELEASE)
@@ -175,7 +184,7 @@ class MysqlLogPacket(MysqlLog):
         self.iptables.flush()
 
     def testFilter(self):
-        client = createClient()
+        client = self.user.createClient()
         time_before = int(time())
         timestamp_before = datetime_before()
 
@@ -201,7 +210,7 @@ class MysqlLogPacket(MysqlLog):
 
         # Check values
         self.assertEqual(username, client.username)
-        self.assertEqual(user_id, CLIENT_USER_ID)
+        self.assertEqual(user_id, self.user.uid)
         self.assertEqual(client_os, CLIENT_OS)
         self.assertEqual(client_app, CLIENT_APP)
         self.assertEqual(tcp_dport, VALID_PORT)

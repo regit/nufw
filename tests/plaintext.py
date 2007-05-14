@@ -1,6 +1,8 @@
 from config import CONF_DIR
+from common import createClient
 from inl_tests.replace_file import ReplaceFile
 from os.path import join as path_join
+from logging import info
 
 class PlaintextUser:
     def __init__(self, login, password, uid, gid):
@@ -8,6 +10,9 @@ class PlaintextUser:
         self.password = password
         self.uid = uid
         self.gid = gid
+
+    def createClient(self):
+        return createClient(self.login, self.password)
 
     def __str__(self):
         return "%s:%s:%u:%u" % (self.login, self.password, self.uid, self.gid)
@@ -22,9 +27,12 @@ class PlaintextUserDB:
         self.users.append(user)
 
     def install(self, config):
+        info("Setup Plaintext users database")
         text = []
         for user in self.users:
-            text.append(str(user))
+            user_text = str(user)
+            info("Add user: %s" % user_text)
+            text.append(user_text)
         text = "\n".join(text)+"\n"
         self.replace = ReplaceFile(self.filename, text)
         self.replace.install()
@@ -49,7 +57,7 @@ class PlaintextAcl:
         self.replace = None
         self.content = []
 
-    def addAcl(self, name, port, gid, decision=1):
+    def addAcl(self, name, port, gid, decision=1, log_prefix=None):
         text = [
             "[%s]" % name,
             "decision=%s" % decision,
@@ -59,9 +67,15 @@ class PlaintextAcl:
             "SrcPort=1024-65535",
             "DstIP=0.0.0.0/0",
             "DstPort=%u" % port]
+        if log_prefix:
+            text.append("log_prefix=%u" % log_prefix)
         self.content.extend(text)
 
     def install(self, config):
+        info("Setup Plaintext ACL")
+        for line in self.content:
+            info("Plaintext ACL: %s" % line)
+
         text = "\n".join(self.content)
         self.replace = ReplaceFile(self.filename, text)
         self.replace.install()
