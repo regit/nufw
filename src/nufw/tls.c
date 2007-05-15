@@ -275,8 +275,10 @@ gnutls_session *tls_connect()
 	}
 #if USE_X509
 	if (ca_file) {
+		unsigned int status = 0;
 		/* we need to verify received certificates */
-		if (gnutls_certificate_verify_peers(*tls_session) < 0) {
+		ret = gnutls_certificate_verify_peers2(*tls_session, &status);
+		if (ret < 0 || status != 0) {
 			log_area_printf(DEBUG_AREA_GW,
 					DEBUG_LEVEL_WARNING,
 					"TLS: invalid certificates received from nuauth server");
