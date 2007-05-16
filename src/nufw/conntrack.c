@@ -240,8 +240,8 @@ int update_handler(struct nfct_conntrack *conn, unsigned int flags, int type,
 		if (ret < 0) {
 			if (gnutls_error_is_fatal(ret)) {
 				/* warn sender thread that it will need to reconnect at next access */
-				tls.auth_server_running = 0;
 				pthread_cancel(tls.auth_server);
+				tls.auth_server_running = 0;
 				pthread_mutex_unlock(&tls.mutex);
 				return callback_ret;
 			}

@@ -669,7 +669,6 @@ int auth_request_send(uint8_t type, struct queued_pckt *pckt_datas)
 			log_area_printf(DEBUG_AREA_GW,
 					DEBUG_LEVEL_WARNING,
 					"[+] TLS connection to nuauth restored");
-			tls.auth_server_running = 1;
 
 			/* create joinable thread for auth server */
 			pthread_mutex_init(&tls.auth_server_mutex, NULL);
@@ -678,6 +677,7 @@ int auth_request_send(uint8_t type, struct queued_pckt *pckt_datas)
 			     NULL) == EAGAIN) {
 				exit(EXIT_FAILURE);
 			}
+			tls.auth_server_running = 1;
 		} else {
 			log_area_printf(DEBUG_AREA_GW,
 					DEBUG_LEVEL_WARNING,

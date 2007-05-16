@@ -65,7 +65,7 @@ void nufw_stop_thread()
 	/* wait for thread end */
 	log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_MESSAGE,
 			"Wait threads end");
-	if (tls.session != NULL) {
+	if (tls.auth_server_running) {
 		pthread_join(tls.auth_server, NULL);
 	}
 	pthread_mutex_unlock(&tls.auth_server_mutex);
@@ -620,7 +620,7 @@ int main(int argc, char *argv[])
 
 	/* init. tls */
 	tls.session = NULL;
-	tls.auth_server_running = 1;
+	tls.auth_server_running = 0;
 	pthread_mutex_init(&tls.mutex, NULL);
 
 	/* start GNU TLS library */
