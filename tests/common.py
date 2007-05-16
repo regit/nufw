@@ -22,10 +22,7 @@ def startNufw(args=None):
     global _nufw
     if _nufw:
         if args or _nufw.args:
-            # if comment line arguments changed: restart nufw!
-            print "RESTART NUFW"
-            print "args is %s" % repr(args)
-            print "_nufw.args was %s" % repr(_nufw.args)
+            # if command line arguments changed: restart nufw!
             _stopNufw()
         else:
             return _nufw

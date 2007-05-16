@@ -1,6 +1,7 @@
 from inl_tests.process import Process
 from config import NUFW_PROG
 
+USE_VALGRIND = False
 DEBUG_LEVEL = 9
 
 class Nufw(Process):
@@ -9,7 +10,11 @@ class Nufw(Process):
         args = ["-"+"v"*DEBUG_LEVEL]
         if moreargs:
             args += list(moreargs)
-        Process.__init__(self, NUFW_PROG, args)
+        program = NUFW_PROG
+        if USE_VALGRIND:
+            args = ["--log-file-exactly=nufw.valgrind.log", "--verbose", program] + args
+            program = "valgrind"
+        Process.__init__(self, program, args)
         # FIXME: Load kernel modules?
 
     def isReady(self):
