@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python
 from unittest import TestSuite, TestResult, TestLoader, TextTestRunner, TestCase
 from imp import load_source
 from os import getuid
@@ -14,10 +14,10 @@ FILES = (
     "test_mysql",
     "test_system",
     "test_user_policy",
-    "test_cert",
+    "test_client_cert",
     "test_ipauth_guest",
+    "test_nufw_cert",
 #    "test_cert_auth",
-#    "test_nufw_cert",
 )
 
 def loadTestcases(module):
