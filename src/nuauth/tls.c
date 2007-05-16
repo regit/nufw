@@ -78,25 +78,24 @@ gint check_certs_for_tls_session(gnutls_session session)
 	 * structure. So you must have installed one or more CA certificates.
 	 */
 	ret = gnutls_certificate_verify_peers2(session, &status);
-
 	if (ret < 0) {
-		g_warning("Certificate verification failed");
+		g_warning("Certificate verification failed: %s",
+				gnutls_strerror(ret));
 		return SASL_BADPARAM;
 	}
 
-	if (status & GNUTLS_CERT_INVALID) {
+	if (status) {
+		if (status & GNUTLS_CERT_SIGNER_NOT_FOUND) {
+			g_message("The certificate hasn't got a known issuer.");
+			return SASL_NOVERIFY;
+		}
+
+		if (status & GNUTLS_CERT_REVOKED) {
+			g_message("The certificate has been revoked.");
+			return SASL_EXPIRED;
+		}
 		g_message("The certificate is not trusted.");
 		return SASL_FAIL;
-	}
-
-	if (status & GNUTLS_CERT_SIGNER_NOT_FOUND) {
-		g_message("The certificate hasn't got a known issuer.");
-		return SASL_NOVERIFY;
-	}
-
-	if (status & GNUTLS_CERT_REVOKED) {
-		g_message("The certificate has been revoked.");
-		return SASL_EXPIRED;
 	}
 
 	if (gnutls_certificate_type_get(session) == GNUTLS_CRT_X509) {
@@ -355,7 +354,7 @@ void create_x509_credentials()
 	int_authcert = *(int *) READ_CONF("nuauth_tls_auth_by_cert");
 #undef READ_CONF
 
-	if ((int_authcert >= NO_AUTH_BY_CERT) 
+	if ((int_authcert >= NO_AUTH_BY_CERT)
 			&& (int_authcert < MAX_AUTH_BY_CERT)) {
 		nuauth_tls.auth_by_cert = int_authcert;
 	} else {

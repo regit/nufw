@@ -36,7 +36,7 @@ int sck_auth_reply;
 char *get_rid_of_domain(const char *user);
 char *get_rid_of_prefix_domain(const char *user);
 
-int is_ipv4(struct in6_addr *addr);
+int is_ipv4(const struct in6_addr *addr);
 
 
 
