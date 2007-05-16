@@ -278,10 +278,27 @@ gnutls_session *tls_connect()
 		unsigned int status = 0;
 		/* we need to verify received certificates */
 		ret = gnutls_certificate_verify_peers2(*tls_session, &status);
-		if (ret < 0 || status != 0) {
+		if (ret < 0) {
 			log_area_printf(DEBUG_AREA_GW,
 					DEBUG_LEVEL_WARNING,
-					"TLS: invalid certificates received from nuauth server");
+					"TLS: Certificate authority verification failed: %s",
+					gnutls_strerror(ret));
+			return NULL;
+		}
+		if (status) {
+			char buffer[200];
+			buffer[0] = 0;
+			if (status & GNUTLS_CERT_INVALID)
+				SECURE_STRNCAT(buffer, " invalid", sizeof(buffer));
+			if (status & GNUTLS_CERT_REVOKED)
+				SECURE_STRNCAT(buffer, ", revoked", sizeof(buffer));
+			if (status & GNUTLS_CERT_SIGNER_NOT_FOUND)
+				SECURE_STRNCAT(buffer, ", signer not found", sizeof(buffer));
+			if (status & GNUTLS_CERT_SIGNER_NOT_CA)
+				SECURE_STRNCAT(buffer, ", signer not a CA", sizeof(buffer));
+			log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_WARNING,
+					"TLS: Invalid certificates received from nuauth server:%s",
+					buffer);
 			return NULL;
 		}
 		if (nuauth_cert_dn) {
