@@ -1,10 +1,12 @@
 from inl_tests.process import Process
 from config import NUFW_PROG
 
+DEBUG_LEVEL = 9
+
 class Nufw(Process):
     def __init__(self, moreargs=None):
         self.args = moreargs
-        args = ["-vvvvv"]
+        args = ["-"+"v"*DEBUG_LEVEL]
         if moreargs:
             args += list(moreargs)
         Process.__init__(self, NUFW_PROG, args)
