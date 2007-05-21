@@ -117,9 +117,9 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 
 	ret = nfq_get_timestamp(nfa, &timestamp);
 	if (ret == 0) {
-		q_pckt.timestamp = current->timestamp = timestamp.tv_sec;
+		q_pckt.timestamp = timestamp.tv_sec;
 	} else {
-		q_pckt.timestamp = current->timestamp = time(NULL);
+		q_pckt.timestamp = time(NULL);
 	}
 
 	if (look_for_tcp_flags
@@ -136,6 +136,7 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 	}
 	current = calloc(1, sizeof(packet_idl));
 	current->nfmark = q_pckt.mark;
+	current->timestamp = q_pckt.timestamp ;
 	current->id = 0;
 	if (current == NULL) {
 		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_MESSAGE,
