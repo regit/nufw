@@ -36,6 +36,7 @@ class NuauthProcess(Process):
         self.nufw_port = 4129
         self.client_port = 4130
         self.config_dirty = False
+        self.need_restart = False
         if self.isReady():
             raise RuntimeError("nuauth is already running!")
 
@@ -81,18 +82,25 @@ class Nuauth:
         self.conf = conf
 
         # Setup configuration
-        need_restart = False
         if self.conf:
             self.conf.install()
-            need_restart = self.conf.need_restart
-        if need_restart and NuauthProcess.hasInstance():
-            self.nuauth = NuauthProcess.getInstance()
+
+        # Do you need to restart running nuauth instance?
+        need_restart = False
+        if NuauthProcess.hasInstance():
+            if NuauthProcess.getInstance().need_restart:
+                need_restart = True
+            elif self.conf:
+                need_restart = self.conf.need_restart
+
+        # Use running nuauth instance or create a new one?
+        self.nuauth = NuauthProcess.getInstance()
+        if need_restart:
             self.nuauth.warning("RESTART NUAUTH: Stop running server")
             self.nuauth.stop()
             self.nuauth.warning("RESTART NUAUTH: Start new server")
             self.nuauth = NuauthProcess.getInstance()
-        else:
-            self.nuauth = NuauthProcess.getInstance()
+        self.nuauth.need_restart = False
 
         # Start nuauth process
         was_running = self.nuauth.start(restart=False, timeout=NUAUTH_START_TIMEOUT)
@@ -116,6 +124,7 @@ class Nuauth:
         if self.conf:
             self.conf.desinstall()
             self.nuauth.config_dirty = True
+            self.nuauth.need_restart = self.conf.need_restart
         self.is_running = False
 
     def readline(self, timeout=0, stream="stdout"):
