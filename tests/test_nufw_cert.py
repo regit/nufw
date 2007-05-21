@@ -49,13 +49,13 @@ class TestClientCert(TestCase):
         self.assert_(any("TLS connection to nuauth restored" in line
             for line in self.nufw.readlines(total_timeout=TIMEOUT)))
 
-#    def testInvalidCert(self):
-#        args = ["-a", config.get("test_cert", "invalid_cacert")]
-#        self.nufw = startNufw(args)
-#        self.connectNuauthNufw()
-#
-#        self.assert_(any("TLS: Invalid certificates received from nuauth server" in line
-#            for line in self.nufw.readlines(total_timeout=TIMEOUT)))
+    def testInvalidCert(self):
+        invalid_cacert = config.get("test_cert", "invalid_cacert")
+        self.nufw = startNufw(["-a", invalid_cacert])
+        self.connectNuauthNufw()
+
+        self.assert_(any("tls: invalid certificates received from nuauth server" in line.lower()
+            for line in self.nufw.readlines(total_timeout=TIMEOUT)))
 
 if __name__ == "__main__":
     print "Test nuauth client authentification"
