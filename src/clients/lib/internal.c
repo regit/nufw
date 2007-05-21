@@ -809,7 +809,7 @@ int tls_handshake(nuauth_session_t * session, nuclient_error_t * err)
 					printf(", signer not a CA");
 				printf("\n");
 			}
-			SET_ERROR(err, GNUTLS_ERROR, ret);
+			SET_ERROR(err, GNUTLS_ERROR, GNUTLS_E_CERTIFICATE_ERROR);
 			return 0;
 		}
 	}
