@@ -37,8 +37,8 @@ static inline void update_connection_datas(connection_t *element,
 		element->log_prefix = g_strdup(datas->log_prefix);
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 				  "Setting log prefix to %s", datas->log_prefix);
-		element->flags = datas->flags;
 	}
+	element->flags = datas->flags;
 }
 
 typedef enum {
