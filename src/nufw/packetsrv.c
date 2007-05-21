@@ -100,6 +100,28 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 		return 0;
 	}
 
+	q_pckt.mark = nfq_get_nfmark(nfa);
+
+#ifdef HAVE_NLIF_CATCH
+	if (!get_interface_information(nlif_handle, &q_pckt, nfa)) {
+		log_area_printf(DEBUG_AREA_PACKET, DEBUG_LEVEL_INFO,
+				"Can not get interfaces information for message");
+		return 0;
+	}
+#else
+	snprintf(q_pckt.indev, sizeof(q_pckt.indev), "*");
+	snprintf(q_pckt.physindev, sizeof(q_pckt.physindev), "*");
+	snprintf(q_pckt.outdev, sizeof(q_pckt.outdev), "*");
+	snprintf(q_pckt.physoutdev, sizeof(q_pckt.physoutdev), "*");
+#endif
+
+	ret = nfq_get_timestamp(nfa, &timestamp);
+	if (ret == 0) {
+		q_pckt.timestamp = current->timestamp = timestamp.tv_sec;
+	} else {
+		q_pckt.timestamp = current->timestamp = time(NULL);
+	}
+
 	if (look_for_tcp_flags
 	    ((unsigned char *) q_pckt.payload, q_pckt.payload_len)) {
 		ph = nfq_get_msg_packet_hdr(nfa);
@@ -113,6 +135,7 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 		}
 	}
 	current = calloc(1, sizeof(packet_idl));
+	current->nfmark = q_pckt.mark;
 	current->id = 0;
 	if (current == NULL) {
 		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_MESSAGE,
@@ -131,29 +154,6 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 				"Can not get id for message");
 		free(current);
 		return 0;
-	}
-
-	q_pckt.mark = current->nfmark = nfq_get_nfmark(nfa);
-
-#ifdef HAVE_NLIF_CATCH
-	if (!get_interface_information(nlif_handle, &q_pckt, nfa)) {
-		log_area_printf(DEBUG_AREA_PACKET, DEBUG_LEVEL_INFO,
-				"Can not get interfaces information for message");
-		free(current);
-		return 0;
-	}
-#else
-	snprintf(q_pckt.indev, sizeof(q_pckt.indev), "*");
-	snprintf(q_pckt.physindev, sizeof(q_pckt.physindev), "*");
-	snprintf(q_pckt.outdev, sizeof(q_pckt.outdev), "*");
-	snprintf(q_pckt.physoutdev, sizeof(q_pckt.physoutdev), "*");
-#endif
-
-	ret = nfq_get_timestamp(nfa, &timestamp);
-	if (ret == 0) {
-		q_pckt.timestamp = current->timestamp = timestamp.tv_sec;
-	} else {
-		q_pckt.timestamp = current->timestamp = time(NULL);
 	}
 
 	/* Try to add the packet to the list */
@@ -631,6 +631,7 @@ int auth_request_send(uint8_t type, struct queued_pckt *pckt_datas)
 	msg_header->timestamp = htonl(pckt_datas->timestamp);
 
 	/* Add info about interfaces */
+	msg_header->mark = pckt_datas->mark;
 	memcpy(msg_header->indev, pckt_datas->indev,
 	       IFNAMSIZ * sizeof(char));
 	memcpy(msg_header->outdev, pckt_datas->outdev,

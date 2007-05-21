@@ -33,6 +33,8 @@
 
 /**
  * Check nuauth certification domain name (DN).
+ *
+ * Returns 1 on error, 0 if the domain name is valid.
  */
 unsigned int check_nuauth_cert_dn(gnutls_session *tls_session)
 {
