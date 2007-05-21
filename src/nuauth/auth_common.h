@@ -21,8 +21,8 @@
 #ifndef AUTH_COMMON_H
 #define AUTH_COMMON_H
 
-#define SHL32(x, n) (((n) < 32)?((x) << (n)):0)
-#define SHR32(x, n) (((n) < 32)?((x) >> (n)):0)
+#define SHL32(x, n) (((int)(n)<=0)?(x):(((n) < 32)?((x) << (n)):0))
+#define SHR32(x, n) (((int)(n)<=0)?(x):(((n) < 32)?((x) >> (n)):0))
 
 typedef enum {
 	PACKET_ALONE = 0,	/*!< The packet is not linked with the main hash ::conn_list */

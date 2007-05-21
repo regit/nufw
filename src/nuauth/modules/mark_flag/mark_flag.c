@@ -29,11 +29,14 @@
  * @{ */
 
 typedef struct {
-	/** position of the mark (in bits) in the packet mark */
-	unsigned int shift;
+	/** position (in bits) in the mark */
+	unsigned int mark_shift;
 
-	/** mask to remove current mark of the packet */
-	uint32_t mask;
+	/** position (in bits) in the flag */
+	unsigned int flag_shift;
+
+	/** mask to insert new data in packet mark */
+	uint32_t mark_mask;
 } mark_flag_config_t;
 
 
@@ -53,7 +56,8 @@ G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
 G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 {
 	confparams_t vars[] = {
-		{"mark_flag_shift", G_TOKEN_INT, 0, NULL} ,
+		{"mark_flag_mark_shift", G_TOKEN_INT, 0, NULL} ,
+		{"mark_flag_flag_shift", G_TOKEN_INT, 0, NULL} ,
 		{"mark_flag_nbits", G_TOKEN_INT, 16, NULL} ,
 	};
 
@@ -77,11 +81,11 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 
 	/* read options */
 	READ_CONF_INT(nbits, "mark_flag_nbits", 16);
-	READ_CONF_INT(config->shift, "mark_flag_shift", 0);
+	READ_CONF_INT(config->mark_shift, "mark_flag_mark_shift", 0);
+	READ_CONF_INT(config->flag_shift, "mark_flag_flag_shift", 0);
 
-	/* create mask to remove nbits at position shift */
-	config->mask =
-	    (SHR32(0xFFFFFFFF, 32 - config->shift) | SHL32(0xFFFFFFFF,  nbits + config->shift));
+	config->mark_mask =
+	    (SHR32(0xFFFFFFFF, 32 - config->mark_shift) | SHL32(0xFFFFFFFF,  nbits + config->mark_shift));
 
 	/* free config struct */
 	free_confparams(vars, nb_vars);
@@ -96,16 +100,17 @@ G_MODULE_EXPORT nu_error_t finalize_packet(connection_t * connection,
 {
 #ifdef DEBUG_ENABLE
 	uint32_t old_mark = connection->mark;
+	uint32_t flag;
 #endif
 	mark_flag_config_t *config = (mark_flag_config_t *) params;
 
-	connection->mark =
-		(connection->mark & config->mask)
-		| ((connection->flags << config->shift) & ~config->mask);
+	flag = SHR32(connection->flags, config->flag_shift);
+	flag = SHL32(flag, config->mark_shift);
+	connection->mark = (connection->mark & config->mark_mask) | (flag & ~config->mark_mask);
 
 	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
-			"mark_flag: Set mark to %08X (mask=%08X, flag=%u), was %08X",
-			connection->mark, config->mask, connection->flags, old_mark);
+			"mark_flag: Set mark to %08X (mark mask=%08X, flag=%u), was %08X",
+			connection->mark, config->mark_mask, connection->flags, old_mark);
 
 	return NU_EXIT_OK;
 }

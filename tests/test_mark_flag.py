@@ -15,7 +15,8 @@ class TestClientAuth(TestCase):
         self.port1 = VALID_PORT
         self.port2 = VALID_PORT+1
         self.mark1 = 1
-        self.mark2 = 0x5678
+        self.mark2 = 2
+        self.shift = 8
         config = NuauthConf()
 
         # Userdb
@@ -25,13 +26,14 @@ class TestClientAuth(TestCase):
         self.userdb.install(config)
 
         self.acls = PlaintextAcl()
-        self.acls.addAcl("port1", self.port1, self.user.gid, flags=self.mark1)
-        self.acls.addAcl("port2", self.port2, self.user.gid, flags=self.mark2)
+        self.acls.addAcl("port1", self.port1, self.user.gid, flags=(self.mark1 << self.shift))
+        self.acls.addAcl("port2", self.port2, self.user.gid, flags=(self.mark2 << self.shift))
         self.acls.install(config)
 
         # Load nuauth
         config["nuauth_finalize_packet_module"] = '"mark_flag"'
-        config["mark_flag_shift"] = 0
+        config["mark_flag_mark_shift"] = 0
+        config["mark_flag_flag_shift"] = self.shift
         config["mark_flag_nbits"] = 16
 
         self.nuauth = Nuauth(config)
