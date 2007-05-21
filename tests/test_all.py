@@ -18,6 +18,7 @@ FILES = (
     "test_ipauth_guest",
     "test_nufw_cert",
     "test_cert_auth",
+    "test_mark_flag",
 )
 
 def loadTestcases(module):
