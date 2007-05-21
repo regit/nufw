@@ -34,9 +34,6 @@ typedef struct {
 
 	/** mask to remove current mark of the packet */
 	uint32_t mask;
-
-	/** mask to keep correct part of flag */
-	uint32_t flag_mask;
 } mark_flag_config_t;
 
 
@@ -56,17 +53,14 @@ G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
 G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 {
 	confparams_t vars[] = {
-		{"mark_flag_mark_shift", G_TOKEN_INT, 0, NULL} ,
-		{"mark_flag_mark_nbits", G_TOKEN_INT, 16, NULL} ,
-		{"mark_flag_flag_shift", G_TOKEN_INT, 0, NULL} ,
-		{"mark_flag_flag_nbits", G_TOKEN_INT, 16, NULL} ,
+		{"mark_flag_shift", G_TOKEN_INT, 0, NULL} ,
+		{"mark_flag_nbits", G_TOKEN_INT, 16, NULL} ,
 	};
 
 	const int nb_vars = sizeof(vars) / sizeof(confparams_t);
 	const char *configfile = DEFAULT_CONF_FILE;
 	mark_flag_config_t *config = g_new0(mark_flag_config_t, 1);
 	unsigned int nbits;
-	unsigned int f_shift;
 
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 		    "Mark_flag module ($Revision$)");
@@ -82,21 +76,12 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
     do { gpointer vpointer = READ_CONF(KEY); if (vpointer) VAR = *(int *)vpointer; else VAR = DEFAULT;} while (0)
 
 	/* read options */
-	READ_CONF_INT(nbits, "mark_flag_mark_nbits", 16);
-	READ_CONF_INT(config->shift, "mark_flag_mark_shift", 16);
+	READ_CONF_INT(nbits, "mark_flag_nbits", 16);
+	READ_CONF_INT(config->shift, "mark_flag_shift", 0);
 
 	/* create mask to remove nbits at position shift */
 	config->mask =
-	    SHR32(0xFFFFFFFF, 32 - config->shift) | SHL32(0xFFFFFFFF,
-							  nbits +
-							  config->shift);
-	READ_CONF_INT(nbits, "mark_flag_flag_nbits", 16);
-	READ_CONF_INT(f_shift, "mark_flag_flag_shift", 16);
-	/* create mask to remove nbits at position shift */
-	config->flag_mask =
-	    SHR32(0xFFFFFFFF, 32 - f_shift) | SHL32(0xFFFFFFFF,
-							  nbits +
-							  f_shift);
+	    (SHR32(0xFFFFFFFF, 32 - config->shift) | SHL32(0xFFFFFFFF,  nbits + config->shift));
 
 	/* free config struct */
 	free_confparams(vars, nb_vars);
@@ -110,10 +95,14 @@ G_MODULE_EXPORT nu_error_t finalize_packet(connection_t * connection,
 					   gpointer params)
 {
 	mark_flag_config_t *config = (mark_flag_config_t *) params;
+
 	connection->mark =
-	    (connection->mark & config->mask)
-	    | (((connection->flags & config->flag_mask)
-	    		<< config->shift) & ~config->mask);
+		(connection->mark & config->mask)
+		| ((connection->flags << config->shift) & ~config->mask);
+
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
+			"mark_flag: Set mark to %08X (mask=%08X, flag=%u)",
+			connection->mark, config->mask, connection->flags);
 
 	return NU_EXIT_OK;
 }
