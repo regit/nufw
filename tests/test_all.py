@@ -17,7 +17,7 @@ FILES = (
     "test_client_cert",
     "test_ipauth_guest",
     "test_nufw_cert",
-#    "test_cert_auth",
+    "test_cert_auth",
 )
 
 def loadTestcases(module):

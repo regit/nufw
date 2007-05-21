@@ -16,7 +16,7 @@ class TestClientAuth(TestCase):
         config = NuauthConf()
 
         # Userdb
-        self.user = PlaintextUser("guest", "nopassword", 42, 42)
+        self.user = PlaintextUser("visiteur", "nopassword", 42, 42)
         self.userdb = PlaintextUserDB()
         self.userdb.addUser(self.user)
         self.userdb.install(config)
