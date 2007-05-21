@@ -100,8 +100,9 @@ G_MODULE_EXPORT nu_error_t finalize_packet(connection_t * connection,
 {
 #ifdef DEBUG_ENABLE
 	uint32_t old_mark = connection->mark;
-	uint32_t flag;
 #endif
+	uint32_t flag;
+
 	mark_flag_config_t *config = (mark_flag_config_t *) params;
 
 	flag = SHR32(connection->flags, config->flag_shift);
