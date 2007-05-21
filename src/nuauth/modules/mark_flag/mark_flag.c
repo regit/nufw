@@ -94,6 +94,9 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 G_MODULE_EXPORT nu_error_t finalize_packet(connection_t * connection,
 					   gpointer params)
 {
+#ifdef DEBUG_ENABLE
+	uint32_t old_mark = connection->mark;
+#endif
 	mark_flag_config_t *config = (mark_flag_config_t *) params;
 
 	connection->mark =
@@ -101,8 +104,8 @@ G_MODULE_EXPORT nu_error_t finalize_packet(connection_t * connection,
 		| ((connection->flags << config->shift) & ~config->mask);
 
 	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
-			"mark_flag: Set mark to %08X (mask=%08X, flag=%u)",
-			connection->mark, config->mask, connection->flags);
+			"mark_flag: Set mark to %08X (mask=%08X, flag=%u), was %08X",
+			connection->mark, config->mask, connection->flags, old_mark);
 
 	return NU_EXIT_OK;
 }
