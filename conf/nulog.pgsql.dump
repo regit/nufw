@@ -126,7 +126,7 @@ CREATE TABLE users (
     user_id bigint,
     username character varying(30),
     start_time timestamp without time zone,
-    end_time timestamp without time zone,
+    end_time timestamp without time zone NULL,
     os_sysname character varying(40),
     os_release character varying(40),
     os_version character varying(100)
