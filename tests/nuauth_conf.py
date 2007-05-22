@@ -37,15 +37,14 @@ class NuauthConf(ReplaceFile):
     def needRestart(self, key, oldvalue, newvalue):
         if self.need_restart:
             return True
-        if oldvalue == newvalue:
+        if key in self.content and self.content[key] == newvalue:
             return False
         if key in ("nuauth_tls_cacert", "nuauth_tls_key", "nuauth_tls_cert"):
             return True
         return False
 
     def __setitem__(self, key, value):
-        if key in self.content \
-        and self.needRestart(key, self.content[key], value):
+        if self.needRestart(key, value):
             self.need_restart = True
         self.content[key] = value
 

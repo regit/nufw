@@ -100,7 +100,7 @@ class Nuauth:
             self.nuauth.stop()
             self.nuauth.warning("RESTART NUAUTH: Start new server")
             self.nuauth = NuauthProcess.getInstance()
-            print "RESTART ",
+            print "(restart nuauth) ",
         self.nuauth.need_restart = False
 
         # Start nuauth process
