@@ -981,28 +981,22 @@ Type of match.
     </section>
     </section>
   <section><title>mark flag</title>
+ <section><title>nuauth_flag_nbits</title>
+ <para>
+ Number of bits to overwrite in the mark.
+    </para>
+    <para>Default: <computeroutput>mark_flag_nbits=16</computeroutput></para>
+    </section>
+
  <section><title>nuauth_flag_mark_shift</title>
  <para>
-Position of the mark (in bits) in the packet mark.
+Position of the overwritten part of the mark (in bits).
     </para>
     <para>Default: <computeroutput>mark_flag_mark_shift=16</computeroutput></para>
     </section>
- <section><title>nuauth_flag_mark_nbits</title>
- <para>
- Number of bits to store the mark.
-    </para>
-    <para>Default: <computeroutput>mark_flag_mark_nbits=16</computeroutput></para>
-    </section>
- <section><title>nuauth_flag_flag_nbits</title>
- <para>
- Number of bits of the flag to use to obtain the mark.
-    </para>
-    <para>Default: <computeroutput>mark_flag_flag_nbits=16</computeroutput></para>
-    </section>
-
  <section><title>nuauth_flag_flag_shift</title>
  <para>
-Position of the mark (in bits) in the flag.
+Position in the flag of the bytes use to overwrite the mark (in bits).
     </para>
     <para>Default: <computeroutput>mark_flag_flag_shift=16</computeroutput></para>
     </section>
