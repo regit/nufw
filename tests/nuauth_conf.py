@@ -34,7 +34,7 @@ class NuauthConf(ReplaceFile):
             value = value[1:-1]
         return value
 
-    def needRestart(self, key, oldvalue, newvalue):
+    def needRestart(self, key, newvalue):
         if self.need_restart:
             return True
         if key in self.content and self.content[key] == newvalue:
