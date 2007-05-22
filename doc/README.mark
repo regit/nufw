@@ -97,3 +97,50 @@ You have more options in nuauth configuration file:
    is shift=0 and nbits=32 (use the whole mark).
  * mark_field_default_mark: default mark (default: 0)
 
+mark-flag
+=========
+
+This module uses the fact that acl can set a flag in packet. It uses it to 
+modify the mark. 
+
+It has three options:
+ * mark_flag_nbits: number of bits to overwrite in the mark
+ * mark_flag_mark_shift: shift of overwritten bits
+ * mark_flag_flag_shift: shift in flag to indicate which bits of the flag are 
+ used.
+
+Here's an ascii art of the system:
+         msb      lsb
+mark  :   [####····] nbits=16  shift=16
+            \\\\
+flags :   [··####··] shift=8
+         msb      lsb
+
+msb : most significant bits
+lsb : less significant bits
+
+Here are some examples:
+
+Initial values:
+  mark  = 0xAABBCCDD
+  flags = 0x12345678
+
+mark_flag_nbits=8
+mark_flag_mark_shift=0
+mark_flag_flag_shift=0
+  => mark = 0xAABBCC78 ( AABBCC | ..78 )
+
+mark_flag_nbits=16
+mark_flag_mark_shift=0
+mark_flag_flag_shift=0
+  => mark = 0xAABB5678 ( AABB | ..5678 )
+
+mark_flag_nbits=16
+mark_flag_mark_shift=8
+mark_flag_flag_shift=0
+  => mark = 0xAA5678DD ( AA | ..5678 | DD )
+
+mark_flag_nbits=16
+mark_flag_mark_shift=0
+mark_flag_flag_shift=8
+  => mark = 0xAABB3456 ( AABB | ..3456.. )
