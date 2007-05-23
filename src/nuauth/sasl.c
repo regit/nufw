@@ -398,7 +398,7 @@ static int mysasl_negotiate(user_session_t * c_session, sasl_conn_t * conn)
 				   data, len, &data, (unsigned *) &len);
 
 	if (auth_result != SASL_OK && auth_result != SASL_CONTINUE)
-		g_message("Starting SASL negotiation %s",
+		g_message("Starting SASL negotiation: %s",
 			  sasl_errstring(auth_result, NULL, NULL));
 
 	while (auth_result == SASL_CONTINUE) {
