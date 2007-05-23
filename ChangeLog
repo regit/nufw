@@ -1,11 +1,11 @@
-2.2.0-rc3
+2.2.0-rc3 (2007/05/23)
 	- By default, do not compile pam_nufw anymore.
 	- nutcpc does now check presence of certificate authority.
 	- Complete rewrite of debian packaging.
 	- log_nuprelude: Add user info to idmef message when there is
 	authentication failure.
 	- nuauth: implement acl ordering (prio_to_nok=2)
-	_ mark_flag: new module used to modify packet mark using acl
+	- mark_flag: new module used to modify packet mark using acl
 	indication
 2.2.0-rc2 (2007/04/27)
 	- nuauth: add declaration of thread_pool_push
