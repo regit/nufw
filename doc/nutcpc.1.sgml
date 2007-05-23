@@ -163,7 +163,6 @@ manpage.1: manpage.sgml
           <para>Set nufw userid to <replaceable>User ID</replaceable>.</para>
         </listitem>
       </varlistentry>
-      </varlistentry>
           <varlistentry>
         <term><option>-P <replaceable>User Password</replaceable></option>
         </term>
@@ -235,6 +234,7 @@ manpage.1: manpage.sgml
           other cases.</para>
         </listitem>
       </varlistentry>
+    </variablelist>
   </refsect1>
   <refsect1>
     <title>SEE ALSO</title>

@@ -3,13 +3,13 @@
 .\" <http://shell.ipoline.com/~elmert/comp/docbook2X/> 
 .\" Please send any bug reports, improvements, comments, patches, 
 .\" etc. to Steve Cheng <steve@ggi-project.org>.
-.TH "NUTCPC" "1" "04 May 2007" "" ""
+.TH "NUTCPC" "1" "23 mai 2007" "" ""
 
 .SH NAME
-nutcpc \- NUFW console-mode client for GNU/Linux systems
+nutcpc \- NUFW console-mode client for GNU/Linux and BSD systems
 .SH SYNOPSIS
 
-\fBnutcpc\fR [ \fB-d \fR ] [ \fB-S \fR ] [ \fB-k \fR ] [ \fB-V \fR ] [ \fB-h \fR ] [ \fB-H \fINuauth IP\fB\fR ] [ \fB-p \fINuauth port \fB\fR ] [ \fB-U \fIUserID\fB\fR ] [ \fB-I \fIInterval\fB\fR ]
+\fBnutcpc\fR [ \fB-d \fR ] [ \fB-l \fR ] [ \fB-k \fR ] [ \fB-V \fR ] [ \fB-h \fR ] [ \fB-q \fR ] [ \fB-H \fINuauth IP\fB\fR ] [ \fB-p \fINuauth port \fB\fR ] [ \fB-U \fIUserID\fB\fR ] [ \fB-P \fIUserPassword\fB\fR ] [ \fB-I \fIInterval\fB\fR ] [ \fB-C \fICertFile\fB\fR ] [ \fB-A \fIAuthorityFile\fB\fR ] [ \fB-K \fIKeyFile\fB\fR ] [ \fB-W \fICertPass\fB\fR ] [ \fB-a \fINuauthDN\fB\fR ]
 
 .SH "DESCRIPTION"
 .PP
@@ -22,34 +22,55 @@ authentication packets to the nuauth server.
 Original packaging and informations and help can be found from http://www.nufw.org/
 .SH "OPTIONS"
 .TP
-\fB-h \fR
-Issues usage details and exits.
-.TP
-\fB-V \fR
-Issues program version and exits.
-.TP
 \fB-d \fR
 Debug mode, don't go into background.
-.TP
-\fB-S \fR
-Use SSL to connect to nuauth server.
-.TP
-\fB-k \fR
-Before starting, kill existing instances of the program running
-on our local userID.
 .TP
 \fB-l \fR
 Do not verify whether lock file exists before starting. And do
 not create lock file.
 .TP
+\fB-k \fR
+Before starting, kill existing instances of the program running
+on our local userID.
+.TP
+\fB-V \fR
+Issues program version and exits.
+.TP
+\fB-h \fR
+Issues usage details and exits.
+.TP
+\fB-q \fR
+So not display running nutcpc options on "ps"
+.TP
 \fB-H \fINuauth IP\fB \fR
-send authentication packet  to \fINuauth IP\fR\&.
+Send authentication packet  to \fINuauth IP\fR\&.
 .TP
 \fB-p \fINuauth port\fB \fR
-send authentication packet  to \fINuauth port\fR\&.
+Send authentication packet  to \fINuauth port\fR\&.
 .TP
 \fB-U \fIUser ID\fB \fR
 Set nufw userid to \fIUser ID\fR\&.
+.TP
+\fB-P \fIUser Password\fB \fR
+Set nufw password to \fIUser Password\fR\&.
+.TP
+\fB-I \fIInterval\fB \fR
+Set refresh interval to \fIInterval\fR\&.
+.TP
+\fB-C \fICertFile\fB \fR
+Use certificate file stored in the file \fICertFile\fR to negotiate the TLS connection to nuauth.
+.TP
+\fB-A \fIAuthorityFile\fB \fR
+Use authority file stored in \fIAuthorityFile\fR and check the validity of nuauth certificate against this authority.  Nutcpc will leave if this is not the case.
+.TP
+\fB-K \fIKeyFile\fB \fR
+Use key file stored in the file \fIKeyFile\fR to negotiate the TLS connection to nuauth.
+.TP
+\fB-W \fICertPass\fB \fR
+Use the passphrase \fICertPass\fR to decrypt the certificate.
+.TP
+\fB-a \fINuauthDN\fB \fR
+Verify that the certificate given by nuauth has a DN equal to \fINuauthDN\fR\&. Nutcpc will leave if this is not the case.
 .SH "LOCK FILE"
 .PP
 By default, the lock file set by nutcpc is at ~/.nufw/nutcpc
