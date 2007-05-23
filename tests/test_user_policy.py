@@ -6,18 +6,16 @@ from nuauth import Nuauth
 from nuauth_conf import NuauthConf
 from os import path
 from inl_tests.replace_file import ReplaceFile
-
-USER_FILENAME = path.join(CONF_DIR, "users.nufw")
-USER, UID, GID, PASS = "username", 42, 42, "password"
-USER2, PASS2 = "username2", "password2"
-USER_DB  = "%s:%s:%u:%u\n" % (USER, PASS, UID, GID)
-USER_DB += "%s:%s:1:2,3\n" % (USER2, PASS2)
+from plaintext import USERDB
 
 class TestPlaintextAuth(TestCase):
     def setUp(self):
         # Setup our user DB
-        self.users = ReplaceFile(USER_FILENAME, USER_DB)
-        self.users.install()
+        self.config = NuauthConf()
+        self.users = USERDB
+        self.userA = self.users[0]
+        self.userB = self.users[1]
+        self.users.install(self.config)
 
     def tearDown(self):
         # Restore user DB and nuauth config
@@ -25,39 +23,33 @@ class TestPlaintextAuth(TestCase):
         self.nuauth.stop()
 
     def testLoginNormal(self):
-        config = NuauthConf()
         # Change login policy to 0
-        config["nuauth_connect_policy"] = 0
-        config["plaintext_userfile"] = '"%s"' % USER_FILENAME
-        config["nuauth_user_check_module"] = '"plaintext"'
-        self.nuauth = Nuauth(config)
+        self.config["nuauth_connect_policy"] = 0
+        self.nuauth = Nuauth(self.config)
 
         # Test user1
-        client1 = createClient(USER, PASS)
+        client1 = self.userA.createClient()
         self.assert_(connectClient(client1))
 
         # Test user2
-        client2 = createClient(USER2, PASS2)
+        client2 = self.userB.createClient()
         self.assert_(connectClient(client2))
 
         client1.stop()
         client2.stop()
 
     def testLoginOne(self):
-	config = NuauthConf()
         # Change login policy to 1
-        config["nuauth_connect_policy"] = 1
-        config["plaintext_userfile"] = '"%s"' % USER_FILENAME
-        config["nuauth_user_check_module"] = '"plaintext"'
-        self.nuauth = Nuauth(config)
+        self.config["nuauth_connect_policy"] = 1
+        self.nuauth = Nuauth(self.config)
 
         # User can't log twice
         # Test user1
-        client1 = createClient(USER, PASS)
+        client1 = self.userA.createClient()
         self.assert_(connectClient(client1))
 
         # Test user1
-        client2 = createClient(USER, PASS)
+        client2 = self.userA.createClient()
         self.assert_(not connectClient(client2))
 
         client1.stop()
@@ -65,20 +57,17 @@ class TestPlaintextAuth(TestCase):
 
 
     def testLoginIP(self):
-	config = NuauthConf()
         # Change login policy to 2
-        config["nuauth_connect_policy"] = 2
-        config["plaintext_userfile"] = '"%s"' % USER_FILENAME
-        config["nuauth_user_check_module"] = '"plaintext"'
-        self.nuauth = Nuauth(config)
+        self.config["nuauth_connect_policy"] = 2
+        self.nuauth = Nuauth(self.config)
 
         # Different users can't log from same IP
         # Test user1
-        client1 = createClient(USER, PASS)
+        client1 = self.userA.createClient()
         self.assert_(connectClient(client1))
 
         # Test user2
-        client2 = createClient(USER2, PASS2)
+        client2 = self.userB.createClient()
         self.assert_(not connectClient(client2))
 
         client1.stop()
