@@ -50,7 +50,7 @@ G_MODULE_EXPORT uint32_t get_api_version()
 
 G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
 {
-	mark_flag_config_t *config = params;
+	mark_flag_config_t *config = params_p;
 
 	g_free(config);
 	return TRUE;
