@@ -12,10 +12,8 @@ from plaintext import PlaintextUserDB, PlaintextUser, PlaintextAcl
 
 class TestClientAuth(TestCase):
     def setUp(self):
-        self.port1 = VALID_PORT
-        self.port2 = VALID_PORT+1
-        self.mark1 = 1
-        self.mark2 = 2
+        self.port = VALID_PORT
+        self.mark = 1
         self.shift = 8
         config = NuauthConf()
 
@@ -26,8 +24,7 @@ class TestClientAuth(TestCase):
         self.userdb.install(config)
 
         self.acls = PlaintextAcl()
-        self.acls.addAcl("port1", self.port1, self.user.gid, flags=(self.mark1 << self.shift))
-        self.acls.addAcl("port2", self.port2, self.user.gid, flags=(self.mark2 << self.shift))
+        self.acls.addAcl("port", self.port, self.user.gid, flags=(self.mark << self.shift))
         self.acls.install(config)
 
         # Load nuauth
@@ -44,20 +41,21 @@ class TestClientAuth(TestCase):
     def tearDown(self):
         self.acls.desinstall()
         self.userdb.desinstall()
+        self.client.stop()
         self.nuauth.stop()
         self.iptables.flush()
 
     def testValid(self):
         # Connect client and filter port
         self.assert_(connectClient(self.client))
-        self.iptables.filterTcp(self.port1)
+        self.iptables.filterTcp(self.port)
 
         # Test connection without QoS (accept)
-        self.assertEqual(connectTcp(HOST, self.port1, TIMEOUT), True)
+        self.assertEqual(connectTcp(HOST, self.port, TIMEOUT), True)
 
         # Test connection with QoS (drop)
-        self.iptables.command("-A POSTROUTING -t mangle -m mark --mark %s -j DROP" % self.mark1)
-        self.assertEqual(connectTcp(HOST, self.port1, TIMEOUT), False)
+        self.iptables.command("-A POSTROUTING -t mangle -m mark --mark %s -j DROP" % self.mark)
+        self.assertEqual(connectTcp(HOST, self.port, TIMEOUT), False)
 
 if __name__ == "__main__":
     print "Test nuauth mark_flag module"
