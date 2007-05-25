@@ -268,8 +268,8 @@ int nu_client_setup_tls(nuauth_session_t * session,
 
 	/* test if key file exists */
 	if (keyfile != NULL && access(keyfile, R_OK) != 0) {
-		keyfile = NULL;
 #if REQUEST_CERT
+		printf("Unable ot load key file : %s\n", keyfile);
 		SET_ERROR(err, INTERNAL_ERROR, FILE_ACCESS_ERR);
 		if (home) {
 			free(home);
@@ -277,6 +277,7 @@ int nu_client_setup_tls(nuauth_session_t * session,
 		errno = EBADF;
 		return 0;
 #endif
+		keyfile = NULL;
 	}
 
 	if (certfile == NULL && home != NULL) {
@@ -287,8 +288,8 @@ int nu_client_setup_tls(nuauth_session_t * session,
 	}
 	/* test if cert exists */
 	if (certfile != NULL && access(certfile, R_OK) != 0) {
-		certfile = NULL;
 #if REQUEST_CERT
+		printf("Unable ot load certificate file : %s\n", certfile);
 		SET_ERROR(err, INTERNAL_ERROR, FILE_ACCESS_ERR);
 		if (home) {
 			free(home);
@@ -296,6 +297,7 @@ int nu_client_setup_tls(nuauth_session_t * session,
 		errno = EBADF;
 		return 0;
 #endif
+		certfile = NULL;
 	}
 	if (cafile == NULL && home != NULL) {
 		ok = secure_snprintf(castring, sizeof(castring),
@@ -305,8 +307,8 @@ int nu_client_setup_tls(nuauth_session_t * session,
 	}
 	/* test if cert exists */
 	if (cafile != NULL && access(cafile, R_OK) != 0) {
-		cafile = NULL;
 #if REQUEST_CERT
+		printf("Unable to load CA file : %s\n", cafile);
 		SET_ERROR(err, INTERNAL_ERROR, FILE_ACCESS_ERR);
 		errno = EBADF;
 		if (home) {
@@ -314,6 +316,7 @@ int nu_client_setup_tls(nuauth_session_t * session,
 		}
 		return 0;
 #endif
+		cafile = NULL;
 	}
 
 	/* sets the trusted cas file */
