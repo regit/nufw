@@ -1,3 +1,5 @@
+2.2.0 (2007/05/29)
+	- log_mysql: fix prefix setting in a sub case.
 2.2.0-rc3 (2007/05/23)
 	- By default, do not compile pam_nufw anymore.
 	- nutcpc does now check presence of certificate authority.
