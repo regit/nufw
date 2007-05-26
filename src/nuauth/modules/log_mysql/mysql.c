@@ -511,7 +511,7 @@ static char *build_insert_request(MYSQL * ld, connection_t * element,
 		g_strlcat(request_fields,
 			  "oob_prefix", sizeof(request_fields));
 		ok = secure_snprintf(tmp_buffer, sizeof(tmp_buffer),
-				     "'%s %s'",
+				     "'%s: %s'",
 				     log_prefix, unauth_oob_prefix);
 		if (!ok) {
 			return NULL;
