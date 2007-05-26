@@ -31,13 +31,19 @@
  * Optionally, the initialisation function of the glib can be used
  *
  * After this, it has to export the functions that are used by hook :
- *  - define_periods() : define period that can be used in time-based acls
- *  - user_check() : verify user credentials
- *  - get_user_groups() : found groups the user belong to
- *  - get_user_id() : get user id
- *  - acl_check() : verify acl for a packet
- *  - user_session_logs() : log user connection and disconnection
- *  - user_packet_logs() : log packet
+ *  - define_periods(): define period that can be used in time-based acls
+ *  - user_check(): verify user credentials
+ *  - get_user_groups(): found groups the user belong to
+ *  - get_user_id(): get user id
+ *  - acl_check(): verify acl for a packet
+ *  - ip_authentication(): authenticate user packet by using external method
+ *  - certificate_check(): check validity of user's certicate
+ *  - certificate_to_uid(): build user ID from user's certicate
+ *  - user_session_logs(): log user connection and disconnection
+ *  - auth_error_log(): log failure of user authentication
+ *  - user_session_modify(): modify user session just after authentication
+ *  - user_packet_logs(): log packet
+ *  - finalize_packet(): modify packet before sending answer to nufw
  *
  * @{
  */
