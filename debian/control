@@ -96,7 +96,7 @@ Description: a linux client for the nufw authentication gateway system
  authenticating data to the nuauth server.
 
 Package: nuauth-utils
-Architecture: any
+Architecture: all
 Depends: ${shlibs:Depends}
 Description: Set of tools useful to nuauth admin
  NuFW is an authenticating gateway, which means that connections are
