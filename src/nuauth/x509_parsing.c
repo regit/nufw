@@ -45,8 +45,9 @@ gint get_first_x509_cert_from_tls_session(gnutls_session session,
 	if (cert_list_size > 0) {
 		/* we only print information about the first certificate. */
 		gnutls_x509_crt_init(cert);
-		gnutls_x509_crt_import(*cert, &cert_list[0],
-				       GNUTLS_X509_FMT_DER);
+		if (gnutls_x509_crt_import(*cert, &cert_list[0],
+				       GNUTLS_X509_FMT_DER) != 0)
+			return SASL_BADPARAM;
 	} else {
 		return SASL_BADPARAM;
 	}
