@@ -122,7 +122,7 @@ G_MODULE_EXPORT int certificate_check(gnutls_session session,
 	if (expiration_time < time(NULL)) {
 		log_message(INFO, DEBUG_AREA_USER, "Certificate expired at: %s",
 			    ctime(&expiration_time));
-		gnutls_x509_crt_deinit(cert);
+		/* gnutls_x509_crt_deinit(cert); */
 		return SASL_EXPIRED;
 	}
 
@@ -130,7 +130,7 @@ G_MODULE_EXPORT int certificate_check(gnutls_session session,
 		log_message(INFO, DEBUG_AREA_USER,
 			    "Certificate only activates at: %s",
 			    ctime(&activation_time));
-		gnutls_x509_crt_deinit(cert);
+		/* gnutls_x509_crt_deinit(cert); */
 		return SASL_DISABLED;
 	}
 
@@ -143,7 +143,7 @@ G_MODULE_EXPORT int certificate_check(gnutls_session session,
 			log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 				    "\tIssuer's DN is not trusted: %s",
 				    dn);
-			gnutls_x509_crt_deinit(cert);
+			/* gnutls_x509_crt_deinit(cert); */
 			return SASL_DISABLED;
 		}
 	}
