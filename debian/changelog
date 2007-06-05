@@ -1,4 +1,10 @@
-nufw (2.2.0~rc3-1) stable; urgency=low
+nufw (2.2.0-2) stable; urgency=low
+
+  * Conflicts/Replaces package libnuclient (for upgrades)
+
+ -- Pierre Chifflier <chifflier@inl.fr>  Tue, 05 Jun 2007 15:03:35 +0200
+
+nufw (2.2.0-1) stable; urgency=low
 
   * New upstream release 
   * Set myself as maintainer, with previous maintainer agreement

@@ -110,6 +110,8 @@ Description: Set of tools useful to nuauth admin
 Package: libnuclient3
 Architecture: any
 Depends: ${shlibs:Depends}, libsasl2-modules
+Replaces: libnuclient
+Conflicts: libnuclient
 Description: client library for nufw authentication
  NuFW is an authenticating gateway, which means that connections are
  authenticated before being forwarded through the gateway.  Classical packet
