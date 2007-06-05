@@ -1,6 +1,7 @@
 2.2.1
-	- x509_std: code cleaning
+	- x509_std: code cleaning and fix potential crash
 	- NuFW: fix compilation on some distribution (for AMD64 architecture)
+	- nutcpc: fix creation of .nufw directory
 2.2.0 (2007/05/29)
 	- log_mysql: fix prefix setting in a sub case.
 	- nuauth: improve doxygen documentation.
