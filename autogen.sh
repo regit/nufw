@@ -57,7 +57,7 @@ AUTOHEADER=$(find_tool_version autoheader "${AUTOCONF_MIN_VERSION}" \
 #-----------------------------------------------------------------------------
 
 echo "[+] Run aclocal"
-$ACLOCAL -I macros || exit $?
+$ACLOCAL || exit $?
 
 echo "[+] Run autoheader"
 $AUTOHEADER || exit $?

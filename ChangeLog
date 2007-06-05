@@ -1,3 +1,6 @@
+2.2.1
+	- x509_std: code cleaning
+	- NuFW: fix compilation on some distribution (for AMD64 architecture)
 2.2.0 (2007/05/29)
 	- log_mysql: fix prefix setting in a sub case.
 	- nuauth: improve doxygen documentation.
