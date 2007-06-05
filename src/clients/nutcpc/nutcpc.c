@@ -85,9 +85,12 @@ char *compute_run_pid()
 	char *home = nu_get_home_dir();
 	if (home == NULL)
 		return NULL;
-	secure_snprintf(path_dir, sizeof(path_dir), " %s/.nufw", home);
+	secure_snprintf(path_dir, sizeof(path_dir), "%s/.nufw", home);
 	if (access(path_dir, R_OK) != 0) {
-		mkdir(path_dir, S_IRWXU);
+		printf("Creating directory \"%s\"\n", path_dir);
+		if (mkdir(path_dir, S_IRWXU) != 0) {
+			printf("Could not create directory \"%s\" (%s)\n", path_dir, strerror(errno));
+		}
 	}
 	secure_snprintf(path_dir, sizeof(path_dir), "%s/.nufw/nutcpc", home);
 	free(home);
