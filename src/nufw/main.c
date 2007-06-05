@@ -559,7 +559,7 @@ int main(int argc, char *argv[])
 \t-n: use specified string as the needed DN of nuauth (inforce certificate checking) (default: none)\n\
 \t-v: increase debug level (+1 for each 'v') (max useful number: 10)\n\
 \t-A: debug areas (see man page for details)\n\
-\t-m: mark packet with userid (needed for connection expiration)\n"
+\t-m: mark packet with nuauth provided mark\n"
 #ifdef HAVE_LIBCONNTRACK
 				"\t-C: listen to conntrack events (needed for connection expiration)\n\
 \t-M: only report event on marked connections to nuauth (implies -C and -m)\n"
