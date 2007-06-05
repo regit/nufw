@@ -96,7 +96,7 @@ manpage.1: manpage.sgml
       <para>nufw is the minimalist server, designed to run on the gateway(s) of
       the network. nufw is designed to run in conjunction with nuauth, the
       authenticating server. nufw receives network packets from the local
-      firewall (on Linux 2.4 and 2.6, this is set up with the help of '-j QUEUE'
+      firewall (on Linux 2.4 and 2.6, this is set up with the help of '-j NFQUEUE' or '-j QUEUE'
       netfilter target), and synchronizes with a nuauth server to check packet is
       authorized to travel through the gateway.</para>
       <para>The design of the NUFW package lets administrator filter network
@@ -165,7 +165,7 @@ manpage.1: manpage.sgml
 	 <listitem><para>DEBUG_AREA_MAIN (1) main domain</para></listitem>
 	 <listitem><para>DEBUG_AREA_PACKET (2) packet domain</para></listitem>
 	 <listitem><para>DEBUG_AREA_USER (4) user domain</para></listitem>
-	 <listitem><para>DEBUG_AREA_GW (8) Gateway domain, interaction wit nufw servers.</para></listitem>
+	 <listitem><para>DEBUG_AREA_GW (8) Gateway domain, interaction with nufw servers.</para></listitem>
 	 <listitem><para>DEBUG_AREA_AUTH (16) Authentication domain</para></listitem>
 	 </itemizedlist>
 	  </para>
