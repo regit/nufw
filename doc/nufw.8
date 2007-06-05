@@ -3,7 +3,7 @@
 .\" <http://shell.ipoline.com/~elmert/comp/docbook2X/> 
 .\" Please send any bug reports, improvements, comments, patches, 
 .\" etc. to Steve Cheng <steve@ggi-project.org>.
-.TH "NUFW" "8" "12 mars 2007" "" ""
+.TH "NUFW" "8" "05 juin 2007" "" ""
 
 .SH NAME
 nufw \- NUFW User filtering gateway server
@@ -19,7 +19,7 @@ This manual page documents the
 nufw is the minimalist server, designed to run on the gateway(s) of
 the network. nufw is designed to run in conjunction with nuauth, the
 authenticating server. nufw receives network packets from the local
-firewall (on Linux 2.4 and 2.6, this is set up with the help of '-j QUEUE'
+firewall (on Linux 2.4 and 2.6, this is set up with the help of '-j NFQUEUE' or '-j QUEUE'
 netfilter target), and synchronizes with a nuauth server to check packet is
 authorized to travel through the gateway.
 .PP
@@ -67,7 +67,7 @@ DEBUG_AREA_PACKET (2) packet domain
 DEBUG_AREA_USER (4) user domain
 .TP 0.2i
 \(bu
-DEBUG_AREA_GW (8) Gateway domain, interaction wit nufw servers.
+DEBUG_AREA_GW (8) Gateway domain, interaction with nufw servers.
 .TP 0.2i
 \(bu
 DEBUG_AREA_AUTH (16) Authentication domain
@@ -135,7 +135,7 @@ work as if the "-C" switch had been set at startup. This is useful on HA
 configurations, when one firewall gets active, for instance.
 .TP
 \fBPOLL \fR
-Logs an "audit" line, mentioning how many network datagrams
+Logs an "audit" line, mentionning how many network datagrams
 were received and sent since daemon startup.
 .SH "SEE ALSO"
 .PP
