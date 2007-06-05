@@ -62,19 +62,19 @@ AC_ARG_WITH(prelude-log,
 
 AC_ARG_WITH(mysql-log, [AC_HELP_STRING(--with-mysql-log,  Support user activity logging in Mysql database)], enable_mysql_log=$withval, enable_mysql_log="")
 AC_ARG_WITH(pgsql-log, [AC_HELP_STRING(--with-pgsql-log,  Support user activity logging in PostgreSQL database)], enable_pgsql_log=$withval, enable_pgsql_log="")
-AC_ARG_WITH(syslog-log, [AC_HELP_STRING(--with-syslog-log,  Support user activity logging in syslog)], enable_syslog_log=$withval, enable_syslog_log="yes")
+AC_ARG_WITH(syslog-log, [AC_HELP_STRING(--without-syslog-log,  Disable user activity logging in syslog)], enable_syslog_log=$withval, enable_syslog_log="yes")
 
-AC_ARG_WITH(plaintext-auth, [AC_HELP_STRING(--with-plaintext-auth,  Support for authentification with plaintext file)], enable_plaintext_auth=$withval, enable_plaintext_auth="yes")
-AC_ARG_WITH(mark-group, [AC_HELP_STRING(--with-mark-group,  Support mark packet by group)], enable_mark_group=$withval, enable_mark_group="yes")
-AC_ARG_WITH(mark-field, [AC_HELP_STRING(--with-mark-field,  Support mark packet by packet field)], enable_mark_field=$withval, enable_mark_field="yes")
-AC_ARG_WITH(mark-flag, [AC_HELP_STRING(--with-mark-flag,  Support mark packet following acl indication)], enable_mark_flag=$withval, enable_mark_flag="yes")
-AC_ARG_WITH(system-auth, [AC_HELP_STRING(--with-system-auth,  Support PAM+NSS authentication)], enable_system_auth=$withval, enable_system_auth="yes")
+AC_ARG_WITH(plaintext-auth, [AC_HELP_STRING(--without-plaintext-auth,  Disable authentification with plaintext file)], enable_plaintext_auth=$withval, enable_plaintext_auth="yes")
+AC_ARG_WITH(mark-group, [AC_HELP_STRING(--without-mark-group,  Disable mark packet by group)], enable_mark_group=$withval, enable_mark_group="yes")
+AC_ARG_WITH(mark-field, [AC_HELP_STRING(--without-mark-field,  Disable mark packet by packet field)], enable_mark_field=$withval, enable_mark_field="yes")
+AC_ARG_WITH(mark-flag, [AC_HELP_STRING(--without-mark-flag,  Disable mark packet following acl indication)], enable_mark_flag=$withval, enable_mark_flag="yes")
+AC_ARG_WITH(system-auth, [AC_HELP_STRING(--without-system-auth,  Disable PAM+NSS authentication)], enable_system_auth=$withval, enable_system_auth="yes")
 
 AC_ARG_WITH(ldap,   [AC_HELP_STRING(--with-ldap,  Support LDAP directory for users and acl lookup)],ldap=$withval, ldap="")
 
 
-AC_ARG_WITH(nfqueue,   [AC_HELP_STRING(--with-nfqueue, Compile for NFQUEUE instead of QUEUE)],use_nfqueue=$withval, use_nfqueue="yes")
-AC_ARG_WITH(nfconntrack,   [AC_HELP_STRING(--with-nfconntrack, Compile with netfilter_conntrack)],use_nfconntrack=$withval, use_nfconntrack="")
+AC_ARG_WITH(nfqueue,   [AC_HELP_STRING(--without-nfqueue, Compile for QUEUE instead of NFQUEUE)],use_nfqueue=$withval, use_nfqueue="yes")
+AC_ARG_WITH(nfconntrack,   [AC_HELP_STRING(--without-nfconntrack, Disable netfilter_conntrack support)],use_nfconntrack=$withval, use_nfconntrack="yes")
 
 
 AC_ARG_WITH(utf8,   [AC_HELP_STRING(--with-utf8, Use UTF8 exchange between client and server)], AC_DEFINE_UNQUOTED([USE_UTF8],[1],[Will use UTF8 exchange]))
@@ -90,7 +90,7 @@ AC_ARG_ENABLE(nuauth-command,   [AC_HELP_STRING(--disable-nuauth-command, Don't 
 
 AC_ARG_ENABLE(debug,   [AC_HELP_STRING(--enable-debug, Add development debug messages (default no))],debug=$enableval, debug="")
 AC_ARG_WITH(perf-display,
-    [AC_HELP_STRING(--with-perf-display, Enable performance display (default yes))],
+    [AC_HELP_STRING(--without-perf-display, Disable performance display)],
     use_perf_display=$withval, use_perf_display="yes")
 
 if test "${use_perf_display}" = "yes"; then
