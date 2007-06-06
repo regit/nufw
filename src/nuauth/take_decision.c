@@ -380,7 +380,7 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 			total_size =
 			    sizeof(nuv3_nuauth_decision_response_t) +
 			    payload_size;
-			response = g_alloca(total_size);
+			response = (void*)g_new0(char, total_size);
 			response->protocol_version = PROTO_VERSION_V20;
 			response->msg_type = AUTH_ANSWER;
 			response->mark = htons(mark16);
@@ -451,7 +451,7 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 			total_size =
 			    sizeof(nuv4_nuauth_decision_response_t) +
 			    payload_size;
-			response = g_alloca(total_size);
+			response = (void*)g_new0(char, total_size);
 			response->protocol_version = PROTO_VERSION;
 			response->msg_type = AUTH_ANSWER;
 			response->tcmark = htonl(mark);
@@ -543,6 +543,7 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 		print_connection(element, "Answ Packet");
 	}
 	ret = nufw_session_send(element->tls, buffer, total_size);
+	g_free(buffer);
 	if (ret != NU_EXIT_OK) {
 		declare_dead_nufw_session(element->tls);
 	} else {

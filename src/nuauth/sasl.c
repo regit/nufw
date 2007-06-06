@@ -194,15 +194,17 @@ static int samp_send(gnutls_session session, const char *buffer,
 	int result;
 
 	alloclen = ((length / 3) + 1) * 4 + 1;
-	buf = g_alloca(alloclen);
+	buf = g_new(char, alloclen);
 	result = sasl_encode64(buffer, length, buf + 3, alloclen, &len);
 	if (result != SASL_OK) {
+		free(buf);
 		log_message(WARNING, DEBUG_AREA_AUTH, "Encoding data in base64");
 		return result;
 	}
 	memcpy(buf, "S: ", 3);
 
 	result = gnutls_record_send(session, buf, len + 3);
+	g_free(buf);
 	return result;
 }
 
