@@ -170,11 +170,12 @@ nu_error_t delete_client_by_socket_ext(int socket, int use_lock)
 
 	tls_user_remove_client(&tls_user_context, socket);
 	if (use_lock) {
-		if (shutdown(socket, SHUT_RDWR) == 0)
-			close(socket);
-		else
+		if (shutdown(socket, SHUT_RDWR) != 0)
 			log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 					"Could not shutdown socket");
+		if (close(socket) != 0)
+			log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
+					"Could not close socket");
 	}
 
 	return NU_EXIT_OK;
