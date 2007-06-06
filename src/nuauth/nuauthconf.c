@@ -184,9 +184,11 @@ void init_nuauthconf(struct nuauth_params **result)
 	g_free(gwsrv_addr);
 }
 
-void free_nuauth_params(struct nuauth_params *data)
+void free_nuauth_params(struct nuauth_params *conf)
 {
-	g_free(data->authorized_servers);
+	g_free(conf->authreq_port);
+	g_free(conf->userpckt_port);
+	g_free(conf->authorized_servers);
 }
 
 static struct nuauth_params *compare_and_update_nuauthparams(struct
