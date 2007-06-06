@@ -183,7 +183,7 @@ nu_error_t check_protocol_version(int version)
 
 /**
  * Convert an integer to a string.
- * Return 0 on error, 1 otherwise.
+ * Return NULL on error, new allocated string otherwise.
  */
 char* int_to_str(int value)
 {
