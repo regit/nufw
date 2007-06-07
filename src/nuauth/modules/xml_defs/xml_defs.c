@@ -276,7 +276,9 @@ G_MODULE_EXPORT void define_periods(GHashTable * periods,
 		log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 			    "Error reading period: %s", error->message);
 	}
-	g_error_free(error);
+	if (error) {
+		g_error_free(error);
+	}
 	g_free(contents);
 }
 
