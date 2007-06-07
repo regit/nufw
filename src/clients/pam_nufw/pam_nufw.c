@@ -150,8 +150,10 @@ static int _pam_parse(int argc, const char **argv, struct pam_nufw_s *pn)
 char *_get_runpid(struct pam_nufw_s *pn_s, char *home)
 {
 	char path_dir[1024];
+	int free_home = 0;
 	if (home == NULL) {
 		home = nu_get_home_dir();
+		free_home = 1;
 	}
 	if (home == NULL) {
 		return NULL;
@@ -170,7 +172,9 @@ char *_get_runpid(struct pam_nufw_s *pn_s, char *home)
 	snprintf(path_dir, sizeof(path_dir), "%s/.nufw/%s", home,
 		 pn_s->file_lock);
 	path_dir[sizeof(path_dir) - 1] = 0;
-	free(home);
+	if (free_home) {
+		free(home);
+	}
 	return (char *) strdup(path_dir);
 }
 
