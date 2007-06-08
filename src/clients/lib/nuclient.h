@@ -192,7 +192,7 @@ extern "C" {
     /**
      * Flag to signal if user is connected or not.
      * Connected means that TLS tunnel is opened
-     * and that authentification is done.
+     * and that authentication is done.
      */
 		unsigned char connected;
 

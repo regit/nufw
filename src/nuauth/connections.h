@@ -28,13 +28,13 @@
  */
 
 /**
- * State of a connection (type ::connection_t) in the authentification server.
+ * State of a connection (type ::connection_t) in the authentication server.
  * See field state of a structure ::connection_t and function
  * change_state().
  */
 typedef enum {
 	AUTH_STATE_NONE = 0,	/*!< Unknow state (when a connection is created) */
-	AUTH_STATE_AUTHREQ = 1,	/*!< Waiting for authentification */
+	AUTH_STATE_AUTHREQ = 1,	/*!< Waiting for authentication */
 	AUTH_STATE_USERPCKT,	/*!< Connection received from an user: see user_request() */
 	AUTH_STATE_READY,	/*!< (see search_and_fill_completing()) */
 
@@ -81,7 +81,7 @@ typedef struct {
 } iface_nfo_t;
 
 /**
- * This is a packet blocked by NuFW and waiting for an authentification
+ * This is a packet blocked by NuFW and waiting for an authentication
  * of NuAuth. They are created in authpckt_new_connection().
  *
  * It contains all datas relative to a packet
