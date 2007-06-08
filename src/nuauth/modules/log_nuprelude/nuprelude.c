@@ -333,8 +333,10 @@ static idmef_message_t *create_message_packet(idmef_message_t * tpl,
 	char *tmp_buffer;
 	unsigned short psrc, pdst;
 
-	/* duplicate message */
-	idmef = idmef_message_ref(tpl);
+	/* copy the message */
+	if (idmef_message_clone(tpl, &idmef) < 0) {
+		return NULL;
+	}
 
 	if (!alert_set_time(idmef, &conn->timestamp))
 	{
@@ -496,8 +498,10 @@ static idmef_message_t *create_message_session(idmef_message_t * tpl,
 	char buffer[50];
 	char ip_ascii[INET6_ADDRSTRLEN];
 
-	/* duplicate message */
-	idmef = idmef_message_ref(tpl);
+	/* copy the message */
+	if (idmef_message_clone(tpl, &idmef) < 0) {
+		return NULL;
+	}
 
 	if (!alert_set_time(idmef, NULL))
 	{
@@ -540,8 +544,10 @@ static idmef_message_t *create_message_autherr(idmef_message_t * tpl,
 	char ip_ascii[INET6_ADDRSTRLEN];
 	char buffer[50];
 
-	/* duplicate message */
-	idmef = idmef_message_ref(tpl);
+	/* copy the message */
+	if (idmef_message_clone(tpl, &idmef) < 0) {
+		return NULL;
+	}
 
 	if (!alert_set_time(idmef, NULL))
 	{
