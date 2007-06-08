@@ -38,7 +38,7 @@ extern int nuauth_tls_auth_by_cert;
 struct tls_user_context_t tls_user_context;
 
 /**
- * List of new clients which are in authentification state. This list is
+ * List of new clients which are in authentication state. This list is
  * feeded by tls_user_accept(), and read by pre_client_check() and
  * remove_socket_from_pre_client_list().
  *
@@ -674,7 +674,7 @@ int tls_user_init(struct tls_user_context_t *context)
 
 /**
  * Thread which process addresses on tls push queue (tls_push_queue member
- * of ::nuauthdatas) which need an authentification.
+ * of ::nuauthdatas) which need an authentication.
  *
  * Lock is only needed when modifications are done, because when this thread
  * work (push mode) it's the only one who can modify the hash.

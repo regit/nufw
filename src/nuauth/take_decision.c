@@ -127,7 +127,7 @@ static void search_user_group_in_acl_groups(struct acl_group *datas,
 
 
 /**
- * \brief Take a decision of a connection authentification, and send it to NuFW.
+ * \brief Take a decision of a connection authentication, and send it to NuFW.
  *
  * The process may be asynchronous (using decisions_workers,
  * member of ::nuauthdatas)
@@ -345,7 +345,7 @@ void decisions_queue_work(gpointer userdata, gpointer data)
 }
 
 /**
- * Send authentification response (decision of type ::decision_t) to the NuFW.
+ * Send authentication response (decision of type ::decision_t) to the NuFW.
  *
  * Use ::nuauth_decision_response_t structure to build the packet.
  *

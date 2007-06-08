@@ -526,7 +526,7 @@ static idmef_message_t *create_message_autherr(idmef_message_t * tpl,
 			 severity);
 
 	add_idmef_object(idmef, "alert.classification.text",
-			 "Authentification error");
+			 "Authentication error");
 	add_idmef_object(idmef, "alert.assessment.impact.description",
 			 text);
 

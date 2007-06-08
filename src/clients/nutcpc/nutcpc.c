@@ -333,7 +333,7 @@ static void usage(void)
 	fprintf(stderr, "\n");
 	fprintf(stderr, "Other options:\n");
 	fprintf(stderr, "  -p PORT: nuauth port number\n");
-	fprintf(stderr, "  -a AUTH_DN: authentification domain name\n");
+	fprintf(stderr, "  -a AUTH_DN: authentication domain name\n");
 	fprintf(stderr, "  -I INTERVAL: check interval in milliseconds\n");
 	fprintf(stderr, "  -q: do not display running nutcpc options on \"ps\"\n");
 	fprintf(stderr, "  -P PASSWORD: specify password (only for debug purpose)\n");

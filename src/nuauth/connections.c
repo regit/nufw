@@ -60,7 +60,7 @@ void free_iface_nfo_t(iface_nfo_t * track)
  *  - Connection created after a call do duplicate_connection()
  *
  * May call log_user_packet() with ::TCP_STATE_DROP state if connection was
- * waiting for its authentification.
+ * waiting for its authentication.
  *
  * \param conn Pointer to a connection
  * \return None

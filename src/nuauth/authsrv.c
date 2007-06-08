@@ -797,7 +797,7 @@ void init_nuauthdatas()
 			      limited_connection_handler);
 	}
 
-	/* create TLS authentification server threads (auth + nufw) */
+	/* create TLS authentication server threads (auth + nufw) */
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 		    "Creating tls authentication server thread");
 	thread_new(&nuauthdatas->tls_auth_server, "tls auth server",

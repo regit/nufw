@@ -956,7 +956,7 @@ int sasl_user_check(user_session_t * c_session)
 		} else {
 			err = AUTH_ERROR_INTERRUPTED;
 			message =
-			    "SASL error: authentification process interrupted";
+			    "SASL error: authentication process interrupted";
 		}
 		modules_auth_error_log(c_session, err, message);
 	}

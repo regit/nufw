@@ -329,7 +329,7 @@ nu_error_t modules_finalize_packet(connection_t * connection)
 }
 
 /**
- * Log authentification error
+ * Log authentication error
  */
 void modules_auth_error_log(user_session_t * session,
 			    nuauth_auth_error_t error, const char *message)

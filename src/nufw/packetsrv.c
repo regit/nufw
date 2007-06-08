@@ -31,7 +31,7 @@
  *
  * packetsrv() is a thread which read packet from netfilter queue. If packet
  * content match to IPv4 TCP/UDP, add it to the packet list (::packets_list)
- * and ask NuAuth an authentification or control using auth_request_send().
+ * and ask NuAuth an authentication or control using auth_request_send().
  *
  * When using NetFilter queue, treat_packet() is used as callback to parse
  * new packets. Function look_for_tcp_flags() is a tool to check TCP flags
@@ -75,7 +75,7 @@ int look_for_tcp_flags(unsigned char *dgram, unsigned int datalen)
  *
  * For other packet: First of all, fill a structure ::packet_idl (identifier,
  * timestamp, ...). Try to add the new packet to ::packets_list (fails if the
- * list is full). Ask an authentification to NuAuth using auth_request_send(),
+ * list is full). Ask an authentication to NuAuth using auth_request_send(),
  * If the packet can't be sended, remove it from the list.
  *
  * \return If an error occurs, returns 0, else returns 1.

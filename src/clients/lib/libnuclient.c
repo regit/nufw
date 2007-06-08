@@ -634,7 +634,7 @@ void nu_client_reset(nuauth_session_t * session)
  * Try to connect to nuauth server:
  *    - init_socket(): create socket to server ;
  *    - tls_handshake(): TLS handshake ;
- *    - init_sasl(): authentification with SASL ;
+ *    - init_sasl(): authentication with SASL ;
  *    - send_os(): send OS field.
  *
  * \param session Pointer to client session

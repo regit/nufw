@@ -261,7 +261,7 @@ int auth_process_conn_update(char *dgram, int dgram_size)
 #endif				/* HAVE_LIBCONNTRACK */
 
 /**
- * Process authentification server (NuAuth) packet answer. Different answers
+ * Process authentication server (NuAuth) packet answer. Different answers
  * can be:
  *   - Decision answer: packet accepted/rejected
  *   - Connection destroy: ask conntrack to destroy a connection
@@ -278,7 +278,7 @@ inline int auth_packet_to_decision(char *dgram, int dgram_size)
 
 	if (dgram[0] != PROTO_VERSION) {
 		debug_log_printf(DEBUG_AREA_GW, DEBUG_LEVEL_DEBUG,
-				 "Wrong protocol version from authentification server answer.");
+				 "Wrong protocol version from authentication server answer.");
 		return -1;
 	}
 
@@ -312,7 +312,7 @@ inline int auth_packet_to_decision(char *dgram, int dgram_size)
 }
 
 /**
- * Thread waiting to authentification server (NuAuth) answer.
+ * Thread waiting to authentication server (NuAuth) answer.
  * Call auth_packet_to_decision() on new packet.
  */
 void *authsrv(void *data)
