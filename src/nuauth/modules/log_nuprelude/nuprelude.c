@@ -95,8 +95,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 		    "Log_nuprelude module ($Revision$)");
 
 	params->packet_tpl = g_private_new((GDestroyNotify) destroy_idmef);
-	params->session_tpl =
-	    g_private_new((GDestroyNotify) destroy_idmef);
+	params->session_tpl = g_private_new((GDestroyNotify) destroy_idmef);
 	module->params = (gpointer) params;
 	return TRUE;
 }
@@ -154,6 +153,9 @@ static int add_idmef_object(idmef_message_t * message, const char *object,
 
 static int feed_template(idmef_message_t * idmef)
 {
+	idmef_analyzer_t *orig_analyzer, *analyzer = NULL;
+	idmef_alert_t *alert;
+
 	/* source address/service */
 	add_idmef_object(idmef, "alert.source(0).node.address(0).category",
 			 "ipv6-addr");
@@ -166,6 +168,20 @@ static int feed_template(idmef_message_t * idmef)
 
 	/* set assessment */
 	add_idmef_object(idmef, "alert.assessment.impact.type", "user");
+
+	/* set analyzer */
+	alert = idmef_message_get_alert(idmef);
+	if (!alert) {
+		return 0;
+	}
+	orig_analyzer = prelude_client_get_analyzer(global_client);
+	if (!orig_analyzer) {
+		return 0;
+	}
+	if (idmef_analyzer_clone(orig_analyzer, &analyzer) < 0) {
+		return 0;
+	}
+	idmef_alert_set_analyzer(alert, analyzer, IDMEF_LIST_PREPEND);
 	return 1;
 }
 
@@ -186,7 +202,7 @@ static idmef_message_t *create_alert_template()
 	}
 
 	ret = feed_template(idmef);
-	if (ret < 0) {
+	if (!ret) {
 		prelude_perror(ret, "unable to create IDMEF message");
 		idmef_message_destroy(idmef);
 		return NULL;
