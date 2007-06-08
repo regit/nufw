@@ -169,6 +169,11 @@ static int feed_template(idmef_message_t * idmef)
 	return 1;
 }
 
+/**
+ * Create Prelude alert message template.
+ *
+ * \return NULL on error, or new allocated idmef message on succes.
+ */
 static idmef_message_t *create_alert_template()
 {
 	idmef_message_t *idmef;
@@ -189,9 +194,17 @@ static idmef_message_t *create_alert_template()
 	return idmef;
 }
 
+/**
+ * Create Prelude packet message template
+ *
+ * \return NULL on error, or new allocated idmef message on succes.
+ */
 static idmef_message_t *create_packet_template()
 {
-	return create_alert_template();
+	idmef_message_t *idmef = create_alert_template();
+	if (!idmef)
+		return NULL;
+	return idmef;
 }
 
 static void feed_source_libnuclient(idmef_message_t *idmef)
@@ -230,9 +243,16 @@ static void feed_target_nuauth(idmef_message_t *idmef)
 	add_idmef_object(idmef, "alert.target(0).service.protocol", "tcp");
 }
 
+/**
+ * Create Prelude authentication error message template
+ *
+ * \return NULL on error, or new allocated idmef message on succes.
+ */
 static idmef_message_t *create_autherr_template()
 {
 	idmef_message_t *idmef = create_alert_template();
+	if (!idmef)
+		return NULL;
 
 	feed_source_libnuclient(idmef);
 	feed_target_nuauth(idmef);
@@ -240,9 +260,16 @@ static idmef_message_t *create_autherr_template()
 	return idmef;
 }
 
+/**
+ * Create Prelude session message template
+ *
+ * \return NULL on error, or new allocated idmef message on succes.
+ */
 static idmef_message_t *create_session_template()
 {
 	idmef_message_t *idmef = create_alert_template();
+	if (!idmef)
+		return NULL;
 
 	feed_source_libnuclient(idmef);
 	feed_target_nuauth(idmef);
@@ -587,8 +614,10 @@ G_MODULE_EXPORT gint user_packet_logs(connection_t * element,
 
 	/* get message template (or create it if needed) */
 	tpl = g_private_get(params->packet_tpl);
-	if (tpl == NULL) {
+	if (!tpl) {
 		tpl = create_packet_template();
+		if (!tpl)
+			return -1;
 		g_private_set(params->packet_tpl, tpl);
 	}
 
@@ -596,7 +625,7 @@ G_MODULE_EXPORT gint user_packet_logs(connection_t * element,
 	message =
 	    create_message_packet(tpl, state, element, state_text, impact,
 				  severity);
-	if (message == NULL) {
+	if (!message) {
 		return -1;
 	}
 
@@ -635,8 +664,10 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 
 	/* get message template (or create it if needed) */
 	tpl = g_private_get(params->session_tpl);
-	if (tpl == NULL) {
+	if (!tpl) {
 		tpl = create_session_template();
+		if (!tpl)
+			return -1;
 		g_private_set(params->session_tpl, tpl);
 	}
 
@@ -644,7 +675,7 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 	message =
 	    create_message_session(tpl, c_session, state_text, impact,
 				   severity);
-	if (message == NULL) {
+	if (!message) {
 		return -1;
 	}
 
@@ -741,8 +772,10 @@ G_MODULE_EXPORT void auth_error_log(user_session_t * session,
 
 	/* get message template (or create it if needed) */
 	tpl = g_private_get(params->autherr_tpl);
-	if (tpl == NULL) {
+	if (!tpl) {
 		tpl = create_autherr_template();
+		if (!tpl)
+			return;
 		g_private_set(params->autherr_tpl, tpl);
 	}
 
@@ -752,7 +785,7 @@ G_MODULE_EXPORT void auth_error_log(user_session_t * session,
 	else
 		severity = "medium";
 	message = create_message_autherr(tpl, session, text, severity);
-	if (message == NULL) {
+	if (!message) {
 		return;
 	}
 
