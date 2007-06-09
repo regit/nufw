@@ -223,6 +223,7 @@ static nu_error_t treat_user_request(user_session_t * c_session)
 
 	/* check message type because USER_HELLO has to be ignored */
 	if (header->msg_type == USER_HELLO) {
+		free_buffer_read(datas);
 		return NU_EXIT_CONTINUE;
 	}
 
