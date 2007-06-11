@@ -1117,8 +1117,9 @@ const gchar *g_module_check_init(GModule *module)
 
 void g_module_unload(GModule *module)
 {
+#if 0
 	GSList* pointer = mysql_conn_list;
-#if 0 /* comment code as it seems to cause a crash when nuauth terminate */
+	/* comment code as it seems to cause a crash when nuauth terminate */
 	if (mysql_conn_list) {
 		while (pointer) {
 			mysql_close((MYSQL *)pointer->data);
