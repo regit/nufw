@@ -485,15 +485,16 @@ gint print_connection(gpointer data, gpointer userdata)
 	if (conn->app_name) {
 		str_app = g_strdup_printf(", app=%s", conn->app_name);
 	} else {
-		str_user = g_strdup("");
+		str_app = g_strdup("");
 	}
 
 	message = g_strconcat(prefix, ":", str_tracking, str_state, str_iface,
 			      str_id, str_os, str_app, NULL);
 	g_free(str_tracking);	
-	g_free(str_iface);	
 	g_free(str_state);
+	g_free(str_iface);	
 	g_free(str_id);	
+	g_free(str_user);	
 	g_free(str_os);	
 	g_free(str_app);	
 
