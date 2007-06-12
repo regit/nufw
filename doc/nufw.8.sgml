@@ -172,24 +172,6 @@ manpage.1: manpage.sgml
         </listitem>
       </varlistentry>
 
-<!--      <varlistentry>
-        <term><option>-l <replaceable>port</replaceable></option>
-        </term>
-        <listitem>
-          <para>Specifies UDP port to listen on. Nuauth server must be setup to
-	  send data to that port. Default value : 4129</para>
-        </listitem>
-      </varlistentry>
-      <varlistentry>
-        <term><option>-L <replaceable>address</replaceable></option>
-        </term>
-        <listitem>
-          <para>Specifies IP address to listen on. Nuauth server must be setup to
-	  send data to that address. Default value : 127.0.0.1</para>
-          <para>It is advised to avoid having nufw listening on all adresses,
-          and setup only an internal adress (or 127.0.0.1)</para>
-        </listitem>
-      </varlistentry>-->
       <varlistentry>
         <term><option>-k <replaceable>keyfile</replaceable></option>
         </term>

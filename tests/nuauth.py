@@ -33,8 +33,8 @@ class NuauthProcess(Process):
         Process.__init__(self, program, arg)
         self.hostname = "localhost"
         self.need_reload = False
-        self.nufw_port = 4129
-        self.client_port = 4130
+        self.nufw_port = 4128
+        self.client_port = 4129
         self.config_dirty = False
         self.need_restart = False
         if self.isReady():

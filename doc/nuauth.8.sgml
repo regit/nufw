@@ -132,7 +132,7 @@ manpage.1: manpage.sgml
         <term><option>-l <replaceable>port</replaceable></option>
         </term>
         <listitem>
-          <para>Specifies TCP port to listen on for clients.  Default value : 4130</para>
+          <para>Specifies TCP port to listen on for clients.  Default value : 4129</para>
         </listitem>
       </varlistentry>
       <varlistentry>

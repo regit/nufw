@@ -50,7 +50,7 @@
 
 
 #define NUAUTH_SRV "192.168.12.1"
-#define NUAUTH_PORT "4130"
+#define NUAUTH_PORT "4129"
 #define FILE_LOCK ".pam_nufw"
 
 #define MAX_RETRY_TIME 30

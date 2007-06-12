@@ -43,20 +43,12 @@ if [ ! "$NUFW_VERBOSITY" ]; then
   NUFW_VERBOSITY="vv"
 fi
 
-#if [ ! "NUFW_LISTEN_ADDRESS" ]; then
-#  NUFW_LISTEN_UDP_PORT="127.0.0.1"
-#fi
-
-#if [ ! "NUFW_LISTEN_UDP_PORT" ]; then
-#  NUFW_LISTEN_UDP_PORT=4129
-#fi
-
 if [ ! "NUFW_NUAUTH_ADDRESS" ]; then
   NUFW_NUAUTH_ADDRESS="127.0.0.1"
 fi
 
 if [ ! "NUFW_NUAUTH_UDP_PORT" ]; then
-  NUFW_NUAUTH_UDP_PORT=4129
+  NUFW_NUAUTH_UDP_PORT=4128
 fi
 
 if [ ! "NUFW_TIMEOUT" ]; then

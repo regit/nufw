@@ -9,10 +9,19 @@
       <email>regit@inl.fr</email>
     </author>
     <copyright>
-      <year>2005-2006</year>
+      <year>2005-2007</year>
       <holder>INL</holder>
     </copyright>
     <revhistory>
+ <revision>
+	<revnumber>0.8</revnumber>
+	<date>2007/06/12</date>
+	<revdescription>
+	  <para>Change port number following IANA assignement</para>
+	</revdescription>
+      </revision>
+
+
  <revision>
 	<revnumber>0.7</revnumber>
 	<date>2007/05/13</date>
@@ -100,7 +109,7 @@ nufw [-nCMhVv[v[v[v[v[v[v[v[v[v]]]]]]]]]] [-l local_port] [-L local_addr] [-d re
 	</listitem>
    <listitem><para>-d : remote address we send auth requests to (adress of the nuauth server) (default : 127.0.0.1)</para>
 	</listitem>
-   <listitem><para>-p : remote port we send auth requests to (UDP port nuauth server listens on) (default : 4128)</para>
+   <listitem><para>-p : remote port we send auth requests to (TCP port nuauth server listens on) (default : 4128)</para>
 	</listitem>
    <listitem><para>-t : timeout to forget about packets when they don't match (default : 15 s)</para>
 	</listitem>
@@ -131,7 +140,7 @@ The IP address where nuauth listens to clients requests.
 	  <para>
 The port where nuauth waits for user authentication packet.
 </para>
-<para>Default: <computeroutput>nuauth_user_packet_port=4130</computeroutput>
+<para>Default: <computeroutput>nuauth_user_packet_port=4129</computeroutput>
 </para>
 	</section>
 	<section><title>nuauth_nufw_listen_addr</title>
@@ -145,7 +154,7 @@ The IP address where nuauth listens to nufw packets.
 	  <para>
 The port where nuauth waits for nufw gateway requests.
 </para>
-<para>Default: <computeroutput>nuauth_gw_packet_port=4129</computeroutput>
+<para>Default: <computeroutput>nuauth_gw_packet_port=4128</computeroutput>
 </para>
 	</section>
 

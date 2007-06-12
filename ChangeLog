@@ -1,7 +1,10 @@
 2.2.1
 	- x509_std: code cleaning and fix potential crash
 	- NuFW: fix compilation on some distribution (for AMD64 architecture)
+	- client manager: close the client socket even if shutdown fails
+	- pam_nufw: fix free(home) in _get_runpid()
 	- nutcpc: fix creation of .nufw directory
+	- nuauth: fix memory leak in debug messages
 2.2.0 (2007/05/29)
 	- log_mysql: fix prefix setting in a sub case.
 	- nuauth: improve doxygen documentation.

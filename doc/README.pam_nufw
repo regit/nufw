@@ -23,7 +23,7 @@ pam_nufw accepts following options on the command line:
 - noauth=user1,user2,(...): Don't authenticate these users
 
 Default values:
-- port is 4130
+- port is 4129
 - lockfile is .pam_nufw, located in $HOME/.nufw/
 
 Configuration file example
@@ -37,11 +37,11 @@ may have its own file (eg. /etc/pam.d/ssh and /etc/pam.d/kdm).
 auth    requisite       pam_nologin.so
 auth    required        pam_env.so
 @include common-auth
-auth optional pam_nufw.so server=192.168.1.2 port=4130
+auth optional pam_nufw.so server=192.168.1.2 port=4129
 @include common-account
 session required        pam_limits.so
 @include common-session
-session optional pam_nufw.so server=192.168.1.2 port=4130
+session optional pam_nufw.so server=192.168.1.2 port=4129
 @include common-password
 ------------------------------- 8< ---------------------------------
 

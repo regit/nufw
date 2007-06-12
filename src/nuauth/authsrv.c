@@ -439,7 +439,7 @@ void print_usage()
 		"\t-D : run as a daemon, send debug messages to syslog (else stdout/stderr)\n"
 		"\t-V : display version and exit\n"
 		"\t-v : increase debug level (+1 for each 'v') (max useful number : 10)\n"
-		"\t-l : specify listening TCP port (this port waits for clients) (default : 4130)\n"
+		"\t-l : specify listening TCP port (this port waits for clients) (default : 4129)\n"
 		"\t-L : specify NUFW listening IP address (local) (this address waits for nufw data) (default : 127.0.0.1)\n"
 		"\t-C : specify clients listening IP address (local) (this address waits for clients auth) (default : 0.0.0.0)\n"
 		"\t-t : timeout to forget about packets when they don't match (default : 15 s)\n");

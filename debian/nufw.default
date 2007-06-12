@@ -4,12 +4,6 @@ NUFW_START="true"
 #Add "v"s so nufw gets more verbose
 NUFW_VERBOSITY="vv"
 
-#Nufw Listening address
-#NUFW_LISTEN_ADDRESS="127.0.0.1"
-
-#Nufw Listening port
-#NUFW_LISTEN_UDP_PORT=4128
-
 #Address of the nuauth server
 NUFW_NUAUTH_ADDRESS="127.0.0.1"
 
