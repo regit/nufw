@@ -4,7 +4,7 @@
 
 # Each ACL begins with an identifier [ACLname]
 # [Sample ACL]
-# decision=1            # decision if the rule matches (default: 0)
+# decision=1            # 0=drop, 1=accept, 3=reject (2 is reserved: "no decide")
 # gid=100,101           # which groups are concerned
 # gid=103               # several lines can be used
 # proto=6               # TCP (only 1 proto allowed per ACL, of course)
