@@ -50,7 +50,7 @@
 # Sample test declaration
 
 [ssh]
-decision=1 
+decision=1
 gid=100
 proto=6
 SrcIP=0.0.0.0/0
@@ -61,7 +61,7 @@ App=/usr/bin/ssh
 OS=Linux
 
 [web]
-decision=1 
+decision=1
 gid=102
 proto=6
 SrcIP=0.0.0.0/0
@@ -70,7 +70,7 @@ DstIP=0.0.0.0/0
 DstPort=80
 
 [web 2]
-decision=1 
+decision=1
 gid=102
 proto=6
 SrcIP=0.0.0.0/0
@@ -79,7 +79,7 @@ DstIP=0.0.0.0/0
 DstPort=443
 
 [ftp]
-decision=1 
+decision=1
 gid=102,103
 proto=6
 SrcIP=0.0.0.0/0
@@ -88,7 +88,7 @@ DstIP=0.0.0.0/0
 DstPort=21
 
 [full]
-decision=1 
+decision=1
 gid=103
 proto=6
 SrcIP=0.0.0.0/0
