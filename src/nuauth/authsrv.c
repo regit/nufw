@@ -476,7 +476,7 @@ void parse_options(int argc, char **argv, command_line_params_t * params)
 			break;
 
 		case 'L':
-			/* Adress we listen for NUFW originating packets */
+			/* Address we listen on for NUFW originating packets */
 			/* SECURE_STRNCPY(nufw_listen_address, optarg, HOSTNAME_SIZE); */
 			params->nuauth_nufw_listen_addr =
 			    (char *) calloc(HOSTNAME_SIZE, sizeof(char));
@@ -491,7 +491,7 @@ void parse_options(int argc, char **argv, command_line_params_t * params)
 			break;
 
 		case 'C':
-			/* Adress we listen for NUFW originating packets */
+			/* Address we listen on for client originating packets */
 			params->nuauth_client_listen_addr =
 			    (char *) calloc(HOSTNAME_SIZE, sizeof(char));
 			if (params->nuauth_client_listen_addr == NULL) {
