@@ -1,4 +1,5 @@
-2.2.1
+2.2.1 (2007/06/17)
+	- port change: IANA has assigned 4128 and 4129 to nufw and nuauth
 	- x509_std: code cleaning and fix potential crash
 	- NuFW: fix compilation on some distribution (for AMD64 architecture)
 	- client manager: close the client socket even if shutdown fails
