@@ -30,6 +30,8 @@
 #include "nufw.h"
 #ifdef HAVE_LIBCONNTRACK
 
+#include <libnetfilter_conntrack/libnetfilter_conntrack_tcp.h>
+
 #ifdef HAVE_NEW_NFCT_API
 #  define MSG_DESTROY NFCT_T_DESTROY
 #  define MSG_UPDATE NFCT_T_UPDATE
@@ -210,11 +212,23 @@ int update_handler(struct nfct_conntrack *conn, unsigned int flags, int type,
 	case MSG_UPDATE:
 #ifdef HAVE_NEW_NFCT_API
 		if (!(nfct_get_attr_u32(conn, ATTR_STATUS) & IPS_ASSURED)) {
+			return callback_ret;
+		} else {
+			/* We only want to log ESTABLISHED for TCP state */
+			if (nfct_get_attr_u8(conn, ATTR_ORIG_L4PROTO)
+					== IPPROTO_TCP) {
+				if (nfct_get_attr_u8(conn, ATTR_TCP_STATE) 
+						!= TCP_CONNTRACK_ESTABLISHED) {
+					return callback_ret;
+				} 
+			}
+		}
 #else
 		if (!(conn->status & IPS_ASSURED)) {
-#endif
+
 			return callback_ret;
 		}
+#endif
 		message.msg_type = AUTH_CONN_UPDATE;
 		debug_log_printf(DEBUG_AREA_MAIN,
 				 DEBUG_LEVEL_VERBOSE_DEBUG,
