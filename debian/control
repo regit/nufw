@@ -2,7 +2,7 @@ Source: nufw
 Section: net
 Priority: optional
 Maintainer: Pierre Chifflier <chifflier@inl.fr>
-Build-Depends: debhelper (>= 4.1.16),po-debconf, automake1.9, libldap2-dev, libglib2.0-dev, libmysqlclient15-dev|libmysqlclient14-dev, postgresql-dev, iptables-dev, libtool, libgnutls-dev|libgnutls11-dev, libsasl2-dev, libpam0g-dev, libnetfilter-conntrack-dev, libnetfilter-queue-dev, libnfnetlink-dev
+Build-Depends: debhelper (>= 4.1.16),po-debconf, automake1.9, libldap2-dev, libglib2.0-dev, libmysqlclient15-dev|libmysqlclient14-dev, libpq-dev, iptables-dev, libtool, libgnutls-dev|libgnutls11-dev, libsasl2-dev, libpam0g-dev, libnetfilter-conntrack-dev, libnetfilter-queue-dev, libnfnetlink-dev
 Standards-Version: 3.7.2
 
 Package: nufw
