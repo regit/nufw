@@ -1,3 +1,7 @@
+2.2.2
+	- log_mysql: fix logging of connection closing
+	- NuFW: fix incompatibility between i386 and x86_64 due to alignement
+	  problem. This break compatibility with previous NuFW 2.2.
 2.2.1 (2007/06/17)
 	- port change: IANA has assigned 4128 and 4129 to nufw and nuauth
 	- x509_std: code cleaning and fix potential crash

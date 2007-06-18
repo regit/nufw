@@ -48,6 +48,9 @@
  * Message of type #AUTH_CONN_DESTROY or #AUTH_CONN_UPDATE send 
  * by NuFW to NuAuth
  */
+
+#define aligned_u64 unsigned long long __attribute__((aligned(8)))
+
 struct nuv4_conntrack_message_t {
 	/* Copy/paste nufw_to_nuauth_message_header_t content */
 	uint8_t protocol_version;	/*!< Version of the protocol (#PROTO_VERSION) */
@@ -66,10 +69,10 @@ struct nuv4_conntrack_message_t {
 	u_int32_t mark;
 
 	/* counters fields */
-	u_int64_t packets_in;
-	u_int64_t bytes_in;
-	u_int64_t packets_out;
-	u_int64_t bytes_out;
+	aligned_u64 packets_in;
+	aligned_u64 bytes_in;
+	aligned_u64 packets_out;
+	aligned_u64 bytes_out;
 
 };
 
