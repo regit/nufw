@@ -395,7 +395,7 @@ GSList *user_request(struct tls_buffer_read * datas)
 		}
 #endif
 
-	/*** process all fields ***/
+		/*** process all fields ***/
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 				  "Authreq start");
 		req_start = start + sizeof(struct nu_authreq);
@@ -501,8 +501,8 @@ static GSList *userpckt_decode(struct tls_buffer_read *datas)
 
 	/* check protocol version */
 	if (check_protocol_version(header->proto) != NU_EXIT_OK) {
-		log_message(INFO, DEBUG_AREA_USER,
-			    "unsupported protocol, got protocol %d (msg %d) with option %d (length %d)",
+		log_message(WARNING, DEBUG_AREA_USER,
+			    "Unsupported protocol, got protocol %d (msg %d) with option %d (length %d)",
 			    header->proto, header->msg_type,
 			    header->option, header->length);
 		return NULL;
@@ -517,7 +517,7 @@ static GSList *userpckt_decode(struct tls_buffer_read *datas)
 	}
 
 	if (header->msg_type != USER_REQUEST) {
-		log_message(INFO, DEBUG_AREA_USER, "unsupported message type");
+		log_message(WARNING, DEBUG_AREA_USER, "Unsupported message type");
 		return NULL;
 	}
 	return user_request(datas);

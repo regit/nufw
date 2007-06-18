@@ -276,7 +276,7 @@ void authpckt_conntrack(unsigned char *dgram, unsigned int dgram_size)
 
 	/* Check message content size */
 	if (dgram_size != sizeof(struct nuv4_conntrack_message_t)) {
-		debug_log_message(WARNING, DEBUG_AREA_PACKET | DEBUG_AREA_GW,
+		log_message(CRITICAL, DEBUG_AREA_PACKET | DEBUG_AREA_GW,
 				  "Auth conntrack: Improper length of packet");
 		return;
 	}
@@ -399,7 +399,7 @@ nu_error_t authpckt_decode(unsigned char **pdgram,
 			}
 			return NU_EXIT_NO_RETURN;
 		default:
-			log_message(VERBOSE_DEBUG, DEBUG_AREA_PACKET | DEBUG_AREA_GW,
+			log_message(CRITICAL, DEBUG_AREA_PACKET | DEBUG_AREA_GW,
 				    "NuFW packet type is unknown");
 			return NU_EXIT_ERROR;
 		}
@@ -435,14 +435,14 @@ nu_error_t authpckt_decode(unsigned char **pdgram,
 			}
 			return NU_EXIT_NO_RETURN;
 		default:
-			log_message(VERBOSE_DEBUG, DEBUG_AREA_PACKET | DEBUG_AREA_GW,
+			log_message(CRITICAL, DEBUG_AREA_PACKET | DEBUG_AREA_GW,
 				    "NuFW packet type is unknown");
 			return NU_EXIT_ERROR;
 		}
 		return NU_EXIT_OK;
 	default:
 		{
-			log_message(WARNING, DEBUG_AREA_PACKET | DEBUG_AREA_GW,
+			log_message(CRITICAL, DEBUG_AREA_PACKET | DEBUG_AREA_GW,
 				    "NuFW protocol is unknown");
 		}
 
