@@ -716,7 +716,7 @@ static inline int log_state_close(MYSQL * ld,
 				" packets_in=%d, packets_out=%d,"
 				" bytes_in=%d, bytes_out=%d "
 				"WHERE (ip_saddr=%s AND ip_daddr=%s "
-				"AND tcp_sport='%hu' AND tcp_dport='%hu' AND (state='%hu' OR state='%hu')",
+				"AND tcp_sport='%hu' AND tcp_dport='%hu' AND (state='%hu' OR state='%hu'))",
 				params->mysql_table_name,
 				element->timestamp,
 				TCP_STATE_CLOSE,
