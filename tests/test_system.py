@@ -10,9 +10,9 @@ from inl_tests.replace_file import ReplaceFile
 class TestSystem(TestCase):
     def setUp(self):
         # Start nuauth with our config
-        config = NuauthConf()
-        config["nuauth_user_check_module"] = '"system"'
-        self.nuauth = Nuauth(config)
+        nuconfig = NuauthConf()
+        nuconfig["nuauth_user_check_module"] = '"system"'
+        self.nuauth = Nuauth(nuconfig)
 
     def tearDown(self):
         # Restore user DB and nuauth config
