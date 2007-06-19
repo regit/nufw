@@ -1,8 +1,3 @@
-src/nuauth/modules/plaintext/.libs/libplaintext.so.0.0.0 usr/lib/nuauth/modules
-src/nuauth/modules/plaintext/.libs/libplaintext.so.0 usr/lib/nuauth/modules
-src/nuauth/modules/plaintext/.libs/libplaintext.so usr/lib/nuauth/modules
-src/nuauth/modules/plaintext/libplaintext.la usr/lib/nuauth/modules
-src/nuauth/modules/plaintext/.libs/libplaintext.a usr/lib/nuauth/modules
 src/nuauth/modules/ipauth_guest/.libs/libipauth_guest.so.0.0.0 usr/lib/nuauth/modules
 src/nuauth/modules/ipauth_guest/.libs/libipauth_guest.so.0 usr/lib/nuauth/modules
 src/nuauth/modules/ipauth_guest/.libs/libipauth_guest.so usr/lib/nuauth/modules
