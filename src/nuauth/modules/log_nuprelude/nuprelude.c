@@ -30,6 +30,7 @@
  *
  * @{ */
 
+
 #define ANALYZER_MANUFACTURER "http://www.nufw.org/"
 #define ANALYZER_CLASS "Firewall"
 #define ANALYZER_MODEL "NuFW"
@@ -353,50 +354,6 @@ int alert_set_time(idmef_message_t *idmef, time_t *creation_timestamp)
 	return 1;
 }
 
-void add_session_analyzer(idmef_message_t *idmef, connection_t * conn)
-{
-	idmef_analyzer_t *analyzer;
-	prelude_string_t *string;
-	int ret;
-
-	if (idmef_analyzer_new(&analyzer) < 0) {
-		return;
-	}
-
-	void idmef_analyzer_set_ostype(idmef_analyzer_t *ptr, prelude_string_t *ostype);
-
-	ret = idmef_analyzer_new_class(analyzer, &string);
-	if (ret < 0) {
-		return;
-	}
-	prelude_string_set_constant(string, ANALYZER_CLASS);
-
-	if (conn->os_sysname != NULL) {
-		add_idmef_object(idmef, "alert.additional_data(0).type",
-				 "string");
-		add_idmef_object(idmef, "alert.additional_data(0).meaning",
-				 "OS system name");
-		add_idmef_object(idmef, "alert.additional_data(0).data",
-				 conn->os_sysname);
-		add_idmef_object(idmef, "alert.additional_data(1).type",
-				 "string");
-		add_idmef_object(idmef, "alert.additional_data(1).meaning",
-				 "OS release");
-		add_idmef_object(idmef, "alert.additional_data(1).data",
-				 conn->os_release);
-		add_idmef_object(idmef, "alert.additional_data(2).type",
-				 "string");
-		add_idmef_object(idmef, "alert.additional_data(2).meaning",
-				 "OS full version");
-		add_idmef_object(idmef, "alert.additional_data(2).data",
-				 conn->os_version);
-	} else {
-		del_idmef_object(idmef, "alert.additional_data(0)");
-		del_idmef_object(idmef, "alert.additional_data(1)");
-		del_idmef_object(idmef, "alert.additional_data(2)");
-	}
-}
-
 static idmef_message_t *create_message_packet(idmef_message_t * tpl,
 					      tcp_state_t state,
 					      connection_t * conn,
@@ -513,7 +470,31 @@ static idmef_message_t *create_message_packet(idmef_message_t * tpl,
 	}
 
 	/* os informations */
-	(void)add_session_analyzer(idmef, conn);
+	if (conn->os_sysname != NULL) {
+		add_idmef_object(idmef, "alert.additional_data(0).type",
+				 "string");
+		add_idmef_object(idmef, "alert.additional_data(0).meaning",
+				 "OS system name");
+		add_idmef_object(idmef, "alert.additional_data(0).data",
+				 conn->os_sysname);
+		add_idmef_object(idmef, "alert.additional_data(1).type",
+				 "string");
+		add_idmef_object(idmef, "alert.additional_data(1).meaning",
+				 "OS release");
+		add_idmef_object(idmef, "alert.additional_data(1).data",
+				 conn->os_release);
+		add_idmef_object(idmef, "alert.additional_data(2).type",
+				 "string");
+		add_idmef_object(idmef, "alert.additional_data(2).meaning",
+				 "OS full version");
+		add_idmef_object(idmef, "alert.additional_data(2).data",
+				 conn->os_version);
+	} else {
+		del_idmef_object(idmef, "alert.additional_data(0)");
+		del_idmef_object(idmef, "alert.additional_data(1)");
+		del_idmef_object(idmef, "alert.additional_data(2)");
+	}
+
 	return idmef;
 }
 
