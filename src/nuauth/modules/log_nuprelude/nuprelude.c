@@ -30,7 +30,9 @@
  *
  * @{ */
 
-
+#define ANALYZER_MANUFACTURER "http://www.nufw.org/"
+#define ANALYZER_CLASS "Firewall"
+#define ANALYZER_MODEL "NuFW"
 
 GMutex *global_client_mutex;
 prelude_client_t *global_client;	/* private pointer for prelude client connection */
@@ -153,8 +155,10 @@ static int add_idmef_object(idmef_message_t * message, const char *object,
 
 static int feed_template(idmef_message_t * idmef)
 {
-	idmef_analyzer_t *orig_analyzer, *analyzer = NULL;
+	idmef_analyzer_t *analyzer;
 	idmef_alert_t *alert;
+	prelude_string_t *string;
+	int ret;
 
 	/* source address/service */
 	add_idmef_object(idmef, "alert.source(0).node.address(0).category",
@@ -169,16 +173,28 @@ static int feed_template(idmef_message_t * idmef)
 	/* set assessment */
 	add_idmef_object(idmef, "alert.assessment.impact.type", "user");
 
+	/* create analyzer */
+	analyzer = prelude_client_get_analyzer(global_client);
+
+	/* configure analyzer */
+	ret = idmef_analyzer_new_model(analyzer, &string);
+	if (ret < 0)
+		return 0;
+	prelude_string_set_constant(string, ANALYZER_MODEL);
+
+	ret = idmef_analyzer_new_class(analyzer, &string);
+	if (ret < 0)
+		return 0;
+	prelude_string_set_constant(string, ANALYZER_CLASS);
+
+	ret = idmef_analyzer_new_manufacturer(analyzer, &string);
+	if (ret < 0)
+		return 0;
+	prelude_string_set_constant(string, ANALYZER_MANUFACTURER);
+
 	/* set analyzer */
 	alert = idmef_message_get_alert(idmef);
 	if (!alert) {
-		return 0;
-	}
-	orig_analyzer = prelude_client_get_analyzer(global_client);
-	if (!orig_analyzer) {
-		return 0;
-	}
-	if (idmef_analyzer_clone(orig_analyzer, &analyzer) < 0) {
 		return 0;
 	}
 	idmef_alert_set_analyzer(alert, analyzer, IDMEF_LIST_PREPEND);
@@ -337,6 +353,50 @@ int alert_set_time(idmef_message_t *idmef, time_t *creation_timestamp)
 	return 1;
 }
 
+void add_session_analyzer(idmef_message_t *idmef, connection_t * conn)
+{
+	idmef_analyzer_t *analyzer;
+	prelude_string_t *string;
+	int ret;
+
+	if (idmef_analyzer_new(&analyzer) < 0) {
+		return;
+	}
+
+	void idmef_analyzer_set_ostype(idmef_analyzer_t *ptr, prelude_string_t *ostype);
+
+	ret = idmef_analyzer_new_class(analyzer, &string);
+	if (ret < 0) {
+		return;
+	}
+	prelude_string_set_constant(string, ANALYZER_CLASS);
+
+	if (conn->os_sysname != NULL) {
+		add_idmef_object(idmef, "alert.additional_data(0).type",
+				 "string");
+		add_idmef_object(idmef, "alert.additional_data(0).meaning",
+				 "OS system name");
+		add_idmef_object(idmef, "alert.additional_data(0).data",
+				 conn->os_sysname);
+		add_idmef_object(idmef, "alert.additional_data(1).type",
+				 "string");
+		add_idmef_object(idmef, "alert.additional_data(1).meaning",
+				 "OS release");
+		add_idmef_object(idmef, "alert.additional_data(1).data",
+				 conn->os_release);
+		add_idmef_object(idmef, "alert.additional_data(2).type",
+				 "string");
+		add_idmef_object(idmef, "alert.additional_data(2).meaning",
+				 "OS full version");
+		add_idmef_object(idmef, "alert.additional_data(2).data",
+				 conn->os_version);
+	} else {
+		del_idmef_object(idmef, "alert.additional_data(0)");
+		del_idmef_object(idmef, "alert.additional_data(1)");
+		del_idmef_object(idmef, "alert.additional_data(2)");
+	}
+}
+
 static idmef_message_t *create_message_packet(idmef_message_t * tpl,
 					      tcp_state_t state,
 					      connection_t * conn,
@@ -453,31 +513,7 @@ static idmef_message_t *create_message_packet(idmef_message_t * tpl,
 	}
 
 	/* os informations */
-	if (conn->os_sysname != NULL) {
-		add_idmef_object(idmef, "alert.additional_data(0).type",
-				 "string");
-		add_idmef_object(idmef, "alert.additional_data(0).meaning",
-				 "OS system name");
-		add_idmef_object(idmef, "alert.additional_data(0).data",
-				 conn->os_sysname);
-		add_idmef_object(idmef, "alert.additional_data(1).type",
-				 "string");
-		add_idmef_object(idmef, "alert.additional_data(1).meaning",
-				 "OS release");
-		add_idmef_object(idmef, "alert.additional_data(1).data",
-				 conn->os_release);
-		add_idmef_object(idmef, "alert.additional_data(2).type",
-				 "string");
-		add_idmef_object(idmef, "alert.additional_data(2).meaning",
-				 "OS full version");
-		add_idmef_object(idmef, "alert.additional_data(2).data",
-				 conn->os_version);
-	} else {
-		del_idmef_object(idmef, "alert.additional_data(0)");
-		del_idmef_object(idmef, "alert.additional_data(1)");
-		del_idmef_object(idmef, "alert.additional_data(2)");
-	}
-
+	(void)add_session_analyzer(idmef, conn);
 	return idmef;
 }
 
