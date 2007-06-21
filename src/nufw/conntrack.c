@@ -199,7 +199,7 @@ int update_handler(struct nfct_conntrack *conn, unsigned int flags, int type,
 			return callback_ret;
 #endif
 	}
-	message.protocol_version = PROTO_VERSION;
+	message.protocol_version = PROTO_NUFW_VERSION;
 	message.msg_length =
 	    htons(sizeof(struct nuv4_conntrack_message_t));
 	switch (type) {

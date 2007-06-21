@@ -48,7 +48,7 @@ nu_error_t send_conntrack_message(struct limited_connection * lconn,
 	session = acquire_nufw_session_by_addr(&lconn->gwaddr);
 	if (session) {
 		switch (session->proto_version) {
-			case PROTO_VERSION:
+			case PROTO_NUFW_VERSION:
 				{
 					struct nuv4_conntrack_message_t
 						message;
@@ -125,7 +125,7 @@ nu_error_t send_conntrack_message(struct limited_connection * lconn,
 				}
 
 				break;
-			case PROTO_VERSION_V20:
+			case PROTO_VERSION_NUFW_V20:
 				{
 					struct nuv3_conntrack_message_t
 						message;

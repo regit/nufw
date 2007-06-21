@@ -362,7 +362,7 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 	nu_error_t ret = NU_EXIT_OK;
 
 	switch (element->nufw_version) {
-	case PROTO_VERSION_V20:
+	case PROTO_VERSION_NUFW_V20:
 		{
 			nuv3_nuauth_decision_response_t *response = NULL;
 			uint16_t mark16;
@@ -427,7 +427,7 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 			buffer = (void *) response;
 		}
 		break;
-	case PROTO_VERSION_V22:
+	case PROTO_VERSION_NUFW_V22_2:
 		{
 			nuv4_nuauth_decision_response_t *response = NULL;
 			int use_icmp6;

@@ -276,7 +276,7 @@ inline int auth_packet_to_decision(char *dgram, int dgram_size)
 		return -1;
 	}
 
-	if (dgram[0] != PROTO_VERSION) {
+	if (dgram[0] != PROTO_NUFW_VERSION) {
 		debug_log_printf(DEBUG_AREA_GW, DEBUG_LEVEL_DEBUG,
 				 "Wrong protocol version from authentication server answer.");
 		return -1;

@@ -232,7 +232,7 @@ nu_error_t authpckt_new_connection(unsigned char *dgram,
 
 	connection->flags = ACL_FLAGS_NONE;
 	/* connection is proto v4 because we are here */
-	connection->nufw_version = PROTO_VERSION_V22;
+	connection->nufw_version = PROTO_NUFW_VERSION;
 
 	ret =
 	    parse_dgram(connection, dgram, dgram_size, conn,
@@ -369,7 +369,7 @@ nu_error_t authpckt_decode(unsigned char **pdgram,
 	/* Switch following protocol version */
 	header = (nufw_to_nuauth_message_header_t *) dgram;
 	switch (header->protocol_version) {
-	case PROTO_VERSION_V22:
+	case PROTO_VERSION_NUFW_V22_2:
 		switch (header->msg_type) {
 		case AUTH_REQUEST:
 		case AUTH_CONTROL:
@@ -404,7 +404,7 @@ nu_error_t authpckt_decode(unsigned char **pdgram,
 			return NU_EXIT_ERROR;
 		}
 		return NU_EXIT_OK;
-	case PROTO_VERSION_V20:
+	case PROTO_VERSION_NUFW_V20:
 		switch (header->msg_type) {
 		case AUTH_REQUEST:
 		case AUTH_CONTROL:
@@ -440,6 +440,10 @@ nu_error_t authpckt_decode(unsigned char **pdgram,
 			return NU_EXIT_ERROR;
 		}
 		return NU_EXIT_OK;
+	case PROTO_VERSION_NUFW_V22:
+		log_message(CRITICAL, DEBUG_AREA_PACKET | DEBUG_AREA_GW,
+				    "nufw server runs pre 2.2.2 protocol: please upgrade");
+		return NU_EXIT_OK;
 	default:
 		{
 			log_message(CRITICAL, DEBUG_AREA_PACKET | DEBUG_AREA_GW,
@@ -464,7 +468,7 @@ unsigned char get_proto_version_from_packet(const unsigned char *dgram,
 	/* Check protocol version */
 	header = (nufw_to_nuauth_message_header_t *) dgram;
 	/* Is protocol supported */
-	if (check_protocol_version(header->protocol_version) == NU_EXIT_OK) {
+	if (check_protocol_version(NUFW_PROTO, header->protocol_version) == NU_EXIT_OK) {
 		return header->protocol_version;
 	} else {
 		return 0;

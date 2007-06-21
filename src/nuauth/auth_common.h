@@ -55,7 +55,7 @@ int timeval_substract(struct timeval *result, struct timeval *x,
 		      struct timeval *y);
 #endif
 
-nu_error_t check_protocol_version(int version);
+nu_error_t check_protocol_version(enum proto_type_t type, int version);
 
 int str_to_int(const char *text, int *value);
 int str_to_uint32(const char *text, uint32_t *value);

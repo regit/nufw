@@ -6,6 +6,9 @@
 	  ESTABLISHED and get destroyed. 
 	- nuauth: change criticity of some debug message to ease detection of
 	  protocol mistakes.
+	- NuFW: separate version number of client and nufw protocols
+	- NuFW: switch protocol number to v22_2 to be able to warn about
+	incompatibility probem.
 2.2.1 (2007/06/17)
 	- port change: IANA has assigned 4128 and 4129 to nufw and nuauth
 	- x509_std: code cleaning and fix potential crash

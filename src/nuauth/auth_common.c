@@ -172,12 +172,41 @@ gboolean secure_snprintf(char *buffer, unsigned int buffer_size,
  * \return a ::nu_error_t
  */
 
-nu_error_t check_protocol_version(int version)
+nu_error_t check_protocol_version(enum proto_type_t type, int version)
 {
-	if ((version != PROTO_VERSION) && (version != PROTO_VERSION_V20)) {
-		return NU_EXIT_ERROR;
-	} else {
-		return NU_EXIT_OK;
+	switch (type) {
+		case NUFW_PROTO:
+			switch (version) {
+				case PROTO_VERSION_NUFW_V20:
+					return NU_EXIT_OK;
+				case PROTO_VERSION_NUFW_V22:
+					log_message(CRITICAL, DEBUG_AREA_PACKET | DEBUG_AREA_GW,
+							"nufw server runs pre 2.2.2 protocol: please upgrade");
+					return NU_EXIT_ERROR;
+				case PROTO_VERSION_NUFW_V22_2:
+					return NU_EXIT_OK;
+				default:
+					log_message(CRITICAL,
+						    DEBUG_AREA_PACKET | DEBUG_AREA_GW,
+						    "NUFW protocol is unknown");
+					return NU_EXIT_ERROR;
+			}
+			break;
+		case CLIENT_PROTO:
+			switch (version) {
+				case PROTO_VERSION_V20:
+					return NU_EXIT_OK;
+				case PROTO_VERSION_V22:
+					return NU_EXIT_OK;
+				default:
+					log_message(CRITICAL,
+						    DEBUG_AREA_PACKET | DEBUG_AREA_GW,
+						    "Client protocol is unknown");
+					return NU_EXIT_ERROR;
+			}
+			break;
+		default:
+			break;
 	}
 }
 

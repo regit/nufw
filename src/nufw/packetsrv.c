@@ -625,7 +625,7 @@ int auth_request_send(uint8_t type, struct queued_pckt *pckt_datas)
 	    pckt_datas->payload_len;
 
 	/* Fill message header */
-	msg_header->protocol_version = PROTO_VERSION;
+	msg_header->protocol_version = PROTO_NUFW_VERSION;
 	msg_header->msg_type = type;
 	msg_header->msg_length = htons(msg_length);
 	msg_header->packet_id = htonl(pckt_datas->packet_id);

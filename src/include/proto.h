@@ -1,5 +1,5 @@
 /*
- ** Copyright (C) 2002-2006 - INL
+ ** Copyright (C) 2002-2007 - INL
  ** Written by Eric Leblond <regit@inL.fr>
  ** INL http://www.inl.fr/
  **
@@ -41,10 +41,25 @@
 #define PROTO_STRING "PROTO"
 #define PROTO_UNKNOWN 0
 
-#define PROTO_VERSION_V20 3
-#define PROTO_VERSION_V22 4
+enum proto_type_t {
+	NUFW_PROTO = 0,
+	CLIENT_PROTO,
+};
+
+enum proto_client_version_t {
+	PROTO_VERSION_V20 = 3,
+	PROTO_VERSION_V22,
+};
 
 #define PROTO_VERSION PROTO_VERSION_V22
+
+enum proto_nufw_version_t {
+	PROTO_VERSION_NUFW_V20 = 3,
+	PROTO_VERSION_NUFW_V22,
+	PROTO_VERSION_NUFW_V22_2,
+};
+
+#define PROTO_NUFW_VERSION PROTO_VERSION_NUFW_V22_2
 
 /* header common for all packets
    1         4            8            16          24     32
