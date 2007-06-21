@@ -381,7 +381,7 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 			    sizeof(nuv3_nuauth_decision_response_t) +
 			    payload_size;
 			response = (void*)g_new0(char, total_size);
-			response->protocol_version = PROTO_VERSION_V20;
+			response->protocol_version = PROTO_VERSION_NUFW_V20;
 			response->msg_type = AUTH_ANSWER;
 			response->mark = htons(mark16);
 			response->decision = element->decision;

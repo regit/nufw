@@ -86,7 +86,7 @@ nu_error_t authpckt_new_connection_v3(unsigned char *dgram,
 		connection->timestamp = time(NULL);
 
 	/* compat version: nufw is v2.0 */
-	connection->nufw_version = PROTO_VERSION_V20;
+	connection->nufw_version = PROTO_VERSION_NUFW_V20;
 
 	ret =
 	    parse_dgram(connection, dgram, dgram_size, conn,

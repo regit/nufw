@@ -48,13 +48,13 @@ nu_error_t send_conntrack_message(struct limited_connection * lconn,
 	session = acquire_nufw_session_by_addr(&lconn->gwaddr);
 	if (session) {
 		switch (session->proto_version) {
-			case PROTO_NUFW_VERSION:
+			case PROTO_VERSION_NUFW_V22_2:
 				{
 					struct nuv4_conntrack_message_t
 						message;
 					/* send message */
 					message.protocol_version =
-						PROTO_VERSION;
+						PROTO_VERSION_NUFW_V22_2;
 					message.msg_type = msgtype;
 					if (lconn->expire != -1) {
 						message.timeout =
@@ -131,7 +131,7 @@ nu_error_t send_conntrack_message(struct limited_connection * lconn,
 						message;
 					/* send message */
 					message.protocol_version =
-						PROTO_VERSION;
+						PROTO_VERSION_NUFW_V20;
 					message.msg_type = msgtype;
 					if (lconn->expire != -1) {
 						message.timeout =
