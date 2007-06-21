@@ -452,7 +452,7 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 			    sizeof(nuv4_nuauth_decision_response_t) +
 			    payload_size;
 			response = (void*)g_new0(char, total_size);
-			response->protocol_version = PROTO_VERSION;
+			response->protocol_version = PROTO_VERSION_NUFW_V22_2;
 			response->msg_type = AUTH_ANSWER;
 			response->tcmark = htonl(mark);
 			response->decision = element->decision;
