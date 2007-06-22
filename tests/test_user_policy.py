@@ -24,7 +24,8 @@ class TestPlaintextAuth(TestCase):
 
     def testLoginNormal(self):
         # Change login policy to 0
-        self.config["nuauth_connect_policy"] = 0
+        self.config["nuauth_single_ip_client_limit"] = 0
+        self.config["nuauth_single_user_client_limit"] = 0
         self.nuauth = Nuauth(self.config)
 
         # Test user1
@@ -39,8 +40,9 @@ class TestPlaintextAuth(TestCase):
         client2.stop()
 
     def testLoginOne(self):
-        # Change login policy to 1
-        self.config["nuauth_connect_policy"] = 1
+        # Change login policy to 1 login/user
+        self.config["nuauth_single_ip_client_limit"] = 0
+        self.config["nuauth_single_user_client_limit"] = 1
         self.nuauth = Nuauth(self.config)
 
         # User can't log twice
@@ -57,8 +59,9 @@ class TestPlaintextAuth(TestCase):
 
 
     def testLoginIP(self):
-        # Change login policy to 2
-        self.config["nuauth_connect_policy"] = 2
+        # Change login policy to 1 login/IP
+        self.config["nuauth_single_ip_client_limit"] = 1
+        self.config["nuauth_single_user_client_limit"] = 0
         self.nuauth = Nuauth(self.config)
 
         # Different users can't log from same IP
