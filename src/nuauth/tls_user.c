@@ -86,8 +86,8 @@ gboolean remove_socket_from_pre_client_list(int socket)
 }
 
 /**
- * Check pre client list to disconnect connection
- * that are open since too long
+ * Check pre client list to disconnect connections
+ * that have been open for too long
  */
 void* pre_client_check(GMutex *mutex)
 {
@@ -558,13 +558,13 @@ int tls_user_bind(char **errmsg)
 	/* open the socket */
 	if (res->ai_family == PF_INET)
 		log_message(DEBUG, DEBUG_AREA_USER | DEBUG_AREA_MAIN,
-			    "Create user server IPv4 socket");
+			    "Creating user server IPv4 socket");
 	else if (res->ai_family == PF_INET6)
 		log_message(DEBUG, DEBUG_AREA_USER | DEBUG_AREA_MAIN,
-			    "Create user server IPv6 socket");
+			    "Creating user server IPv6 socket");
 
 		log_message(DEBUG, DEBUG_AREA_USER | DEBUG_AREA_MAIN,
-			    "Create user server (any) socket");
+			    "Creating user server (any) socket");
 	sck_inet =
 	    socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 	if (sck_inet == -1) {
@@ -615,7 +615,7 @@ int tls_user_init(struct tls_user_context_t *context)
 		log_message(FATAL, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
 			    "FATAL ERROR: User bind error: %s", errmsg);
 		log_message(FATAL, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
-			    "Check that nuauth is not running twice. Exit nuauth!");
+			    "Check that nuauth is not running twice. nuauth exiting!");
 		return 0;
 	}
 
