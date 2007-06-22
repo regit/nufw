@@ -168,6 +168,7 @@ gboolean secure_snprintf(char *buffer, unsigned int buffer_size,
 /**
  * Check Protocol version agains supported one
  *
+ * \param type An ::proto_type_t used to select if we need to check against nufw or client supported protocols
  * \param version A integer coding protocol version to test
  * \return a ::nu_error_t
  */
