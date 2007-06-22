@@ -87,14 +87,13 @@ static void tls_sasl_connect_ok(user_session_t * c_session, int c)
 		c_session->user_name = username;
 	}
 
-        if (nuauthconf->single_user_client_limit > 0)
-        {
-		if (count_username(c_session->user_name,
-                      nuauthconf->single_user_client_limit )) {
+	if (nuauthconf->single_user_client_limit > 0) {
+		if (test_username_count_vs_max(c_session->user_name,
+				   nuauthconf->single_user_client_limit)) {
 			policy_refuse_user(c_session, c, PER_USER_TOO_MANY_LOGINS);
 			return;
 		}
-        }
+	}
 
 	/* unlock hash client */
 	msg.type = SRV_TYPE;
@@ -169,27 +168,25 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 		return;
 	}
 
-        if (nuauthconf->single_ip_client_limit > 0)
-        {
-		if ( g_slist_length( get_client_sockets_by_ip(&client->addr)) >=
-                    nuauthconf->single_ip_client_limit )
-
-                {
-	                char address[INET6_ADDRSTRLEN];
-	                const char *err = inet_ntop(AF_INET6, (&client->addr), address,
-		              sizeof(address));
-		        g_free(userdata);
-		        gnutls_bye(*(session), GNUTLS_SHUT_RDWR);
-		        close_tls_session(c, session);
-		        remove_socket_from_pre_client_list(c);
+	if (nuauthconf->single_ip_client_limit > 0) {
+		if (g_slist_length(get_client_sockets_by_ip(&client->addr)) >=
+				nuauthconf->single_ip_client_limit) {
+			char address[INET6_ADDRSTRLEN];
+			const char *err = inet_ntop(AF_INET6, (&client->addr), address,
+						    sizeof(address));
+			g_free(userdata);
+			gnutls_bye(*(session), GNUTLS_SHUT_RDWR);
+			close_tls_session(c, session);
+			remove_socket_from_pre_client_list(c);
 	                if (err == NULL) {
 		            return;
 	                }
-		        log_message(INFO, DEBUG_AREA_USER, "Policy: too many connection attempts from already overused IP %s, closing socket",address);
+		        log_message(INFO, DEBUG_AREA_USER,
+				    "Policy: too many connection attempts from already overused IP %s, closing socket",
+				    address);
 			return;
 		}
-        }
-
+	}
 
 	c_session = g_new0(user_session_t, 1);
 	c_session->tls = session;
