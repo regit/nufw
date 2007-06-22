@@ -204,4 +204,18 @@ G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
 	return TRUE;
 }
 
+G_MODULE_EXPORT void auth_error_log(user_session_t * session,
+				    nuauth_auth_error_t error,
+				    const char *text, gpointer params_ptr)
+{
+	char ipaddr[INET6_ADDRSTRLEN];
+	format_ipv6(&session->addr, ipaddr, sizeof(ipaddr));
+
+	g_message("Authentification error: %s", text);
+	g_message("Authentification error: user=%s from %s (port %d), protocol version %d",
+		session->user_name,
+		ipaddr, session->sport,
+		session->client_version);
+}
+
 /** @} */
