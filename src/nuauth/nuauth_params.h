@@ -25,18 +25,6 @@
  * @{
  */
 
-/** Polity rule, see tls_sasl_connect_ok() */
-typedef enum {
-    /** Allow multiple login per IP (accept any connection) (default rule) */
-	POLICY_MULTIPLE_LOGIN = 0,
-
-    /** Allow an user can only be connected once (test based on username) */
-	POLICY_ONE_LOGIN = 1,
-
-    /** Allow only an user session per IP (test based on IP) */
-	POLICY_PER_IP_ONE_LOGIN = 2
-} policy_t;
-
 struct nuauth_params {
 	/* Sockets related */
 	char *authreq_port;	/*<! Port used by nufw server to connect to nuauth */
@@ -78,12 +66,10 @@ struct nuauth_params {
      */
 	int prio_to_nok;
 
-    /** policy on user connection, one of
-     * - POLICY_MULTIPLE_LOGIN
-     * - POLICY_ONE_LOGIN
-     * - POLICY_PER_IP_ONE_LOGIN
-     */
-	policy_t connect_policy;
+    /* Max number of client connections per user */
+        int single_user_client_limit;
+    /* Max number of client connections per IP */
+        int single_ip_client_limit;
 
     /** When timeout is reached, use #DECISION_REJECT instead
      *  of #DECISION_DROP (if different than 0).

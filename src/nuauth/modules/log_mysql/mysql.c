@@ -289,9 +289,9 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 			sizeof(mysql_nuauth_vars) / sizeof(confparams_t));
 
 	if (params->mysql_admin_bofh) {
-		if (nuauthconf->connect_policy !=  POLICY_ONE_LOGIN) {
+		if (nuauthconf->single_user_client_limit !=  1 ) {
 			log_message(WARNING, DEBUG_AREA_MAIN,
-			    "Resetting mysql_admin_bofh to 0 because multiple login are allowed");
+			    "Resetting mysql_admin_bofh to 0 because multiple logins are allowed");
 			params->mysql_admin_bofh = 0;
 		}
 		/** \todo Reset mysql_admin_bofh if we more than one nufw */

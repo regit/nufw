@@ -59,6 +59,13 @@ nu_error_t activate_client_by_socket(int socket);
 
 guint get_number_of_clients();
 
+struct username_counter {
+  void *name;
+  int max;
+  int counter;
+};
+
+
 /** @} */
 
 #endif

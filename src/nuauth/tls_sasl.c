@@ -51,17 +51,17 @@ gchar *get_username_from_tls_session(gnutls_session session)
 }
 
 static void policy_refuse_user(user_session_t * c_session, int c,
-			       policy_t reason)
+			       int reason)
 {
 	switch (reason) {
-	case POLICY_ONE_LOGIN:
+	case PER_USER_TOO_MANY_LOGINS:
 		log_message(INFO, DEBUG_AREA_USER,
-			    "Policy: User %s already connected, closing socket",
+			    "Policy: User %s already connected too many times, closing socket",
 			    c_session->user_name);
 		break;
-	case POLICY_PER_IP_ONE_LOGIN:
+	case PER_IP_TOO_MANY_LOGINS:
 		log_message(INFO, DEBUG_AREA_USER,
-			    "Policy: User %s try to connect from already used IP, closing socket",
+			    "Policy: User %s trying to connect from already overused IP, closing socket",
 			    c_session->user_name);
 		break;
 	default:
@@ -87,29 +87,27 @@ static void tls_sasl_connect_ok(user_session_t * c_session, int c)
 		c_session->user_name = username;
 	}
 
-	/* checking policy rule on multiuser usage */
-	switch (nuauthconf->connect_policy) {
-	case POLICY_MULTIPLE_LOGIN:
-		/* Accept all connections */
-		break;
+        if (nuauthconf->single_ip_client_limit > 0)
+        {
+		if ( g_slist_length( get_client_sockets_by_ip(&c_session->addr)) >=
+                    nuauthconf->single_ip_client_limit )
 
-	case POLICY_ONE_LOGIN:
-		/* Allow an user can only be connected once (test username) */
-		if (look_for_username(c_session->user_name)) {
-			policy_refuse_user(c_session, c, POLICY_ONE_LOGIN);
+                {
+			policy_refuse_user(c_session, c, PER_IP_TOO_MANY_LOGINS);
 			return;
 		}
-		break;
+        }
 
-	case POLICY_PER_IP_ONE_LOGIN:
-		/* Allow only an user session per IP (test connection IP) */
-		if (get_client_sockets_by_ip(&c_session->addr)) {
-			policy_refuse_user(c_session, c,
-					   POLICY_PER_IP_ONE_LOGIN);
+        if (nuauthconf->single_user_client_limit > 0)
+        {
+              printf("About to call count_username(%s,%d)\n",c_session->user_name,nuauthconf->single_user_client_limit);
+		if (count_username(c_session->user_name,
+                      nuauthconf->single_user_client_limit )) {
+			policy_refuse_user(c_session, c, PER_USER_TOO_MANY_LOGINS);
 			return;
 		}
-		break;
-	}
+        }
+
 	/* unlock hash client */
 	msg.type = SRV_TYPE;
 	if (nuauthconf->push) {

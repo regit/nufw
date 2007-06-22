@@ -82,8 +82,8 @@ void init_nuauthconf(struct nuauth_params **result)
 		{"nuauth_log_users_strict", G_TOKEN_INT, 1, NULL},
 		{"nuauth_log_users_without_realm", G_TOKEN_INT, 1, NULL},
 		{"nuauth_prio_to_nok", G_TOKEN_INT, 1, NULL},
-		{"nuauth_connect_policy", G_TOKEN_INT,
-		 POLICY_MULTIPLE_LOGIN, NULL},
+		{"nuauth_single_user_client_limit", G_TOKEN_INT, 0, NULL},
+		{"nuauth_single_ip_client_limit", G_TOKEN_INT, 0, NULL},
 		{"nuauth_reject_after_timeout", G_TOKEN_INT, 0, NULL},
 		{"nuauth_reject_authenticated_drop", G_TOKEN_INT, 0, NULL},
 		{"nuauth_datas_persistance", G_TOKEN_INT, 9, NULL},
@@ -139,7 +139,10 @@ void init_nuauthconf(struct nuauth_params **result)
 	conf->log_users_without_realm =
 	    *(int *) READ_CONF("nuauth_log_users_without_realm");
 	conf->prio_to_nok = *(int *) READ_CONF("nuauth_prio_to_nok");
-	conf->connect_policy = *(int *) READ_CONF("nuauth_connect_policy");
+	conf->single_user_client_limit =
+            *(unsigned int *) READ_CONF("nuauth_single_user_client_limit");
+	conf->single_ip_client_limit =
+          *(unsigned int *) READ_CONF("nuauth_single_ip_client_limit");
 	conf->reject_after_timeout =
 	    *(int *) READ_CONF("nuauth_reject_after_timeout");
 	conf->reject_authenticated_drop =

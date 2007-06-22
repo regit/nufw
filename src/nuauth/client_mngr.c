@@ -234,6 +234,40 @@ inline user_session_t *look_for_username(const gchar * username)
 	return ret;
 }
 
+static gboolean count_username_callback(gpointer key,
+					   gpointer value,
+					   gpointer user_data)
+{
+        struct username_counter *count_user = (struct username_counter *) user_data;
+	if (strcmp(((user_session_t *) value)->user_name, (gchar *)(count_user->name)) == 0) {
+                count_user->counter++;
+                if (count_user->counter>=count_user->max){
+		    return TRUE;
+                }else{
+                    return FALSE;
+                }
+	} else {
+		return FALSE;
+	}
+}
+
+inline user_session_t *count_username(const gchar * username, int maxcount)
+{
+        struct username_counter *count_user;
+        count_user = g_new0 (struct username_counter, 1);
+        count_user -> name = username;
+        count_user -> max = maxcount;
+        count_user -> counter = 0;
+	void *ret;
+	g_mutex_lock(client_mutex);
+	ret =
+	    g_hash_table_find(client_conn_hash, count_username_callback,
+			      (void *) count_user);
+	g_mutex_unlock(client_mutex);
+        g_free(count_user);
+	return ret;
+}
+
 /**
  * Ask each client of global_msg address set to send their new connections
  * (connections in stage "SYN SENT").
