@@ -453,6 +453,7 @@ nuauth_session_t *do_connect(nutcpc_context_t * context, char *username)
 
 	if (username) {
 		nu_client_set_username(session, username);
+		free(username);
 	}
 	if (context->password[0] != 0) {
 		nu_client_set_password(session, context->password);

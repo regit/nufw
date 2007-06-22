@@ -1,7 +1,7 @@
 #!/bin/bash
 
 NUTCPC=.libs/nutcpc
-NUTCPC_ARGS="-H localhost -U haypo -d"
+NUTCPC_ARGS="-H 192.168.0.2 -U haypo -P haypo -d"
 
 echo "Run nutcpc in Valgrind"
 echo
