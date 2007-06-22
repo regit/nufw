@@ -24,7 +24,7 @@
 void init_nuauthconf(struct nuauth_params **);
 
 int build_prenuauthconf(struct nuauth_params *prenuauthconf,
-			char *gwsrv_addr);
+			char *gwsrv_addr, policy_t connect_policy);
 
 void nuauth_reload(int signal);
 

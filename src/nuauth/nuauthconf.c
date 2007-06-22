@@ -31,7 +31,7 @@
  */
 
 int build_prenuauthconf(struct nuauth_params *prenuauthconf,
-			char *gwsrv_addr)
+			char *gwsrv_addr, policy_t connect_policy)
 {
 	if ((!prenuauthconf->push) && prenuauthconf->hello_authentication) {
 		g_message
@@ -48,6 +48,27 @@ int build_prenuauthconf(struct nuauth_params *prenuauthconf,
 	if (prenuauthconf->nufw_has_fixed_timeout) {
 		prenuauthconf->nufw_has_conntrack = 1;
 	}
+
+	if ((!prenuauthconf->single_user_client_limit) &&
+			(!prenuauthconf->single_ip_client_limit) && 
+			(connect_policy != POLICY_MULTIPLE_LOGIN)) {
+		/* config file has a deprecated option, send warning and 
+		 * modify value */
+		log_message(CRITICAL, DEBUG_AREA_MAIN,
+				"nuauth_connect_policy variable is deprecated. DO NOT use it.");
+		switch (connect_policy) {
+			case POLICY_ONE_LOGIN:
+				prenuauthconf->single_user_client_limit = 1;
+				break;
+			case POLICY_PER_IP_ONE_LOGIN:
+				prenuauthconf->single_ip_client_limit = 1;
+				break;
+			case POLICY_MULTIPLE_LOGIN:
+			default:
+				break;
+		}
+	}
+
 	return 1;
 }
 
@@ -56,7 +77,7 @@ void init_nuauthconf(struct nuauth_params **result)
 	struct nuauth_params *conf;
 	char *gwsrv_addr = NULL;
 	int port;
-	int connect_policy;
+	int connect_policy = POLICY_MULTIPLE_LOGIN;
 	confparams_t nuauth_vars[] = {
 		{"nuauth_client_listen_addr", G_TOKEN_STRING, 0,
 		 g_strdup(AUTHREQ_CLIENT_LISTEN_ADDR)},
@@ -185,27 +206,8 @@ void init_nuauthconf(struct nuauth_params **result)
 	free_confparams(nuauth_vars,
 			sizeof(nuauth_vars) / sizeof(confparams_t));
 
-	if ( ! conf->single_user_client_limit &&
-			! conf->single_ip_client_limit && 
-			(connect_policy != POLICY_MULTIPLE_LOGIN)) {
-		/* config file has a deprecated option, send warning and 
-		 * modify value */
-		log_message(CRITICAL, DEBUG_AREA_MAIN,
-			    "nuauth_connect_policy variable is deprecated. DO NOT use it.");
-		switch (connect_policy) {
-			case POLICY_ONE_LOGIN:
-				conf->single_user_client_limit = 1;
-				break;
-			case POLICY_PER_IP_ONE_LOGIN:
-				conf->single_ip_client_limit = 1;
-				break;
-			case POLICY_MULTIPLE_LOGIN:
-			default:
-				break;
-		}
-	}
 
-	build_prenuauthconf(conf, gwsrv_addr);
+	build_prenuauthconf(conf, gwsrv_addr, connect_policy);
 
 	g_free(gwsrv_addr);
 }

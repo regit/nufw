@@ -670,7 +670,7 @@ void configure_app(int argc, char **argv)
 
 	parse_options(argc, argv, &params);
 
-	build_prenuauthconf(nuauthconf, NULL);
+	build_prenuauthconf(nuauthconf, NULL, 0);
 
 	if (nuauthconf->uses_utf8) {
 		setlocale(LC_ALL, "");
