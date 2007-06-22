@@ -150,9 +150,6 @@ void free_connection(connection_t * conn);
 int lock_and_free_connection(connection_t * conn);
 void clean_connections_list();
 
-#define PER_IP_TOO_MANY_LOGINS 1
-#define PER_USER_TOO_MANY_LOGINS 2
-
 /** @} */
 
 #endif

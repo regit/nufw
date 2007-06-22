@@ -25,6 +25,14 @@
  * @{
  */
 
+
+/** Policy rule, see tls_sasl_connect_ok() */
+typedef enum {
+	PER_IP_TOO_MANY_LOGINS=1,
+	PER_USER_TOO_MANY_LOGINS,
+} policy_refused_reason_t;
+
+
 struct nuauth_params {
 	/* Sockets related */
 	char *authreq_port;	/*<! Port used by nufw server to connect to nuauth */
@@ -67,9 +75,9 @@ struct nuauth_params {
 	int prio_to_nok;
 
     /* Max number of client connections per user */
-        int single_user_client_limit;
+	int single_user_client_limit;
     /* Max number of client connections per IP */
-        int single_ip_client_limit;
+	int single_ip_client_limit;
 
     /** When timeout is reached, use #DECISION_REJECT instead
      *  of #DECISION_DROP (if different than 0).

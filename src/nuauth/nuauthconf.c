@@ -140,9 +140,9 @@ void init_nuauthconf(struct nuauth_params **result)
 	    *(int *) READ_CONF("nuauth_log_users_without_realm");
 	conf->prio_to_nok = *(int *) READ_CONF("nuauth_prio_to_nok");
 	conf->single_user_client_limit =
-            *(unsigned int *) READ_CONF("nuauth_single_user_client_limit");
+		*(unsigned int *) READ_CONF("nuauth_single_user_client_limit");
 	conf->single_ip_client_limit =
-          *(unsigned int *) READ_CONF("nuauth_single_ip_client_limit");
+		*(unsigned int *) READ_CONF("nuauth_single_ip_client_limit");
 	conf->reject_after_timeout =
 	    *(int *) READ_CONF("nuauth_reject_after_timeout");
 	conf->reject_authenticated_drop =

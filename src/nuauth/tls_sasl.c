@@ -51,7 +51,7 @@ gchar *get_username_from_tls_session(gnutls_session session)
 }
 
 static void policy_refuse_user(user_session_t * c_session, int c,
-			       int reason)
+			       policy_refused_reason_t reason)
 {
 	switch (reason) {
 	case PER_USER_TOO_MANY_LOGINS:
