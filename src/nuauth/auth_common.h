@@ -36,10 +36,6 @@ int sck_auth_reply;
 char *get_rid_of_domain(const char *user);
 char *get_rid_of_prefix_domain(const char *user);
 
-int is_ipv4(const struct in6_addr *addr);
-
-
-
 gboolean secure_snprintf(char *buffer, unsigned int buffer_size,
 			 char *format, ...);
 

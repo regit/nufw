@@ -78,6 +78,7 @@ typedef enum {
 #include "nuauth_debug.h"
 
 /* config file related */
+#include "ipv6.h"
 #include "nuthread.h"
 #include "conffile.h"
 #include "log.h"

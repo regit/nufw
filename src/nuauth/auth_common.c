@@ -74,20 +74,6 @@ int timeval_substract(struct timeval *result, struct timeval *x,
 #endif
 
 /**
- * Check if a IPv6 address is a IPv4 or not.
- *
- * \return 1 for IPv4 and 0 for IPv6
- */
-int is_ipv4(const struct in6_addr *addr)
-{
-	if (addr->s6_addr32[2] != 0xffff0000)
-		return 0;
-	if (addr->s6_addr32[0] != 0 || addr->s6_addr32[1] != 0)
-		return 0;
-	return 1;
-}
-
-/**
  * Suppress domain from "user\@domain" string (returns "user").
  *
  * \return Username which need to be freeded
