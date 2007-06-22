@@ -193,8 +193,9 @@ nu_error_t check_protocol_version(enum proto_type_t type, int version)
 			}
 			break;
 		default:
-			break;
+			return NU_EXIT_ERROR;
 	}
+	return NU_EXIT_ERROR;
 }
 
 /**
