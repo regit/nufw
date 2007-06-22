@@ -212,7 +212,7 @@ G_MODULE_EXPORT void auth_error_log(user_session_t * session,
 	format_ipv6(&session->addr, ipaddr, sizeof(ipaddr));
 
 	g_message("Authentification error: %s", text);
-	g_message("Authentification error: user=%s from %s (port %d), protocol version %d",
+	g_message("Authentification error: user: %s from %s (port %d), protocol version %d",
 		session->user_name,
 		ipaddr, session->sport,
 		session->client_version);
