@@ -82,19 +82,13 @@ G_MODULE_EXPORT gint user_packet_logs(void *element, tcp_state_t state,
 	}
 
 	if ((state == TCP_STATE_OPEN) || (state == TCP_STATE_DROP)) {
-		connection_t *connection = element;
+		const connection_t *connection = element;
 
 		/* convert IP source and destination addresses to string */
-		if (inet_ntop
-		    (AF_INET6,
-		     &(connection->tracking.saddr),
-		     source_addr, sizeof(source_addr)) == NULL)
-			return 1;
-		if (inet_ntop
-		    (AF_INET6,
-		     &(connection->tracking.daddr),
-		     dest_addr, sizeof(dest_addr)) == NULL)
-			return 1;
+		format_ipv6(&connection->tracking.saddr,
+			source_addr, sizeof(source_addr));
+		format_ipv6(&connection->tracking.daddr,
+			dest_addr, sizeof(dest_addr));
 
 		if (connection->log_prefix) {
 			log_prefix =
@@ -131,16 +125,10 @@ G_MODULE_EXPORT gint user_packet_logs(void *element, tcp_state_t state,
 		struct accounted_connection *connection = element;
 
 		/* convert IP source and destination addresses to string */
-		if (inet_ntop
-		    (AF_INET6,
-		     &(connection->tracking.
-		       saddr), source_addr, sizeof(source_addr)) == NULL)
-			return 1;
-		if (inet_ntop
-		    (AF_INET6,
-		     &(connection->tracking.
-		       daddr), dest_addr, sizeof(dest_addr)) == NULL)
-			return 1;
+		format_ipv6(&connection->tracking.saddr,
+			source_addr, sizeof(source_addr));
+		format_ipv6(&connection->tracking.daddr,
+			dest_addr, sizeof(dest_addr));
 
 		saddr = dest_addr;
 		daddr = source_addr;
