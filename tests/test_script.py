@@ -47,17 +47,14 @@ class TestScript(TestCase):
         self.assert_(connectClient(client))
 
         # Check log output
-        client_ip = str(client.ip)
-        if 20200 <= NUAUTH_VERSION:
-            client_ip = "::ffff:%s" % client_ip
         match = "SCRIPT UP COUNT=2 TEXT >>>%s %s<<<" \
-            % (client.username, client_ip)
+            % (client.username, client.ip)
         self.assert_(self.checkScript(match))
 
         # Client logout
         client.stop()
         match = "SCRIPT DOWN COUNT=2 TEXT >>>%s %s<<<" \
-            % (client.username, client_ip)
+            % (client.username, client.ip)
         self.assert_(self.checkScript(match))
 
 if __name__ == "__main__":
