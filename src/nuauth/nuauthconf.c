@@ -56,6 +56,7 @@ void init_nuauthconf(struct nuauth_params **result)
 	struct nuauth_params *conf;
 	char *gwsrv_addr = NULL;
 	int port;
+	int connect_policy;
 	confparams_t nuauth_vars[] = {
 		{"nuauth_client_listen_addr", G_TOKEN_STRING, 0,
 		 g_strdup(AUTHREQ_CLIENT_LISTEN_ADDR)},
@@ -84,6 +85,7 @@ void init_nuauthconf(struct nuauth_params **result)
 		{"nuauth_prio_to_nok", G_TOKEN_INT, 1, NULL},
 		{"nuauth_single_user_client_limit", G_TOKEN_INT, 0, NULL},
 		{"nuauth_single_ip_client_limit", G_TOKEN_INT, 0, NULL},
+		{"nuauth_connect_policy", G_TOKEN_INT, POLICY_MULTIPLE_LOGIN, NULL},
 		{"nuauth_reject_after_timeout", G_TOKEN_INT, 0, NULL},
 		{"nuauth_reject_authenticated_drop", G_TOKEN_INT, 0, NULL},
 		{"nuauth_datas_persistance", G_TOKEN_INT, 9, NULL},
@@ -143,6 +145,7 @@ void init_nuauthconf(struct nuauth_params **result)
 		*(unsigned int *) READ_CONF("nuauth_single_user_client_limit");
 	conf->single_ip_client_limit =
 		*(unsigned int *) READ_CONF("nuauth_single_ip_client_limit");
+	connect_policy = *(int *) READ_CONF("nuauth_connect_policy");
 	conf->reject_after_timeout =
 	    *(int *) READ_CONF("nuauth_reject_after_timeout");
 	conf->reject_authenticated_drop =
@@ -181,6 +184,26 @@ void init_nuauthconf(struct nuauth_params **result)
 	/* free config struct */
 	free_confparams(nuauth_vars,
 			sizeof(nuauth_vars) / sizeof(confparams_t));
+
+	if ( ! conf->single_user_client_limit &&
+			! conf->single_ip_client_limit && 
+			(connect_policy != POLICY_MULTIPLE_LOGIN)) {
+		/* config file has a deprecated option, send warning and 
+		 * modify value */
+		log_message(CRITICAL, DEBUG_AREA_MAIN,
+			    "nuauth_connect_policy variable is deprecated. DO NOT use it.");
+		switch (connect_policy) {
+			case POLICY_ONE_LOGIN:
+				conf->single_user_client_limit = 1;
+				break;
+			case POLICY_PER_IP_ONE_LOGIN:
+				conf->single_ip_client_limit = 1;
+				break;
+			case POLICY_MULTIPLE_LOGIN:
+			default:
+				break;
+		}
+	}
 
 	build_prenuauthconf(conf, gwsrv_addr);
 

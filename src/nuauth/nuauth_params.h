@@ -32,6 +32,19 @@ typedef enum {
 	PER_USER_TOO_MANY_LOGINS,
 } policy_refused_reason_t;
 
+/** \warn Deprecated. Do not use it !  */
+typedef enum
+{
+	/** Allow multiple login per IP (accept any connection) (default rule) */
+	POLICY_MULTIPLE_LOGIN=0,
+
+	/** Allow an user can only be connected once (test based on username) */
+	POLICY_ONE_LOGIN,
+
+	/** Allow only an user session per IP (test based on IP) */
+	POLICY_PER_IP_ONE_LOGIN
+} policy_t;
+
 
 struct nuauth_params {
 	/* Sockets related */
