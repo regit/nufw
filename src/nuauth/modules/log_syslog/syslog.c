@@ -47,7 +47,7 @@ G_MODULE_EXPORT uint32_t get_api_version()
 }
 
 
-/** 
+/**
  * This one forgot the treatment of ESTABLISHED and CLOSE case.
  * */
 G_MODULE_EXPORT gint user_packet_logs(void *element, tcp_state_t state,
@@ -82,114 +82,97 @@ G_MODULE_EXPORT gint user_packet_logs(void *element, tcp_state_t state,
 	}
 
 	if ((state == TCP_STATE_OPEN) || (state == TCP_STATE_DROP)) {
+		connection_t *connection = element;
+
 		/* convert IP source and destination addresses to string */
 		if (inet_ntop
 		    (AF_INET6,
-		     &(((connection_t *) element)->tracking.saddr),
+		     &(connection->tracking.saddr),
 		     source_addr, sizeof(source_addr)) == NULL)
 			return 1;
 		if (inet_ntop
 		    (AF_INET6,
-		     &(((connection_t *) element)->tracking.daddr),
+		     &(connection->tracking.daddr),
 		     dest_addr, sizeof(dest_addr)) == NULL)
 			return 1;
 
-		if (((connection_t *) element)->log_prefix) {
+		if (connection->log_prefix) {
 			log_prefix =
-			    ((connection_t *) element)->log_prefix;
+			    connection->log_prefix;
 		}
 
 		saddr = source_addr;
 		daddr = dest_addr;
-		if (((((connection_t *) element)->tracking).protocol ==
-		     IPPROTO_TCP)
-		    || ((((connection_t *) element)->tracking).protocol ==
-			IPPROTO_UDP)) {
-			sport =
-			    (((connection_t *) element)->tracking).source;
-			dport =
-			    (((connection_t *) element)->tracking).dest;
+		if (((connection->tracking).protocol == IPPROTO_TCP)
+		    || ((connection->tracking).protocol == IPPROTO_UDP)) {
+			sport = (connection->tracking).source;
+			dport = (connection->tracking).dest;
 			g_message
 			    ("%s%s %s[%s] %ld : IN=%s OUT=%s SRC=%s DST=%s PROTO=%d SPT=%u DPT=%u",
 			     prefix, log_prefix, str_state,
-			     ((connection_t *) element)->username,
-			     ((connection_t *) element)->timestamp,
-			     ((connection_t *) element)->iface_nfo.indev,
-			     ((connection_t *) element)->iface_nfo.outdev,
-			     saddr, daddr,
-			     ((connection_t *) element)->tracking.protocol,
-			     sport, dport);
+			     connection->username,
+			     connection->timestamp,
+			     connection->iface_nfo.indev,
+			     connection->iface_nfo.outdev, saddr, daddr,
+			     connection->tracking.protocol, sport, dport);
 		} else {
 			g_message
 			    ("%s%s %s[%s] %ld : IN=%s OUT=%s SRC=%s DST=%s PROTO=%d",
 			     prefix, log_prefix, str_state,
-			     ((connection_t *) element)->username,
-			     ((connection_t *) element)->timestamp,
-			     ((connection_t *) element)->iface_nfo.indev,
-			     ((connection_t *) element)->iface_nfo.outdev,
+			     connection->username,
+			     connection->timestamp,
+			     connection->iface_nfo.indev,
+			     connection->iface_nfo.outdev,
 			     source_addr, dest_addr,
-			     ((connection_t *) element)->tracking.
-			     protocol);
+			     connection->tracking.protocol);
 
 		}
 	} else {
+		struct accounted_connection *connection = element;
+
 		/* convert IP source and destination addresses to string */
 		if (inet_ntop
 		    (AF_INET6,
-		     &(((struct accounted_connection *) element)->tracking.
+		     &(connection->tracking.
 		       saddr), source_addr, sizeof(source_addr)) == NULL)
 			return 1;
 		if (inet_ntop
 		    (AF_INET6,
-		     &(((struct accounted_connection *) element)->tracking.
+		     &(connection->tracking.
 		       daddr), dest_addr, sizeof(dest_addr)) == NULL)
 			return 1;
 
 		saddr = dest_addr;
 		daddr = source_addr;
-		if (((((struct accounted_connection *) element)->tracking).
+		if (((connection->tracking).
 		     protocol == IPPROTO_TCP)
 		    ||
-		    ((((struct accounted_connection *) element)->tracking).
+		    ((connection->tracking).
 		     protocol == IPPROTO_UDP)) {
 
 			sport =
-			    ((struct accounted_connection *) element)->
+			    connection->
 			    tracking.dest;
 			dport =
-			    ((struct accounted_connection *) element)->
+			    connection->
 			    tracking.source;
 			g_message
 			    ("%s%s %ld : SRC=%s DST=%s PROTO=%d SPT=%u DPT=%u (in: %" PRIu64 " pckts/%" PRIu64 " bytes, out: %" PRIu64 " pckts/%" PRIu64 " bytes)",
 			     prefix, str_state,
-			     ((struct accounted_connection *) element)->
-			     timestamp, saddr, daddr,
-			     ((struct accounted_connection *) element)->
-			     tracking.protocol, sport, dport,
-			     ((struct accounted_connection *) element)->
-			     packets_in,
-			     ((struct accounted_connection *) element)->
-			     bytes_in,
-			     ((struct accounted_connection *) element)->
-			     packets_out,
-			     ((struct accounted_connection *) element)->
-			     bytes_out);
+			     connection->timestamp, saddr, daddr,
+			     connection->tracking.protocol, sport, dport,
+			     connection->packets_in,
+			     connection->bytes_in,
+			     connection->packets_out,
+			     connection->bytes_out);
 		} else {
 			g_message
 			    ("%s%s %ld : SRC=%s DST=%s PROTO=%d (in: %" PRIu64 " pckts/%" PRIu64 " bytes, out: %" PRIu64 " pckts/%" PRIu64 " bytes)",
 			     prefix, str_state,
-			     ((struct accounted_connection *) element)->
-			     timestamp, source_addr, dest_addr,
-			     ((struct accounted_connection *) element)->
-			     tracking.protocol,
-			     ((struct accounted_connection *) element)->
-			     packets_in,
-			     ((struct accounted_connection *) element)->
-			     bytes_in,
-			     ((struct accounted_connection *) element)->
-			     packets_out,
-			     ((struct accounted_connection *) element)->
-			     bytes_out);
+			     connection->timestamp, source_addr, dest_addr,
+			     connection->tracking.protocol,
+			     connection->packets_in, connection->bytes_in,
+			     connection->packets_out, connection->bytes_out);
 
 		}
 	}
