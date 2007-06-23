@@ -251,7 +251,7 @@ static gboolean count_username_callback(gpointer key,
 	}
 }
 
-inline gboolean test_username_count_vs_max(const gchar * username, int maxcount)
+gboolean test_username_count_vs_max(const gchar * username, int maxcount)
 {
 	struct username_counter *count_user;
 	count_user = g_new0(struct username_counter, 1);

@@ -38,7 +38,7 @@ inline GSList *get_client_sockets_by_ip(struct in6_addr *ip);
 
 user_session_t *look_for_username(const gchar * username);
 
-inline gboolean test_username_count_vs_max(const gchar * username, int maxcount);
+gboolean test_username_count_vs_max(const gchar * username, int maxcount);
 
 void clean_session(user_session_t *);
 
