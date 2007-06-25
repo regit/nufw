@@ -365,6 +365,7 @@ nu_error_t authpckt_decode(unsigned char **pdgram,
 	unsigned char *dgram = *pdgram;
 	unsigned int dgram_size = *pdgram_size;
 	nufw_to_nuauth_message_header_t *header;
+	int ret;
 
 	/* Switch following protocol version */
 	header = (nufw_to_nuauth_message_header_t *) dgram;
@@ -373,7 +374,10 @@ nu_error_t authpckt_decode(unsigned char **pdgram,
 		switch (header->msg_type) {
 		case AUTH_REQUEST:
 		case AUTH_CONTROL:
-			authpckt_new_connection(dgram, dgram_size, conn);
+			ret = authpckt_new_connection(dgram, dgram_size, conn);
+			if (ret == NU_EXIT_ERROR) {
+				return NU_EXIT_ERROR;
+			}
 			if (ntohs(header->msg_length) < dgram_size) {
 				*pdgram_size =
 				    dgram_size - ntohs(header->msg_length);
@@ -410,6 +414,9 @@ nu_error_t authpckt_decode(unsigned char **pdgram,
 		case AUTH_CONTROL:
 			authpckt_new_connection_v3(dgram, dgram_size,
 						   conn);
+			if (ret == NU_EXIT_ERROR) {
+				return NU_EXIT_ERROR;
+			}
 			if (ntohs(header->msg_length) < dgram_size) {
 				*pdgram_size =
 				    dgram_size - ntohs(header->msg_length);
@@ -423,7 +430,7 @@ nu_error_t authpckt_decode(unsigned char **pdgram,
 			break;
 		case AUTH_CONN_DESTROY:
 		case AUTH_CONN_UPDATE:
-			authpckt_conntrack_v3(dgram, dgram_size);
+			ret = authpckt_conntrack_v3(dgram, dgram_size);
 			*conn = NULL;
 			if (ntohs(header->msg_length) < dgram_size) {
 				*pdgram_size =
