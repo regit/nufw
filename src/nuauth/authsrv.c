@@ -439,6 +439,7 @@ void print_usage()
 		"\t-D : run as a daemon, send debug messages to syslog (else stdout/stderr)\n"
 		"\t-V : display version and exit\n"
 		"\t-v : increase debug level (+1 for each 'v') (max useful number : 10)\n"
+		"\t-p : specify listening TCP port (this port waits for nufw) (default : 4128)\n"
 		"\t-l : specify listening TCP port (this port waits for clients) (default : 4129)\n"
 		"\t-L : specify NUFW listening IP address (local) (this address waits for nufw data) (default : 127.0.0.1)\n"
 		"\t-C : specify clients listening IP address (local) (this address waits for clients auth) (default : 0.0.0.0)\n"
@@ -474,7 +475,13 @@ void parse_options(int argc, char **argv, command_line_params_t * params)
 			SECURE_STRNCPY(nuauthconf->userpckt_port, optarg,
 				       sizeof(nuauthconf->userpckt_port));
 			break;
-
+		case 'p':
+			/* port we listen for auth answer */
+			printf("Waiting for nufw packets on TCP port %s\n",
+			       optarg);
+			SECURE_STRNCPY(nuauthconf->authreq_port, optarg,
+				       sizeof(nuauthconf->authreq_port));
+			break;
 		case 'L':
 			/* Address we listen on for NUFW originating packets */
 			/* SECURE_STRNCPY(nufw_listen_address, optarg, HOSTNAME_SIZE); */
