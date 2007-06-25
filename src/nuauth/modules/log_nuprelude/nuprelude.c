@@ -58,7 +58,7 @@ G_MODULE_EXPORT gchar *unload_module_with_params(gpointer params_ptr)
 }
 
 /**
- * Function called every second to update timer
+ * Function called every second to update timer (Prelude "heartbeat")
  */
 void update_prelude_timer()
 {
@@ -108,6 +108,9 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	return TRUE;
 }
 
+/**
+ * Delete an IDMEF object
+ */
 static void del_idmef_object(idmef_message_t * message, const char *object)
 {
 	idmef_value_t *val;
@@ -122,6 +125,9 @@ static void del_idmef_object(idmef_message_t * message, const char *object)
 	return;
 }
 
+/**
+ * Add an IDMEF object
+ */
 static int add_idmef_object(idmef_message_t * message, const char *object,
 			    const char *value)
 {
@@ -159,6 +165,9 @@ static int add_idmef_object(idmef_message_t * message, const char *object,
 	return ret;
 }
 
+/**
+ * Set default values in an IDMEF template
+ */
 static int feed_template(idmef_message_t * idmef)
 {
 	idmef_analyzer_t *analyzer;
@@ -244,6 +253,9 @@ static idmef_message_t *create_packet_template()
 	return idmef;
 }
 
+/**
+ * Set libnuclient as IDMEF source #0: protocol version and service name
+ */
 static void feed_source_libnuclient(idmef_message_t *idmef)
 {
 	add_idmef_object(idmef,
@@ -254,6 +266,9 @@ static void feed_source_libnuclient(idmef_message_t *idmef)
 			 "nufw-client");
 }
 
+/**
+ * Set nuauth as IDMEF target #0: process path and pid, source IPv6, protocol
+ */
 static void feed_target_nuauth(idmef_message_t *idmef)
 {
 	char buffer[50];
@@ -373,6 +388,12 @@ idmef_message_t* create_from_template(idmef_message_t *tpl, connection_t *conn)
 	return idmef;
 }
 
+/**
+ * Set operating system informations of a IDMEF message:
+ *  - create an analyzer to store libnuclient informations
+ *  - set name, model, class, manufacturer
+ *  - set OS type and version
+ */
 void set_os_infos(idmef_message_t *idmef, connection_t *conn)
 {
 	idmef_alert_t *alert;
@@ -428,6 +449,9 @@ void set_os_infos(idmef_message_t *idmef, connection_t *conn)
 	}
 }
 
+/**
+ * Create IDMEF message for NuFW packet message
+ */
 static idmef_message_t *create_message_packet(idmef_message_t * tpl,
 					      tcp_state_t state,
 					      connection_t * conn,
@@ -559,6 +583,9 @@ static idmef_message_t *create_message_packet(idmef_message_t * tpl,
 	return idmef;
 }
 
+/**
+ * Add NuFW client informations to an IDMEF message: user name and identifier
+ */
 static void add_user_information(idmef_message_t * idmef,
 				 user_session_t * session)
 {
@@ -582,6 +609,9 @@ static void add_user_information(idmef_message_t * idmef,
 	}
 }
 
+/**
+ * Create IDMEF message for a NuFW session message
+ */
 static idmef_message_t *create_message_session(idmef_message_t * tpl,
 					       user_session_t * session,
 					       char *state_text,
