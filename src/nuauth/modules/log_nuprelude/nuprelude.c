@@ -350,10 +350,6 @@ idmef_message_t* create_from_template(idmef_message_t *tpl, connection_t *conn)
 	if (conn) {
 		char ip_ascii[INET6_ADDRSTRLEN];
 		creation_timestamp = &conn->timestamp;
-		if (conn->tls) {
-			inet_ntop (AF_INET6, &conn->tls->peername, ip_ascii, sizeof(ip_ascii));
-			add_idmef_object(idmef, "alert.target(0).node.address(0).address", ip_ascii);
-		}
 	} else {
 		creation_timestamp = &now;
 	}
@@ -450,6 +446,16 @@ static idmef_message_t *create_message_packet(idmef_message_t * tpl,
 					 "alert.target(0).service.name",
 					 "icmp");
 		}
+	}
+
+	/* informations about nufw server */
+	if (conn->tls) {
+		add_idmef_object(idmef, "alert.source(1).process.name", "nufw");
+		add_idmef_object(idmef, "alert.source(1).service.protocol", "tcp");
+		add_idmef_object(idmef, "alert.source(1).service.port", nuauthconf->authreq_port);
+		add_idmef_object(idmef, "alert.source(1).service.iana_protocol_number", "6");
+		inet_ntop (AF_INET6, &conn->tls->peername, ip_ascii, sizeof(ip_ascii));
+		add_idmef_object(idmef, "alert.source(1).node.address(0).address", ip_ascii);
 	}
 
 	/* user informations */
