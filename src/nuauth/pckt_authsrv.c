@@ -412,7 +412,7 @@ nu_error_t authpckt_decode(unsigned char **pdgram,
 		switch (header->msg_type) {
 		case AUTH_REQUEST:
 		case AUTH_CONTROL:
-			authpckt_new_connection_v3(dgram, dgram_size,
+			ret = authpckt_new_connection_v3(dgram, dgram_size,
 						   conn);
 			if (ret == NU_EXIT_ERROR) {
 				return NU_EXIT_ERROR;
@@ -430,7 +430,7 @@ nu_error_t authpckt_decode(unsigned char **pdgram,
 			break;
 		case AUTH_CONN_DESTROY:
 		case AUTH_CONN_UPDATE:
-			ret = authpckt_conntrack_v3(dgram, dgram_size);
+			authpckt_conntrack_v3(dgram, dgram_size);
 			*conn = NULL;
 			if (ntohs(header->msg_length) < dgram_size) {
 				*pdgram_size =
