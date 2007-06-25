@@ -350,8 +350,10 @@ idmef_message_t* create_from_template(idmef_message_t *tpl, connection_t *conn)
 	if (conn) {
 		char ip_ascii[INET6_ADDRSTRLEN];
 		creation_timestamp = &conn->timestamp;
-		inet_ntop (AF_INET6, &conn->tls->peername, ip_ascii, sizeof(ip_ascii));
-		add_idmef_object(idmef, "alert.target(0).node.address(0).address", ip_ascii);
+		if (conn->tls) {
+			inet_ntop (AF_INET6, &conn->tls->peername, ip_ascii, sizeof(ip_ascii));
+			add_idmef_object(idmef, "alert.target(0).node.address(0).address", ip_ascii);
+		}
 	} else {
 		creation_timestamp = &now;
 	}
