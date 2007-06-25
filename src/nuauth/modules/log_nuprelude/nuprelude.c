@@ -31,9 +31,14 @@
  * @{ */
 
 
-#define ANALYZER_MANUFACTURER "http://www.nufw.org/"
-#define ANALYZER_CLASS "Firewall"
-#define ANALYZER_MODEL "NuFW"
+#define NUFW_ANALYZER_MANUFACTURER "http://www.nufw.org/"
+#define NUFW_ANALYZER_CLASS "Firewall"
+#define NUFW_ANALYZER_MODEL "NuFW"
+
+#define CLIENT_ANALYZER_NAME "libnuclient"
+#define CLIENT_ANALYZER_MANUFACTURER NUFW_ANALYZER_MANUFACTURER
+#define CLIENT_ANALYZER_CLASS "NuFW client"
+#define CLIENT_ANALYZER_MODEL "NuFW"
 
 GMutex *global_client_mutex;
 prelude_client_t *global_client;	/* private pointer for prelude client connection */
@@ -175,30 +180,29 @@ static int feed_template(idmef_message_t * idmef)
 	add_idmef_object(idmef, "alert.assessment.impact.type", "user");
 
 	/* create analyzer */
-	analyzer = prelude_client_get_analyzer(global_client);
+	alert = idmef_message_get_alert(idmef);
+	if (!alert) {
+		return 0;
+	}
+	ret = idmef_alert_new_analyzer(alert, &analyzer, 1);
+	if (ret < 0)
+		return 0;
 
 	/* configure analyzer */
 	ret = idmef_analyzer_new_model(analyzer, &string);
 	if (ret < 0)
 		return 0;
-	prelude_string_set_constant(string, ANALYZER_MODEL);
+	prelude_string_set_constant(string, NUFW_ANALYZER_MODEL);
 
 	ret = idmef_analyzer_new_class(analyzer, &string);
 	if (ret < 0)
 		return 0;
-	prelude_string_set_constant(string, ANALYZER_CLASS);
+	prelude_string_set_constant(string, NUFW_ANALYZER_CLASS);
 
 	ret = idmef_analyzer_new_manufacturer(analyzer, &string);
 	if (ret < 0)
 		return 0;
-	prelude_string_set_constant(string, ANALYZER_MANUFACTURER);
-
-	/* set analyzer */
-	alert = idmef_message_get_alert(idmef);
-	if (!alert) {
-		return 0;
-	}
-	idmef_alert_set_analyzer(alert, analyzer, IDMEF_LIST_PREPEND);
+	prelude_string_set_constant(string, NUFW_ANALYZER_MANUFACTURER);
 	return 1;
 }
 
@@ -348,7 +352,6 @@ idmef_message_t* create_from_template(idmef_message_t *tpl, connection_t *conn)
 
 	/* set create time */
 	if (conn) {
-		char ip_ascii[INET6_ADDRSTRLEN];
 		creation_timestamp = &conn->timestamp;
 	} else {
 		creation_timestamp = &now;
@@ -368,6 +371,61 @@ idmef_message_t* create_from_template(idmef_message_t *tpl, connection_t *conn)
 	}
 	idmef_time_set_from_time(detect_time, &now);
 	return idmef;
+}
+
+void set_os_infos(idmef_message_t *idmef, connection_t *conn)
+{
+	idmef_alert_t *alert;
+	idmef_analyzer_t *analyzer;
+	prelude_string_t *string = NULL;
+	gchar* osversion;
+	int ret;
+
+	alert = idmef_message_get_alert(idmef);
+	if (!alert)
+		return;
+
+	ret = idmef_alert_new_analyzer(alert, &analyzer, 2);
+	if (ret < 0)
+		return;
+
+
+	/* configure analyzer */
+	ret = idmef_analyzer_new_name(analyzer, &string);
+	if (ret < 0)
+		return;
+	prelude_string_set_constant(string, CLIENT_ANALYZER_NAME);
+
+	ret = idmef_analyzer_new_model(analyzer, &string);
+	if (ret < 0)
+		return;
+	prelude_string_set_constant(string, CLIENT_ANALYZER_MODEL);
+
+	ret = idmef_analyzer_new_class(analyzer, &string);
+	if (ret < 0)
+		return;
+	prelude_string_set_constant(string, CLIENT_ANALYZER_CLASS);
+
+	ret = idmef_analyzer_new_manufacturer(analyzer, &string);
+	if (ret < 0)
+		return;
+	prelude_string_set_constant(string, CLIENT_ANALYZER_MANUFACTURER);
+
+	ret = idmef_analyzer_new_ostype(analyzer, &string);
+	if (ret < 0)
+		return;
+	prelude_string_set_dup(string, conn->os_sysname);
+
+	osversion = g_strdup_printf("%s %s", conn->os_release, conn->os_version);
+	ret = idmef_analyzer_new_osversion(analyzer, &string);
+	if (ret < 0)
+		return;
+	if (osversion) {
+		prelude_string_set_dup(string, osversion);
+		g_free(osversion);
+	} else {
+		prelude_string_set_dup(string, conn->os_version);
+	}
 }
 
 static idmef_message_t *create_message_packet(idmef_message_t * tpl,
@@ -491,24 +549,7 @@ static idmef_message_t *create_message_packet(idmef_message_t * tpl,
 
 	/* os informations */
 	if (conn->os_sysname != NULL) {
-		add_idmef_object(idmef, "alert.additional_data(0).type",
-				 "string");
-		add_idmef_object(idmef, "alert.additional_data(0).meaning",
-				 "OS system name");
-		add_idmef_object(idmef, "alert.additional_data(0).data",
-				 conn->os_sysname);
-		add_idmef_object(idmef, "alert.additional_data(1).type",
-				 "string");
-		add_idmef_object(idmef, "alert.additional_data(1).meaning",
-				 "OS release");
-		add_idmef_object(idmef, "alert.additional_data(1).data",
-				 conn->os_release);
-		add_idmef_object(idmef, "alert.additional_data(2).type",
-				 "string");
-		add_idmef_object(idmef, "alert.additional_data(2).meaning",
-				 "OS full version");
-		add_idmef_object(idmef, "alert.additional_data(2).data",
-				 conn->os_version);
+		set_os_infos(idmef, conn);
 	} else {
 		del_idmef_object(idmef, "alert.additional_data(0)");
 		del_idmef_object(idmef, "alert.additional_data(1)");
@@ -792,19 +833,6 @@ G_MODULE_EXPORT gchar *g_module_check_init()
 	}
 
 	cleanup_func_push(update_prelude_timer);
-
-#if 0
-	/* set flags */
-	ret = prelude_client_set_flags(global_client,
-				       PRELUDE_CLIENT_FLAGS_ASYNC_SEND |
-				       PRELUDE_CLIENT_FLAGS_ASYNC_TIMER);
-	if (ret < 0) {
-		log_message(WARNING, DEBUG_AREA_MAIN,
-			    "Prelude: Warning, unnable to set asynchronous send and timer: %s",
-			    prelude_strerror(ret));
-	}
-#endif
-
 	return NULL;
 }
 
