@@ -263,8 +263,9 @@ nu_error_t authpckt_new_connection(unsigned char *dgram,
  *
  * \param dgram Pointer to packet datas
  * \param dgram_size Number of bytes in the packet
+ * \return a ::nu_error_t containing success or failure
  */
-void authpckt_conntrack(unsigned char *dgram, unsigned int dgram_size)
+nu_error_t authpckt_conntrack(unsigned char *dgram, unsigned int dgram_size)
 {
 	struct nuv4_conntrack_message_t *conntrack;
 	struct accounted_connection *datas;
@@ -278,7 +279,7 @@ void authpckt_conntrack(unsigned char *dgram, unsigned int dgram_size)
 	if (dgram_size != sizeof(struct nuv4_conntrack_message_t)) {
 		log_message(CRITICAL, DEBUG_AREA_PACKET | DEBUG_AREA_GW,
 				  "Auth conntrack: Improper length of packet");
-		return;
+		return NU_EXIT_ERROR;
 	}
 
 	/* Create a message for limited_connexions_queue */
@@ -337,6 +338,7 @@ void authpckt_conntrack(unsigned char *dgram, unsigned int dgram_size)
 	log_user_packet_from_accounted_connection(datas, pstate);
 	g_async_queue_push(nuauthdatas->limited_connections_queue,
 			   message);
+	return NU_EXIT_OK;
 }
 
 /**
@@ -391,8 +393,11 @@ nu_error_t authpckt_decode(unsigned char **pdgram,
 			break;
 		case AUTH_CONN_DESTROY:
 		case AUTH_CONN_UPDATE:
-			authpckt_conntrack(dgram, dgram_size);
+			ret = authpckt_conntrack(dgram, dgram_size);
 			*conn = NULL;
+			if (ret == NU_EXIT_ERROR) {
+				return ret;
+			}
 			if (ntohs(header->msg_length) < dgram_size) {
 				*pdgram_size =
 				    dgram_size - ntohs(header->msg_length);
@@ -430,8 +435,11 @@ nu_error_t authpckt_decode(unsigned char **pdgram,
 			break;
 		case AUTH_CONN_DESTROY:
 		case AUTH_CONN_UPDATE:
-			authpckt_conntrack_v3(dgram, dgram_size);
+			ret = authpckt_conntrack_v3(dgram, dgram_size);
 			*conn = NULL;
+			if (ret == NU_EXIT_ERROR) {
+				return ret;
+			}
 			if (ntohs(header->msg_length) < dgram_size) {
 				*pdgram_size =
 				    dgram_size - ntohs(header->msg_length);
