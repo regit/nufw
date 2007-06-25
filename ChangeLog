@@ -1,4 +1,7 @@
-2.2.2
+2.3.0
+	- nuauth: introduces nuauth_single_user_client_limit and nuauth_single_ip_client_limit
+	to control user's connection policy.
+2.2.2 (2006/06/26)
 	- log_mysql: fix logging of connection closing
 	- NuFW: fix incompatibility between i386 and x86_64 due to alignement
 	  problem. This break compatibility with previous NuFW 2.2.
@@ -9,6 +12,9 @@
 	- NuFW: separate version number of client and nufw protocols
 	- NuFW: switch protocol number to v22_2 to be able to warn about
 	incompatibility probem.
+	- nuauth: log IP in IPv4 format when they are IPv4
+	- log_syslog: log authentication failures
+	- nuauth: fix crash when nufw sends non SYN packet
 2.2.1 (2007/06/17)
 	- port change: IANA has assigned 4128 and 4129 to nufw and nuauth
 	- x509_std: code cleaning and fix potential crash
