@@ -20,7 +20,7 @@ manpage.1: manpage.sgml
   <!ENTITY dhfirstname "<firstname>Vincent</firstname>">
   <!ENTITY dhsurname   "<surname>Deffontaines</surname>">
   <!-- Please adjust the date whenever revising the manpage. -->
-  <!ENTITY dhdate      "<date>october 2, 2003</date>">
+  <!ENTITY dhdate      "<date>june 26, 2007</date>">
   <!-- SECTION should be 1-8, maybe w/ subsection other parameters are
        allowed: see man(7), man(1). -->
   <!ENTITY dhsection   "<manvolnum>8</manvolnum>">
@@ -70,8 +70,7 @@ manpage.1: manpage.sgml
       <arg><option>-l <replaceable>(local, for clients) port</replaceable></option></arg>
       <arg><option>-C <replaceable>(local, for clients) address</replaceable></option></arg>
       <arg><option>-L <replaceable>(local, for nufw) address</replaceable></option></arg>
-      <arg><option>-d <replaceable>(nufw) address(es)</replaceable></option></arg>
-      <arg><option>-p <replaceable>(nufw) port (deprecated)</replaceable></option></arg>
+      <arg><option>-p <replaceable>(local, for nufw) port</replaceable></option></arg>
       <arg><option>-t <replaceable>timeout</replaceable></option></arg>
       <arg><option>-D</option></arg>
 
