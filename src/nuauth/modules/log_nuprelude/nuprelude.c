@@ -33,6 +33,7 @@
 
 #define NUFW_ANALYZER_MANUFACTURER "http://www.nufw.org/"
 #define NUFW_ANALYZER_CLASS "Firewall"
+#define NUFW_ANALYZER_VERSION NUAUTH_FULL_VERSION
 #define NUFW_ANALYZER_MODEL "NuFW"
 
 #define CLIENT_ANALYZER_NAME "libnuclient"
@@ -208,6 +209,11 @@ static int feed_template(idmef_message_t * idmef)
 		return 0;
 	prelude_string_set_constant(string, NUFW_ANALYZER_CLASS);
 
+	ret = idmef_analyzer_new_version(analyzer, &string);
+	if (ret < 0)
+		return 0;
+	prelude_string_set_constant(string, NUFW_ANALYZER_VERSION);
+
 	ret = idmef_analyzer_new_manufacturer(analyzer, &string);
 	if (ret < 0)
 		return 0;
@@ -326,16 +332,6 @@ static idmef_message_t *create_session_template()
 	feed_source_libnuclient(idmef);
 	feed_target_nuauth(idmef);
 
-	add_idmef_object(idmef, "alert.additional_data(0).type", "string");
-	add_idmef_object(idmef, "alert.additional_data(0).meaning",
-			 "OS system name");
-	add_idmef_object(idmef, "alert.additional_data(1).type", "string");
-	add_idmef_object(idmef, "alert.additional_data(1).meaning",
-			 "OS release");
-	add_idmef_object(idmef, "alert.additional_data(2).type", "string");
-	add_idmef_object(idmef, "alert.additional_data(2).meaning",
-			 "OS full version");
-
 	return idmef;
 }
 
@@ -394,12 +390,12 @@ idmef_message_t* create_from_template(idmef_message_t *tpl, connection_t *conn)
  *  - set name, model, class, manufacturer
  *  - set OS type and version
  */
-void set_os_infos(idmef_message_t *idmef, connection_t *conn)
+void set_os_infos(idmef_message_t *idmef, char* osname, char *osrelease, char *osversion)
 {
 	idmef_alert_t *alert;
 	idmef_analyzer_t *analyzer;
 	prelude_string_t *string = NULL;
-	gchar* osversion;
+	gchar* fullversion;
 	int ret;
 
 	alert = idmef_message_get_alert(idmef);
@@ -432,20 +428,21 @@ void set_os_infos(idmef_message_t *idmef, connection_t *conn)
 		return;
 	prelude_string_set_constant(string, CLIENT_ANALYZER_MANUFACTURER);
 
+	/* OS informations */
 	ret = idmef_analyzer_new_ostype(analyzer, &string);
 	if (ret < 0)
 		return;
-	prelude_string_set_dup(string, conn->os_sysname);
+	prelude_string_set_dup(string, osname);
 
-	osversion = g_strdup_printf("%s %s", conn->os_release, conn->os_version);
+	fullversion = g_strdup_printf("%s %s", osrelease, osversion);
 	ret = idmef_analyzer_new_osversion(analyzer, &string);
 	if (ret < 0)
 		return;
-	if (osversion) {
-		prelude_string_set_dup(string, osversion);
-		g_free(osversion);
+	if (fullversion) {
+		prelude_string_set_dup(string, fullversion);
+		g_free(fullversion);
 	} else {
-		prelude_string_set_dup(string, conn->os_version);
+		prelude_string_set_dup(string, osversion);
 	}
 }
 
@@ -573,11 +570,7 @@ static idmef_message_t *create_message_packet(idmef_message_t * tpl,
 
 	/* os informations */
 	if (conn->os_sysname != NULL) {
-		set_os_infos(idmef, conn);
-	} else {
-		del_idmef_object(idmef, "alert.additional_data(0)");
-		del_idmef_object(idmef, "alert.additional_data(1)");
-		del_idmef_object(idmef, "alert.additional_data(2)");
+		set_os_infos(idmef, conn->os_sysname, conn->os_release, conn->os_version);
 	}
 
 	return idmef;
@@ -644,12 +637,7 @@ static idmef_message_t *create_message_session(idmef_message_t * tpl,
 	add_user_information(idmef, session);
 
 	/* os informations */
-	add_idmef_object(idmef, "alert.additional_data(0).data",
-			 session->sysname);
-	add_idmef_object(idmef, "alert.additional_data(1).data",
-			 session->release);
-	add_idmef_object(idmef, "alert.additional_data(2).data",
-			 session->version);
+	set_os_infos(idmef, session->sysname, session->release, session->version);
 	return idmef;
 }
 
