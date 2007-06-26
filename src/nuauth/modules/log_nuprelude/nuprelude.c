@@ -287,15 +287,7 @@ static void feed_target_nuauth(idmef_message_t *idmef)
 
 	secure_snprintf(buffer, sizeof(buffer), "%lu", (unsigned long) getpid());
 	add_idmef_object(idmef, "alert.target(0).process.pid", buffer);
-
 	add_idmef_object(idmef, "alert.target(0).service.port", nuauthconf->userpckt_port);
-
-	/* TODO: Maybe write real IPv6 of nuauth :-) */
-	add_idmef_object(idmef,
-			 "alert.target(0).service.iana_protocol_number",
-			 "6");
-	add_idmef_object(idmef, "alert.target(0).node.address(0).address",
-			 "::1");
 	add_idmef_object(idmef, "alert.target(0).service.protocol", "tcp");
 }
 
@@ -647,6 +639,7 @@ static idmef_message_t *create_message_autherr(idmef_message_t * tpl,
 {
 	idmef_message_t *idmef;
 	char buffer[50];
+	struct in6_addr nuauth_addr;
 
 	idmef = create_from_template(tpl, NULL);
 	if (!idmef) {
@@ -666,6 +659,14 @@ static idmef_message_t *create_message_autherr(idmef_message_t * tpl,
 
 	secure_snprintf(buffer, sizeof(buffer), "%hu", session->sport);
 	add_idmef_object(idmef,	"alert.source(0).service.port", buffer);
+
+	if (getsockname_ipv6(session->socket, &nuauth_addr))
+	{
+		char ip_ascii[INET6_ADDRSTRLEN];
+		FORMAT_IPV6(&nuauth_addr, ip_ascii);
+		add_idmef_object(idmef,
+			"alert.target(0).node.address(0).address", ip_ascii);
+	}
 
 	/* set user informations */
 	add_user_information(idmef, session);

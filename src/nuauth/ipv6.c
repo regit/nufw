@@ -23,6 +23,14 @@
 #include <security.h>
 
 /**
+ * Set IPv6 address to "empty" address ("::")
+ */
+void clear_ipv6(struct in6_addr *ipv6)
+{
+	memset(ipv6, 0, sizeof(*ipv6));
+}
+
+/**
  * Convert IPv4 address (as 32-bit unsigned integer) to IPv6 address:
  * add 96 bits prefix "::ffff:" to get IPv6 address "::ffff:a.b.c.d".
  */
@@ -101,5 +109,37 @@ char* ipv6_to_str(const struct in6_addr *addr)
 	char buffer[INET6_ADDRSTRLEN];
 	format_ipv6(addr, buffer, sizeof(buffer), NULL);
 	return g_strdup(buffer);
+}
+
+/**
+ * Get socket "name" (local address) as IPv6 address
+ *
+ * \return 0 on error, 1 on success
+ */
+int getsockname_ipv6(int fileno, struct in6_addr *addr)
+{
+	struct sockaddr_storage peer_storage;
+	socklen_t peerlen = sizeof(peer_storage) ;
+	int ret;
+
+	ret = getsockname(fileno, (struct sockaddr*)&peer_storage, &peerlen);
+	if (ret != 0 )
+	{
+		clear_ipv6(addr);
+		return 0;
+	}
+	if (peer_storage.ss_family == AF_INET6)
+	{
+		struct sockaddr_in6 *peer6 = (struct sockaddr_in6 *)&peer_storage;
+		*addr = peer6->sin6_addr;
+		return 1;
+	} else if (peer_storage.ss_family == AF_INET) {
+		struct sockaddr_in *peer4 = (struct sockaddr_in *)&peer_storage;
+		ipv4_to_ipv6(peer4->sin_addr, addr);
+		return 1;
+	} else {
+		clear_ipv6(addr);
+		return 0;
+	}
 }
 
