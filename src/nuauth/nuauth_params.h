@@ -90,7 +90,7 @@ struct nuauth_params {
     /* Max number of client connections per user */
 	int single_user_client_limit;
     /* Max number of client connections per IP */
-	int single_ip_client_limit;
+	unsigned int single_ip_client_limit;
 
     /** When timeout is reached, use #DECISION_REJECT instead
      *  of #DECISION_DROP (if different than 0).
