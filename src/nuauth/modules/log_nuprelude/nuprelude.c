@@ -176,16 +176,6 @@ static int feed_template(idmef_message_t * idmef)
 	prelude_string_t *string;
 	int ret;
 
-	/* source address/service */
-	add_idmef_object(idmef, "alert.source(0).node.address(0).category",
-			 "ipv6-addr");
-	add_idmef_object(idmef, "alert.source(0).service.ip_version", "6");
-
-	/* target address/service */
-	add_idmef_object(idmef, "alert.target(0).node.address(0).category",
-			 "ipv6-addr");
-	add_idmef_object(idmef, "alert.target(0).service.ip_version", "6");
-
 	/* set assessment */
 	add_idmef_object(idmef, "alert.assessment.impact.type", "user");
 
@@ -454,6 +444,15 @@ void set_os_infos(idmef_message_t *idmef, char* osname, char *osrelease, char *o
 	}
 }
 
+void set_source0_address(idmef_message_t *idmef, struct in6_addr *addr)
+{
+	char ip_ascii[INET6_ADDRSTRLEN];
+	FORMAT_IPV6(addr, ip_ascii);
+	add_idmef_object(idmef,
+			 "alert.source(0).node.address(0).address",
+			 ip_ascii);
+}
+
 /**
  * Create IDMEF message for NuFW packet message
  */
@@ -480,14 +479,9 @@ static idmef_message_t *create_message_packet(idmef_message_t * tpl,
 			 impact);
 
 	/* IP source/dest */
-	inet_ntop (AF_INET6, &conn->tracking.saddr, ip_ascii, sizeof(ip_ascii));
-	add_idmef_object(idmef,
-			 "alert.source(0).node.address(0).address",
-			 ip_ascii);
-	inet_ntop (AF_INET6, &conn->tracking.daddr, ip_ascii, sizeof(ip_ascii));
-	add_idmef_object(idmef,
-			 "alert.target(0).node.address(0).address",
-			 ip_ascii);
+	set_source0_address(idmef, &conn->tracking.saddr);
+	FORMAT_IPV6(&conn->tracking.daddr, ip_ascii);
+	add_idmef_object(idmef, "alert.target(0).node.address(0).address", ip_ascii);
 
 	/* IP protocol */
 	if (secure_snprintf
@@ -541,7 +535,7 @@ static idmef_message_t *create_message_packet(idmef_message_t * tpl,
 		add_idmef_object(idmef, "alert.source(1).service.protocol", "tcp");
 		add_idmef_object(idmef, "alert.source(1).service.port", nuauthconf->authreq_port);
 		add_idmef_object(idmef, "alert.source(1).service.iana_protocol_number", "6");
-		inet_ntop (AF_INET6, &conn->tls->peername, ip_ascii, sizeof(ip_ascii));
+		FORMAT_IPV6(&conn->tls->peername, ip_ascii);
 		add_idmef_object(idmef, "alert.source(1).node.address(0).address", ip_ascii);
 	}
 
@@ -621,7 +615,6 @@ static idmef_message_t *create_message_session(idmef_message_t * tpl,
 {
 	idmef_message_t *idmef;
 	char buffer[50];
-	char ip_ascii[INET6_ADDRSTRLEN];
 
 	idmef = create_from_template(tpl, NULL);
 	if (!idmef) {
@@ -637,9 +630,7 @@ static idmef_message_t *create_message_session(idmef_message_t * tpl,
 	secure_snprintf(buffer, sizeof(buffer), "%hu", session->sport);
 	add_idmef_object(idmef,	"alert.source(0).service.port", buffer);
 
-	inet_ntop(AF_INET6, &session->addr, ip_ascii, sizeof(ip_ascii));
-	add_idmef_object(idmef,	"alert.source(0).node.address(0).address",
-			ip_ascii);
+	set_source0_address(idmef, &session->addr);
 
 	/* set user informations */
 	add_user_information(idmef, session);
@@ -655,7 +646,6 @@ static idmef_message_t *create_message_autherr(idmef_message_t * tpl,
 					       const char *severity)
 {
 	idmef_message_t *idmef;
-	char ip_ascii[INET6_ADDRSTRLEN];
 	char buffer[50];
 
 	idmef = create_from_template(tpl, NULL);
@@ -672,9 +662,7 @@ static idmef_message_t *create_message_autherr(idmef_message_t * tpl,
 			 text);
 
 	/* source address */
-	inet_ntop(AF_INET6, &session->addr, ip_ascii, sizeof(ip_ascii));
-	add_idmef_object(idmef, "alert.source(0).node.address(0).address",
-			ip_ascii);
+	set_source0_address(idmef, &session->addr);
 
 	secure_snprintf(buffer, sizeof(buffer), "%hu", session->sport);
 	add_idmef_object(idmef,	"alert.source(0).service.port", buffer);
