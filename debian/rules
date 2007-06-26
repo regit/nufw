@@ -52,7 +52,7 @@ clean:
 	rm -f config-nufw-stamp
 
 	# Add here commands to clean up after the build process.
-	-$(MAKE) distclean
+	[ ! -f Makefile ] || $(MAKE) distclean
 
 	dh_clean
 
@@ -60,7 +60,7 @@ config-nufw: config-nufw-stamp
 config-nufw-stamp:
 	dh_testdir -a
 	@echo "Doing $@"
-	-make clean
+	[ ! -f Makefile ] || make clean
 	$(CONFIGURE)
 	touch config-nufw-stamp
 
