@@ -171,7 +171,7 @@ static int add_idmef_object(idmef_message_t * message, const char *object,
  */
 static int feed_template(idmef_message_t * idmef)
 {
-	idmef_analyzer_t *analyzer;
+	idmef_analyzer_t *client_analyzer, *analyzer;
 	idmef_alert_t *alert;
 	prelude_string_t *string;
 	int ret;
@@ -194,9 +194,17 @@ static int feed_template(idmef_message_t * idmef)
 	if (!alert) {
 		return 0;
 	}
+#if 0
 	ret = idmef_alert_new_analyzer(alert, &analyzer, 1);
 	if (ret < 0)
 		return 0;
+#else
+	client_analyzer = prelude_client_get_analyzer(global_client);
+	ret = idmef_analyzer_clone(client_analyzer, &analyzer);
+	if (ret < 0)
+		return 0;
+	idmef_alert_set_analyzer(alert, analyzer, 1); /*IDMEF_LIST_APPEND */
+#endif
 
 	/* configure analyzer */
 	ret = idmef_analyzer_new_model(analyzer, &string);
