@@ -879,16 +879,8 @@ static nu_error_t build_conntrack_msg_from_mysql(MYSQL_ROW row,
 	memset(&(msgdatas->tracking), 0, sizeof(tracking_t));
 	/* fill msgdatas.tracking with datas */
 	if (params->mysql_use_ipv4_schema) {
-		/* convert u32 to IPV6 */
-		msgdatas->tracking.saddr.s6_addr32[0] = 0;
-		msgdatas->tracking.saddr.s6_addr32[1] = 0;
-		msgdatas->tracking.saddr.s6_addr32[2] = 0xffff0000;
-		msgdatas->tracking.saddr.s6_addr32[3] = atol(row[1]);
-
-		msgdatas->tracking.daddr.s6_addr32[0] = 0;
-		msgdatas->tracking.daddr.s6_addr32[1] = 0;
-		msgdatas->tracking.daddr.s6_addr32[2] = 0xffff0000;
-		msgdatas->tracking.daddr.s6_addr32[3] = atol(row[2]);
+		uint32_to_ipv6(atol(row[1]), &msgdatas->tracking.saddr);
+		uint32_to_ipv6(atol(row[2]), &msgdatas->tracking.daddr);
 	} else {
 		memcpy(&(msgdatas->tracking.saddr),
 				row[1],

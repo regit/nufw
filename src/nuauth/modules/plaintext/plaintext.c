@@ -263,10 +263,7 @@ static int parse_ips(char *ipsline, GSList ** ip_list, char *prefix)
 		}
 
 		if (0 < inet_pton(AF_INET, line, &ip_addr4)) {
-			this_ip.addr.s6_addr32[0] = 0;
-			this_ip.addr.s6_addr32[1] = 0;
-			this_ip.addr.s6_addr32[2] = 0xffff0000;
-			this_ip.addr.s6_addr32[3] = ip_addr4.s_addr;
+			ipv4_to_ipv6(ip_addr4, &this_ip.addr);
 			if (this_ip.addr.s6_addr32[3] == 0) {
 				this_ip.addr.s6_addr32[2] = 0;
 			}
