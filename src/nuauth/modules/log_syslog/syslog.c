@@ -85,10 +85,8 @@ G_MODULE_EXPORT gint user_packet_logs(void *element, tcp_state_t state,
 		const connection_t *connection = element;
 
 		/* convert IP source and destination addresses to string */
-		format_ipv6(&connection->tracking.saddr,
-			source_addr, sizeof(source_addr));
-		format_ipv6(&connection->tracking.daddr,
-			dest_addr, sizeof(dest_addr));
+		FORMAT_IPV6(&connection->tracking.saddr, source_addr);
+		FORMAT_IPV6(&connection->tracking.daddr, dest_addr);
 
 		if (connection->log_prefix) {
 			log_prefix =
@@ -125,10 +123,8 @@ G_MODULE_EXPORT gint user_packet_logs(void *element, tcp_state_t state,
 		struct accounted_connection *connection = element;
 
 		/* convert IP source and destination addresses to string */
-		format_ipv6(&connection->tracking.saddr,
-			source_addr, sizeof(source_addr));
-		format_ipv6(&connection->tracking.daddr,
-			dest_addr, sizeof(dest_addr));
+		FORMAT_IPV6(&connection->tracking.saddr, source_addr);
+		FORMAT_IPV6(&connection->tracking.daddr, dest_addr);
 
 		saddr = dest_addr;
 		daddr = source_addr;
@@ -209,7 +205,7 @@ G_MODULE_EXPORT void auth_error_log(user_session_t * session,
 				    const char *text, gpointer params_ptr)
 {
 	char ipaddr[INET6_ADDRSTRLEN];
-	format_ipv6(&session->addr, ipaddr, sizeof(ipaddr));
+	FORMAT_IPV6(&session->addr, ipaddr);
 
 	g_message("Authentification error: %s", text);
 	g_message("Authentification error: user: %s from %s (port %d), protocol version %d",

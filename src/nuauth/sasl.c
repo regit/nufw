@@ -881,7 +881,7 @@ int sasl_user_check(user_session_t * c_session)
 	}
 
 	/* format "ip;port" */
-	format_ipv6(&c_session->addr, ipremoteport, sizeof(ipremoteport));
+	FORMAT_IPV6(&c_session->addr, ipremoteport);
 	len = strlen(ipremoteport);
 	secure_snprintf(ipremoteport+len, sizeof(ipremoteport)-len,
 		";%hu", c_session->sport);

@@ -67,12 +67,7 @@ struct in6_addr *generate_inaddr_list(gchar * gwsrv_addr)
 				*authorized_server = addr6;
 				authorized_server++;
 			} else if (0 < inet_pton(AF_INET, *iter, &addr4)) {
-				authorized_server->s6_addr32[0] = 0;
-				authorized_server->s6_addr32[1] = 0;
-				authorized_server->s6_addr32[2] =
-				    0xffff0000;
-				authorized_server->s6_addr32[3] =
-				    addr4.s_addr;
+				ipv4_to_ipv6(addr4, authorized_server);
 				authorized_server++;
 			}
 

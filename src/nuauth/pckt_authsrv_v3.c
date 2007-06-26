@@ -137,15 +137,8 @@ nu_error_t authpckt_conntrack_v3(unsigned char *dgram, unsigned int dgram_size)
 	message = g_new0(struct internal_message, 1);
 	datas->tracking.protocol = conntrack->ipv4_protocol;
 
-	datas->tracking.saddr.s6_addr32[0] = 0;
-	datas->tracking.saddr.s6_addr32[1] = 0;
-	datas->tracking.saddr.s6_addr32[2] = 0xffff0000;
-	datas->tracking.saddr.s6_addr32[3] = conntrack->ipv4_src;
-
-	datas->tracking.daddr.s6_addr32[0] = 0;
-	datas->tracking.daddr.s6_addr32[1] = 0;
-	datas->tracking.daddr.s6_addr32[2] = 0xffff0000;
-	datas->tracking.daddr.s6_addr32[3] = conntrack->ipv4_dst;
+	uint32_to_ipv6(conntrack->ipv4_src, &datas->tracking.saddr);
+	uint32_to_ipv6(conntrack->ipv4_dst, &datas->tracking.daddr);
 
 	if (conntrack->ipv4_protocol == IPPROTO_ICMP) {
 		datas->tracking.type = ntohs(conntrack->src_port);

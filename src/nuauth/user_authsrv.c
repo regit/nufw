@@ -149,16 +149,8 @@ int user_process_field_ipv6(connection_t * connection,
 int user_process_field_ipv4(connection_t * connection,
 			    struct nu_authfield_ipv4 *ipfield)
 {
-
-	connection->tracking.saddr.s6_addr32[0] = 0;
-	connection->tracking.saddr.s6_addr32[1] = 0;
-	connection->tracking.saddr.s6_addr32[2] = 0xffff0000;
-	connection->tracking.saddr.s6_addr32[3] = ipfield->src;
-
-	connection->tracking.daddr.s6_addr32[0] = 0;
-	connection->tracking.daddr.s6_addr32[1] = 0;
-	connection->tracking.daddr.s6_addr32[2] = 0xffff0000;
-	connection->tracking.daddr.s6_addr32[3] = ipfield->dst;
+	uint32_to_ipv6(ipfield->src, &connection->tracking.saddr);
+	uint32_to_ipv6(ipfield->dst, &connection->tracking.daddr);
 
 	connection->tracking.protocol = ipfield->proto;
 
