@@ -32,7 +32,7 @@ typedef enum {
 	PER_USER_TOO_MANY_LOGINS,
 } policy_refused_reason_t;
 
-/** \warn Deprecated. Do not use it !  */
+/** \warning Deprecated. Do not use it !  */
 typedef enum
 {
 	/** Allow multiple login per IP (accept any connection) (default rule) */

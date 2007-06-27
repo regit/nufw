@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2005-2006 INL
+ ** Copyright(C) 2005-2007 INL
  ** Written by  Eric Leblond <regit@inl.fr>
  **
  ** $Id$
@@ -235,8 +235,8 @@ inline user_session_t *look_for_username(const gchar * username)
 }
 
 static gboolean count_username_callback(gpointer key,
-					   gpointer value,
-					   gpointer user_data)
+					gpointer value,
+					gpointer user_data)
 {
 	struct username_counter *count_user = (struct username_counter *) user_data;
 	if (strcmp(((user_session_t *) value)->user_name, (gchar *)(count_user->name)) == 0) {

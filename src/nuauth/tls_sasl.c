@@ -88,7 +88,7 @@ static void tls_sasl_connect_ok(user_session_t * c_session, int c)
 	}
 
 	if (nuauthconf->single_user_client_limit > 0) {
-		if (! test_username_count_vs_max(c_session->user_name,
+		if (!test_username_count_vs_max(c_session->user_name,
 				   nuauthconf->single_user_client_limit)) {
 			policy_refuse_user(c_session, c, PER_USER_TOO_MANY_LOGINS);
 			return;
