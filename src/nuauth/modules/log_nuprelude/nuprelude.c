@@ -575,7 +575,8 @@ static idmef_message_t *create_message_packet(idmef_message_t * tpl,
  * Add NuFW client informations to an IDMEF message: user name and identifier
  */
 static void add_user_information(idmef_message_t * idmef,
-				 user_session_t * session)
+				 user_session_t * session,
+				 int userid_is_valid)
 {
 	char buffer[50];
 	if (session->user_name != NULL) {
@@ -586,7 +587,7 @@ static void add_user_information(idmef_message_t * idmef,
 		add_idmef_object(idmef,
 				 "alert.source(0).user.user_id(0).name",
 				 session->user_name);
-		if (secure_snprintf
+		if (userid_is_valid && secure_snprintf
 		    (buffer, sizeof(buffer), "%lu", session->user_id)) {
 			add_idmef_object(idmef,
 					 "alert.source(0).user.user_id(0).number",
@@ -627,7 +628,7 @@ static idmef_message_t *create_message_session(idmef_message_t * tpl,
 	set_source0_address(idmef, &session->addr);
 
 	/* set user informations */
-	add_user_information(idmef, session);
+	add_user_information(idmef, session, 1);
 
 	FORMAT_IPV6(&session->server_addr, ip_ascii);
 	add_idmef_object(idmef,
@@ -671,7 +672,7 @@ static idmef_message_t *create_message_autherr(idmef_message_t * tpl,
 			"alert.target(0).node.address(0).address", ip_ascii);
 
 	/* set user informations */
-	add_user_information(idmef, session);
+	add_user_information(idmef, session, 0);
 
 	return idmef;
 }
