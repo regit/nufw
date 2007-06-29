@@ -173,7 +173,6 @@ static int feed_template(idmef_message_t * idmef)
 {
 	idmef_analyzer_t *client_analyzer, *analyzer;
 	idmef_alert_t *alert;
-	idmef_process_t *process;
 	prelude_string_t *string;
 	int ret;
 
@@ -466,6 +465,11 @@ static idmef_message_t *create_message_packet(idmef_message_t * tpl,
 		return NULL;
 	}
 
+	if (state == TCP_STATE_DROP)
+		tmp_buffer = "failed";
+	else
+		tmp_buffer = "succeeded";
+	add_idmef_object(idmef, "alert.assessment.impact.completion", tmp_buffer);
 	add_idmef_object(idmef, "alert.classification.text", state_text);
 	add_idmef_object(idmef, "alert.assessment.impact.severity", severity);
 	add_idmef_object(idmef, "alert.assessment.impact.description",
@@ -617,6 +621,7 @@ static idmef_message_t *create_message_session(idmef_message_t * tpl,
 	}
 
 	add_idmef_object(idmef, "alert.classification.text", state_text);
+	add_idmef_object(idmef, "alert.assessment.impact.completion", "succeeded");
 	add_idmef_object(idmef, "alert.assessment.impact.severity", severity);	/* info | low | medium | high */
 	add_idmef_object(idmef, "alert.assessment.impact.description",
 			 impact);
@@ -653,6 +658,7 @@ static idmef_message_t *create_message_autherr(idmef_message_t * tpl,
 		return NULL;
 	}
 
+	add_idmef_object(idmef, "alert.assessment.impact.completion", "failed");
 	add_idmef_object(idmef, "alert.assessment.impact.severity",
 			 severity);
 
@@ -715,7 +721,6 @@ G_MODULE_EXPORT gint user_packet_logs(connection_t * element,
 		break;
 	default:
 		return -1;
-		break;
 	}
 
 	/* get message template (or create it if needed) */
@@ -750,19 +755,19 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 	struct log_prelude_params *params = params_ptr;
 	idmef_message_t *tpl;
 	idmef_message_t *message;
-	char *impact;
+	char *impact = NULL;
 	char *severity;
 	char *state_text;
 
 	severity = "low";
 	switch (state) {
 	case SESSION_OPEN:
-		state_text = "user log in";
-		impact = "user log in";
+		state_text = "User log in";
+		impact = g_strdup_printf("User \"%s\" log in", c_session->user_name);
 		break;
 	case SESSION_CLOSE:
-		state_text = "user log out";
-		impact = "user log out";
+		state_text = "User log out";
+		impact = g_strdup_printf("User \"%s\" log out", c_session->user_name);
 		break;
 	default:
 		return -1;
@@ -772,8 +777,10 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 	tpl = g_private_get(params->session_tpl);
 	if (!tpl) {
 		tpl = create_session_template();
-		if (!tpl)
+		if (!tpl) {
+			g_free(impact);
 			return -1;
+		}
 		g_private_set(params->session_tpl, tpl);
 	}
 
@@ -781,6 +788,7 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 	message =
 	    create_message_session(tpl, c_session, state_text, impact,
 				   severity);
+	g_free(impact);
 	if (!message) {
 		return -1;
 	}
