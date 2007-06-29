@@ -22,8 +22,10 @@
 
 
 #include <config.h>
+
 #ifdef LINUX
 
+#include "nufw_source.h"
 #include "nuclient.h"
 #include <errno.h>
 #include <stdio.h>

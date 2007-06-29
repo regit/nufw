@@ -20,6 +20,7 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#include "nufw_source.h"
 #include "nuclient.h"
 #include <sasl/saslutil.h>
 #include <stdarg.h>		/* va_list, va_start, ... */

@@ -1,5 +1,5 @@
 /*
- ** Copyright 2004-2006 - INL
+ ** Copyright 2004-2007 - INL
  ** Written by Eric Leblond <regit@inl.fr>
  **            Vincent Deffontaines <vincent@inl.fr>
  ** INL http://www.inl.fr/
@@ -26,8 +26,6 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-
-#include "nufw_source.h"
 
 #ifdef __cplusplus
 extern "C" {

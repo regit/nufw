@@ -37,6 +37,7 @@
  */
 #define USE_GCRYPT_MALLOC_SECURE
 
+#include "nufw_source.h"
 
 #include "nuclient.h"
 #include <sasl/saslutil.h>
