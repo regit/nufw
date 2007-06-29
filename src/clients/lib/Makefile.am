@@ -1,5 +1,7 @@
 if BUILD_LIBNUCLIENT
-AM_CPPFLAGS = -DCONFIG_DIR=\"$(sysconfdir)\" 
+AM_CPPFLAGS = -DCONFIG_DIR=\"$(sysconfdir)\"
+
+SUBDIRS = tests
 
 lib_LTLIBRARIES = libnuclient.la
 

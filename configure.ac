@@ -273,6 +273,7 @@ AC_CONFIG_FILES([Makefile
         src/nuauth/modules/ipauth_guest/Makefile
         src/clients/Makefile
         src/clients/lib/Makefile
+        src/clients/lib/tests/Makefile
         src/clients/nutcpc/Makefile
         src/clients/pam_nufw/Makefile
         src/nufw/Makefile
