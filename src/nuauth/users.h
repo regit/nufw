@@ -49,6 +49,7 @@ struct user_cached_datas {
  */
 typedef struct {
 	struct in6_addr addr;	/*!< \brief IPv6 address of the client */
+	struct in6_addr server_addr;	/*!< \brief IPv6 address of the server */
 	unsigned short sport;   /*!< \brief source port */
     /** \brief socket used by tls session.
      * It identify the client and it is used as the key

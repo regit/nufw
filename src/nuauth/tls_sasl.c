@@ -193,6 +193,7 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 	c_session->socket = c;
 	c_session->tls_lock = g_mutex_new();
 	c_session->addr = client->addr;
+	(void)getsockname_ipv6(c, &c_session->server_addr);
 	c_session->sport = client->sport;
 	c_session->groups = NULL;
 	c_session->user_name = NULL;
