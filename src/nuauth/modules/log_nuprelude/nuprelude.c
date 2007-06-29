@@ -173,6 +173,7 @@ static int feed_template(idmef_message_t * idmef)
 {
 	idmef_analyzer_t *client_analyzer, *analyzer;
 	idmef_alert_t *alert;
+	idmef_process_t *process;
 	prelude_string_t *string;
 	int ret;
 
@@ -607,7 +608,7 @@ static idmef_message_t *create_message_session(idmef_message_t * tpl,
 {
 	idmef_message_t *idmef;
 	char buffer[50];
-	struct in6_addr nuauth_addr;
+	char ip_ascii[INET6_ADDRSTRLEN];
 
 	idmef = create_from_template(tpl, NULL);
 	if (!idmef) {
@@ -628,13 +629,9 @@ static idmef_message_t *create_message_session(idmef_message_t * tpl,
 	/* set user informations */
 	add_user_information(idmef, session);
 
-	if (getsockname_ipv6(session->socket, &nuauth_addr))
-	{
-		char ip_ascii[INET6_ADDRSTRLEN];
-		FORMAT_IPV6(&nuauth_addr, ip_ascii);
-		add_idmef_object(idmef,
+	FORMAT_IPV6(&session->server_addr, ip_ascii);
+	add_idmef_object(idmef,
 			"alert.target(0).node.address(0).address", ip_ascii);
-	}
 
 	/* os informations */
 	set_os_infos(idmef, session->sysname, session->release, session->version);
@@ -648,7 +645,7 @@ static idmef_message_t *create_message_autherr(idmef_message_t * tpl,
 {
 	idmef_message_t *idmef;
 	char buffer[50];
-	struct in6_addr nuauth_addr;
+	char ip_ascii[INET6_ADDRSTRLEN];
 
 	idmef = create_from_template(tpl, NULL);
 	if (!idmef) {
@@ -669,13 +666,9 @@ static idmef_message_t *create_message_autherr(idmef_message_t * tpl,
 	secure_snprintf(buffer, sizeof(buffer), "%hu", session->sport);
 	add_idmef_object(idmef,	"alert.source(0).service.port", buffer);
 
-	if (getsockname_ipv6(session->socket, &nuauth_addr))
-	{
-		char ip_ascii[INET6_ADDRSTRLEN];
-		FORMAT_IPV6(&nuauth_addr, ip_ascii);
-		add_idmef_object(idmef,
+	FORMAT_IPV6(&session->server_addr, ip_ascii);
+	add_idmef_object(idmef,
 			"alert.target(0).node.address(0).address", ip_ascii);
-	}
 
 	/* set user informations */
 	add_user_information(idmef, session);
@@ -807,9 +800,11 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 G_MODULE_EXPORT gchar *g_module_check_init()
 {
 	const char *version;
-	int argc;
-	char **argv = NULL;
+	int argc = 1;
+	char *argv[2];
 	int ret;
+	argv[0] = nuauthdatas->program_fullpath;
+	argv[1] = NULL;
 
 	log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 		    "[+] Prelude log: Init Prelude library");
