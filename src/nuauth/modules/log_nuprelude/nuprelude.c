@@ -607,6 +607,7 @@ static idmef_message_t *create_message_session(idmef_message_t * tpl,
 {
 	idmef_message_t *idmef;
 	char buffer[50];
+	struct in6_addr nuauth_addr;
 
 	idmef = create_from_template(tpl, NULL);
 	if (!idmef) {
@@ -626,6 +627,14 @@ static idmef_message_t *create_message_session(idmef_message_t * tpl,
 
 	/* set user informations */
 	add_user_information(idmef, session);
+
+	if (getsockname_ipv6(session->socket, &nuauth_addr))
+	{
+		char ip_ascii[INET6_ADDRSTRLEN];
+		FORMAT_IPV6(&nuauth_addr, ip_ascii);
+		add_idmef_object(idmef,
+			"alert.target(0).node.address(0).address", ip_ascii);
+	}
 
 	/* os informations */
 	set_os_infos(idmef, session->sysname, session->release, session->version);
