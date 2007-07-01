@@ -166,6 +166,8 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 		/* send an auth request packet */
 		if (!auth_request_send(AUTH_REQUEST, &q_pckt)) {
 			int sandf = 0;
+			/* send failure dropping packet */
+			IPQ_SET_VERDICT(q_pckt.packet_id, NF_DROP);
 			/* we fail to send the packet so we free packet related to current */
 			pthread_mutex_lock(&packets_list.mutex);
 			/* search and destroy packet by packet_id */
