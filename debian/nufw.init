@@ -41,23 +41,23 @@ fi
 
 NUFW_OPTIONS=""
 
-if [ ! "$NUFW_VERBOSITY" ]; then
+if [ "$NUFW_VERBOSITY" == "" ]; then
   NUFW_VERBOSITY="vv"
 fi
 
-if [ "$NUFW_NUAUTH_ADDRESS" ]; then
+if [ "$NUFW_NUAUTH_ADDRESS" != "" ]; then
   NUFW_OPTIONS="$NUFW_OPTIONS -d $NUFW_NUAUTH_ADDRESS"
 fi
 
-if [ ! "$NUFW_NUAUTH_UDP_PORT" ]; then
-  NUFW_OPTIONS="$NUFW_OPTIONS -p NUFW_NUAUTH_UDP_PORT"
+if [ "$NUFW_NUAUTH_UDP_PORT" != "" ]; then
+  NUFW_OPTIONS="$NUFW_OPTIONS -p $NUFW_NUAUTH_UDP_PORT"
 fi
 
-if [ ! "$NUFW_TIMEOUT" ]; then
-  NUFW_OPTIONS="$NUFW_OPTIONS -r $NUFW_TIMEOUT"
+if [ "$NUFW_TIMEOUT" != "" ]; then
+  NUFW_OPTIONS="$NUFW_OPTIONS -t $NUFW_TIMEOUT"
 fi
 
-if [ ! "$NUFW_TRACK_SIZE" ]; then
+if [ "$NUFW_TRACK_SIZE" != ""]; then
   NUFW_OPTIONS="$NUFW_OPTIONS -T $NUFW_TRACK_SIZE"
 fi
 
