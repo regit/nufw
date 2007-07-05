@@ -1,6 +1,8 @@
 2.3.0
 	- nuauth: introduces nuauth_single_user_client_limit and nuauth_single_ip_client_limit
 	to control user's connection policy.
+	- libnuclient: fix compilation when used in external client.
+	- nufw: ask kernel to drop packet when nuauth can't be reached.
 2.2.2 (2006/06/26)
 	- log_mysql: fix logging of connection closing
 	- NuFW: fix incompatibility between i386 and x86_64 due to alignement
