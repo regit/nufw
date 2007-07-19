@@ -111,8 +111,7 @@ G_MODULE_EXPORT int certificate_check(gnutls_session session,
 	expiration_time = gnutls_x509_crt_get_expiration_time(cert);
 	activation_time = gnutls_x509_crt_get_activation_time(cert);
 
-	if(expiration_time == (time_t)-1 || activation_time == (time_t)-1)
-	{
+	if (expiration_time == (time_t)-1 || activation_time == (time_t)-1) {
 		log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 			    "Unable to check certificate date validity"
 		    );
