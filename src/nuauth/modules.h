@@ -44,6 +44,8 @@ typedef enum {
 	MOD_CERT_CHECK,
 	MOD_CERT_TO_UID,
 	MOD_IP_AUTH,
+
+	MOD_END
 } module_hook_t;
 
 /**

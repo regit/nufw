@@ -25,32 +25,7 @@
  * @{
  */
 
-GSList *user_check_modules;
-
-GSList *get_user_groups_modules;
-
-GSList *get_user_id_modules;
-
-GSList *acl_check_modules;
-
-/** this is the list of module which are used to define time period
- * as this is used by other modules there is no need to have a special locking
- * mechanism for them. It will not be used if usage of all other modules (specifically acls and user one)
- * is blocked.
- */
-GSList *period_modules;
-
-GSList *ip_auth_modules;
-
-GSList *user_logs_modules;
-GSList *user_session_logs_modules;
-
-GSList *certificate_check_modules;
-GSList *certificate_to_uid_modules;
-
-GSList *user_session_modify_modules;
-GSList *finalize_packet_modules;
-GSList *auth_error_log_modules;
+#include "modules.h"
 
 GMutex *modules_mutex;
 
