@@ -31,10 +31,12 @@
 typedef gboolean module_params_unload_t(gpointer params);
 
 typedef enum {
-	MOD_USER_CHECK,
+	MOD_FIRST = 0,
+	MOD_USER_CHECK = MOD_FIRST,
 	MOD_USER_ID,
 	MOD_USER_GROUPS,
 	MOD_USER_FAIL,
+	MOD_SIMPLE = MOD_USER_FAIL,
 	MOD_ACL_CHECK,
 	MOD_SESSION_MODIFY,
 	MOD_LOG_PACKETS,
@@ -44,9 +46,17 @@ typedef enum {
 	MOD_CERT_CHECK,
 	MOD_CERT_TO_UID,
 	MOD_IP_AUTH,
-
-	MOD_END
+	MOD_OPTIONNAL = MOD_IP_AUTH,
+	MOD_END,
 } module_hook_t;
+
+typedef struct {
+	gchar *configstring;
+	gchar *config;
+	GSList *modules;
+	gchar *funcstring;
+	gchar *message;
+} hook_t;
 
 /**
  * Structure use to store a module instance

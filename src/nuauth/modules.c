@@ -60,7 +60,21 @@
 #include "modules_definition.h"
 
 /** This is a static variable to initiate all pointers to zero */
-static GSList* modules[MOD_END];
+static hook_t hooks[MOD_END] = {
+	{ "nuauth_user_check_module", NULL, NULL, "user_check", "user checking" },
+	{ "nuauth_get_user_id_module", NULL, NULL, "get_user_id", "user id fetching" },
+	{ "nuauth_get_user_groups_module", NULL, NULL, "get_user_groups", "user groups fetching" },
+	{ "nuauth_auth_error_log_module", NULL, NULL, "auth_error_log", "auth error log" },
+	{ "nuauth_acl_check_module", NULL, NULL, "acl_check", "acls checking" },
+	{ "nuauth_user_session_modify_module", NULL, NULL,  "user_session_modify", "user session modify" },
+	{ "nuauth_user_logs_module", NULL, NULL, "user_packet_logs", "user packet logging" },
+	{ "nuauth_user_session_logs_module", NULL, NULL, "user_session_logs", "user session logging" },
+	{ "nuauth_finalize_packet_module", NULL, NULL, "finalize_packet", "finalize packet" },
+	{ "nuauth_periods_module", NULL, NULL, "define_periods", "define periods checking" },
+	{ "nuauth_certificate_check_module", NULL, NULL,  "certificate_check", "certificate check" },
+	{ "nuauth_certificate_to_uid_module", NULL, NULL, "certificate_to_uid", "certificate to uid" },
+	{ "nuauth_ip_authentication_module", NULL, NULL, "ip_authentication", "ip authentication" },
+};
 
 /**
  * Check a user/password against the list of modules used for user authentication
@@ -70,7 +84,7 @@ int modules_user_check(const char *user, const char *pass,
 		       unsigned passlen)
 {
 	/* iter through module list and stop when user is found */
-	GSList *walker = modules[MOD_USER_CHECK];
+	GSList *walker = hooks[MOD_USER_CHECK].modules;
 	int walker_return = 0;
 	block_on_conf_reload();
 	for (; walker != NULL; walker = walker->next) {
@@ -93,7 +107,7 @@ int modules_user_check(const char *user, const char *pass,
 GSList *modules_get_user_groups(const char *user)
 {
 	/* iter through module list and stop when an acl is found */
-	GSList *walker = modules[MOD_USER_GROUPS];
+	GSList *walker = hooks[MOD_USER_GROUPS].modules;
 	GSList *walker_return = NULL;
 
 	block_on_conf_reload();
@@ -115,7 +129,7 @@ GSList *modules_get_user_groups(const char *user)
 uint32_t modules_get_user_id(const char *user)
 {
 	/* iter through module list and stop when an acl is found */
-	GSList *walker = modules[MOD_USER_ID];
+	GSList *walker = hooks[MOD_USER_ID].modules;
 	uint32_t walker_return = 0;
 
 	block_on_conf_reload();
@@ -141,7 +155,7 @@ uint32_t modules_get_user_id(const char *user)
 GSList *modules_acl_check(connection_t * element)
 {
 	/* iter through module list and stop when an acl is found */
-	GSList *walker = modules[MOD_ACL_CHECK];
+	GSList *walker = hooks[MOD_ACL_CHECK].modules;
 	GSList *walker_return = NULL;
 
 	block_on_conf_reload();
@@ -163,7 +177,7 @@ GSList *modules_acl_check(connection_t * element)
 gchar *modules_ip_auth(tracking_t * header)
 {
 	/* iter through module list and stop when decision is made */
-	GSList *walker = modules[MOD_IP_AUTH];
+	GSList *walker = hooks[MOD_IP_AUTH].modules;
 	gchar *walker_return = NULL;
 
 	block_on_conf_reload();
@@ -184,7 +198,7 @@ gchar *modules_ip_auth(tracking_t * header)
 int modules_user_logs(void *element, tcp_state_t state)
 {
 	/* iter through all modules list */
-	GSList *walker = modules[MOD_LOG_PACKETS];
+	GSList *walker = hooks[MOD_LOG_PACKETS].modules;
 
 	block_on_conf_reload();
 	for (; walker != NULL; walker = walker->next) {
@@ -203,7 +217,7 @@ int modules_user_logs(void *element, tcp_state_t state)
 int modules_user_session_logs(user_session_t * user, session_state_t state)
 {
 	/* iter through all modules list */
-	GSList *walker = modules[MOD_LOG_SESSION];
+	GSList *walker = hooks[MOD_LOG_SESSION].modules;
 
 	block_on_conf_reload();
 	for (; walker != NULL; walker = walker->next) {
@@ -222,7 +236,7 @@ int modules_user_session_logs(user_session_t * user, session_state_t state)
 void modules_parse_periods(GHashTable * periods)
 {
 	/* iter through all modules list */
-	GSList *walker = modules[MOD_PERIOD];
+	GSList *walker = hooks[MOD_PERIOD].modules;
 
 	for (; walker != NULL; walker = walker->next) {
 		define_period_callback *handler =
@@ -242,7 +256,7 @@ void modules_parse_periods(GHashTable * periods)
 int modules_check_certificate(gnutls_session session, gnutls_x509_crt cert)
 {
 	/* iter through all modules list */
-	GSList *walker = modules[MOD_CERT_CHECK];
+	GSList *walker = hooks[MOD_CERT_CHECK].modules;
 	int ret;
 
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN, "module check certificate");
@@ -273,7 +287,7 @@ gchar *modules_certificate_to_uid(gnutls_session session,
 				  gnutls_x509_crt cert)
 {
 	/* iter through all modules list */
-	GSList *walker = modules[MOD_CERT_TO_UID];
+	GSList *walker = hooks[MOD_CERT_TO_UID].modules;
 	gchar *uid;
 
 	block_on_conf_reload();
@@ -298,7 +312,7 @@ gchar *modules_certificate_to_uid(gnutls_session session,
 int modules_user_session_modify(user_session_t * c_session)
 {
 	/* iter through all modules list */
-	GSList *walker = modules[MOD_SESSION_MODIFY];
+	GSList *walker = hooks[MOD_SESSION_MODIFY].modules;
 
 	block_on_conf_reload();
 	for (; walker != NULL; walker = walker->next) {
@@ -318,7 +332,7 @@ int modules_user_session_modify(user_session_t * c_session)
 nu_error_t modules_finalize_packet(connection_t * connection)
 {
 	/* iter through all modules list */
-	GSList *walker = modules[MOD_FINALIZE_PACKET];
+	GSList *walker = hooks[MOD_FINALIZE_PACKET].modules;
 
 	block_on_conf_reload();
 	for (; walker != NULL; walker = walker->next) {
@@ -337,7 +351,7 @@ nu_error_t modules_finalize_packet(connection_t * connection)
 void modules_auth_error_log(user_session_t * session,
 			    nuauth_auth_error_t error, const char *message)
 {
-	GSList *walker = modules[MOD_USER_FAIL];
+	GSList *walker = hooks[MOD_USER_FAIL].modules;
 
 	block_on_conf_reload();
 	for (; walker != NULL; walker = walker->next) {
@@ -582,19 +596,7 @@ int load_modules()
 		{"nuauth_auth_error_log_module", G_TOKEN_STRING, 1,
 		 g_strdup("")}
 	};
-	char *nuauth_acl_check_module;
-	char *nuauth_user_check_module;
-	char *nuauth_get_user_groups_module = NULL;
-	char *nuauth_get_user_id_module = NULL;
-	char *nuauth_user_session_logs_module;
-	char *nuauth_user_logs_module;
-	char *nuauth_ip_authentication_module = NULL;
-	char *nuauth_periods_module;
-	char *nuauth_certificate_check_module;
-	char *nuauth_certificate_to_uid_module;
-	char *nuauth_user_session_modify_module;
-	char *nuauth_finalize_packet_module;
-	char *nuauth_auth_error_log_module;
+	int i;
 	char *configfile = DEFAULT_CONF_FILE;
 
 	/* parse conf file */
@@ -605,55 +607,41 @@ int load_modules()
 #define READ_CONF(KEY) \
     get_confvar_value(nuauth_vars, sizeof(nuauth_vars)/sizeof(confparams_t), KEY);
 
-	nuauth_user_check_module =
-	    (char *) READ_CONF("nuauth_user_check_module");
-	nuauth_user_session_logs_module =
-	    (char *) READ_CONF("nuauth_user_session_logs_module");
-	nuauth_user_logs_module =
-	    (char *) READ_CONF("nuauth_user_logs_module");
-	nuauth_acl_check_module =
-	    (char *) READ_CONF("nuauth_acl_check_module");
-	nuauth_periods_module =
-	    (char *) READ_CONF("nuauth_periods_module");
-	if (nuauthconf->do_ip_authentication) {
-		nuauth_ip_authentication_module =
-		    (char *) READ_CONF("nuauth_ip_authentication_module");
+	hooks[MOD_USER_CHECK].config = 
+		(char *) READ_CONF(hooks[MOD_USER_CHECK].configstring);
+	for (i = MOD_SIMPLE; i < MOD_OPTIONNAL; i++) {
+		hooks[i].config = (char *) READ_CONF(hooks[i].configstring);
 	}
-	nuauth_certificate_check_module =
-	    (char *) READ_CONF("nuauth_certificate_check_module");
-	nuauth_certificate_to_uid_module =
-	    (char *) READ_CONF("nuauth_certificate_to_uid_module");
-	nuauth_user_session_modify_module =
-	    (char *) READ_CONF("nuauth_user_session_modify_module");
-	nuauth_finalize_packet_module =
-	    (char *) READ_CONF("nuauth_finalize_packet_module");
-	nuauth_auth_error_log_module =
-	    (char *) READ_CONF("nuauth_auth_error_log_module");
+
+	if (nuauthconf->do_ip_authentication) {
+		hooks[MOD_IP_AUTH].config = 
+			(char *) READ_CONF(hooks[MOD_IP_AUTH].configstring);
+	}
 
 	/* free config struct */
 	free_confparams(nuauth_vars,
 			sizeof(nuauth_vars) / sizeof(confparams_t));
 
+
 #undef READ_CONF
 #define READ_CONF(KEY) \
     get_confvar_value(deps_check_vars, sizeof(deps_check_vars)/sizeof(confparams_t), KEY);
-
-	if (nuauth_user_check_module) {
+	if (hooks[MOD_USER_CHECK].configstring) {
 		confparams_t deps_check_vars[] = {
 			{"nuauth_get_user_groups_module", G_TOKEN_STRING, 1,
-				g_strdup(nuauth_user_check_module)},
+				g_strdup(hooks[MOD_USER_CHECK].configstring)},
 			{"nuauth_get_user_id_module", G_TOKEN_STRING, 1,
-				g_strdup(nuauth_user_check_module)},
+				g_strdup(hooks[MOD_USER_CHECK].configstring)},
 		};
 
 		/* parse conf file for user_check sub vars*/
 		parse_conffile(configfile,
 				sizeof(deps_check_vars) / sizeof(confparams_t),
 				deps_check_vars);
-		nuauth_get_user_groups_module =
-			(char *) READ_CONF("nuauth_get_user_groups_module");
-		nuauth_get_user_id_module =
-			(char *) READ_CONF("nuauth_get_user_id_module");
+		hooks[MOD_USER_ID].config = 
+			(char *) READ_CONF(hooks[MOD_USER_ID].configstring);
+		hooks[MOD_USER_GROUPS].config = 
+			(char *) READ_CONF(hooks[MOD_USER_GROUPS].configstring);
 		/* free config struct */
 		free_confparams(deps_check_vars,
 				sizeof(deps_check_vars) / sizeof(confparams_t));
@@ -662,44 +650,17 @@ int load_modules()
 	/* external auth module loading */
 	g_mutex_lock(modules_mutex);
 
-#define LOAD_MODULE(VAR, LIST, KEY, TEXT, HOOK) \
-    log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN, "Loading " TEXT " modules:"); \
-    load_modules_from(VAR, KEY, &(LIST), HOOK); \
-    g_free(VAR);
+#define LOAD_MODULE(HOOK) \
+    log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN, "Loading %s modules:", hooks[HOOK].message); \
+    load_modules_from(hooks[HOOK].config, hooks[HOOK].funcstring, &(hooks[HOOK].modules), HOOK); 
 
 	/* loading modules */
-	LOAD_MODULE(nuauth_user_check_module, modules[MOD_USER_CHECK],
-		    "user_check", "user checking", MOD_USER_CHECK);
-	LOAD_MODULE(nuauth_get_user_groups_module, modules[MOD_USER_GROUPS],
-		    "get_user_groups", "user groups fetching", MOD_USER_GROUPS);
-	LOAD_MODULE(nuauth_get_user_id_module, modules[MOD_USER_ID],
-		    "get_user_id", "user id fetching",MOD_USER_ID);
-	LOAD_MODULE(nuauth_acl_check_module, modules[MOD_ACL_CHECK],
-		    "acl_check", "acls checking", MOD_ACL_CHECK);
-	LOAD_MODULE(nuauth_periods_module, modules[MOD_PERIOD],
-		    "define_periods", "define periods checking", MOD_PERIOD);
-	LOAD_MODULE(nuauth_user_session_logs_module,
-		    modules[MOD_LOG_SESSION], "user_session_logs",
-		    "user session logging", MOD_LOG_SESSION);
-	LOAD_MODULE(nuauth_user_logs_module, modules[MOD_LOG_PACKETS],
-		    "user_packet_logs", "user packet logging", MOD_LOG_PACKETS);
-	LOAD_MODULE(nuauth_certificate_check_module,
-		    modules[MOD_CERT_CHECK], "certificate_check",
-		    "certificate check", MOD_CERT_CHECK);
-	LOAD_MODULE(nuauth_certificate_to_uid_module,
-		    modules[MOD_CERT_TO_UID], "certificate_to_uid",
-		    "certificate to uid", MOD_CERT_TO_UID);
-	LOAD_MODULE(nuauth_finalize_packet_module, modules[MOD_FINALIZE_PACKET],
-		    "finalize_packet", "finalize packet", MOD_FINALIZE_PACKET);
-	LOAD_MODULE(nuauth_auth_error_log_module, modules[MOD_USER_FAIL],
-		    "auth_error_log", "auth error log", MOD_USER_FAIL);
-	LOAD_MODULE(nuauth_user_session_modify_module,
-		    modules[MOD_SESSION_MODIFY], "user_session_modify",
-		    "user session modify", MOD_SESSION_MODIFY);
+	for (i = MOD_FIRST; i < MOD_OPTIONNAL; i++) {
+		LOAD_MODULE(i);
+	}
+
 	if (nuauthconf->do_ip_authentication) {
-		LOAD_MODULE(nuauth_ip_authentication_module,
-			    modules[MOD_IP_AUTH], "ip_authentication",
-			    "ip authentication", MOD_IP_AUTH);
+		LOAD_MODULE(MOD_IP_AUTH);
 	}
 
 	g_mutex_unlock(modules_mutex);
@@ -731,9 +692,10 @@ void unload_modules()
 	nuauthdatas->modules = NULL;
 
 	/* free all lists */
-	for(i = 0; i < (sizeof(modules) / sizeof(*modules)); ++i) {
-		g_slist_free(modules[i]);
-		modules[i] = NULL;
+	for(i = 0; i < (sizeof(hooks) / sizeof(*hooks)); ++i) {
+		g_slist_free(hooks[i].modules);
+		hooks[i].modules = NULL;
+		g_free(hooks[i].config);
 	}
 
 
