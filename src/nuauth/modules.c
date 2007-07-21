@@ -626,12 +626,12 @@ int load_modules()
 #undef READ_CONF
 #define READ_CONF(KEY) \
     get_confvar_value(deps_check_vars, sizeof(deps_check_vars)/sizeof(confparams_t), KEY);
-	if (hooks[MOD_USER_CHECK].configstring) {
+	if (hooks[MOD_USER_CHECK].config) {
 		confparams_t deps_check_vars[] = {
 			{"nuauth_get_user_groups_module", G_TOKEN_STRING, 1,
-				g_strdup(hooks[MOD_USER_CHECK].configstring)},
+				g_strdup(hooks[MOD_USER_CHECK].config)},
 			{"nuauth_get_user_id_module", G_TOKEN_STRING, 1,
-				g_strdup(hooks[MOD_USER_CHECK].configstring)},
+				g_strdup(hooks[MOD_USER_CHECK].config)},
 		};
 
 		/* parse conf file for user_check sub vars*/
