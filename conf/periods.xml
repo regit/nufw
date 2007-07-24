@@ -11,13 +11,14 @@
         <hours start="8" end="18"/>
     </perioditem>
 </period>
-<period name="long" desc="date example"> 
+<period name="long" desc="date example">
     <perioditem>
         <dates start="1128282" end="323232323"/>
     </perioditem>
 </period>
 <period name="interval" desc="one hour interval">
     <perioditem>
+        <!-- Duration in second (1 hour) -->
         <duration length="3600"/>
     </perioditem>
 </period>
