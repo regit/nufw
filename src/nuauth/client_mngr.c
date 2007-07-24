@@ -235,11 +235,10 @@ inline user_session_t *look_for_username(const gchar * username)
 }
 
 static gboolean count_username_callback(gpointer key,
-					gpointer value,
-					gpointer user_data)
+					user_session_t *value,
+					struct username_counter *count_user)
 {
-	struct username_counter *count_user = (struct username_counter *) user_data;
-	if (strcmp(((user_session_t *) value)->user_name, (gchar *)(count_user->name)) == 0) {
+	if (strcmp(value->user_name, count_user->name) == 0) {
 		count_user->counter++;
 		if (count_user->counter >= count_user->max) {
 			return TRUE;
@@ -261,8 +260,7 @@ gboolean test_username_count_vs_max(const gchar * username, int maxcount)
 	void *usersession;
 	g_mutex_lock(client_mutex);
 	usersession =
-	    g_hash_table_find(client_conn_hash, count_username_callback,
-			      (void *) count_user);
+	    g_hash_table_find(client_conn_hash, (GHRFunc)count_username_callback, count_user);
 	g_mutex_unlock(client_mutex);
 	g_free(count_user);
 	if (usersession) {

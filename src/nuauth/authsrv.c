@@ -623,7 +623,7 @@ void configure_app(int argc, char **argv)
 	/* Avoid creation of core file which may contains username and password */
 	if (getrlimit(RLIMIT_CORE, &core_limit) == 0) {
 #ifdef DEBUG_ENABLE
-		core_limit.rlim_cur = -1;
+		core_limit.rlim_cur = RLIM_INFINITY;
 #else
 		core_limit.rlim_cur = 0;
 #endif

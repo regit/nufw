@@ -29,7 +29,7 @@ void process_g_syslog(const gchar * log_domain, GLogLevelFlags log_level,
 		      const gchar * message, gpointer user_data)
 {
 	int syslog_level;
-	syslog_level = rint(log(log_level) / log(2));
+	syslog_level = rint(log((double)log_level) / log(2.0));
 	syslog(LOG_FACILITY || syslog_level, message);
 }
 
