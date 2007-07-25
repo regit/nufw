@@ -328,7 +328,7 @@ static void usage(void)
 	fprintf(stderr, "  -V: display version\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "Certificate options:\n");
-	fprintf(stderr, "  -C CERTFILE: certificate filanem\n");
+	fprintf(stderr, "  -C CERTFILE: certificate filename\n");
 	fprintf(stderr, "  -A AUTHFILE: authority certificate filename\n");
 	fprintf(stderr, "  -K KEYFILE:  key filename\n");
 	fprintf(stderr, "  -W CERTPASS: certificate password\n");
