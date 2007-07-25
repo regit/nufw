@@ -339,7 +339,7 @@ int send_icmp_ipv6_unreach(char *payload)
 int send_icmp_unreach(char *payload)
 {
 	struct iphdr *ip4 = (struct iphdr *) payload;
-	if (ip4->version == 4) {
+	if (ip4->version == AF_INET) {
 		return send_icmp_ipv4_unreach(payload);
 	} else {
 		return send_icmp_ipv6_unreach(payload);

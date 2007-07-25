@@ -406,11 +406,9 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 				ip->protocol = element->tracking.protocol;
 				/* dummy convert to IPv4 as nufw on the other side does not support IPv6 at all */
 				ip->saddr =
-				    htonl(element->tracking.saddr.
-					  s6_addr32[3]);
+				    element->tracking.saddr.s6_addr32[3];
 				ip->daddr =
-				    htonl(element->tracking.daddr.
-					  s6_addr32[3]);
+				    element->tracking.daddr.s6_addr32[3];
 
 				/* write transport layer */
 				memcpy(payload + IPHDR_REJECT_LENGTH,
@@ -430,7 +428,7 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 	case PROTO_VERSION_NUFW_V22_2:
 		{
 			nuv4_nuauth_decision_response_t *response = NULL;
-			int use_icmp6;
+			int use_icmp6 = 0;
 			uint32_t mark = element->mark;
 
 			use_icmp6 = (!is_ipv4(&element->tracking.saddr)
@@ -510,11 +508,9 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 					ip->protocol =
 					    element->tracking.protocol;
 					ip->saddr =
-					    htonl(element->tracking.saddr.
-						  s6_addr32[3]);
+					    element->tracking.saddr.s6_addr32[3];
 					ip->daddr =
-					    htonl(element->tracking.daddr.
-						  s6_addr32[3]);
+					    element->tracking.daddr.s6_addr32[3];
 
 					/* write transport layer */
 					memcpy(payload +

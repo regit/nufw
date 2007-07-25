@@ -48,14 +48,27 @@ nu_error_t parse_dgram(connection_t * connection, unsigned char *dgram,
 	/* get ip headers till tracking is filled */
 	ip_hdr_size =
 	    get_ip_headers(&connection->tracking, dgram, dgram_size);
+	
 	if (ip_hdr_size == 0) {
 		log_message(WARNING, DEBUG_AREA_PACKET | DEBUG_AREA_GW,
 			    "Can't parse IP headers");
 		free_connection(connection);
 		return NU_EXIT_ERROR;
 	}
+
+	if (( ip_hdr_size + sizeof(connection->tracking.payload)) <= dgram_size) {
+		memcpy(connection->tracking.payload,
+		       dgram + ip_hdr_size,
+		       sizeof(connection->tracking.payload));
+	} else {
+		memset(connection->tracking.payload,
+		       0,
+		       sizeof(connection->tracking.payload));
+	}
+
 	dgram += ip_hdr_size;
 	dgram_size -= ip_hdr_size;
+
 
 	/* get saddr and daddr */
 	/* check if proto is in Hello mode list (when hello authentication is used) */
