@@ -106,6 +106,16 @@ static MYSQL *get_mysql_handler(struct log_mysql_params *params);
  *
  * @{ */
 
+static nu_error_t mysql_close_current(struct log_mysql_params* params)
+{
+	MYSQL* ld = get_mysql_handler(params);
+	if (ld) {
+		mysql_close(ld);
+	}
+	g_private_set(params->mysql_priv, NULL);
+	return NU_EXIT_OK;
+}
+
 G_MODULE_EXPORT gchar *unload_module_with_params(gpointer params_p)
 {
 	struct log_mysql_params *params =
@@ -594,6 +604,7 @@ static inline int log_state_open(MYSQL * ld, connection_t * element,
 			log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 				    "[MySQL] Cannot update data: %s",
 				    mysql_error(ld));
+			mysql_close_current(params);
 			return -1;
 		}
 	}
@@ -618,6 +629,7 @@ static inline int log_state_open(MYSQL * ld, connection_t * element,
 		log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 			    "[MySQL] Cannot insert data: %s",
 			    mysql_error(ld));
+		mysql_close_current(params);
 		return -1;
 	}
 	return 0;
@@ -667,6 +679,7 @@ static inline int log_state_established(MYSQL * ld,
 			log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 				    "Can not update Data : %s",
 				    mysql_error(ld));
+			mysql_close_current(params);
 			return -1;
 		}
 		if (mysql_affected_rows(ld) >= 1) {
@@ -741,6 +754,7 @@ static inline int log_state_close(MYSQL * ld,
 	if (Result != 0) {
 		log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 			    "Can not update Data : %s", mysql_error(ld));
+		mysql_close_current(params);
 		return -1;
 	}
 	if (mysql_affected_rows(ld) >= 1) {
@@ -786,6 +800,7 @@ static int log_state_drop(MYSQL * ld, connection_t * element,
 		log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 			    "[MySQL] Cannot insert data: %s",
 			    mysql_error(ld));
+		mysql_close_current(params);
 		return -1;
 	}
 	return 0;
@@ -794,7 +809,8 @@ static int log_state_drop(MYSQL * ld, connection_t * element,
 static MYSQL *get_mysql_handler(struct log_mysql_params *params)
 {
 	MYSQL *ld = g_private_get(params->mysql_priv);
-	if (ld != NULL) {
+
+	if (ld && (!mysql_ping(ld))) {
 		return ld;
 	}
 
@@ -969,6 +985,7 @@ nu_error_t destroy_user_connections(user_session_t * c_session,
 		log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 				"[MySQL] Cannot execute request: %s",
 				mysql_error(ld));
+		mysql_close_current(params);
 		return NU_EXIT_ERROR;
 	} else {
 		 /*
@@ -1080,6 +1097,7 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 		log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 			    "[MySQL] Cannot execute request: %s",
 			    mysql_error(ld));
+		mysql_close_current(params);
 		return -1;
 	}
 
