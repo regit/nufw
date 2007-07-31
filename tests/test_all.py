@@ -19,6 +19,7 @@ FILES = (
     "test_nufw_cert",
     "test_cert_auth",
     "test_mark_flag",
+    "test_reject",
 )
 
 def loadTestcases(module):
