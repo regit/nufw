@@ -330,6 +330,9 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 static MYSQL *mysql_conn_init(struct log_mysql_params *params)
 {
 	MYSQL *ld = NULL;
+#ifdef MYSQL_OPT_RECONNECT
+	my_bool trueval = 1;
+#endif
 
 	/* init connection */
 	ld = mysql_init(ld);
@@ -356,6 +359,11 @@ static MYSQL *mysql_conn_init(struct log_mysql_params *params)
 			    mysql_error(ld));
 	}
 #endif
+#ifdef MYSQL_OPT_RECONNECT
+#  if defined(MYSQL_VERSION_ID) && (MYSQL_VERSION_ID >= 50019)
+	mysql_options(ld, MYSQL_OPT_RECONNECT, &trueval);
+#  endif
+#endif
 	if (!mysql_real_connect
 	    (ld, params->mysql_server, params->mysql_user,
 	     params->mysql_passwd, params->mysql_db_name,
@@ -366,6 +374,11 @@ static MYSQL *mysql_conn_init(struct log_mysql_params *params)
 		mysql_close(ld);
 		return NULL;
 	}
+#ifdef MYSQL_OPT_RECONNECT
+#  if defined(MYSQL_VERSION_ID) && (MYSQL_VERSION_ID < 50019)
+	mysql_options(ld, MYSQL_OPT_RECONNECT, &trueval);
+#  endif
+#endif
 	mysql_conn_list = g_slist_prepend(mysql_conn_list, ld);
 
 	return ld;
