@@ -810,7 +810,7 @@ static MYSQL *get_mysql_handler(struct log_mysql_params *params)
 {
 	MYSQL *ld = g_private_get(params->mysql_priv);
 
-	if (ld && (!mysql_ping(ld))) {
+	if (ld) {
 		return ld;
 	}
 
