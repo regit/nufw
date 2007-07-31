@@ -3,6 +3,9 @@ NuFW testing
 
 This implements a testing system for NuFW.
 
+Results of tests on different architectures are available at:
+  https://buildbot.inl.fr/
+
 Requirements
 ------------
 
