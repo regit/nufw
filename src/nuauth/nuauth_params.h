@@ -184,6 +184,7 @@ struct nuauth_datas {
 
 	/* reload related */
 	gint need_reload;
+	gboolean is_starting;
 	gint locked_threads_number;
 	GCond *reload_cond;
 	GMutex *reload_cond_mutex;

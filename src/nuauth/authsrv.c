@@ -645,6 +645,7 @@ void configure_app(int argc, char **argv)
 
 	/* init nuauthdatas */
 	nuauthdatas = g_new0(struct nuauth_datas, 1);
+	nuauthdatas->is_starting = TRUE;
 	nuauthdatas->reload_cond = g_cond_new();
 	nuauthdatas->reload_cond_mutex = g_mutex_new();
 	nuauthdatas->program_fullpath = g_strdup(argv[0]);
@@ -816,7 +817,8 @@ void init_nuauthdatas()
 		      tls_nufw_authsrv);
 
 	log_message(INFO, DEBUG_AREA_MAIN, "Threads system started");
-	release_pool_threads();
+	release_pool_threads(); 
+	nuauthdatas->is_starting = FALSE;
 }
 
 /**

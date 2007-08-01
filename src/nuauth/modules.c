@@ -710,6 +710,9 @@ void unload_modules()
 gboolean nuauth_is_reloading()
 {
 	gboolean reloading = FALSE;
+	if (nuauthdatas->is_starting == TRUE) {
+		return FALSE;
+	}
 	g_mutex_lock(nuauthdatas->reload_cond_mutex);
 	if (nuauthdatas->need_reload) {
 		reloading = TRUE;
