@@ -304,7 +304,7 @@ int compare(nuauth_session_t * session, conntable_t * old, conntable_t * new,
 #endif
 						if (add_packet_to_send
 						    (session, auth, &count,
-						     bucket)) {
+						     bucket) == -1) {
 							return -1;
 						}
 						nb_packets++;
