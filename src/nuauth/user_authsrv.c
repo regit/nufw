@@ -97,6 +97,8 @@ void user_check_and_decide(gpointer userdata, gpointer data)
 					    ("User %s on %s tried to authenticate packet from other ip",
 					     conn_elt->username, ip_ascii);
 				}
+
+				conn_elt->log_prefix = g_strdup(SPOOFED_LOG_PREFIX);
 				print_connection(conn_elt, "User spoofed Packet");
 			}
 			/* free connection */

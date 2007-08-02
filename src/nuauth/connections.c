@@ -75,6 +75,9 @@ void free_connection(connection_t * conn)
 	if (conn->state == AUTH_STATE_AUTHREQ) {
 		/* copy message */
 		log_user_packet(conn, TCP_STATE_DROP);
+	} else if (conn->state == AUTH_STATE_SPOOFING) {
+		/* we also log spoofing attempt */
+		log_user_packet(conn, TCP_STATE_DROP);
 	}
 	/*
 	 * tell cache we don't use the ressource anymore

@@ -279,13 +279,13 @@ void get_acls_from_cache(connection_t * conn_elt)
 		g_private_set(nuauthdatas->aclqueue, message.reply_queue);
 	}
 	/* send message */
-	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_PACKET,
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 			  "[acl cache] going to send cache request");
 	g_async_queue_push(nuauthdatas->acl_cache->queue, &message);
 	/* lock */
 	g_atomic_int_inc(&(myaudit->cache_req_nb));
 	/*release */
-	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_PACKET,
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 			  "[acl cache] request sent");
 	/* wait for answer */
 	conn_elt->acl_groups = g_async_queue_pop(message.reply_queue);
@@ -295,7 +295,7 @@ void get_acls_from_cache(connection_t * conn_elt)
 	} else if (conn_elt->acl_groups == null_message) {
 		struct cache_message *rmessage;
 
-		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_PACKET,
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 				  "[acl cache] We are about to search entry");
 		/* cache wants an update
 		 * external check of acl */
@@ -306,7 +306,7 @@ void get_acls_from_cache(connection_t * conn_elt)
 		rmessage->key = acl_duplicate_key(message.key);
 		rmessage->datas = conn_elt->acl_groups;
 		rmessage->reply_queue = NULL;
-		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_PACKET,
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 				  "[acl cache] answering for key %p",
 				  rmessage->key);
 		/* reply to the cache */

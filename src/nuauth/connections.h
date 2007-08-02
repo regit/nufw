@@ -44,7 +44,8 @@ typedef enum {
      */
 	AUTH_STATE_COMPLETING,
 	AUTH_STATE_DONE,	/*!< This state is set when the connection will be only used for logging purpose */
-	AUTH_STATE_HELLOMODE	/*!< This connection is treated by the HELLO authentication mode */
+	AUTH_STATE_HELLOMODE,	/*!< This connection is treated by the HELLO authentication mode */
+	AUTH_STATE_SPOOFING,	/*!< This connection is a spoofed one */
 } auth_state_t;
 
 typedef enum {

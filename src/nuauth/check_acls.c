@@ -45,7 +45,7 @@
 void acl_check_and_decide(gpointer userdata, gpointer data)
 {
 	connection_t *conn_elt = userdata;
-	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_PACKET,
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 			  "entering acl_check");
 
 	if (conn_elt == NULL) {
@@ -97,7 +97,7 @@ void acl_check_and_decide(gpointer userdata, gpointer data)
 			}
 		}
 	}
-	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_PACKET, "leaving acl_check");
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN, "leaving acl_check");
 }
 
 /** @} */

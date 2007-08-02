@@ -151,11 +151,14 @@ inline void search_and_fill_complete_of_authreq(connection_t * new,
 	switch (new->state) {
 	case AUTH_STATE_AUTHREQ:
 		debug_log_message(DEBUG, DEBUG_AREA_PACKET,
-				  "Complete authreq: Adding a packet_id to a connection");
+				  "Complete authreq: Adding a packet_id to a connection (id=%u)",
+				  GPOINTER_TO_UINT((new->packet_id)->data)
+				  );
 		packet->packet_id =
 		    g_slist_prepend(packet->packet_id,
-				    GINT_TO_POINTER((new->packet_id)->
+				    GUINT_TO_POINTER((new->packet_id)->
 						    data));
+		new->state = AUTH_STATE_DONE;	
 		break;
 
 	case AUTH_STATE_USERPCKT:
@@ -275,11 +278,14 @@ inline void search_and_fill_completing(connection_t * new,
 
 	case AUTH_STATE_AUTHREQ:
 		debug_log_message(DEBUG, DEBUG_AREA_GW,
-				  "Completing (auth): Adding a packet_id to a completing connection");
+				  "Completing (auth): Adding a packet_id to a completing connection (id=%u)",
+				  GPOINTER_TO_UINT((new->packet_id)->data)
+				  );
 		packet->packet_id =
 		    g_slist_prepend(packet->packet_id,
-				    GINT_TO_POINTER((new->packet_id)->
+				    GUINT_TO_POINTER((new->packet_id)->
 						    data));
+		new->state = AUTH_STATE_DONE;	
 		break;
 
 	case AUTH_STATE_USERPCKT:
@@ -302,11 +308,13 @@ inline void search_and_fill_ready(connection_t * new,
 	switch (new->state) {
 	case AUTH_STATE_AUTHREQ:
 		debug_log_message(DEBUG, DEBUG_AREA_GW,
-				  "search&fill ready: Adding a packet_id to a connection");
+				  "search&fill ready: Adding a packet_id to a connection (id=%u)",
+				  GPOINTER_TO_UINT((new->packet_id)->data)
+				  );
 		packet->packet_id =
 		    g_slist_prepend(packet->packet_id,
-				    GUINT_TO_POINTER((new->packet_id)->
-						     data));
+				    GUINT_TO_POINTER((new->packet_id)->data));
+		new->state = AUTH_STATE_DONE;	
 		break;
 
 	case AUTH_STATE_USERPCKT:

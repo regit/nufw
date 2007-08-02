@@ -21,6 +21,8 @@
 #ifndef USER_LOGS_H
 #define USER_LOGS_H
 
+#define SPOOFED_LOG_PREFIX "Spoofed auth packet"
+
 typedef enum {
 	SESSION_CLOSE = 0,
 	SESSION_OPEN		/* =1 */
