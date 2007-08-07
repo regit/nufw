@@ -167,7 +167,7 @@ if test "${build_nufw}" = "yes"; then
             if test "${have_nfq_indev_name}" = "yes"; then
                 AC_DEFINE_UNQUOTED([HAVE_NLIF_CATCH],[1],[Found iface resolution in nfnetlink and libnetfilter_queue])
             else
-                AC_ERROR("Support of interface resolution in nfnetlink but not in netfilter_queue")
+                AC_MSG_WARN("Support of interface resolution in nfnetlink but not in netfilter_queue")
             fi
         fi
         AC_DEFINE_UNQUOTED([USE_NFQUEUE],[1],[Will use netlink queue support instead of libipq])
