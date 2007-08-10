@@ -298,7 +298,7 @@ void nuauth_deinit(gboolean soft)
 	end_tls();
 	end_audit();
 
-	log_message(INFO, DEBUG_AREA_MAIN, "Free memory");
+	log_message(INFO, DEBUG_AREA_MAIN, "Freeing memory");
 	free_nuauth_params(nuauthconf);
 	if (nuauthconf->acl_cache) {
 		cache_destroy(nuauthdatas->acl_cache);
