@@ -170,7 +170,7 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 	char *prefix = "[nuauth] ";
 	char address[INET6_ADDRSTRLEN];
 
-	format_ipv6(&c_session->addr, address, sizeof(address));
+	format_ipv6(&c_session->addr, address, sizeof(address), NULL);
 	switch (state) {
 	case SESSION_OPEN:
 		g_message("%sUser %s connect on %s", prefix,
