@@ -230,4 +230,6 @@ void start_pool_threads();
 void release_pool_threads();
 void nuauth_install_signals(gboolean action);
 
+int nuauth_bind(char **errmsg, const char *addr, const char *port, char *context);
+
 #endif

@@ -529,66 +529,7 @@ void tls_user_main_loop(struct tls_user_context_t *context, GMutex * mutex)
  */
 int tls_user_bind(char **errmsg)
 {
-	struct addrinfo *res;
-	struct addrinfo hints;
-	int ecode;
-	int sck_inet;
-	gint option_value;
-	int result;
-
-	memset(&hints, 0, sizeof hints);
-	hints.ai_flags = AI_PASSIVE;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_family = PF_UNSPEC;
-	ecode =
-	    getaddrinfo(nuauthconf->client_srv, nuauthconf->userpckt_port,
-			&hints, &res);
-	if (ecode != 0) {
-		*errmsg =
-		    g_strdup_printf
-		    ("Invalid clients listening address %s:%s, error: %s",
-		     nuauthconf->client_srv, nuauthconf->userpckt_port,
-		     gai_strerror(ecode));
-		return -1;
-	}
-
-	/* open the socket */
-	if (res->ai_family == PF_INET)
-		log_message(DEBUG, DEBUG_AREA_USER | DEBUG_AREA_MAIN,
-			    "Creating user server IPv4 socket");
-	else if (res->ai_family == PF_INET6)
-		log_message(DEBUG, DEBUG_AREA_USER | DEBUG_AREA_MAIN,
-			    "Creating user server IPv6 socket");
-
-		log_message(DEBUG, DEBUG_AREA_USER | DEBUG_AREA_MAIN,
-			    "Creating user server (any) socket");
-	sck_inet =
-	    socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-	if (sck_inet == -1) {
-		*errmsg = g_strdup("Socket creation failed.");
-		return -1;
-	}
-
-	/* set socket reuse and keep alive option */
-	option_value = 1;
-	setsockopt(sck_inet,
-		   SOL_SOCKET,
-		   SO_REUSEADDR, &option_value, sizeof(option_value));
-	setsockopt(sck_inet,
-		   SOL_SOCKET,
-		   SO_KEEPALIVE, &option_value, sizeof(option_value));
-
-	/* bind */
-	result = bind(sck_inet, res->ai_addr, res->ai_addrlen);
-	if (result < 0) {
-		*errmsg = g_strdup_printf("Unable to bind %s:%s.",
-					  nuauthconf->client_srv,
-					  nuauthconf->userpckt_port);
-		close(sck_inet);
-		return -1;
-	}
-	freeaddrinfo(res);
-	return sck_inet;
+  	return ( nuauth_bind(errmsg, nuauthconf->client_srv, nuauthconf->userpckt_port, "user") ) ;
 }
 
 /**

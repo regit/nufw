@@ -292,4 +292,69 @@ void thread_pool_push(GThreadPool *pool, gpointer data, GError **error)
 	g_thread_pool_push(pool, data, error);
 }
 
+int nuauth_bind(char **errmsg, const char *addr, const char *port, char *context)
+{
+	struct addrinfo *res;
+	struct addrinfo hints;
+	int ecode;
+	int sck_inet;
+	gint option_value;
+	int result;
+
+	memset(&hints, 0, sizeof hints);
+	hints.ai_flags = AI_PASSIVE;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_family = PF_UNSPEC;
+	ecode =
+	    getaddrinfo(addr, port,
+			&hints, &res);
+	if (ecode != 0) {
+		*errmsg =
+		    g_strdup_printf
+		    ("Invalid %s listening address %s:%s, error: %s",
+		     context,
+		     addr, port,
+		     gai_strerror(ecode));
+		return -1;
+	}
+
+	/* open the socket */
+	if (res->ai_family == PF_INET)
+		log_message(DEBUG, DEBUG_AREA_USER | DEBUG_AREA_MAIN,
+			    "Creating server IPv4 socket");
+	else if (res->ai_family == PF_INET6)
+		log_message(DEBUG, DEBUG_AREA_USER | DEBUG_AREA_MAIN,
+			    "Creating server IPv6 socket");
+	else
+		log_message(DEBUG, DEBUG_AREA_USER | DEBUG_AREA_MAIN,
+			    "Creating server (any) socket");
+	sck_inet =
+	    socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+	if (sck_inet == -1) {
+		*errmsg = g_strdup("Socket creation failed.");
+		return -1;
+	}
+
+	/* set socket reuse and keep alive option */
+	option_value = 1;
+	setsockopt(sck_inet,
+		   SOL_SOCKET,
+		   SO_REUSEADDR, &option_value, sizeof(option_value));
+	setsockopt(sck_inet,
+		   SOL_SOCKET,
+		   SO_KEEPALIVE, &option_value, sizeof(option_value));
+
+	/* bind */
+	result = bind(sck_inet, res->ai_addr, res->ai_addrlen);
+	if (result < 0) {
+		*errmsg = g_strdup_printf("Unable to bind %s socket %s:%s.",
+		    			  context,
+					  addr,
+					  port);
+		close(sck_inet);
+		return -1;
+	}
+	freeaddrinfo(res);
+	return sck_inet;
+}
 /** @} */

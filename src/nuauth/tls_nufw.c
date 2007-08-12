@@ -319,50 +319,7 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex * mutex)
 
 int tls_nufw_bind(char **errmsg)
 {
-	int socket_fd;
-	int sck_inet;
-	gint option_value;
-	struct addrinfo *res;
-	struct addrinfo hints;
-	int ecode;
-
-	memset(&hints, 0, sizeof hints);
-	hints.ai_flags = AI_PASSIVE;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_family = PF_UNSPEC;
-	ecode =
-	    getaddrinfo(nuauthconf->nufw_srv, nuauthconf->authreq_port,
-			&hints, &res);
-	if (ecode != 0) {
-		*errmsg =
-		    g_strdup_printf
-		    ("Invalid nufw servers listening address %s:%s, error: %s",
-		     nuauthconf->nufw_srv, nuauthconf->authreq_port,
-		     gai_strerror(ecode));
-		return -1;
-	}
-
-	/* open the socket */
-	sck_inet =
-	    socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-	if (sck_inet == -1) {
-		*errmsg = g_strdup("socket creation failed");
-		return -1;
-	}
-
-	option_value = 1;
-	setsockopt(sck_inet, SOL_SOCKET, SO_REUSEADDR,
-		   &option_value, sizeof(option_value));
-
-	socket_fd = bind(sck_inet, res->ai_addr, res->ai_addrlen);
-	if (socket_fd < 0) {
-		*errmsg =
-		    g_strdup_printf("bind failed on port %s",
-				    nuauthconf->authreq_port);
-		return -1;
-	}
-	freeaddrinfo(res);
-	return sck_inet;
+  	return ( nuauth_bind(errmsg, nuauthconf->nufw_srv, nuauthconf->authreq_port, "user") ) ;
 }
 
 /**
