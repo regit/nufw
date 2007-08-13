@@ -1,3 +1,25 @@
+nufw (2.2.3-2) unstable; urgency=low
+
+  * Fix init script (Closes: #436958)
+  * Move system files to nuauth (Closes: #427973)
+  * Add --retry to really wait for script exit
+
+ -- Pierre Chifflier <chifflier@inl.fr>  Mon, 13 Aug 2007 15:05:02 +0200
+
+nufw (2.2.3-1) unstable; urgency=low
+
+  * New upstream release
+  * Add watch file
+  * Update my mail address
+
+ -- Pierre Chifflier <pollux@debian.org>  Sun, 05 Aug 2007 22:28:35 +0200
+
+nufw (2.2.2-2) unstable; urgency=low
+
+  * Also move system backend to nuauth (Closes: #427973)
+
+ -- Pierre Chifflier <chifflier@inl.fr>  Wed, 04 Jul 2007 11:30:30 +0200
+
 nufw (2.2.2-1) stable; urgency=low
 
   * New upstream release

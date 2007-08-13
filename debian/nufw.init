@@ -57,7 +57,7 @@ if [ "$NUFW_TIMEOUT" != "" ]; then
   NUFW_OPTIONS="$NUFW_OPTIONS -t $NUFW_TIMEOUT"
 fi
 
-if [ "$NUFW_TRACK_SIZE" != ""]; then
+if [ "$NUFW_TRACK_SIZE" != "" ]; then
   NUFW_OPTIONS="$NUFW_OPTIONS -T $NUFW_TRACK_SIZE"
 fi
 
@@ -77,7 +77,7 @@ case "$1" in
   stop)
 	echo -n "Stopping $DESC: "
 	start-stop-daemon --stop --quiet --oknodo --pidfile /var/run/$PID.pid \
-		--exec $DAEMON
+		--retry 5 --exec $DAEMON
 	echo "$NAME."
 	;;
   #reload)
@@ -100,7 +100,7 @@ case "$1" in
 	#
 	echo -n "Restarting $DESC: "
 	start-stop-daemon --stop --quiet --oknodo --pidfile \
-		/var/run/$PID.pid --exec $DAEMON
+		/var/run/$PID.pid --retry 5 --exec $DAEMON
 	sleep 1
 	start-stop-daemon --start --quiet --pidfile \
 		/var/run/$PID.pid --exec $DAEMON -- $DAEMON_OPTS

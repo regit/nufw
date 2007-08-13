@@ -3,8 +3,3 @@ src/nuauth/modules/ipauth_guest/.libs/libipauth_guest.so.0 usr/lib/nuauth/module
 src/nuauth/modules/ipauth_guest/.libs/libipauth_guest.so usr/lib/nuauth/modules
 src/nuauth/modules/ipauth_guest/libipauth_guest.la usr/lib/nuauth/modules
 src/nuauth/modules/ipauth_guest/.libs/libipauth_guest.a usr/lib/nuauth/modules
-src/nuauth/modules/system/.libs/libsystem.so.0.0.0 usr/lib/nuauth/modules
-src/nuauth/modules/system/.libs/libsystem.so.0 usr/lib/nuauth/modules
-src/nuauth/modules/system/.libs/libsystem.so usr/lib/nuauth/modules
-src/nuauth/modules/system/libsystem.la usr/lib/nuauth/modules
-src/nuauth/modules/system/.libs/libsystem.a usr/lib/nuauth/modules

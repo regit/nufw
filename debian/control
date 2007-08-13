@@ -8,6 +8,7 @@ Standards-Version: 3.7.2
 Package: nufw
 Architecture: any
 Depends: ${shlibs:Depends}, debconf (>= 1.3.22), ssl-cert, openssl
+Suggests: ulogd, ulogd-mysql
 Description: a per-user firewalling daemon that interferes with libipq
  NuFW is an authenticating gateway, which means that connections are
  authenticated before being forwarded through the gateway.  Classical packet

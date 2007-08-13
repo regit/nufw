@@ -62,7 +62,7 @@ case "$1" in
   stop)
 	echo -n "Stopping $DESC: "
 	start-stop-daemon --stop --quiet  --oknodo --pidfile /var/run/$PID/$PID.pid \
-		--exec $DAEMON
+		--retry 5 --exec $DAEMON
 	echo "$NAME."
 	;;
   #reload)
@@ -85,7 +85,7 @@ case "$1" in
 	#
 	echo -n "Restarting $DESC: "
 	start-stop-daemon --stop --quiet --oknodo --pidfile \
-		/var/run/$PID/$PID.pid --exec $DAEMON
+		/var/run/$PID/$PID.pid --retry 5 --exec $DAEMON
 	sleep 1
 	start-stop-daemon --start --quiet --pidfile /var/run/$PID/$PID.pid \
                 --chuid $NUAUTH_USER --exec $DAEMON -- $DAEMON_OPTS
