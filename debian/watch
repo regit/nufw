@@ -1,0 +1,11 @@
+# debian watch file
+# You can run the "uscan" command
+# to check for upstream updates and more.
+# See uscan(1) for format
+
+# Compulsory line, this is a version 3 file
+version=3
+
+#http://nufw.org/download/nufw/nufw-2.2.3.tar.gz
+http://nufw.org/download/nufw/nufw-([0-9].*)\.tar\.gz
+
