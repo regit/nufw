@@ -73,7 +73,7 @@ class PlaintextAcl:
         self.content.extend(text)
 
     def addAcl(self, name, port, gid, decision=1, **kw):
-	addAclFull(self, name, "0.0.0.0/0", port, gid, decision, **kw)
+	self.addAclFull(name, "0.0.0.0/0", port, gid, decision, **kw)
 
     def install(self, config):
         info("Setup Plaintext ACL")
