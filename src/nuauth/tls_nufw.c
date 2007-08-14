@@ -319,7 +319,7 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex * mutex)
 
 int tls_nufw_bind(char **errmsg)
 {
-  	return ( nuauth_bind(errmsg, nuauthconf->nufw_srv, nuauthconf->authreq_port, "user") ) ;
+	return nuauth_bind(errmsg, nuauthconf->nufw_srv, nuauthconf->authreq_port, "user") ;
 }
 
 /**

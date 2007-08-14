@@ -348,7 +348,7 @@ int nuauth_bind(char **errmsg, const char *addr, const char *port, char *context
 	result = bind(sck_inet, res->ai_addr, res->ai_addrlen);
 	if (result < 0) {
 		*errmsg = g_strdup_printf("Unable to bind %s socket %s:%s.",
-		    			  context,
+					  context,
 					  addr,
 					  port);
 		close(sck_inet);

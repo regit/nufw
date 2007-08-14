@@ -529,7 +529,7 @@ void tls_user_main_loop(struct tls_user_context_t *context, GMutex * mutex)
  */
 int tls_user_bind(char **errmsg)
 {
-  	return ( nuauth_bind(errmsg, nuauthconf->client_srv, nuauthconf->userpckt_port, "user") ) ;
+	return nuauth_bind(errmsg, nuauthconf->client_srv, nuauthconf->userpckt_port, "user") ;
 }
 
 /**
