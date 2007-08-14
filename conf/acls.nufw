@@ -39,6 +39,11 @@
 # Log prefix:
 # log_prefix = ssh
 #
+# Period limitation:
+# You need to use period defined in your period handling module
+#  Example :
+# period = 24x7
+#
 # ACL flags:
 # This is a integer coding property of acl
 #  * 1: do aysnchronous login on packet accepted by acl
