@@ -58,7 +58,7 @@ class PlaintextAcl:
         self.replace = None
         self.content = []
 
-    def addAcl(self, name, port, gid, decision=1, **kw):
+    def addAclFull(self, name, host, port, gid, decision=1, **kw):
         text = [
             "[%s]" % name,
             "decision=%s" % decision,
@@ -66,11 +66,14 @@ class PlaintextAcl:
             "proto=6",
             "SrcIP=0.0.0.0/0",
             "SrcPort=1024-65535",
-            "DstIP=0.0.0.0/0",
+            "DstIP=%s" % host, 
             "DstPort=%u" % port]
         for key, value in kw.iteritems():
             text.append("%s=%s" % (key, value))
         self.content.extend(text)
+
+    def addAcl(self, name, port, gid, decision=1, **kw):
+	addAclFull(self, name, "0.0.0.0/0", port, gid, decision, **kw)
 
     def install(self, config):
         info("Setup Plaintext ACL")

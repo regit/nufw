@@ -19,7 +19,7 @@ def testPortFailure(testcase, iptables, client, port, err):
     testcase.assertEqual(connectTcpFail(HOST, port, TIMEOUT), err)
 
 
-def testPort(testcase, iptables, client, port, ok):
+def testPort(testcase, iptables, client, port, ok, host=HOST):
     # Enable iptables filtering
     iptables.filterTcp(VALID_PORT)
 
@@ -27,11 +27,11 @@ def testPort(testcase, iptables, client, port, ok):
     testcase.assert_(connectClient(client))
 
     # Create socket
-    testcase.assertEqual(connectTcp(HOST, port, TIMEOUT), ok)
+    testcase.assertEqual(connectTcp(host, port, TIMEOUT), ok)
 
-def testAllowPort(testcase, iptables, client):
-    testPort(testcase, iptables, client, VALID_PORT, True)
+def testAllowPort(testcase, iptables, client, host=HOST):
+    testPort(testcase, iptables, client, VALID_PORT, True, host)
 
-def testDisallowPort(testcase, iptables, client):
-    testPort(testcase, iptables, client, INVALID_PORT, False)
+def testDisallowPort(testcase, iptables, client, host=HOST):
+    testPort(testcase, iptables, client, INVALID_PORT, False, host)
 
