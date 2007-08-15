@@ -137,7 +137,8 @@ struct nuauth_tls_t {
 
 void clean_nufw_session(nufw_session_t * c_session);
 void create_x509_credentials();
-void *tls_nufw_authsrv(GMutex * mutex);
+void *tls_nufw_authsrv(struct nuauth_thread_t *thread);
+void tls_nufw_start_servers(GSList *servers);
 
 extern GHashTable *nufw_servers;
 extern GStaticMutex nufw_servers_mutex;

@@ -26,14 +26,22 @@ struct nuauth_thread_t {
 	GThread *thread;
 	GMutex *mutex;
 	const char *name;
+	gpointer data;
 };
 
 void thread_new(struct nuauth_thread_t *thread,
 		const char* name,
 		void *(*func) (GMutex *));
+void thread_new_wdata(struct nuauth_thread_t *thread,
+		const char* name,
+		gpointer data,
+		void *(*func) (struct nuauth_thread_t *));
 void thread_stop(struct nuauth_thread_t *thread);
+void thread_list_stop(GSList *thread_list);
 void thread_wait_end(struct nuauth_thread_t *thread);
+void thread_list_wait_end(GSList *thread_list);
 void thread_destroy(struct nuauth_thread_t *thread);
+void thread_list_destroy(GSList *thread_list);
 
 #endif
 

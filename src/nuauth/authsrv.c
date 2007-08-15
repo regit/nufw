@@ -204,11 +204,11 @@ void stop_threads(gboolean wait)
 
 	/* kill entries point */
 	thread_stop(&nuauthdatas->tls_auth_server);
-	thread_stop(&nuauthdatas->tls_nufw_server);
+	thread_list_stop(nuauthdatas->tls_nufw_servers);
 	thread_stop(&nuauthdatas->pre_client_thread);
 	if (wait) {
 		thread_wait_end(&nuauthdatas->tls_auth_server);
-		thread_wait_end(&nuauthdatas->tls_nufw_server);
+		thread_list_wait_end(nuauthdatas->tls_nufw_servers);
 		thread_wait_end(&nuauthdatas->pre_client_thread);
 	}
 
@@ -244,7 +244,7 @@ void free_threads()
 	thread_destroy(&nuauthdatas->tls_pusher);
 	thread_destroy(&nuauthdatas->search_and_fill_worker);
 	thread_destroy(&nuauthdatas->tls_auth_server);
-	thread_destroy(&nuauthdatas->tls_nufw_server);
+	thread_list_destroy(nuauthdatas->tls_nufw_servers);
 	thread_destroy(&nuauthdatas->limited_connections_handler);
 	if (nuauthconf->push && nuauthconf->hello_authentication) {
 		thread_destroy(&nuauthdatas->localid_auth_thread);
@@ -812,9 +812,9 @@ void init_nuauthdatas()
 		      tls_user_authsrv);
 
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
-		    "Creating tls nufw server thread");
-	thread_new(&nuauthdatas->tls_nufw_server, "tls nufw server",
-		      tls_nufw_authsrv);
+		    "Creating tls nufw server threads");
+	
+	tls_nufw_start_servers(nuauthdatas->tls_nufw_servers);
 
 	log_message(INFO, DEBUG_AREA_MAIN, "Threads system started");
 	release_pool_threads(); 

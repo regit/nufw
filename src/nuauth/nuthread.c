@@ -45,6 +45,25 @@ void thread_new(struct nuauth_thread_t *thread,
 	thread->valid = 1;
 }
 
+void thread_new_wdata(struct nuauth_thread_t *thread,
+		const char* name,
+		gpointer data,
+		void *(*func) (struct nuauth_thread_t *))
+{
+	thread->name = name;
+	thread->mutex = g_mutex_new();
+	thread->data = data;
+	thread->thread =
+	    g_thread_create((GThreadFunc) func, thread , TRUE, NULL);
+	if (thread->thread == NULL)
+	{
+		g_error("FATAL ERROR: Unable to create thread %s!",
+			name);
+		exit(EXIT_FAILURE);
+	}
+	thread->valid = 1;
+}
+
 /**
  * Stop a thread: lock its mutex to ask it to leave.
  */
@@ -53,6 +72,16 @@ void thread_stop(struct nuauth_thread_t *thread)
 	if (!thread->valid)
 		return;
 	(void)g_mutex_trylock(thread->mutex);
+}
+
+void thread_list_stop(GSList *thread_list)
+{
+	GSList *thread_p = thread_list;
+	while (thread_p) {
+		thread_stop((struct nuauth_thread_t *)thread_p->data);
+		thread_p = thread_p->next;
+	}
+	return;
 }
 
 /**
@@ -74,6 +103,16 @@ void thread_wait_end(struct nuauth_thread_t *thread)
 	g_thread_join(thread->thread);
 }
 
+void thread_list_wait_end(GSList *thread_list)
+{
+	GSList *thread_p = thread_list;
+	while (thread_p) {
+		thread_wait_end((struct nuauth_thread_t *)thread_p->data);
+		thread_p = thread_p->next;
+	}
+	return;
+}
+
 /**
  * Wait the end of thread using g_thread_join(). Avoid deadlock: if the
  * active thread is the thread to join, we just skip it.
@@ -89,5 +128,15 @@ void thread_destroy(struct nuauth_thread_t *thread)
 	/* destroy the mutex */
 	g_mutex_free(thread->mutex);
 	thread->valid = 0;
+}
+
+void thread_list_destroy(GSList *thread_list)
+{
+	GSList *thread_p = thread_list;
+	while (thread_p) {
+		thread_destroy((struct nuauth_thread_t *)thread_p->data);
+		thread_p = thread_p->next;
+	}
+	return;
 }
 

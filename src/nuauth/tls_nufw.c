@@ -36,9 +36,12 @@
 
 
 struct tls_nufw_context_t {
+	char *addr;
+	char *port;
 	int mx;
 	int sck_inet;
 	fd_set tls_rx_set;	/* read set */
+	GMutex *mutex;
 };
 
 /**
@@ -317,11 +320,6 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex * mutex)
 	close(context->sck_inet);
 }
 
-int tls_nufw_bind(char **errmsg)
-{
-	return nuauth_bind(errmsg, nuauthconf->nufw_srv, nuauthconf->authreq_port, "user") ;
-}
-
 /**
  * Initialize the NuFW TLS servers thread
  */
@@ -330,7 +328,7 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 	int socket_fd;
 	char *errmsg;
 
-	context->sck_inet = tls_nufw_bind(&errmsg);
+	context->sck_inet = nuauth_bind(&errmsg, context->addr, context->port, "nufw");
 	if (context->sck_inet < 0) {
 		log_message(FATAL, DEBUG_AREA_GW | DEBUG_AREA_MAIN,
 			    "FATAL ERROR: NuFW bind error: %s", errmsg);
@@ -369,8 +367,6 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 		return 0;
 	}
 
-	/* build servers hash */
-	init_nufw_servers();
 
 	/* init fd_set */
 	context->mx = context->sck_inet + 1;
@@ -386,18 +382,59 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
  *
  * \return NULL
  */
-void *tls_nufw_authsrv(GMutex * mutex)
+void *tls_nufw_authsrv(struct nuauth_thread_t *thread)
 {
-	struct tls_nufw_context_t context;
+	struct tls_nufw_context_t *context = thread->data;
 	int ok;
-	ok = tls_nufw_init(&context);
+	ok = tls_nufw_init(context);
 	if (ok) {
-		tls_nufw_main_loop(&context, mutex);
+		tls_nufw_main_loop(context, thread->mutex);
 	} else {
 		nuauth_ask_exit();
 	}
 	return NULL;
 }
+
+void tls_nufw_start_servers(GSList *servers)
+{
+	char **nufw_servers;
+	int i = 0;
+	/* build servers hash */
+	init_nufw_servers();
+	nuauthdatas->tls_nufw_servers = NULL;
+	/* get raw string from configuration */
+	nufw_servers = g_strsplit(nuauthconf->nufw_srv, " ", 0);
+	while (nufw_servers[i]) {
+		/* TODO build context */
+		struct tls_nufw_context_t *context = 
+			g_new0(struct tls_nufw_context_t, 1);
+		struct nuauth_thread_t *srv_thread =
+			g_new0(struct nuauth_thread_t, 1);
+		char **context_datas = g_strsplit(nufw_servers[i], ":", 2);
+		if (context_datas[0]) {
+			context->addr = g_strdup(context_datas[0]);
+		} else {
+			/* FIXME */
+			exit(1);
+		}
+		if (context_datas[1]) {
+			context->port = g_strdup(context_datas[1]);
+		} else {
+			context->port = g_strdup(nuauthconf->authreq_port);
+		}
+		g_strfreev(context_datas);
+		thread_new_wdata(srv_thread, "tls nufw server",
+				 (gpointer) context,
+				 tls_nufw_authsrv);
+		/* Append newly created server to list */
+		nuauthdatas->tls_nufw_servers = g_slist_prepend(nuauthdatas->tls_nufw_servers,
+								srv_thread);
+		i++;
+	}
+	g_strfreev(nufw_servers);
+}
+
+
 
 /**
  * @}

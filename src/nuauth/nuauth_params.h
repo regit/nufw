@@ -145,7 +145,7 @@ struct nuauth_params {
 struct nuauth_datas {
 	/* main threads */
 	struct nuauth_thread_t tls_auth_server;
-	struct nuauth_thread_t tls_nufw_server;
+	GSList *tls_nufw_servers;
 	struct nuauth_thread_t tls_pusher;
 	struct nuauth_thread_t search_and_fill_worker;
 	struct nuauth_thread_t localid_auth_thread;
