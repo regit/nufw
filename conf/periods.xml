@@ -11,6 +11,16 @@
         <hours start="8" end="18"/>
     </perioditem>
 </period>
+<period name="0-12" desc="AM">
+    <perioditem>
+        <hours start="0" end="12"/>
+    </perioditem>
+</period>
+<period name="12-24" desc="PM">
+    <perioditem>
+        <hours start="12" end="24"/>
+    </perioditem>
+</period>
 <period name="long" desc="date example">
     <perioditem>
         <dates start="1128282" end="323232323"/>
