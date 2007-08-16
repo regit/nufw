@@ -167,13 +167,19 @@ time_t get_end_of_period_for_time_t(const gchar * period, time_t pckt_time)
 							     *) (pointer->
 								 data),
 							    pckt_time);
+			/* we've got three cases :
+			 *  - provend is 0, out of period, we drop
+			 *  - provend is -1 (illimited) we do nothing as it is default
+			 *  value of result
+			 *  - provend is >0 we update result
+			 */
 			switch (provend) {
-			case -1:
-				return -1;
-			default:	/* here provend is >= 0 */
+			case 0:
+				return 0;
+			default:	/* here provend is > 0 */
 				/* we modify result if and only if previous period items give
 				 * drop or if provend is more limitative than current result */
-				if ((result == 0) || (provend < result)) {
+				if ((result == -1) || (provend < result)) {
 					result = provend;
 				}
 			}
