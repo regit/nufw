@@ -20,7 +20,7 @@ FILES = (
     "test_cert_auth",
     "test_mark_flag",
     "test_reject",
-    "test_period",
+    "test_periods",
 )
 
 def loadTestcases(module):
