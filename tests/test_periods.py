@@ -8,13 +8,14 @@ from filter import testPort, testAllowPort, VALID_PORT
 from test_plaintext_auth import USERDB
 from plaintext import PlaintextAcl
 import time
+import os
 
 class TestPlaintextAcl(TestCase):
     def setUp(self):
         self.iptables = Iptables()
         self.users = USERDB
         self.config = NuauthConf()
-	self.config["xml_defs_periodfile"] = '"/etc/nufw/periods.xml"'
+	self.config["xml_defs_periodfile"] = os.path.join(os.getcwd(),'"../../conf/periods.xml"')
         self.acls = PlaintextAcl()
 
         # Start nuauth with new config
