@@ -24,6 +24,7 @@
 #include <log_mysql.h>
 #include <string.h>
 #include <errno.h>
+#include <inttypes.h>
 
 /** Minimum buffer size to write an IPv6 in SQL syntax */
 #define IPV6_SQL_STRLEN (2+16*2+1)
@@ -725,9 +726,10 @@ static inline int log_state_close(MYSQL * ld,
 
 
 	while (update_status < 2) {
-		update_status++;
 		char src_ascii[IPV6_SQL_STRLEN];
 		char dst_ascii[IPV6_SQL_STRLEN];
+
+		update_status++;
 
 		if (ipv6_to_sql
 				(params, &element->tracking.saddr, src_ascii,
@@ -739,8 +741,8 @@ static inline int log_state_close(MYSQL * ld,
 			return -1;
 		ok = secure_snprintf(request, sizeof(request),
 				"UPDATE %s SET end_timestamp=FROM_UNIXTIME(%lu), state=%hu,"
-				" packets_in=%d, packets_out=%d,"
-				" bytes_in=%d, bytes_out=%d "
+				" packets_in=%" PRIu64 ", packets_out=%" PRIu64 ","
+				" bytes_in=%" PRIu64 ", bytes_out=%" PRIu64 " " 
 				"WHERE (ip_saddr=%s AND ip_daddr=%s "
 				"AND tcp_sport='%hu' AND tcp_dport='%hu' AND (state='%hu' OR state='%hu'))",
 				params->mysql_table_name,
