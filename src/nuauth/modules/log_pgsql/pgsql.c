@@ -29,6 +29,7 @@
 #include <string.h>
 #include <errno.h>
 #include <time.h>
+#include <inttypes.h>
 #include "security.h"
 
 static nu_error_t pgsql_close_open_user_sessions(struct log_pgsql_params
@@ -527,7 +528,7 @@ static int pgsql_update_state(PGconn * ld,
 		ok = secure_snprintf(request, sizeof(request),
 				"UPDATE %s SET state='%hu', end_timestamp='%lu',"
 				" packets_in=%" PRIu64 ", packets_out=%" PRIu64 ","
-				" bytes_in=%" PRIu64 ", bytes_out=%" PRIu64
+				" bytes_in=%" PRIu64 ", bytes_out=%" PRIu64 " "
 				"WHERE (ip_daddr='%s' AND ip_saddr='%s' "
 				"AND tcp_dport='%hu' AND tcp_sport='%hu' AND state='%hu');",
 				params->pgsql_table_name,
