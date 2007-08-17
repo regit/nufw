@@ -526,8 +526,8 @@ static int pgsql_update_state(PGconn * ld,
 	case TCP_STATE_CLOSE:
 		ok = secure_snprintf(request, sizeof(request),
 				"UPDATE %s SET state='%hu', end_timestamp='%lu',"
-				" packets_in=%d, packets_out=%d,"
-				" bytes_in=%d, bytes_out=%d "
+				" packets_in=%" PRIu64 ", packets_out=%" PRIu64 ","
+				" bytes_in=%" PRIu64 ", bytes_out=%" PRIu64
 				"WHERE (ip_daddr='%s' AND ip_saddr='%s' "
 				"AND tcp_dport='%hu' AND tcp_sport='%hu' AND state='%hu');",
 				params->pgsql_table_name,
