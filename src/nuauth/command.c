@@ -241,10 +241,11 @@ int command_do_disconnect(int sock)
 		/* write answer */
 		if (msg->result == NU_EXIT_OK) {
 			ok = 1;
+			g_free(msg);
+			return ok;
 		} else {
 			ok = 0;
 		}
-		g_free(msg);
 		/* return in case we've just send a global disconnect message */
 		if (sock == -1) {
 			return ok;
