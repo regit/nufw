@@ -140,11 +140,12 @@ struct nuauth_params {
 	int nbuser_check;
 	int nbloggers;
 	int nb_session_loggers;
+	int nb_auth_checkers;
 };
 
 struct nuauth_datas {
 	/* main threads */
-	struct nuauth_thread_t tls_auth_server;
+	GSList *tls_auth_servers;
 	GSList *tls_nufw_servers;
 	struct nuauth_thread_t tls_pusher;
 	struct nuauth_thread_t search_and_fill_worker;
@@ -176,6 +177,9 @@ struct nuauth_datas {
 	GAsyncQueue *limited_connections_queue;
 	GAsyncQueue *tls_push_queue;
 	GAsyncQueue *localid_auth_queue;
+	/** \todo Need to really use it to support user
+	 * disconnect from command line */
+	GAsyncQueue *user_cmd_queue;
 	char *program_fullpath;
 
 	/* cache related structure */

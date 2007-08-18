@@ -35,7 +35,6 @@
  */
 
 extern int nuauth_tls_auth_by_cert;
-struct tls_user_context_t tls_user_context;
 
 /**
  * List of new clients which are in authentication state. This list is
@@ -415,10 +414,17 @@ void tls_user_update_mx(struct tls_user_context_t *this)
  *
  * This function has to be called when mutex is locked.
  */
-void tls_user_remove_client(struct tls_user_context_t *this, int sock)
+void tls_user_remove_client(int sock)
 {
-	FD_CLR(sock, &this->tls_rx_set);
-	tls_user_update_mx(this);
+	struct tls_user_context_t *this;
+	GSList *thread_p = nuauthdatas->tls_auth_servers;
+	while (thread_p) {
+		this = ((struct nuauth_thread_t *)thread_p->data)->data;
+		/* search sock among existing select */
+		FD_CLR(sock, &this->tls_rx_set);
+		tls_user_update_mx(this);
+		thread_p = thread_p->next;
+	}
 }
 
 /**
@@ -462,6 +468,7 @@ void tls_user_main_loop(struct tls_user_context_t *context, GMutex * mutex)
 			c_pop = g_async_queue_try_pop(mx_queue);
 		}
 
+		/** \todo carefully check disconnect system */
 		/*
 		 * execute client destruction task
 		 */
@@ -524,12 +531,26 @@ void tls_user_main_loop(struct tls_user_context_t *context, GMutex * mutex)
 	close(context->sck_inet);
 }
 
-/**
- * Bind TLS user socket
- */
-int tls_user_bind(char **errmsg)
+void tls_user_servers_init()
 {
-	return nuauth_bind(errmsg, nuauthconf->client_srv, nuauthconf->userpckt_port, "user") ;
+	/* init sasl stuff */
+	my_sasl_init();
+
+	init_client_struct();
+
+	/* pre client list */
+	pre_client_list = NULL;
+
+	thread_new(&nuauthdatas->pre_client_thread,
+		   "pre client thread", pre_client_check);
+
+	/* create tls sasl worker thread pool */
+	nuauthdatas->tls_sasl_worker =
+	    g_thread_pool_new((GFunc) tls_sasl_connect, NULL,
+			      nuauthconf->nb_auth_checkers, TRUE,
+			      NULL);
+
+	nuauthdatas->user_cmd_queue =  g_async_queue_new();
 }
 
 /**
@@ -540,15 +561,13 @@ int tls_user_init(struct tls_user_context_t *context)
 	confparams_t nuauth_tls_vars[] = {
 		{"nuauth_tls_max_clients", G_TOKEN_INT,
 		 NUAUTH_TLS_MAX_CLIENTS, NULL},
-		{"nuauth_number_authcheckers", G_TOKEN_INT, NB_AUTHCHECK,
-		 NULL},
 		{"nuauth_auth_nego_timeout", G_TOKEN_INT,
 		 AUTH_NEGO_TIMEOUT, NULL}
 	};
 	char *errmsg;
 	int result;
 
-	context->sck_inet = tls_user_bind(&errmsg);
+	context->sck_inet = nuauth_bind(&errmsg, context->addr, context->port, "user");
 	if (context->sck_inet < 0) {
 		log_message(FATAL, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
 			    "FATAL ERROR: User bind error: %s", errmsg);
@@ -568,8 +587,6 @@ int tls_user_init(struct tls_user_context_t *context)
 
 	context->nuauth_tls_max_clients =
 	    *(unsigned int *) READ_CONF("nuauth_tls_max_clients");
-	context->nuauth_number_authcheckers =
-	    *(int *) READ_CONF("nuauth_number_authcheckers");
 	context->nuauth_auth_nego_timeout =
 	    *(int *) READ_CONF("nuauth_auth_nego_timeout");
 #undef READ_CONF
@@ -578,23 +595,7 @@ int tls_user_init(struct tls_user_context_t *context)
 	free_confparams(nuauth_tls_vars,
 			sizeof(nuauth_tls_vars) / sizeof(confparams_t));
 
-	context->cmd_queue =  g_async_queue_new();
-	/* init sasl stuff */
-	my_sasl_init();
-
-	init_client_struct();
-
-	/* pre client list */
-	pre_client_list = NULL;
-
-	thread_new(&nuauthdatas->pre_client_thread,
-		   "pre client thread", pre_client_check);
-
-	/* create tls sasl worker thread pool */
-	nuauthdatas->tls_sasl_worker =
-	    g_thread_pool_new((GFunc) tls_sasl_connect, NULL,
-			      context->nuauth_number_authcheckers, TRUE,
-			      NULL);
+	context->cmd_queue = g_async_queue_new();
 
 	/* listen */
 	result = listen(context->sck_inet, 20);
@@ -709,17 +710,63 @@ void *push_worker(GMutex * mutex)
  *
  * \return NULL
  */
-void *tls_user_authsrv(GMutex * mutex)
+void *tls_user_authsrv(struct nuauth_thread_t *thread)
 {
-	int ok = tls_user_init(&tls_user_context);
+	struct tls_user_context_t *context = thread->data;
+	int ok = tls_user_init(context);
 	if (ok) {
-		tls_user_main_loop(&tls_user_context, mutex);
+		tls_user_main_loop(context, thread->mutex);
 	} else {
 		nuauth_ask_exit();
 	}
 	return NULL;
 }
 
+void tls_user_start_servers(GSList *servers)
+{
+	char **user_servers;
+	int i = 0;
+	nuauthdatas->tls_auth_servers = NULL;
+
+	tls_user_servers_init();
+
+	/* get raw string from configuration */
+	user_servers = g_strsplit(nuauthconf->client_srv, " ", 0);
+	while (user_servers[i]) {
+		/** \todo free context at program exit */
+		struct tls_user_context_t *context = 
+			g_new0(struct tls_user_context_t, 1);
+		struct nuauth_thread_t *srv_thread =
+			g_new0(struct nuauth_thread_t, 1);
+		char **context_datas = g_strsplit(user_servers[i], ":", 2);
+		if (context_datas[0]) {
+			context->addr = g_strdup(context_datas[0]);
+		} else {
+			log_message(FATAL, DEBUG_AREA_MAIN | DEBUG_AREA_GW,
+			    "Address parsing error at %s:%d (%s)", __FILE__,
+			    __LINE__, user_servers[i]);
+			nuauth_ask_exit();
+		}
+		if (context_datas[1]) {
+			context->port = g_strdup(context_datas[1]);
+		} else {
+			context->port = g_strdup(nuauthconf->userpckt_port);
+		}
+		g_strfreev(context_datas);
+		log_message(INFO, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
+			    "Creating user socket %s:%s",context->addr, context->port);
+
+		thread_new_wdata(srv_thread,
+				 "tls auth server",
+				 (gpointer) context,
+				 tls_user_authsrv);
+		/* Append newly created server to list */
+		nuauthdatas->tls_auth_servers = g_slist_prepend(nuauthdatas->tls_auth_servers,
+								srv_thread);
+		i++;
+	}
+	g_strfreev(user_servers);
+}
 
 /**
  * @}

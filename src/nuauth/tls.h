@@ -149,7 +149,7 @@ void close_nufw_servers();
  * For user authentication
  */
 
-void *tls_user_authsrv(GMutex * mutex);
+void *tls_user_authsrv(struct nuauth_thread_t *thread);
 void *push_worker(GMutex * mutex);
 
 
@@ -171,6 +171,8 @@ struct tls_user_context_t {
 	unsigned int nuauth_tls_max_clients;
 	int nuauth_number_authcheckers;
 	int nuauth_auth_nego_timeout;
+	char *addr;
+	char *port;
 	GAsyncQueue* cmd_queue;
 };
 
@@ -182,6 +184,7 @@ typedef struct {
 
 extern struct tls_user_context_t tls_user_context;
 
-void tls_user_remove_client(struct tls_user_context_t *this, int sock);
+void tls_user_remove_client(int sock);
+void tls_user_start_servers(GSList *servers);
 
 #endif

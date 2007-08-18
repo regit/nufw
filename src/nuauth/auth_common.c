@@ -321,10 +321,14 @@ int nuauth_bind(char **errmsg, const char *addr, const char *port, char *context
 	/* open the socket */
 	if (res->ai_family == PF_INET)
 		log_message(DEBUG, DEBUG_AREA_USER | DEBUG_AREA_MAIN,
-			    "Creating server IPv4 socket");
+			    "Creating server IPv4 socket (%s:%s)",
+			    addr,
+			    port);
 	else if (res->ai_family == PF_INET6)
 		log_message(DEBUG, DEBUG_AREA_USER | DEBUG_AREA_MAIN,
-			    "Creating server IPv6 socket");
+			    "Creating server IPv6 socket (%s:%s)",
+			    addr,
+			    port);
 	else
 		log_message(DEBUG, DEBUG_AREA_USER | DEBUG_AREA_MAIN,
 			    "Creating server (any) socket");

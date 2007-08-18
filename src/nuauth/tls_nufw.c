@@ -405,7 +405,7 @@ void tls_nufw_start_servers(GSList *servers)
 	/* get raw string from configuration */
 	nufw_servers = g_strsplit(nuauthconf->nufw_srv, " ", 0);
 	while (nufw_servers[i]) {
-		/** \todo free context */
+		/** \todo free context at program exit */
 		struct tls_nufw_context_t *context = 
 			g_new0(struct tls_nufw_context_t, 1);
 		struct nuauth_thread_t *srv_thread =
@@ -414,8 +414,10 @@ void tls_nufw_start_servers(GSList *servers)
 		if (context_datas[0]) {
 			context->addr = g_strdup(context_datas[0]);
 		} else {
-			/* \todo Add log message */
-			exit(1);
+			log_message(FATAL, DEBUG_AREA_MAIN | DEBUG_AREA_GW,
+			    "Address parsing error at %s:%d (%s)", __FILE__,
+			    __LINE__, nufw_servers[i]);
+			nuauth_ask_exit();
 		}
 		if (context_datas[1]) {
 			context->port = g_strdup(context_datas[1]);

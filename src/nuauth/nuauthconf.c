@@ -99,6 +99,8 @@ void init_nuauthconf(struct nuauth_params **result)
 		{"nuauth_number_loggers", G_TOKEN_INT, NB_LOGGERS, NULL},
 		{"nuauth_number_session_loggers", G_TOKEN_INT, NB_LOGGERS,
 		 NULL},
+		{"nuauth_number_authcheckers", G_TOKEN_INT, NB_AUTHCHECK,
+		 NULL},
 		{"nuauth_log_users", G_TOKEN_INT, 1, NULL},
 		{"nuauth_log_users_sync", G_TOKEN_INT, 0, NULL},
 		{"nuauth_log_users_strict", G_TOKEN_INT, 1, NULL},
@@ -174,6 +176,8 @@ void init_nuauthconf(struct nuauth_params **result)
 	conf->nbloggers = *(int *) READ_CONF("nuauth_number_loggers");
 	conf->nb_session_loggers =
 	    *(int *) READ_CONF("nuauth_number_session_loggers");
+	conf->nb_auth_checkers =
+	    *(int *) READ_CONF("nuauth_number_authcheckers");
 	conf->packet_timeout = *(int *) READ_CONF("nuauth_packet_timeout");
 	conf->session_duration =
 	    *(int *) READ_CONF("nuauth_session_duration");

@@ -168,7 +168,7 @@ nu_error_t delete_client_by_socket_ext(int socket, int use_lock)
 		g_mutex_unlock(client_mutex);
 	}
 
-	tls_user_remove_client(&tls_user_context, socket);
+	tls_user_remove_client(socket);
 	if (use_lock) {
 		if (shutdown(socket, SHUT_RDWR) != 0)
 			log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
