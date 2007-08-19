@@ -2,7 +2,10 @@ from config import CONF_DIR
 from common import createClient
 from inl_tests.replace_file import ReplaceFile
 from os.path import join as path_join
+from os import remove
+from os import rmdir
 from logging import info
+from tempfile import mkdtemp
 
 class PlaintextUser:
     def __init__(self, login, password, uid, gid):
@@ -19,9 +22,9 @@ class PlaintextUser:
 
 class PlaintextUserDB:
     def __init__(self):
-        self.filename = path_join(CONF_DIR, "users.nufw")
+    	self.basedir = mkdtemp()
+        self.filename = path_join(self.basedir, "users.nufw")
         self.users = []
-        self.replace = None
 
     def addUser(self, user):
         self.users.append(user)
@@ -34,16 +37,16 @@ class PlaintextUserDB:
             info("Add user: %s" % user_text)
             text.append(user_text)
         text = "\n".join(text)+"\n"
-        self.replace = ReplaceFile(self.filename, text)
-        self.replace.install()
+	output = open(self.filename, 'w')
+	output.write(text)
+	output.close()
 
         config["nuauth_user_check_module"] = '"plaintext"'
         config["plaintext_userfile"] = '"%s"' % self.filename
 
     def desinstall(self):
-        if self.replace:
-            info("Reset Plaintext user database")
-            self.replace.desinstall()
+	remove(self.filename)
+	rmdir(self.basedir)
 
     def __getitem__(self, key):
         return self.users[key]
@@ -54,7 +57,8 @@ USERDB.addUser( PlaintextUser("username2", "password2", 43, 43) )
 
 class PlaintextAcl:
     def __init__(self):
-        self.filename = path_join(CONF_DIR, "acls.nufw")
+    	self.basedir = mkdtemp()
+        self.filename = path_join(self.basedir, "acls.nufw")
         self.replace = None
         self.content = []
 
@@ -81,14 +85,13 @@ class PlaintextAcl:
             info("Plaintext ACL: %s" % line)
 
         text = "\n".join(self.content)
-        self.replace = ReplaceFile(self.filename, text)
-        self.replace.install()
+	output = open(self.filename, 'w')
+	output.write(text)
+	output.close()
 
         config["plaintext_aclfile"] = '"%s"' % self.filename
         config["nuauth_acl_check_module"] = '"plaintext"'
 
     def desinstall(self):
-        if self.replace:
-            info("Reset Plaintext ACL")
-            self.replace.desinstall()
-
+	remove(self.filename)
+	rmdir(self.basedir)
