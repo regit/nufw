@@ -153,6 +153,7 @@ struct queued_pckt {
 
 struct nuauth_conn tls;
 
+int init_x509_filenames();
 gnutls_session *tls_connect();
 pthread_cond_t *session_destroyed_cond;
 pthread_cond_t *session_active_cond;
