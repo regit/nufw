@@ -20,7 +20,6 @@ class TestPlaintextAcl(TestCase):
 
         # Start nuauth with new config
         self.users.install(self.config)
-        self.nuauth = Nuauth(self.config)
         self.nufw = startNufw()
 
     def tearDown(self):
@@ -39,6 +38,7 @@ class TestPlaintextAcl(TestCase):
         	period = "12-24"
         self.acls.addAcl("web", VALID_PORT, self.users[0].gid, 1, period=period )
         self.acls.install(self.config)
+        self.nuauth = Nuauth(self.config)
 
         user = self.users[0]
         client = user.createClient()
@@ -55,6 +55,7 @@ class TestPlaintextAcl(TestCase):
         	period = "12-24"
         self.acls.addAcl("web", VALID_PORT, self.users[0].gid, 1, period=period)
         self.acls.install(self.config)
+        self.nuauth = Nuauth(self.config)
 
         user = self.users[0]
         client = user.createClient()
