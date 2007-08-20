@@ -38,7 +38,6 @@
 #define USE_GCRYPT_MALLOC_SECURE
 
 #include "nufw_source.h"
-
 #include "nuclient.h"
 #include <sasl/saslutil.h>
 #include <stdarg.h>		/* va_list, va_start, ... */

@@ -19,6 +19,7 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#include "libnuclient.h"
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
@@ -26,7 +27,6 @@
 #include <langinfo.h>
 #include <stdio.h>
 #include <locale.h>
-#include "libnuclient.h"
 
 /**
  * \addtogroup libnuclient
