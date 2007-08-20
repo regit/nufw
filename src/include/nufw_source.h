@@ -30,24 +30,26 @@
  * Use POSIX standard, version "IEEE 1003.1-2004",
  * Neded by sigaction (signal.h) and timespec (time.h) for example
  */
-#if defined(__linux__) && !defined(_POSIX_C_SOURCE)
+#if defined(__linux__)
 #  define _POSIX_C_SOURCE 199506L
 #endif
 
 /**
  * Use ISO C99 standard, needed by snprintf for example
  */
-#ifndef _ISOC99_SOURCE
-#  define _ISOC99_SOURCE
-#endif
+#define _ISOC99_SOURCE
 
 /**
  * Use 4.3BSD standard,
  * needed to get 'tcphdr' structure and snprintf() function.
  */
-#if defined(_BSD_SOURCE)
-#   define _BSD_SOURCE
-#endif
+#define _BSD_SOURCE
+
+/**
+ * Use SVID standard,
+ * needed to get 'strdup' from <string.h>.
+ */
+#define _SVID_SOURCE
 
 /* Disable inline keyword when compiling in strict ANSI conformance */
 #if defined(__STRICT_ANSI__) && !defined(__cplusplus)
