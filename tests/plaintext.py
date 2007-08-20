@@ -2,6 +2,7 @@ from config import CONF_DIR
 from common import createClient
 from inl_tests.replace_file import ReplaceFile
 from os.path import join as path_join
+from os.path import exists as path_exists
 from os import remove
 from os import rmdir
 from logging import info
@@ -46,8 +47,12 @@ class PlaintextUserDB:
         config["plaintext_userfile"] = '"%s"' % self.filename
 
     def desinstall(self):
-	remove(self.filename)
-	rmdir(self.basedir)
+    	if hasattr(self, 'filename'):
+	    if path_exists(self.filename):
+	        remove(self.filename)
+	if hasattr(self, 'basedir'):
+	    if path_exists(self.basedir):
+	        rmdir(self.basedir)
 
     def __getitem__(self, key):
         return self.users[key]
@@ -94,5 +99,9 @@ class PlaintextAcl:
         config["nuauth_acl_check_module"] = '"plaintext"'
 
     def desinstall(self):
-	remove(self.filename)
-	rmdir(self.basedir)
+    	if hasattr(self, 'filename'):
+	    if path_exists(self.filename):
+	        remove(self.filename)
+	if hasattr(self, 'basedir'):
+	    if path_exists(self.basedir):
+	        rmdir(self.basedir)
