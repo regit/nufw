@@ -370,6 +370,31 @@ void create_nuauth_address()
 
 
 /**
+ * Initialization checks
+ *  - check key and cert files
+ */
+int init_checks()
+{
+#if USE_X509
+	if (!init_x509_filenames()) {
+		printf("ERROR: Unable to allocate memory for "
+				"key or cert filename!\n");
+		return 0;
+	}
+	if (access(key_file, R_OK)) {
+		printf("ERROR: Unable to read key file: %s\n", key_file);
+		return 0;
+	}
+	if (access(cert_file, R_OK)) {
+		printf("ERROR: Unable to read key file: %s\n", cert_file);
+		return 0;
+	}
+#endif
+	return 1;
+}
+
+
+/**
  * Main function of NuFW:
  *   - Initialize variables
  *   - Parse command line options
@@ -582,6 +607,10 @@ int main(int argc, char *argv[])
 
 	if (getuid()) {
 		printf("nufw must be run as root! Sorry\n");
+		exit(EXIT_FAILURE);
+	}
+
+	if (!init_checks()) {
 		exit(EXIT_FAILURE);
 	}
 

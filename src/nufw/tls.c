@@ -106,6 +106,39 @@ unsigned int check_nuauth_cert_dn(gnutls_session *tls_session)
 	return 1;
 }
 
+
+/**
+ * Inialialize key_file and cert_file variables
+ */
+int init_x509_filenames()
+{
+#if USE_X509
+	if (!key_file) {
+		key_file =
+			(char *) calloc(strlen(CONFIG_DIR) + strlen(KEYFILE) +
+					2, sizeof(char));
+		if (!key_file) {
+			return 0;
+		}
+		strcat(key_file, CONFIG_DIR);
+		strcat(key_file, "/");
+		strcat(key_file, KEYFILE);
+	}
+	if (!cert_file) {
+		cert_file =
+			(char *) calloc(strlen(CONFIG_DIR) + strlen(CERTFILE) +
+					2, sizeof(char));
+		if (!cert_file) {
+			return 0;
+		}
+		strcat(cert_file, CONFIG_DIR);
+		strcat(cert_file, "/");
+		strcat(cert_file, CERTFILE);
+	}
+#endif
+	return 1;
+}
+
 /**
  * Create a TLS connection to NuAuth: create a TCP socket and connect
  * to NuAuth using ::adr_srv.
@@ -123,31 +156,10 @@ gnutls_session *tls_connect()
 	const int cert_type_priority[3] = { GNUTLS_CRT_X509, 0 };
 
 	/* compute patch key_file */
-	if (!key_file) {
-		key_file =
-		    (char *) calloc(strlen(CONFIG_DIR) + strlen(KEYFILE) +
-				    2, sizeof(char));
-		if (!key_file) {
-			log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
-					"Couldn't malloc for key_file!");
-			return NULL;
-		}
-		strcat(key_file, CONFIG_DIR);
-		strcat(key_file, "/");
-		strcat(key_file, KEYFILE);
-	}
-	if (!cert_file) {
-		cert_file =
-		    (char *) calloc(strlen(CONFIG_DIR) + strlen(CERTFILE) +
-				    2, sizeof(char));
-		if (!cert_file) {
-			log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
-					"Couldn't malloc for cert_file!");
-			return NULL;
-		}
-		strcat(cert_file, CONFIG_DIR);
-		strcat(cert_file, "/");
-		strcat(cert_file, CERTFILE);
+	if (!init_x509_filenames()) {
+		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
+				"Couldn't malloc for key or cert filename!");
+		return NULL;
 	}
 
 	/* test if key exists */
