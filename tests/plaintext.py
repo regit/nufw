@@ -22,8 +22,6 @@ class PlaintextUser:
 
 class PlaintextUserDB:
     def __init__(self):
-    	self.basedir = mkdtemp()
-        self.filename = path_join(self.basedir, "users.nufw")
         self.users = []
 
     def addUser(self, user):
@@ -37,6 +35,9 @@ class PlaintextUserDB:
             info("Add user: %s" % user_text)
             text.append(user_text)
         text = "\n".join(text)+"\n"
+
+    	self.basedir = mkdtemp()
+        self.filename = path_join(self.basedir, "users.nufw")
 	output = open(self.filename, 'w')
 	output.write(text)
 	output.close()
@@ -57,9 +58,6 @@ USERDB.addUser( PlaintextUser("username2", "password2", 43, 43) )
 
 class PlaintextAcl:
     def __init__(self):
-    	self.basedir = mkdtemp()
-        self.filename = path_join(self.basedir, "acls.nufw")
-        self.replace = None
         self.content = []
 
     def addAclFull(self, name, host, port, gid, decision=1, **kw):
@@ -85,6 +83,9 @@ class PlaintextAcl:
             info("Plaintext ACL: %s" % line)
 
         text = "\n".join(self.content)
+
+    	self.basedir = mkdtemp()
+        self.filename = path_join(self.basedir, "acls.nufw")
 	output = open(self.filename, 'w')
 	output.write(text)
 	output.close()
