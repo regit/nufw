@@ -23,12 +23,26 @@
 #ifndef NUCLIENT_H
 #define NUCLIENT_H
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+#ifdef _FEATURES_H
+#   error "nuclient.h have to be included before <features.h>"
+#endif
+
+/**
+ * Use ISO C99 standard, needed by snprintf for example
+ */
+#define _ISOC99_SOURCE
+
+/**
+ * Use GNU extensions like getline() in stdio.h
+ */
+#define _GNU_SOURCE
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
 #endif
 
 #include <features.h>
@@ -43,10 +57,6 @@ extern "C" {
 #include <pwd.h>
 #include <signal.h>
 #include <stdarg.h>
-#ifndef _GNU_SOURCE
-#	define _GNU_SOURCE
-#	define __USE_GNU
-#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -58,9 +68,6 @@ extern "C" {
 #include <unistd.h>
 #include <termios.h>
 #include <time.h>
-#ifndef _XOPEN_SOURCE
-#	define _XOPEN_SOURCE
-#endif
 #include <unistd.h>
 #include <sys/stat.h>
 #include <fcntl.h>

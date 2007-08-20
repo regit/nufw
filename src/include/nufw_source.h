@@ -22,24 +22,32 @@
 #ifndef NUFW_SOURCE_H
 #define NUFW_SOURCE_H
 
+#ifdef _FEATURES_H
+#   error "nufw_source.h have to be included before <features.h>"
+#endif
+
 /**
  * Use POSIX standard, version "IEEE 1003.1-2004",
  * Neded by sigaction (signal.h) and timespec (time.h) for example
  */
-#ifdef __linux__
+#if defined(__linux__) && !defined(_POSIX_C_SOURCE)
 #  define _POSIX_C_SOURCE 199506L
 #endif
 
 /**
  * Use ISO C99 standard, needed by snprintf for example
  */
-#define _ISOC99_SOURCE
+#ifndef _ISOC99_SOURCE
+#  define _ISOC99_SOURCE
+#endif
 
 /**
  * Use 4.3BSD standard,
  * needed to get 'tcphdr' structure and snprintf() function.
  */
-#define _BSD_SOURCE
+#if defined(_BSD_SOURCE)
+#   define _BSD_SOURCE
+#endif
 
 /* Disable inline keyword when compiling in strict ANSI conformance */
 #if defined(__STRICT_ANSI__) && !defined(__cplusplus)

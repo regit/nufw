@@ -23,8 +23,8 @@
 #ifndef LIBNUCLIENT_H
 #define LIBNUCLIENT_H
 
-#include "nuclient.h"
 #include "nufw_source.h"
+#include "nuclient.h"
 
 void nu_exit_clean(nuauth_session_t * session);
 
