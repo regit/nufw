@@ -4,7 +4,7 @@ from nuauth import Nuauth
 from client import Client
 from nuauth_conf import NuauthConf
 from inl_tests.log import setupLog
-from config import (USERNAME, PASSWORD,
+from config import (config, USERNAME, PASSWORD,
     NUAUTH_START_TIMEOUT, NUFW_START_TIMEOUT, CLIENT_IP)
 from time import time, sleep
 from logging import warning
@@ -51,12 +51,13 @@ def createClient(username=USERNAME, password=PASSWORD, more_args=None):
 def connectClient(client):
     client.info("connectClient()")
     try:
-        client.start(timeout=10.0)
+        client.start(timeout=connectClient.timeout)
     except RuntimeError, err:
         client.warning("connectClient(): error: %s" % err)
         return False
     client.warning("connectClient(): connected")
     return True
+connectClient.timeout = config.getfloat('nutcpc', 'connect_timeout')
 
 def getNuauthConf():
     return NuauthConf()
