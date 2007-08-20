@@ -110,7 +110,7 @@ extern "C" {
 		unsigned short port_dst;	/*!< Remote address port */
 		unsigned long uid;	/*!< User identifier */
 		unsigned long inode;	/*!< Inode */
-		unsigned int retransmit;	/*!< Restransmit */
+		unsigned int retransmit;	/*!< Retransmit */
 		time_t createtime;	/*!< Creation time (Epoch format) */
 
     /** Pointer to next connection (NULL if it's as the end) */
@@ -133,7 +133,7 @@ extern "C" {
 		conn_t *buckets[CONNTABLE_BUCKETS];
 	} conntable_t;
 
-/* only publicly seen structure but datas are private */
+/* only publicly seen structure but data are private */
 
 #ifndef USE_SHA1
 #  define PACKET_ITEM_MAXSIZE \
@@ -218,7 +218,7 @@ extern "C" {
 		gnutls_dh_params dh_params;
 
     /**
-     * Does we need to set credentials to current gnutls session?
+     * Do we need to set credentials to current gnutls session?
      */
 		unsigned char need_set_cred;
 
@@ -243,7 +243,7 @@ extern "C" {
 		NO_ERR = 0,	     /** No error */
 		SESSION_NOT_CONNECTED_ERR = 1,
 				     /** Session not connected */
-		UNKNOWN_ERR = 2,     /** Unkown error */
+		UNKNOWN_ERR = 2,     /** Unknown error */
 		TIMEOUT_ERR = 3,     /** Connection timeout */
 		DNS_RESOLUTION_ERR = 4,
 				     /** DNS resolution error */
@@ -257,7 +257,7 @@ extern "C" {
 		BINDING_ERR,	     /** bind() call failed */
 	};
 
-/* Define for backward compability */
+/* Define for backward compatibility */
 	#define nuclient_error nuclient_error_t
 
 /* libnuclient return code structure */
