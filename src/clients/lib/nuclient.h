@@ -43,8 +43,10 @@ extern "C" {
 #include <pwd.h>
 #include <signal.h>
 #include <stdarg.h>
-#define _GNU_SOURCE
-#define __USE_GNU
+#ifndef _GNU_SOURCE
+#	define _GNU_SOURCE
+#	define __USE_GNU
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -56,7 +58,9 @@ extern "C" {
 #include <unistd.h>
 #include <termios.h>
 #include <time.h>
-#define _XOPEN_SOURCE
+#ifndef _XOPEN_SOURCE
+#	define _XOPEN_SOURCE
+#endif
 #include <unistd.h>
 #include <sys/stat.h>
 #include <fcntl.h>

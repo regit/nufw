@@ -21,7 +21,7 @@
  */
 
 
-/*#define _GNU_SOURCE*/
+#define _GNU_SOURCE
 #include "../lib/nuclient.h"
 #include <sys/resource.h>	/* setrlimit() */
 #include <stdio.h>
