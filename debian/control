@@ -1,8 +1,18 @@
 Source: nufw
 Section: net
 Priority: optional
+XS-Python-Version: current
 Maintainer: Pierre Chifflier <chifflier@inl.fr>
-Build-Depends: debhelper (>= 4.1.16),po-debconf, automake1.9, libldap2-dev, libglib2.0-dev, libmysqlclient15-dev|libmysqlclient14-dev, libpq-dev, iptables-dev, libtool, libgnutls-dev|libgnutls11-dev, libsasl2-dev, libpam0g-dev, libnetfilter-conntrack-dev, libnetfilter-queue-dev, libnfnetlink-dev
+Build-Depends: debhelper (>= 4.1.16),po-debconf, automake1.9,
+               libldap2-dev, libglib2.0-dev,
+               libmysqlclient15-dev|libmysqlclient14-dev,
+               libpq-dev,
+               iptables-dev,
+               libtool,
+               libgnutls-dev|libgnutls11-dev, libsasl2-dev,
+               libpam0g-dev,
+               libnetfilter-conntrack-dev, libnetfilter-queue-dev, libnfnetlink-dev,
+               python-support (>= 0.4)
 Standards-Version: 3.7.2
 
 Package: nufw
@@ -98,7 +108,8 @@ Description: a linux client for the nufw authentication gateway system
 
 Package: nuauth-utils
 Architecture: all
-Depends: ${shlibs:Depends}
+Depends: ${shlibs:Depends}, ${python:Depends}, python-ipy, perl, libnet-ldap-perl, nuauth
+XB-Python-Version: ${python:Versions}
 Description: Set of tools useful to nuauth admin
  NuFW is an authenticating gateway, which means that connections are
  authenticated before being forwarded through the gateway.  Classical packet
@@ -106,7 +117,8 @@ Description: Set of tools useful to nuauth admin
  access the network, instead caring only about the originating IP addresses.
  .
  nuaclgen is a perl script that helps generate LDAP ACLs for use with nuauth,
- the nufw auth daemon.
+ the nufw auth daemon. nuauth_command is a python script to control the
+ nuauth daemon.
 
 Package: libnuclient3
 Architecture: any

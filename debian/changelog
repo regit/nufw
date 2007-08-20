@@ -1,3 +1,12 @@
+nufw (2.3.0-1) unstable; urgency=low
+
+  * New upstream release
+  * Add nuauth-command script to nuauth-utils
+  * Use python-support for nuauth-utils
+  * Update nuauth-utils dependencies
+
+ -- Pierre Chifflier <pollux@debian.org>  Mon, 20 Aug 2007 22:25:33 +0200
+
 nufw (2.2.3-2) unstable; urgency=low
 
   * Fix init script (Closes: #436958)

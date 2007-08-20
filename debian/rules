@@ -78,7 +78,7 @@ build-stamp: build-nufw
 	dh_testdir
 	touch build-stamp
 
-binary-arch: build nufw nuauth nutcpc libnuclient3 nuauth-extra nuauth-log-mysql nuauth-log-pgsql nuauth-utils libpam-nufw
+binary-arch: build nufw nuauth nutcpc libnuclient3 nuauth-extra nuauth-log-mysql nuauth-log-pgsql libpam-nufw nuauth-utils
 
 nufw:
 	@echo "--- Building: $@"
@@ -333,6 +333,13 @@ nuauth-utils:
 	cp $(CURDIR)/scripts/nuaclgen $(CURDIR)/debian/$@/usr/bin
 	cp $(CURDIR)/scripts/nutop $(CURDIR)/debian/$@/usr/bin
 	cp $(CURDIR)/scripts/clean_conntrack.pl $(CURDIR)/debian/$@/usr/sbin
+	#make -C $(CURDIR)/scripts/nuauth_command install DESTDIR=$(CURDIR)/debian/$@/
+	cd $(CURDIR)/scripts/nuauth_command && ./setup.py install --no-compile \
+		--install-lib=$(CURDIR)/debian/$@/usr/share/python-support/nuauth_command \
+		--prefix=$(CURDIR)/debian/$@/usr
+	#find $(CURDIR)/debian/$@/ -name \*.pyc -exec rm -f {} \;
+	dh_python
+	dh_pysupport
 #	dh_installlogrotate
 #	dh_installemacsen
 #	dh_installpam
