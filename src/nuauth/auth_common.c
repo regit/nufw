@@ -142,6 +142,11 @@ gboolean secure_snprintf(char *buffer, unsigned int buffer_size,
 	va_list args;
 	int ret;
 	va_start(args, format);
+#ifdef DEBUG_ENABLE
+	memset(buffer, 0, buffer_size);
+#else
+	buffer[0] = 0;
+#endif
 	ret = g_vsnprintf(buffer, buffer_size, format, args);
 	va_end(args);
 	buffer[buffer_size - 1] = '\0';
