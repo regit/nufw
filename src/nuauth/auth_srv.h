@@ -145,7 +145,7 @@ typedef enum {
 #define DEFAULT_ACLS_MODULE "libplaintext"
 #define DEFAULT_PERIODS_MODULE "libxml_defs"
 #define DEFAULT_LOGS_MODULE "libsyslog"
-#define DEFAULT_IPAUTH_MODULE "libident"
+#define DEFAULT_IPAUTH_MODULE "ipauth_guest"
 #define DEFAULT_CERTIFICATE_CHECK_MODULE "libx509_std"
 #define DEFAULT_CERTIFICATE_TO_UID_MODULE "libx509_std"
 #define DEFAULT_USER_SESSION_MODIFY_MODULE "libsession_expire"
