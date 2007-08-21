@@ -590,12 +590,12 @@ void no_action_signals(int recv_signal)
 		case SIGINT:
 		log_message(CRITICAL, DEBUG_AREA_MAIN,
 			    "[+] Nuauth received SIGINT (leaving)");
-		exit(-1);
+		exit(EXIT_FAILURE);
 		break;
 		case SIGTERM:
 		log_message(CRITICAL, DEBUG_AREA_MAIN,
 				"[+] Nuauth received SIGTERM (leaving)");
-		exit(-1);
+		exit(EXIT_FAILURE);
 		break;
 		case SIGHUP:
 		log_message(CRITICAL, DEBUG_AREA_MAIN,
@@ -812,11 +812,11 @@ void init_nuauthdatas()
 
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 		    "Creating tls nufw server threads");
-	
+
 	tls_nufw_start_servers(nuauthdatas->tls_nufw_servers);
 
 	log_message(INFO, DEBUG_AREA_MAIN, "Threads system started");
-	release_pool_threads(); 
+	release_pool_threads();
 	nuauthdatas->is_starting = FALSE;
 }
 
