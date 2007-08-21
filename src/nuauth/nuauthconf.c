@@ -268,12 +268,9 @@ void apply_new_config(
 			NULL);
 }
 
-static struct nuauth_params *compare_and_update_nuauthparams(struct
-							     nuauth_params
-							     *current,
-							     struct
-							     nuauth_params
-							     *new);
+static gboolean compare_nuauthparams(
+		struct nuauth_params *current,
+		struct nuauth_params *new);
 
 /**
  * exit function if a signal is received in daemon mode.
@@ -284,9 +281,9 @@ static struct nuauth_params *compare_and_update_nuauthparams(struct
 void nuauth_reload(int signal)
 {
 	struct nuauth_params *newconf = NULL;
-	struct nuauth_params *actconf;
-	g_message("[+] Reload NuAuth server");
+	gboolean restart;
 
+	g_message("[+] Reload NuAuth server");
 	nuauth_install_signals(FALSE);
 
 	init_nuauthconf(&newconf);
@@ -300,12 +297,22 @@ void nuauth_reload(int signal)
 	unload_modules();
 	/* start "pure" pool threads */
 	start_pool_threads();
+
 	/* switch conf before loading modules */
-	actconf = compare_and_update_nuauthparams(nuauthconf, newconf);
-	if (actconf) {
+	restart = compare_nuauthparams(nuauthconf, newconf);
+	if (restart == FALSE) {
+		apply_new_config(nuauthconf, newconf);
+		/* debug is set via command line thus duplicate */
+		newconf->debug_level = nuauthconf->debug_level;
+		destroy_periods(nuauthconf->periods);
+		free_nuauth_params(nuauthconf);
+
 		g_free(nuauthconf);
-		nuauthconf = actconf;
+		nuauthconf = newconf;
+	} else {
+		free_nuauth_params(newconf);
 	}
+
 	/* reload modules with new conf */
 	load_modules();
 	/* init period */
@@ -321,12 +328,9 @@ void nuauth_reload(int signal)
 	g_message("[+] NuAuth server reloaded");
 }
 
-static struct nuauth_params *compare_and_update_nuauthparams(struct
-							     nuauth_params
-							     *current,
-							     struct
-							     nuauth_params
-							     *new)
+static gboolean compare_nuauthparams(
+		struct nuauth_params *current,
+		struct nuauth_params *new)
 {
 	gboolean restart = FALSE;
 	if (strcmp(current->authreq_port, new->authreq_port) != 0) {
@@ -395,19 +399,7 @@ static struct nuauth_params *compare_and_update_nuauthparams(struct
 		    ("command server option has been modified, please restart");
 		restart = TRUE;
 	}
-
-
-	if (restart == FALSE) {
-		apply_new_config(current, new);
-		/* debug is set via command line thus duplicate */
-		new->debug_level = current->debug_level;
-		destroy_periods(current->periods);
-		free_nuauth_params(current);
-		return new;
-	} else {
-		free_nuauth_params(new);
-		return NULL;
-	}
+	return restart;
 }
 
 /** @} */
