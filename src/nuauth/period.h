@@ -71,7 +71,7 @@ gboolean add_perioditem_to_period(GHashTable * periods, gchar * name,
 
 gboolean delete_period(GHashTable * periods, gchar * name);
 
-gboolean destroy_periods(GHashTable * periods);
+void destroy_periods(GHashTable * periods);
 GHashTable *init_periods();
 
 #endif

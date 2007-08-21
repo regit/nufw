@@ -203,10 +203,9 @@ gboolean delete_period(GHashTable * periods, gchar * name)
 }
 
 
-gboolean destroy_periods(GHashTable * periods)
+void destroy_periods(GHashTable * periods)
 {
 	g_hash_table_destroy(periods);
-	return TRUE;
 }
 
 gboolean define_new_period(GHashTable * periods, gchar * name,

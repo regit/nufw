@@ -218,50 +218,36 @@ void init_nuauthconf(struct nuauth_params **result)
 
 void free_nuauth_params(struct nuauth_params *conf)
 {
+	destroy_periods(nuauthconf->periods);
 	g_free(conf->authreq_port);
 	g_free(conf->userpckt_port);
 	g_free(conf->authorized_servers);
 }
 
-void apply_new_config(
-		struct nuauth_params *current,
-		struct nuauth_params *new)
+void apply_new_config(struct nuauth_params *conf)
 {
-	if (current->do_ip_authentication != new->do_ip_authentication) {
-		if (current->do_ip_authentication) {
-			stop_thread_pool("ip auth worker",
-					&nuauthdatas->ip_authentication_workers);
-		} else {
-			/* create thread pool */
-			nuauthdatas->ip_authentication_workers = g_thread_pool_new(
-					(GFunc) external_ip_auth, NULL,
-					nuauthconf->nbipauth_check,
-					POOL_TYPE, NULL);
-		}
-	}
-
 	/* checking nuauth tuning parameters */
 	g_thread_pool_set_max_threads(nuauthdatas->user_checkers,
-			new->nbuser_check, NULL);
+			conf->nbuser_check, NULL);
 	g_thread_pool_set_max_threads(nuauthdatas->acl_checkers,
-			new->nbacl_check, NULL);
-	if (new->do_ip_authentication) {
+			conf->nbacl_check, NULL);
+	if (conf->do_ip_authentication) {
 		g_thread_pool_set_max_threads(nuauthdatas->
 				ip_authentication_workers,
-				new->nbipauth_check,
+				conf->nbipauth_check,
 				NULL);
 	}
-	if (new->log_users_sync) {
+	if (conf->log_users_sync) {
 		g_thread_pool_set_max_threads(nuauthdatas->
 				decisions_workers,
-				new->nbloggers,
+				conf->nbloggers,
 				NULL);
 	}
 	g_thread_pool_set_max_threads(nuauthdatas->user_loggers,
-			new->nbloggers, NULL);
+			conf->nbloggers, NULL);
 	g_thread_pool_set_max_threads(nuauthdatas->
 			user_session_loggers,
-			new->nb_session_loggers,
+			conf->nb_session_loggers,
 			NULL);
 }
 
@@ -300,10 +286,9 @@ void nuauth_reload(int signum)
 	start_all_thread_pools();
 
 	if (restart == FALSE) {
-		apply_new_config(nuauthconf, newconf);
+		apply_new_config(newconf);
 		/* debug is set via command line thus duplicate */
 		newconf->debug_level = nuauthconf->debug_level;
-		destroy_periods(nuauthconf->periods);
 		free_nuauth_params(nuauthconf);
 		g_free(nuauthconf);
 		nuauthconf = newconf;
@@ -395,6 +380,12 @@ static gboolean compare_nuauthparams(
 	if (current->use_command_server != new->use_command_server) {
 		g_warning
 		    ("command server option has been modified, please restart");
+		restart = TRUE;
+	}
+
+	if (current->do_ip_authentication != new->do_ip_authentication) {
+		g_warning
+		    ("nuauth_do_ip_authentication has been modified, please restart");
 		restart = TRUE;
 	}
 	return restart;

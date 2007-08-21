@@ -39,7 +39,7 @@ class NuauthConf(ReplaceFile):
             return True
         if key in self.content and self.content[key] == newvalue:
             return False
-        if key in ("nuauth_tls_cacert", "nuauth_tls_key", "nuauth_tls_cert"):
+        if key in ("nuauth_tls_cacert", "nuauth_tls_key", "nuauth_tls_cert", "nuauth_do_ip_authentication"):
             return True
         return False
 
