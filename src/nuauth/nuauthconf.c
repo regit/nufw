@@ -50,9 +50,9 @@ int build_prenuauthconf(struct nuauth_params *prenuauthconf,
 	}
 
 	if ((!prenuauthconf->single_user_client_limit) &&
-			(!prenuauthconf->single_ip_client_limit) && 
+			(!prenuauthconf->single_ip_client_limit) &&
 			(connect_policy != POLICY_MULTIPLE_LOGIN)) {
-		/* config file has a deprecated option, send warning and 
+		/* config file has a deprecated option, send warning and
 		 * modify value */
 		log_message(CRITICAL, DEBUG_AREA_MAIN,
 				"nuauth_connect_policy variable is deprecated. DO NOT use it.");
@@ -223,6 +223,51 @@ void free_nuauth_params(struct nuauth_params *conf)
 	g_free(conf->authorized_servers);
 }
 
+void apply_new_config(
+		struct nuauth_params *current,
+		struct nuauth_params *new)
+{
+	if (current->do_ip_authentication != new->do_ip_authentication) {
+		if (current->do_ip_authentication) {
+			/* stop thread pool */
+			g_thread_pool_free(
+					nuauthdatas->ip_authentication_workers,
+					TRUE, TRUE);
+			nuauthdatas->ip_authentication_workers = NULL;
+		} else {
+			/* create thread pool */
+			nuauthdatas->ip_authentication_workers = g_thread_pool_new(
+					(GFunc) external_ip_auth, NULL,
+					nuauthconf->nbipauth_check,
+					POOL_TYPE, NULL);
+		}
+	}
+
+	/* checking nuauth tuning parameters */
+	g_thread_pool_set_max_threads(nuauthdatas->user_checkers,
+			new->nbuser_check, NULL);
+	g_thread_pool_set_max_threads(nuauthdatas->acl_checkers,
+			new->nbacl_check, NULL);
+	if (new->do_ip_authentication) {
+		g_thread_pool_set_max_threads(nuauthdatas->
+				ip_authentication_workers,
+				new->nbipauth_check,
+				NULL);
+	}
+	if (new->log_users_sync) {
+		g_thread_pool_set_max_threads(nuauthdatas->
+				decisions_workers,
+				new->nbloggers,
+				NULL);
+	}
+	g_thread_pool_set_max_threads(nuauthdatas->user_loggers,
+			new->nbloggers, NULL);
+	g_thread_pool_set_max_threads(nuauthdatas->
+			user_session_loggers,
+			new->nb_session_loggers,
+			NULL);
+}
+
 static struct nuauth_params *compare_and_update_nuauthparams(struct
 							     nuauth_params
 							     *current,
@@ -353,45 +398,7 @@ static struct nuauth_params *compare_and_update_nuauthparams(struct
 
 
 	if (restart == FALSE) {
-		if (current->do_ip_authentication != new->do_ip_authentication) {
-			if (current->do_ip_authentication) {
-				/* stop thread pool */
-				g_thread_pool_free(
-					nuauthdatas->ip_authentication_workers,
-					TRUE, TRUE);
-				nuauthdatas->ip_authentication_workers = NULL;
-			} else {
-				/* create thread pool */
-				nuauthdatas->ip_authentication_workers = g_thread_pool_new(
-					(GFunc) external_ip_auth, NULL,
-					nuauthconf->nbipauth_check,
-					POOL_TYPE, NULL);
-			}
-		}
-
-		/* checking nuauth tuning parameters */
-		g_thread_pool_set_max_threads(nuauthdatas->user_checkers,
-					      new->nbuser_check, NULL);
-		g_thread_pool_set_max_threads(nuauthdatas->acl_checkers,
-					      new->nbacl_check, NULL);
-		if (new->do_ip_authentication) {
-			g_thread_pool_set_max_threads(nuauthdatas->
-						      ip_authentication_workers,
-						      new->nbipauth_check,
-						      NULL);
-		}
-		if (new->log_users_sync) {
-			g_thread_pool_set_max_threads(nuauthdatas->
-						      decisions_workers,
-						      new->nbloggers,
-						      NULL);
-		}
-		g_thread_pool_set_max_threads(nuauthdatas->user_loggers,
-					      new->nbloggers, NULL);
-		g_thread_pool_set_max_threads(nuauthdatas->
-					      user_session_loggers,
-					      new->nb_session_loggers,
-					      NULL);
+		apply_new_config(current, new);
 		/* debug is set via command line thus duplicate */
 		new->debug_level = current->debug_level;
 		destroy_periods(current->periods);
