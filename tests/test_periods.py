@@ -32,7 +32,7 @@ class TestPlaintextAcl(TestCase):
     def testPeriodDrop(self):
         self.acls.desinstall()
         self.acls = PlaintextAcl()
-	if time.gmtime().tm_hour >= 12:
+	if time.localtime().tm_hour >= 12:
 		period = "0-12"
 	else:
         	period = "12-24"
@@ -49,7 +49,7 @@ class TestPlaintextAcl(TestCase):
     def testPeriodAccept(self):
         self.acls.desinstall()
 	self.acls = PlaintextAcl()
-	if time.gmtime().tm_hour < 12:
+	if time.localtime().tm_hour < 12:
 		period = "0-12"
 	else:
         	period = "12-24"
