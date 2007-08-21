@@ -14,6 +14,7 @@ from sys import argv, executable
 from nuauth import Nuauth
 from nuauth_conf import NuauthConf
 from plaintext import USERDB, PlaintextAcl
+from config import config as test_config
 
 def datetime2unix(timestamp):
     tm = timestamp.timetuple()
@@ -30,6 +31,7 @@ if POSTGRESQL:
     DB_USER = config["pgsql_user"]
     DB_PASSWORD = config["pgsql_passwd"]
     DB_DBNAME = config["pgsql_db_name"]
+    QUERY_TIMEOUT = test_config.getfloat('test_pgsql', 'query_timeout')
 else:
     import MySQLdb
     DB_PACKET_TABLE = config["mysql_table_name"]
@@ -38,6 +40,7 @@ else:
     DB_USER = config["mysql_user"]
     DB_PASSWORD = config["mysql_passwd"]
     DB_DBNAME = config["mysql_db_name"]
+    QUERY_TIMEOUT = test_config.getfloat('test_mysql', 'query_timeout')
 
 OS_SYSNAME = platform.system()    # 'Linux'
 OS_RELEASE = platform.release()   # '2.6.19.2-haypo'
@@ -65,6 +68,7 @@ class MysqlLog(TestCase):
     def setUp(self):
         startNufw()
         config = NuauthConf()
+        config["nuauth_log_users"] = '9'
         if POSTGRESQL:
             config.need_restart = True
             self.conn = pgdb.connect(
@@ -123,11 +127,11 @@ class MysqlLog(TestCase):
         self.assert_(connectClient(client))
 
         # Check number of rows
-        for when in retry(timeout=2.0):
+        for when in retry(timeout=QUERY_TIMEOUT):
             cursor = self.query(sql)
             for line in self.nuauth.readlines():
                 pass
-            if cursor.rowcount >= 1:
+            if cursor.rowcount:
                 break
         self.assertEqual(cursor.rowcount, 1)
 
@@ -152,12 +156,12 @@ class MysqlLog(TestCase):
         logout_before = datetime_before()
         client.stop()
 
-        for when in retry(timeout=2.0):
+        for when in retry(timeout=QUERY_TIMEOUT):
             # Get last MySQL row
             cursor = self.query(sql)
 
             # Check number of rows
-            if cursor.rowcount < 1:
+            if not cursor.rowcount:
                 continue
             self.assertEqual(cursor.rowcount, 1)
 
@@ -166,16 +170,22 @@ class MysqlLog(TestCase):
                 os_release, os_version, end_time) = self.fetchone(cursor)
             if not end_time:
                 continue
-            logout_after = datetime_after()
-
-            # Check values
-            if not POSTGRESQL:
-                # FIXME: Convert string to datetime for PostgreSQL
-                self.assert_(logout_before <= end_time <= logout_after)
             break
+
+        # Check values
+        if not POSTGRESQL:
+            # FIXME: Convert string to datetime for PostgreSQL
+            logout_after = datetime_after()
+            self.assert_(logout_before <= end_time <= logout_after)
 
 class MysqlLogUser(MysqlLog):
     def testUserLogin(self):
+        """
+        User log in and logout:
+        make sure that MySQL records login and then logout (and only once)
+        with the right parameters.
+        """
+
         # Delete old entries in MySQL user session table
         self.query("DELETE FROM %s WHERE start_time >= %s;" \
             % (DB_USER_TABLE, formatTimestamp(self.start_time)))
@@ -198,6 +208,12 @@ class MysqlLogPacket(MysqlLog):
         self.iptables.flush()
 
     def testFilter(self):
+        """
+        User logs in, opens an authenticated connection, and
+        closes the connection. Make sure that MySQL records the connection,
+        only once, with the right parameters.
+        """
+
         client = self.user.createClient()
         time_before = int(time())
         timestamp_before = datetime_before()
@@ -216,7 +232,12 @@ class MysqlLogPacket(MysqlLog):
             "%sstart_timestamp, end_timestamp, oob_prefix " \
             "FROM %s WHERE oob_time_sec >= %s AND state=1;" \
             % (timestamp_field, DB_PACKET_TABLE, time_before)
-        cursor = self.query(sql)
+
+        # Do the query
+        for when in retry(timeout=QUERY_TIMEOUT):
+            cursor = self.query(sql)
+            if cursor.rowcount:
+                break
 
         # Read result
         row = self.fetchone(cursor)
