@@ -10,10 +10,10 @@ There are three different modules to set mark:
     * configure option: --with-user-mark
  * mark-group: use group mark
     * configure option: --with-mark-group
-    * configuration file: /etc/nufw/mark_field.conf
+    * configuration file: /etc/nufw/mark_group.conf
  * mark-field: use user application or operating system name
     * configure option: --with-mark-field
-    * configuration file: /etc/nufw/mark_group.conf
+    * configuration file: /etc/nufw/mark_field.conf
 
 All modules are enabled by default.
 
