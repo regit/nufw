@@ -229,11 +229,8 @@ void apply_new_config(
 {
 	if (current->do_ip_authentication != new->do_ip_authentication) {
 		if (current->do_ip_authentication) {
-			/* stop thread pool */
-			g_thread_pool_free(
-					nuauthdatas->ip_authentication_workers,
-					TRUE, TRUE);
-			nuauthdatas->ip_authentication_workers = NULL;
+			stop_thread_pool("ip auth worker",
+					&nuauthdatas->ip_authentication_workers);
 		} else {
 			/* create thread pool */
 			nuauthdatas->ip_authentication_workers = g_thread_pool_new(
@@ -275,10 +272,10 @@ static gboolean compare_nuauthparams(
 /**
  * exit function if a signal is received in daemon mode.
  *
- * Argument : a signal
- * Return : None
+ * Argument: signal number
+ * Return: None
  */
-void nuauth_reload(int signal)
+void nuauth_reload(int signum)
 {
 	struct nuauth_params *newconf = NULL;
 	gboolean restart;
@@ -290,23 +287,24 @@ void nuauth_reload(int signal)
 	g_message("nuauth module reloading");
 
 	/* block threads of pool at start */
-	block_pool_threads();
+	block_thread_pools();
 	/* we have to wait that all threads are blocked */
-	stop_pool_threads(TRUE);
+	stop_all_thread_pools(TRUE);
 	/* unload modules */
 	unload_modules();
-	/* start "pure" pool threads */
-	start_pool_threads();
 
 	/* switch conf before loading modules */
 	restart = compare_nuauthparams(nuauthconf, newconf);
+
+	/* start "pure" pool threads */
+	start_all_thread_pools();
+
 	if (restart == FALSE) {
 		apply_new_config(nuauthconf, newconf);
 		/* debug is set via command line thus duplicate */
 		newconf->debug_level = nuauthconf->debug_level;
 		destroy_periods(nuauthconf->periods);
 		free_nuauth_params(nuauthconf);
-
 		g_free(nuauthconf);
 		nuauthconf = newconf;
 	} else {
@@ -322,7 +320,7 @@ void nuauth_reload(int signal)
 		cache_reset(nuauthdatas->acl_cache);
 	}
 
-	release_pool_threads();
+	release_thread_pools();
 	nuauth_install_signals(TRUE);
 
 	g_message("[+] NuAuth server reloaded");

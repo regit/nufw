@@ -71,12 +71,12 @@ void cleanup_func_remove(cleanup_func_t func)
 	cleanup_func_list = g_list_remove(cleanup_func_list, func);
 }
 
-void block_pool_threads()
+void block_thread_pools()
 {
 	nuauthdatas->need_reload = 1;
 }
 
-void release_pool_threads()
+void release_thread_pools()
 {
 	/* liberate threads by broadcasting condition */
 	nuauthdatas->need_reload = 0;
@@ -86,7 +86,7 @@ void release_pool_threads()
 	g_mutex_unlock(nuauthdatas->reload_cond_mutex);
 }
 
-void start_pool_threads()
+void start_all_thread_pools()
 {
 	if (nuauthconf->do_ip_authentication) {
 		/* create thread of pool */
@@ -136,34 +136,37 @@ void start_pool_threads()
 	}
 }
 
-void stop_pool_threads(gboolean wait)
+/**
+ * Stop one thread pool
+ */
+void stop_thread_pool(const char *name, GThreadPool **pool)
+{
+	log_message(DEBUG, DEBUG_AREA_MAIN,
+			"Stop thread pool '%s'", name);
+	g_thread_pool_free(*pool, TRUE, TRUE);
+	*pool = NULL;
+}
+
+/**
+ * Stop all nuauth thread pools
+ * If soft is true, destroy pools.
+ */
+void stop_all_thread_pools(gboolean soft)
 {
 	/* end logging threads */
-	if (wait) {
-		log_message(DEBUG, DEBUG_AREA_MAIN,
-			    "Stop thread pool 'user session loggers'");
-		g_thread_pool_free(nuauthdatas->user_session_loggers, TRUE,
-				   wait);
-		log_message(DEBUG, DEBUG_AREA_MAIN,
-			    "Stop thread pool 'user loggers'");
-		g_thread_pool_free(nuauthdatas->user_loggers, TRUE, wait);
-		log_message(DEBUG, DEBUG_AREA_MAIN,
-			    "Stop thread pool 'acl checkers'");
-		g_thread_pool_free(nuauthdatas->acl_checkers, TRUE, wait);
+	if (soft) {
+		stop_thread_pool("session logger", &nuauthdatas->user_session_loggers);
+		stop_thread_pool("packet logger", &nuauthdatas->user_loggers);
+		stop_thread_pool("acl checker", &nuauthdatas->acl_checkers);
 
 		if (nuauthconf->log_users_sync) {
-			log_message(DEBUG, DEBUG_AREA_MAIN,
-				    "Stop thread pool 'decision workers'");
-			g_thread_pool_free(nuauthdatas->decisions_workers,
-					   TRUE, wait);
+			stop_thread_pool("decision worker",
+					&nuauthdatas->decisions_workers);
 		}
 
 		if (nuauthconf->do_ip_authentication) {
-			log_message(DEBUG, DEBUG_AREA_MAIN,
-				    "Stop thread pool 'ip auth workers'");
-			g_thread_pool_free(nuauthdatas->
-					   ip_authentication_workers, TRUE,
-					   wait);
+			stop_thread_pool("ip auth worker",
+					&nuauthdatas->ip_authentication_workers);
 		}
 	}
 	g_thread_pool_stop_unused_threads();
@@ -233,7 +236,7 @@ void stop_threads(gboolean wait)
 		thread_wait_end(&nuauthdatas->localid_auth_thread);
 	}
 
-	stop_pool_threads(wait);
+	stop_all_thread_pools(wait);
 	/* done! */
 	log_message(INFO, DEBUG_AREA_MAIN, "Threads stopped.");
 }
@@ -734,7 +737,7 @@ void configure_app(int argc, char **argv)
  */
 void init_nuauthdatas()
 {
-	block_pool_threads();
+	block_thread_pools();
 	nuauthdatas->tls_push_queue = g_async_queue_new();
 	if (!nuauthdatas->tls_push_queue)
 		exit(EXIT_FAILURE);
@@ -764,7 +767,7 @@ void init_nuauthdatas()
 	if (nuauthconf->user_cache)
 		init_user_cache();
 
-	start_pool_threads();
+	start_all_thread_pools();
 
 	null_message = g_new0(struct cache_message, 1);
 	null_queue_datas = g_new0(gchar, 1);
@@ -816,7 +819,7 @@ void init_nuauthdatas()
 	tls_nufw_start_servers(nuauthdatas->tls_nufw_servers);
 
 	log_message(INFO, DEBUG_AREA_MAIN, "Threads system started");
-	release_pool_threads();
+	release_thread_pools();
 	nuauthdatas->is_starting = FALSE;
 }
 

@@ -224,10 +224,11 @@ typedef enum {
 #define NUAUTH_FULL_VERSION (VERSION " ($Revision$)")
 
 void nuauth_ask_exit();
-void stop_pool_threads(gboolean wait);
-void block_pool_threads();
-void start_pool_threads();
-void release_pool_threads();
+void stop_all_thread_pools(gboolean wait);
+void block_thread_pools();
+void release_thread_pools();
+void start_all_thread_pools();
+void stop_thread_pool(const char *name, GThreadPool **pool);
 void nuauth_install_signals(gboolean action);
 
 int nuauth_bind(char **errmsg, const char *addr, const char *port, char *context);
