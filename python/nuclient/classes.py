@@ -24,6 +24,7 @@ from nuclient import (
     nu_client_error_init, nu_client_error_destroy,
     nu_client_global_init, nu_client_global_deinit,
     nu_client_new, nu_client_delete,
+    nu_client_check, nu_client_set_verbose,
     nu_client_connect,
     nu_client_strerror)
 from ctypes import byref
@@ -88,6 +89,14 @@ class Nuclient:
         if not ok:
             raise NuclientError("Unable to connect to %s:%s" % (hostname, service),
                 self.error)
+
+    def verbose(self, enabled):
+        assert isinstance(enabled, bool)
+        nu_client_set_verbose(self.session, enabled)
+
+    def check(self):
+        connected = nu_client_check(self.session, self.error)
+        return (connected == 1)
 
 __all__ = ("NuclientError", "Nuclient")
 

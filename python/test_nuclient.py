@@ -25,23 +25,58 @@ Example of libnuclient use
 from nuclient import (
     nu_get_version, nu_check_version, nu_get_home_dir,
     NuclientError, Nuclient)
+from optparse import OptionParser
+from sys import exit, stderr
+from time import sleep
+
+def parseOptions():
+    parser = OptionParser(usage="%prog -u USERNAME -p PASSWORD HOSTNAME [options]]")
+    parser.add_option("--username", "-u", help="NuFW username",
+        action="store", type="str", default=None)
+    parser.add_option("--password", "-p", help="NuFW password",
+        action="store", type="str", default=None)
+    options, arguments = parser.parse_args()
+    if len(arguments) != 1 \
+    or not options.username \
+    or not options.password:
+        parser.print_help()
+        exit(1)
+    return options, arguments[0]
+
+def makeUnicode(text):
+    # FIXME: Detect command line charset
+    return unicode(text, 'utf8')
 
 def main():
-    from sys import exit, stderr
+    options, hostname = parseOptions()
 
-    version = nu_get_version()
-    print "Version: %r" % version
-    print "Check version: %r" % bool(nu_check_version(version))
-    print "Home: %r" % nu_get_home_dir()
+#    version = nu_get_version()
+#    print "Version: %r" % version
+#    print "Check version: %r" % bool(nu_check_version(version))
+#    print "Home: %r" % nu_get_home_dir()
+#    print
 
     try:
-        nuclient = Nuclient(u'user', u'password')
-        nuclient.connect('192.168.0.2')
+        username = makeUnicode(options.username)
+        password = makeUnicode(options.password)
+
+        try:
+            nuclient = Nuclient(username, password)
+            nuclient.verbose(False)
+            nuclient.connect(hostname)
+        except KeyboardInterrupt:
+            print >>stderr, "Interrupted!"
+            exit(1)
+
+        try:
+            print "Connected to %s" % hostname
+            while nuclient.check():
+                sleep(1)
+            print "Lost connection!"
+        except KeyboardInterrupt:
+            print >>stderr, "Quit."
     except NuclientError, error:
         print >>stderr, str(error)
-        exit(1)
-    except KeyboardInterrupt:
-        print >>stderr, "Interrupted!"
         exit(1)
 
 if __name__ == "__main__":

@@ -106,13 +106,25 @@ nu_client_strerror = library.nu_client_strerror
 nu_client_strerror.argstype = (nuclient_error_p,)
 nu_client_strerror.restype = c_char_p
 
+# int nu_client_check(nuauth_session_t *session, nuclient_error_t *err);
+nu_client_check = library.nu_client_check
+nu_client_check.argstype = (nuauth_session_p, nuclient_error_p)
+nu_client_check.restype = c_int
+
+# void nu_client_set_verbose(nuauth_session_t * session,
+#		unsigned char enabled);
+nu_client_set_verbose = library.nu_client_set_verbose
+nu_client_set_verbose.argstype = (nuauth_session_p, c_ubyte)
+nu_client_set_verbose.restype = None
+
 __all__ = (
     "nuauth_session_p", "nuclient_error_p",
     "nu_get_version", "nu_check_version", "nu_get_home_dir",
     "nu_client_error_init", "nu_client_error_destroy",
     "nu_client_global_init", "nu_client_global_deinit",
     "nu_client_new", "nu_client_delete",
-    "nu_client_connect",
+    "nu_client_connect", "nu_client_check",
+    "nu_client_set_verbose",
     "nu_client_strerror",
 )
 
