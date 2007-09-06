@@ -38,7 +38,7 @@
 #include <pwd.h>
 #include <security/pam_appl.h>
 
-GStaticMutex pam_mutex;
+GStaticMutex pam_mutex = G_STATIC_MUTEX_INIT;
 
 GSList *getugroups(char *username, gid_t gid);
 
@@ -214,6 +214,9 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass,
 			ret = pam_start("nuauth", user, &conv_info, &pamh);
 			if (ret != PAM_SUCCESS) {
 				g_warning("Can not initiate pam, dying");
+				if (system_pam_module_not_threadsafe) {
+					g_static_mutex_unlock(&pam_mutex);
+				}
 				return SASL_BADAUTH;
 			}
 
@@ -262,9 +265,15 @@ G_MODULE_EXPORT uint32_t get_user_id(const char *username, gpointer params)
 
 	user = normalize_username(username);
 
+	if (system_pam_module_not_threadsafe) {
+		g_static_mutex_lock(&pam_mutex);
+	}
 	ret =
 	    getpwnam_r(user, &result_buf, buffer, sizeof(buffer),
 		       &result_bufp);
+	if (system_pam_module_not_threadsafe) {
+		g_static_mutex_unlock(&pam_mutex);
+	}
 	if (ret != 0 || (!result_bufp)) {
 		return SASL_BADAUTH;
 	}
@@ -285,9 +294,15 @@ G_MODULE_EXPORT GSList *get_user_groups(const char *username,
 
 	user = normalize_username(username);
 
+	if (system_pam_module_not_threadsafe) {
+		g_static_mutex_lock(&pam_mutex);
+	}
 	ret =
 	    getpwnam_r(user, &result_buf, buffer, sizeof(buffer),
 		       &result_bufp);
+	if (system_pam_module_not_threadsafe) {
+		g_static_mutex_unlock(&pam_mutex);
+	}
 	if (ret != 0 || (!result_bufp)) {
 		return NULL;
 	}
