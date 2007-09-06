@@ -4,12 +4,13 @@
 	- libnuclient: fix compilation when used in external client.
 	- nufw: ask kernel to drop packet when nuauth can't be reached.
 	- NuFW: fix configure for Fedora Core 6
+	- fix clients' Makefile for compatibility with automake 1.10
 2.2.2 (2006/06/26)
 	- log_mysql: fix logging of connection closing
 	- NuFW: fix incompatibility between i386 and x86_64 due to alignement
 	  problem. This break compatibility with previous NuFW 2.2.
 	- nufw: for TCP connection, only send message when session switch to
-	  ESTABLISHED and get destroyed. 
+	  ESTABLISHED and get destroyed.
 	- nuauth: change criticity of some debug message to ease detection of
 	  protocol mistakes.
 	- NuFW: separate version number of client and nufw protocols
