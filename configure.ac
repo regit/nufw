@@ -51,7 +51,6 @@ AC_CHECK_FUNCS([gethostbyname memset socket strcasecmp strspn])
 
 AC_CHECK_LIB([gcrypt], [gcry_md_open],AC_DEFINE([HAVE_LIBRARY_GCRYPT],[1],[Gcrypt lib flag]), check_gcrypt=no,[-L/usr/local/lib])
 AC_CHECK_LIB([gnutls], [gnutls_init],AC_DEFINE([HAVE_LIBRARY_GNUTLS],[1],[Gnutls lib flag]), check_gnutls=no)
-AC_CHECK_LIB([sasl2],[sasl_server_init],AC_DEFINE([HAVE_LIBRARY_SASL2],[1],[SASL lib flag]), check_sasl=no)
 
 #Configure database support, depending on user input
 AC_ARG_WITH(prelude-log,
@@ -97,7 +96,18 @@ if test "${use_perf_display}" = "yes"; then
 	AC_DEFINE_UNQUOTED([PERF_DISPLAY_ENABLE],[1],[Performance display])
 fi
 
+
+if test \
+	   "${build_nuauth}" = "yes"  \
+	-o "${build_libnuclient}" = "yes" \
+	-o "${build_nutcpc}" = "yes" \
+	-o "${build_pam_nufw}" = "yes" \
+; then
+	AC_CHECK_LIB([sasl2],[sasl_server_init],AC_DEFINE([HAVE_LIBRARY_SASL2],[1],[SASL lib flag]), check_sasl=no)
+fi
+
 if test "${build_nuauth}" = "yes"; then
+	AC_CHECK_LIB([sasl2],[sasl_server_init],AC_DEFINE([HAVE_LIBRARY_SASL2],[1],[SASL lib flag]), check_sasl=no)
         # glib stuff
         AM_PATH_GLIB_2_0(2.4.0, , check_glib=no,[gthread gmodule])
         if test "$enable_system_auth" = "yes"; then
@@ -154,6 +164,10 @@ AM_CONDITIONAL(USE_MARK_GROUP, test x$enable_mark_group = xyes)
 AM_CONDITIONAL(USE_MARK_FIELD, test x$enable_mark_field = xyes)
 AM_CONDITIONAL(USE_MARK_FLAG, test x$enable_mark_flag = xyes)
 AM_CONDITIONAL(USE_SYSLOG_LOG, test x$enable_syslog_log = xyes)
+
+if test "${build_libnuclient}" = "yes"; then
+	AC_CHECK_LIB([sasl2],[sasl_server_init],AC_DEFINE([HAVE_LIBRARY_SASL2],[1],[SASL lib flag]), check_sasl=no)
+fi
 
 if test "${build_nufw}" = "yes"; then
     if test "${use_nfqueue}" = "yes"; then
@@ -285,8 +299,7 @@ AC_CONFIG_FILES([Makefile
 
 # Display errors if any library is missing
 if test \
-       x${check_sasl} = xno \
-    -o x${check_pthread} = xno \
+       x${check_pthread} = xno \
     -o x${check_glib} = xno \
     -o x${check_mysql} = xno \
     -o x${check_pgsql} = xno \
@@ -299,9 +312,6 @@ if test \
     AC_MSG_RESULT([])
     if test x${check_pthread} = xno; then
         AC_MSG_RESULT([ERROR: pthread library needed])
-    fi
-    if test x${check_sasl} = xno; then
-        AC_MSG_RESULT([ERROR: sasl library needed for authentication])
     fi
     if test x${check_gcrypt} = xno; then
         AC_MSG_RESULT([ERROR: gcrypt library needed for encryption])
@@ -328,6 +338,18 @@ if test \
         AC_MSG_ERROR([libpq library needed if PostgreSQL support selected])
     fi
     exit 1
+fi
+
+if test \
+	   "${build_nuauth}" = "yes"  \
+	-o "${build_libnuclient}" = "yes" \
+	-o "${build_nutcpc}" = "yes" \
+	-o "${build_pam_nufw}" = "yes" \
+; then
+    if test x${check_sasl} = xno; then
+        AC_MSG_RESULT([ERROR: sasl library needed for authentication])
+    	exit 1
+    fi
 fi
 
 AM_INIT_AUTOMAKE(1.9)
