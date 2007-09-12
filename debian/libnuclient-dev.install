@@ -1,2 +1,4 @@
 src/clients/lib/.libs/libnuclient.so usr/lib
-src/clients/lib/nuclient.h usr/include
+src/clients/lib/libnuclient.la usr/lib
+src/clients/lib/nuclient.h usr/include/nuclient
+src/include/nufw_source.h usr/include/nuclient
