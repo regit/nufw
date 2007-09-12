@@ -78,7 +78,7 @@ build-stamp: build-nufw
 	dh_testdir
 	touch build-stamp
 
-binary-arch: build nufw nuauth nutcpc libnuclient3 nuauth-extra nuauth-log-mysql nuauth-log-pgsql libpam-nufw nuauth-utils
+binary-arch: build nufw nuauth nutcpc libnuclient3 libnuclient-dev nuauth-extra nuauth-log-mysql nuauth-log-pgsql libpam-nufw nuauth-utils
 
 nufw:
 	@echo "--- Building: $@"
@@ -116,6 +116,37 @@ nufw:
 
 
 libnuclient3:
+	@echo "--- Building: $@"
+	dh_installdirs           -p$@ -P$(b)/$@
+	dh_testdir -p$@ -P$(b)/$@
+	dh_testroot -p$@ -P$(b)/$@
+	dh_installchangelogs -p$@ -P$(b)/$@ ChangeLog
+	dh_installdocs -p$@ -P$(b)/$@
+	dh_installexamples -p$@ -P$(b)/$@
+	dh_install -p$@
+#	rm debian/$@/usr/sbin/nufw
+#	dh_installmenu
+	dh_installdebconf -p$@ -P$(b)/$@
+#	dh_installlogrotate
+#	dh_installemacsen
+#	dh_installpam
+#	dh_installmime
+#	dh_installcron
+#	dh_installinfo
+	dh_link -p$@ -P$(b)/$@
+	dh_strip -p$@ -P$(b)/$@
+	dh_compress -p$@ -P$(b)/$@
+	dh_fixperms -p$@ -P$(b)/$@
+#	dh_perl
+#	dh_python
+	dh_makeshlibs -p$@ -P$(b)/$@ -n
+	dh_installdeb -p$@ -P$(b)/$@
+	dh_shlibdeps -p$@ -P$(b)/$@
+	dh_gencontrol -p$@ -P$(b)/$@
+	dh_md5sums -p$@ -P$(b)/$@
+	dh_builddeb -p$@ -P$(b)/$@
+
+libnuclient-dev:
 	@echo "--- Building: $@"
 	dh_installdirs           -p$@ -P$(b)/$@
 	dh_testdir -p$@ -P$(b)/$@

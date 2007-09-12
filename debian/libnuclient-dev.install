@@ -1,0 +1,2 @@
+src/clients/lib/.libs/libnuclient.so usr/lib
+src/clients/lib/nuclient.h usr/include

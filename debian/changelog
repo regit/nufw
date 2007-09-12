@@ -4,8 +4,9 @@ nufw (2.3.0-1) unstable; urgency=low
   * Add nuauth-command script to nuauth-utils
   * Use python-support for nuauth-utils
   * Update nuauth-utils dependencies
+  * Split libnuclient3 to create libnuclient-dev
 
- -- Pierre Chifflier <pollux@debian.org>  Mon, 20 Aug 2007 22:25:33 +0200
+ -- Pierre Chifflier <pollux@debian.org>  Wed, 12 Sep 2007 21:35:07 +0200
 
 nufw (2.2.3-2) unstable; urgency=low
 
