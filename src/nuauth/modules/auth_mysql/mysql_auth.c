@@ -20,7 +20,7 @@
  */
 /* code inspired from log_mysql & plaintext */
 
-#include "ipauth.h"
+#include "mysql_auth.h"
 
 #define IP_AUTH_IPAUTH_GUEST_USERNAME "guest"
 #define IP_AUTH_IPAUTH_GUEST_USERID 0

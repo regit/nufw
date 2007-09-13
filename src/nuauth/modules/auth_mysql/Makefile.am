@@ -15,7 +15,7 @@ plugindir = $(libdir)/nuauth/modules
 
 plugin_LTLIBRARIES = libipauth_mysql.la
 
-libipauth_mysql_la_SOURCES = ipauth.c
+libipauth_mysql_la_SOURCES = mysql_auth.c
 
 #libipauth_mysql_la_LIBADD = -lmysqlclient_r
 
