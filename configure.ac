@@ -288,7 +288,7 @@ AC_CONFIG_FILES([Makefile
         src/nuauth/modules/mark_uid/Makefile
         src/nuauth/modules/session_expire/Makefile
         src/nuauth/modules/ipauth_guest/Makefile
-        src/nuauth/modules/ipauth_mysql/Makefile
+        src/nuauth/modules/auth_mysql/Makefile
         src/clients/Makefile
         src/clients/lib/Makefile
         src/clients/lib/tests/Makefile
