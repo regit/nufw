@@ -1,4 +1,4 @@
-# ipauth_mysql plugin
+# auth_mysql plugin
 
 # if USE_MYSQL_AUTH
 
@@ -13,14 +13,14 @@ INCLUDES = $(GLIB_CFLAGS) -I../../ -I../../include/ $(MYSQL_INCLUDE)
 
 plugindir = $(libdir)/nuauth/modules
 
-plugin_LTLIBRARIES = libipauth_mysql.la
+plugin_LTLIBRARIES = libauth_mysql.la
 
-libipauth_mysql_la_SOURCES = mysql_auth.c
+libauth_mysql_la_SOURCES = mysql_auth.c
 
-#libipauth_mysql_la_LIBADD = -lmysqlclient_r
+#libauth_mysql_la_LIBADD = -lmysqlclient_r
 
-libipauth_mysql.la: $(libipauth_mysql_la_OBJECTS) $(libipauth_mysql_la_DEPENDENCIES) 
-	$(LINK) -rpath $(plugindir) $(am_libipauth_mysql_la_rpath) $(libipauth_mysql_la_LDFLAGS) $(libipauth_mysql_la_OBJECTS) $(MYSQL_LIBS) $(libipauth_mysql_la_LIBADD)
+libauth_mysql.la: $(libauth_mysql_la_OBJECTS) $(libauth_mysql_la_DEPENDENCIES) 
+	$(LINK) -rpath $(plugindir) $(am_libauth_mysql_la_rpath) $(libauth_mysql_la_LDFLAGS) $(libauth_mysql_la_OBJECTS) $(MYSQL_LIBS) $(libauth_mysql_la_LIBADD)
 
 # endif
 
