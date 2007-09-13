@@ -60,6 +60,7 @@ AC_ARG_WITH(prelude-log,
         enable_prelude_log="")
 
 AC_ARG_WITH(mysql-log, [AC_HELP_STRING(--with-mysql-log,  Support user activity logging in Mysql database)], enable_mysql_log=$withval, enable_mysql_log="")
+AC_ARG_WITH(mysql-auth, [AC_HELP_STRING(--with-mysql-auth,  Support user authentication in Mysql database)], enable_mysql_auth=$withval, enable_mysql_auth="")
 AC_ARG_WITH(pgsql-log, [AC_HELP_STRING(--with-pgsql-log,  Support user activity logging in PostgreSQL database)], enable_pgsql_log=$withval, enable_pgsql_log="")
 AC_ARG_WITH(syslog-log, [AC_HELP_STRING(--without-syslog-log,  Disable user activity logging in syslog)], enable_syslog_log=$withval, enable_syslog_log="yes")
 
@@ -118,7 +119,8 @@ if test "${build_nuauth}" = "yes"; then
                  AC_CHECK_LIB([ldap],[ldap_simple_bind_s],AC_DEFINE([HAVE_LIBRARY_LDAP],[1],[ldap lib flag]), check_ldap=no)
         fi
 
-        if test "$enable_mysql_log" = "yes"; then
+        if test "$enable_mysql_log" = "yes" \
+		-o "$enable_mysql_auth" = "yes" ; then
 			if which mysql_config 1>/dev/null; then
 				AC_CHECK_LIB([mysqlclient],[mysql_real_connect],AC_DEFINE([HAVE_LIBRARY_MYSQLCLIENT],[1],[mysql lib flag] )  , check_mysql=no,[$(mysql_config --libs)])
                 		AC_CHECK_LIB([mysqlclient],[mysql_ssl_set],AC_DEFINE_UNQUOTED([HAVE_MYSQL_SSL],[1],[Will compile mysql log module with ssl support]),AC_MSG_NOTICE([mysqlclient has no ssl support]),[$(mysql_config --libs)])
@@ -156,6 +158,7 @@ AM_CONDITIONAL(USE_SYSTEM_AUTH, test x$enable_system_auth = xyes)
 AM_CONDITIONAL(USE_LDAP, test x$ldap = xyes)
 AM_CONDITIONAL(USE_PRELUDE_LOG, test x$enable_prelude_log = xyes)
 AM_CONDITIONAL(USE_MYSQL_LOG, test x$enable_mysql_log = xyes)
+AM_CONDITIONAL(USE_MYSQL_AUTH, test x$enable_mysql_auth = xyes)
 AM_CONDITIONAL(HAVE_MYSQL_CONFIG, test x$have_mysql_config = xyes)
 
 AM_CONDITIONAL(USE_PGSQL_LOG, test x$enable_pgsql_log = xyes)
@@ -285,6 +288,7 @@ AC_CONFIG_FILES([Makefile
         src/nuauth/modules/mark_uid/Makefile
         src/nuauth/modules/session_expire/Makefile
         src/nuauth/modules/ipauth_guest/Makefile
+        src/nuauth/modules/ipauth_mysql/Makefile
         src/clients/Makefile
         src/clients/lib/Makefile
         src/clients/lib/tests/Makefile
@@ -380,6 +384,10 @@ if test "${build_nuauth}" = "yes"; then
 
         if test "${enable_mysql_log}" = "yes"; then
         	AC_MSG_RESULT([  - NuAuth: compile log module mysql])
+        fi
+
+        if test "${enable_mysql_auth}" = "yes"; then
+        	AC_MSG_RESULT([  - NuAuth: compile authentication module mysql])
         fi
 
         if test "${enable_pgsql_log}" = "yes"; then

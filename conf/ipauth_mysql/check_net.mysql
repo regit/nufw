@@ -1,0 +1,19 @@
+DROP FUNCTION IF EXISTS check_net;
+delimiter //
+CREATE FUNCTION check_net (ip BINARY(16), net BINARY(16), mask TINYINT UNSIGNED)
+  RETURNS BOOLEAN
+  DETERMINISTIC
+BEGIN
+  -- if mask is % 4 the function is much more optimized
+  IF (mask % 4) AND NOT (LEFT(LPAD(CONV(SUBSTRING(HEX(ip) FROM (mask div 4)+1 FOR 1), 16, 2),4,0), mask % 4) = LEFT(LPAD(CONV(SUBSTRING(HEX(net) FROM (mask div 4)+1 FOR 1), 16, 2),4,0), mask % 4)) THEN
+    RETURN FALSE;
+  END IF;
+  
+  IF left(HEX(ip), mask div 4) = left(HEX(net), mask div 4) THEN
+    RETURN TRUE;
+  ELSE
+    RETURN FALSE;
+  END IF;
+END
+//
+delimiter ;
