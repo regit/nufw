@@ -57,6 +57,8 @@ static nu_error_t mysql_close_current(struct ipauth_mysql_params* params);
  * \ingroup LoggingNuauthModules
  * \defgroup MySQLAuthentication MySQL authentication module
  *
+ * \todo Use quote_string to protect all strings given as argument.
+ *
  * @{ */
 
 G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
