@@ -57,8 +57,6 @@ static nu_error_t mysql_close_current(struct ipauth_mysql_params* params);
  * \ingroup LoggingNuauthModules
  * \defgroup MySQLAuthentication MySQL authentication module
  *
- * \todo Use quote_string to protect all strings given as argument.
- *
  * @{ */
 
 G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
@@ -273,8 +271,7 @@ static MYSQL *mysql_conn_init(struct ipauth_mysql_params *params)
 	return ld;
 }
 
-#if 0
-static char *quote_string(MYSQL * mysql, char *text)
+static char *quote_string(MYSQL * mysql, const char *text)
 {
 	unsigned int length = strlen(text);
 	char *quoted;
@@ -287,7 +284,6 @@ static char *quote_string(MYSQL * mysql, char *text)
 	}
 	return quoted;
 }
-#endif
 
 #define SELECT_FIELDS "username"
 /**
@@ -312,7 +308,7 @@ G_MODULE_EXPORT gchar* ip_authentication(tracking_t * header, struct ipauth_para
 		return NULL;
 	}
 
-	if (params->mysql->mysql_use_ipv4_schema)
+	if (params->mysql->mysql_use_ipv4_schema) {
 		ok = secure_snprintf(request, sizeof(request),
 			"SELECT " SELECT_FIELDS
 			" FROM  %s "
@@ -321,7 +317,7 @@ G_MODULE_EXPORT gchar* ip_authentication(tracking_t * header, struct ipauth_para
 			"end_time > NOW())",
 			params->mysql->mysql_ipauth_table_name,
 			ip_ascii);
-	else
+	} else {
 		ok = secure_snprintf(request, sizeof(request),
 			"SELECT " SELECT_FIELDS
 			" FROM  %s "
@@ -330,7 +326,7 @@ G_MODULE_EXPORT gchar* ip_authentication(tracking_t * header, struct ipauth_para
 			"end_time > NOW())",
 			params->mysql->mysql_ipauth_table_name,
 			ip_ascii);
-
+	}
 	if (!ok) {
 		log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 		"[IPAUTH MySQL] cannot create query: %s", request);
@@ -372,15 +368,33 @@ G_MODULE_EXPORT int user_check(const char *username,
 	MYSQL *ld = NULL;
 	char request[LONG_REQUEST_SIZE];
 	int ret;
+	char *quoted_username = NULL;
+	char *quoted_clientpass = NULL;
 
 	if(!(ld = get_mysql_handler(mysql)))
+		return SASL_BADAUTH;
+
+	quoted_username = quote_string(ld, username);
+	if (! quoted_username)
+		return SASL_BADAUTH;
+
+	quoted_clientpass = quote_string(ld, clientpass);
+	if (! quoted_clientpass)
 		return SASL_BADAUTH;
 
 	if(!secure_snprintf(request, sizeof(request),
 					"SELECT uid FROM %s WHERE username='%s' AND "
 					"password=PASSWORD('%s')",
-					mysql->mysql_userinfo_table_name, username, clientpass))
+					mysql->mysql_userinfo_table_name,
+					quoted_username,
+					quoted_clientpass)) {
+		g_free(quoted_username);
+		g_free(quoted_clientpass);
 		return SASL_BADAUTH;
+	}
+
+	g_free(quoted_username);
+	g_free(quoted_clientpass);
 
 	/* execute query */
 	if ( mysql_real_query(ld, request, strlen(request)) ) {
@@ -412,6 +426,7 @@ G_MODULE_EXPORT uint32_t get_user_id(const char *username, struct ipauth_params*
 	MYSQL_ROW row;
 	char *endptr=NULL;
 	struct ipauth_user *user;
+	char *quoted_username = NULL;
 
 	if ( (user=g_hash_table_lookup(params->users, username)) ) {
 		/* log_message(INFO, DEBUG_AREA_AUTH, */
@@ -426,10 +441,17 @@ G_MODULE_EXPORT uint32_t get_user_id(const char *username, struct ipauth_params*
 	if(!(ld = get_mysql_handler(mysql)))
 		return NU_EXIT_ERROR;
 
+	quoted_username = quote_string(ld, username);
+	if (! quoted_username)
+		return NU_EXIT_ERROR;
+
 	if(!(ok = secure_snprintf(request, sizeof(request),
 					"SELECT uid FROM %s WHERE username='%s'",
-					mysql->mysql_userinfo_table_name, username)))
+					mysql->mysql_userinfo_table_name, 
+					quoted_username))) {
+		g_free(quoted_username);
 		return NU_EXIT_ERROR;
+	}
 
 	/* execute query */
 	if ( (ok = mysql_real_query(ld, request, strlen(request))) ) {
