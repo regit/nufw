@@ -6,6 +6,8 @@
 	- NuFW: fix configure for Fedora Core 6
 	- fix clients' Makefile for compatibility with automake 1.10
 	- fix race condition (multi-threading) in system module (PAM)
+	- Add auth_mysql module : ipauthentication and authentication against
+	a MySQL database
 2.2.2 (2006/06/26)
 	- log_mysql: fix logging of connection closing
 	- NuFW: fix incompatibility between i386 and x86_64 due to alignement
