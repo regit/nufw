@@ -1,16 +1,18 @@
-* Quick install guide for LDAP acl module *
+=======================================
+Quick install guide for LDAP acl module
+=======================================
 
 LDAP acl module uses a custom schema. To use it, copy
 conf/acls.schema in /etc/ldap/schemas/
-and declare it in your slapd.conf :
+and declare it in your slapd.conf:: 
 
-include         /etc/ldap/schema/acls.schema
+ include         /etc/ldap/schema/acls.schema
 
-Add to your slapd.conf some indexes for performance :
+Add to your slapd.conf some indexes for performance::
 
-# For nufw
-index OsName,OsRelease,OsVersion,AppSig,AppName pres,eq
-index SrcIPStart,SrcIPEnd,DstIPStart,DstIPEnd pres,eq
-index Proto,SrcPortStart,SrcPortEnd,DstPortStart,DstPortEnd pres,eq
-index SrcPort,DstPort pres,eq
+ # For nufw
+ index OsName,OsRelease,OsVersion,AppSig,AppName pres,eq
+ index SrcIPStart,SrcIPEnd,DstIPStart,DstIPEnd pres,eq
+ index Proto,SrcPortStart,SrcPortEnd,DstPortStart,DstPortEnd pres,eq
+ index SrcPort,DstPort pres,eq
 

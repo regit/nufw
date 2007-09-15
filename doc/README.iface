@@ -1,8 +1,13 @@
+======================
+Interface name logging
+======================
+
 Support of transmission of interface name from kernel to NuFW
 is available.
 
 It can be used by fetching libnfnetlink and libnetfilter_queue from 
 Netfilter with version superior to:
+
  * libnfnetlink-0.0.25
  * libnetfilter_queue-0.0.13
 

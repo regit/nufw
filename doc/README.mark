@@ -37,7 +37,7 @@ iptables rules
 ==============
 
 To keep mark on next packets of a connection, you have to use --save-mark
-and --restore-mark:
+and --restore-mark::
 
    iptables -A PREROUTING -j CONNMARK --restore-mark
    iptables -A POSTROUTING -m mark ! --mark 0x0 -j CONNMARK --save-mark
@@ -45,17 +45,18 @@ and --restore-mark:
 mark-group
 ==========
 
-Syntax of configuration file (/etc/nufw/mark_group.conf): each line is
-"groups;mark" with:
+Syntax of configuration file /etc/nufw/mark_group.conf:
+---------------------------------------------------------
+
+Each line is "groups;mark" with:
  * groups: comma separated list of group identifiers
  * mark: 32-bit unsigned integer
 
-Example:
---------
-100:1
-1000:2
-1020,1050:3
---------
+Example::
+
+ 100:1
+ 1000:2
+ 1020,1050:3
 
 Group 100 will have the mark 1, group 1000 the mark 2, groups 1020 and 1050
 the mark 3, and other groups the mark 0 (default mark).
@@ -72,16 +73,18 @@ You have more options in nuauth configuration file:
 mark-field
 ==========
 
-Syntax of configuration file (/etc/nufw/mark_field.conf): each line is
-"mark:pattern" with:
-  * mark: 32-bit unsigned integer
-  * pattern: string with joker "*" (match any string
+Syntax of configuration file (/etc/nufw/mark_field.conf):
+---------------------------------------------------------
 
-Example with mark_field_type=0 (application):
----
-1:*firefox*
-2:*telnet*
----
+Each line is "mark:pattern" with:
+ * mark: 32-bit unsigned integer
+ * pattern: string with joker "*" (match any string
+
+Example with mark_field_type=0 (application)::
+
+ 1:*firefox*
+ 2:*telnet*
+
 
 Application firefox will get the mark 1, telnet the mark 2 and other
 application the mark 0 (default mark).
@@ -107,40 +110,52 @@ It has three options:
  * mark_flag_nbits: number of bits to overwrite in the mark
  * mark_flag_mark_shift: shift of overwritten bits
  * mark_flag_flag_shift: shift in flag to indicate which bits of the flag are 
- used.
+   used.
 
-Here's an ascii art of the system:
-         msb      lsb
-mark  :   [####····] nbits=16  shift=16
-            \\\\
-flags :   [··####··] shift=8
-         msb      lsb
+Here's an ascii art of the system::
+
+          msb      lsb
+ mark  :   [####····] nbits=16  shift=16
+             \\\\
+ flags :   [··####··] shift=8
+          msb      lsb
 
 msb : most significant bits
 lsb : less significant bits
 
-Here are some examples:
+Examples:
+---------
 
 Initial values:
-  mark  = 0xAABBCCDD
-  flags = 0x12345678
+~~~~~~~~~~~~~~~
 
-mark_flag_nbits=8
-mark_flag_mark_shift=0
-mark_flag_flag_shift=0
-  => mark = 0xAABBCC78 ( AABBCC | ..78 )
+ * mark  = 0xAABBCCDD
+ * flags = 0x12345678
 
-mark_flag_nbits=16
-mark_flag_mark_shift=0
-mark_flag_flag_shift=0
-  => mark = 0xAABB5678 ( AABB | ..5678 )
+Example 1::
 
-mark_flag_nbits=16
-mark_flag_mark_shift=8
-mark_flag_flag_shift=0
-  => mark = 0xAA5678DD ( AA | ..5678 | DD )
+ mark_flag_nbits=8
+ mark_flag_mark_shift=0
+ mark_flag_flag_shift=0
+ => mark = 0xAABBCC78 ( AABBCC | ..78 )
 
-mark_flag_nbits=16
-mark_flag_mark_shift=0
-mark_flag_flag_shift=8
-  => mark = 0xAABB3456 ( AABB | ..3456.. )
+Example 2::
+
+ mark_flag_nbits=16
+ mark_flag_mark_shift=0
+ mark_flag_flag_shift=0
+ => mark = 0xAABB5678 ( AABB | ..5678 )
+
+Example 3::
+
+ mark_flag_nbits=16
+ mark_flag_mark_shift=8
+ mark_flag_flag_shift=0
+ => mark = 0xAA5678DD ( AA | ..5678 | DD )
+
+Example 4::
+
+ mark_flag_nbits=16
+ mark_flag_mark_shift=0
+ mark_flag_flag_shift=8
+ => mark = 0xAABB3456 ( AABB | ..3456.. )
