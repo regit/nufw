@@ -2,6 +2,16 @@
 Auth Mysql
 ==========
 
+Introduction
+============
+
+auth_mysql can be used as:
+ * nuauth_user_check_module
+ * nuauth_get_user_id_module
+ * nuauth_get_user_groups_module
+ * nuauth_ip_authentication_module
+
+
 Prerequisites
 =============
 
@@ -13,6 +23,45 @@ mysql_use_ipv4_schema=0
 
 
 At least, all scripts stored in conf/auth_mysql have to be imported into the SQL database.
+
+Module configuration
+====================
+
+mysql tables
+~~~~~~~~~~~~
+
+ * userinfo table contains users informations:
+
+  * main columns are uid and username
+  * password column is used for user authentication
+  * other columns can be added to add user description (address, mail, phone, ...)
+
+ * groups table contains group names and group id,
+ * groupinfo table contains user-group associations:
+
+  * Each user can be part of several groups, each line indicate that the uid is part of the gid,
+
+ * ipauth_sessions table is used for ip based authentication.
+
+  * 'netmask' column is used for authenticate a single ip or an entire subnet. Default value is 128
+    for ipv6 mysql schema or 32 ipv4 schema (with int(10) ip_saddr) authenticating just one host,
+    but you can change it to authenticate an entire subnet (i.e. 192.168.10.0/24
+    or ::ffff:192.168.10.0/120). WARNING with ipv6 schema you'll need to declare 'check_mysql'
+    function (see above)
+  * 'no_logout' column is useful to tag the lines that should never be removed in order to add a
+    'persistent' (never ending) connection. (values: 'y' or 'n')
+
+nuauth.conf file
+~~~~~~~~~~~~~~~~
+  
+In nuauth configuration file this parameters are supported:
+ * mysql_ipauth_table_name (default: ipauth_sessions)
+ * mysql_userinfo_table_name (default: userinfo)
+ * mysql_groups_table_name (default: groups)
+ * mysql_groupinfo_table_name (default: groupinfo)
+ * some other mysql setting used by log_mysql module are used here too with the same meaning.
+ * (TODO) mysql_ipauth_check_netmask: wether or not use netmask in ip authentication. (default: 1)
+
 
 Using it
 ========
