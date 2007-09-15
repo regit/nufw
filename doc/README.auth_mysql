@@ -1,0 +1,21 @@
+==========
+Auth Mysql
+==========
+
+Prerequisites
+=============
+
+Mysql schema has to be IPv6. You need to use the MySQL schema provided with nufw 2.2.
+
+You also need to decomment the following line in nuauth.conf:
+
+mysql_use_ipv4_schema=0
+
+
+At least, all scripts stored in conf/auth_mysql have to be imported into the SQL database.
+
+Using it
+========
+
+You can use the PHP script auth_mysql.php provided in scripts/ as starting point. 
+This script uses the userinfo table to verify user and password given at prompt.
