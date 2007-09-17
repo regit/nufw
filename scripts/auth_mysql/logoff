@@ -1,0 +1,16 @@
+#!/bin/bash
+# $Id$
+
+user="nufw-user"
+passwd="nufw-passwd"
+db="nufw-db"
+LOGOUT_TIME="30 MINUTE"
+
+UNLOG=`mysql -u ${user} -p${passwd} ${db} -s -N -e "select HEX(ip_saddr) from ipauth_sessions where no_logout='n' and ip_saddr not in (select distinct ip_saddr from conntrack_ulog where state=1 or state=2) and ip_saddr not in (select distinct ip_saddr from ulog where timestamp > NOW() - INTERVAL ${LOGOUT_TIME})"`
+
+[ -z "${UNLOG}" ] && exit 0
+
+UNLOG=x\'`echo ${UNLOG} | sed -e "s/ /\',x\'/g"`\'
+
+mysql -u ${user} -p${passwd} ${db} -s -N -e "delete from ipauth_sessions where ip_saddr in ($UNLOG)"
+mysql -u ${user} -p${passwd} ${db} -s -N -e "UPDATE users set end_time=NOW() where (end_time is null) and ip_saddr in ($UNLOG)"
