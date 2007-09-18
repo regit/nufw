@@ -307,7 +307,6 @@ G_MODULE_EXPORT GSList *get_user_groups(const char *username,
 		return NULL;
 	}
 
-	/** \todo Check that protection by mutex is necessary */
 	if (system_pam_module_not_threadsafe) {
 		g_static_mutex_lock(&pam_mutex);
 		userlist = getugroups(user, result_bufp->pw_gid);

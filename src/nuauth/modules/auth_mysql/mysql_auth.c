@@ -54,10 +54,18 @@ static nu_error_t mysql_close_current(struct ipauth_mysql_params* params);
 
 /**
  *
- * \ingroup LoggingNuauthModules
+ * \ingroup AuthNuauthModules
  * \defgroup MySQLAuthentication MySQL authentication module
  *
  * @{ */
+
+/**
+ * \file mysql_auth.c
+ *
+ * \brief Core file for mysql authentication module
+ *
+ */
+
 
 G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
 {
@@ -286,8 +294,6 @@ static char *quote_string(MYSQL * mysql, const char *text)
 }
 
 #define SELECT_FIELDS "username"
-/**
- *  * @{ */
 
 G_MODULE_EXPORT gchar* ip_authentication(tracking_t * header, struct ipauth_params* params)
 {
@@ -350,16 +356,6 @@ G_MODULE_EXPORT gchar* ip_authentication(tracking_t * header, struct ipauth_para
 	return username ? username : g_strdup(IP_AUTH_IPAUTH_GUEST_USERNAME);
 }
 
-/**
- *  user_check()
- *
- *  \param username user name string
- *  \param clientpass user provided password
- *  \param passlen password length
- *  \param params module related parameter
- *  \return SASL_OK if password is correct, other values are authentication
- *           failures
- */
 G_MODULE_EXPORT int user_check(const char *username,
 			       const char *clientpass, unsigned passlen,
 			       struct ipauth_params* params)
