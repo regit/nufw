@@ -432,7 +432,7 @@ G_MODULE_EXPORT uint32_t get_user_id(const char *username, struct ipauth_params*
 	}
 	/* log_message(INFO, DEBUG_AREA_AUTH, */
 	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
-		  	"[IPAUTH MySQL:get_user_id] searching user in mysql table");
+			  "[IPAUTH MySQL:get_user_id] searching user in mysql table");
 
 	if(!(ld = get_mysql_handler(mysql)))
 		return NU_EXIT_ERROR;
@@ -501,7 +501,7 @@ G_MODULE_EXPORT GSList *get_user_groups(const char *username, struct ipauth_para
 	}
 	/* log_message(INFO, DEBUG_AREA_AUTH, */
 	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
-		  	"[IPAUTH MySQL:get_user_groups] searching user in mysql table");
+			  "[IPAUTH MySQL:get_user_groups] searching user in mysql table");
 
 	if(!(ld = get_mysql_handler(mysql)))
 		return NULL;

@@ -164,10 +164,6 @@ nu_error_t delete_client_by_socket_ext(int socket, int use_lock)
 				IPV6_TO_POINTER(&session->addr));
 	delete_ipsockets_from_hash(ipsockets, session, use_lock);
 
-	if (use_lock) {
-		g_mutex_unlock(client_mutex);
-	}
-
 	tls_user_remove_client(socket);
 	if (use_lock) {
 		if (shutdown(socket, SHUT_RDWR) != 0)
@@ -176,6 +172,7 @@ nu_error_t delete_client_by_socket_ext(int socket, int use_lock)
 		if (close(socket) != 0)
 			log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 					"Could not close socket");
+		g_mutex_unlock(client_mutex);
 	}
 
 	return NU_EXIT_OK;
@@ -297,7 +294,7 @@ char warn_clients(struct msg_addr_set *global_msg)
 				IPV6_TO_POINTER(&global_msg->addr));
 	if (start_ipsockets) {
 		global_msg->found = TRUE;
-		for (ipsockets = start_ipsockets; ipsockets; ipsockets=ipsockets->next)
+		for (ipsockets = start_ipsockets; ipsockets; ipsockets = ipsockets->next)
 		{
 			user_session_t *session = (user_session_t *)ipsockets->data;
 			gnutls_session tls = *session->tls;
@@ -312,8 +309,11 @@ char warn_clients(struct msg_addr_set *global_msg)
 		}
 		if (badsockets) {
 			for (; badsockets; badsockets = badsockets->next) {
-				start_ipsockets = delete_ipsockets_from_hash(start_ipsockets,
-							   badsockets->data, 1);
+				nu_error_t ret = delete_client_by_socket_ext(badsockets->data, 0);
+				if (ret != NU_EXIT_OK) {
+					log_message(WARNING, DEBUG_AREA_USER,
+						"Fails to destroy socket in hash.");
+				}
 			}
 			g_slist_free(badsockets);
 		}
