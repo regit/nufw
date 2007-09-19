@@ -66,7 +66,10 @@ In nuauth configuration file this parameters are supported:
 Using it
 ========
 
-You can use the PHP script auth_mysql.php provided in scripts/auth_mysql as starting point. 
-This script uses the userinfo table to verify user and password given at prompt.
+The PHP pages available in scripts/auth_mysql/nufwauth/ provide an login and logout page.
+You may need to edit the start of index.php to adjust the database configuration to your system.
 
 logoff script in the directory scripts/auth_mysql/ can be used to end session after timeout.
+
+You can also use the PHP script auth_mysql.php provided in scripts/auth_mysql as starting point
+for a login banner. This script uses the userinfo table to verify user and password given at prompt.
