@@ -24,7 +24,7 @@
 
 #define IP_AUTH_IPAUTH_GUEST_USERNAME "guest"
 #define IP_AUTH_IPAUTH_GUEST_USERID 0
-#define IP_AUTH_IPAUTH_GUEST_GROUPID 97
+#define IP_AUTH_IPAUTH_GUEST_GROUPID 99
 
 /* MySQL schema
  *
@@ -126,6 +126,9 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 		{"mysql_groupinfo_table_name", G_TOKEN_STRING, 0,
 		 g_strdup(MYSQL_GROUPINFO_TABLE_NAME)}
 		,
+		{"mysql_ipauth_check_netmask", G_TOKEN_INT,
+		 MYSQL_IPAUTH_CHECK_NETMASK, NULL}
+		,
 		{"mysql_request_timeout", G_TOKEN_INT,
 		 MYSQL_REQUEST_TIMEOUT, NULL}
 		,
@@ -187,6 +190,8 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	mysql->mysql_userinfo_table_name = (char *) READ_CONF("mysql_userinfo_table_name");
 	mysql->mysql_groups_table_name = (char *) READ_CONF("mysql_groups_table_name");
 	mysql->mysql_groupinfo_table_name = (char *) READ_CONF("mysql_groupinfo_table_name");
+	READ_CONF_INT(mysql->mysql_ipauth_check_netmask,
+		      "mysql_ipauth_check_netmask", MYSQL_IPAUTH_CHECK_NETMASK);
 	/* endof ipauth specific tables */
 	mysql->mysql_ssl_keyfile = (char *) READ_CONF("mysql_ssl_keyfile");
 	mysql->mysql_ssl_certfile = (char *) READ_CONF("mysql_ssl_certfile");
@@ -304,6 +309,7 @@ G_MODULE_EXPORT gchar* ip_authentication(tracking_t * header, struct ipauth_para
 	gboolean ok;
 	MYSQL_ROW row;
 	char *username = NULL;
+	char ip_check[256];
 	/* u_int32_t saddr=htonl(header->saddr); */ /*!< IPv4 source address */
 
 	if (ipv6_to_sql(params->mysql, &header->saddr, ip_ascii, sizeof(ip_ascii), 1) != 0)
@@ -314,25 +320,37 @@ G_MODULE_EXPORT gchar* ip_authentication(tracking_t * header, struct ipauth_para
 		return NULL;
 	}
 
-	if (params->mysql->mysql_use_ipv4_schema) {
-		ok = secure_snprintf(request, sizeof(request),
-			"SELECT " SELECT_FIELDS
-			" FROM  %s "
-			"WHERE ip_saddr = (%s & netmask) AND"
-			"(end_time is NULL OR "
-			"end_time > NOW())",
-			params->mysql->mysql_ipauth_table_name,
-			ip_ascii);
+	if (params->mysql->mysql_ipauth_check_netmask) {
+		if (params->mysql->mysql_use_ipv4_schema) {
+			ok = secure_snprintf(ip_check, sizeof(ip_check),
+				"ip_saddr = (%s & netmask)",
+				ip_ascii);
+		} else {
+			ok = secure_snprintf(ip_check, sizeof(ip_check),
+				"check_net(ip_saddr, %s, netmask)",
+				ip_ascii);
+		}
 	} else {
-		ok = secure_snprintf(request, sizeof(request),
-			"SELECT " SELECT_FIELDS
-			" FROM  %s "
-			"WHERE check_net(ip_saddr, %s, netmask) AND "
-			"(end_time is NULL OR "
-			"end_time > NOW())",
-			params->mysql->mysql_ipauth_table_name,
+		ok = secure_snprintf(ip_check, sizeof(ip_check),
+			"ip_saddr = %s",
 			ip_ascii);
 	}
+
+	if (!ok) {
+		log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
+		"[IPAUTH MySQL] cannot check IP query: %s", ip_check);
+		return NULL;
+	}
+
+	ok = secure_snprintf(request, sizeof(request),
+		"SELECT " SELECT_FIELDS
+		" FROM  %s "
+		"WHERE %s AND"
+		"(end_time is NULL OR "
+		"end_time > NOW())",
+		params->mysql->mysql_ipauth_table_name,
+		ip_check);
+
 	if (!ok) {
 		log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 		"[IPAUTH MySQL] cannot create query: %s", request);

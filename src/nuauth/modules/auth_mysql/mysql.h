@@ -38,6 +38,8 @@
 #define MYSQL_GROUPS_TABLE_NAME "groups"
 #define MYSQL_GROUPINFO_TABLE_NAME "groupinfo"
 
+#define MYSQL_IPAUTH_CHECK_NETMASK 1
+
 /* SSL options */
 #define MYSQL_USE_SSL 1		/* use ssl by default */
 #define MYSQL_SSL_KEYFILE NULL
@@ -67,6 +69,7 @@ struct ipauth_mysql_params {
 	char *mysql_userinfo_table_name;
 	char *mysql_groups_table_name;
 	char *mysql_groupinfo_table_name;
+	unsigned char mysql_ipauth_check_netmask;
 	int mysql_server_port;
 	unsigned char mysql_use_ipv4_schema;
 	unsigned char mysql_use_ssl;

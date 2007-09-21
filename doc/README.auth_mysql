@@ -15,14 +15,23 @@ auth_mysql can be used as:
 Prerequisites
 =============
 
-Mysql schema has to be IPv6. You need to use the MySQL schema provided with nufw 2.2.
+Two different mysql schemas are provied in conf/auth_mysql:
+- auth_mysql.ipv4.mysql.dump
+- auth_mysql.ipv6.mysql.dump
 
-You also need to decomment the following line in nuauth.conf:
+import the one that matches with you setup.
+
+If you use IPv6 mysql schema you need to uncomment the following line in nuauth.conf:
 
 mysql_use_ipv4_schema=0
 
+If you want to use netmask checking in ipauth module you must also import check_net.mysql, that contains 'check_net' function.
+WARNING to import this file you must have the SUPER privilege or this variable must be declared:
+-- SET GLOBAL log_bin_trust_function_creators = 1;
 
-At least, all scripts stored in conf/auth_mysql have to be imported into the SQL database.
+Then set this line in nuauth.conf:
+
+mysql_ipauth_check_netmask=1
 
 Module configuration
 ====================
@@ -60,8 +69,54 @@ In nuauth configuration file this parameters are supported:
  * mysql_groups_table_name (default: groups)
  * mysql_groupinfo_table_name (default: groupinfo)
  * some other mysql setting used by log_mysql module are used here too with the same meaning.
- * (TODO) mysql_ipauth_check_netmask: wether or not use netmask in ip authentication. (default: 1)
+ * mysql_ipauth_check_netmask: wether or not use netmask in ip authentication. (default: 1)
 
+IP authentication module configuration
+======================================
+
+iptables setup
+~~~~~~~~~~~~~~
+
+If you want to use ipauthentication module and want to redirect http/https traffic to a login
+page you must declare following rules in iptables's nat table:
+
+iptables -t nat -A PREROUTING -i eth0 -s 192.168.22.11 -m mark --mark 0 -p tcp --dport 80 -j REDIRECT
+iptables -t nat -A PREROUTING -i eth0 -s 192.168.22.11 -m mark --mark 0 -p tcp --dport 443 -j REDIRECT
+
+Notes:
+   (1. we suppose eth0 being you lan interface)
+   (2. if your login page is on a remote host you can use "DNAT --to-destination <remoteIP>" as target)
+
+Moreover nufw's filtering rules must be declared in mangle table and not in forward or output:
+
+iptables -t mangle -D PREROUTING -p tcp -i eth0 -m state --state NEW --syn -j NFQUEUE
+
+This way every not authenticated connection is marked "guest" (by default uid=0,gid=99) and above rules
+in nat table redirect it to login page
+
+acl setup
+~~~~~~~~~
+
+In nuauth's acl you need to permit traffic from guest group (default 99 if not overridden in mysql tables)
+to 80 and 443 ports. For example:
+
+[web]
+decision=1 
+gid=99
+proto=6
+SrcIP=0.0.0.0/0
+SrcPort=1024-65535
+DstIP=0.0.0.0/0
+DstPort=80
+
+[web 2]
+decision=1 
+gid=99
+proto=6
+SrcIP=0.0.0.0/0
+SrcPort=1024-65535
+DstIP=0.0.0.0/0
+DstPort=443
 
 Using it
 ========
