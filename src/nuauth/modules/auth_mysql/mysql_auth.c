@@ -22,10 +22,6 @@
 
 #include "mysql_auth.h"
 
-#define IP_AUTH_IPAUTH_GUEST_USERNAME "guest"
-#define IP_AUTH_IPAUTH_GUEST_USERID 0
-#define IP_AUTH_IPAUTH_GUEST_GROUPID 99
-
 /* MySQL schema
  *
  * create table userinfo(uid int primary key auto_increment,username varchar(256));
@@ -92,6 +88,8 @@ G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
 	if (params->users)
 		g_hash_table_remove_all(params->users);
 
+	g_free(params->guest_username);
+
 	params->mysql = NULL;
 	params->users = NULL;
 
@@ -117,6 +115,9 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 		{"mysql_ipauth_table_name", G_TOKEN_STRING, 0,
 		 g_strdup(MYSQL_IPAUTH_TABLE_NAME)}
 		,
+		{"mysql_ipauth_check_netmask", G_TOKEN_INT,
+		 MYSQL_IPAUTH_CHECK_NETMASK, NULL}
+		,
 		{"mysql_userinfo_table_name", G_TOKEN_STRING, 0,
 		 g_strdup(MYSQL_USERINFO_TABLE_NAME)}
 		,
@@ -126,8 +127,17 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 		{"mysql_groupinfo_table_name", G_TOKEN_STRING, 0,
 		 g_strdup(MYSQL_GROUPINFO_TABLE_NAME)}
 		,
-		{"mysql_ipauth_check_netmask", G_TOKEN_INT,
-		 MYSQL_IPAUTH_CHECK_NETMASK, NULL}
+		{"mysql_auth_fallback_to_guest", G_TOKEN_INT,
+		 AUTH_MYSQL_FALLBACK_TO_GUEST, NULL}
+		,
+		{"mysql_auth_guest_username", G_TOKEN_STRING, 0,
+		 g_strdup(AUTH_MYSQL_GUEST_USERNAME)}
+		,
+		{"mysql_auth_guest_userid", G_TOKEN_INT,
+		 AUTH_MYSQL_GUEST_USERID, NULL}
+		,
+		{"mysql_auth_guest_groupid", G_TOKEN_INT,
+		 AUTH_MYSQL_GUEST_GROUPID, NULL}
 		,
 		{"mysql_request_timeout", G_TOKEN_INT,
 		 MYSQL_REQUEST_TIMEOUT, NULL}
@@ -193,6 +203,12 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	READ_CONF_INT(mysql->mysql_ipauth_check_netmask,
 		      "mysql_ipauth_check_netmask", MYSQL_IPAUTH_CHECK_NETMASK);
 	/* endof ipauth specific tables */
+	/* guest user */
+	READ_CONF_INT(ipauth->fallback_to_guest, "mysql_auth_fallback_to_guest", AUTH_MYSQL_FALLBACK_TO_GUEST);
+	ipauth->guest_username = (char *) READ_CONF("mysql_auth_guest_username");
+	READ_CONF_INT(ipauth->guest_uid, "mysql_auth_guest_userid", AUTH_MYSQL_GUEST_USERID);
+	READ_CONF_INT(ipauth->guest_gid, "mysql_auth_guest_groupid", AUTH_MYSQL_GUEST_GROUPID);
+	/* endof guest user */
 	mysql->mysql_ssl_keyfile = (char *) READ_CONF("mysql_ssl_keyfile");
 	mysql->mysql_ssl_certfile = (char *) READ_CONF("mysql_ssl_certfile");
 	mysql->mysql_ssl_ca = (char *) READ_CONF("mysql_ssl_ca");
@@ -368,10 +384,12 @@ G_MODULE_EXPORT gchar* ip_authentication(tracking_t * header, struct ipauth_para
 		MYSQL_RES *result = mysql_store_result(ld);
 		if ( (row = mysql_fetch_row(result) ))
 			username = g_strdup(row[0]);
+		else if (params->fallback_to_guest)
+			username = g_strdup(params->guest_username);
 		mysql_free_result(result);
 	}
 
-	return username ? username : g_strdup(IP_AUTH_IPAUTH_GUEST_USERNAME);
+	return username;
 }
 
 G_MODULE_EXPORT int user_check(const char *username,
@@ -436,7 +454,7 @@ G_MODULE_EXPORT uint32_t get_user_id(const char *username, struct ipauth_params*
 	MYSQL *ld = NULL;
 	char request[LONG_REQUEST_SIZE];
 	int ok;
-	uid_t uid = IP_AUTH_IPAUTH_GUEST_USERID;
+	uint32_t uid = params->guest_uid;
 	MYSQL_ROW row;
 	char *endptr=NULL;
 	struct ipauth_user *user;
@@ -453,18 +471,18 @@ G_MODULE_EXPORT uint32_t get_user_id(const char *username, struct ipauth_params*
 			  "[IPAUTH MySQL:get_user_id] searching user in mysql table");
 
 	if(!(ld = get_mysql_handler(mysql)))
-		return NU_EXIT_ERROR;
+		return params->guest_uid; /* SASL_BADAUTH; error code? */
 
 	quoted_username = quote_string(ld, username);
 	if (! quoted_username)
-		return NU_EXIT_ERROR;
+		return params->guest_uid; /* SASL_BADAUTH; error code? */
 
 	if(!(ok = secure_snprintf(request, sizeof(request),
 					"SELECT uid FROM %s WHERE username='%s'",
 					mysql->mysql_userinfo_table_name, 
 					quoted_username))) {
 		g_free(quoted_username);
-		return NU_EXIT_ERROR;
+		return params->guest_uid; /* SASL_BADAUTH; error code? */
 	}
 
 	/* execute query */
@@ -473,14 +491,14 @@ G_MODULE_EXPORT uint32_t get_user_id(const char *username, struct ipauth_params*
 				"[IPAUTH MySQL] Cannot execute request: %s",
 				mysql_error(ld));
 		mysql_close_current(params->mysql);
-		return NU_EXIT_ERROR;
+		return params->guest_uid; /* SASL_BADAUTH; error code? */
 	} else {
 		MYSQL_RES *result = mysql_store_result(ld);
 		if ((ok=mysql_affected_rows(ld))==1) {
 			if ( (row = mysql_fetch_row(result) )) {
 				uid=strtol(row[0],&endptr,10);
 				if(*endptr)
-					uid = NU_EXIT_ERROR;
+					uid = params->guest_uid; /* SASL_BADAUTH; error code? */
 				else {
 					user=g_new0(struct ipauth_user, 1);
 					user->username = g_strdup(username);
@@ -489,7 +507,7 @@ G_MODULE_EXPORT uint32_t get_user_id(const char *username, struct ipauth_params*
 				}
 			}
 		} else if (ok > 1)
-			uid = NU_EXIT_ERROR;
+			uid = params->guest_uid; /* SASL_BADAUTH; */
 		mysql_free_result(result);
 	}
 
@@ -543,10 +561,11 @@ G_MODULE_EXPORT GSList *get_user_groups(const char *username, struct ipauth_para
 		return NULL;
 	} else {
 		MYSQL_RES *result = mysql_store_result(ld);
-		if((ng=mysql_affected_rows(ld))<1)
-			grouplist = g_slist_prepend(grouplist,
-				GINT_TO_POINTER(IP_AUTH_IPAUTH_GUEST_GROUPID));
-		else {
+		if((ng=mysql_affected_rows(ld))<1) {
+			if (params->fallback_to_guest)
+				grouplist = g_slist_prepend(grouplist,
+					GINT_TO_POINTER(params->guest_gid));
+		} else {
 			for(ok=0;ok<ng && (row = mysql_fetch_row(result) );ok++) {
 				gid=strtol(row[0],&endptr,10);
 				if(*endptr) {
@@ -569,6 +588,9 @@ G_MODULE_EXPORT GSList *get_user_groups(const char *username, struct ipauth_para
 		}
 		mysql_free_result(result);
 	}
+	if (!grouplist)
+		return NULL;
+
 	/* store user to cache */
 	if (!user) {
 		user=g_new0(struct ipauth_user, 1);

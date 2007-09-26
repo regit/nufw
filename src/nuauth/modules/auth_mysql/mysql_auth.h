@@ -26,6 +26,11 @@
 #include <errno.h>
 #include "mysql.h"
 
+#define AUTH_MYSQL_FALLBACK_TO_GUEST 1
+#define AUTH_MYSQL_GUEST_USERNAME "guest"
+#define AUTH_MYSQL_GUEST_USERID 0
+#define AUTH_MYSQL_GUEST_GROUPID 99
+
 #define IPAUTH_REV "0.0.1"
 
 struct ipauth_user {
@@ -37,6 +42,10 @@ struct ipauth_user {
 
 struct ipauth_params {
 	struct ipauth_mysql_params *mysql;
+	unsigned char fallback_to_guest;
+	char *guest_username;
+	unsigned guest_uid;
+	unsigned guest_gid;
 	GHashTable *users; 
 };
 
