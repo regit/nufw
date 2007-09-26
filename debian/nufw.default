@@ -7,8 +7,8 @@ NUFW_VERBOSITY="vv"
 #Address of the nuauth server
 #NUFW_NUAUTH_ADDRESS="127.0.0.1"
 
-#UDP port the nuauth server listens on
-#NUFW_NUAUTH_UDP_PORT=4128
+#TCP port the nuauth server listens on
+#NUFW_NUAUTH_PORT=4128
 
 #Timeout to forget about packets when there's no match (seconds)
 #NUFW_TIMEOUT=15

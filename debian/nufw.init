@@ -49,8 +49,8 @@ if [ "$NUFW_NUAUTH_ADDRESS" != "" ]; then
   NUFW_OPTIONS="$NUFW_OPTIONS -d $NUFW_NUAUTH_ADDRESS"
 fi
 
-if [ "$NUFW_NUAUTH_UDP_PORT" != "" ]; then
-  NUFW_OPTIONS="$NUFW_OPTIONS -p $NUFW_NUAUTH_UDP_PORT"
+if [ "$NUFW_NUAUTH_PORT" != "" ]; then
+  NUFW_OPTIONS="$NUFW_OPTIONS -p $NUFW_NUAUTH_PORT"
 fi
 
 if [ "$NUFW_TIMEOUT" != "" ]; then
