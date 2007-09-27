@@ -494,13 +494,13 @@ G_MODULE_EXPORT uint32_t get_user_id(const char *username, struct ipauth_params*
 		return params->guest_uid; /* SASL_BADAUTH; error code? */
 	} else {
 		MYSQL_RES *result = mysql_store_result(ld);
-		if ((ok=mysql_affected_rows(ld))==1) {
+		if ((ok = mysql_affected_rows(ld)) == 1) {
 			if ( (row = mysql_fetch_row(result) )) {
-				uid=strtol(row[0],&endptr,10);
-				if(*endptr)
+				uid = strtol(row[0],&endptr,10);
+				if (*endptr) {
 					uid = params->guest_uid; /* SASL_BADAUTH; error code? */
-				else {
-					user=g_new0(struct ipauth_user, 1);
+				} else {
+					user = g_new0(struct ipauth_user, 1);
 					user->username = g_strdup(username);
 					user->uid = uid;
 					g_hash_table_insert(params->users, user->username, user);
@@ -546,11 +546,12 @@ G_MODULE_EXPORT GSList *get_user_groups(const char *username, struct ipauth_para
 			"SELECT gid,%s.uid FROM %s JOIN %s ON %s.uid=%s.uid WHERE username='%s'",
 			mysql->mysql_userinfo_table_name, mysql->mysql_groupinfo_table_name,
 			mysql->mysql_userinfo_table_name, mysql->mysql_groupinfo_table_name,
-			mysql->mysql_userinfo_table_name, username)) )
+			mysql->mysql_userinfo_table_name, username)) ) {
 					/* "SELECT gid,users.uid FROM groupinfo JOIN users ON groupinfo.uid=users.uid WHERE username='%s'", username)) ) */
 					/* "SELECT groupinfo.gid,users.uid FROM groupinfo,users WHERE groupinfo.uid=users.uid and users.username='%s'",username)) )  */
 					/* "SELECT gid FROM groupinfo WHERE uid IN (SELECT uid FROM users where username='%s')",username)) )  */
 		return NULL;
+	}
 
 	/* execute query */
 	if ( (ok = mysql_real_query(ld, request, strlen(request)))) {
