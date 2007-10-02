@@ -9,13 +9,13 @@ auth_mysql can be used as:
  * nuauth_user_check_module
  * nuauth_get_user_id_module
  * nuauth_get_user_groups_module
- * nuauth_ip_authentication_module
+ * nuauth_ip_authentication_module (use with caution)
 
 
 Prerequisites
 =============
 
-Two different mysql schemas are provied in conf/auth_mysql:
+Two different mysql schemas are provided in conf/auth_mysql:
 - auth_mysql.ipv4.mysql.dump
 - auth_mysql.ipv6.mysql.dump
 
@@ -121,7 +121,7 @@ DstPort=443
 Using it
 ========
 
-The PHP pages available in scripts/auth_mysql/nufwauth/ provide an login and logout page.
+The PHP pages available in scripts/auth_mysql/mysqlauth/ provide an login and logout page.
 You may need to edit the start of index.php to adjust the database configuration to your system.
 
 logoff script in the directory scripts/auth_mysql/ can be used to end session after timeout.
