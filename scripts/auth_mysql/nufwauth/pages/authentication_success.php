@@ -33,7 +33,7 @@ function Util_PrintAuthenticationSuccess($username,$can_logout)
   <tr>
     <th height="454" valign="top" scope="col"><table width="760" height="375" border="0" align="center" cellpadding="0" cellspacing="0" bordercolor="" bordercolorlight="" bordercolordark="">
       <tr>
-        <th height="96" align="left" valign="top"><img src="images/nupik.png" height="140" /></th>
+        <th height="96" align="left" valign="top">Authentication</th>
         </tr>
       <tr>
         <th ><h1 class="Style1" style="margin-top:2em;">Welcome <?php echo $username; ?><br/></h1>

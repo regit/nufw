@@ -28,7 +28,7 @@ function Util_PrintAuthenticationError()
   <tr>
     <th valign="top" scope="col"><table width="760" height="536" border="0" align="center" cellpadding="0" cellspacing="0" bordercolor="" bordercolorlight="" bordercolordark="">
       <tr>
-        <th height="96" align="left" valign="top"><img src="images/nupik.png" height="140" /></th>
+        <th height="96" align="left" valign="top">Authentication</th>
         </tr>
       <tr>
         <th height="176" ><h1 class="Style13">Authentication Error</h1>

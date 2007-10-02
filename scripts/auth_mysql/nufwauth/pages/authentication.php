@@ -41,7 +41,7 @@ function Util_PrintAuthentication()
   <tr>
     <th height="503" valign="top" scope="col"><table width="760" height="366" border="0" align="center" cellpadding="0" cellspacing="0" bordercolor="" bordercolorlight="" bordercolordark="">
       <tr>
-        <th height="96" align="left" valign="top"><img src="images/nupik.png" /></th>
+        <th height="96" align="left" valign="top">Authentication</th>
         </tr>
       <tr>
         <th align="center" valign="top"><span class="Style12"><b>
