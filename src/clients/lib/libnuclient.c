@@ -270,7 +270,7 @@ int nu_client_setup_tls(nuauth_session_t * session,
 	if (keyfile != NULL && access(keyfile, R_OK) != 0) {
 #if REQUEST_CERT
 		if (session->verbose)
-		    printf("Unable ot load key file: %s\n", keyfile);
+		    printf("Unable to load key file: %s\n", keyfile);
 		SET_ERROR(err, INTERNAL_ERROR, FILE_ACCESS_ERR);
 		if (home) {
 			free(home);
