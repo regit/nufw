@@ -605,6 +605,16 @@ static int read_acl_list(struct plaintext_params *params)
 				fclose(fd);
 				return 2;
 			}
+		} else if (!strcasecmp("uid", p_key)) {	/*  Users */
+			char log_prefix[16];
+			snprintf(log_prefix, sizeof(log_prefix) - 1,
+				 "L.%d: ", ln);
+			/*  parsing groups */
+			if (parse_ints
+			    (p_value, &newacl->users, log_prefix)) {
+				fclose(fd);
+				return 2;
+			}
 		} else if (!strcasecmp("proto", p_key)) {	/*  Protocol */
 			if (sscanf(p_value, "%d", &newacl->proto) != 1) {
 				log_message(WARNING, DEBUG_AREA_MAIN,
@@ -1306,6 +1316,7 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element, gpointer params)
 		this_acl = g_new0(struct acl_group, 1);
 		g_assert(this_acl);
 		this_acl->answer = p_acl->decision;
+		this_acl->users = g_slist_copy(p_acl->users);
 		this_acl->groups = g_slist_copy(p_acl->groups);
 		if (p_acl->period) {
 			this_acl->period = g_strdup(p_acl->period);

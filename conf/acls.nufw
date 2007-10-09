@@ -7,6 +7,9 @@
 # decision=1            # 0=drop, 1=accept, 3=reject (2 is reserved: "no decide")
 # gid=100,101           # which groups are concerned
 # gid=103               # several lines can be used
+# uid=100,101           # which user ids are concerned
+# uid=103               # several lines can be used
+# proto=6               # TCP (only 1 proto allowed per ACL, of course)
 # proto=6               # TCP (only 1 proto allowed per ACL, of course)
 # type=0                # Type, for ICMP protocol only
 # SrcIP=10.10.0.1       # Source IP, equivalent to 10.10.0.1/32

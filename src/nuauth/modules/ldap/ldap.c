@@ -469,7 +469,7 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 	GSList *temp_list = NULL;
 	char filter[LDAP_QUERY_SIZE];
 	char **attrs_array, **walker;
-	int attrs_array_len, i, group;
+	int attrs_array_len, i, integer;
 	struct timeval timeout;
 	struct acl_group *this_acl;
 	struct weighted_acl *this = NULL;
@@ -793,14 +793,28 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 			attrs_array_len = ldap_count_values(attrs_array);
 			walker = attrs_array;
 			for (i = 0; i < attrs_array_len; i++) {
-				sscanf(*walker, "%d", &group);
+				sscanf(*walker, "%d", &integer);
 				this_acl->groups =
 				    g_slist_prepend(this_acl->groups,
 						    GINT_TO_POINTER
-						    (group));
+						    (integer));
 				walker++;
 			}
 			ldap_value_free(attrs_array);
+			/* build groups  list */
+			attrs_array = ldap_get_values(ld, result, "User");
+			attrs_array_len = ldap_count_values(attrs_array);
+			walker = attrs_array;
+			for (i = 0; i < attrs_array_len; i++) {
+				sscanf(*walker, "%d", &integer);
+				this_acl->groups =
+				    g_slist_prepend(this_acl->users,
+						    GINT_TO_POINTER
+						    (integer));
+				walker++;
+			}
+			ldap_value_free(attrs_array);
+
 			result = ldap_next_entry(ld, result);
 
 			if (nuauthconf->prio_to_nok == 2) {

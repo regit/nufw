@@ -67,6 +67,7 @@ typedef enum {
  * Used to store the acl that apply for a packet
  */
 struct acl_group {
+	GSList *users;		/*!< List of users ID on which the acl apply */
 	GSList *groups;		/*!< List of users groups on which the acl apply */
 	decision_t answer;	/*!< Answer relative to the acl */
 	gchar *period;		/*!< Period linked to the acl */

@@ -46,22 +46,12 @@ typedef enum {
 	TEST_DECIDED		/*<! Decision is taken on packet */
 } test_t;
 
-static void search_user_group_in_acl_groups(struct acl_group *datas,
-					    decision_t *answer,
-					    test_t *test,
-					    connection_t *element,
-					    time_t *expire,
-					    GSList *user_group)
+static void update_decision(struct acl_group *datas, decision_t *answer, test_t *test, connection_t *element, time_t *expire)
 {
-	if (g_slist_find(datas->
-			 groups,
-			 (gconstpointer) user_group->data)) {
-		/* find a group match, time to update decision */
-		*answer = datas->answer;
-		switch (nuauthconf->prio_to_nok) {
+	switch (nuauthconf->prio_to_nok) {
 		case 1:
 			if ((*answer ==	DECISION_DROP)
-			   || (*answer == DECISION_REJECT)) {
+					|| (*answer == DECISION_REJECT)) {
 				/* if prio is to not ok, then a DROP or REJECT is a final decision */
 				*test = TEST_DECIDED;
 				update_connection_datas (element,datas);
@@ -82,42 +72,77 @@ static void search_user_group_in_acl_groups(struct acl_group *datas,
 			break;
 		default:
 			debug_log_message(WARNING, DEBUG_AREA_MAIN,
-				  "BUG: Should not have %i for prio_to_nok",
-				  nuauthconf->prio_to_nok);
-		}
-		/* complete decision with check on period (This can change an ACCEPT answer) */
-		if (*answer == DECISION_ACCEPT) {
-			time_t periodend = -1;
-			/* compute end of period for this acl */
-			if (datas->period) {
-				periodend = get_end_of_period_for_time_t(
+					"BUG: Should not have %i for prio_to_nok",
+					nuauthconf->prio_to_nok);
+	}
+	/* complete decision with check on period (This can change an ACCEPT answer) */
+	if (*answer == DECISION_ACCEPT) {
+		time_t periodend = -1;
+		/* compute end of period for this acl */
+		if (datas->period) {
+			periodend = get_end_of_period_for_time_t(
 					datas->period, time(NULL));
-				if (periodend == 0) {
-					/* this is not a correct time going to drop */
-					*answer = DECISION_NODECIDE;
-					*test = TEST_DECIDED;
-					update_connection_datas (element,datas);
-				} else {
-					debug_log_message
-						(VERBOSE_DEBUG,
-						 DEBUG_AREA_MAIN,
-						 "end of period for %s in %ld",
-						 datas->period, periodend);
-
-				}
-			}
-			if ((*expire == -1) || ((periodend != -1)
-					 && (*expire !=
-						 -1)
-					 && (*expire >
-						 periodend))) {
+			if (periodend == 0) {
+				/* this is not a correct time going to drop */
+				*answer = DECISION_NODECIDE;
+				*test = TEST_DECIDED;
+				update_connection_datas (element,datas);
+			} else {
 				debug_log_message
-					(DEBUG,
+					(VERBOSE_DEBUG,
 					 DEBUG_AREA_MAIN,
-					 " ... modifying expire");
-				*expire = periodend;
+					 "end of period for %s in %ld",
+					 datas->period, periodend);
+
 			}
 		}
+		if ((*expire == -1) || ((periodend != -1)
+					&& (*expire !=
+						-1)
+					&& (*expire >
+						periodend))) {
+			debug_log_message
+				(DEBUG,
+				 DEBUG_AREA_MAIN,
+				 " ... modifying expire");
+			*expire = periodend;
+		}
+	}
+}
+
+static void search_user_group_in_acl_groups(struct acl_group *datas,
+					    decision_t *answer,
+					    test_t *test,
+					    connection_t *element,
+					    time_t *expire,
+					    GSList *user_group)
+{
+	if (g_slist_find(datas->
+			 groups,
+			 (gconstpointer) user_group->data)) {
+		/* find a group match, time to update decision */
+		*answer = datas->answer;
+		update_decision(datas, answer, test, element, expire);
+	} else {
+		if (*answer == DECISION_NODECIDE) {
+			update_connection_datas (element,datas);
+		}
+	}
+}
+
+static void search_user_id_in_acl_groups(struct acl_group *datas,
+					    decision_t *answer,
+					    test_t *test,
+					    connection_t *element,
+					    time_t *expire,
+					    uint32_t userid)
+{
+	if (g_slist_find(datas->
+			 users,
+			 userid)) {
+		/* find a group match, time to update decision */
+		*answer = datas->answer;
+		update_decision(datas, answer, test, element, expire);
 	} else {
 		if (*answer == DECISION_NODECIDE) {
 			update_connection_datas (element,datas);
@@ -180,8 +205,15 @@ nu_error_t take_decision(connection_t * element, packet_place_t place)
 		for (parcours = element->acl_groups;
 		     (parcours != NULL && test == TEST_NODECIDE);
 		     parcours = g_slist_next(parcours)) {
-			/* for each user  group */
 			if (parcours->data != NULL) {
+				/* search for a userid-based rule */
+				search_user_id_in_acl_groups(((struct acl_group *)(parcours->data)),
+							     &answer,
+							     &test,
+							     element,
+							     &expire,
+							     element->user_id);
+				/* for each user group */
 				for (user_group = element->user_groups;
 				     user_group != NULL
 				     && test == TEST_NODECIDE;

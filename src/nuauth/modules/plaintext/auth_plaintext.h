@@ -54,6 +54,7 @@ struct plaintext_acl {
 	decision_t decision;
 	int proto;
 
+	GSList *users;
 	GSList *groups;
 	GSList *apps;
 	GSList *os;
