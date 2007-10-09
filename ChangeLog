@@ -8,6 +8,7 @@
 	- fix race condition (multi-threading) in system module (PAM)
 	- Add auth_mysql module : ipauthentication and authentication against
 	a MySQL database
+	- nuauth: can now have user-id based acls
 2.2.2 (2006/06/26)
 	- log_mysql: fix logging of connection closing
 	- NuFW: fix incompatibility between i386 and x86_64 due to alignement

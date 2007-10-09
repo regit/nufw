@@ -734,6 +734,7 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 				this = g_new0(struct weighted_acl, 1);
 			}
 			g_assert(this_acl);
+			this_acl->users = NULL;
 			this_acl->groups = NULL;
 			this_acl->period = NULL;
 			this_acl->log_prefix = NULL;
@@ -788,7 +789,7 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 					  this_acl->answer,
 					  this_acl->period);
 			ldap_value_free(attrs_array);
-			/* build groups  list */
+			/* build groups list */
 			attrs_array = ldap_get_values(ld, result, "Group");
 			attrs_array_len = ldap_count_values(attrs_array);
 			walker = attrs_array;
@@ -801,13 +802,13 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 				walker++;
 			}
 			ldap_value_free(attrs_array);
-			/* build groups  list */
+			/* build users  list */
 			attrs_array = ldap_get_values(ld, result, "User");
 			attrs_array_len = ldap_count_values(attrs_array);
 			walker = attrs_array;
 			for (i = 0; i < attrs_array_len; i++) {
 				sscanf(*walker, "%d", &integer);
-				this_acl->groups =
+				this_acl->users =
 				    g_slist_prepend(this_acl->users,
 						    GINT_TO_POINTER
 						    (integer));
@@ -822,7 +823,7 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 			}
 
 			/* add when acl is filled */
-			if (this_acl->groups != NULL) {
+			if (this_acl->groups || this_acl->users) {
 				if (nuauthconf->prio_to_nok == 2) {
 					g_list = g_slist_insert_sorted(g_list,
 							this,

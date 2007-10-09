@@ -496,9 +496,9 @@ static int read_acl_list(struct plaintext_params *params)
 						  newacl->aclname);
 				/*  check if ACL node has minimal information */
 				/*  Warning: this code is duplicated after the loop */
-				if (!newacl->groups) {
+				if (!(newacl->groups || newacl->users)) {
 					log_message(WARNING, DEBUG_AREA_MAIN,
-						    "No group(s) declared in ACL %s",
+						    "No user or group(s) declared in ACL %s",
 						    newacl->aclname);
 				} else if (newacl->proto == IPPROTO_TCP ||
 					   newacl->proto == IPPROTO_UDP ||
@@ -768,9 +768,9 @@ static int read_acl_list(struct plaintext_params *params)
 				  "Done with ACL [%s]", newacl->aclname);
 		/*  check if ACL node has minimal information */
 		/*  Warning: this code is duplicated after the loop */
-		if (!newacl->groups) {
+		if (!(newacl->groups || newacl->users)) {
 			log_message(WARNING, DEBUG_AREA_MAIN,
-				    "No group(s) declared in ACL %s",
+				    "No user or group(s) declared in ACL %s",
 				    newacl->aclname);
 		} else if (newacl->proto == IPPROTO_TCP
 			   || newacl->proto == IPPROTO_UDP

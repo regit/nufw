@@ -79,6 +79,21 @@ class PlaintextAcl:
             text.append("%s=%s" % (key, value))
         self.content.extend(text)
 
+    def addAclPerUid(self, name, host, port, uid, decision=1, **kw):
+        text = [
+            "[%s]" % name,
+            "decision=%s" % decision,
+            "uid=%u" % uid,
+            "proto=6",
+            "SrcIP=0.0.0.0/0",
+            "SrcPort=1024-65535",
+            "DstIP=%s" % host, 
+            "DstPort=%u" % port]
+        for key, value in kw.iteritems():
+            text.append("%s=%s" % (key, value))
+        self.content.extend(text)
+
+
     def addAcl(self, name, port, gid, decision=1, **kw):
 	self.addAclFull(name, "0.0.0.0/0", port, gid, decision, **kw)
 
