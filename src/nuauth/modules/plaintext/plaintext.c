@@ -871,6 +871,7 @@ G_MODULE_EXPORT gboolean unload_module_with_params(struct plaintext_params
 			g_slist_foreach(p_acl->dst_ports, (GFunc) g_free,
 					NULL);
 			g_slist_free(p_acl->dst_ports);
+			g_slist_free(p_acl->users);
 			g_slist_free(p_acl->groups);
 			g_free(p_acl->aclname);
 			g_free(p_acl->period);
