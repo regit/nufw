@@ -139,7 +139,7 @@ static void search_user_id_in_acl_groups(struct acl_group *datas,
 {
 	if (g_slist_find(datas->
 			 users,
-			 userid)) {
+			 GUINT_TO_POINTER(userid))) {
 		/* find a group match, time to update decision */
 		*answer = datas->answer;
 		update_decision(datas, answer, test, element, expire);
@@ -220,16 +220,16 @@ nu_error_t take_decision(connection_t * element, packet_place_t place)
 				     user_group =
 				     g_slist_next(user_group)) {
 					/* search user group in acl_groups */
-					g_assert(((struct acl_group
-						   *) (parcours->data))->
-						 groups);
-					search_user_group_in_acl_groups(((struct acl_group *)(parcours->data)),
-									&answer,
-									&test,
-									element,
-									&expire,
-									user_group);
+					if (((struct acl_group *)(parcours->data))->groups) {
+							search_user_group_in_acl_groups(
+								((struct acl_group *)(parcours->data)),
+								&answer,
+								&test,
+								element,
+								&expire,
+								user_group);
 
+					}
 				}	/* end of user group loop */
 			} else {
 				debug_log_message(DEBUG, DEBUG_AREA_MAIN,
