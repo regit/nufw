@@ -270,7 +270,7 @@ if (defined ($list)) {
   if (defined($groups)) {
     $filter = "(&(objectClass=NuAccessControlList)(Group=".$acl{"Group"}."))";
   } elsif (defined($users)) {
-    $filter = "(&(objectClass=NuAccessControlList)(Group=".$acl{"Group"}."))";
+    $filter = "(&(objectClass=NuAccessControlList)(User=".$acl{"User"}."))";
   } else {
     die("No group or user given");
   }
