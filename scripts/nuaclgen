@@ -145,7 +145,7 @@ if (defined $delete)
 }else{
 
   if (not (defined($groups) or defined($users))) {
-    die "No group(s) given\n";
+    die "No group(s) or user(s) given\n";
   }
 
   if (defined($groups)) {
@@ -269,7 +269,7 @@ if (not defined($aclname)) {
 if (defined ($list)) {
   if (defined($groups)) {
     $filter = "(&(objectClass=NuAccessControlList)(Group=".$acl{"Group"}."))";
-  } elsif (defined($users)) {
+  } elsif (defined($users)) {
     $filter = "(&(objectClass=NuAccessControlList)(Group=".$acl{"Group"}."))";
   } else {
     die("No group or user given");
