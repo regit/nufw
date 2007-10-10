@@ -96,6 +96,7 @@ $result = GetOptions("help" => \$help,
 		     "dport=s" => \$dport,
 		     "jump=s" => \$decision,
 		     "groups=s" => \$groups,
+		     "users=s" => \$users,
 		     "Aclname=s" => \$aclname,
 		     "OsName=s" => \$osname,
 		     "OsVersion=s" => \$osversion,
@@ -113,14 +114,16 @@ if ($result == 0) {
 
 if ($help) {
   print "nuaclgen [-S (eq|ineq)] --Aclname [ACLDN] [--saddr NETWORK1] [--daddr NETWORK2] [--proto PROTONUMBER]
-        [--sport P1[:P2]] [--dport P3[:P4]] --jump [ACCEPT|DROP] --groups [GROUPLIST]
+        [--sport P1[:P2]] [--dport P3[:P4]] --jump [ACCEPT|DROP] [--groups [GROUPLIST] || --users [USERSLIST]]
         [--OsName N1,N2... [--OsVersion V1,V2...] [--OsRelease R1,R2...]]
         [--AppName N1,N2... [--AppSig S1,S2...]] : add an acl
 nuaclgen -L -g [Id Group] : list acl(s) for a group.
+nuaclgen -L -u [Id User] : list acl(s) for a user.
 nuaclgen --Delete dn : delete this dn ACL
 SYNTAX :
 \t- NETWORK : aaa.bbb.ccc.ddd[/ee]
 \t- GROUPSLIST : gid1[,gid2,gid3]
+\t- USERSLIST : uid1[,uid2,uid3]
 \t- PORTRANGE: NNNN[:MMMM]
 ";
   exit;
@@ -141,14 +144,23 @@ if (defined $delete)
   }
 }else{
 
-
-  if (not defined($groups)) {
+  if (not (defined($groups) or defined($users))) {
     die "No group(s) given\n";
-  } else {
+  }
+
+  if (defined($groups)) {
     if ($groups=~m/,/) {
       $acl{"Group"}= [split /,/ , $groups];
     } else {
       $acl{"Group"}= $groups;
+    }
+  }
+
+  if (defined($users)) {
+    if ($users=~m/,/) {
+      $acl{"User"}= [split /,/ , $users];
+    } else {
+      $acl{"User"}= $users;
     }
   }
 }
@@ -255,7 +267,13 @@ if (not defined($aclname)) {
 }
 
 if (defined ($list)) {
-  $filter = "(&(objectClass=NuAccessControlList)(Group=".$acl{"Group"}."))";
+  if (defined($groups)) {
+    $filter = "(&(objectClass=NuAccessControlList)(Group=".$acl{"Group"}."))";
+  } elsif (defined($users)) {
+    $filter = "(&(objectClass=NuAccessControlList)(Group=".$acl{"Group"}."))";
+  } else {
+    die("No group or user given");
+  }
   $results = $ldap->search(	# perform a search
 			   base   => $basedn,
 			   filter => $filter,
