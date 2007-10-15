@@ -74,9 +74,9 @@
     </revhistory>
   </bookinfo>
   <chapter><title>Introduction</title>
-    
+
     <section><title>Requirements</title>
-      <para>In this section, each invoked library will have to be installed and the 
+      <para>In this section, each invoked library will have to be installed and the
 header have to be in standard places (so <command>configure</command> can
 		found them).
 </para>
@@ -132,7 +132,7 @@ of this module.
       </section>
       <section><title>user marking requirement</title>
 	<para>
-The system needs a patched version of the ip_queue module and of 
+The system needs a patched version of the ip_queue module and of
 its "sibling" library libipq.
 </para>
       </section>
@@ -145,7 +145,7 @@ its "sibling" library libipq.
       run <screen>$./runme ip_queue_vwmark</screen></para>
     </section>
     <section><title>NuFW compilation</title>
-      <para>Extract the source to the directory of your choice and 
+      <para>Extract the source to the directory of your choice and
 go to the created directory.</para>
       <para>
 NuFW uses autoconf and automake for compilation and a standard <command>configure</command> script
@@ -213,7 +213,7 @@ You have to set a strong password here and keep it secret.
       </section>
 <section><title>Basic nuauth setup</title>
 <para>NuFW sources provide a sample configuration file for nuauth <filename>nuauth.conf</filename>
-which is available in the <filename>conf</filename> directory. 
+which is available in the <filename>conf</filename> directory.
 </para>
 <para>The two most important configuration variables are :
 <option>nuauth_client_listen_addr</option> which sets the address
@@ -250,7 +250,7 @@ by setting the variable <option>nuauth_acl_check_module</option>.
 </para>
 <para>To be able to proceed quickly to test, we will use the system
 module for user and the plaintext module for acl.
-A sample file for the plaintext acl check module is available 
+A sample file for the plaintext acl check module is available
 in the <filename>conf</filename> directory, <filename>acls.nufw</filename>.
 Copy it to <filename>/etc/nufw</filename> and adjust the
 group of the ssh acl to have it matching the group of a system
@@ -301,7 +301,7 @@ source address which is one of the network interface.
     <screen>[PID] Sending request for 3352783904</screen>
 </para>
 	      </listitem>
-	      <listitem><para>nufw initiates a TLS connection  to nuauth : 
+	      <listitem><para>nufw initiates a TLS connection  to nuauth :
 <screen>[PID] Trying TLS connection</screen>
 </para></listitem>
 	      <listitem><para>nuauth receives nufw's request :
@@ -340,15 +340,15 @@ on IP source :
       <section><title>Slapd configuration</title>
 	<para>
 The file <filename>acls.schema</filename> has to be put in <filename class="directory">/etc/ldap/schema</filename>
-and a line 
+and a line
 <screen>include         /etc/ldap/schema/acls.schema</screen>
 has to be added at the beginning of the <filename>/etc/ldap/slapd.conf</filename>.
 In the level of access setup in this file, one can add :
-<screen>#INL access for acls 
-access to  dn="ou=acls,dc=inl,dc=fr" 
-       by dn="uid=nufw,ou=Users,dc=inl,dc=fr" write 
-       by dn="uid=nuauth,ou=Users,dc=inl,dc=fr" read 
-       by dn="cn=admin,dc=inl,dc=fr" write 
+<screen>#INL access for acls
+access to  dn="ou=acls,dc=inl,dc=fr"
+       by dn="uid=nufw,ou=Users,dc=inl,dc=fr" write
+       by dn="uid=nuauth,ou=Users,dc=inl,dc=fr" read
+       by dn="cn=admin,dc=inl,dc=fr" write
        by * none</screen>
 nufw user is able to modify the policy and the nuauth user
 can only read the acls.
@@ -356,7 +356,7 @@ can only read the acls.
       </section>
      <section><title>nuauth configuration</title>
 	<para>
-To use ldap support for acl checking, we need to modify the <filename>nuauth.conf</filename> file : 
+To use ldap support for acl checking, we need to modify the <filename>nuauth.conf</filename> file :
 <screen>nuauth_acl_check_module="libldap"</screen>
 and we have to setup the connection parameters :
 <screen>ldap_bind_dn="uid=nuauth,ou=Users,dc=inl,dc=fr"
@@ -367,7 +367,7 @@ ldap_acls_base_dn="ou=Acls,dc=inl,dc=fr"</screen>
       </section>
       <section><title>Using nuface, a web-based rules generator</title>
 <para>
-<ulink url="http://www.inl.fr">INL</ulink> has released a powerful Netfilter rules generator system for NuFW and Netfilter. 
+<ulink url="http://www.inl.fr">INL</ulink> has released a powerful Netfilter rules generator system for NuFW and Netfilter.
 It is called Nuface and it is available at :
 <ulink url="http://inl.fr/Nuface.html">http://inl.fr/Nuface.html</ulink>
 It generates a set of rules for NuFW and Netfilter that can directly be applied from the web interface.
@@ -379,8 +379,8 @@ It generates a set of rules for NuFW and Netfilter that can directly be applied 
 	<para>
 The file <filename>nuaclgen.conf</filename> contains the informations about ldap
 connections. It needs to be modified to suit your configuration, for example :
-<screen>$ldap_host="localhost"; 
-$username="uid=nufw,ou=Users,dc=inl,dc=fr"; 
+<screen>$ldap_host="localhost";
+$username="uid=nufw,ou=Users,dc=inl,dc=fr";
 $password="writepasswd";
 $basedn="ou=Acls,dc=inl,dc=fr";</screen>
 <footnote><para>The nuaclgen.conf file contains sensitive data
@@ -390,18 +390,18 @@ and thus must have limited rights.</para>
 </para>
 	<para>To allow ssh for users
 of group 513 if they use <filename>/usr/bin/ssh</filename> application, we can use :
-<screen>nuaclgen -A cn=ssh,ou=Acls,dc=inl,dc=fr -p 6 --dport 22 -AppName "/usr/bin/ssh" -j ACCEPT -g 513</screen>
+<screen>nuaclgen --Aclname cn=ssh,ou=Acls,dc=inl,dc=fr -p 6 --dport 22 -AppName "/usr/bin/ssh" -j ACCEPT -g 513</screen>
 </para>
 	<para>Or for access directed to a web server :
 <screen>
-nuaclgen -A cn=apt,ou=Acls,dc=inl,dc=fr -p 6 --dport 80 -AppName "/usr/lib/apt/methods/http" -j ACCEPT -g 1042
+nuaclgen --Aclname cn=apt,ou=Acls,dc=inl,dc=fr -p 6 --dport 80 -AppName "/usr/lib/apt/methods/http" -j ACCEPT -g 1042
 </screen>
 This ACL gives access to group 1042  which is used by root user of some server of ours.
 Thus root user can only get file to update the computer, but other users can not access
 the web.
 </para>
       </section>
- 
+
     </section>
     <section><title>Setting up NuFW authenticated connections tracking</title>
       <section><title>nuauth settings</title>
@@ -431,16 +431,16 @@ You have to create a SQL user to run the script, with the following permissions
 minutes, from cron, especially on busy firewalls. If you don't run this script, your "conntrack_ulog" table
 will grow quickly with "dead" connexions, and will cause NuFW to act slower and
 slower. All the script does is transfer "dead" data (ie closed connexions,
-dropped connexions) to the ulog table, which is plainly an archive table, not 
+dropped connexions) to the ulog table, which is plainly an archive table, not
 used on production by NuFW, nor by the SSO subsystems.
 </para>
 <para>
 You may also want to rotate the "ulog" table, so that it doesn't grow to infinite
 size with time. From 1.0.12 on, scripts are available for this task in the scripts/ subdir of
 the archive. Before 1.0.12, you can get those two scripts from the Nulog archive
-at 
-<ulink url="http://www.inl.fr/download/nulog.html.en">Nulog project homepage</ulink>  
-Look for the ulog_rotate_*.sh scripts. 
+at
+<ulink url="http://www.inl.fr/download/nulog.html.en">Nulog project homepage</ulink>
+Look for the ulog_rotate_*.sh scripts.
 At the present time, it is assumed those scripts are run as the root SQL user,
 as cronjobs. Of course the better way to go is to create a separate user for
 this and grant it the needed privileges. Please provide updates for this
@@ -465,7 +465,7 @@ iptables -A FORWARD -d $DMZ -p tcp -m state --state ESTABLISHED --dport 80 --tcp
 iptables -A FORWARD -s $DMZ -p tcp -m state --state ESTABLISHED --sport 80 --tcp-flags SYN,ACK SYN,ACK -j QUEUE
 iptables -A FORWARD -p tcp -m state --state ESTABLISHED -j ACCEPT
 iptables -A FORWARD -d $DMZ -p tcp --syn --dport 80 -m state --state NEW -j QUEUE</screen>
-The first rule optimizes the filter by matching an important part of the ESTABLISHED traffic. The last rule with --state ESTABLISHED is the standard accepted established packets. It has to be put after NuFW flags matching rules. 
+The first rule optimizes the filter by matching an important part of the ESTABLISHED traffic. The last rule with --state ESTABLISHED is the standard accepted established packets. It has to be put after NuFW flags matching rules.
 </para>
       </section>
 <section><title>Using the connection tracking</title>
@@ -473,19 +473,19 @@ The first rule optimizes the filter by matching an important part of the ESTABLI
 <command>nutop</command> is a perl script provided with nufw sources. It is a
 top like tool that displays the active and authenticated connections in real-time.
 </para>
-<para>The best way<footnote><para>as far as the author of this document knows at the time of the writing of 
+<para>The best way<footnote><para>as far as the author of this document knows at the time of the writing of
 this document</para>
 	  </footnote> to use the logs generated by the connection tracking is to install
 <command>nulog</command>(a.k.a ulog-php)  which provides a convenient web interface.
 <command>nulog</command> is available under GPL on this page :
-<ulink url="http://inl.fr/Nulog.html">http://inl.fr/Nulog.html</ulink>  
+<ulink url="http://inl.fr/Nulog.html">http://inl.fr/Nulog.html</ulink>
 </para>
 	</section>
     </section>
 <section><title>Single Sign On setup</title>
 <section><title>Apache</title>
-<para>All you need to do is to setup a SQL user with SELECT permissions on the 
-"conntrack_ulog" table. Then setup mod_auth_nufw to use the configured SQL 
+<para>All you need to do is to setup a SQL user with SELECT permissions on the
+"conntrack_ulog" table. Then setup mod_auth_nufw to use the configured SQL
 user/database/table. The source code of the apache module is available at <ulink
 url="http://inl.fr/mod-auth-nufw.html">NuFW Apache SSO page</ulink></para>
 	</section>
@@ -499,9 +499,9 @@ user/database/table. The source code of the squid helper is available at
 	<section><title>Certificate authentication</title>
 <para>It is possible to use certificate authentication of clients : If
 a user provides at TLS negotiation a certificate which DN matches a known
-user then nuauth assumes the users is authenticated and doesn't ask for a 
+user then nuauth assumes the users is authenticated and doesn't ask for a
 password.
-To activate this functionnality, you need to set the option 
+To activate this functionnality, you need to set the option
 <option>nuauth_tls_request_cert</option> to 1.
 </para>
 	</section>
@@ -512,7 +512,7 @@ Official Linux kernels are not able to mark packets
 with ip_queue framework.
 It is thus necessary to patch the kernel, this has to be done by using
 the <filename>ip_queue_vwmark</filename> patch available in the
-patch-o-matic-ng from netfilter. This will generate a modified version of both 
+patch-o-matic-ng from netfilter. This will generate a modified version of both
 ip_queue module and libipq.a file.
 </para>
 <para>
@@ -550,7 +550,7 @@ by using command like  :
 user's flows in a specific class :
 <screen>tc filter add dev IFACE  prio 5 protocol ip handle 102 fw flowid FLOWID</screen>
 </para>
-<para>For more information about routing and quality of service you can read 
+<para>For more information about routing and quality of service you can read
 <ulink url="http://www.lartc.org">lartc</ulink>.
 </para>
       </section>
@@ -558,7 +558,7 @@ user's flows in a specific class :
 <section><title>Hardening NuFW install</title>
 <section><title>Nufw certificate verification</title>
 <para>It is warmly recommanded to put the nuauth
-in a protected place to ensure the security of 
+in a protected place to ensure the security of
 communications between nufw and nuauth<footnote><para>Even if all flows are TLS encrypted</para>
 	</footnote>.
 As the firewall policy relay on the answer of nuauth, is it good to check that
@@ -579,11 +579,11 @@ be spoofed if a malicious user installs a modified NuFW agent.
 <para>
 This warning needs to be taken into account but one can not forget
 this feature exists to secure flows that an administrator be would have to keep
-open applications on a standard system<footnote><para>Please avoid an ABS effect 
+open applications on a standard system<footnote><para>Please avoid an ABS effect
 : <quote>we've got more security so we can break later</quote></para>
 	  </footnote>.
  </para>
-<para>Thus, the value of application and os filtering depends on the confidence you have 
+<para>Thus, the value of application and os filtering depends on the confidence you have
 on the system which issues the authentication. On a secured system where users can not install
 software, this sort of filtering is "quite secure".</para>
       </section>
