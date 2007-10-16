@@ -193,12 +193,13 @@ static int samp_send(gnutls_session session, const char *buffer,
 	unsigned len, alloclen;
 	int result;
 
-	alloclen = ((length / 3) + 1) * 4 + 1;
+	/* prefix ("S: ") + base64 length + 1 nul byte */
+	alloclen = 3 + ((length+2)/3)*4 + 1;
 	buf = g_new(char, alloclen);
 	result = sasl_encode64(buffer, length, buf + 3, alloclen - 3, &len);
 	if (result != SASL_OK) {
-		free(buf);
-		log_message(WARNING, DEBUG_AREA_AUTH, "Encoding data in base64");
+		g_free(buf);
+		log_message(WARNING, DEBUG_AREA_AUTH, "Encoding data in base64 failed");
 		return result;
 	}
 	memcpy(buf, "S: ", 3);
