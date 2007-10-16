@@ -475,15 +475,21 @@ void parse_options(int argc, char **argv, command_line_params_t * params)
 			/* port we listen for auth answer */
 			printf("Waiting for user packets on TCP port %s\n",
 			       optarg);
-			SECURE_STRNCPY(nuauthconf->userpckt_port, optarg,
-				       sizeof(nuauthconf->userpckt_port));
+			
+			if(nuauthconf->userpckt_port)
+				g_free(nuauthconf->userpckt_port);
+
+			nuauthconf->userpckt_port = g_strdup(optarg);
 			break;
 		case 'p':
 			/* port we listen for auth answer */
 			printf("Waiting for nufw packets on TCP port %s\n",
 			       optarg);
-			SECURE_STRNCPY(nuauthconf->authreq_port, optarg,
-				       sizeof(nuauthconf->authreq_port));
+
+			if(nuauthconf->authreq_port)
+				g_free(nuauthconf->authreq_port);
+
+			nuauthconf->authreq_port = g_strdup(optarg);
 			break;
 		case 'L':
 			/* Address we listen on for NUFW originating packets */
