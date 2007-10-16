@@ -960,13 +960,10 @@ int sasl_user_check(user_session_t * c_session)
 			    "SASL error: authentication process interrupted";
 		}
 		modules_auth_error_log(c_session, err, message);
+		return ret;
 	}
 
 	sasl_dispose(&conn);
-
-	if (ret != SASL_OK)
-		return ret;
-
 
 	/* recv OS datas from client */
 	buf_size = gnutls_record_recv(*(c_session->tls), buf, sizeof buf);
