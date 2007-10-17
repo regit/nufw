@@ -473,49 +473,32 @@ void parse_options(int argc, char **argv, command_line_params_t * params)
 
 		case 'l':
 			/* port we listen for auth answer */
-			printf("Waiting for user packets on TCP port %s\n",
-			       optarg);
-			
-			if(nuauthconf->userpckt_port)
-				g_free(nuauthconf->userpckt_port);
-
+			g_free(nuauthconf->userpckt_port);
 			nuauthconf->userpckt_port = g_strdup(optarg);
+			printf("Waiting for user packets on TCP port %s\n",
+			       nuauthconf->userpckt_port);
 			break;
+
 		case 'p':
 			/* port we listen for auth answer */
-			printf("Waiting for nufw packets on TCP port %s\n",
-			       optarg);
-
-			if(nuauthconf->authreq_port)
-				g_free(nuauthconf->authreq_port);
-
+			g_free(nuauthconf->authreq_port);
 			nuauthconf->authreq_port = g_strdup(optarg);
+			printf("Waiting for nufw packets on TCP port %s\n",
+			       nuauthconf->authreq_port);
 			break;
+
 		case 'L':
 			/* Address we listen on for NUFW originating packets */
-			/* SECURE_STRNCPY(nufw_listen_address, optarg, HOSTNAME_SIZE); */
-			params->nuauth_nufw_listen_addr =
-			    (char *) calloc(HOSTNAME_SIZE, sizeof(char));
-			if (params->nuauth_nufw_listen_addr == NULL) {
-				/* TODO: Error message and free memory? */
-				exit(EXIT_FAILURE);
-			}
-			SECURE_STRNCPY(params->nuauth_nufw_listen_addr,
-				       optarg, HOSTNAME_SIZE);
+			g_free(params->nuauth_nufw_listen_addr);
+			params->nuauth_nufw_listen_addr = g_strdup(optarg);
 			printf("Waiting for Nufw daemon packets on %s\n",
 			       params->nuauth_nufw_listen_addr);
 			break;
 
 		case 'C':
 			/* Address we listen on for client originating packets */
-			params->nuauth_client_listen_addr =
-			    (char *) calloc(HOSTNAME_SIZE, sizeof(char));
-			if (params->nuauth_client_listen_addr == NULL) {
-				/* TODO: Error message and free memory? */
-				exit(EXIT_FAILURE);
-			}
-			SECURE_STRNCPY(params->nuauth_client_listen_addr,
-				       optarg, HOSTNAME_SIZE);
+			g_free(params->nuauth_client_listen_addr);
+			params->nuauth_client_listen_addr = g_strdup(optarg);
 			printf("Waiting for clients auth packets on %s\n",
 			       params->nuauth_client_listen_addr);
 			break;
