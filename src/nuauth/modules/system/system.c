@@ -48,7 +48,7 @@ typedef struct {
 } auth_pam_userinfo;
 
 gint system_pam_module_not_threadsafe;
-gint system_glibc_cant_guess_maxgroups;
+extern gint system_glibc_cant_guess_maxgroups;
 gint system_suppress_prefixed_domain;
 
 /*
