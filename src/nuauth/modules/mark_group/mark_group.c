@@ -223,7 +223,7 @@ G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params)
  *
  * Change the mark of the packet in all cases.
  */
-nu_error_t finalize_packet(connection_t * conn, gpointer params)
+G_MODULE_EXPORT nu_error_t finalize_packet(connection_t * conn, gpointer params)
 {
 	mark_group_config_t *config = params;
 	uint32_t mark = config->default_mark;
