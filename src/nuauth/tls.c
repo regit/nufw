@@ -391,11 +391,9 @@ void create_x509_credentials()
 	ret =
 	    gnutls_certificate_allocate_credentials(&nuauth_tls.x509_cred);
 	if (ret != 0) {
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING, DEBUG_AREA_USER)) {
-			g_message
-			    ("Problem with gnutls_certificate_allocate_credentials() : %s",
-			     gnutls_strerror(ret));
-		}
+		g_message
+		    ("Problem with gnutls_certificate_allocate_credentials() : %s",
+		     gnutls_strerror(ret));
 	}
 
 	ret =
@@ -403,11 +401,9 @@ void create_x509_credentials()
 						   nuauth_tls_cacert,
 						   GNUTLS_X509_FMT_PEM);
 	if (ret <= 0) {
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING, DEBUG_AREA_USER)) {
-			g_message
-			    ("Problem with certificate trust file : %s",
-			     gnutls_strerror(ret));
-		}
+		g_message
+		    ("Problem with certificate trust file : %s",
+		     gnutls_strerror(ret));
 	}
 	ret =
 	    gnutls_certificate_set_x509_key_file(nuauth_tls.x509_cred,
@@ -415,10 +411,8 @@ void create_x509_credentials()
 						 nuauth_tls_key,
 						 GNUTLS_X509_FMT_PEM);
 	if (ret < 0) {
-		if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING, DEBUG_AREA_USER)) {
-			g_message("Problem with certificate key file : %s",
-				  gnutls_strerror(ret));
-		}
+		g_message("Problem with certificate key file : %s",
+			  gnutls_strerror(ret));
 	}
 #ifdef DEBUG_ENABLE
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG, DEBUG_AREA_USER)) {
@@ -446,17 +440,14 @@ void create_x509_credentials()
 						     nuauth_tls.crl_file,
 						     GNUTLS_X509_FMT_PEM);
 	}
+
 	ret = generate_dh_params(&nuauth_tls.dh_params);
-#ifdef DEBUG_ENABLE
-	if (ret < 0)
+
+	if (ret < 0) {
 		log_message(INFO, DEBUG_AREA_GW | DEBUG_AREA_USER,
 			    "generate_dh_params() failed");
-#endif
+	}
 
-	/*
-	 * Gryzor doesnt understand wht dh_params is passed as 2nd argument, where a gnutls_dh_params_t structure is awaited
-	 * gnutls_certificate_set_dh_params( x509_cred, 0);
-	 */
 	gnutls_certificate_set_dh_params(nuauth_tls.x509_cred,
 					 nuauth_tls.dh_params);
 
