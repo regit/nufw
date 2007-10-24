@@ -190,7 +190,7 @@ typedef struct {
 	int auth_by_default;	/*!< Auth. by default (=1) */
 	unsigned char debug_mode;	/*!< Debug mode, enabled if different than zero */
 	unsigned char verbose;	/*!< Verbose mode (default: enabled) */
-	unsigned char diffie_hellman;	/*!< Use Diffie Hellman for key exchange? */
+	/* TODO: To remove */ unsigned char diffie_hellman;	/*!< Use Diffie Hellman for key exchange? */
 	int has_src_addr;		/*!< Has source address? */
 	struct sockaddr_storage src_addr;	/*!< Source address */
 
@@ -227,6 +227,7 @@ typedef struct {
 	 */
 	pthread_t recvthread;
 
+	/* TODO: To remove */
 	/**
 	 * Diffie Hellman parameters used to establish TLS tunnel.
 	 */

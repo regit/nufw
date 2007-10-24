@@ -81,9 +81,6 @@ void nu_exit_clean(nuauth_session_t * session)
 		gnutls_certificate_free_keys(session->cred);
 		gnutls_certificate_free_credentials(session->cred);
 	}
-	if (session->diffie_hellman) {
-		gnutls_dh_params_deinit(session->dh_params);
-	}
 	gnutls_deinit(session->tls);
 
 	pthread_cond_destroy(&(session->check_cond));
@@ -421,7 +418,6 @@ int nu_client_reset_tls(nuauth_session_t *session)
 /**
  * \brief Init connection to nuauth server
  *
- * \param diffie_hellman If equals to 1, use Diffie Hellman for key exchange
  * (very secure but initialization is slower)
  * \param err Pointer to a nuclient_error_t: which contains the error
  * \return A pointer to a valid ::nuauth_session_t structure or NULL if init has failed
@@ -434,7 +430,7 @@ int nu_client_reset_tls(nuauth_session_t *session)
  *
  * If everything is ok, create the connection table using tcptable_init().
  */
-nuauth_session_t *_nu_client_new(unsigned char diffie_hellman, nuclient_error_t * err)
+nuauth_session_t *_nu_client_new(nuclient_error_t * err)
 {
 	conntable_t *new;
 	nuauth_session_t *session;
@@ -454,7 +450,6 @@ nuauth_session_t *_nu_client_new(unsigned char diffie_hellman, nuclient_error_t 
 	/* Set basic fields */
 	session->userid = getuid();
 	session->connected = 0;
-	session->diffie_hellman = diffie_hellman;
 	session->count_msg_cond = -1;
 	session->auth_by_default = 1;
 	session->packet_seq = 0;
@@ -489,33 +484,6 @@ nuauth_session_t *_nu_client_new(unsigned char diffie_hellman, nuclient_error_t 
 		return NULL;
 	}
 
-	if (session->diffie_hellman) {
-		/* allocate diffie hellman parameters */
-		ret = gnutls_dh_params_init(&session->dh_params);
-		if (ret < 0) {
-			SET_ERROR(err, GNUTLS_ERROR, ret);
-			nu_exit_clean(session);
-			return NULL;
-		}
-
-		/* Generate Diffie Hellman parameters - for use with DHE
-		 * kx algorithms. These should be discarded and regenerated
-		 * once a day, once a week or once a month. Depending on the
-		 * security requirements.
-		 */
-		ret =
-		    gnutls_dh_params_generate2(session->dh_params,
-					       DH_BITS);
-		if (ret < 0) {
-			SET_ERROR(err, GNUTLS_ERROR, ret);
-			nu_exit_clean(session);
-			return NULL;
-		}
-
-		gnutls_certificate_set_dh_params(session->cred,
-						 session->dh_params);
-	}
-
 	if (!nu_client_reset_tls(session))
 	{
 		SET_ERROR(err, GNUTLS_ERROR, ret);
@@ -541,7 +509,7 @@ nuauth_session_t *_nu_client_new(unsigned char diffie_hellman, nuclient_error_t 
 
 nuauth_session_t *nu_client_new_callback(void *username_callback,
 		      void *passwd_callback,
-		      unsigned char diffie_hellman, nuclient_error_t * err)
+		      /* TODO: To remove */ unsigned char diffie_hellman, nuclient_error_t * err)
 {
 	nuauth_session_t *session = NULL;
 
@@ -550,7 +518,7 @@ nuauth_session_t *nu_client_new_callback(void *username_callback,
 		return NULL;
 	}
 
-	session = _nu_client_new(diffie_hellman, err);
+	session = _nu_client_new(err);
 
 	session->username_callback = username_callback;
 	session->passwd_callback = passwd_callback;
@@ -575,7 +543,7 @@ nuauth_session_t *nu_client_new_callback(void *username_callback,
 
 nuauth_session_t *nu_client_new(const char *username,
 		      const char *password,
-		      unsigned char diffie_hellman, nuclient_error_t * err)
+		      /* TODO: To remove */ unsigned char diffie_hellman, nuclient_error_t * err)
 {
 	nuauth_session_t *session = NULL;
 
@@ -584,7 +552,7 @@ nuauth_session_t *nu_client_new(const char *username,
 		return NULL;
 	}
 
-	session = _nu_client_new(diffie_hellman, err);
+	session = _nu_client_new(err);
 
 	session->username = secure_str_copy(username);
 	session->password = secure_str_copy(password);
