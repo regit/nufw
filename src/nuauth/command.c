@@ -23,13 +23,9 @@
 #include "command.h"
 #include "command_enc.h"
 #include <sys/un.h>		/* unix socket */
-#include <sys/stat.h>		/* fchmod()/mkdir() */
-#include <sys/types.h>		/* opendir() */
-#include <dirent.h>		/* opendir() */
-#include <errno.h>		/* opendir() */
+#include <sys/stat.h>		/* fchmod() */
 
-#define SOCKET_PATH LOCAL_STATE_DIR "/run/nuauth/"
-#define SOCKET_FILENAME "nuauth-command.socket"
+#define SOCKET_FILENAME LOCAL_STATE_DIR "/run/nuauth/nuauth-command.socket"
 
 const char* COMMAND_HELP =
 "version: display nuauth version\n"
@@ -65,37 +61,18 @@ int command_new(command_t * this)
 	int len;
 	int res;
 	int on = 1;
-	DIR* socket_dir;
 
 	this->start_timestamp = time(NULL);
 	this->socket = -1;
 	this->client = -1;
 	this->select_max = 0;
 
-	/* Check that /var/run/nuauth exists .. create it otherwise */
-	socket_dir = opendir(SOCKET_PATH);
-	if(!socket_dir && errno == ENOENT)
-	{
-		if(mkdir(SOCKET_PATH,S_IRUSR | S_IWUSR | S_IXUSR ))
-		{
-			log_message(CRITICAL, DEBUG_AREA_MAIN,
-				    "Unable to create %s to run command server: %s",
-				    SOCKET_PATH, g_strerror(errno));
-			return 0;
-		}
-	}
-	else
-	{
-		closedir(socket_dir);
-	}
-
-
 	/* Remove socket file */
-	(void) unlink(SOCKET_PATH SOCKET_FILENAME);
+	(void) unlink(SOCKET_FILENAME);
 
 	/* set address */
 	addr.sun_family = AF_UNIX;
-	strncpy(addr.sun_path, SOCKET_PATH SOCKET_FILENAME, sizeof(addr.sun_path));
+	strncpy(addr.sun_path, SOCKET_FILENAME, sizeof(addr.sun_path));
 	addr.sun_path[sizeof(addr.sun_path) - 1] = 0;
 	len = strlen(addr.sun_path) + sizeof(addr.sun_family);
 
@@ -122,7 +99,7 @@ int command_new(command_t * this)
 	if (res == -1) {
 		log_message(CRITICAL, DEBUG_AREA_MAIN,
 			    "Command server: UNIX socket bind(%s) error: %s",
-			    SOCKET_PATH SOCKET_FILENAME, g_strerror(errno));
+			    SOCKET_FILENAME, g_strerror(errno));
 		return 0;
 	}
 
