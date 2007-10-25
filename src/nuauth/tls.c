@@ -455,8 +455,8 @@ void create_x509_credentials()
 	ret = generate_dh_params(&nuauth_tls.dh_params);
 
 	if (ret < 0) {
-		log_message(INFO, DEBUG_AREA_GW | DEBUG_AREA_USER,
-			    "generate_dh_params() failed");
+		g_error("[%i] Problem generating dh params : %s",
+			getpid(), gnutls_strerror(ret));
 	}
 
 	gnutls_certificate_set_dh_params(nuauth_tls.x509_cred,
