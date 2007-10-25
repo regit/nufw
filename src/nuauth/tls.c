@@ -181,11 +181,19 @@ void refresh_crl_file()
 		struct stat stats;
 		stat(nuauth_tls.crl_file, &stats);
 		if (nuauth_tls.crl_file_mtime < stats.st_mtime) {
-			gnutls_certificate_set_x509_crl_file(nuauth_tls.
+			int ret;
+			ret = gnutls_certificate_set_x509_crl_file(nuauth_tls.
 							     x509_cred,
 							     nuauth_tls.
 							     crl_file,
 							     GNUTLS_X509_FMT_PEM);
+			if(ret < 0)
+			{
+				log_message(INFO, DEBUG_AREA_PERF,
+						"[%i] NuFW TLS: CRL file reloading failed (%s)",
+						getpid(), gnutls_strerror(ret));
+			}
+				
 		}
 		nuauth_tls.crl_refresh_counter = 0;
 	}
@@ -249,9 +257,8 @@ int tls_connect(int socket_fd, gnutls_session ** session_ptr)
 	}
 #endif
 	do {
-		debug_log_message(DEBUG, DEBUG_AREA_GW | DEBUG_AREA_USER,
-				  "NuFW TLS Handshaking (last error: %i)",
-				  ret);
+		log_message(INFO, DEBUG_AREA_GW | DEBUG_AREA_USER,
+			    "NuFW TLS Handshaking (last error: %i)", ret);
 		ret = gnutls_handshake(*session);
 	} while (ret < 0 && !gnutls_error_is_fatal(ret));
 #ifdef PERF_DISPLAY_ENABLE
@@ -262,7 +269,7 @@ int tls_connect(int socket_fd, gnutls_session ** session_ptr)
 
 	if (ret < 0) {
 		close_tls_session(socket_fd, session);
-		log_message(DEBUG, DEBUG_AREA_GW | DEBUG_AREA_USER,
+		log_message(INFO, DEBUG_AREA_GW | DEBUG_AREA_USER,
 			    "NuFW TLS Handshake has failed (%s)",
 			    gnutls_strerror(ret));
 		return SASL_BADPARAM;
@@ -391,9 +398,9 @@ void create_x509_credentials()
 	ret =
 	    gnutls_certificate_allocate_credentials(&nuauth_tls.x509_cred);
 	if (ret != 0) {
-		g_message
-		    ("Problem with gnutls_certificate_allocate_credentials() : %s",
-		     gnutls_strerror(ret));
+		g_error
+		    ("[%i] Problem with gnutls_certificate_allocate_credentials() : %s",
+		     getpid(), gnutls_strerror(ret));
 	}
 
 	ret =
@@ -401,9 +408,9 @@ void create_x509_credentials()
 						   nuauth_tls_cacert,
 						   GNUTLS_X509_FMT_PEM);
 	if (ret <= 0) {
-		g_message
-		    ("Problem with certificate trust file : %s",
-		     gnutls_strerror(ret));
+		g_error
+		    ("[%i] Problem with certificate trust file : %s",
+		     getpid(), gnutls_strerror(ret));
 	}
 	ret =
 	    gnutls_certificate_set_x509_key_file(nuauth_tls.x509_cred,
@@ -411,8 +418,8 @@ void create_x509_credentials()
 						 nuauth_tls_key,
 						 GNUTLS_X509_FMT_PEM);
 	if (ret < 0) {
-		g_message("Problem with certificate key file : %s",
-			  gnutls_strerror(ret));
+		g_error("[%i] Problem with certificate key file : %s",
+			getpid(), gnutls_strerror(ret));
 	}
 #ifdef DEBUG_ENABLE
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG, DEBUG_AREA_USER)) {
@@ -436,9 +443,13 @@ void create_x509_credentials()
 				getpid(), nuauth_tls_crl);
 		}
 		nuauth_tls.crl_file = nuauth_tls_crl;
-		gnutls_certificate_set_x509_crl_file(nuauth_tls.x509_cred,
+		ret = gnutls_certificate_set_x509_crl_file(nuauth_tls.x509_cred,
 						     nuauth_tls.crl_file,
 						     GNUTLS_X509_FMT_PEM);
+		if (ret < 0) {
+			g_error("[%i] Problem with certificate key file : %s",
+				getpid(), gnutls_strerror(ret));
+		}
 	}
 
 	ret = generate_dh_params(&nuauth_tls.dh_params);
