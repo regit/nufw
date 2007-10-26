@@ -419,7 +419,9 @@ int create_x509_credentials()
 		    ("[%i] Problem with certificate trust file : %s",
 		     getpid(), gnutls_strerror(ret));
 
-		return 0;
+		if (nuauth_tls.request_cert == GNUTLS_CERT_REQUIRE
+			|| nuauth_tls.auth_by_cert == MANDATORY_AUTH_BY_CERT)
+			return 0;
 	}
 	ret =
 	    gnutls_certificate_set_x509_key_file(nuauth_tls.x509_cred,
