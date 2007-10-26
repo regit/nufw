@@ -96,14 +96,14 @@ int command_new(command_t * this)
 	/* bind socket */
 	res = bind(this->socket, (struct sockaddr *) &addr, len);
 	if (res == -1) {
-		g_error("[%i] Command server: UNIX socket bind(%s) error: %s",
+		g_warning("[%i] Command server: UNIX socket bind(%s) error: %s",
 			    getpid(), SOCKET_FILENAME, g_strerror(errno));
 		return 0;
 	}
 
 	/* listen */
 	if (listen(this->socket, 1) == -1) {
-		g_error("[%i] Command server: UNIX socket listen() error: %s",
+		g_warning("[%i] Command server: UNIX socket listen() error: %s",
 			    getpid(), g_strerror(errno));
 		return 0;
 	}
