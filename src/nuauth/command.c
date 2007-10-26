@@ -81,7 +81,6 @@ int command_new(command_t * this)
 	if (this->socket == -1) {
 		g_warning("[%i] Command server: enable to create UNIX socket %s: %s",
 			    getpid(), addr.sun_path, g_strerror(errno));
-		nuauth_ask_exit();
 		return 0;
 	}
 	this->select_max = this->socket + 1;
@@ -476,7 +475,7 @@ void *command_server(GMutex * mutex)
 	command_t command;
 
 	if (!command_new(&command))
-		return NULL;
+		nuauth_ask_exit();
 
 	while (g_mutex_trylock(mutex)) {
 		g_mutex_unlock(mutex);
