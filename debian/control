@@ -135,7 +135,7 @@ Description: client library for nufw authentication
 
 Package: libnuclient-dev
 Architecture: any
-Depends: ${shlibs:Depends}, libsasl2-dev, libgnutls-dev|libgnutls11-dev
+Depends: ${shlibs:Depends}, libsasl2-dev, libgnutls-dev|libgnutls11-dev, libnuclient3 (= ${binary:Version})
 Description: Development files for nufw client library
  NuFW is an authenticating gateway, which means that connections are
  authenticated before being forwarded through the gateway.  Classical packet
