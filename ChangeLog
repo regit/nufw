@@ -1,14 +1,37 @@
-2.3.0
+2.2.7
+	- nuaclgen: add support for userid based ACLs.
+	- fix SASL rare crash on client authentication failure (sasl_dispose)
+	- fix command line parser: -p and -l were limited to 3 characters
+	- fix a buffer overflow (3 bytes) in base64 encoding function
+	- improve certificate file error handling
+	- leave if socket command file is unavailable
+2.2.6 (2007/10/09)
+	- nuauth: fix rare bug causing infinite loop
+	- Add auth_mysql module : authentication and ip authentication against
+	a MySQL database
 	- nuauth: introduces nuauth_single_user_client_limit and nuauth_single_ip_client_limit
-	to control user's connection policy.
+	- nuauth: add capability to bind on multiple addresses
+	- nuauth: can now have user-id based acls
+2.2.5 (2007/09/10)
+	- fix clients' Makefile for compatibility with automake 1.10
+	- bugfix: disallow change of ipauth option on reload to avoid a crash
+	- fix race condition (multi-threading) in system module (PAM)
+2.2.4 (2007/08/20)
+	- plaintext: fix parsing of IPv4 address
+	- log_syslog: log with IPv4 address and not IPv4 in IPv6
+	- nuauth: don't log packet appended to a connection
+	- nuauth: improve some debug areas settings
+	- nuauth: fix period handling
+	- log_mysql, log_pgsql: fix a rare crash related to improper format
+	string for 64 bits counters
+2.2.3 (2007/08/01)
 	- libnuclient: fix compilation when used in external client.
 	- nufw: ask kernel to drop packet when nuauth can't be reached.
-	- NuFW: fix configure for Fedora Core 6
-	- fix clients' Makefile for compatibility with automake 1.10
-	- fix race condition (multi-threading) in system module (PAM)
-	- Add auth_mysql module : ipauthentication and authentication against
-	a MySQL database
-	- nuauth: can now have user-id based acls
+	- nuauth: add some check when dealing with certificate expiration.
+	- NuFW: recover ICMP reject functionnality.
+	- log_mysql: handle reconnect as mysql default as changed with 5.0.
+	- Test system: add test of ICMP reject functionnality.
+	- nuauth: fix closing of user session in database logging modules.
 2.2.2 (2006/06/26)
 	- log_mysql: fix logging of connection closing
 	- NuFW: fix incompatibility between i386 and x86_64 due to alignement
