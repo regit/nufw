@@ -316,7 +316,7 @@ int tls_connect(int socket_fd, gnutls_session ** session_ptr)
  * Read conf file and allocate x509 credentials. This function should only be
  * called once because it uses the static variable ::dh_params
  */
-void create_x509_credentials()
+int create_x509_credentials()
 {
 	char *nuauth_tls_key = NULL;
 	char *nuauth_tls_cert = NULL;
@@ -365,12 +365,14 @@ void create_x509_credentials()
 			&& (int_authcert < MAX_AUTH_BY_CERT)) {
 		nuauth_tls.auth_by_cert = int_authcert;
 	} else {
-		g_error("[%i] config : invalid nuauth_tls_auth_by_cert value: %d",
+		g_warning("[%i] config : invalid nuauth_tls_auth_by_cert value: %d",
 			getpid(), int_authcert);
+		
+		return 0;
 	}
 
 	if ((nuauth_tls.auth_by_cert == MANDATORY_AUTH_BY_CERT)
-			&& (nuauth_tls.request_cert != GNUTLS_CERT_REQUIRE)) {
+	&& (nuauth_tls.request_cert != GNUTLS_CERT_REQUIRE)) {
 		log_message(INFO, DEBUG_AREA_AUTH | DEBUG_AREA_USER,
 			    "Mandatory certificate authentication asked, asking certificate");
 		nuauth_tls.request_cert = GNUTLS_CERT_REQUIRE;
@@ -381,12 +383,16 @@ void create_x509_credentials()
 			sizeof(nuauth_tls_vars) / sizeof(confparams_t));
 
 	if (access(nuauth_tls_key, R_OK)) {
-		g_error("[%i] TLS : can not access key file %s",
+		g_warning("[%i] TLS : can not access key file %s",
 			getpid(), nuauth_tls_key);
+
+		return 0;
 	}
 	if (access(nuauth_tls_cert, R_OK)) {
-		g_error("[%i] TLS : can not access cert file %s",
+		g_warning("[%i] TLS : can not access cert file %s",
 			getpid(), nuauth_tls_cert);
+		
+		return 0;
 	}
 
 	/* don't refresh crl if there is none */
@@ -398,9 +404,10 @@ void create_x509_credentials()
 	ret =
 	    gnutls_certificate_allocate_credentials(&nuauth_tls.x509_cred);
 	if (ret != 0) {
-		g_error
-		    ("[%i] Problem with gnutls_certificate_allocate_credentials() : %s",
+		g_warning("[%i] Problem with gnutls_certificate_allocate_credentials() : %s",
 		     getpid(), gnutls_strerror(ret));
+
+		return 0;
 	}
 
 	ret =
@@ -408,9 +415,11 @@ void create_x509_credentials()
 						   nuauth_tls_cacert,
 						   GNUTLS_X509_FMT_PEM);
 	if (ret <= 0) {
-		g_error
+		g_warning
 		    ("[%i] Problem with certificate trust file : %s",
 		     getpid(), gnutls_strerror(ret));
+
+		return 0;
 	}
 	ret =
 	    gnutls_certificate_set_x509_key_file(nuauth_tls.x509_cred,
@@ -418,8 +427,10 @@ void create_x509_credentials()
 						 nuauth_tls_key,
 						 GNUTLS_X509_FMT_PEM);
 	if (ret < 0) {
-		g_error("[%i] Problem with certificate key file : %s",
+		g_warning("[%i] Problem with certificate key file : %s",
 			getpid(), gnutls_strerror(ret));
+
+		return 0;
 	}
 #ifdef DEBUG_ENABLE
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG, DEBUG_AREA_USER)) {
@@ -439,30 +450,38 @@ void create_x509_credentials()
 			    nuauth_tls_crl);
 
 		if (access(nuauth_tls_crl, R_OK)) {
-			g_error("[%i] TLS : can not access crl file %s",
+			g_warning("[%i] TLS : can not access crl file %s",
 				getpid(), nuauth_tls_crl);
+
+			return 0;
 		}
 		nuauth_tls.crl_file = nuauth_tls_crl;
 		ret = gnutls_certificate_set_x509_crl_file(nuauth_tls.x509_cred,
 						     nuauth_tls.crl_file,
 						     GNUTLS_X509_FMT_PEM);
 		if (ret < 0) {
-			g_error("[%i] Problem with certificate key file : %s",
+			g_warning("[%i] Problem with certificate key file : %s",
 				getpid(), gnutls_strerror(ret));
+
+			return 0;
 		}
 	}
 
 	ret = generate_dh_params(&nuauth_tls.dh_params);
 
 	if (ret < 0) {
-		g_error("[%i] Problem generating dh params : %s",
+		g_warning("[%i] Problem generating dh params : %s",
 			getpid(), gnutls_strerror(ret));
+	
+		return 0;
 	}
 
 	gnutls_certificate_set_dh_params(nuauth_tls.x509_cred,
 					 nuauth_tls.dh_params);
 
 	cleanup_func_push(refresh_crl_file);
+
+	return 1;
 }
 
 /**

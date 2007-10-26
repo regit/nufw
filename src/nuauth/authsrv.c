@@ -685,7 +685,11 @@ void configure_app(int argc, char **argv)
 		    nuauthconf->debug_level);
 
 	/* init credential */
-	create_x509_credentials();
+	if(! create_x509_credentials())
+	{
+		fprintf(stderr,"Certificate initialization failed\n");
+		exit(EXIT_FAILURE);
+	}
 
 	if (params.daemonize == 1) {
 		daemonize();
