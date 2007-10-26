@@ -79,8 +79,9 @@ int command_new(command_t * this)
 	/* create socket */
 	this->socket = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (this->socket == -1) {
-		g_error("[%i] Command server: enable to create UNIX socket %s: %s",
+		g_warning("[%i] Command server: enable to create UNIX socket %s: %s",
 			    getpid(), addr.sun_path, g_strerror(errno));
+		nuauth_ask_exit();
 		return 0;
 	}
 	this->select_max = this->socket + 1;
