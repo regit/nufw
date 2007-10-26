@@ -79,9 +79,8 @@ int command_new(command_t * this)
 	/* create socket */
 	this->socket = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (this->socket == -1) {
-		log_message(CRITICAL, DEBUG_AREA_MAIN,
-			    "Command server: enable to create UNIX socket %s: %s",
-			    addr.sun_path, g_strerror(errno));
+		g_error("[%i] Command server: enable to create UNIX socket %s: %s",
+			    getpid(), addr.sun_path, g_strerror(errno));
 		return 0;
 	}
 	this->select_max = this->socket + 1;
@@ -97,17 +96,15 @@ int command_new(command_t * this)
 	/* bind socket */
 	res = bind(this->socket, (struct sockaddr *) &addr, len);
 	if (res == -1) {
-		log_message(CRITICAL, DEBUG_AREA_MAIN,
-			    "Command server: UNIX socket bind(%s) error: %s",
-			    SOCKET_FILENAME, g_strerror(errno));
+		g_error("[%i] Command server: UNIX socket bind(%s) error: %s",
+			    getpid(), SOCKET_FILENAME, g_strerror(errno));
 		return 0;
 	}
 
 	/* listen */
 	if (listen(this->socket, 1) == -1) {
-		log_message(CRITICAL, DEBUG_AREA_MAIN,
-			    "Command server: UNIX socket listen() error: %s",
-			    g_strerror(errno));
+		g_error("[%i] Command server: UNIX socket listen() error: %s",
+			    getpid(), g_strerror(errno));
 		return 0;
 	}
 	return 1;
