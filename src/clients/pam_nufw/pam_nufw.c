@@ -98,7 +98,7 @@ static char *_init_pam_nufw_s(struct pam_nufw_s *pn_s)
 	/* Move to root directory to not block current working directory */
 	(void) chdir("/");
 
-	memset(pn_s, 0, sizeof(pn_s));
+	memset(pn_s, 0, sizeof(*pn_s));
 	SECURE_STRNCPY(pn_s->nuauth_srv, NUAUTH_SRV,
 		       sizeof(pn_s->nuauth_srv));
 	SECURE_STRNCPY(pn_s->nuauth_port, NUAUTH_PORT,
