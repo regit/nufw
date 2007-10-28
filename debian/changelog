@@ -5,8 +5,9 @@ nufw (2.3.0-1) unstable; urgency=low
   * Use python-support for nuauth-utils
   * Update nuauth-utils dependencies
   * Split libnuclient3 to create libnuclient-dev
+  * Enable Prelude module
 
- -- Pierre Chifflier <pollux@debian.org>  Wed, 12 Sep 2007 21:35:07 +0200
+ -- Pierre Chifflier <pollux@debian.org>  Sun, 28 Oct 2007 10:14:57 +0100
 
 nufw (2.2.3-2) unstable; urgency=low
 

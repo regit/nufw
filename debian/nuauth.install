@@ -48,3 +48,7 @@ src/nuauth/modules/session_expire/.libs/libsession_expire.so.0 usr/lib/nuauth/mo
 src/nuauth/modules/session_expire/.libs/libsession_expire.so.0.0.0 usr/lib/nuauth/modules
 src/nuauth/modules/session_expire/.libs/libsession_expire.a usr/lib/nuauth/modules
 src/nuauth/modules/session_expire/libsession_expire.la usr/lib/nuauth/modules
+src/nuauth/modules/log_nuprelude/.libs/libnuprelude.so usr/lib/nuauth/modules
+src/nuauth/modules/log_nuprelude/.libs/libnuprelude.so.0 usr/lib/nuauth/modules
+src/nuauth/modules/log_nuprelude/.libs/libnuprelude.so.0.0.0 usr/lib/nuauth/modules
+src/nuauth/modules/log_nuprelude/.libs/libnuprelude.a usr/lib/nuauth/modules

@@ -31,7 +31,8 @@ endif
 CONFIGURE       = CFLAGS='$(CFLAGS)' ./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --prefix=/usr \
 			--mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info --localstatedir=/var \
 			--sysconfdir=/etc/nufw/ --with-mysql-log --with-pgsql-log --with-system-auth --with-ldap \
-			--with-utf8 --with-nfqueue --with-nfconntrack --without-fixedtimeout --enable-debug --enable-pam-nufw
+			--with-utf8 --with-nfqueue --with-nfconntrack --without-fixedtimeout --enable-debug --enable-pam-nufw \
+			--with-prelude-log
 			# --with-utf8 --with-nfqueue --with-nfconntrack --with-fixedtimeout #FIXME : THIS line should be used
 
 config.status: configure
@@ -40,7 +41,8 @@ config.status: configure
 	CFLAGS="$(CFLAGS)" ./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --prefix=/usr \
 		--mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info --localstatedir=/var \
 		--sysconfdir=/etc/nufw/ --with-mysql-log --with-pgsql-log --with-system-auth --with-ldap \
-		--with-nfqueue --with-nfconntrack --with-fixedtimeout --with-utf8 --enable-debug --enable-pam-nufw
+		--with-nfqueue --with-nfconntrack --with-fixedtimeout --with-utf8 --enable-debug --enable-pam-nufw \
+		--with-prelude-log
 
 build: build-stamp
 
