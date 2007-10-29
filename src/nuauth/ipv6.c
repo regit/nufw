@@ -38,7 +38,7 @@ void uint32_to_ipv6(const uint32_t ipv4, struct in6_addr *ipv6)
 {
 	ipv6->s6_addr32[0] = 0x00000000;
 	ipv6->s6_addr32[1] = 0x00000000;
-	ipv6->s6_addr32[2] = 0xffff0000;
+	ipv6->s6_addr32[2] = htonl(0xffff);
 	ipv6->s6_addr32[3] = ipv4;
 }
 
@@ -58,7 +58,7 @@ inline void ipv4_to_ipv6(const struct in_addr ipv4, struct in6_addr *ipv6)
  */
 int is_ipv4(const struct in6_addr *addr)
 {
-	if (addr->s6_addr32[2] != 0xffff0000)
+	if (ntohl(addr->s6_addr32[2]) != 0x0000ffff)
 		return 0;
 	if (addr->s6_addr32[0] != 0 || addr->s6_addr32[1] != 0)
 		return 0;
