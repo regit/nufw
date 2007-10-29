@@ -6,14 +6,14 @@ Description
 ===========
 
 log_mysql module is able to log events related to packet or users in a MySQL database:
-* user session establishement
-* user session ending
-* IP connection opening, establishement, closing
-* Ip connection dropping
+ * user session establishement
+ * user session ending
+ * IP connection opening, establishement, closing
+ * Ip connection dropping
 
 Two database schema are available in the conf/directory:
-* nulog.ipv4.mysql.dump: to be used it you will only log IPv4 IPs
-* nulog.ipv6.mysql.dump: to be used on mixed IPv4/IPv6 system
+ * nulog.ipv4.mysql.dump: to be used it you will only log IPv4 IPs
+ * nulog.ipv6.mysql.dump: to be used on mixed IPv4/IPv6 system
 
 Installation
 ============

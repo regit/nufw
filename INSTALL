@@ -5,15 +5,15 @@ Installation instructions
 Prerequisites:
 ==============
 
-* GNU make
-* automake1.7 to execute cleanly autogen.sh
-* glib
-* libipq (in iptables-dev on debian) or libnetfilter_queue (optionally libnetfilter_conntrack)
-* libldap for the provided auth server
-* libsasl2 (cyrus)
-* libgnutls
-* libgcrypt
-* libpam-dev for system authentication module
+ * GNU make
+ * automake1.7 to execute cleanly autogen.sh
+ * glib
+ * libipq (in iptables-dev on debian) or libnetfilter_queue (optionally libnetfilter_conntrack)
+ * libldap for the provided auth server
+ * libsasl2 (cyrus)
+ * libgnutls
+ * libgcrypt
+ * libpam-dev for system authentication module
 
 Compilation:
 ============
