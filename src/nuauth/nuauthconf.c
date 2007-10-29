@@ -210,7 +210,6 @@ void init_nuauthconf(struct nuauth_params **result)
 	free_confparams(nuauth_vars,
 			sizeof(nuauth_vars) / sizeof(confparams_t));
 
-
 	build_prenuauthconf(conf, gwsrv_addr, connect_policy);
 
 	g_free(gwsrv_addr);
