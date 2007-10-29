@@ -5,10 +5,11 @@ Installation instructions
 Prerequisites:
 ==============
 
-* libipq (in iptables-dev on debian) or libnetfilter_queue (optionally libnetfilter_conntrack)
-* automake1.7 to execute cleanly autogen.sh 
-* libldap for the provided auth server
+* GNU make
+* automake1.7 to execute cleanly autogen.sh
 * glib
+* libipq (in iptables-dev on debian) or libnetfilter_queue (optionally libnetfilter_conntrack)
+* libldap for the provided auth server
 * libsasl2 (cyrus)
 * libgnutls
 * libgcrypt
@@ -33,7 +34,7 @@ Else look for changes between your current conf file and the new one.
 Next, you will have to run (as root) nufw.
 nufw -h will give you a usage message.
 
-You will also have to launch nuauth, the authorisation server. 
+You will also have to launch nuauth, the authorisation server.
 nuauth -h will give you a usage message.
 
 To use nufw you will have to run a client for each user.
@@ -45,8 +46,8 @@ You will find more informations on:
 SQL Logging:
 ============
 
-If you use SQL Logging and SSO features, you may wish to increase performance 
-of SQL queries by putting closed connections in a different SQL table by using or a script 
+If you use SQL Logging and SSO features, you may wish to increase performance
+of SQL queries by putting closed connections in a different SQL table by using or a script
 (cron task ?) or a trigger.
 
 Quick Testing:

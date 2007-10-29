@@ -66,7 +66,7 @@ echo "[+] Run autoconf"
 $AUTOCONF || exit $?
 
 echo "[+] Run automake"
-$AUTOMAKE --add-missing --copy || exit $?
+$AUTOMAKE --add-missing --copy -Wno-portability || exit $?
 
 echo
 echo "Now type: ./configure"
