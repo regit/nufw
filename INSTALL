@@ -1,48 +1,60 @@
-Prerequisites :
-- libipq (in iptables-dev on debian)
-		or
-- libnetfilter_queue (optionally libnetfilter_conntrack)
-- automake1.7 to execute cleanly autogen.sh 
-- libldap for the provided auth server
-- glib
-- libsasl2 (cyrus)
-- libgnutls
-- libgcrypt
-- libpam-dev for system authentication module
+=========================
+Installation instructions
+=========================
 
-To compile, use the standard :
-./autogen.sh
-./configure
-make
-make install
+Prerequisites:
+==============
 
-If it is a first installation, think to copy the configuration file as it:
-cp ./conf/nuauth.conf /usr/local/etc/nuauth.conf
+* libipq (in iptables-dev on debian) or libnetfilter_queue (optionally libnetfilter_conntrack)
+* automake1.7 to execute cleanly autogen.sh 
+* libldap for the provided auth server
+* glib
+* libsasl2 (cyrus)
+* libgnutls
+* libgcrypt
+* libpam-dev for system authentication module
+
+Compilation:
+============
+
+To compile, use the standard ::
+
+  ./autogen.sh
+  ./configure
+  make
+  make install
+
+If it is a first installation, think to copy the configuration file as it ::
+
+  cp ./conf/nuauth.conf /usr/local/etc/nuauth.conf
+
 Else look for changes between your current conf file and the new one.
 
 Next, you will have to run (as root) nufw.
 nufw -h will give you a usage message.
 
-You will also have to launch the authorisation server : 
-nuauth is provided.
+You will also have to launch nuauth, the authorisation server. 
 nuauth -h will give you a usage message.
 
 To use nufw you will have to run a client for each user.
-For the moment only nutcpc is provided.
+nutcpc and pam_nufw are provided in NuFW archive.
 
-You will find more informations on :
+You will find more informations on:
 	http://www.nufw.org
 
-SQL Logging :
+SQL Logging:
+============
 
 If you use SQL Logging and SSO features, you may wish to increase performance 
 of SQL queries by putting closed connections in a different SQL table by using or a script 
 (cron task ?) or a trigger.
 
-Quick Testing :
+Quick Testing:
+==============
 
 See http://www.nufw.org/Testing-NuFW.html
 
-Howto :
+Howto:
+======
 
-See http://www.nufw.org/docs/howto.html
+See http://www.nufw.org/docs/howto20.html
