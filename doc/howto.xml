@@ -552,11 +552,11 @@ and thus must have limited rights.</para>
 </para>
 	<para>To allow ssh for users
 of group 513 if they use <filename>/usr/bin/ssh</filename> application, we can use :
-<screen>nuaclgen -A cn=ssh,ou=Acls,dc=nufw,dc=org -p 6 --dport 22 -AppName "/usr/bin/ssh" -j ACCEPT -g 513</screen>
+<screen>nuaclgen --Aclname cn=ssh,ou=Acls,dc=nufw,dc=org -p 6 --dport 22 -AppName "/usr/bin/ssh" -j ACCEPT -g 513</screen>
 </para>
 	<para>Or for access directed to a web server :
 <screen>
-nuaclgen -A cn=apt,ou=Acls,dc=nufw,dc=org -p 6 --dport 80 \
+nuaclgen --Aclname cn=apt,ou=Acls,dc=nufw,dc=org -p 6 --dport 80 \
   -AppName "/usr/lib/apt/methods/http" -j ACCEPT -g 1042
 </screen>
 This ACL gives access to group 1042  which is used by root user of some server of ours.
