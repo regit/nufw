@@ -379,6 +379,18 @@ of time. Currently only <option>xml_defs</option> is available. It stores period
 
 <para>Default: <computeroutput>nuauth_periods_module="xml_defs"</computeroutput></para>
         </section>
+ <section><title>nuauth_user_session_modify_module</title>
+<para>
+ These modules provides a hook 
+ which can be used to modify a user session just after its creation.
+ It is useful in the case of you want to modify property like expiration date of the session.
+Currently only <option>libsession_expire</option> is available. It modify session expiration to force user to reconnect after
+a given time.
+</para>
+<para>Default: <computeroutput>nuauth_user_session_modify_module="libsession_expire"</computeroutput>
+</para>
+    </section>
+
     <section><title>nuauth_finalize_packet_module</title>
 <para>
  These modules provides a hook
@@ -399,8 +411,8 @@ of time. Currently only <option>xml_defs</option> is available. It stores period
     <section><title>nuauth_auth_error_log_module</title>
 <para>
  These modules provides a way to log
- user authentication failure. For now, the only available module
- is <option>nuprelude</option>.
+ user authentication failure. For now, the only available modules
+ are <option>nuprelude</option> and <option>syslog</option>.
 </para>
 <para>Default: <computeroutput>nuauth_auth_error_log_module=""</computeroutput>
 </para>
@@ -926,6 +938,10 @@ It there is a match, then we trust the give certificate.
     </para>
     <para>No default</para>
     </section>
+    </section>
+    <section><title>session_expire</title><para>
+    The session expiration duration has to be set by using the global variable <option>nuauth_session_duration</option>
+</para>
     </section>
     <section><title>mark group</title>
      <section><title>mark_group_file</title><para>
