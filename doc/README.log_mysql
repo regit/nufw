@@ -1,0 +1,67 @@
+========================================
+Quick install guide for log_mysql module
+========================================
+
+Description
+===========
+
+log_mysql module is able to log events related to packet or users in a MySQL database:
+* user session establishement
+* user session ending
+* IP connection opening, establishement, closing
+* Ip connection dropping
+
+Two database schema are available in the conf/directory:
+* nulog.ipv4.mysql.dump: to be used it you will only log IPv4 IPs
+* nulog.ipv6.mysql.dump: to be used on mixed IPv4/IPv6 system
+
+Installation
+============
+
+To install the database, you need to do ::
+
+	mysqladmin create nufw
+	cat nulog.ipv4.mysql.dump | mysql nufw
+
+if nufw will be used in an IPv4 only network or ::
+
+	mysqladmin create nufw
+	cat nulog.ipv6.mysql.dump | mysql nufw
+
+in a IPv4/IPv6 environnement.
+
+To use an Ipv6 schema you modify nuauth.conf to uncomment and set to 0 
+the mysql_use_ipv4_schema variable.
+
+You then need to set up nuauth.conf accordingly to your database preferences ::
+
+	#MYSql server address
+	mysql_server_addr="localhost"
+	#Mysql server port
+	mysql_server_port=3306
+	#Mysql User to login as
+	mysql_user="myuser"
+	#Mysql password, associated with username
+	mysql_passwd="secret"
+	#Name of MYsql database to connect to
+	mysql_db_name="nufw"
+	#Name of table to connect to for packets logging. Must belong to the chosen database. Specified
+	#user must have rights on this table
+	mysql_table_name="ulog"
+	#Name of table to connect to for user session logging. Must belong to the chosen database. Specified
+	#user must have rights on this table
+	mysql_users_table_name="users"
+
+
+Tools
+=====
+
+Nulog 2:
+--------
+
+Nulog2, an advanced log analysis tool is able to use Netfilter and NuFW logs: http://software.inl.fr/trac/trac.cgi/wiki/EdenWall/NuLog2
+
+nutop:
+------
+
+Nutop, an ncurses perl script, is included in NuFW sources and provides a top like interface to the SQL database.
