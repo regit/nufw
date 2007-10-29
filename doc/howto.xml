@@ -19,6 +19,15 @@
     </copyright>
     <revhistory>
       <revision>
+	<revnumber>0.8</revnumber>
+	<date>2007/10/29</date>
+	<revdescription>
+	  <para>Update for 2.2.</para>
+	  <para>Add information about new marking modules.</para>
+	</revdescription>
+      </revision>
+
+      <revision>
 	<revnumber>0.7.3</revnumber>
 	<date>2007/08/07</date>
 	<revdescription>
@@ -575,6 +584,18 @@ INSERT privileges on the "conntrack_ulog" table. You will have to set the
 credentials for that user in the nuauth.conf file.
 </para>
 <para>
+You may choose between to schema an IPv4 only one and an IPv4/IPv6 one.
+Recent tools like <ulink
+url="http://software.inl.fr/trac/trac.cgi/wiki/EdenWall/NuLog2">Nulog2</ulink> are able to use 
+the IPv6 schema. If you have old script or older tools, you better use the IPv4 only schema.
+To import the IPv4 schema into a newly created database, you can use:
+</para>
+<screen>mysqladmin create nufw
+cat nulog.ipv4.mysql.dump | mysql nufw</screen>
+<para>For the IPv6 schema, simply use:</para>
+<screen>mysqladmin create nufw
+cat nulog.ipv6.mysql.dump | mysql nufw</screen>
+<para>
 When installing NuFW in production, you have to use the clean_conntrack.pl
 script, which is available in the scripts/ subdir of the NuFW archive from
 version 1.0.12 on. For prior versions, you can get the script from <ulink
@@ -695,7 +716,7 @@ to 1 or 2 in the mean time.
 <section><title>Setting up Kernel on non libnetfilter_queue system</title>
 <para>
 Official Linux kernels are not able to mark packets
-with ip_queue framework.
+with ip_queue framework before 2.6.14 release.
 It is thus necessary to patch the kernel (if pre 2.6.14), this has to be done by using
 the <filename>ip_queue_vwmark</filename> patch available in the
 patch-o-matic-ng from netfilter. This will generate a modified version of both
@@ -729,8 +750,20 @@ First line restores the existing mark when a packet arrives and second line
 saves mark on the connection so it can be restored later.
 </para>
       </section>
-<section><title>Using userid mark</title>
-<para>Netfilter mark can be use by the Quality of Servic system and
+      <section><title>Using marking modules</title>
+      <para>
+The nuauth variable <option>nuauth_finalize_packet_module</option> lists module which attach a hook called just before
+nuauth answer to nufw about a packet.
+It is usually used to modify the mark of the packet following a given strategy.
+By splitting the mark in different part, this is possible to define complexe marking policy which can later be used
+by Linux routing and QoS systems.
+</para>
+      <para>
+      Extensive documentation can be found in the file <ulink url="http://software.inl.fr/trac/trac.cgi/browser/mirror/edenwall/nufw/trunk/nufw/doc/README.mark">README.mark</ulink>
+      </para>
+      </section>
+<section><title>Using NuFW mark</title>
+<para>Netfilter mark can be use by the Quality of Service system and
 the routing system of Linux.</para>
 <para>
 So it is possible to do differenciated routing between different users
