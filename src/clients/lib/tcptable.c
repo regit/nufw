@@ -157,10 +157,10 @@ int parse_tcptable_file(nuauth_session_t * session, conntable_t * ct, char *file
 		if (!use_ipv6) {
 			c.ip_src.s6_addr32[0] = 0;
 			c.ip_src.s6_addr32[1] = 0;
-			c.ip_src.s6_addr32[2] = 0xffff0000;
+			c.ip_src.s6_addr32[2] = htonl(0xffff);
 			c.ip_dst.s6_addr32[0] = 0;
 			c.ip_dst.s6_addr32[1] = 0;
-			c.ip_dst.s6_addr32[2] = 0xffff0000;
+			c.ip_dst.s6_addr32[2] = htonl(0xffff);
 			ret = sscanf(buf,
 				     "%*d: "
 				     "%lx:%hx "

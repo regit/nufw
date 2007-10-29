@@ -642,7 +642,7 @@ int init_socket(nuauth_session_t * session,
 			addr.s_addr = src4->sin_addr.s_addr;
 			src6->sin6_addr.s6_addr32[0] = 0;
 			src6->sin6_addr.s6_addr32[0] = 0;
-			src6->sin6_addr.s6_addr32[2] = 0xffff0000;
+			src6->sin6_addr.s6_addr32[2] = htonl(0xffff);
 			src6->sin6_addr.s6_addr32[3] = addr.s_addr;
 		} else {
 			if (session->verbose) {
