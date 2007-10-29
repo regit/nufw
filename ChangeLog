@@ -1,10 +1,11 @@
-2.2.7
+2.2.7 (2007/10/29)
 	- nuaclgen: add support for userid based ACLs.
-	- fix SASL rare crash on client authentication failure (sasl_dispose)
-	- fix command line parser: -p and -l were limited to 3 characters
-	- fix a buffer overflow (3 bytes) in base64 encoding function
-	- improve certificate file error handling
-	- leave if socket command file is unavailable
+	- nuauth: fix SASL rare crash on client authentication failure (sasl_dispose)
+	- nuauth: fix command line parser: -p and -l were limited to 3 characters
+	- nauuth: fix a buffer overflow (3 bytes) in base64 encoding function
+	- nuauth: improve certificate file error handling
+	- nuauth: leaver if socket command file is unavailable
+	- pam_nufw: fix memset usage 
 2.2.6 (2007/10/09)
 	- nuauth: fix rare bug causing infinite loop
 	- Add auth_mysql module : authentication and ip authentication against
