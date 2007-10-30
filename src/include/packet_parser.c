@@ -22,13 +22,14 @@
 
 /** \file packet_parser.c
  *  \brief Functions to parse a network packet
- * 
+ *
  * Functions fill ::tracking_t structure fields. Parser are: IPv4, IPv6, UDP,
  * TCP, ICMP and ICMP6.
  */
 
 #include "packet_parser.h"
 
+#include <ipv6.h>
 #include <netinet/tcp.h>
 #include <netinet/ip.h>
 #include <netinet/ip6.h>
@@ -37,14 +38,14 @@
 #include <netinet/icmp6.h>
 
 
-/** 
- * Fill IP fields (saddr, daddr and protocol) of the a connection tracking 
+/**
+ * Fill IP fields (saddr, daddr and protocol) of the a connection tracking
  * (::tracking_t) structure.
- * 
+ *
  * \param tracking Pointer to a connection tracking
  * \param dgram Pointer to packet datas
  * \param dgram_size Number of bytes in the packet
- * \return Offset to next type of headers, or 0 if the packet is not recognized 
+ * \return Offset to next type of headers, or 0 if the packet is not recognized
  */
 unsigned int get_ip_headers(tracking_t * tracking,
 			    const unsigned char *dgram,
@@ -61,15 +62,8 @@ unsigned int get_ip_headers(tracking_t * tracking,
 	/* check IP version (should be IPv4) */
 	if (ip->version == 4) {
 		/* convert IPv4 addresses to IPv6 addresses in format "::ffff:IPv4" */
-		tracking->saddr.s6_addr32[0] = 0;
-		tracking->saddr.s6_addr32[1] = 0;
-		tracking->saddr.s6_addr32[2] = 0xffff0000;
-		tracking->saddr.s6_addr32[3] = ip->saddr;
-
-		tracking->daddr.s6_addr32[0] = 0;
-		tracking->daddr.s6_addr32[1] = 0;
-		tracking->daddr.s6_addr32[2] = 0xffff0000;
-		tracking->daddr.s6_addr32[3] = ip->daddr;
+		uint32_to_ipv6(ip->saddr, &tracking->saddr);
+		uint32_to_ipv6(ip->daddr, &tracking->daddr);
 
 		/* compute offset to next header and copy protocol */
 		offset = 4 * ip->ihl;
@@ -133,7 +127,7 @@ unsigned int get_ip_headers(tracking_t * tracking,
 			case IPPROTO_ESP:
 			case IPPROTO_NONE:
 				/*
-				 * - RFC 2460 asks to ignore payload is last "Next Header" 
+				 * - RFC 2460 asks to ignore payload is last "Next Header"
 				 *   is IPPROTO_NONE.
 				 * - For ESP, it's not possible to extract any useful
 				 *   informations to match ACLs
@@ -167,10 +161,10 @@ unsigned int get_ip_headers(tracking_t * tracking,
 	return offset;
 }
 
-/** 
+/**
  * Fill UDP fields (source and dest) of a connection tracking
  * (::tracking_t) structure.
- * 
+ *
  * \param tracking Pointer to a connection tracking
  * \param dgram Pointer to packet datas
  * \param dgram_size Number of bytes in the packet
@@ -200,7 +194,7 @@ int get_udp_headers(tracking_t * tracking, const unsigned char *dgram,
  * \param tracking Pointer to a connection tracking
  * \param dgram Pointer to packet datas
  * \param dgram_size Number of bytes in the packet
- * \return State of the TCP connection (#TCP_STATE_OPEN, 
+ * \return State of the TCP connection (#TCP_STATE_OPEN,
  *         #TCP_STATE_ESTABLISHED, #TCP_STATE_CLOSE), or #TCP_STATE_UNKNOW
  *         if an error occurs.
  */
@@ -235,10 +229,10 @@ tcp_state_t get_tcp_headers(tracking_t * tracking,
 	return TCP_STATE_UNKNOW;
 }
 
-/** 
+/**
  * Fill ICMP fields (type and code) of the connection tracking
  * (::tracking_t) structure.
- * 
+ *
  * \param tracking Pointer to a connection tracking
  * \param dgram Pointer to packet datas
  * \param dgram_size Number of bytes in the packet
@@ -260,10 +254,10 @@ int get_icmp_headers(tracking_t * tracking, const unsigned char *dgram,
 	return 0;
 }
 
-/** 
- * Parse ICMPv6 header: extract type and code fields 
+/**
+ * Parse ICMPv6 header: extract type and code fields
  * for the connection tracking (::tracking_t) structure.
- * 
+ *
  * \param tracking Pointer to a connection tracking
  * \param dgram Pointer to packet datas
  * \param dgram_size Number of bytes in the packet

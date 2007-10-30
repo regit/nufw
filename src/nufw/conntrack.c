@@ -55,17 +55,10 @@ void fill_message(struct nuv4_conntrack_message_t *message,
 	message->ip_protocol = nfct_get_attr_u8(conn, ATTR_ORIG_L4PROTO);
 
 	if (nfct_get_attr_u8(conn, ATTR_ORIG_L3PROTO) == AF_INET) {
-		message->ip_src.s6_addr32[0] = 0;
-		message->ip_src.s6_addr32[1] = 0;
-		message->ip_src.s6_addr32[2] = 0xffff0000;
-		message->ip_src.s6_addr32[3] =
-		    nfct_get_attr_u32(conn, ATTR_ORIG_IPV4_SRC);
-
-		message->ip_dst.s6_addr32[0] = 0;
-		message->ip_dst.s6_addr32[1] = 0;
-		message->ip_dst.s6_addr32[2] = 0xffff0000;
-		message->ip_dst.s6_addr32[3] =
-		    nfct_get_attr_u32(conn, ATTR_ORIG_IPV4_DST);
+		uint32_to_ipv6(nfct_get_attr_u32(conn, ATTR_ORIG_IPV4_SRC),
+			&message->ip_src);
+		uint32_to_ipv6(nfct_get_attr_u32(conn, ATTR_ORIG_IPV4_DST),
+			&message->ip_dst);
 	} else {
 		memcpy(&message->ip_src,
 		       nfct_get_attr(conn, ATTR_ORIG_IPV6_SRC),
@@ -104,15 +97,11 @@ void fill_message(struct nuv4_conntrack_message_t *message,
 	message->ip_protocol = conn->tuple[0].protonum;
 
 	if (conn->tuple[0].l3protonum == AF_INET) {
-		message->ip_src.s6_addr32[0] = 0;
-		message->ip_src.s6_addr32[1] = 0;
-		message->ip_src.s6_addr32[2] = 0xffff0000;
-		message->ip_src.s6_addr32[3] = conn->tuple[0].src.v4;
+		uint32_to_ipv6(conn->tuple[0].src.v4,
+				&message->ip_src);
 
-		message->ip_dst.s6_addr32[0] = 0;
-		message->ip_dst.s6_addr32[1] = 0;
-		message->ip_dst.s6_addr32[2] = 0xffff0000;
-		message->ip_dst.s6_addr32[3] = conn->tuple[0].dst.v4;
+		uint32_to_ipv6(conn->tuple[0].dst.v4,
+				&message->ip_dst);
 	} else {
 		memcpy(&message->ip_src, &conn->tuple[0].src.v6,
 		       sizeof(message->ip_src));
@@ -217,10 +206,10 @@ int update_handler(struct nfct_conntrack *conn, unsigned int flags, int type,
 			/* We only want to log ESTABLISHED for TCP state */
 			if (nfct_get_attr_u8(conn, ATTR_ORIG_L4PROTO)
 					== IPPROTO_TCP) {
-				if (nfct_get_attr_u8(conn, ATTR_TCP_STATE) 
+				if (nfct_get_attr_u8(conn, ATTR_TCP_STATE)
 						!= TCP_CONNTRACK_ESTABLISHED) {
 					return callback_ret;
-				} 
+				}
 			}
 		}
 #else

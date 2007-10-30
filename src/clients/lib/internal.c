@@ -631,19 +631,12 @@ int init_socket(nuauth_session_t * session,
 		struct sockaddr_in6 *src6 = (struct sockaddr_in6 *)&session->src_addr;
 		if (res->ai_family == AF_INET
 		    && session->src_addr.ss_family == AF_INET6
-		    && memcmp(&src6->sin6_addr, "\0\0\0\0\0\0\0\0\0\0\xff\xff", 12) == 0)
+		    && is_ipv4(&src6->sin6_addr))
 		{
-			struct in_addr addr;
-			addr.s_addr = src6->sin6_addr.s6_addr32[3];
 			src4->sin_family = AF_INET;
-			src4->sin_addr = addr;
+			ipv6_to_ipv4(src6->sin6_addr, src4);
 		} else if (res->ai_family == AF_INET6 && session->src_addr.ss_family == AF_INET) {
-			struct in_addr addr;
-			addr.s_addr = src4->sin_addr.s_addr;
-			src6->sin6_addr.s6_addr32[0] = 0;
-			src6->sin6_addr.s6_addr32[0] = 0;
-			src6->sin6_addr.s6_addr32[2] = htonl(0xffff);
-			src6->sin6_addr.s6_addr32[3] = addr.s_addr;
+			uint32_to_ipv6(src4->sin_addr.s_addr, &src6->sin6_addr);
 		} else {
 			if (session->verbose) {
 				fprintf(stderr,

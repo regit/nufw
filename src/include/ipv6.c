@@ -18,7 +18,10 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include <auth_srv.h>
+#include <nufw_source.h>
+#include <string.h>
+#include <stdio.h> /* sscanf() */
+#include <inttypes.h> /* SCNx32 */
 #include <arpa/inet.h>
 #include <security.h>
 
@@ -49,6 +52,15 @@ void uint32_to_ipv6(const uint32_t ipv4, struct in6_addr *ipv6)
 inline void ipv4_to_ipv6(const struct in_addr ipv4, struct in6_addr *ipv6)
 {
 	uint32_to_ipv6(ipv4.s_addr, ipv6);
+}
+
+/**
+ * Convert IPv6 address (as in6_addr struture) to IPv4 address (in_addr):
+ * copy 32 bits address.
+ */
+inline void ipv6_to_ipv4(const struct in6_addr *ipv6, struct in_addr *ipv4)
+{
+	ipv4->s_addr = ipv6->s6_addr32[3];
 }
 
 /**
@@ -98,20 +110,6 @@ void format_ipv6(const struct in6_addr *addr, char *buffer, size_t buflen, uint8
 }
 
 /**
- * Convert IPv6 address to a string.
- * Use IPv4 format ("192.168.0.1") for IPv4 in IPv6 address (::ffff:192.168.0.2).
- *
- *
- * Returns new allocated string.
- */
-char* ipv6_to_str(const struct in6_addr *addr)
-{
-	char buffer[INET6_ADDRSTRLEN];
-	format_ipv6(addr, buffer, sizeof(buffer), NULL);
-	return g_strdup(buffer);
-}
-
-/**
  * Get socket "name" (local address) as IPv6 address
  *
  * \return 0 on error, 1 on success
@@ -141,5 +139,38 @@ int getsockname_ipv6(int fileno, struct in6_addr *addr)
 		clear_ipv6(addr);
 		return 0;
 	}
+}
+
+/**
+ * Convert an IPv6 address as hexadecimal without ":" separator (32 characters)
+ * into in6_addr structure.
+ *
+ * \return Returns 0 on failure, or 1 on error.
+ */
+int hex2ipv6(const char *text, struct in6_addr *ip)
+{
+#define READ(text, index) sscanf((text), "%08" SCNx32, (uint32_t *) &ip->s6_addr32[index])
+	/* Copy text */
+	char copy[33];
+	if (strlen(text) != 32)
+		return 0;
+	SECURE_STRNCPY(copy, text, sizeof(copy));
+
+	if (READ(copy + 8 * 3, 3) != 1)
+		return 0;
+	copy[8 * 3] = 0;
+
+	if (READ(copy + 8 * 2, 2) != 1)
+		return 0;
+	copy[8 * 2] = 0;
+
+	if (READ(copy + 8 * 1, 1) != 1)
+		return 0;
+	copy[8] = 0;
+
+	if (READ(copy + 8 * 0, 0) != 1)
+		return 0;
+	return 1;
+#undef READ
 }
 

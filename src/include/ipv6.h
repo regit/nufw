@@ -26,10 +26,11 @@
 void clear_ipv6(struct in6_addr *ipv6);
 void uint32_to_ipv6(const uint32_t ipv4, struct in6_addr *ipv6);
 inline void ipv4_to_ipv6(const struct in_addr ipv4, struct in6_addr *ipv6);
+inline void ipv6_to_ipv4(const struct in6_addr *ipv6, struct in_addr *ipv4);
 int is_ipv4(const struct in6_addr *addr);
 void format_ipv6(const struct in6_addr *addr, char *buffer, size_t buflen, uint8_t *protocol);
-char* ipv6_to_str(const struct in6_addr *addr);
 int getsockname_ipv6(int fileno, struct in6_addr *addr);
+int hex2ipv6(char *text, struct in6_addr *ip);
 
 #define FORMAT_IPV6(addr, buffer) format_ipv6(addr, buffer, sizeof(buffer), NULL)
 

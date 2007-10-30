@@ -24,6 +24,8 @@
 #include "nuclient.h"
 #include "libnuclient.h"
 #include "proto.h"
+#include <inttypes.h>
+#include <ipv6.h>
 #define USE_JHASH3
 #include <jhash.h>
 #ifdef FREEBSD
@@ -54,34 +56,6 @@
  */
 
 #ifdef LINUX
-
-/**
- * Convert an IPv6 address in "Linux format" (with no ":") into
- * in6_addr structure.
- *
- * \return Returns 0 if fails, 1 otherwise
- */
-int str2ipv6(char *text, struct in6_addr *ip)
-{
-	if (sscanf
-	    (text + 8 * 3, "%08lx",
-	     (unsigned long *) &ip->s6_addr32[3]) != 1)
-		return 0;
-	text[8 * 3] = 0;
-	if (sscanf
-	    (text + 8 * 2, "%08lx",
-	     (unsigned long *) &ip->s6_addr32[2]) != 1)
-		return 0;
-	text[8 * 2] = 0;
-	if (sscanf(text + 8, "%08lx", (unsigned long *) &ip->s6_addr32[1])
-	    != 1)
-		return 0;
-	text[8] = 0;
-	if (sscanf(text, "%08lx", (unsigned long *) &ip->s6_addr32[0]) !=
-	    1)
-		return 0;
-	return 1;
-}
 
 /**
  * Parse a Linux connection table (/proc/net/tcp or /proc/net/udp) and filter
@@ -155,26 +129,22 @@ int parse_tcptable_file(nuauth_session_t * session, conntable_t * ct, char *file
 
 		/* get all fields */
 		if (!use_ipv6) {
-			c.ip_src.s6_addr32[0] = 0;
-			c.ip_src.s6_addr32[1] = 0;
-			c.ip_src.s6_addr32[2] = htonl(0xffff);
-			c.ip_dst.s6_addr32[0] = 0;
-			c.ip_dst.s6_addr32[1] = 0;
-			c.ip_dst.s6_addr32[2] = htonl(0xffff);
+			uint32_t src, dst;
 			ret = sscanf(buf,
 				     "%*d: "
-				     "%lx:%hx "
-				     "%lx:%hx "
+				     "%" SCNx32 ":%hx "
+				     "%" SCNx32 ":%hx "
 				     "%*x %*x:%*x %*x:%*x %x "
 				     "%lu %*d %lu",
-				     (long *) &c.ip_src.s6_addr32[3],
-				     &c.port_src,
-				     (long *) &c.ip_dst.s6_addr32[3],
-				     &c.port_dst, &c.retransmit, &c.uid,
+				     &src, &c.port_src,
+				     &dst, &c.port_dst,
+				     &c.retransmit, &c.uid,
 				     &c.inode);
 			if (ret != 7) {
 				continue;
 			}
+			uint32_to_ipv6(src, &c.ip_src);
+			uint32_to_ipv6(dst, &c.ip_dst);
 		} else {
 			char ip_src[33];
 			char ip_dst[33];
@@ -194,9 +164,9 @@ int parse_tcptable_file(nuauth_session_t * session, conntable_t * ct, char *file
 			if (ret != 7) {
 				continue;
 			}
-			if (!str2ipv6(ip_src, &c.ip_src))
+			if (!hex2ipv6(ip_src, &c.ip_src))
 				continue;
-			if (!str2ipv6(ip_dst, &c.ip_dst))
+			if (!hex2ipv6(ip_dst, &c.ip_dst))
 				continue;
 		}
 

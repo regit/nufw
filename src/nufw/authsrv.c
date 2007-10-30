@@ -24,7 +24,7 @@
 
 /** \file nufw/authsrv.c
  *  \brief Process NuAuth packets
- *   
+ *
  * authsrv() thread (created by auth_request_send()) wait for new NuAuth packets,
  * and then call auth_packet_to_decision() to process packet.
  */
@@ -121,20 +121,6 @@ int auth_process_answer(char *dgram, int dgram_size)
 }
 
 #ifdef HAVE_LIBCONNTRACK
-
-/**
- * Check if a IPv6 address is a IPv4 or not.
- *
- * \return 1 for IPv4 and 0 for IPv6
- */
-int is_ipv4(struct in6_addr *addr)
-{
-	if (addr->s6_addr32[2] != 0xffff0000)
-		return 0;
-	if (addr->s6_addr32[0] != 0 || addr->s6_addr32[1] != 0)
-		return 0;
-	return 1;
-}
 
 int build_nfct_tuple_from_message(struct nfct_tuple *orig,
 				  struct nuv4_conntrack_message_t
