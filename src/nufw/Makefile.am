@@ -9,26 +9,25 @@ nodist_include_HEADERS = iface.h log.h nufw.h structure.h
 
 nufw_SOURCES = authsrv.c  common.c  main.c  packetsrv.c \
 		tls.c audit.c conntrack.c log.c iface.c \
-		../include/ipv6.c \
 		${nodist_include_HEADERS}
 
 if HAVE_IPQ
-nufw_LDADD = -lipq -lpthread -lgnutls
+nufw_LDADD = -lipq -lpthread -lgnutls -lnufw
 endif
 if HAVE_NFQUEUE_CONNTRACK
-nufw_LDADD = -lnfnetlink -lnetfilter_queue -lnetfilter_conntrack -lpthread -lgnutls -ldl
+nufw_LDADD = -lnfnetlink -lnetfilter_queue -lnetfilter_conntrack -lpthread -lgnutls -ldl -lnufw
 endif
 
 if HAVE_NFQUEUE_ONLY
-nufw_LDADD = -lnfnetlink -lnetfilter_queue -lpthread -lgnutls
+nufw_LDADD = -lnfnetlink -lnetfilter_queue -lpthread -lgnutls -lnufw
 endif
 
 if HAVE_CONNTRACK_ONLY
-nufw_LDADD = -lnfnetlink -lipq -lnetfilter_conntrack -ldl -lpthread -lgnutls
+nufw_LDADD = -lnfnetlink -lipq -lnetfilter_conntrack -ldl -lpthread -lgnutls -lnufw
 endif
 
 nufw$(EXEEXT): $(nufw_OBJECTS) $(nufw_DEPENDENCIES)
 	@rm -f nufw$(EXEEXT)
-	$(LINK) $(nufw_LDFLAGS) $(nufw_OBJECTS) $(nufw_LDADD)
+	$(LINK) $(nufw_LDFLAGS) $(nufw_OBJECTS) $(nufw_LDADD) -L../include/
 
 endif

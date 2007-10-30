@@ -1,6 +1,6 @@
 SUBDIRS = modules
 
-AM_CFLAGS = -DCONFIG_DIR=\"$(sysconfdir)\" -DMODULE_DIR=\"$(libdir)\" -DLOCAL_STATE_DIR=\"$(localstatedir)\"
+AM_CFLAGS = -DCONFIG_DIR=\"$(sysconfdir)\" -DMODULE_DIR=\"$(libdir)\" -DLOCAL_STATE_DIR=\"$(localstatedir)\" -L../include/
 INCLUDES = $(GLIB_CFLAGS) -Iinclude/
 
 sbin_PROGRAMS = nuauth
@@ -20,10 +20,9 @@ nuauth_SOURCES = nuthread.c acls.c audit.c auth_common.c authsrv.c cache.c \
 	sasl.c tls.c tls_user.c tls_nufw.c tls_sasl.c user_authsrv.c user_logs.c users.c x509_parsing.c \
 	modules.c nuauthconf.c conntrack.c period.c auth_hash.c take_decision.c \
 	command.c command_enc.c nufw_servers.c connections.c \
-	../include/packet_parser.c ../include/ipv6.c \
 	${nodist_nuauth_SOURCES}
 
-nuauth_LDADD = $(GLIB_LIBS) -lm  -lgnutls -lsasl2
+nuauth_LDADD = $(GLIB_LIBS) -lm  -lgnutls -lsasl2 -lnufw
 
 nuauth$(EXEEXT): $(nuauth_OBJECTS) $(nuauth_DEPENDENCIES)
 	@rm -f nuauth$(EXEEXT)
