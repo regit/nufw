@@ -270,6 +270,7 @@ fi
 AC_CONFIG_FILES([Makefile
         doc/Makefile
         src/Makefile
+        src/include/Makefile
         src/nuauth/Makefile
         src/nuauth/modules/Makefile
         src/nuauth/modules/ldap/Makefile

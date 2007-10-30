@@ -8,7 +8,8 @@ plugindir = $(libdir)/nuauth/modules/
 
 plugin_LTLIBRARIES = libldap.la
 
-libldap_la_SOURCES = ldap.c
+nodist_include_HEADERS = auth_ldap.h
+libldap_la_SOURCES = ldap.c ${nodist_include_HEADERS}
 
 libldap_la_LIBADD = -lldap_r
 

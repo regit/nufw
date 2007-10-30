@@ -4,8 +4,13 @@ AM_CPPFLAGS = -DLOCAL_STATE_DIR=\"$(localstatedir)\"  -DCONFIG_DIR=\"$(sysconfdi
 sbin_PROGRAMS = nufw
 
 # nufw
-nufw_SOURCES = authsrv.c  common.c  main.c  packetsrv.c  structure.h\
-		tls.c audit.c conntrack.c log.c iface.c
+
+nodist_include_HEADERS = iface.h log.h nufw.h structure.h
+
+nufw_SOURCES = authsrv.c  common.c  main.c  packetsrv.c \
+		tls.c audit.c conntrack.c log.c iface.c \
+		${nodist_include_HEADERS}
+
 if HAVE_IPQ
 nufw_LDADD = -lipq -lpthread -lgnutls
 endif

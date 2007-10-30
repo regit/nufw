@@ -15,7 +15,9 @@ plugindir = $(libdir)/nuauth/modules
 
 plugin_LTLIBRARIES = libauth_mysql.la
 
-libauth_mysql_la_SOURCES = mysql_auth.c
+nodist_include_HEADERS = mysql_auth.h mysql.h
+
+libauth_mysql_la_SOURCES = mysql_auth.c ${nodist_include_HEADERS}
 
 #libauth_mysql_la_LIBADD = -lmysqlclient_r
 
