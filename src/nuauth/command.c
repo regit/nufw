@@ -216,12 +216,12 @@ void command_servers(command_t *this, encoder_t *encoder)
  */
 int command_do_disconnect(int sock)
 {
-	int ok;
-	GSList *thread_p = nuauthdatas->tls_auth_servers;
+	int ok = 1;
+	GSList *thread_p;
 
 	/* iter on each server thread */
-	while (thread_p) {
-		struct tls_user_context_t *this = 
+	for (thread_p=nuauthdatas->tls_auth_servers; thread_p; thread_p = thread_p->next) {
+		struct tls_user_context_t *this =
 			((struct nuauth_thread_t *)thread_p->data)->data;
 		/* send query to disconnect all users */
 		disconnect_user_msg_t *msg = g_new(disconnect_user_msg_t, 1);
@@ -239,15 +239,14 @@ int command_do_disconnect(int sock)
 		if (msg->result == NU_EXIT_OK) {
 			ok = 1;
 			g_free(msg);
-			return ok;
+                        break;
 		} else {
 			ok = 0;
 		}
 		/* return in case we've just send a global disconnect message */
 		if (sock == -1) {
-			return ok;
+			break;
 		}
-		thread_p = thread_p->next;
 	}
 	return ok;
 }
