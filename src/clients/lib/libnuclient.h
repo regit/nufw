@@ -1,5 +1,5 @@
 /*
- ** Copyright 2004-2006 - INL
+ ** Copyright 2004-2007 - INL
  ** Written by Eric Leblond <regit@inl.fr>
  **            Vincent Deffontaines <vincent@inl.fr>
  ** INL http://www.inl.fr/

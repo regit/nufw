@@ -1,6 +1,7 @@
 2.2.8
 	- libnuclient, nuauth: fix protocol 2.2 on big endian.
 	- log_mysql: add documentation file and add a IPv4 and an IPv6 dump
+	- build system: improve autoconf compliance
 2.2.7 (2007/10/29)
 	- nuaclgen: add support for userid based ACLs.
 	- nuauth: fix SASL rare crash on client authentication failure (sasl_dispose)
