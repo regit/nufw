@@ -72,7 +72,7 @@ void clean_session(user_session_t * c_session)
 
 static void hash_clean_session(user_session_t * c_session)
 {
-	int socket = (int) gnutls_transport_get_ptr(*c_session->tls);
+	int socket = GPOINTER_TO_INT(gnutls_transport_get_ptr(*c_session->tls));
 	log_user_session(c_session, SESSION_CLOSE);
 	clean_session(c_session);
 	shutdown(socket, SHUT_RDWR);
@@ -309,7 +309,8 @@ char warn_clients(struct msg_addr_set *global_msg)
 		}
 		if (badsockets) {
 			for (; badsockets; badsockets = badsockets->next) {
-				nu_error_t ret = delete_client_by_socket_ext(badsockets->data, 0);
+				int sockno = (int)badsockets->data;
+				nu_error_t ret = delete_client_by_socket_ext(sockno, 0);
 				if (ret != NU_EXIT_OK) {
 					log_message(WARNING, DEBUG_AREA_USER,
 						"Fails to destroy socket in hash.");

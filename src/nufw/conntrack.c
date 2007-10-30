@@ -28,6 +28,7 @@
 #define DEBUG_CONNTRACK
 
 #include "nufw.h"
+#include "ipv6.h"
 #ifdef HAVE_LIBCONNTRACK
 
 #include <libnetfilter_conntrack/libnetfilter_conntrack_tcp.h>

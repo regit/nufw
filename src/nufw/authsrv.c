@@ -21,6 +21,7 @@
  */
 
 #include "nufw.h"
+#include "ipv6.h"
 
 /** \file nufw/authsrv.c
  *  \brief Process NuAuth packets
