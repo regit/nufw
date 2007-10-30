@@ -4,6 +4,8 @@ edit = sed \
         -e 's,@localstatedir\@,$(localstatedir),g' \
         -e 's,@prefix\@,$(prefix),g'
 
+EXTRA_DIST = nuauth_command.in
+
 nuauth_command: nuauth_command.in
 	rm -f nuauth_command nuauth_command.tmp
 	$(edit) nuauth_command.in > nuauth_command.tmp

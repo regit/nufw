@@ -299,6 +299,8 @@ AC_CONFIG_FILES([Makefile
 	scripts/Makefile
 	scripts/nuauth_command/Makefile
 	scripts/nuauth_command/scripts/Makefile
+	scripts/nuauth_command/nuauth_command/Makefile
+	scripts/auth_mysql/Makefile
 	tests/Makefile
 ])
 
