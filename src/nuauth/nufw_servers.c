@@ -84,7 +84,7 @@ void clean_nufw_session(nufw_session_t * c_session)
 	socket_tls = gnutls_transport_get_ptr(*(c_session->tls));
 	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
 			  "close nufw session calling");
-	close((int) socket_tls);
+	close(GPOINTER_TO_INT(socket_tls));
 	if (c_session->tls) {
 		gnutls_deinit(*(c_session->tls)
 		    );
@@ -108,10 +108,10 @@ nu_error_t declare_dead_nufw_session(nufw_session_t * session)
 	g_static_mutex_lock(&nufw_servers_mutex);
 
 	if (session->alive == TRUE) {
+		gnutls_transport_ptr tls;
 		session->alive = FALSE;
-		shutdown((int)gnutls_transport_get_ptr(
-					*(session->tls)),
-				SHUT_WR);
+		tls = gnutls_transport_get_ptr(*session->tls);
+		shutdown(GPOINTER_TO_INT(tls), SHUT_WR);
 	}
 	if (g_atomic_int_dec_and_test(&(session->usage))) {
 		suppress_nufw_session(session);

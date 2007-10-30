@@ -22,6 +22,7 @@
 
 #include "nufw_source.h"
 #include "nuclient.h"
+#include "ipv6.h"
 #include <sasl/saslutil.h>
 #include <stdarg.h>		/* va_list, va_start, ... */
 #include <gnutls/x509.h>
@@ -634,7 +635,7 @@ int init_socket(nuauth_session_t * session,
 		    && is_ipv4(&src6->sin6_addr))
 		{
 			src4->sin_family = AF_INET;
-			ipv6_to_ipv4(src6->sin6_addr, src4);
+			ipv6_to_ipv4(&src6->sin6_addr, &src4->sin_addr);
 		} else if (res->ai_family == AF_INET6 && session->src_addr.ss_family == AF_INET) {
 			uint32_to_ipv6(src4->sin_addr.s_addr, &src6->sin6_addr);
 		} else {
