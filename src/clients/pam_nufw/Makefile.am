@@ -4,12 +4,12 @@ if BUILD_PAM_NUFW
 TITLE			= pam_nufw
 modulesdir		= /lib/security
 
-pam_nufw_la_CFLAGS	= -I ../lib -I$(top_srcdir)/include $(DYNAMIC)
+pam_nufw_la_CFLAGS	= -I$(top_srcdir)/src/clients/lib -I$(top_srcdir)/src/include $(DYNAMIC)
 
 modules_LTLIBRARIES	= pam_nufw.la
 
 pam_nufw_la_SOURCES	= pam_nufw.c
-pam_nufw_la_LDFLAGS	= -avoid-version -module -L../lib/
+pam_nufw_la_LDFLAGS	= -avoid-version -module -L$(top_srcdir)/src/clients/lib/
 pam_nufw_la_LIBADD	= -lpam -lnuclient
 
 CLEANFILES		= *~ $(TITLE).so

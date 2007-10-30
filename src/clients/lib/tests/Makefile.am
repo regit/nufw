@@ -1,1 +1,1 @@
-TESTS=build_dummy_client.sh
+TESTS=$(srcdir)/build_dummy_client.sh

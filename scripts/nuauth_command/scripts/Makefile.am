@@ -8,7 +8,7 @@ EXTRA_DIST = nuauth_command.in
 
 nuauth_command: nuauth_command.in
 	rm -f nuauth_command nuauth_command.tmp
-	$(edit) nuauth_command.in > nuauth_command.tmp
+	$(edit) $(srcdir)/nuauth_command.in > nuauth_command.tmp
 	mv nuauth_command.tmp nuauth_command
 	chmod +x nuauth_command
 

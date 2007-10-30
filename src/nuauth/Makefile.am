@@ -1,7 +1,7 @@
 SUBDIRS = modules
 
-AM_CFLAGS = -DCONFIG_DIR=\"$(sysconfdir)\" -DMODULE_DIR=\"$(libdir)\" -DLOCAL_STATE_DIR=\"$(localstatedir)\" -L../include/
-INCLUDES = $(GLIB_CFLAGS) -Iinclude/
+AM_CFLAGS = -DCONFIG_DIR=\"$(sysconfdir)\" -DMODULE_DIR=\"$(libdir)\" -DLOCAL_STATE_DIR=\"$(localstatedir)\" -L$(top_srcdir)/src/include/ -L$(top_srcdir)/src/nuauth/
+INCLUDES = $(GLIB_CFLAGS) -I$(top_srcdir)/src/include/ -I$(top_srcdir)/src/nuauth/
 
 sbin_PROGRAMS = nuauth
 
@@ -22,7 +22,7 @@ nuauth_SOURCES = nuthread.c acls.c audit.c auth_common.c authsrv.c cache.c \
 	command.c command_enc.c nufw_servers.c connections.c \
 	${nodist_nuauth_SOURCES}
 
-nuauth_LDADD = $(GLIB_LIBS) -lm  -lgnutls -lsasl2 -lnufw
+nuauth_LDADD = $(GLIB_LIBS) -lm  -lgnutls -lsasl2 -lnufw -L$(top_builddir)/src/include/
 
 nuauth$(EXEEXT): $(nuauth_OBJECTS) $(nuauth_DEPENDENCIES)
 	@rm -f nuauth$(EXEEXT)
