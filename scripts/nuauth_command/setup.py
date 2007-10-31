@@ -10,7 +10,9 @@ else:
 
 # Open IPy.py to read version
 from imp import load_source
-command = load_source("", "nuauth_command/version.py")
+from os.path import join as path_join, dirname
+filename = path_join(dirname(__file__),  "nuauth_command", "version.py")
+command = load_source("", filename)
 
 LONG_DESCRIPTION = "Command line program to control nuauth daemon throw UNIX socket"
 CLASSIFIERS = [
