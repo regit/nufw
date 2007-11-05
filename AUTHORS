@@ -7,18 +7,18 @@ Vincent Deffontaines (aka gryzor)
 Victor Stinner (aka Haypo)
     victor.stinner AT inl.fr
 
-Mikael Berthe (aka McKael)
-    original author of plaintext module
-
-Jean Gillaux
-    author of pam_nufw module
-
 Laurent Defert
     laurent.defert AT inl.fr
 
 Pierre Chifflier
     pierre.chifflier AT inl.fr
     debian packaging
+
+Mikael Berthe (aka McKael)
+    original author of plaintext module
+
+Jean Gillaux
+    author of pam_nufw module
 
 Francesco Varano <francesco.varano@winext.eu>
 Gabriele Messineo <gabriele.messineo@winext.eu>

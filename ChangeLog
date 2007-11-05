@@ -8,7 +8,7 @@
 	- nuaclgen: add support for userid based ACLs.
 	- nuauth: fix SASL rare crash on client authentication failure (sasl_dispose)
 	- nuauth: fix command line parser: -p and -l were limited to 3 characters
-	- nauuth: fix a buffer overflow (3 bytes) in base64 encoding function
+	- nuauth: fix a buffer overflow (3 bytes) in base64 encoding function
 	- nuauth: improve certificate file error handling
 	- nuauth: leaver if socket command file is unavailable
 	- pam_nufw: fix memset usage 
