@@ -255,8 +255,10 @@ int auth_process_conn_update(char *dgram, int dgram_size)
  * can be:
  *   - Decision answer: packet accepted/rejected
  *   - Connection destroy: ask conntrack to destroy a connection
- *   - Connection update: ask connectrak to set connection timeout to given
+ *   - Connection update: ask conntrack to set connection timeout to given
  *     value
+ *
+ *  \return -1 in case of error
  */
 inline int auth_packet_to_decision(char *dgram, int dgram_size)
 {
@@ -298,7 +300,7 @@ inline int auth_packet_to_decision(char *dgram, int dgram_size)
 				dgram[1]);
 		break;
 	}
-	return 0;
+	return -1;
 }
 
 /**
