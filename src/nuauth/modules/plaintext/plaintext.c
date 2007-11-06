@@ -933,6 +933,16 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 			sizeof(confparams_t));
 
 	module->params = (gpointer) params;
+
+	/*  Initialization of the user list */
+	if(read_user_list(params)) {
+		log_message(FATAL, DEBUG_AREA_AUTH,
+			    "Can't parse users file [%s]",
+			    ((struct plaintext_params *) params)->
+			    plaintext_userfile);
+		return FALSE;
+	}
+
 	return TRUE;
 }
 
@@ -1033,27 +1043,10 @@ G_MODULE_EXPORT int user_check(const char *username,
 G_MODULE_EXPORT uint32_t get_user_id(const char *username, gpointer params)
 {
 	GSList *res;
-	int initstatus;
-	static GStaticMutex plaintext_initmutex = G_STATIC_MUTEX_INIT;
-	/* init has only to be done once */
-	g_static_mutex_lock(&plaintext_initmutex);
-	/*  Initialization if the user list is empty */
-	if (!((struct plaintext_params *) params)->plaintext_userlist) {
-		initstatus = read_user_list(params);
-		if (initstatus) {
-			log_message(SERIOUS_WARNING, DEBUG_AREA_AUTH,
-				    "Can't parse users file [%s]",
-				    ((struct plaintext_params *) params)->
-				    plaintext_userfile);
-			return SASL_BADAUTH;
-		}
-	}
-	g_static_mutex_unlock(&plaintext_initmutex);
-
+	
 	res = fill_user_by_username(username, params);
-	if (res == NULL) {
+	if (res == NULL)
 		return 0;
-	}
 
 	return ((struct plaintext_user *) res->data)->uid;
 }
@@ -1063,22 +1056,6 @@ G_MODULE_EXPORT GSList *get_user_groups(const char *username,
 					gpointer params)
 {
 	GSList *res;
-	int initstatus;
-	static GStaticMutex plaintext_initmutex = G_STATIC_MUTEX_INIT;
-	/* init has only to be done once */
-	g_static_mutex_lock(&plaintext_initmutex);
-	/*  Initialization if the user list is empty */
-	if (!((struct plaintext_params *) params)->plaintext_userlist) {
-		initstatus = read_user_list(params);
-		if (initstatus) {
-			log_message(SERIOUS_WARNING, DEBUG_AREA_AUTH,
-				    "Can't parse users file [%s]",
-				    ((struct plaintext_params *) params)->
-				    plaintext_userfile);
-			return NULL;
-		}
-	}
-	g_static_mutex_unlock(&plaintext_initmutex);
 
 	res = fill_user_by_username(username, params);
 	if (res == NULL) {
