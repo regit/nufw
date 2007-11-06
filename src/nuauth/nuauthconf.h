@@ -21,7 +21,7 @@
 #ifndef NUAUTHCONF_H
 #define NUAUTHCONF_H
 
-void init_nuauthconf(struct nuauth_params **);
+int init_nuauthconf(struct nuauth_params **);
 
 int build_prenuauthconf(struct nuauth_params *prenuauthconf,
 			char *gwsrv_addr, policy_t connect_policy);

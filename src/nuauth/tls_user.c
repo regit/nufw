@@ -578,9 +578,14 @@ int tls_user_init(struct tls_user_context_t *context)
 
 	/* get config file setup */
 	/* parse conf file */
-	parse_conffile(DEFAULT_CONF_FILE,
+	if(!parse_conffile(DEFAULT_CONF_FILE,
 		       sizeof(nuauth_tls_vars) / sizeof(confparams_t),
-		       nuauth_tls_vars);
+		       nuauth_tls_vars))
+	{
+	        log_message(FATAL, DEBUG_AREA_MAIN, "Failed to load config file %s", DEFAULT_CONF_FILE);
+		return 0;
+	}
+
 
 #define READ_CONF(KEY) \
 	get_confvar_value(nuauth_tls_vars, sizeof(nuauth_tls_vars)/sizeof(confparams_t), KEY)

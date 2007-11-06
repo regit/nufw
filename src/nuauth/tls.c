@@ -343,7 +343,12 @@ int create_x509_credentials()
 	    sizeof(nuauth_tls_vars) / sizeof(confparams_t);
 	int int_authcert;
 
-	parse_conffile(configfile, nb_params, nuauth_tls_vars);
+	if(!parse_conffile(configfile, nb_params, nuauth_tls_vars))
+	{
+	        log_message(FATAL, DEBUG_AREA_MAIN, "Failed to load config file %s", configfile);
+		return 0;
+	}
+
 
 #define READ_CONF(KEY) \
     get_confvar_value(nuauth_tls_vars, nb_params, KEY)

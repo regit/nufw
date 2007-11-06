@@ -348,10 +348,15 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 	int nuauth_tls_max_servers = NUAUTH_TLS_MAX_SERVERS;
 	/* get config file setup */
 	/* parse conf file */
-	parse_conffile(configfile,
+	if(!parse_conffile(configfile,
 		       sizeof(nuauth_tls_vars) / sizeof(confparams_t),
-		       nuauth_tls_vars);
-	/* set variable value from config file */
+		       nuauth_tls_vars))
+	{
+	        log_message(FATAL, DEBUG_AREA_MAIN, "Failed to load config file %s", configfile);
+		return 0;
+	}
+
+/* set variable value from config file */
 	vpointer =
 	    get_confvar_value(nuauth_tls_vars,
 			      sizeof(nuauth_tls_vars) / sizeof(confparams_t),

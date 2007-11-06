@@ -72,7 +72,7 @@ int build_prenuauthconf(struct nuauth_params *prenuauthconf,
 	return 1;
 }
 
-void init_nuauthconf(struct nuauth_params **result)
+int init_nuauthconf(struct nuauth_params **result)
 {
 	struct nuauth_params *conf;
 	char *gwsrv_addr = NULL;
@@ -138,7 +138,13 @@ void init_nuauthconf(struct nuauth_params **result)
 	*result = conf;
 
 	/* parse conf file */
-	parse_conffile(DEFAULT_CONF_FILE, nb_params, nuauth_vars);
+	if(!parse_conffile(DEFAULT_CONF_FILE, nb_params, nuauth_vars))
+	{
+	        log_message(FATAL, DEBUG_AREA_MAIN, "Failed to load config file %s", DEFAULT_CONF_FILE);
+		return 0;
+	}
+
+
 
 #define READ_CONF(KEY) \
   get_confvar_value(nuauth_vars, nb_params, KEY)
@@ -213,6 +219,7 @@ void init_nuauthconf(struct nuauth_params **result)
 	build_prenuauthconf(conf, gwsrv_addr, connect_policy);
 
 	g_free(gwsrv_addr);
+	return 1;
 }
 
 void free_nuauth_params(struct nuauth_params *conf)

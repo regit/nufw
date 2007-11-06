@@ -602,9 +602,13 @@ int load_modules()
 	char *configfile = DEFAULT_CONF_FILE;
 
 	/* parse conf file */
-	parse_conffile(configfile,
+	if(!parse_conffile(configfile,
 		       sizeof(nuauth_vars) / sizeof(confparams_t),
-		       nuauth_vars);
+		       nuauth_vars))
+	{
+	        log_message(FATAL, DEBUG_AREA_MAIN, "Failed to load config file %s", configfile);
+		return 0;
+	}
 
 #define READ_CONF(KEY) \
     get_confvar_value(nuauth_vars, sizeof(nuauth_vars)/sizeof(confparams_t), KEY);
@@ -637,9 +641,14 @@ int load_modules()
 		};
 
 		/* parse conf file for user_check sub vars*/
-		parse_conffile(configfile,
+		if(!parse_conffile(configfile,
 				sizeof(deps_check_vars) / sizeof(confparams_t),
-				deps_check_vars);
+				deps_check_vars))
+		{
+		        log_message(FATAL, DEBUG_AREA_MAIN, "Failed to load config file %s", configfile);
+			return 0;
+		}
+
 		hooks[MOD_USER_ID].config = 
 			(char *) READ_CONF(hooks[MOD_USER_ID].configstring);
 		hooks[MOD_USER_GROUPS].config = 

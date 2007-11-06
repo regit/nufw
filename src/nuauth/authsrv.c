@@ -649,7 +649,12 @@ void configure_app(int argc, char **argv)
 	params.nuauth_nufw_listen_addr = NULL;
 
 	/* load configuration */
-	init_nuauthconf(&nuauthconf);
+	if(!init_nuauthconf(&nuauthconf))
+	{
+		fprintf(stderr,"Unable to load configuration\n");
+		exit(EXIT_FAILURE);
+	}
+
 
 	log_message(INFO, DEBUG_AREA_MAIN, "Start NuAuth server.");
 
