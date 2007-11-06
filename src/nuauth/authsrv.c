@@ -748,7 +748,8 @@ void init_nuauthdatas()
 
 	/* init and load modules */
 	init_modules_system();
-	load_modules();
+	if(!load_modules())
+		exit(EXIT_FAILURE);
 
 	/* init periods */
 	nuauthconf->periods = init_periods(nuauthconf);

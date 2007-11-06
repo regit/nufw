@@ -504,13 +504,13 @@ static int load_modules_from(gchar * confvar, gchar * func,
 			g_error("Unable to load module %s in %s",
 				modules_list[i], MODULE_PATH);
 			free_module_t(current_module);
-			continue;
+			return 0;
 		}
 
 		/* check module version */
 		if (!check_module_version(current_module->module)) {
 			free_module_t(current_module);
-			continue;
+			return 0;
 		}
 
 		/* get module function handler */
@@ -521,7 +521,7 @@ static int load_modules_from(gchar * confvar, gchar * func,
 				g_module_name(current_module->module));
 			free_module_t(current_module);
 			g_strfreev(params_list);
-			continue;
+			return 0;
 		}
 
 		current_module->hook = hook;
@@ -533,14 +533,16 @@ static int load_modules_from(gchar * confvar, gchar * func,
 			/* Initialize module */
 			if (!initmod(current_module)) {
 				g_warning
-				    ("Unable to init module, continuing anyway");
+				    ("Unable to init module");
 				current_module->params = NULL;
+				return 0;
 			}
 		} else {
 			log_message(WARNING, DEBUG_AREA_MAIN,
 				    "No init function for module %s: PLEASE UPGRADE!",
 				    current_module->module_name);
 			current_module->params = NULL;
+			return 0;
 		}
 
 		/* get params for module by calling module exported function */
@@ -551,6 +553,7 @@ static int load_modules_from(gchar * confvar, gchar * func,
 				    "No unload function for module %s: PLEASE UPGRADE!",
 				    current_module->module_name);
 			current_module->free_params = NULL;
+			return 0;
 		}
 
 		/* store module in module list */
@@ -564,7 +567,6 @@ static int load_modules_from(gchar * confvar, gchar * func,
 	}
 	g_strfreev(modules_list);
 	return 1;
-
 }
 
 /**
@@ -652,7 +654,12 @@ int load_modules()
 
 #define LOAD_MODULE(HOOK) \
     log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN, "Loading %s modules:", hooks[HOOK].message); \
-    load_modules_from(hooks[HOOK].config, hooks[HOOK].funcstring, &(hooks[HOOK].modules), HOOK); 
+    if(!load_modules_from(hooks[HOOK].config, hooks[HOOK].funcstring, &(hooks[HOOK].modules), HOOK)) \
+    { \
+        log_message(FATAL, DEBUG_AREA_MAIN, "Failed to load modules %s", hooks[HOOK].message); \
+    	return 0; \
+    }
+    
 
 	/* loading modules */
 	for (i = MOD_FIRST; i < MOD_OPTIONNAL; i++) {
