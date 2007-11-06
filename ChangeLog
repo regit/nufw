@@ -1,4 +1,4 @@
-2.2.8
+2.2.8 (2007/11/07)
 	- libnuclient, nuauth: fix protocol 2.2 on big endian.
 	- log_mysql: add documentation file and add a IPv4 and an IPv6 dump
 	- build system: improve autoconf compliance
