@@ -990,23 +990,6 @@ G_MODULE_EXPORT int user_check(const char *username,
 {
 	GSList *res;
 	char *realpass;
-	int initstatus;
-	static GStaticMutex plaintext_initmutex = G_STATIC_MUTEX_INIT;
-
-	/* init has only to be done once */
-	g_static_mutex_lock(&plaintext_initmutex);
-	/*  Initialization if the user list is empty */
-	if (!((struct plaintext_params *) params)->plaintext_userlist) {
-		initstatus = read_user_list(params);
-		if (initstatus) {
-			log_message(SERIOUS_WARNING, DEBUG_AREA_AUTH,
-				    "Can't parse users file [%s]",
-				    ((struct plaintext_params *) params)->
-				    plaintext_userfile);
-			return SASL_BADAUTH;
-		}
-	}
-	g_static_mutex_unlock(&plaintext_initmutex);
 
 	res = fill_user_by_username(username, params);
 	if (res == NULL) {
