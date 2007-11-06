@@ -935,7 +935,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	module->params = (gpointer) params;
 
 	/*  Depending on the use of the module load user list or acl list */
-	if( module->hook == MOD_USER_CHECK || module->hook == MOD_USER_ID || module->hook == MOD_USER_GROUPS) {
+	if (module->hook == MOD_USER_CHECK || module->hook == MOD_USER_ID || module->hook == MOD_USER_GROUPS) {
 		/*  Initialization of the user list */
 		if( read_user_list(params)) {
 			log_message(FATAL, DEBUG_AREA_AUTH,
@@ -944,10 +944,9 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 				    plaintext_userfile);
 			return FALSE;
 		}
-	} else
-	if( module->hook == MOD_ACL_CHECK) {
+	} else if (module->hook == MOD_ACL_CHECK) {
 		/*  Initialization of the ACL list */
-		if( read_acl_list(params)) {
+		if (read_acl_list(params)) {
 			log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 				    "Can't parse ACLs file [%s]",
 				    ((struct plaintext_params *) params)->
