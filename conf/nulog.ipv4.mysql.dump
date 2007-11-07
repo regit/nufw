@@ -88,8 +88,8 @@ CREATE TABLE `ulog` (
   `oob_mark` int(10) unsigned default NULL,
   `oob_in` varchar(32) default NULL,
   `oob_out` varchar(32) default NULL,
-  `ip_saddr` binary(16) default NULL,
-  `ip_daddr` binary(16) default NULL,
+  `ip_saddr` int(10) unsigned default NULL,
+  `ip_daddr` int(10) unsigned default NULL,
   `ip_protocol` tinyint(3) unsigned default NULL,
   `ip_tos` tinyint(3) unsigned default NULL,
   `ip_ttl` tinyint(3) unsigned default NULL,
@@ -149,7 +149,7 @@ CREATE TABLE `ulog` (
 
 DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
-  `ip_saddr` binary(16) NOT NULL,
+  `ip_saddr` int(10) unsigned NOT NULL,
   `socket` int(10) unsigned NOT NULL,
   `user_id` int(10) unsigned default NULL,
   `username` varchar(30) default NULL,
