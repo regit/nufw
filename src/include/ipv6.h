@@ -31,6 +31,9 @@ int is_ipv4(const struct in6_addr *addr);
 void format_ipv6(const struct in6_addr *addr, char *buffer, size_t buflen, uint8_t *protocol);
 int getsockname_ipv6(int fileno, struct in6_addr *addr);
 int hex2ipv6(char *text, struct in6_addr *ip);
+inline int ipv6_equal(const struct in6_addr *ipa, const struct in6_addr *ipb);
+int compare_ipv6_with_mask(const struct in6_addr *addr1,
+	const struct in6_addr *addr2, const struct in6_addr *mask);
 
 #define FORMAT_IPV6(addr, buffer) format_ipv6(addr, buffer, sizeof(buffer), NULL)
 

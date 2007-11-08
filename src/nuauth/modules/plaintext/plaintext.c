@@ -189,22 +189,6 @@ static int parse_ports(char *portsline, GSList ** p_portslist,
 }
 
 /**
- * Compare addr1 with (addr2 & netmask)
- *
- * \return 0 if they match, integer different than zero otherwise (memcmp result)
- */
-static int compare_ipv6_with_mask(struct in6_addr *addr1, struct in6_addr *addr2,
-			   struct in6_addr *mask)
-{
-	struct in6_addr masked = *addr2;
-	masked.s6_addr32[0] &= mask->s6_addr32[0];
-	masked.s6_addr32[1] &= mask->s6_addr32[1];
-	masked.s6_addr32[2] &= mask->s6_addr32[2];
-	masked.s6_addr32[3] &= mask->s6_addr32[3];
-	return memcmp(addr1, &masked, sizeof(masked));
-}
-
-/**
  * Try to match an address from an IP/mask list.
  *
  * \param ip_list Single linked list of plaintext_ip items
@@ -313,17 +297,12 @@ static int parse_ips(char *ipsline, GSList ** ip_list, char *prefix)
 		{
 			char addr_ascii[INET6_ADDRSTRLEN];
 			char mask_ascii[INET6_ADDRSTRLEN];
-			if (inet_ntop
-			    (PF_INET6, &this_ip_copy->addr, addr_ascii,
-			     sizeof(addr_ascii)) != NULL
-			    && inet_ntop(PF_INET6, &this_ip_copy->netmask,
-					 mask_ascii,
-					 sizeof(mask_ascii)) != NULL) {
-				log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
-					    "%s Adding IP = %s, netmask = %s",
-					    prefix, addr_ascii,
-					    mask_ascii);
-			}
+			FORMAT_IPV6(&this_ip_copy->addr, addr_ascii);
+			FORMAT_IPV6(&this_ip_copy->netmask, mask_ascii);
+			log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
+					"%s Adding IP = %s, netmask = %s",
+					prefix, addr_ascii,
+					mask_ascii);
 		}
 #endif
 	}
@@ -1041,7 +1020,7 @@ G_MODULE_EXPORT int user_check(const char *username,
 G_MODULE_EXPORT uint32_t get_user_id(const char *username, gpointer params)
 {
 	GSList *res;
-	
+
 	res = fill_user_by_username(username, params);
 	if (res == NULL)
 		return 0;

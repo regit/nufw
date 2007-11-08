@@ -174,3 +174,31 @@ int hex2ipv6(const char *text, struct in6_addr *ip)
 #undef READ
 }
 
+/**
+ * Compare two IPv6 addresses.
+ *
+ * \return 1 on equality, 0 otherwise.
+ */
+inline int ipv6_equal(const struct in6_addr *ipa, const struct in6_addr *ipb)
+{
+	return memcmp(ipa, ipb, sizeof(struct in6_addr)) == 0;
+}
+
+/**
+ * Compare addr1 with (addr2 & netmask)
+ *
+ * \return 0 if they match, integer different than zero otherwise (memcmp result)
+ */
+int compare_ipv6_with_mask(
+	const struct in6_addr *addr1,
+	const struct in6_addr *addr2,
+	const struct in6_addr *mask)
+{
+	struct in6_addr masked = *addr2;
+	masked.s6_addr32[0] &= mask->s6_addr32[0];
+	masked.s6_addr32[1] &= mask->s6_addr32[1];
+	masked.s6_addr32[2] &= mask->s6_addr32[2];
+	masked.s6_addr32[3] &= mask->s6_addr32[3];
+	return memcmp(addr1, &masked, sizeof(masked));
+}
+
