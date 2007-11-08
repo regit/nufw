@@ -4,7 +4,6 @@
 
 # Each ACL begins with an identifier [ACLname]
 # [Sample ACL]
-# decision=1            # 0=drop, 1=accept, 3=reject (2 is reserved: "no decide")
 # gid=100,101           # which groups are concerned
 # gid=103               # several lines can be used
 # uid=100,101           # which user ids are concerned
@@ -18,7 +17,9 @@
 # DstIP=10.10.0.8, 10.10.1.0/24 # There can be several IP addresses/lines
 # DstPort=5150-5153     # List of destination ports
 # DstPort=22,25         # There can be several lines
+# decision=1            # 0=drop, 1=accept, 3=reject (2 is reserved: "no decide")
 #
+# Filtering
 ## * Note: ports (SrcPort, DstPort) are optional.  If none is specified,
 ##   any port can match the ACL.
 #
@@ -39,13 +40,17 @@
 #  OS = Linux ; 2.6.8 ; #3 Fri Aug 27 20:37:38 CEST 2004
 ## * (Several OS can be given)
 #
-# Log prefix:
-# log_prefix = ssh
-#
 # Period limitation:
 # You need to use period defined in your period handling module
 #  Example :
 # period = 24x7
+#
+# Decision and internal use:
+#
+# decision=1            # 0=drop, 1=accept, 3=reject (2 is reserved: "no decide")
+#
+# Log prefix:
+# log_prefix = ssh
 #
 # ACL flags:
 # This is a integer coding property of acl
