@@ -382,14 +382,8 @@ static char * str_print_tracking_t(tracking_t *tracking)
 	char dst_ascii[INET6_ADDRSTRLEN];
 	char * ip_header, * proto_header, *message;
 
-	if (inet_ntop
-			(AF_INET6, &(tracking->saddr), src_ascii,
-			 sizeof(src_ascii)) == NULL)
-		return NULL;
-	if (inet_ntop
-			(AF_INET6, &(tracking->daddr), dst_ascii,
-			 sizeof(dst_ascii)) == NULL)
-		return NULL;
+	FORMAT_IPV6(&tracking->saddr, src_ascii);
+	FORMAT_IPV6(&tracking->daddr, dst_ascii);
 
 	ip_header = g_strdup_printf(" src=%s dst=%s proto=%u",
 			src_ascii, dst_ascii, tracking->protocol);
@@ -416,7 +410,7 @@ nu_error_t print_tracking_t(tracking_t *tracking)
 
 	if (! tracking_display)
 		return NU_EXIT_ERROR;
-	
+
 	g_message(tracking_display);
 
 	g_free(tracking_display);
@@ -472,7 +466,7 @@ gint print_connection(gpointer data, gpointer userdata)
 	} else {
 		str_id = g_strdup("");
 	}
-	
+
 	if (conn->username) {
 		str_user = g_strdup_printf(", user=%s", conn->username);
 	} else {
@@ -493,13 +487,13 @@ gint print_connection(gpointer data, gpointer userdata)
 
 	message = g_strconcat(prefix, ":", str_tracking, str_state, str_iface,
 			      str_id, str_os, str_app, NULL);
-	g_free(str_tracking);	
+	g_free(str_tracking);
 	g_free(str_state);
-	g_free(str_iface);	
-	g_free(str_id);	
-	g_free(str_user);	
-	g_free(str_os);	
-	g_free(str_app);	
+	g_free(str_iface);
+	g_free(str_id);
+	g_free(str_user);
+	g_free(str_os);
+	g_free(str_app);
 
 	g_message(message);
 
