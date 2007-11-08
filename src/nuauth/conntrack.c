@@ -250,7 +250,7 @@ void *limited_connection_handler(GMutex * mutex)
 	nuauthdatas->limited_connections_queue = g_async_queue_new();
 	/* initialize packets list */
 	lim_conn_list = g_hash_table_new_full((GHashFunc) hash_connection,
-					      compare_connection,
+					      (GEqualFunc) tracking_equal,
 					      NULL,
 					      (GDestroyNotify)
 					      send_destroy_message_and_free);

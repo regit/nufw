@@ -29,6 +29,7 @@ typedef enum {
 	PACKET_IN_HASH		/*!< Packet is stored inside ::conn_list */
 } packet_place_t;
 
+gboolean tracking_equal(const tracking_t *trck1, const tracking_t *trck2);
 void *search_and_fill(GMutex * mutex);
 
 int sck_auth_reply;

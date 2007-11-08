@@ -740,7 +740,7 @@ void init_nuauthdatas()
 
 	/* initialize packets list */
 	conn_list = g_hash_table_new_full((GHashFunc) hash_connection,
-					  compare_connection,
+					  (GEqualFunc) tracking_equal,
 					  NULL, (GDestroyNotify)
 					  free_connection);
 

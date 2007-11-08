@@ -64,18 +64,14 @@ inline guint32 hash_connection(gconstpointer data)
 /**
  * Check if two connections are equal.
  *
- * \param a Tracking headers (type ::tracking_t) compared with b
- * \param b Tracking headers (type ::tracking_t) compared with a
- * \return TRUE is IPv4 headers are equal, FALSE otherwise
+ * \param a Tracking headers compared with b
+ * \param b Tracking headers compared with a
+ * \return TRUE is they are equal, FALSE otherwise
  */
-gboolean compare_connection(gconstpointer a, gconstpointer b)
+gboolean tracking_equal(const tracking_t *trck1, const tracking_t *trck2)
 {
-	tracking_t *trck1 = (tracking_t *) a;
-	tracking_t *trck2 = (tracking_t *) b;
-
 	/* compare IPheaders */
-	if (memcmp(&trck1->saddr, &trck2->saddr, sizeof(trck1->saddr)) !=
-	    0)
+	if (!ipv6_equal(&trck1->saddr, &trck2->saddr))
 		return FALSE;
 
 	/* compare proto */
@@ -86,8 +82,7 @@ gboolean compare_connection(gconstpointer a, gconstpointer b)
 	switch (trck1->protocol) {
 	case IPPROTO_TCP:
 		if (trck1->source == trck2->source
-		    && memcmp(&trck1->daddr, &trck2->daddr,
-			      sizeof(trck1->daddr)) == 0
+		    && ipv6_equal(&trck1->daddr, &trck2->daddr)
 		    && trck1->dest == trck2->dest)
 			return TRUE;
 		else
@@ -96,8 +91,7 @@ gboolean compare_connection(gconstpointer a, gconstpointer b)
 	case IPPROTO_UDP:
 		if (trck1->dest == trck2->dest
 		    && trck1->source == trck2->source
-		    && memcmp(&trck1->daddr, &trck2->daddr,
-			      sizeof(trck1->daddr)) == 0)
+		    && ipv6_equal(&trck1->daddr, &trck2->daddr))
 			return TRUE;
 		else
 			return FALSE;
@@ -106,8 +100,7 @@ gboolean compare_connection(gconstpointer a, gconstpointer b)
 	case IPPROTO_ICMPV6:
 		if (trck1->type == trck2->type
 		    && trck1->code == trck2->code
-		    && memcmp(&trck1->daddr, &trck2->daddr,
-			      sizeof(trck1->daddr)) == 0)
+		    && ipv6_equal(&trck1->daddr, &trck2->daddr))
 			return TRUE;
 		else
 			return FALSE;
@@ -158,7 +151,7 @@ inline void search_and_fill_complete_of_authreq(connection_t * new,
 		    g_slist_prepend(packet->packet_id,
 				    GUINT_TO_POINTER((new->packet_id)->
 						    data));
-		new->state = AUTH_STATE_DONE;	
+		new->state = AUTH_STATE_DONE;
 		break;
 
 	case AUTH_STATE_USERPCKT:
@@ -285,7 +278,7 @@ inline void search_and_fill_completing(connection_t * new,
 		    g_slist_prepend(packet->packet_id,
 				    GUINT_TO_POINTER((new->packet_id)->
 						    data));
-		new->state = AUTH_STATE_DONE;	
+		new->state = AUTH_STATE_DONE;
 		break;
 
 	case AUTH_STATE_USERPCKT:
@@ -314,7 +307,7 @@ inline void search_and_fill_ready(connection_t * new,
 		packet->packet_id =
 		    g_slist_prepend(packet->packet_id,
 				    GUINT_TO_POINTER((new->packet_id)->data));
-		new->state = AUTH_STATE_DONE;	
+		new->state = AUTH_STATE_DONE;
 		break;
 
 	case AUTH_STATE_USERPCKT:

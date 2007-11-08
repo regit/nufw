@@ -77,67 +77,6 @@ inline guint32 hash_acl(gconstpointer key)
 }
 
 /**
- * Find if two acls decision are equal.
- *
- * Params : two ip headers
- * Return : TRUE is ip headers are equal, FALSE otherwise
- */
-
-gboolean compare_tracking(gconstpointer a, gconstpointer b)
-{
-	tracking_t *tracking1 = (tracking_t *) a;
-	tracking_t *tracking2 = (tracking_t *) b;
-
-	/* compare IP source address */
-	if (memcmp
-	    (&tracking1->saddr, &tracking2->saddr,
-	     sizeof(tracking1->saddr)) != 0)
-		return FALSE;
-
-	/* compare proto */
-	if (tracking1->protocol != tracking2->protocol)
-		return FALSE;
-
-	/* compare proto headers */
-	switch (tracking1->protocol) {
-	case IPPROTO_TCP:
-		if (tracking1->dest == tracking2->dest
-		    &&
-		    (memcmp
-		     (&tracking1->daddr, &tracking2->daddr,
-		      sizeof(tracking1->daddr)) == 0))
-			return TRUE;
-		else
-			return FALSE;
-
-	case IPPROTO_UDP:
-		if (tracking1->dest == tracking2->dest
-		    &&
-		    (memcmp
-		     (&tracking1->daddr, &tracking2->daddr,
-		      sizeof(tracking1->daddr)) == 0))
-			return TRUE;
-		else
-			return FALSE;
-
-	case IPPROTO_ICMP:
-	case IPPROTO_ICMPV6:
-		if (tracking1->type == tracking2->type
-		    && tracking1->code == tracking2->code
-		    &&
-		    (memcmp
-		     (&tracking1->daddr, &tracking2->daddr,
-		      sizeof(tracking1->daddr)) == 0))
-			return TRUE;
-		else
-			return FALSE;
-
-	default:
-		return FALSE;
-	}
-}
-
-/**
  * Internal string comparison function
  */
 inline gint strcmp_null(gchar * a, gchar * b)
@@ -160,7 +99,7 @@ gboolean compare_acls(gconstpointer a, gconstpointer b)
 	struct acl_key *acl_key1 = (struct acl_key *) a;
 	struct acl_key *acl_key2 = (struct acl_key *) b;
 
-	if (!compare_tracking
+	if (!tracking_equal
 	    (acl_key1->acl_tracking, acl_key2->acl_tracking)) {
 		return FALSE;
 	}
