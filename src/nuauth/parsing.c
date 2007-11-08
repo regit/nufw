@@ -79,15 +79,15 @@ struct in6_addr *generate_inaddr_list(gchar * gwsrv_addr)
 }
 
 
-gboolean check_inaddr_in_array(struct in6_addr * check_ip,
-			       struct in6_addr * iparray)
+gboolean check_inaddr_in_array(struct in6_addr *check_ip,
+			       struct in6_addr *iparray)
 {
 	struct in6_addr *ipitem;
 	/* test if server is in the list of authorized servers */
 	if (iparray) {
 		ipitem = iparray;
-		while (memcmp(ipitem, &in6addr_any, sizeof(*ipitem)) != 0) {
-			if (memcmp(ipitem, check_ip, sizeof(*ipitem)) == 0)
+		while (!ipv6_equal(ipitem, &in6addr_any)) {
+			if (ipv6_equal(ipitem, check_ip))
 				return TRUE;
 			ipitem++;
 		}

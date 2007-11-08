@@ -56,6 +56,7 @@ void user_check_and_decide(gpointer userdata, gpointer data)
 	/* if OK search and fill */
 	for (conn_elt_l = conn_elts; conn_elt_l != NULL;
 	     conn_elt_l = conn_elt_l->next) {
+		const struct tls_buffer_read *tlsdata = userdata;
 		conn_elt = conn_elt_l->data;
 
 		/* in this case we have an HELLO MODE packet */
@@ -64,8 +65,7 @@ void user_check_and_decide(gpointer userdata, gpointer data)
 			    g_new0(struct internal_message, 1);
 			/* We assume the source address we try to authenticate is source address
 			 * of client connection */
-			conn_elt->tracking.saddr =
-			    ((struct tls_buffer_read *) userdata)->ip_addr;
+			conn_elt->tracking.saddr = tlsdata->ip_addr;
 			message->type = INSERT_MESSAGE;
 			message->datas = conn_elt;
 			g_async_queue_push(nuauthdatas->localid_auth_queue,
@@ -73,9 +73,7 @@ void user_check_and_decide(gpointer userdata, gpointer data)
 			continue;
 		}
 		/* Sanity check : verify source IP equality */
-		if (memcmp(&((struct tls_buffer_read *) userdata)->ip_addr,
-			   &conn_elt->tracking.saddr,
-			   sizeof(conn_elt->tracking.saddr)) == 0) {
+		if (ipv6_equal(&tlsdata->ip_addr, &conn_elt->tracking.saddr)) {
 			if (DEBUG_OR_NOT
 			    (DEBUG_LEVEL_DEBUG,
 			     DEBUG_AREA_PACKET)) {
@@ -87,17 +85,10 @@ void user_check_and_decide(gpointer userdata, gpointer data)
 			if (DEBUG_OR_NOT
 			    (DEBUG_LEVEL_INFO, DEBUG_AREA_USER)) {
 				char ip_ascii[INET6_ADDRSTRLEN];
-
-				if (inet_ntop
-				    (AF_INET6,
-				     &((struct tls_buffer_read *)
-				       userdata)->ip_addr, ip_ascii,
-				     sizeof(ip_ascii)) != NULL) {
-					g_message
-					    ("User %s on %s tried to authenticate packet from other ip",
-					     conn_elt->username, ip_ascii);
-				}
-
+				FORMAT_IPV6(&tlsdata->ip_addr, ip_ascii);
+				g_message
+					("User %s on %s tried to authenticate packet from other ip",
+					 conn_elt->username, ip_ascii);
 				conn_elt->log_prefix = g_strdup(SPOOFED_LOG_PREFIX);
 				print_connection(conn_elt, "User spoofed Packet");
 			}
@@ -429,11 +420,8 @@ GSList *user_request(struct tls_buffer_read * datas)
 		 * Source address can be 0 only if it's a hello mode packet
 		 * we also want to have APPNAME defined
 		 * We destroy all the received message and stop parsing */
-		if ((memcmp
-		     (&connection->tracking.saddr, &in6addr_any,
-		      sizeof(connection->tracking.saddr)) == 0
-		     || (connection->app_name == NULL)
-		    )
+		if ((ipv6_equal(&connection->tracking.saddr, &in6addr_any)
+		     || (connection->app_name == NULL))
 		    && (connection->packet_id == NULL)
 		    ) {
 			free_connection_list(conn_elts);

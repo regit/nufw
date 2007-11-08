@@ -400,11 +400,9 @@ conn_t *tcptable_find(conntable_t * ct, conn_t * c)
 	bucket = ct->buckets[tcptable_hash(c)];
 	while (bucket != NULL) {
 		if ((c->protocol == bucket->protocol)
-		    && memcmp(&c->ip_dst, &bucket->ip_dst,
-			      sizeof(c->ip_dst)) == 0
+		    && ipv6_equal(&c->ip_dst, &bucket->ip_dst)
 		    && (c->port_dst == bucket->port_dst)
-		    && memcmp(&c->ip_src, &bucket->ip_src,
-			      sizeof(c->ip_src)) == 0
+		    && ipv6_equal(&c->ip_src, &bucket->ip_src)
 		    && (c->port_src == bucket->port_src)
 		    ) {
 			return bucket;

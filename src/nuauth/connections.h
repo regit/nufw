@@ -141,7 +141,6 @@ GStaticMutex insert_mutex;
 
 
 gboolean get_old_conn(gpointer key, gpointer value, gpointer user_data);
-gboolean compare_connection(gconstpointer conn1, gconstpointer conn2);
 int conn_cl_remove(gconstpointer conn);
 int conn_cl_delete(gconstpointer conn);
 nu_error_t print_tracking_t(tracking_t *tracking);

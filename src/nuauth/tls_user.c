@@ -663,9 +663,7 @@ void *push_worker(GMutex * mutex)
 			/* search in client array */
 			warn_clients(global_msg);
 			/* do we have found something */
-			if (memcmp
-			    (&global_msg->addr, &in6addr_any,
-			     sizeof(in6addr_any)) != 0) {
+			if (!ipv6_equal(&global_msg->addr, &in6addr_any)) {
 				if (global_msg->found == FALSE) {
 					/* if we do ip authentication send request to pool */
 					if (nuauthconf->
@@ -739,7 +737,7 @@ void tls_user_start_servers(GSList *servers)
 	user_servers = g_strsplit(nuauthconf->client_srv, " ", 0);
 	while (user_servers[i]) {
 		/** \todo free context at program exit */
-		struct tls_user_context_t *context = 
+		struct tls_user_context_t *context =
 			g_new0(struct tls_user_context_t, 1);
 		struct nuauth_thread_t *srv_thread =
 			g_new0(struct nuauth_thread_t, 1);
