@@ -190,12 +190,9 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 
 	/* test if server is in the list of authorized servers */
 	if (!check_inaddr_in_array(&addr, nuauthconf->authorized_servers)) {
-		if (inet_ntop
-		    (AF_INET6, &addr, addr_ascii,
-		     sizeof(addr_ascii)) != NULL)
-			log_message(WARNING, DEBUG_AREA_GW,
-				    "unwanted nufw server (%s)",
-				    addr_ascii);
+		FORMAT_IPV6(&addr, addr_ascii);
+		log_message(WARNING, DEBUG_AREA_GW,
+				"unwanted nufw server (%s)", addr_ascii);
 		close(conn_fd);
 		return 1;
 	}
@@ -411,7 +408,7 @@ void tls_nufw_start_servers(GSList *servers)
 	nufw_servers = g_strsplit(nuauthconf->nufw_srv, " ", 0);
 	while (nufw_servers[i]) {
 		/** \todo free context at program exit */
-		struct tls_nufw_context_t *context = 
+		struct tls_nufw_context_t *context =
 			g_new0(struct tls_nufw_context_t, 1);
 		struct nuauth_thread_t *srv_thread =
 			g_new0(struct nuauth_thread_t, 1);

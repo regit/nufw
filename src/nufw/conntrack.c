@@ -136,13 +136,10 @@ void fill_message(struct nuv4_conntrack_message_t *message,
 
 #ifdef DEBUG_CONNTRACK
 	printf("(*) New conntrack event: ");
-	if (inet_ntop(AF_INET6, &message->ip_src, ascii, sizeof(ascii))) {
-		printf(" src=%s", ascii);
-	}
-	if (inet_ntop(AF_INET6, &message->ip_dst, ascii, sizeof(ascii))) {
-		printf(" dst=%s", ascii);
-	}
-	printf("\n");
+	FORMAT_IPV6(&message->ip_src, ascii);
+	printf(" src=%s", ascii);
+	FORMAT_IPV6(&message->ip_dst, ascii);
+	printf(" dst=%s\n", ascii);
 #endif
 }
 

@@ -172,15 +172,11 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 		if (g_slist_length(get_client_sockets_by_ip(&client->addr)) >=
 				nuauthconf->single_ip_client_limit) {
 			char address[INET6_ADDRSTRLEN];
-			const char *err = inet_ntop(AF_INET6, (&client->addr), address,
-						    sizeof(address));
+			FORMAT_IPV6(&client->addr, address);
 			g_free(userdata);
 			gnutls_bye(*(session), GNUTLS_SHUT_RDWR);
 			close_tls_session(c, session);
 			remove_socket_from_pre_client_list(c);
-	                if (err == NULL) {
-		            return;
-	                }
 		        log_message(INFO, DEBUG_AREA_USER,
 				    "Policy: too many connection attempts from already overused IP %s, closing socket",
 				    address);
