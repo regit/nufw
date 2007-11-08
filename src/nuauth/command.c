@@ -22,6 +22,7 @@
 #include "auth_srv.h"
 #include "command.h"
 #include "command_enc.h"
+#include "security.h"
 #include <sys/un.h>		/* unix socket */
 #include <sys/stat.h>		/* fchmod() */
 
@@ -72,7 +73,7 @@ int command_new(command_t * this)
 
 	/* set address */
 	addr.sun_family = AF_UNIX;
-	strncpy(addr.sun_path, SOCKET_FILENAME, sizeof(addr.sun_path));
+	SECURE_STRNCPY(addr.sun_path, SOCKET_FILENAME, sizeof(addr.sun_path));
 	addr.sun_path[sizeof(addr.sun_path) - 1] = 0;
 	len = strlen(addr.sun_path) + sizeof(addr.sun_family);
 
