@@ -11,6 +11,8 @@ Requirements
 
  * NuFW 2.0 or 2.2
  * inl_tests (Python module)
+ * Python IPy
+ * Python MySQL DB
 
 To download latest version of inl_tests::
 
