@@ -2,7 +2,10 @@
 README
 ======
 
+
 See INSTALL for installation.
+
+SECURITY : please send any security bug or suggestion to : <security@inl.fr>
 
 TLS usage:
 ===========
@@ -18,8 +21,8 @@ Kernel:
 ========
 
 It is recommanded to use a recent kernel to benefit of all latest feature.
-A kernel superior to 2.6.18 is a good choice. 
-The patch dump-connection-mark.diff (in patches/) can be applied to the kernel 
+A kernel superior to 2.6.18 is a good choice.
+The patch dump-connection-mark.diff (in patches/) can be applied to the kernel
 to increase performances when doing session logging.
 
 Included documentation:
