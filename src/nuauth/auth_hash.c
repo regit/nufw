@@ -38,14 +38,16 @@
 void search_and_fill_catchall(connection_t * new, connection_t * packet)
 {
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_WARNING, DEBUG_AREA_MAIN)) {
-		g_warning
-		    ("%s:%d Should not have this. Please email Nufw developpers!",
-		     __FILE__, __LINE__);
 		g_message
 		    ("state of new packet: %d, state of existing packet: %d",
 		     new->state, packet->state);
 	}
 }
+
+#define SEARCH_AND_FILL_CATCHALL(new,packet) g_warning \
+		    ("%s:%d Should not have this. Please email Nufw developpers!", \
+		     __FILE__, __LINE__); \
+	search_and_fill_catchall(new, packet);
 
 /**
  * Compute the key (hash) of a connection tracking.
@@ -141,6 +143,7 @@ void search_and_push(connection_t * new)
 inline void search_and_fill_complete_of_authreq(connection_t * new,
 						connection_t * packet)
 {
+
 	switch (new->state) {
 	case AUTH_STATE_AUTHREQ:
 		debug_log_message(DEBUG, DEBUG_AREA_PACKET,
@@ -180,7 +183,7 @@ inline void search_and_fill_complete_of_authreq(connection_t * new,
 		return;		/* don't free new connection */
 
 	default:
-		search_and_fill_catchall(new, packet);
+		SEARCH_AND_FILL_CATCHALL(new, packet);
 	}
 	free_connection(new);
 }
@@ -194,6 +197,7 @@ inline void search_and_fill_complete_of_authreq(connection_t * new,
 inline void search_and_fill_complete_of_userpckt(connection_t * new,
 						 connection_t * packet)
 {
+
 	switch (new->state) {
 	case AUTH_STATE_AUTHREQ:
 		packet->state = AUTH_STATE_COMPLETING;
@@ -234,7 +238,7 @@ inline void search_and_fill_complete_of_userpckt(connection_t * new,
 		break;
 
 	default:
-		search_and_fill_catchall(new, packet);
+		SEARCH_AND_FILL_CATCHALL(new, packet);
 	}
 	free_connection(new);
 }
@@ -252,7 +256,7 @@ inline void search_and_fill_done(connection_t * new, connection_t * packet)
 		break;
 
 	default:
-		search_and_fill_catchall(new, packet);
+		SEARCH_AND_FILL_CATCHALL(new, packet);
 	}
 	free_connection(new);
 }
@@ -287,7 +291,7 @@ inline void search_and_fill_completing(connection_t * new,
 		break;
 
 	default:
-		search_and_fill_catchall(new, packet);
+		SEARCH_AND_FILL_CATCHALL(new, packet);
 	}
 	free_connection(new);
 }
@@ -316,7 +320,7 @@ inline void search_and_fill_ready(connection_t * new,
 		break;
 
 	default:
-		search_and_fill_catchall(new, packet);
+		SEARCH_AND_FILL_CATCHALL(new, packet);
 	}
 	free_connection(new);
 }
@@ -353,7 +357,7 @@ void search_and_fill_update(connection_t * new, connection_t * packet)
 		break;
 
 	default:
-		search_and_fill_catchall(new, packet);
+		SEARCH_AND_FILL_CATCHALL(new, packet);
 		free_connection(new);
 	}
 }
