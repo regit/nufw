@@ -724,8 +724,8 @@ void configure_app(int argc, char **argv)
  *      - tls_pusher with push_worker() ;
  *      - search_and_fill_worker with search_and_fill() ;
  *      - localid_auth_thread with localid_auth() (if needed) ;
- *      - tls_auth_server with tls_user_authsrv() ;
- *      - tls_nufw_server with tls_nufw_authsrv() ;
+ *      - tls_auth_servers with tls_user_start_servers() ;
+ *      - tls_nufw_servers with tls_nufw_start_servers() ;
  *      - limited_connections_handler with limited_connection_handler().
  *
  * Other queue, threads, etc. are created elsewhere:

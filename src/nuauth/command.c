@@ -240,7 +240,7 @@ int command_do_disconnect(int sock)
 		if (msg->result == NU_EXIT_OK) {
 			ok = 1;
 			g_free(msg);
-                        break;
+			break;
 		} else {
 			ok = 0;
 		}
@@ -378,8 +378,7 @@ void command_execute(command_t * this, char *command)
 	}
 
 	/* on error (invalid input): disconnect client */
-	if (encoder->size == 0)
-	{
+	if (encoder->size == 0) {
 		command_client_close(this);
 		encoder_destroy(encoder);
 		return;
