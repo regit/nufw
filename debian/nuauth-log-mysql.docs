@@ -1,2 +1,3 @@
-conf/nulog.mysql.dump
+conf/nulog.ipv4.mysql.dump
+conf/nulog.ipv6.mysql.dump
 conf/nulog-v1-v2.mysql.dump
