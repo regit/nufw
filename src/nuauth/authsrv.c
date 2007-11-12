@@ -313,6 +313,8 @@ void nuauth_deinit(gboolean soft)
 	free_threads();
 	clear_push_queue();
 
+	g_static_mutex_free(&insert_mutex);
+
 	/* destroy pid file */
 	unlink(NUAUTH_PID_FILE);
 }
@@ -775,6 +777,7 @@ void init_nuauthdatas()
 	nuauthdatas->userqueue =
 	    g_private_new((GDestroyNotify) g_async_queue_unref);
 
+	g_static_mutex_init(&insert_mutex);
 	/* create thread for search_and_fill thread */
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 		    "Creating search_and_fill thread");
