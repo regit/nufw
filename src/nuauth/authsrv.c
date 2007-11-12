@@ -313,6 +313,8 @@ void nuauth_deinit(gboolean soft)
 	free_threads();
 	clear_push_queue();
 
+	g_hash_table_destroy(conn_list);
+
 	g_static_mutex_free(&insert_mutex);
 
 	/* destroy pid file */
