@@ -331,7 +331,7 @@ void clean_connections_list()
 			nb_deleted += 1;
 		} else {
 			log_message(WARNING, DEBUG_AREA_MAIN,
-				    "Clean connection: no entry found in hash ");
+				    "Clean connection: no entry found in hash");
 		}
 		iterator = iterator->next;
 	}
