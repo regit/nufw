@@ -1,9 +1,10 @@
 #!/usr/bin/python
-from unittest import TestSuite, TestResult, TestLoader, TextTestRunner, TestCase
+from unittest import TestSuite, TestResult, TestLoader, TestCase
 from imp import load_source
 from os import getuid
 from sys import exit, stderr
 from random import randint, shuffle
+from nufw_runner import NuFWTestRunner
 
 FILES = (
     "test_client_auth",
@@ -48,7 +49,7 @@ def main():
     for test in tests:
         suite.addTests(test)
 
-    runner = TextTestRunner(descriptions=2, verbosity=2)
+    runner = NuFWTestRunner(descriptions=2, verbosity=2)
     result = runner.run(suite)
     if result.failures or result.errors:
         exit(1)
