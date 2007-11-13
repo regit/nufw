@@ -5,6 +5,8 @@ INCLUDES = $(GLIB_CFLAGS) -I$(top_srcdir)/src/include/ -I$(top_srcdir)/src/nuaut
 
 sbin_PROGRAMS = nuauth
 
+EXTRA_DIST = splint.sh valgrind.sh valgrind.supp
+
 #authsrv
 nodist_nuauth_SOURCES = acls.h audit.h auth_common.h auth_srv.h cache.h client_mngr.h command_codec.h \
 	command_enc.h command.h conffile.h connections.h conntrack.h gcrypt_init.h \

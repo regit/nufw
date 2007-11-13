@@ -3,6 +3,8 @@ AM_CPPFLAGS = -DLOCAL_STATE_DIR=\"$(localstatedir)\"  -DCONFIG_DIR=\"$(sysconfdi
 
 sbin_PROGRAMS = nufw
 
+EXTRA_DIST = valgrind.sh
+
 # nufw
 
 nodist_include_HEADERS = iface.h log.h nufw.h structure.h
