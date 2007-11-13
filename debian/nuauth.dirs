@@ -2,3 +2,4 @@ etc/nufw/certs
 etc/default
 usr/sbin
 usr/share/nuauth
+var/run/nuauth

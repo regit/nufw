@@ -6,6 +6,8 @@ nufw (2.3.0-1) unstable; urgency=low
   * Update nuauth-utils dependencies
   * Split libnuclient3 to create libnuclient-dev
   * Enable Prelude module
+  * Do not use --enable-debug, so it does not flood the log with debug
+    messages
 
  -- Pierre Chifflier <pollux@debian.org>  Sun, 28 Oct 2007 10:14:57 +0100
 
