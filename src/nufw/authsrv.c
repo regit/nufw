@@ -169,7 +169,12 @@ int auth_process_conn_destroy(char *dgram, int dgram_size)
 	if (dgram_size < (int) sizeof(struct nuv4_conntrack_message_t)) {
 		return -1;
 	}
+
 	packet_hdr = (struct nuv4_conntrack_message_t *) dgram;
+	
+	if (ntohs(packet_hdr->msg_length)==0) {
+		return -1;
+	}
 
 	if (build_nfct_tuple_from_message(&orig, packet_hdr)) {
 		debug_log_printf(DEBUG_AREA_GW | DEBUG_AREA_PACKET,
