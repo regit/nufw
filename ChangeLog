@@ -1,5 +1,6 @@
 2.2.9
 	- nuauth: leave when a module fails to load
+	- nuauth: correctly fills headers of messages to nufw
 	- plaintext module: parse needed files at start
 2.2.8 (2007/11/07)
 	- libnuclient, nuauth: fix protocol 2.2 on big endian.
