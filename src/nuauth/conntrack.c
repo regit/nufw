@@ -94,6 +94,7 @@ nu_error_t send_conntrack_message(struct limited_connection * lconn,
 					message.ip_dst.s6_addr32[3] =
 						lconn->tracking.daddr.
 						s6_addr32[3];
+					message.msg_length = htons(sizeof(message));
 
 					if ((message.ip_protocol ==
 								IPPROTO_ICMP)
