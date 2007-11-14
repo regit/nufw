@@ -47,7 +47,6 @@ int auth_process_answer(char *dgram, int dgram_size)
 	}
 	answer = (nuv4_nuauth_decision_response_t *) dgram;
 
-
 	/* check payload length */
 	payload_len = ntohs(answer->payload_len);
 	if (dgram_size <
@@ -172,7 +171,7 @@ int auth_process_conn_destroy(char *dgram, int dgram_size)
 
 	packet_hdr = (struct nuv4_conntrack_message_t *) dgram;
 	
-	if (ntohs(packet_hdr->msg_length)==0) {
+	if (ntohs(packet_hdr->msg_length) != sizeof(packet_hdr)) {
 		return -1;
 	}
 
@@ -205,6 +204,10 @@ int auth_process_conn_update(char *dgram, int dgram_size)
 		return -1;
 	}
 	packet_hdr = (struct nuv4_conntrack_message_t *) dgram;
+
+	if (ntohs(packet_hdr->msg_length) != sizeof(packet_hdr)) {
+		return -1;
+	}
 
 	if (build_nfct_tuple_from_message(&orig, packet_hdr)) {
 		/* generate reply : this is stupid but done by conntrack tool */
