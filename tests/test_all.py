@@ -22,6 +22,7 @@ FILES = (
     "test_mark_flag",
     "test_reject",
     "test_periods",
+    "test_conntrack",
 )
 
 def loadTestcases(module):
