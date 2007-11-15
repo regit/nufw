@@ -209,11 +209,8 @@ int packetsrv_open(void *data)
 	}
 
 	/* unbinding existing nf_queue handler for AF_INET (if any) */
-	if (nfq_unbind_pf(h, AF_INET) < 0) {
-		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
-				"[!] Error during nfq_unbind_pf()");
-		return -1;
-	}
+	/* ignoring return, see http://www.spinics.net/lists/netfilter/msg42063.html */
+	nfq_unbind_pf(h, AF_INET);
 
 	/* binding nfnetlink_queue as nf_queue handler for AF_INET */
 	if (nfq_bind_pf(h, AF_INET) < 0) {
