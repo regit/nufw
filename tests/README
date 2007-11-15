@@ -13,6 +13,7 @@ Requirements
  * inl_tests (Python module)
  * Python IPy
  * Python MySQL DB
+ * PyNetfilter-contrack
 
 To download latest version of inl_tests::
 
