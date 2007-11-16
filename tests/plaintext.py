@@ -164,9 +164,10 @@ class PlainPeriodXML:
         for period in self.periods:
             output.write(period.xml())
 
-	output.write('</periods>\n')
-	output.close()
+        output.write('</periods>\n')
+        output.close()
 
+        config["nuauth_periods_module"]= '"xml_defs"'
         config["xml_defs_periodfile"] = '"%s"' % self.filename
 
     def desinstall(self):

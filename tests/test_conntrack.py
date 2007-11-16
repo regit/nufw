@@ -64,7 +64,7 @@ class TestConntrack(TestCase):
 	time.sleep(15)
 
 	## Check that only one connection is opened to
-	ct_after = len(get_conntrack_conn(0, self.dst_host, VALID_PORT))
+	ct_after = len(get_conntrack_conn(src_port, self.dst_host, VALID_PORT))
 	self.assert_(ct_after == 0)
 
 	conn.close()
