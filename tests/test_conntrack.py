@@ -6,15 +6,24 @@ from nuauth_conf import NuauthConf
 from inl_tests.iptables import Iptables
 from filter import HOST, VALID_PORT
 from plaintext import USERDB, PlaintextAcl, PlainPeriodXML, Period
-from pynetfilter_conntrack import NetfilterConntrack, CONNTRACK
+from pynetfilter_conntrack import NetfilterConntrack, CONNTRACK, __revision__ as pynetfilter_ct_version
 from IPy import IP
 import time, sys, os, socket, commands
 
 def get_conntrack_conn(src_port, dest, port_dest):
-    nf = NetfilterConntrack(CONNTRACK)
-    table = nf.create_table(socket.AF_INET)
-    table = table.filter(6, orig_dst = IP(dest), orig_dst_port = VALID_PORT, orig_src_port = src_port)
-    return table
+    if pynetfilter_ct_version == '0.4.2':
+        nf = Conntrack()
+        table = nf.dump_table(socket.AF_INET)
+        conn_list = []
+        for conn in table:
+            if src_port == conn.orig_port_src and IP(dest) == IP(conn.orig_ipv4_dst):
+                conn_list.append(str(conn))
+        return conn_list
+    else:
+        nf = NetfilterConntrack(CONNTRACK)
+        table = nf.create_table(socket.AF_INET)
+        table = table.filter(6, orig_dst = IP(dest), orig_dst_port = VALID_PORT, orig_src_port = src_port)
+        return table
 
 class TestConntrack(TestCase):
     def setUp(self):
