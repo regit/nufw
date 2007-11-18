@@ -220,11 +220,7 @@ int packetsrv_open(void *data)
 	}
 
 	/* unbinding existing nf_queue handler for AF_INET6 (if any) */
-	if (nfq_unbind_pf(h, AF_INET6) < 0) {
-		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
-				"[!] Error during nfq_unbind_pf()");
-		return -1;
-	}
+	nfq_unbind_pf(h, AF_INET6);
 
 	/* binding nfnetlink_queue as nf_queue handler for AF_INET6 */
 	if (nfq_bind_pf(h, AF_INET6) < 0) {
