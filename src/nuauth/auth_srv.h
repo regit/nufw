@@ -208,7 +208,7 @@ typedef enum {
  * Identifier used to generate #NUAUTH_API_VERSION value. Increment it
  * if you changed API internals (eg. change public function prototype).
  */
-#define _NUAUTH_API_ID 20001000
+#define _NUAUTH_API_ID 20002000
 
 /**
  * Version of nuauth API, used by module to check if

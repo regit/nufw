@@ -980,6 +980,7 @@ static GSList *fill_user_by_username(const char *username, gpointer params)
  */
 G_MODULE_EXPORT int user_check(const char *username,
 			       const char *clientpass, unsigned passlen,
+			       user_session_t *session,
 			       gpointer params)
 {
 	GSList *res;

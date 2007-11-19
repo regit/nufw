@@ -394,6 +394,7 @@ G_MODULE_EXPORT gchar* ip_authentication(tracking_t * header, struct ipauth_para
 
 G_MODULE_EXPORT int user_check(const char *username,
 			       const char *clientpass, unsigned passlen,
+			       user_session_t *session,
 			       struct ipauth_params* params)
 {
 	struct ipauth_mysql_params *mysql = params->mysql;

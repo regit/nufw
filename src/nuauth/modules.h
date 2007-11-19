@@ -123,7 +123,7 @@ int load_modules();
 void unload_modules();
 
 int modules_user_check(const char *user, const char *pass,
-		       unsigned passlen);
+		       unsigned passlen, user_session_t *session);
 uint32_t modules_get_user_id(const char *user);
 GSList *modules_get_user_groups(const char *user);
 

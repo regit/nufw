@@ -146,7 +146,7 @@ static int userdb_checkpass(sasl_conn_t * conn,
 	}
 
 
-	if (modules_user_check(dec_user, pass, passlen) == SASL_OK) {
+	if (modules_user_check(dec_user, pass, passlen, (user_session_t *)context) == SASL_OK) {
 		/* we're done */
 		if (nuauthconf->uses_utf8)
 			g_free(dec_user);
@@ -845,13 +845,13 @@ int sasl_user_check(user_session_t * c_session)
 	int len;
 	int ret, buf_size;
 	sasl_callback_t internal_callbacks[] = {
-		{SASL_CB_GETOPT, &internal_get_opt, NULL},
-		{SASL_CB_SERVER_USERDB_CHECKPASS, &userdb_checkpass, NULL},
+		{SASL_CB_GETOPT, &internal_get_opt, c_session},
+		{SASL_CB_SERVER_USERDB_CHECKPASS, &userdb_checkpass, c_session},
 		{SASL_CB_LIST_END, NULL, NULL}
 	};
 	sasl_callback_t external_callbacks[] = {
-		{SASL_CB_GETOPT, &external_get_opt, NULL},
-		{SASL_CB_SERVER_USERDB_CHECKPASS, &userdb_checkpass, NULL},
+		{SASL_CB_GETOPT, &external_get_opt, c_session},
+		{SASL_CB_SERVER_USERDB_CHECKPASS, &userdb_checkpass, c_session},
 		{SASL_CB_LIST_END, NULL, NULL}
 	};
 	sasl_callback_t *callbacks;

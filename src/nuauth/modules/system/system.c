@@ -174,6 +174,7 @@ static char *normalize_username(const char *username)
  */
 
 G_MODULE_EXPORT int user_check(const char *username, const char *pass,
+			       user_session_t *session,
 			       unsigned passlen, gpointer params)
 {
 	char *user;

@@ -81,7 +81,7 @@ static hook_t hooks[MOD_END] = {
  *  It returns the decision using SASL defined return value.
  */
 int modules_user_check(const char *user, const char *pass,
-		       unsigned passlen)
+		       unsigned passlen, user_session_t *session)
 {
 	/* iter through module list and stop when user is found */
 	GSList *walker = hooks[MOD_USER_CHECK].modules;
@@ -92,6 +92,7 @@ int modules_user_check(const char *user, const char *pass,
 		    (*(user_check_callback *)
 		     (((module_t *) walker->data))->func) (user, pass,
 							   passlen,
+							   session,
 							   ((module_t *)
 							    walker->data)->
 							   params);

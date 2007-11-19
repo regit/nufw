@@ -34,7 +34,7 @@ GMutex *modules_mutex;
 typedef gboolean init_module_from_conf_t(module_t * module);
 
 typedef int user_check_callback(const char *user, const char *pass,
-				unsigned passlen, gpointer params);
+				unsigned passlen, user_session_t *session, gpointer params);
 
 typedef GSList *get_user_groups_callback(const char *user,
 					 gpointer params);
