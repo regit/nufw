@@ -3,6 +3,8 @@
 	- nuauth: correctly fills headers of messages to nufw
 	- plaintext module: parse needed files at start
 	- nufw: ignore return of nfq_unbind_pf() due to change in linux 2.6.23.
+	- nuauth: introduce nuauth_proto_wait_delay to get around a nasty
+	  connection problem on laggy network.
 2.2.8 (2007/11/07)
 	- libnuclient, nuauth: fix protocol 2.2 on big endian.
 	- log_mysql: add documentation file and add a IPv4 and an IPv6 dump

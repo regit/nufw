@@ -130,6 +130,7 @@ int init_nuauthconf(struct nuauth_params **result)
 		{"nufw_has_fixed_timeout", G_TOKEN_INT, 1, NULL},
 		{"nuauth_uses_fake_sasl", G_TOKEN_INT, 1, NULL},
 		{"nuauth_use_command_server", G_TOKEN_INT, 1, NULL},
+		{"nuauth_proto_wait_delay", G_TOKEN_INT, DEFAULT_PROTO_WAIT_DELAY, NULL},
 	};
 	const unsigned int nb_params =
 	    sizeof(nuauth_vars) / sizeof(confparams_t);
@@ -207,6 +208,8 @@ int init_nuauthconf(struct nuauth_params **result)
 	    *(int *) READ_CONF("nuauth_uses_fake_sasl");
 	conf->use_command_server =
 	    *(int *) READ_CONF("nuauth_use_command_server");
+	conf->proto_wait_delay =
+	    *(int *) READ_CONF("nuauth_proto_wait_delay");
 #undef READ_CONF
 
 	if (conf->debug_level > 9) {

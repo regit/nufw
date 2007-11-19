@@ -525,6 +525,14 @@ This permit for example to disconnect users when their account has been cancelle
 </para><para>Default: <computeroutput>nuauth_packet_timeout=15</computeroutput>
 </para>
       </section>
+<section><title>nuauth_proto_wait_delay</title>
+      <para>
+This set the timeout for protocol announce from client.
+If some of your client (post 2.0 version) receives a "bad protocol messsage", you may
+want to increase this value. This is a workaround against very laggy network.
+</para><para>Default: <computeroutput>nuauth_proto_wait_delay=2</computeroutput>
+</para>
+      </section>
 <section><title>nuauth_datas_persistance</title>
 <para>
  A cache is implemented for acl (and/or user) datas. 

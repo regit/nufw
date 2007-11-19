@@ -240,7 +240,6 @@ static unsigned samp_recv(gnutls_session session, char *buf, int bufsize)
  */
 
 #define MAX_WAIT_ITER 5
-#define PROTO_WAIT_DELAY 100000
 nu_error_t get_proto_info(user_session_t * c_session)
 {
 	int ret;
@@ -250,7 +249,7 @@ nu_error_t get_proto_info(user_session_t * c_session)
 	/* wait new events during 1 second */
 	FD_ZERO(&wk_set);
 	FD_SET(c_session->socket, &wk_set);
-	tv.tv_sec = 1;
+	tv.tv_sec = nuauthconf->proto_wait_delay;
 	tv.tv_usec = 0;
 	ret = select(c_session->socket + 1, &wk_set, NULL, NULL, &tv);
 	/* catch select() error */
