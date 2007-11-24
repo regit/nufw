@@ -1,7 +1,28 @@
 #!/bin/sh
 
 echo "[+] Run libtoolize"
-libtoolize --force --automake || exit $?
+
+LIBTOOLIZE="$(which libtoolize)"
+
+## On OSX glibtoolize replaces libtoolize
+if [ "$LIBTOOLIZE" == "" ]
+then
+	LIBTOOLIZE="$(which glibtoolize)"
+fi
+
+## Work-around for MacPorts
+if [ -f /opt/local/bin/glibtoolize ]
+then
+	LIBTOOLIZE=/opt/local/bin/glibtoolize
+fi
+
+if [ "$LIBTOOLIZE" == "" ]
+then
+	echo "Unable to find libtoolize or glibtoolize." > /dev/stderr
+	exit 1
+fi
+
+"$LIBTOOLIZE" --force --automake || exit $?
 
 #-----------------------------------------------------------------------------
 
