@@ -22,7 +22,7 @@
 
 #define NULL_THREAD 0
 
-char* nu_locale_charset;
+extern char* nu_locale_charset;
 
 int init_socket(nuauth_session_t * session,
 		const char *hostname, const char *service,

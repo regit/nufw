@@ -33,6 +33,7 @@
 #include "internal.h"
 #include <sys/utsname.h>
 
+char* nu_locale_charset;
 
 /**
  * \ingroup libnuclient

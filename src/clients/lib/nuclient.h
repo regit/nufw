@@ -49,7 +49,10 @@ extern "C" {
 #include <config.h>
 #endif
 
+#ifndef FREEBSD
 #include <features.h>
+#endif
+
 #include <arpa/inet.h>
 #include <assert.h>
 #include <ctype.h>

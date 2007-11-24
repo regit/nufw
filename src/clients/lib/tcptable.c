@@ -41,6 +41,7 @@
 #include <netinet/tcp_fsm.h>
 #include <netinet/in_pcb.h>
 #include <netinet/tcp_var.h>
+
 #endif
 
 /**
@@ -312,12 +313,12 @@ int tcptable_read(nuauth_session_t * session, conntable_t * ct)
 		    || (inet_lnaof(inp->inp_laddr) == INADDR_ANY))
 			continue;
 
-		c.lcl = inp->inp_laddr.s_addr;
-		c.lclp = inp->inp_lport;
+		uint32_to_ipv6(inp->inp_laddr.s_addr, &c.ip_src);
+		c.port_src = inp->inp_lport;
 
-		c.rmt = inp->inp_faddr.s_addr;
-		c.rmtp = inp->inp_fport;
-		c.proto = IPPROTO_TCP;
+		uint32_to_ipv6(inp->inp_faddr.s_addr, &c.ip_dst);
+		c.port_dst = inp->inp_fport;
+		c.protocol = IPPROTO_TCP;
 
 		tcptable_add(ct, &c);
 	}
@@ -354,10 +355,17 @@ int tcptable_init(conntable_t ** ct)
 inline int tcptable_hash(conn_t * c)
 {
 	/* TODO: Hash the whole ip address! */
+#ifndef FREEBSD
 	return (jhash_3words(c->ip_src.s6_addr32[3],
 			     c->ip_dst.s6_addr32[3],
 			     (c->port_dst | c->port_src << 16),
 			     32)) % CONNTABLE_BUCKETS;
+#else
+	return (jhash_3words(c->ip_src.__u6_addr.__u6_addr32[3],
+			     c->ip_dst.__u6_addr.__u6_addr32[3],
+			     (c->port_dst | c->port_src << 16),
+			     32)) % CONNTABLE_BUCKETS;
+#endif
 }
 
 /**
