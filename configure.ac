@@ -49,8 +49,28 @@ AC_FUNC_MALLOC
 AC_FUNC_STAT
 AC_CHECK_FUNCS([gethostbyname memset socket strcasecmp strspn])
 
-AC_CHECK_LIB([gcrypt], [gcry_md_open],AC_DEFINE([HAVE_LIBRARY_GCRYPT],[1],[Gcrypt lib flag]), check_gcrypt=no,[-L/usr/local/lib])
-AC_CHECK_LIB([gnutls], [gnutls_init],AC_DEFINE([HAVE_LIBRARY_GNUTLS],[1],[Gnutls lib flag]), check_gnutls=no)
+#AC_CHECK_LIB([gcrypt], [gcry_md_open],AC_DEFINE([HAVE_LIBRARY_GCRYPT],[1],[Gcrypt lib flag]), check_gcrypt=no,[-L/usr/local/lib])
+#AC_CHECK_LIB([gnutls], [gnutls_init],AC_DEFINE([HAVE_LIBRARY_GNUTLS],[1],[Gnutls lib flag]), check_gnutls=no)
+#AM_CHECK_PATH([libgcrypt], [gcry_md_open],AC_DEFINE([HAVE_LIBRARY_GCRYPT],[1],[Gcrypt lib flag]), check_gcrypt=no,[-L/usr/local/lib])
+#AM_CHECK_PATH(libgnutls], [gnutls_init],AC_DEFINE([HAVE_LIBRARY_GNUTLS],[1],[Gnutls lib flag]), check_gnutls=no)
+
+
+NEED_LIBGCRYPT_VERSION=1.2.3
+AM_PATH_LIBGCRYPT("$NEED_LIBGCRYPT_VERSION")
+if test "x$LIBGCRYPT_LIBS" = "x"; then
+  AC_MSG_ERROR([libgcrypt is needed.
+                See ftp://ftp.gnupg.org/gcrypt/ .])
+else
+  CFLAGS="$CFLAGS $LIBGCRYPT_CFLAGS"
+  LDFLAGS="$LDFLAGS $LIBGCRYPT_LIBS"
+fi
+
+NEED_LIBGNUTLS_VERSION=1.4.4
+AM_PATH_LIBGNUTLS("$NEED_LIBGNUTLS_VERSION")
+if test "x$LIBGNUTLS_LIBS" = "x"; then
+  AC_MSG_ERROR([libgnutls is needed.
+                See www.gnu.org/software/gnutls/ .])
+fi
 
 #Configure database support, depending on user input
 AC_ARG_WITH(prelude-log,
@@ -96,7 +116,6 @@ AC_ARG_WITH(perf-display,
 if test "${use_perf_display}" = "yes"; then
 	AC_DEFINE_UNQUOTED([PERF_DISPLAY_ENABLE],[1],[Performance display])
 fi
-
 
 if test \
 	   "${build_nuauth}" = "yes"  \
@@ -455,3 +474,4 @@ fi
 
 AC_MSG_RESULT([
 Now type 'make' and then 'sudo make install'])
+
