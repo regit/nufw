@@ -31,6 +31,7 @@
 
 #include "nufw_source.h"
 #include <netinet/in.h>
+#include <sys/types.h>
 
 #ifdef TRACKING_WITH_PAYLOAD
 #  define PAYLOAD_SAMPLE 8

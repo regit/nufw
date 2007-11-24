@@ -29,6 +29,10 @@
 
 #include "packet_parser.h"
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <ipv6.h>
 #include <netinet/tcp.h>
 #include <netinet/ip.h>
@@ -51,15 +55,25 @@ unsigned int get_ip_headers(tracking_t * tracking,
 			    const unsigned char *dgram,
 			    unsigned int dgram_size)
 {
+#ifdef LINUX
 	struct iphdr *ip = (struct iphdr *) dgram;
+#endif
+#ifdef FREEBSD
+	struct ip *ip = (struct ip*) dgram;
+#endif
 	struct ip6_hdr *ip6 = (struct ip6_hdr *) dgram;
 	unsigned int offset;
 
 	/* check ip headers minimum size */
+#ifdef LINUX
 	if (dgram_size < sizeof(struct iphdr))
+#elif defined(FREEBSD)
+	if (dgram_size < sizeof(struct ip))
+#endif
 		return 0;
 
 	/* check IP version (should be IPv4) */
+#ifdef LINUX
 	if (ip->version == 4) {
 		/* convert IPv4 addresses to IPv6 addresses in format "::ffff:IPv4" */
 		uint32_to_ipv6(ip->saddr, &tracking->saddr);
@@ -77,8 +91,31 @@ unsigned int get_ip_headers(tracking_t * tracking,
 		else
 			memset(tracking->payload, 0,
 			       sizeof(tracking->payload));
-#endif
+#endif //#ifdef TRACKING_WITH_PAYLOAD
 	} else if (ip->version == 6) {
+#elif defined(FREEBSD)
+	if (ip->ip_v == 4) {
+		/* convert IPv4 addresses to IPv6 addresses in format "::ffff:IPv4" */
+		uint32_to_ipv6(ip->ip_src.s_addr, &tracking->saddr);
+		uint32_to_ipv6(ip->ip_dst.s_addr, &tracking->daddr);
+
+		/* compute offset to next header and copy protocol */
+		offset = 4 * ip->ip_hl;
+		tracking->protocol = ip->ip_p;
+
+#ifdef TRACKING_WITH_PAYLOAD
+		/* copy payload if any, or fill payload with zero bytes */
+		if ((offset + sizeof(tracking->payload)) <= dgram_size)
+			memcpy(tracking->payload, dgram + offset,
+			       sizeof(tracking->payload));
+		else
+			memset(tracking->payload, 0,
+			       sizeof(tracking->payload));
+#endif //#ifdef TRACKING_WITH_PAYLOAD
+	} else if (ip->ip_v == 6) {
+#endif
+
+
 		unsigned char found_transport_layer = 0;
 #ifdef TRACKING_WITH_PAYLOAD
 		unsigned char copy_payload = 1;
@@ -173,6 +210,7 @@ unsigned int get_ip_headers(tracking_t * tracking,
 int get_udp_headers(tracking_t * tracking, const unsigned char *dgram,
 		    unsigned int dgram_size)
 {
+#ifdef LINUX
 	struct udphdr *udp = (struct udphdr *) dgram;
 
 	/* check udp headers minimum size */
@@ -183,6 +221,9 @@ int get_udp_headers(tracking_t * tracking, const unsigned char *dgram,
 	tracking->dest = ntohs(udp->dest);
 	tracking->type = 0;
 	tracking->code = 0;
+#elif defined(FREEBSD)
+	/* TODO ;) */
+#endif
 	return 0;
 }
 
@@ -202,6 +243,7 @@ tcp_state_t get_tcp_headers(tracking_t * tracking,
 			    const unsigned char *dgram,
 			    unsigned int dgram_size)
 {
+#ifdef LINUX
 	struct tcphdr *tcp = (struct tcphdr *) dgram;
 
 	/* check icmp headers minimum size */
@@ -226,6 +268,9 @@ tcp_state_t get_tcp_headers(tracking_t * tracking,
 			return TCP_STATE_OPEN;
 		}
 	}
+#elif defined(FREEBSD)
+	/* TODO :P */
+#endif
 	return TCP_STATE_UNKNOW;
 }
 
@@ -241,6 +286,7 @@ tcp_state_t get_tcp_headers(tracking_t * tracking,
 int get_icmp_headers(tracking_t * tracking, const unsigned char *dgram,
 		     unsigned int dgram_size)
 {
+#ifdef LINUX
 	struct icmphdr *icmp = (struct icmphdr *) dgram;
 
 	/* check udp headers minimum size */
@@ -251,6 +297,9 @@ int get_icmp_headers(tracking_t * tracking, const unsigned char *dgram,
 	tracking->dest = 0;
 	tracking->type = icmp->type;
 	tracking->code = icmp->code;
+#elif defined(FREEBSD)
+	/* TODO ! */
+#endif
 	return 0;
 }
 

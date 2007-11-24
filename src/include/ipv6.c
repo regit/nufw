@@ -25,6 +25,10 @@
 #include <arpa/inet.h>
 #include <security.h>
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 /**
  * Set IPv6 address to "empty" address ("::")
  */
@@ -39,10 +43,17 @@ void clear_ipv6(struct in6_addr *ipv6)
  */
 void uint32_to_ipv6(const uint32_t ipv4, struct in6_addr *ipv6)
 {
+#ifdef LINUX
 	ipv6->s6_addr32[0] = 0x00000000;
 	ipv6->s6_addr32[1] = 0x00000000;
 	ipv6->s6_addr32[2] = htonl(0xffff);
 	ipv6->s6_addr32[3] = ipv4;
+#elif defined(FREEBSD)
+        ipv6->__u6_addr.__u6_addr32[0] = 0x00000000;
+        ipv6->__u6_addr.__u6_addr32[1] = 0x00000000;
+        ipv6->__u6_addr.__u6_addr32[2] = htonl(0xffff);
+        ipv6->__u6_addr.__u6_addr32[3] = ipv4;
+#endif
 }
 
 /**
@@ -60,7 +71,11 @@ inline void ipv4_to_ipv6(const struct in_addr ipv4, struct in6_addr *ipv6)
  */
 inline void ipv6_to_ipv4(const struct in6_addr *ipv6, struct in_addr *ipv4)
 {
+#ifdef LINUX
 	ipv4->s_addr = ipv6->s6_addr32[3];
+#elif defined(FREEBSD)
+	ipv4->s_addr = ipv6->__u6_addr.__u6_addr32[3];
+#endif
 }
 
 /**
@@ -70,10 +85,17 @@ inline void ipv6_to_ipv4(const struct in6_addr *ipv6, struct in_addr *ipv4)
  */
 int is_ipv4(const struct in6_addr *addr)
 {
+#ifdef LINUX
 	if (ntohl(addr->s6_addr32[2]) != 0x0000ffff)
 		return 0;
 	if (addr->s6_addr32[0] != 0 || addr->s6_addr32[1] != 0)
 		return 0;
+#elif defined(FREEBSD)
+	if (ntohl(addr->__u6_addr.__u6_addr32[2]) != 0x0000ffff)
+		return 0;
+	if (addr->__u6_addr.__u6_addr32[0] != 0 || addr->__u6_addr.__u6_addr32[1] != 0)
+		return 0;
+#endif
 	return 1;
 }
 
@@ -90,7 +112,11 @@ void format_ipv6(const struct in6_addr *addr, char *buffer, size_t buflen, uint8
 {
 	if (is_ipv4(addr)) {
 		struct in_addr addr4;
+#ifdef LINUX
 		addr4.s_addr = addr->s6_addr32[3];
+#elif defined(FREEBSD)
+		addr4.s_addr = addr->__u6_addr.__u6_addr32[3];
+#endif
 		if (protocol) *protocol = AF_INET;
 		if (inet_ntop(AF_INET, &addr4, buffer, buflen) == NULL)
 		{
@@ -149,7 +175,11 @@ int getsockname_ipv6(int fileno, struct in6_addr *addr)
  */
 int hex2ipv6(const char *text, struct in6_addr *ip)
 {
+#ifdef LINUX
 #define READ(text, index) sscanf((text), "%08" SCNx32, (uint32_t *) &ip->s6_addr32[index])
+#elif defined(FREEBSD)
+#define READ(text, index) sscanf((text), "%08" SCNx32, (uint32_t *) &ip->__u6_addr.__u6_addr32[index])
+#endif
 	/* Copy text */
 	char copy[33];
 	if (strlen(text) != 32)
@@ -195,10 +225,17 @@ int compare_ipv6_with_mask(
 	const struct in6_addr *mask)
 {
 	struct in6_addr masked = *addr2;
+#ifdef LINUX
 	masked.s6_addr32[0] &= mask->s6_addr32[0];
 	masked.s6_addr32[1] &= mask->s6_addr32[1];
 	masked.s6_addr32[2] &= mask->s6_addr32[2];
 	masked.s6_addr32[3] &= mask->s6_addr32[3];
+#elif defined(FREEBSD)
+	masked.__u6_addr.__u6_addr32[0] &= mask->__u6_addr.__u6_addr32[0];
+	masked.__u6_addr.__u6_addr32[1] &= mask->__u6_addr.__u6_addr32[1];
+	masked.__u6_addr.__u6_addr32[2] &= mask->__u6_addr.__u6_addr32[2];
+	masked.__u6_addr.__u6_addr32[3] &= mask->__u6_addr.__u6_addr32[3];
+#endif
 	return memcmp(addr1, &masked, sizeof(masked));
 }
 
