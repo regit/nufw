@@ -55,7 +55,7 @@ AC_CHECK_FUNCS([gethostbyname memset socket strcasecmp strspn])
 #AM_CHECK_PATH(libgnutls], [gnutls_init],AC_DEFINE([HAVE_LIBRARY_GNUTLS],[1],[Gnutls lib flag]), check_gnutls=no)
 
 
-NEED_LIBGCRYPT_VERSION=1.2.3
+NEED_LIBGCRYPT_VERSION=1.2.0
 AM_PATH_LIBGCRYPT("$NEED_LIBGCRYPT_VERSION")
 if test "x$LIBGCRYPT_LIBS" = "x"; then
   AC_MSG_ERROR([libgcrypt is needed.
@@ -65,7 +65,7 @@ else
   LDFLAGS="$LDFLAGS $LIBGCRYPT_LIBS"
 fi
 
-NEED_LIBGNUTLS_VERSION=1.4.4
+NEED_LIBGNUTLS_VERSION=1.0.16
 AM_PATH_LIBGNUTLS("$NEED_LIBGNUTLS_VERSION")
 if test "x$LIBGNUTLS_LIBS" = "x"; then
   AC_MSG_ERROR([libgnutls is needed.
