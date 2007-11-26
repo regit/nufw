@@ -55,7 +55,7 @@ find_tool_version()
 #-----------------------------------------------------------------------------
 
 AUTOMAKE_MIN_VERSION="1.8"
-AUTOMAKE_OK_VERSIONS="-1.9 19 -1.8 18"
+AUTOMAKE_OK_VERSIONS="-1.10 110 -1.9 19 -1.8 18"
 AUTOMAKE_NOK_REGEXP='0|0.*|1|1.[0-7]*'
 
 AUTOCONF_MIN_VERSION="2.58"
