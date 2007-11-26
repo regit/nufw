@@ -5,7 +5,7 @@ echo "[+] Run libtoolize"
 LIBTOOLIZE="$(which libtoolize)"
 
 ## On OSX glibtoolize replaces libtoolize
-if [ "$LIBTOOLIZE" == "" ]
+if [ "$LIBTOOLIZE" = "" ]
 then
 	LIBTOOLIZE="$(which glibtoolize)"
 fi
@@ -16,7 +16,7 @@ then
 	LIBTOOLIZE=/opt/local/bin/glibtoolize
 fi
 
-if [ "$LIBTOOLIZE" == "" ]
+if [ "$LIBTOOLIZE" = "" ]
 then
 	echo "Unable to find libtoolize or glibtoolize." > /dev/stderr
 	exit 1
