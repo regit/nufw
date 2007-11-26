@@ -248,9 +248,13 @@ static int parse_ips(char *ipsline, GSList ** ip_list, char *prefix)
 
 		if (0 < inet_pton(AF_INET, line, &ip_addr4)) {
 			ipv4_to_ipv6(ip_addr4, &this_ip.addr);
-			if (32 < mask)
-				mask = 32;
-			mask += (128 - 32);
+			if (mask == 0) {
+				mask = 0;
+			} else {
+				if (32 < mask)
+					mask = 32;
+				mask += (128 - 32);
+			}
 		} else if (0 < inet_pton(AF_INET6, line, &ip_addr6)) {
 			this_ip.addr = ip_addr6;
 		} else {
