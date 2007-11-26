@@ -92,7 +92,7 @@ static int parse_ints(char *intline, GSList ** p_intlist, char *prefix)
 			/*  We can't read a number.  This will be an error only if we can */
 			/*   see a comma next. */
 			if (p_nextint) {
-				log_message(WARNING, DEBUG_AREA_MAIN,
+				log_message(FATAL, DEBUG_AREA_MAIN,
 					    "%s parse_ints: Malformed line",
 					    prefix);
 				*p_intlist = intlist;
@@ -144,7 +144,7 @@ static int parse_ports(char *portsline, GSList ** p_portslist,
 			/*  We can't read a port number.  This will be an error only if we can */
 			/*   see a comma next. */
 			if (p_nextports) {
-				log_message(WARNING, DEBUG_AREA_MAIN,
+				log_message(FATAL, DEBUG_AREA_MAIN,
 					    "%s parse_ports: Malformed line",
 					    prefix);
 				*p_portslist = portslist;
@@ -439,7 +439,7 @@ static int read_acl_list(struct plaintext_params *params)
 	fd = fopen(params->plaintext_aclfile, "r");
 
 	if (!fd) {
-		log_message(WARNING, DEBUG_AREA_MAIN,
+		log_message(FATAL, DEBUG_AREA_MAIN,
 			    "read_acl_list: fopen error");
 		return 1;
 	}
@@ -483,7 +483,7 @@ static int read_acl_list(struct plaintext_params *params)
 
 			p_tmp = strchr(++p_key, ']');
 			if (!p_tmp) {
-				log_message(WARNING, DEBUG_AREA_MAIN,
+				log_message(FATAL, DEBUG_AREA_MAIN,
 					    "L.%d: Malformed line (ACLname)",
 					    ln);
 				fclose(fd);
@@ -493,7 +493,7 @@ static int read_acl_list(struct plaintext_params *params)
 			/*  Ok, new ACL declaration here.  Let's allocate a structure! */
 			newacl = g_new0(struct plaintext_acl, 1);
 			if (!newacl) {
-				log_message(WARNING, DEBUG_AREA_MAIN,
+				log_message(FATAL, DEBUG_AREA_MAIN,
 					    "read_acl_list: Cannot allocate plaintext_acl!");
 				fclose(fd);
 				return 5;
@@ -512,7 +512,7 @@ static int read_acl_list(struct plaintext_params *params)
 
 		/*  We shouldn't be here if we aren't in an ACL declaration */
 		if (!newacl) {
-			log_message(WARNING, DEBUG_AREA_MAIN,
+			log_message(FATAL, DEBUG_AREA_MAIN,
 				    "L.%d: Malformed line (Not in an ACL declaration)",
 				    ln);
 			fclose(fd);
@@ -521,7 +521,7 @@ static int read_acl_list(struct plaintext_params *params)
 
 		p_value = strchr(p_key, '=');
 		if (!p_value) {
-			log_message(WARNING, DEBUG_AREA_MAIN,
+			log_message(FATAL, DEBUG_AREA_MAIN,
 				    "L.%d: Malformed line (No '=' inside)",
 				    ln);
 			fclose(fd);
@@ -548,7 +548,7 @@ static int read_acl_list(struct plaintext_params *params)
 				break;
 			default:
 				{
-					log_message(WARNING, DEBUG_AREA_MAIN,
+					log_message(FATAL, DEBUG_AREA_MAIN,
 						    "L.%d: Malformed line (decision should be 0 or 1)",
 						    ln);
 					fclose(fd);
@@ -580,7 +580,7 @@ static int read_acl_list(struct plaintext_params *params)
 			}
 		} else if (!strcasecmp("proto", p_key)) {	/*  Protocol */
 			if (sscanf(p_value, "%d", &newacl->proto) != 1) {
-				log_message(WARNING, DEBUG_AREA_MAIN,
+				log_message(FATAL, DEBUG_AREA_MAIN,
 					    "L.%d: Malformed line (proto should be a number)",
 					    ln);
 				fclose(fd);
@@ -711,7 +711,7 @@ static int read_acl_list(struct plaintext_params *params)
 					  newacl->log_prefix);
 		} else if (!strcasecmp("flags", p_key)) {
 			if (sscanf(p_value, "%d", &newacl->flags) != 1) {
-				log_message(WARNING, DEBUG_AREA_MAIN,
+				log_message(FATAL, DEBUG_AREA_MAIN,
 						"L.%d: Malformed line (flags should be a number)",
 						ln);
 				fclose(fd);
