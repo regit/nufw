@@ -27,6 +27,10 @@ To compile, use the standard ::
 
 If it is a first installation, think to copy the configuration file as it ::
 
+  make install-conf
+
+or run ::
+
   cp ./conf/nuauth.conf /usr/local/etc/nuauth.conf
 
 Else look for changes between your current conf file and the new one.
