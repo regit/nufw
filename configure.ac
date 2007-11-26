@@ -381,7 +381,7 @@ if test \
     fi
 fi
 
-AM_INIT_AUTOMAKE(1.10)
+AM_INIT_AUTOMAKE(1.8)
 
 AC_OUTPUT
 AC_MSG_RESULT([
