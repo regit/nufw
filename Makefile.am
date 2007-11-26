@@ -5,12 +5,31 @@ EXTRA_DIST = conf doc patches python debian autogen.sh
 func_tests:
 	cd tests && ./test_all.py
 
-install-exec-local:
+all:
+	@tput enacs; tput smacs; tput bold;\
+	echo   "lqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqk";echo -n "x";\
+        tput rmacs;\
+	echo -n "         Compile done         ";\
+	tput smacs; echo "x"; \
+	echo   "mqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqj";tput rmacs;tput sgr0
+
+install-data-am:
+	@tput enacs; tput smacs; tput bold; \
+	echo   "lqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqk";echo -n "x";\
+        tput rmacs;\
+	echo -n "Run 'make install-conf' if you want to install initial configuration file";\
+	tput smacs;echo "x";\
+	echo   "mqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqj";tput rmacs;tput sgr0
+	@tput rmso; echo ""
+
+install-conf:
 	install -d $(sysconfdir)
 	test -e $(sysconfdir)/nuauth.conf || install -m 600 $(top_srcdir)/conf/nuauth.conf $(sysconfdir)
-	install -m 600 $(top_srcdir)/conf/certs/NuFW-cacert.pem \
-            $(top_srcdir)/conf/certs/{nufw,nuauth}-{key,cert}.pem \
-            $(sysconfdir)
-	install -m 600 $(top_srcdir)/conf/acls.nufw $(sysconfdir)
-	install -m 600 $(top_srcdir)/conf/users-plaintext.nufw $(sysconfdir)/users.nufw
+	test -e $(sysconfdir)/certs/NuFW-cacert.pem || install -m 600 $(top_srcdir)/conf/certs/NuFW-cacert.pem $(sysconfdir)
+	test -e $(sysconfdir)/certs/nufw-key.pem || install -m 600 $(top_srcdir)/conf/certs/nufw-key.pem $(sysconfdir)
+	test -e $(sysconfdir)/certs/nufw-cert.pem || install -m 600 $(top_srcdir)/conf/certs/nufw-cert.pem $(sysconfdir)
+	test -e $(sysconfdir)/certs/nuauth-key.pem || install -m 600 $(top_srcdir)/conf/certs/nuauth-key.pem $(sysconfdir)
+	test -e $(sysconfdir)/certs/nuauth-cert.pem || install -m 600 $(top_srcdir)/conf/certs/nuauth-cert.pem $(sysconfdir)
+	test -e $(sysconfdir)/acls.nufw || install -m 600 $(top_srcdir)/conf/acls.nufw $(sysconfdir)
+	test -e $(sysconfdir)/users.nufw || install -m 600 $(top_srcdir)/conf/users-plaintext.nufw $(sysconfdir)/users.nufw
 
