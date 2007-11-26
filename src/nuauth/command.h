@@ -21,6 +21,10 @@
 #ifndef COMMAND_SERVER_H
 #define COMMAND_SERVER_H
 
+#include "auth_srv.h"
+#ifdef BUILD_NUAUTH_COMMAND
+
 void *command_server(GMutex * mutex);
 
+#endif				/* BUILD_NUAUTH_COMMAND */
 #endif				/* COMMAND_SERVER_H */

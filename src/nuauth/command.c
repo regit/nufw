@@ -19,10 +19,11 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifdef BUILD_NUAUTH_COMMAND
 
-#include "auth_srv.h"
 #include "command.h"
+
+#ifdef BUILD_NUAUTH_COMMAND
+#include "auth_srv.h"
 #include "command_enc.h"
 #include "security.h"
 #include <sys/un.h>		/* unix socket */
