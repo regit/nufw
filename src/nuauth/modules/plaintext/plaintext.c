@@ -214,19 +214,20 @@ static int match_ip(GSList * ip_list, struct in6_addr *addr)
  */
 static int parse_ips(char *ipsline, GSList ** ip_list, char *prefix)
 {
-	char *p_nextip = NULL;
+	char addr_ascii[INET6_ADDRSTRLEN];
+	char mask_ascii[INET6_ADDRSTRLEN];
 	struct in_addr ip_addr4;
-	uint32_t *p_netmask;
 	struct in6_addr ip_addr6;
 	char *p_tmp;
 	gchar **ip_items = g_strsplit(ipsline, ",", 0);
 	gchar **iter = ip_items;
 	gchar *line;
 	struct plaintext_ip this_ip, *this_ip_copy;
+	int result = 0;
 
 	/*  parsing IPs */
 	for (iter = ip_items; iter != NULL && *iter != NULL; iter++) {
-		uint32_t mask = 0;
+		int32_t mask = 0;
 		int n;
 
 		line = strip_line(*iter, FALSE);
@@ -237,10 +238,11 @@ static int parse_ips(char *ipsline, GSList ** ip_list, char *prefix)
 			*p_tmp++ = 0;
 			n = sscanf(p_tmp, "%u", &mask);
 			if (n != 1) {
-				log_message(WARNING, DEBUG_AREA_MAIN,
+				log_message(FATAL, DEBUG_AREA_MAIN,
 					    "plaintext warning: wrong network mask (%s)",
 					    p_tmp);
-				continue;
+				result = 1;
+				break;
 			}
 		} else {	/*  no -> default netmask is 32 bits */
 			mask = 128;
@@ -248,27 +250,17 @@ static int parse_ips(char *ipsline, GSList ** ip_list, char *prefix)
 
 		if (0 < inet_pton(AF_INET, line, &ip_addr4)) {
 			ipv4_to_ipv6(ip_addr4, &this_ip.addr);
-			if (mask == 0) {
-				mask = 0;
-			} else {
-				if (32 < mask)
-					mask = 32;
-				mask += (128 - 32);
-			}
+			mask += (128 - 32);
 		} else if (0 < inet_pton(AF_INET6, line, &ip_addr6)) {
 			this_ip.addr = ip_addr6;
 		} else {
 			/*  We can't read an IP address.  This will be an error only if we can */
 			/*   see a comma next. */
-			if (p_nextip) {
-				log_message(WARNING, DEBUG_AREA_MAIN,
-					    "%s parse_ips: Malformed line",
-					    prefix);
-			}
-			log_message(WARNING, DEBUG_AREA_MAIN,
-				    "%s parse_ips: Garbarge at end of line",
-				    prefix);
-			continue;
+			log_message(FATAL, DEBUG_AREA_MAIN,
+				    "%s parse_ips: Unable to parse IP address: %s",
+				    prefix, line);
+			result = 1;
+			break;
 		}
 
 		/*  Create netmask IPv6 address from netmask in bits */
@@ -277,30 +269,29 @@ static int parse_ips(char *ipsline, GSList ** ip_list, char *prefix)
 		if (compare_ipv6_with_mask
 		    (&this_ip.addr, &this_ip.addr,
 		     &this_ip.netmask) != 0) {
-			log_message(WARNING, DEBUG_AREA_MAIN,
-				    "%s parse_ips: Invalid network specification!",
-				    prefix);
-			continue;
+			FORMAT_IPV6(&this_ip.addr, addr_ascii);
+			FORMAT_IPV6(&this_ip.netmask, mask_ascii);
+			log_message(FATAL, DEBUG_AREA_MAIN,
+				    "%s parse_ips: Invalid network specification: IP=%s, netmask=%s!",
+				    prefix, addr_ascii, mask_ascii);
+			result = 1;
+			break;
 		}
 
 		this_ip_copy = g_memdup(&this_ip, sizeof(this_ip));
 		*ip_list = g_slist_prepend(*ip_list, this_ip_copy);
 
 #ifdef DEBUG_ENABLE
-		{
-			char addr_ascii[INET6_ADDRSTRLEN];
-			char mask_ascii[INET6_ADDRSTRLEN];
-			FORMAT_IPV6(&this_ip_copy->addr, addr_ascii);
-			FORMAT_IPV6(&this_ip_copy->netmask, mask_ascii);
-			log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
-					"%s Adding IP = %s, netmask = %s",
-					prefix, addr_ascii,
-					mask_ascii);
-		}
+		FORMAT_IPV6(&this_ip_copy->addr, addr_ascii);
+		FORMAT_IPV6(&this_ip_copy->netmask, mask_ascii);
+		log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
+				"%s Adding IP = %s, netmask = %s",
+				prefix, addr_ascii,
+				mask_ascii);
 #endif
 	}
 	g_strfreev(ip_items);
-	return 0;
+	return result;
 }
 
 /**
