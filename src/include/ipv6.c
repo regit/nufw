@@ -236,6 +236,34 @@ int compare_ipv6_with_mask(
 	masked.__u6_addr.__u6_addr32[2] &= mask->__u6_addr.__u6_addr32[2];
 	masked.__u6_addr.__u6_addr32[3] &= mask->__u6_addr.__u6_addr32[3];
 #endif
-	return memcmp(addr1, &masked, sizeof(masked));
+	return memcmp(addr1, &masked, sizeof(struct in6_addr));
+}
+
+/**
+ * Create an IPv6 netmask
+ */
+void create_ipv6_netmask(struct in6_addr *netmask, int mask)
+{
+	uint32_t *p_netmask;
+	memset(&netmask, 0, sizeof(struct in6_addr));
+	if (mask < 0) {
+		mask = 0;
+	} else if (128 < mask) {
+		mask = 128;
+	}
+#ifdef LINUX
+	p_netmask = &netmask->s6_addr32[0];
+#else
+	p_netmask = &netmask->__u6_addr.__u6_addr32[0];
+#endif
+	while (32 < mask)
+	{
+		*p_netmask = 0xffffffff;
+		p_netmask++;
+		mask -= 32;
+	}
+	if (mask != 0) {
+		*p_netmask = htonl(0xFFFFFFFF << (32 - mask));
+	}
 }
 

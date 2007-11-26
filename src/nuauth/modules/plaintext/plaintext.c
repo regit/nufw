@@ -267,19 +267,8 @@ static int parse_ips(char *ipsline, GSList ** ip_list, char *prefix)
 			continue;
 		}
 
-		if (128 < mask)
-			mask = 128;
-
 		/*  Create netmask IPv6 address from netmask in bits */
-		memset(&this_ip.netmask, 0, sizeof(this_ip.netmask));
-		p_netmask = &this_ip.netmask.s6_addr32[0];
-		for (; 32 < mask; mask -= 32) {
-			*p_netmask = 0xffffffff;
-			p_netmask++;
-		}
-		if (mask != 0) {
-			*p_netmask = htonl(0xFFFFFFFF << (32 - mask));
-		}
+		create_ipv6_netmask(&this_ip.netmask, mask);
 
 		if (compare_ipv6_with_mask
 		    (&this_ip.addr, &this_ip.addr,
