@@ -206,8 +206,10 @@ int init_nuauthconf(struct nuauth_params **result)
 	    *(int *) READ_CONF("nufw_has_fixed_timeout");
 	conf->nuauth_uses_fake_sasl =
 	    *(int *) READ_CONF("nuauth_uses_fake_sasl");
+#ifdef BUILD_NUAUTH_COMMAND
 	conf->use_command_server =
 	    *(int *) READ_CONF("nuauth_use_command_server");
+#endif
 	conf->proto_wait_delay =
 	    *(int *) READ_CONF("nuauth_proto_wait_delay");
 #undef READ_CONF
@@ -386,11 +388,13 @@ static gboolean compare_nuauthparams(
 		restart = TRUE;
 	}
 
+#ifdef BUILD_NUAUTH_COMMAND
 	if (current->use_command_server != new->use_command_server) {
 		g_warning
 		    ("command server option has been modified, please restart");
 		restart = TRUE;
 	}
+#endif
 
 	if (current->do_ip_authentication != new->do_ip_authentication) {
 		g_warning

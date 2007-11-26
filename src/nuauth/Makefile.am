@@ -26,6 +26,11 @@ nuauth_SOURCES = nuthread.c acls.c audit.c auth_common.c authsrv.c cache.c \
 
 nuauth_LDADD = $(GLIB_LIBS) -lm  -lgnutls -lsasl2 -lnufw -L$(top_builddir)/src/include/
 
+if BUILD_NUAUTH_COMMAND
+install-exec-local:
+	install -d $(localstatedir)/run/nuauth/
+endif
+
 nuauth$(EXEEXT): $(nuauth_OBJECTS) $(nuauth_DEPENDENCIES)
 	@rm -f nuauth$(EXEEXT)
 	$(LINK) $(nuauth_LDFLAGS) $(nuauth_OBJECTS) $(nuauth_LDADD)

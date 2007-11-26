@@ -107,6 +107,9 @@ AC_ARG_ENABLE(libnuclient,   [AC_HELP_STRING(--disable-libnuclient, Don't build 
 AC_ARG_ENABLE(nutcpc,   [AC_HELP_STRING(--disable-nutcpc, Don't build nutcpc (default is to build))],build_nutcpc=$enableval, build_nutcpc="yes" )
 AC_ARG_ENABLE(pam-nufw,   [AC_HELP_STRING(--enable-pam-nufw, Build pam_nufw (default is not to build))],build_pam_nufw=$enableval, build_pam_nufw="no" )
 AC_ARG_ENABLE(nuauth-command,   [AC_HELP_STRING(--disable-nuauth-command, Don't build nuauth_command (default is to build))],build_nuauth_command=$enableval, build_nuauth_command="yes" )
+if test "${build_nuauth_command}" = "yes"; then
+    AC_DEFINE_UNQUOTED([BUILD_NUAUTH_COMMAND],[1],[Build nuauth_command])
+fi
 
 AC_ARG_ENABLE(debug,   [AC_HELP_STRING(--enable-debug, Add development debug messages (default no))],debug=$enableval, debug="")
 AC_ARG_WITH(perf-display,
@@ -378,7 +381,7 @@ if test \
     fi
 fi
 
-AM_INIT_AUTOMAKE(1.9)
+AM_INIT_AUTOMAKE(1.10)
 
 AC_OUTPUT
 AC_MSG_RESULT([

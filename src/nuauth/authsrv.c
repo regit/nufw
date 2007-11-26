@@ -183,10 +183,12 @@ void stop_threads(gboolean wait)
 {
 	log_message(INFO, DEBUG_AREA_MAIN, "Ask threads to stop.");
 
+#ifdef BUILD_NUAUTH_COMMAND
 	/* stop command server */
 	if (nuauthconf->use_command_server) {
 		thread_stop(&nuauthdatas->command_thread);
 	}
+#endif
 
 	/* ask theads to stop */
 	if (nuauthconf->push && nuauthconf->hello_authentication) {
@@ -229,9 +231,11 @@ void stop_threads(gboolean wait)
 		thread_wait_end(&nuauthdatas->search_and_fill_worker);
 	}
 
+#ifdef BUILD_NUAUTH_COMMAND
 	if (nuauthconf->use_command_server) {
 		thread_wait_end(&nuauthdatas->command_thread);
 	}
+#endif
 	if (nuauthconf->push && nuauthconf->hello_authentication && wait) {
 		thread_wait_end(&nuauthdatas->localid_auth_thread);
 	}
@@ -794,12 +798,14 @@ void init_nuauthdatas()
 			      "localid", localid_auth);
 	}
 
+#ifdef BUILD_NUAUTH_COMMAND
 	if (nuauthconf->use_command_server) {
 		log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 			    "Creating command thread");
 		thread_new(&nuauthdatas->command_thread,
 			      "command", command_server);
 	}
+#endif
 
 	/* create thread for client request sender */
 	thread_new(&nuauthdatas->tls_pusher, "tls pusher", push_worker);

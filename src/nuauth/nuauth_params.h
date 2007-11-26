@@ -119,7 +119,9 @@ struct nuauth_params {
 	int hello_authentication;
 	char *nufw_srv;
 	char *client_srv;
+#ifdef BUILD_NUAUTH_COMMAND
 	int use_command_server;	/*<! Use command server? */
+#endif
 
 	/* cache setting */
 	int datas_persistance;	/*<! time to keep data in cache before asking a refresh */

@@ -19,6 +19,8 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#ifdef BUILD_NUAUTH_COMMAND
+
 #include "auth_srv.h"
 #include "command.h"
 #include "command_enc.h"
@@ -485,3 +487,6 @@ void *command_server(GMutex * mutex)
 	}
 	return NULL;
 }
+
+#endif
+
