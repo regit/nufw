@@ -245,7 +245,7 @@ int compare_ipv6_with_mask(
 void create_ipv6_netmask(struct in6_addr *netmask, int mask)
 {
 	uint32_t *p_netmask;
-	memset(&netmask, 0, sizeof(struct in6_addr));
+	memset(netmask, 0, sizeof(struct in6_addr));
 	if (mask < 0) {
 		mask = 0;
 	} else if (128 < mask) {
