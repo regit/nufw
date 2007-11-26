@@ -473,8 +473,10 @@ void *command_server(GMutex * mutex)
 {
 	command_t command;
 
-	if (!command_new(&command))
+	if (!command_new(&command)) {
 		nuauth_ask_exit();
+		return NULL;
+	}
 
 	while (g_mutex_trylock(mutex)) {
 		g_mutex_unlock(mutex);
