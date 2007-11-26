@@ -93,7 +93,7 @@ unsigned int get_ip_headers(tracking_t * tracking,
 			       sizeof(tracking->payload));
 #endif //#ifdef TRACKING_WITH_PAYLOAD
 	} else if (ip->version == 6) {
-#elif defined(FREEBSD)
+#else
 	if (ip->ip_v == 4) {
 		/* convert IPv4 addresses to IPv6 addresses in format "::ffff:IPv4" */
 		uint32_to_ipv6(ip->ip_src.s_addr, &tracking->saddr);
@@ -221,7 +221,7 @@ int get_udp_headers(tracking_t * tracking, const unsigned char *dgram,
 	tracking->dest = ntohs(udp->dest);
 	tracking->type = 0;
 	tracking->code = 0;
-#elif defined(FREEBSD)
+#else
 	/* TODO ;) */
 #endif
 	return 0;
@@ -268,7 +268,7 @@ tcp_state_t get_tcp_headers(tracking_t * tracking,
 			return TCP_STATE_OPEN;
 		}
 	}
-#elif defined(FREEBSD)
+#else
 	/* TODO :P */
 #endif
 	return TCP_STATE_UNKNOW;
@@ -297,7 +297,7 @@ int get_icmp_headers(tracking_t * tracking, const unsigned char *dgram,
 	tracking->dest = 0;
 	tracking->type = icmp->type;
 	tracking->code = icmp->code;
-#elif defined(FREEBSD)
+#else
 	/* TODO ! */
 #endif
 	return 0;
