@@ -24,6 +24,7 @@
 #include "nuclient.h"
 #include "ipv6.h"
 #include <sasl/saslutil.h>
+#include <pthread.h>
 #include <stdarg.h>		/* va_list, va_start, ... */
 #include <gnutls/x509.h>
 #include <langinfo.h>

@@ -89,11 +89,7 @@ extern "C" {
 #include <unistd.h>
 #include <string.h>
 
-#include <gcrypt.h>
-#include <pthread.h>
-
 #include <gnutls/gnutls.h>
-#include <sasl/sasl.h>
 
 #define NUCLIENT_VERSION "2.1.1-3"
 #define DEBUG 0

@@ -39,9 +39,12 @@
 
 #include "nufw_source.h"
 #include "nuclient.h"
+#include <pthread.h>
+#include <sasl/sasl.h>
 #include <sasl/saslutil.h>
 #include <stdarg.h>		/* va_list, va_start, ... */
 #include <gnutls/x509.h>
+#include <gcrypt.h>
 #include <langinfo.h>
 #include <proto.h>
 #include "client.h"
