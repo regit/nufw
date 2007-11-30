@@ -505,12 +505,14 @@ the fallback method is used.</para>
 </para><para>Default: <computeroutput>nuauth_do_ip_authentication=1</computeroutput>
 </para>
       </section>
-<section><title>nuauth_session_timeout</title>
+<section><title>nuauth_session_duration</title>
 <para>This option if set to a non null value causes nuauth to close a user session
 after the specified time. The user client has then to reconnect (transparently or not).
 This permit for example to disconnect users when their account has been cancelled.</para>
+<para>Disconnection occurs when nuauth has to authenticate a packet coming from the source IP
+of the connection</para>
 
-<para>Default: <computeroutput>nuauth_session_timeout=0</computeroutput>
+<para>Default: <computeroutput>nuauth_session_duration=0</computeroutput>
 </para>
 	</section>
 
