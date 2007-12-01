@@ -48,7 +48,7 @@ OS_VERSION = platform.version()   # '#2 Mon Feb 5 10:55:30 CET 2007'
 CLIENT_OS = "-".join( (OS_SYSNAME, OS_VERSION, OS_RELEASE) )
 CLIENT_APP = realpath(executable)
 LOG_PREFIX = 42
-OOB_PREFIX = "%u: ACCEPT" % LOG_PREFIX
+OOB_PREFIX = "%u ACCEPT" % LOG_PREFIX
 
 def datetime_now(delta=0):
     # Use datetime.fromtimestamp() with int(time()) to have microsecond=0
