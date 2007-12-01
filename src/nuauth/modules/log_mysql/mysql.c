@@ -338,7 +338,7 @@ static MYSQL *mysql_conn_init(struct log_mysql_params *params)
 	/* init connection */
 	ld = mysql_init(ld);
 	if (ld == NULL) {
-		log_message(WARNING, DEBUG_AREA_MAIN, "mysql init error : %s",
+		log_message(WARNING, DEBUG_AREA_MAIN, "mysql init error: %s",
 			    strerror(errno));
 		return NULL;
 	}
@@ -370,7 +370,7 @@ static MYSQL *mysql_conn_init(struct log_mysql_params *params)
 	     params->mysql_passwd, params->mysql_db_name,
 	     params->mysql_server_port, NULL, 0)) {
 		log_message(WARNING, DEBUG_AREA_MAIN,
-			    "mysql connection failed : %s",
+			    "mysql connection failed: %s",
 			    mysql_error(ld));
 		mysql_close(ld);
 		return NULL;
@@ -515,7 +515,7 @@ static char *build_insert_request(MYSQL * ld, connection_t * element,
 				  sizeof(request_fields));
 			ok = secure_snprintf(tmp_buffer,
 					     sizeof(tmp_buffer),
-					     "'%s: %s', '%lu', '%s', '%s', '%s'",
+					     "'%s %s', '%lu', '%s', '%s', '%s'",
 					     log_prefix, auth_oob_prefix,
 					     (long unsigned int) element->
 					     user_id, quoted_username,
@@ -535,7 +535,7 @@ static char *build_insert_request(MYSQL * ld, connection_t * element,
 		g_strlcat(request_fields,
 			  "oob_prefix", sizeof(request_fields));
 		ok = secure_snprintf(tmp_buffer, sizeof(tmp_buffer),
-				     "'%s: %s'",
+				     "'%s %s'",
 				     log_prefix, unauth_oob_prefix);
 		if (!ok) {
 			return NULL;
@@ -691,7 +691,7 @@ static inline int log_state_established(MYSQL * ld,
 		Result = mysql_real_query(ld, request, strlen(request));
 		if (Result != 0) {
 			log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
-				    "Can not update Data : %s",
+				    "Can not update Data: %s",
 				    mysql_error(ld));
 			mysql_close_current(params);
 			return -1;
@@ -768,7 +768,7 @@ static inline int log_state_close(MYSQL * ld,
 	Result = mysql_real_query(ld, request, strlen(request));
 	if (Result != 0) {
 		log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
-			    "Can not update Data : %s", mysql_error(ld));
+			    "Can not update Data: %s", mysql_error(ld));
 		mysql_close_current(params);
 		return -1;
 	}
