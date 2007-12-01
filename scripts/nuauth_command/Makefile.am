@@ -5,6 +5,6 @@ SUBDIRS = scripts nuauth_command
 EXTRA_DIST = setup.py
 
 install-exec-local:
-	$(srcdir)/setup.py install --prefix $(prefix)
+	$(PYTHON) $(srcdir)/setup.py install --prefix $(prefix)
 
 endif
