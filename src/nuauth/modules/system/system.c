@@ -169,6 +169,7 @@ static char *normalize_username(const char *username)
  *  \param username User name string
  *  \param pass User provided password
  *  \param passlen Password length
+ *  \param session pointer to the user_session_t:: that we working on
  *  \param params Pointer to the parameter of the module instance
  *  \return SASL_OK if password is correct, other return are authentication failure
  */
