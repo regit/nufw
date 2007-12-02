@@ -171,7 +171,11 @@ static int generate_dh_params(gnutls_dh_params * dh_params)
 }
 
 /**
- * return
+ * Refresh crl file 
+ *
+ * This function is run periodically because it is pushed with
+ * cleanup_func_push() to the list of nuauth periodically run
+ * function.
  */
 
 void refresh_crl_file()
@@ -184,8 +188,7 @@ void refresh_crl_file()
 			int ret;
 			ret = gnutls_certificate_set_x509_crl_file(nuauth_tls.
 							     x509_cred,
-							     nuauth_tls.
-							     crl_file,
+							     nuauth_tls.crl_file,
 							     GNUTLS_X509_FMT_PEM);
 			if(ret < 0)
 			{

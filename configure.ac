@@ -90,7 +90,7 @@ AC_ARG_WITH(mark-field, [AC_HELP_STRING(--without-mark-field,  Disable mark pack
 AC_ARG_WITH(mark-flag, [AC_HELP_STRING(--without-mark-flag,  Disable mark packet following acl indication)], enable_mark_flag=$withval, enable_mark_flag="yes")
 AC_ARG_WITH(system-auth, [AC_HELP_STRING(--without-system-auth,  Disable PAM+NSS authentication)], enable_system_auth=$withval, enable_system_auth="yes")
 
-AC_ARG_WITH(ldap,   [AC_HELP_STRING(--with-ldap,  Support LDAP directory for users and acl lookup)],ldap=$withval, ldap="")
+AC_ARG_WITH(ldap,   [AC_HELP_STRING(--with-ldap,  Support LDAP directory for acl lookup)],ldap=$withval, ldap="")
 
 
 AC_ARG_WITH(nfqueue,   [AC_HELP_STRING(--without-nfqueue, Compile for QUEUE instead of NFQUEUE)],use_nfqueue=$withval, use_nfqueue="yes")
