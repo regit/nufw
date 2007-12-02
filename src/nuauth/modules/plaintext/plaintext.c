@@ -958,6 +958,7 @@ static GSList *fill_user_by_username(const char *username, gpointer params)
  *  \param username user name string
  *  \param clientpass user provided password
  *  \param passlen password length
+ *  \param session pointer to the user_session_t:: that we working on
  *  \param params module related parameter
  *  \return SASL_OK if password is correct, other values are authentication
  *           failures

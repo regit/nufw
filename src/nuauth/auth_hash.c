@@ -66,8 +66,8 @@ inline guint32 hash_connection(gconstpointer data)
 /**
  * Check if two connections are equal.
  *
- * \param a Tracking headers compared with b
- * \param b Tracking headers compared with a
+ * \param trck1 Tracking headers compared with trck2
+ * \param trck2 Tracking headers compared with trck1
  * \return TRUE is they are equal, FALSE otherwise
  */
 gboolean tracking_equal(const tracking_t *trck1, const tracking_t *trck2)
