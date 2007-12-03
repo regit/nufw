@@ -1,6 +1,6 @@
 # auth_mysql plugin
 
-# if USE_MYSQL_AUTH
+if USE_MYSQL_AUTH
 
 AM_CPPFLAGS = -DCONFIG_DIR=\"$(sysconfdir)\" -DMODULE_DIR=\"$(libdir)\"
 
@@ -21,8 +21,8 @@ libauth_mysql_la_SOURCES = mysql_auth.c ${nodist_include_HEADERS}
 
 #libauth_mysql_la_LIBADD = -lmysqlclient_r
 
-libauth_mysql.la: $(libauth_mysql_la_OBJECTS) $(libauth_mysql_la_DEPENDENCIES) 
+libauth_mysql.la: $(libauth_mysql_la_OBJECTS) $(libauth_mysql_la_DEPENDENCIES)
 	$(LINK) -rpath $(plugindir) $(am_libauth_mysql_la_rpath) $(libauth_mysql_la_LDFLAGS) $(libauth_mysql_la_OBJECTS) $(MYSQL_LIBS) $(libauth_mysql_la_LIBADD)
 
-# endif
+endif
 
