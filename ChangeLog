@@ -1,5 +1,6 @@
 2.2.10
 	- log_mysql: fix log prefix (avoid double ":" when used with nuface)
+	- nuauth: fix crash when nufw is misconfigured and sends improper packet
 2.2.9 (2007/11/26)
 	- nuauth: leave when a module fails to load
 	- nuauth: correctly fills headers of messages to nufw
