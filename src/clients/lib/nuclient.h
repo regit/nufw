@@ -222,6 +222,11 @@ typedef struct {
 	pthread_t checkthread;
 
 	/**
+	 * Mutex used to ask checkthread to stop.
+	 */
+	pthread_mutex_t checkthread_stop;
+
+	/**
 	 * Thread which receive messages from nuauth, see function recv_message().
 	 */
 	pthread_t recvthread;

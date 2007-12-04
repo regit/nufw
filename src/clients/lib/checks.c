@@ -171,6 +171,7 @@ int nu_client_check(nuauth_session_t * session, nuclient_error_t * err)
 	/* test if we need to create the working thread */
 	if (session->count_msg_cond == -1) {	/* if set to -1 then we've just leave init */
 		if (session->server_mode == SRV_TYPE_PUSH) {
+			pthread_mutex_init(&session->checkthread_stop, NULL);
 			pthread_create(&(session->checkthread), NULL,
 				       nu_client_thread_check, session);
 		}
@@ -221,6 +222,10 @@ void *nu_client_thread_check(void *data)
 {
 	nuauth_session_t *session = (nuauth_session_t *) data;
 	pthread_mutex_t check_mutex;
+	int do_check, ask_stop;
+	struct timespec timeout;
+	struct timeval now;
+
 	pthread_mutex_init(&check_mutex, NULL);
 
 	pthread_cleanup_push((pthread_cleanup_push_arg1_t)
@@ -228,24 +233,38 @@ void *nu_client_thread_check(void *data)
 			     &session->check_count_mutex);
 	pthread_cleanup_push((pthread_cleanup_push_arg1_t)
 			     clear_local_mutex, &check_mutex);
+
+	do_check = 1;
 	for (;;) {
-		nu_client_real_check(session, NULL);
+		ask_stop = pthread_mutex_trylock(&session->checkthread_stop);
+		if (ask_stop != 0)
+			break;
+		pthread_mutex_unlock(&session->checkthread_stop);
+
+		if (do_check) {
+			do_check = 0;
+			nu_client_real_check(session, NULL);
+		}
 		/* Do we need to do an other check ? */
-		pthread_mutex_lock(&(session->check_count_mutex));
+		pthread_mutex_lock(&session->check_count_mutex);
 		if (session->count_msg_cond > 0) {
-			pthread_mutex_unlock(&
-					     (session->check_count_mutex));
-		} else {
-			pthread_mutex_unlock(&
-					     (session->check_count_mutex));
-			/* wait for cond */
+			do_check = 1;
+		}
+		pthread_mutex_unlock(&session->check_count_mutex);
+
+		if (!do_check) {
+			/* wait for cond with a timeout of 1 second */
+			gettimeofday(&now, NULL);
+			timeout.tv_sec = now.tv_sec + 1;
+			timeout.tv_nsec = now.tv_usec * 1000;
 			pthread_mutex_lock(&check_mutex);
-			pthread_cond_wait(&(session->check_cond),
-					  &check_mutex);
+			pthread_cond_timedwait(&(session->check_cond),
+					  &check_mutex, &timeout);
 			pthread_mutex_unlock(&check_mutex);
 		}
 	}
 
+	pthread_mutex_destroy(&check_mutex);
 	pthread_cleanup_pop(1);
 	pthread_cleanup_pop(0);
 

@@ -874,9 +874,12 @@ void ask_session_end(nuauth_session_t * session)
 	}
 	if (session->server_mode == SRV_TYPE_PUSH) {
 		if (session->checkthread != NULL_THREAD
-		    && !pthread_equal(session->checkthread, self_thread)) {
-			pthread_cancel(session->checkthread);
+		    && !pthread_equal(session->checkthread, self_thread))
+		{
+			/* ask thread to stop */
+			(void)pthread_mutex_trylock(&session->checkthread_stop);
 			pthread_join(session->checkthread, NULL);
+			pthread_mutex_destroy(&session->checkthread_stop);
 		}
 	}
 	pthread_mutex_unlock(&(session->mutex));
