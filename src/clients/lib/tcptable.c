@@ -24,6 +24,7 @@
 #include "nuclient.h"
 #include "libnuclient.h"
 #include "proto.h"
+#include <pthread.h>
 #include <inttypes.h>
 #include <ipv6.h>
 #define USE_JHASH3
