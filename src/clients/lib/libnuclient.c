@@ -49,6 +49,7 @@
 #include <proto.h>
 #include "client.h"
 #include "security.h"
+#include "sys_config.h"
 #include "internal.h"
 #include <sys/utsname.h>
 
