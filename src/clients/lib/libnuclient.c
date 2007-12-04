@@ -62,8 +62,6 @@ GCRY_THREAD_OPTION_PTHREAD_IMPL;
 #  define DH_BITS 1024
 #endif
 
-#define REQUEST_CERT 0
-
 static const int cert_type_priority[3] = { GNUTLS_CRT_X509, 0 };
 
 
@@ -254,10 +252,18 @@ int nu_client_setup_tls(nuauth_session_t * session,
 	char certstring[256];
 	char keystring[256];
 	char *home = nu_get_home_dir();
+	int exit_on_error = 0;
 	int ok;
 	int ret;
 
 	session->tls_password = tls_password;
+
+	/* If the user specified a certficate and a key on command line,
+	 * exit if we fail loading them.
+	 * Elsewise, try loading certs from ~/.nufw/, but continue if we fail
+	 */
+	if(certfile || keyfile)
+		exit_on_error = 1;
 
 	/* compute patch keyfile */
 	if (keyfile == NULL && home != NULL) {
@@ -269,16 +275,16 @@ int nu_client_setup_tls(nuauth_session_t * session,
 
 	/* test if key file exists */
 	if (keyfile != NULL && access(keyfile, R_OK) != 0) {
-#if REQUEST_CERT
-		if (session->verbose)
-		    printf("Unable to load key file: %s\n", keyfile);
-		SET_ERROR(err, INTERNAL_ERROR, FILE_ACCESS_ERR);
-		if (home) {
-			free(home);
+		if (exit_on_error) {
+			if (session->verbose)
+			    printf("Unable to load key file: %s\n", keyfile);
+			SET_ERROR(err, INTERNAL_ERROR, FILE_ACCESS_ERR);
+			if (home) {
+				free(home);
+			}
+			errno = EBADF;
+			return 0;
 		}
-		errno = EBADF;
-		return 0;
-#endif
 		keyfile = NULL;
 	}
 
@@ -290,15 +296,15 @@ int nu_client_setup_tls(nuauth_session_t * session,
 	}
 	/* test if cert exists */
 	if (certfile != NULL && access(certfile, R_OK) != 0) {
-#if REQUEST_CERT
-		printf("Unable ot load certificate file : %s\n", certfile);
-		SET_ERROR(err, INTERNAL_ERROR, FILE_ACCESS_ERR);
-		if (home) {
-			free(home);
+		if (exit_on_error) {
+			printf("Unable ot load certificate file : %s\n", certfile);
+			SET_ERROR(err, INTERNAL_ERROR, FILE_ACCESS_ERR);
+			if (home) {
+				free(home);
+			}
+			errno = EBADF;
+			return 0;
 		}
-		errno = EBADF;
-		return 0;
-#endif
 		certfile = NULL;
 	}
 	if (cafile == NULL && home != NULL) {
@@ -309,15 +315,15 @@ int nu_client_setup_tls(nuauth_session_t * session,
 	}
 	/* test if cert exists */
 	if (cafile != NULL && access(cafile, R_OK) != 0) {
-#if REQUEST_CERT
-		printf("Unable to load CA file : %s\n", cafile);
-		SET_ERROR(err, INTERNAL_ERROR, FILE_ACCESS_ERR);
-		errno = EBADF;
-		if (home) {
-			free(home);
+		if (exit_on_error) {
+			printf("Unable to load CA file : %s\n", cafile);
+			SET_ERROR(err, INTERNAL_ERROR, FILE_ACCESS_ERR);
+			errno = EBADF;
+			if (home) {
+				free(home);
+			}
+			return 0;
 		}
-		return 0;
-#endif
 		cafile = NULL;
 	}
 
