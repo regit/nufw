@@ -93,8 +93,8 @@ nu_error_t parse_dgram(connection_t * connection, unsigned char *dgram,
 				if (msg_type == AUTH_CONTROL) {
 					connection->state =
 					    AUTH_STATE_DONE;
-					log_user_packet(connection,
-							TCP_STATE_CLOSE);
+					log_message(WARNING, DEBUG_AREA_GW,
+						    "nufw sends non SYN TCP packet, ignoring");
 					free_connection(connection);
 					return NU_EXIT_NO_RETURN;
 				}
@@ -103,8 +103,8 @@ nu_error_t parse_dgram(connection_t * connection, unsigned char *dgram,
 				if (msg_type == AUTH_CONTROL) {
 					connection->state =
 					    AUTH_STATE_DONE;
-					log_user_packet(connection,
-							TCP_STATE_ESTABLISHED);
+					log_message(WARNING, DEBUG_AREA_GW,
+						    "nufw sends SYN ACK TCP packet, ignoring");
 					free_connection(connection);
 					return NU_EXIT_NO_RETURN;
 				}
@@ -291,7 +291,7 @@ nu_error_t authpckt_conntrack(unsigned char *dgram, unsigned int dgram_size)
 	/* Check message content size */
 	if (dgram_size != sizeof(struct nuv4_conntrack_message_t)) {
 		log_message(CRITICAL, DEBUG_AREA_PACKET | DEBUG_AREA_GW,
-				  "Auth conntrack: Improper length of packet (%d instead of %d)",
+				  "Auth conntrack: Improper length of packet (%d instead of %lu)",
 				  dgram_size,
 				  sizeof(struct nuv4_conntrack_message_t));
 		return NU_EXIT_ERROR;
