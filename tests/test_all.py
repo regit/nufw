@@ -23,6 +23,7 @@ FILES = (
     "test_reject",
     "test_periods",
     "test_conntrack",
+    "test_invalid_tcp",
 )
 
 def loadTestcases(module):
