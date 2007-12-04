@@ -23,3 +23,6 @@ Jean Gillaux
 Francesco Varano <francesco.varano@winext.eu>
 Gabriele Messineo <gabriele.messineo@winext.eu>
     authors of auth_mysql module
+
+Simon Josefsson
+    getdelim implentation (used on freebsd)
