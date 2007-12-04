@@ -463,6 +463,27 @@ nuauth_session_t *do_connect(nutcpc_context_t * context, char *username)
 
 	nu_client_set_debug(session, context->debug_mode);
 
+	/* Set hostname from libnuclient if it wasn't specified by the user */
+	if(*context->port == '\0')
+	{
+		if(session->default_port)
+			SECURE_STRNCPY(context->port, session->default_port,
+			       sizeof(context->port));
+		else
+			SECURE_STRNCPY(context->port, USERPCKT_SERVICE,
+				       sizeof(context->port));
+	}
+
+	if(*context->srv_addr == '\0')
+	{
+		if(session->default_hostname)
+			SECURE_STRNCPY(context->srv_addr, session->default_hostname,
+			       sizeof(context->srv_addr));
+		else
+			SECURE_STRNCPY(context->srv_addr, NUAUTH_IP,
+				       sizeof(context->srv_addr));
+	}
+
 	if (!nu_client_setup_tls(session, context->keyfile, context->certfile,
 	     context->cafile, context->cert_password, err)) {
 		nu_client_delete(session);
@@ -568,10 +589,6 @@ void parse_cmdline_options(int argc, char **argv,
 	int stealth = 0;
 
 	/* set default values */
-	SECURE_STRNCPY(context->port, USERPCKT_SERVICE,
-		       sizeof(context->port));
-	SECURE_STRNCPY(context->srv_addr, NUAUTH_IP,
-		       sizeof(context->srv_addr));
 	context->interval = 100;
 	context->donotuselock = 0;
 	context->debug_mode = 0;

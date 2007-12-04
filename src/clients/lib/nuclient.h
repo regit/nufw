@@ -242,6 +242,11 @@ typedef struct {
 
 	/** Do we need to check the CA certificate */
 	unsigned char need_ca_verif;
+
+	/** Connection to nuauth informations */
+	char* default_hostname;
+	char* default_port;
+	
 } nuauth_session_t;
 
 #define NuAuth nuauth_session_t

@@ -466,6 +466,10 @@ nuauth_session_t *_nu_client_new(nuclient_error_t * err)
 	session->timestamp_last_sent = time(NULL);
 	session->need_set_cred = 1;
 	session->need_ca_verif = 0;
+	session->default_hostname = NULL;
+	session->default_port = NULL;
+
+	load_sys_config(session);
 
 	/* create session mutex */
 	pthread_mutex_init(&(session->mutex), NULL);
