@@ -5,4 +5,5 @@ EXTRA_DIST = defaults.cfg client.py common.py compatibility.py config.py \
 	test_mysql.py test_nufw_cert.py test_periods.py \
 	test_plaintext_acl.py test_plaintext_auth.py test_reject.py \
 	test_script.py test_syslog.py test_system.py \
-	test_user_policy.py nufw_runner.py
+	test_user_policy.py nufw_runner.py test_session_expire.py \
+	test_invalid_tcp.py
