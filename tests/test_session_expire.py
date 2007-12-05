@@ -16,7 +16,7 @@ TIMEOUT = 2.0
 
 class TestSessionExpire(TestCase):
     def setUp(self):
-        self.expiration = 5
+        self.expiration = 1
         self.host = HOST
 
         # Setup session_expire library
@@ -60,7 +60,7 @@ class TestSessionExpire(TestCase):
         self.nuauth.reload()
         sleep(self.expiration+DELAY)
 
-        connectTcp(self.host, VALID_PORT, 1.0)
+        connectTcp(self.host, VALID_PORT, 0.5)
         self.assert_(any("Session not connected" in line
             for line in self.client.readlines(total_timeout=TIMEOUT)))
 
