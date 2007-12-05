@@ -37,22 +37,22 @@ class PlaintextUserDB:
             text.append(user_text)
         text = "\n".join(text)+"\n"
 
-    	self.basedir = mkdtemp()
+        self.basedir = mkdtemp()
         self.filename = path_join(self.basedir, "users.nufw")
-	output = open(self.filename, 'w')
-	output.write(text)
-	output.close()
+        output = open(self.filename, 'w')
+        output.write(text)
+        output.close()
 
         config["nuauth_user_check_module"] = '"plaintext"'
         config["plaintext_userfile"] = '"%s"' % self.filename
 
     def desinstall(self):
-    	if hasattr(self, 'filename'):
-	    if path_exists(self.filename):
-	        remove(self.filename)
-	if hasattr(self, 'basedir'):
-	    if path_exists(self.basedir):
-	        rmdir(self.basedir)
+        if hasattr(self, 'filename'):
+            if path_exists(self.filename):
+                remove(self.filename)
+        if hasattr(self, 'basedir'):
+            if path_exists(self.basedir):
+                rmdir(self.basedir)
 
     def __getitem__(self, key):
         return self.users[key]
@@ -73,7 +73,7 @@ class PlaintextAcl:
             "proto=6",
             "SrcIP=0.0.0.0/0",
             "SrcPort=1024-65535",
-            "DstIP=%s" % host, 
+            "DstIP=%s" % host,
             "DstPort=%u" % port]
         for key, value in kw.iteritems():
             text.append("%s=%s" % (key, value))
@@ -87,7 +87,7 @@ class PlaintextAcl:
             "proto=6",
             "SrcIP=0.0.0.0/0",
             "SrcPort=1024-65535",
-            "DstIP=%s" % host, 
+            "DstIP=%s" % host,
             "DstPort=%u" % port]
         for key, value in kw.iteritems():
             text.append("%s=%s" % (key, value))
@@ -95,7 +95,7 @@ class PlaintextAcl:
 
 
     def addAcl(self, name, port, gid, decision=1, **kw):
-	self.addAclFull(name, "0.0.0.0/0", port, gid, decision, **kw)
+        self.addAclFull(name, "0.0.0.0/0", port, gid, decision, **kw)
 
     def install(self, config):
         info("Setup Plaintext ACL")
@@ -104,27 +104,27 @@ class PlaintextAcl:
 
         text = "\n".join(self.content)
 
-    	self.basedir = mkdtemp()
+        self.basedir = mkdtemp()
         self.filename = path_join(self.basedir, "acls.nufw")
-	output = open(self.filename, 'w')
-	output.write(text)
-	output.close()
+        output = open(self.filename, 'w')
+        output.write(text)
+        output.close()
 
         config["plaintext_aclfile"] = '"%s"' % self.filename
         config["nuauth_acl_check_module"] = '"plaintext"'
 
     def desinstall(self):
-    	if hasattr(self, 'filename'):
-	    if path_exists(self.filename):
-	        remove(self.filename)
-	if hasattr(self, 'basedir'):
-	    if path_exists(self.basedir):
-	        rmdir(self.basedir)
+        if hasattr(self, 'filename'):
+            if path_exists(self.filename):
+                remove(self.filename)
+        if hasattr(self, 'basedir'):
+            if path_exists(self.basedir):
+                rmdir(self.basedir)
 
 class Period:
     def __init__(self, name, desc="", duration=None, days_start=None, days_end=None, hours_start=None, hours_end=None):
         self.name = name
-	self.desc = desc
+        self.desc = desc
         self.duration = duration
         self.days_start = days_start
         self.days_end = days_end
@@ -155,11 +155,11 @@ class PlainPeriodXML:
 
     def install(self, config):
         info("Setup periods.xml file")
-    	self.basedir = mkdtemp()
+        self.basedir = mkdtemp()
         self.filename = path_join(self.basedir, "periods.xml")
 
         output = open(self.filename, 'w')
-	output.write('<?xml version="1.0"?>\n<periods>\n')
+        output.write('<?xml version="1.0"?>\n<periods>\n')
 
         for period in self.periods:
             output.write(period.xml())
@@ -171,11 +171,11 @@ class PlainPeriodXML:
         config["xml_defs_periodfile"] = '"%s"' % self.filename
 
     def desinstall(self):
-    	if hasattr(self, 'filename'):
-	    if path_exists(self.filename):
-	        remove(self.filename)
-	if hasattr(self, 'basedir'):
-	    if path_exists(self.basedir):
-	        rmdir(self.basedir)
+        if hasattr(self, 'filename'):
+            if path_exists(self.filename):
+                remove(self.filename)
+        if hasattr(self, 'basedir'):
+            if path_exists(self.basedir):
+                rmdir(self.basedir)
 
 
