@@ -111,14 +111,6 @@ AC_ARG_ENABLE(nuauth-command,   [AC_HELP_STRING(--disable-nuauth-command, Don't 
 check_ipy=yes
 if test "${build_nuauth_command}" = "yes"; then
     AC_CHECK_TOOL(PYTHON, python, true)
-
-    AC_MSG_CHECKING("checking for IPy Python module")
-    if ! $PYTHON -c 'import IPy' &>/dev/null; then
-      AC_MSG_RESULT("check: no")
-      check_ipy=no
-    else
-      AC_MSG_RESULT("check: yes")
-    fi
     AC_DEFINE_UNQUOTED([BUILD_NUAUTH_COMMAND],[1],[Build nuauth_command])
 fi
 
@@ -350,7 +342,6 @@ if test \
     -o x${check_gcrypt} = xno \
     -o x${check_gnutls} = xno \
     -o x${check_pam} = xno \
-    -o x${check_ipy} = xno \
 ; then
     AC_MSG_RESULT([])
     if test x${check_pthread} = xno; then
@@ -379,9 +370,6 @@ if test \
     fi
     if test x${check_pgsql} = xno; then
         AC_MSG_ERROR([libpq library needed if PostgreSQL support selected])
-    fi
-    if test x${check_ipy} = xno; then
-        AC_MSG_ERROR([IPy Python module needed if nuauth_command support selected])
     fi
     exit 1
 fi
