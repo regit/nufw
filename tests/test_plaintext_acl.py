@@ -7,14 +7,13 @@ from inl_tests.iptables import Iptables
 from filter import testAllowPort, testDisallowPort, VALID_PORT, HOST
 from test_plaintext_auth import USERDB
 from plaintext import PlaintextAcl
-from socket import gethostbyname
 
 class TestPlaintextAcl(TestCase):
     def setUp(self):
         self.iptables = Iptables()
         self.users = USERDB
         self.acls = PlaintextAcl()
-    	self.host = gethostbyname(HOST)
+        self.host = HOST
         self.config = NuauthConf()
 
         # Start nuauth with new config

@@ -82,8 +82,7 @@ class Nuauth:
         self.conf = conf
 
         # Setup configuration
-        if self.conf:
-            self.conf.install()
+        self.installConf()
 
         # Do you need to restart running nuauth instance?
         need_restart = False
@@ -109,11 +108,18 @@ class Nuauth:
 
         # Send SIGHUP if needed
         if not was_running and (self.conf or self.nuauth.config_dirty):
-            self.nuauth.reload()
+            self.reload()
 
         # Eat log output
         for line in self.nuauth.readlines():
             pass
+
+    def reload(self, timeout=RELOAD_TIMEOUT):
+        self.nuauth.reload(timeout)
+
+    def installConf(self):
+        if self.conf:
+            self.conf.install()
 
     def __del__(self):
         self.stop()
