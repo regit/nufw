@@ -1,3 +1,6 @@
+2.2.11
+	- NuFW: introduce protocol client version 5 to add authentication
+	  failure message on client side
 2.2.10 (2007/12/04)
 	- log_mysql: fix log prefix (avoid double ":" when used with nuface)
 	- nuauth: fix crash when nufw is misconfigured and sends improper packet

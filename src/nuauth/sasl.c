@@ -273,7 +273,6 @@ nu_error_t get_proto_info(user_session_t * c_session)
 		break;
 	default:
 		{
-
 			if (FD_ISSET(c_session->socket, &wk_set)) {
 				char buffer[20];
 				debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
@@ -300,14 +299,17 @@ nu_error_t get_proto_info(user_session_t * c_session)
 							  c_session->
 							  client_version);
 					/* sanity check on know protocol */
-					if (c_session->client_version !=
-					    PROTO_VERSION_V22) {
-						debug_log_message(INFO,
-								  DEBUG_AREA_AUTH,
-								  "Bad protocol, announced %d",
-								  c_session->
-								  client_version);
-						return NU_EXIT_ERROR;
+					switch (c_session->client_version) {
+						case PROTO_VERSION_V22:
+						case PROTO_VERSION_V22_1:
+							break;
+						default:
+							debug_log_message(INFO,
+									  DEBUG_AREA_AUTH,
+									  "Bad protocol, announced %d",
+									  c_session->client_version
+									  );
+							return NU_EXIT_ERROR;
 					}
 					return NU_EXIT_OK;
 				} else {
@@ -422,9 +424,15 @@ static int mysasl_negotiate(user_session_t * c_session, sasl_conn_t * conn)
 	if (auth_result != SASL_OK) {
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
 				  "incorrect authentication");
+		if (c_session->client_version >= PROTO_VERSION_V22_1) {
+			samp_send(session, "N", 1);
+		}
 	} else {
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
 				  "correct authentication");
+		if (c_session->client_version >= PROTO_VERSION_V22_1) {
+			samp_send(session, "Y", 1);
+		}
 	}
 
 	if (c_session->user_name) {
@@ -921,6 +929,7 @@ int sasl_user_check(user_session_t * c_session)
 
 	switch (c_session->client_version) {
 	case PROTO_VERSION_V22:
+	case PROTO_VERSION_V22_1:
 		ret = mysasl_negotiate(c_session, conn);
 		break;
 	case PROTO_VERSION_V20:

@@ -203,6 +203,12 @@ int mysasl_negotiate(nuauth_session_t * user_session, sasl_conn_t * conn,
 			}
 		}
 	}
+	
+	len = samp_recv(session, buf, 42, err);
+	if (buf[0] != 'Y') {
+		result = SASL_BADAUTH;
+		SET_ERROR(err, SASL_ERROR, SASL_BADAUTH);
+	}
 
 	if (result != SASL_OK) {
 		if (user_session->verbose)
@@ -540,7 +546,7 @@ int init_sasl(nuauth_session_t * session, nuclient_error_t * err)
 	};
 
 	ret =
-	    gnutls_record_send(session->tls, "PROTO 4", strlen("PROTO 4"));
+	    gnutls_record_send(session->tls, "PROTO 5", strlen("PROTO 5"));
 	if (ret < 0) {
 		SET_ERROR(err, GNUTLS_ERROR, ret);
 		return 0;

@@ -48,7 +48,8 @@ enum proto_type_t {
 
 enum proto_client_version_t {
 	PROTO_VERSION_V20 = 3,
-	PROTO_VERSION_V22
+	PROTO_VERSION_V22,
+	PROTO_VERSION_V22_1
 };
 
 #define PROTO_VERSION PROTO_VERSION_V22
