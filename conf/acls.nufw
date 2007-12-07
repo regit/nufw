@@ -19,6 +19,7 @@
 # decision=1            # 0=drop, 1=accept, 3=reject (2 is reserved: "no decide")
 #
 # Default values:
+#    - decision: 1 (ACCEPT)
 #    - protocol: 6 (TCP)
 #    - SrcIP: any IP address
 #    - DstIP: any IP address
@@ -66,29 +67,20 @@
 # =======================
 
 [ssh]
-decision=1
 gid=100
 DstPort=22
 App=/usr/bin/ssh
 OS=Linux
 
-[web]
-decision=1
+[http]
 gid=102
 DstPort=80
 
-[web 2]
-decision=1
+[https]
 gid=102
 DstPort=443
 
-[ftp]
-decision=1
-gid=102,103
-DstPort=21
-
-[full]
-decision=1
+[full access for group 103]
 gid=103
 
 

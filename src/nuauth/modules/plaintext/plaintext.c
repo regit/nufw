@@ -508,6 +508,7 @@ static int read_acl_list(struct plaintext_params *params)
 			newacl->period = NULL;
 			newacl->log_prefix = NULL;
 			newacl->flags = ACL_FLAGS_NONE;
+			newacl->decision = DECISION_ACCEPT;
 			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 					  "L.%d: ACL name found: [%s]", ln,
 					  newacl->aclname);
