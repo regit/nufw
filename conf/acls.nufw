@@ -1,15 +1,14 @@
-
 # ACLs file for the plaintext module
-#
 
-# Each ACL begins with an identifier [ACLname]
+# Example of ACL
+# ==============
+#
 # [Sample ACL]
 # gid=100,101           # which groups are concerned
 # gid=103               # several lines can be used
 # uid=100,101           # which user ids are concerned
 # uid=103               # several lines can be used
-# proto=6               # TCP (only 1 proto allowed per ACL, of course)
-# proto=6               # TCP (only 1 proto allowed per ACL, of course)
+# proto=6               # IP protocol: 1=ICMP, 6=TCP (default), 20=ICMP
 # type=0                # Type, for ICMP protocol only
 # SrcIP=10.10.0.1       # Source IP, equivalent to 10.10.0.1/32
 # SrcPort=1024-65535    # List of source ports (a single port is ok)
@@ -19,6 +18,13 @@
 # DstPort=22,25         # There can be several lines
 # decision=1            # 0=drop, 1=accept, 3=reject (2 is reserved: "no decide")
 #
+# Default values:
+#    - protocol: 6 (TCP)
+#    - SrcIP: any IP address
+#    - DstIP: any IP address
+#    - SrcPort: any port
+#    - DstPort: any port
+#
 # Filtering
 ## * Note: ports (SrcPort, DstPort) are optional.  If none is specified,
 ##   any port can match the ACL.
@@ -26,11 +32,9 @@
 #
 ## * Application filtering
 #  App=/usr/bin/perl
-## * Application filtering with checksum (not implemented)
-#  App=/usr/bin/perl ; 77bfd8adecec9cd4fb941cabb8f7877b
 ## * Several apps can be given
 #  App=/usr/bin/ssh
-#
+#  App=/usr/bin/nc
 #
 ## * OS checking
 #  OS = Linux
@@ -58,17 +62,12 @@
 #	(equivalent to don't do SSO on acl)
 # flags = 1
 
-
-
 # Sample test declaration
+# =======================
 
 [ssh]
 decision=1
 gid=100
-proto=6
-SrcIP=0.0.0.0/0
-SrcPort=1024-65535
-DstIP=0.0.0.0/0
 DstPort=22
 App=/usr/bin/ssh
 OS=Linux
@@ -76,36 +75,20 @@ OS=Linux
 [web]
 decision=1
 gid=102
-proto=6
-SrcIP=0.0.0.0/0
-SrcPort=1024-65535
-DstIP=0.0.0.0/0
 DstPort=80
 
 [web 2]
 decision=1
 gid=102
-proto=6
-SrcIP=0.0.0.0/0
-SrcPort=1024-65535
-DstIP=0.0.0.0/0
 DstPort=443
 
 [ftp]
 decision=1
 gid=102,103
-proto=6
-SrcIP=0.0.0.0/0
-SrcPort=1024-65535
-DstIP=0.0.0.0/0
 DstPort=21
 
 [full]
 decision=1
 gid=103
-proto=6
-SrcIP=0.0.0.0/0
-SrcPort=1024-65535
-DstIP=0.0.0.0/0
 
 

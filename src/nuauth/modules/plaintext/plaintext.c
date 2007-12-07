@@ -197,6 +197,8 @@ static int parse_ports(char *portsline, GSList ** p_portslist,
  */
 static int match_ip(GSList * ip_list, struct in6_addr *addr)
 {
+	if (!ip_list)
+		return 1;
 	for (; ip_list != NULL; ip_list = g_slist_next(ip_list)) {
 		struct plaintext_ip *item = (struct plaintext_ip *) ip_list->data;
 		if (compare_ipv6_with_mask
@@ -461,8 +463,10 @@ static int read_acl_list(struct plaintext_params *params)
 				/*  Warning: this code is duplicated after the loop */
 				if (!(newacl->groups || newacl->users)) {
 					log_message(WARNING, DEBUG_AREA_MAIN,
-						    "No user or group(s) declared in ACL %s",
-						    newacl->aclname);
+						    "L.%d: No user or group(s) declared in ACL %s",
+						    ln, newacl->aclname);
+					fclose(fd);
+					return 2;
 				} else if (newacl->proto == IPPROTO_TCP ||
 					   newacl->proto == IPPROTO_UDP ||
 					   newacl->proto == IPPROTO_ICMP) {
@@ -500,6 +504,7 @@ static int read_acl_list(struct plaintext_params *params)
 			}
 
 			newacl->aclname = g_strdup(p_key);
+			newacl->proto = IPPROTO_TCP;
 			newacl->period = NULL;
 			newacl->log_prefix = NULL;
 			newacl->flags = ACL_FLAGS_NONE;
@@ -586,6 +591,16 @@ static int read_acl_list(struct plaintext_params *params)
 				fclose(fd);
 				return 2;
 			}
+			/*  Following is only for TCP / UDP  (ports stuff...) */
+			if (newacl->proto != IPPROTO_TCP && newacl->proto != IPPROTO_UDP
+					&& newacl->proto != IPPROTO_ICMP) {
+				log_message(FATAL, DEBUG_AREA_MAIN,
+					    "L.%d: Unsupported protocol: %d",
+					    ln, newacl->proto);
+				fclose(fd);
+				return 2;
+			}
+
 			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 					  "L.%d: Read proto = %d", ln,
 					  newacl->proto);
@@ -1050,16 +1065,26 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element, gpointer params)
 	     p_acllist; p_acllist = g_slist_next(p_acllist)) {
 		p_acl = (struct plaintext_acl *) p_acllist->data;
 
-		if (netdata->protocol != p_acl->proto)
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
+				"(DBG) [plaintext] test acl %s", p_acl->aclname);
+
+		if (netdata->protocol != p_acl->proto) {
+			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
+					"(DBG) skip ACL %s: protocol doesn't match", p_acl->aclname);
 			continue;
+		}
 
 		/*  Check source address */
 		if (!match_ip(p_acl->src_ip, &netdata->saddr)) {
+			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
+					"(DBG) skip ACL %s: source IP doesn't match", p_acl->aclname);
 			continue;
 		}
 
 		/*  Check destination address */
 		if (!match_ip(p_acl->dst_ip, &netdata->daddr)) {
+			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
+					"(DBG) skip ACL %s: destination IP doesn't match", p_acl->aclname);
 			continue;
 		}
 
@@ -1076,19 +1101,13 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element, gpointer params)
 						break;
 					}
 				}
-				if (!found)
+				if (!found) {
+					debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
+							"(DBG) skip ACL %s: ICMP type doesn't match", p_acl->aclname);
 					continue;
+				}
 			}
 		} else {
-			/*  Following is only for TCP / UDP  (ports stuff...) */
-			if (p_acl->proto != IPPROTO_TCP
-			    && p_acl->proto != IPPROTO_UDP) {
-				g_message
-				    ("[plaintext] Unsupported protocol: %d",
-				     p_acl->proto);
-				continue;
-			}
-
 			/*  Check source port */
 			if (p_acl->src_ports) {
 				int found = 0;
@@ -1110,8 +1129,11 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element, gpointer params)
 						break;
 					}
 				}
-				if (!found)
+				if (!found) {
+					debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
+							"(DBG) skip ACL %s: TCP/UDP source port doesn't match", p_acl->aclname);
 					continue;
+				}
 			}
 			/*  Check destination port */
 			if (p_acl->dst_ports) {
@@ -1135,10 +1157,15 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element, gpointer params)
 					}
 				}
 				if (!found) {
+					debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
+							"(DBG) skip ACL %s: TCP/UDP destination port doesn't match", p_acl->aclname);
 					continue;
 				}
 			}
 		}
+
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
+				"(DBG) [plaintext] test acl %s (3)", p_acl->aclname);
 
 		/*  O.S. filtering? */
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
@@ -1193,6 +1220,8 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element, gpointer params)
 					  "(DBG) Checking OS sysname ACL found=%d",
 					  found);
 			if (!found)
+				debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
+						"(DBG) skip ACL %s: OS doesn't match", p_acl->aclname);
 				continue;
 			log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 				    "[plaintext] OS match (%s)",
@@ -1224,6 +1253,8 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element, gpointer params)
 				    "(DBG) Checking App ACL found=%d",
 				    found);
 			if (!found)
+				debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
+						"(DBG) skip ACL %s: Application doesn't match", p_acl->aclname);
 				continue;
 			log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 				    "[plaintext] App match (%s)",
@@ -1234,8 +1265,8 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element, gpointer params)
 
 		/*  We have a match 8-) */
 		log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
-			    "[plaintext] matching with decision %d",
-			    p_acl->decision);
+			    "[plaintext] matching with ACL %s and decision %d",
+			    p_acl->aclname, p_acl->decision);
 		this_acl = g_new0(struct acl_group, 1);
 		g_assert(this_acl);
 		this_acl->answer = p_acl->decision;
