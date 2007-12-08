@@ -6,10 +6,10 @@ func_tests:
 	cd tests && ./test_all.py
 
 all:
-	echo -n "Compile done";\
+	@echo "Compile done";
 
 install-data-am:
-	echo -n "Run 'make install-conf' if you want to install initial configuration file";\
+	@echo "Run 'make install-conf' if you want to install initial configuration file";
 
 install-conf:
 	install -d $(sysconfdir)
