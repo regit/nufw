@@ -375,6 +375,7 @@ void *packetsrv(void *void_arg)
 #endif
 	int rv;
 	int select_result;
+	int max_fd;
 	fd_set wk_set;
 
 #ifdef HAVE_NLIF_CATCH
@@ -414,10 +415,43 @@ void *packetsrv(void *void_arg)
 #ifdef HAVE_NLIF_CATCH
 		FD_SET(if_fd, &wk_set);
 #endif
-		select_result = select(fd + 1, &wk_set, NULL, NULL, &tv);
+		if (fd >= if_fd) {
+			max_fd = fd + 1;
+		} else {
+			max_fd = if_fd + 1;
+		}
+
+		select_result = select(max_fd, &wk_set, NULL, NULL, &tv);
 		if (select_result == -1) {
 			int err = errno;
 			if (err == EINTR) {
+				continue;
+			}
+
+			if (err == EBADF) {
+				struct stat s;
+#ifdef HAVE_NLIF_CATCH
+				if ((fstat(if_fd, &s)<0)) {
+					iface_table_close(nlif_handle);
+
+					nlif_handle = iface_table_open();
+					if (!nlif_handle)
+						exit(EXIT_FAILURE);
+
+					if_fd = nlif_fd(nlif_handle);
+					if (if_fd < 0) {
+						exit(EXIT_FAILURE);
+					}
+				}
+#endif
+				if ((fstat(fd, &s)<0)) {
+					packetsrv_close(0);
+#ifdef HAVE_NLIF_CATCH
+					fd = packetsrv_open(nlif_handle);
+#else
+					fd = packetsrv_open(NULL);
+#endif
+				}
 				continue;
 			}
 			log_area_printf(DEBUG_AREA_MAIN,
