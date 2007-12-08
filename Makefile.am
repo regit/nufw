@@ -6,21 +6,10 @@ func_tests:
 	cd tests && ./test_all.py
 
 all:
-	@tput enacs; tput smacs; tput bold;\
-	echo   "lqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqk";echo -n "x";\
-        tput rmacs;\
-	echo -n "         Compile done         ";\
-	tput smacs; echo "x"; \
-	echo   "mqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqj";tput rmacs;tput sgr0
+	echo -n "Compile done";\
 
 install-data-am:
-	@tput enacs; tput smacs; tput bold; \
-	echo   "lqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqk";echo -n "x";\
-        tput rmacs;\
 	echo -n "Run 'make install-conf' if you want to install initial configuration file";\
-	tput smacs;echo "x";\
-	echo   "mqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqj";tput rmacs;tput sgr0
-	@tput rmso; echo ""
 
 install-conf:
 	install -d $(sysconfdir)
