@@ -1,5 +1,5 @@
 /*
- ** Copyright (C) 2002-2006 INL
+ ** Copyright (C) 2002-2007 INL
  ** Written by Eric Leblond <eric@regit.org>
  **            Vincent Deffontaines <vincent@gryzor.com>
  ** INL http://www.inl.fr/
@@ -414,12 +414,15 @@ void *packetsrv(void *void_arg)
 		FD_SET(fd, &wk_set);
 #ifdef HAVE_NLIF_CATCH
 		FD_SET(if_fd, &wk_set);
-#endif
+
 		if (fd >= if_fd) {
 			max_fd = fd + 1;
 		} else {
 			max_fd = if_fd + 1;
 		}
+#else
+		max_fd = fd + 1;
+#endif
 
 		select_result = select(max_fd, &wk_set, NULL, NULL, &tv);
 		if (select_result == -1) {
