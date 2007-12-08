@@ -505,8 +505,8 @@ void tls_user_main_loop(struct tls_user_context_t *context, GMutex * mutex)
 				/* A client disconnects between FD_SET and select.
 				 * Will try to find it */
 				for (i=0; i<context->mx; ++i){
+					struct stat s;
 					if (FD_ISSET(i, &context->tls_rx_set)){
-						struct stat s;
 						if (fstat(i, &s)<0) {
 							log_message(CRITICAL, DEBUG_AREA_USER,
 								    "Warning: %d is a bad file descriptor.", i);
