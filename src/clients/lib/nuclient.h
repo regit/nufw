@@ -35,20 +35,6 @@ extern "C" {
 #   error "nuclient.h have to be included before <features.h>"
 #endif
 
-/**
- * Use ISO C99 standard, needed by snprintf for example
- */
-#define _ISOC99_SOURCE
-
-/**
- * Use GNU extensions like getline() in stdio.h
- */
-#define _GNU_SOURCE
-
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
 #ifndef FREEBSD
 #include <features.h>
 #endif

@@ -21,6 +21,20 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/**
+ * Use ISO C99 standard, needed by snprintf for example
+ */
+#define _ISOC99_SOURCE
+
+/**
+ * Use GNU extensions like getline() in stdio.h
+ */
+#define _GNU_SOURCE
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include "sys_config.h"
 #include <stdio.h>
 #include "getdelim.h"
