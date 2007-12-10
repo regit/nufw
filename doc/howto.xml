@@ -19,6 +19,13 @@
     </copyright>
     <revhistory>
       <revision>
+	<revnumber>0.8.1</revnumber>
+	<date>2007/11/30</date>
+	<revdescription>
+	  <para>Information about supported protocols.</para>
+	</revdescription>
+      </revision>
+      <revision>
 	<revnumber>0.8</revnumber>
 	<date>2007/10/29</date>
 	<revdescription>
@@ -586,7 +593,7 @@ credentials for that user in the nuauth.conf file.
 <para>
 You may choose between to schema an IPv4 only one and an IPv4/IPv6 one.
 Recent tools like <ulink
-url="http://software.inl.fr/trac/trac.cgi/wiki/EdenWall/NuLog2">Nulog2</ulink> are able to use 
+url="http://software.inl.fr/trac/trac.cgi/wiki/EdenWall/NuLog2">Nulog2</ulink> are able to use
 the IPv6 schema. If you have old script or older tools, you better use the IPv4 only schema.
 To import the IPv4 schema into a newly created database, you can use:
 </para>
@@ -1009,6 +1016,16 @@ net ads join -U administrator
 </section>
   </chapter>
 <chapter><title>Miscellaneous</title>
+<section><title>Supported protocols</title>
+<para>The NuFW daemons can virtually support any protocol, provided a stateful inspection exists
+in Netfilter to deal with the given protocol. However, the main concern about protocol support is client-side.
+<itemizedlist>
+<listitem><para><option>TCP</option>: TCP is supported by all existing clients (Linux, MacOS X, Windows).</para></listitem>
+<listitem><para><option>UDP</option>: Requires some administrator operations, for now only the Windows client supports UDP.</para></listitem>
+<listitem><para><option>ICMP</option>: Uses raw socket. We are unsure whether this can be authenticated at all. For now, no client supports ICMP.</para></listitem>
+<listitem><para><option>other</option>: No support. Contact us if you feel some other protocol could be supported.</para></listitem>
+</itemizedlist>
+</para>
 <section><title>Big endian architectures</title>
 <para>Big endian architectures are supported since version 1.0.11. Prior
 releases do not work on big endian.</para>
