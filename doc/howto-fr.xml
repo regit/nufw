@@ -1,0 +1,1023 @@
+<?xml version="1.0" encoding="ISO-8859-15" ?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN" "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
+<book><title>NuFW Howto</title>
+  <bookinfo>
+    <author>
+      <firstname>Eric</firstname>
+      <surname>Leblond</surname>
+      <email>regit@inl.fr</email>
+
+    </author>
+    <author>
+      <firstname>Vincent</firstname>
+      <surname>Deffontaines</surname>
+      <email>gryzor at inl dot fr</email>
+    </author>
+    <author>
+      <firstname>Jean Baptiste</firstname>
+      <surname>Favre</surname>
+      <email>jean.baptiste.favre at gmail.com</email>
+      <address>
+      <contrib>Traduction française</contrib>
+      </address>
+    </author>
+    <copyright>
+
+      <year>2005-2007</year>
+      <holder>INL</holder>
+    </copyright>
+    <revhistory>
+    <revision>
+    <revnumber>0.9</revnumber>
+    <date>2007/12/10</date>
+    <revdescription>
+    	<para>Mise à jour de la traduction du howto 2.0 grâce au howto 2.2 en anglais</para>
+	<revdescription>
+	</revision>
+      <revision>
+	<revnumber>0.7.3</revnumber>
+	<date>2007/08/07</date>
+	<revdescription>
+	  <para>Ajout d'une section pour préciser quand une recompilation du noyau doit ou non être faite.</para>
+	</revdescription>
+      </revision>
+      <revision>
+	<revnumber>0.7.2</revnumber>
+	<date>2007/02/09</date>
+	<revdescription>
+	  <para>Mise à jour relative à NuFW 2.0.15.</para>
+	</revdescription>
+      </revision>
+
+      <revision>
+	<revnumber>0.7.1</revnumber>
+	<date>2007/02/07</date>
+	<revdescription>
+	  <para>Ajout des options relatives à NuFW 2.0.14.</para>
+	</revdescription>
+      </revision>
+
+      <revision>
+	<revnumber>0.6.1</revnumber>
+	<date>2006/11/14</date>
+	<revdescription>
+	  <para>Compléments d'informations sur PAM/NSS. Mises à jour de certains liens.</para>
+	</revdescription>
+      </revision>
+      <revision>
+	<revnumber>0.6</revnumber>
+	<date>2006/10/12</date>
+
+	<revdescription>
+	  <para>Ajout d'informations récentes sur le noyau.</para>
+	</revdescription>
+      </revision>
+      <revision>
+	<revnumber>0.5</revnumber>
+	<date>2006/08/01</date>
+
+	<revdescription>
+	  <para>Modification de ce HowTo pour en faire une documentation sur la version 2.0.</para>
+	</revdescription>
+      </revision>
+      <revision>
+	<revnumber>0.4.3</revnumber>
+	<date>2005/11/23</date>
+
+	<revdescription>
+	  <para>Ajout d'informations sur le paramétrage de nuauth, notamment avec PAM.
+	Diverses corrections mineures</para></revdescription>
+      </revision>
+      <revision>
+	<revnumber>0.4.2</revnumber>
+	<date>2005/11/22</date>
+	<revdescription>
+
+	  <para>Ajout d'informations sur la création des certificats et de leur signature par une AC.</para>
+	</revdescription>
+      </revision>
+      <revision>
+	<revnumber>0.4.1</revnumber>
+	<date>2005/08/01</date>
+	<revdescription>
+
+	  <para>Ajout d'informations, notamment sur les informations d'authentification et la rotation des logs</para>
+	</revdescription>
+      </revision>
+      <revision>
+	<revnumber>0.4</revnumber>
+	<date>2005/07/25</date>
+	<revdescription>
+
+	  <para>Ajout de précisions concernant RedHat et le portage pour powerpc</para>
+	</revdescription>
+      </revision>
+      <revision>
+	<revnumber>0.3</revnumber>
+	<date>2005/07/18</date>
+	<revdescription>
+
+	  <para>Relecture avec la publication de la version 1.0.10</para>
+	</revdescription>
+      </revision>
+
+      <revision>
+	<revnumber>0.2</revnumber>
+	<date>2005/03/30</date>
+	<revdescription>
+
+	  <para>Compléments</para>
+	</revdescription>
+      </revision>
+      <revision>
+	<revnumber>0.1</revnumber>
+	<date>2005/03/09</date>
+	<revdescription>
+
+	  <para>Première version</para>
+	</revdescription>
+      </revision>
+    </revhistory>
+  </bookinfo>
+  <chapter><title>Introduction</title>
+   <section><title>Présentation</title>
+
+<para>
+NuFW est un pare-feu d'entreprise qui effectue une authentification de chaque connexion qui le traverse. Ceci s'effectue de façon transparente en requérant les informations d'identification de l'utilisateur avant qu'une quelconque décision de filtrage ne soit prise. En pratique, cela signifie que les politiques de filtrage peuvent intégrer l'annuaire utilisateur, et amène cette notion d'ID utilisateur au niveau de la couche IP.
+
+NuFW repose sur Netfilter, l'état de l'art en matière de filtrage IP dans le noyau Linux. NuFW s'intègre parfaitement avec Netfilter et en étend même les fonctionnalités.
+
+Les serveurs sont actuellement disponibles pour Linux ; les clients existent pour Windows, Linux, FreeBSD et Mac OSX.
+</para>
+<para>
+NuFW peut :
+<itemizedlist>
+<listitem><para>
+Authentifier toute connection transitant par la passerelle ou simplement de/vers un sous-réseau précis ou encore un protocole précis (iptables est utilisé pour trier les connections à authentifier).</para></listitem>
+<listitem><para>Effectuer l'imputation, le routage et la qualité de service en se basant sur les utilisateurs et non plus simplement sur l'adresse IP.</para></listitem>
+<listitem><para> Filtrer le trafic en fonction du système d'exploitation et des applications utilisées par les utilisateurs distants.</para></listitem>
+<listitem><para> Constituer le coeur d'un système simple mais sécurisé d'authentification unique.</para></listitem>
+
+</itemizedlist>
+</para>
+<para>
+NuFW est composé de 2 services qui peuvent être installés sur des machines différentes. Le service principal nuauth intègre le support multithread.
+nuauth recourt à des modules pour toute interaction avec l'extérieur.
+</para>
+   </section>
+    <section><title>Pré-requis</title>
+      <para>Dans cette section, toutes les librairies utilisées doivent être installées sur le système. Les fichiers d'en-têtes doivent être situés dans des répertoires standards (afin que <command>configure</command> puisse les trouver).
+</para>
+      <section><title>Dépendances de Nuauth</title>
+
+       <section><title>Le service nuauth</title>
+	<para>
+nuauth dépend de :
+<itemizedlist>
+	    <listitem><para><filename>libglib2.0</filename> : nuauth utilise intensément cette librairie qui procure un ensemble d'objets de haut niveau particulièrement utiles. Il faut au minimum la version 2.4.</para></listitem>
+	    <listitem><para><filename>libgnutls</filename> : le chiffrement des communications entre les différents composants du système est assuré par TLS</para></listitem>
+
+	    <listitem><para><filename>libsasl2</filename> : l'authentification est effectuée par sasl</para></listitem>
+	    <listitem><para><filename>libtool</filename> : requis pour la compilation des librairies et des modules</para></listitem>
+	  </itemizedlist>
+</para>
+      </section>
+      <section><title>Journalisation par mysql</title>
+
+	<para>
+La librairie <filename>libmysqlclient</filename> est requise pour la compilation du module correspondant.
+</para>
+      </section>
+      <section><title>Journalisation par PostGreSql</title>
+	<para>
+La librairie <filename>libpq</filename> est requise pour la compilation du module correspondant.
+
+</para>
+      </section>
+
+      <section><title>Authentification et vérification des ACL via LDAP</title>
+	<para>
+<filename>libldap2</filename> est requis.
+</para>
+      </section>
+
+      </section>
+      <section><title>Dépendances de nufw</title>
+	<para>Le service nufw dépend de :
+<itemizedlist>
+	    <listitem><para><filename>libgnutls</filename> : nufw communique avec nuauth via un tunnel chiffré par TLS</para></listitem>
+
+	<listitem><para><filename>libnfnetlink</filename></para></listitem>
+	<listitem><para><filename>libnetfilter_queue</filename></para></listitem>
+	<listitem><para><filename>libnetfilter_conntrack</filename></para></listitem>
+	  </itemizedlist>
+</para>
+<para>Ces dépendances sont valables si votre système utilise un noyau de version supérieure à 2.6.14. Pour les noyaux plus anciens les dépendances sont
+
+<itemizedlist>
+	    <listitem><para><filename>iptables</filename> : <filename>libipq.a</filename> est la couche d'interaction avec le noyau pour les version de Linux plus anciennes que 2.6.14.</para></listitem>
+	    <listitem><para><filename>libgnutls</filename></para></listitem>
+	  </itemizedlist>
+      </section>
+      <section><title>Dépendances pour le marquage utilisateur sur les vieux noyaux</title>
+	<para>
+Un système avec noyau plus ancien que 2.6.14 nécessitera une version modifiée du module ip_queue et de sa librairie correspondante libipq.
+</para>
+      </section>
+      <section><title>Utiliser nfnetlink et obtenir les dernières fonctionnalités de NuFW</title>
+
+	<para>
+Depuis les noyau 2.6.14, ipq est obsolète et doit être remplacé par libnetfilter_queue qui utilise le système nfnetlink.
+Nous vous encourageons à utiliser cette dernière librairie dans la mesure où elle représente l'avenir.
+De plus, nfnetlink procure également libnetfilter_conntrack qui est utilisée par NuFW pour implémenter les ACL horaires.
+	</para>
+	<para>Pour pouvoir bénéficier de ces fonctionnalités, les librairies suivantes sont nécessaires:
+
+        Vous pouvez trouver des versions fonctionnelles de ces librairies ici : <ulink url="http://nufw.org/download/libs/index.html">http://nufw.org/download/libs/index.html</ulink>
+        Si vous utilisez GNU/Debian, les paquets adaptés sont disponibles là : <ulink url="http://packages.inl.fr/stable/">http://packages.inl.fr/stable/</ulink>
+	</para>
+	<para>
+Si vous souhaitez utiliser les ACL horaires, il est recommandé d'utiliser les versions 2.6.18 du noyau ou supérieures ou d'appliquer le correctif disponible sur le site de NuFW.
+	</para>
+      </section>
+    </section>
+
+  </chapter>
+
+  <chapter><title>Compilation et installation</title>
+    <section><title>Noyaux par défaut sur les distributions courantes</title>
+      <para>
+      Sur les distributions listées ici, il n'est PAS nécessaire de recompiler le noyau pour faire tourner NuFW<footnote><para>N'hésitez pas à nous envoyer des mises à jour pour cette liste ;)</para></footnote>:
+      <itemizedlist>
+        <listitem><para>Fedora Core 6 (kernel 2.6.18)</para></listitem>
+        <listitem><para>Debian Etch (kernel 2.6.18)</para></listitem>
+      </itemizedlist>
+      </para>
+      <para>
+      Par ailleurs, il est à noter que dans tous les cas, une recompilation du noyau n'est au pire nécessaire que sur le pare-feu lui-même (à savoir la machine qui fait tourner le démon nufw). Le démon nuauth n'a aucune dépendance noyau et peut tourner sur n'importe quel système POSIX. Quand aux clients, ils sont par essence multiplateforme et n'ont donc aucune dépendance sur le noyau.</para>
+    </section>
+    <section><title>Préparation du noyau</title>
+      <para>Vous ne devrez modifier votre noyau à l'aide de patch-o-matic que si vous décidez d'utiliser le marquage utilisateur (à partir de la version 2.6.14 du noyau, cette modification est intégrée dans le noyau vanilla). Ceci est nécessaire si vous souhaitez marquer vos flux réseau en fonction de l'ID utilisateur afin, par exemple, d'implémenter une qualité de service basée sur l'utilisateur. Cette fonctionnalité n'est pas nécessaire pour le bon fonctionnement de NuFW. Pour l'activer, installez patch-o-matic et exécutez la commande <screen>$./runme ip_queue_vwmark</screen></para>
+    </section>
+    <section><title>Pour les versions de noyaux supérieurs à 2.6.14</title>
+      <para>
+        Si la version de votre noyau est supérieure à 2.6.14 (et cela devrait être le cas!), vous devriez activer les paramètres suivatns :
+<screen>
+CONFIG_NETFILTER_XT_TARGET_NFQUEUE=Y or m
+CONFIG_NETFILTER_NETLINK=Y or m
+CONFIG_IP_NF_CONNTRACK=m (Avertissement: ne paramétrez pas cette option pour être statiquement intégrée au noyau)
+CONFIG_IP_NF_CONNTRACK_EVENTS=Y
+</screen>
+        Activer ces options vous permettra d'utiliser la cible NFQUEUE ainsi que des règles Netfilter extrêmement simples pour le suivi de connexions.
+      </para>
+    </section>
+    <section><title>Compilation de NuFW</title>
+      <para>Décompressez l'archive contenant les sources dans le répertoire de votre choix et rendez-vous dans le répertoire ainsi créé.</para>
+
+      <para>
+NuFW recourt à autoconf et automake pour la compilation. De plus, un script <command>configure</command> standard est fourni.
+Les options suivantes (entre autres), sont également disponibles :
+<itemizedlist>
+	  <listitem><para> <option>--with-mysql-log </option>   Active le support de la journalisation de l'activité utilisateur dans une base Mysql</para></listitem>
+
+	  <listitem><para> <option>--with-pgsql-log </option>    Active le support de la journalisation de l'activité utilisateur dans une base PostgreSQL</para></listitem>
+	  <listitem><para> <option>--with-system-auth </option>   Active le support de l'authentification PAM+NSS</para></listitem>
+	  <listitem><para> <option>--with-ldap </option>   Active le support des annuaires LDAP pour le stockage des informations utilisateurs et des ACL</para></listitem>
+	</itemizedlist>
+Une liste détaillée des options disponibles peut être obtenue grâce à la commande
+<screen>$./configure --help</screen>
+Vous pouvez donc exécuter <command>./configure</command> avec les options dont vous avez besoin puis commencer la compilation et l'installation:
+<screen linenumbering="numbered">$ ./configure --with-ldap --with-system-auth --with-mysql-log \\
+		--sysconfdir=/etc/nufw/
+$ make
+$ sudo make install</screen>
+
+</para>
+    </section>
+    <section><title>Configuration initiale et tests</title>
+      <section><title>Installation des certificats et du client</title>
+        <para>Il s'agit ici de copier les certificats par défaut. Vous ne devriez vraiment pas procéder de la sorte sauf en cas de tests; dans le cas contraire, vous voudrez sûrement utiliser vos propres certificats : consultez pour cela la section suivante.</para>
+	<para>Pour nufw
+<screen>cp conf/certs/nufw-*.pem /etc/nufw/</screen>
+
+		Pour nuauth :
+<screen>cp conf/certs/nuauth*.pem /etc/nufw/
+cp conf/certs/NuFW*.pem /etc/nufw/</screen>
+</para>
+      </section>
+      <section><title>Créer vos propres certificats</title>
+      <para>Générez votre propre Authorité de Certification:
+      <screen>mkdir private
+chmod 700 private
+openssl req -new -x509 -keyout private/CAkey.pem -out private/CAcert.pem</screen>
+Vous devriez utiliser ici un mot de passe particulièrement robuste, et, bien entendu, le garder secret.
+      </para>
+      <para>Générer les clefs privées pour nufw et nuauth:
+      <screen>openssl genrsa -out private/nufw-key.pem</screen>
+
+      <screen>openssl genrsa -out private/nuauth-key.pem</screen>
+      </para>
+      <para>Générer les demandes de certificats pour nufw et nuauth:
+      <screen>openssl req -new -key private/nufw-key.pem -out nufw.csr</screen>
+      <screen>openssl req -new -key private/nuauth-key.pem -out nuauth.csr</screen>
+      </para>
+      <para>Signer les demandes de certificats grâce à l'AC:
+      <screen>openssl x509 -req -days 365 -in nufw.csr -CA private/CAcert.pem \
+      -CAkey private/CAkey.pem -CAcreateserial -out nufw-cert.pem</screen>
+
+      <screen>openssl x509 -req -days 365 -in nuauth.csr -CA private/CAcert.pem \
+      -CAkey private/CAkey.pem -CAcreateserial -out nuauth-cert.pem</screen>
+      </para>
+      <para>Enfin, comme dans la section précédente, copier les fichiers comme demandé:
+      Pour nufw:
+      <screen>cp private/nufw-key.pem /etc/nufw/</screen>
+      <screen>cp nufw-cert.pem /etc/nufw/</screen>
+      Pour nuauth:
+      <screen>cp private/nuauth-key.pem /etc/nufw/</screen>
+      <screen>cp nuauth-cert.pem /etc/nufw/</screen>
+
+      Avertissement: N'oubliez pas que les fichiers contenant les clefs privées (ici, nufw-key.pem et nuauth-key.pem) doivent rester secrètes.
+      </para>
+      </section>
+<section><title>Configuration basique de nuauth</title>
+<para>NuFW fourni un exemple de fichier de configuration pour nuauth, <filename>nuauth.conf</filename>,
+qui est disponible dans le répertoire <filename>conf</filename>.
+</para>
+<para>Les deux  plus importantes directives de configuration sont :
+<option>nuauth_client_listen_addr</option> : définit l'adresse à laquelle <command>nuauth</command> va attendre les requètes des clients
+
+<option>nuauth_nufw_listen_addr</option> : définit l'adresse à laquelle <command>nuauth</command> va attendre les requètes de nufw.
+La liste des machines <command>nufw</command> autorisées à se connecter au serveur <command>nuauth</command> constitue la variable <varname>nufw_gw_addr</varname>.</para>
+<para>
+Ensuite, vous devez choisir votre module d'authentification et de vérification des ACL.
+Les modules suivants sont disponibles :
+
+<itemizedlist>
+<listitem><para>plaintext  : les informations utilisateur sont stockées dans un fichier texte</para>
+	    </listitem>
+<listitem><para>system : l'authentification s'adosse à PAM et utilise les groupes existants dans le système. Ceci procure un moyen pratique d'utiliser nss et/ou pam-modules</para>
+	    </listitem>
+
+	  </itemizedlist>
+Ceci est paramétrable via l'option <option>nuauth_user_check_module</option>
+dont la valeur par défaut est <varname>libsystem</varname> (si non défini dans le fichier de configuration).
+D'autre paramètres concernant la vérification des ACL doivent être précisés si vous choisissez l'authentification parmi :
+<itemizedlist><listitem><para>libldap</para>
+	    </listitem>
+<listitem><para>plaintext</para>
+	    </listitem>
+
+	  </itemizedlist>
+en définissant la variable <option>nuauth_acl_check_module</option>.
+</para>
+<para>Afin d'être capable de procéder rapidement aux tests, nous utiliserons le module system pour l'authentification et le module plaintext pour les ACL.
+Un fichier d'exemple, <filename>acls.nufw</filename>, pour le module ACL plaintext est disponible dans le répertoire <filename>conf</filename>.
+Copiez le dans <filename>/etc/nufw</filename> et modifiez au besoin le groupe pour l'ACL ssh afin d'utiliser le groupe d'appartenance de l'utilisateur que vous allez utiliser pour les connexions de test.</para>
+      </section>
+
+	</section>
+     <section><title>Tests</title>
+	<section><title>Paramétrage de Netfilter pour un noyau avant la version 2.6.14</title>
+	  <para>
+Nous devons ajouter les règles de filtrages de façon à déclencher une demande d'authentification pour toute connection vers ssh:
+<screen>iptables -A OUTPUT -s 192.168.75.0/24 -p tcp --dport 22 -m state --state NEW --syn -j QUEUE
+iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT</screen>
+<footnote><para>
+Seuls les paquets SYN sont envoyés vers QUEUE. Ce n'est pas assez pour effectuer une journalisation avancée des activités utilisateur, mais c'est largement suffisant pour une authentification du trafic.
+</para></footnote>
+</para>
+
+	</section>
+	<section><title>Paramétrage de Netfilter pour un noyau à partir de la version 2.6.14</title>
+	  <para>
+Nous devons ajouter les règles de filtrages de façon à déclencher une demande d'authentification pour toute connection vers ssh:
+<screen>iptables -A OUTPUT -s 192.168.75.0/24 -p tcp --dport 22 -m state --state NEW --syn -j NFQUEUE
+iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT</screen>
+<footnote><para>
+Seuls les paquets SYN sont envoyés vers NFQUEUE. C'est suffisant pour effectuer une journalisation avancée des activités utilisateur dans la mesure où les évènements liés aux connections seront automatiquement envoyés à nufw par Netfilter.
+Ceci suppose, notamment, que l'option CONFIG_IP_NF_CONNTRACK_EVENTS du noyau soit activée.
+</para></footnote>
+</para>
+	</section>
+
+	<section><title>Test du système d'authentification</title>
+	  <para>En premier lieu, il faut démarrer le service nuauth dans un terminal
+<screen>nuauth -vvvvvvvvv</screen>
+Ensuite, nous démarrons <screen>nufw -vvvvvvvvv</screen> dans un autre terminal.
+</para>
+	  <para>
+Enfin, nous pouvons essayer de connecter un utilisateur (au sens nufw du terme). Sous Linux, ceci peut être fait par la commande :
+<screen>nutcpc -d -H [NUAUTH IP]</screen>
+
+Entrez le login et le mot de passe d'un utilisateur.</para>
+<para>Dans le terminal nuauth, vous devriez voir quelques chose comme:
+<screen>user bill@nufw uses OS Linux, 3.0.10, #1 Tue Oct 19 23:51:32 CEST 2008</screen>
+Si votre configuration PAM utilise les fichiers <filename>shadow</filename>, nuauth pourra seulement authentifié l'utilisateur sous lequel il est lancé à moins d'être lancé en root.
+<footnote>
+      <para> Avertissement: ne lancez JAMAIS nutcpc avec l'adresse [NUAUTH IP] égale à 'localhost' ou '127.0.0.1',
+et ce même si nuauth est installé sur la même machine.
+En effet, dans ce cas, les paquets envoyés à nuauth par le pare-feu proviendront de la machine (avec une adresse égale à, par exemple, 192.168.0.1) alors que nuauth attend pour l'authentification une adresse égale à 127.0.0.1. De ce fait, l'authentification échouera systématiquement.
+</para>
+	    </footnote>
+</para>
+	</section>
+
+	<section><title>Premiers tests et débogage</title>
+	  <para>
+	La connection SSH va déclencher la procédure d'authentification :
+<itemizedlist>
+	      <listitem><para>nufw reçoit un paquet de Netfilter :
+    <screen>[PID] Sending request for 1</screen>
+</para>
+	      </listitem>
+	      <listitem><para>nufw ouvre une connexion TLS vers nuauth :
+
+<screen>[PID] Trying TLS connection</screen>
+</para></listitem>
+	      <listitem><para>nuauth reçoit la requète de nufw :
+    <screen>** Message: Packet :
+** Message: Connection : src=192.168.75.2 dst=192.168.75.2 proto=6
+** Message: sport=32848 dport=22</screen></para>
+	      </listitem>
+	      <listitem><para>nuauth envoie une demande d'authentification au client en fonction de l'IP source :
+    <screen>** Message: need to warn client
+** Message: sending request</screen></para>
+	      </listitem>
+	      <listitem><para>nuauth reçoit la réponse du client :
+    <screen>** Message: User :
+** Message: Connection : src=192.168.75.2 dst=192.168.75.2 proto=6
+** Message: sport=32848 dport=22
+** Message: OS : Linux 2.6.9 #1 Tue Oct 19 23:51:32 CEST 2004
+** Message: Application : /usr/bin/ssh</screen></para>
+
+	      </listitem>
+	      <listitem><para>nuauth renvoie sa réponse à nufw :
+    <screen>Sending auth answer 1 for 1 on 0x42428482 ...</screen></para>
+	      </listitem>
+	      <listitem><para>nufw renvoie le paquet dans le noyau :
+    <screen>[PID] Accepting 1</screen>
+</para>
+	      </listitem>
+	    </itemizedlist>
+
+		</para>
+	</section>
+      </section>
+  </chapter>
+
+
+  <chapter><title>Paramétrage de NuFW</title>
+    <section><title>Utilisation du module LDAP pour vérifier les ACL</title>
+      <section><title>Configuration de slapd</title>
+
+	<para>
+Le fichier <filename>acls.schema</filename> doit être placé dans le répertoire <filename class="directory">/etc/ldap/schema</filename>
+et une ligne
+<screen>include         /etc/ldap/schema/acls.schema</screen>
+ajoutée au début du fichier <filename>/etc/ldap/slapd.conf</filename>.
+Au niveau du contrôle d'accès, on peut ajouter les lignes :
+<screen>#INL access for acls
+access to  dn="ou=acls,dc=inl,dc=fr"
+       by dn="uid=nufw,ou=Users,dc=inl,dc=fr" write
+       by dn="uid=nuauth,ou=Users,dc=inl,dc=fr" read
+       by dn="cn=admin,dc=inl,dc=fr" write
+       by * none</screen>
+L'utilisateur nufw est autorisé à modifier la politique de sécurité alors que l'utilisateur nuauth n'a qu'un droit de lecture sur les ACL.
+
+</para>
+      </section>
+     <section><title>Configuration de nuauth</title>
+	<para>
+Pour activer la vérification des ACL sur un annuaire LDAP, nous devons modifier le fichier <filename>nuauth.conf</filename> comme suit :
+<screen>nuauth_acl_check_module="libldap"</screen>
+Ensuite, il faut préciser les paramètres de connection à l'annuaire :
+<screen>ldap_bind_dn="uid=nuauth,ou=Users,dc=inl,dc=fr"
+ldap_bind_password="secretpassword"
+ldap_basedn="dc=inl,dc=fr"
+ldap_acls_base_dn="ou=Acls,dc=inl,dc=fr"</screen>
+
+</para>
+      </section>
+      <section><title>Utilisation de nuface</title>
+<para>
+<ulink url="http://www.inl.fr">INL</ulink> a développé un puissant générateur de règles pour NuFW et Netfilter.
+Cet outil s'appelle Nuface. Il est disponible ici :
+<ulink url="http://software.inl.fr/trac/trac.cgi/wiki/EdenWall/NuFace">http://software.inl.fr/trac/trac.cgi/wiki/EdenWall/NuFace</ulink>
+Il permet de générer des règles pour NuFW et Netfilter, règles qui sont directement applicables depuis l'interface web.
+</para>
+      </section>
+      <section><title>Configuration de nuaclgen</title>
+
+      <para>nuaclgen est un script qui vous permet de gérer des ACL dans un annuaire LDAP.</para>
+      <para>Il est préférable d'utiliser Nuface plutôt que Nuaclgen dans la mesure où le premier simplifie grandement les opérations. Notamment,
+      lorsque vous utilisez nuaclgen, vous devez modifier manuellement les règles Netfilter alors que Nuface s'en charge pour vous.</para>
+	<para>
+Le fichier <filename>nuaclgen.conf</filename> renferme les informations de connexion à l'annuaire LDAP. Elle doivent être adaptées à votre configuration :
+<screen>$ldap_host="localhost";
+$username="uid=nufw,ou=Users,dc=inl,dc=fr";
+$password="writepasswd";
+$basedn="ou=Acls,dc=inl,dc=fr";</screen>
+<footnote><para>Comme nuaclgen.conf contient des informations sensibles, ses permissions doivent être les plus restrictives possible.</para>
+	  </footnote>
+
+</para>
+	<para>Pour autoriser les connexions SSH aux membres du groupe 513 à l'aide de l'application <filename>/usr/bin/ssh</filename>, la règle sera :
+<screen>nuaclgen -A cn=ssh,ou=Acls,dc=inl,dc=fr -p 6 --dport 22 -AppName "/usr/bin/ssh" -j ACCEPT -g 513</screen>
+</para>
+	<para>Ou pour une connexion vers un serveur web :
+<screen>
+nuaclgen -A cn=apt,ou=Acls,dc=inl,dc=fr -p 6 --dport 80 \
+  -AppName "/usr/lib/apt/methods/http" -j ACCEPT -g 1042
+</screen>
+Cette ACL autorise les connexions aux membres du groupe 1042  qui est utilisé par les administrateurs de certains de nos serveurs.
+Ainsi, les administrateurs ne sont autorisés qu'à récupérer les mise à jour depuis Internet, mais tous les autres utilisateurs se verront refuser l'accès à Internet.
+</para>
+      </section>
+
+
+    </section>
+    <section><title>Activer le suivi des connexions authentifiées avec NuFW</title>
+      <section><title>Paramétrage de nuauth</title>
+	<para>
+ Pour activer le suivi de connexion avec NuFW, il est nécessaire de paramétrer les options suivantes dans le fichier <filename>nuauth.conf</filename> :
+ <screen>nuauth_log_users_sync=1
+nuauth_log_users=9</screen>
+
+</para>
+      </section>
+<section><title>Configuration de SQL</title>
+<para>Le suivi de connexion révèle toute sa puissance lorsqu'il est associé à la journalisation SQL.
+Nous allons décrire ici le paramétrage du module MySQL.</para>
+<para>
+Vous devrez créer la base SQL à partir du fichier dump disponible dans le sous-répertoire conf/
+de l'archive. Créez un utilisateur dans MySql. Celui-ci doit disposer des droits UPDATE et
+INSERT  sur la table "conntrack_ulog". Enfin, ajoutez les informations de connexions au serveur SQL dans le fichier nuauth.conf.
+</para>
+<para>
+Lors du déploiement de NuFW en environnement de production, vous devez utiliser le script clean_conntrack.pl
+qui est disponible dans le sous-répertoire scripts/ de l'archive NuFW à partir de la version 1.0.12.
+ Pour les versions antérieures, vous pouvez récupérer le script ici : <ulink url="http://software.inl.fr/trac/trac.cgi/wiki/EdenWall/NuLog">Nulog project homepage</ulink>.
+Vous devrez créer un utilisateur SQL disposant des privilèges suivants:
+: <code>SELECT</code> et <code>DELETE</code> sur la table "conntrack_ulog",
+
+<code>INSERT</code> sur la table "ulog". Ce script doit être exécuté très régulièrement, à intervalles de quelques minutes seulement,
+ par l'intermédiaire de cron, notamment en cas de trafic important. Si vous ne faites pas cela, la table "conntrack_ulog"
+sera vite saturée de connexions "mortes" ce qui provoquera un ralentissement de NuFW.
+ La seule opération réalisée par le script est de transférer les connexions "mortes" (ie les connexions fermées ou refusées) vers la tables ulog, qui est en fait une table d'archivage. Celle-ci n'est pas utilisée en production, ni par NuFW, ni par les modules SSO.
+</para>
+<para>
+Vous pouvez également envisager d'archiver régulièrement la table "ulog", afin d'éviter qu'elle ne grossisse indéfiniment.
+ A partir de la version 1.0.12, les scripts nécessaires sont disponibles dans le sous-répertoire scripts/ de
+l'archive. Pour les versions antérieures, pour pouvez récupérer les 2 scripts concernés là :
+<ulink url="http://software.inl.fr/trac/trac.cgi/wiki/EdenWall/NuLog">Nulog project homepage</ulink>
+Recherchez les scripts ulog_rotate_*.sh.
+Actuellement, vous devez exécuter ces scripts en tant que root via cron.
+ Bien évidemment, une meilleure solution serait de créer un utilisateur particulier pour exécuter ces scripts, en lui donnant les droits appropriés.
+ Merci de fournir une mise à jour à cette documentation si vous l'implémentez avant nous.
+</para>
+      </section>
+      <section><title>Configuration de Netfilter</title>
+      <section><title>Paramètres pour les noyaux post 2.6.14</title>
+
+      <para>
+Cette opération est nettement simplifiée par rapport aux noyaux antérieurs.
+Pour activer le suivi des connexions authentifiées,
+vous n'avez qu'à ajouter l'option <option>-C</option> à la commande de démarrage de nufw.
+Cette option indiquera à nufw de communiquer à nuauth tous les évènements Netfilter ESTABLISHED et DESTROY en provenance du système de suivi de connexions de Netfilter.
+</para>
+<para>
+L'option ci-dessus risque de générer un nombre conséquent d'évènements que devra gérer nuauth.
+Afin d'éviter un déni de service dû à la saturation de nuauth, nufw offre la possibilité de sélectionner les évènements à envoyer.
+Cette fonctionnalité utilise les capacités de Netfilter en matière de marquage des connections, matérialisées par la cible CONNMARK.
+Cette cible permet de marquer automatiquement tous les paquets ESTABLISHED.
+Ce mode de fonctionnement est activé par l'option <option>-M</option> de nufw.
+Du côté de Netfilter, les règles suivantes devront être ajoutées:
+<screen>iptables -A PREROUTING -t mangle -j CONNMARK --restore-mark
+iptables -A POSTROUTING -t mangle -m mark ! --mark 0 -j CONNMARK --save-mark
+</screen>
+</para>
+<para>
+En résumé, vous devriez toujours utiliser l'option <option>-C</option> si vous utilisez libnetfilter_conntrack (qui est disponible dans le noyau linux depuis la version 2.6.14), et l'option <option>-M</option> si vous envisagez d'utiliser le marquage des connections par l'identifiant utilisateur (vueillz noter que vous devrez alors appliquer le patch suivant <ulink url="http://nufw.org/download/patches/transmit_mark.patch">transmit_mark patch</ulink> à votre noyau. Cette dernière option fonctionnera beaucoup mieux avec un noyau 2.6.16 et supérieur.
+      </para>
+
+      </section>
+      <section><title>Paramètres pour les noyaux antérieurs au 2.6.14</title>
+	<para>
+NuFW mémorise les états des connexions TCP suivants :
+    <itemizedlist><listitem><para>opening : drapeau SYN envoyé</para></listitem>
+	    <listitem><para>established : drapeaux SYN et ACK envoyés</para></listitem>
+	    <listitem><para>closed : drapeaux FIN ou FIN,ACK envoyés</para></listitem>
+	  </itemizedlist>
+
+Pour détecter ces paquets, nous devons utiliser les options <option>--syn</option> et <option>--tcp-flags</option> de Netfilter.
+Voyons un exemple : notre serveur HTTP est protégé par un pare-feu NuFW. Ils sont positionnés dans le sous-réseau $DMZ.
+Les règles ci-après permettent de réaliser un suivi des connexions utilisateurs pour les connexions sortantes.
+<screen>iptables -A FORWARD -p tcp -m state --state ESTABLISHED --tcp-flags ACK,FIN NONE -j ACCEPT
+iptables -A FORWARD -d $DMZ -p tcp -m state --state ESTABLISHED --dport 80 --tcp-flags SYN,RST,ACK RST -j QUEUE
+iptables -A FORWARD -d $DMZ -p tcp -m state --state ESTABLISHED --dport 80 --tcp-flags FIN FIN -j QUEUE
+iptables -A FORWARD -s $DMZ -p tcp -m state --state ESTABLISHED --sport 80 --tcp-flags SYN,ACK SYN,ACK -j QUEUE
+iptables -A FORWARD -p tcp -m state --state ESTABLISHED -j ACCEPT
+iptables -A FORWARD -d $DMZ -p tcp --syn --dport 80 -m state --state NEW -j QUEUE</screen>
+La première règle accélère le fonctionnement de Netfilter en détectant la plus grande partie du trafic ESTABLISHED en l'acceptant. La dernière règle comportant l'option --state ESTABLISHED constitue la règle standard pour les connexions établies. Il est indispensable de l'ajouter après les règles de filtrage propres à NuFW.
+</para>
+</section>
+      <section><title>Paramétrage pour les noyaux supérieurs à 2.6.14</title>
+        <para>
+
+        Aucune régle compliquée n'est nécessaire, le noyau enverra
+        automatiquement les nouveaux événements à NuFW. C'est pour cette
+        raison que nous recommandons un noyau supérieur à 2.6.14.
+        </para>
+      </section>
+      </section>
+<section><title>Utiliser le suivi de connexions</title>
+<para>
+<command>nutop</command> est un script perl fourni avec les sources de nufw. Il permet d'afficher en temps réel les connexions authentifiées actives de façon similaire à la commande top.
+</para>
+<para>Le plus simple<footnote><para>au moment d'écrire cette documentation en tout cas</para></footnote> afin
+
+ d'exploiter la journalisation effectuée par le système de suivi de connexion est d'installer
+<command>nulog</command> (autrefois nommé ulog-php) qui fourni une interface web conviviale.
+<command>nulog</command> est disponible sous license GPL ici :
+<ulink url="http://software.inl.fr/trac/trac.cgi/wiki/EdenWall/NuLog">http://software.inl.fr/trac/trac.cgi/wiki/EdenWall/NuLog</ulink>
+</para>
+	</section>
+    </section>
+<section><title>Paramétrage de l'authentification unique (Single Sign On)</title>
+
+<section><title>Apache</title>
+<para>Tout ce dont vous avez besoin est de créer un utilisateur SQL disposant des droits SELECT sur la table "conntrack_ulog".
+Puis, paramétrez le module Apache mod_auth_nufw afin qu'il utilise les informations utilisateurs/base de données et table.
+ Le code source du module pour Apache peut être récupéré là : <ulink url="http://software.inl.fr/trac/trac.cgi/wiki/EdenWall/mod_auth_nufw">NuFW Apache SSO page</ulink></para>
+	</section>
+<section><title>Squid</title>
+<para>De la même façon, il faut ajouter un utilisateur SQL disposant du droit SELECT sur la table "conntrack_ulog".
+Puis, paramétrez squid_nufw_helper pour qu'il utilise ces informations.
+ Le code source correspondant est disponible ici :
+<ulink url="http://software.inl.fr/trac/trac.cgi/wiki/EdenWall/squid_nufw_helper">NuFW Squid SSO page</ulink></para>
+	</section>
+      </section>
+	<section><title>Authentification à l'aide de certificats</title>
+
+<para>Il est possible d'employer des certificats clients : si un utilisateur en fourni un
+lors de l'établissement de la connexion TLS, nuauth va vérifier si le DN correspond à un utilisateur connu du système. Si c'est le cas, l'utilisateur est réputé authentifié et aucun mot de passe n'est demandé.
+Pour activer cette fonctionnalité, vous devez definir l'option
+<option>nuauth_tls_auth_by_cert</option> à 1.
+Dans ce cas de figure, <option>nuauth_tls_request_cert</option> doit être positionné à 1 ou 2.
+
+</para>
+	</section>
+<section><title>Qualité de service par utilisateur</title>
+<section><title>Paramétrage des noyaux ne disposant pas de libnetfilter_queue</title>
+<para>
+Les noyaux officiels sont incapables d'utiliser le marquage de paquets conjointement avec ip_queue.
+Il est donc nécessaire de modifier le noyau (version antérieures à 2.6.14), ce qui est possible grâce
+au correctif <filename>ip_queue_vwmark</filename> intégré dans patch-o-matic-ng
+ de Netfilter. Cette opération va à la fois fournir une version modifiée du module
+ip_queue et du fichier libipq.a.
+
+</para>
+<para>
+Une fois libipq.a installé, vous pouvez alors compiler nufw :
+<screen>./configure --with-user-mark ${EXTRA_OPTIONS_YOU_LIKE}
+make
+make install</screen>
+</para>
+</section>
+<section><title>Paramétrage de nufw</title>
+<para>
+nufw peut alors être exécuter avec l'option <option>-m</option> pour activer le support du marquage utilisateur.
+Cette option est compatible avec l'option <option>-M</option> vue au-dessus.
+
+</para>
+    </section>
+<section><title>Paramétrage de Netfilter</title>
+<para>
+Dans la mesure où NuFW n'utilise que les premiers paquets de chaque connexion, il ne peut effectuer le marquage des autres.
+Il est donc nécessaire d'utiliser la cible
+<application>CONNMARK<footnote><para>CONNMARK est disponible dans patch-o-matic
+version antérieure à 2.6.11, et est inclu dans le noyau depuis la version 2.6.12</para></footnote></application>.
+Cette cible mémorise et rétabli automatiquement le marquage sur tous les paquets concernés d'une connexion.
+Exemple de paramétrage simple :
+<screen>iptables -A PREROUTING -t mangle -j CONNMARK --restore-mark
+iptables -A POSTROUTING -t mangle -j CONNMARK --save-mark</screen>
+La première règle récupère le marquage existant à l'arrivée d'un paquet et la seconde sauvegarde le marquage appliqué afin de pouvoir le restaurer plus tard.
+</para>
+      </section>
+      <section><title>Utiliser les modules de marquage</title>
+      <para>
+La variable de <filename>nuauth.conf</filename> <option>nuauth_finalize_packet_module</option> liste les modules qui s'attache à
+un hook appelé juste avant l'envoi de la réponse relative à un paquet de nufw.
+Cela est généralement utilisé pour marquer le paquet suivant la stratégie désirée.
+En découpant la marque (de 32 bits) en plusieurs champs de bits, il est possible
+de définir une politique de marquage complexe qui peut ensuite être utilisée
+</para>
+      <para>
+Une documentation complète est disponible dans le fichier suivant <ulink url="http://software.inl.fr/trac/trac.cgi/browser/mirror/edenwall/nufw/trunk/nufw/doc/README.mark">README.mark</ulink>
+      </para>
+      </section>
+
+<section><title>Utiliser le marquage par NuFW</title>
+
+<para>Le marquage Netfilter peut être utilisé pour la qualité de service et le routage.</para>
+<para>
+Il devient donc possible de préciser des routes spécifiques à tel ou tel utilisateur grâce, par exemple, à la commande :
+<screen>ip rule add fwmark XXX lookup TABLE</screen>
+</para>
+<para>Il en va de même pour les opération de QoS: en utilisant la commande <command>tc filter</command> on peut alors
+répartir le trafic dans des classes spécifiques en fonction de l'identifiant utilisateur :
+<screen>tc filter add dev IFACE prio 5 protocol ip handle 102 fw flowid FLOWID</screen>
+</para>
+<para>Pour plus d'information sur le routage avancé et la qualité de service, on se référera utilement au guide
+<ulink url="http://www.lartc.org">lartc</ulink>.
+
+</para>
+      </section>
+    </section>
+    <section><title>Chaîner les modules dans nuauth</title>
+    <section><title>Syntaxe</title>
+    <para>
+Chaque option définissant l'utilisation d'un module doit être de la forme d'une liste de modules, séparés d'un espace</para>
+<para>Pour chaque module, la syntaxe doit être de la forme :
+<option>name[:type[:config file]]</option>
+
+Exemples :
+<itemizedlist>
+<listitem><para><option>name</option>: charge le module "name" dont les directives de configuration se trouvent dans le fichier nuauth.conf</para></listitem>
+<listitem><para><option>name:type</option>: charge le module "type" dont les directives de configuration se trouvent dans le fichier CONFIG_DIR/modules/name.conf</para></listitem>
+<listitem><para><option>name:type:conf</option>: charge le module "type" dont les directives de configuration se trouvent dans le fichier "conf"</para></listitem>
+</itemizedlist>
+    </para>
+    </section>
+    <section><title>Quelques exemples</title>
+
+    <para>
+ Analysons les exemples suivants :
+<computeroutput>nuauth_user_logs_module="syslog dblocal:mysql maindb:mysql:/etc/nufw/mainmysql.conf"</computeroutput>
+Les paquets seront journalisés plusieurs fois :
+<orderedlist>
+<listitem><para>Par syslog</para></listitem>
+<listitem><para>Dans une base MySql en utilisant le fichier de configuration /etc/nufw/modules/dblocal.conf</para></listitem>
+<listitem><para>Dans une autre base MySql en utilisant le fichier de configuration /etc/nufw/mainmysql.conf</para></listitem>
+</orderedlist>
+    </para>
+
+    </section>
+    </section>
+
+<section><title>Sécuriser l'installation de NuFW</title>
+<section><title>Vérification des certificats par nufw</title>
+<para>Il est particulièrement recommandé de placer nuauth dans un endroit protégé afin
+de garantir la sécurité des communications entre nufw et nuauth<footnote><para>Même si tous les paquets sont chiffrés par TLS</para></footnote>.
+Dans la mesure où la décision du pare-feu dépend de la réponse de nuauth, il est important de pouvoir valider l'identité du serveur nuauth.
+ Pour cela, nous pouvons demander à <varname>nufw</varname> de vérifier le certificat présenté par <varname>nuauth</varname>
+
+ lors de l'établissement du tunnel TLS.
+Ceci peut être mis en place grâce à l'option <option>-a</option> suivie du nom du fichier contenant le certificat d'autorité racine.
+Cette option est ajoutée à la ligne de commande démarrant <varname>nufw</varname>. Ce faisant, <varname>nufw</varname>
+vérifiera la validité du certificat présenté par <varname>nauth</varname>.</para>
+      </section>
+<section><title>Côté client</title>
+
+<para>
+Du côté du client, le système doit être intègre pour que les informations conernant les applications et le système d'exploitation soient pertinentes.
+Vous devez toujours garder à l'esprit que seul l'agent installé côté client est capable d'obtenir ces renseignements.
+En cas d'attaque, il est évident que ces informations PEUVENT et SERONT faussées par l'installation d'un agent NuFW modifié.
+</para>
+<para>
+Vous devez impérativement tenir compte de cet avertissement et ne surtout pas oublier que cette fonctionnalité permet de sécuriser
+des flux qui auraient dû être ouvert sans vérification sur un système basique<footnote><para>Merci d'éviter le syndrome ABS :
+<quote>Nous avons plus de sécurité, nous pouvons prendre plus de risques et freiner plus tard</quote></para></footnote>.
+ </para>
+<para>La pertinence du filtrage d'application et/ou de système d'exploitation dépend de la confiance que vous placez
+dans le système qui réalisera l'authentification. Elle est "relativement bonne" sur un système sécurisé sur lequel les
+utilisateurs ne peuvent installer de logiciels.</para></section>
+</section>
+<section><title>Configuration de l'authentification sur Nuauth</title>
+ <section><title>Authentification PAM</title>
+
+  <para>PAM permet simplement d'étendre les méthodes d'authentification à des annuaires "exotiques".
+ Par exemple, PAM vous permet d'interfacer nuauth avec un domaine NT, Active Directory, Radius, etc.
+  </para>
+  <para>Pour réaliser l'authentification utilisasteur en s'appuyant sur PAM, vous devez paramétrer nuauth.conf (pour la 1.0):
+  <screen>nuauth_user_check_module="system"</screen>
+  </para>
+  <para>
+  En complément, il faut configurer correctement PAM. Ce point ne fait pas directement partie des objectifs de ce document.
+ Voici quelques exemples de fichiers de configuration PAM basé sur la distribution GNU/Debian afin de permettre à nuauth d'utiliser
+ l'authentification PAM :
+  /etc/pam.d/nuauth :
+  <screen>#This is to set PAM-LDAP, modify to suit your needs!
+  auth    required      /lib/security/pam_env.so
+  auth    sufficient    /lib/security/pam_ldap.so
+  auth    required      /lib/security/pam_deny.so
+
+  account required      /lib/security/pam_ldap.so
+
+  session required      /lib/security/pam_limits.so
+  session optional      /lib/security/pam_ldap.so</screen>
+  Le fichier <filename>/etc/nsswitch.conf</filename> doit également être adapté :
+  <screen>#This is to set PAM-LDAP, modify to suit your needs!
+  passwd:         compat ldap
+  group:          compat ldap
+  </screen>
+
+  (ne modifiez pas les autres lignes).
+  Vous souhaiterez également adapter la configuration du fichier /etc/pam_ldap.conf. Ce fichier fonctionne correctement chez nous :
+  <screen>
+  host 127.0.0.1
+  ldap_version 3
+  scope one
+  pam_password crypt
+  nss_base_passwd         ou=Users,dc=nufw,dc=org?one
+  nss_base_group          ou=Group,dc=nufw,dc=org?one
+  </screen>
+  Vous devrez également installer et configurer libnss-ldap.
+  La configuration suivante fonctionne pour nous (toujours sous Debian) :
+  <screen>
+  host 127.0.0.1
+  base replace_with_your_base
+  ldap_version 3
+  rootbinddn cn=admin,dc=replace_with_your_base
+  #Optional, set if you need these :
+  nss_base_passwd ou=users,dc=replace_with_your_base?one
+  nss_base_group ou=groups,dc=replace_with_your_base?one
+  </screen>
+  Bien entendu, vous devez adapter ce qui précède à vos besoins propres. Souvenez-vous que ces directives ne sont peut-être pas adaptées à d'autres distribution que GNU/Debian!
+  </para>
+ </section>
+ <section><title>Authentification sur PAM/Winbind</title>
+  <para>Sur Debian/Ubuntu, vous aurez besoin des paquets suivants :
+   <screen>
+    krb5-user
+    krb4-config
+    samba
+    winbind
+   </screen>
+  </para>
+  <para>le fichier <filename>/etc/krb5.conf</filename> doit contenir quelque chose du genre :
+   <screen>
+[libdefaults]
+        default_realm = DOMAIN.NAME
+# The following krb5.conf variables are only for MIT Kerberos.
+        krb4_config = /etc/krb.conf
+        krb4_realms = /etc/krb.realms
+        kdc_timesync = 1
+        ccache_type = 4
+        forwardable = true
+        proxiable = true
+
+[realms]
+        DOMAIN.NAME = {
+                kdc = 10.0.122.5
+                admin_server = 10.0.122.5
+                default_domain = DOMAIN.NAME
+        }
+
+[domain_realm]
+        .domain.name = DOMAIN.NAME
+        domain.name = DOMAIN.NAME
+        shortname = DOMAIN.NAME
+        .shortname = DOMAIN.NAME
+   </screen>
+  </para>
+  <para>
+   Le fichier <filename>/etc/nsswitch</filename> doit ressembler à :
+   <screen>
+passwd:         compat winbind
+group:          compat winbind
+shadow:         compat
+
+hosts:          files dns mdns
+networks:       files
+
+protocols:      db files
+services:       db files
+ethers:         db files
+rpc:            db files
+
+netgroup:       nis
+   </screen>
+  </para>
+  <para>Il est très important de synchroniser l'heure du système avec les serveurs Active Directory.
+On peut utiliser ntp pour se faire.</para>
+  <para>
+  Le fichier <filename>/etc/samba/smb.conf</filename> doit aussi être modifié:
+   <screen>
+[global]
+# Change this to the workgroup/NT-domain name your Samba server will part of
+   realm = DOMAIN.NAME
+   password server = AD-SERVER
+   netbios name = NUAUTH-SERVER
+   workgroup = SHORTNAME
+
+# server string is the equivalent of the NT Description field
+   server string = %h server sexa-prn1 (Samba, Ubuntu)
+
+####### Authentication #######
+
+   security = ads
+   encrypt passwords = true
+   guest account = nobody
+
+############ Misc ############
+
+   socket options = TCP_NODELAY
+   domain master = no
+
+# Some defaults for winbind (make sure you're not using the ranges
+# for something else.)
+   idmap uid = 10000-20000
+   idmap gid = 10000-20000
+   template shell = /bin/bash
+
+   template homedir = /home/%D/%U
+   client use spnego = yes
+   client ntlmv2 auth = yes
+   restrict anonymous = 2
+   </screen>
+  </para>
+  <para>Pour joindre le Domaine Windows, on peut utiliser:
+  <screen>
+kinit administrator@DOMAIN.NAME
+
+net ads join -U administrator
+</screen>
+  La dernière commande devrait afficher le nom court du domaine
+  et indiquer que l'inscription s'est bien passée.
+  </para>
+  <para>Winbind (ou winbindd) devrait tourner sur votre système.
+  On peut vérifier le bon fonctionnement dans les journaux samba (probablement dans <filename>/var/log/samba/*</filename>).</para>
+ </section>
+
+ <section><title>Authentification LDAP</title>
+  <para>C'est relativement limpide à réaliser : le gros du travail doit être effectué dans le fichier
+  nuauth.conf (les différentes options sont documentées dans le fichier lui-même).
+  Souvenez-vous qu'utiliser une authentification directe sur un LDAP vous obligera à utiliser un schéma LDAP spécifique à NuFW
+  ce qui pourrait se révéler bloquant pour vous.
+  Dans ce cas, envisagez sérieusement l'utilisation de PAM comme décrit ci-dessus.
+  </para>
+
+ </section>
+</section>
+  </chapter>
+<chapter><title>Divers</title>
+<section><title>Architectures "Big endian"</title>
+<para>Ce type d'architecture est supporté depuis la version 1.0.11. Les versions antérieures ne fonctionnent pas.</para>
+</section>
+<section><title>Système utilisant glibc 2.3.2</title>
+<para>
+Glibc 2.3.2 est boguée et il faut positionner
+<option>system_glibc_cant_guess_maxgroups</option>
+au nombre maximum de groupes pour un utilisateur.
+</para>
+</section>
+<section><title>Spécificités Debian</title>
+<para>NuFW est inclu dans la distribution Debian. Les paquets sont aussi stables que possible
+mais n'hésitez pas à sauvegarder votre configuration avant une mise à jour. Dans le même ordre d'idée, tout retour d'expérience est le bienvenu.
+Depuis la version 1.0.16, les paquets Debian sont considérés comme particulièrement stables.
+</para>
+      </section>
+
+<section><title>Spécificités Mandrake/Mandriva</title>
+<para>NuFW est inclu dans Mandriva Corporate Server 4.</para>
+      </section>
+<section><title>Spécificités Suse</title>
+<para>La version 9 de Suse semble utiliser une très ancienne version de Glib, qui n'est pas compatible avec
+NuFW. Il semble que cela soit le cas pour toutes les version de Suse jusqu'à la 9.</para>
+      </section>
+<section><title>Spécificités Redhat</title>
+<section><title>RedHat Enterprise Linux 4</title>
+<para>RHEL4 étant fournie avec la version 2.6.9 du noyau, ce système est sujet au problème lié à ip_queue
+comme mentionné ci-après. Le problème s'est systématiquement posé avec ce noyau (en tout cas sur les machines multi-processeurs).</para>
+
+</section>
+      </section>
+<section><title>Problèmes connus</title>
+<section><title>Problème avec ip_queue sur les noyaux antérieurs au 2.6.12</title>
+<para>
+Il existe un bug ip_queue dans les moyaux antérieurs au 2.6.12. Il provoque un crash du système lorsque qu'une décision ACCEPT
+est prise dans la chaîne INPUT. N'utilisez donc pas la cible QUEUE dans la chaîne INPUT avec ces noyaux ou vous risquez de geler votre machine.
+Dans tous les cas de figure vous devriez vraiment utiliser un noyau plus récent et la cible NFQUEUE, comme expliqué plus haut dans ce document.
+</para>
+</section>
+      </section>
+  </chapter>
+
+  <glossary>
+
+    <glossentry><glossterm>nufw</glossterm>
+      <indexterm><primary>nufw</primary></indexterm>
+      <glossdef>
+	<para>nufw est le service qui tourne sur le pare-feu. Il reçoit les paquets du noyau, les envoie au service d'authentification et récupère la réponse.</para>
+      </glossdef>
+    </glossentry>
+    <glossentry><glossterm>nuauth</glossterm>
+
+      <indexterm><primary>nuauth</primary></indexterm>
+      <glossdef>
+	<para>nuauth est le service d'authentification qui reçoit les paquets en provenance de nufw et du client, prend une décision concernant la connexion et la renvoie à nufw.</para>
+      </glossdef>
+    </glossentry>
+  </glossary>
+</book>

@@ -19,6 +19,15 @@
     </copyright>
     <revhistory>
       <revision>
+	<revnumber>0.9</revnumber>
+	<date>2007/12/10</date>
+	<revdescription>
+	  <para>Suppress reference to gdbm and ident.</para>
+	  <para>Suppress some remaining old docs.</para>
+	</revdescription>
+      </revision>
+
+      <revision>
 	<revnumber>0.8.1</revnumber>
 	<date>2007/11/30</date>
 	<revdescription>
@@ -200,17 +209,6 @@ of this module.
 <filename>libldap2</filename> is needed.
 </para>
       </section>
-
-      <section><title>gdbm user authentication</title>
-	<para>
-<filename>libgdbm3</filename>
-</para>
-      </section>
-      <section><title>ident fallback authentication</title>
-	<para>
-<filename>libident</filename>
-</para>
-      </section>
       </section>
       <section><title>nufw dependencies</title>
 	<para>The nufw daemon only depends on :
@@ -220,9 +218,9 @@ of this module.
 	  </itemizedlist>
 </para>
       </section>
-      <section><title>User marking requirement</title>
+      <section><title>User marking requirement on old kernel</title>
 	<para>
-The system needs a patched version of the ip_queue module and of
+A system with a kernel prior to 2.6.14 needs a patched version of the ip_queue module and of
 its "sibling" library libipq.
 </para>
       </section>
@@ -286,12 +284,10 @@ NuFW uses autoconf and automake for compilation and a standard <command>configur
 is provided.
 Above standard options, the following flags (among other) are provided :
 <itemizedlist>
-	  <listitem><para><option>--with-nfqueue</option>  Support for libnetfilter_queue on NuFW firewall (you need a kernel superior as 2.6.14)</para></listitem>
 	  <listitem><para> <option>--with-mysql-log </option>   Support user activity logging in Mysql database</para></listitem>
 	  <listitem><para> <option>--with-pgsql-log </option>   Support user activity logging in PostgreSQL database</para></listitem>
 	  <listitem><para> <option>--with-system-auth </option>   Support PAM+NSS authentication</para></listitem>
 	  <listitem><para> <option>--with-ldap </option>   Support LDAP directory for users and acl lookups</para></listitem>
-	  <listitem><para> <option>--enable-debug </option>  Add development debug message</para></listitem>
 	</itemizedlist>
 A detailed list of the options is available via
 <screen>$./configure --help</screen>
@@ -300,7 +296,6 @@ Thus you can run <command>./configure</command> with the options you want and la
 		--sysconfdir=/etc/nufw/
 $ make
 $ sudo make install</screen>
-We use debug flags as we want to have all messages for testing the whole setup.
 </para>
     </section>
     <section><title>Initial setup and tests</title>
@@ -360,10 +355,6 @@ The next thing to do after setting this variable is to choose
 your authentication and acl checking module.
 Authentication modules for user have to be chosen in :
 <itemizedlist>
-<listitem><para>libldap : user credentials are stored on a LDAP server</para>
-	    </listitem>
-<listitem><para>dbm : user credentials are stored in a gdbm</para>
-	    </listitem>
 <listitem><para>plaintext  : user credentials are stored in a text file</para>
 	    </listitem>
 <listitem><para>system : authentication is done against PAM and groups are system groups. This provides
@@ -428,8 +419,9 @@ enter name and password of a system user.</para>
 <para>At nuauth level, we should see something like :
 <screen>user bill@nufw uses OS Linux, 3.0.10, #1 Tue Oct 19 23:51:32 CEST 2008</screen>
 
+If your PAM setup is based on shadow file, you will not be able to authenticate a user different from the one running nuauth. On this kind of setup, nuauth needs to be run as root to authenticate other users.
 <footnote>
-      <para> never launch nutcpc against 'localhost' or '127.0.0.1',
+      <para> Never launch nutcpc against 'localhost' or '127.0.0.1',
 even if nuauth is on the same computer.
 Packets sent to nuauth by the firewall will hardly have the address of the loopback but rather have a
 source address which is one of the network interface.
@@ -443,7 +435,7 @@ source address which is one of the network interface.
 	A ssh connection from the computer to start the authentication process :
 <itemizedlist>
 	      <listitem><para>nufw gets a packet from  Netfilter :
-    <screen>[PID] Sending request for 3352783904</screen>
+    <screen>[PID] Sending request for 1</screen>
 </para>
 	      </listitem>
 	      <listitem><para>nufw initiates a TLS connection  to nuauth :
@@ -467,10 +459,10 @@ on IP source :
 ** Message: Application : /usr/bin/ssh</screen></para>
 	      </listitem>
 	      <listitem><para>nuauth sends back response to nufw :
-    <screen>Sending auth answer 1 for 3352783904 on 0x42428482 ...</screen></para>
+    <screen>Sending auth answer 1 for 1 on 0x42428482 ...</screen></para>
 	      </listitem>
 	      <listitem><para>nufw pushes the packet back in the kernel :
-    <screen>[PID] Accepting 3352783904</screen>
+    <screen>[PID] Accepting 1</screen>
 </para>
 	      </listitem>
 	    </itemizedlist>
@@ -578,7 +570,7 @@ the web.
 	<para>
  To achieve NuFW connection tracking it is necessary to have these options in <filename>nuauth.conf</filename> :
  <screen>nuauth_log_users_sync=1
-nuauth_log_users=8</screen>
+nuauth_log_users=9</screen>
 </para>
       </section>
 <section><title>SQL configuration</title>
