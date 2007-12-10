@@ -32,7 +32,7 @@
     <date>2007/12/10</date>
     <revdescription>
     	<para>Mise à jour de la traduction du howto 2.0 grâce au howto 2.2 en anglais</para>
-	<revdescription>
+	</revdescription>
 	</revision>
       <revision>
 	<revnumber>0.7.3</revnumber>
@@ -218,6 +218,7 @@ La librairie <filename>libpq</filename> est requise pour la compilation du modul
 	    <listitem><para><filename>iptables</filename> : <filename>libipq.a</filename> est la couche d'interaction avec le noyau pour les version de Linux plus anciennes que 2.6.14.</para></listitem>
 	    <listitem><para><filename>libgnutls</filename></para></listitem>
 	  </itemizedlist>
+	  </para>
       </section>
       <section><title>Dépendances pour le marquage utilisateur sur les vieux noyaux</title>
 	<para>

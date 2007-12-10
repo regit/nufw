@@ -1018,6 +1018,7 @@ in Netfilter to deal with the given protocol. However, the main concern about pr
 <listitem><para><option>other</option>: No support. Contact us if you feel some other protocol could be supported.</para></listitem>
 </itemizedlist>
 </para>
+</section>
 <section><title>Big endian architectures</title>
 <para>Big endian architectures are supported since version 1.0.11. Prior
 releases do not work on big endian.</para>
