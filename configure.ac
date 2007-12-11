@@ -55,22 +55,39 @@ AC_CHECK_FUNCS([gethostbyname memset socket strcasecmp strspn])
 #AM_CHECK_PATH(libgnutls], [gnutls_init],AC_DEFINE([HAVE_LIBRARY_GNUTLS],[1],[Gnutls lib flag]), check_gnutls=no)
 
 
-NEED_LIBGCRYPT_VERSION=1.2.0
-AM_PATH_LIBGCRYPT("$NEED_LIBGCRYPT_VERSION")
-if test "x$LIBGCRYPT_LIBS" = "x"; then
-  AC_MSG_ERROR([libgcrypt is needed.
-                See ftp://ftp.gnupg.org/gcrypt/ .])
-else
-  CFLAGS="$CFLAGS $LIBGCRYPT_CFLAGS"
-  LDFLAGS="$LDFLAGS $LIBGCRYPT_LIBS"
+dnl 
+dnl <SSL> 
+dnl
+
+dnl We can force the use of OpenSSL
+AC_ARG_WITH(openssl,   [AC_HELP_STRING(--with-openssl, Build with openssl support.)],build_openssl=$enableval, build_openssl="no" )
+
+if test $build_openssl = yes; then
+   PKG_PROG_PKG_CONFIG
+   PKG_CHECK_MODULES(OPENSSL, openssl)
 fi
 
-NEED_LIBGNUTLS_VERSION=1.0.16
-AM_PATH_LIBGNUTLS("$NEED_LIBGNUTLS_VERSION")
-if test "x$LIBGNUTLS_LIBS" = "x"; then
-  AC_MSG_ERROR([libgnutls is needed.
-                See www.gnu.org/software/gnutls/ .])
+if test $build_openssl = no; then
+   NEED_LIBGCRYPT_VERSION=1.2.0
+   AM_PATH_LIBGCRYPT("$NEED_LIBGCRYPT_VERSION")
+   if test "x$LIBGCRYPT_LIBS" = "x"; then
+     AC_MSG_ERROR([libgcrypt is needed.
+                     See ftp://ftp.gnupg.org/gcrypt/ .])
+   else
+     CFLAGS="$CFLAGS $LIBGCRYPT_CFLAGS"
+     LDFLAGS="$LDFLAGS $LIBGCRYPT_LIBS"
+   fi
+
+   NEED_LIBGNUTLS_VERSION=1.0.16
+   AM_PATH_LIBGNUTLS("$NEED_LIBGNUTLS_VERSION")
+   if test "x$LIBGNUTLS_LIBS" = "x"; then
+     AC_MSG_ERROR([libgnutls is needed.
+                   See www.gnu.org/software/gnutls/ .])
+   fi
 fi
+dnl 
+dnl </SSL> 
+dnl
 
 #Configure database support, depending on user input
 AC_ARG_WITH(prelude-log,
