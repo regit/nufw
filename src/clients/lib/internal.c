@@ -73,7 +73,8 @@ static int samp_send(gnutls_session session, const char *buffer,
 	unsigned len, alloclen;
 	int result;
 
-	alloclen = ((length / 3) + 1) * 4 + 4;
+	/* prefix ("C: ") + base64 length + 1 nul byte */
+	alloclen = 3 + ((length+2)/3)*4 + 1;
 	buf = malloc(alloclen);
 	if (buf == NULL) {
 		SET_ERROR(err, INTERNAL_ERROR, MEMORY_ERR);
@@ -203,7 +204,7 @@ int mysasl_negotiate(nuauth_session_t * user_session, sasl_conn_t * conn,
 			}
 		}
 	}
-	
+
 	len = samp_recv(session, buf, 42, err);
 	if (buf[0] != 'Y') {
 		result = SASL_BADAUTH;
