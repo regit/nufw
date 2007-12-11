@@ -109,7 +109,7 @@ AC_ARG_ENABLE(pam-nufw,   [AC_HELP_STRING(--enable-pam-nufw, Build pam_nufw (def
 AC_ARG_ENABLE(nuauth-command,   [AC_HELP_STRING(--disable-nuauth-command, Don't build nuauth_command (default is to build))],build_nuauth_command=$enableval, build_nuauth_command="yes" )
 
 if test "${build_nuauth_command}" = "yes"; then
-    AC_CHECK_TOOL(PYTHON, python, true)
+    AC_CHECK_TOOL(PYTHON, python)
     AC_DEFINE_UNQUOTED([BUILD_NUAUTH_COMMAND],[1],[Build nuauth_command])
 fi
 
