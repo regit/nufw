@@ -264,27 +264,6 @@ void ne_set_read_timeout(ne_session *sess, int timeout);
  * timeout value must be greater than zero. */
 void ne_set_connect_timeout(ne_session *sess, int timeout);
 
-/* Sets the user-agent string. neon/VERSION will be appended, to make
- * the full header "User-Agent: product neon/VERSION".
- * If this function is not called, the User-Agent header is not sent.
- * The product string must follow the RFC2616 format, i.e.
- *       product         = token ["/" product-version]
- *       product-version = token
- * where token is any alpha-numeric-y string [a-zA-Z0-9]* */
-void ne_set_useragent(ne_session *sess, const char *product);
-
-/* Returns non-zero if next-hop server does not claim compliance to
- * HTTP/1.1 or later. */
-int ne_version_pre_http11(ne_session *sess);
-
-/* Returns the 'hostport' URI segment for the end-server, e.g.
- * "my.server.com:8080". */
-const char *ne_get_server_hostport(ne_session *sess);
-
-/* Returns the URL scheme being used for the current session, omitting
- * the trailing ':'; e.g. "http" or "https". */
-const char *ne_get_scheme(ne_session *sess);
-
 /* Sets the host, scheme, and port fields of the given URI structure
  * to that of the configured server and scheme for the session; host
  * and scheme are malloc-allocated.  No other fields in the URI

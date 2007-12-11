@@ -81,15 +81,7 @@ static void destroy_hooks(struct hook *hooks)
 
 void ne_session_destroy(ne_session *sess) 
 {
-    struct hook *hk;
-
     NE_DEBUG(NE_DBG_HTTP, "ne_session_destroy called.\n");
-
-    /* Run the destroy hooks. */
-    for (hk = sess->destroy_sess_hooks; hk != NULL; hk = hk->next) {
-	ne_destroy_sess_fn fn = (ne_destroy_sess_fn)hk->fn;
-	fn(hk->userdata);
-    }
 
     /* Close the connection; note that the notifier callback could
      * still be invoked here. */
@@ -97,13 +89,8 @@ void ne_session_destroy(ne_session *sess)
 	ne_close_connection(sess);
     }
     
-    ne_free(sess->scheme);
     ne_free(sess->server.hostname);
-    ne_free(sess->server.hostport);
     if (sess->server.address) ne_addr_destroy(sess->server.address);
-    if (sess->proxy.address) ne_addr_destroy(sess->proxy.address);
-    if (sess->proxy.hostname) ne_free(sess->proxy.hostname);
-    if (sess->user_agent) ne_free(sess->user_agent);
 
 #ifdef NE_HAVE_SSL
     if (sess->ssl_context)
@@ -119,21 +106,6 @@ void ne_session_destroy(ne_session *sess)
     ne_free(sess);
 }
 
-int ne_version_pre_http11(ne_session *s)
-{
-    return !s->is_http11;
-}
-
-/* Stores the "hostname[:port]" segment */
-static void set_hostport(struct host_info *host, unsigned int defaultport)
-{
-    size_t len = strlen(host->hostname);
-    host->hostport = ne_malloc(len + 10);
-    strcpy(host->hostport, host->hostname);
-    if (host->port != defaultport)
-	ne_snprintf(host->hostport + len, 9, ":%u", host->port);
-}
-
 /* Stores the hostname/port in *info, setting up the "hostport"
  * segment correctly. */
 static void
@@ -143,32 +115,23 @@ set_hostinfo(struct host_info *info, const char *hostname, unsigned int port)
     info->port = port;
 }
 
-ne_session *ne_session_create(/*const char *scheme,*/
-			      const char *hostname, unsigned int port)
+ne_session *ne_session_create(const char *hostname, unsigned int port)
 {
     ne_session *sess = ne_calloc(sizeof *sess);
 
     NE_DEBUG(NE_DBG_HTTP, "session to ://%s:%d begins.\n",
-	     /*scheme,*/ hostname, port);
+	     hostname, port);
 
     strcpy(sess->error, "Unknown error.");
 
-    /* use SSL if scheme is https */
-/*    sess->use_ssl = !strcmp(scheme, "https"); */
-    
     /* set the hostname/port */
     set_hostinfo(&sess->server, hostname, port);
-/*    set_hostport(&sess->server, sess->use_ssl?443:80); */
 
 #ifdef NE_HAVE_SSL
-/*    if (sess->use_ssl) {*/
-        sess->ssl_context = ne_ssl_context_create(0);
-        sess->flags[NE_SESSFLAG_SSLv2] = 1;
-        sess->flags[NE_SESSFLAG_TLS_SNI] = 1;
-/*    } */
+    sess->ssl_context = ne_ssl_context_create(0);
+    sess->flags[NE_SESSFLAG_SSLv2] = 1;
+    sess->flags[NE_SESSFLAG_TLS_SNI] = 1;
 #endif
-
-/*    sess->scheme = ne_strdup(scheme); */
 
     /* Set flags which default to on: */
     sess->flags[NE_SESSFLAG_PERSIST] = 1;
@@ -253,46 +216,6 @@ void ne_set_connect_timeout(ne_session *sess, int timeout)
     sess->cotimeout = timeout;
 }
 
-#define UAHDR "User-Agent: "
-#define AGENT " neon/" NEON_VERSION "\r\n"
-
-void ne_set_useragent(ne_session *sess, const char *token)
-{
-    if (sess->user_agent) ne_free(sess->user_agent);
-    sess->user_agent = ne_malloc(strlen(UAHDR) + strlen(AGENT) + 
-                                 strlen(token) + 1);
-#ifdef HAVE_STPCPY
-    strcpy(stpcpy(stpcpy(sess->user_agent, UAHDR), token), AGENT);
-#else
-    strcat(strcat(strcpy(sess->user_agent, UAHDR), token), AGENT);
-#endif
-}
-
-const char *ne_get_server_hostport(ne_session *sess)
-{
-    return sess->server.hostport;
-}
-
-const char *ne_get_scheme(ne_session *sess)
-{
-    return sess->scheme;
-}
-
-/* void ne_fill_server_uri(ne_session *sess, ne_uri *uri) */
-/* { */
-/*     uri->host = ne_strdup(sess->server.hostname); */
-/*     uri->port = sess->server.port; */
-/*     uri->scheme = ne_strdup(sess->scheme); */
-/* } */
-
-/* void ne_fill_proxy_uri(ne_session *sess, ne_uri *uri) */
-/* { */
-/*     if (sess->use_proxy) { */
-/*         uri->host = ne_strdup(sess->proxy.hostname); */
-/*         uri->port = sess->proxy.port; */
-/*     } */
-/* } */
-
 const char *ne_get_error(ne_session *sess)
 {
     return ne_strclean(sess->error);
@@ -301,12 +224,6 @@ const char *ne_get_error(ne_session *sess)
 void ne_close_connection(ne_session *sess)
 {
     if (sess->connected) {
-/*         if (sess->notify_cb) { */
-/*             sess->status.cd.hostname =  */
-/*                 sess->use_proxy ? sess->proxy.hostname : sess->server.hostname; */
-/*             sess->notify_cb(sess->notify_ud, ne_status_disconnected,  */
-/*                             &sess->status); */
-/*         } */
 	NE_DEBUG(NE_DBG_SOCKET, "Closing connection.\n");
 	ne_sock_close(sess->socket);
 	sess->socket = NULL;
@@ -454,11 +371,7 @@ static void add_hook(struct hook **hooks, const char *id, void_fn fn, void *ud)
 /*     ADD_HOOK(sess->destroy_sess_hooks, fn, userdata); */
 /* } */
 
-void ne_set_session_private(ne_session *sess, const char *id, void *userdata)
-{
-    add_hook(&sess->private, id, NULL, userdata);
-}
-
+/*
 static void remove_hook(struct hook **hooks, void_fn fn, void *ud)
 {
     struct hook **p = hooks;
@@ -475,7 +388,7 @@ static void remove_hook(struct hook **hooks, void_fn fn, void *ud)
 }
 
 #define REMOVE_HOOK(hooks, fn, ud) remove_hook(&hooks, (void_fn)fn, ud)
-
+*/
 /* void ne_unhook_create_request(ne_session *sess,  */
 /*                               ne_create_request_fn fn, void *userdata) */
 /* { */
@@ -503,9 +416,10 @@ static void remove_hook(struct hook **hooks, void_fn fn, void *ud)
 /* { */
 /*     REMOVE_HOOK(sess->destroy_req_hooks, fn, userdata);     */
 /* } */
-
+/*
 void ne_unhook_destroy_session(ne_session *sess,
                                ne_destroy_sess_fn fn, void *userdata)
 {
     REMOVE_HOOK(sess->destroy_sess_hooks, fn, userdata);
 }
+*/
