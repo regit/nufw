@@ -1,3 +1,28 @@
+/*
+ ** Copyright (C) 2002-2007 INL
+ ** Written by S.Tricaud <stricaud@inl.fr>
+ **            L.Defert <ldefert@inl.com>
+ ** INL http://www.inl.fr/
+ **
+ ** $Id: main.c 3668 2007-08-20 09:55:12Z haypo $
+ **
+ ** This program is free software; you can redistribute it and/or modify
+ ** it under the terms of the GNU General Public License as published by
+ ** the Free Software Foundation, version 2 of the License.
+ **
+ ** This program is distributed in the hope that it will be useful,
+ ** but WITHOUT ANY WARRANTY; without even the implied warranty of
+ ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ ** GNU General Public License for more details.
+ **
+ ** You should have received a copy of the GNU General Public License
+ ** along with this program; if not, write to the Free Software
+ ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ **
+ ** NuSSL: OpenSSL / GnuTLS layer based on libneon
+ */
+
+
 /* 
    HTTP utility functions
    Copyright (C) 1999-2006, Joe Orton <joe@manyfish.co.uk>
