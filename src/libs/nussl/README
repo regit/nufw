@@ -1,5 +1,9 @@
-libscs, Secure Certificate Stuff
-================================
+libnussl: Library to manage SSL dependent from GnuTLS or OpenSSL
+================================================================
 
-Written by Sebastien Tricaud, <s dot tricaud at inl dot fr>
+Based on libneon code available at: http://www.webdav.org/neon/
+
+Written by:
+- Sebastien Tricaud, <s dot tricaud at inl dot fr>
+- Laurent Defert, <lds at inl dot fr>
 
