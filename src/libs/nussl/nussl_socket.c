@@ -143,7 +143,7 @@ typedef struct in_addr ne_inet_addr;
 #endif
 
 #ifdef NE_HAVE_SSL
-#include "ne_privssl.h" /* MUST come after ne_inet_addr is defined */
+#include "nussl_privssl.h" /* MUST come after ne_inet_addr is defined */
 #endif
 
 /* To avoid doing AAAA queries unless absolutely necessary, either use
@@ -161,13 +161,13 @@ typedef struct in_addr ne_inet_addr;
 #define USE_NONBLOCKING_CONNECT
 #endif
 
-#include "ne_internal.h"
-#include "ne_utils.h"
-#include "ne_string.h"
-#include "ne_socket.h"
-#include "ne_alloc.h"
+#include "nussl_internal.h"
+#include "nussl_utils.h"
+#include "nussl_string.h"
+#include "nussl_socket.h"
+#include "nussl_alloc.h"
 #ifdef HAVE_SSPI
-#include "ne_sspi.h"
+#include "nussl_sspi.h"
 #endif
 
 #if defined(__BEOS__) && !defined(BONE_VERSION)

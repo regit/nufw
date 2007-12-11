@@ -59,7 +59,7 @@
 #include <limits.h> /* for UINT_MAX etc */
 #endif
 
-#include "ne_defs.h"
+#include "nussl_defs.h"
 
 #undef _
 #ifdef NE_HAVE_I18N

@@ -50,9 +50,9 @@
 #ifndef NE_PRIVATE_H
 #define NE_PRIVATE_H
 
-/* #include "ne_request.h" */
-#include "ne_socket.h"
-#include "ne_ssl.h"
+/* #include "nussl_request.h" */
+#include "nussl_socket.h"
+#include "nussl_ssl.h"
 
 struct host_info {
     char *hostname;

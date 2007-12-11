@@ -63,9 +63,9 @@
 #include <windows.h> /* for TIME_ZONE_INFORMATION */
 #endif
 
-#include "ne_alloc.h"
-#include "ne_dates.h"
-#include "ne_string.h"
+#include "nussl_alloc.h"
+#include "nussl_dates.h"
+#include "nussl_string.h"
 
 /* Generic date manipulation routines. */
 

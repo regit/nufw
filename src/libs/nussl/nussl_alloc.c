@@ -56,7 +56,7 @@
 
 #include <stdio.h>
 
-#include "ne_alloc.h"
+#include "nussl_alloc.h"
 
 static ne_oom_callback_fn oom;
 

@@ -58,14 +58,14 @@
 #include <errno.h>
 #endif
 
-#include "ne_session.h"
-#include "ne_alloc.h"
-#include "ne_utils.h"
-#include "ne_internal.h"
-#include "ne_string.h"
-#include "ne_dates.h"
+#include "nussl_session.h"
+#include "nussl_alloc.h"
+#include "nussl_utils.h"
+#include "nussl_internal.h"
+#include "nussl_string.h"
+#include "nussl_dates.h"
 
-#include "ne_private.h"
+#include "nussl_private.h"
 
 /* Destroy a a list of hooks. */
 static void destroy_hooks(struct hook *hooks)

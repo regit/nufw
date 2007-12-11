@@ -74,14 +74,14 @@ GCRY_THREAD_OPTION_PTHREAD_IMPL;
 #include <iconv.h>
 #endif
 
-#include "ne_ssl.h"
-#include "ne_string.h"
-#include "ne_session.h"
-#include "ne_internal.h"
+#include "nussl_ssl.h"
+#include "nussl_string.h"
+#include "nussl_session.h"
+#include "nussl_internal.h"
 
-#include "ne_private.h"
-#include "ne_privssl.h"
-#include "ne_utils.h"
+#include "nussl_private.h"
+#include "nussl_privssl.h"
+#include "nussl_utils.h"
 
 struct ne_ssl_dname_s {
     int subject; /* non-zero if this is the subject DN object */

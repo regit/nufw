@@ -74,9 +74,9 @@
 #include <expat.h>
 #endif
 
-#include "ne_utils.h"
-#include "ne_string.h" /* for ne_strdup */
-#include "ne_dates.h"
+#include "nussl_utils.h"
+#include "nussl_string.h" /* for ne_strdup */
+#include "nussl_dates.h"
 
 int ne_debug_mask = 0;
 FILE *ne_debug_stream = NULL;

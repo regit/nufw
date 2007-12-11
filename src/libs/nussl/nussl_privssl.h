@@ -54,8 +54,8 @@
 /* This is the private interface between ne_socket, ne_gnutls and
  * ne_openssl. */
 
-#include "ne_ssl.h"
-#include "ne_socket.h"
+#include "nussl_ssl.h"
+#include "nussl_socket.h"
 
 #ifdef HAVE_OPENSSL
 

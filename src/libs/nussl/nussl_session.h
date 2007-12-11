@@ -49,10 +49,10 @@
 
 #include <sys/types.h>
 
-#include "ne_ssl.h"
-/* #include "ne_uri.h" /\* for ne_uri *\/ */
-#include "ne_defs.h"
-#include "ne_socket.h"
+#include "nussl_ssl.h"
+/* #include "nussl_uri.h" /\* for ne_uri *\/ */
+#include "nussl_defs.h"
+#include "nussl_socket.h"
 
 NE_BEGIN_DECLS
 

@@ -49,7 +49,7 @@
 
 #include <sys/types.h>
 
-#include "ne_defs.h"
+#include "nussl_defs.h"
 
 NE_BEGIN_DECLS
 

@@ -63,8 +63,8 @@
 
 #include <ctype.h> /* for isprint() etc in ne_strclean() */
 
-#include "ne_alloc.h"
-#include "ne_string.h"
+#include "nussl_alloc.h"
+#include "nussl_string.h"
 
 char *ne_token(char **str, char separator)
 {

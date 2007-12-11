@@ -67,14 +67,14 @@
 #include <pthread.h>
 #endif
 
-#include "ne_ssl.h"
-#include "ne_string.h"
-#include "ne_session.h"
-#include "ne_internal.h"
+#include "nussl_ssl.h"
+#include "nussl_string.h"
+#include "nussl_session.h"
+#include "nussl_internal.h"
 
-#include "ne_private.h"
-#include "ne_privssl.h"
-#include "ne_utils.h"
+#include "nussl_private.h"
+#include "nussl_privssl.h"
+#include "nussl_utils.h"
 
 /* OpenSSL 0.9.6 compatibility */
 #if OPENSSL_VERSION_NUMBER < 0x0090700fL

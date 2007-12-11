@@ -52,7 +52,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#include "ne_defs.h"
+#include "nussl_defs.h"
 
 #ifdef NEON_TRIO
 #include <trio.h>

@@ -49,8 +49,8 @@
 
 #include <sys/types.h>
 
-#include "ne_defs.h"
-#include "ne_ssl.h" /* for ne_ssl_context */
+#include "nussl_defs.h"
+#include "nussl_ssl.h" /* for ne_ssl_context */
 
 NE_BEGIN_DECLS
 

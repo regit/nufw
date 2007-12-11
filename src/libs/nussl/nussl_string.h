@@ -47,8 +47,8 @@
 #ifndef NE_STRING_H
 #define NE_STRING_H
 
-#include "ne_defs.h"
-#include "ne_alloc.h"
+#include "nussl_defs.h"
+#include "nussl_alloc.h"
 
 #include <stdarg.h>
 
