@@ -296,7 +296,15 @@ int nu_client_setup_tls(nuauth_session_t * session,
 	}
 	/* test if cert exists */
 	if (certfile != NULL && access(certfile, R_OK) != 0) {
-		printf("Unable to load certificate file : %s\n", certfile);
+		if (exit_on_error) {
+			printf("Unable to load certificate file : %s\n", certfile);
+			SET_ERROR(err, INTERNAL_ERROR, FILE_ACCESS_ERR);
+			if (home) {
+				free(home);
+			}
+			errno = EBADF;
+			return 0;
+		}
 		certfile = NULL;
 	}
 	if (cafile == NULL && home != NULL) {
@@ -304,6 +312,13 @@ int nu_client_setup_tls(nuauth_session_t * session,
 				     "%s/.nufw/cacert.pem", home);
 		if (ok)
 			cafile = castring;
+		/* if computed cafile is not present we reset to cafile to NULL */
+		if (access(cafile, R_OK) != 0) {
+			if (errno == EACCES) {
+				printf("Warning, unable to access CA file : %s\n", cafile);
+			}
+			cafile = NULL;
+		}
 	}
 	/* test if cert exists */
 	if (cafile != NULL && access(cafile, R_OK) != 0) {
