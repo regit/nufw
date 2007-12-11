@@ -1,2 +1,2 @@
-SUBDIRS = scs
+SUBDIRS = nussl
 
