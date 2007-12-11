@@ -262,7 +262,7 @@ int nu_client_setup_tls(nuauth_session_t * session,
 	 * exit if we fail loading them.
 	 * Elsewise, try loading certs from ~/.nufw/, but continue if we fail
 	 */
-	if(certfile || keyfile)
+	if (certfile || keyfile)
 		exit_on_error = 1;
 
 	/* compute patch keyfile */
@@ -296,15 +296,7 @@ int nu_client_setup_tls(nuauth_session_t * session,
 	}
 	/* test if cert exists */
 	if (certfile != NULL && access(certfile, R_OK) != 0) {
-		if (exit_on_error) {
-			printf("Unable ot load certificate file : %s\n", certfile);
-			SET_ERROR(err, INTERNAL_ERROR, FILE_ACCESS_ERR);
-			if (home) {
-				free(home);
-			}
-			errno = EBADF;
-			return 0;
-		}
+		printf("Unable to load certificate file : %s\n", certfile);
 		certfile = NULL;
 	}
 	if (cafile == NULL && home != NULL) {
