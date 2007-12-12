@@ -1,5 +1,5 @@
 /*
- ** Copyright (C) 2002-2007 INL
+ ** Copyright (C) 2007 INL
  ** Written by S.Tricaud <stricaud@inl.fr>
  **            L.Defert <ldefert@inl.fr>
  ** INL http://www.inl.fr/

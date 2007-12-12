@@ -1,5 +1,5 @@
 /*
- ** Copyright (C) 2002-2007 INL
+ ** Copyright (C) 2007 INL
  ** Written by S.Tricaud <stricaud@inl.fr>
  **            L.Defert <ldefert@inl.fr>
  ** INL http://www.inl.fr/
@@ -12,7 +12,7 @@
 
 /* 
    neon SSL/TLS support using OpenSSL
-   Copyright (C) 2002-2007, Joe Orton <joe@manyfish.co.uk>
+   Copyright (C) 2007, Joe Orton <joe@manyfish.co.uk>
    Portions are:
    Copyright (C) 1999-2000 Tommi Komulainen <Tommi.Komulainen@iki.fi>
 
