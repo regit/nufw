@@ -33,6 +33,7 @@
 
 */
 
+#include <config.h>
 #include "nussl_config.h"
 
 #ifdef HAVE_STRING_H

@@ -34,6 +34,7 @@
 
 */
 
+#include <config.h>
 #include "nussl_config.h"
 
 #ifdef HAVE_STDLIB_H

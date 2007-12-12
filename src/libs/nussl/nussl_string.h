@@ -37,6 +37,7 @@
 #include "nussl_defs.h"
 #include "nussl_alloc.h"
 
+#include <stdio.h>
 #include <stdarg.h>
 
 NE_BEGIN_DECLS
