@@ -1109,7 +1109,7 @@ static int connect_socket(ne_socket *sock, int fd,
         return NE_SOCK_ERROR;
     }
 #else
-    struct sockaddr_in sa = {0};
+    struct sockaddr_in sa;
     sa.sin_family = AF_INET;
     sa.sin_port = port;
     sa.sin_addr = *addr;

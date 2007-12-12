@@ -35,9 +35,7 @@
 
 #include <sys/types.h>
 
-#ifdef HAVE_STRING_H
 #include <string.h>
-#endif
 
 #include <stdio.h>
 #include <ctype.h> /* isdigit() for ne_parse_statusline */

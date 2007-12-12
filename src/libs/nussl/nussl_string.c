@@ -37,16 +37,9 @@
 #include <config.h>
 #include "nussl_config.h"
 
-#ifdef HAVE_STDLIB_H
 #include <stdlib.h>
-#endif
-#ifdef HAVE_STRING_H
 #include <string.h>
-#endif
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif
-
 #include <stdio.h>
 
 #include <ctype.h> /* for isprint() etc in ne_strclean() */

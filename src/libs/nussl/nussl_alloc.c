@@ -34,14 +34,8 @@
 #include <config.h>
 #include "nussl_config.h"
 
-#ifdef HAVE_STRING_H
 #include <string.h>
-#endif
-
-#ifdef HAVE_STDLIB_H
 #include <stdlib.h>
-#endif
-
 #include <stdio.h>
 
 #include "nussl_alloc.h"
@@ -52,8 +46,6 @@ void ne_oom_callback(ne_oom_callback_fn callback)
 {
     oom = callback;
 }
-
-#ifndef NEON_MEMLEAK
 
 #define DO_MALLOC(ptr, len) do {		\
     ptr = malloc((len));			\
@@ -105,124 +97,3 @@ char *ne_strndup(const char *s, size_t n)
     return new;
 }
 
-#else /* NEON_MEMLEAK */
-
-#include <assert.h>
-
-/* Memory-leak detection implementation: ne_malloc and friends are
- * #defined to ne_malloc_ml etc by memleak.h, which is conditionally
- * included by config.h. */
-
-/* memory allocated be ne_*alloc, but not freed. */
-size_t ne_alloc_used = 0;
-
-static struct block {
-    void *ptr;
-    size_t len;
-    const char *file;
-    int line;
-    struct block *next;
-} *blocks = NULL;
-
-void ne_alloc_dump(FILE *f)
-{
-    struct block *b;
-
-    for (b = blocks; b != NULL; b = b->next)
-        fprintf(f, "%" NE_FMT_SIZE_T "b@%s:%d%s", b->len, b->file, b->line,
-                b->next?", ":"");
-}
-
-static void *tracking_malloc(size_t len, const char *file, int line)
-{
-    void *ptr = malloc((len));
-    struct block *block;
-
-    if (!ptr) {
-	if (oom) oom();
-	abort();
-    }
-    
-    block = malloc(sizeof *block);
-    if (block != NULL) {
-        block->ptr = ptr;
-        block->len = len;
-        block->file = file;
-        block->line = line;
-        block->next = blocks;
-        blocks = block;
-        ne_alloc_used += len;
-    }
-
-    return ptr;
-}
-
-void *ne_malloc_ml(size_t size, const char *file, int line)
-{
-    return tracking_malloc(size, file, line);
-}
-
-void *ne_calloc_ml(size_t size, const char *file, int line)
-{
-    return memset(tracking_malloc(size, file, line), 0, size);
-}
-
-void *ne_realloc_ml(void *ptr, size_t s, const char *file, int line)
-{
-    void *ret;
-    struct block *b;
-
-    if (ptr == NULL)
-        return tracking_malloc(s, file, line);
-
-    ret = realloc(ptr, s);
-    if (!ret) {
-        if (oom) oom();
-        abort();
-    }
-    
-    for (b = blocks; b != NULL; b = b->next) {
-        if (b->ptr == ptr) {
-            ne_alloc_used += s - b->len;
-            b->ptr = ret;
-            b->len = s;
-            break;
-        }
-    }
-    assert(b != NULL);
-
-    return ret;
-}
-
-char *ne_strdup_ml(const char *s, const char *file, int line)
-{
-    return strcpy(tracking_malloc(strlen(s) + 1, file, line), s);
-}
-
-char *ne_strndup_ml(const char *s, size_t n, const char *file, int line)
-{
-    char *ret = tracking_malloc(n + 1, file, line);
-    ret[n] = '\0';
-    return memcpy(ret, s, n);
-}
-
-void ne_free_ml(void *ptr)
-{
-    struct block *b, *last = NULL;
-
-    for (b = blocks; b != NULL; last = b, b = b->next) {
-        if (b->ptr == ptr) {
-            ne_alloc_used -= b->len;
-            if (last) 
-                last->next = b->next;
-            else
-                blocks = b->next;
-            free(b);
-            break;
-        }
-    }
-
-    free(ptr);
-}
-
-#endif /* NEON_MEMLEAK */
