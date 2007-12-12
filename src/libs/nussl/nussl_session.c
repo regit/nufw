@@ -51,6 +51,7 @@
 #include "nussl_internal.h"
 #include "nussl_string.h"
 #include "nussl_dates.h"
+#include "nussl_socket.h"
 
 #include "nussl_private.h"
 
@@ -413,13 +414,13 @@ void ne_unhook_destroy_session(ne_session *sess,
 
 int ne_write(ne_session *session, char *buffer, size_t count)
 {
-	return ne_socket_fullwrite(session->socket, buffer, count);
+	return ne_sock_fullwrite(session->socket, buffer, count);
 }
 
 
 ssize_t ne_read(ne_session *session, char *buffer, size_t count)
 {
-	return ne_socket_fullread(session->socket, buffer, count);
+	return ne_sock_fullread(session->socket, buffer, count);
 }
 
 
