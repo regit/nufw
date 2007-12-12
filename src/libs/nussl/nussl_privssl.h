@@ -41,11 +41,12 @@
 /* This is the private interface between ne_socket, ne_gnutls and
  * ne_openssl. */
 
+#include <config.h>
+#include "nussl_config.h"
 #include "nussl_ssl.h"
 #include "nussl_socket.h"
 
 #ifdef USE_OPENSSL
-
 #include <openssl/ssl.h>
 
 struct ne_ssl_context_s {
