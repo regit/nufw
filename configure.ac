@@ -280,6 +280,9 @@ AM_CONDITIONAL(HAVE_NFQUEUE_ONLY, test x$have_nfqueue = xyes && test x$have_conn
 AM_CONDITIONAL(HAVE_NFQUEUE_CONNTRACK,test x$have_conntrack = xyes && test x$have_nfqueue = xyes )
 AM_CONDITIONAL(HAVE_CONNTRACK_ONLY, test x$have_nfqueue = x && test x$have_conntrack = xyes  )
 
+AM_CONDITIONAL(USE_OPENSSL, test x$build_openssl = xyes)
+AM_CONDITIONAL(USE_GNUTLS, test x$build_openssl = xno)
+
 if test "x$GCC" = "xyes"; then
 
 	dnl get gcc version

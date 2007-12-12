@@ -45,6 +45,8 @@
 
 */
 
+#ifdef USE_GNUTLS
+
 #include "config.h"
 
 #include <sys/mman.h>
@@ -1171,3 +1173,5 @@ void ne__ssl_exit(void)
     gnutls_global_deinit();
 #endif
 }
+
+#endif /* USE_GNUTLS */

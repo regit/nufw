@@ -46,6 +46,8 @@
 
 */
 
+#ifdef USE_OPENSSL
+
 #include "config.h"
 
 #include <sys/types.h>
@@ -1137,3 +1139,5 @@ void ne__ssl_exit(void)
     }
 #endif
 }
+
+#endif /* USE_OPENSSL */
