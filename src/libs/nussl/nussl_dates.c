@@ -130,7 +130,7 @@ char *ne_rfc1123_date(time_t anytime) {
  * Returns (time_t)-1 if the parse fails. */
 time_t ne_iso8601_parse(const char *date) 
 {
-    struct tm gmt = {0};
+    struct tm gmt;
     int off_hour, off_min;
     double sec;
     off_t fix;
@@ -174,7 +174,7 @@ time_t ne_iso8601_parse(const char *date)
  * Returns (time_t)-1 if the parse fails. */
 time_t ne_rfc1123_parse(const char *date) 
 {
-    struct tm gmt = {0};
+    struct tm gmt;
     char wkday[4], mon[4];
     int n;
 /*  it goes: Sun, 06 Nov 1994 08:49:37 GMT */
@@ -196,7 +196,7 @@ time_t ne_rfc1123_parse(const char *date)
 /* Takes a string containing a RFC1036-style date and returns the time_t */
 time_t ne_rfc1036_parse(const char *date) 
 {
-    struct tm gmt = {0};
+    struct tm gmt;
     int n;
     char wkday[11], mon[4];
     /* RFC850/1036 style dates: Sunday, 06-Nov-94 08:49:37 GMT */
@@ -229,7 +229,7 @@ time_t ne_rfc1036_parse(const char *date)
  */
 time_t ne_asctime_parse(const char *date) 
 {
-    struct tm gmt = {0};
+    struct tm gmt;
     int n;
     char wkday[4], mon[4];
     n = sscanf(date, ASCTIME_FORMAT,

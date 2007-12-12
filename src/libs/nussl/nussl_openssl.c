@@ -192,7 +192,7 @@ void ne_ssl_clicert_free(ne_ssl_client_cert *cc)
  * 'NE_SSL_VDATELEN'. */
 static time_t asn1time_to_timet(const ASN1_TIME *atm)
 {
-    struct tm tm = {0};
+    struct tm tm;
     int i = atm->length;
     
     if (i < 10)
@@ -261,7 +261,7 @@ static int check_identity(X509 *cert, char **identity)
 {
     STACK_OF(GENERAL_NAME) *names;
     int match = 0, found = 0;
-    const char *hostname;
+/*     const char *hostname; */
     
 /*     hostname = server ? server->host : ""; */
 
@@ -274,14 +274,15 @@ static int check_identity(X509 *cert, char **identity)
 	    GENERAL_NAME *nm = sk_GENERAL_NAME_value(names, n);
 	    
             /* handle dNSName and iPAddress name extensions only. */
-	    if (nm->type == GEN_DNS) {
-		char *name = dup_ia5string(nm->d.ia5);
-                if (identity && !found) *identity = ne_strdup(name);
-		match = match_hostname(name, hostname);
-		ne_free(name);
-		found = 1;
-            } 
-            else if (nm->type == GEN_IPADD) {
+/* 	    if (nm->type == GEN_DNS) { */
+/* 		char *name = dup_ia5string(nm->d.ia5); */
+/*                 if (identity && !found) *identity = ne_strdup(name); */
+/* 		match = match_hostname(name, hostname); */
+/* 		ne_free(name); */
+/* 		found = 1; */
+/*             }  */
+/*             else  */
+	    if (nm->type == GEN_IPADD) {
                 /* compare IP address with server IP address. */
                 ne_inet_addr *ia;
                 if (nm->d.ip->length == 4)
@@ -291,18 +292,18 @@ static int check_identity(X509 *cert, char **identity)
                 else
                     ia = NULL;
                 /* ne_iaddr_make returns NULL if address type is unsupported */
-                if (ia != NULL) { /* address type was supported. */
-                    char buf[128];
+/*                 if (ia != NULL) { /\* address type was supported. *\/ */
+/*                     char buf[128]; */
 
-                    match = strcmp(hostname, 
-                                   ne_iaddr_print(ia, buf, sizeof buf)) == 0;
-                    found = 1;
-                    ne_iaddr_free(ia);
-                } else {
-                    NE_DEBUG(NE_DBG_SSL, "iPAddress name with unsupported "
-                             "address type (length %d), skipped.\n",
-                             nm->d.ip->length);
-                }
+/*                     match = strcmp(hostname,  */
+/*                                    ne_iaddr_print(ia, buf, sizeof buf)) == 0; */
+/*                     found = 1; */
+/*                     ne_iaddr_free(ia); */
+/*                 } else { */
+/*                     NE_DEBUG(NE_DBG_SSL, "iPAddress name with unsupported " */
+/*                              "address type (length %d), skipped.\n", */
+/*                              nm->d.ip->length); */
+/*                 } */
             } 
 /*             else if (nm->type == GEN_URI) { */
 /*                 char *name = dup_ia5string(nm->d.ia5); */
@@ -360,13 +361,13 @@ static int check_identity(X509 *cert, char **identity)
             ne_buffer_destroy(cname);
             return -1;
         }
-        if (identity) *identity = ne_strdup(cname->data);
-        match = match_hostname(cname->data, hostname);
-        ne_buffer_destroy(cname);
+/*         if (identity) *identity = ne_strdup(cname->data); */
+/*         match = match_hostname(cname->data, hostname); */
+/*         ne_buffer_destroy(cname); */
     }
 
-    NE_DEBUG(NE_DBG_SSL, "Identity match for '%s': %s\n", hostname, 
-             match ? "good" : "bad");
+/*     NE_DEBUG(NE_DBG_SSL, "Identity match for '%s': %s\n", hostname,  */
+/*              match ? "good" : "bad"); */
     return match ? 0 : 1;
 }
 
