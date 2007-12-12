@@ -410,3 +410,18 @@ void ne_unhook_destroy_session(ne_session *sess,
     REMOVE_HOOK(sess->destroy_sess_hooks, fn, userdata);
 }
 */
+
+int ne_write(ne_session *session, char *buffer, size_t count)
+{
+	return ne_socket_fullwrite(session->socket, buffer, count);
+}
+
+
+ssize_t ne_read(ne_session *session, char *buffer, size_t count)
+{
+	return ne_socket_fullread(session->socket, buffer, count);
+}
+
+
+
+

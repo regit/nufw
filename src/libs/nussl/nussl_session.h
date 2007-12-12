@@ -271,6 +271,12 @@ void ne_set_error(ne_session *sess, const char *format, ...)
 /* Retrieve the error string for the session */
 const char *ne_get_error(ne_session *sess);
 
+/* Write to session */
+int ne_write(ne_session *session, char *buffer, size_t count);
+
+/* Read from session */
+ssize_t ne_read(ne_session *session, char *buffer, size_t count);
+
 NE_END_DECLS
 
 #endif /* NE_SESSION_H */
