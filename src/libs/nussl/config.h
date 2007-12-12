@@ -56,7 +56,6 @@
 #define NE_VERSION_MINOR 1
 
 #define NE_HAVE_SSL
-#define HAVE_OPENSSL
 
 #ifdef WIN32
 
