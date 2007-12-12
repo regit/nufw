@@ -39,17 +39,10 @@
 /* XXX : add checks here */
 #define HAVE_ERRNO_H
 #define HAVE_LIMITS_H
-#define HAVE_STDLIB_H
-#define HAVE_STRING_H
-#define HAVE_NETDB_H
 #define HAVE_SYS_SELECT_H
-#define HAVE_SYS_SOCKET_H
-#define HAVE_NETINET_IN_H
 #define HAVE_NETINET_TCP_H
-#define HAVE_ARPA_INET_H
 
 #define HAVE_MEMCPY
-#define HAVE_SETSOCKOPT
 #define NEON_VERSION "NuNeon"
 
 #define NE_VERSION_MAJOR 0
