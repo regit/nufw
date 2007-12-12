@@ -414,6 +414,12 @@ if test "$debug"; then
 	AC_MSG_RESULT([* Compiling with developement DEBUG support])
 fi
 
+if test $build_openssl = yes; then
+	AC_MSG_RESULT([* Compiling with OpenSSL])
+else
+	AC_MSG_RESULT([* Compiling with GnuTLS])
+fi
+
 if test "${build_nuauth}" = "yes"; then
 		AC_MSG_RESULT([* Compiling NuAuth])
         if test "$enable_system_auth" = "yes"; then
