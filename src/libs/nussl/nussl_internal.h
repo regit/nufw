@@ -37,7 +37,7 @@
 #ifndef NE_INTERNAL_H
 #define NE_INTERNAL_H 1
 
-#include "config.h"
+#include "nussl_config.h"
 
 #ifdef HAVE_SYS_LIMITS_H
 #include <sys/limits.h>

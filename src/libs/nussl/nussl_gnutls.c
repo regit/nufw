@@ -32,9 +32,11 @@
 
 */
 
+#include "config.h"
+
 #ifdef USE_GNUTLS
 
-#include "config.h"
+#include "nussl_config.h"
 
 #include <sys/mman.h>
 #include <sys/stat.h>
