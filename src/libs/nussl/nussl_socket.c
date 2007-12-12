@@ -37,7 +37,8 @@
   Relicensed under LGPL for neon, http://www.webdav.org/neon/
 */
 
-#include "config.h"
+#include <config.h>
+#include "nussl_config.h"
 
 #include <stdio.h>
 #include <sys/types.h>

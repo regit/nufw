@@ -35,7 +35,7 @@
 
 #include "config.h"
 
-#ifdef USE_OPENSSL
+#ifdef HAVE_OPENSSL
 
 #include "nussl_config.h"
 
@@ -1129,4 +1129,4 @@ void ne__ssl_exit(void)
 #endif
 }
 
-#endif /* USE_OPENSSL */
+#endif /* HAVE_OPENSSL */

@@ -65,7 +65,7 @@ AC_ARG_WITH(openssl,   [AC_HELP_STRING(--with-openssl, Build with openssl suppor
 if test $build_openssl = yes; then
    PKG_PROG_PKG_CONFIG
    PKG_CHECK_MODULES(OPENSSL, openssl)
-   AC_DEFINE_UNQUOTED([USE_OPENSSL],[1],[Will use openssl support instead of gnutls])
+   AC_DEFINE_UNQUOTED([HAVE_OPENSSL],[1],[Will use openssl support instead of gnutls])
 fi
 
 if test $build_openssl = no; then
@@ -85,7 +85,7 @@ if test $build_openssl = no; then
      AC_MSG_ERROR([libgnutls is needed.
                    See www.gnu.org/software/gnutls/ .])
    fi
-   AC_DEFINE_UNQUOTED([USE_GNUTLS],[1],[Will use gnutls support instead of openssl])
+   AC_DEFINE_UNQUOTED([HAVE_GNUTLS],[1],[Will use gnutls support instead of openssl])
 fi
 dnl 
 dnl </SSL> 

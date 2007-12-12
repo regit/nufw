@@ -46,7 +46,7 @@
 #include "nussl_ssl.h"
 #include "nussl_socket.h"
 
-#ifdef USE_OPENSSL
+#ifdef HAVE_OPENSSL
 #include <openssl/ssl.h>
 
 struct ne_ssl_context_s {
@@ -57,9 +57,9 @@ struct ne_ssl_context_s {
 
 typedef SSL *ne_ssl_socket;
 
-#endif /* USE_OPENSSL */
+#endif /* HAVE_OPENSSL */
 
-#ifdef USE_GNUTLS
+#ifdef HAVE_GNUTLS
 
 #include <gnutls/gnutls.h>
 
@@ -87,7 +87,7 @@ struct ne_ssl_context_s {
 
 typedef gnutls_session ne_ssl_socket;
 
-#endif /* USE_GNUTLS */
+#endif /* HAVE_GNUTLS */
 
 ne_ssl_socket ne__sock_sslsock(ne_socket *sock);
 
