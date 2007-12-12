@@ -31,7 +31,7 @@
 
 */
 
-#include "config.h"
+#include "nussl_config.h"
 
 #include <sys/types.h>
 
