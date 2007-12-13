@@ -36,15 +36,9 @@
 #include <config.h>
 #include "nussl_config.h"
 
-#ifdef HAVE_STRING_H
 #include <string.h>
-#endif
-#ifdef HAVE_STDLIB_H
 #include <stdlib.h>
-#endif
-#ifdef HAVE_ERRNO_H
 #include <errno.h>
-#endif
 
 #include "nussl_session.h"
 #include "nussl_alloc.h"
@@ -247,7 +241,6 @@ void ne_ssl_trust_cert(ne_session *sess, const ne_ssl_certificate *cert)
 
 void ne_ssl_cert_validity(const ne_ssl_certificate *cert, char *from, char *until)
 {
-#ifdef NE_HAVE_SSL
     time_t tf, tu;
     char *date;
 
@@ -274,7 +267,6 @@ void ne_ssl_cert_validity(const ne_ssl_certificate *cert, char *from, char *unti
             ne_strnzcpy(until, _("[invalid date]"), NE_SSL_VDATELEN);
         }
     }
-#endif
 }
 
 #ifdef NE_HAVE_SSL
