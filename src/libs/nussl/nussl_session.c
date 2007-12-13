@@ -50,11 +50,13 @@
 
 #include "nussl_private.h"
 
+#define UGLY_DEBUG() printf("%s %s:%i\n", __FUNCTION__, __FILE__, __LINE__)
 /* Destroy a a list of hooks. */
 static void destroy_hooks(struct hook *hooks)
 {
     struct hook *nexthk;
 
+    UGLY_DEBUG();
     while (hooks) {
 	nexthk = hooks->next;
 	ne_free(hooks);
@@ -64,6 +66,7 @@ static void destroy_hooks(struct hook *hooks)
 
 void ne_session_destroy(ne_session *sess) 
 {
+    UGLY_DEBUG();
     NE_DEBUG(NE_DBG_HTTP, "ne_session_destroy called.\n");
 
     /* Close the connection; note that the notifier callback could
@@ -94,6 +97,7 @@ void ne_session_destroy(ne_session *sess)
 static void
 set_hostinfo(struct host_info *info, const char *hostname, unsigned int port)
 {
+    UGLY_DEBUG();
     info->hostname = ne_strdup(hostname);
     info->port = port;
 }
@@ -101,6 +105,7 @@ set_hostinfo(struct host_info *info, const char *hostname, unsigned int port)
 ne_session *ne_session_create(const char *hostname, unsigned int port)
 {
     ne_session *sess = ne_calloc(sizeof *sess);
+    UGLY_DEBUG();
 
     NE_DEBUG(NE_DBG_HTTP, "session to ://%s:%d begins.\n",
 	     hostname, port);
@@ -132,6 +137,7 @@ ne_session *ne_session_create(const char *hostname, unsigned int port)
 
 void ne_set_addrlist(ne_session *sess, const ne_inet_addr **addrs, size_t n)
 {
+    UGLY_DEBUG();
     sess->addrlist = addrs;
     sess->numaddrs = n;
 }
@@ -139,6 +145,7 @@ void ne_set_addrlist(ne_session *sess, const ne_inet_addr **addrs, size_t n)
 void ne_set_error(ne_session *sess, const char *format, ...)
 {
     va_list params;
+    UGLY_DEBUG();
 
     va_start(params, format);
     ne_vsnprintf(sess->error, sizeof sess->error, format, params);
@@ -147,6 +154,7 @@ void ne_set_error(ne_session *sess, const char *format, ...)
 
 void ne_set_session_flag(ne_session *sess, ne_session_flag flag, int value)
 {
+    UGLY_DEBUG();
     if (flag < NE_SESSFLAG_LAST) {
         sess->flags[flag] = value;
 #ifdef NE_HAVE_SSL
@@ -159,6 +167,7 @@ void ne_set_session_flag(ne_session *sess, ne_session_flag flag, int value)
 
 int ne_get_session_flag(ne_session *sess, ne_session_flag flag)
 {
+    UGLY_DEBUG();
     if (flag < NE_SESSFLAG_LAST) {
         return sess->flags[flag];
     }
@@ -191,21 +200,25 @@ int ne_get_session_flag(ne_session *sess, ne_session_flag flag)
 
 void ne_set_read_timeout(ne_session *sess, int timeout)
 {
+    UGLY_DEBUG();
     sess->rdtimeout = timeout;
 }
 
 void ne_set_connect_timeout(ne_session *sess, int timeout)
 {
+    UGLY_DEBUG();
     sess->cotimeout = timeout;
 }
 
 const char *ne_get_error(ne_session *sess)
 {
+    UGLY_DEBUG();
     return ne_strclean(sess->error);
 }
 
 void ne_close_connection(ne_session *sess)
 {
+    UGLY_DEBUG();
     if (sess->connected) {
 	NE_DEBUG(NE_DBG_SOCKET, "Closing connection.\n");
 	ne_sock_close(sess->socket);
@@ -219,6 +232,7 @@ void ne_close_connection(ne_session *sess)
 
 void ne_ssl_set_verify(ne_session *sess, ne_ssl_verify_fn fn, void *userdata)
 {
+    UGLY_DEBUG();
     sess->ssl_verify_fn = fn;
     sess->ssl_verify_ud = userdata;
 }
@@ -226,12 +240,14 @@ void ne_ssl_set_verify(ne_session *sess, ne_ssl_verify_fn fn, void *userdata)
 void ne_ssl_provide_clicert(ne_session *sess, 
 			  ne_ssl_provide_fn fn, void *userdata)
 {
+    UGLY_DEBUG();
     sess->ssl_provide_fn = fn;
     sess->ssl_provide_ud = userdata;
 }
 
 void ne_ssl_trust_cert(ne_session *sess, const ne_ssl_certificate *cert)
 {
+    UGLY_DEBUG();
 #ifdef NE_HAVE_SSL
     if (sess->ssl_context) {
         ne_ssl_context_trustcert(sess->ssl_context, cert);
@@ -244,6 +260,7 @@ void ne_ssl_cert_validity(const ne_ssl_certificate *cert, char *from, char *unti
     time_t tf, tu;
     char *date;
 
+    UGLY_DEBUG();
     ne_ssl_cert_validity_time(cert, &tf, &tu);
     
     if (from) {
@@ -284,6 +301,7 @@ void ne__ssl_set_verify_err(ne_session *sess, int failures)
     };
     int n, flag = 0;
 
+    UGLY_DEBUG();
     strcpy(sess->error, _("Server certificate verification failed: "));
 
     for (n = 0; reasons[n].bit; n++) {
@@ -407,13 +425,15 @@ void ne_unhook_destroy_session(ne_session *sess,
 
 int ne_write(ne_session *session, char *buffer, size_t count)
 {
+    UGLY_DEBUG();
 	return ne_sock_fullwrite(session->socket, buffer, count);
 }
 
 
 ssize_t ne_read(ne_session *session, char *buffer, size_t count)
 {
-	return ne_sock_fullread(session->socket, buffer, count);
+    UGLY_DEBUG();
+	return ne_sock_read(session->socket, buffer, count);
 }
 
 

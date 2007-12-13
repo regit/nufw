@@ -42,13 +42,21 @@
 #define HAVE_SYS_SELECT_H
 #define HAVE_NETINET_TCP_H
 
+
+#define  HAVE_FNCTL
+#define  F_GETFD
+#define  F_SETFD
+
+
 #define HAVE_MEMCPY
 #define NEON_VERSION "NuNeon"
 
+/*#define NE_USE_POLL 1 XXX: remove anything related to me*/
 #define NE_VERSION_MAJOR 0
 #define NE_VERSION_MINOR 1
 
 #define NE_HAVE_SSL
+#define NE_TS_SSL /* TS = Thread Safe */
 /* #define HAVE_OPENSSL */
 
 #define NE_FMT_SIZE_T "u"

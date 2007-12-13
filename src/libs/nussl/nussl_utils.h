@@ -39,6 +39,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#include "nussl_config.h"
 #include "nussl_defs.h"
 
 #ifdef NEON_TRIO

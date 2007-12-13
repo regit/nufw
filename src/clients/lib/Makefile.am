@@ -1,5 +1,5 @@
 if BUILD_LIBNUCLIENT
-AM_CPPFLAGS = -DCONFIG_DIR=\"$(sysconfdir)\" -I$(top_srcdir)/src/include/
+AM_CPPFLAGS = -DCONFIG_DIR=\"$(sysconfdir)\" -I$(top_srcdir)/src/include/ -I$(top_srcdir)/src/libs/nussl/
 
 SUBDIRS = tests
 
@@ -14,7 +14,7 @@ libnuclient_la_SOURCES = ${include_HEADERS} libnuclient.c proc.c iconv.c checks.
 			 sys_config.c tcptable.c internal.c
 
 
-libnuclient_la_LIBADD = -lgcrypt -lgnutls -lsasl2 -lnufw -L$(top_builddir)/src/include/
+libnuclient_la_LIBADD = -lgcrypt -lgnutls -lsasl2 -lnufw -L$(top_builddir)/src/include/ -L$(top_builddir)/src/libs/nussl -lnussl 
 
 LIBNUCLIENT_AC=3
 LIBNUCLIENT_REV=0

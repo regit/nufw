@@ -51,18 +51,13 @@ typedef struct ne_session_s ne_session;
 ne_session *ne_session_create(/* const char *scheme, */
 			      const char *hostname, unsigned int port);
 
+ 
 /* Finish an HTTP session */
 void ne_session_destroy(ne_session *sess);
 
 /* Prematurely force the connection to be closed for the given
  * session. */
 void ne_close_connection(ne_session *sess);
-
-typedef void (*ne_destroy_sess_fn)(void *userdata);
-/* Hook called when the session is destroyed. */
-void ne_hook_destroy_session(ne_session *sess,
-                             ne_destroy_sess_fn fn, void *userdata);
-
 
 /* Set the proxy server to be used for the session. */
 /*void ne_session_proxy(ne_session *sess,

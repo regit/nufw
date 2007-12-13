@@ -24,6 +24,7 @@
 #include "nuclient.h"
 #include <sasl/saslutil.h>
 #include <proto.h>
+#include <nussl_session.h>
 
 /**
  * \addtogroup libnuclient
@@ -44,6 +45,7 @@ int send_hello_pckt(nuauth_session_t * session)
 	header.option = 0;
 	header.length = htons(sizeof(struct nu_header));
 
+#if XXX
 	/*  send it */
 	if (session->tls) {
 		if (gnutls_record_send
@@ -56,6 +58,17 @@ int send_hello_pckt(nuauth_session_t * session)
 			return 0;
 		}
 	}
+#else
+	if (ne_write(session->nussl, (char*)&header, sizeof(struct nu_header)) <= 0)
+	{
+#if DEBUG_ENABLE
+		printf("write failed at %s:%d\n", __FILE__,
+		       __LINE__);
+#endif
+		return 0;
+	}
+#endif
+
 	return 1;
 }
 
@@ -167,6 +180,7 @@ int send_user_pckt(nuauth_session_t * session, conn_t * carray[CONN_MAX])
 	}
 
 	/* and send it */
+#if XXX
 	if (session->tls) {
 		if (gnutls_record_send
 		    (session->tls, datas, pointer - datas) <= 0) {
@@ -174,6 +188,13 @@ int send_user_pckt(nuauth_session_t * session, conn_t * carray[CONN_MAX])
 			return 0;
 		}
 	}
+#else
+	if (ne_write(session->nussl, (char*)datas, pointer - datas) <= 0)
+	{
+		printf("write failed\n");
+		return 0;
+	}
+#endif
 	return 1;
 }
 

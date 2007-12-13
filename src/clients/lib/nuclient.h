@@ -75,8 +75,6 @@ extern "C" {
 #include <unistd.h>
 #include <string.h>
 
-#include <gnutls/gnutls.h>
-
 #define NUCLIENT_VERSION "2.1.1-3"
 #define DEBUG 0
 
@@ -153,8 +151,11 @@ enum {
 };
 
 /* nuauth_session_t structure */
+struct ne_session_s;
 
 typedef struct {
+	struct ne_session_s* nussl;
+
 	/*--------------- PUBLIC MEMBERS -------------------*/
 	u_int32_t userid;	/*!< Local user identifier (getuid()) */
 	char *username;	/*!< Username (encoded in UTF-8) */
@@ -164,12 +165,10 @@ typedef struct {
 	/** Callback used to get password */
 	char* (*passwd_callback)();
 
-	gnutls_session tls;	/*!< TLS session over TCP socket */
-	gnutls_certificate_credentials cred;	/*!< TLS credentials */
 	char *tls_password;	/*!< TLS password */
 	char *nuauth_cert_dn;
 
-	int socket;	/*!< TCP socket used to exchange message with nuauth */
+/*	int socket;	*//*!< TCP socket used to exchange message with nuauth */
 	conntable_t *ct;	/*!< Connection table */
 	u_int32_t packet_seq;	/*!< Packet sequence number (start at zero) */
 	int auth_by_default;	/*!< Auth. by default (=1) */
@@ -216,12 +215,6 @@ typedef struct {
 	 * Thread which receive messages from nuauth, see function recv_message().
 	 */
 	pthread_t recvthread;
-
-	/* TODO: To remove */
-	/**
-	 * Diffie Hellman parameters used to establish TLS tunnel.
-	 */
-	gnutls_dh_params dh_params;
 
 	/**
 	 * Do we need to set credentials to current gnutls session?

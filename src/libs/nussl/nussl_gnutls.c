@@ -74,6 +74,7 @@ GCRY_THREAD_OPTION_PTHREAD_IMPL;
 #include "nussl_privssl.h"
 #include "nussl_utils.h"
 
+#define UGLY_DEBUG() printf("%s %s:%i\n", __FUNCTION__, __FILE__, __LINE__)
 struct ne_ssl_dname_s {
     int subject; /* non-zero if this is the subject DN object */
     gnutls_x509_crt cert;
@@ -101,6 +102,7 @@ static int oid_find_highest_index(gnutls_x509_crt cert, int subject, const char 
 {
     int ret, idx = -1;
 
+    UGLY_DEBUG();
     do {
         size_t len = 0;
 
@@ -127,6 +129,7 @@ static void convert_dirstring(ne_buffer *buf, const char *charset,
     char *inbuf = (char *)data->data;
     char *outbuf = buf->data + buf->used - 1;
     
+    UGLY_DEBUG();
     if (id == (iconv_t)-1) {
         char err[128], err2[128];
 
@@ -159,6 +162,7 @@ static void convert_dirstring(ne_buffer *buf, const char *charset,
 
 static void append_dirstring(ne_buffer *buf, gnutls_datum *data, unsigned long tag)
 {
+    UGLY_DEBUG();
     switch (tag) {
     case TAG_UTF8:
     case TAG_IA5:
@@ -196,6 +200,7 @@ char *ne_ssl_readable_dname(const ne_ssl_dname *name)
     ne_buffer *buf;
     gnutls_x509_ava_st val;
 
+    UGLY_DEBUG();
     if (name->subject)
         ret = gnutls_x509_crt_get_subject(name->cert, &dn);
     else
@@ -248,6 +253,7 @@ static void append_rdn(ne_buffer *buf, gnutls_x509_crt x5, int subject, const ch
     int idx, top, ret;
     char rdn[50];
 
+    UGLY_DEBUG();
     top = oid_find_highest_index(x5, subject, oid);
     
     for (idx = top; idx >= 0; idx--) {
@@ -274,6 +280,7 @@ char *ne_ssl_readable_dname(const ne_ssl_dname *name)
     ne_buffer *buf = ne_buffer_create();
     int ret, idx = 0;
 
+    UGLY_DEBUG();
     do {
         char oid[32] = {0};
         size_t oidlen = sizeof oid;
@@ -298,6 +305,7 @@ int ne_ssl_dname_cmp(const ne_ssl_dname *dn1, const ne_ssl_dname *dn2)
     size_t s1 = sizeof c1, s2 = sizeof c2;
     int ret;
 
+    UGLY_DEBUG();
     if (dn1->subject)
         ret = gnutls_x509_crt_get_dn(dn1->cert, c1, &s1);
     else
@@ -320,6 +328,7 @@ int ne_ssl_dname_cmp(const ne_ssl_dname *dn1, const ne_ssl_dname *dn2)
 
 void ne_ssl_clicert_free(ne_ssl_client_cert *cc)
 {
+    UGLY_DEBUG();
     if (cc->p12)
         gnutls_pkcs12_deinit(cc->p12);
     if (cc->decrypted) {
@@ -334,6 +343,7 @@ void ne_ssl_clicert_free(ne_ssl_client_cert *cc)
 void ne_ssl_cert_validity_time(const ne_ssl_certificate *cert,
                                time_t *from, time_t *until)
 {
+    UGLY_DEBUG();
     if (from) {
         *from = gnutls_x509_crt_get_activation_time(cert->subject);
     }
@@ -349,6 +359,7 @@ static int match_hostname(char *cn, const char *hostname)
 {
     const char *dot;
     NE_DEBUG(NE_DBG_SSL, "Match %s on %s...\n", cn, hostname);
+    UGLY_DEBUG();
     dot = strchr(hostname, '.');
     if (dot == NULL) {
 	char *pnt = strchr(cn, '.');
@@ -381,8 +392,9 @@ static int check_identity(gnutls_x509_crt cert,
     size_t len;
     const char *hostname;
     
-/*     hostname = server ? server->host : ""; */
+    hostname = /*server ? server->host :*/ "";
 
+    UGLY_DEBUG();
     do {
         len = sizeof name;
         ret = gnutls_x509_crt_get_subject_alt_name(cert, seq, name, &len,
@@ -473,6 +485,7 @@ static int check_identity(gnutls_x509_crt cert,
 static ne_ssl_certificate *populate_cert(ne_ssl_certificate *cert,
                                          gnutls_x509_crt x5)
 {
+    UGLY_DEBUG();
     cert->subj_dn.cert = x5;
     cert->subj_dn.subject = 1;
     cert->issuer_dn.cert = x5;
@@ -493,6 +506,7 @@ static gnutls_x509_crt x509_crt_copy(gnutls_x509_crt src)
     gnutls_datum tmp;
     gnutls_x509_crt dest;
     
+    UGLY_DEBUG();
     if (gnutls_x509_crt_init(&dest) != 0) {
         return NULL;
     }
@@ -525,6 +539,7 @@ static ne_ssl_client_cert *dup_client_cert(const ne_ssl_client_cert *cc)
     int ret;
     ne_ssl_client_cert *newcc = ne_calloc(sizeof *newcc);
 
+    UGLY_DEBUG();
     newcc->decrypted = 1;
 
     ret = gnutls_x509_privkey_init(&newcc->pkey);
@@ -555,6 +570,7 @@ static int provide_client_cert(gnutls_session session,
                                int sign_algos_length, gnutls_retr_st *st)
 {
     ne_session *sess = gnutls_session_get_ptr(session);
+    UGLY_DEBUG();
     
     if (!sess) {
         return -1;
@@ -593,23 +609,26 @@ static int provide_client_cert(gnutls_session session,
 
 void ne_ssl_set_clicert(ne_session *sess, const ne_ssl_client_cert *cc)
 {
+    UGLY_DEBUG();
     sess->client_cert = dup_client_cert(cc);
 }
 
 ne_ssl_context *ne_ssl_context_create(int flags)
 {
     ne_ssl_context *ctx = ne_calloc(sizeof *ctx);
+    UGLY_DEBUG();
     gnutls_certificate_allocate_credentials(&ctx->cred);
-    if (flags == NE_SSL_CTX_CLIENT) {
+/*    if (flags == NE_SSL_CTX_CLIENT) {
         gnutls_certificate_client_set_retrieve_function(ctx->cred,
                                                         provide_client_cert);
-    }
+    }*/
     return ctx;
 }
 
 int ne_ssl_context_keypair(ne_ssl_context *ctx, 
                            const char *cert, const char *key)
 {
+    UGLY_DEBUG();
     gnutls_certificate_set_x509_key_file(ctx->cred, cert, key,
                                          GNUTLS_X509_FMT_PEM);
     return 0;
@@ -618,6 +637,7 @@ int ne_ssl_context_keypair(ne_ssl_context *ctx,
 int ne_ssl_context_set_verify(ne_ssl_context *ctx, int required,
                               const char *ca_names, const char *verify_cas)
 {
+    UGLY_DEBUG();
     ctx->verify = required;
     if (verify_cas) {
         gnutls_certificate_set_x509_trust_file(ctx->cred, verify_cas,
@@ -636,6 +656,7 @@ void ne_ssl_context_set_flag(ne_ssl_context *ctx, int flag, int value)
 
 void ne_ssl_context_destroy(ne_ssl_context *ctx)
 {
+    UGLY_DEBUG();
     gnutls_certificate_free_credentials(ctx->cred);
     if (ctx->cache.client.data) {
         ne_free(ctx->cache.client.data);
@@ -653,6 +674,7 @@ static ne_ssl_certificate *make_peers_chain(gnutls_session sock)
     const gnutls_datum *certs;
     unsigned int n, count;
 
+    UGLY_DEBUG();
     certs = gnutls_certificate_get_peers(sock, &count);
     if (!certs) {
         return NULL;
@@ -689,6 +711,7 @@ static int check_certificate(ne_session *sess, gnutls_session sock,
     int ret, failures = 0;
 /*     ne_uri server; */
 
+    UGLY_DEBUG();
     before = gnutls_x509_crt_get_activation_time(chain->subject);
     after = gnutls_x509_crt_get_expiration_time(chain->subject);
 
@@ -737,6 +760,7 @@ int ne__negotiate_ssl(ne_session *sess)
     ne_ssl_certificate *chain;
     gnutls_session sock;
 
+    UGLY_DEBUG();
     NE_DEBUG(NE_DBG_SSL, "Negotiating SSL connection.\n");
 
     /* Pass through the hostname if SNI is enabled. */
@@ -751,6 +775,7 @@ int ne__negotiate_ssl(ne_session *sess)
 
     sock = ne__sock_sslsock(sess->socket);
 
+#ifdef XXX
     chain = make_peers_chain(sock);
     if (chain == NULL) {
         ne_set_error(sess, _("Server did not send certificate chain"));
@@ -771,7 +796,7 @@ int ne__negotiate_ssl(ne_session *sess)
     }
 
     sess->server_cert = chain;
-
+#endif
     return NE_OK;
 }
 
@@ -1152,6 +1177,7 @@ int ne__ssl_init(void)
 
 void ne__ssl_exit(void)
 {
+    UGLY_DEBUG();
     /* No way to unregister the thread callbacks.  Doomed. */
 #if LIBGNUTLS_VERSION_MAJOR > 1 || LIBGNUTLS_VERSION_MINOR > 3 \
     || (LIBGNUTLS_VERSION_MINOR == 3 && LIBGNUTLS_VERSION_PATCH >= 3)

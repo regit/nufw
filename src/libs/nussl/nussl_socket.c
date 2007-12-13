@@ -39,7 +39,6 @@
 
 #include <config.h>
 #include "nussl_config.h"
-#include "nussl_config.h"
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -194,7 +193,10 @@ typedef struct in_addr ne_inet_addr;
 
 /* Socket read timeout */
 #define SOCKET_READ_TIMEOUT 120
+static const int cert_type_priority[3] = { GNUTLS_CRT_X509, 0 };
 
+#include <stdio.h>
+#define UGLY_DEBUG() printf("%s %s:%i\n", __FUNCTION__, __FILE__, __LINE__)
 /* Critical I/O functions on a socket: useful abstraction for easily
  * handling SSL I/O alongside raw socket I/O. */
 struct iofns {
@@ -327,6 +329,7 @@ int ne_sock_init(void)
     int err;
 #endif
 
+    UGLY_DEBUG();
     if (init_state > 0) {
         init_state++;
 	return 0;
@@ -373,6 +376,7 @@ int ne_sock_init(void)
 
 void ne_sock_exit(void)
 {
+    UGLY_DEBUG();
     if (init_state > 0 && --init_state == 0) {
 #ifdef WIN32
         WSACleanup();
@@ -397,6 +401,7 @@ static int raw_poll(int fdno, int rdwr, int secs)
     struct pollfd fds;
     int timeout = secs > 0 ? secs * 1000 : -1;
 
+    UGLY_DEBUG();
     fds.fd = fdno;
     fds.events = rdwr == 0 ? POLLIN : POLLOUT;
     fds.revents = 0;
@@ -429,6 +434,7 @@ static int raw_poll(int fdno, int rdwr, int secs)
 
 int ne_sock_block(ne_socket *sock, int n)
 {
+    UGLY_DEBUG();
     if (sock->bufavail)
 	return 0;
     return sock->ops->readable(sock, n);
@@ -441,6 +447,7 @@ ssize_t ne_sock_read(ne_socket *sock, char *buffer, size_t buflen)
 {
     ssize_t bytes;
 
+    UGLY_DEBUG();
 #if 0
     NE_DEBUG(NE_DBG_SOCKET, "buf: at %d, %d avail [%s]\n", 
 	     sock->bufpos - sock->buffer, sock->bufavail, sock->bufpos);
@@ -476,6 +483,7 @@ ssize_t ne_sock_peek(ne_socket *sock, char *buffer, size_t buflen)
 {
     ssize_t bytes;
     
+    UGLY_DEBUG();
     if (sock->bufavail) {
 	/* just return buffered data. */
 	bytes = sock->bufavail;
@@ -502,6 +510,7 @@ static int readable_raw(ne_socket *sock, int secs)
 {
     int ret = raw_poll(sock->fd, 0, secs);
 
+    UGLY_DEBUG();
     if (ret < 0) {
 	set_strerror(sock, ne_errno);
 	return NE_SOCK_ERROR;
@@ -513,6 +522,7 @@ static ssize_t read_raw(ne_socket *sock, char *buffer, size_t len)
 {
     ssize_t ret;
     
+    UGLY_DEBUG();
     ret = readable_raw(sock, sock->rdtimeout);
     if (ret) return ret;
 
@@ -539,6 +549,7 @@ static ssize_t write_raw(ne_socket *sock, const char *data, size_t length)
 {
     ssize_t ret;
     
+    UGLY_DEBUG();
 #ifdef __QNX__
     /* Test failures seen on QNX over loopback, if passing large
      * buffer lengths to send().  */
@@ -563,6 +574,7 @@ static const struct iofns iofns_raw = { read_raw, write_raw, readable_raw };
 /* OpenSSL I/O function implementations. */
 static int readable_ossl(ne_socket *sock, int secs)
 {
+    UGLY_DEBUG();
     if (SSL_pending(sock->ssl))
 	return 0;
     return readable_raw(sock, secs);
@@ -574,6 +586,7 @@ static int error_ossl(ne_socket *sock, int sret)
     int errnum = SSL_get_error(sock->ssl, sret);
     unsigned long err;
 
+    UGLY_DEBUG();
     if (errnum == SSL_ERROR_ZERO_RETURN) {
 	set_error(sock, _("Connection closed"));
         return NE_SOCK_CLOSED;
@@ -616,6 +629,7 @@ static ssize_t read_ossl(ne_socket *sock, char *buffer, size_t len)
 {
     int ret;
 
+    UGLY_DEBUG();
     ret = readable_ossl(sock, sock->rdtimeout);
     if (ret) return ret;
     
@@ -629,6 +643,7 @@ static ssize_t read_ossl(ne_socket *sock, char *buffer, size_t len)
 static ssize_t write_ossl(ne_socket *sock, const char *data, size_t len)
 {
     int ret, ilen = CAST2INT(len);
+    UGLY_DEBUG();
     ret = SSL_write(sock->ssl, data, ilen);
     /* ssl.h says SSL_MODE_ENABLE_PARTIAL_WRITE must be enabled to
      * have SSL_write return < length...  so, SSL_write should never
@@ -651,6 +666,7 @@ static int check_alert(ne_socket *sock, ssize_t ret)
 {
     const char *alert;
 
+    UGLY_DEBUG();
     if (ret == GNUTLS_E_WARNING_ALERT_RECEIVED) {
         alert = gnutls_alert_get_name(gnutls_alert_get(sock->ssl));
         NE_DEBUG(NE_DBG_SOCKET, "TLS warning alert: %s\n", alert);
@@ -665,6 +681,7 @@ static int check_alert(ne_socket *sock, ssize_t ret)
 
 static int readable_gnutls(ne_socket *sock, int secs)
 {
+    UGLY_DEBUG();
     if (gnutls_record_check_pending(sock->ssl)) {
         return 0;
     }
@@ -675,6 +692,7 @@ static ssize_t error_gnutls(ne_socket *sock, ssize_t sret)
 {
     ssize_t ret;
 
+    UGLY_DEBUG();
     switch (sret) {
     case 0:
 	ret = NE_SOCK_CLOSED;
@@ -716,6 +734,7 @@ static ssize_t read_gnutls(ne_socket *sock, char *buffer, size_t len)
 {
     ssize_t ret;
 
+    UGLY_DEBUG();
     ret = readable_gnutls(sock, sock->rdtimeout);
     if (ret) return ret;
     
@@ -733,6 +752,7 @@ static ssize_t write_gnutls(ne_socket *sock, const char *data, size_t len)
 {
     ssize_t ret;
 
+    UGLY_DEBUG();
     do {
         ret = gnutls_record_send(sock->ssl, data, len);
     } while (RETRY_GNUTLS(sock, ret));
@@ -755,6 +775,7 @@ int ne_sock_fullwrite(ne_socket *sock, const char *data, size_t len)
 {
     ssize_t ret;
 
+    UGLY_DEBUG();
     do {
         ret = sock->ops->swrite(sock, data, len);
         if (ret > 0) {
@@ -771,6 +792,7 @@ ssize_t ne_sock_readline(ne_socket *sock, char *buf, size_t buflen)
     char *lf;
     size_t len;
     
+    UGLY_DEBUG();
     if ((lf = memchr(sock->bufpos, '\n', sock->bufavail)) == NULL
 	&& sock->bufavail < RDBUFSIZ) {
 	/* The buffered data does not contain a complete line: move it
@@ -813,6 +835,7 @@ ssize_t ne_sock_fullread(ne_socket *sock, char *buffer, size_t buflen)
 {
     ssize_t len;
 
+    UGLY_DEBUG();
     while (buflen > 0) {
 	len = ne_sock_read(sock, buffer, buflen);
 	if (len < 0) return len;
@@ -837,6 +860,7 @@ extern int h_errno;
 ne_sock_addr *ne_addr_resolve(const char *hostname, int flags)
 {
     ne_sock_addr *addr = ne_calloc(sizeof *addr);
+    UGLY_DEBUG();
 #ifdef USE_GETADDRINFO
     struct addrinfo hints = {0};
     char *pnt;
@@ -1120,6 +1144,7 @@ static int connect_socket(ne_socket *sock, int fd,
 ne_socket *ne_sock_create(void)
 {
     ne_socket *sock = ne_calloc(sizeof *sock);
+    UGLY_DEBUG();
     sock->rdtimeout = SOCKET_READ_TIMEOUT;
     sock->cotimeout = 0;
     sock->bufpos = sock->buffer;
@@ -1200,6 +1225,8 @@ int ne_sock_connect(ne_socket *sock,
                     const ne_inet_addr *addr, unsigned int port)
 {
     int fd, ret;
+
+    UGLY_DEBUG();
 
     /* use SOCK_STREAM rather than ai_socktype: some getaddrinfo
      * implementations do not set ai_socktype, e.g. RHL6.2. */
@@ -1300,6 +1327,7 @@ ne_inet_addr *ne_iaddr_make(ne_iaddr_type type, const unsigned char *raw)
 	return NULL;
 #endif
     ia = ne_calloc(sizeof *ia);
+    UGLY_DEBUG();
 #ifdef USE_GETADDRINFO
     /* ai_protocol and ai_socktype aren't used by connect_socket() so
      * ignore them here. (for now) */
@@ -1329,6 +1357,7 @@ ne_inet_addr *ne_iaddr_make(ne_iaddr_type type, const unsigned char *raw)
 
 ne_iaddr_type ne_iaddr_typeof(const ne_inet_addr *ia)
 {
+    UGLY_DEBUG();
 #ifdef USE_GETADDRINFO
     return ia->ai_family == AF_INET6 ? ne_iaddr_ipv6 : ne_iaddr_ipv4;
 #else
@@ -1338,6 +1367,7 @@ ne_iaddr_type ne_iaddr_typeof(const ne_inet_addr *ia)
 
 int ne_iaddr_cmp(const ne_inet_addr *i1, const ne_inet_addr *i2)
 {
+    UGLY_DEBUG();
 #ifdef USE_GETADDRINFO
     if (i1->ai_family != i2->ai_family)
 	return i2->ai_family - i1->ai_family;
@@ -1370,6 +1400,7 @@ int ne_sock_accept(ne_socket *sock, int listener)
 {
     int fd = accept(listener, NULL, NULL);
 
+    UGLY_DEBUG();
     if (fd < 0)
         return -1;
 
@@ -1389,6 +1420,7 @@ void ne_sock_read_timeout(ne_socket *sock, int timeout)
 
 void ne_sock_connect_timeout(ne_socket *sock, int timeout)
 {
+    UGLY_DEBUG();
     sock->cotimeout = timeout;
 }
 
@@ -1401,6 +1433,7 @@ void ne_sock_connect_timeout(ne_socket *sock, int timeout)
 /* Copy datum 'src' to 'dest'. */
 static void copy_datum(gnutls_datum *dest, gnutls_datum *src)
 {
+    UGLY_DEBUG();
     dest->size = src->size;
     dest->data = memcpy(gnutls_malloc(src->size), src->data, src->size);
 }
@@ -1410,6 +1443,7 @@ static int store_sess(void *userdata, gnutls_datum key, gnutls_datum data)
 {
     ne_ssl_context *ctx = userdata;
 
+    UGLY_DEBUG();
     if (ctx->cache.server.key.data) { 
         gnutls_free(ctx->cache.server.key.data);
         gnutls_free(ctx->cache.server.data.data);
@@ -1424,6 +1458,7 @@ static int store_sess(void *userdata, gnutls_datum key, gnutls_datum data)
 /* Returns non-zero if d1 and d2 are the same datum. */
 static int match_datum(gnutls_datum *d1, gnutls_datum *d2)
 {
+    UGLY_DEBUG();
     return d1->size == d2->size
         && memcmp(d1->data, d2->data, d1->size) == 0;
 }
@@ -1434,6 +1469,7 @@ static gnutls_datum retrieve_sess(void *userdata, gnutls_datum key)
     ne_ssl_context *ctx = userdata;
     gnutls_datum ret = { NULL, 0 };
 
+    UGLY_DEBUG();
     if (match_datum(&ctx->cache.server.key, &key)) {
         copy_datum(&ret, &ctx->cache.server.data);
     }
@@ -1453,6 +1489,7 @@ int ne_sock_accept_ssl(ne_socket *sock, ne_ssl_context *ctx)
 {
     int ret;
     ne_ssl_socket ssl;
+    UGLY_DEBUG();
 
 #if defined(HAVE_OPENSSL)
     ssl = SSL_new(ctx->ctx);
@@ -1497,6 +1534,7 @@ int ne_sock_connect_ssl(ne_socket *sock, ne_ssl_context *ctx, void *userdata)
 {
     int ret;
 
+    UGLY_DEBUG();
 #if defined(HAVE_OPENSSL)
     SSL *ssl;
 
@@ -1548,13 +1586,16 @@ int ne_sock_connect_ssl(ne_socket *sock, ne_ssl_context *ctx, void *userdata)
     /* DH and RSA params are set in ne_ssl_context_create */
     gnutls_init(&sock->ssl, GNUTLS_CLIENT);
     gnutls_set_default_priority(sock->ssl);
+    gnutls_certificate_type_set_priority(sock->ssl,cert_type_priority);
     gnutls_session_set_ptr(sock->ssl, userdata);
     gnutls_credentials_set(sock->ssl, GNUTLS_CRD_CERTIFICATE, ctx->cred);
 
+#ifdef XXX /* keep or drop ? */
     if (ctx->hostname) {
         gnutls_server_name_set(sock->ssl, GNUTLS_NAME_DNS, ctx->hostname,
                                strlen(ctx->hostname));
     }                               
+#endif
 
     gnutls_transport_set_ptr(sock->ssl, (gnutls_transport_ptr) sock->fd);
 
@@ -1598,6 +1639,7 @@ int ne_sock_connect_ssl(ne_socket *sock, ne_ssl_context *ctx, void *userdata)
 
 ne_ssl_socket ne__sock_sslsock(ne_socket *sock)
 {
+    UGLY_DEBUG();
     return sock->ssl;
 }
 
@@ -1605,6 +1647,7 @@ ne_ssl_socket ne__sock_sslsock(ne_socket *sock)
 
 int ne_sock_sessid(ne_socket *sock, unsigned char *buf, size_t *buflen)
 {
+    UGLY_DEBUG();
 #ifdef NE_HAVE_SSL
 #ifdef HAVE_GNUTLS
     if (sock->ssl) {
@@ -1641,6 +1684,7 @@ int ne_sock_sessid(ne_socket *sock, unsigned char *buf, size_t *buflen)
 
 char *ne_sock_cipher(ne_socket *sock)
 {
+    UGLY_DEBUG();
     if (sock->ssl) {
 #ifdef NE_HAVE_SSL
 #ifdef HAVE_OPENSSL
@@ -1659,12 +1703,14 @@ char *ne_sock_cipher(ne_socket *sock)
 
 const char *ne_sock_error(const ne_socket *sock)
 {
+    UGLY_DEBUG();
     return sock->error;
 }
 
 /* Closes given ne_socket */
 int ne_sock_close(ne_socket *sock)
 {
+    UGLY_DEBUG();
     int ret;
 
 #if defined(HAVE_OPENSSL)

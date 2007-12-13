@@ -43,8 +43,6 @@
 #include <sasl/sasl.h>
 #include <sasl/saslutil.h>
 #include <stdarg.h>		/* va_list, va_start, ... */
-#include <gnutls/x509.h>
-#include <gcrypt.h>
 #include <langinfo.h>
 #include <proto.h>
 #include "client.h"
@@ -52,17 +50,17 @@
 #include "sys_config.h"
 #include "internal.h"
 #include <sys/utsname.h>
+#include <nussl_ssl.h>
+#include <nussl_session.h>
+#include <nussl_request.h> /* ne__negotiate_ssl */
+#include <nussl_utils.h> /* NE_OK definition */
 
-#ifndef GCRY_THREAD
-#define GCRY_THREAD 1
-GCRY_THREAD_OPTION_PTHREAD_IMPL;
-#endif
-
-#ifndef NUCLIENT_WITHOUT_DIFFIE_HELLMAN
+/*
+ * #ifndef NUCLIENT_WITHOUT_DIFFIE_HELLMAN
 #  define DH_BITS 1024
 #endif
-
-static const int cert_type_priority[3] = { GNUTLS_CRT_X509, 0 };
+*/
+/* static const int cert_type_priority[3] = { GNUTLS_CRT_X509, 0 }; */
 
 
 void nu_exit_clean(nuauth_session_t * session)
@@ -70,20 +68,14 @@ void nu_exit_clean(nuauth_session_t * session)
 	if (session->ct) {
 		tcptable_free(session->ct);
 	}
-	if (session->socket > 0) {
+	/*if (session->socket > 0) {
 		shutdown(session->socket, SHUT_WR);
 		close(session->socket);
 		session->socket = 0;
-	}
+	}*/
 
 	secure_str_free(session->username);
 	secure_str_free(session->password);
-
-	if (session->cred) {
-		gnutls_certificate_free_keys(session->cred);
-		gnutls_certificate_free_credentials(session->cred);
-	}
-	gnutls_deinit(session->tls);
 
 	pthread_cond_destroy(&(session->check_cond));
 	pthread_mutex_destroy(&(session->check_count_mutex));
@@ -138,12 +130,17 @@ int nu_client_global_init(nuclient_error_t * err)
 {
 	int ret;
 
-	gcry_control(GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);
-	ret = gnutls_global_init();
+	/*gcry_control(GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);*/
+	/* ret = gnutls_global_init(); */
+
+/*
 	if (ret != 0) {
 		SET_ERROR(err, GNUTLS_ERROR, ret);
 		return 0;
 	}
+*/
+
+	ne_sock_init();
 
 	/* initialize the sasl library */
 	ret = sasl_client_init(NULL);
@@ -170,7 +167,8 @@ int nu_client_global_init(nuclient_error_t * err)
 void nu_client_global_deinit()
 {
 	sasl_done();
-	gnutls_global_deinit();
+/*	gnutls_global_deinit();_password
+ *	*/
 }
 
 /**
@@ -264,6 +262,7 @@ int nu_client_setup_tls(nuauth_session_t * session,
 	 */
 	if (certfile || keyfile)
 		exit_on_error = 1;
+#if XXX
 
 	/* compute patch keyfile */
 	if (keyfile == NULL && home != NULL) {
@@ -376,6 +375,7 @@ int nu_client_setup_tls(nuauth_session_t * session,
 	if (home) {
 		free(home);
 	}
+#endif
 	return 1;
 }
 /**
@@ -405,34 +405,6 @@ void nu_client_set_source(nuauth_session_t *session, struct sockaddr_storage *ad
 }
 
 /**
- * \ingroup nuclientAPI
- */
-int nu_client_reset_tls(nuauth_session_t *session)
-{
-	int ret;
-	session->need_set_cred = 1;
-
-	/* Initialize TLS session */
-	ret = gnutls_init(&session->tls, GNUTLS_CLIENT);
-	if (ret != 0) {
-		return 0;
-	}
-
-	ret = gnutls_set_default_priority(session->tls);
-	if (ret < 0) {
-		return 0;
-	}
-
-	ret =
-	    gnutls_certificate_type_set_priority(session->tls,
-						 cert_type_priority);
-	if (ret < 0) {
-		return 0;
-	}
-	return 1;
-}
-
-/**
  * \brief Init connection to nuauth server
  *
  * (very secure but initialization is slower)
@@ -453,7 +425,6 @@ nuauth_session_t *_nu_client_new(nuclient_error_t * err)
 	nuauth_session_t *session;
 	int ret;
 
-
 	/* First reset error */
 	SET_ERROR(err, INTERNAL_ERROR, NO_ERR);
 
@@ -472,7 +443,6 @@ nuauth_session_t *_nu_client_new(nuclient_error_t * err)
 	session->packet_seq = 0;
 	session->checkthread = NULL_THREAD;
 	session->recvthread = NULL_THREAD;
-	session->tls = NULL;
 	session->ct = NULL;
 	session->tls_password = NULL;
 	session->debug_mode = 0;
@@ -497,8 +467,11 @@ nuauth_session_t *_nu_client_new(nuclient_error_t * err)
 	}
 	session->ct = new;
 
+	session->nussl = ne_session_create(session->default_hostname, 4129); /* XXX: don't use default values */
 	/* X509 stuff */
+#if XXX
 	ret = gnutls_certificate_allocate_credentials(&(session->cred));
+
 	if (ret != 0) {
 		SET_ERROR(err, GNUTLS_ERROR, ret);
 		nu_exit_clean(session);
@@ -510,6 +483,7 @@ nuauth_session_t *_nu_client_new(nuclient_error_t * err)
 		SET_ERROR(err, GNUTLS_ERROR, ret);
 		nu_exit_clean(session);
 	}
+#endif
 	return session;
 }
 
@@ -596,24 +570,24 @@ void nu_client_reset(nuauth_session_t * session)
 	ask_session_end(session);
 
 	/* delete old TLS session and create a new TLS session */
-	gnutls_deinit(session->tls);
+/*	gnutls_deinit(session->tls);
 	gnutls_init(&session->tls, GNUTLS_CLIENT);
 	gnutls_set_default_priority(session->tls);
 	gnutls_certificate_type_set_priority(session->tls,
-					     cert_type_priority);
+					     cert_type_priority);*/
 	session->need_set_cred = 1;
 
 	/* close socket */
-	if (session->socket > 0) {
+/*	if (session->socket > 0) {
 		shutdown(session->socket, SHUT_WR);
 		close(session->socket);
 	}
-
+*/
 	/* reset fields */
 	session->connected = 0;
 	session->count_msg_cond = -1;
 	session->timestamp_last_sent = time(NULL);
-	session->socket = -1;
+/*	session->socket = -1; */
 	session->checkthread = 0;
 	session->recvthread = 0;
 }
@@ -636,6 +610,7 @@ int nu_client_connect(nuauth_session_t * session,
 		      const char *hostname, const char *service,
 		      nuclient_error_t * err)
 {
+#if XXX
 	if (session->need_set_cred) {
 		/* put the x509 credentials to the current session */
 		int ret =
@@ -648,13 +623,19 @@ int nu_client_connect(nuauth_session_t * session,
 		}
 		session->need_set_cred = 0;
 	}
-
 	/* set field about host */
 	if (!init_socket(session, hostname, service, err)) {
 		return 0;
 	}
 
 	if (!tls_handshake(session, err)) {
+		return 0;
+	}
+#endif
+	session->need_set_cred = 0;
+
+	if (open_connection(session->nussl) != NE_OK) {
+		printf("%s\n", ne_get_error(session->nussl));
 		return 0;
 	}
 
@@ -727,9 +708,11 @@ const char *nu_client_strerror(nuclient_error_t * err)
 	if (err == NULL)
 		return "Error structure was not initialised";
 	switch (err->family) {
+#if XXX
 	case GNUTLS_ERROR:
 		return gnutls_strerror(err->error);
 		break;
+#endif
 	case SASL_ERROR:
 		return sasl_errstring(err->error, NULL, NULL);
 		break;

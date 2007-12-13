@@ -44,10 +44,10 @@ char *secure_str_copy(const char *orig);
  *
  * \return Copy of the string, or NULL on error.
  */
-#ifdef USE_GCRYPT_MALLOC_SECURE
+/*#ifdef USE_GCRYPT_MALLOC_SECURE
 #   define secure_str_free(text) gcry_free(text)
-#else
+#else*/
 #   define secure_str_free(text) free(text)
-#endif
+/*#endif*/
 
 

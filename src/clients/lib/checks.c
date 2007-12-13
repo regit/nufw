@@ -24,6 +24,7 @@
 #include "nufw_source.h"
 #include "nuclient.h"
 #include <sasl/saslutil.h>
+#include <nussl_session.h>
 #include <pthread.h>
 #include <proto.h>
 #include "proc.h"
@@ -79,15 +80,19 @@ void *recv_message(void *data)
 			     &session->check_count_mutex);
 
 	for (;;) {
-		ret =
-		    gnutls_record_recv(session->tls, dgram, sizeof dgram);
+/*		ret =
+		    gnutls_record_recv(session->tls, dgram, sizeof dgram);*/
+		ret = ne_read(session->nussl, dgram, sizeof dgram);
 		if (ret <= 0) {
+#if XXX
 			if (gnutls_error_is_fatal(ret)) {
 				ask_session_end(session);
 				break;
 			} else {
 				continue;
 			}
+#endif
+			printf("EZrrors..\n");
 		}
 
 		switch (dgram[0]) {
@@ -108,6 +113,7 @@ void *recv_message(void *data)
 			}
 
 			/*  send it */
+#if XXX
 			if (session->tls) {
 				ret =
 				    gnutls_record_send(session->tls,
@@ -122,6 +128,17 @@ void *recv_message(void *data)
 					return NULL;
 				}
 			}
+#else
+			ret = ne_write(session->nussl, message, message_length);
+			if (ret <= 0) {
+#if DEBUG_ENABLE
+				printf("write failed at %s:%d\n",
+				       __FILE__, __LINE__);
+#endif
+				ask_session_end(session);
+				return NULL;
+			}
+#endif
 			break;
 
 		default:

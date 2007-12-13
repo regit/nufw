@@ -26,13 +26,14 @@
 #include <sasl/saslutil.h>
 #include <pthread.h>
 #include <stdarg.h>		/* va_list, va_start, ... */
-#include <gnutls/x509.h>
+/*#include <gnutls/x509.h>*/
 #include <langinfo.h>
 #include <proto.h>
 #include "client.h"
 #include "security.h"
 #include "internal.h"
 #include <sys/utsname.h>
+#include <nussl_session.h>
 
 char* nu_locale_charset;
 
@@ -66,7 +67,7 @@ void do_panic(const char *filename, unsigned long line, const char *fmt,
 }
 
 
-static int samp_send(gnutls_session session, const char *buffer,
+static int samp_send(nuauth_session_t* session, const char *buffer,
 		     unsigned length, nuclient_error_t * err)
 {
 	char *buf;
@@ -90,29 +91,45 @@ static int samp_send(gnutls_session session, const char *buffer,
 
 	memcpy(buf, "C: ", 3);
 
+#if XXX
 	result = gnutls_record_send(session, buf, len + 3);
 	free(buf);
 	if (result < 0) {
 		SET_ERROR(err, GNUTLS_ERROR, result);
 		return 0;
 	}
+#else
+	result = ne_write(session->nussl, buf, len + 3);
+	if (result < 0) {
+		SET_ERROR(err, GNUTLS_ERROR, result);
+		return 0;
+	}
+#endif
 	return 1;
 }
 
 
-
-static unsigned samp_recv(gnutls_session session, char *buf, int bufsize,
+/* XXX: Move this fuction into nussl */
+static unsigned samp_recv(nuauth_session_t* session, char *buf, int bufsize,
 			  nuclient_error_t * err)
 {
 	unsigned len;
 	int result;
 	int tls_len;
 
+#if XXX
 	tls_len = gnutls_record_recv(session, buf, bufsize);
 	if (tls_len <= 0) {
 		SET_ERROR(err, GNUTLS_ERROR, tls_len);
 		return 0;
 	}
+#else
+	tls_len = ne_read(session->nussl, buf, bufsize);
+	if (tls_len <= 0) {
+		SET_ERROR(err, GNUTLS_ERROR, tls_len);
+		return 0;
+	}
+#endif
 
 	result = sasl_decode64(buf + 3, (unsigned) strlen(buf + 3), buf,
 			       bufsize, &len);
@@ -126,7 +143,7 @@ static unsigned samp_recv(gnutls_session session, char *buf, int bufsize,
 
 
 
-int mysasl_negotiate(nuauth_session_t * user_session, sasl_conn_t * conn,
+int mysasl_negotiate(nuauth_session_t * session, sasl_conn_t * conn,
 		     nuclient_error_t * err)
 {
 	char buf[8192];
@@ -134,7 +151,7 @@ int mysasl_negotiate(nuauth_session_t * user_session, sasl_conn_t * conn,
 	const char *chosenmech;
 	unsigned len;
 	int result;
-	gnutls_session session = user_session->tls;
+	/* gnutls_session session = session->tls; */
 
 	memset(buf, 0, sizeof buf);
 	/* get the capability list */
@@ -146,12 +163,12 @@ int mysasl_negotiate(nuauth_session_t * user_session, sasl_conn_t * conn,
 	result = sasl_client_start(conn,
 				   buf, NULL, &data, &len, &chosenmech);
 
-	if (user_session->verbose) {
+	if (session->verbose) {
 		printf("Using mechanism %s\n", chosenmech);
 	}
 
 	if (result != SASL_OK && result != SASL_CONTINUE) {
-		if (user_session->verbose) {
+		if (session->verbose) {
 			printf("Error starting SASL negotiation");
 			printf("\n%s\n", sasl_errdetail(conn));
 		}
@@ -176,7 +193,7 @@ int mysasl_negotiate(nuauth_session_t * user_session, sasl_conn_t * conn,
 	}
 
 	while (result == SASL_CONTINUE) {
-		if (user_session->verbose) {
+		if (session->verbose) {
 			printf("Waiting for server reply...\n");
 		}
 		memset(buf, 0, sizeof(buf));
@@ -188,12 +205,12 @@ int mysasl_negotiate(nuauth_session_t * user_session, sasl_conn_t * conn,
 		result =
 		    sasl_client_step(conn, buf, len, NULL, &data, &len);
 		if (result != SASL_OK && result != SASL_CONTINUE) {
-			if (user_session->verbose)
+			if (session->verbose)
 				printf("Performing SASL negotiation\n");
 			SET_ERROR(err, SASL_ERROR, result);
 		}
 		if (data && len) {
-			if (user_session->verbose)
+			if (session->verbose)
 				puts("Sending response...\n");
 			if (!samp_send(session, data, len, err)) {
 				return SASL_FAIL;
@@ -212,11 +229,11 @@ int mysasl_negotiate(nuauth_session_t * user_session, sasl_conn_t * conn,
 	}
 
 	if (result != SASL_OK) {
-		if (user_session->verbose)
+		if (session->verbose)
 			puts("Authentication failed...");
 		return SASL_FAIL;
 	} else {
-		if (user_session->verbose)
+		if (session->verbose)
 			puts("Authentication started...\n");
 	}
 
@@ -407,6 +424,7 @@ int send_os(nuauth_session_t * session, nuclient_error_t * err)
 	free(enc_oses);
 
 	/* Send OS field over network */
+#ifdef XXX
 	ret = gnutls_record_send(session->tls, buf, osfield_length);
 	if (ret < 0) {
 		if (session->verbose)
@@ -415,17 +433,39 @@ int send_os(nuauth_session_t * session, nuclient_error_t * err)
 		SET_ERROR(err, GNUTLS_ERROR, ret);
 		return 0;
 	}
-
-	/* wait for message of server about mode */
-	ret = gnutls_record_recv(session->tls, buf, osfield_length);
-	if (ret <= 0) {
-		errno = EACCES;
+#else
+	ret = ne_write(session->nussl, buf, osfield_length);
+	if (ret < 0) {
+		if (session->verbose)
+			printf("Error sending tls data: ...");
 		SET_ERROR(err, GNUTLS_ERROR, ret);
-#ifndef LINUX
-		free(buf);
-#endif
 		return 0;
 	}
+#endif
+
+	/* wait for message of server about mode */
+#ifdef XXX
+		ret = gnutls_record_recv(session->tls, buf, osfield_length);
+		if (ret <= 0) {
+			errno = EACCES;
+			SET_ERROR(err, GNUTLS_ERROR, ret);
+	#ifndef LINUX
+			free(buf);
+	#endif
+			return 0;
+		}
+#else
+		ret = ne_read(session->nussl, buf, osfield_length);
+		if (ret <= 0) {
+			errno = EACCES;
+			SET_ERROR(err, GNUTLS_ERROR, ret);
+	#ifndef LINUX
+			free(buf);
+	#endif
+			return 0;
+		}
+#endif
+
 #ifndef LINUX
 	free(buf);
 #endif
@@ -546,12 +586,20 @@ int init_sasl(nuauth_session_t * session, nuclient_error_t * err)
 		{SASL_CB_LIST_END, NULL, NULL}
 	};
 
+#ifdef XXX
 	ret =
 	    gnutls_record_send(session->tls, "PROTO 5", strlen("PROTO 5"));
 	if (ret < 0) {
 		SET_ERROR(err, GNUTLS_ERROR, ret);
 		return 0;
 	}
+#else
+	ret = ne_write(session->nussl, "PROTO 5", strlen("PROTO 5"));
+	if (ret < 0) {
+		SET_ERROR(err, GNUTLS_ERROR, ret);
+		return 0;
+	}
+#endif
 
 	/* client new connection */
 	ret =
@@ -607,6 +655,7 @@ int init_socket(nuauth_session_t * session,
 		const char *hostname, const char *service,
 		nuclient_error_t *err)
 {
+#if XXX /* to remove */
 	int option_value;
 	struct sigaction no_action;
 	int ecode;
@@ -697,9 +746,11 @@ int init_socket(nuauth_session_t * session,
 		return 0;
 	}
 	freeaddrinfo(res);
+#endif
 	return 1;
 }
 
+#if XXX /* to remove */
 int get_first_x509_cert_from_tls_session(gnutls_session session,
 					  gnutls_x509_crt * cert)
 {
@@ -763,10 +814,12 @@ int certificate_check(nuauth_session_t *session)
 
 	return SASL_OK;
 }
-
+#endif
 /**
  * Do the TLS handshake and check server certificate
  */
+
+#if XXX /* todo */
 int tls_handshake(nuauth_session_t * session, nuclient_error_t * err)
 {
 	int ret;
@@ -832,6 +885,7 @@ int tls_handshake(nuauth_session_t * session, nuclient_error_t * err)
 		printf("Server Certificate OK\n");
 	return 1;
 }
+#endif
 
 /**
  * Make a copy in a string in a secure memory buffer, ie. buffer never moved
@@ -872,7 +926,9 @@ void ask_session_end(nuauth_session_t * session)
 
 	pthread_mutex_lock(&(session->mutex));
 	session->connected = 0;
+#ifdef XXX
 	gnutls_bye(session->tls, GNUTLS_SHUT_WR);
+#endif
 	if (session->recvthread != NULL_THREAD
 	    && !pthread_equal(session->recvthread, self_thread)) {
 		/* destroy thread */
