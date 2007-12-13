@@ -51,6 +51,19 @@
 #define NE_HAVE_SSL
 /* #define HAVE_OPENSSL */
 
+#define NE_FMT_SIZE_T "u"
+#define NE_FMT_SSIZE_T "d"
+#define NE_FMT_OFF_T "ld"
+#define NE_FMT_NE_OFF_T NE_FMT_OFF_T
+
+#ifndef NE_FMT_XML_SIZE
+#define NE_FMT_XML_SIZE "d"
+#endif
+
+/* needs adjusting for Win64... */
+#define SIZEOF_INT 4
+#define SIZEOF_LONG 4
+
 #ifdef WIN32
 
 
@@ -68,19 +81,6 @@
 
 /* Define to enable debugging */
 #define NE_DEBUGGING 1
-
-#define NE_FMT_SIZE_T "u"
-#define NE_FMT_SSIZE_T "d"
-#define NE_FMT_OFF_T "ld"
-#define NE_FMT_NE_OFF_T NE_FMT_OFF_T
-
-#ifndef NE_FMT_XML_SIZE
-#define NE_FMT_XML_SIZE "d"
-#endif
-
-/* needs adjusting for Win64... */
-#define SIZEOF_INT 4
-#define SIZEOF_LONG 4
 
 /* Win32 uses a underscore, so we use a macro to eliminate that. */
 #define snprintf			_snprintf
