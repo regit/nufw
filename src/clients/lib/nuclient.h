@@ -224,9 +224,6 @@ typedef struct {
 	/** Timestamp (Epoch format) of last packet send to nuauth */
 	time_t timestamp_last_sent;
 
-	/** Do we need to check the CA certificate */
-	unsigned char need_ca_verif;
-
 	/** Connection to nuauth informations */
 	char* default_hostname;
 	char* default_port;

@@ -253,6 +253,20 @@ void ne_ssl_trust_cert(ne_session *sess, const ne_ssl_certificate *cert)
 #endif
 }
 
+void ne_ssl_trust_cert_file(ne_session *sess, const char *cert_file)
+{
+    UGLY_DEBUG();
+#ifdef NE_HAVE_SSL
+    ne_ssl_certificate* ca = ne_ssl_cert_read(cert_file);
+    if(ca == NULL)
+    {
+    	printf("Unable to load certificate: %s\n", cert_file);
+	return;
+    }
+    ne_ssl_trust_cert(sess, ca);
+#endif
+}
+
 void ne_ssl_cert_validity(const ne_ssl_certificate *cert, char *from, char *until)
 {
     time_t tf, tu;

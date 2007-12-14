@@ -262,7 +262,6 @@ int nu_client_setup_tls(nuauth_session_t * session,
 	 */
 	if (certfile || keyfile)
 		exit_on_error = 1;
-#if XXX
 
 	/* compute patch keyfile */
 	if (keyfile == NULL && home != NULL) {
@@ -333,6 +332,9 @@ int nu_client_setup_tls(nuauth_session_t * session,
 		cafile = NULL;
 	}
 
+	if (cafile != NULL)
+		ne_ssl_trust_cert_file(session->nussl, cafile);
+#if XXX
 	/* sets the trusted cas file */
 	if (cafile != NULL)
 	{
@@ -449,7 +451,6 @@ nuauth_session_t *_nu_client_new(nuclient_error_t * err)
 	session->verbose = 1;
 	session->timestamp_last_sent = time(NULL);
 	session->need_set_cred = 1;
-	session->need_ca_verif = 0;
 	session->default_hostname = NULL;
 	session->default_port = NULL;
 

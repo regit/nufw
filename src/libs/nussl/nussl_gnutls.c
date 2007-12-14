@@ -391,7 +391,8 @@ static int check_identity(gnutls_x509_crt cert,
     int match = 0, found = 0;
     size_t len;
     const char *hostname;
-    
+
+    return 0;
     hostname = /*server ? server->host :*/ "";
 
     UGLY_DEBUG();
@@ -618,10 +619,10 @@ ne_ssl_context *ne_ssl_context_create(int flags)
     ne_ssl_context *ctx = ne_calloc(sizeof *ctx);
     UGLY_DEBUG();
     gnutls_certificate_allocate_credentials(&ctx->cred);
-/*    if (flags == NE_SSL_CTX_CLIENT) {
+    if (flags == NE_SSL_CTX_CLIENT) {
         gnutls_certificate_client_set_retrieve_function(ctx->cred,
                                                         provide_client_cert);
-    }*/
+    }
     return ctx;
 }
 
@@ -775,7 +776,6 @@ int ne__negotiate_ssl(ne_session *sess)
 
     sock = ne__sock_sslsock(sess->socket);
 
-#ifdef XXX
     chain = make_peers_chain(sock);
     if (chain == NULL) {
         ne_set_error(sess, _("Server did not send certificate chain"));
@@ -796,32 +796,36 @@ int ne__negotiate_ssl(ne_session *sess)
     }
 
     sess->server_cert = chain;
-#endif
     return NE_OK;
 }
 
 const ne_ssl_dname *ne_ssl_cert_issuer(const ne_ssl_certificate *cert)
 {
+    UGLY_DEBUG();
     return &cert->issuer_dn;
 }
 
 const ne_ssl_dname *ne_ssl_cert_subject(const ne_ssl_certificate *cert)
 {
+    UGLY_DEBUG();
     return &cert->subj_dn;
 }
 
 const ne_ssl_certificate *ne_ssl_cert_signedby(const ne_ssl_certificate *cert)
 {
+    UGLY_DEBUG();
     return cert->issuer;
 }
 
 const char *ne_ssl_cert_identity(const ne_ssl_certificate *cert)
 {
+    UGLY_DEBUG();
     return cert->identity;
 }
 
 void ne_ssl_context_trustcert(ne_ssl_context *ctx, const ne_ssl_certificate *cert)
 {
+    UGLY_DEBUG();
     gnutls_x509_crt certs = cert->subject;
     gnutls_certificate_set_x509_trust(ctx->cred, &certs, 1);
 }
@@ -829,6 +833,7 @@ void ne_ssl_context_trustcert(ne_ssl_context *ctx, const ne_ssl_certificate *cer
 void ne_ssl_trust_default_ca(ne_session *sess)
 {
 #ifdef NE_SSL_CA_BUNDLE
+    UGLY_DEBUG();
     gnutls_certificate_set_x509_trust_file(sess->ssl_context->cred,
                                            NE_SSL_CA_BUNDLE,
                                            GNUTLS_X509_FMT_PEM);
@@ -843,6 +848,7 @@ static int read_to_datum(const char *filename, gnutls_datum *datum)
     char tmp[4192];
     size_t len;
 
+    UGLY_DEBUG();
     if (!f) {
         return -1;
     }
@@ -872,6 +878,7 @@ static int pkcs12_parse(gnutls_pkcs12 p12, gnutls_x509_privkey *pkey,
     gnutls_pkcs12_bag bag = NULL;
     int i, j, ret = 0;
 
+    UGLY_DEBUG();
     for (i = 0; ret == 0; ++i) {
         if (bag) gnutls_pkcs12_bag_deinit(bag);
 
@@ -951,6 +958,7 @@ ne_ssl_client_cert *ne_ssl_clicert_read(const char *filename)
     gnutls_x509_crt cert = NULL;
     gnutls_x509_privkey pkey = NULL;
 
+    UGLY_DEBUG();
     if (read_to_datum(filename, &data))
         return NULL;
 
@@ -990,6 +998,7 @@ ne_ssl_client_cert *ne_ssl_clicert_read(const char *filename)
 
 int ne_ssl_clicert_encrypted(const ne_ssl_client_cert *cc)
 {
+    UGLY_DEBUG();
     return !cc->decrypted;
 }
 
@@ -999,6 +1008,7 @@ int ne_ssl_clicert_decrypt(ne_ssl_client_cert *cc, const char *password)
     gnutls_x509_crt cert = NULL;
     gnutls_x509_privkey pkey = NULL;
 
+    UGLY_DEBUG();
     if (gnutls_pkcs12_verify_mac(cc->p12, password) != 0) {
         return -1;
     }        
@@ -1017,11 +1027,13 @@ int ne_ssl_clicert_decrypt(ne_ssl_client_cert *cc, const char *password)
 
 const ne_ssl_certificate *ne_ssl_clicert_owner(const ne_ssl_client_cert *cc)
 {
+    UGLY_DEBUG();
     return &cc->cert;
 }
 
 const char *ne_ssl_clicert_name(const ne_ssl_client_cert *ccert)
 {
+    UGLY_DEBUG();
     return ccert->friendly_name;
 }
 
@@ -1031,6 +1043,7 @@ ne_ssl_certificate *ne_ssl_cert_read(const char *filename)
     gnutls_datum data;
     gnutls_x509_crt x5;
 
+    UGLY_DEBUG();
     if (read_to_datum(filename, &data))
         return NULL;
 
@@ -1040,6 +1053,7 @@ ne_ssl_certificate *ne_ssl_cert_read(const char *filename)
     ret = gnutls_x509_crt_import(x5, &data, GNUTLS_X509_FMT_PEM);
     ne_free(data.data);
     if (ret < 0) {
+    	printf("Unable to load cert..\n");
         gnutls_x509_crt_deinit(x5);
         return NULL;
     }
@@ -1054,6 +1068,7 @@ int ne_ssl_cert_write(const ne_ssl_certificate *cert, const char *filename)
 
     FILE *fp = fopen(filename, "w");
 
+    UGLY_DEBUG();
     if (fp == NULL) return -1;
 
     if (gnutls_x509_crt_export(cert->subject, GNUTLS_X509_FMT_PEM, buffer,
@@ -1075,6 +1090,7 @@ int ne_ssl_cert_write(const ne_ssl_certificate *cert, const char *filename)
 
 void ne_ssl_cert_free(ne_ssl_certificate *cert)
 {
+    UGLY_DEBUG();
     gnutls_x509_crt_deinit(cert->subject);
     if (cert->identity) ne_free(cert->identity);
     if (cert->issuer) ne_ssl_cert_free(cert->issuer);
@@ -1085,6 +1101,7 @@ int ne_ssl_cert_cmp(const ne_ssl_certificate *c1, const ne_ssl_certificate *c2)
 {
     char digest1[NE_SSL_DIGESTLEN], digest2[NE_SSL_DIGESTLEN];
 
+    UGLY_DEBUG();
     if (ne_ssl_cert_digest(c1, digest1) || ne_ssl_cert_digest(c2, digest2)) {
         return -1;
     }
@@ -1103,6 +1120,7 @@ ne_ssl_certificate *ne_ssl_cert_import(const char *data)
     gnutls_datum buffer = { NULL, 0 };
     gnutls_x509_crt x5;
 
+    UGLY_DEBUG();
     if (gnutls_x509_crt_init(&x5) != 0)
         return NULL;
 
@@ -1130,6 +1148,7 @@ char *ne_ssl_cert_export(const ne_ssl_certificate *cert)
     size_t len = 0;
     char *ret;
 
+    UGLY_DEBUG();
     /* find the length of the DER encoding. */
     if (gnutls_x509_crt_export(cert->subject, GNUTLS_X509_FMT_DER, NULL, &len) != 
         GNUTLS_E_SHORT_MEMORY_BUFFER) {
@@ -1153,6 +1172,7 @@ int ne_ssl_cert_digest(const ne_ssl_certificate *cert, char *digest)
     int j;
     size_t len = sizeof sha1;
 
+    UGLY_DEBUG();
     if (gnutls_x509_crt_get_fingerprint(cert->subject, GNUTLS_DIG_SHA,
                                         sha1, &len) < 0)
         return -1;
@@ -1169,6 +1189,7 @@ int ne_ssl_cert_digest(const ne_ssl_certificate *cert, char *digest)
 
 int ne__ssl_init(void)
 {
+    UGLY_DEBUG();
 #ifdef NE_HAVE_TS_SSL
     gcry_control(GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);
 #endif
