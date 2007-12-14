@@ -467,7 +467,7 @@ nuauth_session_t *_nu_client_new(nuclient_error_t * err)
 	}
 	session->ct = new;
 
-	session->nussl = ne_session_create(session->default_hostname, 4129); /* XXX: don't use default values */
+	session->nussl = ne_session_create(); /* XXX: don't use default values */
 	/* X509 stuff */
 #if XXX
 	ret = gnutls_certificate_allocate_credentials(&(session->cred));
@@ -632,9 +632,11 @@ int nu_client_connect(nuauth_session_t * session,
 		return 0;
 	}
 #endif
+	unsigned int port = atoi(service);
 	session->need_set_cred = 0;
 
-	if (open_connection(session->nussl) != NE_OK) {
+	ne_set_hostinfo(session->nussl, hostname, port);
+	if (ne_open_connection(session->nussl) != NE_OK) {
 		printf("%s\n", ne_get_error(session->nussl));
 		return 0;
 	}

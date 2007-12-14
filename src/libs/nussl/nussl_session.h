@@ -48,9 +48,7 @@ typedef struct ne_session_s ne_session;
 /* Create a session to the given server, using the given scheme.  If
  * "https" is passed as the scheme, SSL will be used to connect to the
  * server. */
-ne_session *ne_session_create(/* const char *scheme, */
-			      const char *hostname, unsigned int port);
-
+ne_session *ne_session_create();
  
 /* Finish an HTTP session */
 void ne_session_destroy(ne_session *sess);
@@ -265,6 +263,9 @@ void ne_set_error(ne_session *sess, const char *format, ...)
 
 /* Retrieve the error string for the session */
 const char *ne_get_error(ne_session *sess);
+
+/* Set destination hostname / port */
+void ne_set_hostinfo(ne_session* sess, const char *hostname, unsigned int port);
 
 /* Write to session */
 int ne_write(ne_session *session, char *buffer, size_t count);

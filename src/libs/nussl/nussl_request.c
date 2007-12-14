@@ -1479,7 +1479,7 @@ static int lookup_host(ne_session *sess, struct host_info *info)
     }
 }
 
-int open_connection(ne_session *sess) 
+int ne_open_connection(ne_session *sess) 
 {
     int ret;
     struct host_info *host;

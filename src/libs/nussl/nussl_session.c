@@ -92,28 +92,26 @@ void ne_session_destroy(ne_session *sess)
     ne_free(sess);
 }
 
-/* Stores the hostname/port in *info, setting up the "hostport"
+/* Stores the hostname/port in *sess, setting up the "hostport"
  * segment correctly. */
-static void
-set_hostinfo(struct host_info *info, const char *hostname, unsigned int port)
+void ne_set_hostinfo(ne_session* sess, const char *hostname, unsigned int port)
 {
     UGLY_DEBUG();
-    info->hostname = ne_strdup(hostname);
-    info->port = port;
+    if(sess->server.hostname)
+    	free(sess->server.hostname);
+    sess->server.hostname = ne_strdup(hostname);
+    sess->server.port = port;
 }
 
-ne_session *ne_session_create(const char *hostname, unsigned int port)
+ne_session *ne_session_create()
 {
     ne_session *sess = ne_calloc(sizeof *sess);
     UGLY_DEBUG();
 
-    NE_DEBUG(NE_DBG_HTTP, "session to ://%s:%d begins.\n",
-	     hostname, port);
+/*    NE_DEBUG(NE_DBG_HTTP, "session to ://%s:%d begins.\n",
+	     hostname, port); */
 
     strcpy(sess->error, "Unknown error.");
-
-    /* set the hostname/port */
-    set_hostinfo(&sess->server, hostname, port);
 
 #ifdef NE_HAVE_SSL
     sess->ssl_context = ne_ssl_context_create(0);

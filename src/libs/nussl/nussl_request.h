@@ -306,7 +306,7 @@ void ne_unhook_destroy_session(ne_session *sess,
 void ne_set_request_private(ne_request *req, const char *id, void *priv);
 void *ne_get_request_private(ne_request *req, const char *id);
 
-int open_connection(ne_session* sess);
+int ne_open_connection(ne_session* sess);
 
 NE_END_DECLS
 
