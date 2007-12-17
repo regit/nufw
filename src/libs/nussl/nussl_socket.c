@@ -193,7 +193,6 @@ typedef struct in_addr ne_inet_addr;
 
 /* Socket read timeout */
 #define SOCKET_READ_TIMEOUT 120
-static const int cert_type_priority[3] = { GNUTLS_CRT_X509, 0 };
 
 #include <stdio.h>
 #define UGLY_DEBUG() printf("%s %s:%i\n", __FUNCTION__, __FILE__, __LINE__)
@@ -660,6 +659,7 @@ static const struct iofns iofns_ssl = {
 };
 
 #elif defined(HAVE_GNUTLS)
+static const int cert_type_priority[3] = { GNUTLS_CRT_X509, 0 };
 
 /* Return zero if an alert value can be ignored. */
 static int check_alert(ne_socket *sock, ssize_t ret)
