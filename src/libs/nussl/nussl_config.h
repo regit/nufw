@@ -55,6 +55,9 @@
 #define NE_VERSION_MAJOR 0
 #define NE_VERSION_MINOR 1
 
+#define HAVE_SIGNAL_H
+#define HAVE_SIGNAL
+
 #define NE_HAVE_SSL
 #define NE_TS_SSL /* TS = Thread Safe */
 /* #define HAVE_OPENSSL */
