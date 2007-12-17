@@ -486,25 +486,27 @@ nuauth_session_t *do_connect(nutcpc_context_t * context, char *username)
 
 	if (!nu_client_setup_tls(session, context->keyfile, context->certfile,
 	     context->cafile, context->cert_password, err)) {
-		nu_client_delete(session);
-		return NULL;
+		goto init_failed;
 	}
 
 	if (context->nuauthdn) {
 		if (!nu_client_set_nuauth_cert_dn(session,
 						  context->nuauthdn,
 						  err)) {
-			nu_client_delete(session);
-			return NULL;
+			goto init_failed;
 		}
 	}
 
 	if (!nu_client_connect
 	    (session, context->srv_addr, context->port, err)) {
-		nu_client_delete(session);
-		return NULL;
+		goto init_failed;
 	}
 	return session;
+init_failed:
+
+	printf("Inititalisation error: %s\n", nu_client_strerror(session, err));
+	nu_client_delete(session);
+	return NULL;
 }
 
 /**
@@ -539,7 +541,7 @@ void main_loop(nutcpc_context_t * context)
 				context->tempo = 1;	/* second */
 			} else {
 				printf("Reconnection error: %s\n",
-				       nu_client_strerror(err));
+				       nu_client_strerror(session, err));
 				nu_client_reset(session);
 			}
 		} else {
@@ -549,7 +551,7 @@ void main_loop(nutcpc_context_t * context)
 				/* on error: reset the session */
 				nu_client_reset(session);
 				connected = 0;
-				printf("%s\n", nu_client_strerror(err));
+				printf("%s\n", nu_client_strerror(session, err));
 			}
 		}
 	}
@@ -693,7 +695,7 @@ void init_library(nutcpc_context_t * context, char *username)
 	/* global libnuclient init */
 	if (!nu_client_global_init(err)) {
 		printf("Unable to initiate nuclient library!\n");
-		printf("Problem: %s\n", nu_client_strerror(err));
+		printf("Problem: %s\n", nu_client_strerror(session, err));
 		exit(EXIT_FAILURE);
 	}
 
@@ -704,7 +706,7 @@ void init_library(nutcpc_context_t * context, char *username)
 	/* Library failure? */
 	if (session == NULL) {
 		printf("Unable to initiate connection to NuFW gateway\n");
-		printf("Problem: %s\n", nu_client_strerror(err));
+		printf("Problem: %s\n", nu_client_strerror(session, err));
 		printf("Authentication failed (check parameters)\n");
 		exit(EXIT_FAILURE);
 	}

@@ -235,7 +235,7 @@ typedef struct {
 /** Error family */
 typedef enum {
 	INTERNAL_ERROR = 0,
-	GNUTLS_ERROR = 1,
+	NUSSL_ERROR = 1,
 	SASL_ERROR = 2
 } nuclient_error_family_t;
 
@@ -272,6 +272,8 @@ int nu_client_check(nuauth_session_t *session, nuclient_error_t *err);
 
 int nu_client_error_init(nuclient_error_t **err);
 void nu_client_error_destroy(nuclient_error_t *err);
+
+const char *nu_client_strerror(nuauth_session_t *session, nuclient_error_t *err);
 
 int nu_client_global_init(nuclient_error_t *err);
 void nu_client_global_deinit();
@@ -315,8 +317,6 @@ int nu_client_connect(nuauth_session_t * session,
 void nu_client_reset(nuauth_session_t * session);
 
 void nu_client_delete(nuauth_session_t * session);
-
-const char *nu_client_strerror(nuclient_error_t *err);
 
 char *nu_client_to_utf8(const char *inbuf, char *from_charset);
 

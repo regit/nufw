@@ -140,7 +140,11 @@ int nu_client_global_init(nuclient_error_t * err)
 	}
 */
 
-	ne_sock_init();
+	if (ne_sock_init() != NE_OK)
+	{
+		SET_ERROR(err, INTERNAL_ERROR, UNKNOWN_ERR); /* TODO: patch nussl to handle errors correctly in ne_sock_init */
+		return 0;
+	}
 
 	/* initialize the sasl library */
 	ret = sasl_client_init(NULL);
@@ -633,12 +637,15 @@ int nu_client_connect(nuauth_session_t * session,
 		return 0;
 	}
 #endif
+	int ret;
 	unsigned int port = atoi(service);
 	session->need_set_cred = 0;
 
 	ne_set_hostinfo(session->nussl, hostname, port);
-	if (ne_open_connection(session->nussl) != NE_OK) {
-		printf("%s\n", ne_get_error(session->nussl));
+
+	ret = ne_open_connection(session->nussl);
+	if (ret != NE_OK) {
+		SET_ERROR(err, NUSSL_ERROR, ret);
 		return 0;
 	}
 
@@ -706,7 +713,7 @@ void nu_client_error_destroy(nuclient_error_t * err)
  * \ingroup nuclientAPI
  * \brief Convert an error to an human readable string
  */
-const char *nu_client_strerror(nuclient_error_t * err)
+const char *nu_client_strerror(nuauth_session_t * session, nuclient_error_t * err)
 {
 	if (err == NULL)
 		return "Error structure was not initialised";
@@ -715,6 +722,11 @@ const char *nu_client_strerror(nuclient_error_t * err)
 	case GNUTLS_ERROR:
 		return gnutls_strerror(err->error);
 		break;
+#else
+	case NUSSL_ERROR:
+		if (session == NULL)
+			return "NuSSL error.";
+		return ne_get_error(session->nussl);
 #endif
 	case SASL_ERROR:
 		return sasl_errstring(err->error, NULL, NULL);
