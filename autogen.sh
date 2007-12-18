@@ -1,6 +1,5 @@
 #!/bin/sh
 
-echo "[+] Run libtoolize"
 
 LIBTOOLIZE="$(which libtoolize)"
 
@@ -22,6 +21,7 @@ then
 	exit 1
 fi
 
+echo "[+] Run $LIBTOOLIZE"
 "$LIBTOOLIZE" --force --automake || exit $?
 
 #-----------------------------------------------------------------------------
@@ -77,16 +77,16 @@ AUTOHEADER=$(find_tool_version autoheader "${AUTOCONF_MIN_VERSION}" \
 
 #-----------------------------------------------------------------------------
 
-echo "[+] Run aclocal"
+echo "[+] Run $ACLOCAL"
 $ACLOCAL || exit $?
 
-echo "[+] Run autoheader"
+echo "[+] Run $AUTOHEADER"
 $AUTOHEADER || exit $?
 
-echo "[+] Run autoconf"
+echo "[+] Run $AUTOCONF"
 $AUTOCONF || exit $?
 
-echo "[+] Run automake"
+echo "[+] Run $AUTOMAKE"
 $AUTOMAKE --add-missing --copy -Wno-portability || exit $?
 
 echo

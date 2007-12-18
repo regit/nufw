@@ -1,5 +1,5 @@
 # ACLs file for the plaintext module
-
+#
 # Example of ACL
 # ==============
 #
@@ -26,45 +26,31 @@
 #    - SrcPort: any port
 #    - DstPort: any port
 #
-# Filtering
-## * Note: ports (SrcPort, DstPort) are optional.  If none is specified,
-##   any port can match the ACL.
+# Application filtering:
+#     App=/usr/bin/perl
+# Several applications can be given:
+#     App=/usr/bin/ssh
+#     App=/usr/bin/nc
 #
-#
-## * Application filtering
-#  App=/usr/bin/perl
-## * Several apps can be given
-#  App=/usr/bin/ssh
-#  App=/usr/bin/nc
-#
-## * OS checking
-#  OS = Linux
-## * You can give the kernel release...
-#  OS = Linux ; 2.6.8
-## * ... and the kernel version:
-#  OS = Linux ; 2.6.8 ; #3 Fri Aug 27 20:37:38 CEST 2004
-## * (Several OS can be given)
-#
-# Period limitation:
-# You need to use period defined in your period handling module
-#  Example :
-# period = 24x7
-#
-# Decision and internal use:
-#
-# decision=1            # 0=drop, 1=accept, 3=reject (2 is reserved: "no decide")
+# OS checking:
+#     OS = Linux
+# You can give the kernel release:
+#     OS = Linux ; 2.6.8
+# and the kernel version:
+#     OS = Linux ; 2.6.8 ; #3 Fri Aug 27 20:37:38 CEST 2004
+# (Several OS can be given)
 #
 # Log prefix:
-# log_prefix = ssh
+#     log_prefix = ssh
 #
-# ACL flags:
-# This is a integer coding property of acl
-#  * 1: do aysnchronous login on packet accepted by acl
-#	(equivalent to don't do SSO on acl)
-# flags = 1
-
-# Sample test declaration
-# =======================
+# You need to use period defined in your period handling module:
+#     period = 24x7
+#
+# ACL flags is an integer coding properties of the ACL:
+#     flags = 1
+#
+# Flags 1 means: do aysnchronous login on packet accepted by ACL, equivalent
+# to don't do Single Sign On on the ACL.
 
 [ssh]
 gid=100
@@ -73,14 +59,14 @@ App=/usr/bin/ssh
 OS=Linux
 
 [http]
-gid=102
+gid=100,102,103
 DstPort=80
 
 [https]
+gid=100
 gid=102
 DstPort=443
 
 [full access for group 103]
 gid=103
-
 

@@ -592,7 +592,6 @@ static int read_acl_list(struct plaintext_params *params)
 				fclose(fd);
 				return 2;
 			}
-			/*  Following is only for TCP / UDP  (ports stuff...) */
 			if (newacl->proto != IPPROTO_TCP && newacl->proto != IPPROTO_UDP
 					&& newacl->proto != IPPROTO_ICMP) {
 				log_message(FATAL, DEBUG_AREA_MAIN,
