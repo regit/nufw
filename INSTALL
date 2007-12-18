@@ -5,16 +5,38 @@ Installation instructions
 Prerequisites:
 ==============
 
- * GNU make
- * automake1.7 to execute cleanly autogen.sh
- * glib
- * libipq (in iptables-dev on debian) or libnetfilter_queue (optionally libnetfilter_conntrack)
+Prerequisites of autogen.sh script:
+
+ * automake1.7 to execute cleanly autogen.sh:
+   http://www.gnu.org/software/automake/
+
+Prerequisites of NuFW compilation:
+
+ * GNU make:
+   http://www.gnu.org/software/make/
+
+Prerequisites of NuFW compilation and runtime:
+
+ * glib 2.4+:
+   http://www.gtk.org/
+ * libipq (in iptables-dev on debian) or libnetfilter_queue
+   (optionally libnetfilter_conntrack):
+   http://www.netfilter.org/
  * libldap for the provided auth server
- * libsasl2 (cyrus)
- * libgnutls
- * libgcrypt
+ * libsasl2 (Cyrus)
+ * libgnutls:
+   http://www.gnu.org/software/gnutls/
+ * libgcrypt (and libgpg-error):
+   http://ftp.gnupg.org/gcrypt/libgcrypt/ and
+   http://ftp.gnupg.org/gcrypt/libgpg-error/
  * libpam-dev for system authentication module
- * IPy python library for nuauth_command program
+
+Prerequisites of nuauth_command program:
+
+ * Python 2.4+: http://www.python.org/. On Mandriva, install
+   libpython2.4-devel to get /usr/lib/python2.4/config/Makefile
+ * IPy python library:
+   http://software.inl.fr/trac/trac.cgi/wiki/IPy
 
 Compilation:
 ============
