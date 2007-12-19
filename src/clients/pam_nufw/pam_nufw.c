@@ -302,7 +302,7 @@ static void main_loop(struct pam_nufw_s *pn_s)
 				/* quit if password is wrong. to not lock user account */
 				syslog(LOG_ERR,
 				       "(pam_nufw) unable to reconnect to server: %s",
-				       nu_client_strerror(pn_s->err));
+				       nu_client_strerror(session, pn_s->err));
 				if (pn_s->err->error ==
 				    BAD_CREDENTIALS_ERR) {
 					syslog(LOG_ERR,
@@ -316,7 +316,7 @@ static void main_loop(struct pam_nufw_s *pn_s)
 				connected = 0;
 				syslog(LOG_ERR,
 				       "(pam_nufw) libnuclient error: %s",
-				       nu_client_strerror(pn_s->err));
+				       nu_client_strerror(session, pn_s->err));
 			}
 		}
 	}
@@ -374,7 +374,7 @@ static int nufw_client_func(struct pam_nufw_s *pn_s,
 	if (!nu_client_global_init(pn_s->err)) {
 		syslog(LOG_ERR,
 		       "(pam_nufw) Cannot init nuclient library: %s",
-		       nu_client_strerror(pn_s->err));
+		       nu_client_strerror(session, pn_s->err));
 		return PAM_AUTH_ERR;
 	}
 
