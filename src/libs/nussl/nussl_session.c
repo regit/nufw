@@ -450,4 +450,9 @@ ssize_t ne_read(ne_session *session, char *buffer, size_t count)
 
 
 
+int ne_ssl_set_keypair(ne_session *session, const char* cert_file, const char* key_file)
+{
+	return ne_ssl_context_keypair(session->ssl_context, cert_file, key_file);
+}
+
 

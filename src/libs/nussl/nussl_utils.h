@@ -74,13 +74,18 @@ int ne_has_support(int feature);
 
 /* Debugging macro to allow code to be optimized out if debugging is
  * disabled at build time. */
+#if 0
 #ifndef NE_DEBUGGING
 #define NE_DEBUG if (0) ne_debug
 #else /* DEBUGGING */
 #define NE_DEBUG ne_debug
 #endif /* DEBUGGING */
+#endif
+
+
 
 /* Debugging masks. */
+#if 0
 #define NE_DBG_SOCKET (1<<0) /* raw socket */
 #define NE_DBG_HTTP (1<<1) /* HTTP request/response handling */
 #define NE_DBG_XML (1<<2) /* XML parser */
@@ -91,6 +96,22 @@ int ne_has_support(int feature);
 #define NE_DBG_HTTPBODY (1<<7) /* HTTP response body blocks */
 #define NE_DBG_SSL (1<<8) /* SSL/TLS */
 #define NE_DBG_FLUSH (1<<30) /* always flush debugging */
+#endif
+
+#define NE_DEBUG fprintf
+
+#define NE_DBG_SOCKET stderr
+#define NE_DBG_HTTP stderr
+#define NE_DBG_XML stderr
+#define NE_DBG_HTTPAUTH stderr
+#define NE_DBG_HTTPPLAIN stderr
+#define NE_DBG_LOCKS stderr
+#define NE_DBG_XMLPARSE stderr
+#define NE_DBG_HTTPBODY stderr
+#define NE_DBG_SSL stderr
+#define NE_DBG_FLUSH stderr
+
+
 
 #define NE_OK (0) /* Success */
 #define NE_ERROR (1) /* Generic error; use ne_get_error(session) for message */

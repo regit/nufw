@@ -59,7 +59,7 @@
 #define HAVE_SIGNAL
 
 #define NE_HAVE_SSL
-#define NE_TS_SSL /* TS = Thread Safe */
+#define NE_HAVE_TS_SSL /* TS = Thread Safe */
 /* #define HAVE_OPENSSL */
 
 #define NE_FMT_SIZE_T "u"

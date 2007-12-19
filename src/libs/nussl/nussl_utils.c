@@ -85,8 +85,8 @@ void ne_debug(int ch, const char *template, ...)
     va_start(params, template);
     vfprintf(ne_debug_stream, template, params);
     va_end(params);
-    if ((ch & NE_DBG_FLUSH) == NE_DBG_FLUSH)
-	fflush(ne_debug_stream);
+/*    if ((ch & NE_DBG_FLUSH) == NE_DBG_FLUSH)
+	fflush(ne_debug_stream);*/
 }
 
 #define NE_STRINGIFY(x) # x

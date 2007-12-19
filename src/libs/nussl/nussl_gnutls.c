@@ -33,10 +33,9 @@
 */
 
 #include "config.h"
+#include "nussl_config.h"
 
 #ifdef HAVE_GNUTLS
-
-#include "nussl_config.h"
 
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -59,6 +58,7 @@
 #include <pthread.h>
 #include <gcrypt.h>
 GCRY_THREAD_OPTION_PTHREAD_IMPL;
+
 #endif
 
 #ifdef HAVE_ICONV
@@ -619,10 +619,10 @@ ne_ssl_context *ne_ssl_context_create(int flags)
     ne_ssl_context *ctx = ne_calloc(sizeof *ctx);
     UGLY_DEBUG();
     gnutls_certificate_allocate_credentials(&ctx->cred);
-    if (flags == NE_SSL_CTX_CLIENT) {
+/*    if (flags == NE_SSL_CTX_CLIENT) {
         gnutls_certificate_client_set_retrieve_function(ctx->cred,
                                                         provide_client_cert);
-    }
+    }*/
     return ctx;
 }
 
@@ -630,8 +630,10 @@ int ne_ssl_context_keypair(ne_ssl_context *ctx,
                            const char *cert, const char *key)
 {
     UGLY_DEBUG();
+    printf("%p\n", ctx->cred);
     gnutls_certificate_set_x509_key_file(ctx->cred, cert, key,
                                          GNUTLS_X509_FMT_PEM);
+    printf("%p\n", ctx->cred);
     return 0;
 }
 
@@ -664,7 +666,7 @@ void ne_ssl_context_destroy(ne_ssl_context *ctx)
     } else if (ctx->cache.server.key.data) {
         gnutls_free(ctx->cache.server.key.data);
         gnutls_free(ctx->cache.server.data.data);
-    }    
+    }
     ne_free(ctx);
 }
 
@@ -710,6 +712,7 @@ static int check_certificate(ne_session *sess, gnutls_session sock,
 {
     time_t before, after, now = time(NULL);
     int ret, failures = 0;
+    unsigned int status;
 /*     ne_uri server; */
 
     UGLY_DEBUG();
@@ -735,9 +738,26 @@ static int check_certificate(ne_session *sess, gnutls_session sock,
         failures |= NE_SSL_IDMISMATCH;
     }
 
-    if (gnutls_certificate_verify_peers(sock)) {
+    ret = gnutls_certificate_verify_peers2(sock, &status);
+    if (ret < 0) {
+                    printf("Certificate authority verification failed: %s\n",
+                           gnutls_strerror(ret));
         failures |= NE_SSL_UNTRUSTED;
     }
+    if (status) {
+                    printf("Certificate authority verification failed:");
+                    if( status & GNUTLS_CERT_INVALID )
+                            printf(" invalid");
+                    if( status & GNUTLS_CERT_REVOKED )
+                            printf(", revoked");
+                    if( status & GNUTLS_CERT_SIGNER_NOT_FOUND )
+                            printf(", signer not found");
+                    if( status & GNUTLS_CERT_SIGNER_NOT_CA )
+                            printf(", signer not a CA");
+                    printf("\n");
+        failures |= NE_SSL_UNTRUSTED;
+	    }
+
 
     NE_DEBUG(NE_DBG_SSL, "Failures = %d\n", failures);
 

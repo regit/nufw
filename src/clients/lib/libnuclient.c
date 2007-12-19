@@ -338,6 +338,19 @@ int nu_client_setup_tls(nuauth_session_t * session,
 
 	if (cafile != NULL)
 		ne_ssl_trust_cert_file(session->nussl, cafile);
+
+	if (certfile != NULL && keyfile != NULL) {
+		ret =
+		    ne_ssl_set_keypair(session->nussl, certfile, keyfile);
+		if (ret != NE_OK) {
+			SET_ERROR(err, NUSSL_ERROR, ret);
+			if (home) {
+				free(home);
+			}
+			return 0;
+		}
+	}
+
 #if XXX
 	/* sets the trusted cas file */
 	if (cafile != NULL)
