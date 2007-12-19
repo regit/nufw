@@ -2,8 +2,8 @@
 Installation instructions
 =========================
 
-Prerequisites:
-==============
+Prerequisites
+=============
 
 Prerequisites of autogen.sh script:
 
@@ -14,6 +14,7 @@ Prerequisites of NuFW compilation:
 
  * GNU make:
    http://www.gnu.org/software/make/
+ * libpam-dev for system authentication module
 
 Prerequisites of NuFW compilation and runtime:
 
@@ -29,7 +30,10 @@ Prerequisites of NuFW compilation and runtime:
  * libgcrypt (and libgpg-error):
    http://ftp.gnupg.org/gcrypt/libgcrypt/ and
    http://ftp.gnupg.org/gcrypt/libgpg-error/
- * libpam-dev for system authentication module
+
+Prerequisites of NuFW runtime:
+
+ * Linux kernel 2.6, a kernel superior to 2.6.18 is a good choice: http://www.kernel.org/
 
 Prerequisites of nuauth_command program:
 
@@ -38,8 +42,19 @@ Prerequisites of nuauth_command program:
  * IPy python library:
    http://software.inl.fr/trac/trac.cgi/wiki/IPy
 
-Compilation:
-============
+
+Kernel
+======
+
+It is recommanded to use a recent kernel to benefit of all latest feature.
+A kernel superior to 2.6.18 is a good choice.
+
+The patch dump-connection-mark.diff (in patches/) can be applied to the kernel
+to increase performances when doing session logging.
+
+
+Compilation
+===========
 
 To compile, use the standard ::
 
@@ -67,22 +82,14 @@ nuauth -h will give you a usage message.
 To use nufw you will have to run a client for each user.
 nutcpc and pam_nufw are provided in NuFW archive.
 
-You will find more informations on:
-	http://www.nufw.org
+You will find more informations on: http://www.nufw.org
 
-SQL Logging:
-============
+
+SQL Logging
+===========
 
 If you use SQL Logging and SSO features, you may wish to increase performance
 of SQL queries by putting closed connections in a different SQL table by using or a script
 (cron task ?) or a trigger.
 
-Quick Testing:
-==============
 
-See http://www.nufw.org/Testing-NuFW.html
-
-Howto:
-======
-
-See http://www.nufw.org/docs/howto22.html

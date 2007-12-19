@@ -7,26 +7,28 @@ See INSTALL for installation.
 
 SECURITY: Please send any security bug or suggestion to: <security@inl.fr>
 
-TLS usage:
-===========
+
+Howto
+=====
+
+See http://www.nufw.org/docs/howto22.html
+
+
+TLS usage
+=========
 
 NuAuth:
 -------
 
-A key for nuauth can be created wth the following command :
-openssl req -new -x509 -nodes -days 365 -out nuauth.pem -keyout nuauth.pem
-By default nuauth searches the certificate : CONFIGDIR/nuauth.pem
+A key for nuauth can be created wth the following command:
 
-Kernel:
-========
+    openssl req -new -x509 -nodes -days 365 -out nuauth.pem -keyout nuauth.pem
 
-It is recommanded to use a recent kernel to benefit of all latest feature.
-A kernel superior to 2.6.18 is a good choice.
-The patch dump-connection-mark.diff (in patches/) can be applied to the kernel
-to increase performances when doing session logging.
+By default nuauth searches the certificate: CONFIGDIR/nuauth.pem
 
-Included documentation:
-=======================
+
+Included documentation
+======================
 
  * scripts/README: describe usage of provided scripts
  * doc/README.mark: small howto about QoS and routing capabilities of NuFW
@@ -35,8 +37,9 @@ Included documentation:
  * doc/README.ldap: information about ldap usage and tuning
  * tests/README: information about unitary tests system
 
-Legal Notice due to cyrus SASL usage:
-======================================
+
+Legal Notice due to cyrus SASL usage
+====================================
 
  This product includes software developed by Computing Services
  at Carnegie Mellon University (http://www.cmu.edu/computing/).
