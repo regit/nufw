@@ -520,17 +520,10 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 		switch (params->ldap_filter_type) {
 		case 1:
 			if (snprintf(filter, LDAP_QUERY_SIZE - 1,
-#if USE_SOURCE_PORT
-				     "(&(objectClass=NuAccessControlList)(Proto=%d)(DstPort=%d)(SrcIPStart<=%s)(SrcIPEnd>=%s)(DstIPStart<=%s)(DstIPEnd>=%s)(SrcPortStart<=%d)(SrcPortEnd>=%d)",
-#endif
 				     "(&(objectClass=NuAccessControlList)(Proto=%d)(DstPort=%d)(SrcIPStart<=%s)(SrcIPEnd>=%s)(DstIPStart<=%s)(DstIPEnd>=%s)",
 				     (element->tracking).protocol,
 				     (element->tracking).dest,
 				     ip_src, ip_src, ip_dst, ip_dst
-#if USE_SOURCE_PORT
-				     , (element->tracking).source,
-				     (element->tracking).source
-#endif
 			    ) >= (LDAP_QUERY_SIZE - 1)) {
 				log_message(WARNING, DEBUG_AREA_MAIN,
 					    "LDAP query too big (more than %d bytes)\n",
@@ -542,18 +535,11 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 			break;
 		case 0:
 			if (snprintf(filter, LDAP_QUERY_SIZE - 1,
-#if USE_SOURCE_PORT
-				     "(&(objectClass=NuAccessControlList)(SrcIPStart<=%s)(SrcIPEnd>=%s)(DstIPStart<=%s)(DstIPEnd>=%s)(Proto=%d)(SrcPortStart<=%d)(SrcPortEnd>=%d)(DstPortStart<=%d)(DstPortEnd>=%d)",
-#endif
 				     "(&(objectClass=NuAccessControlList)(SrcIPStart<=%s)(SrcIPEnd>=%s)(DstIPStart<=%s)(DstIPEnd>=%s)(Proto=%d)(DstPortStart<=%d)(DstPortEnd>=%d)",
 				     ip_src,
 				     ip_src,
 				     ip_dst,
 				     ip_dst, (element->tracking).protocol,
-#if USE_SOURCE_PORT
-				     (element->tracking).source,
-				     (element->tracking).source,
-#endif
 				     (element->tracking).dest,
 				     (element->tracking).dest) >=
 			    (LDAP_QUERY_SIZE - 1)) {
@@ -861,5 +847,6 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 }
 
 /* @} */
+
 
 
