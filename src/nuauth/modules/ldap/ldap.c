@@ -493,18 +493,17 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 	}
 
 	if (params->ldap_use_ipv4_schema) {
+		struct in_addr ipv4;
 		if (!is_ipv4(&element->tracking.saddr) ||
 				!is_ipv4(&element->tracking.daddr)) {
 			log_message(SERIOUS_WARNING, DEBUG_AREA_AUTH,
 				    "ldap: IPv4 schema but IPv6 address\n");
 			return NULL;
 		}
-		ip_src = g_new0(char,11);
-		snprintf(ip_src, 11, "%u", 
-				ntohl(element->tracking.saddr.s6_addr32[3]));
-		ip_dst = g_new0(char,11);
-		snprintf(ip_dst, 11, "%u", 
-				ntohl(element->tracking.daddr.s6_addr32[3]));
+		ipv6_to_ipv4(&element->tracking.saddr, &ipv4);
+		ip_src = g_strdup_printf("%u", ipv4.s_addr);
+		ipv6_to_ipv4(&element->tracking.daddr, &ipv4);
+		ip_dst = g_strdup_printf("%u", ipv4.s_addr);
 	} else {
 		ip_src = ipv6_to_base10(&element->tracking.saddr);
 		ip_dst = ipv6_to_base10(&element->tracking.daddr);
@@ -862,4 +861,5 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 }
 
 /* @} */
+
 
