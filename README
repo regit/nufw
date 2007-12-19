@@ -5,8 +5,6 @@ README
 
 See INSTALL for installation.
 
-SECURITY: Please send any security bug or suggestion to: <security@inl.fr>
-
 
 Howto
 =====
@@ -36,6 +34,16 @@ Included documentation
  * doc/README.pam_nufw: how to use NuFW pam authentication module
  * doc/README.ldap: information about ldap usage and tuning
  * tests/README: information about unitary tests system
+
+
+Contact and support
+===================
+
+ * IRC channel: #nufw on irc.freenode.net server.
+ * Forum: http://forums.inl.fr/
+ * Mailing lists: http://nufw.org/Contacts.html
+ * Security: Please send any security bug or suggestion to: <security@inl.fr>
+ * Commercial support: http://www.inl.fr/
 
 
 Legal Notice due to cyrus SASL usage
