@@ -474,6 +474,14 @@ on IP source:
 
   <chapter><title>Setting up NuFW</title>
     <section><title>Using the LDAP module for acl checking</title>
+      <section><title>Installation OpenLDAP</title>
+        <para>OpenLDAP installation is standard. Use your Linux distribution package. Example on Debian:</para>
+<screen>apt-get install slapd</screen>
+        <para>Read <ulink url="http://www.openldap.org/doc/admin/">OpenLDAP Software
+Administrator's Guide</ulink>, section "Building and Installing OpenLDAP Software" to get more information.
+        </para>
+      </section>
+
       <section><title>Slapd configuration</title>
 	<para>
 The file <filename>acls.schema</filename> has to be put in <filename class="directory">/etc/ldap/schema</filename>
