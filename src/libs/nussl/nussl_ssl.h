@@ -168,7 +168,7 @@ typedef struct ne_ssl_context_s ne_ssl_context;
 ne_ssl_context *ne_ssl_context_create(int mode);
 
 /* Client mode: trust the given certificate 'cert' in context 'ctx'. */
-void ne_ssl_context_trustcert(ne_ssl_context *ctx, const ne_ssl_certificate *cert);
+int ne_ssl_context_trustcert(ne_ssl_context *ctx, const ne_ssl_certificate *cert);
 
 /* Server mode: use given cert and key (filenames to PEM certificates). */
 int ne_ssl_context_keypair(ne_ssl_context *ctx,

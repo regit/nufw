@@ -120,13 +120,6 @@ int nu_client_global_init(nuclient_error_t * err)
 	/*gcry_control(GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);*/
 	/* ret = gnutls_global_init(); */
 
-/*
-	if (ret != 0) {
-		SET_ERROR(err, GNUTLS_ERROR, ret);
-		return 0;
-	}
-*/
-
 	if (ne_sock_init() != NE_OK)
 	{
 		SET_ERROR(err, INTERNAL_ERROR, UNKNOWN_ERR); /* TODO: patch nussl to handle errors correctly in ne_sock_init */
@@ -309,8 +302,7 @@ int nu_client_set_ca(nuauth_session_t * session,
 	}
 
 	if (cafile != NULL) {
-		/* ret = */ ne_ssl_trust_cert_file(session->nussl, cafile);
-/*
+		ret = ne_ssl_trust_cert_file(session->nussl, cafile);
 		if (ret != NE_OK) {
 			if (exit_on_error) {
 				if (home)
@@ -322,7 +314,6 @@ int nu_client_set_ca(nuauth_session_t * session,
 				printf("Warning: Failed to load default CA certificate.\n");
 			}
 		}
-*/
 	}
 	return 1;
 }

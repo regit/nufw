@@ -608,13 +608,13 @@ static int provide_client_cert(gnutls_session session,
 
     return 0;
 }
-#endif
 
 void ne_ssl_set_clicert(ne_session *sess, const ne_ssl_client_cert *cc)
 {
     UGLY_DEBUG();
     sess->client_cert = dup_client_cert(cc);
 }
+#endif
 
 ne_ssl_context *ne_ssl_context_create(int flags)
 {
@@ -632,11 +632,11 @@ int ne_ssl_context_keypair(ne_ssl_context *ctx,
                            const char *cert, const char *key)
 {
     UGLY_DEBUG();
-    gnutls_certificate_set_x509_key_file(ctx->cred, cert, key,
-                                         GNUTLS_X509_FMT_PEM);
-    return 0;
+    return (gnutls_certificate_set_x509_key_file(ctx->cred, cert, key,
+                                         GNUTLS_X509_FMT_PEM) == 0) ? NE_OK : NE_ERROR;
 }
 
+#if 0
 int ne_ssl_context_set_verify(ne_ssl_context *ctx, int required,
                               const char *ca_names, const char *verify_cas)
 {
@@ -651,6 +651,7 @@ int ne_ssl_context_set_verify(ne_ssl_context *ctx, int required,
      * it seems. */
     return 0;
 }
+#endif
 
 void ne_ssl_context_set_flag(ne_ssl_context *ctx, int flag, int value)
 {
@@ -766,11 +767,12 @@ static int check_certificate(ne_session *sess, gnutls_session sock,
     } else {
         ne__ssl_set_verify_err(sess, failures);
         ret = NE_ERROR;
+#if 0
         if (sess->ssl_verify_fn
             && sess->ssl_verify_fn(sess->ssl_verify_ud, failures, chain) == 0)
             ret = NE_OK;
+#endif
     }
-
     return ret;
 }
 
@@ -795,6 +797,9 @@ int ne__negotiate_ssl(ne_session *sess)
     }
 
     sock = ne__sock_sslsock(sess->socket);
+
+    if (!sess->check_peer_cert)
+        return NE_OK;
 
     chain = make_peers_chain(sock);
     if (chain == NULL) {
@@ -843,11 +848,11 @@ const char *ne_ssl_cert_identity(const ne_ssl_certificate *cert)
     return cert->identity;
 }
 
-void ne_ssl_context_trustcert(ne_ssl_context *ctx, const ne_ssl_certificate *cert)
+int ne_ssl_context_trustcert(ne_ssl_context *ctx, const ne_ssl_certificate *cert)
 {
     UGLY_DEBUG();
     gnutls_x509_crt certs = cert->subject;
-    gnutls_certificate_set_x509_trust(ctx->cred, &certs, 1);
+    return (gnutls_certificate_set_x509_trust(ctx->cred, &certs, 1) == 0) ? NE_OK : NE_ERROR;
 }
 
 void ne_ssl_trust_default_ca(ne_session *sess)

@@ -214,6 +214,7 @@ void ne_close_connection(ne_session *sess)
     sess->connected = 0;
 }
 
+#if 0
 void ne_ssl_set_verify(ne_session *sess, ne_ssl_verify_fn fn, void *userdata)
 {
     UGLY_DEBUG();
@@ -228,25 +229,31 @@ void ne_ssl_provide_clicert(ne_session *sess,
     sess->ssl_provide_fn = fn;
     sess->ssl_provide_ud = userdata;
 }
+#endif
 
-void ne_ssl_trust_cert(ne_session *sess, const ne_ssl_certificate *cert)
+int ne_ssl_trust_cert(ne_session *sess, const ne_ssl_certificate *cert)
 {
     UGLY_DEBUG();
-    if (sess->ssl_context) {
-        ne_ssl_context_trustcert(sess->ssl_context, cert);
-    }
+    return ne_ssl_context_trustcert(sess->ssl_context, cert);
 }
 
-void ne_ssl_trust_cert_file(ne_session *sess, const char *cert_file)
+int ne_ssl_trust_cert_file(ne_session *sess, const char *cert_file)
 {
+    int ret;
+
     UGLY_DEBUG();
     ne_ssl_certificate* ca = ne_ssl_cert_read(cert_file);
     if(ca == NULL)
     {
-    	printf("Unable to load certificate: %s\n", cert_file);
-	return;
+    	ne_set_error(sess, _("Unable to load trust certificate"));
+	return NE_ERROR;
     }
-    ne_ssl_trust_cert(sess, ca);
+
+    ret = ne_ssl_trust_cert(sess, ca);
+    if (ret == NE_OK)
+        sess->check_peer_cert = 1;
+
+    return ret;
 }
 
 void ne_ssl_cert_validity(const ne_ssl_certificate *cert, char *from, char *until)
@@ -430,7 +437,10 @@ ssize_t ne_read(ne_session *session, char *buffer, size_t count)
 
 int ne_ssl_set_keypair(ne_session *session, const char* cert_file, const char* key_file)
 {
-	return ne_ssl_context_keypair(session->ssl_context, cert_file, key_file);
+	int ret = ne_ssl_context_keypair(session->ssl_context, cert_file, key_file);
+	if (ret != NE_OK)
+		ne_set_error(session, _("Unable to load private key or certificate file"));
+	return ret;
 }
 
 

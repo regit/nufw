@@ -193,6 +193,7 @@ void ne_set_notifier(ne_session *sess, ne_notify_status status, void *userdata);
  * should be failed. */
 #define NE_SSL_FAILMASK (0x0f)
 
+#if 0
 /* A callback which is used when server certificate verification is
  * needed.  The reasons for verification failure are given in the
  * 'failures' parameter, which is a binary OR of one or more of the
@@ -217,12 +218,9 @@ void ne_ssl_set_clicert(ne_session *sess, const ne_ssl_client_cert *clicert);
  * is duplicated internally so can be destroyed by the caller.  This
  * function has no effect for non-SSL sessions. */
 void ne_ssl_trust_cert(ne_session *sess, const ne_ssl_certificate *cert);
+#endif
 
-/* Indicate that the certificate 'cert' is trusted; the 'cert' object
- * is duplicated internally so can be destroyed by the caller.  This
- * function has no effect for non-SSL sessions. */
-void ne_ssl_trust_cert_file(ne_session *sess, const char *cert_file);
-
+#if 0
 /* If the SSL library provided a default set of CA certificates, trust
  * this set of CAs. */
 void ne_ssl_trust_default_ca(ne_session *sess);
@@ -240,6 +238,7 @@ typedef void (*ne_ssl_provide_fn)(void *userdata, ne_session *sess,
  * certificate. */
 void ne_ssl_provide_clicert(ne_session *sess, 
                             ne_ssl_provide_fn fn, void *userdata);
+#endif
 
 /* Set the timeout (in seconds) used when reading from a socket.  The
  * timeout value must be greater than zero. */
@@ -248,18 +247,6 @@ void ne_set_read_timeout(ne_session *sess, int timeout);
 /* Set the timeout (in seconds) used when making a connection.  The
  * timeout value must be greater than zero. */
 void ne_set_connect_timeout(ne_session *sess, int timeout);
-
-/* Sets the host, scheme, and port fields of the given URI structure
- * to that of the configured server and scheme for the session; host
- * and scheme are malloc-allocated.  No other fields in the URI
- * structure are changed. */
-/* void ne_fill_server_uri(ne_session *sess, ne_uri *uri); */
-
-/* If a proxy is configured, sets the host and port fields in the
- * given URI structure to that of the proxy.  The hostname is
- * malloc-allocated.  No other fields in the URI structure are
- * changed; if a proxy is not configured, no fields are changed. */
-/* void ne_fill_proxy_uri(ne_session *sess, ne_uri *uri); */
 
 /* Set the error string for the session; takes printf-like format
  * string. */
@@ -278,7 +265,12 @@ int ne_write(ne_session *session, char *buffer, size_t count);
 /* Read from session */
 ssize_t ne_read(ne_session *session, char *buffer, size_t count);
 
+/* Set private key and certificate */
 int ne_ssl_set_keypair(ne_session *session, const char* cert_file, const char* key_file);
+
+/* Indicate that the certificate 'cert' is trusted */
+int ne_ssl_trust_cert_file(ne_session *sess, const char *cert_file);
+
 NE_END_DECLS
 
 #endif /* NE_SESSION_H */

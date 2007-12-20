@@ -86,14 +86,18 @@ struct ne_session_s {
     ne_ssl_certificate *server_cert;
     ne_ssl_context *ssl_context;
 
+#if 0
     /* Server cert verification callback: */
     ne_ssl_verify_fn ssl_verify_fn;
     void *ssl_verify_ud;
     /* Client cert provider callback: */
     ne_ssl_provide_fn ssl_provide_fn;
     void *ssl_provide_ud;
+#endif
 
     ne_session_status_info status;
+
+    int check_peer_cert;
 
     /* Error string */
     char error[512];
