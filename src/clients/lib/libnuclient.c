@@ -233,19 +233,15 @@ char *nu_get_home_dir()
  * \param err Pointer to a nuclient_error_t: which contains the error
  * \return Returns 0 on error (error description in err), 1 otherwise
  */
-int nu_client_setup_tls(nuauth_session_t * session,
-			char *keyfile, char *certfile, char *cafile,
-			char *tls_password, nuclient_error_t * err)
+int nu_client_set_key(nuauth_session_t * session,
+			char *keyfile, char *certfile,
+			nuclient_error_t * err)
 {
-	char castring[256];
 	char certstring[256];
 	char keystring[256];
 	char *home = nu_get_home_dir();
 	int exit_on_error = 0;
-	int ok;
 	int ret;
-
-	session->tls_password = tls_password;
 
 	/* If the user specified a certficate and a key on command line,
 	 * exit if we fail loading them.
@@ -256,90 +252,81 @@ int nu_client_setup_tls(nuauth_session_t * session,
 
 	/* compute patch keyfile */
 	if (keyfile == NULL && home != NULL) {
-		ok = secure_snprintf(keystring, sizeof(keystring),
+		ret = secure_snprintf(keystring, sizeof(keystring),
 				     "%s/.nufw/key.pem", home);
-		if (ok)
+		if (ret)
 			keyfile = keystring;
 	}
 
-	/* test if key file exists */
-	if (keyfile != NULL && access(keyfile, R_OK) != 0) {
-		if (exit_on_error) {
-			if (session->verbose)
-			    printf("Unable to load key file: %s\n", keyfile);
-			SET_ERROR(err, INTERNAL_ERROR, FILE_ACCESS_ERR);
-			if (home) {
-				free(home);
-			}
-			errno = EBADF;
-			return 0;
-		}
-		keyfile = NULL;
-	}
-
 	if (certfile == NULL && home != NULL) {
-		ok = secure_snprintf(certstring, sizeof(certstring),
+		ret = secure_snprintf(certstring, sizeof(certstring),
 				     "%s/.nufw/cert.pem", home);
-		if (ok)
+		if (ret)
 			certfile = certstring;
 	}
-	/* test if cert exists */
-	if (certfile != NULL && access(certfile, R_OK) != 0) {
-		if (exit_on_error) {
-			printf("Unable to load certificate file : %s\n", certfile);
-			SET_ERROR(err, INTERNAL_ERROR, FILE_ACCESS_ERR);
-			if (home) {
-				free(home);
-			}
-			errno = EBADF;
-			return 0;
-		}
-		certfile = NULL;
-	}
-	if (cafile == NULL && home != NULL) {
-		ok = secure_snprintf(castring, sizeof(castring),
-				     "%s/.nufw/cacert.pem", home);
-		if (ok)
-			cafile = castring;
-		/* if computed cafile is not present we reset to cafile to NULL */
-		if (access(cafile, R_OK) != 0) {
-			if (errno == EACCES) {
-				printf("Warning, unable to access CA file : %s\n", cafile);
-			}
-			cafile = NULL;
-		}
-	}
-	/* test if cert exists */
-	if (cafile != NULL && access(cafile, R_OK) != 0) {
-		if (exit_on_error) {
-			printf("Unable to load CA file : %s\n", cafile);
-			SET_ERROR(err, INTERNAL_ERROR, FILE_ACCESS_ERR);
-			errno = EBADF;
-			if (home) {
-				free(home);
-			}
-			return 0;
-		}
-		cafile = NULL;
-	}
 
-	if (cafile != NULL)
-		ne_ssl_trust_cert_file(session->nussl, cafile);
-
-	if (certfile != NULL && keyfile != NULL) {
+	if (certfile != NULL || keyfile != NULL) {
 		ret =
 		    ne_ssl_set_keypair(session->nussl, certfile, keyfile);
+
 		if (ret != NE_OK) {
-			SET_ERROR(err, NUSSL_ERROR, ret);
-			if (home) {
-				free(home);
+			if (exit_on_error) {
+				if (home)
+					free(home);
+				SET_ERROR(err, NUSSL_ERROR, ret);
+				return 0;
 			}
-			return 0;
+			else {
+				printf("Warning: Failed to load default certificate and key.\n");
+			}
 		}
 	}
+
+	if (home)
+		free(home);
 
 	return 1;
 }
+
+
+int nu_client_set_ca(nuauth_session_t * session,
+			char *cafile,
+			nuclient_error_t * err)
+{
+	char castring[256];
+	char *home = nu_get_home_dir();
+	int exit_on_error = 0;
+	int ret;
+
+	if (cafile != NULL)
+		exit_on_error = 1;
+
+	if (cafile == NULL && home != NULL) {
+		ret = secure_snprintf(castring, sizeof(castring),
+				     "%s/.nufw/cacert.pem", home);
+		if (ret)
+			cafile = castring;
+	}
+
+	if (cafile != NULL) {
+		/* ret = */ ne_ssl_trust_cert_file(session->nussl, cafile);
+/*
+		if (ret != NE_OK) {
+			if (exit_on_error) {
+				if (home)
+					free(home);
+				SET_ERROR(err, NUSSL_ERROR, ret);
+				return 0;
+			}
+			else {
+				printf("Warning: Failed to load default CA certificate.\n");
+			}
+		}
+*/
+	}
+	return 1;
+}
+
 /**
  * \ingroup nuclientAPI
  */
@@ -385,7 +372,6 @@ nuauth_session_t *_nu_client_new(nuclient_error_t * err)
 {
 	conntable_t *new;
 	nuauth_session_t *session;
-	int ret;
 
 	/* First reset error */
 	SET_ERROR(err, INTERNAL_ERROR, NO_ERR);
@@ -406,7 +392,6 @@ nuauth_session_t *_nu_client_new(nuclient_error_t * err)
 	session->checkthread = NULL_THREAD;
 	session->recvthread = NULL_THREAD;
 	session->ct = NULL;
-	session->tls_password = NULL;
 	session->debug_mode = 0;
 	session->verbose = 1;
 	session->timestamp_last_sent = time(NULL);
@@ -426,9 +411,7 @@ nuauth_session_t *_nu_client_new(nuclient_error_t * err)
 		return NULL;
 	}
 	session->ct = new;
-
 	session->nussl = ne_session_create();
-
 
 	return session;
 }

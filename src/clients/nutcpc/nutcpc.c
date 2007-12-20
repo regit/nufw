@@ -484,8 +484,11 @@ nuauth_session_t *do_connect(nutcpc_context_t * context, char *username)
 				       sizeof(context->srv_addr));
 	}
 
-	if (!nu_client_setup_tls(session, context->keyfile, context->certfile,
-	     context->cafile, context->cert_password, err)) {
+	if (!nu_client_set_key(session, context->keyfile, context->certfile, err)) {
+		goto init_failed;
+	}
+
+	if (!nu_client_set_ca(session, context->cafile, err)) {
 		goto init_failed;
 	}
 

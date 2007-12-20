@@ -165,10 +165,8 @@ typedef struct {
 	/** Callback used to get password */
 	char* (*passwd_callback)();
 
-	char *tls_password;	/*!< TLS password */
 	char *nuauth_cert_dn;
 
-/*	int socket;	*//*!< TCP socket used to exchange message with nuauth */
 	conntable_t *ct;	/*!< Connection table */
 	u_int32_t packet_seq;	/*!< Packet sequence number (start at zero) */
 	int auth_by_default;	/*!< Auth. by default (=1) */
@@ -294,10 +292,17 @@ void nu_client_set_verbose(nuauth_session_t * session,
 		unsigned char enabled);
 void nu_client_set_source(nuauth_session_t *session, struct sockaddr_storage *addr);
 
-int nu_client_setup_tls(nuauth_session_t * session,
-		char *tls_passwd,
+int nu_client_set_key(nuauth_session_t * session,
 		char *keyfile,
 		char *certfile,
+		nuclient_error_t *err);
+
+/* int nu_client_set_pkcs12_key(nuauth_session_t * session,
+		char *keyfile,
+		nuclient_error_t *err);
+*/
+
+int nu_client_set_ca(nuauth_session_t * session,
 		char *cafile, nuclient_error_t *err);
 
 int nu_client_set_nuauth_cert_dn(nuauth_session_t * session,
