@@ -19,6 +19,13 @@
     </copyright>
     <revhistory>
       <revision>
+	<revnumber>0.9.1</revnumber>
+	<date>2007/12/20</date>
+	<revdescription>
+	  <para>License clarification. On earlier versions license was not expressed at all, making the document de facto proprietary.</para>
+	</revdescription>
+      </revision>
+      <revision>
 	<revnumber>0.9</revnumber>
 	<date>2007/12/10</date>
 	<revdescription>
@@ -150,6 +157,11 @@
       </revision>
     </revhistory>
   </bookinfo>
+  <chapter><title>License</title>
+  <para>
+  This document is copyrighted by INL, and distributed under the Creative Commons <command>by-nc-sa</command> license. The full text of the license is available at  <ulink url="http://creativecommons.org/licenses/by-nc-sa/3.0/legalcode">http://creativecommons.org/licenses/by-nc-sa/3.0/legalcode</ulink>.
+  </para>
+  </chapter>
   <chapter><title>Introduction</title>
    <section><title>Presentation</title>
 <para>
@@ -871,7 +883,7 @@ software, this sort of filtering is "quite secure".</para>
 It your ldap server has support for TLS, you can setup nuauth to
 have the ldap acls checking module using ldap over SSL.
 </para>
-<para>To do so, edit <filename>nuauth.conf</filename> and modify ldap 
+<para>To do so, edit <filename>nuauth.conf</filename> and modify ldap
 port to 636 (ldaps):
 <screen>
 ldap_server_port=636
