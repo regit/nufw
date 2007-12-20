@@ -150,13 +150,6 @@ typedef struct {
 /* NB: couldn't use 'class' in ne_status because it would clash with
  * the C++ reserved word. */
 
-/* Parse 'status_line' using the the RFC2616 Status-Line grammar.
- * s->reason_phrase is malloc-allocated if non-NULL, and must be
- * free'd by the caller.  Returns 0 on success, in which case all
- * fields of '*s' will be set; or -1 on parse error, in which case
- * '*s' is unmodified. */
-int ne_parse_statusline(const char *status_line, ne_status *s);
-
 NE_END_DECLS
 
 #endif /* NE_UTILS_H */

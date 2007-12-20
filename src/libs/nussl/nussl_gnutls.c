@@ -564,6 +564,7 @@ dup_error:
     return NULL;
 }    
 
+#if 0 /* Use gnutls function, no callback needed */
 /* Callback invoked when the SSL server requests a client certificate.  */
 static int provide_client_cert(gnutls_session session,
                                const gnutls_datum *req_ca_rdn, int nreqs,
@@ -607,6 +608,7 @@ static int provide_client_cert(gnutls_session session,
 
     return 0;
 }
+#endif
 
 void ne_ssl_set_clicert(ne_session *sess, const ne_ssl_client_cert *cc)
 {
@@ -630,10 +632,8 @@ int ne_ssl_context_keypair(ne_ssl_context *ctx,
                            const char *cert, const char *key)
 {
     UGLY_DEBUG();
-    printf("%p\n", ctx->cred);
     gnutls_certificate_set_x509_key_file(ctx->cred, cert, key,
                                          GNUTLS_X509_FMT_PEM);
-    printf("%p\n", ctx->cred);
     return 0;
 }
 

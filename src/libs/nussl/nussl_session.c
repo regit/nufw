@@ -125,14 +125,6 @@ ne_session *ne_session_create()
     return sess;
 }
 
-/* void ne_session_proxy(ne_session *sess, const char *hostname, */
-/* 		      unsigned int port) */
-/* { */
-/*     sess->use_proxy = 1; */
-/*     if (sess->proxy.hostname) ne_free(sess->proxy.hostname); */
-/*     set_hostinfo(&sess->proxy, hostname, port); */
-/* } */
-
 void ne_set_addrlist(ne_session *sess, const ne_inet_addr **addrs, size_t n)
 {
     UGLY_DEBUG();
@@ -447,8 +439,6 @@ ssize_t ne_read(ne_session *session, char *buffer, size_t count)
     UGLY_DEBUG();
 	return ne_sock_read(session->socket, buffer, count);
 }
-
-
 
 int ne_ssl_set_keypair(ne_session *session, const char* cert_file, const char* key_file)
 {
