@@ -997,14 +997,6 @@ net ads join -U administrator
   </para>
   <para>Winbind (or winbindd) should be running on your system. You can check things are going allright by reading samba logs (probably in /var/log/samba/*).</para>
  </section>
- <section><title>LDAP authentication with Nuauth</title>
-  <para>This is pretty straightforward: most of the work is to be done in
-  nuauth.conf (options are documented in that file itself). Be aware that using
-  direct LDAP authentication requires that you use a NuFW specific LDAP schema,
-  which can be considered inconvenient. In such a case, use PAM, as described
-  above.
-  </para>
- </section>
 </section>
   </chapter>
 <chapter><title>Miscellaneous</title>
