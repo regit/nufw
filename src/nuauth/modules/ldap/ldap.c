@@ -327,14 +327,15 @@ static LDAP *ldap_conn_init(struct ldap_params *params)
 	if (ldap_set_option(ld, LDAP_OPT_PROTOCOL_VERSION,
 			    &version) == LDAP_OPT_SUCCESS) {
 		/* Goes to ssl if needed */
+
 #ifdef LDAP_OPT_X_TLS
 		if (params->ldap_server_port == LDAPS_PORT) {
 			int tls_option;
-			tls_option = LDAP_OPT_X_TLS_TRY;
+			tls_option = LDAP_OPT_X_TLS_HARD;
 			ldap_set_option(ld, LDAP_OPT_X_TLS,
 					(void *) &tls_option);
 		}
-#endif				/* LDAP_OPT_X_TLS */
+#endif /* LDAP_OPT_X_TLS */
 		err =
 		    ldap_bind_s(ld, params->binddn, params->bindpasswd,
 				LDAP_AUTH_SIMPLE);

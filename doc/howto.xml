@@ -866,6 +866,32 @@ open on a standard system<footnote><para>Please avoid an ABS effect
 on the system which issues the authentication. On a secured system where users can not install
 software, this sort of filtering is "quite secure".</para>
       </section>
+<section><title>Using ldaps for ACLs checking</title>
+<para>
+It your ldap server has support for TLS, you can setup nuauth to
+have the ldap acls checking module using ldap over SSL.
+</para>
+<para>To do so, edit <filename>nuauth.conf</filename> and modify ldap 
+port to 636 (ldaps):
+<screen>
+ldap_server_port=636
+</screen>
+Next step is to edit <filename>/etc/ldap/ldap.conf</filename> to indicate which policy you want to use
+for SSL connection.
+If you only want to encrypt data, you can simply add to <filename>ldap.conf</filename>:
+<screen>
+TLS_REQCERT never
+</screen>
+The recommanded setup is to fill in <filename>ldap.conf</filename> with the path to certificate, key and certificate authority.
+Your <filename>ldap.conf</filename> should look like:
+<screen>
+TLS_CACERT /etc/nufw/cacert-ldap.pem
+TLS_CERT /etc/nufw/nuauth-cert.pem
+TLS_KEY /etc/nufw/nuauth-key.pem
+TLS_REQCERT allow
+</screen>
+</para>
+</section>
 </section>
 <section><title>Nuauth authentication configurations</title>
  <section><title>PAM/LDAP authentication with Nuauth</title>
