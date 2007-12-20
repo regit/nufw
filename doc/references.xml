@@ -14,6 +14,13 @@
     </copyright>
     <revhistory>
  <revision>
+	<revnumber>0.8.1</revnumber>
+	<date>2007/12/20</date>
+	<revdescription>
+	  <para>License clarification. On earlier versions license was not expressed at all, making the document de facto proprietary.</para>
+	</revdescription>
+      </revision>
+ <revision>
 	<revnumber>0.8</revnumber>
 	<date>2007/06/12</date>
 	<revdescription>
@@ -79,6 +86,10 @@
       </revision>
     </revhistory>
   </bookinfo>
+  <chapter><title>License</title>
+  <para>
+  This document is copyrighted by INL, and distributed under the Creative Commons <command>by-nc-sa</command> license. The full text of the license is available at  <ulink url="http://creativecommons.org/licenses/by-nc-sa/3.0/legalcode">http://creativecommons.org/licenses/by-nc-sa/3.0/legalcode</ulink>.
+  </para>
   <chapter><title>nufw configuration</title>
     <para>
 the nufw server has no configuration file as it as only a restricted set of options :
@@ -214,10 +225,10 @@ If it is set to 2, then the client has to show a valid certificate.
 <para>Default: <computeroutput>nuauth_tls_request_cert=0</computeroutput>
 </para>
 	<section><title>nuauth_tls_auth_by_cert</title><para>
-This variable if set to 1 
-adds the capability to authenticate the client based on name 
+This variable if set to 1
+adds the capability to authenticate the client based on name
 provided in certificate.
-The authentication can failed if there is no group corresponding to 
+The authentication can failed if there is no group corresponding to
 the given user name.
 </para>
 <para>If set to 2, then per-certificate authentication is mandatory.</para>
@@ -300,7 +311,7 @@ This variable is used by nuauth to choose the module used to fetch user groups. 
       </section>
       <section><title>nuauth_acl_check_module</title>
 	<para>
-Choose here the acl checking  module. It has 
+Choose here the acl checking  module. It has
  to be choozen in :
 <itemizedlist>
 <listitem><para>libldap: Acls are stored on an LDAP tree whith a specific schema. This module enables
@@ -357,7 +368,7 @@ The available modules are :
     <section><title>nuauth_certificate_check_module</title>
 <para>
  These modules check client certificate and issue verdict on validity.
-It is recommanded to keep <option>x509_std</option> as first module as it is 
+It is recommanded to keep <option>x509_std</option> as first module as it is
 usually wanted checks.
 </para>
 <para>Default: <computeroutput>nuauth_certificate_check_module="x509_std"</computeroutput>
@@ -381,7 +392,7 @@ of time. Currently only <option>xml_defs</option> is available. It stores period
         </section>
  <section><title>nuauth_user_session_modify_module</title>
 <para>
- These modules provides a hook 
+ These modules provides a hook
  which can be used to modify a user session just after its creation.
  It is useful in the case of you want to modify property like expiration date of the session.
 Currently only <option>libsession_expire</option> is available. It modify session expiration to force user to reconnect after
@@ -468,7 +479,7 @@ This is used to choose the user connection policy :
 </section>
 <section><title>nuauth_reject_authenticated_drop</title>
 <para>
- Reject via ICMP message (instead of simply drop) when 
+ Reject via ICMP message (instead of simply drop) when
  user in not authorized by nuauth to send packets.
 </para>
 <para>Default: <computeroutput>nuauth_reject_authenticated_drop=0</computeroutput>
@@ -537,8 +548,8 @@ want to increase this value. This is a workaround against very laggy network.
       </section>
 <section><title>nuauth_datas_persistance</title>
 <para>
- A cache is implemented for acl (and/or user) datas. 
-It permits to speed thing up by decreasing the number of request to external 
+ A cache is implemented for acl (and/or user) datas.
+It permits to speed thing up by decreasing the number of request to external
 system. This variable set the datas persistence in cache (in second).
 </para><para>Default: <computeroutput>nuauth_datas_persistance=300</computeroutput>
 </para>
@@ -567,14 +578,14 @@ and to treat gateway request.
 	  </section>
 <section><title>nuauth_number_loggers</title>
 <para>
-A pool of threads is used to do logging. You may need to adjust 
+A pool of threads is used to do logging. You may need to adjust
 it to the capability of the database server.
  </para><para>Default: <computeroutput>nuauth_number_loggers=3</computeroutput>
 </para>
 	  </section>
 <section><title>nuauth_number_session_loggers</title>
 <para>
-A pool of threads is used to do user connection logging. You may need to adjust 
+A pool of threads is used to do user connection logging. You may need to adjust
 it to the capability of the database server.
  </para><para>Default: <computeroutput>nuauth_number_session_loggers=3</computeroutput>
 </para>
@@ -583,7 +594,7 @@ it to the capability of the database server.
 <section><title>nuauth_number_authcheckers</title>
 <para>
 A pool of threads is used to do TLS and SASL negotiation with users.
- This set the number of threads used for this task. 
+ This set the number of threads used for this task.
 </para><para>Default: <computeroutput>nuauth_number_authcheckers=5</computeroutput>
 </para>
 	    </section>
@@ -655,7 +666,7 @@ This variable decide the level of verbosity of user activities logging.
 	 <listitem><para>DEBUG_AREA_GW (8) Gateway domain, interaction wit nufw servers.</para></listitem>
 	 <listitem><para>DEBUG_AREA_AUTH (16) Authentication domain</para></listitem>
 	 </itemizedlist>
-	 Default debug areas is all areas. 
+	 Default debug areas is all areas.
 	  </para>
 <para>Default: <computeroutput>nuauth_debug_level=31</computeroutput></para>
       </section>
@@ -724,12 +735,12 @@ This set the address of the ldap server which contains the acls and/or the users
 <para>Default: <computeroutput>ldap_server_port=389</computeroutput>
 </para>      </section>
       <section><title>ldap_bind_dn</title><para>
- This set the bind dn of the ldap connection. 
+ This set the bind dn of the ldap connection.
 </para><para>Default: <computeroutput>ldap_bind_dn="cn=admin,dc=nufw,dc=org"</computeroutput>
 </para>
       </section>
       <section><title>ldap_bind_password</title>
-	<para>This set the password used to bind to the ldap connection. 
+	<para>This set the password used to bind to the ldap connection.
 </para><para>Default: <computeroutput>ldap_bind_password="mypassword"</computeroutput>
 </para>
       </section>
@@ -768,7 +779,7 @@ This is the  base dn for acl search request.
 </para><para>Default: <computeroutput>ldap_users_base_dn="ou=people,dc=nufw,dc=org"</computeroutput>
 </para>
       </section>
-      
+
     </section>
 
     <section><title>mysql log</title>
@@ -785,7 +796,7 @@ This set the Mysql server port.
       </section>
       <section><title>mysql_user</title>
 	<para>
-This parameter set the name of the user used to log on MySQL server. 
+This parameter set the name of the user used to log on MySQL server.
 </para><para>Default: <computeroutput>mysql_user="myuser"</computeroutput>
 </para>
       </section>
@@ -906,7 +917,7 @@ This is the name of PGsql database to connect to
       </section>
       <section><title>pgsql_table_name</title>
 	<para>
-This set the name of the table  to connect to. It must belong to the chosen database. 
+This set the name of the table  to connect to. It must belong to the chosen database.
 The specified user must have rights on this table.
 </para><para>Default: <computeroutput>pgsql_table_name="ulog"</computeroutput>
 </para>
@@ -921,7 +932,7 @@ The specified user must have rights on this table.
 
 
       <section><title>pgsql_request_timeout</title><para>
-This is the time in seconds after which  the connection to the database is 
+This is the time in seconds after which  the connection to the database is
 assumed to be lost if we have no answer.
 </para><para>Default: <computeroutput>pgsql_request_timeout=5</computeroutput>
 </para>
