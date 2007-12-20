@@ -44,9 +44,6 @@
 
 
 #define  HAVE_FNCTL
-#define  F_GETFD
-#define  F_SETFD
-
 
 #define HAVE_MEMCPY
 #define NEON_VERSION "NuNeon"
@@ -58,7 +55,6 @@
 #define HAVE_SIGNAL_H
 #define HAVE_SIGNAL
 
-#define NE_HAVE_SSL
 #define NE_HAVE_TS_SSL /* TS = Thread Safe */
 /* #define HAVE_OPENSSL */
 

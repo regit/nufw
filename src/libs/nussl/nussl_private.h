@@ -82,11 +82,9 @@ struct ne_session_s {
 
     int rdtimeout, cotimeout; /* read, connect timeouts. */
 
-#ifdef NE_HAVE_SSL
     ne_ssl_client_cert *client_cert;
     ne_ssl_certificate *server_cert;
     ne_ssl_context *ssl_context;
-#endif
 
     /* Server cert verification callback: */
     ne_ssl_verify_fn ssl_verify_fn;

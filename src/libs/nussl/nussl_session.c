@@ -78,7 +78,6 @@ void ne_session_destroy(ne_session *sess)
     ne_free(sess->server.hostname);
     if (sess->server.address) ne_addr_destroy(sess->server.address);
 
-#ifdef NE_HAVE_SSL
     if (sess->ssl_context)
         ne_ssl_context_destroy(sess->ssl_context);
 
@@ -87,7 +86,6 @@ void ne_session_destroy(ne_session *sess)
     
     if (sess->client_cert)
         ne_ssl_clicert_free(sess->client_cert);
-#endif
 
     ne_free(sess);
 }
@@ -113,11 +111,9 @@ ne_session *ne_session_create()
 
     strcpy(sess->error, "Unknown error.");
 
-#ifdef NE_HAVE_SSL
     sess->ssl_context = ne_ssl_context_create(0);
     sess->flags[NE_SESSFLAG_SSLv2] = 1;
     sess->flags[NE_SESSFLAG_TLS_SNI] = 1;
-#endif
 
     /* Set flags which default to on: */
     sess->flags[NE_SESSFLAG_PERSIST] = 1;
@@ -147,11 +143,9 @@ void ne_set_session_flag(ne_session *sess, ne_session_flag flag, int value)
     UGLY_DEBUG();
     if (flag < NE_SESSFLAG_LAST) {
         sess->flags[flag] = value;
-#ifdef NE_HAVE_SSL
         if (flag == NE_SESSFLAG_SSLv2 && sess->ssl_context) {
             ne_ssl_context_set_flag(sess->ssl_context, NE_SSL_CTX_SSLv2, value);
         }
-#endif
     }
 }
 
@@ -238,17 +232,14 @@ void ne_ssl_provide_clicert(ne_session *sess,
 void ne_ssl_trust_cert(ne_session *sess, const ne_ssl_certificate *cert)
 {
     UGLY_DEBUG();
-#ifdef NE_HAVE_SSL
     if (sess->ssl_context) {
         ne_ssl_context_trustcert(sess->ssl_context, cert);
     }
-#endif
 }
 
 void ne_ssl_trust_cert_file(ne_session *sess, const char *cert_file)
 {
     UGLY_DEBUG();
-#ifdef NE_HAVE_SSL
     ne_ssl_certificate* ca = ne_ssl_cert_read(cert_file);
     if(ca == NULL)
     {
@@ -256,7 +247,6 @@ void ne_ssl_trust_cert_file(ne_session *sess, const char *cert_file)
 	return;
     }
     ne_ssl_trust_cert(sess, ca);
-#endif
 }
 
 void ne_ssl_cert_validity(const ne_ssl_certificate *cert, char *from, char *until)
@@ -290,7 +280,6 @@ void ne_ssl_cert_validity(const ne_ssl_certificate *cert, char *from, char *unti
     }
 }
 
-#ifdef NE_HAVE_SSL
 void ne__ssl_set_verify_err(ne_session *sess, int failures)
 {
     static const struct {
@@ -316,7 +305,6 @@ void ne__ssl_set_verify_err(ne_session *sess, int failures)
 	}
     }
 }
-#endif
 
 typedef void (*void_fn)(void);
 

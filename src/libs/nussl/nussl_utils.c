@@ -145,12 +145,10 @@ int ne_version_match(int major, int minor)
 int ne_has_support(int feature)
 {
     switch (feature) {
-#if defined(NE_HAVE_SSL) || defined(NE_HAVE_ZLIB) || defined(NE_HAVE_IPV6) \
+#if defined(NE_HAVE_ZLIB) || defined(NE_HAVE_IPV6) \
     || defined(NE_HAVE_SOCKS) || defined(NE_HAVE_LFS) \
     || defined(NE_HAVE_TS_SSL) || defined(NE_HAVE_I18N)
-#ifdef NE_HAVE_SSL
     case NE_FEATURE_SSL:
-#endif
 #ifdef NE_HAVE_ZLIB
     case NE_FEATURE_ZLIB:
 #endif

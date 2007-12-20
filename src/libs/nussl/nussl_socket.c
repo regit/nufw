@@ -130,9 +130,7 @@ typedef struct addrinfo ne_inet_addr;
 typedef struct in_addr ne_inet_addr;
 #endif
 
-#ifdef NE_HAVE_SSL
 #include "nussl_privssl.h" /* MUST come after ne_inet_addr is defined */
-#endif
 
 /* To avoid doing AAAA queries unless absolutely necessary, either use
  * AI_ADDRCONFIG where available, or a run-time check for working IPv6
@@ -220,9 +218,8 @@ struct ne_socket_s {
     void *progress_ud;
     int rdtimeout, cotimeout; /* timeouts */
     const struct iofns *ops;
-#ifdef NE_HAVE_SSL
     ne_ssl_socket ssl;
-#endif
+
     /* The read buffer: ->buffer stores byte which have been read; as
      * these are consumed and passed back to the caller, bufpos
      * advances through ->buffer.  ->bufavail gives the number of
@@ -363,11 +360,9 @@ int ne_sock_init(void)
     init_ipv6();
 #endif
 
-#ifdef NE_HAVE_SSL
     if (ne__ssl_init()) {
         return init_state = -1;
     }
-#endif
 
     init_state = 1;
     return 0;
@@ -380,9 +375,7 @@ void ne_sock_exit(void)
 #ifdef WIN32
         WSACleanup();
 #endif
-#ifdef NE_HAVE_SSL
         ne__ssl_exit();
-#endif
         
 #ifdef HAVE_SSPI
         ne_sspi_deinit();
@@ -1424,8 +1417,6 @@ void ne_sock_connect_timeout(ne_socket *sock, int timeout)
     sock->cotimeout = timeout;
 }
 
-#ifdef NE_HAVE_SSL
-
 #ifdef HAVE_GNUTLS
 /* Dumb server session cache implementation for GNUTLS; holds a single
  * session. */
@@ -1643,12 +1634,10 @@ ne_ssl_socket ne__sock_sslsock(ne_socket *sock)
     return sock->ssl;
 }
 
-#endif
-
+#if 0 /* Unused */
 int ne_sock_sessid(ne_socket *sock, unsigned char *buf, size_t *buflen)
 {
     UGLY_DEBUG();
-#ifdef NE_HAVE_SSL
 #ifdef HAVE_GNUTLS
     if (sock->ssl) {
         return gnutls_session_get_id(sock->ssl, buf, buflen);
@@ -1677,16 +1666,13 @@ int ne_sock_sessid(ne_socket *sock, unsigned char *buf, size_t *buflen)
     memcpy(buf, sess->session_id, *buflen);
     return 0;
 #endif
-#else
-    return -1;
-#endif
 }
+#endif
 
 char *ne_sock_cipher(ne_socket *sock)
 {
     UGLY_DEBUG();
     if (sock->ssl) {
-#ifdef NE_HAVE_SSL
 #ifdef HAVE_OPENSSL
         const char *name = SSL_get_cipher(sock->ssl);
         return ne_strdup(name);
@@ -1694,7 +1680,6 @@ char *ne_sock_cipher(ne_socket *sock)
         const char *name = gnutls_cipher_get_name(gnutls_cipher_get(sock->ssl));
         return ne_strdup(name);
 #endif
-#endif /* NE_HAVE_SSL */
     }
     else {
         return NULL;

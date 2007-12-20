@@ -195,14 +195,10 @@ int ne_open_connection(ne_session *sess)
         if (ret) return ret;
     }    
     
-    ret = do_connect(sess, host, 
-                    /* sess->use_proxy ? 
-                     _("Could not connect to proxy server")
-                     :*/ _("Could not connect to server"));
+    ret = do_connect(sess, host, _("Could not connect to server"));
     if (ret != NE_OK) return ret;
 
-#ifdef NE_HAVE_SSL
-    /* Negotiate SSL layer if required. */
+    /* Negotiate SSL layer. */
 #ifdef XXX
     if (/*sess->use_ssl &&*/ !sess->in_connect) {
         /* CONNECT tunnel */
@@ -216,7 +212,6 @@ int ne_open_connection(ne_session *sess)
         }
 #ifdef XXX
     }
-#endif
 #endif
     
     return ret;
