@@ -191,20 +191,20 @@ nuauth dependencies are as follows:
 	  </itemizedlist>
 </para>
       </section>
-      <section><title>mysql logging</title>
+      <section><title>MySQL logging</title>
 	<para>
 The <filename>libmysqlclient</filename> library is necessary to the compilation
 of this module.
 </para>
       </section>
-      <section><title>pgsql logging</title>
+      <section><title>PostgreSQL logging</title>
 	<para>
 The <filename>libpq</filename> library is necessary to the compilation
 of this module.
 </para>
       </section>
 
-      <section><title>ldap authentication and acl check</title>
+      <section><title>LDAP authentication and acl check</title>
 	<para>
 <filename>libldap2</filename> is needed.
 </para>
@@ -473,7 +473,7 @@ on IP source:
 
 
   <chapter><title>Setting up NuFW</title>
-    <section><title>Using the ldap module for acl checking</title>
+    <section><title>Using the LDAP module for acl checking</title>
       <section><title>Slapd configuration</title>
 	<para>
 The file <filename>acls.schema</filename> has to be put in <filename class="directory">/etc/ldap/schema</filename>
@@ -515,7 +515,7 @@ structuralObjectClass: organizationalUnit
       </section>
      <section><title>nuauth configuration</title>
 	<para>
-To use ldap support for acl checking, we need to modify the <filename>nuauth.conf</filename> file:
+To use LDAP support for acl checking, we need to modify the <filename>nuauth.conf</filename> file:
 <screen>nuauth_acl_check_module="libldap"</screen>
 and we have to setup the connection parameters:
 <screen>ldap_bind_dn="uid=nuauth,ou=Users,dc=nufw,dc=org"
@@ -534,11 +534,11 @@ It generates a set of rules for NuFW and Netfilter that can directly be applied 
       </section>
       <section><title>nuaclgen configuration</title>
       <para>nuaclgen is a script that can help you maintain a simple
-      set of acls in an ldap tree.</para>
+      set of acls in an LDAP tree.</para>
       <para>It is advised that you use Nuface rather than Nuaclgen, if possible, since it makes things simpler. In particular,
       be aware that when you use nuaclgen, you need to also modify by hand your Netfilter rules.</para>
 	<para>
-The file <filename>nuaclgen.conf</filename> contains the informations about ldap
+The file <filename>nuaclgen.conf</filename> contains the informations about LDAP
 connections. It needs to be modified to suit your configuration, for example:
 <screen>$ldap_host="localhost";
 $username="uid=nufw,ou=Users,dc=nufw,dc=org";
@@ -800,8 +800,8 @@ If syntax is:
 Packet will be logged multiple times:
 <orderedlist>
 <listitem><para>In syslog</para></listitem>
-<listitem><para>In a mysql database using configuration file /etc/nufw/modules/dblocal.conf</para></listitem>
-<listitem><para>In a second mysql database using configuration file /etc/nufw/mainmysql.conf</para></listitem>
+<listitem><para>In a MySQL database using configuration file /etc/nufw/modules/dblocal.conf</para></listitem>
+<listitem><para>In a second MySQL database using configuration file /etc/nufw/mainmysql.conf</para></listitem>
 </orderedlist>
     </para>
     </section>
