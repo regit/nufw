@@ -474,10 +474,11 @@ on IP source:
 
   <chapter><title>Setting up NuFW</title>
     <section><title>Using the LDAP module for acl checking</title>
-      <section><title>Installation OpenLDAP</title>
-        <para>OpenLDAP installation is standard. Use your Linux distribution package. Example on Debian:</para>
+      <section><title>Installation of OpenLDAP server (slapd)</title>
+        <para>OpenLDAP server installation is standard. Use your Linux distribution packages,
+example with Debian:
 <screen>apt-get install slapd</screen>
-        <para>Read <ulink url="http://www.openldap.org/doc/admin/">OpenLDAP Software
+Read <ulink url="http://www.openldap.org/doc/admin/">OpenLDAP Software
 Administrator's Guide</ulink>, section "Building and Installing OpenLDAP Software" to get more information.
         </para>
       </section>
@@ -500,8 +501,7 @@ can only read the acls.
 </para>
 <para>
 You can start with a LDIF file such as:
-<screen>
-dn: dc=nufw,dc=org
+<screen>dn: dc=nufw,dc=org
 objectClass: top
 objectClass: dcObject
 objectClass: organization
@@ -581,6 +581,25 @@ the web.
 nuauth_log_users=9</screen>
 </para>
       </section>
+
+<section><title>Installation of MySQL server</title>
+        <para>MySQL server installation is standard. Use your Linux distribution packages,
+example with Debian:
+<screen>apt-get install mysql-server</screen>
+Read <ulink url="http://dev.mysql.com/doc/">MySQL Documentation</ulink>, section
+"2 Installing and Upgrading MySQL" to get more information.
+        </para>
+</section>
+
+<section><title>Installation of PostgreSQL server</title>
+        <para>PostgreSQL server installation is standard. Use your Linux distribution packages,
+example with Debian (replace 8.2 by the last server version):
+<screen>apt-get install postgresql-8.2</screen>
+Read <ulink url="http://www.postgresql.org/docs/">PostgreSQL Documentation</ulink>, section
+"III. 14. Installation Instructions" to get more information.
+        </para>
+</section>
+
 <section><title>SQL configuration</title>
 <para>The connection tracking system is really useful with SQL logging modules.
 We will describe here the setup of the MySQL module.</para>
