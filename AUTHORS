@@ -20,9 +20,13 @@ Mikael Berthe (aka McKael)
 Jean Gillaux
     author of pam_nufw module
 
-Francesco Varano <francesco.varano@winext.eu>
-Gabriele Messineo <gabriele.messineo@winext.eu>
+Francesco Varano <francesco.varano AT winext.eu>
+Gabriele Messineo <gabriele.messineo AT winext.eu>
     authors of auth_mysql module
 
 Simon Josefsson
     getdelim implentation (used on freebsd)
+
+Andrew Williams aka mistik1 <awilliams AT tsiware.com>
+    fixed Makefile.am of nuauth_command for Gentoo ($DESTDIR)
+
