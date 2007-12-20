@@ -216,11 +216,6 @@ typedef struct {
 	 */
 	pthread_t recvthread;
 
-	/**
-	 * Do we need to set credentials to current gnutls session?
-	 */
-	unsigned char need_set_cred;
-
 	/** Timestamp (Epoch format) of last packet send to nuauth */
 	time_t timestamp_last_sent;
 

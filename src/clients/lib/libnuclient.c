@@ -55,24 +55,11 @@
 #include <nussl_request.h> /* ne__negotiate_ssl */
 #include <nussl_utils.h> /* NE_OK definition */
 
-/*
- * #ifndef NUCLIENT_WITHOUT_DIFFIE_HELLMAN
-#  define DH_BITS 1024
-#endif
-*/
-/* static const int cert_type_priority[3] = { GNUTLS_CRT_X509, 0 }; */
-
-
 void nu_exit_clean(nuauth_session_t * session)
 {
 	if (session->ct) {
 		tcptable_free(session->ct);
 	}
-	/*if (session->socket > 0) {
-		shutdown(session->socket, SHUT_WR);
-		close(session->socket);
-		session->socket = 0;
-	}*/
 
 	secure_str_free(session->username);
 	secure_str_free(session->password);
@@ -351,50 +338,6 @@ int nu_client_setup_tls(nuauth_session_t * session,
 		}
 	}
 
-#if XXX
-	/* sets the trusted cas file */
-	if (cafile != NULL)
-	{
-		ret =
-		    gnutls_certificate_set_x509_trust_file(session->cred, cafile,
-							   GNUTLS_X509_FMT_PEM);
-		if (ret < 0) {
-			SET_ERROR(err, GNUTLS_ERROR, ret);
-			return 0;
-		}
-		session->need_ca_verif = 1;
-	}
-
-	if (certfile != NULL && keyfile != NULL) {
-		ret =
-		    gnutls_certificate_set_x509_key_file(session->cred,
-							 certfile, keyfile,
-							 GNUTLS_X509_FMT_PEM);
-		if (ret < 0) {
-			SET_ERROR(err, GNUTLS_ERROR, ret);
-			if (home) {
-				free(home);
-			}
-			return 0;
-		}
-	}
-
-	/* put the x509 credentials to the current session */
-	ret =
-	    gnutls_credentials_set(session->tls, GNUTLS_CRD_CERTIFICATE,
-				   session->cred);
-	if (ret < 0) {
-		SET_ERROR(err, GNUTLS_ERROR, ret);
-		if (home) {
-			free(home);
-		}
-		return 0;
-	}
-	session->need_set_cred = 0;
-	if (home) {
-		free(home);
-	}
-#endif
 	return 1;
 }
 /**
@@ -467,7 +410,6 @@ nuauth_session_t *_nu_client_new(nuclient_error_t * err)
 	session->debug_mode = 0;
 	session->verbose = 1;
 	session->timestamp_last_sent = time(NULL);
-	session->need_set_cred = 1;
 	session->default_hostname = NULL;
 	session->default_port = NULL;
 
@@ -485,23 +427,9 @@ nuauth_session_t *_nu_client_new(nuclient_error_t * err)
 	}
 	session->ct = new;
 
-	session->nussl = ne_session_create(); /* XXX: don't use default values */
-	/* X509 stuff */
-#if XXX
-	ret = gnutls_certificate_allocate_credentials(&(session->cred));
+	session->nussl = ne_session_create();
 
-	if (ret != 0) {
-		SET_ERROR(err, GNUTLS_ERROR, ret);
-		nu_exit_clean(session);
-		return NULL;
-	}
 
-	if (!nu_client_reset_tls(session))
-	{
-		SET_ERROR(err, GNUTLS_ERROR, ret);
-		nu_exit_clean(session);
-	}
-#endif
 	return session;
 }
 
@@ -587,25 +515,10 @@ void nu_client_reset(nuauth_session_t * session)
 	/* close TLS conneciton */
 	ask_session_end(session);
 
-	/* delete old TLS session and create a new TLS session */
-/*	gnutls_deinit(session->tls);
-	gnutls_init(&session->tls, GNUTLS_CLIENT);
-	gnutls_set_default_priority(session->tls);
-	gnutls_certificate_type_set_priority(session->tls,
-					     cert_type_priority);*/
-	session->need_set_cred = 1;
-
-	/* close socket */
-/*	if (session->socket > 0) {
-		shutdown(session->socket, SHUT_WR);
-		close(session->socket);
-	}
-*/
 	/* reset fields */
 	session->connected = 0;
 	session->count_msg_cond = -1;
 	session->timestamp_last_sent = time(NULL);
-/*	session->socket = -1; */
 	session->checkthread = 0;
 	session->recvthread = 0;
 }
@@ -628,31 +541,8 @@ int nu_client_connect(nuauth_session_t * session,
 		      const char *hostname, const char *service,
 		      nuclient_error_t * err)
 {
-#if XXX
-	if (session->need_set_cred) {
-		/* put the x509 credentials to the current session */
-		int ret =
-		    gnutls_credentials_set(session->tls,
-					   GNUTLS_CRD_CERTIFICATE,
-					   session->cred);
-		if (ret < 0) {
-			SET_ERROR(err, GNUTLS_ERROR, ret);
-			return 0;
-		}
-		session->need_set_cred = 0;
-	}
-	/* set field about host */
-	if (!init_socket(session, hostname, service, err)) {
-		return 0;
-	}
-
-	if (!tls_handshake(session, err)) {
-		return 0;
-	}
-#endif
 	int ret;
 	unsigned int port = atoi(service);
-	session->need_set_cred = 0;
 
 	ne_set_hostinfo(session->nussl, hostname, port);
 
@@ -731,16 +621,10 @@ const char *nu_client_strerror(nuauth_session_t * session, nuclient_error_t * er
 	if (err == NULL)
 		return "Error structure was not initialised";
 	switch (err->family) {
-#if XXX
-	case GNUTLS_ERROR:
-		return gnutls_strerror(err->error);
-		break;
-#else
 	case NUSSL_ERROR:
 		if (session == NULL)
 			return "NuSSL error.";
 		return ne_get_error(session->nussl);
-#endif
 	case SASL_ERROR:
 		return sasl_errstring(err->error, NULL, NULL);
 		break;

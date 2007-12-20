@@ -26,7 +26,6 @@
 #include <sasl/saslutil.h>
 #include <pthread.h>
 #include <stdarg.h>		/* va_list, va_start, ... */
-/*#include <gnutls/x509.h>*/
 #include <langinfo.h>
 #include <proto.h>
 #include "client.h"
@@ -91,20 +90,12 @@ static int samp_send(nuauth_session_t* session, const char *buffer,
 
 	memcpy(buf, "C: ", 3);
 
-#if XXX
-	result = gnutls_record_send(session, buf, len + 3);
-	free(buf);
-	if (result < 0) {
-		SET_ERROR(err, GNUTLS_ERROR, result);
-		return 0;
-	}
-#else
 	result = ne_write(session->nussl, buf, len + 3);
 	if (result < 0) {
 		SET_ERROR(err, NUSSL_ERROR, result);
 		return 0;
 	}
-#endif
+
 	return 1;
 }
 
@@ -117,19 +108,11 @@ static unsigned samp_recv(nuauth_session_t* session, char *buf, int bufsize,
 	int result;
 	int tls_len;
 
-#if XXX
-	tls_len = gnutls_record_recv(session, buf, bufsize);
-	if (tls_len <= 0) {
-		SET_ERROR(err, GNUTLS_ERROR, tls_len);
-		return 0;
-	}
-#else
 	tls_len = ne_read(session->nussl, buf, bufsize);
 	if (tls_len <= 0) {
 		SET_ERROR(err, NUSSL_ERROR, tls_len);
 		return 0;
 	}
-#endif
 
 	result = sasl_decode64(buf + 3, (unsigned) strlen(buf + 3), buf,
 			       bufsize, &len);
@@ -424,16 +407,6 @@ int send_os(nuauth_session_t * session, nuclient_error_t * err)
 	free(enc_oses);
 
 	/* Send OS field over network */
-#ifdef XXX
-	ret = gnutls_record_send(session->tls, buf, osfield_length);
-	if (ret < 0) {
-		if (session->verbose)
-			printf("Error sending tls data: %s",
-			       gnutls_strerror(ret));
-		SET_ERROR(err, GNUTLS_ERROR, ret);
-		return 0;
-	}
-#else
 	ret = ne_write(session->nussl, buf, osfield_length);
 	if (ret < 0) {
 		if (session->verbose)
@@ -441,30 +414,17 @@ int send_os(nuauth_session_t * session, nuclient_error_t * err)
 		SET_ERROR(err, NUSSL_ERROR, ret);
 		return 0;
 	}
-#endif
 
 	/* wait for message of server about mode */
-#ifdef XXX
-		ret = gnutls_record_recv(session->tls, buf, osfield_length);
-		if (ret <= 0) {
-			errno = EACCES;
-			SET_ERROR(err, GNUTLS_ERROR, ret);
-	#ifndef LINUX
-			free(buf);
-	#endif
-			return 0;
-		}
-#else
-		ret = ne_read(session->nussl, buf, osfield_length);
-		if (ret <= 0) {
-			errno = EACCES;
-			SET_ERROR(err, NUSSL_ERROR, ret);
-	#ifndef LINUX
-			free(buf);
-	#endif
-			return 0;
-		}
+	ret = ne_read(session->nussl, buf, osfield_length);
+	if (ret <= 0) {
+		errno = EACCES;
+		SET_ERROR(err, NUSSL_ERROR, ret);
+#ifndef LINUX
+		free(buf);
 #endif
+		return 0;
+	}
 
 #ifndef LINUX
 	free(buf);
@@ -586,20 +546,11 @@ int init_sasl(nuauth_session_t * session, nuclient_error_t * err)
 		{SASL_CB_LIST_END, NULL, NULL}
 	};
 
-#ifdef XXX
-	ret =
-	    gnutls_record_send(session->tls, "PROTO 5", strlen("PROTO 5"));
-	if (ret < 0) {
-		SET_ERROR(err, GNUTLS_ERROR, ret);
-		return 0;
-	}
-#else
 	ret = ne_write(session->nussl, "PROTO 5", strlen("PROTO 5"));
 	if (ret < 0) {
 		SET_ERROR(err, NUSSL_ERROR, ret);
 		return 0;
 	}
-#endif
 
 	/* client new connection */
 	ret =
@@ -643,251 +594,6 @@ int init_sasl(nuauth_session_t * session, nuclient_error_t * err)
 }
 
 /**
- * Create a socket to nuauth, and try to connect. The function also set
- * SIGPIPE handler: ignore these signals.
- *
- * \param session Pointer to client session
- * \param hostname String containing hostname of nuauth server (default: #NUAUTH_IP)
- * \param service Port number (or string) on which nuauth server is listening (default: #USERPCKT_SERVICE)
- * \param err Pointer to a nuclient_error_t: which contains the error
- */
-int init_socket(nuauth_session_t * session,
-		const char *hostname, const char *service,
-		nuclient_error_t *err)
-{
-#if XXX /* to remove */
-	int option_value;
-	struct sigaction no_action;
-	int ecode;
-	struct addrinfo *res;
-	struct addrinfo hints = {
-		0,
-		PF_UNSPEC,
-		SOCK_STREAM,
-		0,
-		0,
-		NULL,
-		NULL,
-		NULL
-	};
-
-	/* get address informations */
-	ecode = getaddrinfo(hostname, service, &hints, &res);
-	if (ecode != 0) {
-		if (session->verbose) {
-			fprintf(stderr,
-				"Fail to create host address: %s\n",
-				gai_strerror(ecode));
-			fprintf(stderr, "(host=\"%s\", service=\"%s\")\n",
-				hostname, service);
-		}
-		SET_ERROR(err, INTERNAL_ERROR, DNS_RESOLUTION_ERR);
-		return 0;
-	}
-	if (session->has_src_addr && session->src_addr.ss_family != res->ai_family)
-	{
-		struct sockaddr_in *src4 = (struct sockaddr_in *)&session->src_addr;
-		struct sockaddr_in6 *src6 = (struct sockaddr_in6 *)&session->src_addr;
-		if (res->ai_family == AF_INET
-		    && session->src_addr.ss_family == AF_INET6
-		    && is_ipv4(&src6->sin6_addr))
-		{
-			src4->sin_family = AF_INET;
-			ipv6_to_ipv4(&src6->sin6_addr, &src4->sin_addr);
-		} else if (res->ai_family == AF_INET6 && session->src_addr.ss_family == AF_INET) {
-			uint32_to_ipv6(src4->sin_addr.s_addr, &src6->sin6_addr);
-		} else {
-			if (session->verbose) {
-				fprintf(stderr,
-						"Unable to set source address: host (%s) is not IPv6!",
-						hostname);
-			}
-			SET_ERROR(err, INTERNAL_ERROR, BINDING_ERR);
-			return 0;
-		}
-	}
-
-	/* ignore SIGPIPE */
-	no_action.sa_handler = SIG_IGN;
-	sigemptyset(&(no_action.sa_mask));
-	no_action.sa_flags = 0;
-	(void) sigaction(SIGPIPE, &no_action, NULL);
-
-	/* create socket to nuauth */
-	session->socket =
-	    socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-	if (session->socket <= 0) {
-		errno = EADDRNOTAVAIL;
-		freeaddrinfo(res);
-		SET_ERROR(err, INTERNAL_ERROR, CANT_CONNECT_ERR);
-		return 0;
-	}
-	option_value = 1;
-	setsockopt(session->socket,
-		   SOL_SOCKET,
-		   SO_KEEPALIVE, &option_value, sizeof(option_value));
-
-	if (session->has_src_addr)
-	{
-		int result = bind(session->socket,
-				  (struct sockaddr*)&session->src_addr, sizeof(session->src_addr));
-		if (result != 0)
-		{
-			SET_ERROR(err, INTERNAL_ERROR, BINDING_ERR);
-			return 0;
-		}
-	}
-
-	/* connect to nuauth */
-	if (connect(session->socket, res->ai_addr, res->ai_addrlen) == -1) {
-		errno = ENOTCONN;
-		SET_ERROR(err, INTERNAL_ERROR, CANT_CONNECT_ERR);
-		freeaddrinfo(res);
-		return 0;
-	}
-	freeaddrinfo(res);
-#endif
-	return 1;
-}
-
-#if XXX /* to remove */
-int get_first_x509_cert_from_tls_session(gnutls_session session,
-					  gnutls_x509_crt * cert)
-{
-	const gnutls_datum *cert_list;
-	unsigned int cert_list_size = 0;
-
-	if (gnutls_certificate_type_get(session) != GNUTLS_CRT_X509)
-		return SASL_BADPARAM;
-
-	cert_list = gnutls_certificate_get_peers(session, &cert_list_size);
-
-	if (cert_list_size > 0) {
-		/* we only print information about the first certificate. */
-		gnutls_x509_crt_init(cert);
-		gnutls_x509_crt_import(*cert, &cert_list[0],
-				       GNUTLS_X509_FMT_DER);
-	} else {
-		return SASL_BADPARAM;
-	}
-	return SASL_OK;
-}
-
-
-int certificate_check(nuauth_session_t *session)
-{
-	time_t expiration_time, activation_time;
-	gnutls_x509_crt cert;
-
-	if (get_first_x509_cert_from_tls_session(session->tls, &cert)
-			!= SASL_OK) {
-		return SASL_BADPARAM;
-	}
-
-	expiration_time = gnutls_x509_crt_get_expiration_time(cert);
-	activation_time = gnutls_x509_crt_get_activation_time(cert);
-
-	/* verify date */
-	if (expiration_time < time(NULL)) {
-		gnutls_x509_crt_deinit(cert);
-		return SASL_EXPIRED;
-	}
-
-	if (activation_time > time(NULL)) {
-		gnutls_x509_crt_deinit(cert);
-		return SASL_DISABLED;
-	}
-
-	if (session->nuauth_cert_dn) {
-		size_t size;
-		char dn[512];
-		size = sizeof(dn);
-		gnutls_x509_crt_get_dn(cert, dn, &size);
-		if (session->verbose) {
-			printf("Certificate DN is: %s\n",dn);
-		}
-		if (strcmp(dn, session->nuauth_cert_dn)) {
-			gnutls_x509_crt_deinit(cert);
-			return SASL_DISABLED;
-		}
-	}
-
-	return SASL_OK;
-}
-#endif
-/**
- * Do the TLS handshake and check server certificate
- */
-
-#if XXX /* todo */
-int tls_handshake(nuauth_session_t * session, nuclient_error_t * err)
-{
-	int ret;
-	unsigned int status;
-
-	gnutls_transport_set_ptr(session->tls,
-				 (gnutls_transport_ptr) session->socket);
-
-	/* Perform the TLS handshake */
-	ret = 0;
-	do {
-		ret = gnutls_handshake(session->tls);
-	} while (ret < 0 && !gnutls_error_is_fatal(ret));
-
-	if (ret < 0) {
-		gnutls_perror(ret);
-		errno = ECONNRESET;
-		SET_ERROR(err, GNUTLS_ERROR, ret);
-		return 0;
-	}
-
-	/* certificate verification */
-	if ( session->need_ca_verif )
-	{
-		ret = gnutls_certificate_verify_peers2(session->tls, &status);
-		if (ret < 0) {
-			if (session->verbose) {
-				printf("Certificate authority verification failed: %s\n",
-				       gnutls_strerror(ret));
-			}
-			SET_ERROR(err, GNUTLS_ERROR, ret);
-			return 0;
-		}
-		if (status) {
-			if (session->verbose) {
-				printf("Certificate authority verification failed:");
-				if( status & GNUTLS_CERT_INVALID )
-					printf(" invalid");
-				if( status & GNUTLS_CERT_REVOKED )
-					printf(", revoked");
-				if( status & GNUTLS_CERT_SIGNER_NOT_FOUND )
-					printf(", signer not found");
-				if( status & GNUTLS_CERT_SIGNER_NOT_CA )
-					printf(", signer not a CA");
-				printf("\n");
-			}
-			SET_ERROR(err, GNUTLS_ERROR, GNUTLS_E_CERTIFICATE_ERROR);
-			return 0;
-		}
-	}
-
-	ret = certificate_check(session);
-	if (ret != SASL_OK) {
-		if (session->verbose) {
-			printf("Certificate check  failed: %s\n",
-			       gnutls_strerror(ret));
-		}
-		SET_ERROR(err, GNUTLS_ERROR, ret);
-		return 0;
-	}
-
-	if (session->verbose)
-		printf("Server Certificate OK\n");
-	return 1;
-}
-#endif
-
-/**
  * Make a copy in a string in a secure memory buffer, ie. buffer never moved
  * to swap (hard drive). Use secure_str_free() to free the memory when you
  * don't need the string anymore.
@@ -926,9 +632,8 @@ void ask_session_end(nuauth_session_t * session)
 
 	pthread_mutex_lock(&(session->mutex));
 	session->connected = 0;
-#ifdef XXX
-	gnutls_bye(session->tls, GNUTLS_SHUT_WR);
-#endif
+	ne_session_destroy(session->nussl);
+
 	if (session->recvthread != NULL_THREAD
 	    && !pthread_equal(session->recvthread, self_thread)) {
 		/* destroy thread */
