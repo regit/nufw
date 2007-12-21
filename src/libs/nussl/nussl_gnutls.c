@@ -500,7 +500,7 @@ static ne_ssl_certificate *populate_cert(ne_ssl_certificate *cert,
 }
 
 /* Returns a copy certificate of certificate SRC. */
-+#if 0
+#if 0
 static gnutls_x509_crt x509_crt_copy(gnutls_x509_crt src)
 {
     int ret;

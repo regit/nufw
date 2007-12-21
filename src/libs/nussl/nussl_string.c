@@ -34,6 +34,9 @@
 
 */
 
+/* Enable C99 features like vsnprintf() */
+#define _ISOC99_SOURCE
+
 #include <config.h>
 #include "nussl_config.h"
 
