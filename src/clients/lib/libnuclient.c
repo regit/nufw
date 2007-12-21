@@ -61,6 +61,13 @@ void nu_exit_clean(nuauth_session_t * session)
 		tcptable_free(session->ct);
 	}
 
+	if(session->nussl)
+	{
+		printf("%s %i", __FILE__, __LINE__);
+		ne_session_destroy(session->nussl);
+		session->nussl = NULL;
+	}
+
 	secure_str_free(session->username);
 	secure_str_free(session->password);
 
@@ -118,7 +125,6 @@ int nu_client_global_init(nuclient_error_t * err)
 	int ret;
 
 	/*gcry_control(GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);*/
-	/* ret = gnutls_global_init(); */
 
 	if (ne_sock_init() != NE_OK)
 	{
@@ -151,8 +157,6 @@ int nu_client_global_init(nuclient_error_t * err)
 void nu_client_global_deinit()
 {
 	sasl_done();
-/*	gnutls_global_deinit();_password
- *	*/
 }
 
 /**
@@ -207,26 +211,63 @@ char *nu_get_home_dir()
 	return dir;
 }
 
+int nu_client_set_key(nuauth_session_t* session, char* keyfile, char* certfile, nuclient_error_t* err)
+{
+	if (session->pem_key)
+		free(session->pem_key);
 
+	if (session->pem_cert)
+		free(session->pem_cert);
 
+	if (keyfile)
+		session->pem_key = strdup(keyfile);
+
+	if (certfile)
+		session->pem_key = strdup(certfile);
+
+	return 1;
+}
+
+int nu_client_set_ca(nuauth_session_t* session, char* cafile, nuclient_error_t* err)
+{
+	if (session->pem_ca)
+		free(session->pem_ca);
+
+	if (cafile)
+		session->pem_ca = strdup(cafile);
+
+	return 1;
+}
+
+int nu_client_set_pkcs12(nuauth_session_t* session, char* key_file, char* key_password, nuclient_error_t* err)
+{
+	if (session->pkcs12_file)
+		free(session->pkcs12_file);
+	
+	if (session->pkcs12_password)
+		free(session->pkcs12_password);
+
+	if (key_file)
+		session->pkcs12_file = strdup(key_file);
+	
+	if (key_password)
+		session->pkcs12_password = strdup(key_password);
+
+	return 1;
+}
 /**
  * \ingroup nuclientAPI
  * Initialize TLS:
  *    - Set key filename (and test if the file does exist)
- *    - Set certificate filename (and test if the file does exist)
- *    - Set trust file of credentials (if needed)
  *    - Set certificate (if key and cert. are present)
- *    - Init. TLS session
  *
  * \param session Pointer to client session
  * \param keyfile Complete path to a key file stored in PEM format (can be NULL)
  * \param certfile Complete path to a certificate file stored in PEM format (can be NULL)
- * \param cafile Complete path to a certificate authority file stored in PEM format (can be NULL)
- * \param tls_password Certificate password string
  * \param err Pointer to a nuclient_error_t: which contains the error
  * \return Returns 0 on error (error description in err), 1 otherwise
  */
-int nu_client_set_key(nuauth_session_t * session,
+int nu_client_load_key(nuauth_session_t * session,
 			char *keyfile, char *certfile,
 			nuclient_error_t * err)
 {
@@ -282,7 +323,42 @@ int nu_client_set_key(nuauth_session_t * session,
 }
 
 
-int nu_client_set_ca(nuauth_session_t * session,
+/**
+ * \ingroup nuclientAPI
+ * Initialize TLS:
+ *    - Set PKCS12 key/certificate filename (and test if the file does exist)
+ *    - Set PKCS12 password
+ *
+ * \param session Pointer to client session
+ * \param pkcs12file Complete path to a key and a certificate file stored in PEM format (can be NULL)
+ * \param pkcs12password Password of the pkcs12 file
+ * \param err Pointer to a nuclient_error_t: which contains the error
+ * \return Returns 0 on error (error description in err), 1 otherwise
+ */
+int nu_client_load_pkcs12(nuauth_session_t * session,
+			char *pkcs12file, char *pkcs12password,
+			nuclient_error_t * err)
+{
+	/*if (ne_ssl_set_pkcs12_keypair(session, pkcs12file, pkcs12password) != NE_OK)
+	{
+		SET_ERROR(err, NUSSL_ERROR, ret);
+		return 0;
+	}*/
+	return 1;
+}
+
+
+/**
+ * \ingroup nuclientAPI
+ * Initialize TLS:
+ *    - Set trust file of credentials (if needed)
+ *
+ * \param session Pointer to client session
+ * \param cafile Complete path to a certificate authority file stored in PEM format (can be NULL)
+ * \param err Pointer to a nuclient_error_t: which contains the error
+ * \return Returns 0 on error (error description in err), 1 otherwise
+ */
+int nu_client_load_ca(nuauth_session_t * session,
 			char *cafile,
 			nuclient_error_t * err)
 {
@@ -402,7 +478,6 @@ nuauth_session_t *_nu_client_new(nuclient_error_t * err)
 		return NULL;
 	}
 	session->ct = new;
-	session->nussl = ne_session_create();
 
 	return session;
 }
@@ -518,7 +593,22 @@ int nu_client_connect(nuauth_session_t * session,
 	int ret;
 	unsigned int port = atoi(service);
 
+	session->nussl = ne_session_create();
+
 	ne_set_hostinfo(session->nussl, hostname, port);
+	if(session->pkcs12_file)
+	{
+		if (!nu_client_load_pkcs12(session, session->pkcs12_file, session->pkcs12_password, err))
+			return 0;
+	}
+	else
+	{
+		if (!nu_client_load_key(session, session->pem_key, session->pem_cert, err))
+			return 0;
+	}
+
+	if (!nu_client_load_ca(session, session->pem_ca, err))
+		return 0;
 
 	ret = ne_open_connection(session->nussl);
 	if (ret != NE_OK) {

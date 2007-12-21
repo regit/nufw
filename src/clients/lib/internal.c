@@ -632,7 +632,6 @@ void ask_session_end(nuauth_session_t * session)
 
 	pthread_mutex_lock(&(session->mutex));
 	session->connected = 0;
-	ne_session_destroy(session->nussl);
 
 	if (session->recvthread != NULL_THREAD
 	    && !pthread_equal(session->recvthread, self_thread)) {
@@ -656,6 +655,11 @@ void ask_session_end(nuauth_session_t * session)
 	     && pthread_equal(session->checkthread, self_thread))
 	    ) {
 		pthread_exit(NULL);
+	}
+	if(session->nussl)
+	{
+		ne_session_destroy(session->nussl);
+		session->nussl = NULL;
 	}
 }
 

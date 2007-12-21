@@ -160,6 +160,11 @@ typedef struct {
 	u_int32_t userid;	/*!< Local user identifier (getuid()) */
 	char *username;	/*!< Username (encoded in UTF-8) */
 	char *password;	/*!< Password (encoded in UTF-8) */
+	char *pem_key; /* Path ot file */
+	char *pem_cert; /* Path ot file */
+	char *pem_ca; /* Path ot file */
+	char *pkcs12_file; /* Path ot file */
+	char *pkcs12_password; /* Path ot file */
 	/** Callback used to get username */
 	char* (*username_callback)();
 	/** Callback used to get password */
@@ -293,14 +298,12 @@ void nu_client_set_verbose(nuauth_session_t * session,
 void nu_client_set_source(nuauth_session_t *session, struct sockaddr_storage *addr);
 
 int nu_client_set_key(nuauth_session_t * session,
-		char *keyfile,
-		char *certfile,
+		char *keyfile, char *certfile,
 		nuclient_error_t *err);
 
-/* int nu_client_set_pkcs12_key(nuauth_session_t * session,
-		char *keyfile,
+int nu_client_set_pkcs12(nuauth_session_t * session,
+		char *pkcs12file, char *pkcs12password,
 		nuclient_error_t *err);
-*/
 
 int nu_client_set_ca(nuauth_session_t * session,
 		char *cafile, nuclient_error_t *err);

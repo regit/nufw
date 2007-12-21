@@ -60,7 +60,8 @@ typedef struct {
 	char *certfile;
 	char *keyfile;
 	char *cafile;
-	char *cert_password;
+	char *pkcs12file;
+	char *pkcs12password;
 } nutcpc_context_t;
 
 /**
@@ -330,10 +331,11 @@ static void usage(void)
 	fprintf(stderr, "  -V: display version\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "Certificate options:\n");
-	fprintf(stderr, "  -C CERTFILE: certificate filename\n");
-	fprintf(stderr, "  -A AUTHFILE: authority certificate filename\n");
-	fprintf(stderr, "  -K KEYFILE:  key filename\n");
-	fprintf(stderr, "  -W CERTPASS: certificate password\n");
+	fprintf(stderr, "  -C CERTFILE: PEM certificate filename\n");
+	fprintf(stderr, "  -A AUTHFILE: PEM authority certificate filename\n");
+	fprintf(stderr, "  -K KEYFILE:  PEM RSA private key filename\n");
+	fprintf(stderr, "  -S PKCS12FILE: PKCS12 key/certificate filename\n");
+	fprintf(stderr, "  -W PKCS12PASS: PKCS12 password\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "Other options:\n");
 	fprintf(stderr, "  -p PORT: nuauth port number\n");
@@ -486,8 +488,15 @@ nuauth_session_t *do_connect(nutcpc_context_t * context, char *username)
 				       sizeof(context->srv_addr));
 	}
 
-	if (!nu_client_set_key(session, context->keyfile, context->certfile, err)) {
-		goto init_failed;
+	if (context->pkcs12file) {
+		if (!nu_client_set_pkcs12(session, context->pkcs12file, context->pkcs12password, err)) {
+			goto init_failed;
+		}
+	}
+	else {
+		if (!nu_client_set_key(session, context->keyfile, context->certfile, err)) {
+			goto init_failed;
+		}
 	}
 
 	if (!nu_client_set_ca(session, context->cafile, err)) {
@@ -603,7 +612,7 @@ void parse_cmdline_options(int argc, char **argv,
 
 	/* Parse all command line arguments */
 	opterr = 0;
-	while ((ch = getopt(argc, argv, "kldqVu:H:I:U:p:P:a:K:C:A:W:")) != -1) {
+	while ((ch = getopt(argc, argv, "kldqVu:H:I:U:p:P:a:K:C:A:W:S:")) != -1) {
 		switch (ch) {
 		case 'H':
 			SECURE_STRNCPY(context->srv_addr, optarg,
@@ -656,8 +665,11 @@ void parse_cmdline_options(int argc, char **argv,
 		case 'A':
 			context->cafile = copy_filename(optarg);
 			break;
+		case 'S':
+			context->pkcs12file = copy_filename(optarg);
+			break;
 		case 'W':
-			context->cert_password = strdup(optarg);
+			context->pkcs12password = strdup(optarg);
 			break;
 		default:
 			usage();
@@ -666,7 +678,13 @@ void parse_cmdline_options(int argc, char **argv,
 	if (context->password[0] != 0 && !context->debug_mode) {
 		fprintf(stderr,
 			"Don't use -P option outside debugging, it's not safe!\n");
-		exit(1);
+		exit(EXIT_FAILURE);
+	}
+
+	if ((context->keyfile || context->certfile) && (context->pkcs12file || context->pkcs12password))
+	{
+		fprintf(stderr, "Don't mix PKCS12 options with X509/RSA options.\n");
+		exit(EXIT_FAILURE);
 	}
 
 	/* fill argument with nul byte */
