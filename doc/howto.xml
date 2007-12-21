@@ -853,7 +853,7 @@ in a protected place to ensure the security of
 communications between nufw and nuauth<footnote><para>Even if all flows are TLS encrypted</para>
 	</footnote>.
 As the firewall policy relay on the answer of nuauth, is it good to check that
-the nuauth server is trust worthy. To do so we can ask nufw to check the certificate provided
+the nuauth server is trustworthy. To do so we can ask nufw to check the certificate provided
 by nuauth during the TLS negotiation. This is done by using the <option>-a</option> at start
 of nufw followed by the name of the certificate authority file.
 With this option set <varname>nufw</varname> will check the presence of a signed certificat
@@ -861,7 +861,7 @@ on nuauth side.</para>
       </section>
 <section><title>On client side</title>
 <para>
-On client side, system needs to be trust worthy if you want to perform
+On client side, system needs to be trustworthy if you want to perform
 valuable application and OS filtering. You must never forget that
 it is the application on client side which tells the application name as
 well as the operating system name and version: these informations CAN and WILL
