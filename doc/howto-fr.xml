@@ -182,7 +182,7 @@ nuauth dépend de :
 	  </itemizedlist>
 </para>
       </section>
-      <section><title>Journalisation par mysql</title>
+      <section><title>Journalisation par MySQL</title>
 
 	<para>
 La librairie <filename>libmysqlclient</filename> est requise pour la compilation du module correspondant.
@@ -279,7 +279,7 @@ CONFIG_IP_NF_CONNTRACK_EVENTS=Y
 NuFW recourt à autoconf et automake pour la compilation. De plus, un script <command>configure</command> standard est fourni.
 Les options suivantes (entre autres), sont également disponibles :
 <itemizedlist>
-	  <listitem><para> <option>--with-mysql-log </option>   Active le support de la journalisation de l'activité utilisateur dans une base Mysql</para></listitem>
+	  <listitem><para> <option>--with-mysql-log </option>   Active le support de la journalisation de l'activité utilisateur dans une base MySQL</para></listitem>
 
 	  <listitem><para> <option>--with-pgsql-log </option>    Active le support de la journalisation de l'activité utilisateur dans une base PostgreSQL</para></listitem>
 	  <listitem><para> <option>--with-system-auth </option>   Active le support de l'authentification PAM+NSS</para></listitem>
@@ -758,8 +758,8 @@ Exemples :
 Les paquets seront journalisés plusieurs fois :
 <orderedlist>
 <listitem><para>Par syslog</para></listitem>
-<listitem><para>Dans une base MySql en utilisant le fichier de configuration /etc/nufw/modules/dblocal.conf</para></listitem>
-<listitem><para>Dans une autre base MySql en utilisant le fichier de configuration /etc/nufw/mainmysql.conf</para></listitem>
+<listitem><para>Dans une base MySQL en utilisant le fichier de configuration /etc/nufw/modules/dblocal.conf</para></listitem>
+<listitem><para>Dans une autre base MySQL en utilisant le fichier de configuration /etc/nufw/mainmysql.conf</para></listitem>
 </orderedlist>
     </para>
 

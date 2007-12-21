@@ -296,7 +296,7 @@ NuFW uses autoconf and automake for compilation and a standard <command>configur
 is provided.
 Above standard options, the following flags (among other) are provided:
 <itemizedlist>
-	  <listitem><para> <option>--with-mysql-log </option>   Support user activity logging in Mysql database</para></listitem>
+	  <listitem><para> <option>--with-mysql-log </option>   Support user activity logging in MySQL database</para></listitem>
 	  <listitem><para> <option>--with-pgsql-log </option>   Support user activity logging in PostgreSQL database</para></listitem>
 	  <listitem><para> <option>--with-system-auth </option>   Support PAM+NSS authentication</para></listitem>
 	  <listitem><para> <option>--with-ldap </option>   Support LDAP directory for users and acl lookups</para></listitem>
@@ -900,7 +900,7 @@ Your <filename>ldap.conf</filename> should look like:
 TLS_CACERT /etc/ldap/cacert-ldap.pem
 TLS_REQCERT demand
 </screen>
-Please note that you need to have a certificate that match precisely the hostname put in 
+Please note that you need to have a certificate that match precisely the hostname put in
 the <option>ldap_server_port</option> of <filename>nuauth.conf</filename>.
 </para>
 </section>
