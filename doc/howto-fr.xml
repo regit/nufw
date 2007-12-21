@@ -27,6 +27,13 @@
       <holder>INL</holder>
     </copyright>
     <revhistory>
+      <revision>
+	<revnumber>0.9.1</revnumber>
+	<date>2007/12/20</date>
+	<revdescription>
+	  <para>Précision d'une license. Les versions précédentes de ce document ne précisaient pas la licence, ce qui le rendait propriétaire de fait.</para>
+	</revdescription>
+      </revision>
     <revision>
     <revnumber>0.9</revnumber>
     <date>2007/12/10</date>
@@ -139,6 +146,11 @@
       </revision>
     </revhistory>
   </bookinfo>
+  <chapter><title>License</title>
+  <para>
+  Ce document appartient à INL et est protégé par les lois internationales sur le copyright. La licence de distribution du présent document est la licence Creative Commons <command>by-nc-sa</command>. Le texte complet de cette licence est disponible à l'adresse <ulink url="http://creativecommons.org/licenses/by-nc-sa/3.0/legalcode">http://creativecommons.org/licenses/by-nc-sa/3.0/legalcode</ulink>.
+  </para>
+  </chapter>
   <chapter><title>Introduction</title>
    <section><title>Présentation</title>
 
