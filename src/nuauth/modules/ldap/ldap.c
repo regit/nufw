@@ -321,7 +321,7 @@ static LDAP *ldap_conn_init(struct ldap_params *params)
 	/* init connection */
 	ld = ldap_init(params->ldap_server, params->ldap_server_port);
 	if (!ld) {
-		log_message(WARNING, DEBUG_AREA_MAIN, "ldap init error\n");
+		log_message(WARNING, DEBUG_AREA_MAIN, "Ldap init error");
 		return NULL;
 	}
 	if (ldap_set_option(ld, LDAP_OPT_PROTOCOL_VERSION,
@@ -332,15 +332,25 @@ static LDAP *ldap_conn_init(struct ldap_params *params)
 		if (params->ldap_server_port == LDAPS_PORT) {
 			int tls_option;
 			tls_option = LDAP_OPT_X_TLS_HARD;
-			ldap_set_option(ld, LDAP_OPT_X_TLS,
+			err = ldap_set_option(ld, LDAP_OPT_X_TLS,
 					(void *) &tls_option);
+			if (err != LDAP_OPT_SUCCESS) {
+				log_message(SERIOUS_WARNING, DEBUG_AREA_AUTH,
+					    "Can not set tls option: %s",
+					    ldap_err2string(err));
+				return NULL;
+			}
 		}
 #endif /* LDAP_OPT_X_TLS */
+
 		err =
 		    ldap_bind_s(ld, params->binddn, params->bindpasswd,
 				LDAP_AUTH_SIMPLE);
 		if (err != LDAP_SUCCESS) {
 			if (err == LDAP_SERVER_DOWN) {
+				log_message(INFO, DEBUG_AREA_AUTH,
+					    "Can not connect to ldap: %s",
+					    ldap_err2string(err));
 				/* we lost connection, so disable current one */
 				ldap_unbind(ld);
 				ld = NULL;
@@ -348,7 +358,7 @@ static LDAP *ldap_conn_init(struct ldap_params *params)
 				return NULL;
 			}
 			log_message(SERIOUS_WARNING, DEBUG_AREA_AUTH,
-				    "ldap bind error : %s \n",
+				    "Ldap bind error : %s",
 				    ldap_err2string(err));
 			return NULL;
 		}
