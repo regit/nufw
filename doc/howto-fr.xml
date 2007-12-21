@@ -200,7 +200,7 @@ nuauth dépend de :
 La librairie <filename>libmysqlclient</filename> est requise pour la compilation du module correspondant.
 </para>
       </section>
-      <section><title>Journalisation par PostGreSql</title>
+      <section><title>Journalisation par PostgreSQL</title>
 	<para>
 La librairie <filename>libpq</filename> est requise pour la compilation du module correspondant.
 
@@ -481,6 +481,17 @@ En effet, dans ce cas, les paquets envoyés à nuauth par le pare-feu proviendront
 
   <chapter><title>Paramétrage de NuFW</title>
     <section><title>Utilisation du module LDAP pour vérifier les ACL</title>
+
+      <section><title>Installation du serveur OpenLDAP (slapd)</title>
+        <para>L'installation du serveur OpenLDAP est standard. Utilisez les
+paquets de votre distribution Linux, exemple avec Debian :
+<screen>apt-get install slapd</screen>
+Lisez <ulink url="http://www.openldap.org/doc/admin/">OpenLDAP Software
+Administrator's Guide</ulink>, section "Building and Installing OpenLDAP Software"
+pour plus d'informations.
+        </para>
+      </section>
+
       <section><title>Configuration de slapd</title>
 
 	<para>
@@ -558,6 +569,26 @@ nuauth_log_users=9</screen>
 
 </para>
       </section>
+
+<section><title>Installation du serveur MySQL</title>
+        <para>L'installation du seveur MySQL est standard. Utilisez les
+paquets de votre distribution Linux, exemple avec Debian :
+<screen>apt-get install mysql-server</screen>
+Lisez <ulink url="http://dev.mysql.com/doc/">MySQL Documentation</ulink>, section
+"2 Installing and Upgrading MySQL" pour plus d'informations.
+        </para>
+</section>
+
+<section><title>Installation du serveur PostgreSQL</title>
+        <para>L'installation du serveur PostgreSQL est standard. Utilisez les
+paquets de votre distribution Linux, exemple avec Debian (remplacez 8.2 par
+la dernière version stable) :
+<screen>apt-get install postgresql-8.2</screen>
+Lisez <ulink url="http://www.postgresql.org/docs/">PostgreSQL Documentation</ulink>,
+section "III. 14. Installation Instructions" pour plus d'informations.
+        </para>
+</section>
+
 <section><title>Configuration de SQL</title>
 <para>Le suivi de connexion révèle toute sa puissance lorsqu'il est associé à la journalisation SQL.
 Nous allons décrire ici le paramétrage du module MySQL.</para>
