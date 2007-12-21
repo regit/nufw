@@ -859,6 +859,15 @@ of nufw followed by the name of the certificate authority file.
 With this option set <varname>nufw</varname> will check the presence of a signed certificat
 on nuauth side.</para>
       </section>
+<section><title>User authentication restrictions</title>
+<para>You can restrict both the number of connections a given user can start, either on 
+any IP address or per IP address.
+<orderedlist>
+<listitem><para><option>nuauth_single_user_client_limit</option>: enforce the number of connections a user can start</para></listitem>
+<listitem><para><option>nuauth_single_ip_client_limit</option>: enforce the number of connections per IP a user can start</para></listitem>
+</orderedlist>
+</para>
+</section>
 <section><title>On client side</title>
 <para>
 On client side, system needs to be trustworthy if you want to perform
