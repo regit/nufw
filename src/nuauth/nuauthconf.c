@@ -78,7 +78,8 @@ int init_nuauthconf(struct nuauth_params **result)
 	char *gwsrv_addr = NULL;
 	int port;
 	int connect_policy = POLICY_MULTIPLE_LOGIN;
-	confparams_t nuauth_vars[] = {
+ 	confparams_t nuauth_vars[] = {
+	        /* token, data_type, default_int_val, default_string_val */
 		{"nuauth_client_listen_addr", G_TOKEN_STRING, 0,
 		 g_strdup(AUTHREQ_CLIENT_LISTEN_ADDR)},
 		{"nuauth_nufw_listen_addr", G_TOKEN_STRING, 0,
@@ -101,7 +102,7 @@ int init_nuauthconf(struct nuauth_params **result)
 		 NULL},
 		{"nuauth_number_authcheckers", G_TOKEN_INT, NB_AUTHCHECK,
 		 NULL},
-		{"nuauth_log_users", G_TOKEN_INT, 1, NULL},
+		{"nuauth_log_users", G_TOKEN_INT, 9, NULL},
 		{"nuauth_log_users_sync", G_TOKEN_INT, 0, NULL},
 		{"nuauth_log_users_strict", G_TOKEN_INT, 1, NULL},
 		{"nuauth_log_users_without_realm", G_TOKEN_INT, 1, NULL},
