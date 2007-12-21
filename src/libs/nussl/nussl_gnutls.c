@@ -500,6 +500,7 @@ static ne_ssl_certificate *populate_cert(ne_ssl_certificate *cert,
 }
 
 /* Returns a copy certificate of certificate SRC. */
++#if 0
 static gnutls_x509_crt x509_crt_copy(gnutls_x509_crt src)
 {
     int ret;
@@ -533,7 +534,9 @@ static gnutls_x509_crt x509_crt_copy(gnutls_x509_crt src)
     ne_free(tmp.data);
     return dest;
 }
+#endif
 
+#if 0
 /* Duplicate a client certificate, which must be in the decrypted state. */
 static ne_ssl_client_cert *dup_client_cert(const ne_ssl_client_cert *cc)
 {
@@ -563,6 +566,7 @@ dup_error:
     ne_free(newcc);
     return NULL;
 }
+#endif
 
 #if 0 /* Use gnutls function, no callback needed */
 /* Callback invoked when the SSL server requests a client certificate.  */

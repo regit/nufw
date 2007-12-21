@@ -51,6 +51,8 @@
 #include "nussl_private.h"
 
 #define UGLY_DEBUG() printf("%s %s:%i\n", __FUNCTION__, __FILE__, __LINE__)
+
+#if 0
 /* Destroy a a list of hooks. */
 static void destroy_hooks(struct hook *hooks)
 {
@@ -63,6 +65,7 @@ static void destroy_hooks(struct hook *hooks)
 	hooks = nexthk;
     }
 }
+#endif
 
 void ne_session_destroy(ne_session *sess)
 {
@@ -315,6 +318,7 @@ void ne__ssl_set_verify_err(ne_session *sess, int failures)
 
 typedef void (*void_fn)(void);
 
+#if 0
 #define ADD_HOOK(hooks, fn, ud) add_hook(&(hooks), NULL, (void_fn)(fn), (ud))
 
 static void add_hook(struct hook **hooks, const char *id, void_fn fn, void *ud)
@@ -334,6 +338,7 @@ static void add_hook(struct hook **hooks, const char *id, void_fn fn, void *ud)
     hk->userdata = ud;
     hk->next = NULL;
 }
+#endif
 
 /* void ne_hook_create_request(ne_session *sess,  */
 /* 			    ne_create_request_fn fn, void *userdata) */
