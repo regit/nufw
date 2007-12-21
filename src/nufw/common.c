@@ -118,9 +118,8 @@ void psuppress(packet_idl * previous, packet_idl * current)
 unsigned long padd(packet_idl * current)
 {
 	if (track_size <= packets_list.length) {
-		log_area_printf(DEBUG_AREA_PACKET, DEBUG_LEVEL_MESSAGE,
-				"Warning: queue is full, drop element %d",
-				current->id);
+		log_area_printf(DEBUG_AREA_PACKET, DEBUG_LEVEL_WARNING,
+				"Warning: queue is full, dropping element");
 		IPQ_SET_VERDICT(current->id, NF_DROP);
 		return 0;
 	}
