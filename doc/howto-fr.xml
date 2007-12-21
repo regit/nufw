@@ -31,7 +31,7 @@
 	<revnumber>0.9.1</revnumber>
 	<date>2007/12/20</date>
 	<revdescription>
-	  <para>Précision d'une license. Les versions précédentes de ce document ne précisaient pas la licence, ce qui le rendait propriétaire de fait.</para>
+	  <para>Précision d'une licence. Les versions précédentes de ce document ne précisaient pas la licence, ce qui le rendait propriétaire de fait.</para>
 	</revdescription>
       </revision>
     <revision>
@@ -146,7 +146,7 @@
       </revision>
     </revhistory>
   </bookinfo>
-  <chapter><title>License</title>
+  <chapter><title>Licence</title>
   <para>
   Ce document appartient à INL et est protégé par les lois internationales sur le copyright. La licence de distribution du présent document est la licence Creative Commons <command>by-nc-sa</command>. Le texte complet de cette licence est disponible à l'adresse <ulink url="http://creativecommons.org/licenses/by-nc-sa/3.0/legalcode">http://creativecommons.org/licenses/by-nc-sa/3.0/legalcode</ulink>.
   </para>
@@ -682,7 +682,7 @@ La première règle accélère le fonctionnement de Netfilter en détectant la plus g
 
  d'exploiter la journalisation effectuée par le système de suivi de connexion est d'installer
 <command>nulog</command> (autrefois nommé ulog-php) qui fourni une interface web conviviale.
-<command>nulog</command> est disponible sous license GPL ici :
+<command>nulog</command> est disponible sous licence GPL ici :
 <ulink url="http://software.inl.fr/trac/trac.cgi/wiki/EdenWall/NuLog">http://software.inl.fr/trac/trac.cgi/wiki/EdenWall/NuLog</ulink>
 </para>
 	</section>
