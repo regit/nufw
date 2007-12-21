@@ -894,14 +894,14 @@ If you only want to encrypt data, you can simply add to <filename>ldap.conf</fil
 <screen>
 TLS_REQCERT never
 </screen>
-The recommanded setup is to fill in <filename>ldap.conf</filename> with the path to certificate, key and certificate authority.
+The recommanded setup is to fill in <filename>ldap.conf</filename> with the path to certificate authority.
 Your <filename>ldap.conf</filename> should look like:
 <screen>
-TLS_CACERT /etc/nufw/cacert-ldap.pem
-TLS_CERT /etc/nufw/nuauth-cert.pem
-TLS_KEY /etc/nufw/nuauth-key.pem
-TLS_REQCERT allow
+TLS_CACERT /etc/ldap/cacert-ldap.pem
+TLS_REQCERT demand
 </screen>
+Please note that you need to have a certificate that match precisely the hostname put in 
+the <option>ldap_server_port</option> of <filename>nuauth.conf</filename>.
 </para>
 </section>
 </section>
