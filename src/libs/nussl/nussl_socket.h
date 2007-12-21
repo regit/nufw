@@ -10,7 +10,7 @@
  */
 
 
-/* 
+/*
    socket handling interface
    Copyright (C) 1999-2007, Joe Orton <joe@manyfish.co.uk>
 
@@ -18,7 +18,7 @@
    modify it under the terms of the GNU Library General Public
    License as published by the Free Software Foundation; either
    version 2 of the License, or (at your option) any later version.
-   
+
    This library is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
@@ -149,7 +149,7 @@ void ne_sock_prebind(ne_socket *sock, const ne_inet_addr *addr,
  * Returns zero on success, NE_SOCK_TIMEOUT if a timeout occurs when a
  * non-zero connect timeout is configured (and is supported), or
  * NE_SOCK_ERROR on failure.  */
-int ne_sock_connect(ne_socket *sock, const ne_inet_addr *addr, 
+int ne_sock_connect(ne_socket *sock, const ne_inet_addr *addr,
                     unsigned int port);
 
 /* Read up to 'count' bytes from socket into 'buffer'.  Returns:
@@ -177,7 +177,7 @@ int ne_sock_block(ne_socket *sock, int n);
 /* Write 'count' bytes of 'data' to the socket.  Guarantees to either
  * write all the bytes or to fail.  Returns 0 on success, or NE_SOCK_*
  * on error. */
-int ne_sock_fullwrite(ne_socket *sock, const char *data, size_t count); 
+int ne_sock_fullwrite(ne_socket *sock, const char *data, size_t count);
 
 /* Read an LF-terminated line into 'buffer', and NUL-terminate it.
  * At most 'len' bytes are read (including the NUL terminator).

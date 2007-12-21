@@ -10,7 +10,7 @@
  */
 
 
-/* 
+/*
    HTTP session handling
    Copyright (C) 1999-2007, Joe Orton <joe@manyfish.co.uk>
 
@@ -18,7 +18,7 @@
    modify it under the terms of the GNU Library General Public
    License as published by the Free Software Foundation; either
    version 2 of the License, or (at your option) any later version.
-   
+
    This library is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
@@ -49,7 +49,7 @@ typedef struct ne_session_s ne_session;
  * "https" is passed as the scheme, SSL will be used to connect to the
  * server. */
 ne_session *ne_session_create();
- 
+
 /* Finish an HTTP session */
 void ne_session_destroy(ne_session *sess);
 
@@ -167,7 +167,7 @@ typedef void (*ne_notify_status)(void *userdata, ne_session_status status,
 /* Set a status notification callback for the session, to report
  * session status events.  Only one notification callback per session
  * can be registered; the most recent of successive calls to this
- * function takes effect. Note that 
+ * function takes effect. Note that
  *
  * NOTE: Use of this interface is mutually exclusive with the use of
  * ne_set_progress().  A call to ne_set_notifier() removes the
@@ -236,7 +236,7 @@ typedef void (*ne_ssl_provide_fn)(void *userdata, ne_session *sess,
 
 /* Register a function to be called when the server requests a client
  * certificate. */
-void ne_ssl_provide_clicert(ne_session *sess, 
+void ne_ssl_provide_clicert(ne_session *sess,
                             ne_ssl_provide_fn fn, void *userdata);
 #endif
 

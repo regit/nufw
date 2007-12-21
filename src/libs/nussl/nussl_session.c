@@ -10,7 +10,7 @@
  */
 
 
-/* 
+/*
    HTTP session handling
    Copyright (C) 1999-2007, Joe Orton <joe@manyfish.co.uk>
    Portions are:
@@ -20,7 +20,7 @@
    modify it under the terms of the GNU Library General Public
    License as published by the Free Software Foundation; either
    version 2 of the License, or (at your option) any later version.
-   
+
    This library is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
@@ -64,7 +64,7 @@ static void destroy_hooks(struct hook *hooks)
     }
 }
 
-void ne_session_destroy(ne_session *sess) 
+void ne_session_destroy(ne_session *sess)
 {
     UGLY_DEBUG();
     NE_DEBUG(NE_DBG_HTTP, "ne_session_destroy called.\n");
@@ -74,7 +74,7 @@ void ne_session_destroy(ne_session *sess)
     if (sess->connected) {
 	ne_close_connection(sess);
     }
-    
+
     ne_free(sess->server.hostname);
     if (sess->server.address) ne_addr_destroy(sess->server.address);
 
@@ -83,7 +83,7 @@ void ne_session_destroy(ne_session *sess)
 
     if (sess->server_cert)
         ne_ssl_cert_free(sess->server_cert);
-    
+
     if (sess->client_cert)
         ne_ssl_clicert_free(sess->client_cert);
 
@@ -222,7 +222,7 @@ void ne_ssl_set_verify(ne_session *sess, ne_ssl_verify_fn fn, void *userdata)
     sess->ssl_verify_ud = userdata;
 }
 
-void ne_ssl_provide_clicert(ne_session *sess, 
+void ne_ssl_provide_clicert(ne_session *sess,
 			  ne_ssl_provide_fn fn, void *userdata)
 {
     UGLY_DEBUG();
@@ -263,7 +263,7 @@ void ne_ssl_cert_validity(const ne_ssl_certificate *cert, char *from, char *unti
 
     UGLY_DEBUG();
     ne_ssl_cert_validity_time(cert, &tf, &tu);
-    
+
     if (from) {
         if (tf != (time_t) -1) {
             date = ne_rfc1123_date(tf);
@@ -274,7 +274,7 @@ void ne_ssl_cert_validity(const ne_ssl_certificate *cert, char *from, char *unti
             ne_strnzcpy(from, _("[invalid date]"), NE_SSL_VDATELEN);
         }
     }
-        
+
     if (until) {
         if (tu != (time_t) -1) {
             date = ne_rfc1123_date(tu);

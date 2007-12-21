@@ -10,9 +10,9 @@
  */
 
 
-/* 
+/*
    Socket handling routines
-   Copyright (C) 1998-2007, Joe Orton <joe@manyfish.co.uk>, 
+   Copyright (C) 1998-2007, Joe Orton <joe@manyfish.co.uk>,
    Copyright (C) 1999-2000 Tommi Komulainen <Tommi.Komulainen@iki.fi>
    Copyright (C) 2004 Aleix Conchillo Flaque <aleix@member.fsf.org>
 
@@ -20,7 +20,7 @@
    modify it under the terms of the GNU Library General Public
    License as published by the Free Software Foundation; either
    version 2 of the License, or (at your option) any later version.
-   
+
    This library is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
@@ -85,7 +85,7 @@
 #endif
 #ifdef HAVE_STRINGS_H
 #include <strings.h>
-#endif 
+#endif
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -254,7 +254,7 @@ static void print_error(int errnum, char *buffer, size_t buflen)
 {
     if (FormatMessage (FORMAT_MESSAGE_FROM_SYSTEM
                        | FORMAT_MESSAGE_IGNORE_INSERTS,
-                       NULL, (DWORD) errnum, 0, 
+                       NULL, (DWORD) errnum, 0,
                        buffer, buflen, NULL) == 0)
         ne_snprintf(buffer, buflen, "Socket error %d", errnum);
 }
@@ -302,7 +302,7 @@ static int ipv6_disabled = 0;
 static void init_ipv6(void)
 {
     int fd = socket(AF_INET6, SOCK_STREAM, 0);
-    
+
     if (fd < 0)
         ipv6_disabled = 1;
     else
@@ -329,14 +329,14 @@ int ne_sock_init(void)
     if (init_state > 0) {
         init_state++;
 	return 0;
-    } 
+    }
     else if (init_state < 0) {
 	return -1;
     }
 
-#ifdef WIN32    
+#ifdef WIN32
     wVersionRequested = MAKEWORD(2, 2);
-    
+
     err = WSAStartup(wVersionRequested, &wsaData);
     if (err != 0) {
 	return init_state = -1;
@@ -376,7 +376,7 @@ void ne_sock_exit(void)
         WSACleanup();
 #endif
         ne__ssl_exit();
-        
+
 #ifdef HAVE_SSPI
         ne_sspi_deinit();
 #endif
@@ -432,7 +432,7 @@ int ne_sock_block(ne_socket *sock, int n)
     return sock->ops->readable(sock, n);
 }
 
-/* Cast address object AD to type 'sockaddr_TY' */ 
+/* Cast address object AD to type 'sockaddr_TY' */
 #define SACAST(ty, ad) ((struct sockaddr_##ty *)(ad))
 
 ssize_t ne_sock_read(ne_socket *sock, char *buffer, size_t buflen)
@@ -441,7 +441,7 @@ ssize_t ne_sock_read(ne_socket *sock, char *buffer, size_t buflen)
 
     UGLY_DEBUG();
 #if 0
-    NE_DEBUG(NE_DBG_SOCKET, "buf: at %d, %d avail [%s]\n", 
+    NE_DEBUG(NE_DBG_SOCKET, "buf: at %d, %d avail [%s]\n",
 	     sock->bufpos - sock->buffer, sock->bufavail, sock->bufpos);
 #endif
 
@@ -467,14 +467,14 @@ ssize_t ne_sock_read(ne_socket *sock, char *buffer, size_t buflen)
 	memcpy(buffer, sock->buffer, buflen);
 	sock->bufpos = sock->buffer + buflen;
 	sock->bufavail = bytes - buflen;
-	return buflen; 
+	return buflen;
     }
 }
 
 ssize_t ne_sock_peek(ne_socket *sock, char *buffer, size_t buflen)
 {
     ssize_t bytes;
-    
+
     UGLY_DEBUG();
     if (sock->bufavail) {
 	/* just return buffered data. */
@@ -513,7 +513,7 @@ static int readable_raw(ne_socket *sock, int secs)
 static ssize_t read_raw(ne_socket *sock, char *buffer, size_t len)
 {
     ssize_t ret;
-    
+
     UGLY_DEBUG();
     ret = readable_raw(sock, sock->rdtimeout);
     if (ret) return ret;
@@ -537,10 +537,10 @@ static ssize_t read_raw(ne_socket *sock, char *buffer, size_t len)
 #define MAP_ERR(e) (NE_ISCLOSED(e) ? NE_SOCK_CLOSED : \
                     (NE_ISRESET(e) ? NE_SOCK_RESET : NE_SOCK_ERROR))
 
-static ssize_t write_raw(ne_socket *sock, const char *data, size_t length) 
+static ssize_t write_raw(ne_socket *sock, const char *data, size_t length)
 {
     ssize_t ret;
-    
+
     UGLY_DEBUG();
 #ifdef __QNX__
     /* Test failures seen on QNX over loopback, if passing large
@@ -583,7 +583,7 @@ static int error_ossl(ne_socket *sock, int sret)
 	set_error(sock, _("Connection closed"));
         return NE_SOCK_CLOSED;
     }
-    
+
     /* for all other errors, look at the OpenSSL error stack */
     err = ERR_get_error();
     if (err == 0) {
@@ -601,13 +601,13 @@ static int error_ossl(ne_socket *sock, int sret)
     }
 
     if (ERR_reason_error_string(err)) {
-        ne_snprintf(sock->error, sizeof sock->error, 
+        ne_snprintf(sock->error, sizeof sock->error,
                     _("SSL error: %s"), ERR_reason_error_string(err));
     } else {
-	ne_snprintf(sock->error, sizeof sock->error, 
+	ne_snprintf(sock->error, sizeof sock->error,
                     _("SSL error code %d/%d/%lu"), sret, errnum, err);
     }
-    
+
     /* make sure the error stack is now empty. */
     ERR_clear_error();
     return NE_SOCK_ERROR;
@@ -624,7 +624,7 @@ static ssize_t read_ossl(ne_socket *sock, char *buffer, size_t len)
     UGLY_DEBUG();
     ret = readable_ossl(sock, sock->rdtimeout);
     if (ret) return ret;
-    
+
     ret = SSL_read(sock->ssl, buffer, CAST2INT(len));
     if (ret <= 0)
 	ret = error_ossl(sock, ret);
@@ -693,7 +693,7 @@ static ssize_t error_gnutls(ne_socket *sock, ssize_t sret)
 	break;
     case GNUTLS_E_FATAL_ALERT_RECEIVED:
         ret = NE_SOCK_ERROR;
-        ne_snprintf(sock->error, sizeof sock->error, 
+        ne_snprintf(sock->error, sizeof sock->error,
                     _("SSL alert received: %s"),
                     gnutls_alert_get_name(gnutls_alert_get(sock->ssl)));
         break;
@@ -730,7 +730,7 @@ static ssize_t read_gnutls(ne_socket *sock, char *buffer, size_t len)
     UGLY_DEBUG();
     ret = readable_gnutls(sock, sock->rdtimeout);
     if (ret) return ret;
-    
+
     do {
         ret = gnutls_record_recv(sock->ssl, buffer, len);
     } while (RETRY_GNUTLS(sock, ret));
@@ -784,7 +784,7 @@ ssize_t ne_sock_readline(ne_socket *sock, char *buf, size_t buflen)
 {
     char *lf;
     size_t len;
-    
+
     UGLY_DEBUG();
     if ((lf = memchr(sock->bufpos, '\n', sock->bufavail)) == NULL
 	&& sock->bufavail < RDBUFSIZ) {
@@ -793,9 +793,9 @@ ssize_t ne_sock_readline(ne_socket *sock, char *buf, size_t buflen)
 	if (sock->bufavail)
 	    memmove(sock->buffer, sock->bufpos, sock->bufavail);
 	sock->bufpos = sock->buffer;
-	
+
 	/* Loop filling the buffer whilst no newline is found in the data
-	 * buffered so far, and there is still buffer space available */ 
+	 * buffered so far, and there is still buffer space available */
 	do {
 	    /* Read more data onto end of buffer. */
 	    ssize_t ret = sock->ops->sread(sock, sock->buffer + sock->bufavail,
@@ -824,7 +824,7 @@ ssize_t ne_sock_readline(ne_socket *sock, char *buf, size_t buflen)
     return len;
 }
 
-ssize_t ne_sock_fullread(ne_socket *sock, char *buffer, size_t buflen) 
+ssize_t ne_sock_fullread(ne_socket *sock, char *buffer, size_t buflen)
 {
     ssize_t len;
 
@@ -880,7 +880,7 @@ ne_sock_addr *ne_addr_resolve(const char *hostname, int flags)
 #else /* Use gethostbyname() */
     in_addr_t laddr;
     struct hostent *hp;
-    
+
     laddr = inet_addr(hostname);
     if (laddr == INADDR_NONE) {
 	hp = gethostbyname(hostname);
@@ -1002,7 +1002,7 @@ int ne_iaddr_reverse(const ne_inet_addr *ia, char *buf, size_t bufsiz)
                        NULL, 0, 0);
 #else
     struct hostent *hp;
-    
+
     hp = gethostbyaddr(ia, sizeof *ia, AF_INET);
     if (hp && hp->h_name) {
         ne_strnzcpy(buf, hp->h_name, bufsiz);
@@ -1042,7 +1042,7 @@ static int timed_connect(ne_socket *sock, int fd,
             set_strerror(sock, errno);
             return NE_SOCK_ERROR;
         }
-        
+
         ret = connect(fd, sa, salen);
         if (ret == -1) {
             errnum = ne_errno;
@@ -1050,7 +1050,7 @@ static int timed_connect(ne_socket *sock, int fd,
                 ret = raw_poll(fd, 1, sock->cotimeout);
                 if (ret > 0) { /* poll got data */
                     socklen_t len = sizeof(errnum);
-                    
+
                     /* Check whether there is a pending error for the
                      * socket.  Per Stevens UNPv1§15.4, Solaris will
                      * return a pending error via errno by failing the
@@ -1059,7 +1059,7 @@ static int timed_connect(ne_socket *sock, int fd,
                     errnum = 0;
                     if (getsockopt(fd, SOL_SOCKET, SO_ERROR, &errnum, &len))
                         errnum = errno;
-                    
+
                     if (errnum == 0) {
                         ret = 0;
                     } else {
@@ -1073,22 +1073,22 @@ static int timed_connect(ne_socket *sock, int fd,
                     set_strerror(sock, errno);
                     ret = NE_SOCK_ERROR;
                 }
-            } else /* non-EINPROGRESS error from connect() */ { 
+            } else /* non-EINPROGRESS error from connect() */ {
                 set_strerror(sock, errnum);
                 ret = NE_SOCK_ERROR;
             }
         }
-        
+
         /* Reset to old flags: */
         if (fcntl(fd, F_SETFL, flags) == -1) {
             set_strerror(sock, errno);
             ret = NE_SOCK_ERROR;
-        }       
-    } else 
+        }
+    } else
 #endif /* USE_NONBLOCKING_CONNECT */
     {
         ret = connect(fd, sa, salen);
-        
+
         if (ret < 0) {
             set_strerror(sock, errno);
             ret = NE_SOCK_ERROR;
@@ -1159,12 +1159,12 @@ void ne_sock_prebind(ne_socket *sock, const ne_inet_addr *addr,
                      unsigned int port)
 {
     sock->lport = port;
-    sock->laddr = addr ? addr : &dummy_laddr;    
+    sock->laddr = addr ? addr : &dummy_laddr;
 }
 
 /* Bind socket 'fd' to address/port 'addr' and 'port', for subsequent
  * connect() to address of family 'peer_family'. */
-static int do_bind(int fd, int peer_family, 
+static int do_bind(int fd, int peer_family,
                    const ne_inet_addr *addr, unsigned int port)
 {
 #if defined(HAVE_SETSOCKOPT) && defined(SO_REUSEADDR) && defined(SOL_SOCKET)
@@ -1174,8 +1174,8 @@ static int do_bind(int fd, int peer_family,
         (void) setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof flag);
         /* An error here is not fatal, so ignore it. */
     }
-#endif        
-    
+#endif
+
 
 #ifdef USE_GETADDRINFO
     /* Use a sockaddr_in6 if an AF_INET6 local address is specifed, or
@@ -1183,7 +1183,7 @@ static int do_bind(int fd, int peer_family,
     if ((addr != &dummy_laddr && addr->ai_family == AF_INET6)
         || (addr == &dummy_laddr && peer_family == AF_INET6)) {
         struct sockaddr_in6 in6;
-        
+
         if (addr == &dummy_laddr)
             memset(&in6, 0, sizeof in6);
         else
@@ -1228,7 +1228,7 @@ int ne_sock_connect(ne_socket *sock,
         set_strerror(sock, ne_errno);
 	return -1;
     }
-    
+
 #if !defined(NE_USE_POLL) && !defined(WIN32)
     if (fd > FD_SETSIZE) {
         ne_close(fd);
@@ -1236,7 +1236,7 @@ int ne_sock_connect(ne_socket *sock,
         return NE_SOCK_ERROR;
     }
 #endif
-   
+
 #if defined(HAVE_FCNTL) && defined(F_GETFD) && defined(F_SETFD) \
     && defined(FD_CLOEXEC)
     /* Set the FD_CLOEXEC bit for the new fd. */
@@ -1246,7 +1246,7 @@ int ne_sock_connect(ne_socket *sock,
     }
 #endif
 
-    if (sock->laddr && (sock->laddr == &dummy_laddr || 
+    if (sock->laddr && (sock->laddr == &dummy_laddr ||
                         ia_family(sock->laddr) == ia_family(addr))) {
         ret = do_bind(fd, ia_family(addr), sock->laddr, sock->lport);
         if (ret < 0) {
@@ -1264,7 +1264,7 @@ int ne_sock_connect(ne_socket *sock,
         setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &flag, sizeof flag);
     }
 #endif
-    
+
     ret = connect_socket(sock, fd, addr, htons(port));
     if (ret == 0)
         sock->fd = fd;
@@ -1299,10 +1299,10 @@ ne_inet_addr *ne_sock_peer(ne_socket *sock, unsigned int *port)
     ia->ai_family = sad->sa_family;
 #else
     memcpy(ia, &saun.sin.sin_addr.s_addr, sizeof *ia);
-#endif    
+#endif
 
 #ifdef USE_GETADDRINFO
-    *port = ntohs(sad->sa_family == AF_INET ? 
+    *port = ntohs(sad->sa_family == AF_INET ?
                   saun.sin.sin_port : saun.sin6.sin6_port);
 #else
     *port = ntohs(saun.sin.sin_port);
@@ -1344,7 +1344,7 @@ ne_inet_addr *ne_iaddr_make(ne_iaddr_type type, const unsigned char *raw)
 #endif
 #else /* !USE_GETADDRINFO */
     memcpy(&ia->s_addr, raw, sizeof ia->s_addr);
-#endif    
+#endif
     return ia;
 }
 
@@ -1365,12 +1365,12 @@ int ne_iaddr_cmp(const ne_inet_addr *i1, const ne_inet_addr *i2)
     if (i1->ai_family != i2->ai_family)
 	return i2->ai_family - i1->ai_family;
     if (i1->ai_family == AF_INET) {
-	struct sockaddr_in *in1 = SACAST(in, i1->ai_addr), 
+	struct sockaddr_in *in1 = SACAST(in, i1->ai_addr),
 	    *in2 = SACAST(in, i2->ai_addr);
-	return memcmp(&in1->sin_addr.s_addr, &in2->sin_addr.s_addr, 
+	return memcmp(&in1->sin_addr.s_addr, &in2->sin_addr.s_addr,
 		      sizeof in1->sin_addr.s_addr);
     } else if (i1->ai_family == AF_INET6) {
-	struct sockaddr_in6 *in1 = SACAST(in6, i1->ai_addr), 
+	struct sockaddr_in6 *in1 = SACAST(in6, i1->ai_addr),
 	    *in2 = SACAST(in6, i2->ai_addr);
 	return memcmp(in1->sin6_addr.s6_addr, in2->sin6_addr.s6_addr,
 		      sizeof in1->sin6_addr.s6_addr);
@@ -1389,7 +1389,7 @@ void ne_iaddr_free(ne_inet_addr *addr)
     ne_free(addr);
 }
 
-int ne_sock_accept(ne_socket *sock, int listener) 
+int ne_sock_accept(ne_socket *sock, int listener)
 {
     int fd = accept(listener, NULL, NULL);
 
@@ -1435,7 +1435,7 @@ static int store_sess(void *userdata, gnutls_datum key, gnutls_datum data)
     ne_ssl_context *ctx = userdata;
 
     UGLY_DEBUG();
-    if (ctx->cache.server.key.data) { 
+    if (ctx->cache.server.key.data) {
         gnutls_free(ctx->cache.server.key.data);
         gnutls_free(ctx->cache.server.data.data);
     }
@@ -1484,7 +1484,7 @@ int ne_sock_accept_ssl(ne_socket *sock, ne_ssl_context *ctx)
 
 #if defined(HAVE_OPENSSL)
     ssl = SSL_new(ctx->ctx);
-    
+
     SSL_set_fd(ssl, sock->fd);
 
     sock->ssl = ssl;
@@ -1499,8 +1499,8 @@ int ne_sock_accept_ssl(ne_socket *sock, ne_ssl_context *ctx)
 
     /* Set up dummy session cache. */
     gnutls_db_set_store_function(ssl, store_sess);
-    gnutls_db_set_retrieve_function(ssl, retrieve_sess);    
-    gnutls_db_set_remove_function(ssl, remove_sess);    
+    gnutls_db_set_retrieve_function(ssl, retrieve_sess);
+    gnutls_db_set_remove_function(ssl, remove_sess);
     gnutls_db_set_ptr(ssl, ctx);
 
     if (ctx->verify)
@@ -1546,7 +1546,7 @@ int ne_sock_connect_ssl(ne_socket *sock, ne_ssl_context *ctx, void *userdata)
 	set_error(sock, _("Could not create SSL structure"));
 	return NE_SOCK_ERROR;
     }
-    
+
     SSL_set_app_data(ssl, userdata);
     SSL_set_mode(ssl, SSL_MODE_AUTO_RETRY);
     SSL_set_fd(ssl, sock->fd);
@@ -1562,7 +1562,7 @@ int ne_sock_connect_ssl(ne_socket *sock, ne_ssl_context *ctx, void *userdata)
         }
     }
 #endif
-    
+
     if (ctx->sess)
 	SSL_set_session(ssl, ctx->sess);
 
@@ -1585,19 +1585,19 @@ int ne_sock_connect_ssl(ne_socket *sock, ne_ssl_context *ctx, void *userdata)
     if (ctx->hostname) {
         gnutls_server_name_set(sock->ssl, GNUTLS_NAME_DNS, ctx->hostname,
                                strlen(ctx->hostname));
-    }                               
+    }
 #endif
 
     gnutls_transport_set_ptr(sock->ssl, (gnutls_transport_ptr) sock->fd);
 
     if (ctx->cache.client.data) {
 #if defined(HAVE_GNUTLS_SESSION_GET_DATA2)
-        gnutls_session_set_data(sock->ssl, 
-                                ctx->cache.client.data, 
+        gnutls_session_set_data(sock->ssl,
+                                ctx->cache.client.data,
                                 ctx->cache.client.size);
 #else
-        gnutls_session_set_data(sock->ssl, 
-                                ctx->cache.client.data, 
+        gnutls_session_set_data(sock->ssl,
+                                ctx->cache.client.data,
                                 ctx->cache.client.len);
 #endif
     }
@@ -1616,10 +1616,10 @@ int ne_sock_connect_ssl(ne_socket *sock, ne_ssl_context *ctx, void *userdata)
         gnutls_session_get_data2(sock->ssl, &ctx->cache.client);
 #else
         ctx->cache.client.len = 0;
-        if (gnutls_session_get_data(sock->ssl, NULL, 
+        if (gnutls_session_get_data(sock->ssl, NULL,
                                     &ctx->cache.client.len) == 0) {
             ctx->cache.client.data = ne_malloc(ctx->cache.client.len);
-            gnutls_session_get_data(sock->ssl, ctx->cache.client.data, 
+            gnutls_session_get_data(sock->ssl, ctx->cache.client.data,
                                     &ctx->cache.client.len);
         }
 #endif
@@ -1683,7 +1683,7 @@ char *ne_sock_cipher(ne_socket *sock)
     }
     else {
         return NULL;
-    }    
+    }
 }
 
 const char *ne_sock_error(const ne_socket *sock)

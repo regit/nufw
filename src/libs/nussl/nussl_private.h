@@ -10,7 +10,7 @@
  */
 
 
-/* 
+/*
    HTTP Request Handling
    Copyright (C) 1999-2006, Joe Orton <joe@manyfish.co.uk>
 
@@ -18,7 +18,7 @@
    modify it under the terms of the GNU Library General Public
    License as published by the Free Software Foundation; either
    version 2 of the License, or (at your option) any later version.
-   
+
    This library is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
@@ -33,7 +33,7 @@
 
 /* THIS IS NOT A PUBLIC INTERFACE. You CANNOT include this header file
  * from an application.  */
- 
+
 #ifndef NE_PRIVATE_H
 #define NE_PRIVATE_H
 
@@ -68,7 +68,7 @@ struct ne_session_s {
 
     /* non-zero if connection has been established. */
     int connected;
-    
+
     /* non-zero if connection has persisted beyond one request. */
     int persisted;
 

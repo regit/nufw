@@ -1,4 +1,4 @@
-/* 
+/*
    HTTP request/response handling
    Copyright (C) 1999-2007, Joe Orton <joe@manyfish.co.uk>
 
@@ -6,7 +6,7 @@
    modify it under the terms of the GNU Library General Public
    License as published by the Free Software Foundation; either
    version 2 of the License, or (at your option) any later version.
-   
+
    This library is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
@@ -35,7 +35,7 @@
 #endif
 #ifdef HAVE_STRINGS_H
 #include <strings.h>
-#endif 
+#endif
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
@@ -80,7 +80,7 @@ struct field {
 #define HH_HV_TRANSFER_ENCODING (0x07)
 
 /* Return the first resolved address for the given host. */
-static const ne_inet_addr *resolve_first(ne_session *sess, 
+static const ne_inet_addr *resolve_first(ne_session *sess,
                                          struct host_info *host)
 {
     if (sess->addrlist) {
@@ -148,7 +148,7 @@ static int do_connect(ne_session *sess, struct host_info *host, const char *err)
     }
 
     /* notify_status(sess, ne_status_connected);*/
-    
+
     if (sess->rdtimeout)
 	ne_sock_read_timeout(sess->socket, sess->rdtimeout);
 
@@ -170,7 +170,7 @@ static int lookup_host(ne_session *sess, struct host_info *info)
     info->address = ne_addr_resolve(info->hostname, 0);
     if (ne_addr_result(info->address)) {
 	char buf[256];
-	ne_set_error(sess, _("Could not resolve hostname `%s': %s"), 
+	ne_set_error(sess, _("Could not resolve hostname `%s': %s"),
 		     info->hostname,
 		     ne_addr_error(info->address, buf, sizeof buf));
 	ne_addr_destroy(info->address);
@@ -181,11 +181,11 @@ static int lookup_host(ne_session *sess, struct host_info *info)
     }
 }
 
-int ne_open_connection(ne_session *sess) 
+int ne_open_connection(ne_session *sess)
 {
     int ret;
     struct host_info *host;
-    
+
     if (sess->connected) return NE_OK;
 
     /* Resolve hostname if necessary. */
@@ -193,8 +193,8 @@ int ne_open_connection(ne_session *sess)
     if (host->address == NULL) {
         ret = lookup_host(sess, host);
         if (ret) return ret;
-    }    
-    
+    }
+
     ret = do_connect(sess, host, _("Could not connect to server"));
     if (ret != NE_OK) return ret;
 
@@ -204,7 +204,7 @@ int ne_open_connection(ne_session *sess)
         /* CONNECT tunnel */
     /*    if (sess->use_proxy)
            ret = proxy_tunnel(sess);*/
-#endif        
+#endif
         if (ret == NE_OK) {
             ret = ne__negotiate_ssl(sess);
             if (ret != NE_OK)
@@ -213,6 +213,6 @@ int ne_open_connection(ne_session *sess)
 #ifdef XXX
     }
 #endif
-    
+
     return ret;
 }
