@@ -233,8 +233,10 @@ gnutls_session *tls_connect()
 	/* connect */
 	if (tls_socket <= 0)
 		return NULL;
+
 	if (connect(tls_socket, adr_srv->ai_addr, adr_srv->ai_addrlen) ==
 	    -1) {
+		close(tls_socket);
 		return NULL;
 	}
 
