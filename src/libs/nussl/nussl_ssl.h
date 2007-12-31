@@ -155,6 +155,7 @@ const ne_ssl_certificate *ne_ssl_clicert_owner(const ne_ssl_client_cert *ccert);
 void ne_ssl_clicert_free(ne_ssl_client_cert *ccert);
 
 
+
 /* SSL context object.  The interfaces to manipulate an SSL context
  * are only needed when interfacing directly with ne_socket.h. */
 typedef struct ne_ssl_context_s ne_ssl_context;
@@ -169,6 +170,9 @@ ne_ssl_context *ne_ssl_context_create(int mode);
 
 /* Client mode: trust the given certificate 'cert' in context 'ctx'. */
 int ne_ssl_context_trustcert(ne_ssl_context *ctx, const ne_ssl_certificate *cert);
+
+/* Set the client certificate */
+int ne_ssl_context_keypair_from_data(ne_ssl_context *ctx, ne_ssl_client_cert* cert);
 
 /* Server mode: use given cert and key (filenames to PEM certificates). */
 int ne_ssl_context_keypair(ne_ssl_context *ctx,

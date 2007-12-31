@@ -254,7 +254,10 @@ int nu_client_set_pkcs12(nuauth_session_t* session, char* key_file, char* key_pa
 		free(session->pkcs12_password);
 
 	if (key_file)
+	{
+		printf("Using key: %s\n", key_file);
 		session->pkcs12_file = strdup(key_file);
+	}
 	
 	if (key_password)
 		session->pkcs12_password = strdup(key_password);
@@ -345,11 +348,12 @@ int nu_client_load_pkcs12(nuauth_session_t * session,
 			char *pkcs12file, char *pkcs12password,
 			nuclient_error_t * err)
 {
-	/*if (ne_ssl_set_pkcs12_keypair(session, pkcs12file, pkcs12password) != NE_OK)
+	int ret = ne_ssl_set_pkcs12_keypair(session->nussl, pkcs12file, pkcs12password);
+	if (ret != NE_OK)
 	{
 		SET_ERROR(err, NUSSL_ERROR, ret);
 		return 0;
-	}*/
+	}
 	return 1;
 }
 

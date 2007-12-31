@@ -640,6 +640,14 @@ int ne_ssl_context_keypair(ne_ssl_context *ctx,
                                          GNUTLS_X509_FMT_PEM) == 0) ? NE_OK : NE_ERROR;
 }
 
+int ne_ssl_context_keypair_from_data(ne_ssl_context *ctx, ne_ssl_client_cert* cert)
+{
+    UGLY_DEBUG();
+    return gnutls_certificate_set_x509_key(ctx->cred, &cert->cert.subject, 1, cert->pkey);
+}
+
+
+
 #if 0
 int ne_ssl_context_set_verify(ne_ssl_context *ctx, int required,
                               const char *ca_names, const char *verify_cas)

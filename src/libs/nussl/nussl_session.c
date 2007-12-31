@@ -99,7 +99,7 @@ void ne_set_hostinfo(ne_session* sess, const char *hostname, unsigned int port)
 {
     UGLY_DEBUG();
     if(sess->server.hostname)
-    	free(sess->server.hostname);
+    	ne_free(sess->server.hostname);
     sess->server.hostname = ne_strdup(hostname);
     sess->server.port = port;
 }
@@ -443,9 +443,48 @@ ssize_t ne_read(ne_session *session, char *buffer, size_t count)
 int ne_ssl_set_keypair(ne_session *session, const char* cert_file, const char* key_file)
 {
 	int ret = ne_ssl_context_keypair(session->ssl_context, cert_file, key_file);
+    UGLY_DEBUG();
 	if (ret != NE_OK)
 		ne_set_error(session, _("Unable to load private key or certificate file"));
 	return ret;
 }
 
+int ne_ssl_set_pkcs12_keypair(ne_session *session, const char* pkcs12_file, const char* password)
+{
+	int ret = NE_OK;
+	ne_ssl_client_cert* cert = ne_ssl_clicert_read(pkcs12_file);
+    UGLY_DEBUG();
+
+	if (cert == NULL)
+	{
+		ne_set_error(session, _("Unable to load PKCS12 certificate file"));
+		return NE_ERROR;
+	}
+
+	if (ne_ssl_clicert_encrypted(cert))
+	{
+		if (password)
+		{
+			if (ne_ssl_clicert_decrypt(cert, password) != 0)
+			{
+				ne_set_error(session, _("Bad password to decrypt the PKCS key"));
+				return NE_ERROR;
+			}
+		}
+		else
+		{
+			ne_set_error(session, _("PKCS12 file is encrypted, please supply a password"));
+			return NE_ERROR;
+		}
+	}
+	else
+	{
+		if (password)
+			fprintf(stderr, "Warning, the key is not encrypted, but a password was supplied\n");
+	}
+
+	ret = ne_ssl_context_keypair_from_data(session->ssl_context, cert);
+
+	return ret;
+}
 

@@ -268,6 +268,9 @@ ssize_t ne_read(ne_session *session, char *buffer, size_t count);
 /* Set private key and certificate */
 int ne_ssl_set_keypair(ne_session *session, const char* cert_file, const char* key_file);
 
+/* Set private key and certificate */
+int ne_ssl_set_pkcs12_keypair(ne_session *session, const char* cert_file, const char* key_file);
+
 /* Indicate that the certificate 'cert' is trusted */
 int ne_ssl_trust_cert_file(ne_session *sess, const char *cert_file);
 
