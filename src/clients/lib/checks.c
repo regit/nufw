@@ -25,6 +25,7 @@
 #include "nuclient.h"
 #include <sasl/saslutil.h>
 #include <nussl_session.h>
+#include <nussl_utils.h>
 #include <pthread.h>
 #include <proto.h>
 #include "proc.h"
@@ -83,16 +84,19 @@ void *recv_message(void *data)
 /*		ret =
 		    gnutls_record_recv(session->tls, dgram, sizeof dgram);*/
 		ret = ne_read(session->nussl, dgram, sizeof dgram);
-		if (ret <= 0) {
 #if XXX
+		if (ret <= 0) {
 			if (gnutls_error_is_fatal(ret)) {
 				ask_session_end(session);
 				break;
 			} else {
 				continue;
 			}
+		}
 #endif
-			printf("EZrrors..\n");
+		if (ret != NE_OK) {
+			ask_session_end(session);
+			break;
 		}
 
 		switch (dgram[0]) {
