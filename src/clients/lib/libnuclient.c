@@ -220,10 +220,16 @@ int nu_client_set_key(nuauth_session_t* session, char* keyfile, char* certfile, 
 		free(session->pem_cert);
 
 	if (keyfile)
+	{
 		session->pem_key = strdup(keyfile);
+		printf("Using key: %s\n", keyfile);
+	}
 
 	if (certfile)
-		session->pem_key = strdup(certfile);
+	{
+		session->pem_cert = strdup(certfile);
+		printf("Using certificate: %s\n", certfile);
+	}
 
 	return 1;
 }
