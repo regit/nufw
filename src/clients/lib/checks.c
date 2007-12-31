@@ -94,7 +94,7 @@ void *recv_message(void *data)
 			}
 		}
 #endif
-		if (ret != NE_OK) {
+		if (ret <= 0) {
 			ask_session_end(session);
 			break;
 		}
@@ -134,7 +134,7 @@ void *recv_message(void *data)
 			}
 #else
 			ret = ne_write(session->nussl, message, message_length);
-			if (ret <= 0) {
+			if (ret < 0) {
 #if DEBUG_ENABLE
 				printf("write failed at %s:%d\n",
 				       __FILE__, __LINE__);

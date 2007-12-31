@@ -59,7 +59,7 @@ int send_hello_pckt(nuauth_session_t * session)
 		}
 	}
 #else
-	if (ne_write(session->nussl, (char*)&header, sizeof(struct nu_header)) <= 0)
+	if (ne_write(session->nussl, (char*)&header, sizeof(struct nu_header)) < 0)
 	{
 #if DEBUG_ENABLE
 		printf("write failed at %s:%d\n", __FILE__,
@@ -189,7 +189,7 @@ int send_user_pckt(nuauth_session_t * session, conn_t * carray[CONN_MAX])
 		}
 	}
 #else
-	if (ne_write(session->nussl, (char*)datas, pointer - datas) <= 0)
+	if (ne_write(session->nussl, (char*)datas, pointer - datas) < 0)
 	{
 		printf("write failed\n");
 		return 0;
