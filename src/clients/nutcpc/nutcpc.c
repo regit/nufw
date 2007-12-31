@@ -704,7 +704,7 @@ void init_library(nutcpc_context_t * context, char *username)
 	struct rlimit core_limit;
 
 	/* Avoid creation of core file which may contains username and password */
-	if (getrlimit(RLIMIT_CORE, &core_limit) == 0) {
+	if (!context->debug_mode && getrlimit(RLIMIT_CORE, &core_limit) == 0) {
 		core_limit.rlim_cur = 0;
 		setrlimit(RLIMIT_CORE, &core_limit);
 	}
