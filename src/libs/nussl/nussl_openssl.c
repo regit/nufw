@@ -481,9 +481,11 @@ static int check_certificate(nussl_session *sess, SSL *ssl, nussl_ssl_certificat
         nussl__ssl_set_verify_err(sess, failures);
         ret = NUSSL_ERROR;
         /* Allow manual override */
+#if XXX
         if (sess->ssl_verify_fn &&
             sess->ssl_verify_fn(sess->ssl_verify_ud, failures, chain) == 0)
             ret = NUSSL_OK;
+#endif
     }
 
     return ret;
@@ -511,6 +513,7 @@ static int provide_client_cert(SSL *ssl, X509 **cert, EVP_PKEY **pkey)
 {
     nussl_session *const sess = SSL_get_app_data(ssl);
 
+#if XXX
     if (!sess->client_cert && sess->ssl_provide_fn) {
 	nussl_ssl_dname **dnames = NULL;
         int n, count = 0;
@@ -536,6 +539,7 @@ static int provide_client_cert(SSL *ssl, X509 **cert, EVP_PKEY **pkey)
             nussl_free(dnames);
         }
     }
+#endif
 
     if (sess->client_cert) {
         nussl_ssl_client_cert *const cc = sess->client_cert;
@@ -606,6 +610,18 @@ int nussl_ssl_context_keypair(nussl_ssl_context *ctx, const char *cert,
     }
 
     return ret == 1 ? 0 : -1;
+}
+
+int nussl_ssl_context_keypair_from_data(nussl_ssl_context *ctx, nussl_ssl_client_cert* cert)
+{
+	int ret;
+	ret = SSL_CTX_use_PrivateKey(ctx->ctx, cert->pkey);
+
+	if (ret != 1)
+		return NUSSL_ERROR;
+
+	ret = SSL_CTX_use_certificate(ctx->ctx, cert->cert.subject);
+	return (ret == 1) ? NUSSL_OK : NUSSL_ERROR;
 }
 
 int nussl_ssl_context_set_verify(nussl_ssl_context *ctx,
@@ -740,11 +756,14 @@ const char *nussl_ssl_cert_identity(const nussl_ssl_certificate *cert)
     return cert->identity;
 }
 
-void nussl_ssl_context_trustcert(nussl_ssl_context *ctx, const nussl_ssl_certificate *cert)
+int nussl_ssl_context_trustcert(nussl_ssl_context *ctx, const nussl_ssl_certificate *cert)
 {
     X509_STORE *store = SSL_CTX_get_cert_store(ctx->ctx);
 
-    X509_STORE_add_cert(store, cert->subject);
+    if (store == NULL)
+        return NUSSL_ERROR;
+
+    return (X509_STORE_add_cert(store, cert->subject) == 1) ? NUSSL_OK : NUSSL_ERROR;
 }
 
 void nussl_ssl_trust_default_ca(nussl_session *sess)
