@@ -45,12 +45,12 @@
 #include <unistd.h>
 #include <stdio.h>
 
-#include <ctype.h> /* for isprint() etc in ne_strclean() */
+#include <ctype.h> /* for isprint() etc in nussl_strclean() */
 
 #include "nussl_alloc.h"
 #include "nussl_string.h"
 
-char *ne_token(char **str, char separator)
+char *nussl_token(char **str, char separator)
 {
     char *ret = *str, *pnt = strchr(*str, separator);
 
@@ -65,7 +65,7 @@ char *ne_token(char **str, char separator)
     return ret;
 }
 
-char *ne_qtoken(char **str, char separator, const char *quotes)
+char *nussl_qtoken(char **str, char separator, const char *quotes)
 {
     char *pnt, *ret = NULL;
 
@@ -96,7 +96,7 @@ char *ne_qtoken(char **str, char separator, const char *quotes)
     return ret;
 }
 
-char *ne_shave(char *str, const char *whitespace)
+char *nussl_shave(char *str, const char *whitespace)
 {
     char *pnt, *ret = str;
 
@@ -115,22 +115,22 @@ char *ne_shave(char *str, const char *whitespace)
     return ret;
 }
 
-void ne_buffer_clear(ne_buffer *buf)
+void nussl_buffer_clear(nussl_buffer *buf)
 {
     memset(buf->data, 0, buf->length);
     buf->used = 1;
 }
 
 /* Grows for given size, returns 0 on success, -1 on error. */
-void ne_buffer_grow(ne_buffer *buf, size_t newsize)
+void nussl_buffer_grow(nussl_buffer *buf, size_t newsize)
 {
-#define NE_BUFFER_GROWTH 512
+#define NUSSL_BUFFER_GROWTH 512
     if (newsize > buf->length) {
 	/* If it's not big enough already... */
-	buf->length = ((newsize / NE_BUFFER_GROWTH) + 1) * NE_BUFFER_GROWTH;
+	buf->length = ((newsize / NUSSL_BUFFER_GROWTH) + 1) * NUSSL_BUFFER_GROWTH;
 
 	/* Reallocate bigger buffer */
-	buf->data = ne_realloc(buf->data, buf->length);
+	buf->data = nussl_realloc(buf->data, buf->length);
     }
 }
 
@@ -160,7 +160,7 @@ static void do_concat(char *str, va_list *ap)
     }
 }
 
-void ne_buffer_concat(ne_buffer *buf, ...)
+void nussl_buffer_concat(nussl_buffer *buf, ...)
 {
     va_list ap;
     ssize_t total;
@@ -170,7 +170,7 @@ void ne_buffer_concat(ne_buffer *buf, ...)
     va_end(ap);
 
     /* Grow the buffer */
-    ne_buffer_grow(buf, total);
+    nussl_buffer_grow(buf, total);
 
     va_start(ap, buf);
     do_concat(buf->data + buf->used - 1, &ap);
@@ -180,7 +180,7 @@ void ne_buffer_concat(ne_buffer *buf, ...)
     buf->data[total - 1] = '\0';
 }
 
-char *ne_concat(const char *str, ...)
+char *nussl_concat(const char *str, ...)
 {
     va_list ap;
     size_t total, slen = strlen(str);
@@ -190,7 +190,7 @@ char *ne_concat(const char *str, ...)
     total = slen + count_concat(&ap);
     va_end(ap);
 
-    ret = memcpy(ne_malloc(total + 1), str, slen);
+    ret = memcpy(nussl_malloc(total + 1), str, slen);
 
     va_start(ap, str);
     do_concat(ret + slen, &ap);
@@ -202,63 +202,63 @@ char *ne_concat(const char *str, ...)
 
 /* Append zero-terminated string... returns 0 on success or -1 on
  * realloc failure. */
-void ne_buffer_zappend(ne_buffer *buf, const char *str)
+void nussl_buffer_zappend(nussl_buffer *buf, const char *str)
 {
-    ne_buffer_append(buf, str, strlen(str));
+    nussl_buffer_append(buf, str, strlen(str));
 }
 
-void ne_buffer_append(ne_buffer *buf, const char *data, size_t len)
+void nussl_buffer_append(nussl_buffer *buf, const char *data, size_t len)
 {
-    ne_buffer_grow(buf, buf->used + len);
+    nussl_buffer_grow(buf, buf->used + len);
     memcpy(buf->data + buf->used - 1, data, len);
     buf->used += len;
     buf->data[buf->used - 1] = '\0';
 }
 
-size_t ne_buffer_snprintf(ne_buffer *buf, size_t max, const char *fmt, ...)
+size_t nussl_buffer_snprintf(nussl_buffer *buf, size_t max, const char *fmt, ...)
 {
     va_list ap;
     size_t ret;
 
-    ne_buffer_grow(buf, buf->used + max);
+    nussl_buffer_grow(buf, buf->used + max);
 
     va_start(ap, fmt);
-    ret = ne_vsnprintf(buf->data + buf->used - 1, max, fmt, ap);
+    ret = nussl_vsnprintf(buf->data + buf->used - 1, max, fmt, ap);
     va_end(ap);
     buf->used += ret;
 
     return ret;
 }
 
-ne_buffer *ne_buffer_create(void)
+nussl_buffer *nussl_buffer_create(void)
 {
-    return ne_buffer_ncreate(512);
+    return nussl_buffer_ncreate(512);
 }
 
-ne_buffer *ne_buffer_ncreate(size_t s)
+nussl_buffer *nussl_buffer_ncreate(size_t s)
 {
-    ne_buffer *buf = ne_malloc(sizeof(*buf));
-    buf->data = ne_malloc(s);
+    nussl_buffer *buf = nussl_malloc(sizeof(*buf));
+    buf->data = nussl_malloc(s);
     buf->data[0] = '\0';
     buf->length = s;
     buf->used = 1;
     return buf;
 }
 
-void ne_buffer_destroy(ne_buffer *buf)
+void nussl_buffer_destroy(nussl_buffer *buf)
 {
-    ne_free(buf->data);
-    ne_free(buf);
+    nussl_free(buf->data);
+    nussl_free(buf);
 }
 
-char *ne_buffer_finish(ne_buffer *buf)
+char *nussl_buffer_finish(nussl_buffer *buf)
 {
     char *ret = buf->data;
-    ne_free(buf);
+    nussl_free(buf);
     return ret;
 }
 
-void ne_buffer_altered(ne_buffer *buf)
+void nussl_buffer_altered(nussl_buffer *buf)
 {
     buf->used = strlen(buf->data) + 1;
 }
@@ -268,7 +268,7 @@ static const char b64_alphabet[] =
     "abcdefghijklmnopqrstuvwxyz"
     "0123456789+/=";
 
-char *ne_base64(const unsigned char *text, size_t inlen)
+char *nussl_base64(const unsigned char *text, size_t inlen)
 {
     /* The tricky thing about this is doing the padding at the end,
      * doing the bit manipulation requires a bit of concentration only */
@@ -282,7 +282,7 @@ char *ne_base64(const unsigned char *text, size_t inlen)
     if ((inlen % 3) > 0) /* got to pad */
 	outlen += 4 - (inlen % 3);
 
-    buffer = ne_malloc(outlen + 1); /* +1 for the \0 */
+    buffer = nussl_malloc(outlen + 1); /* +1 for the \0 */
 
     /* now do the main stage of conversion, 3 bytes at a time,
      * leave the trailing bytes (if there are any) for later */
@@ -322,7 +322,7 @@ char *ne_base64(const unsigned char *text, size_t inlen)
                          ((ch) >= '0' ? ((ch) + 52 - '0') : \
                           ((ch) == '+' ? 62 : 63))))
 
-size_t ne_unbase64(const char *data, unsigned char **out)
+size_t nussl_unbase64(const char *data, unsigned char **out)
 {
     size_t inlen = strlen(data);
     unsigned char *outp;
@@ -330,14 +330,14 @@ size_t ne_unbase64(const char *data, unsigned char **out)
 
     if (inlen == 0 || (inlen % 4) != 0) return 0;
 
-    outp = *out = ne_malloc(inlen * 3 / 4);
+    outp = *out = nussl_malloc(inlen * 3 / 4);
 
     for (in = (const unsigned char *)data; *in; in += 4) {
         unsigned int tmp;
         if (!VALID_B64(in[0]) || !VALID_B64(in[1]) || !VALID_B64(in[2]) ||
             !VALID_B64(in[3]) || in[0] == '=' || in[1] == '=' ||
             (in[2] == '=' && in[3] != '=')) {
-            ne_free(*out);
+            nussl_free(*out);
             return 0;
         }
         tmp = (DECODE_B64(in[0]) & 0x3f) << 18 |
@@ -356,7 +356,7 @@ size_t ne_unbase64(const char *data, unsigned char **out)
     return outp - *out;
 }
 
-char *ne_strclean(char *str)
+char *nussl_strclean(char *str)
 {
     char *pnt;
     for (pnt = str; *pnt; pnt++)
@@ -364,31 +364,31 @@ char *ne_strclean(char *str)
     return str;
 }
 
-char *ne_strerror(int errnum, char *buf, size_t buflen)
+char *nussl_strerror(int errnum, char *buf, size_t buflen)
 {
 #ifdef HAVE_STRERROR_R
 #ifdef STRERROR_R_CHAR_P
     /* glibc-style strerror_r which may-or-may-not use provided buffer. */
     char *ret = strerror_r(errnum, buf, buflen);
     if (ret != buf)
-	ne_strnzcpy(buf, ret, buflen);
+	nussl_strnzcpy(buf, ret, buflen);
 #else /* POSIX-style strerror_r: */
     char tmp[256];
 
     if (strerror_r(errnum, tmp, sizeof tmp) == 0)
-        ne_strnzcpy(buf, tmp, buflen);
+        nussl_strnzcpy(buf, tmp, buflen);
     else
-        ne_snprintf(buf, buflen, "Unknown error %d", errnum);
+        nussl_snprintf(buf, buflen, "Unknown error %d", errnum);
 #endif
 #else /* no strerror_r: */
-    ne_strnzcpy(buf, strerror(errnum), buflen);
+    nussl_strnzcpy(buf, strerror(errnum), buflen);
 #endif
     return buf;
 }
 
 
-/* Wrapper for ne_snprintf. */
-size_t ne_snprintf(char *str, size_t size, const char *fmt, ...)
+/* Wrapper for nussl_snprintf. */
+size_t nussl_snprintf(char *str, size_t size, const char *fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
@@ -402,8 +402,8 @@ size_t ne_snprintf(char *str, size_t size, const char *fmt, ...)
     return strlen(str);
 }
 
-/* Wrapper for ne_vsnprintf. */
-size_t ne_vsnprintf(char *str, size_t size, const char *fmt, va_list ap)
+/* Wrapper for nussl_vsnprintf. */
+size_t nussl_vsnprintf(char *str, size_t size, const char *fmt, va_list ap)
 {
 #ifdef HAVE_TRIO
     trio_vsnprintf(str, size, fmt, ap);
@@ -452,12 +452,12 @@ static const unsigned char ascii_tolower[256] = {
 
 #define TOLOWER(ch) ascii_tolower[ch]
 
-const unsigned char *ne_tolower_array(void)
+const unsigned char *nussl_tolower_array(void)
 {
     return ascii_tolower;
 }
 
-int ne_strcasecmp(const char *s1, const char *s2)
+int nussl_strcasecmp(const char *s1, const char *s2)
 {
     const unsigned char *p1 = (const unsigned char *) s1;
     const unsigned char *p2 = (const unsigned char *) s2;
@@ -476,7 +476,7 @@ int ne_strcasecmp(const char *s1, const char *s2)
     return c1 - c2;
 }
 
-int ne_strncasecmp(const char *s1, const char *s2, size_t n)
+int nussl_strncasecmp(const char *s1, const char *s2, size_t n)
 {
     const unsigned char *p1 = (const unsigned char *) s1;
     const unsigned char *p2 = (const unsigned char *) s2;

@@ -31,25 +31,25 @@
 
 */
 
-#undef NE_BEGIN_DECLS
-#undef NE_END_DECLS
+#undef NUSSL_BEGIN_DECLS
+#undef NUSSL_END_DECLS
 #ifdef __cplusplus
-# define NE_BEGIN_DECLS extern "C" {
-# define NE_END_DECLS }
+# define NUSSL_BEGIN_DECLS extern "C" {
+# define NUSSL_END_DECLS }
 #else
-# define NE_BEGIN_DECLS /* empty */
-# define NE_END_DECLS /* empty */
+# define NUSSL_BEGIN_DECLS /* empty */
+# define NUSSL_END_DECLS /* empty */
 #endif
 
-#ifndef NE_DEFS_H
-#define NE_DEFS_H
+#ifndef NUSSL_DEFS_H
+#define NUSSL_DEFS_H
 
 #include <sys/types.h>
 
-#ifdef NE_LFS
-typedef off64_t ne_off_t;
+#ifdef NUSSL_LFS
+typedef off64_t nussl_off_t;
 #else
-typedef off_t ne_off_t;
+typedef off_t nussl_off_t;
 #endif
 
 /* define ssize_t for Win32 */
@@ -59,18 +59,18 @@ typedef off_t ne_off_t;
 
 #ifdef __GNUC__
 #if __GNUC__ >= 3
-#define ne_attribute_malloc __attribute__((malloc))
+#define nussl_attribute_malloc __attribute__((malloc))
 #else
-#define ne_attribute_malloc
+#define nussl_attribute_malloc
 #endif
-#define ne_attribute(x) __attribute__(x)
+#define nussl_attribute(x) __attribute__(x)
 #else
-#define ne_attribute(x)
-#define ne_attribute_malloc
+#define nussl_attribute(x)
+#define nussl_attribute_malloc
 #endif
 
-#ifndef NE_BUFSIZ
-#define NE_BUFSIZ 8192
+#ifndef NUSSL_BUFSIZ
+#define NUSSL_BUFSIZ 8192
 #endif
 
-#endif /* NE_DEFS_H */
+#endif /* NUSSL_DEFS_H */

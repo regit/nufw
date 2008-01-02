@@ -47,7 +47,7 @@
 
 #include "nussl_alloc.h"
 #include "nussl_request.h"
-#include "nussl_string.h" /* for ne_buffer */
+#include "nussl_string.h" /* for nussl_buffer */
 #include "nussl_utils.h"
 #include "nussl_socket.h"
 #include "nussl_session.h"
@@ -80,20 +80,20 @@ struct field {
 #define HH_HV_TRANSFER_ENCODING (0x07)
 
 /* Return the first resolved address for the given host. */
-static const ne_inet_addr *resolve_first(ne_session *sess,
+static const nussl_inet_addr *resolve_first(nussl_session *sess,
                                          struct host_info *host)
 {
     if (sess->addrlist) {
         sess->curaddr = 0;
         return sess->addrlist[0];
     } else {
-        return ne_addr_first(host->address);
+        return nussl_addr_first(host->address);
     }
 }
 
 /* Return the next resolved address for the given host or NULL if
  * there are no more addresses. */
-static const ne_inet_addr *resolve_next(ne_session *sess,
+static const nussl_inet_addr *resolve_next(nussl_session *sess,
                                         struct host_info *host)
 {
     if (sess->addrlist) {
@@ -102,7 +102,7 @@ static const ne_inet_addr *resolve_next(ne_session *sess,
         else
             return NULL;
     } else {
-        return ne_addr_next(host->address);
+        return nussl_addr_next(host->address);
     }
 }
 
@@ -110,17 +110,17 @@ static const ne_inet_addr *resolve_next(ne_session *sess,
  * that once a connection to a particular network address has
  * succeeded, that address will be used first for the next attempt to
  * connect. */
-static int do_connect(ne_session *sess, struct host_info *host, const char *err)
+static int do_connect(nussl_session *sess, struct host_info *host, const char *err)
 {
     int ret;
 
-    if ((sess->socket = ne_sock_create()) == NULL) {
-        ne_set_error(sess, _("Could not create socket"));
-        return NE_ERROR;
+    if ((sess->socket = nussl_sock_create()) == NULL) {
+        nussl_set_error(sess, _("Could not create socket"));
+        return NUSSL_ERROR;
     }
 
     if (sess->cotimeout)
-	ne_sock_connect_timeout(sess->socket, sess->cotimeout);
+	nussl_sock_connect_timeout(sess->socket, sess->cotimeout);
 
     if (host->current == NULL)
 	host->current = resolve_first(sess, host);
@@ -129,64 +129,64 @@ static int do_connect(ne_session *sess, struct host_info *host, const char *err)
 
     do {
         sess->status.ci.address = host->current;
-	/* notify_status(sess, ne_status_connecting); */
-#ifdef NE_DEBUGGING
-	if (ne_debug_mask & NE_DBG_HTTP) {
+	/* notify_status(sess, nussl_status_connecting); */
+#ifdef NUSSL_DEBUGGING
+	if (nussl_debug_mask & NUSSL_DBG_HTTP) {
 	    char buf[150];
-	    NE_DEBUG(NE_DBG_HTTP, "Connecting to %s\n",
-		     ne_iaddr_print(host->current, buf, sizeof buf));
+	    NUSSL_DEBUG(NUSSL_DBG_HTTP, "Connecting to %s\n",
+		     nussl_iaddr_print(host->current, buf, sizeof buf));
 	}
 #endif
-	ret = ne_sock_connect(sess->socket, host->current, host->port);
+	ret = nussl_sock_connect(sess->socket, host->current, host->port);
     } while (ret && /* try the next address... */
 	     (host->current = resolve_next(sess, host)) != NULL);
 
     if (ret) {
-        ne_set_error(sess, "%s: %s", err, ne_sock_error(sess->socket));
-        ne_sock_close(sess->socket);
-	return NE_CONNECT;
+        nussl_set_error(sess, "%s: %s", err, nussl_sock_error(sess->socket));
+        nussl_sock_close(sess->socket);
+	return NUSSL_CONNECT;
     }
 
-    /* notify_status(sess, ne_status_connected);*/
+    /* notify_status(sess, nussl_status_connected);*/
 
     if (sess->rdtimeout)
-	ne_sock_read_timeout(sess->socket, sess->rdtimeout);
+	nussl_sock_read_timeout(sess->socket, sess->rdtimeout);
 
     sess->connected = 1;
     /* clear persistent connection flag. */
     sess->persisted = 0;
-    return NE_OK;
+    return NUSSL_OK;
 }
 
 /* Perform any necessary DNS lookup for the host given by *info;
- * return NE_ code. */
-static int lookup_host(ne_session *sess, struct host_info *info)
+ * return NUSSL_ code. */
+static int lookup_host(nussl_session *sess, struct host_info *info)
 {
-    if (sess->addrlist) return NE_OK;
+    if (sess->addrlist) return NUSSL_OK;
 
-    NE_DEBUG(NE_DBG_HTTP, "Doing DNS lookup on %s...\n", info->hostname);
+    NUSSL_DEBUG(NUSSL_DBG_HTTP, "Doing DNS lookup on %s...\n", info->hostname);
     sess->status.lu.hostname = info->hostname;
-    /*notify_status(sess, ne_status_lookup);*/
-    info->address = ne_addr_resolve(info->hostname, 0);
-    if (ne_addr_result(info->address)) {
+    /*notify_status(sess, nussl_status_lookup);*/
+    info->address = nussl_addr_resolve(info->hostname, 0);
+    if (nussl_addr_result(info->address)) {
 	char buf[256];
-	ne_set_error(sess, _("Could not resolve hostname `%s': %s"),
+	nussl_set_error(sess, _("Could not resolve hostname `%s': %s"),
 		     info->hostname,
-		     ne_addr_error(info->address, buf, sizeof buf));
-	ne_addr_destroy(info->address);
+		     nussl_addr_error(info->address, buf, sizeof buf));
+	nussl_addr_destroy(info->address);
 	info->address = NULL;
-	return NE_LOOKUP;
+	return NUSSL_LOOKUP;
     } else {
-	return NE_OK;
+	return NUSSL_OK;
     }
 }
 
-int ne_open_connection(ne_session *sess)
+int nussl_open_connection(nussl_session *sess)
 {
     int ret;
     struct host_info *host;
 
-    if (sess->connected) return NE_OK;
+    if (sess->connected) return NUSSL_OK;
 
     /* Resolve hostname if necessary. */
     host =&sess->server;
@@ -196,7 +196,7 @@ int ne_open_connection(ne_session *sess)
     }
 
     ret = do_connect(sess, host, _("Could not connect to server"));
-    if (ret != NE_OK) return ret;
+    if (ret != NUSSL_OK) return ret;
 
     /* Negotiate SSL layer. */
 #ifdef XXX
@@ -205,10 +205,10 @@ int ne_open_connection(ne_session *sess)
     /*    if (sess->use_proxy)
            ret = proxy_tunnel(sess);*/
 #endif
-        if (ret == NE_OK) {
-            ret = ne__negotiate_ssl(sess);
-            if (ret != NE_OK)
-                ne_close_connection(sess);
+        if (ret == NUSSL_OK) {
+            ret = nussl__negotiate_ssl(sess);
+            if (ret != NUSSL_OK)
+                nussl_close_connection(sess);
         }
 #ifdef XXX
     }

@@ -151,10 +151,10 @@ enum {
 };
 
 /* nuauth_session_t structure */
-struct ne_session_s;
+struct nussl_session_s;
 
 typedef struct {
-	struct ne_session_s* nussl;
+	struct nussl_session_s* nussl;
 
 	/*--------------- PUBLIC MEMBERS -------------------*/
 	u_int32_t userid;	/*!< Local user identifier (getuid()) */

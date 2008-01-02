@@ -40,9 +40,9 @@
 
 #include "nussl_alloc.h"
 
-static ne_oom_callback_fn oom;
+static nussl_oom_callback_fn oom;
 
-void ne_oom_callback(ne_oom_callback_fn callback)
+void nussl_oom_callback(nussl_oom_callback_fn callback)
 {
     oom = callback;
 }
@@ -56,21 +56,21 @@ void ne_oom_callback(ne_oom_callback_fn callback)
     }						\
 } while(0);
 
-void *ne_malloc(size_t len)
+void *nussl_malloc(size_t len)
 {
     void *ptr;
     DO_MALLOC(ptr, len);
     return ptr;
 }
 
-void *ne_calloc(size_t len)
+void *nussl_calloc(size_t len)
 {
     void *ptr;
     DO_MALLOC(ptr, len);
     return memset(ptr, 0, len);
 }
 
-void *ne_realloc(void *ptr, size_t len)
+void *nussl_realloc(void *ptr, size_t len)
 {
     void *ret = realloc(ptr, len);
     if (!ret) {
@@ -81,14 +81,14 @@ void *ne_realloc(void *ptr, size_t len)
     return ret;
 }
 
-char *ne_strdup(const char *s)
+char *nussl_strdup(const char *s)
 {
     char *ret;
     DO_MALLOC(ret, strlen(s) + 1);
     return strcpy(ret, s);
 }
 
-char *ne_strndup(const char *s, size_t n)
+char *nussl_strndup(const char *s, size_t n)
 {
     char *new;
     DO_MALLOC(new, n+1);

@@ -19,29 +19,29 @@
 
 */
 
-#ifndef NE_REQUEST_H
-#define NE_REQUEST_H
+#ifndef NUSSL_REQUEST_H
+#define NUSSL_REQUEST_H
 
 #include <config.h>
 #include "nussl_config.h"
 #include "nussl_session.h"
 
 
-NE_BEGIN_DECLS
+NUSSL_BEGIN_DECLS
 
-#define NE_OK (0) /* Success */
-#define NE_ERROR (1) /* Generic error; use ne_get_error(session) for message */
-#define NE_LOOKUP (2) /* Server or proxy hostname lookup failed */
-#define NE_AUTH (3) /* User authentication failed on server */
-#define NE_PROXYAUTH (4) /* User authentication failed on proxy */
-#define NE_CONNECT (5) /* Could not connect to server */
-#define NE_TIMEOUT (6) /* Connection timed out */
-#define NE_FAILED (7) /* The precondition failed */
-#define NE_RETRY (8) /* Retry request (ne_end_request ONLY) */
-#define NE_REDIRECT (9) /* See ne_redirect.h */
+#define NUSSL_OK (0) /* Success */
+#define NUSSL_ERROR (1) /* Generic error; use nussl_get_error(session) for message */
+#define NUSSL_LOOKUP (2) /* Server or proxy hostname lookup failed */
+#define NUSSL_AUTH (3) /* User authentication failed on server */
+#define NUSSL_PROXYAUTH (4) /* User authentication failed on proxy */
+#define NUSSL_CONNECT (5) /* Could not connect to server */
+#define NUSSL_TIMEOUT (6) /* Connection timed out */
+#define NUSSL_FAILED (7) /* The precondition failed */
+#define NUSSL_RETRY (8) /* Retry request (nussl_end_request ONLY) */
+#define NUSSL_REDIRECT (9) /* See nussl_redirect.h */
 
-int ne_open_connection(ne_session* sess);
+int nussl_open_connection(nussl_session* sess);
 
-NE_END_DECLS
+NUSSL_END_DECLS
 
-#endif /* NE_REQUEST_H */
+#endif /* NUSSL_REQUEST_H */

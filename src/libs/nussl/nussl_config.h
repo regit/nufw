@@ -35,7 +35,7 @@
 #define WIN32
 #endif
 
-/* #define NE_DBG_SSL fprintf */
+/* #define NUSSL_DBG_SSL fprintf */
 /* XXX : add checks here */
 #define HAVE_ERRNO_H
 #define HAVE_LIMITS_H
@@ -48,23 +48,23 @@
 #define HAVE_MEMCPY
 #define NEON_VERSION "NuNeon"
 
-/*#define NE_USE_POLL 1 XXX: remove anything related to me*/
-#define NE_VERSION_MAJOR 0
-#define NE_VERSION_MINOR 1
+/*#define NUSSL_USE_POLL 1 XXX: remove anything related to me*/
+#define NUSSL_VERSION_MAJOR 0
+#define NUSSL_VERSION_MINOR 1
 
 #define HAVE_SIGNAL_H
 #define HAVE_SIGNAL
 
-#define NE_HAVE_TS_SSL /* TS = Thread Safe */
+#define NUSSL_HAVE_TS_SSL /* TS = Thread Safe */
 /* #define HAVE_OPENSSL */
 
-#define NE_FMT_SIZE_T "u"
-#define NE_FMT_SSIZE_T "d"
-#define NE_FMT_OFF_T "ld"
-#define NE_FMT_NE_OFF_T NE_FMT_OFF_T
+#define NUSSL_FMT_SIZE_T "u"
+#define NUSSL_FMT_SSIZE_T "d"
+#define NUSSL_FMT_OFF_T "ld"
+#define NUSSL_FMT_NE_OFF_T NUSSL_FMT_OFF_T
 
-#ifndef NE_FMT_XML_SIZE
-#define NE_FMT_XML_SIZE "d"
+#ifndef NUSSL_FMT_XML_SIZE
+#define NUSSL_FMT_XML_SIZE "d"
 #endif
 
 /* needs adjusting for Win64... */
@@ -75,8 +75,8 @@
 
 
 #define NEON_VERSION "@VERSION@"
-#define NE_VERSION_MAJOR (@MAJOR@)
-#define NE_VERSION_MINOR (@MINOR@)
+#define NUSSL_VERSION_MAJOR (@MAJOR@)
+#define NUSSL_VERSION_MINOR (@MINOR@)
 
 #define HAVE_ERRNO_H
 #define HAVE_LIMITS_H
@@ -87,7 +87,7 @@
 #define HAVE_SSPI
 
 /* Define to enable debugging */
-#define NE_DEBUGGING 1
+#define NUSSL_DEBUGGING 1
 
 /* Win32 uses a underscore, so we use a macro to eliminate that. */
 #define snprintf			_snprintf

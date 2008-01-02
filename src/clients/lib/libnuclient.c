@@ -52,8 +52,8 @@
 #include <sys/utsname.h>
 #include <nussl_ssl.h>
 #include <nussl_session.h>
-#include <nussl_request.h> /* ne__negotiate_ssl */
-#include <nussl_utils.h> /* NE_OK definition */
+#include <nussl_request.h> /* nussl__negotiate_ssl */
+#include <nussl_utils.h> /* NUSSL_OK definition */
 
 void nu_exit_clean(nuauth_session_t * session)
 {
@@ -64,7 +64,7 @@ void nu_exit_clean(nuauth_session_t * session)
 	if(session->nussl)
 	{
 		printf("%s %i", __FILE__, __LINE__);
-		ne_session_destroy(session->nussl);
+		nussl_session_destroy(session->nussl);
 		session->nussl = NULL;
 	}
 
@@ -126,9 +126,9 @@ int nu_client_global_init(nuclient_error_t * err)
 
 	/*gcry_control(GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);*/
 
-	if (ne_sock_init() != NE_OK)
+	if (nussl_sock_init() != NUSSL_OK)
 	{
-		SET_ERROR(err, INTERNAL_ERROR, UNKNOWN_ERR); /* TODO: patch nussl to handle errors correctly in ne_sock_init */
+		SET_ERROR(err, INTERNAL_ERROR, UNKNOWN_ERR); /* TODO: patch nussl to handle errors correctly in nussl_sock_init */
 		return 0;
 	}
 
@@ -310,9 +310,9 @@ int nu_client_load_key(nuauth_session_t * session,
 
 	if (certfile != NULL || keyfile != NULL) {
 		ret =
-		    ne_ssl_set_keypair(session->nussl, certfile, keyfile);
+		    nussl_ssl_set_keypair(session->nussl, certfile, keyfile);
 
-		if (ret != NE_OK) {
+		if (ret != NUSSL_OK) {
 			if (exit_on_error) {
 				if (home)
 					free(home);
@@ -348,8 +348,8 @@ int nu_client_load_pkcs12(nuauth_session_t * session,
 			char *pkcs12file, char *pkcs12password,
 			nuclient_error_t * err)
 {
-	int ret = ne_ssl_set_pkcs12_keypair(session->nussl, pkcs12file, pkcs12password);
-	if (ret != NE_OK)
+	int ret = nussl_ssl_set_pkcs12_keypair(session->nussl, pkcs12file, pkcs12password);
+	if (ret != NUSSL_OK)
 	{
 		SET_ERROR(err, NUSSL_ERROR, ret);
 		return 0;
@@ -388,8 +388,8 @@ int nu_client_load_ca(nuauth_session_t * session,
 	}
 
 	if (cafile != NULL) {
-		ret = ne_ssl_trust_cert_file(session->nussl, cafile);
-		if (ret != NE_OK) {
+		ret = nussl_ssl_trust_cert_file(session->nussl, cafile);
+		if (ret != NUSSL_OK) {
 			if (exit_on_error) {
 				if (home)
 					free(home);
@@ -603,9 +603,9 @@ int nu_client_connect(nuauth_session_t * session,
 	int ret;
 	unsigned int port = atoi(service);
 
-	session->nussl = ne_session_create();
+	session->nussl = nussl_session_create();
 
-	ne_set_hostinfo(session->nussl, hostname, port);
+	nussl_set_hostinfo(session->nussl, hostname, port);
 	if(session->pkcs12_file)
 	{
 		if (!nu_client_load_pkcs12(session, session->pkcs12_file, session->pkcs12_password, err))
@@ -620,8 +620,8 @@ int nu_client_connect(nuauth_session_t * session,
 	if (!nu_client_load_ca(session, session->pem_ca, err))
 		return 0;
 
-	ret = ne_open_connection(session->nussl);
-	if (ret != NE_OK) {
+	ret = nussl_open_connection(session->nussl);
+	if (ret != NUSSL_OK) {
 		SET_ERROR(err, NUSSL_ERROR, ret);
 		return 0;
 	}
@@ -698,7 +698,7 @@ const char *nu_client_strerror(nuauth_session_t * session, nuclient_error_t * er
 	case NUSSL_ERROR:
 		if (session == NULL)
 			return "NuSSL error.";
-		return ne_get_error(session->nussl);
+		return nussl_get_error(session->nussl);
 	case SASL_ERROR:
 		return sasl_errstring(err->error, NULL, NULL);
 		break;

@@ -35,11 +35,11 @@
 /* THIS IS NOT A PUBLIC INTERFACE. You CANNOT include this header file
  * from an application.  */
 
-#ifndef NE_PRIVSSL_H
-#define NE_PRIVSSL_H
+#ifndef NUSSL_PRIVSSL_H
+#define NUSSL_PRIVSSL_H
 
-/* This is the private interface between ne_socket, ne_gnutls and
- * ne_openssl. */
+/* This is the private interface between nussl_socket, nussl_gnutls and
+ * nussl_openssl. */
 
 #include <config.h>
 #include "nussl_config.h"
@@ -49,13 +49,13 @@
 #ifdef HAVE_OPENSSL
 #include <openssl/ssl.h>
 
-struct ne_ssl_context_s {
+struct nussl_ssl_context_s {
     SSL_CTX *ctx;
     SSL_SESSION *sess;
     const char *hostname; /* for SNI */
 };
 
-typedef SSL *ne_ssl_socket;
+typedef SSL *nussl_ssl_socket;
 
 #endif /* HAVE_OPENSSL */
 
@@ -63,7 +63,7 @@ typedef SSL *ne_ssl_socket;
 
 #include <gnutls/gnutls.h>
 
-struct ne_ssl_context_s {
+struct nussl_ssl_context_s {
     gnutls_certificate_credentials cred;
     int verify; /* non-zero if client cert verification required */
     int use_cert;
@@ -71,7 +71,7 @@ struct ne_ssl_context_s {
     const char *hostname; /* for SNI */
 
     /* Session cache. */
-    union ne_ssl_scache {
+    union nussl_ssl_scache {
         struct {
             gnutls_datum key, data;
         } server;
@@ -86,17 +86,17 @@ struct ne_ssl_context_s {
     } cache;
 };
 
-typedef gnutls_session ne_ssl_socket;
+typedef gnutls_session nussl_ssl_socket;
 
 #endif /* HAVE_GNUTLS */
 
-ne_ssl_socket ne__sock_sslsock(ne_socket *sock);
+nussl_ssl_socket nussl__sock_sslsock(nussl_socket *sock);
 
 /* Process-global initialization of the SSL library; returns non-zero
  * on error. */
-int ne__ssl_init(void);
+int nussl__ssl_init(void);
 
 /* Process-global de-initialization of the SSL library. */
-void ne__ssl_exit(void);
+void nussl__ssl_exit(void);
 
-#endif /* NE_PRIVSSL_H */
+#endif /* NUSSL_PRIVSSL_H */

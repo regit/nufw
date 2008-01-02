@@ -110,15 +110,15 @@ time_t gmt_to_local_win32(void)
 
 /* Returns the time/date GMT, in RFC1123-type format: eg
  *  Sun, 06 Nov 1994 08:49:37 GMT. */
-char *ne_rfc1123_date(time_t anytime) {
+char *nussl_rfc1123_date(time_t anytime) {
     struct tm *gmt;
     char *ret;
     gmt = gmtime(&anytime);
     if (gmt == NULL)
 	return NULL;
-    ret = ne_malloc(29 + 1); /* dates are 29 chars long */
+    ret = nussl_malloc(29 + 1); /* dates are 29 chars long */
 /*  it goes: Sun, 06 Nov 1994 08:49:37 GMT */
-    ne_snprintf(ret, 30, RFC1123_FORMAT,
+    nussl_snprintf(ret, 30, RFC1123_FORMAT,
 		rfc1123_weekdays[gmt->tm_wday], gmt->tm_mday,
 		short_months[gmt->tm_mon], 1900 + gmt->tm_year,
 		gmt->tm_hour, gmt->tm_min, gmt->tm_sec);
@@ -128,7 +128,7 @@ char *ne_rfc1123_date(time_t anytime) {
 
 /* Takes an ISO-8601-formatted date string and returns the time_t.
  * Returns (time_t)-1 if the parse fails. */
-time_t ne_iso8601_parse(const char *date)
+time_t nussl_iso8601_parse(const char *date)
 {
     struct tm gmt;
     int off_hour, off_min;
@@ -172,7 +172,7 @@ time_t ne_iso8601_parse(const char *date)
 
 /* Takes an RFC1123-formatted date string and returns the time_t.
  * Returns (time_t)-1 if the parse fails. */
-time_t ne_rfc1123_parse(const char *date)
+time_t nussl_rfc1123_parse(const char *date)
 {
     struct tm gmt;
     char wkday[4], mon[4];
@@ -194,7 +194,7 @@ time_t ne_rfc1123_parse(const char *date)
 }
 
 /* Takes a string containing a RFC1036-style date and returns the time_t */
-time_t ne_rfc1036_parse(const char *date)
+time_t nussl_rfc1036_parse(const char *date)
 {
     struct tm gmt;
     int n;
@@ -227,7 +227,7 @@ time_t ne_rfc1036_parse(const char *date)
 /* (as)ctime dates are like:
  *    Wed Jun 30 21:49:08 1993
  */
-time_t ne_asctime_parse(const char *date)
+time_t nussl_asctime_parse(const char *date)
 {
     struct tm gmt;
     int n;
@@ -248,14 +248,14 @@ time_t ne_asctime_parse(const char *date)
 }
 
 /* HTTP-date parser */
-time_t ne_httpdate_parse(const char *date)
+time_t nussl_httpdate_parse(const char *date)
 {
     time_t tmp;
-    tmp = ne_rfc1123_parse(date);
+    tmp = nussl_rfc1123_parse(date);
     if (tmp == -1) {
-        tmp = ne_rfc1036_parse(date);
+        tmp = nussl_rfc1036_parse(date);
 	if (tmp == -1)
-	    tmp = ne_asctime_parse(date);
+	    tmp = nussl_asctime_parse(date);
     }
     return tmp;
 }

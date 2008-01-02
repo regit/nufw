@@ -83,7 +83,7 @@ void *recv_message(void *data)
 	for (;;) {
 /*		ret =
 		    gnutls_record_recv(session->tls, dgram, sizeof dgram);*/
-		ret = ne_read(session->nussl, dgram, sizeof dgram);
+		ret = nussl_read(session->nussl, dgram, sizeof dgram);
 #if XXX
 		if (ret <= 0) {
 			if (gnutls_error_is_fatal(ret)) {
@@ -133,7 +133,7 @@ void *recv_message(void *data)
 				}
 			}
 #else
-			ret = ne_write(session->nussl, message, message_length);
+			ret = nussl_write(session->nussl, message, message_length);
 			if (ret < 0) {
 #if DEBUG_ENABLE
 				printf("write failed at %s:%d\n",

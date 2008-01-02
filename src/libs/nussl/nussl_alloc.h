@@ -31,8 +31,8 @@
 
 */
 
-#ifndef NE_ALLOC_H
-#define NE_ALLOC_H
+#ifndef NUSSL_ALLOC_H
+#define NUSSL_ALLOC_H
 
 #ifdef WIN32
 #include <stdlib.h>
@@ -42,12 +42,12 @@
 
 #include "nussl_defs.h"
 
-NE_BEGIN_DECLS
+NUSSL_BEGIN_DECLS
 
-typedef void (*ne_oom_callback_fn)(void);
+typedef void (*nussl_oom_callback_fn)(void);
 
 /* Set callback which is called if malloc() returns NULL. */
-void ne_oom_callback(ne_oom_callback_fn callback);
+void nussl_oom_callback(nussl_oom_callback_fn callback);
 
 #ifndef NEON_MEMLEAK
 /* Replacements for standard C library memory allocation functions,
@@ -55,14 +55,14 @@ void ne_oom_callback(ne_oom_callback_fn callback);
  * neon will abort(); calling an OOM callback beforehand if one is
  * registered.  The C library will only ever return NULL if the
  * operating system does not use optimistic memory allocation. */
-void *ne_malloc(size_t size) ne_attribute_malloc;
-void *ne_calloc(size_t size) ne_attribute_malloc;
-void *ne_realloc(void *ptr, size_t s);
-char *ne_strdup(const char *s) ne_attribute_malloc;
-char *ne_strndup(const char *s, size_t n) ne_attribute_malloc;
-#define ne_free free
+void *nussl_malloc(size_t size) nussl_attribute_malloc;
+void *nussl_calloc(size_t size) nussl_attribute_malloc;
+void *nussl_realloc(void *ptr, size_t s);
+char *nussl_strdup(const char *s) nussl_attribute_malloc;
+char *nussl_strndup(const char *s, size_t n) nussl_attribute_malloc;
+#define nussl_free free
 #endif
 
-NE_END_DECLS
+NUSSL_END_DECLS
 
-#endif /* NE_ALLOC_H */
+#endif /* NUSSL_ALLOC_H */

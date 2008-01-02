@@ -61,172 +61,172 @@ static void destroy_hooks(struct hook *hooks)
     UGLY_DEBUG();
     while (hooks) {
 	nexthk = hooks->next;
-	ne_free(hooks);
+	nussl_free(hooks);
 	hooks = nexthk;
     }
 }
 #endif
 
-void ne_session_destroy(ne_session *sess)
+void nussl_session_destroy(nussl_session *sess)
 {
     UGLY_DEBUG();
-    NE_DEBUG(NE_DBG_HTTP, "ne_session_destroy called.\n");
+    NUSSL_DEBUG(NUSSL_DBG_HTTP, "nussl_session_destroy called.\n");
 
     /* Close the connection; note that the notifier callback could
      * still be invoked here. */
     if (sess->connected) {
-	ne_close_connection(sess);
+	nussl_close_connection(sess);
     }
 
-    ne_free(sess->server.hostname);
-    if (sess->server.address) ne_addr_destroy(sess->server.address);
+    nussl_free(sess->server.hostname);
+    if (sess->server.address) nussl_addr_destroy(sess->server.address);
 
     if (sess->ssl_context)
-        ne_ssl_context_destroy(sess->ssl_context);
+        nussl_ssl_context_destroy(sess->ssl_context);
 
     if (sess->server_cert)
-        ne_ssl_cert_free(sess->server_cert);
+        nussl_ssl_cert_free(sess->server_cert);
 
     if (sess->client_cert)
-        ne_ssl_clicert_free(sess->client_cert);
+        nussl_ssl_clicert_free(sess->client_cert);
 
-    ne_free(sess);
+    nussl_free(sess);
 }
 
 /* Stores the hostname/port in *sess, setting up the "hostport"
  * segment correctly. */
-void ne_set_hostinfo(ne_session* sess, const char *hostname, unsigned int port)
+void nussl_set_hostinfo(nussl_session* sess, const char *hostname, unsigned int port)
 {
     UGLY_DEBUG();
     if(sess->server.hostname)
-    	ne_free(sess->server.hostname);
-    sess->server.hostname = ne_strdup(hostname);
+    	nussl_free(sess->server.hostname);
+    sess->server.hostname = nussl_strdup(hostname);
     sess->server.port = port;
 }
 
-ne_session *ne_session_create()
+nussl_session *nussl_session_create()
 {
-    ne_session *sess = ne_calloc(sizeof *sess);
+    nussl_session *sess = nussl_calloc(sizeof *sess);
     UGLY_DEBUG();
 
-/*    NE_DEBUG(NE_DBG_HTTP, "session to ://%s:%d begins.\n",
+/*    NUSSL_DEBUG(NUSSL_DBG_HTTP, "session to ://%s:%d begins.\n",
 	     hostname, port); */
 
     strcpy(sess->error, "Unknown error.");
 
-    sess->ssl_context = ne_ssl_context_create(0);
-    sess->flags[NE_SESSFLAG_SSLv2] = 1;
-    sess->flags[NE_SESSFLAG_TLS_SNI] = 1;
+    sess->ssl_context = nussl_ssl_context_create(0);
+    sess->flags[NUSSL_SESSFLAG_SSLv2] = 1;
+    sess->flags[NUSSL_SESSFLAG_TLS_SNI] = 1;
 
     /* Set flags which default to on: */
-    sess->flags[NE_SESSFLAG_PERSIST] = 1;
+    sess->flags[NUSSL_SESSFLAG_PERSIST] = 1;
 
     return sess;
 }
 
-void ne_set_addrlist(ne_session *sess, const ne_inet_addr **addrs, size_t n)
+void nussl_set_addrlist(nussl_session *sess, const nussl_inet_addr **addrs, size_t n)
 {
     UGLY_DEBUG();
     sess->addrlist = addrs;
     sess->numaddrs = n;
 }
 
-void ne_set_error(ne_session *sess, const char *format, ...)
+void nussl_set_error(nussl_session *sess, const char *format, ...)
 {
     va_list params;
     UGLY_DEBUG();
 
     va_start(params, format);
-    ne_vsnprintf(sess->error, sizeof sess->error, format, params);
+    nussl_vsnprintf(sess->error, sizeof sess->error, format, params);
     va_end(params);
 }
 
-void ne_set_session_flag(ne_session *sess, ne_session_flag flag, int value)
+void nussl_set_session_flag(nussl_session *sess, nussl_session_flag flag, int value)
 {
     UGLY_DEBUG();
-    if (flag < NE_SESSFLAG_LAST) {
+    if (flag < NUSSL_SESSFLAG_LAST) {
         sess->flags[flag] = value;
-        if (flag == NE_SESSFLAG_SSLv2 && sess->ssl_context) {
-            ne_ssl_context_set_flag(sess->ssl_context, NE_SSL_CTX_SSLv2, value);
+        if (flag == NUSSL_SESSFLAG_SSLv2 && sess->ssl_context) {
+            nussl_ssl_context_set_flag(sess->ssl_context, NUSSL_SSL_CTX_SSLv2, value);
         }
     }
 }
 
-int ne_get_session_flag(ne_session *sess, ne_session_flag flag)
+int nussl_get_session_flag(nussl_session *sess, nussl_session_flag flag)
 {
     UGLY_DEBUG();
-    if (flag < NE_SESSFLAG_LAST) {
+    if (flag < NUSSL_SESSFLAG_LAST) {
         return sess->flags[flag];
     }
     return -1;
 }
 
-/* static void progress_notifier(void *userdata, ne_session_status status, */
-/*                               const ne_session_status_info *info) */
+/* static void progress_notifier(void *userdata, nussl_session_status status, */
+/*                               const nussl_session_status_info *info) */
 /* { */
-/*     ne_session *sess = userdata; */
+/*     nussl_session *sess = userdata; */
 
-/*     if (status == ne_status_sending || status == ne_status_recving) { */
+/*     if (status == nussl_status_sending || status == nussl_status_recving) { */
 /*         sess->progress_cb(sess->progress_ud, info->sr.progress, info->sr.total);     */
 /*     } */
 /* } */
 
-/* void ne_set_progress(ne_session *sess, ne_progress progress, void *userdata) */
+/* void nussl_set_progress(nussl_session *sess, nussl_progress progress, void *userdata) */
 /* { */
 /*     sess->progress_cb = progress; */
 /*     sess->progress_ud = userdata; */
-/*     ne_set_notifier(sess, progress_notifier, sess); */
+/*     nussl_set_notifier(sess, progress_notifier, sess); */
 /* } */
 
-/* void ne_set_notifier(ne_session *sess, */
-/* 		     ne_notify_status status, void *userdata) */
+/* void nussl_set_notifier(nussl_session *sess, */
+/* 		     nussl_notify_status status, void *userdata) */
 /* { */
 /*     sess->notify_cb = status; */
 /*     sess->notify_ud = userdata; */
 /* } */
 
-void ne_set_read_timeout(ne_session *sess, int timeout)
+void nussl_set_read_timeout(nussl_session *sess, int timeout)
 {
     UGLY_DEBUG();
     sess->rdtimeout = timeout;
 }
 
-void ne_set_connect_timeout(ne_session *sess, int timeout)
+void nussl_set_connect_timeout(nussl_session *sess, int timeout)
 {
     UGLY_DEBUG();
     sess->cotimeout = timeout;
 }
 
-const char *ne_get_error(ne_session *sess)
+const char *nussl_get_error(nussl_session *sess)
 {
     UGLY_DEBUG();
-    return ne_strclean(sess->error);
+    return nussl_strclean(sess->error);
 }
 
-void ne_close_connection(ne_session *sess)
+void nussl_close_connection(nussl_session *sess)
 {
     UGLY_DEBUG();
     if (sess->connected) {
-	NE_DEBUG(NE_DBG_SOCKET, "Closing connection.\n");
-	ne_sock_close(sess->socket);
+	NUSSL_DEBUG(NUSSL_DBG_SOCKET, "Closing connection.\n");
+	nussl_sock_close(sess->socket);
 	sess->socket = NULL;
-	NE_DEBUG(NE_DBG_SOCKET, "Connection closed.\n");
+	NUSSL_DEBUG(NUSSL_DBG_SOCKET, "Connection closed.\n");
     } else {
-	NE_DEBUG(NE_DBG_SOCKET, "(Not closing closed connection!).\n");
+	NUSSL_DEBUG(NUSSL_DBG_SOCKET, "(Not closing closed connection!).\n");
     }
     sess->connected = 0;
 }
 
 #if 0
-void ne_ssl_set_verify(ne_session *sess, ne_ssl_verify_fn fn, void *userdata)
+void nussl_ssl_set_verify(nussl_session *sess, nussl_ssl_verify_fn fn, void *userdata)
 {
     UGLY_DEBUG();
     sess->ssl_verify_fn = fn;
     sess->ssl_verify_ud = userdata;
 }
 
-void ne_ssl_provide_clicert(ne_session *sess,
-			  ne_ssl_provide_fn fn, void *userdata)
+void nussl_ssl_provide_clicert(nussl_session *sess,
+			  nussl_ssl_provide_fn fn, void *userdata)
 {
     UGLY_DEBUG();
     sess->ssl_provide_fn = fn;
@@ -234,72 +234,72 @@ void ne_ssl_provide_clicert(ne_session *sess,
 }
 #endif
 
-int ne_ssl_trust_cert(ne_session *sess, const ne_ssl_certificate *cert)
+int nussl_ssl_trust_cert(nussl_session *sess, const nussl_ssl_certificate *cert)
 {
     UGLY_DEBUG();
-    return ne_ssl_context_trustcert(sess->ssl_context, cert);
+    return nussl_ssl_context_trustcert(sess->ssl_context, cert);
 }
 
-int ne_ssl_trust_cert_file(ne_session *sess, const char *cert_file)
+int nussl_ssl_trust_cert_file(nussl_session *sess, const char *cert_file)
 {
     int ret;
 
     UGLY_DEBUG();
-    ne_ssl_certificate* ca = ne_ssl_cert_read(cert_file);
+    nussl_ssl_certificate* ca = nussl_ssl_cert_read(cert_file);
     if(ca == NULL)
     {
-    	ne_set_error(sess, _("Unable to load trust certificate"));
-	return NE_ERROR;
+    	nussl_set_error(sess, _("Unable to load trust certificate"));
+	return NUSSL_ERROR;
     }
 
-    ret = ne_ssl_trust_cert(sess, ca);
-    if (ret == NE_OK)
+    ret = nussl_ssl_trust_cert(sess, ca);
+    if (ret == NUSSL_OK)
         sess->check_peer_cert = 1;
 
     return ret;
 }
 
-void ne_ssl_cert_validity(const ne_ssl_certificate *cert, char *from, char *until)
+void nussl_ssl_cert_validity(const nussl_ssl_certificate *cert, char *from, char *until)
 {
     time_t tf, tu;
     char *date;
 
     UGLY_DEBUG();
-    ne_ssl_cert_validity_time(cert, &tf, &tu);
+    nussl_ssl_cert_validity_time(cert, &tf, &tu);
 
     if (from) {
         if (tf != (time_t) -1) {
-            date = ne_rfc1123_date(tf);
-            ne_strnzcpy(from, date, NE_SSL_VDATELEN);
-            ne_free(date);
+            date = nussl_rfc1123_date(tf);
+            nussl_strnzcpy(from, date, NUSSL_SSL_VDATELEN);
+            nussl_free(date);
         }
         else {
-            ne_strnzcpy(from, _("[invalid date]"), NE_SSL_VDATELEN);
+            nussl_strnzcpy(from, _("[invalid date]"), NUSSL_SSL_VDATELEN);
         }
     }
 
     if (until) {
         if (tu != (time_t) -1) {
-            date = ne_rfc1123_date(tu);
-            ne_strnzcpy(until, date, NE_SSL_VDATELEN);
-            ne_free(date);
+            date = nussl_rfc1123_date(tu);
+            nussl_strnzcpy(until, date, NUSSL_SSL_VDATELEN);
+            nussl_free(date);
         }
         else {
-            ne_strnzcpy(until, _("[invalid date]"), NE_SSL_VDATELEN);
+            nussl_strnzcpy(until, _("[invalid date]"), NUSSL_SSL_VDATELEN);
         }
     }
 }
 
-void ne__ssl_set_verify_err(ne_session *sess, int failures)
+void nussl__ssl_set_verify_err(nussl_session *sess, int failures)
 {
     static const struct {
 	int bit;
 	const char *str;
     } reasons[] = {
-	{ NE_SSL_NOTYETVALID, N_("certificate is not yet valid") },
-	{ NE_SSL_EXPIRED, N_("certificate has expired") },
-	{ NE_SSL_IDMISMATCH, N_("certificate issued for a different hostname") },
-	{ NE_SSL_UNTRUSTED, N_("issuer is not trusted") },
+	{ NUSSL_SSL_NOTYETVALID, N_("certificate is not yet valid") },
+	{ NUSSL_SSL_EXPIRED, N_("certificate has expired") },
+	{ NUSSL_SSL_IDMISMATCH, N_("certificate issued for a different hostname") },
+	{ NUSSL_SSL_UNTRUSTED, N_("issuer is not trusted") },
 	{ 0, NULL }
     };
     int n, flag = 0;
@@ -323,7 +323,7 @@ typedef void (*void_fn)(void);
 
 static void add_hook(struct hook **hooks, const char *id, void_fn fn, void *ud)
 {
-    struct hook *hk = ne_malloc(sizeof (struct hook)), *pos;
+    struct hook *hk = nussl_malloc(sizeof (struct hook)), *pos;
 
     if (*hooks != NULL) {
 	for (pos = *hooks; pos->next != NULL; pos = pos->next)
@@ -340,36 +340,36 @@ static void add_hook(struct hook **hooks, const char *id, void_fn fn, void *ud)
 }
 #endif
 
-/* void ne_hook_create_request(ne_session *sess,  */
-/* 			    ne_create_request_fn fn, void *userdata) */
+/* void nussl_hook_create_request(nussl_session *sess,  */
+/* 			    nussl_create_request_fn fn, void *userdata) */
 /* { */
 /*     ADD_HOOK(sess->create_req_hooks, fn, userdata); */
 /* } */
 
-/* void ne_hook_pre_send(ne_session *sess, ne_pre_send_fn fn, void *userdata) */
+/* void nussl_hook_pre_send(nussl_session *sess, nussl_pre_send_fn fn, void *userdata) */
 /* { */
 /*     ADD_HOOK(sess->pre_send_hooks, fn, userdata); */
 /* } */
 
-/* void ne_hook_post_send(ne_session *sess, ne_post_send_fn fn, void *userdata) */
+/* void nussl_hook_post_send(nussl_session *sess, nussl_post_send_fn fn, void *userdata) */
 /* { */
 /*     ADD_HOOK(sess->post_send_hooks, fn, userdata); */
 /* } */
 
-/* void ne_hook_post_headers(ne_session *sess, ne_post_headers_fn fn,  */
+/* void nussl_hook_post_headers(nussl_session *sess, nussl_post_headers_fn fn,  */
 /*                           void *userdata) */
 /* { */
 /*     ADD_HOOK(sess->post_headers_hooks, fn, userdata); */
 /* } */
 
-/* void ne_hook_destroy_request(ne_session *sess, */
-/* 			     ne_destroy_req_fn fn, void *userdata) */
+/* void nussl_hook_destroy_request(nussl_session *sess, */
+/* 			     nussl_destroy_req_fn fn, void *userdata) */
 /* { */
 /*     ADD_HOOK(sess->destroy_req_hooks, fn, userdata);     */
 /* } */
 
-/* void ne_hook_destroy_session(ne_session *sess, */
-/* 			     ne_destroy_sess_fn fn, void *userdata) */
+/* void nussl_hook_destroy_session(nussl_session *sess, */
+/* 			     nussl_destroy_sess_fn fn, void *userdata) */
 /* { */
 /*     ADD_HOOK(sess->destroy_sess_hooks, fn, userdata); */
 /* } */
@@ -382,7 +382,7 @@ static void remove_hook(struct hook **hooks, void_fn fn, void *ud)
     while (*p) {
         if ((*p)->fn == fn && (*p)->userdata == ud) {
             struct hook *next = (*p)->next;
-            ne_free(*p);
+            nussl_free(*p);
             (*p) = next;
             break;
         }
@@ -392,89 +392,89 @@ static void remove_hook(struct hook **hooks, void_fn fn, void *ud)
 
 #define REMOVE_HOOK(hooks, fn, ud) remove_hook(&hooks, (void_fn)fn, ud)
 */
-/* void ne_unhook_create_request(ne_session *sess,  */
-/*                               ne_create_request_fn fn, void *userdata) */
+/* void nussl_unhook_create_request(nussl_session *sess,  */
+/*                               nussl_create_request_fn fn, void *userdata) */
 /* { */
 /*     REMOVE_HOOK(sess->create_req_hooks, fn, userdata); */
 /* } */
 
-/* void ne_unhook_pre_send(ne_session *sess, ne_pre_send_fn fn, void *userdata) */
+/* void nussl_unhook_pre_send(nussl_session *sess, nussl_pre_send_fn fn, void *userdata) */
 /* { */
 /*     REMOVE_HOOK(sess->pre_send_hooks, fn, userdata); */
 /* } */
 
-/* void ne_unhook_post_headers(ne_session *sess, ne_post_headers_fn fn,  */
+/* void nussl_unhook_post_headers(nussl_session *sess, nussl_post_headers_fn fn,  */
 /* 			    void *userdata) */
 /* { */
 /*     REMOVE_HOOK(sess->post_headers_hooks, fn, userdata); */
 /* } */
 
-/* void ne_unhook_post_send(ne_session *sess, ne_post_send_fn fn, void *userdata) */
+/* void nussl_unhook_post_send(nussl_session *sess, nussl_post_send_fn fn, void *userdata) */
 /* { */
 /*     REMOVE_HOOK(sess->post_send_hooks, fn, userdata); */
 /* } */
 
-/* void ne_unhook_destroy_request(ne_session *sess, */
-/*                                ne_destroy_req_fn fn, void *userdata) */
+/* void nussl_unhook_destroy_request(nussl_session *sess, */
+/*                                nussl_destroy_req_fn fn, void *userdata) */
 /* { */
 /*     REMOVE_HOOK(sess->destroy_req_hooks, fn, userdata);     */
 /* } */
 /*
-void ne_unhook_destroy_session(ne_session *sess,
-                               ne_destroy_sess_fn fn, void *userdata)
+void nussl_unhook_destroy_session(nussl_session *sess,
+                               nussl_destroy_sess_fn fn, void *userdata)
 {
     REMOVE_HOOK(sess->destroy_sess_hooks, fn, userdata);
 }
 */
 
-int ne_write(ne_session *session, char *buffer, size_t count)
+int nussl_write(nussl_session *session, char *buffer, size_t count)
 {
     UGLY_DEBUG();
-	return ne_sock_fullwrite(session->socket, buffer, count);
+	return nussl_sock_fullwrite(session->socket, buffer, count);
 }
 
 
-ssize_t ne_read(ne_session *session, char *buffer, size_t count)
+ssize_t nussl_read(nussl_session *session, char *buffer, size_t count)
 {
     UGLY_DEBUG();
-	return ne_sock_read(session->socket, buffer, count);
+	return nussl_sock_read(session->socket, buffer, count);
 }
 
-int ne_ssl_set_keypair(ne_session *session, const char* cert_file, const char* key_file)
+int nussl_ssl_set_keypair(nussl_session *session, const char* cert_file, const char* key_file)
 {
-	int ret = ne_ssl_context_keypair(session->ssl_context, cert_file, key_file);
+	int ret = nussl_ssl_context_keypair(session->ssl_context, cert_file, key_file);
     UGLY_DEBUG();
-	if (ret != NE_OK)
-		ne_set_error(session, _("Unable to load private key or certificate file"));
+	if (ret != NUSSL_OK)
+		nussl_set_error(session, _("Unable to load private key or certificate file"));
 	return ret;
 }
 
-int ne_ssl_set_pkcs12_keypair(ne_session *session, const char* pkcs12_file, const char* password)
+int nussl_ssl_set_pkcs12_keypair(nussl_session *session, const char* pkcs12_file, const char* password)
 {
-	int ret = NE_OK;
-	ne_ssl_client_cert* cert = ne_ssl_clicert_read(pkcs12_file);
+	int ret = NUSSL_OK;
+	nussl_ssl_client_cert* cert = nussl_ssl_clicert_read(pkcs12_file);
     UGLY_DEBUG();
 
 	if (cert == NULL)
 	{
-		ne_set_error(session, _("Unable to load PKCS12 certificate file"));
-		return NE_ERROR;
+		nussl_set_error(session, _("Unable to load PKCS12 certificate file"));
+		return NUSSL_ERROR;
 	}
 
-	if (ne_ssl_clicert_encrypted(cert))
+	if (nussl_ssl_clicert_encrypted(cert))
 	{
 		if (password)
 		{
-			if (ne_ssl_clicert_decrypt(cert, password) != 0)
+			if (nussl_ssl_clicert_decrypt(cert, password) != 0)
 			{
-				ne_set_error(session, _("Bad password to decrypt the PKCS key"));
-				return NE_ERROR;
+				nussl_set_error(session, _("Bad password to decrypt the PKCS key"));
+				return NUSSL_ERROR;
 			}
 		}
 		else
 		{
-			ne_set_error(session, _("PKCS12 file is encrypted, please supply a password"));
-			return NE_ERROR;
+			nussl_set_error(session, _("PKCS12 file is encrypted, please supply a password"));
+			return NUSSL_ERROR;
 		}
 	}
 	else
@@ -483,7 +483,7 @@ int ne_ssl_set_pkcs12_keypair(ne_session *session, const char* pkcs12_file, cons
 			fprintf(stderr, "Warning, the key is not encrypted, but a password was supplied\n");
 	}
 
-	ret = ne_ssl_context_keypair_from_data(session->ssl_context, cert);
+	ret = nussl_ssl_context_keypair_from_data(session->ssl_context, cert);
 
 	return ret;
 }

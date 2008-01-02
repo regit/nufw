@@ -50,7 +50,7 @@
 #include <sys/socket.h>
 #endif
 
-#ifdef NE_USE_POLL
+#ifdef NUSSL_USE_POLL
 #include <sys/poll.h>
 #elif defined(HAVE_SYS_SELECT_H)
 #include <sys/select.h>
@@ -118,19 +118,19 @@
 #include <gnutls/gnutls.h>
 #endif
 
-#define NE_INET_ADDR_DEFINED
-/* A slightly ugly hack: change the ne_inet_addr definition to be the
- * real address type used.  The API only exposes ne_inet_addr as a
+#define NUSSL_INET_ADDR_DEFINED
+/* A slightly ugly hack: change the nussl_inet_addr definition to be the
+ * real address type used.  The API only exposes nussl_inet_addr as a
  * pointer to an opaque object, so this should be well-defined
- * behaviour.  It avoids the hassle of a real wrapper ne_inet_addr
+ * behaviour.  It avoids the hassle of a real wrapper nussl_inet_addr
  * structure, or losing type-safety by using void *. */
 #ifdef USE_GETADDRINFO
-typedef struct addrinfo ne_inet_addr;
+typedef struct addrinfo nussl_inet_addr;
 #else
-typedef struct in_addr ne_inet_addr;
+typedef struct in_addr nussl_inet_addr;
 #endif
 
-#include "nussl_privssl.h" /* MUST come after ne_inet_addr is defined */
+#include "nussl_privssl.h" /* MUST come after nussl_inet_addr is defined */
 
 /* To avoid doing AAAA queries unless absolutely necessary, either use
  * AI_ADDRCONFIG where available, or a run-time check for working IPv6
@@ -158,22 +158,22 @@ typedef struct in_addr ne_inet_addr;
 
 #if defined(__BEOS__) && !defined(BONE_VERSION)
 /* pre-BONE */
-#define ne_close(s) closesocket(s)
-#define ne_errno errno
+#define nussl_close(s) closesocket(s)
+#define nussl_errno errno
 #elif defined(WIN32)
-#define ne_close(s) closesocket(s)
-#define ne_errno WSAGetLastError()
+#define nussl_close(s) closesocket(s)
+#define nussl_errno WSAGetLastError()
 #else /* really Unix! */
-#define ne_close(s) close(s)
-#define ne_errno errno
+#define nussl_close(s) close(s)
+#define nussl_errno errno
 #endif
 
 #ifdef WIN32
-#define NE_ISRESET(e) ((e) == WSAECONNABORTED || (e) == WSAETIMEDOUT || \
+#define NUSSL_ISRESET(e) ((e) == WSAECONNABORTED || (e) == WSAETIMEDOUT || \
                        (e) == WSAECONNRESET || (e) == WSAENETRESET)
-#define NE_ISCLOSED(e) ((e) == WSAESHUTDOWN || (e) == WSAENOTCONN)
-#define NE_ISINTR(e) (0)
-#define NE_ISINPROGRESS(e) ((e) == WSAEWOULDBLOCK) /* says MSDN */
+#define NUSSL_ISCLOSED(e) ((e) == WSAESHUTDOWN || (e) == WSAENOTCONN)
+#define NUSSL_ISINTR(e) (0)
+#define NUSSL_ISINPROGRESS(e) ((e) == WSAEWOULDBLOCK) /* says MSDN */
 #else /* Unix */
 /* Also treat ECONNABORTED and ENOTCONN as "connection reset" errors;
  * both can be returned by Winsock-based sockets layers e.g. CygWin */
@@ -183,10 +183,10 @@ typedef struct in_addr ne_inet_addr;
 #ifndef ENOTCONN
 #define ENOTCONN ECONNRESET
 #endif
-#define NE_ISRESET(e) ((e) == ECONNRESET || (e) == ECONNABORTED || (e) == ENOTCONN)
-#define NE_ISCLOSED(e) ((e) == EPIPE)
-#define NE_ISINTR(e) ((e) == EINTR)
-#define NE_ISINPROGRESS(e) ((e) == EINPROGRESS)
+#define NUSSL_ISRESET(e) ((e) == ECONNRESET || (e) == ECONNABORTED || (e) == ENOTCONN)
+#define NUSSL_ISCLOSED(e) ((e) == EPIPE)
+#define NUSSL_ISINTR(e) ((e) == EINTR)
+#define NUSSL_ISINPROGRESS(e) ((e) == EINPROGRESS)
 #endif
 
 /* Socket read timeout */
@@ -199,26 +199,26 @@ typedef struct in_addr ne_inet_addr;
 struct iofns {
     /* Read up to 'len' bytes into 'buf' from socket.  Return <0 on
      * error or EOF, or >0; number of bytes read. */
-    ssize_t (*sread)(ne_socket *s, char *buf, size_t len);
+    ssize_t (*sread)(nussl_socket *s, char *buf, size_t len);
     /* Write up to 'len' bytes from 'buf' to socket.  Return number of
      * bytes written on success, or <0 on error. */
-    ssize_t (*swrite)(ne_socket *s, const char *buf, size_t len);
+    ssize_t (*swrite)(nussl_socket *s, const char *buf, size_t len);
     /* Wait up to 'n' seconds for socket to become readable.  Returns
-     * 0 when readable, otherwise NE_SOCK_TIMEOUT or NE_SOCK_ERROR. */
-    int (*readable)(ne_socket *s, int n);
+     * 0 when readable, otherwise NUSSL_SOCK_TIMEOUT or NUSSL_SOCK_ERROR. */
+    int (*readable)(nussl_socket *s, int n);
 };
 
-static const ne_inet_addr dummy_laddr;
+static const nussl_inet_addr dummy_laddr;
 
-struct ne_socket_s {
+struct nussl_socket_s {
     int fd;
     unsigned int lport;
-    const ne_inet_addr *laddr;
+    const nussl_inet_addr *laddr;
 
     void *progress_ud;
     int rdtimeout, cotimeout; /* timeouts */
     const struct iofns *ops;
-    ne_ssl_socket ssl;
+    nussl_ssl_socket ssl;
 
     /* The read buffer: ->buffer stores byte which have been read; as
      * these are consumed and passed back to the caller, bufpos
@@ -233,8 +233,8 @@ struct ne_socket_s {
     char error[192];
 };
 
-/* ne_sock_addr represents an Internet address. */
-struct ne_sock_addr_s {
+/* nussl_sock_addr represents an Internet address. */
+struct nussl_sock_addr_s {
 #ifdef USE_GETADDRINFO
     struct addrinfo *result, *cursor;
 #else
@@ -245,7 +245,7 @@ struct ne_sock_addr_s {
 };
 
 /* set_error: set socket error string to 'str'. */
-#define set_error(s, str) ne_strnzcpy((s)->error, (str), sizeof (s)->error)
+#define set_error(s, str) nussl_strnzcpy((s)->error, (str), sizeof (s)->error)
 
 /* set_strerror: set socket error to system error string for 'errnum' */
 #ifdef WIN32
@@ -256,11 +256,11 @@ static void print_error(int errnum, char *buffer, size_t buflen)
                        | FORMAT_MESSAGE_IGNORE_INSERTS,
                        NULL, (DWORD) errnum, 0,
                        buffer, buflen, NULL) == 0)
-        ne_snprintf(buffer, buflen, "Socket error %d", errnum);
+        nussl_snprintf(buffer, buflen, "Socket error %d", errnum);
 }
 #define set_strerror(s, e) print_error((e), (s)->error, sizeof (s)->error)
 #else /* not WIN32 */
-#define set_strerror(s, e) ne_strerror((e), (s)->error, sizeof (s)->error)
+#define set_strerror(s, e) nussl_strerror((e), (s)->error, sizeof (s)->error)
 #endif
 
 #ifdef HAVE_OPENSSL
@@ -272,7 +272,7 @@ static int seed_ssl_prng(void)
 	return 0;
 
 #if defined(EGD_PATH)
-    NE_DEBUG(NE_DBG_SOCKET, "Seeding PRNG from " EGD_PATH "...\n");
+    NUSSL_DEBUG(NUSSL_DBG_SOCKET, "Seeding PRNG from " EGD_PATH "...\n");
     if (RAND_egd(EGD_PATH) != -1)
 	return 0;
 #elif defined(ENABLE_EGD)
@@ -281,14 +281,14 @@ static int seed_ssl_prng(void)
 				       "/etc/egd-pool", "/etc/entropy" };
 	size_t n;
 	for (n = 0; n < sizeof(paths) / sizeof(char *); n++) {
-	    NE_DEBUG(NE_DBG_SOCKET, "Seeding PRNG from %s...\n", paths[n]);
+	    NUSSL_DEBUG(NUSSL_DBG_SOCKET, "Seeding PRNG from %s...\n", paths[n]);
 	    if (RAND_egd(paths[n]) != -1)
 		return 0;
 	}
     }
 #endif /* EGD_PATH */
 
-    NE_DEBUG(NE_DBG_SOCKET, "No entropy source found; could not seed PRNG.\n");
+    NUSSL_DEBUG(NUSSL_DBG_SOCKET, "No entropy source found; could not seed PRNG.\n");
     return -1;
 }
 #endif /* HAVE_OPENSSL */
@@ -312,12 +312,12 @@ static void init_ipv6(void)
 #define ipv6_disabled (0)
 #endif
 
-/* If init_state is N where > 0, ne_sock_init has been called N times;
+/* If init_state is N where > 0, nussl_sock_init has been called N times;
  * if == 0, library is not initialized; if < 0, library initialization
  * has failed. */
 static int init_state = 0;
 
-int ne_sock_init(void)
+int nussl_sock_init(void)
 {
 #ifdef WIN32
     WORD wVersionRequested;
@@ -342,13 +342,13 @@ int ne_sock_init(void)
 	return init_state = -1;
     }
 #ifdef HAVE_SSPI
-    if (ne_sspi_init() < 0) {
+    if (nussl_sspi_init() < 0) {
         return init_state = -1;
     }
 #endif
 #endif
 
-#ifdef NE_HAVE_SOCKS
+#ifdef NUSSL_HAVE_SOCKS
     SOCKSinit("neon");
 #endif
 
@@ -360,7 +360,7 @@ int ne_sock_init(void)
     init_ipv6();
 #endif
 
-    if (ne__ssl_init()) {
+    if (nussl__ssl_init()) {
         return init_state = -1;
     }
 
@@ -368,17 +368,17 @@ int ne_sock_init(void)
     return 0;
 }
 
-void ne_sock_exit(void)
+void nussl_sock_exit(void)
 {
     UGLY_DEBUG();
     if (init_state > 0 && --init_state == 0) {
 #ifdef WIN32
         WSACleanup();
 #endif
-        ne__ssl_exit();
+        nussl__ssl_exit();
 
 #ifdef HAVE_SSPI
-        ne_sspi_deinit();
+        nussl_sspi_deinit();
 #endif
     }
 }
@@ -389,7 +389,7 @@ void ne_sock_exit(void)
 static int raw_poll(int fdno, int rdwr, int secs)
 {
     int ret;
-#ifdef NE_USE_POLL
+#ifdef NUSSL_USE_POLL
     struct pollfd fds;
     int timeout = secs > 0 ? secs * 1000 : -1;
 
@@ -400,7 +400,7 @@ static int raw_poll(int fdno, int rdwr, int secs)
 
     do {
         ret = poll(&fds, 1, timeout);
-    } while (ret < 0 && NE_ISINTR(ne_errno));
+    } while (ret < 0 && NUSSL_ISINTR(nussl_errno));
 #else
     fd_set rdfds, wrfds;
     struct timeval timeout, *tvp = (secs >= 0 ? &timeout : NULL);
@@ -419,12 +419,12 @@ static int raw_poll(int fdno, int rdwr, int secs)
     }
     do {
 	ret = select(fdno + 1, &rdfds, &wrfds, NULL, tvp);
-    } while (ret < 0 && NE_ISINTR(ne_errno));
+    } while (ret < 0 && NUSSL_ISINTR(nussl_errno));
 #endif
     return ret;
 }
 
-int ne_sock_block(ne_socket *sock, int n)
+int nussl_sock_block(nussl_socket *sock, int n)
 {
     UGLY_DEBUG();
     if (sock->bufavail)
@@ -435,13 +435,13 @@ int ne_sock_block(ne_socket *sock, int n)
 /* Cast address object AD to type 'sockaddr_TY' */
 #define SACAST(ty, ad) ((struct sockaddr_##ty *)(ad))
 
-ssize_t ne_sock_read(ne_socket *sock, char *buffer, size_t buflen)
+ssize_t nussl_sock_read(nussl_socket *sock, char *buffer, size_t buflen)
 {
     ssize_t bytes;
 
     UGLY_DEBUG();
 #if 0
-    NE_DEBUG(NE_DBG_SOCKET, "buf: at %d, %d avail [%s]\n",
+    NUSSL_DEBUG(NUSSL_DBG_SOCKET, "buf: at %d, %d avail [%s]\n",
 	     sock->bufpos - sock->buffer, sock->bufavail, sock->bufpos);
 #endif
 
@@ -471,7 +471,7 @@ ssize_t ne_sock_read(ne_socket *sock, char *buffer, size_t buflen)
     }
 }
 
-ssize_t ne_sock_peek(ne_socket *sock, char *buffer, size_t buflen)
+ssize_t nussl_sock_peek(nussl_socket *sock, char *buffer, size_t buflen)
 {
     ssize_t bytes;
 
@@ -498,19 +498,19 @@ ssize_t ne_sock_peek(ne_socket *sock, char *buffer, size_t buflen)
 }
 
 /* Await data on raw fd in socket. */
-static int readable_raw(ne_socket *sock, int secs)
+static int readable_raw(nussl_socket *sock, int secs)
 {
     int ret = raw_poll(sock->fd, 0, secs);
 
     UGLY_DEBUG();
     if (ret < 0) {
-	set_strerror(sock, ne_errno);
-	return NE_SOCK_ERROR;
+	set_strerror(sock, nussl_errno);
+	return NUSSL_SOCK_ERROR;
     }
-    return (ret == 0) ? NE_SOCK_TIMEOUT : 0;
+    return (ret == 0) ? NUSSL_SOCK_TIMEOUT : 0;
 }
 
-static ssize_t read_raw(ne_socket *sock, char *buffer, size_t len)
+static ssize_t read_raw(nussl_socket *sock, char *buffer, size_t len)
 {
     ssize_t ret;
 
@@ -520,24 +520,24 @@ static ssize_t read_raw(ne_socket *sock, char *buffer, size_t len)
 
     do {
 	ret = recv(sock->fd, buffer, len, 0);
-    } while (ret == -1 && NE_ISINTR(ne_errno));
+    } while (ret == -1 && NUSSL_ISINTR(nussl_errno));
 
     if (ret == 0) {
 	set_error(sock, _("Connection closed"));
-	ret = NE_SOCK_CLOSED;
+	ret = NUSSL_SOCK_CLOSED;
     } else if (ret < 0) {
-	int errnum = ne_errno;
-	ret = NE_ISRESET(errnum) ? NE_SOCK_RESET : NE_SOCK_ERROR;
+	int errnum = nussl_errno;
+	ret = NUSSL_ISRESET(errnum) ? NUSSL_SOCK_RESET : NUSSL_SOCK_ERROR;
 	set_strerror(sock, errnum);
     }
 
     return ret;
 }
 
-#define MAP_ERR(e) (NE_ISCLOSED(e) ? NE_SOCK_CLOSED : \
-                    (NE_ISRESET(e) ? NE_SOCK_RESET : NE_SOCK_ERROR))
+#define MAP_ERR(e) (NUSSL_ISCLOSED(e) ? NUSSL_SOCK_CLOSED : \
+                    (NUSSL_ISRESET(e) ? NUSSL_SOCK_RESET : NUSSL_SOCK_ERROR))
 
-static ssize_t write_raw(ne_socket *sock, const char *data, size_t length)
+static ssize_t write_raw(nussl_socket *sock, const char *data, size_t length)
 {
     ssize_t ret;
 
@@ -550,10 +550,10 @@ static ssize_t write_raw(ne_socket *sock, const char *data, size_t length)
 
     do {
 	ret = send(sock->fd, data, length, 0);
-    } while (ret == -1 && NE_ISINTR(ne_errno));
+    } while (ret == -1 && NUSSL_ISINTR(nussl_errno));
 
     if (ret < 0) {
-	int errnum = ne_errno;
+	int errnum = nussl_errno;
 	set_strerror(sock, errnum);
 	return MAP_ERR(errnum);
     }
@@ -564,7 +564,7 @@ static const struct iofns iofns_raw = { read_raw, write_raw, readable_raw };
 
 #ifdef HAVE_OPENSSL
 /* OpenSSL I/O function implementations. */
-static int readable_ossl(ne_socket *sock, int secs)
+static int readable_ossl(nussl_socket *sock, int secs)
 {
     UGLY_DEBUG();
     if (SSL_pending(sock->ssl))
@@ -573,7 +573,7 @@ static int readable_ossl(ne_socket *sock, int secs)
 }
 
 /* SSL error handling, according to SSL_get_error(3). */
-static int error_ossl(ne_socket *sock, int sret)
+static int error_ossl(nussl_socket *sock, int sret)
 {
     int errnum = SSL_get_error(sock->ssl, sret);
     unsigned long err;
@@ -581,7 +581,7 @@ static int error_ossl(ne_socket *sock, int sret)
     UGLY_DEBUG();
     if (errnum == SSL_ERROR_ZERO_RETURN) {
 	set_error(sock, _("Connection closed"));
-        return NE_SOCK_CLOSED;
+        return NUSSL_SOCK_CLOSED;
     }
 
     /* for all other errors, look at the OpenSSL error stack */
@@ -591,33 +591,33 @@ static int error_ossl(ne_socket *sock, int sret)
         if (sret == 0) {
             /* EOF without close_notify, possible truncation */
             set_error(sock, _("Secure connection truncated"));
-            return NE_SOCK_TRUNC;
+            return NUSSL_SOCK_TRUNC;
         } else {
             /* Other socket error. */
-            errnum = ne_errno;
+            errnum = nussl_errno;
             set_strerror(sock, errnum);
             return MAP_ERR(errnum);
         }
     }
 
     if (ERR_reason_error_string(err)) {
-        ne_snprintf(sock->error, sizeof sock->error,
+        nussl_snprintf(sock->error, sizeof sock->error,
                     _("SSL error: %s"), ERR_reason_error_string(err));
     } else {
-	ne_snprintf(sock->error, sizeof sock->error,
+	nussl_snprintf(sock->error, sizeof sock->error,
                     _("SSL error code %d/%d/%lu"), sret, errnum, err);
     }
 
     /* make sure the error stack is now empty. */
     ERR_clear_error();
-    return NE_SOCK_ERROR;
+    return NUSSL_SOCK_ERROR;
 }
 
 /* Work around OpenSSL's use of 'int' rather than 'size_t', to prevent
  * accidentally passing a negative number, etc. */
 #define CAST2INT(n) (((n) > INT_MAX) ? INT_MAX : (n))
 
-static ssize_t read_ossl(ne_socket *sock, char *buffer, size_t len)
+static ssize_t read_ossl(nussl_socket *sock, char *buffer, size_t len)
 {
     int ret;
 
@@ -632,7 +632,7 @@ static ssize_t read_ossl(ne_socket *sock, char *buffer, size_t len)
     return ret;
 }
 
-static ssize_t write_ossl(ne_socket *sock, const char *data, size_t len)
+static ssize_t write_ossl(nussl_socket *sock, const char *data, size_t len)
 {
     int ret, ilen = CAST2INT(len);
     UGLY_DEBUG();
@@ -655,24 +655,24 @@ static const struct iofns iofns_ssl = {
 static const int cert_type_priority[3] = { GNUTLS_CRT_X509, 0 };
 
 /* Return zero if an alert value can be ignored. */
-static int check_alert(ne_socket *sock, ssize_t ret)
+static int check_alert(nussl_socket *sock, ssize_t ret)
 {
     const char *alert;
 
     UGLY_DEBUG();
     if (ret == GNUTLS_E_WARNING_ALERT_RECEIVED) {
         alert = gnutls_alert_get_name(gnutls_alert_get(sock->ssl));
-        NE_DEBUG(NE_DBG_SOCKET, "TLS warning alert: %s\n", alert);
+        NUSSL_DEBUG(NUSSL_DBG_SOCKET, "TLS warning alert: %s\n", alert);
         return 0;
     } else if (ret == GNUTLS_E_FATAL_ALERT_RECEIVED) {
         alert = gnutls_alert_get_name(gnutls_alert_get(sock->ssl));
-        NE_DEBUG(NE_DBG_SOCKET, "TLS fatal alert: %s\n", alert);
+        NUSSL_DEBUG(NUSSL_DBG_SOCKET, "TLS fatal alert: %s\n", alert);
         return -1;
     }
     return ret;
 }
 
-static int readable_gnutls(ne_socket *sock, int secs)
+static int readable_gnutls(nussl_socket *sock, int secs)
 {
     UGLY_DEBUG();
     if (gnutls_record_check_pending(sock->ssl)) {
@@ -681,39 +681,39 @@ static int readable_gnutls(ne_socket *sock, int secs)
     return readable_raw(sock, secs);
 }
 
-static ssize_t error_gnutls(ne_socket *sock, ssize_t sret)
+static ssize_t error_gnutls(nussl_socket *sock, ssize_t sret)
 {
     ssize_t ret;
 
     UGLY_DEBUG();
     switch (sret) {
     case 0:
-	ret = NE_SOCK_CLOSED;
+	ret = NUSSL_SOCK_CLOSED;
 	set_error(sock, _("Connection closed"));
 	break;
     case GNUTLS_E_FATAL_ALERT_RECEIVED:
-        ret = NE_SOCK_ERROR;
-        ne_snprintf(sock->error, sizeof sock->error,
+        ret = NUSSL_SOCK_ERROR;
+        nussl_snprintf(sock->error, sizeof sock->error,
                     _("SSL alert received: %s"),
                     gnutls_alert_get_name(gnutls_alert_get(sock->ssl)));
         break;
     case GNUTLS_E_UNEXPECTED_PACKET_LENGTH:
         /* It's not exactly an API guarantee but this error will
          * always mean a premature EOF. */
-        ret = NE_SOCK_TRUNC;
+        ret = NUSSL_SOCK_TRUNC;
         set_error(sock, _("Secure connection truncated"));
         break;
     case GNUTLS_E_PUSH_ERROR:
-        ret = NE_SOCK_RESET;
+        ret = NUSSL_SOCK_RESET;
         set_error(sock, ("SSL socket write failed"));
         break;
     case GNUTLS_E_PULL_ERROR:
-        ret = NE_SOCK_RESET;
+        ret = NUSSL_SOCK_RESET;
         set_error(sock, _("SSL socket read failed"));
         break;
     default:
-        ret = NE_SOCK_ERROR;
-        ne_snprintf(sock->error, sizeof sock->error, _("SSL error: %s"),
+        ret = NUSSL_SOCK_ERROR;
+        nussl_snprintf(sock->error, sizeof sock->error, _("SSL error: %s"),
                     gnutls_strerror(sret));
     }
     return ret;
@@ -723,7 +723,7 @@ static ssize_t error_gnutls(ne_socket *sock, ssize_t sret)
     && (ret == GNUTLS_E_INTERRUPTED || ret == GNUTLS_E_AGAIN \
         || check_alert(sock, ret) == 0))
 
-static ssize_t read_gnutls(ne_socket *sock, char *buffer, size_t len)
+static ssize_t read_gnutls(nussl_socket *sock, char *buffer, size_t len)
 {
     ssize_t ret;
 
@@ -741,7 +741,7 @@ static ssize_t read_gnutls(ne_socket *sock, char *buffer, size_t len)
     return ret;
 }
 
-static ssize_t write_gnutls(ne_socket *sock, const char *data, size_t len)
+static ssize_t write_gnutls(nussl_socket *sock, const char *data, size_t len)
 {
     ssize_t ret;
 
@@ -764,7 +764,7 @@ static const struct iofns iofns_ssl = {
 
 #endif
 
-int ne_sock_fullwrite(ne_socket *sock, const char *data, size_t len)
+int nussl_sock_fullwrite(nussl_socket *sock, const char *data, size_t len)
 {
     ssize_t ret;
 
@@ -780,7 +780,7 @@ int ne_sock_fullwrite(ne_socket *sock, const char *data, size_t len)
     return ret < 0 ? ret : 0;
 }
 
-ssize_t ne_sock_readline(ne_socket *sock, char *buf, size_t buflen)
+ssize_t nussl_sock_readline(nussl_socket *sock, char *buf, size_t buflen)
 {
     char *lf;
     size_t len;
@@ -813,7 +813,7 @@ ssize_t ne_sock_readline(ne_socket *sock, char *buf, size_t buflen)
 
     if ((len + 1) > buflen) {
 	set_error(sock, _("Line too long"));
-	return NE_SOCK_ERROR;
+	return NUSSL_SOCK_ERROR;
     }
 
     memcpy(buf, sock->bufpos, len);
@@ -824,13 +824,13 @@ ssize_t ne_sock_readline(ne_socket *sock, char *buf, size_t buflen)
     return len;
 }
 
-ssize_t ne_sock_fullread(ne_socket *sock, char *buffer, size_t buflen)
+ssize_t nussl_sock_fullread(nussl_socket *sock, char *buffer, size_t buflen)
 {
     ssize_t len;
 
     UGLY_DEBUG();
     while (buflen > 0) {
-	len = ne_sock_read(sock, buffer, buflen);
+	len = nussl_sock_read(sock, buffer, buflen);
 	if (len < 0) return len;
 	buflen -= len;
 	buffer += len;
@@ -850,23 +850,23 @@ extern int h_errno;
 
 /* This implemementation does not attempt to support IPv6 using
  * gethostbyname2 et al.  */
-ne_sock_addr *ne_addr_resolve(const char *hostname, int flags)
+nussl_sock_addr *nussl_addr_resolve(const char *hostname, int flags)
 {
-    ne_sock_addr *addr = ne_calloc(sizeof *addr);
+    nussl_sock_addr *addr = nussl_calloc(sizeof *addr);
     UGLY_DEBUG();
 #ifdef USE_GETADDRINFO
     struct addrinfo hints = {0};
     char *pnt;
     hints.ai_socktype = SOCK_STREAM;
     if (hostname[0] == '[' && ((pnt = strchr(hostname, ']')) != NULL)) {
-	char *hn = ne_strdup(hostname + 1);
+	char *hn = nussl_strdup(hostname + 1);
 	hn[pnt - hostname - 1] = '\0';
 #ifdef AI_NUMERICHOST /* added in the RFC2553 API */
 	hints.ai_flags = AI_NUMERICHOST;
 #endif
         hints.ai_family = AF_INET6;
 	addr->errnum = getaddrinfo(hn, NULL, &hints, &addr->result);
-	ne_free(hn);
+	nussl_free(hn);
     } else {
 #ifdef USE_GAI_ADDRCONFIG /* added in the RFC3493 API */
         hints.ai_flags = AI_ADDRCONFIG;
@@ -900,13 +900,13 @@ ne_sock_addr *ne_addr_resolve(const char *hostname, int flags)
 		/* noop */;
 
 	    addr->count = n;
-	    addr->addrs = ne_malloc(n * sizeof *addr->addrs);
+	    addr->addrs = nussl_malloc(n * sizeof *addr->addrs);
 
 	    for (n = 0; n < addr->count; n++)
 		memcpy(&addr->addrs[n], hp->h_addr_list[n], hp->h_length);
 	}
     } else {
-	addr->addrs = ne_malloc(sizeof *addr->addrs);
+	addr->addrs = nussl_malloc(sizeof *addr->addrs);
 	addr->count = 1;
 	memcpy(addr->addrs, &laddr, sizeof *addr->addrs);
     }
@@ -914,12 +914,12 @@ ne_sock_addr *ne_addr_resolve(const char *hostname, int flags)
     return addr;
 }
 
-int ne_addr_result(const ne_sock_addr *addr)
+int nussl_addr_result(const nussl_sock_addr *addr)
 {
     return addr->errnum;
 }
 
-const ne_inet_addr *ne_addr_first(ne_sock_addr *addr)
+const nussl_inet_addr *nussl_addr_first(nussl_sock_addr *addr)
 {
 #ifdef USE_GETADDRINFO
     addr->cursor = addr->result->ai_next;
@@ -930,7 +930,7 @@ const ne_inet_addr *ne_addr_first(ne_sock_addr *addr)
 #endif
 }
 
-const ne_inet_addr *ne_addr_next(ne_sock_addr *addr)
+const nussl_inet_addr *nussl_addr_next(nussl_sock_addr *addr)
 {
 #ifdef USE_GETADDRINFO
     struct addrinfo *ret = addr->cursor;
@@ -945,7 +945,7 @@ const ne_inet_addr *ne_addr_next(ne_sock_addr *addr)
     return ret;
 }
 
-char *ne_addr_error(const ne_sock_addr *addr, char *buf, size_t bufsiz)
+char *nussl_addr_error(const nussl_sock_addr *addr, char *buf, size_t bufsiz)
 {
 #ifdef WIN32
     print_error(addr->errnum, buf, bufsiz);
@@ -962,12 +962,12 @@ char *ne_addr_error(const ne_sock_addr *addr, char *buf, size_t bufsiz)
 #else
     err = _("Host not found");
 #endif
-    ne_strnzcpy(buf, err, bufsiz);
+    nussl_strnzcpy(buf, err, bufsiz);
 #endif /* WIN32 */
     return buf;
 }
 
-char *ne_iaddr_print(const ne_inet_addr *ia, char *buf, size_t bufsiz)
+char *nussl_iaddr_print(const nussl_inet_addr *ia, char *buf, size_t bufsiz)
 {
 #if defined(USE_GETADDRINFO) && defined(HAVE_INET_NTOP)
     const char *ret;
@@ -983,19 +983,19 @@ char *ne_iaddr_print(const ne_inet_addr *ia, char *buf, size_t bufsiz)
     } else
 	ret = NULL;
     if (ret == NULL)
-	ne_strnzcpy(buf, "[IP address]", bufsiz);
+	nussl_strnzcpy(buf, "[IP address]", bufsiz);
 #elif defined(USE_GETADDRINFO) && defined(NI_NUMERICHOST)
     /* use getnameinfo instead for Win32, which lacks inet_ntop: */
     if (getnameinfo(ia->ai_addr, ia->ai_addrlen, buf, bufsiz, NULL, 0,
                     NI_NUMERICHOST))
-        ne_strnzcpy(buf, "[IP address]", bufsiz);
+        nussl_strnzcpy(buf, "[IP address]", bufsiz);
 #else /* USE_GETADDRINFO */
-    ne_strnzcpy(buf, inet_ntoa(*ia), bufsiz);
+    nussl_strnzcpy(buf, inet_ntoa(*ia), bufsiz);
 #endif
     return buf;
 }
 
-int ne_iaddr_reverse(const ne_inet_addr *ia, char *buf, size_t bufsiz)
+int nussl_iaddr_reverse(const nussl_inet_addr *ia, char *buf, size_t bufsiz)
 {
 #ifdef USE_GETADDRINFO
     return getnameinfo(ia->ai_addr, ia->ai_addrlen, buf, bufsiz,
@@ -1005,29 +1005,29 @@ int ne_iaddr_reverse(const ne_inet_addr *ia, char *buf, size_t bufsiz)
 
     hp = gethostbyaddr(ia, sizeof *ia, AF_INET);
     if (hp && hp->h_name) {
-        ne_strnzcpy(buf, hp->h_name, bufsiz);
+        nussl_strnzcpy(buf, hp->h_name, bufsiz);
         return 0;
     }
     return -1;
 #endif
 }
 
-void ne_addr_destroy(ne_sock_addr *addr)
+void nussl_addr_destroy(nussl_sock_addr *addr)
 {
 #ifdef USE_GETADDRINFO
     if (addr->result)
 	freeaddrinfo(addr->result);
 #else
     if (addr->addrs)
-	ne_free(addr->addrs);
+	nussl_free(addr->addrs);
 #endif
-    ne_free(addr);
+    nussl_free(addr);
 }
 
 /* Perform a connect() for fd to address sa of length salen, with a
  * timeout if supported on this platform.  Returns zero on success or
- * NE_SOCK_* on failure, with sock->error set appropriately. */
-static int timed_connect(ne_socket *sock, int fd,
+ * NUSSL_SOCK_* on failure, with sock->error set appropriately. */
+static int timed_connect(nussl_socket *sock, int fd,
                          const struct sockaddr *sa, size_t salen)
 {
     int ret;
@@ -1040,13 +1040,13 @@ static int timed_connect(ne_socket *sock, int fd,
         flags = fcntl(fd, F_GETFL);
         if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1) {
             set_strerror(sock, errno);
-            return NE_SOCK_ERROR;
+            return NUSSL_SOCK_ERROR;
         }
 
         ret = connect(fd, sa, salen);
         if (ret == -1) {
-            errnum = ne_errno;
-            if (NE_ISINPROGRESS(errnum)) {
+            errnum = nussl_errno;
+            if (NUSSL_ISINPROGRESS(errnum)) {
                 ret = raw_poll(fd, 1, sock->cotimeout);
                 if (ret > 0) { /* poll got data */
                     socklen_t len = sizeof(errnum);
@@ -1064,25 +1064,25 @@ static int timed_connect(ne_socket *sock, int fd,
                         ret = 0;
                     } else {
                         set_strerror(sock, errnum);
-                        ret = NE_SOCK_ERROR;
+                        ret = NUSSL_SOCK_ERROR;
                     }
                 } else if (ret == 0) { /* poll timed out */
                     set_error(sock, _("Connection timed out"));
-                    ret = NE_SOCK_TIMEOUT;
+                    ret = NUSSL_SOCK_TIMEOUT;
                 } else /* poll failed */ {
                     set_strerror(sock, errno);
-                    ret = NE_SOCK_ERROR;
+                    ret = NUSSL_SOCK_ERROR;
                 }
             } else /* non-EINPROGRESS error from connect() */ {
                 set_strerror(sock, errnum);
-                ret = NE_SOCK_ERROR;
+                ret = NUSSL_SOCK_ERROR;
             }
         }
 
         /* Reset to old flags: */
         if (fcntl(fd, F_SETFL, flags) == -1) {
             set_strerror(sock, errno);
-            ret = NE_SOCK_ERROR;
+            ret = NUSSL_SOCK_ERROR;
         }
     } else
 #endif /* USE_NONBLOCKING_CONNECT */
@@ -1091,7 +1091,7 @@ static int timed_connect(ne_socket *sock, int fd,
 
         if (ret < 0) {
             set_strerror(sock, errno);
-            ret = NE_SOCK_ERROR;
+            ret = NUSSL_SOCK_ERROR;
         }
     }
 
@@ -1099,10 +1099,10 @@ static int timed_connect(ne_socket *sock, int fd,
 }
 
 /* Connect socket to address 'addr' on given 'port'.  Returns zero on
- * success or NE_SOCK_* on failure with sock->error set
+ * success or NUSSL_SOCK_* on failure with sock->error set
  * appropriately. */
-static int connect_socket(ne_socket *sock, int fd,
-                          const ne_inet_addr *addr, unsigned int port)
+static int connect_socket(nussl_socket *sock, int fd,
+                          const nussl_inet_addr *addr, unsigned int port)
 {
 #ifdef USE_GETADDRINFO
 #ifdef AF_INET6
@@ -1123,7 +1123,7 @@ static int connect_socket(ne_socket *sock, int fd,
         return timed_connect(sock, fd, (struct sockaddr *)&in, sizeof in);
     } else {
         set_strerror(sock, EINVAL);
-        return NE_SOCK_ERROR;
+        return NUSSL_SOCK_ERROR;
     }
 #else
     struct sockaddr_in sa;
@@ -1134,9 +1134,9 @@ static int connect_socket(ne_socket *sock, int fd,
 #endif
 }
 
-ne_socket *ne_sock_create(void)
+nussl_socket *nussl_sock_create(void)
 {
-    ne_socket *sock = ne_calloc(sizeof *sock);
+    nussl_socket *sock = nussl_calloc(sizeof *sock);
     UGLY_DEBUG();
     sock->rdtimeout = SOCKET_READ_TIMEOUT;
     sock->cotimeout = 0;
@@ -1155,7 +1155,7 @@ ne_socket *ne_sock_create(void)
 #define ia_proto(a)  0
 #endif
 
-void ne_sock_prebind(ne_socket *sock, const ne_inet_addr *addr,
+void nussl_sock_prebind(nussl_socket *sock, const nussl_inet_addr *addr,
                      unsigned int port)
 {
     sock->lport = port;
@@ -1165,7 +1165,7 @@ void ne_sock_prebind(ne_socket *sock, const ne_inet_addr *addr,
 /* Bind socket 'fd' to address/port 'addr' and 'port', for subsequent
  * connect() to address of family 'peer_family'. */
 static int do_bind(int fd, int peer_family,
-                   const ne_inet_addr *addr, unsigned int port)
+                   const nussl_inet_addr *addr, unsigned int port)
 {
 #if defined(HAVE_SETSOCKOPT) && defined(SO_REUSEADDR) && defined(SOL_SOCKET)
     {
@@ -1214,8 +1214,8 @@ static int do_bind(int fd, int peer_family,
     }
 }
 
-int ne_sock_connect(ne_socket *sock,
-                    const ne_inet_addr *addr, unsigned int port)
+int nussl_sock_connect(nussl_socket *sock,
+                    const nussl_inet_addr *addr, unsigned int port)
 {
     int fd, ret;
 
@@ -1225,15 +1225,15 @@ int ne_sock_connect(ne_socket *sock,
      * implementations do not set ai_socktype, e.g. RHL6.2. */
     fd = socket(ia_family(addr), SOCK_STREAM, ia_proto(addr));
     if (fd < 0) {
-        set_strerror(sock, ne_errno);
+        set_strerror(sock, nussl_errno);
 	return -1;
     }
 
-#if !defined(NE_USE_POLL) && !defined(WIN32)
+#if !defined(NUSSL_USE_POLL) && !defined(WIN32)
     if (fd > FD_SETSIZE) {
-        ne_close(fd);
+        nussl_close(fd);
         set_error(sock, _("Socket descriptor number exceeds FD_SETSIZE"));
-        return NE_SOCK_ERROR;
+        return NUSSL_SOCK_ERROR;
     }
 #endif
 
@@ -1251,9 +1251,9 @@ int ne_sock_connect(ne_socket *sock,
         ret = do_bind(fd, ia_family(addr), sock->laddr, sock->lport);
         if (ret < 0) {
             int errnum = errno;
-            ne_close(fd);
+            nussl_close(fd);
             set_strerror(sock, errnum);
-            return NE_SOCK_ERROR;
+            return NUSSL_SOCK_ERROR;
         }
     }
 
@@ -1269,12 +1269,12 @@ int ne_sock_connect(ne_socket *sock,
     if (ret == 0)
         sock->fd = fd;
     else
-        ne_close(fd);
+        nussl_close(fd);
 
     return ret;
 }
 
-ne_inet_addr *ne_sock_peer(ne_socket *sock, unsigned int *port)
+nussl_inet_addr *nussl_sock_peer(nussl_socket *sock, unsigned int *port)
 {
     union saun {
         struct sockaddr_in sin;
@@ -1283,7 +1283,7 @@ ne_inet_addr *ne_sock_peer(ne_socket *sock, unsigned int *port)
 #endif
     } saun;
     socklen_t len = sizeof saun;
-    ne_inet_addr *ia;
+    nussl_inet_addr *ia;
     struct sockaddr *sad = (struct sockaddr *)&saun;
 
     if (getpeername(sock->fd, sad, &len) != 0) {
@@ -1291,9 +1291,9 @@ ne_inet_addr *ne_sock_peer(ne_socket *sock, unsigned int *port)
         return NULL;
     }
 
-    ia = ne_calloc(sizeof *ia);
+    ia = nussl_calloc(sizeof *ia);
 #ifdef USE_GETADDRINFO
-    ia->ai_addr = ne_malloc(sizeof *ia);
+    ia->ai_addr = nussl_malloc(sizeof *ia);
     ia->ai_addrlen = len;
     memcpy(ia->ai_addr, sad, len);
     ia->ai_family = sad->sa_family;
@@ -1311,21 +1311,21 @@ ne_inet_addr *ne_sock_peer(ne_socket *sock, unsigned int *port)
     return ia;
 }
 
-ne_inet_addr *ne_iaddr_make(ne_iaddr_type type, const unsigned char *raw)
+nussl_inet_addr *nussl_iaddr_make(nussl_iaddr_type type, const unsigned char *raw)
 {
-    ne_inet_addr *ia;
+    nussl_inet_addr *ia;
 #if !defined(AF_INET6) || !defined(USE_GETADDRINFO)
     /* fail if IPv6 address is given if IPv6 is not supported. */
-    if (type == ne_iaddr_ipv6)
+    if (type == nussl_iaddr_ipv6)
 	return NULL;
 #endif
-    ia = ne_calloc(sizeof *ia);
+    ia = nussl_calloc(sizeof *ia);
     UGLY_DEBUG();
 #ifdef USE_GETADDRINFO
     /* ai_protocol and ai_socktype aren't used by connect_socket() so
      * ignore them here. (for now) */
-    if (type == ne_iaddr_ipv4) {
-	struct sockaddr_in *in4 = ne_calloc(sizeof *in4);
+    if (type == nussl_iaddr_ipv4) {
+	struct sockaddr_in *in4 = nussl_calloc(sizeof *in4);
 	ia->ai_family = AF_INET;
 	ia->ai_addr = (struct sockaddr *)in4;
 	ia->ai_addrlen = sizeof *in4;
@@ -1334,7 +1334,7 @@ ne_inet_addr *ne_iaddr_make(ne_iaddr_type type, const unsigned char *raw)
     }
 #ifdef AF_INET6
     else {
-	struct sockaddr_in6 *in6 = ne_calloc(sizeof *in6);
+	struct sockaddr_in6 *in6 = nussl_calloc(sizeof *in6);
 	ia->ai_family = AF_INET6;
 	ia->ai_addr = (struct sockaddr *)in6;
 	ia->ai_addrlen = sizeof *in6;
@@ -1348,17 +1348,17 @@ ne_inet_addr *ne_iaddr_make(ne_iaddr_type type, const unsigned char *raw)
     return ia;
 }
 
-ne_iaddr_type ne_iaddr_typeof(const ne_inet_addr *ia)
+nussl_iaddr_type nussl_iaddr_typeof(const nussl_inet_addr *ia)
 {
     UGLY_DEBUG();
 #ifdef USE_GETADDRINFO
-    return ia->ai_family == AF_INET6 ? ne_iaddr_ipv6 : ne_iaddr_ipv4;
+    return ia->ai_family == AF_INET6 ? nussl_iaddr_ipv6 : nussl_iaddr_ipv4;
 #else
-    return ne_iaddr_ipv4;
+    return nussl_iaddr_ipv4;
 #endif
 }
 
-int ne_iaddr_cmp(const ne_inet_addr *i1, const ne_inet_addr *i2)
+int nussl_iaddr_cmp(const nussl_inet_addr *i1, const nussl_inet_addr *i2)
 {
     UGLY_DEBUG();
 #ifdef USE_GETADDRINFO
@@ -1381,15 +1381,15 @@ int ne_iaddr_cmp(const ne_inet_addr *i1, const ne_inet_addr *i2)
 #endif
 }
 
-void ne_iaddr_free(ne_inet_addr *addr)
+void nussl_iaddr_free(nussl_inet_addr *addr)
 {
 #ifdef USE_GETADDRINFO
-    ne_free(addr->ai_addr);
+    nussl_free(addr->ai_addr);
 #endif
-    ne_free(addr);
+    nussl_free(addr);
 }
 
-int ne_sock_accept(ne_socket *sock, int listener)
+int nussl_sock_accept(nussl_socket *sock, int listener)
 {
     int fd = accept(listener, NULL, NULL);
 
@@ -1401,17 +1401,17 @@ int ne_sock_accept(ne_socket *sock, int listener)
     return 0;
 }
 
-int ne_sock_fd(const ne_socket *sock)
+int nussl_sock_fd(const nussl_socket *sock)
 {
     return sock->fd;
 }
 
-void ne_sock_read_timeout(ne_socket *sock, int timeout)
+void nussl_sock_read_timeout(nussl_socket *sock, int timeout)
 {
     sock->rdtimeout = timeout;
 }
 
-void ne_sock_connect_timeout(ne_socket *sock, int timeout)
+void nussl_sock_connect_timeout(nussl_socket *sock, int timeout)
 {
     UGLY_DEBUG();
     sock->cotimeout = timeout;
@@ -1432,7 +1432,7 @@ static void copy_datum(gnutls_datum *dest, gnutls_datum *src)
 /* Callback to store a session 'data' with id 'key'. */
 static int store_sess(void *userdata, gnutls_datum key, gnutls_datum data)
 {
-    ne_ssl_context *ctx = userdata;
+    nussl_ssl_context *ctx = userdata;
 
     UGLY_DEBUG();
     if (ctx->cache.server.key.data) {
@@ -1457,7 +1457,7 @@ static int match_datum(gnutls_datum *d1, gnutls_datum *d2)
 /* Callback to retrieve a session of id 'key'. */
 static gnutls_datum retrieve_sess(void *userdata, gnutls_datum key)
 {
-    ne_ssl_context *ctx = userdata;
+    nussl_ssl_context *ctx = userdata;
     gnutls_datum ret = { NULL, 0 };
 
     UGLY_DEBUG();
@@ -1476,10 +1476,10 @@ static int remove_sess(void *userdata, gnutls_datum key)
 }
 #endif
 
-int ne_sock_accept_ssl(ne_socket *sock, ne_ssl_context *ctx)
+int nussl_sock_accept_ssl(nussl_socket *sock, nussl_ssl_context *ctx)
 {
     int ret;
-    ne_ssl_socket ssl;
+    nussl_ssl_socket ssl;
     UGLY_DEBUG();
 
 #if defined(HAVE_OPENSSL)
@@ -1514,14 +1514,14 @@ int ne_sock_accept_ssl(ne_socket *sock, ne_ssl_context *ctx)
     }
     if (ctx->verify && gnutls_certificate_verify_peers(ssl)) {
         set_error(sock, _("Client certificate verification failed"));
-        return NE_SOCK_ERROR;
+        return NUSSL_SOCK_ERROR;
     }
 #endif
     sock->ops = &iofns_ssl;
     return 0;
 }
 
-int ne_sock_connect_ssl(ne_socket *sock, ne_ssl_context *ctx, void *userdata)
+int nussl_sock_connect_ssl(nussl_socket *sock, nussl_ssl_context *ctx, void *userdata)
 {
     int ret;
 
@@ -1531,20 +1531,20 @@ int ne_sock_connect_ssl(ne_socket *sock, ne_ssl_context *ctx, void *userdata)
 
     if (seed_ssl_prng()) {
 	set_error(sock, _("SSL disabled due to lack of entropy"));
-	return NE_SOCK_ERROR;
+	return NUSSL_SOCK_ERROR;
     }
 
     /* If runtime library version differs from compile-time version
      * number in major/minor/fix level, abort soon. */
     if ((SSLeay() ^ OPENSSL_VERSION_NUMBER) & 0xFFFFF000) {
         set_error(sock, _("SSL disabled due to library version mismatch"));
-        return NE_SOCK_ERROR;
+        return NUSSL_SOCK_ERROR;
     }
 
     sock->ssl = ssl = SSL_new(ctx->ctx);
     if (!ssl) {
 	set_error(sock, _("Could not create SSL structure"));
-	return NE_SOCK_ERROR;
+	return NUSSL_SOCK_ERROR;
     }
 
     SSL_set_app_data(ssl, userdata);
@@ -1571,10 +1571,10 @@ int ne_sock_connect_ssl(ne_socket *sock, ne_ssl_context *ctx, void *userdata)
 	error_ossl(sock, ret);
 	SSL_free(ssl);
 	sock->ssl = NULL;
-	return NE_SOCK_ERROR;
+	return NUSSL_SOCK_ERROR;
     }
 #elif defined(HAVE_GNUTLS)
-    /* DH and RSA params are set in ne_ssl_context_create */
+    /* DH and RSA params are set in nussl_ssl_context_create */
     gnutls_init(&sock->ssl, GNUTLS_CLIENT);
     gnutls_set_default_priority(sock->ssl);
     gnutls_certificate_type_set_priority(sock->ssl,cert_type_priority);
@@ -1606,7 +1606,7 @@ int ne_sock_connect_ssl(ne_socket *sock, ne_ssl_context *ctx, void *userdata)
     ret = gnutls_handshake(sock->ssl);
     if (ret < 0) {
 	error_gnutls(sock, ret);
-        return NE_SOCK_ERROR;
+        return NUSSL_SOCK_ERROR;
     }
 
     if (!gnutls_session_is_resumed(sock->ssl)) {
@@ -1618,7 +1618,7 @@ int ne_sock_connect_ssl(ne_socket *sock, ne_ssl_context *ctx, void *userdata)
         ctx->cache.client.len = 0;
         if (gnutls_session_get_data(sock->ssl, NULL,
                                     &ctx->cache.client.len) == 0) {
-            ctx->cache.client.data = ne_malloc(ctx->cache.client.len);
+            ctx->cache.client.data = nussl_malloc(ctx->cache.client.len);
             gnutls_session_get_data(sock->ssl, ctx->cache.client.data,
                                     &ctx->cache.client.len);
         }
@@ -1628,14 +1628,14 @@ int ne_sock_connect_ssl(ne_socket *sock, ne_ssl_context *ctx, void *userdata)
     return 0;
 }
 
-ne_ssl_socket ne__sock_sslsock(ne_socket *sock)
+nussl_ssl_socket nussl__sock_sslsock(nussl_socket *sock)
 {
     UGLY_DEBUG();
     return sock->ssl;
 }
 
 #if 0 /* Unused */
-int ne_sock_sessid(ne_socket *sock, unsigned char *buf, size_t *buflen)
+int nussl_sock_sessid(nussl_socket *sock, unsigned char *buf, size_t *buflen)
 {
     UGLY_DEBUG();
 #ifdef HAVE_GNUTLS
@@ -1669,16 +1669,16 @@ int ne_sock_sessid(ne_socket *sock, unsigned char *buf, size_t *buflen)
 }
 #endif
 
-char *ne_sock_cipher(ne_socket *sock)
+char *nussl_sock_cipher(nussl_socket *sock)
 {
     UGLY_DEBUG();
     if (sock->ssl) {
 #ifdef HAVE_OPENSSL
         const char *name = SSL_get_cipher(sock->ssl);
-        return ne_strdup(name);
+        return nussl_strdup(name);
 #elif defined(HAVE_GNUTLS)
         const char *name = gnutls_cipher_get_name(gnutls_cipher_get(sock->ssl));
-        return ne_strdup(name);
+        return nussl_strdup(name);
 #endif
     }
     else {
@@ -1686,14 +1686,14 @@ char *ne_sock_cipher(ne_socket *sock)
     }
 }
 
-const char *ne_sock_error(const ne_socket *sock)
+const char *nussl_sock_error(const nussl_socket *sock)
 {
     UGLY_DEBUG();
     return sock->error;
 }
 
-/* Closes given ne_socket */
-int ne_sock_close(ne_socket *sock)
+/* Closes given nussl_socket */
+int nussl_sock_close(nussl_socket *sock)
 {
     UGLY_DEBUG();
     int ret;
@@ -1715,7 +1715,7 @@ int ne_sock_close(ne_socket *sock)
     if (sock->fd < 0)
         ret = 0;
     else
-        ret = ne_close(sock->fd);
-    ne_free(sock);
+        ret = nussl_close(sock->fd);
+    nussl_free(sock);
     return ret;
 }

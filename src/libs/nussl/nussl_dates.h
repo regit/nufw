@@ -31,36 +31,36 @@
 
 */
 
-#ifndef NE_DATES_H
-#define NE_DATES_H
+#ifndef NUSSL_DATES_H
+#define NUSSL_DATES_H
 
 #include <sys/types.h>
 
 #include "nussl_defs.h"
 
-NE_BEGIN_DECLS
+NUSSL_BEGIN_DECLS
 
 /* Date manipulation routines as per RFC1123 and RFC1036 */
 
 /* Return current date/time in RFC1123 format */
-char *ne_rfc1123_date(time_t anytime);
+char *nussl_rfc1123_date(time_t anytime);
 
 /* Returns time from date/time using the subset of the ISO8601 format
  * referenced in RFC2518 (e.g as used in the creationdate property in
  * the DAV: namespace). */
-time_t ne_iso8601_parse(const char *date);
+time_t nussl_iso8601_parse(const char *date);
 
 /* Returns time from date/time in RFC1123 format */
-time_t ne_rfc1123_parse(const char *date);
+time_t nussl_rfc1123_parse(const char *date);
 
-time_t ne_rfc1036_parse(const char *date);
+time_t nussl_rfc1036_parse(const char *date);
 
 /* Parses asctime date string */
-time_t ne_asctime_parse(const char *date);
+time_t nussl_asctime_parse(const char *date);
 
 /* Parse an HTTP-date as per RFC2616 */
-time_t ne_httpdate_parse(const char *date);
+time_t nussl_httpdate_parse(const char *date);
 
-NE_END_DECLS
+NUSSL_END_DECLS
 
-#endif /* NE_DATES_H */
+#endif /* NUSSL_DATES_H */

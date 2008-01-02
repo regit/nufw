@@ -38,9 +38,9 @@
 #include <string.h>
 
 #include <stdio.h>
-#include <ctype.h> /* isdigit() for ne_parse_statusline */
+#include <ctype.h> /* isdigit() for nussl_parse_statusline */
 
-#ifdef NE_HAVE_ZLIB
+#ifdef NUSSL_HAVE_ZLIB
 #include <zlib.h>
 #endif
 
@@ -60,16 +60,16 @@
 #endif
 
 #include "nussl_utils.h"
-#include "nussl_string.h" /* for ne_strdup */
+#include "nussl_string.h" /* for nussl_strdup */
 #include "nussl_dates.h"
 
-int ne_debug_mask = 0;
-FILE *ne_debug_stream = NULL;
+int nussl_debug_mask = 0;
+FILE *nussl_debug_stream = NULL;
 
-void ne_debug_init(FILE *stream, int mask)
+void nussl_debug_init(FILE *stream, int mask)
 {
-    ne_debug_stream = stream;
-    ne_debug_mask = mask;
+    nussl_debug_stream = stream;
+    nussl_debug_mask = mask;
 #if defined(HAVE_SETVBUF) && defined(_IONBF)
     /* If possible, turn off buffering on the debug log.  this is very
      * helpful if debugging segfaults. */
@@ -77,20 +77,20 @@ void ne_debug_init(FILE *stream, int mask)
 #endif
 }
 
-void ne_debug(int ch, const char *template, ...)
+void nussl_debug(int ch, const char *template, ...)
 {
     va_list params;
-    if ((ch & ne_debug_mask) == 0) return;
+    if ((ch & nussl_debug_mask) == 0) return;
     fflush(stdout);
     va_start(params, template);
-    vfprintf(ne_debug_stream, template, params);
+    vfprintf(nussl_debug_stream, template, params);
     va_end(params);
-/*    if ((ch & NE_DBG_FLUSH) == NE_DBG_FLUSH)
-	fflush(ne_debug_stream);*/
+/*    if ((ch & NUSSL_DBG_FLUSH) == NUSSL_DBG_FLUSH)
+	fflush(nussl_debug_stream);*/
 }
 
-#define NE_STRINGIFY(x) # x
-#define NE_EXPAT_VER(x,y,z) NE_STRINGIFY(x) "." NE_STRINGIFY(y) "." NE_STRINGIFY(z)
+#define NUSSL_STRINGIFY(x) # x
+#define NUSSL_EXPAT_VER(x,y,z) NUSSL_STRINGIFY(x) "." NUSSL_STRINGIFY(y) "." NUSSL_STRINGIFY(z)
 
 static const char version_string[] = "neon " NEON_VERSION ": "
 #ifdef NEON_IS_LIBRARY
@@ -98,24 +98,24 @@ static const char version_string[] = "neon " NEON_VERSION ": "
 #else
   "Bundled build"
 #endif
-#ifdef NE_HAVE_IPV6
+#ifdef NUSSL_HAVE_IPV6
    ", IPv6"
 #endif
 #ifdef HAVE_EXPAT
   ", Expat"
 /* expat >=1.95.2 exported the version */
 #ifdef XML_MAJOR_VERSION
-" " NE_EXPAT_VER(XML_MAJOR_VERSION, XML_MINOR_VERSION, XML_MICRO_VERSION)
+" " NUSSL_EXPAT_VER(XML_MAJOR_VERSION, XML_MINOR_VERSION, XML_MICRO_VERSION)
 #endif
 #else /* !HAVE_EXPAT */
 #ifdef HAVE_LIBXML
   ", libxml " LIBXML_DOTTED_VERSION
 #endif /* HAVE_LIBXML */
 #endif /* !HAVE_EXPAT */
-#if defined(NE_HAVE_ZLIB) && defined(ZLIB_VERSION)
+#if defined(NUSSL_HAVE_ZLIB) && defined(ZLIB_VERSION)
   ", zlib " ZLIB_VERSION
-#endif /* NE_HAVE_ZLIB && ... */
-#ifdef NE_HAVE_SOCKS
+#endif /* NUSSL_HAVE_ZLIB && ... */
+#ifdef NUSSL_HAVE_SOCKS
    ", SOCKSv5"
 #endif
 #ifdef HAVE_OPENSSL
@@ -131,44 +131,44 @@ static const char version_string[] = "neon " NEON_VERSION ": "
    "."
 ;
 
-const char *ne_version_string(void)
+const char *nussl_version_string(void)
 {
     return version_string;
 }
 
-int ne_version_match(int major, int minor)
+int nussl_version_match(int major, int minor)
 {
-    return NE_VERSION_MAJOR != major || NE_VERSION_MINOR < minor
-        || (NE_VERSION_MAJOR == 0 && NE_VERSION_MINOR != minor);
+    return NUSSL_VERSION_MAJOR != major || NUSSL_VERSION_MINOR < minor
+        || (NUSSL_VERSION_MAJOR == 0 && NUSSL_VERSION_MINOR != minor);
 }
 
-int ne_has_support(int feature)
+int nussl_has_support(int feature)
 {
     switch (feature) {
-#if defined(NE_HAVE_ZLIB) || defined(NE_HAVE_IPV6) \
-    || defined(NE_HAVE_SOCKS) || defined(NE_HAVE_LFS) \
-    || defined(NE_HAVE_TS_SSL) || defined(NE_HAVE_I18N)
-    case NE_FEATURE_SSL:
-#ifdef NE_HAVE_ZLIB
-    case NE_FEATURE_ZLIB:
+#if defined(NUSSL_HAVE_ZLIB) || defined(NUSSL_HAVE_IPV6) \
+    || defined(NUSSL_HAVE_SOCKS) || defined(NUSSL_HAVE_LFS) \
+    || defined(NUSSL_HAVE_TS_SSL) || defined(NUSSL_HAVE_I18N)
+    case NUSSL_FEATURE_SSL:
+#ifdef NUSSL_HAVE_ZLIB
+    case NUSSL_FEATURE_ZLIB:
 #endif
-#ifdef NE_HAVE_IPV6
-    case NE_FEATURE_IPV6:
+#ifdef NUSSL_HAVE_IPV6
+    case NUSSL_FEATURE_IPV6:
 #endif
-#ifdef NE_HAVE_SOCKS
-    case NE_FEATURE_SOCKS:
+#ifdef NUSSL_HAVE_SOCKS
+    case NUSSL_FEATURE_SOCKS:
 #endif
-#ifdef NE_HAVE_LFS
-    case NE_FEATURE_LFS:
+#ifdef NUSSL_HAVE_LFS
+    case NUSSL_FEATURE_LFS:
 #endif
-#ifdef NE_HAVE_TS_SSL
-    case NE_FEATURE_TS_SSL:
+#ifdef NUSSL_HAVE_TS_SSL
+    case NUSSL_FEATURE_TS_SSL:
 #endif
-#ifdef NE_HAVE_I18N
-    case NE_FEATURE_I18N:
+#ifdef NUSSL_HAVE_I18N
+    case NUSSL_FEATURE_I18N:
 #endif
         return 1;
-#endif /* NE_HAVE_* */
+#endif /* NUSSL_HAVE_* */
     default:
         return 0;
     }

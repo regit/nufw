@@ -90,7 +90,7 @@ static int samp_send(nuauth_session_t* session, const char *buffer,
 
 	memcpy(buf, "C: ", 3);
 
-	result = ne_write(session->nussl, buf, len + 3);
+	result = nussl_write(session->nussl, buf, len + 3);
 	if (result < 0) {
 		SET_ERROR(err, NUSSL_ERROR, result);
 		return 0;
@@ -108,7 +108,7 @@ static unsigned samp_recv(nuauth_session_t* session, char *buf, int bufsize,
 	int result;
 	int tls_len;
 
-	tls_len = ne_read(session->nussl, buf, bufsize);
+	tls_len = nussl_read(session->nussl, buf, bufsize);
 	if (tls_len <= 0) {
 		SET_ERROR(err, NUSSL_ERROR, tls_len);
 		return 0;
@@ -407,7 +407,7 @@ int send_os(nuauth_session_t * session, nuclient_error_t * err)
 	free(enc_oses);
 
 	/* Send OS field over network */
-	ret = ne_write(session->nussl, buf, osfield_length);
+	ret = nussl_write(session->nussl, buf, osfield_length);
 	if (ret < 0) {
 		if (session->verbose)
 			printf("Error sending tls data: ...");
@@ -416,7 +416,7 @@ int send_os(nuauth_session_t * session, nuclient_error_t * err)
 	}
 
 	/* wait for message of server about mode */
-	ret = ne_read(session->nussl, buf, osfield_length);
+	ret = nussl_read(session->nussl, buf, osfield_length);
 	if (ret <= 0) {
 		errno = EACCES;
 		SET_ERROR(err, NUSSL_ERROR, ret);
@@ -546,7 +546,7 @@ int init_sasl(nuauth_session_t * session, nuclient_error_t * err)
 		{SASL_CB_LIST_END, NULL, NULL}
 	};
 
-	ret = ne_write(session->nussl, "PROTO 5", strlen("PROTO 5"));
+	ret = nussl_write(session->nussl, "PROTO 5", strlen("PROTO 5"));
 	if (ret < 0) {
 		SET_ERROR(err, NUSSL_ERROR, ret);
 		return 0;
@@ -658,7 +658,7 @@ void ask_session_end(nuauth_session_t * session)
 	}
 	if(session->nussl)
 	{
-		ne_session_destroy(session->nussl);
+		nussl_session_destroy(session->nussl);
 		session->nussl = NULL;
 	}
 }
