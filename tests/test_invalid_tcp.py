@@ -10,7 +10,7 @@ from filter import testAllowPort, HOST, VALID_PORT, TIMEOUT
 class TestSYNACKignore(TestCase):
     def setUp(self):
         self.iptables = Iptables()
-	self.iptables.command('-A OUTPUT -p tcp --sport %u -d %s --tcp-flags SYN,ACK SYN,ACK -j NFQUEUE' % (VALID_PORT, HOST))
+        self.iptables.command('-A OUTPUT -p tcp --sport %u -d %s --tcp-flags SYN,ACK SYN,ACK -j NFQUEUE' % (VALID_PORT, HOST))
         config = NuauthConf()
 
         self.nuauth = Nuauth(config)
@@ -21,8 +21,8 @@ class TestSYNACKignore(TestCase):
         self.iptables.flush()
 
     def testsynack(self):
-    	# Create socket
-    	self.assertEqual(connectTcp(HOST, VALID_PORT, TIMEOUT), True)
+        # Create socket
+        self.assertEqual(connectTcp(HOST, VALID_PORT, TIMEOUT), True)
 
 if __name__ == "__main__":
     print "Test TCP SYN ACK packet"

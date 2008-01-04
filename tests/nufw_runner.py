@@ -8,10 +8,10 @@ class NuFWTestRunner (TextTestRunner):
         result = self._makeResult()
         startTime = time.time()
         for unit_test in test:
-		info("Starting test from: " + str(type(unit_test)))
-		unit_test(result)
-		if len(result.failures) != 0:
-			break
+            info("Starting test from: " + str(type(unit_test)))
+            unit_test(result)
+            if len(result.failures) != 0:
+                break
 
         stopTime = time.time()
         timeTaken = stopTime - startTime

@@ -7,7 +7,7 @@ from inl_tests.iptables import Iptables
 from filter import HOST, VALID_PORT
 from plaintext import USERDB, PlaintextAcl, PlainPeriodXML, Period
 from IPy import IP
-import time, sys, os, socket, commands, pynetfilter_conntrack 
+import time, sys, os, socket, commands, pynetfilter_conntrack
 
 def get_conntrack_conn(src_port, dest, port_dest):
     if pynetfilter_conntrack.__revision__ == '0.4.2':
@@ -26,32 +26,32 @@ def get_conntrack_conn(src_port, dest, port_dest):
 
 class TestConntrack(TestCase):
     def setUp(self):
-	self.dst_host = socket.gethostbyname(HOST)
+        self.dst_host = socket.gethostbyname(HOST)
 
         self.config = NuauthConf()
         self.acls = PlaintextAcl()
         self.acls.addAclFull("web", self.dst_host, VALID_PORT, USERDB[0].gid, 1, period='10 secs' )
         self.acls.install(self.config)
 
-	self.period = PlainPeriodXML()
-	self.period.addPeriod(Period("10 secs", duration = 10))
-	self.period.install(self.config)
+        self.period = PlainPeriodXML()
+        self.period.addPeriod(Period("10 secs", duration = 10))
+        self.period.install(self.config)
 
         self.users = USERDB
         self.users.install(self.config)
         self.nuauth = Nuauth(self.config)
-	self.nufw = startNufw()
+        self.nufw = startNufw()
 
-	self.iptables = Iptables()
-	self.iptables.flush()
-	self.iptables.command('-I OUTPUT -d %s -p tcp --dport 80 --syn -m state --state NEW -j NFQUEUE' % self.dst_host)
-	self.iptables.command('-I OUTPUT -d %s -p tcp --dport 80 ! --syn -m state --state NEW -j DROP' % self.dst_host)
+        self.iptables = Iptables()
+        self.iptables.flush()
+        self.iptables.command('-I OUTPUT -d %s -p tcp --dport 80 --syn -m state --state NEW -j NFQUEUE' % self.dst_host)
+        self.iptables.command('-I OUTPUT -d %s -p tcp --dport 80 ! --syn -m state --state NEW -j DROP' % self.dst_host)
 
     def tearDown(self):
         self.nuauth.stop()
         self.users.desinstall()
-	self.acls.desinstall()
-	self.period.desinstall()
+        self.acls.desinstall()
+        self.period.desinstall()
 
     def testConnShutdown(self):
         user = USERDB[0]
@@ -62,20 +62,20 @@ class TestConntrack(TestCase):
         conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         conn.connect((self.dst_host, VALID_PORT))
 
-	src_port = conn.getsockname()[1]
+        src_port = conn.getsockname()[1]
 
-	ct_before = len(get_conntrack_conn(src_port, self.dst_host, VALID_PORT))
-	## Check that only one connection is opened to
-	self.assert_(ct_before == 1)
+        ct_before = len(get_conntrack_conn(src_port, self.dst_host, VALID_PORT))
+        ## Check that only one connection is opened to
+        self.assert_(ct_before == 1)
 
-	## The connection should be killed 10 seconds after being opened
-	time.sleep(15)
+        ## The connection should be killed 10 seconds after being opened
+        time.sleep(15)
 
-	## Check that only one connection is opened to
-	ct_after = len(get_conntrack_conn(src_port, self.dst_host, VALID_PORT))
-	self.assert_(ct_after == 0)
+        ## Check that only one connection is opened to
+        ct_after = len(get_conntrack_conn(src_port, self.dst_host, VALID_PORT))
+        self.assert_(ct_after == 0)
 
-	conn.close()
+        conn.close()
         client.stop()
 
 if __name__ == "__main__":

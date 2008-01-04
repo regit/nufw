@@ -15,7 +15,7 @@ class TestPlaintextAcl(TestCase):
         self.iptables = Iptables()
         self.users = USERDB
         self.config = NuauthConf()
-	self.config["xml_defs_periodfile"] = '"%s"' % os.path.join(os.getcwd(),"../conf/periods.xml")
+        self.config["xml_defs_periodfile"] = '"%s"' % os.path.join(os.getcwd(),"../conf/periods.xml")
         self.acls = PlaintextAcl()
 
         # Start nuauth with new config
@@ -32,10 +32,10 @@ class TestPlaintextAcl(TestCase):
     def testPeriodDrop(self):
         self.acls.desinstall()
         self.acls = PlaintextAcl()
-	if time.localtime().tm_hour >= 12:
-		period = "0-12"
-	else:
-        	period = "12-24"
+        if time.localtime().tm_hour >= 12:
+                period = "0-12"
+        else:
+                period = "12-24"
         self.acls.addAcl("web", VALID_PORT, self.users[0].gid, 1, period=period )
         self.acls.install(self.config)
         self.nuauth = Nuauth(self.config)
@@ -48,11 +48,11 @@ class TestPlaintextAcl(TestCase):
 
     def testPeriodAccept(self):
         self.acls.desinstall()
-	self.acls = PlaintextAcl()
-	if time.localtime().tm_hour < 12:
-		period = "0-12"
-	else:
-        	period = "12-24"
+        self.acls = PlaintextAcl()
+        if time.localtime().tm_hour < 12:
+                period = "0-12"
+        else:
+                period = "12-24"
         self.acls.addAcl("web", VALID_PORT, self.users[0].gid, 1, period=period)
         self.acls.install(self.config)
         self.nuauth = Nuauth(self.config)
