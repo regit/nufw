@@ -29,7 +29,7 @@ def main():
         "description": "Python binding of libnuclient library, object oriented",
         "long_description": open('README').read(),
         "classifiers": CLASSIFIERS,
-        "license": nuclient.LICENCE,
+        "license": nuclient.LICENSE,
         "packages": ["nuclient"],
         "package_dir": {"nuclient": "nuclient"},
     }
