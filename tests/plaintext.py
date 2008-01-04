@@ -70,9 +70,6 @@ class PlaintextAcl:
             "[%s]" % name,
             "decision=%s" % decision,
             "gid=%u" % gid,
-            "proto=6",
-            "SrcIP=0.0.0.0/0",
-            "SrcPort=1024-65535",
             "DstIP=%s" % host,
             "DstPort=%u" % port]
         for key, value in kw.iteritems():
@@ -84,9 +81,6 @@ class PlaintextAcl:
             "[%s]" % name,
             "decision=%s" % decision,
             "uid=%u" % uid,
-            "proto=6",
-            "SrcIP=0.0.0.0/0",
-            "SrcPort=1024-65535",
             "DstIP=%s" % host,
             "DstPort=%u" % port]
         for key, value in kw.iteritems():
