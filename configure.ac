@@ -55,8 +55,8 @@ AC_CHECK_FUNCS([gethostbyname memset socket strcasecmp strspn])
 #AM_CHECK_PATH(libgnutls], [gnutls_init],AC_DEFINE([HAVE_LIBRARY_GNUTLS],[1],[Gnutls lib flag]), check_gnutls=no)
 
 
-dnl 
-dnl <SSL> 
+dnl
+dnl <SSL>
 dnl
 
 dnl We can force the use of OpenSSL
@@ -87,8 +87,8 @@ if test $build_openssl = no; then
    fi
    AC_DEFINE_UNQUOTED([HAVE_GNUTLS],[1],[Will use gnutls support instead of openssl])
 fi
-dnl 
-dnl </SSL> 
+dnl
+dnl </SSL>
 dnl
 
 #Configure database support, depending on user input
@@ -350,6 +350,7 @@ AC_CONFIG_FILES([Makefile
 	scripts/nuauth_command/nuauth_command/Makefile
 	scripts/auth_mysql/Makefile
 	tests/Makefile
+	tests/inl_tests/Makefile
 ])
 
 # Display errors if any library is missing

@@ -1,3 +1,5 @@
+SUBDIRS = inl_tests
+
 EXTRA_DIST = defaults.cfg client.py common.py compatibility.py config.py \
 	filter.py mysocket.py nuauth_conf.py nuauth.py nufw.py nufw_runner.py\
 	plaintext.py test_all.py test_cert_auth.py test_client_auth.py \
