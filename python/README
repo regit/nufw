@@ -1,0 +1,4 @@
+Python binding of libnuclient library, object oriented.
+
+See test_nuclient.py for an example of nuclient use.
+
