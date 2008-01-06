@@ -1219,10 +1219,11 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element, gpointer params)
 			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 					  "(DBG) Checking OS sysname ACL found=%d",
 					  found);
-			if (!found)
+			if (!found) {
 				debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 						"(DBG) skip ACL %s: OS doesn't match", p_acl->aclname);
 				continue;
+			}
 			log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 				    "[plaintext] OS match (%s)",
 				    element->os_sysname);
@@ -1252,10 +1253,11 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element, gpointer params)
 			log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 				    "(DBG) Checking App ACL found=%d",
 				    found);
-			if (!found)
+			if (!found) {
 				debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 						"(DBG) skip ACL %s: Application doesn't match", p_acl->aclname);
 				continue;
+			}
 			log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 				    "[plaintext] App match (%s)",
 				    element->app_name);
