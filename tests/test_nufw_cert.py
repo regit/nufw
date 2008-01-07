@@ -20,17 +20,18 @@ class TestClientCert(TestCase):
         self.cacert = config.get("test_cert", "cacert")
         self.iptables = Iptables()
 
-        nuconfig = NuauthConf()
-        nuconfig["nuauth_tls_auth_by_cert"] = "0"
-        nuconfig["nuauth_tls_request_cert"] = "0"
-        nuconfig["nuauth_tls_cacert"] = '"%s"' % self.cacert
-        nuconfig["nuauth_tls_key"] = '"%s"' % config.get("test_cert", "nuauth_key")
-        nuconfig["nuauth_tls_cert"] = '"%s"' % config.get("test_cert", "nuauth_cert")
-        self.nuauth = Nuauth(nuconfig)
+        self.nuconfig = NuauthConf()
+        self.nuconfig["nuauth_tls_auth_by_cert"] = "0"
+        self.nuconfig["nuauth_tls_request_cert"] = "0"
+        self.nuconfig["nuauth_tls_cacert"] = '"%s"' % self.cacert
+        self.nuconfig["nuauth_tls_key"] = '"%s"' % config.get("test_cert", "nuauth_key")
+        self.nuconfig["nuauth_tls_cert"] = '"%s"' % config.get("test_cert", "nuauth_cert")
+        self.nuauth = Nuauth(self.nuconfig)
 
     def tearDown(self):
         self.nufw.stop()
         self.nuauth.stop()
+        self.nuconfig.desinstall()
         self.iptables.flush()
 
     def connectNuauthNufw(self):

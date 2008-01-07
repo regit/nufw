@@ -23,13 +23,13 @@ class TestClientCertAuth(TestCase):
         self.userdb.install(nuconfig)
 
         # Server
-        nuconfig["plaintext_userfile"] = '"%s"' % self.userdb.filename
-        nuconfig["nuauth_tls_auth_by_cert"] = "2"
-        nuconfig["nuauth_tls_request_cert"] = "2"
-        nuconfig["nuauth_tls_cacert"] = '"%s"' % cacert
-        nuconfig["nuauth_tls_key"] = '"%s"' % config.get("test_cert", "nuauth_key")
-        nuconfig["nuauth_tls_cert"] = '"%s"' % config.get("test_cert", "nuauth_cert")
-        self.nuauth = Nuauth(nuconfig)
+        self.nuconfig["plaintext_userfile"] = '"%s"' % self.userdb.filename
+        self.nuconfig["nuauth_tls_auth_by_cert"] = "2"
+        self.nuconfig["nuauth_tls_request_cert"] = "2"
+        self.nuconfig["nuauth_tls_cacert"] = '"%s"' % cacert
+        self.nuconfig["nuauth_tls_key"] = '"%s"' % config.get("test_cert", "nuauth_key")
+        self.nuconfig["nuauth_tls_cert"] = '"%s"' % config.get("test_cert", "nuauth_cert")
+        self.nuauth = Nuauth(self.nuconfig)
 
         # Client
         args = ["-C", cert, "-K", key, "-A", cacert]
@@ -40,6 +40,7 @@ class TestClientCertAuth(TestCase):
         self.client.stop()
         self.nuauth.stop()
         self.userdb.desinstall()
+        self.nuconfig.desinstall()
 
     def testValidCert(self):
         self.assert_(connectClient(self.client))
