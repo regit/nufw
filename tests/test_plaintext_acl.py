@@ -7,6 +7,13 @@ from inl_tests.iptables import Iptables
 from filter import testAllowPort, testDisallowPort, VALID_PORT, HOST
 from test_plaintext_auth import USERDB
 from plaintext import PlaintextAcl
+from sys import executable
+from os import uname
+
+APPLICATION = executable
+OS = uname()
+OS_NAME = OS[0]
+OS_FULL = "%s;%s;%s" % (OS[0], OS[2], OS[3])
 
 class TestPlaintextAcl(TestCase):
     def setUp(self):
@@ -46,6 +53,46 @@ class TestPlaintextAcl(TestCase):
         client = user.createClient()
         testAllowPort(self, self.iptables, client, self.host)
         testDisallowPort(self, self.iptables, client, self.host)
+        self.acls.desinstall()
+
+    def testValidApplication(self):
+        self.acls = PlaintextAcl()
+        self.acls.addAclFull("application", self.host, VALID_PORT, self.users[0].gid, App=APPLICATION)
+        self.acls.install(self.config)
+        self.nuauth = Nuauth(self.config)
+        user = self.users[0]
+        client = user.createClient()
+        testAllowPort(self, self.iptables, client, self.host)
+        self.acls.desinstall()
+
+    def testInvalidApplication(self):
+        self.acls = PlaintextAcl()
+        self.acls.addAclFull("application", self.host, VALID_PORT, self.users[0].gid, App=APPLICATION+"xxx")
+        self.acls.install(self.config)
+        self.nuauth = Nuauth(self.config)
+        user = self.users[0]
+        client = user.createClient()
+        testAllowPort(self, self.iptables, client, self.host, allow=False)
+        self.acls.desinstall()
+
+    def testValidOS(self):
+        self.acls = PlaintextAcl()
+        self.acls.addAclFull("application", self.host, VALID_PORT, self.users[0].gid, OS=OS_FULL)
+        self.acls.install(self.config)
+        self.nuauth = Nuauth(self.config)
+        user = self.users[0]
+        client = user.createClient()
+        testAllowPort(self, self.iptables, client, self.host)
+        self.acls.desinstall()
+
+    def testInvalidOS(self):
+        self.acls = PlaintextAcl()
+        self.acls.addAclFull("application", self.host, VALID_PORT, self.users[0].gid, OS=OS_NAME+"xxx")
+        self.acls.install(self.config)
+        self.nuauth = Nuauth(self.config)
+        user = self.users[0]
+        client = user.createClient()
+        testAllowPort(self, self.iptables, client, self.host, allow=False)
         self.acls.desinstall()
 
 if __name__ == "__main__":

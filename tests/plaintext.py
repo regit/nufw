@@ -58,8 +58,8 @@ class PlaintextUserDB:
         return self.users[key]
 
 USERDB = PlaintextUserDB()
-USERDB.addUser( PlaintextUser("username", "password", 42, 42) )
-USERDB.addUser( PlaintextUser("username2", "password2", 43, 43) )
+USERDB.addUser( PlaintextUser("username", "password", 1, 100) )
+USERDB.addUser( PlaintextUser("username2", "password2", 2, 200) )
 
 class PlaintextAcl:
     def __init__(self):
@@ -74,6 +74,8 @@ class PlaintextAcl:
             "DstPort=%u" % port]
         for key, value in kw.iteritems():
             text.append("%s=%s" % (key, value))
+        for line in text:
+            info("Create plaintext ACL: %s" % text)
         self.content.extend(text)
 
     def addAclPerUid(self, name, host, port, uid, decision=1, **kw):
