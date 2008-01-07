@@ -1164,9 +1164,6 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element, gpointer params)
 			}
 		}
 
-		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
-				"(DBG) [plaintext] test acl %s (3)", p_acl->aclname);
-
 		/*  O.S. filtering? */
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 				  "(DBG) current ACL os=%p", p_acl->os);
