@@ -2,13 +2,16 @@
 from compatibility import any
 from unittest import TestCase, main
 from sys import stderr
-from common import createClient, startNufw
+from common import createClient, connectClient, PASSWORD, startNufw
 from nuauth import Nuauth
 from config import config
 from inl_tests.iptables import Iptables
 from nuauth_conf import NuauthConf
 from mysocket import connectTcp
-from filter import HOST, VALID_PORT
+from filter import testAllowPort, testPort, HOST, VALID_PORT
+# We perform the cert check wether a client can connect or not
+from plaintext import USERDB
+from plaintext import PlaintextAcl
 
 # TODO: check -n=CN:...
 
@@ -16,9 +19,10 @@ TIMEOUT = 2.0
 
 class TestClientCert(TestCase):
     def setUp(self):
-        self.port = VALID_PORT
-        self.cacert = config.get("test_cert", "cacert")
         self.iptables = Iptables()
+        self.port = VALID_PORT
+        self.host = HOST
+        self.cacert = config.get("test_cert", "cacert")
 
         self.nuconfig = NuauthConf()
         self.nuconfig["nuauth_tls_auth_by_cert"] = "0"
@@ -29,7 +33,6 @@ class TestClientCert(TestCase):
         self.nuauth = Nuauth(self.nuconfig)
 
     def tearDown(self):
-        self.nufw.stop()
         self.nuauth.stop()
         self.nuconfig.desinstall()
         self.iptables.flush()
@@ -39,7 +42,6 @@ class TestClientCert(TestCase):
         self.iptables.filterTcp(self.port)
         connectTcp(HOST, self.port, 0.100)
 
-
         # nufw side
         # "TLS connection to nuauth can NOT be restored"
 
@@ -47,8 +49,10 @@ class TestClientCert(TestCase):
         self.nufw = startNufw(["-a", self.cacert])
         self.connectNuauthNufw()
 
-        self.assert_(any("TLS connection to nuauth restored" in line
-            for line in self.nufw.readlines(total_timeout=TIMEOUT)))
+	self.assert_(any("TLS connection to nuauth restored" in line
+                for line in self.nufw.readlines(total_timeout=TIMEOUT)))
+
+        self.nufw.stop()
 
     def testInvalidCert(self):
         invalid_cacert = config.get("test_cert", "invalid_cacert")
@@ -57,6 +61,31 @@ class TestClientCert(TestCase):
 
         self.assert_(any("tls: invalid certificates received from nuauth server" in line.lower()
             for line in self.nufw.readlines(total_timeout=TIMEOUT)))
+        self.nufw.stop()
+
+    # If NuFW does not run under the strict mode, the provided certificates in svn
+    # will be accepted and the client will be able to authenticate and then be
+    # accepted by the firewall. This is what we want to check here
+    def testNotStrictMode(self):
+
+        self.nufw = startNufw()
+        self.connectNuauthNufw()
+	
+	self.assert_(any("TLS connection to nuauth restored" in line
+                for line in self.nufw.readlines(total_timeout=TIMEOUT)))
+
+        self.nufw.stop()
+
+    def testStrictMode(self):
+
+        self.nufw = startNufw(["-S"])
+        self.connectNuauthNufw()
+        
+	self.assert_(any("tls: invalid certificates received from nuauth server" in line.lower()
+            for line in self.nufw.readlines(total_timeout=TIMEOUT)))
+
+        self.nufw.stop()
+
 
 if __name__ == "__main__":
     print "Test nuauth client authentification"
