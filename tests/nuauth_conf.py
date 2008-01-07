@@ -46,5 +46,6 @@ class NuauthConf(ReplaceFile):
     def __setitem__(self, key, value):
         if self.needRestart(key, value):
             self.need_restart = True
+        info("nuauth.conf: set %s=%s" % (key, value))
         self.content[key] = value
 
