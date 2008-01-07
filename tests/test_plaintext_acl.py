@@ -9,8 +9,9 @@ from test_plaintext_auth import USERDB
 from plaintext import PlaintextAcl
 from sys import executable
 from os import uname
+from os.path import realpath
 
-APPLICATION = executable
+APPLICATION = realpath(executable)
 OS = uname()
 OS_NAME = OS[0]
 OS_FULL = "%s;%s;%s" % (OS[0], OS[2], OS[3])
