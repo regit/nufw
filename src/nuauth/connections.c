@@ -442,8 +442,9 @@ gint print_connection(gpointer data, gpointer userdata)
 
 	str_tracking = str_print_tracking_t(&(conn->tracking));
 
-	if (str_tracking == NULL)
+	if (str_tracking == NULL) {
 		return -1;
+	}
 
 	if (conn->decision != DECISION_NODECIDE) {
 		char * str_decision = decision_to_str(conn->decision);
@@ -486,7 +487,7 @@ gint print_connection(gpointer data, gpointer userdata)
 	}
 
 	message = g_strconcat(prefix, ":", str_tracking, str_state, str_iface,
-			      str_id, str_os, str_app, NULL);
+			      str_id, str_user, str_os, str_app, NULL);
 	g_free(str_tracking);
 	g_free(str_state);
 	g_free(str_iface);
