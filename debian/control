@@ -97,7 +97,7 @@ Description: Module for nuauth logging into PostgreSQL databases
 Package: nutcpc
 Architecture: any
 Depends: ${shlibs:Depends}, libnuclient3 (= ${binary:Version})
-Description: a linux client for the nufw authentication gateway system
+Description: a Linux client for the nufw authentication gateway system
  NuFW is an authenticating gateway, which means that connections are
  authenticated before being forwarded through the gateway.  Classical packet
  filtering systems disregard the identity of the user who may be attempting to
@@ -137,6 +137,7 @@ Description: client library for nufw authentication
 Package: libnuclient-dev
 Architecture: any
 Depends: ${shlibs:Depends}, libsasl2-dev, libgnutls-dev|libgnutls11-dev, libnuclient3 (= ${binary:Version})
+Section: libdevel
 Description: Development files for nufw client library
  NuFW is an authenticating gateway, which means that connections are
  authenticated before being forwarded through the gateway.  Classical packet
