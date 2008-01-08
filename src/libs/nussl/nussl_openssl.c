@@ -557,7 +557,15 @@ static int provide_client_cert(SSL *ssl, X509 **cert, EVP_PKEY **pkey)
 
 void nussl_ssl_set_clicert(nussl_session *sess, const nussl_ssl_client_cert *cc)
 {
+    int ret;
     sess->client_cert = dup_client_cert(cc);
+    ret = SSL_CTX_use_PrivateKey(ctx->ctx, cc->pkey);
+    
+    if (ret != 1)
+        return NUSSL_ERROR;
+    
+    ret = SSL_CTX_use_certificate(ctx->ctx, cc->cert.subject);
+    return (ret == 1) ? NUSSL_OK : NUSSL_ERROR;
 }
 
 nussl_ssl_context *nussl_ssl_context_create(int mode)
@@ -612,6 +620,7 @@ int nussl_ssl_context_keypair(nussl_ssl_context *ctx, const char *cert,
     return ret == 1 ? 0 : -1;
 }
 
+#if 0
 int nussl_ssl_context_keypair_from_data(nussl_ssl_context *ctx, nussl_ssl_client_cert* cert)
 {
 	int ret;
@@ -623,6 +632,7 @@ int nussl_ssl_context_keypair_from_data(nussl_ssl_context *ctx, nussl_ssl_client
 	ret = SSL_CTX_use_certificate(ctx->ctx, cert->cert.subject);
 	return (ret == 1) ? NUSSL_OK : NUSSL_ERROR;
 }
+#endif
 
 int nussl_ssl_context_set_verify(nussl_ssl_context *ctx,
                               int required,

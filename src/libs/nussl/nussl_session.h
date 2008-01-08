@@ -207,20 +207,20 @@ typedef int (*nussl_ssl_verify_fn)(void *userdata, int failures,
  * is required when the CA certificate is not known for the server
  * certificate, or the server cert has other verification problems. */
 void nussl_ssl_set_verify(nussl_session *sess, nussl_ssl_verify_fn fn, void *userdata);
+#endif
 
 /* Use the given client certificate for the session.  The client cert
  * MUST be in the decrypted state, otherwise behaviour is undefined.
  * The 'clicert' object is duplicated internally so can be destroyed
  * by the caller.  */
-void nussl_ssl_set_clicert(nussl_session *sess, const nussl_ssl_client_cert *clicert);
+int nussl_ssl_set_clicert(nussl_session *sess, const nussl_ssl_client_cert *clicert);
 
+#if 0
 /* Indicate that the certificate 'cert' is trusted; the 'cert' object
  * is duplicated internally so can be destroyed by the caller.  This
  * function has no effect for non-SSL sessions. */
 void nussl_ssl_trust_cert(nussl_session *sess, const nussl_ssl_certificate *cert);
-#endif
 
-#if 0
 /* If the SSL library provided a default set of CA certificates, trust
  * this set of CAs. */
 void nussl_ssl_trust_default_ca(nussl_session *sess);
@@ -273,6 +273,8 @@ int nussl_ssl_set_pkcs12_keypair(nussl_session *session, const char* cert_file, 
 
 /* Indicate that the certificate 'cert' is trusted */
 int nussl_ssl_trust_cert_file(nussl_session *sess, const char *cert_file);
+
+nussl_ssl_client_cert* nussl_ssl_import_keypair(nussl_session* session, const char* cert_file, const char* key_file);
 
 NUSSL_END_DECLS
 

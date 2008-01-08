@@ -429,24 +429,28 @@ void nussl_unhook_destroy_session(nussl_session *sess,
 
 int nussl_write(nussl_session *session, char *buffer, size_t count)
 {
-    UGLY_DEBUG();
+	UGLY_DEBUG();
 	return nussl_sock_fullwrite(session->socket, buffer, count);
 }
 
 
 ssize_t nussl_read(nussl_session *session, char *buffer, size_t count)
 {
-    UGLY_DEBUG();
+	UGLY_DEBUG();
 	return nussl_sock_read(session->socket, buffer, count);
 }
 
 int nussl_ssl_set_keypair(nussl_session *session, const char* cert_file, const char* key_file)
 {
-	int ret = nussl_ssl_context_keypair(session->ssl_context, cert_file, key_file);
-    UGLY_DEBUG();
-	if (ret != NUSSL_OK)
+	nussl_ssl_client_cert* cert = nussl_ssl_import_keypair(session, cert_file, key_file);
+	UGLY_DEBUG();
+	if (cert == NULL)
+	{
 		nussl_set_error(session, _("Unable to load private key or certificate file"));
-	return ret;
+		return NUSSL_ERROR;
+	}
+
+	return nussl_ssl_set_clicert(session, cert);
 }
 
 int nussl_ssl_set_pkcs12_keypair(nussl_session *session, const char* pkcs12_file, const char* password)
@@ -483,7 +487,7 @@ int nussl_ssl_set_pkcs12_keypair(nussl_session *session, const char* pkcs12_file
 			fprintf(stderr, "Warning, the key is not encrypted, but a password was supplied\n");
 	}
 
-	ret = nussl_ssl_context_keypair_from_data(session->ssl_context, cert);
+	ret = nussl_ssl_set_clicert(session, cert);
 
 	return ret;
 }

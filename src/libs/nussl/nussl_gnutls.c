@@ -495,16 +495,15 @@ static nussl_ssl_certificate *populate_cert(nussl_ssl_certificate *cert,
     cert->subject = x5;
     cert->identity = NULL;
 /*     check_identity(NULL, x5, &cert->identity); */
-    check_identity(x5, &cert->identity);
+    check_identity(x5, &cert->identity); /* TODO: return the error of check_identity ... */
     return cert;
 }
 
 /* Returns a copy certificate of certificate SRC. */
-#if 0
 static gnutls_x509_crt x509_crt_copy(gnutls_x509_crt src)
 {
     int ret;
-    size_t size;
+    size_t size = 0;
     gnutls_datum tmp;
     gnutls_x509_crt dest;
 
@@ -534,9 +533,7 @@ static gnutls_x509_crt x509_crt_copy(gnutls_x509_crt src)
     nussl_free(tmp.data);
     return dest;
 }
-#endif
 
-#if 0
 /* Duplicate a client certificate, which must be in the decrypted state. */
 static nussl_ssl_client_cert *dup_client_cert(const nussl_ssl_client_cert *cc)
 {
@@ -566,7 +563,6 @@ dup_error:
     nussl_free(newcc);
     return NULL;
 }
-#endif
 
 #if 0 /* Use gnutls function, no callback needed */
 /* Callback invoked when the SSL server requests a client certificate.  */
@@ -612,12 +608,6 @@ static int provide_client_cert(gnutls_session session,
 
     return 0;
 }
-
-void nussl_ssl_set_clicert(nussl_session *sess, const nussl_ssl_client_cert *cc)
-{
-    UGLY_DEBUG();
-    sess->client_cert = dup_client_cert(cc);
-}
 #endif
 
 nussl_ssl_context *nussl_ssl_context_create(int flags)
@@ -632,6 +622,7 @@ nussl_ssl_context *nussl_ssl_context_create(int flags)
     return ctx;
 }
 
+#if 0
 int nussl_ssl_context_keypair(nussl_ssl_context *ctx,
                            const char *cert, const char *key)
 {
@@ -639,14 +630,26 @@ int nussl_ssl_context_keypair(nussl_ssl_context *ctx,
     return (gnutls_certificate_set_x509_key_file(ctx->cred, cert, key,
                                          GNUTLS_X509_FMT_PEM) == 0) ? NUSSL_OK : NUSSL_ERROR;
 }
+#endif
 
 int nussl_ssl_context_keypair_from_data(nussl_ssl_context *ctx, nussl_ssl_client_cert* cert)
 {
     UGLY_DEBUG();
-    return gnutls_certificate_set_x509_key(ctx->cred, &cert->cert.subject, 1, cert->pkey);
+    int ret;
+    ret = gnutls_certificate_set_x509_key(ctx->cred, &cert->cert.subject, 1, cert->pkey);
+    return (ret == 0) ? NUSSL_OK : NUSSL_ERROR;
 }
 
 
+int nussl_ssl_set_clicert(nussl_session *sess, const nussl_ssl_client_cert *cc)
+{
+    UGLY_DEBUG();
+    sess->client_cert = dup_client_cert(cc);
+    if (!sess->client_cert)
+    	return NUSSL_ERROR;
+
+    return nussl_ssl_context_keypair_from_data(sess->ssl_context, sess->client_cert);
+}
 
 #if 0
 int nussl_ssl_context_set_verify(nussl_ssl_context *ctx, int required,
@@ -1144,6 +1147,44 @@ int nussl_ssl_cert_cmp(const nussl_ssl_certificate *c1, const nussl_ssl_certific
     }
 
     return strcmp(digest1, digest2);
+}
+
+nussl_ssl_client_cert* nussl_ssl_import_keypair(nussl_session* sess,
+                           const char *cert_file, const char *key_file)
+{
+	nussl_ssl_client_cert* keypair = NULL;
+	gnutls_datum cert_raw;
+	gnutls_datum key_raw;
+
+	keypair = nussl_calloc(sizeof(nussl_ssl_client_cert));
+	if (keypair == NULL)
+		return NULL;
+
+	keypair->decrypted = 1;
+	keypair->p12 = NULL;
+	keypair->friendly_name = NULL;
+
+	UGLY_DEBUG();
+
+	if (gnutls_x509_crt_init(&keypair->cert.subject) < 0)
+        	return NULL;
+	if (read_to_datum(cert_file, &cert_raw) != NUSSL_OK)
+        	return NULL;
+	if (gnutls_x509_crt_import(keypair->cert.subject, &cert_raw, GNUTLS_X509_FMT_PEM) < 0)
+		return NULL;
+
+	if (populate_cert(&keypair->cert, keypair->cert.subject) == NULL)
+        	return NULL;
+
+	if (gnutls_x509_privkey_init(&keypair->pkey) < 0)
+		return NULL;
+	
+	if (read_to_datum(key_file, &key_raw) != NUSSL_OK)
+		return NULL;
+	if (gnutls_x509_privkey_import(keypair->pkey, &key_raw, GNUTLS_X509_FMT_PEM) < 0)
+		return NULL;
+
+	return keypair;
 }
 
 /* The certificate import/export format is the base64 encoding of the
