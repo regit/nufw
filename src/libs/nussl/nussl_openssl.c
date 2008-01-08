@@ -555,19 +555,33 @@ static int provide_client_cert(SSL *ssl, X509 **cert, EVP_PKEY **pkey)
     }
 }
 
-void nussl_ssl_set_clicert(nussl_session *sess, const nussl_ssl_client_cert *cc)
+int nussl_ssl_set_clicert(nussl_session *sess, const nussl_ssl_client_cert *cc)
 {
-    int ret;
     sess->client_cert = dup_client_cert(cc);
-    ret = SSL_CTX_use_PrivateKey(ctx->ctx, cc->pkey);
-    
-    if (ret != 1)
-        return NUSSL_ERROR;
-    
-    ret = SSL_CTX_use_certificate(ctx->ctx, cc->cert.subject);
-    return (ret == 1) ? NUSSL_OK : NUSSL_ERROR;
+    if (!sess->client_cert)
+    	return NUSSL_ERROR;
+
+    return nussl_ssl_context_keypair_from_data(sess->ssl_context, sess->client_cert);
 }
 
+#ifdef BLAH
+int nussl_ssl_set_clicert(nussl_session *sess, const nussl_ssl_client_cert *cc)
+{
+	int ret;
+	sess->client_cert = dup_client_cert(cc);
+
+	if (sess->client_cert == NULL)
+		return NUSSL_ERROR;
+
+	ret = SSL_CTX_use_PrivateKey(sess->ssl_context->ctx, cc->pkey);
+    
+	if (ret != 1)
+		return NUSSL_ERROR;
+    
+	ret = SSL_CTX_use_certificate(sess->ssl_context->ctx->ctx, cc->cert.subject);
+	return (ret == 1) ? NUSSL_OK : NUSSL_ERROR;
+}
+#endif
 nussl_ssl_context *nussl_ssl_context_create(int mode)
 {
     nussl_ssl_context *ctx = nussl_calloc(sizeof *ctx);
@@ -620,7 +634,6 @@ int nussl_ssl_context_keypair(nussl_ssl_context *ctx, const char *cert,
     return ret == 1 ? 0 : -1;
 }
 
-#if 0
 int nussl_ssl_context_keypair_from_data(nussl_ssl_context *ctx, nussl_ssl_client_cert* cert)
 {
 	int ret;
@@ -632,7 +645,6 @@ int nussl_ssl_context_keypair_from_data(nussl_ssl_context *ctx, nussl_ssl_client
 	ret = SSL_CTX_use_certificate(ctx->ctx, cert->cert.subject);
 	return (ret == 1) ? NUSSL_OK : NUSSL_ERROR;
 }
-#endif
 
 int nussl_ssl_context_set_verify(nussl_ssl_context *ctx,
                               int required,
@@ -968,6 +980,51 @@ void nussl_ssl_cert_free(nussl_ssl_certificate *cert)
 int nussl_ssl_cert_cmp(const nussl_ssl_certificate *c1, const nussl_ssl_certificate *c2)
 {
     return X509_cmp(c1->subject, c2->subject);
+}
+
+nussl_ssl_client_cert* nussl_ssl_import_keypair(nussl_session* sess,
+                           const char *cert_file, const char *key_file)
+{
+	FILE *fp;
+	nussl_ssl_client_cert* keypair = NULL;
+
+	keypair = nussl_calloc(sizeof(nussl_ssl_client_cert));
+	if (keypair == NULL)
+		return NULL;
+
+	keypair->decrypted = 1;
+	keypair->p12 = NULL;
+	keypair->friendly_name = NULL;
+
+	// Load the certificate
+	fp = fopen(cert_file, "r");
+	if (fp == NULL)
+	{
+		nussl_free(keypair);
+		return NULL;
+	}
+
+	keypair->cert.subject = PEM_read_X509(fp, NULL, NULL, NULL);
+	fclose(fp);
+	if(keypair->cert.subject  == NULL)
+		return NULL;
+
+	if (populate_cert(&keypair->cert, keypair->cert.subject) == NULL)
+        	return NULL;
+
+	// Load the private key
+	fp = fopen(key_file, "r");
+	if (fp == NULL)
+	{
+		nussl_free(keypair);
+		return NULL;
+	}
+
+	keypair->pkey = PEM_read_PrivateKey(fp, NULL, NULL, NULL);
+	fclose(fp);
+	if(keypair->pkey == NULL)
+		return NULL;
+	return keypair;
 }
 
 /* The certificate import/export format is the base64 encoding of the
