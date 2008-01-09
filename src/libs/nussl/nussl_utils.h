@@ -150,6 +150,8 @@ typedef struct {
 /* NB: couldn't use 'class' in nussl_status because it would clash with
  * the C++ reserved word. */
 
+int check_key_perms(const char* filename);
+
 NUSSL_END_DECLS
 
 #endif /* NUSSL_UTILS_H */

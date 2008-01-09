@@ -442,8 +442,17 @@ ssize_t nussl_read(nussl_session *session, char *buffer, size_t count)
 
 int nussl_ssl_set_keypair(nussl_session *session, const char* cert_file, const char* key_file)
 {
-	nussl_ssl_client_cert* cert = nussl_ssl_import_keypair(session, cert_file, key_file);
+	nussl_ssl_client_cert* cert;
+	
 	UGLY_DEBUG();
+	
+	if (check_key_perms(key_file)!= NUSSL_OK)
+	{
+		nussl_set_error(session, _("Permissions on private key %s are not restrictive enough, it should be readable only by its owner."), key_file);
+		return NUSSL_ERROR;
+	}
+
+	cert = nussl_ssl_import_keypair(session, cert_file, key_file);
 	if (cert == NULL)
 	{
 		nussl_set_error(session, _("Unable to load private key or certificate file"));
@@ -456,8 +465,15 @@ int nussl_ssl_set_keypair(nussl_session *session, const char* cert_file, const c
 int nussl_ssl_set_pkcs12_keypair(nussl_session *session, const char* pkcs12_file, const char* password)
 {
 	int ret = NUSSL_OK;
+	UGLY_DEBUG();
+
+	if (check_key_perms(pkcs12_file)!= NUSSL_OK)
+	{
+		nussl_set_error(session, _("Permissions of key %s are too open."), pkcs12_file);
+		return NUSSL_ERROR;
+	}
+
 	nussl_ssl_client_cert* cert = nussl_ssl_clicert_read(pkcs12_file);
-    UGLY_DEBUG();
 
 	if (cert == NULL)
 	{

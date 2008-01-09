@@ -59,6 +59,11 @@
 #include <expat.h>
 #endif
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
+
 #include "nussl_utils.h"
 #include "nussl_string.h" /* for nussl_strdup */
 #include "nussl_dates.h"
@@ -172,4 +177,18 @@ int nussl_has_support(int feature)
     default:
         return 0;
     }
+}
+
+int check_key_perms(const char* filename)
+{
+	struct stat infos;
+
+	if (stat(filename, &infos) != 0)
+		return NUSSL_ERROR;
+	
+	/* Check it's owned by the current user */
+	if (infos.st_mode & S_IRGRP || infos.st_mode & S_IROTH)
+		return NUSSL_ERROR;
+	
+	return NUSSL_OK;
 }
