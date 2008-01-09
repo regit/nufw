@@ -22,7 +22,7 @@
       	<revnumber>0.9.2</revnumber>
 	<date>2008/01/09</date>
 	<revdescription>
-	Add information about TLS usage in all NuFW related fields.
+	<para>Add information about TLS usage in all NuFW related fields.</para>
 	</revdescription>
 	</revision>
       <revision>
@@ -865,6 +865,23 @@ by nuauth during the TLS negotiation. This is done by using the <option>-a</opti
 of nufw followed by the name of the certificate authority file.
 With this option set <varname>nufw</varname> will check the presence of a signed certificat
 on nuauth side.</para>
+<!-- Present in 2.2 but not yet in trunk
+<para>
+You can even run nufw in strict TLS mode using <option>-S<option> parameter. We highly recommend
+to use this option. It means nufw will not start if your certificate is:
+<orderedlist>
+<listitem><para>Not verifiable against an authority</para></listitem>
+<listitem><para>Invalid</para></listitem>
+<listitem><para>Revoked</para></listitem>
+<listitem><para>Without signer</para></listitem>
+<listitem><para>With a signer that is not a CA</para></listitem>
+<listitem><para>With an insecure algorithm (if GnuTLS is compiled with its support)</para></listitem>
+<listitem><para>Not yet activated</para></listitem>
+<listitem><para>Expired</para></listitem>
+</orderedlist>
+Warning: This mode will be activated by default in next major stable release.
+</para>
+-->
       </section>
 <section><title>User authentication restrictions</title>
 <para>You can restrict both the number of connections a given user can start, either on 
