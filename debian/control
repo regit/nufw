@@ -14,7 +14,7 @@ Build-Depends: debhelper (>= 4.1.16),po-debconf, automake1.9,
                libprelude-dev,
                libnetfilter-conntrack-dev, libnetfilter-queue-dev, libnfnetlink-dev,
                python-support (>= 0.4), python-dev
-Standards-Version: 3.7.2
+Standards-Version: 3.7.3
 
 Package: nufw
 Architecture: any
