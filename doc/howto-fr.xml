@@ -28,6 +28,14 @@
     </copyright>
     <revhistory>
       <revision>
+      	<revnumber>0.9.2</revnumber>
+	<date>2008/01/09</date>
+	<revdescription>
+	<para>Ajout information sur l'utilisation de TLS dans les différentes briques.</para>
+	<para>Documentation de l'utilisation des logiciels libres utilisées.</para>
+	</revdescription>
+	</revision>
+      <revision>
 	<revnumber>0.9.1</revnumber>
 	<date>2007/12/20</date>
 	<revdescription>
@@ -549,8 +557,7 @@ $basedn="ou=Acls,dc=inl,dc=fr";</screen>
 <screen>nuaclgen -A cn=ssh,ou=Acls,dc=inl,dc=fr -p 6 --dport 22 -AppName "/usr/bin/ssh" -j ACCEPT -g 513</screen>
 </para>
 	<para>Ou pour une connexion vers un serveur web :
-<screen>
-nuaclgen -A cn=apt,ou=Acls,dc=inl,dc=fr -p 6 --dport 80 \
+<screen>nuaclgen -A cn=apt,ou=Acls,dc=inl,dc=fr -p 6 --dport 80 \
   -AppName "/usr/lib/apt/methods/http" -j ACCEPT -g 1042
 </screen>
 Cette ACL autorise les connexions aux membres du groupe 1042  qui est utilisé par les administrateurs de certains de nos serveurs.
@@ -821,6 +828,16 @@ Ceci peut être mis en place grâce à l'option <option>-a</option> suivie du nom d
 Cette option est ajoutée à la ligne de commande démarrant <varname>nufw</varname>. Ce faisant, <varname>nufw</varname>
 vérifiera la validité du certificat présenté par <varname>nauth</varname>.</para>
       </section>
+      <section><title>Restriction à l'authentification des utilisateurs</title>
+<para>Il est possible de restreindre le nombre de connexions
+qu'un utilisateur peut initier et de limiter le nombre de connexions depuis une adresse IP donnée.
+<orderedlist>
+<listitem><para><option>nuauth_single_user_client_limit</option>: fixe le nombre maximum
+de connexions simultanées qu'un utilisateur peut démarrer.</para></listitem>
+<listitem><para><option>nuauth_single_ip_client_limit</option>: fixe le nombre maximum de connexions simultanées ayant pour source une même adresse IP.</para></listitem>
+</orderedlist>
+</para>
+</section>
 <section><title>Côté client</title>
 
 <para>
@@ -835,7 +852,34 @@ des flux qui auraient dû être ouvert sans vérification sur un système basique<fo
  </para>
 <para>La pertinence du filtrage d'application et/ou de système d'exploitation dépend de la confiance que vous placez
 dans le système qui réalisera l'authentification. Elle est "relativement bonne" sur un système sécurisé sur lequel les
-utilisateurs ne peuvent installer de logiciels.</para></section>
+utilisateurs ne peuvent installer de logiciels.</para>
+</section>
+<section><title>Utilisation de ldaps avec le module d'ACLs LDAP</title>
+<para>
+Si voter serveur LDAP supporte les connexions SSL, il est possible de paramétrer nuauth 
+pour qu'il se connecte en ldap over SSL.
+</para>
+<para>Pour se faire, il faut éditer <filename>nuauth.conf</filename> et modifier le port
+LDAP à 636 (ldaps) :
+<screen>ldap_server_port=636
+</screen>
+L'étape suivante est l'édition du fichier <filename>/etc/ldap/ldap.conf</filename> pour indiquer la 
+politique des connexions SSL.
+Pour une simple encryption des données, il suffit d'ajouter à <filename>ldap.conf</filename>:
+<screen>TLS_REQCERT never
+</screen>
+La configuration recommandée suppose d'utiliser une autorité de certification.
+Il faut pour cela éditer le fichier <filename>ldap.conf</filename> pour lui fournir le chemin vers le fichier 
+de l'autorité de certification.
+Le fichier <filename>ldap.conf</filename> devrait ressembler à :
+<screen>TLS_CACERT /etc/ldap/cacert-ldap.pem
+TLS_REQCERT demand
+</screen>
+Attention, dans ce mode de fonctionnent, il est nécessaire que le nom indiqué dans le certificat du serveur LDAP et le nom d'hôte spécifié dans
+la variable <option>ldap_server_addr</option> de <filename>nuauth.conf</filename> soient identiques.
+</para>
+</section>
+
 </section>
 <section><title>Configuration de l'authentification sur Nuauth</title>
  <section><title>Authentification PAM</title>
