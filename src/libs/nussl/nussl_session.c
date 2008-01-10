@@ -234,12 +234,6 @@ void nussl_ssl_provide_clicert(nussl_session *sess,
 }
 #endif
 
-int nussl_ssl_trust_cert(nussl_session *sess, const nussl_ssl_certificate *cert)
-{
-    UGLY_DEBUG();
-    return nussl_ssl_context_trustcert(sess->ssl_context, cert);
-}
-
 int nussl_ssl_trust_cert_file(nussl_session *sess, const char *cert_file)
 {
     int ret;
@@ -252,7 +246,8 @@ int nussl_ssl_trust_cert_file(nussl_session *sess, const char *cert_file)
 	return NUSSL_ERROR;
     }
 
-    ret = nussl_ssl_trust_cert(sess, ca);
+    ret = nussl_ssl_context_trustcert(sess->ssl_context, ca);
+
     if (ret == NUSSL_OK)
         sess->check_peer_cert = 1;
 
@@ -429,15 +424,25 @@ void nussl_unhook_destroy_session(nussl_session *sess,
 
 int nussl_write(nussl_session *session, char *buffer, size_t count)
 {
+	int ret;
 	UGLY_DEBUG();
-	return nussl_sock_fullwrite(session->socket, buffer, count);
+	ret = nussl_sock_fullwrite(session->socket, buffer, count);
+	if (ret < 0)
+		nussl_set_error(session, nussl_sock_error(session->socket));
+
+	return ret;
 }
 
 
 ssize_t nussl_read(nussl_session *session, char *buffer, size_t count)
 {
+	int ret;
 	UGLY_DEBUG();
-	return nussl_sock_read(session->socket, buffer, count);
+	ret = nussl_sock_read(session->socket, buffer, count);
+	if (ret < 0)
+		nussl_set_error(session, nussl_sock_error(session->socket));
+
+	return ret;
 }
 
 int nussl_ssl_set_keypair(nussl_session *session, const char* cert_file, const char* key_file)
