@@ -23,10 +23,17 @@
     </author>
     <copyright>
 
-      <year>2005-2007</year>
+      <year>2005-2008</year>
       <holder>INL</holder>
     </copyright>
     <revhistory>
+      <revision>
+      	<revnumber>0.9.3</revnumber>
+	<date>2008/01/10</date>
+	<revdescription>
+	<para>Description détaillée du modèle de journalisation et des mises à jours des tables SQL par nuauth.</para>
+	</revdescription>
+	</revision>
       <revision>
       	<revnumber>0.9.2</revnumber>
 	<date>2008/01/09</date>
@@ -626,7 +633,36 @@ Actuellement, vous devez exécuter ces scripts en tant que root via cron.
  Bien évidemment, une meilleure solution serait de créer un utilisateur particulier pour exécuter ces scripts, en lui donnant les droits appropriés.
  Merci de fournir une mise à jour à cette documentation si vous l'implémentez avant nous.
 </para>
-      </section>
+</section>
+<section><title>Vie d'une connexion dans la table SQL</title>
+<para>
+Si nuauth est parametré pour journaliser les flux dans une base SQL, voici le fonctionnement du système :
+</para>
+<itemizedlist><listitem><para>Au moment de l'authentification du paquet d'ouverture de connexion (pour TCP, le paquet SYN), nuauth crée une entrée dans la base de données, avec pour un flux TCP, une requête du style :
+<screen>INSERT INTO conntrack_ulog (state, oob_time_sec, ip_protocol, ip_saddr, ip_daddr, oob_in, oob_out, oob_prefix, user_id,
+username, client_os, client_app, tcp_sport, tcp_dport) VALUES (...les valeurs...);</screen>
+Si la décision prise pour ce datagramme est un rejet, la journalisation de cette "connexion" s'arrête ici, cette entrée dans la base de données ne sera plus manipulée par Nuauth.
+</para></listitem>
+<listitem><para>Au moment où la connexion change d'état (Pour TCP, dans la vie normale d'une connexion acceptée, celle ci passe en état ESTABLISHED au moment où le serveur répond), la requête suivante sera effectuée par nuauth, si le démon nufw est lancé avec l'option "-C"  :
+<screen>
+UPDATE conntrack_ulog SET state=ESTABLISHED, start_timestamp=FROM_UNIXTIME(marqueur_de_temps)
+WHERE (ip_daddr=%s AND ip_saddr=%s "AND tcp_dport='%hu' AND tcp_sport='%hu' AND state=OPEN)
+</screen>
+Les seuls champs alterés par cette requête sont "state", qui passe en état établi, et start_timestamp, qui n'était pas positionné préalablement. Il est important de noter qu'aucune information n'est perdue lors de cette modification de la table. Il est évident que la connexion a été préalablement en état "OPEN", puisque c'est un préalable à l'état "ESTABLISHED", et nous disposons de l'heure de l'ouverture de la connexion dans le champ "oob_time_sec". Le champ "start_timestamp" marque simplement l'heure de passage en état ESTABLISHED.
+</para></listitem>
+<listitem><para>Quand la connexion vient à expirer, la requête suivante est effectuée par nuauth, si le démon nufw est lancé avec l'option "-C":
+<screen>
+UPDATE conntrack_ulog SET end_timestamp=FROM_UNIXTIME(marqueur_de_temps), state=CLOSE, packets_in=%d , packets_out=%d , bytes_in=%d , bytes_out=%d
+WHERE (ip_saddr=%s AND ip_daddr=%sAND tcp_sport='%hu' AND tcp_dport='%hu' AND (state=OPEN OR state=ESTABLISHED))
+</screen>
+L'état est mis à jour, il devient "CLOSE", nous positionnons le champ end_timestamp, qui était préalablement vide, et nous positionnons les compteurs (auparavant vides également) sur le nombre de paquets et le nombre d'octets qui ont transité sur cette connexion. L'heure d'ouverture de la connexion reste présent et inalteré dans le champ oob_time_sec, et l'heure de passage de la connexion en état établi est également conservé dans le champ start_timestamp.
+</para></listitem></itemizedlist>
+<para>
+Le mode de journalisation en SQL conserve donc tout l'historique de chaque connexion, et les différentes mises à jour de la base de données n'effacent en aucun cas les données journalisées précédemment. Ce mode de journalisation est le plus puissant que puisse offir un pare-feu, car il est très synthétique : une seule entrée est maintenue pour chaque connexion ; et il conserve tout l'historique de tous les événements de connexion.
+</para>
+</section>
+
+
       <section><title>Configuration de Netfilter</title>
       <section><title>Paramètres pour les noyaux post 2.6.14</title>
 
@@ -856,20 +892,20 @@ utilisateurs ne peuvent installer de logiciels.</para>
 </section>
 <section><title>Utilisation de ldaps avec le module d'ACLs LDAP</title>
 <para>
-Si voter serveur LDAP supporte les connexions SSL, il est possible de paramétrer nuauth 
+Si voter serveur LDAP supporte les connexions SSL, il est possible de paramétrer nuauth
 pour qu'il se connecte en ldap over SSL.
 </para>
 <para>Pour se faire, il faut éditer <filename>nuauth.conf</filename> et modifier le port
 LDAP à 636 (ldaps) :
 <screen>ldap_server_port=636
 </screen>
-L'étape suivante est l'édition du fichier <filename>/etc/ldap/ldap.conf</filename> pour indiquer la 
+L'étape suivante est l'édition du fichier <filename>/etc/ldap/ldap.conf</filename> pour indiquer la
 politique des connexions SSL.
 Pour une simple encryption des données, il suffit d'ajouter à <filename>ldap.conf</filename>:
 <screen>TLS_REQCERT never
 </screen>
 La configuration recommandée suppose d'utiliser une autorité de certification.
-Il faut pour cela éditer le fichier <filename>ldap.conf</filename> pour lui fournir le chemin vers le fichier 
+Il faut pour cela éditer le fichier <filename>ldap.conf</filename> pour lui fournir le chemin vers le fichier
 de l'autorité de certification.
 Le fichier <filename>ldap.conf</filename> devrait ressembler à :
 <screen>TLS_CACERT /etc/ldap/cacert-ldap.pem

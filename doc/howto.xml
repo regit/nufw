@@ -14,10 +14,17 @@
       <email>gryzor at inl dot fr</email>
     </author>
     <copyright>
-      <year>2005-2007</year>
+      <year>2005-2008</year>
       <holder>INL</holder>
     </copyright>
     <revhistory>
+      <revision>
+      	<revnumber>0.9.3</revnumber>
+	<date>2008/01/10</date>
+	<revdescription>
+	<para>A detailled description of SQL tables insertions and updates by nuauth.</para>
+	</revdescription>
+	</revision>
      <revision>
       	<revnumber>0.9.2</revnumber>
 	<date>2008/01/09</date>
@@ -667,6 +674,33 @@ this and grant it the needed privileges. Please provide updates for this
 document if you implement this before we do.
 </para>
       </section>
+<section><title>Life of a connection in the SQL table</title>
+<para>
+If nuauth is configured to log network flow information in a SQL database, here is how the logging system works :
+</para>
+<itemizedlist><listitem><para>When the connexion opening datagram is authenticated (for TCP, that is the SYN datagram), nuauth creates an entry in database, with a request looking like this (for TCP) :
+<screen>INSERT INTO conntrack_ulog (state, oob_time_sec, ip_protocol, ip_saddr, ip_daddr, oob_in, oob_out, oob_prefix, user_id,
+username, client_os, client_app, tcp_sport, tcp_dport) VALUES (... our datagram values ...);</screen>
+If nuauth decision for that datagram is to drop or reject it, log of the "connexion" stops here. The connexion will never be opened, and this database entry will no longer be manipulated by nuauth.
+</para></listitem>
+<listitem><para>At the time when connection changes state (For TCP, and for any accepted connection, state changes to ESTABLISHED as soon as the server answers the SYN datagram), this request is performed by nuauth, if the nufw daemon is run with "-C" :
+<screen>
+UPDATE conntrack_ulog SET state=ESTABLISHED, start_timestamp=FROM_UNIXTIME(timestamp)
+WHERE (ip_daddr=%s AND ip_saddr=%s "AND tcp_dport='%hu' AND tcp_sport='%hu' AND state=OPEN)
+</screen>
+The only fields that are altered by this request are "state", which changes to "ESTABLISHED", and start_timestamp, which wasn't set before. It is important to note that no information is lost when this modification is performed. It is indeed obvious that the connection was previously in "OPEN" state, since that's a TCP preambule to the "ESTABLISHED" state, and the database keeps track of the timestamp when the connection was opened in the "oob_time_sec" field. The "start_timestamp" field simply marks the timestamp of switch to the "ESTABLISHED" state.
+</para></listitem>
+<listitem><para>When the connection expires, this request is executed by nuauth, if the nufw daemon is run with "-C" :
+<screen>
+UPDATE conntrack_ulog SET end_timestamp=FROM_UNIXTIME(timestamp), state=CLOSE, packets_in=%d , packets_out=%d , bytes_in=%d , bytes_out=%d
+WHERE (ip_saddr=%s AND ip_daddr=%sAND tcp_sport='%hu' AND tcp_dport='%hu' AND (state=OPEN OR state=ESTABLISHED))
+</screen>
+State is updated, it becomes "CLOSE", and we set the end_timestamp field, which was empty before this, as well as packet number and byte number counters for the now dead connexion. Time of opening and time of establishment of the connection remain available in the oob_time_sec and start_timestamp fields.
+</para></listitem></itemizedlist>
+<para>
+The SQL logging feature keeps track of the whole history of each connexion, and updates that nuauth performs on the database do never erase data that was previously logged. This log mode is the most powerful one that a firewall can achieve, because it is very synthetic : one single SQL entry is maintained for each connection ; and it keeps the whole history of all elements of connections.
+</para>
+</section>
       <section><title>Netfilter settings</title>
       <section><title>Settings on post 2.6.14 kernel</title>
       <para>
@@ -884,7 +918,7 @@ Warning: This mode will be activated by default in next major stable release.
 -->
       </section>
 <section><title>User authentication restrictions</title>
-<para>You can restrict both the number of connections a given user can start, either on 
+<para>You can restrict both the number of connections a given user can start, either on
 any IP address or per IP address.
 <orderedlist>
 <listitem><para><option>nuauth_single_user_client_limit</option>: enforce the number of connections a user can start</para></listitem>
