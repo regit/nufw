@@ -28,6 +28,13 @@
     </copyright>
     <revhistory>
       <revision>
+      	<revnumber>0.9.4</revnumber>
+	<date>2008/01/10</date>
+	<revdescription>
+	<para>Mention est faite de la journalisation Prelude.</para>
+	</revdescription>
+	</revision>
+      <revision>
       	<revnumber>0.9.3</revnumber>
 	<date>2008/01/10</date>
 	<revdescription>
@@ -212,14 +219,28 @@ nuauth dépend de :
       <section><title>Journalisation par MySQL</title>
 
 	<para>
-La librairie <filename>libmysqlclient</filename> est requise pour la compilation du module correspondant.
+La bibliothèque <filename>libmysqlclient</filename> est requise pour la compilation du module correspondant.
 </para>
       </section>
       <section><title>Journalisation par PostgreSQL</title>
 	<para>
-La librairie <filename>libpq</filename> est requise pour la compilation du module correspondant.
+La bibliothèque <filename>libpq</filename> est requise pour la compilation du module correspondant.
 
 </para>
+      </section>
+      <section><title>Journalisation par Prelude</title>
+	<para>
+La librairie <filename>libprelude</filename> est requise pour la compilation du module correspondant.
+Prelude permet de centraliser les événements de sécurité d'une organisation, et NuFW peut lui envoyer les événements suivants :
+<itemizedlist>
+<listitem><para>Les échecs d'authentification</para></listitem>
+<listitem><para>Les réussites d'authentification</para></listitem>
+<listitem><para>Les débuts et fin de sessions NuFW</para></listitem>
+<listitem><para>Les débuts et fin de connexions authentifiées</para></listitem>
+<listitem><para>Les connexions rejetées</para></listitem>
+Toutes informations à propos du projet Prelude sont disponibles à l'adresse <ulink url="http://prelude-ids.org/">http://prelude-ids.org</ulink>
+        </para>
+
       </section>
 
       <section><title>Authentification et vérification des ACL via LDAP</title>

@@ -19,6 +19,13 @@
     </copyright>
     <revhistory>
       <revision>
+      	<revnumber>0.9.4</revnumber>
+	<date>2008/01/10</date>
+	<revdescription>
+	<para>Prelude log module documented.</para>
+	</revdescription>
+	</revision>
+      <revision>
       	<revnumber>0.9.3</revnumber>
 	<date>2008/01/10</date>
 	<revdescription>
@@ -219,15 +226,27 @@ nuauth dependencies are as follows:
       </section>
       <section><title>MySQL logging</title>
 	<para>
-The <filename>libmysqlclient</filename> library is necessary to the compilation
-of this module.
+The <filename>libmysqlclient</filename> library is required for compiling of this module.
 </para>
       </section>
       <section><title>PostgreSQL logging</title>
 	<para>
-The <filename>libpq</filename> library is necessary to the compilation
-of this module.
+The <filename>libpq</filename> library is required for compiling this module.
 </para>
+      </section>
+      <section><title>Prelude logging</title>
+	<para>
+The <filename>libprelude</filename> library is required for compiling this module.
+Prelude allows for gathering security events at the scale of any organisation, and NuFW can send Prelude the following events :
+<itemizedlist>
+<listitem><para>User authentication failures</para></listitem>
+<listitem><para>User authentication successes</para></listitem>
+<listitem><para>Start and end of user sessions</para></listitem>
+<listitem><para>Start and end of authenticated connections</para></listitem>
+<listitem><para>Rejected connections</para></listitem>
+All information about the Prelude project is available at <ulink url="http://prelude-ids.org/">http://prelude-ids.org</ulink>
+        </para>
+
       </section>
 
       <section><title>LDAP authentication and acl check</title>
