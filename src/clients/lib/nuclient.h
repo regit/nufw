@@ -35,10 +35,6 @@ extern "C" {
 #   error "nuclient.h have to be included before <features.h>"
 #endif
 
-#ifndef FREEBSD
-#include <features.h>
-#endif
-
 #include <arpa/inet.h>
 #include <assert.h>
 #include <ctype.h>
