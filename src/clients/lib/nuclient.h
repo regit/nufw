@@ -305,6 +305,9 @@ int nu_client_set_nuauth_cert_dn(nuauth_session_t * session,
 		char *nuauth_cert_dn,
 		nuclient_error_t *err);
 
+char* nu_client_get_cert_infos(nuauth_session_t * session);
+char* nu_client_get_server_cert_infos(nuauth_session_t * session);
+
 int nu_client_connect(nuauth_session_t * session,
 		const char *hostname,
 		const char *service,

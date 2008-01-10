@@ -40,6 +40,7 @@
 /* #include "nussl_uri.h" /\* for nussl_uri *\/ */
 #include "nussl_defs.h"
 #include "nussl_socket.h"
+#include "nussl_privssl.h"
 
 NUSSL_BEGIN_DECLS
 
@@ -275,6 +276,9 @@ int nussl_ssl_set_pkcs12_keypair(nussl_session *session, const char* cert_file, 
 int nussl_ssl_trust_cert_file(nussl_session *sess, const char *cert_file);
 
 nussl_ssl_client_cert* nussl_ssl_import_keypair(nussl_session* session, const char* cert_file, const char* key_file);
+
+char* nussl_get_cert_infos(nussl_session* sess);
+char* nussl_get_server_cert_infos(nussl_session* sess);
 
 NUSSL_END_DECLS
 

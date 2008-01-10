@@ -59,6 +59,7 @@
 #endif
 
 #include "nussl_ssl.h"
+#include "nussl_ssl_common.h"
 #include "nussl_string.h"
 #include "nussl_session.h"
 #include "nussl_internal.h"
@@ -81,25 +82,6 @@ typedef unsigned char nussl_d2i_uchar;
 #else
 typedef const unsigned char nussl_d2i_uchar;
 #endif
-
-struct nussl_ssl_dname_s {
-    X509_NAME *dn;
-};
-
-struct nussl_ssl_certificate_s {
-    nussl_ssl_dname subj_dn, issuer_dn;
-    X509 *subject;
-    nussl_ssl_certificate *issuer;
-    char *identity;
-};
-
-struct nussl_ssl_client_cert_s {
-    PKCS12 *p12;
-    int decrypted; /* non-zero if successfully decrypted. */
-    nussl_ssl_certificate cert;
-    EVP_PKEY *pkey;
-    char *friendly_name;
-};
 
 /* Append an ASN.1 DirectoryString STR to buffer BUF as UTF-8.
  * Returns zero on success or non-zero on error. */

@@ -34,6 +34,7 @@
 
 #include "config.h"
 #include "nussl_config.h"
+#include "nussl_ssl_common.h"
 
 #ifdef HAVE_GNUTLS
 
@@ -75,26 +76,6 @@ GCRY_THREAD_OPTION_PTHREAD_IMPL;
 #include "nussl_utils.h"
 
 #define UGLY_DEBUG() printf("%s %s:%i\n", __FUNCTION__, __FILE__, __LINE__)
-struct nussl_ssl_dname_s {
-    int subject; /* non-zero if this is the subject DN object */
-    gnutls_x509_crt cert;
-};
-
-struct nussl_ssl_certificate_s {
-    nussl_ssl_dname subj_dn, issuer_dn;
-    gnutls_x509_crt subject;
-    nussl_ssl_certificate *issuer;
-    char *identity;
-};
-
-struct nussl_ssl_client_cert_s {
-    gnutls_pkcs12 p12;
-    int decrypted; /* non-zero if successfully decrypted. */
-    nussl_ssl_certificate cert;
-    gnutls_x509_privkey pkey;
-    char *friendly_name;
-};
-
 /* Returns the highest used index in subject (or issuer) DN of
  * certificate CERT for OID, or -1 if no RDNs are present in the DN
  * using that OID. */

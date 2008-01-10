@@ -41,7 +41,7 @@
 
 #include "nussl_defs.h"
 
-NUSSL_BEGIN_DECLS
+/* NUSSL_BEGIN_DECLS */
 
 /* A "distinguished name"; a unique name for some entity. */
 typedef struct nussl_ssl_dname_s nussl_ssl_dname;
@@ -191,6 +191,6 @@ void nussl_ssl_context_set_flag(nussl_ssl_context *ctx, int flag, int value);
 /* Destroy an SSL context. */
 void nussl_ssl_context_destroy(nussl_ssl_context *ctx);
 
-NUSSL_END_DECLS
+/* NUSSL_END_DECLS */
 
 #endif

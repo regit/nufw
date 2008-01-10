@@ -444,6 +444,21 @@ void wipe(void *data, size_t datalen)
 }
 
 /**
+ * Display informations about the user certificate
+ *
+ */
+void display_cert(nuauth_session_t* session)
+{
+	char* infos = nu_client_get_cert_infos(session);
+	printf("User certificate:\n%s\n", infos ? infos : "None");
+	free(infos);
+	infos = nu_client_get_server_cert_infos(session);
+	printf("Server certificate:\n%s\n", infos ? infos : "None");
+	free(infos);
+}
+
+
+/**
  * Try to connect to nuauth.
  *
  * \return The client session, or NULL on error (get description from ::err)
@@ -725,6 +740,10 @@ void init_library(nutcpc_context_t * context, char *username)
 	/* Init. library */
 	printf("Connecting to NuFW gateway (%s)\n", context->srv_addr);
 	session = do_connect(context, username);
+
+	if (session) {
+		display_cert(session);
+	}
 
 	/* Library failure? */
 	if (session == NULL) {

@@ -406,6 +406,32 @@ int nu_client_load_ca(nuauth_session_t * session,
 
 /**
  * \ingroup nuclientAPI
+ * Returns a formated string containing information about the user certificate
+ *
+ * \param session Pointer to client session
+ * \return 
+ */
+char* nu_client_get_cert_infos(nuauth_session_t * session)
+{
+	return nussl_get_cert_infos(session->nussl);
+}
+
+
+/**
+ * \ingroup nuclientAPI
+ * Returns a formated string containing information about the server certificate
+ *
+ * \param session Pointer to client session
+ * \return 
+ */
+char* nu_client_get_server_cert_infos(nuauth_session_t * session)
+{
+	return nussl_get_server_cert_infos(session->nussl);
+}
+
+
+/**
+ * \ingroup nuclientAPI
  */
 int nu_client_set_nuauth_cert_dn(nuauth_session_t * session,
 				char *nuauth_cert_dn,
@@ -762,6 +788,5 @@ int nu_check_version(const char *version)
 	else
 		return 0;
 }
-
 
 /** @} */
