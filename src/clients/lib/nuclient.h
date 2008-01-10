@@ -82,9 +82,6 @@ extern "C" {
 /** Default nuauth IP address */
 #define NUAUTH_IP "192.168.1.1"
 
-/** Default filename of key */
-#define KEYFILE "key.pem"
-
 /** Timeout of UDP connections */
 #define UDP_TIMEOUT 30
 
