@@ -138,6 +138,7 @@ void nussl_set_error(nussl_session *sess, const char *format, ...)
 
     va_start(params, format);
     nussl_vsnprintf(sess->error, sizeof sess->error, format, params);
+    printf("ERROR: %s\n", sess->error);
     va_end(params);
 }
 

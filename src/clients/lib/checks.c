@@ -94,6 +94,9 @@ void *recv_message(void *data)
 			}
 		}
 #endif
+		if (ret == NUSSL_SOCK_TIMEOUT)
+			continue;
+
 		if (ret <= 0) {
 			ask_session_end(session);
 			break;

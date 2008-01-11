@@ -507,7 +507,13 @@ static int readable_raw(nussl_socket *sock, int secs)
 	set_strerror(sock, nussl_errno);
 	return NUSSL_SOCK_ERROR;
     }
-    return (ret == 0) ? NUSSL_SOCK_TIMEOUT : 0;
+    else
+    if(ret == 0)
+    {
+        set_error(sock, _("Read timed out"));
+        return NUSSL_SOCK_TIMEOUT;
+    }
+    return 0;
 }
 
 static ssize_t read_raw(nussl_socket *sock, char *buffer, size_t len)
