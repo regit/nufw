@@ -50,9 +50,8 @@
 #include "sys_config.h"
 #include "internal.h"
 #include <sys/utsname.h>
-#include <nussl_ssl.h>
+#include <nussl_request.h>
 #include <nussl_session.h>
-#include <nussl_request.h> /* nussl__negotiate_ssl */
 #include <nussl_utils.h> /* NUSSL_OK definition */
 
 void nu_exit_clean(nuauth_session_t * session)
@@ -124,11 +123,9 @@ int nu_client_global_init(nuclient_error_t * err)
 {
 	int ret;
 
-	/*gcry_control(GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);*/
-
-	if (nussl_sock_init() != NUSSL_OK)
+	if (nussl_init() != NUSSL_OK)
 	{
-		SET_ERROR(err, INTERNAL_ERROR, UNKNOWN_ERR); /* TODO: patch nussl to handle errors correctly in nussl_sock_init */
+		SET_ERROR(err, INTERNAL_ERROR, NUSSL_INIT_ERR); /* TODO: patch nussl to handle errors correctly in nussl_sock_init */
 		return 0;
 	}
 
@@ -754,6 +751,8 @@ const char *nu_client_strerror(nuauth_session_t * session, nuclient_error_t * er
 			return "Bad credentials";
 		case BINDING_ERR:
 			return "Binding (source address) error";
+		case NUSSL_INIT_ERR:
+			return "NuSSL initialisation failed.";
 		default:
 			return "Unknown internal error code";
 		}

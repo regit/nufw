@@ -279,6 +279,7 @@ nussl_ssl_client_cert* nussl_ssl_import_keypair(nussl_session* session, const ch
 
 char* nussl_get_cert_infos(nussl_session* sess);
 char* nussl_get_server_cert_infos(nussl_session* sess);
+int nussl_init();
 
 NUSSL_END_DECLS
 

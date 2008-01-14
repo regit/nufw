@@ -247,6 +247,7 @@ enum {
 	SEND_ERR = 10,	     /** Fail to send packet to nuauth */
 	BAD_CREDENTIALS_ERR, /** Username/password error */
 	BINDING_ERR,	     /** bind() call failed */
+	NUSSL_INIT_ERR,	     /** NuSSL initialisation failed */
 };
 
 /* Define for backward compatibility */

@@ -514,3 +514,7 @@ int nussl_ssl_set_pkcs12_keypair(nussl_session *session, const char* pkcs12_file
 	return ret;
 }
 
+int nussl_init()
+{
+	return nussl_sock_init();
+}
