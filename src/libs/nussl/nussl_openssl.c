@@ -693,36 +693,39 @@ int nussl__negotiate_ssl(nussl_session *sess)
         }
     }
 
-    if (chain == NULL || sk_X509_num(chain) == 0) {
-	nussl_set_error(sess, _("SSL server did not present certificate"));
-	return NUSSL_ERROR;
-    }
-
-    if (sess->server_cert) {
-        int diff = X509_cmp(sk_X509_value(chain, 0), sess->server_cert->subject);
-        if (freechain) sk_X509_free(chain); /* no longer need the chain */
-	if (diff) {
-	    /* This could be a MITM attack: fail the request. */
-	    nussl_set_error(sess, _("Server certificate changed: "
-				 "connection intercepted?"));
-	    return NUSSL_ERROR;
-	}
-	/* certificate has already passed verification: no need to
-	 * verify it again. */
-    } else {
-	/* new connection: create the chain. */
-        nussl_ssl_certificate *cert = make_chain(chain);
-
-        if (freechain) sk_X509_free(chain); /* no longer need the chain */
-
-	if (check_certificate(sess, ssl, cert)) {
-	    NUSSL_DEBUG(NUSSL_DBG_SSL, "SSL certificate checks failed: %s\n",
-		     sess->error);
-	    nussl_ssl_cert_free(cert);
-	    return NUSSL_ERROR;
-	}
-	/* remember the chain. */
-        sess->server_cert = cert;
+    if(sess->check_peer_cert)
+    {
+        if (chain == NULL || sk_X509_num(chain) == 0) {
+    	nussl_set_error(sess, _("SSL server did not present certificate"));
+    	return NUSSL_ERROR;
+        }
+    
+        if (sess->server_cert) {
+            int diff = X509_cmp(sk_X509_value(chain, 0), sess->server_cert->subject);
+            if (freechain) sk_X509_free(chain); /* no longer need the chain */
+            if (diff) {
+                /* This could be a MITM attack: fail the request. */
+                nussl_set_error(sess, _("Server certificate changed: "
+                                        "connection intercepted?"));
+                return NUSSL_ERROR;
+            }
+    	/* certificate has already passed verification: no need to
+    	 * verify it again. */
+        } else {
+    	/* new connection: create the chain. */
+            nussl_ssl_certificate *cert = make_chain(chain);
+    
+            if (freechain) sk_X509_free(chain); /* no longer need the chain */
+    
+            if (check_certificate(sess, ssl, cert)) {
+                NUSSL_DEBUG(NUSSL_DBG_SSL, "SSL certificate checks failed: %s\n",
+           		     sess->error);
+           	nussl_ssl_cert_free(cert);
+           	return NUSSL_ERROR;
+            }
+    	/* remember the chain. */
+            sess->server_cert = cert;
+        }
     }
 
     if (ctx->sess) {
