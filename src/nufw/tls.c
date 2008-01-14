@@ -59,6 +59,8 @@ unsigned int check_nuauth_cert_dn(gnutls_session *tls_session)
 
 	cert_list = gnutls_certificate_get_peers(*tls_session, &cert_list_size);
 	if (cert_list_size == 0) {
+                log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
+                                "TLS: cannot get the peer certificate");
 		return 1;
 	}
 
@@ -118,7 +120,9 @@ int init_x509_filenames()
 			(char *) calloc(strlen(CONFIG_DIR) + strlen(KEYFILE) +
 					2, sizeof(char));
 		if (!key_file) {
-			return 0;
+                        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
+                                        "TLS: cannot allocate the key file");
+                        return 0;
 		}
 		strcat(key_file, CONFIG_DIR);
 		strcat(key_file, "/");
@@ -129,7 +133,9 @@ int init_x509_filenames()
 			(char *) calloc(strlen(CONFIG_DIR) + strlen(CERTFILE) +
 					2, sizeof(char));
 		if (!cert_file) {
-			return 0;
+                        log_area_printf (DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
+                                                                "TLS: cannot allocate the cert file");
+                        return 0;
 		}
 		strcat(cert_file, CONFIG_DIR);
 		strcat(cert_file, "/");
@@ -237,7 +243,9 @@ gnutls_session *tls_connect()
 	if (connect(tls_socket, adr_srv->ai_addr, adr_srv->ai_addrlen) ==
 	    -1) {
 		close(tls_socket);
-		return NULL;
+                log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
+                                "TLS: cannot connect to tls_socket");
+                return NULL;
 	}
 
 	ret = gnutls_set_default_priority(*(tls_session));
@@ -319,6 +327,8 @@ gnutls_session *tls_connect()
 		}
 		if (nuauth_cert_dn) {
 			if (!check_nuauth_cert_dn(tls_session)) {
+                                log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_WARNING,
+                                                "TLS: Cannot check the certificate DN");
 				return NULL;
 			}
 		}
