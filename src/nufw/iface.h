@@ -22,7 +22,7 @@
 #ifndef IFACE_H
 #define IFACE_H
 
-#ifdef HAVE_NLIF_CATCH
+#ifdef HAVE_NFQ_INDEV_NAME
 int get_interface_information(struct nlif_handle *inst,
 			      struct queued_pckt *q_pckt,
 			      struct nfq_data *nfad);

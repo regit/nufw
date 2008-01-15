@@ -22,7 +22,7 @@
 
 #include "nufw.h"
 
-#ifdef HAVE_NLIF_CATCH
+#ifdef HAVE_NFQ_INDEV_NAME
 #  include "iface.h"
 #endif
 
@@ -88,7 +88,7 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 	struct nfqnl_msg_packet_hdr *ph;
 	struct timeval timestamp;
 	int ret;
-#ifdef HAVE_NLIF_CATCH
+#ifdef HAVE_NFQ_INDEV_NAME
 	struct nlif_handle *nlif_handle = (struct nlif_handle *) data;
 #endif
 
@@ -102,7 +102,7 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 
 	q_pckt.mark = nfq_get_nfmark(nfa);
 
-#ifdef HAVE_NLIF_CATCH
+#ifdef HAVE_NFQ_INDEV_NAME
 	if (!get_interface_information(nlif_handle, &q_pckt, nfa)) {
 		log_area_printf(DEBUG_AREA_PACKET, DEBUG_LEVEL_INFO,
 				"Can not get interfaces information for message");
@@ -369,7 +369,7 @@ void *packetsrv(void *void_arg)
 	unsigned char buffer[BUFSIZ];
 	struct timeval tv;
 	int fd;
-#ifdef HAVE_NLIF_CATCH
+#ifdef HAVE_NFQ_INDEV_NAME
 	struct nlif_handle *nlif_handle;
 	int if_fd;
 #endif
@@ -378,7 +378,7 @@ void *packetsrv(void *void_arg)
 	int max_fd;
 	fd_set wk_set;
 
-#ifdef HAVE_NLIF_CATCH
+#ifdef HAVE_NFQ_INDEV_NAME
 	nlif_handle = iface_table_open();
 
 	if (!nlif_handle)
@@ -412,7 +412,7 @@ void *packetsrv(void *void_arg)
 		/* wait new event on socket */
 		FD_ZERO(&wk_set);
 		FD_SET(fd, &wk_set);
-#ifdef HAVE_NLIF_CATCH
+#ifdef HAVE_NFQ_INDEV_NAME
 		FD_SET(if_fd, &wk_set);
 
 		if (fd >= if_fd) {
@@ -433,7 +433,7 @@ void *packetsrv(void *void_arg)
 
 			if (err == EBADF) {
 				struct stat s;
-#ifdef HAVE_NLIF_CATCH
+#ifdef HAVE_NFQ_INDEV_NAME
 				if ((fstat(if_fd, &s)<0)) {
 					iface_table_close(nlif_handle);
 
@@ -449,7 +449,7 @@ void *packetsrv(void *void_arg)
 #endif
 				if ((fstat(fd, &s)<0)) {
 					packetsrv_close(0);
-#ifdef HAVE_NLIF_CATCH
+#ifdef HAVE_NFQ_INDEV_NAME
 					fd = packetsrv_open(nlif_handle);
 #else
 					fd = packetsrv_open(NULL);
@@ -470,7 +470,7 @@ void *packetsrv(void *void_arg)
 			/* timeout! */
 			continue;
 		}
-#ifdef HAVE_NLIF_CATCH
+#ifdef HAVE_NFQ_INDEV_NAME
 		if (FD_ISSET(if_fd, &wk_set)) {
 			iface_treat_message(nlif_handle);
 			continue;
@@ -487,7 +487,7 @@ void *packetsrv(void *void_arg)
 					DEBUG_LEVEL_SERIOUS_MESSAGE,
 					"Reopen netlink connection.");
 			packetsrv_close(0);
-#ifdef HAVE_NLIF_CATCH
+#ifdef HAVE_NFQ_INDEV_NAME
 			fd = packetsrv_open(nlif_handle);
 #else
 			fd = packetsrv_open(NULL);
@@ -507,7 +507,7 @@ void *packetsrv(void *void_arg)
 		pckt_rx++;
 	}
 
-#ifdef HAVE_NLIF_CATCH
+#ifdef HAVE_NFQ_INDEV_NAME
 	iface_table_close(nlif_handle);
 #endif
 

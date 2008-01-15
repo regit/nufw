@@ -22,7 +22,7 @@
 
 #include "nufw.h"
 
-#ifdef HAVE_NLIF_CATCH
+#ifdef HAVE_NFQ_INDEV_NAME
 int get_interface_information(struct nlif_handle *inst,
 			      struct queued_pckt *q_pckt,
 			      struct nfq_data *nfad)
@@ -90,4 +90,4 @@ void iface_table_close(struct nlif_handle *inst)
 	nlif_close(inst);
 }
 
-#endif				/* #ifdef HAVE_NLIF_CATCH */
+#endif				/* #ifdef HAVE_NFQ_INDEV_NAME */
