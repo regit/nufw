@@ -76,15 +76,15 @@ class TestClientCert(TestCase):
 
         self.nufw.stop()
 
-    def testStrictMode(self):
-
-        self.nufw = startNufw(["-S"])
-        self.connectNuauthNufw()
-        
-	self.assert_(any("tls: invalid certificates received from nuauth server" in line.lower()
-            for line in self.nufw.readlines(total_timeout=TIMEOUT)))
-
-        self.nufw.stop()
+#    def testStrictMode(self):
+#
+#        self.nufw = startNufw(["-S"])
+#        self.connectNuauthNufw()
+#        
+#	self.assert_(any("tls: invalid certificates received from nuauth server" in line.lower()
+#            for line in self.nufw.readlines(total_timeout=TIMEOUT)))
+#
+#        self.nufw.stop()
 
 
 if __name__ == "__main__":
