@@ -41,16 +41,6 @@
 
 NUSSL_BEGIN_DECLS
 
-#define NUSSL_SOCK_ERROR (-1)
-/* Read/Write timed out */
-#define NUSSL_SOCK_TIMEOUT (-2)
-/* Socket was closed */
-#define NUSSL_SOCK_CLOSED (-3)
-/* Connection was reset (e.g. server crashed) */
-#define NUSSL_SOCK_RESET (-4)
-/* Secure connection was closed without proper SSL shutdown. */
-#define NUSSL_SOCK_TRUNC (-5)
-
 /* nussl_socket represents a TCP socket. */
 typedef struct nussl_socket_s nussl_socket;
 

@@ -50,9 +50,7 @@
 #include "sys_config.h"
 #include "internal.h"
 #include <sys/utsname.h>
-#include <nussl_request.h>
-#include <nussl_session.h>
-#include <nussl_utils.h> /* NUSSL_OK definition */
+#include <nussl.h>
 
 void nu_exit_clean(nuauth_session_t * session)
 {
@@ -313,7 +311,7 @@ int nu_client_load_key(nuauth_session_t * session,
 			if (exit_on_error) {
 				if (home)
 					free(home);
-				SET_ERROR(err, NUSSL_ERROR, ret);
+				SET_ERROR(err, NUSSL_ERR, ret);
 				return 0;
 			}
 			else {
@@ -348,7 +346,7 @@ int nu_client_load_pkcs12(nuauth_session_t * session,
 	int ret = nussl_ssl_set_pkcs12_keypair(session->nussl, pkcs12file, pkcs12password);
 	if (ret != NUSSL_OK)
 	{
-		SET_ERROR(err, NUSSL_ERROR, ret);
+		SET_ERROR(err, NUSSL_ERR, ret);
 		return 0;
 	}
 	return 1;
@@ -390,7 +388,7 @@ int nu_client_load_ca(nuauth_session_t * session,
 			if (exit_on_error) {
 				if (home)
 					free(home);
-				SET_ERROR(err, NUSSL_ERROR, ret);
+				SET_ERROR(err, NUSSL_ERR, ret);
 				return 0;
 			}
 			else {
@@ -645,7 +643,7 @@ int nu_client_connect(nuauth_session_t * session,
 
 	ret = nussl_open_connection(session->nussl);
 	if (ret != NUSSL_OK) {
-		SET_ERROR(err, NUSSL_ERROR, ret);
+		SET_ERROR(err, NUSSL_ERR, ret);
 		return 0;
 	}
 
@@ -718,7 +716,7 @@ const char *nu_client_strerror(nuauth_session_t * session, nuclient_error_t * er
 	if (err == NULL)
 		return "Error structure was not initialised";
 	switch (err->family) {
-	case NUSSL_ERROR:
+	case NUSSL_ERR:
 		if (session == NULL)
 			return "NuSSL error.";
 		return nussl_get_error(session->nussl);

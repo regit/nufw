@@ -32,7 +32,7 @@
 #include "security.h"
 #include "internal.h"
 #include <sys/utsname.h>
-#include <nussl_session.h>
+#include <nussl.h>
 
 char* nu_locale_charset;
 
@@ -92,7 +92,7 @@ static int samp_send(nuauth_session_t* session, const char *buffer,
 
 	result = nussl_write(session->nussl, buf, len + 3);
 	if (result < 0) {
-		SET_ERROR(err, NUSSL_ERROR, result);
+		SET_ERROR(err, NUSSL_ERR, result);
 		return 0;
 	}
 
@@ -110,7 +110,7 @@ static unsigned samp_recv(nuauth_session_t* session, char *buf, int bufsize,
 
 	tls_len = nussl_read(session->nussl, buf, bufsize);
 	if (tls_len <= 0) {
-		SET_ERROR(err, NUSSL_ERROR, tls_len);
+		SET_ERROR(err, NUSSL_ERR, tls_len);
 		return 0;
 	}
 
@@ -411,7 +411,7 @@ int send_os(nuauth_session_t * session, nuclient_error_t * err)
 	if (ret < 0) {
 		if (session->verbose)
 			printf("Error sending tls data: ...");
-		SET_ERROR(err, NUSSL_ERROR, ret);
+		SET_ERROR(err, NUSSL_ERR, ret);
 		return 0;
 	}
 
@@ -419,7 +419,7 @@ int send_os(nuauth_session_t * session, nuclient_error_t * err)
 	ret = nussl_read(session->nussl, buf, osfield_length);
 	if (ret <= 0) {
 		errno = EACCES;
-		SET_ERROR(err, NUSSL_ERROR, ret);
+		SET_ERROR(err, NUSSL_ERR, ret);
 #ifndef LINUX
 		free(buf);
 #endif
@@ -548,7 +548,7 @@ int init_sasl(nuauth_session_t * session, nuclient_error_t * err)
 
 	ret = nussl_write(session->nussl, "PROTO 5", strlen("PROTO 5"));
 	if (ret < 0) {
-		SET_ERROR(err, NUSSL_ERROR, ret);
+		SET_ERROR(err, NUSSL_ERR, ret);
 		return 0;
 	}
 

@@ -24,8 +24,7 @@
 #include "nufw_source.h"
 #include "nuclient.h"
 #include <sasl/saslutil.h>
-#include <nussl_session.h>
-#include <nussl_utils.h>
+#include <nussl.h>
 #include <pthread.h>
 #include <proto.h>
 #include "proc.h"

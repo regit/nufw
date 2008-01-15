@@ -24,7 +24,7 @@
 #include "nuclient.h"
 #include <sasl/saslutil.h>
 #include <proto.h>
-#include <nussl_session.h>
+#include <nussl.h>
 
 /**
  * \addtogroup libnuclient

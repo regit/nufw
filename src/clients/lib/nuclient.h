@@ -70,6 +70,7 @@ extern "C" {
 #include <signal.h>
 #include <unistd.h>
 #include <string.h>
+#include <nussl.h>
 
 #define NUCLIENT_VERSION "2.1.1-3"
 #define DEBUG 0
@@ -144,10 +145,9 @@ enum {
 };
 
 /* nuauth_session_t structure */
-struct nussl_session_s;
 
 typedef struct {
-	struct nussl_session_s* nussl;
+	nussl_session* nussl;
 
 	/*--------------- PUBLIC MEMBERS -------------------*/
 	u_int32_t userid;	/*!< Local user identifier (getuid()) */
@@ -226,7 +226,7 @@ typedef struct {
 /** Error family */
 typedef enum {
 	INTERNAL_ERROR = 0,
-	NUSSL_ERROR = 1,
+	NUSSL_ERR = 1,
 	SASL_ERROR = 2
 } nuclient_error_family_t;
 
