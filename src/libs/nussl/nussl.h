@@ -21,6 +21,9 @@ extern "C" {
 struct nussl_nession_t;
 typedef struct nussl_session_t nussl_session;
 
+/* Global library initialisation */
+int nussl_init();
+
 /* Create a session to the given server, using the given scheme.  If
  * "https" is passed as the scheme, SSL will be used to connect to the
  * server. */
@@ -28,6 +31,12 @@ nussl_session *nussl_session_create();
 
 /* Finish an HTTP session */
 void nussl_session_destroy(nussl_session *sess);
+
+/* Set destination hostname / port */
+void nussl_set_hostinfo(nussl_session *sess, const char *hostname, unsigned int port);
+
+/* Open the connection */
+int nussl_open_connection(nussl_session* sess);
 
 /* Prematurely force the connection to be closed for the given
  * session. */
@@ -44,9 +53,6 @@ void nussl_set_connect_timeout(nussl_session* sess, int timeout);
 /* Retrieve the error string for the session */
 const char *nussl_get_error(nussl_session* sess);
 
-/* Set destination hostname / port */
-void nussl_set_hostinfo(nussl_session *sess, const char *hostname, unsigned int port);
-
 /* Write to session */
 int nussl_write(nussl_session *sess, char *buffer, size_t count);
 
@@ -62,10 +68,11 @@ int nussl_ssl_set_pkcs12_keypair(nussl_session *sess, const char* cert_file, con
 /* Indicate that the certificate 'cert' is trusted */
 int nussl_ssl_trust_cert_file(nussl_session* sess, const char *cert_file);
 
+/* Returns a string containing informations about the certificate */
 char* nussl_get_cert_infos(nussl_session* sess);
+
+/* Returns a string containing informations about the peer certificate */
 char* nussl_get_server_cert_infos(nussl_session* sess);
-int nussl_init();
-int nussl_open_connection(nussl_session* sess);
 
 
 #define NUSSL_OK (0) /* Success */
