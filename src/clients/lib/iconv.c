@@ -70,7 +70,7 @@ char *nu_client_to_utf8(const char *inbuf, char *from_charset)
 	outbufleft = outbuflen - 1;	/* -1 because we keep last byte for nul byte */
 	targetbuf = outbuf;
 	ret =
-	    iconv(ctx, (char **) &inbuf, &inlen, &targetbuf, &outbufleft);
+	    iconv(ctx, (const char **) &inbuf, &inlen, &targetbuf, &outbufleft);
 	real_outlen = targetbuf - outbuf;
 
 	/* is buffer too small? */
@@ -98,7 +98,7 @@ char *nu_client_to_utf8(const char *inbuf, char *from_charset)
 			outbufleft = outbuflen - real_outlen - 1;	/* -1 because we keep last byte for nul byte */
 			targetbuf = outbuf + real_outlen;
 			ret =
-			    iconv(ctx, (char **) &inbuf, &inlen,
+			    iconv(ctx, (const char **) &inbuf, &inlen,
 				  &targetbuf, &outbufleft);
 			real_outlen = targetbuf - outbuf;
 		}
