@@ -91,7 +91,7 @@ unsigned int get_ip_headers(tracking_t * tracking,
 		else
 			memset(tracking->payload, 0,
 			       sizeof(tracking->payload));
-#endif //#ifdef TRACKING_WITH_PAYLOAD
+#endif /* #ifdef TRACKING_WITH_PAYLOAD */
 	} else if (ip->version == 6) {
 #else
 	if (ip->ip_v == 4) {
