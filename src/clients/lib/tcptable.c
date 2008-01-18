@@ -20,13 +20,13 @@
  ** along with this program; if not, write to the Free Software
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+#include "ipv6.h"
 #include "client.h"
 #include "nuclient.h"
 #include "libnuclient.h"
 #include "proto.h"
 #include <pthread.h>
 #include <inttypes.h>
-#include <ipv6.h>
 #define USE_JHASH3
 #include <jhash.h>
 #ifdef FREEBSD

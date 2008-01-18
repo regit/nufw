@@ -29,11 +29,6 @@
 
 #include "packet_parser.h"
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
-#include <ipv6.h>
 #include <netinet/tcp.h>
 #include <netinet/ip.h>
 #include <netinet/ip6.h>

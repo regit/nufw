@@ -22,8 +22,18 @@
 #ifndef NUFW_SOURCE_H
 #define NUFW_SOURCE_H
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #ifdef _FEATURES_H
+/* Linux */
 #   error "nufw_source.h have to be included before <features.h>"
+#endif
+
+#ifdef	_SYS_CDEFS_H_
+/* FreeBSD */
+#   error "nufw_source.h have to be included before <sys/cdefs.h>"
 #endif
 
 /**

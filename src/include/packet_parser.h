@@ -30,7 +30,7 @@
 #define PACKET_PARSER_H
 
 #include "nufw_source.h"
-#include <netinet/in.h>
+#include "ipv6.h"
 #include <sys/types.h>
 
 #ifdef TRACKING_WITH_PAYLOAD
