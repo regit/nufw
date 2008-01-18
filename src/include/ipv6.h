@@ -21,6 +21,18 @@
 #ifndef NUFW_IPV6_H
 #define NUFW_IPV6_H
 
+#include "nufw_source.h"
+
+#ifdef _NETINET_IN_H_
+/* FreeBSD */
+#   error "ipv6.h have to be included before <netinet/in.h>"
+#endif
+
+#ifdef FREEBSD
+#  include <sys/types.h>
+#  include <netinet/in_systm.h>
+#endif
+
 #include <netinet/in.h>
 
 void clear_ipv6(struct in6_addr *ipv6);
@@ -30,7 +42,7 @@ inline void ipv6_to_ipv4(const struct in6_addr *ipv6, struct in_addr *ipv4);
 int is_ipv4(const struct in6_addr *addr);
 void format_ipv6(const struct in6_addr *addr, char *buffer, size_t buflen, uint8_t *protocol);
 int getsockname_ipv6(int fileno, struct in6_addr *addr);
-int hex2ipv6(char *text, struct in6_addr *ip);
+int hex2ipv6(const char *text, struct in6_addr *ip);
 inline int ipv6_equal(const struct in6_addr *ipa, const struct in6_addr *ipb);
 int compare_ipv6_with_mask(const struct in6_addr *addr1,
 	const struct in6_addr *addr2, const struct in6_addr *mask);

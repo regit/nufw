@@ -18,11 +18,12 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include <nufw_source.h>
+#include <ipv6.h>
 #include <string.h>
 #include <stdio.h> /* sscanf() */
 #include <inttypes.h> /* SCNx32 */
 #include <arpa/inet.h>
+#include <sys/socket.h>
 #include <security.h>
 
 #ifdef HAVE_CONFIG_H
