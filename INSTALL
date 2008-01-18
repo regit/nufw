@@ -43,6 +43,16 @@ Prerequisites of nuauth_command program:
    http://software.inl.fr/trac/trac.cgi/wiki/IPy
 
 
+Name of FreeBSD packages (incomplete list):
+
+ * autotools
+ * libtool
+ * glib20
+ * libgcrypt
+ * gnutls
+ * cyrus-sasl2
+
+
 Kernel
 ======
 
