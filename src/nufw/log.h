@@ -53,9 +53,18 @@ int debug_level;		/*!< Debug level, default valut: #DEFAULT_DEBUG_LEVEL */
 int debug_areas;		/*!< Debug areas, default value: #DEFAULT_DEBUG_AREAS (all areas) */
 
 void init_log_engine();
-void log_printf(debug_level_t priority, char *format, ...);
+void log_printf(debug_level_t priority, char *format, ...)
+#ifdef __GNUC__
+  __attribute__((__format__(printf,2,3)))
+#endif
+;
+
 void log_area_printf(debug_area_t area, debug_level_t priority,
-		     char *format, ...);
+		     char *format, ...)
+#ifdef __GNUC__
+  __attribute__((__format__(printf,3,4)))
+#endif
+;
 
 /** \def debug_log_printf(area, priority, format, ...)
  * Call log_area_printf(area, priority, ...) if DEBUG_ENABLE is defined 

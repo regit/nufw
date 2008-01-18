@@ -38,7 +38,11 @@ char *get_rid_of_domain(const char *user);
 char *get_rid_of_prefix_domain(const char *user);
 
 gboolean secure_snprintf(char *buffer, unsigned int buffer_size,
-			 char *format, ...);
+			 char *format, ...)
+#ifdef __GNUC__
+	__attribute__((__format__(printf,3,4)))
+#endif
+;
 
 
 void free_buffer_read(struct tls_buffer_read *datas);

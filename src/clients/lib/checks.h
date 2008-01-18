@@ -31,6 +31,10 @@ void *nu_client_thread_check(void *session);
 int nu_client_real_check(nuauth_session_t * session, nuclient_error * err);
 
 int secure_snprintf(char *buffer, unsigned int buffer_size, char *format,
-		    ...);
+		    ...)
+#ifdef __GNUC__
+	__attribute__((__format__(printf,3,4)))
+#endif
+;
 
 #endif

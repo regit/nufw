@@ -48,6 +48,12 @@ struct sigaction old_sigterm;
 struct sigaction old_sigint;
 int forced_reconnect = 0;
 
+void panic(const char *fmt, ...)
+#ifdef __GNUC__
+	__attribute__((__format__(printf,1,2)))
+#endif
+;
+
 typedef struct {
 	char port[10];		/*!< Port (service) number / name */
 	unsigned long interval;	/*!< Number of millisecond for sleep in main loop (default value: 100ms) */

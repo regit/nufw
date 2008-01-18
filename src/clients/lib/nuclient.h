@@ -326,7 +326,11 @@ int nu_check_version(const char *version);
 char *nu_get_home_dir();
 
 int secure_snprintf(char *buffer, unsigned int buffer_size,
-		char *format, ...);
+		char *format, ...)
+#ifdef __GNUC__
+	__attribute__((__format__(printf,3,4)))
+#endif
+;
 
 #ifdef __cplusplus
 }
