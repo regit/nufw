@@ -315,10 +315,10 @@ int tcptable_read(nuauth_session_t * session, conntable_t * ct)
 			continue;
 
 		uint32_to_ipv6(inp->inp_laddr.s_addr, &c.ip_src);
-		c.port_src = inp->inp_lport;
+		c.port_src = ntohs(inp->inp_lport);
 
 		uint32_to_ipv6(inp->inp_faddr.s_addr, &c.ip_dst);
-		c.port_dst = inp->inp_fport;
+		c.port_dst = ntohs(inp->inp_fport);
 		c.protocol = IPPROTO_TCP;
 
 		tcptable_add(ct, &c);
