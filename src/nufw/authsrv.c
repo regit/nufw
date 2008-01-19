@@ -1,5 +1,5 @@
 /*
- ** Copyright (C) 2002-2006 INL
+ ** Copyright (C) 2002-2008 INL
  ** Written by Éric Leblond <eric@regit.org>
  **            Vincent Deffontaines <vincent@gryzor.com>
  ** INL http://www.inl.fr/
@@ -101,12 +101,12 @@ int auth_process_answer(char *dgram, int dgram_size)
 	case DECISION_REJECT:
 		/* Packet is rejected, ie. dropped and ICMP signalized */
 		log_area_printf(DEBUG_AREA_PACKET, DEBUG_LEVEL_VERBOSE_DEBUG,
-				"(*) Rejecting %lu", packet_id);
+				"(*) Rejecting %" PRIu32, packet_id);
 		IPQ_SET_VERDICT(packet_id, NF_DROP);
 		if (send_icmp_unreach(dgram +
 				  sizeof(nuv4_nuauth_decision_response_t)) == -1) {
 			log_area_printf(DEBUG_AREA_PACKET, DEBUG_LEVEL_WARNING,
-					"(*) Could not sent ICMP reject for %lu", packet_id);
+					"(*) Could not sent ICMP reject for %" PRIu32, packet_id);
 		}
 		break;
 
