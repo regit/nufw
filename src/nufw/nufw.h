@@ -55,11 +55,14 @@
 #  include "config.h"
 #endif
 
+#include "nufw_source.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <signal.h>
 #include <sys/types.h>
+#include <inttypes.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <assert.h>

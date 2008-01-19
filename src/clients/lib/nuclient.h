@@ -70,6 +70,7 @@ extern "C" {
 #include <signal.h>
 #include <unistd.h>
 #include <string.h>
+#include <pthread.h>
 #include <nussl.h>
 
 #define NUCLIENT_VERSION "2.1.1-3"
