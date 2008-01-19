@@ -53,6 +53,8 @@ typedef unsigned long digit_t;
 #endif
 typedef digit_t number_t[DIGIT_COUNT];
 
+#define LDAP_MAX_TRY 2
+
 /**
  * Returns version of nuauth API
  */
@@ -485,23 +487,12 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 	struct acl_group *this_acl;
 	struct weighted_acl *this = NULL;
 	LDAPMessage *res, *result;
-	int ok, err;
+	int ok, err, try;
 	struct ldap_params *params = (struct ldap_params *) params_p;
 	LDAP *ld = g_private_get(params->ldap_priv);
 	gchar *ip_src;
 	gchar *ip_dst;
 	gchar *prov_string;
-
-	if (ld == NULL) {
-		/* init ldap has never been done */
-		ld = ldap_conn_init(params);
-		if (ld == NULL) {
-			log_message(SERIOUS_WARNING, DEBUG_AREA_AUTH,
-				    "Can not initiate LDAP conn\n");
-			return NULL;
-		}
-		g_private_set(params->ldap_priv, ld);
-	}
 
 	if (params->ldap_use_ipv4_schema) {
 		struct in_addr ipv4;
@@ -662,40 +653,60 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 		free(ip_dst);
 	}
 
-	/* send query and wait result */
-	timeout.tv_sec = params->ldap_request_timeout;
-	timeout.tv_usec = 0;
-#ifdef PERF_DISPLAY_ENABLE
-	{
-		struct timeval tvstart, tvend, result;
-		if (nuauthconf->debug_areas & DEBUG_AREA_PERF) {
-			gettimeofday(&tvstart, NULL);
-		}
-#endif
-
-		err =
-		    ldap_search_st(ld, params->ldap_acls_base_dn,
-				   LDAP_SCOPE_SUBTREE, filter, NULL, 0,
-				   &timeout, &res);
-
-#ifdef PERF_DISPLAY_ENABLE
-		if (nuauthconf->debug_areas & DEBUG_AREA_PERF) {
-			gettimeofday(&tvend, NULL);
-			timeval_substract(&result, &tvend, &tvstart);
-			log_message(INFO, DEBUG_AREA_PERF, "Ldap query time: %.1f msec",
-					(double)result.tv_sec*1000+(double)(result.tv_usec/1000));
-		}
-	}
-#endif
-	if (err != LDAP_SUCCESS) {
-		if (err == LDAP_SERVER_DOWN) {
-			/* we lost connection, so disable current one */
-			log_message(WARNING, DEBUG_AREA_MAIN,
-				    "disabling current connection");
-			ldap_unbind(ld);
-			ld = NULL;
+	try = 0;
+	do {
+		if (ld == NULL) {
+			/* init ldap has never been done */
+			ld = ldap_conn_init(params);
+			if (ld == NULL) {
+				log_message(SERIOUS_WARNING, DEBUG_AREA_AUTH,
+						"Can not initiate LDAP conn\n");
+				return NULL;
+			}
 			g_private_set(params->ldap_priv, ld);
 		}
+
+		/* send query and wait result */
+		timeout.tv_sec = params->ldap_request_timeout;
+		timeout.tv_usec = 0;
+#ifdef PERF_DISPLAY_ENABLE
+		{
+			struct timeval tvstart, tvend, result;
+			if (nuauthconf->debug_areas & DEBUG_AREA_PERF) {
+				gettimeofday(&tvstart, NULL);
+			}
+#endif
+
+			err =
+				ldap_search_st(ld, params->ldap_acls_base_dn,
+						LDAP_SCOPE_SUBTREE, filter, NULL, 0,
+						&timeout, &res);
+
+#ifdef PERF_DISPLAY_ENABLE
+			if (nuauthconf->debug_areas & DEBUG_AREA_PERF) {
+				gettimeofday(&tvend, NULL);
+				timeval_substract(&result, &tvend, &tvstart);
+				log_message(INFO, DEBUG_AREA_PERF, "Ldap query time: %.1f msec",
+						(double)result.tv_sec*1000+(double)(result.tv_usec/1000));
+			}
+		}
+#endif
+		if (err != LDAP_SUCCESS) {
+			if (err == LDAP_SERVER_DOWN) {
+				/* we lost connection, so disable current one */
+				log_message(WARNING, DEBUG_AREA_MAIN,
+						"disabling current connection");
+				ldap_unbind(ld);
+				ld = NULL;
+				try++;
+				g_private_set(params->ldap_priv, ld);
+			} else {
+				return NULL;
+			}
+		}
+	} while ((err!= LDAP_SUCCESS) || (try < LDAP_MAX_TRY));
+
+	if (try == LDAP_MAX_TRY) {
 		log_message(WARNING, DEBUG_AREA_MAIN,
 			    "invalid return from ldap_search_st : %s\n",
 			    ldap_err2string(err));
