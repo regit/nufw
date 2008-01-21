@@ -28,6 +28,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include <nussl.h>
 
 /**
  * \addtogroup TLS
@@ -44,6 +45,22 @@
 
 /* These are global */
 struct nuauth_tls_t nuauth_tls;
+
+nussl_session* nussl;
+
+
+extern int ssl_connect(const char *hostname, const char *service)
+{
+        unsigned int port = atoi(service);
+
+        nussl = nussl_session_create();
+        if ( ! nussl ) {
+                log_message(CRITICAL, DEBUG_AREA_AUTH,
+                            "Cannot allocate nussl session!");
+        }
+
+        nussl_set_hostinfo(nussl, hostname, port);
+}
 
 /**
  * Strictly close a TLS session: call gnutls_deinit() and free memory.
@@ -171,7 +188,7 @@ static int generate_dh_params(gnutls_dh_params * dh_params)
 }
 
 /**
- * Refresh crl file 
+ * Refresh crl file
  *
  * This function is run periodically because it is pushed with
  * cleanup_func_push() to the list of nuauth periodically run
@@ -196,7 +213,7 @@ void refresh_crl_file()
 						"[%i] NuFW TLS: CRL file reloading failed (%s)",
 						getpid(), gnutls_strerror(ret));
 			}
-				
+
 		}
 		nuauth_tls.crl_refresh_counter = 0;
 	}
@@ -211,6 +228,7 @@ static ssize_t tls_push_func(gnutls_transport_ptr ptr, const void *buf,
 	int fd = GPOINTER_TO_INT(ptr);
 	return send(fd, buf, count, MSG_DONTWAIT);
 }
+
 
 /**
  * Realize a tls connection: call initialize_tls_session(), set tranport
@@ -375,7 +393,7 @@ int create_x509_credentials()
 	} else {
 		g_warning("[%i] config : invalid nuauth_tls_auth_by_cert value: %d",
 			getpid(), int_authcert);
-		
+
 		return 0;
 	}
 
@@ -399,7 +417,7 @@ int create_x509_credentials()
 	if (access(nuauth_tls_cert, R_OK)) {
 		g_warning("[%i] TLS : can not access cert file %s",
 			getpid(), nuauth_tls_cert);
-		
+
 		return 0;
 	}
 
@@ -482,7 +500,7 @@ int create_x509_credentials()
 	if (ret < 0) {
 		g_warning("[%i] Problem generating dh params : %s",
 			getpid(), gnutls_strerror(ret));
-	
+
 		return 0;
 	}
 

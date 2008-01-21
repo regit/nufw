@@ -125,7 +125,7 @@ struct tls_insert_data {
 };
 
 struct nuauth_tls_t {
-	gnutls_certificate_credentials x509_cred;
+        gnutls_certificate_credentials x509_cred;
 	int request_cert;
 	auth_cert_type_t auth_by_cert;
 	int crl_refresh;
