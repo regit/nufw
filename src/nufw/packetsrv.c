@@ -49,9 +49,11 @@
 int look_for_tcp_flags(unsigned char *dgram, unsigned int datalen)
 {
 	struct iphdr *iphdrs = (struct iphdr *) dgram;
-	/* check need some datas */
+	/* check need some data */
 	if (datalen < sizeof(struct iphdr) + sizeof(struct tcphdr)) {
-		return 0;
+                log_area_printf(DEBUG_AREA_PACKET, DEBUG_LEVEL_VERBOSE_DEBUG,
+                                "Incorrect packet data length");
+                return 0;
 	}
 	/* check IP version */
 	if (iphdrs->version == 4) {
@@ -59,7 +61,7 @@ int look_for_tcp_flags(unsigned char *dgram, unsigned int datalen)
 			struct tcphdr *tcphdrs =
 			    (struct tcphdr *) (dgram + 4 * iphdrs->ihl);
 			if (tcphdrs->fin || tcphdrs->ack || tcphdrs->rst) {
-				return 1;
+                                return 1;
 			}
 		}
 	}
@@ -131,6 +133,8 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 			IPQ_SET_VERDICT(q_pckt.packet_id, NF_ACCEPT);
 			return 1;
 		} else {
+                        log_area_printf(DEBUG_AREA_PACKET, DEBUG_LEVEL_VERBOSE_DEBUG,
+                                        "Can not get the packet headers");
 			return 0;
 		}
 	}
@@ -323,8 +327,10 @@ void packetsrv_ipq_process(unsigned char *buffer)
 	pcktid = padd(current);
 	pthread_mutex_unlock(&packets_list.mutex);
 	if (!pcktid) {
-		/* can't add packet to packet list (so already dropped): exit */
-		return;
+                log_area_printf(DEBUG_AREA_MAIN | DEBUG_AREA_PACKET,
+                                DEBUG_LEVEL_VERBOSE_DEBUG,
+                                "Can not add packet to packet list (so already dropped): exit");
+                return;
 	}
 
 	/* send an auth request packet */
