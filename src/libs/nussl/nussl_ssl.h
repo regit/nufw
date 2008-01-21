@@ -77,9 +77,17 @@ char *nussl_ssl_cert_export(const nussl_ssl_certificate *cert);
  * 'data' was not valid. */
 nussl_ssl_certificate *nussl_ssl_cert_import(const char *data);
 
-/* Returns the identity of the certificate, or NULL if none is given.
- * For a server certificate this will be the hostname of the server to
- * which the cert was issued.  String returned is UTF-8-encoded. */
+/**
+ * Retrieves the “identity” of a certificate; for an SSL server certificate,
+ * this will be the hostname for which the certificate was issued.
+ * In PKI parlance, the identity is the common name attribute of the
+ * distinguished name of the certificate subject.
+ * @param cert a nussl certificate
+ * @see nussl_ssl_cert_subject
+ * @see nussl_ssl_cert_issuer
+ * @return the identity of the certificate as UTF-8-encoded string
+ * or NULL if none is given.
+ * */
 const char *nussl_ssl_cert_identity(const nussl_ssl_certificate *cert);
 
 /* Return the certificate of the entity which signed certificate
