@@ -7,6 +7,10 @@
  ** $Id$
  **
  ** NuSSL: OpenSSL / GnuTLS layer based on libneon
+ *
+ * ChangeLog:
+ * 2008-22-01: Sebastien Tricaud
+ *              * Added dh parameter to nussl_ssl_context_t
  */
 
 
@@ -53,6 +57,8 @@ struct nussl_ssl_context_s {
     SSL_CTX *ctx;
     SSL_SESSION *sess;
     const char *hostname; /* for SNI */
+
+    DH *dh;
 };
 
 typedef SSL *nussl_ssl_socket;
@@ -84,6 +90,8 @@ struct nussl_ssl_context_s {
         } client;
 #endif
     } cache;
+
+    gnutls_dh_params_t dh;
 };
 
 typedef gnutls_session nussl_ssl_socket;

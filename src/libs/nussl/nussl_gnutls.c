@@ -1159,7 +1159,7 @@ nussl_ssl_client_cert* nussl_ssl_import_keypair(nussl_session* sess,
 
 	if (gnutls_x509_privkey_init(&keypair->pkey) < 0)
 		return NULL;
-	
+
 	if (read_to_datum(key_file, &key_raw) != NUSSL_OK)
 		return NULL;
 	if (gnutls_x509_privkey_import(keypair->pkey, &key_raw, GNUTLS_X509_FMT_PEM) < 0)
@@ -1245,6 +1245,37 @@ int nussl_ssl_cert_digest(const nussl_ssl_certificate *cert, char *digest)
     *--p = '\0';
     return 0;
 }
+
+/* Begin: --INL-- DH management functions added */
+/**
+ * Generate Diffie Hellman parameters - for use with DHE
+ * (Ephemeral Diffie Hellman) kx algorithms. These should be discarded
+ * and regenerated once a day, once a week or once a month. Depending on
+ * the security requirements.
+ *
+ * \return If an error occurs returns -1, else return 0
+ */
+int nussl_ssl_cert_generate_dh_params(nussl_ssl_context *ctx)
+{
+        if (gnutls_dh_params_init(ctx->dh) < 0) {
+                return -1;
+        }
+        if (gnutls_dh_params_generate2(*ctx->dh_params, DH_BITS) < 0) {
+                return -1;
+        }
+
+        return 0;
+}
+
+void nussl_ssl_cert_dh_params(nussl_ssl_context *ctx)
+{
+
+        gnutls_certificate_set_dh_params(ctx->cred, ctx->dh);
+
+}
+
+
+/* End: --INL-- */
 
 int nussl__ssl_init(void)
 {
