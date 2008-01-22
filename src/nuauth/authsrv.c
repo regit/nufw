@@ -40,6 +40,8 @@
 #include "security.h"
 #include <sys/resource.h>	/* setrlimit() */
 
+#include <nussl.h>
+
 typedef struct {
 	int daemonize;
 	char *nuauth_client_listen_addr;
@@ -608,7 +610,7 @@ void no_action_signals(int recv_signal)
  * Configure NuAuth:
  *   - Init. glib threads: g_thread_init() ;
  *   - Read NuAuth configuration file: init_nuauthconf() ;
- *   - Init GNU TLS library: gnutls_global_init() ;
+ *   - Init SSL library: nussl_init() ;
  *   - Create credentials: create_x509_credentials() ;
  *   - Read command line options: parse_options() ;
  *   - Build configuration options: build_prenuauthconf() ;
@@ -617,7 +619,7 @@ void no_action_signals(int recv_signal)
 void configure_app(int argc, char **argv)
 {
 	command_line_params_t params;
-	int err;
+	int ret;
 	struct rlimit core_limit;
 
 	/* Avoid creation of core file which may contains username and password */
@@ -671,11 +673,10 @@ void configure_app(int argc, char **argv)
 	gcry_control(GCRYCTL_SET_THREAD_CBS, &gcry_threads_gthread);
 #endif
 
-	err = gnutls_global_init();
-	if (err) {
+	ret = nussl_init();
+	if ( ret != NUSSL_OK ) {
 		fprintf(stderr,
-			"FATAL ERROR: gnutls global initialisation failed:\n"
-			"%s\n", gnutls_strerror(err));
+			"FATAL ERROR: NuSSL global initialisation failed.\n");
 		exit(EXIT_FAILURE);
 	}
 

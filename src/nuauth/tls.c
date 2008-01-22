@@ -46,8 +46,7 @@
 /* These are global */
 struct nuauth_tls_t nuauth_tls;
 
-nussl_session* nussl;
-
+static nussl_session *nussl;
 
 extern int ssl_connect(const char *hostname, const char *service)
 {
