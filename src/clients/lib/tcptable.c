@@ -95,7 +95,7 @@ int parse_tcptable_file(nuauth_session_t * session, conntable_t * ct, char *file
 
 	/* convert session user identifier to string */
 	secure_snprintf(session_uid, sizeof(session_uid), "%5lu",
-			session->userid);
+			(long)session->userid);
 	session_uid_len = strlen(session_uid);
 
 	/* get state field position in header */

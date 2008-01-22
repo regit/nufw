@@ -685,7 +685,7 @@ int auth_request_send(uint8_t type, struct queued_pckt *pckt_datas)
 
 	/* Display message */
 	log_area_printf(DEBUG_AREA_PACKET, DEBUG_LEVEL_DEBUG,
-			"Sending request for %lu", pckt_datas->packet_id);
+			"Sending request for %lu", (long)pckt_datas->packet_id);
 
 	/* cleaning up current session : auth_server has detected a problem */
 	pthread_mutex_lock(&tls.mutex);
