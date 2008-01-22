@@ -52,7 +52,10 @@ typedef enum {
 	ACL_FLAGS_NONE = 0,
 	/* This ACL wants asynchronous logging */
 	ACL_FLAGS_ASYNC_BIT = 0,
-	ACL_FLAGS_ASYNC = (1 << ACL_FLAGS_ASYNC_BIT)
+	ACL_FLAGS_ASYNC = (1 << ACL_FLAGS_ASYNC_BIT),
+	/* This ACL don't want to log */
+	ACL_FLAGS_NOLOG_BIT = 1,
+	ACL_FLAGS_NOLOG = (1 << ACL_FLAGS_NOLOG_BIT),
 } acl_flags_t;
 
 
