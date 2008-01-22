@@ -1257,10 +1257,10 @@ int nussl_ssl_cert_digest(const nussl_ssl_certificate *cert, char *digest)
  */
 int nussl_ssl_cert_generate_dh_params(nussl_ssl_context *ctx)
 {
-        if (gnutls_dh_params_init(ctx->dh) < 0) {
+        if (gnutls_dh_params_init(&ctx->dh) < 0) {
                 return -1;
         }
-        if (gnutls_dh_params_generate2(*ctx->dh_params, DH_BITS) < 0) {
+        if (gnutls_dh_params_generate2(ctx->dh, DH_BITS) < 0) {
                 return -1;
         }
 
