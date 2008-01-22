@@ -546,7 +546,7 @@ static idmef_message_t *create_message_packet(idmef_message_t * tpl,
 				 "alert.source(0).user.user_id(0).name",
 				 conn->username);
 		if (secure_snprintf
-		    (buffer, sizeof(buffer), "%lu", conn->user_id)) {
+		    (buffer, sizeof(buffer), "%lu", (long)conn->user_id)) {
 			add_idmef_object(idmef,
 					 "alert.source(0).user.user_id(0).number",
 					 buffer);
@@ -592,7 +592,7 @@ static void add_user_information(idmef_message_t * idmef,
 				 "alert.source(0).user.user_id(0).name",
 				 session->user_name);
 		if (userid_is_valid && secure_snprintf
-		    (buffer, sizeof(buffer), "%lu", session->user_id)) {
+		    (buffer, sizeof(buffer), "%lu", (long)session->user_id)) {
 			add_idmef_object(idmef,
 					 "alert.source(0).user.user_id(0).number",
 					 buffer);
