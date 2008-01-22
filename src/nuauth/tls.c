@@ -57,9 +57,11 @@ extern int ssl_connect(const char *hostname, const char *service)
         if ( ! nussl ) {
                 log_message(CRITICAL, DEBUG_AREA_AUTH,
                             "Cannot allocate nussl session!");
+                return -1;
         }
 
         nussl_set_hostinfo(nussl, hostname, port);
+        return 0;
 }
 
 /**
