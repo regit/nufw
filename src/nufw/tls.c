@@ -295,7 +295,7 @@ gnutls_session *tls_connect()
 
 	if (ret < 0) {
 		gnutls_perror(ret);
-		return NULL;
+		RETURN_NO_LOG(NULL);
 	}
 #if USE_X509
 	if (ca_file) {
