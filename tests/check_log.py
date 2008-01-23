@@ -7,7 +7,7 @@
 #
 
 # Config
-log_functions = ['log_area_printf','g_warning','log_message']
+log_functions = ['log_area_printf','g_warning','log_message','printf']
 
 import sys
 import sre
