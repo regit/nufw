@@ -1514,7 +1514,7 @@ int nussl_sock_accept_ssl(nussl_socket *sock, nussl_ssl_context *ctx)
         gnutls_certificate_server_set_request(ssl, GNUTLS_CERT_REQUEST);
 
     sock->ssl = ssl;
-    gnutls_transport_set_ptr(sock->ssl, (gnutls_transport_ptr) sock->fd);
+    gnutls_transport_set_ptr((gnutls_session_t ) sock->ssl, (gnutls_transport_ptr) sock->fd);
     ret = gnutls_handshake(ssl);
     if (ret < 0) {
         return error_gnutls(sock, ret);

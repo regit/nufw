@@ -1255,25 +1255,33 @@ int nussl_ssl_cert_digest(const nussl_ssl_certificate *cert, char *digest)
  *
  * \return If an error occurs returns -1, else return 0
  */
-int nussl_ssl_cert_generate_dh_params(nussl_ssl_context *ctx)
+int nussl_ssl_cert_generate_dh_params(nussl_session *session)
 {
-        if (gnutls_dh_params_init(&ctx->dh) < 0) {
+        if (gnutls_dh_params_init(&session->ssl_context->dh) < 0) {
                 return -1;
         }
-        if (gnutls_dh_params_generate2(ctx->dh, DH_BITS) < 0) {
+        if (gnutls_dh_params_generate2(session->ssl_context->dh, DH_BITS) < 0) {
                 return -1;
         }
 
         return 0;
 }
 
-void nussl_ssl_cert_dh_params(nussl_ssl_context *ctx)
+void nussl_ssl_cert_dh_params(nussl_session *session)
 {
 
-        gnutls_certificate_set_dh_params(ctx->cred, ctx->dh);
+        gnutls_certificate_set_dh_params(session->ssl_context->cred, session->ssl_context->dh);
 
 }
 
+int nussl_ssl_cert_set_x509_crl_file(nussl_session *session, const char *crl_file)
+{
+
+        return gnutls_certificate_set_x509_crl_file(session->ssl_context->cred,
+                                                    crl_file,
+                                                    GNUTLS_X509_FMT_PEM);
+
+}
 
 /* End: --INL-- */
 

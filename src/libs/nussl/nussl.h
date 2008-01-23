@@ -74,6 +74,14 @@ char* nussl_get_cert_infos(nussl_session* sess);
 /* Returns a string containing informations about the peer certificate */
 char* nussl_get_server_cert_infos(nussl_session* sess);
 
+/* Begin: INL additions */
+
+int nussl_ssl_cert_generate_dh_params(nussl_session *session);
+void nussl_ssl_cert_dh_params(nussl_session *session);
+int nussl_ssl_cert_set_x509_crl_file(nussl_session *session, const char *crl_file);
+
+/* End: INL additions */
+
 
 #define NUSSL_OK (0) /* Success */
 #define NUSSL_ERROR (1) /* Generic error; use nussl_get_error(session) for message */

@@ -192,12 +192,6 @@ int nussl_ssl_context_keypair(nussl_ssl_context *ctx,
 int nussl_ssl_context_set_verify(nussl_ssl_context *ctx, int required,
                               const char *ca_names, const char *verify_cas);
 
-/* Begin: INL additions */
-
-int nussl_ssl_cert_generate_dh_params(nussl_ssl_context *ctx);
-void nussl_ssl_cert_dh_params(nussl_ssl_context *ctx);
-
-/* End: INL additions */
 
 #define NUSSL_SSL_CTX_SSLv2 (0)
 /* Set a flag for the SSL context. */
