@@ -1,5 +1,5 @@
 /*
- ** Copyright 2004-2007 - INL
+ ** Copyright 2004-2008 - INL
  ** Written by Eric Leblond <eric.leblond@inl.fr>
  **            Vincent Deffontaines <vincent@inl.fr>
  ** INL http://www.inl.fr/
@@ -211,8 +211,10 @@ ssize_t getline(char **lineptr, size_t * n, FILE * stream)
 	/* buffer need to grow up? */
 	if (len >= *n) {
 		char *tmp = realloc(*lineptr, len + 1);
-		if (tmp == NULL)
+		if (tmp == NULL) {
+			printf("Not enough memory\n");
 			return -1;
+		}
 		*lineptr = tmp;
 		*n = len + 1;
 	}
@@ -293,6 +295,7 @@ char *get_password()
 	ret = my_getpass(&new_pass, &password_size);
 	if (ret < 0) {
 		free(new_pass);
+		printf("Problem when getting password\n");
 		return NULL;
 	}
 #endif
@@ -316,6 +319,7 @@ char *get_username()
 	nread = getline(&username, &username_size, stdin);
 	if (nread < 0) {
 		free(username);
+		printf("Problem when reading username\n");
 		return NULL;
 	}
 	if (0 < nread && username[nread - 1] == '\n') {
@@ -356,7 +360,7 @@ static void usage(void)
 
 void process_hup(int signum)
 {
-  forced_reconnect = 1;
+	forced_reconnect = 1;
 }
 
 /**
@@ -372,24 +376,22 @@ void install_signals()
 	action.sa_flags = 0;
 
 	/* install handlers */
-	if (sigaction(SIGINT, &action, &old_sigint) != 0)
-        {
+	if (sigaction(SIGINT, &action, &old_sigint) != 0) {
 		fprintf(stderr, "Unable to install SIGINT signal handler!\n");
 		exit(EXIT_FAILURE);
-        }
-        if (sigaction(SIGTERM, &action, &old_sigterm) != 0)
-        {
+	}
+	if (sigaction(SIGTERM, &action, &old_sigterm) != 0) {
 		fprintf(stderr, "Unable to install SIGTERM signal handler!\n");
 		exit(EXIT_FAILURE);
-        }
-        memset(&action, 0, sizeof(action));
-        action.sa_handler = &process_hup;
-        action.sa_flags = SIGHUP;
+	}
+	memset(&action, 0, sizeof(action));
+	action.sa_handler = &process_hup;
+	action.sa_flags = SIGHUP;
 
-        if (sigaction(SIGHUP, &action, NULL) != 0)
-        {
+	if (sigaction(SIGHUP, &action, NULL) != 0)
+	{
 		fprintf(stderr, "Warning : Unable to install SIGHUP signal handler!\n");
-        }
+	}
 }
 
 /**
@@ -407,7 +409,7 @@ void daemonize_process(nutcpc_context_t * context, char *runpid)
 		exit(EXIT_FAILURE);
 	}
 
-      /* kill 1st process (keep 2nd) */
+	/* kill 1st process (keep 2nd) */
 	if (p != 0) {
 		exit(0);
 	}
@@ -475,6 +477,7 @@ nuauth_session_t *do_connect(nutcpc_context_t * context, char *username)
 
 	session = nu_client_new_callback(get_username, get_password, 1, err);
 	if (session == NULL) {
+		printf("Problem during session callback init\n");
 		return NULL;
 	}
 
@@ -552,35 +555,35 @@ void main_loop(nutcpc_context_t * context)
 	int connected = 1;
 	int ret;
 	for (;;) {
-                if (forced_reconnect == 0)
-                {
-		  usleep(context->interval * 1000);
-                }
+		if (forced_reconnect == 0)
+		{
+			usleep(context->interval * 1000);
+		}
 		if (!connected) {
-                        if (forced_reconnect == 0)
-                        {
-			  usleep((unsigned long) context->tempo * 1000000);
-                        }else{
-                          context->tempo = 1;
-                          forced_reconnect = 0;
-                        }
+			if (forced_reconnect == 0)
+			{
+				usleep((unsigned long) context->tempo * 1000000);
+			}else{
+				context->tempo = 1;
+				forced_reconnect = 0;
+			}
 			if (context->tempo < MAX_RETRY_TIME) {
 				context->tempo *= 2;
 			}
 
 			/* try to reconnect to nuauth */
 			if (nu_client_connect
-			    (session, context->srv_addr, context->port,
-			     err) != 0) {
+					(session, context->srv_addr, context->port,
+					 err) != 0) {
 				connected = 1;
 				context->tempo = 1;	/* second */
 			} else {
 				printf("Reconnection error: %s\n",
-				       nu_client_strerror(session, err));
+						nu_client_strerror(session, err));
 				nu_client_reset(session);
 			}
 		} else {
-                        forced_reconnect = 0;
+			forced_reconnect = 0;
 			ret = nu_client_check(session, err);
 			if (ret < 0) {
 				/* on error: reset the session */
@@ -606,12 +609,18 @@ char* copy_filename(char* name)
 	char* ret;
 	if (name[0] != '/') {
 		ret = getcwd(cwd, sizeof(cwd));
-		if (!ret) return NULL;
+		if (!ret) {
+			printf("Unable to get current working directory\n");
+			return NULL;
+		}
 		ok = secure_snprintf(buffer, sizeof(buffer), "%s/%s", cwd, name);
-		if (!ok) return NULL;
-		return strdup(buffer);
+		if (!ok) {
+			printf("Unable to copy filename\n");
+			return NULL;
+		}
+		RETURN_NO_LOG strdup(buffer);
 	} else {
-		return strdup(name);
+		RETURN_NO_LOG strdup(name);
 	}
 }
 
