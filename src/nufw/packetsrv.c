@@ -736,3 +736,4 @@ int auth_request_send(uint8_t type, struct queued_pckt *pckt_datas)
 	pthread_mutex_unlock(&tls.mutex);
 	return 1;
 }
+
