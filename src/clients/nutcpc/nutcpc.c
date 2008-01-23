@@ -811,7 +811,6 @@ int main(int argc, char **argv)
 							printf
 							    ("No running process, starting anyway (deleting lockfile)\n");
 							unlink(runpid);
-							free(runpid);
 						} else {
 							printf
 							    ("Kill existing process with \"-k\" or ignore it with \"-l\" option\n");
