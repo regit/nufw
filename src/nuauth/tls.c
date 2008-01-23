@@ -59,7 +59,7 @@ extern int ssl_connect(const char *hostname, const char *service)
                 return -1;
         }
 
-        nussl_set_hostinfo(nussl, hostname, port);
+/*       nussl_set_hostinfo(nussl, hostname, port);*/
         return 0;
 }
 
@@ -169,23 +169,6 @@ gnutls_session *initialize_tls_session()
 	gnutls_dh_set_prime_bits(*session, DH_BITS);
 
 	return session;
-}
-
-/**
- * Generate Diffie Hellman parameters - for use with DHE
- * (Ephemeral Diffie Hellman) kx algorithms. These should be discarded
- * and regenerated once a day, once a week or once a month. Depending on
- * the security requirements.
- *
- * \return If an error occurs returns -1, else return 0
- */
-static int generate_dh_params(gnutls_dh_params * dh_params)
-{
-	if (gnutls_dh_params_init(dh_params) < 0)
-		return -1;
-	if (gnutls_dh_params_generate2(*dh_params, DH_BITS) < 0)
-		return -1;
-	return 0;
 }
 
 /**
@@ -428,14 +411,8 @@ int create_x509_credentials()
 	}
 	nuauth_tls.crl_refresh_counter = 0;
 
-	ret =
-	    gnutls_certificate_allocate_credentials(&nuauth_tls.x509_cred);
-	if (ret != 0) {
-		g_warning("[%i] Problem with gnutls_certificate_allocate_credentials() : %s",
-		     getpid(), gnutls_strerror(ret));
-
-		return 0;
-	}
+        /* We create the NuSSL object */
+        nussl = nussl_session_create();
 
 	ret =
 	    gnutls_certificate_set_x509_trust_file(nuauth_tls.x509_cred,
@@ -485,9 +462,8 @@ int create_x509_credentials()
 			return 0;
 		}
 		nuauth_tls.crl_file = nuauth_tls_crl;
-		ret = gnutls_certificate_set_x509_crl_file(nuauth_tls.x509_cred,
-						     nuauth_tls.crl_file,
-						     GNUTLS_X509_FMT_PEM);
+		ret = nussl_ssl_cert_set_x509_crl_file(nussl,
+						       nuauth_tls.crl_file);
 		if (ret < 0) {
 			g_warning("[%i] Problem with certificate key file : %s",
 				getpid(), gnutls_strerror(ret));
@@ -496,17 +472,16 @@ int create_x509_credentials()
 		}
 	}
 
-	ret = generate_dh_params(&nuauth_tls.dh_params);
-
+        ret =
+            nussl_ssl_cert_generate_dh_params(nussl);
 	if (ret < 0) {
-		g_warning("[%i] Problem generating dh params : %s",
-			getpid(), gnutls_strerror(ret));
+		g_warning("[%i] Problem generating dh params",
+			getpid());
 
 		return 0;
 	}
 
-	gnutls_certificate_set_dh_params(nuauth_tls.x509_cred,
-					 nuauth_tls.dh_params);
+        nussl_ssl_cert_dh_params(nussl);
 
 	cleanup_func_push(refresh_crl_file);
 
