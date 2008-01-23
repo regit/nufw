@@ -1,5 +1,5 @@
 /*
- ** Copyright (C) 2002-2007 INL
+ ** Copyright (C) 2002-2008 INL
  ** Written by Eric Leblond <eric@regit.org>
  **            Vincent Deffontaines <vincent@gryzor.com>
  ** INL http://www.inl.fr/
@@ -51,9 +51,9 @@ int look_for_tcp_flags(unsigned char *dgram, unsigned int datalen)
 	struct iphdr *iphdrs = (struct iphdr *) dgram;
 	/* check need some data */
 	if (datalen < sizeof(struct iphdr) + sizeof(struct tcphdr)) {
-                log_area_printf(DEBUG_AREA_PACKET, DEBUG_LEVEL_VERBOSE_DEBUG,
-                                "Incorrect packet data length");
-                return 0;
+		log_area_printf(DEBUG_AREA_PACKET, DEBUG_LEVEL_VERBOSE_DEBUG,
+				"Incorrect packet data length");
+		return 0;
 	}
 	/* check IP version */
 	if (iphdrs->version == 4) {
@@ -61,7 +61,7 @@ int look_for_tcp_flags(unsigned char *dgram, unsigned int datalen)
 			struct tcphdr *tcphdrs =
 			    (struct tcphdr *) (dgram + 4 * iphdrs->ihl);
 			if (tcphdrs->fin || tcphdrs->ack || tcphdrs->rst) {
-                                return 1;
+				RETURN_NO_LOG 1;
 			}
 		}
 	}
@@ -99,6 +99,8 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 
 	q_pckt.payload_len = nfq_get_payload(nfa, &(q_pckt.payload));
 	if (q_pckt.payload_len == -1) {
+		log_area_printf(DEBUG_AREA_PACKET, DEBUG_LEVEL_INFO,
+				"Unable to get payload");
 		return 0;
 	}
 
@@ -131,10 +133,10 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 			q_pckt.packet_id = ntohl(ph->packet_id);
 			auth_request_send(AUTH_CONTROL, &q_pckt);
 			IPQ_SET_VERDICT(q_pckt.packet_id, NF_ACCEPT);
-			return 1;
+			RETURN_NO_LOG 1;
 		} else {
-                        log_area_printf(DEBUG_AREA_PACKET, DEBUG_LEVEL_VERBOSE_DEBUG,
-                                        "Can not get the packet headers");
+			log_area_printf(DEBUG_AREA_PACKET, DEBUG_LEVEL_VERBOSE_DEBUG,
+					"Can not get the packet headers");
 			return 0;
 		}
 	}
@@ -155,9 +157,9 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 	if (ph) {
 		current->id = ntohl(ph->packet_id);
 	} else {
+		free(current);
 		log_area_printf(DEBUG_AREA_PACKET, DEBUG_LEVEL_INFO,
 				"Can not get id for message");
-		free(current);
 		return 0;
 	}
 
@@ -303,17 +305,17 @@ void packetsrv_ipq_process(unsigned char *buffer)
 	if (look_for_tcp_flags(msg_p->payload, msg_p->data_len)) {
 		auth_request_send(AUTH_CONTROL, &q_pckt);
 		IPQ_SET_VERDICT(msg_p->packet_id, NF_ACCEPT);
-		return;
+		RETURN_NO_LOG;
 	}
 
 	/* Create packet */
 	current = calloc(1, sizeof(packet_idl));
 	if (current == NULL) {
 		/* no more memory: drop packet and exit */
+		IPQ_SET_VERDICT(msg_p->packet_id, NF_DROP);
 		log_area_printf(DEBUG_AREA_MAIN | DEBUG_AREA_PACKET,
 				DEBUG_LEVEL_SERIOUS_WARNING,
 				"[+] Can not allocate packet_id (drop packet)");
-		IPQ_SET_VERDICT(msg_p->packet_id, NF_DROP);
 		return;
 	}
 	current->id = msg_p->packet_id;
@@ -327,10 +329,10 @@ void packetsrv_ipq_process(unsigned char *buffer)
 	pcktid = padd(current);
 	pthread_mutex_unlock(&packets_list.mutex);
 	if (!pcktid) {
-                log_area_printf(DEBUG_AREA_MAIN | DEBUG_AREA_PACKET,
-                                DEBUG_LEVEL_VERBOSE_DEBUG,
-                                "Can not add packet to packet list (so already dropped): exit");
-                return;
+		log_area_printf(DEBUG_AREA_MAIN | DEBUG_AREA_PACKET,
+				DEBUG_LEVEL_VERBOSE_DEBUG,
+				"Can not add packet to packet list (so already dropped): exit");
+		return;
 	}
 
 	/* send an auth request packet */
@@ -641,7 +643,7 @@ int auth_request_send(uint8_t type, struct queued_pckt *pckt_datas)
 	/* Drop non-IPv(4|6) packet */
 	if ((((struct iphdr *) (pckt_datas->payload))->version != 4)
 	    && (((struct iphdr *) (pckt_datas->payload))->version != 6)) {
-		debug_log_printf(DEBUG_AREA_PACKET, DEBUG_LEVEL_DEBUG,
+		log_area_printf(DEBUG_AREA_PACKET, DEBUG_LEVEL_DEBUG,
 				 "Dropping non-IPv4/non-IPv6 packet (version %u)",
 				 ((struct iphdr *) (pckt_datas->payload))->
 				 version);
@@ -731,6 +733,9 @@ int auth_request_send(uint8_t type, struct queued_pckt *pckt_datas)
 	if (!gnutls_record_send(*(tls.session), datas, msg_length)) {
 		shutdown_tls();
 		pthread_mutex_unlock(&tls.mutex);
+		log_area_printf(DEBUG_AREA_GW,
+				DEBUG_LEVEL_WARNING,
+				"[!] TLS send failure");
 		return 0;
 	}
 	pthread_mutex_unlock(&tls.mutex);
