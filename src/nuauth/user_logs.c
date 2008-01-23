@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2003-2006 INL
+ ** Copyright(C) 2003-2008 INL
  ** Written by Eric Leblond <eric@regit.org>
  **            Vincent Deffontaines <vincent@gryzor.com>
  ** INL http://www.inl.fr/
@@ -49,7 +49,7 @@ struct conn_state {
 void log_user_packet(connection_t * element, tcp_state_t state)
 {
 	if (element->flags & ACL_FLAGS_NOLOG) {
-		return;
+		RETURN_NO_LOG;
 	}
 	if ((nuauthconf->log_users_sync) && (state == TCP_STATE_OPEN)
 			&& (!(element->flags & ACL_FLAGS_ASYNC))) {
@@ -69,6 +69,8 @@ void log_user_packet(connection_t * element, tcp_state_t state)
 			    (void *) duplicate_connection(element);
 			if (!conn_state_copy->conn) {
 				g_free(conn_state_copy);
+				log_message(MESSAGE, DEBUG_AREA_MAIN,
+					    "Unable to duplicate connection");
 				return;
 			}
 			conn_state_copy->state = state;
@@ -94,6 +96,8 @@ void log_user_packet_from_accounted_connection(struct accounted_connection
 	conn_state_copy->conn = g_memdup(datas, sizeof(*datas));
 	if (!conn_state_copy->conn) {
 		g_free(conn_state_copy);
+		log_message(MESSAGE, DEBUG_AREA_MAIN,
+			    "Unable to duplicate connection");
 		return;
 	}
 	conn_state_copy->state = state;
@@ -173,13 +177,14 @@ void log_user_session(user_session_t * usession, session_state_t state)
 			    usession->user_name);
 
 	if ((nuauthconf->log_users & 1) == 0) {
-		return;
+		RETURN_NO_LOG;
 	}
 
 	/* copy interesting informations of the session */
 	sessevent = g_new0(struct session_event, 1);
 	if (sessevent == NULL) {
 		/* no more memory :-( */
+		log_message(WARNING, DEBUG_AREA_MAIN, "No more memory");
 		return;
 	}
 	sessevent->session = g_memdup(usession, sizeof(*usession));
