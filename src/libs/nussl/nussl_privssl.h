@@ -73,6 +73,7 @@ typedef SSL *nussl_ssl_socket;
 
 struct nussl_ssl_context_s {
     gnutls_certificate_credentials cred;
+    gnutls_dh_params_t dh;
     int verify; /* non-zero if client cert verification required */
     int use_cert;
 
@@ -92,8 +93,6 @@ struct nussl_ssl_context_s {
         } client;
 #endif
     } cache;
-
-    gnutls_dh_params_t dh;
 };
 
 typedef gnutls_session nussl_ssl_socket;
