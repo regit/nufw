@@ -1,5 +1,5 @@
 /*
-** Copyright 2005-2007 - INL
+** Copyright 2005-2008 - INL
 ** Written by Vincent Deffontaines <vincent@gryzor.com>
 **            Victor Stinner <haypo@inl.fr>
 ** INL http://www.inl.fr/
@@ -24,7 +24,7 @@
 #define NUFW_DEBUG_HEADER
 
 
-#define RETURN_NO_LOG(x) return(x)
+#define RETURN_NO_LOG return
 
 /**
  * Debug levels: default is #DEFAULT_DEBUG_LEVEL
