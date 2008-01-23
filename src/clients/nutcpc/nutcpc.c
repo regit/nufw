@@ -33,6 +33,7 @@
 #include <signal.h>
 #include "proto.h"
 #include "security.h"
+#include "debug.h"
 #define NUTCPC_VERSION PACKAGE_VERSION " $Revision$"
 
 #ifdef FREEBSD
