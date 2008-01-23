@@ -23,9 +23,12 @@
 #ifndef NUFW_DEBUG_HEADER
 #define NUFW_DEBUG_HEADER
 
+
+#define RETURN_NO_LOG(x) return(x)
+
 /**
- * Debug levels: default is #DEFAULT_DEBUG_LEVEL 
- * and values are between #MIN_DEBUG_LEVEL and #MAX_DEBUG_LEVEL 
+ * Debug levels: default is #DEFAULT_DEBUG_LEVEL
+ * and values are between #MIN_DEBUG_LEVEL and #MAX_DEBUG_LEVEL
  */
 typedef enum {
 	DEBUG_LEVEL_FATAL = 1,	/*!< 1: Least verbose level */
