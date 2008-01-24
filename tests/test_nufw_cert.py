@@ -49,7 +49,7 @@ class TestClientCert(TestCase):
         self.nufw = startNufw(["-a", self.cacert])
         self.connectNuauthNufw()
 
-	self.assert_(any("TLS connection to nuauth restored" in line
+        self.assert_(any("TLS connection to nuauth restored" in line
                 for line in self.nufw.readlines(total_timeout=TIMEOUT)))
 
         self.nufw.stop()
@@ -70,8 +70,8 @@ class TestClientCert(TestCase):
 
         self.nufw = startNufw()
         self.connectNuauthNufw()
-	
-	self.assert_(any("TLS connection to nuauth restored" in line
+
+        self.assert_(any("TLS connection to nuauth restored" in line
                 for line in self.nufw.readlines(total_timeout=TIMEOUT)))
 
         self.nufw.stop()
@@ -80,8 +80,8 @@ class TestClientCert(TestCase):
 #
 #        self.nufw = startNufw(["-S"])
 #        self.connectNuauthNufw()
-#        
-#	self.assert_(any("tls: invalid certificates received from nuauth server" in line.lower()
+#
+#       self.assert_(any("tls: invalid certificates received from nuauth server" in line.lower()
 #            for line in self.nufw.readlines(total_timeout=TIMEOUT)))
 #
 #        self.nufw.stop()
