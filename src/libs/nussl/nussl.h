@@ -79,6 +79,7 @@ char* nussl_get_server_cert_infos(nussl_session* sess);
 int nussl_ssl_cert_generate_dh_params(nussl_session *session);
 void nussl_ssl_cert_dh_params(nussl_session *session);
 int nussl_ssl_cert_set_x509_crl_file(nussl_session *session, const char *crl_file);
+int nussl_ssl_context_set_verify(nussl_session *session, int required, const char *verify_cas);
 
 /* End: INL additions */
 

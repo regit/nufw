@@ -1283,6 +1283,18 @@ int nussl_ssl_cert_set_x509_crl_file(nussl_session *session, const char *crl_fil
 
 }
 
+int nussl_ssl_context_set_verify(nussl_session *session, int required,
+                                 const char *verify_cas)
+{
+    session->ssl_context->verify = required;
+    /* gnutls_certificate_send_x509_rdn_sequence in gnutls >= 1.2 can
+     * be used to *suppress* sending the CA names, but not control it,
+     * it seems. */
+    return gnutls_certificate_set_x509_trust_file(session->ssl_context->cred, verify_cas,
+                                                  GNUTLS_X509_FMT_PEM);
+}
+
+
 /* End: --INL-- */
 
 int nussl__ssl_init(void)

@@ -189,9 +189,14 @@ int nussl_ssl_context_keypair(nussl_ssl_context *ctx,
 /* Server mode: set client cert verification options: required is non-zero if
  * a client cert is required, if ca_names is non-NULL it is a filename containing
  * a set of PEM certs from which CA names are sent in the ccert request. */
+/*
+ * This function has been replaced by:
+ * int nussl_ssl_context_set_verify(nussl_session *session, int required,
+ *                                  const char *verify_cas)
+ *
 int nussl_ssl_context_set_verify(nussl_ssl_context *ctx, int required,
                               const char *ca_names, const char *verify_cas);
-
+*/
 
 #define NUSSL_SSL_CTX_SSLv2 (0)
 /* Set a flag for the SSL context. */
