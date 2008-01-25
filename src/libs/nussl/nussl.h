@@ -14,6 +14,8 @@
 #include <stdio.h>
 #include <sys/types.h>
 
+#include "nussl_constants.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
