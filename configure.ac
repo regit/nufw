@@ -318,6 +318,7 @@ AC_CONFIG_FILES([Makefile
         src/include/Makefile
         src/libs/Makefile
         src/libs/nussl/Makefile
+        src/libs/nubase/Makefile
         src/nuauth/Makefile
         src/nuauth/modules/Makefile
         src/nuauth/modules/ldap/Makefile
