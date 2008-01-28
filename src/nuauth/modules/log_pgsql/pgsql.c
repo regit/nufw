@@ -32,6 +32,8 @@
 #include <inttypes.h>
 #include "security.h"
 
+#include <nubase>
+
 static nu_error_t pgsql_close_open_user_sessions(struct log_pgsql_params
 						 *params);
 static PGconn *pgsql_conn_init(struct log_pgsql_params *params);
@@ -197,9 +199,9 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 
 	/* set variables */
 #define READ_CONF(KEY) \
-    get_confvar_value(pgsql_nuauth_vars, nb_params, KEY)
+	get_confvar_value(pgsql_nuauth_vars, nb_params, KEY)
 #define READ_CONF_INT(VAR, KEY, DEFAULT) \
-    do { gpointer vpointer = READ_CONF(KEY); if (vpointer) VAR = *(int *)vpointer; else VAR = DEFAULT; } while (0)
+	do { gpointer vpointer = READ_CONF(KEY); if (vpointer) VAR = *(int *)vpointer; else VAR = DEFAULT; } while (0)
 
 	params->pgsql_server = (char *) READ_CONF("pgsql_server_addr");
 	READ_CONF_INT(params->pgsql_server_port, "pgsql_server_port",
