@@ -1,7 +1,6 @@
 /*
- ** Copyright (C) 2008 INL
+ ** Copyright(C) 2008 INL
  ** Written by Sebastien Tricaud <s.tricaud@inl.fr>
- ** INL http://www.inl.fr/
  **
  ** $Id$
  **
@@ -19,17 +18,10 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-
-#ifndef NUBASE_HEADER
-#define NUBASE_HEADER
-
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
+int secure_snprintf(char *buffer, unsigned int buffer_size,
+			 char *format, ...)
+#ifdef __GNUC__
+	__attribute__((__format__(printf,3,4)))
 #endif
+;
 
-#include "ipv6.h"
-#include "log.h"
-#include "packet_parser.h"
-#include "strings.h"
-
-#endif				/* ifndef NUBASE_HEADER */
