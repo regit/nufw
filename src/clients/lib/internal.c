@@ -22,7 +22,6 @@
 
 #include "nufw_source.h"
 #include "nuclient.h"
-#include "ipv6.h"
 #include <sasl/saslutil.h>
 #include <pthread.h>
 #include <stdarg.h>		/* va_list, va_start, ... */
@@ -32,7 +31,9 @@
 #include "security.h"
 #include "internal.h"
 #include <sys/utsname.h>
+
 #include <nussl.h>
+#include <nubase.h>
 
 char* nu_locale_charset;
 

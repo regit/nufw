@@ -21,7 +21,6 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 #include "libnuclient.h"
-#include "ipv6.h"
 #include "client.h"
 #include "proto.h"
 #include <pthread.h>
