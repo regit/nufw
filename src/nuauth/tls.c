@@ -28,12 +28,17 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include <nubase.h>
 #include <nussl.h>
 
 /**
  * \addtogroup TLS
  * @{
  */
+
+/* } <- Added to avoid false positive
+ * with check_log introduced by the
+ * comment just above ;-) */
 
 /**
  * \file nuauth/tls.c
@@ -46,21 +51,22 @@
 /* These are global */
 struct nuauth_tls_t nuauth_tls;
 
+/* XXX: *nussl replaces nuauth_tls*/
 static nussl_session *nussl;
 
 extern int ssl_connect(const char *hostname, const char *service)
 {
-        unsigned int port = atoi(service);
+	unsigned int port = atoi(service);
 
-        nussl = nussl_session_create();
-        if ( ! nussl ) {
-                log_message(CRITICAL, DEBUG_AREA_AUTH,
-                            "Cannot allocate nussl session!");
-                return -1;
-        }
+	nussl = nussl_session_create();
+	if ( ! nussl ) {
+		log_message(CRITICAL, DEBUG_AREA_AUTH,
+				"Cannot allocate nussl session!");
+	return -1;
+	}
 
 /*       nussl_set_hostinfo(nussl, hostname, port);*/
-        return 0;
+	return 0;
 }
 
 /**
@@ -356,7 +362,7 @@ int create_x509_credentials()
 
 
 #define READ_CONF(KEY) \
-    get_confvar_value(nuauth_tls_vars, nb_params, KEY)
+	get_confvar_value(nuauth_tls_vars, nb_params, KEY)
 
 	nuauth_tls_key = (char *) READ_CONF("nuauth_tls_key");
 	nuauth_tls_cert = (char *) READ_CONF("nuauth_tls_cert");
@@ -411,19 +417,17 @@ int create_x509_credentials()
 	}
 	nuauth_tls.crl_refresh_counter = 0;
 
-        /* We create the NuSSL object */
-        nussl = nussl_session_create();
+	/* We create the NuSSL object */
+	nussl = nussl_session_create();
 
-	ret =
-	    gnutls_certificate_set_x509_trust_file(nuauth_tls.x509_cred,
-						   nuauth_tls_cacert,
-						   GNUTLS_X509_FMT_PEM);
+	/* XXX: Make sure nuauth_tls.request_cert will be effective with ctx->verify */
+	ret = nussl_ssl_context_set_verify(nussl, nuauth_tls.request_cert, nuauth_tls_cacert);
 	if (ret <= 0) {
 		g_warning
 		    ("[%i] Problem with certificate trust file : %s",
 		     getpid(), gnutls_strerror(ret));
 
-		if (nuauth_tls.request_cert == GNUTLS_CERT_REQUIRE
+		if (nuauth_tls.request_cert == NUSSL_CERT_REQUIRE
 			|| nuauth_tls.auth_by_cert == MANDATORY_AUTH_BY_CERT)
 			return 0;
 	}
@@ -472,8 +476,7 @@ int create_x509_credentials()
 		}
 	}
 
-        ret =
-            nussl_ssl_cert_generate_dh_params(nussl);
+	ret = nussl_ssl_cert_generate_dh_params(nussl);
 	if (ret < 0) {
 		g_warning("[%i] Problem generating dh params",
 			getpid());
@@ -481,7 +484,7 @@ int create_x509_credentials()
 		return 0;
 	}
 
-        nussl_ssl_cert_dh_params(nussl);
+	nussl_ssl_cert_dh_params(nussl);
 
 	cleanup_func_push(refresh_crl_file);
 
