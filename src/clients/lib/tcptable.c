@@ -44,6 +44,8 @@
 
 #endif
 
+#include <nubase.h>
+
 /**
  * \addtogroup libnuclient
  * @{

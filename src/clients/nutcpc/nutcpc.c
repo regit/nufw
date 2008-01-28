@@ -42,6 +42,8 @@
 
 #define MAX_RETRY_TIME 30
 
+#include <nubase.h>
+
 struct termios orig;
 nuauth_session_t *session = NULL;
 nuclient_error_t *err = NULL;

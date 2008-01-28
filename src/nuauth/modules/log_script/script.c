@@ -25,6 +25,8 @@
 #include <string.h>
 #include <errno.h>
 
+#include <nubase.h>
+
 /**
  *
  * \ingroup LoggingNuauthModules

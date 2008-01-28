@@ -219,7 +219,7 @@ typedef struct {
 	/** Connection to nuauth informations */
 	char* default_hostname;
 	char* default_port;
-	
+
 } nuauth_session_t;
 
 #define NuAuth nuauth_session_t
@@ -326,12 +326,6 @@ int nu_check_version(const char *version);
 
 char *nu_get_home_dir();
 
-int secure_snprintf(char *buffer, unsigned int buffer_size,
-		char *format, ...)
-#ifdef __GNUC__
-	__attribute__((__format__(printf,3,4)))
-#endif
-;
 
 #ifdef __cplusplus
 }
