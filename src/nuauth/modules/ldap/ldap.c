@@ -19,7 +19,6 @@
  ** along with this program; if not, write to the Free Software
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
-#define LDAP_DEPRECATED 1
 
 #include <auth_srv.h>
 #include <auth_ldap.h>
@@ -163,6 +162,15 @@ int decimal_to_number(const char *orig_decimal, number_t number)
 		return 1;
 }
 
+
+static void ldap_conn_destroy(void * connection)
+{
+	if (connection) {
+		ldap_unbind_ext_s(connection, NULL, NULL);
+	}
+}
+
+
 G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
 {
 	struct ldap_params *params = (struct ldap_params *) params_p;
@@ -296,7 +304,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 
 
 	/* init thread private stuff */
-	params->ldap_priv = g_private_new((GDestroyNotify) ldap_unbind);
+	params->ldap_priv = g_private_new((GDestroyNotify) ldap_conn_destroy);
 
 	module->params = params;
 
@@ -319,17 +327,29 @@ static LDAP *ldap_conn_init(struct ldap_params *params)
 {
 	LDAP *ld = NULL;
 	int err, version = 3;
+	char * uri = NULL;
+	struct berval password;
 
 	/* init connection */
-	ld = ldap_init(params->ldap_server, params->ldap_server_port);
-	if (!ld) {
-		log_message(WARNING, DEBUG_AREA_MAIN, "Ldap init error");
+	uri = malloc(1024);
+	if ( ! secure_snprintf(uri,1024,"%s://%s:%u",
+		(params->ldap_server_port == LDAPS_PORT) ? "ldaps" : "ldap",
+		params->ldap_server, params->ldap_server_port) ) {
+		log_message(WARNING, DEBUG_AREA_MAIN, "LDAP: could not build URI");
 		return NULL;
 	}
+	ldap_initialize(&ld, uri);
+	if (!ld) {
+		log_message(WARNING, DEBUG_AREA_MAIN, "Ldap init error");
+		free(uri);
+		return NULL;
+	}
+	free(uri);
 	if (ldap_set_option(ld, LDAP_OPT_PROTOCOL_VERSION,
 			    &version) == LDAP_OPT_SUCCESS) {
 		/* Goes to ssl if needed */
 
+#if 0
 #ifdef LDAP_OPT_X_TLS
 		if (params->ldap_server_port == LDAPS_PORT) {
 			int tls_option;
@@ -344,17 +364,19 @@ static LDAP *ldap_conn_init(struct ldap_params *params)
 			}
 		}
 #endif /* LDAP_OPT_X_TLS */
+#endif
 
-		err =
-		    ldap_bind_s(ld, params->binddn, params->bindpasswd,
-				LDAP_AUTH_SIMPLE);
+		password.bv_val = params->bindpasswd;
+		password.bv_len = strlen(password.bv_val);
+		err = ldap_sasl_bind_s(ld, params->binddn, LDAP_SASL_SIMPLE,
+				&password, NULL, NULL, NULL);
 		if (err != LDAP_SUCCESS) {
 			if (err == LDAP_SERVER_DOWN) {
 				log_message(INFO, DEBUG_AREA_AUTH,
 					    "Can not connect to ldap: %s",
 					    ldap_err2string(err));
 				/* we lost connection, so disable current one */
-				ldap_unbind(ld);
+				ldap_unbind_ext_s(ld, NULL, NULL);
 				ld = NULL;
 				g_private_set(params->ldap_priv, ld);
 				return NULL;
@@ -481,7 +503,7 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 	GSList *g_acl_list = NULL;
 	GSList *temp_list = NULL;
 	char filter[LDAP_QUERY_SIZE];
-	char **attrs_array, **walker;
+	struct berval **attrs_array, **walker;
 	int attrs_array_len, i, integer;
 	struct timeval timeout;
 	struct acl_group *this_acl;
@@ -565,60 +587,47 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 
 		/* finish filter */
 		if (element->os_sysname) {
-			g_strlcat(filter, "(|(OsName=",
-				  LDAP_QUERY_SIZE);
+			g_strlcat(filter, "(|(OsName=", LDAP_QUERY_SIZE);
 			prov_string =
 			    escape_string_for_ldap(element->os_sysname);
 			g_strlcat(filter, prov_string, LDAP_QUERY_SIZE);
 			g_free(prov_string);
-			g_strlcat(filter, ")(!(OsName=*)))",
-				  LDAP_QUERY_SIZE);
+			g_strlcat(filter, ")(!(OsName=*)))", LDAP_QUERY_SIZE);
 		} else {
-			g_strlcat(filter, "(!(OsName=*))",
-				  LDAP_QUERY_SIZE);
+			g_strlcat(filter, "(!(OsName=*))", LDAP_QUERY_SIZE);
 		}
 		if (! element->app_name) {
-			g_strlcat(filter, "(!(AppName=*))",
-				  LDAP_QUERY_SIZE);
+			g_strlcat(filter, "(!(AppName=*))", LDAP_QUERY_SIZE);
 		}
 		if (element->os_release) {
-			g_strlcat(filter, "(|(OsRelease=",
-				  LDAP_QUERY_SIZE);
+			g_strlcat(filter, "(|(OsRelease=", LDAP_QUERY_SIZE);
 			prov_string =
 			    escape_string_for_ldap(element->os_release);
 			g_strlcat(filter, prov_string, LDAP_QUERY_SIZE);
 			g_free(prov_string);
-			g_strlcat(filter, ")(!(OsRelease=*)))",
-				  LDAP_QUERY_SIZE);
+			g_strlcat(filter, ")(!(OsRelease=*)))", LDAP_QUERY_SIZE);
 		} else {
-			g_strlcat(filter, "(!(OsRelease=*))",
-				  LDAP_QUERY_SIZE);
+			g_strlcat(filter, "(!(OsRelease=*))", LDAP_QUERY_SIZE);
 		}
 		if (element->os_version) {
-			g_strlcat(filter, "(|(OsVersion=",
-				  LDAP_QUERY_SIZE);
+			g_strlcat(filter, "(|(OsVersion=", LDAP_QUERY_SIZE);
 			prov_string =
 			    escape_string_for_ldap(element->os_version);
 			g_strlcat(filter, prov_string, LDAP_QUERY_SIZE);
 			g_free(prov_string);
-			g_strlcat(filter, ")(!(OsVersion=*)))",
-				  LDAP_QUERY_SIZE);
+			g_strlcat(filter, ")(!(OsVersion=*)))", LDAP_QUERY_SIZE);
 		} else {
-			g_strlcat(filter, "(!(OsVersion=*))",
-				  LDAP_QUERY_SIZE);
+			g_strlcat(filter, "(!(OsVersion=*))", LDAP_QUERY_SIZE);
 		}
 		if (element->app_md5) {
-			g_strlcat(filter, "(|(AppSig=",
-				  LDAP_QUERY_SIZE);
+			g_strlcat(filter, "(|(AppSig=", LDAP_QUERY_SIZE);
 			prov_string =
 			    escape_string_for_ldap(element->app_md5);
 			g_strlcat(filter, prov_string, LDAP_QUERY_SIZE);
 			g_free(prov_string);
-			g_strlcat(filter, ")(!(AppSig=*)))",
-				  LDAP_QUERY_SIZE);
+			g_strlcat(filter, ")(!(AppSig=*)))", LDAP_QUERY_SIZE);
 		} else {
-			g_strlcat(filter, "(!(AppSig=*))",
-				  LDAP_QUERY_SIZE);
+			g_strlcat(filter, "(!(AppSig=*))", LDAP_QUERY_SIZE);
 		}
 
 
@@ -677,10 +686,10 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 			}
 #endif
 
-			err =
-				ldap_search_st(ld, params->ldap_acls_base_dn,
+			err = ldap_search_ext_s(ld, params->ldap_acls_base_dn,
 						LDAP_SCOPE_SUBTREE, filter, NULL, 0,
-						&timeout, &res);
+						NULL, NULL,
+						&timeout, LDAP_NO_LIMIT, &res);
 
 #ifdef PERF_DISPLAY_ENABLE
 			if (nuauthconf->debug_areas & DEBUG_AREA_PERF) {
@@ -696,7 +705,7 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 				/* we lost connection, so disable current one */
 				log_message(WARNING, DEBUG_AREA_MAIN,
 						"disabling current connection");
-				ldap_unbind(ld);
+				ldap_unbind_ext_s(ld, NULL, NULL);
 				ld = NULL;
 				try++;
 				g_private_set(params->ldap_priv, ld);
@@ -718,13 +727,12 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 		while (result) {
 			gboolean break_loop = FALSE;
 			/* get period */
-			attrs_array =
-			    ldap_get_values(ld, result, "AppName");
+			attrs_array = ldap_get_values_len(ld, result, "AppName");
 			if (attrs_array && *attrs_array) {
-				char **pattrs_array = attrs_array;
+				struct berval **pattrs_array = attrs_array;
 				while (*pattrs_array) {
 					if (g_pattern_match_simple(
-								*attrs_array,
+								(*pattrs_array)->bv_val,
 								element->app_name
 								)) {
 						break_loop = FALSE;
@@ -735,7 +743,7 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 					pattrs_array++;
 				}
 			}
-			ldap_value_free(attrs_array);
+			ldap_value_free_len(attrs_array);
 
 			if (break_loop) {
 				break;
@@ -755,80 +763,71 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 			this_acl->flags = ACL_FLAGS_NONE;
 
 			/* get period */
-			attrs_array =
-			    ldap_get_values(ld, result, "TimeRange");
+			attrs_array = ldap_get_values_len(ld, result, "TimeRange");
 			if (attrs_array && *attrs_array) {
-				this_acl->period = g_strdup(*attrs_array);
+				this_acl->period = g_strdup((*attrs_array)->bv_val);
 			}
-			ldap_value_free(attrs_array);
+			ldap_value_free_len(attrs_array);
 
 			/* get description (log prefix) */
-			attrs_array =
-			    ldap_get_values(ld, result, "description");
+			attrs_array = ldap_get_values_len(ld, result, "description");
 			if (attrs_array && *attrs_array) {
-				this_acl->log_prefix =
-				    g_strdup(*attrs_array);
+				this_acl->log_prefix = g_strdup((*attrs_array)->bv_val);
 			}
-			ldap_value_free(attrs_array);
+			ldap_value_free_len(attrs_array);
 
 			/* get flags */
-			attrs_array =
-			    ldap_get_values(ld, result, "AclFlags");
+			attrs_array = ldap_get_values_len(ld, result, "AclFlags");
 			if (attrs_array && *attrs_array) {
-				sscanf(*attrs_array, "%d",
-						(int *) &(this_acl->flags));
+				sscanf((*attrs_array)->bv_val, "%d", (int *) &(this_acl->flags));
 			}
-			ldap_value_free(attrs_array);
+			ldap_value_free_len(attrs_array);
 
 			if (nuauthconf->prio_to_nok == 2) {
 				/* get weight */
-				attrs_array =
-					ldap_get_values(ld, result, "AclWeight");
+				attrs_array = ldap_get_values_len(ld, result, "AclWeight");
 				if (attrs_array && *attrs_array) {
-					sscanf(*attrs_array, "%d",
-							(int *) &(this->weight));
+					sscanf((*attrs_array)->bv_val, "%d", (int *) &(this->weight));
 				} else {
 					this->weight = 0;
 				}
-				ldap_value_free(attrs_array);
+				ldap_value_free_len(attrs_array);
 			}
 
 			/* get decision */
-			attrs_array =
-			    ldap_get_values(ld, result, "Decision");
-			sscanf(*attrs_array, "%d",
-			       (int *) &(this_acl->answer));
+			attrs_array = ldap_get_values_len(ld, result, "Decision");
+			sscanf((*attrs_array)->bv_val, "%d", (int *) &(this_acl->answer));
 			debug_log_message(DEBUG, DEBUG_AREA_AUTH,
 					  "Acl found with decision %d (timerange: %s)\n",
 					  this_acl->answer,
 					  this_acl->period);
-			ldap_value_free(attrs_array);
+			ldap_value_free_len(attrs_array);
 			/* build groups list */
-			attrs_array = ldap_get_values(ld, result, "Group");
-			attrs_array_len = ldap_count_values(attrs_array);
+			attrs_array = ldap_get_values_len(ld, result, "Group");
+			attrs_array_len = ldap_count_values_len(attrs_array);
 			walker = attrs_array;
 			for (i = 0; i < attrs_array_len; i++) {
-				sscanf(*walker, "%d", &integer);
+				sscanf((*walker)->bv_val, "%d", &integer);
 				this_acl->groups =
 				    g_slist_prepend(this_acl->groups,
 						    GINT_TO_POINTER
 						    (integer));
 				walker++;
 			}
-			ldap_value_free(attrs_array);
+			ldap_value_free_len(attrs_array);
 			/* build users  list */
-			attrs_array = ldap_get_values(ld, result, "User");
-			attrs_array_len = ldap_count_values(attrs_array);
+			attrs_array = ldap_get_values_len(ld, result, "User");
+			attrs_array_len = ldap_count_values_len(attrs_array);
 			walker = attrs_array;
 			for (i = 0; i < attrs_array_len; i++) {
-				sscanf(*walker, "%d", &integer);
+				sscanf((*walker)->bv_val, "%d", &integer);
 				this_acl->users =
 				    g_slist_prepend(this_acl->users,
 						    GINT_TO_POINTER
 						    (integer));
 				walker++;
 			}
-			ldap_value_free(attrs_array);
+			ldap_value_free_len(attrs_array);
 
 			result = ldap_next_entry(ld, result);
 
