@@ -71,7 +71,6 @@
 #include <gcrypt.h>
 #include <errno.h>
 
-#include "log.h"
 #include "security.h"
 #include "structure.h"
 

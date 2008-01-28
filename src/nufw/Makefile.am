@@ -1,5 +1,5 @@
 if BUILD_NUFW
-AM_CPPFLAGS = -DLOCAL_STATE_DIR=\"$(localstatedir)\"  -DCONFIG_DIR=\"$(sysconfdir)\" 
+AM_CPPFLAGS = -DLOCAL_STATE_DIR=\"$(localstatedir)\"  -DCONFIG_DIR=\"$(sysconfdir)\"
 INCLUDES = -I$(top_srcdir)/src/include/ -I$(top_srcdir)/src/libs/nubase/
 
 sbin_PROGRAMS = nufw
@@ -8,7 +8,7 @@ EXTRA_DIST = valgrind.sh
 
 # nufw
 
-nodist_include_HEADERS = iface.h log.h nufw.h structure.h
+nodist_include_HEADERS = iface.h nufw.h structure.h
 
 nufw_SOURCES = authsrv.c  common.c  main.c  packetsrv.c \
 		tls.c audit.c conntrack.c iface.c \
