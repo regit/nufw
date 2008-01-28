@@ -50,10 +50,10 @@ void uint32_to_ipv6(const uint32_t ipv4, struct in6_addr *ipv6)
 	ipv6->s6_addr32[2] = htonl(0xffff);
 	ipv6->s6_addr32[3] = ipv4;
 #else
-        ipv6->__u6_addr.__u6_addr32[0] = 0x00000000;
-        ipv6->__u6_addr.__u6_addr32[1] = 0x00000000;
-        ipv6->__u6_addr.__u6_addr32[2] = htonl(0xffff);
-        ipv6->__u6_addr.__u6_addr32[3] = ipv4;
+	ipv6->__u6_addr.__u6_addr32[0] = 0x00000000;
+	ipv6->__u6_addr.__u6_addr32[1] = 0x00000000;
+	ipv6->__u6_addr.__u6_addr32[2] = htonl(0xffff);
+	ipv6->__u6_addr.__u6_addr32[3] = ipv4;
 #endif
 }
 

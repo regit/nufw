@@ -24,8 +24,6 @@
 
 #include <nubase.h>
 
-#include "ipv6.h"
-
 /** \file nufw/authsrv.c
  *  \brief Process NuAuth packets
  *
@@ -173,7 +171,7 @@ int auth_process_conn_destroy(char *dgram, int dgram_size)
 	}
 
 	packet_hdr = (struct nuv4_conntrack_message_t *) dgram;
-	
+
 	if (ntohs(packet_hdr->msg_length) != sizeof(struct nuv4_conntrack_message_t)) {
 		return -1;
 	}

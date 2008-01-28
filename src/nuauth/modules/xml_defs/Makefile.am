@@ -1,13 +1,14 @@
 # xml_defs plugin
 
 AM_CPPFLAGS = -DCONFIG_DIR=\"$(sysconfdir)\" -DMODULE_DIR=\"$(libdir)\"
-INCLUDES = $(GLIB_CFLAGS) -I$(top_srcdir)/src/nuauth/ -I$(top_srcdir)/src/include/
+INCLUDES = $(GLIB_CFLAGS) -I$(top_srcdir)/src/nuauth/ -I$(top_srcdir)/src/include/ -I$(top_srcdir)/src/libs/nubase
 plugindir = $(libdir)/nuauth/modules
 
 plugin_LTLIBRARIES = libxml_defs.la
 
 nodist_include_HEADERS = xml_defs.h
 libxml_defs_la_SOURCES = xml_defs.c ${nodist_include_HEADERS}
+libxml_defs_la_LIBADD = -L$(top_builddir)/src/libs/nubase -lnubase
 
-libxml_defs.la: $(libxml_defs_la_OBJECTS) $(libxml_defs_la_DEPENDENCIES) 
+libxml_defs.la: $(libxml_defs_la_OBJECTS) $(libxml_defs_la_DEPENDENCIES)
 	$(LINK) -rpath $(plugindir) $(libxml_defs_la_LDFLAGS) $(libxml_defs_la_OBJECTS) $(libxml_defs_la_LIBADD)

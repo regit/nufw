@@ -27,6 +27,8 @@
 #  include "config.h"
 #endif
 
+#include "ipv6.h"
 #include "log.h"
+#include "packet_parser.h"
 
 #endif				/* ifndef NUBASE_HEADER */

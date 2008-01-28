@@ -28,7 +28,6 @@
 #define DEBUG_CONNTRACK
 
 #include "nufw.h"
-#include "ipv6.h"
 #ifdef HAVE_LIBCONNTRACK
 
 #include <nubase.h>

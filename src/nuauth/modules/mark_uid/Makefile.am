@@ -1,12 +1,13 @@
 # mark_uid plugin
 
 AM_CPPFLAGS = -DCONFIG_DIR=\"$(sysconfdir)\" -DMODULE_DIR=\"$(libdir)\"
-INCLUDES = $(GLIB_CFLAGS) -I$(top_srcdir)/src/nuauth/ -I$(top_srcdir)/src/include/
+INCLUDES = $(GLIB_CFLAGS) -I$(top_srcdir)/src/nuauth/ -I$(top_srcdir)/src/include/ -I$(top_srcdir)/src/libs/nubase
 plugindir = $(libdir)/nuauth/modules
 
 plugin_LTLIBRARIES = libmark_uid.la
 
 libmark_uid_la_SOURCES = mark_uid.c
+libmark_uid_la_LIBADD = -L$(top_builddir)/src/libs/nubase -lnubase
 
-libmark_uid.la: $(libmark_uid_la_OBJECTS) $(libmark_uid_la_DEPENDENCIES) 
+libmark_uid.la: $(libmark_uid_la_OBJECTS) $(libmark_uid_la_DEPENDENCIES)
 	$(LINK) -rpath $(plugindir) $(libmark_uid_la_LDFLAGS) $(libmark_uid_la_OBJECTS) $(libmark_uid_la_LIBADD)
