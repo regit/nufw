@@ -22,6 +22,9 @@
 
 #include "nufw.h"
 
+#include <nubase.h>
+
+
 #ifdef HAVE_NFQ_INDEV_NAME
 #  include "iface.h"
 #endif

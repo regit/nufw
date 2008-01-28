@@ -20,9 +20,11 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-
 #include "nufw.h"
+
+#include <nubase.h>
 #include <gnutls/x509.h>
+
 
 /**
  * \file nufw/tls.c

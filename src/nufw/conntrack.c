@@ -31,6 +31,7 @@
 #include "ipv6.h"
 #ifdef HAVE_LIBCONNTRACK
 
+#include <nubase.h>
 #include <libnetfilter_conntrack/libnetfilter_conntrack_tcp.h>
 
 #ifdef HAVE_NEW_NFCT_API

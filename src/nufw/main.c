@@ -29,6 +29,7 @@
  */
 
 #include "nufw.h"
+
 #include <linux/netfilter.h>
 #include <unistd.h>
 #include <pthread.h>
@@ -37,6 +38,8 @@
 #include <syslog.h>
 #include <errno.h>
 #include <sys/types.h>
+
+#include <nubase.h>
 
 GCRY_THREAD_OPTION_PTHREAD_IMPL;
 

@@ -29,6 +29,7 @@
  */
 
 #include "nufw.h"
+
 #include <stdlib.h>
 #include <time.h>
 #include <linux/icmp.h>		/* icmphdr */
@@ -36,7 +37,10 @@
 #include <netinet/ip.h>		/* iphdr */
 #include <netinet/ip6.h>	/* ip6_hdr */
 
-/* datas stuffs */
+#include <nubase.h>
+
+
+/* data stuff */
 
 #ifdef PERF_DISPLAY_ENABLE
 /**

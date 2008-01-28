@@ -30,6 +30,7 @@
  */
 
 #include <nufw.h>
+#include <nubase.h>
 
 /**
  * Output traffic statistics (packets received/accepted).

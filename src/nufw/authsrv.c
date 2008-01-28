@@ -21,6 +21,9 @@
  */
 
 #include "nufw.h"
+
+#include <nubase.h>
+
 #include "ipv6.h"
 
 /** \file nufw/authsrv.c
