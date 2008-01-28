@@ -53,6 +53,8 @@
 #include <sasl/saslutil.h>
 #include "security.h"
 
+#include <nubase.h>
+
 gchar *mech_string_internal;
 gchar *mech_string_external;
 

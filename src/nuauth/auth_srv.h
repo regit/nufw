@@ -79,7 +79,6 @@ typedef enum {
 #include "nuauth_debug.h"
 
 /* config file related */
-#include "ipv6.h"
 #include "nuthread.h"
 #include "conffile.h"
 #include "log.h"
@@ -217,8 +216,8 @@ typedef enum {
  * everybody have the same API version.
  */
 #define NUAUTH_API_VERSION ((uint32_t)( _NUAUTH_API_ID + sizeof(connection_t) \
-    + sizeof(module_t) + sizeof(nufw_session_t) + sizeof(struct nuauth_datas) \
-    + sizeof(tracking_t) + sizeof(user_session_t) ))
+	+ sizeof(module_t) + sizeof(nufw_session_t) + sizeof(struct nuauth_datas) \
+	+ sizeof(tracking_t) + sizeof(user_session_t) ))
 
 /**
  * Nuauth full version, eg. "nuauth 2.1.2 (Revision: 2730)"
