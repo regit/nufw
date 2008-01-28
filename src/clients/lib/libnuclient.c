@@ -50,7 +50,10 @@
 #include "sys_config.h"
 #include "internal.h"
 #include <sys/utsname.h>
+
 #include <nussl.h>
+#include <nubase.h>
+
 
 void nu_exit_clean(nuauth_session_t * session)
 {
@@ -244,7 +247,7 @@ int nu_client_set_pkcs12(nuauth_session_t* session, char* key_file, char* key_pa
 {
 	if (session->pkcs12_file)
 		free(session->pkcs12_file);
-	
+
 	if (session->pkcs12_password)
 		free(session->pkcs12_password);
 
@@ -253,7 +256,7 @@ int nu_client_set_pkcs12(nuauth_session_t* session, char* key_file, char* key_pa
 		printf("Using key: %s\n", key_file);
 		session->pkcs12_file = strdup(key_file);
 	}
-	
+
 	if (key_password)
 		session->pkcs12_password = strdup(key_password);
 
@@ -404,7 +407,7 @@ int nu_client_load_ca(nuauth_session_t * session,
  * Returns a formated string containing information about the user certificate
  *
  * \param session Pointer to client session
- * \return 
+ * \return
  */
 char* nu_client_get_cert_infos(nuauth_session_t * session)
 {
@@ -417,7 +420,7 @@ char* nu_client_get_cert_infos(nuauth_session_t * session)
  * Returns a formated string containing information about the server certificate
  *
  * \param session Pointer to client session
- * \return 
+ * \return
  */
 char* nu_client_get_server_cert_infos(nuauth_session_t * session)
 {
