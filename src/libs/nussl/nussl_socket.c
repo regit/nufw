@@ -1510,8 +1510,7 @@ int nussl_sock_accept_ssl(nussl_socket *sock, nussl_ssl_context *ctx)
     gnutls_db_set_remove_function(ssl, remove_sess);
     gnutls_db_set_ptr(ssl, ctx);
 
-    if (ctx->verify)
-        gnutls_certificate_server_set_request(ssl, GNUTLS_CERT_REQUEST);
+    gnutls_certificate_server_set_request(ssl, ctx->verify);
 
     sock->ssl = ssl;
     gnutls_transport_set_ptr((gnutls_session_t ) sock->ssl, (gnutls_transport_ptr) sock->fd);
