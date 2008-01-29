@@ -26,6 +26,8 @@
 #include <errno.h>
 #include <inttypes.h>
 
+#include "strings.h"
+
 /** Minimum buffer size to write an IPv6 in SQL syntax */
 #define IPV6_SQL_STRLEN (2+16*2+1)
 
@@ -264,9 +266,9 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	/* set variables */
 
 #define READ_CONF(KEY) \
-    get_confvar_value(mysql_nuauth_vars, sizeof(mysql_nuauth_vars)/sizeof(confparams_t), KEY)
+	get_confvar_value(mysql_nuauth_vars, sizeof(mysql_nuauth_vars)/sizeof(confparams_t), KEY)
 #define READ_CONF_INT(VAR, KEY, DEFAULT) \
-    do { gpointer vpointer = READ_CONF(KEY); if (vpointer) VAR = *(int *)vpointer; else VAR = DEFAULT; } while (0)
+	do { gpointer vpointer = READ_CONF(KEY); if (vpointer) VAR = *(int *)vpointer; else VAR = DEFAULT; } while (0)
 
 	params->mysql_server = (char *) READ_CONF("mysql_server_addr");
 	params->mysql_user = (char *) READ_CONF("mysql_user");
@@ -1076,7 +1078,7 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 						"os_sysname, os_release, os_version, socket, start_time) "
 						"VALUES ('%lu', '%s', '%s', '%s', '%s', '%s', '%u', FROM_UNIXTIME(%lu))",
 						params->mysql_users_table_name,
-						c_session->user_id,
+						(unsigned long)c_session->user_id,
 						quoted_username,
 						ip_ascii,
 						quoted_osname,
