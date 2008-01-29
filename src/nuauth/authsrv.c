@@ -24,11 +24,13 @@
  * @{
  */
 
-/*! \file nuauth/authsrv.c
-  \brief Main file
+/* } */
 
-  It takes care of init stuffs and runs sheduled tasks at a given interval.
-  */
+/*! \file nuauth/authsrv.c
+	\brief Main file
+
+	It takes care of init stuffs and runs sheduled tasks at a given interval.
+*/
 
 
 #include <auth_srv.h>
@@ -41,6 +43,7 @@
 #include <sys/resource.h>	/* setrlimit() */
 
 #include <nussl.h>
+#include <nubase.h>
 
 typedef struct {
 	int daemonize;
@@ -660,11 +663,13 @@ void configure_app(int argc, char **argv)
 
 	/* load configuration */
 	if (!init_nuauthconf(&nuauthconf)) {
-		fprintf(stderr,"Unable to load configuration\n");
+		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
+				"Unable to load configuration");
 		exit(EXIT_FAILURE);
 	}
 
-	log_message(INFO, DEBUG_AREA_MAIN, "Start NuAuth server.");
+	log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
+			"[+] NuAuth " VERSION " started");
 
 	/* init gcrypt and gnutls */
 #ifdef GCRYPT_PTHEAD_IMPLEMENTATION
@@ -675,8 +680,8 @@ void configure_app(int argc, char **argv)
 
 	ret = nussl_init();
 	if ( ret != NUSSL_OK ) {
-		fprintf(stderr,
-			"FATAL ERROR: NuSSL global initialisation failed.\n");
+		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
+			"FATAL ERROR: NuSSL global initialisation failed.");
 		exit(EXIT_FAILURE);
 	}
 
@@ -693,27 +698,28 @@ void configure_app(int argc, char **argv)
 		nuauthconf->debug_level = MAX_DEBUG_LEVEL;
 	if (nuauthconf->debug_level < MIN_DEBUG_LEVEL)
 		nuauthconf->debug_level = MIN_DEBUG_LEVEL;
-	log_message(INFO, DEBUG_AREA_MAIN, "debug_level is %i",
-		    nuauthconf->debug_level);
+	log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
+			"debug_level is %i", nuauthconf->debug_level);
 
 	/* init credential */
 	if(! create_x509_credentials())
 	{
-		fprintf(stderr,"Certificate initialization failed\n");
+		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
+				"Certificate initialization failed");
 		exit(EXIT_FAILURE);
 	}
 
 	if (params.daemonize == 1) {
 		daemonize();
 	} else {
-		g_message("[+] Starting nuauth " VERSION
-			  " ($Revision$) with config "
-			  DEFAULT_CONF_FILE );
+			log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
+					"[+] NuAuth ($Revision$) with config "
+					DEFAULT_CONF_FILE );
 	}
 }
 
 /**
- * Initialize all datas:
+ * Initialize all data:
  *   - Create different queues:
  *      - tls_push_queue: read in push_worker() ;
  *      - connections_queue: read in search_and_fill() ;
