@@ -411,14 +411,14 @@ int create_x509_credentials()
 		return 0;
 	}
 
-	/* don't refresh crl if there is none */
-	if (nuauth_tls_crl == NULL) {
-		nuauth_tls.crl_refresh = 0;
-	}
-	nuauth_tls.crl_refresh_counter = 0;
-
 	/* We create the NuSSL object */
 	nussl = nussl_session_create();
+
+	/* don't refresh crl if there is none */
+
+	if (nuauth_tls_crl) {
+		nussl_set_crl_refresh(nussl, 1);
+	}
 
 	ret = nussl_ssl_context_set_verify(nussl, nuauth_tls.request_cert, nuauth_tls_cacert);
 	if (ret <= 0) {
