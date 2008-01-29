@@ -851,6 +851,7 @@ int nussl_ssl_context_trustcert(nussl_ssl_context *ctx, const nussl_ssl_certific
     return (gnutls_certificate_set_x509_trust(ctx->cred, &certs, 1) == 0) ? NUSSL_OK : NUSSL_ERROR;
 }
 
+#if 0
 void nussl_ssl_trust_default_ca(nussl_session *sess)
 {
 #ifdef NUSSL_SSL_CA_BUNDLE
@@ -860,6 +861,7 @@ void nussl_ssl_trust_default_ca(nussl_session *sess)
                                            GNUTLS_X509_FMT_PEM);
 #endif
 }
+#endif
 
 /* Read the contents of file FILENAME into *DATUM. */
 static int read_to_datum(const char *filename, gnutls_datum *datum)
