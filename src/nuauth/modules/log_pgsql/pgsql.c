@@ -32,7 +32,7 @@
 #include <inttypes.h>
 #include "security.h"
 
-#include <nubase>
+#include "nubase.h"
 
 static nu_error_t pgsql_close_open_user_sessions(struct log_pgsql_params
 						 *params);
@@ -688,7 +688,7 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 				     "os_sysname, os_release, os_version, socket, start_time) "
 				     "VALUES ('%lu', '%s', '%s', '%s', '%s', '%s', '%u', ABSTIME(%lu))",
 				     params->pgsql_users_table_name,
-				     c_session->user_id,
+				     (unsigned long)c_session->user_id,
 				     c_session->user_name,
 				     addr_ascii,
 				     c_session->sysname,
