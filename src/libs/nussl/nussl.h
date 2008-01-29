@@ -31,6 +31,9 @@ int nussl_init();
  * server. */
 nussl_session *nussl_session_create();
 
+/* We se the crl refresh capability */
+void nussl_set_crl_refresh(nussl_session *sess, int refresh);
+
 /* Finish an HTTP session */
 void nussl_session_destroy(nussl_session *sess);
 

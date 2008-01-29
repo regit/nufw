@@ -115,6 +115,8 @@ nussl_session *nussl_session_create()
     strcpy(sess->error, "Unknown error.");
 
     sess->ssl_context = nussl_ssl_context_create(0);
+    sess->ssl_context->crl_refresh_counter = 0;
+    sess->ssl_context->crl_refresh = 0;
     sess->flags[NUSSL_SESSFLAG_SSLv2] = 1;
     sess->flags[NUSSL_SESSFLAG_TLS_SNI] = 1;
 
@@ -122,6 +124,11 @@ nussl_session *nussl_session_create()
     sess->flags[NUSSL_SESSFLAG_PERSIST] = 1;
 
     return sess;
+}
+
+void nussl_set_crl_refresh(nussl_session *sess, int refresh)
+{
+    sess->ssl_context->crl_refresh = refresh;
 }
 
 void nussl_set_addrlist(nussl_session *sess, const nussl_inet_addr **addrs, size_t n)
@@ -449,9 +456,9 @@ ssize_t nussl_read(nussl_session *session, char *buffer, size_t count)
 int nussl_ssl_set_keypair(nussl_session *session, const char* cert_file, const char* key_file)
 {
 	nussl_ssl_client_cert* cert;
-	
+
 	UGLY_DEBUG();
-	
+
 	if (check_key_perms(key_file)!= NUSSL_OK)
 	{
 		nussl_set_error(session, _("Permissions on private key %s are not restrictive enough, it should be readable only by its owner."), key_file);
