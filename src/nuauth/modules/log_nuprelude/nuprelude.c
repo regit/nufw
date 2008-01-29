@@ -1,5 +1,6 @@
 /*
- ** Copyright(C) 2006 INL
+ ** Copyright(C) 2006,2007,2008 INL
+ **	written by Pierre Chifflier <chifflier AT inl DOT fr>
  **	written by Victor Stinner <victor.stinner AT haypocalc.com>
  **
  ** $Id$
@@ -19,6 +20,7 @@
  */
 
 #include "log_prelude.h"
+#include "strings.h"
 #include <prelude.h>
 #include <prelude-log.h>
 #include <idmef-tree-wrap.h>
@@ -465,10 +467,11 @@ static idmef_message_t *create_message_packet(idmef_message_t * tpl,
 		return NULL;
 	}
 
-	if (state == TCP_STATE_DROP)
+	if (state == TCP_STATE_DROP) {
 		tmp_buffer = "failed";
-	else
+	} else {
 		tmp_buffer = "succeeded";
+	}
 	add_idmef_object(idmef, "alert.assessment.impact.completion", tmp_buffer);
 	add_idmef_object(idmef, "alert.classification.text", state_text);
 	add_idmef_object(idmef, "alert.assessment.impact.severity", severity);
@@ -481,8 +484,7 @@ static idmef_message_t *create_message_packet(idmef_message_t * tpl,
 	add_idmef_object(idmef, "alert.target(0).node.address(0).address", ip_ascii);
 
 	/* IP protocol */
-	if (secure_snprintf
-	    (buffer, sizeof(buffer), "%hu", conn->tracking.protocol)) {
+	if (secure_snprintf(buffer, sizeof(buffer), "%hu", conn->tracking.protocol)) {
 		add_idmef_object(idmef,
 				 "alert.source(0).service.iana_protocol_number",
 				 buffer);
@@ -591,8 +593,10 @@ static void add_user_information(idmef_message_t * idmef,
 		add_idmef_object(idmef,
 				 "alert.source(0).user.user_id(0).name",
 				 session->user_name);
-		if (userid_is_valid && secure_snprintf
-		    (buffer, sizeof(buffer), "%lu", (long)session->user_id)) {
+		if (userid_is_valid &&
+				secure_snprintf (buffer,
+						sizeof(buffer),
+						"%lu", (long)session->user_id)) {
 			add_idmef_object(idmef,
 					 "alert.source(0).user.user_id(0).number",
 					 buffer);
@@ -659,13 +663,10 @@ static idmef_message_t *create_message_autherr(idmef_message_t * tpl,
 	}
 
 	add_idmef_object(idmef, "alert.assessment.impact.completion", "failed");
-	add_idmef_object(idmef, "alert.assessment.impact.severity",
-			 severity);
+	add_idmef_object(idmef, "alert.assessment.impact.severity", severity);
 
-	add_idmef_object(idmef, "alert.classification.text",
-			 "Authentication error");
-	add_idmef_object(idmef, "alert.assessment.impact.description",
-			 text);
+	add_idmef_object(idmef, "alert.classification.text", "Authentication error");
+	add_idmef_object(idmef, "alert.assessment.impact.description", text);
 
 	/* source address */
 	set_source0_address(idmef, &session->addr);
@@ -674,8 +675,7 @@ static idmef_message_t *create_message_autherr(idmef_message_t * tpl,
 	add_idmef_object(idmef,	"alert.source(0).service.port", buffer);
 
 	FORMAT_IPV6(&session->server_addr, ip_ascii);
-	add_idmef_object(idmef,
-			"alert.target(0).node.address(0).address", ip_ascii);
+	add_idmef_object(idmef, "alert.target(0).node.address(0).address", ip_ascii);
 
 	/* set user informations */
 	add_user_information(idmef, session, 0);
@@ -877,16 +877,18 @@ G_MODULE_EXPORT void auth_error_log(user_session_t * session,
 	tpl = g_private_get(params->autherr_tpl);
 	if (!tpl) {
 		tpl = create_autherr_template();
-		if (!tpl)
+		if (!tpl) {
 			return;
+		}
 		g_private_set(params->autherr_tpl, tpl);
 	}
 
 	/* feed message fields */
-	if (error == AUTH_ERROR_CREDENTIALS)
+	if (error == AUTH_ERROR_CREDENTIALS) {
 		severity = "high";
-	else
+	} else {
 		severity = "medium";
+	}
 	message = create_message_autherr(tpl, session, text, severity);
 	if (!message) {
 		return;
