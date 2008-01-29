@@ -420,7 +420,6 @@ int create_x509_credentials()
 	/* We create the NuSSL object */
 	nussl = nussl_session_create();
 
-	/* XXX: Make sure nuauth_tls.request_cert will be effective with ctx->verify */
 	ret = nussl_ssl_context_set_verify(nussl, nuauth_tls.request_cert, nuauth_tls_cacert);
 	if (ret <= 0) {
 		g_warning
@@ -431,11 +430,8 @@ int create_x509_credentials()
 			|| nuauth_tls.auth_by_cert == MANDATORY_AUTH_BY_CERT)
 			return 0;
 	}
-	ret =
-	    gnutls_certificate_set_x509_key_file(nuauth_tls.x509_cred,
-						 nuauth_tls_cert,
-						 nuauth_tls_key,
-						 GNUTLS_X509_FMT_PEM);
+
+	ret = nussl_ssl_set_keypair(nussl, nuauth_tls_cert, nuauth_tls_key);
 	if (ret < 0) {
 		g_warning("[%i] Problem with certificate key file : %s",
 			getpid(), gnutls_strerror(ret));
