@@ -156,11 +156,11 @@ nu_error_t parse_dgram(connection_t * connection, unsigned char *dgram,
 }
 
 #define GET_IFACE_FROM_MSG(conn, msg, iface) \
-    do { if (msg->iface) \
-            { if (msg->iface[0] != '*') \
-	    conn->iface_nfo.iface = g_strndup(msg->iface,IFNAMSIZ); }  \
-        else { conn->iface_nfo.iface = NULL; } \
-    } while (0)
+	do { if (msg->iface) \
+		{ if (msg->iface[0] != '*') \
+		conn->iface_nfo.iface = g_strndup(msg->iface,IFNAMSIZ); }  \
+		else { conn->iface_nfo.iface = NULL; } \
+	} while (0)
 
 /**
  * Parse fields of the message
@@ -291,7 +291,7 @@ nu_error_t authpckt_conntrack(unsigned char *dgram, unsigned int dgram_size)
 	/* Check message content size */
 	if (dgram_size != sizeof(struct nuv4_conntrack_message_t)) {
 		log_message(CRITICAL, DEBUG_AREA_PACKET | DEBUG_AREA_GW,
-				  "Auth conntrack: Improper length of packet (%d instead of %lu)",
+				  "Auth conntrack: Improper length of packet (%d instead of %u)",
 				  dgram_size,
 				  sizeof(struct nuv4_conntrack_message_t));
 		return NU_EXIT_ERROR;
