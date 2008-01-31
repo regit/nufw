@@ -29,21 +29,6 @@
  * Some structures, functions, global variables and \#define common to NuFW.
  */
 
-/**
- * Use ISO C99 standard, needed by snprintf for example
- */
-#define _ISOC99_SOURCE
-
-/*
- * Use POSIX standard, version "IEEE 1003.1-2004"
- */
-#define _POSIX_C_SOURCE 199506L
-
-/**
- * Use 4.3BSD standard
- */
-#define _BSD_SOURCE
-
 /* Disable inline keyword when compiling in strict ANSI conformance */
 #ifdef __STRICT_ANSI__
 #  define inline

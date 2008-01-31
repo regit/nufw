@@ -21,7 +21,6 @@
  */
 
 /* Enable GNU extensions: getline() from stdio.h */
-#define _GNU_SOURCE
 #include "nufw_source.h"
 
 #include "../lib/nuclient.h"

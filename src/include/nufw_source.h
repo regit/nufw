@@ -26,41 +26,6 @@
 #  include <config.h>
 #endif
 
-#ifdef _FEATURES_H
-/* Linux */
-#   error "nufw_source.h have to be included before <features.h>"
-#endif
-
-#ifdef	_SYS_CDEFS_H_
-/* FreeBSD */
-#   error "nufw_source.h have to be included before <sys/cdefs.h>"
-#endif
-
-/**
- * Use POSIX standard, version "IEEE 1003.1-2004",
- * Neded by sigaction (signal.h) and timespec (time.h) for example
- */
-#if defined(__linux__)
-#  define _POSIX_C_SOURCE 199506L
-#endif
-
-/**
- * Use ISO C99 standard, needed by snprintf for example
- */
-#define _ISOC99_SOURCE
-
-/**
- * Use 4.3BSD standard,
- * needed to get 'tcphdr' structure and snprintf() function.
- */
-#define _BSD_SOURCE
-
-/**
- * Use SVID standard,
- * needed to get 'strdup' from <string.h>.
- */
-#define _SVID_SOURCE
-
 /* Disable inline keyword when compiling in strict ANSI conformance */
 #if defined(__STRICT_ANSI__) && !defined(__cplusplus)
 #  undef inline

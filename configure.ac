@@ -16,11 +16,21 @@ AC_PROG_INSTALL
 AC_C_BIGENDIAN()
 
 case $host in
-*-*-linux*) AC_DEFINE([LINUX],[1],[Target is Linux]) ;;
+*-*-linux*)
+	AC_DEFINE([LINUX],[1],[Target is Linux])
+	CFLAGS="$CFLAGS -D_POSIX_C_SOURCE=199506L" ;;
 *-*-darwin*) AC_DEFINE([FREEBSD],[1],[Target is darwin (freebsd like)]) ;;
 *-*-freebsd*) AC_DEFINE([FREEBSD],[1],[Target is freebsd]) ;;
 *) AC_MSG_ERROR([Linux, FreeBSD, Darwin only, dude!]);;
 esac
+
+# Global definitions
+# _ISOC99_SOURCE	Use ISO C99 standard, needed by snprintf for example
+# _GNU_SOURCE		Use GNU extensions like getline() in stdio.h
+# _SVID_SOURCE		Needed to get 'strdup' from <string.h>
+# _BSD_SOURCE		Use 4.3BSD
+
+CFLAGS="$CFLAGS -D_ISOC99_SOURCE -D_GNU_SOURCE -D_BSD_SOURCE -D_SVID_SOURCE"
 
 # check to see if struct dirent has the d_type member
 AC_CHECK_MEMBER([struct dirent.d_type],

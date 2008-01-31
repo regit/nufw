@@ -23,11 +23,6 @@
 
 #include "nufw_source.h"
 
-#ifdef _NETINET_IN_H_
-/* FreeBSD */
-#   error "ipv6.h have to be included before <netinet/in.h>"
-#endif
-
 #ifdef FREEBSD
 #  include <sys/types.h>
 #  include <netinet/in_systm.h>
