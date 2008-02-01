@@ -491,7 +491,7 @@ static int pgsql_update_state(PGconn * ld,
 	char *ip_src, *ip_dst;
 	int nb_try = 0;
 	int nb_tuple;
-	gboolean ok;
+	gboolean ok = 0;
 
 	/* setup IP/TCP parameters */
 	if (!formatINET(params, tmp_inet1, sizeof(tmp_inet1),
