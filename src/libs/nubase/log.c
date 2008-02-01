@@ -39,6 +39,18 @@
 #include "log.h"
 
 /**
+ * Log engine used:
+ *   - if equals to #LOG_TO_SYSLOG, use syslog
+ *   - else use printf()
+ * \see log_printf()
+ */
+int log_engine;
+
+int debug_level;                /*!< Debug level, default valut: #DEFAULT_DEBUG_LEVEL */
+int debug_areas;                /*!< Debug areas, default value: #DEFAULT_DEBUG_AREAS (all areas) */
+
+
+/**
  * Convert NuFW verbosity level to syslog priority.
  */
 int syslog_priority_map[MAX_DEBUG_LEVEL - MIN_DEBUG_LEVEL + 1] = {

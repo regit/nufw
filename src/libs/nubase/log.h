@@ -47,10 +47,10 @@
  *   - else use printf()
  * \see log_printf()
  */
-int log_engine;
+extern int log_engine;
 
-int debug_level;		/*!< Debug level, default valut: #DEFAULT_DEBUG_LEVEL */
-int debug_areas;		/*!< Debug areas, default value: #DEFAULT_DEBUG_AREAS (all areas) */
+extern int debug_level;		/*!< Debug level, default valut: #DEFAULT_DEBUG_LEVEL */
+extern int debug_areas;		/*!< Debug areas, default value: #DEFAULT_DEBUG_AREAS (all areas) */
 
 void init_log_engine();
 void log_printf(debug_level_t priority, char *format, ...)
@@ -70,7 +70,7 @@ void log_area_printf(debug_area_t area, debug_level_t priority, char *format, ..
  */
 #ifdef DEBUG_ENABLE
 #  define debug_log_printf(area, priority, format, args...) \
-       log_area_printf(area, priority, format, ##args )
+	log_area_printf(area, priority, format, ##args )
 #else
 #  define debug_log_printf(area, priority, format, ...)
 #endif
