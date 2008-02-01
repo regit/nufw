@@ -21,7 +21,7 @@ def startNufw(args=None):
     """
     global _nufw
     if _nufw:
-        if args or _nufw.args:
+        if args or _nufw.args or (not _nufw.isRunning()):
             # if command line arguments changed: restart nufw!
             _stopNufw()
         else:

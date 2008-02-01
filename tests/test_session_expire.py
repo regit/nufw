@@ -44,7 +44,6 @@ class TestSessionExpire(TestCase):
         self.client.stop()
         self.acls.desinstall()
         self.nuauth.stop()
-        self.nufw.stop()
 
     def testExpire(self):
         self.assert_(connectClient(self.client))
