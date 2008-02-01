@@ -19,7 +19,7 @@ from sys import exit
 from select import select
 from logging import info, warning, error
 
-NOBUFFER_SRC_PATH = normpath(join_path(dirname(__file__), 'libnobuffer.so'))
+NOBUFFER_SRC_PATH = normpath(join_path(dirname(__file__), '.libs', 'libnobuffer.so'))
 
 SIGNAME = {
     SIGABRT: "SIGABRT",

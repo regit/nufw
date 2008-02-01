@@ -3,11 +3,16 @@ EXTRA_DIST = \
   subprocess_python25.py __init__.py  log.py process.py \
   replace_file.py rpc_server.py tools.py nobuffer.c
 
-all: libnobuffer.so
+#all: libnobuffer.so
+#
+#libnobuffer.so: nobuffer.c
+#	gcc -o $@ -shared nobuffer.c $(CFLAGS) -fPIC
+#
+#clean:
+#	rm -f libnobuffer.so
+#
 
-libnobuffer.so: nobuffer.c
-	gcc -o $@ -shared nobuffer.c $(CFLAGS) -fPIC
+lib_LTLIBRARIES = libnobuffer.la
 
-clean:
-	rm -f libnobuffer.so
+libnobuffer_la_SOURCES = nobuffer.c
 
