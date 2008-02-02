@@ -617,6 +617,9 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
+	/* Nice nufw to increase performance of nfnetlink layer */
+	nice(-1);
+
 	/* Daemon code */
 	if (daemonize == 1) {
 		nufw_daemonize();
