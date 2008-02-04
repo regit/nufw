@@ -375,65 +375,29 @@ idmef_message_t* create_from_template(idmef_message_t *tpl, connection_t *conn)
 }
 
 /**
- * Set operating system informations of a IDMEF message:
- *  - create an analyzer to store libnuclient informations
- *  - set name, model, class, manufacturer
- *  - set OS type and version
+ * Set operating system information on the client (OS type and version)
  */
-void set_os_infos(idmef_message_t *idmef, char* osname, char *osrelease, char *osversion)
+static void set_os_infos(idmef_message_t *idmef, const char* osname, const char *osrelease, const char *osversion)
 {
-	idmef_alert_t *alert;
-	idmef_analyzer_t *analyzer;
-	prelude_string_t *string = NULL;
-	gchar* fullversion;
-	int ret;
+	char buffer[256];
 
-	alert = idmef_message_get_alert(idmef);
-	if (!alert)
-		return;
+	add_idmef_object(idmef, "alert.additional_data(0).type", "string");
+	add_idmef_object(idmef, "alert.additional_data(0).meaning", "Client OS");
+	secure_snprintf(buffer, sizeof(buffer), "%s %s %s", osname, osrelease, osversion);
+	add_idmef_object(idmef, "alert.additional_data(0).data", buffer);
+}
 
-	ret = idmef_alert_new_analyzer(alert, &analyzer, 2);
-	if (ret < 0)
-		return;
+/**
+ * Set information on NuFW (ip address, port)
+ */
+static void set_nufw_infos(idmef_message_t *idmef, const char *nufw_address, const char *nufw_port)
+{
+	char buffer[256];
 
-
-	/* configure analyzer */
-	ret = idmef_analyzer_new_name(analyzer, &string);
-	if (ret < 0)
-		return;
-	prelude_string_set_constant(string, CLIENT_ANALYZER_NAME);
-
-	ret = idmef_analyzer_new_model(analyzer, &string);
-	if (ret < 0)
-		return;
-	prelude_string_set_constant(string, CLIENT_ANALYZER_MODEL);
-
-	ret = idmef_analyzer_new_class(analyzer, &string);
-	if (ret < 0)
-		return;
-	prelude_string_set_constant(string, CLIENT_ANALYZER_CLASS);
-
-	ret = idmef_analyzer_new_manufacturer(analyzer, &string);
-	if (ret < 0)
-		return;
-	prelude_string_set_constant(string, CLIENT_ANALYZER_MANUFACTURER);
-
-	/* OS informations */
-	ret = idmef_analyzer_new_ostype(analyzer, &string);
-	if (ret < 0)
-		return;
-	prelude_string_set_dup(string, osname);
-
-	fullversion = g_strdup_printf("%s %s", osrelease, osversion);
-	ret = idmef_analyzer_new_osversion(analyzer, &string);
-	if (ret < 0)
-		return;
-	if (fullversion) {
-		prelude_string_set_dup(string, fullversion);
-		g_free(fullversion);
-	} else {
-		prelude_string_set_dup(string, osversion);
-	}
+	add_idmef_object(idmef, "alert.additional_data(1).type", "string");
+	add_idmef_object(idmef, "alert.additional_data(1).meaning", "NuFW server address");
+	secure_snprintf(buffer, sizeof(buffer), "%s:%s", nufw_address, nufw_port);
+	add_idmef_object(idmef, "alert.additional_data(1).data", buffer);
 }
 
 void set_source0_address(idmef_message_t *idmef, struct in6_addr *addr)
@@ -529,16 +493,6 @@ static idmef_message_t *create_message_packet(idmef_message_t * tpl,
 		}
 	}
 
-	/* informations about nufw server */
-	if (conn->tls) {
-		add_idmef_object(idmef, "alert.source(1).process.name", "nufw");
-		add_idmef_object(idmef, "alert.source(1).service.protocol", "tcp");
-		add_idmef_object(idmef, "alert.source(1).service.port", nuauthconf->authreq_port);
-		add_idmef_object(idmef, "alert.source(1).service.iana_protocol_number", "6");
-		FORMAT_IPV6(&conn->tls->peername, ip_ascii);
-		add_idmef_object(idmef, "alert.source(1).node.address(0).address", ip_ascii);
-	}
-
 	/* user informations */
 	if (conn->username != NULL) {
 		add_idmef_object(idmef,
@@ -574,6 +528,10 @@ static idmef_message_t *create_message_packet(idmef_message_t * tpl,
 	if (conn->os_sysname != NULL) {
 		set_os_infos(idmef, conn->os_sysname, conn->os_release, conn->os_version);
 	}
+
+	/* informations about nufw server */
+	FORMAT_IPV6(&conn->tls->peername, ip_ascii);
+	set_nufw_infos(idmef, ip_ascii, nuauthconf->authreq_port);
 
 	return idmef;
 }
@@ -695,26 +653,26 @@ G_MODULE_EXPORT gint user_packet_logs(connection_t * element,
 	char *state_text;
 	char *severity;
 
-	impact = "Connection state change notification";
+	state_text = "Connection state change";
 	switch (state) {
 	case TCP_STATE_OPEN:
-		state_text = "Connection opened";
+		impact = "Connection opened";
 		severity = "low";
 		break;
 	case TCP_STATE_ESTABLISHED:
-		state_text = "Connection established";
+		impact = "Connection established";
 		severity = "info";
 		break;
 	case TCP_STATE_CLOSE:
-		state_text = "Connection closed";
+		impact = "Connection closed";
 		severity = "low";
 		break;
 	case TCP_STATE_DROP:
 		if (element->username != NULL) {
-			state_text = "Authenticated connection dropped";
+			impact = "Authenticated connection dropped";
 			severity = "high";
 		} else {
-			state_text = "Unauthenticated connection dropped";
+			impact = "Unauthenticated connection dropped";
 			severity = "medium";
 		}
 		break;
