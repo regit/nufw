@@ -268,8 +268,6 @@ static void feed_source_libnuclient(idmef_message_t *idmef)
 			 "alert.source(0).service.iana_protocol_number",
 			 "6");
 	add_idmef_object(idmef, "alert.source(0).service.protocol", "tcp");
-	add_idmef_object(idmef, "alert.source(0).service.name",
-			 "nufw-client");
 }
 
 /**
@@ -445,6 +443,9 @@ void set_source0_address(idmef_message_t *idmef, struct in6_addr *addr)
 	add_idmef_object(idmef,
 			 "alert.source(0).node.address(0).address",
 			 ip_ascii);
+	add_idmef_object(idmef,
+			 "alert.source(0).spoofed",
+			 "no");
 }
 
 /**
@@ -640,8 +641,7 @@ static idmef_message_t *create_message_session(idmef_message_t * tpl,
 	add_user_information(idmef, session, 1);
 
 	FORMAT_IPV6(&session->server_addr, ip_ascii);
-	add_idmef_object(idmef,
-			"alert.target(0).node.address(0).address", ip_ascii);
+	add_idmef_object(idmef, "alert.target(0).node.address(0).address", ip_ascii);
 
 	/* os informations */
 	set_os_infos(idmef, session->sysname, session->release, session->version);
@@ -695,10 +695,10 @@ G_MODULE_EXPORT gint user_packet_logs(connection_t * element,
 	char *state_text;
 	char *severity;
 
-	impact = "notify connection state change";
+	impact = "Connection state change notification";
 	switch (state) {
 	case TCP_STATE_OPEN:
-		state_text = "Open connection";
+		state_text = "Connection opened";
 		severity = "low";
 		break;
 	case TCP_STATE_ESTABLISHED:
@@ -706,16 +706,15 @@ G_MODULE_EXPORT gint user_packet_logs(connection_t * element,
 		severity = "info";
 		break;
 	case TCP_STATE_CLOSE:
-		state_text = "Close connection";
+		state_text = "Connection closed";
 		severity = "low";
 		break;
 	case TCP_STATE_DROP:
 		if (element->username != NULL) {
-			state_text = "Drop auth connection";
+			state_text = "Authenticated connection dropped";
 			severity = "high";
 		} else {
-			state_text =
-			    "Drop unauth connection (auth timeout)";
+			state_text = "Unauthenticated connection dropped";
 			severity = "medium";
 		}
 		break;
@@ -727,14 +726,14 @@ G_MODULE_EXPORT gint user_packet_logs(connection_t * element,
 	tpl = g_private_get(params->packet_tpl);
 	if (!tpl) {
 		tpl = create_packet_template();
-		if (!tpl)
+		if (!tpl) {
 			return -1;
+		}
 		g_private_set(params->packet_tpl, tpl);
 	}
 
 	/* feed message fields */
-	message =
-	    create_message_packet(tpl, state, element, state_text, impact,
+	message = create_message_packet(tpl, state, element, state_text, impact,
 				  severity);
 	if (!message) {
 		return -1;
@@ -759,15 +758,16 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 	char *severity;
 	char *state_text;
 
-	severity = "low";
 	switch (state) {
 	case SESSION_OPEN:
-		state_text = "User log in";
-		impact = g_strdup_printf("User \"%s\" log in", c_session->user_name);
+		state_text = "User login";
+		severity = "medium";
+		impact = g_strdup_printf("User \"%s\" logged in", c_session->user_name);
 		break;
 	case SESSION_CLOSE:
-		state_text = "User log out";
-		impact = g_strdup_printf("User \"%s\" log out", c_session->user_name);
+		state_text = "User logout";
+		severity = "low";
+		impact = g_strdup_printf("User \"%s\" logged out", c_session->user_name);
 		break;
 	default:
 		return -1;
@@ -785,8 +785,7 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 	}
 
 	/* feed message fields */
-	message =
-	    create_message_session(tpl, c_session, state_text, impact,
+	message = create_message_session(tpl, c_session, state_text, impact,
 				   severity);
 	g_free(impact);
 	if (!message) {
