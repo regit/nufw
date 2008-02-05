@@ -35,7 +35,7 @@
 
 #define NUFW_ANALYZER_MANUFACTURER "http://www.nufw.org/"
 #define NUFW_ANALYZER_CLASS "Firewall"
-#define NUFW_ANALYZER_VERSION NUAUTH_FULL_VERSION
+#define NUFW_ANALYZER_VERSION VERSION
 #define NUFW_ANALYZER_MODEL "NuFW"
 
 #define CLIENT_ANALYZER_NAME "libnuclient"
@@ -530,8 +530,10 @@ static idmef_message_t *create_message_packet(idmef_message_t * tpl,
 	}
 
 	/* informations about nufw server */
-	FORMAT_IPV6(&conn->tls->peername, ip_ascii);
-	set_nufw_infos(idmef, ip_ascii, nuauthconf->authreq_port);
+	if (conn->tls != NULL) {
+		FORMAT_IPV6(&conn->tls->peername, ip_ascii);
+		set_nufw_infos(idmef, ip_ascii, nuauthconf->authreq_port);
+	}
 
 	return idmef;
 }
