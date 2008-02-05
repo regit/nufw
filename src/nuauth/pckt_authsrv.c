@@ -111,9 +111,10 @@ nu_error_t parse_dgram(connection_t * connection, unsigned char *dgram,
 				break;
 			default:
 				log_message(WARNING, DEBUG_AREA_PACKET | DEBUG_AREA_GW,
-					    "Can't parse TCP headers");
+					    "Non-SYN TCP headers, we should not have received this packet");
+				connection->state = AUTH_STATE_DONE;
 				free_connection(connection);
-				return NU_EXIT_ERROR;
+				return NU_EXIT_NO_RETURN;
 			}
 			break;
 		}
