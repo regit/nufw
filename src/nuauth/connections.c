@@ -139,10 +139,10 @@ void free_connection(connection_t * conn)
 }
 
 #define COPY_IFACE_NAME(copy, orig, iface) \
-    do { if (orig->iface) \
-            { copy->iface = g_strndup(orig->iface,IFNAMSIZ); }  \
-        else { copy->iface = NULL; } \
-    } while (0)
+	do { if (orig->iface) \
+		{ copy->iface = g_strndup(orig->iface,IFNAMSIZ); }  \
+		else { copy->iface = NULL; } \
+	} while (0)
 
 /** Duplicate an iface_nfo
  *
@@ -202,7 +202,6 @@ connection_t *duplicate_connection(connection_t * element)
 			    &(element->iface_nfo));
 
 	/* Nullify needed internal field */
-	conn_copy->tls = NULL;
 	conn_copy->acl_groups = NULL;
 	conn_copy->user_groups = NULL;
 	conn_copy->packet_id = NULL;
