@@ -131,6 +131,11 @@ void nussl_set_crl_refresh(nussl_session *sess, int refresh)
     sess->ssl_context->crl_refresh = refresh;
 }
 
+void nussl_crl_refresh_counter_inc(nussl_session *sess)
+{
+    sess->ssl_context->crl_refresh_counter++;
+}
+
 void nussl_set_addrlist(nussl_session *sess, const nussl_inet_addr **addrs, size_t n)
 {
     UGLY_DEBUG();

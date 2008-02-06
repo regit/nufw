@@ -82,9 +82,11 @@ struct nussl_session_s {
 
     int rdtimeout, cotimeout; /* read, connect timeouts. */
 
+
     nussl_ssl_client_cert *client_cert;
     nussl_ssl_certificate *server_cert;
     nussl_ssl_context *ssl_context;
+
 
 #if 0
     /* Server cert verification callback: */
