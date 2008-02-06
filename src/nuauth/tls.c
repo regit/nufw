@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2004-2006 INL
+ ** Copyright(C) 2004-2008 INL
  ** Written by  Eric Leblond <regit@inl.fr>
  **             Vincent Deffontaines <gryzor@inl.fr>
  **
@@ -53,6 +53,11 @@ struct nuauth_tls_t nuauth_tls;
 
 /* XXX: *nussl replaces nuauth_tls*/
 static nussl_session *nussl;
+/* XXX: We must change the variable name to something clearer */
+static int auth_by_cert = NUSSL_CERT_REQUIRE;    /* Default behavior: strict */
+static int request_cert = NUSSL_CERT_REQUIRE;    /* Default behavior: strict */
+
+
 
 extern int ssl_connect(const char *hostname, const char *service)
 {
@@ -170,7 +175,7 @@ gnutls_session *initialize_tls_session()
 	}
 	/* request client certificate if any.  */
 	gnutls_certificate_server_set_request(*session,
-					      nuauth_tls.request_cert);
+					      request_cert);
 
 	gnutls_dh_set_prime_bits(*session, DH_BITS);
 
@@ -187,6 +192,9 @@ gnutls_session *initialize_tls_session()
 
 void refresh_crl_file()
 {
+#if 0
+XXX: crl not managed yet, nuauth_tls.crl_file_mtime used uninitialized
+
 	nuauth_tls.crl_refresh_counter++;
 	if (nuauth_tls.crl_refresh == nuauth_tls.crl_refresh_counter) {
 		struct stat stats;
@@ -207,6 +215,7 @@ void refresh_crl_file()
 		}
 		nuauth_tls.crl_refresh_counter = 0;
 	}
+#endif
 }
 
 /**
@@ -305,7 +314,7 @@ int tls_connect(int socket_fd, gnutls_session ** session_ptr)
 	debug_log_message(DEBUG, DEBUG_AREA_GW | DEBUG_AREA_USER,
 			  "NuFW TLS Handshake was completed");
 
-	if (nuauth_tls.request_cert == GNUTLS_CERT_REQUIRE) {
+	if (request_cert == NUSSL_CERT_REQUIRE) {
 		/* certicate verification */
 		ret = check_certs_for_tls_session(*session);
 		if (ret != 0) {
@@ -353,12 +362,16 @@ int create_x509_credentials()
 	const unsigned int nb_params =
 	    sizeof(nuauth_tls_vars) / sizeof(confparams_t);
 	int int_authcert;
+	int int_requestcert;
 
 	if(!parse_conffile(configfile, nb_params, nuauth_tls_vars))
 	{
 	        log_message(FATAL, DEBUG_AREA_MAIN, "Failed to load config file %s", configfile);
 		return 0;
 	}
+
+	/* We create the NuSSL object */
+	nussl = nussl_session_create();
 
 
 #define READ_CONF(KEY) \
@@ -370,13 +383,15 @@ int create_x509_credentials()
 	nuauth_tls_crl = (char *) READ_CONF("nuauth_tls_crl");
 	nuauth_tls_key_passwd =
 	    (char *) READ_CONF("nuauth_tls_key_passwd");
-	nuauth_tls.request_cert =
+	int_requestcert =
 	    *(int *) READ_CONF("nuauth_tls_request_cert");
 	nuauth_tls.crl_refresh =
 	    *(int *) READ_CONF("nuauth_tls_crl_refresh");
 	int_authcert = *(int *) READ_CONF("nuauth_tls_auth_by_cert");
 #undef READ_CONF
 
+#if 0
+/* XXX: Double check this and close ticket #120 */
 	if ((int_authcert >= NO_AUTH_BY_CERT)
 			&& (int_authcert < MAX_AUTH_BY_CERT)) {
 		nuauth_tls.auth_by_cert = int_authcert;
@@ -392,6 +407,25 @@ int create_x509_credentials()
 		log_message(INFO, DEBUG_AREA_AUTH | DEBUG_AREA_USER,
 			    "Mandatory certificate authentication asked, asking certificate");
 		nuauth_tls.request_cert = GNUTLS_CERT_REQUIRE;
+	}
+#endif
+
+	if ((int_authcert >= NUSSL_CERT_IGNORE)
+	&& (int_authcert <= NUSSL_CERT_REQUIRE)) {
+		auth_by_cert = int_authcert;
+	} else {
+		log_area_printf(DEBUG_AREA_AUTH, DEBUG_LEVEL_WARNING,
+				"[%i] config: Invalid nuauth_tls_auth_by_cert value: %d",
+				getpid(), int_authcert);
+
+		return 0;
+	}
+
+	if ((auth_by_cert == NUSSL_CERT_REQUIRE)
+	&& (request_cert != NUSSL_CERT_REQUIRE)) {
+		log_area_printf(DEBUG_AREA_AUTH, DEBUG_LEVEL_INFO,
+				"Mandatory certificate authentication asked, asking certificate");
+		request_cert = NUSSL_CERT_REQUIRE;
 	}
 
 	/* free config struct */
@@ -411,23 +445,20 @@ int create_x509_credentials()
 		return 0;
 	}
 
-	/* We create the NuSSL object */
-	nussl = nussl_session_create();
-
 	/* don't refresh crl if there is none */
 
 	if (nuauth_tls_crl) {
 		nussl_set_crl_refresh(nussl, 1);
 	}
 
-	ret = nussl_ssl_context_set_verify(nussl, nuauth_tls.request_cert, nuauth_tls_cacert);
+	ret = nussl_ssl_context_set_verify(nussl, request_cert, nuauth_tls_cacert);
 	if (ret <= 0) {
 		g_warning
 		    ("[%i] Problem with certificate trust file : %s",
 		     getpid(), gnutls_strerror(ret));
 
-		if (nuauth_tls.request_cert == NUSSL_CERT_REQUIRE
-			|| nuauth_tls.auth_by_cert == MANDATORY_AUTH_BY_CERT)
+		if (request_cert == NUSSL_CERT_REQUIRE
+			|| auth_by_cert == NUSSL_CERT_REQUIRE)
 			return 0;
 	}
 
@@ -442,7 +473,7 @@ int create_x509_credentials()
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG, DEBUG_AREA_USER)) {
 		g_message("TLS using key %s and cert %s", nuauth_tls_key,
 			  nuauth_tls_cert);
-		if (nuauth_tls.request_cert == GNUTLS_CERT_REQUIRE)
+		if (request_cert == NUSSL_CERT_REQUIRE)
 			g_message("TLS require cert from client");
 	}
 #endif
