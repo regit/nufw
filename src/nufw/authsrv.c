@@ -335,7 +335,7 @@ void *authsrv(void *data)
 		pthread_mutex_unlock(&tls.mutex);
 		if (ret == NUSSL_SOCK_TIMEOUT)
 		{
-			usleep(10000); // Without that, the other thread can't get the lock to tls.mutex
+			usleep(10000); /* Without that, the other thread can't get the lock to tls.mutex */
 			continue;
 		}
 		if (ret <= 0) {

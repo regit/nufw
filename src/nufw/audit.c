@@ -38,16 +38,18 @@
  */
 void process_poll(int signum)
 {
-//	log_area_printf(DEBUG_AREA_MAIN,
-//#ifdef DEBUG_ENABLE
-//		DEBUG_LEVEL_SERIOUS_WARNING,
-//#else
-//		DEBUG_LEVEL_FATAL,
-//#endif
-//		"AUDIT: rx=%d tx=%d track_size=%d list=%s",
-//		pckt_rx, pckt_tx, packets_list.length,
-//		(packets_list.start ==
-//		 NULL) ? "empty" : "one packet or more");
+/*
+	log_area_printf(DEBUG_AREA_MAIN,
+#ifdef DEBUG_ENABLE
+		DEBUG_LEVEL_SERIOUS_WARNING,
+#else
+		DEBUG_LEVEL_FATAL,
+#endif
+		"AUDIT: rx=%d tx=%d track_size=%d list=%s",
+		pckt_rx, pckt_tx, packets_list.length,
+		(packets_list.start ==
+		 NULL) ? "empty" : "one packet or more");
+*/
 }
 
 /**
