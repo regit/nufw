@@ -9,7 +9,7 @@ MYSQL_INCLUDE = `mysql_config --include`
 MYSQL_LIBS = `mysql_config --libs_r`
 endif
 
-INCLUDES = $(GLIB_CFLAGS) -I$(top_srcdir)/src/nuauth/ -I$(top_srcdir)/src/include/ $(MYSQL_INCLUDE)
+INCLUDES = $(GLIB_CFLAGS) -I$(top_srcdir)/src/nuauth/ -I$(top_srcdir)/src/include/ $(MYSQL_INCLUDE) -I$(top_srcdir)/src/libs/nussl/ -I$(top_srcdir)/src/libs/nubase/
 
 plugindir = $(libdir)/nuauth/modules
 
