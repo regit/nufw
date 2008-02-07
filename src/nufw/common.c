@@ -78,19 +78,13 @@ int timeval_substract(struct timeval *result, struct timeval *x,
  */
 void close_tls_session()
 {
-	int socket;
-
 	if (tls.session == NULL)
 		return;
 
 	pthread_mutex_destroy(&tls.auth_server_mutex);
 
-	socket = (int) gnutls_transport_get_ptr(*tls.session);
-	gnutls_bye(*tls.session, GNUTLS_SHUT_WR);
-	gnutls_deinit(*tls.session);
-	shutdown(socket, SHUT_RDWR);
-	close(socket);
-	free(tls.session);
+	nussl_close_connection(tls.session);
+	nussl_session_destroy(tls.session);
 	tls.session = NULL;
 }
 

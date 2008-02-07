@@ -24,7 +24,6 @@
 
 #include <nubase.h>
 
-
 #ifdef HAVE_NFQ_INDEV_NAME
 #  include "iface.h"
 #endif
@@ -697,6 +696,7 @@ int auth_request_send(uint8_t type, struct queued_pckt *pckt_datas)
 	if ((tls.auth_server_running == 0) && tls.session != NULL) {
 		close_tls_session();
 	}
+
 	pthread_mutex_unlock(&tls.mutex);
 
 	/* negotiate TLS connection if needed */
@@ -733,7 +733,10 @@ int auth_request_send(uint8_t type, struct queued_pckt *pckt_datas)
 
 	/* send packet */
 	pthread_mutex_lock(&tls.mutex);
-	if (!gnutls_record_send(*(tls.session), datas, msg_length)) {
+
+	if (nussl_write(tls.session, (char*)datas, msg_length) < 0) {
+		debug_log_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
+				 "Error during nussl_write.");
 		shutdown_tls();
 		pthread_mutex_unlock(&tls.mutex);
 		log_area_printf(DEBUG_AREA_GW,

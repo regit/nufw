@@ -233,19 +233,18 @@ int update_handler(struct nfct_conntrack *conn, unsigned int flags, int type,
 	if (tls.session) {
 		debug_log_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
 				 "Sending conntrack event to nuauth.");
-		ret = gnutls_record_send(*(tls.session),
-					 &message,
+		ret = nussl_write(tls.session,
+					 (char*)&message,
 					 sizeof(struct
 						nuv4_conntrack_message_t)
 		    );
 		if (ret < 0) {
-			if (gnutls_error_is_fatal(ret)) {
-				/* warn sender thread that it will need to reconnect at next access */
-				pthread_cancel(tls.auth_server);
-				tls.auth_server_running = 0;
-				pthread_mutex_unlock(&tls.mutex);
-				return callback_ret;
-			}
+			debug_log_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
+					 "Error during nussl_write.");
+			pthread_cancel(tls.auth_server);
+			tls.auth_server_running = 0;
+			pthread_mutex_unlock(&tls.mutex);
+			return callback_ret;
 		}
 	}
 	pthread_mutex_unlock(&tls.mutex);

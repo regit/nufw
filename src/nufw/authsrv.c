@@ -322,10 +322,6 @@ void *authsrv(void *data)
 	int read_size;
 	char cdgram[512];
 	char *dgram = cdgram;
-	int socket = (int) gnutls_transport_get_ptr(*tls.session);
-	fd_set wk_set;
-	int select_result;
-	struct timeval tv;
 
 	log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_VERBOSE_DEBUG,
 			"[+] Start auth server thread");
@@ -333,44 +329,19 @@ void *authsrv(void *data)
 	while (pthread_mutex_trylock(&tls.auth_server_mutex) == 0) {
 		pthread_mutex_unlock(&tls.auth_server_mutex);
 
-		/* Set timeout: one second */
-		tv.tv_sec = 1;
-		tv.tv_usec = 0;
-
-		read_size = 0;
-
-		/* wait new event on socket */
-		FD_ZERO(&wk_set);
-		FD_SET(socket, &wk_set);
-		select_result =
-		    select(socket + 1, &wk_set, NULL, NULL, &tv);
-		if (select_result == -1) {
-			int err = errno;
-			if (err == EINTR) {
-				continue;
-			}
-			log_area_printf(DEBUG_AREA_GW,
-					DEBUG_LEVEL_WARNING,
-					"[+] select() in authsrv.c failure: code %u",
-					errno);
-			break;
-		}
-
-		/* catch timeout */
-		if (select_result == 0) {
-			/* timeout! */
-			continue;
-		}
-
 		/* memset(dgram, 0, sizeof dgram); */
 		pthread_mutex_lock(&tls.mutex);
-		ret =
-		    gnutls_record_recv(*tls.session, dgram, sizeof cdgram);
+		ret = nussl_read(tls.session, dgram, sizeof cdgram);
 		pthread_mutex_unlock(&tls.mutex);
-		if (ret < 0) {
-			if (gnutls_error_is_fatal(ret)) {
-				break;
-			}
+		if (ret == NUSSL_SOCK_TIMEOUT)
+		{
+			usleep(10000); // Without that, the other thread can't get the lock to tls.mutex
+			continue;
+		}
+		if (ret <= 0) {
+			log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_VERBOSE_DEBUG,
+					"Error during nussl_read: %s", nussl_get_error(tls.session));
+			break;
 		} else {
 			do {
 				read_size =

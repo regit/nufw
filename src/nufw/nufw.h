@@ -52,10 +52,10 @@
 #include <unistd.h>
 #include <assert.h>
 #include <strings.h>
-#include <gnutls/gnutls.h>
 #include <gcrypt.h>
 #include <errno.h>
 
+#include <nussl.h>
 #include "security.h"
 #include "structure.h"
 
@@ -115,7 +115,7 @@ void *conntrack_event_handler(void *data);
 #define CERTFILE "/nufw-cert.pem"
 
 struct nuauth_conn {
-	gnutls_session *session;
+	nussl_session *session;
 	pthread_mutex_t mutex;
 	unsigned char auth_server_running;
 	pthread_t auth_server;
@@ -123,7 +123,6 @@ struct nuauth_conn {
 #ifdef HAVE_LIBCONNTRACK
 	pthread_t conntrack_event_handler;
 #endif
-	gnutls_certificate_credentials xcred;
 };
 
 struct queued_pckt {
@@ -144,7 +143,7 @@ struct queued_pckt {
 struct nuauth_conn tls;
 
 int init_x509_filenames();
-gnutls_session *tls_connect();
+nussl_session *tls_connect();
 pthread_cond_t *session_destroyed_cond;
 pthread_cond_t *session_active_cond;
 pthread_mutex_t *session_destroyed_mutex;

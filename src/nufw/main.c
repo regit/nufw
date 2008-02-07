@@ -87,11 +87,6 @@ void nufw_prepare_quit()
 	pthread_mutex_destroy(&packets_list.mutex);
 
 	/* close tls session */
-#if USE_X509
-	if (tls.session) {
-		gnutls_certificate_free_credentials(tls.xcred);
-	}
-#endif
 	close_tls_session();
 	pthread_mutex_destroy(&tls.mutex);
 
@@ -99,9 +94,6 @@ void nufw_prepare_quit()
 #ifdef HAVE_LIBCONNTRACK
 	nfct_close(cth);
 #endif
-
-	/* quit gnutls */
-	gnutls_global_deinit();
 
 	/* free memory */
 	free(key_file);
@@ -351,28 +343,6 @@ void nufw_daemonize()
 
 
 /**
- * Create nuauth address: ::adr_srv
- */
-void create_nuauth_address()
-{
-	int ecode;
-	struct addrinfo hints;
-	memset(&hints, 0, sizeof hints);
-	hints.ai_flags = AI_PASSIVE;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_family = PF_UNSPEC;
-
-	ecode = getaddrinfo(authreq_addr, authreq_port, &hints, &adr_srv);
-	if (ecode != 0) {
-		log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_CRITICAL,
-				"Can not resolve NuAuth hostname \"%s\"!",
-				authreq_addr);
-		exit(EXIT_FAILURE);
-	}
-}
-
-
-/**
  * Initialization checks
  *  - check key and cert files
  */
@@ -444,7 +414,7 @@ int main(int argc, char *argv[])
 	/* initialize variables */
 
 	log_engine = LOG_TO_STD;	/* default is to send debug messages to stdout + stderr */
-	snprintf(authreq_port, sizeof(authreq_port), "%hu", AUTHREQ_PORT);
+	authreq_port = AUTHREQ_PORT;
 	packet_timeout = PACKET_TIMEOUT;
 	track_size = TRACK_SIZE;
 	cert_file = NULL;
@@ -518,8 +488,7 @@ int main(int argc, char *argv[])
 			debug_level += 1;
 			break;
 		case 'p':
-			SECURE_STRNCPY(authreq_port, optarg,
-				       sizeof(authreq_port));
+			authreq_port = atoi(optarg);
 			break;
 			/* destination IP */
 		case 'd':
@@ -644,9 +613,6 @@ int main(int argc, char *argv[])
 				"Fail to create socket for ICMPv6!");
 	}
 
-	/* Create address adr_srv */
-	create_nuauth_address();
-
 	/* create packet list */
 	packets_list.start = NULL;
 	packets_list.end = NULL;
@@ -660,7 +626,11 @@ int main(int argc, char *argv[])
 
 	/* start GNU TLS library */
 	gcry_control(GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);
-	gnutls_global_init();
+	if (nussl_init() != NUSSL_OK) {
+		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
+				"Unable to initialize NuSSL library.");
+		
+	}
 
 #ifdef HAVE_LIBCONNTRACK
 	cth = nfct_open(CONNTRACK, 0);
