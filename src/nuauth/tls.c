@@ -421,7 +421,8 @@ int create_x509_credentials()
 		return 0;
 	}
 
-	if (NUSSL_VALID_REQ_TYPE(auth_by_cert)) {
+	if ((auth_by_cert == NUSSL_CERT_REQUIRE)
+		&& (request_cert != NUSSL_CERT_REQUIRE)) {
 		log_area_printf(DEBUG_AREA_AUTH, DEBUG_LEVEL_INFO,
 				"Mandatory certificate authentication asked, asking certificate");
 		request_cert = NUSSL_CERT_REQUIRE;
