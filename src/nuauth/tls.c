@@ -52,7 +52,8 @@
 struct nuauth_tls_t nuauth_tls;
 
 /* XXX: *nussl replaces nuauth_tls*/
-static nussl_session *nussl;
+struct nuauth_ssl_t nuauth_ssl;
+
 /* XXX: We must change the variable name to something clearer */
 static int auth_by_cert = NUSSL_CERT_REQUIRE;    /* Default behavior: strict */
 static int request_cert = NUSSL_CERT_REQUIRE;    /* Default behavior: strict */
@@ -63,8 +64,8 @@ extern int ssl_connect(const char *hostname, const char *service)
 {
 	unsigned int port = atoi(service);
 
-	nussl = nussl_session_create();
-	if ( ! nussl ) {
+	nuauth_ssl.session = nussl_session_create();
+	if ( ! nuauth_ssl.session ) {
 		log_message(CRITICAL, DEBUG_AREA_AUTH,
 				"Cannot allocate nussl session!");
 	return -1;
@@ -371,7 +372,7 @@ int create_x509_credentials()
 	}
 
 	/* We create the NuSSL object */
-	nussl = nussl_session_create();
+	nuauth_ssl.session = nussl_session_create();
 
 
 #define READ_CONF(KEY) \
@@ -448,10 +449,10 @@ int create_x509_credentials()
 	/* don't refresh crl if there is none */
 
 	if (nuauth_tls_crl) {
-		nussl_set_crl_refresh(nussl, 1);
+		nussl_set_crl_refresh(nuauth_ssl.session, 1);
 	}
 
-	ret = nussl_ssl_context_set_verify(nussl, request_cert, nuauth_tls_cacert);
+	ret = nussl_ssl_context_set_verify(nuauth_ssl.session, request_cert, nuauth_tls_cacert);
 	if (ret <= 0) {
 		g_warning
 		    ("[%i] Problem with certificate trust file : %s",
@@ -462,7 +463,7 @@ int create_x509_credentials()
 			return 0;
 	}
 
-	ret = nussl_ssl_set_keypair(nussl, nuauth_tls_cert, nuauth_tls_key);
+	ret = nussl_ssl_set_keypair(nuauth_ssl.session, nuauth_tls_cert, nuauth_tls_key);
 	if (ret < 0) {
 		g_warning("[%i] Problem with certificate key file : %s",
 			getpid(), gnutls_strerror(ret));
@@ -493,7 +494,7 @@ int create_x509_credentials()
 			return 0;
 		}
 		nuauth_tls.crl_file = nuauth_tls_crl;
-		ret = nussl_ssl_cert_set_x509_crl_file(nussl,
+		ret = nussl_ssl_cert_set_x509_crl_file(nuauth_ssl.session,
 						       nuauth_tls.crl_file);
 		if (ret < 0) {
 			g_warning("[%i] Problem with certificate key file : %s",
@@ -503,7 +504,7 @@ int create_x509_credentials()
 		}
 	}
 
-	ret = nussl_ssl_cert_generate_dh_params(nussl);
+	ret = nussl_ssl_cert_generate_dh_params(nuauth_ssl.session);
 	if (ret < 0) {
 		g_warning("[%i] Problem generating dh params",
 			getpid());
@@ -511,7 +512,7 @@ int create_x509_credentials()
 		return 0;
 	}
 
-	nussl_ssl_cert_dh_params(nussl);
+	nussl_ssl_cert_dh_params(nuauth_ssl.session);
 
 	cleanup_func_push(refresh_crl_file);
 

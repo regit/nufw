@@ -36,6 +36,9 @@
 
 extern struct nuauth_tls_t nuauth_tls;
 
+/* nuauth_ssl replaces nuauth_tls */
+extern struct nuauth_ssl_t nuauth_ssl;
+
 /**
  * get username from a tls session
  *
