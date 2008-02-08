@@ -110,6 +110,8 @@ int nussl_ssl_context_set_verify(nussl_session *session, int required, const cha
 /* Secure connection was closed without proper SSL shutdown. */
 #define NUSSL_SOCK_TRUNC (-5)
 
+#define NUSSL_VALID_REQ_TYPE(n) (n >= NUSSL_CERT_IGNORE && n <= NUSSL_CERT_REQUIRE)
+
 #ifdef __cplusplus
 }
 #endif

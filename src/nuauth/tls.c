@@ -51,7 +51,7 @@
 /* These are global */
 struct nuauth_tls_t nuauth_tls;
 
-/* XXX: *nussl replaces nuauth_tls*/
+/* XXX: *nuauth_ssl replaces nuauth_tls*/
 struct nuauth_ssl_t nuauth_ssl;
 
 /* XXX: We must change the variable name to something clearer */
@@ -411,8 +411,7 @@ int create_x509_credentials()
 	}
 #endif
 
-	if ((int_authcert >= NUSSL_CERT_IGNORE)
-	&& (int_authcert <= NUSSL_CERT_REQUIRE)) {
+	if (NUSSL_VALID_REQ_TYPE(int_authcert)) {
 		auth_by_cert = int_authcert;
 	} else {
 		log_area_printf(DEBUG_AREA_AUTH, DEBUG_LEVEL_WARNING,
@@ -422,8 +421,7 @@ int create_x509_credentials()
 		return 0;
 	}
 
-	if ((auth_by_cert == NUSSL_CERT_REQUIRE)
-	&& (request_cert != NUSSL_CERT_REQUIRE)) {
+	if (NUSSL_VALID_REQ_TYPE(auth_by_cert)) {
 		log_area_printf(DEBUG_AREA_AUTH, DEBUG_LEVEL_INFO,
 				"Mandatory certificate authentication asked, asking certificate");
 		request_cert = NUSSL_CERT_REQUIRE;
