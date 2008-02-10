@@ -58,6 +58,7 @@ clean:
 	-find scripts/nuauth_command/ -name '*.pyc' -exec rm {} \;
 	[ ! -d scripts/nuauth_command/build ] || rm -rf scripts/nuauth_command/build
 	[ ! -f scripts/nuauth_command/scripts/nuauth_command ] || rm -f scripts/nuauth_command/scripts/nuauth_command
+	rm -f tests/inl_tests/libnobuffer.so
 	rm -f config.log
 
 	dh_clean

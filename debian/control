@@ -20,7 +20,7 @@ Package: nufw
 Architecture: any
 Depends: ${shlibs:Depends}, debconf (>= 1.3.22), ssl-cert, openssl
 Suggests: ulogd, ulogd-mysql
-Description: a per-user firewalling daemon that interferes with NFQUEUE
+Description: a per-user firewalling daemon that interferes with libipq
  NuFW is an authenticating gateway, which means that connections are
  authenticated before being forwarded through the gateway.  Classical packet
  filtering systems disregard the identity of the user who may be attempting to
@@ -71,13 +71,13 @@ Architecture: any
 Depends: ${shlibs:Depends}, debconf, nuauth
 Conflicts: nuauth-log-pgsql
 Recommends: nuauth-utils
-Description: Module for nuauth logging into mysql databases
+Description: Module for nuauth logging into MySQL databases
  NuFW is an authenticating gateway, which means that connections are
  authenticated before being forwarded through the gateway.  Classical packet
  filtering systems disregard the identity of the user who may be attempting to
  access the network, instead caring only about the originating IP addresses.
  .
- This package adds support for nuauth logging users activity into a Mysql
+ This package adds support for nuauth logging users activity into a MySQL
  database. You can use this for an SSO solution, too.
 
 Package: nuauth-log-pgsql
@@ -91,7 +91,7 @@ Description: Module for nuauth logging into PostgreSQL databases
  filtering systems disregard the identity of the user who may be attempting to
  access the network, instead caring only about the originating IP addresses.
  .
- This package adds support for nuauth logging users activity into a postgreSQL
+ This package adds support for nuauth logging users activity into a PostgreSQL
  database. You can use this for an SSO solution, too.
 
 Package: nutcpc
@@ -118,7 +118,7 @@ Description: Set of tools useful to nuauth admin
  access the network, instead caring only about the originating IP addresses.
  .
  nuaclgen is a perl script that helps generate LDAP ACLs for use with nuauth,
- the nufw auth daemon. nuauth_command is a python script to control the
+ the nufw auth daemon. nuauth_command is a Python script to control the
  nuauth daemon.
 
 Package: libnuclient3
