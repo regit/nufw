@@ -1146,6 +1146,19 @@ nussl_socket *nussl_sock_create(void)
     return sock;
 }
 
+/* XXX: INL Addition */
+nussl_socket *nussl_sock_create_with_fd(int fd)
+{
+    nussl_socket *sock = nussl_calloc(sizeof *sock);
+    UGLY_DEBUG();
+    sock->rdtimeout = SOCKET_READ_TIMEOUT;
+    sock->cotimeout = 0;
+    sock->bufpos = sock->buffer;
+    sock->ops = &iofns_raw;
+    sock->fd = fd;
+    return sock;
+}
+
 
 #ifdef USE_GETADDRINFO
 #define ia_family(a) ((a)->ai_family)

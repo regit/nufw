@@ -126,6 +126,9 @@ void nussl_iaddr_free(nussl_inet_addr *addr);
 /* Create a socket object; returns NULL on error. */
 nussl_socket *nussl_sock_create(void);
 
+/* Create a socket object from a file descriptor; returns NULL on error. */
+nussl_socket *nussl_sock_create_with_fd(int fd);
+
 /* Specify an address to which the local end of the socket will be
  * bound during a subsequent nussl_sock_connect() call.  If the address
  * passed to nussl_sock_connect() is of a different type (family) to
