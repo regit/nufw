@@ -304,16 +304,17 @@ if test "x$GCC" = "xyes"; then
 		gccvernum=$(expr $gccvermajor "*" 100 + $gccverminor)
 	AC_MSG_RESULT($gccver)
 
-    CFLAGS="$CFLAGS -ansi -Wall"
 
 	if test "$gccvernum" -ge "400"; then
 		dnl gcc 4.0 or later
-        CFLAGS="$CFLAGS -Wextra"
+		CFLAGS="$CFLAGS -Wextra"
 	else
-        CFLAGS="$CFLAGS -W"
+		CFLAGS="$CFLAGS -W"
 	fi
-    CFLAGS="$CFLAGS -Wno-unused-parameter"
 fi
+
+CFLAGS="$CFLAGS -ansi -Wall"
+CFLAGS="$CFLAGS -Wno-unused-parameter"
 
 if test "${debug}" = "yes"; then
 	AC_DEFINE_UNQUOTED([DEBUG_ENABLE],[1],[Will compile development debug message])
