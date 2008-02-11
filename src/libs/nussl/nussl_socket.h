@@ -39,6 +39,9 @@
 #include "nussl_defs.h"
 #include "nussl_ssl.h" /* for nussl_ssl_context */
 
+/* Socket read timeout */
+#define SOCKET_READ_TIMEOUT 120
+
 NUSSL_BEGIN_DECLS
 
 /* nussl_socket represents a TCP socket. */

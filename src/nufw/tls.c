@@ -203,7 +203,7 @@ nussl_session *tls_connect()
 	}
 
 	nussl_set_hostinfo(sess, authreq_addr, authreq_port);
-	nussl_set_read_timeout(sess, 1);
+	nussl_set_read_timeout(sess, 0);
 
 	if (nussl_open_connection(sess) != NUSSL_OK) {
 		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,

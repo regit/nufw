@@ -148,9 +148,7 @@ static int do_connect(nussl_session *sess, struct host_info *host, const char *e
     }
 
     /* notify_status(sess, nussl_status_connected);*/
-
-    if (sess->rdtimeout)
-	nussl_sock_read_timeout(sess->socket, sess->rdtimeout);
+    nussl_sock_read_timeout(sess->socket, sess->rdtimeout);
 
     sess->connected = 1;
     /* clear persistent connection flag. */
