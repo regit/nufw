@@ -162,7 +162,7 @@ struct nufw_threadargument {
 };
 
 /* mutex */
-pthread_mutex_t hndl_mutex;
+extern pthread_mutex_t ipq_mutex;
 
 /** \def IPQ_SET_VERDICT(PACKETID, DECISION)
  * Set decision (NF_ACCEPT or NF_DROP) of a packet. Call nfq_set_verdict()
@@ -174,17 +174,34 @@ pthread_mutex_t hndl_mutex;
  * nfq_set_verdict_mark() or ipq_set_vwmark().
  */
 
-/* do some define to add mutex usage */
 #if USE_NFQUEUE
 #define IPQ_SET_VERDICT(PACKETID, DECISION) \
-	nfq_set_verdict(hndl, PACKETID, DECISION, 0 , NULL)
+	do { \
+		pthread_mutex_lock(&ipq_mutex); \
+		nfq_set_verdict(hndl, PACKETID, DECISION, 0 , NULL); \
+		pthread_mutex_unlock(&ipq_mutex); \
+	} while(0)
+
 #define IPQ_SET_VWMARK(PACKETID, DECISION, NFMARK) \
-	nfq_set_verdict_mark(hndl, PACKETID, DECISION, NFMARK, 0, NULL)
+	do { \
+		pthread_mutex_lock(&ipq_mutex); \
+		nfq_set_verdict_mark(hndl, PACKETID, DECISION, NFMARK, 0, NULL); \
+		pthread_mutex_unlock(&ipq_mutex); \
+	} while(0)
 #else
 #define	IPQ_SET_VERDICT(PACKETID, DECISION) \
-	ipq_set_verdict(hndl, PACKETID, DECISION,0,NULL)
+	do { \
+		pthread_mutex_lock(&ipq_mutex); \
+		ipq_set_verdict(hndl, PACKETID, DECISION,0,NULL); \
+		pthread_mutex_unlock(&ipq_mutex); \
+	} while(0)
+
 #define	IPQ_SET_VWMARK(PACKETID, DECISION, NFMARK) \
-	ipq_set_vwmark(hndl, PACKETID, DECISION, NFMARK,0,NULL)
+	do { \
+		pthread_mutex_lock(&ipq_mutex); \
+		ipq_set_vwmark(hndl, PACKETID, DECISION, NFMARK,0,NULL); \
+		pthread_mutex_unlock(&ipq_mutex); \
+	} while(0)
 #endif
 
 int pckt_tx;			/*!< Number of transmitted packets since NuFW is running */
