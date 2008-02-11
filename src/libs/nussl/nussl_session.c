@@ -149,7 +149,6 @@ void nussl_set_addrlist(nussl_session *sess, const nussl_inet_addr **addrs, size
 void nussl_set_error(nussl_session *sess, const char *format, ...)
 {
     va_list params;
-    //UGLY_DEBUG();
 
     va_start(params, format);
     nussl_vsnprintf(sess->error, sizeof sess->error, format, params);
@@ -452,7 +451,6 @@ int nussl_write(nussl_session *session, char *buffer, size_t count)
 ssize_t nussl_read(nussl_session *session, char *buffer, size_t count)
 {
 	int ret;
-	//UGLY_DEBUG();
 	ret = nussl_sock_read(session->socket, buffer, count);
 	if (ret < 0)
 		nussl_set_error(session, nussl_sock_error(session->socket));

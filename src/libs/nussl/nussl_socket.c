@@ -437,7 +437,6 @@ ssize_t nussl_sock_read(nussl_socket *sock, char *buffer, size_t buflen)
 {
     ssize_t bytes;
 
-    //UGLY_DEBUG();
 #if 0
     NUSSL_DEBUG(NUSSL_DBG_SOCKET, "buf: at %d, %d avail [%s]\n",
 	     sock->bufpos - sock->buffer, sock->bufavail, sock->bufpos);
@@ -500,7 +499,6 @@ static int readable_raw(nussl_socket *sock, int secs)
 {
     int ret = raw_poll(sock->fd, 0, secs);
 
-    //UGLY_DEBUG();
     if (ret < 0) {
 	set_strerror(sock, nussl_errno);
 	return NUSSL_SOCK_ERROR;
@@ -678,7 +676,6 @@ static int check_alert(nussl_socket *sock, ssize_t ret)
 
 static int readable_gnutls(nussl_socket *sock, int secs)
 {
-    //UGLY_DEBUG();
     if (gnutls_record_check_pending(sock->ssl)) {
         return 0;
     }
@@ -731,7 +728,6 @@ static ssize_t read_gnutls(nussl_socket *sock, char *buffer, size_t len)
 {
     ssize_t ret;
 
-    //UGLY_DEBUG();
     ret = readable_gnutls(sock, sock->rdtimeout);
     if (ret) return ret;
 
@@ -1693,7 +1689,6 @@ char *nussl_sock_cipher(nussl_socket *sock)
 
 const char *nussl_sock_error(const nussl_socket *sock)
 {
-    //UGLY_DEBUG();
     return sock->error;
 }
 
