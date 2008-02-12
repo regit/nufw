@@ -234,7 +234,7 @@ void nussl_set_connect_timeout(nussl_session *sess, int timeout)
 
 const char *nussl_get_error(nussl_session *sess)
 {
-    int ret;
+    char* ret;
     pthread_mutex_lock(&interface_mutex);
     UGLY_DEBUG();
     ret = nussl_strclean(sess->error);
