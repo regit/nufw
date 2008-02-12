@@ -36,6 +36,7 @@
 
 #define SOCKET_PATH LOCAL_STATE_DIR "/run/nuauth/"
 #define SOCKET_FILENAME "nuauth-command.socket"
+#define SOCKET_TARGET SOCKET_PATH SOCKET_FILENAME
 
 const char* COMMAND_HELP =
 "version: display nuauth version\n"
@@ -85,11 +86,11 @@ int command_new(command_t * this)
 	}
 
 	/* Remove socket file */
-	(void) unlink(SOCKET_FILENAME);
+	(void) unlink(SOCKET_TARGET);
 
 	/* set address */
 	addr.sun_family = AF_UNIX;
-	SECURE_STRNCPY(addr.sun_path, SOCKET_FILENAME, sizeof(addr.sun_path));
+	SECURE_STRNCPY(addr.sun_path, SOCKET_TARGET, sizeof(addr.sun_path));
 	addr.sun_path[sizeof(addr.sun_path) - 1] = 0;
 	len = strlen(addr.sun_path) + sizeof(addr.sun_family);
 
@@ -118,7 +119,7 @@ int command_new(command_t * this)
 	ret = bind(this->socket, (struct sockaddr *) &addr, len);
 	if (ret == -1) {
 		g_warning("[%i] Command server: UNIX socket bind(%s) error: %s",
-			    getpid(), SOCKET_FILENAME, g_strerror(errno));
+			    getpid(), SOCKET_TARGET, g_strerror(errno));
 		return 0;
 	}
 
