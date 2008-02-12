@@ -468,7 +468,7 @@ int create_x509_credentials()
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG, DEBUG_AREA_USER)) {
 		g_message("TLS using key %s and cert %s", nuauth_tls_key,
 			  nuauth_tls_cert);
-		if (request_cert == NUSSL_CERT_REQUIRE)
+		if (nuauth_ssl.request_cert == NUSSL_CERT_REQUIRE)
 			g_message("TLS require cert from client");
 
 #endif
