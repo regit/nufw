@@ -26,10 +26,16 @@
 #include "auth_srv.h"
 #include "command_enc.h"
 #include "security.h"
+
+#include <errno.h>
 #include <sys/un.h>		/* unix socket */
 #include <sys/stat.h>		/* fchmod() */
+#include <sys/types.h>		/* mode_t */
 
-#define SOCKET_FILENAME LOCAL_STATE_DIR "/run/nuauth/nuauth-command.socket"
+#include <nubase.h>
+
+#define SOCKET_PATH LOCAL_STATE_DIR "/run/nuauth/"
+#define SOCKET_FILENAME "nuauth-command.socket"
 
 const char* COMMAND_HELP =
 "version: display nuauth version\n"
@@ -63,13 +69,20 @@ int command_new(command_t * this)
 {
 	struct sockaddr_un addr;
 	int len;
-	int res;
+	int ret;
 	int on = 1;
 
 	this->start_timestamp = time(NULL);
 	this->socket = -1;
 	this->client = -1;
 	this->select_max = 0;
+
+	/* Create socket dir */
+	ret = mkdir(SOCKET_PATH, S_IRWXU);
+	if ( ret != 0 ) {
+		log_area_printf(DEBUG_AREA_AUTH, DEBUG_LEVEL_FATAL,
+				"Cannot create socket directory %s: %s", SOCKET_PATH, strerror(errno));
+	}
 
 	/* Remove socket file */
 	(void) unlink(SOCKET_FILENAME);
@@ -93,13 +106,17 @@ int command_new(command_t * this)
 	(void)fchmod(this->socket, 0600);
 
 	/* set reuse option */
-	res =
+	ret =
 	    setsockopt(this->socket, SOL_SOCKET, SO_REUSEADDR,
 		       (char *) &on, sizeof(on));
+	if ( ret != 0 ) {
+		log_area_printf(DEBUG_AREA_AUTH, DEBUG_LEVEL_FATAL,
+				"Cannot set sockets options: %s.",  strerror(errno));
+	}
 
 	/* bind socket */
-	res = bind(this->socket, (struct sockaddr *) &addr, len);
-	if (res == -1) {
+	ret = bind(this->socket, (struct sockaddr *) &addr, len);
+	if (ret == -1) {
 		g_warning("[%i] Command server: UNIX socket bind(%s) error: %s",
 			    getpid(), SOCKET_FILENAME, g_strerror(errno));
 		return 0;
