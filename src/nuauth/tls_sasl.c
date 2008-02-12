@@ -233,7 +233,7 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 		}
 	}
 
-	if ((nuauth_tls.auth_by_cert == MANDATORY_AUTH_BY_CERT) &&
+	if ((nuauth_tls.auth_by_cert == NUSSL_CERT_REQUIRE) &&
 			(c_session->groups == NULL)) {
 
 		log_message(INFO, DEBUG_AREA_AUTH | DEBUG_AREA_USER,
