@@ -165,8 +165,6 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 	int c = ((struct client_connection *) userdata)->socket;
 	struct client_connection *client = (struct client_connection *)userdata;
 
-	printf("USERDATA: c=%d\n", c);
-
 	if (tls_connect(c, &session) == SASL_BADPARAM) {
 		g_free(userdata);
 		remove_socket_from_pre_client_list(c);
