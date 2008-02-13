@@ -11,9 +11,6 @@ class TestClientCertAuth(TestCase):
     def setUp(self):
         self.nuconfig = NuauthConf()
 
-        # Certs
-        cert = config.get("test_cert", "user_cert")
-        key = config.get("test_cert", "user_key")
         cacert = config.get("test_cert", "cacert")
 
         # Userdb
@@ -31,11 +28,6 @@ class TestClientCertAuth(TestCase):
         self.nuconfig["nuauth_tls_cert"] = '"%s"' % config.get("test_cert", "nuauth_cert")
         self.nuauth = Nuauth(self.nuconfig)
 
-        # Client
-        args = ["-C", cert, "-K", key, "-A", cacert]
-        self.client = self.user.createClient(more_args=args)
-        self.client.password = "xx%sxx" % self.user.password
-
     def tearDown(self):
         self.client.stop()
         self.nuauth.stop()
@@ -43,7 +35,28 @@ class TestClientCertAuth(TestCase):
         self.nuconfig.desinstall()
 
     def testValidCert(self):
+        # Client
+        cacert = config.get("test_cert", "cacert")
+        cert = config.get("test_cert", "user_cert")
+        key = config.get("test_cert", "user_key")
+
+        args = ["-C", cert, "-K", key, "-A", cacert]
+
+        self.client = self.user.createClient(more_args=args)
+        self.client.password = "xx%sxx" % self.user.password
         self.assert_(connectClient(self.client))
+
+    def testInvalidCert(self):
+        # Expired certificate
+        cacert = config.get("test_cert", "cacert")
+        cert = config.get("test_cert", "user_invalid_cert")
+        key = config.get("test_cert", "user_invalid_key")
+
+        args = ["-C", cert, "-K", key, "-A", cacert]
+
+        self.client = self.user.createClient(more_args=args)
+        self.client.password = "xx%sxx" % self.user.password
+        self.assert_(not connectClient(self.client))
 
 if __name__ == "__main__":
     print "Test nuauth client authentification"
