@@ -307,6 +307,15 @@ Si vous souhaitez utiliser les ACL horaires, il est recommandé d'utiliser les ve
     </section>
     <section><title>Préparation du noyau</title>
       <para>Vous ne devrez modifier votre noyau à l'aide de patch-o-matic que si vous décidez d'utiliser le marquage utilisateur (à partir de la version 2.6.14 du noyau, cette modification est intégrée dans le noyau vanilla). Ceci est nécessaire si vous souhaitez marquer vos flux réseau en fonction de l'ID utilisateur afin, par exemple, d'implémenter une qualité de service basée sur l'utilisateur. Cette fonctionnalité n'est pas nécessaire pour le bon fonctionnement de NuFW. Pour l'activer, installez patch-o-matic et exécutez la commande <screen>$./runme ip_queue_vwmark</screen></para>
+      <para>Note importante : il semble que les fonctions netfilter_netlink de 2.6.24 ne fonctionnent que si elles sont compilées en tant que module, pas en dur. Essayez de toujours compiler ces options en tant que modules noyaux :
+      <itemizedlist>
+        <listitem><para>CONFIG_NETFILTER_NETLINK</para></listitem>
+        <listitem><para>CONFIG_NETFILTER_NETLINK_QUEUE</para></listitem>
+        <listitem><para>CONFIG_NETFILTER_NETLINK_LOG</para></listitem>
+        <listitem><para>CONFIG_NF_CT_NETLINK</para></listitem>
+      </itemizedlist>
+      La bonne nouvelle est que sur la plupart des distributions, le noyau fourni par défaut propose ces fonctions comme modules.
+      </para>
     </section>
     <section><title>Pour les versions de noyaux supérieurs à 2.6.14</title>
       <para>

@@ -19,6 +19,13 @@
     </copyright>
     <revhistory>
       <revision>
+      	<revnumber>0.9.5</revnumber>
+	<date>2008/02/14</date>
+	<revdescription>
+	<para>Added specific kernel (2.6.24) information.</para>
+	</revdescription>
+      </revision>
+      <revision>
       	<revnumber>0.9.4</revnumber>
 	<date>2008/01/10</date>
 	<revdescription>
@@ -300,6 +307,7 @@ to apply patches provided on NuFW site.
       <itemizedlist>
         <listitem><para>Fedora Core 6 (kernel 2.6.18)</para></listitem>
         <listitem><para>Debian Etch (kernel 2.6.18)</para></listitem>
+        <listitem><para>Debian Lenny</para></listitem>
       </itemizedlist>
       </para>
       <para>
@@ -308,6 +316,15 @@ to apply patches provided on NuFW site.
     <section><title>Kernel preparation</title>
       <para>You only need to patch your kernel sources with patch-o-matic if you want to use userid marking (from linux 2.6.14 there is no need to patch the kernel as this option is available in vanilla). This is necessary if you need to mark your network flows depending on the originating user ID, for instance, to perform per user Quality of Service. This is not needed to use NuFW. To do so, install patch-o-matic as usual and
       run <screen>$./runme ip_queue_vwmark</screen></para>
+      <para>Important note : it seems 2.6.24 netfilter_netlink capabilities only work if they are compiled as modules. Always compile these options as modules :
+      <itemizedlist>
+        <listitem><para>CONFIG_NETFILTER_NETLINK</para></listitem>
+        <listitem><para>CONFIG_NETFILTER_NETLINK_QUEUE</para></listitem>
+        <listitem><para>CONFIG_NETFILTER_NETLINK_LOG</para></listitem>
+        <listitem><para>CONFIG_NF_CT_NETLINK</para></listitem>
+      </itemizedlist>
+      The good news is that most distribution kernels come with these options compiled as modules.
+      </para>
     </section>
     <section><title>Linux 2.6.14 and better</title>
         <para>
