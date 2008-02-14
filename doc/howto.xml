@@ -251,6 +251,7 @@ Prelude allows for gathering security events at the scale of any organisation, a
 <listitem><para>Start and end of user sessions</para></listitem>
 <listitem><para>Start and end of authenticated connections</para></listitem>
 <listitem><para>Rejected connections</para></listitem>
+</itemizedlist>
 All information about the Prelude project is available at <ulink url="http://prelude-ids.org/">http://prelude-ids.org</ulink>
         </para>
 

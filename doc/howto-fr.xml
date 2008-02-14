@@ -238,6 +238,7 @@ Prelude permet de centraliser les événements de sécurité d'une organisation, et 
 <listitem><para>Les débuts et fin de sessions NuFW</para></listitem>
 <listitem><para>Les débuts et fin de connexions authentifiées</para></listitem>
 <listitem><para>Les connexions rejetées</para></listitem>
+</itemizedlist>
 Toutes informations à propos du projet Prelude sont disponibles à l'adresse <ulink url="http://prelude-ids.org/">http://prelude-ids.org</ulink>
         </para>
 
