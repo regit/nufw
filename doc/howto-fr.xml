@@ -28,12 +28,19 @@
     </copyright>
     <revhistory>
       <revision>
+      	<revnumber>0.9.5</revnumber>
+	<date>2008/02/14</date>
+	<revdescription>
+	<para>Ajout d'informations spécifiques à certaines versions du noyau (2.6.24).</para>
+	</revdescription>
+      </revision>
+      <revision>
       	<revnumber>0.9.4</revnumber>
 	<date>2008/01/10</date>
 	<revdescription>
 	<para>Mention est faite de la journalisation Prelude.</para>
 	</revdescription>
-	</revision>
+      </revision>
       <revision>
       	<revnumber>0.9.3</revnumber>
 	<date>2008/01/10</date>
