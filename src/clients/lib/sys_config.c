@@ -32,6 +32,9 @@
 #define SYS_CONF_FILE CONFIG_DIR "/nuclient.conf"
 #define USR_CONF_FILE "/.nufw/nuclient.conf"
 
+char* default_hostname = NULL;
+char* default_port = NULL;
+
 #ifdef FREEBSD
 #include "getdelim.h"
 
@@ -57,12 +60,13 @@ ssize_t getline(char **lineptr, size_t * n, FILE * stream)
 }
 #endif /* #ifdef FREEBSD */
 
-void load_config_file(nuauth_session_t *session, char* path)
+void load_config_file(char* path)
 {
 	int line_nbr = 0;
 	char *opt, *val, *line;
 	size_t len;
 	FILE* file ;
+
 
 	/* Parse the file */
 	printf("Loading default settings from %s\n", path);
@@ -93,16 +97,16 @@ void load_config_file(nuauth_session_t *session, char* path)
 
 		if(!strcmp(opt, "nuauth_ip"))
 		{
-			if(session->default_hostname)
-				free(session->default_hostname);
-			session->default_hostname = val;
+			if(default_hostname)
+				free(default_hostname);
+			default_hostname = val;
 		}
 		else
 		if(!strcmp(opt, "nuauth_port"))
 		{
-			if(session->default_port)
-				free(session->default_port);
-			session->default_port = val;
+			if(default_port)
+				free(default_port);
+			default_port = val;
 		}
 		else
 			free(val);
@@ -113,13 +117,14 @@ void load_config_file(nuauth_session_t *session, char* path)
 	fclose(file);
 }
 
-void load_sys_config(nuauth_session_t *session)
+
+void load_sys_config()
 {
 	char* home;
 	char* home_config;
 
 	/* Load system wide config file */
-	load_config_file(session, SYS_CONF_FILE);
+	load_config_file(SYS_CONF_FILE);
 
 	/* Load user config file */
 	home = nu_get_home_dir();
@@ -133,8 +138,18 @@ void load_sys_config(nuauth_session_t *session)
 
 	strncpy(home_config, home, strlen(home));
 	strncat(home_config, USR_CONF_FILE, strlen(USR_CONF_FILE));
-	load_config_file(session, home_config);
+	load_config_file(home_config);
 
 	free(home);
 	free(home_config);
+}
+
+const char* nu_client_default_hostname()
+{
+	return default_hostname;
+}
+
+const char* nu_client_default_port()
+{
+	return 	default_port;
 }

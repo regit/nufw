@@ -26,10 +26,10 @@
  */
 
 /*! \file libnuclient.c
-  \brief Main file for libnuclient
-
-  It contains all the exported functions
-  */
+ * \brief Main file for libnuclient
+ *
+ * It contains all the exported functions
+ * */
 
 /**
  * Use gcry_malloc_secure() to disallow a memory page
@@ -142,6 +142,8 @@ int nu_client_global_init(nuclient_error_t * err)
 		fprintf(stderr, "Can't get locale charset!\n");
 		exit(EXIT_FAILURE);
 	}
+
+	load_sys_config();
 
 	return 1;
 }
@@ -496,10 +498,6 @@ nuauth_session_t *_nu_client_new(nuclient_error_t * err)
 	session->debug_mode = 0;
 	session->verbose = 1;
 	session->timestamp_last_sent = time(NULL);
-	session->default_hostname = NULL;
-	session->default_port = NULL;
-
-	load_sys_config(session);
 
 	/* create session mutex */
 	pthread_mutex_init(&(session->mutex), NULL);

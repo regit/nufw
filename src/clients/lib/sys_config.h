@@ -25,6 +25,6 @@
 
 #include "nuclient.h"
 
-void load_sys_config(nuauth_session_t *session);
+void load_sys_config();
 
 #endif

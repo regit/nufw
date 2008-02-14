@@ -216,9 +216,6 @@ typedef struct {
 	/** Timestamp (Epoch format) of last packet send to nuauth */
 	time_t timestamp_last_sent;
 
-	/** Connection to nuauth informations */
-	char* default_hostname;
-	char* default_port;
 
 } nuauth_session_t;
 
@@ -286,6 +283,10 @@ void nu_client_set_username(nuauth_session_t *session,
 
 void nu_client_set_password(nuauth_session_t *session,
 		const char *password);
+
+const char* nu_client_default_hostname();
+	
+const char* nu_client_default_port();
 
 void nu_client_set_debug(nuauth_session_t * session, unsigned char enabled);
 void nu_client_set_verbose(nuauth_session_t * session,
