@@ -1414,6 +1414,18 @@ int nussl_sock_accept(nussl_socket *sock, int listener)
     return 0;
 }
 
+int nussl_sock_accept_full(nussl_socket *sock, int listener,  struct sockaddr *addr, socklen_t *addrlen)
+{
+    int fd = accept(listener, addr, addrlen);
+
+    UGLY_DEBUG();
+    if (fd < 0)
+        return -1;
+
+    sock->fd = fd;
+    return 0;
+}
+
 int nussl_sock_fd(const nussl_socket *sock)
 {
     return sock->fd;

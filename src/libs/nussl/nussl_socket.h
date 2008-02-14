@@ -191,6 +191,9 @@ ssize_t nussl_sock_fullread(nussl_socket *sock, char *buffer, size_t len);
  * socket in 'sock'.  Returns zero on success or -1 on failure. */
 int nussl_sock_accept(nussl_socket *sock, int fd);
 
+/* INL: Same than nussl_sock_accept(), but with provide every info we have */
+int nussl_sock_accept_full(nussl_socket *sock, int listener,  struct sockaddr *addr, socklen_t *addrlen);
+
 /* Returns the file descriptor used for socket 'sock'. */
 int nussl_sock_fd(const nussl_socket *sock);
 
