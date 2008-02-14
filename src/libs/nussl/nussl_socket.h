@@ -35,6 +35,7 @@
 #define NUSSL_SOCKET_H
 
 #include <sys/types.h>
+#include <sys/socket.h>
 
 #include "nussl_defs.h"
 #include "nussl_ssl.h" /* for nussl_ssl_context */

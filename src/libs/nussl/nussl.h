@@ -15,6 +15,7 @@
 #include <sys/types.h>
 
 #include "nussl_constants.h"
+#include "nussl_misc.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -22,6 +23,8 @@ extern "C" {
 
 struct nussl_nession_t;
 typedef struct nussl_session_t nussl_session;
+
+typedef void *nussl_ptr;
 
 /* Global library initialisation */
 int nussl_init();
