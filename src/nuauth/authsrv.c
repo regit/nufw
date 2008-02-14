@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2004-2007 INL
+ ** Copyright(C) 2004-2008 INL
  ** Written by Eric Leblond <regit@inl.fr>
  **
  ** $Id$
@@ -746,7 +746,7 @@ void configure_app(int argc, char **argv)
  * Other queue, threads, etc. are created elsewhere:
  *      - in tls_user_init(): tls_sasl_worker thread pool, tls_sasl_connect().
  */
-void init_nuauthdatas()
+void init_nuauthdata()
 {
 	block_thread_pools();
 	nuauthdatas->tls_push_queue = g_async_queue_new();
@@ -949,14 +949,14 @@ void nuauth_main_loop()
  * NuAuth entry point:
  *   - Configure application with: configure_app()
  *   - Install signals: nuauth_install_signals()
- *   - Init. all datas: init_nuauthdatas()
+ *   - Init. all data: init_nuauthdata()
  *   - Init. autdit: init_audit()
  *   - Run main loop: nuauth_main_loop()
  */
 int main(int argc, char *argv[])
 {
 	configure_app(argc, argv);
-	init_nuauthdatas();
+	init_nuauthdata();
 	nuauth_install_signals(TRUE);
 	init_audit();
 	nuauth_main_loop();

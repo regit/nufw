@@ -363,7 +363,7 @@ void search_and_fill_update(connection_t * new, connection_t * packet)
 }
 
 /**
- * Thread created in ::init_nuauthdatas().
+ * Thread created in ::init_nuauthdata().
  * Try to insert a connection in Struct.
  * Fetch datas in connections queue.
  *
