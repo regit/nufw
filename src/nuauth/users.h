@@ -52,11 +52,13 @@ typedef struct {
 	struct in6_addr addr;	/*!< \brief IPv6 address of the client */
 	struct in6_addr server_addr;	/*!< \brief IPv6 address of the server */
 	unsigned short sport;   /*!< \brief source port */
-    /** \brief socket used by tls session.
-     * It identify the client and it is used as the key
-     */
+	/** \brief socket used by tls session.
+	* It identify the client and it is used as the key
+	*/
 	int socket;
+	/* tls should be removed by ssl */
 	gnutls_session *tls;	/*!< \brief TLS session opened with tls_connect() */
+	nussl_session *ssl;	/*!< \brief SSL session opened with tls_connect() */
 	GMutex *tls_lock;	/*!< \brief Mutex to lock use of TLS */
 	char *user_name;	/*!< \brief User name */
 	uint32_t user_id;	/*!< \brief User identifier */

@@ -54,7 +54,7 @@ struct nuauth_tls_t nuauth_tls;
 /* XXX: *nuauth_ssl replaces nuauth_tls*/
 struct nuauth_ssl_t nuauth_ssl;
 
-
+#if 0
 extern int ssl_connect(const char *hostname, const char *service)
 {
 	unsigned int port = atoi(service);
@@ -69,6 +69,8 @@ extern int ssl_connect(const char *hostname, const char *service)
 /*       nussl_set_hostinfo(nussl, hostname, port);*/
 	return 0;
 }
+#endif
+
 
 /**
  * Strictly close a TLS session: call gnutls_deinit() and free memory.
@@ -222,6 +224,69 @@ static ssize_t tls_push_func(gnutls_transport_ptr ptr, const void *buf,
 {
 	int fd = GPOINTER_TO_INT(ptr);
 	return send(fd, buf, count, MSG_DONTWAIT);
+}
+
+nussl_session *ssl_connect(int socket_fd)
+{
+	nussl_session *session;
+
+	session = nussl_session_create();
+	if (!session) {
+		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
+			"Unable to create NuSSL session: %s", nussl_get_error(session));
+		close(socket_fd);
+		return NULL;
+	}
+
+#if 0
+	gnutls_transport_set_ptr(*session, GINT_TO_POINTER(socket_fd));
+	gnutls_transport_set_push_function(*session, tls_push_func);
+
+	*session_ptr = session;
+	ret = 0;
+
+	do {
+		log_message(INFO, DEBUG_AREA_GW | DEBUG_AREA_USER,
+			    "NuFW TLS Handshaking (last error: %i)", ret);
+		ret = gnutls_handshake(*session);
+	} while (ret < 0 && !gnutls_error_is_fatal(ret));
+
+	if (ret < 0) {
+		close_tls_session(socket_fd, session);
+		log_message(INFO, DEBUG_AREA_GW | DEBUG_AREA_USER,
+			    "NuFW TLS Handshake has failed (%s)",
+			    gnutls_strerror(ret));
+		return SASL_BADPARAM;
+	}
+
+	debug_log_message(DEBUG, DEBUG_AREA_GW | DEBUG_AREA_USER, "NuFW TLS Handshaked");
+
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW | DEBUG_AREA_USER, "NuFW TLS mac: %s",
+			  gnutls_mac_get_name(gnutls_mac_get(*session)));
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW | DEBUG_AREA_USER, "NuFW TLS kx: %s",
+			  gnutls_kx_get_name(gnutls_kx_get(*session)));
+
+	debug_log_message(DEBUG, DEBUG_AREA_GW | DEBUG_AREA_USER,
+			  "NuFW TLS Handshake was completed");
+
+	if (nuauth_ssl.request_cert == NUSSL_CERT_REQUIRE) {
+		/* certicate verification */
+		ret = check_certs_for_tls_session(*session);
+		if (ret != 0) {
+			log_message(INFO, DEBUG_AREA_GW | DEBUG_AREA_USER,
+				    "Certificate verification failed : %s",
+				    gnutls_strerror(ret));
+			close_tls_session(socket_fd, session);
+			return SASL_BADPARAM;
+		}
+	} else {
+		debug_log_message(DEBUG, DEBUG_AREA_GW | DEBUG_AREA_USER,
+				  "Certificate verification is not done as requested");
+	}
+
+	return SASL_OK;
+
+#endif
 }
 
 

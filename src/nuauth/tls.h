@@ -57,7 +57,7 @@ typedef enum {
  */
 GAsyncQueue *mx_queue;
 
-int ssl_connect(const char *hostname, const char *service);
+nussl_session *ssl_connect(int socket_fd);
 int tls_connect(int c, gnutls_session ** session_ptr);
 
 /* cache system related */

@@ -22,6 +22,9 @@
 
 #include "auth_srv.h"
 
+#include <nubase.h>
+#include <nussl.h>
+
 /**
  * \addtogroup TLSUser
  * @{
@@ -151,23 +154,35 @@ static void tls_sasl_connect_ok(user_session_t * c_session, int c)
 }
 
 /**
- * \brief Complete all user connection from TLS to authentication.
+ * \brief Complete all user connection from SSL to authentication.
  *
  * \param userdata A client_connection:
  * \param data Unused
  */
 void tls_sasl_connect(gpointer userdata, gpointer data)
 {
+	/* session will be removed by nussl */
 	gnutls_session *session;
+	nussl_session *nussl;
 	user_session_t *c_session;
 	int ret;
 	unsigned int size = 1;
-	int c = ((struct client_connection *) userdata)->socket;
+	int socket_fd = ((struct client_connection *) userdata)->socket;
 	struct client_connection *client = (struct client_connection *)userdata;
 
+#if 0
 	if (tls_connect(c, &session) == SASL_BADPARAM) {
 		g_free(userdata);
 		remove_socket_from_pre_client_list(c);
+		return;
+	}
+#endif
+	nussl = ssl_connect(socket_fd);
+	if ( ! nussl ) {
+		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
+				"Unable to connect to a SSL session");
+		g_free(userdata);
+		remove_socket_from_pre_client_list(socket_fd);
 		return;
 	}
 
@@ -178,8 +193,8 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 			FORMAT_IPV6(&client->addr, address);
 			g_free(userdata);
 			gnutls_bye(*(session), GNUTLS_SHUT_RDWR);
-			close_tls_session(c, session);
-			remove_socket_from_pre_client_list(c);
+			close_tls_session(socket_fd, session);
+			remove_socket_from_pre_client_list(socket_fd);
 		        log_message(INFO, DEBUG_AREA_USER,
 				    "Policy: too many connection attempts from already overused IP %s, closing socket",
 				    address);
@@ -188,11 +203,11 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 	}
 
 	c_session = g_new0(user_session_t, 1);
-	c_session->tls = session;
-	c_session->socket = c;
+	c_session->ssl = nussl;
+	c_session->socket = socket_fd;
 	c_session->tls_lock = g_mutex_new();
 	c_session->addr = client->addr;
-	(void)getsockname_ipv6(c, &c_session->server_addr);
+	(void)getsockname_ipv6(socket_fd, &c_session->server_addr);
 	c_session->sport = client->sport;
 	c_session->groups = NULL;
 	c_session->user_name = NULL;
@@ -244,11 +259,11 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 		ret = sasl_user_check(c_session);
 	}
 
-	remove_socket_from_pre_client_list(c);
+	remove_socket_from_pre_client_list(socket_fd);
 	switch (ret) {
 	case SASL_OK:
 		/* remove socket from the list of pre auth socket */
-		tls_sasl_connect_ok(c_session, c);
+		tls_sasl_connect_ok(c_session, socket_fd);
 		break;
 
 	case SASL_FAIL:
@@ -260,7 +275,7 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 					  "Problem with user, closing socket");
 		}
-		close_tls_session(c, c_session->tls);
+		close_tls_session(socket_fd, c_session->tls);
 		c_session->tls = NULL;
 		clean_session(c_session);
 	}
