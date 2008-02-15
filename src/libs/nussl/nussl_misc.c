@@ -7,15 +7,16 @@
 
 #include "nussl.h"
 #include "nussl_misc.h"
+#include "nussl_privssl.h"
 
-void nussl_misc_set_fd_and_push(nussl_session *session, nussl_ptr fd, gnutls_push_func push_func)
+void nussl_misc_set_fd_and_push(gnutls_session *session, nussl_ptr fd, gnutls_push_func push_func)
 {
-#if 0
-	nussl_ssl_socket ssl_session;
+//	nussl_ssl_socket sock;
 
-	gnutls_transport_set_ptr(ssl_session, fd);
-	gnutls_transport_set_push_function(ssl_session, tls_push_func);
-#endif
+//	sock = session->socket->ssl;
+
+	gnutls_transport_set_ptr(session, fd);
+	gnutls_transport_set_push_function(session, push_func);
 
 }
 
