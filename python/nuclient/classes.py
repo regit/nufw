@@ -26,7 +26,8 @@ from nuclient import (
     nu_client_new, nu_client_delete,
     nu_client_check, nu_client_set_verbose,
     nu_client_connect,
-    nu_client_strerror)
+    nu_client_strerror,
+    DEFAULT_PORT)
 from ctypes import byref
 
 class NuclientError(RuntimeError):
@@ -82,10 +83,12 @@ class Nuclient:
     def __del__(self):
         self.deinit()
 
-    def connect(self, hostname, service='4129'):
+    def connect(self, hostname, port=None):
+        if not port:
+            port = str(DEFAULT_PORT)
         assert isinstance(hostname, str)
-        assert isinstance(service, str)
-        ok = nu_client_connect(self.session, hostname, service, self.error)
+        assert isinstance(port, str)
+        ok = nu_client_connect(self.session, hostname, port, self.error)
         if not ok:
             raise NuclientError("Unable to connect to %s:%s" % (hostname, service),
                 self.error)

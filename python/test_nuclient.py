@@ -24,7 +24,7 @@ Example of libnuclient use
 
 from nuclient import (
     nu_get_version, nu_check_version, nu_get_home_dir,
-    NuclientError, Nuclient)
+    NuclientError, Nuclient, DEFAULT_PORT)
 from optparse import OptionParser
 from sys import exit, stderr
 from time import sleep
@@ -35,6 +35,8 @@ def parseOptions():
         action="store", type="str", default=None)
     parser.add_option("--password", "-p", help="NuFW password",
         action="store", type="str", default=None)
+    parser.add_option("--port", help="NuFW port number (default: %s)" % DEFAULT_PORT,
+        type="int", default=None)
     options, arguments = parser.parse_args()
     if len(arguments) != 1 \
     or not options.username \
@@ -63,7 +65,11 @@ def main():
         try:
             nuclient = Nuclient(username, password)
             nuclient.verbose(False)
-            nuclient.connect(hostname)
+            if options.port:
+                port = str(options.port)
+            else:
+                port = None
+            nuclient.connect(hostname, port)
         except KeyboardInterrupt:
             print >>stderr, "Interrupted!"
             exit(1)

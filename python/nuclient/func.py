@@ -51,9 +51,9 @@ nu_client_error_destroy.argstype = (POINTER(nuclient_error_p),)
 nu_client_error_destroy.restype = None
 
 # nuauth_session_t *nu_client_new(const char *username,
-# 		const char *password,
-# 		unsigned char diffie_hellman,
-# 		nuclient_error_t *err);
+#                                 const char *password,
+#                                 unsigned char diffie_hellman,
+#                                 nuclient_error_t *err);
 nu_client_new = library.nu_client_new
 nu_client_new.argstype = (c_char_p, c_char_p, c_ubyte, nuclient_error_p)
 nu_client_new.restype = nuauth_session_p
@@ -69,9 +69,9 @@ nu_client_global_deinit.argstype = None
 nu_client_global_deinit.restype = None
 
 # int nu_client_connect(nuauth_session_t * session,
-# 		const char *hostname,
-# 		const char *service,
-# 		nuclient_error_t *err);
+#                       const char *hostname,
+#                       const char *service,
+#                       nuclient_error_t *err);
 nu_client_connect = library.nu_client_connect
 nu_client_connect.argstype = (nuauth_session_p, c_char_p, c_char_p, nuclient_error_p)
 nu_client_connect.restype = c_int
@@ -112,10 +112,12 @@ nu_client_check.argstype = (nuauth_session_p, nuclient_error_p)
 nu_client_check.restype = c_int
 
 # void nu_client_set_verbose(nuauth_session_t * session,
-#		unsigned char enabled);
+#                            unsigned char enabled);
 nu_client_set_verbose = library.nu_client_set_verbose
 nu_client_set_verbose.argstype = (nuauth_session_p, c_ubyte)
 nu_client_set_verbose.restype = None
+
+DEFAULT_PORT = 4129
 
 __all__ = (
     "nuauth_session_p", "nuclient_error_p",
@@ -126,5 +128,6 @@ __all__ = (
     "nu_client_connect", "nu_client_check",
     "nu_client_set_verbose",
     "nu_client_strerror",
+    "DEFAULT_PORT",
 )
 
