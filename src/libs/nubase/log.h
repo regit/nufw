@@ -29,7 +29,7 @@
 #include <syslog.h>
 #include "debug.h"
 
-/** \file nufw/log.h
+/** \file libs/nubase/log.h
  *  \brief Initialize and write messages in log.
  *
  * Some constants used in log, and function prototypes.
