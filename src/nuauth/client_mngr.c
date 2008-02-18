@@ -304,12 +304,12 @@ char warn_clients(struct msg_addr_set *global_msg)
 			if (ret < 0) {
 				log_message(WARNING, DEBUG_AREA_USER,
 						"Fails to send warning to client(s).");
-				badsockets = g_slist_prepend(badsockets, ipsockets->data);
+				badsockets = g_slist_prepend(badsockets, GINT_TO_POINTER(ipsockets->data));
 			}
 		}
 		if (badsockets) {
 			for (; badsockets; badsockets = badsockets->next) {
-				int sockno = (int)badsockets->data;
+				int sockno = GPOINTER_TO_INT(badsockets->data);
 				nu_error_t ret = delete_client_by_socket_ext(sockno, 0);
 				if (ret != NU_EXIT_OK) {
 					log_message(WARNING, DEBUG_AREA_USER,
