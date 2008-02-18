@@ -1,5 +1,5 @@
 from errno import EEXIST
-from os import rename, makedirs, access, R_OK
+from os import rename, makedirs, access, F_OK
 from logging import info
 from errno import ENOENT, EACCES
 from os.path import dirname
@@ -11,7 +11,7 @@ def tryRename(before, after):
     Raise RuntimeError() on permission error.
     """
     try:
-        if access(after, R_OK):
+        if access(after, F_OK):
             raise RuntimeError('New filename already exists: %s' % after)
         rename(before, after)
         return True

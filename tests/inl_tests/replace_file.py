@@ -1,4 +1,4 @@
-from os import rename, chmod, unlink
+from os import rename, chmod, unlink, access, F_OK
 from logging import info, warning, error
 from shutil import copyfile
 from inl_tests.tools import tryRename
@@ -16,11 +16,15 @@ class BaseReplaceFile:
         if self.installed:
             return
         self.installed = True
-        self.replaced = tryRename(self.filename, self.filename_old)
-        if self.replaced:
-            warning("Replace file %s (existing renamed to %s)" % (self.filename, self.filename_old))
+        if not access(self.filename_old, F_OK):
+            self.replaced = tryRename(self.filename, self.filename_old)
+            if self.replaced:
+                warning("Replace file %s (existing renamed to %s)" % (self.filename, self.filename_old))
+            else:
+                warning("Install file %s" % self.filename)
         else:
-            warning("Install file %s" % self.filename)
+            self.replaced = True
+            warning("Install file %s (and keep old copy %s)" % (self.filename, self.filename_old))
         self.install_newfile()
 
     def install_newfile(self):
