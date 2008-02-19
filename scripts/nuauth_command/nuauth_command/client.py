@@ -102,30 +102,28 @@ class Client:
                 version, PROTO_VERSION))
 
     def execute(self, command):
-        err, result = self._send_command(command)
-        if err:
-            ok = self.reconnect()
-            if ok:
-                err, result = self._send_command(command)
-        if err:
-            raise NuauthError("execute(%r) error: %s" % (command, err))
-        return result
+        try:
+            return self._send_command(command)
+        except NuauthError, err:
+            if not self.reconnect():
+                raise err
+            return self._send_command(command)
 
     def _send_command(self, command):
         # Send command
         err = self.socket.send(command)
         if err:
-            return "send() error: %s" % err, None
+            raise NuauthError("send() error: %s" % err)
 
         if command == "quit":
-            return "", None
+            return None
 
         # Read answer
         err, data = self.socket.recv()
         if err:
-            return "recv() error: %s" % err, None
+            raise NuauthError("recv() error: %s" % err)
         value = decode(data)
-        return "", value
+        return value
 
     def reconnect(self):
         self.socket = None
