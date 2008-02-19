@@ -18,12 +18,16 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-from nuauth_command import Client
+from nuauth_command import NuauthError
+from nuauth_command.cmdline import CommandLineClient
 from sys import exit
 
 def main():
-    client = Client("@localstatedir@/run/nuauth/nuauth-command.socket")
-    if not client.connect():
+    client = CommandLineClient("@localstatedir@/run/nuauth/nuauth-command.socket")
+    try:
+        client.connect()
+    except NuauthError, err:
+        print "[!] %s" % err
         exit(1)
     client.run()
 

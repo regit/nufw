@@ -76,7 +76,7 @@ class NuFW:
         addr = self.peername.strCompressed()
         return "#%s: nufw at %s, %s since %s (usage=%s, alive=%s)" % (
             self.socket, addr, self.uptime, self.connect_timestamp,
-	    self.usage, self.alive)
+            self.usage, self.alive)
 
 class Decoder:
     def __init__(self, data):
@@ -137,7 +137,6 @@ class Decoder:
         try:
             text = unicode(text, "UTF-8", "strict")
         except UnicodeDecodeError:
-            print "ERROR: Unable to convert string to Unicode: %s" % repr(text)
             text = unicode(text, "ISO-8859-1", "strict")
         return text
 
@@ -241,6 +240,5 @@ class Decoder:
     }
 
 def decode(data):
-   decoder = Decoder(data)
-   return decoder.decode()
+   return Decoder(data).decode()
 
