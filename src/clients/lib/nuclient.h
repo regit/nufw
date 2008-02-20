@@ -23,6 +23,8 @@
 #ifndef NUCLIENT_H
 #define NUCLIENT_H
 
+#include <netinet/in.h>
+
 #ifdef __cplusplus
 extern "C" {
 #if 0
@@ -31,55 +33,8 @@ extern "C" {
 #endif
 #endif
 
-#ifdef _FEATURES_H
-#   error "nuclient.h have to be included before <features.h>"
-#endif
-
-#include <arpa/inet.h>
-#include <assert.h>
-#include <ctype.h>
-#include <dirent.h>
-#include <errno.h>
-#include <grp.h>
-#include <limits.h>
-#include <netdb.h>
-#include <pwd.h>
-#include <signal.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <syslog.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <termios.h>
-#include <time.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-
-#include <errno.h>
-
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#include <netdb.h>
-#include <fcntl.h>
-#include <signal.h>
-#include <unistd.h>
-#include <string.h>
-#include <pthread.h>
-#include <nussl.h>
-
 #define NUCLIENT_VERSION "2.1.1-3"
 #define DEBUG 0
-
-#ifndef CONNTABLE_BUCKETS
-/** Maximum number of connections in connection table, see ::conntable_t */
-#define CONNTABLE_BUCKETS 5003
-#endif
 
 /** Default nuauth IP address */
 #define NUAUTH_IP "192.168.1.1"
@@ -87,139 +42,11 @@ extern "C" {
 /** Timeout of UDP connections */
 #define UDP_TIMEOUT 30
 
-/**
- * This structure holds everything we need to know about a connection.
- *
- * We use unsigned int and long (instead of exact type) to make
- * hashing easier.
- *
- * \see ::conn_t
- */
-typedef struct conn_type {
-	unsigned int protocol;	/*!< IPv4 protocol */
-	struct in6_addr ip_src;	/*!< Local address IPv4 */
-	unsigned short port_src;	/*!< Local address port */
-	struct in6_addr ip_dst;	/*!< Remote address IPv4 */
-	unsigned short port_dst;	/*!< Remote address port */
-	unsigned long uid;	/*!< User identifier */
-	unsigned long inode;	/*!< Inode */
-	unsigned int retransmit;	/*!< Retransmit */
-	time_t createtime;	/*!< Creation time (Epoch format) */
-
-	/** Pointer to next connection (NULL if it's as the end) */
-	struct conn_type *next;
-} conn_t;
-
-/**
- * A connection table: hash table of single-linked connection lists,
- * a list stops with NULL value.
- *
- * Methods:
- *   - tcptable_init(): create a structure (allocate memory) ;
- *   - tcptable_hash(): compute a connection hash (index in this table) ;
- *   - tcptable_add(): add a new entry ;
- *   - tcptable_find(): fin a connection in a table ;
- *   - tcptable_read(): feed the table using /proc/net/ files (under Linux) ;
- *   - tcptable_free(): destroy a table (free memory).
- */
-typedef struct {
-	conn_t *buckets[CONNTABLE_BUCKETS];
-} conntable_t;
-
-/* only publicly seen structure but data are private */
-
-#ifndef USE_SHA1
-#  define PACKET_ITEM_MAXSIZE \
-	( sizeof(struct nu_authreq) + sizeof(struct nu_authfield_ipv6) \
-	  + sizeof(struct nu_authfield_app) + PROGNAME_BASE64_WIDTH )
-#else
-#  error "TODO: Compute PACKET_ITEM_MAXSIZE with SHA1 checksum"
-#endif
-
-#define PACKET_SIZE \
-	( sizeof(struct nu_header) + CONN_MAX * PACKET_ITEM_MAXSIZE )
-
 enum {
 	ERROR_OK = 0,
 	ERROR_LOGIN = 1,
 	ERROR_NETWORK = 2
 };
-
-/* nuauth_session_t structure */
-
-typedef struct {
-	nussl_session* nussl;
-
-	/*--------------- PUBLIC MEMBERS -------------------*/
-	u_int32_t userid;	/*!< Local user identifier (getuid()) */
-	char *username;	/*!< Username (encoded in UTF-8) */
-	char *password;	/*!< Password (encoded in UTF-8) */
-	char *pem_key; /* Path ot file */
-	char *pem_cert; /* Path ot file */
-	char *pem_ca; /* Path ot file */
-	char *pkcs12_file; /* Path ot file */
-	char *pkcs12_password; /* Path ot file */
-	/** Callback used to get username */
-	char* (*username_callback)();
-	/** Callback used to get password */
-	char* (*passwd_callback)();
-
-	char *nuauth_cert_dn;
-
-	conntable_t *ct;	/*!< Connection table */
-	u_int32_t packet_seq;	/*!< Packet sequence number (start at zero) */
-	int auth_by_default;	/*!< Auth. by default (=1) */
-	unsigned char debug_mode;	/*!< Debug mode, enabled if different than zero */
-	unsigned char verbose;	/*!< Verbose mode (default: enabled) */
-	/* TODO: To remove */ unsigned char diffie_hellman;	/*!< Use Diffie Hellman for key exchange? */
-	int has_src_addr;		/*!< Has source address? */
-	struct sockaddr_storage src_addr;	/*!< Source address */
-
-	/** Server mode: #SRV_TYPE_POLL or #SRV_TYPE_PUSH */
-	u_int8_t server_mode;
-
-	/*------------- PRIVATE MEMBERS ----------------*/
-
-	/** Mutex used in session destruction */
-	pthread_mutex_t mutex;
-
-	/**
-	 * Flag to signal if user is connected or not.
-	 * Connected means that TLS tunnel is opened
-	 * and that authentication is done.
-	 */
-	unsigned char connected;
-
-	/**
-	 * Condition and associated mutex used to know when a check is necessary
-	 */
-	pthread_cond_t check_cond;
-	pthread_mutex_t check_count_mutex;
-	int count_msg_cond;
-
-	/**
-	 * Thread which check connection with nuauth,
-	 * see function nu_client_thread_check().
-	 */
-	pthread_t checkthread;
-
-	/**
-	 * Mutex used to ask checkthread to stop.
-	 */
-	pthread_mutex_t checkthread_stop;
-
-	/**
-	 * Thread which receive messages from nuauth, see function recv_message().
-	 */
-	pthread_t recvthread;
-
-	/** Timestamp (Epoch format) of last packet send to nuauth */
-	time_t timestamp_last_sent;
-
-
-} nuauth_session_t;
-
-#define NuAuth nuauth_session_t
 
 /** Error family */
 typedef enum {
@@ -250,6 +77,8 @@ enum {
 
 /* Define for backward compatibility */
 #define nuclient_error nuclient_error_t
+
+typedef struct nuauth_session nuauth_session_t;
 
 /* libnuclient return code structure */
 typedef struct {

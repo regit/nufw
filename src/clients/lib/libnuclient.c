@@ -37,18 +37,19 @@
  */
 #define USE_GCRYPT_MALLOC_SECURE
 
-#include "nufw_source.h"
+#include "libnuclient.h"
 #include "nuclient.h"
+#include "nufw_source.h"
 #include <pthread.h>
 #include <sasl/sasl.h>
 #include <sasl/saslutil.h>
 #include <stdarg.h>		/* va_list, va_start, ... */
 #include <langinfo.h>
 #include <proto.h>
-#include "client.h"
 #include "security.h"
 #include "sys_config.h"
 #include "internal.h"
+#include "tcptable.h"
 #include <sys/utsname.h>
 
 #include <nussl.h>

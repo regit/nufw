@@ -25,8 +25,10 @@
 #include <config.h>
 #endif
 
-#include "sys_config.h"
 #include <stdio.h>
+#include <string.h>
+#include <malloc.h>
+#include "sys_config.h"
 #include "getdelim.h"
 
 #define SYS_CONF_FILE CONFIG_DIR "/nuclient.conf"

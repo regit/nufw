@@ -22,13 +22,15 @@
  */
 
 #include "nufw_source.h"
-#include "nuclient.h"
+#include "libnuclient.h"
 #include <sasl/saslutil.h>
 #include <nussl.h>
 #include <pthread.h>
 #include <proto.h>
 #include "proc.h"
-#include "client.h"
+#include "checks.h"
+#include "tcptable.h"
+#include "sending.h"
 
 /** \addtogroup libnuclient
  * @{
@@ -80,19 +82,8 @@ void *recv_message(void *data)
 			     &session->check_count_mutex);
 
 	for (;;) {
-/*		ret =
-		    gnutls_record_recv(session->tls, dgram, sizeof dgram);*/
 		ret = nussl_read(session->nussl, dgram, sizeof dgram);
-#if XXX
-		if (ret <= 0) {
-			if (gnutls_error_is_fatal(ret)) {
-				ask_session_end(session);
-				break;
-			} else {
-				continue;
-			}
-		}
-#endif
+
 		if (ret == NUSSL_SOCK_TIMEOUT)
 			continue;
 

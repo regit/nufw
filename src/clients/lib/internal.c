@@ -21,13 +21,14 @@
  */
 
 #include "nufw_source.h"
-#include "nuclient.h"
+#include "libnuclient.h"
+#include "sending.h"
+#include "tcptable.h"
 #include <sasl/saslutil.h>
 #include <pthread.h>
 #include <stdarg.h>		/* va_list, va_start, ... */
 #include <langinfo.h>
 #include <proto.h>
-#include "client.h"
 #include "security.h"
 #include "internal.h"
 #include <sys/utsname.h>

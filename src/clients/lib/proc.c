@@ -23,10 +23,11 @@
 
 #include <config.h>
 
+#include "libnuclient.h"
+#include "proc.h"
+
 #ifdef LINUX
 
-#include "nufw_source.h"
-#include "nuclient.h"
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -47,7 +48,6 @@
 #include <net/if.h>
 #include <dirent.h>
 
-#include "client.h"
 #include "security.h"
 
 /**

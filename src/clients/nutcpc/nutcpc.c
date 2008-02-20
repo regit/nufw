@@ -23,13 +23,22 @@
 /* Enable GNU extensions: getline() from stdio.h */
 #include "nufw_source.h"
 
-#include "../lib/nuclient.h"
-#include <locale.h>
 #include <config.h>
+#include "../lib/nuclient.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <errno.h>
+#include <locale.h>
 #include <sys/resource.h>	/* setrlimit() */
 #include <langinfo.h>
 #include <stdarg.h>
 #include <signal.h>
+#include <sys/ioctl.h>
+#include <sys/stat.h>	/* mkdir() */
+#include <sys/types.h>	/* mkdir() */
+#include <termios.h>	/* tcgetattr() */
 #include "proto.h"
 #include "security.h"
 #include "debug.h"
