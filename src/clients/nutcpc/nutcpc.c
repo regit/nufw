@@ -45,6 +45,7 @@
 #define NUTCPC_VERSION PACKAGE_VERSION " $Revision$"
 
 #ifdef FREEBSD
+#include <sys/syslimits.h>	/* PATH_MAX */
 #include <readpassphrase.h>
 #endif
 

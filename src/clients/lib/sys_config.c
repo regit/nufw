@@ -27,7 +27,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <malloc.h>
+#include <stdlib.h>
 #include "sys_config.h"
 #include "getdelim.h"
 
