@@ -152,6 +152,11 @@ void nussl_crl_refresh_counter_inc(nussl_session *sess)
     pthread_mutex_unlock(&interface_mutex);
 }
 
+int nussl_session_get_fd(nussl_session *sess)
+{
+	return nussl_sock_fd(sess->socket);
+}
+
 void nussl_set_addrlist(nussl_session *sess, const nussl_inet_addr **addrs, size_t n)
 {
     pthread_mutex_lock(&interface_mutex);
@@ -480,7 +485,7 @@ int nussl_write(nussl_session *session, char *buffer, size_t count)
 	ret = nussl_sock_fullwrite(session->socket, buffer, count);
 	if (ret < 0)
 		nussl_set_error(session, nussl_sock_error(session->socket));
-    
+
 	pthread_mutex_unlock(&interface_mutex);
 	return ret;
 }
@@ -529,7 +534,7 @@ int nussl_ssl_set_keypair(nussl_session *session, const char* cert_file, const c
 int nussl_ssl_set_pkcs12_keypair(nussl_session *session, const char* pkcs12_file, const char* password)
 {
 	int ret = NUSSL_OK;
-	
+
 	pthread_mutex_lock(&interface_mutex);
 	UGLY_DEBUG();
 

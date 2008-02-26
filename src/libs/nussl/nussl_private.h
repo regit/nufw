@@ -61,6 +61,11 @@ struct hook {
 #define HAVE_HOOK(st,func) (st->hook->hooks->func != NULL)
 #define HOOK_FUNC(st, func) (*st->hook->hooks->func)
 
+struct nussl_session_server_s {
+    nussl_socket *socket;
+    int check_peer_cert;
+};
+
 /* Session support. */
 struct nussl_session_s {
     /* Connection information */
@@ -83,6 +88,7 @@ struct nussl_session_s {
     int rdtimeout, cotimeout; /* read, connect timeouts. */
 
 
+/* rename into my_cert & peer_cert */
     nussl_ssl_client_cert *client_cert;
     nussl_ssl_certificate *server_cert;
     nussl_ssl_context *ssl_context;

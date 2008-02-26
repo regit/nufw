@@ -51,7 +51,6 @@ typedef struct nussl_session_s nussl_session;
  * server. */
 nussl_session *nussl_session_create();
 
-/* Finish an HTTP session */
 void nussl_session_destroy(nussl_session *sess);
 
 /* Prematurely force the connection to be closed for the given

@@ -23,6 +23,7 @@ extern "C" {
 
 struct nussl_nession_t;
 typedef struct nussl_session_t nussl_session;
+typedef struct nussl_session_server_t nussl_session_server;
 
 typedef void *nussl_ptr;
 
@@ -88,6 +89,16 @@ int nussl_ssl_cert_generate_dh_params(nussl_session *session);
 void nussl_ssl_cert_dh_params(nussl_session *session);
 int nussl_ssl_cert_set_x509_crl_file(nussl_session *session, const char *crl_file);
 int nussl_ssl_context_set_verify(nussl_session *session, int required, const char *verify_cas);
+
+/* Create session server from sock fd */
+nussl_session_server *nussl_session_server_create_with_fd(int fd);
+
+void nussl_session_server_destroy(nussl_session_server *srv_sess);
+
+void nussl_session_server_close_connection(nussl_session_server *srv_sess);
+
+nussl_session* nussl_session_server_new_client(nussl_session_server *srv_sess, int fd);
+
 
 /* End: INL additions */
 

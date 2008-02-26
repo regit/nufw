@@ -741,7 +741,7 @@ static int check_certificate(nussl_session *sess, gnutls_session sock,
                            gnutls_strerror(ret));
         failures |= NUSSL_SSL_UNTRUSTED;
     }
-    if (status) {
+    if (status) { /* XXX: Add more checks*/
                     printf("Certificate authority verification failed:");
                     if( status & GNUTLS_CERT_INVALID )
                             printf(" invalid");

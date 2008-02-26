@@ -1149,12 +1149,7 @@ nussl_socket *nussl_sock_create(void)
 /* XXX: INL Addition */
 nussl_socket *nussl_sock_create_with_fd(int fd)
 {
-    nussl_socket *sock = nussl_calloc(sizeof *sock);
-    UGLY_DEBUG();
-    sock->rdtimeout = SOCKET_READ_TIMEOUT;
-    sock->cotimeout = 0;
-    sock->bufpos = sock->buffer;
-    sock->ops = &iofns_raw;
+    nussl_socket *sock = nussl_sock_create();
     sock->fd = fd;
     return sock;
 }
