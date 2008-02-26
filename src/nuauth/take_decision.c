@@ -280,7 +280,13 @@ nu_error_t take_decision(connection_t * element, packet_place_t place)
 			memcpy(&(datas->tracking), &(element->tracking),
 			       sizeof(tracking_t));
 			datas->expire = expire;
+
+#if 0
+
 			datas->gwaddr = element->tls->peername;
+
+#endif
+
 			message->datas = datas;
 			message->type = INSERT_MESSAGE;
 			g_async_queue_push(nuauthdatas->

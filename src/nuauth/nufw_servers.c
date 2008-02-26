@@ -20,6 +20,7 @@
  */
 
 #include "auth_srv.h"
+#include <nussl.h>
 
 /**
  * \ingroup TLSNufw
@@ -70,7 +71,7 @@ void close_nufw_servers()
  */
 static nu_error_t suppress_nufw_session(nufw_session_t * session)
 {
-	g_hash_table_remove(nufw_servers, GINT_TO_POINTER (session->socket));
+	g_hash_table_remove(nufw_servers, GINT_TO_POINTER (nussl_session_get_fd(session->nufw_client)));
 	return NU_EXIT_OK;
 }
 
@@ -80,6 +81,7 @@ static nu_error_t suppress_nufw_session(nufw_session_t * session)
  */
 void clean_nufw_session(nufw_session_t * c_session)
 {
+#if 0
 	gnutls_transport_ptr socket_tls;
 	socket_tls = gnutls_transport_get_ptr(*(c_session->tls));
 	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
@@ -94,6 +96,10 @@ void clean_nufw_session(nufw_session_t * c_session)
 				  "close nufw session was called but NULL");
 
 	}
+#endif
+	nussl_session_destroy(c_session->nufw_client);
+	nussl_session_server_destroy(c_session->server);
+
 	g_mutex_free(c_session->tls_lock);
 	g_free(c_session);
 
@@ -108,10 +114,12 @@ nu_error_t declare_dead_nufw_session(nufw_session_t * session)
 	g_static_mutex_lock(&nufw_servers_mutex);
 
 	if (session->alive == TRUE) {
+#if 0 /* XXX: So many functions to perform cleanups!! */
 		gnutls_transport_ptr tls;
 		session->alive = FALSE;
 		tls = gnutls_transport_get_ptr(*session->tls);
 		shutdown(GPOINTER_TO_INT(tls), SHUT_WR);
+#endif
 	}
 	if (g_atomic_int_dec_and_test(&(session->usage))) {
 		suppress_nufw_session(session);
@@ -131,6 +139,7 @@ gboolean ghrfunc_true(gpointer key, gpointer value, gpointer user_data)
 static gboolean get_nufw_server_by_addr(gpointer key, gpointer value,
 					gpointer user_data)
 {
+#if 0
 	const nufw_session_t* session = value;
 	const struct in6_addr *addr = user_data;
 	if (ipv6_equal(&session->peername, addr)) {
@@ -138,6 +147,10 @@ static gboolean get_nufw_server_by_addr(gpointer key, gpointer value,
 	} else {
 		return FALSE;
 	}
+#endif
+
+	return TRUE;
+
 }
 
 /**
@@ -214,9 +227,16 @@ nu_error_t nufw_session_send(nufw_session_t * session, char * buffer, int length
 		return NU_EXIT_ERROR;
 
 	g_mutex_lock(session->tls_lock);
+
+	ret = nussl_write(session->nufw_client, buffer, length);
+
+#if 0
 	ret = gnutls_record_send(*(session->tls),
 				 buffer,
 				 length);
+
+#endif
+
 	g_mutex_unlock(session->tls_lock);
 	if (ret < 0) {
 		log_message(DEBUG, DEBUG_AREA_GW,

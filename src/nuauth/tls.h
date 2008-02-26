@@ -97,14 +97,21 @@ struct tls_buffer_read {
  * from a nufw server.
  */
 typedef struct {
-	int socket;
+
+	nussl_session_server *server;
+	nussl_session *nufw_client;
+
+#if 0
 	gnutls_session *tls;
+#endif
 	/**
 	 * This lock has to be used before any call to gnutls_record function
 	 * on TLS session pointed by the ::nufw_session_t
 	 */
 	GMutex *tls_lock;
+#if 0
 	struct in6_addr peername;
+#endif
 	unsigned char proto_version;
 	/**
 	 * usage stores the number of packets currently depending of this session
@@ -137,6 +144,7 @@ struct nuauth_ssl_t {
 };
 
 struct nuauth_tls_t {
+	nussl_session_server *server_session;
 	gnutls_certificate_credentials x509_cred;
 	int request_cert;
 	auth_cert_type_t auth_by_cert;

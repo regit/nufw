@@ -226,9 +226,12 @@ static ssize_t tls_push_func(gnutls_transport_ptr ptr, const void *buf,
 	return send(fd, buf, count, MSG_DONTWAIT);
 }
 
+#if 0
 nussl_session *ssl_connect(int socket_fd)
 {
 	nussl_session *session;
+	int ret = 0;
+
 
 	session = nussl_session_create();
 	if (!session) {
@@ -238,12 +241,7 @@ nussl_session *ssl_connect(int socket_fd)
 		return NULL;
 	}
 
-#if 0
-	gnutls_transport_set_ptr(*session, GINT_TO_POINTER(socket_fd));
-	gnutls_transport_set_push_function(*session, tls_push_func);
-
-	*session_ptr = session;
-	ret = 0;
+	nussl_misc_set_fd_and_push(session.socket->ssl, GINT_TO_POINTER(socket_fd), tls_push_func);
 
 	do {
 		log_message(INFO, DEBUG_AREA_GW | DEBUG_AREA_USER,
@@ -259,6 +257,7 @@ nussl_session *ssl_connect(int socket_fd)
 		return SASL_BADPARAM;
 	}
 
+#if 0 /* XXX: Why are those logs important? */
 	debug_log_message(DEBUG, DEBUG_AREA_GW | DEBUG_AREA_USER, "NuFW TLS Handshaked");
 
 	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW | DEBUG_AREA_USER, "NuFW TLS mac: %s",
@@ -268,6 +267,7 @@ nussl_session *ssl_connect(int socket_fd)
 
 	debug_log_message(DEBUG, DEBUG_AREA_GW | DEBUG_AREA_USER,
 			  "NuFW TLS Handshake was completed");
+#endif
 
 	if (nuauth_ssl.request_cert == NUSSL_CERT_REQUIRE) {
 		/* certicate verification */
@@ -285,10 +285,8 @@ nussl_session *ssl_connect(int socket_fd)
 	}
 
 	return SASL_OK;
-
-#endif
 }
-
+#endif
 
 /**
  * Realize a tls connection: call initialize_tls_session(), set tranport

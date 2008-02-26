@@ -272,8 +272,13 @@ encoder_t* encode_nufw(nufw_session_t* session)
 	encoder_t* encoder = encoder_new();
 	encoder_add_bytecode(encoder, BYTECODE_NUFW);
 	encoder_add_int32(encoder, session->proto_version);
-	encoder_add_int32(encoder, session->socket);
+
+	encoder_add_int32(encoder, nussl_session_get_fd(session->nufw_client));
+
+#if 0
 	encoder_add_ipv6(encoder, &session->peername);
+#endif
+
 	encoder_add_timestamp(encoder, session->connect_timestamp);
 	encoder_add_int32(encoder, time(NULL) - session->connect_timestamp);
 	encoder_add_int32(encoder, session->usage);

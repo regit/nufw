@@ -67,14 +67,21 @@ static int treat_nufw_request(nufw_session_t * c_session)
 
 	/* read data from nufw */
 	g_mutex_lock(c_session->tls_lock);
-	dgram_size =
-	    gnutls_record_recv(*(c_session->tls), dgram,
+	dgram_size = nussl_read(c_session->nufw_client, dgram, CLASSIC_NUFW_PACKET_SIZE);
+#if 0
+	gnutls_record_recv(*(c_session->tls), dgram,
 			       CLASSIC_NUFW_PACKET_SIZE);
+#endif
 	g_mutex_unlock(c_session->tls_lock);
 	if (dgram_size < 0) {
 		log_message(INFO, DEBUG_AREA_GW,
+			    "nufw failure at %s:%d", __FILE__,
+			    __LINE__);
+#if 0
+		log_message(INFO, DEBUG_AREA_GW,
 			    "nufw failure at %s:%d (%s)", __FILE__,
 			    __LINE__,gnutls_strerror(dgram_size));
+#endif
 		return NU_EXIT_ERROR;
 	} else if (dgram_size == 0) {
 		log_message(INFO, DEBUG_AREA_GW,
@@ -94,9 +101,8 @@ static int treat_nufw_request(nufw_session_t * c_session)
 	}
 	/* decode data */
 	do {
-		ret =
-		    authpckt_decode(&dgram, (unsigned int *) &dgram_size,
-				    &current_conn);
+		ret = authpckt_decode(&dgram, (unsigned int *) &dgram_size,
+					&current_conn);
 		switch (ret) {
 		case NU_EXIT_ERROR:
 			return NU_EXIT_ERROR;
@@ -171,8 +177,12 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 	struct in6_addr addr;
 	char addr_ascii[INET6_ADDRSTRLEN];
 	unsigned int len_inet;
+
 	nufw_session_t *nu_session;
 
+
+
+#if 0
 	/* Accept the connection */
 	len_inet = sizeof sockaddr;
 	conn_fd = accept(context->sck_inet,
@@ -180,14 +190,18 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 	if (conn_fd == -1) {
 		log_message(WARNING, DEBUG_AREA_GW, "accept");
 	}
+#endif
 
+#if 0
 	/* Extract client address (convert it to IPv6 if it's IPv4) */
 	if (sockaddr6->sin6_family == AF_INET) {
 		ipv4_to_ipv6(sockaddr4->sin_addr, &addr);
 	} else {
 		addr = sockaddr6->sin6_addr;
 	}
+#endif
 
+#if 0 /* XXX: nuauthconf->authorized_servers is always set as NULL */
 	/* test if server is in the list of authorized servers */
 	if (!check_inaddr_in_array(&addr, nuauthconf->authorized_servers)) {
 		FORMAT_IPV6(&addr, addr_ascii);
@@ -196,6 +210,7 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 		close(conn_fd);
 		return 1;
 	}
+#endif
 #if 0
 	if (conn_fd >= nuauth_tls_max_servers) {
 		log_message(WARNING, DEBUG_AREA_GW,
@@ -208,13 +223,37 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 
 	/* initialize TLS */
 	nu_session = g_new0(nufw_session_t, 1);
+
+	nu_session->server = nussl_session_server_create_with_fd(context->sck_inet);
+
 	nu_session->connect_timestamp = time(NULL);
 	nu_session->usage = 1;
 	nu_session->alive = TRUE;
+#if 0
 	nu_session->peername = addr;
 	nu_session->socket = conn_fd;
+#endif
 	/* We have to wait the first packet */
 	nu_session->proto_version = PROTO_UNKNOWN;
+
+	nu_session->nufw_client = nussl_session_server_new_client(nu_session->server, 0);
+	if ( ! nu_session->nufw_client ) {
+		nussl_session_server_destroy(nu_session->server);
+		g_free(nu_session);
+		return 1;
+	}
+
+	conn_fd = nussl_session_get_fd(nu_session->nufw_client);
+
+	nu_session->tls_lock = g_mutex_new();
+	add_nufw_server(conn_fd, nu_session);
+	FD_SET(conn_fd, &context->tls_rx_set);
+	if (conn_fd + 1 > context->mx)
+		context->mx = conn_fd + 1;
+	g_message("[+] NuFW: new client connected on socket %d",
+		  conn_fd);
+
+#if 0
 	if (tls_connect(conn_fd, &(nu_session->tls)) == SASL_OK) {
 		nu_session->tls_lock = g_mutex_new();
 		add_nufw_server(conn_fd, nu_session);
@@ -226,6 +265,9 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 	} else {
 		g_free(nu_session);
 	}
+
+#endif
+
 	return 0;
 }
 
@@ -266,6 +308,7 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex * mutex)
 				continue;
 			}
 
+/* XXX: TODO: BUZZWORD: Destroy the nussl session */
 			if (errno == EBADF) {
 				int i;
 				/* A client disconnects between FD_SET and select.

@@ -452,7 +452,7 @@ void tls_user_main_loop(struct tls_user_context_t *context, GMutex * mutex)
 		 * tls_sasl_connect_ok() and are send when a new user is connected.
 		 */
 		c_pop = g_async_queue_try_pop(mx_queue);
-		while (c_pop != NULL) {
+		while (c_pop) {
 			int socket = GPOINTER_TO_INT(c_pop);
 
 			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,

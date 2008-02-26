@@ -177,6 +177,8 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 		return;
 	}
 #endif
+
+#if 0
 	nussl = ssl_connect(socket_fd);
 	if ( ! nussl ) {
 		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
@@ -279,6 +281,9 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 		c_session->tls = NULL;
 		clean_session(c_session);
 	}
+
+#endif
+
 }
 
 /**
