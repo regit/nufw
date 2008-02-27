@@ -533,7 +533,7 @@ int create_x509_credentials()
 			  nuauth_tls_cert);
 		if (nuauth_ssl.request_cert == NUSSL_CERT_REQUIRE)
 			g_message("TLS require cert from client");
-
+	}
 #endif
 	g_free(nuauth_tls_key);
 	g_free(nuauth_tls_cert);
