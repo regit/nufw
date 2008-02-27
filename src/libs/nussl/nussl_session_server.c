@@ -42,6 +42,7 @@ nussl_session* nussl_session_server_new_client(nussl_session_server *srv_sess, i
 	}
 
 	client_sess->socket = nussl_sock_create();
+
 	if (nussl_sock_accept(client_sess->socket, nussl_sock_fd(srv_sess->socket)) != 0) {
 		printf("Error during accept()\n");
 		nussl_session_destroy(client_sess);
@@ -50,7 +51,7 @@ nussl_session* nussl_session_server_new_client(nussl_session_server *srv_sess, i
 
 	client_sess->ssl_context->verify = verify;
 
-	nussl_sock_accept_ssl(client_sess->socket, client_sess->ssl_context);
+	nussl_sock_accept_ssl(client_sess->socket, srv_sess->ssl_context);
 
 	return client_sess;
 }
