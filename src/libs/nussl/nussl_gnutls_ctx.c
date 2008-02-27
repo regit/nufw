@@ -54,13 +54,10 @@
 #include <gnutls/gnutls.h>
 #include <gnutls/pkcs12.h>
 
-#ifdef NUSSL_HAVE_TS_SSL
 #include <errno.h>
 #include <pthread.h>
 #include <gcrypt.h>
 GCRY_THREAD_OPTION_PTHREAD_IMPL;
-
-#endif        /* HAVE_GNUTLS */
 
 #ifdef HAVE_ICONV
 #include <iconv.h>
@@ -150,4 +147,4 @@ int nussl_ssl_context_trustcert(nussl_ssl_context *ctx, const nussl_ssl_certific
     return (gnutls_certificate_set_x509_trust(ctx->cred, &certs, 1) == 0) ? NUSSL_OK : NUSSL_ERROR;
 }
 
-
+#endif /* HAVE_GNUTLS */
