@@ -520,6 +520,7 @@ int create_x509_credentials()
 			return 0;
 	}
 
+#if 0
 	ret = nussl_ssl_set_keypair(nuauth_ssl.session, nuauth_tls_cert, nuauth_tls_key);
 	if (ret < 0) {
 		g_warning("[%i] Problem with certificate key file : %s",
@@ -527,6 +528,8 @@ int create_x509_credentials()
 
 		return 0;
 	}
+#endif
+
 #ifdef DEBUG_ENABLE
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG, DEBUG_AREA_USER)) {
 		g_message("TLS using key %s and cert %s", nuauth_tls_key,

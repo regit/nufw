@@ -98,7 +98,6 @@ void clean_nufw_session(nufw_session_t * c_session)
 	}
 #endif
 	nussl_session_destroy(c_session->nufw_client);
-	nussl_session_server_destroy(c_session->server);
 
 	g_mutex_free(c_session->tls_lock);
 	g_free(c_session);

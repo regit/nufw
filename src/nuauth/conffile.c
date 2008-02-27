@@ -44,7 +44,7 @@
  * \param symbols (Pointer to) Hash containing options
  * \return 1 if OK, 0 otherwise
  */
-
+/* TODO: use Key-value file parser glib API */
 int parse_conffile(const char *filename, gint array_size,
 		   confparams_t * symbols)
 {

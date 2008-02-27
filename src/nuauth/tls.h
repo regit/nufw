@@ -97,8 +97,7 @@ struct tls_buffer_read {
  * from a nufw server.
  */
 typedef struct {
-
-	nussl_session_server *server;
+	/* nussl_session_server is in tls_nufw_context_t */
 	nussl_session *nufw_client;
 
 #if 0
