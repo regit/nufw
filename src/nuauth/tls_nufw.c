@@ -174,9 +174,11 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 	struct sockaddr_storage sockaddr;
 	struct sockaddr_in *sockaddr4 = (struct sockaddr_in *) &sockaddr;
 	struct sockaddr_in6 *sockaddr6 = (struct sockaddr_in6 *) &sockaddr;
+#if 0
 	struct in6_addr addr;
 	char addr_ascii[INET6_ADDRSTRLEN];
-	unsigned int len_inet;
+#endif
+	socklen_t len_inet;
 
 	nufw_session_t *nu_session;
 
@@ -190,9 +192,7 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 	if (conn_fd == -1) {
 		log_message(WARNING, DEBUG_AREA_GW, "accept");
 	}
-#endif
 
-#if 0
 	/* Extract client address (convert it to IPv6 if it's IPv4) */
 	if (sockaddr6->sin6_family == AF_INET) {
 		ipv4_to_ipv6(sockaddr4->sin_addr, &addr);
@@ -241,6 +241,15 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 		nussl_session_server_destroy(nu_session->server);
 		g_free(nu_session);
 		return 1;
+	}
+
+	nussl_session_getpeer(nu_session->nufw_client, (struct sockaddr *) &sockaddr, &len_inet);
+
+	/* Extract client address (convert it to IPv6 if it's IPv4) */
+	if (sockaddr6->sin6_family == AF_INET) {
+		ipv4_to_ipv6(sockaddr4->sin_addr, &nu_session->peername);
+	} else {
+		nu_session->peername = sockaddr6->sin6_addr;
 	}
 
 	conn_fd = nussl_session_get_fd(nu_session->nufw_client);

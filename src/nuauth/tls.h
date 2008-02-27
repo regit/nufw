@@ -109,9 +109,8 @@ typedef struct {
 	 * on TLS session pointed by the ::nufw_session_t
 	 */
 	GMutex *tls_lock;
-#if 0
+
 	struct in6_addr peername;
-#endif
 	unsigned char proto_version;
 	/**
 	 * usage stores the number of packets currently depending of this session

@@ -139,7 +139,6 @@ gboolean ghrfunc_true(gpointer key, gpointer value, gpointer user_data)
 static gboolean get_nufw_server_by_addr(gpointer key, gpointer value,
 					gpointer user_data)
 {
-#if 0
 	const nufw_session_t* session = value;
 	const struct in6_addr *addr = user_data;
 	if (ipv6_equal(&session->peername, addr)) {
@@ -147,9 +146,6 @@ static gboolean get_nufw_server_by_addr(gpointer key, gpointer value,
 	} else {
 		return FALSE;
 	}
-#endif
-
-	return TRUE;
 
 }
 
