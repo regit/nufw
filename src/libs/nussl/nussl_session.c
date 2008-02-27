@@ -584,6 +584,20 @@ int nussl_ssl_set_pkcs12_keypair(nussl_session *session, const char* pkcs12_file
 	return ret;
 }
 
+int nussl_session_getpeer(nussl_session *sess, struct sockaddr *addr, socklen_t *addrlen)
+{
+
+	int fd = nussl_session_get_fd(sess);
+	int ret = getpeername(fd, addr, addrlen);
+
+	if ( ret != 0 ) {
+		nussl_set_error(sess, strerror(ret));
+		return NUSSL_ERROR;
+	}
+
+	return NUSSL_OK;
+}
+
 int nussl_init()
 {
 	int ret;
