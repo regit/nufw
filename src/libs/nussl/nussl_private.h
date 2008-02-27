@@ -64,6 +64,7 @@ struct hook {
 struct nussl_session_server_s {
     nussl_socket *socket;
     nussl_ssl_context *ssl_context;
+    nussl_ssl_client_cert *mycert; /* TODO: rename structure */
 };
 
 /* Session support. */

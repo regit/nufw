@@ -3,7 +3,7 @@
 
 #include "nussl_session_server.h"
 #include "nussl_socket.h"
-
+#include "nussl_utils.h"
 
 nussl_session_server *nussl_session_server_create_with_fd(int server_fd)
 {
@@ -53,3 +53,38 @@ nussl_session* nussl_session_server_new_client(nussl_session_server *srv_sess, i
 	return client_sess;
 }
 
+int nussl_session_server_set_clicert(nussl_session_server *srv_sess, const nussl_ssl_client_cert *cc)
+{
+
+    srv_sess->mycert = dup_client_cert(cc);
+    if (!srv_sess->mycert)
+    	return NUSSL_ERROR;
+
+    return nussl_ssl_context_keypair_from_data(srv_sess->ssl_context, srv_sess->mycert);
+}
+
+int nussl_session_server_set_keypair(nussl_session *srv_sess, const char* cert_file, const char* key_file)
+{
+	nussl_ssl_client_cert* cert;
+	int ret;
+
+	if (check_key_perms(key_file)!= NUSSL_OK)
+	{
+		/* TODO: use nussl_set_error instead */
+		fprintf(stdout, "Permissions on private key %s are not restrictive enough, it should be readable only by its owner.", key_file);
+
+		return NUSSL_ERROR;
+	}
+
+	cert = nussl_ssl_import_keypair(cert_file, key_file);
+	if (cert == NULL)
+	{
+		fprintf(stdout, "Unable to load private key or certificate file");
+
+		return NUSSL_ERROR;
+	}
+
+	ret = nussl_session_server_set_clicert(srv_sess, cert);
+
+	return ret;
+}
