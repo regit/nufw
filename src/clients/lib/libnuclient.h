@@ -159,10 +159,10 @@ typedef struct {
 
 /* nuauth_session_t structure */
 
+/* -- PRIVATE STRUCTURE -- */
 struct  nuauth_session {
 	nussl_session* nussl;
 
-	/*--------------- PUBLIC MEMBERS -------------------*/
 	u_int32_t userid;	/*!< Local user identifier (getuid()) */
 	char *username;	/*!< Username (encoded in UTF-8) */
 	char *password;	/*!< Password (encoded in UTF-8) */
@@ -189,8 +189,6 @@ struct  nuauth_session {
 
 	/** Server mode: #SRV_TYPE_POLL or #SRV_TYPE_PUSH */
 	u_int8_t server_mode;
-
-	/*------------- PRIVATE MEMBERS ----------------*/
 
 	/** Mutex used in session destruction */
 	pthread_mutex_t mutex;
