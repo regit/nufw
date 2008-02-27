@@ -404,7 +404,7 @@ static int nufw_client_func(struct pam_nufw_s *pn_s,
 		fclose(RunD);
 		syslog(LOG_INFO,
 		       "(pam_nufw) session to Nuauth server opened, username=%s, server=%s (pid=%lu)",
-		       session->username, pn_s->nuauth_srv,
+		       user_info->username, pn_s->nuauth_srv,
 		       (unsigned long) mypid);
 	}
 
@@ -470,8 +470,7 @@ static int read_user_info(struct user_info_s *user_info,
 /*
  * used to open the connection to the nuauth server
  */
-PAM_EXTERN
-    int pam_sm_authenticate(pam_handle_t * pamh, int flags,
+PAM_EXTERN int pam_sm_authenticate(pam_handle_t * pamh, int flags,
 			    int argc, const char **argv)
 {
 	int retval;
@@ -540,8 +539,7 @@ PAM_EXTERN
 	return retval;
 }
 
-PAM_EXTERN
-    int pam_sm_setcred(pam_handle_t * pamh, int flags, int argc,
+PAM_EXTERN int pam_sm_setcred(pam_handle_t * pamh, int flags, int argc,
 		       const char **argv)
 {
 	/*D(("pam_nufw sm_setcred")); */
@@ -550,9 +548,7 @@ PAM_EXTERN
 
 /* --- account management functions --- */
 
-PAM_EXTERN
-    int pam_sm_acct_mgmt(pam_handle_t * pamh, int flags, int argc,
-			 const char **argv)
+PAM_EXTERN int pam_sm_acct_mgmt(pam_handle_t * pamh, int flags, int argc, const char **argv)
 {
 	D(("pam_nufw sm_acct_mgmt"));
 	return PAM_SUCCESS;
