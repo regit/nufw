@@ -564,96 +564,6 @@ int nussl_ssl_set_clicert(nussl_session *sess, const nussl_ssl_client_cert *cc)
 	return (ret == 1) ? NUSSL_OK : NUSSL_ERROR;
 }
 #endif
-nussl_ssl_context *nussl_ssl_context_create(int mode)
-{
-    nussl_ssl_context *ctx = nussl_calloc(sizeof *ctx);
-    if (mode == NUSSL_SSL_CTX_CLIENT) {
-        ctx->ctx = SSL_CTX_new(SSLv23_client_method());
-        ctx->sess = NULL;
-        /* set client cert callback. */
-        SSL_CTX_set_client_cert_cb(ctx->ctx, provide_client_cert);
-        /* enable workarounds for buggy SSL server implementations */
-        SSL_CTX_set_options(ctx->ctx, SSL_OP_ALL);
-    } else if (mode == NUSSL_SSL_CTX_SERVER) {
-        ctx->ctx = SSL_CTX_new(SSLv23_server_method());
-        SSL_CTX_set_session_cache_mode(ctx->ctx, SSL_SESS_CACHE_CLIENT);
-    } else {
-        ctx->ctx = SSL_CTX_new(SSLv2_server_method());
-        SSL_CTX_set_session_cache_mode(ctx->ctx, SSL_SESS_CACHE_CLIENT);
-    }
-    return ctx;
-}
-
-void nussl_ssl_context_set_flag(nussl_ssl_context *ctx, int flag, int value)
-{
-    long opts = SSL_CTX_get_options(ctx->ctx);
-
-    switch (flag) {
-    case NUSSL_SSL_CTX_SSLv2:
-        if (value) {
-            /* Enable SSLv2 support; clear the "no SSLv2" flag. */
-            opts &= ~SSL_OP_NO_SSLv2;
-        } else {
-            /* Disable it: set the flag. */
-            opts |= SSL_OP_NO_SSLv2;
-        }
-        break;
-    }
-
-    SSL_CTX_set_options(ctx->ctx, opts);
-}
-
-int nussl_ssl_context_keypair(nussl_ssl_context *ctx, const char *cert,
-                           const char *key)
-{
-    int ret;
-
-    ret = SSL_CTX_use_PrivateKey_file(ctx->ctx, key, SSL_FILETYPE_PEM);
-    if (ret == 1) {
-        ret = SSL_CTX_use_certificate_file(ctx->ctx, cert, SSL_FILETYPE_PEM);
-    }
-
-    return ret == 1 ? 0 : -1;
-}
-
-int nussl_ssl_context_keypair_from_data(nussl_ssl_context *ctx, nussl_ssl_client_cert* cert)
-{
-	int ret;
-	ret = SSL_CTX_use_PrivateKey(ctx->ctx, cert->pkey);
-
-	if (ret != 1)
-		return NUSSL_ERROR;
-
-	ret = SSL_CTX_use_certificate(ctx->ctx, cert->cert.subject);
-	return (ret == 1) ? NUSSL_OK : NUSSL_ERROR;
-}
-
-int nussl_ssl_context_set_verify(nussl_ssl_context *ctx,
-                              int required,
-                              const char *ca_names,
-                              const char *verify_cas)
-{
-    if (required) {
-        SSL_CTX_set_verify(ctx->ctx, SSL_VERIFY_PEER |
-                           SSL_VERIFY_FAIL_IF_NO_PEER_CERT, NULL);
-    }
-    if (ca_names) {
-        SSL_CTX_set_client_CA_list(ctx->ctx,
-                                   SSL_load_client_CA_file(ca_names));
-    }
-    if (verify_cas) {
-        SSL_CTX_load_verify_locations(ctx->ctx, verify_cas, NULL);
-    }
-    return 0;
-}
-
-void nussl_ssl_context_destroy(nussl_ssl_context *ctx)
-{
-    SSL_CTX_free(ctx->ctx);
-    if (ctx->sess)
-        SSL_SESSION_free(ctx->sess);
-    nussl_free(ctx);
-}
 
 /* For internal use only. */
 int nussl__negotiate_ssl(nussl_session *sess)
@@ -761,16 +671,6 @@ const nussl_ssl_certificate *nussl_ssl_cert_signedby(const nussl_ssl_certificate
 const char *nussl_ssl_cert_identity(const nussl_ssl_certificate *cert)
 {
     return cert->identity;
-}
-
-int nussl_ssl_context_trustcert(nussl_ssl_context *ctx, const nussl_ssl_certificate *cert)
-{
-    X509_STORE *store = SSL_CTX_get_cert_store(ctx->ctx);
-
-    if (store == NULL)
-        return NUSSL_ERROR;
-
-    return (X509_STORE_add_cert(store, cert->subject) == 1) ? NUSSL_OK : NUSSL_ERROR;
 }
 
 void nussl_ssl_trust_default_ca(nussl_session *sess)
