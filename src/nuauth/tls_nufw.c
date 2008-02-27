@@ -503,7 +503,7 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 		return 0;
 	}
 	ret = nussl_session_server_set_keypair(context->server, nuauth_tls_cert, nuauth_tls_key);
-	if ( ret != NUSSL_ERROR ) {
+	if ( ret != NUSSL_OK ) {
 		g_error("[%s:%d]:error on nussl_session_server_set_keypair", __FUNCTION__, __LINE__);
 		return 0;
 	}
