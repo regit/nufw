@@ -53,8 +53,6 @@
 
 #define UGLY_DEBUG() printf("%s %s:%i\n", __FUNCTION__, __FILE__, __LINE__)
 
-pthread_mutex_t interface_mutex = PTHREAD_MUTEX_INITIALIZER;
-
 #if 0
 /* Destroy a a list of hooks. */
 static void destroy_hooks(struct hook *hooks)
@@ -72,7 +70,7 @@ static void destroy_hooks(struct hook *hooks)
 
 void nussl_session_destroy(nussl_session *sess)
 {
-    pthread_mutex_lock(&interface_mutex);
+
     UGLY_DEBUG();
     NUSSL_DEBUG(NUSSL_DBG_HTTP, "nussl_session_destroy called.\n");
 
@@ -95,25 +93,25 @@ void nussl_session_destroy(nussl_session *sess)
         nussl_ssl_clicert_free(sess->client_cert);
 
     nussl_free(sess);
-    pthread_mutex_unlock(&interface_mutex);
+
 }
 
 /* Stores the hostname/port in *sess, setting up the "hostport"
  * segment correctly. */
 void nussl_set_hostinfo(nussl_session* sess, const char *hostname, unsigned int port)
 {
-    pthread_mutex_lock(&interface_mutex);
+
     UGLY_DEBUG();
     if(sess->server.hostname)
     	nussl_free(sess->server.hostname);
     sess->server.hostname = nussl_strdup(hostname);
     sess->server.port = port;
-    pthread_mutex_unlock(&interface_mutex);
+
 }
 
 nussl_session *nussl_session_create()
 {
-    pthread_mutex_lock(&interface_mutex);
+
     nussl_session *sess = nussl_calloc(sizeof *sess);
     UGLY_DEBUG();
 
@@ -134,22 +132,22 @@ nussl_session *nussl_session_create()
     /* Set default read timeout */
     sess->rdtimeout = SOCKET_READ_TIMEOUT;
 
-    pthread_mutex_unlock(&interface_mutex);
+
     return sess;
 }
 
 void nussl_set_crl_refresh(nussl_session *sess, int refresh)
 {
-    pthread_mutex_lock(&interface_mutex);
+
     sess->ssl_context->crl_refresh = refresh;
-    pthread_mutex_unlock(&interface_mutex);
+
 }
 
 void nussl_crl_refresh_counter_inc(nussl_session *sess)
 {
-    pthread_mutex_lock(&interface_mutex);
+
     sess->ssl_context->crl_refresh_counter++;
-    pthread_mutex_unlock(&interface_mutex);
+
 }
 
 int nussl_session_get_fd(nussl_session *sess)
@@ -159,11 +157,11 @@ int nussl_session_get_fd(nussl_session *sess)
 
 void nussl_set_addrlist(nussl_session *sess, const nussl_inet_addr **addrs, size_t n)
 {
-    pthread_mutex_lock(&interface_mutex);
+
     UGLY_DEBUG();
     sess->addrlist = addrs;
     sess->numaddrs = n;
-    pthread_mutex_unlock(&interface_mutex);
+
 }
 
 void nussl_set_error(nussl_session *sess, const char *format, ...)
@@ -191,7 +189,7 @@ int nussl_get_session_flag(nussl_session *sess, nussl_session_flag flag)
     UGLY_DEBUG();
     if (flag < NUSSL_SESSFLAG_LAST) {
     	int sess_flag = sess->flags[flag];
-    	pthread_mutex_unlock(&interface_mutex);
+
         return sess_flag;
     }
     return -1;
@@ -223,33 +221,33 @@ int nussl_get_session_flag(nussl_session *sess, nussl_session_flag flag)
 
 void nussl_set_read_timeout(nussl_session *sess, int timeout)
 {
-    pthread_mutex_lock(&interface_mutex);
+
     UGLY_DEBUG();
     sess->rdtimeout = timeout;
-    pthread_mutex_unlock(&interface_mutex);
+
 }
 
 void nussl_set_connect_timeout(nussl_session *sess, int timeout)
 {
-    pthread_mutex_lock(&interface_mutex);
+
     UGLY_DEBUG();
     sess->cotimeout = timeout;
-    pthread_mutex_unlock(&interface_mutex);
+
 }
 
 const char *nussl_get_error(nussl_session *sess)
 {
     char* ret;
-    pthread_mutex_lock(&interface_mutex);
+
     UGLY_DEBUG();
     ret = nussl_strclean(sess->error);
-    pthread_mutex_unlock(&interface_mutex);
+
     return ret;
 }
 
 void nussl_close_connection(nussl_session *sess)
 {
-    pthread_mutex_lock(&interface_mutex);
+
     UGLY_DEBUG();
     if (sess->connected) {
 	NUSSL_DEBUG(NUSSL_DBG_SOCKET, "Closing connection.\n");
@@ -260,27 +258,27 @@ void nussl_close_connection(nussl_session *sess)
 	NUSSL_DEBUG(NUSSL_DBG_SOCKET, "(Not closing closed connection!).\n");
     }
     sess->connected = 0;
-    pthread_mutex_unlock(&interface_mutex);
+
 }
 
 #if 0
 void nussl_ssl_set_verify(nussl_session *sess, nussl_ssl_verify_fn fn, void *userdata)
 {
-    pthread_mutex_lock(&interface_mutex);
+
     UGLY_DEBUG();
     sess->ssl_verify_fn = fn;
     sess->ssl_verify_ud = userdata;
-    pthread_mutex_unlock(&interface_mutex);
+
 }
 
 void nussl_ssl_provide_clicert(nussl_session *sess,
 			  nussl_ssl_provide_fn fn, void *userdata)
 {
-    pthread_mutex_lock(&interface_mutex);
+
     UGLY_DEBUG();
     sess->ssl_provide_fn = fn;
     sess->ssl_provide_ud = userdata;
-    pthread_mutex_unlock(&interface_mutex);
+
 }
 #endif
 
@@ -288,13 +286,13 @@ int nussl_ssl_trust_cert_file(nussl_session *sess, const char *cert_file)
 {
     int ret;
 
-    pthread_mutex_lock(&interface_mutex);
+
     UGLY_DEBUG();
     nussl_ssl_certificate* ca = nussl_ssl_cert_read(cert_file);
     if(ca == NULL)
     {
     	nussl_set_error(sess, _("Unable to load trust certificate"));
-        pthread_mutex_lock(&interface_mutex);
+
 	return NUSSL_ERROR;
     }
 
@@ -303,7 +301,7 @@ int nussl_ssl_trust_cert_file(nussl_session *sess, const char *cert_file)
     if (ret == NUSSL_OK)
         sess->check_peer_cert = 1;
 
-    pthread_mutex_unlock(&interface_mutex);
+
     return ret;
 }
 
@@ -312,7 +310,7 @@ void nussl_ssl_cert_validity(const nussl_ssl_certificate *cert, char *from, char
     time_t tf, tu;
     char *date;
 
-    pthread_mutex_lock(&interface_mutex);
+
     UGLY_DEBUG();
     nussl_ssl_cert_validity_time(cert, &tf, &tu);
 
@@ -337,7 +335,7 @@ void nussl_ssl_cert_validity(const nussl_ssl_certificate *cert, char *from, char
             nussl_strnzcpy(until, _("[invalid date]"), NUSSL_SSL_VDATELEN);
         }
     }
-    pthread_mutex_unlock(&interface_mutex);
+
 }
 
 void nussl__ssl_set_verify_err(nussl_session *sess, int failures)
@@ -480,13 +478,13 @@ void nussl_unhook_destroy_session(nussl_session *sess,
 int nussl_write(nussl_session *session, char *buffer, size_t count)
 {
 	int ret;
-	pthread_mutex_lock(&interface_mutex);
+
 	UGLY_DEBUG();
 	ret = nussl_sock_fullwrite(session->socket, buffer, count);
 	if (ret < 0)
 		nussl_set_error(session, nussl_sock_error(session->socket));
 
-	pthread_mutex_unlock(&interface_mutex);
+
 	return ret;
 }
 
@@ -494,12 +492,12 @@ int nussl_write(nussl_session *session, char *buffer, size_t count)
 ssize_t nussl_read(nussl_session *session, char *buffer, size_t count)
 {
 	int ret;
-	pthread_mutex_lock(&interface_mutex);
+
 	ret = nussl_sock_read(session->socket, buffer, count);
 	if (ret < 0)
 		nussl_set_error(session, nussl_sock_error(session->socket));
 
-	pthread_mutex_unlock(&interface_mutex);
+
 	return ret;
 }
 
@@ -508,26 +506,26 @@ int nussl_ssl_set_keypair(nussl_session *session, const char* cert_file, const c
 	nussl_ssl_client_cert* cert;
 	int ret;
 
-	pthread_mutex_lock(&interface_mutex);
+
 	UGLY_DEBUG();
 
 	if (check_key_perms(key_file)!= NUSSL_OK)
 	{
 		nussl_set_error(session, _("Permissions on private key %s are not restrictive enough, it should be readable only by its owner."), key_file);
-		pthread_mutex_unlock(&interface_mutex);
+
 		return NUSSL_ERROR;
 	}
 
-	cert = nussl_ssl_import_keypair(session, cert_file, key_file);
+	cert = nussl_ssl_import_keypair(cert_file, key_file);
 	if (cert == NULL)
 	{
 		nussl_set_error(session, _("Unable to load private key or certificate file"));
-		pthread_mutex_unlock(&interface_mutex);
+
 		return NUSSL_ERROR;
 	}
 
 	ret = nussl_ssl_set_clicert(session, cert);
-	pthread_mutex_unlock(&interface_mutex);
+
 	return ret;
 }
 
@@ -535,13 +533,13 @@ int nussl_ssl_set_pkcs12_keypair(nussl_session *session, const char* pkcs12_file
 {
 	int ret = NUSSL_OK;
 
-	pthread_mutex_lock(&interface_mutex);
+
 	UGLY_DEBUG();
 
 	if (check_key_perms(pkcs12_file)!= NUSSL_OK)
 	{
 		nussl_set_error(session, _("Permissions of key %s are too open."), pkcs12_file);
-		pthread_mutex_unlock(&interface_mutex);
+
 		return NUSSL_ERROR;
 	}
 
@@ -550,7 +548,7 @@ int nussl_ssl_set_pkcs12_keypair(nussl_session *session, const char* pkcs12_file
 	if (cert == NULL)
 	{
 		nussl_set_error(session, _("Unable to load PKCS12 certificate file"));
-		pthread_mutex_unlock(&interface_mutex);
+
 		return NUSSL_ERROR;
 	}
 
@@ -561,14 +559,14 @@ int nussl_ssl_set_pkcs12_keypair(nussl_session *session, const char* pkcs12_file
 			if (nussl_ssl_clicert_decrypt(cert, password) != 0)
 			{
 				nussl_set_error(session, _("Bad password to decrypt the PKCS key"));
-				pthread_mutex_unlock(&interface_mutex);
+
 				return NUSSL_ERROR;
 			}
 		}
 		else
 		{
 			nussl_set_error(session, _("PKCS12 file is encrypted, please supply a password"));
-			pthread_mutex_unlock(&interface_mutex);
+
 			return NUSSL_ERROR;
 		}
 	}
@@ -580,7 +578,7 @@ int nussl_ssl_set_pkcs12_keypair(nussl_session *session, const char* pkcs12_file
 
 	ret = nussl_ssl_set_clicert(session, cert);
 
-	pthread_mutex_unlock(&interface_mutex);
+
 	return ret;
 }
 
@@ -601,8 +599,8 @@ int nussl_session_getpeer(nussl_session *sess, struct sockaddr *addr, socklen_t 
 int nussl_init()
 {
 	int ret;
-	pthread_mutex_lock(&interface_mutex);
+
 	ret = nussl_sock_init();
-	pthread_mutex_unlock(&interface_mutex);
+
 	return ret;
 }

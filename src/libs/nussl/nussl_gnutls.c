@@ -1061,8 +1061,7 @@ int nussl_ssl_cert_cmp(const nussl_ssl_certificate *c1, const nussl_ssl_certific
     return strcmp(digest1, digest2);
 }
 
-nussl_ssl_client_cert* nussl_ssl_import_keypair(nussl_session* sess,
-                           const char *cert_file, const char *key_file)
+nussl_ssl_client_cert* nussl_ssl_import_keypair(const char *cert_file, const char *key_file)
 {
 	nussl_ssl_client_cert* keypair = NULL;
 	gnutls_datum cert_raw;

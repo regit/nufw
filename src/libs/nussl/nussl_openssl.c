@@ -556,10 +556,10 @@ int nussl_ssl_set_clicert(nussl_session *sess, const nussl_ssl_client_cert *cc)
 		return NUSSL_ERROR;
 
 	ret = SSL_CTX_use_PrivateKey(sess->ssl_context->ctx, cc->pkey);
-    
+
 	if (ret != 1)
 		return NUSSL_ERROR;
-    
+
 	ret = SSL_CTX_use_certificate(sess->ssl_context->ctx->ctx, cc->cert.subject);
 	return (ret == 1) ? NUSSL_OK : NUSSL_ERROR;
 }
@@ -609,7 +609,7 @@ int nussl__negotiate_ssl(nussl_session *sess)
     	nussl_set_error(sess, _("SSL server did not present certificate"));
     	return NUSSL_ERROR;
         }
-    
+
         if (sess->server_cert) {
             int diff = X509_cmp(sk_X509_value(chain, 0), sess->server_cert->subject);
             if (freechain) sk_X509_free(chain); /* no longer need the chain */
@@ -624,9 +624,9 @@ int nussl__negotiate_ssl(nussl_session *sess)
         } else {
     	/* new connection: create the chain. */
             nussl_ssl_certificate *cert = make_chain(chain);
-    
+
             if (freechain) sk_X509_free(chain); /* no longer need the chain */
-    
+
             if (check_certificate(sess, ssl, cert)) {
                 NUSSL_DEBUG(NUSSL_DBG_SSL, "SSL certificate checks failed: %s\n",
            		     sess->error);
@@ -867,8 +867,7 @@ int nussl_ssl_cert_cmp(const nussl_ssl_certificate *c1, const nussl_ssl_certific
     return X509_cmp(c1->subject, c2->subject);
 }
 
-nussl_ssl_client_cert* nussl_ssl_import_keypair(nussl_session* sess,
-                           const char *cert_file, const char *key_file)
+nussl_ssl_client_cert* nussl_ssl_import_keypair(const char *cert_file, const char *key_file)
 {
 	FILE *fp;
 	nussl_ssl_client_cert* keypair = NULL;

@@ -63,7 +63,7 @@ struct hook {
 
 struct nussl_session_server_s {
     nussl_socket *socket;
-    int check_peer_cert;
+    nussl_ssl_context *ssl_context;
 };
 
 /* Session support. */
