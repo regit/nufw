@@ -53,16 +53,6 @@ nussl_session* nussl_session_server_new_client(nussl_session_server *srv_sess, i
 	return client_sess;
 }
 
-int nussl_session_server_set_clicert(nussl_session_server *srv_sess, const nussl_ssl_client_cert *cc)
-{
-
-    srv_sess->mycert = dup_client_cert(cc);
-    if (!srv_sess->mycert)
-    	return NUSSL_ERROR;
-
-    return nussl_ssl_context_keypair_from_data(srv_sess->ssl_context, srv_sess->mycert);
-}
-
 int nussl_session_server_set_keypair(nussl_session *srv_sess, const char* cert_file, const char* key_file)
 {
 	nussl_ssl_client_cert* cert;
