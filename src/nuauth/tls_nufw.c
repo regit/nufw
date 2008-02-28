@@ -427,25 +427,6 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 		return 0;
 	}
 
-#define READ_CONF(KEY) \
-	get_confvar_value(nuauth_tls_vars, nb_params, KEY)
-
-	nuauth_tls_key = (char *) READ_CONF("nuauth_tls_key");
-	nuauth_tls_cert = (char *) READ_CONF("nuauth_tls_cert");
-	nuauth_tls_cacert = (char *) READ_CONF("nuauth_tls_cacert");
-	nuauth_tls_crl = (char *) READ_CONF("nuauth_tls_crl");
-	nuauth_tls_key_passwd =
-	    (char *) READ_CONF("nuauth_tls_key_passwd");
-	int_requestcert =
-	    *(int *) READ_CONF("nuauth_tls_request_cert");
-#if 0
-	nuauth_tls.crl_refresh =
-	    *(int *) READ_CONF("nuauth_tls_crl_refresh");
-#endif
-	int_authcert = *(int *) READ_CONF("nuauth_tls_auth_by_cert");
-#undef READ_CONF
-
-
 	context->sck_inet = nuauth_bind(&errmsg, context->addr, context->port, "nufw");
 	if (context->sck_inet < 0) {
 		log_message(FATAL, DEBUG_AREA_GW | DEBUG_AREA_MAIN,
@@ -497,17 +478,43 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 	FD_ZERO(&context->tls_rx_set);
 	FD_SET(context->sck_inet, &context->tls_rx_set);
 
+#define READ_CONF(KEY) \
+	get_confvar_value(nuauth_tls_vars, nb_params, KEY)
+	nuauth_tls_key = (char *) READ_CONF("nuauth_tls_key");
+	nuauth_tls_cert = (char *) READ_CONF("nuauth_tls_cert");
+	nuauth_tls_cacert = (char *) READ_CONF("nuauth_tls_cacert");
+	nuauth_tls_crl = (char *) READ_CONF("nuauth_tls_crl");
+	nuauth_tls_key_passwd =
+	    (char *) READ_CONF("nuauth_tls_key_passwd");
+	int_requestcert =
+	    *(int *) READ_CONF("nuauth_tls_request_cert");
+#if 0
+	nuauth_tls.crl_refresh =
+	    *(int *) READ_CONF("nuauth_tls_crl_refresh");
+#endif
+	int_authcert = *(int *) READ_CONF("nuauth_tls_auth_by_cert");
+#undef READ_CONF
+
+	g_free(nuauth_tls_cacert);
+	g_free(nuauth_tls_crl);
+	g_free(nuauth_tls_key_passwd);
+
 	context->server = nussl_session_server_create_with_fd(context->sck_inet, int_requestcert);
 	if ( ! context->server ) {
 		g_error("Cannot create session from fd!");
 		return 0;
 	}
+
 	ret = nussl_session_server_set_keypair(context->server, nuauth_tls_cert, nuauth_tls_key);
 	if ( ret != NUSSL_OK ) {
 		g_error("[%s:%d]:error on nussl_session_server_set_keypair", __FUNCTION__, __LINE__);
+		g_free(nuauth_tls_key);
+		g_free(nuauth_tls_cert);
 		return 0;
 	}
 
+	g_free(nuauth_tls_key);
+	g_free(nuauth_tls_cert);
 	return 1;
 }
 
