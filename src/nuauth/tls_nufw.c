@@ -212,6 +212,7 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 	}
 
 	conn_fd = nussl_session_get_fd(nu_session->nufw_client);
+#if 0
 	if (conn_fd >= nuauth_tls_max_servers) {
 		log_message(WARNING, DEBUG_AREA_GW,
 			"too much servers (%d configured)",
@@ -219,6 +220,7 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 		close(conn_fd);
 		continue;
 	}
+#endif
 
 	nu_session->tls_lock = g_mutex_new();
 	add_nufw_server(conn_fd, nu_session);
