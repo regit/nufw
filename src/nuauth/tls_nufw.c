@@ -236,7 +236,7 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 	/* We have to wait the first packet */
 	nu_session->proto_version = PROTO_UNKNOWN;
 
-	nu_session->nufw_client = nussl_session_server_new_client(context->server, 0);
+	nu_session->nufw_client = nussl_session_server_new_client(context->server);
 	if ( ! nu_session->nufw_client ) {
 		g_free(nu_session);
 		return 1;
@@ -497,7 +497,7 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 	FD_ZERO(&context->tls_rx_set);
 	FD_SET(context->sck_inet, &context->tls_rx_set);
 
-	context->server = nussl_session_server_create_with_fd(context->sck_inet);
+	context->server = nussl_session_server_create_with_fd(context->sck_inet, int_requestcert);
 	if ( ! context->server ) {
 		g_error("Cannot create session from fd!");
 		return 0;

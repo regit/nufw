@@ -5,7 +5,7 @@
 #include "nussl_socket.h"
 #include "nussl_utils.h"
 
-nussl_session_server *nussl_session_server_create_with_fd(int server_fd)
+nussl_session_server *nussl_session_server_create_with_fd(int server_fd, int verify)
 {
 	nussl_session_server *srv_sess;
 	srv_sess = malloc(sizeof(*srv_sess));
@@ -16,6 +16,8 @@ nussl_session_server *nussl_session_server_create_with_fd(int server_fd)
 
 	srv_sess->socket = nussl_sock_create_with_fd(server_fd);
 	srv_sess->ssl_context = nussl_ssl_context_create(0);
+	srv_sess->ssl_context->verify = verify;
+
 
 	return srv_sess;
 }
@@ -33,7 +35,7 @@ void nussl_session_server_close_connection(nussl_session_server *srv_sess)
 }
 
 /* Verify: one of NUSSL_CERT_IGNORE, NUSSL_CERT_REQUEST or NUSSL_CERT_REQUIRE */
-nussl_session* nussl_session_server_new_client(nussl_session_server *srv_sess, int verify)
+nussl_session* nussl_session_server_new_client(nussl_session_server *srv_sess)
 {
 	nussl_session* client_sess = nussl_session_create();
 
@@ -48,8 +50,6 @@ nussl_session* nussl_session_server_new_client(nussl_session_server *srv_sess, i
 		nussl_session_destroy(client_sess);
 		return NULL;
 	}
-
-	client_sess->ssl_context->verify = verify;
 
 	nussl_sock_accept_ssl(client_sess->socket, srv_sess->ssl_context);
 
