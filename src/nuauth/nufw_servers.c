@@ -223,6 +223,7 @@ nu_error_t nufw_session_send(nufw_session_t * session, char * buffer, int length
 
 	g_mutex_lock(session->tls_lock);
 
+	// XXX: make me non-blockant
 	ret = nussl_write(session->nufw_client, buffer, length);
 
 #if 0
