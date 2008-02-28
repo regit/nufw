@@ -48,12 +48,13 @@
  */
 
 
+#if 0
 /* These are global */
 struct nuauth_tls_t nuauth_tls;
 
 /* XXX: *nuauth_ssl replaces nuauth_tls*/
 struct nuauth_ssl_t nuauth_ssl;
-
+#endif
 #if 0
 extern int ssl_connect(const char *hostname, const char *service)
 {
@@ -134,6 +135,7 @@ gint check_certs_for_tls_session(gnutls_session session)
 	return SASL_OK;
 }
 
+#if 0
 /**
  * Create the TLS server using the credentials ::x509_cred.
  *
@@ -179,6 +181,7 @@ gnutls_session *initialize_tls_session()
 
 	return session;
 }
+#endif
 
 /**
  * Refresh crl file
@@ -216,6 +219,7 @@ XXX: crl not managed yet, nuauth_tls.crl_file_mtime used uninitialized
 #endif
 }
 
+#if 0
 /**
  * TLS push function: send data to the socket in non-blocking mode.
  */
@@ -225,6 +229,7 @@ static ssize_t tls_push_func(gnutls_transport_ptr ptr, const void *buf,
 	int fd = GPOINTER_TO_INT(ptr);
 	return send(fd, buf, count, MSG_DONTWAIT);
 }
+#endif
 
 #if 0
 nussl_session *ssl_connect(int socket_fd)
@@ -288,6 +293,7 @@ nussl_session *ssl_connect(int socket_fd)
 }
 #endif
 
+#if 0
 /**
  * Realize a tls connection: call initialize_tls_session(), set tranport
  * pointer to the socket file descriptor (socket_fd), set push function to
@@ -390,7 +396,9 @@ int tls_connect(int socket_fd, gnutls_session ** session_ptr)
 
 	return SASL_OK;
 }
+#endif
 
+#if 0
 /**
  * Read conf file and allocate x509 credentials. This function should only be
  * called once because it uses the static variable ::dh_params
@@ -578,7 +586,9 @@ int create_x509_credentials()
 
 	return 1;
 }
+#endif
 
+#if 0
 /**
  * Free memory (of ::x509_cred) and call gnutls_global_deinit().
  */
@@ -589,5 +599,6 @@ void end_tls()
 	gnutls_dh_params_deinit(nuauth_tls.dh_params);
 	gnutls_global_deinit();
 }
+#endif
 
 /**@}*/

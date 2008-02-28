@@ -21,6 +21,7 @@
  */
 
 #include "auth_srv.h"
+#include "tls.h"
 
 #include <nubase.h>
 #include <nussl.h>
@@ -37,10 +38,7 @@
  * It also handle preclient list to be able to disconnect user if authentication take too long.
  */
 
-extern struct nuauth_tls_t nuauth_tls;
-
-/* nuauth_ssl replaces nuauth_tls */
-extern struct nuauth_ssl_t nuauth_ssl;
+struct nuauth_tls_t nuauth_tls;
 
 /**
  * get username from a tls session
@@ -76,9 +74,11 @@ static void policy_refuse_user(user_session_t * c_session, int c,
 			    c_session->user_name);
 	}
 	/* get rid of client */
+#ifdef XXX /* factorize and destruct this cleanly */
 	close_tls_session(c, c_session->tls);
-	c_session->tls = NULL;
+	c_session->nussl = NULL;
 	clean_session(c_session);
+#endif
 }
 
 
@@ -110,14 +110,20 @@ static void tls_sasl_connect_ok(user_session_t * c_session, int c)
 	}
 	msg.length = 0;
 	/* send mode to client */
+#if 0
 	if (gnutls_record_send(*(c_session->tls), &msg, sizeof(msg)) < 0) {
+#else
+	if (nussl_write(c_session->nussl, &msg, sizeof(msg)) < 0) {
+#endif
 		log_message(WARNING, DEBUG_AREA_USER,
 			    "gnutls_record_send() failure at %s:%d",
 			    __FILE__, __LINE__);
 		if (nuauthconf->push) {
+#ifdef XXX /* factorize and destruct this cleanly */
 			close_tls_session(c, c_session->tls);
 			c_session->tls = NULL;
 			clean_session(c_session);
+#endif
 			return;
 		} else {
 			return;
@@ -130,9 +136,11 @@ static void tls_sasl_connect_ok(user_session_t * c_session, int c)
 		struct tls_insert_data *datas =
 		    g_new0(struct tls_insert_data, 1);
 		if ((message == NULL) || (datas == NULL)) {
+#ifdef XXX /* factorize and destruct this cleanly */
 			close_tls_session(c, c_session->tls);
 			c_session->tls = NULL;
 			clean_session(c_session);
+#endif
 			return;
 		}
 		datas->socket = c;
@@ -162,13 +170,14 @@ static void tls_sasl_connect_ok(user_session_t * c_session, int c)
 void tls_sasl_connect(gpointer userdata, gpointer data)
 {
 	/* session will be removed by nussl */
+#if 0
 	gnutls_session *session;
-	nussl_session *nussl;
+#endif
 	user_session_t *c_session;
 	int ret;
 	unsigned int size = 1;
-	int socket_fd = ((struct client_connection *) userdata)->socket;
 	struct client_connection *client = (struct client_connection *)userdata;
+	int socket_fd = client->socket;
 
 #if 0
 	if (tls_connect(c, &session) == SASL_BADPARAM) {
@@ -177,25 +186,16 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 		return;
 	}
 #endif
-
-#if 0
-	nussl = ssl_connect(socket_fd);
-	if ( ! nussl ) {
-		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
-				"Unable to connect to a SSL session");
-		g_free(userdata);
-		remove_socket_from_pre_client_list(socket_fd);
-		return;
-	}
-
 	if (nuauthconf->single_ip_client_limit > 0) {
 		if (g_slist_length(get_client_sockets_by_ip(&client->addr)) >=
 				nuauthconf->single_ip_client_limit) {
 			char address[INET6_ADDRSTRLEN];
 			FORMAT_IPV6(&client->addr, address);
 			g_free(userdata);
+#ifdef XXX /* factorize and destruct this cleanly */
 			gnutls_bye(*(session), GNUTLS_SHUT_RDWR);
 			close_tls_session(socket_fd, session);
+#endif
 			remove_socket_from_pre_client_list(socket_fd);
 		        log_message(INFO, DEBUG_AREA_USER,
 				    "Policy: too many connection attempts from already overused IP %s, closing socket",
@@ -205,7 +205,7 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 	}
 
 	c_session = g_new0(user_session_t, 1);
-	c_session->ssl = nussl;
+	c_session->nussl = client->nussl;
 	c_session->socket = socket_fd;
 	c_session->tls_lock = g_mutex_new();
 	c_session->addr = client->addr;
@@ -215,6 +215,7 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 	c_session->user_name = NULL;
 	c_session->user_id = 0;
 	g_free(userdata);
+#ifdef XXX /* Port-me */
 	if ((nuauth_tls.auth_by_cert > NO_AUTH_BY_CERT)
 	    && gnutls_certificate_get_peers(*session, &size)) {
 		ret = check_certs_for_tls_session(*session);
@@ -255,11 +256,16 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 
 		log_message(INFO, DEBUG_AREA_AUTH | DEBUG_AREA_USER,
 			    "Certificate authentication failed, closing session");
+#ifdef XXX
 		gnutls_bye(*(c_session->tls), GNUTLS_SHUT_RDWR);
+#endif
 		ret = SASL_BADAUTH;
 	} else {
+#endif
 		ret = sasl_user_check(c_session);
+#ifdef XXX
 	}
+#endif
 
 	remove_socket_from_pre_client_list(socket_fd);
 	switch (ret) {
@@ -277,12 +283,13 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 					  "Problem with user, closing socket");
 		}
+#ifdef XXX /* factorize and destruct this cleanly */
 		close_tls_session(socket_fd, c_session->tls);
 		c_session->tls = NULL;
 		clean_session(c_session);
+#endif
 	}
 
-#endif
 
 }
 

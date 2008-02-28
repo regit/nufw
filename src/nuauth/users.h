@@ -22,6 +22,7 @@
 #ifndef USERS_H
 #define USERS_H
 
+#include <nussl.h>
 #include "cache.h"
 
 int init_user_cache();
@@ -57,8 +58,10 @@ typedef struct {
 	*/
 	int socket;
 	/* tls should be removed by ssl */
+#if 0
 	gnutls_session *tls;	/*!< \brief TLS session opened with tls_connect() */
-	nussl_session *ssl;	/*!< \brief SSL session opened with tls_connect() */
+#endif
+	nussl_session *nussl;	/*!< \brief SSL session opened with tls_connect() */
 	GMutex *tls_lock;	/*!< \brief Mutex to lock use of TLS */
 	char *user_name;	/*!< \brief User name */
 	uint32_t user_id;	/*!< \brief User identifier */

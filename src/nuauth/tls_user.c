@@ -155,7 +155,9 @@ static nu_error_t treat_user_request(user_session_t * c_session)
 	if (datas == NULL)
 		return NU_EXIT_ERROR;
 	datas->socket = 0;
+#if 0
 	datas->tls = c_session->tls;
+#endif
 	datas->ip_addr = c_session->addr;
 	datas->client_version = c_session->client_version;
 
@@ -166,9 +168,14 @@ static nu_error_t treat_user_request(user_session_t * c_session)
 		return NU_EXIT_ERROR;
 	}
 	g_mutex_lock(c_session->tls_lock);
-	datas->buffer_len =
-	    gnutls_record_recv(*(c_session->tls), datas->buffer,
+#if 0
+	datas->buffer_len = gnutls_record_recv(*(c_session->tls), datas->buffer,
 			       CLASSIC_NUFW_PACKET_SIZE);
+#else
+	datas->buffer_len = nussl_read(c_session->nussl, datas->buffer,
+			       CLASSIC_NUFW_PACKET_SIZE);
+#endif
+	
 	g_mutex_unlock(c_session->tls_lock);
 	if (datas->buffer_len < (int) sizeof(struct nu_header)) {
 #ifdef DEBUG_ENABLE
@@ -180,6 +187,7 @@ static nu_error_t treat_user_request(user_session_t * c_session)
 		free_buffer_read(datas);
 		return NU_EXIT_OK;
 	}
+	
 
 	/* get header to check if we need to get more datas */
 	header = (struct nu_header *) datas->buffer;
@@ -207,11 +215,19 @@ static nu_error_t treat_user_request(user_session_t * c_session)
 		header = (struct nu_header *) datas->buffer;
 
 		g_mutex_lock(c_session->tls_lock);
+#if 0
 		tmp_len =
 		    gnutls_record_recv(*(c_session->tls),
 				       datas->buffer +
 				       CLASSIC_NUFW_PACKET_SIZE,
 				       header_length - datas->buffer_len);
+#else
+		tmp_len = nussl_read(c_session->nussl, 
+				       datas->buffer +
+				       CLASSIC_NUFW_PACKET_SIZE,
+				       header_length - datas->buffer_len);
+#endif
+
 		g_mutex_unlock(c_session->tls_lock);
 		if (tmp_len < 0) {
 			free_buffer_read(datas);
@@ -291,13 +307,27 @@ int tls_user_accept(struct tls_user_context_t *context)
 	gint option_value;
 	unsigned short sport;
 
+#if 0
 	/* Wait for a connect */
 	socket = accept(context->sck_inet,
 			(struct sockaddr *) &sockaddr, &len_inet);
 	if (socket == -1) {
 		log_message(WARNING, DEBUG_AREA_USER, "accept");
 	}
+#endif
+	current_client_conn = g_new0(struct client_connection, 1);
 
+	current_client_conn->nussl = nussl_session_server_new_client(context->nussl);
+	if ( ! current_client_conn->nussl ) {
+		g_free(current_client_conn);
+		return 1;
+	}
+
+	nussl_session_getpeer(current_client_conn->nussl, (struct sockaddr *) &sockaddr, &len_inet);
+
+	socket = nussl_session_get_fd(current_client_conn->nussl);
+
+	
 	/* if system is in reload: drop new client */
 	if (nuauthdatas->need_reload) {
 		shutdown(socket, SHUT_RDWR);
@@ -315,7 +345,8 @@ int tls_user_accept(struct tls_user_context_t *context)
 	}
 
 	/* Extract client address (convert it to IPv6 if it's IPv4) */
-	if (sockaddr.ss_family == AF_INET) {
+	/* if (sockaddr.ss_family == AF_INET) { -> same as tls_nufw.c */
+	if (sockaddr6->sin6_family == AF_INET) {
 		ipv4_to_ipv6(sockaddr4->sin_addr, &addr);
 		sport = ntohs(sockaddr4->sin_port);
 	} else {
@@ -323,7 +354,6 @@ int tls_user_accept(struct tls_user_context_t *context)
 		sport = ntohs(sockaddr6->sin6_port);
 	}
 
-	current_client_conn = g_new0(struct client_connection, 1);
 	current_client_conn->socket = socket;
 	current_client_conn->addr = addr;
 	current_client_conn->sport = sport;
@@ -574,14 +604,40 @@ void tls_user_servers_init()
  */
 int tls_user_init(struct tls_user_context_t *context)
 {
+	char *errmsg;
+	int result;
+
+/* config init */
+	char *nuauth_tls_key = NULL;
+	char *nuauth_tls_cert = NULL;
+	char *nuauth_tls_cacert = NULL;
+	char *nuauth_tls_key_passwd = NULL;
+	char *nuauth_tls_crl = NULL;
+	char *configfile = DEFAULT_CONF_FILE;
+	int ret;
+	/* TODO: read values specific to user connections */
 	confparams_t nuauth_tls_vars[] = {
 		{"nuauth_tls_max_clients", G_TOKEN_INT,
 		 NUAUTH_TLS_MAX_CLIENTS, NULL},
 		{"nuauth_auth_nego_timeout", G_TOKEN_INT,
-		 AUTH_NEGO_TIMEOUT, NULL}
+		 AUTH_NEGO_TIMEOUT, NULL},
+		{"nuauth_tls_key", G_TOKEN_STRING, 0,
+		 g_strdup(NUAUTH_KEYFILE)},
+		{"nuauth_tls_cert", G_TOKEN_STRING, 0,
+		 g_strdup(NUAUTH_CERTFILE)},
+		{"nuauth_tls_cacert", G_TOKEN_STRING, 0,
+		 g_strdup(NUAUTH_CACERTFILE)},
+		{"nuauth_tls_crl", G_TOKEN_STRING, 0, NULL},
+		{"nuauth_tls_crl_refresh", G_TOKEN_INT,
+		 DEFAULT_REFRESH_CRL_INTERVAL, NULL},
+		{"nuauth_tls_key_passwd", G_TOKEN_STRING, 0, NULL},
+		{"nuauth_tls_request_cert", G_TOKEN_INT, FALSE, NULL},
+		{"nuauth_tls_auth_by_cert", G_TOKEN_INT, FALSE, NULL}
 	};
-	char *errmsg;
-	int result;
+	const unsigned int nb_params =
+	    sizeof(nuauth_tls_vars) / sizeof(confparams_t);
+	int int_authcert;
+	int int_requestcert;
 
 	context->sck_inet = nuauth_bind(&errmsg, context->addr, context->port, "user");
 	if (context->sck_inet < 0) {
@@ -603,19 +659,6 @@ int tls_user_init(struct tls_user_context_t *context)
 	}
 
 
-#define READ_CONF(KEY) \
-	get_confvar_value(nuauth_tls_vars, sizeof(nuauth_tls_vars)/sizeof(confparams_t), KEY)
-
-	context->nuauth_tls_max_clients =
-	    *(unsigned int *) READ_CONF("nuauth_tls_max_clients");
-	context->nuauth_auth_nego_timeout =
-	    *(int *) READ_CONF("nuauth_auth_nego_timeout");
-#undef READ_CONF
-
-	/* free config struct */
-	free_confparams(nuauth_tls_vars,
-			sizeof(nuauth_tls_vars) / sizeof(confparams_t));
-
 	context->cmd_queue = g_async_queue_new();
 
 	/* listen */
@@ -630,6 +673,48 @@ int tls_user_init(struct tls_user_context_t *context)
 	FD_SET(context->sck_inet, &context->tls_rx_set);
 	context->mx = context->sck_inet + 1;
 	mx_queue = g_async_queue_new();
+
+	/* Init ssl session */
+#define READ_CONF(KEY) \
+	get_confvar_value(nuauth_tls_vars, sizeof(nuauth_tls_vars)/sizeof(confparams_t), KEY)
+
+	context->nuauth_tls_max_clients =
+	    *(unsigned int *) READ_CONF("nuauth_tls_max_clients");
+	context->nuauth_auth_nego_timeout =
+	    *(int *) READ_CONF("nuauth_auth_nego_timeout");
+	/* ssl related conf */
+	nuauth_tls_key = (char *) READ_CONF("nuauth_tls_key");
+	nuauth_tls_cert = (char *) READ_CONF("nuauth_tls_cert");
+	nuauth_tls_cacert = (char *) READ_CONF("nuauth_tls_cacert");
+	nuauth_tls_crl = (char *) READ_CONF("nuauth_tls_crl");
+	nuauth_tls_key_passwd = (char *) READ_CONF("nuauth_tls_key_passwd");
+	int_requestcert = *(int *) READ_CONF("nuauth_tls_request_cert");
+#undef READ_CONF
+
+	/* free config struct */
+	free_confparams(nuauth_tls_vars,
+			sizeof(nuauth_tls_vars) / sizeof(confparams_t));
+
+	g_free(nuauth_tls_cacert);
+	g_free(nuauth_tls_crl);
+	g_free(nuauth_tls_key_passwd);
+
+	context->nussl = nussl_session_server_create_with_fd(context->sck_inet, int_requestcert);
+	if ( ! context->nussl ) {
+		g_error("Cannot create session from fd!");
+		return 0;
+	}
+
+	ret = nussl_session_server_set_keypair(context->nussl, nuauth_tls_cert, nuauth_tls_key);
+	if ( ret != NUSSL_OK ) {
+		g_error("[%s:%d]:error on nussl_session_server_set_keypair", __FUNCTION__, __LINE__);
+		g_free(nuauth_tls_key);
+		g_free(nuauth_tls_cert);
+		return 0;
+	}
+
+	g_free(nuauth_tls_key);
+	g_free(nuauth_tls_cert);
 	return 1;
 }
 

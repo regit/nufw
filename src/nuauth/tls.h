@@ -70,6 +70,9 @@ struct client_connection {
 
 	/** Source port */
 	int sport;
+
+	/** Nussl server structure */
+	nussl_session* nussl;
 };
 
 /**
@@ -131,6 +134,7 @@ struct tls_insert_data {
 	gpointer data;
 };
 
+#if 0
 struct nuauth_ssl_t {
 	nussl_session *session;
 
@@ -140,17 +144,21 @@ struct nuauth_ssl_t {
 	int crl_refresh;
 	int crl_refresh_counter;
 };
+#endif
 
+/* TODO: move-me into tls_user.h */
 struct nuauth_tls_t {
-	nussl_session_server *server_session;
-	gnutls_certificate_credentials x509_cred;
+	nussl_session_server *nussl_server;
 	int request_cert;
 	auth_cert_type_t auth_by_cert;
+#ifdef XXX /* Move this into nussl */
+	gnutls_certificate_credentials x509_cred;
 	int crl_refresh;
 	int crl_refresh_counter;
 	gchar *crl_file;
 	time_t crl_file_mtime;
 	gnutls_dh_params dh_params;
+#endif
 };
 
 void clean_nufw_session(nufw_session_t * c_session);
@@ -192,6 +200,7 @@ struct tls_user_context_t {
 	char *addr;
 	char *port;
 	GAsyncQueue* cmd_queue;
+	nussl_session_server* nussl;
 };
 
 typedef struct {

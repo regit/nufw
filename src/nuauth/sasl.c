@@ -188,7 +188,7 @@ void my_sasl_init()
 
 }
 
-static int samp_send(gnutls_session session, const char *buffer,
+static int samp_send(nussl_session* nussl, const char *buffer,
 		     unsigned length)
 {
 	char *buf;
@@ -206,17 +206,17 @@ static int samp_send(gnutls_session session, const char *buffer,
 	}
 	memcpy(buf, "S: ", 3);
 
-	result = gnutls_record_send(session, buf, len + 3);
+	result = nussl_write(nussl, buf, len + 3);
 	g_free(buf);
 	return result;
 }
 
-static unsigned samp_recv(gnutls_session session, char *buf, int bufsize)
+static unsigned samp_recv(nussl_session* nussl, char *buf, int bufsize)
 {
 	unsigned len;
 	int result;
 
-	len = gnutls_record_recv(session, buf, bufsize);
+	len = nussl_read(nussl, buf, bufsize);
 	if (len <= 0) {
 		return 0;
 	}
@@ -279,10 +279,18 @@ nu_error_t get_proto_info(user_session_t * c_session)
 				char buffer[20];
 				debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
 						  "Getting protocol information");
+#if 0
 				ret =
 				    gnutls_record_recv(*(c_session->tls),
 						       buffer,
 						       sizeof(buffer) - 1);
+#else
+				ret =
+				    nussl_read(c_session->nussl,
+						       buffer,
+						       sizeof(buffer) - 1);
+#endif
+
 				if (ret < 0) {
 					return NU_EXIT_ERROR;
 				}
@@ -342,7 +350,9 @@ static int mysasl_negotiate(user_session_t * c_session, sasl_conn_t * conn)
 	int tls_len = 0;
 	unsigned sasl_len = 0;
 	int count;
+#if 0
 	gnutls_session session = *(c_session->tls);
+#endif
 	gboolean external_auth = FALSE;
 	ssize_t record_send;
 	unsigned len = tls_len;
@@ -359,13 +369,13 @@ static int mysasl_negotiate(user_session_t * c_session, sasl_conn_t * conn)
 			  "%d mechanisms : %s (length: %d)", count, data,
 			  sasl_len);
 	/* send capability list to client */
-	record_send = samp_send(session, data, sasl_len);
+	record_send = samp_send(c_session->nussl, data, sasl_len);
 	tls_len = sasl_len;
 	if ((record_send == GNUTLS_E_INTERRUPTED)
 	    || (record_send == GNUTLS_E_AGAIN)) {
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
 				  "sasl nego: need to resend packet");
-		record_send = samp_send(session, data, tls_len);
+		record_send = samp_send(c_session->nussl, data, tls_len);
 	}
 	if (record_send < 0) {
 		return SASL_FAIL;
@@ -374,12 +384,12 @@ static int mysasl_negotiate(user_session_t * c_session, sasl_conn_t * conn)
 			  "Now we know record_send >= 0");
 
 	memset(buf, 0, sizeof(buf));
-	tls_len = samp_recv(session, buf, sizeof(buf));
+	tls_len = samp_recv(c_session->nussl, buf, sizeof(buf));
 	if (tls_len <= 0) {
 		if (tls_len == 0) {
 			log_message(INFO, DEBUG_AREA_AUTH,
 				    "client didn't choose mechanism");
-			if (samp_send(session, "N", 1) <= 0)	/* send NO to client */
+			if (samp_send(c_session->nussl, "N", 1) <= 0)	/* send NO to client */
 				return SASL_FAIL;
 			return SASL_BADPARAM;
 		} else {
@@ -409,7 +419,7 @@ static int mysasl_negotiate(user_session_t * c_session, sasl_conn_t * conn)
 
 	while (auth_result == SASL_CONTINUE) {
 		if (data) {
-			samp_send(session, data, len);
+			samp_send(c_session->nussl, data, len);
 		} else {
 			log_message(WARNING, DEBUG_AREA_AUTH,
 				    "No data to send--something's wrong");
@@ -418,7 +428,7 @@ static int mysasl_negotiate(user_session_t * c_session, sasl_conn_t * conn)
 				  "Waiting for client reply...");
 
 		memset(buf, 0, sizeof(buf));
-		len = samp_recv(session, buf, sizeof(buf));
+		len = samp_recv(c_session->nussl, buf, sizeof(buf));
 		data = NULL;
 		auth_result = sasl_server_step(conn, buf, len, &data, &len);
 	}
@@ -427,13 +437,13 @@ static int mysasl_negotiate(user_session_t * c_session, sasl_conn_t * conn)
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
 				  "incorrect authentication");
 		if (c_session->client_version >= PROTO_VERSION_V22_1) {
-			samp_send(session, "N", 1);
+			samp_send(c_session->nussl, "N", 1);
 		}
 	} else {
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
 				  "correct authentication");
 		if (c_session->client_version >= PROTO_VERSION_V22_1) {
-			samp_send(session, "Y", 1);
+			samp_send(c_session->nussl, "Y", 1);
 		}
 	}
 
@@ -471,7 +481,11 @@ static int mysasl_negotiate(user_session_t * c_session, sasl_conn_t * conn)
 			debug_log_message(DEBUG, DEBUG_AREA_AUTH,
 					  "error when searching user groups for %s",
 					  c_session->user_name);
-			if (gnutls_record_send(session, "N", 1) <= 0)	/* send NO to client */
+#if 0
+			if (nussl_write(c_session->nussl, "N", 1) <= 0)	/* send NO to client */
+#else
+			if (nussl_write(c_session->nussl, "N", 1) <= 0)	/* send NO to client */
+#endif
 				return SASL_FAIL;
 			return SASL_BADAUTH;
 		}
@@ -483,7 +497,7 @@ static int mysasl_negotiate(user_session_t * c_session, sasl_conn_t * conn)
 		}
 	}
 #if 0
-	if (gnutls_record_send(session, "O", 1) <= 0)	/* send YES to client */
+	if (nussl_write(c_session->nussl, "O", 1) <= 0)	/* send YES to client */
 		return SASL_FAIL;
 #endif
 
@@ -643,7 +657,9 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 	int r = SASL_FAIL;
 	int count;
 	int ret = 0;
+#if 0
 	gnutls_session session = *(c_session->tls);
+#endif
 	gboolean external_auth = FALSE;
 	ssize_t record_send;
 
@@ -658,12 +674,12 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 			  count, data);
 	tls_len = sasl_len;
 	/* send capability list to client */
-	record_send = gnutls_record_send(session, data, tls_len);
+	record_send = nussl_write(c_session->nussl, data, tls_len);
 	if ((record_send == GNUTLS_E_INTERRUPTED)
 	    || (record_send == GNUTLS_E_AGAIN)) {
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
 				  "proto v3: sasl nego : need to resend packet");
-		record_send = gnutls_record_send(session, data, tls_len);
+		record_send = nussl_write(c_session->nussl, data, tls_len);
 	}
 	if (record_send < 0) {
 		return SASL_FAIL;
@@ -673,12 +689,12 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 
 	memset(chosenmech, 0, sizeof chosenmech);
 	tls_len =
-	    gnutls_record_recv(session, chosenmech, sizeof chosenmech);
+	    nussl_read(c_session->nussl, chosenmech, sizeof chosenmech);
 	if (tls_len <= 0) {
 		if (tls_len == 0) {
 			log_message(INFO, DEBUG_AREA_AUTH,
 				    "proto v3: client didn't choose mechanism");
-			if (gnutls_record_send(session, "N", 1) <= 0)	/* send NO to client */
+			if (nussl_write(c_session->nussl, "N", 1) <= 0)	/* send NO to client */
 				return SASL_FAIL;
 			return SASL_BADPARAM;
 		} else {
@@ -691,14 +707,14 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 			  "proto v3: client chose mechanism %s", chosenmech);
 
 	memset(buf, 0, sizeof buf);
-	tls_len = gnutls_record_recv(session, buf, sizeof(buf));
+	tls_len = nussl_read(c_session->nussl, buf, sizeof(buf));
 	if (tls_len != 1) {
 		if (tls_len < 0) {
 			return SASL_FAIL;
 		}
 		debug_log_message(DEBUG, DEBUG_AREA_AUTH,
 				  "proto v3: didn't receive first-sent parameter correctly");
-		if (gnutls_record_send(session, "N", 1) <= 0)	/* send NO to client */
+		if (nussl_write(c_session->nussl, "N", 1) <= 0)	/* send NO to client */
 			return SASL_FAIL;
 		return SASL_BADPARAM;
 	}
@@ -708,7 +724,7 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 
 
 		memset(buf, 0, sizeof(buf));
-		tls_len = gnutls_record_recv(session, buf, sizeof(buf));
+		tls_len = nussl_read(c_session->nussl, buf, sizeof(buf));
 		if (tls_len < 0) {
 			return SASL_FAIL;
 		}
@@ -735,7 +751,7 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 			c_session->user_name = NULL;
 		}
 
-		if (gnutls_record_send(session, "N", 1) <= 0)	/* send NO to client */
+		if (nussl_write(c_session->nussl, "N", 1) <= 0)	/* send NO to client */
 			return SASL_FAIL;
 		return SASL_BADPARAM;
 	}
@@ -743,20 +759,20 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 	while (r == SASL_CONTINUE) {
 
 		if (data) {
-			if (gnutls_record_send(session, "C", 1) <= 0)	/* send CONTINUE to client */
+			if (nussl_write(c_session->nussl, "C", 1) <= 0)	/* send CONTINUE to client */
 				return SASL_FAIL;
-			if (gnutls_record_send(session, data, tls_len) < 0)
+			if (nussl_write(c_session->nussl, data, tls_len) < 0)
 				return SASL_FAIL;
 		} else {
-			if (gnutls_record_send(session, "C", 1) <= 0)	/* send CONTINUE to client */
+			if (nussl_write(c_session->nussl, "C", 1) <= 0)	/* send CONTINUE to client */
 				return SASL_FAIL;
-			if (gnutls_record_send(session, "", 0) < 0)
+			if (nussl_write(c_session->nussl, "", 0) < 0)
 				return SASL_FAIL;
 		}
 
 
 		memset(buf, 0, sizeof buf);
-		tls_len = gnutls_record_recv(session, buf, sizeof buf);
+		tls_len = nussl_read(c_session->nussl, buf, sizeof buf);
 		if (tls_len <= 0) {
 #ifdef DEBUG_ENABLE
 			if (!tls_len) {
@@ -777,7 +793,7 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 				    "proto v3: error performing SASL negotiation: %s",
 				    sasl_errdetail(conn));
 #endif
-			if (gnutls_record_send(session, "N", 1) <= 0)	/* send NO to client */
+			if (nussl_write(c_session->nussl, "N", 1) <= 0)	/* send NO to client */
 				return SASL_FAIL;
 			return SASL_BADPARAM;
 		}
@@ -787,7 +803,7 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 	if (r != SASL_OK) {
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
 				  "proto v3: incorrect authentication");
-		if (gnutls_record_send(session, "N", 1) <= 0)	/* send NO to client */
+		if (nussl_write(c_session->nussl, "N", 1) <= 0)	/* send NO to client */
 			return SASL_FAIL;
 		return SASL_BADAUTH;
 	}
@@ -815,7 +831,7 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 		if (c_session->groups == NULL) {
 			debug_log_message(DEBUG, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
 					  "proto v3: Couldn't get user groups");
-			if (gnutls_record_send(session, "N", 1) <= 0)	/* send NO to client */
+			if (nussl_write(c_session->nussl, "N", 1) <= 0)	/* send NO to client */
 				return SASL_FAIL;
 			return SASL_BADAUTH;
 		}
@@ -827,7 +843,7 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 		}
 	}
 
-	if (gnutls_record_send(session, "O", 1) <= 0)	/* send YES to client */
+	if (nussl_write(c_session->nussl, "O", 1) <= 0)	/* send YES to client */
 		return SASL_FAIL;
 
 	/* negotiation complete */
@@ -961,7 +977,7 @@ int sasl_user_check(user_session_t * c_session)
 	sasl_dispose(&conn);
 
 	/* recv OS datas from client */
-	buf_size = gnutls_record_recv(*(c_session->tls), buf, sizeof buf);
+	buf_size = nussl_read(c_session->nussl, buf, sizeof buf);
 	if (buf_size <= 0) {
 		/* allo houston */
 		debug_log_message(DEBUG, DEBUG_AREA_USER,

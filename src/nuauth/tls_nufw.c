@@ -184,8 +184,6 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 
 	nufw_session_t *nu_session;
 
-
-
 #if 0
 	/* Accept the connection */
 	len_inet = sizeof sockaddr;
@@ -402,6 +400,7 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 	char *nuauth_tls_crl = NULL;
 	char *configfile = DEFAULT_CONF_FILE;
 	int ret;
+	/* TODO: read values specifis to nufw connection */
 	confparams_t nuauth_tls_vars[] = {
 		{"nuauth_tls_key", G_TOKEN_STRING, 0,
 		 g_strdup(NUAUTH_KEYFILE)},
@@ -420,12 +419,6 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 	    sizeof(nuauth_tls_vars) / sizeof(confparams_t);
 	int int_authcert;
 	int int_requestcert;
-
-	if(!parse_conffile(configfile, nb_params, nuauth_tls_vars))
-	{
-	        log_message(FATAL, DEBUG_AREA_MAIN, "Failed to load config file %s", configfile);
-		return 0;
-	}
 
 	context->sck_inet = nuauth_bind(&errmsg, context->addr, context->port, "nufw");
 	if (context->sck_inet < 0) {
@@ -478,22 +471,29 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 	FD_ZERO(&context->tls_rx_set);
 	FD_SET(context->sck_inet, &context->tls_rx_set);
 
+	if(!parse_conffile(configfile, nb_params, nuauth_tls_vars))
+	{
+	        log_message(FATAL, DEBUG_AREA_MAIN, "Failed to load config file %s", configfile);
+		return 0;
+	}
 #define READ_CONF(KEY) \
 	get_confvar_value(nuauth_tls_vars, nb_params, KEY)
 	nuauth_tls_key = (char *) READ_CONF("nuauth_tls_key");
 	nuauth_tls_cert = (char *) READ_CONF("nuauth_tls_cert");
 	nuauth_tls_cacert = (char *) READ_CONF("nuauth_tls_cacert");
 	nuauth_tls_crl = (char *) READ_CONF("nuauth_tls_crl");
-	nuauth_tls_key_passwd =
-	    (char *) READ_CONF("nuauth_tls_key_passwd");
-	int_requestcert =
-	    *(int *) READ_CONF("nuauth_tls_request_cert");
+	nuauth_tls_key_passwd = (char *) READ_CONF("nuauth_tls_key_passwd");
+	int_requestcert = *(int *) READ_CONF("nuauth_tls_request_cert");
 #if 0
 	nuauth_tls.crl_refresh =
 	    *(int *) READ_CONF("nuauth_tls_crl_refresh");
 #endif
 	int_authcert = *(int *) READ_CONF("nuauth_tls_auth_by_cert");
 #undef READ_CONF
+
+	/* free config struct */
+	free_confparams(nuauth_tls_vars,
+			sizeof(nuauth_tls_vars) / sizeof(confparams_t));
 
 	g_free(nuauth_tls_cacert);
 	g_free(nuauth_tls_crl);

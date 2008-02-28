@@ -37,7 +37,6 @@
 #include <gcrypt.h>
 #include <sasl/saslutil.h>
 #include "gcrypt_init.h"
-#include "tls.h"
 #include "sasl.h"
 #include "security.h"
 #include <sys/resource.h>	/* setrlimit() */
@@ -307,7 +306,9 @@ void nuauth_deinit(gboolean soft)
 	unload_modules();
 
 	log_message(INFO, DEBUG_AREA_MAIN, "End TLS and audit");
+#if 0
 	end_tls();
+#endif
 	end_audit();
 
 	log_message(INFO, DEBUG_AREA_MAIN, "Freeing memory");
@@ -701,6 +702,7 @@ void configure_app(int argc, char **argv)
 	log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
 			"debug_level is %i", nuauthconf->debug_level);
 
+#if 0
 	/* init credential */
 	if(! create_x509_credentials())
 	{
@@ -708,6 +710,7 @@ void configure_app(int argc, char **argv)
 				"Certificate initialization failed");
 		exit(EXIT_FAILURE);
 	}
+#endif
 
 	if (params.daemonize == 1) {
 		daemonize();
