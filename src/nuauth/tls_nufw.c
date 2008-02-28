@@ -68,22 +68,13 @@ static int treat_nufw_request(nufw_session_t * c_session)
 		return NU_EXIT_OK;
 
 	/* read data from nufw */
-	g_mutex_lock(c_session->tls_lock);
-	dgram_size = nussl_read(c_session->nufw_client, dgram, CLASSIC_NUFW_PACKET_SIZE);
-#if 0
-	gnutls_record_recv(*(c_session->tls), dgram,
-			       CLASSIC_NUFW_PACKET_SIZE);
-#endif
-	g_mutex_unlock(c_session->tls_lock);
+/*	g_mutex_lock(c_session->tls_lock); */
+	dgram_size = nussl_read(c_session->nufw_client, (char *)dgram, CLASSIC_NUFW_PACKET_SIZE);
+/*	g_mutex_unlock(c_session->tls_lock);*/
 	if (dgram_size < 0) {
 		log_message(INFO, DEBUG_AREA_GW,
-			    "nufw failure at %s:%d", __FILE__,
-			    __LINE__);
-#if 0
-		log_message(INFO, DEBUG_AREA_GW,
 			    "nufw failure at %s:%d (%s)", __FILE__,
-			    __LINE__,gnutls_strerror(dgram_size));
-#endif
+			    __LINE__, nussl_get_error(c_session->nufw_client));
 		return NU_EXIT_ERROR;
 	} else if (dgram_size == 0) {
 		log_message(INFO, DEBUG_AREA_GW,
@@ -184,23 +175,6 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 
 	nufw_session_t *nu_session;
 
-#if 0
-	/* Accept the connection */
-	len_inet = sizeof sockaddr;
-	conn_fd = accept(context->sck_inet,
-			 (struct sockaddr *) &sockaddr, &len_inet);
-	if (conn_fd == -1) {
-		log_message(WARNING, DEBUG_AREA_GW, "accept");
-	}
-
-	/* Extract client address (convert it to IPv6 if it's IPv4) */
-	if (sockaddr6->sin6_family == AF_INET) {
-		ipv4_to_ipv6(sockaddr4->sin_addr, &addr);
-	} else {
-		addr = sockaddr6->sin6_addr;
-	}
-#endif
-
 #if 0 /* XXX: nuauthconf->authorized_servers is always set as NULL */
 	/* test if server is in the list of authorized servers */
 	if (!check_inaddr_in_array(&addr, nuauthconf->authorized_servers)) {
@@ -211,15 +185,6 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 		return 1;
 	}
 #endif
-#if 0
-	if (conn_fd >= nuauth_tls_max_servers) {
-		log_message(WARNING, DEBUG_AREA_GW,
-			    "too much servers (%d configured)",
-			    nuauth_tls_max_servers);
-		close(conn_fd);
-		continue;
-	}
-#endif
 
 	/* initialize TLS */
 	nu_session = g_new0(nufw_session_t, 1);
@@ -227,10 +192,7 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 	nu_session->connect_timestamp = time(NULL);
 	nu_session->usage = 1;
 	nu_session->alive = TRUE;
-#if 0
-	nu_session->peername = addr;
-	nu_session->socket = conn_fd;
-#endif
+
 	/* We have to wait the first packet */
 	nu_session->proto_version = PROTO_UNKNOWN;
 
@@ -250,6 +212,13 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 	}
 
 	conn_fd = nussl_session_get_fd(nu_session->nufw_client);
+	if (conn_fd >= nuauth_tls_max_servers) {
+		log_message(WARNING, DEBUG_AREA_GW,
+			"too much servers (%d configured)",
+			nuauth_tls_max_servers);
+		close(conn_fd);
+		continue;
+	}
 
 	nu_session->tls_lock = g_mutex_new();
 	add_nufw_server(conn_fd, nu_session);
@@ -413,12 +382,13 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 		 DEFAULT_REFRESH_CRL_INTERVAL, NULL},
 		{"nuauth_tls_key_passwd", G_TOKEN_STRING, 0, NULL},
 		{"nuauth_tls_request_cert", G_TOKEN_INT, FALSE, NULL},
-		{"nuauth_tls_auth_by_cert", G_TOKEN_INT, FALSE, NULL}
+		{"nuauth_tls_auth_by_cert", G_TOKEN_INT, FALSE, NULL},
+		{"nuauth_tls_max_servers", G_TOKEN_INT, NUAUTH_TLS_MAX_SERVERS, NULL}
 	};
-	const unsigned int nb_params =
-	    sizeof(nuauth_tls_vars) / sizeof(confparams_t);
+	const unsigned int nb_params = sizeof(nuauth_tls_vars) / sizeof(confparams_t);
 	int int_authcert;
 	int int_requestcert;
+	int nuauth_tls_max_servers = NUAUTH_TLS_MAX_SERVERS;
 
 	context->sck_inet = nuauth_bind(&errmsg, context->addr, context->port, "nufw");
 	if (context->sck_inet < 0) {
@@ -483,6 +453,7 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 	nuauth_tls_cacert = (char *) READ_CONF("nuauth_tls_cacert");
 	nuauth_tls_crl = (char *) READ_CONF("nuauth_tls_crl");
 	nuauth_tls_key_passwd = (char *) READ_CONF("nuauth_tls_key_passwd");
+	nuauth_tls_max_servers = *(int *) READ_CONF("nuauth_tls_max_servers");
 	int_requestcert = *(int *) READ_CONF("nuauth_tls_request_cert");
 #if 0
 	nuauth_tls.crl_refresh =

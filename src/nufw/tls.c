@@ -188,7 +188,7 @@ nussl_session *tls_connect()
 		nussl_session_destroy(sess);
 		return NULL;
 	}
-		
+
 	/* sets the trusted cas file */
 	if (ca_file) {
 		ret = nussl_ssl_trust_cert_file(sess, ca_file);
