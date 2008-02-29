@@ -22,6 +22,9 @@
 
 #include "auth_srv.h"
 
+#include <nubase.h>
+#include <nussl.h>
+
 /**
  * \ingroup TLS
  * \defgroup TLSNufw TLS Nufw server
@@ -33,6 +36,9 @@
  *
  * The main thread is tls_nufw_authsrv() which call tls_nufw_main_loop().
  */
+
+int nuauth_tls_max_servers = NUAUTH_TLS_MAX_SERVERS;
+static int nufw_servers_connected = 0;
 
 
 struct tls_nufw_context_t {
@@ -186,6 +192,14 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 	}
 #endif
 
+	/* Check number of connected servers */
+	if ( nufw_servers_connected >= nuauth_tls_max_servers ) {
+		log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_WARNING,
+				"too many servers (%d configured)",
+				nuauth_tls_max_servers);
+		return 1;
+	}
+
 	/* initialize TLS */
 	nu_session = g_new0(nufw_session_t, 1);
 
@@ -202,6 +216,8 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 		return 1;
 	}
 
+	nufw_servers_connected++;
+
 	nussl_session_getpeer(nu_session->nufw_client, (struct sockaddr *) &sockaddr, &len_inet);
 
 	/* Extract client address (convert it to IPv6 if it's IPv4) */
@@ -212,15 +228,6 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 	}
 
 	conn_fd = nussl_session_get_fd(nu_session->nufw_client);
-#if 0
-	if (conn_fd >= nuauth_tls_max_servers) {
-		log_message(WARNING, DEBUG_AREA_GW,
-			"too much servers (%d configured)",
-			nuauth_tls_max_servers);
-		close(conn_fd);
-		continue;
-	}
-#endif
 
 	nu_session->tls_lock = g_mutex_new();
 	add_nufw_server(conn_fd, nu_session);
@@ -390,7 +397,6 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 	const unsigned int nb_params = sizeof(nuauth_tls_vars) / sizeof(confparams_t);
 	int int_authcert;
 	int int_requestcert;
-	int nuauth_tls_max_servers = NUAUTH_TLS_MAX_SERVERS;
 
 	context->sck_inet = nuauth_bind(&errmsg, context->addr, context->port, "nufw");
 	if (context->sck_inet < 0) {
