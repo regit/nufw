@@ -237,21 +237,6 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 	g_message("[+] NuFW: new client connected on socket %d",
 		  conn_fd);
 
-#if 0
-	if (tls_connect(conn_fd, &(nu_session->tls)) == SASL_OK) {
-		nu_session->tls_lock = g_mutex_new();
-		add_nufw_server(conn_fd, nu_session);
-		FD_SET(conn_fd, &context->tls_rx_set);
-		if (conn_fd + 1 > context->mx)
-			context->mx = conn_fd + 1;
-		g_message("[+] NuFW: new client connected on socket %d",
-			  conn_fd);
-	} else {
-		g_free(nu_session);
-	}
-
-#endif
-
 	return 0;
 }
 
@@ -378,7 +363,7 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 	char *nuauth_tls_crl = NULL;
 	char *configfile = DEFAULT_CONF_FILE;
 	int ret;
-	/* TODO: read values specifis to nufw connection */
+	/* TODO: read values specific to nufw connection */
 	confparams_t nuauth_tls_vars[] = {
 		{"nuauth_tls_key", G_TOKEN_STRING, 0,
 		 g_strdup(NUAUTH_KEYFILE)},
