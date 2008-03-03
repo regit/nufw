@@ -102,6 +102,8 @@ void nussl_session_server_close_connection(nussl_session_server *srv_sess);
 
 nussl_session* nussl_session_server_new_client(nussl_session_server *srv_sess);
 
+int nussl_session_server_set_keypair(nussl_session *srv_sess, const char* cert_file, const char* key_file);
+
 int nussl_session_getpeer(nussl_session *sess, struct sockaddr *addr, socklen_t *addrlen);
 
 int nussl_session_get_fd(nussl_session *sess);
