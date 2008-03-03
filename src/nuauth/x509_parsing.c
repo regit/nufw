@@ -55,7 +55,7 @@ gint get_first_x509_cert_from_tls_session(gnutls_session session,
 }
 
 
-
+#if 0
 /**
  * Given a pointer to a x509 certificate, it checks
  * the validity :
@@ -81,6 +81,7 @@ gint check_x509_certificate_validity(gnutls_session session)
 
 	return ret;
 }
+#endif
 
 /**
  *  This function parse information about this session's peer
@@ -89,6 +90,7 @@ gint check_x509_certificate_validity(gnutls_session session)
  *  return NULL if certificate is not valid
  */
 
+#if 0
 gchar *get_username_from_x509_certificate(gnutls_session session)
 {
 	gnutls_x509_crt cert;
@@ -103,5 +105,6 @@ gchar *get_username_from_x509_certificate(gnutls_session session)
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_USER, "\tCN: %s", username);
 	return username;
 }
+#endif
 
 /** @} */

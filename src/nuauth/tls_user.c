@@ -28,13 +28,13 @@
  * @{
  */
 
-/** \file tls_user.c
- *  \brief Manage clients connections and messages.
+/**
+ * \brief Handle phase after authentication and till client is active. Defined in tls_sasl.c
  *
- * The thread tls_user_authsrv() wait for clients in tls_user_main_loop().
+ * It also handle preclient list to be able to disconnect user if authentication take too long.
  */
 
-extern int nuauth_tls_auth_by_cert;
+extern struct nuauth_tls_t nuauth_tls;
 
 /**
  * List of new clients which are in authentication state. This list is
@@ -599,6 +599,50 @@ void tls_user_servers_init()
 	nuauthdatas->user_cmd_queue =  g_async_queue_new();
 }
 
+/** 
+ * Set request_cert and auth_by_cert params depending on the configuration
+ */
+int tls_user_setcert_auth_params(int requestcert, int authcert)
+{
+/* XXX: Double check this and close ticket #120 */
+	if ((authcert >= NO_AUTH_BY_CERT)
+			&& (authcert < MAX_AUTH_BY_CERT)) {
+		nuauth_tls.auth_by_cert = authcert;
+	} else {
+		g_warning("[%i] config : invalid nuauth_tls_auth_by_cert value: %d",
+			getpid(), authcert);
+		return 0;
+	}
+
+	if ((nuauth_tls.auth_by_cert == MANDATORY_AUTH_BY_CERT)
+	&& (nuauth_tls.request_cert != GNUTLS_CERT_REQUIRE)) {
+		log_message(INFO, DEBUG_AREA_AUTH | DEBUG_AREA_USER,
+			    "Mandatory certificate authentication asked, asking certificate");
+		nuauth_tls.request_cert = GNUTLS_CERT_REQUIRE;
+	}
+
+	if (NUSSL_VALID_REQ_TYPE(authcert)) {
+		nuauth_tls.auth_by_cert = authcert;
+	} else {
+		log_message(INFO, DEBUG_AREA_AUTH | DEBUG_AREA_USER,
+				"[%i] config: Invalid nuauth_tls_auth_by_cert value: %d",
+				getpid(), authcert);
+
+		return 0;
+	}
+
+	if ((nuauth_tls.auth_by_cert == NUSSL_CERT_REQUIRE)
+		&& (nuauth_tls.request_cert != NUSSL_CERT_REQUIRE)) {
+		log_message(INFO, DEBUG_AREA_AUTH | DEBUG_AREA_USER,
+				"Mandatory certificate authentication asked, asking certificate");
+		nuauth_tls.request_cert = NUSSL_CERT_REQUIRE;
+	}
+
+	log_message(INFO, DEBUG_AREA_AUTH | DEBUG_AREA_USER,"request_cert = %i", nuauth_tls.request_cert);
+	log_message(INFO, DEBUG_AREA_AUTH | DEBUG_AREA_USER,"auth_by_cert = %i", nuauth_tls.auth_by_cert);
+	return 1;
+}
+
 /**
  * Create TLS user context.
  */
@@ -689,17 +733,23 @@ int tls_user_init(struct tls_user_context_t *context)
 	nuauth_tls_crl = (char *) READ_CONF("nuauth_tls_crl");
 	nuauth_tls_key_passwd = (char *) READ_CONF("nuauth_tls_key_passwd");
 	int_requestcert = *(int *) READ_CONF("nuauth_tls_request_cert");
+	int_authcert = *(int *) READ_CONF("nuauth_tls_auth_by_cert");
 #undef READ_CONF
+
+	if (!tls_user_setcert_auth_params(int_requestcert, int_authcert))
+	{
+		g_error("Invalid request_cert or auth_by_cert option");
+		return 0;
+	}
 
 	/* free config struct */
 	free_confparams(nuauth_tls_vars,
 			sizeof(nuauth_tls_vars) / sizeof(confparams_t));
 
-	g_free(nuauth_tls_cacert);
 	g_free(nuauth_tls_crl);
 	g_free(nuauth_tls_key_passwd);
 
-	context->nussl = nussl_session_server_create_with_fd(context->sck_inet, int_requestcert);
+	context->nussl = nussl_session_server_create_with_fd(context->sck_inet, nuauth_tls.request_cert);
 	if ( ! context->nussl ) {
 		g_error("Cannot create session from fd!");
 		return 0;
@@ -710,11 +760,21 @@ int tls_user_init(struct tls_user_context_t *context)
 		g_error("[%s:%d]:error on nussl_session_server_set_keypair", __FUNCTION__, __LINE__);
 		g_free(nuauth_tls_key);
 		g_free(nuauth_tls_cert);
+		g_free(nuauth_tls_cacert);
 		return 0;
 	}
 
 	g_free(nuauth_tls_key);
 	g_free(nuauth_tls_cert);
+
+	ret = nussl_session_server_trust_cert_file(context->nussl, nuauth_tls_cacert);
+	if ( ret != NUSSL_OK ) {
+		g_error("[%s:%d]:error on nussl_session_server_set_keypair", __FUNCTION__, __LINE__);
+		g_free(nuauth_tls_cacert);
+		return 0;
+	}
+	g_free(nuauth_tls_cacert);
+
 	return 1;
 }
 

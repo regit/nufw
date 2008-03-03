@@ -100,10 +100,10 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 }
 
 
-G_MODULE_EXPORT int certificate_check(gnutls_session session,
-				      gnutls_x509_crt cert,
+G_MODULE_EXPORT int certificate_check(nussl_session* session,
 				      gpointer params_p)
 {
+#if 0
 	struct x509_std_params *params =
 	    (struct x509_std_params *) params_p;
 	time_t expiration_time, activation_time;
@@ -154,12 +154,11 @@ G_MODULE_EXPORT int certificate_check(gnutls_session session,
 			return SASL_DISABLED;
 		}
 	}
-
+#endif
 	return SASL_OK;
 }
 
-G_MODULE_EXPORT gchar *certificate_to_uid(gnutls_session session,
-					  gnutls_x509_crt cert,
+G_MODULE_EXPORT gchar *certificate_to_uid(nussl_session* session,
 					  gpointer params)
 {
 	size_t size;
@@ -167,7 +166,7 @@ G_MODULE_EXPORT gchar *certificate_to_uid(gnutls_session session,
 	gchar *pointer;
 
 	size = sizeof(dn);
-	gnutls_x509_crt_get_dn(cert, dn, &size);
+	nussl_get_peer_dn(session, dn, &size);
 
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_USER, "\tDN: %s", dn);
 

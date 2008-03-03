@@ -117,7 +117,10 @@ char* nussl_get_server_cert_dn(nussl_session* sess)
 {
 	char *tmp, *dn;
 	if (!sess->server_cert)
+	{
+		printf("no server cert\n");
 		return NULL;
+	}
 
 	tmp = nussl_ssl_readable_dname(&sess->server_cert->subj_dn);
 	dn = strdup(tmp);

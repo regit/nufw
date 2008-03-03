@@ -40,6 +40,7 @@
 
 struct nuauth_tls_t nuauth_tls;
 
+#if 0
 /**
  * get username from a tls session
  *
@@ -53,6 +54,7 @@ gchar *get_username_from_tls_session(gnutls_session session)
 		return NULL;
 	}
 }
+#endif
 
 static void policy_refuse_user(user_session_t * c_session, int c,
 			       policy_refused_reason_t reason)
@@ -113,7 +115,7 @@ static void tls_sasl_connect_ok(user_session_t * c_session, int c)
 #if 0
 	if (gnutls_record_send(*(c_session->tls), &msg, sizeof(msg)) < 0) {
 #else
-	if (nussl_write(c_session->nussl, &msg, sizeof(msg)) < 0) {
+	if (nussl_write(c_session->nussl, (char*)&msg, sizeof(msg)) < 0) {
 #endif
 		log_message(WARNING, DEBUG_AREA_USER,
 			    "gnutls_record_send() failure at %s:%d",
@@ -175,7 +177,7 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 #endif
 	user_session_t *c_session;
 	int ret;
-	unsigned int size = 1;
+	/*unsigned int size = 1;*/
 	struct client_connection *client = (struct client_connection *)userdata;
 	int socket_fd = client->socket;
 
@@ -215,8 +217,8 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 	c_session->user_name = NULL;
 	c_session->user_id = 0;
 	g_free(userdata);
-#ifdef XXX /* Port-me */
-	if ((nuauth_tls.auth_by_cert > NO_AUTH_BY_CERT)
+	if ((nuauth_tls.auth_by_cert > NO_AUTH_BY_CERT))
+#if 0 /* Check ed by nussl */
 	    && gnutls_certificate_get_peers(*session, &size)) {
 		ret = check_certs_for_tls_session(*session);
 
@@ -224,10 +226,16 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 			log_message(INFO, DEBUG_AREA_USER,
 				    "Certificate verification failed : %s",
 				    gnutls_strerror(ret));
-		} else {
+		} else
+#endif
+		{
 			gchar *username = NULL;
 			/* need to parse the certificate to see if it is a sufficient credential */
+#if 0
 			username = get_username_from_tls_session(*session);
+#else
+			username = modules_certificate_to_uid(c_session->nussl);
+#endif
 			/* parsing complete */
 			if (username) {
 				debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
@@ -249,7 +257,9 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 				}
 			}
 		}
+#if 0
 	}
+#endif
 
 	if ((nuauth_tls.auth_by_cert == NUSSL_CERT_REQUIRE) &&
 			(c_session->groups == NULL)) {
@@ -261,11 +271,8 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 #endif
 		ret = SASL_BADAUTH;
 	} else {
-#endif
 		ret = sasl_user_check(c_session);
-#ifdef XXX
 	}
-#endif
 
 	remove_socket_from_pre_client_list(socket_fd);
 	switch (ret) {

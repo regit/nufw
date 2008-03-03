@@ -137,11 +137,9 @@ int modules_user_session_logs(user_session_t * user,
 
 void modules_parse_periods(GHashTable * periods);
 
-int modules_check_certificate(gnutls_session session,
-			      gnutls_x509_crt cert);
+int modules_check_certificate(nussl_session* nussl);
 
-gchar *modules_certificate_to_uid(gnutls_session session,
-				  gnutls_x509_crt cert);
+gchar *modules_certificate_to_uid(nussl_session* nussl);
 
 int modules_user_session_modify(user_session_t * c_session);
 

@@ -457,7 +457,7 @@ int create_x509_credentials()
 	int_authcert = *(int *) READ_CONF("nuauth_tls_auth_by_cert");
 #undef READ_CONF
 
-#if 0
+#if 0 /* ->moved to tls_user.c */
 /* XXX: Double check this and close ticket #120 */
 	if ((int_authcert >= NO_AUTH_BY_CERT)
 			&& (int_authcert < MAX_AUTH_BY_CERT)) {

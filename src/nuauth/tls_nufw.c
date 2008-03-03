@@ -459,7 +459,6 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 	free_confparams(nuauth_tls_vars,
 			sizeof(nuauth_tls_vars) / sizeof(confparams_t));
 
-	g_free(nuauth_tls_cacert);
 	g_free(nuauth_tls_crl);
 	g_free(nuauth_tls_key_passwd);
 
@@ -474,11 +473,20 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 		g_error("[%s:%d]:error on nussl_session_server_set_keypair", __FUNCTION__, __LINE__);
 		g_free(nuauth_tls_key);
 		g_free(nuauth_tls_cert);
+		g_free(nuauth_tls_cacert);
 		return 0;
 	}
-
 	g_free(nuauth_tls_key);
 	g_free(nuauth_tls_cert);
+
+	ret = nussl_session_server_trust_cert_file(context->server, nuauth_tls_cacert);
+	if ( ret != NUSSL_OK ) {
+		g_error("[%s:%d]:error on nussl_session_server_set_keypair", __FUNCTION__, __LINE__);
+		g_free(nuauth_tls_cacert);
+		return 0;
+	}
+	g_free(nuauth_tls_cacert);
+
 	return 1;
 }
 

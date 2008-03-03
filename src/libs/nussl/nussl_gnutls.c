@@ -718,34 +718,17 @@ static int check_certificate(nussl_session *sess, gnutls_session sock,
     return ret;
 }
 
-/* Negotiate an SSL connection. */
-int nussl__negotiate_ssl(nussl_session *sess)
+int nussl__ssl_post_handshake(nussl_session * sess)
 {
-    nussl_ssl_context *const ctx = sess->ssl_context;
     nussl_ssl_certificate *chain;
-    gnutls_session sock;
-
-    UGLY_DEBUG();
-    NUSSL_DEBUG(NUSSL_DBG_SSL, "Negotiating SSL connection.\n");
-
-    /* Pass through the hostname if SNI is enabled. */
-    ctx->hostname =
-        sess->flags[NUSSL_SESSFLAG_TLS_SNI] ? sess->server.hostname : NULL;
-
-    if (nussl_sock_connect_ssl(sess->socket, ctx, sess)) {
-	nussl_set_error(sess, _("SSL negotiation failed: %s"),
-		     nussl_sock_error(sess->socket));
-	return NUSSL_ERROR;
-    }
-
-    sock = nussl__sock_sslsock(sess->socket);
+    gnutls_session sock = nussl__sock_sslsock(sess->socket);
 
     if (!sess->check_peer_cert)
         return NUSSL_OK;
 
     chain = make_peers_chain(sock);
     if (chain == NULL) {
-        nussl_set_error(sess, _("Server did not send certificate chain"));
+        nussl_set_error(sess, _("Peer did not send certificate chain"));
         return NUSSL_ERROR;
     }
 
@@ -764,6 +747,27 @@ int nussl__negotiate_ssl(nussl_session *sess)
 
     sess->server_cert = chain;
     return NUSSL_OK;
+}
+
+/* Negotiate an SSL connection. */
+int nussl__negotiate_ssl(nussl_session *sess)
+{
+    nussl_ssl_context *const ctx = sess->ssl_context;
+
+    UGLY_DEBUG();
+    NUSSL_DEBUG(NUSSL_DBG_SSL, "Negotiating SSL connection.\n");
+
+    /* Pass through the hostname if SNI is enabled. */
+    ctx->hostname =
+        sess->flags[NUSSL_SESSFLAG_TLS_SNI] ? sess->server.hostname : NULL;
+
+    if (nussl_sock_connect_ssl(sess->socket, ctx, sess)) {
+	nussl_set_error(sess, _("SSL negotiation failed: %s"),
+		     nussl_sock_error(sess->socket));
+	return NUSSL_ERROR;
+    }
+
+    return nussl__ssl_post_handshake(sess);
 }
 
 const nussl_ssl_dname *nussl_ssl_cert_issuer(const nussl_ssl_certificate *cert)
@@ -1184,6 +1188,17 @@ int nussl_ssl_cert_digest(const nussl_ssl_certificate *cert, char *digest)
 
     *--p = '\0';
     return 0;
+}
+
+int nussl_get_peer_dn(nussl_session* sess, char* buf, size_t buf_size)
+{
+	if (sess->server_cert == NULL)
+		return NUSSL_ERROR;
+
+	if (gnutls_x509_crt_get_dn(sess->server_cert->subj_dn.cert, buf, buf_size))
+		return NUSSL_ERROR;
+
+	return NUSSL_OK;
 }
 
 /* Begin: --INL-- DH management functions added */

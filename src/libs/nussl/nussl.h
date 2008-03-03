@@ -86,6 +86,9 @@ char* nussl_get_cert_infos(nussl_session* sess);
 /* Returns a string containing informations about the peer certificate */
 char* nussl_get_server_cert_infos(nussl_session* sess);
 
+/* Returns a string containing informations about the peer certificate */
+char* nussl_get_server_cert_dn(nussl_session* sess);
+
 /* Begin: INL additions */
 
 int nussl_ssl_cert_generate_dh_params(nussl_session *session);

@@ -277,6 +277,8 @@ nu_error_t get_proto_info(user_session_t * c_session)
 		{
 			if (FD_ISSET(c_session->socket, &wk_set)) {
 				char buffer[20];
+				memset(buffer, 0, sizeof(buffer));
+
 				debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
 						  "Getting protocol information");
 #if 0

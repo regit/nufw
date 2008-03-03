@@ -250,11 +250,10 @@ void modules_parse_periods(GHashTable * periods)
 /**
  * Check certificate
  *
- * \param session TLS connection
- * \param cert x509 certificate
+ * \param nussl NuSSL connection
  * \return SASL_OK if certificate is correct
  */
-int modules_check_certificate(gnutls_session session, gnutls_x509_crt cert)
+int modules_check_certificate(nussl_session* nussl)
 {
 	/* iter through all modules list */
 	GSList *walker = hooks[MOD_CERT_CHECK].modules;
@@ -267,9 +266,7 @@ int modules_check_certificate(gnutls_session session, gnutls_x509_crt cert)
 		certificate_check_callback *handler =
 		    (certificate_check_callback *) ((module_t *) walker->
 						    data)->func;
-		ret =
-		    handler(session, cert,
-			    ((module_t *) walker->data)->params);
+		ret = handler(nussl, ((module_t *) walker->data)->params);
 		if (ret != SASL_OK) {
 			return ret;
 		}
@@ -280,12 +277,11 @@ int modules_check_certificate(gnutls_session session, gnutls_x509_crt cert)
 /**
  * certificate to uid
  *
- * \param session TLS connection
+ * \param nussl NuSSL connection
  * \param cert x509 certificate
  * \return uid
  */
-gchar *modules_certificate_to_uid(gnutls_session session,
-				  gnutls_x509_crt cert)
+gchar *modules_certificate_to_uid(nussl_session* nussl)
 {
 	/* iter through all modules list */
 	GSList *walker = hooks[MOD_CERT_TO_UID].modules;
@@ -296,9 +292,7 @@ gchar *modules_certificate_to_uid(gnutls_session session,
 		certificate_to_uid_callback *handler =
 		    (certificate_to_uid_callback *) ((module_t *) walker->
 						     data)->func;
-		uid =
-		    handler(session, cert,
-			    ((module_t *) walker->data)->params);
+		uid = handler(nussl, ((module_t *) walker->data)->params);
 		if (uid) {
 			return uid;
 		}
