@@ -37,7 +37,7 @@ char* nussl_get_cert_infos(nussl_session* sess)
 	from_str = _("Valid from: ");
 	until_str = _("Valid until: ");
 
-	ret = (char*)nussl_malloc(strlen(dn) + strlen(issuer_dn) + strlen(valid_from) + strlen(valid_until) + 
+	ret = (char*)malloc(strlen(dn) + strlen(issuer_dn) + strlen(valid_from) + strlen(valid_until) + 
 		strlen(dn_str) + strlen(issuer_str) + strlen(from_str) + strlen(until_str) + 5); /* 5 = 4 '\n' and 1 '\0' */
 
 	if (!ret)
@@ -65,6 +65,7 @@ char* nussl_get_cert_infos(nussl_session* sess)
 
 	return ret;
 }
+
 char* nussl_get_server_cert_infos(nussl_session* sess)
 {
 	char valid_from[NUSSL_SSL_VDATELEN];
@@ -110,5 +111,17 @@ char* nussl_get_server_cert_infos(nussl_session* sess)
 	nussl_free(issuer_dn);
 
 	return ret;
+}
+
+char* nussl_get_server_cert_dn(nussl_session* sess)
+{
+	char *tmp, *dn;
+	if (!sess->server_cert)
+		return NULL;
+
+	tmp = nussl_ssl_readable_dname(&sess->server_cert->subj_dn);
+	dn = strdup(tmp);
+	nussl_free(tmp);
+	return dn;
 }
 

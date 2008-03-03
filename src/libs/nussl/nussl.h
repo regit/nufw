@@ -67,6 +67,8 @@ const char *nussl_get_error(nussl_session* sess);
 int nussl_write(nussl_session *sess, char *buffer, size_t count);
 
 /* Read from session */
+/* returns the number of octets read on success */
+/* returns a NUSSL_SOCK_* error on failure */
 ssize_t nussl_read(nussl_session *sess, char *buffer, size_t count);
 
 /* Set private key and certificate */
