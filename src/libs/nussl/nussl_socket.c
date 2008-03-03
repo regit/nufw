@@ -1531,10 +1531,12 @@ int nussl_sock_accept_ssl(nussl_socket *sock, nussl_ssl_context *ctx)
     if (ret < 0) {
         return error_gnutls(sock, ret);
     }
+#if 0 /* done from session.*_post_handshake in nussl_gnutls.c */
     if (ctx->verify && gnutls_certificate_verify_peers(ssl)) {
         set_error(sock, _("Client certificate verification failed"));
         return NUSSL_SOCK_ERROR;
     }
+#endif
 #endif
     sock->ops = &iofns_ssl;
     return 0;

@@ -40,6 +40,8 @@
 int nuauth_tls_max_servers = NUAUTH_TLS_MAX_SERVERS;
 static int nufw_servers_connected = 0;
 
+extern struct nuauth_tls_t nuauth_tls;
+
 
 struct tls_nufw_context_t {
 	char *addr;
@@ -452,7 +454,6 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 	nuauth_tls.crl_refresh =
 	    *(int *) READ_CONF("nuauth_tls_crl_refresh");
 #endif
-	int_authcert = *(int *) READ_CONF("nuauth_tls_auth_by_cert");
 #undef READ_CONF
 
 	/* free config struct */
@@ -462,7 +463,8 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 	g_free(nuauth_tls_crl);
 	g_free(nuauth_tls_key_passwd);
 
-	context->server = nussl_session_server_create_with_fd(context->sck_inet, int_requestcert);
+	/* TODO: use a nufw specific value of request_cert */
+	context->server = nussl_session_server_create_with_fd(context->sck_inet, nuauth_tls.request_cert);
 	if ( ! context->server ) {
 		g_error("Cannot create session from fd!");
 		return 0;

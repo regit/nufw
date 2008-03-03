@@ -723,8 +723,10 @@ int nussl__ssl_post_handshake(nussl_session * sess)
     nussl_ssl_certificate *chain;
     gnutls_session sock = nussl__sock_sslsock(sess->socket);
 
+    UGLY_DEBUG();
     if (!sess->check_peer_cert)
         return NUSSL_OK;
+    UGLY_DEBUG();
 
     chain = make_peers_chain(sock);
     if (chain == NULL) {

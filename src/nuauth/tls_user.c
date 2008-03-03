@@ -604,13 +604,15 @@ void tls_user_servers_init()
  */
 int tls_user_setcert_auth_params(int requestcert, int authcert)
 {
+	nuauth_tls.request_cert = requestcert;
+
 /* XXX: Double check this and close ticket #120 */
-	if ((authcert >= NO_AUTH_BY_CERT)
-			&& (authcert < MAX_AUTH_BY_CERT)) {
+	if (NUSSL_VALID_REQ_TYPE(authcert)) {
 		nuauth_tls.auth_by_cert = authcert;
 	} else {
-		g_warning("[%i] config : invalid nuauth_tls_auth_by_cert value: %d",
-			getpid(), authcert);
+		log_message(INFO, DEBUG_AREA_AUTH | DEBUG_AREA_USER,
+				"[%i] config: Invalid nuauth_tls_auth_by_cert value: %d",
+				getpid(), authcert);
 		return 0;
 	}
 
@@ -619,16 +621,6 @@ int tls_user_setcert_auth_params(int requestcert, int authcert)
 		log_message(INFO, DEBUG_AREA_AUTH | DEBUG_AREA_USER,
 			    "Mandatory certificate authentication asked, asking certificate");
 		nuauth_tls.request_cert = GNUTLS_CERT_REQUIRE;
-	}
-
-	if (NUSSL_VALID_REQ_TYPE(authcert)) {
-		nuauth_tls.auth_by_cert = authcert;
-	} else {
-		log_message(INFO, DEBUG_AREA_AUTH | DEBUG_AREA_USER,
-				"[%i] config: Invalid nuauth_tls_auth_by_cert value: %d",
-				getpid(), authcert);
-
-		return 0;
 	}
 
 	if ((nuauth_tls.auth_by_cert == NUSSL_CERT_REQUIRE)
