@@ -50,17 +50,6 @@ char *nussl_rfc1123_date(time_t anytime);
  * the DAV: namespace). */
 time_t nussl_iso8601_parse(const char *date);
 
-/* Returns time from date/time in RFC1123 format */
-time_t nussl_rfc1123_parse(const char *date);
-
-time_t nussl_rfc1036_parse(const char *date);
-
-/* Parses asctime date string */
-time_t nussl_asctime_parse(const char *date);
-
-/* Parse an HTTP-date as per RFC2616 */
-time_t nussl_httpdate_parse(const char *date);
-
 NUSSL_END_DECLS
 
 #endif /* NUSSL_DATES_H */
