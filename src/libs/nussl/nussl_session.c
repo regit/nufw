@@ -497,7 +497,6 @@ ssize_t nussl_read(nussl_session *session, char *buffer, size_t count)
 	if (ret < 0)
 		nussl_set_error(session, nussl_sock_error(session->socket));
 
-
 	return ret;
 }
 
@@ -539,7 +538,6 @@ int nussl_ssl_set_pkcs12_keypair(nussl_session *session, const char* pkcs12_file
 	if (check_key_perms(pkcs12_file)!= NUSSL_OK)
 	{
 		nussl_set_error(session, _("Permissions of key %s are too open."), pkcs12_file);
-
 		return NUSSL_ERROR;
 	}
 
@@ -548,7 +546,6 @@ int nussl_ssl_set_pkcs12_keypair(nussl_session *session, const char* pkcs12_file
 	if (cert == NULL)
 	{
 		nussl_set_error(session, _("Unable to load PKCS12 certificate file"));
-
 		return NUSSL_ERROR;
 	}
 
@@ -559,14 +556,12 @@ int nussl_ssl_set_pkcs12_keypair(nussl_session *session, const char* pkcs12_file
 			if (nussl_ssl_clicert_decrypt(cert, password) != 0)
 			{
 				nussl_set_error(session, _("Bad password to decrypt the PKCS key"));
-
 				return NUSSL_ERROR;
 			}
 		}
 		else
 		{
 			nussl_set_error(session, _("PKCS12 file is encrypted, please supply a password"));
-
 			return NUSSL_ERROR;
 		}
 	}

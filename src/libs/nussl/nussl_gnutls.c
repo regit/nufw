@@ -747,6 +747,7 @@ int nussl__ssl_post_handshake(nussl_session * sess)
         return NUSSL_ERROR;
     }
 
+    sess->connected = 1;
     sess->server_cert = chain;
     return NUSSL_OK;
 }
