@@ -634,7 +634,7 @@ int nussl_session_getpeer(nussl_session *sess, struct sockaddr *addr, socklen_t 
 	int ret = getpeername(fd, addr, addrlen);
 
 	if ( ret != 0 ) {
-		nussl_set_error(sess, strerror(ret));
+		nussl_set_error(sess, strerror(errno));
 		return NUSSL_ERROR;
 	}
 
