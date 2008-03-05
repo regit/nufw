@@ -1,5 +1,5 @@
 import readline
-from nuauth_command import Client
+from nuauth_command import Client, NuauthError
 import re
 from command_dec import Answer
 
@@ -34,7 +34,7 @@ class Completer:
 
 def displayAnswer(value):
     if value.__class__ != Answer:
-        print "[!] invalid answer format: %r" % answer
+        print "[!] invalid answer format: %r" % value
     if not value.ok:
         err = value.content
         print "[!] Error: %s" % err

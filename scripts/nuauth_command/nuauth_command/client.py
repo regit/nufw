@@ -59,7 +59,7 @@ class NuauthSocket:
             data = "".join(alldata)
         return (None, data)
 
-    def send(self, data, retry=True):
+    def send(self, data):
         err = ""
         try:
             self.socket.send(data)
@@ -94,7 +94,7 @@ class Client:
         # Read client version
         err, version = self.socket.recv()
         if err:
-            raise Nuautherror("Unable to read server version: %s" % err)
+            raise NuauthError("Unable to read server version: %s" % err)
 
         # Check versions
         if version != PROTO_VERSION:
@@ -127,5 +127,5 @@ class Client:
 
     def reconnect(self):
         self.socket = None
-        return self.connect(False)
+        return self.connect()
 
