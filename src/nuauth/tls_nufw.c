@@ -228,8 +228,8 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 		log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_WARNING,
 				"Unable to get peername of NuFW dameon : %s",
 				nussl_get_error(nu_session->nufw_client));
-		g_free(nu_session);
 		nussl_session_destroy(nu_session->nufw_client);
+		g_free(nu_session);
 		return 1;
 	}
 
