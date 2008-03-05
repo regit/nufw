@@ -320,7 +320,7 @@ char warn_clients(struct msg_addr_set *global_msg)
 #endif
 			if (ret < 0) {
 				log_message(WARNING, DEBUG_AREA_USER,
-						"Fails to send warning to client(s).");
+						"Fails to send warning to client(s): %s", nussl_get_error(session->nussl));
 				badsockets = g_slist_prepend(badsockets, GINT_TO_POINTER(ipsockets->data));
 			}
 		}

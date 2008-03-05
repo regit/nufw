@@ -207,19 +207,24 @@ static int samp_send(nussl_session* nussl, const char *buffer,
 	memcpy(buf, "S: ", 3);
 
 	result = nussl_write(nussl, buf, len + 3);
+	if(result < 0)
+		log_message(WARNING, DEBUG_AREA_AUTH, "nussl_write() failed: %s", nussl_get_error(nussl));
+		
 	g_free(buf);
 	return result;
 }
 
 static unsigned samp_recv(nussl_session* nussl, char *buf, int bufsize)
 {
-	unsigned len;
+	unsigned int len;
 	int result;
 
-	len = nussl_read(nussl, buf, bufsize);
-	if (len <= 0) {
+	result = nussl_read(nussl, buf, bufsize);
+	if (result < 0) {
+		log_message(WARNING, DEBUG_AREA_AUTH, "nussl_read() failed: %s", nussl_get_error(nussl));
 		return 0;
 	}
+	len = (unsigned int)result;
 
 	result = sasl_decode64(buf + 3, (unsigned) strlen(buf + 3), buf,
 			       bufsize, &len);
@@ -294,6 +299,8 @@ nu_error_t get_proto_info(user_session_t * c_session)
 #endif
 
 				if (ret < 0) {
+					debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
+							  "nussl_read() failed: %s", nussl_get_error(c_session->nussl));
 					return NU_EXIT_ERROR;
 				}
 				if (((int) strlen(PROTO_STRING) + 2) <= ret
@@ -678,7 +685,7 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 			  count, data);
 	tls_len = sasl_len;
 	/* send capability list to client */
-	record_send = nussl_write(c_session->nussl, data, tls_len);
+	record_send = nussl_write(c_session->nussl, (char*)data, tls_len);
 #if 0
 	if ((record_send == GNUTLS_E_INTERRUPTED)
 	    || (record_send == GNUTLS_E_AGAIN)) {
@@ -694,9 +701,8 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 			  "proto v3: Now we know record_send >= 0");
 
 	memset(chosenmech, 0, sizeof chosenmech);
-	tls_len =
-	    nussl_read(c_session->nussl, chosenmech, sizeof chosenmech);
-	if (tls_len <= 0) {
+	tls_len = nussl_read(c_session->nussl, chosenmech, sizeof chosenmech);
+	if (tls_len < 0) {
 		if (tls_len == 0) {
 			log_message(INFO, DEBUG_AREA_AUTH,
 				    "proto v3: client didn't choose mechanism");
@@ -716,12 +722,18 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 	tls_len = nussl_read(c_session->nussl, buf, sizeof(buf));
 	if (tls_len != 1) {
 		if (tls_len < 0) {
+			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
+					  "nussl_read() error: %s", nussl_get_error(c_session->nussl));
 			return SASL_FAIL;
 		}
 		debug_log_message(DEBUG, DEBUG_AREA_AUTH,
 				  "proto v3: didn't receive first-sent parameter correctly");
-		if (nussl_write(c_session->nussl, "N", 1) <= 0)	/* send NO to client */
+		if (nussl_write(c_session->nussl, "N", 1) < 0)	/* send NO to client */
+		{
+			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
+					  "nussl_write() error: %s", nussl_get_error(c_session->nussl));
 			return SASL_FAIL;
+		}
 		return SASL_BADPARAM;
 	}
 
@@ -732,6 +744,8 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 		memset(buf, 0, sizeof(buf));
 		tls_len = nussl_read(c_session->nussl, buf, sizeof(buf));
 		if (tls_len < 0) {
+			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
+					  "nussl_read() error: %s", nussl_get_error(c_session->nussl));
 			return SASL_FAIL;
 		}
 		/* start libsasl negotiation */
@@ -757,21 +771,24 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 			c_session->user_name = NULL;
 		}
 
-		if (nussl_write(c_session->nussl, "N", 1) <= 0)	/* send NO to client */
+		if (nussl_write(c_session->nussl, "N", 1) < 0)	/* send NO to client */
+		{
+			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
+					  "nussl_read() error: %s", nussl_get_error(c_session->nussl));
 			return SASL_FAIL;
+		}
 		return SASL_BADPARAM;
 	}
 
 	while (r == SASL_CONTINUE) {
 
+		if (nussl_write(c_session->nussl, "C", 1) < 0)	/* send CONTINUE to client */
+			return SASL_FAIL;
+
 		if (data) {
-			if (nussl_write(c_session->nussl, "C", 1) <= 0)	/* send CONTINUE to client */
-				return SASL_FAIL;
-			if (nussl_write(c_session->nussl, data, tls_len) < 0)
+			if (nussl_write(c_session->nussl, (char*)data, tls_len) < 0)
 				return SASL_FAIL;
 		} else {
-			if (nussl_write(c_session->nussl, "C", 1) <= 0)	/* send CONTINUE to client */
-				return SASL_FAIL;
 			if (nussl_write(c_session->nussl, "", 0) < 0)
 				return SASL_FAIL;
 		}
@@ -779,7 +796,7 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 
 		memset(buf, 0, sizeof buf);
 		tls_len = nussl_read(c_session->nussl, buf, sizeof buf);
-		if (tls_len <= 0) {
+		if (tls_len < 0) {
 #ifdef DEBUG_ENABLE
 			if (!tls_len) {
 				log_message(VERBOSE_DEBUG, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
@@ -799,7 +816,7 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 				    "proto v3: error performing SASL negotiation: %s",
 				    sasl_errdetail(conn));
 #endif
-			if (nussl_write(c_session->nussl, "N", 1) <= 0)	/* send NO to client */
+			if (nussl_write(c_session->nussl, "N", 1) < 0)	/* send NO to client */
 				return SASL_FAIL;
 			return SASL_BADPARAM;
 		}
@@ -809,7 +826,7 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 	if (r != SASL_OK) {
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
 				  "proto v3: incorrect authentication");
-		if (nussl_write(c_session->nussl, "N", 1) <= 0)	/* send NO to client */
+		if (nussl_write(c_session->nussl, "N", 1) < 0)	/* send NO to client */
 			return SASL_FAIL;
 		return SASL_BADAUTH;
 	}
@@ -837,7 +854,7 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 		if (c_session->groups == NULL) {
 			debug_log_message(DEBUG, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
 					  "proto v3: Couldn't get user groups");
-			if (nussl_write(c_session->nussl, "N", 1) <= 0)	/* send NO to client */
+			if (nussl_write(c_session->nussl, "N", 1) < 0)	/* send NO to client */
 				return SASL_FAIL;
 			return SASL_BADAUTH;
 		}
@@ -849,7 +866,7 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 		}
 	}
 
-	if (nussl_write(c_session->nussl, "O", 1) <= 0)	/* send YES to client */
+	if (nussl_write(c_session->nussl, "O", 1) < 0)	/* send YES to client */
 		return SASL_FAIL;
 
 	/* negotiation complete */
@@ -984,7 +1001,7 @@ int sasl_user_check(user_session_t * c_session)
 
 	/* recv OS datas from client */
 	buf_size = nussl_read(c_session->nussl, buf, sizeof buf);
-	if (buf_size <= 0) {
+	if (buf_size < 0) {
 		/* allo houston */
 		debug_log_message(DEBUG, DEBUG_AREA_USER,
 				  "error when receiving user OS");
