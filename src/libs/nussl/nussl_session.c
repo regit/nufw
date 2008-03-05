@@ -161,6 +161,7 @@ nussl_session* nussl_session_accept(nussl_session *srv_sess)
 	nussl_session* client_sess = nussl_session_create();
 
 	if (!client_sess) {
+    		nussl_set_error(srv_sess, _("Not enough memory"));
 		return NULL;
 	}
 
@@ -169,15 +170,16 @@ nussl_session* nussl_session_accept(nussl_session *srv_sess)
 
 	client_sess->socket = nussl_sock_create();
 
+	/* TDOD: make nussl_sock_accept return a real error.. */
 	if (nussl_sock_accept(client_sess->socket, nussl_sock_fd(srv_sess->socket)) != 0) {
-		printf("Error during accept()\n");
+		nussl_set_error(srv_sess, "Error during nussl_session_accept()\n");
 		nussl_session_destroy(client_sess);
 		return NULL;
 	}
 
 	if(nussl_sock_accept_ssl(client_sess->socket, srv_sess->ssl_context))
 	{
-		printf("Error during accept_ssl()\n");
+		/* nussl_sock_accept_ssl already sets an error */
 		nussl_session_destroy(client_sess);
 		return NULL;
 	}
@@ -185,8 +187,7 @@ nussl_session* nussl_session_accept(nussl_session *srv_sess)
 	// Post handshake needed to retrieve the peers certificate
 	if(nussl__ssl_post_handshake(client_sess) != NUSSL_OK)
 	{
-		printf("Negotiation failed\n");
-		printf("%s\n", nussl_get_error(client_sess));
+		/* nussl__ssl_post_handshake already sets an error */
 		nussl_session_destroy(client_sess);
 		return NULL;
 	}
@@ -350,7 +351,6 @@ int nussl_ssl_trust_cert_file(nussl_session *sess, const char *cert_file)
     if(ca == NULL)
     {
     	nussl_set_error(sess, _("Unable to load trust certificate"));
-
 	return NUSSL_ERROR;
     }
 
@@ -542,7 +542,6 @@ int nussl_write(nussl_session *session, char *buffer, size_t count)
 	if (ret < 0)
 		nussl_set_error(session, nussl_sock_error(session->socket));
 
-
 	return ret;
 }
 
@@ -569,7 +568,6 @@ int nussl_ssl_set_keypair(nussl_session *session, const char* cert_file, const c
 	if (check_key_perms(key_file)!= NUSSL_OK)
 	{
 		nussl_set_error(session, _("Permissions on private key %s are not restrictive enough, it should be readable only by its owner."), key_file);
-
 		return NUSSL_ERROR;
 	}
 
@@ -577,19 +575,16 @@ int nussl_ssl_set_keypair(nussl_session *session, const char* cert_file, const c
 	if (cert == NULL)
 	{
 		nussl_set_error(session, _("Unable to load private key or certificate file"));
-
 		return NUSSL_ERROR;
 	}
 
 	ret = nussl_ssl_set_clicert(session, cert);
-
 	return ret;
 }
 
 int nussl_ssl_set_pkcs12_keypair(nussl_session *session, const char* pkcs12_file, const char* password)
 {
 	int ret = NUSSL_OK;
-
 
 	UGLY_DEBUG();
 
@@ -630,14 +625,11 @@ int nussl_ssl_set_pkcs12_keypair(nussl_session *session, const char* pkcs12_file
 	}
 
 	ret = nussl_ssl_set_clicert(session, cert);
-
-
 	return ret;
 }
 
 int nussl_session_getpeer(nussl_session *sess, struct sockaddr *addr, socklen_t *addrlen)
 {
-
 	int fd = nussl_session_get_fd(sess);
 	int ret = getpeername(fd, addr, addrlen);
 

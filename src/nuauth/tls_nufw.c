@@ -215,12 +215,23 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 	nu_session->nufw_client = nussl_session_accept(context->server);
 	if ( ! nu_session->nufw_client ) {
 		g_free(nu_session);
+		log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_WARNING,
+				"Unable to allocate nufw server connection : %s",
+				nussl_get_error(context->server));
 		return 1;
 	}
 
 	nufw_servers_connected++;
 
-	nussl_session_getpeer(nu_session->nufw_client, (struct sockaddr *) &sockaddr, &len_inet);
+	if (nussl_session_getpeer(nu_session->nufw_client, (struct sockaddr *) &sockaddr, &len_inet) != NUSSL_OK)
+	{
+		log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_WARNING,
+				"Unable to get peername of NuFW dameon : %s",
+				nussl_get_error(nu_session->nufw_client));
+		g_free(nu_session);
+		nussl_session_destroy(nu_session->nufw_client);
+		return 1;
+	}
 
 	/* Extract client address (convert it to IPv6 if it's IPv4) */
 	if (sockaddr6->sin6_family == AF_INET) {
@@ -382,7 +393,6 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 		{"nuauth_tls_max_servers", G_TOKEN_INT, NUAUTH_TLS_MAX_SERVERS, NULL}
 	};
 	const unsigned int nb_params = sizeof(nuauth_tls_vars) / sizeof(confparams_t);
-	int int_authcert;
 	int int_requestcert;
 
 	context->sck_inet = nuauth_bind(&errmsg, context->addr, context->port, "nufw");
@@ -472,7 +482,7 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 
 	ret = nussl_ssl_set_keypair(context->server, nuauth_tls_cert, nuauth_tls_key);
 	if ( ret != NUSSL_OK ) {
-		g_error("[%s:%d]:error on nussl_session_server_set_keypair", __FUNCTION__, __LINE__);
+		g_error("Failed to load nufw key/certificate: %s", nussl_get_error(context->server));
 		g_free(nuauth_tls_key);
 		g_free(nuauth_tls_cert);
 		g_free(nuauth_tls_cacert);
@@ -483,7 +493,7 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 
 	ret = nussl_ssl_trust_cert_file(context->server, nuauth_tls_cacert);
 	if ( ret != NUSSL_OK ) {
-		g_error("[%s:%d]:error on nussl_session_server_set_keypair", __FUNCTION__, __LINE__);
+		g_error("Failed to load nufw trust certificate: %s", nussl_get_error(context->server));
 		g_free(nuauth_tls_cacert);
 		return 0;
 	}

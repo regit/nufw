@@ -181,8 +181,8 @@ static nu_error_t treat_user_request(user_session_t * c_session)
 #ifdef DEBUG_ENABLE
 		if (datas->buffer_len < 0)
 			log_message(DEBUG, DEBUG_AREA_USER,
-				    "Received error from user %s",
-				    c_session->user_name);
+				    "Received error from user %s (%s)",
+				    c_session->user_name, nussl_get_error(c_session->nussl);
 #endif
 		free_buffer_read(datas);
 		return NU_EXIT_OK;
@@ -319,14 +319,21 @@ int tls_user_accept(struct tls_user_context_t *context)
 
 	current_client_conn->nussl = nussl_session_accept(context->nussl);
 	if ( ! current_client_conn->nussl ) {
+		log_message(WARNING, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
+			    "New client connection failed during nussl_session_accept(): %", nussl_get_error(context->nussl));
 		g_free(current_client_conn);
 		return 1;
 	}
 
-	nussl_session_getpeer(current_client_conn->nussl, (struct sockaddr *) &sockaddr, &len_inet);
+	if (nussl_session_getpeer(current_client_conn->nussl, (struct sockaddr *) &sockaddr, &len_inet) != NUSSL_OK)
+	{
+		log_message(WARNING, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
+			    "New client connection failed during nussl_session_getpeer(): %", nussl_get_error(context->nussl));
+		g_free(current_client_conn);
+		return 1;
+	}
 
 	socket = nussl_session_get_fd(current_client_conn->nussl);
-
 	
 	/* if system is in reload: drop new client */
 	if (nuauthdatas->need_reload) {
@@ -742,7 +749,7 @@ int tls_user_init(struct tls_user_context_t *context)
 
 	ret = nussl_ssl_set_keypair(context->nussl, nuauth_tls_cert, nuauth_tls_key);
 	if ( ret != NUSSL_OK ) {
-		g_error("[%s:%d]:error on nussl_session_server_set_keypair", __FUNCTION__, __LINE__);
+		g_error("Failed to load user key/certificate: %s", nussl_get_error(context->server));
 		g_free(nuauth_tls_key);
 		g_free(nuauth_tls_cert);
 		g_free(nuauth_tls_cacert);
@@ -754,7 +761,7 @@ int tls_user_init(struct tls_user_context_t *context)
 
 	ret = nussl_ssl_trust_cert_file(context->nussl, nuauth_tls_cacert);
 	if ( ret != NUSSL_OK ) {
-		g_error("[%s:%d]:error on nussl_session_server_set_keypair", __FUNCTION__, __LINE__);
+		g_error("Failed to load user trust certificate: %s", nussl_get_error(context->server));
 		g_free(nuauth_tls_cacert);
 		return 0;
 	}
