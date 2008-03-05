@@ -317,7 +317,7 @@ int tls_user_accept(struct tls_user_context_t *context)
 #endif
 	current_client_conn = g_new0(struct client_connection, 1);
 
-	current_client_conn->nussl = nussl_session_server_new_client(context->nussl);
+	current_client_conn->nussl = nussl_session_accept(context->nussl);
 	if ( ! current_client_conn->nussl ) {
 		g_free(current_client_conn);
 		return 1;
@@ -734,13 +734,13 @@ int tls_user_init(struct tls_user_context_t *context)
 	g_free(nuauth_tls_crl);
 	g_free(nuauth_tls_key_passwd);
 
-	context->nussl = nussl_session_server_create_with_fd(context->sck_inet, nuauth_tls.request_cert);
+	context->nussl = nussl_session_create_with_fd(context->sck_inet, nuauth_tls.request_cert);
 	if ( ! context->nussl ) {
 		g_error("Cannot create session from fd!");
 		return 0;
 	}
 
-	ret = nussl_session_server_set_keypair(context->nussl, nuauth_tls_cert, nuauth_tls_key);
+	ret = nussl_ssl_set_keypair(context->nussl, nuauth_tls_cert, nuauth_tls_key);
 	if ( ret != NUSSL_OK ) {
 		g_error("[%s:%d]:error on nussl_session_server_set_keypair", __FUNCTION__, __LINE__);
 		g_free(nuauth_tls_key);
@@ -752,7 +752,7 @@ int tls_user_init(struct tls_user_context_t *context)
 	g_free(nuauth_tls_key);
 	g_free(nuauth_tls_cert);
 
-	ret = nussl_session_server_trust_cert_file(context->nussl, nuauth_tls_cacert);
+	ret = nussl_ssl_trust_cert_file(context->nussl, nuauth_tls_cacert);
 	if ( ret != NUSSL_OK ) {
 		g_error("[%s:%d]:error on nussl_session_server_set_keypair", __FUNCTION__, __LINE__);
 		g_free(nuauth_tls_cacert);

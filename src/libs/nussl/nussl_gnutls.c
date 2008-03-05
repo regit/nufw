@@ -69,7 +69,6 @@ GCRY_THREAD_OPTION_PTHREAD_IMPL;
 #include "nussl_ssl.h"
 #include "nussl_string.h"
 #include "nussl_session.h"
-#include "nussl_session_server.h"
 #include "nussl_internal.h"
 
 #include "nussl_private.h"
@@ -591,17 +590,6 @@ static int provide_client_cert(gnutls_session session,
     return 0;
 }
 #endif
-
-int nussl_session_server_set_clicert(nussl_session_server *srv_sess, const nussl_ssl_client_cert *cc)
-{
-
-    srv_sess->mycert = dup_client_cert(cc);
-    if (!srv_sess->mycert)
-    	return NUSSL_ERROR;
-
-    return nussl_ssl_context_keypair_from_data(srv_sess->ssl_context, srv_sess->mycert);
-}
-
 
 int nussl_ssl_set_clicert(nussl_session *sess, const nussl_ssl_client_cert *cc)
 {
@@ -1193,7 +1181,7 @@ int nussl_ssl_cert_digest(const nussl_ssl_certificate *cert, char *digest)
     return 0;
 }
 
-int nussl_get_peer_dn(nussl_session* sess, char* buf, size_t buf_size)
+int nussl_get_peer_dn(nussl_session* sess, char* buf, size_t *buf_size)
 {
 	if (sess->peer_cert == NULL)
 		return NUSSL_ERROR;

@@ -24,7 +24,6 @@ extern "C" {
 
 struct nussl_nession_t;
 typedef struct nussl_session_t nussl_session;
-typedef struct nussl_session_server_t nussl_session_server;
 
 typedef void *nussl_ptr;
 
@@ -89,29 +88,23 @@ char* nussl_get_server_cert_infos(nussl_session* sess);
 /* Returns a string containing informations about the peer certificate */
 char* nussl_get_server_cert_dn(nussl_session* sess);
 
-/* Begin: INL additions */
-
+#if 0
 int nussl_ssl_cert_generate_dh_params(nussl_session *session);
 void nussl_ssl_cert_dh_params(nussl_session *session);
 int nussl_ssl_cert_set_x509_crl_file(nussl_session *session, const char *crl_file);
 int nussl_ssl_context_set_verify(nussl_session *session, int required, const char *verify_cas);
+#endif
 
+/* Server related functions */
 /* Create session server from sock fd */
-nussl_session_server *nussl_session_server_create_with_fd(int fd, int verify);
+nussl_session *nussl_session_create_with_fd(int fd, int verify);
 
-void nussl_session_server_destroy(nussl_session_server *srv_sess);
-
-void nussl_session_server_close_connection(nussl_session_server *srv_sess);
-
-nussl_session* nussl_session_server_new_client(nussl_session_server *srv_sess);
-
-int nussl_session_server_set_keypair(nussl_session *srv_sess, const char* cert_file, const char* key_file);
-
-int nussl_session_getpeer(nussl_session *sess, struct sockaddr *addr, socklen_t *addrlen);
+nussl_session* nussl_session_accept(nussl_session *srv_sess);
 
 int nussl_session_get_fd(nussl_session *sess);
 
-/* End: INL additions */
+int nussl_session_getpeer(nussl_session *sess, struct sockaddr *addr, socklen_t *addrlen);
+
 
 
 #define NUSSL_OK (0) /* Success */

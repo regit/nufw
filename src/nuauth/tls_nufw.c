@@ -51,7 +51,7 @@ struct tls_nufw_context_t {
 	fd_set tls_rx_set;	/* read set */
 	GMutex *mutex;
 
-	nussl_session_server *server;
+	nussl_session *server;
 };
 
 /**
@@ -212,7 +212,7 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 	/* We have to wait the first packet */
 	nu_session->proto_version = PROTO_UNKNOWN;
 
-	nu_session->nufw_client = nussl_session_server_new_client(context->server);
+	nu_session->nufw_client = nussl_session_accept(context->server);
 	if ( ! nu_session->nufw_client ) {
 		g_free(nu_session);
 		return 1;
@@ -464,13 +464,13 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 	g_free(nuauth_tls_key_passwd);
 
 	/* TODO: use a nufw specific value of request_cert */
-	context->server = nussl_session_server_create_with_fd(context->sck_inet, nuauth_tls.request_cert);
+	context->server = nussl_session_create_with_fd(context->sck_inet, nuauth_tls.request_cert);
 	if ( ! context->server ) {
 		g_error("Cannot create session from fd!");
 		return 0;
 	}
 
-	ret = nussl_session_server_set_keypair(context->server, nuauth_tls_cert, nuauth_tls_key);
+	ret = nussl_ssl_set_keypair(context->server, nuauth_tls_cert, nuauth_tls_key);
 	if ( ret != NUSSL_OK ) {
 		g_error("[%s:%d]:error on nussl_session_server_set_keypair", __FUNCTION__, __LINE__);
 		g_free(nuauth_tls_key);
@@ -481,7 +481,7 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 	g_free(nuauth_tls_key);
 	g_free(nuauth_tls_cert);
 
-	ret = nussl_session_server_trust_cert_file(context->server, nuauth_tls_cacert);
+	ret = nussl_ssl_trust_cert_file(context->server, nuauth_tls_cacert);
 	if ( ret != NUSSL_OK ) {
 		g_error("[%s:%d]:error on nussl_session_server_set_keypair", __FUNCTION__, __LINE__);
 		g_free(nuauth_tls_cacert);

@@ -118,6 +118,9 @@ nussl_session *nussl_session_create()
 /*    NUSSL_DEBUG(NUSSL_DBG_HTTP, "session to ://%s:%d begins.\n",
 	     hostname, port); */
 
+    if (!sess)
+    	return NULL;
+
     strcpy(sess->error, "Unknown error.");
 
     sess->ssl_context = nussl_ssl_context_create(0);
@@ -132,8 +135,63 @@ nussl_session *nussl_session_create()
     /* Set default read timeout */
     sess->rdtimeout = SOCKET_READ_TIMEOUT;
 
-
     return sess;
+}
+
+/* Server function */
+nussl_session *nussl_session_create_with_fd(int server_fd, int verify)
+{
+	nussl_session *srv_sess;
+	srv_sess = nussl_session_create();
+	if ( !srv_sess ) {
+		return NULL;
+	}
+
+	srv_sess->socket = nussl_sock_create_with_fd(server_fd);
+	srv_sess->ssl_context = nussl_ssl_context_create(0);
+	/* verify: one of NUSSL_CERT_IGNORE, NUSSL_CERT_REQUEST or NUSSL_CERT_REQUIRE */
+	srv_sess->ssl_context->verify = verify;
+
+	return srv_sess;
+}
+
+/* Server function */
+nussl_session* nussl_session_accept(nussl_session *srv_sess)
+{
+	nussl_session* client_sess = nussl_session_create();
+
+	if (!client_sess) {
+		return NULL;
+	}
+
+	if (srv_sess->ssl_context->verify)
+		client_sess->check_peer_cert = 1;
+
+	client_sess->socket = nussl_sock_create();
+
+	if (nussl_sock_accept(client_sess->socket, nussl_sock_fd(srv_sess->socket)) != 0) {
+		printf("Error during accept()\n");
+		nussl_session_destroy(client_sess);
+		return NULL;
+	}
+
+	if(nussl_sock_accept_ssl(client_sess->socket, srv_sess->ssl_context))
+	{
+		printf("Error during accept_ssl()\n");
+		nussl_session_destroy(client_sess);
+		return NULL;
+	}
+
+	// Post handshake needed to retrieve the peers certificate
+	if(nussl__ssl_post_handshake(client_sess) != NUSSL_OK)
+	{
+		printf("Negotiation failed\n");
+		printf("%s\n", nussl_get_error(client_sess));
+		nussl_session_destroy(client_sess);
+		return NULL;
+	}
+
+	return client_sess;
 }
 
 void nussl_set_crl_refresh(nussl_session *sess, int refresh)

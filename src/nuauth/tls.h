@@ -149,7 +149,7 @@ struct nuauth_ssl_t {
 
 /* TODO: move-me into tls_user.h */
 struct nuauth_tls_t {
-	nussl_session_server *nussl_server;
+	nussl_session *nussl_server;
 	int request_cert;
 	auth_cert_type_t auth_by_cert;
 #ifdef XXX /* Move this into nussl */
@@ -203,7 +203,7 @@ struct tls_user_context_t {
 	char *addr;
 	char *port;
 	GAsyncQueue* cmd_queue;
-	nussl_session_server* nussl;
+	nussl_session* nussl;
 };
 
 typedef struct {
