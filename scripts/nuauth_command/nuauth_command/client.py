@@ -83,7 +83,7 @@ class Client:
         except error, err:
             code = err[0]
             if code == 111:
-                err = "Server is not running"
+                err = "Server is not running (UNIX socket: %s)" % self.socket_filename
             raise NuauthError("Connection error: %s" % err)
 
         # Send client version
