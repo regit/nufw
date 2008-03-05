@@ -105,8 +105,7 @@ class Client:
         try:
             return self._send_command(command)
         except NuauthError, err:
-            if not self.reconnect():
-                raise err
+            self.reconnect()
             return self._send_command(command)
 
     def _send_command(self, command):
@@ -127,5 +126,5 @@ class Client:
 
     def reconnect(self):
         self.socket = None
-        return self.connect()
+        self.connect()
 
