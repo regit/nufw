@@ -99,7 +99,6 @@ typedef enum {
 #include "client_mngr.h"
 #include "nu_gcrypt.h"
 #include "ip_auth.h"
-#include "x509_parsing.h"
 #include "parsing.h"
 #include "localid_auth.h"
 #include "audit.h"
