@@ -1737,7 +1737,10 @@ int nussl_sock_close(nussl_socket *sock)
     if (sock->fd < 0)
         ret = 0;
     else
+    {
+        shutdown(sock->fd, SHUT_RDWR);
         ret = nussl_close(sock->fd);
+    }
     nussl_free(sock);
     return ret;
 }
