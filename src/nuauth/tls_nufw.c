@@ -179,7 +179,7 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 	struct in6_addr addr;
 	char addr_ascii[INET6_ADDRSTRLEN];
 #endif
-	socklen_t len_inet;
+	socklen_t len_inet = sizeof(sockaddr);
 
 	nufw_session_t *nu_session;
 
