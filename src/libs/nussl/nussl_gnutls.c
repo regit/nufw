@@ -560,7 +560,7 @@ static int provide_client_cert(gnutls_session session,
         return -1;
     }
 
-    if (!sess->client_cert && sess->ssl_provide_fn) {
+    if (!sess->my_cert && sess->ssl_provide_fn) {
         /* The dname array cannot be converted without better dname
          * support from GNUTLS. */
         sess->ssl_provide_fn(sess->ssl_provide_ud, sess,
@@ -569,15 +569,15 @@ static int provide_client_cert(gnutls_session session,
 
     NUSSL_DEBUG(NUSSL_DBG_SSL, "In client cert provider callback.\n");
 
-    if (sess->client_cert) {
+    if (sess->my_cert) {
         gnutls_certificate_type type = gnutls_certificate_type_get(session);
         if (type == GNUTLS_CRT_X509) {
             NUSSL_DEBUG(NUSSL_DBG_SSL, "Supplying client certificate.\n");
 
             st->type = type;
             st->ncerts = 1;
-            st->cert.x509 = &sess->client_cert->cert.subject;
-            st->key.x509 = sess->client_cert->pkey;
+            st->cert.x509 = &sess->my_cert->cert.subject;
+            st->key.x509 = sess->my_cert->pkey;
 
             /* tell GNU TLS not to deallocate the certs. */
             st->deinit_all = 0;
@@ -606,11 +606,11 @@ int nussl_session_server_set_clicert(nussl_session_server *srv_sess, const nussl
 int nussl_ssl_set_clicert(nussl_session *sess, const nussl_ssl_client_cert *cc)
 {
     UGLY_DEBUG();
-    sess->client_cert = dup_client_cert(cc);
-    if (!sess->client_cert)
+    sess->my_cert = dup_client_cert(cc);
+    if (!sess->my_cert)
     	return NUSSL_ERROR;
 
-    return nussl_ssl_context_keypair_from_data(sess->ssl_context, sess->client_cert);
+    return nussl_ssl_context_keypair_from_data(sess->ssl_context, sess->my_cert);
 }
 
 /* Return the certificate chain sent by the peer, or NULL on error. */
@@ -734,7 +734,7 @@ int nussl__ssl_post_handshake(nussl_session * sess)
         return NUSSL_ERROR;
     }
 
-    if (sess->server_cert && nussl_ssl_cert_cmp(sess->server_cert, chain) == 0) {
+    if (sess->peer_cert && nussl_ssl_cert_cmp(sess->peer_cert, chain) == 0) {
         /* Same cert as last time; presume OK.  This is not optimal as
          * make_peers_chain() has already gone through and done the
          * expensive DER parsing stuff for the whole chain by now. */
@@ -748,7 +748,7 @@ int nussl__ssl_post_handshake(nussl_session * sess)
     }
 
     sess->connected = 1;
-    sess->server_cert = chain;
+    sess->peer_cert = chain;
     return NUSSL_OK;
 }
 
@@ -1195,10 +1195,10 @@ int nussl_ssl_cert_digest(const nussl_ssl_certificate *cert, char *digest)
 
 int nussl_get_peer_dn(nussl_session* sess, char* buf, size_t buf_size)
 {
-	if (sess->server_cert == NULL)
+	if (sess->peer_cert == NULL)
 		return NUSSL_ERROR;
 
-	if (gnutls_x509_crt_get_dn(sess->server_cert->subj_dn.cert, buf, buf_size))
+	if (gnutls_x509_crt_get_dn(sess->peer_cert->subj_dn.cert, buf, buf_size))
 		return NUSSL_ERROR;
 
 	return NUSSL_OK;

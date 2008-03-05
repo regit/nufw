@@ -496,7 +496,7 @@ static int provide_client_cert(SSL *ssl, X509 **cert, EVP_PKEY **pkey)
     nussl_session *const sess = SSL_get_app_data(ssl);
 
 #if XXX
-    if (!sess->client_cert && sess->ssl_provide_fn) {
+    if (!sess->my_cert && sess->ssl_provide_fn) {
 	nussl_ssl_dname **dnames = NULL;
         int n, count = 0;
 	STACK_OF(X509_NAME) *ca_list = SSL_get_client_CA_list(ssl);
@@ -523,8 +523,8 @@ static int provide_client_cert(SSL *ssl, X509 **cert, EVP_PKEY **pkey)
     }
 #endif
 
-    if (sess->client_cert) {
-        nussl_ssl_client_cert *const cc = sess->client_cert;
+    if (sess->my_cert) {
+        nussl_ssl_client_cert *const cc = sess->my_cert;
 	NUSSL_DEBUG(NUSSL_DBG_SSL, "Supplying client certificate.\n");
 	cc->pkey->references++;
 	cc->cert.subject->references++;
@@ -539,20 +539,20 @@ static int provide_client_cert(SSL *ssl, X509 **cert, EVP_PKEY **pkey)
 
 int nussl_ssl_set_clicert(nussl_session *sess, const nussl_ssl_client_cert *cc)
 {
-    sess->client_cert = dup_client_cert(cc);
-    if (!sess->client_cert)
+    sess->my_cert = dup_client_cert(cc);
+    if (!sess->my_cert)
     	return NUSSL_ERROR;
 
-    return nussl_ssl_context_keypair_from_data(sess->ssl_context, sess->client_cert);
+    return nussl_ssl_context_keypair_from_data(sess->ssl_context, sess->my_cert);
 }
 
 #ifdef BLAH
 int nussl_ssl_set_clicert(nussl_session *sess, const nussl_ssl_client_cert *cc)
 {
 	int ret;
-	sess->client_cert = dup_client_cert(cc);
+	sess->my_cert = dup_client_cert(cc);
 
-	if (sess->client_cert == NULL)
+	if (sess->my_cert == NULL)
 		return NUSSL_ERROR;
 
 	ret = SSL_CTX_use_PrivateKey(sess->ssl_context->ctx, cc->pkey);
@@ -610,8 +610,8 @@ int nussl__negotiate_ssl(nussl_session *sess)
     	return NUSSL_ERROR;
         }
 
-        if (sess->server_cert) {
-            int diff = X509_cmp(sk_X509_value(chain, 0), sess->server_cert->subject);
+        if (sess->peer_cert) {
+            int diff = X509_cmp(sk_X509_value(chain, 0), sess->peer_cert->subject);
             if (freechain) sk_X509_free(chain); /* no longer need the chain */
             if (diff) {
                 /* This could be a MITM attack: fail the request. */
@@ -634,7 +634,7 @@ int nussl__negotiate_ssl(nussl_session *sess)
            	return NUSSL_ERROR;
             }
     	/* remember the chain. */
-            sess->server_cert = cert;
+            sess->peer_cert = cert;
         }
     }
 

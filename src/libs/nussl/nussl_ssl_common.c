@@ -25,12 +25,12 @@ char* nussl_get_cert_infos(nussl_session* sess)
 	char valid_until[NUSSL_SSL_VDATELEN];
 	char *ret, *dn, *issuer_dn, *dn_str, *issuer_str, *from_str, *until_str;
 
-	if (!sess->client_cert)
+	if (!sess->my_cert)
 		return NULL;
 
-	dn = nussl_ssl_readable_dname(&sess->client_cert->cert.subj_dn);
-	issuer_dn = nussl_ssl_readable_dname(&sess->client_cert->cert.issuer_dn);
-	nussl_ssl_cert_validity(&sess->client_cert->cert, valid_from, valid_until);
+	dn = nussl_ssl_readable_dname(&sess->my_cert->cert.subj_dn);
+	issuer_dn = nussl_ssl_readable_dname(&sess->my_cert->cert.issuer_dn);
+	nussl_ssl_cert_validity(&sess->my_cert->cert, valid_from, valid_until);
 
 	dn_str = _("DN: ");
 	issuer_str = _("Issuer DN: ");
@@ -72,12 +72,12 @@ char* nussl_get_server_cert_infos(nussl_session* sess)
 	char valid_until[NUSSL_SSL_VDATELEN];
 	char *ret, *dn, *issuer_dn, *dn_str, *issuer_str, *from_str, *until_str;
 
-	if (!sess->server_cert)
+	if (!sess->peer_cert)
 		return NULL;
 
-	dn = nussl_ssl_readable_dname(&sess->server_cert->subj_dn);
-	issuer_dn = nussl_ssl_readable_dname(&sess->server_cert->issuer_dn);
-	nussl_ssl_cert_validity(sess->server_cert, valid_from, valid_until);
+	dn = nussl_ssl_readable_dname(&sess->peer_cert->subj_dn);
+	issuer_dn = nussl_ssl_readable_dname(&sess->peer_cert->issuer_dn);
+	nussl_ssl_cert_validity(sess->peer_cert, valid_from, valid_until);
 
 	dn_str = _("DN: ");
 	issuer_str = _("Issuer DN: ");
@@ -116,13 +116,13 @@ char* nussl_get_server_cert_infos(nussl_session* sess)
 char* nussl_get_server_cert_dn(nussl_session* sess)
 {
 	char *tmp, *dn;
-	if (!sess->server_cert)
+	if (!sess->peer_cert)
 	{
 		printf("no server cert\n");
 		return NULL;
 	}
 
-	tmp = nussl_ssl_readable_dname(&sess->server_cert->subj_dn);
+	tmp = nussl_ssl_readable_dname(&sess->peer_cert->subj_dn);
 	dn = strdup(tmp);
 	nussl_free(tmp);
 	return dn;

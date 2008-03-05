@@ -86,11 +86,11 @@ void nussl_session_destroy(nussl_session *sess)
     if (sess->ssl_context)
         nussl_ssl_context_destroy(sess->ssl_context);
 
-    if (sess->server_cert)
-        nussl_ssl_cert_free(sess->server_cert);
+    if (sess->peer_cert)
+        nussl_ssl_cert_free(sess->peer_cert);
 
-    if (sess->client_cert)
-        nussl_ssl_clicert_free(sess->client_cert);
+    if (sess->my_cert)
+        nussl_ssl_clicert_free(sess->my_cert);
 
     nussl_free(sess);
 

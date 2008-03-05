@@ -90,8 +90,8 @@ struct nussl_session_s {
 
 
 /* rename into my_cert & peer_cert */
-    nussl_ssl_client_cert *client_cert;
-    nussl_ssl_certificate *server_cert;
+    nussl_ssl_client_cert *my_cert;
+    nussl_ssl_certificate *peer_cert;
     nussl_ssl_context *ssl_context;
 
 
