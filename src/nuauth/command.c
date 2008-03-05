@@ -355,8 +355,12 @@ void command_execute(command_t * this, char *command)
 	} else if (strncmp(command, "disconnect ", 10) == 0) {
 		ok = command_disconnect(this, encoder, command+10);
 	} else if (strcmp(command, "reload") == 0) {
-		nuauth_reload(0);
-		encoder_add_string(encoder, "Configuration reloaded");
+		gboolean restart = nuauth_reload(0);
+		if (restart) {
+			encoder_add_string(encoder, "Configuration change requires Nuauth restart");
+		} else {
+			encoder_add_string(encoder, "Configuration reloaded");
+		}
 	} else if (strcmp(command, "refresh cache") == 0) {
 		if (nuauthconf->acl_cache) {
 			cache_reset(nuauthdatas->acl_cache);

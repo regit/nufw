@@ -78,7 +78,7 @@ int init_nuauthconf(struct nuauth_params **result)
 	char *gwsrv_addr = NULL;
 	int port;
 	int connect_policy = POLICY_MULTIPLE_LOGIN;
- 	confparams_t nuauth_vars[] = {
+	confparams_t nuauth_vars[] = {
 	        /* token, data_type, default_int_val, default_string_val */
 		{"nuauth_client_listen_addr", G_TOKEN_STRING, 0,
 		 g_strdup(AUTHREQ_CLIENT_LISTEN_ADDR)},
@@ -148,8 +148,7 @@ int init_nuauthconf(struct nuauth_params **result)
 
 
 
-#define READ_CONF(KEY) \
-  get_confvar_value(nuauth_vars, nb_params, KEY)
+#define READ_CONF(KEY) get_confvar_value(nuauth_vars, nb_params, KEY)
 
 	conf->client_srv = (char *) READ_CONF("nuauth_client_listen_addr");
 	conf->nufw_srv = (char *) READ_CONF("nuauth_nufw_listen_addr");
@@ -273,7 +272,7 @@ static gboolean compare_nuauthparams(
  * Argument: signal number
  * Return: None
  */
-void nuauth_reload(int signum)
+gboolean nuauth_reload(int signum)
 {
 	struct nuauth_params *newconf = NULL;
 	gboolean restart;
@@ -321,6 +320,7 @@ void nuauth_reload(int signum)
 	nuauth_install_signals(TRUE);
 
 	g_message("[+] NuAuth server reloaded");
+	return restart;
 }
 
 static gboolean compare_nuauthparams(
