@@ -47,7 +47,7 @@ void nuauth_process_poll(int signum)
 	g_message("AUDIT : %d connections waiting to be sent packets for.",
 		  (g_hash_table_size(myaudit->conn_list)));
 /*  g_message("AUDIT : overall number of unused threads : %u",
-            g_thread_pool_get_num_unused_threads());*/
+	g_thread_pool_get_num_unused_threads());*/
 #ifdef DEBUG_MEMORY
 	g_mem_profile();
 #endif

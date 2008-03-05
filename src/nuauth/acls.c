@@ -24,10 +24,10 @@
  */
 
 /*! \file acls.c
-    \brief Acls manipulations and cache
+ *  \brief Acls manipulations and cache
 
-    It implements the functions needed to activate cache for acls and basic
-    acl manipulations tasks
+ *  It implements the functions needed to activate cache for acls and basic
+ *  acl manipulations tasks
 
 
 */
