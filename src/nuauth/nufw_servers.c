@@ -237,7 +237,7 @@ nu_error_t nufw_session_send(nufw_session_t * session, char * buffer, int length
 	if (ret < 0) {
 		log_message(DEBUG, DEBUG_AREA_GW,
 			"nufw_servers: send failure (%s)",
-			gnutls_strerror(ret));
+			nussl_get_error(session->nufw_client));
 		return NU_EXIT_ERROR;
 	} else if (ret == 0) {
 		return NU_EXIT_ERROR;

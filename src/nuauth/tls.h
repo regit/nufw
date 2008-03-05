@@ -58,7 +58,6 @@ typedef enum {
 GAsyncQueue *mx_queue;
 
 nussl_session *ssl_connect(int socket_fd);
-int tls_connect(int c, gnutls_session ** session_ptr);
 
 /* cache system related */
 struct client_connection {
@@ -83,7 +82,9 @@ struct client_connection {
 struct tls_buffer_read {
 	int socket;		/*!< Socket file descriptor (value from accept()) */
 	struct in6_addr ip_addr;	/*!< User IPv6 address */
+#if 0
 	gnutls_session *tls;	/*!< TLS session */
+#endif
 	char *user_name;	/*!< User name string */
 	uint32_t user_id;	/*!< User identifier (16 bits */
 	GSList *groups;		/*!< User groups */
@@ -185,8 +186,10 @@ void end_tls();
 gboolean remove_socket_from_pre_client_list(int c);
 
 void tls_sasl_connect(gpointer userdata, gpointer data);
+#if 0
 gint check_certs_for_tls_session(gnutls_session session);
 void close_tls_session(int c, gnutls_session * session);
+#endif
 
 void refresh_crl_file();
 

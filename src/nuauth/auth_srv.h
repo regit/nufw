@@ -52,7 +52,6 @@
 #include <errno.h>
 /* config dependant */
 #include <config.h>
-#include <gnutls/gnutls.h>
 #include <sasl/sasl.h>
 #include <locale.h>
 #include <sys/time.h>

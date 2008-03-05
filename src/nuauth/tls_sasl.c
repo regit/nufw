@@ -79,8 +79,8 @@ static void policy_refuse_user(user_session_t * c_session, int c,
 #ifdef XXX /* factorize and destruct this cleanly */
 	close_tls_session(c, c_session->tls);
 	c_session->nussl = NULL;
-	clean_session(c_session);
 #endif
+	clean_session(c_session);
 }
 
 
@@ -118,14 +118,14 @@ static void tls_sasl_connect_ok(user_session_t * c_session, int c)
 	if (nussl_write(c_session->nussl, (char*)&msg, sizeof(msg)) < 0) {
 #endif
 		log_message(WARNING, DEBUG_AREA_USER,
-			    "gnutls_record_send() failure at %s:%d",
+			    "nussl_write() failure at %s:%d",
 			    __FILE__, __LINE__);
 		if (nuauthconf->push) {
 #ifdef XXX /* factorize and destruct this cleanly */
 			close_tls_session(c, c_session->tls);
 			c_session->tls = NULL;
-			clean_session(c_session);
 #endif
+			clean_session(c_session);
 			return;
 		} else {
 			return;
@@ -141,8 +141,8 @@ static void tls_sasl_connect_ok(user_session_t * c_session, int c)
 #ifdef XXX /* factorize and destruct this cleanly */
 			close_tls_session(c, c_session->tls);
 			c_session->tls = NULL;
-			clean_session(c_session);
 #endif
+			clean_session(c_session);
 			return;
 		}
 		datas->socket = c;
@@ -188,24 +188,6 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 		return;
 	}
 #endif
-	if (nuauthconf->single_ip_client_limit > 0) {
-		if (g_slist_length(get_client_sockets_by_ip(&client->addr)) >=
-				nuauthconf->single_ip_client_limit) {
-			char address[INET6_ADDRSTRLEN];
-			FORMAT_IPV6(&client->addr, address);
-			g_free(userdata);
-#ifdef XXX /* factorize and destruct this cleanly */
-			gnutls_bye(*(session), GNUTLS_SHUT_RDWR);
-			close_tls_session(socket_fd, session);
-#endif
-			remove_socket_from_pre_client_list(socket_fd);
-		        log_message(INFO, DEBUG_AREA_USER,
-				    "Policy: too many connection attempts from already overused IP %s, closing socket",
-				    address);
-			return;
-		}
-	}
-
 	c_session = g_new0(user_session_t, 1);
 	c_session->nussl = client->nussl;
 	c_session->socket = socket_fd;
@@ -217,6 +199,27 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 	c_session->user_name = NULL;
 	c_session->user_id = 0;
 	g_free(userdata);
+
+	/* Check the user is authorized to connect
+	 * when he already have an open connection */
+	if (nuauthconf->single_ip_client_limit > 0) {
+		if (g_slist_length(get_client_sockets_by_ip(&client->addr)) >=
+				nuauthconf->single_ip_client_limit) {
+			char address[INET6_ADDRSTRLEN];
+			FORMAT_IPV6(&client->addr, address);
+#ifdef XXX /* factorize and destruct this cleanly */
+			gnutls_bye(*(session), GNUTLS_SHUT_RDWR);
+			close_tls_session(socket_fd, session);
+#endif
+			clean_session(c_session);
+			remove_socket_from_pre_client_list(socket_fd);
+		        log_message(INFO, DEBUG_AREA_USER,
+				    "Policy: too many connection attempts from already overused IP %s, closing socket",
+				    address);
+			return;
+		}
+	}
+
 	if ((nuauth_tls.auth_by_cert > NO_AUTH_BY_CERT))
 #if 0 /* Check ed by nussl */
 	    && gnutls_certificate_get_peers(*session, &size)) {
@@ -293,8 +296,8 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 #ifdef XXX /* factorize and destruct this cleanly */
 		close_tls_session(socket_fd, c_session->tls);
 		c_session->tls = NULL;
-		clean_session(c_session);
 #endif
+		clean_session(c_session);
 	}
 
 

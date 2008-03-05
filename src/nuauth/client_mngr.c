@@ -50,18 +50,21 @@ static uint32_t hash_ipv6(struct in6_addr *addr)
 
 void clean_session(user_session_t * c_session)
 {
-#ifdef XXX /* factorize and destruct this cleanly */
-	if (c_session->tls) {
-		gnutls_deinit(*(c_session->tls));
-		g_free(c_session->tls);
-	}
-#endif
-	g_free(c_session->user_name);
-	g_slist_free(c_session->groups);
+	log_user_session(c_session, SESSION_CLOSE);
+	if (c_session->nussl)
+		nussl_session_destroy(c_session->nussl);
 
-	g_free(c_session->sysname);
-	g_free(c_session->release);
-	g_free(c_session->version);
+	if(c_session->user_name)
+		g_free(c_session->user_name);
+	if(c_session->groups)
+		g_slist_free(c_session->groups);
+
+	if(c_session->sysname)
+		g_free(c_session->sysname);
+	if(c_session->release)
+		g_free(c_session->release);
+	if(c_session->version)
+		g_free(c_session->version);
 
 	g_mutex_free(c_session->tls_lock);
 
@@ -74,6 +77,7 @@ void clean_session(user_session_t * c_session)
 
 static void hash_clean_session(user_session_t * c_session)
 {
+#if 0
 /*	int socket = GPOINTER_TO_INT(gnutls_transport_get_ptr(*c_session->tls));*/
 	log_user_session(c_session, SESSION_CLOSE);
 #ifdef XXX /* factorize and destruct this cleanly */
@@ -82,6 +86,9 @@ static void hash_clean_session(user_session_t * c_session)
 	int socket = nussl_session_get_fd(c_session->nussl);
 	shutdown(socket, SHUT_RDWR);
 	close(socket);
+#else
+	clean_session(c_session);
+#endif
 }
 
 
@@ -135,7 +142,6 @@ static GSList *delete_ipsockets_from_hash(GSList *ipsockets,
 		/* remove entry from hash */
 		key = GINT_TO_POINTER(session->socket);
 		g_hash_table_steal(client_conn_hash, key);
-		log_user_session(session, SESSION_CLOSE);
 		clean_session(session);
 	}
 	return ipsockets;

@@ -80,24 +80,30 @@ extern int ssl_connect(const char *hostname, const char *service)
  * \param session A session with a client
  * \param socket_fd File descriptor of the connection (created by accept() syscall)
  */
-void close_tls_session(int socket_fd, gnutls_session * session)
+#if 0 /* moved to tls_user.c */
+void close_tls_session(nussl_session* session)
 {
+#if 0
 	if (close(socket_fd))
 		log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 			    "close_tls_session: close() failed (error code %i)!",
 			    errno);
 	gnutls_credentials_clear(*session);
 	gnutls_deinit(*session);
+#endif
+	nussl_destroy(session);
 	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER | DEBUG_AREA_GW,
-			  "gnutls_deinit() was called");
+			  "nussl_destroy() was called");
 	g_free(session);
 }
+#endif
 
 /**
  * Check certificates of a session. Only accept certificate of type x509.
  *
  * \return SASL_OK if ok, SASL error code else
  */
+#if 0
 gint check_certs_for_tls_session(gnutls_session session)
 {
 	unsigned int status;
@@ -134,6 +140,7 @@ gint check_certs_for_tls_session(gnutls_session session)
 	}
 	return SASL_OK;
 }
+#endif
 
 #if 0
 /**

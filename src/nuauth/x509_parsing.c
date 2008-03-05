@@ -20,14 +20,17 @@
 
 
 #include <auth_srv.h>
+
+#if 0
 #include <gnutls/x509.h>
+#endif
 
 /**
  * \addtogroup TLSUser
  * @{
  */
 
-
+#if 0
 gint get_first_x509_cert_from_tls_session(gnutls_session session,
 					  gnutls_x509_crt * cert)
 {
@@ -53,7 +56,7 @@ gint get_first_x509_cert_from_tls_session(gnutls_session session,
 	}
 	return SASL_OK;
 }
-
+#endif
 
 #if 0
 /**

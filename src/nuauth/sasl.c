@@ -373,12 +373,14 @@ static int mysasl_negotiate(user_session_t * c_session, sasl_conn_t * conn)
 	/* send capability list to client */
 	record_send = samp_send(c_session->nussl, data, sasl_len);
 	tls_len = sasl_len;
+#if 0
 	if ((record_send == GNUTLS_E_INTERRUPTED)
 	    || (record_send == GNUTLS_E_AGAIN)) {
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
 				  "sasl nego: need to resend packet");
 		record_send = samp_send(c_session->nussl, data, tls_len);
 	}
+#endif
 	if (record_send < 0) {
 		return SASL_FAIL;
 	}
@@ -677,12 +679,14 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 	tls_len = sasl_len;
 	/* send capability list to client */
 	record_send = nussl_write(c_session->nussl, data, tls_len);
+#if 0
 	if ((record_send == GNUTLS_E_INTERRUPTED)
 	    || (record_send == GNUTLS_E_AGAIN)) {
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
 				  "proto v3: sasl nego : need to resend packet");
 		record_send = nussl_write(c_session->nussl, data, tls_len);
 	}
+#endif
 	if (record_send < 0) {
 		return SASL_FAIL;
 	}
