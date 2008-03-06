@@ -143,7 +143,6 @@ static int do_connect(nussl_session *sess, struct host_info *host, const char *e
 
     if (ret) {
         nussl_set_error(sess, "%s: %s", err, nussl_sock_error(sess->socket));
-        nussl_sock_close(sess->socket);
 	return NUSSL_CONNECT;
     }
 
@@ -183,7 +182,7 @@ int nussl_open_connection(nussl_session *sess)
     int ret;
     struct host_info *host;
 
-    if (sess->connected) return NUSSL_OK;
+    if (sess->socket) return NUSSL_OK;
 
     /* Resolve hostname if necessary. */
     host =&sess->server;
@@ -204,8 +203,6 @@ int nussl_open_connection(nussl_session *sess)
 #endif
         if (ret == NUSSL_OK) {
             ret = nussl__negotiate_ssl(sess);
-            if (ret != NUSSL_OK)
-                nussl_close_connection(sess);
         }
 #ifdef XXX
     }

@@ -76,9 +76,7 @@ void nussl_session_destroy(nussl_session *sess)
 
     /* Close the connection; note that the notifier callback could
      * still be invoked here. */
-    if (sess->connected) {
-	nussl_close_connection(sess);
-    }
+    nussl_close_connection(sess);
 
     nussl_free(sess->server.hostname);
     if (sess->server.address) nussl_addr_destroy(sess->server.address);
@@ -148,7 +146,6 @@ nussl_session *nussl_session_create_with_fd(int server_fd, int verify)
 	}
 
 	srv_sess->socket = nussl_sock_create_with_fd(server_fd);
-	srv_sess->ssl_context = nussl_ssl_context_create(0);
 	/* verify: one of NUSSL_CERT_IGNORE, NUSSL_CERT_REQUEST or NUSSL_CERT_REQUIRE */
 	srv_sess->ssl_context->verify = verify;
 
@@ -199,9 +196,7 @@ nussl_session* nussl_session_accept(nussl_session *srv_sess)
 
 void nussl_set_crl_refresh(nussl_session *sess, int refresh)
 {
-
     sess->ssl_context->crl_refresh = refresh;
-
 }
 
 void nussl_crl_refresh_counter_inc(nussl_session *sess)
@@ -310,7 +305,7 @@ void nussl_close_connection(nussl_session *sess)
 {
 
     UGLY_DEBUG();
-    if (sess->connected) {
+    if (sess->socket) {
 	NUSSL_DEBUG(NUSSL_DBG_SOCKET, "Closing connection.\n");
 	nussl_sock_close(sess->socket);
 	sess->socket = NULL;
@@ -318,8 +313,6 @@ void nussl_close_connection(nussl_session *sess)
     } else {
 	NUSSL_DEBUG(NUSSL_DBG_SOCKET, "(Not closing closed connection!).\n");
     }
-    sess->connected = 0;
-
 }
 
 #if 0
@@ -413,7 +406,7 @@ void nussl__ssl_set_verify_err(nussl_session *sess, int failures)
     int n, flag = 0;
 
     UGLY_DEBUG();
-    strcpy(sess->error, _("Server certificate verification failed: "));
+    strcpy(sess->error, _("Peer certificate verification failed: "));
 
     for (n = 0; reasons[n].bit; n++) {
 	if (failures & reasons[n].bit) {
@@ -633,9 +626,11 @@ int nussl_ssl_set_pkcs12_keypair(nussl_session *session, const char* pkcs12_file
 int nussl_session_getpeer(nussl_session *sess, struct sockaddr *addr, socklen_t *addrlen)
 {
 	int fd = nussl_session_get_fd(sess);
+
+	memset(addr, 0, *addrlen);
 	int ret = getpeername(fd, addr, addrlen);
 
-	if ( ret != 0 ) {
+	if ( ret == -1 ) {
 		nussl_set_error(sess, strerror(errno));
 		return NUSSL_ERROR;
 	}

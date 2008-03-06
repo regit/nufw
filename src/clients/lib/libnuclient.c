@@ -645,6 +645,8 @@ int nu_client_connect(nuauth_session_t * session,
 
 	ret = nussl_open_connection(session->nussl);
 	if (ret != NUSSL_OK) {
+		nussl_session_destroy(session->nussl);
+		session->nussl = NULL;
 		SET_ERROR(err, NUSSL_ERR, ret);
 		return 0;
 	}

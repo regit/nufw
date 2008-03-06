@@ -203,10 +203,10 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 	/* Check the user is authorized to connect
 	 * when he already have an open connection */
 	if (nuauthconf->single_ip_client_limit > 0) {
-		if (g_slist_length(get_client_sockets_by_ip(&client->addr)) >=
+		if (g_slist_length(get_client_sockets_by_ip(&c_session->addr)) >=
 				nuauthconf->single_ip_client_limit) {
 			char address[INET6_ADDRSTRLEN];
-			FORMAT_IPV6(&client->addr, address);
+			FORMAT_IPV6(&c_session->addr, address);
 #ifdef XXX /* factorize and destruct this cleanly */
 			gnutls_bye(*(session), GNUTLS_SHUT_RDWR);
 			close_tls_session(socket_fd, session);

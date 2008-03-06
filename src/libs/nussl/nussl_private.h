@@ -66,9 +66,6 @@ struct nussl_session_s {
     /* Connection information */
     nussl_socket *socket;
 
-    /* non-zero if connection has been established. */
-    int connected;
-
     /* non-zero if connection has persisted beyond one request. */
     int persisted;
 

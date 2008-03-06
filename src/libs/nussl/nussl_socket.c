@@ -1628,6 +1628,8 @@ int nussl_sock_connect_ssl(nussl_socket *sock, nussl_ssl_context *ctx, void *use
 
     ret = gnutls_handshake(sock->ssl);
     if (ret < 0) {
+    	gnutls_deinit(sock->ssl);
+	sock->ssl = NULL;
 	error_gnutls(sock, ret);
         return NUSSL_SOCK_ERROR;
     }
@@ -1729,8 +1731,8 @@ int nussl_sock_close(nussl_socket *sock)
     if (sock->ssl) {
         do {
             ret = gnutls_bye(sock->ssl, GNUTLS_SHUT_RDWR);
-        } while (ret < 0
-                 && (ret == GNUTLS_E_INTERRUPTED || ret == GNUTLS_E_AGAIN));
+        } while (ret < 0 && (ret == GNUTLS_E_INTERRUPTED || ret == GNUTLS_E_AGAIN));
+	gnutls_deinit(sock->ssl);
     }
 #endif
 

@@ -710,7 +710,6 @@ int nussl__ssl_post_handshake(nussl_session * sess)
 {
     nussl_ssl_certificate *chain;
     gnutls_session sock = nussl__sock_sslsock(sess->socket);
-    sess->connected = 1;
 
     UGLY_DEBUG();
     if (!sess->check_peer_cert)
@@ -731,8 +730,9 @@ int nussl__ssl_post_handshake(nussl_session * sess)
         return NUSSL_OK;
     }
 
-    if (check_certificate(sess, sock, chain)) {
+    if (check_certificate(sess, sock, chain) != NUSSL_OK) {
         nussl_ssl_cert_free(chain);
+        nussl_set_error(sess, "Certificate verification failed");
         return NUSSL_ERROR;
     }
 
