@@ -180,6 +180,7 @@ nussl_session* nussl_session_accept(nussl_session *srv_sess)
 	if(nussl_sock_accept_ssl(client_sess->socket, srv_sess->ssl_context))
 	{
 		/* nussl_sock_accept_ssl already sets an error */
+		nussl_set_error(srv_sess, nussl_sock_error(client_sess->socket));
 		nussl_session_destroy(client_sess);
 		return NULL;
 	}
@@ -188,6 +189,7 @@ nussl_session* nussl_session_accept(nussl_session *srv_sess)
 	if(nussl__ssl_post_handshake(client_sess) != NUSSL_OK)
 	{
 		/* nussl__ssl_post_handshake already sets an error */
+		nussl_set_error(srv_sess, nussl_get_error(client_sess));
 		nussl_session_destroy(client_sess);
 		return NULL;
 	}
