@@ -204,7 +204,7 @@ int packetsrv_open(void *data)
 	struct nfnl_handle *nh;
 
 	log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
-			"Open netfilter queue socket");
+			"Opening netfilter queue socket");
 	log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
 			"[!] Don't forget to load kernel modules nfnetlink and nfnetlink_queue (using modprobe command)");
 
