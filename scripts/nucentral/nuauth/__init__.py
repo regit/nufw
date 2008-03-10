@@ -23,6 +23,7 @@ from nuauth_command import NuauthError, Client
 
 class Nuauth(Component):
     NAME = "nuauth"
+    VERSION = "1.0"
 
     def init(self, core):
         self.socket_filename = core.conf_get_var_or_default("nuauth", "socket", "/var/run/nuauth/nuauth-command.socket")
@@ -43,8 +44,9 @@ class Nuauth(Component):
                 raise
 
         # Execute command and convert answer to string
-        answer = self.client.execute(command)
-        return str(answer.content)
+        result = self.client.execute(command)
+        result = result.content
+        return result
 
     def sync_help(self):
         """Get nuauth help"""
