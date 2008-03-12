@@ -27,19 +27,23 @@
 #include <debug.h>
 
 #define DEBUG_OR_NOT(LOGLEVEL, LOGAREA) \
-    ((nuauthconf->debug_areas & LOGAREA) == LOGAREA \
-     && \
-     (nuauthconf->debug_level >=LOGLEVEL ))
+	((nuauthconf->debug_areas & LOGAREA) == LOGAREA \
+	 && \
+	 (nuauthconf->debug_level >=LOGLEVEL ))
 
 #define log_message(level, area, format, args...) \
-  do { if (((area) & nuauthconf->debug_areas) == (area) && (nuauthconf->debug_level >= DEBUG_LEVEL_##level)) \
-    g_message(format, ##args); } while (0)
+	do { \
+		if (((area) & nuauthconf->debug_areas) == (area) && (nuauthconf->debug_level >= DEBUG_LEVEL_##level)) \
+		g_message("[%u] " format, DEBUG_LEVEL_##level, ##args); \
+	} while (0)
 
 #ifdef DEBUG_ENABLE
-   /* copy of log_message macro */
-#  define debug_log_message(level, area, format, args...) \
-      do { if (((area) & nuauthconf->debug_areas) == (area) && (nuauthconf->debug_level >= DEBUG_LEVEL_##level)) \
-        g_message(format, ##args); } while (0)
+/* copy/paste of log_message macro */
+#define log_message(level, area, format, args...) \
+	do { \
+		if (((area) & nuauthconf->debug_areas) == (area) && (nuauthconf->debug_level >= DEBUG_LEVEL_##level)) \
+		g_message("[%u] " format, DEBUG_LEVEL_##level, ##args); \
+	} while (0)
 #else
 #  define debug_log_message(level, area, format, ...)
 #endif
