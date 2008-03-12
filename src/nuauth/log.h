@@ -39,7 +39,7 @@
 
 #ifdef DEBUG_ENABLE
 /* copy/paste of log_message macro */
-#define log_message(level, area, format, args...) \
+#define debug_log_message(level, area, format, args...) \
 	do { \
 		if (((area) & nuauthconf->debug_areas) == (area) && (nuauthconf->debug_level >= DEBUG_LEVEL_##level)) \
 		g_message("[%u] " format, DEBUG_LEVEL_##level, ##args); \
