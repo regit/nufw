@@ -68,10 +68,10 @@ int syslog_priority_map[MAX_DEBUG_LEVEL - MIN_DEBUG_LEVEL + 1] = {
 /**
  * Initialize log engine: initialize syslog if it's used (see ::log_engine).
  */
-void init_log_engine()
+void init_log_engine(const char* log_id)
 {
 	if (log_engine == LOG_TO_SYSLOG) {
-		openlog(LOG_ID, SYSLOG_OPTS, LOG_FACILITY);
+		openlog(log_id, SYSLOG_OPTS, LOG_FACILITY);
 	}
 }
 

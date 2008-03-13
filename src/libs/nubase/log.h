@@ -37,7 +37,6 @@
 
 #define SYSLOG_OPTS \
 	LOG_CONS||LOG_PID		/*!< Syslog options of NuFW */
-#define LOG_ID "nufw"		/*!< Syslog identifier of NuFW */
 #define LOG_TO_STD	  1	/*!< Value of ::log_engine when using printf() */
 #define LOG_TO_SYSLOG 2		/*!< Value of ::log_engine when using syslog() */
 
@@ -52,7 +51,7 @@ extern int log_engine;
 extern int debug_level;		/*!< Debug level, default valut: #DEFAULT_DEBUG_LEVEL */
 extern int debug_areas;		/*!< Debug areas, default value: #DEFAULT_DEBUG_AREAS (all areas) */
 
-void init_log_engine();
+void init_log_engine(const char* log_id);
 void log_printf(debug_level_t priority, char *format, ...)
 #ifdef __GNUC__
 	__attribute__((__format__(printf,2,3)))

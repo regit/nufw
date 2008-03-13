@@ -596,7 +596,7 @@ int main(int argc, char *argv[])
 
 	install_signals();
 
-	init_log_engine();
+	init_log_engine("nufw");
 
 	/* open ICMP (IPv4) socket */
 	raw_sock4 = socket(PF_INET, SOCK_RAW, 1);	/* 1: ICMP protocol */
@@ -629,7 +629,7 @@ int main(int argc, char *argv[])
 	if (nussl_init() != NUSSL_OK) {
 		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
 				"Unable to initialize NuSSL library.");
-		
+
 	}
 
 #ifdef HAVE_LIBCONNTRACK
