@@ -12,6 +12,8 @@ Prerequisites of autogen.sh script:
 
 Prerequisites of NuFW compilation:
 
+ * GNU libtool:
+   http://www.gnu.org/software/libtool/
  * GNU make:
    http://www.gnu.org/software/make/
  * libpam-dev for system authentication module
@@ -41,7 +43,6 @@ Prerequisites of nuauth_command program:
    libpython2.4-devel to get /usr/lib/python2.4/config/Makefile
  * IPy python library:
    http://software.inl.fr/trac/trac.cgi/wiki/IPy
-
 
 Name of FreeBSD packages (incomplete list):
 
