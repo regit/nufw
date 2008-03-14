@@ -39,8 +39,8 @@ iptables rules
 To keep mark on next packets of a connection, you have to use --save-mark
 and --restore-mark::
 
-   iptables -A PREROUTING -j CONNMARK --restore-mark
-   iptables -A POSTROUTING -m mark ! --mark 0x0 -j CONNMARK --save-mark
+   iptables -t mangle -A PREROUTING -j CONNMARK --restore-mark
+   iptables -t mangle -A POSTROUTING -m mark ! --mark 0x0 -j CONNMARK --save-mark
 
 mark-group
 ==========
@@ -103,13 +103,13 @@ You have more options in nuauth configuration file:
 mark-flag
 =========
 
-This module uses the fact that acl can set a flag in packet. It uses it to 
-modify the mark. 
+This module uses the fact that acl can set a flag in packet. It uses it to
+modify the mark.
 
 It has three options:
  * mark_flag_nbits: number of bits to overwrite in the mark
  * mark_flag_mark_shift: shift of overwritten bits
- * mark_flag_flag_shift: shift in flag to indicate which bits of the flag are 
+ * mark_flag_flag_shift: shift in flag to indicate which bits of the flag are
    used.
 
 Here's an ascii art of the system::
