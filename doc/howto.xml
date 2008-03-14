@@ -1040,7 +1040,7 @@ the <option>ldap_server_addr</option> of <filename>nuauth.conf</filename>.
   </screen>
   (leave the other lines unchanged).
   And you probably also need to tune the /etc/pam_ldap.conf file. This file
-  works for us:
+  works for us, provided there is no line beginning with "uri":
   <screen>
   host 127.0.0.1
   ldap_version 3

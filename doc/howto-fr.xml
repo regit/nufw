@@ -985,7 +985,8 @@ la variable <option>ldap_server_addr</option> de <filename>nuauth.conf</filename
   </screen>
 
   (ne modifiez pas les autres lignes).
-  Vous souhaiterez également adapter la configuration du fichier /etc/pam_ldap.conf. Ce fichier fonctionne correctement chez nous :
+  Vous souhaiterez également adapter la configuration du fichier /etc/pam_ldap.conf. Ce fichier fonctionne correctement chez nous, à condition
+  qu'il n'y ait pas de ligne commençant par "uri" :
   <screen>
   host 127.0.0.1
   ldap_version 3
