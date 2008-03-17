@@ -20,11 +20,12 @@ $Id: __init__.py 4489 2008-02-21 17:03:32Z haypo $
 
 from nucentral import Component
 from nevow import rend, tags, loaders
+from twisted.internet.defer import succeed
 
 class NuauthFragment(rend.Fragment):
     docFactory = loaders.xmlstr(
         '<div style="border: 1px solid black; margin: 1ex; padding: 0.5ex;" xmlns:nevow="http://nevow.com/ns/nevow/0.1">'
-        +'<ul nevow:render="users" />'
+        +'<div nevow:render="users" />'
         +'<div nevow:render="uptime" />'
         +'</div>'
     )
@@ -57,22 +58,32 @@ class NuauthFragment(rend.Fragment):
         data = []
         for user in users:
             data.append(self.formatUser(user))
+        if users:
+            data = tags.ul[data]
+        else:
+            data = tags.p[u"No user connected."]
         return ctx.tag[data]
 
-    def render_users(self, ctx, data):
-        defer = self.nuauth.getUsers()
-        return defer.addCallback(self._render_users, ctx=ctx)
+    def error(self, err, ctx):
+        err = err.getErrorMessage()
+        return ctx.tag[tags.p[u"Error: %s" % err]]
+
+    def render_command(self, ctx, command, render_func):
+        defer = succeed(command)
+        defer.addCallback(self.nuauth.command)
+        defer.addCallback(render_func, ctx=ctx)
+        defer.addErrback(self.error, ctx=ctx)
+        return defer
 
     def _render_uptime(self, uptime, ctx):
-        content = [
-            tags.p[u"Server started at %s" % uptime.start],
-            tags.p[u"Server running since %s" % uptime.diff],
-        ]
-        return ctx.tag[content]
+        msg = u"Server started at %s, running since %s" % (uptime.start, uptime.diff)
+        return ctx.tag[tags.p[msg]]
+
+    def render_users(self, ctx, data):
+        return self.render_command(ctx, "users", self._render_users)
 
     def render_uptime(self, ctx, data):
-        defer = self.nuauth.getUptime()
-        return defer.addCallback(self._render_uptime, ctx=ctx)
+        return self.render_command(ctx, "uptime", self._render_uptime)
 
 class NuauthWeb(Component):
     NAME = "nuauth_web"
@@ -84,9 +95,6 @@ class NuauthWeb(Component):
     def fragment_nuauth(self):
         return NuauthFragment(self)
 
-    def getUptime(self):
-        return self.core.callService("nuauth", "uptime")
-
-    def getUsers(self):
-        return self.core.callService("nuauth", "users")
+    def command(self, command):
+        return self.core.callService("nuauth", command)
 
