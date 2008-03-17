@@ -21,6 +21,9 @@ $Id$
 from nucentral import Component
 from nuauth_command import NuauthError, Client
 
+def timedeltaSeconds(delta):
+    return delta.seconds + delta.days * 3600 * 24
+
 class Nuauth(Component):
     NAME = "nuauth"
     VERSION = "1.0"
@@ -57,11 +60,21 @@ class Nuauth(Component):
 
     def service_uptime(self):
         """Get nuauth uptime"""
-        return self._command("uptime")
+        uptime = self._command("uptime")
+        return {
+            'start': str(uptime.start),
+            'seconds': timedeltaSeconds(uptime.diff),
+        }
 
     def service_users(self):
         """Get the list of connected NuFW users"""
-        return self._command("users")
+        users = []
+        for user in self._command("users"):
+            users.append({
+                'name': user.name,
+                'uid': user.uid,
+            })
+        return users
 
     def service_firewalls(self):
         """Get the list of connected firewalls"""
