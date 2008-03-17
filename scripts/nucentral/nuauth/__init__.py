@@ -40,7 +40,6 @@ class Nuauth(Component):
                 self.client.connect()
             except NuauthError, err:
                 self.client = None
-                print "[!] %s" % err
                 raise
 
         # Execute command and convert answer to string
@@ -48,59 +47,59 @@ class Nuauth(Component):
         result = result.content
         return result
 
-    def sync_help(self):
+    def service_help(self):
         """Get nuauth help"""
         return self._command("help")
 
-    def sync_version(self):
+    def service_version(self):
         """Get nuauth version string"""
         return self._command("version")
 
-    def sync_uptime(self):
+    def service_uptime(self):
         """Get nuauth uptime"""
         return self._command("uptime")
 
-    def sync_users(self):
+    def service_users(self):
         """Get the list of connected NuFW users"""
         return self._command("users")
 
-    def sync_firewalls(self):
+    def service_firewalls(self):
         """Get the list of connected firewalls"""
         return self._command("firewalls")
 
-    def sync_packets_count(self):
+    def service_packets_count(self):
         """Get number of decision waiting packets"""
         return self._command("packets count")
 
-    def sync_refresh_cache(self):
+    def service_refresh_cache(self):
         """Ask server to refresh all caches"""
         return self._command("refresh cache")
 
-    def sync_disconnect(self, user_id):
+    def service_disconnect(self, user_id):
         """Disconnect specified user"""
         return self._command("disconnect %s" % user_id)
 
-    def sync_disconnect_all(self):
+    def service_disconnect_all(self):
         """Disconnect all users"""
         return self._command("disconnect all")
 
-    def sync_reload(self):
+    def service_reload(self):
         """Reload server configuration"""
         return self._command("reload")
 
-    def sync_display_debug_level(self):
+    def service_display_debug_level(self):
         """Display debug level"""
         return self._command("display debug_level")
 
-    def sync_display_debug_areas(self):
+    def service_display_debug_areas(self):
         """Display debug areas"""
         return self._command("display debug_areas")
 
-    def sync_debug_level(self, areas):
+    def service_debug_level(self, areas):
         """Set debug level"""
         return self._command("debug_level %s" % areas)
 
-    def sync_debug_areas(self, areas):
+    def service_debug_areas(self, areas):
         """Set debug areas"""
         return self._command("debug_areas %s" % areas)
 

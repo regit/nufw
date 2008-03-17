@@ -19,11 +19,15 @@ $Id: __init__.py 4489 2008-02-21 17:03:32Z haypo $
 """
 
 from nucentral import Component
-from nucentral.core import ComponentError
 from nevow import rend, tags, loaders
 
 class NuauthFragment(rend.Fragment):
-    docFactory = loaders.xmlstr('<div style="border: 1px solid black; margin: 1ex; padding: 0.5ex;" xmlns:nevow="http://nevow.com/ns/nevow/0.1"><ul nevow:render="users" /><div nevow:render="uptime" /></div>')
+    docFactory = loaders.xmlstr(
+        '<div style="border: 1px solid black; margin: 1ex; padding: 0.5ex;" xmlns:nevow="http://nevow.com/ns/nevow/0.1">'
+        +'<ul nevow:render="users" />'
+        +'<div nevow:render="uptime" />'
+        +'</div>'
+    )
 
     def __init__(self, nuauth):
         rend.Fragment.__init__(self)
@@ -49,22 +53,26 @@ class NuauthFragment(rend.Fragment):
         #self.activated = activated
         return tags.li[u"%s from %s" % (user.name, user.addr)]
 
-    def render_users(self, ctx, data):
+    def _render_users(self, users, ctx=None):
         data = []
-        for user in self.nuauth.getUsers():
+        for user in users:
             data.append(self.formatUser(user))
         return ctx.tag[data]
 
-    def render_uptime(self, ctx, data):
-        try:
-            uptime = self.nuauth.getUptime()
-            content = [
-                tags.p[u"Server started at %s" % uptime.start],
-                tags.p[u"Server running since %s" % uptime.diff],
-            ]
-        except ComponentError, err:
-            content = [tags.p[u"ERROR: %s" % err]]
+    def render_users(self, ctx, data):
+        defer = self.nuauth.getUsers()
+        return defer.addCallback(self._render_users, ctx=ctx)
+
+    def _render_uptime(self, uptime, ctx):
+        content = [
+            tags.p[u"Server started at %s" % uptime.start],
+            tags.p[u"Server running since %s" % uptime.diff],
+        ]
         return ctx.tag[content]
+
+    def render_uptime(self, ctx, data):
+        defer = self.nuauth.getUptime()
+        return defer.addCallback(self._render_uptime, ctx=ctx)
 
 class NuauthWeb(Component):
     NAME = "nuauth_web"
@@ -77,10 +85,8 @@ class NuauthWeb(Component):
         return NuauthFragment(self)
 
     def getUptime(self):
-        return self.core.callService_s("nuauth", "uptime")
+        return self.core.callService("nuauth", "uptime")
 
     def getUsers(self):
-        users = self.core.callService_s("nuauth", "users")
-        print "Users: %s" % repr(users)
-        return users
+        return self.core.callService("nuauth", "users")
 
