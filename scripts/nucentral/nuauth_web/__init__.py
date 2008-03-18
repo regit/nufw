@@ -76,7 +76,7 @@ class NuauthFragment(rend.Fragment):
         return defer
 
     def _render_uptime(self, uptime, ctx):
-        msg = u"Server started at %s, running since %s" % (uptime.start, uptime.diff)
+        msg = u"Server started at %s, running since %s" % (uptime['start'], uptime['seconds'])
         return ctx.tag[tags.p[msg]]
 
     def render_users(self, ctx, data):
