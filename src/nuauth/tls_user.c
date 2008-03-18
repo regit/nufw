@@ -881,13 +881,14 @@ void *tls_user_authsrv(struct nuauth_thread_t *thread)
 void tls_user_start_servers(GSList *servers)
 {
 	char **user_servers;
+	int i;
 	nuauthdatas->tls_auth_servers = NULL;
 
 	tls_user_servers_init();
 
 	/* get raw string from configuration */
 	user_servers = g_strsplit(nuauthconf->client_srv, " ", 0);
-	for (int i=0; user_servers[i]; i++) {
+	for (i=0; user_servers[i]; i++) {
 		/** \todo free context at program exit */
 		struct tls_user_context_t *context =
 			g_new0(struct tls_user_context_t, 1);

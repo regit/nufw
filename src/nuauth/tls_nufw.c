@@ -524,12 +524,13 @@ void *tls_nufw_authsrv(struct nuauth_thread_t *thread)
 void tls_nufw_start_servers(GSList *servers)
 {
 	char **nufw_servers;
+	int i;
 	/* build servers hash */
 	init_nufw_servers();
 	nuauthdatas->tls_nufw_servers = NULL;
 	/* get raw string from configuration */
 	nufw_servers = g_strsplit(nuauthconf->nufw_srv, " ", 0);
-	for (int i=0; nufw_servers[i]; i++) {
+	for (i=0; nufw_servers[i]; i++) {
 		/** \todo free context at program exit */
 		struct tls_nufw_context_t *context =
 			g_new0(struct tls_nufw_context_t, 1);
