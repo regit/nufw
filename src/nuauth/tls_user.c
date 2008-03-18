@@ -175,7 +175,7 @@ static nu_error_t treat_user_request(user_session_t * c_session)
 	datas->buffer_len = nussl_read(c_session->nussl, datas->buffer,
 			       CLASSIC_NUFW_PACKET_SIZE);
 #endif
-	
+
 	g_mutex_unlock(c_session->tls_lock);
 	if (datas->buffer_len < (int) sizeof(struct nu_header)) {
 #ifdef DEBUG_ENABLE
@@ -187,7 +187,7 @@ static nu_error_t treat_user_request(user_session_t * c_session)
 		free_buffer_read(datas);
 		return NU_EXIT_OK;
 	}
-	
+
 
 	/* get header to check if we need to get more datas */
 	header = (struct nu_header *) datas->buffer;
@@ -222,7 +222,7 @@ static nu_error_t treat_user_request(user_session_t * c_session)
 				       CLASSIC_NUFW_PACKET_SIZE,
 				       header_length - datas->buffer_len);
 #else
-		tmp_len = nussl_read(c_session->nussl, 
+		tmp_len = nussl_read(c_session->nussl,
 				       datas->buffer +
 				       CLASSIC_NUFW_PACKET_SIZE,
 				       header_length - datas->buffer_len);
@@ -334,7 +334,7 @@ int tls_user_accept(struct tls_user_context_t *context)
 	}
 
 	socket = nussl_session_get_fd(current_client_conn->nussl);
-	
+
 	/* if system is in reload: drop new client */
 	if (nuauthdatas->need_reload) {
 		shutdown(socket, SHUT_RDWR);
@@ -606,7 +606,7 @@ void tls_user_servers_init()
 	nuauthdatas->user_cmd_queue =  g_async_queue_new();
 }
 
-/** 
+/**
  * Set request_cert and auth_by_cert params depending on the configuration
  */
 int tls_user_setcert_auth_params(int requestcert, int authcert)
@@ -881,34 +881,24 @@ void *tls_user_authsrv(struct nuauth_thread_t *thread)
 void tls_user_start_servers(GSList *servers)
 {
 	char **user_servers;
-	int i = 0;
 	nuauthdatas->tls_auth_servers = NULL;
 
 	tls_user_servers_init();
 
 	/* get raw string from configuration */
 	user_servers = g_strsplit(nuauthconf->client_srv, " ", 0);
-	while (user_servers[i]) {
+	for (int i=0; user_servers[i]; i++) {
 		/** \todo free context at program exit */
 		struct tls_user_context_t *context =
 			g_new0(struct tls_user_context_t, 1);
 		struct nuauth_thread_t *srv_thread =
 			g_new0(struct nuauth_thread_t, 1);
-		char **context_datas = g_strsplit(user_servers[i], ":", 2);
-		if (context_datas[0]) {
-			context->addr = g_strdup(context_datas[0]);
-		} else {
+		if (!parse_addr_port(user_servers[i], nuauthconf->userpckt_port, &context->addr, &context->port)) {
 			log_message(FATAL, DEBUG_AREA_MAIN | DEBUG_AREA_GW,
 			    "Address parsing error at %s:%d (%s)", __FILE__,
 			    __LINE__, user_servers[i]);
 			nuauth_ask_exit();
 		}
-		if (context_datas[1]) {
-			context->port = g_strdup(context_datas[1]);
-		} else {
-			context->port = g_strdup(nuauthconf->userpckt_port);
-		}
-		g_strfreev(context_datas);
 		log_message(INFO, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
 			    "Creating user socket %s:%s",context->addr, context->port);
 
@@ -919,7 +909,6 @@ void tls_user_start_servers(GSList *servers)
 		/* Append newly created server to list */
 		nuauthdatas->tls_auth_servers = g_slist_prepend(nuauthdatas->tls_auth_servers,
 								srv_thread);
-		i++;
 	}
 	g_strfreev(user_servers);
 }

@@ -331,7 +331,7 @@ int nuauth_bind(char **errmsg, const char *addr, const char *port, char *context
 			    port);
 	else if (res->ai_family == PF_INET6)
 		log_message(DEBUG, DEBUG_AREA_USER | DEBUG_AREA_MAIN,
-			    "Creating server IPv6 socket (%s:%s)",
+			    "Creating server IPv6 socket ([%s]:%s)",
 			    addr,
 			    port);
 	else
@@ -366,4 +366,51 @@ int nuauth_bind(char **errmsg, const char *addr, const char *port, char *context
 	freeaddrinfo(res);
 	return sck_inet;
 }
+
+/**
+ * Parse "[ipv6]:port", "[ipv6]", "ipv4:port" or "ipv4" string
+ */
+int parse_addr_port(
+	const char *text, const char* default_port,
+	char **addr, char **port)
+{
+	char *pos;
+	if (text[0] == '[') {
+		pos = strchr(text+1, ']');
+	} else {
+		pos = NULL;
+	}
+	if (pos) {
+		size_t len = pos - text - 1;
+		if (*(pos+1) && *(pos+1) != ':') {
+			/* eg. "[ipv6]port", invalid syntax */
+			return 0;
+		}
+		if (*(pos+1) == ':') {
+			if (!strlen(pos+2)) {
+				/* eg. "[ipv6]:", missing port */
+				return 0;
+			}
+			*port = g_strdup(pos+2);
+		} else {
+			*port = g_strdup(default_port);
+		}
+		*addr = g_strndup(text+1, len);
+	} else {
+		char **context_datas = g_strsplit(text, ":", 2);
+		if (!context_datas[0]) {
+			g_strfreev(context_datas);
+			return 0;
+		}
+		*addr = g_strdup(context_datas[0]);
+		if (context_datas[1]) {
+			*port = g_strdup(context_datas[1]);
+		} else {
+			*port = g_strdup(default_port);
+		}
+		g_strfreev(context_datas);
+	}
+	return 1;
+}
+
 /** @} */

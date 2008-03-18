@@ -524,40 +524,29 @@ void *tls_nufw_authsrv(struct nuauth_thread_t *thread)
 void tls_nufw_start_servers(GSList *servers)
 {
 	char **nufw_servers;
-	int i = 0;
 	/* build servers hash */
 	init_nufw_servers();
 	nuauthdatas->tls_nufw_servers = NULL;
 	/* get raw string from configuration */
 	nufw_servers = g_strsplit(nuauthconf->nufw_srv, " ", 0);
-	while (nufw_servers[i]) {
+	for (int i=0; nufw_servers[i]; i++) {
 		/** \todo free context at program exit */
 		struct tls_nufw_context_t *context =
 			g_new0(struct tls_nufw_context_t, 1);
 		struct nuauth_thread_t *srv_thread =
 			g_new0(struct nuauth_thread_t, 1);
-		char **context_datas = g_strsplit(nufw_servers[i], ":", 2);
-		if (context_datas[0]) {
-			context->addr = g_strdup(context_datas[0]);
-		} else {
+		if (!parse_addr_port(nufw_servers[i], nuauthconf->authreq_port, &context->addr, &context->port)) {
 			log_message(FATAL, DEBUG_AREA_MAIN | DEBUG_AREA_GW,
 			    "Address parsing error at %s:%d (%s)", __FILE__,
 			    __LINE__, nufw_servers[i]);
 			nuauth_ask_exit();
 		}
-		if (context_datas[1]) {
-			context->port = g_strdup(context_datas[1]);
-		} else {
-			context->port = g_strdup(nuauthconf->authreq_port);
-		}
-		g_strfreev(context_datas);
 		thread_new_wdata(srv_thread, "tls nufw server",
 				 (gpointer) context,
 				 tls_nufw_authsrv);
 		/* Append newly created server to list */
 		nuauthdatas->tls_nufw_servers = g_slist_prepend(nuauthdatas->tls_nufw_servers,
 								srv_thread);
-		i++;
 	}
 	g_strfreev(nufw_servers);
 }
