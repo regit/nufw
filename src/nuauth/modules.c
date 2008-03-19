@@ -278,7 +278,6 @@ int modules_check_certificate(nussl_session* nussl)
  * certificate to uid
  *
  * \param nussl NuSSL connection
- * \param cert x509 certificate
  * \return uid
  */
 gchar *modules_certificate_to_uid(nussl_session* nussl)
@@ -606,7 +605,7 @@ int load_modules()
 	}
 
 #define READ_CONF(KEY) \
-    get_confvar_value(nuauth_vars, sizeof(nuauth_vars)/sizeof(confparams_t), KEY);
+	get_confvar_value(nuauth_vars, sizeof(nuauth_vars)/sizeof(confparams_t), KEY);
 
 	hooks[MOD_USER_CHECK].config = 
 		(char *) READ_CONF(hooks[MOD_USER_CHECK].configstring);
@@ -626,7 +625,8 @@ int load_modules()
 
 #undef READ_CONF
 #define READ_CONF(KEY) \
-    get_confvar_value(deps_check_vars, sizeof(deps_check_vars)/sizeof(confparams_t), KEY);
+	get_confvar_value(deps_check_vars, sizeof(deps_check_vars)/sizeof(confparams_t), KEY);
+
 	if (hooks[MOD_USER_CHECK].config) {
 		confparams_t deps_check_vars[] = {
 			{"nuauth_get_user_groups_module", G_TOKEN_STRING, 1,
@@ -657,13 +657,13 @@ int load_modules()
 	g_mutex_lock(modules_mutex);
 
 #define LOAD_MODULE(HOOK) \
-    log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN, "Loading %s modules:", hooks[HOOK].message); \
-    if(!load_modules_from(hooks[HOOK].config, hooks[HOOK].funcstring, &(hooks[HOOK].modules), HOOK)) \
-    { \
-        log_message(FATAL, DEBUG_AREA_MAIN, "Failed to load modules %s", hooks[HOOK].message); \
-    	return 0; \
-    }
-    
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN, "Loading %s modules:", hooks[HOOK].message); \
+	if(!load_modules_from(hooks[HOOK].config, hooks[HOOK].funcstring, &(hooks[HOOK].modules), HOOK)) \
+	{ \
+		log_message(FATAL, DEBUG_AREA_MAIN, "Failed to load modules %s", hooks[HOOK].message); \
+		return 0; \
+	}
+
 
 	/* loading modules */
 	for (i = MOD_FIRST; i < MOD_OPTIONNAL; i++) {
