@@ -1,2 +1,14 @@
 # TLS
 password protected certificate support
+
+# NuSSL
+- Nuauth/NuFW/Nutcpc: CRL handling
+	- Periodic CRL file reloading
+	- Handle the "CRL distribution point" field in the CA certificate (later)
+- Nuauth: Fix broken multi-NuFW handling
+- Nuauth: Split NuFW certificates and users certificates options in nuauth.conf
+- Nuauth: Nuauth 2.2 uses non-blockant send to NuFW, NuSSL doesn't handle it
+- NuFW/NuAuth: Check NuSSL error handling/reporting
+- Nuauth/NuFW/Nutcpc: Valgrind checks
+- Nuauth: Remove gnutls related code
+
