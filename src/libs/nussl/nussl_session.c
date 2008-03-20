@@ -74,6 +74,9 @@ void nussl_session_destroy(nussl_session *sess)
     UGLY_DEBUG();
     NUSSL_DEBUG(NUSSL_DBG_HTTP, "nussl_session_destroy called.\n");
 
+    if(!sess)
+        return;
+
     /* Close the connection; note that the notifier callback could
      * still be invoked here. */
     nussl_close_connection(sess);
@@ -100,6 +103,9 @@ void nussl_set_hostinfo(nussl_session* sess, const char *hostname, unsigned int 
 {
 
     UGLY_DEBUG();
+    if(!sess)
+        return;
+
     if(sess->server.hostname)
     	nussl_free(sess->server.hostname);
     sess->server.hostname = nussl_strdup(hostname);
@@ -117,7 +123,7 @@ nussl_session *nussl_session_create()
 	     hostname, port); */
 
     if (!sess)
-    	return NULL;
+        return NULL;
 
     strcpy(sess->error, "Unknown error.");
 
@@ -155,7 +161,12 @@ nussl_session *nussl_session_create_with_fd(int server_fd, int verify)
 /* Server function */
 nussl_session* nussl_session_accept(nussl_session *srv_sess)
 {
-	nussl_session* client_sess = nussl_session_create();
+	nussl_session* client_sess;
+
+	if(!srv_sess)
+		return NULL;
+
+	client_sess = nussl_session_create();
 
 	if (!client_sess) {
     		nussl_set_error(srv_sess, _("Not enough memory"));
@@ -196,11 +207,16 @@ nussl_session* nussl_session_accept(nussl_session *srv_sess)
 
 void nussl_set_crl_refresh(nussl_session *sess, int refresh)
 {
+    if (!sess)
+        return;
+
     sess->ssl_context->crl_refresh = refresh;
 }
 
 void nussl_crl_refresh_counter_inc(nussl_session *sess)
 {
+    if (!sess)
+        return;
 
     sess->ssl_context->crl_refresh_counter++;
 
@@ -208,11 +224,16 @@ void nussl_crl_refresh_counter_inc(nussl_session *sess)
 
 int nussl_session_get_fd(nussl_session *sess)
 {
+	if (!sess)
+		return -1;
+
 	return nussl_sock_fd(sess->socket);
 }
 
 void nussl_set_addrlist(nussl_session *sess, const nussl_inet_addr **addrs, size_t n)
 {
+    if (!sess)
+        return;
 
     UGLY_DEBUG();
     sess->addrlist = addrs;
@@ -224,6 +245,9 @@ void nussl_set_error(nussl_session *sess, const char *format, ...)
 {
     va_list params;
 
+    if (!sess)
+        return;
+
     va_start(params, format);
     nussl_vsnprintf(sess->error, sizeof sess->error, format, params);
     va_end(params);
@@ -232,6 +256,9 @@ void nussl_set_error(nussl_session *sess, const char *format, ...)
 void nussl_set_session_flag(nussl_session *sess, nussl_session_flag flag, int value)
 {
     UGLY_DEBUG();
+    if (!sess)
+        return;
+
     if (flag < NUSSL_SESSFLAG_LAST) {
         sess->flags[flag] = value;
         if (flag == NUSSL_SESSFLAG_SSLv2 && sess->ssl_context) {
@@ -243,6 +270,9 @@ void nussl_set_session_flag(nussl_session *sess, nussl_session_flag flag, int va
 int nussl_get_session_flag(nussl_session *sess, nussl_session_flag flag)
 {
     UGLY_DEBUG();
+    if (!sess)
+        return -1;
+
     if (flag < NUSSL_SESSFLAG_LAST) {
     	int sess_flag = sess->flags[flag];
 
@@ -277,6 +307,8 @@ int nussl_get_session_flag(nussl_session *sess, nussl_session_flag flag)
 
 void nussl_set_read_timeout(nussl_session *sess, int timeout)
 {
+    if (!sess)
+        return;
 
     UGLY_DEBUG();
     sess->rdtimeout = timeout;
@@ -285,6 +317,8 @@ void nussl_set_read_timeout(nussl_session *sess, int timeout)
 
 void nussl_set_connect_timeout(nussl_session *sess, int timeout)
 {
+    if (!sess)
+        return;
 
     UGLY_DEBUG();
     sess->cotimeout = timeout;
@@ -295,6 +329,9 @@ const char *nussl_get_error(nussl_session *sess)
 {
     char* ret;
 
+    if (!sess)
+        return NULL;
+
     UGLY_DEBUG();
     ret = nussl_strclean(sess->error);
 
@@ -303,6 +340,8 @@ const char *nussl_get_error(nussl_session *sess)
 
 void nussl_close_connection(nussl_session *sess)
 {
+    if (!sess)
+        return;
 
     UGLY_DEBUG();
     if (sess->socket) {
@@ -340,6 +379,8 @@ int nussl_ssl_trust_cert_file(nussl_session *sess, const char *cert_file)
 {
     int ret;
 
+    if (!sess)
+        return NUSSL_ERROR;
 
     UGLY_DEBUG();
     nussl_ssl_certificate* ca = nussl_ssl_cert_read(cert_file);
@@ -363,6 +404,8 @@ void nussl_ssl_cert_validity(const nussl_ssl_certificate *cert, char *from, char
     time_t tf, tu;
     char *date;
 
+    if (!cert)
+        return;
 
     UGLY_DEBUG();
     nussl_ssl_cert_validity_time(cert, &tf, &tu);
@@ -417,9 +460,9 @@ void nussl__ssl_set_verify_err(nussl_session *sess, int failures)
     }
 }
 
+#if 0
 typedef void (*void_fn)(void);
 
-#if 0
 #define ADD_HOOK(hooks, fn, ud) add_hook(&(hooks), NULL, (void_fn)(fn), (ud))
 
 static void add_hook(struct hook **hooks, const char *id, void_fn fn, void *ud)
@@ -532,6 +575,9 @@ int nussl_write(nussl_session *session, char *buffer, size_t count)
 {
 	int ret;
 
+	if (!session)
+		return NUSSL_ERROR;
+
 	UGLY_DEBUG();
 	ret = nussl_sock_fullwrite(session->socket, buffer, count);
 	if (ret < 0)
@@ -545,6 +591,9 @@ ssize_t nussl_read(nussl_session *session, char *buffer, size_t count)
 {
 	int ret;
 
+	if (!session)
+		return NUSSL_ERROR;
+
 	ret = nussl_sock_read(session->socket, buffer, count);
 	if (ret < 0)
 		nussl_set_error(session, nussl_sock_error(session->socket));
@@ -557,6 +606,8 @@ int nussl_ssl_set_keypair(nussl_session *session, const char* cert_file, const c
 	nussl_ssl_client_cert* cert;
 	int ret;
 
+	if (!session)
+		return NUSSL_ERROR;
 
 	UGLY_DEBUG();
 
@@ -580,6 +631,9 @@ int nussl_ssl_set_keypair(nussl_session *session, const char* cert_file, const c
 int nussl_ssl_set_pkcs12_keypair(nussl_session *session, const char* pkcs12_file, const char* password)
 {
 	int ret = NUSSL_OK;
+
+	if (!session)
+		return NUSSL_ERROR;
 
 	UGLY_DEBUG();
 
@@ -625,8 +679,12 @@ int nussl_ssl_set_pkcs12_keypair(nussl_session *session, const char* pkcs12_file
 
 int nussl_session_getpeer(nussl_session *sess, struct sockaddr *addr, socklen_t *addrlen)
 {
-	int fd = nussl_session_get_fd(sess);
+	int fd;
+	
+	if (!sess)
+		return NUSSL_ERROR;
 
+	fd = nussl_session_get_fd(sess);
 	memset(addr, 0, *addrlen);
 	int ret = getpeername(fd, addr, addrlen);
 
@@ -640,9 +698,5 @@ int nussl_session_getpeer(nussl_session *sess, struct sockaddr *addr, socklen_t 
 
 int nussl_init()
 {
-	int ret;
-
-	ret = nussl_sock_init();
-
-	return ret;
+	return nussl_sock_init();
 }
