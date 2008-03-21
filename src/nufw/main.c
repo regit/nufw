@@ -262,17 +262,6 @@ void install_signals()
 		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
 				"Warning: Could not set signal POLL");
 	}
-
-#ifdef HAVE_LIBCONNTRACK
-	/* intercept SIGSYS */
-	memset(&action, 0, sizeof(action));
-	action.sa_handler = &process_sys;
-	action.sa_flags = SIGSYS;
-	if (sigaction(SIGSYS, &action, NULL) == -1) {
-		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
-				"Warning: Could not set signal SYS");
-	}
-#endif
 }
 
 /**

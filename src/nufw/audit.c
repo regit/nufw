@@ -77,22 +77,3 @@ void process_usr2(int signum)
 	log_printf(DEBUG_LEVEL_FATAL, "USR2: Setting debug level to %d",
 		   debug_level);
 }
-
-#ifdef HAVE_LIBCONNTRACK
-/**
- * Remove -M : set nufw_conntrack_uses_mark to 0
- */
-
-void process_sys(int signum)
-{
-	if (handle_conntrack_event != 0) {
-		handle_conntrack_event = 0;
-		log_printf(DEBUG_LEVEL_INFO,
-			   "SYS:   Setting handle_conntrack_event level to 0 (this cancels the -C switch)");
-	} else {
-	  log_printf(DEBUG_LEVEL_INFO,
-		     "SYS:   doing nothing (handle_conntrack_event is already zeroed)");
-	}
-}
-#endif
-
