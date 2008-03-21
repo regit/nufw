@@ -94,26 +94,5 @@ void process_sys(int signum)
 		     "SYS:   doing nothing (handle_conntrack_event is already zeroed)");
 	}
 }
-
-/**
- * Reset -M : set nufw_conntrack_uses_mark to 1
- */
-void process_winch(int signum)
-{
-	if (handle_conntrack_event == 0) {
-		handle_conntrack_event = 1;
-		if (pthread_create(&(tls.conntrack_event_handler),
-				   NULL,
-				   conntrack_event_handler,
-				   NULL) == EAGAIN) {
-			exit(EXIT_FAILURE);
-		}
-		log_printf(DEBUG_LEVEL_INFO,
-			   "WINCH: Setting handle_conntrack_event level to 1 (this activates the -C switch)");
-	} else {
-		log_printf(DEBUG_LEVEL_INFO,
-			   "WINCH: doing nothing (handle_conntrack_event already set)");
-	}
-}
 #endif
 

@@ -264,22 +264,13 @@ void install_signals()
 	}
 
 #ifdef HAVE_LIBCONNTRACK
-	/* intercpet SIGSYS */
+	/* intercept SIGSYS */
 	memset(&action, 0, sizeof(action));
 	action.sa_handler = &process_sys;
 	action.sa_flags = SIGSYS;
 	if (sigaction(SIGSYS, &action, NULL) == -1) {
 		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
 				"Warning: Could not set signal SYS");
-	}
-
-	/* intercpet SIGWINCH */
-	memset(&action, 0, sizeof(action));
-	action.sa_handler = &process_winch;
-	action.sa_flags = SIGWINCH;
-	if (sigaction(SIGWINCH, &action, NULL) == -1) {
-		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
-				"Warning: Could not set signal WINCH");
 	}
 #endif
 }
