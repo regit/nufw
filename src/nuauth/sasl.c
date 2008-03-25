@@ -492,11 +492,7 @@ static int mysasl_negotiate(user_session_t * c_session, sasl_conn_t * conn)
 			debug_log_message(DEBUG, DEBUG_AREA_AUTH,
 					  "error when searching user groups for %s",
 					  c_session->user_name);
-#if 0
-			if (nussl_write(c_session->nussl, "N", 1) <= 0)	/* send NO to client */
-#else
-			if (nussl_write(c_session->nussl, "N", 1) <= 0)	/* send NO to client */
-#endif
+			if (nussl_write(c_session->nussl, "N", 1) < 0)	/* send NO to client */
 				return SASL_FAIL;
 			return SASL_BADAUTH;
 		}
@@ -706,7 +702,7 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 		if (tls_len == 0) {
 			log_message(INFO, DEBUG_AREA_AUTH,
 				    "proto v3: client didn't choose mechanism");
-			if (nussl_write(c_session->nussl, "N", 1) <= 0)	/* send NO to client */
+			if (nussl_write(c_session->nussl, "N", 1) < 0)	/* send NO to client */
 				return SASL_FAIL;
 			return SASL_BADPARAM;
 		} else {

@@ -260,9 +260,13 @@ const char *nussl_get_error(nussl_session *sess);
 void nussl_set_hostinfo(nussl_session* sess, const char *hostname, unsigned int port);
 
 /* Write to session */
+/* Return NUSSL_OK on success
+ * Returns a NUSSL_SOCK_* on failure */
 int nussl_write(nussl_session *session, char *buffer, size_t count);
 
 /* Read from session */
+/* Return the number of bytes read on success
+ * Returns a NUSSL_SOCK_* on failure */
 ssize_t nussl_read(nussl_session *session, char *buffer, size_t count);
 
 /* Set private key and certificate */

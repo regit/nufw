@@ -119,6 +119,9 @@ nu_error_t declare_dead_nufw_session(nufw_session_t * session)
 		tls = gnutls_transport_get_ptr(*session->tls);
 		shutdown(GPOINTER_TO_INT(tls), SHUT_WR);
 #endif
+		nussl_session_destroy(session->nufw_client);
+		session->nufw_client = NULL;
+		session->alive = FALSE;
 	}
 	if (g_atomic_int_dec_and_test(&(session->usage))) {
 		suppress_nufw_session(session);
@@ -238,8 +241,6 @@ nu_error_t nufw_session_send(nufw_session_t * session, char * buffer, int length
 		log_message(DEBUG, DEBUG_AREA_GW,
 			"nufw_servers: send failure (%s)",
 			nussl_get_error(session->nufw_client));
-		return NU_EXIT_ERROR;
-	} else if (ret == 0) {
 		return NU_EXIT_ERROR;
 	}
 	return NU_EXIT_OK;

@@ -206,7 +206,7 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 	nu_session = g_new0(nufw_session_t, 1);
 
 	nu_session->connect_timestamp = time(NULL);
-	nu_session->usage = 1;
+	nu_session->usage = 0;
 	nu_session->alive = TRUE;
 
 	/* We have to wait the first packet */
@@ -346,7 +346,8 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex * mutex)
 					FD_CLR(c, &context->tls_rx_set);
 					declare_dead_nufw_session(c_session);
 				}
-				release_nufw_session(c_session);
+				else
+					release_nufw_session(c_session);
 			}
 		}
 
