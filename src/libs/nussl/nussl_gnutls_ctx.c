@@ -74,13 +74,11 @@
 #include "nussl_privssl.h"
 #include "nussl_utils.h"
 
-#define UGLY_DEBUG() printf("%s %s:%i\n", __FUNCTION__, __FILE__, __LINE__)
 
 
 nussl_ssl_context *nussl_ssl_context_create(int flags)
 {
     nussl_ssl_context *ctx = nussl_calloc(sizeof *ctx);
-    UGLY_DEBUG();
     gnutls_certificate_allocate_credentials(&ctx->cred);
 /*    if (flags == NUSSL_SSL_CTX_CLIENT) {
         gnutls_certificate_client_set_retrieve_function(ctx->cred,
@@ -93,7 +91,6 @@ nussl_ssl_context *nussl_ssl_context_create(int flags)
 int nussl_ssl_context_keypair(nussl_ssl_context *ctx,
                            const char *cert, const char *key)
 {
-    UGLY_DEBUG();
     return (gnutls_certificate_set_x509_key_file(ctx->cred, cert, key,
                                          GNUTLS_X509_FMT_PEM) == 0) ? NUSSL_OK : NUSSL_ERROR;
 }
@@ -101,7 +98,6 @@ int nussl_ssl_context_keypair(nussl_ssl_context *ctx,
 
 int nussl_ssl_context_keypair_from_data(nussl_ssl_context *ctx, nussl_ssl_client_cert* cert)
 {
-    UGLY_DEBUG();
     int ret;
     ret = gnutls_certificate_set_x509_key(ctx->cred, &cert->cert.subject, 1, cert->pkey);
     return (ret == 0) ? NUSSL_OK : NUSSL_ERROR;
@@ -111,7 +107,6 @@ int nussl_ssl_context_keypair_from_data(nussl_ssl_context *ctx, nussl_ssl_client
 int nussl_ssl_context_set_verify(nussl_ssl_context *ctx, int required,
                               const char *ca_names, const char *verify_cas)
 {
-    UGLY_DEBUG();
     ctx->verify = required;
     if (verify_cas) {
         gnutls_certificate_set_x509_trust_file(ctx->cred, verify_cas,
@@ -131,7 +126,6 @@ void nussl_ssl_context_set_flag(nussl_ssl_context *ctx, int flag, int value)
 
 void nussl_ssl_context_destroy(nussl_ssl_context *ctx)
 {
-    UGLY_DEBUG();
     gnutls_certificate_free_credentials(ctx->cred);
     if (ctx->cache.client.data) {
         nussl_free(ctx->cache.client.data);
@@ -144,7 +138,6 @@ void nussl_ssl_context_destroy(nussl_ssl_context *ctx)
 
 int nussl_ssl_context_trustcert(nussl_ssl_context *ctx, const nussl_ssl_certificate *cert)
 {
-    UGLY_DEBUG();
     gnutls_x509_crt certs = cert->subject;
     return (gnutls_certificate_set_x509_trust(ctx->cred, &certs, 1) == 0) ? NUSSL_OK : NUSSL_ERROR;
 }

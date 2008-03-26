@@ -51,7 +51,6 @@
 
 #include "nussl_private.h"
 
-#define UGLY_DEBUG() printf("%s %s:%i\n", __FUNCTION__, __FILE__, __LINE__)
 
 #if 0
 /* Destroy a a list of hooks. */
@@ -59,7 +58,6 @@ static void destroy_hooks(struct hook *hooks)
 {
     struct hook *nexthk;
 
-    UGLY_DEBUG();
     while (hooks) {
 	nexthk = hooks->next;
 	nussl_free(hooks);
@@ -71,7 +69,6 @@ static void destroy_hooks(struct hook *hooks)
 void nussl_session_destroy(nussl_session *sess)
 {
 
-    UGLY_DEBUG();
     NUSSL_DEBUG(NUSSL_DBG_HTTP, "nussl_session_destroy called.\n");
 
     if(!sess)
@@ -102,7 +99,6 @@ void nussl_session_destroy(nussl_session *sess)
 void nussl_set_hostinfo(nussl_session* sess, const char *hostname, unsigned int port)
 {
 
-    UGLY_DEBUG();
     if(!sess)
         return;
 
@@ -117,7 +113,6 @@ nussl_session *nussl_session_create()
 {
 
     nussl_session *sess = nussl_calloc(sizeof *sess);
-    UGLY_DEBUG();
 
 /*    NUSSL_DEBUG(NUSSL_DBG_HTTP, "session to ://%s:%d begins.\n",
 	     hostname, port); */
@@ -235,7 +230,6 @@ void nussl_set_addrlist(nussl_session *sess, const nussl_inet_addr **addrs, size
     if (!sess)
         return;
 
-    UGLY_DEBUG();
     sess->addrlist = addrs;
     sess->numaddrs = n;
 
@@ -255,7 +249,6 @@ void nussl_set_error(nussl_session *sess, const char *format, ...)
 
 void nussl_set_session_flag(nussl_session *sess, nussl_session_flag flag, int value)
 {
-    UGLY_DEBUG();
     if (!sess)
         return;
 
@@ -269,7 +262,6 @@ void nussl_set_session_flag(nussl_session *sess, nussl_session_flag flag, int va
 
 int nussl_get_session_flag(nussl_session *sess, nussl_session_flag flag)
 {
-    UGLY_DEBUG();
     if (!sess)
         return -1;
 
@@ -310,7 +302,6 @@ void nussl_set_read_timeout(nussl_session *sess, int timeout)
     if (!sess)
         return;
 
-    UGLY_DEBUG();
     sess->rdtimeout = timeout;
 
 }
@@ -320,7 +311,6 @@ void nussl_set_connect_timeout(nussl_session *sess, int timeout)
     if (!sess)
         return;
 
-    UGLY_DEBUG();
     sess->cotimeout = timeout;
 
 }
@@ -332,7 +322,6 @@ const char *nussl_get_error(nussl_session *sess)
     if (!sess)
         return NULL;
 
-    UGLY_DEBUG();
     ret = nussl_strclean(sess->error);
 
     return ret;
@@ -343,7 +332,6 @@ void nussl_close_connection(nussl_session *sess)
     if (!sess)
         return;
 
-    UGLY_DEBUG();
     if (sess->socket) {
 	NUSSL_DEBUG(NUSSL_DBG_SOCKET, "Closing connection.\n");
 	nussl_sock_close(sess->socket);
@@ -358,7 +346,6 @@ void nussl_close_connection(nussl_session *sess)
 void nussl_ssl_set_verify(nussl_session *sess, nussl_ssl_verify_fn fn, void *userdata)
 {
 
-    UGLY_DEBUG();
     sess->ssl_verify_fn = fn;
     sess->ssl_verify_ud = userdata;
 
@@ -368,7 +355,6 @@ void nussl_ssl_provide_clicert(nussl_session *sess,
 			  nussl_ssl_provide_fn fn, void *userdata)
 {
 
-    UGLY_DEBUG();
     sess->ssl_provide_fn = fn;
     sess->ssl_provide_ud = userdata;
 
@@ -382,7 +368,6 @@ int nussl_ssl_trust_cert_file(nussl_session *sess, const char *cert_file)
     if (!sess)
         return NUSSL_ERROR;
 
-    UGLY_DEBUG();
     nussl_ssl_certificate* ca = nussl_ssl_cert_read(cert_file);
     if(ca == NULL)
     {
@@ -407,7 +392,6 @@ void nussl_ssl_cert_validity(const nussl_ssl_certificate *cert, char *from, char
     if (!cert)
         return;
 
-    UGLY_DEBUG();
     nussl_ssl_cert_validity_time(cert, &tf, &tu);
 
     if (from) {
@@ -448,7 +432,6 @@ void nussl__ssl_set_verify_err(nussl_session *sess, int failures)
     };
     int n, flag = 0;
 
-    UGLY_DEBUG();
     strcpy(sess->error, _("Peer certificate verification failed: "));
 
     for (n = 0; reasons[n].bit; n++) {
@@ -578,7 +561,6 @@ int nussl_write(nussl_session *session, char *buffer, size_t count)
 	if (!session)
 		return NUSSL_ERROR;
 
-	UGLY_DEBUG();
 	ret = nussl_sock_fullwrite(session->socket, buffer, count);
 	if (ret < 0)
 		nussl_set_error(session, nussl_sock_error(session->socket));
@@ -609,7 +591,6 @@ int nussl_ssl_set_keypair(nussl_session *session, const char* cert_file, const c
 	if (!session)
 		return NUSSL_ERROR;
 
-	UGLY_DEBUG();
 
 	if (check_key_perms(key_file)!= NUSSL_OK)
 	{
@@ -635,7 +616,6 @@ int nussl_ssl_set_pkcs12_keypair(nussl_session *session, const char* pkcs12_file
 	if (!session)
 		return NUSSL_ERROR;
 
-	UGLY_DEBUG();
 
 	if (check_key_perms(pkcs12_file)!= NUSSL_OK)
 	{

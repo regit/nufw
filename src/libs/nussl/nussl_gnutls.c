@@ -75,7 +75,6 @@ GCRY_THREAD_OPTION_PTHREAD_IMPL;
 #include "nussl_privssl.h"
 #include "nussl_utils.h"
 
-#define UGLY_DEBUG() printf("%s %s:%i\n", __FUNCTION__, __FILE__, __LINE__)
 /* Returns the highest used index in subject (or issuer) DN of
  * certificate CERT for OID, or -1 if no RDNs are present in the DN
  * using that OID. */
@@ -83,7 +82,6 @@ static int oid_find_highest_index(gnutls_x509_crt cert, int subject, const char 
 {
     int ret, idx = -1;
 
-    UGLY_DEBUG();
     do {
         size_t len = 0;
 
@@ -110,7 +108,6 @@ static void convert_dirstring(nussl_buffer *buf, const char *charset,
     char *inbuf = (char *)data->data;
     char *outbuf = buf->data + buf->used - 1;
 
-    UGLY_DEBUG();
     if (id == (iconv_t)-1) {
         char err[128], err2[128];
 
@@ -143,7 +140,6 @@ static void convert_dirstring(nussl_buffer *buf, const char *charset,
 
 static void append_dirstring(nussl_buffer *buf, gnutls_datum *data, unsigned long tag)
 {
-    UGLY_DEBUG();
     switch (tag) {
     case TAG_UTF8:
     case TAG_IA5:
@@ -181,7 +177,6 @@ char *nussl_ssl_readable_dname(const nussl_ssl_dname *name)
     nussl_buffer *buf;
     gnutls_x509_ava_st val;
 
-    UGLY_DEBUG();
     if (name->subject)
         ret = gnutls_x509_crt_get_subject(name->cert, &dn);
     else
@@ -234,7 +229,6 @@ static void append_rdn(nussl_buffer *buf, gnutls_x509_crt x5, int subject, const
     int idx, top, ret;
     char rdn[50];
 
-    UGLY_DEBUG();
     top = oid_find_highest_index(x5, subject, oid);
 
     for (idx = top; idx >= 0; idx--) {
@@ -261,7 +255,6 @@ char *nussl_ssl_readable_dname(const nussl_ssl_dname *name)
     nussl_buffer *buf = nussl_buffer_create();
     int ret, idx = 0;
 
-    UGLY_DEBUG();
     do {
         char oid[32] = {0};
         size_t oidlen = sizeof oid;
@@ -286,7 +279,6 @@ int nussl_ssl_dname_cmp(const nussl_ssl_dname *dn1, const nussl_ssl_dname *dn2)
     size_t s1 = sizeof c1, s2 = sizeof c2;
     int ret;
 
-    UGLY_DEBUG();
     if (dn1->subject)
         ret = gnutls_x509_crt_get_dn(dn1->cert, c1, &s1);
     else
@@ -309,7 +301,6 @@ int nussl_ssl_dname_cmp(const nussl_ssl_dname *dn1, const nussl_ssl_dname *dn2)
 
 void nussl_ssl_clicert_free(nussl_ssl_client_cert *cc)
 {
-    UGLY_DEBUG();
     if (cc->p12)
         gnutls_pkcs12_deinit(cc->p12);
     if (cc->decrypted) {
@@ -324,7 +315,6 @@ void nussl_ssl_clicert_free(nussl_ssl_client_cert *cc)
 void nussl_ssl_cert_validity_time(const nussl_ssl_certificate *cert,
                                time_t *from, time_t *until)
 {
-    UGLY_DEBUG();
     if (from) {
         *from = gnutls_x509_crt_get_activation_time(cert->subject);
     }
@@ -340,7 +330,6 @@ static int match_hostname(char *cn, const char *hostname)
 {
     const char *dot;
     NUSSL_DEBUG(NUSSL_DBG_SSL, "Match %s on %s...\n", cn, hostname);
-    UGLY_DEBUG();
     dot = strchr(hostname, '.');
     if (dot == NULL) {
 	char *pnt = strchr(cn, '.');
@@ -376,7 +365,6 @@ static int check_identity(gnutls_x509_crt cert,
     return 0;
     hostname = /*server ? server->host :*/ "";
 
-    UGLY_DEBUG();
     do {
         len = sizeof name;
         ret = gnutls_x509_crt_get_subject_alt_name(cert, seq, name, &len,
@@ -467,7 +455,6 @@ static int check_identity(gnutls_x509_crt cert,
 static nussl_ssl_certificate *populate_cert(nussl_ssl_certificate *cert,
                                          gnutls_x509_crt x5)
 {
-    UGLY_DEBUG();
     cert->subj_dn.cert = x5;
     cert->subj_dn.subject = 1;
     cert->issuer_dn.cert = x5;
@@ -488,7 +475,6 @@ static gnutls_x509_crt x509_crt_copy(gnutls_x509_crt src)
     gnutls_datum tmp;
     gnutls_x509_crt dest;
 
-    UGLY_DEBUG();
     if (gnutls_x509_crt_init(&dest) != 0) {
         return NULL;
     }
@@ -521,7 +507,6 @@ static nussl_ssl_client_cert *dup_client_cert(const nussl_ssl_client_cert *cc)
     int ret;
     nussl_ssl_client_cert *newcc = nussl_calloc(sizeof *newcc);
 
-    UGLY_DEBUG();
     newcc->decrypted = 1;
 
     ret = gnutls_x509_privkey_init(&newcc->pkey);
@@ -553,7 +538,6 @@ static int provide_client_cert(gnutls_session session,
                                int sign_algos_length, gnutls_retr_st *st)
 {
     nussl_session *sess = gnutls_session_get_ptr(session);
-    UGLY_DEBUG();
 
     if (!sess) {
         return -1;
@@ -593,7 +577,6 @@ static int provide_client_cert(gnutls_session session,
 
 int nussl_ssl_set_clicert(nussl_session *sess, const nussl_ssl_client_cert *cc)
 {
-    UGLY_DEBUG();
     sess->my_cert = dup_client_cert(cc);
     if (!sess->my_cert)
     	return NUSSL_ERROR;
@@ -608,7 +591,6 @@ static nussl_ssl_certificate *make_peers_chain(gnutls_session sock)
     const gnutls_datum *certs;
     unsigned int n, count;
 
-    UGLY_DEBUG();
     certs = gnutls_certificate_get_peers(sock, &count);
     if (!certs) {
         return NULL;
@@ -646,7 +628,6 @@ static int check_certificate(nussl_session *sess, gnutls_session sock,
     unsigned int status;
 /*     nussl_uri server; */
 
-    UGLY_DEBUG();
     before = gnutls_x509_crt_get_activation_time(chain->subject);
     after = gnutls_x509_crt_get_expiration_time(chain->subject);
 
@@ -711,10 +692,8 @@ int nussl__ssl_post_handshake(nussl_session * sess)
     nussl_ssl_certificate *chain;
     gnutls_session sock = nussl__sock_sslsock(sess->socket);
 
-    UGLY_DEBUG();
     if (!sess->check_peer_cert)
         return NUSSL_OK;
-    UGLY_DEBUG();
 
     chain = make_peers_chain(sock);
     if (chain == NULL) {
@@ -745,7 +724,6 @@ int nussl__negotiate_ssl(nussl_session *sess)
 {
     nussl_ssl_context *const ctx = sess->ssl_context;
 
-    UGLY_DEBUG();
     NUSSL_DEBUG(NUSSL_DBG_SSL, "Negotiating SSL connection.\n");
 
     /* Pass through the hostname if SNI is enabled. */
@@ -763,25 +741,21 @@ int nussl__negotiate_ssl(nussl_session *sess)
 
 const nussl_ssl_dname *nussl_ssl_cert_issuer(const nussl_ssl_certificate *cert)
 {
-    UGLY_DEBUG();
     return &cert->issuer_dn;
 }
 
 const nussl_ssl_dname *nussl_ssl_cert_subject(const nussl_ssl_certificate *cert)
 {
-    UGLY_DEBUG();
     return &cert->subj_dn;
 }
 
 const nussl_ssl_certificate *nussl_ssl_cert_signedby(const nussl_ssl_certificate *cert)
 {
-    UGLY_DEBUG();
     return cert->issuer;
 }
 
 const char *nussl_ssl_cert_identity(const nussl_ssl_certificate *cert)
 {
-    UGLY_DEBUG();
     return cert->identity;
 }
 
@@ -789,7 +763,6 @@ const char *nussl_ssl_cert_identity(const nussl_ssl_certificate *cert)
 void nussl_ssl_trust_default_ca(nussl_session *sess)
 {
 #ifdef NUSSL_SSL_CA_BUNDLE
-    UGLY_DEBUG();
     gnutls_certificate_set_x509_trust_file(sess->ssl_context->cred,
                                            NUSSL_SSL_CA_BUNDLE,
                                            GNUTLS_X509_FMT_PEM);
@@ -805,7 +778,6 @@ static int read_to_datum(const char *filename, gnutls_datum *datum)
     char tmp[4192];
     size_t len;
 
-    UGLY_DEBUG();
     if (!f) {
         return -1;
     }
@@ -835,7 +807,6 @@ static int pkcs12_parse(gnutls_pkcs12 p12, gnutls_x509_privkey *pkey,
     gnutls_pkcs12_bag bag = NULL;
     int i, j, ret = 0;
 
-    UGLY_DEBUG();
     for (i = 0; ret == 0; ++i) {
         if (bag) gnutls_pkcs12_bag_deinit(bag);
 
@@ -915,7 +886,6 @@ nussl_ssl_client_cert *nussl_ssl_clicert_read(const char *filename)
     gnutls_x509_crt cert = NULL;
     gnutls_x509_privkey pkey = NULL;
 
-    UGLY_DEBUG();
     if (read_to_datum(filename, &data))
         return NULL;
 
@@ -955,7 +925,6 @@ nussl_ssl_client_cert *nussl_ssl_clicert_read(const char *filename)
 
 int nussl_ssl_clicert_encrypted(const nussl_ssl_client_cert *cc)
 {
-    UGLY_DEBUG();
     return !cc->decrypted;
 }
 
@@ -965,7 +934,6 @@ int nussl_ssl_clicert_decrypt(nussl_ssl_client_cert *cc, const char *password)
     gnutls_x509_crt cert = NULL;
     gnutls_x509_privkey pkey = NULL;
 
-    UGLY_DEBUG();
     if (gnutls_pkcs12_verify_mac(cc->p12, password) != 0) {
         return -1;
     }
@@ -984,13 +952,11 @@ int nussl_ssl_clicert_decrypt(nussl_ssl_client_cert *cc, const char *password)
 
 const nussl_ssl_certificate *nussl_ssl_clicert_owner(const nussl_ssl_client_cert *cc)
 {
-    UGLY_DEBUG();
     return &cc->cert;
 }
 
 const char *nussl_ssl_clicert_name(const nussl_ssl_client_cert *ccert)
 {
-    UGLY_DEBUG();
     return ccert->friendly_name;
 }
 
@@ -1000,7 +966,6 @@ nussl_ssl_certificate *nussl_ssl_cert_read(const char *filename)
     gnutls_datum data;
     gnutls_x509_crt x5;
 
-    UGLY_DEBUG();
     if (read_to_datum(filename, &data))
         return NULL;
 
@@ -1025,7 +990,6 @@ int nussl_ssl_cert_write(const nussl_ssl_certificate *cert, const char *filename
 
     FILE *fp = fopen(filename, "w");
 
-    UGLY_DEBUG();
     if (fp == NULL) return -1;
 
     if (gnutls_x509_crt_export(cert->subject, GNUTLS_X509_FMT_PEM, buffer,
@@ -1047,7 +1011,6 @@ int nussl_ssl_cert_write(const nussl_ssl_certificate *cert, const char *filename
 
 void nussl_ssl_cert_free(nussl_ssl_certificate *cert)
 {
-    UGLY_DEBUG();
     gnutls_x509_crt_deinit(cert->subject);
     if (cert->identity) nussl_free(cert->identity);
     if (cert->issuer) nussl_ssl_cert_free(cert->issuer);
@@ -1058,7 +1021,6 @@ int nussl_ssl_cert_cmp(const nussl_ssl_certificate *c1, const nussl_ssl_certific
 {
     char digest1[NUSSL_SSL_DIGESTLEN], digest2[NUSSL_SSL_DIGESTLEN];
 
-    UGLY_DEBUG();
     if (nussl_ssl_cert_digest(c1, digest1) || nussl_ssl_cert_digest(c2, digest2)) {
         return -1;
     }
@@ -1080,7 +1042,6 @@ nussl_ssl_client_cert* nussl_ssl_import_keypair(const char *cert_file, const cha
 	keypair->p12 = NULL;
 	keypair->friendly_name = NULL;
 
-	UGLY_DEBUG();
 
 	if (gnutls_x509_crt_init(&keypair->cert.subject) < 0)
         	return NULL;
@@ -1114,7 +1075,6 @@ nussl_ssl_certificate *nussl_ssl_cert_import(const char *data)
     gnutls_datum buffer = { NULL, 0 };
     gnutls_x509_crt x5;
 
-    UGLY_DEBUG();
     if (gnutls_x509_crt_init(&x5) != 0)
         return NULL;
 
@@ -1142,7 +1102,6 @@ char *nussl_ssl_cert_export(const nussl_ssl_certificate *cert)
     size_t len = 0;
     char *ret;
 
-    UGLY_DEBUG();
     /* find the length of the DER encoding. */
     if (gnutls_x509_crt_export(cert->subject, GNUTLS_X509_FMT_DER, NULL, &len) !=
         GNUTLS_E_SHORT_MEMORY_BUFFER) {
@@ -1166,7 +1125,6 @@ int nussl_ssl_cert_digest(const nussl_ssl_certificate *cert, char *digest)
     int j;
     size_t len = sizeof sha1;
 
-    UGLY_DEBUG();
     if (gnutls_x509_crt_get_fingerprint(cert->subject, GNUTLS_DIG_SHA,
                                         sha1, &len) < 0)
         return -1;
@@ -1194,7 +1152,6 @@ int nussl_get_peer_dn(nussl_session* sess, char* buf, size_t *buf_size)
 
 int nussl__ssl_init(void)
 {
-    UGLY_DEBUG();
 #ifdef NUSSL_HAVE_TS_SSL
     gcry_control(GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);
 #endif
@@ -1203,7 +1160,6 @@ int nussl__ssl_init(void)
 
 void nussl__ssl_exit(void)
 {
-    UGLY_DEBUG();
     /* No way to unregister the thread callbacks.  Doomed. */
 #if LIBGNUTLS_VERSION_MAJOR > 1 || LIBGNUTLS_VERSION_MINOR > 3 \
     || (LIBGNUTLS_VERSION_MINOR == 3 && LIBGNUTLS_VERSION_PATCH >= 3)
