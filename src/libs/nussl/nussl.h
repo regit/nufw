@@ -16,7 +16,6 @@
 #include <sys/socket.h>
 
 #include "nussl_constants.h"
-#include "nussl_misc.h"
 
 #ifdef __cplusplus
 extern "C" {

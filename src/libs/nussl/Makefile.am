@@ -1,6 +1,6 @@
 noinst_LTLIBRARIES = libnussl.la
 
-libnussl_la_SOURCES = nussl_alloc.c nussl_dates.c nussl_openssl.c nussl_openssl_ctx.c nussl_gnutls.c nussl_gnutls_ctx.c nussl_ssl_common.c nussl_misc.c nussl_request.c nussl_session.c nussl_socket.c nussl_string.c nussl_utils.c
+libnussl_la_SOURCES = nussl_alloc.c nussl_dates.c nussl_openssl.c nussl_openssl_ctx.c nussl_gnutls.c nussl_gnutls_ctx.c nussl_ssl_common.c nussl_request.c nussl_session.c nussl_socket.c nussl_string.c nussl_utils.c
 AM_CPPFLAGS = -I$(top_srcdir)/src/include/
 
 if USE_OPENSSL

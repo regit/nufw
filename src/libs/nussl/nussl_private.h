@@ -113,4 +113,6 @@ int nussl__negotiate_ssl(nussl_session *sess);
 /* Set the session error appropriate for SSL verification failures. */
 void nussl__ssl_set_verify_err(nussl_session *sess, int failures);
 
+/* Check certificates after the SSL handshake */
+int nussl__ssl_post_handshake(nussl_session * sess);
 #endif /* HTTP_PRIVATE_H */
