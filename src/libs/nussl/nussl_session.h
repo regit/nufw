@@ -187,11 +187,21 @@ void nussl_set_notifier(nussl_session *sess, nussl_notify_status status, void *u
  * not trusted: there is no indicatation the server is who they claim
  * to be: */
 #define NUSSL_SSL_UNTRUSTED (0x08)
+/* The certificate is invalid */
+#define NUSSL_SSL_INVALID (0x10)
+/* The certificate has been revoked */
+#define NUSSL_SSL_REVOKED (0x20)
+/* The certificate issuer has not been found in the trust chain */
+#define NUSSL_SSL_SIGNER_NOT_FOUND (0x40)
+/* The certificate is not signed by a CA */
+#define NUSSL_SSL_SIGNER_NOT_CA (0x80)
+
+
 
 /* The bitmask of known failure bits: if (failures & ~NUSSL_SSL_FAILMASK)
  * is non-zero, an unrecognized failure is given, and the verification
  * should be failed. */
-#define NUSSL_SSL_FAILMASK (0x0f)
+#define NUSSL_SSL_FAILMASK (0xff)
 
 #if 0
 /* A callback which is used when server certificate verification is

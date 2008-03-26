@@ -428,6 +428,10 @@ void nussl__ssl_set_verify_err(nussl_session *sess, int failures)
 	{ NUSSL_SSL_EXPIRED, N_("certificate has expired") },
 	{ NUSSL_SSL_IDMISMATCH, N_("certificate issued for a different hostname") },
 	{ NUSSL_SSL_UNTRUSTED, N_("issuer is not trusted") },
+	{ NUSSL_SSL_INVALID, N_("certificate is not a valid certificate") },
+	{ NUSSL_SSL_REVOKED, N_("certificate is revoked") },
+	{ NUSSL_SSL_SIGNER_NOT_FOUND, N_("signer not found") },
+	{ NUSSL_SSL_SIGNER_NOT_CA, N_("signer not a CA") },
 	{ 0, NULL }
     };
     int n, flag = 0;

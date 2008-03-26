@@ -652,24 +652,34 @@ static int check_certificate(nussl_session *sess, gnutls_session sock,
 
     ret = gnutls_certificate_verify_peers2(sock, &status);
     if (ret < 0) {
-                    printf("Certificate authority verification failed: %s\n",
-                           gnutls_strerror(ret));
+        NUSSL_DEBUG(NUSSL_DBG_SSL, "Certificate authority verification failed: %s\n",
+                                                              gnutls_strerror(ret));
         failures |= NUSSL_SSL_UNTRUSTED;
     }
     if (status) { /* XXX: Add more checks*/
-                    printf("Certificate authority verification failed:");
-                    if( status & GNUTLS_CERT_INVALID )
-                            printf(" invalid");
-                    if( status & GNUTLS_CERT_REVOKED )
-                            printf(", revoked");
-                    if( status & GNUTLS_CERT_SIGNER_NOT_FOUND )
-                            printf(", signer not found");
-                    if( status & GNUTLS_CERT_SIGNER_NOT_CA )
-                            printf(", signer not a CA");
-                    printf("\n");
-        failures |= NUSSL_SSL_UNTRUSTED;
-	    }
-
+        NUSSL_DEBUG(NUSSL_DBG_SSL, "Certificate authority verification failed:");
+        if( status & GNUTLS_CERT_INVALID )
+        {
+            NUSSL_DEBUG(NUSSL_DBG_SSL, ", invalid");
+            failures |= NUSSL_SSL_INVALID;
+        }
+        if( status & GNUTLS_CERT_REVOKED )
+        {
+            NUSSL_DEBUG(NUSSL_DBG_SSL, ", revoked");
+            failures |= NUSSL_SSL_REVOKED;
+        }
+        if( status & GNUTLS_CERT_SIGNER_NOT_FOUND )
+        {
+            NUSSL_DEBUG(NUSSL_DBG_SSL, ", signer not found");
+            failures |= NUSSL_SSL_SIGNER_NOT_FOUND;
+        }
+        if( status & GNUTLS_CERT_SIGNER_NOT_CA )
+        {
+            NUSSL_DEBUG(NUSSL_DBG_SSL, ", signer not a CA");
+            failures |= NUSSL_SSL_SIGNER_NOT_CA;
+        }
+	failures |= NUSSL_SSL_UNTRUSTED;
+    }
 
     NUSSL_DEBUG(NUSSL_DBG_SSL, "Failures = %d\n", failures);
 
@@ -975,7 +985,6 @@ nussl_ssl_certificate *nussl_ssl_cert_read(const char *filename)
     ret = gnutls_x509_crt_import(x5, &data, GNUTLS_X509_FMT_PEM);
     nussl_free(data.data);
     if (ret < 0) {
-    	printf("Unable to load cert..\n");
         gnutls_x509_crt_deinit(x5);
         return NULL;
     }

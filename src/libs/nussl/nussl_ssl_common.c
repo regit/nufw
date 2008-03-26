@@ -118,7 +118,7 @@ char* nussl_get_server_cert_dn(nussl_session* sess)
 	char *tmp, *dn;
 	if (!sess->peer_cert)
 	{
-		printf("no server cert\n");
+    		nussl_set_error(sess, _("The peer didn't send a certificate."));
 		return NULL;
 	}
 
