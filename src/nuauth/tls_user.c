@@ -649,7 +649,7 @@ int tls_user_init(struct tls_user_context_t *context)
 	char *nuauth_tls_cacert = NULL;
 	char *nuauth_tls_key_passwd = NULL;
 	char *nuauth_tls_crl = NULL;
-	char *configfile = DEFAULT_CONF_FILE;
+	/*char *configfile = DEFAULT_CONF_FILE;*/
 	int ret;
 	/* TODO: read values specific to user connections */
 	confparams_t nuauth_tls_vars[] = {
@@ -670,8 +670,7 @@ int tls_user_init(struct tls_user_context_t *context)
 		{"nuauth_tls_request_cert", G_TOKEN_INT, FALSE, NULL},
 		{"nuauth_tls_auth_by_cert", G_TOKEN_INT, FALSE, NULL}
 	};
-	const unsigned int nb_params =
-	    sizeof(nuauth_tls_vars) / sizeof(confparams_t);
+	/*const unsigned int nb_params = sizeof(nuauth_tls_vars) / sizeof(confparams_t);*/
 	int int_authcert;
 	int int_requestcert;
 

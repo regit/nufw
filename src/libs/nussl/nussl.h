@@ -78,6 +78,7 @@ int nussl_ssl_set_pkcs12_keypair(nussl_session *sess, const char* cert_file, con
 /* Indicate that the certificate 'cert' is trusted */
 int nussl_ssl_trust_cert_file(nussl_session* sess, const char *cert_file);
 
+/* TODO: factorize those functions */
 /* Returns a string containing informations about the certificate */
 char* nussl_get_cert_infos(nussl_session* sess);
 
@@ -87,12 +88,8 @@ char* nussl_get_server_cert_infos(nussl_session* sess);
 /* Returns a string containing informations about the peer certificate */
 char* nussl_get_server_cert_dn(nussl_session* sess);
 
-#if 0
-int nussl_ssl_cert_generate_dh_params(nussl_session *session);
-void nussl_ssl_cert_dh_params(nussl_session *session);
-int nussl_ssl_cert_set_x509_crl_file(nussl_session *session, const char *crl_file);
-int nussl_ssl_context_set_verify(nussl_session *session, int required, const char *verify_cas);
-#endif
+/* Returns a string containing informations about the peer certificate */
+char* nussl_get_peer_dn(nussl_session* sess, char* buf, size_t *buf_size);
 
 /* Server related functions */
 /* Create session server from sock fd */

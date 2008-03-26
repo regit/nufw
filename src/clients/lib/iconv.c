@@ -69,8 +69,7 @@ char *nu_client_to_utf8(const char *inbuf, char *from_charset)
 	/* iconv convert */
 	outbufleft = outbuflen - 1;	/* -1 because we keep last byte for nul byte */
 	targetbuf = outbuf;
-	ret =
-	    iconv(ctx, (const char **) &inbuf, &inlen, &targetbuf, &outbufleft);
+	ret = iconv(ctx, (char **) &inbuf, &inlen, &targetbuf, &outbufleft);
 	real_outlen = targetbuf - outbuf;
 
 	/* is buffer too small? */

@@ -1192,57 +1192,6 @@ int nussl_get_peer_dn(nussl_session* sess, char* buf, size_t *buf_size)
 	return NUSSL_OK;
 }
 
-/* Begin: --INL-- DH management functions added */
-/**
- * Generate Diffie Hellman parameters - for use with DHE
- * (Ephemeral Diffie Hellman) kx algorithms. These should be discarded
- * and regenerated once a day, once a week or once a month. Depending on
- * the security requirements.
- *
- * \return If an error occurs returns -1, else return 0
- */
-int nussl_ssl_cert_generate_dh_params(nussl_session *session)
-{
-        if (gnutls_dh_params_init(&session->ssl_context->dh) < 0) {
-                return -1;
-        }
-        if (gnutls_dh_params_generate2(session->ssl_context->dh, DH_BITS) < 0) {
-                return -1;
-        }
-
-        return 0;
-}
-
-void nussl_ssl_cert_dh_params(nussl_session *session)
-{
-
-        gnutls_certificate_set_dh_params(session->ssl_context->cred, session->ssl_context->dh);
-
-}
-
-int nussl_ssl_cert_set_x509_crl_file(nussl_session *session, const char *crl_file)
-{
-
-        return gnutls_certificate_set_x509_crl_file(session->ssl_context->cred,
-                                                    crl_file,
-                                                    GNUTLS_X509_FMT_PEM);
-
-}
-
-int nussl_ssl_context_set_verify(nussl_session *session, int required,
-                                 const char *verify_cas)
-{
-    session->ssl_context->verify = required;
-    /* gnutls_certificate_send_x509_rdn_sequence in gnutls >= 1.2 can
-     * be used to *suppress* sending the CA names, but not control it,
-     * it seems. */
-    return gnutls_certificate_set_x509_trust_file(session->ssl_context->cred, verify_cas,
-                                                  GNUTLS_X509_FMT_PEM);
-}
-
-
-/* End: --INL-- */
-
 int nussl__ssl_init(void)
 {
     UGLY_DEBUG();

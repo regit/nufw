@@ -578,7 +578,7 @@ void nuauth_install_signals(gboolean sig_action)
 
 	/* intercept SIGHUP */
 	memset(&action, 0, sizeof(action));
-	action.sa_handler = nuauth_reload;
+	action.sa_handler = (__sighandler_t) nuauth_reload;
 	sigemptyset(&(action.sa_mask));
 	action.sa_flags = 0;
 	if (sigaction(SIGHUP, &action, &nuauthdatas->old_sighup_hdl) != 0) {
