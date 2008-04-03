@@ -410,7 +410,7 @@ nu_error_t print_tracking_t(tracking_t *tracking)
 	if (! tracking_display)
 		return NU_EXIT_ERROR;
 
-	g_message(tracking_display);
+	g_message("%s", tracking_display);
 
 	g_free(tracking_display);
 	return NU_EXIT_OK;
@@ -495,7 +495,7 @@ gint print_connection(gpointer data, gpointer userdata)
 	g_free(str_os);
 	g_free(str_app);
 
-	g_message(message);
+	g_message("%s", message);
 
 	g_free(message);
 	return 1;

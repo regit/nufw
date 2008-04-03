@@ -303,7 +303,7 @@ char *get_password()
 		fprintf(stderr, "unable to read passphrase");
 	}
 #else
-	printf(question);
+	printf("%s", question);
 	ret = my_getpass(&new_pass, &password_size);
 	if (ret < 0) {
 		free(new_pass);
