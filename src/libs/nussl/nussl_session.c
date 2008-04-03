@@ -183,7 +183,7 @@ nussl_session* nussl_session_accept(nussl_session *srv_sess)
 	if(nussl_sock_accept_ssl(client_sess->socket, srv_sess->ssl_context))
 	{
 		/* nussl_sock_accept_ssl already sets an error */
-		nussl_set_error(srv_sess, nussl_sock_error(client_sess->socket));
+		nussl_set_error(srv_sess, "%s", nussl_sock_error(client_sess->socket));
 		nussl_session_destroy(client_sess);
 		return NULL;
 	}
@@ -192,7 +192,7 @@ nussl_session* nussl_session_accept(nussl_session *srv_sess)
 	if(nussl__ssl_post_handshake(client_sess) != NUSSL_OK)
 	{
 		/* nussl__ssl_post_handshake already sets an error */
-		nussl_set_error(srv_sess, nussl_get_error(client_sess));
+		nussl_set_error(srv_sess, "%s", nussl_get_error(client_sess));
 		nussl_session_destroy(client_sess);
 		return NULL;
 	}
@@ -567,7 +567,7 @@ int nussl_write(nussl_session *session, char *buffer, size_t count)
 
 	ret = nussl_sock_fullwrite(session->socket, buffer, count);
 	if (ret < 0)
-		nussl_set_error(session, nussl_sock_error(session->socket));
+		nussl_set_error(session, "%s", nussl_sock_error(session->socket));
 
 	return ret;
 }
@@ -582,7 +582,7 @@ ssize_t nussl_read(nussl_session *session, char *buffer, size_t count)
 
 	ret = nussl_sock_read(session->socket, buffer, count);
 	if (ret < 0)
-		nussl_set_error(session, nussl_sock_error(session->socket));
+		nussl_set_error(session, "%s", nussl_sock_error(session->socket));
 
 	return ret;
 }
@@ -673,7 +673,7 @@ int nussl_session_getpeer(nussl_session *sess, struct sockaddr *addr, socklen_t 
 	int ret = getpeername(fd, addr, addrlen);
 
 	if ( ret == -1 ) {
-		nussl_set_error(sess, strerror(errno));
+		nussl_set_error(sess, "%s", strerror(errno));
 		return NUSSL_ERROR;
 	}
 
