@@ -32,13 +32,13 @@
 
 void clear_ipv6(struct in6_addr *ipv6);
 void uint32_to_ipv6(const uint32_t ipv4, struct in6_addr *ipv6);
-inline void ipv4_to_ipv6(const struct in_addr ipv4, struct in6_addr *ipv6);
-inline void ipv6_to_ipv4(const struct in6_addr *ipv6, struct in_addr *ipv4);
+void ipv4_to_ipv6(const struct in_addr ipv4, struct in6_addr *ipv6);
+void ipv6_to_ipv4(const struct in6_addr *ipv6, struct in_addr *ipv4);
 int is_ipv4(const struct in6_addr *addr);
 void format_ipv6(const struct in6_addr *addr, char *buffer, size_t buflen, uint8_t *protocol);
 int getsockname_ipv6(int fileno, struct in6_addr *addr);
 int hex2ipv6(const char *text, struct in6_addr *ip);
-inline int ipv6_equal(const struct in6_addr *ipa, const struct in6_addr *ipb);
+int ipv6_equal(const struct in6_addr *ipa, const struct in6_addr *ipb);
 int compare_ipv6_with_mask(const struct in6_addr *addr1,
 	const struct in6_addr *addr2, const struct in6_addr *mask);
 void create_ipv6_netmask(struct in6_addr *netmask, int mask);

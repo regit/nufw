@@ -32,9 +32,9 @@ void add_client(int socket, gpointer datas);
 
 nu_error_t delete_client_by_socket(int c);
 
-inline user_session_t *get_client_datas_by_socket(int c);
+user_session_t *get_client_datas_by_socket(int c);
 
-inline GSList *get_client_sockets_by_ip(struct in6_addr *ip);
+GSList *get_client_sockets_by_ip(struct in6_addr *ip);
 
 user_session_t *look_for_username(const gchar * username);
 

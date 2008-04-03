@@ -61,7 +61,7 @@ void uint32_to_ipv6(const uint32_t ipv4, struct in6_addr *ipv6)
  * Convert IPv4 address (as in_addr struture) to IPv6 address:
  * add 96 bits prefix "::ffff:" to get IPv6 address "::ffff:a.b.c.d".
  */
-inline void ipv4_to_ipv6(const struct in_addr ipv4, struct in6_addr *ipv6)
+void ipv4_to_ipv6(const struct in_addr ipv4, struct in6_addr *ipv6)
 {
 	uint32_to_ipv6(ipv4.s_addr, ipv6);
 }
@@ -70,7 +70,7 @@ inline void ipv4_to_ipv6(const struct in_addr ipv4, struct in6_addr *ipv6)
  * Convert IPv6 address (as in6_addr struture) to IPv4 address (in_addr):
  * copy 32 bits address.
  */
-inline void ipv6_to_ipv4(const struct in6_addr *ipv6, struct in_addr *ipv4)
+void ipv6_to_ipv4(const struct in6_addr *ipv6, struct in_addr *ipv4)
 {
 #ifdef LINUX
 	ipv4->s_addr = ipv6->s6_addr32[3];
@@ -210,7 +210,7 @@ int hex2ipv6(const char *text, struct in6_addr *ip)
  *
  * \return 1 on equality, 0 otherwise.
  */
-inline int ipv6_equal(const struct in6_addr *ipa, const struct in6_addr *ipb)
+int ipv6_equal(const struct in6_addr *ipa, const struct in6_addr *ipb)
 {
 	return memcmp(ipa, ipb, sizeof(struct in6_addr)) == 0;
 }

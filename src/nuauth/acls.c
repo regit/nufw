@@ -68,7 +68,7 @@ struct acl_key {
  * Params : a "struct acl_key"
  * Return : the associated key
  */
-inline guint32 hash_acl(gconstpointer key)
+guint32 hash_acl(gconstpointer key)
 {
 	tracking_t *tracking =
 	    (tracking_t *) ((struct acl_key *) key)->acl_tracking;

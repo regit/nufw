@@ -189,12 +189,12 @@ nu_error_t delete_client_by_socket_ext(int socket, int use_lock)
 	return NU_EXIT_OK;
 }
 
-inline nu_error_t delete_client_by_socket(int socket)
+nu_error_t delete_client_by_socket(int socket)
 {
 	return delete_client_by_socket_ext(socket, 1);
 }
 
-inline user_session_t *get_client_datas_by_socket(int socket)
+user_session_t *get_client_datas_by_socket(int socket)
 {
 	void *ret;
 
@@ -205,7 +205,7 @@ inline user_session_t *get_client_datas_by_socket(int socket)
 	return ret;
 }
 
-inline GSList *get_client_sockets_by_ip(struct in6_addr * ip)
+GSList *get_client_sockets_by_ip(struct in6_addr * ip)
 {
 	void *ret;
 
@@ -215,7 +215,7 @@ inline GSList *get_client_sockets_by_ip(struct in6_addr * ip)
 	return ret;
 }
 
-inline guint get_number_of_clients()
+guint get_number_of_clients()
 {
 	return g_hash_table_size(client_conn_hash);
 }
@@ -231,7 +231,7 @@ static gboolean look_for_username_callback(gpointer key,
 	}
 }
 
-inline user_session_t *look_for_username(const gchar * username)
+user_session_t *look_for_username(const gchar * username)
 {
 	void *ret;
 	g_mutex_lock(client_mutex);
