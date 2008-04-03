@@ -660,28 +660,28 @@ static int check_certificate(nussl_session *sess, gnutls_session sock,
         NUSSL_DEBUG(NUSSL_DBG_SSL, "Certificate authority verification failed:");
         if( status & GNUTLS_CERT_INVALID )
         {
-            NUSSL_DEBUG(NUSSL_DBG_SSL, ", invalid");
+            NUSSL_DEBUG(NUSSL_DBG_SSL, "invalid, ");
             failures |= NUSSL_SSL_INVALID;
         }
         if( status & GNUTLS_CERT_REVOKED )
         {
-            NUSSL_DEBUG(NUSSL_DBG_SSL, ", revoked");
+            NUSSL_DEBUG(NUSSL_DBG_SSL, "revoked, ");
             failures |= NUSSL_SSL_REVOKED;
         }
         if( status & GNUTLS_CERT_SIGNER_NOT_FOUND )
         {
-            NUSSL_DEBUG(NUSSL_DBG_SSL, ", signer not found");
+            NUSSL_DEBUG(NUSSL_DBG_SSL, "signer not found, ");
             failures |= NUSSL_SSL_SIGNER_NOT_FOUND;
         }
         if( status & GNUTLS_CERT_SIGNER_NOT_CA )
         {
-            NUSSL_DEBUG(NUSSL_DBG_SSL, ", signer not a CA");
+            NUSSL_DEBUG(NUSSL_DBG_SSL, "signer not a CA, ");
             failures |= NUSSL_SSL_SIGNER_NOT_CA;
         }
 	failures |= NUSSL_SSL_UNTRUSTED;
     }
 
-    NUSSL_DEBUG(NUSSL_DBG_SSL, "Failures = %d\n", failures);
+    NUSSL_DEBUG(NUSSL_DBG_SSL, "\nFailures = %d\n", failures);
 
     if (failures == 0) {
         ret = NUSSL_OK;
@@ -1156,6 +1156,26 @@ int nussl_get_peer_dn(nussl_session* sess, char* buf, size_t *buf_size)
 	if (gnutls_x509_crt_get_dn(sess->peer_cert->subj_dn.cert, buf, buf_size))
 		return NUSSL_ERROR;
 
+	return NUSSL_OK;
+}
+
+int nussl_ssl_create_dh_params(nussl_session *sess, unsigned int dh_bits)
+{
+	gnutls_session sock = nussl__sock_sslsock(sess->socket);
+
+	gnutls_dh_set_prime_bits(sock, dh_bits);
+
+	if(gnutls_dh_params_init(&sess->ssl_context->dh) < 0)
+	{
+		nussl_set_error(sess, _("DH params initialization failed"));
+		return NUSSL_ERROR;
+	}
+	printf("sizeof(dh_paarams)=%u", sizeof(gnutls_dh_params));
+	if(gnutls_dh_params_generate2(sess->ssl_context->dh, dh_bits) < 0)
+	{
+		nussl_set_error(sess, _("DH params generation failed"));
+		return NUSSL_ERROR;
+	}
 	return NUSSL_OK;
 }
 
