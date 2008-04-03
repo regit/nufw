@@ -118,7 +118,7 @@ static void del_idmef_object(idmef_message_t * message, const char *object)
 {
 	idmef_value_t *val;
 	idmef_path_t *path;
-	if (idmef_path_new(&path, object) < 0) {
+	if (idmef_path_new(&path, "%s", object) < 0) {
 		return;
 	}
 	if (0 < idmef_path_get(path, message, &val)) {
@@ -139,7 +139,7 @@ static int add_idmef_object(idmef_message_t * message, const char *object,
 	idmef_path_t *path;
 
 
-	ret = idmef_path_new(&path, object);
+	ret = idmef_path_new(&path, "%s", object);
 	if (ret < 0) {
 		log_message(DEBUG, DEBUG_AREA_MAIN,
 			    "Prelude: Fail to set attribute %s=%s: %s",
