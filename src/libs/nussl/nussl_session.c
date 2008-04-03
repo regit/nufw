@@ -90,6 +90,9 @@ void nussl_session_destroy(nussl_session *sess)
     if (sess->my_cert)
         nussl_ssl_clicert_free(sess->my_cert);
 
+    if (sess->crl_file)
+        free(sess->crl_file);
+
     nussl_free(sess);
 
 }
@@ -133,6 +136,8 @@ nussl_session *nussl_session_create()
 
     /* Set default read timeout */
     sess->rdtimeout = SOCKET_READ_TIMEOUT;
+
+    sess->crl_file = NULL;
 
     return sess;
 }
@@ -664,7 +669,7 @@ int nussl_ssl_set_pkcs12_keypair(nussl_session *session, const char* pkcs12_file
 int nussl_session_getpeer(nussl_session *sess, struct sockaddr *addr, socklen_t *addrlen)
 {
 	int fd;
-	
+
 	if (!sess)
 		return NUSSL_ERROR;
 
@@ -678,6 +683,26 @@ int nussl_session_getpeer(nussl_session *sess, struct sockaddr *addr, socklen_t 
 	}
 
 	return NUSSL_OK;
+}
+
+int nussl_session_set_crl_file(nussl_session *sess, char *crl_file)
+{
+	if ( ! sess ) {
+		return NUSSL_ERROR;
+	}
+
+	sess->crl_file = strdup(crl_file);
+
+	return NUSSL_OK;
+}
+
+char * nussl_session_get_crl_file(nussl_session *sess)
+{
+	if ( ! sess ) {
+		return NULL;
+	}
+
+	return sess->crl_file;
 }
 
 int nussl_init()

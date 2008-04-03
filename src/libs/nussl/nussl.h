@@ -101,6 +101,8 @@ int nussl_session_get_fd(nussl_session *sess);
 
 int nussl_session_getpeer(nussl_session *sess, struct sockaddr *addr, socklen_t *addrlen);
 
+int nussl_session_set_crl_file(nussl_session *sess, char *crl_file);
+char * nussl_session_get_crl_file(nussl_session *sess);
 
 
 #define NUSSL_OK (0) /* Success */
