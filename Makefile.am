@@ -1,6 +1,7 @@
-SUBDIRS = src scripts doc tests
+SUBDIRS = src scripts doc tests conf python
 
-EXTRA_DIST = conf doc patches python debian autogen.sh
+PATCH_FILES = patches/dump-connection-mark.diff 
+EXTRA_DIST = autogen.sh $(PATCH_FILES)
 
 func_tests:
 	cd tests && ./test_all.py
