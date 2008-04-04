@@ -59,7 +59,7 @@ class TestClientCert(TestCase):
         self.nufw = startNufw(["-a", invalid_cacert])
         self.connectNuauthNufw()
 
-        self.assert_(any("Certificate authority verification failed: invalid, signer not found" in line
+        self.assert_(any("Certificate authority verification failed:invalid, signer not found," in line
             for line in self.nufw.readlines(total_timeout=TIMEOUT)))
         self.nufw.stop()
 
