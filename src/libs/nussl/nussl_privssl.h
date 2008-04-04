@@ -59,8 +59,6 @@ struct nussl_ssl_context_s {
     SSL_CTX *ctx;
     SSL_SESSION *sess;
     const char *hostname; /* for SNI */
-    int crl_refresh;
-    int crl_refresh_counter;
 
     DH *dh;
 };
@@ -76,8 +74,6 @@ typedef SSL *nussl_ssl_socket;
 struct nussl_ssl_context_s {
     gnutls_certificate_credentials cred;
     gnutls_dh_params dh;
-    int crl_refresh;
-    int crl_refresh_counter;
     int verify; /* non-zero if client cert verification required */
     int use_cert;
 

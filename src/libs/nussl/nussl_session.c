@@ -90,9 +90,6 @@ void nussl_session_destroy(nussl_session *sess)
     if (sess->my_cert)
         nussl_ssl_clicert_free(sess->my_cert);
 
-    if (sess->crl_file)
-        free(sess->crl_file);
-
     nussl_free(sess);
 
 }
@@ -126,8 +123,6 @@ nussl_session *nussl_session_create()
     strcpy(sess->error, "Unknown error.");
 
     sess->ssl_context = nussl_ssl_context_create(0);
-    sess->ssl_context->crl_refresh_counter = 0;
-    sess->ssl_context->crl_refresh = 0;
     sess->flags[NUSSL_SESSFLAG_SSLv2] = 1;
     sess->flags[NUSSL_SESSFLAG_TLS_SNI] = 1;
 
@@ -136,8 +131,6 @@ nussl_session *nussl_session_create()
 
     /* Set default read timeout */
     sess->rdtimeout = SOCKET_READ_TIMEOUT;
-
-    sess->crl_file = NULL;
 
     return sess;
 }
@@ -203,23 +196,6 @@ nussl_session* nussl_session_accept(nussl_session *srv_sess)
 	}
 
 	return client_sess;
-}
-
-void nussl_set_crl_refresh(nussl_session *sess, int refresh)
-{
-    if (!sess)
-        return;
-
-    sess->ssl_context->crl_refresh = refresh;
-}
-
-void nussl_crl_refresh_counter_inc(nussl_session *sess)
-{
-    if (!sess)
-        return;
-
-    sess->ssl_context->crl_refresh_counter++;
-
 }
 
 int nussl_session_get_fd(nussl_session *sess)
@@ -683,26 +659,6 @@ int nussl_session_getpeer(nussl_session *sess, struct sockaddr *addr, socklen_t 
 	}
 
 	return NUSSL_OK;
-}
-
-int nussl_session_set_crl_file(nussl_session *sess, char *crl_file)
-{
-	if ( ! sess ) {
-		return NUSSL_ERROR;
-	}
-
-	sess->crl_file = strdup(crl_file);
-
-	return NUSSL_OK;
-}
-
-char * nussl_session_get_crl_file(nussl_session *sess)
-{
-	if ( ! sess ) {
-		return NULL;
-	}
-
-	return sess->crl_file;
 }
 
 int nussl_init()

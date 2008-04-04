@@ -85,13 +85,6 @@ struct nussl_session_s {
     nussl_ssl_certificate *peer_cert;
     nussl_ssl_context *ssl_context;
 
-/* Certificate CRL handling */
-/* XXX: Make sure we do not have unused variables */
-	int crl_refresh;
-	int crl_refresh_counter;
-	char *crl_file;
-	time_t crl_file_mtime;
-
 #if 0
     /* Server cert verification callback: */
     nussl_ssl_verify_fn ssl_verify_fn;

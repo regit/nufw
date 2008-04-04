@@ -34,9 +34,6 @@ int nussl_init();
  * server. */
 nussl_session *nussl_session_create();
 
-/* We se the crl refresh capability */
-void nussl_set_crl_refresh(nussl_session *sess, int refresh);
-
 /* Finish an HTTP session */
 void nussl_session_destroy(nussl_session *sess);
 
@@ -100,10 +97,6 @@ nussl_session* nussl_session_accept(nussl_session *srv_sess);
 int nussl_session_get_fd(nussl_session *sess);
 
 int nussl_session_getpeer(nussl_session *sess, struct sockaddr *addr, socklen_t *addrlen);
-
-int nussl_session_set_crl_file(nussl_session *sess, char *crl_file);
-char * nussl_session_get_crl_file(nussl_session *sess);
-
 
 #define NUSSL_OK (0) /* Success */
 #define NUSSL_ERROR (1) /* Generic error; use nussl_get_error(session) for message */
