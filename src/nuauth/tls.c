@@ -56,6 +56,8 @@ struct nuauth_tls_t nuauth_tls;
 void tls_common_init(void)
 {
 
+	struct stat stats;
+
 	confparams_t nuauth_tls_vars[] = {
 		{"nuauth_tls_key", G_TOKEN_STRING, 0,
 		 g_strdup(NUAUTH_KEYFILE)},
@@ -79,6 +81,21 @@ void tls_common_init(void)
 	nuauth_tls.crl_refresh = *(int *) READ_CONF("nuauth_tls_crl_refresh");
 
 #undef READ_CONF
+
+	if ( nuauth_tls.crl_file ) {
+		log_message(VERBOSE_DEBUG, DEBUG_AREA_GW | DEBUG_AREA_USER,
+			"Certificate revocation list: %s",
+			nuauth_tls.crl_file);
+
+		if (access(nuauth_tls.crl_file, R_OK)) {
+			g_warning("[%i] TLS : can not access crl file %s",
+			getpid(), nuauth_tls.crl_file);
+			nuauth_ask_exit();
+		}
+
+		stat(nuauth_tls.crl_file, &stats);
+		nuauth_tls.crl_file_mtime = stats.st_mtime;
+	}
 
 }
 
