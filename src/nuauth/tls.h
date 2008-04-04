@@ -152,6 +152,19 @@ struct nuauth_tls_t {
 	nussl_session *nussl_server;
 	int request_cert;
 	auth_cert_type_t auth_by_cert;
+
+/* Common (user/nufw) configuration options */
+	char *key; /* nuauth_tls_key */
+	char *cert; /* nuauth_tls_cert */
+	char *ca; /* nuauth_tls_cacert */
+	char *crl_file; /* nuauth_tls_crl */
+	int crl_refresh; /* nuauth_tls_crl_refresh */
+	char *key_password; /* nuauth_tls_key_passwd */
+
+/* TLS helpers, no configuration */
+	int crl_refresh_counter; 
+	time_t crl_file_mtime;
+
 #ifdef XXX /* Move this into nussl */
 	gnutls_certificate_credentials x509_cred;
 	int crl_refresh;
@@ -191,7 +204,6 @@ gint check_certs_for_tls_session(gnutls_session session);
 void close_tls_session(int c, gnutls_session * session);
 #endif
 
-void refresh_crl_file();
 
 struct tls_user_context_t {
 	int mx;
@@ -216,5 +228,9 @@ extern struct tls_user_context_t tls_user_context;
 
 void tls_user_remove_client(int sock);
 void tls_user_start_servers(GSList *servers);
+
+void tls_common_init(void);
+void tls_common_deinit(void);
+void refresh_crl_file(void);
 
 #endif

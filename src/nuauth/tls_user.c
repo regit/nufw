@@ -21,6 +21,7 @@
  */
 
 #include "auth_srv.h"
+#include "tls.h"
 
 /**
  * \ingroup TLS
@@ -643,30 +644,14 @@ int tls_user_init(struct tls_user_context_t *context)
 	char *errmsg;
 	int result;
 
-/* config init */
-	char *nuauth_tls_key = NULL;
-	char *nuauth_tls_cert = NULL;
-	char *nuauth_tls_cacert = NULL;
-	char *nuauth_tls_key_passwd = NULL;
-	char *nuauth_tls_crl = NULL;
-	/*char *configfile = DEFAULT_CONF_FILE;*/
 	int ret;
-	/* TODO: read values specific to user connections */
+
+	/* TODO: make sure request_cert | auth_by_cert is for user and change to nufw if required */
 	confparams_t nuauth_tls_vars[] = {
 		{"nuauth_tls_max_clients", G_TOKEN_INT,
 		 NUAUTH_TLS_MAX_CLIENTS, NULL},
 		{"nuauth_auth_nego_timeout", G_TOKEN_INT,
 		 AUTH_NEGO_TIMEOUT, NULL},
-		{"nuauth_tls_key", G_TOKEN_STRING, 0,
-		 g_strdup(NUAUTH_KEYFILE)},
-		{"nuauth_tls_cert", G_TOKEN_STRING, 0,
-		 g_strdup(NUAUTH_CERTFILE)},
-		{"nuauth_tls_cacert", G_TOKEN_STRING, 0,
-		 g_strdup(NUAUTH_CACERTFILE)},
-		{"nuauth_tls_crl", G_TOKEN_STRING, 0, NULL},
-		{"nuauth_tls_crl_refresh", G_TOKEN_INT,
-		 DEFAULT_REFRESH_CRL_INTERVAL, NULL},
-		{"nuauth_tls_key_passwd", G_TOKEN_STRING, 0, NULL},
 		{"nuauth_tls_request_cert", G_TOKEN_INT, FALSE, NULL},
 		{"nuauth_tls_auth_by_cert", G_TOKEN_INT, FALSE, NULL}
 	};
@@ -718,11 +703,6 @@ int tls_user_init(struct tls_user_context_t *context)
 	context->nuauth_auth_nego_timeout =
 	    *(int *) READ_CONF("nuauth_auth_nego_timeout");
 	/* ssl related conf */
-	nuauth_tls_key = (char *) READ_CONF("nuauth_tls_key");
-	nuauth_tls_cert = (char *) READ_CONF("nuauth_tls_cert");
-	nuauth_tls_cacert = (char *) READ_CONF("nuauth_tls_cacert");
-	nuauth_tls_crl = (char *) READ_CONF("nuauth_tls_crl");
-	nuauth_tls_key_passwd = (char *) READ_CONF("nuauth_tls_key_passwd");
 	int_requestcert = *(int *) READ_CONF("nuauth_tls_request_cert");
 	int_authcert = *(int *) READ_CONF("nuauth_tls_auth_by_cert");
 #undef READ_CONF
@@ -737,8 +717,10 @@ int tls_user_init(struct tls_user_context_t *context)
 	free_confparams(nuauth_tls_vars,
 			sizeof(nuauth_tls_vars) / sizeof(confparams_t));
 
-	g_free(nuauth_tls_crl);
-	g_free(nuauth_tls_key_passwd);
+	/* We add the crl file function check every second only if we have a crl */
+	if ( nuauth_tls.crl_file ) {
+		cleanup_func_push(refresh_crl_file);
+	}
 
 	context->nussl = nussl_session_create_with_fd(context->sck_inet, nuauth_tls.request_cert);
 	if ( ! context->nussl ) {
@@ -746,25 +728,17 @@ int tls_user_init(struct tls_user_context_t *context)
 		return 0;
 	}
 
-	ret = nussl_ssl_set_keypair(context->nussl, nuauth_tls_cert, nuauth_tls_key);
+	ret = nussl_ssl_set_keypair(context->nussl, nuauth_tls.cert, nuauth_tls.key);
 	if ( ret != NUSSL_OK ) {
 		g_error("Failed to load user key/certificate: %s", nussl_get_error(context->nussl));
-		g_free(nuauth_tls_key);
-		g_free(nuauth_tls_cert);
-		g_free(nuauth_tls_cacert);
 		return 0;
 	}
 
-	g_free(nuauth_tls_key);
-	g_free(nuauth_tls_cert);
-
-	ret = nussl_ssl_trust_cert_file(context->nussl, nuauth_tls_cacert);
+	ret = nussl_ssl_trust_cert_file(context->nussl, nuauth_tls.ca);
 	if ( ret != NUSSL_OK ) {
 		g_error("Failed to load user trust certificate: %s", nussl_get_error(context->nussl));
-		g_free(nuauth_tls_cacert);
 		return 0;
 	}
-	g_free(nuauth_tls_cacert);
 
 	return 1;
 }

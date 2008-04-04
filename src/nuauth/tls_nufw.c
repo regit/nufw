@@ -370,25 +370,10 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 	char *errmsg;
 
 /* config init */
-	char *nuauth_tls_key = NULL;
-	char *nuauth_tls_cert = NULL;
-	char *nuauth_tls_cacert = NULL;
-	char *nuauth_tls_key_passwd = NULL;
-	char *nuauth_tls_crl = NULL;
 	char *configfile = DEFAULT_CONF_FILE;
 	int ret;
 	/* TODO: read values specific to nufw connection */
 	confparams_t nuauth_tls_vars[] = {
-		{"nuauth_tls_key", G_TOKEN_STRING, 0,
-		 g_strdup(NUAUTH_KEYFILE)},
-		{"nuauth_tls_cert", G_TOKEN_STRING, 0,
-		 g_strdup(NUAUTH_CERTFILE)},
-		{"nuauth_tls_cacert", G_TOKEN_STRING, 0,
-		 g_strdup(NUAUTH_CACERTFILE)},
-		{"nuauth_tls_crl", G_TOKEN_STRING, 0, NULL},
-		{"nuauth_tls_crl_refresh", G_TOKEN_INT,
-		 DEFAULT_REFRESH_CRL_INTERVAL, NULL},
-		{"nuauth_tls_key_passwd", G_TOKEN_STRING, 0, NULL},
 		{"nuauth_tls_request_cert", G_TOKEN_INT, FALSE, NULL},
 		{"nuauth_tls_auth_by_cert", G_TOKEN_INT, FALSE, NULL},
 		{"nuauth_tls_max_servers", G_TOKEN_INT, NUAUTH_TLS_MAX_SERVERS, NULL}
@@ -404,6 +389,8 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 			    "Check that nuauth is not running twice. Exit nuauth!");
 		return 0;
 	}
+
+
 #if 0 /* XXX: Already commented in 2.2 */
 	struct sigaction action;
 
@@ -454,25 +441,13 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 	}
 #define READ_CONF(KEY) \
 	get_confvar_value(nuauth_tls_vars, nb_params, KEY)
-	nuauth_tls_key = (char *) READ_CONF("nuauth_tls_key");
-	nuauth_tls_cert = (char *) READ_CONF("nuauth_tls_cert");
-	nuauth_tls_cacert = (char *) READ_CONF("nuauth_tls_cacert");
-	nuauth_tls_crl = (char *) READ_CONF("nuauth_tls_crl");
-	nuauth_tls_key_passwd = (char *) READ_CONF("nuauth_tls_key_passwd");
 	nuauth_tls_max_servers = *(int *) READ_CONF("nuauth_tls_max_servers");
 	int_requestcert = *(int *) READ_CONF("nuauth_tls_request_cert");
-#if 0
-	nuauth_tls.crl_refresh =
-	    *(int *) READ_CONF("nuauth_tls_crl_refresh");
-#endif
 #undef READ_CONF
 
 	/* free config struct */
 	free_confparams(nuauth_tls_vars,
 			sizeof(nuauth_tls_vars) / sizeof(confparams_t));
-
-	g_free(nuauth_tls_crl);
-	g_free(nuauth_tls_key_passwd);
 
 	/* TODO: use a nufw specific value of request_cert */
 	context->server = nussl_session_create_with_fd(context->sck_inet, nuauth_tls.request_cert);
@@ -481,24 +456,17 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 		return 0;
 	}
 
-	ret = nussl_ssl_set_keypair(context->server, nuauth_tls_cert, nuauth_tls_key);
+	ret = nussl_ssl_set_keypair(context->server, nuauth_tls.cert, nuauth_tls.key);
 	if ( ret != NUSSL_OK ) {
 		g_error("Failed to load nufw key/certificate: %s", nussl_get_error(context->server));
-		g_free(nuauth_tls_key);
-		g_free(nuauth_tls_cert);
-		g_free(nuauth_tls_cacert);
 		return 0;
 	}
-	g_free(nuauth_tls_key);
-	g_free(nuauth_tls_cert);
 
-	ret = nussl_ssl_trust_cert_file(context->server, nuauth_tls_cacert);
+	ret = nussl_ssl_trust_cert_file(context->server, nuauth_tls.ca);
 	if ( ret != NUSSL_OK ) {
 		g_error("Failed to load nufw trust certificate: %s", nussl_get_error(context->server));
-		g_free(nuauth_tls_cacert);
 		return 0;
 	}
-	g_free(nuauth_tls_cacert);
 
 	return 1;
 }

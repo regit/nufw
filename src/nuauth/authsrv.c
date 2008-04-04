@@ -596,16 +596,19 @@ void no_action_signals(int recv_signal)
 		case SIGINT:
 		log_message(CRITICAL, DEBUG_AREA_MAIN,
 			    "[+] Nuauth received SIGINT (leaving)");
+		tls_common_deinit();
 		exit(EXIT_FAILURE);
 		break;
 		case SIGTERM:
 		log_message(CRITICAL, DEBUG_AREA_MAIN,
 				"[+] Nuauth received SIGTERM (leaving)");
+		tls_common_deinit();
 		exit(EXIT_FAILURE);
 		break;
 		case SIGHUP:
 		log_message(CRITICAL, DEBUG_AREA_MAIN,
 				"[+] Nuauth received SIGHUP (ignoring)");
+		tls_common_deinit();
 		break;
 	}
 }
@@ -827,6 +830,8 @@ void init_nuauthdata()
 	}
 
 	/* create TLS authentication server threads (auth + nufw) */
+	tls_common_init();
+
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 		    "Creating tls authentication server threads");
 	tls_user_start_servers(nuauthdatas->tls_auth_servers);

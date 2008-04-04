@@ -4,6 +4,7 @@
  **             Vincent Deffontaines <gryzor@inl.fr>
  **
  ** $Id$
+ ** tls.c: Common functions for TLS nufw and user management
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -48,10 +49,48 @@
  */
 
 
-#if 0
 /* These are global */
 struct nuauth_tls_t nuauth_tls;
 
+
+void tls_common_init(void)
+{
+
+	confparams_t nuauth_tls_vars[] = {
+		{"nuauth_tls_key", G_TOKEN_STRING, 0,
+		 g_strdup(NUAUTH_KEYFILE)},
+		{"nuauth_tls_cert", G_TOKEN_STRING, 0,
+		 g_strdup(NUAUTH_CERTFILE)},
+		{"nuauth_tls_cacert", G_TOKEN_STRING, 0,
+		 g_strdup(NUAUTH_CACERTFILE)},
+		{"nuauth_tls_crl", G_TOKEN_STRING, 0, NULL},
+		{"nuauth_tls_crl_refresh", G_TOKEN_INT,
+		 DEFAULT_REFRESH_CRL_INTERVAL, NULL},
+		{"nuauth_tls_key_passwd", G_TOKEN_STRING, 0, NULL},
+	};
+	
+#define READ_CONF(KEY) \
+	get_confvar_value(nuauth_tls_vars, sizeof(nuauth_tls_vars)/sizeof(confparams_t), KEY)
+
+	nuauth_tls.key = (char *) READ_CONF("nuauth_tls_key");
+	nuauth_tls.cert = (char *) READ_CONF("nuauth_tls_cert");
+	nuauth_tls.ca = (char *) READ_CONF("nuauth_tls_cacert");
+	nuauth_tls.crl_file = (char *) READ_CONF("nuauth_tls_crl");
+	nuauth_tls.crl_refresh = *(int *) READ_CONF("nuauth_tls_crl_refresh");
+
+#undef READ_CONF
+
+}
+
+void tls_common_deinit(void)
+{
+	free(nuauth_tls.key);
+	free(nuauth_tls.cert);
+	free(nuauth_tls.ca);
+	free(nuauth_tls.crl_file);
+}
+
+#if 0
 /* XXX: *nuauth_ssl replaces nuauth_tls*/
 struct nuauth_ssl_t nuauth_ssl;
 #endif
@@ -197,12 +236,9 @@ gnutls_session *initialize_tls_session()
  * cleanup_func_push() to the list of nuauth periodically run
  * function.
  */
-
-void refresh_crl_file()
+void refresh_crl_file(void)
 {
 #if 0
-XXX: crl not managed yet, nuauth_tls.crl_file_mtime used uninitialized
-
 	nuauth_tls.crl_refresh_counter++;
 	if (nuauth_tls.crl_refresh == nuauth_tls.crl_refresh_counter) {
 		struct stat stats;
