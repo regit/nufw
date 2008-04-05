@@ -18,11 +18,19 @@ TLS usage
 NuAuth:
 -------
 
-A key for nuauth can be created wth the following command:
+A key for nuauth can be created wth the following command :
+openssl req -new -x509 -nodes -days 365 -out nuauth-cert.pem -keyout nuauth-key.pem
+By default nuauth searches the certificate  CONFIGDIR/nuauth-cert.pem and
+key CONFIGDIR/nuauth-key.pem
 
-    openssl req -new -x509 -nodes -days 365 -out nuauth.pem -keyout nuauth.pem
+Kernel:
+========
 
-By default nuauth searches the certificate: CONFIGDIR/nuauth.pem
+It is recommanded to use a recent kernel to benefit of all latest feature.
+A kernel superior to 2.6.18 is a good choice.
+The patch dump-connection-mark.diff (in patches/) can be applied to the kernel
+to increase performances when doing session logging. This patch is included in
+2.6.25 kernel and over.
 
 
 Included documentation
