@@ -47,8 +47,8 @@ OS_RELEASE = platform.release()   # '2.6.19.2-haypo'
 OS_VERSION = platform.version()   # '#2 Mon Feb 5 10:55:30 CET 2007'
 CLIENT_OS = "-".join( (OS_SYSNAME, OS_VERSION, OS_RELEASE) )
 CLIENT_APP = realpath(executable)
-LOG_PREFIX = 42
-OOB_PREFIX = "%u ACCEPT" % LOG_PREFIX
+LOG_PREFIX = "42:ETH0-IF"
+OOB_PREFIX = "%s ACCEPT" % LOG_PREFIX
 
 def datetime_now(delta=0):
     # Use datetime.fromtimestamp() with int(time()) to have microsecond=0
@@ -69,6 +69,7 @@ class MysqlLog(TestCase):
         startNufw()
         config = NuauthConf()
         config["nuauth_log_users"] = '9'
+        config["mysql_prefix_version"] = '1'
         if POSTGRESQL:
             config.need_restart = True
             self.conn = pgdb.connect(

@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2003-2007 INL
+ ** Copyright(C) 2003-2008 INL
  ** Written by Eric Leblond <regit@inl.fr>
  **	       Vincent Deffontaines <vincent@gryzor.com>
  **	       Victor Stinner <haypo@inl.fr>
@@ -226,6 +226,8 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 		{"mysql_bofh_victime_group", G_TOKEN_INT,
 		 0, NULL}
 		,
+		{"mysql_prefix_version", G_TOKEN_INT, PREFIX_VERSION_ORIG, NULL}
+		,
 		{"mysql_use_ssl", G_TOKEN_INT, MYSQL_USE_SSL, NULL}
 		,
 		{"mysql_ssl_keyfile", G_TOKEN_STRING, 0,
@@ -294,6 +296,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	READ_CONF_INT(params->mysql_use_ipv4_schema,
 		      "mysql_use_ipv4_schema", MYSQL_USE_IPV4_SCHEMA);
 	READ_CONF_INT(params->mysql_admin_bofh, "mysql_admin_bofh", 0);
+	READ_CONF_INT(params->mysql_prefix_version, "mysql_prefix_version", PREFIX_VERSION_NULOG2);
 	READ_CONF_INT(params->mysql_bofh_victim_group, "mysql_bofh_victim_group", 0);
 
 
@@ -422,6 +425,39 @@ static char *quote_string(MYSQL * mysql, char *text)
 	return quoted;
 }
 
+char* create_log_prefix(int prefix_version, const char* oob_sufix, connection_t *element)
+{
+	const gchar *place;
+
+	if (prefix_version == PREFIX_VERSION_ORIG) {
+		/* old log format: "42:ETH-IF ACCEPT" */
+		const gchar *prefix;
+		if (element->log_prefix) {
+			prefix = element->log_prefix;
+		} else {
+			prefix = "Default";
+		}
+		return g_strdup_printf("%s %s", prefix, oob_sufix);
+	}
+
+	/* new log format: "F42A:message" */
+	if (!element->log_prefix) {
+		return g_strdup_printf("F0%c:Default DROP", oob_sufix[0]);
+	}
+
+	/* prefix is "[FIO]${ID_ACL}?:${description}",
+	 * replace ? by decision (in fact first letter of prefix) */
+	place = strchr(element->log_prefix, '?');
+	if (place) {
+		char *log_prefix = g_strdup(element->log_prefix);
+		log_prefix[place - element->log_prefix] = oob_sufix[0];
+		return log_prefix;
+	} else {
+		/* old log format? (eg. log prefix from plaintext module) */
+		return g_strdup_printf("%s %s", element->log_prefix, oob_sufix);
+	}
+}
+
 static char *build_insert_request(MYSQL * ld, connection_t * element,
 				  tcp_state_t state,
 				  char *auth_oob_prefix,
@@ -433,9 +469,10 @@ static char *build_insert_request(MYSQL * ld, connection_t * element,
 	char src_ascii[IPV6_SQL_STRLEN];
 	char dst_ascii[IPV6_SQL_STRLEN];
 	char tmp_buffer[REQUEST_TMP_BUFFER];
-	char *log_prefix = "Default";
+	char *log_prefix;
 	short unsigned int proto;
 	gboolean ok;
+	const char* oob_prefix;
 
 	/* Write common informations */
 	ok = secure_snprintf(request_fields, sizeof(request_fields),
@@ -488,9 +525,12 @@ static char *build_insert_request(MYSQL * ld, connection_t * element,
 			  INSERT_REQUEST_VALUES_SIZE);
 	}
 
-	if (element->log_prefix) {
-		log_prefix = element->log_prefix;
+	if (element->username) {
+		oob_prefix = auth_oob_prefix;
+	} else {
+		oob_prefix = unauth_oob_prefix;
 	}
+	log_prefix = create_log_prefix(params->mysql_prefix_version, oob_prefix, element);
 
 	/* Add user informations */
 	if (element->username) {
@@ -517,8 +557,8 @@ static char *build_insert_request(MYSQL * ld, connection_t * element,
 				  sizeof(request_fields));
 			ok = secure_snprintf(tmp_buffer,
 					     sizeof(tmp_buffer),
-					     "'%s %s', '%lu', '%s', '%s', '%s'",
-					     log_prefix, auth_oob_prefix,
+					     "'%s', '%lu', '%s', '%s', '%s'",
+					     log_prefix,
 					     (long unsigned int) element->
 					     user_id, quoted_username,
 					     quoted_osname,
@@ -537,14 +577,14 @@ static char *build_insert_request(MYSQL * ld, connection_t * element,
 		g_strlcat(request_fields,
 			  "oob_prefix", sizeof(request_fields));
 		ok = secure_snprintf(tmp_buffer, sizeof(tmp_buffer),
-				     "'%s %s'",
-				     log_prefix, unauth_oob_prefix);
+				     "'%s'", log_prefix);
 		if (!ok) {
 			return NULL;
 		}
 		g_strlcat(request_values, tmp_buffer,
 			  sizeof(request_values));
 	}
+	g_free(log_prefix);
 
 	/* Add TCP/UDP parameters */
 	if ((element->tracking.protocol == IPPROTO_TCP)
@@ -626,9 +666,11 @@ static inline int log_state_open(MYSQL * ld, connection_t * element,
 	}
 
 	/* build sql request */
+
 	request = build_insert_request(ld, element,
-				       TCP_STATE_OPEN, "ACCEPT", "ACCEPT",
-				       params);
+			TCP_STATE_OPEN, "ACCEPT", "ACCEPT",
+			params);
+
 	if (request == NULL) {
 		log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 			    "Error while building MySQL insert query (state OPEN)!");
@@ -744,7 +786,7 @@ static inline int log_state_close(MYSQL * ld,
 		ok = secure_snprintf(request, sizeof(request),
 				"UPDATE %s SET end_timestamp=FROM_UNIXTIME(%lu), state=%hu,"
 				" packets_in=%" PRIu64 ", packets_out=%" PRIu64 ","
-				" bytes_in=%" PRIu64 ", bytes_out=%" PRIu64 " " 
+				" bytes_in=%" PRIu64 ", bytes_out=%" PRIu64 " "
 				"WHERE (ip_saddr=%s AND ip_daddr=%s "
 				"AND tcp_sport='%hu' AND tcp_dport='%hu' AND (state='%hu' OR state='%hu'))",
 				params->mysql_table_name,
