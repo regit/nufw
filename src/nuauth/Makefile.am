@@ -28,7 +28,7 @@ nuauth_LDADD = $(GLIB_LIBS) -lm  -lgnutls -lsasl2 -L$(top_builddir)/src/include/
 
 if BUILD_NUAUTH_COMMAND
 install-exec-local:
-	install -d $(localstatedir)/run/nuauth/
+	install -d "$(DESTDIR)$(localstatedir)/run/nuauth/"
 endif
 
 nuauth$(EXEEXT): $(nuauth_OBJECTS) $(nuauth_DEPENDENCIES)
