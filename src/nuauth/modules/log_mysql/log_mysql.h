@@ -50,6 +50,11 @@
 #define INSERT_REQUEST_VALUES_SIZE 800
 #define REQUEST_TMP_BUFFER 500
 
+typedef enum {
+	PREFIX_VERSION_ORIG,
+	PREFIX_VERSION_NULOG2,
+} prefix_version_t;
+
 struct log_mysql_params {
 	module_hook_t hook;
 	int mysql_request_timeout;
@@ -63,6 +68,7 @@ struct log_mysql_params {
 	unsigned char mysql_use_ipv4_schema;
 	unsigned char mysql_admin_bofh;
 	int mysql_bofh_victim_group;
+	prefix_version_t mysql_prefix_version;
 	unsigned char mysql_use_ssl;
 	char *mysql_ssl_keyfile;
 	char *mysql_ssl_certfile;
