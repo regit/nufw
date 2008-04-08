@@ -170,6 +170,7 @@ gpointer get_confvar_value(confparams_t * symbols, gint array_size,
 	gpointer value = NULL;
 	int i;
 	int token_type;
+
 	/* go through symbol table */
 	for (i = 0; i < array_size; i++) {
 		if (!strcmp(symbols[i].name, confparam)) {

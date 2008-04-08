@@ -842,7 +842,10 @@ void *push_worker(GMutex * mutex)
 void *tls_user_authsrv(struct nuauth_thread_t *thread)
 {
 	struct tls_user_context_t *context = thread->data;
-	int ok = tls_user_init(context);
+	int ok = 0;
+
+	ok = tls_user_init(context);
+
 	if (ok) {
 		tls_user_main_loop(context, thread->mutex);
 	} else {
