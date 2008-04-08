@@ -780,6 +780,11 @@ void nussl_ssl_trust_default_ca(nussl_session *sess)
 }
 #endif
 
+int nussl_ssl_set_crl_file(nussl_session *sess, char *crl_file)
+{
+	return gnutls_certificate_set_x509_crl_file(sess->ssl_context->cred, crl_file, GNUTLS_X509_FMT_PEM);
+}
+
 /* Read the contents of file FILENAME into *DATUM. */
 static int read_to_datum(const char *filename, gnutls_datum *datum)
 {

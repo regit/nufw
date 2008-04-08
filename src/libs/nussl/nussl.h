@@ -98,6 +98,9 @@ int nussl_session_get_fd(nussl_session *sess);
 
 int nussl_session_getpeer(nussl_session *sess, struct sockaddr *addr, socklen_t *addrlen);
 
+int nussl_ssl_set_crl_file(nussl_session *sess, char *crl_file);
+
+
 #define NUSSL_OK (0) /* Success */
 #define NUSSL_ERROR (1) /* Generic error; use nussl_get_error(session) for message */
 #define NUSSL_LOOKUP (2) /* Server or proxy hostname lookup failed */
