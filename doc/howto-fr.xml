@@ -28,6 +28,13 @@
     </copyright>
     <revhistory>
       <revision>
+      	<revnumber>0.9.6</revnumber>
+	<date>2008/04/09</date>
+	<revdescription>
+	<para>Ajout d'informations spécifiques à l'utilisation de NuFW avec Xen.</para>
+	</revdescription>
+      </revision>
+      <revision>
       	<revnumber>0.9.5</revnumber>
 	<date>2008/02/14</date>
 	<revdescription>
@@ -1162,6 +1169,16 @@ comme mentionné ci-après. Le problème s'est systématiquement posé avec ce noyau 
 Il existe un bug ip_queue dans les moyaux antérieurs au 2.6.12. Il provoque un crash du système lorsque qu'une décision ACCEPT
 est prise dans la chaîne INPUT. N'utilisez donc pas la cible QUEUE dans la chaîne INPUT avec ces noyaux ou vous risquez de geler votre machine.
 Dans tous les cas de figure vous devriez vraiment utiliser un noyau plus récent et la cible NFQUEUE, comme expliqué plus haut dans ce document.
+</para>
+</section>
+<section><title>NuFW en environnement virtualisé</title>
+<para>NuFW devrait tourner sans soucis dans des environnements virtualisés. Il est cependant à noter que Xen 3.1 semble poser des problèmes
+à l'utilisation de nfnetlink. Les tests suivants ont été réalisés (avec NuFW 2.2.14, mais la version NuFW semble sans importance) :
+<itemizedlist>
+<listitem><para><option>Xen 3.1, noyau 2.6.22</option> BUG : Tout traffic réseau est bloqué dès que le démon nufw est lancé.</para></listitem>
+<listitem><para><option>Xen 3.2, noyau 2.6.22</option> BUG : Tout traffic réseau est bloqué dès que le démon nufw est lancé</para></listitem>
+<listitem><para><option>Xen 3.2, noyau 2.6.24</option> Tout fonctionne.</para></listitem>
+</itemizedlist>
 </para>
 </section>
       </section>

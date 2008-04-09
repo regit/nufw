@@ -19,6 +19,13 @@
     </copyright>
     <revhistory>
       <revision>
+      	<revnumber>0.9.6</revnumber>
+	<date>2008/04/09</date>
+	<revdescription>
+	<para>Added specific Xen information.</para>
+	</revdescription>
+      </revision>
+      <revision>
       	<revnumber>0.9.5</revnumber>
 	<date>2008/02/14</date>
 	<revdescription>
@@ -1217,6 +1224,16 @@ kernel the bug occurs systematically (at least on SMP machines).</para>
 There's an ip_queue bug on kernels prior to 2.6.12. It can hang the system when an ACCEPT decision is done
 on the INPUT chain. Thus DO NOT use a QUEUE target on INPUT with these kernels or it could freeze your computer.
 And anyway, you should use a recent kernel and NFQUEUE, as explained hereup in this howto.
+</para>
+</section>
+<section><title>Running NuFW in a virtualized environment</title>
+<para>NuFW should run seamlessly in virtualized environments. However it seems a Xen 3.1 does not allow the use of
+nfnetlink without problems. The following facts were reported (with NuFW 2.2.14, but NuFW versioning is not the matter) :
+<itemizedlist>
+<listitem><para><option>Xen 3.1, kernel 2.6.22</option> BUG : No network trafic when launching the nufw daemon.</para></listitem>
+<listitem><para><option>Xen 3.2, kernel 2.6.22</option> BUG : No network trafic when launching the nufw daemon.</para></listitem>
+<listitem><para><option>Xen 3.2, kernel 2.6.24</option> Everything works.</para></listitem>
+</itemizedlist>
 </para>
 </section>
       </section>
