@@ -206,6 +206,14 @@ int nussl_session_get_fd(nussl_session *sess)
 	return nussl_sock_fd(sess->socket);
 }
 
+int nussl_session_set_dh_bits(nussl_session* sess, unsigned int dh_bits)
+{
+	if(!sess)
+		return NUSSL_ERROR;
+
+	return nussl_ssl_context_set_dh_bits(sess->ssl_context, dh_bits);
+}
+
 void nussl_set_addrlist(nussl_session *sess, const nussl_inet_addr **addrs, size_t n)
 {
     if (!sess)

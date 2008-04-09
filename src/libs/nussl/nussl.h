@@ -98,6 +98,8 @@ int nussl_session_get_fd(nussl_session *sess);
 
 int nussl_session_getpeer(nussl_session *sess, struct sockaddr *addr, socklen_t *addrlen);
 
+int nussl_session_set_dh_bits(nussl_session *sess, unsigned int dh_bits);
+
 int nussl_ssl_set_crl_file(nussl_session *sess, char *crl_file);
 
 

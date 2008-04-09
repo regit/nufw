@@ -1164,26 +1164,6 @@ int nussl_get_peer_dn(nussl_session* sess, char* buf, size_t *buf_size)
 	return NUSSL_OK;
 }
 
-int nussl_ssl_create_dh_params(nussl_session *sess, unsigned int dh_bits)
-{
-	gnutls_session sock = nussl__sock_sslsock(sess->socket);
-
-	gnutls_dh_set_prime_bits(sock, dh_bits);
-
-	if(gnutls_dh_params_init(&sess->ssl_context->dh) < 0)
-	{
-		nussl_set_error(sess, _("DH params initialization failed"));
-		return NUSSL_ERROR;
-	}
-	printf("sizeof(dh_paarams)=%u", sizeof(gnutls_dh_params));
-	if(gnutls_dh_params_generate2(sess->ssl_context->dh, dh_bits) < 0)
-	{
-		nussl_set_error(sess, _("DH params generation failed"));
-		return NUSSL_ERROR;
-	}
-	return NUSSL_OK;
-}
-
 int nussl__ssl_init(void)
 {
 #ifdef NUSSL_HAVE_TS_SSL

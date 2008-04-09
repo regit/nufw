@@ -728,6 +728,11 @@ int tls_user_init(struct tls_user_context_t *context)
 		return 0;
 	}
 
+	if ( nussl_session_set_dh_bits(context->nussl, DH_BITS) != NUSSL_OK) {
+		g_error("Unable to initialize Diffie Hellman params.");
+		return 0;
+	}
+
 	ret = nussl_ssl_set_keypair(context->nussl, nuauth_tls.cert, nuauth_tls.key);
 	if ( ret != NUSSL_OK ) {
 		g_error("Failed to load user key/certificate: %s", nussl_get_error(context->nussl));

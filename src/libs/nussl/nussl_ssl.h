@@ -186,6 +186,9 @@ int nussl_ssl_context_keypair_from_data(nussl_ssl_context *ctx, nussl_ssl_client
 int nussl_ssl_context_keypair(nussl_ssl_context *ctx,
                            const char *cert, const char *key);
 
+/* Server mode: Set DH parameters */
+int nussl_ssl_context_set_dh_bits(nussl_ssl_context *ctx, unsigned int dh_bits);
+
 /* Server mode: set client cert verification options: required is non-zero if
  * a client cert is required, if ca_names is non-NULL it is a filename containing
  * a set of PEM certs from which CA names are sent in the ccert request. */

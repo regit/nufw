@@ -102,9 +102,14 @@ struct nussl_session_s {
     char error[512];
 };
 
+#if 0
 /* Pushes block of 'count' bytes at 'buf'. Returns non-zero on
  * error. */
 typedef int (*nussl_push_fn)(void *userdata, const char *buf, size_t count);
+#endif
+
+/* Generate DH prime number. */
+int nussl_ssl_create_dh_params(nussl_session* sess, unsigned int dh_bits);
 
 /* Do the SSL negotiation. */
 int nussl__negotiate_ssl(nussl_session *sess);

@@ -452,7 +452,12 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 	/* TODO: use a nufw specific value of request_cert */
 	context->server = nussl_session_create_with_fd(context->sck_inet, nuauth_tls.request_cert);
 	if ( ! context->server ) {
-		g_error("Cannot create session from fd!");
+		g_error("Cannot create NuSSL session!");
+		return 0;
+	}
+
+	if ( nussl_session_set_dh_bits(context->server, DH_BITS) != NUSSL_OK) {
+		g_error("Unable to initialize Diffie Hellman params.");
 		return 0;
 	}
 

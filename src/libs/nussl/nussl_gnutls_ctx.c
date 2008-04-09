@@ -100,7 +100,25 @@ int nussl_ssl_context_keypair_from_data(nussl_ssl_context *ctx, nussl_ssl_client
 {
     int ret;
     ret = gnutls_certificate_set_x509_key(ctx->cred, &cert->cert.subject, 1, cert->pkey);
+    if (ret != 0)
+    	return NUSSL_ERROR;
+    gnutls_certificate_set_dh_params(ctx->cred, ctx->dh);
+
     return (ret == 0) ? NUSSL_OK : NUSSL_ERROR;
+}
+
+/* Server mode: Set DH parameters */
+int nussl_ssl_context_set_dh_bits(nussl_ssl_context *ctx, unsigned int dh_bits)
+{
+	ctx->dh_bits = dh_bits;
+
+	if(gnutls_dh_params_init(&ctx->dh) < 0)
+		return NUSSL_ERROR;
+
+	if(gnutls_dh_params_generate2(ctx->dh, ctx->dh_bits) < 0)
+		return NUSSL_ERROR;
+
+	return NUSSL_OK;
 }
 
 #if 0
@@ -127,6 +145,7 @@ void nussl_ssl_context_set_flag(nussl_ssl_context *ctx, int flag, int value)
 void nussl_ssl_context_destroy(nussl_ssl_context *ctx)
 {
     gnutls_certificate_free_credentials(ctx->cred);
+    gnutls_dh_params_deinit(ctx->dh);
     if (ctx->cache.client.data) {
         nussl_free(ctx->cache.client.data);
     } else if (ctx->cache.server.key.data) {

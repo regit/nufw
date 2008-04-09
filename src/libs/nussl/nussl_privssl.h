@@ -74,6 +74,7 @@ typedef SSL *nussl_ssl_socket;
 struct nussl_ssl_context_s {
     gnutls_certificate_credentials cred;
     gnutls_dh_params dh;
+    unsigned int dh_bits;
     int verify; /* non-zero if client cert verification required */
     int use_cert;
 
