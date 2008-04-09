@@ -15,7 +15,7 @@ from plaintext import PlaintextAcl
 
 # TODO: check -n=CN:...
 
-TIMEOUT = 2.0
+TIMEOUT = 4.0
 
 class TestClientCert(TestCase):
     def setUp(self):
