@@ -126,10 +126,10 @@ void tls_common_init(void)
  */
 void tls_common_deinit(void)
 {
-	free(nuauth_tls.key);
-	free(nuauth_tls.cert);
-	free(nuauth_tls.ca);
-	free(nuauth_tls.crl_file);
+	g_free(nuauth_tls.key);
+	g_free(nuauth_tls.cert);
+	g_free(nuauth_tls.ca);
+	g_free(nuauth_tls.crl_file);
 }
 
 #if 0
