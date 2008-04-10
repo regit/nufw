@@ -717,8 +717,19 @@ void nu_client_error_destroy(nuclient_error_t * err)
  */
 const char *nu_client_strerror(nuauth_session_t * session, nuclient_error_t * err)
 {
-	if (err == NULL)
+	if (err == NULL) {
 		return "Error structure was not initialised";
+	}
+
+	/* 
+	 * In this very special case, we cannot handle the error 
+	 * and INTERNAL_ERROR is wise.
+	 */
+	if (( err->family == NUSSL_ERR ) && 
+		( ! session->nussl )) {
+		err->family = INTERNAL_ERROR;
+	}
+
 	switch (err->family) {
 	case NUSSL_ERR:
 		if (session == NULL)

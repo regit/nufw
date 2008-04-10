@@ -554,7 +554,7 @@ nuauth_session_t *do_connect(nutcpc_context_t * context, char *username)
 	return session;
 init_failed:
 
-	printf("Inititalisation error: %s\n", nu_client_strerror(session, err));
+	printf("Initialization error: %s\n", nu_client_strerror(session, err));
 	nu_client_delete(session);
 	return NULL;
 }
