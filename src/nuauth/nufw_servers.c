@@ -81,29 +81,12 @@ static nu_error_t suppress_nufw_session(nufw_session_t * session)
  */
 void clean_nufw_session(nufw_session_t * c_session)
 {
-#if 0
-	gnutls_transport_ptr socket_tls;
-	socket_tls = gnutls_transport_get_ptr(*(c_session->tls));
-	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
-			  "close nufw session calling");
-	close(GPOINTER_TO_INT(socket_tls));
-	if (c_session->tls) {
-		gnutls_deinit(*(c_session->tls)
-		    );
-		g_free(c_session->tls);
-	} else {
-		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
-				  "close nufw session was called but NULL");
-
-	}
-#endif
 	nussl_session_destroy(c_session->nufw_client);
 
 	g_mutex_free(c_session->tls_lock);
 	g_free(c_session);
 
-	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
-			  "close nufw session: done");
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW, "close nufw session: done");
 }
 
 
@@ -113,12 +96,6 @@ nu_error_t declare_dead_nufw_session(nufw_session_t * session)
 	g_static_mutex_lock(&nufw_servers_mutex);
 
 	if (session->alive == TRUE) {
-#if 0 /* XXX: So many functions to perform cleanups!! */
-		gnutls_transport_ptr tls;
-		session->alive = FALSE;
-		tls = gnutls_transport_get_ptr(*session->tls);
-		shutdown(GPOINTER_TO_INT(tls), SHUT_WR);
-#endif
 		nussl_session_destroy(session->nufw_client);
 		session->nufw_client = NULL;
 		session->alive = FALSE;
@@ -228,13 +205,6 @@ nu_error_t nufw_session_send(nufw_session_t * session, char * buffer, int length
 
 	// XXX: make me non-blockant
 	ret = nussl_write(session->nufw_client, buffer, length);
-
-#if 0
-	ret = gnutls_record_send(*(session->tls),
-				 buffer,
-				 length);
-
-#endif
 
 	g_mutex_unlock(session->tls_lock);
 	if (ret < 0) {

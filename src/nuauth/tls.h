@@ -57,8 +57,6 @@ typedef enum {
  */
 GAsyncQueue *mx_queue;
 
-nussl_session *ssl_connect(int socket_fd);
-
 /* cache system related */
 struct client_connection {
 	/** Socket file descriptor, init. with accept() and set to SO_KEEPALIVE mode */
@@ -82,9 +80,6 @@ struct client_connection {
 struct tls_buffer_read {
 	int socket;		/*!< Socket file descriptor (value from accept()) */
 	struct in6_addr ip_addr;	/*!< User IPv6 address */
-#if 0
-	gnutls_session *tls;	/*!< TLS session */
-#endif
 	char *user_name;	/*!< User name string */
 	uint32_t user_id;	/*!< User identifier (16 bits */
 	GSList *groups;		/*!< User groups */
@@ -104,9 +99,6 @@ typedef struct {
 	/* nussl_session_server is in tls_nufw_context_t */
 	nussl_session *nufw_client;
 
-#if 0
-	gnutls_session *tls;
-#endif
 	/**
 	 * This lock has to be used before any call to gnutls_record function
 	 * on TLS session pointed by the ::nufw_session_t
@@ -135,18 +127,6 @@ struct tls_insert_data {
 	gpointer data;
 };
 
-#if 0
-struct nuauth_ssl_t {
-	nussl_session *session;
-
-	int request_cert;
-	int auth_by_cert;
-
-	int crl_refresh;
-	int crl_refresh_counter;
-};
-#endif
-
 /* TODO: move-me into tls_user.h */
 struct nuauth_tls_t {
 	nussl_session *nussl_server;
@@ -165,18 +145,9 @@ struct nuauth_tls_t {
 	int crl_refresh_counter; 
 	time_t crl_file_mtime;
 
-#ifdef XXX /* Move this into nussl */
-	gnutls_certificate_credentials x509_cred;
-	int crl_refresh;
-	int crl_refresh_counter;
-	gchar *crl_file;
-	time_t crl_file_mtime;
-	gnutls_dh_params dh_params;
-#endif
 };
 
 void clean_nufw_session(nufw_session_t * c_session);
-int create_x509_credentials();
 void *tls_nufw_authsrv(struct nuauth_thread_t *thread);
 void tls_nufw_start_servers(GSList *servers);
 
@@ -192,17 +163,9 @@ void close_nufw_servers();
 void *tls_user_authsrv(struct nuauth_thread_t *thread);
 void *push_worker(GMutex * mutex);
 
-
-/** end tls stuff */
-void end_tls();
-
 gboolean remove_socket_from_pre_client_list(int c);
 
 void tls_sasl_connect(gpointer userdata, gpointer data);
-#if 0
-gint check_certs_for_tls_session(gnutls_session session);
-void close_tls_session(int c, gnutls_session * session);
-#endif
 
 
 struct tls_user_context_t {

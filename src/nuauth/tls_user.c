@@ -156,9 +156,6 @@ static nu_error_t treat_user_request(user_session_t * c_session)
 	if (datas == NULL)
 		return NU_EXIT_ERROR;
 	datas->socket = 0;
-#if 0
-	datas->tls = c_session->tls;
-#endif
 	datas->ip_addr = c_session->addr;
 	datas->client_version = c_session->client_version;
 
@@ -169,13 +166,8 @@ static nu_error_t treat_user_request(user_session_t * c_session)
 		return NU_EXIT_ERROR;
 	}
 	g_mutex_lock(c_session->tls_lock);
-#if 0
-	datas->buffer_len = gnutls_record_recv(*(c_session->tls), datas->buffer,
-			       CLASSIC_NUFW_PACKET_SIZE);
-#else
 	datas->buffer_len = nussl_read(c_session->nussl, datas->buffer,
 			       CLASSIC_NUFW_PACKET_SIZE);
-#endif
 
 	g_mutex_unlock(c_session->tls_lock);
 	if (datas->buffer_len < (int) sizeof(struct nu_header)) {
@@ -216,19 +208,10 @@ static nu_error_t treat_user_request(user_session_t * c_session)
 		header = (struct nu_header *) datas->buffer;
 
 		g_mutex_lock(c_session->tls_lock);
-#if 0
-		tmp_len =
-		    gnutls_record_recv(*(c_session->tls),
-				       datas->buffer +
-				       CLASSIC_NUFW_PACKET_SIZE,
-				       header_length - datas->buffer_len);
-#else
 		tmp_len = nussl_read(c_session->nussl,
 				       datas->buffer +
 				       CLASSIC_NUFW_PACKET_SIZE,
 				       header_length - datas->buffer_len);
-#endif
-
 		g_mutex_unlock(c_session->tls_lock);
 		if (tmp_len < 0) {
 			free_buffer_read(datas);
@@ -308,14 +291,6 @@ int tls_user_accept(struct tls_user_context_t *context)
 	gint option_value;
 	unsigned short sport;
 
-#if 0
-	/* Wait for a connect */
-	socket = accept(context->sck_inet,
-			(struct sockaddr *) &sockaddr, &len_inet);
-	if (socket == -1) {
-		log_message(WARNING, DEBUG_AREA_USER, "accept");
-	}
-#endif
 	current_client_conn = g_new0(struct client_connection, 1);
 
 	current_client_conn->nussl = nussl_session_accept(context->nussl);
@@ -614,7 +589,6 @@ int tls_user_setcert_auth_params(int requestcert, int authcert)
 {
 	nuauth_tls.auth_by_cert = authcert;
 
-/* XXX: Double check this and close ticket #120 */
 	if (NUSSL_VALID_REQ_TYPE(requestcert)) {
 		nuauth_tls.request_cert = requestcert;
 	} else {

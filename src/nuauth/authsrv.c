@@ -705,16 +705,6 @@ void configure_app(int argc, char **argv)
 	log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
 			"debug_level is %i", nuauthconf->debug_level);
 
-#if 0
-	/* init credential */
-	if(! create_x509_credentials())
-	{
-		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
-				"Certificate initialization failed");
-		exit(EXIT_FAILURE);
-	}
-#endif
-
 	if (params.daemonize == 1) {
 		daemonize();
 	} else {

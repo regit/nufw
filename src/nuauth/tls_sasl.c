@@ -40,22 +40,6 @@
 
 struct nuauth_tls_t nuauth_tls;
 
-#if 0
-/**
- * get username from a tls session
- *
- * Extract the username from the provided certificate
- */
-gchar *get_username_from_tls_session(gnutls_session session)
-{
-	if (gnutls_certificate_type_get(session) == GNUTLS_CRT_X509) {
-		return get_username_from_x509_certificate(session);
-	} else {
-		return NULL;
-	}
-}
-#endif
-
 static void policy_refuse_user(user_session_t * c_session, int c,
 			       policy_refused_reason_t reason)
 {
@@ -76,10 +60,6 @@ static void policy_refuse_user(user_session_t * c_session, int c,
 			    c_session->user_name);
 	}
 	/* get rid of client */
-#ifdef XXX /* factorize and destruct this cleanly */
-	close_tls_session(c, c_session->tls);
-	c_session->nussl = NULL;
-#endif
 	clean_session(c_session);
 }
 
@@ -112,19 +92,11 @@ static void tls_sasl_connect_ok(user_session_t * c_session, int c)
 	}
 	msg.length = 0;
 	/* send mode to client */
-#if 0
-	if (gnutls_record_send(*(c_session->tls), &msg, sizeof(msg)) < 0) {
-#else
 	if (nussl_write(c_session->nussl, (char*)&msg, sizeof(msg)) < 0) {
-#endif
 		log_message(WARNING, DEBUG_AREA_USER,
 			    "nussl_write() failure at %s:%d",
 			    __FILE__, __LINE__);
 		if (nuauthconf->push) {
-#ifdef XXX /* factorize and destruct this cleanly */
-			close_tls_session(c, c_session->tls);
-			c_session->tls = NULL;
-#endif
 			clean_session(c_session);
 			return;
 		} else {
@@ -138,10 +110,6 @@ static void tls_sasl_connect_ok(user_session_t * c_session, int c)
 		struct tls_insert_data *datas =
 		    g_new0(struct tls_insert_data, 1);
 		if ((message == NULL) || (datas == NULL)) {
-#ifdef XXX /* factorize and destruct this cleanly */
-			close_tls_session(c, c_session->tls);
-			c_session->tls = NULL;
-#endif
 			clean_session(c_session);
 			return;
 		}
@@ -172,22 +140,12 @@ static void tls_sasl_connect_ok(user_session_t * c_session, int c)
 void tls_sasl_connect(gpointer userdata, gpointer data)
 {
 	/* session will be removed by nussl */
-#if 0
-	gnutls_session *session;
-#endif
 	user_session_t *c_session;
 	int ret;
 	/*unsigned int size = 1;*/
 	struct client_connection *client = (struct client_connection *)userdata;
 	int socket_fd = client->socket;
 
-#if 0
-	if (tls_connect(c, &session) == SASL_BADPARAM) {
-		g_free(userdata);
-		remove_socket_from_pre_client_list(c);
-		return;
-	}
-#endif
 	c_session = g_new0(user_session_t, 1);
 	c_session->nussl = client->nussl;
 	c_session->socket = socket_fd;
@@ -207,10 +165,6 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 				nuauthconf->single_ip_client_limit) {
 			char address[INET6_ADDRSTRLEN];
 			FORMAT_IPV6(&c_session->addr, address);
-#ifdef XXX /* factorize and destruct this cleanly */
-			gnutls_bye(*(session), GNUTLS_SHUT_RDWR);
-			close_tls_session(socket_fd, session);
-#endif
 			clean_session(c_session);
 			remove_socket_from_pre_client_list(socket_fd);
 		        log_message(INFO, DEBUG_AREA_USER,
@@ -220,58 +174,38 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 		}
 	}
 
-	if ((nuauth_tls.auth_by_cert > NO_AUTH_BY_CERT))
-#if 0 /* Check ed by nussl */
-	    && gnutls_certificate_get_peers(*session, &size)) {
-		ret = check_certs_for_tls_session(*session);
+	if ((nuauth_tls.auth_by_cert > NO_AUTH_BY_CERT)) {
+		gchar *username = NULL;
+		/* need to parse the certificate to see if it is a sufficient credential */
+		username = modules_certificate_to_uid(c_session->nussl);
 
-		if (ret != SASL_OK) {
-			log_message(INFO, DEBUG_AREA_USER,
-				    "Certificate verification failed : %s",
-				    gnutls_strerror(ret));
-		} else
-#endif
-		{
-			gchar *username = NULL;
-			/* need to parse the certificate to see if it is a sufficient credential */
-#if 0
-			username = get_username_from_tls_session(*session);
-#else
-			username = modules_certificate_to_uid(c_session->nussl);
-#endif
-			/* parsing complete */
-			if (username) {
-				debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
-						  "Using username %s from certificate",
-						  username);
-				c_session->groups =
-				    modules_get_user_groups(username);
-				c_session->user_id =
-				    modules_get_user_id(username);
-				if (c_session->groups == NULL) {
-					debug_log_message(DEBUG, DEBUG_AREA_USER,
-							  "error when searching user groups");
-					c_session->groups = NULL;
-					c_session->user_id = 0;
-					/* we free username as it is not a good one */
-					g_free(username);
-				} else {
-					c_session->user_name = username;
-				}
+		/* parsing complete */
+		if (username) {
+			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
+					  "Using username %s from certificate",
+					  username);
+			c_session->groups =
+			    modules_get_user_groups(username);
+			c_session->user_id =
+			    modules_get_user_id(username);
+			if (c_session->groups == NULL) {
+				debug_log_message(DEBUG, DEBUG_AREA_USER,
+						  "error when searching user groups");
+				c_session->groups = NULL;
+				c_session->user_id = 0;
+				/* we free username as it is not a good one */
+				g_free(username);
+			} else {
+				c_session->user_name = username;
 			}
 		}
-#if 0
 	}
-#endif
 
 	if ((nuauth_tls.auth_by_cert == NUSSL_CERT_REQUIRE) &&
 			(c_session->groups == NULL)) {
 
 		log_message(INFO, DEBUG_AREA_AUTH | DEBUG_AREA_USER,
 			    "Certificate authentication failed, closing session");
-#ifdef XXX
-		gnutls_bye(*(c_session->tls), GNUTLS_SHUT_RDWR);
-#endif
 		ret = SASL_BADAUTH;
 	} else {
 		ret = sasl_user_check(c_session);
@@ -293,10 +227,6 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 					  "Problem with user, closing socket");
 		}
-#ifdef XXX /* factorize and destruct this cleanly */
-		close_tls_session(socket_fd, c_session->tls);
-		c_session->tls = NULL;
-#endif
 		clean_session(c_session);
 	}
 

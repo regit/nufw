@@ -183,17 +183,6 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 
 	nufw_session_t *nu_session;
 
-#if 0 /* XXX: nuauthconf->authorized_servers is always set as NULL */
-	/* test if server is in the list of authorized servers */
-	if (!check_inaddr_in_array(&addr, nuauthconf->authorized_servers)) {
-		FORMAT_IPV6(&addr, addr_ascii);
-		log_message(WARNING, DEBUG_AREA_GW,
-				"unwanted nufw server (%s)", addr_ascii);
-		close(conn_fd);
-		return 1;
-	}
-#endif
-
 	/* Check number of connected servers */
 	if ( nufw_servers_connected >= nuauth_tls_max_servers ) {
 		log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_WARNING,
@@ -290,7 +279,6 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex * mutex)
 				continue;
 			}
 
-/* XXX: TODO: BUZZWORD: Destroy the nussl session */
 			if (errno == EBADF) {
 				int i;
 				/* A client disconnects between FD_SET and select.

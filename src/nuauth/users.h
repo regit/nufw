@@ -58,9 +58,6 @@ typedef struct {
 	*/
 	int socket;
 	/* tls should be removed by ssl */
-#if 0
-	gnutls_session *tls;	/*!< \brief TLS session opened with tls_connect() */
-#endif
 	nussl_session *nussl;	/*!< \brief SSL session opened with tls_connect() */
 	GMutex *tls_lock;	/*!< \brief Mutex to lock use of TLS */
 	char *user_name;	/*!< \brief User name */

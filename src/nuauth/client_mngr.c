@@ -77,18 +77,8 @@ void clean_session(user_session_t * c_session)
 
 static void hash_clean_session(user_session_t * c_session)
 {
-#if 0
-/*	int socket = GPOINTER_TO_INT(gnutls_transport_get_ptr(*c_session->tls));*/
 	log_user_session(c_session, SESSION_CLOSE);
-#ifdef XXX /* factorize and destruct this cleanly */
 	clean_session(c_session);
-#endif
-	int socket = nussl_session_get_fd(c_session->nussl);
-	shutdown(socket, SHUT_RDWR);
-	close(socket);
-#else
-	clean_session(c_session);
-#endif
 }
 
 
@@ -308,12 +298,6 @@ char warn_clients(struct msg_addr_set *global_msg)
 		for (ipsockets = start_ipsockets; ipsockets; ipsockets = ipsockets->next)
 		{
 			user_session_t *session = (user_session_t *)ipsockets->data;
-#if 0
-			gnutls_session tls = *session->tls;
-			int ret = gnutls_record_send(tls,
-					global_msg->msg,
-					ntohs(global_msg->msg->length));
-#else
 			int ret = nussl_write(session->nussl,
 					(char*)global_msg->msg,
 					ntohs(global_msg->msg->length));
