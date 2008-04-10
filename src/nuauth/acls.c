@@ -73,7 +73,7 @@ guint32 hash_acl(gconstpointer key)
 	tracking_t *tracking =
 	    (tracking_t *) ((struct acl_key *) key)->acl_tracking;
 	return jhash2((guint32 *) tracking,
-		      (sizeof(struct in6_addr) * 2 + 4) / 4, 0);
+		      (sizeof(struct in6_addr) * 2 + 4) / 4, tracking->dest);
 }
 
 /**
@@ -160,18 +160,6 @@ void free_acl_cache(cache_entry_t * entry)
 	g_free(entry);
 }
 
-struct acl_key *acl_create_key(connection_t * kdatas)
-{
-	struct acl_key *key = g_new0(struct acl_key, 1);
-	key->acl_tracking = &(kdatas->tracking);
-	key->sysname = kdatas->os_sysname;
-	key->release = kdatas->os_release;
-	key->version = kdatas->os_version;
-	key->appname = kdatas->app_name;
-	key->appmd5 = kdatas->app_md5;
-	return key;
-}
-
 gpointer acl_create_and_alloc_key(connection_t * kdatas)
 {
 	struct acl_key key;
@@ -193,6 +181,8 @@ gpointer acl_duplicate_key(gpointer datas)
 	key->acl_tracking =
 	    g_memdup(kdatas->acl_tracking,
 		     sizeof(*(kdatas->acl_tracking)));
+	/* Normalize source port */
+	key->acl_tracking->source = 1024;
 	key->sysname = g_strdup(kdatas->sysname);
 	key->release = g_strdup(kdatas->release);
 	key->version = g_strdup(kdatas->version);
@@ -211,7 +201,7 @@ void get_acls_from_cache(connection_t * conn_elt)
 	/* Going to ask to the cache */
 	/* prepare message */
 	message.type = GET_MESSAGE;
-	message.key = acl_create_key(conn_elt);
+	message.key = acl_create_and_alloc_key(conn_elt);
 	message.datas = NULL;
 	message.reply_queue = g_private_get(nuauthdatas->aclqueue);
 	if (message.reply_queue == NULL) {
@@ -243,7 +233,7 @@ void get_acls_from_cache(connection_t * conn_elt)
 
 		rmessage = g_new0(struct cache_message, 1);
 		rmessage->type = INSERT_MESSAGE;
-		rmessage->key = acl_duplicate_key(message.key);
+		rmessage->key = message.key;
 		rmessage->datas = conn_elt->acl_groups;
 		rmessage->reply_queue = NULL;
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
@@ -252,11 +242,12 @@ void get_acls_from_cache(connection_t * conn_elt)
 		/* reply to the cache */
 		g_async_queue_push(nuauthdatas->acl_cache->queue,
 				   rmessage);
+		return;
 	} else {
 		g_atomic_int_inc(&(myaudit->cache_hit_nb));
 	}
 	/* free initial key */
-	g_free(message.key);
+	free_acl_key(message.key);
 }
 
 int init_acl_cache()

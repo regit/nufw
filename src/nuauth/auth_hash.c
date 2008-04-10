@@ -53,13 +53,12 @@ void search_and_fill_catchall(connection_t * new, connection_t * packet)
  * Compute the key (hash) of a connection tracking.
  *
  * \param data IPv4 tracking headers (of type tracking_t) of a connection
- * \return Comptuted hash
+ * \return Computed hash
  */
-inline guint32 hash_connection(gconstpointer data)
+guint32 hash_connection(gconstpointer data)
 {
 	tracking_t *tracking = (tracking_t *) data;
-	guint32 *data32 = (guint32 *) tracking;
-	return jhash2(data32, (sizeof(tracking_t) - PAYLOAD_SAMPLE) / 4,
+	return jhash2((uint32_t *)&(tracking->saddr), 4,
 		      tracking->source);
 }
 
@@ -72,10 +71,6 @@ inline guint32 hash_connection(gconstpointer data)
  */
 gboolean tracking_equal(const tracking_t *trck1, const tracking_t *trck2)
 {
-	/* compare IPheaders */
-	if (!ipv6_equal(&trck1->saddr, &trck2->saddr))
-		return FALSE;
-
 	/* compare proto */
 	if (trck1->protocol != trck2->protocol)
 		return FALSE;
@@ -84,16 +79,18 @@ gboolean tracking_equal(const tracking_t *trck1, const tracking_t *trck2)
 	switch (trck1->protocol) {
 	case IPPROTO_TCP:
 		if (trck1->source == trck2->source
+		    && trck1->dest == trck2->dest
 		    && ipv6_equal(&trck1->daddr, &trck2->daddr)
-		    && trck1->dest == trck2->dest)
+		    && ipv6_equal(&trck1->saddr, &trck2->saddr))
 			return TRUE;
 		else
 			return FALSE;
 
 	case IPPROTO_UDP:
-		if (trck1->dest == trck2->dest
-		    && trck1->source == trck2->source
-		    && ipv6_equal(&trck1->daddr, &trck2->daddr))
+		if (trck1->source == trck2->source
+		    && trck1->dest == trck2->dest
+		    && ipv6_equal(&trck1->daddr, &trck2->daddr)
+		    && ipv6_equal(&trck1->saddr, &trck2->saddr))
 			return TRUE;
 		else
 			return FALSE;
@@ -102,7 +99,8 @@ gboolean tracking_equal(const tracking_t *trck1, const tracking_t *trck2)
 	case IPPROTO_ICMPV6:
 		if (trck1->type == trck2->type
 		    && trck1->code == trck2->code
-		    && ipv6_equal(&trck1->daddr, &trck2->daddr))
+		    && ipv6_equal(&trck1->daddr, &trck2->daddr)
+		    && ipv6_equal(&trck1->saddr, &trck2->saddr))
 			return TRUE;
 		else
 			return FALSE;
