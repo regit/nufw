@@ -301,7 +301,6 @@ char warn_clients(struct msg_addr_set *global_msg)
 			int ret = nussl_write(session->nussl,
 					(char*)global_msg->msg,
 					ntohs(global_msg->msg->length));
-#endif
 			if (ret < 0) {
 				log_message(WARNING, DEBUG_AREA_USER,
 						"Fails to send warning to client(s): %s", nussl_get_error(session->nussl));
