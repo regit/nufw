@@ -204,6 +204,14 @@ class Process(object):
                     break
                 yield line
 
+    def waitline(self, to_find, timeout, stream="stdout"):
+        start = time()
+        while time() < start + timeout:
+            line = self.readline(0, stream)
+            if line and to_find in line:
+                return True
+        return False
+
     def exited(self, status):
         # Log last output
         for line in self.readlines():

@@ -64,11 +64,7 @@ class NuauthProcess(Process):
 
         # Wait until nuauth is reloaded
         message = "NuAuth server reloaded"
-        start = time()
-        while time()-start <= timeout:
-            for line in self.readlines(timeout=0.250):
-                if message in line:
-                    return
+        self.waitline(message, timeout)
         self.warning('nuauth doesn\'t write message "%s"' % message)
 
     @classmethod

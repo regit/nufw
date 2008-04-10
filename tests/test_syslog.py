@@ -17,11 +17,7 @@ class TestLog(TestCase):
 
     def findLog(self, match):
         warning("Search string >%s< in log" % match)
-        matched = False
-        for line in self.nuauth.readlines(total_timeout=2.0):
-            if match in line:
-                return True
-        return False
+        return self.nuauth.nuauth.waitline(match, 2.0)
 
     def testLogin(self):
         # Client login

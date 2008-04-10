@@ -60,8 +60,7 @@ class TestSessionExpire(TestCase):
         sleep(self.expiration+DELAY)
 
         connectTcp(self.host, VALID_PORT, 0.5)
-        self.assert_(any("Session not connected" in line
-            for line in self.client.readlines(total_timeout=TIMEOUT)))
+        self.assert_(self.client.waitline("Session not connected", TIMEOUT))
 
 if __name__ == "__main__":
     print "Test nuauth client authentification"

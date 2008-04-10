@@ -15,7 +15,7 @@ from plaintext import PlaintextAcl
 
 # TODO: check -n=CN:...
 
-TIMEOUT = 4.0
+TIMEOUT = 10.0
 
 class TestClientCert(TestCase):
     def setUp(self):
@@ -49,8 +49,7 @@ class TestClientCert(TestCase):
         self.nufw = startNufw(["-a", self.cacert])
         self.connectNuauthNufw()
 
-        self.assert_(any("TLS connection to nuauth restored" in line
-                for line in self.nufw.readlines(total_timeout=TIMEOUT)))
+        self.assert_(self.nufw.waitline("TLS connection to nuauth restored", TIMEOUT))
 
         self.nufw.stop()
 
@@ -59,8 +58,7 @@ class TestClientCert(TestCase):
         self.nufw = startNufw(["-a", invalid_cacert])
         self.connectNuauthNufw()
 
-        self.assert_(any("Certificate authority verification failed:invalid, signer not found," in line
-            for line in self.nufw.readlines(total_timeout=TIMEOUT)))
+        self.assert_(self.nufw.waitline("Certificate authority verification failed:invalid, signer not found,", TIMEOUT))
         self.nufw.stop()
 
     # If NuFW does not run under the strict mode, the provided certificates in svn
@@ -71,8 +69,7 @@ class TestClientCert(TestCase):
         self.nufw = startNufw()
         self.connectNuauthNufw()
 
-        self.assert_(any("TLS connection to nuauth restored" in line
-                for line in self.nufw.readlines(total_timeout=TIMEOUT)))
+        self.assert_(self.nufw.waitline("TLS connection to nuauth restored", TIMEOUT))
 
         self.nufw.stop()
 
