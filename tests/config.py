@@ -34,3 +34,7 @@ NUFW_START_TIMEOUT = config.getfloat("nufw", "start_timeout")
 # Iptables options
 IPTABLE_QUEUE = config.get("iptables", "queue")
 
+if USE_VALGRIND:
+    NUAUTH_START_TIMEOUT *= 10
+    NUFW_START_TIMEOUT *= 10
+

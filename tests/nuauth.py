@@ -26,9 +26,8 @@ class NuauthProcess(Process):
         arg = ["-" + "v" * min(max(debug_level, 1), 9)]
         program = NUAUTH_PROG
         if USE_VALGRIND:
-            #arg = ["--tool=callgrind", program] + arg
-            #program = "valgrind"
-            arg = ["--log-file-exactly=nuauth.valgrind.log", "--verbose", program] + arg
+            #args = ["--log-file-exactly=nufw.valgrind.log", "--verbose", program] + args
+            arg = [program] + arg
             program = "valgrind"
         Process.__init__(self, program, arg)
         self.hostname = "localhost"
@@ -48,8 +47,8 @@ class NuauthProcess(Process):
            and connectTcp(self.hostname, self.client_port, INIT_TIMEOUT)
 
     def exited(self, status):
-        if USE_VALGRIND:
-            print "Callgrind logs written in callgrind.out.%s" % self.pid
+        #if USE_VALGRIND:
+        #    print "Callgrind logs written in callgrind.out.%s" % self.pid
         Process.exited(self, status)
 
     def reload(self, timeout=RELOAD_TIMEOUT):

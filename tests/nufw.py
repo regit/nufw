@@ -12,7 +12,8 @@ class Nufw(Process):
             args += list(moreargs)
         program = NUFW_PROG
         if USE_VALGRIND:
-            args = ["--log-file-exactly=nufw.valgrind.log", "--verbose", program] + args
+            #args = ["--log-file-exactly=nufw.valgrind.log", "--verbose", program] + args
+            args = [program] + args
             program = "valgrind"
         Process.__init__(self, program, args)
         # FIXME: Load kernel modules?

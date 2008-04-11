@@ -4,7 +4,7 @@ from unittest import TestCase, main
 from sys import stderr
 from common import createClient, connectClient, PASSWORD, startNufw
 from nuauth import Nuauth
-from config import config
+from config import config, USE_VALGRIND
 from inl_tests.iptables import Iptables
 from nuauth_conf import NuauthConf
 from mysocket import connectTcp
@@ -16,6 +16,9 @@ from plaintext import PlaintextAcl
 # TODO: check -n=CN:...
 
 TIMEOUT = 10.0
+
+if USE_VALGRIND:
+    TIMEOUT *= 10
 
 class TestClientCert(TestCase):
     def setUp(self):
@@ -40,7 +43,10 @@ class TestClientCert(TestCase):
     def connectNuauthNufw(self):
         # Open TCP connection just to connect nufw to nuauth
         self.iptables.filterTcp(self.port)
-        connectTcp(HOST, self.port, 0.100)
+        if USE_VALGRIND:
+                connectTcp(HOST, self.port, 10.0)
+        else:
+                connectTcp(HOST, self.port, 0.100)
 
         # nufw side
         # "TLS connection to nuauth can NOT be restored"
