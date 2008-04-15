@@ -1,6 +1,7 @@
 /*
  **  "plaintext" module
  ** Copyright(C) 2004-2005 Mikael Berthe <mikael+nufw@lists.lilotux.net>
+ ** Copyright(C) 2005-2008 INL
  **
  ** $Id$
  **
@@ -1073,21 +1074,6 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element, gpointer params)
 					"(DBG) skip ACL %s: protocol doesn't match", p_acl->aclname);
 			continue;
 		}
-
-		/*  Check source address */
-		if (!match_ip(p_acl->src_ip, &netdata->saddr)) {
-			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
-					"(DBG) skip ACL %s: source IP doesn't match", p_acl->aclname);
-			continue;
-		}
-
-		/*  Check destination address */
-		if (!match_ip(p_acl->dst_ip, &netdata->daddr)) {
-			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
-					"(DBG) skip ACL %s: destination IP doesn't match", p_acl->aclname);
-			continue;
-		}
-
 		/*  ICMP? */
 		if (netdata->protocol == IPPROTO_ICMP) {
 			if (p_acl->proto == IPPROTO_ICMP) {
@@ -1108,33 +1094,6 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element, gpointer params)
 				}
 			}
 		} else {
-			/*  Check source port */
-			if (p_acl->src_ports) {
-				int found = 0;
-				struct plaintext_ports *p_ports;
-				GSList *pl_ports = p_acl->src_ports;
-				for (; pl_ports;
-				     pl_ports = g_slist_next(pl_ports)) {
-					p_ports =
-					    (struct plaintext_ports *) pl_ports->
-					    data;
-					if (!p_ports->firstport
-					    ||
-					    ((netdata->source >=
-					      p_ports->firstport)
-					     && (netdata->source <=
-						 p_ports->firstport +
-						 p_ports->nbports))) {
-						found = 1;
-						break;
-					}
-				}
-				if (!found) {
-					debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
-							"(DBG) skip ACL %s: TCP/UDP source port doesn't match", p_acl->aclname);
-					continue;
-				}
-			}
 			/*  Check destination port */
 			if (p_acl->dst_ports) {
 				int found = 0;
@@ -1162,6 +1121,47 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element, gpointer params)
 					continue;
 				}
 			}
+			/*  Check source port */
+			if (p_acl->src_ports) {
+				int found = 0;
+				struct plaintext_ports *p_ports;
+				GSList *pl_ports = p_acl->src_ports;
+				for (; pl_ports;
+				     pl_ports = g_slist_next(pl_ports)) {
+					p_ports =
+					    (struct plaintext_ports *) pl_ports->
+					    data;
+					if (!p_ports->firstport
+					    ||
+					    ((netdata->source >=
+					      p_ports->firstport)
+					     && (netdata->source <=
+						 p_ports->firstport +
+						 p_ports->nbports))) {
+						found = 1;
+						break;
+					}
+				}
+				if (!found) {
+					debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
+							"(DBG) skip ACL %s: TCP/UDP source port doesn't match", p_acl->aclname);
+					continue;
+				}
+			}
+		}
+
+		/*  Check source address */
+		if (!match_ip(p_acl->src_ip, &netdata->saddr)) {
+			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
+					"(DBG) skip ACL %s: source IP doesn't match", p_acl->aclname);
+			continue;
+		}
+
+		/*  Check destination address */
+		if (!match_ip(p_acl->dst_ip, &netdata->daddr)) {
+			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
+					"(DBG) skip ACL %s: destination IP doesn't match", p_acl->aclname);
+			continue;
 		}
 
 		/*  O.S. filtering? */
