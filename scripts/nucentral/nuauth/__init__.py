@@ -27,6 +27,7 @@ def timedeltaSeconds(delta):
 class Nuauth(Component):
     NAME = "nuauth"
     VERSION = "1.0"
+    API_VERSION = 1
 
     def init(self, core):
         self.socket_filename = core.conf_get_var_or_default("nuauth", "socket", "/var/run/nuauth/nuauth-command.socket")
@@ -50,15 +51,11 @@ class Nuauth(Component):
         result = result.content
         return result
 
-    def service_help(self):
-        """Get nuauth help"""
-        return self._command("help")
-
-    def service_version(self):
+    def service_version(self, context):
         """Get nuauth version string"""
         return self._command("version")
 
-    def service_uptime(self):
+    def service_uptime(self, context):
         """Get nuauth uptime"""
         uptime = self._command("uptime")
         return {
@@ -66,7 +63,7 @@ class Nuauth(Component):
             'seconds': timedeltaSeconds(uptime.diff),
         }
 
-    def service_users(self):
+    def service_users(self, context):
         """Get the list of connected NuFW users"""
         users = []
         for user in self._command("users"):
@@ -76,43 +73,43 @@ class Nuauth(Component):
             })
         return users
 
-    def service_firewalls(self):
+    def service_firewalls(self, context):
         """Get the list of connected firewalls"""
         return self._command("firewalls")
 
-    def service_packets_count(self):
+    def service_packets_count(self, context):
         """Get number of decision waiting packets"""
         return self._command("packets count")
 
-    def service_refresh_cache(self):
+    def service_refresh_cache(self, context):
         """Ask server to refresh all caches"""
         return self._command("refresh cache")
 
-    def service_disconnect(self, user_id):
+    def service_disconnect(self, context, user_id):
         """Disconnect specified user"""
         return self._command("disconnect %s" % user_id)
 
-    def service_disconnect_all(self):
+    def service_disconnect_all(self, context):
         """Disconnect all users"""
         return self._command("disconnect all")
 
-    def service_reload(self):
+    def service_reload(self, context):
         """Reload server configuration"""
         return self._command("reload")
 
-    def service_display_debug_level(self):
+    def service_display_debug_level(self, context):
         """Display debug level"""
         return self._command("display debug_level")
 
-    def service_display_debug_areas(self):
+    def service_display_debug_areas(self, context):
         """Display debug areas"""
         return self._command("display debug_areas")
 
-    def service_debug_level(self, areas):
+    def service_debug_level(self, context, areas):
         """Set debug level"""
         return self._command("debug_level %s" % areas)
 
-    def service_debug_areas(self, areas):
+    def service_debug_areas(self, context, areas):
         """Set debug areas"""
         return self._command("debug_areas %s" % areas)
 
