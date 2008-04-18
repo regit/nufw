@@ -84,6 +84,7 @@ static void hash_clean_session(user_session_t * c_session)
 
 void init_client_struct()
 {
+	client_mutex = g_mutex_new();
 	/* build client hash */
 	client_conn_hash = g_hash_table_new_full(NULL, NULL, NULL,
 						 (GDestroyNotify)
@@ -91,7 +92,6 @@ void init_client_struct()
 
 	/* build client hash */
 	client_ip_hash = g_hash_table_new(NULL, NULL);
-	client_mutex = g_mutex_new();
 }
 
 void add_client(int socket, gpointer datas)
@@ -163,7 +163,7 @@ nu_error_t delete_client_by_socket_ext(int socket, int use_lock)
 	ipsockets =
 		g_hash_table_lookup(client_ip_hash,
 				IPV6_TO_POINTER(&session->addr));
-	delete_ipsockets_from_hash(ipsockets, session, use_lock);
+	delete_ipsockets_from_hash(ipsockets, session, 1);
 
 	tls_user_remove_client(socket);
 	if (use_lock) {
@@ -302,9 +302,15 @@ char warn_clients(struct msg_addr_set *global_msg)
 					(char*)global_msg->msg,
 					ntohs(global_msg->msg->length));
 			if (ret < 0) {
-				log_message(WARNING, DEBUG_AREA_USER,
-						"Fails to send warning to client(s): %s", nussl_get_error(session->nussl));
-				badsockets = g_slist_prepend(badsockets, GINT_TO_POINTER(ipsockets->data));
+				/* Test on non critical error */
+				if (gnutls_error_is_fatal(ret)) {
+					log_message(WARNING, DEBUG_AREA_USER,
+							"Failed to send warning to client(s).");
+					badsockets = g_slist_prepend(badsockets, GINT_TO_POINTER(ipsockets->data));
+				} else {
+					log_message(INFO, DEBUG_AREA_USER,
+							"Failed to send warning to client(s) (non fatal TLS error).");
+				}
 			}
 		}
 		if (badsockets) {
@@ -358,8 +364,10 @@ gboolean is_expired_client(gpointer key,
 void kill_expired_clients_session()
 {
 	time_t current_time = time(NULL);
+	g_mutex_lock(client_mutex);
 	g_hash_table_foreach_remove(client_conn_hash, is_expired_client,
 				    &current_time);
+	g_mutex_unlock(client_mutex);
 }
 
 /**
