@@ -19,6 +19,13 @@
     </copyright>
     <revhistory>
       <revision>
+      	<revnumber>0.9.7</revnumber>
+	<date>2008/04/18</date>
+	<revdescription>
+	<para>Information about NuFW multiplatform agents was added.</para>
+	</revdescription>
+      </revision>
+      <revision>
       	<revnumber>0.9.6</revnumber>
 	<date>2008/04/09</date>
 	<revdescription>
@@ -1175,6 +1182,28 @@ net ads join -U administrator
  </section>
 </section>
   </chapter>
+<chapter><title>Authentication Agents</title>
+<section><title>Windows</title>
+<para>NuWinC (NuFW Windows Client) provides NuFW authentication for Microsoft Windows 95/98/NT/2000/XP/2003/Vista. This software is available from <ulink url="http://inl.fr/">INL</ulink>. NuWinC can provide, when installed on machines of a Windows domain, a 100% transparent behaviour, meaning users will not even notice it starting or running. For more information about NuWinC, see <ulink url="http://www.inl.fr/NuWINc,68.html">http://www.inl.fr/NuWINc,68.html</ulink>.</para>
+</section>
+<section><title>Linux</title>
+<para>Several clients run on Linux :
+<orderedlist>
+<listitem><para>nutcpc : the lightest, command line agent.</para></listitem>
+<listitem><para>Nuapplet2 : The graphical client.</para></listitem>
+<listitem><para>PAM authentication, through the pam_nufw module. This provides transparent authentication on nuauth.</para></listitem>
+</orderedlist>
+</para>
+</section>
+<section><title>MacOS</title>
+<para>MacOS X is supported by the Nuapplet2 graphical client. The nutcpc command line client also runs on MacOS X.</para>
+</section>
+<section><title>UNIX and BSD systems</title>
+<para>
+nutcpc is known to work on FreeBSD. For other systems, test feedbacks are greatly welcome! Porting NuFW agents to *NIX systems should be fairly easy, too.
+</para>
+</section>
+</chapter>
 <chapter><title>Miscellaneous</title>
 <section><title>Supported protocols</title>
 <para>The NuFW daemons can virtually support any protocol, provided a stateful inspection exists

@@ -28,6 +28,13 @@
     </copyright>
     <revhistory>
       <revision>
+      	<revnumber>0.9.7</revnumber>
+	<date>2008/04/17</date>
+	<revdescription>
+	<para>Plus d'informations sur le fonctionnement des agents NuFW.</para>
+	</revdescription>
+      </revision>
+      <revision>
       	<revnumber>0.9.6</revnumber>
 	<date>2008/04/09</date>
 	<revdescription>
@@ -1131,6 +1138,28 @@ net ads join -U administrator
  </section>
 </section>
   </chapter>
+<chapter><title>Agents d'authentification</title>
+<section><title>Windows</title>
+<para>Un agent, appelé NuWinC (NuFW Windows Client) est disponible pour les systèmes Microsoft Windows 95/98/NT/2000/XP/2003/Vista, auprès de la société INL. Cet agent permet, dans le cadre d'une authentification sur un domaine, un fonctionnement 100% transparent pour les utilisateurs. Pour toutes informations à propos de ce logiciel, consulter <ulink url="http://www.inl.fr/NuWINc.html">http://www.inl.fr/NuWINc.html</ulink>.</para>
+</section>
+<section><title>MacOS</title>
+<para>MacOS X est supporté par le client graphique Nuapplet2.</para>
+</section>
+<section><title>Linux</title>
+<para>Il existe plusieurs clients pour Linux :
+<orderedlist>
+<listitem><para>nutcpc : le client le plus léger, en ligne de commande</para></listitem>
+<listitem><para>Nuapplet2 : le client en mode graphique</para></listitem>
+<listitem><para>Authentification par PAM, au moyen du module pam_nufw. Ceci permet d'obtenir une authentification 100% transparente pour les systèmes GNU/Linux.</para></listitem>
+</para>
+</orderedlist>
+</section>
+<section><title>UNIX et BSD</title>
+<para>
+nutcpc fonctionne sur les systèmes FreeBSD. Pour les autres systèmes, vos retours seront accueillis chaleureusement! Par ailleurs, le portage des agents NuFW aux systèmes *NIX devrait être assez simple.
+</para>
+</section>
+</chapter>
 <chapter><title>Divers</title>
 <section><title>Architectures "Big endian"</title>
 <para>Ce type d'architecture est supporté depuis la version 1.0.11. Les versions antérieures ne fonctionnent pas.</para>
