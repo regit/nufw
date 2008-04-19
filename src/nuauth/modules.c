@@ -593,7 +593,7 @@ int load_modules()
 		 g_strdup("")}
 	};
 	int i;
-	char *configfile = DEFAULT_CONF_FILE;
+	char *configfile = nuauthconf->configfile;
 
 	/* parse conf file */
 	if(!parse_conffile(configfile,

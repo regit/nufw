@@ -65,7 +65,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	};
 
 	const int nb_vars = sizeof(vars) / sizeof(confparams_t);
-	const char *configfile = DEFAULT_CONF_FILE;
+	const char *configfile = nuauthconf->configfile;
 	mark_flag_config_t *config = g_new0(mark_flag_config_t, 1);
 	unsigned int nbits;
 
@@ -78,9 +78,9 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	parse_conffile(configfile, nb_vars, vars);
 
 #define READ_CONF(KEY) \
-    get_confvar_value(vars, nb_vars, KEY)
+	get_confvar_value(vars, nb_vars, KEY)
 #define READ_CONF_INT(VAR, KEY, DEFAULT) \
-    do { gpointer vpointer = READ_CONF(KEY); if (vpointer) VAR = *(int *)vpointer; else VAR = DEFAULT;} while (0)
+	do { gpointer vpointer = READ_CONF(KEY); if (vpointer) VAR = *(int *)vpointer; else VAR = DEFAULT;} while (0)
 
 	/* read options */
 	READ_CONF_INT(nbits, "mark_flag_nbits", 16);

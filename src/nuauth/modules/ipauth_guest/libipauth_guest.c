@@ -56,7 +56,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 		 g_strdup(IP_AUTH_GUEST_USERNAME)}
 		,
 	};
-	char *configfile = DEFAULT_CONF_FILE;
+	char *configfile = nuauthconf->configfile;
 	struct ipauth_guest_params *params =
 	    g_new0(struct ipauth_guest_params, 1);
 
@@ -75,7 +75,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	/* set variables */
 
 #define READ_CONF(KEY) \
-  get_confvar_value(ipauth_guest_vars, sizeof(ipauth_guest_vars)/sizeof(confparams_t), KEY)
+	get_confvar_value(ipauth_guest_vars, sizeof(ipauth_guest_vars)/sizeof(confparams_t), KEY)
 
 	params->username = (char *) READ_CONF("ipauth_guest_username");
 

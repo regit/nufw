@@ -644,11 +644,11 @@ int tls_user_init(struct tls_user_context_t *context)
 
 	/* get config file setup */
 	/* parse conf file */
-	if(!parse_conffile(DEFAULT_CONF_FILE,
+	if(!parse_conffile(nuauthconf->configfile,
 		       sizeof(nuauth_tls_vars) / sizeof(confparams_t),
 		       nuauth_tls_vars))
 	{
-	        log_message(FATAL, DEBUG_AREA_MAIN, "Failed to load config file %s", DEFAULT_CONF_FILE);
+	        log_message(FATAL, DEBUG_AREA_MAIN, "Failed to load config file %s", nuauthconf->configfile);
 		return 0;
 	}
 

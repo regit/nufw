@@ -244,7 +244,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 		{"mysql_ssl_cipher", G_TOKEN_STRING, 0,
 		 g_strdup(MYSQL_SSL_CIPHER)}
 	};
-	char *configfile = DEFAULT_CONF_FILE;
+	char *configfile = nuauthconf->configfile;
 	/* char *ldap_base_dn=LDAP_BASE; */
 	struct log_mysql_params *params =
 	    g_new0(struct log_mysql_params, 1);

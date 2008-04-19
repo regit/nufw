@@ -23,24 +23,24 @@
 #include <limits.h>
 
 typedef struct {
-    /** Identifier of the group */
+	/** Identifier of the group */
 	uint32_t id;
 
-    /** The mark (truncated the 'nbits' bits) */
+	/** The mark (truncated the 'nbits' bits) */
 	uint32_t mark;
 } group_mark_t;
 
 typedef struct {
-    /** position of the mark (in bits) in the packet mark */
+	/** position of the mark (in bits) in the packet mark */
 	unsigned int shift;
 
-    /** mask to remove current mark of the packet */
+	/** mask to remove current mark of the packet */
 	uint32_t mask;
 
-    /** default mark if no group does match */
+	/** default mark if no group does match */
 	uint32_t default_mark;
 
-    /** list of group with a known mark */
+	/** list of group with a known mark */
 	GList *groups;
 } mark_group_config_t;
 
@@ -154,7 +154,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 		,
 	};
 	const int nb_vars = sizeof(vars) / sizeof(confparams_t);
-	const char *configfile = DEFAULT_CONF_FILE;
+	const char *configfile = nuauthconf->configfile;
 	mark_group_config_t *config = g_new0(mark_group_config_t, 1);
 	unsigned int nbits;
 	char *group_filename;
@@ -169,9 +169,9 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	parse_conffile(configfile, nb_vars, vars);
 
 #define READ_CONF(KEY) \
-    get_confvar_value(vars, nb_vars, KEY)
+	get_confvar_value(vars, nb_vars, KEY)
 #define READ_CONF_INT(VAR, KEY, DEFAULT) \
-    do { gpointer vpointer = READ_CONF(KEY); if (vpointer) VAR = *(int *)vpointer; else VAR = DEFAULT;} while (0)
+	do { gpointer vpointer = READ_CONF(KEY); if (vpointer) VAR = *(int *)vpointer; else VAR = DEFAULT;} while (0)
 
 	/* read options */
 	group_filename = READ_CONF("mark_group_group_file");

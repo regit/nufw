@@ -358,7 +358,7 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 	char *errmsg;
 
 /* config init */
-	char *configfile = DEFAULT_CONF_FILE;
+	char *configfile = nuauthconf->configfile;
 	int ret;
 	/* TODO: read values specific to nufw connection */
 	confparams_t nuauth_tls_vars[] = {
@@ -382,7 +382,7 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 #if 0 /* XXX: Already commented in 2.2 */
 	struct sigaction action;
 
-	char *configfile = DEFAULT_CONF_FILE;
+	char *configfile = nuauthconf->configfile;
 	gpointer vpointer;
 	confparams_t nuauth_tls_vars[] = {
 		{"nuauth_tls_max_servers", G_TOKEN_INT,

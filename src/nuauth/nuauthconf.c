@@ -140,9 +140,9 @@ int init_nuauthconf(struct nuauth_params **result)
 	*result = conf;
 
 	/* parse conf file */
-	if(!parse_conffile(DEFAULT_CONF_FILE, nb_params, nuauth_vars))
+	if(!parse_conffile(nuauthconf->configfile, nb_params, nuauth_vars))
 	{
-	        log_message(FATAL, DEBUG_AREA_MAIN, "Failed to load config file %s", DEFAULT_CONF_FILE);
+	        log_message(FATAL, DEBUG_AREA_MAIN, "Failed to load config file %s", nuauthconf->configfile);
 		return 0;
 	}
 
@@ -233,6 +233,7 @@ void free_nuauth_params(struct nuauth_params *conf)
 	g_free(conf->authreq_port);
 	g_free(conf->userpckt_port);
 	g_free(conf->authorized_servers);
+	g_free(conf->configfile);
 }
 
 void apply_new_config(struct nuauth_params *conf)
@@ -289,6 +290,11 @@ gboolean nuauth_reload(int signum)
 	stop_all_thread_pools(TRUE);
 	/* unload modules */
 	unload_modules();
+
+	/* Only duplicate configfile info, if configfile has not been set */
+	if (! newconf->configfile) {
+		newconf->configfile = g_strdup(nuauthconf->configfile);
+	}
 
 	/* switch conf before loading modules */
 	restart = compare_nuauthparams(nuauthconf, newconf);

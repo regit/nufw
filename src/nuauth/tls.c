@@ -82,9 +82,9 @@ void tls_common_init(void)
 	};
 	const unsigned int nb_params = sizeof(nuauth_tls_vars) / sizeof(confparams_t);
 
-	if(!parse_conffile(DEFAULT_CONF_FILE, nb_params, nuauth_tls_vars))
+	if(!parse_conffile(nuauthconf->configfile, nb_params, nuauth_tls_vars))
 	{
-	        log_message(FATAL, DEBUG_AREA_MAIN, "Failed to load config file %s", DEFAULT_CONF_FILE);
+	        log_message(FATAL, DEBUG_AREA_MAIN, "Failed to load config file %s", nuauthconf->configfile);
 		return;
 	}
 

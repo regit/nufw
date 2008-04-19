@@ -193,7 +193,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 		parse_conffile(module->configfile, nb_params,
 			       pgsql_nuauth_vars);
 	} else {
-		parse_conffile(DEFAULT_CONF_FILE, nb_params,
+		parse_conffile(nuauthconf->configfile, nb_params,
 			       pgsql_nuauth_vars);
 	}
 

@@ -72,7 +72,7 @@ G_MODULE_EXPORT gchar *g_module_check_init(GModule * module)
 	};
 
 	/*  parse conf file */
-	parse_conffile(DEFAULT_CONF_FILE,
+	parse_conffile(nuauthconf->configfile,
 		       sizeof(system_nuauth_vars) / sizeof(confparams_t),
 		       system_nuauth_vars);
 	/*  set variables */

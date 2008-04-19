@@ -78,7 +78,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 			       sizeof(x509_std_nuauth_vars) /
 			       sizeof(confparams_t), x509_std_nuauth_vars);
 	} else {
-		parse_conffile(DEFAULT_CONF_FILE,
+		parse_conffile(nuauthconf->configfile,
 			       sizeof(x509_std_nuauth_vars) /
 			       sizeof(confparams_t), x509_std_nuauth_vars);
 	}

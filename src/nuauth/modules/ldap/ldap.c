@@ -216,7 +216,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 		    "Ldap module ($Revision$)");
 	if (!module->configfile) {
-		configfile = DEFAULT_CONF_FILE;
+		configfile = nuauthconf->configfile;
 	} else {
 		configfile = module->configfile;
 	}
@@ -410,13 +410,13 @@ static char *ipv6_to_base10(struct in6_addr *addr)
  *
  * \verbatim
 Abstract from RFC 2254
-   Character       ASCII value
-   ---------------------------
-    *               0x2a
-    (               0x28
-    )               0x29
-    \               0x5c
-    NUL             0x00
+	Character       ASCII value
+	---------------------------
+	*               0x2a
+	(               0x28
+	)               0x29
+	\               0x5c
+	NUL             0x00
 For example * is coded \2a
 \endverbatim
  *

@@ -46,8 +46,12 @@
 
 typedef struct {
 	int daemonize;
-	char *nuauth_client_listen_addr;
-	char *nuauth_nufw_listen_addr;
+	int debug_level;
+	char *configfile;
+	char *userpckt_port;
+	char *authreq_port;
+	char *client_srv;
+	char *nufw_srv;
 } command_line_params_t;
 
 int nuauth_running = 1;
@@ -374,11 +378,11 @@ void nuauth_cleanup(int recv_signal)
 	else if (recv_signal == SIGTERM)
 		log_message(CRITICAL, DEBUG_AREA_MAIN,
 			    "[+] Stop NuAuth server (SIGTERM)");
-	g_message("[+] Stop NuAuth server");
+	log_message(FATAL, DEBUG_AREA_MAIN, "[+] Stop NuAuth server");
 
 	nuauth_deinit(TRUE);
 
-	g_message("[+] NuAuth exit");
+	log_message(FATAL, DEBUG_AREA_MAIN, "[+] NuAuth exit");
 	exit(EXIT_SUCCESS);
 }
 
@@ -405,8 +409,8 @@ void daemonize()
 		if (pf != NULL &&
 		    fscanf(pf, "%d", &pidv) == 1 && kill(pidv, 0) == 0) {
 			fclose(pf);
-			printf
-			    ("pid file exists. Is nuauth already running? Aborting!\n");
+			log_message(FATAL, DEBUG_AREA_MAIN,
+			    "pid file exists. Is nuauth already running? Aborting!\n");
 			exit(EXIT_FAILURE);
 		}
 
@@ -453,6 +457,7 @@ void print_usage()
 		"nuauth [-hDVv[v[v[v[v[v[v[v[v]]]]]]]]] [-l user_packet_port] [-C local_addr] [-L local_addr] \n"
 		"\t\t[-t packet_timeout]\n"
 		"\t-h : display this help and exit\n"
+		"\t-c : use alternate configuration file\n"
 		"\t-D : run as a daemon, send debug messages to syslog (else stdout/stderr)\n"
 		"\t-V : display version and exit\n"
 		"\t-v : increase debug level (+1 for each 'v') (max useful number : 10)\n"
@@ -468,13 +473,19 @@ void print_usage()
  */
 void parse_options(int argc, char **argv, command_line_params_t * params)
 {
-	char *options_list = "DhVvl:L:C:p:t:T:";
+	char *options_list = "DhVvc:l:L:C:p:t:T:";
 	int option;
 	int local_debug_level = 0;
 
 	/*parse options */
 	while ((option = getopt(argc, argv, options_list)) != -1) {
 		switch (option) {
+		case 'c':
+			/* configuration file */
+			g_free(params->configfile);
+			params->configfile = g_strdup(optarg);
+			break;
+
 		case 'V':
 			fprintf(stdout, "nuauth (version %s)\n",
 				NUAUTH_FULL_VERSION);
@@ -487,34 +498,26 @@ void parse_options(int argc, char **argv, command_line_params_t * params)
 
 		case 'l':
 			/* port we listen for auth answer */
-			g_free(nuauthconf->userpckt_port);
-			nuauthconf->userpckt_port = g_strdup(optarg);
-			printf("Waiting for user packets on TCP port %s\n",
-			       nuauthconf->userpckt_port);
+			g_free(params->userpckt_port);
+			params->userpckt_port = g_strdup(optarg);
 			break;
 
 		case 'p':
 			/* port we listen for auth answer */
-			g_free(nuauthconf->authreq_port);
-			nuauthconf->authreq_port = g_strdup(optarg);
-			printf("Waiting for nufw packets on TCP port %s\n",
-			       nuauthconf->authreq_port);
+			g_free(params->authreq_port);
+			params->authreq_port = g_strdup(optarg);
 			break;
 
 		case 'L':
 			/* Address we listen on for NUFW originating packets */
-			g_free(params->nuauth_nufw_listen_addr);
-			params->nuauth_nufw_listen_addr = g_strdup(optarg);
-			printf("Waiting for Nufw daemon packets on %s\n",
-			       params->nuauth_nufw_listen_addr);
+			g_free(params->nufw_srv);
+			params->nufw_srv = g_strdup(optarg);
 			break;
 
 		case 'C':
 			/* Address we listen on for client originating packets */
-			g_free(params->nuauth_client_listen_addr);
-			params->nuauth_client_listen_addr = g_strdup(optarg);
-			printf("Waiting for clients auth packets on %s\n",
-			       params->nuauth_client_listen_addr);
+			g_free(params->client_srv);
+			params->client_srv = g_strdup(optarg);
 			break;
 
 		case 't':
@@ -533,7 +536,7 @@ void parse_options(int argc, char **argv, command_line_params_t * params)
 		}
 	}
 	if (local_debug_level) {
-		nuauthconf->debug_level = local_debug_level;
+		params->debug_level = local_debug_level;
 	}
 }
 
@@ -566,13 +569,13 @@ void nuauth_install_signals(gboolean sig_action)
 	/* intercept SIGTERM */
 	if (sigaction(SIGTERM, &action, &nuauthdatas->old_sigterm_hdl) !=
 	    0) {
-		g_message("Error modifying sigaction");
+		log_message(FATAL, DEBUG_AREA_MAIN, "Error modifying sigaction");
 		exit(EXIT_FAILURE);
 	}
 
 	/* intercept SIGINT */
 	if (sigaction(SIGINT, &action, &nuauthdatas->old_sigint_hdl) != 0) {
-		g_message("Error modifying sigaction");
+		log_message(FATAL, DEBUG_AREA_MAIN, "Error modifying sigaction");
 		exit(EXIT_FAILURE);
 	}
 
@@ -582,7 +585,7 @@ void nuauth_install_signals(gboolean sig_action)
 	sigemptyset(&(action.sa_mask));
 	action.sa_flags = 0;
 	if (sigaction(SIGHUP, &action, &nuauthdatas->old_sighup_hdl) != 0) {
-		g_message("Error modifying sigaction");
+		log_message(FATAL, DEBUG_AREA_MAIN, "Error modifying sigaction");
 		exit(EXIT_FAILURE);
 	}
 
@@ -613,14 +616,32 @@ void no_action_signals(int recv_signal)
 	}
 }
 
+#define OVERWRITE_DATA(x) \
+	if (params->x) { \
+		g_free(nuauthconf->x); \
+		nuauthconf->x = g_strdup(params->x); \
+	}
+	
+static void nuauthconf_from_cmdline(command_line_params_t *params)
+{
+	OVERWRITE_DATA(client_srv);
+	OVERWRITE_DATA(nufw_srv);
+	OVERWRITE_DATA(userpckt_port);
+	OVERWRITE_DATA(authreq_port);
+
+	nuauthconf->debug_level = params->debug_level;
+}
+
+#undef OVERWRITE_DATA
+
 /**
  * Configure NuAuth:
  *   - Init. glib threads: g_thread_init() ;
+ *   - Read command line options: parse_options() ;
  *   - Read NuAuth configuration file: init_nuauthconf() ;
+ *   - Build configuration options: build_prenuauthconf() ;
  *   - Init SSL library: nussl_init() ;
  *   - Create credentials: create_x509_credentials() ;
- *   - Read command line options: parse_options() ;
- *   - Build configuration options: build_prenuauthconf() ;
  *   - Daemonize the process if asked: daemonize().
  */
 void configure_app(int argc, char **argv)
@@ -628,6 +649,8 @@ void configure_app(int argc, char **argv)
 	command_line_params_t params;
 	int ret;
 	struct rlimit core_limit;
+	struct nuauth_params initconf;
+	struct nuauth_params *conf;
 
 	/* Avoid creation of core file which may contains username and password */
 	if (getrlimit(RLIMIT_CORE, &core_limit) == 0) {
@@ -662,36 +685,56 @@ void configure_app(int argc, char **argv)
 
 	/* set default parameters */
 	params.daemonize = 0;
-	params.nuauth_client_listen_addr = NULL;
-	params.nuauth_nufw_listen_addr = NULL;
+	params.client_srv = NULL;
+	params.nufw_srv = NULL;
+	params.userpckt_port = NULL;
+	params.authreq_port = NULL;
+	params.configfile = NULL;
+
+	nuauthconf = &initconf;
+	/* check if configuration file is not given on command line */
+	parse_options(argc, argv, &params);
+
+	if (params.debug_level) {
+		nuauthconf->debug_level = params.debug_level;
+	} else {
+		nuauthconf->debug_level = DEFAULT_DEBUG_LEVEL;
+	}
+	nuauthconf->debug_areas = DEFAULT_DEBUG_AREAS;
+
+	if (params.configfile == NULL) {
+		nuauthconf->configfile = g_strdup(DEFAULT_CONF_FILE);
+	} else {
+		nuauthconf->configfile = g_strdup(params.configfile);
+	}
 
 	/* load configuration */
-	if (!init_nuauthconf(&nuauthconf)) {
-		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
+	if (!init_nuauthconf(&conf)) {
+		log_message(FATAL, DEBUG_AREA_MAIN,
 				"Unable to load configuration");
 		exit(EXIT_FAILURE);
 	}
 
-	log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
-			"[+] NuAuth " VERSION " started");
+	conf->configfile = nuauthconf->configfile;
+	nuauthconf = conf;
+	/* build configuration by overwritting config file option by
+	 * command line one */
+	nuauthconf_from_cmdline(&params);
 
-	/* init gcrypt and gnutls */
 #ifdef GCRYPT_PTHEAD_IMPLEMENTATION
 	gcry_control(GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);
 #else
 	gcry_control(GCRYCTL_SET_THREAD_CBS, &gcry_threads_gthread);
 #endif
+	build_prenuauthconf(nuauthconf, NULL, 0);
 
 	ret = nussl_init();
 	if ( ret != NUSSL_OK ) {
-		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
+		log_message(FATAL, DEBUG_AREA_MAIN,
 			"FATAL ERROR: NuSSL global initialisation failed.");
 		exit(EXIT_FAILURE);
+
 	}
-
-	parse_options(argc, argv, &params);
-
-	build_prenuauthconf(nuauthconf, NULL, 0);
 
 	if (nuauthconf->uses_utf8) {
 		setlocale(LC_ALL, "");
@@ -702,15 +745,32 @@ void configure_app(int argc, char **argv)
 		nuauthconf->debug_level = MAX_DEBUG_LEVEL;
 	if (nuauthconf->debug_level < MIN_DEBUG_LEVEL)
 		nuauthconf->debug_level = MIN_DEBUG_LEVEL;
-	log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
-			"debug_level is %i", nuauthconf->debug_level);
+	log_message(INFO, DEBUG_AREA_MAIN,
+			"Debug_level is %i", nuauthconf->debug_level);
 
+#if 0
+	/* init credential */
+	if(! create_x509_credentials())
+	{
+		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
+				"Certificate initialization failed");
+		exit(EXIT_FAILURE);
+	}
+#endif
+	/* free command line structure */
+	g_free(params.client_srv);
+	g_free(params.nufw_srv);
+	g_free(params.userpckt_port);
+	g_free(params.authreq_port);
+	g_free(params.configfile);
+
+	/* init gcrypt and gnutls */
 	if (params.daemonize == 1) {
 		daemonize();
 	} else {
-			log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
-					"[+] NuAuth ($Revision$) with config "
-					DEFAULT_CONF_FILE );
+		log_message(FATAL, DEBUG_AREA_MAIN,
+				"[+] NuAuth ($Revision$) with config %s",
+				nuauthconf->configfile);
 	}
 }
 
@@ -903,7 +963,7 @@ void nuauth_main_loop()
 	double sec;
 	unsigned long ms;
 
-	g_message("[+] NuAuth started.");
+	log_message(FATAL, DEBUG_AREA_MAIN, "[+] NuAuth started.");
 
 	/* create timer and add main cleanup function to cleanup list */
 	timer = g_timer_new();

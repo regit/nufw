@@ -161,7 +161,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 		{"mysql_ssl_cipher", G_TOKEN_STRING, 0,
 		 g_strdup(MYSQL_SSL_CIPHER)}
 	};
-	char *configfile = DEFAULT_CONF_FILE;
+	char *configfile = nuauthconf->configfile;
 	/* char *ldap_base_dn=LDAP_BASE; */
 	struct ipauth_params *ipauth =
 	    g_new0(struct ipauth_params, 1);
@@ -187,9 +187,9 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	/* set variables */
 
 #define READ_CONF(KEY) \
-    get_confvar_value(mysql_nuauth_vars, sizeof(mysql_nuauth_vars)/sizeof(confparams_t), KEY)
+	get_confvar_value(mysql_nuauth_vars, sizeof(mysql_nuauth_vars)/sizeof(confparams_t), KEY)
 #define READ_CONF_INT(VAR, KEY, DEFAULT) \
-    do { gpointer vpointer = READ_CONF(KEY); if (vpointer) VAR = *(int *)vpointer; else VAR = DEFAULT; } while (0)
+	do { gpointer vpointer = READ_CONF(KEY); if (vpointer) VAR = *(int *)vpointer; else VAR = DEFAULT; } while (0)
 
 	mysql->mysql_server = (char *) READ_CONF("mysql_server_addr");
 	mysql->mysql_user = (char *) READ_CONF("mysql_user");
