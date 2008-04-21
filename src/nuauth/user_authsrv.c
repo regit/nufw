@@ -228,22 +228,20 @@ int user_process_field_app(struct nu_authreq *authreq,
 			    len);
 		return -1;
 	}
-	dec_appname = g_new0(gchar, len);
-	if (sasl_decode64
-	    ((char *) appfield + 4, len, dec_appname, len, &reallen)
-	    == SASL_BUFOVER) {
-		dec_appname = g_try_realloc(dec_appname, reallen + 1);
-		if (dec_appname)
-			sasl_decode64((char *) appfield + 4, len,
-				      dec_appname, reallen, &reallen);
-	} else {
-		dec_appname = g_try_realloc(dec_appname, reallen + 1);
+	dec_appname = g_new0(gchar, len + 1);
+	int ret;
+	if ((ret = sasl_decode64((char *) appfield + 4, len, dec_appname, len, &reallen)) != SASL_OK) {
+		log_message(INFO, DEBUG_AREA_USER,
+			    "user packet announced a badly encoded app name, sasl_error %d", ret);
+		if(ret == SASL_BADPROT)
+			log_message(INFO, DEBUG_AREA_USER, "Try upgrading your client");
+			
+		g_free(dec_appname);
+		return -1;
 	}
-	if (reallen) {
-		dec_appname[reallen] = 0;
-	} else {
-		dec_appname[len-1] = 0;
-	}
+
+	dec_appname = g_try_realloc(dec_appname, reallen + 1);
+	dec_appname[reallen] = 0;
 
 	if (dec_appname != NULL) {
 		connection->app_name = string_escape(dec_appname);
