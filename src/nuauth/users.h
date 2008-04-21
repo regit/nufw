@@ -56,7 +56,7 @@ typedef struct {
 	/** \brief socket used by tls session.
 	* It identify the client and it is used as the key
 	*/
-	int socket;
+	int32_t socket;
 	/* tls should be removed by ssl */
 	nussl_session *nussl;	/*!< \brief SSL session opened with tls_connect() */
 	GMutex *tls_lock;	/*!< \brief Mutex to lock use of TLS */

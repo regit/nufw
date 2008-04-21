@@ -117,7 +117,7 @@ void start_all_thread_pools()
 		    nuauthconf->nbuser_check);
 	nuauthdatas->user_checkers =
 	    g_thread_pool_new((GFunc) user_check_and_decide, NULL,
-			      nuauthconf->nbuser_check, POOL_TYPE, NULL);
+			      nuauthconf->nbuser_check, FALSE, NULL);
 
 	/* create user logger workers */
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN, "Creating %d user loggers",

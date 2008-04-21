@@ -59,5 +59,6 @@ char *int_to_str(int value);
 void thread_pool_push(GThreadPool *pool, gpointer data, GError **error);
 
 int parse_addr_port(const char *text, const char* default_port, char **addr, char **port);
+int user_pipefd[2];
 
 #endif

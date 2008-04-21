@@ -24,6 +24,8 @@
 #include <sys/time.h>
 #include <sasl/saslutil.h>
 
+#define RETURN_NO_LOG return
+
 static GSList *userpckt_decode(struct tls_buffer_read *datas);
 
 /**
@@ -32,17 +34,47 @@ static GSList *userpckt_decode(struct tls_buffer_read *datas);
  *
  * Call userpckt_decode()
  *
- * \param userdata Pointer to a struct tls_buffer_read: containing the datagram
+ * \param usersession Pointer to a struct user_session_t: containing the data to treat
  * \param data NULL (unused)
  */
-void user_check_and_decide(gpointer userdata, gpointer data)
+void user_check_and_decide(gpointer user_session, gpointer data)
 {
 	GSList *conn_elts = NULL;
 	GSList *conn_elt_l;
 	connection_t *conn_elt;
+	struct tls_buffer_read *userdata = NULL;
+	nu_error_t u_request;
+	user_session_t *usersession = user_session;
 
 	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER, "entering user_check");
 
+	/* Call treat user request */
+	u_request = treat_user_request(usersession, &userdata);
+	if (u_request == NU_EXIT_OK) {
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
+				  "client disconnect on socket %d",
+				  socket);
+		/* clean client structure */
+		delete_client_by_socket(usersession->socket);
+		RETURN_NO_LOG;
+	} else if (u_request != NU_EXIT_CONTINUE) {
+#ifdef DEBUG_ENABLE
+		log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
+			    "treat_user_request() failure");
+#endif
+		/* better to disconnect: cleaning client structure */
+		delete_client_by_socket(usersession->socket);
+		RETURN_NO_LOG;
+	}
+
+		
+	/* send socket back to user select */
+	write(user_pipefd[1], &usersession->socket, sizeof(usersession->socket));
+
+	if (userdata == NULL) {
+		RETURN_NO_LOG;
+	}
+	
 	/* reload condition */
 	conn_elts = userpckt_decode(userdata);
 

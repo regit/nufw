@@ -22,6 +22,7 @@
 
 #include "auth_srv.h"
 #include "tls.h"
+#include <fcntl.h>
 
 /**
  * \ingroup TLS
@@ -143,11 +144,12 @@ void* pre_client_check(GMutex *mutex)
  * \param c_session SSL RX packet
  * \return a nu_error_t::, NU_EXIT_CONTINUE if read done, NU_EXIT_OK if read complete, NU_EXIT_ERROR on error
  */
-static nu_error_t treat_user_request(user_session_t * c_session)
+nu_error_t treat_user_request(user_session_t * c_session,
+				     struct tls_buffer_read **c_datas)
 {
-	struct tls_buffer_read *datas;
 	int header_length;
 	struct nu_header *header;
+	struct tls_buffer_read *datas;
 
 	if (c_session == NULL)
 		return NU_EXIT_ERROR;
@@ -253,11 +255,6 @@ static nu_error_t treat_user_request(user_session_t * c_session)
 				return NU_EXIT_ERROR;
 			}
 		}
-
-		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
-				  "Pushing packet to user_checker");
-		thread_pool_push(nuauthdatas->user_checkers, datas,
-				   NULL);
 	} else {
 		log_message(INFO, DEBUG_AREA_USER,
 			    "Bad packet, option of header is not set or unauthorized option from user %s.",
@@ -265,6 +262,8 @@ static nu_error_t treat_user_request(user_session_t * c_session)
 		free_buffer_read(datas);
 		return NU_EXIT_OK;
 	}
+
+	*c_datas = datas;
 	return NU_EXIT_CONTINUE;
 }
 
@@ -375,7 +374,6 @@ void tls_user_check_activity(struct tls_user_context_t *context,
 			     int socket)
 {
 	user_session_t *c_session;
-	int u_request;
 	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 			  "user activity on socket %d", socket);
 
@@ -388,21 +386,9 @@ void tls_user_check_activity(struct tls_user_context_t *context,
 		return;
 	}
 
-	u_request = treat_user_request(c_session);
-	if (u_request == NU_EXIT_OK) {
-		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
-				  "client disconnect on socket %d",
-				  socket);
-		/* clean client structure */
-		delete_client_by_socket(socket);
-	} else if (u_request != NU_EXIT_CONTINUE) {
-#ifdef DEBUG_ENABLE
-		log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
-			    "treat_user_request() failure");
-#endif
-		/* better to disconnect: cleaning client structure */
-		delete_client_by_socket(socket);
-	}
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
+			  "Pushing packet to user_checker");
+	thread_pool_push(nuauthdatas->user_checkers, c_session, NULL);
 }
 
 /**
@@ -455,6 +441,21 @@ void tls_user_main_loop(struct tls_user_context_t *context, GMutex * mutex)
 	struct timeval tv;
 	disconnect_user_msg_t *disconnect_msg;
 
+	/* create unix pipe */
+	if (pipe(user_pipefd) == -1) {
+		log_message(CRITICAL, DEBUG_AREA_MAIN,
+		    "[+] Unable to open user pipe.");
+		nuauth_ask_exit();
+	}
+	if (fcntl(user_pipefd[0], F_SETFL, (fcntl(user_pipefd[0], F_GETFL)|O_NONBLOCK))) {
+		log_message(CRITICAL, DEBUG_AREA_MAIN,
+		    "[+] Unable to set pipe to non-blocking.");
+		nuauth_ask_exit();
+	}
+
+	FD_SET(user_pipefd[0], &context->tls_rx_set);
+
+
 	log_message(INFO, DEBUG_AREA_USER,
 		    "[+] NuAuth is waiting for client connections.");
 	while (g_mutex_trylock(mutex)) {
@@ -499,6 +500,9 @@ void tls_user_main_loop(struct tls_user_context_t *context, GMutex * mutex)
 		for (i = 0; i < context->mx; ++i) {
 			if (FD_ISSET(i, &context->tls_rx_set))
 				FD_SET(i, &wk_set);
+			if (i == user_pipefd[0]) {
+				FD_SET(i, &wk_set);
+			}
 		}
 		tv.tv_sec = 0;
 		tv.tv_usec = 250000;
@@ -544,14 +548,29 @@ void tls_user_main_loop(struct tls_user_context_t *context, GMutex * mutex)
 					continue;
 			}
 
+			if (FD_ISSET(user_pipefd[0], &wk_set)) {
+				int32_t gb_socket;
+				while (read(user_pipefd[0], &gb_socket, sizeof(gb_socket)) >0) {
+					debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
+							  "FD %d return to working set", gb_socket);
+					FD_SET(gb_socket, &context->tls_rx_set);
+				}
+				if (gb_socket + 1 > context->mx)
+					context->mx = gb_socket + 1;
+				continue;
+			}
 			/*
 			 * check for client activity
 			 */
 			for (i = 0; i < context->mx; ++i) {
 				if (i == context->sck_inet)
 					continue;
-				if (FD_ISSET(i, &wk_set))
+				if (FD_ISSET(i, &wk_set)) {
 					tls_user_check_activity(context, i);
+					/* remove socket from wk_set it will be added
+					 * back by user checker. */
+					FD_CLR(i, &context->tls_rx_set);
+				}
 			}
 		}
 		tls_user_update_mx(context);
@@ -576,7 +595,7 @@ void tls_user_servers_init()
 	/* create tls sasl worker thread pool */
 	nuauthdatas->tls_sasl_worker =
 	    g_thread_pool_new((GFunc) tls_sasl_connect, NULL,
-			      nuauthconf->nb_auth_checkers, TRUE,
+			      nuauthconf->nb_auth_checkers, FALSE,
 			      NULL);
 
 	nuauthdatas->user_cmd_queue =  g_async_queue_new();

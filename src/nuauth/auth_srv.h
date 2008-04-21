@@ -108,6 +108,9 @@ typedef enum {
 #include "nuauth_params.h"
 #include "nuauthconf.h"
 
+
+nu_error_t treat_user_request(user_session_t * c_session,
+			      struct tls_buffer_read **datas);
 /*
  * declare some global variables and do some definitions
  */
