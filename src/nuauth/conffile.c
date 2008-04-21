@@ -57,8 +57,9 @@ int parse_conffile(const char *filename, gint array_size,
 	scanner = g_scanner_new(NULL);
 	fd = open(filename, O_RDONLY);
 	if (fd == -1) {
-		g_error("Can not open config file : %s", filename);
-		exit(EXIT_FAILURE);
+		log_message(FATAL, DEBUG_AREA_MAIN,
+			    "Can not open config file : %s", filename);
+		exit(1);
 	}
 	g_scanner_input_file(scanner, fd);
 	for (i = 0; i < array_size; i++)
@@ -107,12 +108,11 @@ int parse_conffile(const char *filename, gint array_size,
 							     value.
 							     v_string);
 						} else {
-							g_warning
-							    ("Bad argument value for %s at %u",
-							     current_symbol->
-							     name,
-							     scanner->
-							     line);
+							log_message(WARNING,
+							    DEBUG_AREA_MAIN,
+							    "Bad argument value for %s at %u",
+							    current_symbol->name,
+							    scanner->line);
 							g_scanner_destroy
 							    (scanner);
 							return 0;
@@ -128,8 +128,9 @@ int parse_conffile(const char *filename, gint array_size,
 							    scanner->value.
 							    v_int;
 						} else {
-							g_warning
-							    ("Bad argument value for %s at %u",
+							log_message(WARNING,
+							    DEBUG_AREA_MAIN,
+							    "Bad argument value for %s at %u",
 							     current_symbol->
 							     name,
 							     scanner->
@@ -140,13 +141,16 @@ int parse_conffile(const char *filename, gint array_size,
 						}
 						break;
 					default:
-						g_warning ("Bad argument !");
+						log_message(WARNING,
+							    DEBUG_AREA_MAIN,
+							    "Bad argument !");
 					}
 				}
 			} else {
-				g_warning("Did not find a symbol at %d,%d",
-					  scanner->line,
-					  scanner->position);
+				log_message(WARNING, DEBUG_AREA_MAIN,
+					    "Did not find a symbol at %d,%d",
+					    scanner->line,
+					    scanner->position);
 			}
 		}
 	}
