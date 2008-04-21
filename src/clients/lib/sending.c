@@ -161,7 +161,7 @@ int send_user_pckt(nuauth_session_t * session, conn_t * carray[CONN_MAX])
 		strcpy(app_ptr + len, sha1_sig);
 		len += strlen(sha1_sig);
 #endif
-		appfield->length = sizeof(appfield) + len;
+		appfield->length = sizeof(struct nu_authfield_app) + len;
 		authreq->packet_length += appfield->length;
 
 		/* glue piece together on data if packet is not too long */
