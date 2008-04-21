@@ -22,6 +22,7 @@ from nucentral import Component
 from nevow import rend, tags, loaders
 from twisted.internet.defer import succeed
 from nucentral.core.context import Context
+from datetime import timedelta
 
 class NuauthFragment(rend.Fragment):
     docFactory = loaders.xmlstr(
@@ -60,7 +61,8 @@ class NuauthFragment(rend.Fragment):
         return defer
 
     def _render_uptime(self, uptime, ctx):
-        msg = u"Server started at %s, running since %s" % (uptime['start'], uptime['seconds'])
+        delta = timedelta(seconds=uptime['seconds'])
+        msg = u"Server started at %s, running since %s" % (uptime['start'], delta)
         return ctx.tag[tags.p[msg]]
 
     def render_users(self, ctx, data):
