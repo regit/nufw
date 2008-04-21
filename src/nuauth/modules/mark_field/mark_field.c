@@ -74,8 +74,10 @@ void parse_field_file(mark_field_config_t * config, const char *filename)
 
 	if (file == NULL) {
 		/* fatal error, exit nuauth! */
-		g_error("mark_field: Unable to open field list (file %s)!",
-			filename);
+		log_message(FATAL, DEBUG_AREA_MAIN,
+			    "mark_field: Unable to open field list (file %s)!",
+			    filename);
+		exit(EXIT_FAILURE);
 	}
 
 	config->fields = NULL;

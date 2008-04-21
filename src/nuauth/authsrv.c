@@ -420,7 +420,7 @@ void daemonize()
 
 	pidf = fork();
 	if (pidf < 0) {
-		g_error("Unable to fork");
+		log_message(FATAL, DEBUG_AREA_MAIN, "Unable to fork");
 		exit(EXIT_FAILURE);	/* this should be useless !! */
 	} else {
 		if (pidf > 0) {

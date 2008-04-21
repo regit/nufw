@@ -495,10 +495,11 @@ static int load_modules_from(gchar * confvar, gchar * func,
 			    current_module->module_name,
 			    current_module->configfile);
 		if (current_module->module == NULL) {
-			g_error("Unable to load module %s in %s",
-				modules_list[i], MODULE_PATH);
+			log_message(FATAL, DEBUG_AREA_MAIN,
+				    "Unable to load module %s in %s",
+				    modules_list[i], MODULE_PATH);
 			free_module_t(current_module);
-			return 0;
+			exit(EXIT_FAILURE);
 		}
 
 		/* check module version */
@@ -511,11 +512,12 @@ static int load_modules_from(gchar * confvar, gchar * func,
 		if (!g_module_symbol
 		    (current_module->module, func,
 		     (gpointer *) & current_module->func)) {
-			g_error("Unable to load function %s in %s", func,
-				g_module_name(current_module->module));
+			log_message(FATAL, DEBUG_AREA_MAIN,
+				    "Unable to load function %s in %s", func,
+				    g_module_name(current_module->module));
 			free_module_t(current_module);
 			g_strfreev(params_list);
-			return 0;
+			exit(EXIT_FAILURE);
 		}
 
 		current_module->hook = hook;

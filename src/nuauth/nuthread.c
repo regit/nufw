@@ -38,8 +38,9 @@ void thread_new(struct nuauth_thread_t *thread,
 	    g_thread_create((GThreadFunc) func, thread->mutex, TRUE, NULL);
 	if (thread->thread == NULL)
 	{
-		g_error("FATAL ERROR: Unable to create thread %s!",
-			name);
+		log_message(FATAL, DEBUG_AREA_MAIN,
+			    "FATAL ERROR: Unable to create thread %s!",
+			    name);
 		exit(EXIT_FAILURE);
 	}
 	thread->valid = 1;
@@ -57,8 +58,9 @@ void thread_new_wdata(struct nuauth_thread_t *thread,
 	    g_thread_create((GThreadFunc) func, thread , TRUE, NULL);
 	if (thread->thread == NULL)
 	{
-		g_error("FATAL ERROR: Unable to create thread %s!",
-			name);
+		log_message(FATAL, DEBUG_AREA_MAIN,
+			    "FATAL ERROR: Unable to create thread %s!",
+			    name);
 		exit(EXIT_FAILURE);
 	}
 	thread->valid = 1;

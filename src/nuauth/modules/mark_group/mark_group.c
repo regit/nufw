@@ -67,8 +67,10 @@ void parse_group_file(mark_group_config_t * config, const char *filename)
 
 	if (file == NULL) {
 		/* fatal error, exit nuauth! */
-		g_error("mark_group: Unable to open group list (file %s)!",
-			filename);
+		log_message(FATAL, DEBUG_AREA_MAIN,
+			    "mark_group: Unable to open group list (file %s)!",
+			    filename);
+		exit(EXIT_FAILURE);
 	}
 
 	while (fgets(line, sizeof(line), file) != NULL) {

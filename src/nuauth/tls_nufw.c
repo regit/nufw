@@ -411,8 +411,9 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 	/* Listen ! */
 	socket_fd = listen(context->sck_inet, 20);
 	if (socket_fd == -1) {
-		g_error("nufw listen() failed, exiting");
-		return 0;
+		log_message(FATAL, DEBUG_AREA_MAIN,
+			    "nufw listen() failed, exiting");
+		exit(EXIT_FAILURE);
 	}
 
 
@@ -440,25 +441,31 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 	/* TODO: use a nufw specific value of request_cert */
 	context->server = nussl_session_create_with_fd(context->sck_inet, nuauth_tls.request_cert);
 	if ( ! context->server ) {
-		g_error("Cannot create NuSSL session!");
-		return 0;
+		log_message(FATAL, DEBUG_AREA_MAIN,
+			    "Cannot create NuSSL session!");
+		exit(EXIT_FAILURE);
 	}
 
 	if ( nussl_session_set_dh_bits(context->server, DH_BITS) != NUSSL_OK) {
-		g_error("Unable to initialize Diffie Hellman params.");
-		return 0;
+		log_message(FATAL, DEBUG_AREA_MAIN,
+			    "Unable to initialize Diffie Hellman params.");
+		exit(EXIT_FAILURE);
 	}
 
 	ret = nussl_ssl_set_keypair(context->server, nuauth_tls.cert, nuauth_tls.key);
 	if ( ret != NUSSL_OK ) {
-		g_error("Failed to load nufw key/certificate: %s", nussl_get_error(context->server));
-		return 0;
+		log_message(FATAL, DEBUG_AREA_MAIN,
+			    "Failed to load nufw key/certificate: %s",
+			    nussl_get_error(context->server));
+		exit(EXIT_FAILURE);
 	}
 
 	ret = nussl_ssl_trust_cert_file(context->server, nuauth_tls.ca);
 	if ( ret != NUSSL_OK ) {
-		g_error("Failed to load nufw trust certificate: %s", nussl_get_error(context->server));
-		return 0;
+		log_message(FATAL, DEBUG_AREA_MAIN,
+			    "Failed to load nufw trust certificate: %s",
+			    nussl_get_error(context->server));
+		exit(EXIT_FAILURE);
 	}
 
 	return 1;

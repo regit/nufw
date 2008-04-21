@@ -658,17 +658,17 @@ int tls_user_init(struct tls_user_context_t *context)
 			    "FATAL ERROR: User bind error: %s", errmsg);
 		log_message(FATAL, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
 			    "Check that nuauth is not running twice. nuauth exiting!");
-		return 0;
+		exit(EXIT_FAILURE);
 	}
 
 	/* get config file setup */
 	/* parse conf file */
 	if(!parse_conffile(nuauthconf->configfile,
 		       sizeof(nuauth_tls_vars) / sizeof(confparams_t),
-		       nuauth_tls_vars))
-	{
-	        log_message(FATAL, DEBUG_AREA_MAIN, "Failed to load config file %s", nuauthconf->configfile);
-		return 0;
+		       nuauth_tls_vars)) {
+	        log_message(FATAL, DEBUG_AREA_MAIN,
+			    "Failed to load config file %s", nuauthconf->configfile);
+		exit(EXIT_FAILURE);
 	}
 
 
@@ -677,8 +677,9 @@ int tls_user_init(struct tls_user_context_t *context)
 	/* listen */
 	result = listen(context->sck_inet, 20);
 	if (result == -1) {
-		g_error("user listen() failed, exiting");
-		return 0;
+		log_message(FATAL, DEBUG_AREA_MAIN,
+			    "user listen() failed, exiting");
+		exit(EXIT_FAILURE);
 	}
 
 	/* init fd_set */
@@ -700,10 +701,10 @@ int tls_user_init(struct tls_user_context_t *context)
 	int_authcert = *(int *) READ_CONF("nuauth_tls_auth_by_cert");
 #undef READ_CONF
 
-	if (!tls_user_setcert_auth_params(int_requestcert, int_authcert))
-	{
-		g_error("Invalid request_cert or auth_by_cert option");
-		return 0;
+	if (!tls_user_setcert_auth_params(int_requestcert, int_authcert)) {
+		log_message(FATAL, DEBUG_AREA_MAIN,
+			    "Invalid request_cert or auth_by_cert option");
+		exit(EXIT_FAILURE);
 	}
 
 	/* free config struct */
@@ -715,27 +716,34 @@ int tls_user_init(struct tls_user_context_t *context)
 		cleanup_func_push(refresh_crl_file);
 	}
 
-	context->nussl = nussl_session_create_with_fd(context->sck_inet, nuauth_tls.request_cert);
-	if ( ! context->nussl ) {
-		g_error("Cannot create session from fd!");
-		return 0;
+	context->nussl = nussl_session_create_with_fd(context->sck_inet,
+						      nuauth_tls.request_cert);
+	if (!context->nussl ) {
+		log_message(FATAL, DEBUG_AREA_MAIN,
+			    "Cannot create session from fd!");
+		exit(EXIT_FAILURE);
 	}
 
 	if ( nussl_session_set_dh_bits(context->nussl, DH_BITS) != NUSSL_OK) {
-		g_error("Unable to initialize Diffie Hellman params.");
-		return 0;
+		log_message(FATAL, DEBUG_AREA_MAIN,
+			    "Unable to initialize Diffie Hellman params.");
+		exit(EXIT_FAILURE);
 	}
 
 	ret = nussl_ssl_set_keypair(context->nussl, nuauth_tls.cert, nuauth_tls.key);
 	if ( ret != NUSSL_OK ) {
-		g_error("Failed to load user key/certificate: %s", nussl_get_error(context->nussl));
-		return 0;
+		log_message(FATAL, DEBUG_AREA_MAIN,
+			    "Failed to load user key/certificate: %s",
+			    nussl_get_error(context->nussl));
+		exit(EXIT_FAILURE);
 	}
 
 	ret = nussl_ssl_trust_cert_file(context->nussl, nuauth_tls.ca);
 	if ( ret != NUSSL_OK ) {
-		g_error("Failed to load user trust certificate: %s", nussl_get_error(context->nussl));
-		return 0;
+		log_message(FATAL, DEBUG_AREA_MAIN,
+			    "Failed to load user trust certificate: %s",
+			    nussl_get_error(context->nussl));
+		exit(EXIT_FAILURE);
 	}
 
 	return 1;
