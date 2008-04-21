@@ -21,6 +21,7 @@ $Id: __init__.py 4489 2008-02-21 17:03:32Z haypo $
 from nucentral import Component
 from nevow import rend, tags, loaders
 from twisted.internet.defer import succeed
+from nucentral.core.context import Context
 
 class NuauthFragment(rend.Fragment):
     docFactory = loaders.xmlstr(
@@ -35,24 +36,7 @@ class NuauthFragment(rend.Fragment):
         self.nuauth = nuauth
 
     def formatUser(self, user):
-        #self.client_version = client_version
-        #self.socket = socket
-        #self.name = name
-        #self.addr = addr
-        #self.sport = sport
-        #self.uid = uid
-        #self.groups = groups
-        #self.connect_timestamp = connect_timestamp
-        #self.uptime = datetime.timedelta(seconds=uptime)
-        #if expire < 0:
-        #    self.expire = None
-        #else:
-        #    self.expire = datetime.timedelta(seconds=expire)
-        #self.sysname = sysname
-        #self.release = release
-        #self.version = version
-        #self.activated = activated
-        return tags.li[u"%s from %s" % (user.name, user.addr)]
+        return tags.li[u"%s from %s" % (user['name'], user['addr'])]
 
     def _render_users(self, users, ctx=None):
         data = []
@@ -70,7 +54,7 @@ class NuauthFragment(rend.Fragment):
 
     def render_command(self, ctx, command, render_func):
         defer = succeed(command)
-        defer.addCallback(self.nuauth.command)
+        defer.addCallback(self.nuauth.command, nevow_ctx=ctx)
         defer.addCallback(render_func, ctx=ctx)
         defer.addErrback(self.error, ctx=ctx)
         return defer
@@ -88,6 +72,7 @@ class NuauthFragment(rend.Fragment):
 class NuauthWeb(Component):
     NAME = "nuauth_web"
     VERSION = "1.0"
+    API_VERSION = 1
 
     def init(self, core):
         self.core = core
@@ -95,6 +80,7 @@ class NuauthWeb(Component):
     def fragment_nuauth(self):
         return NuauthFragment(self)
 
-    def command(self, command):
-        return self.core.callService("nuauth", command)
+    def command(self, command, nevow_ctx):
+        context = Context()
+        return self.core.callService(context, "nuauth", command)
 

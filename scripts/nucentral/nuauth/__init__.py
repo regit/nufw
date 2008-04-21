@@ -70,6 +70,7 @@ class Nuauth(Component):
             users.append({
                 'name': user.name,
                 'uid': user.uid,
+                'addr': str(user.addr),
             })
         return users
 
