@@ -83,6 +83,6 @@ class NuauthWeb(Component):
         return NuauthFragment(self)
 
     def command(self, command, nevow_ctx):
-        context = Context()
+        context = Context.fromNevowContext(nevow_ctx)
         return self.core.callService(context, "nuauth", command)
 
