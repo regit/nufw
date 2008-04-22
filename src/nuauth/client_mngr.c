@@ -302,15 +302,9 @@ char warn_clients(struct msg_addr_set *global_msg)
 					(char*)global_msg->msg,
 					ntohs(global_msg->msg->length));
 			if (ret < 0) {
-				/* Test on non critical error */
-				if (gnutls_error_is_fatal(ret)) {
-					log_message(WARNING, DEBUG_AREA_USER,
-							"Failed to send warning to client(s).");
-					badsockets = g_slist_prepend(badsockets, GINT_TO_POINTER(ipsockets->data));
-				} else {
-					log_message(INFO, DEBUG_AREA_USER,
-							"Failed to send warning to client(s) (non fatal TLS error).");
-				}
+				log_message(WARNING, DEBUG_AREA_USER,
+						"Failed to send warning to client(s): %s", nussl_get_error(session->nussl));
+				badsockets = g_slist_prepend(badsockets, GINT_TO_POINTER(ipsockets->data));
 			}
 		}
 		if (badsockets) {

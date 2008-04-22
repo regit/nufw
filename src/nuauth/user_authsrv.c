@@ -52,8 +52,7 @@ void user_check_and_decide(gpointer user_session, gpointer data)
 	u_request = treat_user_request(usersession, &userdata);
 	if (u_request == NU_EXIT_OK) {
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
-				  "client disconnect on socket %d",
-				  socket);
+				  "client disconnect");
 		/* clean client structure */
 		delete_client_by_socket(usersession->socket);
 		RETURN_NO_LOG;
