@@ -206,13 +206,14 @@ nu_error_t nufw_session_send(nufw_session_t * session, char * buffer, int length
 	// XXX: make me non-blockant
 	ret = nussl_write(session->nufw_client, buffer, length);
 
-	g_mutex_unlock(session->tls_lock);
 	if (ret < 0) {
 		log_message(DEBUG, DEBUG_AREA_GW,
 			"nufw_servers: send failure (%s)",
 			nussl_get_error(session->nufw_client));
+		g_mutex_unlock(session->tls_lock);
 		return NU_EXIT_ERROR;
 	}
+	g_mutex_unlock(session->tls_lock);
 	return NU_EXIT_OK;
 }
 
