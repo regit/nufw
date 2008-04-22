@@ -85,8 +85,8 @@ G_MODULE_EXPORT gint user_packet_logs(void *element, tcp_state_t state,
 		const connection_t *connection = element;
 
 		/* convert IP source and destination addresses to string */
-		FORMAT_IPV6(&connection->tracking.saddr, source_addr);
-		FORMAT_IPV6(&connection->tracking.daddr, dest_addr);
+		format_ipv6(&connection->tracking.saddr, source_addr, INET6_ADDRSTRLEN, NULL);
+		format_ipv6(&connection->tracking.daddr, dest_addr, INET6_ADDRSTRLEN, NULL);
 
 		if (connection->log_prefix) {
 			log_prefix =
@@ -123,8 +123,8 @@ G_MODULE_EXPORT gint user_packet_logs(void *element, tcp_state_t state,
 		struct accounted_connection *connection = element;
 
 		/* convert IP source and destination addresses to string */
-		FORMAT_IPV6(&connection->tracking.saddr, source_addr);
-		FORMAT_IPV6(&connection->tracking.daddr, dest_addr);
+		format_ipv6(&connection->tracking.saddr, source_addr, INET6_ADDRSTRLEN, NULL);
+		format_ipv6(&connection->tracking.daddr, dest_addr, INET6_ADDRSTRLEN, NULL);
 
 		saddr = dest_addr;
 		daddr = source_addr;
@@ -170,7 +170,7 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 	char *prefix = "[nuauth] ";
 	char address[INET6_ADDRSTRLEN];
 
-	format_ipv6(&c_session->addr, address, sizeof(address), NULL);
+	format_ipv6(&c_session->addr, address, sizeof(address, NULL), NULL);
 	switch (state) {
 	case SESSION_OPEN:
 		g_message("%sUser %s connect on %s", prefix,
@@ -201,7 +201,7 @@ G_MODULE_EXPORT void auth_error_log(user_session_t * session,
 				    const char *text, gpointer params_ptr)
 {
 	char ipaddr[INET6_ADDRSTRLEN];
-	FORMAT_IPV6(&session->addr, ipaddr);
+	format_ipv6(&session->addr, ipaddr, INET6_ADDRSTRLEN, NULL);
 
 	g_message("Authentification error: %s", text);
 	g_message("Authentification error: user: %s from %s (port %d), protocol version %d",

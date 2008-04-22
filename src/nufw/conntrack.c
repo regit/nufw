@@ -136,9 +136,9 @@ void fill_message(struct nuv4_conntrack_message_t *message,
 
 #ifdef DEBUG_CONNTRACK
 	printf("(*) New conntrack event: ");
-	FORMAT_IPV6(&message->ip_src, ascii);
+	format_ipv6(&message->ip_src, ascii, INET6_ADDRSTRLEN, NULL);
 	printf(" src=%s", ascii);
-	FORMAT_IPV6(&message->ip_dst, ascii);
+	format_ipv6(&message->ip_dst, ascii, INET6_ADDRSTRLEN, NULL);
 	printf(" dst=%s\n", ascii);
 #endif
 }

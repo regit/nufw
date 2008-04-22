@@ -164,7 +164,7 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 		if (g_slist_length(get_client_sockets_by_ip(&c_session->addr)) >=
 				nuauthconf->single_ip_client_limit) {
 			char address[INET6_ADDRSTRLEN];
-			FORMAT_IPV6(&c_session->addr, address);
+			format_ipv6(&c_session->addr, address, INET6_ADDRSTRLEN, NULL);
 			clean_session(c_session);
 			remove_socket_from_pre_client_list(socket_fd);
 		        log_message(INFO, DEBUG_AREA_USER,

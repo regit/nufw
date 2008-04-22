@@ -284,7 +284,7 @@ char warn_clients(struct msg_addr_set *global_msg)
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG, DEBUG_AREA_USER))
 	{
 		char addr_ascii[INET6_ADDRSTRLEN];
-		FORMAT_IPV6(&global_msg->addr, addr_ascii);
+		format_ipv6(&global_msg->addr, addr_ascii, INET6_ADDRSTRLEN, NULL);
 		g_message("Warn client(s) on IP %s", addr_ascii);
 	}
 #endif

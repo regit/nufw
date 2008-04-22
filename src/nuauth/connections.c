@@ -381,8 +381,8 @@ static char * str_print_tracking_t(tracking_t *tracking)
 	char dst_ascii[INET6_ADDRSTRLEN];
 	char * ip_header, * proto_header, *message;
 
-	FORMAT_IPV6(&tracking->saddr, src_ascii);
-	FORMAT_IPV6(&tracking->daddr, dst_ascii);
+	format_ipv6(&tracking->saddr, src_ascii, INET6_ADDRSTRLEN, NULL);
+	format_ipv6(&tracking->daddr, dst_ascii, INET6_ADDRSTRLEN, NULL);
 
 	ip_header = g_strdup_printf(" src=%s dst=%s proto=%u",
 			src_ascii, dst_ascii, tracking->protocol);

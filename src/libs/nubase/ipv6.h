@@ -43,7 +43,5 @@ int compare_ipv6_with_mask(const struct in6_addr *addr1,
 	const struct in6_addr *addr2, const struct in6_addr *mask);
 void create_ipv6_netmask(struct in6_addr *netmask, int mask);
 
-#define FORMAT_IPV6(addr, buffer) format_ipv6(addr, buffer, sizeof(buffer), NULL)
-
 #endif
 

@@ -117,7 +117,7 @@ void user_check_and_decide(gpointer user_session, gpointer data)
 			if (DEBUG_OR_NOT
 			    (DEBUG_LEVEL_INFO, DEBUG_AREA_USER)) {
 				char ip_ascii[INET6_ADDRSTRLEN];
-				FORMAT_IPV6(&tlsdata->ip_addr, ip_ascii);
+				format_ipv6(&tlsdata->ip_addr, ip_ascii, INET6_ADDRSTRLEN, NULL);
 				g_message
 					("User %s on %s tried to authenticate packet from other ip",
 					 conn_elt->username, ip_ascii);

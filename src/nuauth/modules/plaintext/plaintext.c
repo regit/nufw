@@ -272,8 +272,8 @@ static int parse_ips(char *ipsline, GSList ** ip_list, char *prefix)
 		if (compare_ipv6_with_mask
 		    (&this_ip.addr, &this_ip.addr,
 		     &this_ip.netmask) != 0) {
-			FORMAT_IPV6(&this_ip.addr, addr_ascii);
-			FORMAT_IPV6(&this_ip.netmask, mask_ascii);
+			format_ipv6(&this_ip.addr, addr_ascii, INET6_ADDRSTRLEN, NULL);
+			format_ipv6(&this_ip.netmask, mask_ascii, INET6_ADDRSTRLEN, NULL);
 			log_message(FATAL, DEBUG_AREA_MAIN,
 				    "%s parse_ips: Invalid network specification: IP=%s, netmask=%s!",
 				    prefix, addr_ascii, mask_ascii);
@@ -285,8 +285,8 @@ static int parse_ips(char *ipsline, GSList ** ip_list, char *prefix)
 		*ip_list = g_slist_prepend(*ip_list, this_ip_copy);
 
 #ifdef DEBUG_ENABLE
-		FORMAT_IPV6(&this_ip_copy->addr, addr_ascii);
-		FORMAT_IPV6(&this_ip_copy->netmask, mask_ascii);
+		format_ipv6(&this_ip_copy->addr, addr_ascii, INET6_ADDRSTRLEN, NULL);
+		format_ipv6(&this_ip_copy->netmask, mask_ascii, INET6_ADDRSTRLEN, NULL);
 		log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 				"%s Adding IP = %s, netmask = %s",
 				prefix, addr_ascii,

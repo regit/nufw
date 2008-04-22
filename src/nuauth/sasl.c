@@ -526,7 +526,7 @@ int sasl_parse_user_os(user_session_t * c_session, char *buf, int buf_size)
 
 	/* check buffer underflow */
 	if (buf_size < (int) sizeof(struct nu_authfield)) {
-		FORMAT_IPV6(&c_session->addr, address);
+		format_ipv6(&c_session->addr, address, INET6_ADDRSTRLEN, NULL);
 		g_message("%s sent a too small osfield", address);
 		return SASL_FAIL;
 	}
@@ -543,7 +543,7 @@ int sasl_parse_user_os(user_session_t * c_session, char *buf, int buf_size)
 
 	dec_buf_size = ntohs(osfield->length);
 	if (dec_buf_size > 1024 || (ntohs(osfield->length) <= 4)) {
-		FORMAT_IPV6(&c_session->addr, address);
+		format_ipv6(&c_session->addr, address, INET6_ADDRSTRLEN, NULL);
 		log_message(WARNING, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
 				"error osfield from %s is uncorrect, announced %d",
 				address, ntohs(osfield->length));
@@ -581,7 +581,7 @@ int sasl_parse_user_os(user_session_t * c_session, char *buf, int buf_size)
 		if (strlen(os_strings[0]) < 128) {
 			c_session->sysname = string_escape(os_strings[0]);
 			if (c_session->sysname == NULL) {
-				FORMAT_IPV6(&c_session->addr, address);
+				format_ipv6(&c_session->addr, address, INET6_ADDRSTRLEN, NULL);
 				log_message(WARNING, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
 						"received sysname with invalid characters from %s",
 						address);
@@ -594,7 +594,7 @@ int sasl_parse_user_os(user_session_t * c_session, char *buf, int buf_size)
 		if (strlen(os_strings[1]) < 128) {
 			c_session->release = string_escape(os_strings[1]);
 			if (c_session->release == NULL) {
-				FORMAT_IPV6(&c_session->addr, address);
+				format_ipv6(&c_session->addr, address, INET6_ADDRSTRLEN, NULL);
 				log_message(WARNING, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
 						"received release with invalid characters from %s",
 						address);
@@ -607,7 +607,7 @@ int sasl_parse_user_os(user_session_t * c_session, char *buf, int buf_size)
 		if (strlen(os_strings[2]) < 128) {
 			c_session->version = string_escape(os_strings[2]);
 			if (c_session->version == NULL) {
-				FORMAT_IPV6(&c_session->addr, address);
+				format_ipv6(&c_session->addr, address, INET6_ADDRSTRLEN, NULL);
 				log_message(WARNING, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
 						"received version with invalid characters from %s",
 						address);
@@ -623,7 +623,7 @@ int sasl_parse_user_os(user_session_t * c_session, char *buf, int buf_size)
 
 #ifdef DEBUG_ENABLE
 			if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG, DEBUG_AREA_USER)) {
-				FORMAT_IPV6(&c_session->addr, address);
+				format_ipv6(&c_session->addr, address, INET6_ADDRSTRLEN, NULL);
 				g_message
 					("user %s at %s uses OS %s ,%s, %s",
 					 c_session->user_name, address,
@@ -636,7 +636,7 @@ int sasl_parse_user_os(user_session_t * c_session, char *buf, int buf_size)
 		}
 		g_strfreev(os_strings);
 	} else {
-		FORMAT_IPV6(&c_session->addr, address);
+		format_ipv6(&c_session->addr, address, INET6_ADDRSTRLEN, NULL);
 		log_message(DEBUG, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
 				"from %s : osfield->option is not OS_SRV ?!",
 				address);
@@ -911,7 +911,7 @@ int sasl_user_check(user_session_t * c_session)
 	}
 
 	/* format "ip;port" */
-	FORMAT_IPV6(&c_session->addr, ipremoteport);
+	format_ipv6(&c_session->addr, ipremoteport, INET6_ADDRSTRLEN, NULL);
 	len = strlen(ipremoteport);
 	secure_snprintf(ipremoteport+len, sizeof(ipremoteport)-len,
 		";%hu", c_session->sport);

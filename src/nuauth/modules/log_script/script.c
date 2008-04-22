@@ -56,7 +56,7 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 	char *format;
 	gboolean ok;
 
-	FORMAT_IPV6(&c_session->addr, address);
+	format_ipv6(&c_session->addr, address, INET6_ADDRSTRLEN, NULL);
 	quoted_address = g_shell_quote(address);
 
 	if (state == SESSION_OPEN) {
