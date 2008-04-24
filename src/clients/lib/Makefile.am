@@ -6,7 +6,7 @@ SUBDIRS = tests
 
 lib_LTLIBRARIES = libnuclient.la
 
-EXTRA_DIST = checks.h client.h getdelim.h internal.h libnuclient.h \
+EXTRA_DIST = checks.h getdelim.h internal.h libnuclient.h \
 			 proc.h sys_config.h sending.h tcptable.h
 
 include_HEADERS = nuclient.h
