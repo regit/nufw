@@ -40,6 +40,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include "nussl_session.h"
 #include "nussl_alloc.h"
@@ -144,7 +146,7 @@ nussl_session *nussl_session_create_with_fd(int server_fd, int verify)
 	srv_sess = nussl_session_create();
 	if (!srv_sess) {
 		return NULL;
-	}
+	}	  
 
 	srv_sess->socket = nussl_sock_create_with_fd(server_fd);
 	/* verify: one of NUSSL_CERT_IGNORE, NUSSL_CERT_REQUEST or NUSSL_CERT_REQUIRE */
@@ -605,9 +607,18 @@ int nussl_ssl_set_keypair(nussl_session * session, const char *cert_file,
 {
 	nussl_ssl_client_cert *cert;
 	int ret;
+	struct stat key_stat;
 
 	if (!session)
 		return NUSSL_ERROR;
+
+	/* Try opening the keys */
+	if(stat(key_file, &key_stat) != 0) {
+		nussl_set_error(session,
+				_("Unable to open private key %s: %s"),
+				key_file, strerror(errno));
+		return NUSSL_ERROR;
+	}
 
 
 	if (check_key_perms(key_file) != NUSSL_OK) {
@@ -634,10 +645,19 @@ int nussl_ssl_set_pkcs12_keypair(nussl_session * session,
 				 const char *pkcs12_file,
 				 const char *password)
 {
+	struct stat key_stat;
 	int ret = NUSSL_OK;
 
 	if (!session)
 		return NUSSL_ERROR;
+
+	/* Try opening the keys */
+	if(stat(pkcs12_file, &key_stat) != 0) {
+		nussl_set_error(session,
+				_("Unable to open private key %s: %s"),
+				pkcs12_file, strerror(errno));
+		return NUSSL_ERROR;
+	}
 
 
 	if (check_key_perms(pkcs12_file) != NUSSL_OK) {
