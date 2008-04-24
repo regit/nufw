@@ -38,7 +38,7 @@
 #include <string.h>
 
 #include <stdio.h>
-#include <ctype.h> /* isdigit() for nussl_parse_statusline */
+#include <ctype.h>		/* isdigit() for nussl_parse_statusline */
 
 #ifdef NUSSL_HAVE_ZLIB
 #include <zlib.h>
@@ -65,31 +65,33 @@
 
 
 #include "nussl_utils.h"
-#include "nussl_string.h" /* for nussl_strdup */
+#include "nussl_string.h"	/* for nussl_strdup */
 #include "nussl_dates.h"
 
 int nussl_debug_mask = 0;
 FILE *nussl_debug_stream = NULL;
 
-void nussl_debug_init(FILE *stream, int mask)
+void nussl_debug_init(FILE * stream, int mask)
 {
-    nussl_debug_stream = stream;
-    nussl_debug_mask = mask;
+	nussl_debug_stream = stream;
+	nussl_debug_mask = mask;
 #if defined(HAVE_SETVBUF) && defined(_IONBF)
-    /* If possible, turn off buffering on the debug log.  this is very
-     * helpful if debugging segfaults. */
-    if (stream) setvbuf(stream, NULL, _IONBF, 0);
+	/* If possible, turn off buffering on the debug log.  this is very
+	 * helpful if debugging segfaults. */
+	if (stream)
+		setvbuf(stream, NULL, _IONBF, 0);
 #endif
 }
 
 void nussl_debug(int ch, const char *template, ...)
 {
-    va_list params;
-    if ((ch & nussl_debug_mask) == 0) return;
-    fflush(stdout);
-    va_start(params, template);
-    vfprintf(nussl_debug_stream, template, params);
-    va_end(params);
+	va_list params;
+	if ((ch & nussl_debug_mask) == 0)
+		return;
+	fflush(stdout);
+	va_start(params, template);
+	vfprintf(nussl_debug_stream, template, params);
+	va_end(params);
 /*    if ((ch & NUSSL_DBG_FLUSH) == NUSSL_DBG_FLUSH)
 	fflush(nussl_debug_stream);*/
 }
@@ -99,96 +101,96 @@ void nussl_debug(int ch, const char *template, ...)
 
 static const char version_string[] = "neon " NEON_VERSION ": "
 #ifdef NEON_IS_LIBRARY
-  "Library build"
+    "Library build"
 #else
-  "Bundled build"
+    "Bundled build"
 #endif
 #ifdef NUSSL_HAVE_IPV6
-   ", IPv6"
+    ", IPv6"
 #endif
 #ifdef HAVE_EXPAT
-  ", Expat"
+    ", Expat"
 /* expat >=1.95.2 exported the version */
 #ifdef XML_MAJOR_VERSION
-" " NUSSL_EXPAT_VER(XML_MAJOR_VERSION, XML_MINOR_VERSION, XML_MICRO_VERSION)
+    " " NUSSL_EXPAT_VER(XML_MAJOR_VERSION, XML_MINOR_VERSION,
+			XML_MICRO_VERSION)
 #endif
-#else /* !HAVE_EXPAT */
+#else				/* !HAVE_EXPAT */
 #ifdef HAVE_LIBXML
-  ", libxml " LIBXML_DOTTED_VERSION
-#endif /* HAVE_LIBXML */
-#endif /* !HAVE_EXPAT */
+    ", libxml " LIBXML_DOTTED_VERSION
+#endif				/* HAVE_LIBXML */
+#endif				/* !HAVE_EXPAT */
 #if defined(NUSSL_HAVE_ZLIB) && defined(ZLIB_VERSION)
-  ", zlib " ZLIB_VERSION
-#endif /* NUSSL_HAVE_ZLIB && ... */
+    ", zlib " ZLIB_VERSION
+#endif				/* NUSSL_HAVE_ZLIB && ... */
 #ifdef NUSSL_HAVE_SOCKS
-   ", SOCKSv5"
+    ", SOCKSv5"
 #endif
 #ifdef HAVE_OPENSSL
 #ifdef OPENSSL_VERSION_TEXT
     ", " OPENSSL_VERSION_TEXT
 #else
-   "OpenSSL (unknown version)"
-#endif /* OPENSSL_VERSION_TEXT */
-#endif /* HAVE_OPENSSL */
+    "OpenSSL (unknown version)"
+#endif				/* OPENSSL_VERSION_TEXT */
+#endif				/* HAVE_OPENSSL */
 #ifdef HAVE_GNUTLS
     ", GNU TLS " LIBGNUTLS_VERSION
-#endif /* HAVE_GNUTLS */
-   "."
-;
+#endif				/* HAVE_GNUTLS */
+    ".";
 
 const char *nussl_version_string(void)
 {
-    return version_string;
+	return version_string;
 }
 
 int nussl_version_match(int major, int minor)
 {
-    return NUSSL_VERSION_MAJOR != major || NUSSL_VERSION_MINOR < minor
-        || (NUSSL_VERSION_MAJOR == 0 && NUSSL_VERSION_MINOR != minor);
+	return NUSSL_VERSION_MAJOR != major || NUSSL_VERSION_MINOR < minor
+	    || (NUSSL_VERSION_MAJOR == 0 && NUSSL_VERSION_MINOR != minor);
 }
 
 int nussl_has_support(int feature)
 {
-    switch (feature) {
+	switch (feature) {
 #if defined(NUSSL_HAVE_ZLIB) || defined(NUSSL_HAVE_IPV6) \
     || defined(NUSSL_HAVE_SOCKS) || defined(NUSSL_HAVE_LFS) \
     || defined(NUSSL_HAVE_TS_SSL) || defined(NUSSL_HAVE_I18N)
-    case NUSSL_FEATURE_SSL:
+	case NUSSL_FEATURE_SSL:
 #ifdef NUSSL_HAVE_ZLIB
-    case NUSSL_FEATURE_ZLIB:
+	case NUSSL_FEATURE_ZLIB:
 #endif
 #ifdef NUSSL_HAVE_IPV6
-    case NUSSL_FEATURE_IPV6:
+	case NUSSL_FEATURE_IPV6:
 #endif
 #ifdef NUSSL_HAVE_SOCKS
-    case NUSSL_FEATURE_SOCKS:
+	case NUSSL_FEATURE_SOCKS:
 #endif
 #ifdef NUSSL_HAVE_LFS
-    case NUSSL_FEATURE_LFS:
+	case NUSSL_FEATURE_LFS:
 #endif
 #ifdef NUSSL_HAVE_TS_SSL
-    case NUSSL_FEATURE_TS_SSL:
+	case NUSSL_FEATURE_TS_SSL:
 #endif
 #ifdef NUSSL_HAVE_I18N
-    case NUSSL_FEATURE_I18N:
+	case NUSSL_FEATURE_I18N:
 #endif
-        return 1;
-#endif /* NUSSL_HAVE_* */
-    default:
-        return 0;
-    }
+		return 1;
+#endif				/* NUSSL_HAVE_* */
+	default:
+		return 0;
+	}
 }
 
-int check_key_perms(const char* filename)
+int check_key_perms(const char *filename)
 {
 	struct stat infos;
 
 	if (stat(filename, &infos) != 0)
 		return NUSSL_ERROR;
-	
+
 	/* Check it's owned by the current user */
 	if (infos.st_mode & S_IRGRP || infos.st_mode & S_IROTH)
 		return NUSSL_ERROR;
-	
+
 	return NUSSL_OK;
 }

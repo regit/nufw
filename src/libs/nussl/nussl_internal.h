@@ -43,7 +43,7 @@
 #include <sys/limits.h>
 #endif
 #ifdef HAVE_LIMITS_H
-#include <limits.h> /* for UINT_MAX etc */
+#include <limits.h>		/* for UINT_MAX etc */
 #endif
 
 #include "nussl_defs.h"
@@ -54,7 +54,7 @@
 #define _(str) dgettext(PACKAGE_NAME, str)
 #else
 #define _(str) (str)
-#endif /* NUSSL_ENABLE_NLS */
+#endif				/* NUSSL_ENABLE_NLS */
 #define N_(str) (str)
 
 #if !defined(LONG_LONG_MAX) && defined(LLONG_MAX)
@@ -74,7 +74,7 @@
 #define nussl_strtoff strtoq
 #endif
 
-#else /* !NUSSL_LFS */
+#else				/* !NUSSL_LFS */
 
 #define nussl_lseek lseek
 #define FMT_NE_OFF_T NUSSL_FMT_OFF_T
@@ -93,6 +93,6 @@
 #else
 #define nussl_strtoff strtol
 #endif
-#endif /* NUSSL_LFS */
+#endif				/* NUSSL_LFS */
 
-#endif /* NUSSL_INTERNAL_H */
+#endif				/* NUSSL_INTERNAL_H */

@@ -54,7 +54,7 @@
 #include <openssl/rand.h>
 
 #ifdef NUSSL_HAVE_TS_SSL
-#include <stdlib.h> /* for abort() */
+#include <stdlib.h>		/* for abort() */
 #include <pthread.h>
 #endif
 
@@ -85,130 +85,138 @@ typedef const unsigned char nussl_d2i_uchar;
 
 /* Append an ASN.1 DirectoryString STR to buffer BUF as UTF-8.
  * Returns zero on success or non-zero on error. */
-static int append_dirstring(nussl_buffer *buf, ASN1_STRING *str)
+static int append_dirstring(nussl_buffer * buf, ASN1_STRING * str)
 {
-    unsigned char *tmp = (unsigned char *)""; /* initialize to workaround 0.9.6 bug */
-    int len;
+	unsigned char *tmp = (unsigned char *) "";	/* initialize to workaround 0.9.6 bug */
+	int len;
 
-    switch (str->type) {
-    case V_ASN1_UTF8STRING:
-    case V_ASN1_IA5STRING: /* definitely ASCII */
-    case V_ASN1_VISIBLESTRING: /* probably ASCII */
-    case V_ASN1_PRINTABLESTRING: /* subset of ASCII */
-        nussl_buffer_append(buf, (char *)str->data, str->length);
-        break;
-    case V_ASN1_UNIVERSALSTRING:
-    case V_ASN1_T61STRING: /* let OpenSSL convert it as ISO-8859-1 */
-    case V_ASN1_BMPSTRING:
-        len = ASN1_STRING_to_UTF8(&tmp, str);
-        if (len > 0) {
-            nussl_buffer_append(buf, (char *)tmp, len);
-            OPENSSL_free(tmp);
-            break;
-        } else {
-            ERR_clear_error();
-            return -1;
-        }
-        break;
-    default:
-        NUSSL_DEBUG(NUSSL_DBG_SSL, "Could not convert DirectoryString type %d\n",
-                 str->type);
-        return -1;
-    }
-    return 0;
+	switch (str->type) {
+	case V_ASN1_UTF8STRING:
+	case V_ASN1_IA5STRING:	/* definitely ASCII */
+	case V_ASN1_VISIBLESTRING:	/* probably ASCII */
+	case V_ASN1_PRINTABLESTRING:	/* subset of ASCII */
+		nussl_buffer_append(buf, (char *) str->data, str->length);
+		break;
+	case V_ASN1_UNIVERSALSTRING:
+	case V_ASN1_T61STRING:	/* let OpenSSL convert it as ISO-8859-1 */
+	case V_ASN1_BMPSTRING:
+		len = ASN1_STRING_to_UTF8(&tmp, str);
+		if (len > 0) {
+			nussl_buffer_append(buf, (char *) tmp, len);
+			OPENSSL_free(tmp);
+			break;
+		} else {
+			ERR_clear_error();
+			return -1;
+		}
+		break;
+	default:
+		NUSSL_DEBUG(NUSSL_DBG_SSL,
+			    "Could not convert DirectoryString type %d\n",
+			    str->type);
+		return -1;
+	}
+	return 0;
 }
 
 /* Returns a malloc-allocate version of IA5 string AS.  Really only
  * here to prevent char * vs unsigned char * type mismatches without
  * losing all hope at type-safety. */
-static char *dup_ia5string(const ASN1_IA5STRING *as)
+static char *dup_ia5string(const ASN1_IA5STRING * as)
 {
-    unsigned char *data = as->data;
-    return nussl_strndup((char *)data, as->length);
+	unsigned char *data = as->data;
+	return nussl_strndup((char *) data, as->length);
 }
 
-char *nussl_ssl_readable_dname(const nussl_ssl_dname *name)
+char *nussl_ssl_readable_dname(const nussl_ssl_dname * name)
 {
-    int n, flag = 0;
-    nussl_buffer *dump = nussl_buffer_create();
-    const ASN1_OBJECT * const cname = OBJ_nid2obj(NID_commonName),
-	* const email = OBJ_nid2obj(NID_pkcs9_emailAddress);
+	int n, flag = 0;
+	nussl_buffer *dump = nussl_buffer_create();
+	const ASN1_OBJECT *const cname = OBJ_nid2obj(NID_commonName),
+	    *const email = OBJ_nid2obj(NID_pkcs9_emailAddress);
 
-    for (n = X509_NAME_entry_count(name->dn); n > 0; n--) {
-	X509_NAME_ENTRY *ent = X509_NAME_get_entry(name->dn, n-1);
+	for (n = X509_NAME_entry_count(name->dn); n > 0; n--) {
+		X509_NAME_ENTRY *ent =
+		    X509_NAME_get_entry(name->dn, n - 1);
 
-        /* Skip commonName or emailAddress except if there is no other
-         * attribute in dname. */
-	if ((OBJ_cmp(ent->object, cname) && OBJ_cmp(ent->object, email)) ||
-            (!flag && n == 1)) {
- 	    if (flag++)
-		nussl_buffer_append(dump, ", ", 2);
+		/* Skip commonName or emailAddress except if there is no other
+		 * attribute in dname. */
+		if ((OBJ_cmp(ent->object, cname)
+		     && OBJ_cmp(ent->object, email)) || (!flag
+							 && n == 1)) {
+			if (flag++)
+				nussl_buffer_append(dump, ", ", 2);
 
-            if (append_dirstring(dump, ent->value))
-                nussl_buffer_czappend(dump, "???");
+			if (append_dirstring(dump, ent->value))
+				nussl_buffer_czappend(dump, "???");
+		}
 	}
-    }
 
-    return nussl_buffer_finish(dump);
+	return nussl_buffer_finish(dump);
 }
 
-int nussl_ssl_dname_cmp(const nussl_ssl_dname *dn1, const nussl_ssl_dname *dn2)
+int nussl_ssl_dname_cmp(const nussl_ssl_dname * dn1,
+			const nussl_ssl_dname * dn2)
 {
-    return X509_NAME_cmp(dn1->dn, dn2->dn);
+	return X509_NAME_cmp(dn1->dn, dn2->dn);
 }
 
-void nussl_ssl_clicert_free(nussl_ssl_client_cert *cc)
+void nussl_ssl_clicert_free(nussl_ssl_client_cert * cc)
 {
-    if (cc->p12)
-        PKCS12_free(cc->p12);
-    if (cc->decrypted) {
-        if (cc->cert.identity) nussl_free(cc->cert.identity);
-        EVP_PKEY_free(cc->pkey);
-        X509_free(cc->cert.subject);
-    }
-    if (cc->friendly_name) nussl_free(cc->friendly_name);
-    nussl_free(cc);
+	if (cc->p12)
+		PKCS12_free(cc->p12);
+	if (cc->decrypted) {
+		if (cc->cert.identity)
+			nussl_free(cc->cert.identity);
+		EVP_PKEY_free(cc->pkey);
+		X509_free(cc->cert.subject);
+	}
+	if (cc->friendly_name)
+		nussl_free(cc->friendly_name);
+	nussl_free(cc);
 }
 
 /* Format an ASN1 time to a string. 'buf' must be at least of size
  * 'NUSSL_SSL_VDATELEN'. */
-static time_t asn1time_to_timet(const ASN1_TIME *atm)
+static time_t asn1time_to_timet(const ASN1_TIME * atm)
 {
-    struct tm tm;
-    int i = atm->length;
+	struct tm tm;
+	int i = atm->length;
 
-    if (i < 10)
-        return (time_t )-1;
+	if (i < 10)
+		return (time_t) - 1;
 
-    tm.tm_year = (atm->data[0]-'0') * 10 + (atm->data[1]-'0');
+	tm.tm_year = (atm->data[0] - '0') * 10 + (atm->data[1] - '0');
 
-    /* Deal with Year 2000 */
-    if (tm.tm_year < 70)
-        tm.tm_year += 100;
+	/* Deal with Year 2000 */
+	if (tm.tm_year < 70)
+		tm.tm_year += 100;
 
-    tm.tm_mon = (atm->data[2]-'0') * 10 + (atm->data[3]-'0') - 1;
-    tm.tm_mday = (atm->data[4]-'0') * 10 + (atm->data[5]-'0');
-    tm.tm_hour = (atm->data[6]-'0') * 10 + (atm->data[7]-'0');
-    tm.tm_min = (atm->data[8]-'0') * 10 + (atm->data[9]-'0');
-    tm.tm_sec = (atm->data[10]-'0') * 10 + (atm->data[11]-'0');
+	tm.tm_mon = (atm->data[2] - '0') * 10 + (atm->data[3] - '0') - 1;
+	tm.tm_mday = (atm->data[4] - '0') * 10 + (atm->data[5] - '0');
+	tm.tm_hour = (atm->data[6] - '0') * 10 + (atm->data[7] - '0');
+	tm.tm_min = (atm->data[8] - '0') * 10 + (atm->data[9] - '0');
+	tm.tm_sec = (atm->data[10] - '0') * 10 + (atm->data[11] - '0');
 
 #ifdef HAVE_TIMEZONE
-    /* ANSI C time handling is... interesting. */
-    return mktime(&tm) - timezone;
+	/* ANSI C time handling is... interesting. */
+	return mktime(&tm) - timezone;
 #else
-    return mktime(&tm);
+	return mktime(&tm);
 #endif
 }
 
-void nussl_ssl_cert_validity_time(const nussl_ssl_certificate *cert,
-                               time_t *from, time_t *until)
+void nussl_ssl_cert_validity_time(const nussl_ssl_certificate * cert,
+				  time_t * from, time_t * until)
 {
-    if (from) {
-        *from = asn1time_to_timet(X509_get_notBefore(cert->subject));
-    }
-    if (until) {
-        *until = asn1time_to_timet(X509_get_notAfter(cert->subject));
-    }
+	if (from) {
+		*from =
+		    asn1time_to_timet(X509_get_notBefore(cert->subject));
+	}
+	if (until) {
+		*until =
+		    asn1time_to_timet(X509_get_notAfter(cert->subject));
+	}
 }
 
 /* Return non-zero if hostname from certificate (cn) matches hostname
@@ -216,22 +224,21 @@ void nussl_ssl_cert_validity_time(const nussl_ssl_certificate *cert,
  * logic; omits "f*.example.com" support for simplicity. */
 static int match_hostname(char *cn, const char *hostname)
 {
-    const char *dot;
+	const char *dot;
 
-    dot = strchr(hostname, '.');
-    if (dot == NULL) {
-	char *pnt = strchr(cn, '.');
-	/* hostname is not fully-qualified; unqualify the cn. */
-	if (pnt != NULL) {
-	    *pnt = '\0';
+	dot = strchr(hostname, '.');
+	if (dot == NULL) {
+		char *pnt = strchr(cn, '.');
+		/* hostname is not fully-qualified; unqualify the cn. */
+		if (pnt != NULL) {
+			*pnt = '\0';
+		}
+	} else if (strncmp(cn, "*.", 2) == 0) {
+		hostname = dot + 1;
+		cn += 2;
 	}
-    }
-    else if (strncmp(cn, "*.", 2) == 0) {
-	hostname = dot + 1;
-	cn += 2;
-    }
 
-    return !nussl_strcasecmp(cn, hostname);
+	return !nussl_strcasecmp(cn, hostname);
 }
 
 /* Check certificate identity.  Returns zero if identity matches; 1 if
@@ -239,23 +246,23 @@ static int match_hostname(char *cn, const char *hostname)
  * If 'identity' is non-NULL, store the malloc-allocated identity in
  * *identity.  Logic specified by RFC 2818 and RFC 3280. */
 /* static int check_identity(const nussl_uri *server, X509 *cert, char **identity) */
-static int check_identity(X509 *cert, char **identity)
+static int check_identity(X509 * cert, char **identity)
 {
-    STACK_OF(GENERAL_NAME) *names;
-    int match = 0, found = 0;
+	STACK_OF(GENERAL_NAME) * names;
+	int match = 0, found = 0;
 /*     const char *hostname; */
 
 /*     hostname = server ? server->host : ""; */
 
-    names = X509_get_ext_d2i(cert, NID_subject_alt_name, NULL, NULL);
-    if (names) {
-	int n;
+	names = X509_get_ext_d2i(cert, NID_subject_alt_name, NULL, NULL);
+	if (names) {
+		int n;
 
-        /* subjectAltName contains a sequence of GeneralNames */
-	for (n = 0; n < sk_GENERAL_NAME_num(names) && !match; n++) {
-	    GENERAL_NAME *nm = sk_GENERAL_NAME_value(names, n);
+		/* subjectAltName contains a sequence of GeneralNames */
+		for (n = 0; n < sk_GENERAL_NAME_num(names) && !match; n++) {
+			GENERAL_NAME *nm = sk_GENERAL_NAME_value(names, n);
 
-            /* handle dNSName and iPAddress name extensions only. */
+			/* handle dNSName and iPAddress name extensions only. */
 /* 	    if (nm->type == GEN_DNS) { */
 /* 		char *name = dup_ia5string(nm->d.ia5); */
 /*                 if (identity && !found) *identity = nussl_strdup(name); */
@@ -264,16 +271,20 @@ static int check_identity(X509 *cert, char **identity)
 /* 		found = 1; */
 /*             }  */
 /*             else  */
-	    if (nm->type == GEN_IPADD) {
-                /* compare IP address with server IP address. */
-                nussl_inet_addr *ia;
-                if (nm->d.ip->length == 4)
-                    ia = nussl_iaddr_make(nussl_iaddr_ipv4, nm->d.ip->data);
-                else if (nm->d.ip->length == 16)
-                    ia = nussl_iaddr_make(nussl_iaddr_ipv6, nm->d.ip->data);
-                else
-                    ia = NULL;
-                /* nussl_iaddr_make returns NULL if address type is unsupported */
+			if (nm->type == GEN_IPADD) {
+				/* compare IP address with server IP address. */
+				nussl_inet_addr *ia;
+				if (nm->d.ip->length == 4)
+					ia = nussl_iaddr_make
+					    (nussl_iaddr_ipv4,
+					     nm->d.ip->data);
+				else if (nm->d.ip->length == 16)
+					ia = nussl_iaddr_make
+					    (nussl_iaddr_ipv6,
+					     nm->d.ip->data);
+				else
+					ia = NULL;
+				/* nussl_iaddr_make returns NULL if address type is unsupported */
 /*                 if (ia != NULL) { /\* address type was supported. *\/ */
 /*                     char buf[128]; */
 
@@ -286,7 +297,7 @@ static int check_identity(X509 *cert, char **identity)
 /*                              "address type (length %d), skipped.\n", */
 /*                              nm->d.ip->length); */
 /*                 } */
-            }
+			}
 /*             else if (nm->type == GEN_URI) { */
 /*                 char *name = dup_ia5string(nm->d.ia5); */
 /*                 nussl_uri uri; */
@@ -312,107 +323,113 @@ static int check_identity(X509 *cert, char **identity)
 /*                 nussl_uri_free(&uri); */
 /*                 nussl_free(name); */
 /*             } */
+		}
+		/* free the whole stack. */
+		sk_GENERAL_NAME_pop_free(names, GENERAL_NAME_free);
 	}
-        /* free the whole stack. */
-        sk_GENERAL_NAME_pop_free(names, GENERAL_NAME_free);
-    }
 
-    /* Check against the commonName if no DNS alt. names were found,
-     * as per RFC3280. */
-    if (!found) {
-	X509_NAME *subj = X509_get_subject_name(cert);
-	X509_NAME_ENTRY *entry;
-	nussl_buffer *cname = nussl_buffer_ncreate(30);
-	int idx = -1, lastidx;
+	/* Check against the commonName if no DNS alt. names were found,
+	 * as per RFC3280. */
+	if (!found) {
+		X509_NAME *subj = X509_get_subject_name(cert);
+		X509_NAME_ENTRY *entry;
+		nussl_buffer *cname = nussl_buffer_ncreate(30);
+		int idx = -1, lastidx;
 
-	/* find the most specific commonName attribute. */
-	do {
-	    lastidx = idx;
-	    idx = X509_NAME_get_index_by_NID(subj, NID_commonName, lastidx);
-	} while (idx >= 0);
+		/* find the most specific commonName attribute. */
+		do {
+			lastidx = idx;
+			idx =
+			    X509_NAME_get_index_by_NID(subj,
+						       NID_commonName,
+						       lastidx);
+		} while (idx >= 0);
 
-	if (lastidx < 0) {
-            /* no commonName attributes at all. */
-            nussl_buffer_destroy(cname);
-	    return -1;
-        }
+		if (lastidx < 0) {
+			/* no commonName attributes at all. */
+			nussl_buffer_destroy(cname);
+			return -1;
+		}
 
-	/* extract the string from the entry */
-        entry = X509_NAME_get_entry(subj, lastidx);
-        if (append_dirstring(cname, X509_NAME_ENTRY_get_data(entry))) {
-            nussl_buffer_destroy(cname);
-            return -1;
-        }
+		/* extract the string from the entry */
+		entry = X509_NAME_get_entry(subj, lastidx);
+		if (append_dirstring
+		    (cname, X509_NAME_ENTRY_get_data(entry))) {
+			nussl_buffer_destroy(cname);
+			return -1;
+		}
 /*         if (identity) *identity = nussl_strdup(cname->data); */
 /*         match = match_hostname(cname->data, hostname); */
 /*         nussl_buffer_destroy(cname); */
-    }
+	}
 
 /*     NUSSL_DEBUG(NUSSL_DBG_SSL, "Identity match for '%s': %s\n", hostname,  */
 /*              match ? "good" : "bad"); */
-    return match ? 0 : 1;
+	return match ? 0 : 1;
 }
 
 /* Populate an nussl_ssl_certificate structure from an X509 object. */
-static nussl_ssl_certificate *populate_cert(nussl_ssl_certificate *cert, X509 *x5)
+static nussl_ssl_certificate *populate_cert(nussl_ssl_certificate * cert,
+					    X509 * x5)
 {
-    cert->subj_dn.dn = X509_get_subject_name(x5);
-    cert->issuer_dn.dn = X509_get_issuer_name(x5);
-    cert->issuer = NULL;
-    cert->subject = x5;
-    /* Retrieve the cert identity; pass a dummy hostname to match. */
-    cert->identity = NULL;
+	cert->subj_dn.dn = X509_get_subject_name(x5);
+	cert->issuer_dn.dn = X509_get_issuer_name(x5);
+	cert->issuer = NULL;
+	cert->subject = x5;
+	/* Retrieve the cert identity; pass a dummy hostname to match. */
+	cert->identity = NULL;
 /*     check_identity(NULL, x5, &cert->identity); */
-    check_identity(x5, &cert->identity);
-    return cert;
+	check_identity(x5, &cert->identity);
+	return cert;
 }
 
 /* Return a linked list of certificate objects from an OpenSSL chain. */
-static nussl_ssl_certificate *make_chain(STACK_OF(X509) *chain)
+static nussl_ssl_certificate *make_chain(STACK_OF(X509) * chain)
 {
-    int n, count = sk_X509_num(chain);
-    nussl_ssl_certificate *top = NULL, *current = NULL;
+	int n, count = sk_X509_num(chain);
+	nussl_ssl_certificate *top = NULL, *current = NULL;
 
-    NUSSL_DEBUG(NUSSL_DBG_SSL, "Chain depth: %d\n", count);
+	NUSSL_DEBUG(NUSSL_DBG_SSL, "Chain depth: %d\n", count);
 
-    for (n = 0; n < count; n++) {
-        nussl_ssl_certificate *cert = nussl_malloc(sizeof *cert);
-        populate_cert(cert, X509_dup(sk_X509_value(chain, n)));
+	for (n = 0; n < count; n++) {
+		nussl_ssl_certificate *cert = nussl_malloc(sizeof *cert);
+		populate_cert(cert, X509_dup(sk_X509_value(chain, n)));
 #ifdef NUSSL_DEBUGGING
-        if (nussl_debug_mask & NUSSL_DBG_SSL) {
-            fprintf(nussl_debug_stream, "Cert #%d:\n", n);
-            X509_print_fp(nussl_debug_stream, cert->subject);
-        }
+		if (nussl_debug_mask & NUSSL_DBG_SSL) {
+			fprintf(nussl_debug_stream, "Cert #%d:\n", n);
+			X509_print_fp(nussl_debug_stream, cert->subject);
+		}
 #endif
-        if (top == NULL) {
-            current = top = cert;
-        } else {
-            current->issuer = cert;
-            current = cert;
-        }
-    }
+		if (top == NULL) {
+			current = top = cert;
+		} else {
+			current->issuer = cert;
+			current = cert;
+		}
+	}
 
-    return top;
+	return top;
 }
 
 /* Verifies an SSL server certificate. */
-static int check_certificate(nussl_session *sess, SSL *ssl, nussl_ssl_certificate *chain)
+static int check_certificate(nussl_session * sess, SSL * ssl,
+			     nussl_ssl_certificate * chain)
 {
-    X509 *cert = chain->subject;
-    ASN1_TIME *notBefore = X509_get_notBefore(cert);
-    ASN1_TIME *notAfter = X509_get_notAfter(cert);
-    int ret, failures = 0;
-    long result;
+	X509 *cert = chain->subject;
+	ASN1_TIME *notBefore = X509_get_notBefore(cert);
+	ASN1_TIME *notAfter = X509_get_notAfter(cert);
+	int ret, failures = 0;
+	long result;
 /*     nussl_uri server; */
 
-    /* check expiry dates */
-    if (X509_cmp_current_time(notBefore) >= 0)
-	failures |= NUSSL_SSL_NOTYETVALID;
-    else if (X509_cmp_current_time(notAfter) <= 0)
-	failures |= NUSSL_SSL_EXPIRED;
+	/* check expiry dates */
+	if (X509_cmp_current_time(notBefore) >= 0)
+		failures |= NUSSL_SSL_NOTYETVALID;
+	else if (X509_cmp_current_time(notAfter) <= 0)
+		failures |= NUSSL_SSL_EXPIRED;
 
-    /* Check certificate was issued to this server; pass URI of
-     * server. */
+	/* Check certificate was issued to this server; pass URI of
+	 * server. */
 /*     memset(&server, 0, sizeof server); */
 /*     nussl_fill_server_uri(sess, &server); */
 /*     ret = check_identity(&server, cert, NULL); */
@@ -423,131 +440,146 @@ static int check_certificate(nussl_session *sess, SSL *ssl, nussl_ssl_certificat
 /*         return NUSSL_ERROR; */
 /*     } else if (ret > 0) failures |= NUSSL_SSL_IDMISMATCH; */
 
-    /* get the result of the cert verification out of OpenSSL */
-    result = SSL_get_verify_result(ssl);
+	/* get the result of the cert verification out of OpenSSL */
+	result = SSL_get_verify_result(ssl);
 
-    NUSSL_DEBUG(NUSSL_DBG_SSL, "Verify result: %ld = %s\n", result,
-	     X509_verify_cert_error_string(result));
+	NUSSL_DEBUG(NUSSL_DBG_SSL, "Verify result: %ld = %s\n", result,
+		    X509_verify_cert_error_string(result));
 
-    switch (result) {
-    case X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY:
-    case X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN:
-    case X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT:
-	/* TODO: and probably more result codes here... */
-	failures |= NUSSL_SSL_UNTRUSTED;
-	break;
-	/* ignore these, since we've already noticed them: */
-    case X509_V_ERR_CERT_NOT_YET_VALID:
-    case X509_V_ERR_CERT_HAS_EXPIRED:
-        /* cert was trusted: */
-    case X509_V_OK:
-	break;
-    default:
-	/* TODO: tricky to handle the 30-odd failure cases OpenSSL
-	 * presents here (see x509_vfy.h), and present a useful API to
-	 * the application so it in turn can then present a meaningful
-	 * UI to the user.  The only thing to do really would be to
-	 * pass back the error string, but that's not localisable.  So
-	 * just fail the verification here - better safe than
-	 * sorry. */
-	nussl_set_error(sess, _("Certificate verification error: %s"),
-		     X509_verify_cert_error_string(result));
-	return NUSSL_ERROR;
-    }
+	switch (result) {
+	case X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY:
+	case X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN:
+	case X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT:
+		/* TODO: and probably more result codes here... */
+		failures |= NUSSL_SSL_UNTRUSTED;
+		break;
+		/* ignore these, since we've already noticed them: */
+	case X509_V_ERR_CERT_NOT_YET_VALID:
+	case X509_V_ERR_CERT_HAS_EXPIRED:
+		/* cert was trusted: */
+	case X509_V_OK:
+		break;
+	default:
+		/* TODO: tricky to handle the 30-odd failure cases OpenSSL
+		 * presents here (see x509_vfy.h), and present a useful API to
+		 * the application so it in turn can then present a meaningful
+		 * UI to the user.  The only thing to do really would be to
+		 * pass back the error string, but that's not localisable.  So
+		 * just fail the verification here - better safe than
+		 * sorry. */
+		nussl_set_error(sess,
+				_("Certificate verification error: %s"),
+				X509_verify_cert_error_string(result));
+		return NUSSL_ERROR;
+	}
 
-    if (failures == 0) {
-        /* verified OK! */
-        ret = NUSSL_OK;
-    } else {
-        /* Set up the error string. */
-        nussl__ssl_set_verify_err(sess, failures);
-        ret = NUSSL_ERROR;
-        /* Allow manual override */
+	if (failures == 0) {
+		/* verified OK! */
+		ret = NUSSL_OK;
+	} else {
+		/* Set up the error string. */
+		nussl__ssl_set_verify_err(sess, failures);
+		ret = NUSSL_ERROR;
+		/* Allow manual override */
 #if XXX
-        if (sess->ssl_verify_fn &&
-            sess->ssl_verify_fn(sess->ssl_verify_ud, failures, chain) == 0)
-            ret = NUSSL_OK;
+		if (sess->ssl_verify_fn &&
+		    sess->ssl_verify_fn(sess->ssl_verify_ud, failures,
+					chain) == 0)
+			ret = NUSSL_OK;
 #endif
-    }
+	}
 
-    return ret;
+	return ret;
 }
 
 /* Duplicate a client certificate, which must be in the decrypted state. */
-static nussl_ssl_client_cert *dup_client_cert(const nussl_ssl_client_cert *cc)
+static nussl_ssl_client_cert *dup_client_cert(const nussl_ssl_client_cert *
+					      cc)
 {
-    nussl_ssl_client_cert *newcc = nussl_calloc(sizeof *newcc);
+	nussl_ssl_client_cert *newcc = nussl_calloc(sizeof *newcc);
 
-    newcc->decrypted = 1;
-    newcc->pkey = cc->pkey;
-    if (cc->friendly_name)
-        newcc->friendly_name = nussl_strdup(cc->friendly_name);
+	newcc->decrypted = 1;
+	newcc->pkey = cc->pkey;
+	if (cc->friendly_name)
+		newcc->friendly_name = nussl_strdup(cc->friendly_name);
 
-    populate_cert(&newcc->cert, cc->cert.subject);
+	populate_cert(&newcc->cert, cc->cert.subject);
 
-    cc->cert.subject->references++;
-    cc->pkey->references++;
-    return newcc;
+	cc->cert.subject->references++;
+	cc->pkey->references++;
+	return newcc;
 }
 
 /* Callback invoked when the SSL server requests a client certificate.  */
-static int provide_client_cert(SSL *ssl, X509 **cert, EVP_PKEY **pkey)
+static int provide_client_cert(SSL * ssl, X509 ** cert, EVP_PKEY ** pkey)
 {
-    nussl_session *const sess = SSL_get_app_data(ssl);
+	nussl_session *const sess = SSL_get_app_data(ssl);
 
 #if XXX
-    if (!sess->my_cert && sess->ssl_provide_fn) {
-	nussl_ssl_dname **dnames = NULL;
-        int n, count = 0;
-	STACK_OF(X509_NAME) *ca_list = SSL_get_client_CA_list(ssl);
+	if (!sess->my_cert && sess->ssl_provide_fn) {
+		nussl_ssl_dname **dnames = NULL;
+		int n, count = 0;
+		STACK_OF(X509_NAME) * ca_list =
+		    SSL_get_client_CA_list(ssl);
 
-        count = ca_list ? sk_X509_NAME_num(ca_list) : 0;
+		count = ca_list ? sk_X509_NAME_num(ca_list) : 0;
 
-        if (count > 0) {
-            dnames = nussl_malloc(count * sizeof(nussl_ssl_dname *));
+		if (count > 0) {
+			dnames =
+			    nussl_malloc(count *
+					 sizeof(nussl_ssl_dname *));
 
-            for (n = 0; n < count; n++) {
-                dnames[n] = nussl_malloc(sizeof(nussl_ssl_dname));
-                dnames[n]->dn = sk_X509_NAME_value(ca_list, n);
-            }
-        }
+			for (n = 0; n < count; n++) {
+				dnames[n] =
+				    nussl_malloc(sizeof(nussl_ssl_dname));
+				dnames[n]->dn =
+				    sk_X509_NAME_value(ca_list, n);
+			}
+		}
 
-	NUSSL_DEBUG(NUSSL_DBG_SSL, "Calling client certificate provider...\n");
-	sess->ssl_provide_fn(sess->ssl_provide_ud, sess,
-                             (const nussl_ssl_dname *const *)dnames, count);
-        if (count) {
-            for (n = 0; n < count; n++)
-                nussl_free(dnames[n]);
-            nussl_free(dnames);
-        }
-    }
+		NUSSL_DEBUG(NUSSL_DBG_SSL,
+			    "Calling client certificate provider...\n");
+		sess->ssl_provide_fn(sess->ssl_provide_ud, sess,
+				     (const nussl_ssl_dname *
+				      const *) dnames, count);
+		if (count) {
+			for (n = 0; n < count; n++)
+				nussl_free(dnames[n]);
+			nussl_free(dnames);
+		}
+	}
 #endif
 
-    if (sess->my_cert) {
-        nussl_ssl_client_cert *const cc = sess->my_cert;
-	NUSSL_DEBUG(NUSSL_DBG_SSL, "Supplying client certificate.\n");
-	cc->pkey->references++;
-	cc->cert.subject->references++;
-	*cert = cc->cert.subject;
-	*pkey = cc->pkey;
-	return 1;
-    } else {
-	NUSSL_DEBUG(NUSSL_DBG_SSL, "No client certificate supplied.\n");
-	return 0;
-    }
+	if (sess->my_cert) {
+		nussl_ssl_client_cert *const cc = sess->my_cert;
+		NUSSL_DEBUG(NUSSL_DBG_SSL,
+			    "Supplying client certificate.\n");
+		cc->pkey->references++;
+		cc->cert.subject->references++;
+		*cert = cc->cert.subject;
+		*pkey = cc->pkey;
+		return 1;
+	} else {
+		NUSSL_DEBUG(NUSSL_DBG_SSL,
+			    "No client certificate supplied.\n");
+		return 0;
+	}
 }
 
-int nussl_ssl_set_clicert(nussl_session *sess, const nussl_ssl_client_cert *cc)
+int nussl_ssl_set_clicert(nussl_session * sess,
+			  const nussl_ssl_client_cert * cc)
 {
-    sess->my_cert = dup_client_cert(cc);
-    if (!sess->my_cert)
-    	return NUSSL_ERROR;
+	sess->my_cert = dup_client_cert(cc);
+	if (!sess->my_cert)
+		return NUSSL_ERROR;
 
-    return nussl_ssl_context_keypair_from_data(sess->ssl_context, sess->my_cert);
+	return nussl_ssl_context_keypair_from_data(sess->ssl_context,
+						   sess->my_cert);
 }
 
 #ifdef BLAH
-int nussl_ssl_set_clicert(nussl_session *sess, const nussl_ssl_client_cert *cc)
+int nussl_ssl_set_clicert(nussl_session * sess,
+			  const nussl_ssl_client_cert * cc)
 {
 	int ret;
 	sess->my_cert = dup_client_cert(cc);
@@ -560,317 +592,348 @@ int nussl_ssl_set_clicert(nussl_session *sess, const nussl_ssl_client_cert *cc)
 	if (ret != 1)
 		return NUSSL_ERROR;
 
-	ret = SSL_CTX_use_certificate(sess->ssl_context->ctx->ctx, cc->cert.subject);
+	ret =
+	    SSL_CTX_use_certificate(sess->ssl_context->ctx->ctx,
+				    cc->cert.subject);
 	return (ret == 1) ? NUSSL_OK : NUSSL_ERROR;
 }
 #endif
 
 /* For internal use only. */
-int nussl__negotiate_ssl(nussl_session *sess)
+int nussl__negotiate_ssl(nussl_session * sess)
 {
-    nussl_ssl_context *ctx = sess->ssl_context;
-    SSL *ssl;
-    STACK_OF(X509) *chain;
-    int freechain = 0; /* non-zero if chain should be free'd. */
+	nussl_ssl_context *ctx = sess->ssl_context;
+	SSL *ssl;
+	STACK_OF(X509) * chain;
+	int freechain = 0;	/* non-zero if chain should be free'd. */
 
-    NUSSL_DEBUG(NUSSL_DBG_SSL, "Doing SSL negotiation.\n");
+	NUSSL_DEBUG(NUSSL_DBG_SSL, "Doing SSL negotiation.\n");
 
-    /* Pass through the hostname if SNI is enabled. */
-    ctx->hostname =
-        sess->flags[NUSSL_SESSFLAG_TLS_SNI] ? sess->server.hostname : NULL;
+	/* Pass through the hostname if SNI is enabled. */
+	ctx->hostname =
+	    sess->flags[NUSSL_SESSFLAG_TLS_SNI] ? sess->server.
+	    hostname : NULL;
 
-    if (nussl_sock_connect_ssl(sess->socket, ctx, sess)) {
-	if (ctx->sess) {
-	    /* remove cached session. */
-	    SSL_SESSION_free(ctx->sess);
-	    ctx->sess = NULL;
+	if (nussl_sock_connect_ssl(sess->socket, ctx, sess)) {
+		if (ctx->sess) {
+			/* remove cached session. */
+			SSL_SESSION_free(ctx->sess);
+			ctx->sess = NULL;
+		}
+		nussl_set_error(sess, _("SSL negotiation failed: %s"),
+				nussl_sock_error(sess->socket));
+		return NUSSL_ERROR;
 	}
-	nussl_set_error(sess, _("SSL negotiation failed: %s"),
-		     nussl_sock_error(sess->socket));
-	return NUSSL_ERROR;
-    }
 
-    ssl = nussl__sock_sslsock(sess->socket);
+	ssl = nussl__sock_sslsock(sess->socket);
 
-    chain = SSL_get_peer_cert_chain(ssl);
-    /* For an SSLv2 connection, the cert chain will always be NULL. */
-    if (chain == NULL) {
-        X509 *cert = SSL_get_peer_certificate(ssl);
-        if (cert) {
-            chain = sk_X509_new_null();
-            sk_X509_push(chain, cert);
-            freechain = 1;
-        }
-    }
+	chain = SSL_get_peer_cert_chain(ssl);
+	/* For an SSLv2 connection, the cert chain will always be NULL. */
+	if (chain == NULL) {
+		X509 *cert = SSL_get_peer_certificate(ssl);
+		if (cert) {
+			chain = sk_X509_new_null();
+			sk_X509_push(chain, cert);
+			freechain = 1;
+		}
+	}
 
-    if(sess->check_peer_cert)
-    {
-        if (chain == NULL || sk_X509_num(chain) == 0) {
-    	nussl_set_error(sess, _("SSL server did not present certificate"));
-    	return NUSSL_ERROR;
-        }
+	if (sess->check_peer_cert) {
+		if (chain == NULL || sk_X509_num(chain) == 0) {
+			nussl_set_error(sess,
+					_
+					("SSL server did not present certificate"));
+			return NUSSL_ERROR;
+		}
 
-        if (sess->peer_cert) {
-            int diff = X509_cmp(sk_X509_value(chain, 0), sess->peer_cert->subject);
-            if (freechain) sk_X509_free(chain); /* no longer need the chain */
-            if (diff) {
-                /* This could be a MITM attack: fail the request. */
-                nussl_set_error(sess, _("Server certificate changed: "
-                                        "connection intercepted?"));
-                return NUSSL_ERROR;
-            }
-    	/* certificate has already passed verification: no need to
-    	 * verify it again. */
-        } else {
-    	/* new connection: create the chain. */
-            nussl_ssl_certificate *cert = make_chain(chain);
+		if (sess->peer_cert) {
+			int diff =
+			    X509_cmp(sk_X509_value(chain, 0),
+				     sess->peer_cert->subject);
+			if (freechain)
+				sk_X509_free(chain);	/* no longer need the chain */
+			if (diff) {
+				/* This could be a MITM attack: fail the request. */
+				nussl_set_error(sess,
+						_
+						("Server certificate changed: "
+						 "connection intercepted?"));
+				return NUSSL_ERROR;
+			}
+			/* certificate has already passed verification: no need to
+			 * verify it again. */
+		} else {
+			/* new connection: create the chain. */
+			nussl_ssl_certificate *cert = make_chain(chain);
 
-            if (freechain) sk_X509_free(chain); /* no longer need the chain */
+			if (freechain)
+				sk_X509_free(chain);	/* no longer need the chain */
 
-            if (check_certificate(sess, ssl, cert)) {
-                NUSSL_DEBUG(NUSSL_DBG_SSL, "SSL certificate checks failed: %s\n",
-           		     sess->error);
-           	nussl_ssl_cert_free(cert);
-           	return NUSSL_ERROR;
-            }
-    	/* remember the chain. */
-            sess->peer_cert = cert;
-        }
-    }
+			if (check_certificate(sess, ssl, cert)) {
+				NUSSL_DEBUG(NUSSL_DBG_SSL,
+					    "SSL certificate checks failed: %s\n",
+					    sess->error);
+				nussl_ssl_cert_free(cert);
+				return NUSSL_ERROR;
+			}
+			/* remember the chain. */
+			sess->peer_cert = cert;
+		}
+	}
 
-    if (ctx->sess) {
-        SSL_SESSION *newsess = SSL_get0_session(ssl);
-        /* Replace the session if it has changed. */
-        if (newsess != ctx->sess || SSL_SESSION_cmp(ctx->sess, newsess)) {
-            SSL_SESSION_free(ctx->sess);
-            ctx->sess = SSL_get1_session(ssl); /* bumping the refcount */
-        }
-    } else {
-	/* Store the session. */
-	ctx->sess = SSL_get1_session(ssl);
-    }
+	if (ctx->sess) {
+		SSL_SESSION *newsess = SSL_get0_session(ssl);
+		/* Replace the session if it has changed. */
+		if (newsess != ctx->sess
+		    || SSL_SESSION_cmp(ctx->sess, newsess)) {
+			SSL_SESSION_free(ctx->sess);
+			ctx->sess = SSL_get1_session(ssl);	/* bumping the refcount */
+		}
+	} else {
+		/* Store the session. */
+		ctx->sess = SSL_get1_session(ssl);
+	}
 
-    return NUSSL_OK;
+	return NUSSL_OK;
 }
 
-const nussl_ssl_dname *nussl_ssl_cert_issuer(const nussl_ssl_certificate *cert)
+const nussl_ssl_dname *nussl_ssl_cert_issuer(const nussl_ssl_certificate *
+					     cert)
 {
-    return &cert->issuer_dn;
+	return &cert->issuer_dn;
 }
 
-const nussl_ssl_dname *nussl_ssl_cert_subject(const nussl_ssl_certificate *cert)
+const nussl_ssl_dname *nussl_ssl_cert_subject(const nussl_ssl_certificate *
+					      cert)
 {
-    return &cert->subj_dn;
+	return &cert->subj_dn;
 }
 
-const nussl_ssl_certificate *nussl_ssl_cert_signedby(const nussl_ssl_certificate *cert)
+const nussl_ssl_certificate *nussl_ssl_cert_signedby(const
+						     nussl_ssl_certificate
+						     * cert)
 {
-    return cert->issuer;
+	return cert->issuer;
 }
 
-const char *nussl_ssl_cert_identity(const nussl_ssl_certificate *cert)
+const char *nussl_ssl_cert_identity(const nussl_ssl_certificate * cert)
 {
-    return cert->identity;
+	return cert->identity;
 }
 
-void nussl_ssl_trust_default_ca(nussl_session *sess)
+void nussl_ssl_trust_default_ca(nussl_session * sess)
 {
-    X509_STORE *store = SSL_CTX_get_cert_store(sess->ssl_context->ctx);
+	X509_STORE *store = SSL_CTX_get_cert_store(sess->ssl_context->ctx);
 
 #ifdef NUSSL_SSL_CA_BUNDLE
-    X509_STORE_load_locations(store, NUSSL_SSL_CA_BUNDLE, NULL);
+	X509_STORE_load_locations(store, NUSSL_SSL_CA_BUNDLE, NULL);
 #else
-    X509_STORE_set_default_paths(store);
+	X509_STORE_set_default_paths(store);
 #endif
 }
 
 /* Find a friendly name in a PKCS12 structure the hard way, without
  * decrypting the parts which are encrypted.. */
-static char *find_friendly_name(PKCS12 *p12)
+static char *find_friendly_name(PKCS12 * p12)
 {
-    STACK_OF(PKCS7) *safes = PKCS12_unpack_authsafes(p12);
-    int n, m;
-    char *name = NULL;
+	STACK_OF(PKCS7) * safes = PKCS12_unpack_authsafes(p12);
+	int n, m;
+	char *name = NULL;
 
-    if (safes == NULL) return NULL;
+	if (safes == NULL)
+		return NULL;
 
-    /* Iterate over the unpacked authsafes: */
-    for (n = 0; n < sk_PKCS7_num(safes) && !name; n++) {
-        PKCS7 *safe = sk_PKCS7_value(safes, n);
-        STACK_OF(PKCS12_SAFEBAG) *bags;
+	/* Iterate over the unpacked authsafes: */
+	for (n = 0; n < sk_PKCS7_num(safes) && !name; n++) {
+		PKCS7 *safe = sk_PKCS7_value(safes, n);
+		STACK_OF(PKCS12_SAFEBAG) * bags;
 
-        /* Only looking for unencrypted authsafes. */
-        if (OBJ_obj2nid(safe->type) != NID_pkcs7_data) continue;
+		/* Only looking for unencrypted authsafes. */
+		if (OBJ_obj2nid(safe->type) != NID_pkcs7_data)
+			continue;
 
-        bags = PKCS12_unpack_p7data(safe);
-        if (!bags) continue;
+		bags = PKCS12_unpack_p7data(safe);
+		if (!bags)
+			continue;
 
-        /* Iterate through the bags, picking out a friendly name */
-        for (m = 0; m < sk_PKCS12_SAFEBAG_num(bags) && !name; m++) {
-            PKCS12_SAFEBAG *bag = sk_PKCS12_SAFEBAG_value(bags, m);
-            name = PKCS12_get_friendlyname(bag);
-        }
+		/* Iterate through the bags, picking out a friendly name */
+		for (m = 0; m < sk_PKCS12_SAFEBAG_num(bags) && !name; m++) {
+			PKCS12_SAFEBAG *bag =
+			    sk_PKCS12_SAFEBAG_value(bags, m);
+			name = PKCS12_get_friendlyname(bag);
+		}
 
-        sk_PKCS12_SAFEBAG_pop_free(bags, PKCS12_SAFEBAG_free);
-    }
+		sk_PKCS12_SAFEBAG_pop_free(bags, PKCS12_SAFEBAG_free);
+	}
 
-    sk_PKCS7_pop_free(safes, PKCS7_free);
-    return name;
+	sk_PKCS7_pop_free(safes, PKCS7_free);
+	return name;
 }
 
 nussl_ssl_client_cert *nussl_ssl_clicert_read(const char *filename)
 {
-    PKCS12 *p12;
-    FILE *fp;
-    X509 *cert;
-    EVP_PKEY *pkey;
-    nussl_ssl_client_cert *cc;
+	PKCS12 *p12;
+	FILE *fp;
+	X509 *cert;
+	EVP_PKEY *pkey;
+	nussl_ssl_client_cert *cc;
 
-    fp = fopen(filename, "rb");
-    if (fp == NULL)
-        return NULL;
+	fp = fopen(filename, "rb");
+	if (fp == NULL)
+		return NULL;
 
-    p12 = d2i_PKCS12_fp(fp, NULL);
+	p12 = d2i_PKCS12_fp(fp, NULL);
 
-    fclose(fp);
+	fclose(fp);
 
-    if (p12 == NULL) {
-        ERR_clear_error();
-        return NULL;
-    }
+	if (p12 == NULL) {
+		ERR_clear_error();
+		return NULL;
+	}
 
-    /* Try parsing with no password. */
-    if (PKCS12_parse(p12, NULL, &pkey, &cert, NULL) == 1) {
-        /* Success - no password needed for decryption. */
-        int len = 0;
-        unsigned char *name = X509_alias_get0(cert, &len);
+	/* Try parsing with no password. */
+	if (PKCS12_parse(p12, NULL, &pkey, &cert, NULL) == 1) {
+		/* Success - no password needed for decryption. */
+		int len = 0;
+		unsigned char *name = X509_alias_get0(cert, &len);
 
-        cc = nussl_calloc(sizeof *cc);
-        cc->pkey = pkey;
-        cc->decrypted = 1;
-        if (name && len > 0)
-            cc->friendly_name = nussl_strndup((char *)name, len);
-        populate_cert(&cc->cert, cert);
-        PKCS12_free(p12);
-        return cc;
-    } else {
-        /* Failed to parse the file */
-        int err = ERR_get_error();
-        ERR_clear_error();
-        if (ERR_GET_LIB(err) == ERR_LIB_PKCS12 &&
-            ERR_GET_REASON(err) == PKCS12_R_MAC_VERIFY_FAILURE) {
-            /* Decryption error due to bad password. */
-            cc = nussl_calloc(sizeof *cc);
-            cc->friendly_name = find_friendly_name(p12);
-            cc->p12 = p12;
-            return cc;
-        } else {
-            /* Some parse error, give up. */
-            PKCS12_free(p12);
-            return NULL;
-        }
-    }
+		cc = nussl_calloc(sizeof *cc);
+		cc->pkey = pkey;
+		cc->decrypted = 1;
+		if (name && len > 0)
+			cc->friendly_name =
+			    nussl_strndup((char *) name, len);
+		populate_cert(&cc->cert, cert);
+		PKCS12_free(p12);
+		return cc;
+	} else {
+		/* Failed to parse the file */
+		int err = ERR_get_error();
+		ERR_clear_error();
+		if (ERR_GET_LIB(err) == ERR_LIB_PKCS12 &&
+		    ERR_GET_REASON(err) == PKCS12_R_MAC_VERIFY_FAILURE) {
+			/* Decryption error due to bad password. */
+			cc = nussl_calloc(sizeof *cc);
+			cc->friendly_name = find_friendly_name(p12);
+			cc->p12 = p12;
+			return cc;
+		} else {
+			/* Some parse error, give up. */
+			PKCS12_free(p12);
+			return NULL;
+		}
+	}
 }
 
-int nussl_ssl_clicert_encrypted(const nussl_ssl_client_cert *cc)
+int nussl_ssl_clicert_encrypted(const nussl_ssl_client_cert * cc)
 {
-    return !cc->decrypted;
+	return !cc->decrypted;
 }
 
-int nussl_ssl_clicert_decrypt(nussl_ssl_client_cert *cc, const char *password)
+int nussl_ssl_clicert_decrypt(nussl_ssl_client_cert * cc,
+			      const char *password)
 {
-    X509 *cert;
-    EVP_PKEY *pkey;
+	X509 *cert;
+	EVP_PKEY *pkey;
 
-    if (PKCS12_parse(cc->p12, password, &pkey, &cert, NULL) != 1) {
-        ERR_clear_error();
-        return -1;
-    }
+	if (PKCS12_parse(cc->p12, password, &pkey, &cert, NULL) != 1) {
+		ERR_clear_error();
+		return -1;
+	}
 
-    if (X509_check_private_key(cert, pkey) != 1) {
-        ERR_clear_error();
-        X509_free(cert);
-        EVP_PKEY_free(pkey);
-        NUSSL_DEBUG(NUSSL_DBG_SSL, "Decrypted private key/cert are not matched.");
-        return -1;
-    }
+	if (X509_check_private_key(cert, pkey) != 1) {
+		ERR_clear_error();
+		X509_free(cert);
+		EVP_PKEY_free(pkey);
+		NUSSL_DEBUG(NUSSL_DBG_SSL,
+			    "Decrypted private key/cert are not matched.");
+		return -1;
+	}
 
-    PKCS12_free(cc->p12);
-    populate_cert(&cc->cert, cert);
-    cc->pkey = pkey;
-    cc->decrypted = 1;
-    cc->p12 = NULL;
-    return 0;
+	PKCS12_free(cc->p12);
+	populate_cert(&cc->cert, cert);
+	cc->pkey = pkey;
+	cc->decrypted = 1;
+	cc->p12 = NULL;
+	return 0;
 }
 
-const nussl_ssl_certificate *nussl_ssl_clicert_owner(const nussl_ssl_client_cert *cc)
+const nussl_ssl_certificate *nussl_ssl_clicert_owner(const
+						     nussl_ssl_client_cert
+						     * cc)
 {
-    return &cc->cert;
+	return &cc->cert;
 }
 
-const char *nussl_ssl_clicert_name(const nussl_ssl_client_cert *ccert)
+const char *nussl_ssl_clicert_name(const nussl_ssl_client_cert * ccert)
 {
-    return ccert->friendly_name;
+	return ccert->friendly_name;
 }
 
 nussl_ssl_certificate *nussl_ssl_cert_read(const char *filename)
 {
-    FILE *fp = fopen(filename, "r");
-    X509 *cert;
+	FILE *fp = fopen(filename, "r");
+	X509 *cert;
 
-    if (fp == NULL)
-        return NULL;
+	if (fp == NULL)
+		return NULL;
 
-    cert = PEM_read_X509(fp, NULL, NULL, NULL);
-    fclose(fp);
+	cert = PEM_read_X509(fp, NULL, NULL, NULL);
+	fclose(fp);
 
-    if (cert == NULL) {
-        NUSSL_DEBUG(NUSSL_DBG_SSL, "d2i_X509_fp failed: %s\n",
-                 ERR_reason_error_string(ERR_get_error()));
-        ERR_clear_error();
-        return NULL;
-    }
+	if (cert == NULL) {
+		NUSSL_DEBUG(NUSSL_DBG_SSL, "d2i_X509_fp failed: %s\n",
+			    ERR_reason_error_string(ERR_get_error()));
+		ERR_clear_error();
+		return NULL;
+	}
 
-    return populate_cert(nussl_calloc(sizeof(struct nussl_ssl_certificate_s)), cert);
+	return
+	    populate_cert(nussl_calloc
+			  (sizeof(struct nussl_ssl_certificate_s)), cert);
 }
 
-int nussl_ssl_cert_write(const nussl_ssl_certificate *cert, const char *filename)
+int nussl_ssl_cert_write(const nussl_ssl_certificate * cert,
+			 const char *filename)
 {
-    FILE *fp = fopen(filename, "w");
+	FILE *fp = fopen(filename, "w");
 
-    if (fp == NULL) return -1;
+	if (fp == NULL)
+		return -1;
 
-    if (PEM_write_X509(fp, cert->subject) != 1) {
-        ERR_clear_error();
-        fclose(fp);
-        return -1;
-    }
+	if (PEM_write_X509(fp, cert->subject) != 1) {
+		ERR_clear_error();
+		fclose(fp);
+		return -1;
+	}
 
-    if (fclose(fp) != 0)
-        return -1;
+	if (fclose(fp) != 0)
+		return -1;
 
-    return 0;
+	return 0;
 }
 
-void nussl_ssl_cert_free(nussl_ssl_certificate *cert)
+void nussl_ssl_cert_free(nussl_ssl_certificate * cert)
 {
-    X509_free(cert->subject);
-    if (cert->issuer)
-        nussl_ssl_cert_free(cert->issuer);
-    if (cert->identity)
-        nussl_free(cert->identity);
-    nussl_free(cert);
+	X509_free(cert->subject);
+	if (cert->issuer)
+		nussl_ssl_cert_free(cert->issuer);
+	if (cert->identity)
+		nussl_free(cert->identity);
+	nussl_free(cert);
 }
 
-int nussl_ssl_cert_cmp(const nussl_ssl_certificate *c1, const nussl_ssl_certificate *c2)
+int nussl_ssl_cert_cmp(const nussl_ssl_certificate * c1,
+		       const nussl_ssl_certificate * c2)
 {
-    return X509_cmp(c1->subject, c2->subject);
+	return X509_cmp(c1->subject, c2->subject);
 }
 
-nussl_ssl_client_cert* nussl_ssl_import_keypair(const char *cert_file, const char *key_file)
+nussl_ssl_client_cert *nussl_ssl_import_keypair(const char *cert_file,
+						const char *key_file)
 {
 	FILE *fp;
-	nussl_ssl_client_cert* keypair = NULL;
+	nussl_ssl_client_cert *keypair = NULL;
 
 	keypair = nussl_calloc(sizeof(nussl_ssl_client_cert));
 	if (keypair == NULL)
@@ -882,31 +945,29 @@ nussl_ssl_client_cert* nussl_ssl_import_keypair(const char *cert_file, const cha
 
 	// Load the certificate
 	fp = fopen(cert_file, "r");
-	if (fp == NULL)
-	{
+	if (fp == NULL) {
 		nussl_free(keypair);
 		return NULL;
 	}
 
 	keypair->cert.subject = PEM_read_X509(fp, NULL, NULL, NULL);
 	fclose(fp);
-	if(keypair->cert.subject  == NULL)
+	if (keypair->cert.subject == NULL)
 		return NULL;
 
 	if (populate_cert(&keypair->cert, keypair->cert.subject) == NULL)
-        	return NULL;
+		return NULL;
 
 	// Load the private key
 	fp = fopen(key_file, "r");
-	if (fp == NULL)
-	{
+	if (fp == NULL) {
 		nussl_free(keypair);
 		return NULL;
 	}
 
 	keypair->pkey = PEM_read_PrivateKey(fp, NULL, NULL, NULL);
 	fclose(fp);
-	if(keypair->pkey == NULL)
+	if (keypair->pkey == NULL)
 		return NULL;
 	return keypair;
 }
@@ -916,66 +977,70 @@ nussl_ssl_client_cert* nussl_ssl_import_keypair(const char *cert_file, const cha
 
 nussl_ssl_certificate *nussl_ssl_cert_import(const char *data)
 {
-    unsigned char *der;
-    nussl_d2i_uchar *p;
-    size_t len;
-    X509 *x5;
+	unsigned char *der;
+	nussl_d2i_uchar *p;
+	size_t len;
+	X509 *x5;
 
-    /* decode the base64 to get the raw DER representation */
-    len = nussl_unbase64(data, &der);
-    if (len == 0) return NULL;
+	/* decode the base64 to get the raw DER representation */
+	len = nussl_unbase64(data, &der);
+	if (len == 0)
+		return NULL;
 
-    p = der;
-    x5 = d2i_X509(NULL, &p, len); /* p is incremented */
-    nussl_free(der);
-    if (x5 == NULL) {
-        ERR_clear_error();
-        return NULL;
-    }
+	p = der;
+	x5 = d2i_X509(NULL, &p, len);	/* p is incremented */
+	nussl_free(der);
+	if (x5 == NULL) {
+		ERR_clear_error();
+		return NULL;
+	}
 
-    return populate_cert(nussl_calloc(sizeof(struct nussl_ssl_certificate_s)), x5);
+	return
+	    populate_cert(nussl_calloc
+			  (sizeof(struct nussl_ssl_certificate_s)), x5);
 }
 
-char *nussl_ssl_cert_export(const nussl_ssl_certificate *cert)
+char *nussl_ssl_cert_export(const nussl_ssl_certificate * cert)
 {
-    int len;
-    unsigned char *der, *p;
-    char *ret;
+	int len;
+	unsigned char *der, *p;
+	char *ret;
 
-    /* find the length of the DER encoding. */
-    len = i2d_X509(cert->subject, NULL);
+	/* find the length of the DER encoding. */
+	len = i2d_X509(cert->subject, NULL);
 
-    p = der = nussl_malloc(len);
-    i2d_X509(cert->subject, &p); /* p is incremented */
+	p = der = nussl_malloc(len);
+	i2d_X509(cert->subject, &p);	/* p is incremented */
 
-    ret = nussl_base64(der, len);
-    nussl_free(der);
-    return ret;
+	ret = nussl_base64(der, len);
+	nussl_free(der);
+	return ret;
 }
 
 #if SHA_DIGEST_LENGTH != 20
 # error SHA digest length is not 20 bytes
 #endif
 
-int nussl_ssl_cert_digest(const nussl_ssl_certificate *cert, char *digest)
+int nussl_ssl_cert_digest(const nussl_ssl_certificate * cert, char *digest)
 {
-    unsigned char sha1[EVP_MAX_MD_SIZE];
-    unsigned int len, j;
-    char *p;
+	unsigned char sha1[EVP_MAX_MD_SIZE];
+	unsigned int len, j;
+	char *p;
 
-    if (!X509_digest(cert->subject, EVP_sha1(), sha1, &len) || len != 20) {
-        ERR_clear_error();
-        return -1;
-    }
+	if (!X509_digest(cert->subject, EVP_sha1(), sha1, &len)
+	    || len != 20) {
+		ERR_clear_error();
+		return -1;
+	}
 
-    for (j = 0, p = digest; j < 20; j++) {
-        *p++ = NUSSL_HEX2ASC((sha1[j] >> 4) & 0x0f);
-        *p++ = NUSSL_HEX2ASC(sha1[j] & 0x0f);
-        *p++ = ':';
-    }
+	for (j = 0, p = digest; j < 20; j++) {
+		*p++ = NUSSL_HEX2ASC((sha1[j] >> 4) & 0x0f);
+		*p++ = NUSSL_HEX2ASC(sha1[j] & 0x0f);
+		*p++ = ':';
+	}
 
-    p[-1] = '\0';
-    return 0;
+	p[-1] = '\0';
+	return 0;
 }
 
 #ifdef NUSSL_HAVE_TS_SSL
@@ -993,10 +1058,10 @@ static size_t num_locks;
 /* Named to be obvious when it shows up in a backtrace. */
 static unsigned long thread_id_neon(void)
 {
-    /* This will break if pthread_t is a structure; upgrading OpenSSL
-     * >= 0.9.9 (which does not require this callback) is the only
-     * solution.  */
-    return (unsigned long) pthread_self();
+	/* This will break if pthread_t is a structure; upgrading OpenSSL
+	 * >= 0.9.9 (which does not require this callback) is the only
+	 * solution.  */
+	return (unsigned long) pthread_self();
 }
 #endif
 
@@ -1004,16 +1069,15 @@ static unsigned long thread_id_neon(void)
  * the lock/unlock fails, all that can be done is to abort. */
 static void thread_lock_neon(int mode, int n, const char *file, int line)
 {
-    if (mode & CRYPTO_LOCK) {
-        if (pthread_mutex_lock(&locks[n])) {
-            abort();
-        }
-    }
-    else {
-        if (pthread_mutex_unlock(&locks[n])) {
-            abort();
-        }
-    }
+	if (mode & CRYPTO_LOCK) {
+		if (pthread_mutex_lock(&locks[n])) {
+			abort();
+		}
+	} else {
+		if (pthread_mutex_unlock(&locks[n])) {
+			abort();
+		}
+	}
 }
 
 #endif
@@ -1031,73 +1095,78 @@ static void thread_lock_neon(int mode, int n, const char *file, int line)
 
 int nussl__ssl_init(void)
 {
-    CRYPTO_malloc_init();
-    SSL_load_error_strings();
-    SSL_library_init();
-    OpenSSL_add_all_algorithms();
+	CRYPTO_malloc_init();
+	SSL_load_error_strings();
+	SSL_library_init();
+	OpenSSL_add_all_algorithms();
 
 #ifdef NUSSL_HAVE_TS_SSL
-    /* If some other library has already come along and set up the
-     * thread-safety callbacks, then it must be presumed that the
-     * other library will have a longer lifetime in the process than
-     * neon.  If the library which has installed the callbacks is
-     * unloaded, then all bets are off. */
-    if (ID_CALLBACK_IS_OTHER || CRYPTO_get_locking_callback() != NULL) {
-        NUSSL_DEBUG(NUSSL_DBG_SOCKET, "ssl: OpenSSL thread-safety callbacks already installed.\n");
-        NUSSL_DEBUG(NUSSL_DBG_SOCKET, "ssl: neon will not replace existing callbacks.\n");
-    } else {
-        size_t n;
+	/* If some other library has already come along and set up the
+	 * thread-safety callbacks, then it must be presumed that the
+	 * other library will have a longer lifetime in the process than
+	 * neon.  If the library which has installed the callbacks is
+	 * unloaded, then all bets are off. */
+	if (ID_CALLBACK_IS_OTHER || CRYPTO_get_locking_callback() != NULL) {
+		NUSSL_DEBUG(NUSSL_DBG_SOCKET,
+			    "ssl: OpenSSL thread-safety callbacks already installed.\n");
+		NUSSL_DEBUG(NUSSL_DBG_SOCKET,
+			    "ssl: neon will not replace existing callbacks.\n");
+	} else {
+		size_t n;
 
-        num_locks = CRYPTO_num_locks();
+		num_locks = CRYPTO_num_locks();
 
-        /* For releases where CRYPTO_set_idptr_callback is present,
-         * the default ID callback should be sufficient. */
+		/* For releases where CRYPTO_set_idptr_callback is present,
+		 * the default ID callback should be sufficient. */
 #ifndef HAVE_CRYPTO_SET_IDPTR_CALLBACK
-        CRYPTO_set_id_callback(thread_id_neon);
+		CRYPTO_set_id_callback(thread_id_neon);
 #endif
-        CRYPTO_set_locking_callback(thread_lock_neon);
+		CRYPTO_set_locking_callback(thread_lock_neon);
 
-        locks = malloc(num_locks * sizeof *locks);
-        for (n = 0; n < num_locks; n++) {
-            if (pthread_mutex_init(&locks[n], NULL)) {
-                NUSSL_DEBUG(NUSSL_DBG_SOCKET, "ssl: Failed to initialize pthread mutex.\n");
-                return -1;
-            }
-        }
+		locks = malloc(num_locks * sizeof *locks);
+		for (n = 0; n < num_locks; n++) {
+			if (pthread_mutex_init(&locks[n], NULL)) {
+				NUSSL_DEBUG(NUSSL_DBG_SOCKET,
+					    "ssl: Failed to initialize pthread mutex.\n");
+				return -1;
+			}
+		}
 
-        NUSSL_DEBUG(NUSSL_DBG_SOCKET, "ssl: Initialized OpenSSL thread-safety callbacks "
-                 "for %" NUSSL_FMT_SIZE_T " locks.\n", num_locks);
-    }
+		NUSSL_DEBUG(NUSSL_DBG_SOCKET,
+			    "ssl: Initialized OpenSSL thread-safety callbacks "
+			    "for %" NUSSL_FMT_SIZE_T " locks.\n",
+			    num_locks);
+	}
 #endif
 
-    return 0;
+	return 0;
 }
 
 void nussl__ssl_exit(void)
 {
-    /* Cannot call ERR_free_strings() etc here in case any other code
-     * in the process using OpenSSL. */
+	/* Cannot call ERR_free_strings() etc here in case any other code
+	 * in the process using OpenSSL. */
 
 #ifdef NUSSL_HAVE_TS_SSL
-    /* Only unregister the callbacks if some *other* library has not
-     * come along in the mean-time and trampled over the callbacks
-     * installed by neon. */
-    if (CRYPTO_get_locking_callback() == thread_lock_neon
-        && ID_CALLBACK_IS_NEON) {
-        size_t n;
+	/* Only unregister the callbacks if some *other* library has not
+	 * come along in the mean-time and trampled over the callbacks
+	 * installed by neon. */
+	if (CRYPTO_get_locking_callback() == thread_lock_neon
+	    && ID_CALLBACK_IS_NEON) {
+		size_t n;
 
 #ifndef HAVE_CRYPTO_SET_IDPTR_CALLBACK
-        CRYPTO_set_id_callback(NULL);
+		CRYPTO_set_id_callback(NULL);
 #endif
-        CRYPTO_set_locking_callback(NULL);
+		CRYPTO_set_locking_callback(NULL);
 
-        for (n = 0; n < num_locks; n++) {
-            pthread_mutex_destroy(&locks[n]);
-        }
+		for (n = 0; n < num_locks; n++) {
+			pthread_mutex_destroy(&locks[n]);
+		}
 
-        free(locks);
-    }
+		free(locks);
+	}
 #endif
 }
 
-#endif /* HAVE_OPENSSL */
+#endif				/* HAVE_OPENSSL */

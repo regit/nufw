@@ -55,7 +55,7 @@
 #define HAVE_SIGNAL_H
 #define HAVE_SIGNAL
 
-#define NUSSL_HAVE_TS_SSL /* TS = Thread Safe */
+#define NUSSL_HAVE_TS_SSL	/* TS = Thread Safe */
 /* #define HAVE_OPENSSL */
 
 #define NUSSL_FMT_SIZE_T "u"

@@ -37,8 +37,8 @@
 # define NUSSL_BEGIN_DECLS extern "C" {
 # define NUSSL_END_DECLS }
 #else
-# define NUSSL_BEGIN_DECLS /* empty */
-# define NUSSL_END_DECLS /* empty */
+# define NUSSL_BEGIN_DECLS	/* empty */
+# define NUSSL_END_DECLS	/* empty */
 #endif
 
 #ifndef NUSSL_DEFS_H
@@ -73,4 +73,4 @@ typedef off_t nussl_off_t;
 #define NUSSL_BUFSIZ 8192
 #endif
 
-#endif /* NUSSL_DEFS_H */
+#endif				/* NUSSL_DEFS_H */

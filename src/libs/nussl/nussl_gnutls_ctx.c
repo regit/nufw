@@ -78,87 +78,97 @@
 
 nussl_ssl_context *nussl_ssl_context_create(int flags)
 {
-    nussl_ssl_context *ctx = nussl_calloc(sizeof *ctx);
-    gnutls_certificate_allocate_credentials(&ctx->cred);
+	nussl_ssl_context *ctx = nussl_calloc(sizeof *ctx);
+	gnutls_certificate_allocate_credentials(&ctx->cred);
 /*    if (flags == NUSSL_SSL_CTX_CLIENT) {
         gnutls_certificate_client_set_retrieve_function(ctx->cred,
                                                         provide_client_cert);
     }*/
-    return ctx;
+	return ctx;
 }
 
 #if 0
-int nussl_ssl_context_keypair(nussl_ssl_context *ctx,
-                           const char *cert, const char *key)
+int nussl_ssl_context_keypair(nussl_ssl_context * ctx,
+			      const char *cert, const char *key)
 {
-    return (gnutls_certificate_set_x509_key_file(ctx->cred, cert, key,
-                                         GNUTLS_X509_FMT_PEM) == 0) ? NUSSL_OK : NUSSL_ERROR;
+	return (gnutls_certificate_set_x509_key_file(ctx->cred, cert, key,
+						     GNUTLS_X509_FMT_PEM)
+		== 0) ? NUSSL_OK : NUSSL_ERROR;
 }
 #endif
 
-int nussl_ssl_context_keypair_from_data(nussl_ssl_context *ctx, nussl_ssl_client_cert* cert)
+int nussl_ssl_context_keypair_from_data(nussl_ssl_context * ctx,
+					nussl_ssl_client_cert * cert)
 {
-    int ret;
-    ret = gnutls_certificate_set_x509_key(ctx->cred, &cert->cert.subject, 1, cert->pkey);
-    if (ret != 0)
-    	return NUSSL_ERROR;
-    gnutls_certificate_set_dh_params(ctx->cred, ctx->dh);
+	int ret;
+	ret =
+	    gnutls_certificate_set_x509_key(ctx->cred, &cert->cert.subject,
+					    1, cert->pkey);
+	if (ret != 0)
+		return NUSSL_ERROR;
+	gnutls_certificate_set_dh_params(ctx->cred, ctx->dh);
 
-    return (ret == 0) ? NUSSL_OK : NUSSL_ERROR;
+	return (ret == 0) ? NUSSL_OK : NUSSL_ERROR;
 }
 
 /* Server mode: Set DH parameters */
-int nussl_ssl_context_set_dh_bits(nussl_ssl_context *ctx, unsigned int dh_bits)
+int nussl_ssl_context_set_dh_bits(nussl_ssl_context * ctx,
+				  unsigned int dh_bits)
 {
 	ctx->dh_bits = dh_bits;
 
-	if(gnutls_dh_params_init(&ctx->dh) < 0)
+	if (gnutls_dh_params_init(&ctx->dh) < 0)
 		return NUSSL_ERROR;
 
-	if(gnutls_dh_params_generate2(ctx->dh, ctx->dh_bits) < 0)
+	if (gnutls_dh_params_generate2(ctx->dh, ctx->dh_bits) < 0)
 		return NUSSL_ERROR;
 
 	return NUSSL_OK;
 }
 
 #if 0
-int nussl_ssl_context_set_verify(nussl_ssl_context *ctx, int required,
-                              const char *ca_names, const char *verify_cas)
+int nussl_ssl_context_set_verify(nussl_ssl_context * ctx, int required,
+				 const char *ca_names,
+				 const char *verify_cas)
 {
-    ctx->verify = required;
-    if (verify_cas) {
-        gnutls_certificate_set_x509_trust_file(ctx->cred, verify_cas,
-                                               GNUTLS_X509_FMT_PEM);
-    }
-    /* gnutls_certificate_send_x509_rdn_sequence in gnutls >= 1.2 can
-     * be used to *suppress* sending the CA names, but not control it,
-     * it seems. */
-    return 0;
+	ctx->verify = required;
+	if (verify_cas) {
+		gnutls_certificate_set_x509_trust_file(ctx->cred,
+						       verify_cas,
+						       GNUTLS_X509_FMT_PEM);
+	}
+	/* gnutls_certificate_send_x509_rdn_sequence in gnutls >= 1.2 can
+	 * be used to *suppress* sending the CA names, but not control it,
+	 * it seems. */
+	return 0;
 }
 #endif
 
-void nussl_ssl_context_set_flag(nussl_ssl_context *ctx, int flag, int value)
+void nussl_ssl_context_set_flag(nussl_ssl_context * ctx, int flag,
+				int value)
 {
-    /* SSLv2 not supported. */
+	/* SSLv2 not supported. */
 }
 
-void nussl_ssl_context_destroy(nussl_ssl_context *ctx)
+void nussl_ssl_context_destroy(nussl_ssl_context * ctx)
 {
-    gnutls_certificate_free_credentials(ctx->cred);
-    gnutls_dh_params_deinit(ctx->dh);
-    if (ctx->cache.client.data) {
-        nussl_free(ctx->cache.client.data);
-    } else if (ctx->cache.server.key.data) {
-        gnutls_free(ctx->cache.server.key.data);
-        gnutls_free(ctx->cache.server.data.data);
-    }
-    nussl_free(ctx);
+	gnutls_certificate_free_credentials(ctx->cred);
+	gnutls_dh_params_deinit(ctx->dh);
+	if (ctx->cache.client.data) {
+		nussl_free(ctx->cache.client.data);
+	} else if (ctx->cache.server.key.data) {
+		gnutls_free(ctx->cache.server.key.data);
+		gnutls_free(ctx->cache.server.data.data);
+	}
+	nussl_free(ctx);
 }
 
-int nussl_ssl_context_trustcert(nussl_ssl_context *ctx, const nussl_ssl_certificate *cert)
+int nussl_ssl_context_trustcert(nussl_ssl_context * ctx,
+				const nussl_ssl_certificate * cert)
 {
-    gnutls_x509_crt certs = cert->subject;
-    return (gnutls_certificate_set_x509_trust(ctx->cred, &certs, 1) == 0) ? NUSSL_OK : NUSSL_ERROR;
+	gnutls_x509_crt certs = cert->subject;
+	return (gnutls_certificate_set_x509_trust(ctx->cred, &certs, 1) ==
+		0) ? NUSSL_OK : NUSSL_ERROR;
 }
 
-#endif /* HAVE_GNUTLS */
+#endif				/* HAVE_GNUTLS */

@@ -50,11 +50,12 @@ typedef struct nussl_ssl_dname_s nussl_ssl_dname;
  * name, intended to be human-readable (e.g. "Acme Ltd., Norfolk,
  * GB").  Return value is a UTF-8-encoded malloc-allocated string and
  * must be free'd by the caller. */
-char *nussl_ssl_readable_dname(const nussl_ssl_dname *dn);
+char *nussl_ssl_readable_dname(const nussl_ssl_dname * dn);
 
 /* Returns zero if 'dn1' and 'dn2' refer to same name, or non-zero if
  * they are different. */
-int nussl_ssl_dname_cmp(const nussl_ssl_dname *dn1, const nussl_ssl_dname *dn2);
+int nussl_ssl_dname_cmp(const nussl_ssl_dname * dn1,
+			const nussl_ssl_dname * dn2);
 
 /* An SSL certificate. */
 typedef struct nussl_ssl_certificate_s nussl_ssl_certificate;
@@ -65,12 +66,13 @@ nussl_ssl_certificate *nussl_ssl_cert_read(const char *filename);
 
 /* Write a certificate to a file in PEM format; returns non-zero if
  * the certificate could not be written. */
-int nussl_ssl_cert_write(const nussl_ssl_certificate *cert, const char *filename);
+int nussl_ssl_cert_write(const nussl_ssl_certificate * cert,
+			 const char *filename);
 
 /* Export a certificate to a base64-encoded, NUL-terminated string.
  * The returned string is malloc-allocated and must be free()d by the
  * caller. */
-char *nussl_ssl_cert_export(const nussl_ssl_certificate *cert);
+char *nussl_ssl_cert_export(const nussl_ssl_certificate * cert);
 
 /* Import a certificate from a base64-encoded string as returned by
  * nussl_ssl_cert_export(). Returns a certificate object or NULL if
@@ -88,18 +90,22 @@ nussl_ssl_certificate *nussl_ssl_cert_import(const char *data);
  * @return the identity of the certificate as UTF-8-encoded string
  * or NULL if none is given.
  * */
-const char *nussl_ssl_cert_identity(const nussl_ssl_certificate *cert);
+const char *nussl_ssl_cert_identity(const nussl_ssl_certificate * cert);
 
 /* Return the certificate of the entity which signed certificate
  * 'cert'.  Returns NULL if 'cert' is self-signed or the issuer
  * certificate is not available. */
-const nussl_ssl_certificate *nussl_ssl_cert_signedby(const nussl_ssl_certificate *cert);
+const nussl_ssl_certificate *nussl_ssl_cert_signedby(const
+						     nussl_ssl_certificate
+						     * cert);
 
 /* Returns the distinguished name of the certificate issuer. */
-const nussl_ssl_dname *nussl_ssl_cert_issuer(const nussl_ssl_certificate *cert);
+const nussl_ssl_dname *nussl_ssl_cert_issuer(const nussl_ssl_certificate *
+					     cert);
 
 /* Returns the distinguished name of the certificate subject. */
-const nussl_ssl_dname *nussl_ssl_cert_subject(const nussl_ssl_certificate *cert);
+const nussl_ssl_dname *nussl_ssl_cert_subject(const nussl_ssl_certificate *
+					      cert);
 
 #define NUSSL_SSL_DIGESTLEN (60)
 
@@ -108,13 +114,14 @@ const nussl_ssl_dname *nussl_ssl_cert_subject(const nussl_ssl_certificate *cert)
  * Returns zero on success or non-zero if there was an internal error
  * whilst calculating the digest.  'digest' must be at least
  * NUSSL_SSL_DIGESTLEN bytes in length. */
-int nussl_ssl_cert_digest(const nussl_ssl_certificate *cert, char *digest);
+int nussl_ssl_cert_digest(const nussl_ssl_certificate * cert,
+			  char *digest);
 
 /* Copy the validity times for the certificate 'cert' into 'from' and
  * 'until' (either may be NULL).  If the time cannot be represented by
  * a time_t value, then (time_t)-1 will be written. */
-void nussl_ssl_cert_validity_time(const nussl_ssl_certificate *cert,
-                               time_t *from, time_t *until);
+void nussl_ssl_cert_validity_time(const nussl_ssl_certificate * cert,
+				  time_t * from, time_t * until);
 
 #define NUSSL_SSL_VDATELEN (30)
 /* Copy the validity times into buffers 'from' and 'until' as
@@ -122,16 +129,16 @@ void nussl_ssl_cert_validity_time(const nussl_ssl_certificate *cert,
  * formatting (and not localized, so always using English month/week
  * names).  The buffers must be at least NUSSL_SSL_VDATELEN bytes in
  * length, and either may be NULL. */
-void nussl_ssl_cert_validity(const nussl_ssl_certificate *cert,
-                          char *from, char *until);
+void nussl_ssl_cert_validity(const nussl_ssl_certificate * cert,
+			     char *from, char *until);
 
 /* Returns zero if 'c1' and 'c2' refer to the same certificate, or
  * non-zero otherwise. */
-int nussl_ssl_cert_cmp(const nussl_ssl_certificate *c1,
-                    const nussl_ssl_certificate *c2);
+int nussl_ssl_cert_cmp(const nussl_ssl_certificate * c1,
+		       const nussl_ssl_certificate * c2);
 
 /* Deallocate memory associated with certificate. */
-void nussl_ssl_cert_free(nussl_ssl_certificate *cert);
+void nussl_ssl_cert_free(nussl_ssl_certificate * cert);
 
 /* A client certificate (and private key). */
 typedef struct nussl_ssl_client_cert_s nussl_ssl_client_cert;
@@ -144,23 +151,26 @@ nussl_ssl_client_cert *nussl_ssl_clicert_read(const char *filename);
 /* Returns the "friendly name" given for the client cert, or NULL if
  * none given.  This can be called before or after the client cert has
  * been decrypted.  Returns a NUL-terminated, UTF-8-encoded string. */
-const char *nussl_ssl_clicert_name(const nussl_ssl_client_cert *ccert);
+const char *nussl_ssl_clicert_name(const nussl_ssl_client_cert * ccert);
 
 /* Returns non-zero if client cert is encrypted. */
-int nussl_ssl_clicert_encrypted(const nussl_ssl_client_cert *ccert);
+int nussl_ssl_clicert_encrypted(const nussl_ssl_client_cert * ccert);
 
 /* Decrypt the encrypted client cert using given password.  Returns
  * non-zero on failure, in which case, the function can be called
  * again with a different password.  For a ccert on which _encrypted()
  * returns 0, calling _decrypt results in undefined behaviour. */
-int nussl_ssl_clicert_decrypt(nussl_ssl_client_cert *ccert, const char *password);
+int nussl_ssl_clicert_decrypt(nussl_ssl_client_cert * ccert,
+			      const char *password);
 
 /* Return the actual certificate part of the client certificate (never
  * returns NULL). */
-const nussl_ssl_certificate *nussl_ssl_clicert_owner(const nussl_ssl_client_cert *ccert);
+const nussl_ssl_certificate *nussl_ssl_clicert_owner(const
+						     nussl_ssl_client_cert
+						     * ccert);
 
 /* Destroy a client certificate object. */
-void nussl_ssl_clicert_free(nussl_ssl_client_cert *ccert);
+void nussl_ssl_clicert_free(nussl_ssl_client_cert * ccert);
 
 
 
@@ -169,25 +179,28 @@ void nussl_ssl_clicert_free(nussl_ssl_client_cert *ccert);
 typedef struct nussl_ssl_context_s nussl_ssl_context;
 
 /* Context creation modes: */
-#define NUSSL_SSL_CTX_CLIENT (0) /* client context */
-#define NUSSL_SSL_CTX_SERVER (1) /* default server context */
-#define NUSSL_SSL_CTX_SERVERv2 (2) /* SSLv2-specific server context */
+#define NUSSL_SSL_CTX_CLIENT (0)	/* client context */
+#define NUSSL_SSL_CTX_SERVER (1)	/* default server context */
+#define NUSSL_SSL_CTX_SERVERv2 (2)	/* SSLv2-specific server context */
 
 /* Create an SSL context. */
 nussl_ssl_context *nussl_ssl_context_create(int mode);
 
 /* Client mode: trust the given certificate 'cert' in context 'ctx'. */
-int nussl_ssl_context_trustcert(nussl_ssl_context *ctx, const nussl_ssl_certificate *cert);
+int nussl_ssl_context_trustcert(nussl_ssl_context * ctx,
+				const nussl_ssl_certificate * cert);
 
 /* Set the client certificate */
-int nussl_ssl_context_keypair_from_data(nussl_ssl_context *ctx, nussl_ssl_client_cert* cert);
+int nussl_ssl_context_keypair_from_data(nussl_ssl_context * ctx,
+					nussl_ssl_client_cert * cert);
 
 /* Server mode: use given cert and key (filenames to PEM certificates). */
-int nussl_ssl_context_keypair(nussl_ssl_context *ctx,
-                           const char *cert, const char *key);
+int nussl_ssl_context_keypair(nussl_ssl_context * ctx,
+			      const char *cert, const char *key);
 
 /* Server mode: Set DH parameters */
-int nussl_ssl_context_set_dh_bits(nussl_ssl_context *ctx, unsigned int dh_bits);
+int nussl_ssl_context_set_dh_bits(nussl_ssl_context * ctx,
+				  unsigned int dh_bits);
 
 /* Server mode: set client cert verification options: required is non-zero if
  * a client cert is required, if ca_names is non-NULL it is a filename containing
@@ -203,10 +216,11 @@ int nussl_ssl_context_set_verify(nussl_ssl_context *ctx, int required,
 
 #define NUSSL_SSL_CTX_SSLv2 (0)
 /* Set a flag for the SSL context. */
-void nussl_ssl_context_set_flag(nussl_ssl_context *ctx, int flag, int value);
+void nussl_ssl_context_set_flag(nussl_ssl_context * ctx, int flag,
+				int value);
 
 /* Destroy an SSL context. */
-void nussl_ssl_context_destroy(nussl_ssl_context *ctx);
+void nussl_ssl_context_destroy(nussl_ssl_context * ctx);
 
 /* NUSSL_END_DECLS */
 

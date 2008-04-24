@@ -44,7 +44,7 @@ static nussl_oom_callback_fn oom;
 
 void nussl_oom_callback(nussl_oom_callback_fn callback)
 {
-    oom = callback;
+	oom = callback;
 }
 
 #define DO_MALLOC(ptr, len) do {		\
@@ -58,42 +58,41 @@ void nussl_oom_callback(nussl_oom_callback_fn callback)
 
 void *nussl_malloc(size_t len)
 {
-    void *ptr;
-    DO_MALLOC(ptr, len);
-    return ptr;
+	void *ptr;
+	DO_MALLOC(ptr, len);
+	return ptr;
 }
 
 void *nussl_calloc(size_t len)
 {
-    void *ptr;
-    DO_MALLOC(ptr, len);
-    return memset(ptr, 0, len);
+	void *ptr;
+	DO_MALLOC(ptr, len);
+	return memset(ptr, 0, len);
 }
 
 void *nussl_realloc(void *ptr, size_t len)
 {
-    void *ret = realloc(ptr, len);
-    if (!ret) {
-	if (oom)
-	    oom();
-	abort();
-    }
-    return ret;
+	void *ret = realloc(ptr, len);
+	if (!ret) {
+		if (oom)
+			oom();
+		abort();
+	}
+	return ret;
 }
 
 char *nussl_strdup(const char *s)
 {
-    char *ret;
-    DO_MALLOC(ret, strlen(s) + 1);
-    return strcpy(ret, s);
+	char *ret;
+	DO_MALLOC(ret, strlen(s) + 1);
+	return strcpy(ret, s);
 }
 
 char *nussl_strndup(const char *s, size_t n)
 {
-    char *new;
-    DO_MALLOC(new, n+1);
-    new[n] = '\0';
-    memcpy(new, s, n);
-    return new;
+	char *new;
+	DO_MALLOC(new, n + 1);
+	new[n] = '\0';
+	memcpy(new, s, n);
+	return new;
 }
-

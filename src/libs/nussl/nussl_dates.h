@@ -39,9 +39,7 @@
 #include "nussl_defs.h"
 
 NUSSL_BEGIN_DECLS
-
 /* Date manipulation routines as per RFC1123 and RFC1036 */
-
 /* Return current date/time in RFC1123 format */
 char *nussl_rfc1123_date(time_t anytime);
 
@@ -51,5 +49,4 @@ char *nussl_rfc1123_date(time_t anytime);
 time_t nussl_iso8601_parse(const char *date);
 
 NUSSL_END_DECLS
-
-#endif /* NUSSL_DATES_H */
+#endif				/* NUSSL_DATES_H */

@@ -42,9 +42,7 @@
 
 #include "nussl_defs.h"
 
-NUSSL_BEGIN_DECLS
-
-typedef void (*nussl_oom_callback_fn)(void);
+NUSSL_BEGIN_DECLS typedef void (*nussl_oom_callback_fn) (void);
 
 /* Set callback which is called if malloc() returns NULL. */
 void nussl_oom_callback(nussl_oom_callback_fn callback);
@@ -64,5 +62,4 @@ char *nussl_strndup(const char *s, size_t n) nussl_attribute_malloc;
 #endif
 
 NUSSL_END_DECLS
-
-#endif /* NUSSL_ALLOC_H */
+#endif				/* NUSSL_ALLOC_H */

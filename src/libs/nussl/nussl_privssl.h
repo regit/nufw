@@ -56,51 +56,51 @@
 #include <openssl/ssl.h>
 
 struct nussl_ssl_context_s {
-    SSL_CTX *ctx;
-    SSL_SESSION *sess;
-    const char *hostname; /* for SNI */
+	SSL_CTX *ctx;
+	SSL_SESSION *sess;
+	const char *hostname;	/* for SNI */
 
-    DH *dh;
+	DH *dh;
 };
 
 typedef SSL *nussl_ssl_socket;
 
-#endif /* HAVE_OPENSSL */
+#endif				/* HAVE_OPENSSL */
 
 #ifdef HAVE_GNUTLS
 
 #include <gnutls/gnutls.h>
 
 struct nussl_ssl_context_s {
-    gnutls_certificate_credentials cred;
-    gnutls_dh_params dh;
-    unsigned int dh_bits;
-    int verify; /* non-zero if client cert verification required */
-    int use_cert;
+	gnutls_certificate_credentials cred;
+	gnutls_dh_params dh;
+	unsigned int dh_bits;
+	int verify;		/* non-zero if client cert verification required */
+	int use_cert;
 
-    const char *hostname; /* for SNI */
+	const char *hostname;	/* for SNI */
 
-    /* Session cache. */
-    union nussl_ssl_scache {
-        struct {
-            gnutls_datum key, data;
-        } server;
+	/* Session cache. */
+	union nussl_ssl_scache {
+		struct {
+			gnutls_datum key, data;
+		} server;
 #if defined(HAVE_GNUTLS_SESSION_GET_DATA2)
-        gnutls_datum client;
+		gnutls_datum client;
 #else
-        struct {
-            char *data;
-            size_t len;
-        } client;
+		struct {
+			char *data;
+			size_t len;
+		} client;
 #endif
-    } cache;
+	} cache;
 };
 
 typedef gnutls_session nussl_ssl_socket;
 
-#endif /* HAVE_GNUTLS */
+#endif				/* HAVE_GNUTLS */
 
-nussl_ssl_socket nussl__sock_sslsock(nussl_socket *sock);
+nussl_ssl_socket nussl__sock_sslsock(nussl_socket * sock);
 
 /* Process-global initialization of the SSL library; returns non-zero
  * on error. */
@@ -109,4 +109,4 @@ int nussl__ssl_init(void);
 /* Process-global de-initialization of the SSL library. */
 void nussl__ssl_exit(void);
 
-#endif /* NUSSL_PRIVSSL_H */
+#endif				/* NUSSL_PRIVSSL_H */

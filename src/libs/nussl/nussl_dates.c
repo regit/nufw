@@ -48,7 +48,7 @@
 #endif
 
 #ifdef WIN32
-#include <windows.h> /* for TIME_ZONE_INFORMATION */
+#include <windows.h>		/* for TIME_ZONE_INFORMATION */
 #endif
 
 #include "nussl_alloc.h"
@@ -70,11 +70,11 @@
 #define ASCTIME_FORMAT "%3s %3s %2d %2d:%2d:%2d %4d"
 
 static const char rfc1123_weekdays[7][4] = {
-    "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
+	"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
 };
 static const char short_months[12][4] = {
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+	"Jan", "Feb", "Mar", "Apr", "May", "Jun",
+	"Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 };
 
 #if defined(HAVE_STRUCT_TM_TM_GMTOFF)
@@ -91,81 +91,81 @@ static const char short_months[12][4] = {
 #ifdef WIN32
 time_t gmt_to_local_win32(void)
 {
-    TIME_ZONE_INFORMATION tzinfo;
-    DWORD dwStandardDaylight;
-    long bias;
+	TIME_ZONE_INFORMATION tzinfo;
+	DWORD dwStandardDaylight;
+	long bias;
 
-    dwStandardDaylight = GetTimeZoneInformation(&tzinfo);
-    bias = tzinfo.Bias;
+	dwStandardDaylight = GetTimeZoneInformation(&tzinfo);
+	bias = tzinfo.Bias;
 
-    if (dwStandardDaylight == TIME_ZONE_ID_STANDARD)
-        bias += tzinfo.StandardBias;
+	if (dwStandardDaylight == TIME_ZONE_ID_STANDARD)
+		bias += tzinfo.StandardBias;
 
-    if (dwStandardDaylight == TIME_ZONE_ID_DAYLIGHT)
-        bias += tzinfo.DaylightBias;
+	if (dwStandardDaylight == TIME_ZONE_ID_DAYLIGHT)
+		bias += tzinfo.DaylightBias;
 
-    return (- bias * 60);
+	return (-bias * 60);
 }
 #endif
 
 /* Returns the time/date GMT, in RFC1123-type format: eg
  *  Sun, 06 Nov 1994 08:49:37 GMT. */
-char *nussl_rfc1123_date(time_t anytime) {
-    struct tm *gmt;
-    char *ret;
-    gmt = gmtime(&anytime);
-    if (gmt == NULL)
-	return NULL;
-    ret = nussl_malloc(29 + 1); /* dates are 29 chars long */
+char *nussl_rfc1123_date(time_t anytime)
+{
+	struct tm *gmt;
+	char *ret;
+	gmt = gmtime(&anytime);
+	if (gmt == NULL)
+		return NULL;
+	ret = nussl_malloc(29 + 1);	/* dates are 29 chars long */
 /*  it goes: Sun, 06 Nov 1994 08:49:37 GMT */
-    nussl_snprintf(ret, 30, RFC1123_FORMAT,
-		rfc1123_weekdays[gmt->tm_wday], gmt->tm_mday,
-		short_months[gmt->tm_mon], 1900 + gmt->tm_year,
-		gmt->tm_hour, gmt->tm_min, gmt->tm_sec);
+	nussl_snprintf(ret, 30, RFC1123_FORMAT,
+		       rfc1123_weekdays[gmt->tm_wday], gmt->tm_mday,
+		       short_months[gmt->tm_mon], 1900 + gmt->tm_year,
+		       gmt->tm_hour, gmt->tm_min, gmt->tm_sec);
 
-    return ret;
+	return ret;
 }
 
 /* Takes an ISO-8601-formatted date string and returns the time_t.
  * Returns (time_t)-1 if the parse fails. */
 time_t nussl_iso8601_parse(const char *date)
 {
-    struct tm gmt;
-    int off_hour, off_min;
-    double sec;
-    off_t fix;
-    int n;
+	struct tm gmt;
+	int off_hour, off_min;
+	double sec;
+	off_t fix;
+	int n;
 
-    /*  it goes: ISO8601: 2001-01-01T12:30:00+03:30 */
-    if ((n = sscanf(date, ISO8601_FORMAT_P,
-		    &gmt.tm_year, &gmt.tm_mon, &gmt.tm_mday,
-		    &gmt.tm_hour, &gmt.tm_min, &sec,
-		    &off_hour, &off_min)) == 8) {
-      gmt.tm_sec = (int)sec;
-      fix = - off_hour * 3600 - off_min * 60;
-    }
-    /*  it goes: ISO8601: 2001-01-01T12:30:00-03:30 */
-    else if ((n = sscanf(date, ISO8601_FORMAT_M,
-			 &gmt.tm_year, &gmt.tm_mon, &gmt.tm_mday,
-			 &gmt.tm_hour, &gmt.tm_min, &sec,
-			 &off_hour, &off_min)) == 8) {
-      gmt.tm_sec = (int)sec;
-      fix = off_hour * 3600 + off_min * 60;
-    }
-    /*  it goes: ISO8601: 2001-01-01T12:30:00Z */
-    else if ((n = sscanf(date, ISO8601_FORMAT_Z,
-			 &gmt.tm_year, &gmt.tm_mon, &gmt.tm_mday,
-			 &gmt.tm_hour, &gmt.tm_min, &sec)) == 6) {
-      gmt.tm_sec = (int)sec;
-      fix = 0;
-    }
-    else {
-      return (time_t)-1;
-    }
+	/*  it goes: ISO8601: 2001-01-01T12:30:00+03:30 */
+	if ((n = sscanf(date, ISO8601_FORMAT_P,
+			&gmt.tm_year, &gmt.tm_mon, &gmt.tm_mday,
+			&gmt.tm_hour, &gmt.tm_min, &sec,
+			&off_hour, &off_min)) == 8) {
+		gmt.tm_sec = (int) sec;
+		fix = -off_hour * 3600 - off_min * 60;
+	}
+	/*  it goes: ISO8601: 2001-01-01T12:30:00-03:30 */
+	else if ((n = sscanf(date, ISO8601_FORMAT_M,
+			     &gmt.tm_year, &gmt.tm_mon, &gmt.tm_mday,
+			     &gmt.tm_hour, &gmt.tm_min, &sec,
+			     &off_hour, &off_min)) == 8) {
+		gmt.tm_sec = (int) sec;
+		fix = off_hour * 3600 + off_min * 60;
+	}
+	/*  it goes: ISO8601: 2001-01-01T12:30:00Z */
+	else if ((n = sscanf(date, ISO8601_FORMAT_Z,
+			     &gmt.tm_year, &gmt.tm_mon, &gmt.tm_mday,
+			     &gmt.tm_hour, &gmt.tm_min, &sec)) == 6) {
+		gmt.tm_sec = (int) sec;
+		fix = 0;
+	} else {
+		return (time_t) - 1;
+	}
 
-    gmt.tm_year -= 1900;
-    gmt.tm_isdst = -1;
-    gmt.tm_mon--;
+	gmt.tm_year -= 1900;
+	gmt.tm_isdst = -1;
+	gmt.tm_mon--;
 
-    return mktime(&gmt) + fix + GMTOFF(gmt);
+	return mktime(&gmt) + fix + GMTOFF(gmt);
 }

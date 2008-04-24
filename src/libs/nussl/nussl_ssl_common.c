@@ -19,29 +19,30 @@
 #include "nussl_internal.h"
 #include "nussl_alloc.h"
 
-char* nussl_get_cert_infos(nussl_session* sess)
+char *nussl_get_cert_infos(nussl_session * sess)
 {
 	char valid_from[NUSSL_SSL_VDATELEN];
 	char valid_until[NUSSL_SSL_VDATELEN];
-	char *ret, *dn, *issuer_dn, *dn_str, *issuer_str, *from_str, *until_str;
+	char *ret, *dn, *issuer_dn, *dn_str, *issuer_str, *from_str,
+	    *until_str;
 
 	if (!sess->my_cert)
 		return NULL;
 
 	dn = nussl_ssl_readable_dname(&sess->my_cert->cert.subj_dn);
-	issuer_dn = nussl_ssl_readable_dname(&sess->my_cert->cert.issuer_dn);
-	nussl_ssl_cert_validity(&sess->my_cert->cert, valid_from, valid_until);
+	issuer_dn =
+	    nussl_ssl_readable_dname(&sess->my_cert->cert.issuer_dn);
+	nussl_ssl_cert_validity(&sess->my_cert->cert, valid_from,
+				valid_until);
 
 	dn_str = _("DN: ");
 	issuer_str = _("Issuer DN: ");
 	from_str = _("Valid from: ");
 	until_str = _("Valid until: ");
 
-	ret = (char*)malloc(strlen(dn) + strlen(issuer_dn) + strlen(valid_from) + strlen(valid_until) + 
-		strlen(dn_str) + strlen(issuer_str) + strlen(from_str) + strlen(until_str) + 5); /* 5 = 4 '\n' and 1 '\0' */
+	ret = (char *) malloc(strlen(dn) + strlen(issuer_dn) + strlen(valid_from) + strlen(valid_until) + strlen(dn_str) + strlen(issuer_str) + strlen(from_str) + strlen(until_str) + 5);	/* 5 = 4 '\n' and 1 '\0' */
 
-	if (!ret)
-	{
+	if (!ret) {
 		nussl_free(dn);
 		nussl_free(issuer_dn);
 		return NULL;
@@ -49,7 +50,7 @@ char* nussl_get_cert_infos(nussl_session* sess)
 
 	strcpy(ret, dn_str);
 	strcat(ret, dn);
-	strcat(ret,"\n");
+	strcat(ret, "\n");
 	strcat(ret, issuer_str);
 	strcat(ret, issuer_dn);
 	strcat(ret, "\n");
@@ -66,11 +67,12 @@ char* nussl_get_cert_infos(nussl_session* sess)
 	return ret;
 }
 
-char* nussl_get_server_cert_infos(nussl_session* sess)
+char *nussl_get_server_cert_infos(nussl_session * sess)
 {
 	char valid_from[NUSSL_SSL_VDATELEN];
 	char valid_until[NUSSL_SSL_VDATELEN];
-	char *ret, *dn, *issuer_dn, *dn_str, *issuer_str, *from_str, *until_str;
+	char *ret, *dn, *issuer_dn, *dn_str, *issuer_str, *from_str,
+	    *until_str;
 
 	if (!sess->peer_cert)
 		return NULL;
@@ -84,11 +86,9 @@ char* nussl_get_server_cert_infos(nussl_session* sess)
 	from_str = _("Valid from: ");
 	until_str = _("Valid until: ");
 
-	ret = (char*)nussl_malloc(strlen(dn) + strlen(issuer_dn) + strlen(valid_from) + strlen(valid_until) + 
-		strlen(dn_str) + strlen(issuer_str) + strlen(from_str) + strlen(until_str) + 5); /* 5 = 4 '\n' and 1 '\0' */
+	ret = (char *) nussl_malloc(strlen(dn) + strlen(issuer_dn) + strlen(valid_from) + strlen(valid_until) + strlen(dn_str) + strlen(issuer_str) + strlen(from_str) + strlen(until_str) + 5);	/* 5 = 4 '\n' and 1 '\0' */
 
-	if (!ret)
-	{
+	if (!ret) {
 		nussl_free(dn);
 		nussl_free(issuer_dn);
 		return NULL;
@@ -96,7 +96,7 @@ char* nussl_get_server_cert_infos(nussl_session* sess)
 
 	strcpy(ret, dn_str);
 	strcat(ret, dn);
-	strcat(ret,"\n");
+	strcat(ret, "\n");
 	strcat(ret, issuer_str);
 	strcat(ret, issuer_dn);
 	strcat(ret, "\n");
@@ -113,12 +113,12 @@ char* nussl_get_server_cert_infos(nussl_session* sess)
 	return ret;
 }
 
-char* nussl_get_server_cert_dn(nussl_session* sess)
+char *nussl_get_server_cert_dn(nussl_session * sess)
 {
 	char *tmp, *dn;
-	if (!sess->peer_cert)
-	{
-    		nussl_set_error(sess, _("The peer didn't send a certificate."));
+	if (!sess->peer_cert) {
+		nussl_set_error(sess,
+				_("The peer didn't send a certificate."));
 		return NULL;
 	}
 
@@ -127,4 +127,3 @@ char* nussl_get_server_cert_dn(nussl_session* sess)
 	nussl_free(tmp);
 	return dn;
 }
-

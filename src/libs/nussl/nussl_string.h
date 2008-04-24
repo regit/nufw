@@ -41,7 +41,6 @@
 #include <stdarg.h>
 
 NUSSL_BEGIN_DECLS
-
 /* nussl_token and nussl_qtoken return the next token in *str before either
  * the next separator character 'sep' or the NUL terminator.
  * nussl_qtoken skips over any parts quoted using a pair of any one of
@@ -75,9 +74,9 @@ size_t nussl_unbase64(const char *data, unsigned char **out);
  * dynamically . (Strings are zero-terminated still).  A
  * string buffer nussl_buffer which grows dynamically with the string. */
 typedef struct {
-    char *data; /* contents: NUL-terminated string */
-    size_t used; /* strlen(data) + 1 */
-    size_t length; /* number of bytes allocated */
+	char *data;		/* contents: NUL-terminated string */
+	size_t used;		/* strlen(data) + 1 */
+	size_t length;		/* number of bytes allocated */
 } nussl_buffer;
 
 /* Create a new string buffer object. */
@@ -93,23 +92,23 @@ nussl_buffer *nussl_buffer_ncreate(size_t size);
 /* Concatenate all given strings onto the end of the buffer.  The
  * strings must all be NUL-terminated, and MUST be followed by a NULL
  * argument marking the end of the list.  */
-void nussl_buffer_concat(nussl_buffer *buf, ...);
+void nussl_buffer_concat(nussl_buffer * buf, ...);
 
 /* Append a NUL-terminated string 'str' to buf. */
-void nussl_buffer_zappend(nussl_buffer *buf, const char *str);
+void nussl_buffer_zappend(nussl_buffer * buf, const char *str);
 
 /* Append 'len' bytes of 'data' to buf, where 'data' does not contain
  * a NUL terminator.  (A NUL terminator is appended to buf) */
-void nussl_buffer_append(nussl_buffer *buf, const char *data, size_t len);
+void nussl_buffer_append(nussl_buffer * buf, const char *data, size_t len);
 
 /* Print a string to the end of the buffer using printf-style format
  * string 'format' and subsqeuent arguments.  At most 'max' characters
  * are appended; the number of characters appended (excluding the NUL
  * terminator) is returned.  Behaviour is undefined if 'max' is passed
  * as zero. */
-size_t nussl_buffer_snprintf(nussl_buffer *buf, size_t max,
-                          const char *format, ...)
-    nussl_attribute((format(printf, 3, 4)));
+size_t nussl_buffer_snprintf(nussl_buffer * buf, size_t max,
+			     const char *format, ...)
+nussl_attribute((format(printf, 3, 4)));
 
 /* Append a literal, NUL-terminated constant string 'str' to buffer
  * 'buf'. */
@@ -118,23 +117,23 @@ nussl_buffer_append((buf), (str), sizeof((str)) - 1)
 
 /* Clear the string buffer 'buf', making it equivalent to the empty
  * string. */
-void nussl_buffer_clear(nussl_buffer *buf);
+void nussl_buffer_clear(nussl_buffer * buf);
 
 /* Grow the allocated size of string buffer 'buf' to at least 'size'
  * bytes. */
-void nussl_buffer_grow(nussl_buffer *buf, size_t size);
+void nussl_buffer_grow(nussl_buffer * buf, size_t size);
 
 /* Re-establish the 'used' invariant if the string buffer data field is
  * altered directly. */
-void nussl_buffer_altered(nussl_buffer *buf);
+void nussl_buffer_altered(nussl_buffer * buf);
 
 /* Destroy the string buffer object 'buf' without deallocating the
  * data string.  The data string must subsequently be freed using
  * nussl_free(). */
-char *nussl_buffer_finish(nussl_buffer *buf);
+char *nussl_buffer_finish(nussl_buffer * buf);
 
 /* Destroy a string buffer object. */
-void nussl_buffer_destroy(nussl_buffer *buf);
+void nussl_buffer_destroy(nussl_buffer * buf);
 
 /* Thread-safe strerror() wrapper; place system error for errno value
  * 'errnum' in 'buffer', which is of length 'buflen'.  Returns
@@ -153,11 +152,11 @@ char *nussl_concat(const char *str, ...);
 /* Wrapper for snprintf: always NUL-terminates returned buffer, and
  * returns strlen(str). */
 size_t nussl_snprintf(char *str, size_t size, const char *fmt, ...)
-    nussl_attribute((format(printf, 3, 4)));
+nussl_attribute((format(printf, 3, 4)));
 
 /* Wrapper for vsnprintf. */
 size_t nussl_vsnprintf(char *str, size_t size, const char *fmt, va_list ap)
-    nussl_attribute((format(printf, 3, 0)));
+nussl_attribute((format(printf, 3, 0)));
 
 /* Implementations of strcasecmp and strncasecmp which behave as
  * defined by the ANSI C strcasecmp() and strncasecmp() when in the
@@ -186,5 +185,4 @@ const unsigned char *nussl_tolower_array(void);
 #define NUSSL_HEX2ASC(x) ((char) ((x) > 9 ? ((x) - 10 + 'a') : ((x) + '0')))
 
 NUSSL_END_DECLS
-
-#endif /* NUSSL_STRING_H */
+#endif				/* NUSSL_STRING_H */

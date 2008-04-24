@@ -38,13 +38,12 @@
 #include <sys/socket.h>
 
 #include "nussl_defs.h"
-#include "nussl_ssl.h" /* for nussl_ssl_context */
+#include "nussl_ssl.h"		/* for nussl_ssl_context */
 
 /* Socket read timeout */
 #define SOCKET_READ_TIMEOUT 120
 
 NUSSL_BEGIN_DECLS
-
 /* nussl_socket represents a TCP socket. */
 typedef struct nussl_socket_s nussl_socket;
 
@@ -71,16 +70,16 @@ nussl_sock_addr *nussl_addr_resolve(const char *hostname, int flags);
 
 /* Returns zero if name resolution was successful, non-zero on
  * error. */
-int nussl_addr_result(const nussl_sock_addr *addr);
+int nussl_addr_result(const nussl_sock_addr * addr);
 
 /* Returns the first network address associated with the 'addr'
  * object.  Undefined behaviour if nussl_addr_result returns non-zero for
  * 'addr'; otherwise, never returns NULL.  */
-const nussl_inet_addr *nussl_addr_first(nussl_sock_addr *addr);
+const nussl_inet_addr *nussl_addr_first(nussl_sock_addr * addr);
 
 /* Returns the next network address associated with the 'addr' object,
  * or NULL if there are no more. */
-const nussl_inet_addr *nussl_addr_next(nussl_sock_addr *addr);
+const nussl_inet_addr *nussl_addr_next(nussl_sock_addr * addr);
 
 /* NB: the pointers returned by nussl_addr_first and nussl_addr_next are
  * valid until nussl_addr_destroy is called for the corresponding
@@ -88,41 +87,46 @@ const nussl_inet_addr *nussl_addr_next(nussl_sock_addr *addr);
 
 /* If name resolution fails, copies the error string into 'buffer',
  * which is of size 'bufsiz'.  'buffer' is returned. */
-char *nussl_addr_error(const nussl_sock_addr *addr, char *buffer, size_t bufsiz);
+char *nussl_addr_error(const nussl_sock_addr * addr, char *buffer,
+		       size_t bufsiz);
 
 /* Destroys an address object created by nussl_addr_resolve. */
-void nussl_addr_destroy(nussl_sock_addr *addr);
+void nussl_addr_destroy(nussl_sock_addr * addr);
 
 /* Network address type; IPv4 or IPv6 */
 typedef enum {
-    nussl_iaddr_ipv4 = 0,
-    nussl_iaddr_ipv6
+	nussl_iaddr_ipv4 = 0,
+	nussl_iaddr_ipv6
 } nussl_iaddr_type;
 
 /* Create a network address object from raw byte representation (in
  * network byte order) of given type.  'raw' must be four bytes for an
  * IPv4 address, 16 bytes for an IPv6 address.  May return NULL if
  * address type is not supported. */
-nussl_inet_addr *nussl_iaddr_make(nussl_iaddr_type type, const unsigned char *raw);
+nussl_inet_addr *nussl_iaddr_make(nussl_iaddr_type type,
+				  const unsigned char *raw);
 
 /* Compare two network address objects i1 and i2; returns zero if they
  * are equivalent or non-zero otherwise.  */
-int nussl_iaddr_cmp(const nussl_inet_addr *i1, const nussl_inet_addr *i2);
+int nussl_iaddr_cmp(const nussl_inet_addr * i1,
+		    const nussl_inet_addr * i2);
 
 /* Return the type of the given network address object. */
-nussl_iaddr_type nussl_iaddr_typeof(const nussl_inet_addr *ia);
+nussl_iaddr_type nussl_iaddr_typeof(const nussl_inet_addr * ia);
 
 /* Print the string representation of network address 'ia' into the
  * buffer 'buffer', which is of length 'bufsiz'.  Returns 'buffer'. */
-char *nussl_iaddr_print(const nussl_inet_addr *ia, char *buffer, size_t bufsiz);
+char *nussl_iaddr_print(const nussl_inet_addr * ia, char *buffer,
+			size_t bufsiz);
 
 /* Perform the reverse name lookup on network address 'ia', placing
  * the returned name in the 'buf' buffer (of length 'bufsiz') if
  * successful.  Returns zero on success, or non-zero on error. */
-int nussl_iaddr_reverse(const nussl_inet_addr *ia, char *buf, size_t bufsiz);
+int nussl_iaddr_reverse(const nussl_inet_addr * ia, char *buf,
+			size_t bufsiz);
 
 /* Destroy a network address object created using nussl_iaddr_make. */
-void nussl_iaddr_free(nussl_inet_addr *addr);
+void nussl_iaddr_free(nussl_inet_addr * addr);
 
 /* Create a socket object; returns NULL on error. */
 nussl_socket *nussl_sock_create(void);
@@ -139,21 +143,21 @@ nussl_socket *nussl_sock_create_with_fd(int fd);
  *
  * (Note: This function is not equivalent to a BSD socket bind(), it
  * only takes effect during the _connect() call). */
-void nussl_sock_prebind(nussl_socket *sock, const nussl_inet_addr *addr,
-                     unsigned int port);
+void nussl_sock_prebind(nussl_socket * sock, const nussl_inet_addr * addr,
+			unsigned int port);
 
 /* Connect the socket to server at address 'addr' on port 'port'.
  * Returns zero on success, NUSSL_SOCK_TIMEOUT if a timeout occurs when a
  * non-zero connect timeout is configured (and is supported), or
  * NUSSL_SOCK_ERROR on failure.  */
-int nussl_sock_connect(nussl_socket *sock, const nussl_inet_addr *addr,
-                    unsigned int port);
+int nussl_sock_connect(nussl_socket * sock, const nussl_inet_addr * addr,
+		       unsigned int port);
 
 /* Read up to 'count' bytes from socket into 'buffer'.  Returns:
  *   NUSSL_SOCK_* on error,
  *   >0 length of data read into buffer (may be less than 'count')
  */
-ssize_t nussl_sock_read(nussl_socket *sock, char *buffer, size_t count);
+ssize_t nussl_sock_read(nussl_socket * sock, char *buffer, size_t count);
 
 /* Read up to 'count' bytes into 'buffer', leaving the data available
  * in the socket buffer to be returned by a subsequent call to
@@ -161,7 +165,7 @@ ssize_t nussl_sock_read(nussl_socket *sock, char *buffer, size_t count);
  *   NUSSL_SOCK_* on error,
  *   >0 length of data read into buffer.
  */
-ssize_t nussl_sock_peek(nussl_socket *sock, char *buffer, size_t count);
+ssize_t nussl_sock_peek(nussl_socket * sock, char *buffer, size_t count);
 
 /* Block for up to 'n' seconds until data becomes available for reading
  * from the socket. Returns:
@@ -169,12 +173,13 @@ ssize_t nussl_sock_peek(nussl_socket *sock, char *buffer, size_t count);
  *  NUSSL_SOCK_TIMEOUT if no data arrives in 'n' seconds,
  *  0 if data arrived on the socket.
  */
-int nussl_sock_block(nussl_socket *sock, int n);
+int nussl_sock_block(nussl_socket * sock, int n);
 
 /* Write 'count' bytes of 'data' to the socket.  Guarantees to either
  * write all the bytes or to fail.  Returns 0 on success, or NUSSL_SOCK_*
  * on error. */
-int nussl_sock_fullwrite(nussl_socket *sock, const char *data, size_t count);
+int nussl_sock_fullwrite(nussl_socket * sock, const char *data,
+			 size_t count);
 
 /* Read an LF-terminated line into 'buffer', and NUL-terminate it.
  * At most 'len' bytes are read (including the NUL terminator).
@@ -182,68 +187,69 @@ int nussl_sock_fullwrite(nussl_socket *sock, const char *data, size_t count);
  * NUSSL_SOCK_* on error,
  * >0 number of bytes read (including NUL terminator)
  */
-ssize_t nussl_sock_readline(nussl_socket *sock, char *buffer, size_t len);
+ssize_t nussl_sock_readline(nussl_socket * sock, char *buffer, size_t len);
 
 /* Read exactly 'len' bytes into buffer, or fail; returns 0 on
  * success, NUSSL_SOCK_* on error. */
-ssize_t nussl_sock_fullread(nussl_socket *sock, char *buffer, size_t len);
+ssize_t nussl_sock_fullread(nussl_socket * sock, char *buffer, size_t len);
 
 /* Accepts a connection from listening socket 'fd' and places the
  * socket in 'sock'.  Returns zero on success or -1 on failure. */
-int nussl_sock_accept(nussl_socket *sock, int fd);
+int nussl_sock_accept(nussl_socket * sock, int fd);
 
 /* INL: Same than nussl_sock_accept(), but with provide every info we have */
-int nussl_sock_accept_full(nussl_socket *sock, int listener,  struct sockaddr *addr, socklen_t *addrlen);
+int nussl_sock_accept_full(nussl_socket * sock, int listener,
+			   struct sockaddr *addr, socklen_t * addrlen);
 
 /* Returns the file descriptor used for socket 'sock'. */
-int nussl_sock_fd(const nussl_socket *sock);
+int nussl_sock_fd(const nussl_socket * sock);
 
 /* Return address of peer, or NULL on error.  The returned address
  * must be destroyed by caller using nussl_iaddr_free. */
-nussl_inet_addr *nussl_sock_peer(nussl_socket *sock, unsigned int *port);
+nussl_inet_addr *nussl_sock_peer(nussl_socket * sock, unsigned int *port);
 
 /* Close the socket and destroy the socket object.  Returns zero on
  * success, or an errno value if close() failed. */
-int nussl_sock_close(nussl_socket *sock);
+int nussl_sock_close(nussl_socket * sock);
 
 /* Return current error string for socket. */
-const char *nussl_sock_error(const nussl_socket *sock);
+const char *nussl_sock_error(const nussl_socket * sock);
 
 /* Set read timeout for socket, in seconds; must be a non-zero
  * positive integer. */
-void nussl_sock_read_timeout(nussl_socket *sock, int timeout);
+void nussl_sock_read_timeout(nussl_socket * sock, int timeout);
 
 /* Set connect timeout for socket, in seconds; must be a positive
  * integer.  If a timeout of 'zero' is used then then no explicit
  * timeout handling will be used for nussl_sock_connect(), and the
  * connect call will only timeout as dictated by the TCP stack. */
-void nussl_sock_connect_timeout(nussl_socket *sock, int timeout);
+void nussl_sock_connect_timeout(nussl_socket * sock, int timeout);
 
 /* Negotiate an SSL connection on socket as an SSL server, using given
  * SSL context. */
-int nussl_sock_accept_ssl(nussl_socket *sock, nussl_ssl_context *ctx);
+int nussl_sock_accept_ssl(nussl_socket * sock, nussl_ssl_context * ctx);
 
 /* Negotiate an SSL connection on socket as an SSL client, using given
  * SSL context.  The 'userdata' parameter is associated with the
  * underlying SSL library's socket structure for use in callbacks.
  * Returns zero on success, or non-zero on error. */
-int nussl_sock_connect_ssl(nussl_socket *sock, nussl_ssl_context *ctx,
-                        void *userdata);
+int nussl_sock_connect_ssl(nussl_socket * sock, nussl_ssl_context * ctx,
+			   void *userdata);
 
 /* Retrieve the session ID of the current SSL session.  If 'buf' is
  * non-NULL, on success, copies at most *buflen bytes to 'buf' and
  * sets *buflen to the exact number of bytes copied.  If 'buf' is
  * NULL, on success, sets *buflen to the length of the session ID.
  * Returns zero on success, non-zero on error. */
-int nussl_sock_sessid(nussl_socket *sock, unsigned char *buf, size_t *buflen);
+int nussl_sock_sessid(nussl_socket * sock, unsigned char *buf,
+		      size_t * buflen);
 
 /* Return human-readable name of SSL/TLS cipher used for connection,
  * or NULL if none.  The format of this string is not intended to be
  * fixed or parseable, but is informational only.  Return value is
  * NUL-terminated malloc-allocated string if not NULL, which must be
  * freed by the caller. */
-char *nussl_sock_cipher(nussl_socket *sock);
+char *nussl_sock_cipher(nussl_socket * sock);
 
 NUSSL_END_DECLS
-
-#endif /* NUSSL_SOCKET_H */
+#endif				/* NUSSL_SOCKET_H */

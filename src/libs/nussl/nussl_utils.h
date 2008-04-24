@@ -47,7 +47,6 @@
 #endif
 
 NUSSL_BEGIN_DECLS
-
 /* Returns a human-readable library version string describing the
  * version and build information; for example:
  *    "neon 0.2.0: Library build, OpenSSL support" */
@@ -60,13 +59,13 @@ const char *nussl_version_string(void);
 int nussl_version_match(int major, int minor);
 
 /* Feature codes: */
-#define NUSSL_FEATURE_SSL (1) /* SSL/TLS support */
-#define NUSSL_FEATURE_ZLIB (2) /* zlib compression in compress interface */
-#define NUSSL_FEATURE_IPV6 (3) /* IPv6 is supported in resolver */
-#define NUSSL_FEATURE_LFS (4) /* large file support */
-#define NUSSL_FEATURE_SOCKS (5) /* SOCKSv5 support */
-#define NUSSL_FEATURE_TS_SSL (6) /* Thread-safe SSL/TLS support */
-#define NUSSL_FEATURE_I18N (7) /* i18n error message support */
+#define NUSSL_FEATURE_SSL (1)	/* SSL/TLS support */
+#define NUSSL_FEATURE_ZLIB (2)	/* zlib compression in compress interface */
+#define NUSSL_FEATURE_IPV6 (3)	/* IPv6 is supported in resolver */
+#define NUSSL_FEATURE_LFS (4)	/* large file support */
+#define NUSSL_FEATURE_SOCKS (5)	/* SOCKSv5 support */
+#define NUSSL_FEATURE_TS_SSL (6)	/* Thread-safe SSL/TLS support */
+#define NUSSL_FEATURE_I18N (7)	/* i18n error message support */
 
 /* Returns non-zero if library is built with support for the given
  * NUSSL_FEATURE_* feature code 'code'. */
@@ -77,25 +76,25 @@ int nussl_has_support(int feature);
 #if 0
 #ifndef NUSSL_DEBUGGING
 #define NUSSL_DEBUG if (0) nussl_debug
-#else /* DEBUGGING */
+#else				/* DEBUGGING */
 #define NUSSL_DEBUG nussl_debug
-#endif /* DEBUGGING */
+#endif				/* DEBUGGING */
 #endif
 
 
 
 /* Debugging masks. */
 #if 0
-#define NUSSL_DBG_SOCKET (1<<0) /* raw socket */
-#define NUSSL_DBG_HTTP (1<<1) /* HTTP request/response handling */
-#define NUSSL_DBG_XML (1<<2) /* XML parser */
-#define NUSSL_DBG_HTTPAUTH (1<<3) /* HTTP authentication (hiding credentials) */
-#define NUSSL_DBG_HTTPPLAIN (1<<4) /* plaintext HTTP authentication */
-#define NUSSL_DBG_LOCKS (1<<5) /* WebDAV locking */
-#define NUSSL_DBG_XMLPARSE (1<<6) /* low-level XML parser */
-#define NUSSL_DBG_HTTPBODY (1<<7) /* HTTP response body blocks */
-#define NUSSL_DBG_SSL (1<<8) /* SSL/TLS */
-#define NUSSL_DBG_FLUSH (1<<30) /* always flush debugging */
+#define NUSSL_DBG_SOCKET (1<<0)	/* raw socket */
+#define NUSSL_DBG_HTTP (1<<1)	/* HTTP request/response handling */
+#define NUSSL_DBG_XML (1<<2)	/* XML parser */
+#define NUSSL_DBG_HTTPAUTH (1<<3)	/* HTTP authentication (hiding credentials) */
+#define NUSSL_DBG_HTTPPLAIN (1<<4)	/* plaintext HTTP authentication */
+#define NUSSL_DBG_LOCKS (1<<5)	/* WebDAV locking */
+#define NUSSL_DBG_XMLPARSE (1<<6)	/* low-level XML parser */
+#define NUSSL_DBG_HTTPBODY (1<<7)	/* HTTP response body blocks */
+#define NUSSL_DBG_SSL (1<<8)	/* SSL/TLS */
+#define NUSSL_DBG_FLUSH (1<<30)	/* always flush debugging */
 #endif
 
 #define NUSSL_DEBUG fprintf
@@ -113,21 +112,21 @@ int nussl_has_support(int feature);
 
 
 
-#define NUSSL_OK (0) /* Success */
-#define NUSSL_ERROR (1) /* Generic error; use nussl_get_error(session) for message */
-#define NUSSL_LOOKUP (2) /* Server or proxy hostname lookup failed */
-#define NUSSL_AUTH (3) /* User authentication failed on server */
-#define NUSSL_PROXYAUTH (4) /* User authentication failed on proxy */
-#define NUSSL_CONNECT (5) /* Could not connect to server */
-#define NUSSL_TIMEOUT (6) /* Connection timed out */
-#define NUSSL_FAILED (7) /* The precondition failed */
-#define NUSSL_RETRY (8) /* Retry request (nussl_end_request ONLY) */
-#define NUSSL_REDIRECT (9) /* See nussl_redirect.h */
+#define NUSSL_OK (0)		/* Success */
+#define NUSSL_ERROR (1)		/* Generic error; use nussl_get_error(session) for message */
+#define NUSSL_LOOKUP (2)	/* Server or proxy hostname lookup failed */
+#define NUSSL_AUTH (3)		/* User authentication failed on server */
+#define NUSSL_PROXYAUTH (4)	/* User authentication failed on proxy */
+#define NUSSL_CONNECT (5)	/* Could not connect to server */
+#define NUSSL_TIMEOUT (6)	/* Connection timed out */
+#define NUSSL_FAILED (7)	/* The precondition failed */
+#define NUSSL_RETRY (8)		/* Retry request (nussl_end_request ONLY) */
+#define NUSSL_REDIRECT (9)	/* See nussl_redirect.h */
 
 /* Send debugging output to 'stream', for all of the given debug
  * channels.  To disable debugging, pass 'stream' as NULL and 'mask'
  * as 0. */
-void nussl_debug_init(FILE *stream, int mask);
+void nussl_debug_init(FILE * stream, int mask);
 
 /* The current debug mask and stream set by the last call to
  * nussl_debug_init. */
@@ -136,22 +135,22 @@ extern FILE *nussl_debug_stream;
 
 /* Produce debug output if any of channels 'ch' is enabled for
  * debugging. */
-void nussl_debug(int ch, const char *, ...) nussl_attribute((format(printf, 2, 3)));
+void nussl_debug(int ch, const char *,
+		 ...) nussl_attribute((format(printf, 2, 3)));
 
 /* Storing an HTTP status result */
 typedef struct {
-    int major_version;
-    int minor_version;
-    int code; /* Status-Code value */
-    int klass; /* Class of Status-Code (1-5) */
-    char *reason_phrase;
+	int major_version;
+	int minor_version;
+	int code;		/* Status-Code value */
+	int klass;		/* Class of Status-Code (1-5) */
+	char *reason_phrase;
 } nussl_status;
 
 /* NB: couldn't use 'class' in nussl_status because it would clash with
  * the C++ reserved word. */
 
-int check_key_perms(const char* filename);
+int check_key_perms(const char *filename);
 
 NUSSL_END_DECLS
-
-#endif /* NUSSL_UTILS_H */
+#endif				/* NUSSL_UTILS_H */
