@@ -621,7 +621,7 @@ void no_action_signals(int recv_signal)
 		g_free(nuauthconf->x); \
 		nuauthconf->x = g_strdup(params->x); \
 	}
-	
+
 static void nuauthconf_from_cmdline(command_line_params_t *params)
 {
 	OVERWRITE_DATA(client_srv);
@@ -915,13 +915,18 @@ void main_cleanup()
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO, DEBUG_AREA_MAIN)) {
 		if (g_thread_pool_unprocessed(nuauthdatas->user_checkers)
 		    || g_thread_pool_unprocessed(nuauthdatas->
-						 acl_checkers)) {
+						 acl_checkers)
+		    || g_thread_pool_unprocessed(nuauthdatas->
+						 user_loggers)) {
 			g_message
 			    ("%u user/%u acl unassigned task(s), %d connection(s)",
+			     ", %d unlogged packet(s)",
 			     g_thread_pool_unprocessed(nuauthdatas->
 						       user_checkers),
 			     g_thread_pool_unprocessed(nuauthdatas->
 						       acl_checkers),
+			     g_thread_pool_unprocessed(nuauthdatas->
+						       user_loggers),
 			     g_hash_table_size(conn_list)
 			    );
 		}
