@@ -138,7 +138,7 @@ void search_and_push(connection_t * new)
 	}
 }
 
-inline void search_and_fill_complete_of_authreq(connection_t * new,
+void search_and_fill_complete_of_authreq(connection_t * new,
 						connection_t * packet)
 {
 
@@ -192,7 +192,7 @@ inline void search_and_fill_complete_of_authreq(connection_t * new,
  *  - #AUTH_STATE_USERPCKT: that's a duplicate
  *  - other: error!
  */
-inline void search_and_fill_complete_of_userpckt(connection_t * new,
+void search_and_fill_complete_of_userpckt(connection_t * new,
 						 connection_t * packet)
 {
 
@@ -241,7 +241,7 @@ inline void search_and_fill_complete_of_userpckt(connection_t * new,
 	free_connection(new);
 }
 
-inline void search_and_fill_done(connection_t * new, connection_t * packet)
+void search_and_fill_done(connection_t * new, connection_t * packet)
 {
 	/* if new is a nufw request respond with correct decision */
 	switch (new->state) {
@@ -259,7 +259,7 @@ inline void search_and_fill_done(connection_t * new, connection_t * packet)
 	free_connection(new);
 }
 
-inline void search_and_fill_completing(connection_t * new,
+void search_and_fill_completing(connection_t * new,
 				       connection_t * packet)
 {
 	switch (new->state) {
@@ -294,7 +294,7 @@ inline void search_and_fill_completing(connection_t * new,
 	free_connection(new);
 }
 
-inline void search_and_fill_ready(connection_t * new,
+void search_and_fill_ready(connection_t * new,
 				  connection_t * packet)
 {
 	debug_log_message(DEBUG, DEBUG_AREA_MAIN,
