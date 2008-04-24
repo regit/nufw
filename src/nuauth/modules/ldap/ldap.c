@@ -138,7 +138,7 @@ char *number_to_decimal(number_t number)
 int decimal_to_number(const char *orig_decimal, number_t number)
 {
 	ssize_t decimal_len = strlen(orig_decimal);
-	char *decimal = strdup(orig_decimal);
+	char *decimal = g_strdup(orig_decimal);
 	char *err;
 	unsigned char index;
 	for (index = 0; index < DIGIT_COUNT; index++)
@@ -150,13 +150,13 @@ int decimal_to_number(const char *orig_decimal, number_t number)
 		number[index] = strtol(decimal + decimal_len, &err, 10);
 		index++;
 		if (err == NULL || *err != 0 || DIGIT_COUNT <= index) {
-			free(decimal);
+			g_free(decimal);
 			return 0;
 		}
 	}
 	decimal[decimal_len] = 0;
 	number[index] = strtol(decimal, &err, 10);
-	free(decimal);
+	g_free(decimal);
 	if (err == NULL || *err != 0)
 		return 0;
 	else
@@ -534,8 +534,8 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 		ip_dst = ipv6_to_base10(&element->tracking.daddr);
 	}
 	if (ip_src == NULL || ip_dst == NULL) {
-		free(ip_src);
-		free(ip_dst);
+		g_free(ip_src);
+		g_free(ip_dst);
 		return NULL;
 	}
 
@@ -558,8 +558,8 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 				log_message(WARNING, DEBUG_AREA_MAIN,
 					    "LDAP query too big (more than %d bytes)\n",
 					    LDAP_QUERY_SIZE);
-				free(ip_src);
-				free(ip_dst);
+				g_free(ip_src);
+				g_free(ip_dst);
 				return NULL;
 			}
 			break;
@@ -578,13 +578,13 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 				log_message(WARNING, DEBUG_AREA_MAIN,
 					    "LDAP query too big (more than %d bytes)\n",
 					    LDAP_QUERY_SIZE);
-				free(ip_src);
-				free(ip_dst);
+				g_free(ip_src);
+				g_free(ip_dst);
 				return NULL;
 			}
 		}
-		free(ip_src);
-		free(ip_dst);
+		g_free(ip_src);
+		g_free(ip_dst);
 
 		/* finish filter */
 		if (element->os_sysname) {
@@ -655,23 +655,24 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 			log_message(WARNING, DEBUG_AREA_MAIN,
 				    "LDAP query too big (more than %d bytes)\n",
 				    LDAP_QUERY_SIZE);
-			free(ip_src);
-			free(ip_dst);
+			g_free(ip_src);
+			g_free(ip_dst);
 			return NULL;
 		}
-		free(ip_src);
-		free(ip_dst);
+		g_free(ip_src);
+		g_free(ip_dst);
 	}
 
 	try = 0;
 	do {
+		try++;
 		if (ld == NULL) {
 			/* init ldap has never been done */
 			ld = ldap_conn_init(params);
 			if (ld == NULL) {
 				log_message(SERIOUS_WARNING, DEBUG_AREA_AUTH,
 						"Can not initiate LDAP conn\n");
-				return NULL;
+				break;
 			}
 			g_private_set(params->ldap_priv, ld);
 		}
@@ -708,15 +709,14 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 						"disabling current connection");
 				ldap_unbind_ext_s(ld, NULL, NULL);
 				ld = NULL;
-				try++;
 				g_private_set(params->ldap_priv, ld);
 			} else {
-				return NULL;
+				break;
 			}
 		}
-	} while ((err!= LDAP_SUCCESS) || (try < LDAP_MAX_TRY));
+	} while ((err != LDAP_SUCCESS) || (try < LDAP_MAX_TRY));
 
-	if (try == LDAP_MAX_TRY) {
+	if ((try == LDAP_MAX_TRY) && (err != LDAP_SUCCESS)) {
 		log_message(WARNING, DEBUG_AREA_MAIN,
 			    "invalid return from ldap_search_st : %s\n",
 			    ldap_err2string(err));
