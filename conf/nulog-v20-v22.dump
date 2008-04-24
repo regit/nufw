@@ -1,3 +1,0 @@
-ALTER TABLE ulog ADD (packets_in int(10) default NULL, packets_out int(10) default NULL, bytes_in int(10) default NULL, bytes_out int(10) default NULL);
-ALTER TABLE conntrack_ulog ADD (packets_in int(10) default NULL, packets_out int(10) default NULL, bytes_in int(10) default NULL, bytes_out int(10) default NULL);
- 

@@ -1,2 +1,0 @@
-alter table ulog add client_os character varying(128);
-alter table ulog add client_app character varying(128);

@@ -1,2 +1,0 @@
-alter table ulog add client_os varchar(128) default NULL;
-alter table ulog add client_app varchar(128) default NULL;

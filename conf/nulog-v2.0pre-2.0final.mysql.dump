@@ -1,1 +1,0 @@
-alter table users add socket unsigned int(10) not NULL;
