@@ -50,6 +50,9 @@
 
 #include "security.h"
 
+#include <nubase.h>
+
+
 /**
  * \addtogroup libnuclient
  * @{
@@ -221,7 +224,7 @@ int secure_readlink(const char *filename, char *buffer,
 }
 
 /**
- * Walk in directoty like "/proc/123/fd/" 
+ * Walk in directoty like "/proc/123/fd/"
  */
 void prg_cache_load_sub(DIR * dir, const char *path_process,
 			const char *path_fd)
@@ -246,8 +249,8 @@ void prg_cache_load_sub(DIR * dir, const char *path_process,
 			continue;
 
 		/*
-		 * extract inode number from name like "socket:[12345]" 
-		 * or "[0000]:12345" 
+		 * extract inode number from name like "socket:[12345]"
+		 * or "[0000]:12345"
 		 */
 		if (extract_type_1_socket_inode(lname, &inode) < 0)
 			if (extract_type_2_socket_inode(lname, &inode) < 0)

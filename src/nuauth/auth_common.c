@@ -128,35 +128,6 @@ void free_buffer_read(struct tls_buffer_read *datas)
 }
 
 /**
- * Function snprintf() which check buffer overflow, and always write a '\\0'
- * to the end of the buffer.
- *
- * \param buffer Buffer where characters are written
- * \param buffer_size Buffer size (in bytes), usually equals to sizeof(buffer)
- * \param format Format string (see printf() documentation)
- * \return Returns FALSE if a buffer overflow occurs, TRUE is everything goes fine.
- */
-gboolean secure_snprintf(char *buffer, unsigned int buffer_size,
-			 char *format, ...)
-{
-	va_list args;
-	int ret;
-	va_start(args, format);
-#ifdef DEBUG_ENABLE
-	memset(buffer, 0, buffer_size);
-#else
-	buffer[0] = 0;
-#endif
-	ret = g_vsnprintf(buffer, buffer_size, format, args);
-	va_end(args);
-	buffer[buffer_size - 1] = '\0';
-	if (0 <= ret && ret <= ((int) buffer_size - 1))
-		return TRUE;
-	else
-		return FALSE;
-}
-
-/**
  * Check Protocol version agains supported one
  *
  * \param type An ::proto_type_t used to select if we need to check against nufw or client supported protocols

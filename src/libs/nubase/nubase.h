@@ -27,6 +27,14 @@
 #  include "config.h"
 #endif
 
+#ifndef FALSE
+#define FALSE 0
+#endif
+
+#ifndef TRUE
+#define TRUE  1
+#endif
+
 #include "ipv6.h"
 #include "log.h"
 #include "packet_parser.h"
