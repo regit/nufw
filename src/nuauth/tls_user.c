@@ -192,7 +192,7 @@ nu_error_t treat_user_request(user_session_t * c_session,
 	if (header->proto == PROTO_VERSION
 	    && header->msg_type == USER_HELLO) {
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
-				  "tls user: HELLO from %s",
+				  "tls user: HELLO from user \"%s\"",
 				  c_session->user_name);
 		free_buffer_read(datas);
 		return NU_EXIT_CONTINUE;
@@ -257,7 +257,7 @@ nu_error_t treat_user_request(user_session_t * c_session,
 		}
 	} else {
 		log_message(INFO, DEBUG_AREA_USER,
-			    "Bad packet, option of header is not set or unauthorized option from user %s.",
+			    "Bad packet, option of header is not set or unauthorized option from user \"%s\".",
 			    c_session->user_name);
 		free_buffer_read(datas);
 		return NU_EXIT_OK;
@@ -878,12 +878,12 @@ void tls_user_start_servers(GSList *servers)
 			g_new0(struct nuauth_thread_t, 1);
 		if (!parse_addr_port(user_servers[i], nuauthconf->userpckt_port, &context->addr, &context->port)) {
 			log_message(FATAL, DEBUG_AREA_MAIN | DEBUG_AREA_GW,
-			    "Address parsing error at %s:%d (%s)", __FILE__,
-			    __LINE__, user_servers[i]);
+					"Address parsing error at %s:%d (\"%s\")", __FILE__,
+					__LINE__, user_servers[i]);
 			nuauth_ask_exit();
 		}
 		log_message(INFO, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
-			    "Creating user socket %s:%s",context->addr, context->port);
+			"Creating user socket %s:%s", context->addr, context->port);
 
 		thread_new_wdata(srv_thread,
 				 "tls auth server",

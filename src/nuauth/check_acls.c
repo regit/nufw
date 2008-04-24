@@ -34,7 +34,7 @@
  * (acl_ckeckers function).
  * Treat a connection from insertion to decision
  *
- *  We use this function when 
+ *  We use this function when
  *  decision is ready to be taken for the connection
  *
  * \param userdata a connection
@@ -92,7 +92,7 @@ void acl_check_and_decide(gpointer userdata, gpointer data)
 				break;
 			default:
 				log_message(WARNING, DEBUG_AREA_PACKET,
-					    "This is no good : conn state is unvalid at %s:%d",
+					    "This is no good : conn state is invalid at %s:%d",
 					    __FILE__, __LINE__);
 			}
 		}

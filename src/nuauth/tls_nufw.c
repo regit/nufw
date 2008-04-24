@@ -159,7 +159,7 @@ static int treat_nufw_request(nufw_session_t * c_session)
 			break;
 		case NU_EXIT_NO_RETURN:
 			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
-				"Nufw gateway send control message");
+				"Nufw gateway sending control message");
 			break;
 		}
 #if 0
@@ -383,7 +383,7 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 		log_message(FATAL, DEBUG_AREA_GW | DEBUG_AREA_MAIN,
 			    "FATAL ERROR: NuFW bind error: %s", errmsg);
 		log_message(FATAL, DEBUG_AREA_GW | DEBUG_AREA_MAIN,
-			    "Check that nuauth is not running twice. Exit nuauth!");
+			    "Check that nuauth is not running twice. Exiting nuauth!");
 		return 0;
 	}
 
@@ -516,7 +516,7 @@ void tls_nufw_start_servers(GSList *servers)
 			g_new0(struct nuauth_thread_t, 1);
 		if (!parse_addr_port(nufw_servers[i], nuauthconf->authreq_port, &context->addr, &context->port)) {
 			log_message(FATAL, DEBUG_AREA_MAIN | DEBUG_AREA_GW,
-			    "Address parsing error at %s:%d (%s)", __FILE__,
+			    "Address parsing error at %s:%d (\"%s\")", __FILE__,
 			    __LINE__, nufw_servers[i]);
 			nuauth_ask_exit();
 		}

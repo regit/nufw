@@ -118,8 +118,8 @@ void user_check_and_decide(gpointer user_session, gpointer data)
 				char ip_ascii[INET6_ADDRSTRLEN];
 				format_ipv6(&tlsdata->ip_addr, ip_ascii, INET6_ADDRSTRLEN, NULL);
 				g_message
-					("User %s on %s tried to authenticate packet from other ip",
-					 conn_elt->username, ip_ascii);
+				    ("User \"%s\" on %s tried to authenticate packet from other ip",
+				     conn_elt->username, ip_ascii);
 				conn_elt->log_prefix = g_strdup(SPOOFED_LOG_PREFIX);
 				print_connection(conn_elt, "User spoofed Packet");
 			}

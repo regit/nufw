@@ -46,17 +46,17 @@ static void policy_refuse_user(user_session_t * c_session, int c,
 	switch (reason) {
 	case PER_USER_TOO_MANY_LOGINS:
 		log_message(INFO, DEBUG_AREA_USER,
-			    "Policy: User %s already connected too many times, closing socket",
+			    "Policy: Too many opened sessions for user \"%s\", closing socket",
 			    c_session->user_name);
 		break;
 	case PER_IP_TOO_MANY_LOGINS:
 		log_message(INFO, DEBUG_AREA_USER,
-			    "Policy: User %s trying to connect from already overused IP, closing socket",
+			    "Policy: User \"%s\" trying to connect from already overused IP, closing socket",
 			    c_session->user_name);
 		break;
 	default:
 		log_message(WARNING, DEBUG_AREA_USER,
-			    "Policy: User %s has to disconnect for UNKNOWN reason, closing socket",
+			    "Policy (bug!): User \"%s\" has to disconnect for UNKNOWN reason, closing socket",
 			    c_session->user_name);
 	}
 	/* get rid of client */
