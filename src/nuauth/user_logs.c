@@ -88,6 +88,7 @@ nu_error_t log_user_packet(connection_t * element, tcp_state_t state)
 		}
 	}
 	/* end */
+	return NU_EXIT_OK;
 }
 
 /**

@@ -292,7 +292,7 @@ nu_error_t authpckt_conntrack(unsigned char *dgram, unsigned int dgram_size)
 	/* Check message content size */
 	if (dgram_size != sizeof(struct nuv4_conntrack_message_t)) {
 		log_message(CRITICAL, DEBUG_AREA_PACKET | DEBUG_AREA_GW,
-				  "Auth conntrack: Improper length of packet (%d instead of %u)",
+				  "Auth conntrack: Improper length of packet (%d instead of %lu)",
 				  dgram_size,
 				  sizeof(struct nuv4_conntrack_message_t));
 		return NU_EXIT_ERROR;

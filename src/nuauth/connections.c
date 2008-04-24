@@ -222,7 +222,7 @@ connection_t *duplicate_connection(connection_t * element)
  * \return Returns 1 if success, 0 if it fails
  */
 
-inline int conn_cl_remove(gconstpointer conn)
+int conn_cl_remove(gconstpointer conn)
 {
 	if (!g_hash_table_steal(conn_list,
 				&(((connection_t *) conn)->tracking))) {

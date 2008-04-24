@@ -23,6 +23,7 @@
 #include <auth_srv.h>
 #include <auth_ldap.h>
 #include "security.h"
+#include "nubase.h"
 
 /**
  * \ingroup NuauthModules

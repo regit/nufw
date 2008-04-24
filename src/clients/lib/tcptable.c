@@ -353,7 +353,7 @@ int tcptable_init(conntable_t ** ct)
  * Compute connection hash (index in a connection table, see ::conntable_t).
  * Hash is an integer in interval 0..(::CONNTABLE_BUCKETS-1).
  */
-inline int tcptable_hash(conn_t * c)
+int tcptable_hash(conn_t * c)
 {
 	/* TODO: Hash the whole ip address! */
 #ifndef FREEBSD

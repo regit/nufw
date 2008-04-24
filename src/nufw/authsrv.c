@@ -272,7 +272,7 @@ int auth_process_conn_update(char *dgram, int dgram_size)
  *
  *  \return -1 in case of error
  */
-inline int auth_packet_to_decision(char *dgram, int dgram_size)
+int auth_packet_to_decision(char *dgram, int dgram_size)
 {
 	if (dgram_size < 2) {
 		debug_log_printf(DEBUG_AREA_GW, DEBUG_LEVEL_DEBUG,

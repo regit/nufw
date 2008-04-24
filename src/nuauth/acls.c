@@ -79,7 +79,7 @@ guint32 hash_acl(gconstpointer key)
 /**
  * Internal string comparison function
  */
-inline gint strcmp_null(gchar * a, gchar * b)
+gint strcmp_null(gchar * a, gchar * b)
 {
 	if (a == NULL) {
 		if (b == NULL)
