@@ -721,19 +721,10 @@ const char *nu_client_strerror(nuauth_session_t * session, nuclient_error_t * er
 		return "Error structure was not initialised";
 	}
 
-	/* 
-	 * In this very special case, we cannot handle the error 
-	 * and INTERNAL_ERROR is wise.
-	 */
-	if (( err->family == NUSSL_ERR ) && 
-		( ! session->nussl )) {
-		err->family = INTERNAL_ERROR;
-	}
-
 	switch (err->family) {
 	case NUSSL_ERR:
-		if (session == NULL)
-			return "NuSSL error.";
+		if(session == NULL || session->nussl == NULL)
+			return "NuSSL initialization error.";
 		return nussl_get_error(session->nussl);
 	case SASL_ERROR:
 		return sasl_errstring(err->error, NULL, NULL);
