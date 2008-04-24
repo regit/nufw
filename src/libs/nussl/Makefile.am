@@ -1,5 +1,9 @@
 noinst_LTLIBRARIES = libnussl.la
-EXTRA_DIST = README
+
+HEADERS_FILE = nussl_alloc.h nussl_config.h nussl_constants.h nussl_dates.h nussl_defs.h nussl.h nussl_internal.h \
+	  nussl_private.h nussl_privssl.h nussl_request.h nussl_session.h nussl_socket.h \
+	nussl_ssl_common.h nussl_ssl.h nussl_string.h nussl_utils.h
+EXTRA_DIST = README $(HEADERS_FILE)
 
 libnussl_la_SOURCES = nussl_alloc.c nussl_dates.c nussl_openssl.c nussl_openssl_ctx.c nussl_gnutls.c nussl_gnutls_ctx.c nussl_ssl_common.c nussl_request.c nussl_session.c nussl_socket.c nussl_string.c nussl_utils.c
 AM_CPPFLAGS = -I$(top_srcdir)/src/include/
