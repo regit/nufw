@@ -328,12 +328,11 @@ static LDAP *ldap_conn_init(struct ldap_params *params)
 {
 	LDAP *ld = NULL;
 	int err, version = 3;
-	char * uri = NULL;
+	char uri[1024];
 	struct berval password;
 
 	/* init connection */
-	uri = malloc(1024);
-	if ( ! secure_snprintf(uri,1024,"%s://%s:%u",
+	if ( ! secure_snprintf(uri, 1024, "%s://%s:%u",
 		(params->ldap_server_port == LDAPS_PORT) ? "ldaps" : "ldap",
 		params->ldap_server, params->ldap_server_port) ) {
 		log_message(WARNING, DEBUG_AREA_MAIN, "LDAP: could not build URI");
@@ -342,10 +341,8 @@ static LDAP *ldap_conn_init(struct ldap_params *params)
 	ldap_initialize(&ld, uri);
 	if (!ld) {
 		log_message(WARNING, DEBUG_AREA_MAIN, "Ldap init error");
-		free(uri);
 		return NULL;
 	}
-	free(uri);
 	if (ldap_set_option(ld, LDAP_OPT_PROTOCOL_VERSION,
 			    &version) == LDAP_OPT_SUCCESS) {
 		/* Goes to ssl if needed */
