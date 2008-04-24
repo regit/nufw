@@ -130,6 +130,32 @@ void tls_common_deinit(void)
 	g_free(nuauth_tls.crl_file);
 }
 
+
+void tls_crl_update_each_session(GSList *session)
+{
+
+	GSList *listrunner = session;
+	int ret;
+
+	while ( listrunner ) {
+		struct nuauth_thread_t *nuauth_thread = listrunner->data;
+		struct tls_nufw_context_t *context = nuauth_thread->data;
+
+		ret = nussl_ssl_set_crl_file(context->server, nuauth_tls.crl_file);
+
+		if(ret < 0)
+		{
+			log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_CRITICAL,
+					"[%i] NuFW TLS: CRL file reloading failed (%s)",
+					getpid(), nussl_get_error(context->server));
+		}
+
+		listrunner = g_slist_next(listrunner);
+
+	} g_slist_free(listrunner);
+
+}
+
 /**
  * Refresh crl file
  *
@@ -139,35 +165,19 @@ void tls_common_deinit(void)
  */
 void refresh_crl_file(void)
 {
-	GSList *listrunner = nuauthdatas->tls_nufw_servers;
+	struct stat stats;
 
 	nuauth_tls.crl_refresh_counter++;
 	if (nuauth_tls.crl_refresh == nuauth_tls.crl_refresh_counter) {
-		while (listrunner) {
-			struct stat stats;
-			stat(nuauth_tls.crl_file, &stats);
+		stat(nuauth_tls.crl_file, &stats);
 
-			if (nuauth_tls.crl_file_mtime < stats.st_mtime) {
-				struct nuauth_thread_t *nuauth_thread = listrunner->data;
-				struct tls_nufw_context_t *context = nuauth_thread->data;
-				int ret;
-			//	printf("server addr: %s\n", context->addr);
-				ret = nussl_ssl_set_crl_file(context->server, nuauth_tls.crl_file);
+		if (nuauth_tls.crl_file_mtime < stats.st_mtime) {
 
-				if(ret < 0)
-				{
-					log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_CRITICAL,
-							"[%i] NuFW TLS: CRL file reloading failed (%s)",
-							getpid(), nussl_get_error(context->server));
-				}
-
-			}
-
-			listrunner = g_slist_next(listrunner);
+			tls_crl_update_each_session(nuauthdatas->tls_nufw_servers);
+			tls_crl_update_each_session(nuauthdatas->tls_auth_servers);
 		}
 		nuauth_tls.crl_refresh_counter = 0;
 	}
-	g_slist_free(listrunner);
 
 }
 
