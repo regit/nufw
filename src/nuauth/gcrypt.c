@@ -44,7 +44,7 @@ int verify_user_password(const char *given, const char *ours)
 	gcry_md_hd_t hd;
 	char *res;
 	char *decoded;
-	size_t len;
+	unsigned int len;
 	char **splitted_secret;
 	int algo = 0;
 
