@@ -18,6 +18,13 @@
       <holder>INL</holder>
     </copyright>
     <revhistory>
+    <revision>
+      	<revnumber>0.9.8</revnumber>
+	<date>2008/04/24</date>
+	<revdescription>
+	<para>Xen related problem was in fact a bridge related problem.</para>
+	</revdescription>
+      </revision>
       <revision>
       	<revnumber>0.9.7</revnumber>
 	<date>2008/04/18</date>
@@ -1255,13 +1262,12 @@ on the INPUT chain. Thus DO NOT use a QUEUE target on INPUT with these kernels o
 And anyway, you should use a recent kernel and NFQUEUE, as explained hereup in this howto.
 </para>
 </section>
-<section><title>Running NuFW in a virtualized environment</title>
-<para>NuFW should run seamlessly in virtualized environments. However it seems a Xen 3.1 does not allow the use of
+<section><title>Running NuFW in a bridged network</title>
+<para>NuFW should run seamlessly in bridge networking. However it seems a bug in some kernel does not allow the use of
 nfnetlink without problems. The following facts were reported (with NuFW 2.2.14, but NuFW versioning is not the matter) :
 <itemizedlist>
-<listitem><para><option>Xen 3.1, kernel 2.6.22</option> BUG : No network trafic when launching the nufw daemon.</para></listitem>
-<listitem><para><option>Xen 3.2, kernel 2.6.22</option> BUG : No network trafic when launching the nufw daemon.</para></listitem>
-<listitem><para><option>Xen 3.2, kernel 2.6.24</option> Everything works.</para></listitem>
+<listitem><para><option>Kernel 2.6.22</option> BUG : No network trafic when launching the nufw daemon.</para></listitem>
+<listitem><para><option>Kernel 2.6.24</option> Everything works.</para></listitem>
 </itemizedlist>
 </para>
 </section>
