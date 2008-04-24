@@ -243,14 +243,14 @@ void log_user_session_thread(gpointer event_ptr, gpointer unused_optional)
  * switch to enable action in other nuauth part.*/
 void act_on_loggers_processing()
 {
-	if (g_thread_pool_unprocessed(nuauthdatas->
-				user_loggers) > MAX_NON_UNASSIGNED_MESSAGE) {
+	if (g_thread_pool_unprocessed(nuauthdatas->user_loggers) >
+			nuauthconf->max_unassigned_messages) {
 		nuauthdatas->loggers_pool_full = TRUE;
 	} else {
 		nuauthdatas->loggers_pool_full = FALSE;
 	}
-	if (g_thread_pool_unprocessed(nuauthdatas->
-				user_session_loggers) > MAX_NON_UNASSIGNED_MESSAGE) {
+	if (g_thread_pool_unprocessed(nuauthdatas->user_session_loggers) > 
+			nuauthconf->max_unassigned_messages) {
 		nuauthdatas->session_loggers_pool_full = TRUE;
 	} else {
 		nuauthdatas->session_loggers_pool_full = FALSE;

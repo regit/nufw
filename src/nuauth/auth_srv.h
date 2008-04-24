@@ -119,7 +119,8 @@ nu_error_t treat_user_request(user_session_t * c_session,
 #define NUAUTH_TLS_MAX_SERVERS 16
 #define TLS_CLIENT_MIN_DELAY 25000
 #define AUTH_NEGO_TIMEOUT 30
-#define MAX_NON_UNASSIGNED_MESSAGE 500
+/* define maximum of messages that can wait on a logging pool */
+#define MAX_UNASSIGNED_MESSAGES 2000
 
 #define UNKNOWN_STRING "UNKNOWN"
 

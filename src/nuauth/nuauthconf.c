@@ -133,6 +133,7 @@ int init_nuauthconf(struct nuauth_params **result)
 		{"nuauth_use_command_server", G_TOKEN_INT, 1, NULL},
 		{"nuauth_proto_wait_delay", G_TOKEN_INT, DEFAULT_PROTO_WAIT_DELAY, NULL},
 		{"nuauth_drop_if_no_logging", G_TOKEN_INT, FALSE, NULL},
+		{"nuauth_max_unassigned_messages", G_TOKEN_INT, MAX_UNASSIGNED_MESSAGES, NULL},
 	};
 	const unsigned int nb_params =
 	    sizeof(nuauth_vars) / sizeof(confparams_t);
@@ -141,8 +142,7 @@ int init_nuauthconf(struct nuauth_params **result)
 	*result = conf;
 
 	/* parse conf file */
-	if(!parse_conffile(nuauthconf->configfile, nb_params, nuauth_vars))
-	{
+	if(!parse_conffile(nuauthconf->configfile, nb_params, nuauth_vars)) {
 	        log_message(FATAL, DEBUG_AREA_MAIN, "Failed to load config file %s", nuauthconf->configfile);
 		return 0;
 	}
@@ -215,6 +215,8 @@ int init_nuauthconf(struct nuauth_params **result)
 	    *(int *) READ_CONF("nuauth_proto_wait_delay");
 	conf->drop_if_no_logging =
 	    *(int *) READ_CONF("nuauth_drop_if_no_logging");
+	conf->max_unassigned_messages =
+	    *(int *) READ_CONF("nuauth_max_unassigned_messages");
 #undef READ_CONF
 
 	if (conf->debug_level > 9) {

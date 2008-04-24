@@ -81,6 +81,7 @@ struct nuauth_params {
 	/* absolute logging : drop packet if it is not possible to log due to 
 	 * loggers problem. */
 	int drop_if_no_logging;
+	int max_unassigned_messages;
 
 	/** decision related, see take_decision()
 	 *
