@@ -78,6 +78,10 @@ struct nuauth_params {
 	int log_users_strict;
 	int log_users_without_realm;
 
+	/* absolute logging : drop packet if it is not possible to log due to 
+	 * loggers problem. */
+	int drop_if_no_logging;
+
 	/** decision related, see take_decision()
 	 *
 	 * It is used to set acl policy:
@@ -172,6 +176,10 @@ struct nuauth_datas {
 	GThreadPool *user_session_loggers;
 	GThreadPool *decisions_workers;
 	GThreadPool *ip_authentication_workers;
+
+	/* Pool related */
+	gboolean loggers_pool_full;
+	gboolean session_loggers_pool_full;
 
 	/* private datas */
 	GPrivate *aclqueue;

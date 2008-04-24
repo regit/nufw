@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2005 Eric Leblond <regit@inl.fr>
+ ** Copyright(C) 2005-2008 Eric Leblond <regit@inl.fr>
  ** INL http://www.inl.fr/
  **
  ** $Id$
@@ -37,7 +37,7 @@ int check_fill_user_counters(u_int16_t userid, long time,
 			     unsigned long packet_id, u_int32_t ip);
 void print_users_list();
 
-void log_user_packet(connection_t * element, tcp_state_t state);
+nu_error_t log_user_packet(connection_t * element, tcp_state_t state);
 void log_user_packet_from_tracking_t(tracking_t * datas,
 				     tcp_state_t pstate);
 
@@ -48,5 +48,7 @@ void log_user_packet_from_accounted_connection(struct accounted_connection
 
 void log_user_session(user_session_t * element, session_state_t state);
 void log_user_session_thread(gpointer element, gpointer state);
+
+void act_on_loggers_processing();
 
 #endif

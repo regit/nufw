@@ -919,8 +919,7 @@ void main_cleanup()
 		    || g_thread_pool_unprocessed(nuauthdatas->
 						 user_loggers)) {
 			g_message
-			    ("%u user/%u acl unassigned task(s), %d connection(s)",
-			     ", %d unlogged packet(s)",
+			    ("%u user/%u acl/ %u log unassigned task(s), %d connection(s)",
 			     g_thread_pool_unprocessed(nuauthdatas->
 						       user_checkers),
 			     g_thread_pool_unprocessed(nuauthdatas->
@@ -931,6 +930,8 @@ void main_cleanup()
 			    );
 		}
 	}
+
+	act_on_loggers_processing();
 
 	if (nuauthconf->acl_cache) {
 		/* send refresh message to acl cache thread */

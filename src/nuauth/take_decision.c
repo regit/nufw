@@ -322,6 +322,7 @@ nu_error_t take_decision(connection_t * element, packet_place_t place)
 nu_error_t apply_decision(connection_t * element)
 {
 	decision_t decision = element->decision;
+	nu_error_t ret;
 #ifdef PERF_DISPLAY_ENABLE
 	struct timeval leave_time, elapsed_time;
 #endif
@@ -333,9 +334,13 @@ nu_error_t apply_decision(connection_t * element)
 	}
 
 	if (decision == DECISION_ACCEPT) {
-		log_user_packet(element, TCP_STATE_OPEN);
+		ret = log_user_packet(element, TCP_STATE_OPEN);
 	} else {
-		log_user_packet(element, TCP_STATE_DROP);
+		ret = log_user_packet(element, TCP_STATE_DROP);
+	}
+
+	if ((ret != NU_EXIT_OK) && nuauthconf->drop_if_no_logging) {
+		element->decision =  DECISION_DROP;
 	}
 
 	g_slist_foreach(element->packet_id, send_auth_response, element);

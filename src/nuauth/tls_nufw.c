@@ -114,6 +114,15 @@ static int treat_nufw_request(nufw_session_t * c_session)
 				increase_nufw_session_usage(c_session);
 				current_conn->tls = c_session;
 
+				/* if we absolutely want to log we've got to have a working pool thread */
+				if (nuauthconf->drop_if_no_logging &&
+						(nuauthdatas->loggers_pool_full == TRUE)) {
+					current_conn->decision = DECISION_DROP;
+					current_conn->state = AUTH_STATE_DONE;
+					apply_decision(current_conn);
+					free_connection(current_conn);
+					return NU_EXIT_ERROR;
+				}
 				/* gonna feed the birds */
 				if (current_conn->state ==
 				    AUTH_STATE_HELLOMODE) {

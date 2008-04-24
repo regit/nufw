@@ -46,15 +46,23 @@ struct conn_state {
  * \param state A ::tcp_state_t, TCP state of the connection
  */
 
-void log_user_packet(connection_t * element, tcp_state_t state)
+nu_error_t log_user_packet(connection_t * element, tcp_state_t state)
 {
 	if (element->flags & ACL_FLAGS_NOLOG) {
-		RETURN_NO_LOG;
+		RETURN_NO_LOG NU_EXIT_OK;
 	}
-	if ((nuauthconf->log_users_sync) && (state == TCP_STATE_OPEN)
-			&& (!(element->flags & ACL_FLAGS_ASYNC))) {
+
+	if (nuauthdatas->loggers_pool_full == TRUE) {
+		log_message(INFO, DEBUG_AREA_USER, "No packet logging to avoid logger DOS");
+		return NU_EXIT_ERROR;
+	}
+
+	if (nuauthconf->drop_if_no_logging ||
+			((nuauthconf->log_users_sync) && (state == TCP_STATE_OPEN)
+			 && (!(element->flags & ACL_FLAGS_ASYNC)))
+	   ) {
 		if (nuauthconf->log_users & 8) {
-			modules_user_logs(element, state);
+			return modules_user_logs(element, state);
 		}
 	} else {
 		if (((nuauthconf->log_users & 2)
@@ -71,7 +79,7 @@ void log_user_packet(connection_t * element, tcp_state_t state)
 				g_free(conn_state_copy);
 				log_message(MESSAGE, DEBUG_AREA_MAIN,
 					    "Unable to duplicate connection");
-				return;
+				return NU_EXIT_ERROR;
 			}
 			conn_state_copy->state = state;
 
@@ -162,6 +170,11 @@ void log_user_session(user_session_t * usession, session_state_t state)
 	struct session_event *sessevent;
 	char * str_groups = NULL;
 
+	if (nuauthdatas->session_loggers_pool_full == TRUE) {
+		log_message(INFO, DEBUG_AREA_USER, "No session logging to avoid logger DOS");
+		return;
+	}
+
 	if (state == SESSION_OPEN) {
 		if (usession->groups) {
 			g_slist_foreach(usession->groups, print_group,
@@ -224,4 +237,22 @@ void log_user_session_thread(gpointer event_ptr, gpointer unused_optional)
 	g_free(session->release);
 	g_free(session);
 	g_free(event);
+}
+
+/** If there is too much unhandled messages modify
+ * switch to enable action in other nuauth part.*/
+void act_on_loggers_processing()
+{
+	if (g_thread_pool_unprocessed(nuauthdatas->
+				user_loggers) > MAX_NON_UNASSIGNED_MESSAGE) {
+		nuauthdatas->loggers_pool_full = TRUE;
+	} else {
+		nuauthdatas->loggers_pool_full = FALSE;
+	}
+	if (g_thread_pool_unprocessed(nuauthdatas->
+				user_session_loggers) > MAX_NON_UNASSIGNED_MESSAGE) {
+		nuauthdatas->session_loggers_pool_full = TRUE;
+	} else {
+		nuauthdatas->session_loggers_pool_full = FALSE;
+	}
 }

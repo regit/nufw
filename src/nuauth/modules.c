@@ -196,20 +196,28 @@ gchar *modules_ip_auth(tracking_t * header)
 /**
  * log authenticated packets
  */
-int modules_user_logs(void *element, tcp_state_t state)
+nu_error_t modules_user_logs(void *element, tcp_state_t state)
 {
 	/* iter through all modules list */
 	GSList *walker = hooks[MOD_LOG_PACKETS].modules;
+	nu_error_t ret = NU_EXIT_OK;
 
 	block_on_conf_reload();
 	for (; walker != NULL; walker = walker->next) {
 		user_logs_callback *handler =
 		    (user_logs_callback *) ((module_t *) walker->data)->
 		    func;
-		handler(element, state,
-			((module_t *) walker->data)->params);
+		if (handler(element, state,
+			((module_t *) walker->data)->params) == -1) {
+			ret = NU_EXIT_ERROR;
+			/* A module has failed, this packet will be dropped if
+			 * drop_if_no_logging is set */
+			if (nuauthconf->drop_if_no_logging) {
+				((connection_t *)element)->decision = DECISION_DROP;
+			}
+		}
 	}
-	return 0;
+	return ret;
 }
 
 /**
