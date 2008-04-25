@@ -105,8 +105,9 @@ void tls_common_init(void)
 			nuauth_tls.crl_file);
 
 		if (access(nuauth_tls.crl_file, R_OK)) {
-			g_warning("[%i] TLS : can not access crl file %s",
-			getpid(), nuauth_tls.crl_file);
+			log_message(WARNING, DEBUG_AREA_MAIN,
+				    "TLS : can not access crl file %s",
+				    nuauth_tls.crl_file);
 			nuauth_ask_exit();
 		}
 
