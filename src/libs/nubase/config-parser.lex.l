@@ -20,7 +20,7 @@
  */
 %{
 #include <stdio.h>
-#include "config-parser.yacc.tab.h"
+#include "config-parser.yacc.h"
 /* C declarations */
 
 %}
