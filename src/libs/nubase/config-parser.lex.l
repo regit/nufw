@@ -21,7 +21,24 @@
 %{
 #include <stdio.h>
 #include "config-parser.yacc.h"
+
 /* C declarations */
+
+static char *escape_str(char *str)
+{
+	int i = -1;
+	size_t strsize;
+	char *ret;
+
+	if (!(strsize = strlen(str))) return "";
+	ret = malloc(strsize);
+
+	while (*str) ret[i++] = *str++;
+
+        ret[i-1] = '\0';
+
+	return ret;
+}
 
 %}
 
@@ -46,12 +63,12 @@ VOID		[ \t\n]+
 {EQUAL}		{ return TOK_EQUAL; }
 
 {SECTION}	{
-			yylval.string = strdup(yytext);
+			yylval.string = escape_str(yytext);
 			return TOK_SECTION;
 		}
 
 {STRING}	{
-			yylval.string = strdup(yytext);
+			yylval.string = escape_str(yytext);
 			return TOK_WORD;
 		}
 
