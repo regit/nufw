@@ -4,7 +4,7 @@ EXTRA_DIST = ipv6.h log.h nubase.h packet_parser.h strings.h
 
 AM_CPPFLAGS = -I$(top_srcdir)/src/include/
 BUILT_SOURCES = config-parser.yacc.h
-YFLAGS = -d
+AM_YFLAGS = -d
 
 libnubase_la_SOURCES =			\
 		config-parser.yacc.y	\

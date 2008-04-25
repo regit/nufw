@@ -31,7 +31,6 @@ DQSTRING	\"([^\\\"]|\\.)*\"
 STRING		(\"|\')([^\\(\"|\')]|\\.)*(\"|\')
 INCLUDE		include
 COMMENT		^#.*\n
-NUMBER		[0-9]+
 WORD		([a-zA-Z0-9_\-]+(\(\-?[0-9\*]+\))?\.?)+
 EQUAL		\=
 VOID		[ \t\n]+
@@ -40,11 +39,6 @@ VOID		[ \t\n]+
 
 {INCLUDE}	{
 			return TOK_INCLUDE;
-		}
-
-{NUMBER}	{
-			yylval.number=atoi(yytext);
-			return TOK_NUMBER;
 		}
 
 {WORD}		{	yylval.string = strdup(yytext);
@@ -58,7 +52,7 @@ VOID		[ \t\n]+
 
 {STRING}	{
 			yylval.string = strdup(yytext);
-			return TOK_STRING;
+			return TOK_WORD;
 		}
 
 {COMMENT}	{

@@ -26,7 +26,6 @@
 %}
 
 %token TOK_EQUAL
-%token	<number> TOK_NUMBER
 %token	<string> TOK_WORD
 %token           TOK_INCLUDE
 %token	<string> TOK_SECTION
@@ -41,8 +40,7 @@
 
 config:		 /* empty */
 		| config section
-		| config key_valueint
-		| config key_valuestr
+		| config key_value
 		| config include
 		;
 
@@ -50,18 +48,15 @@ section:		TOK_SECTION {
 				printf("\n%s is a section\n", $1);
 			}
 			;
-include:		TOK_INCLUDE TOK_STRING {
+include:		TOK_INCLUDE TOK_WORD {
 				printf("\nWe include the file %s\n", $2);
 			}
 			;
-key_valueint:		TOK_WORD TOK_EQUAL TOK_NUMBER {
-				printf("\n%d is int stuff\n", $3);
+key_value:		TOK_WORD TOK_EQUAL TOK_WORD
+			{
+				printf("\nKey=%s,Value=%s\n", $1, $3);
 			}
 			;
-key_valuestr:		TOK_WORD TOK_EQUAL TOK_STRING {
-				printf("\n%s is a string simple quote\n", $3);
-			}
-
 
 %%
 extern FILE *yyin;
