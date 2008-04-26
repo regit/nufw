@@ -34,7 +34,7 @@ static GSList *userpckt_decode(struct tls_buffer_read *datas);
  *
  * Call userpckt_decode()
  *
- * \param usersession Pointer to a struct user_session_t: containing the data to treat
+ * \param user_session Pointer to a struct user_session_t: containing the data to treat
  * \param data NULL (unused)
  */
 void user_check_and_decide(gpointer user_session, gpointer data)

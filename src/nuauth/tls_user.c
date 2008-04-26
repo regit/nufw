@@ -142,6 +142,7 @@ void* pre_client_check(GMutex *mutex)
  * authentication threads.
  *
  * \param c_session SSL RX packet
+ * \param c_datas pointer that will point to the parsed datas
  * \return a nu_error_t::, NU_EXIT_CONTINUE if read done, NU_EXIT_OK if read complete, NU_EXIT_ERROR on error
  */
 nu_error_t treat_user_request(user_session_t * c_session,
