@@ -23,11 +23,13 @@
 
 #define YYERROR_VERBOSE
 
+
+char *filename;
+
 %}
 
 %token TOK_EQUAL
 %token	<string> TOK_WORD
-%token           TOK_INCLUDE
 %token	<string> TOK_SECTION
 %token	<string> TOK_STRING
 
@@ -37,19 +39,13 @@
 }
 
 %%
-
 config:		 /* empty */
 		| config section
 		| config key_value
-		| config include
 		;
 
 section:		TOK_SECTION {
 				printf("\n%s is a section\n", $1);
-			}
-			;
-include:		TOK_INCLUDE TOK_WORD {
-				printf("\nWe include the file %s\n", $2);
 			}
 			;
 key_value:		TOK_WORD TOK_EQUAL TOK_WORD
@@ -59,9 +55,21 @@ key_value:		TOK_WORD TOK_EQUAL TOK_WORD
 			;
 
 %%
-extern FILE *yyin;
+
+int
+parse_configuration(FILE *input, char *name)
+{
+	extern FILE *yyin;
+
+	filename = name;
+	yyin = input;
+	yyparse();
+	return  0;
+}
+
 
 #ifdef _UNIT_TEST_
+/* gcc config-parser.lex.c config-parser.yacc.c -o config-parser -D_UNIT_TEST_ -ly -lfl */
 int main(void)
 {
 	FILE *fp;
@@ -72,11 +80,7 @@ int main(void)
 		return 1;
 	}
 
-	yyin = fp;
-
-	yyparse();
-
-	fclose(yyin);
+	parse_configuration(fp, "../../../conf/nuauth.conf");
 
 	return 0;
 }

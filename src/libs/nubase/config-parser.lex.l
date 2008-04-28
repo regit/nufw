@@ -18,6 +18,9 @@
  ** along with this program; if not, write to the Free Software
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
+%x incl
+
 %{
 #include <stdio.h>
 #include <string.h>
@@ -27,6 +30,14 @@
 
 /* C declarations */
 
+extern char *filename;
+
+/* For handling the 'include' directive*/
+#define MAX_INCLUDE_DEPTH 10
+YY_BUFFER_STATE includes[MAX_INCLUDE_DEPTH];
+char *filenames[MAX_INCLUDE_DEPTH];
+int includes_index = 0;
+
 static char *escape_str(char *str)
 {
 	int i = -1;
@@ -34,7 +45,7 @@ static char *escape_str(char *str)
 	char *ret;
 
 	if (!(strsize = strlen(str))) return "";
-	ret = malloc(strsize);
+	ret = malloc(strsize - 2);
 
 	while (*str) ret[i++] = *str++;
 
@@ -57,9 +68,7 @@ VOID		[ \t\n]+
 
 %%
 
-{INCLUDE}	{
-			return TOK_INCLUDE;
-		}
+{INCLUDE}	{ BEGIN(incl); }
 
 {WORD}		{	yylval.string = strdup(yytext);
 			return TOK_WORD; }
@@ -83,6 +92,40 @@ VOID		[ \t\n]+
 			/* We don't care */
 		}
 
+
+<incl>[ \t]*      /* eat the whitespace */
+<incl>[^ \t\n]+	{ /* got the include file name */
+		  if (includes_index >= MAX_INCLUDE_DEPTH) {
+			  yyerror("Includes nested too deeply");
+			  exit(1);
+		  }
+
+		  filenames[includes_index] = filename;
+		  includes[includes_index++] = YY_CURRENT_BUFFER;
+
+		printf("We must open %s\n", yytext);
+
+		filename = escape_str(yytext);
+
+		  yyin = fopen(filename, "r");
+		  if (!yyin) {
+			printf("Can not open %s\n", filename);
+			exit(1);
+		  }
+		  yy_switch_to_buffer(yy_create_buffer(yyin, YY_BUF_SIZE));
+
+                  BEGIN(INITIAL);
+		}
+<<EOF>>		{
+		  if (--includes_index < 0)
+			  yyterminate();
+		  else {
+			  free(filenames[includes_index + 1]);
+			  filename = filenames[includes_index];
+			  yy_delete_buffer(YY_CURRENT_BUFFER);
+			  yy_switch_to_buffer(includes[includes_index]);
+		  }
+		}
 
 %%
 
