@@ -21,8 +21,14 @@
 %{
 #include <stdio.h>
 
-#define YYERROR_VERBOSE
+extern int yylex(void);
+extern void yylex_init(void);
+extern void yylex_destroy(void);
+extern void yyerror(char *);
+extern void *yy_scan_string(const char *);
+extern void yy_delete_buffer(void *);
 
+#define YYERROR_VERBOSE
 
 char *filename;
 
@@ -55,6 +61,11 @@ key_value:		TOK_WORD TOK_EQUAL TOK_WORD
 			;
 
 %%
+
+void yyerror(char *str)
+{
+	fprintf(stderr, "YYERROR:%s\n", str);
+}
 
 int
 parse_configuration(FILE *input, char *name)
