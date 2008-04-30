@@ -21,6 +21,8 @@
 #ifndef _HASH_H_
 #define _HASH_H_
 
+#include "linuxlist.h"
+
 struct hash_t {
 	struct llist_head list;
 	void *key;
