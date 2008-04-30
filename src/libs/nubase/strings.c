@@ -32,7 +32,7 @@
  * \param format Format string (see printf() documentation)
  * \return Returns FALSE if a buffer overflow occurs, TRUE is everything goes fine.
  */
-int secure_snprintf(char *buffer, unsigned int buffer_size,
+int secure_snprintf(char *buffer, size_t buffer_size,
 			 char *format, ...)
 {
 	va_list args;

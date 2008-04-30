@@ -18,7 +18,7 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-int secure_snprintf(char *buffer, unsigned int buffer_size,
+int secure_snprintf(char *buffer, size_t buffer_size,
 			 char *format, ...)
 #ifdef __GNUC__
 	__attribute__((__format__(printf,3,4)))
