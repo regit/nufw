@@ -103,8 +103,6 @@ VOID		[ \t\n]+
 		  filenames[includes_index] = filename;
 		  includes[includes_index++] = YY_CURRENT_BUFFER;
 
-		printf("We must open %s\n", yytext);
-
 		filename = escape_str(yytext);
 
 		  yyin = fopen(filename, "r");

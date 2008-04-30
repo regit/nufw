@@ -21,8 +21,6 @@
 #ifndef NUFW_IPV6_H
 #define NUFW_IPV6_H
 
-#include "nufw_source.h"
-
 #ifdef FREEBSD
 #  include <sys/types.h>
 #  include <netinet/in_systm.h>

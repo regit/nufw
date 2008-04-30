@@ -21,7 +21,7 @@
 
 /** \file pckt_authsrv.h
  *  \brief Functions to parse a network packet
- * 
+ *
  * Functions fill ::tracking_t structure fields. Parser are: IPv4, IPv6, UDP,
  * TCP, ICMP and ICMP6.
  */
@@ -29,7 +29,6 @@
 #ifndef PACKET_PARSER_H
 #define PACKET_PARSER_H
 
-#include "nufw_source.h"
 #include "ipv6.h"
 #include <sys/types.h>
 

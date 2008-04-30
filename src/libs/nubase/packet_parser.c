@@ -36,6 +36,7 @@
 #include <netinet/ip_icmp.h>
 #include <netinet/icmp6.h>
 
+#include <config.h>
 
 /**
  * Fill IP fields (saddr, daddr and protocol) of the a connection tracking
