@@ -20,6 +20,9 @@
  */
 %{
 #include <stdio.h>
+#include <errno.h>
+
+#include "hash.h"
 
 extern int yylex(void);
 extern void yylex_init(void);
@@ -56,7 +59,7 @@ section:		TOK_SECTION {
 			;
 key_value:		TOK_WORD TOK_EQUAL TOK_WORD
 			{
-				printf("\nKey=%s,Value=%s\n", $1, $3);
+				nubase_hash_append($1,$3);
 			}
 			;
 
@@ -68,7 +71,7 @@ void yyerror(char *str)
 }
 
 int
-parse_configuration(FILE *input, char *name)
+__parse_configuration(FILE *input, char *name)
 {
 	extern FILE *yyin;
 
@@ -78,11 +81,25 @@ parse_configuration(FILE *input, char *name)
 	return  0;
 }
 
+int parse_configuration(char *config)
+{
+	FILE *fp;
+
+	fp = fopen(config, "r");
+	if ( ! fp ) {
+		fprintf(stderr, "Cannot open file %s.\n", config);
+		return 1;
+	}
+
+	return __parse_configuration(fp, config);
+}
+
 
 #ifdef _UNIT_TEST_
 /* gcc config-parser.lex.c config-parser.yacc.c -o config-parser -D_UNIT_TEST_ -ly -lfl */
 int main(void)
 {
+#if 0
 	FILE *fp;
 
 	fp = fopen("../../../conf/nuauth.conf", "r");
@@ -92,6 +109,8 @@ int main(void)
 	}
 
 	parse_configuration(fp, "../../../conf/nuauth.conf");
+#endif
+	parse_configuration("../../../conf/nuauth.conf");
 
 	return 0;
 }

@@ -23,12 +23,7 @@
 #include <errno.h>
 
 #include "linuxlist.h"
-
-struct hash_t {
-	struct llist_head list;
-	void *key;
-	void *value;
-} hash_t;
+#include "hash.h"
 
 LLIST_HEAD(hash_list);
 
