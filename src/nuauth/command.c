@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2007 INL
+ ** Copyright(C) 2007,2008 INL
  ** Written by Victor Stinner <victor.stinner@inl.fr>
  **	       Eric Leblond <eric@inl.fr>
  **

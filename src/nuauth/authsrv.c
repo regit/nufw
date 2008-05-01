@@ -919,7 +919,8 @@ void main_cleanup()
 		    || g_thread_pool_unprocessed(nuauthdatas->
 						 user_loggers)) {
 			g_message
-			    ("%u user/%u acl/ %u log unassigned task(s), %d connection(s)",
+			    ("%u user/%u acl/%u log unassigned task(s), %d "
+			     "connection(s)",
 			     g_thread_pool_unprocessed(nuauthdatas->
 						       user_checkers),
 			     g_thread_pool_unprocessed(nuauthdatas->

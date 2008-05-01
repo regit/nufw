@@ -249,13 +249,15 @@ void act_on_loggers_processing()
 		if (nuauthdatas->loggers_pool_full == FALSE) {
 			nuauthdatas->loggers_pool_full = TRUE;
 			log_message(CRITICAL, DEBUG_AREA_MAIN,
-				    "Packet logging system too slow, switching to DOS mode");
+				    "Switching to DOS conditions mode: packet logging"
+				    " system too slow");
 		}
 	} else {
 		if (nuauthdatas->loggers_pool_full == TRUE) {
 			nuauthdatas->loggers_pool_full = FALSE;
 			log_message(CRITICAL, DEBUG_AREA_USER,
-				    "Packet logging system recovered, switching to standard mode");
+				    "Switching to standard conditions: packet logging system"
+				    " recovered from DOS");
 		}
 	}
 	if (g_thread_pool_unprocessed(nuauthdatas->user_session_loggers) > 
@@ -263,13 +265,15 @@ void act_on_loggers_processing()
 		if (nuauthdatas->session_loggers_pool_full == FALSE) {
 			nuauthdatas->session_loggers_pool_full = TRUE;
 			log_message(CRITICAL, DEBUG_AREA_MAIN,
-				    "User logging system too slow, switching to DOS mode");
+				    "Switching to DOS conditions mode, user logging system"
+				    " too slow");
 		}
 	} else {
 		if (nuauthdatas->session_loggers_pool_full == TRUE) {
 			nuauthdatas->session_loggers_pool_full = FALSE;
 			log_message(CRITICAL, DEBUG_AREA_MAIN,
-				    "User logging system recoverd, switching to standard mode");
+				    "Switching to standard conditions: user logging system"
+				    " recovered from DOS");
 		}
 	}
 }
