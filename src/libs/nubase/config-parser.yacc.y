@@ -34,6 +34,7 @@ extern void yy_delete_buffer(void *);
 #define YYERROR_VERBOSE
 
 char *filename;
+char *path;
 
 %}
 
@@ -84,6 +85,8 @@ __parse_configuration(FILE *input, char *name)
 int parse_configuration(char *config)
 {
 	FILE *fp;
+
+	path = str_extract_until(config, '/');
 
 	fp = fopen(config, "r");
 	if ( ! fp ) {

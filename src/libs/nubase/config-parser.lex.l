@@ -30,7 +30,9 @@
 
 /* C declarations */
 
+extern char *path;
 extern char *filename;
+static char *includefile;
 
 /* For handling the 'include' directive*/
 #define MAX_INCLUDE_DEPTH 10
@@ -52,6 +54,17 @@ static char *escape_str(char *str)
         ret[i-1] = '\0';
 
 	return ret;
+}
+
+static int can_append_path(char *str)
+{
+
+	if ((str[0] == '/') || ((str[0] == '.') && (str[1] == '.'))) {
+		return 0;
+	}
+
+	return 1;
+
 }
 
 %}
@@ -105,9 +118,15 @@ VOID		[ \t\n]+
 
 		filename = escape_str(yytext);
 
+		if (can_append_path(filename)) {
+			printf("We get %s/%s\n", path, filename);
+//			sprintf(includefile,
+//					"%s/%s", path, filename);
+		}
+
 		  yyin = fopen(filename, "r");
 		  if (!yyin) {
-			printf("Can not open %s\n", filename);
+			printf("Can not open %s\n", includefile);
 			exit(1);
 		  }
 		  yy_switch_to_buffer(yy_create_buffer(yyin, YY_BUF_SIZE));

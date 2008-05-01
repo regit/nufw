@@ -19,7 +19,9 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 #include <stdio.h>
+#include <string.h>
 #include <stdarg.h>
+#include <stdlib.h>
 
 #include <nubase.h>
 
@@ -50,5 +52,42 @@ int secure_snprintf(char *buffer, size_t buffer_size,
 		return TRUE;
 	else
 		return FALSE;
+}
+
+/**
+ * Function which extracts a string until char 'c'
+ * is found
+ *
+ * \param str input string
+ * \param c character to match the string until
+ * \return Returns NULL if error, or the new allocated string
+ */
+char *str_extract_until(char *str, int c)
+{
+	int i;
+
+	char *newstr;
+	char *last_str;
+
+	size_t last_size;
+	size_t str_size;
+	size_t newstr_size;
+
+	last_str = strrchr(str, c);
+	if ( ! last_str ) return NULL;
+	last_size = strlen(last_str);
+	str_size = strlen(str);
+	newstr_size = str_size - last_size;
+	newstr = malloc(newstr_size);
+	if ( ! newstr ) return NULL;
+
+	for (i=0;i<newstr_size;i++) {
+		newstr[i] = *str++;
+	}
+
+	newstr[i] = '\0';
+
+	return newstr;
+
 }
 
