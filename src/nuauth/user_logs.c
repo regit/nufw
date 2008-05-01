@@ -246,14 +246,30 @@ void act_on_loggers_processing()
 {
 	if (g_thread_pool_unprocessed(nuauthdatas->user_loggers) >
 			nuauthconf->max_unassigned_messages) {
-		nuauthdatas->loggers_pool_full = TRUE;
+		if (nuauthdatas->loggers_pool_full == FALSE) {
+			nuauthdatas->loggers_pool_full = TRUE;
+			log_message(CRITICAL, DEBUG_AREA_MAIN,
+				    "Packet logging system too slow, switching to DOS mode");
+		}
 	} else {
-		nuauthdatas->loggers_pool_full = FALSE;
+		if (nuauthdatas->loggers_pool_full == TRUE) {
+			nuauthdatas->loggers_pool_full = FALSE;
+			log_message(CRITICAL, DEBUG_AREA_USER,
+				    "Packet logging system recovered, switching to standard mode");
+		}
 	}
 	if (g_thread_pool_unprocessed(nuauthdatas->user_session_loggers) > 
 			nuauthconf->max_unassigned_messages) {
-		nuauthdatas->session_loggers_pool_full = TRUE;
+		if (nuauthdatas->session_loggers_pool_full == FALSE) {
+			nuauthdatas->session_loggers_pool_full = TRUE;
+			log_message(CRITICAL, DEBUG_AREA_MAIN,
+				    "User logging system too slow, switching to DOS mode");
+		}
 	} else {
-		nuauthdatas->session_loggers_pool_full = FALSE;
+		if (nuauthdatas->session_loggers_pool_full == TRUE) {
+			nuauthdatas->session_loggers_pool_full = FALSE;
+			log_message(CRITICAL, DEBUG_AREA_MAIN,
+				    "User logging system recoverd, switching to standard mode");
+		}
 	}
 }
