@@ -66,6 +66,8 @@
 #include <nussl.h>
 
 #include "nufw_source.h"
+
+#include "nubase.h"
 #include "nuclient.h"
 
 /* Constants */

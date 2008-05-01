@@ -23,7 +23,6 @@
 #include "libnuclient.h"
 #include "proto.h"
 #include "tcptable.h"
-#include <pthread.h>
 #include <inttypes.h>
 #define USE_JHASH3
 #include <jhash.h>
@@ -214,12 +213,6 @@ int tcptable_read(nuauth_session_t * session, conntable_t * ct)
 	assert(ct != NULL);
 	assert(TCP_SYN_SENT == 2);
 #endif
-	if (session->server_mode == SRV_TYPE_PUSH) {
-		/* need to set check_cond */
-		pthread_mutex_lock(&(session->check_count_mutex));
-		session->count_msg_cond = 0;
-		pthread_mutex_unlock(&(session->check_count_mutex));
-	}
 
 	if (!parse_tcptable_file
 	    (session, ct, "/proc/net/tcp", &fd_tcp, IPPROTO_TCP, 0))
@@ -268,13 +261,6 @@ int tcptable_read(nuauth_session_t * session, conntable_t * ct)
 	if (buf == NULL) {
 		printf("malloc %lu bytes", (u_long) len);
 		return 0;
-	}
-
-	if (session->server_mode == SRV_TYPE_PUSH) {
-		/* need to set check_cond */
-		pthread_mutex_lock(&(session->check_count_mutex));
-		session->count_msg_cond = 0;
-		pthread_mutex_unlock(&(session->check_count_mutex));
 	}
 
 	/* read connection table */

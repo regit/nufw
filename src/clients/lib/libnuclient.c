@@ -1,5 +1,5 @@
 /*
- ** Copyright 2004-2007 - INL
+ ** Copyright 2004-2008 - INL
  ** Written by Eric Leblond <regit@inl.fr>
  **            Vincent Deffontaines <vincent@inl.fr>
  ** INL http://www.inl.fr/
@@ -40,7 +40,6 @@
 #include "libnuclient.h"
 #include "nuclient.h"
 #include "nufw_source.h"
-#include <pthread.h>
 #include <sasl/sasl.h>
 #include <sasl/saslutil.h>
 #include <stdarg.h>		/* va_list, va_start, ... */
@@ -72,9 +71,6 @@ void nu_exit_clean(nuauth_session_t * session)
 	secure_str_free(session->username);
 	secure_str_free(session->password);
 
-	pthread_cond_destroy(&(session->check_cond));
-	pthread_mutex_destroy(&(session->check_count_mutex));
-	pthread_mutex_destroy(&(session->mutex));
 	free(session);
 }
 
@@ -104,9 +100,7 @@ void nu_exit_clean(nuauth_session_t * session)
  */
 void nu_client_delete(nuauth_session_t * session)
 {
-	/* kill all threads */
 	ask_session_end(session);
-	/* all threads are dead, we are the one who can access to it */
 	/* destroy session */
 	nu_exit_clean(session);
 }
@@ -500,11 +494,6 @@ nuauth_session_t *_nu_client_new(nuclient_error_t * err)
 	session->verbose = 1;
 	session->timestamp_last_sent = time(NULL);
 
-	/* create session mutex */
-	pthread_mutex_init(&(session->mutex), NULL);
-	pthread_mutex_init(&(session->check_count_mutex), NULL);
-	pthread_cond_init(&(session->check_cond), NULL);
-
 	if (tcptable_init(&new) == 0) {
 		SET_ERROR(err, INTERNAL_ERROR, MEMORY_ERR);
 		nu_exit_clean(session);
@@ -594,7 +583,6 @@ nuauth_session_t *nu_client_new(const char *username,
  */
 void nu_client_reset(nuauth_session_t * session)
 {
-	/* close TLS conneciton */
 	ask_session_end(session);
 
 	/* reset fields */

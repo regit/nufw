@@ -23,7 +23,7 @@
 #ifndef CHECKS_H
 #define CHECKS_H
 
-void *recv_message(void *session);
+nu_error_t recv_message(nuauth_session_t *session, nuclient_error_t *err);
 
 int nu_client_check(nuauth_session_t * session, nuclient_error * err);
 void *nu_client_thread_check(void *session);

@@ -567,15 +567,10 @@ void main_loop(nutcpc_context_t * context)
 	int connected = 1;
 	int ret;
 	for (;;) {
-		if (forced_reconnect == 0)
-		{
-			usleep(context->interval * 1000);
-		}
 		if (!connected) {
-			if (forced_reconnect == 0)
-			{
+			if (forced_reconnect == 0) {
 				usleep((unsigned long) context->tempo * 1000000);
-			}else{
+			} else {
 				context->tempo = 1;
 				forced_reconnect = 0;
 			}

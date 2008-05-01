@@ -25,7 +25,6 @@
 #include "sending.h"
 #include "tcptable.h"
 #include <sasl/saslutil.h>
-#include <pthread.h>
 #include <stdarg.h>		/* va_list, va_start, ... */
 #include <langinfo.h>
 #include <proto.h>
@@ -621,45 +620,11 @@ char *secure_str_copy(const char *orig)
 
 void ask_session_end(nuauth_session_t * session)
 {
-	pthread_t self_thread = pthread_self();
-	/* we kill thread thus lock will be lost if another thread reach this point */
-
 	/* sanity checks */
 	if (session == NULL) {
 		return;
 	}
-	if (session->connected == 0) {
-		return;
-	}
-
-	pthread_mutex_lock(&(session->mutex));
-	session->connected = 0;
-
-	if (session->recvthread != NULL_THREAD
-	    && !pthread_equal(session->recvthread, self_thread)) {
-		/* destroy thread */
-		pthread_cancel(session->recvthread);
-		pthread_join(session->recvthread, NULL);
-	}
-	if (session->server_mode == SRV_TYPE_PUSH) {
-		if (session->checkthread != NULL_THREAD
-		    && !pthread_equal(session->checkthread, self_thread))
-		{
-			/* ask thread to stop */
-			(void)pthread_mutex_trylock(&session->checkthread_stop);
-			pthread_join(session->checkthread, NULL);
-			pthread_mutex_destroy(&session->checkthread_stop);
-		}
-	}
-	pthread_mutex_unlock(&(session->mutex));
-	if (pthread_equal(session->recvthread, self_thread) ||
-	    ((session->server_mode == SRV_TYPE_PUSH)
-	     && pthread_equal(session->checkthread, self_thread))
-	    ) {
-		pthread_exit(NULL);
-	}
-	if(session->nussl)
-	{
+	if(session->nussl) {
 		nussl_session_destroy(session->nussl);
 		session->nussl = NULL;
 	}

@@ -25,7 +25,6 @@
 #include "libnuclient.h"
 #include <sasl/saslutil.h>
 #include <nussl.h>
-#include <pthread.h>
 #include <proto.h>
 #include "proc.h"
 #include "checks.h"
@@ -36,8 +35,6 @@
  * @{
  */
 
-typedef void (*pthread_cleanup_push_arg1_t) (void *);
-
 /**
  * Thread waiting for nuauth message to do client tasks
  *
@@ -46,9 +43,8 @@ typedef void (*pthread_cleanup_push_arg1_t) (void *);
  * - SRV_REQUIRED_HELLO : send hello back to nuauth
  */
 
-void *recv_message(void *data)
+nu_error_t recv_message(nuauth_session_t *session, nuclient_error_t *err)
 {
-	nuauth_session_t *session = (nuauth_session_t *) data;
 	int ret;
 	char dgram[512];
 	const size_t message_length =
@@ -69,81 +65,55 @@ void *recv_message(void *data)
 	authreq = (struct nu_authreq *) (header + 1);
 	authreq->packet_seq = session->packet_seq++;
 	authreq->packet_length =
-	    htons(sizeof(struct nu_authreq) +
-		  sizeof(struct nu_authfield_hello));
+		htons(sizeof(struct nu_authreq) +
+				sizeof(struct nu_authfield_hello));
 
 	hellofield = (struct nu_authfield_hello *) (authreq + 1);
 	hellofield->type = HELLO_FIELD;
 	hellofield->option = 0;
 	hellofield->length = htons(sizeof(struct nu_authfield_hello));
 
-	pthread_cleanup_push((pthread_cleanup_push_arg1_t)
-			     pthread_mutex_unlock,
-			     &session->check_count_mutex);
+	ret = nussl_read(session->nussl, dgram, sizeof dgram);
 
-	for (;;) {
-		ret = nussl_read(session->nussl, dgram, sizeof dgram);
+	if (ret == NUSSL_SOCK_TIMEOUT)
+		return NU_EXIT_CONTINUE;
 
-		if (ret == NUSSL_SOCK_TIMEOUT)
-			continue;
+	if (ret <= 0) {
+		/* \fixme correct error and cleaning */
+		ask_session_end(session);
+		return NU_EXIT_ERROR;
+	}
 
-		if (ret <= 0) {
-			ask_session_end(session);
-			break;
-		}
-
-		switch (dgram[0]) {
+	switch (dgram[0]) {
 		case SRV_REQUIRED_PACKET:
-			/* wake up nu_client_real_check_tread */
-			pthread_mutex_lock(&(session->check_count_mutex));
-			session->count_msg_cond++;
-			pthread_mutex_unlock(&
-					     (session->check_count_mutex));
-			pthread_cond_signal(&(session->check_cond));
+			/** \fixme Add error as second argument */
+			nu_client_real_check(session, NULL);
 			break;
 
 		case SRV_REQUIRED_HELLO:
 			hellofield->helloid =
-			    ((struct nu_srv_helloreq *) dgram)->helloid;
+				((struct nu_srv_helloreq *) dgram)->helloid;
 			if (session->debug_mode) {
 				printf("[+] Send HELLO\n");
 			}
 
 			/*  send it */
-#if XXX
-			if (session->tls) {
-				ret =
-				    gnutls_record_send(session->tls,
-						       message,
-						       message_length);
-				if (ret <= 0) {
-#if DEBUG_ENABLE
-					printf("write failed at %s:%d\n",
-					       __FILE__, __LINE__);
-#endif
-					ask_session_end(session);
-					return NULL;
-				}
-			}
-#else
 			ret = nussl_write(session->nussl, message, message_length);
 			if (ret < 0) {
 #if DEBUG_ENABLE
 				printf("write failed at %s:%d\n",
-				       __FILE__, __LINE__);
+						__FILE__, __LINE__);
 #endif
 				ask_session_end(session);
-				return NULL;
+				return NU_EXIT_ERROR;
 			}
-#endif
 			break;
 
 		default:
 			printf("unknown message\n");
-		}
+			return NU_EXIT_CONTINUE;
 	}
-	pthread_cleanup_pop(1);
-	return NULL;
+	return NU_EXIT_OK;
 }
 
 
@@ -172,31 +142,17 @@ void *recv_message(void *data)
  */
 int nu_client_check(nuauth_session_t * session, nuclient_error_t * err)
 {
-	pthread_mutex_lock(&(session->mutex));
-
 	/* test is a thread has detected problem with the session */
 	if (session->connected == 0) {
-		/* if we are here, threads are dead */
-		pthread_mutex_unlock(&(session->mutex));
 		SET_ERROR(err, INTERNAL_ERROR, SESSION_NOT_CONNECTED_ERR);
 		return -1;
 	}
 
-	/* test if we need to create the working thread */
-	if (session->count_msg_cond == -1) {	/* if set to -1 then we've just leave init */
-		if (session->server_mode == SRV_TYPE_PUSH) {
-			pthread_mutex_init(&session->checkthread_stop, NULL);
-			pthread_create(&(session->checkthread), NULL,
-				       nu_client_thread_check, session);
-		}
-		pthread_create(&(session->recvthread), NULL, recv_message,
-			       session);
-	}
-
-	pthread_mutex_unlock(&(session->mutex));
-
 	if (session->server_mode == SRV_TYPE_POLL) {
 		int checkreturn;
+
+		/** \fixme Need to use an customizable interval */
+		usleep(100*1000);
 		checkreturn = nu_client_real_check(session, err);
 		if (checkreturn < 0) {
 			/* error code filled by nu_client_real_check() */
@@ -206,83 +162,57 @@ int nu_client_check(nuauth_session_t * session, nuclient_error_t * err)
 			return 1;
 		}
 	} else {
-		if ((time(NULL) - session->timestamp_last_sent) >
-		    SENT_TEST_INTERVAL) {
-			if (!send_hello_pckt(session)) {
-				SET_ERROR(err, INTERNAL_ERROR,
-					  TIMEOUT_ERR);
+		struct timeval tv;	
+		fd_set select_set;
+		int ret;
+		tv.tv_sec = 0;
+		tv.tv_usec = 500000;
+
+		if (session->nussl == NULL) {
+			exit(1);
+			/** \fixme Handle error */
+			return -1;
+		}
+		/* Going to wait an event */
+		FD_ZERO(&select_set);
+		FD_SET(nussl_session_get_fd(session->nussl), &select_set);
+		ret = select(nussl_session_get_fd(session->nussl)+1, &select_set, NULL, NULL, &tv);
+
+		/* catch select() error */
+		if (ret == -1) {
+			/** \fixme Handle error */
+			return -1;
+		}
+
+		if (ret == 0) {
+			int checkreturn;
+			/* start a check */
+			checkreturn = nu_client_real_check(session, err);
+			if (checkreturn < 0) {
+				/* error code filled by nu_client_real_check() */
+				return -1;
+			} else {
+				SET_ERROR(err, INTERNAL_ERROR, NO_ERR);
+				return 1;
+			}
+			/* sending hello if needed */
+			if ((time(NULL) - session->timestamp_last_sent) >
+					SENT_TEST_INTERVAL) {
+				if (!send_hello_pckt(session)) {
+					SET_ERROR(err, INTERNAL_ERROR,
+							TIMEOUT_ERR);
+					return -1;
+				}
+				session->timestamp_last_sent = time(NULL);
+			}
+		} else {
+			if (recv_message(session, err) == NU_EXIT_ERROR) {
 				return -1;
 			}
-			session->timestamp_last_sent = time(NULL);
 		}
 	}
 	SET_ERROR(err, INTERNAL_ERROR, NO_ERR);
 	return 1;
-}
-
-void clear_local_mutex(void *mutex)
-{
-	pthread_mutex_unlock(mutex);
-	pthread_mutex_destroy(mutex);
-}
-
-/**
- * Function used to launch check in push mode
- *
- * This is a thread waiting to a condition to awake and launch
- * nu_client_real_check().
- */
-void *nu_client_thread_check(void *data)
-{
-	nuauth_session_t *session = (nuauth_session_t *) data;
-	pthread_mutex_t check_mutex;
-	int do_check, ask_stop;
-	struct timespec timeout;
-	struct timeval now;
-
-	pthread_mutex_init(&check_mutex, NULL);
-
-	pthread_cleanup_push((pthread_cleanup_push_arg1_t)
-			     pthread_mutex_unlock,
-			     &session->check_count_mutex);
-	pthread_cleanup_push((pthread_cleanup_push_arg1_t)
-			     clear_local_mutex, &check_mutex);
-
-	do_check = 1;
-	for (;;) {
-		ask_stop = pthread_mutex_trylock(&session->checkthread_stop);
-		if (ask_stop != 0)
-			break;
-		pthread_mutex_unlock(&session->checkthread_stop);
-
-		if (do_check) {
-			do_check = 0;
-			nu_client_real_check(session, NULL);
-		}
-		/* Do we need to do an other check ? */
-		pthread_mutex_lock(&session->check_count_mutex);
-		if (session->count_msg_cond > 0) {
-			do_check = 1;
-		}
-		pthread_mutex_unlock(&session->check_count_mutex);
-
-		if (!do_check) {
-			/* wait for cond with a timeout of 1 second */
-			gettimeofday(&now, NULL);
-			timeout.tv_sec = now.tv_sec + 1;
-			timeout.tv_nsec = now.tv_usec * 1000;
-			pthread_mutex_lock(&check_mutex);
-			pthread_cond_timedwait(&(session->check_cond),
-					  &check_mutex, &timeout);
-			pthread_mutex_unlock(&check_mutex);
-		}
-	}
-
-	pthread_mutex_destroy(&check_mutex);
-	pthread_cleanup_pop(1);
-	pthread_cleanup_pop(0);
-
-	return NULL;
 }
 
 /**

@@ -36,6 +36,8 @@ int send_os(nuauth_session_t * session, nuclient_error_t * err);
 
 char *secure_str_copy(const char *orig);
 
+void ask_session_end(nuauth_session_t * session);
+
 /**
  * Free a string allocated by secure_str_copy().
  *
