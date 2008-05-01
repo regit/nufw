@@ -69,6 +69,7 @@ typedef struct {
 	time_t expire;		/*!< \brief Timeout of the session (-1 means unlimited) */
 	int client_version;	/*!< \brief Client protocol version */
 	time_t connect_timestamp;
+	struct timeval last_message;
 	gboolean activated;	/*!< \brief TRUE if user server listen for event for this session */
 } user_session_t;
 

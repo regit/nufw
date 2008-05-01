@@ -117,6 +117,8 @@ nu_error_t treat_user_request(user_session_t * c_session,
 /* define maximum of messages that can wait on a logging pool */
 #define MAX_UNASSIGNED_MESSAGES 2000
 
+#define PUSH_DELAY 150000
+
 #define UNKNOWN_STRING "UNKNOWN"
 
 #define POOL_TYPE TRUE

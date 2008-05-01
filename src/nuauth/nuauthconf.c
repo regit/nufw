@@ -134,6 +134,7 @@ int init_nuauthconf(struct nuauth_params **result)
 		{"nuauth_proto_wait_delay", G_TOKEN_INT, DEFAULT_PROTO_WAIT_DELAY, NULL},
 		{"nuauth_drop_if_no_logging", G_TOKEN_INT, FALSE, NULL},
 		{"nuauth_max_unassigned_messages", G_TOKEN_INT, MAX_UNASSIGNED_MESSAGES, NULL},
+		{"nuauth_push_delay", G_TOKEN_INT, PUSH_DELAY, NULL},
 	};
 	const unsigned int nb_params =
 	    sizeof(nuauth_vars) / sizeof(confparams_t);
@@ -217,6 +218,8 @@ int init_nuauthconf(struct nuauth_params **result)
 	    *(int *) READ_CONF("nuauth_drop_if_no_logging");
 	conf->max_unassigned_messages =
 	    *(int *) READ_CONF("nuauth_max_unassigned_messages");
+	conf->push_delay =
+	    *(int *) READ_CONF("nuauth_push_delay");
 #undef READ_CONF
 
 	if (conf->debug_level > 9) {

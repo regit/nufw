@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2005-2007 INL
+ ** Copyright(C) 2005-2008 INL
  ** Written by  Eric Leblond <regit@inl.fr>
  **
  ** $Id$
@@ -280,6 +280,8 @@ char warn_clients(struct msg_addr_set *global_msg)
 	GSList *start_ipsockets = NULL;
 	GSList *ipsockets = NULL;
 	GSList *badsockets = NULL;
+	struct timeval timestamp;
+	struct timeval interval;
 #if DEBUG_ENABLE
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG, DEBUG_AREA_USER))
 	{
@@ -295,16 +297,27 @@ char warn_clients(struct msg_addr_set *global_msg)
 				IPV6_TO_POINTER(&global_msg->addr));
 	if (start_ipsockets) {
 		global_msg->found = TRUE;
-		for (ipsockets = start_ipsockets; ipsockets; ipsockets = ipsockets->next)
-		{
+		gettimeofday(&timestamp, NULL);
+		for (ipsockets = start_ipsockets; ipsockets; ipsockets = ipsockets->next) {
 			user_session_t *session = (user_session_t *)ipsockets->data;
-			int ret = nussl_write(session->nussl,
+			int ret;
+
+			if (session->client_version >= PROTO_VERSION_V22_1) {
+				timeval_substract(&interval, &timestamp, &(session->last_message));
+				if (interval.tv_usec < nuauthconf->push_delay) {
+					break;
+				}
+			}
+			ret = nussl_write(session->nussl,
 					(char*)global_msg->msg,
 					ntohs(global_msg->msg->length));
 			if (ret < 0) {
 				log_message(WARNING, DEBUG_AREA_USER,
 						"Failed to send warning to client(s): %s", nussl_get_error(session->nussl));
 				badsockets = g_slist_prepend(badsockets, GINT_TO_POINTER(ipsockets->data));
+			} else {
+				session->last_message.tv_sec = timestamp.tv_sec;
+				session->last_message.tv_usec = timestamp.tv_usec;
 			}
 		}
 		if (badsockets) {

@@ -119,6 +119,7 @@ struct nuauth_params {
 	/** nuauth uses push mode if set to 1, else
 	 * the old poll mode is used */
 	int push;
+	unsigned int push_delay; /*<! Delay between to consecutive push message */
 	int proto_wait_delay;
 	int do_ip_authentication;	/*<! nuauth uses ip_authentication
 					  fallback mode if set to 1 */
