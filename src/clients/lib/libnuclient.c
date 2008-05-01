@@ -484,15 +484,18 @@ nuauth_session_t *_nu_client_new(nuclient_error_t * err)
 	/* Set basic fields */
 	session->userid = getuid();
 	session->connected = 0;
-	session->count_msg_cond = -1;
 	session->auth_by_default = 1;
 	session->packet_seq = 0;
-	session->checkthread = NULL_THREAD;
-	session->recvthread = NULL_THREAD;
 	session->ct = NULL;
 	session->debug_mode = 0;
 	session->verbose = 1;
 	session->timestamp_last_sent = time(NULL);
+	session->min_sleep_delay.tv_sec = MIN_DELAY_SEC;
+	session->min_sleep_delay.tv_usec = MIN_DELAY_USEC;
+	session->max_sleep_delay.tv_sec = MAX_DELAY_SEC;
+	session->max_sleep_delay.tv_usec = MAX_DELAY_USEC;
+	session->sleep_delay.tv_sec = MIN_DELAY_SEC;
+	session->sleep_delay.tv_usec = MIN_DELAY_USEC;
 
 	if (tcptable_init(&new) == 0) {
 		SET_ERROR(err, INTERNAL_ERROR, MEMORY_ERR);
@@ -587,10 +590,7 @@ void nu_client_reset(nuauth_session_t * session)
 
 	/* reset fields */
 	session->connected = 0;
-	session->count_msg_cond = -1;
 	session->timestamp_last_sent = time(NULL);
-	session->checkthread = 0;
-	session->recvthread = 0;
 }
 
 /**
@@ -673,6 +673,34 @@ void nu_client_set_debug(nuauth_session_t * session, unsigned char enabled)
 void nu_client_set_verbose(nuauth_session_t * session, unsigned char enabled)
 {
 	session->verbose = enabled;
+}
+
+/**
+ * \ingroup nuclientAPI
+ * Set minimum delay
+ *
+ * \param session Pointer to client session
+ * \param delay a timeval which will be equal to the minimum delay
+ * between two checks (in ms)
+ */
+void nu_client_set_min_delay(nuauth_session_t * session, unsigned int delay)
+{
+	session->min_sleep_delay.tv_sec = delay / 1000;
+	session->min_sleep_delay.tv_usec = (delay * 1000) % 1000000;
+}
+
+/**
+ * \ingroup nuclientAPI
+ * Set maximum delay
+ *
+ * \param session Pointer to client session
+ * \param delay a timeval which will be equal to the maximum delay 
+ * between two checks (in ms)
+ */
+void nu_client_set_max_delay(nuauth_session_t * session, unsigned int delay)
+{
+	session->max_sleep_delay.tv_sec = delay / 1000;
+	session->max_sleep_delay.tv_usec = (delay * 1000) % 1000000;
 }
 
 /**

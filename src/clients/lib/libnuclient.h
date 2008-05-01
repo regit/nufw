@@ -62,7 +62,6 @@
 #include <signal.h>
 #include <unistd.h>
 #include <string.h>
-#include <pthread.h>
 #include <nussl.h>
 
 #include "nufw_source.h"
@@ -81,6 +80,10 @@
 /*> max number of packets to authenticate in a single tls packet */
 #define CONN_MAX 10
 
+#define MIN_DELAY_SEC 0
+#define MIN_DELAY_USEC 50*1000
+#define MAX_DELAY_SEC 1
+#define MAX_DELAY_USEC 600*1000
 
 /* Macros declarations */
 #define SET_ERROR(ERR, FAMILY, CODE) \
@@ -162,7 +165,7 @@ typedef struct {
 /* nuauth_session_t structure */
 
 /* -- PRIVATE STRUCTURE -- */
-struct  nuauth_session {
+struct nuauth_session {
 	nussl_session* nussl;
 
 	u_int32_t userid;	/*!< Local user identifier (getuid()) */
@@ -202,33 +205,17 @@ struct  nuauth_session {
 	 */
 	unsigned char connected;
 
-	/**
-	 * Condition and associated mutex used to know when a check is necessary
-	 */
-	pthread_cond_t check_cond;
-	pthread_mutex_t check_count_mutex;
-	int count_msg_cond;
-
-	/**
-	 * Thread which check connection with nuauth,
-	 * see function nu_client_thread_check().
-	 */
-	pthread_t checkthread;
-
-	/**
-	 * Mutex used to ask checkthread to stop.
-	 */
-	pthread_mutex_t checkthread_stop;
-
-	/**
-	 * Thread which receive messages from nuauth, see function recv_message().
-	 */
-	pthread_t recvthread;
-
 	/** Timestamp (Epoch format) of last packet send to nuauth */
 	time_t timestamp_last_sent;
 
+	/** sleep delay between check in microseconds */
+	struct timeval sleep_delay;
 
+	/** min sleep delay between check in microseconds */
+	struct timeval min_sleep_delay;
+
+	/** max sleep delay between check in microseconds */
+	struct timeval max_sleep_delay;
 };
 
 

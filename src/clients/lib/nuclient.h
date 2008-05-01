@@ -1,5 +1,5 @@
 /*
- ** Copyright 2004-2007 - INL
+ ** Copyright 2004-2008 - INL
  ** Written by Eric Leblond <regit@inl.fr>
  **            Vincent Deffontaines <vincent@inl.fr>
  ** INL http://www.inl.fr/
@@ -153,6 +153,9 @@ char *nu_client_to_utf8(const char *inbuf, char *from_charset);
 
 const char *nu_get_version();
 int nu_check_version(const char *version);
+
+void nu_client_set_min_delay(nuauth_session_t * session, unsigned int delay);
+void nu_client_set_max_delay(nuauth_session_t * session, unsigned int delay);
 
 char *nu_get_home_dir();
 

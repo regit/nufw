@@ -118,6 +118,28 @@ nu_error_t recv_message(nuauth_session_t *session, nuclient_error_t *err)
 	return NU_EXIT_OK;
 }
 
+nu_error_t increase_refresh_delay(nuauth_session_t *session)
+{
+	if (session->sleep_delay.tv_sec * 1000000 + 
+		session->sleep_delay.tv_usec <
+		session->max_sleep_delay.tv_sec * 1000000 +
+		session->max_sleep_delay.tv_usec) {
+		session->sleep_delay.tv_sec = session->sleep_delay.tv_sec * 2 +
+			    (session->sleep_delay.tv_usec * 2) / 1000000;
+		session->sleep_delay.tv_usec =
+			session->sleep_delay.tv_usec * 2 % 1000000;
+		/* Should retest: We may exceed max delay if we don't have 
+		 * max_delay=min_delay*2^k */
+	}
+	return NU_EXIT_OK;
+}
+
+nu_error_t reset_refresh_delay(nuauth_session_t *session)
+{
+	session->sleep_delay.tv_sec = session->min_sleep_delay.tv_sec;
+	session->sleep_delay.tv_usec = session->min_sleep_delay.tv_usec;
+	return NU_EXIT_OK;
+}
 
 /**
  * \ingroup nuclientAPI
@@ -153,8 +175,8 @@ int nu_client_check(nuauth_session_t * session, nuclient_error_t * err)
 	if (session->server_mode == SRV_TYPE_POLL) {
 		int checkreturn;
 
-		/** \fixme Need to use an customizable interval */
-		usleep(100*1000);
+		usleep(session->sleep_delay.tv_sec * 1000000 +
+		       session->sleep_delay.tv_usec);
 		checkreturn = nu_client_real_check(session, err);
 		if (checkreturn < 0) {
 			/* error code filled by nu_client_real_check() */
@@ -167,8 +189,8 @@ int nu_client_check(nuauth_session_t * session, nuclient_error_t * err)
 		struct timeval tv;	
 		fd_set select_set;
 		int ret;
-		tv.tv_sec = 0;
-		tv.tv_usec = 500000;
+		tv.tv_sec = session->sleep_delay.tv_sec;
+		tv.tv_usec = session->sleep_delay.tv_usec;
 
 		if (session->nussl == NULL) {
 			SET_ERROR(err, INTERNAL_ERROR, UNKNOWN_ERR);
@@ -195,6 +217,9 @@ int nu_client_check(nuauth_session_t * session, nuclient_error_t * err)
 				return -1;
 			} else {
 				SET_ERROR(err, INTERNAL_ERROR, NO_ERR);
+				if (checkreturn == 0) {
+					increase_refresh_delay(session);
+				}
 				return 1;
 			}
 			/* sending hello if needed */
@@ -261,6 +286,9 @@ int nu_client_real_check(nuauth_session_t * session, nuclient_error_t * err)
 	}
 	session->ct = new;
 
+	if (nb_packets > 0) {
+		reset_refresh_delay(session);
+	}
 	return nb_packets;
 }
 
