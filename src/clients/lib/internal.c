@@ -628,6 +628,7 @@ void ask_session_end(nuauth_session_t * session)
 		nussl_session_destroy(session->nussl);
 		session->nussl = NULL;
 	}
+	session->connected = 0;
 }
 
 

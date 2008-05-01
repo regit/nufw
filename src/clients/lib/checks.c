@@ -75,19 +75,20 @@ nu_error_t recv_message(nuauth_session_t *session, nuclient_error_t *err)
 
 	ret = nussl_read(session->nussl, dgram, sizeof dgram);
 
-	if (ret == NUSSL_SOCK_TIMEOUT)
+	if (ret == NUSSL_SOCK_TIMEOUT) {
+		SET_ERROR(err, INTERNAL_ERROR, NO_ERR);
 		return NU_EXIT_CONTINUE;
+	}
 
 	if (ret <= 0) {
-		/* \fixme correct error and cleaning */
 		ask_session_end(session);
+		SET_ERROR(err, INTERNAL_ERROR, SESSION_NOT_CONNECTED_ERR);
 		return NU_EXIT_ERROR;
 	}
 
 	switch (dgram[0]) {
 		case SRV_REQUIRED_PACKET:
-			/** \fixme Add error as second argument */
-			nu_client_real_check(session, NULL);
+			nu_client_real_check(session, err);
 			break;
 
 		case SRV_REQUIRED_HELLO:
@@ -105,6 +106,7 @@ nu_error_t recv_message(nuauth_session_t *session, nuclient_error_t *err)
 						__FILE__, __LINE__);
 #endif
 				ask_session_end(session);
+				SET_ERROR(err, INTERNAL_ERROR, SESSION_NOT_CONNECTED_ERR);
 				return NU_EXIT_ERROR;
 			}
 			break;
@@ -169,8 +171,7 @@ int nu_client_check(nuauth_session_t * session, nuclient_error_t * err)
 		tv.tv_usec = 500000;
 
 		if (session->nussl == NULL) {
-			exit(1);
-			/** \fixme Handle error */
+			SET_ERROR(err, INTERNAL_ERROR, UNKNOWN_ERR);
 			return -1;
 		}
 		/* Going to wait an event */
@@ -180,7 +181,8 @@ int nu_client_check(nuauth_session_t * session, nuclient_error_t * err)
 
 		/* catch select() error */
 		if (ret == -1) {
-			/** \fixme Handle error */
+			ask_session_end(session);
+			SET_ERROR(err, INTERNAL_ERROR, SESSION_NOT_CONNECTED_ERR);
 			return -1;
 		}
 
