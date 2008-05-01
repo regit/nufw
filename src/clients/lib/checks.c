@@ -88,6 +88,9 @@ nu_error_t recv_message(nuauth_session_t *session, nuclient_error_t *err)
 
 	switch (dgram[0]) {
 		case SRV_REQUIRED_PACKET:
+			if (session->debug_mode) {
+				printf("[+] Client is asked to send new connections.\n");
+			}
 			nu_client_real_check(session, err);
 			break;
 
@@ -256,9 +259,11 @@ int nu_client_real_check(nuauth_session_t * session, nuclient_error_t * err)
 {
 	conntable_t *new;
 	int nb_packets = 0;
+
 	if (session->debug_mode) {
-		printf("[+] Client is asked to send new connections.\n");
+		printf("[+] Client checking for new connections.\n");
 	}
+
 	if (tcptable_init(&new) == 0) {
 		SET_ERROR(err, INTERNAL_ERROR, MEMORY_ERR);
 		return -1;
