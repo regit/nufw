@@ -18,19 +18,19 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _HASH_H_
-#define _HASH_H_
+#ifndef _CONFIG_TABLE_H_
+#define _CONFIG_TABLE_H_
 
 #include "linuxlist.h"
 
-struct hash_t {
+struct config_table_t {
 	struct llist_head list;
 	void *key;
 	void *value;
-} hash_t;
+} config_table_t;
 
-char *nubase_hash_get(char *key);
-struct hash_t *nubase_hash_append(char *key, char *value);
+char *nubase_config_table_get(char *key);
+struct config_table_t *nubase_config_table_append(char *key, char *value);
 
-#endif /* _HASH_H_ */
+#endif /* _CONFIG_TABLE_H_ */
 

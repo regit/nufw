@@ -22,7 +22,7 @@
 #include <stdio.h>
 #include <errno.h>
 
-#include "hash.h"
+#include "config-table.h"
 
 extern int yylex(void);
 extern void yylex_init(void);
@@ -60,7 +60,7 @@ section:		TOK_SECTION {
 			;
 key_value:		TOK_WORD TOK_EQUAL TOK_WORD
 			{
-				nubase_hash_append($1,$3);
+				nubase_config_table_append($1,$3);
 			}
 			;
 

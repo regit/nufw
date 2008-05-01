@@ -36,7 +36,7 @@
 #endif
 
 #include "config-parser.h"
-#include "hash.h"
+#include "config-table.h"
 #include "ipv6.h"
 #include "log.h"
 #include "packet_parser.h"
