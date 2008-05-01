@@ -42,4 +42,12 @@
 #include "packet_parser.h"
 #include "strings.h"
 
+typedef enum {
+	NU_EXIT_ERROR = -1,
+	NU_EXIT_OK = 0,
+	NU_EXIT_NO_RETURN,
+	NU_EXIT_CONTINUE
+} nu_error_t;
+
+
 #endif				/* ifndef NUBASE_HEADER */

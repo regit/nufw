@@ -61,12 +61,7 @@
 /*#  define DEBUG_WITH_VALGRIND*/
 #endif
 
-typedef enum {
-	NU_EXIT_ERROR = -1,
-	NU_EXIT_OK = 0,
-	NU_EXIT_NO_RETURN,
-	NU_EXIT_CONTINUE
-} nu_error_t;
+#include "nubase.h"
 
 #define PROTO_IPV4 4
 #define PROTO_IPV6 6
