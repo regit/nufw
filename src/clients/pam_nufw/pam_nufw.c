@@ -285,7 +285,6 @@ static void main_loop(struct pam_nufw_s *pn_s)
 	unsigned long interval = 100;
 
 	for (;;) {
-		usleep(interval * 1000);
 		if (!connected) {
 			sleep(tempo);
 			if (tempo < MAX_RETRY_TIME) {
@@ -557,7 +556,7 @@ PAM_EXTERN int pam_sm_acct_mgmt(pam_handle_t * pamh, int flags, int argc, const 
 /* --- password management --- */
 
 PAM_EXTERN
-    int pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc,
+int pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc,
 			 const char **argv)
 {
 	D(("pam_nufw sm_chauthok"));
@@ -567,7 +566,7 @@ PAM_EXTERN
 /* --- session management --- */
 
 PAM_EXTERN
-    int pam_sm_open_session(pam_handle_t * pamh, int flags, int argc,
+int pam_sm_open_session(pam_handle_t * pamh, int flags, int argc,
 			    const char **argv)
 {
 	syslog(LOG_INFO, "(pam_nufw) session opened");
@@ -579,7 +578,7 @@ PAM_EXTERN
  * -> get pid file, and kill process
  */
 PAM_EXTERN
-    int pam_sm_close_session(pam_handle_t * pamh, int flags, int argc,
+int pam_sm_close_session(pam_handle_t * pamh, int flags, int argc,
 			     const char **argv)
 {
 	/*D(("pam_nufw sm_close_session")); */
