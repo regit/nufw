@@ -250,14 +250,16 @@ void act_on_loggers_processing()
 			nuauthdatas->loggers_pool_full = TRUE;
 			log_message(CRITICAL, DEBUG_AREA_MAIN,
 				    "Switching to DOS conditions mode: packet logging"
-				    " system too slow");
+				    " system too slow (%d msgs in queue)",
+				    g_thread_pool_unprocessed(nuauthdatas->user_loggers));
 		}
 	} else {
 		if (nuauthdatas->loggers_pool_full == TRUE) {
 			nuauthdatas->loggers_pool_full = FALSE;
 			log_message(CRITICAL, DEBUG_AREA_USER,
 				    "Switching to standard conditions: packet logging system"
-				    " recovered from DOS");
+				    " recovered from DOS (%d msgs in queue)",
+				    g_thread_pool_unprocessed(nuauthdatas->user_loggers));
 		}
 	}
 	if (g_thread_pool_unprocessed(nuauthdatas->user_session_loggers) > 
@@ -266,14 +268,16 @@ void act_on_loggers_processing()
 			nuauthdatas->session_loggers_pool_full = TRUE;
 			log_message(CRITICAL, DEBUG_AREA_MAIN,
 				    "Switching to DOS conditions mode, user logging system"
-				    " too slow");
+				    " too slow (%d msgs in queue)",
+				    g_thread_pool_unprocessed(nuauthdatas->user_session_loggers));
 		}
 	} else {
 		if (nuauthdatas->session_loggers_pool_full == TRUE) {
 			nuauthdatas->session_loggers_pool_full = FALSE;
 			log_message(CRITICAL, DEBUG_AREA_MAIN,
 				    "Switching to standard conditions: user logging system"
-				    " recovered from DOS");
+				    " recovered from DOS (%d msgs in queue)",
+				    g_thread_pool_unprocessed(nuauthdatas->user_session_loggers));
 		}
 	}
 }
