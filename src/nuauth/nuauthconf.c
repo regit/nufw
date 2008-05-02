@@ -76,162 +76,78 @@ int init_nuauthconf(struct nuauth_params **result)
 {
 	struct nuauth_params *conf;
 	char *gwsrv_addr = NULL;
-	int port;
 	int connect_policy = POLICY_MULTIPLE_LOGIN;
-	confparams_t nuauth_vars[] = {
-	        /* token, data_type, default_int_val, default_string_val */
-		{"nuauth_client_listen_addr", G_TOKEN_STRING, 0,
-		 g_strdup(AUTHREQ_CLIENT_LISTEN_ADDR)},
-		{"nuauth_nufw_listen_addr", G_TOKEN_STRING, 0,
-		 g_strdup(AUTHREQ_NUFW_LISTEN_ADDR)},
-		{"nuauth_gw_packet_port", G_TOKEN_INT, AUTHREQ_PORT, 0},
-		{"nuauth_user_packet_port", G_TOKEN_INT, USERPCKT_PORT, 0},
-		{"nufw_gw_addr", G_TOKEN_STRING, 0, g_strdup(GWSRV_ADDR)},
-		{"nuauth_packet_timeout", G_TOKEN_INT, PACKET_TIMEOUT,
-		 NULL},
-		{"nuauth_session_duration", G_TOKEN_INT, SESSION_DURATION,
-		 NULL},
-		{"nuauth_number_usercheckers", G_TOKEN_INT, NB_USERCHECK,
-		 NULL},
-		{"nuauth_number_aclcheckers", G_TOKEN_INT, NB_ACLCHECK,
-		 NULL},
-		{"nuauth_number_ipauthcheckers", G_TOKEN_INT, NB_ACLCHECK,
-		 NULL},
-		{"nuauth_number_loggers", G_TOKEN_INT, NB_LOGGERS, NULL},
-		{"nuauth_number_session_loggers", G_TOKEN_INT, NB_LOGGERS,
-		 NULL},
-		{"nuauth_number_authcheckers", G_TOKEN_INT, NB_AUTHCHECK,
-		 NULL},
-		{"nuauth_log_users", G_TOKEN_INT, 9, NULL},
-		{"nuauth_log_users_sync", G_TOKEN_INT, 0, NULL},
-		{"nuauth_log_users_strict", G_TOKEN_INT, 1, NULL},
-		{"nuauth_log_users_without_realm", G_TOKEN_INT, 1, NULL},
-		{"nuauth_prio_to_nok", G_TOKEN_INT, 1, NULL},
-		{"nuauth_single_user_client_limit", G_TOKEN_INT, 0, NULL},
-		{"nuauth_single_ip_client_limit", G_TOKEN_INT, 0, NULL},
-		{"nuauth_connect_policy", G_TOKEN_INT, POLICY_MULTIPLE_LOGIN, NULL},
-		{"nuauth_reject_after_timeout", G_TOKEN_INT, 0, NULL},
-		{"nuauth_reject_authenticated_drop", G_TOKEN_INT, 0, NULL},
-		{"nuauth_datas_persistance", G_TOKEN_INT, 9, NULL},
-		{"nuauth_push_to_client", G_TOKEN_INT, 1, NULL},
-		{"nuauth_do_ip_authentication", G_TOKEN_INT, 0, NULL},
-		{"nuauth_acl_cache", G_TOKEN_INT, 0, NULL},
-		{"nuauth_user_cache", G_TOKEN_INT, 0, NULL},
-#if USE_UTF8
-		{"nuauth_uses_utf8", G_TOKEN_INT, 1, NULL},
-#else
-		{"nuauth_uses_utf8", G_TOKEN_INT, 0, NULL},
-#endif
-		{"nuauth_debug_areas", G_TOKEN_INT, DEFAULT_DEBUG_AREAS,
-		 NULL},
-		{"nuauth_debug_level", G_TOKEN_INT, DEFAULT_DEBUG_LEVEL,
-		 NULL},
-		{"nuauth_hello_authentication", G_TOKEN_INT, 0, NULL},
-		{"nufw_has_conntrack", G_TOKEN_INT, 1, NULL},
-		{"nufw_has_fixed_timeout", G_TOKEN_INT, 1, NULL},
-		{"nuauth_uses_fake_sasl", G_TOKEN_INT, 1, NULL},
-		{"nuauth_use_command_server", G_TOKEN_INT, 1, NULL},
-		{"nuauth_proto_wait_delay", G_TOKEN_INT, DEFAULT_PROTO_WAIT_DELAY, NULL},
-		{"nuauth_drop_if_no_logging", G_TOKEN_INT, FALSE, NULL},
-		{"nuauth_max_unassigned_messages", G_TOKEN_INT, MAX_UNASSIGNED_MESSAGES, NULL},
-		{"nuauth_push_delay", G_TOKEN_INT, PUSH_DELAY, NULL},
-	};
-	const unsigned int nb_params =
-	    sizeof(nuauth_vars) / sizeof(confparams_t);
 
 	conf = g_new0(struct nuauth_params, 1);
 	*result = conf;
 
-	/* parse conf file */
-	if(!parse_conffile(nuauthconf->configfile, nb_params, nuauth_vars)) {
-	        log_message(FATAL, DEBUG_AREA_MAIN, "Failed to load config file %s", nuauthconf->configfile);
-		return 0;
-	}
+	conf->client_srv = nubase_config_table_get_alwaysstring("nuauth_client_listen_addr");
+	conf->nufw_srv = nubase_config_table_get_alwaysstring("nuauth_nufw_listen_addr");
+	gwsrv_addr = nubase_config_table_get_alwaysstring("nufw_gw_addr");
+	conf->authreq_port = nubase_config_table_get_alwaysstring("nuauth_gw_packet_port");
+	conf->userpckt_port = nubase_config_table_get_alwaysstring("nuauth_user_packet_port");
 
-
-
-#define READ_CONF(KEY) get_confvar_value(nuauth_vars, nb_params, KEY)
-
-	conf->client_srv = (char *) READ_CONF("nuauth_client_listen_addr");
-	conf->nufw_srv = (char *) READ_CONF("nuauth_nufw_listen_addr");
-	gwsrv_addr = (char *) READ_CONF("nufw_gw_addr");
-	port = *(int *) READ_CONF("nuauth_gw_packet_port");
-	conf->authreq_port = int_to_str(port);
-	port = *(int *) READ_CONF("nuauth_user_packet_port");
-	conf->userpckt_port = int_to_str(port);
-
-	conf->nbuser_check =
-	    *(int *) READ_CONF("nuauth_number_usercheckers");
-	conf->nbacl_check =
-	    *(int *) READ_CONF("nuauth_number_aclcheckers");
-	conf->nbipauth_check =
-	    *(int *) READ_CONF("nuauth_number_ipauthcheckers");
-	conf->log_users = *(int *) READ_CONF("nuauth_log_users");
-	conf->log_users_sync = *(int *) READ_CONF("nuauth_log_users_sync");
-	conf->log_users_strict =
-	    *(int *) READ_CONF("nuauth_log_users_strict");
-	conf->log_users_without_realm =
-	    *(int *) READ_CONF("nuauth_log_users_without_realm");
-	conf->prio_to_nok = *(int *) READ_CONF("nuauth_prio_to_nok");
-	conf->single_user_client_limit =
-		*(unsigned int *) READ_CONF("nuauth_single_user_client_limit");
-	conf->single_ip_client_limit =
-		*(unsigned int *) READ_CONF("nuauth_single_ip_client_limit");
-	connect_policy = *(int *) READ_CONF("nuauth_connect_policy");
+	conf->nbuser_check = atoi(nubase_config_table_get_alwaysstring("nuauth_number_usercheckers"));
+	conf->nbacl_check = atoi(nubase_config_table_get_alwaysstring("nuauth_number_aclcheckers"));
+	conf->nbipauth_check = atoi(nubase_config_table_get_alwaysstring("nuauth_number_ipauthcheckers"));
+	conf->log_users = atoi(nubase_config_table_get_alwaysstring("nuauth_log_users"));
+	conf->log_users_sync = atoi(nubase_config_table_get_alwaysstring("nuauth_log_users_sync"));
+	conf->log_users_strict = atoi(nubase_config_table_get_alwaysstring("nuauth_log_users_strict"));
+	conf->log_users_without_realm =	atoi(nubase_config_table_get_alwaysstring("nuauth_log_users_without_realm"));
+	conf->prio_to_nok = atoi(nubase_config_table_get_alwaysstring("nuauth_prio_to_nok"));
+	conf->single_user_client_limit = atoi(nubase_config_table_get_alwaysstring("nuauth_single_user_client_limit"));
+	conf->single_ip_client_limit = atoi(nubase_config_table_get_alwaysstring("nuauth_single_ip_client_limit"));
+	connect_policy = atoi(nubase_config_table_get_alwaysstring("nuauth_connect_policy"));
 	conf->reject_after_timeout =
-	    *(int *) READ_CONF("nuauth_reject_after_timeout");
+	    atoi(nubase_config_table_get_alwaysstring("nuauth_reject_after_timeout"));
 	conf->reject_authenticated_drop =
-	    *(int *) READ_CONF("nuauth_reject_authenticated_drop");
-	conf->nbloggers = *(int *) READ_CONF("nuauth_number_loggers");
+	    atoi(nubase_config_table_get_alwaysstring("nuauth_reject_authenticated_drop"));
+	conf->nbloggers = atoi(nubase_config_table_get_alwaysstring("nuauth_number_loggers"));
 	conf->nb_session_loggers =
-	    *(int *) READ_CONF("nuauth_number_session_loggers");
+	    atoi(nubase_config_table_get_alwaysstring("nuauth_number_session_loggers"));
 	conf->nb_auth_checkers =
-	    *(int *) READ_CONF("nuauth_number_authcheckers");
-	conf->packet_timeout = *(int *) READ_CONF("nuauth_packet_timeout");
+	    atoi(nubase_config_table_get_alwaysstring("nuauth_number_authcheckers"));
+	conf->packet_timeout = atoi(nubase_config_table_get_alwaysstring("nuauth_packet_timeout"));
 	conf->session_duration =
-	    *(int *) READ_CONF("nuauth_session_duration");
+	    atoi(nubase_config_table_get_alwaysstring("nuauth_session_duration"));
 	conf->datas_persistance =
-	    *(int *) READ_CONF("nuauth_datas_persistance");
-	conf->push = *(int *) READ_CONF("nuauth_push_to_client");
+	    atoi(nubase_config_table_get_alwaysstring("nuauth_datas_persistance"));
+	conf->push = atoi(nubase_config_table_get_alwaysstring("nuauth_push_to_client"));
 	conf->do_ip_authentication =
-	    *(int *) READ_CONF("nuauth_do_ip_authentication");
-	conf->acl_cache = *(int *) READ_CONF("nuauth_acl_cache");
-	conf->user_cache = *(int *) READ_CONF("nuauth_user_cache");
-	conf->uses_utf8 = *(int *) READ_CONF("nuauth_uses_utf8");
+	    atoi(nubase_config_table_get_alwaysstring("nuauth_do_ip_authentication"));
+	conf->acl_cache = atoi(nubase_config_table_get_alwaysstring("nuauth_acl_cache"));
+	conf->user_cache = atoi(nubase_config_table_get_alwaysstring("nuauth_user_cache"));
+	conf->uses_utf8 = atoi(nubase_config_table_get_alwaysstring("nuauth_uses_utf8"));
 	conf->hello_authentication =
-	    *(int *) READ_CONF("nuauth_hello_authentication");
-	conf->debug_areas = *(int *) READ_CONF("nuauth_debug_areas");
-	conf->debug_level = *(int *) READ_CONF("nuauth_debug_level");
+	    atoi(nubase_config_table_get_alwaysstring("nuauth_hello_authentication"));
+	conf->debug_areas = atoi(nubase_config_table_get_alwaysstring("nuauth_debug_areas"));
+	conf->debug_level = atoi(nubase_config_table_get_alwaysstring("nuauth_debug_level"));
 	conf->nufw_has_conntrack =
-	    *(int *) READ_CONF("nufw_has_conntrack");
+	    atoi(nubase_config_table_get_alwaysstring("nufw_has_conntrack"));
 	conf->nufw_has_fixed_timeout =
-	    *(int *) READ_CONF("nufw_has_fixed_timeout");
+	    atoi(nubase_config_table_get_alwaysstring("nufw_has_fixed_timeout"));
 	conf->nuauth_uses_fake_sasl =
-	    *(int *) READ_CONF("nuauth_uses_fake_sasl");
+	    atoi(nubase_config_table_get_alwaysstring("nuauth_uses_fake_sasl"));
 #ifdef BUILD_NUAUTH_COMMAND
 	conf->use_command_server =
-	    *(int *) READ_CONF("nuauth_use_command_server");
+	    atoi(nubase_config_table_get_alwaysstring("nuauth_use_command_server"));
 #endif
 	conf->proto_wait_delay =
-	    *(int *) READ_CONF("nuauth_proto_wait_delay");
+	    atoi(nubase_config_table_get_alwaysstring("nuauth_proto_wait_delay"));
 	conf->drop_if_no_logging =
-	    *(int *) READ_CONF("nuauth_drop_if_no_logging");
+	    atoi(nubase_config_table_get_alwaysstring("nuauth_drop_if_no_logging"));
 	conf->max_unassigned_messages =
-	    *(int *) READ_CONF("nuauth_max_unassigned_messages");
+	    atoi(nubase_config_table_get_alwaysstring("nuauth_max_unassigned_messages"));
 	conf->push_delay =
-	    *(int *) READ_CONF("nuauth_push_delay");
-#undef READ_CONF
+	    atoi(nubase_config_table_get_alwaysstring("nuauth_push_delay"));
 
 	if (conf->debug_level > 9) {
 		conf->debug_level = 9;
 	}
-	/* free config struct */
-	free_confparams(nuauth_vars,
-			sizeof(nuauth_vars) / sizeof(confparams_t));
 
 	build_prenuauthconf(conf, gwsrv_addr, connect_policy);
 
-	g_free(gwsrv_addr);
+	//g_free(gwsrv_addr);
 	return 1;
 }
 
