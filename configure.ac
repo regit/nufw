@@ -66,7 +66,7 @@ AC_CHECK_MEMBER([struct dirent.d_type],
 
 # Checks for libraries.
 
-AC_CHECK_LIB([pthread], [pthread_mutex_init],, check_pthread=no)
+AC_CHECK_LIB([pthread], [pthread_mutex_init], check_pthread="yes", check_pthread="no")
 
 AC_CHECK_TOOL(DOCBOOK2MAN, docbook2man, true)
 AC_CHECK_TOOL(DOCBOOK2PDF, docbook2pdf, true)
@@ -250,6 +250,9 @@ if test "${build_libnuclient}" = "yes"; then
 fi
 
 if test "${build_nufw}" = "yes"; then
+    if test "${check_pthread}" = "no"; then
+        AC_MSG_ERROR([No pthread library, nufw daemon WON'T be able to compile]);	
+    fi
     if test "${use_nfqueue}" = "yes"; then
         # if we don't have we can't build nufw
         AC_CHECK_LIB([nfnetlink], [nfnl_open], have_nfqueue="yes", build_nufw="")
@@ -392,8 +395,7 @@ AC_CONFIG_FILES([Makefile
 
 # Display errors if any library is missing
 if test \
-       x${check_pthread} = xno \
-    -o x${check_glib} = xno \
+    x${check_glib} = xno \
     -o x${check_mysql} = xno \
     -o x${check_pgsql} = xno \
     -o x${check_prelude} = xno \
@@ -403,9 +405,6 @@ if test \
     -o x${check_pam} = xno \
 ; then
     AC_MSG_RESULT([])
-    if test x${check_pthread} = xno; then
-        AC_MSG_RESULT([ERROR: pthread library needed])
-    fi
     if test x${check_gcrypt} = xno; then
         AC_MSG_RESULT([ERROR: gcrypt library needed for encryption])
     fi

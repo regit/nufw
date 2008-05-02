@@ -195,9 +195,6 @@ struct nuauth_session {
 	/** Server mode: #SRV_TYPE_POLL or #SRV_TYPE_PUSH */
 	u_int8_t server_mode;
 
-	/** Mutex used in session destruction */
-	pthread_mutex_t mutex;
-
 	/**
 	 * Flag to signal if user is connected or not.
 	 * Connected means that TLS tunnel is opened
