@@ -708,6 +708,8 @@ void configure_app(int argc, char **argv)
 		nuauthconf->configfile = g_strdup(params.configfile);
 	}
 
+	parse_configuration(nuauthconf->configfile);
+
 	/* load configuration */
 	if (!init_nuauthconf(&conf)) {
 		log_message(FATAL, DEBUG_AREA_MAIN,
