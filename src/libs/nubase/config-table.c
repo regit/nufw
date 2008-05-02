@@ -42,17 +42,25 @@ char *nubase_config_table_get(char *key)
 
 char *nubase_config_table_get_alwaysstring(char *key)
 {
-	struct config_table_t *config_table;
+	char *str;
 
-	llist_for_each_entry(config_table, &config_table_list, list) {
-		if (!strncmp(key, config_table->key, strlen(config_table->key))) {
-			return config_table->value;
-		}
-	}
+	str = nubase_config_table_get(key);
+	if ( ! str ) return "";
 
-	return "";
+	return str;
 }
 
+char *nubase_config_table_get_or_default(char *key, char *replace)
+{
+	char *str;
+
+	if (str = nubase_config_table_get(key)) {
+		return key;
+	} else {
+		return replace;
+	}
+
+}
 
 struct config_table_t *nubase_config_table_append(char *key, char *value)
 {
