@@ -60,6 +60,29 @@ struct config_table_t *nubase_config_table_append(char *key, char *value)
 	return config_table;
 }
 
+/* Similar to nubase_config_table_append,
+ * but does not check for existing value
+ * and if it exists, free() it */
+struct config_table_t *nubase_config_table_set(char *key, char *value)
+{
+	struct config_table_t *config_table;
+
+	/* It does not exists so we use _append*/
+	if ( ! nubase_config_table_get(key) ) {
+		return nubase_config_table_append(key, value);
+	}
+
+	llist_for_each_entry(config_table, &config_table_list, list) {
+		if (!strncmp(key, config_table->key, strlen(config_table->key))) {
+			llist_del(&config_table->list);
+			return nubase_config_table_append(key, value);
+		}
+	}
+
+	return NULL;
+}
+
+
 #ifdef _UNIT_TEST_
 #include <stdio.h>
 int main(void)
