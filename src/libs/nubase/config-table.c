@@ -40,6 +40,20 @@ char *nubase_config_table_get(char *key)
 	return NULL;
 }
 
+char *nubase_config_table_get_alwaysstring(char *key)
+{
+	struct config_table_t *config_table;
+
+	llist_for_each_entry(config_table, &config_table_list, list) {
+		if (!strncmp(key, config_table->key, strlen(config_table->key))) {
+			return config_table->value;
+		}
+	}
+
+	return "";
+}
+
+
 struct config_table_t *nubase_config_table_append(char *key, char *value)
 {
 	struct config_table_t *config_table;

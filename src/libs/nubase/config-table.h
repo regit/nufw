@@ -30,6 +30,8 @@ struct config_table_t {
 } config_table_t;
 
 char *nubase_config_table_get(char *key);
+char *nubase_config_table_get_alwaysstring(char *key);
+
 struct config_table_t *nubase_config_table_append(char *key, char *value);
 struct config_table_t *nubase_config_table_set(char *key, char *value);
 

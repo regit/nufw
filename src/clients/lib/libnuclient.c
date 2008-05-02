@@ -63,7 +63,6 @@ void nu_exit_clean(nuauth_session_t * session)
 
 	if(session->nussl)
 	{
-		printf("%s %i", __FILE__, __LINE__);
 		nussl_session_destroy(session->nussl);
 		session->nussl = NULL;
 	}
