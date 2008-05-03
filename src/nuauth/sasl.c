@@ -1009,10 +1009,6 @@ int sasl_user_check(user_session_t * c_session)
 	if (ret != SASL_OK)
 		return ret;
 
-	/* Tuning of user_session */
-	ret = modules_user_session_modify(c_session);
-	if (ret != SASL_OK)
-		return ret;
 
 	/* sasl connection is not used anymore */
 	return SASL_OK;

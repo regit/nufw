@@ -212,9 +212,14 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 	}
 
 	remove_socket_from_pre_client_list(socket_fd);
+
 	switch (ret) {
 	case SASL_OK:
-		/* remove socket from the list of pre auth socket */
+		/* Tuning of user_session */
+		ret = modules_user_session_modify(c_session);
+		if (ret != SASL_OK)
+			break;
+
 		tls_sasl_connect_ok(c_session, socket_fd);
 		break;
 
