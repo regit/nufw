@@ -41,6 +41,12 @@ GMutex *client_mutex;
 GHashTable *client_conn_hash = NULL;
 GHashTable *client_ip_hash = NULL;
 
+typedef struct {
+	GSList *sessions;
+	int client_version;
+	struct timeval last_message;
+} ip_sessions_t;
+
 static uint32_t hash_ipv6(struct in6_addr *addr)
 {
 	return jhash2(addr->s6_addr32, sizeof(*addr) / 4, 0);
@@ -92,13 +98,13 @@ void init_client_struct()
 	client_ip_hash = g_hash_table_new_full((GHashFunc)hash_ipv6,
 					  (GEqualFunc)ipv6_equal,
 					  (GDestroyNotify) g_free,
-					  NULL);
+					  (GDestroyNotify) g_free);
 }
 
 void add_client(int socket, gpointer datas)
 {
 	user_session_t *c_session = (user_session_t *) datas;
-	GSList *ipsockets;
+	ip_sessions_t *ipsessions;
 	gpointer key;
 
 	g_mutex_lock(client_mutex);
@@ -106,31 +112,51 @@ void add_client(int socket, gpointer datas)
 	g_hash_table_insert(client_conn_hash, GINT_TO_POINTER(socket),
 			    datas);
 
-	/* need to create entry in ip hash */
-	ipsockets =
+	/* need to create entry in ip hash ? */
+	ipsessions =
 	    g_hash_table_lookup(client_ip_hash,
 				&c_session->addr);
-	ipsockets = g_slist_prepend(ipsockets, c_session);
-
-	key = g_memdup(&c_session->addr, sizeof(c_session->addr));
-	g_hash_table_replace(client_ip_hash, key, ipsockets);
-
+	if (ipsessions == NULL) {
+		ipsessions = g_new0(ip_sessions_t, 1);
+		ipsessions->client_version = c_session->client_version;
+		ipsessions->sessions = NULL;
+		key = g_memdup(&c_session->addr, sizeof(c_session->addr));
+		g_hash_table_replace(client_ip_hash, key, ipsessions);
+	}
+	/* let's assume backward compatibility, older client wins */
+	/** \fixme Add a configuration variable for this choice */
+	if (c_session->client_version < ipsessions->client_version) {
+		char buffer[256];
+		format_ipv6(&c_session->addr, buffer, 256, NULL);
+		ipsessions->client_version = c_session->client_version;
+		log_message(WARNING, DEBUG_AREA_USER,
+			    "User %s on %s uses older version of client",
+			    c_session->user_name,
+			    buffer);
+	}
+	if (c_session->client_version > ipsessions->client_version) {
+		char buffer[256];
+		format_ipv6(&c_session->addr, buffer, 256, NULL);
+		log_message(WARNING, DEBUG_AREA_USER,
+				"User %s on %s uses newer version of client",
+				c_session->user_name,
+				buffer);
+	}
+	ipsessions->sessions = g_slist_prepend(ipsessions->sessions, c_session);
 	g_mutex_unlock(client_mutex);
 }
 
-static GSList *delete_ipsockets_from_hash(GSList *ipsockets,
+static ip_sessions_t *delete_session_from_hash(ip_sessions_t *ipsessions,
 					  user_session_t *session,
 					  int destroy)
 {
 	gpointer key;
 	key = g_memdup(&session->addr, sizeof(session->addr));
-	ipsockets = g_slist_remove(ipsockets, session);
-	if (ipsockets != NULL) {
-		g_hash_table_replace(client_ip_hash,
-				key, ipsockets);
-	} else {
+	ipsessions->sessions = g_slist_remove(ipsessions->sessions, session);
+	if (ipsessions->sessions == NULL) {
 		g_hash_table_remove(client_ip_hash, key);
 		g_free(key);
+		ipsessions = NULL;
 	}
 	if (destroy) {
 		/* remove entry from hash */
@@ -138,12 +164,12 @@ static GSList *delete_ipsockets_from_hash(GSList *ipsockets,
 		g_hash_table_steal(client_conn_hash, key);
 		clean_session(session);
 	}
-	return ipsockets;
+	return ipsessions;
 }
 
 nu_error_t delete_client_by_socket_ext(int socket, int use_lock)
 {
-	GSList *ipsockets;
+	ip_sessions_t *ipsessions;
 	user_session_t *session;
 
 
@@ -164,10 +190,15 @@ nu_error_t delete_client_by_socket_ext(int socket, int use_lock)
 	}
 
 	/* destroy entry in IP hash */
-	ipsockets =
+	ipsessions =
 		g_hash_table_lookup(client_ip_hash,
 				    &session->addr);
-	delete_ipsockets_from_hash(ipsockets, session, 1);
+	if (ipsessions) {
+		delete_session_from_hash(ipsessions, session, 1);
+	} else {
+		log_message(CRITICAL, DEBUG_AREA_USER,
+			    "Could not find entry in ip hash");
+	}
 
 	tls_user_remove_client(socket);
 	if (use_lock) {
@@ -281,14 +312,13 @@ gboolean test_username_count_vs_max(const gchar * username, int maxcount)
  */
 char warn_clients(struct msg_addr_set *global_msg)
 {
-	GSList *start_ipsockets = NULL;
+	ip_sessions_t *ipsessions = NULL;
 	GSList *ipsockets = NULL;
 	GSList *badsockets = NULL;
 	struct timeval timestamp;
 	struct timeval interval;
 #if DEBUG_ENABLE
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG, DEBUG_AREA_USER))
-	{
+	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG, DEBUG_AREA_USER)) {
 		char addr_ascii[INET6_ADDRSTRLEN];
 		format_ipv6(&global_msg->addr, addr_ascii, INET6_ADDRSTRLEN, NULL);
 		g_message("Warn client(s) on IP %s", addr_ascii);
@@ -296,22 +326,25 @@ char warn_clients(struct msg_addr_set *global_msg)
 #endif
 
 	g_mutex_lock(client_mutex);
-	start_ipsockets =
-	    g_hash_table_lookup(client_ip_hash,
-				&global_msg->addr);
-	if (start_ipsockets) {
+	ipsessions = g_hash_table_lookup(client_ip_hash, &global_msg->addr);
+	if (ipsessions) {
 		global_msg->found = TRUE;
 		gettimeofday(&timestamp, NULL);
-		for (ipsockets = start_ipsockets; ipsockets; ipsockets = ipsockets->next) {
+
+		if (ipsessions->client_version >= PROTO_VERSION_V22_1) {
+			timeval_substract(&interval, &timestamp, &(ipsessions->last_message));
+			if (interval.tv_sec || (interval.tv_usec < nuauthconf->push_delay)) {
+				return 1;
+			} else {
+				ipsessions->last_message.tv_sec = timestamp.tv_sec;
+				ipsessions->last_message.tv_usec = timestamp.tv_usec;
+			}
+		}
+
+		for (ipsockets = ipsessions->sessions; ipsockets; ipsockets = ipsockets->next) {
 			user_session_t *session = (user_session_t *)ipsockets->data;
 			int ret;
 
-			if (session->client_version >= PROTO_VERSION_V22_1) {
-				timeval_substract(&interval, &timestamp, &(session->last_message));
-				if (interval.tv_usec < nuauthconf->push_delay) {
-					break;
-				}
-			}
 			ret = nussl_write(session->nussl,
 					(char*)global_msg->msg,
 					ntohs(global_msg->msg->length));
@@ -319,9 +352,6 @@ char warn_clients(struct msg_addr_set *global_msg)
 				log_message(WARNING, DEBUG_AREA_USER,
 						"Failed to send warning to client(s): %s", nussl_get_error(session->nussl));
 				badsockets = g_slist_prepend(badsockets, GINT_TO_POINTER(ipsockets->data));
-			} else {
-				session->last_message.tv_sec = timestamp.tv_sec;
-				session->last_message.tv_usec = timestamp.tv_usec;
 			}
 		}
 		if (badsockets) {
@@ -347,7 +377,10 @@ char warn_clients(struct msg_addr_set *global_msg)
 gboolean hash_delete_client(gpointer key, gpointer value,
 			    gpointer userdata)
 {
-	g_slist_free(value);
+	ip_sessions_t *ipsessions = (ip_sessions_t *) value;
+	if (ipsessions->sessions) {
+		g_slist_free(ipsessions->sessions);
+	}
 	return TRUE;
 }
 
