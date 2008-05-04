@@ -123,7 +123,7 @@ static GSList *delete_ipsockets_from_hash(GSList *ipsockets,
 					  int destroy)
 {
 	gpointer key;
-	key = g_memdup(&c_session->addr, sizeof(c_session->addr));
+	key = g_memdup(&session->addr, sizeof(session->addr));
 	ipsockets = g_slist_remove(ipsockets, session);
 	if (ipsockets != NULL) {
 		g_hash_table_replace(client_ip_hash,
