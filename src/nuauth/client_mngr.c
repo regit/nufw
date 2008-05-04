@@ -46,8 +46,6 @@ static uint32_t hash_ipv6(struct in6_addr *addr)
 	return jhash2(addr->s6_addr32, sizeof(*addr) / 4, 0);
 }
 
-#define IPV6_TO_POINTER(addr) GUINT_TO_POINTER(hash_ipv6(addr))
-
 void clean_session(user_session_t * c_session)
 {
 	log_user_session(c_session, SESSION_CLOSE);
@@ -91,7 +89,7 @@ void init_client_struct()
 						 hash_clean_session);
 
 	/* build client hash */
-	client_ip_hash = g_hash_table_new(NULL, NULL);
+	client_ip_hash = g_hash_table_new((GHashFunc)hash_ipv6, NULL);
 }
 
 void add_client(int socket, gpointer datas)
@@ -107,10 +105,10 @@ void add_client(int socket, gpointer datas)
 	/* need to create entry in ip hash */
 	ipsockets =
 	    g_hash_table_lookup(client_ip_hash,
-				IPV6_TO_POINTER(&c_session->addr));
+				&c_session->addr);
 	ipsockets = g_slist_prepend(ipsockets, c_session);
 	g_hash_table_replace(client_ip_hash,
-			     IPV6_TO_POINTER(&c_session->addr), ipsockets);
+			     &c_session->addr, ipsockets);
 
 	g_mutex_unlock(client_mutex);
 }
@@ -120,7 +118,7 @@ static GSList *delete_ipsockets_from_hash(GSList *ipsockets,
 					  int destroy)
 {
 	gpointer key;
-	key = IPV6_TO_POINTER(&session->addr);
+	key = &session->addr;
 	ipsockets = g_slist_remove(ipsockets, session);
 	if (ipsockets != NULL) {
 		g_hash_table_replace(client_ip_hash,
@@ -162,7 +160,7 @@ nu_error_t delete_client_by_socket_ext(int socket, int use_lock)
 	/* destroy entry in IP hash */
 	ipsockets =
 		g_hash_table_lookup(client_ip_hash,
-				IPV6_TO_POINTER(&session->addr));
+				    &session->addr);
 	delete_ipsockets_from_hash(ipsockets, session, 1);
 
 	tls_user_remove_client(socket);
@@ -200,7 +198,7 @@ GSList *get_client_sockets_by_ip(struct in6_addr * ip)
 	void *ret;
 
 	g_mutex_lock(client_mutex);
-	ret = g_hash_table_lookup(client_ip_hash, IPV6_TO_POINTER(ip));
+	ret = g_hash_table_lookup(client_ip_hash, ip);
 	g_mutex_unlock(client_mutex);
 	return ret;
 }
@@ -294,7 +292,7 @@ char warn_clients(struct msg_addr_set *global_msg)
 	g_mutex_lock(client_mutex);
 	start_ipsockets =
 	    g_hash_table_lookup(client_ip_hash,
-				IPV6_TO_POINTER(&global_msg->addr));
+				&global_msg->addr);
 	if (start_ipsockets) {
 		global_msg->found = TRUE;
 		gettimeofday(&timestamp, NULL);
