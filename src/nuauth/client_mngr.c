@@ -89,14 +89,17 @@ void init_client_struct()
 						 hash_clean_session);
 
 	/* build client hash */
-	client_ip_hash = g_hash_table_new((GHashFunc)hash_ipv6,
-					  (GEqualFunc)ipv6_equal);
+	client_ip_hash = g_hash_table_new_full((GHashFunc)hash_ipv6,
+					  (GEqualFunc)ipv6_equal,
+					  (GDestroyNotify) g_free,
+					  NULL);
 }
 
 void add_client(int socket, gpointer datas)
 {
 	user_session_t *c_session = (user_session_t *) datas;
 	GSList *ipsockets;
+	gpointer key;
 
 	g_mutex_lock(client_mutex);
 
@@ -108,8 +111,9 @@ void add_client(int socket, gpointer datas)
 	    g_hash_table_lookup(client_ip_hash,
 				&c_session->addr);
 	ipsockets = g_slist_prepend(ipsockets, c_session);
-	g_hash_table_replace(client_ip_hash,
-			     &c_session->addr, ipsockets);
+
+	key = g_memdup(&c_session->addr, sizeof(c_session->addr));
+	g_hash_table_replace(client_ip_hash, key, ipsockets);
 
 	g_mutex_unlock(client_mutex);
 }
@@ -119,13 +123,14 @@ static GSList *delete_ipsockets_from_hash(GSList *ipsockets,
 					  int destroy)
 {
 	gpointer key;
-	key = &session->addr;
+	key = g_memdup(&c_session->addr, sizeof(c_session->addr));
 	ipsockets = g_slist_remove(ipsockets, session);
 	if (ipsockets != NULL) {
 		g_hash_table_replace(client_ip_hash,
 				key, ipsockets);
 	} else {
 		g_hash_table_remove(client_ip_hash, key);
+		g_free(key);
 	}
 	if (destroy) {
 		/* remove entry from hash */
