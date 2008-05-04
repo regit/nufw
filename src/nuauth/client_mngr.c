@@ -89,7 +89,8 @@ void init_client_struct()
 						 hash_clean_session);
 
 	/* build client hash */
-	client_ip_hash = g_hash_table_new((GHashFunc)hash_ipv6, NULL);
+	client_ip_hash = g_hash_table_new((GHashFunc)hash_ipv6,
+					  (GEqualFunc)ipv6_equal);
 }
 
 void add_client(int socket, gpointer datas)
