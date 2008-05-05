@@ -1,6 +1,6 @@
 CC=gcc
 LIBS=-L../.libs/ -lnubase
-CFLAGS=-I../ -I../../../include
+CFLAGS=-I../ -I../../../include -g
 
 all: conffile testnuparm strings
 

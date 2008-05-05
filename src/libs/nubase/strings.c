@@ -179,10 +179,10 @@ char *str_itoa(int i)
 	if ( strsize <= 0 ) return "";
 	str = malloc(strsize + 1);
 	if ( ! str ) return "";
-	ret = snprintf(str, strsize, "%d", i);
+	ret = snprintf(str, strsize + 1, "%d", i);
 	if ( ret <= 0 ) return "";
 
-	str[strsize] = '\0';
+	str[ret] = '\0';
 
 	return str;
 }
