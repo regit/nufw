@@ -81,65 +81,69 @@ int init_nuauthconf(struct nuauth_params **result)
 	conf = g_new0(struct nuauth_params, 1);
 	*result = conf;
 
-	conf->client_srv = nubase_config_table_get_alwaysstring("nuauth_client_listen_addr");
-	conf->nufw_srv = nubase_config_table_get_alwaysstring("nuauth_nufw_listen_addr");
-	gwsrv_addr = nubase_config_table_get_alwaysstring("nufw_gw_addr");
-	conf->authreq_port = nubase_config_table_get_alwaysstring("nuauth_gw_packet_port");
-	conf->userpckt_port = nubase_config_table_get_alwaysstring("nuauth_user_packet_port");
+	conf->client_srv = nubase_config_table_get_or_default("nuauth_client_listen_addr", AUTHREQ_CLIENT_LISTEN_ADDR);
+	conf->nufw_srv = nubase_config_table_get_or_default("nuauth_nufw_listen_addr", AUTHREQ_NUFW_LISTEN_ADDR);
+	gwsrv_addr = nubase_config_table_get_or_default("nufw_gw_addr", GWSRV_ADDR);
+	conf->authreq_port = nubase_config_table_get_or_default("nuauth_gw_packet_port", str_itoa(AUTHREQ_PORT));
+	conf->userpckt_port = nubase_config_table_get_or_default("nuauth_user_packet_port", str_itoa(USERPCKT_PORT));
 
-	conf->nbuser_check = atoi(nubase_config_table_get_alwaysstring("nuauth_number_usercheckers"));
-	conf->nbacl_check = atoi(nubase_config_table_get_alwaysstring("nuauth_number_aclcheckers"));
-	conf->nbipauth_check = atoi(nubase_config_table_get_alwaysstring("nuauth_number_ipauthcheckers"));
-	conf->log_users = atoi(nubase_config_table_get_alwaysstring("nuauth_log_users"));
-	conf->log_users_sync = atoi(nubase_config_table_get_alwaysstring("nuauth_log_users_sync"));
-	conf->log_users_strict = atoi(nubase_config_table_get_alwaysstring("nuauth_log_users_strict"));
-	conf->log_users_without_realm =	atoi(nubase_config_table_get_alwaysstring("nuauth_log_users_without_realm"));
-	conf->prio_to_nok = atoi(nubase_config_table_get_alwaysstring("nuauth_prio_to_nok"));
-	conf->single_user_client_limit = atoi(nubase_config_table_get_alwaysstring("nuauth_single_user_client_limit"));
-	conf->single_ip_client_limit = atoi(nubase_config_table_get_alwaysstring("nuauth_single_ip_client_limit"));
-	connect_policy = atoi(nubase_config_table_get_alwaysstring("nuauth_connect_policy"));
+	conf->nbuser_check = nubase_config_table_get_or_default_int("nuauth_number_usercheckers", NB_USERCHECK);
+	conf->nbacl_check = nubase_config_table_get_or_default_int("nuauth_number_aclcheckers", NB_ACLCHECK);
+	conf->nbipauth_check = nubase_config_table_get_or_default_int("nuauth_number_ipauthcheckers", NB_ACLCHECK);
+	conf->log_users = nubase_config_table_get_or_default_int("nuauth_log_users", 9);
+	conf->log_users_sync = nubase_config_table_get_or_default_int("nuauth_log_users_sync", 0);
+	conf->log_users_strict = nubase_config_table_get_or_default_int("nuauth_log_users_strict", 1);
+	conf->log_users_without_realm =	nubase_config_table_get_or_default_int("nuauth_log_users_without_realm", 1);
+	conf->prio_to_nok = nubase_config_table_get_or_default_int("nuauth_prio_to_nok", 1);
+	conf->single_user_client_limit = nubase_config_table_get_or_default_int("nuauth_single_user_client_limit", 0);
+	conf->single_ip_client_limit = nubase_config_table_get_or_default_int("nuauth_single_ip_client_limit", 0);
+	connect_policy = nubase_config_table_get_or_default_int("nuauth_connect_policy", POLICY_MULTIPLE_LOGIN);
 	conf->reject_after_timeout =
-	    atoi(nubase_config_table_get_alwaysstring("nuauth_reject_after_timeout"));
+	    nubase_config_table_get_or_default_int("nuauth_reject_after_timeout", 0);
 	conf->reject_authenticated_drop =
-	    atoi(nubase_config_table_get_alwaysstring("nuauth_reject_authenticated_drop"));
-	conf->nbloggers = atoi(nubase_config_table_get_alwaysstring("nuauth_number_loggers"));
+	    nubase_config_table_get_or_default_int("nuauth_reject_authenticated_drop", 0);
+	conf->nbloggers = nubase_config_table_get_or_default_int("nuauth_number_loggers", NB_LOGGERS);
 	conf->nb_session_loggers =
-	    atoi(nubase_config_table_get_alwaysstring("nuauth_number_session_loggers"));
+	    nubase_config_table_get_or_default_int("nuauth_number_session_loggers", NB_LOGGERS);
 	conf->nb_auth_checkers =
-	    atoi(nubase_config_table_get_alwaysstring("nuauth_number_authcheckers"));
-	conf->packet_timeout = atoi(nubase_config_table_get_alwaysstring("nuauth_packet_timeout"));
+	    nubase_config_table_get_or_default_int("nuauth_number_authcheckers", NB_AUTHCHECK);
+	conf->packet_timeout = nubase_config_table_get_or_default_int("nuauth_packet_timeout", PACKET_TIMEOUT);
 	conf->session_duration =
-	    atoi(nubase_config_table_get_alwaysstring("nuauth_session_duration"));
+	    nubase_config_table_get_or_default_int("nuauth_session_duration", SESSION_DURATION);
 	conf->datas_persistance =
-	    atoi(nubase_config_table_get_alwaysstring("nuauth_datas_persistance"));
-	conf->push = atoi(nubase_config_table_get_alwaysstring("nuauth_push_to_client"));
+	    nubase_config_table_get_or_default_int("nuauth_datas_persistance", 9);
+	conf->push = nubase_config_table_get_or_default_int("nuauth_push_to_client", 1);
 	conf->do_ip_authentication =
-	    atoi(nubase_config_table_get_alwaysstring("nuauth_do_ip_authentication"));
-	conf->acl_cache = atoi(nubase_config_table_get_alwaysstring("nuauth_acl_cache"));
-	conf->user_cache = atoi(nubase_config_table_get_alwaysstring("nuauth_user_cache"));
-	conf->uses_utf8 = atoi(nubase_config_table_get_alwaysstring("nuauth_uses_utf8"));
+	    nubase_config_table_get_or_default_int("nuauth_do_ip_authentication", 0);
+	conf->acl_cache = nubase_config_table_get_or_default_int("nuauth_acl_cache", 0);
+	conf->user_cache = nubase_config_table_get_or_default_int("nuauth_user_cache", 0);
+#if USE_UTF8 
+	conf->uses_utf8 = nubase_config_table_get_or_default_int("nuauth_uses_utf8", 1);
+#else
+	conf->uses_utf8 = nubase_config_table_get_or_default_int("nuauth_uses_utf8", 0);
+#endif
 	conf->hello_authentication =
-	    atoi(nubase_config_table_get_alwaysstring("nuauth_hello_authentication"));
-	conf->debug_areas = atoi(nubase_config_table_get_alwaysstring("nuauth_debug_areas"));
-	conf->debug_level = atoi(nubase_config_table_get_alwaysstring("nuauth_debug_level"));
+	    nubase_config_table_get_or_default_int("nuauth_hello_authentication", 0);
+	conf->debug_areas = nubase_config_table_get_or_default_int("nuauth_debug_areas", DEFAULT_DEBUG_AREAS);
+	conf->debug_level = nubase_config_table_get_or_default_int("nuauth_debug_level", DEFAULT_DEBUG_LEVEL);
 	conf->nufw_has_conntrack =
-	    atoi(nubase_config_table_get_alwaysstring("nufw_has_conntrack"));
+	    nubase_config_table_get_or_default_int("nufw_has_conntrack", 1);
 	conf->nufw_has_fixed_timeout =
-	    atoi(nubase_config_table_get_alwaysstring("nufw_has_fixed_timeout"));
+	    nubase_config_table_get_or_default_int("nufw_has_fixed_timeout", 1);
 	conf->nuauth_uses_fake_sasl =
-	    atoi(nubase_config_table_get_alwaysstring("nuauth_uses_fake_sasl"));
+	    nubase_config_table_get_or_default_int("nuauth_uses_fake_sasl", 1);
 #ifdef BUILD_NUAUTH_COMMAND
 	conf->use_command_server =
-	    atoi(nubase_config_table_get_alwaysstring("nuauth_use_command_server"));
+	    nubase_config_table_get_or_default_int("nuauth_use_command_server", 1);
 #endif
 	conf->proto_wait_delay =
-	    atoi(nubase_config_table_get_alwaysstring("nuauth_proto_wait_delay"));
+	    nubase_config_table_get_or_default_int("nuauth_proto_wait_delay", DEFAULT_PROTO_WAIT_DELAY);
 	conf->drop_if_no_logging =
-	    atoi(nubase_config_table_get_alwaysstring("nuauth_drop_if_no_logging"));
+	    nubase_config_table_get_or_default_int("nuauth_drop_if_no_logging", FALSE);
 	conf->max_unassigned_messages =
-	    atoi(nubase_config_table_get_alwaysstring("nuauth_max_unassigned_messages"));
+	    nubase_config_table_get_or_default_int("nuauth_max_unassigned_messages", MAX_UNASSIGNED_MESSAGES);
 	conf->push_delay =
-	    atoi(nubase_config_table_get_alwaysstring("nuauth_push_delay"));
+	    nubase_config_table_get_or_default_int("nuauth_push_delay", PUSH_DELAY);
 
 	if (conf->debug_level > 9) {
 		conf->debug_level = 9;

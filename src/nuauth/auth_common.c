@@ -25,6 +25,8 @@
 #include <netinet/ip6.h>
 #include <ctype.h>         /* isspace() */
 
+#include <nubase.h>
+
 /**
  * \ingroup Nuauth
  * \defgroup NuauthCore Nuauth Core
@@ -181,82 +183,6 @@ nu_error_t check_protocol_version(enum proto_type_t type, int version)
 char* int_to_str(int value)
 {
 	return g_strdup_printf("%i", value);
-}
-
-/**
- * Convert a string to a signed long integer number.
- * Skip spaces before first digit.
- * Return 0 on error, 1 otherwise.
- */
-int str_to_long(const char *text, long *value)
-{
-	char *err = NULL;
-	long longvalue;
-
-	/* skip spaces */
-	while (isspace(*text))
-		text++;
-
-	/* call strtol */
-	longvalue = strtol(text, &err, 10);
-	if (err == NULL || *err != 0)
-		return 0;
-	*value = longvalue;
-	return 1;
-}
-
-/**
- * Convert a string to an unsigned long integer number.
- * Skip spaces before first digit.
- * Return 0 on error, 1 otherwise.
- */
-int str_to_ulong(const char *text, unsigned long *value)
-{
-	char *err = NULL;
-	unsigned long ulongvalue;
-
-	/* skip spaces */
-	while (isspace(*text))
-		text++;
-
-	/* call strtol */
-	ulongvalue = strtoul(text, &err, 10);
-	if (err == NULL || *err != 0)
-		return 0;
-	*value = ulongvalue;
-	return 1;
-}
-
-/**
- * Convert a string to integer number (value in INT_MIN..INT_MAX).
- * Skip spaces before number value if any.
- * Return 0 on error, 1 otherwise.
- */
-int str_to_int(const char *text, int *value)
-{
-	long longvalue;
-	if (!str_to_long(text, &longvalue))
-		return 0;
-	if (longvalue < INT_MIN || INT_MAX < longvalue)
-		return 0;
-	*value = (int)longvalue;
-	return 1;
-}
-
-/**
- * Convert a string to a 32-bit unsigned integer (value in 0..4294967295).
- * Skip spaces before number value if any.
- * Returns 0 on error, 1 otherwise.
- */
-int str_to_uint32(const char *text, uint32_t * value)
-{
-	unsigned long ulongvalue;
-	if (!str_to_ulong(text, &ulongvalue))
-		return 0;
-	if (4294967295UL < ulongvalue)
-		return 0;
-	*value = (uint32_t)ulongvalue;
-	return 1;
 }
 
 /**
