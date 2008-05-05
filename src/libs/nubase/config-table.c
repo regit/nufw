@@ -55,7 +55,7 @@ char *nubase_config_table_get_or_default(char *key, char *replace)
 	char *str;
 
 	if (str = nubase_config_table_get(key)) {
-		return key;
+		return str;
 	} else {
 		return replace;
 	}
