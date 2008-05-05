@@ -26,7 +26,7 @@ int main(void)
 	printf("foo=[%s]\n", nubase_config_table_get("foo"));
 
 	printf("foo or default=[%s]\n", nubase_config_table_get_or_default("foo", "bar"));
-	printf("foo or default int=[%s]\n", nubase_config_table_get_or_default("foo", str_itoa(42)));
+	printf("foo or default int=[%d]\n", conf_get_int_default("foo", 42));
 
 	i = conf_get_int_default("nuauth_number_aclcheckers", 42);
 	printf("integer value:%d\n", i);
