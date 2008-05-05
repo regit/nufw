@@ -25,3 +25,11 @@ int secure_snprintf(char *buffer, size_t buffer_size,
 #endif
 ;
 
+char *str_extract_until(char *str, int c);
+
+int str_to_long(const char *text, long *value);
+int str_to_ulong(const char *text, unsigned long *value);
+int str_to_int(const char *text, int *value);
+int str_to_uint32(const char *text, uint32_t * value);
+char *str_itoa(int i);
+

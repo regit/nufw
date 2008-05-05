@@ -3,11 +3,11 @@
 
 int main(void)
 {
-	int i = 313445;
 	char *str;
 
-	str = (char *)str_itoa(i);
-	printf("info:%s\n", str);
+	str = str_itoa(-12345);
+
+	printf("info:[%s]\n", str);
 
 	free(str);
 
