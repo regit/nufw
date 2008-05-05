@@ -64,7 +64,7 @@ int secure_snprintf(char *buffer, size_t buffer_size,
  */
 char *str_extract_until(char *str, int c)
 {
-	int i;
+	unsigned int i;
 
 	char *newstr;
 	char *last_str;
@@ -89,5 +89,25 @@ char *str_extract_until(char *str, int c)
 
 	return newstr;
 
+}
+
+/**
+ * Util function returning a string
+ * from an integer.
+ *
+ * Use of sprintf() because int is
+ * a controlled value. However this
+ * function must be used with care.
+ *
+ * \param i integer to convert
+ * \return Returns the string equivalent to i
+ */
+char *str_itoa(int i)
+{
+	char *str;
+	str = malloc(sizeof(int));
+	if ( ! str ) return "";
+	sprintf(str, "%d", i);
+	return str;
 }
 
