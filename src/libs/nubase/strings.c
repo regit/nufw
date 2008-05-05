@@ -22,6 +22,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#include <ctype.h>         /* isspace() */
 
 #include <nubase.h>
 
