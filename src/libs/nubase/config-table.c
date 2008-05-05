@@ -22,6 +22,8 @@
 #include <stdlib.h>
 #include <errno.h>
 
+#include <nubase.h>
+
 #include "linuxlist.h"
 #include "config-table.h"
 
@@ -54,7 +56,9 @@ char *nubase_config_table_get_or_default(char *key, char *replace)
 {
 	char *str;
 
-	if (str = nubase_config_table_get(key)) {
+	str = nubase_config_table_get(key);
+
+	if (str) {
 		return str;
 	} else {
 		return replace;
@@ -104,6 +108,17 @@ struct config_table_t *nubase_config_table_set(char *key, char *value)
 	return NULL;
 }
 
+int nubase_config_table_get_or_default_int(char *key, int defint) 
+{
+	char *str;
+	int i;
+
+	str = nubase_config_table_get_or_default(key, str_itoa(defint));
+
+	i = atoi(str);
+
+	return i;
+}
 
 #ifdef _UNIT_TEST_
 #include <stdio.h>
