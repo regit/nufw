@@ -105,8 +105,11 @@ char *str_extract_until(char *str, int c)
 char *str_itoa(int i)
 {
 	char *str;
+	// Check the number we'll fit in the buffer
+	if(i >= 1000)
+		return strdup("");
 	str = malloc(sizeof(int));
-	if ( ! str ) return "";
+	if ( ! str ) return strdup("");
 	sprintf(str, "%d", i);
 	return str;
 }
