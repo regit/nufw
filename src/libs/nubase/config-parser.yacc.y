@@ -22,7 +22,7 @@
 #include <stdio.h>
 #include <errno.h>
 
-#include "config-table.h"
+#include <nubase.h>
 
 extern int yylex(void);
 extern void yylex_init(void);

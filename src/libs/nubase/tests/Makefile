@@ -12,3 +12,8 @@ testnuparm: testnuparm.c
 
 strings: strings.c
 	$(CC) strings.c -lnubase $(CFLAGS) $(LIBS) -o strings
+
+clean:
+	rm -f strings
+	rm -f testnuparm
+	rm -f conffile

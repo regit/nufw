@@ -176,11 +176,11 @@ char *str_itoa(int i)
 	int ret;
 
 	strsize = snprintf(NULL, 0, "%d", i);
-	if ( strsize <= 0 ) return "";
+	if ( strsize <= 0 ) return strdup("");
 	str = malloc(strsize + 1);
-	if ( ! str ) return "";
+	if ( ! str ) return strdup("");
 	ret = snprintf(str, strsize + 1, "%d", i);
-	if ( ret <= 0 ) return "";
+	if ( ret <= 0 ) return strdup("");
 
 	str[ret] = '\0';
 
