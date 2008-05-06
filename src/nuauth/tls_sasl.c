@@ -146,6 +146,12 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 	struct client_connection *client = (struct client_connection *)userdata;
 	int socket_fd = client->socket;
 
+	if ( ! client ) {
+		log_message(INFO, DEBUG_AREA_USER,
+				"Client structure empty");
+		return;
+	}
+
 	c_session = g_new0(user_session_t, 1);
 	c_session->nussl = client->nussl;
 	c_session->socket = socket_fd;
