@@ -640,15 +640,6 @@ int tls_user_init(struct tls_user_context_t *context)
 
 	int ret;
 
-	/* TODO: make sure request_cert | auth_by_cert is for user and change to nufw if required */
-	confparams_t nuauth_tls_vars[] = {
-		{"nuauth_tls_max_clients", G_TOKEN_INT,
-		 NUAUTH_TLS_MAX_CLIENTS, NULL},
-		{"nuauth_auth_nego_timeout", G_TOKEN_INT,
-		 AUTH_NEGO_TIMEOUT, NULL},
-		{"nuauth_tls_request_cert", G_TOKEN_INT, FALSE, NULL},
-		{"nuauth_tls_auth_by_cert", G_TOKEN_INT, FALSE, NULL}
-	};
 	/*const unsigned int nb_params = sizeof(nuauth_tls_vars) / sizeof(confparams_t);*/
 	int int_authcert;
 	int int_requestcert;
@@ -661,17 +652,6 @@ int tls_user_init(struct tls_user_context_t *context)
 			    "Check that nuauth is not running twice. nuauth exiting!");
 		exit(EXIT_FAILURE);
 	}
-
-	/* get config file setup */
-	/* parse conf file */
-	if(!parse_conffile(nuauthconf->configfile,
-		       sizeof(nuauth_tls_vars) / sizeof(confparams_t),
-		       nuauth_tls_vars)) {
-	        log_message(FATAL, DEBUG_AREA_MAIN,
-			    "Failed to load config file %s", nuauthconf->configfile);
-		exit(EXIT_FAILURE);
-	}
-
 
 	context->cmd_queue = g_async_queue_new();
 
@@ -690,27 +670,18 @@ int tls_user_init(struct tls_user_context_t *context)
 	mx_queue = g_async_queue_new();
 
 	/* Init ssl session */
-#define READ_CONF(KEY) \
-	get_confvar_value(nuauth_tls_vars, sizeof(nuauth_tls_vars)/sizeof(confparams_t), KEY)
-
-	context->nuauth_tls_max_clients =
-	    *(unsigned int *) READ_CONF("nuauth_tls_max_clients");
-	context->nuauth_auth_nego_timeout =
-	    *(int *) READ_CONF("nuauth_auth_nego_timeout");
+	/* TODO: make sure request_cert | auth_by_cert is for user and change to nufw if required */
+	context->nuauth_tls_max_clients = nubase_config_table_get_or_default_int("nuauth_tls_max_clients", NUAUTH_TLS_MAX_CLIENTS);
+	context->nuauth_auth_nego_timeout = nubase_config_table_get_or_default_int("nuauth_auth_nego_timeout", NUAUTH_TLS_MAX_CLIENTS);
 	/* ssl related conf */
-	int_requestcert = *(int *) READ_CONF("nuauth_tls_request_cert");
-	int_authcert = *(int *) READ_CONF("nuauth_tls_auth_by_cert");
-#undef READ_CONF
+	int_requestcert = nubase_config_table_get_or_default_int("nuauth_tls_request_cert", FALSE);
+	int_authcert = nubase_config_table_get_or_default_int("nuauth_tls_auth_by_cert", FALSE);
 
 	if (!tls_user_setcert_auth_params(int_requestcert, int_authcert)) {
 		log_message(FATAL, DEBUG_AREA_MAIN,
 			    "Invalid request_cert or auth_by_cert option");
 		exit(EXIT_FAILURE);
 	}
-
-	/* free config struct */
-	free_confparams(nuauth_tls_vars,
-			sizeof(nuauth_tls_vars) / sizeof(confparams_t));
 
 	/* We add the crl file function check every second only if we have a crl */
 	if ( nuauth_tls.crl_file ) {
