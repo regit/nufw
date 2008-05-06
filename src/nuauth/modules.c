@@ -573,96 +573,69 @@ static int load_modules_from(gchar * confvar, gchar * func,
 	return 1;
 }
 
+static char *module_default_value(int type)
+{
+	switch (type) {
+		case MOD_USER_CHECK:
+		case MOD_USER_ID:
+		case MOD_USER_GROUPS:
+			return DEFAULT_USERAUTH_MODULE;
+			break;
+		case MOD_USER_FAIL:
+			return "";
+			break;
+		case MOD_ACL_CHECK:
+			return DEFAULT_ACLS_MODULE;
+			break;
+		case MOD_SESSION_MODIFY:
+			return DEFAULT_USER_SESSION_MODIFY_MODULE;
+			break;
+		case MOD_LOG_PACKETS:
+		case MOD_LOG_SESSION:
+			return DEFAULT_LOGS_MODULE;
+			break;
+		case MOD_FINALIZE_PACKET:
+			return DEFAULT_FINALIZE_PACKET_MODULE;
+			break;
+		case MOD_PERIOD:
+			return DEFAULT_PERIODS_MODULE;
+			break;
+		case MOD_CERT_CHECK:
+			return DEFAULT_CERTIFICATE_CHECK_MODULE;
+			break;
+		case MOD_CERT_TO_UID:
+			return DEFAULT_CERTIFICATE_TO_UID_MODULE;
+			break;
+		case MOD_IP_AUTH:
+			return DEFAULT_IPAUTH_MODULE;
+			break;
+		default:
+			return NULL;
+	}
+}
+
 /**
  * Load modules for user and acl checking as well as for user logging and ip authentication
  */
 int load_modules()
 {
-	confparams_t nuauth_vars[] = {
-		{"nuauth_user_check_module", G_TOKEN_STRING, 1,
-		 g_strdup(DEFAULT_USERAUTH_MODULE)},
-		{"nuauth_acl_check_module", G_TOKEN_STRING, 1,
-		 g_strdup(DEFAULT_ACLS_MODULE)},
-		{"nuauth_periods_module", G_TOKEN_STRING, 1,
-		 g_strdup(DEFAULT_PERIODS_MODULE)},
-		{"nuauth_user_logs_module", G_TOKEN_STRING, 1,
-		 g_strdup(DEFAULT_LOGS_MODULE)},
-		{"nuauth_user_session_logs_module", G_TOKEN_STRING, 1,
-		 g_strdup(DEFAULT_LOGS_MODULE)},
-		{"nuauth_ip_authentication_module", G_TOKEN_STRING, 1,
-		 g_strdup(DEFAULT_IPAUTH_MODULE)},
-		{"nuauth_certificate_check_module", G_TOKEN_STRING, 1,
-		 g_strdup(DEFAULT_CERTIFICATE_CHECK_MODULE)},
-		{"nuauth_certificate_to_uid_module", G_TOKEN_STRING, 1,
-		 g_strdup(DEFAULT_CERTIFICATE_TO_UID_MODULE)},
-		{"nuauth_user_session_modify_module", G_TOKEN_STRING, 1,
-		 g_strdup(DEFAULT_USER_SESSION_MODIFY_MODULE)},
-		{"nuauth_finalize_packet_module", G_TOKEN_STRING, 1,
-		 g_strdup(DEFAULT_FINALIZE_PACKET_MODULE)},
-		{"nuauth_auth_error_log_module", G_TOKEN_STRING, 1,
-		 g_strdup("")}
-	};
 	int i;
-	char *configfile = nuauthconf->configfile;
 
-	/* parse conf file */
-	if(!parse_conffile(configfile,
-		       sizeof(nuauth_vars) / sizeof(confparams_t),
-		       nuauth_vars))
-	{
-	        log_message(FATAL, DEBUG_AREA_MAIN, "Failed to load config file %s", configfile);
-		return 0;
-	}
-
-#define READ_CONF(KEY) \
-	get_confvar_value(nuauth_vars, sizeof(nuauth_vars)/sizeof(confparams_t), KEY);
-
-	hooks[MOD_USER_CHECK].config = 
-		(char *) READ_CONF(hooks[MOD_USER_CHECK].configstring);
-	for (i = MOD_SIMPLE; i < MOD_OPTIONNAL; i++) {
-		hooks[i].config = (char *) READ_CONF(hooks[i].configstring);
+	hooks[MOD_USER_CHECK].config =
+		nubase_config_table_get_or_default(hooks[MOD_USER_CHECK].configstring, module_default_value(MOD_USER_CHECK));
+	for (i = MOD_SIMPLE; i < MOD_OPTIONAL; i++) {
+		hooks[i].config = nubase_config_table_get_or_default(hooks[i].configstring, module_default_value(i));
 	}
 
 	if (nuauthconf->do_ip_authentication) {
-		hooks[MOD_IP_AUTH].config = 
-			(char *) READ_CONF(hooks[MOD_IP_AUTH].configstring);
+		hooks[MOD_IP_AUTH].config =
+			nubase_config_table_get_or_default(hooks[MOD_IP_AUTH].configstring, module_default_value(MOD_IP_AUTH));
 	}
 
-	/* free config struct */
-	free_confparams(nuauth_vars,
-			sizeof(nuauth_vars) / sizeof(confparams_t));
+	/* MOD_USER_CHECK is *always* set to something */
+	hooks[MOD_USER_ID].config = nubase_config_table_get_or_default(hooks[MOD_USER_ID].configstring, module_default_value(MOD_USER_ID));
+	hooks[MOD_USER_GROUPS].config = nubase_config_table_get_or_default(hooks[MOD_USER_GROUPS].configstring, module_default_value(MOD_USER_GROUPS));
 
-
-#undef READ_CONF
-#define READ_CONF(KEY) \
-	get_confvar_value(deps_check_vars, sizeof(deps_check_vars)/sizeof(confparams_t), KEY);
-
-	if (hooks[MOD_USER_CHECK].config) {
-		confparams_t deps_check_vars[] = {
-			{"nuauth_get_user_groups_module", G_TOKEN_STRING, 1,
-				g_strdup(hooks[MOD_USER_CHECK].config)},
-			{"nuauth_get_user_id_module", G_TOKEN_STRING, 1,
-				g_strdup(hooks[MOD_USER_CHECK].config)},
-		};
-
-		/* parse conf file for user_check sub vars*/
-		if(!parse_conffile(configfile,
-				sizeof(deps_check_vars) / sizeof(confparams_t),
-				deps_check_vars))
-		{
-		        log_message(FATAL, DEBUG_AREA_MAIN, "Failed to load config file %s", configfile);
-			return 0;
-		}
-
-		hooks[MOD_USER_ID].config = 
-			(char *) READ_CONF(hooks[MOD_USER_ID].configstring);
-		hooks[MOD_USER_GROUPS].config = 
-			(char *) READ_CONF(hooks[MOD_USER_GROUPS].configstring);
-		/* free config struct */
-		free_confparams(deps_check_vars,
-				sizeof(deps_check_vars) / sizeof(confparams_t));
-
-	}
 	/* external auth module loading */
 	g_mutex_lock(modules_mutex);
 
@@ -676,7 +649,7 @@ int load_modules()
 
 
 	/* loading modules */
-	for (i = MOD_FIRST; i < MOD_OPTIONNAL; i++) {
+	for (i = MOD_FIRST; i < MOD_OPTIONAL; i++) {
 		LOAD_MODULE(i);
 	}
 
