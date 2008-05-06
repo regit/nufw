@@ -61,7 +61,7 @@ char *nubase_config_table_get_or_default(char *key, char *replace)
 	if (str) {
 		return str;
 	} else {
-		return replace;
+		return strdup(replace);
 	}
 
 }
@@ -108,7 +108,7 @@ struct config_table_t *nubase_config_table_set(char *key, char *value)
 	return NULL;
 }
 
-int nubase_config_table_get_or_default_int(char *key, int defint) 
+int nubase_config_table_get_or_default_int(char *key, int defint)
 {
 	char *str;
 	int i;
