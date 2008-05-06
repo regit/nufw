@@ -143,14 +143,17 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 	user_session_t *c_session;
 	int ret;
 	/*unsigned int size = 1;*/
-	struct client_connection *client = (struct client_connection *)userdata;
-	int socket_fd = client->socket;
+	struct client_connection *client;
+	int socket_fd;
 
-	if ( ! client ) {
+	if ( ! userdata ) {
 		log_message(INFO, DEBUG_AREA_USER,
-				"Client structure empty");
+				"Unable to connect: client structure empty");
 		return;
 	}
+
+	client = (struct client_connection *)userdata;
+	socket_fd = client->socket;
 
 	c_session = g_new0(user_session_t, 1);
 	c_session->nussl = client->nussl;
