@@ -20,6 +20,8 @@
  */
 /* code inspired from log_mysql & plaintext */
 
+#include <nubase.h>
+
 #include "mysql_auth.h"
 
 /* MySQL schema
@@ -99,69 +101,6 @@ G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
 /* Init mysql system */
 G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 {
-	confparams_t mysql_nuauth_vars[] = {
-		{"mysql_server_addr", G_TOKEN_STRING, 0,
-		 g_strdup(MYSQL_SERVER)}
-		,
-		{"mysql_server_port", G_TOKEN_INT, MYSQL_SERVER_PORT, NULL}
-		,
-		{"mysql_user", G_TOKEN_STRING, 0, g_strdup(MYSQL_USER)}
-		,
-		{"mysql_passwd", G_TOKEN_STRING, 0, g_strdup(MYSQL_PASSWD)}
-		,
-		{"mysql_db_name", G_TOKEN_STRING, 0,
-		 g_strdup(MYSQL_DB_NAME)}
-		,
-		{"mysql_ipauth_table_name", G_TOKEN_STRING, 0,
-		 g_strdup(MYSQL_IPAUTH_TABLE_NAME)}
-		,
-		{"mysql_ipauth_check_netmask", G_TOKEN_INT,
-		 MYSQL_IPAUTH_CHECK_NETMASK, NULL}
-		,
-		{"mysql_userinfo_table_name", G_TOKEN_STRING, 0,
-		 g_strdup(MYSQL_USERINFO_TABLE_NAME)}
-		,
-		{"mysql_groups_table_name", G_TOKEN_STRING, 0,
-		 g_strdup(MYSQL_GROUPS_TABLE_NAME)}
-		,
-		{"mysql_groupinfo_table_name", G_TOKEN_STRING, 0,
-		 g_strdup(MYSQL_GROUPINFO_TABLE_NAME)}
-		,
-		{"mysql_auth_fallback_to_guest", G_TOKEN_INT,
-		 AUTH_MYSQL_FALLBACK_TO_GUEST, NULL}
-		,
-		{"mysql_auth_guest_username", G_TOKEN_STRING, 0,
-		 g_strdup(AUTH_MYSQL_GUEST_USERNAME)}
-		,
-		{"mysql_auth_guest_userid", G_TOKEN_INT,
-		 AUTH_MYSQL_GUEST_USERID, NULL}
-		,
-		{"mysql_auth_guest_groupid", G_TOKEN_INT,
-		 AUTH_MYSQL_GUEST_GROUPID, NULL}
-		,
-		{"mysql_request_timeout", G_TOKEN_INT,
-		 MYSQL_REQUEST_TIMEOUT, NULL}
-		,
-		{"mysql_use_ipv4_schema", G_TOKEN_INT,
-		 MYSQL_USE_IPV4_SCHEMA, NULL}
-		,
-		{"mysql_use_ssl", G_TOKEN_INT, MYSQL_USE_SSL, NULL}
-		,
-		{"mysql_ssl_keyfile", G_TOKEN_STRING, 0,
-		 g_strdup(MYSQL_SSL_KEYFILE)}
-		,
-		{"mysql_ssl_certfile", G_TOKEN_STRING, 0,
-		 g_strdup(MYSQL_SSL_CERTFILE)}
-		,
-		{"mysql_ssl_ca", G_TOKEN_STRING, 0, g_strdup(MYSQL_SSL_CA)}
-		,
-		{"mysql_ssl_capath", G_TOKEN_STRING, 0,
-		 g_strdup(MYSQL_SSL_CAPATH)}
-		,
-		{"mysql_ssl_cipher", G_TOKEN_STRING, 0,
-		 g_strdup(MYSQL_SSL_CIPHER)}
-	};
-	char *configfile = nuauthconf->configfile;
 	/* char *ldap_base_dn=LDAP_BASE; */
 	struct ipauth_params *ipauth =
 	    g_new0(struct ipauth_params, 1);
@@ -174,59 +113,43 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	mysql->mysql_ssl_cipher = MYSQL_SSL_CIPHER;
 	/* mysql->hook = module->hook; */
 
-	/* parse conf file */
-	if (module->configfile) {
-		parse_conffile(module->configfile,
-			       sizeof(mysql_nuauth_vars) /
-			       sizeof(confparams_t), mysql_nuauth_vars);
-	} else {
-		parse_conffile(configfile,
-			       sizeof(mysql_nuauth_vars) /
-			       sizeof(confparams_t), mysql_nuauth_vars);
-	}
-	/* set variables */
-
-#define READ_CONF(KEY) \
-	get_confvar_value(mysql_nuauth_vars, sizeof(mysql_nuauth_vars)/sizeof(confparams_t), KEY)
-#define READ_CONF_INT(VAR, KEY, DEFAULT) \
-	do { gpointer vpointer = READ_CONF(KEY); if (vpointer) VAR = *(int *)vpointer; else VAR = DEFAULT; } while (0)
-
-	mysql->mysql_server = (char *) READ_CONF("mysql_server_addr");
-	mysql->mysql_user = (char *) READ_CONF("mysql_user");
-	mysql->mysql_passwd = (char *) READ_CONF("mysql_passwd");
-	mysql->mysql_db_name = (char *) READ_CONF("mysql_db_name");
+	mysql->mysql_server =
+		nubase_config_table_get_or_default("mysql_server_addr", MYSQL_SERVER);
+	mysql->mysql_user =
+		nubase_config_table_get_or_default("mysql_user", MYSQL_USER);
+	mysql->mysql_passwd =
+		nubase_config_table_get_or_default("mysql_passwd", MYSQL_PASSWD);
+	mysql->mysql_db_name =
+		nubase_config_table_get_or_default("mysql_db_name", MYSQL_DB_NAME);
 	/* ipauth specific tables */
-	mysql->mysql_ipauth_table_name = (char *) READ_CONF("mysql_ipauth_table_name");
-	mysql->mysql_userinfo_table_name = (char *) READ_CONF("mysql_userinfo_table_name");
-	mysql->mysql_groups_table_name = (char *) READ_CONF("mysql_groups_table_name");
-	mysql->mysql_groupinfo_table_name = (char *) READ_CONF("mysql_groupinfo_table_name");
-	READ_CONF_INT(mysql->mysql_ipauth_check_netmask,
-		      "mysql_ipauth_check_netmask", MYSQL_IPAUTH_CHECK_NETMASK);
+	mysql->mysql_ipauth_table_name =
+		nubase_config_table_get_or_default("mysql_ipauth_table_name", MYSQL_IPAUTH_TABLE_NAME);
+	mysql->mysql_userinfo_table_name =
+		nubase_config_table_get_or_default("mysql_userinfo_table_name", MYSQL_USERINFO_TABLE_NAME);
+	mysql->mysql_groups_table_name =
+		nubase_config_table_get_or_default("mysql_groups_table_name", MYSQL_GROUPS_TABLE_NAME);
+	mysql->mysql_groupinfo_table_name =
+		nubase_config_table_get_or_default("mysql_groupinfo_table_name", MYSQL_GROUPINFO_TABLE_NAME);
+	mysql->mysql_ipauth_check_netmask =
+		nubase_config_table_get_or_default_int("mysql_ipauth_check_netmask", MYSQL_IPAUTH_CHECK_NETMASK);
 	/* endof ipauth specific tables */
 	/* guest user */
-	READ_CONF_INT(ipauth->fallback_to_guest, "mysql_auth_fallback_to_guest", AUTH_MYSQL_FALLBACK_TO_GUEST);
-	ipauth->guest_username = (char *) READ_CONF("mysql_auth_guest_username");
-	READ_CONF_INT(ipauth->guest_uid, "mysql_auth_guest_userid", AUTH_MYSQL_GUEST_USERID);
-	READ_CONF_INT(ipauth->guest_gid, "mysql_auth_guest_groupid", AUTH_MYSQL_GUEST_GROUPID);
+	ipauth->fallback_to_guest =
+		nubase_config_table_get_or_default_int("mysql_auth_fallback_to_guest", AUTH_MYSQL_FALLBACK_TO_GUEST);
+	ipauth->guest_username = nubase_config_table_get_or_default("mysql_auth_guest_username", AUTH_MYSQL_GUEST_USERNAME);
+	ipauth->guest_uid = nubase_config_table_get_or_default_int("mysql_auth_guest_userid", AUTH_MYSQL_GUEST_USERID);
+	ipauth->guest_gid = nubase_config_table_get_or_default_int("mysql_auth_guest_groupid", AUTH_MYSQL_GUEST_GROUPID);
 	/* endof guest user */
-	mysql->mysql_ssl_keyfile = (char *) READ_CONF("mysql_ssl_keyfile");
-	mysql->mysql_ssl_certfile = (char *) READ_CONF("mysql_ssl_certfile");
-	mysql->mysql_ssl_ca = (char *) READ_CONF("mysql_ssl_ca");
-	mysql->mysql_ssl_capath = (char *) READ_CONF("mysql_ssl_capath");
-	mysql->mysql_ssl_cipher = (char *) READ_CONF("mysql_ssl_cipher");
+	mysql->mysql_ssl_keyfile = nubase_config_table_get_or_default("mysql_ssl_keyfile", MYSQL_SSL_KEYFILE);
+	mysql->mysql_ssl_certfile = nubase_config_table_get_or_default("mysql_ssl_certfile", MYSQL_SSL_CERTFILE);
+	mysql->mysql_ssl_ca = nubase_config_table_get_or_default("mysql_ssl_ca", MYSQL_SSL_CA);
+	mysql->mysql_ssl_capath = nubase_config_table_get_or_default("mysql_ssl_capath", MYSQL_SSL_CAPATH);
+	mysql->mysql_ssl_cipher = nubase_config_table_get_or_default("mysql_ssl_cipher", MYSQL_SSL_CIPHER);
 
-	READ_CONF_INT(mysql->mysql_server_port, "mysql_server_port",
-		      MYSQL_SERVER_PORT);
-	READ_CONF_INT(mysql->mysql_request_timeout,
-		      "mysql_request_timeout", MYSQL_REQUEST_TIMEOUT);
-	READ_CONF_INT(mysql->mysql_use_ssl, "mysql_use_ssl",
-		      MYSQL_USE_SSL);
-	READ_CONF_INT(mysql->mysql_use_ipv4_schema,
-		      "mysql_use_ipv4_schema", MYSQL_USE_IPV4_SCHEMA);
-
-	/* free config struct */
-	free_confparams(mysql_nuauth_vars,
-			sizeof(mysql_nuauth_vars) / sizeof(confparams_t));
+	mysql->mysql_server_port = nubase_config_table_get_or_default_int("mysql_server_port", MYSQL_SERVER_PORT);
+	mysql->mysql_request_timeout = nubase_config_table_get_or_default_int("mysql_request_timeout", MYSQL_REQUEST_TIMEOUT);
+	mysql->mysql_use_ssl = nubase_config_table_get_or_default_int("mysql_use_ssl", MYSQL_USE_SSL);
+	mysql->mysql_use_ipv4_schema = nubase_config_table_get_or_default_int("mysql_use_ipv4_schema", MYSQL_USE_IPV4_SCHEMA);
 
 	/* init thread private stuff */
 	mysql->mysql_priv = g_private_new(NULL);
@@ -480,7 +403,7 @@ G_MODULE_EXPORT uint32_t get_user_id(const char *username, struct ipauth_params*
 
 	if(!(ok = secure_snprintf(request, sizeof(request),
 					"SELECT uid FROM %s WHERE username='%s'",
-					mysql->mysql_userinfo_table_name, 
+					mysql->mysql_userinfo_table_name,
 					quoted_username))) {
 		g_free(quoted_username);
 		return params->guest_uid; /* SASL_BADAUTH; error code? */
