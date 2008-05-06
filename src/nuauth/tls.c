@@ -68,36 +68,12 @@ void tls_common_init(void)
 
 	struct stat stats;
 
-	confparams_t nuauth_tls_vars[] = {
-		{"nuauth_tls_key", G_TOKEN_STRING, 0,
-		 g_strdup(NUAUTH_KEYFILE)},
-		{"nuauth_tls_cert", G_TOKEN_STRING, 0,
-		 g_strdup(NUAUTH_CERTFILE)},
-		{"nuauth_tls_cacert", G_TOKEN_STRING, 0,
-		 g_strdup(NUAUTH_CACERTFILE)},
-		{"nuauth_tls_crl", G_TOKEN_STRING, 0, NULL},
-		{"nuauth_tls_crl_refresh", G_TOKEN_INT,
-		 DEFAULT_REFRESH_CRL_INTERVAL, NULL},
-		{"nuauth_tls_key_passwd", G_TOKEN_STRING, 0, NULL},
-	};
-	const unsigned int nb_params = sizeof(nuauth_tls_vars) / sizeof(confparams_t);
-
-	if(!parse_conffile(nuauthconf->configfile, nb_params, nuauth_tls_vars))
-	{
-	        log_message(FATAL, DEBUG_AREA_MAIN, "Failed to load config file %s", nuauthconf->configfile);
-		return;
-	}
-
-#define READ_CONF(KEY) \
-	get_confvar_value(nuauth_tls_vars, nb_params, KEY)
-
-	nuauth_tls.key = (char *) READ_CONF("nuauth_tls_key");
-	nuauth_tls.cert = (char *) READ_CONF("nuauth_tls_cert");
-	nuauth_tls.ca = (char *) READ_CONF("nuauth_tls_cacert");
-	nuauth_tls.crl_file = (char *) READ_CONF("nuauth_tls_crl");
-	nuauth_tls.crl_refresh = *(int *) READ_CONF("nuauth_tls_crl_refresh");
-
-#undef READ_CONF
+	nuauth_tls.key = nubase_config_table_get_or_default("nuauth_tls_key", NUAUTH_KEYFILE);
+	nuauth_tls.cert = nubase_config_table_get_or_default("nuauth_tls_cert", NUAUTH_CERTFILE);
+	nuauth_tls.ca = nubase_config_table_get_or_default("nuauth_tls_cacert", NUAUTH_CACERTFILE);
+	nuauth_tls.crl_file = nubase_config_table_get("nuauth_tls_crl");
+	nuauth_tls.crl_refresh = nubase_config_table_get_or_default_int("nuauth_tls_crl_refresh", DEFAULT_REFRESH_CRL_INTERVAL);
+	/* {"nuauth_tls_key_passwd", G_TOKEN_STRING, 0, NULL}, */
 
 	if ( nuauth_tls.crl_file ) {
 		log_message(VERBOSE_DEBUG, DEBUG_AREA_GW | DEBUG_AREA_USER,
@@ -117,7 +93,7 @@ void tls_common_init(void)
 
 }
 
-/* 
+/*
  * This function is called
  * when NuAuth traps a signal.
  * Which is always the case when the
