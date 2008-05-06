@@ -367,15 +367,7 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 	char *errmsg;
 
 /* config init */
-	char *configfile = nuauthconf->configfile;
 	int ret;
-	/* TODO: read values specific to nufw connection */
-	confparams_t nuauth_tls_vars[] = {
-		{"nuauth_tls_request_cert", G_TOKEN_INT, FALSE, NULL},
-		{"nuauth_tls_auth_by_cert", G_TOKEN_INT, FALSE, NULL},
-		{"nuauth_tls_max_servers", G_TOKEN_INT, NUAUTH_TLS_MAX_SERVERS, NULL}
-	};
-	const unsigned int nb_params = sizeof(nuauth_tls_vars) / sizeof(confparams_t);
 	int int_requestcert;
 
 	context->sck_inet = nuauth_bind(&errmsg, context->addr, context->port, "nufw");
@@ -432,20 +424,10 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 	FD_ZERO(&context->tls_rx_set);
 	FD_SET(context->sck_inet, &context->tls_rx_set);
 
-	if(!parse_conffile(configfile, nb_params, nuauth_tls_vars))
-	{
-	        log_message(FATAL, DEBUG_AREA_MAIN, "Failed to load config file %s", configfile);
-		return 0;
-	}
-#define READ_CONF(KEY) \
-	get_confvar_value(nuauth_tls_vars, nb_params, KEY)
-	nuauth_tls_max_servers = *(int *) READ_CONF("nuauth_tls_max_servers");
-	int_requestcert = *(int *) READ_CONF("nuauth_tls_request_cert");
-#undef READ_CONF
-
-	/* free config struct */
-	free_confparams(nuauth_tls_vars,
-			sizeof(nuauth_tls_vars) / sizeof(confparams_t));
+	/* TODO: read values specific to nufw connection */
+	nuauth_tls_max_servers = nubase_config_table_get_or_default_int("nuauth_tls_max_servers", NUAUTH_TLS_MAX_SERVERS);
+	int_requestcert = nubase_config_table_get_or_default_int("nuauth_tls_request_cert", FALSE);
+	/* {"nuauth_tls_auth_by_cert", G_TOKEN_INT, FALSE, NULL}, */
 
 	/* TODO: use a nufw specific value of request_cert */
 	context->server = nussl_session_create_with_fd(context->sck_inet, nuauth_tls.request_cert);
