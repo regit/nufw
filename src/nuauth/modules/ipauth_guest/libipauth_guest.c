@@ -51,35 +51,13 @@ G_MODULE_EXPORT gchar *unload_module_with_params(gpointer params_p)
 
 G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 {
-	confparams_t ipauth_guest_vars[] = {
-		{"ipauth_guest_username", G_TOKEN_STRING, 0,
-		 g_strdup(IP_AUTH_GUEST_USERNAME)}
-		,
-	};
-	char *configfile = nuauthconf->configfile;
 	struct ipauth_guest_params *params =
 	    g_new0(struct ipauth_guest_params, 1);
 
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 		    "Ipauth_guest module ($Revision$)");
-	/* parse conf file */
-	if (module->configfile) {
-		parse_conffile(module->configfile,
-			       sizeof(ipauth_guest_vars) /
-			       sizeof(confparams_t), ipauth_guest_vars);
-	} else {
-		parse_conffile(configfile,
-			       sizeof(ipauth_guest_vars) /
-			       sizeof(confparams_t), ipauth_guest_vars);
-	}
-	/* set variables */
 
-#define READ_CONF(KEY) \
-	get_confvar_value(ipauth_guest_vars, sizeof(ipauth_guest_vars)/sizeof(confparams_t), KEY)
-
-	params->username = (char *) READ_CONF("ipauth_guest_username");
-
-#undef READ_CONF
+	params->username = nubase_config_table_get_or_default("ipauth_guest_username", IP_AUTH_GUEST_USERNAME);
 
 	module->params = (gpointer) params;
 	return TRUE;
