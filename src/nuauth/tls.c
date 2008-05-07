@@ -101,10 +101,13 @@ void tls_common_init(void)
  */
 void tls_common_deinit(void)
 {
+#if 0
+/* XXX: Of course we must deallocate, but considering the new config API */
 	g_free(nuauth_tls.key);
 	g_free(nuauth_tls.cert);
 	g_free(nuauth_tls.ca);
 	g_free(nuauth_tls.crl_file);
+#endif
 }
 
 
