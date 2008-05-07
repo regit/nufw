@@ -132,21 +132,6 @@ void parse_field_file(mark_field_config_t * config, const char *filename)
  */
 G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 {
-	confparams_t vars[] = {
-		{"mark_field_file", G_TOKEN_STRING, 0,
-		 g_strdup(MARK_FIELD_CONF)}
-		,
-		{"mark_field_shift", G_TOKEN_INT, 0, NULL}
-		,
-		{"mark_field_type", G_TOKEN_INT, 0, NULL  }
-		,
-		{"mark_field_nbits", G_TOKEN_INT, 32, NULL}
-		,
-		{"mark_field_default_mark", G_TOKEN_INT, 0, NULL}
-		,
-	};
-	const int nb_vars = sizeof(vars) / sizeof(confparams_t);
-	const char *configfile = nuauthconf->configfile;
 	mark_field_config_t *config = g_new0(mark_field_config_t, 1);
 	unsigned int nbits;
 	char *field_filename;
@@ -154,31 +139,18 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 		    "Mark_field module ($Revision$)");
-	/* parse config file */
-	if (module->configfile) {
-		configfile = module->configfile;
-	}
-	parse_conffile(configfile, nb_vars, vars);
-
-#define READ_CONF(KEY) \
-	get_confvar_value(vars, nb_vars, KEY)
-#define READ_CONF_INT(VAR, KEY, DEFAULT) \
-	do { gpointer vpointer = READ_CONF(KEY); if (vpointer) VAR = *(int *)vpointer; else VAR = DEFAULT;} while (0)
 
 	/* read options */
-	field_filename = READ_CONF("mark_field_file");
-	READ_CONF_INT(nbits, "mark_field_nbits", 32);
-	READ_CONF_INT(config->shift, "mark_field_shift", 0);
-	READ_CONF_INT(config->type, "mark_field_type", 0);
+	field_filename = nubase_config_table_get_or_default("mark_field_file", MARK_FIELD_CONF);
+	nbits = nubase_config_table_get_or_default_int("mark_field_nbits", 32);
+	config->shift = nubase_config_table_get_or_default_int("mark_field_shift", 0);
+	config->type = nubase_config_table_get_or_default_int("mark_field_type", 0);
 	if (config->type < 0 && config->type > 1) {
 		log_message(WARNING, DEBUG_AREA_MAIN,
 				"mark_field: found unknown type, resetting to 0"
 			   );
 	}
-	READ_CONF_INT(config->default_mark, "mark_field_default_mark", 0);
-
-	/* free config struct */
-	free_confparams(vars, nb_vars);
+	config->default_mark = nubase_config_table_get_or_default_int("mark_field_default_mark", 0);
 
 	/* create mask to remove nbits at position shift */
 	config->mask =
