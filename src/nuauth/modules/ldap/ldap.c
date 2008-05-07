@@ -191,117 +191,29 @@ G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
  */
 G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 {
-	char *configfile = NULL;
-	gpointer vpointer;
 	struct ldap_params *params = g_new0(struct ldap_params, 1);
 	char *ldap_base_dn = LDAP_BASE;
-	confparams_t ldap_nuauth_vars[] = {
-		{"ldap_server_addr", G_TOKEN_STRING, 0,
-		 g_strdup(LDAP_SERVER)},
-		{"ldap_server_port", G_TOKEN_INT, LDAP_SERVER_PORT, NULL},
-		{"ldap_base_dn", G_TOKEN_STRING, 0, g_strdup(LDAP_BASE)},
-		{"ldap_users_base_dn", G_TOKEN_STRING, 0,
-		 g_strdup(LDAP_BASE)},
-		{"ldap_acls_base_dn", G_TOKEN_STRING, 0,
-		 g_strdup(LDAP_BASE)},
-		{"ldap_bind_dn", G_TOKEN_STRING, 0, g_strdup(LDAP_USER)},
-		{"ldap_bind_password", G_TOKEN_STRING, 0,
-		 g_strdup(LDAP_CRED)},
-		{"ldap_request_timeout", G_TOKEN_INT, LDAP_REQUEST_TIMEOUT,
-		 NULL},
-		{"ldap_use_ipv4_schema", G_TOKEN_INT, 1, NULL},
-		{"ldap_filter_type", G_TOKEN_INT, 1, NULL}
-	};
-
 
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 		    "Ldap module ($Revision$)");
-	if (!module->configfile) {
-		configfile = nuauthconf->configfile;
-	} else {
-		configfile = module->configfile;
-	}
 
-
-	/* parse conf file */
-	parse_conffile(configfile,
-		       sizeof(ldap_nuauth_vars) / sizeof(confparams_t),
-		       ldap_nuauth_vars);
 	/* set variables */
-	vpointer =
-	    get_confvar_value(ldap_nuauth_vars,
-			      sizeof(ldap_nuauth_vars) /
-			      sizeof(confparams_t), "ldap_server_addr");
-	params->ldap_server =
-	    (char *) (vpointer ? vpointer : params->ldap_server);
-	vpointer =
-	    get_confvar_value(ldap_nuauth_vars,
-			      sizeof(ldap_nuauth_vars) /
-			      sizeof(confparams_t), "ldap_server_port");
-	params->ldap_server_port =
-	    *(int *) (vpointer ? vpointer : &params->ldap_server_port);
-	vpointer =
-	    get_confvar_value(ldap_nuauth_vars,
-			      sizeof(ldap_nuauth_vars) /
-			      sizeof(confparams_t), "ldap_bind_dn");
-	params->binddn = (char *) (vpointer ? vpointer : params->binddn);
-	vpointer =
-	    get_confvar_value(ldap_nuauth_vars,
-			      sizeof(ldap_nuauth_vars) /
-			      sizeof(confparams_t), "ldap_base_dn");
-	ldap_base_dn = (char *) (vpointer ? vpointer : ldap_base_dn);
-	vpointer =
-	    get_confvar_value(ldap_nuauth_vars,
-			      sizeof(ldap_nuauth_vars) /
-			      sizeof(confparams_t), "ldap_users_base_dn");
-	params->ldap_users_base_dn =
-	    (char *) (vpointer ? vpointer : params->ldap_users_base_dn);
-	vpointer =
-	    get_confvar_value(ldap_nuauth_vars,
-			      sizeof(ldap_nuauth_vars) /
-			      sizeof(confparams_t), "ldap_acls_base_dn");
-	params->ldap_acls_base_dn =
-	    (char *) (vpointer ? vpointer : params->ldap_acls_base_dn);
-
+	params->ldap_server = nubase_config_table_get_or_default("ldap_server_addr", LDAP_SERVER);
+	params->ldap_server_port = nubase_config_table_get_or_default_int("ldap_server_port", LDAP_SERVER_PORT);
+	params->binddn = nubase_config_table_get_or_default("ldap_bind_dn",LDAP_USER);
+	ldap_base_dn = nubase_config_table_get_or_default("ldap_base_dn",LDAP_BASE);
+	params->ldap_users_base_dn = nubase_config_table_get_or_default("ldap_users_base_dn",LDAP_BASE);
+	params->ldap_acls_base_dn = nubase_config_table_get_or_default("ldap_acls_base_dn",LDAP_BASE);
 	if (!strcmp(params->ldap_acls_base_dn, LDAP_BASE)) {
 		params->ldap_acls_base_dn = ldap_base_dn;
 	}
 	if (!strcmp(params->ldap_users_base_dn, LDAP_BASE)) {
 		params->ldap_users_base_dn = ldap_base_dn;
 	}
-
-	vpointer =
-	    get_confvar_value(ldap_nuauth_vars,
-			      sizeof(ldap_nuauth_vars) /
-			      sizeof(confparams_t), "ldap_bind_password");
-	params->bindpasswd =
-	    (char *) (vpointer ? vpointer : params->bindpasswd);
-	params->ldap_request_timeout = LDAP_REQUEST_TIMEOUT;
-	vpointer =
-	    get_confvar_value(ldap_nuauth_vars,
-			      sizeof(ldap_nuauth_vars) /
-			      sizeof(confparams_t), "ldap_request_timeout");
-	params->ldap_request_timeout =
-	    *(int *) (vpointer ? vpointer : &params->ldap_request_timeout);
-
-	vpointer =
-	    get_confvar_value(ldap_nuauth_vars,
-			      sizeof(ldap_nuauth_vars) /
-			      sizeof(confparams_t), "ldap_use_ipv4_schema");
-	params->ldap_use_ipv4_schema =
-	    *(int *) (vpointer ? vpointer : &params->ldap_use_ipv4_schema);
-
-	vpointer =
-	    get_confvar_value(ldap_nuauth_vars,
-			      sizeof(ldap_nuauth_vars) /
-			      sizeof(confparams_t), "ldap_filter_type");
-	params->ldap_filter_type =
-	    *(int *) (vpointer ? vpointer : &params->ldap_filter_type);
-
-
-	/* free config struct */
-	free_confparams(ldap_nuauth_vars,
-			sizeof(ldap_nuauth_vars) / sizeof(confparams_t));
+	params->bindpasswd = nubase_config_table_get_or_default("ldap_bind_password",LDAP_CRED);
+	params->ldap_request_timeout = nubase_config_table_get_or_default_int("ldap_request_timeout",LDAP_REQUEST_TIMEOUT);
+	params->ldap_use_ipv4_schema = nubase_config_table_get_or_default_int("ldap_use_ipv4_schema", 1);
+	params->ldap_filter_type = nubase_config_table_get_or_default_int("ldap_filter_type", 1);
 
 
 	/* init thread private stuff */
