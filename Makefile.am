@@ -21,6 +21,7 @@ install-conf:
 	test -e $(sysconfdir)/nuauth.d/nuauth_mysql.conf || install -m 600 $(top_srcdir)/conf/nuauth.d/nuauth_mysql.conf $(sysconfdir)/nuauth.d
 	test -e $(sysconfdir)/nuauth.d/nuauth_pgsql.conf || install -m 600 $(top_srcdir)/conf/nuauth.d/nuauth_pgsql.conf $(sysconfdir)/nuauth.d
 	test -e $(sysconfdir)/nuauth.d/nuauth_tuning.conf || install -m 600 $(top_srcdir)/conf/nuauth.d/nuauth_tuning.conf $(sysconfdir)/nuauth.d
+	test -e $(sysconfdir)/nuauth.d/nuauth_mark.conf || install -m 600 $(top_srcdir)/conf/nuauth.d/nuauth_mark.conf $(sysconfdir)/nuauth.d
 	test -e $(sysconfdir)/certs/NuFW-cacert.pem || install -m 600 $(top_srcdir)/conf/certs/NuFW-cacert.pem $(sysconfdir)
 	test -e $(sysconfdir)/certs/nufw-key.pem || install -m 600 $(top_srcdir)/conf/certs/nufw-key.pem $(sysconfdir)
 	test -e $(sysconfdir)/certs/nufw-cert.pem || install -m 600 $(top_srcdir)/conf/certs/nufw-cert.pem $(sysconfdir)
