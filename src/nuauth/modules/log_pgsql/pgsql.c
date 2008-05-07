@@ -168,58 +168,24 @@ static nu_error_t pgsql_close_open_user_sessions(struct log_pgsql_params
 /* Init pgsql system */
 G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 {
-	confparams_t pgsql_nuauth_vars[] = {
-		{"pgsql_server_addr", G_TOKEN_STRING, 0, g_strdup(PGSQL_SERVER)},
-		{"pgsql_server_port", G_TOKEN_INT, PGSQL_SERVER_PORT, NULL},
-		{"pgsql_user", G_TOKEN_STRING, 0, g_strdup(PGSQL_USER)},
-		{"pgsql_passwd", G_TOKEN_STRING, 0, g_strdup(PGSQL_PASSWD)},
-		{"pgsql_ssl", G_TOKEN_STRING, 0, g_strdup(PGSQL_SSL)},
-		{"pgsql_db_name", G_TOKEN_STRING, 0, g_strdup(PGSQL_DB_NAME)},
-		{"pgsql_table_name", G_TOKEN_STRING, 0, g_strdup(PGSQL_TABLE_NAME)},
-		{"pgsql_users_table_name", G_TOKEN_STRING, 0, g_strdup(PGSQL_USERS_TABLE_NAME)},
-		{"pgsql_request_timeout", G_TOKEN_INT, PGSQL_REQUEST_TIMEOUT, NULL},
-		{"pgsql_use_ipv4", G_TOKEN_INT, PGSQL_USE_IPV4, NULL}
-	};
-	unsigned int nb_params =
-	    sizeof(pgsql_nuauth_vars) / sizeof(confparams_t);
 	struct log_pgsql_params *params =
 	    g_new0(struct log_pgsql_params, 1);
 	module->params = params;
 
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 		    "Log_pgsql module ($Revision$)");
-	/* parse conf file */
-	if (module->configfile) {
-		parse_conffile(module->configfile, nb_params,
-			       pgsql_nuauth_vars);
-	} else {
-		parse_conffile(nuauthconf->configfile, nb_params,
-			       pgsql_nuauth_vars);
-	}
 
 	/* set variables */
-#define READ_CONF(KEY) \
-	get_confvar_value(pgsql_nuauth_vars, nb_params, KEY)
-#define READ_CONF_INT(VAR, KEY, DEFAULT) \
-	do { gpointer vpointer = READ_CONF(KEY); if (vpointer) VAR = *(int *)vpointer; else VAR = DEFAULT; } while (0)
-
-	params->pgsql_server = (char *) READ_CONF("pgsql_server_addr");
-	READ_CONF_INT(params->pgsql_server_port, "pgsql_server_port",
-		      PGSQL_SERVER_PORT);
-	params->pgsql_user = (char *) READ_CONF("pgsql_user");
-	params->pgsql_passwd = (char *) READ_CONF("pgsql_passwd");
-	params->pgsql_ssl = (char *) READ_CONF("pgsql_ssl");
-	params->pgsql_db_name = (char *) READ_CONF("pgsql_db_name");
-	params->pgsql_table_name = (char *) READ_CONF("pgsql_table_name");
-	params->pgsql_users_table_name = (char *) READ_CONF("pgsql_users_table_name");
-	READ_CONF_INT(params->pgsql_request_timeout, "pgsql_request_timeout", PGSQL_REQUEST_TIMEOUT);
-	READ_CONF_INT(params->pgsql_use_ipv4, "pgsql_use_ipv4", PGSQL_USE_IPV4);
-
-	/* free config struct */
-	free_confparams(pgsql_nuauth_vars,
-			sizeof(pgsql_nuauth_vars) / sizeof(confparams_t));
-#undef READ_CONF
-#undef READ_CONF_INT
+	params->pgsql_server = nubase_config_table_get_or_default("pgsql_server_addr", PGSQL_SERVER);
+	params->pgsql_server_port = nubase_config_table_get_or_default_int("pgsql_server_port", PGSQL_SERVER_PORT);
+	params->pgsql_user = nubase_config_table_get_or_default("pgsql_user", PGSQL_USER);
+	params->pgsql_passwd = nubase_config_table_get_or_default("pgsql_passwd", PGSQL_PASSWD);
+	params->pgsql_ssl = nubase_config_table_get_or_default("pgsql_ssl", PGSQL_SSL);
+	params->pgsql_db_name = nubase_config_table_get_or_default("pgsql_db_name", PGSQL_DB_NAME);
+	params->pgsql_table_name = nubase_config_table_get_or_default("pgsql_table_name", PGSQL_TABLE_NAME);
+	params->pgsql_users_table_name = nubase_config_table_get_or_default("pgsql_users_table_name", PGSQL_USERS_TABLE_NAME);
+	params->pgsql_request_timeout = nubase_config_table_get_or_default_int("pgsql_request_timeout", PGSQL_REQUEST_TIMEOUT);
+	params->pgsql_use_ipv4 = nubase_config_table_get_or_default_int("pgsql_use_ipv4", PGSQL_USE_IPV4);
 
 	/* init thread private stuff */
 	params->pgsql_priv = g_private_new((GDestroyNotify) PQfinish);
