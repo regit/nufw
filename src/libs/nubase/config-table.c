@@ -59,7 +59,7 @@ char *nubase_config_table_get_or_default(char *key, char *replace)
 	str = nubase_config_table_get(key);
 
 	if (str) {
-		return str;
+		return strdup(str);
 	} else {
 		return strdup(replace);
 	}
