@@ -18,6 +18,12 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/**
+ * \addtogroup Nubase
+ *
+ * @{
+ */ 
+
 /** \file log.c
  *  \brief Initialize and write messages in log.
  *
@@ -138,3 +144,5 @@ void log_printf(debug_level_t priority, char *format, ...)
 	do_log_area_printf(DEBUG_AREA_ALL, priority, format, args);
 	va_end(args);
 }
+
+/** @} */

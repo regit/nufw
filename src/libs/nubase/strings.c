@@ -27,6 +27,15 @@
 #include <nubase.h>
 
 /**
+ * \addtogroup Nubase
+ *
+ * @{
+ *
+ * \file strings.c
+ * \brief String utility functions
+ */
+
+/**
  * Function snprintf() which check buffer overflow, and always write a '\\0'
  * to the end of the buffer.
  *
@@ -187,3 +196,4 @@ char *str_itoa(int i)
 	return str;
 }
 
+/** @} */

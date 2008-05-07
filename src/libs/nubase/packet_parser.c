@@ -20,6 +20,12 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/**
+ * \addtogroup Nubase
+ *
+ * @{
+ */ 
+
 /** \file packet_parser.c
  *  \brief Functions to parse a network packet
  *
@@ -323,3 +329,5 @@ int get_icmpv6_headers(tracking_t * tracking, const unsigned char *dgram,
 	tracking->code = hdr->icmp6_code;
 	return 0;
 }
+
+/** @} */

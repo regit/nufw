@@ -30,6 +30,15 @@
 #include <config.h>
 #endif
 
+/** \defgroup Nubase Nubase Library
+ * \brief This is a convenient library use in different part of NuFW.
+ *
+ * @{
+ *
+ * \file ipv6.c
+ * \brief IPv6 related function
+ */
+
 /**
  * Set IPv6 address to "empty" address ("::")
  */
@@ -268,3 +277,4 @@ void create_ipv6_netmask(struct in6_addr *netmask, int mask)
 	}
 }
 
+/** @} */

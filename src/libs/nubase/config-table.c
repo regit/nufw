@@ -27,6 +27,15 @@
 #include "linuxlist.h"
 #include "config-table.h"
 
+/**
+ * \addtogroup Nubase
+ *
+ * @{
+ *
+ * \file config-table.c
+ * \brief Configuration file parsing function
+ */
+
 LLIST_HEAD(config_table_list);
 
 char *nubase_config_table_get(char *key)
@@ -145,3 +154,4 @@ int main(void)
 }
 #endif
 
+/** @} */
