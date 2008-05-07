@@ -14,12 +14,13 @@ install-data-am:
 
 install-conf:
 	install -d $(sysconfdir)
+	install -d $(sysconfdir)/nuauth.d
 	test -e $(sysconfdir)/nuauth.conf || install -m 600 $(top_srcdir)/conf/nuauth.conf $(sysconfdir)
-	test -e $(sysconfdir)/nuauth_ldap.conf || install -m 600 $(top_srcdir)/conf/nuauth_ldap.conf $(sysconfdir)
-	test -e $(sysconfdir)/nuauth_tls.conf || install -m 600 $(top_srcdir)/conf/nuauth_tls.conf $(sysconfdir)
-	test -e $(sysconfdir)/nuauth_mysql.conf || install -m 600 $(top_srcdir)/conf/nuauth_mysql.conf $(sysconfdir)
-	test -e $(sysconfdir)/nuauth_pgsql.conf || install -m 600 $(top_srcdir)/conf/nuauth_pgsql.conf $(sysconfdir)
-	test -e $(sysconfdir)/nuauth_tuning.conf || install -m 600 $(top_srcdir)/conf/nuauth_tuning.conf $(sysconfdir)
+	test -e $(sysconfdir)/nuauth.d/nuauth_ldap.conf || install -m 600 $(top_srcdir)/conf/nuauth.d/nuauth_ldap.conf $(sysconfdir)/nuauth.d
+	test -e $(sysconfdir)/nuauth.d/nuauth_tls.conf || install -m 600 $(top_srcdir)/conf/nuauth.d/nuauth_tls.conf $(sysconfdir)/nuauth.d
+	test -e $(sysconfdir)/nuauth.d/nuauth_mysql.conf || install -m 600 $(top_srcdir)/conf/nuauth.d/nuauth_mysql.conf $(sysconfdir)/nuauth.d
+	test -e $(sysconfdir)/nuauth.d/nuauth_pgsql.conf || install -m 600 $(top_srcdir)/conf/nuauth.d/nuauth_pgsql.conf $(sysconfdir)/nuauth.d
+	test -e $(sysconfdir)/nuauth.d/nuauth_tuning.conf || install -m 600 $(top_srcdir)/conf/nuauth.d/nuauth_tuning.conf $(sysconfdir)/nuauth.d
 	test -e $(sysconfdir)/certs/NuFW-cacert.pem || install -m 600 $(top_srcdir)/conf/certs/NuFW-cacert.pem $(sysconfdir)
 	test -e $(sysconfdir)/certs/nufw-key.pem || install -m 600 $(top_srcdir)/conf/certs/nufw-key.pem $(sysconfdir)
 	test -e $(sysconfdir)/certs/nufw-cert.pem || install -m 600 $(top_srcdir)/conf/certs/nufw-cert.pem $(sysconfdir)
