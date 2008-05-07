@@ -870,46 +870,15 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	gpointer vpointer;
 	struct plaintext_params *params =
 	    g_new0(struct plaintext_params, 1);
-	confparams_t plaintext_nuauth_vars[] = {
-		{"plaintext_userfile", G_TOKEN_STRING, 0,
-		 g_strdup(TEXplaintext_USERFILE)},
-		{"plaintext_aclfile", G_TOKEN_STRING, 0,
-		 g_strdup(TEXplaintext_ACLFILE)}
-	};
-
 
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 		    "Plaintext module ($Revision$)");
-	/*  parse conf file */
-	if (module->configfile) {
-		parse_conffile(module->configfile,
-			       sizeof(plaintext_nuauth_vars) /
-			       sizeof(confparams_t), plaintext_nuauth_vars);
-	} else {
-		parse_conffile(nuauthconf->configfile,
-			       sizeof(plaintext_nuauth_vars) /
-			       sizeof(confparams_t), plaintext_nuauth_vars);
-	}
+
 	/*  set variables */
-	vpointer = get_confvar_value(plaintext_nuauth_vars,
-				     sizeof(plaintext_nuauth_vars) /
-				     sizeof(confparams_t),
-				     "plaintext_userfile");
-	params->plaintext_userfile =
-	    (char *) (vpointer ? vpointer : params->plaintext_userfile);
-	vpointer =
-	    get_confvar_value(plaintext_nuauth_vars,
-			      sizeof(plaintext_nuauth_vars) /
-			      sizeof(confparams_t), "plaintext_aclfile");
-	params->plaintext_aclfile =
-	    (char *) (vpointer ? vpointer : params->plaintext_aclfile);
+	params->plaintext_userfile = nubase_config_table_get_or_default("plaintext_userfile", TEXplaintext_USERFILE);
+	params->plaintext_aclfile = nubase_config_table_get_or_default("plaintext_aclfile", TEXplaintext_ACLFILE);
 	params->plaintext_userlist = NULL;
 	params->plaintext_acllist = NULL;
-
-	/* free config struct */
-	free_confparams(plaintext_nuauth_vars,
-			sizeof(plaintext_nuauth_vars) /
-			sizeof(confparams_t));
 
 	module->params = (gpointer) params;
 
