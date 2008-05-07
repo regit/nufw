@@ -144,19 +144,6 @@ void parse_group_file(mark_group_config_t * config, const char *filename)
  */
 G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 {
-	confparams_t vars[] = {
-		{"mark_group_group_file", G_TOKEN_STRING, 0,
-		 g_strdup(MARK_GROUP_CONF)}
-		,
-		{"mark_group_shift", G_TOKEN_INT, 0, NULL}
-		,
-		{"mark_group_nbits", G_TOKEN_INT, 32, NULL}
-		,
-		{"mark_group_default_mark", G_TOKEN_INT, 0, NULL}
-		,
-	};
-	const int nb_vars = sizeof(vars) / sizeof(confparams_t);
-	const char *configfile = nuauthconf->configfile;
 	mark_group_config_t *config = g_new0(mark_group_config_t, 1);
 	unsigned int nbits;
 	char *group_filename;
@@ -164,25 +151,12 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 		    "Mark_group module ($Revision$)");
-	/* parse config file */
-	if (module->configfile) {
-		configfile = module->configfile;
-	}
-	parse_conffile(configfile, nb_vars, vars);
-
-#define READ_CONF(KEY) \
-	get_confvar_value(vars, nb_vars, KEY)
-#define READ_CONF_INT(VAR, KEY, DEFAULT) \
-	do { gpointer vpointer = READ_CONF(KEY); if (vpointer) VAR = *(int *)vpointer; else VAR = DEFAULT;} while (0)
 
 	/* read options */
-	group_filename = READ_CONF("mark_group_group_file");
-	READ_CONF_INT(nbits, "mark_group_nbits", 32);
-	READ_CONF_INT(config->shift, "mark_group_shift", 0);
-	READ_CONF_INT(config->default_mark, "mark_group_default_mark", 0);
-
-	/* free config struct */
-	free_confparams(vars, nb_vars);
+	group_filename = nubase_config_table_get_or_default("mark_group_group_file", MARK_GROUP_CONF);
+	nbits = nubase_config_table_get_or_default_int("mark_group_nbits", 32);
+	config->shift = nubase_config_table_get_or_default_int("mark_group_shift", 0);
+	config->default_mark = nubase_config_table_get_or_default_int("mark_group_default_mark", 0);
 
 	/* create mask to remove nbits at position shift */
 	config->mask =
