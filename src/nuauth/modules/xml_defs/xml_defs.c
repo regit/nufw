@@ -60,39 +60,12 @@ G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
 
 G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 {
-	confparams_t xml_defs_nuauth_vars[] = {
-		{"xml_defs_periodfile", G_TOKEN_STRING, 0,
-		 g_strdup(XML_DEFS_PERIODFILE)}
-	};
-	gpointer vpointer;
 	struct xml_defs_params *params = g_new0(struct xml_defs_params, 1);
-
 
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 		    "Xml_defs module ($Revision$)");
 	/*  init global variables */
-	params->xml_defs_periodfile = XML_DEFS_PERIODFILE;
-
-	/*  parse conf file */
-	if (module->configfile) {
-		parse_conffile(module->configfile,
-			       sizeof(xml_defs_nuauth_vars) /
-			       sizeof(confparams_t), xml_defs_nuauth_vars);
-	} else {
-		parse_conffile(nuauthconf->configfile,
-			       sizeof(xml_defs_nuauth_vars) /
-			       sizeof(confparams_t), xml_defs_nuauth_vars);
-	}
-	/*  set variables */
-	vpointer = get_confvar_value(xml_defs_nuauth_vars,
-				     sizeof(xml_defs_nuauth_vars) /
-				     sizeof(confparams_t),
-				     "xml_defs_periodfile");
-	params->xml_defs_periodfile = (char *) (vpointer);
-
-	/* free config struct */
-	free_confparams(xml_defs_nuauth_vars,
-			sizeof(xml_defs_nuauth_vars) / sizeof(confparams_t));
+	params->xml_defs_periodfile = nubase_config_table_get_or_default("xml_defs_periodfile", XML_DEFS_PERIODFILE);
 
 	module->params = (gpointer) params;
 	return TRUE;
