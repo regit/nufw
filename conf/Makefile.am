@@ -1,4 +1,5 @@
-CONFIG_FILES = acls.nufw mark_field.conf mark_group.conf nuaclgen.conf nuauth.conf nuclient.conf nutop.conf periods.xml users-plaintext.nufw
+CONFIG_FILES = acls.nufw mark_field.conf mark_group.conf nuaclgen.conf nuauth.conf nuclient.conf nutop.conf periods.xml users-plaintext.nufw \
+	nuauth_ldap.conf nuauth_mysql.conf nuauth_pgsql.conf nuauth_tls.conf nuauth_tuning.conf
 SQL_DUMP = nulog.ipv4.mysql.dump nulog.ipv6.mysql.dump nulog.pgsql.dump
 LDAP_FILES = acls.schema timeranges.schema
 AUTH_MYSQL_FILES = auth_mysql/auth_mysql.ipv4.mysql.dump auth_mysql/auth_mysql.ipv6.mysql.dump auth_mysql/check_net.mysql
