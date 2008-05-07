@@ -63,35 +63,13 @@ G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
 
 G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 {
-	confparams_t x509_std_nuauth_vars[] = {
-		{"nuauth_tls_trusted_issuer_dn", G_TOKEN_STRING, 0, NULL}
-	};
-	gpointer vpointer;
 	struct x509_std_params *params = g_new0(struct x509_std_params, 1);
 
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 		    "X509_std module ($Revision$)");
 
-	/*  parse conf file */
-	if (module->configfile) {
-		parse_conffile(module->configfile,
-			       sizeof(x509_std_nuauth_vars) /
-			       sizeof(confparams_t), x509_std_nuauth_vars);
-	} else {
-		parse_conffile(nuauthconf->configfile,
-			       sizeof(x509_std_nuauth_vars) /
-			       sizeof(confparams_t), x509_std_nuauth_vars);
-	}
 	/*  set variables */
-	vpointer = get_confvar_value(x509_std_nuauth_vars,
-				     sizeof(x509_std_nuauth_vars) /
-				     sizeof(confparams_t),
-				     "nauth_tls_trusted_issuer_dn");
-	params->trusted_issuer_dn = (gchar *) (vpointer);
-
-	/* free config struct */
-	free_confparams(x509_std_nuauth_vars,
-			sizeof(x509_std_nuauth_vars) / sizeof(confparams_t));
+	params->trusted_issuer_dn = nubase_config_table_get("nauth_tls_trusted_issuer_dn");
 
 	module->params = (gpointer) params;
 
