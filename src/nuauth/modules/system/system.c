@@ -62,37 +62,11 @@ G_MODULE_EXPORT uint32_t get_api_version()
 /* Init module system */
 G_MODULE_EXPORT gchar *g_module_check_init(GModule * module)
 {
-	gpointer vpointer;
-	confparams_t system_nuauth_vars[] = {
-		{"system_glibc_cant_guess_maxgroups", G_TOKEN_INT, 0, 0}
-		,
-		{"system_pam_module_not_threadsafe", G_TOKEN_INT, 1, 0}
-		,
-		{"system_suppress_prefixed_domain", G_TOKEN_INT, 0, 0}
-	};
 
-	/*  parse conf file */
-	parse_conffile(nuauthconf->configfile,
-		       sizeof(system_nuauth_vars) / sizeof(confparams_t),
-		       system_nuauth_vars);
 	/*  set variables */
-	vpointer = get_confvar_value(system_nuauth_vars,
-				     sizeof(system_nuauth_vars) /
-				     sizeof(confparams_t),
-				     "system_pam_module_not_threadsafe");
-	system_pam_module_not_threadsafe = *(int *) (vpointer);
-
-	vpointer = get_confvar_value(system_nuauth_vars,
-				     sizeof(system_nuauth_vars) /
-				     sizeof(confparams_t),
-				     "system_glibc_cant_guess_maxgroups");
-	system_glibc_cant_guess_maxgroups = *(int *) (vpointer);
-
-	vpointer = get_confvar_value(system_nuauth_vars,
-				     sizeof(system_nuauth_vars) /
-				     sizeof(confparams_t),
-				     "system_suppress_prefixed_domain");
-	system_suppress_prefixed_domain = *(int *) (vpointer);
+	system_pam_module_not_threadsafe = nubase_config_table_get_or_default_int("system_pam_module_not_threadsafe", 1);
+	system_glibc_cant_guess_maxgroups = nubase_config_table_get_or_default_int("system_glibc_cant_guess_maxgroups", 0);
+	system_suppress_prefixed_domain = nubase_config_table_get_or_default_int("system_suppress_prefixed_domain", 0);
 
 	return NULL;
 }
