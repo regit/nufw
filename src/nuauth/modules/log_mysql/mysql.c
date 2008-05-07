@@ -195,56 +195,6 @@ static nu_error_t mysql_close_open_user_sessions(struct log_mysql_params
 /* Init mysql system */
 G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 {
-	confparams_t mysql_nuauth_vars[] = {
-		{"mysql_server_addr", G_TOKEN_STRING, 0,
-		 g_strdup(MYSQL_SERVER)}
-		,
-		{"mysql_server_port", G_TOKEN_INT, MYSQL_SERVER_PORT, NULL}
-		,
-		{"mysql_user", G_TOKEN_STRING, 0, g_strdup(MYSQL_USER)}
-		,
-		{"mysql_passwd", G_TOKEN_STRING, 0, g_strdup(MYSQL_PASSWD)}
-		,
-		{"mysql_db_name", G_TOKEN_STRING, 0,
-		 g_strdup(MYSQL_DB_NAME)}
-		,
-		{"mysql_table_name", G_TOKEN_STRING, 0,
-		 g_strdup(MYSQL_TABLE_NAME)}
-		,
-		{"mysql_users_table_name", G_TOKEN_STRING, 0,
-		 g_strdup(MYSQL_USERS_TABLE_NAME)}
-		,
-		{"mysql_request_timeout", G_TOKEN_INT,
-		 MYSQL_REQUEST_TIMEOUT, NULL}
-		,
-		{"mysql_use_ipv4_schema", G_TOKEN_INT,
-		 MYSQL_USE_IPV4_SCHEMA, NULL}
-		,
-		{"mysql_admin_bofh", G_TOKEN_INT,
-		 0, NULL}
-		,
-		{"mysql_bofh_victime_group", G_TOKEN_INT,
-		 0, NULL}
-		,
-		{"mysql_prefix_version", G_TOKEN_INT, PREFIX_VERSION_ORIG, NULL}
-		,
-		{"mysql_use_ssl", G_TOKEN_INT, MYSQL_USE_SSL, NULL}
-		,
-		{"mysql_ssl_keyfile", G_TOKEN_STRING, 0,
-		 g_strdup(MYSQL_SSL_KEYFILE)}
-		,
-		{"mysql_ssl_certfile", G_TOKEN_STRING, 0,
-		 g_strdup(MYSQL_SSL_CERTFILE)}
-		,
-		{"mysql_ssl_ca", G_TOKEN_STRING, 0, g_strdup(MYSQL_SSL_CA)}
-		,
-		{"mysql_ssl_capath", G_TOKEN_STRING, 0,
-		 g_strdup(MYSQL_SSL_CAPATH)}
-		,
-		{"mysql_ssl_cipher", G_TOKEN_STRING, 0,
-		 g_strdup(MYSQL_SSL_CIPHER)}
-	};
-	char *configfile = nuauthconf->configfile;
 	/* char *ldap_base_dn=LDAP_BASE; */
 	struct log_mysql_params *params =
 	    g_new0(struct log_mysql_params, 1);
@@ -255,54 +205,29 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	params->mysql_ssl_cipher = MYSQL_SSL_CIPHER;
 	params->hook = module->hook;
 
-	/* parse conf file */
-	if (module->configfile) {
-		parse_conffile(module->configfile,
-			       sizeof(mysql_nuauth_vars) /
-			       sizeof(confparams_t), mysql_nuauth_vars);
-	} else {
-		parse_conffile(configfile,
-			       sizeof(mysql_nuauth_vars) /
-			       sizeof(confparams_t), mysql_nuauth_vars);
-	}
 	/* set variables */
-
-#define READ_CONF(KEY) \
-	get_confvar_value(mysql_nuauth_vars, sizeof(mysql_nuauth_vars)/sizeof(confparams_t), KEY)
-#define READ_CONF_INT(VAR, KEY, DEFAULT) \
-	do { gpointer vpointer = READ_CONF(KEY); if (vpointer) VAR = *(int *)vpointer; else VAR = DEFAULT; } while (0)
-
-	params->mysql_server = (char *) READ_CONF("mysql_server_addr");
-	params->mysql_user = (char *) READ_CONF("mysql_user");
-	params->mysql_passwd = (char *) READ_CONF("mysql_passwd");
-	params->mysql_db_name = (char *) READ_CONF("mysql_db_name");
-	params->mysql_table_name = (char *) READ_CONF("mysql_table_name");
+	params->mysql_server = nubase_config_table_get_or_default("mysql_server_addr", MYSQL_SERVER);
+	params->mysql_user = nubase_config_table_get_or_default("mysql_user", MYSQL_USER);
+	params->mysql_passwd = nubase_config_table_get_or_default("mysql_passwd", MYSQL_PASSWD);
+	params->mysql_db_name = nubase_config_table_get_or_default("mysql_db_name", MYSQL_DB_NAME);
+	params->mysql_table_name = nubase_config_table_get_or_default("mysql_table_name", MYSQL_TABLE_NAME);
 	params->mysql_users_table_name =
-	    (char *) READ_CONF("mysql_users_table_name");
+	    nubase_config_table_get_or_default("mysql_users_table_name", MYSQL_USERS_TABLE_NAME);
 	params->mysql_ssl_keyfile =
-	    (char *) READ_CONF("mysql_ssl_keyfile");
+	    nubase_config_table_get_or_default("mysql_ssl_keyfile", MYSQL_SSL_KEYFILE);
 	params->mysql_ssl_certfile =
-	    (char *) READ_CONF("mysql_ssl_certfile");
-	params->mysql_ssl_ca = (char *) READ_CONF("mysql_ssl_ca");
-	params->mysql_ssl_capath = (char *) READ_CONF("mysql_ssl_capath");
-	params->mysql_ssl_cipher = (char *) READ_CONF("mysql_ssl_cipher");
+	    nubase_config_table_get_or_default("mysql_ssl_certfile", MYSQL_SSL_CERTFILE);
+	params->mysql_ssl_ca = nubase_config_table_get_or_default("mysql_ssl_ca", MYSQL_SSL_CA);
+	params->mysql_ssl_capath = nubase_config_table_get_or_default("mysql_ssl_capath", MYSQL_SSL_CAPATH);
+	params->mysql_ssl_cipher = nubase_config_table_get_or_default("mysql_ssl_cipher", MYSQL_SSL_CIPHER);
 
-	READ_CONF_INT(params->mysql_server_port, "mysql_server_port",
-		      MYSQL_SERVER_PORT);
-	READ_CONF_INT(params->mysql_request_timeout,
-		      "mysql_request_timeout", MYSQL_REQUEST_TIMEOUT);
-	READ_CONF_INT(params->mysql_use_ssl, "mysql_use_ssl",
-		      MYSQL_USE_SSL);
-	READ_CONF_INT(params->mysql_use_ipv4_schema,
-		      "mysql_use_ipv4_schema", MYSQL_USE_IPV4_SCHEMA);
-	READ_CONF_INT(params->mysql_admin_bofh, "mysql_admin_bofh", 0);
-	READ_CONF_INT(params->mysql_prefix_version, "mysql_prefix_version", PREFIX_VERSION_NULOG2);
-	READ_CONF_INT(params->mysql_bofh_victim_group, "mysql_bofh_victim_group", 0);
-
-
-	/* free config struct */
-	free_confparams(mysql_nuauth_vars,
-			sizeof(mysql_nuauth_vars) / sizeof(confparams_t));
+	params->mysql_server_port = nubase_config_table_get_or_default_int("mysql_server_port", MYSQL_SERVER_PORT);
+	params->mysql_request_timeout = nubase_config_table_get_or_default_int("mysql_request_timeout", MYSQL_REQUEST_TIMEOUT);
+	params->mysql_use_ssl = nubase_config_table_get_or_default_int("mysql_use_ssl", MYSQL_USE_SSL);
+	params->mysql_use_ipv4_schema = nubase_config_table_get_or_default_int("mysql_use_ipv4_schema", MYSQL_USE_IPV4_SCHEMA);
+	params->mysql_admin_bofh = nubase_config_table_get_or_default_int("mysql_admin_bofh", 0);
+	params->mysql_prefix_version = nubase_config_table_get_or_default_int("mysql_prefix_version", PREFIX_VERSION_NULOG2); /* XXX: Was previously initialized as PREFIX_VERSION_ORIG*/
+	params->mysql_bofh_victim_group = nubase_config_table_get_or_default_int("mysql_bofh_victim_group", 0);
 
 	if (params->mysql_admin_bofh) {
 		if (nuauthconf->single_user_client_limit !=  1 ) {
