@@ -1,3 +1,5 @@
+2008/05/07 : New config parser for nuauth
+2008/05/01 : Libnussl, abstraction library for TLS
 2007/09/10 : Add auth_mysql module from http://www.winext.eu
 2007/03/18 : work done for 2.2
 2006/04/24 : work done for 2.0  
