@@ -30,6 +30,7 @@
 #  define LOCAL_STATE_DIR "/usr/local/var"
 #endif
 
+#define DEFAULT_CONF_FILE   CONFIG_DIR "/nuauth.conf"
 #define MODULES_CONF_DIR "modules"
 #define MODULES_CONF_EXTENSION ".conf"
 #define TRACKING_WITH_PAYLOAD
@@ -74,7 +75,6 @@
 
 /* config file related */
 #include "nuthread.h"
-#include "conffile.h"
 #include "log.h"
 #include "tls.h"
 #include "nufw_servers.h"
