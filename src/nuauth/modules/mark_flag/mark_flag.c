@@ -58,40 +58,19 @@ G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
 
 G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 {
-	confparams_t vars[] = {
-		{"mark_flag_mark_shift", G_TOKEN_INT, 0, NULL} ,
-		{"mark_flag_flag_shift", G_TOKEN_INT, 0, NULL} ,
-		{"mark_flag_nbits", G_TOKEN_INT, 16, NULL} ,
-	};
-
-	const int nb_vars = sizeof(vars) / sizeof(confparams_t);
-	const char *configfile = nuauthconf->configfile;
 	mark_flag_config_t *config = g_new0(mark_flag_config_t, 1);
 	unsigned int nbits;
 
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 		    "Mark_flag module ($Revision$)");
-	/* parse config file */
-	if (module->configfile) {
-		configfile = module->configfile;
-	}
-	parse_conffile(configfile, nb_vars, vars);
-
-#define READ_CONF(KEY) \
-	get_confvar_value(vars, nb_vars, KEY)
-#define READ_CONF_INT(VAR, KEY, DEFAULT) \
-	do { gpointer vpointer = READ_CONF(KEY); if (vpointer) VAR = *(int *)vpointer; else VAR = DEFAULT;} while (0)
 
 	/* read options */
-	READ_CONF_INT(nbits, "mark_flag_nbits", 16);
-	READ_CONF_INT(config->mark_shift, "mark_flag_mark_shift", 0);
-	READ_CONF_INT(config->flag_shift, "mark_flag_flag_shift", 0);
+	nbits = nubase_config_table_get_or_default_int("mark_flag_nbits", 16);
+	config->mark_shift = nubase_config_table_get_or_default_int("mark_flag_mark_shift", 0);
+	config->flag_shift = nubase_config_table_get_or_default_int("mark_flag_flag_shift", 0);
 
 	config->mark_mask =
 	    (SHR32(0xFFFFFFFF, 32 - config->mark_shift) | SHL32(0xFFFFFFFF,  nbits + config->mark_shift));
-
-	/* free config struct */
-	free_confparams(vars, nb_vars);
 
 	/* store config and exit */
 	module->params = config;
