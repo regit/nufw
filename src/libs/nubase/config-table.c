@@ -31,7 +31,9 @@
  * \addtogroup Nubase
  *
  * @{
- *
+ */
+
+/**
  * \file config-table.c
  * \brief Configuration file parsing function
  */

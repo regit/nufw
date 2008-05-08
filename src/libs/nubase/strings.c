@@ -30,8 +30,11 @@
  * \addtogroup Nubase
  *
  * @{
+ */
+
+/**
  *
- * \file strings.c
+ * \file nubase/strings.c
  * \brief String utility functions
  */
 

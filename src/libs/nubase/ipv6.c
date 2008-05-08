@@ -34,7 +34,9 @@
  * \brief This is a convenient library use in different part of NuFW.
  *
  * @{
- *
+ */
+
+/**
  * \file ipv6.c
  * \brief IPv6 related function
  */
