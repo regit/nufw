@@ -7,6 +7,8 @@
 #define inline __inline__
 #endif
 
+/** \cond LINUX_KERNEL */
+
 static inline void prefetch(const void *x) {;}
 
 /**
@@ -358,3 +360,5 @@ static inline void llist_splice_init(struct llist_head *llist,
 
 
 #endif
+
+/** \endcond */
