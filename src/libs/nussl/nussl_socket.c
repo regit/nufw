@@ -37,6 +37,18 @@
   Relicensed under LGPL for neon, http://www.webdav.org/neon/
 */
 
+/**
+ * \addtogroup NuSSL
+ *
+ * @{
+ */
+
+/**
+ * \file nussl_socket.c
+ * \brief Socket and I/O handling functions
+ */
+
+
 #include <config.h>
 #include "nussl_config.h"
 #include "nussl.h"
@@ -142,9 +154,9 @@ typedef struct in_addr nussl_inet_addr;
 
 /* "Be Conservative In What You Build". */
 #if defined(HAVE_FCNTL) && defined(O_NONBLOCK) && defined(F_SETFL) \
-    && defined(HAVE_GETSOCKOPT) && defined(SO_ERROR) \
-    && defined(HAVE_SOCKLEN_T) && defined(SOL_SOCKET) \
-    && defined(EINPROGRESS)
+	&& defined(HAVE_GETSOCKOPT) && defined(SO_ERROR) \
+	&& defined(HAVE_SOCKLEN_T) && defined(SOL_SOCKET) \
+	&& defined(EINPROGRESS)
 #define USE_NONBLOCKING_CONNECT
 #endif
 
@@ -171,7 +183,7 @@ typedef struct in_addr nussl_inet_addr;
 
 #ifdef WIN32
 #define NUSSL_ISRESET(e) ((e) == WSAECONNABORTED || (e) == WSAETIMEDOUT || \
-                       (e) == WSAECONNRESET || (e) == WSAENETRESET)
+			 (e) == WSAECONNRESET || (e) == WSAENETRESET)
 #define NUSSL_ISCLOSED(e) ((e) == WSAESHUTDOWN || (e) == WSAENOTCONN)
 #define NUSSL_ISINTR(e) (0)
 #define NUSSL_ISINPROGRESS(e) ((e) == WSAEWOULDBLOCK)	/* says MSDN */
@@ -539,7 +551,7 @@ static ssize_t read_raw(nussl_socket * sock, char *buffer, size_t len)
 }
 
 #define MAP_ERR(e) (NUSSL_ISCLOSED(e) ? NUSSL_SOCK_CLOSED : \
-                    (NUSSL_ISRESET(e) ? NUSSL_SOCK_RESET : NUSSL_SOCK_ERROR))
+		   (NUSSL_ISRESET(e) ? NUSSL_SOCK_RESET : NUSSL_SOCK_ERROR))
 
 static ssize_t write_raw(nussl_socket * sock, const char *data,
 			 size_t length)
@@ -565,8 +577,7 @@ static ssize_t write_raw(nussl_socket * sock, const char *data,
 	return ret;
 }
 
-static const struct iofns iofns_raw =
-    { read_raw, write_raw, readable_raw };
+static const struct iofns iofns_raw = { read_raw, write_raw, readable_raw };
 
 #ifdef HAVE_OPENSSL
 /* OpenSSL I/O function implementations. */
@@ -726,8 +737,8 @@ static ssize_t error_gnutls(nussl_socket * sock, ssize_t sret)
 }
 
 #define RETRY_GNUTLS(sock, ret) ((ret < 0) \
-    && (ret == GNUTLS_E_INTERRUPTED || ret == GNUTLS_E_AGAIN \
-        || check_alert(sock, ret) == 0))
+		&& (ret == GNUTLS_E_INTERRUPTED || ret == GNUTLS_E_AGAIN \
+		|| check_alert(sock, ret) == 0))
 
 static ssize_t read_gnutls(nussl_socket * sock, char *buffer, size_t len)
 {
@@ -1272,8 +1283,7 @@ int nussl_sock_connect(nussl_socket * sock,
 	}
 #endif
 
-#if defined(HAVE_FCNTL) && defined(F_GETFD) && defined(F_SETFD) \
-    && defined(FD_CLOEXEC)
+#if defined(HAVE_FCNTL) && defined(F_GETFD) && defined(F_SETFD) && defined(FD_CLOEXEC)
 	/* Set the FD_CLOEXEC bit for the new fd. */
 	if ((ret = fcntl(fd, F_GETFD)) >= 0) {
 		fcntl(fd, F_SETFD, ret | FD_CLOEXEC);
@@ -1779,3 +1789,5 @@ int nussl_sock_close(nussl_socket * sock)
 	nussl_free(sock);
 	return ret;
 }
+
+/** @} */

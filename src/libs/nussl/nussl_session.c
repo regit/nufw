@@ -33,6 +33,17 @@
 
 */
 
+/** \defgroup NuSSL NuSSL Library
+ * \brief This is a library used in NuFW to be independant from a specific TLS/SLL implementation.
+ *
+ * @{
+ */
+
+/**
+ * \file nussl_session.c
+ * \brief nussl session handling
+ */
+
 #include <config.h>
 #include <pthread.h>
 #include "nussl_config.h"
@@ -724,3 +735,5 @@ int nussl_init()
 {
 	return nussl_sock_init();
 }
+
+/** @} */
