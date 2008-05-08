@@ -82,7 +82,8 @@ void nu_exit_clean(nuauth_session_t * session)
  *  - nu_client_new() or nu_client_new_callback(): start user session
  *  - nu_client_setup_tls(): (optionnal) setup TLS key/certificate files
  *  - nu_client_connect(): try to connect to nuauth server
- *  - nu_client_check(): do a check, it has to be run at regular interval
+ *  - nu_client_check(): check if there is packet to authenticate and send authentication 
+ *  request to nuauth if needed. It has to be run in a endless loop.
  *  - nu_client_delete(): free a user session
  *  - nu_client_global_deinit(): To be called once at program end
  *

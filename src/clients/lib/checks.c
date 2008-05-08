@@ -148,24 +148,16 @@ nu_error_t reset_refresh_delay(nuauth_session_t *session)
  * \ingroup nuclientAPI
  * \brief Function called by client to initiate a check
  *
- * It has to be run at regular interval :
- *  - In POLL mode, it is really doing the job.
- *  - In PUSH mode, it is used to detect failure and send HELLO message
+ * It has to be run in an endless loop.
  *
  * \param session A pointer to a valid ::nuauth_session_t session
  * \param err A pointer to a allocated ::nuclient_error_t
- * \return -1 if a problem occurs. Session is destroyed if nu_client_check() return -1;
+ * \return 1 if success, -1 if a problem occurs. Session is destroyed if nu_client_check() return -1;
  *
  * \par Internal
  * It is in charge of cleaning session as the session may be used
- * by user and we have no control of it. It has to be called for the first
- * time AFTER all forks occurs to create the working threads. This is
- * mandatory and occurs because fork does not replicate the threads.
+ * by user and we have no control of it.
  *
- *  - Poll mode: this is just a wrapper to nu_client_real_check()
- *  - Push mode: It is used to send HELLO message
- *
- * \return Returns -1 on error, 1 otherwise
  */
 int nu_client_check(nuauth_session_t * session, nuclient_error_t * err)
 {
