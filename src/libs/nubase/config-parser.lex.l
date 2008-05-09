@@ -32,7 +32,7 @@
 
 extern char *path;
 extern char *filename;
-static char *includefile;
+static char *realfile;
 
 /* For handling the 'include' directive*/
 #define MAX_INCLUDE_DEPTH 10
@@ -46,7 +46,7 @@ static char *escape_str(char *str)
 	size_t strsize;
 	char *ret;
 
-	if (!(strsize = strlen(str))) return "";
+	if (!(strsize = strlen(str))) return strdup("");
 	ret = malloc(strsize - 2);
 
 	while (*str) ret[i++] = *str++;
@@ -55,6 +55,23 @@ static char *escape_str(char *str)
 
 	return ret;
 }
+
+char* str_prepend(char *str, char *prepend)
+{
+	size_t strsize = strlen(str) + strlen(prepend) + 1;
+	char *new;
+
+	new = malloc(strsize);
+	if ( ! new ) {
+		errno = ENOMEM;
+		return NULL;
+	}
+	snprintf(new, strsize, "%s%s", prepend, str);
+	new[strsize + 1] = '\0';
+
+	return new;
+}
+
 
 static int can_append_path(char *str)
 {
@@ -84,8 +101,10 @@ VOID		[ \t\n]+
 {INCLUDE}	{ BEGIN(incl); }
 
 {WORD}		{	yylval.string = strdup(yytext);
-			return TOK_WORD; }
-{EQUAL}		{ return TOK_EQUAL; }
+			return TOK_WORD; 
+		}
+
+{EQUAL}		{	return TOK_EQUAL; }
 
 {SECTION}	{
 			yylval.string = escape_str(yytext);
@@ -113,22 +132,23 @@ VOID		[ \t\n]+
 			  exit(1);
 		  }
 
-		  filenames[includes_index] = filename;
-		  includes[includes_index++] = YY_CURRENT_BUFFER;
-
+		filenames[includes_index] = filename;
+		includes[includes_index++] = YY_CURRENT_BUFFER;
 		filename = escape_str(yytext);
 
 		if (can_append_path(filename)) {
-			printf("We get %s/%s\n", path, filename);
-//			sprintf(includefile,
-//					"%s/%s", path, filename);
+			realfile = str_prepend(filename, path);
+		} else {
+			realfile = strdup(filename);
 		}
 
-		  yyin = fopen(filename, "r");
-		  if (!yyin) {
-			printf("Can not open %s\n", includefile);
+		yyin = fopen(realfile, "r");
+		if (!yyin) {
+			printf("Can not open %s\n", realfile);
 			exit(1);
-		  }
+		}
+		free(realfile);
+
 		  yy_switch_to_buffer(yy_create_buffer(yyin, YY_BUF_SIZE));
 
                   BEGIN(INITIAL);
