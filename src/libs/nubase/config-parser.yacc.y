@@ -33,6 +33,7 @@ extern void yy_delete_buffer(void *);
 
 #define YYERROR_VERBOSE
 
+extern FILE *yyin;
 char *filename;
 char *path;
 
@@ -48,6 +49,8 @@ char *path;
 	int number;
 }
 
+%destructor { free ($$); } TOK_WORD TOK_SECTION
+
 %%
 config:		 /* empty */
 		| config section
@@ -56,11 +59,23 @@ config:		 /* empty */
 
 section:		TOK_SECTION {
 				printf("\n%s is a section\n", $1);
+				free($1);
 			}
 			;
 key_value:		TOK_WORD TOK_EQUAL TOK_WORD
 			{
 				nubase_config_table_append($1,$3);
+
+				free($1);
+				free($3);
+			}
+		|
+			TOK_WORD TOK_EQUAL TOK_STRING
+			{
+				nubase_config_table_append($1,$3);
+
+				free($1);
+				free($3);
 			}
 			;
 
@@ -72,11 +87,10 @@ void yyerror(char *str)
 }
 
 int
-__parse_configuration(FILE *input, char *name)
+__parse_configuration(FILE *input)
 {
 	extern FILE *yyin;
 
-	filename = name;
 	yyin = input;
 	yyparse();
 	return  0;
@@ -84,17 +98,18 @@ __parse_configuration(FILE *input, char *name)
 
 int parse_configuration(char *config)
 {
-	FILE *fp;
 
 	path = str_extract_until(config, '/');
+	filename = config;
 
-	fp = fopen(config, "r");
-	if ( ! fp ) {
+	yyin = fopen(config, "r");
+	if ( ! yyin ) {
 		fprintf(stderr, "Cannot open file %s.\n", config);
 		return 1;
 	}
+	yyparse();
 
-	return __parse_configuration(fp, config);
+	return 0;
 }
 
 

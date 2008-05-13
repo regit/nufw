@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include "config-parser.yacc.h"
 
@@ -40,28 +41,34 @@ YY_BUFFER_STATE includes[MAX_INCLUDE_DEPTH];
 char *filenames[MAX_INCLUDE_DEPTH];
 int includes_index = 0;
 
+
 static char *escape_str(char *str)
 {
-	int i = -1;
-	size_t strsize;
-	char *ret;
+        size_t w = 0, i = 0;
+        int escape_next = 1;
 
-	if (!(strsize = strlen(str))) return strdup("");
-	ret = malloc(strsize - 2);
+        for ( i = 0; str[i]; i++ ) {
 
-	while (*str) ret[i++] = *str++;
+                if ( ! escape_next && str[i] == '\\' ) {
+                        escape_next = 0;
+                        continue;
+                }
 
-        ret[i-1] = '\0';
+                str[w++] = str[i];
+                escape_next = 1;
+        }
 
-	return ret;
+        str[w] = 0;
+        return str;
 }
+
 
 char* str_prepend(char *str, char *prepend)
 {
 	size_t strsize = strlen(str) + strlen(prepend) + 1;
 	char *new;
 
-	new = malloc(strsize);
+	new = malloc(strsize + 1);
 	if ( ! new ) {
 		errno = ENOMEM;
 		return NULL;
@@ -100,20 +107,21 @@ VOID		[ \t\n]+
 
 {INCLUDE}	{ BEGIN(incl); }
 
-{WORD}		{	yylval.string = strdup(yytext);
-			return TOK_WORD; 
+{WORD}		{
+			yylval.string = strdup(yytext);
+			return TOK_WORD;
 		}
 
 {EQUAL}		{	return TOK_EQUAL; }
 
 {SECTION}	{
-			yylval.string = escape_str(yytext);
+//			yylval.string = escape_str(yytext);
 			return TOK_SECTION;
 		}
 
 {STRING}	{
-			yylval.string = escape_str(yytext);
-			return TOK_WORD;
+			yylval.string = escape_str(strndup(yytext + 1, yyleng - 2));
+			return TOK_STRING;
 		}
 
 {COMMENT}	{
@@ -132,9 +140,10 @@ VOID		[ \t\n]+
 			  exit(1);
 		  }
 
+		filename = escape_str(strndup(yytext + 1, yyleng - 2));
+
 		filenames[includes_index] = filename;
 		includes[includes_index++] = YY_CURRENT_BUFFER;
-		filename = escape_str(yytext);
 
 		if (can_append_path(filename)) {
 			realfile = str_prepend(filename, path);
@@ -148,8 +157,9 @@ VOID		[ \t\n]+
 			exit(1);
 		}
 		free(realfile);
+		free(filename);
 
-		  yy_switch_to_buffer(yy_create_buffer(yyin, YY_BUF_SIZE));
+		yy_switch_to_buffer(yy_create_buffer(yyin, YY_BUF_SIZE));
 
                   BEGIN(INITIAL);
 		}

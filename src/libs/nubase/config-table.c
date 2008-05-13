@@ -89,8 +89,8 @@ struct config_table_t *nubase_config_table_append(char *key, char *value)
 		return NULL;
 	}
 
-	config_table->key = key;
-	config_table->value = value;
+	config_table->key = strdup(key);
+	config_table->value = strdup(value);
 
 	llist_add_tail(&config_table->list, &config_table_list);
 
