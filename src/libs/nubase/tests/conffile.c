@@ -1,15 +1,19 @@
 #include <stdio.h>
 #include <nubase.h>
 
-int conf_get_int_default(char *key, int defint)  
+int conf_get_int_default(char *key, int defint)
 {
-	char *str;								
+	char *str, *tmp;
 	int i;
 
-	str = nubase_config_table_get_or_default(key, str_itoa(defint));
+	tmp = str_itoa(defint);
+	str = nubase_config_table_get_or_default(key, tmp);
+	free(tmp);
 	printf("string=%s\n", str);
 
-	i = atoi(str);								
+	i = atoi(str);
+
+	free(str);
 
 	return i;
 }
@@ -17,6 +21,7 @@ int conf_get_int_default(char *key, int defint)
 int main(void)
 {
 	int i;
+	char *s;
 
 	parse_configuration("../../../../conf/nuauth.conf");
 
@@ -25,8 +30,11 @@ int main(void)
 	printf("nufw_gw_addr=[%s]\n", nubase_config_table_get("nufw_gw_addr"));
 	printf("foo=[%s]\n", nubase_config_table_get("foo"));
 
-	printf("foo or default=[%s]\n", nubase_config_table_get_or_default("foo", "bar"));
-	printf("foo or default int=[%d]\n", conf_get_int_default("foo", 42));
+	s = nubase_config_table_get_or_default("foo", "bar");
+	printf("foo or default=[%s]\n", s);
+	free(s);
+	i = conf_get_int_default("foo", 42);
+	printf("foo or default int=[%d]\n", i);
 
 	i = conf_get_int_default("nuauth_number_aclcheckers", 42);
 	printf("integer value:%d\n", i);
