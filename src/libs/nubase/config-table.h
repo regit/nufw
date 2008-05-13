@@ -35,6 +35,7 @@ char *nubase_config_table_get_or_default(char *key, char *replace);
 int nubase_config_table_get_or_default_int(char *key, int defint);
 
 struct config_table_t *nubase_config_table_append(char *key, char *value);
+void nubase_config_table_destroy(void);
 struct config_table_t *nubase_config_table_set(char *key, char *value);
 
 #endif /* _CONFIG_TABLE_H_ */

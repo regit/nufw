@@ -39,6 +39,8 @@ int main(void)
 	i = conf_get_int_default("nuauth_number_aclcheckers", 42);
 	printf("integer value:%d\n", i);
 
+	nubase_config_table_destroy();
+
 	return 0;
 }
 

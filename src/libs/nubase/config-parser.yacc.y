@@ -65,7 +65,6 @@ section:		TOK_SECTION {
 key_value:		TOK_WORD TOK_EQUAL TOK_WORD
 			{
 				nubase_config_table_append($1,$3);
-
 				free($1);
 				free($3);
 			}
@@ -73,7 +72,6 @@ key_value:		TOK_WORD TOK_EQUAL TOK_WORD
 			TOK_WORD TOK_EQUAL TOK_STRING
 			{
 				nubase_config_table_append($1,$3);
-
 				free($1);
 				free($3);
 			}

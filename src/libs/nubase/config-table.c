@@ -94,7 +94,20 @@ struct config_table_t *nubase_config_table_append(char *key, char *value)
 
 	llist_add_tail(&config_table->list, &config_table_list);
 
+
 	return config_table;
+}
+
+void nubase_config_table_destroy(void)
+{
+	struct config_table_t *config_table;
+	struct config_table_t *tmp;
+
+	llist_for_each_entry(config_table, &config_table_list, list) {
+			free(config_table->key);
+			free(config_table->value);
+	}
+
 }
 
 /* Similar to nubase_config_table_append,
