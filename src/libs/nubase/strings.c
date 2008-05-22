@@ -91,7 +91,7 @@ char *str_extract_until(char *str, int c)
 	last_size = strlen(last_str);
 	str_size = strlen(str);
 	newstr_size = str_size - last_size;
-	newstr = malloc(newstr_size + 1);
+	newstr = malloc(newstr_size + 2);
 	if ( ! newstr ) return NULL;
 
 	for (i=0;i<newstr_size;i++) {
