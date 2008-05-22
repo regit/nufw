@@ -633,8 +633,7 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 	}
 	/* parse result to feed a group_list */
 	if (ldap_count_entries(ld, res) >= 1) {
-		result = ldap_first_entry(ld, res);
-		while (result) {
+		for(result=ldap_first_entry(ld, res); result; result=ldap_next_entry(ld, result)) {
 			gboolean break_loop = FALSE;
 			/* get period */
 			attrs_array = ldap_get_values_len(ld, result, "AppName");
@@ -656,9 +655,8 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 			ldap_value_free_len(attrs_array);
 
 			if (break_loop) {
-				break;
+				continue;
 			}
-
 
 			/* allocate a new acl_group */
 			this_acl = g_new0(struct acl_group, 1);
@@ -738,8 +736,6 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 				walker++;
 			}
 			ldap_value_free_len(attrs_array);
-
-			result = ldap_next_entry(ld, result);
 
 			if (nuauthconf->prio_to_nok == 2) {
 				this->acl = this_acl;
