@@ -241,6 +241,10 @@ gboolean nuauth_reload(int signum)
 		free_nuauth_params(newconf);
 	}
 
+	/* Reload the configuration file */
+	nubase_config_table_destroy();
+	parse_configuration(nuauthconf->configfile);
+
 	/* reload modules with new conf */
 	load_modules();
 	/* init period */

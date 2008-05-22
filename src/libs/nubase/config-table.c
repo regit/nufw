@@ -108,6 +108,10 @@ void nubase_config_table_destroy(void)
 			free(config_table->value);
 	}
 
+	// Reinitialize the list for reuse
+	config_table_list.next = &config_table_list;
+	config_table_list.prev = &config_table_list;
+
 }
 
 /* Similar to nubase_config_table_append,
