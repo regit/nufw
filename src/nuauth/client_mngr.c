@@ -334,6 +334,7 @@ char warn_clients(struct msg_addr_set *global_msg)
 		if (ipsessions->client_version >= PROTO_VERSION_V22_1) {
 			timeval_substract(&interval, &timestamp, &(ipsessions->last_message));
 			if (interval.tv_sec || (interval.tv_usec < nuauthconf->push_delay)) {
+				g_mutex_unlock(client_mutex);
 				return 1;
 			} else {
 				ipsessions->last_message.tv_sec = timestamp.tv_sec;
