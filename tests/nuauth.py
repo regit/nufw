@@ -63,8 +63,8 @@ class NuauthProcess(Process):
 
         # Wait until nuauth is reloaded
         message = "NuAuth server reloaded"
-        self.waitline(message, timeout)
-        self.warning('nuauth doesn\'t write message "%s"' % message)
+        if not self.waitline(message, timeout):
+            self.warning('nuauth doesn\'t write message "%s"' % message)
 
     @classmethod
     def _reallyStop(cls):
