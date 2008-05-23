@@ -54,6 +54,11 @@ set -e
 
 case "$1" in
   start)
+	# ubuntu wipes everything in /var/run at boot
+	if [ ! -d /var/run/nuauth ]; then
+		mkdir /var/run/nuauth
+		chown $NUAUTH_USER /var/run/nuauth
+	fi
 	echo -n "Starting $DESC: "
 	start-stop-daemon --start --quiet --pidfile /var/run/$PID/$PID.pid \
 		--chuid $NUAUTH_USER --exec $DAEMON -- $DAEMON_OPTS
