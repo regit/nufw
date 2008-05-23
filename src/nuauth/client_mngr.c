@@ -232,10 +232,13 @@ user_session_t *get_client_datas_by_socket(int socket)
 
 GSList *get_client_sockets_by_ip(struct in6_addr * ip)
 {
-	void *ret;
+	ip_sessions_t *session;
+	GSList *ret = NULL;
 
 	g_mutex_lock(client_mutex);
-	ret = g_hash_table_lookup(client_ip_hash, ip);
+	session = g_hash_table_lookup(client_ip_hash, ip);
+	if(session)
+		ret = session->sessions;
 	g_mutex_unlock(client_mutex);
 	return ret;
 }
