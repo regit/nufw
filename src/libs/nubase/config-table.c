@@ -101,17 +101,17 @@ struct config_table_t *nubase_config_table_append(char *key, char *value)
 void nubase_config_table_destroy(void)
 {
 	struct config_table_t *config_table;
-	struct config_table_t *tmp;
 
-	llist_for_each_entry(config_table, &config_table_list, list) {
-			free(config_table->key);
-			free(config_table->value);
+	while(!llist_empty(&config_table_list)) {
+		config_table = llist_entry(config_table_list.next, struct config_table_t, list);
+		llist_del(&config_table->list);
+		free(config_table->key);
+		free(config_table->value);
+		free(config_table);
 	}
 
 	// Reinitialize the list for reuse
-	config_table_list.next = &config_table_list;
-	config_table_list.prev = &config_table_list;
-
+	INIT_LLIST_HEAD(&config_table_list);
 }
 
 /* Similar to nubase_config_table_append,
