@@ -394,6 +394,37 @@ static void local_free(gpointer data, gpointer userdata)
 }
 
 /**
+ * \return A nu_error_t::, NU_EXIT_CONTINUE if filter did not match, NU_EXIT_OK if filter did match.
+ */
+
+static nu_error_t field_match_pattern(gchar * value, LDAP *ld, LDAPMessage *result, gchar *attribute)
+{
+	nu_error_t ret = NU_EXIT_CONTINUE;
+	struct berval **attrs_array;
+	struct berval **pattrs_array;
+
+	attrs_array = ldap_get_values_len(ld, result, attribute);
+	if (attrs_array && *attrs_array) {
+		pattrs_array = attrs_array;
+		while (*pattrs_array) {
+			if (g_pattern_match_simple(
+						(*pattrs_array)->bv_val,
+						value
+						)) {
+				ret = NU_EXIT_OK;
+				break;
+			}
+			pattrs_array++;
+		}
+	} else {
+		/* No attributes in LDAP, thus criteria filtering is a success */
+		ret = NU_EXIT_OK;
+	}
+	ldap_value_free_len(attrs_array);
+	return ret;
+}
+
+/**
  * \brief Acl check function
  *
  * This function realise the matching of a packet against the set of rules. It is exported
@@ -496,38 +527,17 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 		g_free(ip_dst);
 
 		/* finish filter */
-		if (element->os_sysname) {
-			g_strlcat(filter, "(|(OsName=", LDAP_QUERY_SIZE);
-			prov_string =
-			    escape_string_for_ldap(element->os_sysname);
-			g_strlcat(filter, prov_string, LDAP_QUERY_SIZE);
-			g_free(prov_string);
-			g_strlcat(filter, ")(!(OsName=*)))", LDAP_QUERY_SIZE);
-		} else {
+		if (! element->os_sysname) {
 			g_strlcat(filter, "(!(OsName=*))", LDAP_QUERY_SIZE);
+		}
+		if (! element->os_release) {
+			g_strlcat(filter, "(!(OsRelease=*))", LDAP_QUERY_SIZE);
+		}
+		if (! element->os_version) {
+			g_strlcat(filter, "(!(OsVersion=*))", LDAP_QUERY_SIZE);
 		}
 		if (! element->app_name) {
 			g_strlcat(filter, "(!(AppName=*))", LDAP_QUERY_SIZE);
-		}
-		if (element->os_release) {
-			g_strlcat(filter, "(|(OsRelease=", LDAP_QUERY_SIZE);
-			prov_string =
-			    escape_string_for_ldap(element->os_release);
-			g_strlcat(filter, prov_string, LDAP_QUERY_SIZE);
-			g_free(prov_string);
-			g_strlcat(filter, ")(!(OsRelease=*)))", LDAP_QUERY_SIZE);
-		} else {
-			g_strlcat(filter, "(!(OsRelease=*))", LDAP_QUERY_SIZE);
-		}
-		if (element->os_version) {
-			g_strlcat(filter, "(|(OsVersion=", LDAP_QUERY_SIZE);
-			prov_string =
-			    escape_string_for_ldap(element->os_version);
-			g_strlcat(filter, prov_string, LDAP_QUERY_SIZE);
-			g_free(prov_string);
-			g_strlcat(filter, ")(!(OsVersion=*)))", LDAP_QUERY_SIZE);
-		} else {
-			g_strlcat(filter, "(!(OsVersion=*))", LDAP_QUERY_SIZE);
 		}
 		if (element->app_md5) {
 			g_strlcat(filter, "(|(AppSig=", LDAP_QUERY_SIZE);
@@ -635,28 +645,34 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 	if (ldap_count_entries(ld, res) >= 1) {
 		for(result=ldap_first_entry(ld, res); result; result=ldap_next_entry(ld, result)) {
 			gboolean break_loop = FALSE;
-			/* get period */
-			attrs_array = ldap_get_values_len(ld, result, "AppName");
-			if (attrs_array && *attrs_array) {
-				struct berval **pattrs_array = attrs_array;
-				while (*pattrs_array) {
-					if (g_pattern_match_simple(
-								(*pattrs_array)->bv_val,
-								element->app_name
-								)) {
-						break_loop = FALSE;
-						break;
-					} else {
-						break_loop = TRUE;
-					}
-					pattrs_array++;
-				}
-			}
-			ldap_value_free_len(attrs_array);
 
-			if (break_loop) {
-				continue;
+#define TEST_PATTERN(x, y) switch (field_match_pattern(element->x, ld, result, y)) { \
+				case NU_EXIT_OK: \
+					break; \
+				case NU_EXIT_CONTINUE: \
+					/* this is not a match, going to test next acl */ \
+					break_loop = TRUE; \
+					break; \
+				case NU_EXIT_ERROR: \
+					log_message(WARNING, DEBUG_AREA_MAIN, \
+						    "Invalid return from field_match_pattern"); \
+					return NULL; \
+				default: \
+					log_message(WARNING, DEBUG_AREA_MAIN, \
+						    "Impossible return from field_match_pattern"); \
+					return NULL; \
+					break; \
+			} \
+			if (break_loop) { \
+				continue; \
 			}
+
+			TEST_PATTERN(app_name, "AppName");
+			TEST_PATTERN(os_sysname, "OsName");
+			TEST_PATTERN(os_release, "OsRelease");
+			TEST_PATTERN(os_version, "OsVersion");
+
+#undef TEST_PATTERN
 
 			/* allocate a new acl_group */
 			this_acl = g_new0(struct acl_group, 1);
