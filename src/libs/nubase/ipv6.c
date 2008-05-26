@@ -84,9 +84,9 @@ void ipv4_to_ipv6(const struct in_addr ipv4, struct in6_addr *ipv6)
 void ipv6_to_ipv4(const struct in6_addr *ipv6, struct in_addr *ipv4)
 {
 #ifdef LINUX
-	ipv4->s_addr = ipv6->s6_addr32[3];
+	ipv4->s_addr = ntohl(ipv6->s6_addr32[3]);
 #else
-	ipv4->s_addr = ipv6->__u6_addr.__u6_addr32[3];
+	ipv4->s_addr = ntohl(ipv6->__u6_addr.__u6_addr32[3]);
 #endif
 }
 
