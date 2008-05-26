@@ -248,6 +248,7 @@ nu_error_t take_decision(connection_t * element, packet_place_t place)
 			answer = DECISION_DROP;
 		}
 	}
+	/** Drop per expiration (packet out of time window) */
 	if (expire == 0) {
 		if (nuauthconf->reject_authenticated_drop) {
 			answer = DECISION_REJECT;
@@ -257,18 +258,13 @@ nu_error_t take_decision(connection_t * element, packet_place_t place)
 	}
 	element->decision = answer;
 
+	element->expire = expire;
 
 	/* Call modules to do final tuning of packet (setting mark, expire modification ...) */
 	modules_finalize_packet(element);
 
-	if ((element->expire != -1) && (element->expire < expire)) {
-		debug_log_message(DEBUG, DEBUG_AREA_MAIN,
-				  " taken expire from element");
-		expire = element->expire;
-	}
-
 	/* we must put element in expire list if needed before decision is taken */
-	if (expire > 0) {
+	if (element->expire > 0) {
 		if (nuauthconf->nufw_has_conntrack) {
 			struct limited_connection *datas =
 			    g_new0(struct limited_connection, 1);
