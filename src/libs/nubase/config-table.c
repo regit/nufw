@@ -71,8 +71,10 @@ char *nubase_config_table_get_or_default(char *key, char *replace)
 
 	if (str) {
 		return strdup(str);
-	} else {
+	} else if (replace) {
 		return strdup(replace);
+	} else {
+		return strdup("");
 	}
 
 }
