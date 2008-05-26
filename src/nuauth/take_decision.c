@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2006,2007 INL
+ ** Copyright(C) 2006,2007,2008 INL
  ** Written by Eric Leblond <regit@inl.fr>
  ** INL : http://www.inl.fr/
  **

@@ -1,7 +1,6 @@
-
 /*
- ** Copyright(C) 2003-2006 INL
- **     written by Eric Leblond <eric@regit.org>
+ ** Copyright(C) 2003-2008 INL
+ **     written by Eric Leblond <eric@inl.fr>
  **                Vincent Deffontaines <vincent@gryzor.com>
  **
  ** $Id$
