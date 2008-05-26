@@ -591,7 +591,7 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 			if (ld == NULL) {
 				log_message(SERIOUS_WARNING, DEBUG_AREA_AUTH,
 						"Can not initiate LDAP conn\n");
-				break;
+				return NULL;
 			}
 			g_private_set(params->ldap_priv, ld);
 		}
