@@ -202,12 +202,14 @@ nu_error_t delete_client_by_socket_ext(int socket, int use_lock)
 
 	tls_user_remove_client(socket);
 	if (use_lock) {
-		if (shutdown(socket, SHUT_RDWR) != 0)
+		if (shutdown(socket, SHUT_RDWR) != 0) {
 			log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
-					"Could not shutdown socket");
-		if (close(socket) != 0)
+					"Could not shutdown socket: %s", strerror(errno));
+		}
+		if (close(socket) != 0) {
 			log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
-					"Could not close socket");
+					"Could not close socket: %s", strerror(errno));
+		}
 		g_mutex_unlock(client_mutex);
 	}
 
