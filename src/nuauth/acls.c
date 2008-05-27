@@ -168,7 +168,6 @@ gpointer acl_create_and_alloc_key(connection_t * kdatas)
 	key.release = kdatas->os_release;
 	key.version = kdatas->os_version;
 	key.appname = kdatas->app_name;
-	key.appmd5 = kdatas->app_md5;
 	return acl_duplicate_key(&key);
 }
 

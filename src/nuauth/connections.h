@@ -118,7 +118,6 @@ typedef struct {
 	gchar *os_release;	/*!< Operating system release */
 	gchar *os_version;	/*!< Operating system version */
 	gchar *app_name;	/*!< Application name (full path) */
-	gchar *app_md5;		/*!< Application binary MD5 checksum */
 
 	auth_state_t state;	/*!< State of the packet */
 

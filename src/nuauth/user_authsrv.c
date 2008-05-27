@@ -66,14 +66,14 @@ void user_check_and_decide(gpointer user_session, gpointer data)
 		RETURN_NO_LOG;
 	}
 
-		
+
 	/* send socket back to user select */
 	write(user_pipefd[1], &usersession->socket, sizeof(usersession->socket));
 
 	if (userdata == NULL) {
 		RETURN_NO_LOG;
 	}
-	
+
 	/* reload condition */
 	conn_elts = userpckt_decode(userdata);
 
@@ -234,7 +234,7 @@ int user_process_field_app(struct nu_authreq *authreq,
 			    "user packet announced a badly encoded app name, sasl_error %d", ret);
 		if(ret == SASL_BADPROT)
 			log_message(INFO, DEBUG_AREA_USER, "Try upgrading your client");
-			
+
 		g_free(dec_appname);
 		return -1;
 	}
@@ -253,7 +253,6 @@ int user_process_field_app(struct nu_authreq *authreq,
 		connection->app_name = NULL;
 	}
 	g_free(dec_appname);
-	connection->app_md5 = NULL;
 	return 1;
 }
 
@@ -391,7 +390,6 @@ GSList *user_request(struct tls_buffer_read * datas)
 		connection->acl_groups = NULL;
 		connection->user_groups = NULL;
 		connection->app_name = NULL;
-		connection->app_md5 = NULL;
 		connection->username = NULL;
 		connection->cacheduserdatas = NULL;
 		connection->packet_id = NULL;

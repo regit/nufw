@@ -127,7 +127,6 @@ void free_connection(connection_t * conn)
 	g_slist_free(conn->packet_id);
 	g_slist_free(conn->user_groups);
 	g_free(conn->app_name);
-	g_free(conn->app_md5);
 	g_free(conn->os_sysname);
 	g_free(conn->os_release);
 	g_free(conn->os_version);
@@ -190,7 +189,6 @@ connection_t *duplicate_connection(connection_t * element)
 	}
 	conn_copy->username = g_strdup(element->username);
 	conn_copy->app_name = g_strdup(element->app_name);
-	conn_copy->app_md5 = g_strdup(element->app_md5);
 	conn_copy->os_sysname = g_strdup(element->os_sysname);
 	conn_copy->os_release = g_strdup(element->os_release);
 	conn_copy->os_version = g_strdup(element->os_version);

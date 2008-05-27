@@ -538,17 +538,6 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 		if (! element->app_name) {
 			g_strlcat(filter, "(!(AppName=*))", LDAP_QUERY_SIZE);
 		}
-		if (element->app_md5) {
-			g_strlcat(filter, "(|(AppSig=", LDAP_QUERY_SIZE);
-			prov_string =
-			    escape_string_for_ldap(element->app_md5);
-			g_strlcat(filter, prov_string, LDAP_QUERY_SIZE);
-			g_free(prov_string);
-			g_strlcat(filter, ")(!(AppSig=*)))", LDAP_QUERY_SIZE);
-		} else {
-			g_strlcat(filter, "(!(AppSig=*))", LDAP_QUERY_SIZE);
-		}
-
 
 		g_strlcat(filter, ")", LDAP_QUERY_SIZE);
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
