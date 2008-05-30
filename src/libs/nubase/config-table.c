@@ -45,7 +45,7 @@ char *nubase_config_table_get(char *key)
 	struct config_table_t *config_table;
 
 	llist_for_each_entry(config_table, &config_table_list, list) {
-		if (!strncmp(key, config_table->key, strlen(config_table->key))) {
+		if (!strcmp(config_table->key, key)) {
 			return config_table->value;
 		}
 	}
