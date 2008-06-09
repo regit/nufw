@@ -39,10 +39,10 @@ sub convert_addr {
   my @list;
   my $partsum;
   my @parts;
-  foreach $address (@_) {
+  foreach my $address (@_) {
     @parts=split /\./, $address;
     $partsum=0;
-    foreach $part (@parts) {
+    foreach my $part (@parts) {
       $partsum = $partsum*256 + $part;
     }
     push @list, ($partsum);
@@ -279,7 +279,7 @@ if (defined ($list)) {
 			   base   => $basedn,
 			   filter => $filter,
 			  );
-  foreach $entry ($results->all_entries) {
+  foreach my $entry ($results->all_entries) {
     $dn=$entry->dn;
     # $entry->dump;
     # print source address
