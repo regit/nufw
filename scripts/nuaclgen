@@ -30,6 +30,8 @@ use Socket;
 $Getopt::Long::ignorecase=0;
 
 my %acl;
+# TODO unused variable ?
+my $exit_code;
 
 # include conf variables
 require("/etc/nufw/nuaclgen.conf") or die "Can not find config file";
