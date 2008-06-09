@@ -91,8 +91,12 @@ sub todotquad {
 }
 
 my $separator = ",";
+my ($help, $schema, $saddr, $daddr, $proto, $sport, $dport);
+my ($decision, $groups, $users, $aclname, $osname, $osversion);
+my ($osrelease, $appname, $appsig, $list, $delete );
 
-$result = GetOptions("help" => \$help,
+
+my $result = GetOptions("help" => \$help,
 		     "Schema" => \$schema,
 		     "saddr=s" => \$saddr,
 		     "daddr=s" => \$daddr,
@@ -140,7 +144,7 @@ if ((defined $aclname)+(defined $list)+defined($delete) > 1)
 
 if (defined $delete)
 {
-  $mybase=$basedn;
+  my $mybase = $basedn;
   chomp $mybase;
   if ($delete!~/.*$mybase$/){
     print "basedn : $mybase\n";
@@ -171,7 +175,7 @@ if (defined $delete)
 }
 
 #do ldap connect
-$ldap = Net::LDAP->new($ldap_host)  or die $@;;
+my $ldap = Net::LDAP->new($ldap_host)  or die $@;;
 # bind to a directory with dn and password
 $result = $ldap->bind ( $username,
 			password => $password
@@ -213,7 +217,7 @@ if (not defined($Schema) or $Schema eq 'eq') {
     die "Equality schema specified, destination port needed";
   } else {
     # split by comma
-    @dports=split(/,/,$dport);
+    my @dports = split(/,/,$dport);
     $acl{"DstPort"}=\@dports;
   }
 } else {
@@ -271,6 +275,8 @@ if (not defined($aclname)) {
 }
 }
 
+my $filter;
+
 if (defined ($list)) {
   if (defined($groups)) {
     $filter = "(&(objectClass=NuAccessControlList)(Group=".$acl{"Group"}."))";
@@ -279,28 +285,28 @@ if (defined ($list)) {
   } else {
     die("No group or user given");
   }
-  $results = $ldap->search(	# perform a search
+  my $results = $ldap->search(	# perform a search
 			   base   => $basedn,
 			   filter => $filter,
 			  );
   foreach my $entry ($results->all_entries) {
-    $dn=$entry->dn;
+    my $dn = $entry->dn;
     # $entry->dump;
     # print source address
-    $sad = todotquad($entry->get_value("SrcIpStart"));
+    my $sad = todotquad($entry->get_value("SrcIpStart"));
     $sad .="-". todotquad($entry->get_value("SrcIpEnd"));
     # print dest address
-    $dad = todotquad($entry->get_value("DstIpStart"));
+    my $dad = todotquad($entry->get_value("DstIpStart"));
     $dad .="-". todotquad($entry->get_value("DstIpEnd"));
     # print source port
-    $sport = $entry->get_value("SrcPortStart").":".$entry->get_value("SrcPortEnd");
+    my $sport = $entry->get_value("SrcPortStart").":".$entry->get_value("SrcPortEnd");
     # print dest port
-    $dport = $entry->get_value("DstPort");
+    my $dport = $entry->get_value("DstPort");
     if (! $dport){
     $dport = $entry->get_value("DstPortStart").":".$entry->get_value("DstPortEnd");
     }
     # print groups
-    ($dec)=$entry->get_value("Decision");
+    my ($dec)=$entry->get_value("Decision");
     # OSname
     $osname=$entry->get_value("OsName");
     $osversion=$entry->get_value("OsVersion");
@@ -319,7 +325,7 @@ if (defined ($list)) {
   exit;
 }
 if (defined ($delete)) {
-  $results = $ldap->delete($delete);
+  my $results = $ldap->delete($delete);
   $results->code && warn "failed to delete entry: ", $results->error ;
   $ldap->unbind;		# take down session
   exit;
