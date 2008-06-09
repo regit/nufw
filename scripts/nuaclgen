@@ -33,6 +33,8 @@ my %acl;
 # TODO unused variable ?
 my $exit_code;
 
+my ($basedn, $ldap_host, $username, $password);
+
 # include conf variables
 require("/etc/nufw/nuaclgen.conf") or die "Can not find config file";
 
