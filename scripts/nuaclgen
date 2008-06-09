@@ -81,11 +81,11 @@ sub construct_port_range {
 }
 
 sub todotquad {
-  $ip=shift;
-  $stringip=$ip%256;
-  for ($i=0;$i<3;$i++) {
-    $ip=($ip-$ip%256)/256;
-    $stringip= $ip%256 .".".$stringip;
+  my $ip = shift;
+  my $stringip = $ip % 256;
+  foreach my $i (0..2) {
+    $ip = ( $ip - $ip%256 ) / 256;
+    $stringip = $ip % 256 . "." . $stringip;
   }
   return $stringip;
 }
