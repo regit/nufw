@@ -212,7 +212,7 @@ if (not defined($proto)) {
 
 
 
-if (not defined($Schema) or $Schema eq 'eq') {
+if (not defined($schema) or $schema eq 'eq') {
   if (not defined($dport)) {
     die "Equality schema specified, destination port needed";
   } else {
