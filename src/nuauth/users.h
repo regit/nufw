@@ -35,6 +35,11 @@ struct user_cached_datas {
 	GSList *groups;
 };
 
+typedef enum {
+	AUTH_TYPE_EXTERNAL; /*!< authentication SSL */
+	AUTH_TYPE_INTERNAL; /*!< authentification SASL */
+} auth_type_t;
+
 /**
  * \brief Stores all information relative to a TLS user session.
  *
@@ -68,6 +73,7 @@ typedef struct {
 	gchar *version;		/*!< \brief OS full version */
 	time_t expire;		/*!< \brief Timeout of the session (-1 means unlimited) */
 	int client_version;	/*!< \brief Client protocol version */
+	auth_type_t auth_type;
 	time_t connect_timestamp;
 	gboolean activated;	/*!< \brief TRUE if user server listen for event for this session */
 } user_session_t;
