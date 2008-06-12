@@ -36,8 +36,8 @@ struct user_cached_datas {
 };
 
 typedef enum {
-	AUTH_TYPE_EXTERNAL; /*!< authentication SSL */
-	AUTH_TYPE_INTERNAL; /*!< authentification SASL */
+	AUTH_TYPE_EXTERNAL, /*!< authentication SSL */
+	AUTH_TYPE_INTERNAL, /*!< authentification SASL */
 } auth_type_t;
 
 /**
