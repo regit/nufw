@@ -454,7 +454,6 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 	LDAP *ld = g_private_get(params->ldap_priv);
 	gchar *ip_src;
 	gchar *ip_dst;
-	gchar *prov_string;
 
 	if (params->ldap_use_ipv4_schema) {
 		struct in_addr ipv4;
