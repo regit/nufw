@@ -315,13 +315,17 @@ int modules_user_session_modify(user_session_t * c_session)
 {
 	/* iter through all modules list */
 	GSList *walker = hooks[MOD_SESSION_MODIFY].modules;
+	int ret;
 
 	block_on_conf_reload();
 	for (; walker != NULL; walker = walker->next) {
 		user_session_modify_callback *handler =
 		    (user_session_modify_callback
 		     *) (((module_t *) walker->data)->func);
-		handler(c_session, ((module_t *) walker->data)->params);
+		ret = handler(c_session, ((module_t *) walker->data)->params);
+		if (ret != SASL_OK) {
+			return ret;
+		}
 	}
 
 	return SASL_OK;
