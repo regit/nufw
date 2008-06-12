@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2004,2005,2006,2007 INL
+ ** Copyright(C) 2004,2005,2006,2007,2008 INL
  ** Written by  Eric Leblond <regit@inl.fr>
  **             Vincent Deffontaines <gryzor@inl.fr>
  **
@@ -226,8 +226,11 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 	case SASL_OK:
 		/* Tuning of user_session */
 		ret = modules_user_session_modify(c_session);
-		if (ret != SASL_OK)
+		if (ret != SASL_OK) {
+			/* get rid of client */
+			clean_session(c_session);
 			break;
+		}
 
 		tls_sasl_connect_ok(c_session, socket_fd);
 		break;
@@ -243,8 +246,6 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 		}
 		clean_session(c_session);
 	}
-
-
 }
 
 /**
