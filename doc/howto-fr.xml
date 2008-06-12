@@ -499,7 +499,7 @@ Enfin, nous pouvons essayer de connecter un utilisateur (au sens nufw du terme).
 Entrez le login et le mot de passe d'un utilisateur.</para>
 <para>Dans le terminal nuauth, vous devriez voir quelques chose comme:
 <screen>user bill@nufw uses OS Linux, 3.0.10, #1 Tue Oct 19 23:51:32 CEST 2008</screen>
-Si votre configuration PAM utilise les fichiers <filename>shadow</filename>, nuauth pourra seulement authentifié l'utilisateur sous lequel il est lancé à moins d'être lancé en root.
+Si votre configuration PAM utilise les fichiers <filename>shadow</filename>, nuauth pourra seulement authentifier l'utilisateur sous lequel il est lancé à moins d'être lancé en root.
 <footnote>
       <para> Avertissement: ne lancez JAMAIS nutcpc avec l'adresse [NUAUTH IP] égale à 'localhost' ou '127.0.0.1',
 et ce même si nuauth est installé sur la même machine.
