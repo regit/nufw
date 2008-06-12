@@ -376,6 +376,7 @@ AC_CONFIG_FILES([Makefile
         src/nuauth/modules/x509_std/Makefile
         src/nuauth/modules/mark_uid/Makefile
         src/nuauth/modules/session_expire/Makefile
+        src/nuauth/modules/session_authtype/Makefile
         src/nuauth/modules/ipauth_guest/Makefile
         src/nuauth/modules/auth_mysql/Makefile
         src/clients/Makefile
