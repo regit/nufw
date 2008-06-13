@@ -8,7 +8,7 @@
 # gid=103               # several lines can be used
 # uid=100,101           # which user ids are concerned
 # uid=103               # several lines can be used
-# proto=6               # IP protocol: 1=ICMP, 6=TCP (default), 20=ICMP
+# proto=6               # IP protocol: 1=ICMP, 6=TCP (default), 17=UDP
 # type=0                # Type, for ICMP protocol only
 # SrcIP=10.10.0.1       # Source IP, equivalent to 10.10.0.1/32
 # SrcPort=1024-65535    # List of source ports (a single port is ok)
