@@ -22,6 +22,7 @@
 
 typedef struct {
 	GSList * blacklist_groups;
+	GSList * whitelist_groups;
 	GSList * sasl_groups;
 	GSList * ssl_groups;
 } session_authtype_config_t;
@@ -78,6 +79,9 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	result = nubase_config_table_get("session_authtype_blacklist_groups");
 	config->blacklist_groups = parse_group_list(result);
 
+	result = nubase_config_table_get("session_authtype_whitelist_groups");
+	config->whitelist_groups = parse_group_list(result);
+
 	result = nubase_config_table_get("session_authtype_sasl_groups");
 	config->sasl_groups = parse_group_list(result);
 
@@ -111,10 +115,17 @@ G_MODULE_EXPORT int user_session_modify(user_session_t * session,
 	/* check if user has the right to use NuFW */
 	if (config->blacklist_groups && groups_intersect(session->groups, config->blacklist_groups)) {
 		log_message(INFO, DEBUG_AREA_USER,
-			    "User %s in user blacklist is not allowed to connect",
+			    "User %s is in user blacklist: not allowed to connect",
 			    session->user_name);
 		return SASL_FAIL;
 	}
+	if (config->whitelist_groups && (! groups_intersect(session->groups, config->whitelist_groups))) {
+		log_message(INFO, DEBUG_AREA_USER,
+			    "User %s is not in user whitelist: not allowed to connect",
+			    session->user_name);
+		return SASL_FAIL;
+	}
+
 	switch (session->auth_type) {
 		case AUTH_TYPE_INTERNAL:
 			/* no filtering on SASL asked */
