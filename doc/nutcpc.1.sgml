@@ -20,7 +20,7 @@ manpage.1: manpage.sgml
   <!ENTITY dhfirstname "<firstname>Eric</firstname>">
   <!ENTITY dhsurname   "<surname>Leblond</surname>">
   <!-- Please adjust the date whenever revising the manpage. -->
-  <!ENTITY dhdate      "<date>july 29, 2004</date>">
+  <!ENTITY dhdate      "<date>june 15, 2008</date>">
   <!-- SECTION should be 1-8, maybe w/ subsection other parameters are
        allowed: see man(7), man(1). -->
   <!ENTITY dhsection   "<manvolnum>1</manvolnum>">
@@ -45,7 +45,7 @@ manpage.1: manpage.sgml
       &dhsurname;
     </author>
     <copyright>
-      <year>2004-2007</year>
+      <year>2004-2008</year>
       <holder>&dhusername;</holder>
     </copyright>
     &dhdate;
@@ -66,6 +66,7 @@ manpage.1: manpage.sgml
       <arg>-d </arg>
       <arg>-l </arg>
       <arg>-k </arg>
+      <arg>-c </arg>
       <arg>-V </arg>
       <arg>-h </arg>
       <arg>-q </arg>
@@ -113,12 +114,19 @@ manpage.1: manpage.sgml
           not create lock file.</para>
         </listitem>
       </varlistentry>
-     <varlistentry>
+	<varlistentry>
         <term><option>-k</option>
         </term>
         <listitem>
-          <para>Before starting, kill existing instances of the program running
+          <para>Kill existing instances of the program running
           on our local userID.</para>
+        </listitem>
+      </varlistentry>
+     <varlistentry>
+        <term><option>-c</option>
+        </term>
+        <listitem>
+          <para>Check if a client is already running. Return error if no client are running.</para>
         </listitem>
       </varlistentry>
        <varlistentry>

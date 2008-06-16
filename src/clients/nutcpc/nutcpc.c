@@ -121,6 +121,28 @@ char *compute_run_pid()
 }
 
 /**
+ * Test if a nutcpc is currently running
+ */
+int test_nutcpc(pid_t *pid)
+{
+	FILE *fd;
+	int ok = EXIT_FAILURE;
+	char *runpid = compute_run_pid();
+
+	if (runpid) {
+		fd = fopen(runpid, "r");
+		if (fd) {
+			fscanf(fd, "%d", pid);
+			fclose(fd);
+			/* FIXME test if process pid is running */
+			ok = EXIT_SUCCESS;
+		}
+		free(runpid);
+	}
+	return ok;
+}
+
+/**
  * Kill existing instance of nutcpc: read pid file,
  * and then send SIGTERM to the process.
  *
@@ -129,30 +151,32 @@ char *compute_run_pid()
 void kill_nutcpc()
 {
 	pid_t pid;
-	FILE *fd;
-	int ret;
-	int ok = 0;
-	char *runpid = compute_run_pid();
 
-	if (runpid) {
-		fd = fopen(runpid, "r");
-		if (fd) {
-			fscanf(fd, "%d", &pid);
-			fclose(fd);
-			ret = kill(pid, SIGTERM);
-			ok = (ret == 0);
-			if (ok) {
-				printf("nutcpc process killed (pid %lu)\n",
-				       (unsigned long) pid);
-			} else {
-				printf
-				    ("Fail to kill process: remove pid file\n");
-				unlink(runpid);
+	if (test_nutcpc(&pid) == EXIT_SUCCESS) {
+		int ret;
+		char *runpid = compute_run_pid();
+		ret = kill(pid, SIGTERM);
+		if (ret == 0) {
+			printf("nutcpc process killed (pid %lu)\n",
+					(unsigned long) pid);
+			unlink(runpid);
+			free(runpid);
+			exit(EXIT_SUCCESS);
+		} else {
+			switch (errno) {
+				case ESRCH:
+					printf("Process does not exist: removing pid file\n");
+					unlink(runpid);
+					break;
+				case EINVAL:
+				case EPERM:
+				default:
+					printf("Bad return from kill\n");
 			}
+			free(runpid);
+			exit(EXIT_FAILURE);
 		}
-		free(runpid);
-	}
-	if (!ok) {
+	} else {
 		printf("No nutcpc seems to be running\n");
 		exit(EXIT_FAILURE);
 	}
@@ -349,6 +373,7 @@ static void usage(void)
 	fprintf(stderr, "\n");
 	fprintf(stderr, "Options:\n");
 	fprintf(stderr, "  -k: kill active client\n");
+	fprintf(stderr, "  -c: check if there is an active client\n");
 	fprintf(stderr, "  -l: don't create lock file\n");
 	fprintf(stderr, "  -V: display version\n");
 	fprintf(stderr, "\n");
@@ -649,7 +674,7 @@ void parse_cmdline_options(int argc, char **argv,
 
 	/* Parse all command line arguments */
 	opterr = 0;
-	while ((ch = getopt(argc, argv, "kldqVu:H:I:U:p:P:a:K:C:A:W:S:")) != -1) {
+	while ((ch = getopt(argc, argv, "kcldqVu:H:I:U:p:P:a:K:C:A:W:S:")) != -1) {
 		switch (ch) {
 		case 'H':
 			SECURE_STRNCPY(context->srv_addr, optarg,
@@ -675,6 +700,17 @@ void parse_cmdline_options(int argc, char **argv,
 			break;
 		case 'U':
 			*username = strdup(optarg);
+			break;
+		case 'c': {
+				  pid_t pid;
+				  if (test_nutcpc(&pid) == EXIT_SUCCESS) {
+					  printf("nutcpc already running (pid %u)\n",
+						 pid);
+					  exit(EXIT_SUCCESS);
+				  }
+				  printf("No running nutcpc\n");
+				  exit(EXIT_FAILURE);
+			  }
 			break;
 		case 'k':
 			kill_nutcpc();
