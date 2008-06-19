@@ -553,8 +553,9 @@ static inline int log_state_open(MYSQL * ld, connection_t * element,
 	char *request;
 	int mysql_ret;
 
-	if (element->tracking.protocol == IPPROTO_TCP
-	    && nuauthconf->log_users_strict) {
+	if (element->tracking.protocol == IPPROTO_TCP &&
+		(nuauthconf->log_users_strict ||
+		 (element->flags & ACL_FLAGS_STRICT))) {
 		gboolean ok;
 		char request[SHORT_REQUEST_SIZE];
 		char src_ascii[IPV6_SQL_STRLEN];

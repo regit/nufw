@@ -34,12 +34,12 @@ struct conn_state {
  * Log user packet or by a direct call to log module or by sending log
  * message to logger thread pool.
  *
- * If nuauth_params::log_user_sync is set to 1, we log synchronously
+ * If nuauth_params::log_users_sync is set to 1, we log synchronously
  * to be sure that the packet is logged by all the modules before
  * the decision leaves nuauth and reach nufw. This is only done for
  * packet which initiate a connection (in Netfilter meaning).
  *
- * If nuauth_params::log_user_sync is set to 0, log_user_packet() directly
+ * If nuauth_params::log_users_sync is set to 0, log_user_packet() directly
  * sends packet to the pool of threads waiting for logging.
  *
  * \param element A connection
@@ -57,10 +57,14 @@ nu_error_t log_user_packet(connection_t * element, tcp_state_t state)
 		return NU_EXIT_ERROR;
 	}
 
-	if (nuauthconf->drop_if_no_logging ||
-			((nuauthconf->log_users_sync) && (state == TCP_STATE_OPEN)
-			 && (!(element->flags & ACL_FLAGS_ASYNC)))
-	   ) {
+	if ((state == TCP_STATE_OPEN) && (
+		(
+			(nuauthconf->log_users_sync) &&
+			(!(element->flags & ACL_FLAGS_ASYNC))
+		) ||
+			element->flags & ACL_FLAGS_SYNC
+		)
+		) {
 		if (nuauthconf->log_users & 8) {
 			return modules_user_logs(element, state);
 		}

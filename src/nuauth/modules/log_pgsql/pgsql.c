@@ -582,8 +582,9 @@ G_MODULE_EXPORT gint user_packet_logs(void *element,
 
 	switch (state) {
 	case TCP_STATE_OPEN:
-		if (((connection_t *)element)->tracking.protocol == IPPROTO_TCP
-		    && nuauthconf->log_users_strict) {
+		if (((connection_t *)element)->tracking.protocol == IPPROTO_TCP &&
+			(nuauthconf->log_users_strict ||
+			 (((connection_t *)element)->flags & ACL_FLAGS_STRICT))) {
 			int ret = pgsql_update_close(ld,
 						     (connection_t *)element,
 						     params);
