@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python
 from unittest import TestCase, main
 from test_acl import TestAcl
 from plaintext import PlaintextAcl

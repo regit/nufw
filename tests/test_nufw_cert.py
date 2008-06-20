@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python
 from compatibility import any
 from unittest import TestCase, main
 from sys import stderr

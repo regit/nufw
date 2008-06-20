@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python
 from unittest import TestCase, main
 from common import createClient, connectClient, startNufw
 from nuauth import Nuauth

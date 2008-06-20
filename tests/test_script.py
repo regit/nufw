@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/bin/python
 from unittest import TestCase, main
 from config import CONF_DIR, NUAUTH_VERSION
 from common import createClient, connectClient
