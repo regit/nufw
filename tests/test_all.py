@@ -10,6 +10,7 @@ FILES = (
     "test_client_auth",
     "test_plaintext_acl",
     "test_plaintext_auth",
+    "test_ldap_acl",
     "test_script",
     "test_syslog",
     "test_mysql",
