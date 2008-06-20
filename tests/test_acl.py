@@ -26,7 +26,6 @@ class TestAcl(object):
         # Start nuauth with new config
         self.users.install(self.config)
         self.nufw = startNufw()
-        self.nuauth = Nuauth(self.config)
 
     def tearDown(self):
         # Restore user DB and nuauth config
@@ -36,7 +35,6 @@ class TestAcl(object):
         self.acls.desinstall()
 
     def testFilterByGroup(self):
-        self.acls = self.func_acls()
         self.acls.addAclFull("Web group", self.host, VALID_PORT, self.users[0].gid)
         self.acls.install(self.config)
         self.nuauth = Nuauth(self.config)
@@ -47,7 +45,6 @@ class TestAcl(object):
         self.acls.desinstall()
 
     def testFilterByUser(self):
-        self.acls = self.func_acls()
         self.acls.addAclPerUid("Web user", self.host, VALID_PORT, self.users[0].uid)
         self.acls.install(self.config)
         self.nuauth = Nuauth(self.config)
@@ -58,7 +55,6 @@ class TestAcl(object):
         self.acls.desinstall()
 
     def testValidApplication(self):
-        self.acls = self.func_acls()
         self.acls.addAclFull("application", self.host, VALID_PORT, self.users[0].gid, App=APPLICATION)
         self.acls.install(self.config)
         self.nuauth = Nuauth(self.config)
@@ -68,7 +64,6 @@ class TestAcl(object):
         self.acls.desinstall()
 
     def testInvalidApplication(self):
-        self.acls = self.func_acls()
         self.acls.addAclFull("application", self.host, VALID_PORT, self.users[0].gid, App=APPLICATION+"xxx")
         self.acls.install(self.config)
         self.nuauth = Nuauth(self.config)
@@ -78,7 +73,6 @@ class TestAcl(object):
         self.acls.desinstall()
 
     def testValidOS(self):
-        self.acls = self.func_acls()
         self.acls.addAclFull("application", self.host, VALID_PORT, self.users[0].gid, OS=OS_FULL)
         self.acls.install(self.config)
         self.nuauth = Nuauth(self.config)
@@ -88,7 +82,6 @@ class TestAcl(object):
         self.acls.desinstall()
 
     def testInvalidOS(self):
-        self.acls = self.func_acls()
         self.acls.addAclFull("application", self.host, VALID_PORT, self.users[0].gid, OS=OS_NAME+"xxx")
         self.acls.install(self.config)
         self.nuauth = Nuauth(self.config)

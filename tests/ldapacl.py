@@ -23,12 +23,16 @@ class LDAPAcl:
         self.bindpw = test_config.get('test_ldap', 'bindpw')
 
         self.conn = ldap.initialize(self.ldapuri)
-        self.conn.simple_bind_s(self.binddn, self.bindpw)
+        try:
+            self.conn.simple_bind_s(self.binddn, self.bindpw)
+        except ldap.INVALID_CREDENTIALS:
+            print "Invalid auth: %s/%s" % (self.binddn, self.bindpw)
 
 
     def format_acl(self, name, host, port, decision, kw):
         ldapattr = {}
         ldapattr['objectclass'] = ['NuAccessControlList']
+        ldapattr['cn'] = [name]
         ldapattr['Proto'] = [str(6)]
         ldapattr['DstPortStart'] = [str(port)]
         ldapattr['DstPortEnd'] = [str(port)]
@@ -37,17 +41,16 @@ class LDAPAcl:
         ldapattr['DstIPStart'] = [dip]
         ldapattr['DstIPEnd'] = [dip]
         ldapattr['SrcIPStart'] = [str(0)]
-        ldapattr['SrcIPEnd'] = [str(2^32-1)]
+        ldapattr['SrcIPEnd'] = [str(pow(2,32)-1)]
 
         ftraduc = { 'App': 'AppName', 'log_prefix': 'description' }
         for key, value in kw:
             if (key == 'OS'):
-                osfields = [ 'OsName', 'OsVersion', 'OsRelease']
+                osfields = [ 'OsName', 'OsRelease', 'OsVersion']
                 for val in value.split(';'):
                     ldapattr[osfields.pop(0)] = val
             else:
                 ldapattr[ftraduc[key]] = [str(value)]
-
 
         return ldapattr
 
@@ -84,10 +87,16 @@ class LDAPAcl:
         info("Setup LDAP ACL")
 
         config["nuauth_acl_check_module"] = '"ldap"'
-        config["nuauth_ldap_acls_base_dn"] = '"'+self.basedn+'"'
+        config["ldap_acls_base_dn"] = '"'+self.basedn+'"'
+        config["ldap_bind_dn"] = '"'+self.binddn+'"'
+        config["ldap_bind_password"] = '"'+self.bindpw+'"'
+        config["nuauth_acl_cache"] = 0
 
     def desinstall(self):
         # drop all inserted acls
         for dn in self.acllist:
-            self.conn.delete_s(dn)
+            try:
+                self.conn.delete_s(dn)
+            except ldap.NO_SUCH_OBJECT:
+                pass
 
