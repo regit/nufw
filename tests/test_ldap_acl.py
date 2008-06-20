@@ -1,4 +1,4 @@
-#!/usr/bin/python2.5
+#!/usr/bin/python2.4
 from unittest import TestCase, main
 from test_acl import TestAcl
 from ldapacl import LDAPAcl
