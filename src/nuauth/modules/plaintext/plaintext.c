@@ -667,15 +667,6 @@ static int read_acl_list(struct plaintext_params *params)
 					  "L.%d: Read App name [%s]", ln,
 					  newapp->appname);
 
-			/*  MD5: */
-			if (sep) {
-				p_value = sep;
-				newapp->appmd5 =
-				    g_strdup(strip_line(p_value, 0));
-				debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
-						  "L.%d: Read App MD5 [%s]",
-						  ln, newapp->appmd5);
-			}
 			/*  TODO checks */
 			newacl->apps =
 			    g_slist_prepend(newacl->apps, newapp);
@@ -818,7 +809,6 @@ G_MODULE_EXPORT gboolean unload_module_with_params(struct plaintext_params
 			     p_app = g_slist_next(p_app)) {
 				struct plaintext_app *app = p_app->data;
 				g_free(app->appname);
-				g_free(app->appmd5);
 				g_free(app);
 			}
 			/*  Free OS attributes */
@@ -867,7 +857,6 @@ G_MODULE_EXPORT gboolean unload_module_with_params(struct plaintext_params
 
 G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 {
-	gpointer vpointer;
 	struct plaintext_params *params =
 	    g_new0(struct plaintext_params, 1);
 

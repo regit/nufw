@@ -55,11 +55,6 @@ struct acl_key {
 	 * application full path
 	 */
 	gchar *appname;
-	/** application md5sum.
-	 *
-	 * md5sum of the binary which send the packet
-	 */
-	gchar *appmd5;
 };
 
 /**
@@ -105,8 +100,6 @@ gboolean compare_acls(gconstpointer a, gconstpointer b)
 	}
 	if (strcmp_null(acl_key1->appname, acl_key2->appname))
 		return FALSE;
-	if (strcmp_null(acl_key1->appmd5, acl_key2->appmd5))
-		return FALSE;
 	if (strcmp_null(acl_key1->sysname, acl_key2->sysname))
 		return FALSE;
 	if (strcmp_null(acl_key1->release, acl_key2->release))
@@ -124,7 +117,6 @@ void free_acl_key(gpointer datas)
 	g_free(kdatas->release);
 	g_free(kdatas->version);
 	g_free(kdatas->appname);
-	g_free(kdatas->appmd5);
 	g_free(kdatas);
 }
 
@@ -186,7 +178,6 @@ gpointer acl_duplicate_key(gpointer datas)
 	key->release = g_strdup(kdatas->release);
 	key->version = g_strdup(kdatas->version);
 	key->appname = g_strdup(kdatas->appname);
-	key->appmd5 = g_strdup(kdatas->appmd5);
 	return key;
 }
 

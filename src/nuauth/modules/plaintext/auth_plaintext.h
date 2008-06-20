@@ -30,7 +30,6 @@ struct plaintext_user {
 
 struct plaintext_app {
 	gchar *appname;
-	gchar *appmd5;
 };
 
 struct plaintext_os {
