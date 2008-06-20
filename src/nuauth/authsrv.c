@@ -97,7 +97,7 @@ void release_thread_pools()
 void start_all_thread_pools()
 {
 	if (nuauthconf->do_ip_authentication) {
-		/* create thread of pool */
+      			/* create thread of pool */
 		nuauthdatas->ip_authentication_workers =
 		    g_thread_pool_new((GFunc) external_ip_auth, NULL,
 				      nuauthconf->nbipauth_check,
