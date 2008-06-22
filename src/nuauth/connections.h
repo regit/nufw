@@ -136,6 +136,9 @@ typedef struct {
 
 	int nufw_version;	/*!< Store the version of the nufw server which has sent the request */
 	int client_version;	/*!< Store version of the client which has sent the packet */
+
+	int auth_quality;
+
 #ifdef PERF_DISPLAY_ENABLE
 	struct timeval arrival_time;	/*!< Performance datas */
 #endif

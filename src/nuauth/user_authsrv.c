@@ -400,6 +400,7 @@ GSList *user_request(struct tls_buffer_read * datas)
 		connection->expire = -1;
 		connection->flags = ACL_FLAGS_NONE;
 		connection->client_version = datas->client_version;
+		connection->auth_quality = datas->auth_quality;
 		connection->decision = DECISION_NODECIDE;
 #ifdef PERF_DISPLAY_ENABLE
 		if (nuauthconf->debug_areas & DEBUG_AREA_PERF) {

@@ -89,6 +89,7 @@ struct tls_buffer_read {
 	char *buffer;		/*!< Content of the received packet */
 	int32_t buffer_len;	/*!< Length of the buffer */
 	int client_version;	/*!< Protocol version of client */
+	int auth_quality;	/*!< Quality of client authentication */
 };
 
 /**

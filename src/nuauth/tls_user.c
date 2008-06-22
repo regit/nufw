@@ -161,6 +161,7 @@ nu_error_t treat_user_request(user_session_t * c_session,
 	datas->socket = 0;
 	datas->ip_addr = c_session->addr;
 	datas->client_version = c_session->client_version;
+	datas->auth_quality = c_session->auth_quality;
 
 	/* copy packet datas */
 	datas->buffer = g_new0(char, CLASSIC_NUFW_PACKET_SIZE);

@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2006-2007 INL
+ ** Copyright(C) 2006-2008 INL
  ** Written by Eric Leblond <regit@inl.fr>
  **            Victor Stinner <haypo@inl.fr>
  **     INL : http://www.inl.fr/
@@ -173,6 +173,7 @@ void search_and_fill_complete_of_authreq(connection_t * new,
 		packet->os_release = new->os_release;
 		packet->os_version = new->os_version;
 		packet->client_version = new->client_version;
+		packet->auth_quality = new->auth_quality;
 		/* user cache system */
 		packet->cacheduserdatas = new->cacheduserdatas;
 
@@ -212,6 +213,7 @@ void search_and_fill_complete_of_userpckt(connection_t * new,
 		new->os_release = packet->os_release;
 		new->os_version = packet->os_version;
 		new->client_version = packet->client_version;
+		new->auth_quality = packet->auth_quality;
 		/* copy iface info */
 		memcpy(&(new->iface_nfo), &(packet->iface_nfo),
 		       sizeof(iface_nfo_t));
