@@ -206,31 +206,42 @@ nu_error_t take_decision(connection_t * element, packet_place_t place)
 		     (parcours != NULL && test == TEST_NODECIDE);
 		     parcours = g_slist_next(parcours)) {
 			if (parcours->data != NULL) {
-				/* search for a userid-based rule */
-				search_user_id_in_acl_groups(((struct acl_group *)(parcours->data)),
-							     &answer,
-							     &test,
-							     element,
-							     &expire,
-							     element->user_id);
-				/* for each user group */
-				for (user_group = element->user_groups;
-				     user_group != NULL
-				     && test == TEST_NODECIDE;
-				     user_group =
-				     g_slist_next(user_group)) {
-					/* search user group in acl_groups */
-					if (((struct acl_group *)(parcours->data))->groups) {
-							search_user_group_in_acl_groups(
-								((struct acl_group *)(parcours->data)),
-								&answer,
-								&test,
-								element,
-								&expire,
-								user_group);
-
+				if (((struct acl_group *)(parcours->data))->auth_quality <
+						element->auth_quality) {
+					if (nuauthconf->reject_authenticated_drop) {
+						answer = DECISION_REJECT;
+					} else {
+						answer = DECISION_DROP;
 					}
-				}	/* end of user group loop */
+					update_decision((struct acl_group *)(parcours->data),
+							&answer, &test, element, &expire);	
+				} else {
+					/* search for a userid-based rule */
+					search_user_id_in_acl_groups(((struct acl_group *)(parcours->data)),
+							&answer,
+							&test,
+							element,
+							&expire,
+							element->user_id);
+					/* for each user group */
+					for (user_group = element->user_groups;
+							user_group != NULL
+							&& test == TEST_NODECIDE;
+							user_group =
+							g_slist_next(user_group)) {
+						/* search user group in acl_groups */
+						if (((struct acl_group *)(parcours->data))->groups) {
+							search_user_group_in_acl_groups(
+									((struct acl_group *)(parcours->data)),
+									&answer,
+									&test,
+									element,
+									&expire,
+									user_group);
+
+						}
+					}	/* end of user group loop */
+				}
 			} else {
 				debug_log_message(DEBUG, DEBUG_AREA_MAIN,
 						  "Empty acl : bad things ...");
