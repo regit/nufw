@@ -51,6 +51,10 @@
 #
 # Flags 1 means: do aysnchronous login on packet accepted by ACL, equivalent
 # to don't do Single Sign On on the ACL.
+#
+# Authentication quality can be used to limit authorization following the
+# type of authentication used
+#     authquality = LEVEL
 
 [ssh]
 gid=100

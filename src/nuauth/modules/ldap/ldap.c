@@ -672,6 +672,7 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 			this_acl->period = NULL;
 			this_acl->log_prefix = NULL;
 			this_acl->flags = ACL_FLAGS_NONE;
+			this_acl->auth_quality = 0;
 
 			/* get period */
 			attrs_array = ldap_get_values_len(ld, result, "TimeRange");
@@ -693,6 +694,14 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 				sscanf((*attrs_array)->bv_val, "%d", (int *) &(this_acl->flags));
 			}
 			ldap_value_free_len(attrs_array);
+
+			/* get auth quality */
+			attrs_array = ldap_get_values_len(ld, result, "AuthQuality");
+			if (attrs_array && *attrs_array) {
+				sscanf((*attrs_array)->bv_val, "%d", (int *) &(this_acl->auth_quality));
+			}
+			ldap_value_free_len(attrs_array);
+
 
 			if (nuauthconf->prio_to_nok == 2) {
 				/* get weight */

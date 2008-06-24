@@ -70,6 +70,7 @@ struct plaintext_acl {
 	gchar *log_prefix;
 
 	gint flags;
+	gint auth_quality;
 };
 
 struct plaintext_params {

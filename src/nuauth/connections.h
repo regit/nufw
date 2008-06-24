@@ -82,6 +82,7 @@ struct acl_group {
 	gchar *period;		/*!< Period linked to the acl */
 	gchar *log_prefix;	/*!< Log prefix used for the acl */
 	gint flags;		/*!< flags used to set some acl properties */
+	gint auth_quality;	/*!< Minimum authentication quality required for a match */
 };
 
 typedef struct {
