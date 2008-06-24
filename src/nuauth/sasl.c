@@ -903,10 +903,12 @@ int sasl_user_check(user_session_t * c_session)
 	if (c_session->user_name) {
 		external_auth = TRUE;
 		c_session->auth_type = AUTH_TYPE_EXTERNAL;
+		c_session->auth_quality = AUTHQ_SSL;
 		callbacks = external_callbacks;
 	} else {
 		callbacks = internal_callbacks;
 		c_session->auth_type = AUTH_TYPE_INTERNAL;
+		c_session->auth_quality = AUTHQ_SASL;
 		if (!nuauthconf->nuauth_uses_fake_sasl) {
 			callbacks = NULL;
 		}

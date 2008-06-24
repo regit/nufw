@@ -61,6 +61,7 @@ void external_ip_auth(gpointer userdata, gpointer data)
 			connection->os_sysname = NULL;
 			connection->app_name = NULL;
 			connection->flags = ACL_FLAGS_NONE;
+			connection->auth_quality = AUTHQ_BYIP;
 			/* copy ipv4 header */
 			memcpy(&(connection->tracking),
 			       (tracking_t *) userdata,

@@ -72,6 +72,12 @@ typedef enum {
  */
 #define IPHDR_REJECT_LENGTH_BWORD 5
 
+typedef enum {
+	AUTHQ_BYIP,
+	AUTHQ_SASL,
+	AUTHQ_SSL,
+} auth_quality_t;
+
 /**
  * Used to store the acl that apply for a packet
  */
