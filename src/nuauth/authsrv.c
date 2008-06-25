@@ -166,6 +166,7 @@ void stop_all_thread_pools(gboolean soft)
 		stop_thread_pool("session logger", &nuauthdatas->user_session_loggers);
 		stop_thread_pool("packet logger", &nuauthdatas->user_loggers);
 		stop_thread_pool("acl checker", &nuauthdatas->acl_checkers);
+		stop_thread_pool("users checker", &nuauthdatas->user_checkers);
 
 		if (nuauthconf->log_users_sync) {
 			stop_thread_pool("decision worker",
