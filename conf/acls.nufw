@@ -55,6 +55,7 @@
 # Authentication quality can be used to limit authorization following the
 # type of authentication used
 #     authquality = LEVEL
+# defined levels are: 0 auth by IP fallback method, 1 auth by SASL, 2 auth by certificate
 
 [ssh]
 gid=100
