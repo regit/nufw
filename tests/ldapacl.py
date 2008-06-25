@@ -43,7 +43,7 @@ class LDAPAcl:
         ldapattr['SrcIPStart'] = [str(0)]
         ldapattr['SrcIPEnd'] = [str(pow(2,32)-1)]
 
-        ftraduc = { 'App': 'AppName', 'log_prefix': 'description' }
+        ftraduc = { 'App': 'AppName', 'log_prefix': 'description', 'authquality': 'AuthQuality' }
         for key, value in kw:
             if (key == 'OS'):
                 osfields = [ 'OsName', 'OsRelease', 'OsVersion']

@@ -90,3 +90,21 @@ class TestAcl(object):
         testAllowPort(self, self.iptables, client, self.host, allow=False)
         self.acls.desinstall()
 
+    def testQualityOk(self):
+        self.acls.addAclFull("auth quality", self.host, VALID_PORT, self.users[0].gid, authquality = 1)
+        self.acls.install(self.config)
+        self.nuauth = Nuauth(self.config)
+        user = self.users[0]
+        client = user.createClient()
+        testAllowPort(self, self.iptables, client, self.host)
+        self.acls.desinstall()
+
+    def testQualityNOK(self):
+        self.acls.addAclFull("auth quality", self.host, VALID_PORT, self.users[0].gid, authquality = 4)
+        self.acls.install(self.config)
+        self.nuauth = Nuauth(self.config)
+        user = self.users[0]
+        client = user.createClient()
+        testAllowPort(self, self.iptables, client, self.host, allow=False)
+        self.acls.desinstall()
+
