@@ -206,7 +206,7 @@ nu_error_t take_decision(connection_t * element, packet_place_t place)
 		     (parcours != NULL && test == TEST_NODECIDE);
 		     parcours = g_slist_next(parcours)) {
 			if (parcours->data != NULL) {
-				if (((struct acl_group *)(parcours->data))->auth_quality <
+				if (((struct acl_group *)(parcours->data))->auth_quality >
 						element->auth_quality) {
 					if (nuauthconf->reject_authenticated_drop) {
 						answer = DECISION_REJECT;
