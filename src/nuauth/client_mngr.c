@@ -124,7 +124,7 @@ void add_client(int socket, gpointer datas)
 		g_hash_table_replace(client_ip_hash, key, ipsessions);
 	}
 	/* let's assume backward compatibility, older client wins */
-	/** \fixme Add a configuration variable for this choice */
+	/* TODO: Add a configuration variable for this choice */
 	if (c_session->client_version < ipsessions->client_version) {
 		char buffer[256];
 		format_ipv6(&c_session->addr, buffer, 256, NULL);
