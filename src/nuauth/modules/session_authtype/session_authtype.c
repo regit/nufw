@@ -41,7 +41,7 @@ G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
 }
 
 static GSList * parse_group_list(gchar *string)
-{	
+{
 	gchar **groups_list;
 	gchar **groups_item;
 	uint32_t group_id;

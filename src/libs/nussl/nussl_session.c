@@ -157,7 +157,7 @@ nussl_session *nussl_session_create_with_fd(int server_fd, int verify)
 	srv_sess = nussl_session_create();
 	if (!srv_sess) {
 		return NULL;
-	}	  
+	}
 
 	srv_sess->socket = nussl_sock_create_with_fd(server_fd);
 	/* verify: one of NUSSL_CERT_IGNORE, NUSSL_CERT_REQUEST or NUSSL_CERT_REQUIRE */
