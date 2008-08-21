@@ -927,6 +927,7 @@ int sasl_user_check(user_session_t * c_session)
 	if (ret != SASL_OK) {
 		g_warning
 		    ("allocating connection state - failure at sasl_server_new()");
+		return ret;
 	}
 
 	secprops.min_ssf = 0;
@@ -953,11 +954,13 @@ int sasl_user_check(user_session_t * c_session)
 		if (ret != SASL_OK) {
 			log_message(INFO, DEBUG_AREA_AUTH,
 				    "Error setting external auth");
+			return ret;
 		}
 		ret = sasl_setprop(conn, SASL_SSF_EXTERNAL, &extssf);
 		if (ret != SASL_OK) {
 			log_message(INFO, DEBUG_AREA_AUTH,
 				    "Error setting external SSF");
+			return ret;
 		}
 	}
 
