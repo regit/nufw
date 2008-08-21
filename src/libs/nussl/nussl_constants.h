@@ -9,6 +9,8 @@
  ** NuSSL: OpenSSL / GnuTLS layer based on libneon
  */
 
-#define NUSSL_CERT_IGNORE 0
-#define NUSSL_CERT_REQUEST 1
-#define NUSSL_CERT_REQUIRE 2
+typedef enum {
+	NUSSL_CERT_IGNORE,
+	NUSSL_CERT_REQUEST,
+	NUSSL_CERT_REQUIRE,
+} nussl_cert_t;
