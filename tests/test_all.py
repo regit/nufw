@@ -26,6 +26,7 @@ FILES = (
     "test_conntrack",
     "test_session_expire",
     "test_invalid_tcp",
+    "test_session_authtype"
 )
 
 def loadTestcases(module):
