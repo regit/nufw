@@ -65,16 +65,22 @@ static char *escape_str(char *str)
 
 char* str_prepend(char *str, char *prepend)
 {
-	size_t strsize = strlen(str) + strlen(prepend) + 1;
+	size_t strsize;
 	char *new;
 
-	new = malloc(strsize + 1);
+	if ( (!str) || (!prepend) ) {
+		return NULL;
+	}
+
+	strsize = strlen(str) + strlen(prepend) + 1;
+
+	new = malloc(strsize);
 	if ( ! new ) {
 		errno = ENOMEM;
 		return NULL;
 	}
+
 	snprintf(new, strsize, "%s%s", prepend, str);
-	new[strsize + 1] = '\0';
 
 	return new;
 }
