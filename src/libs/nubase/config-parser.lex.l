@@ -176,6 +176,13 @@ VOID		[ \t\n]+
 
 %%
 
+/* remove unused functions */
+typedef void (*dummy_function) ();
+dummy_function nubase_unused[] =
+{
+  (dummy_function) input, (dummy_function) yyunput
+};
+
 int
 yywrap(void)
 {
