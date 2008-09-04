@@ -34,8 +34,8 @@ grepdefault () {
 ucf --three-way --debconf-ok /usr/share/nuauth/nuauth.conf /etc/nufw/nuauth.conf
 
 NUAUTH_USER=`grepdefault NUAUTH_USER nobody`
-nuauth_tls_key=`grepconf nuauth_tls_key /etc/nufw/nuauth-key.pem`
-nuauth_tls_cert=`grepconf nuauth_tls_cert /etc/nufw/nuauth-cert.pem`
+nuauth_tls_key=`grepconf nuauth_tls_key /etc/nufw/certs/nuauth-key.pem`
+nuauth_tls_cert=`grepconf nuauth_tls_cert /etc/nufw/certs/nuauth-cert.pem`
 
 if grep -q -e "^$NUAUTH_USER:" /etc/passwd
 then
@@ -49,72 +49,18 @@ fi
 # ssl certificate generation
 if [ -x /usr/bin/openssl ]; then
   if [ ! -e $nuauth_tls_key ]; then
-    if [ ! -e $nuauth_tls_cert ]; then
 
-      db_capb backup
-      db_settitle make-ssl-cert/title
-      
-      templates="countryname statename localityname organisationname ouname hostname email"
-      
-      for i in $templates; do
-          RET=""
-          while [ "x$RET" = "x" ]; do
-          	db_fset make-ssl-cert/$i seen false
-      	db_input high make-ssl-cert/$i || true
-      	db_go
-      	db_get make-ssl-cert/$i
-          done
-      done
-      
-      db_get make-ssl-cert/countryname
-      CountryName="$RET"
-      db_fset make-ssl-cert/countryname seen false
-      
-      db_get make-ssl-cert/statename
-      StateName="$RET"
-      db_fset make-ssl-cert/statename seen false
-      
-      db_get make-ssl-cert/localityname
-      LocalityName="$RET"
-      db_fset make-ssl-cert/localityname seen false
-      
-      db_get make-ssl-cert/organisationname
-      OrganisationName="$RET"
-      db_fset make-ssl-cert/organisationname seen false
-      
-      db_get make-ssl-cert/ouname
-      OUName="$RET"
-      db_fset make-ssl-cert/ouname seen false
-      
-      db_get make-ssl-cert/hostname
-      HostName="$RET"
-      db_fset make-ssl-cert/hostname seen false
-      
-      db_get make-ssl-cert/email
-      Email="$RET"
-      db_fset make-ssl-cert/email seen false
-      
-      # # should be a less common char
-      # problem is that openssl virtually accepts everything and we need to
-      # sacrifice one char.
-      
-      TMPFILE=`mktemp` || exit 1
-      
-      sed -e s#@CountryName@#"$CountryName"# \
-          -e s#@StateName@#"$StateName"# \
-          -e s#@LocalityName@#"$LocalityName"# \
-          -e s#@OrganisationName@#"$OrganisationName"# \
-          -e s#@OUName@#"$OUName"# \
-          -e s#@HostName@#"$HostName"# \
-          -e s#@Email@#"$Email"# \
-          /usr/share/ssl-cert/ssleay.cnf > $TMPFILE
-      
-      export RANDFILE=/dev/random
-      /usr/bin/openssl req -config $TMPFILE -new -x509 -nodes -keyout $nuauth_tls_key -pubkey -out $nuauth_tls_cert -days 1095 || /bin/true
-      chmod 640 $nuauth_tls_key
+    make-ssl-cert /usr/share/ssl-cert/ssleay.cnf /etc/nufw/certs/nuauth.pem
+
+    if [ -f /etc/nufw/certs/nuauth.pem ]; then
+      # split key and certificate data
+      openssl x509 -in /etc/nufw/certs/nuauth.pem -out $nuauth_tls_cert
+      openssl rsa  -in /etc/nufw/certs/nuauth.pem -out $nuauth_tls_key
+      chmod 0600 $nuauth_tls_key
       chown $NUAUTH_USER $nuauth_tls_key
-      rm -f $TMPFILE
+      rm -f /etc/nufw/certs/nuauth.pem
     fi
+
   fi
 fi
 
