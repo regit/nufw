@@ -59,6 +59,7 @@ if [ -x /usr/bin/openssl ]; then
       chmod 0600 $nuauth_tls_key
       chown $NUAUTH_USER $nuauth_tls_key
       rm -f /etc/nufw/certs/nuauth.pem
+      find /etc/nufw/certs -type l -maxdepth 1 -delete
     fi
 
   fi

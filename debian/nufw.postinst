@@ -17,6 +17,7 @@ if [ -x /usr/bin/openssl ]; then
       openssl rsa  -in /etc/nufw/certs/nufw.pem -out /etc/nufw/certs/nufw-key.pem
       chmod 0600 /etc/nufw/certs/nufw-key.pem
       rm -f /etc/nufw/certs/nufw.pem
+      find /etc/nufw/certs -type l -maxdepth 1 -delete
     fi
 
   fi
