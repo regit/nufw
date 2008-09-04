@@ -16,6 +16,9 @@ Sébastien Tricaud (aka toady)
 Victor Stinner (aka haypo)
     victor.stinner AT inl.fr
 
+Pierre Chifflier
+    pierre.chifflier AT inl.fr
+
 
 Contributors
 ============
@@ -35,10 +38,6 @@ Jean Gillaux
 
 Mikael Berthe (aka McKael)
     original author of plaintext module
-
-Pierre Chifflier
-    pierre.chifflier AT inl.fr
-    debian packaging
 
 Simon Josefsson
     getdelim() implentation (used on FreeBSD)
