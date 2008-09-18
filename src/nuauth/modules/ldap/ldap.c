@@ -542,28 +542,28 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 			g_strlcat(filter, "(!(InDev=*))", LDAP_QUERY_SIZE);
 		} else {
 			gchar iffilter[256];
-			g_snprintf(iffilter, 256, "(InDev=%s)", element->iface_nfo.indev);
+			g_snprintf(iffilter, 256, "(|(InDev=%s)(!(InDev=*)))", element->iface_nfo.indev);
 			g_strlcat(filter, iffilter, LDAP_QUERY_SIZE);
 		}
 		if (! element->iface_nfo.outdev) {
 			g_strlcat(filter, "(!(OutDev=*))", LDAP_QUERY_SIZE);
 		} else {
 			gchar iffilter[256];
-			g_snprintf(iffilter, 256, "(OutDev=%s)", element->iface_nfo.outdev);
+			g_snprintf(iffilter, 256, "(|(OutDev=%s)(!(OutDev=*)))", element->iface_nfo.outdev);
 			g_strlcat(filter, iffilter, LDAP_QUERY_SIZE);
 		}
 		if (! element->iface_nfo.physindev) {
-			g_strlcat(filter, "(!(PhysInDev=*))", LDAP_QUERY_SIZE);
+			g_strlcat(filter,  "(!(PhysInDev=*)", LDAP_QUERY_SIZE);
 		} else {
 			gchar iffilter[256];
-			g_snprintf(iffilter, 256, "(PhysInDev=%s)", element->iface_nfo.physindev);
+			g_snprintf(iffilter, 256, "(|(PhysInDev=%s)(!(PhysInDev=*)))", element->iface_nfo.physindev);
 			g_strlcat(filter, iffilter, LDAP_QUERY_SIZE);
 		}
 		if (! element->iface_nfo.physoutdev) {
 			g_strlcat(filter, "(!(PhysOutDev=*))", LDAP_QUERY_SIZE);
 		} else {
 			gchar iffilter[256];
-			g_snprintf(iffilter, 256, "(PhysOutDev=%s)",
+			g_snprintf(iffilter, 256, "(|(PhysOutDev=%s)(!(PhysOutDev=*)))",
 				   element->iface_nfo.physoutdev);
 			g_strlcat(filter, iffilter, LDAP_QUERY_SIZE);
 		}
