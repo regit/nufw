@@ -178,10 +178,7 @@ void search_and_fill_complete_of_authreq(connection_t * new,
 		packet->cacheduserdatas = new->cacheduserdatas;
 
 		/* Add interfaces information needed for ACLs checking */
-		new->iface_nfo.indev = g_strdup(packet->iface_nfo.indev);
-		new->iface_nfo.physindev = g_strdup(packet->iface_nfo.physindev);
-		new->iface_nfo.outdev = g_strdup(packet->iface_nfo.outdev);
-		new->iface_nfo.physoutdev = g_strdup(packet->iface_nfo.physoutdev);
+		duplicate_iface_nfo(&new->iface_nfo, &packet->iface_nfo);
 
 		thread_pool_push(nuauthdatas->acl_checkers, new, NULL);
 		return;		/* don't free new connection */
