@@ -117,7 +117,7 @@ int number_add(number_t number, digit_t value)
 char *number_to_decimal(number_t number)
 {
 	char ascii[DIGIT_COUNT * BASE_LOG10 + 1];
-	char *text;
+	gchar *text;
 	signed char index;
 	for (index = DIGIT_COUNT - 1; 0 <= index; index--) {
 		sprintf(ascii + (DIGIT_COUNT - index - 1) * BASE_LOG10,
@@ -126,7 +126,7 @@ char *number_to_decimal(number_t number)
 	text = ascii;
 	while (text[0] == '0')
 		text++;
-	return strdup(text);
+	return g_strdup(text);
 }
 
 /**
@@ -537,7 +537,7 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 		if (! element->app_name) {
 			g_strlcat(filter, "(!(AppName=*))", LDAP_QUERY_SIZE);
 		}
-		
+
 		if (! element->iface_nfo.indev) {
 			g_strlcat(filter, "(!(InDev=*))", LDAP_QUERY_SIZE);
 		} else {
