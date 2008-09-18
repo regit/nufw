@@ -55,6 +55,10 @@ struct acl_key {
 	 * application full path
 	 */
 	gchar *appname;
+	/*
+	 * interfaces
+	 */
+	iface_nfo_t iface_nfo;
 };
 
 /**
@@ -106,6 +110,9 @@ gboolean compare_acls(gconstpointer a, gconstpointer b)
 		return FALSE;
 	if (strcmp_null(acl_key1->version, acl_key2->version))
 		return FALSE;
+	if (compare_iface_nfo_t(&acl_key1->iface_nfo, &acl_key2->iface_nfo)
+		== NU_EXIT_ERROR)
+		return FALSE;
 	return TRUE;
 }
 
@@ -117,6 +124,7 @@ void free_acl_key(gpointer datas)
 	g_free(kdatas->release);
 	g_free(kdatas->version);
 	g_free(kdatas->appname);
+	free_iface_nfo_t(&kdatas->iface_nfo);
 	g_free(kdatas);
 }
 
@@ -160,6 +168,7 @@ gpointer acl_create_and_alloc_key(connection_t * kdatas)
 	key.release = kdatas->os_release;
 	key.version = kdatas->os_version;
 	key.appname = kdatas->app_name;
+	memcpy(&(key.iface_nfo), &(kdatas->iface_nfo), sizeof(iface_nfo_t));
 	return acl_duplicate_key(&key);
 }
 
@@ -178,6 +187,7 @@ gpointer acl_duplicate_key(gpointer datas)
 	key->release = g_strdup(kdatas->release);
 	key->version = g_strdup(kdatas->version);
 	key->appname = g_strdup(kdatas->appname);
+	duplicate_iface_nfo(&key->iface_nfo, &kdatas->iface_nfo);
 	return key;
 }
 
