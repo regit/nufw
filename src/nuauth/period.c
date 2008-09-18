@@ -30,15 +30,7 @@
  * \brief Provide a set of functions for period and time calculation
  */
 
-gboolean is_time_t_in_period(const gchar * periodname, time_t pckt_time)
-{
-	if (get_end_of_period_for_time_t(periodname, pckt_time)) {
-		return TRUE;
-	} else {
-		return FALSE;
-	}
-
-}
+static GStaticMutex period_mutex = G_STATIC_MUTEX_INIT;
 
 static inline unsigned int get_start_of_day_from_time_t(time_t pckt_time)
 {
@@ -150,11 +142,15 @@ time_t get_end_of_period_for_time_t(const gchar * period, time_t pckt_time)
 {
 	struct period *pperiod = NULL;
 	time_t result = -1;
+
+	g_static_mutex_lock(&period_mutex);
 	/* get period in hash */
 	pperiod = g_hash_table_lookup(nuauthconf->periods, period);
 	if (pperiod == NULL) {
 		log_message(WARNING, DEBUG_AREA_MAIN,
 			    "period can not be found, typo ?");
+		g_static_mutex_unlock(&period_mutex);
+		return 0;
 	} else {
 		GSList *pointer;
 		time_t provend;
@@ -175,6 +171,7 @@ time_t get_end_of_period_for_time_t(const gchar * period, time_t pckt_time)
 			 */
 			switch (provend) {
 			case 0:
+				g_static_mutex_unlock(&period_mutex);
 				return 0;
 			default:	/* here provend is > 0 */
 				/* we modify result if and only if previous period items give
@@ -185,6 +182,7 @@ time_t get_end_of_period_for_time_t(const gchar * period, time_t pckt_time)
 			}
 		}
 	}
+	g_static_mutex_unlock(&period_mutex);
 	return result;
 }
 
@@ -254,6 +252,14 @@ GHashTable *init_periods()
 	modules_parse_periods(periods);
 
 	return periods;
+}
+
+void reload_periods(GHashTable **periods)
+{
+	g_static_mutex_lock(&period_mutex);
+	destroy_periods(*periods);
+	*periods = init_periods();
+	g_static_mutex_unlock(&period_mutex);
 }
 
 /** @} */

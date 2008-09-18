@@ -74,4 +74,6 @@ gboolean delete_period(GHashTable * periods, gchar * name);
 void destroy_periods(GHashTable * periods);
 GHashTable *init_periods();
 
+void reload_periods(GHashTable **periods);
+
 #endif
