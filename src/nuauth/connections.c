@@ -58,13 +58,13 @@ nu_error_t compare_iface_nfo_t(iface_nfo_t *a, iface_nfo_t *b)
 {
 #define compare_iface(x) if (a->x) { \
 				if (b->x) { \
-					if (!strcmp(a->x, b->x)) { \
+					if (strcmp(a->x, b->x)) { \
 						return NU_EXIT_ERROR; \
 					} \
 				} else { \
 					return NU_EXIT_ERROR; \
 				} \
-			} 
+			}
 	compare_iface(indev);
 	compare_iface(outdev);
 	compare_iface(physindev);
