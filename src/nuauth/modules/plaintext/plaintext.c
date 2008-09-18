@@ -511,6 +511,10 @@ static int read_acl_list(struct plaintext_params *params)
 			newacl->flags = ACL_FLAGS_NONE;
 			newacl->auth_quality = 0;
 			newacl->decision = DECISION_ACCEPT;
+			newacl->iface_nfo.indev = NULL;
+			newacl->iface_nfo.physindev = NULL;
+			newacl->iface_nfo.outdev = NULL;
+			newacl->iface_nfo.physoutdev = NULL;
 			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 					  "L.%d: ACL name found: [%s]", ln,
 					  newacl->aclname);
@@ -712,6 +716,26 @@ static int read_acl_list(struct plaintext_params *params)
 			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 					  "L.%d: Read  period [%s]", ln,
 					  newacl->period);
+		} else if (!strcasecmp("indev", p_key)) {	/*  input dev */
+			newacl->iface_nfo.indev = g_strdup(p_value);
+			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
+					"L.%d: Read  indev [%s]", ln,
+					newacl->iface_nfo.indev);
+		} else if (!strcasecmp("physindev", p_key)) {	/*  phys input dev */
+			newacl->iface_nfo.physindev = g_strdup(p_value);
+			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
+					"L.%d: Read  physindev [%s]", ln,
+					newacl->iface_nfo.physindev);
+		} else if (!strcasecmp("outdev", p_key)) {	/*  output dev */
+			newacl->iface_nfo.outdev = g_strdup(p_value);
+			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
+					"L.%d: Read  indev [%s]", ln,
+					newacl->iface_nfo.outdev);
+		} else if (!strcasecmp("physoutdev", p_key)) {	/*  phys output dev */
+			newacl->iface_nfo.physoutdev = g_strdup(p_value);
+			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
+					"L.%d: Read  physoutdev [%s]", ln,
+					newacl->iface_nfo.physoutdev);
 		} else if (!strcasecmp("log_prefix", p_key)) {
 			newacl->log_prefix = g_strdup(p_value);
 			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
@@ -769,11 +793,11 @@ static int read_acl_list(struct plaintext_params *params)
 
 	fclose(fd);
 	return 0;
-}
+	}
 
-G_MODULE_EXPORT gboolean unload_module_with_params(struct plaintext_params
+	G_MODULE_EXPORT gboolean unload_module_with_params(struct plaintext_params
 						   * params)
-{
+	{
 	if (!params) {
 		return TRUE;
 	}
@@ -855,6 +879,10 @@ G_MODULE_EXPORT gboolean unload_module_with_params(struct plaintext_params
 			g_slist_free(p_acl->groups);
 			g_free(p_acl->aclname);
 			g_free(p_acl->period);
+				g_free(p_acl->iface_nfo.indev);
+				g_free(p_acl->iface_nfo.physindev);
+				g_free(p_acl->iface_nfo.outdev);
+				g_free(p_acl->iface_nfo.physoutdev);
 			g_free(p_acl);
 		}
 		/*  Now we can free the list */
@@ -1130,6 +1158,10 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element, gpointer params)
 		if (!match_ip(p_acl->dst_ip, &netdata->daddr)) {
 			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 					"(DBG) skip ACL %s: destination IP doesn't match", p_acl->aclname);
+			continue;
+		}
+
+		if (! compare_iface_nfo_t(&p_acl->iface_nfo, &element->iface_nfo)) {
 			continue;
 		}
 

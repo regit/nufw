@@ -66,6 +66,8 @@ struct plaintext_acl {
 	GSList *dst_ip;
 	GSList *dst_ports;
 
+	iface_nfo_t iface_nfo;
+
 	gchar *period;
 	gchar *log_prefix;
 
