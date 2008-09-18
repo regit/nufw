@@ -50,6 +50,29 @@ void free_iface_nfo_t(iface_nfo_t * track)
 }
 
 /**
+ * Compare non null iface value of a to value in b
+ *
+ * \return NU_EXIT_OK on match, NU_EXIT_ERROR on failure
+ */
+nu_error_t compare_iface_nfo_t(iface_nfo_t *a, iface_nfo_t *b)
+{
+#define compare_iface(x) if (a->x) { \
+				if (b->x) { \
+					if (!strcmp(a->x, b->x)) { \
+						return NU_EXIT_ERROR; \
+					} \
+				} else { \
+					return NU_EXIT_ERROR; \
+				} \
+			} 
+	compare_iface(indev);
+	compare_iface(outdev);
+	compare_iface(physindev);
+	compare_iface(physoutdev);
+	return NU_EXIT_OK;
+}
+
+/**
  * Delete a connection and free all the memory used.
  *
  * This is the output function for every connection_t::. It
