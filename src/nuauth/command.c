@@ -48,6 +48,7 @@ const char* COMMAND_HELP =
 "disconnect all: disconnect all users\n"
 "uptime: display nuauth starting time and uptime\n"
 "reload: reload nuauth configuration\n"
+"reload periods: reload the time periods\n"
 "display debug_level\n"
 "display debug_areas\n"
 "debug_level LEVEL\n"
@@ -361,6 +362,9 @@ void command_execute(command_t * this, char *command)
 		} else {
 			encoder_add_string(encoder, "Configuration reloaded");
 		}
+	} else if (strcmp(command, "reload periods") == 0) {
+		reload_periods(&nuauthconf->periods);
+		encoder_add_string(encoder, "Periods reloaded");
 	} else if (strcmp(command, "refresh cache") == 0) {
 		if (nuauthconf->acl_cache) {
 			cache_reset(nuauthdatas->acl_cache);
