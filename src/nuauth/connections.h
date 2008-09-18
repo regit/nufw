@@ -158,6 +158,8 @@ GHashTable *conn_list;
 GStaticMutex insert_mutex;
 
 
+nu_error_t compare_iface_nfo_t(iface_nfo_t *a, iface_nfo_t *b);
+
 gboolean get_old_conn(gpointer key, gpointer value, gpointer user_data);
 int conn_cl_remove(gconstpointer conn);
 int conn_cl_delete(gconstpointer conn);
