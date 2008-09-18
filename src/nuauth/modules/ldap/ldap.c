@@ -553,7 +553,7 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 			g_strlcat(filter, iffilter, LDAP_QUERY_SIZE);
 		}
 		if (! element->iface_nfo.physindev) {
-			g_strlcat(filter,  "(!(PhysInDev=*)", LDAP_QUERY_SIZE);
+			g_strlcat(filter,  "(!(PhysInDev=*))", LDAP_QUERY_SIZE);
 		} else {
 			gchar iffilter[256];
 			g_snprintf(iffilter, 256, "(|(PhysInDev=%s)(!(PhysInDev=*)))", element->iface_nfo.physindev);
