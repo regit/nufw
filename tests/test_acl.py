@@ -4,7 +4,7 @@ from common import startNufw, connectClient
 from nuauth import Nuauth
 from nuauth_conf import NuauthConf
 from inl_tests.iptables import Iptables
-from filter import testAllowPort, testDisallowPort, VALID_PORT, HOST
+from filter import testAllowPort, testDisallowPort, VALID_PORT, HOST, IFACE
 from test_plaintext_auth import USERDB
 from sys import executable
 from os import uname
@@ -101,6 +101,24 @@ class TestAcl(object):
 
     def testQualityNOK(self):
         self.acls.addAclFull("auth quality", self.host, VALID_PORT, self.users[0].gid, authquality = 4)
+        self.acls.install(self.config)
+        self.nuauth = Nuauth(self.config)
+        user = self.users[0]
+        client = user.createClient()
+        testAllowPort(self, self.iptables, client, self.host, allow=False)
+        self.acls.desinstall()
+
+    def testOutdevOk(self):
+        self.acls.addAclFull("outdev test", self.host, VALID_PORT, self.users[0].gid, outdev = IFACE)
+        self.acls.install(self.config)
+        self.nuauth = Nuauth(self.config)
+        user = self.users[0]
+        client = user.createClient()
+        testAllowPort(self, self.iptables, client, self.host)
+        self.acls.desinstall()
+
+    def testOutdevNOK(self):
+        self.acls.addAclFull("outdev test", self.host, VALID_PORT, self.users[0].gid, outdev = "bad0" )
         self.acls.install(self.config)
         self.nuauth = Nuauth(self.config)
         user = self.users[0]

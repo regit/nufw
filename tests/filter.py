@@ -7,6 +7,7 @@ TIMEOUT = config.getfloat("filter", "timeout")
 VALID_PORT = config.getint("filter", "valid_port")
 INVALID_PORT = config.getint("filter", "invalid_port")
 HOST = gethostbyname(config.get("filter", "host"))
+IFACE = config.get("filter", "iface")
 
 def testPortFailure(testcase, iptables, client, port, err):
     # Enable iptables filtering
