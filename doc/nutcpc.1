@@ -3,13 +3,13 @@
 .\" <http://shell.ipoline.com/~elmert/comp/docbook2X/> 
 .\" Please send any bug reports, improvements, comments, patches, 
 .\" etc. to Steve Cheng <steve@ggi-project.org>.
-.TH "NUTCPC" "1" "23 mai 2007" "" ""
+.TH "NUTCPC" "1" "18 septembre 2008" "" ""
 
 .SH NAME
 nutcpc \- NUFW console-mode client for GNU/Linux and BSD systems
 .SH SYNOPSIS
 
-\fBnutcpc\fR [ \fB-d \fR ] [ \fB-l \fR ] [ \fB-k \fR ] [ \fB-V \fR ] [ \fB-h \fR ] [ \fB-q \fR ] [ \fB-H \fINuauth IP\fB\fR ] [ \fB-p \fINuauth port \fB\fR ] [ \fB-U \fIUserID\fB\fR ] [ \fB-P \fIUserPassword\fB\fR ] [ \fB-I \fIInterval\fB\fR ] [ \fB-C \fICertFile\fB\fR ] [ \fB-A \fIAuthorityFile\fB\fR ] [ \fB-K \fIKeyFile\fB\fR ] [ \fB-W \fICertPass\fB\fR ] [ \fB-a \fINuauthDN\fB\fR ]
+\fBnutcpc\fR [ \fB-d \fR ] [ \fB-l \fR ] [ \fB-k \fR ] [ \fB-c \fR ] [ \fB-V \fR ] [ \fB-h \fR ] [ \fB-q \fR ] [ \fB-H \fINuauth IP\fB\fR ] [ \fB-p \fINuauth port \fB\fR ] [ \fB-U \fIUserID\fB\fR ] [ \fB-P \fIUserPassword\fB\fR ] [ \fB-I \fIInterval\fB\fR ] [ \fB-C \fICertFile\fB\fR ] [ \fB-A \fIAuthorityFile\fB\fR ] [ \fB-K \fIKeyFile\fB\fR ] [ \fB-W \fICertPass\fB\fR ] [ \fB-a \fINuauthDN\fB\fR ]
 
 .SH "DESCRIPTION"
 .PP
@@ -30,8 +30,11 @@ Do not verify whether lock file exists before starting. And do
 not create lock file.
 .TP
 \fB-k \fR
-Before starting, kill existing instances of the program running
+Kill existing instances of the program running
 on our local userID.
+.TP
+\fB-c \fR
+Check if a client is already running. Return error if no client are running.
 .TP
 \fB-V \fR
 Issues program version and exits.
