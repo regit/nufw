@@ -952,12 +952,14 @@ int sasl_user_check(user_session_t * c_session)
 		    sasl_setprop(conn, SASL_AUTH_EXTERNAL,
 				 c_session->user_name);
 		if (ret != SASL_OK) {
+			sasl_dispose(&conn);
 			log_message(INFO, DEBUG_AREA_AUTH,
 				    "Error setting external auth");
 			return ret;
 		}
 		ret = sasl_setprop(conn, SASL_SSF_EXTERNAL, &extssf);
 		if (ret != SASL_OK) {
+			sasl_dispose(&conn);
 			log_message(INFO, DEBUG_AREA_AUTH,
 				    "Error setting external SSF");
 			return ret;
@@ -984,6 +986,8 @@ int sasl_user_check(user_session_t * c_session)
 		ret = SASL_BADPARAM;
 	}
 
+	sasl_dispose(&conn);
+
 	if (ret != SASL_OK) {
 		nuauth_auth_error_t err;
 		const char *message;
@@ -999,8 +1003,6 @@ int sasl_user_check(user_session_t * c_session)
 		modules_auth_error_log(c_session, err, message);
 		return ret;
 	}
-
-	sasl_dispose(&conn);
 
 	/* recv OS datas from client */
 	buf_size = nussl_read(c_session->nussl, buf, sizeof buf);
