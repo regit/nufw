@@ -272,7 +272,7 @@ int auth_process_conn_update(char *dgram, int dgram_size)
  *
  *  \return -1 in case of error
  */
-int auth_packet_to_decision(char *dgram, int dgram_size)
+static int auth_packet_to_decision(char *dgram, int dgram_size)
 {
 	if (dgram_size < 2) {
 		debug_log_printf(DEBUG_AREA_GW, DEBUG_LEVEL_DEBUG,
@@ -347,8 +347,7 @@ void *authsrv(void *data)
 			break;
 		} else {
 			do {
-				read_size =
-				    auth_packet_to_decision(dgram, ret);
+				read_size = auth_packet_to_decision(dgram, ret);
 				ret -= read_size;
 				dgram = dgram + read_size;
 			} while (ret > 0 && (read_size != -1));
