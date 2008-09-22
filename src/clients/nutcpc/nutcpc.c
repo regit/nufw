@@ -80,6 +80,7 @@ typedef struct {
 	char *cafile;
 	char *pkcs12file;
 	char *pkcs12password;
+	char *krb5_service;
 } nutcpc_context_t;
 
 /**
@@ -384,6 +385,9 @@ static void usage(void)
 	fprintf(stderr, "  -S PKCS12FILE: PKCS12 key/certificate filename\n");
 	fprintf(stderr, "  -W PKCS12PASS: PKCS12 password\n");
 	fprintf(stderr, "\n");
+	fprintf(stderr, "SASL options:\n");
+	fprintf(stderr, "  -Z SERVICE: Kerberos service name (nuauth)\n");
+	fprintf(stderr, "\n");
 	fprintf(stderr, "Other options:\n");
 	fprintf(stderr, "  -p PORT: nuauth port number\n");
 	fprintf(stderr, "  -a AUTH_DN: authentication domain name\n");
@@ -572,6 +576,14 @@ nuauth_session_t *do_connect(nutcpc_context_t * context, char *username)
 		}
 	}
 
+	if (context->krb5_service) {
+		if (!nu_client_set_krb5_service(session, context->krb5_service)) {
+			nu_client_delete(session);
+			fprintf(stderr, "Unable to setup Kerberos5 service\n");
+			return NULL;
+		}
+	}
+
 	if (!nu_client_connect
 	    (session, context->srv_addr, context->port, err)) {
 		goto init_failed;
@@ -674,7 +686,7 @@ void parse_cmdline_options(int argc, char **argv,
 
 	/* Parse all command line arguments */
 	opterr = 0;
-	while ((ch = getopt(argc, argv, "kcldqVu:H:I:U:p:P:a:K:C:A:W:S:")) != -1) {
+	while ((ch = getopt(argc, argv, "kcldqVu:H:I:U:p:P:a:K:C:A:W:S:Z:")) != -1) {
 		switch (ch) {
 		case 'H':
 			SECURE_STRNCPY(context->srv_addr, optarg,
@@ -743,6 +755,9 @@ void parse_cmdline_options(int argc, char **argv,
 			break;
 		case 'W':
 			context->pkcs12password = strdup(optarg);
+			break;
+		case 'Z':
+			context->krb5_service = strdup(optarg);
 			break;
 		default:
 			usage();

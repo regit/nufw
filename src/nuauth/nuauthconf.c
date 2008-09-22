@@ -145,6 +145,10 @@ int init_nuauthconf(struct nuauth_params **result)
 	conf->push_delay =
 	    nubase_config_table_get_or_default_int("nuauth_push_delay", PUSH_DELAY);
 
+	conf->krb5_service = nubase_config_table_get_or_default("nuauth_krb5_service", DEFAULT_KRB5_SERVICE);
+	conf->krb5_hostname = nubase_config_table_get("nuauth_krb5_hostname");
+	conf->krb5_realm = nubase_config_table_get("nuauth_krb5_realm");
+
 	if (conf->debug_level > 9) {
 		conf->debug_level = 9;
 	}

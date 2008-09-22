@@ -183,6 +183,8 @@ struct nuauth_session {
 
 	char *nuauth_cert_dn;
 
+	char *krb5_service;
+
 	conntable_t *ct;	/*!< Connection table */
 	u_int32_t packet_seq;	/*!< Packet sequence number (start at zero) */
 	int auth_by_default;	/*!< Auth. by default (=1) */

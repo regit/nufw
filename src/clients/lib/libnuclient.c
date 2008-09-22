@@ -440,6 +440,18 @@ int nu_client_set_nuauth_cert_dn(nuauth_session_t * session,
 
 /**
  * \ingroup nuclientAPI
+ */
+int nu_client_set_krb5_service(nuauth_session_t * session,
+				char *service)
+{
+	if (service) {
+		session->krb5_service = service;
+	}
+	return 1;
+}
+
+/**
+ * \ingroup nuclientAPI
  * Set IP source of the socket used to connect to nuauth server
  *
  * \param session Pointer to client session
@@ -639,7 +651,7 @@ int nu_client_connect(nuauth_session_t * session,
 		return 0;
 	}
 
-	if (!init_sasl(session, err)) {
+	if (!init_sasl(session, hostname, err)) {
 		return 0;
 	}
 

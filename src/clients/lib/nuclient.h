@@ -39,6 +39,9 @@ extern "C" {
 /** Default nuauth IP address */
 #define NUAUTH_IP "192.168.1.1"
 
+/** Default Kerberos realm */
+#define DEFAULT_KRB5_REALM "nuauth"
+
 /** Timeout of UDP connections */
 #define UDP_TIMEOUT 30
 
@@ -139,6 +142,9 @@ int nu_client_set_nuauth_cert_dn(nuauth_session_t * session,
 
 char* nu_client_get_cert_infos(nuauth_session_t * session);
 char* nu_client_get_server_cert_infos(nuauth_session_t * session);
+
+int nu_client_set_krb5_service(nuauth_session_t * session,
+		char *service);
 
 int nu_client_connect(nuauth_session_t * session,
 		const char *hostname,

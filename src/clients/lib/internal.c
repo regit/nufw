@@ -111,6 +111,7 @@ static unsigned samp_recv(nuauth_session_t* session, char *buf, int bufsize,
 
 	tls_len = nussl_read(session->nussl, buf, bufsize);
 	if (tls_len <= 0) {
+		printf("ERROR gnutls_record_recv returned %d (requested %d bytes)\n", tls_len, bufsize);
 		SET_ERROR(err, NUSSL_ERR, tls_len);
 		return 0;
 	}
@@ -118,6 +119,7 @@ static unsigned samp_recv(nuauth_session_t* session, char *buf, int bufsize,
 	result = sasl_decode64(buf + 3, (unsigned) strlen(buf + 3), buf,
 			       bufsize, &len);
 	if (result != SASL_OK) {
+		printf("ERROR sasl_decode64 returned %d\n", result);
 		SET_ERROR(err, SASL_ERROR, result);
 		return 0;
 	}
@@ -533,11 +535,13 @@ static int nu_get_userdatas(void *context __attribute__ ((unused)),
  * \param session Pointer to client session
  * \param err Pointer to a nuclient_error_t: which contains the error
  */
-int init_sasl(nuauth_session_t * session, nuclient_error_t * err)
+int init_sasl(nuauth_session_t * session, const char *hostname, nuclient_error_t * err)
 {
 	int ret;
 	sasl_conn_t *conn;
 	sasl_ssf_t extssf = 0;
+	char * krb5_service = NULL;
+	const char * server_fqdn = hostname;
 
 	/* SASL time */
 	sasl_callback_t callbacks[] = {
@@ -553,9 +557,12 @@ int init_sasl(nuauth_session_t * session, nuclient_error_t * err)
 		return 0;
 	}
 
+	krb5_service = session->krb5_service;
+	if (krb5_service == NULL)
+		krb5_service = DEFAULT_KRB5_REALM;
+
 	/* client new connection */
-	ret =
-	    sasl_client_new("nuauth", "", NULL, NULL, callbacks, 0, &conn);
+	ret = sasl_client_new(krb5_service, server_fqdn, NULL, NULL, callbacks, 0, &conn);
 	if (ret != SASL_OK) {
 		if (session->verbose)
 			printf("Failed allocating connection state");

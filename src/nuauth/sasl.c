@@ -877,9 +877,9 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 
 int sasl_user_check(user_session_t * c_session)
 {
-	char *service = "nuauth";
-	char *myhostname = "nuserver";
-	char *myrealm = "nufw";
+	char *service = NULL;
+	char *myhostname = NULL;
+	char *myrealm = NULL;
 	sasl_conn_t *conn = NULL;
 	sasl_security_properties_t secprops;
 	gboolean external_auth = FALSE;
@@ -920,8 +920,9 @@ int sasl_user_check(user_session_t * c_session)
 	secure_snprintf(ipremoteport+len, sizeof(ipremoteport)-len,
 		";%hu", c_session->sport);
 
-	ret =
-		sasl_server_new(service, myhostname, myrealm,
+	ret = sasl_server_new(nuauthconf->krb5_service,
+			nuauthconf->krb5_hostname,
+			nuauthconf->krb5_realm,
 			iplocalport, ipremoteport,
 			callbacks, 0, &conn);
 	if (ret != SASL_OK) {

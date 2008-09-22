@@ -151,6 +151,11 @@ struct nuauth_params {
 	int nbloggers;
 	int nb_session_loggers;
 	int nb_auth_checkers;
+
+	/* Kerberos / GSSAPI stuff */
+	char * krb5_service;
+	char * krb5_hostname;
+	char * krb5_realm;
 };
 
 struct nuauth_datas {

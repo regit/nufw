@@ -179,7 +179,7 @@ nu_error_t treat_user_request(user_session_t * c_session,
  */
 #define MAX_NUFW_PACKET_SIZE 1800
 
-/*----------------------- SSL stuffs ----------------------------------*/
+/*----------------------- SSL stuff ----------------------------------*/
 
 /**
  * Default value for "nuauth_tls_key" option: filename of
@@ -233,5 +233,13 @@ void stop_thread_pool(const char *name, GThreadPool **pool);
 void nuauth_install_signals(gboolean action);
 
 int nuauth_bind(char **errmsg, const char *addr, const char *port, char *context);
+
+/*----------------------- Kerberos stuff ----------------------------------*/
+
+/**
+ * Default value for "nuauth_krb5_service" option:
+ * Service name to use for Kerberos 5 authentication
+ */
+#define DEFAULT_KRB5_SERVICE "nuauth"
 
 #endif
