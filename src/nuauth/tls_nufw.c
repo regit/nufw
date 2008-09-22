@@ -454,7 +454,7 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 	ret = nussl_ssl_trust_cert_file(context->server, nuauth_tls.ca);
 	if ( ret != NUSSL_OK ) {
 		log_message(FATAL, DEBUG_AREA_MAIN,
-			    "Failed to load nufw trust certificate: %s",
+			    "Failed to load nufw certificate authority (nuauth_tls_cacert): %s",
 			    nussl_get_error(context->server));
 		exit(EXIT_FAILURE);
 	}

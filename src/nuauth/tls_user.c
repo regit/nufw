@@ -714,7 +714,7 @@ int tls_user_init(struct tls_user_context_t *context)
 	ret = nussl_ssl_trust_cert_file(context->nussl, nuauth_tls.ca);
 	if ( ret != NUSSL_OK ) {
 		log_message(FATAL, DEBUG_AREA_MAIN,
-			    "Failed to load user trust certificate: %s",
+			    "Failed to load user certificate authority: %s",
 			    nussl_get_error(context->nussl));
 		exit(EXIT_FAILURE);
 	}
