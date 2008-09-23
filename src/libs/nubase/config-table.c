@@ -18,6 +18,7 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -148,6 +149,15 @@ int nubase_config_table_get_or_default_int(char *key, int defint)
 	i = atoi(str);
 
 	return i;
+}
+
+void nubase_config_table_print(void)
+{
+	struct config_table_t *config_table;
+
+	llist_for_each_entry(config_table, &config_table_list, list) {
+		fprintf(stdout,"%s = %s\n", (char *)config_table->key, (char *)config_table->value);
+	}
 }
 
 #ifdef _UNIT_TEST_
