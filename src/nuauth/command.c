@@ -40,6 +40,7 @@
 
 const char* COMMAND_HELP =
 "version: display nuauth version\n"
+"confdump: dump configuration\n"
 "users: list connected users\n"
 "firewalls: list connected nufw firewalls\n"
 "packets count: display number of decision waiting packets\n"
@@ -328,6 +329,11 @@ const char* fortune()
 	return FORTUNES[(int)index];
 }
 
+static void conf_server_side_print(void *unused, char *buffer)
+{
+	g_message("%s", buffer);	
+}
+
 void command_execute(command_t * this, char *command)
 {
 	encoder_t *encoder, *answer;
@@ -351,6 +357,9 @@ void command_execute(command_t * this, char *command)
 		command_servers(this, encoder);
 	} else if (strcmp(command, "version") == 0) {
 		encoder_add_string(encoder, NUAUTH_FULL_VERSION);
+	} else if (strcmp(command, "confdump") == 0) {
+		nubase_config_table_print(encoder, conf_server_side_print);
+		encoder_add_string(encoder, "Configuration dumped server side");
 	} else if (strcmp(command, "disconnect all") == 0) {
 		ok = command_disconnect_all(this, encoder);
 	} else if (strncmp(command, "disconnect ", 10) == 0) {

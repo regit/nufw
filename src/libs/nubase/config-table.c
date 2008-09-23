@@ -151,12 +151,21 @@ int nubase_config_table_get_or_default_int(char *key, int defint)
 	return i;
 }
 
-void nubase_config_table_print(void)
+void nubase_config_table_print(void *userdata, void (*func)(void *data, char *keyeqval))
 {
 	struct config_table_t *config_table;
+	char *buffer;
+	size_t buffer_len;
 
 	llist_for_each_entry(config_table, &config_table_list, list) {
-		fprintf(stdout,"%s = %s\n", (char *)config_table->key, (char *)config_table->value);
+		buffer_len = strlen((const char *)config_table->key) + 1 + strlen((const char *)config_table->value) + 1;
+		buffer = malloc(buffer_len);
+		secure_snprintf(buffer,  buffer_len,
+				"%s=%s",(char *)config_table->key, (char *)config_table->value); 
+		
+		func(userdata, buffer);
+
+		free(buffer);
 	}
 }
 

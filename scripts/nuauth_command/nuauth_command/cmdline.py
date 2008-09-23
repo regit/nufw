@@ -3,13 +3,13 @@ from nuauth_command import Client, NuauthError
 import re
 from command_dec import Answer
 
-COMMANDS_COMPLETION = ("version", "users", "refresh cache",
+COMMANDS_COMPLETION = ("version", "confdump", "users", "refresh cache",
     "disconnect ", "uptime", "reload", "help", "quit",
     "display debug_level", "display debug_areas", "debug_level",
     "debug_areas", "firewalls", "packets count", "reload periods")
 
 COMMANDS_REGEX = re.compile(
-    "^(?:version|users|firewalls|refresh cache|nupik!|display debug_(?:level|areas)|"
+    "^(?:version|confdump|users|firewalls|refresh cache|nupik!|display debug_(?:level|areas)|"
     "debug_level [0-9]+|debug_areas [0-9]+|"
     "disconnect (?:[0-9]+|all)|uptime|reload(?: periods)?|help|quit|packets count)$")
 
