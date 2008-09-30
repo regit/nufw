@@ -533,6 +533,7 @@ static int nu_get_userdatas(void *context __attribute__ ((unused)),
  * and then call mysasl_negotiate()
  *
  * \param session Pointer to client session
+ * \param hostname Name (FQDN) of the Nuauth server
  * \param err Pointer to a nuclient_error_t: which contains the error
  */
 int init_sasl(nuauth_session_t * session, const char *hostname, nuclient_error_t * err)
