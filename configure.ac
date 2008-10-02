@@ -32,9 +32,20 @@ fi
 AC_CPP_FUNC
 
 AM_PROG_LEX
+# macro AM_PROG_LEX is really stupid, so we insist on flex
+AC_CHECK_PROG(FLEX, flex, "$LEX", false)
+if test "$FLEX" = "false"; then
+  AC_MSG_ERROR([This package requires flex to build])
+fi
 AC_PROG_YACC
+# the macro is stupid and set $YACC to "yacc" if nothing was found ..
+AC_CHECK_PROG(YACC, yacc, "$YACC", false)
+if test "$YACC" = "yacc"; then
+  AC_MSG_ERROR([This package requires bison to build])
+fi
 AM_PROG_LIBTOOL
 AC_PROG_INSTALL
+
 
 # Checks for endianess
 AC_C_BIGENDIAN()
