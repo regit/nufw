@@ -543,6 +543,7 @@ int init_sasl(nuauth_session_t * session, const char *hostname, nuclient_error_t
 	sasl_ssf_t extssf = 0;
 	char * krb5_service = NULL;
 	const char * server_fqdn = hostname;
+	sasl_security_properties_t secprops;
 
 	/* SASL time */
 	sasl_callback_t callbacks[] = {
@@ -582,6 +583,14 @@ int init_sasl(nuauth_session_t * session, const char *hostname, nuclient_error_t
 		}
 	}
 
+	secprops.min_ssf = 0;
+	secprops.max_ssf = UINT_MAX;
+	secprops.property_names = NULL;
+	secprops.property_values = NULL;
+	secprops.security_flags = SASL_SEC_NOANONYMOUS; /* as appropriate */
+	secprops.maxbufsize = 65536;
+	sasl_setprop(conn, SASL_SEC_PROPS, &secprops);
+	
 	sasl_setprop(conn, SASL_SSF_EXTERNAL, &extssf);
 	ret = sasl_setprop(conn, SASL_AUTH_EXTERNAL, session->username);
 	if (ret != SASL_OK) {
@@ -589,7 +598,6 @@ int init_sasl(nuauth_session_t * session, const char *hostname, nuclient_error_t
 		SET_ERROR(err, SASL_ERROR, ret);
 		return 0;
 	}
-
 
 	ret = mysasl_negotiate(session, conn, err);
 	if (ret != SASL_OK) {
