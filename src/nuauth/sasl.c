@@ -932,7 +932,7 @@ int sasl_user_check(user_session_t * c_session)
 	}
 
 	secprops.min_ssf = 0;
-	secprops.max_ssf = 0;
+	secprops.max_ssf = UINT_MAX;
 	secprops.property_names = NULL;
 	secprops.property_values = NULL;
 	secprops.security_flags = SASL_SEC_NOANONYMOUS;	/* as appropriate */
