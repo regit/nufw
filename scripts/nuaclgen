@@ -92,7 +92,7 @@ sub todotquad {
 
 my $separator = ",";
 my ($help, $schema, $saddr, $daddr, $proto, $sport, $dport);
-my ($decision, $groups, $users, $aclname, $osname, $osversion);
+my ($decision, $groups, $users, $aclname, $osname, $osversion, $authquality);
 my ($osrelease, $appname, $appsig, $list, $delete );
 
 
@@ -112,6 +112,7 @@ my $result = GetOptions("help" => \$help,
 		     "OsRelease=s" => \$osrelease,
 		     "AppName=s" => \$appname,
 		     "AppSig=s" => \$appsig,
+		     "AuthQuality" => \$authquality,
                      "Separator" => \$separator,
 		     "List" => \$list,
 		     "Delete=s" => \$delete,
@@ -125,7 +126,7 @@ if ($help) {
   print "nuaclgen [-S (eq|ineq)] --Aclname [ACLDN] [--saddr NETWORK1] [--daddr NETWORK2] [--proto PROTONUMBER]
         [--sport P1[:P2]] [--dport P3[:P4]] --jump [ACCEPT|DROP] [--groups [GROUPLIST] || --users [USERSLIST]]
         [--OsName N1,N2... [--OsVersion V1,V2...] [--OsRelease R1,R2...]]
-        [--AppName N1,N2... [--AppSig S1,S2...]] : add an acl
+        [--AppName N1,N2... [--AppSig S1,S2...]] [--AuthQuality 1]: add an acl
 nuaclgen -L -g [Id Group] : list acl(s) for a group.
 nuaclgen -L -u [Id User] : list acl(s) for a user.
 nuaclgen --Delete dn : delete this dn ACL
@@ -247,6 +248,11 @@ if (defined $appname){
     my @sig= split(/$separator/,$appsig);
     $acl{"AppSig"}=\@sig;
   }
+}
+
+if (defined $authquality){
+    my @sig= split(/$separator/,$authquality);
+    $acl{"AuthQuality"}=\@sig;
 }
 
 # look for Add mode
