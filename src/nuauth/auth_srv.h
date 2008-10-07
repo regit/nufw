@@ -119,6 +119,8 @@ nu_error_t treat_user_request(user_session_t * c_session,
 
 #define PUSH_DELAY 150000
 
+#define POP_DELAY 500000 /* delay in nanosecond for timed pop call */
+
 #define UNKNOWN_STRING "UNKNOWN"
 
 #define POOL_TYPE TRUE

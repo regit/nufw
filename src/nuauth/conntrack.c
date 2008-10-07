@@ -262,7 +262,7 @@ void *limited_connection_handler(GMutex * mutex)
 
 		/* wait for message */
 		g_get_current_time(&tv);
-		g_time_val_add(&tv, 1000);
+		g_time_val_add(&tv, POP_DELAY);
 		message =
 		    g_async_queue_timed_pop(nuauthdatas->
 					    limited_connections_queue,

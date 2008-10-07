@@ -751,9 +751,9 @@ void *push_worker(GMutex * mutex)
 	while (g_mutex_trylock(mutex)) {
 		g_mutex_unlock(mutex);
 
-		/* wait a message during 1000ms */
+		/* wait a message during POP_DELAY */
 		g_get_current_time(&tv);
-		g_time_val_add(&tv, 1000);
+		g_time_val_add(&tv, POP_DELAY);
 		message =
 		    g_async_queue_timed_pop(nuauthdatas->tls_push_queue,
 					    &tv);
