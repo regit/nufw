@@ -1,0 +1,23 @@
+Introduction
+============
+
+ACLs checking modules contain a flag that can be used to store different
+information. The plaintext acl module uses the "flags" tag and ldap module
+uses "AclFlags" attribute.
+
+Values
+======
+
+The 16 lower weight order bit are reserved for per-ACL settings. These bits are
+used in bit comparison operation.
+
+You can combine the following value by addition:
+ * 1: do aysnchronous login on packet accepted by ACL, equivalent
+ to don't do Single Sign On on the ACL.
+ * 2: Don't log
+ * 4: Log synchronously (set it for SSO if not globally set)
+ * 8: Log strictly (set it for SSO if not globally set)
+
+Flag bits can also be used to set a mark on packet. If a packet matches an acl
+mark is computed based on information provided by the mark_flag module. See
+README.mark for more information.
