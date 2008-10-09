@@ -54,9 +54,14 @@
 # ACL flags is an integer coding properties of the ACL:
 #     flags = 1
 #
-# Flags 1 means: do aysnchronous login on packet accepted by ACL, equivalent
-# to don't do Single Sign On on the ACL.
-#
+# Flags value are used by bit comparison. You can combien the following
+# value
+#  * 1: do aysnchronous login on packet accepted by ACL, equivalent
+#  to don't do Single Sign On on the ACL.
+#  * 2: Don't log
+#  * 4: Log synchronously (set it for SSO if not globally set)
+#  * 8: Log strictly (set it for SSO)
+# Flag bits can be used to set a mark on packet. See mark_flag module.
 # Authentication quality can be used to limit authorization following the
 # type of authentication used
 #     authquality = LEVEL
