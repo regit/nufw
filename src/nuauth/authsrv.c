@@ -709,7 +709,10 @@ void configure_app(int argc, char **argv)
 		nuauthconf->configfile = g_strdup(params.configfile);
 	}
 
-	parse_configuration(nuauthconf->configfile);
+	ret = parse_configuration(nuauthconf->configfile);
+	if (ret > 0) {
+		g_error("Cannot load configuration (file '%s')", nuauthconf->configfile);
+	}
 
 	/* load configuration */
 	if (!init_nuauthconf(&conf)) {

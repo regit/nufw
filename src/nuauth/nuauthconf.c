@@ -117,7 +117,7 @@ int init_nuauthconf(struct nuauth_params **result)
 	    nubase_config_table_get_or_default_int("nuauth_do_ip_authentication", 0);
 	conf->acl_cache = nubase_config_table_get_or_default_int("nuauth_acl_cache", 0);
 	conf->user_cache = nubase_config_table_get_or_default_int("nuauth_user_cache", 0);
-#if USE_UTF8 
+#if USE_UTF8
 	conf->uses_utf8 = nubase_config_table_get_or_default_int("nuauth_uses_utf8", 1);
 #else
 	conf->uses_utf8 = nubase_config_table_get_or_default_int("nuauth_uses_utf8", 0);
@@ -209,6 +209,7 @@ gboolean nuauth_reload(int signum)
 {
 	struct nuauth_params *newconf = NULL;
 	gboolean restart;
+	int retval;
 
 	g_message("[+] Reload NuAuth server");
 	nuauth_install_signals(FALSE);
@@ -247,7 +248,10 @@ gboolean nuauth_reload(int signum)
 
 	/* Reload the configuration file */
 	nubase_config_table_destroy();
-	parse_configuration(nuauthconf->configfile);
+	retval = parse_configuration(nuauthconf->configfile);
+	if (retval > 0) {
+		g_error("Cannot reload configuration (file '%s')", nuauthconf->configfile);
+	}
 
 	/* reload modules with new conf */
 	load_modules();
