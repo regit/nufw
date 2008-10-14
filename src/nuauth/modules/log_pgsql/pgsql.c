@@ -71,7 +71,7 @@ static int formatINET(struct log_pgsql_params *params,
 	if (params->pgsql_use_ipv4) {
 		if (!is_ipv4(addr6)) {
 			log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
-				    "MySQL: Packet has IPV6 address but MySQL use IPV4 only schema");
+				    "PostgreSQL: Packet has IPV6 address but PostgreSQL use IPV4 only schema");
 			return 0;
 		}
 		addr4.s_addr = addr6->s6_addr32[3];
@@ -268,7 +268,7 @@ static int pgsql_insert(PGconn * ld, connection_t * element,
 			char *oob_prefix, tcp_state_t state,
 			struct log_pgsql_params *params)
 {
-	char request_fields[INSERT_REQUEST_FIEDLS_SIZE];
+	char request_fields[INSERT_REQUEST_FIELDS_SIZE];
 	char request_values[INSERT_REQUEST_VALUES_SIZE];
 	char tmp_buffer[INSERT_REQUEST_VALUES_SIZE];
 	char ip_src[INET6_ADDRSTRLEN];
@@ -328,7 +328,7 @@ static int pgsql_insert(PGconn * ld, connection_t * element,
 		else
 			quoted_appname = g_strdup("");
 
-		/* Quote strings send to MySQL */
+		/* Quote strings send to PostgreSQL */
 		g_strlcat(request_fields,
 			  ", user_id, username, client_os, client_app",
 			  sizeof(request_fields));
@@ -451,8 +451,8 @@ static int pgsql_update_state(PGconn * ld,
 {
 	char request[SHORT_REQUEST_SIZE];
 	PGresult *Result;
-	char tmp_inet1[INET_ADDRSTRLEN + 1];
-	char tmp_inet2[INET_ADDRSTRLEN + 1];
+	char tmp_inet1[INET6_ADDRSTRLEN + 1];
+	char tmp_inet2[INET6_ADDRSTRLEN + 1];
 	u_int16_t tcp_src, tcp_dst;
 	char *ip_src, *ip_dst;
 	int nb_try = 0;
