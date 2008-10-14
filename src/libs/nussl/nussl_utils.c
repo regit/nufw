@@ -188,8 +188,8 @@ int check_key_perms(const char *filename)
 	if (stat(filename, &infos) != 0)
 		return NUSSL_ERROR;
 
-	/* Check it's owned by the current user */
-	if (infos.st_mode & S_IRGRP || infos.st_mode & S_IROTH)
+	/* File should not be readable or writable by others */
+	if (infos.st_mode & S_IROTH || infos.st_mode & S_IWOTH)
 		return NUSSL_ERROR;
 
 	return NUSSL_OK;
