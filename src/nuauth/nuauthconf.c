@@ -91,7 +91,7 @@ int init_nuauthconf(struct nuauth_params **result)
 	conf->nbacl_check = nubase_config_table_get_or_default_int("nuauth_number_aclcheckers", NB_ACLCHECK);
 	conf->nbipauth_check = nubase_config_table_get_or_default_int("nuauth_number_ipauthcheckers", NB_ACLCHECK);
 	conf->log_users = nubase_config_table_get_or_default_int("nuauth_log_users", 9);
-	conf->log_users_sync = nubase_config_table_get_or_default_int("nuauth_log_users_sync", 0);
+	conf->log_users_sync = nubase_config_table_get_or_default_int("nuauth_log_users_sync", 1);
 	conf->log_users_strict = nubase_config_table_get_or_default_int("nuauth_log_users_strict", 1);
 	conf->log_users_without_realm =	nubase_config_table_get_or_default_int("nuauth_log_users_without_realm", 1);
 	conf->prio_to_nok = nubase_config_table_get_or_default_int("nuauth_prio_to_nok", 1);
