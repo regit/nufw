@@ -79,6 +79,38 @@ void cleanup_func_remove(cleanup_func_t func)
 	cleanup_func_list = g_list_remove(cleanup_func_list, func);
 }
 
+/**
+ * wait one thread pool
+ */
+void wait_thread_pool(const char *name, GThreadPool *pool)
+{
+	gint count = 1;
+	while (count) {
+		count = g_thread_pool_unprocessed(pool);	
+		usleep(10000);
+	}
+	log_message(DEBUG, DEBUG_AREA_MAIN,
+			"thread pool '%s' free", name);
+}
+
+void wait_all_thread_pools()
+{
+	wait_thread_pool("session logger", nuauthdatas->user_session_loggers);
+	wait_thread_pool("packet logger", nuauthdatas->user_loggers);
+	wait_thread_pool("acl checker", nuauthdatas->acl_checkers);
+	wait_thread_pool("users checker", nuauthdatas->user_checkers);
+
+	if (nuauthconf->log_users_sync) {
+		wait_thread_pool("decision worker",
+				nuauthdatas->decisions_workers);
+	}
+
+	if (nuauthconf->do_ip_authentication) {
+		wait_thread_pool("ip auth worker",
+				nuauthdatas->ip_authentication_workers);
+	}
+}
+
 void block_thread_pools()
 {
 	nuauthdatas->need_reload = 1;

@@ -220,7 +220,7 @@ gboolean nuauth_reload(int signum)
 	/* block threads of pool at start */
 	block_thread_pools();
 	/* we have to wait that all threads are blocked */
-	stop_all_thread_pools(TRUE);
+	wait_all_thread_pools();
 	/* unload modules */
 	unload_modules();
 
@@ -231,9 +231,6 @@ gboolean nuauth_reload(int signum)
 
 	/* switch conf before loading modules */
 	restart = compare_nuauthparams(nuauthconf, newconf);
-
-	/* start "pure" pool threads */
-	start_all_thread_pools();
 
 	if (restart == FALSE) {
 		apply_new_config(newconf);
@@ -281,16 +278,6 @@ static gboolean compare_nuauthparams(
 
 	if (strcmp(current->userpckt_port, new->userpckt_port) != 0) {
 		g_warning("userpckt_port has changed, please restart");
-		restart = TRUE;
-	}
-
-	if (current->log_users_sync != new->log_users_sync) {
-		g_warning("log_users_sync has changed, please restart");
-		restart = TRUE;
-	}
-
-	if (current->log_users_strict != new->log_users_strict) {
-		g_warning("log_users_strict has changed, please restart");
 		restart = TRUE;
 	}
 
@@ -347,6 +334,21 @@ static gboolean compare_nuauthparams(
 		g_warning
 		    ("nuauth_do_ip_authentication has been modified, please restart");
 		restart = TRUE;
+	}
+
+	if (current->log_users_sync != new->log_users_sync) {
+		if (new->log_users_sync) {
+			log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
+					"Creating %d decision worker threads",
+					nuauthconf->nbloggers);
+			nuauthdatas->decisions_workers =
+				g_thread_pool_new((GFunc) decisions_queue_work, NULL,
+						new->nbloggers, POOL_TYPE,
+						NULL);
+		} else {
+			stop_thread_pool("decision worker",
+					&nuauthdatas->decisions_workers);
+		}
 	}
 	return restart;
 }

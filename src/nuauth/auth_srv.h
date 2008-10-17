@@ -229,6 +229,7 @@ nu_error_t treat_user_request(user_session_t * c_session,
 void nuauth_ask_exit();
 void stop_all_thread_pools(gboolean wait);
 void block_thread_pools();
+void wait_all_thread_pools();
 void release_thread_pools();
 void start_all_thread_pools();
 void stop_thread_pool(const char *name, GThreadPool **pool);
