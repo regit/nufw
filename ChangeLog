@@ -2,6 +2,7 @@
 	  failure message on client side
 	- libnuclient: don't leave when default cafile is not found
 	- Nuauth: add a flag to be able to disable log on a per-rule basis
+	- nuauth: fix ACL order in the plaintext module
 2.2.10 (2007/12/04)
 	- log_mysql: fix log prefix (avoid double ":" when used with nuface)
 	- nuauth: fix crash when nufw is misconfigured and sends improper packet
@@ -26,7 +27,7 @@
 	- nuauth: fix a buffer overflow (3 bytes) in base64 encoding function
 	- nuauth: improve certificate file error handling
 	- nuauth: leaver if socket command file is unavailable
-	- pam_nufw: fix memset usage 
+	- pam_nufw: fix memset usage
 2.2.6 (2007/10/09)
 	- nuauth: fix rare bug causing infinite loop
 	- Add auth_mysql module : authentication and ip authentication against

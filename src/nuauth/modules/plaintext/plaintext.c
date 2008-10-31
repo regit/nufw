@@ -1287,7 +1287,7 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element, gpointer params)
 		this_acl->flags = p_acl->flags;
 		this_acl->auth_quality = p_acl->auth_quality;
 
-		g_list = g_slist_prepend(g_list, this_acl);
+		g_list = g_slist_append(g_list, this_acl);
 	}
 
 	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
