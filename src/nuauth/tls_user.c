@@ -2,6 +2,7 @@
  ** Copyright(C) 2004-2008 INL
  ** Written by  Eric Leblond <regit@inl.fr>
  **             Vincent Deffontaines <gryzor@inl.fr>
+ **             Pierre Chifflier <chifflier@inl.fr>
  **
  ** $Id$
  **
@@ -608,6 +609,10 @@ void tls_user_servers_init()
  */
 int tls_user_setcert_auth_params(int requestcert, int authcert)
 {
+	int disable_request_warning;
+
+	disable_request_warning = nubase_config_table_get_or_default_int("nuauth_tls_disable_request_warning", FALSE);
+
 	nuauth_tls.auth_by_cert = authcert;
 
 	if (NUSSL_VALID_REQ_TYPE(requestcert)) {
@@ -628,6 +633,19 @@ int tls_user_setcert_auth_params(int requestcert, int authcert)
 
 	log_message(INFO, DEBUG_AREA_AUTH | DEBUG_AREA_USER,"request_cert = %i", nuauth_tls.request_cert);
 	log_message(INFO, DEBUG_AREA_AUTH | DEBUG_AREA_USER,"auth_by_cert = %i", nuauth_tls.auth_by_cert);
+
+	if (!disable_request_warning) {
+		if (nuauth_tls.request_cert != 2) {
+			g_warning ("[%i] nuauth: client certificates are not required\n"
+				"nuauth will *NOT* check client certificates.\n"
+				"Set nuauth_tls_request_cert=2 to request certificates.\n",
+				getpid());
+		} else {
+			log_message(INFO, DEBUG_AREA_AUTH | DEBUG_AREA_USER,
+				    "Client certificates are required.");
+		}
+	}
+
 	return 1;
 }
 
