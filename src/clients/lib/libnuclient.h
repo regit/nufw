@@ -215,6 +215,9 @@ struct nuauth_session {
 
 	/** max sleep delay between check in microseconds */
 	struct timeval max_sleep_delay;
+
+	/** Suppress warning when no CA is configured */
+	int suppress_ca_warning;
 };
 
 

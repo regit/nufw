@@ -392,7 +392,12 @@ int nu_client_load_ca(nuauth_session_t * session,
 				return 0;
 			}
 			else {
-				printf("Warning: Failed to load default CA certificate.\n");
+				if (!session->suppress_ca_warning) {
+					fprintf(stderr,"\nWARNING: you have not provided any certificate authority.\n"
+							"nutcpc will *NOT* verify server certificate trust.\n"
+							"Use the -A <cafile> option to set up CA.\n\n"
+					       );
+				}
 			}
 		}
 	}
@@ -447,6 +452,16 @@ int nu_client_set_krb5_service(nuauth_session_t * session,
 	if (service) {
 		session->krb5_service = service;
 	}
+	return 1;
+}
+
+/**
+ * \ingroup nuclientAPI
+ */
+int nu_client_set_ca_suppress_warning(nuauth_session_t * session,
+				int suppress_ca_warning)
+{
+	session->suppress_ca_warning = suppress_ca_warning;
 	return 1;
 }
 
