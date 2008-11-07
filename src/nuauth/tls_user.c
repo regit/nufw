@@ -693,7 +693,7 @@ int tls_user_init(struct tls_user_context_t *context)
 	context->nuauth_tls_max_clients = nubase_config_table_get_or_default_int("nuauth_tls_max_clients", NUAUTH_TLS_MAX_CLIENTS);
 	context->nuauth_auth_nego_timeout = nubase_config_table_get_or_default_int("nuauth_auth_nego_timeout", NUAUTH_TLS_MAX_CLIENTS);
 	/* ssl related conf */
-	int_requestcert = nubase_config_table_get_or_default_int("nuauth_tls_request_cert", FALSE);
+	int_requestcert = nubase_config_table_get_or_default_int("nuauth_tls_request_cert", 2);
 	int_authcert = nubase_config_table_get_or_default_int("nuauth_tls_auth_by_cert", FALSE);
 
 	if (!tls_user_setcert_auth_params(int_requestcert, int_authcert)) {
