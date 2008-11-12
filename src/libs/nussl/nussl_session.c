@@ -203,7 +203,6 @@ int nussl_session_handshake(nussl_session * client_sess, nussl_session * srv_ses
 		/* nussl_sock_accept_ssl already sets an error */
 		nussl_set_error(srv_sess, "%s",
 				nussl_sock_error(client_sess->socket));
-		nussl_session_destroy(client_sess);
 		return -1;
 	}
 	// Post handshake needed to retrieve the peers certificate
@@ -211,7 +210,6 @@ int nussl_session_handshake(nussl_session * client_sess, nussl_session * srv_ses
 		/* nussl__ssl_post_handshake already sets an error */
 		nussl_set_error(srv_sess, "%s",
 				nussl_get_error(client_sess));
-		nussl_session_destroy(client_sess);
 		return -1;
 	}
 
@@ -718,13 +716,14 @@ int nussl_session_getpeer(nussl_session * sess, struct sockaddr *addr,
 			  socklen_t * addrlen)
 {
 	int fd;
+	int ret;
 
 	if (!sess)
 		return NUSSL_ERROR;
 
 	fd = nussl_session_get_fd(sess);
 	memset(addr, 0, *addrlen);
-	int ret = getpeername(fd, addr, addrlen);
+	ret = getpeername(fd, addr, addrlen);
 
 	if (ret == -1) {
 		nussl_set_error(sess, "%s", strerror(errno));
