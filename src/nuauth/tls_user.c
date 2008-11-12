@@ -304,14 +304,6 @@ int tls_user_accept(struct tls_user_context_t *context)
 		return 1;
 	}
 
-	ret = nussl_session_handshake(current_client_conn->nussl,context->nussl);
-	if ( ret ) {
-		log_message(WARNING, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
-			    "New client connection failed during nussl_session_handshake(): %s", nussl_get_error(context->nussl));
-		g_free(current_client_conn);
-		return 1;
-	}
-
 	if (nussl_session_getpeer(current_client_conn->nussl, (struct sockaddr *) &sockaddr, &len_inet) != NUSSL_OK)
 	{
 		log_message(WARNING, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
@@ -346,6 +338,19 @@ int tls_user_accept(struct tls_user_context_t *context)
 	} else {
 		addr = sockaddr6->sin6_addr;
 		sport = ntohs(sockaddr6->sin6_port);
+	}
+
+	ret = nussl_session_handshake(current_client_conn->nussl,context->nussl);
+	if ( ret ) {
+		char address[INET6_ADDRSTRLEN];
+		format_ipv6(&addr, address, sizeof(address), NULL);
+		log_message(WARNING, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
+			    "New client connection from %s failed during nussl_session_handshake(): %s",
+			    address,
+			    nussl_get_error(context->nussl));
+		nussl_session_destroy(current_client_conn->nussl);
+		g_free(current_client_conn);
+		return 1;
 	}
 
 	current_client_conn->socket = socket;
