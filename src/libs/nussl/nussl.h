@@ -102,6 +102,9 @@ extern "C" {
 
 	nussl_session *nussl_session_accept(nussl_session * srv_sess);
 
+	int nussl_session_handshake(nussl_session * client_sess,
+				    nussl_session * srv_sess);
+
 	int nussl_session_get_fd(nussl_session * sess);
 
 	int nussl_session_getpeer(nussl_session * sess,

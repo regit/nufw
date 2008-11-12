@@ -184,6 +184,7 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 	struct sockaddr_storage sockaddr;
 	struct sockaddr_in *sockaddr4 = (struct sockaddr_in *) &sockaddr;
 	struct sockaddr_in6 *sockaddr6 = (struct sockaddr_in6 *) &sockaddr;
+	int ret;
 #if 0
 	struct in6_addr addr;
 	char addr_ascii[INET6_ADDRSTRLEN];
@@ -215,6 +216,15 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 		g_free(nu_session);
 		log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_WARNING,
 				"Unable to allocate nufw server connection : %s",
+				nussl_get_error(context->server));
+		return 1;
+	}
+
+	ret = nussl_session_handshake(nu_session->nufw_client, context->server);
+	if ( ret ) {
+		g_free(nu_session);
+		log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_WARNING,
+				"Error during TLS handshake with nufw server : %s",
 				nussl_get_error(context->server));
 		return 1;
 	}

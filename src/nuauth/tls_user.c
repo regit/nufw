@@ -292,6 +292,7 @@ int tls_user_accept(struct tls_user_context_t *context)
 	int socket;
 	gint option_value;
 	unsigned short sport;
+	int ret;
 
 	current_client_conn = g_new0(struct client_connection, 1);
 
@@ -299,6 +300,14 @@ int tls_user_accept(struct tls_user_context_t *context)
 	if ( ! current_client_conn->nussl ) {
 		log_message(WARNING, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
 			    "New client connection failed during nussl_session_accept(): %s", nussl_get_error(context->nussl));
+		g_free(current_client_conn);
+		return 1;
+	}
+
+	ret = nussl_session_handshake(current_client_conn->nussl,context->nussl);
+	if ( ret ) {
+		log_message(WARNING, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
+			    "New client connection failed during nussl_session_handshake(): %s", nussl_get_error(context->nussl));
 		g_free(current_client_conn);
 		return 1;
 	}

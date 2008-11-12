@@ -187,21 +187,24 @@ nussl_session *nussl_session_accept(nussl_session * srv_sess)
 	client_sess->socket = nussl_sock_create();
 
 	/* TDOD: make nussl_sock_accept return a real error.. */
-	if (nussl_sock_accept
-	    (client_sess->socket, nussl_sock_fd(srv_sess->socket)) != 0) {
+	if (nussl_sock_accept(client_sess->socket, nussl_sock_fd(srv_sess->socket)) != 0) {
 		nussl_set_error(srv_sess,
 				"Error during nussl_session_accept()\n");
 		nussl_session_destroy(client_sess);
 		return NULL;
 	}
 
-	if (nussl_sock_accept_ssl
-	    (client_sess->socket, srv_sess->ssl_context)) {
+	return client_sess;
+}
+
+int nussl_session_handshake(nussl_session * client_sess, nussl_session * srv_sess)
+{
+	if (nussl_sock_accept_ssl(client_sess->socket, srv_sess->ssl_context)) {
 		/* nussl_sock_accept_ssl already sets an error */
 		nussl_set_error(srv_sess, "%s",
 				nussl_sock_error(client_sess->socket));
 		nussl_session_destroy(client_sess);
-		return NULL;
+		return -1;
 	}
 	// Post handshake needed to retrieve the peers certificate
 	if (nussl__ssl_post_handshake(client_sess) != NUSSL_OK) {
@@ -209,10 +212,10 @@ nussl_session *nussl_session_accept(nussl_session * srv_sess)
 		nussl_set_error(srv_sess, "%s",
 				nussl_get_error(client_sess));
 		nussl_session_destroy(client_sess);
-		return NULL;
+		return -1;
 	}
 
-	return client_sess;
+	return 0;
 }
 
 int nussl_session_get_fd(nussl_session * sess)
