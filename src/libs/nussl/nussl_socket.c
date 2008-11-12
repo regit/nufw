@@ -51,7 +51,6 @@
 
 #include <config.h>
 #include "nussl_config.h"
-#include "nussl.h"
 
 #include <stdio.h>
 #include <sys/types.h>

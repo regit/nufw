@@ -28,16 +28,7 @@
 
 
 NUSSL_BEGIN_DECLS
-#define NUSSL_OK (0)		/* Success */
-#define NUSSL_ERROR (1)		/* Generic error; use nussl_get_error(session) for message */
-#define NUSSL_LOOKUP (2)	/* Server or proxy hostname lookup failed */
-#define NUSSL_AUTH (3)		/* User authentication failed on server */
-#define NUSSL_PROXYAUTH (4)	/* User authentication failed on proxy */
-#define NUSSL_CONNECT (5)	/* Could not connect to server */
-#define NUSSL_TIMEOUT (6)	/* Connection timed out */
-#define NUSSL_FAILED (7)	/* The precondition failed */
-#define NUSSL_RETRY (8)		/* Retry request (nussl_end_request ONLY) */
-#define NUSSL_REDIRECT (9)	/* See nussl_redirect.h */
+
 int nussl_open_connection(nussl_session * sess);
 
 NUSSL_END_DECLS

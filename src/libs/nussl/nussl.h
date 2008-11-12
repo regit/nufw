@@ -114,27 +114,6 @@ extern "C" {
 	int nussl_ssl_set_crl_file(nussl_session * sess, char *crl_file);
 
 
-#define NUSSL_OK (0)		/* Success */
-#define NUSSL_ERROR (1)		/* Generic error; use nussl_get_error(session) for message */
-#define NUSSL_LOOKUP (2)	/* Server or proxy hostname lookup failed */
-#define NUSSL_AUTH (3)		/* User authentication failed on server */
-#define NUSSL_PROXYAUTH (4)	/* User authentication failed on proxy */
-#define NUSSL_CONNECT (5)	/* Could not connect to server */
-#define NUSSL_TIMEOUT (6)	/* Connection timed out */
-#define NUSSL_FAILED (7)	/* The precondition failed */
-#define NUSSL_RETRY (8)		/* Retry request (nussl_end_request ONLY) */
-#define NUSSL_REDIRECT (9)	/* See nussl_redirect.h */
-
-#define NUSSL_SOCK_ERROR (-1)
-/* Read/Write timed out */
-#define NUSSL_SOCK_TIMEOUT (-2)
-/* Socket was closed */
-#define NUSSL_SOCK_CLOSED (-3)
-/* Connection was reset (e.g. server crashed) */
-#define NUSSL_SOCK_RESET (-4)
-/* Secure connection was closed without proper SSL shutdown. */
-#define NUSSL_SOCK_TRUNC (-5)
-
 #define NUSSL_VALID_REQ_TYPE(n) (n >= NUSSL_CERT_IGNORE && n <= NUSSL_CERT_REQUIRE)
 
 #ifdef __cplusplus

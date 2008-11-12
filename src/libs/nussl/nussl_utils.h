@@ -40,6 +40,7 @@
 #include <stdio.h>
 
 #include "nussl_config.h"
+#include "nussl_constants.h"
 #include "nussl_defs.h"
 
 #ifdef NEON_TRIO
@@ -111,17 +112,6 @@ int nussl_has_support(int feature);
 #define NUSSL_DBG_FLUSH stderr
 
 
-
-#define NUSSL_OK (0)		/* Success */
-#define NUSSL_ERROR (1)		/* Generic error; use nussl_get_error(session) for message */
-#define NUSSL_LOOKUP (2)	/* Server or proxy hostname lookup failed */
-#define NUSSL_AUTH (3)		/* User authentication failed on server */
-#define NUSSL_PROXYAUTH (4)	/* User authentication failed on proxy */
-#define NUSSL_CONNECT (5)	/* Could not connect to server */
-#define NUSSL_TIMEOUT (6)	/* Connection timed out */
-#define NUSSL_FAILED (7)	/* The precondition failed */
-#define NUSSL_RETRY (8)		/* Retry request (nussl_end_request ONLY) */
-#define NUSSL_REDIRECT (9)	/* See nussl_redirect.h */
 
 /* Send debugging output to 'stream', for all of the given debug
  * channels.  To disable debugging, pass 'stream' as NULL and 'mask'
