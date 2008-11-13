@@ -713,7 +713,8 @@ int auth_request_send(uint8_t type, struct queued_pckt *pckt_datas)
 
 			log_area_printf(DEBUG_AREA_GW,
 					DEBUG_LEVEL_WARNING,
-					"[+] TLS connection to nuauth restored");
+					"[+] TLS connection to nuauth restored (%s:%d)",
+					authreq_addr, authreq_port);
 
 			/* create joinable thread for auth server */
 			pthread_mutex_init(&tls.auth_server_mutex, NULL);
@@ -726,7 +727,8 @@ int auth_request_send(uint8_t type, struct queued_pckt *pckt_datas)
 		} else {
 			log_area_printf(DEBUG_AREA_GW,
 					DEBUG_LEVEL_WARNING,
-					"[!] TLS connection to nuauth can NOT be restored");
+					"[!] TLS connection to nuauth can NOT be restored (%s:%d)",
+					authreq_addr, authreq_port);
 			return 0;
 		}
 	}
