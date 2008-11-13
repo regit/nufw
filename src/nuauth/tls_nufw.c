@@ -184,6 +184,7 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 	struct sockaddr_storage sockaddr;
 	struct sockaddr_in *sockaddr4 = (struct sockaddr_in *) &sockaddr;
 	struct sockaddr_in6 *sockaddr6 = (struct sockaddr_in6 *) &sockaddr;
+	char address[INET6_ADDRSTRLEN];
 	int ret;
 #if 0
 	struct in6_addr addr;
@@ -237,10 +238,10 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 		nu_session->peername = sockaddr6->sin6_addr;
 	}
 
+	format_ipv6(&nu_session->peername, address, sizeof(address), NULL);
+
 	ret = nussl_session_handshake(nu_session->nufw_client, context->server);
 	if ( ret ) {
-		char address[INET6_ADDRSTRLEN];
-		format_ipv6(&nu_session->peername, address, sizeof(address), NULL);
 		log_message(WARNING, DEBUG_AREA_MAIN,
 				"Error during TLS handshake with nufw server %s : %s",
 				address,
@@ -259,8 +260,8 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 	FD_SET(conn_fd, &context->tls_rx_set);
 	if (conn_fd + 1 > context->mx)
 		context->mx = conn_fd + 1;
-	g_message("[+] NuFW: new client connected on socket %d",
-		  conn_fd);
+	g_message("[+] NuFW: new NuFW server (%s) connected on socket %d",
+		  address, conn_fd);
 
 	return 0;
 }
