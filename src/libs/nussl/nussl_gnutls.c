@@ -779,7 +779,8 @@ int nussl__ssl_post_handshake(nussl_session * sess)
 		return NUSSL_OK;
 	}
 
-	if (check_certificate(sess, sock, chain) != NUSSL_OK) {
+	if (check_certificate(sess, sock, chain) != NUSSL_OK &&
+	    sess->check_peer_cert != 0) {
 		nussl_ssl_cert_free(chain);
 		nussl_set_error(sess, "Certificate verification failed");
 		return NUSSL_ERROR;

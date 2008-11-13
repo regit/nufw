@@ -147,6 +147,9 @@ nussl_session *nussl_session_create()
 	/* Set default read timeout */
 	sess->rdtimeout = SOCKET_READ_TIMEOUT;
 
+	/* check certificates by default */
+	sess->check_peer_cert = 1;
+
 	return sess;
 }
 
@@ -352,6 +355,14 @@ void nussl_close_connection(nussl_session * sess)
 		NUSSL_DEBUG(NUSSL_DBG_SOCKET,
 			    "(Not closing closed connection!).\n");
 	}
+}
+
+void nussl_ssl_disable_certificate_check(nussl_session * sess, int is_disabled)
+{
+	if (!sess)
+		return;
+
+	sess->check_peer_cert = !is_disabled;
 }
 
 #if 0

@@ -116,6 +116,8 @@ extern "C" {
 
 	int nussl_ssl_set_crl_file(nussl_session * sess, char *crl_file);
 
+	void nussl_ssl_disable_certificate_check(nussl_session * sess, int is_disabled);
+
 
 #define NUSSL_VALID_REQ_TYPE(n) (n >= NUSSL_CERT_IGNORE && n <= NUSSL_CERT_REQUIRE)
 

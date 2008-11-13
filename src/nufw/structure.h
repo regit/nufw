@@ -76,6 +76,9 @@ int track_size;
 /*! If equals to 1, set mark on packet using #IPQ_SET_VWMARK. Default value: 0 */
 int nufw_set_mark;
 
+/*! If equals to 1, do a strict check of all TLS property */
+int nufw_strict_tls;
+
 /**
  * This enum is used to code the state of  a packet
  * with respect to nufw nuauth interaction

@@ -376,7 +376,7 @@ int main(int argc, char *argv[])
 {
 	/* option */
 #if USE_NFQUEUE
-	char *options_list = "DhVvmq:"
+	char *options_list = "sDhVvmq:"
 #ifdef HAVE_NFQ_SET_QUEUE_MAXLEN
 	    "L:"
 #endif
@@ -386,7 +386,7 @@ int main(int argc, char *argv[])
 #endif
 	    ;
 #else
-	char *options_list = "DhVvmc:k:a:n:d:p:t:T:A:";
+	char *options_list = "sDhVvmc:k:a:n:d:p:t:T:A:";
 #endif
 	int option, daemonize = 0;
 	char *version = PACKAGE_VERSION;
@@ -416,6 +416,7 @@ int main(int argc, char *argv[])
 #endif
 #endif
 	nufw_set_mark = 0;
+	nufw_strict_tls = 1;
 
 
 	log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_VERBOSE_DEBUG,
@@ -491,6 +492,9 @@ int main(int argc, char *argv[])
 		case 'm':
 			nufw_set_mark = 1;
 			break;
+		case 's':
+			nufw_strict_tls = 0;
+			break;
 #if USE_NFQUEUE
 		case 'q':
 			sscanf(optarg, "%hu", &nfqueue_num);
@@ -530,6 +534,7 @@ int main(int argc, char *argv[])
 \t-h: display this help and exit\n\
 \t-V: display version and exit\n\
 \t-D: daemonize\n\
+\t-s: do not enforce strict checking of TLS certificates\n\
 \t-k: use specified file as key file\n\
 \t-c: use specified file as cert file\n\
 \t-a: use specified file as ca file (strict checking is done if selected) (default: none)\n\
