@@ -701,8 +701,7 @@ static int check_certificate(nussl_session * sess, gnutls_session sock,
 
 	if (ret < 0) {
 		nussl_set_error(sess,
-				_
-				("Server certificate was missing commonName "
+				_("Server certificate was missing commonName "
 				 "attribute in subject name"));
 		return NUSSL_ERROR;
 	} else if (ret > 0) {
@@ -716,9 +715,9 @@ static int check_certificate(nussl_session * sess, gnutls_session sock,
 			    gnutls_strerror(ret));
 		failures |= NUSSL_SSL_UNTRUSTED;
 	}
-	if (status) {		/* XXX: Add more checks */
+	if (status || failures) {		/* XXX: Add more checks */
 		NUSSL_DEBUG(NUSSL_DBG_SSL,
-			    "Certificate authority verification failed:");
+			    "Certificate authority verification failed: ");
 		if (status & GNUTLS_CERT_INVALID) {
 			NUSSL_DEBUG(NUSSL_DBG_SSL, "invalid, ");
 			failures |= NUSSL_SSL_INVALID;
@@ -734,6 +733,12 @@ static int check_certificate(nussl_session * sess, gnutls_session sock,
 		if (status & GNUTLS_CERT_SIGNER_NOT_CA) {
 			NUSSL_DEBUG(NUSSL_DBG_SSL, "signer not a CA, ");
 			failures |= NUSSL_SSL_SIGNER_NOT_CA;
+		}
+		if (failures & NUSSL_SSL_EXPIRED) {
+			NUSSL_DEBUG(NUSSL_DBG_SSL, "expired, ");
+		}
+		if (failures & NUSSL_SSL_NOTYETVALID) {
+			NUSSL_DEBUG(NUSSL_DBG_SSL, "not yet valid, ");
 		}
 		failures |= NUSSL_SSL_UNTRUSTED;
 	}
