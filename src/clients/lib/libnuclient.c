@@ -206,6 +206,30 @@ char *nu_get_home_dir()
 	return dir;
 }
 
+/**
+ * \ingroup nuclientAPI
+ * Get user name
+ *
+ * \return A string that need to be freed
+ */
+
+char *nu_get_user_name()
+{
+	uid_t uid;
+	struct passwd *pwd;
+	char *name = NULL;
+
+	uid = getuid();
+	if (!(pwd = getpwuid(uid))) {
+		printf("Unable to get password file record\n");
+		endpwent();
+		return NULL;
+	}
+	name = strdup(pwd->pw_name);
+	endpwent();
+	return name;
+}
+
 int nu_client_set_key(nuauth_session_t* session, char* keyfile, char* certfile, nuclient_error_t* err)
 {
 	if (session->pem_key)

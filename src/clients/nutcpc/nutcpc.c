@@ -846,8 +846,11 @@ int main(int argc, char **argv)
 {
 	char *runpid = compute_run_pid();
 	char *username = NULL;
+	char *default_username = NULL;
 	nutcpc_context_t context;
 	memset(&context, 0, sizeof(context));
+
+	default_username = nu_get_user_name();
 
 	/* needed by iconv */
 	setlocale(LC_ALL, "");
@@ -896,6 +899,9 @@ int main(int argc, char **argv)
 	}
 
 	install_signals();
+
+	if (!username)
+		username = default_username;
 
 	init_library(&context, username);
 
