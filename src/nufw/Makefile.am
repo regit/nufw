@@ -15,18 +15,18 @@ nufw_SOURCES = authsrv.c  common.c  main.c  packetsrv.c \
 		${nodist_include_HEADERS}
 
 if HAVE_IPQ
-nufw_LDADD = -lipq -lpthread -lgnutls -L$(top_builddir)/src/libs/nubase -lnubase -L$(top_builddir)/src/libs/nussl -lnussl
+nufw_LDADD = -lipq -lpthread -lgnutls ../libs/nubase/libnubase.la ../libs/nussl/libnussl.la
 endif
 if HAVE_NFQUEUE_CONNTRACK
-nufw_LDADD = -lnfnetlink -lnetfilter_queue -lnetfilter_conntrack -lpthread -lgnutls -ldl -L$(top_builddir)/src/libs/nubase -lnubase -L$(top_builddir)/src/libs/nussl -lnussl
+nufw_LDADD = -lnfnetlink -lnetfilter_queue -lnetfilter_conntrack -lpthread -lgnutls -ldl ../libs/nubase/libnubase.la ../libs/nussl/libnussl.la
 endif
 
 if HAVE_NFQUEUE_ONLY
-nufw_LDADD = -lnfnetlink -lnetfilter_queue -lpthread -lgnutls -L$(top_builddir)/src/libs/nubase -lnubase -L$(top_builddir)/src/libs/nussl -lnussl
+nufw_LDADD = -lnfnetlink -lnetfilter_queue -lpthread -lgnutls ../libs/nubase/libnubase.la ../libs/nussl/libnussl.la
 endif
 
 if HAVE_CONNTRACK_ONLY
-nufw_LDADD = -lnfnetlink -lipq -lnetfilter_conntrack -ldl -lpthread -lgnutls -L$(top_builddir)/src/libs/nubase -lnubase -L$(top_builddir)/src/libs/nussl -lnussl
+nufw_LDADD = -lnfnetlink -lipq -lnetfilter_conntrack -ldl -lpthread -lgnutls ../libs/nubase/libnubase.la ../libs/nussl/libnussl.la
 endif
 
 nufw$(EXEEXT): $(nufw_OBJECTS) $(nufw_DEPENDENCIES)
