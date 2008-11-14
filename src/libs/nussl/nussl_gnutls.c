@@ -477,7 +477,7 @@ static nussl_ssl_client_cert *dup_client_cert(const nussl_ssl_client_cert *
 	populate_cert(&newcc->cert, newcc->cert.subject);
 	return newcc;
 
-      dup_error:
+dup_error:
 	if (newcc->pkey)
 		gnutls_x509_privkey_deinit(newcc->pkey);
 	if (newcc->cert.subject)
@@ -1197,7 +1197,7 @@ void nussl__ssl_exit(void)
 {
 	/* No way to unregister the thread callbacks.  Doomed. */
 #if LIBGNUTLS_VERSION_MAJOR > 1 || LIBGNUTLS_VERSION_MINOR > 3 \
-    || (LIBGNUTLS_VERSION_MINOR == 3 && LIBGNUTLS_VERSION_PATCH >= 3)
+	|| (LIBGNUTLS_VERSION_MINOR == 3 && LIBGNUTLS_VERSION_PATCH >= 3)
 	/* It's safe to call gnutls_global_deinit() here only with
 	 * gnutls >= 1.3., since older versions don't refcount and
 	 * doing so would prevent any other use of gnutls within
