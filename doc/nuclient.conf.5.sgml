@@ -1,0 +1,186 @@
+<!doctype refentry PUBLIC "-//OASIS//DTD DocBook V4.1//EN" [
+
+<!-- Process this file with docbook-to-man to generate an nroff manual
+     page: `docbook-to-man manpage.sgml > manpage.1'.  You may view
+     the manual page with: `docbook-to-man manpage.sgml | nroff -man |
+     less'.  A typical entry in a Makefile or Makefile.am is:
+
+manpage.1: manpage.sgml
+	docbook-to-man $< > $@
+
+
+	The docbook-to-man binary is found in the docbook-to-man package.
+	Please remember that if you create the nroff version in one of the
+	debian/rules file targets (such as build), you will need to include
+	docbook-to-man in your Build-Depends control field.
+
+  -->
+
+  <!-- Fill in your name for FIRSTNAME and SURNAME. -->
+  <!ENTITY dhfirstname "<firstname>Pierre</firstname>">
+  <!ENTITY dhsurname   "<surname>Chifflier</surname>">
+  <!-- Please adjust the date whenever revising the manpage. -->
+  <!ENTITY dhdate      "<date>october 24, 2008</date>">
+  <!-- SECTION should be 1-8, maybe w/ subsection other parameters are
+       allowed: see man(7), man(1). -->
+  <!ENTITY dhsection   "<manvolnum>5</manvolnum>">
+  <!ENTITY dhemail2     "<email>vincent@gryzor.com</email>">
+  <!ENTITY dhemail    "<email>eric@regit.org</email>">
+  <!ENTITY dhusername  "Pierre Chifflier">
+  <!ENTITY dhucpackage "<refentrytitle>nuclient.conf</refentrytitle>">
+  <!ENTITY dhpackage   "nuclient.conf">
+
+  <!ENTITY gnu         "<acronym>GNU</acronym>">
+  <!ENTITY gpl         "&gnu; <acronym>GPL</acronym>">
+
+]>
+
+<refentry>
+  <refentryinfo>
+    <address>
+      &dhemail;
+    </address>
+    <author>
+      &dhfirstname;
+      &dhsurname;
+    </author>
+    <copyright>
+      <year>2004-2008</year>
+      <holder>&dhusername;</holder>
+    </copyright>
+    &dhdate;
+  </refentryinfo>
+  <refmeta>
+    &dhucpackage;
+
+    &dhsection;
+  </refmeta>
+  <refnamediv>
+    <refname>&dhpackage;</refname>
+
+    <refpurpose>nuauth client configuration file</refpurpose>
+  </refnamediv>
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>/etc/&dhpackage;</command>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+  <refsect1>
+    <title>DESCRIPTION</title>
+
+    <para>The configuration file <command>&dhpackage;</command> is used by all nuauth clients
+      (for ex, nutcpc or nuapplet2).</para>
+
+      <para>The file is designed to be human readable and contains a list of keywords with
+      values that provide configuration values for libnuclient. Configuration file
+      uses the key=value format, without spaces between around the '=' sign.
+       </para>
+
+      <para>Global configuration file is stored in <filename>CONFDIR/nuclient.conf</filename>
+      and per-user file can be stored in <filename>HOME/.nufw/nuclient.conf</filename>. Any variable set in
+      the user file will overwrite the one set in the global file.</para>
+
+      <para>Original packaging and informations and help can be found from http://www.nufw.org/</para>
+
+  </refsect1>
+  <refsect1>
+    <title>OPTIONS</title>
+
+    <para>The different configuration options are:</para>
+
+    <variablelist>
+    <varlistentry>
+        <term><option>nuauth_ip</option>
+        </term>
+        <listitem>
+          <para>Name of the nuauth server (fully qualified domain name, or IP address).</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>nuauth_port</option>
+        </term>
+        <listitem>
+          <para>Port number to use on the nuauth server (default: 4129).</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>nuauth_tls_ca</option>
+        </term>
+        <listitem>
+          <para>Certificate authority used to check the validity
+	  of nuauth certificate.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>nuauth_tls_cert</option>
+        </term>
+        <listitem>
+          <para>Certificate file used to negotiate the TLS connection to nuauth.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>nuauth_tls_key</option>
+        </term>
+        <listitem>
+          <para>Key of the certificate file from the <replaceable>nuauth_tls_cert</replaceable> option.</para>
+        </listitem>
+      </varlistentry>
+    <varlistentry>
+        <term><option>nuauth_tls_crl</option>
+        </term>
+        <listitem>
+          <para>Certificate revocation list file to use. If the client is disconnected from nuauth, it will reload this file at reconnect.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>nuauth_suppress_fqdn_verif</option>
+        </term>
+        <listitem>
+          <para>If set to 1, suppress error if server FQDN does not match certificate CN (default: 0).</para>
+        </listitem>
+      </varlistentry>
+
+   </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>SEE ALSO</title>
+    <para>nufw(8)</para>
+    <para>nuauth(8)</para>
+    <para>nutcpc(1)</para>
+  </refsect1>
+  <refsect1>
+    <title>AUTHOR</title>
+    <para>Nuauth was designed and coded by Eric Leblond, aka Regit (&dhemail;) , and Vincent
+    Deffontaines, aka gryzor (&dhemail2;). Original idea in 2001, while working on NSM Ldap
+    support.</para>
+
+    <para>This manual page was written by &dhusername;.</para>
+      <para>Permission is
+      granted to copy, distribute and/or modify this document under
+      the terms of the &gnu; Free Documentation
+      License, Version 2 as published by the Free
+      Software Foundation; with no Invariant Sections, no Front-Cover
+      Texts and no Back-Cover Texts.</para>
+
+  </refsect1>
+</refentry>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:2
+sgml-indent-data:t
+sgml-parent-document:nil
+sgml-default-dtd-file:nil
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+-->
+
+
