@@ -40,6 +40,34 @@ typedef enum {
 } ssl_sock_error_t;
 
 
+/* Defined session flags: */
+typedef enum nussl_session_flag_e {
+	NUSSL_SESSFLAG_PERSIST = 0,	/* disable this flag to prevent use of
+					 * persistent connections. */
+
+	NUSSL_SESSFLAG_ICYPROTO,	/* enable this flag to enable support for
+					 * non-HTTP ShoutCast-style "ICY" responses. */
+
+	NUSSL_SESSFLAG_SSLv2,	/* disable this flag to disable support for
+				 * SSLv2, if supported by the SSL library. */
+
+	NUSSL_SESSFLAG_RFC4918,	/* enable this flag to enable support for
+				 * RFC4918-only WebDAV features; losing
+				 * backwards-compatibility with RFC2518
+				 * servers. */
+
+	NUSSL_SESSFLAG_CONNAUTH,	/* enable this flag if an awful, broken,
+					 * RFC-violating, connection-based HTTP
+					 * authentication scheme is in use. */
+
+	NUSSL_SESSFLAG_TLS_SNI,	/* disable this flag to disable use of the
+				 * TLS Server Name Indication extension. */
+
+	NUSSL_SESSFLAG_IGNORE_ID_MISMATCH,	/* Enable this flag to ignore mismatch
+						 * between server FQDN and certificate CN value. */
+
+	NUSSL_SESSFLAG_LAST	/* enum sentinel value */
+} nussl_session_flag;
 
 #endif /* __NUSSL_CONSTANTS__ */
 

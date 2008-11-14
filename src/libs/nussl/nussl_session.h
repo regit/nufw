@@ -40,6 +40,7 @@
 /* #include "nussl_uri.h" /\* for nussl_uri *\/ */
 #include "nussl_defs.h"
 #include "nussl_socket.h"
+#include "nussl_constants.h"
 #include "nussl_privssl.h"
 
 NUSSL_BEGIN_DECLS typedef struct nussl_session_s nussl_session;
@@ -59,31 +60,6 @@ void nussl_close_connection(nussl_session * sess);
 /*void nussl_session_proxy(nussl_session *sess,
 		      const char *hostname, unsigned int port);
 */
-/* Defined session flags: */
-typedef enum nussl_session_flag_e {
-	NUSSL_SESSFLAG_PERSIST = 0,	/* disable this flag to prevent use of
-					 * persistent connections. */
-
-	NUSSL_SESSFLAG_ICYPROTO,	/* enable this flag to enable support for
-					 * non-HTTP ShoutCast-style "ICY" responses. */
-
-	NUSSL_SESSFLAG_SSLv2,	/* disable this flag to disable support for
-				 * SSLv2, if supported by the SSL library. */
-
-	NUSSL_SESSFLAG_RFC4918,	/* enable this flag to enable support for
-				 * RFC4918-only WebDAV features; losing
-				 * backwards-compatibility with RFC2518
-				 * servers. */
-
-	NUSSL_SESSFLAG_CONNAUTH,	/* enable this flag if an awful, broken,
-					 * RFC-violating, connection-based HTTP
-					 * authentication scheme is in use. */
-
-	NUSSL_SESSFLAG_TLS_SNI,	/* disable this flag to disable use of the
-				 * TLS Server Name Indication extension. */
-
-	NUSSL_SESSFLAG_LAST	/* enum sentinel value */
-} nussl_session_flag;
 
 /* Set a new value for a particular session flag. */
 void nussl_set_session_flag(nussl_session * sess, nussl_session_flag flag,
