@@ -160,6 +160,9 @@ int nu_client_set_krb5_service(nuauth_session_t * session,
 int nu_client_set_ca_suppress_warning(nuauth_session_t * session,
 		int suppress_ca_warning);
 
+int nu_client_set_fqdn_suppress_verif(nuauth_session_t * session,
+		int suppress_fqdn_verif);
+
 int nu_client_connect(nuauth_session_t * session,
 		const char *hostname,
 		const char *service,
