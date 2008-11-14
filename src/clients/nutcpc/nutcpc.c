@@ -387,6 +387,8 @@ static void usage(void)
 	fprintf(stderr, "  -K KEYFILE:  PEM RSA private key filename\n");
 	fprintf(stderr, "  -S PKCS12FILE: PKCS12 key/certificate filename\n");
 	fprintf(stderr, "  -W PKCS12PASS: PKCS12 password\n");
+	fprintf(stderr, "  -Q: suppress warning if no certificate authority is configured\n");
+	fprintf(stderr, "  -N: suppress error if server FQDN does not match certificate CN.\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "SASL options:\n");
 	fprintf(stderr, "  -Z SERVICE: Kerberos service name (nuauth)\n");
