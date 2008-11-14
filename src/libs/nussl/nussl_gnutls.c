@@ -348,148 +348,53 @@ void nussl_ssl_cert_validity_time(const nussl_ssl_certificate * cert,
 	}
 }
 
-/* Return non-zero if hostname from certificate (cn) matches hostname
- * used for session (hostname).  (Wildcard matching is no longer
- * mandated by RFC3280, but certs are deployed which use wildcards) */
-static int match_hostname(char *cn, const char *hostname)
-{
-	const char *dot;
-	NUSSL_DEBUG(NUSSL_DBG_SSL, "Match %s on %s...\n", cn, hostname);
-	dot = strchr(hostname, '.');
-	if (dot == NULL) {
-		char *pnt = strchr(cn, '.');
-		/* hostname is not fully-qualified; unqualify the cn. */
-		if (pnt != NULL) {
-			*pnt = '\0';
-		}
-	} else if (strncmp(cn, "*.", 2) == 0) {
-		hostname = dot + 1;
-		cn += 2;
-	}
-	return !nussl_strcasecmp(cn, hostname);
-}
-
-/* Check certificate identity.  Returns zero if identity matches; 1 if
- * identity does not match, or <0 if the certificate had no identity.
- * If 'identity' is non-NULL, store the malloc-allocated identity in
- * *identity.  If 'server' is non-NULL, it must be the network address
- * of the server in use, and identity must be NULL. */
-/* static int check_identity(const nussl_uri *server, gnutls_x509_crt cert, */
-/*                           char **identity) */
-static int check_identity(gnutls_x509_crt cert, char **identity)
+/* Check certificate identity.  Returns zero if identity matches or could
+ * not be checked; 1 if identity does not match, or <0 if the certificate had
+ * no identity.
+ * if hostname is not NULL, store certificate identity
+ */
+static int check_identity(const char *expected_hostname, gnutls_x509_crt cert, char **hostname)
 {
 	char name[255];
-	unsigned int critical;
-	int ret, seq = 0;
-	int match = 0, found = 0;
+	int ret;
 	size_t len;
-	const char *hostname;
 
-	return 0;
-	hostname = /*server ? server->host : */ "";
-
-	do {
-		len = sizeof name;
-		ret =
-		    gnutls_x509_crt_get_subject_alt_name(cert, seq, name,
-							 &len, &critical);
-		switch (ret) {
-		case GNUTLS_SAN_DNSNAME:
-			if (identity && !found)
-				*identity = nussl_strdup(name);
-			match = match_hostname(name, hostname);
-			found = 1;
-			break;
-		case GNUTLS_SAN_IPADDRESS:{
-				nussl_inet_addr *ia;
-				if (len == 4)
-					ia = nussl_iaddr_make
-					    (nussl_iaddr_ipv4,
-					     (unsigned char *) name);
-				else if (len == 16)
-					ia = nussl_iaddr_make
-					    (nussl_iaddr_ipv6,
-					     (unsigned char *) name);
-				else
-					ia = NULL;
-				if (ia) {
-					char buf[128];
-
-					match = strcmp(hostname,
-						       nussl_iaddr_print
-						       (ia, buf,
-							sizeof buf)) == 0;
-					if (identity)
-						*identity =
-						    nussl_strdup(buf);
-					found = 1;
-					nussl_iaddr_free(ia);
-				} else {
-					/* XXX: NUSSL_FMT_SIZE_T n'est pas trouve et est dans config.h mais avec un #ifdef WIN32 */
-/*                 NUSSL_DEBUG(NUSSL_DBG_SSL, "iPAddress name with unsupported " */
-/*                          "address type (length %" NUSSL_FMT_SIZE_T "), skipped.\n", */
-/*                          len); */
-				}
-			}
-			break;
-/*         case GNUTLS_SAN_URI: { */
-/*             nussl_uri uri; */
-
-/*             if (nussl_uri_parse(name, &uri) == 0 && uri.host && uri.scheme) { */
-/*                 nussl_uri tmp; */
-
-/*                 if (identity && !found) *identity = nussl_strdup(name); */
-/*                 found = 1; */
-
-/*                 if (server) { */
-/*                     /\* For comparison purposes, all that matters is */
-/*                      * host, scheme and port; ignore the rest. *\/ */
-/*                     memset(&tmp, 0, sizeof tmp); */
-/*                     tmp.host = uri.host; */
-/*                     tmp.scheme = uri.scheme; */
-/*                     tmp.port = uri.port; */
-
-/*                     match = nussl_uri_cmp(server, &tmp) == 0; */
-/*                 } */
-/*             } */
-
-/*             nussl_uri_free(&uri); */
-/*         } break; */
-
-		default:
-			break;
-		}
-		seq++;
-	} while (!match && ret != GNUTLS_E_REQUESTED_DATA_NOT_AVAILABLE);
-
-	/* Check against the commonName if no DNS alt. names were found,
-	 * as per RFC3280. */
-	if (!found) {
-		seq =
-		    oid_find_highest_index(cert, 1,
-					   GNUTLS_OID_X520_COMMON_NAME);
-
-		if (seq >= 0) {
-			len = sizeof name;
-			name[0] = '\0';
-			ret =
-			    gnutls_x509_crt_get_dn_by_oid(cert,
-							  GNUTLS_OID_X520_COMMON_NAME,
-							  seq, 0, name,
-							  &len);
-			if (ret == 0) {
-				if (identity)
-					*identity = nussl_strdup(name);
-				match = match_hostname(name, hostname);
-			}
-		} else {
+	len = sizeof(name);
+	ret = gnutls_x509_crt_get_dn_by_oid(cert, GNUTLS_OID_X520_COMMON_NAME,
+		0, /* the first and only one */
+		0,
+		name,
+		&len);
+	if(ret) {
+		NUSSL_DEBUG(NUSSL_DBG_SSL,
+			"TLS: error fetching CN from cert: %s",
+			gnutls_strerror(ret));
 			return -1;
-		}
 	}
 
-	NUSSL_DEBUG(NUSSL_DBG_SSL, "Identity match: %s\n",
-		    match ? "good" : "bad");
-	return match ? 0 : 1;
+	if (hostname) {
+		*hostname = nussl_strdup(name);
+	}
+
+	/* we can't check the identifity .. */
+	if (!expected_hostname)
+		return 0;
+
+	/* This function will check if the given certificate's subject matches the
+	 * given hostname. This is a basic implementation of the matching described
+	 * in RFC2818 (HTTPS), which takes into account wildcards, and the subject
+	 * alternative name PKIX extension. Returns non zero on success, and zero on
+	 * failure. */
+	ret = gnutls_x509_crt_check_hostname(cert, expected_hostname);
+	if(!ret) {
+		NUSSL_DEBUG(NUSSL_DBG_SSL,
+			"SSL: certificate subject name (%s) does not match target host name '%s'\n",
+			name, expected_hostname);
+			return 1;
+	}
+
+
+	return 0;
 }
 
 /* Populate an nussl_ssl_certificate structure from an X509 object. */
@@ -503,8 +408,7 @@ static nussl_ssl_certificate *populate_cert(nussl_ssl_certificate * cert,
 	cert->issuer = NULL;
 	cert->subject = x5;
 	cert->identity = NULL;
-/*     check_identity(NULL, x5, &cert->identity); */
-	check_identity(x5, &cert->identity);	/* TODO: return the error of check_identity ... */
+	check_identity(NULL, x5, &cert->identity);	/* TODO: return the error of check_identity ... */
 	return cert;
 }
 
@@ -693,12 +597,7 @@ static int check_certificate(nussl_session * sess, gnutls_session sock,
 	else if (now > after)
 		failures |= NUSSL_SSL_EXPIRED;
 
-/*     memset(&server, 0, sizeof server); */
-/*     nussl_fill_server_uri(sess, &server); */
-/*     ret = check_identity(&server, chain->subject, NULL); */
-	ret = check_identity(chain->subject, NULL);
-/*     nussl_uri_free(&server); */
-
+	ret = check_identity(sess->server.hostname, chain->subject, NULL);
 	if (ret < 0) {
 		nussl_set_error(sess,
 				_("Server certificate was missing commonName "
@@ -739,6 +638,9 @@ static int check_certificate(nussl_session * sess, gnutls_session sock,
 		}
 		if (failures & NUSSL_SSL_NOTYETVALID) {
 			NUSSL_DEBUG(NUSSL_DBG_SSL, "not yet valid, ");
+		}
+		if (failures & NUSSL_SSL_IDMISMATCH) {
+			NUSSL_DEBUG(NUSSL_DBG_SSL, "FQDN mismatch, ");
 		}
 		failures |= NUSSL_SSL_UNTRUSTED;
 	}
