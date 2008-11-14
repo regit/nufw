@@ -877,9 +877,6 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 
 int sasl_user_check(user_session_t * c_session)
 {
-	char *service = NULL;
-	char *myhostname = NULL;
-	char *myrealm = NULL;
 	sasl_conn_t *conn = NULL;
 	sasl_security_properties_t secprops;
 	gboolean external_auth = FALSE;

@@ -158,6 +158,7 @@ GHashTable *conn_list;
 GStaticMutex insert_mutex;
 
 
+void duplicate_iface_nfo(iface_nfo_t * copy, iface_nfo_t * orig);
 nu_error_t compare_iface_nfo_t(iface_nfo_t *a, iface_nfo_t *b);
 void free_iface_nfo_t(iface_nfo_t * track);
 
