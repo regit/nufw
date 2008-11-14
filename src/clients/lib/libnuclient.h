@@ -218,6 +218,9 @@ struct nuauth_session {
 
 	/** Suppress warning when no CA is configured */
 	int suppress_ca_warning;
+
+	/** Suppress certificate FQDN verification */
+	int suppress_fqdn_verif;
 };
 
 

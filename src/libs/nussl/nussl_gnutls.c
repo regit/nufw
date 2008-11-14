@@ -604,7 +604,8 @@ static int check_certificate(nussl_session * sess, gnutls_session sock,
 				 "attribute in subject name"));
 		return NUSSL_ERROR;
 	} else if (ret > 0) {
-		failures |= NUSSL_SSL_IDMISMATCH;
+		if (sess->flags[NUSSL_SESSFLAG_IGNORE_ID_MISMATCH] == 0)
+			failures |= NUSSL_SSL_IDMISMATCH;
 	}
 
 	ret = gnutls_certificate_verify_peers2(sock, &status);

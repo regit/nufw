@@ -118,6 +118,11 @@ extern "C" {
 
 	void nussl_ssl_disable_certificate_check(nussl_session * sess, int is_disabled);
 
+	/* Set a new value for a particular session flag. */
+	void nussl_set_session_flag(nussl_session * sess,
+		nussl_session_flag flag,
+		int value);
+
 
 #define NUSSL_VALID_REQ_TYPE(n) (n >= NUSSL_CERT_IGNORE && n <= NUSSL_CERT_REQUIRE)
 

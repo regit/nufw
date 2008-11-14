@@ -52,6 +52,7 @@
 #define MAX_RETRY_TIME 30
 
 #include <nubase.h>
+#include <nussl.h>
 
 struct termios orig;
 nuauth_session_t *session = NULL;
@@ -60,6 +61,7 @@ struct sigaction old_sigterm;
 struct sigaction old_sigint;
 int forced_reconnect = 0;
 static int suppress_ca_warning = 0;
+static int suppress_fqdn_verif = 0;
 
 void panic(const char *fmt, ...)
 #ifdef __GNUC__
@@ -570,6 +572,8 @@ nuauth_session_t *do_connect(nutcpc_context_t * context, char *username)
 	}
 
 	nu_client_set_ca_suppress_warning(session,suppress_ca_warning);
+	if (suppress_fqdn_verif)
+		nu_client_set_fqdn_suppress_verif(session, 1);
 
 	if (context->nuauthdn) {
 		if (!nu_client_set_nuauth_cert_dn(session,
@@ -689,7 +693,7 @@ void parse_cmdline_options(int argc, char **argv,
 
 	/* Parse all command line arguments */
 	opterr = 0;
-	while ((ch = getopt(argc, argv, "kcldqQVu:H:I:U:p:P:a:K:C:A:W:S:Z:")) != -1) {
+	while ((ch = getopt(argc, argv, "kcldqNQVu:H:I:U:p:P:a:K:C:A:W:S:Z:")) != -1) {
 		switch (ch) {
 		case 'H':
 			SECURE_STRNCPY(context->srv_addr, optarg,
@@ -739,6 +743,9 @@ void parse_cmdline_options(int argc, char **argv,
 			break;
 		case 'q':
 			stealth = 1;
+			break;
+		case 'N':
+			suppress_fqdn_verif = 1;
 			break;
 		case 'Q':
 			suppress_ca_warning = 1;

@@ -467,6 +467,16 @@ int nu_client_set_ca_suppress_warning(nuauth_session_t * session,
 
 /**
  * \ingroup nuclientAPI
+ */
+int nu_client_set_fqdn_suppress_verif(nuauth_session_t * session,
+				int suppress_fqdn_verif)
+{
+	session->suppress_fqdn_verif = suppress_fqdn_verif;
+	return 1;
+}
+
+/**
+ * \ingroup nuclientAPI
  * Set IP source of the socket used to connect to nuauth server
  *
  * \param session Pointer to client session
@@ -642,6 +652,9 @@ int nu_client_connect(nuauth_session_t * session,
 	unsigned int port = atoi(service);
 
 	session->nussl = nussl_session_create();
+
+	if (session->suppress_fqdn_verif)
+		nussl_set_session_flag(session->nussl, NUSSL_SESSFLAG_IGNORE_ID_MISMATCH, 1);
 
 	nussl_set_hostinfo(session->nussl, hostname, port);
 	if(session->pkcs12_file)
