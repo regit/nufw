@@ -26,57 +26,110 @@
 #endif
 
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+#include <nubase.h>
+
 #include "sys_config.h"
 #include "getdelim.h"
 
 #define SYS_CONF_FILE CONFIG_DIR "/nuclient.conf"
-#define USR_CONF_FILE "/.nufw/nuclient.conf"
 
-char* default_hostname = NULL;
-char* default_port = NULL;
+static int config_loaded = 0;
+static char* default_hostname = NULL;
+static char* default_port = NULL;
+static char* default_tls_ca = NULL;
+static char* default_tls_cert = NULL;
+static char* default_tls_key = NULL;
+static char* default_tls_crl = NULL;
+static int default_suppress_fqdn_verif = 0;
 
 #ifdef FREEBSD
 #include "getdelim.h"
 
-char *strndup(const char* s, size_t n)
+static char *strndup(const char* s, size_t n)
 {
 	char *new;
 	size_t len = strlen(s);
-	
+
 	if(len > n)
 		len = n;
 
 	new = (char *) malloc (len + 1);
 	if (new == NULL)
 		return NULL;
-	
+
 	new[len] = '\0';
 	return (char *) memcpy (new, s, len);
 }
 
-ssize_t getline(char **lineptr, size_t * n, FILE * stream)
+static ssize_t getline(char **lineptr, size_t * n, FILE * stream)
 {
 	return getdelim(lineptr, n, '\n', stream);
 }
 #endif /* #ifdef FREEBSD */
 
-void load_config_file(char* path)
+static int str_to_bool(const char *val, int default_value)
 {
-	int line_nbr = 0;
+	if ( (!strcasecmp(val,"1")) ||
+	     (!strcasecmp(val,"true")) ||
+	     (!strcasecmp(val,"yes")) )
+		return 1;
+
+	if ( (!strcasecmp(val,"0")) ||
+	     (!strcasecmp(val,"false")) ||
+	     (!strcasecmp(val,"no")) )
+		return 0;
+
+	return default_value;
+}
+
+char *compute_user_config_path()
+{
+	char path_dir[254];
+	char *home = nu_get_home_dir();
+	if (home == NULL)
+		return NULL;
+	secure_snprintf(path_dir, sizeof(path_dir), "%s/.nufw", home);
+	if (access(path_dir, R_OK) != 0) {
+		return NULL;
+	}
+	secure_snprintf(path_dir, sizeof(path_dir), "%s/.nufw/nuclient.conf", home);
+	free(home);
+	if (access(path_dir, R_OK) != 0) {
+		return NULL;
+	}
+	return strdup(path_dir);
+}
+
+static void replace_value(char ** initval, char *newval)
+{
+	if (! initval) {
+		return;
+	}
+
+	if (*initval) {
+		free(*initval);
+	}
+	*initval = newval;
+}
+
+int parse_sys_config(const char *filename)
+{
 	char *opt, *val, *line;
 	size_t len;
-	FILE* file ;
-
-
-	/* Parse the file */
-	printf("Loading default settings from %s\n", path);
-	file = fopen(path, "r"); 
-	if(!file)
-		return;
-
+	FILE * file;
+	int line_nbr = 0;
 	line = NULL;
+
+	file = fopen(filename, "r");
+	if(!file)
+		return 0;
+
+	printf("Loading settings from %s\n", filename);
+
 	while (getline(&line, &len, file) >= 0)
 	{
 		char* equ_pos;
@@ -85,8 +138,7 @@ void load_config_file(char* path)
 			continue;
 
 		equ_pos = strchr(line,'=');
-		if(equ_pos == NULL)
-		{
+		if(equ_pos == NULL) {
 			fprintf(stderr, "Wrong format on line %i: %s\n",line_nbr, line);
 			continue;
 		}
@@ -98,52 +150,60 @@ void load_config_file(char* path)
 			val[strlen(val)-1] = '\0'; /* Strip '\n' */
 
 		if(!strcmp(opt, "nuauth_ip"))
-		{
-			if(default_hostname)
-				free(default_hostname);
-			default_hostname = val;
-		}
+			replace_value(&default_hostname, val);
 		else
 		if(!strcmp(opt, "nuauth_port"))
-		{
-			if(default_port)
-				free(default_port);
-			default_port = val;
-		}
+			replace_value(&default_port, val);
 		else
+		if(!strcmp(opt, "nuauth_tls_ca"))
+			replace_value(&default_tls_ca, val);
+		else
+		if(!strcmp(opt, "nuauth_tls_cert"))
+			replace_value(&default_tls_cert, val);
+		else
+		if(!strcmp(opt, "nuauth_tls_key"))
+			replace_value(&default_tls_key, val);
+		else
+		if(!strcmp(opt, "nuauth_tls_crl"))
+			replace_value(&default_tls_crl, val);
+		else
+		if(!strcmp(opt, "nuauth_suppress_fqdn_verif")) {
+			default_suppress_fqdn_verif = str_to_bool(val,1);
 			free(val);
+		}
+		else {
+			printf("warning: unknown option '%s' in config file\n", opt);
+			free(val);
+		}
 		free(opt);
 	}
 	if(line)
 		free(line);
 	fclose(file);
+	return 1;
 }
-
 
 void load_sys_config()
 {
-	char* home;
-	char* home_config;
+	char* user_config;
 
-	/* Load system wide config file */
-	load_config_file(SYS_CONF_FILE);
-
-	/* Load user config file */
-	home = nu_get_home_dir();
-	if(!home)
+	if(config_loaded)
 		return;
 
-	home_config = (char*) calloc( strlen(home) + strlen(USR_CONF_FILE) + 1, 1 );
+	config_loaded = 1;
 
-	if(!home_config)
-		return;
-
-	strncpy(home_config, home, strlen(home));
-	strncat(home_config, USR_CONF_FILE, strlen(USR_CONF_FILE));
-	load_config_file(home_config);
-
-	free(home);
-	free(home_config);
+	parse_sys_config(SYS_CONF_FILE);
+	user_config = compute_user_config_path();
+	if (user_config) {
+		if (!parse_sys_config(user_config)) {
+			fprintf(stderr,
+				"Warning: unable to parse config file \"%s\"\n",
+				user_config);
+			free(user_config);
+			return;
+		}
+	}
+	free(user_config);
 }
 
 const char* nu_client_default_hostname()
@@ -154,4 +214,29 @@ const char* nu_client_default_hostname()
 const char* nu_client_default_port()
 {
 	return 	default_port;
+}
+
+const char* nu_client_default_tls_ca()
+{
+	return 	default_tls_ca;
+}
+
+const char* nu_client_default_tls_cert()
+{
+	return 	default_tls_cert;
+}
+
+const char* nu_client_default_tls_key()
+{
+	return 	default_tls_key;
+}
+
+const char* nu_client_default_tls_crl()
+{
+	return 	default_tls_crl;
+}
+
+int nu_client_default_suppress_fqdn_verif()
+{
+	return 	default_suppress_fqdn_verif;
 }

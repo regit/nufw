@@ -117,8 +117,15 @@ void nu_client_set_password(nuauth_session_t *session,
 		const char *password);
 
 const char* nu_client_default_hostname();
-	
+
 const char* nu_client_default_port();
+
+const char* nu_client_default_tls_ca();
+const char* nu_client_default_tls_cert();
+const char* nu_client_default_tls_key();
+const char* nu_client_default_tls_crl();
+
+int nu_client_default_suppress_fqdn_verif();
 
 void nu_client_set_debug(nuauth_session_t * session, unsigned char enabled);
 void nu_client_set_verbose(nuauth_session_t * session,
@@ -139,6 +146,10 @@ int nu_client_set_ca(nuauth_session_t * session,
 int nu_client_set_nuauth_cert_dn(nuauth_session_t * session,
 		char *nuauth_cert_dn,
 		nuclient_error_t *err);
+
+int nu_client_set_crlfile(nuauth_session_t * session,
+				char *crlfile,
+				nuclient_error_t *err);
 
 char* nu_client_get_cert_infos(nuauth_session_t * session);
 char* nu_client_get_server_cert_infos(nuauth_session_t * session);
@@ -167,6 +178,7 @@ void nu_client_set_min_delay(nuauth_session_t * session, unsigned int delay);
 void nu_client_set_max_delay(nuauth_session_t * session, unsigned int delay);
 
 char *nu_get_home_dir();
+char *nu_get_user_name();
 
 
 #ifdef __cplusplus
