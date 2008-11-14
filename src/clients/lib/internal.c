@@ -436,7 +436,7 @@ int send_os(nuauth_session_t * session, nuclient_error_t * err)
 	if (buf[0] == SRV_TYPE) {
 		session->server_mode = buf[1];
 	} else {
-		session->server_mode = SRV_TYPE_POLL;
+		SET_ERROR(err, NUSSL_ERR, ret);
 	}
 	return 1;
 }
