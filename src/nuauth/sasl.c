@@ -489,18 +489,18 @@ static int mysasl_negotiate(user_session_t * c_session, sasl_conn_t * conn)
 		c_session->groups =
 		    modules_get_user_groups(c_session->user_name);
 		if (c_session->groups == NULL) {
-			debug_log_message(DEBUG, DEBUG_AREA_AUTH,
+			log_message(INFO, DEBUG_AREA_AUTH,
 					  "error when searching user groups for %s",
 					  c_session->user_name);
-			if (nussl_write(c_session->nussl, "N", 1) < 0)	/* send NO to client */
-				return SASL_FAIL;
 			return SASL_BADAUTH;
 		}
 		c_session->user_id =
 		    modules_get_user_id(c_session->user_name);
 		if (c_session->user_id == 0) {
 			log_message(INFO, DEBUG_AREA_AUTH,
-				    "Couldn't get user ID!");
+					"Couldn't get user ID for \"%s\"!",
+					c_session->user_name);
+			return SASL_BADAUTH;
 		}
 	}
 #if 0
