@@ -176,7 +176,7 @@ static void append_dirstring(nussl_buffer * buf, gnutls_datum * data,
 #define OID_commonName "2.5.4.3"
 
 #define CMPOID(a,o) ((a)->oid.size == sizeof(o)                        \
-                     && memcmp((a)->oid.data, o, strlen(o)) == 0)
+		&& memcmp((a)->oid.data, o, strlen(o)) == 0)
 
 char *nussl_ssl_readable_dname(const nussl_ssl_dname * name)
 {
