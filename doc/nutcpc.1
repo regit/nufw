@@ -3,21 +3,21 @@
 .\" <http://shell.ipoline.com/~elmert/comp/docbook2X/> 
 .\" Please send any bug reports, improvements, comments, patches, 
 .\" etc. to Steve Cheng <steve@ggi-project.org>.
-.TH "NUTCPC" "1" "18 septembre 2008" "" ""
+.TH "NUTCPC" "1" "14 November 2008" "" ""
 
 .SH NAME
-nutcpc \- NUFW console-mode client for GNU/Linux and BSD systems
+nutcpc \- NuFW console-mode client for GNU/Linux and BSD systems
 .SH SYNOPSIS
 
-\fBnutcpc\fR [ \fB-d \fR ] [ \fB-l \fR ] [ \fB-k \fR ] [ \fB-c \fR ] [ \fB-V \fR ] [ \fB-h \fR ] [ \fB-q \fR ] [ \fB-H \fINuauth IP\fB\fR ] [ \fB-p \fINuauth port \fB\fR ] [ \fB-U \fIUserID\fB\fR ] [ \fB-P \fIUserPassword\fB\fR ] [ \fB-I \fIInterval\fB\fR ] [ \fB-C \fICertFile\fB\fR ] [ \fB-A \fIAuthorityFile\fB\fR ] [ \fB-K \fIKeyFile\fB\fR ] [ \fB-W \fICertPass\fB\fR ] [ \fB-a \fINuauthDN\fB\fR ]
+\fBnutcpc\fR [ \fB-d \fR ] [ \fB-l \fR ] [ \fB-k \fR ] [ \fB-c \fR ] [ \fB-V \fR ] [ \fB-h \fR ] [ \fB-q \fR ] [ \fB-Q \fR ] [ \fB-N \fR ] [ \fB-H \fINuauth IP\fB\fR ] [ \fB-p \fINuauth port \fB\fR ] [ \fB-U \fIUserID\fB\fR ] [ \fB-P \fIUserPassword\fB\fR ] [ \fB-I \fIInterval\fB\fR ] [ \fB-Z \fIService\fB\fR ] [ \fB-C \fICertFile\fB\fR ] [ \fB-A \fIAuthorityFile\fB\fR ] [ \fB-K \fIKeyFile\fB\fR ] [ \fB-W \fICertPass\fB\fR ] [ \fB-R \fICrlFile\fB\fR ] [ \fB-a \fINuauthDN\fB\fR ]
 
 .SH "DESCRIPTION"
 .PP
 This manual page documents the
 \fBnutcpc\fR command.
 .PP
-nutcpc is a console-mode client for the NUFW authenticating firewall. It sends
-authentication packets to the nuauth server.
+nutcpc is a console-mode client for the NuFW authenticating firewall. It sends
+authentication packets to the nuauth server. All parameters can be set on commandline but nutcpc can also be configured via the file nuclient.conf(5).
 .PP
 Original packaging and informations and help can be found from http://www.nufw.org/
 .SH "OPTIONS"
@@ -43,7 +43,7 @@ Issues program version and exits.
 Issues usage details and exits.
 .TP
 \fB-q \fR
-So not display running nutcpc options on "ps"
+Do not display running nutcpc options on "ps". Useful when using "-W"
 .TP
 \fB-H \fINuauth IP\fB \fR
 Send authentication packet  to \fINuauth IP\fR\&.
@@ -58,7 +58,10 @@ Set nufw userid to \fIUser ID\fR\&.
 Set nufw password to \fIUser Password\fR\&.
 .TP
 \fB-I \fIInterval\fB \fR
-Set refresh interval to \fIInterval\fR\&.
+Set connection list refresh interval to \fIInterval\fR\&. This option is only useful if nuauth server is in POLL mode.
+.TP
+\fB-Z \fIService\fB \fR
+Set kerberos service name to \fIService\fR\&.
 .TP
 \fB-C \fICertFile\fB \fR
 Use certificate file stored in the file \fICertFile\fR to negotiate the TLS connection to nuauth.
@@ -70,16 +73,25 @@ Use authority file stored in \fIAuthorityFile\fR and check the validity of nuaut
 Use key file stored in the file \fIKeyFile\fR to negotiate the TLS connection to nuauth.
 .TP
 \fB-W \fICertPass\fB \fR
-Use the passphrase \fICertPass\fR to decrypt the certificate.
+Use the passphrase \fICertPass\fR to decrypt the certificate. Check the \fI-q\fR option if you use this.
+.TP
+\fB-R \fICrlFile\fB \fR
+Use certificate revocation list file stored in the file \fICrlFile\fR to negotiate the TLS connection to nuauth. nutcpc reloads this file if it gets disconnected from nuauth and needs to reconnect. Since version 2.2.19, nutcpc reloads the CRL file when receiving a HUP signal.
 .TP
 \fB-a \fINuauthDN\fB \fR
 Verify that the certificate given by nuauth has a DN equal to \fINuauthDN\fR\&. Nutcpc will leave if this is not the case.
+.TP
+\fB-Q \fR
+Suppress warning if no certificate authority is configured.
+.TP
+\fB-N \fR
+Suppress error if server FQDN does not match certificate CN.
 .SH "LOCK FILE"
 .PP
-By default, the lock file set by nutcpc is at ~/.nufw/nutcpc
+By default, the lock file set by nutcpc is at ~/.nufw/nutcpc.
 .SH "CERTIFICATE AUTHENTICATION"
 .PP
-User authentication can be done using a certificate and a private key. Such a method will be used, if nutcpc can find a certificate at ~/.nufw/cert.pem and the corresponding privat key at ~/.nufw/key.pem. The server identity will be checked if a CA certificate is provided in ~/.nufw/cacert.pem .
+User authentication can be done using a certificate and a private key. Such a method will be used, if nutcpc can find a certificate at ~/.nufw/cert.pem and the corresponding private key at ~/.nufw/key.pem. The server identity will be checked if a CA certificate is provided in ~/.nufw/cacert.pem. Certificates and key can also be provided on command line or via nuclient.conf(5).
 .SH "SIGNALS"
 .TP
 \fBHUP \fR
@@ -91,13 +103,15 @@ other cases.
 nufw(8)
 .PP
 nuauth(8)
+.PP
+nuclient.conf(5)
 .SH "AUTHOR"
 .PP
 Nuauth was designed and coded by Eric Leblond, aka Regit (<eric@regit.org>) , and Vincent
 Deffontaines, aka gryzor (<vincent@gryzor.com>). Original idea in 2001, while working on NSM Ldap
 support.
 .PP
-This manual page was written by Eric Leblond
+This manual page was written by Eric Leblond.
 .PP
 Permission is
 granted to copy, distribute and/or modify this document under
