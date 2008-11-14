@@ -90,6 +90,9 @@ CREATE TABLE ulog (
     bytes_in bigint,
     bytes_out bigint
 );
+CREATE INDEX ulog_id ON ulog USING btree (id);
+CREATE INDEX ulog_ip_saddr ON ulog USING btree (ip_saddr);
+CREATE INDEX ulog_ip_daddr ON ulog USING btree (ip_daddr);
 
 
 --
