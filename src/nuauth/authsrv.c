@@ -79,14 +79,14 @@ void cleanup_func_remove(cleanup_func_t func)
 	cleanup_func_list = g_list_remove(cleanup_func_list, func);
 }
 
-/**
+/*
  * wait one thread pool
  */
 void wait_thread_pool(const char *name, GThreadPool *pool)
 {
 	gint count = 1;
 	while (count) {
-		count = g_thread_pool_unprocessed(pool);	
+		count = g_thread_pool_unprocessed(pool);
 		usleep(10000);
 	}
 	log_message(DEBUG, DEBUG_AREA_MAIN,
