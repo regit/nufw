@@ -171,6 +171,21 @@ static int treat_nufw_request(nufw_session_t * c_session)
 }
 
 
+static int get_reverse_dns_info(struct sockaddr_storage *addr, char *buffer, size_t size)
+{
+	int ret;
+
+	ret = getnameinfo((const struct sockaddr*)addr,
+			sizeof(*addr),
+			buffer,
+			size,
+			NULL,
+			0,
+			0);
+
+	return ret;
+}
+
 
 /**
  * Function called on new NuFW connection: create a new TLS session using
@@ -186,10 +201,8 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 	struct sockaddr_in6 *sockaddr6 = (struct sockaddr_in6 *) &sockaddr;
 	char address[INET6_ADDRSTRLEN];
 	int ret;
-#if 0
-	struct in6_addr addr;
-	char addr_ascii[INET6_ADDRSTRLEN];
-#endif
+	char peername[256];
+	int port;
 	socklen_t len_inet = sizeof(sockaddr);
 
 	nufw_session_t *nu_session;
@@ -234,11 +247,25 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 	/* Extract client address (convert it to IPv6 if it's IPv4) */
 	if (sockaddr6->sin6_family == AF_INET) {
 		ipv4_to_ipv6(sockaddr4->sin_addr, &nu_session->peername);
+		port = ntohs(sockaddr4->sin_port);
 	} else {
 		nu_session->peername = sockaddr6->sin6_addr;
+		port = ntohs(sockaddr6->sin6_port);
 	}
 
 	format_ipv6(&nu_session->peername, address, sizeof(address), NULL);
+
+	/* get canonical (first) name and set it in ssl session, so that
+	 * we can verify if peer name matches certificate CN entry
+	 */
+	ret = get_reverse_dns_info(&sockaddr, peername, sizeof(peername));
+	nussl_set_hostinfo(nu_session->nufw_client, peername, port);
+
+	/* copy verification flag from server session */
+	nussl_set_session_flag(nu_session->nufw_client,
+		NUSSL_SESSFLAG_IGNORE_ID_MISMATCH,
+		nussl_get_session_flag(context->server, NUSSL_SESSFLAG_IGNORE_ID_MISMATCH)
+		);
 
 	ret = nussl_session_handshake(nu_session->nufw_client, context->server);
 	if ( ret ) {
@@ -384,6 +411,7 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 /* config init */
 	int ret;
 	int int_requestcert;
+	int int_disable_fqdn_check;
 
 	context->sck_inet = nuauth_bind(&errmsg, context->addr, context->port, "nufw");
 	if (context->sck_inet < 0) {
@@ -444,6 +472,8 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 	int_requestcert = nubase_config_table_get_or_default_int("nuauth_tls_request_cert", FALSE);
 	/* {"nuauth_tls_auth_by_cert", G_TOKEN_INT, FALSE, NULL}, */
 
+	int_disable_fqdn_check = nubase_config_table_get_or_default_int("nuauth_tls_disable_nufw_fqdn_check", FALSE);
+
 	/* TODO: use a nufw specific value of request_cert */
 	context->server = nussl_session_create_with_fd(context->sck_inet, nuauth_tls.request_cert);
 	if ( ! context->server ) {
@@ -473,6 +503,9 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 			    nussl_get_error(context->server));
 		exit(EXIT_FAILURE);
 	}
+
+	if (int_disable_fqdn_check)
+		nussl_set_session_flag(context->server, NUSSL_SESSFLAG_IGNORE_ID_MISMATCH, 1);
 
 	return 1;
 }

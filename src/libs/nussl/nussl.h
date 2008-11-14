@@ -123,6 +123,9 @@ extern "C" {
 		nussl_session_flag flag,
 		int value);
 
+	int nussl_get_session_flag(nussl_session * sess,
+		nussl_session_flag flag);
+
 
 #define NUSSL_VALID_REQ_TYPE(n) (n >= NUSSL_CERT_IGNORE && n <= NUSSL_CERT_REQUIRE)
 
