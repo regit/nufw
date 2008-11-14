@@ -422,6 +422,8 @@ int nu_client_load_ca(nuauth_session_t * session,
 							"Use the -A <cafile> option to set up CA.\n\n"
 					       );
 				}
+				session->suppress_fqdn_verif = 1;
+				nussl_set_session_flag(session->nussl, NUSSL_SESSFLAG_IGNORE_ID_MISMATCH, 1);
 			}
 		}
 	}
