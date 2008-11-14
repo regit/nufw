@@ -825,6 +825,17 @@ void init_library(nutcpc_context_t * context, char *username)
 		exit(EXIT_FAILURE);
 	}
 
+	/* options specificied on command line are taken prior
+	 * to options from configuration file
+	 */
+	suppress_fqdn_verif |= nu_client_default_suppress_fqdn_verif();
+	if (!context->cafile)
+		context->cafile = (char *)nu_client_default_tls_ca();
+	if (!context->certfile)
+		context->certfile = (char *)nu_client_default_tls_cert();
+	if (!context->keyfile)
+		context->keyfile = (char *)nu_client_default_tls_key();
+
 	/* Init. library */
 	printf("Connecting to NuFW gateway (%s)\n", context->srv_addr);
 	session = do_connect(context, username);
