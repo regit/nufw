@@ -142,6 +142,7 @@ G_MODULE_EXPORT gchar *certificate_to_uid(nussl_session* session,
 	size_t size;
 	char dn[DN_LENGTH];
 	gchar *pointer;
+	gchar *delim;
 
 	size = sizeof(dn);
 	nussl_get_peer_dn(session, dn, &size);
@@ -149,10 +150,13 @@ G_MODULE_EXPORT gchar *certificate_to_uid(nussl_session* session,
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_USER, "\tDN: %s", dn);
 
 	/* parse DN and extract username is there is one */
-	pointer = g_strrstr_len(dn, DN_LENGTH - 1, ",CN=");
+	pointer = g_strrstr_len(dn, DN_LENGTH - 1, "CN=");
 	if (pointer) {
 		char *string_end = NULL;
-		pointer += 4;
+		pointer += 3;
+		delim = strpbrk(pointer,",/");
+		if (delim)
+			*delim = '\0';
 		string_end = g_strrstr_len(pointer, (DN_LENGTH - 1 ) - (pointer - dn), ",");
 		if (string_end) {
 			*string_end = 0;
