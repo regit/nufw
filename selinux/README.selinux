@@ -1,0 +1,28 @@
+Installation
+============
+
+WARNING this policy is experimental, and still in development. It works, but
+may need some corrections (patches accepted ;)
+
+This policy was written for Debian, so paths may need to be adjusted.
+
+Install package selinux-policy-dev.
+
+Build the policy modules::
+
+ make -f /usr/share/doc/selinux-policy-dev/examples/Makefile
+
+As root, create the ports definition for SELinux::
+
+ semanage port -a -t nufw_port_t -p tcp 4128
+ semanage port -a -t nuauth_port_t -p tcp 4129
+
+Then, as root, load the policy modules (choose one)::
+
+ sudo make -f /usr/share/doc/selinux-policy-dev/examples/Makefile load
+
+You will need to wait for restorecond to relabel files, or you can force the
+relabel, for ex::
+
+ restorecon -v -R /etc/nufw/ /usr/bin/nufw [...]
+

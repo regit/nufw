@@ -1,0 +1,61 @@
+## <summary>policy for nufw</summary>
+
+########################################
+## <summary>
+##	Execute a domain transition to run nufw.
+## </summary>
+## <param name="domain">
+## <summary>
+##	Domain allowed to transition.
+## </summary>
+## </param>
+#
+interface(`nufw_domtrans',`
+	gen_require(`
+		type nufw_t, nufw_exec_t;
+	')
+
+	domain_auto_trans($1,nufw_exec_t,nufw_t)
+
+	allow $1 nufw_t:fd use;
+	allow nufw_t $1:fd use;
+	allow nufw_t $1:fifo_file rw_file_perms;
+	allow nufw_t $1:process sigchld;
+')
+
+########################################
+## <summary>
+##      Make a TCP connection to the nufw port.
+## </summary>
+## <param name="domain">
+##      <summary>
+##      Domain allowed access.
+##      </summary>
+## </param>
+#
+interface(`corenet_tcp_connect_nufw_port',`
+        gen_require(`
+                type nufw_port_t;
+        ')
+
+        allow $1 nufw_port_t:tcp_socket name_connect;
+')
+
+########################################
+## <summary>
+##      Send and receive TCP traffic on the nufw port.
+## </summary>
+## <param name="domain">
+##      <summary>
+##      Domain allowed access.
+##      </summary>
+## </param>
+## <infoflow type="both" weight="10"/>
+#
+interface(`corenet_tcp_sendrecv_nufw_port',`
+        gen_require(`
+                type nufw_port_t;
+        ')
+
+        allow $1 nufw_port_t:tcp_socket { send_msg recv_msg };
+')

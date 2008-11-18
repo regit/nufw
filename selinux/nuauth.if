@@ -1,0 +1,124 @@
+## <summary>policy for nuauth</summary>
+
+########################################
+## <summary>
+##	Execute a domain transition to run nuauth.
+## </summary>
+## <param name="domain">
+## <summary>
+##	Domain allowed to transition.
+## </summary>
+## </param>
+#
+interface(`nuauth_domtrans',`
+	gen_require(`
+		type nuauth_t, nuauth_exec_t;
+	')
+
+	domain_auto_trans($1,nuauth_exec_t,nuauth_t)
+
+	allow $1 nuauth_t:fd use;
+	allow nuauth_t $1:fd use;
+	allow nuauth_t $1:fifo_file rw_file_perms;
+	allow nuauth_t $1:process sigchld;
+')
+
+########################################
+## <summary>
+##	Allow nuauth to access nufw configuration files
+## </summary>
+## <param name="domain">
+## <summary>
+##	Domain allowed to access files.
+## </summary>
+## <param name="domain">
+## </param>
+#
+interface(`nuauth_access_nufw_etc_t',`
+	gen_require(`
+		type nufw_etc_t;
+	')
+
+	allow $1 nufw_etc_t:dir list_dir_perms;
+	read_files_pattern($1,nufw_etc_t,nufw_etc_t)
+	read_lnk_files_pattern($1,nufw_etc_t,nufw_etc_t)
+')
+
+########################################
+## <summary>
+##      Bind TCP sockets to the nufw port.
+## </summary>
+## <param name="domain">
+##      <summary>
+##      Domain allowed access.
+##      </summary>
+## </param>
+## <infoflow type="none"/>
+#
+interface(`corenet_tcp_bind_nufw_port',`
+        gen_require(`
+                type nufw_port_t;
+        ')
+
+        allow $1 nufw_port_t:tcp_socket name_bind;
+
+')
+
+########################################
+## <summary>
+##      Bind TCP sockets to the nuauth port.
+## </summary>
+## <param name="domain">
+##      <summary>
+##      Domain allowed access.
+##      </summary>
+## </param>
+## <infoflow type="none"/>
+#
+interface(`corenet_tcp_bind_nuauth_port',`
+        gen_require(`
+                type nuauth_port_t;
+        ')
+
+        allow $1 nuauth_port_t:tcp_socket name_bind;
+
+')
+
+########################################
+## <summary>
+##      Send and receive TCP traffic on the nufw port.
+## </summary>
+## <param name="domain">
+##      <summary>
+##      Domain allowed access.
+##      </summary>
+## </param>
+## <infoflow type="both" weight="10"/>
+#
+interface(`corenet_tcp_sendrecv_nufw_port',`
+        gen_require(`
+                type nufw_port_t;
+        ')
+
+        allow $1 nufw_port_t:tcp_socket { send_msg recv_msg };
+')
+
+########################################
+## <summary>
+##      Send and receive TCP traffic on the nuauth port.
+## </summary>
+## <param name="domain">
+##      <summary>
+##      Domain allowed access.
+##      </summary>
+## </param>
+## <infoflow type="both" weight="10"/>
+#
+interface(`corenet_tcp_sendrecv_nuauth_port',`
+        gen_require(`
+                type nuauth_port_t;
+        ')
+
+        allow $1 nuauth_port_t:tcp_socket { send_msg recv_msg };
+')
+

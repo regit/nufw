@@ -1,4 +1,4 @@
-SUBDIRS = src scripts doc tests conf python
+SUBDIRS = src scripts doc tests conf python selinux
 
 PATCH_FILES = patches/dump-connection-mark.diff 
 EXTRA_DIST = autogen.sh $(PATCH_FILES)

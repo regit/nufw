@@ -1,0 +1,107 @@
+policy_module(nuauth,1.0.0)
+
+# add nuauth_port_t using:
+#   semanage port -a -t nuauth_port_t -p tcp 4129
+
+########################################
+#
+# Declarations
+#
+
+type nuauth_t;
+type nuauth_exec_t;
+domain_type(nuauth_t)
+init_daemon_domain(nuauth_t, nuauth_exec_t)
+
+# pid files
+type nuauth_var_run_t;
+files_pid_file(nuauth_var_run_t)
+
+# configuration files
+nuauth_access_nufw_etc_t(nuauth_t)
+
+########################################
+#
+# nuauth local policy
+#
+# Check in /etc/selinux/refpolicy/include for macros to use instead of allow rules.
+
+# Some common macros (you might be able to remove some)
+files_read_etc_files(nuauth_t)
+libs_use_ld_so(nuauth_t)
+libs_use_shared_libs(nuauth_t)
+miscfiles_read_localization(nuauth_t)
+
+logging_send_syslog_msg(nuauth_t)
+
+## internal communication is often done using fifo and unix sockets.
+#allow nuauth_t self:fifo_file { read write };
+allow nuauth_t self:unix_stream_socket create_stream_socket_perms;
+
+# pid file
+#allow nuauth_t nuauth_var_run_t:file manage_file_perms;
+#allow nuauth_t nuauth_var_run_t:sock_file { unlink create write };
+#allow nuauth_t nuauth_var_run_t:dir rw_dir_perms;
+
+manage_files_pattern(nuauth_t, nuauth_var_run_t, nuauth_var_run_t)
+manage_sock_files_pattern(nuauth_t, nuauth_var_run_t, nuauth_var_run_t)
+delete_sock_files_pattern(nuauth_t, nuauth_var_run_t, nuauth_var_run_t)
+
+files_pid_filetrans(nuauth_t,nuauth_var_run_t, { file sock_file })
+
+## Networking basics (adjust to your needs!)
+sysnet_dns_name_resolve(nuauth_t)
+corenet_tcp_sendrecv_all_if(nuauth_t)
+corenet_tcp_sendrecv_all_nodes(nuauth_t)
+corenet_tcp_sendrecv_all_ports(nuauth_t)
+corenet_non_ipsec_sendrecv(nuauth_t)
+#corenet_tcp_connect_http_port(nuauth_t)
+#corenet_tcp_connect_all_ports(nuauth_t)
+## if it is a network daemon, consider these:
+#corenet_tcp_bind_all_ports(nuauth_t)
+corenet_tcp_bind_all_nodes(nuauth_t)
+allow nuauth_t self:tcp_socket { listen accept };
+
+allow nuauth_t self:unix_dgram_socket create_socket_perms;
+allow nuauth_t self:netlink_route_socket rw_netlink_socket_perms;
+
+type nuauth_port_t;
+corenet_tcp_bind_nufw_port(nuauth_t);
+corenet_tcp_bind_nuauth_port(nuauth_t);
+
+corenet_port(nuauth_port_t)
+gen_require(` type nufw_port_t; ')
+corenet_port(nufw_port_t)
+
+corenet_tcp_sendrecv_nufw_port(nuauth_t);
+corenet_tcp_sendrecv_nuauth_port(nuauth_t);
+
+# Init script handling
+init_use_fds(nuauth_t)
+init_use_script_ptys(nuauth_t)
+domain_use_interactive_fds(nuauth_t)
+
+# for crypto
+dev_read_rand(nuauth_t)
+dev_read_urand(nuauth_t)
+
+allow nuauth_t self:process { signal getsched };
+allow nuauth_t self:capability { dac_read_search dac_override setuid };
+
+# for the "system" module
+allow nuauth_t bin_t:dir search;
+allow nuauth_t self:fifo_file write;
+auth_use_nsswitch(nuauth_t)
+auth_domtrans_chk_passwd(nuauth_t)
+
+# postgresql logging
+corenet_tcp_connect_postgresql_port(nuauth_t)
+corenet_tcp_sendrecv_postgresql_port(nuauth_t)
+
+# postgresql searches for file ~/.pgpass
+files_dontaudit_search_home(nuauth_t)
+
+# mysql logging
+corenet_tcp_connect_mysqld_port(nuauth_t)
+corenet_tcp_sendrecv_mysqld_port(nuauth_t)
+

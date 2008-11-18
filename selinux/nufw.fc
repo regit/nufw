@@ -1,0 +1,9 @@
+# nufw executable will have:
+# label: system_u:object_r:nufw_exec_t
+# MLS sensitivity: s0
+# MCS categories: <none>
+
+/etc/nufw(/.*)?                       gen_context(system_u:object_r:nufw_etc_t,s0)
+/usr/sbin/nufw		--	gen_context(system_u:object_r:nufw_exec_t,s0)
+/var/run/nufw.pid			gen_context(system_u:object_r:nufw_var_run_t,s0)
+

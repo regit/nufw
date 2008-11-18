@@ -1,0 +1,90 @@
+policy_module(nufw,1.0.0)
+
+# add nufw_port_t using:
+#   semanage port -a -t nufw_port_t -p tcp 4128
+
+########################################
+#
+# Declarations
+#
+
+type nufw_t;
+type nufw_exec_t;
+domain_type(nufw_t)
+init_daemon_domain(nufw_t, nufw_exec_t)
+
+# etc files
+type nufw_etc_t;
+files_type(nufw_etc_t)
+
+# log files
+type nufw_var_log_t;
+logging_log_file(nufw_var_log_t)
+
+# pid files
+type nufw_var_run_t;
+files_pid_file(nufw_var_run_t)
+
+########################################
+#
+# nufw local policy
+#
+# Check in /etc/selinux/refpolicy/include for macros to use instead of allow rules.
+
+# Some common macros (you might be able to remove some)
+files_read_etc_files(nufw_t)
+# configuration files
+allow nufw_t nufw_etc_t:dir list_dir_perms;
+read_files_pattern(nufw_t,nufw_etc_t,nufw_etc_t)
+read_lnk_files_pattern(nufw_t,nufw_etc_t,nufw_etc_t)
+
+libs_use_ld_so(nufw_t)
+libs_use_shared_libs(nufw_t)
+miscfiles_read_localization(nufw_t)
+
+logging_send_syslog_msg(nufw_t)
+
+## internal communication is often done using fifo and unix sockets.
+#allow nufw_t self:fifo_file { read write };
+allow nufw_t self:unix_stream_socket create_stream_socket_perms;
+
+# pid file
+allow nufw_t nufw_var_run_t:file manage_file_perms;
+#allow nufw_t nufw_var_run_t:sock_file manage_file_perms;
+allow nufw_t nufw_var_run_t:dir rw_dir_perms;
+files_pid_filetrans(nufw_t,nufw_var_run_t, { file sock_file })
+
+## Networking basics (adjust to your needs!)
+sysnet_dns_name_resolve(nufw_t)
+corenet_tcp_sendrecv_all_if(nufw_t)
+corenet_tcp_sendrecv_all_nodes(nufw_t)
+#corenet_tcp_sendrecv_all_ports(nufw_t)
+#corenet_non_ipsec_sendrecv(nufw_t)
+
+type nufw_port_t;
+corenet_tcp_connect_nufw_port(nufw_t)
+corenet_tcp_sendrecv_nufw_port(nufw_t)
+
+#corenet_tcp_connect_all_ports(nufw_t)
+## if it is a network daemon, consider these:
+#corenet_tcp_bind_all_ports(nufw_t)
+#corenet_tcp_bind_all_nodes(nufw_t)
+allow nufw_t self:tcp_socket { listen accept };
+
+allow nufw_t self:rawip_socket create_socket_perms;
+
+allow nufw_t self:netlink_socket create_socket_perms;
+allow nufw_t self:netlink_route_socket rw_netlink_socket_perms;
+
+# Init script handling
+init_use_fds(nufw_t)
+init_use_script_ptys(nufw_t)
+domain_use_interactive_fds(nufw_t)
+
+# for crypto
+dev_read_rand(nufw_t)
+dev_read_urand(nufw_t)
+
+# nufw wants sys_nice
+allow nufw_t self:capability { sys_nice net_admin net_raw };
+allow nufw_t self:process { setsched };

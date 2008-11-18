@@ -1,0 +1,7 @@
+# nuauth executable will have:
+# label: system_u:object_r:nuauth_exec_t
+# MLS sensitivity: s0
+# MCS categories: <none>
+
+/usr/sbin/nuauth		--	gen_context(system_u:object_r:nuauth_exec_t,s0)
+/var/run/nuauth/nuauth.pid			gen_context(system_u:object_r:nuauth_var_run_t,s0)

@@ -365,6 +365,7 @@ AC_CONFIG_FILES([Makefile
         doc/Makefile
         conf/Makefile
         python/Makefile
+        selinux/Makefile
         src/Makefile
         src/include/Makefile
         src/libs/Makefile
