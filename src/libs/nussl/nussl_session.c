@@ -646,8 +646,7 @@ int nussl_ssl_set_keypair(nussl_session * session, const char *cert_file,
 
 	if (check_key_perms(key_file) != NUSSL_OK) {
 		nussl_set_error(session,
-				_
-				("Permissions on private key %s are not restrictive enough, it should be readable only by its owner."),
+				_("Permissions on private key %s are not restrictive enough, file should not be readable or writable by others."),
 				key_file);
 		return NUSSL_ERROR;
 	}
@@ -685,7 +684,7 @@ int nussl_ssl_set_pkcs12_keypair(nussl_session * session,
 
 	if (check_key_perms(pkcs12_file) != NUSSL_OK) {
 		nussl_set_error(session,
-				_("Permissions of key %s are too open."),
+				_("Permissions on private key %s are not restrictive enough, file should not be readable or writable by others."),
 				pkcs12_file);
 		return NUSSL_ERROR;
 	}
