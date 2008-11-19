@@ -561,7 +561,7 @@ static int read_acl_list(struct plaintext_params *params)
 			default:
 				{
 					log_message(FATAL, DEBUG_AREA_MAIN,
-						    "L.%d: Malformed line (decision should be 0 or 1)",
+						    "L.%d: Malformed line, decision should be 0 (DROP) or 1 (ACCEPT) or 3 (REJECT)",
 						    ln);
 					fclose(fd);
 					return 2;
