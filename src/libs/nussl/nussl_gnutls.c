@@ -757,9 +757,16 @@ void nussl_ssl_trust_default_ca(nussl_session * sess)
 
 int nussl_ssl_set_crl_file(nussl_session * sess, const char *crl_file)
 {
-	return gnutls_certificate_set_x509_crl_file(sess->ssl_context->
-						    cred, crl_file,
-						    GNUTLS_X509_FMT_PEM);
+	int ret;
+
+	/* this function returns the number of CRLs processed
+	 * or a negative value on error.
+	 */
+	ret = gnutls_certificate_set_x509_crl_file(sess->ssl_context->cred,
+						  crl_file,
+						  GNUTLS_X509_FMT_PEM);
+
+	return (ret > 0) ? NUSSL_OK : NUSSL_FAILED;
 }
 
 /* Read the contents of file FILENAME into *DATUM. */

@@ -436,7 +436,7 @@ int nu_client_load_crl(nuauth_session_t *session, const char *crlfile,
 	int ret;
 	if (*crlfile) {
 		ret = nussl_ssl_set_crl_file(session->nussl, crlfile);
-		if (ret < 0) {
+		if (ret != NUSSL_OK) {
 			fprintf(stderr,"TLS error with CRL: %s",
 				nussl_get_error(session->nussl));
 			return 0;
