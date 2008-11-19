@@ -12,11 +12,12 @@ STYLEPDF=/usr/share/xml/docbook/stylesheet/nwalsh/pdf/docbook.xsl
 
 PARAMS=--stringparam html.stylesheet ck-style.css --stringparam section.autolabel 1 
 
-references: references.xml
+references.html: references.xml
 	xsltproc ${PARAMS} --output references.html ${STYLESHEET} references.xml
 
-handbook: handbook.xml
-	xsltproc ${PARAMS} --output handbook.html ${STYLESHEET} handbook.xml
+handbook: handbook.html
+handbook.html: handbook.xml
+	xsltproc ${PARAMS} --output $@ ${STYLESHEET} $<
 
 pdf: handbook.pdf references.pdf
 

@@ -20,7 +20,7 @@ manpage.1: manpage.sgml
   <!ENTITY dhfirstname "<firstname>Vincent</firstname>">
   <!ENTITY dhsurname   "<surname>Deffontaines</surname>">
   <!-- Please adjust the date whenever revising the manpage. -->
-  <!ENTITY dhdate      "<date>october 2, 2003</date>">
+  <!ENTITY dhdate      "<date>november 4, 2008</date>">
   <!-- SECTION should be 1-8, maybe w/ subsection other parameters are
        allowed: see man(7), man(1). -->
   <!ENTITY dhsection   "<manvolnum>8</manvolnum>">
@@ -68,20 +68,22 @@ manpage.1: manpage.sgml
       <arg><option>-V</option></arg>
       <arg><option>-D</option></arg>
       <arg><option>-m</option></arg>
-      <arg><option>-U</option></arg>
       <arg><option>-v[v...]</option></arg>
+      <arg><option>-s</option></arg>
+      <arg><option>-S</option></arg>
       <arg><option>-A <replaceable>debug_area</replaceable></option></arg>
       <arg><option>-k <replaceable>keyfile</replaceable></option></arg>
       <arg><option>-c <replaceable>certfile</replaceable></option></arg>
       <arg><option>-a <replaceable>cafile</replaceable></option></arg>
+      <arg><option>-r <replaceable>crlfile</replaceable></option></arg>
+      <arg><option>-n <replaceable>nuauth_cert_dn</replaceable></option></arg>
 <!--      <arg><option>-l <replaceable>(local) port</replaceable></option></arg>-->
-<!--      <arg><option>-L <replaceable>(local) address</replaceable></option></arg>-->
       <arg><option>-d <replaceable>address</replaceable></option></arg>
       <arg><option>-p <replaceable>(remote) port</replaceable></option></arg>
       <arg><option>-t <replaceable>timeout</replaceable></option></arg>
       <arg><option>-T <replaceable>track_size</replaceable></option></arg>
-      <arg><option>-I <replaceable>ServerID</replaceable></option></arg>
       <arg><option>-q <replaceable>NfQueue_num</replaceable></option></arg>
+      <arg><option>-L <replaceable>Nfqueue_length</replaceable></option></arg>
       <arg><option>-C</option></arg>
       <arg><option>-M</option></arg>
 
@@ -129,15 +131,9 @@ manpage.1: manpage.sgml
         <term><option>-D</option>
         </term>
         <listitem>
-          <para>Run as a daemon.</para>
-        </listitem>
-      </varlistentry>
-      <varlistentry>
-        <term><option>-U</option>
-        </term>
-        <listitem>
-          <para>Use UDP, unencrypted protocol for communication with the nuauth
-          server. This is NOT recommended.</para>
+          <para>Run as a daemon. If started as a daemon, nufw logs message to syslog. If you don't specify this option,
+          messages go to the console nufw is running on, both on STDOUT and STDERR. Unless you are debugging something, you should
+          run nufw with this option.</para>
         </listitem>
       </varlistentry>
       <varlistentry>
@@ -171,7 +167,6 @@ manpage.1: manpage.sgml
 	  </para>
         </listitem>
       </varlistentry>
-
       <varlistentry>
         <term><option>-k <replaceable>keyfile</replaceable></option>
         </term>
@@ -190,8 +185,36 @@ manpage.1: manpage.sgml
         <term><option>-a <replaceable>cafile</replaceable></option>
         </term>
         <listitem>
-          <para>Use specified file as SSL certificate authority file. This
-          parameter is optional.</para>
+          <para>Use specified file as SSL certificate authority file.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>-r <replaceable>crlfile</replaceable></option>
+        </term>
+        <listitem>
+          <para>Use specified file as SSL certificate revocation list file. You will need to restart nufw if you modify this file. Since 2.2.19, nufw reloads this file dynamically when receiving a HUP signal.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>-n <replaceable>nuauth_dn</replaceable></option>
+        </term>
+        <listitem>
+          <para>Use specified string as the needed DN of nuauth. nufw will refuse to connect if the provided string does not match the DN of the certificate provided by nuauth. If you do not use this option, the DN of the nuauth certificate will be checked against the fully qualified domain name of the nuauth server, obtained from a reverse DNS lookup on nuauth IP address.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-s</option>
+        </term>
+        <listitem>
+          <para>Disable strict TLS checking of the certificate provided by nuauth.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>-S</option>
+        </term>
+        <listitem>
+          <para>Force strict TLS checking of the certificate provided by nuauth. This is the default behavior of the daemon since 2.2.18.</para>
         </listitem>
       </varlistentry>
       <varlistentry>
@@ -234,17 +257,25 @@ manpage.1: manpage.sgml
         </listitem>
       </varlistentry>
       <varlistentry>
+        <term><option>-L <replaceable>NfQueue length</replaceable></option>
+        </term>
+        <listitem>
+          <para>Specify the length of the nfnetlink queue used by nufw. This is the number of packets that the kernel will keep internally before dropping new coming packets.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
         <term><option>-C</option>
         </term>
         <listitem>
-          <para>listen to conntrack events (needed for connection expiration).</para>
+          <para>Listen to conntrack events (needed for connection expiration).</para>
         </listitem>
       </varlistentry>
      <varlistentry>
         <term><option>-M</option>
         </term>
         <listitem>
-          <para>only report event on marked connections to nuauth (implies -C and -m)</para>
+          <para>Only report event on marked connections to nuauth (implies -C and -m)</para>
 		  <para>
 		  This is the way to do an efficient selection of events to be sent to nuauth but this REQUIRES a kernel with transmit_mark applied (should be ok for 2.6.18+) and the use of CONNMARK to propagate the initial mark across all the packets of the connection.
 		  </para>

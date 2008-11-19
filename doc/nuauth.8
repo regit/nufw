@@ -3,7 +3,7 @@
 .\" <http://shell.ipoline.com/~elmert/comp/docbook2X/> 
 .\" Please send any bug reports, improvements, comments, patches, 
 .\" etc. to Steve Cheng <steve@ggi-project.org>.
-.TH "NUAUTH" "8" "26 juin 2007" "" ""
+.TH "NUAUTH" "8" "10 novembre 2008" "" ""
 
 .SH NAME
 nuauth \- NUFW authentication server
@@ -20,17 +20,17 @@ Nuauth is the authentication server of the NUFW package. Whenever a
 client sends a packet(1) to start a connection through the gateway, the
 client program (nutcpc), installed on the client's station, sends an
 authentication packet(2) to nuauth. The gateway's firewall queues the
-packet(1) and sends informations about it directly to the nuauth server. 
-Nuauth's job is to analyse both packets(1) and (2), and check user owns 
-the right to initialize the connection (s)he has tried to. If Nuauth finds 
-so, Nuauth sends authorization to Nufw to accept the packet(1) through, 
+packet(1) and sends informations about it directly to the nuauth server.
+Nuauth's job is to analyse both packets(1) and (2), and check user owns
+the right to initialize the connection (s)he has tried to. If Nuauth finds
+so, Nuauth sends authorization to Nufw to accept the packet(1) through,
 and the connection gets initialized. If not, the connection is Dropped.
 .PP
 Nuauth can use a backend LDAP server for user and groups
 definitions, as well as Access Lists associated with those groups.
 Interface to Users/Groups database can also be performed through PAM/NSS.
 An option is also to store the user database in DBM files. It should be
-noted that dynamic modifications of the users base can currently 
+noted that dynamic modifications of the users base can currently
 only be performed if an LDAP database is used.
 .PP
 Original packaging and informations and help can be found from http://www.nufw.org/
@@ -72,11 +72,18 @@ Specifies timeout to forget packets not identified, and
 identification packets matching nothing.  Default value : 15 s.
 .TP
 \fB-D \fR
-Run as a daemon.
+Run as a daemon. If started as a daemon, nuauth logs message to syslog. If you don't specify this option,
+messages go to the console nuauth is running on, both on STDOUT and STDERR. Unless you are debugging something, you should
+run nuauth with this option.
 .SH "SIGNALS"
 .PP
 The \fBnuauth\fR daemon is designed to deal with several
-signals : USR1, USR2, and POLL.
+signals : HUP, USR1, USR2, and POLL.
+.TP
+\fBHUP \fR
+Reload configuration. The \fBnuauth\fR daemon reloads its
+configuration when receiving this signal. Since 2.2.19, it also refreshes the CRL
+file content.
 .TP
 \fBUSR1 \fR
 Increases verbosity. The daemon then acts as if it had been

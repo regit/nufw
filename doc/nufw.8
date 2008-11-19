@@ -3,13 +3,13 @@
 .\" <http://shell.ipoline.com/~elmert/comp/docbook2X/> 
 .\" Please send any bug reports, improvements, comments, patches, 
 .\" etc. to Steve Cheng <steve@ggi-project.org>.
-.TH "NUFW" "8" "29 octobre 2007" "" ""
+.TH "NUFW" "8" "10 novembre 2008" "" ""
 
 .SH NAME
 nufw \- NUFW User filtering gateway server
 .SH SYNOPSIS
 
-\fBnufw\fR [ \fB-h\fR ] [ \fB-V\fR ] [ \fB-D\fR ] [ \fB-m\fR ] [ \fB-U\fR ] [ \fB-v[v...]\fR ] [ \fB-A \fIdebug_area\fB\fR ] [ \fB-k \fIkeyfile\fB\fR ] [ \fB-c \fIcertfile\fB\fR ] [ \fB-a \fIcafile\fB\fR ] [ \fB-d \fIaddress\fB\fR ] [ \fB-p \fI(remote) port\fB\fR ] [ \fB-t \fItimeout\fB\fR ] [ \fB-T \fItrack_size\fB\fR ] [ \fB-I \fIServerID\fB\fR ] [ \fB-q \fINfQueue_num\fB\fR ] [ \fB-C\fR ] [ \fB-M\fR ]
+\fBnufw\fR [ \fB-h\fR ] [ \fB-V\fR ] [ \fB-D\fR ] [ \fB-m\fR ] [ \fB-v[v...]\fR ] [ \fB-s\fR ] [ \fB-S\fR ] [ \fB-A \fIdebug_area\fB\fR ] [ \fB-k \fIkeyfile\fB\fR ] [ \fB-c \fIcertfile\fB\fR ] [ \fB-a \fIcafile\fB\fR ] [ \fB-r \fIcrlfile\fB\fR ] [ \fB-n \fInuauth_cert_dn\fB\fR ] [ \fB-d \fIaddress\fB\fR ] [ \fB-p \fI(remote) port\fB\fR ] [ \fB-t \fItimeout\fB\fR ] [ \fB-T \fItrack_size\fB\fR ] [ \fB-q \fINfQueue_num\fB\fR ] [ \fB-L \fINfqueue_length\fB\fR ] [ \fB-C\fR ] [ \fB-M\fR ]
 
 .SH "DESCRIPTION"
 .PP
@@ -39,11 +39,9 @@ Issues usage details and exits.
 Issues version and exits.
 .TP
 \fB-D \fR
-Run as a daemon.
-.TP
-\fB-U \fR
-Use UDP, unencrypted protocol for communication with the nuauth
-server. This is NOT recommended.
+Run as a daemon. If started as a daemon, nufw logs message to syslog. If you don't specify this option,
+messages go to the console nufw is running on, both on STDOUT and STDERR. Unless you are debugging something, you should
+run nufw with this option.
 .TP
 \fB-m \fR
 Mark packets with UserID. This requires the wvmark POM patch
@@ -80,8 +78,19 @@ Use specified file as SSL (private) key file.
 Use specified file as SSL (public) certificate file.
 .TP
 \fB-a \fIcafile\fB \fR
-Use specified file as SSL certificate authority file. This
-parameter is optional.
+Use specified file as SSL certificate authority file.
+.TP
+\fB-r \fIcrlfile\fB \fR
+Use specified file as SSL certificate revocation list file. You will need to restart nufw if you modify this file. Since 2.2.19, nufw reloads this file dynamically when receiving a HUP signal.
+.TP
+\fB-n \fInuauth_dn\fB \fR
+Use specified string as the needed DN of nuauth. nufw will refuse to connect if the provided string does not match the DN of the certificate provided by nuauth. If you do not use this option, the DN of the nuauth certificate will be checked against the fully qualified domain name of the nuauth server, obtained from a reverse DNS lookup on nuauth IP address.
+.TP
+\fB-s \fR
+Disable strict TLS checking of the certificate provided by nuauth.
+.TP
+\fB-S \fR
+Force strict TLS checking of the certificate provided by nuauth. This is the default behavior of the daemon since 2.2.18.
 .TP
 \fB-d \fIaddress\fB \fR
 Network address of the nuauth server.
@@ -102,11 +111,14 @@ Set maximum number of packets that can wait a decision in nufw. Default value : 
 If Nufw was compiled with NfQueue support, Id of the NfQueue to
 use (default : 0).
 .TP
+\fB-L \fINfQueue length\fB \fR
+Specify the length of the nfnetlink queue used by nufw. This is the number of packets that the kernel will keep internally before dropping new coming packets.
+.TP
 \fB-C \fR
-listen to conntrack events (needed for connection expiration).
+Listen to conntrack events (needed for connection expiration).
 .TP
 \fB-M \fR
-only report event on marked connections to nuauth (implies -C and -m)
+Only report event on marked connections to nuauth (implies -C and -m)
 
 This is the way to do an efficient selection of events to be sent to nuauth but this REQUIRES a kernel with transmit_mark applied (should be ok for 2.6.18+) and the use of CONNMARK to propagate the initial mark across all the packets of the connection.
 .SH "SIGNALS"

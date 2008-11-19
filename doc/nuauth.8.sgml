@@ -8,7 +8,7 @@
 manpage.1: manpage.sgml
 	docbook-to-man $< > $@
 
-    
+
 	The docbook-to-man binary is found in the docbook-to-man package.
 	Please remember that if you create the nroff version in one of the
 	debian/rules file targets (such as build), you will need to include
@@ -86,17 +86,17 @@ manpage.1: manpage.sgml
       client sends a packet(1) to start a connection through the gateway, the
       client program (nutcpc), installed on the client's station, sends an
       authentication packet(2) to nuauth. The gateway's firewall queues the
-      packet(1) and sends informations about it directly to the nuauth server. 
-      Nuauth's job is to analyse both packets(1) and (2), and check user owns 
-      the right to initialize the connection (s)he has tried to. If Nuauth finds 
-      so, Nuauth sends authorization to Nufw to accept the packet(1) through, 
+      packet(1) and sends informations about it directly to the nuauth server.
+      Nuauth's job is to analyse both packets(1) and (2), and check user owns
+      the right to initialize the connection (s)he has tried to. If Nuauth finds
+      so, Nuauth sends authorization to Nufw to accept the packet(1) through,
       and the connection gets initialized. If not, the connection is Dropped.</para>
 
       <para>Nuauth can use a backend LDAP server for user and groups
       definitions, as well as Access Lists associated with those groups.
       Interface to Users/Groups database can also be performed through PAM/NSS.
       An option is also to store the user database in DBM files. It should be
-      noted that dynamic modifications of the users base can currently 
+      noted that dynamic modifications of the users base can currently
       only be performed if an LDAP database is used.</para>
 
       <para>Original packaging and informations and help can be found from http://www.nufw.org/</para>
@@ -179,7 +179,9 @@ manpage.1: manpage.sgml
         <term><option>-D</option>
         </term>
         <listitem>
-          <para>Run as a daemon.</para>
+          <para>Run as a daemon. If started as a daemon, nuauth logs message to syslog. If you don't specify this option,
+          messages go to the console nuauth is running on, both on STDOUT and STDERR. Unless you are debugging something, you should
+          run nuauth with this option.</para>
         </listitem>
       </varlistentry>
     </variablelist>
@@ -188,8 +190,17 @@ manpage.1: manpage.sgml
     <title>SIGNALS</title>
      <para>
       The <command>&dhpackage;</command> daemon is designed to deal with several
-      signals : USR1, USR2, and POLL.
+      signals : HUP, USR1, USR2, and POLL.
         <variablelist>
+          <varlistentry>
+            <term><option>HUP</option>
+            </term>
+            <listitem>
+              <para>Reload configuration. The <command>&dhpackage;</command> daemon reloads its
+              configuration when receiving this signal. Since 2.2.19, it also refreshes the CRL
+              file content.</para>
+            </listitem>
+          </varlistentry>
           <varlistentry>
             <term><option>USR1</option>
             </term>
