@@ -80,7 +80,6 @@ char *nu_client_to_utf8(const char *inbuf, char *from_charset)
 			panic("iconv error code %i!", ret);
 		}
 
-		/* TODO : put a good value here */
 		while ((ret == -1) && (errno == E2BIG)
 		       && (outbuflen < maxlen)) {
 			/* realloc outbuf */

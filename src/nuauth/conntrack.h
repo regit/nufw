@@ -23,7 +23,6 @@
 
 
 struct limited_connection {
-	/** \todo check that having address is enough (two nufw on same computer) */
 	struct in6_addr gwaddr;
 	time_t expire; /**< expiration time of connection */
 	tracking_t tracking;

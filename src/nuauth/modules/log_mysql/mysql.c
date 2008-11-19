@@ -684,7 +684,6 @@ static inline int log_state_established(MYSQL * ld,
 	return 0;
 }
 
-/** \todo Dump accounting counters in the table */
 static inline int log_state_close(MYSQL * ld,
 				  struct accounted_connection *element,
 				  struct log_mysql_params *params)
@@ -984,7 +983,6 @@ nu_error_t destroy_user_connections(user_session_t * c_session,
 							  &msgdatas,
 							  params)
 					!= NU_EXIT_OK) {
-				/** \todo log error treatment */
 				mysql_free_result(result);
 				return NU_EXIT_ERROR;
 			}
@@ -992,7 +990,6 @@ nu_error_t destroy_user_connections(user_session_t * c_session,
 					(&msgdatas,
 					 AUTH_CONN_DESTROY)
 					!= NU_EXIT_OK) {
-				/** \todo log error treatment */
 				mysql_free_result(result);
 				return NU_EXIT_ERROR;
 			}

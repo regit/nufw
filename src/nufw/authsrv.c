@@ -90,7 +90,6 @@ int auth_process_answer(char *dgram, int dgram_size)
 					 DEBUG_LEVEL_VERBOSE_DEBUG,
 					 "(*) Marking packet with %d",
 					 ntohl(answer->tcmark));
-			/* \todo Overwrite whole mark */
 			IPQ_SET_VWMARK(packet_id, NF_ACCEPT,
 				       answer->tcmark);
 		} else {

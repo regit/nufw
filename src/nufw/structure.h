@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2002-2007 INL
+** Copyright (C) 2002-2008 INL
 ** Written by Éric Leblond <regit@inl.fr>
 ** INL http://www.inl.fr/
 **
@@ -95,7 +95,6 @@ typedef enum {
  * timestamp (initialized by NuFW) and mark (if NuFW compiled with
  * mark support).
  */
-/* TODO use a kind of HASH */
 typedef struct Packet_Ids {
 	/*! Unique identifier in netfilter queue, comes
 	 * from nfq_get_msg_packet_hdr() */
