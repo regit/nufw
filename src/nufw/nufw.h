@@ -175,6 +175,7 @@ void *authsrv(void *data);
 int auth_request_send(uint8_t type, struct queued_pckt *pckt);
 
 void close_tls_session();
+void shutdown_tls();
 
 unsigned long padd(packet_idl * packet);
 int psearch_and_destroy(uint32_t packet_id, uint32_t * mark);

@@ -607,17 +607,14 @@ void shutdown_tls()
 {
 	log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_CRITICAL,
 			"tls send failure when sending request");
-	pthread_mutex_lock(&tls.mutex);
 
 	pthread_cancel(tls.auth_server);
 
 	close_tls_session();
 
-	/* put auth_server_running to 1 because this is this thread which has
+	/* put auth_server_running to 0 because this is this thread which has
 	 * just killed auth_server */
-	tls.auth_server_running = 1;
-
-	pthread_mutex_unlock(&tls.mutex);
+	tls.auth_server_running = 0;
 }
 
 /**
