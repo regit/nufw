@@ -1,0 +1,50 @@
+#!/usr/bin/perl
+
+# Author: Pierre Chifflier <chifflier@inl.fr>
+# license: GPLv2
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, version 2 of the License.
+
+
+# NIST SHA-1 message digest algorithm
+
+use Digest::SHA1 qw(sha1_base64);
+
+use POSIX;
+
+sub echo_off {
+        my($echo) = (&POSIX::ECHO|&POSIX::ECHOK);
+        $no_echo = $term_orig;
+        $no_echo &= ~$echo;
+        $t->setlflag( $no_echo );
+        $t->setattr( 0, &TCSANOW);
+}
+
+sub echo_on {
+        $t->setlflag( $term_orig );
+        $t->setattr( 0, &TCSANOW);
+}
+
+#
+# Set up terminal
+$t = POSIX::Termios->new();
+$t->getattr();
+$term_orig = $t->getlflag();
+
+my $plaintext=shift;
+
+if (!$plaintext) {
+  print "password : ";
+  echo_off();
+  chop ($plaintext=<STDIN>);
+  echo_on();
+  print "\n";
+}
+
+# we append a = because the sha1_base64 function does not append it
+
+print sha1_base64($plaintext), "=\n";
+
+print "$hash\n";
+
