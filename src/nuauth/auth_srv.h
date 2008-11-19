@@ -149,7 +149,7 @@ nu_error_t treat_user_request(user_session_t * c_session,
 #define DEFAULT_PERIODS_MODULE "libxml_defs"
 #define DEFAULT_LOGS_MODULE "libsyslog"
 #define DEFAULT_IPAUTH_MODULE "ipauth_guest"
-#define DEFAULT_CERTIFICATE_CHECK_MODULE "libx509_std"
+#define DEFAULT_CERTIFICATE_CHECK_MODULE NULL
 #define DEFAULT_CERTIFICATE_TO_UID_MODULE "libx509_std"
 #define DEFAULT_USER_SESSION_MODIFY_MODULE "libsession_expire"
 #define DEFAULT_FINALIZE_PACKET_MODULE "libmark_uid"
