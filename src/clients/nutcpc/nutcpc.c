@@ -859,7 +859,8 @@ void init_library(nutcpc_context_t * context, char *username)
 	/* Library failure? */
 	if (session == NULL) {
 		printf("Unable to initiate connection to NuFW gateway\n");
-		printf("Problem: %s\n", nu_client_strerror(session, err));
+		if (err->error != 0)
+			printf("Problem: %s\n", nu_client_strerror(session, err));
 		printf("Authentication failed (check parameters)\n");
 		exit(EXIT_FAILURE);
 	}
