@@ -154,6 +154,10 @@ int nu_client_set_crlfile(nuauth_session_t * session,
 char* nu_client_get_cert_infos(nuauth_session_t * session);
 char* nu_client_get_server_cert_infos(nuauth_session_t * session);
 
+int nu_client_set_crlfile(nuauth_session_t * session,
+		char *crlfile,
+		nuclient_error_t *err);
+
 int nu_client_set_krb5_service(nuauth_session_t * session,
 		char *service);
 

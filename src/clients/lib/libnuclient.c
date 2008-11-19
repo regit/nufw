@@ -469,6 +469,25 @@ int nu_client_set_nuauth_cert_dn(nuauth_session_t * session,
 	return 1;
 }
 
+ /**
+  * \ingroup nuclientAPI
+  */
+int nu_client_set_crlfile(nuauth_session_t * session,
+		char *crlfile,
+		nuclient_error_t *err)
+{
+	int ret;
+	if (*crlfile) {
+		ret = nussl_ssl_set_crl_file(session->nussl, crlfile);
+		if (ret < 0) {
+			fprintf(stderr,"TLS error with CRL: %s",
+				nussl_get_error(session->nussl));
+			return 0;
+		}
+	}
+	return 1;
+}
+
 /**
  * \ingroup nuclientAPI
  */
