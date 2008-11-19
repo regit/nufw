@@ -460,12 +460,19 @@ int check_module_version(GModule * module)
 static int load_modules_from(gchar * confvar, gchar * func,
 			     GSList ** target, module_hook_t hook)
 {
-	gchar **modules_list = g_strsplit(confvar, " ", 0);
+	gchar **modules_list;
 	gchar *module_path;
 	init_module_from_conf_t *initmod;
 	gchar **params_list;
 	module_t *current_module;
 	int i;
+
+	if (confvar == NULL)
+		return 1;
+
+	modules_list = g_strsplit(confvar, " ", 0);
+	if (modules_list == NULL)
+		return 1;
 
 	for (i = 0; modules_list[i] != NULL; i++) {
 		current_module = g_new0(module_t, 1);
