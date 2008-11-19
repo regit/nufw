@@ -496,7 +496,7 @@ static int mysasl_negotiate(user_session_t * c_session, sasl_conn_t * conn)
 		}
 	}
 #if 0
-	if (nussl_write(c_session->nussl, "O", 1) <= 0)	/* send YES to client */
+	if (nussl_write(c_session->nussl, "O", 1) < 0)	/* send YES to client */
 		return SASL_FAIL;
 #endif
 

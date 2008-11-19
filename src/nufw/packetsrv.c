@@ -733,9 +733,9 @@ int auth_request_send(uint8_t type, struct queued_pckt *pckt_datas)
 	/* send packet */
 	pthread_mutex_lock(&tls.mutex);
 
-	if (nussl_write(tls.session, (char*)datas, msg_length) <= 0) {
+	if (nussl_write(tls.session, (char*)datas, msg_length) < 0) {
 		debug_log_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
-				 "Error during nussl_write.");
+				 "Error during nussl_write (auth_request_send).");
 		shutdown_tls();
 		pthread_mutex_unlock(&tls.mutex);
 		log_area_printf(DEBUG_AREA_GW,

@@ -2,6 +2,7 @@
  ** Copyright (C) 2008 INL
  ** Written by S.Tricaud <stricaud@inl.fr>
  **            L.Defert <ldefert@inl.fr>
+ **            Pierre Chifflier <p.chifflier@inl.fr>
  ** INL http://www.inl.fr/
  **
  ** $Id$
