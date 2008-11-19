@@ -177,7 +177,7 @@ nu_error_t treat_user_request(user_session_t * c_session,
 	g_mutex_unlock(c_session->tls_lock);
 	if (datas->buffer_len < (int) sizeof(struct nu_header)) {
 #ifdef DEBUG_ENABLE
-		if (datas->buffer_len < 0)
+		if (datas->buffer_len <= 0)
 			log_message(DEBUG, DEBUG_AREA_USER,
 				    "Received error from user %s (%s)",
 				    c_session->user_name, nussl_get_error(c_session->nussl));
@@ -218,7 +218,7 @@ nu_error_t treat_user_request(user_session_t * c_session,
 				       CLASSIC_NUFW_PACKET_SIZE,
 				       header_length - datas->buffer_len);
 		g_mutex_unlock(c_session->tls_lock);
-		if (tmp_len < 0) {
+		if (tmp_len <= 0) {
 			free_buffer_read(datas);
 			return NU_EXIT_ERROR;
 		}

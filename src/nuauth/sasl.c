@@ -286,19 +286,11 @@ nu_error_t get_proto_info(user_session_t * c_session)
 
 				debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
 						  "Getting protocol information");
-#if 0
-				ret =
-				    gnutls_record_recv(*(c_session->tls),
+				ret = nussl_read(c_session->nussl,
 						       buffer,
 						       sizeof(buffer) - 1);
-#else
-				ret =
-				    nussl_read(c_session->nussl,
-						       buffer,
-						       sizeof(buffer) - 1);
-#endif
 
-				if (ret < 0) {
+				if (ret <= 0) {
 					debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
 							  "nussl_read() failed: %s", nussl_get_error(c_session->nussl));
 					return NU_EXIT_ERROR;
@@ -690,7 +682,7 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 		record_send = nussl_write(c_session->nussl, data, tls_len);
 	}
 #endif
-	if (record_send < 0) {
+	if (record_send <= 0) {
 		return SASL_FAIL;
 	}
 	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
@@ -698,7 +690,7 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 
 	memset(chosenmech, 0, sizeof chosenmech);
 	tls_len = nussl_read(c_session->nussl, chosenmech, sizeof chosenmech);
-	if (tls_len < 0) {
+	if (tls_len <= 0) {
 		if (tls_len == 0) {
 			log_message(INFO, DEBUG_AREA_AUTH,
 				    "proto v3: client didn't choose mechanism");
@@ -717,7 +709,7 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 	memset(buf, 0, sizeof buf);
 	tls_len = nussl_read(c_session->nussl, buf, sizeof(buf));
 	if (tls_len != 1) {
-		if (tls_len < 0) {
+		if (tls_len <= 0) {
 			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
 					  "nussl_read() error: %s", nussl_get_error(c_session->nussl));
 			return SASL_FAIL;
@@ -739,7 +731,7 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 
 		memset(buf, 0, sizeof(buf));
 		tls_len = nussl_read(c_session->nussl, buf, sizeof(buf));
-		if (tls_len < 0) {
+		if (tls_len <= 0) {
 			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
 					  "nussl_read() error: %s", nussl_get_error(c_session->nussl));
 			return SASL_FAIL;
