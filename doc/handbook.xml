@@ -1,23 +1,48 @@
 <?xml version='1.0'?>
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
-"http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
-<book><title>NuFW Howto</title>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN" "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
+<book><title>NuFW Handbook</title>
   <bookinfo>
     <author>
       <firstname>Eric</firstname>
       <surname>Leblond</surname>
-      <email>regit@inl.fr</email>
+      <email>eric at inl dot fr</email>
     </author>
     <author>
       <firstname>Vincent</firstname>
       <surname>Deffontaines</surname>
       <email>gryzor at inl dot fr</email>
     </author>
+    <author>
+      <firstname>Pierre</firstname>
+      <surname>Chifflier</surname>
+      <email>chifflier at inl dot fr</email>
+    </author>
     <copyright>
       <year>2005-2008</year>
       <holder>INL</holder>
     </copyright>
     <revhistory>
+    <revision>
+      	<revnumber>1.0.0</revnumber>
+	<date>2008/11/7</date>
+	<revdescription>
+	<para>Add SSO troubleshooting information, and switch the release number to a more stable version after many recent and massive updates.</para>
+	</revdescription>
+    </revision>
+    <revision>
+      	<revnumber>0.9.10</revnumber>
+	<date>2008/11/5</date>
+	<revdescription>
+	<para>Complete notes on certificate checks, and TLS options.</para>
+	</revdescription>
+      </revision>
+    <revision>
+      	<revnumber>0.9.9</revnumber>
+	<date>2008/10/17</date>
+	<revdescription>
+	<para>Add notes on security, certificate checks, and TLS options.</para>
+	</revdescription>
+      </revision>
     <revision>
       	<revnumber>0.9.8</revnumber>
 	<date>2008/04/24</date>
@@ -29,7 +54,7 @@
       	<revnumber>0.9.7</revnumber>
 	<date>2008/04/18</date>
 	<revdescription>
-	<para>Information about NuFW multiplatform agents was added.</para>
+	<para>Information about NuFW multi-platform agents was added.</para>
 	</revdescription>
       </revision>
       <revision>
@@ -57,7 +82,7 @@
       	<revnumber>0.9.3</revnumber>
 	<date>2008/01/10</date>
 	<revdescription>
-	<para>A detailled description of SQL tables insertions and updates by nuauth.</para>
+	<para>A detailed description of SQL tables insertions and updates by nuauth.</para>
 	</revdescription>
 	</revision>
      <revision>
@@ -225,31 +250,38 @@ NuFW can:
 <itemizedlist>
 <listitem><para>
 Authenticate any connection that goes through your gateway or only from/to a chosen subset or a specific protocol (iptables is used to select the connections to authenticate).</para></listitem>
-<listitem><para>Perform accounting, routing and quality of service based on users and not simply on IPs.</para></listitem>
-<listitem><para> Filter packets with criterium such as application and OS used by distant users.</para></listitem>
+<listitem><para>Perform accounting, routing and quality of service based on users and not simply on IP.</para></listitem>
+<listitem><para> Filter packets with criteria such as application and OS used by remote users.</para></listitem>
 <listitem><para> Be the key of a secure and simple Single Sign On system.</para></listitem>
 </itemizedlist>
 </para>
 <para>
-NuFW is composed of two daemons that can be put on different systems and the main daemon nuauth is heavily multithreaded.
-nuauth uses loadable modules for any exterior interaction.
+NuFW is composed of two daemons that can be put on different systems and the
+main daemon nuauth is heavily multi-threaded.  nuauth uses loadable modules to
+add features, like SQL logging, reporting alert to IDS using Prelude, etc.
 </para>
    </section>
     <section><title>Requirements</title>
       <para>In this section, each invoked library will have to be installed and the
-header have to be in standard places (so <command>configure</command> can
-		found them).
+header files have to be in standard places (so <command>./configure</command> can
+		find them).
 </para>
+      <section><title>General</title>
+      <para>NuFW is an advanced network filtering solution. For logging, as well as for domain integrations, it is highly recommended that all servers hosting NuFW services (<command>nufw</command>, <command>nuauth</command>, <command>LDAP/Active Directory</command>, and <command>the logging server (SQLi/syslog/prelude)</command>) be time-synchronized with a protocol such as NTP. NuFW does not provide time synchronization per se.
+      </para>
+      </section>
       <section><title>Nuauth dependencies</title>
        <section><title>nuauth core daemon</title>
 	<para>
 nuauth dependencies are as follows:
 <itemizedlist>
 	    <listitem><para><filename>libglib2.0</filename>: nuauth heavily uses this library which provides a set of very useful high level objects. It needs at least 2.4 release.</para></listitem>
-	    <listitem><para><filename>libgnutls</filename>: encryption of communications between the different parts of the system is performed via TLS</para></listitem>
+	    <listitem><para><filename>libgnutls</filename>: communications between components are encrypted using TLS v1</para></listitem>
 	    <listitem><para><filename>libsasl2</filename>: authentication is done via sasl</para></listitem>
 	    <listitem><para><filename>libtool</filename>: It's needed for the compilation of library and modules</para></listitem>
 	  </itemizedlist>
+        <note><para>Be careful when choosing your GnuTLS version : old versions may contain security breaches. Check the <ulink url="http://www.gnu.org/software/gnutls/security.html">GnuTLS security advisories page</ulink> or make sure your distribution is reactive enough with updates.</para>
+        </note>
 </para>
       </section>
       <section><title>MySQL logging</title>
@@ -262,10 +294,10 @@ The <filename>libmysqlclient</filename> library is required for compiling of thi
 The <filename>libpq</filename> library is required for compiling this module.
 </para>
       </section>
-      <section><title>Prelude logging</title>
+      <section><title>Prelude IDS alerts</title>
 	<para>
 The <filename>libprelude</filename> library is required for compiling this module.
-Prelude allows for gathering security events at the scale of any organisation, and NuFW can send Prelude the following events :
+Prelude allows for gathering security events at the scale of any organization, and NuFW can send Prelude the following events :
 <itemizedlist>
 <listitem><para>User authentication failures</para></listitem>
 <listitem><para>User authentication successes</para></listitem>
@@ -273,6 +305,8 @@ Prelude allows for gathering security events at the scale of any organisation, a
 <listitem><para>Start and end of authenticated connections</para></listitem>
 <listitem><para>Rejected connections</para></listitem>
 </itemizedlist>
+NuFW is a native sensor for Prelude, allowing tight integration with any IDS based the IDMEF standard (RFC 4765).
+
 All information about the Prelude project is available at <ulink url="http://prelude-ids.org/">http://prelude-ids.org</ulink>
         </para>
 
@@ -288,7 +322,7 @@ All information about the Prelude project is available at <ulink url="http://pre
 	<para>The nufw daemon only depends on:
 <itemizedlist>
 	    <listitem><para><filename>iptables</filename>: <filename>libipq.a</filename> is necessary to compile the nufw server</para></listitem>
-	    <listitem><para><filename>libgnutls</filename>: nufw speaks to nuauth via a TLS encrypted channel</para></listitem>
+	    <listitem><para><filename>libgnutls</filename>: nufw is connected to nuauth using a TLS encrypted channel</para></listitem>
 	  </itemizedlist>
 </para>
       </section>
@@ -301,18 +335,18 @@ its "sibling" library libipq.
       <section><title>Using nfnetlink and getting all latest NuFW features</title>
 	<para>
 On kernel superior to 2.6.14, ipq is now deprecated in favor of libnetfilter_queue which
-uses the new nfnetlink system. We encourage you to switch to this library as it is the future.
+uses the new nfnetlink system.
 On top of that nfnetlink also provides libnetfilter_conntrack which is used by NuFW to implement
-time-based acls.
+connection tracking, and strict time-based acls.
 	</para>
-	<para>To be able to use this features, the following libraries are needed:
+	<para>To use this features, the following libraries are needed:
 	<itemizedlist>
 	<listitem><para>libnfnetlink</para></listitem>
 	<listitem><para>libnetfilter_queue</para></listitem>
 	<listitem><para>libnetfilter_conntrack</para></listitem>
 	</itemizedlist>
         You can find working versions of these libraries at <ulink url="http://nufw.org/download/libs/index.html">http://nufw.org/download/libs/index.html</ulink>
-        And if you run debian, packages are available at <ulink url="http://www.nufw.org/debian/">http://www.nufw.org/debian/</ulink>
+        Debian packages are available at <ulink url="http://www.nufw.org/debian/">http://www.nufw.org/debian/</ulink>
 	</para>
 	<para>
 If you plan to use NuFW time-based acls, it is best to use a kernel superior to 2.6.18 or
@@ -333,10 +367,10 @@ to apply patches provided on NuFW site.
       </itemizedlist>
       </para>
       <para>
-      Also, please note that a Linux kernel recompilation will only be needed on the Firewall itself (the host running the nufw daemon). The nuauth daemon should run on any POSIX system, and clients are, by essence, multiplatform (meaning, NO kernel dependency).</para>
+      Please note that a Linux kernel recompilation will only be needed on the Firewall itself (the host running the nufw daemon). The nuauth daemon should run on any POSIX system, and clients are, by essence, multi-platform (meaning, NO kernel dependency).</para>
     </section>
     <section><title>Kernel preparation</title>
-      <para>You only need to patch your kernel sources with patch-o-matic if you want to use userid marking (from linux 2.6.14 there is no need to patch the kernel as this option is available in vanilla). This is necessary if you need to mark your network flows depending on the originating user ID, for instance, to perform per user Quality of Service. This is not needed to use NuFW. To do so, install patch-o-matic as usual and
+      <para>You only need to patch your kernel sources with patch-o-matic if you want to use userid marking (from Linux 2.6.14 there is no need to patch the kernel as this option is available in vanilla). This is necessary if you need to mark your network flows depending on the originating user ID, for instance, to perform per user Quality of Service. This is not needed to use NuFW. To do so, install patch-o-matic as usual and
       run <screen>$./runme ip_queue_vwmark</screen></para>
       <para>Important note : it seems 2.6.24 netfilter_netlink capabilities only work if they are compiled as modules. Always compile these options as modules :
       <itemizedlist>
@@ -345,10 +379,10 @@ to apply patches provided on NuFW site.
         <listitem><para>CONFIG_NETFILTER_NETLINK_LOG</para></listitem>
         <listitem><para>CONFIG_NF_CT_NETLINK</para></listitem>
       </itemizedlist>
-      The good news is that most distribution kernels come with these options compiled as modules.
+      Most distribution kernels come with these options compiled as modules.
       </para>
     </section>
-    <section><title>Linux 2.6.14 and better</title>
+    <section><title>Linux 2.6.14 and higher</title>
         <para>
         If you run a kernel higher than 2.6.14 (and you should!), you should set the following options:
 <screen>
@@ -380,6 +414,11 @@ Thus you can run <command>./configure</command> with the options you want and la
 		--sysconfdir=/etc/nufw/
 $ make
 $ sudo make install</screen>
+
+If you want to install default configuration files :
+<screen>sudo make install-conf</screen>
+This will only copy new configuration files when an old version of the file does not already exist in your <command>$prefix/conf</command> directory
+
 </para>
     </section>
     <section><title>Initial setup and tests</title>
@@ -393,6 +432,20 @@ cp conf/certs/NuFW*.pem /etc/nufw/</screen>
 </para>
       </section>
       <section><title>Creating your own certificates</title>
+      <para>The management of certificates, or the use of a Public Key Infrastructure (PKI), is
+      not covered in this howto. Using a dedicated software, like
+      <ulink url="http://www.openca.org/">OpenCA</ulink> or
+      <ulink url="http://ejbca.sourceforge.net/">EBJCA</ulink>,
+      is suggested.
+      </para>
+
+      <para>See section <link linkend='hardening' endterm="hardening.title"/> for details on how
+      certificates are used in NuFW.
+      </para>
+
+      <para>The following commands show how to quickly create a Certificate Authority, and some
+      certificates for nufw and nuauth.
+      </para>
       <para>Generating your own Certificate authority:
       <screen>mkdir private
 chmod 700 private
@@ -439,22 +492,30 @@ The next thing to do after setting this variable is to choose
 your authentication and acl checking module.
 Authentication modules for user have to be chosen in:
 <itemizedlist>
-<listitem><para>plaintext: user credentials are stored in a text file</para>
+<listitem><para>plaintext: user credentials are stored in a text file. It is advised not to use this module, except for quick testing :
+you need to restart nuauth when updating the text file. Instead, on production, you should run the system module. This format supports both
+plaintext and encrypted passwords, see the sample config file (named <command>users-plaintext.nufw</command>) for formatting and details.</para>
 	    </listitem>
 <listitem><para>system: authentication is done against PAM and groups are system groups. This provides
- a convenient way to use nss features and/or pam-modules</para>
+ a convenient way to use nss features and/or pam-modules. This is the recommended way, as it lets you
+ authenticate against your LDAP, Active Directory, or any directory.</para>
 	    </listitem>
 	  </itemizedlist>
 This is set with the option <option>nuauth_user_check_module</option>
 which default is <varname>libsystem</varname> (if not set in config file).
 Further choice for the acl checking  module has to be done if you choose:
-<itemizedlist><listitem><para>libldap</para>
+<itemizedlist><listitem><para>libldap : this is the recommended ACL checking module, as it is modular, and does not require a reload of the
+nuauth server when updating rules. You can manage iptables and LDAP rules in a consistent way, by using <ulink url="http://software.inl.fr/trac/wiki/EdenWall/NuFace">NuFace</ulink></para>
 	    </listitem>
-<listitem><para>plaintext</para>
+<listitem><para>plaintext : this module is intended to be used for quick testing only. It requires that you reload nuauth when modifying rules.</para>
 	    </listitem>
 	  </itemizedlist>
 by setting the variable <option>nuauth_acl_check_module</option>.
 </para>
+      </section>
+	</section>
+     <section><title>Testing</title>
+
 <para>To be able to proceed quickly to test, we will use the system
 module for user and the plaintext module for acl.
 A sample file for the plaintext acl check module is available
@@ -462,9 +523,7 @@ in the <filename>conf</filename> directory, <filename>acls.nufw</filename>.
 Copy it to <filename>/etc/nufw</filename> and adjust the
 group of the ssh acl to have it matching the group of a system
 user you will use later to authenticate on the system.</para>
-      </section>
-	</section>
-     <section><title>Testing</title>
+
 	<section><title>Setting up Netfilter rules before 2.6.14</title>
 	  <para>
 We will test the setup by connecting from the local host ssh server. For this
@@ -473,7 +532,7 @@ we need to add filtering rules to ask for authentication:
 iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT</screen>
 <footnote><para>
 Only SYN packets are sent to QUEUE. This is not enough to do advanced
-user activities logging, but enough for trafic authentication.
+user activities logging, but enough for traffic authentication.
 </para></footnote>
 </para>
 	</section>
@@ -494,12 +553,17 @@ This requires, in particular, that the CONFIG_IP_NF_CONNTRACK_EVENTS kernel opti
 	<section><title>Testing the authentication system</title>
 	  <para>First, the daemons need to be started. We start nuauth in a terminal
 <screen>nuauth -vvvvvvvvv</screen>
-then we start <screen>nufw -vvvvvvvvv</screen> in another terminal.
+then we start <screen>nufw -s -vvvvvvvvv</screen> in another terminal.
 </para>
-	  <para>
+<note>
+<para>When starting <command>nufw</command> or <command>nuauth</command> daemons without the <command>-D</command> switch,
+they do not run as daemon : they remain attached to the console. In such conditions, both programs log to STDOUT/STDERR instead of
+using syslog. On production, you should always start the daemons with the <command>-D</command> option.</para>
+</note>
+<para>
 Next, we can try to connect a user. Under Linux it can be done with:
-<screen>nutcpc -d -H [NUAUTH IP]</screen>
-enter name and password of a system user.</para>
+<screen>nutcpc -N -d -U [USERNAME] -H [NUAUTH IP]</screen>
+Next step is to enter the user's password. Without the <command>-U</command> option, the current system user's name is used.</para>
 <para>At nuauth level, we should see something like:
 <screen>user bill@nufw uses OS Linux, 3.0.10, #1 Tue Oct 19 23:51:32 CEST 2008</screen>
 
@@ -566,7 +630,6 @@ Read <ulink url="http://www.openldap.org/doc/admin/">OpenLDAP Software
 Administrator's Guide</ulink>, section "Building and Installing OpenLDAP Software" to get more information.
         </para>
       </section>
-
       <section><title>Slapd configuration</title>
 	<para>
 The file <filename>acls.schema</filename> has to be put in <filename class="directory">/etc/ldap/schema</filename>
@@ -602,6 +665,18 @@ dn: ou=acls,dc=nufw,dc=org
 objectClass: organizationalUnit
 ou: acls
 structuralObjectClass: organizationalUnit
+
+dn: uid=nuauth,ou=Users,dc=nufw,dc=org
+objectClass: top
+objectClass: simpleSecurityObject
+uid: nuauth
+userPassword: nuauth
+
+dn: uid=nufw,ou=Users,dc=nufw,dc=org
+objectClass: top
+objectClass: simpleSecurityObject
+uid: nufw
+userPassword: nufw
 </screen>
 </para>
       </section>
@@ -620,8 +695,8 @@ ldap_acls_base_dn="ou=Acls,dc=nufw,dc=org"</screen>
 <para>
 <ulink url="http://www.inl.fr">INL</ulink> has released a powerful Netfilter rules generator system for NuFW and Netfilter.
 It is called Nuface and it is available at:
-<ulink url="http://software.inl.fr/trac/trac.cgi/wiki/EdenWall/NuFace">http://software.inl.fr/trac/trac.cgi/wiki/EdenWall/NuFace</ulink>
-It generates a set of rules for NuFW and Netfilter that can directly be applied from the web interface.
+<ulink url="http://software.inl.fr/trac/wiki/EdenWall/NuFace">http://software.inl.fr/trac/wiki/EdenWall/NuFace</ulink>
+It generates a set of rules for NuFW and Netfilter that can directly be applied from the web interface. All Netfilter rules generated by Netfilter use the stateful capabilities of Netfilter, without user intervention.
 </para>
       </section>
       <section><title>nuaclgen configuration</title>
@@ -677,11 +752,19 @@ Read <ulink url="http://dev.mysql.com/doc/">MySQL Documentation</ulink>, section
 
 <section><title>Installation of PostgreSQL server</title>
         <para>PostgreSQL server installation is standard. Use your Linux distribution packages,
-example with Debian (replace 8.2 by the last server version):
+example with Debian (replace 8.2 by the latest server version):
 <screen>apt-get install postgresql-8.2</screen>
 Read <ulink url="http://www.postgresql.org/docs/">PostgreSQL Documentation</ulink>, section
 "III. 14. Installation Instructions" to get more information.
         </para>
+        <note>
+        <para>Note that, even though nuauth PostgreSQL support is complete, you probably want to use
+        a MySQL server for now, if you want to use <ulink url="http://software.inl.fr/trac/wiki/EdenWall/NuLog">Nulog</ulink>.
+
+        Single Sign On modules (<ulink url="http://software.inl.fr/trac/wiki/EdenWall/mod_auth_nufw">apache</ulink>
+        and <ulink url="http://software.inl.fr/trac/wiki/EdenWall/squid_nufw_helper">squid</ulink>) have
+        PostgreSQL support.</para>
+        </note>
 </section>
 
 <section><title>SQL configuration</title>
@@ -696,7 +779,7 @@ credentials for that user in the nuauth.conf file.
 <para>
 You may choose between to schema an IPv4 only one and an IPv4/IPv6 one.
 Recent tools like <ulink
-url="http://software.inl.fr/trac/trac.cgi/wiki/EdenWall/NuLog2">Nulog2</ulink> are able to use
+url="http://software.inl.fr/trac/wiki/EdenWall/NuLog">Nulog2</ulink> are able to use
 the IPv6 schema. If you have old script or older tools, you better use the IPv4 only schema.
 To import the IPv4 schema into a newly created database, you can use:
 </para>
@@ -706,26 +789,10 @@ cat nulog.ipv4.mysql.dump | mysql nufw</screen>
 <screen>mysqladmin create nufw
 cat nulog.ipv6.mysql.dump | mysql nufw</screen>
 <para>
-When installing NuFW in production, you have to use the clean_conntrack.pl
-script, which is available in the scripts/ subdir of the NuFW archive from
-version 1.0.12 on. For prior versions, you can get the script from <ulink
-url="http://software.inl.fr/trac/trac.cgi/wiki/EdenWall/NuLog">Nulog project homepage</ulink>.
-You have to create a SQL user to run the script, with the following permissions
-: <code>SELECT</code> and <code>DELETE</code> on the "conntrack_ulog" table,
-<code>INSERT</code> on the "ulog" table. The script must be run, every few
-minutes, from cron, especially on busy firewalls. If you don't run this script, your "conntrack_ulog" table
-will grow quickly with "dead" connections, and will cause NuFW to act slower and
-slower. All the script does is transfer "dead" data (ie closed connections,
-dropped connections) to the ulog table, which is plainly an archive table, not
-used on production by NuFW, nor by the SSO subsystems.
-</para>
-<para>
 You may also want to rotate the "ulog" table, so that it doesn't grow to infinite
-size with time. From 1.0.12 on, scripts are available for this task in the scripts/ subdir of
-the archive. Before 1.0.12, you can get those two scripts from the Nulog archive
-at
-<ulink url="http://software.inl.fr/trac/trac.cgi/wiki/EdenWall/NuLog">Nulog project homepage</ulink>
-Look for the ulog_rotate_*.sh scripts.
+size with time. The ulog_rotate.py script is available in the
+<ulink url="http://software.inl.fr/trac/wiki/EdenWall/NuLog">Nulog project</ulink>
+tarball.
 At the present time, it is assumed those scripts are run as the root SQL user,
 as cronjobs. Of course the better way to go is to create a separate user for
 this and grant it the needed privileges. Please provide updates for this
@@ -746,7 +813,7 @@ If nuauth decision for that datagram is to drop or reject it, log of the "connex
 UPDATE conntrack_ulog SET state=ESTABLISHED, start_timestamp=FROM_UNIXTIME(timestamp)
 WHERE (ip_daddr=%s AND ip_saddr=%s "AND tcp_dport='%hu' AND tcp_sport='%hu' AND state=OPEN)
 </screen>
-The only fields that are altered by this request are "state", which changes to "ESTABLISHED", and start_timestamp, which wasn't set before. It is important to note that no information is lost when this modification is performed. It is indeed obvious that the connection was previously in "OPEN" state, since that's a TCP preambule to the "ESTABLISHED" state, and the database keeps track of the timestamp when the connection was opened in the "oob_time_sec" field. The "start_timestamp" field simply marks the timestamp of switch to the "ESTABLISHED" state.
+The only fields that are altered by this request are "state", which changes to "ESTABLISHED", and start_timestamp, which wasn't set before. It is important to note that no information is lost when this modification is performed. It is indeed obvious that the connection was previously in "OPEN" state, since that's a TCP preamble to the "ESTABLISHED" state, and the database keeps track of the timestamp when the connection was opened in the "oob_time_sec" field. The "start_timestamp" field simply marks the timestamp of switch to the "ESTABLISHED" state.
 </para></listitem>
 <listitem><para>When the connection expires, this request is executed by nuauth, if the nufw daemon is run with "-C" :
 <screen>
@@ -778,7 +845,7 @@ iptables -A POSTROUTING -t mangle -m mark ! --mark 0 -j CONNMARK --save-mark
 </screen>
 </para>
 <para>
-In short, you should always use <option>-C</option> if you use libnetfilter_conntrack (this is available from linux 2.6.14), and you should use <option>-M</option> if you want all your connections marked per userID (please note that you need to apply <ulink url="http://nufw.org/download/patches/transmit_mark.patch">transmit_mark patch</ulink> on your kernel to use this). Library compatibilty is better with a >=2.6.16 kernel.
+In short, you should always use <option>-C</option> if you use libnetfilter_conntrack (this is available from linux 2.6.14), and you should use <option>-M</option> if you want all your connections marked per userID (please note that you need to apply <ulink url="http://nufw.org/download/patches/transmit_mark.patch">transmit_mark patch</ulink> on your kernel to use this). Library compatibility is better with a >=2.6.16 kernel.
       </para>
       </section>
       <section><title>Settings on pre 2.6.14 kernel</title>
@@ -817,9 +884,9 @@ top like tool that displays the active and authenticated connections in real-tim
 <para>The best way<footnote><para>as far as the author of this document knows at the time of the writing of
 this document</para>
 	  </footnote> to use the logs generated by the connection tracking is to install
-<command>nulog</command>(a.k.a ulog-php)  which provides a convenient web interface.
+<command>nulog</command> which provides a convenient web interface.
 <command>nulog</command> is available under GPL on this page:
-<ulink url="http://software.inl.fr/trac/trac.cgi/wiki/EdenWall/NuLog">http://software.inl.fr/trac/trac.cgi/wiki/EdenWall/NuLog</ulink>
+<ulink url="http://software.inl.fr/trac/trac/wiki/EdenWall/NuLog">http://software.inl.fr/trac/wiki/EdenWall/NuLog</ulink>
 </para>
 	</section>
     </section>
@@ -828,27 +895,24 @@ this document</para>
 <para>All you need to do is to setup a SQL user with SELECT permissions on the
 "conntrack_ulog" table. Then setup mod_auth_nufw to use the configured SQL
 user/database/table. The source code of the apache module is available at <ulink
-url="http://software.inl.fr/trac/trac.cgi/wiki/EdenWall/mod_auth_nufw">NuFW Apache SSO page</ulink></para>
+url="http://software.inl.fr/trac/wiki/EdenWall/mod_auth_nufw">NuFW Apache SSO page</ulink></para>
 	</section>
 <section><title>Squid</title>
 <para>All you need to do is to setup a SQL user with SELECT permissions on the
 "conntrack_ulog" table. Then setup squid_nufw_helper to use the configured SQL
 user/database/table. The source code of the squid helper is available at
-<ulink url="http://software.inl.fr/trac/trac.cgi/wiki/EdenWall/squid_nufw_helper">NuFW Squid SSO page</ulink></para>
+<ulink url="http://software.inl.fr/trac/wiki/EdenWall/squid_nufw_helper">NuFW Squid SSO page</ulink></para>
+	</section>
+	<section><title>Troubleshooting single sign on problems</title>
+	 <section><title>General information</title>
+	  <para>If you experience problems with Single Sign On problems, one common way to find out where the problem lays is to check whether the SSO code performs SQL lookups correctly. You can check it out easily at the database level. On MySQL, check you have in <filename>my.cnf</filename> something like: <screen>log             = /var/log/mysql/mysql.log</screen> This ensures that MySQL logs request that it receives. Then all you need to do is test the module, while running <screen>tail -f /var/log/mysql/mysql.log</screen> If the Single Sign On module is doing its job, you should see lines such as : <screen>SELECT DISTINCT username FROM conntrack_ulog WHERE (tcp_sport=50423 AND ip_saddr=3232235761 AND tcp_dport=80 AND ip_daddr=3232235761 AND (state=1 OR state=2))</screen> in the log, revealing that the Single Sign On module actually requests the database. If you run a PostgreSQL database, you can do similar operations by setting <screen>log_min_duration_statement = 0</screen> in <filename>postgresql.conf</filename>. On Debian, the default PostgreSQL log file is probably located in <filename>/var/log/postgresql/postgresql-8.X-main.log</filename>.</para>
+	 </section>
+	 <section><title>Apache module troubleshooting</title>
+	  <para>Like any Apache module, the mod_auth[n]_nufw module dumps verbose/debug information in the Apache error log when you set :<screen>Loglevel debug</screen> in the Apache <filename>httpd.conf</filename> file.</para>
+<!--	  <note>This works on Apache 1.3, Apache 2.0 and Apache 2.2</note> -->
+	 </section>
 	</section>
       </section>
-	<section><title>Certificate authentication</title>
-<para>It is possible to use certificate authentication of clients: If
-a user provides at TLS negotiation a certificate which DN matches a known
-user then nuauth assumes the users is authenticated and doesn't ask for a
-password.
-To activate this functionnality, you need to set the option
-<option>nuauth_tls_auth_by_cert</option> to 1.
-Note that, <option>nuauth_tls_request_cert</option> has to be set
-to 1 or 2 in the mean time.
-
-</para>
-	</section>
 <section><title>User based Quality of Service</title>
 <section><title>Setting up Kernel on non libnetfilter_queue system</title>
 <para>
@@ -874,12 +938,12 @@ This option is compatible with <option>-M</option>.
     </section>
 <section><title>Setting up Netfilter</title>
 <para>
-As nufw only works with initialisation packets it can not pull the userid mark of each packet
+As nufw only works with initialization packets it can not pull the userid mark of each packet
 of a connection. Thus, this is necessary to use
 <application>CONNMARK<footnote><para>CONNMARK is only available in patch-o-matic
 before 2.6.11, it is included in 2.6.12+ kernels</para>
 	    </footnote></application>
-which is a target able to propagate marks accross connections.
+which is a target able to propagate marks across connections.
 A basic setup is the following:
 <screen>iptables -A PREROUTING -t mangle -j CONNMARK --restore-mark
 iptables -A POSTROUTING -t mangle -j CONNMARK --save-mark</screen>
@@ -892,18 +956,18 @@ saves mark on the connection so it can be restored later.
 The nuauth variable <option>nuauth_finalize_packet_module</option> lists module which attach a hook called just before
 nuauth answer to nufw about a packet.
 It is usually used to modify the mark of the packet following a given strategy.
-By splitting the mark in different part, this is possible to define complexe marking policy which can later be used
+By splitting the mark in different part, this is possible to define complex marking policy which can later be used
 by Linux routing and QoS systems.
 </para>
       <para>
-      Extensive documentation can be found in the file <ulink url="http://software.inl.fr/trac/trac.cgi/browser/mirror/edenwall/nufw/trunk/nufw/doc/README.mark">README.mark</ulink>
+      Extensive documentation can be found in the file <ulink url="http://software.inl.fr/trac/browser/mirror/edenwall/nufw/trunk/nufw/doc/README.mark">README.mark</ulink>
       </para>
       </section>
 <section><title>Using NuFW mark</title>
 <para>Netfilter mark can be use by the Quality of Service system and
 the routing system of Linux.</para>
 <para>
-So it is possible to do differenciated routing between different users
+So it is possible to do differentiated routing between different users
 by using command like:
 <screen>ip rule add fwmark XXX lookup TABLE</screen>
 </para>
@@ -916,24 +980,118 @@ user's flows in a specific class:
 </para>
       </section>
     </section>
+    <section><title>Controlling nuauth finely at runtime</title>
+    <para>NuFW 2.2.0 introduced new nuauth control capabilities, thanks to <command>nuauth_command</command>. This command should
+    be installed when you install nuauth, and it can be run by the administrator, on the same server as <command>nuauth</command>.
+    <command>nuauth_command</command> connects to nuauth, and lets you do the following tasks :
+    <itemizedlist>
+    <listitem><para><option>help</option> display inline help with a summary of available subcommands</para></listitem>
+    <listitem><para><option>version</option> display nuauth version</para></listitem>
+    <listitem><para><option>users</option> list connected users</para></listitem>
+    <listitem><para><option>firewalls</option> list connected nufw firewalls</para></listitem>
+    <listitem><para><option>packets count</option> display number of decision waiting packets</para></listitem>
+    <listitem><para><option>refresh cache</option> refresh all caches</para></listitem>
+    <listitem><para><option>refresh crl</option> refresh the TLS crl file</para></listitem>
+    <listitem><para><option>disconnect ID</option> disconnect a user with his session identifier</para></listitem>
+    <listitem><para><option>disconnect all</option> disconnect all users</para></listitem>
+    <listitem><para><option>uptime</option> display nuauth starting time and uptime</para></listitem>
+    <listitem><para><option>reload</option> reload the configuration and reload the modules</para></listitem>
+    <listitem><para><option>reload periods</option> reload the time periods</para></listitem>
+    <listitem><para><option>display debug_level</option></para></listitem>
+    <listitem><para><option>display debug_areas</option></para></listitem>
+    <listitem><para><option>debug_level <replaceable>LEVEL</replaceable></option></para></listitem>
+    <listitem><para><option>debug_areas <replaceable>AREAS</replaceable></option></para></listitem>
+    <listitem><para><option>help</option> display this help</para></listitem>
+    <listitem><para><option>quit</option> disconnect</para></listitem>
+    </itemizedlist>
+
+    </para>
+    </section>
+
+    <section><title>Time-based ACLs</title>
+    <section><title>Global configuration</title>
+    <para>
+NuFW can be used to implement strict time-based acls. When a period using time interval is defined (like say 08am-6pm)
+a authenticated connection can only start in the interval and is destroyed at the end of the interval.
+    </para>
+    <para>Configuration is done by defining a set of periods and using them (by their name) in the acls backend.
+    The <option>plaintext</option> acl backend uses the <option>period</option> key to defined the period
+    to apply to the acl. The <option>LDAP</option> acls backend uses the <option>TimeRange</option> atttribute.
+    </para>
+    <para>
+    Definition of periods is done by modules and the corresponding option is <option>nuauth_periods_module</option>.
+    For now, the     only available module  is <filename>xml_defs</filename>.
+    </para>
+    </section>
+    <section><title>XML period definition module</title>
+    <para>
+<filename>xml_defs</filename> is a period definition module. It uses a XML formatted file to store
+the periods. The path to this file can be set by using the <option>xml_defs_periodfile</option>:
+    </para>
+<screen>
+xml_defs_periodfile="/etc/nufw/periods.xml"
+</screen>
+<para>
+The XML structure of the file is the following:
+</para>
+<screen>
+<![CDATA[
+<?xml version="1.0"?>
+<periods>
+<period name="5x8" desc="open hour">
+    <perioditem>
+        <days start="1" end="5"/>
+        <hours start="8" end="18"/>
+    </perioditem>
+</period>
+<period name="long" desc="date example">
+    <perioditem>
+        <dates start="1128282" end="323232323"/>
+    </perioditem>
+</period>
+<period name="interval" desc="one hour interval">
+    <perioditem>
+        <!-- Duration in second (1 hour) -->
+        <duration length="3600"/>
+    </perioditem>
+</period>
+</periods>
+]]>
+</screen>
+<para>
+There are two major types of period definitions:
+<itemizedlist>
+<listitem><para><option>Time interval</option>: the period is defined by using specifying days, hours or dates interval. Days and hours can be combined to define more complex period.
+</para></listitem>
+<listitem><para><option>Duration</option>: the period is defined by a duration expressed in seconds.</para></listitem>
+</itemizedlist>
+</para>
+<para>Multiple <option>perioditem</option> can be put in the same <option>period</option> to increase the flexibility of period definition.</para>
+ </section>
+ <note>
+ <para>When using Nuface to manage filtering rules, time-based ACLs can be setup through the web interface, without editing any file by hand.</para>
+ </note>
+ </section>
+
+
     <section><title>Chaining modules in nuauth</title>
     <section><title>Syntax description</title>
     <para>
-The syntax is the following: Each option that set up the use of a hook is
-a list of modules separated by space.</para>
-<para>For each module type, the syntax is the following:
+The syntax is the following: Each option that sets up the use of a hook is
+a space separated list of modules.</para>
+<para>For each module type, the syntax is as follows :
 <option>name[:type[:config file]]</option>
 If syntax is:
 <itemizedlist>
-<listitem><para><option>name</option>: load module "name" with config file included in nuauth.conf</para></listitem>
-<listitem><para><option>name:type</option>: load module "type" with config file CONFIG_DIR/modules/name.conf</para></listitem>
-<listitem><para><option>name:type:conf</option>: load module "type" with config file "conf"</para></listitem>
+<listitem><para><option>name</option>: loads module "name" with config file included in nuauth.conf</para></listitem>
+<listitem><para><option>name:type</option>: loads module "type" with config file CONFIG_DIR/modules/name.conf</para></listitem>
+<listitem><para><option>name:type:conf</option>: loads module "type" with config file "conf"</para></listitem>
 </itemizedlist>
     </para>
     </section>
     <section><title>Some examples</title>
     <para>
- Let's analyse the following line:
+ Let's analyze the following line:
 <computeroutput>nuauth_user_logs_module="syslog dblocal:mysql maindb:mysql:/etc/nufw/mainmysql.conf"</computeroutput>
 Packet will be logged multiple times:
 <orderedlist>
@@ -945,90 +1103,309 @@ Packet will be logged multiple times:
     </section>
     </section>
 
-<section><title>Hardening NuFW install</title>
+<section id='hardening'><title id='hardening.title'>Hardening NuFW</title>
 <section><title>Nufw certificate verification</title>
-<para>It is warmly recommanded to put the nuauth
-in a protected place to ensure the security of
-communications between nufw and nuauth<footnote><para>Even if all flows are TLS encrypted</para>
-	</footnote>.
-As the firewall policy relay on the answer of nuauth, is it good to check that
-the nuauth server is trustworthy. To do so we can ask nufw to check the certificate provided
-by nuauth during the TLS negotiation. This is done by using the <option>-a</option> at start
-of nufw followed by the name of the certificate authority file.
-With this option set <varname>nufw</varname> will check the presence of a signed certificat
-on nuauth side.</para>
-<!-- Present in 2.2 but not yet in trunk
+
+<para>It is highly recommended to install nuauth and nufw on a dedicated server, hardened
+for security. Other projects like GrSec <footnote><para>http://www.grsecurity.net/</para></footnote> or
+SELinux <footnote><para>http://www.nsa.gov/selinux/</para></footnote> can be used to increase local (system)
+security.
+<note>
+<para>Since NuFW 2.2.19, a SeLinux configuration is distributed in the <computeroutput>selinux/</computeroutput> directory of the archive. Read the <computeroutput>README.selinux</computeroutput>
+file there if you want to implement SELinux policies to the NuFW daemons. However, this security policy set is not yet considered stable and
+is distributed for testing purpose. You are welcome to send the NuFW team feedback about it!</para>
+</note>
+</para>
+
+<para>To ensure confidentiality of communications between nufw, nuauth, and the clients,
+all connections are encrypted using TLSv1.</para>
+
 <para>
-You can even run nufw in strict TLS mode using <option>-S<option> parameter. We highly recommend
-to use this option. It means nufw will not start if your certificate is:
+As the firewall policy is applied by nuauth, the trust relationship between nufw and nuauth
+should be verified. The certificate provided by nuauth during the TLS negotiation
+will be checked if a certificate authority is configured in nufw.
+This is done by using the <option>-a</option> option at start
+of nufw followed by the name of the certificate authority file.
+With this option set, <varname>nufw</varname> will require a signed certificate
+from nuauth, and verify it.</para>
+
+<para>The CN (complete name) field from nufw certificate must contain the FQDN (fully
+qualified domain name) of nufw server.
+</para>
+
+<para>
+Since release 2.2.18, NuFW runs in TLS strict mode by default.
+ It means nufw will not start if nuauth certificate is:
 <orderedlist>
 <listitem><para>Not verifiable against an authority</para></listitem>
 <listitem><para>Invalid</para></listitem>
 <listitem><para>Revoked</para></listitem>
 <listitem><para>Without signer</para></listitem>
-<listitem><para>With a signer that is not a CA</para></listitem>
+<listitem><para>Signed, but the signer is not a CA</para></listitem>
 <listitem><para>With an insecure algorithm (if GnuTLS is compiled with its support)</para></listitem>
 <listitem><para>Not yet activated</para></listitem>
 <listitem><para>Expired</para></listitem>
 </orderedlist>
-Warning: This mode will be activated by default in next major stable release.
+See the <link linkend='FinerTLS' endterm="FinerTLS.title"/> section of this document for advanced TLS options of nufw and other components.
 </para>
--->
-      </section>
-<section><title>User authentication restrictions</title>
-<para>You can restrict both the number of connections a given user can start, either on
-any IP address or per IP address.
+<warning>
+<para>
+Since release 2.2.18, this mode is now activated by default. You can disable it, at your own risks, using the <option>-s</option> option of nufw.
+</para>
+</warning>
+<para>
+To run nufw with strict TLS checking, you will have to specify the following option:
+<itemizedlist>
+<listitem><para><option>-a</option>: Specify the authority file to use.</para></listitem>
+<listitem><para><option>-k</option>: Specify the key file to use.</para></listitem>
+<listitem><para><option>-c</option>: Specify the certificate file to use.</para></listitem>
+<listitem><para><option>-r</option>: Specify the certificate revocation list file to use (if available). A nufw restart  or a SIGHUP signal will be needed if you want change to the file to be taken into account.</para></listitem>
+<listitem><para><option>-d</option>: Fully qualified domain name of the nuauth server.</para></listitem>
+</itemizedlist>
+Thus a typical nufw command line should look like:
+</para>
+<screen>nufw -d nuauth.nufw.org -a localCA-cacert.pem -k server.nufw.org-key.pem -c server.nufw.org-cert.pem -r localCA-crl.pem</screen>
+</section>
+<section><title>Authentication server (nuauth)</title>
+<para>The option <option>nuauth_tls_request_cert</option> defines if client
+certificates are optional or not. Possible values are:
+<itemizedlist>
+<listitem><para><option>0</option>: nuauth will not ask client to provide a certificate, they won't send one
+even if they have some to give.</para></listitem>
+<listitem><para><option>1</option>: client is asked to send a certificate, but the server will not refuse connection if none is provided.</para></listitem>
+<listitem><para><option>2</option>: client is asked to send a certificate, and the server will drop the connection if none is provided.</para></listitem>
+</itemizedlist>
+</para>
+<para>The default setting (<option>nuauth_tls_request_cert=2</option>) is that nuauth will require and verify client certificates for all
+connections (clients, and NuFW servers). Certificates are used to verify the identity
+of all components of a NuFW installation (nufw, nuauth, and clients), and ensure that
+no forgery or false representation has occurred.
+</para>
+<para>All components must share the same certificate authority (CA).
+See the <link linkend='FinerTLS' endterm="FinerTLS.title"/> section of this document for advanced TLS options of nuauth and other components.
+</para>
+<para>The CN (complete name) field from nuauth certificate must contain the FQDN (fully
+qualified domain name) of nuauth server. All clients and nufw servers will check that
+the DNS name of nuauth server matches the name in the certificate.
+</para>
+<note>
+<para>It is possible to generate a certificate with additional names, using the
+<computeroutput>subjectAltName</computeroutput> extension (See
+<ulink url="http://tools.ietf.org/html/rfc3280#section-4.2.1.7">Section 4.2.1.7 of RFC
+3280</ulink>).
+</para>
+</note>
+<para>
+You have to:
 <orderedlist>
-<listitem><para><option>nuauth_single_user_client_limit</option>: enforce the number of connections a user can start</para></listitem>
-<listitem><para><option>nuauth_single_ip_client_limit</option>: enforce the number of connections per IP a user can start</para></listitem>
+  <listitem><para>Configure the certificate authority (<option>nuauth_tls_cacert</option>)</para></listitem>
+  <listitem><para>Configure nuauth certificate (<option>nuauth_tls_cert</option>) and key (<option>nuauth_tls_key</option>) files.</para></listitem>
+  <listitem>
+    <para>Deploy client certificates. If you only want to verify server
+identity, you can share a certificate between several clients. If you want to
+use certificates for authentication, or if you will revoke certificates, you
+have to deploy a certificate for each client.
+    </para>
+  </listitem>
+</orderedlist>
+Warning: since release 2.2.18, this mode is now activated by default. You can
+disable it, at your own risks, by setting <option>nuauth_tls_request_cert=0</option> in nuauth
+configuration file.
+</para>
+
+<para>nuauth will check that the CN (complete name) field from nufw certificate contains the FQDN (fully
+qualified domain name) of the nufw server. You can disable it, at your own risks, by setting
+<option>nuauth_tls_disable_nufw_fqdn_check=1</option> in nuauth configuration file.
+</para>
+
+<para>You should also configure a Certificate Revocation List (CRL), with the
+<option>nuauth_tls_crl</option> parameter in nuauth configuration file. This file contains
+the list of all revoked certificates, in standard CRL format. You have to create a
+planified task (cron job) to update this file periodically, nuauth will check for
+modifications every <option>nuauth_tls_crl_refresh</option> seconds and will reload the file
+if necessary. You can use the HUP signal or the <command>refresh crl</command> command
+to force an update of the CRL.
+</para>
+
+<note>
+<para>Note that currently, private keys cannot be password protected : neither nufw nor nuauth support entering a passphrase.
+The reference documentation mentions the <computeroutput>nuauth_tls_key_passwd</computeroutput> option, but it is not implemented for now.
+</para>
+</note>
+
+</section>
+<section><title>User authentication restrictions</title>
+<para>You can restrict the number of simultaneous nuauth clients, per user or per IP address.
+<orderedlist>
+<listitem><para><option>nuauth_single_user_client_limit</option>: maximum number of nuauth clients per user</para></listitem>
+<listitem><para><option>nuauth_single_ip_client_limit</option>: maximum number of nuauth clients per IP</para></listitem>
 </orderedlist>
 </para>
 </section>
 <section><title>On client side</title>
+<para>nuauth client (nutcpc or nuapplet) will verify nuauth certificate when connecting, if a
+certificate authority is configured on the client (option <option>-A</option> of nutcpc). The certificate
+of the nuauth server will be verified, and the DNS name must match the CN field of the certificate.
+See the <link linkend='FinerTLS' endterm="FinerTLS.title"/> section of this document for advanced TLS options of nutcpc and other components.
+</para>
+
+<para>You can disable, at your own risks, the verifications:
+<orderedlist>
+  <listitem><para>If no certificate authority is defined, the trust relation with nuauth will not be
+  checked. Other attributes of nuauth certificate (expiration,etc.) will be checked, though.
+    </para>
+  </listitem>
+  <listitem><para>Option <option>-N</option> disables the verification of the DNS name of nuauth server.
+    </para>
+  </listitem>
+  <listitem><para>Option <option>-Q</option> disables the warning if no certificate authority is configured.
+    </para>
+  </listitem>
+</orderedlist>
+</para>
+
+<para>Clients should provide a client certificate, signed by the same authority.
+<orderedlist>
+  <listitem><para>If the certificate is used to login, the name of the user must be stored in the CN field
+  of the client certificate.</para>
+  </listitem>
+  <listitem><para>If the certificate is not used to login, the CN field of the client certificate is
+  not checked.</para>
+  </listitem>
+</orderedlist>
+</para>
+
+
 <para>
-On client side, system needs to be trustworthy if you want to perform
+The <computeroutput>nutcpc</computeroutput> client supports multiple options to achieve a strict verification of
+nuauth certificates:
+<itemizedlist>
+<listitem><para><option>-A</option>: Specify the authority file to use.</para></listitem>
+<listitem><para><option>-K</option>: Specify the key file to use.</para></listitem>
+<listitem><para><option>-C</option>: Specify the certificate file to use.</para></listitem>
+<listitem><para><option>-R</option>: Specify the certificate revocation list file to use. A nutcpc restart or a SIGHUP signal 
+will be needed if you want change to the file to be taken into account.</para></listitem>
+<listitem><para><option>-H</option>: Fully qualified domain name of the nuauth server.</para></listitem>
+</itemizedlist>
+To sum up a typical nutcpc command line should look like:
+</para>
+<screen>nutcpc -H nuauth.nufw.org -A localCA-cacert.pem -K client.nufw.org-key.pem -C client.nufw.org-cert.pem -R localCA-crl.pem</screen>
+
+<para>
+It is possible to use the configuration file <filename>nuclient.conf</filename> to specify value
+for these options and be able to run client without having to specify all
+options on the commandline. A typical <filename>nuclient.conf</filename> should look like.
+</para>
+
+<screen>
+# Name of the nuauth server (fully qualified domain name, or IP address).
+nuauth_ip=nuauth.nufw.org
+# Certificate authority used to check the validity of nuauth certificate
+nuauth_tls_ca=/etc/nufw/localCA-cacert.pem
+# Certificate file used to negotiate the TLS connection to nuauth.
+nuauth_tls_cert=/etc/nufw/client.nufw.org-cert.pem
+# Key of the certificate file from the nuauth_tls_cert option.
+nuauth_tls_key=/etc/nufw/client.nufw.org-key.pem
+# Certificate revocation list file to use.
+nuauth_tls_crl=/etc/nufw/localCA-crl.pem
+</screen>
+
+<para>
+To combine strict TLS usage and login/password authentication, the recommanded setup for
+client certificate deploiement is to deploy a per-computer certificate with FQDN matching
+computer domain name with the associated CA and key in the configuration directory of NuFW
+(usually <filename>/etc/nufw/</filename>). By setting the correct values in
+<filename>/etc/nufw/nuclient.conf</filename> (as previously seen), the computer user will be
+able to run client without providing any options (omit for -U option which is needed if the local
+user name is different from the nuauth user name).
+</para>
+
+
+</section>
+
+<section><title>Certificate authentication</title>
+<para>Certificates can be used to authenticate clients, if a user provides
+a client certificate during the TLS negotiation. The DN of the certificate
+must match a known user. Nuauth will check the certificate, and if
+validated, will mark the user as authenticated (no password asked).</para>
+<para>
+To activate this functionality, nuauth configuration file must include:
+<screen>nuauth_tls_auth_by_cert=1</screen>
+Note that, <option>nuauth_tls_request_cert</option> has to be set
+to 1 or 2 in the mean time. If set to 2, certificates authentication is
+mandatory.</para>
+</section>
+
+
+<section><title>Using secure LDAP (LDAPs) for ACLs checking</title>
+<para>
+If the LDAP server supports TLS connections, you should setup nuauth to
+have the LDAP acls checking module using LDAP over SSL.
+</para>
+<para>To do so, edit <filename>nuauth.conf</filename> and modify LDAP
+port to 636 (LDAPs):
+<screen>
+ldap_server_port=636
+</screen>
+Then, edit <filename>/etc/ldap/ldap.conf</filename> to indicate the policy used
+for SSL connections.
+If you only want to encrypt data, you can simply add to <filename>ldap.conf</filename>:
+<screen>
+TLS_REQCERT never
+</screen>
+The recommended setup is to fill in <filename>ldap.conf</filename> with the path to certificate authority.
+<filename>ldap.conf</filename> should look like:
+<screen>
+TLS_CACERT /etc/ldap/cacert-ldap.pem
+TLS_REQCERT demand
+</screen>
+Please note that the certificate must precisely match the hostname set in
+the <option>ldap_server_addr</option> option in <filename>nuauth.conf</filename>.
+</para>
+
+<para>See the <ulink url="http://www.openldap.org/doc/admin24/tls.html">TLS section</ulink> in
+<ulink url="http://www.openldap.org/doc/admin24/">LDAP Configuration guide</ulink>, and
+<ulink url="http://www.openldap.org/faq/data/cache/185.html">OpenLDAP TLS FAQ</ulink>
+for more information.
+</para>
+
+</section>
+
+<section><title>OS and application filtering</title>
+<para>
+On client side, system needs to be trustworthy to perform
 valuable application and OS filtering. You must never forget that
 it is the application on client side which tells the application name as
 well as the operating system name and version: these informations CAN and WILL
 be spoofed if a malicious user installs a modified NuFW agent.
 </para>
-<para>
-This warning needs to be taken into account but one can not forget
-this feature exists to secure flows that an administrator would have to keep
-open on a standard system<footnote><para>Please avoid an ABS effect
-: <quote>we've got more security so we can break later</quote></para>
-	  </footnote>.
- </para>
-<para>Thus, the value of application and os filtering depends on the confidence you have
-on the system which issues the authentication. On a secured system where users can not install
-software, this sort of filtering is "quite secure".</para>
+<para>Thus, the value of application and OS filtering depends on the trust you have
+on the system which issues the authentication. On a secure system (for ex. SELinux)
+where users can not install software, this sort of filtering is "quite
+secure".</para>
       </section>
-<section><title>Using ldaps for ACLs checking</title>
-<para>
-If your ldap server has support for TLS, you can setup nuauth to
-have the ldap acls checking module using ldap over SSL.
+
+<section><title>Intrusion Detection System (IDS)</title>
+<para>NuFW is free software, and as such does not duplicate features from other softwares, but prefer
+to integrate with them, to benefit from their experience, and specific features.
 </para>
-<para>To do so, edit <filename>nuauth.conf</filename> and modify ldap
-port to 636 (ldaps):
-<screen>
-ldap_server_port=636
-</screen>
-Next step is to edit <filename>/etc/ldap/ldap.conf</filename> to indicate which policy you want to use
-for SSL connection.
-If you only want to encrypt data, you can simply add to <filename>ldap.conf</filename>:
-<screen>
-TLS_REQCERT never
-</screen>
-The recommanded setup is to fill in <filename>ldap.conf</filename> with the path to certificate authority.
-Your <filename>ldap.conf</filename> should look like:
-<screen>
-TLS_CACERT /etc/ldap/cacert-ldap.pem
-TLS_REQCERT demand
-</screen>
-Please note that you need to have a certificate that match precisely the hostname put in
-the <option>ldap_server_addr</option> of <filename>nuauth.conf</filename>.
+
+<para>For example, NuFW is a native Prelude<footnote><para>http://www.prelude-ids.com</para></footnote>
+sensor, using the <option>nuprelude</option> module.
+This allows to send alerts (user login success or failure, connections, etc.) to Prelude, and
+use correlation, for ex., to combine a Network IDS like Snort<footnote><para>http://www.snort.org/</para></footnote>.
 </para>
+
+<para>See <ulink url="https://trac.prelude-ids.org/wiki/ManualUser">Prelude user manual</ulink>, and
+<ulink url="https://trac.prelude-ids.org/wiki/InstallingAgentThirdpartyNufw">Configuring NuFW for Prelude</ulink>
+for more information.
+</para>
+
 </section>
+<note>
+ <para>It is to be noted that, for now, all TLS certificates of your installation must be signed by the same CA, for
+ valid checks to be performed. It is planned to implement support of chained CAs in a future release (possibly 2.2.20).</para>
+</note>
 </section>
 <section><title>Nuauth authentication configurations</title>
  <section><title>PAM/LDAP authentication with Nuauth</title>
@@ -1036,8 +1413,15 @@ the <option>ldap_server_addr</option> of <filename>nuauth.conf</filename>.
   directories. In particular, PAM lets one interface nuauth on NT domains,
   Active Directory, Radius, etc.
   </para>
-  <para>To have nuauth authenticate users based on PAM/Ldap, one must set in
-  nuauth.conf:
+
+<note>
+<para>When using PAM authentication for local users (<option>shadow</option> file),
+nuauth must run as root to be able to read system files.
+</para>
+</note>
+
+  <para>To have nuauth authenticate users based on PAM/ldap, use the <option>
+  system</option> user checking module in nuauth.conf:
   <screen>nuauth_user_check_module="system"</screen>
   </para>
   <para>
@@ -1071,15 +1455,15 @@ the <option>ldap_server_addr</option> of <filename>nuauth.conf</filename>.
   nss_base_group          ou=Group,dc=nufw,dc=org?one
   </screen>
   You also need to install and configure libnss-ldap.
-  Configuration that works for us (still on debian) in /etc/libnss-ldap.conf:
+  Configuration that works for us (still on Debian) in /etc/libnss-ldap.conf:
   <screen>
   host 127.0.0.1
   base replace_with_your_base
   ldap_version 3
   rootbinddn cn=admin,dc=replace_with_your_base
   #Optional, set if you need these:
-  nss_base_passwd ou=users,dc=replace_with_your_base?one
-  nss_base_group ou=groups,dc=replace_with_your_base?one
+  nss_base_passwd ou=users,dc=nufw,dc=org?one
+  nss_base_group ou=groups,dc=nufw,dc=org?one
   </screen>
   Of course, tune this to suit your needs, and be aware that these system
   instructions may not be accurate for other distributions!
@@ -1139,7 +1523,7 @@ rpc:            db files
 netgroup:       nis
    </screen>
   </para>
-  <para>It is very important that your system is time-synchronized with the AD/NT server. You should setup ntp to achieve this!
+  <para>It is very important that your system is time-synchronized with the AD/NT server. You should setup NTP to achieve this!
   </para>
   <para>
   The /etc/samba/smb.conf file should also be customized:
@@ -1177,7 +1561,7 @@ netgroup:       nis
    restrict anonymous = 2
    </screen>
   </para>
-  <para>To join the Windows Domain, one will use:
+  <para>To join the Windows Domain:
 <screen>
 kinit administrator@DOMAIN.NAME
 
@@ -1185,13 +1569,13 @@ net ads join -U administrator
 </screen>
   The last command should display the short domain name, and should specify that the machine was successfully added to the domain.
   </para>
-  <para>Winbind (or winbindd) should be running on your system. You can check things are going allright by reading samba logs (probably in /var/log/samba/*).</para>
+  <para>Winbind (or winbindd) should be running on your system. You can check things are going fine by reading samba logs (probably in /var/log/samba/*).</para>
  </section>
 </section>
   </chapter>
 <chapter><title>Authentication Agents</title>
 <section><title>Windows</title>
-<para>NuWinC (NuFW Windows Client) provides NuFW authentication for Microsoft Windows 95/98/NT/2000/XP/2003/Vista. This software is available from <ulink url="http://inl.fr/">INL</ulink>. NuWinC can provide, when installed on machines of a Windows domain, a 100% transparent behaviour, meaning users will not even notice it starting or running. For more information about NuWinC, see <ulink url="http://www.inl.fr/NuWINc,68.html">http://www.inl.fr/NuWINc,68.html</ulink>.</para>
+<para>NuWinC (NuFW Windows Client) provides NuFW authentication for Microsoft Windows 95/98/NT/2000/XP/2003/Vista. This software is available from <ulink url="http://inl.fr/">INL</ulink>. NuWinC can provide, when installed on machines of a Windows domain, a 100% transparent behavior, meaning users will not even notice it starting or running. For more information about NuWinC, see <ulink url="http://www.inl.fr/NuWINc,68.html">http://www.inl.fr/NuWINc,68.html</ulink>.</para>
 </section>
 <section><title>Linux</title>
 <para>Several clients run on Linux :
@@ -1219,6 +1603,7 @@ in Netfilter to deal with the given protocol. However, the main concern about pr
 <listitem><para><option>TCP</option>: TCP is supported by all existing clients (Linux, MacOS X, Windows).</para></listitem>
 <listitem><para><option>UDP</option>: Requires some administrator operations, for now only the Windows client supports UDP.</para></listitem>
 <listitem><para><option>ICMP</option>: Uses raw socket. We are unsure whether this can be authenticated at all. For now, no client supports ICMP.</para></listitem>
+<listitem><para><option>IPv6</option>: IPv6 is supported since branch 2.2, with the same restrictions as IPv4.</para></listitem>
 <listitem><para><option>other</option>: No support. Contact us if you feel some other protocol could be supported.</para></listitem>
 </itemizedlist>
 </para>
@@ -1234,11 +1619,20 @@ Glibc 2.3.2 is buggy and you need to set
 for a single user.
 </para>
 </section>
-<section><title>Debian specific</title>
-<para>NuFW packages are part of the debian distribution. Those packages are
-as stable as we make them,so please backup your config before upgrading them and provide
-feedback ! From 1.0.16 on we believe the debian packaging is getting pretty stable.
+<section><title>Linux distributions specific</title>
+<para>Packages can be provided by some distributions. However,
+these packages can be modified by the maintainer, or might not be up to date, so
+check the local modifications carefully.
 </para>
+<para>
+While these packages can be good, it is encouraged to use the official releases from
+nufw.org, which are officially supported by the developers.
+</para>
+      </section>
+<section><title>Debian specific</title>
+<para>NuFW packages are part of the Debian main distribution.</para>
+<note><para>However, we recommend that you use the latest available NuFW version. Debian packages are available at <ulink url="http://packages.inl.fr/">packages.inl.fr</ulink></para>
+</note>
       </section>
 <section><title>Mandrake specific</title>
 <para>NuFW is packaged in Mandriva Corporate Server 4.</para>
@@ -1250,7 +1644,7 @@ NuFW. It seems this is true for all Suse versions until v9.</para>
 <section><title>Redhat specific</title>
 <section><title>RedHat Enterprise Linux 4</title>
 <para>As RHEL4 is shipped with a 2.6.9 kernel that is subject to the ip_queue
-problem mentionned later in this document. With this
+problem mentioned later in this document. With this
 kernel the bug occurs systematically (at least on SMP machines).</para>
 </section>
       </section>
@@ -1259,19 +1653,212 @@ kernel the bug occurs systematically (at least on SMP machines).</para>
 <para>
 There's an ip_queue bug on kernels prior to 2.6.12. It can hang the system when an ACCEPT decision is done
 on the INPUT chain. Thus DO NOT use a QUEUE target on INPUT with these kernels or it could freeze your computer.
-And anyway, you should use a recent kernel and NFQUEUE, as explained hereup in this howto.
+And anyway, you should use a recent kernel and NFQUEUE, as explained here-up in this howto.
 </para>
 </section>
 <section><title>Running NuFW in a bridged network</title>
 <para>NuFW should run seamlessly in bridge networking. However it seems a bug in some kernel does not allow the use of
 nfnetlink without problems. The following facts were reported (with NuFW 2.2.14, but NuFW versioning is not the matter) :
 <itemizedlist>
-<listitem><para><option>Kernel 2.6.22</option> BUG : No network trafic when launching the nufw daemon.</para></listitem>
+<listitem><para><option>Kernel 2.6.22</option> BUG : No network traffic when launching the nufw daemon.</para></listitem>
 <listitem><para><option>Kernel 2.6.24</option> Everything works.</para></listitem>
 </itemizedlist>
 </para>
 </section>
       </section>
+  </chapter>
+  <chapter><title>Appendix</title>
+ <section id="FinerTLS"><title id="FinerTLS.title">Managing finer TLS settings with NuFW</title>
+<para>
+<xref linkend="nufw-tls"/> describes the TLS options that the nufw daemon accepts. All these options are accepted since the 2.2.18 release (some options existed earlier).
+<table border="1" id="nufw-tls">
+<title>nufw daemon (command line) TLS options resume</title>
+<tgroup cols="2">
+<colspec colnum="1" colname="col1" colwidth="4em"/>
+<thead>
+  <row>
+    <entry>Option</entry>
+    <entry>Description</entry>
+  </row>
+</thead>
+<tbody>
+  <row>
+    <entry>-k</entry>
+    <entry>specifies as argument the filename of the (private) key to use.</entry>
+  </row>
+  <row>
+    <entry>-c</entry>
+    <entry>specifies as argument the filename of the (public) certificate to use.</entry>
+  </row>
+  <row>
+    <entry>-a</entry>
+    <entry>specifies as argument the filename of the certificate authority file.</entry>
+  </row>
+  <row>
+    <entry>-r</entry>
+    <entry>specifies as argument the filename of the certificate revocation list. The daemon will also re-read the revocation list if it is disconnected from nuauth and needs to reconnect. Since 2.2.19, nufw reloads this file when receiving a HUP signal.</entry>
+  </row>
+  <row>
+    <entry>-n</entry>
+    <entry>specifies as argument the string of the expected DN that should be received by nuauth. The DN advertised by nuauth will have to match the string exactly, else nufw will drop the connection. If you do not specify this option, the DN of the certificate will be checked against the FQDN of the nuauth server (nufw will obtain it from a reverse DNS lookup on nuauth IP address).</entry>
+  </row>
+  <row>
+    <entry>-S</entry>
+    <entry>Request that nufw strictly validates the TLS connection when opening the connection to the nuauth server. This means that the nuauth certificate has to be signed by the CA, that it is not revoked, and that the DN of the certificate is also checked (see the <command>-n</command>) option. Since 2.2.18, this is the default behaviour of the nufw daemon.</entry>
+  </row>
+  <row>
+    <entry>-s</entry>
+    <entry>Opposite of <command>-S</command>. This means all TLS checks are disabled. Use at your own risk!!</entry>
+  </row>
+</tbody>
+</tgroup>
+</table>
+</para>
+<para>
+<xref linkend="nuauth-tls"/> describes the TLS options that the nuauth daemon accepts (in nuauth.conf). All these options are accepted since the 2.2.18 release (some options existed earlier).
+<table id="nuauth-tls" border="1">
+<title>nuauth daemon configuration TLS options resume</title>
+<tgroup cols="2">
+<colspec colnum="1" colname="col1" colwidth="17em"/>
+<thead>
+  <row>
+    <entry>Option</entry>
+    <entry>Description</entry>
+  </row>
+</thead>
+<tbody>
+  <row>
+    <entry>nuauth_tls_key</entry>
+    <entry>specifies as argument the filename of the (private) key to use.</entry>
+  </row>
+  <row>
+    <entry>nuauth_tls_cert</entry>
+    <entry>specifies as argument the filename of the (public) certificate to use.</entry>
+  </row>
+  <row>
+    <entry>nuauth_tls_cacert</entry>
+    <entry>specifies as argument the filename of the certificate authority file.</entry>
+  </row>
+  <row>
+    <entry>nuauth_tls_crl</entry>
+    <entry>specifies as argument the filename of the certificate revocation list.</entry>
+  </row>
+  <row>
+    <entry>nuauth_tls_crl_refresh</entry>
+    <entry>specifies the time period (in seconds) at which nuauth refreshes the <command>nuauth_tls_crl</command> file.</entry>
+  </row>
+  <row>
+    <entry>nuauth_tls_request_cert</entry>
+    <entry>Whether nuauth performs TLS checks. Since 2.2.18, the default value is <command>2</command>, which means that all certificates need to be signed by the CA, must not have expired, and must not be revoked. If you specify <command>0</command>, nuauth will perform no TLS check at all (use at your own risk!!). If you specify <command>1</command>, nuauth will ask the clients and nufw to provide a certificate, but will not fail if no certificate is provided. You should always use the default setting of <command>2</command> if you want a safe installation!</entry>
+  </row>
+  <row>
+    <entry>nuauth_tls_disable_request_warning</entry>
+    <entry>If you set <command>nuauth_tls_request_cert</command> to an insecure value, nuauth will complain in the log everytime a client connects, but will not reject connections. If you want to prevent such logging from nuauth, you can set this option to <command>1</command>. The default value is <command>0</command>.</entry>
+  </row>
+  <row>
+    <entry>nuauth_tls_disable_nufw_fqdn_check</entry>
+    <entry>If you set <command>nuauth_tls_request_cert</command> to <command>2</command> (the default value), the nufw daemon certificate DN will be checked against the nufw fully qualified domain name (which nuauth obtains thanks to a reverse DNS lookup). If they do not match, nuauth will reject the connection. You can set this parameter to <command>1</command> if you want nuauth to accept the connection without checking this match.</entry>
+  </row>
+  <row>
+    <entry>nuauth_tls_auth_by_cert</entry>
+    <entry>This lets clients authenticate with a certificate, rather than with a login/password.</entry>
+  </row>
+ </tbody>
+ </tgroup>
+</table>
+</para>
+<para>
+<xref linkend="nutcpc-tls"/> describes the TLS options that the nutcpc client accepts on command line. All these options are accepted since the 2.2.18 release (some options existed earlier).
+You can also get nutcpc to read configuration from <command>nuclient.conf</command> config file (see below).
+<table id="nutcpc-tls" border="1">
+<title>nutcpc command line TLS options resume</title>
+<tgroup cols="2">
+<colspec colnum="1" colname="col1" colwidth="4em"/>
+<thead>
+  <row>
+    <entry>Option</entry>
+    <entry>Description</entry>
+  </row>
+</thead>
+<tbody>
+  <row>
+    <entry>-C</entry>
+    <entry>specifies as argument the filename of the (public) certificate to use.</entry>
+  </row>
+  <row>
+    <entry>-A</entry>
+    <entry>specifies as argument the filename of the certificate authority file.</entry>
+  </row>
+  <row>
+    <entry>-K</entry>
+    <entry>specifies as argument the filename of the (private) key.</entry>
+  </row>
+  <row>
+    <entry>-W</entry>
+    <entry>if you use a keyfile (with <command>-K</command>), and it is password-protected, you can specify the password to use with this switch. Use with <command>-q</command> for security reasons.</entry>
+  </row>
+  <row>
+    <entry>-R</entry>
+    <entry>specifies as argument the filename of the certificate revocation list. This file is only checked when nutcpc is launched : you currently need to stop and restart nutcpc if the revocation list is changed. Since 2.2.19, nutcpc reloads this file when receiving a HUP signal.</entry>
+  </row>
+  <row>
+    <entry>-a</entry>
+    <entry>specifies as argument the string to use to check the CN nuauth certificate contains. If you do not use this option, nuauth certificate DN will be checked against nuauth fully qualified domain name, which will be found by performing a reverse DNS lookup on nuauth IP address.</entry>
+  </row>
+  <row>
+    <entry>-N</entry>
+    <entry>If you use this switch, nutcpc will skip the nuauth CN check.</entry>
+  </row>
+  <row>
+    <entry>-Q</entry>
+    <entry>By default, nutcpc leaves with an error if the CA is not configured (see <command>-A</command>). If you use this option, the error will be ignored. Use at your own risk!!</entry>
+  </row>
+ </tbody>
+ </tgroup>
+</table>
+</para>
+<para>
+<xref linkend="nuclient-tls"/>  describes the TLS options that the libnuclient client accepts on command line. All these options are accepted since the 2.2.18 release (some options existed earlier).
+Currently, these options work with nutcpc, as well as nuapplet.
+</para>
+<para>
+<table border="1" id="nuclient-tls">
+<title>nuclient.conf TLS options resume</title>
+<tgroup cols="2">
+<colspec colnum="1" colname="col1" colwidth="15em"/>
+<thead>
+  <row>
+    <entry>Option</entry>
+    <entry>Description</entry>
+  </row>
+</thead>
+<tbody>
+  <row>
+    <entry>nuauth_tls_cert</entry>
+    <entry>specifies as argument the filename of the (public) certificate to use.</entry>
+  </row>
+  <row>
+    <entry>nuauth_tls_ca</entry>
+    <entry>specifies as argument the filename of the certificate authority file.</entry>
+  </row>
+  <row>
+    <entry>nuauth_tls_key</entry>
+    <entry>specifies as argument the filename of the (private) key.</entry>
+  </row>
+  <row>
+    <entry>nuauth_tls_crl</entry>
+    <entry>specifies as argument the filename of the certificate revocation list. This file is checked when the client is launched, and anytime the client is disconnected from nuauth and needs to reconnect.</entry>
+  </row>
+  <row>
+    <entry>nuauth_suppress_fqdn_verif</entry>
+    <entry>If set to <command>1</command>, the client will skip the nuauth CN check.</entry>
+  </row>
+ </tbody>
+ </tgroup>
+</table>
+</para>
+
+ </section>
   </chapter>
 
   <glossary>
