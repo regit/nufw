@@ -638,6 +638,12 @@ int main(int argc, char *argv[])
 	log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
 			"[+] NuFW " VERSION " started");
 
+	if (daemonize == 0) {
+		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
+				"NuFW launched in foreground (without -D option), "
+				"logging to stdout and stderr only (no syslog).");
+	}
+
 	/* control stuff */
 	pckt_tx = pckt_rx = 0;
 	while (1 == 1) {

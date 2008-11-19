@@ -809,6 +809,9 @@ void configure_app(int argc, char **argv)
 		log_message(FATAL, DEBUG_AREA_MAIN,
 				"[+] NuAuth ($Revision$) with config %s",
 				nuauthconf->configfile);
+		log_message(FATAL, DEBUG_AREA_MAIN,
+		"Nuauth started in foreground (without -D option), "
+		"logging on stderr and stdout only (no syslog)");
 	}
 }
 
