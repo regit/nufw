@@ -587,6 +587,8 @@ nuauth_session_t *do_connect(nutcpc_context_t * context, char *username)
 		}
 	}
 
+	if (!context->crlfile)
+		context->crlfile = (char *)nu_client_default_tls_crl();
 	if (context->crlfile) {
 		if (!nu_client_set_crlfile(session, context->crlfile, err)) {
 			goto init_failed;
