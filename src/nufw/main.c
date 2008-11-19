@@ -548,7 +548,7 @@ int main(int argc, char *argv[])
 \t-k: use specified file as key file\n\
 \t-c: use specified file as cert file\n\
 \t-a: use specified file as ca file (strict checking is done if selected) (default: none)\n\
-\t-r: use specified file as crl file\n\
+\t-r: use specified file as crl file (default: none)\n\
 \t-n: use specified string as the needed DN of nuauth (inforce certificate checking) (default: none)\n\
 \t-v: increase debug level (+1 for each 'v') (max useful number: 10)\n\
 \t-A: debug areas (see man page for details)\n\
@@ -562,10 +562,10 @@ int main(int argc, char *argv[])
 #if USE_NFQUEUE
 				"\t-q: use nfqueue number (default: 0)\n"
 #ifdef HAVE_NFQ_SET_QUEUE_MAXLEN
-				"\t-L : set queue max len (default : 1024)\n"
+				"\t-L : set queue max len (default: 1024)\n"
 #endif
 #endif
-				"\t-t : timeout to forget about packets when they don't match (default : 15 s)\n\
+				"\t-t : timeout to forget about packets when they don't match (default: 15 s)\n\
 \t-T : track size (default : 1000)\n",
 				PACKAGE_TARNAME);
 
