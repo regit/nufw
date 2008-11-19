@@ -99,6 +99,7 @@ void nufw_prepare_quit()
 	free(key_file);
 	free(cert_file);
 	free(ca_file);
+	free(crl_file);
 	freeaddrinfo(adr_srv);
 
 	/* destroy pid file */
@@ -380,13 +381,13 @@ int main(int argc, char *argv[])
 #ifdef HAVE_NFQ_SET_QUEUE_MAXLEN
 	    "L:"
 #endif
-	    "c:k:a:n:d:p:t:T:A:"
+	    "c:k:a:n:r:d:p:t:T:A:"
 #ifdef HAVE_LIBCONNTRACK
 	    "CM"
 #endif
 	    ;
 #else
-	char *options_list = "sDhVvmc:k:a:n:d:p:t:T:A:";
+	char *options_list = "sDhVvmc:k:a:n:r:d:p:t:T:A:";
 #endif
 	int option, daemonize = 0;
 	char *version = PACKAGE_VERSION;
@@ -400,6 +401,7 @@ int main(int argc, char *argv[])
 	cert_file = NULL;
 	key_file = NULL;
 	ca_file = NULL;
+	crl_file = NULL;
 	nuauth_cert_dn = NULL;
 	SECURE_STRNCPY(authreq_addr, AUTHREQ_ADDR, sizeof authreq_addr);
 	debug_level = DEFAULT_DEBUG_LEVEL;
@@ -444,6 +446,14 @@ int main(int argc, char *argv[])
 		case 'a':
 			ca_file = strdup(optarg);
 			if (ca_file == NULL) {
+				fprintf(stderr,
+					"Couldn't malloc! Exiting");
+				exit(EXIT_FAILURE);
+			}
+			break;
+		case 'r':
+			crl_file = strdup(optarg);
+			if (crl_file == NULL) {
 				fprintf(stderr,
 					"Couldn't malloc! Exiting");
 				exit(EXIT_FAILURE);
@@ -538,6 +548,7 @@ int main(int argc, char *argv[])
 \t-k: use specified file as key file\n\
 \t-c: use specified file as cert file\n\
 \t-a: use specified file as ca file (strict checking is done if selected) (default: none)\n\
+\t-r: use specified file as crl file\n\
 \t-n: use specified string as the needed DN of nuauth (inforce certificate checking) (default: none)\n\
 \t-v: increase debug level (+1 for each 'v') (max useful number: 10)\n\
 \t-A: debug areas (see man page for details)\n\

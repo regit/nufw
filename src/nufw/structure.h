@@ -59,6 +59,7 @@
 extern char *cert_file;		/*!< Certificatename used in TLS connection, default value: NULL */
 extern char *key_file;		/*!< Key filename used in TLS connection, default value: NULL */
 char *ca_file;			/*!< Trust filename used in TLS connection, default value: NULL */
+char *crl_file;			/*!< CRL filename used in TLS connection, default value: NULL */
 char *nuauth_cert_dn;		/*!< NuAuth certificate filename, default value: NULL */
 
 /*! IP or hostname of NuAuth server address (::adr_srv), default value: #AUTHREQ_ADDR */

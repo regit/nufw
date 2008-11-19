@@ -189,13 +189,26 @@ nussl_session *tls_connect()
 		return NULL;
 	}
 
-	/* sets the trusted cas file */
+	/* sets the trusted CA file */
 	if (ca_file) {
 		ret = nussl_ssl_trust_cert_file(sess, ca_file);
 		if (ret != NUSSL_OK) {
 			log_area_printf(DEBUG_AREA_MAIN,
 					DEBUG_LEVEL_FATAL,
-					"TLS: can not set nussl trust file: %s",
+					"TLS: can not set nussl CA file: %s",
+					nussl_get_error(sess));
+			nussl_session_destroy(sess);
+			return NULL;
+		}
+	}
+
+	/* sets the CRL */
+	if (crl_file) {
+		ret = nussl_ssl_set_crl_file(sess, crl_file);
+		if (ret != NUSSL_OK) {
+			log_area_printf(DEBUG_AREA_MAIN,
+					DEBUG_LEVEL_FATAL,
+					"TLS: can not set nussl CRL file: %s",
 					nussl_get_error(sess));
 			nussl_session_destroy(sess);
 			return NULL;
