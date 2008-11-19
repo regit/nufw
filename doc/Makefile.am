@@ -15,10 +15,10 @@ PARAMS=--stringparam html.stylesheet ck-style.css --stringparam section.autolabe
 references: references.xml
 	xsltproc ${PARAMS} --output references.html ${STYLESHEET} references.xml
 
-howto: howto.xml
-	xsltproc ${PARAMS} --output howto.html ${STYLESHEET} howto.xml
+handbook: handbook.xml
+	xsltproc ${PARAMS} --output handbook.html ${STYLESHEET} handbook.xml
 
-pdf: howto.pdf references.pdf
+pdf: handbook.pdf references.pdf
 
 %.pdf: %.xml
 	${DOCBOOK2PDF} $<
