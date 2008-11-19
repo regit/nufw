@@ -333,7 +333,10 @@ void *authsrv(void *data)
 
 		/* memset(dgram, 0, sizeof dgram); */
 		pthread_mutex_lock(&tls.mutex);
-		ret = nussl_read(tls.session, dgram, sizeof cdgram);
+		if (tls.session)
+			ret = nussl_read(tls.session, dgram, sizeof cdgram);
+		else
+			ret = 0;
 		pthread_mutex_unlock(&tls.mutex);
 		if (ret == NUSSL_SOCK_TIMEOUT)
 		{
