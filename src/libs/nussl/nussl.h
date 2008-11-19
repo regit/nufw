@@ -114,7 +114,7 @@ extern "C" {
 	int nussl_session_set_dh_bits(nussl_session * sess,
 				      unsigned int dh_bits);
 
-	int nussl_ssl_set_crl_file(nussl_session * sess, char *crl_file);
+	int nussl_ssl_set_crl_file(nussl_session * sess, const char *crl_file);
 
 	void nussl_ssl_disable_certificate_check(nussl_session * sess, int is_disabled);
 

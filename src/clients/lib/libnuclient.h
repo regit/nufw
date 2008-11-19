@@ -171,11 +171,12 @@ struct nuauth_session {
 	u_int32_t userid;	/*!< Local user identifier (getuid()) */
 	char *username;	/*!< Username (encoded in UTF-8) */
 	char *password;	/*!< Password (encoded in UTF-8) */
-	char *pem_key; /* Path ot file */
-	char *pem_cert; /* Path ot file */
-	char *pem_ca; /* Path ot file */
-	char *pkcs12_file; /* Path ot file */
-	char *pkcs12_password; /* Path ot file */
+	char *pem_key; /* Path to file */
+	char *pem_cert; /* Path to file */
+	char *pem_ca; /* Path to file */
+	char *pem_crl; /* Path to file */
+	char *pkcs12_file; /* Path to file */
+	char *pkcs12_password; /* Path to file */
 	/** Callback used to get username */
 	char* (*username_callback)();
 	/** Callback used to get password */

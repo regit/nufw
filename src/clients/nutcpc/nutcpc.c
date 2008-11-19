@@ -81,6 +81,7 @@ typedef struct {
 	char *certfile;
 	char *keyfile;
 	char *cafile;
+	char *crlfile;
 	char *pkcs12file;
 	char *pkcs12password;
 	char *krb5_service;
@@ -387,6 +388,7 @@ static void usage(void)
 	fprintf(stderr, "  -K KEYFILE:  PEM RSA private key filename\n");
 	fprintf(stderr, "  -S PKCS12FILE: PKCS12 key/certificate filename\n");
 	fprintf(stderr, "  -W PKCS12PASS: PKCS12 password\n");
+	fprintf(stderr, "  -R CRLFILE: crl filename\n");
 	fprintf(stderr, "  -Q: suppress warning if no certificate authority is configured\n");
 	fprintf(stderr, "  -N: suppress error if server FQDN does not match certificate CN.\n");
 	fprintf(stderr, "\n");
@@ -585,6 +587,12 @@ nuauth_session_t *do_connect(nutcpc_context_t * context, char *username)
 		}
 	}
 
+	if (context->crlfile) {
+		if (!nu_client_set_crlfile(session, context->crlfile, err)) {
+			goto init_failed;
+		}
+	}
+
 	if (context->krb5_service) {
 		if (!nu_client_set_krb5_service(session, context->krb5_service)) {
 			nu_client_delete(session);
@@ -593,8 +601,7 @@ nuauth_session_t *do_connect(nutcpc_context_t * context, char *username)
 		}
 	}
 
-	if (!nu_client_connect
-	    (session, context->srv_addr, context->port, err)) {
+	if (!nu_client_connect(session, context->srv_addr, context->port, err)) {
 		goto init_failed;
 	}
 	return session;
@@ -695,7 +702,7 @@ void parse_cmdline_options(int argc, char **argv,
 
 	/* Parse all command line arguments */
 	opterr = 0;
-	while ((ch = getopt(argc, argv, "kcldqNQVu:H:I:U:p:P:a:K:C:A:W:S:Z:")) != -1) {
+	while ((ch = getopt(argc, argv, "kcldqNQVu:H:I:U:p:P:a:K:C:A:R:W:S:Z:")) != -1) {
 		switch (ch) {
 		case 'H':
 			SECURE_STRNCPY(context->srv_addr, optarg,
@@ -764,6 +771,9 @@ void parse_cmdline_options(int argc, char **argv,
 			break;
 		case 'A':
 			context->cafile = copy_filename(optarg);
+			break;
+		case 'R':
+			context->crlfile = copy_filename(optarg);
 			break;
 		case 'S':
 			context->pkcs12file = copy_filename(optarg);

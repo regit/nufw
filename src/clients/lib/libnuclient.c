@@ -430,6 +430,22 @@ int nu_client_load_ca(nuauth_session_t * session,
 	return 1;
 }
 
+int nu_client_load_crl(nuauth_session_t *session, const char *crlfile,
+	const char *cafile, nuclient_error_t * err)
+{
+	int ret;
+	if (*crlfile) {
+		ret = nussl_ssl_set_crl_file(session->nussl, crlfile);
+		if (ret < 0) {
+			fprintf(stderr,"TLS error with CRL: %s",
+				nussl_get_error(session->nussl));
+			return 0;
+		}
+		printf("Using crl: %s\n", crlfile);
+	}
+	return 1;
+}
+
 /**
  * \ingroup nuclientAPI
  * Returns a formated string containing information about the user certificate
@@ -476,15 +492,12 @@ int nu_client_set_crlfile(nuauth_session_t * session,
 		char *crlfile,
 		nuclient_error_t *err)
 {
-	int ret;
-	if (*crlfile) {
-		ret = nussl_ssl_set_crl_file(session->nussl, crlfile);
-		if (ret < 0) {
-			fprintf(stderr,"TLS error with CRL: %s",
-				nussl_get_error(session->nussl));
-			return 0;
-		}
-	}
+	if (session->pem_crl)
+		free(session->pem_crl);
+
+	if (crlfile)
+		session->pem_crl = strdup(crlfile);
+
 	return 1;
 }
 
@@ -715,6 +728,11 @@ int nu_client_connect(nuauth_session_t * session,
 
 	if (!nu_client_load_ca(session, session->pem_ca, err))
 		return 0;
+
+	if (session->pem_crl) {
+		if (!nu_client_load_crl(session, session->pem_crl, session->pem_ca, err))
+			return 0;
+	}
 
 	ret = nussl_open_connection(session->nussl);
 	if (ret != NUSSL_OK) {
