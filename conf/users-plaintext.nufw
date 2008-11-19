@@ -1,4 +1,4 @@
-
+#
 # ACLs file for the plaintext module
 #
 
@@ -7,7 +7,14 @@
 #
 # Note: account is disabled if passwd is "*" or "!"
 #
+# Passwords can be crypted via SSHA, SMD5, SHA1, SHA or MD5
+# To do so specify
+#	user:{ALGO}CRYPTEDPASSWORD:uid:gid
+# Example:
+#	user:{SHA}lgJ11mVejyWMPhz9hL5y85+FdfY=:1:102
 
-user:imauser:1:102
+user:{SHA}lgJ11mVejyWMPhz9hL5y85+FdfY=:1:102
+# This entry is equivalent to the following one
+# user:imauser:1:102
 admin:iadmin:2:100,102
 suadmin:suroot:3:103
