@@ -7,7 +7,7 @@
 #
 # Note: account is disabled if passwd is "*" or "!"
 #
-# Passwords can be crypted via SSHA, SMD5, SHA1, SHA or MD5
+# Passwords can be hashed via SSHA, SMD5, SHA1, SHA or MD5
 # To do so specify
 #	user:{ALGO}CRYPTEDPASSWORD:uid:gid
 # Example:
