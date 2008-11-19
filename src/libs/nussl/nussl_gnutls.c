@@ -366,10 +366,11 @@ static int check_identity(const char *expected_hostname, gnutls_x509_crt cert, c
 		name,
 		&len);
 	if(ret) {
-		NUSSL_DEBUG(NUSSL_DBG_SSL,
-			"TLS: error fetching CN from cert: %s",
-			gnutls_strerror(ret));
-			return -1;
+		if (expected_hostname != NULL)
+			NUSSL_DEBUG(NUSSL_DBG_SSL,
+				"TLS: error fetching CN from cert: %s",
+				gnutls_strerror(ret));
+				return -1;
 	}
 
 	if (hostname) {
