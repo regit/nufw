@@ -549,7 +549,8 @@ int main(int argc, char *argv[])
 \t-c: use specified file as cert file\n\
 \t-a: use specified file as ca file (strict checking is done if selected) (default: none)\n\
 \t-r: use specified file as crl file (default: none)\n\
-\t-n: use specified string as the needed DN of nuauth (inforce certificate checking) (default: none)\n\
+\t-n: use specified string as the needed DN of nuauth (enforce certificate checking) (default is to)\n\
+\t\tcheck the DN against nuauth FQDN specified using the -d option)\n\
 \t-v: increase debug level (+1 for each 'v') (max useful number: 10)\n\
 \t-A: debug areas (see man page for details)\n\
 \t-m: mark packet with nuauth provided mark\n"
