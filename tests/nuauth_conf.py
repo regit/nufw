@@ -2,6 +2,7 @@ import re
 from inl_tests.replace_file import ReplaceFile
 from logging import info
 from config import NUAUTH_CONF
+from os.path import abspath
 
 class NuauthConf(ReplaceFile):
     def __init__(self):
@@ -20,6 +21,13 @@ class NuauthConf(ReplaceFile):
                 raise Exception("Line %s has no '='" % line)
             key, value = line
             self.content[key] = value
+
+        # default values
+        self["nuauth_tls_cacert"] = '"%s"' % abspath("./pki/CA.crt")
+        self["nuauth_tls_key"] = '"%s"' % abspath("./pki/nuauth.inl.fr.key")
+        self["nuauth_tls_cert"] = '"%s"' % abspath("./pki/nuauth.inl.fr.crt")
+        self["nuauth_tls_request_cert"] = "0"
+        self["nuauth_tls_disable_nufw_fqdn_check"] = "1"
 
     def writeContent(self, output):
         for key, value in self.content.iteritems():

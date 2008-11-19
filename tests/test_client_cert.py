@@ -6,6 +6,7 @@ from nuauth import Nuauth
 from nuauth_conf import NuauthConf
 from config import config
 from os.path import join as path_join
+from os.path import abspath
 
 class TestClientCert(TestCase):
     def setUp(self):
@@ -13,9 +14,6 @@ class TestClientCert(TestCase):
         nuconfig = NuauthConf()
         nuconfig["nuauth_tls_auth_by_cert"] = "0"
         nuconfig["nuauth_tls_request_cert"] = "0"
-        nuconfig["nuauth_tls_cacert"] = '"%s"' % self.cacert
-        nuconfig["nuauth_tls_key"] = '"%s"' % config.get("test_cert", "nuauth_key")
-        nuconfig["nuauth_tls_cert"] = '"%s"' % config.get("test_cert", "nuauth_cert")
         self.nuauth = Nuauth(nuconfig)
 
     def tearDown(self):

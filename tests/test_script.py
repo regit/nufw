@@ -36,7 +36,10 @@ class TestScript(TestCase):
 
     def checkScript(self, match):
         warning("checkScript(%r)" % match)
-        return self.nuauth.nuauth.waitline(match, 2.0)
+        for line in self.nuauth.readlines(total_timeout=2.0):
+            if line == match:
+                return True
+        return False
 
     def testLogin(self):
         # Client login

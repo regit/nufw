@@ -47,20 +47,13 @@ class TestSessionExpire(TestCase):
 
     def testExpire(self):
         self.assert_(connectClient(self.client))
-        if True:
-            self.iptables.filterTcp(VALID_PORT)
-            connectTcp(self.host, VALID_PORT, 0.5)
-        else:
-            testAllowPort(self, self.iptables, None, self.host)
+        testAllowPort(self, self.iptables, None, self.host)
 
-        self.userdb.users = []
-        self.userdb.install(self.nuauth.conf)
-        self.nuauth.installConf()
-        self.nuauth.reload()
         sleep(self.expiration+DELAY)
 
         connectTcp(self.host, VALID_PORT, 0.5)
-        self.assert_(self.client.waitline("Session not connected", TIMEOUT))
+        self.assert_(any("Session not connected" in line
+            for line in self.client.readlines(total_timeout=TIMEOUT)))
 
 if __name__ == "__main__":
     print "Test nuauth client authentification"

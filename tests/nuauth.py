@@ -26,8 +26,9 @@ class NuauthProcess(Process):
         arg = ["-" + "v" * min(max(debug_level, 1), 9)]
         program = NUAUTH_PROG
         if USE_VALGRIND:
-            #args = ["--log-file-exactly=nufw.valgrind.log", "--verbose", program] + args
-            arg = [program] + arg
+            #arg = ["--tool=callgrind", program] + arg
+            #program = "valgrind"
+            arg = ["--log-file-exactly=nuauth.valgrind.log", "--verbose", program] + arg
             program = "valgrind"
         Process.__init__(self, program, arg)
         self.hostname = "localhost"
@@ -47,8 +48,8 @@ class NuauthProcess(Process):
            and connectTcp(self.hostname, self.client_port, INIT_TIMEOUT)
 
     def exited(self, status):
-        #if USE_VALGRIND:
-        #    print "Callgrind logs written in callgrind.out.%s" % self.pid
+        if USE_VALGRIND:
+            print "Callgrind logs written in callgrind.out.%s" % self.pid
         Process.exited(self, status)
 
     def reload(self, timeout=RELOAD_TIMEOUT):
@@ -63,8 +64,12 @@ class NuauthProcess(Process):
 
         # Wait until nuauth is reloaded
         message = "NuAuth server reloaded"
-        if not self.waitline(message, timeout):
-            self.warning('nuauth doesn\'t write message "%s"' % message)
+        start = time()
+        while time()-start <= timeout:
+            for line in self.readlines(timeout=0.250):
+                if message in line:
+                    return
+        self.warning('nuauth doesn\'t write message "%s"' % message)
 
     @classmethod
     def _reallyStop(cls):

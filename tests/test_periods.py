@@ -15,12 +15,12 @@ class TestPlaintextAcl(TestCase):
         self.iptables = Iptables()
         self.users = USERDB
         self.config = NuauthConf()
-        self.config["xml_defs_periodfile"] = '"%s"' % os.path.join(os.getcwd(),"../conf/periods.xml")
+        self.config["xml_defs_periodfile"] = '"%s"' % os.path.abspath("../conf/periods.xml")
         self.acls = PlaintextAcl()
 
         # Start nuauth with new config
         self.users.install(self.config)
-        self.nufw = startNufw()
+        self.nufw = startNufw(["-s"])
 
     def tearDown(self):
         # Restore user DB and nuauth config

@@ -23,7 +23,6 @@ FILES = (
     "test_mark_flag",
     "test_reject",
     "test_periods",
-    "test_conntrack",
     "test_session_expire",
     "test_invalid_tcp",
     "test_session_authtype"

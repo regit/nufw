@@ -12,7 +12,7 @@ class TestClientCert(TestCase):
     def setUp(self):
         self.cacert = config.get("test_cert", "cacert")
         nuconfig = NuauthConf()
-        nuconfig["nuauth_user_session_modify_module"]= "session_authtype"
+        nuconfig["nuauth_user_session_modify_module"]= "\"session_authtype\""
         nuconfig["nuauth_tls_auth_by_cert"] = "0"
         nuconfig["nuauth_tls_request_cert"] = "0"
         nuconfig["nuauth_tls_cacert"] = '"%s"' % self.cacert
@@ -32,8 +32,8 @@ class TestClientCert(TestCase):
         self.client.stop()
 
     def testCertAuthGroupOK(self):
-        self.config["nuauth_tls_auth_by_cert"] = 2
-        self.config["session_authtype_ssl_groups"] = 42
+        self.config["nuauth_tls_auth_by_cert"] = "2"
+        self.config["session_authtype_ssl_groups"] = "\"42\""
         self.nuauth = Nuauth(self.config)
         # Client
         cacert = config.get("test_cert", "cacert")
@@ -47,8 +47,8 @@ class TestClientCert(TestCase):
         self.assert_(connectClient(self.client))
 
     def testCertAuthGroupNOK(self):
-        self.config["nuauth_tls_auth_by_cert"] = 2
-        self.config["session_authtype_ssl_groups"] = 100
+        self.config["nuauth_tls_auth_by_cert"] = "2"
+        self.config["session_authtype_ssl_groups"] = "\"100\""
         self.nuauth = Nuauth(self.config)
         # Client
         cacert = config.get("test_cert", "cacert")
@@ -63,7 +63,7 @@ class TestClientCert(TestCase):
 
     def testWhitelistAuthOK(self):
         self.config["nuauth_tls_auth_by_cert"] = 0
-        self.config["session_authtype_whitelist_groups"] = 42
+        self.config["session_authtype_whitelist_groups"] = "\"42\""
         self.nuauth = Nuauth(self.config)
 
         self.client = self.user.createClient()
@@ -71,7 +71,7 @@ class TestClientCert(TestCase):
 
     def testWhitelistAuthNOK(self):
         self.config["nuauth_tls_auth_by_cert"] = 0
-        self.config["session_authtype_whitelist_groups"] = 123
+        self.config["session_authtype_whitelist_groups"] = "\"123\""
         self.nuauth = Nuauth(self.config)
 
         self.client = self.user.createClient()
@@ -79,7 +79,7 @@ class TestClientCert(TestCase):
 
     def testBlacklistAuthOK(self):
         self.config["nuauth_tls_auth_by_cert"] = 0
-        self.config["session_authtype_blacklist_groups"] = 123
+        self.config["session_authtype_blacklist_groups"] = "\"123\""
         self.nuauth = Nuauth(self.config)
 
         self.client = self.user.createClient()
@@ -87,7 +87,7 @@ class TestClientCert(TestCase):
 
     def testBlacklistAuthNOK(self):
         self.config["nuauth_tls_auth_by_cert"] = 0
-        self.config["session_authtype_blacklist_groups"] = 42
+        self.config["session_authtype_blacklist_groups"] = "\"42\""
         self.nuauth = Nuauth(self.config)
 
         self.client = self.user.createClient()
@@ -95,7 +95,7 @@ class TestClientCert(TestCase):
 
     def testSASLAuthOK(self):
         self.config["nuauth_tls_auth_by_cert"] = 0
-        self.config["session_authtype_sasl_groups"] = 42
+        self.config["session_authtype_sasl_groups"] = "\"42\""
         self.nuauth = Nuauth(self.config)
 
         self.client = self.user.createClient()
@@ -103,7 +103,7 @@ class TestClientCert(TestCase):
 
     def testSASLAuthNOK(self):
         self.config["nuauth_tls_auth_by_cert"] = 0
-        self.config["session_authtype_sasl_groups"] = 123
+        self.config["session_authtype_sasl_groups"] = "\"123\""
         self.nuauth = Nuauth(self.config)
 
         self.client = self.user.createClient()

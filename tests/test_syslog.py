@@ -8,6 +8,7 @@ from logging import warning
 class TestLog(TestCase):
     def setUp(self):
         config = getNuauthConf()
+        config["nuauth_tls_request_cert"] = "0"
         config["nuauth_user_logs_module"] = '"syslog"'
         config["nuauth_user_session_logs_module"] = '"syslog"'
         self.nuauth = Nuauth(config)
@@ -17,7 +18,11 @@ class TestLog(TestCase):
 
     def findLog(self, match):
         warning("Search string >%s< in log" % match)
-        return self.nuauth.nuauth.waitline(match, 2.0)
+        matched = False
+        for line in self.nuauth.readlines(total_timeout=2.0):
+            if match in line:
+                return True
+        return False
 
     def testLogin(self):
         # Client login

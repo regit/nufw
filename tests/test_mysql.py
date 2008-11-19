@@ -66,7 +66,7 @@ def formatTimestamp(ts):
 
 class MysqlLog(TestCase):
     def setUp(self):
-        startNufw()
+        startNufw(["-s"])
         config = NuauthConf()
         config["nuauth_log_users"] = '9'
         config["mysql_prefix_version"] = '1'

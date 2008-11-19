@@ -20,7 +20,7 @@ class TestICMPReject(TestCase):
 
         self.users.install(self.config)
         self.acls.install(self.config)
-        self.nufw = startNufw()
+        self.nufw = startNufw(["-s"])
 
     def tearDown(self):
         # Restore user DB and nuauth config

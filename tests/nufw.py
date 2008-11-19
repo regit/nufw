@@ -1,5 +1,6 @@
 from inl_tests.process import Process
-from config import NUFW_PROG
+from config import config, NUFW_PROG
+from os.path import abspath
 
 USE_VALGRIND = False
 DEBUG_LEVEL = 9
@@ -7,13 +8,18 @@ DEBUG_LEVEL = 9
 class Nufw(Process):
     def __init__(self, moreargs=None):
         self.args = moreargs
-        args = ["-"+"v"*DEBUG_LEVEL]
+        args = ["-"+"v"*DEBUG_LEVEL, "-d", config.get("nuauth", "host") ]
+        if not moreargs or not "-k" in list(moreargs):
+            args = args + ["-k", abspath(config.get("nufw", "tlskey"))]
+        if not moreargs or not "-c" in list(moreargs):
+            args = args + ["-c", abspath(config.get("nufw", "tlscert"))]
+        if not moreargs or not "-a" in list(moreargs):
+            args = args + ["-a", abspath(config.get("nufw", "cacert"))]
         if moreargs:
             args += list(moreargs)
         program = NUFW_PROG
         if USE_VALGRIND:
-            #args = ["--log-file-exactly=nufw.valgrind.log", "--verbose", program] + args
-            args = [program] + args
+            args = ["--log-file-exactly=nufw.valgrind.log", "--verbose", program] + args
             program = "valgrind"
         Process.__init__(self, program, args)
         # FIXME: Load kernel modules?
