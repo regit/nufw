@@ -1,4 +1,4 @@
-SUBDIRS = inl_tests
+SUBDIRS = inl_tests pki
 
 EXTRA_DIST = defaults.cfg client.py common.py compatibility.py config.py \
 	filter.py mysocket.py nuauth_conf.py nuauth.py nufw.py nufw_runner.py\

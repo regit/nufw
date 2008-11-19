@@ -404,6 +404,7 @@ AC_CONFIG_FILES([Makefile
 	scripts/auth_mysql/Makefile
 	tests/Makefile
 	tests/inl_tests/Makefile
+	tests/pki/Makefile
 ])
 
 # Display errors if any library is missing
