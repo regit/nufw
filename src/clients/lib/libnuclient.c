@@ -619,7 +619,7 @@ nuauth_session_t *_nu_client_new(nuclient_error_t * err)
 
 nuauth_session_t *nu_client_new_callback(void *username_callback,
 		      void *passwd_callback,
-		      /* TODO: To remove */ unsigned char diffie_hellman, nuclient_error_t * err)
+		      unsigned char diffie_hellman, nuclient_error_t * err)
 {
 	nuauth_session_t *session = NULL;
 
@@ -653,7 +653,7 @@ nuauth_session_t *nu_client_new_callback(void *username_callback,
 
 nuauth_session_t *nu_client_new(const char *username,
 		      const char *password,
-		      /* TODO: To remove */ unsigned char diffie_hellman, nuclient_error_t * err)
+		      unsigned char diffie_hellman, nuclient_error_t * err)
 {
 	nuauth_session_t *session = NULL;
 
