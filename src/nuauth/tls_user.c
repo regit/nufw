@@ -293,6 +293,7 @@ int tls_user_accept(struct tls_user_context_t *context)
 	gint option_value;
 	unsigned short sport;
 	int ret;
+	char address[INET6_ADDRSTRLEN];
 
 	current_client_conn = g_new0(struct client_connection, 1);
 
@@ -321,15 +322,6 @@ int tls_user_accept(struct tls_user_context_t *context)
 		return 0;
 	}
 
-	if (get_number_of_clients() >= context->nuauth_tls_max_clients) {
-		log_message(WARNING, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
-			    "too many clients (%d configured)",
-			    context->nuauth_tls_max_clients);
-		shutdown(socket, SHUT_RDWR);
-		close(socket);
-		return 1;
-	}
-
 	/* Extract client address (convert it to IPv6 if it's IPv4) */
 	/* if (sockaddr.ss_family == AF_INET) { -> same as tls_nufw.c */
 	if (sockaddr6->sin6_family == AF_INET) {
@@ -340,10 +332,22 @@ int tls_user_accept(struct tls_user_context_t *context)
 		sport = ntohs(sockaddr6->sin6_port);
 	}
 
+	format_ipv6(&addr, address, sizeof(address), NULL);
+	log_message(DEBUG, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
+			"nuauth: user connection attempt from %s\n",
+			address);
+
+	if (get_number_of_clients() >= context->nuauth_tls_max_clients) {
+		log_message(WARNING, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
+			    "too many clients (%d configured)",
+			    context->nuauth_tls_max_clients);
+		shutdown(socket, SHUT_RDWR);
+		close(socket);
+		return 1;
+	}
+
 	ret = nussl_session_handshake(current_client_conn->nussl,context->nussl);
 	if ( ret ) {
-		char address[INET6_ADDRSTRLEN];
-		format_ipv6(&addr, address, sizeof(address), NULL);
 		log_message(WARNING, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
 			    "New client connection from %s failed during nussl_session_handshake(): %s",
 			    address,
@@ -644,6 +648,10 @@ int tls_user_setcert_auth_params(int requestcert, int authcert)
 			    "Mandatory certificate authentication asked, asking certificate");
 		nuauth_tls.request_cert = NUSSL_CERT_REQUIRE;
 	}
+
+	/* always ask for certificates - but don't error if none were sent */
+	if (nuauth_tls.request_cert == 0)
+		nuauth_tls.request_cert = 1;
 
 	log_message(INFO, DEBUG_AREA_AUTH | DEBUG_AREA_USER,"request_cert = %i", nuauth_tls.request_cert);
 	log_message(INFO, DEBUG_AREA_AUTH | DEBUG_AREA_USER,"auth_by_cert = %i", nuauth_tls.auth_by_cert);

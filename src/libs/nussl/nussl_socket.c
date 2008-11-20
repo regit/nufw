@@ -466,9 +466,8 @@ ssize_t nussl_sock_read(nussl_socket * sock, char *buffer, size_t buflen)
 		return sock->ops->sread(sock, buffer, buflen);
 	} else {
 		/* Fill read buffer. */
-		bytes =
-		    sock->ops->sread(sock, sock->buffer,
-				     sizeof sock->buffer);
+		bytes = sock->ops->sread(sock, sock->buffer,
+				sizeof sock->buffer);
 		if (bytes <= 0)
 			return bytes;
 

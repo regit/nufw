@@ -111,7 +111,7 @@ static unsigned samp_recv(nuauth_session_t* session, char *buf, int bufsize,
 
 	tls_len = nussl_read(session->nussl, buf, bufsize);
 	if (tls_len <= 0) {
-		printf("ERROR gnutls_record_recv returned %d (requested %d bytes)\n", tls_len, bufsize);
+		printf("ERROR nussl_read returned %d (requested %d bytes)\n", tls_len, bufsize);
 		SET_ERROR(err, NUSSL_ERR, tls_len);
 		return 0;
 	}
