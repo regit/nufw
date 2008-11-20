@@ -1,5 +1,5 @@
 from config import CONF_DIR
-from common import createClient
+from common import createClient, createClientWithCerts
 from inl_tests.replace_file import ReplaceFile
 from os.path import join as path_join
 from os.path import exists as path_exists
@@ -17,6 +17,9 @@ class PlaintextUser:
 
     def createClient(self, more_args=None):
         return createClient(self.login, self.password, more_args=more_args)
+
+    def createClientWithCerts(self, m_args=None):
+        return createClientWithCerts(self.login, self.password, more_args=m_args)
 
     def __str__(self):
         return "%s:%s:%u:%u" % (self.login, self.password, self.uid, self.gid)

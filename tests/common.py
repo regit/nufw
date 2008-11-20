@@ -9,6 +9,7 @@ from config import (config, USERNAME, PASSWORD,
 from time import time, sleep
 from logging import warning
 from os import nice
+from os.path import abspath
 
 _nuauth = None
 _nufw = None
@@ -47,6 +48,16 @@ def _stopNufw():
 
 def createClient(username=USERNAME, password=PASSWORD, more_args=None):
     return Client(username, password, CLIENT_IP, more_args=more_args)
+
+def createClientWithCerts(username=USERNAME, password=PASSWORD, more_args=None):
+    nuconfig = NuauthConf()
+    cacert = abspath(config.get("test_cert", "cacert"))
+    cert = abspath(config.get("test_cert", "user_cert"))
+    key = abspath(config.get("test_cert", "user_key"))
+    args = ["-C", cert, "-K", key, "-A", cacert]
+    if more_args:
+        args = args.concat(more_args)
+    return Client(username, password, CLIENT_IP, more_args=args)
 
 def connectClient(client):
     client.info("connectClient()")
