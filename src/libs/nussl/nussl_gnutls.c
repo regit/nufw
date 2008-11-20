@@ -678,8 +678,11 @@ int nussl__ssl_post_handshake(nussl_session * sess)
 
 	chain = make_peers_chain(sock);
 	if (chain == NULL) {
-		nussl_set_error(sess,
-				_("Peer did not send certificate chain"));
+		nussl_set_error(sess, _("Peer did not send certificate chain"));
+		if (sess->ssl_context->verify < 2) {
+			/* certificates are not mandatory, so continue */
+			return NUSSL_OK;
+		}
 		return NUSSL_ERROR;
 	}
 
