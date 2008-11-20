@@ -1,6 +1,6 @@
 #!/usr/bin/python
 from unittest import TestCase, main
-from common import startNufw, connectClient; createClient, createClientWithCerts
+from common import startNufw, connectClient, createClient, createClientWithCerts
 from nuauth import Nuauth
 from nuauth_conf import NuauthConf
 from inl_tests.iptables import Iptables
