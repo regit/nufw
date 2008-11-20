@@ -1038,7 +1038,7 @@ void nuauth_main_loop()
 		}
 		g_timer_stop(timer);
 
-		/* compute next sleep: one second minus (elasped time) */
+		/* compute next sleep: one second minus (elapsed time) */
 		sec = g_timer_elapsed(timer, &ms);
 		if (1 <= sec) {
 			sleep.tv_sec = 0;
