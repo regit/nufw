@@ -125,7 +125,9 @@ int init_nuauthconf(struct nuauth_params **result)
 	conf->hello_authentication =
 	    nubase_config_table_get_or_default_int("nuauth_hello_authentication", 0);
 	conf->debug_areas = nubase_config_table_get_or_default_int("nuauth_debug_areas", DEFAULT_DEBUG_AREAS);
+	debug_areas = conf->debug_areas;
 	conf->debug_level = nubase_config_table_get_or_default_int("nuauth_debug_level", DEFAULT_DEBUG_LEVEL);
+	debug_level = conf->debug_level;
 	conf->nufw_has_conntrack =
 	    nubase_config_table_get_or_default_int("nufw_has_conntrack", 1);
 	conf->nufw_has_fixed_timeout =
