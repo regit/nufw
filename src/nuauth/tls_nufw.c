@@ -254,6 +254,9 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 	}
 
 	format_ipv6(&nu_session->peername, address, sizeof(address), NULL);
+	log_message(DEBUG, DEBUG_AREA_MAIN,
+			"nuauth: nufw connection attempt from %s\n",
+			address);
 
 	/* get canonical (first) name and set it in ssl session, so that
 	 * we can verify if peer name matches certificate CN entry
