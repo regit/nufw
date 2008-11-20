@@ -231,17 +231,20 @@ authorityKeyIdentifier=keyid:always,issuer:always
 
 # This is what PKIX recommends but some broken software chokes on critical
 # extensions.
-#basicConstraints = critical,CA:true
+basicConstraints = critical,CA:true
 # So we do this instead.
-basicConstraints = CA:true
+#basicConstraints = CA:true
 
 # Key usage: this is typical for a CA certificate. However since it will
 # prevent it being used as an test self-signed certificate it is best
 # left out by default.
 # keyUsage = cRLSign, keyCertSign
+keyUsage = cRLSign, keyCertSign
+
 
 # Some might want this also
 # nsCertType = sslCA, emailCA
+nsCertType = sslCA, emailCA
 
 # Include email address in subject alt name: another PKIX recommendation
 # subjectAltName=email:copy
