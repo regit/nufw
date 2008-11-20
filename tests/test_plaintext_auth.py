@@ -1,6 +1,6 @@
 #!/usr/bin/python
 from unittest import TestCase, main
-from common import createClient, connectClient
+from common import createClient, connectClient, createClientWithCerts
 from nuauth import Nuauth
 from nuauth_conf import NuauthConf
 from plaintext import USERDB
@@ -18,25 +18,25 @@ class TestPlaintextAuth(TestCase):
 
     def testUser1(self):
         user = USERDB[0]
-        client = user.createClient()
+        client = user.createClientWithCerts()
         self.assert_(connectClient(client))
         client.stop()
 
     def testUser2(self):
         user = USERDB[1]
-        client = user.createClient()
+        client = user.createClientWithCerts()
         self.assert_(connectClient(client))
         client.stop()
 
     def testInvalidLogin(self):
         user = USERDB[0]
-        client = createClient(user.login+"x", user.password)
+        client = createClientWithCerts(user.login+"x", user.password)
         self.assert_(not connectClient(client))
         client.stop()
 
     def testInvalidPass(self):
         user = USERDB[1]
-        client = createClient(user.login, user.password+"x")
+        client = createClientWithCerts(user.login, user.password+"x")
         self.assert_(not connectClient(client))
         client.stop()
 
