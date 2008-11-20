@@ -682,7 +682,7 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 		record_send = nussl_write(c_session->nussl, data, tls_len);
 	}
 #endif
-	if (record_send <= 0) {
+	if (record_send < 0) {
 		return SASL_FAIL;
 	}
 	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,

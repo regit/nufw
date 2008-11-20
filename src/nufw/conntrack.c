@@ -238,7 +238,7 @@ int update_handler(struct nfct_conntrack *conn, unsigned int flags, int type,
 					 sizeof(struct
 						nuv4_conntrack_message_t)
 		    );
-		if (ret <= 0) {
+		if (ret < 0) {
 			/* warn sender thread that it will need to reconnect at next access */
 			debug_log_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
 					 "Error during nussl_write.");
