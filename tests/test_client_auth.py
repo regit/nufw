@@ -4,14 +4,23 @@ from sys import stderr
 from common import createClient, connectClient, PASSWORD
 from logging import info
 from nuauth import Nuauth
+from nuauth_conf import NuauthConf
+from config import config
+from os.path import abspath
 
 class TestClientAuth(TestCase):
     def setUp(self):
         # Load nuauth
+        nuconfig = NuauthConf()
+        self.config = nuconfig
         self.nuauth = Nuauth()
 
         # Create client
-        self.client = createClient()
+        cacert = abspath(config.get("test_cert", "cacert"))
+        cert = abspath(config.get("test_cert", "user_cert"))
+        key = abspath(config.get("test_cert", "user_key"))
+        args = ["-C", cert, "-K", key, "-A", cacert]
+        self.client = createClient(more_args=args)
 
     def tearDown(self):
         self.client.stop()
