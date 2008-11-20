@@ -39,7 +39,7 @@ fi
 valgrind \
     --show-reachable=yes -v \
     --suppressions=valgrind.supp \
-    --log-file-exactly=$LOG \
+    --log-file=$LOG \
     --run-libc-freeres=yes \
     --leak-check=full \
     --verbose \
