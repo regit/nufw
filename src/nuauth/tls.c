@@ -75,6 +75,13 @@ void tls_common_init(void)
 	nuauth_tls.crl_refresh = nubase_config_table_get_or_default_int("nuauth_tls_crl_refresh", DEFAULT_REFRESH_CRL_INTERVAL);
 	/* {"nuauth_tls_key_passwd", G_TOKEN_STRING, 0, NULL}, */
 
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_GW | DEBUG_AREA_USER,
+			"Certificate authority: %s", nuauth_tls.ca);
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_GW | DEBUG_AREA_USER,
+			"Server certificate: %s", nuauth_tls.cert);
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_GW | DEBUG_AREA_USER,
+			"Server certificate key: %s", nuauth_tls.key);
+
 	if ( nuauth_tls.crl_file ) {
 		log_message(VERBOSE_DEBUG, DEBUG_AREA_GW | DEBUG_AREA_USER,
 			"Certificate revocation list: %s",

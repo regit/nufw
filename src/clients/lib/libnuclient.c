@@ -261,6 +261,7 @@ int nu_client_set_ca(nuauth_session_t* session, char* cafile, nuclient_error_t* 
 	if (cafile)
 		session->pem_ca = strdup(cafile);
 
+	printf("Using CA: %s\n", cafile);
 	return 1;
 }
 
@@ -426,6 +427,9 @@ int nu_client_load_ca(nuauth_session_t * session,
 				nussl_set_session_flag(session->nussl, NUSSL_SESSFLAG_IGNORE_ID_MISMATCH, 1);
 			}
 		}
+	} else {
+		fprintf(stderr, "Could not load any CA !\n");
+		return 0;
 	}
 	return 1;
 }

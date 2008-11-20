@@ -613,13 +613,13 @@ static int check_certificate(nussl_session * sess, gnutls_session sock,
 	ret = gnutls_certificate_verify_peers2(sock, &status);
 	if (ret < 0) {
 		NUSSL_DEBUG(NUSSL_DBG_SSL,
-			    "Certificate authority verification failed: %s\n",
+			    "Certificate verification failed: %s\n",
 			    gnutls_strerror(ret));
 		failures |= NUSSL_SSL_UNTRUSTED;
 	}
-	if (status || failures) {		/* XXX: Add more checks */
+	if (status || failures) {
 		NUSSL_DEBUG(NUSSL_DBG_SSL,
-			    "Certificate authority verification failed: ");
+			    "Certificate verification failed: ");
 		if (status & GNUTLS_CERT_INVALID) {
 			NUSSL_DEBUG(NUSSL_DBG_SSL, "invalid, ");
 			failures |= NUSSL_SSL_INVALID;
@@ -635,6 +635,9 @@ static int check_certificate(nussl_session * sess, gnutls_session sock,
 		if (status & GNUTLS_CERT_SIGNER_NOT_CA) {
 			NUSSL_DEBUG(NUSSL_DBG_SSL, "signer not a CA, ");
 			failures |= NUSSL_SSL_SIGNER_NOT_CA;
+		}
+		if (failures & NUSSL_SSL_UNTRUSTED) {
+			NUSSL_DEBUG(NUSSL_DBG_SSL, "untrusted, ");
 		}
 		if (failures & NUSSL_SSL_EXPIRED) {
 			NUSSL_DEBUG(NUSSL_DBG_SSL, "expired, ");
