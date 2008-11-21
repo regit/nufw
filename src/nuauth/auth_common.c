@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2003-2007 INL
+ ** Copyright(C) 2003-2008 INL
  ** Written by Eric Leblond <regit@inl.fr>
  **            Vincent Deffontaines <vincent@gryzor.com>
  **     INL : http://www.inl.fr/
@@ -78,7 +78,7 @@ int timeval_substract(struct timeval *result, struct timeval *x,
 /**
  * Suppress domain from "user\@domain" string (returns "user").
  *
- * \return Username which need to be freeded
+ * \return Username which need to be freed
  */
 char *get_rid_of_domain(const char *user_domain)
 {
@@ -97,7 +97,7 @@ char *get_rid_of_domain(const char *user_domain)
 /**
  * Suppress domain from "DOMAIN\user" string (returns "user").
  *
- * \return Username which need to be freeded
+ * \return Username which need to be freed
  */
 char *get_rid_of_prefix_domain(const char *user_domain)
 {

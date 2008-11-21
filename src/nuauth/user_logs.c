@@ -266,7 +266,7 @@ void act_on_loggers_processing()
 				    g_thread_pool_unprocessed(nuauthdatas->user_loggers));
 		}
 	}
-	if (g_thread_pool_unprocessed(nuauthdatas->user_session_loggers) > 
+	if (g_thread_pool_unprocessed(nuauthdatas->user_session_loggers) >
 			nuauthconf->max_unassigned_messages) {
 		if (nuauthdatas->session_loggers_pool_full == FALSE) {
 			nuauthdatas->session_loggers_pool_full = TRUE;

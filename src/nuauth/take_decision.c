@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2006,2007,2008 INL
+ ** Copyright(C) 2006,2008,2008 INL
  ** Written by Eric Leblond <regit@inl.fr>
  ** INL : http://www.inl.fr/
  **
@@ -310,7 +310,10 @@ nu_error_t take_decision(connection_t * element, packet_place_t place)
 		apply_decision(element);
 		element->packet_id = NULL;
 		if (place == PACKET_IN_HASH) {
-			conn_cl_delete(element);
+			if (conn_cl_delete(element) == 0) {
+				log_message(CRITICAL, DEBUG_AREA_MAIN,
+						"Unable to suppress packet from hash");
+			}
 		} else {
 			free_connection(element);
 		}
@@ -347,7 +350,7 @@ nu_error_t apply_decision(connection_t * element)
 	}
 
 	if ((ret != NU_EXIT_OK) && nuauthconf->drop_if_no_logging) {
-		element->decision =  DECISION_DROP;
+		element->decision = DECISION_DROP;
 	}
 
 	g_slist_foreach(element->packet_id, send_auth_response, element);
