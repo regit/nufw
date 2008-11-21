@@ -41,7 +41,7 @@ class TestPlaintextAcl(TestCase):
         self.nuauth = Nuauth(self.config)
 
         user = self.users[0]
-        client = user.createClient()
+        client = user.createClientWithCerts()
         testPort(self, self.iptables, client, VALID_PORT, False)
 
         self.acls.desinstall()
@@ -58,7 +58,7 @@ class TestPlaintextAcl(TestCase):
         self.nuauth = Nuauth(self.config)
 
         user = self.users[0]
-        client = user.createClient()
+        client = user.createClientWithCerts()
         testAllowPort(self, self.iptables, client)
 
         self.acls.desinstall()
