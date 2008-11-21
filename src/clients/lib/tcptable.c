@@ -113,9 +113,6 @@ int parse_tcptable_file(nuauth_session_t * session, conntable_t * ct, char *file
 	uid_pos = pos - buf + strlen(" retrnsmt ");
 
 	while (fgets(buf, sizeof(buf), *file) != NULL) {
-#ifdef USE_FILTER
-		int seen = 0;
-#endif
 
 		/* only keep connections in state "SYN packet sent" */
 		if (buf[state_pos] != state_char) {
@@ -180,14 +177,6 @@ int parse_tcptable_file(nuauth_session_t * session, conntable_t * ct, char *file
 		printf("Packet dst = %ld (%lx)\n", c.rmt, c.rmt);
 #endif
 
-#ifdef USE_FILTER
-		/*  If we're sure auth_by_default is either 0 or 1, it can be simplified. */
-		/*  (MiKael) TODO: Make sure!! :) */
-		if (session->auth_by_default && seen)
-			continue;
-		if (!session->auth_by_default && !seen)
-			continue;
-#endif
 		c.protocol = protocol;
 		tcptable_add(ct, &c);
 	}
@@ -341,7 +330,7 @@ int tcptable_init(conntable_t ** ct)
  */
 int tcptable_hash(conn_t * c)
 {
-	/* TODO: Hash the whole ip address! */
+	/* \todo Hash the whole ip address! */
 #ifndef FREEBSD
 	return (jhash_3words(c->ip_src.s6_addr32[3],
 			     c->ip_dst.s6_addr32[3],
