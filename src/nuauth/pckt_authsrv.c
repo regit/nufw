@@ -159,8 +159,8 @@ nu_error_t parse_dgram(connection_t * connection, unsigned char *dgram,
 #define GET_IFACE_FROM_MSG(conn, msg, iface) \
 	do { if (msg->iface) \
 		{ if (msg->iface[0] != '*') \
-		conn->iface_nfo.iface = g_strndup(msg->iface,IFNAMSIZ); }  \
-		else { conn->iface_nfo.iface = NULL; } \
+			memcpy(conn->iface_nfo.iface, msg->iface, IFNAMSIZ); }  \
+		else { conn->iface_nfo.iface[0] = '\0'; } \
 	} while (0)
 
 /**

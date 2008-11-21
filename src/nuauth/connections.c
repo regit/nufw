@@ -41,14 +41,6 @@ void free_connection_list(GSList * list)
 	g_slist_free(list);
 }
 
-void free_iface_nfo_t(iface_nfo_t * track)
-{
-	g_free(track->indev);
-	g_free(track->outdev);
-	g_free(track->physindev);
-	g_free(track->physoutdev);
-}
-
 /**
  * Compare non null iface value of a to value in b
  *
@@ -155,16 +147,8 @@ void free_connection(connection_t * conn)
 	g_free(conn->os_version);
 	g_free(conn->log_prefix);
 
-	free_iface_nfo_t(&(conn->iface_nfo));
-
 	g_free(conn);
 }
-
-#define COPY_IFACE_NAME(copy, orig, iface) \
-	do { if (orig->iface) \
-		{ copy->iface = g_strndup(orig->iface,IFNAMSIZ); }  \
-		else { copy->iface = NULL; } \
-	} while (0)
 
 /** Duplicate an iface_nfo
  *
@@ -176,10 +160,7 @@ void free_connection(connection_t * conn)
 
 void duplicate_iface_nfo(iface_nfo_t * copy, iface_nfo_t * orig)
 {
-	COPY_IFACE_NAME(copy, orig, indev);
-	COPY_IFACE_NAME(copy, orig, outdev);
-	COPY_IFACE_NAME(copy, orig, physindev);
-	COPY_IFACE_NAME(copy, orig, physoutdev);
+	memcpy(copy, orig, sizeof(iface_nfo_t));
 }
 
 #undef COPY_IFACE_NAME
@@ -194,9 +175,6 @@ void duplicate_iface_nfo(iface_nfo_t * copy, iface_nfo_t * orig)
  *
  * connection_t::state is switched to ::AUTH_STATE_DONE as the
  * connection will be used for logging only.
- *
- * We call duplicate_iface_nfo() because the copy will be
- * sent to free_connection() like the original.
  *
  * \param element a pointer to a connection_t
  * \return the duplicated connection_t
@@ -218,9 +196,6 @@ connection_t *duplicate_connection(connection_t * element)
 
 	conn_copy->log_prefix = g_strdup(element->log_prefix);
 	conn_copy->flags = element->flags;
-
-	duplicate_iface_nfo(&(conn_copy->iface_nfo),
-			    &(element->iface_nfo));
 
 	/* Nullify needed internal field */
 	conn_copy->acl_groups = NULL;
@@ -474,7 +449,7 @@ gint print_connection(gpointer data, gpointer userdata)
 		str_state = g_strdup("");
 	}
 
-	if (conn->iface_nfo.indev && conn->iface_nfo.outdev) {
+	if (conn->iface_nfo.indev[0] && conn->iface_nfo.outdev[0]) {
 		str_iface = g_strdup_printf(", IN=%s OUT=%s", conn->iface_nfo.indev,
 				conn->iface_nfo.outdev);
 	} else {

@@ -124,7 +124,6 @@ void free_acl_key(gpointer datas)
 	g_free(kdatas->release);
 	g_free(kdatas->version);
 	g_free(kdatas->appname);
-	free_iface_nfo_t(&kdatas->iface_nfo);
 	g_free(kdatas);
 }
 
@@ -168,7 +167,7 @@ gpointer acl_create_and_alloc_key(connection_t * kdatas)
 	key.release = kdatas->os_release;
 	key.version = kdatas->os_version;
 	key.appname = kdatas->app_name;
-	memcpy(&(key.iface_nfo), &(kdatas->iface_nfo), sizeof(iface_nfo_t));
+	duplicate_iface_nfo(&(key.iface_nfo), &(kdatas->iface_nfo));
 	return acl_duplicate_key(&key);
 }
 

@@ -393,10 +393,6 @@ GSList *user_request(struct tls_buffer_read * datas)
 		connection->username = NULL;
 		connection->cacheduserdatas = NULL;
 		connection->packet_id = NULL;
-		connection->iface_nfo.indev = NULL;
-		connection->iface_nfo.physindev = NULL;
-		connection->iface_nfo.outdev = NULL;
-		connection->iface_nfo.physoutdev = NULL;
 		connection->expire = -1;
 		connection->flags = ACL_FLAGS_NONE;
 		connection->client_version = datas->client_version;

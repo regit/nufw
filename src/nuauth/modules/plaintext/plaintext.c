@@ -511,10 +511,6 @@ static int read_acl_list(struct plaintext_params *params)
 			newacl->flags = ACL_FLAGS_NONE;
 			newacl->auth_quality = 0;
 			newacl->decision = DECISION_ACCEPT;
-			newacl->iface_nfo.indev = NULL;
-			newacl->iface_nfo.physindev = NULL;
-			newacl->iface_nfo.outdev = NULL;
-			newacl->iface_nfo.physoutdev = NULL;
 			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 					  "L.%d: ACL name found: [%s]", ln,
 					  newacl->aclname);
@@ -717,22 +713,22 @@ static int read_acl_list(struct plaintext_params *params)
 					  "L.%d: Read  period [%s]", ln,
 					  newacl->period);
 		} else if (!strcasecmp("indev", p_key)) {	/*  input dev */
-			newacl->iface_nfo.indev = g_strdup(p_value);
+			memcpy(newacl->iface_nfo.indev, p_value, IFNAMSIZ);
 			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 					"L.%d: Read  indev [%s]", ln,
 					newacl->iface_nfo.indev);
 		} else if (!strcasecmp("physindev", p_key)) {	/*  phys input dev */
-			newacl->iface_nfo.physindev = g_strdup(p_value);
+			memcpy(newacl->iface_nfo.physindev, p_value, IFNAMSIZ);
 			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 					"L.%d: Read  physindev [%s]", ln,
 					newacl->iface_nfo.physindev);
 		} else if (!strcasecmp("outdev", p_key)) {	/*  output dev */
-			newacl->iface_nfo.outdev = g_strdup(p_value);
+			memcpy(newacl->iface_nfo.outdev, p_value, IFNAMSIZ);
 			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 					"L.%d: Read  indev [%s]", ln,
 					newacl->iface_nfo.outdev);
 		} else if (!strcasecmp("physoutdev", p_key)) {	/*  phys output dev */
-			newacl->iface_nfo.physoutdev = g_strdup(p_value);
+			memcpy(newacl->iface_nfo.physoutdev, p_value, IFNAMSIZ);
 			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 					"L.%d: Read  physoutdev [%s]", ln,
 					newacl->iface_nfo.physoutdev);
@@ -1163,7 +1159,7 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element, gpointer params)
 
 		if (compare_iface_nfo_t(&p_acl->iface_nfo, &element->iface_nfo) == NU_EXIT_ERROR) {
 			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
-					"(DBG) skip ACL %s: interfaces IP doesn't match", p_acl->aclname);
+					"(DBG) skip ACL %s: interfaces doesn't match", p_acl->aclname);
 			continue;
 		}
 

@@ -92,10 +92,10 @@ struct acl_group {
 };
 
 typedef struct {
-	char *indev;		/*!< Input device set to NULL if not available */
-	char *physindev;	/*!< Input physical device set to NULL if not available */
-	char *outdev;		/*!< Output device set to NULL if not available */
-	char *physoutdev;	/*!< Output physical device set to NULL if not available */
+	char indev[IFNAMSIZ];		/*!< Input device set to "\0" if not available */
+	char physindev[IFNAMSIZ];	/*!< Input physical device set to "\0" if not available */
+	char outdev[IFNAMSIZ];		/*!< Output device set to "\0" if not available */
+	char physoutdev[IFNAMSIZ];	/*!< Output physical device set to "\0" if not available */
 } iface_nfo_t;
 
 /**
@@ -160,7 +160,6 @@ GStaticMutex insert_mutex;
 
 void duplicate_iface_nfo(iface_nfo_t * copy, iface_nfo_t * orig);
 nu_error_t compare_iface_nfo_t(iface_nfo_t *a, iface_nfo_t *b);
-void free_iface_nfo_t(iface_nfo_t * track);
 
 gboolean get_old_conn(gpointer key, gpointer value, gpointer user_data);
 int conn_cl_remove(gconstpointer conn);
