@@ -60,6 +60,7 @@ nuclient_error_t *err = NULL;
 struct sigaction old_sigterm;
 struct sigaction old_sigint;
 int forced_reconnect = 0;
+int connected;
 static int suppress_ca_warning = 0;
 static int suppress_fqdn_verif = 0;
 
@@ -409,6 +410,8 @@ static void usage(void)
 void process_hup(int signum)
 {
 	forced_reconnect = 1;
+	nu_client_reset(session);
+	connected = 0;
 }
 
 /**
