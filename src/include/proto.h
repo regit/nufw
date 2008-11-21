@@ -104,7 +104,6 @@ typedef struct {
 	uint16_t msg_length;
 } nufw_to_nuauth_message_header_t;
 
-/* TODO switch to enum specific to protocol */
 /**
  * (possible value of the option member of ::nuv2_authfield)
  */

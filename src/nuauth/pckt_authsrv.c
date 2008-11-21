@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2003-2006 Eric Leblond <regit@inl.fr>
+ ** Copyright(C) 2003-2008 Eric Leblond <regit@inl.fr>
  ** INL http://www.inl.fr/
  **
  ** $Id$
@@ -208,7 +208,10 @@ nu_error_t authpckt_new_connection(unsigned char *dgram,
 	nu_error_t ret;
 
 	if (dgram_size < sizeof(nuv4_nufw_to_nuauth_auth_message_t)) {
-	/** \todo Display warning message */
+		log_message(WARNING, DEBUG_AREA_PACKET | DEBUG_AREA_GW,
+			    "NuFW packet too small: %d for a minimum of %lu",
+			    dgram_size,
+			    (unsigned long)sizeof(nuv4_nufw_to_nuauth_auth_message_t));
 		return NU_EXIT_ERROR;
 	}
 	dgram += sizeof(nuv4_nufw_to_nuauth_auth_message_t);

@@ -44,8 +44,7 @@ void external_ip_auth(gpointer userdata, gpointer data)
 		GSList *groups = NULL;
 		uint32_t uid;
 	    /**
-             * \todo
-             *  set a cache for such query
+             * \todo set a cache for such query
              */
 
 		uid = modules_get_user_id(username);

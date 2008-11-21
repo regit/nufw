@@ -187,7 +187,7 @@ struct nuauth_session {
 	int auth_by_default;	/*!< Auth. by default (=1) */
 	unsigned char debug_mode;	/*!< Debug mode, enabled if different than zero */
 	unsigned char verbose;	/*!< Verbose mode (default: enabled) */
-	/* TODO: To remove */ unsigned char diffie_hellman;	/*!< Use Diffie Hellman for key exchange? */
+	unsigned char diffie_hellman;	/*!< Use Diffie Hellman for key exchange? */
 	int has_src_addr;		/*!< Has source address? */
 	struct sockaddr_storage src_addr;	/*!< Source address */
 

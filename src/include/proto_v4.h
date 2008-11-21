@@ -95,9 +95,6 @@ typedef struct {
 	char physindev[IFNAMSIZ];
 	char outdev[IFNAMSIZ];
 	char physoutdev[IFNAMSIZ];
-	/* \todo Internal fields 
-	   hwmac
-	 */
 
 	/* (...): packet content (maybe truncated) */
 } nuv4_nufw_to_nuauth_auth_message_t;

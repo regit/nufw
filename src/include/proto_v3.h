@@ -81,7 +81,6 @@ typedef struct {
 typedef struct {
 	uint8_t protocol_version;	/*!< Version of the protocol (#PROTO_VERSION) */
 	uint8_t msg_type;	/*!< Message type (#AUTH_ANSWER) */
-	/* TODO Use user id in 32 bits? Or rename the field "QoS_group_id"? */
 	u_int16_t mark;		/*!< Mark */
 	u_int8_t decision;	/*!< NuAuth decision (see ::decision_t) */
 	uint8_t priority;	/*!< Priority ? */

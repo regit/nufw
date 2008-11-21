@@ -150,7 +150,7 @@ int psearch_and_destroy(uint32_t packet_id, uint32_t * nfmark)
 	packet_idl *current = packets_list.start, *previous = NULL;
 	int timestamp = time(NULL);
 
-	/* TODO: Do benchmarks and check if an hash-table + list (instead of just
+	/* \todo Do benchmarks and check if an hash-table + list (instead of just
 	 * list) wouldn't be faster than just a list when NuAuth is slow */
 	while (current != NULL) {
 		if (current->id == packet_id) {
@@ -182,7 +182,6 @@ int psearch_and_destroy(uint32_t packet_id, uint32_t * nfmark)
 
 			/* we want to suppress first element if it is too old */
 		} else if (timestamp - current->timestamp > packet_timeout) {
-			/* TODO : find a better place, does not satisfy me */
 			IPQ_SET_VERDICT(current->id, NF_DROP);
 			debug_log_printf(DEBUG_AREA_PACKET, DEBUG_LEVEL_INFO,
 					 "Dropped: %lu", current->id);

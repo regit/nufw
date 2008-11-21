@@ -101,7 +101,7 @@ void localid_insert_message(connection_t * pckt,
 				log_message(WARNING, DEBUG_AREA_USER,
 					    "Looks like a spoofing attempt from %s.",
 					    pckt->username);
-				/* TODO : kill bad guy */
+				/* \todo Kill bad guy */
 			}
 			pckt->user_groups = NULL;
 			pckt->username = NULL;
@@ -149,9 +149,6 @@ void *localid_auth(GMutex * mutex)
 	struct internal_message *message = NULL;
 	long current_timestamp;
 	GTimeVal tv;
-
-/** \todo
- * protocol v3 compatibility */
 
 	global_msg.msg = (struct nu_srv_message *) msg;
 	msg->type = SRV_REQUIRED_HELLO;
