@@ -150,7 +150,7 @@ int psearch_and_destroy(uint32_t packet_id, uint32_t * nfmark)
 	packet_idl *current = packets_list.start, *previous = NULL;
 	int timestamp = time(NULL);
 
-	/* \todo Do benchmarks and check if an hash-table + list (instead of just
+	/** \todo Do benchmarks and check if an hash-table + list (instead of just
 	 * list) wouldn't be faster than just a list when NuAuth is slow */
 	while (current != NULL) {
 		if (current->id == packet_id) {

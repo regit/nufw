@@ -74,7 +74,6 @@ struct nuauth_params {
 	/** \brief See log_user_packet() */
 	int log_users_sync;
 
-	/* \todo Switch this on a per-module basis */
 	int log_users_strict;
 	int log_users_without_realm;
 

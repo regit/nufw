@@ -140,7 +140,7 @@ int test_nutcpc(pid_t *pid)
 		if (fd) {
 			fscanf(fd, "%d", pid);
 			fclose(fd);
-			/* \todo test if process pid is running */
+			/** \todo test if process pid is running */
 			ok = EXIT_SUCCESS;
 		}
 		free(runpid);

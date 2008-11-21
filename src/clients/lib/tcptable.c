@@ -330,7 +330,7 @@ int tcptable_init(conntable_t ** ct)
  */
 int tcptable_hash(conn_t * c)
 {
-	/* \todo Hash the whole ip address! */
+	/** \todo Hash the whole ip address! */
 #ifndef FREEBSD
 	return (jhash_3words(c->ip_src.s6_addr32[3],
 			     c->ip_dst.s6_addr32[3],

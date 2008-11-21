@@ -101,7 +101,7 @@ void localid_insert_message(connection_t * pckt,
 				log_message(WARNING, DEBUG_AREA_USER,
 					    "Looks like a spoofing attempt from %s.",
 					    pckt->username);
-				/* \todo Kill bad guy */
+				/** \todo Kill bad guy */
 			}
 			pckt->user_groups = NULL;
 			pckt->username = NULL;
