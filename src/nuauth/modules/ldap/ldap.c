@@ -538,28 +538,28 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 			g_strlcat(filter, "(!(AppName=*))", LDAP_QUERY_SIZE);
 		}
 
-		if (element->iface_nfo.indev[0] != '\0') {
+		if (element->iface_nfo.indev[0] == '\0') {
 			g_strlcat(filter, "(!(InDev=*))", LDAP_QUERY_SIZE);
 		} else {
 			gchar iffilter[256];
 			g_snprintf(iffilter, 256, "(|(InDev=%s)(!(InDev=*)))", element->iface_nfo.indev);
 			g_strlcat(filter, iffilter, LDAP_QUERY_SIZE);
 		}
-		if (element->iface_nfo.outdev[0] != '\0') {
+		if (element->iface_nfo.outdev[0] == '\0') {
 			g_strlcat(filter, "(!(OutDev=*))", LDAP_QUERY_SIZE);
 		} else {
 			gchar iffilter[256];
 			g_snprintf(iffilter, 256, "(|(OutDev=%s)(!(OutDev=*)))", element->iface_nfo.outdev);
 			g_strlcat(filter, iffilter, LDAP_QUERY_SIZE);
 		}
-		if (element->iface_nfo.physindev[0] != '\0') {
+		if (element->iface_nfo.physindev[0] == '\0') {
 			g_strlcat(filter,  "(!(PhysInDev=*))", LDAP_QUERY_SIZE);
 		} else {
 			gchar iffilter[256];
 			g_snprintf(iffilter, 256, "(|(PhysInDev=%s)(!(PhysInDev=*)))", element->iface_nfo.physindev);
 			g_strlcat(filter, iffilter, LDAP_QUERY_SIZE);
 		}
-		if (element->iface_nfo.physoutdev[0] != '\0') {
+		if (element->iface_nfo.physoutdev[0] == '\0') {
 			g_strlcat(filter, "(!(PhysOutDev=*))", LDAP_QUERY_SIZE);
 		} else {
 			gchar iffilter[256];
