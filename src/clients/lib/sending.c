@@ -147,20 +147,10 @@ int send_user_pckt(nuauth_session_t * session, conn_t * carray[CONN_MAX])
 		/* application field  */
 		appfield = (struct nu_authfield_app *) (authfield + 1);
 		appfield->type = APP_FIELD;
-#ifdef USE_SHA1
-		appfield->option = APP_TYPE_SHA1;
-#else
 		appfield->option = APP_TYPE_NAME;
-#endif
 		app_ptr = (char *) (appfield + 1);
 		sasl_encode64(appname, strlen(appname), app_ptr,
 			      PROGNAME_BASE64_WIDTH, &len);
-#ifdef USE_SHA1
-		*(app_ptr + len) = ';';
-		len++;
-		strcpy(app_ptr + len, sha1_sig);
-		len += strlen(sha1_sig);
-#endif
 		appfield->length = sizeof(struct nu_authfield_app) + len;
 		authreq->packet_length += appfield->length;
 

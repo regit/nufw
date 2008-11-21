@@ -1,5 +1,5 @@
 /*
- ** Copyright 2004-2007 - INL
+ ** Copyright 2004-2008 - INL
  ** Written by Eric Leblond <regit@inl.fr>
  **            Vincent Deffontaines <vincent@inl.fr>
  ** INL http://www.inl.fr/
@@ -93,13 +93,9 @@
 		ERR->error = CODE; \
 	}
 
-#ifndef USE_SHA1
-#  define PACKET_ITEM_MAXSIZE \
+#define PACKET_ITEM_MAXSIZE \
 	( sizeof(struct nu_authreq) + sizeof(struct nu_authfield_ipv6) \
 	  + sizeof(struct nu_authfield_app) + PROGNAME_BASE64_WIDTH )
-#else
-#  error "TODO: Compute PACKET_ITEM_MAXSIZE with SHA1 checksum"
-#endif
 
 #define PACKET_SIZE \
 	( sizeof(struct nu_header) + CONN_MAX * PACKET_ITEM_MAXSIZE )
