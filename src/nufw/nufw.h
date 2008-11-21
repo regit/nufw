@@ -185,6 +185,7 @@ void clean_old_packets();
 void process_usr1(int signum);
 void process_usr2(int signum);
 void process_poll(int signum);
+void process_hup(int signum);
 
 int send_icmp_unreach(char *payload);
 

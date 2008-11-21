@@ -237,7 +237,7 @@ void install_signals()
 	/* ignore "broken pipe" signal */
 	signal(SIGPIPE, SIG_IGN);
 
-	/* intercpet SIGUSR1 */
+	/* intercept SIGUSR1 */
 	memset(&action, 0, sizeof(action));
 	action.sa_handler = &process_usr1;
 	action.sa_flags = SIGUSR1;
@@ -246,7 +246,7 @@ void install_signals()
 				"Warning: Could not set signal USR1");
 	}
 
-	/* intercpet SIGUSR2 */
+	/* intercept SIGUSR2 */
 	memset(&action, 0, sizeof(action));
 	action.sa_handler = &process_usr2;
 	action.sa_flags = SIGUSR2;
@@ -255,13 +255,22 @@ void install_signals()
 				"Warning: Could not set signal USR2");
 	}
 
-	/* intercpet SIGPOLL */
+	/* intercept SIGPOLL */
 	memset(&action, 0, sizeof(action));
 	action.sa_handler = &process_poll;
 	action.sa_flags = SIGPOLL;
 	if (sigaction(SIGPOLL, &action, NULL) == -1) {
 		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
 				"Warning: Could not set signal POLL");
+	}
+
+	/* intercept SIGHUP */
+	memset(&action, 0, sizeof(action));
+	action.sa_handler = &process_hup;
+	action.sa_flags = SIGHUP;
+	if (sigaction(SIGHUP, &action, NULL) == -1) {
+		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
+				"Warning: Could not set signal HUP");
 	}
 }
 
