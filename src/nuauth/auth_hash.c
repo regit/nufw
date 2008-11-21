@@ -218,7 +218,7 @@ void search_and_fill_complete_of_userpckt(connection_t * new,
 		new->client_version = packet->client_version;
 		new->auth_quality = packet->auth_quality;
 		/* copy iface info */
-		duplicate_iface_nfo(&(new->iface_nfo), &(packet->iface_nfo));
+		duplicate_iface_nfo(&(packet->iface_nfo), &(new->iface_nfo));
 
 		packet->packet_id = new->packet_id;
 		new->packet_id = NULL;

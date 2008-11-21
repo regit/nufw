@@ -48,9 +48,9 @@ void free_connection_list(GSList * list)
  */
 nu_error_t compare_iface_nfo_t(iface_nfo_t *a, iface_nfo_t *b)
 {
-#define compare_iface(x) if (a->x) { \
-				if (b->x) { \
-					if (strcmp(a->x, b->x)) { \
+#define compare_iface(x) if (a->x[0]) { \
+				if (b->x[0]) { \
+					if (strncmp(a->x, b->x, IFNAMSIZ)) { \
 						return NU_EXIT_ERROR; \
 					} \
 				} else { \
