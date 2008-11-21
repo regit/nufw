@@ -386,7 +386,7 @@ int main(int argc, char *argv[])
 {
 	/* option */
 #if USE_NFQUEUE
-	char *options_list = "4sDhVvmq:"
+	char *options_list = "4sSDhVvmq:"
 #ifdef HAVE_NFQ_SET_QUEUE_MAXLEN
 	    "L:"
 #endif
@@ -396,7 +396,7 @@ int main(int argc, char *argv[])
 #endif
 	    ;
 #else
-	char *options_list = "4sDhVvmc:k:a:n:r:d:p:t:T:A:";
+	char *options_list = "4sSDhVvmc:k:a:n:r:d:p:t:T:A:";
 #endif
 	int option, daemonize = 0;
 	char *version = PACKAGE_VERSION;
@@ -515,6 +515,8 @@ int main(int argc, char *argv[])
 		case 's':
 			nufw_strict_tls = 0;
 			break;
+		case 'S':
+			break;
 		case '4':
 			nufw_no_ipv6 = 1;
 			break;
@@ -558,6 +560,7 @@ int main(int argc, char *argv[])
 \t-V: display version and exit\n\
 \t-D: daemonize\n\
 \t-s: do not enforce strict checking of TLS certificates\n\
+\t-S: this option does nothing, it is here for backward compatibility\n\
 \t-k: use specified file as key file\n\
 \t-c: use specified file as cert file\n\
 \t-a: use specified file as ca file (strict checking is done if selected) (default: none)\n\
