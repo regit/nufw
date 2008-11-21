@@ -503,7 +503,6 @@ void tls_user_main_loop(struct tls_user_context_t *context, GMutex * mutex)
 			c_pop = g_async_queue_try_pop(mx_queue);
 		}
 
-		/** \todo carefully check disconnect system */
 		/*
 		 * execute client destruction task
 		 */
@@ -618,8 +617,6 @@ void tls_user_servers_init()
 	    g_thread_pool_new((GFunc) tls_sasl_connect, NULL,
 			      nuauthconf->nb_auth_checkers, FALSE,
 			      NULL);
-
-	nuauthdatas->user_cmd_queue =  g_async_queue_new();
 }
 
 /**

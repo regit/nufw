@@ -196,9 +196,6 @@ struct nuauth_datas {
 	GAsyncQueue *limited_connections_queue;
 	GAsyncQueue *tls_push_queue;
 	GAsyncQueue *localid_auth_queue;
-	/** \todo Need to really use it to support user
-	 * disconnect from command line */
-	GAsyncQueue *user_cmd_queue;
 	char *program_fullpath;
 
 	/* cache related structure */
