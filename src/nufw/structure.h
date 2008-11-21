@@ -1,6 +1,6 @@
 /*
 ** Copyright (C) 2002-2008 INL
-** Written by Éric Leblond <regit@inl.fr>
+** Written by Eric Leblond <regit@inl.fr>
 ** INL http://www.inl.fr/
 **
 ** $Id$
@@ -79,6 +79,9 @@ int nufw_set_mark;
 
 /*! If equals to 1, do a strict check of all TLS property */
 int nufw_strict_tls;
+
+/*! Restrict to IPv4 (use this if your system lacks IPv6 support for nfnetlink) */
+int nufw_no_ipv6;
 
 /**
  * This enum is used to code the state of  a packet

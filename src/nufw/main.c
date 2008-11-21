@@ -386,7 +386,7 @@ int main(int argc, char *argv[])
 {
 	/* option */
 #if USE_NFQUEUE
-	char *options_list = "sDhVvmq:"
+	char *options_list = "4sDhVvmq:"
 #ifdef HAVE_NFQ_SET_QUEUE_MAXLEN
 	    "L:"
 #endif
@@ -396,10 +396,11 @@ int main(int argc, char *argv[])
 #endif
 	    ;
 #else
-	char *options_list = "sDhVvmc:k:a:n:r:d:p:t:T:A:";
+	char *options_list = "4sDhVvmc:k:a:n:r:d:p:t:T:A:";
 #endif
 	int option, daemonize = 0;
 	char *version = PACKAGE_VERSION;
+	nufw_no_ipv6 = 0;
 
 	/* initialize variables */
 
@@ -514,6 +515,9 @@ int main(int argc, char *argv[])
 		case 's':
 			nufw_strict_tls = 0;
 			break;
+		case '4':
+			nufw_no_ipv6 = 1;
+			break;
 #if USE_NFQUEUE
 		case 'q':
 			sscanf(optarg, "%hu", &nfqueue_num);
@@ -562,6 +566,7 @@ int main(int argc, char *argv[])
 \t\tcheck the DN against nuauth FQDN specified using the -d option)\n\
 \t-v: increase debug level (+1 for each 'v') (max useful number: 10)\n\
 \t-A: debug areas (see man page for details)\n\
+\t-4: use this flag if your system does not have IPv6 support for nfnetlink\n\
 \t-m: mark packet with nuauth provided mark\n"
 #ifdef HAVE_LIBCONNTRACK
 				"\t-C: listen to conntrack events (needed for connection expiration)\n\
@@ -612,11 +617,13 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	/* open ICMPv6 socket */
-	raw_sock6 = socket(PF_INET6, SOCK_RAW, 58);	/* 58: ICMPv6 protocol */
-	if (raw_sock6 == -1) {
-		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
-				"Fail to create socket for ICMPv6!");
+	if (!nufw_no_ipv6) {
+		/* open ICMPv6 socket */
+		raw_sock6 = socket(PF_INET6, SOCK_RAW, 58);	/* 58: ICMPv6 protocol */
+		if (raw_sock6 == -1) {
+			log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
+					"Fail to create socket for ICMPv6!");
+		}
 	}
 
 	/* create packet list */

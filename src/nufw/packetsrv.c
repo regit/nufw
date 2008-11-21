@@ -227,20 +227,23 @@ int packetsrv_open(void *data)
 		return -1;
 	}
 
-	/* unbinding existing nf_queue handler for AF_INET6 (if any) */
-	nfq_unbind_pf(h, AF_INET6);
+	if (!nufw_no_ipv6) {
+		/* unbinding existing nf_queue handler for AF_INET6 (if any) */
+		nfq_unbind_pf(h, AF_INET6);
 
-	/* binding nfnetlink_queue as nf_queue handler for AF_INET6 */
-	if (nfq_bind_pf(h, AF_INET6) < 0) {
-		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
-				"[!] Error during nfq_bind_pf()");
-		return -1;
+		/* binding nfnetlink_queue as nf_queue handler for AF_INET6 */
+		if (nfq_bind_pf(h, AF_INET6) < 0) {
+			log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
+					"[!] Error during nfq_bind_pf()");
+			log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
+					"Maybe you need to compile NF_NETLINK* kernel options as modules (not built in the kernel!)");
+			return -1;
+		}
 	}
 
 	/* binding this socket to queue number ::nfqueue_num
 	 * and install our packet handler */
-	hndl =
-	    nfq_create_queue(h, nfqueue_num,
+	hndl = nfq_create_queue(h, nfqueue_num,
 			     (nfq_callback *) & treat_packet, data);
 	if (!hndl) {
 		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
