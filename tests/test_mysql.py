@@ -124,7 +124,7 @@ class MysqlLog(TestCase):
 
     def _login(self, sql):
         # Client login
-        client = self.user.createClient()
+        client = self.user.createClientWithCerts()
         self.assert_(connectClient(client))
 
         # Check number of rows
@@ -215,7 +215,7 @@ class MysqlLogPacket(MysqlLog):
         only once, with the right parameters.
         """
 
-        client = self.user.createClient()
+        client = self.user.createClientWithCerts()
         time_before = int(time())
         timestamp_before = datetime_before()
 
