@@ -1,6 +1,6 @@
 #!/usr/bin/python
 from unittest import TestCase, main
-from common import getNuauthConf, createClient, connectClient
+from common import getNuauthConf, createClientWithCerts, connectClient
 from nuauth import Nuauth
 from nuauth_conf import NuauthConf
 from logging import warning
@@ -26,7 +26,7 @@ class TestLog(TestCase):
 
     def testLogin(self):
         # Client login
-        client = createClient()
+        client = createClientWithCerts()
         self.assert_(connectClient(client))
 
         # Check log output
