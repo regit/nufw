@@ -244,16 +244,17 @@ G_MODULE_EXPORT uint32_t get_user_id(const char *username, gpointer params)
 	if (system_pam_module_not_threadsafe) {
 		g_static_mutex_lock(&pam_mutex);
 	}
-	ret =
-	    getpwnam_r(user, &result_buf, buffer, sizeof(buffer),
+	ret = getpwnam_r(user, &result_buf, buffer, sizeof(buffer),
 		       &result_bufp);
 	if (system_pam_module_not_threadsafe) {
 		g_static_mutex_unlock(&pam_mutex);
 	}
 	if (ret != 0 || (!result_bufp)) {
+		g_free(user);
 		return SASL_BADAUTH;
 	}
 
+	g_free(user);
 	return result_bufp->pw_uid;
 }
 
@@ -273,13 +274,13 @@ G_MODULE_EXPORT GSList *get_user_groups(const char *username,
 	if (system_pam_module_not_threadsafe) {
 		g_static_mutex_lock(&pam_mutex);
 	}
-	ret =
-	    getpwnam_r(user, &result_buf, buffer, sizeof(buffer),
+	ret = getpwnam_r(user, &result_buf, buffer, sizeof(buffer),
 		       &result_bufp);
 	if (system_pam_module_not_threadsafe) {
 		g_static_mutex_unlock(&pam_mutex);
 	}
 	if (ret != 0 || (!result_bufp)) {
+		g_free(user);
 		return NULL;
 	}
 
@@ -288,8 +289,9 @@ G_MODULE_EXPORT GSList *get_user_groups(const char *username,
 		userlist = getugroups(user, result_bufp->pw_gid);
 		g_static_mutex_unlock(&pam_mutex);
 	} else {
-		return getugroups(user, result_bufp->pw_gid);
+		userlist = getugroups(user, result_bufp->pw_gid);
 	}
+	g_free(user);
 	return userlist;
 }
 
