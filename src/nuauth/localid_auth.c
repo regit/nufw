@@ -93,16 +93,14 @@ void localid_insert_message(connection_t * pckt,
 				thread_pool_push(nuauthdatas->
 						   acl_checkers, element,
 						   NULL);
-				/* remove element from hash without destroy */
-				g_hash_table_steal(localid_auth_hash,
-						   GINT_TO_POINTER(pckt->
-								   packet_id));
 			} else {
 				log_message(WARNING, DEBUG_AREA_USER,
 					    "Looks like a spoofing attempt from %s.",
 					    pckt->username);
-				/** \todo Kill bad guy */
 			}
+			/* remove element from hash without destroy */
+			g_hash_table_steal(localid_auth_hash,
+					   GINT_TO_POINTER(pckt->packet_id));
 			pckt->user_groups = NULL;
 			pckt->username = NULL;
 			/* free pckt */
