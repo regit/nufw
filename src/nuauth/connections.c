@@ -449,7 +449,7 @@ gint print_connection(gpointer data, gpointer userdata)
 		str_state = g_strdup("");
 	}
 
-	if (conn->iface_nfo.indev[0] && conn->iface_nfo.outdev[0]) {
+	if (conn->iface_nfo.indev[0] || conn->iface_nfo.outdev[0]) {
 		str_iface = g_strdup_printf(", IN=%s OUT=%s", conn->iface_nfo.indev,
 				conn->iface_nfo.outdev);
 	} else {

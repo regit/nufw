@@ -875,10 +875,6 @@ static int read_acl_list(struct plaintext_params *params)
 			g_slist_free(p_acl->groups);
 			g_free(p_acl->aclname);
 			g_free(p_acl->period);
-			g_free(p_acl->iface_nfo.indev);
-			g_free(p_acl->iface_nfo.physindev);
-			g_free(p_acl->iface_nfo.outdev);
-			g_free(p_acl->iface_nfo.physoutdev);
 			g_free(p_acl);
 		}
 		/*  Now we can free the list */
