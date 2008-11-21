@@ -118,8 +118,6 @@ void get_users_from_cache(connection_t * conn_elt)
 			log_message(WARNING, DEBUG_AREA_USER,
 				    "User not found");
 			return;
-
-			/* GRYZOR asks : shouldnt we just leave here? */
 		}
 		rmessage = g_new0(struct cache_message, 1);
 		rmessage->type = INSERT_MESSAGE;

@@ -4,7 +4,7 @@ ACLs design
 This document aims at describing the way ACLs can be designed, and how they can
 follow an "order relationship" (?) in Nuauth.
 This document aims at being an abstract, above any implementation such as LDAP
-or XML, and allowing full compatibility of Nufw ACLs scheme regardless of the chosen 
+or XML, and allowing full compatibility of Nufw ACLs scheme regardless of the chosen
 implementation.
 
 o ACL definition
@@ -27,7 +27,7 @@ o ACL definition
 
 o ACL ordering
 --------------
-  
+
   Possible ways of ordering ACLs:
   - first seen matches (this is not applicable to LDAP, where no order is
     guaranteed in server's answers)
@@ -94,6 +94,3 @@ o Abstraction à la Nagios
   </UDAcl>
 
   TODO : Add an LDAP example too.
-  TODO : Deal with user's vacation times.
-  TODO : expiration of users accounts, though this is not ACL-related.
-   
