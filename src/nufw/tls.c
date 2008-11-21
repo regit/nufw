@@ -150,30 +150,54 @@ int init_x509_filenames()
 }
 
 /**
+ * Create auth server thread
+ */
+
+void create_authserver()
+{
+	pthread_attr_t attr;
+	pthread_attr_init(&attr);
+	pthread_attr_setdetachstate(&attr,
+			PTHREAD_CREATE_JOINABLE);
+
+	/* create joinable thread for auth server */
+	pthread_mutex_init(&tls.auth_server_mutex, NULL);
+	if (pthread_create
+			(&tls.auth_server, &attr, authsrv,
+			 NULL) == EAGAIN) {
+		exit(EXIT_FAILURE);
+	}
+	tls.auth_server_running = 1;
+
+}
+
+/**
  * Create a TLS connection to NuAuth: create a TCP socket and connect
  * to NuAuth using ::adr_srv.
  *
  * If x509 is enable (USE_X509 equals to 1), create credentials and check
- * NuAuth's one.
+ * NuAuth's one. This function modify the tls variable and in particular
+ * set tls.session.
  *
- * \return Pointer to a gnutls_session session, or NULL if an error occurs.
  */
-nussl_session *tls_connect()
+void tls_connect()
 {
 	int ret;
 	nussl_session* sess;
 
+	tls.session = NULL;
+
 	if (!init_x509_filenames()) {
 		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
 				"Couldn't malloc for key or cert filename!");
-		return NULL;
+		return;
 	}
 
 	sess = nussl_session_create();
 	if (!sess) {
 		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
 				"Unable to create NuSSL session: %s", nussl_get_error(sess));
-		return NULL;
+		return;
 	}
 
 	log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL, "Loading certificate:%s", cert_file);
@@ -186,7 +210,7 @@ nussl_session *tls_connect()
 				"TLS: can not set nussl certificate or keyfile: %s",
 				nussl_get_error(sess));
 		nussl_session_destroy(sess);
-		return NULL;
+		return;
 	}
 
 	/* sets the trusted CA file */
@@ -198,7 +222,7 @@ nussl_session *tls_connect()
 					"TLS: can not set nussl CA file: %s",
 					nussl_get_error(sess));
 			nussl_session_destroy(sess);
-			return NULL;
+			return;
 		}
 	}
 
@@ -211,7 +235,7 @@ nussl_session *tls_connect()
 					"TLS: can not set nussl CRL file: %s",
 					nussl_get_error(sess));
 			nussl_session_destroy(sess);
-			return NULL;
+			return;
 		}
 	}
 
@@ -227,7 +251,7 @@ nussl_session *tls_connect()
 		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
 				"TLS: cannot connect to tls_socket");
 		nussl_session_destroy(sess);
-		return NULL;
+		return;
 	}
 
 #ifdef XXX
@@ -236,11 +260,12 @@ nussl_session *tls_connect()
 			if (!check_nuauth_cert_dn(tls_session)) {
 				log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_WARNING,
 					"TLS: Cannot check the certificate DN");
-				return NULL;
+				return;
 			}
 		}
 	}
 #endif
 
-	return sess;
+	tls.session = sess;
+	create_authserver();
 }

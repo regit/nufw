@@ -700,27 +700,14 @@ int auth_request_send(uint8_t type, struct queued_pckt *pckt_datas)
 	if (!tls.session) {
 		log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_INFO,
 				"Not connected, trying TLS connection");
-		tls.session = tls_connect();
+		tls_connect();
 
 		if (tls.session) {
-			pthread_attr_t attr;
-			pthread_attr_init(&attr);
-			pthread_attr_setdetachstate(&attr,
-						    PTHREAD_CREATE_JOINABLE);
-
 			log_area_printf(DEBUG_AREA_GW,
 					DEBUG_LEVEL_WARNING,
 					"[+] TLS connection to nuauth restored (%s:%d)",
 					authreq_addr, authreq_port);
 
-			/* create joinable thread for auth server */
-			pthread_mutex_init(&tls.auth_server_mutex, NULL);
-			if (pthread_create
-			    (&tls.auth_server, &attr, authsrv,
-			     NULL) == EAGAIN) {
-				exit(EXIT_FAILURE);
-			}
-			tls.auth_server_running = 1;
 		} else {
 			log_area_printf(DEBUG_AREA_GW,
 					DEBUG_LEVEL_WARNING,

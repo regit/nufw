@@ -636,6 +636,19 @@ int main(int argc, char *argv[])
 
 	/* create packet server thread */
 	create_thread();
+
+	/* do initial connect */
+	tls_connect();
+	if (tls.session) {
+		log_area_printf(DEBUG_AREA_GW,
+				DEBUG_LEVEL_WARNING,
+				"[+] TLS connection to nuauth established");
+	} else {
+		log_area_printf(DEBUG_AREA_GW,
+				DEBUG_LEVEL_CRITICAL,
+				"[!] TLS connection to nuauth can NOT be established");
+	}
+
 	log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
 			"[+] NuFW " VERSION " started");
 
