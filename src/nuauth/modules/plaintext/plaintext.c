@@ -331,7 +331,6 @@ static int read_user_list(struct plaintext_params *params)
 
 		if (!p_username)
 			continue;
-		/*  TODO: check for bad characters */
 
 		/*  User Name */
 		if (!p_username) {
@@ -668,9 +667,7 @@ static int read_acl_list(struct plaintext_params *params)
 					  "L.%d: Read App name [%s]", ln,
 					  newapp->appname);
 
-			/*  TODO checks */
-			newacl->apps =
-			    g_slist_prepend(newacl->apps, newapp);
+			newacl->apps = g_slist_prepend(newacl->apps, newapp);
 		} else if (!strcasecmp("os", p_key)) {	/*  OS */
 			char *sep;
 			struct plaintext_os *newos = g_new0(struct plaintext_os, 1);
@@ -705,7 +702,6 @@ static int read_acl_list(struct plaintext_params *params)
 						  ln, newos->version);
 			}
 
-			/*  TODO checks */
 			newacl->os = g_slist_prepend(newacl->os, newos);
 		} else if (!strcasecmp("period", p_key)) {	/*  Period */
 			newacl->period = g_strdup(p_value);

@@ -643,12 +643,12 @@ static idmef_message_t *create_message_autherr(idmef_message_t * tpl,
 	return idmef;
 }
 
-/** \todo Take into account connection_t* to void* change */
-G_MODULE_EXPORT gint user_packet_logs(connection_t * element,
+G_MODULE_EXPORT gint user_packet_logs(void *pelement,
 				      tcp_state_t state,
 				      gpointer params_ptr)
 {
 	struct log_prelude_params *params = params_ptr;
+	connection_t *element = (connection_t *)pelement;
 	idmef_message_t *tpl;
 	idmef_message_t *message;
 	char *impact;
