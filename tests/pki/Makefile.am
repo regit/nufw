@@ -6,6 +6,8 @@ CA_PASS = mypassword
 CA_DAYS = 7000
 CERT_DAYS = 3650
 CERT_PASS = weak
+CRL_NAME = crl.pem
+CRL_DAYS = 30
 
 CERT_TYPE = server
 
@@ -57,7 +59,7 @@ revoke: CA
 	$(CA_CLI) -revoke $(NAME).crt
 
 gencrl: CA
-	$(CA_CLI) -gencrl -out crl.pem
+	$(CA_CLI) -gencrl -crldays $(CRL_DAYS) -out $(CRL_NAME)
 
 # Misc stuff
 openssl.cnf: gen_config.sh

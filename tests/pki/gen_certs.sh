@@ -27,4 +27,6 @@ chmod o-rwx *.key
 
 
 make gencrl
+make gencrl CRL_NAME="crl-expired.pem" CRL_DAYS=-1
+
 make clean
