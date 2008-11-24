@@ -109,12 +109,14 @@ WORD		([a-zA-Z0-9_\-]+(\(\-?[0-9\*]+\))?\.?)+
 EQUAL		\=
 VOID		[ \t\n]+
 
+%option bison-bridge bison-locations
+
 %%
 
 {INCLUDE}	{ BEGIN(incl); }
 
 {WORD}		{
-			yylval.string = strdup(yytext);
+			yylval->string = strdup(yytext);
 			return TOK_WORD;
 		}
 
@@ -126,7 +128,7 @@ VOID		[ \t\n]+
 		}
 
 {STRING}	{
-			yylval.string = escape_str(strndup(yytext + 1, yyleng - 2));
+			yylval->string = escape_str(strndup(yytext + 1, yyleng - 2));
 			return TOK_STRING;
 		}
 
@@ -142,7 +144,7 @@ VOID		[ \t\n]+
 <incl>[ \t]*      /* eat the whitespace */
 <incl>[^ \t\n]+	{ /* got the include file name */
 		  if (includes_index >= MAX_INCLUDE_DEPTH) {
-			  yyerror("Includes nested too deeply");
+			  YY_FATAL_ERROR("Includes nested too deeply");
 			  exit(1);
 		  }
 

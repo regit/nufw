@@ -24,18 +24,17 @@
 
 #include <nubase.h>
 
-extern int yylex(void);
-extern void yylex_init(void);
-extern void yylex_destroy(void);
-extern void yyerror(char *);
-extern void *yy_scan_string(const char *);
-extern void yy_delete_buffer(void *);
-
 #define YYERROR_VERBOSE
 
 extern FILE *yyin;
 char *filename;
 char *path;
+
+typedef struct list_head internal_list_t;
+
+/* Pass the argument to yyparse through to yylex. */
+#define YYPARSE_PARAM parsed_config
+#define YYLEX_PARAM   parsed_config
 
 %}
 
@@ -50,6 +49,21 @@ char *path;
 }
 
 %destructor { free ($$); } TOK_WORD TOK_SECTION
+
+%locations
+%pure_parser
+
+%parse-param { internal_list_t* parsed_config }
+
+%{
+
+/* this must come after bison macros, since we need these types to be defined */
+int yylex(YYSTYPE* lvalp, YYLTYPE* llocp, internal_list_t* parsed_config);
+
+void yyerror(YYLTYPE* locp, internal_list_t *parsed_config, const char* err);
+
+
+%}
 
 %%
 config:		 /* empty */
@@ -79,23 +93,25 @@ key_value:		TOK_WORD TOK_EQUAL TOK_WORD
 
 %%
 
-void yyerror(char *str)
+void yyerror(YYLTYPE* locp, internal_list_t *parsed_config, const char* err)
 {
-	fprintf(stderr, "YYERROR:%s\n", str);
+	fprintf(stderr, "YYERROR:%s\n", err);
 }
 
 int
 __parse_configuration(FILE *input)
 {
 	extern FILE *yyin;
+	void *dummy=(void*)0x42L;
 
 	yyin = input;
-	yyparse();
+	yyparse(dummy);
 	return  0;
 }
 
 int parse_configuration(char *config)
 {
+	void *dummy=(void*)0x42L;
 
 	path = str_extract_until(config, '/');
 	filename = config;
@@ -105,7 +121,7 @@ int parse_configuration(char *config)
 		fprintf(stderr, "Cannot open file %s.\n", config);
 		return 1;
 	}
-	yyparse();
+	yyparse(dummy);
 
 	return 0;
 }
