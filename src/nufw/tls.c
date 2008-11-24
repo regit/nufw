@@ -249,7 +249,8 @@ void tls_connect()
 
 	if (nussl_open_connection(sess) != NUSSL_OK) {
 		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
-				"TLS: cannot connect to tls_socket");
+				"TLS: cannot connect to tls_socket (%s)",
+				nussl_get_error(sess));
 		nussl_session_destroy(sess);
 		return;
 	}

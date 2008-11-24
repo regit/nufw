@@ -1,7 +1,7 @@
 #!/usr/bin/python
 from unittest import TestCase, main
 from config import CONF_DIR
-from common import createClient, connectClient
+from common import createClientWithCerts, connectClient
 from nuauth import Nuauth
 from nuauth_conf import NuauthConf
 from os import path
@@ -29,11 +29,11 @@ class TestPlaintextAuth(TestCase):
         self.nuauth = Nuauth(self.config)
 
         # Test user1
-        client1 = self.userA.createClient()
+        client1 = self.userA.createClientWithCerts()
         self.assert_(connectClient(client1))
 
         # Test user2
-        client2 = self.userB.createClient()
+        client2 = self.userB.createClientWithCerts()
         self.assert_(connectClient(client2))
 
         client1.stop()
@@ -47,11 +47,11 @@ class TestPlaintextAuth(TestCase):
 
         # User can't log twice
         # Test user1
-        client1 = self.userA.createClient()
+        client1 = self.userA.createClientWithCerts()
         self.assert_(connectClient(client1))
 
         # Test user1
-        client2 = self.userA.createClient()
+        client2 = self.userA.createClientWithCerts()
         self.assert_(not connectClient(client2))
 
         client1.stop()
@@ -66,11 +66,11 @@ class TestPlaintextAuth(TestCase):
 
         # Different users can't log from same IP
         # Test user1
-        client1 = self.userA.createClient()
+        client1 = self.userA.createClientWithCerts()
         self.assert_(connectClient(client1))
 
         # Test user2
-        client2 = self.userB.createClient()
+        client2 = self.userB.createClientWithCerts()
         self.assert_(not connectClient(client2))
 
         client1.stop()

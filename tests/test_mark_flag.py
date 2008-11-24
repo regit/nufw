@@ -36,7 +36,7 @@ class TestClientAuth(TestCase):
         self.nuauth = Nuauth(config)
         self.iptables = Iptables()
         self.nufw = startNufw(["-m"])
-        self.client = self.user.createClient()
+        self.client = self.user.createClientWithCerts()
 
     def tearDown(self):
         self.acls.desinstall()
