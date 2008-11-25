@@ -241,6 +241,13 @@ gboolean nuauth_reload(int signum)
 	g_message("[+] Reload NuAuth server");
 	nuauth_install_signals(FALSE);
 
+	/* Reload the configuration file */
+	retval = nuauth_parse_configuration(nuauthconf->configfile);
+	if (retval != 0) {
+		g_error("Cannot reload configuration (file '%s')", nuauthconf->configfile);
+		return -1;
+	}
+
 	init_nuauthconf(&newconf);
 	g_message("nuauth module reloading");
 
@@ -268,13 +275,6 @@ gboolean nuauth_reload(int signum)
 		nuauthconf = newconf;
 	} else {
 		free_nuauth_params(newconf);
-	}
-
-	/* Reload the configuration file */
-	nuauth_config_table_destroy();
-	retval = nuauth_parse_configuration(nuauthconf->configfile);
-	if (retval != 0) {
-		g_error("Cannot reload configuration (file '%s')", nuauthconf->configfile);
 	}
 
 	/* reload modules with new conf */
