@@ -1,7 +1,7 @@
 #!/usr/bin/python
 from unittest import TestCase, main
 from sys import stderr
-from common import createClient, connectClient
+from common import createClientWithCerts, connectClient
 from nuauth import Nuauth
 from nuauth_conf import NuauthConf
 from config import config
@@ -36,13 +36,7 @@ class TestClientCert(TestCase):
         self.config["session_authtype_ssl_groups"] = "\"42\""
         self.nuauth = Nuauth(self.config)
         # Client
-        cacert = config.get("test_cert", "cacert")
-        cert = config.get("test_cert", "user_cert")
-        key = config.get("test_cert", "user_key")
-
-        args = ["-C", cert, "-K", key, "-A", cacert]
-
-        self.client = self.user.createClient(more_args=args)
+        self.client = self.user.createClientWithCerts()
         self.client.password = "xx%sxx" % self.user.password
         self.assert_(connectClient(self.client))
 
@@ -51,13 +45,7 @@ class TestClientCert(TestCase):
         self.config["session_authtype_ssl_groups"] = "\"100\""
         self.nuauth = Nuauth(self.config)
         # Client
-        cacert = config.get("test_cert", "cacert")
-        cert = config.get("test_cert", "user_cert")
-        key = config.get("test_cert", "user_key")
-
-        args = ["-C", cert, "-K", key, "-A", cacert]
-
-        self.client = self.user.createClient(more_args=args)
+        self.client = self.user.createClientWithCerts()
         self.client.password = "xx%sxx" % self.user.password
         self.assert_(not connectClient(self.client))
 
@@ -66,7 +54,7 @@ class TestClientCert(TestCase):
         self.config["session_authtype_whitelist_groups"] = "\"42\""
         self.nuauth = Nuauth(self.config)
 
-        self.client = self.user.createClient()
+        self.client = self.user.createClientWithCerts()
         self.assert_(connectClient(self.client))
 
     def testWhitelistAuthNOK(self):
@@ -74,7 +62,7 @@ class TestClientCert(TestCase):
         self.config["session_authtype_whitelist_groups"] = "\"123\""
         self.nuauth = Nuauth(self.config)
 
-        self.client = self.user.createClient()
+        self.client = self.user.createClientWithCerts()
         self.assert_(not connectClient(self.client))
 
     def testBlacklistAuthOK(self):
@@ -82,7 +70,7 @@ class TestClientCert(TestCase):
         self.config["session_authtype_blacklist_groups"] = "\"123\""
         self.nuauth = Nuauth(self.config)
 
-        self.client = self.user.createClient()
+        self.client = self.user.createClientWithCerts()
         self.assert_(connectClient(self.client))
 
     def testBlacklistAuthNOK(self):
@@ -90,7 +78,7 @@ class TestClientCert(TestCase):
         self.config["session_authtype_blacklist_groups"] = "\"42\""
         self.nuauth = Nuauth(self.config)
 
-        self.client = self.user.createClient()
+        self.client = self.user.createClientWithCerts()
         self.assert_(not connectClient(self.client))
 
     def testSASLAuthOK(self):
@@ -98,7 +86,7 @@ class TestClientCert(TestCase):
         self.config["session_authtype_sasl_groups"] = "\"42\""
         self.nuauth = Nuauth(self.config)
 
-        self.client = self.user.createClient()
+        self.client = self.user.createClientWithCerts()
         self.assert_(connectClient(self.client))
 
     def testSASLAuthNOK(self):
@@ -106,7 +94,7 @@ class TestClientCert(TestCase):
         self.config["session_authtype_sasl_groups"] = "\"123\""
         self.nuauth = Nuauth(self.config)
 
-        self.client = self.user.createClient()
+        self.client = self.user.createClientWithCerts()
         self.assert_(not connectClient(self.client))
 
 if __name__ == "__main__":
