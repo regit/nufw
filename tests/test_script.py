@@ -1,7 +1,7 @@
 #!/usr/bin/python
 from unittest import TestCase, main
 from config import CONF_DIR, NUAUTH_VERSION
-from common import createClient, connectClient
+from common import createClientWithCerts, connectClient
 from os import path
 from inl_tests.replace_file import ReplaceFile
 from logging import warning
@@ -43,7 +43,7 @@ class TestScript(TestCase):
 
     def testLogin(self):
         # Client login
-        client = createClient()
+        client = createClientWithCerts()
         self.assert_(connectClient(client))
 
         # Check log output
