@@ -136,12 +136,21 @@ void real_log_user_packet(gpointer userdata, gpointer data)
 	modules_user_logs(((struct conn_state *) userdata)->conn,
 			  ((struct conn_state *) userdata)->state);
 	/* free userdata */
-	if ((((struct conn_state *) userdata)->state == TCP_STATE_OPEN) ||
-	    (((struct conn_state *) userdata)->state == TCP_STATE_DROP)) {
-		((connection_t *) ((struct conn_state *) userdata)->conn)->
-		    state = AUTH_STATE_DONE;
-		free_connection((connection_t *) ((struct conn_state *)
-						  userdata)->conn);
+	switch (((struct conn_state *) userdata)->state) {
+		case TCP_STATE_OPEN:
+		case TCP_STATE_DROP:
+			((connection_t *) ((struct conn_state *) userdata)->conn)->state = AUTH_STATE_DONE;
+			free_connection((connection_t *) ((struct conn_state *) userdata)->conn);
+			break;
+		case TCP_STATE_ESTABLISHED:
+		case TCP_STATE_CLOSE:
+			g_free(((struct conn_state *)userdata)->conn);
+			break;
+		case TCP_STATE_UNKNOW:
+		default:
+			g_warning("Should not be there, bad TCP state (%s:%d)",
+				  __FILE__,
+				  __LINE__);
 	}
 	g_free(userdata);
 }
