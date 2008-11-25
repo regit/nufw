@@ -45,6 +45,7 @@ typedef unsigned long digit_t;
 #define BASE 1000000	 /** Use 6 decimal digits in each number digit */
 #define BASE_LOG10 6
 #define BASE2STR "%06lu"
+#define IPADDR_STRLEN 42
 #define DIGIT_COUNT 7	 /** BASE ^ DIGIT_COUNT should be able to store 2 ^ 128 */
 #define INIT_NUMBER {0, 0, 0, 0, 0, 0, 0}
 #if ULONG_MAX < (BASE*256)
@@ -114,7 +115,7 @@ int number_add(number_t number, digit_t value)
  *
  * \return Returns new allocated string
  */
-char *number_to_decimal(number_t number)
+static nu_error_t number_to_decimal(number_t number, char *ipaddr)
 {
 	char ascii[DIGIT_COUNT * BASE_LOG10 + 1];
 	gchar *text;
@@ -126,40 +127,13 @@ char *number_to_decimal(number_t number)
 	text = ascii;
 	while (text[0] == '0')
 		text++;
-	return g_strdup(text);
-}
 
-/**
- * Convert a decimal string to a "Base 10^n" number.
- *
- * \return Returns 0 on error, 1 otherwise
- */
-int decimal_to_number(const char *orig_decimal, number_t number)
-{
-	ssize_t decimal_len = strlen(orig_decimal);
-	char *decimal = g_strdup(orig_decimal);
-	char *err;
-	unsigned char index;
-	for (index = 0; index < DIGIT_COUNT; index++)
-		number[index] = 0;
-	index = 0;
-	while (BASE_LOG10 < decimal_len) {
-		decimal[decimal_len] = 0;
-		decimal_len -= BASE_LOG10;
-		number[index] = strtol(decimal + decimal_len, &err, 10);
-		index++;
-		if (err == NULL || *err != 0 || DIGIT_COUNT <= index) {
-			g_free(decimal);
-			return 0;
-		}
+	if (strlen(text) < IPADDR_STRLEN) {
+		memcpy(ipaddr, text, strlen(text));
+	} else {
+		return NU_EXIT_ERROR;
 	}
-	decimal[decimal_len] = 0;
-	number[index] = strtol(decimal, &err, 10);
-	g_free(decimal);
-	if (err == NULL || *err != 0)
-		return 0;
-	else
-		return 1;
+	return NU_EXIT_OK;
 }
 
 
@@ -299,18 +273,18 @@ static LDAP *ldap_conn_init(struct ldap_params *params)
 	return ld;
 }
 
-static char *ipv6_to_base10(struct in6_addr *addr)
+static nu_error_t ipv6_to_base10(struct in6_addr *addr, gchar *ipaddr)
 {
 	number_t number = INIT_NUMBER;
 	unsigned char index = 0;
 
 	for (index = 0; index < 16; index++) {
 		if (number_add(number, addr->s6_addr[index]) != 1)
-			return NULL;
+			return NU_EXIT_ERROR;
 		number_multiply(number, 256);
 	}
 
-	return number_to_decimal(number);
+	return number_to_decimal(number, ipaddr);
 }
 
 
@@ -452,8 +426,8 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 	int ok, err, try;
 	struct ldap_params *params = (struct ldap_params *) params_p;
 	LDAP *ld = g_private_get(params->ldap_priv);
-	gchar *ip_src;
-	gchar *ip_dst;
+	gchar ip_src[IPADDR_STRLEN];
+	gchar ip_dst[IPADDR_STRLEN];
 
 	if (params->ldap_use_ipv4_schema) {
 		struct in_addr ipv4;
@@ -464,17 +438,18 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 			return NULL;
 		}
 		ipv6_to_ipv4(&element->tracking.saddr, &ipv4);
-		ip_src = g_strdup_printf("%u", ipv4.s_addr);
+		snprintf(ip_src, IPADDR_STRLEN, "%u", ipv4.s_addr);
 		ipv6_to_ipv4(&element->tracking.daddr, &ipv4);
-		ip_dst = g_strdup_printf("%u", ipv4.s_addr);
+		snprintf(ip_dst, IPADDR_STRLEN, "%u", ipv4.s_addr);
 	} else {
-		ip_src = ipv6_to_base10(&element->tracking.saddr);
-		ip_dst = ipv6_to_base10(&element->tracking.daddr);
-	}
-	if (ip_src == NULL || ip_dst == NULL) {
-		g_free(ip_src);
-		g_free(ip_dst);
-		return NULL;
+		if (ipv6_to_base10(&element->tracking.saddr, ip_src) ==
+				NU_EXIT_ERROR) {
+			return NULL;
+		}
+		if (ipv6_to_base10(&element->tracking.daddr, ip_dst) ==
+				NU_EXIT_ERROR) {
+			return NULL;
+		}
 	}
 
 	/* contruct filter */
@@ -496,8 +471,6 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 				log_message(WARNING, DEBUG_AREA_MAIN,
 					    "LDAP query too big (more than %d bytes)\n",
 					    LDAP_QUERY_SIZE);
-				g_free(ip_src);
-				g_free(ip_dst);
 				return NULL;
 			}
 			break;
@@ -516,13 +489,9 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 				log_message(WARNING, DEBUG_AREA_MAIN,
 					    "LDAP query too big (more than %d bytes)\n",
 					    LDAP_QUERY_SIZE);
-				g_free(ip_src);
-				g_free(ip_dst);
 				return NULL;
 			}
 		}
-		g_free(ip_src);
-		g_free(ip_dst);
 
 		/* finish filter */
 		if (! element->os_sysname) {
@@ -591,12 +560,8 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 			log_message(WARNING, DEBUG_AREA_MAIN,
 				    "LDAP query too big (more than %d bytes)\n",
 				    LDAP_QUERY_SIZE);
-			g_free(ip_src);
-			g_free(ip_dst);
 			return NULL;
 		}
-		g_free(ip_src);
-		g_free(ip_dst);
 	}
 
 	try = 0;
