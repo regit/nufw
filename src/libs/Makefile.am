@@ -1,2 +1,2 @@
-SUBDIRS = nussl nubase
+SUBDIRS = nubase nuconfparser nussl
 
