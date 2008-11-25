@@ -214,6 +214,8 @@ nu_error_t modules_user_logs(void *element, tcp_state_t state)
 			 * drop_if_no_logging is set */
 			if (nuauthconf->drop_if_no_logging) {
 				((connection_t *)element)->decision = DECISION_DROP;
+				/* stop iterating over modules (nuauth is in DOS mode there) */
+				return ret;
 			}
 		}
 	}
