@@ -1,7 +1,8 @@
 /*
- ** Copyright (C) 2002-2005 INL
- ** Written by Éric Leblond <eric@regit.org>
+ ** Copyright (C) 2002-2008 INL
+ ** Written by Eric Leblond <eric@regit.org>
  **            Vincent Deffontaines <vincent@gryzor.com>
+ **            Pierre Chifflier <chifflier@inl.fr>
  ** INL http://www.inl.fr/
  **
  ** $Id$
@@ -245,6 +246,11 @@ void tls_connect()
 		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
 				"TLS: disabling certificate verification, as asked.");
 		nussl_ssl_disable_certificate_check(sess, 1);
+	}
+	if (!nufw_fqdn_check) {
+		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_WARNING,
+				"TLS: disabling FQDN verification, as asked.");
+		nussl_set_session_flag(sess, NUSSL_SESSFLAG_IGNORE_ID_MISMATCH, 1);
 	}
 
 	if (nussl_open_connection(sess) != NUSSL_OK) {

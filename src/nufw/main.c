@@ -1,7 +1,8 @@
 /*
- ** Copyright (C) 2002-2007 INL
+ ** Copyright (C) 2002-2008 INL
  ** Written by Eric Leblond <regit@inl.fr>
  **            Vincent Deffontaines <vincent@gryzor.com>
+ **            Pierre Chifflier <chifflier@inl.fr>
  ** INL http://www.inl.fr/
  **
  ** $Id$
@@ -386,7 +387,7 @@ int main(int argc, char *argv[])
 {
 	/* option */
 #if USE_NFQUEUE
-	char *options_list = "4sSDhVvmq:"
+	char *options_list = "4sSNDhVvmq:"
 #ifdef HAVE_NFQ_SET_QUEUE_MAXLEN
 	    "L:"
 #endif
@@ -396,7 +397,7 @@ int main(int argc, char *argv[])
 #endif
 	    ;
 #else
-	char *options_list = "4sSDhVvmc:k:a:n:r:d:p:t:T:A:";
+	char *options_list = "4sSNDhVvmc:k:a:n:r:d:p:t:T:A:";
 #endif
 	int option, daemonize = 0;
 	char *version = PACKAGE_VERSION;
@@ -429,6 +430,7 @@ int main(int argc, char *argv[])
 #endif
 	nufw_set_mark = 0;
 	nufw_strict_tls = 1;
+	nufw_fqdn_check = 1;
 
 
 	log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_VERBOSE_DEBUG,
@@ -514,8 +516,12 @@ int main(int argc, char *argv[])
 			break;
 		case 's':
 			nufw_strict_tls = 0;
+			nufw_fqdn_check = 0;
 			break;
 		case 'S':
+			break;
+		case 'N':
+			nufw_fqdn_check = 0;
 			break;
 		case '4':
 			nufw_no_ipv6 = 1;

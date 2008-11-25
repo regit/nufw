@@ -80,6 +80,9 @@ int nufw_set_mark;
 /*! If equals to 1, do a strict check of all TLS property */
 int nufw_strict_tls;
 
+/*! If equals to 1, do a strict check of nuauth FQDN vs certificate CN field */
+int nufw_fqdn_check;
+
 /*! Restrict to IPv4 (use this if your system lacks IPv6 support for nfnetlink) */
 int nufw_no_ipv6;
 
