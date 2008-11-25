@@ -1,6 +1,7 @@
 /*
- ** Copyright(C) 2005,2006,2007 INL
+ ** Copyright(C) 2005,2006,2007,2008 INL
  ** Written by  Eric Leblond <regit@inl.fr>
+ **             Pierre Chifflier <chifflier@inl.fr>
  **
  ** $Id$
  **
@@ -58,6 +59,8 @@
 
 #include <auth_srv.h>
 #include "modules_definition.h"
+
+#include "nuauthconf.h"
 
 /** This is a static variable to initiate all pointers to zero */
 static hook_t hooks[MOD_END] = {
@@ -635,19 +638,19 @@ int load_modules()
 	int i;
 
 	hooks[MOD_USER_CHECK].config =
-		nubase_config_table_get_or_default(hooks[MOD_USER_CHECK].configstring, module_default_value(MOD_USER_CHECK));
+		nuauth_config_table_get_or_default(hooks[MOD_USER_CHECK].configstring, module_default_value(MOD_USER_CHECK));
 	for (i = MOD_SIMPLE; i < MOD_OPTIONAL; i++) {
-		hooks[i].config = nubase_config_table_get_or_default(hooks[i].configstring, module_default_value(i));
+		hooks[i].config = nuauth_config_table_get_or_default(hooks[i].configstring, module_default_value(i));
 	}
 
 	if (nuauthconf->do_ip_authentication) {
 		hooks[MOD_IP_AUTH].config =
-			nubase_config_table_get_or_default(hooks[MOD_IP_AUTH].configstring, module_default_value(MOD_IP_AUTH));
+			nuauth_config_table_get_or_default(hooks[MOD_IP_AUTH].configstring, module_default_value(MOD_IP_AUTH));
 	}
 
 	/* MOD_USER_CHECK is *always* set to something */
-	hooks[MOD_USER_ID].config = nubase_config_table_get_or_default(hooks[MOD_USER_ID].configstring, module_default_value(MOD_USER_ID));
-	hooks[MOD_USER_GROUPS].config = nubase_config_table_get_or_default(hooks[MOD_USER_GROUPS].configstring, module_default_value(MOD_USER_GROUPS));
+	hooks[MOD_USER_ID].config = nuauth_config_table_get_or_default(hooks[MOD_USER_ID].configstring, module_default_value(MOD_USER_ID));
+	hooks[MOD_USER_GROUPS].config = nuauth_config_table_get_or_default(hooks[MOD_USER_GROUPS].configstring, module_default_value(MOD_USER_GROUPS));
 
 	/* external auth module loading */
 	g_mutex_lock(modules_mutex);

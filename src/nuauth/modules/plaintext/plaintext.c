@@ -23,6 +23,8 @@
 #include <string.h>
 #include "auth_plaintext.h"
 
+#include "nuauthconf.h"
+
 /**
  *
  * \ingroup AuthNuauthModules
@@ -891,8 +893,8 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 		    "Plaintext module ($Revision$)");
 
 	/*  set variables */
-	params->plaintext_userfile = nubase_config_table_get_or_default("plaintext_userfile", TEXplaintext_USERFILE);
-	params->plaintext_aclfile = nubase_config_table_get_or_default("plaintext_aclfile", TEXplaintext_ACLFILE);
+	params->plaintext_userfile = nuauth_config_table_get_or_default("plaintext_userfile", TEXplaintext_USERFILE);
+	params->plaintext_aclfile = nuauth_config_table_get_or_default("plaintext_aclfile", TEXplaintext_ACLFILE);
 	params->plaintext_userlist = NULL;
 	params->plaintext_acllist = NULL;
 

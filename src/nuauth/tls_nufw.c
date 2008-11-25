@@ -1,7 +1,8 @@
 /*
- ** Copyright(C) 2004-2007 INL
+ ** Copyright(C) 2004-2008 INL
  ** Written by  Eric Leblond <regit@inl.fr>
  **             Vincent Deffontaines <gryzor@inl.fr>
+ **             Pierre Chifflier <chifflier@inl.fr>
  **
  ** $Id$
  **
@@ -24,6 +25,8 @@
 
 #include <nubase.h>
 #include <nussl.h>
+
+#include "nuauthconf.h"
 
 /**
  * \ingroup TLS
@@ -471,11 +474,11 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 	FD_SET(context->sck_inet, &context->tls_rx_set);
 
 	/* TODO: read values specific to nufw connection */
-	nuauth_tls_max_servers = nubase_config_table_get_or_default_int("nuauth_tls_max_servers", NUAUTH_TLS_MAX_SERVERS);
-	int_requestcert = nubase_config_table_get_or_default_int("nuauth_tls_request_cert", FALSE);
+	nuauth_tls_max_servers = nuauth_config_table_get_or_default_int("nuauth_tls_max_servers", NUAUTH_TLS_MAX_SERVERS);
+	int_requestcert = nuauth_config_table_get_or_default_int("nuauth_tls_request_cert", FALSE);
 	/* {"nuauth_tls_auth_by_cert", G_TOKEN_INT, FALSE, NULL}, */
 
-	int_disable_fqdn_check = nubase_config_table_get_or_default_int("nuauth_tls_disable_nufw_fqdn_check", FALSE);
+	int_disable_fqdn_check = nuauth_config_table_get_or_default_int("nuauth_tls_disable_nufw_fqdn_check", FALSE);
 
 	/* TODO: use a nufw specific value of request_cert */
 	context->server = nussl_session_create_with_fd(context->sck_inet, nuauth_tls.request_cert);

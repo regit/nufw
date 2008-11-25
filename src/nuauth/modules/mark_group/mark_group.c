@@ -1,5 +1,5 @@
 /*
-** Copyright(C) 2006, INL
+** Copyright(C) 2006-2008 INL
 **	Written by Victor Stinner <vstinner@inl.fr>
 **
 ** $Id$
@@ -18,9 +18,12 @@
 ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#include "mark_group.h"
 #include <glib.h>
 #include <limits.h>
+
+#include "mark_group.h"
+
+#include "nuauthconf.h"
 
 typedef struct {
 	/** Identifier of the group */
@@ -153,10 +156,10 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 		    "Mark_group module ($Revision$)");
 
 	/* read options */
-	group_filename = nubase_config_table_get_or_default("mark_group_group_file", MARK_GROUP_CONF);
-	nbits = nubase_config_table_get_or_default_int("mark_group_nbits", 32);
-	config->shift = nubase_config_table_get_or_default_int("mark_group_shift", 0);
-	config->default_mark = nubase_config_table_get_or_default_int("mark_group_default_mark", 0);
+	group_filename = nuauth_config_table_get_or_default("mark_group_group_file", MARK_GROUP_CONF);
+	nbits = nuauth_config_table_get_or_default_int("mark_group_nbits", 32);
+	config->shift = nuauth_config_table_get_or_default_int("mark_group_shift", 0);
+	config->default_mark = nuauth_config_table_get_or_default_int("mark_group_default_mark", 0);
 
 	/* create mask to remove nbits at position shift */
 	config->mask =

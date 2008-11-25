@@ -1,6 +1,7 @@
 /*
- ** Copyright(C) 2004-2005 INL
+ ** Copyright(C) 2004-2008 INL
  ** written by Eric Leblond <regit@inl.fr>
+ **            Pierre Chifflier <chifflier@inl.fr>
  **
  ** $Id$
  **
@@ -64,9 +65,9 @@ G_MODULE_EXPORT gchar *g_module_check_init(GModule * module)
 {
 
 	/*  set variables */
-	system_pam_module_not_threadsafe = nubase_config_table_get_or_default_int("system_pam_module_not_threadsafe", 1);
-	system_glibc_cant_guess_maxgroups = nubase_config_table_get_or_default_int("system_glibc_cant_guess_maxgroups", 0);
-	system_suppress_prefixed_domain = nubase_config_table_get_or_default_int("system_suppress_prefixed_domain", 0);
+	system_pam_module_not_threadsafe = nuauth_config_table_get_or_default_int("system_pam_module_not_threadsafe", 1);
+	system_glibc_cant_guess_maxgroups = nuauth_config_table_get_or_default_int("system_glibc_cant_guess_maxgroups", 0);
+	system_suppress_prefixed_domain = nuauth_config_table_get_or_default_int("system_suppress_prefixed_domain", 0);
 
 	return NULL;
 }

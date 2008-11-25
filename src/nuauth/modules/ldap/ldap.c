@@ -24,6 +24,8 @@
 #include "security.h"
 #include "nubase.h"
 
+#include "nuauthconf.h"
+
 /**
  * \ingroup NuauthModules
  * \defgroup AuthNuauthModules Authentication and acls checking modules
@@ -171,22 +173,22 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 		    "Ldap module ($Revision$)");
 
 	/* set variables */
-	params->ldap_server = nubase_config_table_get_or_default("ldap_server_addr", LDAP_SERVER);
-	params->ldap_server_port = nubase_config_table_get_or_default_int("ldap_server_port", LDAP_SERVER_PORT);
-	params->binddn = nubase_config_table_get_or_default("ldap_bind_dn",LDAP_USER);
-	ldap_base_dn = nubase_config_table_get_or_default("ldap_base_dn",LDAP_BASE);
-	params->ldap_users_base_dn = nubase_config_table_get_or_default("ldap_users_base_dn",LDAP_BASE);
-	params->ldap_acls_base_dn = nubase_config_table_get_or_default("ldap_acls_base_dn",LDAP_BASE);
+	params->ldap_server = nuauth_config_table_get_or_default("ldap_server_addr", LDAP_SERVER);
+	params->ldap_server_port = nuauth_config_table_get_or_default_int("ldap_server_port", LDAP_SERVER_PORT);
+	params->binddn = nuauth_config_table_get_or_default("ldap_bind_dn",LDAP_USER);
+	ldap_base_dn = nuauth_config_table_get_or_default("ldap_base_dn",LDAP_BASE);
+	params->ldap_users_base_dn = nuauth_config_table_get_or_default("ldap_users_base_dn",LDAP_BASE);
+	params->ldap_acls_base_dn = nuauth_config_table_get_or_default("ldap_acls_base_dn",LDAP_BASE);
 	if (!strcmp(params->ldap_acls_base_dn, LDAP_BASE)) {
 		params->ldap_acls_base_dn = ldap_base_dn;
 	}
 	if (!strcmp(params->ldap_users_base_dn, LDAP_BASE)) {
 		params->ldap_users_base_dn = ldap_base_dn;
 	}
-	params->bindpasswd = nubase_config_table_get_or_default("ldap_bind_password",LDAP_CRED);
-	params->ldap_request_timeout = nubase_config_table_get_or_default_int("ldap_request_timeout",LDAP_REQUEST_TIMEOUT);
-	params->ldap_use_ipv4_schema = nubase_config_table_get_or_default_int("ldap_use_ipv4_schema", 1);
-	params->ldap_filter_type = nubase_config_table_get_or_default_int("ldap_filter_type", 1);
+	params->bindpasswd = nuauth_config_table_get_or_default("ldap_bind_password",LDAP_CRED);
+	params->ldap_request_timeout = nuauth_config_table_get_or_default_int("ldap_request_timeout",LDAP_REQUEST_TIMEOUT);
+	params->ldap_use_ipv4_schema = nuauth_config_table_get_or_default_int("ldap_use_ipv4_schema", 1);
+	params->ldap_filter_type = nuauth_config_table_get_or_default_int("ldap_filter_type", 1);
 
 
 	/* init thread private stuff */

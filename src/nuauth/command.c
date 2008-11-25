@@ -34,6 +34,8 @@
 
 #include <nubase.h>
 
+#include "nuauthconf.h"
+
 #define SOCKET_PATH LOCAL_STATE_DIR "/run/nuauth/"
 #define SOCKET_FILENAME "nuauth-command.socket"
 #define SOCKET_TARGET SOCKET_PATH SOCKET_FILENAME
@@ -358,7 +360,7 @@ void command_execute(command_t * this, char *command)
 	} else if (strcmp(command, "version") == 0) {
 		encoder_add_string(encoder, NUAUTH_FULL_VERSION);
 	} else if (strcmp(command, "confdump") == 0) {
-		nubase_config_table_print(encoder, conf_server_side_print);
+		nuauth_config_table_print(encoder, conf_server_side_print);
 		encoder_add_string(encoder, "Configuration dumped server side");
 	} else if (strcmp(command, "disconnect all") == 0) {
 		ok = command_disconnect_all(this, encoder);

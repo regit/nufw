@@ -44,6 +44,8 @@
 #include <nussl.h>
 #include <nubase.h>
 
+#include "nuauthconf.h"
+
 typedef struct {
 	int daemonize;
 	int debug_level;
@@ -741,7 +743,7 @@ void configure_app(int argc, char **argv)
 		nuauthconf->configfile = g_strdup(params.configfile);
 	}
 
-	ret = parse_configuration(nuauthconf->configfile);
+	ret = nuauth_parse_configuration(nuauthconf->configfile);
 	if (ret > 0) {
 		g_error("Cannot load configuration (file '%s')", nuauthconf->configfile);
 	}

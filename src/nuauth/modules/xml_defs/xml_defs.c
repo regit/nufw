@@ -1,6 +1,7 @@
 /*
-** Copyright(C) 2006 INL
+** Copyright(C) 2006-2008 INL
 **          written by Eric Leblond <regit@inl.fr>
+**                     Pierre Chifflier <chifflier@inl.fr>
 **
 ** $Id$
 **
@@ -20,6 +21,8 @@
 
 
 #include <auth_srv.h>
+
+#include "nuauthconf.h"
 #include "xml_defs.h"
 
 /**
@@ -65,7 +68,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 		    "Xml_defs module ($Revision$)");
 	/*  init global variables */
-	params->xml_defs_periodfile = nubase_config_table_get_or_default("xml_defs_periodfile", XML_DEFS_PERIODFILE);
+	params->xml_defs_periodfile = nuauth_config_table_get_or_default("xml_defs_periodfile", XML_DEFS_PERIODFILE);
 
 	module->params = (gpointer) params;
 	return TRUE;

@@ -25,6 +25,8 @@
 #include "tls.h"
 #include <fcntl.h>
 
+#include "nuauthconf.h"
+
 /**
  * \ingroup TLS
  * \defgroup TLSUser TLS User server
@@ -626,7 +628,7 @@ int tls_user_setcert_auth_params(int requestcert, int authcert)
 {
 	int disable_request_warning;
 
-	disable_request_warning = nubase_config_table_get_or_default_int("nuauth_tls_disable_request_warning", FALSE);
+	disable_request_warning = nuauth_config_table_get_or_default_int("nuauth_tls_disable_request_warning", FALSE);
 
 	nuauth_tls.auth_by_cert = authcert;
 
@@ -709,11 +711,11 @@ int tls_user_init(struct tls_user_context_t *context)
 
 	/* Init ssl session */
 	/* TODO: make sure request_cert | auth_by_cert is for user and change to nufw if required */
-	context->nuauth_tls_max_clients = nubase_config_table_get_or_default_int("nuauth_tls_max_clients", NUAUTH_TLS_MAX_CLIENTS);
-	context->nuauth_auth_nego_timeout = nubase_config_table_get_or_default_int("nuauth_auth_nego_timeout", NUAUTH_TLS_MAX_CLIENTS);
+	context->nuauth_tls_max_clients = nuauth_config_table_get_or_default_int("nuauth_tls_max_clients", NUAUTH_TLS_MAX_CLIENTS);
+	context->nuauth_auth_nego_timeout = nuauth_config_table_get_or_default_int("nuauth_auth_nego_timeout", NUAUTH_TLS_MAX_CLIENTS);
 	/* ssl related conf */
-	int_requestcert = nubase_config_table_get_or_default_int("nuauth_tls_request_cert", 2);
-	int_authcert = nubase_config_table_get_or_default_int("nuauth_tls_auth_by_cert", FALSE);
+	int_requestcert = nuauth_config_table_get_or_default_int("nuauth_tls_request_cert", 2);
+	int_authcert = nuauth_config_table_get_or_default_int("nuauth_tls_auth_by_cert", FALSE);
 
 	if (!tls_user_setcert_auth_params(int_requestcert, int_authcert)) {
 		log_message(FATAL, DEBUG_AREA_MAIN,

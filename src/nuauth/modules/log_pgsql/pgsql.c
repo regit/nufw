@@ -1,6 +1,7 @@
 /*
- ** Copyright(C) 2003-2006 Eric Leblond <eric@regit.org>
+ ** Copyright(C) 2003-2008 Eric Leblond <eric@regit.org>
  **		     Vincent Deffontaines <vincent@gryzor.com>
+ **		     Pierre Chifflier <chifflier@inl.fr>
  **                   INL
  ** $Id$
  **
@@ -31,6 +32,8 @@
 #include <time.h>
 #include <inttypes.h>
 #include "security.h"
+
+#include "nuauthconf.h"
 
 #include "nubase.h"
 
@@ -176,16 +179,16 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 		    "Log_pgsql module ($Revision$)");
 
 	/* set variables */
-	params->pgsql_server = nubase_config_table_get_or_default("pgsql_server_addr", PGSQL_SERVER);
-	params->pgsql_server_port = nubase_config_table_get_or_default_int("pgsql_server_port", PGSQL_SERVER_PORT);
-	params->pgsql_user = nubase_config_table_get_or_default("pgsql_user", PGSQL_USER);
-	params->pgsql_passwd = nubase_config_table_get_or_default("pgsql_passwd", PGSQL_PASSWD);
-	params->pgsql_ssl = nubase_config_table_get_or_default("pgsql_ssl", PGSQL_SSL);
-	params->pgsql_db_name = nubase_config_table_get_or_default("pgsql_db_name", PGSQL_DB_NAME);
-	params->pgsql_table_name = nubase_config_table_get_or_default("pgsql_table_name", PGSQL_TABLE_NAME);
-	params->pgsql_users_table_name = nubase_config_table_get_or_default("pgsql_users_table_name", PGSQL_USERS_TABLE_NAME);
-	params->pgsql_request_timeout = nubase_config_table_get_or_default_int("pgsql_request_timeout", PGSQL_REQUEST_TIMEOUT);
-	params->pgsql_use_ipv4 = nubase_config_table_get_or_default_int("pgsql_use_ipv4", PGSQL_USE_IPV4);
+	params->pgsql_server = nuauth_config_table_get_or_default("pgsql_server_addr", PGSQL_SERVER);
+	params->pgsql_server_port = nuauth_config_table_get_or_default_int("pgsql_server_port", PGSQL_SERVER_PORT);
+	params->pgsql_user = nuauth_config_table_get_or_default("pgsql_user", PGSQL_USER);
+	params->pgsql_passwd = nuauth_config_table_get_or_default("pgsql_passwd", PGSQL_PASSWD);
+	params->pgsql_ssl = nuauth_config_table_get_or_default("pgsql_ssl", PGSQL_SSL);
+	params->pgsql_db_name = nuauth_config_table_get_or_default("pgsql_db_name", PGSQL_DB_NAME);
+	params->pgsql_table_name = nuauth_config_table_get_or_default("pgsql_table_name", PGSQL_TABLE_NAME);
+	params->pgsql_users_table_name = nuauth_config_table_get_or_default("pgsql_users_table_name", PGSQL_USERS_TABLE_NAME);
+	params->pgsql_request_timeout = nuauth_config_table_get_or_default_int("pgsql_request_timeout", PGSQL_REQUEST_TIMEOUT);
+	params->pgsql_use_ipv4 = nuauth_config_table_get_or_default_int("pgsql_use_ipv4", PGSQL_USE_IPV4);
 
 	/* init thread private stuff */
 	params->pgsql_priv = g_private_new((GDestroyNotify) PQfinish);

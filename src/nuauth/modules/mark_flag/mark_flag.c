@@ -1,5 +1,5 @@
 /*
-** Copyright(C) 2007 INL
+** Copyright(C) 2007-2008 INL
 **          written by Eric Leblond <regit@inl.fr>
 **
 ** $Id$
@@ -20,6 +20,8 @@
 
 
 #include <auth_srv.h>
+
+#include "nuauthconf.h"
 
 /**
  * \ingroup NuauthModules
@@ -65,9 +67,9 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 		    "Mark_flag module ($Revision$)");
 
 	/* read options */
-	nbits = nubase_config_table_get_or_default_int("mark_flag_nbits", 16);
-	config->mark_shift = nubase_config_table_get_or_default_int("mark_flag_mark_shift", 0);
-	config->flag_shift = nubase_config_table_get_or_default_int("mark_flag_flag_shift", 0);
+	nbits = nuauth_config_table_get_or_default_int("mark_flag_nbits", 16);
+	config->mark_shift = nuauth_config_table_get_or_default_int("mark_flag_mark_shift", 0);
+	config->flag_shift = nuauth_config_table_get_or_default_int("mark_flag_flag_shift", 0);
 
 	config->mark_mask =
 	    (SHR32(0xFFFFFFFF, 32 - config->mark_shift) | SHL32(0xFFFFFFFF,  nbits + config->mark_shift));

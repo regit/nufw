@@ -1,6 +1,7 @@
 /*
- ** Copyright(C) 2005-2007 INL
+ ** Copyright(C) 2005-2008 INL
  ** Written by Eric Leblond <regit@inl.fr>
+ **            Pierre Chifflier <chifflier@inl.fr>
  **
  ** $Id$
  **
@@ -29,5 +30,16 @@ int build_prenuauthconf(struct nuauth_params *prenuauthconf,
 gboolean nuauth_reload(int signal);
 
 void free_nuauth_params(struct nuauth_params *data);
+
+int nuauth_parse_configuration(const char *filename);
+
+
+char *nuauth_config_table_get(const char *key);
+char *nuauth_config_table_get_alwaysstring(char *key);
+char *nuauth_config_table_get_or_default(char *key, char *replace);
+int nuauth_config_table_get_or_default_int(char *key, int defint);
+void nuauth_config_table_destroy(void);
+void nuauth_config_table_print(void *userdata, void (*func)(void *data, char *keyeqval));
+
 
 #endif

@@ -1,6 +1,7 @@
 /*
  ** Copyright (C) 2008 INL
  ** Written by Sebastien Tricaud <s.tricaud@inl.fr>
+ **            Pierre Chifflier <chifflier@inl.fr>
  ** INL http://www.inl.fr/
  **
  ** $Id$
@@ -27,10 +28,8 @@
 #define YYERROR_VERBOSE
 
 extern FILE *yyin;
-char *filename;
+const char *filename;
 char *path;
-
-typedef struct list_head internal_list_t;
 
 /* Pass the argument to yyparse through to yylex. */
 #define YYPARSE_PARAM parsed_config
@@ -53,14 +52,14 @@ typedef struct list_head internal_list_t;
 %locations
 %pure_parser
 
-%parse-param { internal_list_t* parsed_config }
+%parse-param { struct llist_head* parsed_config }
 
 %{
 
 /* this must come after bison macros, since we need these types to be defined */
-int yylex(YYSTYPE* lvalp, YYLTYPE* llocp, internal_list_t* parsed_config);
+int yylex(YYSTYPE* lvalp, YYLTYPE* llocp, struct llist_head* parsed_config);
 
-void yyerror(YYLTYPE* locp, internal_list_t *parsed_config, const char* err);
+void yyerror(YYLTYPE* locp, struct llist_head *parsed_config, const char* err);
 
 
 %}
@@ -78,14 +77,14 @@ section:		TOK_SECTION {
 			;
 key_value:		TOK_WORD TOK_EQUAL TOK_WORD
 			{
-				nubase_config_table_append($1,$3);
+				nubase_config_table_append(parsed_config, $1,$3);
 				free($1);
 				free($3);
 			}
 		|
 			TOK_WORD TOK_EQUAL TOK_STRING
 			{
-				nubase_config_table_append($1,$3);
+				nubase_config_table_append(parsed_config, $1,$3);
 				free($1);
 				free($3);
 			}
@@ -93,25 +92,14 @@ key_value:		TOK_WORD TOK_EQUAL TOK_WORD
 
 %%
 
-void yyerror(YYLTYPE* locp, internal_list_t *parsed_config, const char* err)
+void yyerror(YYLTYPE* locp, struct llist_head *parsed_config, const char* err)
 {
 	fprintf(stderr, "YYERROR:%s\n", err);
 }
 
-int
-__parse_configuration(FILE *input)
+struct llist_head * parse_configuration(const char *config)
 {
-	extern FILE *yyin;
-	void *dummy=(void*)0x42L;
-
-	yyin = input;
-	yyparse(dummy);
-	return  0;
-}
-
-int parse_configuration(char *config)
-{
-	void *dummy=(void*)0x42L;
+	struct llist_head * config_table_list;
 
 	path = str_extract_until(config, '/');
 	filename = config;
@@ -119,11 +107,14 @@ int parse_configuration(char *config)
 	yyin = fopen(config, "r");
 	if ( ! yyin ) {
 		fprintf(stderr, "Cannot open file %s.\n", config);
-		return 1;
+		return NULL;
 	}
-	yyparse(dummy);
+	config_table_list = malloc(sizeof(*config_table_list));
+	INIT_LLIST_HEAD( config_table_list );
 
-	return 0;
+	yyparse(config_table_list);
+
+	return config_table_list;
 }
 
 

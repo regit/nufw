@@ -26,6 +26,8 @@
 #include <errno.h>
 #include <inttypes.h>
 
+#include "nuauthconf.h"
+
 #include "strings.h"
 
 /** Minimum buffer size to write an IPv6 in SQL syntax */
@@ -206,28 +208,28 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	params->hook = module->hook;
 
 	/* set variables */
-	params->mysql_server = nubase_config_table_get_or_default("mysql_server_addr", MYSQL_SERVER);
-	params->mysql_user = nubase_config_table_get_or_default("mysql_user", MYSQL_USER);
-	params->mysql_passwd = nubase_config_table_get_or_default("mysql_passwd", MYSQL_PASSWD);
-	params->mysql_db_name = nubase_config_table_get_or_default("mysql_db_name", MYSQL_DB_NAME);
-	params->mysql_table_name = nubase_config_table_get_or_default("mysql_table_name", MYSQL_TABLE_NAME);
+	params->mysql_server = nuauth_config_table_get_or_default("mysql_server_addr", MYSQL_SERVER);
+	params->mysql_user = nuauth_config_table_get_or_default("mysql_user", MYSQL_USER);
+	params->mysql_passwd = nuauth_config_table_get_or_default("mysql_passwd", MYSQL_PASSWD);
+	params->mysql_db_name = nuauth_config_table_get_or_default("mysql_db_name", MYSQL_DB_NAME);
+	params->mysql_table_name = nuauth_config_table_get_or_default("mysql_table_name", MYSQL_TABLE_NAME);
 	params->mysql_users_table_name =
-	    nubase_config_table_get_or_default("mysql_users_table_name", MYSQL_USERS_TABLE_NAME);
+	    nuauth_config_table_get_or_default("mysql_users_table_name", MYSQL_USERS_TABLE_NAME);
 	params->mysql_ssl_keyfile =
-	    nubase_config_table_get_or_default("mysql_ssl_keyfile", MYSQL_SSL_KEYFILE);
+	    nuauth_config_table_get_or_default("mysql_ssl_keyfile", MYSQL_SSL_KEYFILE);
 	params->mysql_ssl_certfile =
-	    nubase_config_table_get_or_default("mysql_ssl_certfile", MYSQL_SSL_CERTFILE);
-	params->mysql_ssl_ca = nubase_config_table_get_or_default("mysql_ssl_ca", MYSQL_SSL_CA);
-	params->mysql_ssl_capath = nubase_config_table_get_or_default("mysql_ssl_capath", MYSQL_SSL_CAPATH);
-	params->mysql_ssl_cipher = nubase_config_table_get_or_default("mysql_ssl_cipher", MYSQL_SSL_CIPHER);
+	    nuauth_config_table_get_or_default("mysql_ssl_certfile", MYSQL_SSL_CERTFILE);
+	params->mysql_ssl_ca = nuauth_config_table_get_or_default("mysql_ssl_ca", MYSQL_SSL_CA);
+	params->mysql_ssl_capath = nuauth_config_table_get_or_default("mysql_ssl_capath", MYSQL_SSL_CAPATH);
+	params->mysql_ssl_cipher = nuauth_config_table_get_or_default("mysql_ssl_cipher", MYSQL_SSL_CIPHER);
 
-	params->mysql_server_port = nubase_config_table_get_or_default_int("mysql_server_port", MYSQL_SERVER_PORT);
-	params->mysql_request_timeout = nubase_config_table_get_or_default_int("mysql_request_timeout", MYSQL_REQUEST_TIMEOUT);
-	params->mysql_use_ssl = nubase_config_table_get_or_default_int("mysql_use_ssl", MYSQL_USE_SSL);
-	params->mysql_use_ipv4_schema = nubase_config_table_get_or_default_int("mysql_use_ipv4_schema", MYSQL_USE_IPV4_SCHEMA);
-	params->mysql_admin_bofh = nubase_config_table_get_or_default_int("mysql_admin_bofh", 0);
-	params->mysql_prefix_version = nubase_config_table_get_or_default_int("mysql_prefix_version", PREFIX_VERSION_NULOG2); /* XXX: Was previously initialized as PREFIX_VERSION_ORIG*/
-	params->mysql_bofh_victim_group = nubase_config_table_get_or_default_int("mysql_bofh_victim_group", 0);
+	params->mysql_server_port = nuauth_config_table_get_or_default_int("mysql_server_port", MYSQL_SERVER_PORT);
+	params->mysql_request_timeout = nuauth_config_table_get_or_default_int("mysql_request_timeout", MYSQL_REQUEST_TIMEOUT);
+	params->mysql_use_ssl = nuauth_config_table_get_or_default_int("mysql_use_ssl", MYSQL_USE_SSL);
+	params->mysql_use_ipv4_schema = nuauth_config_table_get_or_default_int("mysql_use_ipv4_schema", MYSQL_USE_IPV4_SCHEMA);
+	params->mysql_admin_bofh = nuauth_config_table_get_or_default_int("mysql_admin_bofh", 0);
+	params->mysql_prefix_version = nuauth_config_table_get_or_default_int("mysql_prefix_version", PREFIX_VERSION_NULOG2); /* XXX: Was previously initialized as PREFIX_VERSION_ORIG*/
+	params->mysql_bofh_victim_group = nuauth_config_table_get_or_default_int("mysql_bofh_victim_group", 0);
 
 	if (params->mysql_admin_bofh) {
 		if (nuauthconf->single_user_client_limit !=  1 ) {

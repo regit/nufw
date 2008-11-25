@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2006 INL
+ ** Copyright(C) 2006-2008 INL
  ** written by Eric Leblond <regit@inl.fr>
  **
  ** $Id$
@@ -18,6 +18,8 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 #include <auth_srv.h>
+
+#include "nuauthconf.h"
 
 /**
  * \ingroup NuauthModules
@@ -57,7 +59,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 		    "Ipauth_guest module ($Revision$)");
 
-	params->username = nubase_config_table_get_or_default("ipauth_guest_username", IP_AUTH_GUEST_USERNAME);
+	params->username = nuauth_config_table_get_or_default("ipauth_guest_username", IP_AUTH_GUEST_USERNAME);
 
 	module->params = (gpointer) params;
 	return TRUE;

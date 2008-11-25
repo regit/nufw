@@ -1,6 +1,7 @@
 /*
  ** Copyright(C) 2008 INL
  ** Written by Sebastien Tricaud <s.tricaud@inl.fr>
+ **            Pierre Chifflier <chifflier@inl.fr>
  **
  ** $Id$
  **
@@ -39,13 +40,11 @@
  * \brief Configuration file parsing function
  */
 
-LLIST_HEAD(config_table_list);
-
-char *nubase_config_table_get(char *key)
+char *nubase_config_table_get(struct llist_head *config_table_list, const char *key)
 {
 	struct config_table_t *config_table;
 
-	llist_for_each_entry(config_table, &config_table_list, list) {
+	llist_for_each_entry(config_table, config_table_list, list) {
 		if (!strcmp(config_table->key, key)) {
 			return config_table->value;
 		}
@@ -54,21 +53,21 @@ char *nubase_config_table_get(char *key)
 	return NULL;
 }
 
-char *nubase_config_table_get_alwaysstring(char *key)
+char *nubase_config_table_get_alwaysstring(struct llist_head *config_table_list, char *key)
 {
 	char *str;
 
-	str = nubase_config_table_get(key);
+	str = nubase_config_table_get(config_table_list, key);
 	if ( ! str ) return "";
 
 	return str;
 }
 
-char *nubase_config_table_get_or_default(char *key, char *replace)
+char *nubase_config_table_get_or_default(struct llist_head *config_table_list, char *key, char *replace)
 {
 	char *str;
 
-	str = nubase_config_table_get(key);
+	str = nubase_config_table_get(config_table_list, key);
 
 	if (str) {
 		return strdup(str);
@@ -80,11 +79,12 @@ char *nubase_config_table_get_or_default(char *key, char *replace)
 
 }
 
-struct config_table_t *nubase_config_table_append(char *key, char *value)
+struct config_table_t *nubase_config_table_append(struct llist_head *config_table_list, char *key, char *value)
 {
 	struct config_table_t *config_table;
 
-	if (nubase_config_table_get(key)) return NULL;
+	if (nubase_config_table_get(config_table_list, key))
+		return NULL;
 
 	config_table = malloc(sizeof(*config_table));
 	if ( ! config_table ) {
@@ -95,18 +95,18 @@ struct config_table_t *nubase_config_table_append(char *key, char *value)
 	config_table->key = strdup(key);
 	config_table->value = strdup(value);
 
-	llist_add_tail(&config_table->list, &config_table_list);
+	llist_add_tail(&config_table->list, config_table_list);
 
 
 	return config_table;
 }
 
-void nubase_config_table_destroy(void)
+void nubase_config_table_destroy(struct llist_head *config_table_list)
 {
 	struct config_table_t *config_table;
 
-	while(!llist_empty(&config_table_list)) {
-		config_table = llist_entry(config_table_list.next, struct config_table_t, list);
+	while(!llist_empty(config_table_list)) {
+		config_table = llist_entry(config_table_list->next, struct config_table_t, list);
 		llist_del(&config_table->list);
 		free(config_table->key);
 		free(config_table->value);
@@ -114,50 +114,50 @@ void nubase_config_table_destroy(void)
 	}
 
 	// Reinitialize the list for reuse
-	INIT_LLIST_HEAD(&config_table_list);
+	INIT_LLIST_HEAD(config_table_list);
 }
 
 /* Similar to nubase_config_table_append,
  * but does not check for existing value
  * and if it exists, free() it */
-struct config_table_t *nubase_config_table_set(char *key, char *value)
+struct config_table_t *nubase_config_table_set(struct llist_head *config_table_list, char *key, char *value)
 {
 	struct config_table_t *config_table;
 
 	/* It does not exists so we use _append*/
-	if ( ! nubase_config_table_get(key) ) {
-		return nubase_config_table_append(key, value);
+	if ( ! nubase_config_table_get(config_table_list, key) ) {
+		return nubase_config_table_append(config_table_list, key, value);
 	}
 
-	llist_for_each_entry(config_table, &config_table_list, list) {
+	llist_for_each_entry(config_table, config_table_list, list) {
 		if (!strncmp(key, config_table->key, strlen(config_table->key))) {
 			llist_del(&config_table->list);
-			return nubase_config_table_append(key, value);
+			return nubase_config_table_append(config_table_list, key, value);
 		}
 	}
 
 	return NULL;
 }
 
-int nubase_config_table_get_or_default_int(char *key, int defint)
+int nubase_config_table_get_or_default_int(struct llist_head *config_table_list, char *key, int defint)
 {
 	char *str;
 	int i;
 
-	str = nubase_config_table_get_or_default(key, str_itoa(defint));
+	str = nubase_config_table_get_or_default(config_table_list, key, str_itoa(defint));
 
 	i = atoi(str);
 
 	return i;
 }
 
-void nubase_config_table_print(void *userdata, void (*func)(void *data, char *keyeqval))
+void nubase_config_table_print(struct llist_head *config_table_list, void *userdata, void (*func)(void *data, char *keyeqval))
 {
 	struct config_table_t *config_table;
 	char *buffer;
 	size_t buffer_len;
 
-	llist_for_each_entry(config_table, &config_table_list, list) {
+	llist_for_each_entry(config_table, config_table_list, list) {
 		buffer_len = strlen((const char *)config_table->key) + 1 + strlen((const char *)config_table->value) + 1;
 		buffer = malloc(buffer_len);
 		secure_snprintf(buffer,  buffer_len,

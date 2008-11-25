@@ -19,6 +19,8 @@
  */
 #include <auth_srv.h>
 
+#include "nuauthconf.h"
+
 
 typedef struct {
 	GSList * blacklist_groups;
@@ -76,16 +78,16 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 		    "Session_authtype module ($Revision$)");
-	result = nubase_config_table_get("session_authtype_blacklist_groups");
+	result = nuauth_config_table_get("session_authtype_blacklist_groups");
 	config->blacklist_groups = parse_group_list(result);
 
-	result = nubase_config_table_get("session_authtype_whitelist_groups");
+	result = nuauth_config_table_get("session_authtype_whitelist_groups");
 	config->whitelist_groups = parse_group_list(result);
 
-	result = nubase_config_table_get("session_authtype_sasl_groups");
+	result = nuauth_config_table_get("session_authtype_sasl_groups");
 	config->sasl_groups = parse_group_list(result);
 
-	result = nubase_config_table_get("session_authtype_ssl_groups");
+	result = nuauth_config_table_get("session_authtype_ssl_groups");
 	config->ssl_groups = parse_group_list(result);
 
 	/* store config and exit */

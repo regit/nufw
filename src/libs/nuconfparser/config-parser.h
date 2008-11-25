@@ -19,5 +19,5 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-int parse_configuration(char *config);
+struct llist_head * parse_configuration(const char *config);
 

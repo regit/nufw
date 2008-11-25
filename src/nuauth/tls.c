@@ -32,6 +32,8 @@
 #include <nubase.h>
 #include <nussl.h>
 
+#include "nuauthconf.h"
+
 /**
  * \addtogroup TLS
  * @{
@@ -68,11 +70,11 @@ void tls_common_init(void)
 
 	struct stat stats;
 
-	nuauth_tls.key = nubase_config_table_get_or_default("nuauth_tls_key", NUAUTH_KEYFILE);
-	nuauth_tls.cert = nubase_config_table_get_or_default("nuauth_tls_cert", NUAUTH_CERTFILE);
-	nuauth_tls.ca = nubase_config_table_get_or_default("nuauth_tls_cacert", NUAUTH_CACERTFILE);
-	nuauth_tls.crl_file = nubase_config_table_get("nuauth_tls_crl");
-	nuauth_tls.crl_refresh = nubase_config_table_get_or_default_int("nuauth_tls_crl_refresh", DEFAULT_REFRESH_CRL_INTERVAL);
+	nuauth_tls.key = nuauth_config_table_get_or_default("nuauth_tls_key", NUAUTH_KEYFILE);
+	nuauth_tls.cert = nuauth_config_table_get_or_default("nuauth_tls_cert", NUAUTH_CERTFILE);
+	nuauth_tls.ca = nuauth_config_table_get_or_default("nuauth_tls_cacert", NUAUTH_CACERTFILE);
+	nuauth_tls.crl_file = nuauth_config_table_get("nuauth_tls_crl");
+	nuauth_tls.crl_refresh = nuauth_config_table_get_or_default_int("nuauth_tls_crl_refresh", DEFAULT_REFRESH_CRL_INTERVAL);
 	/* {"nuauth_tls_key_passwd", G_TOKEN_STRING, 0, NULL}, */
 
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_GW | DEBUG_AREA_USER,

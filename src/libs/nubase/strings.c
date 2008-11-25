@@ -75,7 +75,7 @@ int secure_snprintf(char *buffer, size_t buffer_size,
  * \param c character to match the string until
  * \return Returns NULL if error, or the new allocated string
  */
-char *str_extract_until(char *str, int c)
+char *str_extract_until(const char *str, int c)
 {
 	unsigned int i;
 

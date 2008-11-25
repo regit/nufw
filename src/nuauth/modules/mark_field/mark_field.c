@@ -1,5 +1,5 @@
 /*
-** Copyright(C) 2007, INL
+** Copyright(C) 2007-2008 INL
 **	Written by Eric Leblond <eric@inl.fr>
 **	Based on mark_group module by Victor Stinner
 **
@@ -19,9 +19,12 @@
 ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#include "mark_field.h"
 #include <glib.h>
 #include <limits.h>
+
+#include "mark_field.h"
+
+#include "nuauthconf.h"
 
 typedef struct {
 	/** Identifier of the field */
@@ -141,16 +144,16 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 		    "Mark_field module ($Revision$)");
 
 	/* read options */
-	field_filename = nubase_config_table_get_or_default("mark_field_file", MARK_FIELD_CONF);
-	nbits = nubase_config_table_get_or_default_int("mark_field_nbits", 32);
-	config->shift = nubase_config_table_get_or_default_int("mark_field_shift", 0);
-	config->type = nubase_config_table_get_or_default_int("mark_field_type", 0);
+	field_filename = nuauth_config_table_get_or_default("mark_field_file", MARK_FIELD_CONF);
+	nbits = nuauth_config_table_get_or_default_int("mark_field_nbits", 32);
+	config->shift = nuauth_config_table_get_or_default_int("mark_field_shift", 0);
+	config->type = nuauth_config_table_get_or_default_int("mark_field_type", 0);
 	if (config->type < 0 && config->type > 1) {
 		log_message(WARNING, DEBUG_AREA_MAIN,
 				"mark_field: found unknown type, resetting to 0"
 			   );
 	}
-	config->default_mark = nubase_config_table_get_or_default_int("mark_field_default_mark", 0);
+	config->default_mark = nuauth_config_table_get_or_default_int("mark_field_default_mark", 0);
 
 	/* create mask to remove nbits at position shift */
 	config->mask =

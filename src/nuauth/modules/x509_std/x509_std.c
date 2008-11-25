@@ -1,6 +1,7 @@
 /*
-** Copyright(C) 2006 INL
+** Copyright(C) 2006-2008 INL
 **          written by Eric Leblond <regit@inl.fr>
+**                     Pierre Chifflier <chifflier@inl.fr>
 **
 ** $Id$
 **
@@ -69,7 +70,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 		    "X509_std module ($Revision$)");
 
 	/*  set variables */
-	params->trusted_issuer_dn = nubase_config_table_get("nauth_tls_trusted_issuer_dn");
+	params->trusted_issuer_dn = nuauth_config_table_get("nauth_tls_trusted_issuer_dn");
 
 	module->params = (gpointer) params;
 

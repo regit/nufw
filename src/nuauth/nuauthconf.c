@@ -1,6 +1,7 @@
 /*
- ** Copyright(C) 2005-2007 INL
+ ** Copyright(C) 2005-2008 INL
  ** Written by Eric Leblond <regit@inl.fr>
+ **            Pierre Chifflier <chifflier@inl.fr>
  **
  ** $Id$
  **
@@ -21,6 +22,14 @@
 #include <auth_srv.h>
 #include <time.h>
 
+#include <nubase.h>
+
+#include "nuauthconf.h"
+
+#include "config-parser.h"
+
+struct llist_head *nuauth_config_table_list = NULL;
+
 /**
  * \addtogroup NuauthConf
  * @{
@@ -29,6 +38,22 @@
 /** \file nuauthconf.c
  * \brief Contain functions used to regenerate configuration and reload
  */
+
+int nuauth_parse_configuration(const char *filename)
+{
+	struct llist_head *new_config;
+
+	new_config = parse_configuration(filename);
+	if (new_config == NULL)
+		return -1;
+
+	if (nuauth_config_table_list != NULL)
+		nuauth_config_table_destroy();
+
+	nuauth_config_table_list = new_config;
+
+	return 0;
+}
 
 int build_prenuauthconf(struct nuauth_params *prenuauthconf,
 			char *gwsrv_addr, policy_t connect_policy)
@@ -81,75 +106,75 @@ int init_nuauthconf(struct nuauth_params **result)
 	conf = g_new0(struct nuauth_params, 1);
 	*result = conf;
 
-	conf->client_srv = nubase_config_table_get_or_default("nuauth_client_listen_addr", AUTHREQ_CLIENT_LISTEN_ADDR);
-	conf->nufw_srv = nubase_config_table_get_or_default("nuauth_nufw_listen_addr", AUTHREQ_NUFW_LISTEN_ADDR);
-	gwsrv_addr = nubase_config_table_get_or_default("nufw_gw_addr", GWSRV_ADDR);
-	conf->authreq_port = nubase_config_table_get_or_default("nuauth_gw_packet_port", str_itoa(AUTHREQ_PORT));
-	conf->userpckt_port = nubase_config_table_get_or_default("nuauth_user_packet_port", str_itoa(USERPCKT_PORT));
+	conf->client_srv = nuauth_config_table_get_or_default("nuauth_client_listen_addr", AUTHREQ_CLIENT_LISTEN_ADDR);
+	conf->nufw_srv = nuauth_config_table_get_or_default("nuauth_nufw_listen_addr", AUTHREQ_NUFW_LISTEN_ADDR);
+	gwsrv_addr = nuauth_config_table_get_or_default("nufw_gw_addr", GWSRV_ADDR);
+	conf->authreq_port = nuauth_config_table_get_or_default("nuauth_gw_packet_port", str_itoa(AUTHREQ_PORT));
+	conf->userpckt_port = nuauth_config_table_get_or_default("nuauth_user_packet_port", str_itoa(USERPCKT_PORT));
 
-	conf->nbuser_check = nubase_config_table_get_or_default_int("nuauth_number_usercheckers", NB_USERCHECK);
-	conf->nbacl_check = nubase_config_table_get_or_default_int("nuauth_number_aclcheckers", NB_ACLCHECK);
-	conf->nbipauth_check = nubase_config_table_get_or_default_int("nuauth_number_ipauthcheckers", NB_ACLCHECK);
-	conf->log_users = nubase_config_table_get_or_default_int("nuauth_log_users", 9);
-	conf->log_users_sync = nubase_config_table_get_or_default_int("nuauth_log_users_sync", 1);
-	conf->log_users_strict = nubase_config_table_get_or_default_int("nuauth_log_users_strict", 1);
-	conf->log_users_without_realm =	nubase_config_table_get_or_default_int("nuauth_log_users_without_realm", 1);
-	conf->prio_to_nok = nubase_config_table_get_or_default_int("nuauth_prio_to_nok", 1);
-	conf->single_user_client_limit = nubase_config_table_get_or_default_int("nuauth_single_user_client_limit", 0);
-	conf->single_ip_client_limit = nubase_config_table_get_or_default_int("nuauth_single_ip_client_limit", 0);
-	connect_policy = nubase_config_table_get_or_default_int("nuauth_connect_policy", POLICY_MULTIPLE_LOGIN);
+	conf->nbuser_check = nuauth_config_table_get_or_default_int("nuauth_number_usercheckers", NB_USERCHECK);
+	conf->nbacl_check = nuauth_config_table_get_or_default_int("nuauth_number_aclcheckers", NB_ACLCHECK);
+	conf->nbipauth_check = nuauth_config_table_get_or_default_int("nuauth_number_ipauthcheckers", NB_ACLCHECK);
+	conf->log_users = nuauth_config_table_get_or_default_int("nuauth_log_users", 9);
+	conf->log_users_sync = nuauth_config_table_get_or_default_int("nuauth_log_users_sync", 1);
+	conf->log_users_strict = nuauth_config_table_get_or_default_int("nuauth_log_users_strict", 1);
+	conf->log_users_without_realm =	nuauth_config_table_get_or_default_int("nuauth_log_users_without_realm", 1);
+	conf->prio_to_nok = nuauth_config_table_get_or_default_int("nuauth_prio_to_nok", 1);
+	conf->single_user_client_limit = nuauth_config_table_get_or_default_int("nuauth_single_user_client_limit", 0);
+	conf->single_ip_client_limit = nuauth_config_table_get_or_default_int("nuauth_single_ip_client_limit", 0);
+	connect_policy = nuauth_config_table_get_or_default_int("nuauth_connect_policy", POLICY_MULTIPLE_LOGIN);
 	conf->reject_after_timeout =
-	    nubase_config_table_get_or_default_int("nuauth_reject_after_timeout", 0);
+	    nuauth_config_table_get_or_default_int("nuauth_reject_after_timeout", 0);
 	conf->reject_authenticated_drop =
-	    nubase_config_table_get_or_default_int("nuauth_reject_authenticated_drop", 0);
-	conf->nbloggers = nubase_config_table_get_or_default_int("nuauth_number_loggers", NB_LOGGERS);
+	    nuauth_config_table_get_or_default_int("nuauth_reject_authenticated_drop", 0);
+	conf->nbloggers = nuauth_config_table_get_or_default_int("nuauth_number_loggers", NB_LOGGERS);
 	conf->nb_session_loggers =
-	    nubase_config_table_get_or_default_int("nuauth_number_session_loggers", NB_LOGGERS);
+	    nuauth_config_table_get_or_default_int("nuauth_number_session_loggers", NB_LOGGERS);
 	conf->nb_auth_checkers =
-	    nubase_config_table_get_or_default_int("nuauth_number_authcheckers", NB_AUTHCHECK);
-	conf->packet_timeout = nubase_config_table_get_or_default_int("nuauth_packet_timeout", PACKET_TIMEOUT);
+	    nuauth_config_table_get_or_default_int("nuauth_number_authcheckers", NB_AUTHCHECK);
+	conf->packet_timeout = nuauth_config_table_get_or_default_int("nuauth_packet_timeout", PACKET_TIMEOUT);
 	conf->session_duration =
-	    nubase_config_table_get_or_default_int("nuauth_session_duration", SESSION_DURATION);
+	    nuauth_config_table_get_or_default_int("nuauth_session_duration", SESSION_DURATION);
 	conf->datas_persistance =
-	    nubase_config_table_get_or_default_int("nuauth_datas_persistance", 9);
-	conf->push = nubase_config_table_get_or_default_int("nuauth_push_to_client", 1);
+	    nuauth_config_table_get_or_default_int("nuauth_datas_persistance", 9);
+	conf->push = nuauth_config_table_get_or_default_int("nuauth_push_to_client", 1);
 	conf->do_ip_authentication =
-	    nubase_config_table_get_or_default_int("nuauth_do_ip_authentication", 0);
-	conf->acl_cache = nubase_config_table_get_or_default_int("nuauth_acl_cache", 0);
-	conf->user_cache = nubase_config_table_get_or_default_int("nuauth_user_cache", 0);
+	    nuauth_config_table_get_or_default_int("nuauth_do_ip_authentication", 0);
+	conf->acl_cache = nuauth_config_table_get_or_default_int("nuauth_acl_cache", 0);
+	conf->user_cache = nuauth_config_table_get_or_default_int("nuauth_user_cache", 0);
 #if USE_UTF8
-	conf->uses_utf8 = nubase_config_table_get_or_default_int("nuauth_uses_utf8", 1);
+	conf->uses_utf8 = nuauth_config_table_get_or_default_int("nuauth_uses_utf8", 1);
 #else
-	conf->uses_utf8 = nubase_config_table_get_or_default_int("nuauth_uses_utf8", 0);
+	conf->uses_utf8 = nuauth_config_table_get_or_default_int("nuauth_uses_utf8", 0);
 #endif
 	conf->hello_authentication =
-	    nubase_config_table_get_or_default_int("nuauth_hello_authentication", 0);
-	conf->debug_areas = nubase_config_table_get_or_default_int("nuauth_debug_areas", DEFAULT_DEBUG_AREAS);
+	    nuauth_config_table_get_or_default_int("nuauth_hello_authentication", 0);
+	conf->debug_areas = nuauth_config_table_get_or_default_int("nuauth_debug_areas", DEFAULT_DEBUG_AREAS);
 	debug_areas = conf->debug_areas;
-	conf->debug_level = nubase_config_table_get_or_default_int("nuauth_debug_level", DEFAULT_DEBUG_LEVEL);
+	conf->debug_level = nuauth_config_table_get_or_default_int("nuauth_debug_level", DEFAULT_DEBUG_LEVEL);
 	debug_level = conf->debug_level;
 	conf->nufw_has_conntrack =
-	    nubase_config_table_get_or_default_int("nufw_has_conntrack", 1);
+	    nuauth_config_table_get_or_default_int("nufw_has_conntrack", 1);
 	conf->nufw_has_fixed_timeout =
-	    nubase_config_table_get_or_default_int("nufw_has_fixed_timeout", 1);
+	    nuauth_config_table_get_or_default_int("nufw_has_fixed_timeout", 1);
 	conf->nuauth_uses_fake_sasl =
-	    nubase_config_table_get_or_default_int("nuauth_uses_fake_sasl", 1);
+	    nuauth_config_table_get_or_default_int("nuauth_uses_fake_sasl", 1);
 #ifdef BUILD_NUAUTH_COMMAND
 	conf->use_command_server =
-	    nubase_config_table_get_or_default_int("nuauth_use_command_server", 1);
+	    nuauth_config_table_get_or_default_int("nuauth_use_command_server", 1);
 #endif
 	conf->proto_wait_delay =
-	    nubase_config_table_get_or_default_int("nuauth_proto_wait_delay", DEFAULT_PROTO_WAIT_DELAY);
+	    nuauth_config_table_get_or_default_int("nuauth_proto_wait_delay", DEFAULT_PROTO_WAIT_DELAY);
 	conf->drop_if_no_logging =
-	    nubase_config_table_get_or_default_int("nuauth_drop_if_no_logging", FALSE);
+	    nuauth_config_table_get_or_default_int("nuauth_drop_if_no_logging", FALSE);
 	conf->max_unassigned_messages =
-	    nubase_config_table_get_or_default_int("nuauth_max_unassigned_messages", MAX_UNASSIGNED_MESSAGES);
+	    nuauth_config_table_get_or_default_int("nuauth_max_unassigned_messages", MAX_UNASSIGNED_MESSAGES);
 	conf->push_delay =
-	    nubase_config_table_get_or_default_int("nuauth_push_delay", PUSH_DELAY);
+	    nuauth_config_table_get_or_default_int("nuauth_push_delay", PUSH_DELAY);
 
-	conf->krb5_service = nubase_config_table_get_or_default("nuauth_krb5_service", DEFAULT_KRB5_SERVICE);
-	conf->krb5_hostname = nubase_config_table_get("nuauth_krb5_hostname");
-	conf->krb5_realm = nubase_config_table_get("nuauth_krb5_realm");
+	conf->krb5_service = nuauth_config_table_get_or_default("nuauth_krb5_service", DEFAULT_KRB5_SERVICE);
+	conf->krb5_hostname = nuauth_config_table_get("nuauth_krb5_hostname");
+	conf->krb5_realm = nuauth_config_table_get("nuauth_krb5_realm");
 
 	if (conf->debug_level > 9) {
 		conf->debug_level = 9;
@@ -246,9 +271,9 @@ gboolean nuauth_reload(int signum)
 	}
 
 	/* Reload the configuration file */
-	nubase_config_table_destroy();
-	retval = parse_configuration(nuauthconf->configfile);
-	if (retval > 0) {
+	nuauth_config_table_destroy();
+	retval = nuauth_parse_configuration(nuauthconf->configfile);
+	if (retval != 0) {
 		g_error("Cannot reload configuration (file '%s')", nuauthconf->configfile);
 	}
 
@@ -354,5 +379,40 @@ static gboolean compare_nuauthparams(
 	}
 	return restart;
 }
+
+char *nuauth_config_table_get(const char *key)
+{
+	return nubase_config_table_get(nuauth_config_table_list, key);
+}
+
+char *nuauth_config_table_get_alwaysstring(char *key)
+{
+	return nubase_config_table_get_alwaysstring(nuauth_config_table_list, key);
+}
+
+char *nuauth_config_table_get_or_default(char *key, char *replace)
+{
+	return nubase_config_table_get_or_default(nuauth_config_table_list, key, replace);
+}
+
+int nuauth_config_table_get_or_default_int(char *key, int defint)
+{
+	return nubase_config_table_get_or_default_int(nuauth_config_table_list, key, defint);
+}
+
+void nuauth_config_table_destroy(void)
+{
+	return nubase_config_table_destroy(nuauth_config_table_list);
+	nuauth_config_table_list = NULL;
+}
+
+void nuauth_config_table_print(void *userdata, void (*func)(void *data, char *keyeqval))
+
+{
+	return nubase_config_table_print(nuauth_config_table_list,userdata,func);
+}
+
+
+
 
 /** @} */

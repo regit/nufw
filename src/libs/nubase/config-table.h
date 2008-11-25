@@ -1,6 +1,7 @@
 /*
  ** Copyright(C) 2008 INL
  ** Written by Sebastien Tricaud <s.tricaud@inl.fr>
+ **            Pierre Chifflier <chifflier@inl.fr>
  **
  ** $Id$
  **
@@ -29,15 +30,15 @@ struct config_table_t {
 	void *value;
 } config_table_t;
 
-char *nubase_config_table_get(char *key);
-char *nubase_config_table_get_alwaysstring(char *key);
-char *nubase_config_table_get_or_default(char *key, char *replace);
-int nubase_config_table_get_or_default_int(char *key, int defint);
+char *nubase_config_table_get(struct llist_head *config_table_list, const char *key);
+char *nubase_config_table_get_alwaysstring(struct llist_head *config_table_list, char *key);
+char *nubase_config_table_get_or_default(struct llist_head *config_table_list, char *key, char *replace);
+int nubase_config_table_get_or_default_int(struct llist_head *config_table_list, char *key, int defint);
 
-struct config_table_t *nubase_config_table_append(char *key, char *value);
-void nubase_config_table_destroy(void);
-struct config_table_t *nubase_config_table_set(char *key, char *value);
-void nubase_config_table_print(void *userdata, void (*func)(void *data, char *keyeqval));
+struct config_table_t *nubase_config_table_append(struct llist_head *config_table_list, char *key, char *value);
+void nubase_config_table_destroy(struct llist_head *config_table_list);
+struct config_table_t *nubase_config_table_set(struct llist_head *config_table_list, char *key, char *value);
+void nubase_config_table_print(struct llist_head *config_table_list, void *userdata, void (*func)(void *data, char *keyeqval));
 
 #endif /* _CONFIG_TABLE_H_ */
 
