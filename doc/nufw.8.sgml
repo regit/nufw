@@ -71,6 +71,7 @@ manpage.1: manpage.sgml
       <arg><option>-v[v...]</option></arg>
       <arg><option>-s</option></arg>
       <arg><option>-S</option></arg>
+      <arg><option>-N</option></arg>
       <arg><option>-A <replaceable>debug_area</replaceable></option></arg>
       <arg><option>-k <replaceable>keyfile</replaceable></option></arg>
       <arg><option>-c <replaceable>certfile</replaceable></option></arg>
@@ -215,6 +216,13 @@ manpage.1: manpage.sgml
         </term>
         <listitem>
           <para>Force strict TLS checking of the certificate provided by nuauth. This is the default behavior of the daemon since 2.2.18.</para>
+        </listitem>
+      </varlistentry>
+          <varlistentry>
+        <term><option>-N</option>
+        </term>
+        <listitem>
+          <para>Suppress error if server FQDN does not match certificate CN.</para>
         </listitem>
       </varlistentry>
       <varlistentry>

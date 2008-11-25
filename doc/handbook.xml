@@ -1695,6 +1695,10 @@ nfnetlink without problems. The following facts were reported (with NuFW 2.2.14,
     <entry>specifies as argument the filename of the certificate authority file.</entry>
   </row>
   <row>
+    <entry>-N</entry>
+    <entry>If you use this switch, nutfw will skip the nuauth CN check.</entry>
+  </row>
+  <row>
     <entry>-r</entry>
     <entry>specifies as argument the filename of the certificate revocation list. The daemon will also re-read the revocation list if it is disconnected from nuauth and needs to reconnect. Since 2.2.19, nufw reloads this file when receiving a HUP signal.</entry>
   </row>
