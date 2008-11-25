@@ -218,6 +218,9 @@ struct nuauth_session {
 
 	/** Suppress certificate FQDN verification */
 	int suppress_fqdn_verif;
+
+	/** Suppress certificate verification */
+	int suppress_cert_verif;
 };
 
 

@@ -371,6 +371,35 @@ char *get_username()
 }
 
 /**
+ * Callback used for user validation
+ *
+ * \return New allocated buffer containing the answer,
+ *         or NULL if it fails
+ */
+char *get_user_validation(const char *msg)
+{
+	char *answer;
+	int nread;
+	size_t answer_size = 32;
+
+	if (msg) {
+		fprintf(stdout,"%s",msg);
+		fflush(stdout);
+	}
+	answer = (char *) calloc(answer_size, sizeof(char));
+	nread = getline(&answer, &answer_size, stdin);
+	if (nread < 0) {
+		free(answer);
+		printf("Problem when reading answer\n");
+		return NULL;
+	}
+	if (0 < nread && answer[nread - 1] == '\n') {
+		answer[nread - 1] = 0;
+	}
+	return answer;
+}
+
+/**
  * Print client usage.
  */
 static void usage(void)
@@ -574,6 +603,23 @@ nuauth_session_t *do_connect(nutcpc_context_t * context, char *username)
 		}
 	}
 
+	if (!context->cafile) {
+		char *reply;
+
+		reply = get_user_validation(
+			"*******   WARNING   ******\n"
+			"You are trying to connect to nuauth without configuring a certificate authority (CA).\n"
+			"You are vulnerable to attacks like man-in-the-middle.\n"
+			"Do you really want to do that ? Type \"yes\" to continue: ");
+
+		if (reply==NULL || strcasecmp(reply,"YES")!=0) {
+			fprintf(stderr,"Aborted");
+			goto init_failed;
+		}
+		free(reply);
+
+		nu_client_set_cert_suppress_verif(session, 1);
+	}
 	if (!nu_client_set_ca(session, context->cafile, err)) {
 		goto init_failed;
 	}

@@ -539,6 +539,18 @@ int nu_client_set_fqdn_suppress_verif(nuauth_session_t * session,
 
 /**
  * \ingroup nuclientAPI
+ */
+int nu_client_set_cert_suppress_verif(nuauth_session_t * session,
+				int suppress_cert_verif)
+{
+	session->suppress_cert_verif = suppress_cert_verif;
+	if (suppress_cert_verif)
+		session-> suppress_fqdn_verif = 1;
+	return 1;
+}
+
+/**
+ * \ingroup nuclientAPI
  * Set IP source of the socket used to connect to nuauth server
  *
  * \param session Pointer to client session
@@ -714,6 +726,9 @@ int nu_client_connect(nuauth_session_t * session,
 	unsigned int port = atoi(service);
 
 	session->nussl = nussl_session_create();
+
+	if (session->suppress_cert_verif)
+		nussl_ssl_disable_certificate_check(session->nussl,1);
 
 	if (session->suppress_fqdn_verif)
 		nussl_set_session_flag(session->nussl, NUSSL_SESSFLAG_IGNORE_ID_MISMATCH, 1);
