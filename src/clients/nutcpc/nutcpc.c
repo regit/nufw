@@ -604,20 +604,21 @@ nuauth_session_t *do_connect(nutcpc_context_t * context, char *username)
 	}
 
 	if (!context->cafile) {
-		char *reply;
+		if (!suppress_ca_warning) {
+			char *reply;
 
-		reply = get_user_validation(
-			"*******   WARNING   ******\n"
-			"You are trying to connect to nuauth without configuring a certificate authority (CA).\n"
-			"You are vulnerable to attacks like man-in-the-middle.\n"
-			"Do you really want to do that ? Type \"yes\" to continue: ");
+			reply = get_user_validation(
+					"*******   WARNING   ******\n"
+					"You are trying to connect to nuauth without configuring a certificate authority (CA).\n"
+					"You are vulnerable to attacks like man-in-the-middle.\n"
+					"Do you really want to do that ? Type \"yes\" to continue: ");
 
-		if (reply==NULL || strcasecmp(reply,"YES")!=0) {
-			fprintf(stderr,"Aborted");
-			goto init_failed;
+			if (reply==NULL || strcasecmp(reply,"YES")!=0) {
+				fprintf(stderr,"Aborted");
+				goto init_failed;
+			}
+			free(reply);
 		}
-		free(reply);
-
 		nu_client_set_cert_suppress_verif(session, 1);
 	}
 	if (!nu_client_set_ca(session, context->cafile, err)) {
