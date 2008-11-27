@@ -59,7 +59,6 @@
 #include <errno.h>
 #include <pthread.h>
 #include <gcrypt.h>
-//GCRY_THREAD_OPTION_PTHREAD_IMPL;
 
 #ifdef HAVE_ICONV
 #include <iconv.h>

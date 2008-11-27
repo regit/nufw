@@ -15,7 +15,7 @@ libnuclient_la_SOURCES = ${include_HEADERS} libnuclient.c proc.c iconv.c checks.
 			 sys_config.c tcptable.c internal.c
 
 
-libnuclient_la_LIBADD = -lgcrypt -lgnutls -lsasl2 -L$(top_builddir)/src/include/ ../../libs/nussl/libnussl.la ../../libs/nubase/libnubase.la
+libnuclient_la_LIBADD = -lsasl2 -L$(top_builddir)/src/include/ ../../libs/nussl/libnussl.la ../../libs/nubase/libnubase.la
 
 LIBNUCLIENT_AC=3
 LIBNUCLIENT_REV=0

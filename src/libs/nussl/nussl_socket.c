@@ -1633,7 +1633,6 @@ int nussl_sock_connect_ssl(nussl_socket * sock, nussl_ssl_context * ctx,
 	}
 #elif defined(HAVE_GNUTLS)
 	/* DH and RSA params are set in nussl_ssl_context_create
-	 * (str): hum, it does not seem so :(
 	 * */
 	gnutls_init(&sock->ssl, GNUTLS_CLIENT);
 	gnutls_set_default_priority(sock->ssl);
