@@ -109,15 +109,15 @@ void psuppress(packet_idl * previous, packet_idl * current)
  * Try to add a packet to the end of ::packets_list. If we exceed max length
  * (::track_size), just drop the packet.
  *
- * \return Packet id of the new element, or 0 if list is full. 
+ * \return 0 if ok, -1 if list is full. 
  */
-unsigned long padd(packet_idl * current)
+int padd(packet_idl * current)
 {
 	if (track_size <= packets_list.length) {
 		log_area_printf(DEBUG_AREA_PACKET, DEBUG_LEVEL_WARNING,
 				"Warning: queue is full, dropping element");
 		IPQ_SET_VERDICT(current->id, NF_DROP);
-		return 0;
+		return -1;
 	}
 
 	packets_list.length++;
@@ -132,7 +132,7 @@ unsigned long padd(packet_idl * current)
 	packets_list.end = current;
 	if (packets_list.start == NULL)
 		packets_list.start = current;
-	return current->id;
+	return 0;
 }
 
 

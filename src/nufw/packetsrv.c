@@ -167,10 +167,11 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 
 	/* Try to add the packet to the list */
 	pthread_mutex_lock(&packets_list.mutex);
-	q_pckt.packet_id = padd(current);
+	ret = padd(current);
+	q_pckt.packet_id = current->id;
 	pthread_mutex_unlock(&packets_list.mutex);
 
-	if (q_pckt.packet_id) {
+	if (ret == 0) {
 		/* send an auth request packet */
 		if (!auth_request_send(AUTH_REQUEST, &q_pckt)) {
 			int sandf = 0;
@@ -299,6 +300,7 @@ void packetsrv_ipq_process(unsigned char *buffer)
 	packet_idl *current;
 	struct queued_pckt q_pckt;
 	uint32_t pcktid;
+	int ret;
 
 	pckt_rx++;
 	/* printf("Working on IP packet\n"); */
@@ -331,9 +333,10 @@ void packetsrv_ipq_process(unsigned char *buffer)
 
 	/* Adding packet to list */
 	pthread_mutex_lock(&packets_list.mutex);
-	pcktid = padd(current);
+	ret = padd(current);
+	pcktid = current->id;
 	pthread_mutex_unlock(&packets_list.mutex);
-	if (!pcktid) {
+	if (ret != 0) {
 		log_area_printf(DEBUG_AREA_MAIN | DEBUG_AREA_PACKET,
 				DEBUG_LEVEL_VERBOSE_DEBUG,
 				"Can not add packet to packet list (so already dropped): exit");
