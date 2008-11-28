@@ -1,6 +1,6 @@
 SUBDIRS = modules
 
-AM_CFLAGS = -DCONFIG_DIR=\"$(sysconfdir)\" -DMODULE_DIR=\"$(libdir)\" -DLOCAL_STATE_DIR=\"$(localstatedir)\" -L$(top_srcdir)/src/include/ -L$(top_srcdir)/src/nuauth/
+AM_CFLAGS = -DCONFIG_DIR=\"$(sysconfdir)\" -DMODULE_DIR=\"$(libdir)\" -DLOCAL_STATE_DIR=\"$(localstatedir)\" -L$(top_srcdir)/src/include/ -L$(top_srcdir)/src/nuauth/ -D_REENTRANT
 INCLUDES = $(GLIB_CFLAGS) -I$(top_srcdir)/src/include/ -I$(top_srcdir)/src/nuauth/ -I$(top_srcdir)/src/libs/nussl/ -I$(top_srcdir)/src/libs/nubase -I$(top_srcdir)/src/libs/nuconfparser
 
 sbin_PROGRAMS = nuauth
