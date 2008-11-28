@@ -42,8 +42,6 @@
 
 #include <nubase.h>
 
-GCRY_THREAD_OPTION_PTHREAD_IMPL;
-
 char *key_file = NULL;
 char *cert_file = NULL;
 
@@ -647,7 +645,6 @@ int main(int argc, char *argv[])
 	pthread_mutex_init(&tls.mutex, NULL);
 
 	/* start GNU TLS library */
-	gcry_control(GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);
 	if (nussl_init() != NUSSL_OK) {
 		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
 				"Unable to initialize NuSSL library.");
@@ -658,9 +655,9 @@ int main(int argc, char *argv[])
 	cth = nfct_open(CONNTRACK, 0);
 #endif
 
+	log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_INFO,
+			"[+] NuFW server starting");
 
-	/* create packet server thread */
-	create_thread();
 
 	/* do initial connect */
 	tls_connect();
@@ -673,6 +670,9 @@ int main(int argc, char *argv[])
 				DEBUG_LEVEL_CRITICAL,
 				"[!] TLS connection to nuauth can NOT be established");
 	}
+
+	/* create packet server thread */
+	create_thread();
 
 	log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
 			"[+] NuFW " VERSION " started");
