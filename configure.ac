@@ -105,7 +105,7 @@ dnl <SSL>
 dnl
 
 dnl We can force the use of OpenSSL
-AC_ARG_WITH(openssl,   [AC_HELP_STRING(--with-openssl, Build with openssl support.)],build_openssl=$enableval, build_openssl="no" )
+AC_ARG_WITH(openssl,   [AC_HELP_STRING(--with-openssl, Build with openssl support *EXPERIMENTAL*.)],build_openssl=$enableval, build_openssl="no" )
 
 if test $build_openssl = yes; then
    PKG_PROG_PKG_CONFIG
