@@ -510,6 +510,16 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 		exit(EXIT_FAILURE);
 	}
 
+	if (nuauth_tls.crl_file) {
+		ret = nussl_ssl_set_crl_file(context->server, nuauth_tls.crl_file);
+		if ( ret != NUSSL_OK ) {
+			log_message(FATAL, DEBUG_AREA_MAIN,
+					"Failed to load certificate revocation list (CRL): %s",
+					nussl_get_error(context->server));
+			exit(EXIT_FAILURE);
+		}
+	}
+
 	if (int_disable_fqdn_check)
 		nussl_set_session_flag(context->server, NUSSL_SESSFLAG_IGNORE_ID_MISMATCH, 1);
 
