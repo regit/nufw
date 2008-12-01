@@ -184,8 +184,9 @@ int nussl_ssl_context_set_dh_bits(nussl_ssl_context * ctx,
 				  unsigned int dh_bits)
 {
 #warning "Function is not yet implemented"
+	/* XXX see man SSL_CTX_set_tmp_dh_callback */
 
-	return NUSSL_ERROR;
+	return NUSSL_OK;
 }
 
 

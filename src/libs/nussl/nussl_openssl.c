@@ -940,8 +940,24 @@ int nussl_ssl_cert_cmp(const nussl_ssl_certificate * c1,
 
 int nussl_ssl_set_crl_file(nussl_session * sess, const char *crl_file, const char *ca_file)
 {
-	// XXX
-#warning "Function is not yet implemented"
+	X509_STORE *store = SSL_CTX_get_cert_store(sess->ssl_context->ctx);
+	X509_LOOKUP* lu;
+	int ret;
+
+	if (store == NULL)
+		return NUSSL_ERROR;
+
+	lu = X509_STORE_add_lookup(store, X509_LOOKUP_file());
+	if (lu == NULL)
+		return NUSSL_ERROR;
+
+	//ret = X509_load_crl_file(lu, crl_file, X509_FILETYPE_ASN1);
+
+	ret = X509_load_crl_file(lu, crl_file, X509_FILETYPE_PEM);
+	if (ret == 1) {
+		X509_STORE_set_flags(store, X509_V_FLAG_CRL_CHECK | X509_V_FLAG_CRL_CHECK_ALL);
+		return NUSSL_OK;
+	}
 
 	return NUSSL_ERROR;
 }
@@ -1058,6 +1074,17 @@ int nussl_ssl_cert_digest(const nussl_ssl_certificate * cert, char *digest)
 
 	p[-1] = '\0';
 	return 0;
+}
+
+int nussl_get_peer_dn(nussl_session * sess, char *buf, size_t * buf_size)
+{
+	if (sess->peer_cert == NULL)
+		return NUSSL_ERROR;
+
+	// XXX
+#warning "Function is not yet implemented"
+
+	return NUSSL_OK;
 }
 
 #ifdef NUSSL_HAVE_TS_SSL
