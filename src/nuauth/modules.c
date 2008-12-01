@@ -520,8 +520,9 @@ static int load_modules_from(gchar * confvar, gchar * func,
 			    current_module->configfile);
 		if (current_module->module == NULL) {
 			log_message(FATAL, DEBUG_AREA_MAIN,
-				    "Unable to load module %s in %s",
-				    modules_list[i], MODULE_PATH);
+				    "Unable to load module %s in %s\nError: %s",
+				    modules_list[i], MODULE_PATH,
+				    g_module_error ());
 			free_module_t(current_module);
 			exit(EXIT_FAILURE);
 		}
