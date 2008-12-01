@@ -80,7 +80,8 @@ class NuauthConf(ReplaceFile):
             self.need_restart = True
         info("nuauth.conf: set %s=%s" % (key, value))
         if value is None:
-            del self.content[key]
+            if self.content.has_key(key):
+                del self.content[key]
         else:
             self.content[key] = value
 
