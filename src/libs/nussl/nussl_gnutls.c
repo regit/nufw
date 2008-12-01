@@ -76,6 +76,9 @@ GCRY_THREAD_OPTION_PTHREAD_IMPL;
 #include "nussl_privssl.h"
 #include "nussl_utils.h"
 
+static int read_to_datum(const char *filename, gnutls_datum * datum);
+
+
 /* Returns the highest used index in subject (or issuer) DN of
  * certificate CERT for OID, or -1 if no RDNs are present in the DN
  * using that OID. */
@@ -751,20 +754,98 @@ const char *nussl_ssl_cert_identity(const nussl_ssl_certificate * cert)
 	return cert->identity;
 }
 
-#if 0
-void nussl_ssl_trust_default_ca(nussl_session * sess)
+static int check_crl_validity(nussl_session * sess, const char *crl_file, const char *ca_file)
 {
-#ifdef NUSSL_SSL_CA_BUNDLE
-	gnutls_certificate_set_x509_trust_file(sess->ssl_context->cred,
-					       NUSSL_SSL_CA_BUNDLE,
-					       GNUTLS_X509_FMT_PEM);
-#endif
-}
-#endif
+	gnutls_datum_t datum_crl;
+	gnutls_datum_t datum_ca;
+	gnutls_x509_crt_t ca;
+	gnutls_x509_crl_t crl;
+	time_t t, now;
+	int return_value;
+	char buffer[256];
+	size_t s;
+	int ret;
 
-int nussl_ssl_set_crl_file(nussl_session * sess, const char *crl_file)
+	datum_ca.data = NULL;
+	datum_crl.data = NULL;
+
+	NUSSL_DEBUG(NUSSL_DBG_SSL, "Checking CRL file %s against %s", crl_file, ca_file);
+	if (!ca_file || !crl_file)
+		return -1;
+
+	/* read CRL and CA */
+	ret = read_to_datum(crl_file, &datum_crl);
+	if (ret != 0)
+		return -1;
+
+	ret = read_to_datum(ca_file, &datum_ca);
+	if (ret != 0) {
+		nussl_free(datum_crl.data);
+		return -1;
+	}
+
+	gnutls_x509_crt_init(&ca);
+	gnutls_x509_crl_init(&crl);
+
+	ret = gnutls_x509_crl_import(crl, &datum_crl, GNUTLS_X509_FMT_PEM);
+	if (ret) {
+		nussl_set_error(sess,_("TLS: Could not import CRL data\n"));
+		nussl_free(datum_ca.data);
+		nussl_free(datum_crl.data);
+		return -1;
+	}
+
+	ret = gnutls_x509_crt_import(ca, &datum_ca, GNUTLS_X509_FMT_PEM);
+	if (ret) {
+		nussl_set_error(sess,_("TLS: Could not import CA data\n"));
+		gnutls_free(datum_ca.data);
+		gnutls_free(datum_crl.data);
+		return -1;
+	}
+
+
+	/* debug stuff */
+	s = sizeof(buffer);
+	ret = gnutls_x509_crl_get_issuer_dn(crl, buffer, &s);
+	NUSSL_DEBUG(NUSSL_DBG_SSL, "TLS: CRL issuer DN: %s.\n", buffer);
+
+	/* Check if CRL was signed by configured CA */
+	return_value = 0;
+	ret = gnutls_x509_crl_check_issuer (crl, ca);
+	if (ret != 1) {
+		nussl_set_error(sess,_("TLS: CRL issuer is NOT the configured certificate authority\n"));
+		return_value--;
+	}
+
+	/* Check if CRL has expired */
+	now = time(NULL);
+	t = gnutls_x509_crl_get_next_update (crl);
+	/* This field is optional in a CRL */
+	if (t != (time_t)-1 ) {
+		if (now > t) {
+			/* XXX how can we send a warning to caller  from nussl ? */
+			//nussl_set_error(sess,_("TLS: CRL has expired and should be re-issued\n"));
+			NUSSL_DEBUG(NUSSL_DBG_SSL, _("TLS: CRL has expired and should be re-issued\n"));
+			/* this is only a warning, do not decrement return_value */
+		}
+	}
+
+	gnutls_x509_crt_deinit(ca);
+	gnutls_x509_crl_deinit(crl);
+	nussl_free(datum_ca.data);
+	nussl_free(datum_crl.data);
+
+	return return_value;
+
+}
+
+int nussl_ssl_set_crl_file(nussl_session * sess, const char *crl_file, const char *ca_file)
 {
 	int ret;
+
+	if (check_crl_validity(sess, crl_file, ca_file) != 0) {
+		return NUSSL_FAILED;
+	}
 
 	/* this function returns the number of CRLs processed
 	 * or a negative value on error.

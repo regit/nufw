@@ -229,7 +229,7 @@ void tls_connect()
 
 	/* sets the CRL */
 	if (crl_file) {
-		ret = nussl_ssl_set_crl_file(sess, crl_file);
+		ret = nussl_ssl_set_crl_file(sess, crl_file, ca_file);
 		if (ret != NUSSL_OK) {
 			log_area_printf(DEBUG_AREA_MAIN,
 					DEBUG_LEVEL_FATAL,

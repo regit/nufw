@@ -133,7 +133,7 @@ void tls_crl_update_each_session(GSList *session)
 		struct nuauth_thread_t *nuauth_thread = listrunner->data;
 		struct tls_nufw_context_t *context = nuauth_thread->data;
 
-		ret = nussl_ssl_set_crl_file(context->server, nuauth_tls.crl_file);
+		ret = nussl_ssl_set_crl_file(context->server, nuauth_tls.crl_file, nuauth_tls.ca);
 
 		if(ret != NUSSL_OK)
 		{

@@ -511,7 +511,7 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 	}
 
 	if (nuauth_tls.crl_file) {
-		ret = nussl_ssl_set_crl_file(context->server, nuauth_tls.crl_file);
+		ret = nussl_ssl_set_crl_file(context->server, nuauth_tls.crl_file, nuauth_tls.ca);
 		if ( ret != NUSSL_OK ) {
 			log_message(FATAL, DEBUG_AREA_MAIN,
 					"Failed to load certificate revocation list (CRL): %s",
