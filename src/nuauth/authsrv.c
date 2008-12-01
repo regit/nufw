@@ -34,9 +34,7 @@
 
 
 #include <auth_srv.h>
-#include <gcrypt.h>
 #include <sasl/saslutil.h>
-#include "gcrypt_init.h"
 #include "sasl.h"
 #include "security.h"
 #include <sys/resource.h>	/* setrlimit() */
@@ -761,11 +759,6 @@ void configure_app(int argc, char **argv)
 	 * command line one */
 	nuauthconf_from_cmdline(&params);
 
-#ifdef GCRYPT_PTHEAD_IMPLEMENTATION
-	gcry_control(GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread);
-#else
-	gcry_control(GCRYCTL_SET_THREAD_CBS, &gcry_threads_gthread);
-#endif
 	build_prenuauthconf(nuauthconf, NULL, 0);
 
 	ret = nussl_init();
