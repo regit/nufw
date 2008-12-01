@@ -1,7 +1,8 @@
 /*
- ** Copyright (C) 2007 INL
+ ** Copyright (C) 2007-2008 INL
  ** Written by S.Tricaud <stricaud@inl.fr>
  **            L.Defert <ldefert@inl.fr>
+ **            Pierre Chifflier <chifflier@inl.fr>
  ** INL http://www.inl.fr/
  **
  ** $Id: nussl_openssl.c 4310 2008-01-14 17:05:56Z lds $
@@ -75,7 +76,7 @@ nussl_ssl_context *nussl_ssl_context_create(int mode)
 		ctx->ctx = SSL_CTX_new(SSLv23_client_method());
 		ctx->sess = NULL;
 		/* set client cert callback. */
-		SSL_CTX_set_client_cert_cb(ctx->ctx, provide_client_cert);
+		//SSL_CTX_set_client_cert_cb(ctx->ctx, provide_client_cert);
 		/* enable workarounds for buggy SSL server implementations */
 		SSL_CTX_set_options(ctx->ctx, SSL_OP_ALL);
 	} else if (mode == NUSSL_SSL_CTX_SERVER) {
@@ -177,5 +178,15 @@ int nussl_ssl_context_trustcert(nussl_ssl_context * ctx,
 	return (X509_STORE_add_cert(store, cert->subject) ==
 		1) ? NUSSL_OK : NUSSL_ERROR;
 }
+
+/* Server mode: Set DH parameters */
+int nussl_ssl_context_set_dh_bits(nussl_ssl_context * ctx,
+				  unsigned int dh_bits)
+{
+#warning "Function is not yet implemented"
+
+	return NUSSL_ERROR;
+}
+
 
 #endif				/* HAVE_OPENSSL */

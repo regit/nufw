@@ -1,7 +1,8 @@
 /*
- ** Copyright (C) 2007 INL
+ ** Copyright (C) 2007-2008 INL
  ** Written by S.Tricaud <stricaud@inl.fr>
  **            L.Defert <ldefert@inl.fr>
+ **            Pierre Chifflier <chifflier@inl.fr>
  ** INL http://www.inl.fr/
  **
  ** $Id$
@@ -59,6 +60,7 @@ struct nussl_ssl_context_s {
 	SSL_CTX *ctx;
 	SSL_SESSION *sess;
 	const char *hostname;	/* for SNI */
+	int verify;		/* non-zero if client cert verification required */
 
 	DH *dh;
 };

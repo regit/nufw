@@ -1,7 +1,8 @@
 /*
- ** Copyright (C) 2007 INL
+ ** Copyright (C) 2007-2008 INL
  ** Written by S.Tricaud <stricaud@inl.fr>
  **            L.Defert <ldefert@inl.fr>
+ **            Pierre Chifflier <chifflier@inl.fr>
  ** INL http://www.inl.fr/
  **
  ** $Id$
@@ -599,6 +600,14 @@ int nussl_ssl_set_clicert(nussl_session * sess,
 }
 #endif
 
+int nussl__ssl_post_handshake(nussl_session * sess)
+{
+	// XXX
+#warning "Function is not yet implemented"
+
+	return NUSSL_ERROR;
+}
+
 /* For internal use only. */
 int nussl__negotiate_ssl(nussl_session * sess)
 {
@@ -927,6 +936,14 @@ int nussl_ssl_cert_cmp(const nussl_ssl_certificate * c1,
 		       const nussl_ssl_certificate * c2)
 {
 	return X509_cmp(c1->subject, c2->subject);
+}
+
+int nussl_ssl_set_crl_file(nussl_session * sess, const char *crl_file, const char *ca_file)
+{
+	// XXX
+#warning "Function is not yet implemented"
+
+	return NUSSL_ERROR;
 }
 
 nussl_ssl_client_cert *nussl_ssl_import_keypair(const char *cert_file,

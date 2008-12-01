@@ -22,10 +22,12 @@
  */
 #include <auth_srv.h>
 #include <tls.h>
-#include <gcrypt.h>
 #include <sasl/saslutil.h>
 #include "../include/security.h"
 
+#ifdef HAVE_GNUTLS
+
+#include <gcrypt.h>
 /**
  * \ingroup TLSUser
  * @{
@@ -233,5 +235,21 @@ int verify_user_password(const char *given, const char *ours)
 		}
 	}
 }
+
+#elif HAVE_OPENSSL /* HAVE_GNUTLS */
+
+int verify_user_password(const char *given, const char *ours)
+{
+	// XXX
+#warning "Function is not yet implemented"
+
+	return -1;
+}
+
+#else
+
+#error "You need either GnuTLS or OpenSSL"
+
+#endif /* HAVE_GNUTLS */
 
 /* @} */
