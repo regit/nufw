@@ -69,13 +69,16 @@ class NuauthConf(ReplaceFile):
             return True
         if key in self.content and self.content[key] == newvalue:
             return False
-        if key in ("nuauth_tls_cacert", "nuauth_tls_key", "nuauth_tls_cert", "nuauth_do_ip_authentication"):
-            return True
+        if key.startswith("nuauth_tls"):
+            return True;
         return False
 
     def __setitem__(self, key, value):
         if self.needRestart(key, value):
             self.need_restart = True
         info("nuauth.conf: set %s=%s" % (key, value))
-        self.content[key] = value
+        if value is None:
+            del self.content[key]
+        else:
+            self.content[key] = value
 

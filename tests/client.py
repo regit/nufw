@@ -36,11 +36,16 @@ class Client(Process):
     hostname = property(lambda self: self._hostname)
 
     def updateArgs(self):
-        self.program_args = [
-            "-H", self._hostname,
-            "-U", self._username,
-            "-P", self._password,
-            "-d"]
+        args = self._more_args
+        self.program_args = [ ]
+        if not (args and "-H" in args):
+            self.program_args += ["-H", self._hostname]
+        if not (args and "-U" in args):
+            self.program_args += ["-U", self._username]
+        if not (args and "-P" in args):
+            self.program_args += ["-P", self._password]
+        if not (args and "-d" in args):
+            self.program_args += ["-d"]
         self.program_args.extend(self._more_args)
 
     def isReady(self):

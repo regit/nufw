@@ -1,7 +1,7 @@
 #!/usr/bin/python
 from unittest import TestCase, main
 from config import CONF_DIR, config
-from common import createClient, connectClient
+from common import createClientWithCerts, connectClient
 from nuauth import Nuauth
 from nuauth_conf import NuauthConf
 from os import path
@@ -21,11 +21,11 @@ class TestSystem(TestCase):
     def testLogin(self):
         username = config.get("test_system", "username")
         password = config.get("test_system", "password")
-        client = createClient(username, password)
+        client = createClientWithCerts(username, password)
         self.assert_(connectClient(client))
         client.stop()
 
-        client = createClient(username, "xxx%sxxx" % password)
+        client = createClientWithCerts(username, "xxx%sxxx" % password)
         self.assert_(not connectClient(client))
         client.stop()
 

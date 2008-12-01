@@ -39,7 +39,7 @@ class TestAcl(object):
         self.acls.install(self.config)
         self.nuauth = Nuauth(self.config)
         user = self.users[0]
-        client = user.createClient()
+        client = user.createClientWithCerts()
         testAllowPort(self, self.iptables, client, self.host)
         testDisallowPort(self, self.iptables, client, self.host)
         self.acls.desinstall()
@@ -49,7 +49,7 @@ class TestAcl(object):
         self.acls.install(self.config)
         self.nuauth = Nuauth(self.config)
         user = self.users[0]
-        client = user.createClient()
+        client = user.createClientWithCerts()
         testAllowPort(self, self.iptables, client, self.host)
         testDisallowPort(self, self.iptables, client, self.host)
         self.acls.desinstall()
@@ -59,7 +59,7 @@ class TestAcl(object):
         self.acls.install(self.config)
         self.nuauth = Nuauth(self.config)
         user = self.users[0]
-        client = user.createClient()
+        client = user.createClientWithCerts()
         testAllowPort(self, self.iptables, client, self.host)
         self.acls.desinstall()
 
@@ -68,7 +68,7 @@ class TestAcl(object):
         self.acls.install(self.config)
         self.nuauth = Nuauth(self.config)
         user = self.users[0]
-        client = user.createClient()
+        client = user.createClientWithCerts()
         testAllowPort(self, self.iptables, client, self.host, allow=False)
         self.acls.desinstall()
 
@@ -77,7 +77,7 @@ class TestAcl(object):
         self.acls.install(self.config)
         self.nuauth = Nuauth(self.config)
         user = self.users[0]
-        client = user.createClient()
+        client = user.createClientWithCerts()
         testAllowPort(self, self.iptables, client, self.host)
         self.acls.desinstall()
 
@@ -86,7 +86,7 @@ class TestAcl(object):
         self.acls.install(self.config)
         self.nuauth = Nuauth(self.config)
         user = self.users[0]
-        client = user.createClient()
+        client = user.createClientWithCerts()
         testAllowPort(self, self.iptables, client, self.host, allow=False)
         self.acls.desinstall()
 
@@ -95,7 +95,7 @@ class TestAcl(object):
         self.acls.install(self.config)
         self.nuauth = Nuauth(self.config)
         user = self.users[0]
-        client = user.createClient()
+        client = user.createClientWithCerts()
         testAllowPort(self, self.iptables, client, self.host)
         self.acls.desinstall()
 
@@ -104,7 +104,7 @@ class TestAcl(object):
         self.acls.install(self.config)
         self.nuauth = Nuauth(self.config)
         user = self.users[0]
-        client = user.createClient()
+        client = user.createClientWithCerts()
         testAllowPort(self, self.iptables, client, self.host, allow=False)
         self.acls.desinstall()
 

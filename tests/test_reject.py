@@ -1,6 +1,6 @@
 #!/usr/bin/python
 from unittest import TestCase, main
-from common import startNufw, connectClient, createClient, createClientWithCerts
+from common import startNufw, connectClient
 from nuauth import Nuauth
 from nuauth_conf import NuauthConf
 from inl_tests.iptables import Iptables
@@ -8,7 +8,6 @@ from filter import testAllowPort, testPortFailure, VALID_PORT
 from test_plaintext_auth import USERDB
 from plaintext import PlaintextAcl
 from errno import ETIMEDOUT, ENETUNREACH, EISCONN
-from os.path import abspath
 
 class TestICMPReject(TestCase):
     def setUp(self):

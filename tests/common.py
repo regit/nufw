@@ -51,12 +51,18 @@ def createClient(username=USERNAME, password=PASSWORD, more_args=None):
 
 def createClientWithCerts(username=USERNAME, password=PASSWORD, more_args=None):
     nuconfig = NuauthConf()
+    args = [ ]
     cacert = abspath(config.get("test_cert", "cacert"))
+    if not (more_args and "-A" in more_args):
+        args = args + ["-A",cacert]
     cert = abspath(config.get("test_cert", "user_cert"))
+    if not (more_args and "-C" in more_args):
+        args = args + ["-C",cert]
     key = abspath(config.get("test_cert", "user_key"))
-    args = ["-C", cert, "-K", key, "-A", cacert]
+    if not (more_args and "-K" in more_args):
+        args = args + ["-K",key]
     if more_args:
-        args = args.concat(more_args)
+        args = args + more_args
     return Client(username, password, CLIENT_IP, more_args=args)
 
 def connectClient(client):

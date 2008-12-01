@@ -25,7 +25,10 @@ FILES = (
     "test_periods",
     "test_session_expire",
     "test_invalid_tcp",
-    "test_session_authtype"
+    "test_session_authtype",
+    "test_tls_client",
+    "test_tls_nuauth",
+    "test_tls_nufw",
 )
 
 def loadTestcases(module):

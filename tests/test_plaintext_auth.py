@@ -1,6 +1,6 @@
 #!/usr/bin/python
 from unittest import TestCase, main
-from common import createClient, connectClient, createClientWithCerts
+from common import createClientWithCerts, connectClient
 from nuauth import Nuauth
 from nuauth_conf import NuauthConf
 from plaintext import USERDB

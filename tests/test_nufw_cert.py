@@ -51,7 +51,7 @@ class TestClientCert(TestCase):
 
     def get_tls_cert_invalid(self):
         for line in self.nufw.readlines(total_timeout=TIMEOUT):
-            if line.lower().find('tls: invalid certificates received from nuauth server'):
+            if line.lower().find('tls: invalid certificates received from nuauth server') >= 0:
                 return True
         return False
 
@@ -77,18 +77,20 @@ class TestClientCert(TestCase):
 
     def testStrictMode(self):
 
-        self.nufw = startNufw()
+        self.nufw = startNufw(["-d","127.0.0.1"])
         self.connectNuauthNufw()
 
-        self.assert_(self.get_tls_cert_invalid())
+        self.assert_(not self.nufw_connection_is_established())
 
         self.nufw.stop()
 
     def nufw_connection_is_established(self):
+        if self.nufw.is_connected_to_nuauth:
+            return True
         for line in self.nufw.readlines(total_timeout=TIMEOUT):
-            if line.lower().find("TLS connection to nuauth established"):
+            if line.lower().find("tls connection to nuauth established") >= 0:
                 return True
-            if line.lower().find("TLS connection to nuauth restored"):
+            if line.lower().find("tls connection to nuauth restored") >= 0:
                 return True
         return False
 

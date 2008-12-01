@@ -1,7 +1,7 @@
 #!/usr/bin/python
 from compatibility import any
 from unittest import TestCase, main
-from common import createClient, startNufw, connectClient
+from common import createClientWithCerts, startNufw, connectClient
 from inl_tests.iptables import Iptables
 from config import USERNAME, PASSWORD
 from nuauth import Nuauth
@@ -38,7 +38,7 @@ class TestSessionExpire(TestCase):
         self.iptables = Iptables()
 
         # Create client
-        self.client = createClient()
+        self.client = createClientWithCerts()
 
     def tearDown(self):
         self.client.stop()

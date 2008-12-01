@@ -1,26 +1,19 @@
 #!/usr/bin/python
 from unittest import TestCase, main
 from sys import stderr
-from common import createClient, connectClient, PASSWORD
+from common import createClientWithCerts, connectClient, PASSWORD
 from logging import info
 from nuauth import Nuauth
 from nuauth_conf import NuauthConf
-from config import config
-from os.path import abspath
 
 class TestClientAuth(TestCase):
     def setUp(self):
         # Load nuauth
         nuconfig = NuauthConf()
-        self.config = nuconfig
-        self.nuauth = Nuauth()
+        self.nuauth = Nuauth(nuconfig)
 
         # Create client
-        cacert = abspath(config.get("test_cert", "cacert"))
-        cert = abspath(config.get("test_cert", "user_cert"))
-        key = abspath(config.get("test_cert", "user_key"))
-        args = ["-C", cert, "-K", key, "-A", cacert]
-        self.client = createClient(more_args=args)
+        self.client = createClientWithCerts()
 
     def tearDown(self):
         self.client.stop()
