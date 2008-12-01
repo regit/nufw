@@ -51,7 +51,7 @@ class TestClientCert(TestCase):
 
     def get_tls_cert_invalid(self):
         for line in self.nufw.readlines(total_timeout=TIMEOUT):
-            if line.lower().find('tls: invalid certificates received from nuauth server') >= 0:
+            if line.lower().find('certificate verification failed') >= 0:
                 return True
         return False
 
