@@ -10,7 +10,6 @@ plugin_LTLIBRARIES = libplaintext.la
 
 nodist_include_HEADERS = auth_plaintext.h
 libplaintext_la_SOURCES = plaintext.c ${nodist_include_HEADERS}
-libplaintext_la_LIBADD = -L$(top_builddir)/src/libs/nubase -lnubase
 
 libplaintext.la: $(libplaintext_la_OBJECTS) $(libplaintext_la_DEPENDENCIES)
 	$(LINK) -rpath $(plugindir) $(libplaintext_la_LDFLAGS) $(libplaintext_la_OBJECTS) $(libplaintext_la_LIBADD)

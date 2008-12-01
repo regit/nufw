@@ -7,7 +7,6 @@ plugindir = $(libdir)/nuauth/modules
 plugin_LTLIBRARIES = libipauth_guest.la
 
 libipauth_guest_la_SOURCES = libipauth_guest.c
-libipauth_guest_la_LIBADD = -L$(top_builddir)/src/libs/nubase -lnubase
 
 libipauth_guest.la: $(libipauth_guest_la_OBJECTS) $(libipauth_guest_la_DEPENDENCIES)
 	$(LINK) -rpath $(plugindir) $(libipauth_guest_la_LDFLAGS) $(libipauth_guest_la_OBJECTS) $(libipauth_guest_la_LIBADD)
