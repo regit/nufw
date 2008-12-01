@@ -31,6 +31,8 @@ class NuauthConf(ReplaceFile):
         self["nuauth_tls_cert"] = '"%s"' % abspath("./pki/nuauth.inl.fr.crt")
         self["nuauth_tls_request_cert"] = "1"
         self["nuauth_tls_disable_nufw_fqdn_check"] = "1"
+        self["nuauth_nufw_listen_addr"] = '"0.0.0.0"'
+        self["nufw_gw_addr"] = None
 
     def parse_include(self, line):
         conf_dir = dirname(self.filename)
