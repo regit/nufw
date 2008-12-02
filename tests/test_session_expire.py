@@ -11,7 +11,7 @@ from time import sleep
 from filter import testAllowPort, VALID_PORT, HOST
 from mysocket import connectTcp
 
-DELAY = 1.0
+DELAY = 10.0
 TIMEOUT = 2.0
 
 class TestSessionExpire(TestCase):
@@ -48,12 +48,18 @@ class TestSessionExpire(TestCase):
     def testExpire(self):
         self.assert_(connectClient(self.client))
         testAllowPort(self, self.iptables, None, self.host)
+        connectTcp(self.host, VALID_PORT, 0.5)
 
         sleep(self.expiration+DELAY)
 
         connectTcp(self.host, VALID_PORT, 0.5)
-        self.assert_(any("Session not connected" in line
-            for line in self.client.readlines(total_timeout=TIMEOUT)))
+        self.assert_(self.get_session_not_connected())
+
+    def get_session_not_connected(self):
+        for line in self.client.readlines(total_timeout=TIMEOUT):
+            if line.lower().find('session not connected') >= 0:
+                return True
+        return False
 
 if __name__ == "__main__":
     print "Test nuauth client authentification"
