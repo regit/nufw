@@ -602,8 +602,91 @@ int nussl_ssl_set_clicert(nussl_session * sess,
 
 int nussl__ssl_post_handshake(nussl_session * sess)
 {
-	// XXX
-#warning "Function is not yet implemented"
+	nussl_ssl_context *ctx = sess->ssl_context;
+	SSL *ssl;
+	STACK_OF(X509) * chain;
+	int freechain = 0;	/* non-zero if chain should be free'd. */
+
+	NUSSL_DEBUG(NUSSL_DBG_SSL, "Doing SSL post-handshake checks. (check: %d)\n", sess->check_peer_cert);
+
+	if (!sess->check_peer_cert)
+		return NUSSL_OK;
+
+	/* Pass through the hostname if SNI is enabled. */
+	ctx->hostname =
+	    sess->flags[NUSSL_SESSFLAG_TLS_SNI] ? sess->server.
+	    hostname : NULL;
+
+	ssl = nussl__sock_sslsock(sess->socket);
+
+	chain = SSL_get_peer_cert_chain(ssl);
+	/* For an SSLv2 connection, the cert chain will always be NULL. */
+	if (chain == NULL) {
+		X509 *cert = SSL_get_peer_certificate(ssl);
+		if (cert) {
+			chain = sk_X509_new_null();
+			sk_X509_push(chain, cert);
+			freechain = 1;
+		}
+	}
+
+	if (sess->check_peer_cert) {
+		if (chain == NULL || sk_X509_num(chain) == 0) {
+NUSSL_DEBUG(NUSSL_DBG_SSL, "SSL peer did not present certificate\n");
+			nussl_set_error(sess, _("SSL peer did not present certificate"));
+			if (sess->ssl_context->verify < 2) {
+				/* certificates are not mandatory, so continue */
+				return NUSSL_OK;
+			}
+			return NUSSL_ERROR;
+		}
+
+		if (sess->peer_cert) {
+			int diff =
+			    X509_cmp(sk_X509_value(chain, 0),
+				     sess->peer_cert->subject);
+			if (freechain)
+				sk_X509_free(chain);	/* no longer need the chain */
+			if (diff) {
+				/* This could be a MITM attack: fail the request. */
+				nussl_set_error(sess,
+						_("Server certificate changed: "
+						 "connection intercepted?"));
+				return NUSSL_ERROR;
+			}
+			/* certificate has already passed verification: no need to
+			 * verify it again. */
+		} else {
+			/* new connection: create the chain. */
+			nussl_ssl_certificate *cert = make_chain(chain);
+
+			if (freechain)
+				sk_X509_free(chain);	/* no longer need the chain */
+
+			if (check_certificate(sess, ssl, cert)) {
+				NUSSL_DEBUG(NUSSL_DBG_SSL,
+					    "SSL certificate checks failed: %s\n",
+					    sess->error);
+				nussl_ssl_cert_free(cert);
+				return NUSSL_ERROR;
+			}
+			/* remember the chain. */
+			sess->peer_cert = cert;
+		}
+	}
+
+	if (ctx->sess) {
+		SSL_SESSION *newsess = SSL_get0_session(ssl);
+		/* Replace the session if it has changed. */
+		if (newsess != ctx->sess
+		    || SSL_SESSION_cmp(ctx->sess, newsess)) {
+			SSL_SESSION_free(ctx->sess);
+			ctx->sess = SSL_get1_session(ssl);	/* bumping the refcount */
+		}
+	} else {
+		/* Store the session. */
+		ctx->sess = SSL_get1_session(ssl);
+	}
 
 	return NUSSL_OK;
 }
