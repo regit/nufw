@@ -605,7 +605,7 @@ int nussl__ssl_post_handshake(nussl_session * sess)
 	// XXX
 #warning "Function is not yet implemented"
 
-	return NUSSL_ERROR;
+	return NUSSL_OK;
 }
 
 /* For internal use only. */
