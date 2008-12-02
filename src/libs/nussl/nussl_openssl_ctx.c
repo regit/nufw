@@ -147,8 +147,11 @@ int nussl_ssl_context_set_verify(nussl_ssl_context * ctx,
 				 const char *verify_cas)
 {
 	if (required) {
-		SSL_CTX_set_verify(ctx->ctx, SSL_VERIFY_PEER |
-				   SSL_VERIFY_FAIL_IF_NO_PEER_CERT, NULL);
+		int verify_mode = SSL_VERIFY_PEER;
+
+		if (required == NUSSL_CERT_REQUIRE)
+			verify_mode |= SSL_VERIFY_FAIL_IF_NO_PEER_CERT;
+		SSL_CTX_set_verify(ctx->ctx, verify_mode, NULL);
 	}
 	if (ca_names) {
 		SSL_CTX_set_client_CA_list(ctx->ctx,

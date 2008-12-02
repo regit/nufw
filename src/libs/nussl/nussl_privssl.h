@@ -111,4 +111,10 @@ int nussl__ssl_init(void);
 /* Process-global de-initialization of the SSL library. */
 void nussl__ssl_exit(void);
 
+/* Set certificate verification options */
+int nussl_ssl_context_set_verify(nussl_ssl_context * ctx,
+				 int required,
+				 const char *ca_names,
+				 const char *verify_cas);
+
 #endif				/* NUSSL_PRIVSSL_H */

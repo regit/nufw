@@ -1535,6 +1535,7 @@ int nussl_sock_accept_ssl(nussl_socket * sock, nussl_ssl_context * ctx)
 	nussl_ssl_socket ssl;
 
 #if defined(HAVE_OPENSSL)
+	nussl_ssl_context_set_verify(ctx, ctx->verify, NULL, NULL);
 	ssl = SSL_new(ctx->ctx);
 
 	SSL_set_fd(ssl, sock->fd);
