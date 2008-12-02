@@ -1021,6 +1021,73 @@ int nussl_ssl_cert_cmp(const nussl_ssl_certificate * c1,
 	return X509_cmp(c1->subject, c2->subject);
 }
 
+static int check_crl_validity(nussl_session * sess, const char *crl_file, const char *ca_file)
+{
+	BIO* crl_bio;
+	BIO* ca_bio;
+	X509_CRL* crl;
+	X509 *ca=NULL;
+	EVP_PKEY *pkey;
+	int ret;
+
+	NUSSL_DEBUG(NUSSL_DBG_SOCKET, "Loading CRL: %s\n", crl_file);
+
+	crl_bio = BIO_new(BIO_s_file());
+	BIO_read_filename(crl_bio, crl_file);
+
+	if(crl_bio == NULL)
+		return NUSSL_FAILED;
+
+	crl = PEM_read_bio_X509_CRL(crl_bio, NULL, NULL, NULL);
+	BIO_free(crl_bio);
+	if (crl == NULL)
+		return NUSSL_FAILED;
+
+	ca_bio = BIO_new_file(ca_file, "rb");
+	if (ca_bio == NULL)
+		return NUSSL_FAILED;
+
+	ca = PEM_read_bio_X509(ca_bio, NULL, NULL, NULL);
+	if (ca == NULL)
+		return NUSSL_FAILED;
+
+	pkey = X509_get_pubkey(ca);
+
+	BIO_free(ca_bio);
+
+	if (pkey == NULL)
+	{
+		EVP_PKEY_free(pkey);
+		X509_CRL_free(crl);
+		nussl_set_error(sess, _("CRL check failed: could not extract certificate authority public key from %s: %s\n"),ca_file,ERR_error_string(ERR_get_error(), NULL));
+		return NUSSL_FAILED;
+	}
+
+	// Check the validity of the CRL against the CA
+	ret = X509_CRL_verify(crl, pkey);
+	EVP_PKEY_free(pkey);
+	if (ret <= 0)
+	{
+		X509_CRL_free(crl);
+		/* Note that we cannot use ERR_error_string(ERR_get_error(), NULL)
+		 * here, it returns something completely useless like:
+		 * Error: 67567722 : error:0407006A:rsa routines:RSA_padding_check_PKCS1_type_1:block type is not 01
+		 * In human-readable form, this means the CRL is not signed by the CA ...
+		 */
+		nussl_set_error(sess, "CRL check failed. Is CRL issued by the same Certificate Authority ?\n");
+		return NUSSL_FAILED;
+	}
+	if (X509_cmp_current_time(X509_CRL_get_nextUpdate(crl)) < 0
+			|| X509_cmp_current_time(X509_CRL_get_lastUpdate(crl)) > 0)
+	{
+		X509_CRL_free(crl);
+		nussl_set_error(sess, "CRL check failed: CRL has expired\n");
+		return NUSSL_FAILED;
+	}
+
+	return NUSSL_OK;
+}
+
 int nussl_ssl_set_crl_file(nussl_session * sess, const char *crl_file, const char *ca_file)
 {
 	X509_STORE *store = SSL_CTX_get_cert_store(sess->ssl_context->ctx);
@@ -1029,6 +1096,10 @@ int nussl_ssl_set_crl_file(nussl_session * sess, const char *crl_file, const cha
 
 	if (store == NULL)
 		return NUSSL_ERROR;
+
+	if (check_crl_validity(sess, crl_file, ca_file) != 0) {
+		return NUSSL_FAILED;
+	}
 
 	lu = X509_STORE_add_lookup(store, X509_LOOKUP_file());
 	if (lu == NULL)
