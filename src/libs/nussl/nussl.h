@@ -30,10 +30,10 @@ extern "C" {
 /* Global library initialisation */
 	int nussl_init();
 
-/* Create a session to the given server, using the given scheme.  If
- * "https" is passed as the scheme, SSL will be used to connect to the
- * server. */
-	nussl_session *nussl_session_create();
+/* Create a session to the given server, using the given mode.
+ * mode can be one of NUSSL_SSL_CTX_CLIENT, NUSSL_SSL_CTX_SERVER,
+ * or NUSSL_SSL_CTX_SERVERv2 */
+	nussl_session *nussl_session_create(int mode);
 
 /* Finish an HTTP session */
 	void nussl_session_destroy(nussl_session * sess);

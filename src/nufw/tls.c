@@ -194,7 +194,7 @@ void tls_connect()
 		return;
 	}
 
-	sess = nussl_session_create();
+	sess = nussl_session_create(NUSSL_SSL_CTX_CLIENT);
 	if (!sess) {
 		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
 				"Unable to create NuSSL session: %s", nussl_get_error(sess));

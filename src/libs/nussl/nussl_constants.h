@@ -12,6 +12,13 @@
 #ifndef __NUSSL_CONSTANTS__
 #define __NUSSL_CONSTANTS__
 
+/* Context creation modes: */
+typedef enum {
+	NUSSL_SSL_CTX_CLIENT,		/* client context */
+	NUSSL_SSL_CTX_SERVER,		/* default server context */
+	NUSSL_SSL_CTX_SERVERv2,		/* SSLv2 specific server context */
+} nussl_mode_t;
+
 typedef enum {
 	NUSSL_CERT_IGNORE,
 	NUSSL_CERT_REQUEST,

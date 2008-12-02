@@ -725,7 +725,7 @@ int nu_client_connect(nuauth_session_t * session,
 	int ret;
 	unsigned int port = atoi(service);
 
-	session->nussl = nussl_session_create();
+	session->nussl = nussl_session_create(NUSSL_SSL_CTX_CLIENT);
 
 	if (session->suppress_cert_verif)
 		nussl_ssl_disable_certificate_check(session->nussl,1);

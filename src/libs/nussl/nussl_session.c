@@ -124,7 +124,7 @@ void nussl_set_hostinfo(nussl_session * sess, const char *hostname,
 
 }
 
-nussl_session *nussl_session_create()
+nussl_session *nussl_session_create(int mode)
 {
 
 	nussl_session *sess = nussl_calloc(sizeof *sess);
@@ -137,7 +137,7 @@ nussl_session *nussl_session_create()
 
 	strcpy(sess->error, "Unknown error.");
 
-	sess->ssl_context = nussl_ssl_context_create(0);
+	sess->ssl_context = nussl_ssl_context_create(mode);
 	sess->flags[NUSSL_SESSFLAG_SSLv2] = 1;
 	sess->flags[NUSSL_SESSFLAG_TLS_SNI] = 1;
 
@@ -157,7 +157,7 @@ nussl_session *nussl_session_create()
 nussl_session *nussl_session_create_with_fd(int server_fd, int verify)
 {
 	nussl_session *srv_sess;
-	srv_sess = nussl_session_create();
+	srv_sess = nussl_session_create(NUSSL_SSL_CTX_SERVER);
 	if (!srv_sess) {
 		return NULL;
 	}
@@ -177,7 +177,7 @@ nussl_session *nussl_session_accept(nussl_session * srv_sess)
 	if (!srv_sess)
 		return NULL;
 
-	client_sess = nussl_session_create();
+	client_sess = nussl_session_create(NUSSL_SSL_CTX_SERVER);
 
 	if (!client_sess) {
 		nussl_set_error(srv_sess, _("Not enough memory"));

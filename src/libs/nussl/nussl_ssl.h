@@ -178,11 +178,6 @@ void nussl_ssl_clicert_free(nussl_ssl_client_cert * ccert);
  * are only needed when interfacing directly with nussl_socket.h. */
 typedef struct nussl_ssl_context_s nussl_ssl_context;
 
-/* Context creation modes: */
-#define NUSSL_SSL_CTX_CLIENT (0)	/* client context */
-#define NUSSL_SSL_CTX_SERVER (1)	/* default server context */
-#define NUSSL_SSL_CTX_SERVERv2 (2)	/* SSLv2-specific server context */
-
 /* Create an SSL context. */
 nussl_ssl_context *nussl_ssl_context_create(int mode);
 

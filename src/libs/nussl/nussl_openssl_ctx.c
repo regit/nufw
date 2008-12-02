@@ -72,6 +72,7 @@
 nussl_ssl_context *nussl_ssl_context_create(int mode)
 {
 	nussl_ssl_context *ctx = nussl_calloc(sizeof *ctx);
+
 	if (mode == NUSSL_SSL_CTX_CLIENT) {
 		ctx->ctx = SSL_CTX_new(SSLv23_client_method());
 		ctx->sess = NULL;
@@ -88,6 +89,7 @@ nussl_ssl_context *nussl_ssl_context_create(int mode)
 		SSL_CTX_set_session_cache_mode(ctx->ctx,
 					       SSL_SESS_CACHE_CLIENT);
 	}
+
 	return ctx;
 }
 

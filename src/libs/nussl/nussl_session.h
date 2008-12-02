@@ -1,7 +1,8 @@
 /*
- ** Copyright (C) 2007 INL
+ ** Copyright (C) 2007-2008 INL
  ** Written by S.Tricaud <stricaud@inl.fr>
  **            L.Defert <ldefert@inl.fr>
+ **            Pierre Chifflier <chifflier@inl.fr>
  ** INL http://www.inl.fr/
  **
  ** $Id$
@@ -45,10 +46,10 @@
 
 NUSSL_BEGIN_DECLS typedef struct nussl_session_s nussl_session;
 
-/* Create a session to the given server, using the given scheme.  If
- * "https" is passed as the scheme, SSL will be used to connect to the
- * server. */
-nussl_session *nussl_session_create();
+/* Create a session to the given server, using the given mode.
+ * mode can be one of NUSSL_SSL_CTX_CLIENT, NUSSL_SSL_CTX_SERVER,
+ * or NUSSL_SSL_CTX_SERVERv2 */
+nussl_session *nussl_session_create(int mode);
 
 void nussl_session_destroy(nussl_session * sess);
 
