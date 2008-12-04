@@ -318,6 +318,9 @@ void nussl_set_read_timeout(nussl_session * sess, int timeout)
 
 	sess->rdtimeout = timeout;
 
+	if (sess->socket)
+		nussl_sock_read_timeout(sess->socket, timeout);
+
 }
 
 void nussl_set_connect_timeout(nussl_session * sess, int timeout)
