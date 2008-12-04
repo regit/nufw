@@ -31,6 +31,10 @@
 
 #include "nufw.h"
 
+#ifdef HAVE_GETOPT_H
+# include <getopt.h>
+#endif
+
 #include <linux/netfilter.h>
 #include <unistd.h>
 #include <pthread.h>
@@ -355,6 +359,80 @@ int init_checks()
 	return 1;
 }
 
+static struct option long_options[] = {
+	{"help", 0, NULL, 'h'},
+	{"version", 0, NULL, 'V'},
+	{"daemon", 0, NULL, 'D'},
+	{"strict", 0, NULL, 's'},
+	{"no-strict", 0, NULL, 'S'},
+	{"key", 1, NULL, 'k'},
+	{"cert", 1, NULL, 'c'},
+	{"ca", 1, NULL, 'a'},
+	{"crl", 1, NULL, 'r'},
+	{"check-dn", 1, NULL, 'n'},
+	{"verbose", 0, NULL, 'v'},
+	{"debug-area", 1, NULL, 'A'},
+	{"ipv4", 0, NULL, '4'},
+	{"mark", 0, NULL, 'm'},
+	{"conntrack", 0, NULL, 'C'},
+	{"marked-only", 0, NULL, 'M'},
+	{"destination", 1, NULL, 'd'},
+	{"port", 1, NULL, 'p'},
+	{"queue", 1, NULL, 'q'},
+	{"queue-len", 1, NULL, 'L'},
+	{"timeout", 1, NULL, 't'},
+	{"track-size", 1, NULL, 'T'},
+
+	{0, 0, 0, 0}
+};
+
+
+void display_usage(void)
+{
+	fprintf(stdout, "%s [-hVc"
+#ifdef HAVE_LIBCONNTRACK
+		"CM"
+#endif
+		"v[v[v[v[v[v[v[v[v[v]]]]]]]]]] [-d remote_addr] [-p remote_port]  [-t packet_timeout] [-T track_size]"
+#ifdef USE_NFQUEUE
+				" [-q queue_num]"
+#ifdef HAVE_NFQ_SET_QUEUE_MAXLEN
+				" [-L queue_maxlen]"
+#endif
+#endif
+				"\n\
+\t-h (--help       ): display this help and exit\n\
+\t-V (--version    ): display version and exit\n\
+\t-D (--daemon     ): daemonize\n\
+\t-s (--strict     ): do not enforce strict checking of TLS certificates\n\
+\t-S (--no-strict  ): this option does nothing, it is here for backward compatibility\n\
+\t-k (--key        ): certificate key file\n\
+\t-c (--cert       ): certificate file\n\
+\t-a (--ca         ): certificate authority file (strict checking is done if selected) (default: none)\n\
+\t-r (--crl        ): use specified file as crl file (default: none)\n\
+\t-n (--check-dn   ): use specified string as the needed DN of nuauth (enforce certificate checking) (default is to)\n\
+\t\tcheck the DN against nuauth FQDN specified using the -d option)\n\
+\t-v (--verbose    ): increase debug level (+1 for each 'v') (max useful number: 10)\n\
+\t-A (--debug-area ): debug areas (see man page for details)\n\
+\t-4 (--ipv4       ): use this flag if your system does not have IPv6 support for nfnetlink\n\
+\t-m (--mark       ): mark packet with nuauth provided mark\n"
+#ifdef HAVE_LIBCONNTRACK
+"\t-C (--conntrack  ): listen to conntrack events (needed for connection expiration)\n\
+\t-M (--marked-only): only report event on marked connections to nuauth (implies -C and -m)\n"
+#endif
+"\t-d (--destination): remote address we send auth requests to (address of the nuauth server) (default: 127.0.0.1)\n\
+\t-p (--port       ): remote port we send auth requests to (TCP port nuauth server listens on) (default: 4128)\n"
+#if USE_NFQUEUE
+"\t-q (--queue      ): use nfqueue number (default: 0)\n"
+#ifdef HAVE_NFQ_SET_QUEUE_MAXLEN
+"\t-L (--queue-len  ): set queue max len (default: 1024)\n"
+#endif
+#endif
+"\t-t (--timeout    ): timeout to forget about packets when they don't match (default: 15 s)\n\
+\t-T (--track-size ): track size (default : 1000)\n",
+				PACKAGE_TARNAME);
+}
+
 
 /**
  * Main function of NuFW:
@@ -435,7 +513,7 @@ int main(int argc, char *argv[])
 			"[+] Start NuFW");
 
 	/*parse options */
-	while ((option = getopt(argc, argv, options_list)) != -1) {
+	while ((option = getopt_long(argc, argv, options_list, long_options, NULL)) != -1) {
 		switch (option) {
 		case 'k':
 			key_file = strdup(optarg);
@@ -548,49 +626,7 @@ int main(int argc, char *argv[])
 #endif				/* USE_NFQUEUE */
 
 		case 'h':
-			fprintf(stdout, "%s [-hVc"
-#ifdef HAVE_LIBCONNTRACK
-				"CM"
-#endif
-				"v[v[v[v[v[v[v[v[v[v]]]]]]]]]] [-d remote_addr] [-p remote_port]  [-t packet_timeout] [-T track_size]"
-#ifdef USE_NFQUEUE
-				" [-q queue_num]"
-#ifdef HAVE_NFQ_SET_QUEUE_MAXLEN
-				" [-L queue_maxlen]"
-#endif
-#endif
-				"\n\
-\t-h: display this help and exit\n\
-\t-V: display version and exit\n\
-\t-D: daemonize\n\
-\t-s: do not enforce strict checking of TLS certificates\n\
-\t-S: this option does nothing, it is here for backward compatibility\n\
-\t-k: use specified file as key file\n\
-\t-c: use specified file as cert file\n\
-\t-a: use specified file as ca file (strict checking is done if selected) (default: none)\n\
-\t-r: use specified file as crl file (default: none)\n\
-\t-n: use specified string as the needed DN of nuauth (enforce certificate checking) (default is to)\n\
-\t\tcheck the DN against nuauth FQDN specified using the -d option)\n\
-\t-v: increase debug level (+1 for each 'v') (max useful number: 10)\n\
-\t-A: debug areas (see man page for details)\n\
-\t-4: use this flag if your system does not have IPv6 support for nfnetlink\n\
-\t-m: mark packet with nuauth provided mark\n"
-#ifdef HAVE_LIBCONNTRACK
-				"\t-C: listen to conntrack events (needed for connection expiration)\n\
-\t-M: only report event on marked connections to nuauth (implies -C and -m)\n"
-#endif
-				"\t-d: remote address we send auth requests to (address of the nuauth server) (default: 127.0.0.1)\n\
-\t-p: remote port we send auth requests to (TCP port nuauth server listens on) (default: 4128)\n"
-#if USE_NFQUEUE
-				"\t-q: use nfqueue number (default: 0)\n"
-#ifdef HAVE_NFQ_SET_QUEUE_MAXLEN
-				"\t-L : set queue max len (default: 1024)\n"
-#endif
-#endif
-				"\t-t : timeout to forget about packets when they don't match (default: 15 s)\n\
-\t-T : track size (default : 1000)\n",
-				PACKAGE_TARNAME);
-
+			display_usage();
 			exit(EXIT_SUCCESS);
 		}
 	}
