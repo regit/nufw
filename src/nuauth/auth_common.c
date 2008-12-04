@@ -23,9 +23,14 @@
 #include "auth_srv.h"
 #include <netinet/ip.h>
 #include <netinet/ip6.h>
+#include <sys/socket.h>
+#include <sys/un.h>
 #include <ctype.h>         /* isspace() */
 
 #include <nubase.h>
+
+/* See <sys/un.h for details, value is hardcoded */
+#define UNIX_MAX_PATH 108
 
 /**
  * \ingroup Nuauth
@@ -207,8 +212,8 @@ int nuauth_bind(char **errmsg, const char *addr, const char *port, char *context
 	hints.ai_flags = AI_PASSIVE;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_family = PF_UNSPEC;
-	ecode =
-	    getaddrinfo(addr, port,
+
+	ecode = getaddrinfo(addr, port,
 			&hints, &res);
 	if (ecode != 0) {
 		*errmsg =
@@ -234,8 +239,8 @@ int nuauth_bind(char **errmsg, const char *addr, const char *port, char *context
 	else
 		log_message(DEBUG, DEBUG_AREA_USER | DEBUG_AREA_MAIN,
 			    "Creating server (any) socket");
-	sck_inet =
-	    socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+
+	sck_inet = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 	if (sck_inet == -1) {
 		*errmsg = g_strdup("Socket creation failed.");
 		return -1;
@@ -262,6 +267,36 @@ int nuauth_bind(char **errmsg, const char *addr, const char *port, char *context
 	}
 	freeaddrinfo(res);
 	return sck_inet;
+}
+
+int nuauth_bind_unix(char **errmsg, const char *unix_path)
+{
+	struct sockaddr_un s_addr;
+	int sck_unix;
+	socklen_t len;
+
+	log_message(DEBUG, DEBUG_AREA_USER | DEBUG_AREA_MAIN,
+		    "Creating server (unix socket) on %s", unix_path);
+
+	sck_unix = socket(AF_UNIX, SOCK_STREAM, 0);
+	if (sck_unix == -1) {
+		*errmsg = g_strdup("Socket creation failed.");
+		return -1;
+	}
+
+	s_addr.sun_family = AF_UNIX;
+	strncpy(s_addr.sun_path, unix_path, UNIX_MAX_PATH-1);
+	/* ignore errors, socket may not exist */
+	unlink(s_addr.sun_path);
+	len = strlen(s_addr.sun_path) + sizeof(s_addr.sun_family);
+	if (bind(sck_unix, (struct sockaddr *)&s_addr, len) == -1) {
+		*errmsg = g_strdup_printf("Unable to bind socket to %s.",
+					  unix_path);
+		close(sck_unix);
+		return -1;
+	}
+
+	return sck_unix;
 }
 
 /**

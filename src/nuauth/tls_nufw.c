@@ -26,6 +26,9 @@
 #include <nubase.h>
 #include <nussl.h>
 
+#include <sys/socket.h>
+#include <sys/un.h>
+
 #include "nuauthconf.h"
 
 /**
@@ -51,6 +54,7 @@ struct tls_nufw_context_t {
 	char *port;
 	int mx;
 	int sck_inet;
+	int sck_unix;
 	fd_set tls_rx_set;	/* read set */
 	GMutex *mutex;
 
@@ -299,6 +303,65 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 	return 0;
 }
 
+int tls_nufw_accept_unix(struct tls_nufw_context_t *context)
+{
+	int conn_fd;
+	struct sockaddr_un sockaddr;
+	socklen_t len_unix = sizeof(sockaddr);
+
+	nufw_session_t *nu_session;
+
+	/* Check number of connected servers */
+	if ( nufw_servers_connected >= nuauth_tls_max_servers ) {
+		log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_WARNING,
+				"too many servers (%d configured)",
+				nuauth_tls_max_servers);
+		return 1;
+	}
+
+	/* initialize TLS */
+	nu_session = g_new0(nufw_session_t, 1);
+
+	nu_session->connect_timestamp = time(NULL);
+	nu_session->usage = 0;
+	nu_session->alive = TRUE;
+
+	/* We have to wait the first packet */
+	nu_session->proto_version = PROTO_UNKNOWN;
+
+	nu_session->nufw_client = NULL;
+
+	conn_fd = accept(context->sck_unix, (struct sockaddr*)&sockaddr, &len_unix);
+	if ( conn_fd < 0 ) {
+		g_free(nu_session);
+		log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_WARNING,
+				"Error while accepting nufw server connection");
+		return 1;
+	}
+
+	nu_session->nufw_client = nussl_session_create_with_fd(conn_fd, 0 /* verify */);
+	if ( ! nu_session->nufw_client ) {
+		g_free(nu_session);
+		log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_WARNING,
+				"Unable to allocate nufw server connection : %s",
+				nussl_get_error(context->server));
+		return 1;
+	}
+
+
+	nufw_servers_connected++;
+
+	nu_session->tls_lock = g_mutex_new();
+	add_nufw_server(conn_fd, nu_session);
+	FD_SET(conn_fd, &context->tls_rx_set);
+	if (conn_fd + 1 > context->mx)
+		context->mx = conn_fd + 1;
+	g_message("[+] NuFW: new NuFW server connected on unix socket %d",
+		  conn_fd);
+
+	return 0;
+}
+
 /**
  * NuFW TLS thread main loop:
  *   - Wait events (message/new connection) using select() with a timeout
@@ -311,7 +374,9 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex * mutex)
 	int n, c, z;
 	fd_set wk_set;		/* working set */
 	struct timeval tv;
+	char *unix_path;
 
+	unix_path = nuauth_config_table_get("nuauth_client_listen_socket");
 	log_message(INFO, DEBUG_AREA_GW,
 		    "[+] NuAuth is waiting for NuFW connections.");
 	while (g_mutex_trylock(mutex)) {
@@ -369,9 +434,18 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex * mutex)
 			}
 		}
 
+		/* Check if a connect has occured */
+		if (context->sck_unix > 0 && FD_ISSET(context->sck_unix, &wk_set)) {
+			if (tls_nufw_accept_unix(context)) {
+				continue;
+			}
+		}
+
 		/* check for server activity */
 		for (c = 0; c < context->mx; ++c) {
 			if (c == context->sck_inet)
+				continue;
+			if (c == context->sck_unix)
 				continue;
 
 			if (FD_ISSET(c, &wk_set)) {
@@ -379,11 +453,10 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex * mutex)
 				debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
 						  "nufw activity on socket %d",
 						  c);
-				c_session =
-					acquire_nufw_session_by_socket(c);
+
+				c_session = acquire_nufw_session_by_socket(c);
 				g_assert(c_session);
-				if (treat_nufw_request(c_session) ==
-				    NU_EXIT_ERROR) {
+				if (treat_nufw_request(c_session) == NU_EXIT_ERROR) {
 					/* get session link with c */
 					debug_log_message(DEBUG, DEBUG_AREA_GW,
 							  "nufw server disconnect on %d",
@@ -403,6 +476,9 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex * mutex)
 		}
 	}
 	close(context->sck_inet);
+	close(context->sck_unix);
+	if (unix_path)
+		unlink(unix_path);
 }
 
 /**
@@ -412,7 +488,9 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex * mutex)
 int tls_nufw_init(struct tls_nufw_context_t *context)
 {
 	int socket_fd;
+	int unix_socket_fd;
 	char *errmsg;
+	char *unix_path;
 
 /* config init */
 	int ret;
@@ -428,6 +506,19 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 		return 0;
 	}
 
+	unix_path = nuauth_config_table_get("nuauth_client_listen_socket");
+	if (unix_path) {
+		context->sck_unix = nuauth_bind_unix(&errmsg, unix_path);
+		if (context->sck_unix < 0) {
+			log_message(FATAL, DEBUG_AREA_GW | DEBUG_AREA_MAIN,
+					"FATAL ERROR: NuFW unix bind error: %s", errmsg);
+			log_message(FATAL, DEBUG_AREA_GW | DEBUG_AREA_MAIN,
+					"Check that nuauth is not running twice. Exiting nuauth!");
+			return 0;
+		}
+	} else {
+		context->sck_unix = -1;
+	}
 
 #if 0 /* XXX: Already commented in 2.2 */
 	struct sigaction action;
@@ -466,12 +557,25 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 		exit(EXIT_FAILURE);
 	}
 
+	if (context->sck_unix >= 0) {
+		unix_socket_fd = listen(context->sck_unix, 20);
+		if (unix_socket_fd == -1) {
+			log_message(FATAL, DEBUG_AREA_MAIN,
+					"nufw unix_socket listen() failed, exiting");
+			exit(EXIT_FAILURE);
+		}
+	}
+
 
 	/* init fd_set */
 	context->mx = context->sck_inet + 1;
+	if (context->sck_unix > context->sck_inet)
+		context->mx = context->sck_unix + 1;
 
 	FD_ZERO(&context->tls_rx_set);
 	FD_SET(context->sck_inet, &context->tls_rx_set);
+	if (context->sck_unix >=0)
+		FD_SET(context->sck_unix, &context->tls_rx_set);
 
 	/* TODO: read values specific to nufw connection */
 	nuauth_tls_max_servers = nuauth_config_table_get_or_default_int("nuauth_tls_max_servers", NUAUTH_TLS_MAX_SERVERS);

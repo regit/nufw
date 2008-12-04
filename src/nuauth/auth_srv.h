@@ -237,6 +237,8 @@ void nuauth_install_signals(gboolean action);
 
 int nuauth_bind(char **errmsg, const char *addr, const char *port, char *context);
 
+int nuauth_bind_unix(char **errmsg, const char *unix_path);
+
 /*----------------------- Kerberos stuff ----------------------------------*/
 
 /**
