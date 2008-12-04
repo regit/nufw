@@ -26,6 +26,12 @@
 #include <nubase.h>
 #include <nussl.h>
 
+#include <sys/socket.h>
+#include <sys/un.h>
+
+/* see <sys/un.h> for details - value is hardcoded */
+#define UNIX_MAX_PATH 108
+
 
 /**
  * \file nufw/tls.c
@@ -172,6 +178,44 @@ void create_authserver()
 
 }
 
+void tls_connect_unix()
+{
+	struct sockaddr_un remote;
+	socklen_t len;
+	int s;
+	int ret;
+	nussl_session* sess;
+
+	log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
+		"Trying to connect to unix socket: %s", authreq_addr);
+
+	s = socket(AF_UNIX, SOCK_STREAM, 0);
+	if (s < 0) {
+		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
+				"Couldn't create socket");
+		return;
+	}
+
+	remote.sun_family = AF_UNIX;
+	strncpy(remote.sun_path, authreq_addr, UNIX_MAX_PATH-1);
+	len = strlen(remote.sun_path) + sizeof(remote.sun_family);
+	ret = connect(s, (struct sockaddr *)&remote, len);
+	if (ret < 0) {
+		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
+				"Couldn't connect to unix socket");
+		return;
+	}
+
+	sess = nussl_session_create_with_fd(s, 0 /* verify */);
+	/* time *must* be set to 0 (non-blocking calls) to avoid a deadlock
+	 * between auth_request_send and authsrv
+	 */
+	nussl_set_read_timeout(sess, 0);
+
+	tls.session = sess;
+	create_authserver();
+}
+
 /**
  * Create a TLS connection to NuAuth: create a TCP socket and connect
  * to NuAuth using ::adr_srv.
@@ -187,6 +231,9 @@ void tls_connect()
 	nussl_session* sess;
 
 	tls.session = NULL;
+
+	if (authreq_addr[0] == '/')
+		return tls_connect_unix();
 
 	if (!init_x509_filenames()) {
 		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
