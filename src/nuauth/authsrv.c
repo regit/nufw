@@ -44,6 +44,10 @@
 
 #include "nuauthconf.h"
 
+#ifdef HAVE_GETOPT_H
+# include <getopt.h>
+#endif
+
 typedef struct {
 	int daemonize;
 	int debug_level;
@@ -481,6 +485,22 @@ void daemonize()
 	(void) close(STDERR_FILENO);
 }
 
+static struct option long_options[] = {
+	{"help", 0, NULL, 'h'},
+	{"config", 1, NULL, 'c'},
+	{"daemon", 0, NULL, 'D'},
+	{"version", 0, NULL, 'V'},
+	{"verbose", 0, NULL, 'v'},
+	{"nufw-port", 1, NULL, 'p'},
+	{"client-port", 1, NULL, 'l'},
+	{"nufw-address", 1, NULL, 'L'},
+	{"client-address", 1, NULL, 'C'},
+	{"timeout", 1, NULL, 't'},
+
+	{0, 0, 0, 0}
+};
+
+
 /**
  * Display all command line options of NuAuth
  */
@@ -489,16 +509,16 @@ void print_usage()
 	fprintf(stdout,
 		"nuauth [-hDVv[v[v[v[v[v[v[v[v]]]]]]]]] [-l user_packet_port] [-C local_addr] [-L local_addr] \n"
 		"\t\t[-t packet_timeout]\n"
-		"\t-h : display this help and exit\n"
-		"\t-c : use alternate configuration file\n"
-		"\t-D : run as a daemon, send debug messages to syslog (else stdout/stderr)\n"
-		"\t-V : display version and exit\n"
-		"\t-v : increase debug level (+1 for each 'v') (max useful number : 10)\n"
-		"\t-p : specify listening TCP port (this port waits for nufw) (default : 4128)\n"
-		"\t-l : specify listening TCP port (this port waits for clients) (default : 4129)\n"
-		"\t-L : specify NUFW listening IP address (local) (this address waits for nufw data) (default : 127.0.0.1)\n"
-		"\t-C : specify clients listening IP address (local) (this address waits for clients auth) (default : 0.0.0.0)\n"
-		"\t-t : timeout to forget about packets when they don't match (default : 15 s)\n");
+		"\t-h (--help          ): display this help and exit\n"
+		"\t-c (--config        ): use alternate configuration file\n"
+		"\t-D (--daemon        ): run as a daemon, send debug messages to syslog (else stdout/stderr)\n"
+		"\t-V (--version       ): display version and exit\n"
+		"\t-v (--verbose       ): increase debug level (+1 for each 'v') (max useful number : 10)\n"
+		"\t-p (--nufw-port     ): specify listening TCP port (this port waits for nufw) (default : 4128)\n"
+		"\t-l (--client-port   ): specify listening TCP port (this port waits for clients) (default : 4129)\n"
+		"\t-L (--nufw-address  ): specify NUFW listening IP address (local) (this address waits for nufw data) (default : 127.0.0.1)\n"
+		"\t-C (--client-address): specify clients listening IP address (local) (this address waits for clients auth) (default : 0.0.0.0)\n"
+		"\t-t (--timeout       ): timeout to forget about packets when they don't match (default : 15 s)\n");
 }
 
 /**
@@ -511,7 +531,7 @@ void parse_options(int argc, char **argv, command_line_params_t * params)
 	int local_debug_level = 0;
 
 	/*parse options */
-	while ((option = getopt(argc, argv, options_list)) != -1) {
+	while ((option = getopt_long(argc, argv, options_list, long_options, NULL)) != -1) {
 		switch (option) {
 		case 'c':
 			/* configuration file */
