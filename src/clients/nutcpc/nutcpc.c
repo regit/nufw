@@ -44,6 +44,10 @@
 #include "debug.h"
 #define NUTCPC_VERSION PACKAGE_VERSION " $Revision$"
 
+#ifdef HAVE_GETOPT_H
+# include <getopt.h>
+#endif
+
 #ifdef FREEBSD
 #include <sys/syslimits.h>	/* PATH_MAX */
 #include <readpassphrase.h>
@@ -399,39 +403,69 @@ char *get_user_validation(const char *msg)
 	return answer;
 }
 
+static struct option long_options[] = {
+	{"help", 0, NULL, 'h'},
+	{"user", 1, NULL, 'U'},
+	{"host", 1, NULL, 'H'},
+	{"kill", 0, NULL, 'k'},
+	{"check", 0, NULL, 'c'},
+	{"no-lock", 0, NULL, 'l'},
+	{"version", 0, NULL, 'V'},
+	{"cert", 1, NULL, 'C'},
+	{"ca", 1, NULL, 'A'},
+	{"key", 1, NULL, 'K'},
+	{"pkcs12-file", 1, NULL, 'S'},
+	{"pkcs12-key", 1, NULL, 'W'},
+	{"crl", 1, NULL, 'R'},
+	{"no-warn-ca", 0, NULL, 'Q'},
+	{"no-error-fqdn", 0, NULL, 'N'},
+	{"krb-service", 1, NULL, 'Z'},
+	{"port", 1, NULL, 'p'},
+	{"auth-dn", 1, NULL, 'a'},
+	{"interval", 1, NULL, 'I'},
+	{"hide", 0, NULL, 'q'},
+	{"password", 1, NULL, 'P'},
+	{"debug", 0, NULL, 'd'},
+
+	{0, 0, 0, 0}
+};
+
+
 /**
  * Print client usage.
  */
 static void usage(void)
 {
-	fprintf(stderr, "usage: nutcpc -U username -H host\n");
+	fprintf(stderr, "usage: nutcpc [-U username] [-H host]\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "Options:\n");
-	fprintf(stderr, "  -k: kill active client\n");
-	fprintf(stderr, "  -c: check if there is an active client\n");
-	fprintf(stderr, "  -l: don't create lock file\n");
-	fprintf(stderr, "  -V: display version\n");
+	fprintf(stderr, "  -U (--user         ): username (default: current login)\n");
+	fprintf(stderr, "  -H (--host         ): nuauth server\n");
+	fprintf(stderr, "  -k (--kill         ): kill active client\n");
+	fprintf(stderr, "  -c (--check        ): check if there is an active client\n");
+	fprintf(stderr, "  -l (--no-lock      ): don't create lock file\n");
+	fprintf(stderr, "  -V (--no-version   ): display version\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "Certificate options:\n");
-	fprintf(stderr, "  -C CERTFILE: PEM certificate filename\n");
-	fprintf(stderr, "  -A AUTHFILE: PEM authority certificate filename\n");
-	fprintf(stderr, "  -K KEYFILE:  PEM RSA private key filename\n");
-	fprintf(stderr, "  -S PKCS12FILE: PKCS12 key/certificate filename\n");
-	fprintf(stderr, "  -W PKCS12PASS: PKCS12 password\n");
-	fprintf(stderr, "  -R CRLFILE: crl filename\n");
-	fprintf(stderr, "  -Q: suppress warning if no certificate authority is configured\n");
-	fprintf(stderr, "  -N: suppress error if server FQDN does not match certificate CN.\n");
+	fprintf(stderr, "  -C (--cert         ) CERTFILE: PEM certificate filename\n");
+	fprintf(stderr, "  -A (--ca           ) AUTHFILE: PEM authority certificate filename\n");
+	fprintf(stderr, "  -K (--key          ) KEYFILE:  PEM RSA private key filename\n");
+	fprintf(stderr, "  -S (--pkcs12-file  ) PKCS12FILE: PKCS12 key/certificate filename\n");
+	fprintf(stderr, "  -W (--pkcs12-key   ) PKCS12PASS: PKCS12 password\n");
+	fprintf(stderr, "  -R (--crl          ) CRLFILE: crl filename\n");
+	fprintf(stderr, "  -Q (--no-warn-ca   ): suppress warning if no certificate authority is configured\n");
+	fprintf(stderr, "  -N (--no-error-fqdn): suppress error if server FQDN does not match certificate CN.\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "SASL options:\n");
-	fprintf(stderr, "  -Z SERVICE: Kerberos service name (nuauth)\n");
+	fprintf(stderr, "  -Z (--krb-service  ) SERVICE: Kerberos service name (nuauth)\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "Other options:\n");
-	fprintf(stderr, "  -p PORT: nuauth port number\n");
-	fprintf(stderr, "  -a AUTH_DN: authentication domain name\n");
-	fprintf(stderr, "  -I INTERVAL: check interval in milliseconds\n");
-	fprintf(stderr, "  -q: do not display running nutcpc options on \"ps\"\n");
-	fprintf(stderr, "  -P PASSWORD: specify password (only for debug purpose)\n");
-	fprintf(stderr, "  -d: debug mode (don't go to foreground, daemon)\n");
+	fprintf(stderr, "  -p (--port         ) PORT: nuauth port number\n");
+	fprintf(stderr, "  -a (--auth-dn      ) AUTH_DN: authentication domain name\n");
+	fprintf(stderr, "  -I (--interval     ) INTERVAL: check interval in milliseconds\n");
+	fprintf(stderr, "  -q (--hide         ): do not display running nutcpc options on \"ps\"\n");
+	fprintf(stderr, "  -P (--password     ):PASSWORD: specify password (only for debug purpose)\n");
+	fprintf(stderr, "  -d (--debug        ): debug mode (don't go to foreground, daemon)\n");
 	fprintf(stderr, "\n");
 	exit(EXIT_FAILURE);
 }
@@ -754,7 +788,7 @@ void parse_cmdline_options(int argc, char **argv,
 
 	/* Parse all command line arguments */
 	opterr = 0;
-	while ((ch = getopt(argc, argv, "kcldqNQVu:H:I:U:p:P:a:K:C:A:R:W:S:Z:")) != -1) {
+	while ((ch = getopt_long(argc, argv, "kcldqNQVu:H:I:U:p:P:a:K:C:A:R:W:S:Z:", long_options, NULL)) != -1) {
 		switch (ch) {
 		case 'H':
 			SECURE_STRNCPY(context->srv_addr, optarg,
