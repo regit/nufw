@@ -84,7 +84,7 @@ AC_CHECK_TOOL(DOCBOOK2PDF, docbook2pdf, true)
 
 # Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h netinet/in.h stdlib.h string.h sys/socket.h unistd.h])
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h getopt.h netdb.h netinet/in.h stdlib.h string.h sys/socket.h unistd.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -92,7 +92,7 @@ AC_C_CONST
 # Checks for library functions.
 AC_FUNC_MALLOC
 AC_FUNC_STAT
-AC_CHECK_FUNCS([gethostbyname memset socket strcasecmp strspn])
+AC_CHECK_FUNCS([getopt_long gethostbyname memset socket strcasecmp strspn])
 
 #AC_CHECK_LIB([gcrypt], [gcry_md_open],AC_DEFINE([HAVE_LIBRARY_GCRYPT],[1],[Gcrypt lib flag]), check_gcrypt=no,[-L/usr/local/lib])
 #AC_CHECK_LIB([gnutls], [gnutls_init],AC_DEFINE([HAVE_LIBRARY_GNUTLS],[1],[Gnutls lib flag]), check_gnutls=no)
