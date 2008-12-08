@@ -74,6 +74,10 @@ void parse_group_file(mark_group_config_t * config, const char *filename)
 			    "mark_group: Unable to open group list (file %s)!",
 			    filename);
 		exit(EXIT_FAILURE);
+	} else {
+		log_message(DEBUG, DEBUG_AREA_MAIN,
+			    "mark_group: Using group file \"%s\"",
+			    filename);
 	}
 
 	while (fgets(line, sizeof(line), file) != NULL) {
@@ -135,6 +139,9 @@ void parse_group_file(mark_group_config_t * config, const char *filename)
 			group->mark = mark;
 			config->groups =
 			    g_list_append(config->groups, group);
+			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
+					  "mark_group: Will mark group %d with mark %d",
+					  group->id, group->mark);
 			groups_item++;
 		}
 		g_strfreev(groups_list);
@@ -228,5 +235,8 @@ G_MODULE_EXPORT nu_error_t finalize_packet(connection_t * conn, gpointer params)
 
 	conn->mark = (conn->mark & config->mask)
 	    | ((mark << config->shift) & ~config->mask);
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
+		    "mark_group: Setting mark %d on conn (init mark: %d)",
+		    conn->mark, mark);
 	return NU_EXIT_OK;
 }

@@ -430,6 +430,7 @@ gint print_connection(gpointer data, gpointer userdata)
 	char * str_state = NULL;
 	char * str_iface = NULL;
 	char * str_id = NULL;
+	char * str_mark = NULL;
 	char * str_user = NULL;
 	char * str_os = NULL;
 	char * str_app = NULL;
@@ -463,6 +464,8 @@ gint print_connection(gpointer data, gpointer userdata)
 		str_id = g_strdup("");
 	}
 
+	str_mark = g_strdup_printf(", mark=%d", conn->mark);
+	
 	if (conn->username) {
 		str_user = g_strdup_printf(", user=%s", conn->username);
 	} else {
@@ -482,14 +485,15 @@ gint print_connection(gpointer data, gpointer userdata)
 	}
 
 	message = g_strconcat(prefix, ":", str_tracking, str_state, str_iface,
-			      str_id, str_user, str_os, str_app, NULL);
+			      str_id, str_mark, str_user, str_os, str_app, NULL);
 	g_free(str_tracking);
 	g_free(str_state);
-	g_free(str_iface);
-	g_free(str_id);
-	g_free(str_user);
-	g_free(str_os);
-	g_free(str_app);
+	g_free(str_iface);	
+	g_free(str_id);	
+	g_free(str_mark);	
+	g_free(str_user);	
+	g_free(str_os);	
+	g_free(str_app);	
 
 	g_message("%s", message);
 
