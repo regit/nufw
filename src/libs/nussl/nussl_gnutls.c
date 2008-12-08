@@ -369,7 +369,7 @@ static int check_identity(const char *expected_hostname, gnutls_x509_crt cert, c
 		0,
 		name,
 		&len);
-	if(ret) {
+	if (ret) {
 		if (expected_hostname != NULL)
 			NUSSL_DEBUG(NUSSL_DBG_SSL,
 				"TLS: error fetching CN from cert: %s",
@@ -391,7 +391,7 @@ static int check_identity(const char *expected_hostname, gnutls_x509_crt cert, c
 	 * alternative name PKIX extension. Returns non zero on success, and zero on
 	 * failure. */
 	ret = gnutls_x509_crt_check_hostname(cert, expected_hostname);
-	if(!ret) {
+	if (!ret) {
 		NUSSL_DEBUG(NUSSL_DBG_SSL,
 			"SSL: certificate subject name (%s) does not match target host name '%s'\n",
 			name, expected_hostname);

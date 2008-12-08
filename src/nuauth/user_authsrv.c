@@ -232,7 +232,7 @@ int user_process_field_app(struct nu_authreq *authreq,
 	if ((ret = sasl_decode64((char *) appfield + 4, len, dec_appname, len, &reallen)) != SASL_OK) {
 		log_message(INFO, DEBUG_AREA_USER,
 			    "user packet announced a badly encoded app name, sasl_error %d", ret);
-		if(ret == SASL_BADPROT)
+		if (ret == SASL_BADPROT)
 			log_message(INFO, DEBUG_AREA_USER, "Try upgrading your client");
 
 		g_free(dec_appname);

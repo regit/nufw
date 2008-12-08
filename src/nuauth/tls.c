@@ -135,8 +135,7 @@ void tls_crl_update_each_session(GSList *session)
 
 		ret = nussl_ssl_set_crl_file(context->server, nuauth_tls.crl_file, nuauth_tls.ca);
 
-		if(ret != NUSSL_OK)
-		{
+		if (ret != NUSSL_OK) {
 			log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_CRITICAL,
 					"[%i] NuFW TLS: CRL file reloading failed (%s)",
 					getpid(), nussl_get_error(context->server));

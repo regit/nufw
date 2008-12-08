@@ -54,7 +54,7 @@ static char *strndup(const char* s, size_t n)
 	char *new;
 	size_t len = strlen(s);
 
-	if(len > n)
+	if (len > n)
 		len = n;
 
 	new = (char *) malloc (len + 1);
@@ -125,20 +125,19 @@ int parse_sys_config(const char *filename)
 	line = NULL;
 
 	file = fopen(filename, "r");
-	if(!file)
+	if (!file)
 		return 0;
 
 	printf("Loading settings from %s\n", filename);
 
-	while (getline(&line, &len, file) >= 0)
-	{
+	while (getline(&line, &len, file) >= 0) {
 		char* equ_pos;
 		line_nbr++;
-		if(strlen(line) == 0 || *line == '#' || *line == '\n' )
+		if (strlen(line) == 0 || *line == '#' || *line == '\n' )
 			continue;
 
 		equ_pos = strchr(line,'=');
-		if(equ_pos == NULL) {
+		if (equ_pos == NULL) {
 			fprintf(stderr, "Wrong format on line %i: %s\n",line_nbr, line);
 			continue;
 		}
@@ -146,28 +145,28 @@ int parse_sys_config(const char *filename)
 		opt = strndup(line, equ_pos - line);
 		val = strdup(equ_pos + 1);
 
-		if(strlen(val) >= 1)
+		if (strlen(val) >= 1)
 			val[strlen(val)-1] = '\0'; /* Strip '\n' */
 
-		if(!strcmp(opt, "nuauth_ip"))
+		if (!strcmp(opt, "nuauth_ip"))
 			replace_value(&default_hostname, val);
 		else
-		if(!strcmp(opt, "nuauth_port"))
+		if (!strcmp(opt, "nuauth_port"))
 			replace_value(&default_port, val);
 		else
-		if(!strcmp(opt, "nuauth_tls_ca"))
+		if (!strcmp(opt, "nuauth_tls_ca"))
 			replace_value(&default_tls_ca, val);
 		else
-		if(!strcmp(opt, "nuauth_tls_cert"))
+		if (!strcmp(opt, "nuauth_tls_cert"))
 			replace_value(&default_tls_cert, val);
 		else
-		if(!strcmp(opt, "nuauth_tls_key"))
+		if (!strcmp(opt, "nuauth_tls_key"))
 			replace_value(&default_tls_key, val);
 		else
-		if(!strcmp(opt, "nuauth_tls_crl"))
+		if (!strcmp(opt, "nuauth_tls_crl"))
 			replace_value(&default_tls_crl, val);
 		else
-		if(!strcmp(opt, "nuauth_suppress_fqdn_verif")) {
+		if (!strcmp(opt, "nuauth_suppress_fqdn_verif")) {
 			default_suppress_fqdn_verif = str_to_bool(val,1);
 			free(val);
 		}
@@ -177,7 +176,7 @@ int parse_sys_config(const char *filename)
 		}
 		free(opt);
 	}
-	if(line)
+	if (line)
 		free(line);
 	fclose(file);
 	return 1;
@@ -187,7 +186,7 @@ void load_sys_config()
 {
 	char* user_config;
 
-	if(config_loaded)
+	if (config_loaded)
 		return;
 
 	config_loaded = 1;

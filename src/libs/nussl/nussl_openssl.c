@@ -1035,7 +1035,7 @@ static int check_crl_validity(nussl_session * sess, const char *crl_file, const 
 	crl_bio = BIO_new(BIO_s_file());
 	BIO_read_filename(crl_bio, crl_file);
 
-	if(crl_bio == NULL)
+	if (crl_bio == NULL)
 		return NUSSL_FAILED;
 
 	crl = PEM_read_bio_X509_CRL(crl_bio, NULL, NULL, NULL);

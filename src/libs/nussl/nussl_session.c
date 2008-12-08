@@ -639,7 +639,7 @@ int nussl_ssl_set_keypair(nussl_session * session, const char *cert_file,
 		return NUSSL_ERROR;
 
 	/* Try opening the keys */
-	if(stat(key_file, &key_stat) != 0) {
+	if (stat(key_file, &key_stat) != 0) {
 		nussl_set_error(session,
 				_("Unable to open private key %s: %s"),
 				key_file, strerror(errno));
@@ -677,7 +677,7 @@ int nussl_ssl_set_pkcs12_keypair(nussl_session * session,
 		return NUSSL_ERROR;
 
 	/* Try opening the keys */
-	if(stat(pkcs12_file, &key_stat) != 0) {
+	if (stat(pkcs12_file, &key_stat) != 0) {
 		nussl_set_error(session,
 				_("Unable to open private key %s: %s"),
 				pkcs12_file, strerror(errno));

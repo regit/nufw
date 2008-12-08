@@ -331,7 +331,7 @@ G_MODULE_EXPORT int user_check(const char *username,
 	char *quoted_username = NULL;
 	char *quoted_clientpass = NULL;
 
-	if(!(ld = get_mysql_handler(mysql)))
+	if (!(ld = get_mysql_handler(mysql)))
 		return SASL_BADAUTH;
 
 	quoted_username = quote_string(ld, username);
@@ -342,7 +342,7 @@ G_MODULE_EXPORT int user_check(const char *username,
 	if (! quoted_clientpass)
 		return SASL_BADAUTH;
 
-	if(!secure_snprintf(request, sizeof(request),
+	if (!secure_snprintf(request, sizeof(request),
 					"SELECT uid FROM %s WHERE username='%s' AND "
 					"password=PASSWORD('%s')",
 					mysql->mysql_userinfo_table_name,
@@ -398,14 +398,14 @@ G_MODULE_EXPORT uint32_t get_user_id(const char *username, struct ipauth_params*
 	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 			  "[IPAUTH MySQL:get_user_id] searching user in mysql table");
 
-	if(!(ld = get_mysql_handler(mysql)))
+	if (!(ld = get_mysql_handler(mysql)))
 		return params->guest_uid; /* SASL_BADAUTH; error code? */
 
 	quoted_username = quote_string(ld, username);
 	if (! quoted_username)
 		return params->guest_uid; /* SASL_BADAUTH; error code? */
 
-	if(!(ok = secure_snprintf(request, sizeof(request),
+	if (!(ok = secure_snprintf(request, sizeof(request),
 					"SELECT uid FROM %s WHERE username='%s'",
 					mysql->mysql_userinfo_table_name,
 					quoted_username))) {
@@ -467,10 +467,10 @@ G_MODULE_EXPORT GSList *get_user_groups(const char *username, struct ipauth_para
 	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 			  "[IPAUTH MySQL:get_user_groups] searching user in mysql table");
 
-	if(!(ld = get_mysql_handler(mysql)))
+	if (!(ld = get_mysql_handler(mysql)))
 		return NULL;
 
-	if(!(ok = secure_snprintf(request, sizeof(request),
+	if (!(ok = secure_snprintf(request, sizeof(request),
 			"SELECT gid,%s.uid FROM %s JOIN %s ON %s.uid=%s.uid WHERE username='%s'",
 			mysql->mysql_userinfo_table_name, mysql->mysql_groupinfo_table_name,
 			mysql->mysql_userinfo_table_name, mysql->mysql_groupinfo_table_name,
@@ -490,14 +490,14 @@ G_MODULE_EXPORT GSList *get_user_groups(const char *username, struct ipauth_para
 		return NULL;
 	} else {
 		MYSQL_RES *result = mysql_store_result(ld);
-		if((ng=mysql_affected_rows(ld))<1) {
+		if ((ng=mysql_affected_rows(ld))<1) {
 			if (params->fallback_to_guest)
 				grouplist = g_slist_prepend(grouplist,
 					GINT_TO_POINTER(params->guest_gid));
 		} else {
 			for(ok=0;ok<ng && (row = mysql_fetch_row(result) );ok++) {
 				gid=strtol(row[0],&endptr,10);
-				if(*endptr) {
+				if (*endptr) {
 					log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 						"[IPAUTH MySQL] error getting Group ID: %s", row[0]);
 					continue;
@@ -505,7 +505,7 @@ G_MODULE_EXPORT GSList *get_user_groups(const char *username, struct ipauth_para
 				grouplist = g_slist_prepend(grouplist, GINT_TO_POINTER(gid));
 				if (uid<0) {
 					uid=strtol(row[1],&endptr,10);
-					if(*endptr) {
+					if (*endptr) {
 						log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
 							"[IPAUTH MySQL] error getting User ID: %s",
 							row[1]);

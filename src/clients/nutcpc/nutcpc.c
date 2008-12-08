@@ -606,24 +606,24 @@ nuauth_session_t *do_connect(nutcpc_context_t * context, char *username)
 	nu_client_set_debug(session, context->debug_mode);
 
 	/* Set hostname from libnuclient if it wasn't specified by the user */
-	if(*context->port == '\0')
-	{
-		if(nu_client_default_port())
+	if (*context->port == '\0') {
+		if (nu_client_default_port()) {
 			SECURE_STRNCPY(context->port, nu_client_default_port(),
 			       sizeof(context->port));
-		else
+		} else {
 			SECURE_STRNCPY(context->port, USERPCKT_SERVICE,
 				       sizeof(context->port));
+		}
 	}
 
-	if(*context->srv_addr == '\0')
-	{
-		if(nu_client_default_hostname())
+	if (*context->srv_addr == '\0') {
+		if (nu_client_default_hostname()) {
 			SECURE_STRNCPY(context->srv_addr, nu_client_default_hostname(),
 			       sizeof(context->srv_addr));
-		else
+		} else {
 			SECURE_STRNCPY(context->srv_addr, NUAUTH_IP,
 				       sizeof(context->srv_addr));
+		}
 	}
 
 	if (context->pkcs12file) {

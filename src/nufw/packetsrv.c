@@ -611,7 +611,7 @@ void *packetsrv(void *void_arg)
  */
 void shutdown_tls()
 {
-	if(!tls.auth_server_running)
+	if (!tls.auth_server_running)
 		return;
 
 	log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_CRITICAL,

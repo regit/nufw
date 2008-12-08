@@ -640,7 +640,7 @@ void ask_session_end(nuauth_session_t * session)
 	if (session == NULL) {
 		return;
 	}
-	if(session->nussl) {
+	if (session->nussl) {
 		nussl_session_destroy(session->nussl);
 		session->nussl = NULL;
 	}

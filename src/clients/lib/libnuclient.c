@@ -61,8 +61,7 @@ void nu_exit_clean(nuauth_session_t * session)
 		tcptable_free(session->ct);
 	}
 
-	if(session->nussl)
-	{
+	if (session->nussl) {
 		nussl_session_destroy(session->nussl);
 		session->nussl = NULL;
 	}
@@ -734,13 +733,10 @@ int nu_client_connect(nuauth_session_t * session,
 		nussl_set_session_flag(session->nussl, NUSSL_SESSFLAG_IGNORE_ID_MISMATCH, 1);
 
 	nussl_set_hostinfo(session->nussl, hostname, port);
-	if(session->pkcs12_file)
-	{
+	if (session->pkcs12_file) {
 		if (!nu_client_load_pkcs12(session, session->pkcs12_file, session->pkcs12_password, err))
 			return 0;
-	}
-	else
-	{
+	} else {
 		if (!nu_client_load_key(session, session->pem_key, session->pem_cert, err))
 			return 0;
 	}
@@ -861,7 +857,7 @@ const char *nu_client_strerror(nuauth_session_t * session, nuclient_error_t * er
 
 	switch (err->family) {
 	case NUSSL_ERR:
-		if(session == NULL || session->nussl == NULL)
+		if (session == NULL || session->nussl == NULL)
 			return "NuSSL initialization error.";
 		return nussl_get_error(session->nussl);
 	case SASL_ERROR:

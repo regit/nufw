@@ -207,7 +207,7 @@ static int samp_send(nussl_session* nussl, const char *buffer,
 	memcpy(buf, "S: ", 3);
 
 	result = nussl_write(nussl, buf, len + 3);
-	if(result < 0)
+	if (result < 0)
 		log_message(WARNING, DEBUG_AREA_AUTH, "nussl_write() failed: %s", nussl_get_error(nussl));
 		
 	g_free(buf);

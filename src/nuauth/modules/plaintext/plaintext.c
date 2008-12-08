@@ -903,7 +903,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	/*  Depending on the use of the module load user list or acl list */
 	if (module->hook == MOD_USER_CHECK || module->hook == MOD_USER_ID || module->hook == MOD_USER_GROUPS) {
 		/*  Initialization of the user list */
-		if( read_user_list(params)) {
+		if (read_user_list(params)) {
 			log_message(FATAL, DEBUG_AREA_AUTH,
 				    "Can't parse users file [%s]",
 				    ((struct plaintext_params *) params)->

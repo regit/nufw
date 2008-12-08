@@ -803,8 +803,7 @@ void configure_app(int argc, char **argv)
 
 #if 0
 	/* init credential */
-	if(! create_x509_credentials())
-	{
+	if (! create_x509_credentials()) {
 		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
 				"Certificate initialization failed");
 		exit(EXIT_FAILURE);
@@ -878,7 +877,7 @@ void init_nuauthdata()
 
 	/* init and load modules */
 	init_modules_system();
-	if(!load_modules())
+	if (!load_modules())
 		exit(EXIT_FAILURE);
 
 	/* init periods */

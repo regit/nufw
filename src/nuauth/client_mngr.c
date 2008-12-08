@@ -58,16 +58,16 @@ void clean_session(user_session_t * c_session)
 	if (c_session->nussl)
 		nussl_session_destroy(c_session->nussl);
 
-	if(c_session->user_name)
+	if (c_session->user_name)
 		g_free(c_session->user_name);
-	if(c_session->groups)
+	if (c_session->groups)
 		g_slist_free(c_session->groups);
 
-	if(c_session->sysname)
+	if (c_session->sysname)
 		g_free(c_session->sysname);
-	if(c_session->release)
+	if (c_session->release)
 		g_free(c_session->release);
-	if(c_session->version)
+	if (c_session->version)
 		g_free(c_session->version);
 
 	g_mutex_free(c_session->tls_lock);
@@ -239,7 +239,7 @@ GSList *get_client_sockets_by_ip(struct in6_addr * ip)
 
 	g_mutex_lock(client_mutex);
 	session = g_hash_table_lookup(client_ip_hash, ip);
-	if(session)
+	if (session)
 		ret = session->sessions;
 	g_mutex_unlock(client_mutex);
 	return ret;

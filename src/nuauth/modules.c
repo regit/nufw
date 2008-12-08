@@ -658,7 +658,7 @@ int load_modules()
 
 #define LOAD_MODULE(HOOK) \
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN, "Loading %s modules:", hooks[HOOK].message); \
-	if(!load_modules_from(hooks[HOOK].config, hooks[HOOK].funcstring, &(hooks[HOOK].modules), HOOK)) \
+	if (!load_modules_from(hooks[HOOK].config, hooks[HOOK].funcstring, &(hooks[HOOK].modules), HOOK)) \
 	{ \
 		log_message(FATAL, DEBUG_AREA_MAIN, "Failed to load modules %s", hooks[HOOK].message); \
 		return 0; \
