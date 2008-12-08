@@ -11,7 +11,7 @@ COMMANDS_COMPLETION = ("version", "confdump", "users", "refresh cache",
 COMMANDS_REGEX = re.compile(
     "^(?:version|confdump|users|firewalls|refresh cache|nupik!|display debug_(?:level|areas)|"
     "debug_level [0-9]+|debug_areas [0-9]+|"
-    "disconnect (?:[0-9]+|all)|uptime|reload(?: periods)?|help|quit|packets count)$")
+    "disconnect (?:.*)|uptime|reload(?: periods)?|help|quit|packets count)$")
 
 class Completer:
     def __init__(self, words):

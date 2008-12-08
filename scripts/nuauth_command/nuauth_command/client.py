@@ -17,7 +17,10 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 from socket import socket, AF_UNIX, error
-from command_dec import PROTO_VERSION, decode
+from command_dec import PROTO_VERSION, decode, Answer
+import re
+
+DISCONNECT_REGEX = re.compile("^disconnect +(.*)$")
 
 class NuauthError(Exception):
     pass
@@ -101,8 +104,39 @@ class Client:
             raise NuauthError("Server version %r != client version %r: please upgrade." % (
                 version, PROTO_VERSION))
 
+    def disconnectPattern(self, pattern):
+        # Command "disconnect haypo"
+        users = self._send_command('users')
+        total = 0
+        userregex = re.compile(pattern)
+        for user in users.content:
+            match = userregex.match(user.name)
+            if match:
+                self._send_command('disconnect %s' % user.socket)
+                total += 1
+        value = Answer(True, total)
+        return value
+
+    def pythonCommand(self, command):
+        match = DISCONNECT_REGEX.match(command)
+        if not match:
+            return None
+        what = match.group(1)
+        if what == 'all':
+            return None
+        try:
+            # Exclude "disconnect 42"
+            uid = int(what)
+            return None
+        except ValueError:
+            pass
+        return self.disconnectPattern(what)
+
     def execute(self, command):
         try:
+            result = self.pythonCommand(command)
+            if result is not None:
+                return result
             return self._send_command(command)
         except NuauthError, err:
             self.reconnect()
