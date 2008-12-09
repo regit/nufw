@@ -67,7 +67,10 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 	ok = secure_snprintf(cmdbuffer, sizeof(cmdbuffer), format,
 			     quoted_username, quoted_address);
 	if (ok) {
-		system(cmdbuffer);
+		if (system(cmdbuffer) == -1) {
+			log_message(WARNING, DEBUG_AREA_MAIN,
+			    "Can't execute command (%s)!", cmdbuffer);
+		}
 	} else {
 		log_message(WARNING, DEBUG_AREA_MAIN,
 			    "Can't call script, command line truncated!");
