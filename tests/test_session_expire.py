@@ -13,10 +13,11 @@ from mysocket import connectTcp
 
 DELAY = 10.0
 TIMEOUT = 2.0
+DURATION = 3
 
 class TestSessionExpire(TestCase):
     def setUp(self):
-        self.expiration = 1
+        self.expiration = DURATION
         self.host = HOST
 
         # Setup session_expire library
@@ -48,7 +49,6 @@ class TestSessionExpire(TestCase):
     def testExpire(self):
         self.assert_(connectClient(self.client))
         testAllowPort(self, self.iptables, None, self.host)
-        connectTcp(self.host, VALID_PORT, 0.5)
 
         sleep(self.expiration+DELAY)
 
