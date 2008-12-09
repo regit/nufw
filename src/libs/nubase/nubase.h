@@ -35,6 +35,8 @@
 #define TRUE  1
 #endif
 
+#include <limits.h>
+
 #include "config-table.h"
 #include "ipv6.h"
 #include "log.h"
