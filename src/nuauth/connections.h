@@ -98,6 +98,12 @@ typedef struct {
 	char physoutdev[IFNAMSIZ];	/*!< Output physical device set to "\0" if not available */
 } iface_nfo_t;
 
+
+/**
+ * \brief Size of payload we keep for parsing (must be > headers)
+ */
+#define STORED_PAYLOAD_SIZE	64
+
 /**
  * This is a packet blocked by NuFW and waiting for an authentication
  * of NuAuth. They are created in authpckt_new_connection().
@@ -149,6 +155,10 @@ typedef struct {
 #ifdef PERF_DISPLAY_ENABLE
 	struct timeval arrival_time;	/*!< Performance datas */
 #endif
+
+	unsigned char payload[STORED_PAYLOAD_SIZE];
+	unsigned int payload_len;
+
 } connection_t;
 
 guint hash_connection(gconstpointer conn_p);

@@ -44,10 +44,11 @@ nu_error_t parse_dgram(connection_t * connection, unsigned char *dgram,
 		       unsigned int dgram_size, connection_t ** conn,
 		       nufw_message_t msg_type)
 {
+	unsigned char *orig_dgram = dgram;
+	unsigned int orig_dgram_size = dgram_size;
 	unsigned int ip_hdr_size;
 	/* get ip headers till tracking is filled */
-	ip_hdr_size =
-	    get_ip_headers(&connection->tracking, dgram, dgram_size);
+	ip_hdr_size = get_ip_headers(&connection->tracking, dgram, dgram_size);
 	
 	if (ip_hdr_size == 0) {
 		log_message(WARNING, DEBUG_AREA_PACKET | DEBUG_AREA_GW,
@@ -83,8 +84,7 @@ nu_error_t parse_dgram(connection_t * connection, unsigned char *dgram,
 	switch (connection->tracking.protocol) {
 	case IPPROTO_TCP:
 		{
-			tcp_state_t tcp_state =
-			    get_tcp_headers(&connection->tracking, dgram,
+			tcp_state_t tcp_state = get_tcp_headers(&connection->tracking, dgram,
 					    dgram_size);
 			switch (tcp_state) {
 			case TCP_STATE_OPEN:
@@ -153,6 +153,13 @@ nu_error_t parse_dgram(connection_t * connection, unsigned char *dgram,
 			return NU_EXIT_ERROR;
 		}
 	}
+
+	if (orig_dgram_size > STORED_PAYLOAD_SIZE)
+		connection->payload_len = STORED_PAYLOAD_SIZE;
+	else
+		connection->payload_len = orig_dgram_size;
+	memcpy(connection->payload, orig_dgram, orig_dgram_size);
+
 	return NU_EXIT_CONTINUE;
 }
 
@@ -233,6 +240,7 @@ nu_error_t authpckt_new_connection(unsigned char *dgram,
 	connection->user_groups = NULL;
 	connection->decision = DECISION_NODECIDE;
 	connection->expire = -1;
+	connection->payload_len = 0;
 
 	connection->packet_id =
 	    g_slist_append(NULL, GUINT_TO_POINTER(ntohl(msg->packet_id)));
@@ -251,8 +259,7 @@ nu_error_t authpckt_new_connection(unsigned char *dgram,
 	/* connection is proto v4 because we are here */
 	connection->nufw_version = PROTO_NUFW_VERSION;
 
-	ret =
-	    parse_dgram(connection, dgram, dgram_size, conn,
+	ret = parse_dgram(connection, dgram, dgram_size, conn,
 			msg->msg_type);
 	if (ret != NU_EXIT_CONTINUE) {
 		return ret;
