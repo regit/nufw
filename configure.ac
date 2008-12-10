@@ -389,6 +389,7 @@ AC_CONFIG_FILES([Makefile
         src/nuauth/modules/log_script/Makefile
         src/nuauth/modules/log_ulogd2/Makefile
         src/nuauth/modules/xml_defs/Makefile
+        src/nuauth/modules/x509_ocsp/Makefile
         src/nuauth/modules/x509_std/Makefile
         src/nuauth/modules/mark_uid/Makefile
         src/nuauth/modules/session_expire/Makefile
