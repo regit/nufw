@@ -359,6 +359,18 @@ int tls_user_accept(struct tls_user_context_t *context)
 		return 1;
 	}
 
+	/* Check certificate hook */
+	ret = modules_check_certificate(current_client_conn->nussl);
+	if ( ret ) {
+		log_message(WARNING, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
+			    "New client connection from %s failed during modules_check_certificate()",
+			    address);
+		nussl_session_destroy(current_client_conn->nussl);
+		g_free(current_client_conn);
+		return 1;
+	}
+
+
 	current_client_conn->socket = socket;
 	current_client_conn->addr = addr;
 	current_client_conn->sport = sport;

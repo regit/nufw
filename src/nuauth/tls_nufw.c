@@ -288,6 +288,17 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 		return 1;
 	}
 
+	/* Check certificate hook */
+	ret = modules_check_certificate(nu_session->nufw_client);
+	if ( ret ) {
+		log_message(WARNING, DEBUG_AREA_MAIN,
+				"New client connection from %s failed during modules_check_certificate()",
+				address);
+		nussl_session_destroy(nu_session->nufw_client);
+		g_free(nu_session);
+		return 1;
+	}
+
 	nufw_servers_connected++;
 
 	conn_fd = nussl_session_get_fd(nu_session->nufw_client);
