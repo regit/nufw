@@ -1282,6 +1282,14 @@ int nussl_get_peer_dn(nussl_session * sess, char *buf, size_t * buf_size)
 	return NUSSL_OK;
 }
 
+void *nussl_get_ctx(nussl_session * sess)
+{
+	if (!sess || !sess->ssl_context)
+		return NULL;
+
+	return NULL;
+}
+
 int nussl__ssl_init(void)
 {
 #ifdef NUSSL_HAVE_TS_SSL

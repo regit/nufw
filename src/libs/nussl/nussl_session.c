@@ -746,6 +746,14 @@ int nussl_session_getpeer(nussl_session * sess, struct sockaddr *addr,
 	return NUSSL_OK;
 }
 
+void *nussl_get_socket(nussl_session * sess)
+{
+	if (!sess)
+		return NULL;
+
+	return nussl__sock_sslsock(sess->socket);
+}
+
 int nussl_init()
 {
 	return nussl_sock_init();

@@ -1241,6 +1241,14 @@ int nussl_get_peer_dn(nussl_session * sess, char *buf, size_t * buf_size)
 	return NUSSL_OK;
 }
 
+void *nussl_get_ctx(nussl_session * sess)
+{
+	if (!sess || !sess->ssl_context)
+		return NULL;
+
+	return sess->ssl_context->ctx;
+}
+
 #ifdef NUSSL_HAVE_TS_SSL
 /* Implementation of locking callbacks to make OpenSSL thread-safe.
  * If the OpenSSL API was better designed, this wouldn't be necessary.

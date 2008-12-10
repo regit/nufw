@@ -127,6 +127,9 @@ extern "C" {
 	int nussl_get_session_flag(nussl_session * sess,
 		nussl_session_flag flag);
 
+	void *nussl_get_ctx(nussl_session * sess);
+
+	void *nussl_get_socket(nussl_session * sess);
 
 #define NUSSL_VALID_REQ_TYPE(n) (n >= NUSSL_CERT_IGNORE && n <= NUSSL_CERT_REQUIRE)
 
