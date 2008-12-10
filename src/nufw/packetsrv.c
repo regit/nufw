@@ -180,8 +180,7 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 			/* we fail to send the packet so we free packet related to current */
 			pthread_mutex_lock(&packets_list.mutex);
 			/* search and destroy packet by packet_id */
-			sandf =
-			    psearch_and_destroy(q_pckt.packet_id,
+			sandf = psearch_and_destroy(q_pckt.packet_id,
 						&(q_pckt.mark));
 			pthread_mutex_unlock(&packets_list.mutex);
 
@@ -639,63 +638,60 @@ void shutdown_tls()
  * \param pckt_datas A pointer to a queued_pckt:: holding packet information
  * \return If an error occurs returns 0, else return 1.
  */
-int auth_request_send(uint8_t type, struct queued_pckt *pckt_datas)
+int auth_request_send(uint8_t type, struct queued_pckt *pckt_data)
 {
-	unsigned char datas[512];
+	unsigned char data[512];
 	nuv4_nufw_to_nuauth_auth_message_t *msg_header =
-	    (nuv4_nufw_to_nuauth_auth_message_t *) & datas;
+	    (nuv4_nufw_to_nuauth_auth_message_t *) & data;
 	unsigned char *msg_content =
-	    datas + sizeof(nuv4_nufw_to_nuauth_auth_message_t);
+	    data + sizeof(nuv4_nufw_to_nuauth_auth_message_t);
 	int msg_length;
 
 	/* Drop non-IPv(4|6) packet */
-	if ((((struct iphdr *) (pckt_datas->payload))->version != 4)
-	    && (((struct iphdr *) (pckt_datas->payload))->version != 6)) {
+	if ((((struct iphdr *) (pckt_data->payload))->version != 4)
+	    && (((struct iphdr *) (pckt_data->payload))->version != 6)) {
 		log_area_printf(DEBUG_AREA_PACKET, DEBUG_LEVEL_DEBUG,
 				 "Dropping non-IPv4/non-IPv6 packet (version %u)",
-				 ((struct iphdr *) (pckt_datas->payload))->
+				 ((struct iphdr *) (pckt_data->payload))->
 				 version);
 		return 0;
 	}
 
 	/* Truncate packet content if needed */
-	if (sizeof(datas) <
-	    sizeof(nuv4_nufw_to_nuauth_auth_message_t) +
-	    pckt_datas->payload_len) {
+	if (sizeof(data) <
+	    sizeof(nuv4_nufw_to_nuauth_auth_message_t) + pckt_data->payload_len) {
 		debug_log_printf(DEBUG_AREA_PACKET, DEBUG_LEVEL_DEBUG,
 				 "Very long packet: truncating!");
-		pckt_datas->payload_len =
-		    sizeof(datas) -
+		pckt_data->payload_len =
+		    sizeof(data) -
 		    sizeof(nuv4_nufw_to_nuauth_auth_message_t);
 	}
-	msg_length =
-	    sizeof(nuv4_nufw_to_nuauth_auth_message_t) +
-	    pckt_datas->payload_len;
+	msg_length = sizeof(nuv4_nufw_to_nuauth_auth_message_t) + pckt_data->payload_len;
 
 	/* Fill message header */
 	msg_header->protocol_version = PROTO_NUFW_VERSION;
 	msg_header->msg_type = type;
 	msg_header->msg_length = htons(msg_length);
-	msg_header->packet_id = htonl(pckt_datas->packet_id);
-	msg_header->timestamp = htonl(pckt_datas->timestamp);
+	msg_header->packet_id = htonl(pckt_data->packet_id);
+	msg_header->timestamp = htonl(pckt_data->timestamp);
 
 	/* Add info about interfaces */
-	msg_header->mark = pckt_datas->mark;
-	memcpy(msg_header->indev, pckt_datas->indev,
+	msg_header->mark = pckt_data->mark;
+	memcpy(msg_header->indev, pckt_data->indev,
 	       IFNAMSIZ * sizeof(char));
-	memcpy(msg_header->outdev, pckt_datas->outdev,
+	memcpy(msg_header->outdev, pckt_data->outdev,
 	       IFNAMSIZ * sizeof(char));
-	memcpy(msg_header->physindev, pckt_datas->physindev,
+	memcpy(msg_header->physindev, pckt_data->physindev,
 	       IFNAMSIZ * sizeof(char));
-	memcpy(msg_header->physoutdev, pckt_datas->physoutdev,
+	memcpy(msg_header->physoutdev, pckt_data->physoutdev,
 	       IFNAMSIZ * sizeof(char));
 
 	/* Copy (maybe truncated) packet content */
-	memcpy(msg_content, pckt_datas->payload, pckt_datas->payload_len);
+	memcpy(msg_content, pckt_data->payload, pckt_data->payload_len);
 
 	/* Display message */
 	log_area_printf(DEBUG_AREA_PACKET, DEBUG_LEVEL_DEBUG,
-			"Sending request for %lu", (long)pckt_datas->packet_id);
+			"Sending request for %lu", (long)pckt_data->packet_id);
 
 	/* cleaning up current session : auth_server has detected a problem */
 	pthread_mutex_lock(&tls.mutex);
@@ -729,7 +725,7 @@ int auth_request_send(uint8_t type, struct queued_pckt *pckt_datas)
 	/* send packet */
 	pthread_mutex_lock(&tls.mutex);
 
-	if (nussl_write(tls.session, (char*)datas, msg_length) < 0) {
+	if (nussl_write(tls.session, (char*)data, msg_length) < 0) {
 		debug_log_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
 				 "Error during nussl_write (auth_request_send).");
 		shutdown_tls();
