@@ -147,6 +147,7 @@ AC_ARG_WITH(mysql-log, [AC_HELP_STRING(--with-mysql-log,  Support user activity 
 AC_ARG_WITH(mysql-auth, [AC_HELP_STRING(--with-mysql-auth,  Support user authentication in Mysql database)], enable_mysql_auth=$withval, enable_mysql_auth="")
 AC_ARG_WITH(pgsql-log, [AC_HELP_STRING(--with-pgsql-log,  Support user activity logging in PostgreSQL database)], enable_pgsql_log=$withval, enable_pgsql_log="")
 AC_ARG_WITH(syslog-log, [AC_HELP_STRING(--without-syslog-log,  Disable user activity logging in syslog)], enable_syslog_log=$withval, enable_syslog_log="yes")
+AC_ARG_WITH(ulogd2-log, [AC_HELP_STRING(--without-ulogd2-log,  Disable user activity logging in ulogd2)], enable_ulogd2_log=$withval, enable_ulogd2_log="yes")
 
 AC_ARG_WITH(plaintext-auth, [AC_HELP_STRING(--without-plaintext-auth,  Disable authentification with plaintext file)], enable_plaintext_auth=$withval, enable_plaintext_auth="yes")
 AC_ARG_WITH(mark-group, [AC_HELP_STRING(--without-mark-group,  Disable mark packet by group)], enable_mark_group=$withval, enable_mark_group="yes")
@@ -255,6 +256,7 @@ AM_CONDITIONAL(USE_MARK_GROUP, test x$enable_mark_group = xyes)
 AM_CONDITIONAL(USE_MARK_FIELD, test x$enable_mark_field = xyes)
 AM_CONDITIONAL(USE_MARK_FLAG, test x$enable_mark_flag = xyes)
 AM_CONDITIONAL(USE_SYSLOG_LOG, test x$enable_syslog_log = xyes)
+AM_CONDITIONAL(USE_ULOGD2_LOG, test x$enable_ulogd2_log = xyes)
 
 if test "${build_libnuclient}" = "yes"; then
 	AC_CHECK_LIB([sasl2],[sasl_server_init],AC_DEFINE([HAVE_LIBRARY_SASL2],[1],[SASL lib flag]), check_sasl=no)
@@ -385,6 +387,7 @@ AC_CONFIG_FILES([Makefile
         src/nuauth/modules/log_nuprelude/Makefile
         src/nuauth/modules/log_syslog/Makefile
         src/nuauth/modules/log_script/Makefile
+        src/nuauth/modules/log_ulogd2/Makefile
         src/nuauth/modules/xml_defs/Makefile
         src/nuauth/modules/x509_std/Makefile
         src/nuauth/modules/mark_uid/Makefile
@@ -505,6 +508,10 @@ if test "${build_nuauth}" = "yes"; then
 
         if test "${enable_syslog_log}" = "yes"; then
         	AC_MSG_RESULT([  - NuAuth: compile syslog log module])
+        fi
+
+        if test "${enable_ulogd2_log}" = "yes"; then
+        	AC_MSG_RESULT([  - NuAuth: compile ulogd2 log module])
         fi
 
         if test "${enable_plaintext_auth}" = "yes"; then
