@@ -41,7 +41,7 @@
 
 /**
  * \ingroup LoggingNuauthModules
- * \defgroup SyslogModule Syslog logging module
+ * \defgroup Ulogd2Module Ulogd2 logging module
  *
  * @{ */
 
