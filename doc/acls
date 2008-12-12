@@ -49,7 +49,7 @@ o ACL ordering
     101. In case a connection matches both groups, and their decisions are
     conflictual, the decision linked to group 102 will be used.
 
-o Abstraction à la Nagios
+o Nagios like Abstraction
 -------------------------
 
   Generic and often used schemes must be extractable, as for instance for working
