@@ -10,4 +10,4 @@ libsession_expire_la_SOURCES = session_expire.c
 libsession_expire_la_LDFLAGS = -module -avoid-version
 
 libsession_expire.la: $(libsession_expire_la_OBJECTS) $(libsession_expire_la_DEPENDENCIES)
-	$(LINK) -rpath $(plugindir) $(lib_session_expire_la_LDFLAGS) $(libsession_expire_la_OBJECTS) $(libsession_expire_la_LIBADD)
+	$(LINK) -rpath $(plugindir) $(libsession_expire_la_LDFLAGS) $(libsession_expire_la_OBJECTS) $(libsession_expire_la_LIBADD)
