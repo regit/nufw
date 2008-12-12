@@ -17,8 +17,7 @@ plugin_LTLIBRARIES = libmysql.la
 
 nodist_include_HEADERS = log_mysql.h
 libmysql_la_SOURCES = mysql.c ${nodist_include_HEADERS}
-
-#libmysql_la_LIBADD = -lmysqlclient_r
+libmysql_la_LDFLAGS = -module -avoid-version 
 
 libmysql.la: $(libmysql_la_OBJECTS) $(libmysql_la_DEPENDENCIES)
 	$(LINK) -rpath $(plugindir) $(am_libmysql_la_rpath) $(libmysql_la_LDFLAGS) $(libmysql_la_OBJECTS) $(MYSQL_LIBS) $(libmysql_la_LIBADD)

@@ -20,6 +20,7 @@ nodist_include_HEADERS = mysql_auth.h mysql.h
 libauth_mysql_la_SOURCES = mysql_auth.c ${nodist_include_HEADERS}
 
 #libauth_mysql_la_LIBADD = -lmysqlclient_r
+libauth_mysql_la_LDFLAGS = -module -avoid-version
 
 libauth_mysql.la: $(libauth_mysql_la_OBJECTS) $(libauth_mysql_la_DEPENDENCIES)
 	$(LINK) -rpath $(plugindir) $(am_libauth_mysql_la_rpath) $(libauth_mysql_la_LDFLAGS) $(libauth_mysql_la_OBJECTS) $(MYSQL_LIBS) $(libauth_mysql_la_LIBADD)

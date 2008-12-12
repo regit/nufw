@@ -12,6 +12,7 @@ nodist_include_HEADERS = auth_ldap.h
 libldap_la_SOURCES = ldap.c ${nodist_include_HEADERS}
 
 libldap_la_LIBADD = -lldap_r
+libldap_la_LDFLAGS = -module -avoid-version
 
 libldap.la: $(libldap_la_OBJECTS) $(libldap_la_DEPENDENCIES)
 	$(LINK) -rpath $(plugindir) $(am_libldap_la_rpath) $(libldap_la_LDFLAGS) $(libldap_la_OBJECTS) $(libldap_la_LIBADD)

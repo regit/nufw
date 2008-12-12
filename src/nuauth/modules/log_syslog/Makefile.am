@@ -9,6 +9,7 @@ plugindir = $(libdir)/nuauth/modules
 plugin_LTLIBRARIES = libsyslog.la
 
 libsyslog_la_SOURCES = syslog.c
+libsyslog_la_LDFLAGS = -module -avoid-version
 
 libsyslog.la: $(libsyslog_la_OBJECTS) $(libsyslog_la_DEPENDENCIES)
 	$(LINK) -rpath $(plugindir) $(libsyslog_la_LDFLAGS) $(libsyslog_la_OBJECTS) $(libsyslog_la_LIBADD)

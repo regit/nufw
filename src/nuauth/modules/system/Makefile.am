@@ -10,6 +10,7 @@ plugin_LTLIBRARIES = libsystem.la
 
 libsystem_la_SOURCES = system.c getugroups.c
 
+libsystem_la_LDFLAGS = -module -avoid-version
 libsystem_la_LIBADD = -lpam $(GLIB_LIBS)
 
 libsystem.la: $(libsystem_la_OBJECTS) $(libsystem_la_DEPENDENCIES)
