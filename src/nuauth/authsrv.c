@@ -1030,6 +1030,7 @@ void nuauth_main_loop()
 	/* create timer and add main cleanup function to cleanup list */
 	timer = g_timer_new();
 	cleanup_func_push(main_cleanup);
+	cleanup_func_push(kill_expired_clients_session);
 
 	/* first sleep is one full second */
 	sleep.tv_sec = 1;
