@@ -826,7 +826,7 @@ static int check_crl_validity(nussl_session * sess, const char *crl_file, const 
 			/* XXX how can we send a warning to caller  from nussl ? */
 			//nussl_set_error(sess,_("TLS: CRL has expired and should be re-issued\n"));
 			NUSSL_DEBUG(NUSSL_DBG_SSL, _("TLS: CRL has expired and should be re-issued\n"));
-			/* this is only a warning, do not decrement return_value */
+			return_value--;
 		}
 	}
 
