@@ -11,7 +11,7 @@ from time import sleep
 from filter import testAllowPort, VALID_PORT, HOST
 from mysocket import connectTcp
 
-DELAY = 10.0
+DELAY = 2
 TIMEOUT = 2.0
 DURATION = 3
 
@@ -30,13 +30,9 @@ class TestSessionExpire(TestCase):
         self.userdb.addUser( PlaintextUser(USERNAME, PASSWORD, 42, 42) )
         self.userdb.install(nuconfig)
         self.acls = PlaintextAcl()
-        self.acls.addAclFull("Web group", self.host, VALID_PORT, self.userdb[0].gid)
-        self.acls.install(nuconfig)
 
         # Start nuauth
         self.nuauth = Nuauth(nuconfig)
-        self.nufw = startNufw()
-        self.iptables = Iptables()
 
         # Create client
         self.client = createClientWithCerts()
@@ -48,11 +44,9 @@ class TestSessionExpire(TestCase):
 
     def testExpire(self):
         self.assert_(connectClient(self.client))
-        testAllowPort(self, self.iptables, None, self.host)
 
         sleep(self.expiration+DELAY)
 
-        connectTcp(self.host, VALID_PORT, 0.5)
         self.assert_(self.get_session_not_connected())
 
     def get_session_not_connected(self):
