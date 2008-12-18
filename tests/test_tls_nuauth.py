@@ -66,6 +66,9 @@ class TestTLSNuauth(TestCase):
         self.client = createClient(more_args=["-H","nuauth.inl.fr","-A",self.cacert])
         self.assert_(not connectClient(self.client))
         self.client.stop()
+        self.client = createClient(more_args=["-H","nuauth.inl.fr","-Q"])
+        self.assert_(not connectClient(self.client))
+        self.client.stop()
         self.stopNuauth()
 
     def testNuauthInvalidCRL(self):
