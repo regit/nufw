@@ -365,6 +365,7 @@ static struct option long_options[] = {
 	{"daemon", 0, NULL, 'D'},
 	{"strict", 0, NULL, 's'},
 	{"no-strict", 0, NULL, 'S'},
+	{"no-fqdn", 0, NULL, 'N'},
 	{"key", 1, NULL, 'k'},
 	{"cert", 1, NULL, 'c'},
 	{"ca", 1, NULL, 'a'},
@@ -406,6 +407,7 @@ void display_usage(void)
 \t-D (--daemon     ): daemonize\n\
 \t-s (--strict     ): do not enforce strict checking of TLS certificates\n\
 \t-S (--no-strict  ): this option does nothing, it is here for backward compatibility\n\
+\t-N (--no-fqdn): do not check nuauth fqdn (-d params) against provided certificate\n\
 \t-k (--key        ): certificate key file\n\
 \t-c (--cert       ): certificate file\n\
 \t-a (--ca         ): certificate authority file (strict checking is done if selected) (default: none)\n\
