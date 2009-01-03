@@ -201,8 +201,6 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
  */
 int packetsrv_open(void *data)
 {
-	struct nfnl_handle *nh;
-
 	log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
 			"Opening netfilter queue socket");
 	log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
@@ -274,8 +272,7 @@ int packetsrv_open(void *data)
 	}
 #endif
 
-	nh = nfq_nfnlh(h);
-	return nfnl_fd(nh);
+	return nfq_fd(h);
 }
 
 void packetsrv_close(int smart)
