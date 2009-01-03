@@ -20,6 +20,7 @@
 
 
 #include <auth_srv.h>
+#include <security.h>
 
 #include "x509_ocsp.h"
 
@@ -36,6 +37,8 @@
 #include <openssl/err.h>
 #include <openssl/ocsp.h>
 
+#define OCSP_BUFFER_LEN 256
+
 static X509* _read_cert_file(const char *cert_file)
 {
 	X509 *cert = NULL;
@@ -51,6 +54,60 @@ static X509* _read_cert_file(const char *cert_file)
 	return cert;
 }
 
+static int _extract_ocsp_uri(X509 *ca_cert, char *ocsp_host,
+		char *ocsp_port_s, char *ocsp_path, int *ocsp_ssl)
+{
+	AUTHORITY_INFO_ACCESS *aia;
+	int k, rc=-1;
+
+	aia = (AUTHORITY_INFO_ACCESS *) X509_get_ext_d2i(ca_cert, NID_info_access, NULL, NULL);
+	if ( aia == NULL) {
+		return -1;
+	}
+
+	for (k=0;k<sk_ACCESS_DESCRIPTION_num(aia);k++) {
+		ACCESS_DESCRIPTION *ad;
+		GENERAL_NAME *gn;
+		char *portPtr = NULL, *hostPtr = NULL, *pathPtr = "/";
+		ASN1_IA5STRING *asn1Uri;
+		int ssl;
+
+		/* look for the OCSP info because AIA can have others */
+		ad = sk_ACCESS_DESCRIPTION_value(aia, k);
+		if (OBJ_obj2nid(ad->method) != NID_ad_OCSP)
+			continue;
+
+		/* make sure we have the URI */
+		gn = ad->location;
+		if (gn->type != GEN_URI)
+			continue;
+		asn1Uri = gn->d.uniformResourceIdentifier;
+		log_message(DEBUG, DEBUG_AREA_MAIN,
+				"Got URI %s", asn1Uri->data);
+
+		if (! OCSP_parse_url((char*)asn1Uri->data, & hostPtr, & portPtr, & pathPtr, & ssl)) {
+			log_message(WARNING, DEBUG_AREA_MAIN,
+					"OCSP_parse_url fails for \"%s\"", asn1Uri->data);
+			continue;
+		}
+
+		SECURE_STRNCPY(ocsp_host, hostPtr, OCSP_BUFFER_LEN-1);
+		SECURE_STRNCPY(ocsp_port_s, portPtr, OCSP_BUFFER_LEN-1);
+		SECURE_STRNCPY(ocsp_path, pathPtr, OCSP_BUFFER_LEN-1);
+		rc = 1;
+
+		OPENSSL_free(hostPtr);
+		OPENSSL_free(portPtr);
+		OPENSSL_free(pathPtr);
+		break;
+	}
+
+	AUTHORITY_INFO_ACCESS_free(aia);
+	return (rc > 0);
+}
+
+/** See RFC 2459
+ */
 int check_ocsp(nussl_session *session, gpointer params_p)
 {
 	int retval = 1;
@@ -59,6 +116,11 @@ int check_ocsp(nussl_session *session, gpointer params_p)
 	struct sockaddr_in sin;
 	struct hostent *host;
 	struct x509_ocsp_params *params = (struct x509_ocsp_params *)params_p;
+	char ocsp_host[OCSP_BUFFER_LEN];
+	char ocsp_port_s[OCSP_BUFFER_LEN];
+	char ocsp_path[OCSP_BUFFER_LEN];
+	int ocsp_ssl = 0;
+	unsigned int ocsp_port;
 	BIO *bio=NULL;
 	SSL *ssl = (SSL*)nussl_get_socket(session);
 	SSL_CTX *ctx = (SSL_CTX*)nussl_get_ctx(session);
@@ -77,10 +139,6 @@ int check_ocsp(nussl_session *session, gpointer params_p)
 	ASN1_GENERALIZEDTIME *produced_at, *this_update, *next_update;
 	int status, reason;
 
-	/* TODO check if an OCSP server was configured */
-	if (params->ocsp_server == NULL)
-		return 0;
-
 	cacert = _read_cert_file(params->ca);
 	if (cacert == NULL) {
 		log_message(CRITICAL, DEBUG_AREA_MAIN,
@@ -88,14 +146,37 @@ int check_ocsp(nussl_session *session, gpointer params_p)
 		return -1;
 	}
 
+	retval = 0;
+	if (params->ocsp_ca_use_aia) {
+		/* this needs to be done for each different CA */
+		retval = _extract_ocsp_uri(cacert,
+				ocsp_host,
+				ocsp_port_s,
+				ocsp_path,
+				&ocsp_ssl);
+	}
+
+	if (retval > 0) {
+		ocsp_port = (unsigned int)strtoul(ocsp_port_s, NULL, 10);
+	} else {
+		/* TODO check if an OCSP server was configured */
+		if (params->ocsp_server == NULL)
+			return 0;
+
+		SECURE_STRNCPY(ocsp_host, params->ocsp_server, OCSP_BUFFER_LEN);
+		ocsp_port = params->ocsp_port;
+		SECURE_STRNCPY(ocsp_path, params->ocsp_path, OCSP_BUFFER_LEN);
+	}
+
 	log_message(DEBUG, DEBUG_AREA_MAIN,
-		" Checking OCSP status");
+		" Checking OCSP status on [%s:%d %s]",
+		ocsp_host, ocsp_port, ocsp_path);
 
 	/* TODO better use getaddrinfo */
-	host = gethostbyname(params->ocsp_server);
+	host = gethostbyname(ocsp_host);
 	if (host == NULL) {
 		log_message(WARNING, DEBUG_AREA_MAIN,
-				" Could not resolve OCSP server name %s", params->ocsp_server);
+				" Could not resolve OCSP server name %s", ocsp_host);
 		goto cleanup;
 	}
 
@@ -110,20 +191,20 @@ int check_ocsp(nussl_session *session, gpointer params_p)
 
 	memcpy(&sin.sin_addr.s_addr, host->h_addr, host->h_length);
 	sin.sin_family = AF_INET;
-	sin.sin_port = htons(params->ocsp_port);
+	sin.sin_port = htons(ocsp_port);
 
 	/* FIXME blocking call ! */
 	ret = connect(fd, (struct sockaddr *)&sin, sizeof(sin));
 	if (ret < 0) {
 		log_message(WARNING, DEBUG_AREA_MAIN,
-				" Could not connect to OCSP server %s", params->ocsp_server);
+				" Could not connect to OCSP server %s", ocsp_host);
 		goto cleanup;
 	}
 
 
 
 	log_message(DEBUG, DEBUG_AREA_MAIN,
-			" Connected to OCSP server %s", params->ocsp_server);
+			" Connected to OCSP server %s", ocsp_host);
 
 	cert = SSL_get_peer_certificate(ssl);
 	cert_stack = (STACK_OF(X509) *)SSL_get_peer_cert_chain(ssl);
@@ -173,7 +254,7 @@ int check_ocsp(nussl_session *session, gpointer params_p)
 	/* (blocking sockets are used) */
 	bio = BIO_new_fd(fd, BIO_NOCLOSE);
 	//setnonblock(fd, 0);
-	response = OCSP_sendreq_bio(bio, params->ocsp_path, request);
+	response = OCSP_sendreq_bio(bio, ocsp_path, request);
 	//setnonblock(c->fd, 1);
 	if (response == NULL) {
 		log_message(WARNING, DEBUG_AREA_MAIN,

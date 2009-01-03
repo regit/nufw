@@ -73,6 +73,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	params->ocsp_server = nuauth_config_table_get("nuauth_tls_ocsp_server");
 	params->ocsp_port = nuauth_config_table_get_or_default_int("nuauth_tls_ocsp_port", 80);
 	params->ocsp_path = nuauth_config_table_get("nuauth_tls_ocsp_path");
+	params->ocsp_ca_use_aia = nuauth_config_table_get_or_default_int("nuauth_tls_ocsp_ca_use_aia", 0);
 
 	module->params = (gpointer) params;
 

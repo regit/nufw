@@ -25,6 +25,7 @@ struct x509_ocsp_params {
 	gchar *ocsp_server;
 	unsigned int ocsp_port;
 	gchar *ocsp_path;
+	unsigned int ocsp_ca_use_aia;
 };
 
 int check_ocsp(nussl_session *session, gpointer params_p);

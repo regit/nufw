@@ -203,6 +203,7 @@ authorityKeyIdentifier=keyid,issuer
 # Copy subject details
 # issuerAltName=issuer:copy
 
+nsCaRevocationUrl		= http://www.domain.dom/ca-crl.pem
 #nsCaRevocationUrl		= http://www.domain.dom/ca-crl.pem
 #nsBaseUrl
 #nsRevocationUrl
@@ -228,6 +229,8 @@ keyUsage = nonRepudiation, digitalSignature, keyEncipherment
 subjectKeyIdentifier=hash
 
 authorityKeyIdentifier=keyid:always,issuer:always
+
+authorityInfoAccess = OCSP;URI:http://ocsp.inl.fr/
 
 # This is what PKIX recommends but some broken software chokes on critical
 # extensions.
