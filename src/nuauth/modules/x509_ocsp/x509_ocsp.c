@@ -24,14 +24,9 @@
 #include "x509_ocsp.h"
 
 /**
- * \ingroup NuauthModules
- * \defgroup X509NuauthModules X509 OCSP Checking modules
- */
-
-/**
  *
  * \ingroup X509NuauthModules
- * \defgroup X509STDModule X509 OCSP checking module
+ * \defgroup X509OSCPModule X509 OCSP checking module
  *
  * @{ */
 

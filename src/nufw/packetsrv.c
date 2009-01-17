@@ -632,7 +632,7 @@ void shutdown_tls()
  * and it's structure is ::nufw_to_nuauth_auth_message_t.
  *
  * \param type Type of request (::AUTH_REQUEST, ::AUTH_CONTROL, ...)
- * \param pckt_datas A pointer to a queued_pckt:: holding packet information
+ * \param pckt_data A pointer to a queued_pckt:: holding packet information
  * \return If an error occurs returns 0, else return 1.
  */
 int auth_request_send(uint8_t type, struct queued_pckt *pckt_data)
