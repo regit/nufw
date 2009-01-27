@@ -1,5 +1,5 @@
 /*
- ** Copyright (C) 2002-2008 INL
+ ** Copyright (C) 2002-2009 INL
  ** Written by Eric Leblond <regit@inl.fr>
  **            Vincent Deffontaines <vincent@gryzor.com>
  **            Pierre Chifflier <chifflier@inl.fr>
@@ -46,6 +46,8 @@
 
 #include <nubase.h>
 
+#include "nufwconf.h"
+
 char *key_file = NULL;
 char *cert_file = NULL;
 
@@ -58,6 +60,8 @@ struct nufw_signals signals;
 /*! Name of pid file prefixed by LOCAL_STATE_DIR (variable defined
  * during compilation/installation) */
 #define NUFW_PID_FILE  LOCAL_STATE_DIR "/run/nufw.pid"
+
+char * nufw_config_file = DEFAULT_NUFW_CONF_FILE;
 
 /**
  * Stop threads and then wait until threads exit.
@@ -334,6 +338,41 @@ void nufw_daemonize()
 	(void) close(2);
 }
 
+/**
+ * Parse configuration values and set variables
+ */
+int nufw_use_config()
+{
+	char * value;
+
+	value = nufw_config_table_get("nufw_tls_cacert");
+	if (value != NULL && ca_file == NULL) {
+		ca_file = strdup(value);
+	}
+
+	value = nufw_config_table_get_or_default("nufw_tls_cert",DEFAULT_NUFW_CERT);
+	if (value != NULL && cert_file == NULL) {
+		cert_file = strdup(value);
+	}
+
+	value = nufw_config_table_get_or_default("nufw_tls_key",DEFAULT_NUFW_KEY);
+	if (value != NULL && key_file == NULL) {
+		key_file = strdup(value);
+	}
+
+	value = nufw_config_table_get("nufw_tls_crl");
+	if (value != NULL && crl_file == NULL) {
+		crl_file = strdup(value);
+	}
+
+	value = nufw_config_table_get_or_default("nufw_destination", AUTHREQ_ADDR);
+	if (value != NULL && strlen(authreq_addr) == 0) {
+		SECURE_STRNCPY(authreq_addr, value, sizeof authreq_addr);
+		printf("Sending Auth request to %s\n", authreq_addr);
+	}
+
+	return 0;
+}
 
 /**
  * Initialization checks
@@ -405,6 +444,7 @@ void display_usage(void)
 \t-h (--help       ): display this help and exit\n\
 \t-V (--version    ): display version and exit\n\
 \t-D (--daemon     ): daemonize\n\
+\t-f (--config     ): use specific config file\n\
 \t-s (--strict     ): do not enforce strict checking of TLS certificates\n\
 \t-S (--no-strict  ): this option does nothing, it is here for backward compatibility\n\
 \t-N (--no-fqdn): do not check nuauth fqdn (-d params) against provided certificate\n\
@@ -465,7 +505,7 @@ int main(int argc, char *argv[])
 {
 	/* option */
 #if USE_NFQUEUE
-	char *options_list = "4sSNDhVvmq:"
+	char *options_list = "4sSNDf:hVvmq:"
 #ifdef HAVE_NFQ_SET_QUEUE_MAXLEN
 	    "L:"
 #endif
@@ -475,7 +515,7 @@ int main(int argc, char *argv[])
 #endif
 	    ;
 #else
-	char *options_list = "4sSNDhVvmc:k:a:n:r:d:p:t:T:A:";
+	char *options_list = "4sSNDf:hVvmc:k:a:n:r:d:p:t:T:A:";
 #endif
 	int option, daemonize = 0;
 	char *version = PACKAGE_VERSION;
@@ -492,7 +532,7 @@ int main(int argc, char *argv[])
 	ca_file = NULL;
 	crl_file = NULL;
 	nuauth_cert_dn = NULL;
-	SECURE_STRNCPY(authreq_addr, AUTHREQ_ADDR, sizeof authreq_addr);
+	authreq_addr[0] = '\0';
 	debug_level = DEFAULT_DEBUG_LEVEL;
 	debug_areas = DEFAULT_DEBUG_AREAS;
 #if USE_NFQUEUE
@@ -517,6 +557,14 @@ int main(int argc, char *argv[])
 	/*parse options */
 	while ((option = getopt_long(argc, argv, options_list, long_options, NULL)) != -1) {
 		switch (option) {
+		case 'f':
+			nufw_config_file = strdup(optarg);
+			if (nufw_config_file == NULL) {
+				fprintf(stderr,
+					"Couldn't malloc! Exiting");
+				exit(EXIT_FAILURE);
+			}
+			break;
 		case 'k':
 			key_file = strdup(optarg);
 			if (key_file == NULL) {
@@ -631,6 +679,16 @@ int main(int argc, char *argv[])
 			display_usage();
 			exit(EXIT_SUCCESS);
 		}
+	}
+
+	if (nufw_parse_configuration(nufw_config_file) != 0) {
+		printf("Error while parsing configuration file\n");
+		exit(EXIT_FAILURE);
+	}
+
+	if (nufw_use_config() != 0) {
+		printf("Error while setting configuration values from file\n");
+		exit(EXIT_FAILURE);
 	}
 
 	if (getuid()) {

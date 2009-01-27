@@ -63,6 +63,9 @@
 #include <linux/netfilter.h>	/* for NF_ACCEPT */
 #include <libnetfilter_queue/libnetfilter_queue.h>
 
+/** Default value of config file */
+#define DEFAULT_NUFW_CONF_FILE CONFIG_DIR "/nufw.conf"
+
 /** Default value of ::nfqueue_num */
 #define DEFAULT_NFQUEUE 0
 
@@ -110,9 +113,11 @@ void *conntrack_event_handler(void *data);
 
 /** Default value, prefixed with CONFIG_DIR, of ::key_file */
 #define KEYFILE "/nufw-key.pem"
+#define DEFAULT_NUFW_KEY  CONFIG_DIR KEYFILE
 
 /** Default value, prefixed with CONFIG_DIR, of ::cert_file */
 #define CERTFILE "/nufw-cert.pem"
+#define DEFAULT_NUFW_CERT  CONFIG_DIR CERTFILE
 
 struct nuauth_conn {
 	nussl_session *session;
