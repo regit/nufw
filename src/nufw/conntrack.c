@@ -146,8 +146,8 @@ void fill_message(struct nuv4_conntrack_message_t *message,
 /**
  * Send message to TLS tunnel on new netfilter conntrack event.
  *
- * \param arg Pointer to a connection of type ::nfct_conntrack
  * \param type Event type (IPCTNL_MSG_CT_DELETE, IPCTNL_MSG_CT_NEW, ...)
+ * \param conn Pointer to a connection of type ::nfct_conntrack
  * \param flags Event flags (no used)
  * \param data (no data, NULL pointer)
  * \return If an error occurs returns -1, else returns 0

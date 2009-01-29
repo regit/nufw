@@ -35,13 +35,7 @@
 #include "security.h"
 
 /**
- * \ingroup NuauthModules
- * \defgroup LoggingNuauthModules Logging modules
- */
-
-/**
- * \ingroup LoggingNuauthModules
- * \defgroup Ulogd2Module Ulogd2 logging module
+ * \ingroup Ulogd2Module
  *
  * @{ */
 

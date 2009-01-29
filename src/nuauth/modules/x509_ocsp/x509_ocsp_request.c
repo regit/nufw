@@ -26,8 +26,7 @@
 
 /**
  *
- * \ingroup X509NuauthModules
- * \defgroup X509STDModule X509 standard checking module
+ * \ingroup X509OSCPModule
  *
  * @{ */
 
