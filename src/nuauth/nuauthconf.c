@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2005-2008 INL
+ ** Copyright(C) 2005-2009 INL
  ** Written by Eric Leblond <regit@inl.fr>
  **            Pierre Chifflier <chifflier@inl.fr>
  **
@@ -138,6 +138,7 @@ int init_nuauthconf(struct nuauth_params **result)
 	conf->datas_persistance =
 	    nuauth_config_table_get_or_default_int("nuauth_datas_persistance", 9);
 	conf->push = nuauth_config_table_get_or_default_int("nuauth_push_to_client", 1);
+	conf->user_check_ip_equality = nuauth_config_table_get_or_default_int("nuauth_user_check_ip_equality", 1);
 	conf->do_ip_authentication =
 	    nuauth_config_table_get_or_default_int("nuauth_do_ip_authentication", 0);
 	conf->acl_cache = nuauth_config_table_get_or_default_int("nuauth_acl_cache", 0);

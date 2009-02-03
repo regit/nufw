@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2003-2007 INL
+ ** Copyright(C) 2003-2009 INL
  ** Written by Eric Leblond <regit@inl.fr>
  **
  ** $Id$
@@ -120,6 +120,7 @@ struct nuauth_params {
 	int push;
 	unsigned int push_delay; /*<! Delay between to consecutive push message */
 	int proto_wait_delay;
+	int user_check_ip_equality;
 	int do_ip_authentication;	/*<! nuauth uses ip_authentication
 					  fallback mode if set to 1 */
 	int hello_authentication;
