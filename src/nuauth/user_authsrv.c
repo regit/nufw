@@ -105,29 +105,29 @@ void user_check_and_decide(gpointer user_session, gpointer data)
 		}
 		if (nuauthconf->user_check_ip_equality) {
 			/* Sanity check : verify source IP equality */
-			if (ipv6_equal(&tlsdata->ip_addr, &conn_elt->tracking.saddr)) {
+			if (! ipv6_equal(&tlsdata->ip_addr, &conn_elt->tracking.saddr)) {
 				if (DEBUG_OR_NOT
-				    (DEBUG_LEVEL_DEBUG,
-				     DEBUG_AREA_PACKET)) {
-					print_connection(conn_elt, "User Packet");
-				}
-				g_async_queue_push(nuauthdatas->connections_queue,
-						   conn_elt);
-			} else {
-				if (DEBUG_OR_NOT
-				    (DEBUG_LEVEL_INFO, DEBUG_AREA_USER)) {
+						(DEBUG_LEVEL_INFO, DEBUG_AREA_USER)) {
 					char ip_ascii[INET6_ADDRSTRLEN];
 					format_ipv6(&tlsdata->ip_addr, ip_ascii, INET6_ADDRSTRLEN, NULL);
 					g_message
-					    ("User \"%s\" on %s tried to authenticate packet from other ip",
-					     conn_elt->username, ip_ascii);
+						("User \"%s\" on %s tried to authenticate packet from other ip",
+						 conn_elt->username, ip_ascii);
 					conn_elt->log_prefix = g_strdup(SPOOFED_LOG_PREFIX);
 					print_connection(conn_elt, "User spoofed Packet");
 				}
 				/* free connection */
 				free_connection(conn_elt);
+				continue;
 			}
 		}
+		if (DEBUG_OR_NOT
+				(DEBUG_LEVEL_DEBUG,
+				 DEBUG_AREA_PACKET)) {
+			print_connection(conn_elt, "User Packet");
+		}
+		g_async_queue_push(nuauthdatas->connections_queue,
+				conn_elt);
 	}
 	g_slist_free(conn_elts);
 	free_buffer_read(userdata);
