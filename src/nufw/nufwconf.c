@@ -27,7 +27,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-struct llist_head *nufw_config_table_list = NULL;
+static struct llist_head *nufw_config_table_list = NULL;
 
 /** \file nufwconf.c
  * \brief Read configuration file

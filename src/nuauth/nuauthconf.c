@@ -28,7 +28,7 @@
 
 #include "config-parser.h"
 
-struct llist_head *nuauth_config_table_list = NULL;
+static struct llist_head *nuauth_config_table_list = NULL;
 
 /**
  * \addtogroup NuauthConf
