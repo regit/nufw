@@ -3,7 +3,7 @@
 .\" <http://shell.ipoline.com/~elmert/comp/docbook2X/> 
 .\" Please send any bug reports, improvements, comments, patches, 
 .\" etc. to Steve Cheng <steve@ggi-project.org>.
-.TH "NUCLIENT.CONF" "5" "09 novembre 2008" "" ""
+.TH "NUCLIENT.CONF" "5" "01 February 2009" "" ""
 
 .SH NAME
 nuclient.conf \- nuauth client configuration file
@@ -18,7 +18,9 @@ The configuration file \fBnuclient.conf\fR is used by all nuauth clients
 .PP
 The file is designed to be human readable and contains a list of keywords with
 values that provide configuration values for libnuclient. Configuration file
-uses the key=value format, without spaces between around the '=' sign.
+uses the key=value format.
+.PP
+Note that strings must be enclosed into double-quotes signs (").
 .PP
 Global configuration file is stored in \fICONFDIR/nuclient.conf\fR
 and per-user file can be stored in \fIHOME/.nufw/nuclient.conf\fR\&. Any variable set in

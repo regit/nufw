@@ -73,7 +73,9 @@ manpage.1: manpage.sgml
 
       <para>The file is designed to be human readable and contains a list of keywords with
       values that provide configuration values for libnuclient. Configuration file
-      uses the key=value format, without spaces between around the '=' sign.
+      uses the key=value format.
+       </para>
+      <para>Note that strings must be enclosed into double-quotes signs (").
        </para>
 
       <para>Global configuration file is stored in <filename>CONFDIR/nuclient.conf</filename>
