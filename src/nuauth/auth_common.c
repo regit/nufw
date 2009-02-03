@@ -1,7 +1,8 @@
 /*
- ** Copyright(C) 2003-2008 INL
+ ** Copyright(C) 2003-2009 INL
  ** Written by Eric Leblond <regit@inl.fr>
  **            Vincent Deffontaines <vincent@gryzor.com>
+ **            Pierre Chifflier <chifflier@inl.fr>
  **     INL : http://www.inl.fr/
  **
  ** $Id$
@@ -216,8 +217,7 @@ int nuauth_bind(char **errmsg, const char *addr, const char *port, char *context
 	ecode = getaddrinfo(addr, port,
 			&hints, &res);
 	if (ecode != 0) {
-		*errmsg =
-		    g_strdup_printf
+		*errmsg = g_strdup_printf
 		    ("Invalid %s listening address %s:%s, error: %s",
 		     context,
 		     addr, port,
@@ -254,6 +254,14 @@ int nuauth_bind(char **errmsg, const char *addr, const char *port, char *context
 	setsockopt(sck_inet,
 		   SOL_SOCKET,
 		   SO_KEEPALIVE, &option_value, sizeof(option_value));
+
+	if (res->ai_family == PF_INET6) {
+		setsockopt(sck_inet,
+				IPPROTO_IPV6,
+				IPV6_V6ONLY,
+				(char *)&option_value,
+				sizeof (option_value));
+	}
 
 	/* bind */
 	result = bind(sck_inet, res->ai_addr, res->ai_addrlen);
