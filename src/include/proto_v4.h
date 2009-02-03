@@ -1,5 +1,5 @@
 /*
- ** Copyright (C) 2002-2006 INL
+ ** Copyright (C) 2002-2009 INL
  ** Written by Eric Leblond <eric@regit.org>
  **            Vincent Deffontaines <vincent@gryzor.com>
  ** INL http://www.inl.fr/
@@ -63,7 +63,7 @@ struct nuv4_conntrack_message_t {
 	struct in6_addr ip_dst;	/*!< IPv6 destination IP */
 	uint8_t ip_protocol;	/*!< IP protocol number */
 	uint16_t src_port;	/*!< TCP/UDP source port or ICMP type */
-	uint16_t dest_port;	/*!< TCP/UDP destionation port or ICMP code */
+	uint16_t dest_port;	/*!< TCP/UDP destination port or ICMP code */
 
 	/* mark field */
 	u_int32_t mark;
@@ -86,7 +86,7 @@ typedef struct {
 	uint8_t msg_type;	/*!< Message type (from ::nufw_message_t) */
 	uint16_t msg_length;	/*!< Message length including header (in bytes) */
 
-	/* Authentification fields */
+	/* Authentication fields */
 	uint32_t packet_id;	/*!< Netfilter packet unique identifier */
 	uint32_t timestamp;	/*!< Timestamp (Epoch format) */
 
@@ -109,9 +109,9 @@ typedef struct {
 	u_int8_t priority;	/*!< priority (See if there is an interest of having this in the scope of asynchronous message) */
 	uint32_t packet_id;	/*!< NetFilter packet unique identifier */
 	u_int32_t tcmark;	/*!< User identifier */
-	uint16_t payload_len;	/*!< Indicate the length of datas in the recv buffer after 
+	uint16_t payload_len;	/*!< Indicate the length of data in the recv buffer after 
 				   the end of the structure that contains the payload of packet. Set
-				   to 0 to treat the following datas as a new decision response */
+				   to 0 to treat the following data as a new decision response */
 	uint16_t padding;	/*!< 0x00000000 */
 } nuv4_nuauth_decision_response_t;
 

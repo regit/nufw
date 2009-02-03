@@ -28,6 +28,6 @@ class TestClientAuth(TestCase):
         self.assert_(not connectClient(self.client))
 
 if __name__ == "__main__":
-    print "Test nuauth client authentification"
+    print "Test nuauth client authentication"
     main()
 

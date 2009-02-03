@@ -1,5 +1,5 @@
 /*
-** Copyright 2006 -INL
+** Copyright 2006-2009 -INL
 ** Written by Victor Stinner <haypo@inl.fr>
 ** INL http://www.inl.fr/
 **
@@ -28,12 +28,12 @@
  * \section intro_sec Introduction
  *
  * NuFW is a firewall based on NetFilter (http://www.netfilter.org)
- * which authentificate users. It's composed of three parts:
+ * which authenticate users. It's composed of three parts:
  *   - NuFW: gateway that works directly with NetFilter, just sends new
  *     connection packets to NuAuth, and applies decisions (accept or drop) ;
  *   - NuAuth: Kernel of the firewall, manages client connections, and takes
  *     decisions on new connection packets sent by NuFW ;
- *   - Client (nutcpc or Windows client): Authentificates users to NuAuth and
+ *   - Client (nutcpc or Windows client): Authenticates users to NuAuth and
  *     answers NuAuth requests (sends its new connection list).
  *
  * This documentation only describes four parts: NuFW, NuAuth, libnuclient and nutcpc.

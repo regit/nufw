@@ -44,6 +44,6 @@ class TestClientAuth(TestCase):
         self.assertEqual(connectTcp(HOST, self.port, TIMEOUT), True)
 
 if __name__ == "__main__":
-    print "Test nuauth client authentification"
+    print "Test nuauth client authentication"
     main()
 

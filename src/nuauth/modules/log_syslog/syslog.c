@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2003 Eric Leblond <eric@regit.org>
+ ** Copyright(C) 2003-2009 Eric Leblond <eric@regit.org>
  **		     Vincent Deffontaines <vincent@gryzor.com>
  **
  ** $Id$
@@ -203,8 +203,8 @@ G_MODULE_EXPORT void auth_error_log(user_session_t * session,
 	char ipaddr[INET6_ADDRSTRLEN];
 	format_ipv6(&session->addr, ipaddr, INET6_ADDRSTRLEN, NULL);
 
-	g_message("Authentification error: %s", text);
-	g_message("Authentification error: user: %s from %s (port %d), protocol version %d",
+	g_message("Authentication error: %s", text);
+	g_message("Authentication error: user: %s from %s (port %d), protocol version %d",
 		session->user_name,
 		ipaddr, session->sport,
 		session->client_version);

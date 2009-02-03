@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2005-2007 INL
+ ** Copyright(C) 2005-2009 INL
  ** Written by Eric Leblond <regit@inl.fr>
  ** INL http://www.inl.fr/
  **
@@ -37,7 +37,7 @@ struct user_cached_datas {
 
 typedef enum {
 	AUTH_TYPE_EXTERNAL, /*!< authentication SSL */
-	AUTH_TYPE_INTERNAL, /*!< authentification SASL */
+	AUTH_TYPE_INTERNAL, /*!< authentication SASL */
 } auth_type_t;
 
 /**
@@ -52,7 +52,7 @@ typedef enum {
  * we add the informations contained in this strucuture to the just created
  * ::connection_t (see user_request()).
  *
- * An "user" is a person authentified with a NuFW client.
+ * An "user" is a person authenticated with a NuFW client.
  */
 typedef struct {
 	struct in6_addr addr;	/*!< \brief IPv6 address of the client */

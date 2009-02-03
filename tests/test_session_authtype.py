@@ -98,6 +98,6 @@ class TestClientCert(TestCase):
         self.assert_(not connectClient(self.client))
 
 if __name__ == "__main__":
-    print "Test nuauth authentification policy"
+    print "Test nuauth authentication policy"
     main()
 

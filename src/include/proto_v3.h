@@ -1,5 +1,5 @@
 /*
- ** Copyright (C) 2002-2006 - INL
+ ** Copyright (C) 2002-2009 - INL
  ** Written by Eric Leblond <eric@regit.org>
  **            Vincent Deffontaines <vincent@gryzor.com>
  ** INL http://www.inl.fr/
@@ -68,7 +68,7 @@ typedef struct {
 	uint8_t msg_type;	/*!< Message type (from ::nufw_message_t) */
 	uint16_t msg_length;	/*!< Message length including header (in bytes) */
 
-	/* Authentification fields */
+	/* Authentication fields */
 	uint32_t packet_id;	/*!< Netfilter packet unique identifier */
 	uint32_t timestamp;	/*!< Timestamp (Epoch format) */
 

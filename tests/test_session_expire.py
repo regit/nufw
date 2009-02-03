@@ -56,6 +56,6 @@ class TestSessionExpire(TestCase):
         return False
 
 if __name__ == "__main__":
-    print "Test nuauth client authentification"
+    print "Test nuauth client authentication"
     main()
 

@@ -9,7 +9,7 @@ from inl_tests.iptables import Iptables
 from nuauth_conf import NuauthConf
 from mysocket import connectTcp
 from filter import testAllowPort, testPort, HOST, VALID_PORT
-# We perform the cert check wether a client can connect or not
+# We perform the cert check whether a client can connect or not
 from plaintext import USERDB
 from plaintext import PlaintextAcl
 
@@ -95,6 +95,6 @@ class TestClientCert(TestCase):
         return False
 
 if __name__ == "__main__":
-    print "Test nuauth client authentification"
+    print "Test nuauth client authentication"
     main()
 

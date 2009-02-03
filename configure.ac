@@ -149,7 +149,7 @@ AC_ARG_WITH(pgsql-log, [AC_HELP_STRING(--with-pgsql-log,  Support user activity 
 AC_ARG_WITH(syslog-log, [AC_HELP_STRING(--without-syslog-log,  Disable user activity logging in syslog)], enable_syslog_log=$withval, enable_syslog_log="yes")
 AC_ARG_WITH(ulogd2-log, [AC_HELP_STRING(--without-ulogd2-log,  Disable user activity logging in ulogd2)], enable_ulogd2_log=$withval, enable_ulogd2_log="yes")
 
-AC_ARG_WITH(plaintext-auth, [AC_HELP_STRING(--without-plaintext-auth,  Disable authentification with plaintext file)], enable_plaintext_auth=$withval, enable_plaintext_auth="yes")
+AC_ARG_WITH(plaintext-auth, [AC_HELP_STRING(--without-plaintext-auth,  Disable authentication with plaintext file)], enable_plaintext_auth=$withval, enable_plaintext_auth="yes")
 AC_ARG_WITH(mark-group, [AC_HELP_STRING(--without-mark-group,  Disable mark packet by group)], enable_mark_group=$withval, enable_mark_group="yes")
 AC_ARG_WITH(mark-field, [AC_HELP_STRING(--without-mark-field,  Disable mark packet by packet field)], enable_mark_field=$withval, enable_mark_field="yes")
 AC_ARG_WITH(mark-flag, [AC_HELP_STRING(--without-mark-flag,  Disable mark packet following acl indication)], enable_mark_flag=$withval, enable_mark_flag="yes")
