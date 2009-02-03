@@ -1,7 +1,8 @@
 /*
- ** Copyright 2005 - INL
+ ** Copyright 2005-2009 - INL
  ** Written by Eric Leblond <regit@inl.fr>
  **            Vincent Deffontaines <vincent@inl.fr>
+ **            Pierre Chifflier <chifflier@inl.fr>
  ** INL http://www.inl.fr/
  **
  ** $Id: checks.c 3968 2007-11-26 14:03:43Z lds $
@@ -32,6 +33,8 @@
 
 #include <nubase.h>
 
+#include "nuclient_conf.h"
+
 #include "sys_config.h"
 #include "getdelim.h"
 
@@ -46,39 +49,15 @@ static char* default_tls_key = NULL;
 static char* default_tls_crl = NULL;
 static int default_suppress_fqdn_verif = 0;
 
-#ifdef FREEBSD
-#include "getdelim.h"
-
-static char *strndup(const char* s, size_t n)
-{
-	char *new;
-	size_t len = strlen(s);
-
-	if (len > n)
-		len = n;
-
-	new = (char *) malloc (len + 1);
-	if (new == NULL)
-		return NULL;
-
-	new[len] = '\0';
-	return (char *) memcpy (new, s, len);
-}
-
-static ssize_t getline(char **lineptr, size_t * n, FILE * stream)
-{
-	return getdelim(lineptr, n, '\n', stream);
-}
-#endif /* #ifdef FREEBSD */
 
 static int str_to_bool(const char *val, int default_value)
 {
-	if ( (!strcasecmp(val,"1")) ||
+	if ( (!strcmp(val,"1")) ||
 	     (!strcasecmp(val,"true")) ||
 	     (!strcasecmp(val,"yes")) )
 		return 1;
 
-	if ( (!strcasecmp(val,"0")) ||
+	if ( (!strcmp(val,"0")) ||
 	     (!strcasecmp(val,"false")) ||
 	     (!strcasecmp(val,"no")) )
 		return 0;
@@ -104,82 +83,21 @@ char *compute_user_config_path()
 	return strdup(path_dir);
 }
 
-static void replace_value(char ** initval, char *newval)
+void nuclient_use_config()
 {
-	if (! initval) {
-		return;
+	char *value;
+
+	default_hostname = nuclient_config_table_get("nuauth_ip");
+	default_port = nuclient_config_table_get("nuauth_port");
+	default_tls_ca = nuclient_config_table_get("nuauth_tls_ca");
+	default_tls_cert = nuclient_config_table_get("nuauth_tls_cert");
+	default_tls_key = nuclient_config_table_get("nuauth_tls_key");
+	default_tls_crl = nuclient_config_table_get("nuauth_tls_crl");
+
+	value = nuclient_config_table_get("nuauth_suppress_fqdn_verif");
+	if (value) {
+		default_suppress_fqdn_verif = str_to_bool(value,1);
 	}
-
-	if (*initval) {
-		free(*initval);
-	}
-	*initval = newval;
-}
-
-int parse_sys_config(const char *filename)
-{
-	char *opt, *val, *line;
-	size_t len;
-	FILE * file;
-	int line_nbr = 0;
-	line = NULL;
-
-	file = fopen(filename, "r");
-	if (!file)
-		return 0;
-
-	printf("Loading settings from %s\n", filename);
-
-	while (getline(&line, &len, file) >= 0) {
-		char* equ_pos;
-		line_nbr++;
-		if (strlen(line) == 0 || *line == '#' || *line == '\n' )
-			continue;
-
-		equ_pos = strchr(line,'=');
-		if (equ_pos == NULL) {
-			fprintf(stderr, "Wrong format on line %i: %s\n",line_nbr, line);
-			continue;
-		}
-
-		opt = strndup(line, equ_pos - line);
-		val = strdup(equ_pos + 1);
-
-		if (strlen(val) >= 1)
-			val[strlen(val)-1] = '\0'; /* Strip '\n' */
-
-		if (!strcmp(opt, "nuauth_ip"))
-			replace_value(&default_hostname, val);
-		else
-		if (!strcmp(opt, "nuauth_port"))
-			replace_value(&default_port, val);
-		else
-		if (!strcmp(opt, "nuauth_tls_ca"))
-			replace_value(&default_tls_ca, val);
-		else
-		if (!strcmp(opt, "nuauth_tls_cert"))
-			replace_value(&default_tls_cert, val);
-		else
-		if (!strcmp(opt, "nuauth_tls_key"))
-			replace_value(&default_tls_key, val);
-		else
-		if (!strcmp(opt, "nuauth_tls_crl"))
-			replace_value(&default_tls_crl, val);
-		else
-		if (!strcmp(opt, "nuauth_suppress_fqdn_verif")) {
-			default_suppress_fqdn_verif = str_to_bool(val,1);
-			free(val);
-		}
-		else {
-			printf("warning: unknown option '%s' in config file\n", opt);
-			free(val);
-		}
-		free(opt);
-	}
-	if (line)
-		free(line);
-	fclose(file);
-	return 1;
 }
 
 void load_sys_config()
@@ -191,16 +109,9 @@ void load_sys_config()
 
 	config_loaded = 1;
 
-	parse_sys_config(SYS_CONF_FILE);
 	user_config = compute_user_config_path();
-	if (user_config) {
-		if (!parse_sys_config(user_config)) {
-			fprintf(stderr,
-				"Warning: unable to parse config file \"%s\"\n",
-				user_config);
-			free(user_config);
-			return;
-		}
+	if (nuclient_parse_configuration(user_config, SYS_CONF_FILE) == 0) {
+		nuclient_use_config();
 	}
 	free(user_config);
 }
