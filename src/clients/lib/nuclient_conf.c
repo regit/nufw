@@ -69,7 +69,7 @@ int nuclient_parse_configuration(const char *user_config, const char *global_con
 			return 0;
 		 }
 	} else {
-		if (new_user_config == NULL) {
+		if (new_global_config != NULL) {
 			/* global, but no user config */
 			nuclient_config_table_list = new_global_config;
 			return 0;
