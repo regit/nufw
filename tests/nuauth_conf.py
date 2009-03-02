@@ -33,6 +33,9 @@ class NuauthConf(ReplaceFile):
         self["nuauth_tls_disable_nufw_fqdn_check"] = "1"
         self["nuauth_nufw_listen_addr"] = '"0.0.0.0"'
         self["nufw_gw_addr"] = None
+        # disable cert checking module, this can prevent correct
+        # authentication from working (for ex if OCSP is working)
+        self["nuauth_certificate_check_module"] = None
 
     def parse_include(self, line):
         conf_dir = dirname(self.filename)
