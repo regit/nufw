@@ -1,5 +1,5 @@
 /*
- ** Copyright (C) 2007-2008 INL
+ ** Copyright (C) 2007-2009 INL
  ** Written by S.Tricaud <stricaud@inl.fr>
  **            L.Defert <ldefert@inl.fr>
  **            Pierre Chifflier <chifflier@inl.fr>
@@ -247,16 +247,19 @@ static int match_hostname(char *cn, const char *hostname)
  * If 'identity' is non-NULL, store the malloc-allocated identity in
  * *identity.  Logic specified by RFC 2818 and RFC 3280. */
 /* static int check_identity(const nussl_uri *server, X509 *cert, char **identity) */
-static int check_identity(X509 * cert, char **identity)
+static int check_identity(const char *expected_hostname, X509 * cert, char **identity)
 {
 	STACK_OF(GENERAL_NAME) * names;
 	int match = 0, found = 0;
-/*     const char *hostname; */
+	char *found_hostname = NULL;
 
 /*     hostname = server ? server->host : ""; */
 
 	names = X509_get_ext_d2i(cert, NID_subject_alt_name, NULL, NULL);
-	if (names) {
+	/* if expected_hostname is NULL, do not check subjectAltName,
+	 * we are only looking for the CN
+	 */
+	if (names && expected_hostname != NULL) {
 		int n;
 
 		/* subjectAltName contains a sequence of GeneralNames */
@@ -264,25 +267,23 @@ static int check_identity(X509 * cert, char **identity)
 			GENERAL_NAME *nm = sk_GENERAL_NAME_value(names, n);
 
 			/* handle dNSName and iPAddress name extensions only. */
-/* 	    if (nm->type == GEN_DNS) { */
-/* 		char *name = dup_ia5string(nm->d.ia5); */
-/*                 if (identity && !found) *identity = nussl_strdup(name); */
-/* 		match = match_hostname(name, hostname); */
-/* 		nussl_free(name); */
-/* 		found = 1; */
-/*             }  */
-/*             else  */
+			if (nm->type == GEN_DNS) {
+				found_hostname = dup_ia5string(nm->d.ia5);
+				match = match_hostname(found_hostname, expected_hostname);
+				if (match) {
+					found = 1;
+					if (identity)
+						*identity = nussl_strdup(found_hostname);
+				}
+			}
+			else
 			if (nm->type == GEN_IPADD) {
 				/* compare IP address with server IP address. */
 				nussl_inet_addr *ia;
 				if (nm->d.ip->length == 4)
-					ia = nussl_iaddr_make
-					    (nussl_iaddr_ipv4,
-					     nm->d.ip->data);
+					ia = nussl_iaddr_make(nussl_iaddr_ipv4, nm->d.ip->data);
 				else if (nm->d.ip->length == 16)
-					ia = nussl_iaddr_make
-					    (nussl_iaddr_ipv6,
-					     nm->d.ip->data);
+					ia = nussl_iaddr_make(nussl_iaddr_ipv6, nm->d.ip->data);
 				else
 					ia = NULL;
 				/* nussl_iaddr_make returns NULL if address type is unsupported */
@@ -325,9 +326,11 @@ static int check_identity(X509 * cert, char **identity)
 /*                 nussl_free(name); */
 /*             } */
 		}
-		/* free the whole stack. */
-		sk_GENERAL_NAME_pop_free(names, GENERAL_NAME_free);
 	}
+
+	/* free the whole stack. */
+	if (names)
+		sk_GENERAL_NAME_pop_free(names, GENERAL_NAME_free);
 
 	/* Check against the commonName if no DNS alt. names were found,
 	 * as per RFC3280. */
@@ -340,8 +343,7 @@ static int check_identity(X509 * cert, char **identity)
 		/* find the most specific commonName attribute. */
 		do {
 			lastidx = idx;
-			idx =
-			    X509_NAME_get_index_by_NID(subj,
+			idx = X509_NAME_get_index_by_NID(subj,
 						       NID_commonName,
 						       lastidx);
 		} while (idx >= 0);
@@ -354,18 +356,23 @@ static int check_identity(X509 * cert, char **identity)
 
 		/* extract the string from the entry */
 		entry = X509_NAME_get_entry(subj, lastidx);
-		if (append_dirstring
-		    (cname, X509_NAME_ENTRY_get_data(entry))) {
+		if (append_dirstring(cname, X509_NAME_ENTRY_get_data(entry))) {
 			nussl_buffer_destroy(cname);
 			return -1;
 		}
-/*         if (identity) *identity = nussl_strdup(cname->data); */
-/*         match = match_hostname(cname->data, hostname); */
-/*         nussl_buffer_destroy(cname); */
+
+		found_hostname = nussl_strdup(cname->data);
+		if (expected_hostname != NULL)
+			match = match_hostname(found_hostname, expected_hostname);
+		nussl_buffer_destroy(cname);
 	}
 
-/*     NUSSL_DEBUG(NUSSL_DBG_SSL, "Identity match for '%s': %s\n", hostname,  */
-/*              match ? "good" : "bad"); */
+	/*NUSSL_DEBUG(NUSSL_DBG_SSL, "Identity match for '%s' (identity: %s): %s\n",
+			expected_hostname, found_hostname,
+			match ? "good" : "bad");*/
+	if (identity != NULL)
+		*identity = nussl_strdup(found_hostname);
+	nussl_free(found_hostname);
 	return match ? 0 : 1;
 }
 
@@ -379,8 +386,7 @@ static nussl_ssl_certificate *populate_cert(nussl_ssl_certificate * cert,
 	cert->subject = x5;
 	/* Retrieve the cert identity; pass a dummy hostname to match. */
 	cert->identity = NULL;
-/*     check_identity(NULL, x5, &cert->identity); */
-	check_identity(x5, &cert->identity);
+	check_identity(NULL, x5, &cert->identity);
 	return cert;
 }
 
@@ -421,7 +427,6 @@ static int check_certificate(nussl_session * sess, SSL * ssl,
 	ASN1_TIME *notAfter = X509_get_notAfter(cert);
 	int ret, failures = 0;
 	long result;
-/*     nussl_uri server; */
 
 	/* check expiry dates */
 	if (X509_cmp_current_time(notBefore) >= 0)
@@ -431,15 +436,16 @@ static int check_certificate(nussl_session * sess, SSL * ssl,
 
 	/* Check certificate was issued to this server; pass URI of
 	 * server. */
-/*     memset(&server, 0, sizeof server); */
-/*     nussl_fill_server_uri(sess, &server); */
-/*     ret = check_identity(&server, cert, NULL); */
-/*     nussl_uri_free(&server); */
-/*     if (ret < 0) { */
-/*         nussl_set_error(sess, _("Server certificate was missing commonName " */
-/*                              "attribute in subject name")); */
-/*         return NUSSL_ERROR; */
-/*     } else if (ret > 0) failures |= NUSSL_SSL_IDMISMATCH; */
+	ret = check_identity(sess->server.hostname, cert, NULL);
+	if (ret < 0) {
+		nussl_set_error(sess,
+				_("Server certificate was missing commonName "
+				 "attribute in subject name"));
+		return NUSSL_ERROR;
+	} else if (ret > 0) {
+		if (sess->flags[NUSSL_SESSFLAG_IGNORE_ID_MISMATCH] == 0)
+			failures |= NUSSL_SSL_IDMISMATCH;
+	}
 
 	/* get the result of the cert verification out of OpenSSL */
 	result = SSL_get_verify_result(ssl);
@@ -613,15 +619,17 @@ int nussl__ssl_post_handshake(nussl_session * sess)
 		return NUSSL_OK;
 
 	/* Pass through the hostname if SNI is enabled. */
-	ctx->hostname =
-	    sess->flags[NUSSL_SESSFLAG_TLS_SNI] ? sess->server.
-	    hostname : NULL;
+	ctx->hostname = sess->flags[NUSSL_SESSFLAG_TLS_SNI] ?
+		sess->server.hostname : NULL;
 
 	ssl = nussl__sock_sslsock(sess->socket);
 
 	chain = SSL_get_peer_cert_chain(ssl);
 	/* For an SSLv2 connection, the cert chain will always be NULL. */
-	if (chain == NULL) {
+	/* The server-side must call SSL_get_peer_certificate
+	 * (see SSL_get_peer_cert_chain(3)
+	 */
+	if (chain == NULL || sess->server.hostname == NULL) {
 		X509 *cert = SSL_get_peer_certificate(ssl);
 		if (cert) {
 			chain = sk_X509_new_null();
@@ -642,8 +650,7 @@ NUSSL_DEBUG(NUSSL_DBG_SSL, "SSL peer did not present certificate\n");
 		}
 
 		if (sess->peer_cert) {
-			int diff =
-			    X509_cmp(sk_X509_value(chain, 0),
+			int diff = X509_cmp(sk_X509_value(chain, 0),
 				     sess->peer_cert->subject);
 			if (freechain)
 				sk_X509_free(chain);	/* no longer need the chain */
