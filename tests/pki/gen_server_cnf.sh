@@ -9,7 +9,7 @@ cat > server.cnf << EOF
 default_bits                    = 1024
 distinguished_name              = $CN
 string_mask                     = nombstr
-req_extensions                  = extensions
+req_extensions                  = v3_req
 input_password                  = secret
 output_password                 = secret
 [ $CN ]
@@ -31,11 +31,18 @@ commonName_max                  = 64
 emailAddress                    = Email Address
 emailAddress_value              = admin@localhost.edu
 emailAddress_max                = 40
-[ extensions ]
+[ v3_req ]
 nsCertType                      = server
 basicConstraints                = critical,CA:false
 # PKIX recommendations harmless if included in all certificates.
 subjectKeyIdentifier            = hash
 # do *not* include email address in subject name (CN field)
-subjectAltName                  = email:move
+#subjectAltName                  = email:move
+subjectAltName                   = DNS:blah1,DNS:blah2
+#subjectAltName                  = @alt_names
+#[alt_names]
+#DNS.1   = lance.eng.networktest.com
+#DNS.2   = mail.freedonia.gov
+#DNS.3   = mail.potrzebie.org
+#DNS.4   = mail.furshlugginer.org
 EOF
