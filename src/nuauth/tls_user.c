@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2004-2008 INL
+ ** Copyright(C) 2004-2009 INL
  ** Written by  Eric Leblond <regit@inl.fr>
  **             Vincent Deffontaines <gryzor@inl.fr>
  **             Pierre Chifflier <chifflier@inl.fr>
@@ -347,6 +347,12 @@ int tls_user_accept(struct tls_user_context_t *context)
 		close(socket);
 		return 1;
 	}
+
+	/* do not verify FQDN field from client */
+	nussl_set_session_flag(current_client_conn->nussl,
+		NUSSL_SESSFLAG_IGNORE_ID_MISMATCH,
+		1
+		);
 
 	ret = nussl_session_handshake(current_client_conn->nussl,context->nussl);
 	if ( ret ) {
