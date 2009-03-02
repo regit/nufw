@@ -1543,6 +1543,15 @@ int nussl_sock_accept_ssl(nussl_socket * sock, nussl_ssl_context * ctx)
 	sock->ssl = ssl;
 	ret = SSL_accept(ssl);
 	if (ret != 1) {
+		int ret_verif;
+		ret_verif = SSL_get_verify_result(ssl);
+		if (ret_verif != 0) {
+			nussl_snprintf(sock->error, sizeof sock->error,
+					_("Certificate verification error: %s"),
+					X509_verify_cert_error_string(ret_verif));
+			return NUSSL_SOCK_ERROR;
+		}
+
 		return error_ossl(sock, ret);
 	}
 #elif defined(HAVE_GNUTLS)
