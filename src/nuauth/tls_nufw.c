@@ -211,6 +211,7 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 	char peername[256];
 	int port;
 	socklen_t len_inet = sizeof(sockaddr);
+	char cipher[256];
 
 	nufw_session_t *nu_session;
 
@@ -287,6 +288,11 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 		g_free(nu_session);
 		return 1;
 	}
+
+	nussl_session_get_cipher(nu_session->nufw_client, cipher, sizeof(cipher));
+	log_message(INFO, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
+		    "TLS handshake with nufw server %s succeeded, cipher is %s",
+		    address, cipher);
 
 	/* Check certificate hook */
 	ret = modules_check_certificate(nu_session->nufw_client);

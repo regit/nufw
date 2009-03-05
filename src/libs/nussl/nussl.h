@@ -108,6 +108,8 @@ extern "C" {
 
 	int nussl_session_get_fd(nussl_session * sess);
 
+	int nussl_session_get_cipher(nussl_session * sess, char *buf, size_t bufsz);
+
 	int nussl_session_getpeer(nussl_session * sess,
 				  struct sockaddr *addr,
 				  socklen_t * addrlen);

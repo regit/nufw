@@ -758,13 +758,17 @@ int main(int argc, char *argv[])
 	/* do initial connect */
 	tls_connect();
 	if (tls.session) {
+		char buf[256];
+		nussl_session_get_cipher(tls.session, buf, sizeof(buf));
 		log_area_printf(DEBUG_AREA_GW,
 				DEBUG_LEVEL_WARNING,
-				"[+] TLS connection to nuauth established");
+				"[+] TLS connection to nuauth established (%s:%d), cipher is %s",
+				authreq_addr, authreq_port, buf);
 	} else {
 		log_area_printf(DEBUG_AREA_GW,
 				DEBUG_LEVEL_CRITICAL,
-				"[!] TLS connection to nuauth can NOT be established");
+				"[!] TLS connection to nuauth can NOT be established (%s:%d)",
+				authreq_addr, authreq_port);
 	}
 
 	/* create packet server thread */

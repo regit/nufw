@@ -572,6 +572,10 @@ void wipe(void *data, size_t datalen)
 void display_cert(nuauth_session_t* session)
 {
 	char* info;
+
+	info = nu_client_get_cipher(session);
+	printf("Server cipher:\n%s\n", info ? info : "None");
+	free(info);
 	info = nu_client_get_cert_info(session);
 	printf("User certificate:\n%s\n", info ? info : "None");
 	free(info);

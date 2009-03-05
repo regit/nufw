@@ -705,10 +705,12 @@ int auth_request_send(uint8_t type, struct queued_pckt *pckt_data)
 		tls_connect();
 
 		if (tls.session) {
+			char buf[256];
+			nussl_session_get_cipher(tls.session, buf, sizeof(buf));
 			log_area_printf(DEBUG_AREA_GW,
 					DEBUG_LEVEL_WARNING,
-					"[+] TLS connection to nuauth restored (%s:%d)",
-					authreq_addr, authreq_port);
+					"[+] TLS connection to nuauth restored (%s:%d), cipher is %s",
+					authreq_addr, authreq_port, buf);
 
 		} else {
 			log_area_printf(DEBUG_AREA_GW,

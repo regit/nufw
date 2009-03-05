@@ -451,7 +451,24 @@ int nu_client_load_crl(nuauth_session_t *session, const char *crlfile,
 
 /**
  * \ingroup nuclientAPI
- * Returns a formated string containing information about the user certificate
+ * Returns a formatted string containing information about the TLS cipher
+ * used for the connection to the server.
+ *
+ * \param session Pointer to client session
+ * \return
+ */
+char* nu_client_get_cipher(nuauth_session_t * session)
+{
+	char buf[256];
+	int ret;
+
+	ret = nussl_session_get_cipher(session->nussl, buf, sizeof(buf));
+	return (ret==0) ? strdup(buf) : NULL;
+}
+
+/**
+ * \ingroup nuclientAPI
+ * Returns a formatted string containing information about the user certificate
  *
  * \param session Pointer to client session
  * \return
@@ -464,7 +481,7 @@ char* nu_client_get_cert_info(nuauth_session_t * session)
 
 /**
  * \ingroup nuclientAPI
- * Returns a formated string containing information about the server certificate
+ * Returns a formatted string containing information about the server certificate
  *
  * \param session Pointer to client session
  * \return

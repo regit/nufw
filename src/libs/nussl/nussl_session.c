@@ -230,6 +230,23 @@ int nussl_session_get_fd(nussl_session * sess)
 	return nussl_sock_fd(sess->socket);
 }
 
+int nussl_session_get_cipher(nussl_session * sess, char *buf, size_t bufsz)
+{
+	char *cipher = NULL;
+
+	if (!sess)
+		return -1;
+
+	cipher = nussl_sock_cipher(sess->socket);
+	if (!cipher)
+		return -1;
+
+	strncpy(buf, cipher, bufsz);
+	nussl_free(cipher);
+
+	return 0;
+}
+
 int nussl_session_set_dh_bits(nussl_session * sess, unsigned int dh_bits)
 {
 	if (!sess)

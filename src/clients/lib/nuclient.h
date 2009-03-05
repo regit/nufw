@@ -151,6 +151,7 @@ int nu_client_set_crlfile(nuauth_session_t * session,
 				char *crlfile,
 				nuclient_error_t *err);
 
+char* nu_client_get_cipher(nuauth_session_t * session);
 char* nu_client_get_cert_info(nuauth_session_t * session);
 char* nu_client_get_server_cert_info(nuauth_session_t * session);
 

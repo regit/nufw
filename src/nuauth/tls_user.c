@@ -296,6 +296,7 @@ int tls_user_accept(struct tls_user_context_t *context)
 	unsigned short sport;
 	int ret;
 	char address[INET6_ADDRSTRLEN];
+	char cipher[256];
 
 	current_client_conn = g_new0(struct client_connection, 1);
 
@@ -364,6 +365,11 @@ int tls_user_accept(struct tls_user_context_t *context)
 		g_free(current_client_conn);
 		return 1;
 	}
+
+	nussl_session_get_cipher(current_client_conn->nussl, cipher, sizeof(cipher));
+	log_message(INFO, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
+		    "TLS handshake with client %s succeeded, cipher is %s",
+		    address, cipher);
 
 	/* Check certificate hook */
 	ret = modules_check_certificate(current_client_conn->nussl);
