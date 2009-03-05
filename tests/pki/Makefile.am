@@ -35,6 +35,22 @@ CA.csr: CA.key openssl.cnf
 CA.key:
 	openssl genrsa -des3 -passout pass:$(CA_PASS) -out CA.key $(KEY_SIZE)
 
+# subca
+subca: subca_req
+	[ "x$(NAME)" != "x" ] || exit 1; \
+	$(CA_CLI) -extensions v3_ca -in $(NAME).csr -out $(NAME).crt -days $(CA_DAYS)
+
+subca_req:
+	[ "x$(NAME)" != "x" ] || exit 1; \
+	./gen_subca_cnf.sh "$(NAME)"; \
+	openssl req -new -config subca.cnf -batch -passout pass:$(CA_PASS) -newkey rsa:$(KEY_SIZE) -keyout $(NAME).key -out $(NAME).csr -days $(CA_DAYS); \
+	rm -f subca.cnf
+
+subcert: req
+	[ "x$(NAME)" != "x" ] || exit 1; \
+	[ "x$(CA_NAME)" != "x" ] || exit 1; \
+	openssl ca -passin pass:$(CA_PASS) -batch -notext -config openssl.cnf -cert $(CA_NAME).crt -keyfile $(CA_NAME).key -extensions usr_cert -policy policy_anything -days $(CERT_DAYS) -out $(NAME).crt -infiles $(NAME).csr
+
 # certificates generation
 cert: req
 	[ "x$(NAME)" != "x" ] || exit 1; \

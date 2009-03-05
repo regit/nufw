@@ -131,19 +131,20 @@ countryName_min			= 2
 countryName_max			= 2
 
 stateOrProvinceName		= State or Province Name (full name)
-stateOrProvinceName_default	= Some-State
+stateOrProvinceName_default	= France
 
 localityName			= Locality Name (eg, city)
+localityName_default		= Paris
 
 0.organizationName		= Organization Name (eg, company)
-0.organizationName_default	= Internet Widgits Pty Ltd
+0.organizationName_default	= INL
 
 # we can do this but it is not needed normally :-)
 #1.organizationName		= Second Organization Name (eg, company)
 #1.organizationName_default	= World Wide Web Pty Ltd
 
 organizationalUnitName		= Organizational Unit Name (eg, section)
-#organizationalUnitName_default	=
+organizationalUnitName_default	= INL tests
 
 commonName			= Common Name (eg, YOUR name)
 commonName_max			= 64

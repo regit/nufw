@@ -23,6 +23,11 @@ make revoke NAME="nuauth-revoked.inl.fr"
 make cert NAME="client-revoked.inl.fr" CERT_TYPE=user
 make revoke NAME="client-revoked.inl.fr"
 
+# subca stuff
+make subca NAME="sub1"
+make subcert NAME=subserver1 CA_NAME=sub1 CERT_TYPE=server
+make subcert NAME=subuser1 CA_NAME=sub1 CERT_TYPE=user
+
 chmod o-rwx *.key
 
 
