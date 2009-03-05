@@ -377,7 +377,7 @@ idmef_message_t* create_from_template(idmef_message_t *tpl, connection_t *conn)
 /**
  * Set operating system information on the client (OS type and version)
  */
-static void set_os_infos(idmef_message_t *idmef, const char* osname, const char *osrelease, const char *osversion)
+static void set_os_info(idmef_message_t *idmef, const char* osname, const char *osrelease, const char *osversion)
 {
 	char buffer[256];
 
@@ -390,7 +390,7 @@ static void set_os_infos(idmef_message_t *idmef, const char* osname, const char 
 /**
  * Set information on NuFW (ip address, port)
  */
-static void set_nufw_infos(idmef_message_t *idmef, const char *nufw_address, const char *nufw_port)
+static void set_nufw_info(idmef_message_t *idmef, const char *nufw_address, const char *nufw_port)
 {
 	char buffer[256];
 
@@ -526,13 +526,13 @@ static idmef_message_t *create_message_packet(idmef_message_t * tpl,
 
 	/* os informations */
 	if (conn->os_sysname != NULL) {
-		set_os_infos(idmef, conn->os_sysname, conn->os_release, conn->os_version);
+		set_os_info(idmef, conn->os_sysname, conn->os_release, conn->os_version);
 	}
 
 	/* informations about nufw server */
 	if (conn->tls != NULL) {
 		format_ipv6(&conn->tls->peername, ip_ascii, INET6_ADDRSTRLEN, NULL);
-		set_nufw_infos(idmef, ip_ascii, nuauthconf->authreq_port);
+		set_nufw_info(idmef, ip_ascii, nuauthconf->authreq_port);
 	}
 
 	return idmef;
@@ -604,7 +604,7 @@ static idmef_message_t *create_message_session(idmef_message_t * tpl,
 	add_idmef_object(idmef, "alert.target(0).node.address(0).address", ip_ascii);
 
 	/* os informations */
-	set_os_infos(idmef, session->sysname, session->release, session->version);
+	set_os_info(idmef, session->sysname, session->release, session->version);
 	return idmef;
 }
 

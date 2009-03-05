@@ -1,5 +1,5 @@
 /*
- ** Copyright (C) 2007-2008 INL
+ ** Copyright (C) 2007-2009 INL
  ** Written by S.Tricaud <stricaud@inl.fr>
  **            L.Defert <ldefert@inl.fr>
  **            Pierre Chifflier <chifflier@inl.fr>
@@ -85,10 +85,10 @@ extern "C" {
 
 /* TODO: factorize those functions */
 /* Returns a string containing informations about the certificate */
-	char *nussl_get_cert_infos(nussl_session * sess);
+	char *nussl_get_cert_info(nussl_session * sess);
 
 /* Returns a string containing informations about the peer certificate */
-	char *nussl_get_server_cert_infos(nussl_session * sess);
+	char *nussl_get_server_cert_info(nussl_session * sess);
 
 /* Returns a string containing informations about the peer certificate */
 	char *nussl_get_server_cert_dn(nussl_session * sess);

@@ -183,13 +183,13 @@ int nussl_has_support(int feature)
 
 int check_key_perms(const char *filename)
 {
-	struct stat infos;
+	struct stat info;
 
-	if (stat(filename, &infos) != 0)
+	if (stat(filename, &info) != 0)
 		return NUSSL_ERROR;
 
 	/* File should not be readable or writable by others */
-	if (infos.st_mode & S_IROTH || infos.st_mode & S_IWOTH)
+	if (info.st_mode & S_IROTH || info.st_mode & S_IWOTH)
 		return NUSSL_ERROR;
 
 	return NUSSL_OK;

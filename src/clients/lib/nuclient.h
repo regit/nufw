@@ -1,5 +1,5 @@
 /*
- ** Copyright 2004-2008 - INL
+ ** Copyright 2004-2009 - INL
  ** Written by Eric Leblond <regit@inl.fr>
  **            Vincent Deffontaines <vincent@inl.fr>
  ** INL http://www.inl.fr/
@@ -151,8 +151,8 @@ int nu_client_set_crlfile(nuauth_session_t * session,
 				char *crlfile,
 				nuclient_error_t *err);
 
-char* nu_client_get_cert_infos(nuauth_session_t * session);
-char* nu_client_get_server_cert_infos(nuauth_session_t * session);
+char* nu_client_get_cert_info(nuauth_session_t * session);
+char* nu_client_get_server_cert_info(nuauth_session_t * session);
 
 int nu_client_set_crlfile(nuauth_session_t * session,
 		char *crlfile,

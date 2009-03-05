@@ -19,7 +19,7 @@
 #include "nussl_internal.h"
 #include "nussl_alloc.h"
 
-char *nussl_get_cert_infos(nussl_session * sess)
+char *nussl_get_cert_info(nussl_session * sess)
 {
 	char valid_from[NUSSL_SSL_VDATELEN];
 	char valid_until[NUSSL_SSL_VDATELEN];
@@ -67,7 +67,7 @@ char *nussl_get_cert_infos(nussl_session * sess)
 	return ret;
 }
 
-char *nussl_get_server_cert_infos(nussl_session * sess)
+char *nussl_get_server_cert_info(nussl_session * sess)
 {
 	char valid_from[NUSSL_SSL_VDATELEN];
 	char valid_until[NUSSL_SSL_VDATELEN];

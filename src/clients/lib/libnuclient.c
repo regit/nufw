@@ -1,5 +1,5 @@
 /*
- ** Copyright 2004-2008 - INL
+ ** Copyright 2004-2009 - INL
  ** Written by Eric Leblond <regit@inl.fr>
  **            Vincent Deffontaines <vincent@inl.fr>
  ** INL http://www.inl.fr/
@@ -456,9 +456,9 @@ int nu_client_load_crl(nuauth_session_t *session, const char *crlfile,
  * \param session Pointer to client session
  * \return
  */
-char* nu_client_get_cert_infos(nuauth_session_t * session)
+char* nu_client_get_cert_info(nuauth_session_t * session)
 {
-	return nussl_get_cert_infos(session->nussl);
+	return nussl_get_cert_info(session->nussl);
 }
 
 
@@ -469,9 +469,9 @@ char* nu_client_get_cert_infos(nuauth_session_t * session)
  * \param session Pointer to client session
  * \return
  */
-char* nu_client_get_server_cert_infos(nuauth_session_t * session)
+char* nu_client_get_server_cert_info(nuauth_session_t * session)
 {
-	return nussl_get_server_cert_infos(session->nussl);
+	return nussl_get_server_cert_info(session->nussl);
 }
 
 

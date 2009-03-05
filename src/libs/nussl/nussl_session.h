@@ -281,9 +281,9 @@ int nussl_ssl_trust_cert_file(nussl_session * sess, const char *cert_file);
 nussl_ssl_client_cert *nussl_ssl_import_keypair(const char *cert_file,
 						const char *key_file);
 
-char *nussl_get_cert_infos(nussl_session * sess);
+char *nussl_get_cert_info(nussl_session * sess);
 char *nussl_get_server_cert_dn(nussl_session * sess);
-char *nussl_get_server_cert_infos(nussl_session * sess);
+char *nussl_get_server_cert_info(nussl_session * sess);
 int nussl_init();
 
 NUSSL_END_DECLS

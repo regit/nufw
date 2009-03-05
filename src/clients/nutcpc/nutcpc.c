@@ -571,12 +571,13 @@ void wipe(void *data, size_t datalen)
  */
 void display_cert(nuauth_session_t* session)
 {
-	char* infos = nu_client_get_cert_infos(session);
-	printf("User certificate:\n%s\n", infos ? infos : "None");
-	free(infos);
-	infos = nu_client_get_server_cert_infos(session);
-	printf("Server certificate:\n%s\n", infos ? infos : "None");
-	free(infos);
+	char* info;
+	info = nu_client_get_cert_info(session);
+	printf("User certificate:\n%s\n", info ? info : "None");
+	free(info);
+	info = nu_client_get_server_cert_info(session);
+	printf("Server certificate:\n%s\n", info ? info : "None");
+	free(info);
 }
 
 
