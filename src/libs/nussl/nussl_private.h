@@ -1,5 +1,5 @@
 /*
- ** Copyright (C) 2007-2008 INL
+ ** Copyright (C) 2007-2009 INL
  ** Written by S.Tricaud <stricaud@inl.fr>
  **            L.Defert <ldefert@inl.fr>
  **            Pierre Chifflier <chifflier@inl.fr>
@@ -98,6 +98,9 @@ struct nussl_session_s {
 	nussl_session_status_info status;
 
 	int check_peer_cert;
+
+	/* NUSSL_SSL_CTX_SERVER or NUSSL_SSL_CTX_CLIENT */
+	int mode;
 
 	/* Error string */
 	char error[512];

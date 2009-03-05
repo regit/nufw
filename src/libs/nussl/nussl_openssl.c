@@ -629,7 +629,7 @@ int nussl__ssl_post_handshake(nussl_session * sess)
 	/* The server-side must call SSL_get_peer_certificate
 	 * (see SSL_get_peer_cert_chain(3)
 	 */
-	if (chain == NULL || sess->server.hostname == NULL) {
+	if (chain == NULL || sess->mode == NUSSL_SSL_CTX_SERVER) {
 		X509 *cert = SSL_get_peer_certificate(ssl);
 		if (cert) {
 			chain = sk_X509_new_null();

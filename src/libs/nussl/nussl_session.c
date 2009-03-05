@@ -1,7 +1,8 @@
 /*
- ** Copyright (C) 2007,2008 INL
+ ** Copyright (C) 2007-2009 INL
  ** Written by S.Tricaud <stricaud@inl.fr>
  **            L.Defert <ldefert@inl.fr>
+ **            Pierre Chifflier <chifflier@inl.fr>
  ** INL http://www.inl.fr/
  **
  ** $Id$
@@ -149,6 +150,8 @@ nussl_session *nussl_session_create(int mode)
 
 	/* check certificates by default */
 	sess->check_peer_cert = 1;
+
+	sess->mode = mode;
 
 	return sess;
 }
