@@ -404,6 +404,9 @@ void close_clients(int signal)
 gboolean is_expired_client(gpointer key,
 			   gpointer value, gpointer user_data)
 {
+	if (((user_session_t *) value)->expire == -1) {
+		return FALSE;
+	}
 	if (((user_session_t *) value)->expire < *((time_t *) user_data)) {
 		return TRUE;
 	} else {
