@@ -1,5 +1,5 @@
 /*
- ** Copyright 2004-2007 - INL
+ ** Copyright 2004-2009 - INL
  ** Written by Eric Leblond <regit@inl.fr>
  **            Vincent Deffontaines <vincent@inl.fr>
  ** INL http://www.inl.fr/
@@ -488,7 +488,7 @@ static int nu_get_usersecret(sasl_conn_t * conn __attribute__ ((unused)),
 	return SASL_OK;
 }
 
-static int nu_get_userdatas(void *context __attribute__ ((unused)),
+static int nu_get_userdata(void *context __attribute__ ((unused)),
 			    int id, const char **result, unsigned *len)
 {
 	nuauth_session_t *session = (nuauth_session_t *) context;
@@ -547,8 +547,8 @@ int init_sasl(nuauth_session_t * session, const char *hostname, nuclient_error_t
 
 	/* SASL time */
 	sasl_callback_t callbacks[] = {
-		{SASL_CB_USER, &nu_get_userdatas, session},
-		{SASL_CB_AUTHNAME, &nu_get_userdatas, session},
+		{SASL_CB_USER, &nu_get_userdata, session},
+		{SASL_CB_AUTHNAME, &nu_get_userdata, session},
 		{SASL_CB_PASS, &nu_get_usersecret, session},
 		{SASL_CB_LIST_END, NULL, NULL}
 	};

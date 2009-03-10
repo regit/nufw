@@ -26,10 +26,10 @@
 
 #define RETURN_NO_LOG return
 
-static GSList *userpckt_decode(struct tls_buffer_read *datas);
+static GSList *userpckt_decode(struct tls_buffer_read *data);
 
 /**
- * Get user datas (containing datagram) and goes till inclusion
+ * Get user data (containing datagram) and goes till inclusion
  * (or decision) on packet.
  *
  * Call userpckt_decode()
@@ -349,17 +349,17 @@ int user_process_field(struct nu_authreq *authreq,
 /**
  * \brief Parse user request
  *
- * \param datas Buffer read on a TLS socket
+ * \param data Buffer read on a TLS socket
  * \return Single linked list of connections (of type ::connection_t).
  */
-GSList *user_request(struct tls_buffer_read * datas)
+GSList *user_request(struct tls_buffer_read * data)
 {
-	char *dgram = datas->buffer;
+	char *dgram = data->buffer;
 	struct nu_header *header = (struct nu_header *) dgram;
 	GSList *conn_elts = NULL;
 	connection_t *connection = NULL;
 	char *start;
-	int buffer_len = datas->buffer_len;
+	int buffer_len = data->buffer_len;
 	int auth_buffer_len;
 	int field_length;
 	struct nu_authreq *authreq;
@@ -397,8 +397,8 @@ GSList *user_request(struct tls_buffer_read * datas)
 		connection->packet_id = NULL;
 		connection->expire = -1;
 		connection->flags = ACL_FLAGS_NONE;
-		connection->client_version = datas->client_version;
-		connection->auth_quality = datas->auth_quality;
+		connection->client_version = data->client_version;
+		connection->auth_quality = data->auth_quality;
 		connection->decision = DECISION_NODECIDE;
 #ifdef PERF_DISPLAY_ENABLE
 		if (nuauthconf->debug_areas & DEBUG_AREA_PERF) {
@@ -459,15 +459,15 @@ GSList *user_request(struct tls_buffer_read * datas)
 
 		/* here all packet related information are filled-in */
 		if (connection->username == NULL) {
-			connection->username = g_strdup(datas->user_name);
+			connection->username = g_strdup(data->user_name);
 		}
-		connection->user_id = datas->user_id;
-		connection->user_groups = g_slist_copy(datas->groups);
-		connection->os_sysname = g_strdup(datas->os_sysname);
-		connection->os_release = g_strdup(datas->os_release);
-		connection->os_version = g_strdup(datas->os_version);
+		connection->user_id = data->user_id;
+		connection->user_groups = g_slist_copy(data->groups);
+		connection->os_sysname = g_strdup(data->os_sysname);
+		connection->os_release = g_strdup(data->os_release);
+		connection->os_version = g_strdup(data->os_version);
 		/* copy client version information */
-		connection->client_version = datas->client_version;
+		connection->client_version = data->client_version;
 
 		if (connection->user_groups == NULL) {
 			log_message(INFO, DEBUG_AREA_USER,
@@ -489,19 +489,19 @@ GSList *user_request(struct tls_buffer_read * datas)
 }
 
 /**
- * Decode user datagram packet and fill a connection with datas
+ * Decode user datagram packet and fill a connection with data
  * (called by user_check_and_decide()).
  *
- * \param datas Pointer to a struct tls_buffer_read:
+ * \param data Pointer to a struct tls_buffer_read:
  * \return Single linked list of connections (of type connection_t).
  */
-static GSList *userpckt_decode(struct tls_buffer_read *datas)
+static GSList *userpckt_decode(struct tls_buffer_read *data)
 {
-	char *dgram = datas->buffer;
+	char *dgram = data->buffer;
 	struct nu_header *header = (struct nu_header *) dgram;
 
 	/* check buffer underflow */
-	if (datas->buffer_len < (int) sizeof(struct nu_header)) {
+	if (data->buffer_len < (int) sizeof(struct nu_header)) {
 		log_message(WARNING, DEBUG_AREA_USER,
 			    "Received buffer too small to read header");
 		return NULL;
@@ -528,5 +528,5 @@ static GSList *userpckt_decode(struct tls_buffer_read *datas)
 		log_message(WARNING, DEBUG_AREA_USER, "Unsupported message type");
 		return NULL;
 	}
-	return user_request(datas);
+	return user_request(data);
 }

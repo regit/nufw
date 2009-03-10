@@ -145,52 +145,52 @@ void* pre_client_check(GMutex *mutex)
  * authentication threads.
  *
  * \param c_session SSL RX packet
- * \param c_datas pointer that will point to the parsed datas
+ * \param c_data pointer that will point to the parsed data
  * \return a nu_error_t::, NU_EXIT_CONTINUE if read done, NU_EXIT_OK if read complete, NU_EXIT_ERROR on error
  */
 nu_error_t treat_user_request(user_session_t * c_session,
-				     struct tls_buffer_read **c_datas)
+				     struct tls_buffer_read **c_data)
 {
 	int header_length;
 	struct nu_header *header;
-	struct tls_buffer_read *datas;
+	struct tls_buffer_read *data;
 
 	if (c_session == NULL)
 		return NU_EXIT_ERROR;
 
-	datas = g_new0(struct tls_buffer_read, 1);
-	if (datas == NULL)
+	data = g_new0(struct tls_buffer_read, 1);
+	if (data == NULL)
 		return NU_EXIT_ERROR;
-	datas->socket = 0;
-	datas->ip_addr = c_session->addr;
-	datas->client_version = c_session->client_version;
-	datas->auth_quality = c_session->auth_quality;
+	data->socket = 0;
+	data->ip_addr = c_session->addr;
+	data->client_version = c_session->client_version;
+	data->auth_quality = c_session->auth_quality;
 
-	/* copy packet datas */
-	datas->buffer = g_new0(char, CLASSIC_NUFW_PACKET_SIZE);
-	if (datas->buffer == NULL) {
-		g_free(datas);
+	/* copy packet data */
+	data->buffer = g_new0(char, CLASSIC_NUFW_PACKET_SIZE);
+	if (data->buffer == NULL) {
+		g_free(data);
 		return NU_EXIT_ERROR;
 	}
 	g_mutex_lock(c_session->tls_lock);
-	datas->buffer_len = nussl_read(c_session->nussl, datas->buffer,
+	data->buffer_len = nussl_read(c_session->nussl, data->buffer,
 			       CLASSIC_NUFW_PACKET_SIZE);
 
 	g_mutex_unlock(c_session->tls_lock);
-	if (datas->buffer_len < (int) sizeof(struct nu_header)) {
+	if (data->buffer_len < (int) sizeof(struct nu_header)) {
 #ifdef DEBUG_ENABLE
-		if (datas->buffer_len <= 0)
+		if (data->buffer_len <= 0)
 			log_message(DEBUG, DEBUG_AREA_USER,
 				    "Received error from user %s (%s)",
 				    c_session->user_name, nussl_get_error(c_session->nussl));
 #endif
-		free_buffer_read(datas);
+		free_buffer_read(data);
 		return NU_EXIT_OK;
 	}
 
 
-	/* get header to check if we need to get more datas */
-	header = (struct nu_header *) datas->buffer;
+	/* get header to check if we need to get more data */
+	header = (struct nu_header *) data->buffer;
 	header_length = ntohs(header->length);
 
 	/* is it an "USER HELLO" message ? */
@@ -199,64 +199,64 @@ nu_error_t treat_user_request(user_session_t * c_session,
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 				  "tls user: HELLO from user \"%s\"",
 				  c_session->user_name);
-		free_buffer_read(datas);
+		free_buffer_read(data);
 		return NU_EXIT_CONTINUE;
 	}
 
 	/* if message content is bigger than CLASSIC_NUFW_PACKET_SIZE, */
 	/* continue to read the content */
 	if (header->proto == PROTO_VERSION
-	    && header_length > datas->buffer_len
+	    && header_length > data->buffer_len
 	    && header_length < MAX_NUFW_PACKET_SIZE) {
 		int tmp_len;
 
 		/* we realloc and get what we miss */
-		datas->buffer = g_realloc(datas->buffer, header_length);
-		header = (struct nu_header *) datas->buffer;
+		data->buffer = g_realloc(data->buffer, header_length);
+		header = (struct nu_header *) data->buffer;
 
 		g_mutex_lock(c_session->tls_lock);
 		tmp_len = nussl_read(c_session->nussl,
-				       datas->buffer +
+				       data->buffer +
 				       CLASSIC_NUFW_PACKET_SIZE,
-				       header_length - datas->buffer_len);
+				       header_length - data->buffer_len);
 		g_mutex_unlock(c_session->tls_lock);
 		if (tmp_len <= 0) {
-			free_buffer_read(datas);
+			free_buffer_read(data);
 			return NU_EXIT_ERROR;
 		}
-		datas->buffer_len += tmp_len;
+		data->buffer_len += tmp_len;
 	}
 
 	/* check message type because USER_HELLO has to be ignored */
 	if (header->msg_type == USER_HELLO) {
-		free_buffer_read(datas);
+		free_buffer_read(data);
 		return NU_EXIT_CONTINUE;
 	}
 
 	/* check authorization if we're facing a multi user packet */
 	if (header->option == 0x0) {
 		/* this is an authorized packet we fill the buffer_read structure */
-		datas->user_name = g_strdup(c_session->user_name);
-		datas->user_id = c_session->user_id;
-		datas->groups = g_slist_copy(c_session->groups);
+		data->user_name = g_strdup(c_session->user_name);
+		data->user_id = c_session->user_id;
+		data->groups = g_slist_copy(c_session->groups);
 		if (c_session->sysname) {
-			datas->os_sysname = g_strdup(c_session->sysname);
-			if (datas->os_sysname == NULL) {
-				free_buffer_read(datas);
+			data->os_sysname = g_strdup(c_session->sysname);
+			if (data->os_sysname == NULL) {
+				free_buffer_read(data);
 				return NU_EXIT_ERROR;
 			}
 		}
 		if (c_session->release) {
-			datas->os_release = g_strdup(c_session->release);
-			if (datas->os_release == NULL) {
-				free_buffer_read(datas);
+			data->os_release = g_strdup(c_session->release);
+			if (data->os_release == NULL) {
+				free_buffer_read(data);
 				return NU_EXIT_ERROR;
 			}
 		}
 		if (c_session->version) {
-			datas->os_version = g_strdup(c_session->version);
-			if (datas->os_version == NULL) {
-				free_buffer_read(datas);
+			data->os_version = g_strdup(c_session->version);
+			if (data->os_version == NULL) {
+				free_buffer_read(data);
 				return NU_EXIT_ERROR;
 			}
 		}
@@ -264,11 +264,11 @@ nu_error_t treat_user_request(user_session_t * c_session,
 		log_message(INFO, DEBUG_AREA_USER,
 			    "Bad packet, option of header is not set or unauthorized option from user \"%s\".",
 			    c_session->user_name);
-		free_buffer_read(datas);
+		free_buffer_read(data);
 		return NU_EXIT_OK;
 	}
 
-	*c_datas = datas;
+	*c_data = data;
 	return NU_EXIT_CONTINUE;
 }
 
@@ -862,13 +862,12 @@ void *push_worker(GMutex * mutex)
 
 		case INSERT_MESSAGE:
 			{
-				struct tls_insert_data *datas =
-				    message->datas;
-				if (datas->data) {
-					add_client(datas->socket,
-						   datas->data);
+				struct tls_insert_data *data = message->datas;
+				if (data->data) {
+					add_client(data->socket,
+						   data->data);
 				}
-				g_free(datas);
+				g_free(data);
 			}
 			break;
 		default:

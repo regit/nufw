@@ -1,5 +1,5 @@
 /*
- ** Copyright 2005 - INL
+ ** Copyright 2005-2009 - INL
  ** Written by Eric Leblond <regit@inl.fr>
  **            Vincent Deffontaines <vincent@inl.fr>
  ** INL http://www.inl.fr/
@@ -82,7 +82,7 @@ int send_hello_pckt(nuauth_session_t * session)
  */
 int send_user_pckt(nuauth_session_t * session, conn_t * carray[CONN_MAX])
 {
-	char datas[PACKET_SIZE];
+	char data[PACKET_SIZE];
 	char *pointer;
 	unsigned int item;
 	struct nu_header *header;
@@ -94,9 +94,9 @@ int send_user_pckt(nuauth_session_t * session, conn_t * carray[CONN_MAX])
 	char *app_ptr;
 
 	session->timestamp_last_sent = time(NULL);
-	memset(datas, 0, sizeof datas);
+	memset(data, 0, sizeof data);
 
-	header = (struct nu_header *) datas;
+	header = (struct nu_header *) data;
 	header->proto = PROTO_VERSION;
 	header->msg_type = USER_REQUEST;
 	header->option = 0;
@@ -175,13 +175,13 @@ int send_user_pckt(nuauth_session_t * session, conn_t * carray[CONN_MAX])
 #if XXX
 	if (session->tls) {
 		if (gnutls_record_send
-		    (session->tls, datas, pointer - datas) <= 0) {
+		    (session->tls, data, pointer - data) <= 0) {
 			printf("write failed\n");
 			return 0;
 		}
 	}
 #else
-	if (nussl_write(session->nussl, (char*)datas, pointer - datas) < 0)
+	if (nussl_write(session->nussl, (char*)data, pointer - data) < 0)
 	{
 		printf("write failed\n");
 		return 0;
