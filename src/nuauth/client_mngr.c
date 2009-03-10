@@ -43,7 +43,7 @@ GHashTable *client_ip_hash = NULL;
 
 typedef struct {
 	GSList *sessions;
-	int client_version;
+	int proto_version;
 	struct timeval last_message;
 } ip_sessions_t;
 
@@ -118,23 +118,23 @@ void add_client(int socket, gpointer datas)
 				&c_session->addr);
 	if (ipsessions == NULL) {
 		ipsessions = g_new0(ip_sessions_t, 1);
-		ipsessions->client_version = c_session->client_version;
+		ipsessions->proto_version = c_session->proto_version;
 		ipsessions->sessions = NULL;
 		key = g_memdup(&c_session->addr, sizeof(c_session->addr));
 		g_hash_table_replace(client_ip_hash, key, ipsessions);
 	}
 	/* let's assume backward compatibility, older client wins */
 	/* TODO: Add a configuration variable for this choice */
-	if (c_session->client_version < ipsessions->client_version) {
+	if (c_session->proto_version < ipsessions->proto_version) {
 		char buffer[256];
 		format_ipv6(&c_session->addr, buffer, 256, NULL);
-		ipsessions->client_version = c_session->client_version;
+		ipsessions->proto_version = c_session->proto_version;
 		log_message(WARNING, DEBUG_AREA_USER,
 			    "User %s on %s uses older version of client",
 			    c_session->user_name,
 			    buffer);
 	}
-	if (c_session->client_version > ipsessions->client_version) {
+	if (c_session->proto_version > ipsessions->proto_version) {
 		char buffer[256];
 		format_ipv6(&c_session->addr, buffer, 256, NULL);
 		log_message(WARNING, DEBUG_AREA_USER,
@@ -336,7 +336,7 @@ char warn_clients(struct msg_addr_set *global_msg)
 		global_msg->found = TRUE;
 		gettimeofday(&timestamp, NULL);
 
-		if (ipsessions->client_version >= PROTO_VERSION_V22_1) {
+		if (ipsessions->proto_version >= PROTO_VERSION_V22_1) {
 			timeval_substract(&interval, &timestamp, &(ipsessions->last_message));
 			if (interval.tv_sec || (interval.tv_usec < nuauthconf->push_delay)) {
 				g_mutex_unlock(client_mutex);

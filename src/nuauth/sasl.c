@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2005-2006 INL
+ ** Copyright(C) 2005-2009 INL
  ** Written by Eric Leblond <regit@inl.fr>
  **
  ** $Id$
@@ -275,7 +275,7 @@ nu_error_t get_proto_info(user_session_t * c_session)
 		{
 			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
 					  "Falling back to v3 protocol");
-			c_session->client_version = PROTO_VERSION_V20;
+			c_session->proto_version = PROTO_VERSION_V20;
 		}
 		break;
 	default:
@@ -300,7 +300,7 @@ nu_error_t get_proto_info(user_session_t * c_session)
 					       strlen(PROTO_STRING)) ==
 				    0) {
 					buffer[ret] = 0;
-					c_session->client_version =
+					c_session->proto_version =
 					    atoi((char *) buffer +
 						 strlen(PROTO_STRING));
 
@@ -308,9 +308,9 @@ nu_error_t get_proto_info(user_session_t * c_session)
 							  DEBUG_AREA_AUTH,
 							  "Protocol information: %d",
 							  c_session->
-							  client_version);
+							  proto_version);
 					/* sanity check on know protocol */
-					switch (c_session->client_version) {
+					switch (c_session->proto_version) {
 						case PROTO_VERSION_V22:
 						case PROTO_VERSION_V22_1:
 							break;
@@ -318,7 +318,7 @@ nu_error_t get_proto_info(user_session_t * c_session)
 							debug_log_message(INFO,
 									  DEBUG_AREA_AUTH,
 									  "Bad protocol, announced %d",
-									  c_session->client_version
+									  c_session->proto_version
 									  );
 							return NU_EXIT_ERROR;
 					}
@@ -439,13 +439,13 @@ static int mysasl_negotiate(user_session_t * c_session, sasl_conn_t * conn)
 	if (auth_result != SASL_OK) {
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
 				  "incorrect authentication");
-		if (c_session->client_version >= PROTO_VERSION_V22_1) {
+		if (c_session->proto_version >= PROTO_VERSION_V22_1) {
 			samp_send(c_session->nussl, "N", 1);
 		}
 	} else {
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
 				  "correct authentication");
-		if (c_session->client_version >= PROTO_VERSION_V22_1) {
+		if (c_session->proto_version >= PROTO_VERSION_V22_1) {
 			samp_send(c_session->nussl, "Y", 1);
 		}
 	}
@@ -553,8 +553,7 @@ int sasl_parse_user_os(user_session_t * c_session, char *buf, int buf_size)
 		return SASL_BADAUTH;
 	}
 	dec_buf = g_new0(gchar, dec_buf_size);
-	decode =
-	    sasl_decode64(buf + 4, ntohs(osfield->length) - 4, dec_buf,
+	decode = sasl_decode64(buf + 4, ntohs(osfield->length) - 4, dec_buf,
 			  dec_buf_size, &len);
 	if (decode != SASL_OK) {
 		g_free(dec_buf);
@@ -563,7 +562,7 @@ int sasl_parse_user_os(user_session_t * c_session, char *buf, int buf_size)
 
 	/* should always be true for the moment */
 	if (osfield->option == OS_SRV) {
-		os_strings = g_strsplit(dec_buf, ";", 3);
+		os_strings = g_strsplit(dec_buf, ";", 5);
 		if (os_strings[0] == NULL || os_strings[1] == NULL
 		    || os_strings[2] == NULL) {
 			g_strfreev(os_strings);
@@ -608,6 +607,8 @@ int sasl_parse_user_os(user_session_t * c_session, char *buf, int buf_size)
 			}
 		} else {
 			c_session->version = g_strdup(UNKNOWN_STRING);
+		}
+		if (os_strings[3]) {
 		}
 		/* print information */
 		if (c_session->sysname && c_session->release &&
@@ -963,7 +964,7 @@ int sasl_user_check(user_session_t * c_session)
 		return SASL_BADPARAM;
 	}
 
-	switch (c_session->client_version) {
+	switch (c_session->proto_version) {
 	case PROTO_VERSION_V22:
 	case PROTO_VERSION_V22_1:
 		ret = mysasl_negotiate(c_session, conn);

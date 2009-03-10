@@ -294,7 +294,7 @@ int user_process_field(struct nu_authreq *authreq,
 					"Auth buffer too small for field type");
 			return -1;
 		}
-		switch (connection->client_version) {
+		switch (connection->proto_version) {
 		case PROTO_VERSION_V20:
 			if (user_process_field_ipv4
 			    (connection,
@@ -308,7 +308,7 @@ int user_process_field(struct nu_authreq *authreq,
 		default:
 			log_message(WARNING, DEBUG_AREA_USER,
 				    "Unknown protocol %d client has sent an IPV4_FIELD",
-				    connection->client_version);
+				    connection->proto_version);
 		}
 		break;
 
@@ -397,7 +397,7 @@ GSList *user_request(struct tls_buffer_read * data)
 		connection->packet_id = NULL;
 		connection->expire = -1;
 		connection->flags = ACL_FLAGS_NONE;
-		connection->client_version = data->client_version;
+		connection->proto_version = data->proto_version;
 		connection->auth_quality = data->auth_quality;
 		connection->decision = DECISION_NODECIDE;
 #ifdef PERF_DISPLAY_ENABLE
@@ -467,7 +467,7 @@ GSList *user_request(struct tls_buffer_read * data)
 		connection->os_release = g_strdup(data->os_release);
 		connection->os_version = g_strdup(data->os_version);
 		/* copy client version information */
-		connection->client_version = data->client_version;
+		connection->proto_version = data->proto_version;
 
 		if (connection->user_groups == NULL) {
 			log_message(INFO, DEBUG_AREA_USER,

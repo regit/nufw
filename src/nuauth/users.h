@@ -72,7 +72,7 @@ typedef struct {
 	gchar *release;		/*!< \brief OS release (eg. "2.6.12") */
 	gchar *version;		/*!< \brief OS full version */
 	time_t expire;		/*!< \brief Timeout of the session (-1 means unlimited) */
-	int client_version;	/*!< \brief Client protocol version */
+	int proto_version;	/*!< \brief Client protocol version */
 	auth_type_t auth_type;
 	int auth_quality;
 	time_t connect_timestamp;

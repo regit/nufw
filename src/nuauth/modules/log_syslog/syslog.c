@@ -207,7 +207,7 @@ G_MODULE_EXPORT void auth_error_log(user_session_t * session,
 	g_message("Authentication error: user: %s from %s (port %d), protocol version %d",
 		session->user_name,
 		ipaddr, session->sport,
-		session->client_version);
+		session->proto_version);
 }
 
 /** @} */

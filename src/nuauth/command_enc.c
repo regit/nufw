@@ -244,7 +244,7 @@ encoder_t* encode_user(user_session_t* session)
 
 	/* encode user entry */
 	encoder_add_bytecode(encoder, BYTECODE_USER);
-	encoder_add_int32(encoder, session->client_version);
+	encoder_add_int32(encoder, session->proto_version);
 	encoder_add_int32(encoder, session->socket);
 	encoder_add_string(encoder, session->user_name);
 	encoder_add_ipv6(encoder, &session->addr);

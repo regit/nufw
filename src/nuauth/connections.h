@@ -148,7 +148,7 @@ typedef struct {
 
 
 	int nufw_version;	/*!< Store the version of the nufw server which has sent the request */
-	int client_version;	/*!< Store version of the client which has sent the packet */
+	int proto_version;	/*!< Store protocol version of the client which has sent the packet */
 
 	int auth_quality;
 

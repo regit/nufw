@@ -163,7 +163,7 @@ nu_error_t treat_user_request(user_session_t * c_session,
 		return NU_EXIT_ERROR;
 	data->socket = 0;
 	data->ip_addr = c_session->addr;
-	data->client_version = c_session->client_version;
+	data->proto_version = c_session->proto_version;
 	data->auth_quality = c_session->auth_quality;
 
 	/* copy packet data */
