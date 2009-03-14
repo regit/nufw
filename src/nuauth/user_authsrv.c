@@ -302,6 +302,7 @@ int user_process_field(struct nu_authreq *authreq,
 				return -1;
 			break;
 		case PROTO_VERSION_V22:
+		case PROTO_VERSION_V24:
 			log_message(WARNING, DEBUG_AREA_USER,
 				    "Proto V4 user sends an IPV4_FIELD");
 			return -1;

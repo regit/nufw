@@ -49,10 +49,11 @@ enum proto_type_t {
 enum proto_client_version_t {
 	PROTO_VERSION_V20 = 3,
 	PROTO_VERSION_V22,
-	PROTO_VERSION_V22_1
+	PROTO_VERSION_V22_1,
+	PROTO_VERSION_V24
 };
 
-#define PROTO_VERSION PROTO_VERSION_V22
+#define PROTO_VERSION PROTO_VERSION_V24
 
 enum proto_nufw_version_t {
 	PROTO_VERSION_NUFW_V20 = 3,
@@ -108,6 +109,7 @@ typedef struct {
  * (possible value of the option member of ::nuv2_authfield)
  */
 #define OS_SRV 0x1
+#define CLIENT_SRV 0x1
 
 #define APP_TYPE_NAME 0x1 /** application is defined by full path.  */
 
@@ -149,7 +151,8 @@ typedef enum {
 	APP_FIELD,
 	OS_FIELD,
 	USERNAME_FIELD,
-	HELLO_FIELD
+	HELLO_FIELD,
+	VERSION_FIELD
 } nu_field_identifier_t;
 
 struct nu_authreq {
@@ -221,7 +224,9 @@ typedef enum {
 	SRV_TYPE = 1,		/*!< Send server mode: #SRV_TYPE_PUSH or #SRV_TYPE_POLL */
 	SRV_REQUIRED_PACKET,
 	SRV_REQUIRED_DISCONNECT,
-	SRV_REQUIRED_HELLO
+	SRV_REQUIRED_HELLO,
+	SRV_REQUIRED_INFO,
+	SRV_INIT
 } nu_type_t;
 
 /** Server mode, value of with #SRV_TYPE (::nuv2_srv_message) message type */
@@ -229,6 +234,17 @@ typedef enum {
 	SRV_TYPE_POLL = 0,	/*!< Server works in POLL mode (default) */
 	SRV_TYPE_PUSH		/*!< Server works in PUSH mode */
 } nu_server_mode_t;
+
+typedef enum {
+	OS_VERSION = 0,
+	CLIENT_VERSION
+} nu_client_info_t;
+
+typedef enum {
+	INIT_NOK = 0,
+	INIT_OK
+} nu_srv_init_t;
+
 
 struct nu_srv_message {
 	uint8_t type;

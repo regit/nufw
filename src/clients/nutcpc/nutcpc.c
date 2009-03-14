@@ -1,5 +1,5 @@
 /*
- ** Copyright 2004-2008 - INL
+ ** Copyright 2004-2009 - INL
  ** Written by Eric Leblond <eric.leblond@inl.fr>
  **            Vincent Deffontaines <vincent@inl.fr>
  ** INL http://www.inl.fr/
@@ -607,6 +607,8 @@ nuauth_session_t *do_connect(nutcpc_context_t * context, char *username)
 	if (context->password[0] != 0) {
 		nu_client_set_password(session, context->password);
 	}
+
+	nu_client_set_client_info(session, "nutcpc", NUTCPC_VERSION);
 
 	nu_client_set_debug(session, context->debug_mode);
 

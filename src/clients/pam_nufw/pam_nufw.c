@@ -255,6 +255,8 @@ nuauth_session_t *do_connect(char *username, char *password, nuclient_error_t * 
 		return NULL;
 	}
 
+	nu_client_set_client_info(session, "pam", "unknown version");
+
 	/* wipe out username and password, and then freee memory */
 	memset(username, 0, strlen(username));
 	memset(password, 0, strlen(password));

@@ -33,6 +33,7 @@ int tls_handshake(nuauth_session_t * session, nuclient_error_t * err);
 int init_sasl(nuauth_session_t * session, const char *hostname, nuclient_error_t * err);
 
 int send_os(nuauth_session_t * session, nuclient_error_t * err);
+int send_client(nuauth_session_t * session, nuclient_error_t * err);
 
 char *secure_str_copy(const char *orig);
 

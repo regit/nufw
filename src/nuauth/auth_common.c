@@ -168,6 +168,8 @@ nu_error_t check_protocol_version(enum proto_type_t type, int version)
 				case PROTO_VERSION_V20:
 					return NU_EXIT_OK;
 				case PROTO_VERSION_V22:
+				case PROTO_VERSION_V22_1:
+				case PROTO_VERSION_V24:
 					return NU_EXIT_OK;
 				default:
 					log_message(CRITICAL,

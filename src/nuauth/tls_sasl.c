@@ -21,6 +21,7 @@
  */
 
 #include "auth_srv.h"
+#include <sasl/saslutil.h>
 #include "tls.h"
 
 #include <nubase.h>
@@ -83,27 +84,29 @@ static void tls_sasl_connect_ok(user_session_t * c_session, int c)
 		}
 	}
 
-	/* unlock hash client */
-	msg.type = SRV_TYPE;
-	if (nuauthconf->push) {
-		msg.option = SRV_TYPE_PUSH;
-	} else {
-		msg.option = SRV_TYPE_POLL;
-	}
-	msg.length = 0;
-	/* send mode to client */
-	if (nussl_write(c_session->nussl, (char*)&msg, sizeof(msg)) < 0) {
-		log_message(WARNING, DEBUG_AREA_USER,
-			    "nussl_write() failure at %s:%d",
-			    __FILE__, __LINE__);
+	if (c_session->proto_version < PROTO_VERSION_V24) {
+		/* send mode to client */
+		msg.type = SRV_TYPE;
 		if (nuauthconf->push) {
-			clean_session(c_session);
-			return;
+			msg.option = SRV_TYPE_PUSH;
 		} else {
-			return;
+			msg.option = SRV_TYPE_POLL;
+		}
+		msg.length = 0;
+		if (nussl_write(c_session->nussl, (char*)&msg, sizeof(msg)) < 0) {
+			log_message(WARNING, DEBUG_AREA_USER,
+					"nussl_write() failure at %s:%d",
+					__FILE__, __LINE__);
+			if (nuauthconf->push) {
+				clean_session(c_session);
+				return;
+			} else {
+				return;
+			}
 		}
 	}
 
+	/* unlock hash client */
 	if (nuauthconf->push) {
 		struct internal_message *message =
 		    g_new0(struct internal_message, 1);
@@ -129,6 +132,377 @@ static void tls_sasl_connect_ok(user_session_t * c_session, int c)
 	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 			  "Says we need to work on %d", c);
 	g_async_queue_push(mx_queue, GINT_TO_POINTER(c));
+}
+
+static int parse_user_version(user_session_t * c_session, char *buf, int buf_size)
+{
+	unsigned int len;
+	int decode;
+	struct nu_authfield *vfield;
+	gchar *dec_buf = NULL;
+	gchar **v_strings;
+	int dec_buf_size;
+	char address[INET6_ADDRSTRLEN];
+
+	vfield = (struct nu_authfield *) buf;
+
+	/* check buffer underflow */
+	if (buf_size < (int) sizeof(struct nu_authfield)) {
+		format_ipv6(&c_session->addr, address, INET6_ADDRSTRLEN, NULL);
+		g_message("%s sent a too small vfield", address);
+		return SASL_FAIL;
+	}
+
+	if (vfield->type != VERSION_FIELD) {
+#ifdef DEBUG_ENABLE
+		log_message(DEBUG, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
+			    "osfield received %d,%d,%d from %s",
+			    vfield->type, vfield->option,
+			    ntohs(vfield->length), address);
+#endif
+		return SASL_FAIL;
+	}
+
+	dec_buf_size = ntohs(vfield->length);
+	if (dec_buf_size > 1024 || (ntohs(vfield->length) <= 4)) {
+		format_ipv6(&c_session->addr, address, INET6_ADDRSTRLEN, NULL);
+		log_message(WARNING, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
+				"error osfield from %s is uncorrect, announced %d",
+				address, ntohs(vfield->length));
+		/* One more gryzor hack */
+		if (dec_buf_size > 4096)
+			log_message(WARNING, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
+				    "   Is %s running a 1.0 client?",
+				    address);
+#ifdef DEBUG_ENABLE
+		log_message(DEBUG, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
+			    "%s:%d version field received %d,%d,%d ", __FILE__,
+			    __LINE__, vfield->type, vfield->option,
+			    ntohs(vfield->length));
+#endif
+		return SASL_BADAUTH;
+	}
+	dec_buf = g_new0(gchar, dec_buf_size);
+	decode = sasl_decode64(buf + 4, ntohs(vfield->length) - 4, dec_buf,
+			  dec_buf_size, &len);
+	if (decode != SASL_OK) {
+		g_free(dec_buf);
+		return SASL_BADAUTH;
+	}
+
+	/* should always be true for the moment */
+	if (vfield->option == OS_SRV) {
+		v_strings = g_strsplit(dec_buf, ";", 2);
+		if (v_strings[0] == NULL || v_strings[1] == NULL) {
+			g_strfreev(v_strings);
+			g_free(dec_buf);
+			return SASL_BADAUTH;
+		}
+		if (strlen(v_strings[0]) < 128) {
+			c_session->client_name = string_escape(v_strings[0]);
+			if (c_session->client_name == NULL) {
+				format_ipv6(&c_session->addr, address, INET6_ADDRSTRLEN, NULL);
+				log_message(WARNING, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
+						"received client name with invalid characters from %s",
+						address);
+				g_free(dec_buf);
+				return SASL_BADAUTH;
+			}
+		} else {
+			c_session->client_name = g_strdup(UNKNOWN_STRING);
+		}
+		if (strlen(v_strings[1]) < 128) {
+			c_session->client_version = string_escape(v_strings[1]);
+			if (c_session->client_version == NULL) {
+				format_ipv6(&c_session->addr, address, INET6_ADDRSTRLEN, NULL);
+				log_message(WARNING, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
+						"received client version with invalid characters from %s",
+						address);
+				g_free(dec_buf);
+				return SASL_BADAUTH;
+			}
+		} else {
+			c_session->client_version = g_strdup(UNKNOWN_STRING);
+		}
+	/* print information */
+		if (c_session->client_name && c_session->client_version) {
+#ifdef DEBUG_ENABLE
+			if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG, DEBUG_AREA_USER)) {
+				format_ipv6(&c_session->addr, address, INET6_ADDRSTRLEN, NULL);
+				g_message
+					("user %s at %s uses client %s, %s",
+					 c_session->user_name, address,
+					 c_session->client_name,
+					 c_session->client_version);
+
+			}
+#endif
+		}
+		g_strfreev(v_strings);
+
+	} else {
+		format_ipv6(&c_session->addr, address, INET6_ADDRSTRLEN, NULL);
+		log_message(DEBUG, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
+				"from %s : vfield->option is not CLIENT_SRV ?!",
+				address);
+		g_free(dec_buf);
+		return SASL_FAIL;
+
+	}
+	g_free(dec_buf);
+	return SASL_OK;
+}
+
+static int parse_user_os(user_session_t * c_session, char *buf, int buf_size)
+{
+	unsigned int len;
+	int decode;
+	struct nu_authfield *osfield;
+	gchar *dec_buf = NULL;
+	gchar **os_strings;
+	int dec_buf_size;
+	char address[INET6_ADDRSTRLEN];
+
+	osfield = (struct nu_authfield *) buf;
+
+	/* check buffer underflow */
+	if (buf_size < (int) sizeof(struct nu_authfield)) {
+		format_ipv6(&c_session->addr, address, INET6_ADDRSTRLEN, NULL);
+		g_message("%s sent a too small osfield", address);
+		return SASL_FAIL;
+	}
+
+	if (osfield->type != OS_FIELD) {
+#ifdef DEBUG_ENABLE
+		log_message(DEBUG, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
+			    "osfield received %d,%d,%d from %s",
+			    osfield->type, osfield->option,
+			    ntohs(osfield->length), address);
+#endif
+		return SASL_FAIL;
+	}
+
+	dec_buf_size = ntohs(osfield->length);
+	if (dec_buf_size > 1024 || (ntohs(osfield->length) <= 4)) {
+		format_ipv6(&c_session->addr, address, INET6_ADDRSTRLEN, NULL);
+		log_message(WARNING, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
+				"error osfield from %s is uncorrect, announced %d",
+				address, ntohs(osfield->length));
+		/* One more gryzor hack */
+		if (dec_buf_size > 4096)
+			log_message(WARNING, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
+				    "   Is %s running a 1.0 client?",
+				    address);
+#ifdef DEBUG_ENABLE
+		log_message(DEBUG, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
+			    "%s:%d osfield received %d,%d,%d ", __FILE__,
+			    __LINE__, osfield->type, osfield->option,
+			    ntohs(osfield->length));
+#endif
+		return SASL_BADAUTH;
+	}
+	dec_buf = g_new0(gchar, dec_buf_size);
+	decode = sasl_decode64(buf + 4, ntohs(osfield->length) - 4, dec_buf,
+			  dec_buf_size, &len);
+	if (decode != SASL_OK) {
+		g_free(dec_buf);
+		return SASL_BADAUTH;
+	}
+
+	/* should always be true for the moment */
+	if (osfield->option == OS_SRV) {
+		os_strings = g_strsplit(dec_buf, ";", 5);
+		if (os_strings[0] == NULL || os_strings[1] == NULL
+		    || os_strings[2] == NULL) {
+			g_strfreev(os_strings);
+			g_free(dec_buf);
+			return SASL_BADAUTH;
+		}
+		if (strlen(os_strings[0]) < 128) {
+			c_session->sysname = string_escape(os_strings[0]);
+			if (c_session->sysname == NULL) {
+				format_ipv6(&c_session->addr, address, INET6_ADDRSTRLEN, NULL);
+				log_message(WARNING, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
+						"received sysname with invalid characters from %s",
+						address);
+				g_free(dec_buf);
+				return SASL_BADAUTH;
+			}
+		} else {
+			c_session->sysname = g_strdup(UNKNOWN_STRING);
+		}
+		if (strlen(os_strings[1]) < 128) {
+			c_session->release = string_escape(os_strings[1]);
+			if (c_session->release == NULL) {
+				format_ipv6(&c_session->addr, address, INET6_ADDRSTRLEN, NULL);
+				log_message(WARNING, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
+						"received release with invalid characters from %s",
+						address);
+				g_free(dec_buf);
+				return SASL_BADAUTH;
+			}
+		} else {
+			c_session->release = g_strdup(UNKNOWN_STRING);
+		}
+		if (strlen(os_strings[2]) < 128) {
+			c_session->version = string_escape(os_strings[2]);
+			if (c_session->version == NULL) {
+				format_ipv6(&c_session->addr, address, INET6_ADDRSTRLEN, NULL);
+				log_message(WARNING, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
+						"received version with invalid characters from %s",
+						address);
+				g_free(dec_buf);
+				return SASL_BADAUTH;
+			}
+		} else {
+			c_session->version = g_strdup(UNKNOWN_STRING);
+		}
+		if (os_strings[3]) {
+		}
+		/* print information */
+		if (c_session->sysname && c_session->release &&
+		    c_session->version) {
+
+#ifdef DEBUG_ENABLE
+			if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG, DEBUG_AREA_USER)) {
+				format_ipv6(&c_session->addr, address, INET6_ADDRSTRLEN, NULL);
+				g_message
+					("user %s at %s uses OS %s ,%s, %s",
+					 c_session->user_name, address,
+					 c_session->sysname,
+					 c_session->release,
+					 c_session->version);
+
+			}
+#endif
+		}
+		g_strfreev(os_strings);
+	} else {
+		format_ipv6(&c_session->addr, address, INET6_ADDRSTRLEN, NULL);
+		log_message(DEBUG, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
+				"from %s : osfield->option is not OS_SRV ?!",
+				address);
+		g_free(dec_buf);
+		return SASL_FAIL;
+
+	}
+	g_free(dec_buf);
+	return SASL_OK;
+}
+
+static int wait_client_os(user_session_t * c_session)
+{
+	char buf[8192];
+	int buf_size, ret;
+
+	/* recv OS datas from client */
+	buf_size = nussl_read(c_session->nussl, buf, sizeof buf);
+	if (buf_size < 0) {
+		/* allo houston */
+		debug_log_message(DEBUG, DEBUG_AREA_USER,
+				  "error when receiving user OS");
+		return SASL_FAIL;
+	}
+
+	/* parse and validate OS */
+	ret = parse_user_os(c_session, buf, buf_size);
+	if (ret != SASL_OK)
+		return ret;
+
+	return SASL_OK;
+}
+
+static int finish_nego(user_session_t * c_session)
+{
+	char buf[8192];
+	struct nu_srv_message msg;
+	int buf_size, ret;
+
+	/* ask OS to client */
+	msg.type = SRV_REQUIRED_INFO;
+	msg.option = OS_VERSION;
+	if (nussl_write(c_session->nussl, (char*)&msg, sizeof(msg)) < 0) {
+		log_message(WARNING, DEBUG_AREA_USER,
+			    "nussl_write() failure at %s:%d",
+			    __FILE__, __LINE__);
+		if (nuauthconf->push) {
+			clean_session(c_session);
+			return SASL_FAIL;
+		} else {
+			return SASL_FAIL;
+		}
+	}
+
+	buf_size = nussl_read(c_session->nussl, buf, sizeof buf);
+	ret = parse_user_os(c_session, buf, buf_size);
+	if (ret != SASL_OK)
+		return ret;
+	debug_log_message(DEBUG, DEBUG_AREA_USER,
+				  "user OS read");
+
+	/* ask version to client */
+	msg.option = CLIENT_VERSION;
+	if (nussl_write(c_session->nussl, (char*)&msg, sizeof(msg)) < 0) {
+		log_message(WARNING, DEBUG_AREA_USER,
+			    "nussl_write() failure at %s:%d",
+			    __FILE__, __LINE__);
+		if (nuauthconf->push) {
+			clean_session(c_session);
+			return SASL_FAIL;
+		} else {
+			return SASL_FAIL;
+		}
+	}
+	debug_log_message(DEBUG, DEBUG_AREA_USER,
+				  "user version asked");
+
+	buf_size = nussl_read(c_session->nussl, buf, sizeof buf);
+	ret = parse_user_version(c_session, buf, buf_size);
+
+	if (ret != SASL_OK)
+		return ret;
+	debug_log_message(DEBUG, DEBUG_AREA_USER,
+				  "user version read");
+
+	/* send mode to client */
+	msg.type = SRV_TYPE;
+	if (nuauthconf->push) {
+		msg.option = SRV_TYPE_PUSH;
+	} else {
+		msg.option = SRV_TYPE_POLL;
+	}
+	msg.length = 0;
+	if (nussl_write(c_session->nussl, (char*)&msg, sizeof(msg)) < 0) {
+		log_message(WARNING, DEBUG_AREA_USER,
+			    "nussl_write() failure at %s:%d",
+			    __FILE__, __LINE__);
+		if (nuauthconf->push) {
+			clean_session(c_session);
+			return SASL_FAIL;
+		} else {
+			return SASL_FAIL;
+		}
+	}
+
+
+	/* send nego done */
+	msg.type = SRV_INIT;
+	msg.option = INIT_OK;
+	if (nussl_write(c_session->nussl, (char*)&msg, sizeof(msg)) < 0) {
+		log_message(WARNING, DEBUG_AREA_USER,
+			    "nussl_write() failure at %s:%d",
+			    __FILE__, __LINE__);
+		if (nuauthconf->push) {
+			clean_session(c_session);
+			return SASL_FAIL;
+		} else {
+			return SASL_FAIL;
+		}
+	}
+	debug_log_message(DEBUG, DEBUG_AREA_USER,
+				  "negotation finished");
+
+	return SASL_OK;
 }
 
 /**
@@ -224,6 +598,31 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 
 	switch (ret) {
 	case SASL_OK:
+		/* finish init phase */
+		switch (c_session->proto_version) {
+			case PROTO_VERSION_V20:
+			case PROTO_VERSION_V22:
+			case PROTO_VERSION_V22_1:
+				debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
+					  "Wait for OS");
+				ret = wait_client_os(c_session);
+				break;
+			case PROTO_VERSION_V24:
+				debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
+					  "Finishing nego");
+				ret = finish_nego(c_session);
+				break;
+			default:
+				log_message(WARNING, DEBUG_AREA_AUTH,
+					    "Bad user protocol");
+		}
+
+		if (ret != SASL_OK) {
+			/* get rid of client */
+			clean_session(c_session);
+			break;
+		}
+
 		/* Tuning of user_session */
 		ret = modules_user_session_modify(c_session);
 		if (ret != SASL_OK) {

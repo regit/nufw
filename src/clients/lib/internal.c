@@ -418,8 +418,73 @@ int send_os(nuauth_session_t * session, nuclient_error_t * err)
 		return 0;
 	}
 
+#ifndef LINUX
+	free(buf);
+#endif
+	return 1;
+}
+
+/**
+ * Create the client information packet and send it to nuauth.
+ * Packet is in format ::nuv2_authfield.
+ *
+ * \param session Pointer to client session
+ * \param err Pointer to a nuclient_error_t: which contains the error
+ */
+int send_client(nuauth_session_t * session, nuclient_error_t * err)
+{
+	struct nu_authfield vfield;
+	char version[512];
+	char *enc_version;
+	char *pointer;
+	char *buf;
+	unsigned stringlen = sizeof(version);
+	unsigned actuallen;
+	int vfield_length;
+	int ret;
+
+	enc_version = calloc(4 * sizeof(version), sizeof(char));
+	(void) secure_snprintf(version, stringlen,
+			       "%s;%s",
+			       session->client_name, session->client_version);
+	if (sasl_encode64
+	    (version, strlen(version), enc_version, 4 * stringlen,
+	     &actuallen) == SASL_BUFOVER) {
+		enc_version = realloc(enc_version, actuallen);
+		sasl_encode64(version, strlen(version), enc_version, actuallen,
+			      &actuallen);
+	}
+
+	/* build packet header */
+	vfield.type = VERSION_FIELD;
+	vfield.option = CLIENT_SRV;
+	vfield.length = sizeof(vfield) + actuallen;
+
+	/* add packet body */
+#ifdef LINUX
+	buf = alloca(vfield.length);
+#else
+	buf = calloc(vfield.length, sizeof(char));
+#endif
+	vfield_length = vfield.length;
+	vfield.length = htons(vfield.length);
+	pointer = buf;
+	memcpy(buf, &vfield, sizeof vfield);
+	pointer += sizeof vfield;
+	memcpy(pointer, enc_version, actuallen);
+	free(enc_version);
+
+	/* Send OS field over network */
+	ret = nussl_write(session->nussl, buf, vfield_length);
+	if (ret < 0) {
+		if (session->verbose)
+			printf("Error sending tls data: ...");
+		SET_ERROR(err, NUSSL_ERR, ret);
+		return 0;
+	}
+
 	/* wait for message of server about mode */
-	ret = nussl_read(session->nussl, buf, osfield_length);
+	ret = nussl_read(session->nussl, buf, vfield_length);
 	if (ret <= 0) {
 		errno = EACCES;
 		SET_ERROR(err, NUSSL_ERR, ret);
@@ -440,6 +505,8 @@ int send_os(nuauth_session_t * session, nuclient_error_t * err)
 	}
 	return 1;
 }
+
+
 
 /**
  * SASL callback used to get password
@@ -553,7 +620,7 @@ int init_sasl(nuauth_session_t * session, const char *hostname, nuclient_error_t
 		{SASL_CB_LIST_END, NULL, NULL}
 	};
 
-	ret = nussl_write(session->nussl, "PROTO 5", strlen("PROTO 5"));
+	ret = nussl_write(session->nussl, "PROTO 6", strlen("PROTO 6"));
 	if (ret < 0) {
 		SET_ERROR(err, NUSSL_ERR, ret);
 		return 0;

@@ -164,6 +164,9 @@ typedef struct {
 struct nuauth_session {
 	nussl_session* nussl;
 
+	char *client_name;
+	char *client_version;
+
 	u_int32_t userid;	/*!< Local user identifier (getuid()) */
 	char *username;	/*!< Username (encoded in UTF-8) */
 	char *password;	/*!< Password (encoded in UTF-8) */

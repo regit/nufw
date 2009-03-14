@@ -229,6 +229,16 @@ char *nu_get_user_name()
 	return name;
 }
 
+void nu_client_set_client_info(nuauth_session_t *session,
+		const char *client_name, const char *client_version)
+{
+	if (client_name)
+		session->client_name = strdup(client_name);
+
+	if (client_version)
+		session->client_version = strdup(client_version);
+}
+
 int nu_client_set_key(nuauth_session_t* session, char* keyfile, char* certfile, nuclient_error_t* err)
 {
 	if (session->pem_key)
@@ -630,6 +640,8 @@ nuauth_session_t *_nu_client_new(nuclient_error_t * err)
 	}
 	session->ct = new;
 
+	nu_client_set_client_info(session, "unknown client", "unknown version");
+
 	return session;
 }
 
@@ -719,6 +731,57 @@ void nu_client_reset(nuauth_session_t * session)
 	session->timestamp_last_sent = time(NULL);
 }
 
+static int finish_init(nuauth_session_t * session, nuclient_error_t * err)
+{
+	int finish = 0;
+	char buf[1024];
+	int bufsize;
+	struct nu_srv_message * message = (struct nu_srv_message *) buf;
+
+	while (! finish) {
+		bufsize = nussl_read(session->nussl, buf, sizeof(buf));
+		if ((bufsize < 0) || 
+			(bufsize < sizeof(struct nu_srv_message))) {
+			/* allo houston */
+			return 0;
+		}
+		switch (message->type) {
+			case SRV_REQUIRED_INFO:
+				switch (message->option) {
+					case OS_VERSION:
+						if (!send_os(session, err)) {
+							return 0;
+						}
+						break;
+					case CLIENT_VERSION:
+						if (!send_client(session, err)) {
+							return 0;
+						}
+						break;
+					default:
+						return 0;
+				}
+				break;
+			case SRV_TYPE:
+				session->server_mode = message->option;
+				break;
+			case SRV_INIT:
+				finish = 1;
+				switch (message->option) {
+					case INIT_NOK:
+						return 0;
+					case INIT_OK:
+						session->connected = 1;
+						break;
+				}
+				break;
+		}
+	}
+
+	return 1;
+
+}
+
 /**
  * \ingroup nuclientAPI
  * Try to connect to nuauth server:
@@ -777,10 +840,9 @@ int nu_client_connect(nuauth_session_t * session,
 		return 0;
 	}
 
-	if (!send_os(session, err)) {
+	if (!finish_init(session, err)) {
 		return 0;
 	}
-	session->connected = 1;
 	return 1;
 }
 

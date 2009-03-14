@@ -127,6 +127,9 @@ const char* nu_client_default_tls_crl();
 
 int nu_client_default_suppress_fqdn_verif();
 
+void nu_client_set_client_info(nuauth_session_t *session,
+		const char *client_name, const char *client_version);
+
 void nu_client_set_debug(nuauth_session_t * session, unsigned char enabled);
 void nu_client_set_verbose(nuauth_session_t * session,
 		unsigned char enabled);
