@@ -36,6 +36,8 @@ class NuauthConf(ReplaceFile):
         # disable cert checking module, this can prevent correct
         # authentication from working (for ex if OCSP is working)
         self["nuauth_certificate_check_module"] = None
+        # do not use CRL by default
+        self["nuauth_tls_crl"] = None
 
     def parse_include(self, line):
         conf_dir = dirname(self.filename)
