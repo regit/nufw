@@ -483,26 +483,9 @@ int send_client(nuauth_session_t * session, nuclient_error_t * err)
 		return 0;
 	}
 
-	/* wait for message of server about mode */
-	ret = nussl_read(session->nussl, buf, vfield_length);
-	if (ret <= 0) {
-		errno = EACCES;
-		SET_ERROR(err, NUSSL_ERR, ret);
-#ifndef LINUX
-		free(buf);
-#endif
-		return 0;
-	}
-
 #ifndef LINUX
 	free(buf);
 #endif
-
-	if (buf[0] == SRV_TYPE) {
-		session->server_mode = buf[1];
-	} else {
-		SET_ERROR(err, NUSSL_ERR, ret);
-	}
 	return 1;
 }
 
