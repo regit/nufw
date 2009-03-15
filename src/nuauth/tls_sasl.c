@@ -206,7 +206,7 @@ static int parse_user_capabilities(user_session_t * c_session, char *buf, int bu
 	}
 
 	/* should always be true for the moment */
-	if (vfield->option == OS_SRV) {
+	if (vfield->option == CLIENT_SRV) {
 		char *value;
 		int i, ret;
 
@@ -309,7 +309,7 @@ static int parse_user_version(user_session_t * c_session, char *buf, int buf_siz
 	}
 
 	/* should always be true for the moment */
-	if (vfield->option == OS_SRV) {
+	if (vfield->option == CLIENT_SRV) {
 		v_strings = g_strsplit(dec_buf, ";", 2);
 		if (v_strings[0] == NULL || v_strings[1] == NULL) {
 			g_strfreev(v_strings);
