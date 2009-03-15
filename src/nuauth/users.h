@@ -73,6 +73,7 @@ typedef struct {
 	gchar *version;		/*!< \brief OS full version */
 	gchar *client_name;	/*!< \brief Client full name */
 	gchar *client_version;	/*!< \brief Client full version */
+	uint32_t capa_flags;	/*!< \brief Handle client capabilities */
 	time_t expire;		/*!< \brief Timeout of the session (-1 means unlimited) */
 	int proto_version;	/*!< \brief Client protocol version */
 	auth_type_t auth_type;
@@ -80,5 +81,20 @@ typedef struct {
 	time_t connect_timestamp;
 	gboolean activated;	/*!< \brief TRUE if user server listen for event for this session */
 } user_session_t;
+
+typedef enum {
+	CAPA_FLAGS_NONE = 0,
+	/* Client supports authentication via HELLO mode */
+	CAPA_FLAGS_HELLO_BIT = 0,
+	CAPA_FLAGS_HELLO = (1 << CAPA_FLAGS_HELLO_BIT),
+	/* Client supports TCP authentication via NuFW protocol */
+	CAPA_FLAGS_TCP_BIT = 1,
+	CAPA_FLAGS_TCP = (1 << CAPA_FLAGS_TCP_BIT),
+	/* Client supports UDP authentication via NuFW protocol */
+	CAPA_FLAGS_UDP_BIT = 2,
+	CAPA_FLAGS_UDP = (1 << CAPA_FLAGS_UDP_BIT),
+} capa_flags_t;
+
+
 
 #endif

@@ -151,7 +151,8 @@ typedef enum {
 	APP_FIELD,
 	OS_FIELD,
 	VERSION_FIELD,
-	HELLO_FIELD
+	HELLO_FIELD,
+	CAPA_FIELD,
 } nu_field_identifier_t;
 
 struct nu_authreq {
@@ -236,7 +237,8 @@ typedef enum {
 
 typedef enum {
 	OS_VERSION = 0,
-	CLIENT_VERSION
+	CLIENT_VERSION,
+	CLIENT_CAPA
 } nu_client_info_t;
 
 typedef enum {

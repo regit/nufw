@@ -489,6 +489,70 @@ int send_client(nuauth_session_t * session, nuclient_error_t * err)
 	return 1;
 }
 
+/**
+ * Create the client information packet and send it to nuauth.
+ * Packet is in format ::nuv2_authfield.
+ *
+ * \param session Pointer to client session
+ * \param err Pointer to a nuclient_error_t: which contains the error
+ */
+int send_capa(nuauth_session_t * session, nuclient_error_t * err)
+{
+	struct nu_authfield vfield;
+	char *enc_capa;
+	char *pointer;
+	char *buf;
+	unsigned stringlen = sizeof(NU_CAPABILITIES);
+	unsigned actuallen;
+	int vfield_length;
+	int ret;
+
+	enc_capa = calloc(4 * sizeof(NU_CAPABILITIES), sizeof(char));
+
+	if (sasl_encode64
+	    (NU_CAPABILITIES, strlen(NU_CAPABILITIES), enc_capa, 4 * stringlen,
+	     &actuallen) == SASL_BUFOVER) {
+		enc_capa = realloc(enc_capa, actuallen);
+		sasl_encode64(NU_CAPABILITIES, strlen(NU_CAPABILITIES), enc_capa, actuallen,
+			      &actuallen);
+	}
+
+	/* build packet header */
+	vfield.type = CAPA_FIELD;
+	vfield.option = CLIENT_SRV;
+	vfield.length = sizeof(vfield) + actuallen;
+
+	/* add packet body */
+#ifdef LINUX
+	buf = alloca(vfield.length);
+#else
+	buf = calloc(vfield.length, sizeof(char));
+#endif
+	vfield_length = vfield.length;
+	vfield.length = htons(vfield.length);
+	pointer = buf;
+	memcpy(buf, &vfield, sizeof vfield);
+	pointer += sizeof vfield;
+	memcpy(pointer, enc_capa, actuallen);
+	free(enc_capa);
+
+	/* Send OS field over network */
+	ret = nussl_write(session->nussl, buf, vfield_length);
+	if (ret < 0) {
+		if (session->verbose)
+			printf("Error sending tls data: ...");
+		SET_ERROR(err, NUSSL_ERR, ret);
+		return 0;
+	}
+
+
+#ifndef LINUX
+	free(buf);
+#endif
+	return 1;
+}
+
+
 
 
 /**

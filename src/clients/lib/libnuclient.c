@@ -758,6 +758,11 @@ static int finish_init(nuauth_session_t * session, nuclient_error_t * err)
 							return 0;
 						}
 						break;
+					case CLIENT_CAPA:
+						if (!send_capa(session, err)) {
+							return 0;
+						}
+						break;
 					default:
 						return 0;
 				}

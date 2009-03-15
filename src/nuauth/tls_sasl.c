@@ -134,6 +134,124 @@ static void tls_sasl_connect_ok(user_session_t * c_session, int c)
 	g_async_queue_push(mx_queue, GINT_TO_POINTER(c));
 }
 
+static int add_client_capa(user_session_t * c_session, const char * value)
+{
+	if (! value)
+		return SASL_FAIL;
+
+	if (!strcmp("HELLO", value))
+		c_session->capa_flags = c_session->capa_flags | CAPA_FLAGS_HELLO;
+	if (!strcmp("TCP", value))
+		c_session->capa_flags = c_session->capa_flags | CAPA_FLAGS_TCP;
+	if (!strcmp("UDP", value))
+		c_session->capa_flags = c_session->capa_flags | CAPA_FLAGS_UDP;
+
+	return SASL_OK;
+}
+
+static int parse_user_capabilities(user_session_t * c_session, char *buf, int buf_size)
+{
+	unsigned int len;
+	int decode;
+	struct nu_authfield *vfield;
+	gchar *dec_buf = NULL;
+	gchar **v_strings;
+	int dec_buf_size;
+	char address[INET6_ADDRSTRLEN];
+
+	vfield = (struct nu_authfield *) buf;
+
+	/* check buffer underflow */
+	if (buf_size < (int) sizeof(struct nu_authfield)) {
+		format_ipv6(&c_session->addr, address, INET6_ADDRSTRLEN, NULL);
+		g_message("%s sent a too small vfield", address);
+		return SASL_FAIL;
+	}
+
+	if (vfield->type != CAPA_FIELD) {
+#ifdef DEBUG_ENABLE
+		log_message(DEBUG, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
+			    "capa field received %d,%d,%d from %s",
+			    vfield->type, vfield->option,
+			    ntohs(vfield->length), address);
+#endif
+		return SASL_FAIL;
+	}
+
+	dec_buf_size = ntohs(vfield->length);
+	if (dec_buf_size > 1024 || (ntohs(vfield->length) <= 4)) {
+		format_ipv6(&c_session->addr, address, INET6_ADDRSTRLEN, NULL);
+		log_message(WARNING, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
+				"error capa field from %s is uncorrect, announced %d",
+				address, ntohs(vfield->length));
+		/* One more gryzor hack */
+		if (dec_buf_size > 4096)
+			log_message(WARNING, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
+				    "   Is %s running a 1.0 client?",
+				    address);
+#ifdef DEBUG_ENABLE
+		log_message(DEBUG, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
+			    "%s:%d version field received %d,%d,%d ", __FILE__,
+			    __LINE__, vfield->type, vfield->option,
+			    ntohs(vfield->length));
+#endif
+		return SASL_BADAUTH;
+	}
+	dec_buf = g_new0(gchar, dec_buf_size);
+	decode = sasl_decode64(buf + 4, ntohs(vfield->length) - 4, dec_buf,
+			  dec_buf_size, &len);
+	if (decode != SASL_OK) {
+		g_free(dec_buf);
+		return SASL_BADAUTH;
+	}
+
+	/* should always be true for the moment */
+	if (vfield->option == OS_SRV) {
+		char *value;
+		int i, ret;
+
+		v_strings = g_strsplit(dec_buf, ";", 0);
+		for (value = v_strings[0], i = 0; value != NULL; i++, value = v_strings[i]) {
+			debug_log_message(DEBUG, DEBUG_AREA_USER,
+					  "client capa field: %s",
+					  value);
+			ret = add_client_capa(c_session, value);
+			if (ret != SASL_OK) {
+				g_strfreev(v_strings);
+				g_free(dec_buf);
+				return SASL_FAIL;
+			}
+		}
+		/* print information */
+		if (c_session->capa_flags) {
+#ifdef DEBUG_ENABLE
+			if (DEBUG_OR_NOT(DEBUG_LEVEL_DEBUG, DEBUG_AREA_USER)) {
+				format_ipv6(&c_session->addr, address, INET6_ADDRSTRLEN, NULL);
+				g_message
+					("user %s at %s uses client with capabilities %d",
+					 c_session->user_name, address,
+					 c_session->capa_flags);
+
+			}
+#endif
+		}
+		g_strfreev(v_strings);
+
+	} else {
+		format_ipv6(&c_session->addr, address, INET6_ADDRSTRLEN, NULL);
+		log_message(DEBUG, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
+				"from %s : vfield->option is not CLIENT_SRV ?!",
+				address);
+		g_free(dec_buf);
+		return SASL_FAIL;
+
+	}
+	g_free(dec_buf);
+	return SASL_OK;
+}
+
+
+
 static int parse_user_version(user_session_t * c_session, char *buf, int buf_size)
 {
 	unsigned int len;
@@ -463,6 +581,31 @@ static int finish_nego(user_session_t * c_session)
 		return ret;
 	debug_log_message(DEBUG, DEBUG_AREA_USER,
 				  "user version read");
+
+	/* ask version to client */
+	msg.option = CLIENT_CAPA;
+	if (nussl_write(c_session->nussl, (char*)&msg, sizeof(msg)) < 0) {
+		log_message(WARNING, DEBUG_AREA_USER,
+			    "nussl_write() failure at %s:%d",
+			    __FILE__, __LINE__);
+		if (nuauthconf->push) {
+			clean_session(c_session);
+			return SASL_FAIL;
+		} else {
+			return SASL_FAIL;
+		}
+	}
+	debug_log_message(DEBUG, DEBUG_AREA_USER,
+				  "user capabilities asked");
+
+	buf_size = nussl_read(c_session->nussl, buf, sizeof buf);
+	ret = parse_user_capabilities(c_session, buf, buf_size);
+
+	if (ret != SASL_OK)
+		return ret;
+	debug_log_message(DEBUG, DEBUG_AREA_USER,
+				  "user version read");
+
 
 	/* send mode to client */
 	msg.type = SRV_TYPE;

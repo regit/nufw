@@ -85,6 +85,8 @@
 #define MAX_DELAY_SEC 1
 #define MAX_DELAY_USEC 600*1000
 
+#define NU_CAPABILITIES "HELLO;TCP"
+
 /* Macros declarations */
 #define SET_ERROR(ERR, FAMILY, CODE) \
 	if (ERR != NULL) \
