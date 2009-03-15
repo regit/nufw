@@ -324,11 +324,6 @@ int user_process_field(struct nu_authreq *authreq,
 			return -1;
 		break;
 
-	case USERNAME_FIELD:
-		log_message(WARNING, DEBUG_AREA_USER,
-			    "Received USERNAME_FIELD, this is BAD! multiuser client are born-dead");
-		return -1;
-
 	case HELLO_FIELD:
 		if (auth_buffer_len <
 		    (int) sizeof(struct nu_authfield_hello)) {

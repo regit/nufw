@@ -150,9 +150,8 @@ typedef enum {
 	IPV6_FIELD,
 	APP_FIELD,
 	OS_FIELD,
-	USERNAME_FIELD,
-	HELLO_FIELD,
-	VERSION_FIELD
+	VERSION_FIELD,
+	HELLO_FIELD
 } nu_field_identifier_t;
 
 struct nu_authreq {
