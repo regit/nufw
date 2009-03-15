@@ -323,6 +323,7 @@ static int parse_user_version(user_session_t * c_session, char *buf, int buf_siz
 				log_message(WARNING, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
 						"received client name with invalid characters from %s",
 						address);
+				g_strfreev(v_strings);
 				g_free(dec_buf);
 				return SASL_BADAUTH;
 			}
@@ -336,6 +337,7 @@ static int parse_user_version(user_session_t * c_session, char *buf, int buf_siz
 				log_message(WARNING, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
 						"received client version with invalid characters from %s",
 						address);
+				g_strfreev(v_strings);
 				g_free(dec_buf);
 				return SASL_BADAUTH;
 			}
@@ -443,6 +445,7 @@ static int parse_user_os(user_session_t * c_session, char *buf, int buf_size)
 				log_message(WARNING, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
 						"received sysname with invalid characters from %s",
 						address);
+				g_strfreev(os_strings);
 				g_free(dec_buf);
 				return SASL_BADAUTH;
 			}
@@ -456,6 +459,7 @@ static int parse_user_os(user_session_t * c_session, char *buf, int buf_size)
 				log_message(WARNING, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
 						"received release with invalid characters from %s",
 						address);
+				g_strfreev(os_strings);
 				g_free(dec_buf);
 				return SASL_BADAUTH;
 			}
@@ -469,6 +473,7 @@ static int parse_user_os(user_session_t * c_session, char *buf, int buf_size)
 				log_message(WARNING, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
 						"received version with invalid characters from %s",
 						address);
+				g_strfreev(os_strings);
 				g_free(dec_buf);
 				return SASL_BADAUTH;
 			}
