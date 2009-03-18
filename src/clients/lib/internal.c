@@ -354,14 +354,12 @@ int send_os(nuauth_session_t * session, nuclient_error_t * err)
 {
 	/* announce our OS */
 	struct utsname info;
-	struct nu_authfield osfield;
-	char *oses;
-	char *enc_oses;
-	char *pointer;
-	char *buf;
+	char oses[256];
+	char buf[1024];
+	char *enc_oses = buf + sizeof(struct nu_authfield);
+	struct nu_authfield *osfield = (struct nu_authfield *) buf;
 	unsigned stringlen;
 	unsigned actuallen;
-	int osfield_length;
 	int ret;
 
 	/* read OS informations */
@@ -370,47 +368,28 @@ int send_os(nuauth_session_t * session, nuclient_error_t * err)
 	/* encode OS informations in base64 */
 	stringlen = strlen(info.sysname) + 1
 	    + strlen(info.release) + 1 + strlen(info.version) + 1;
-#ifdef LINUX
-	oses = alloca(stringlen);
-#else
-	oses = calloc(stringlen, sizeof(char));
-#endif
-	enc_oses = calloc(4 * stringlen, sizeof(char));
+
 	(void) secure_snprintf(oses, stringlen,
 			       "%s;%s;%s",
 			       info.sysname, info.release, info.version);
 	if (sasl_encode64
 	    (oses, strlen(oses), enc_oses, 4 * stringlen,
 	     &actuallen) == SASL_BUFOVER) {
-		enc_oses = realloc(enc_oses, actuallen);
-		sasl_encode64(oses, strlen(oses), enc_oses, actuallen,
-			      &actuallen);
+		SET_ERROR(err, SASL_ERROR, SASL_BUFOVER);
+		/* TODO set explicit string message */
+		return 0;
 	}
-#ifndef LINUX
-	free(oses);
-#endif
 
 	/* build packet header */
-	osfield.type = OS_FIELD;
-	osfield.option = OS_SRV;
-	osfield.length = sizeof(osfield) + actuallen;
+	osfield->type = OS_FIELD;
+	osfield->option = OS_SRV;
+	osfield->length = sizeof(osfield) + actuallen;
 
 	/* add packet body */
-#ifdef LINUX
-	buf = alloca(osfield.length);
-#else
-	buf = calloc(osfield.length, sizeof(char));
-#endif
-	osfield_length = osfield.length;
-	osfield.length = htons(osfield.length);
-	pointer = buf;
-	memcpy(buf, &osfield, sizeof osfield);
-	pointer += sizeof osfield;
-	memcpy(pointer, enc_oses, actuallen);
-	free(enc_oses);
+	osfield->length = htons(osfield->length);
 
 	/* Send OS field over network */
-	ret = nussl_write(session->nussl, buf, osfield_length);
+	ret = nussl_write(session->nussl, buf, ntohs(osfield->length));
 	if (ret < 0) {
 		if (session->verbose)
 			printf("Error sending tls data: ...");
@@ -418,9 +397,6 @@ int send_os(nuauth_session_t * session, nuclient_error_t * err)
 		return 0;
 	}
 
-#ifndef LINUX
-	free(buf);
-#endif
 	return 1;
 }
 
@@ -433,49 +409,35 @@ int send_os(nuauth_session_t * session, nuclient_error_t * err)
  */
 int send_client(nuauth_session_t * session, nuclient_error_t * err)
 {
-	struct nu_authfield vfield;
-	char version[512];
-	char *enc_version;
-	char *pointer;
-	char *buf;
-	unsigned stringlen = sizeof(version);
+	char version[256];
+	char buf[1024];
+	struct nu_authfield *vfield = (struct nu_authfield *) buf;
+	char *enc_version = buf + sizeof(struct nu_authfield);
+	unsigned stringlen = 256;
 	unsigned actuallen;
-	int vfield_length;
 	int ret;
 
-	enc_version = calloc(4 * sizeof(version), sizeof(char));
 	(void) secure_snprintf(version, stringlen,
 			       "%s;%s",
 			       session->client_name, session->client_version);
 	if (sasl_encode64
 	    (version, strlen(version), enc_version, 4 * stringlen,
 	     &actuallen) == SASL_BUFOVER) {
-		enc_version = realloc(enc_version, actuallen);
-		sasl_encode64(version, strlen(version), enc_version, actuallen,
-			      &actuallen);
+		SET_ERROR(err, SASL_ERROR, SASL_BUFOVER);
+		/* TODO set explicit string message */
+		return 0;
 	}
 
 	/* build packet header */
-	vfield.type = VERSION_FIELD;
-	vfield.option = CLIENT_SRV;
-	vfield.length = sizeof(vfield) + actuallen;
+	vfield->type = VERSION_FIELD;
+	vfield->option = CLIENT_SRV;
+	vfield->length = sizeof(vfield) + actuallen;
 
 	/* add packet body */
-#ifdef LINUX
-	buf = alloca(vfield.length);
-#else
-	buf = calloc(vfield.length, sizeof(char));
-#endif
-	vfield_length = vfield.length;
-	vfield.length = htons(vfield.length);
-	pointer = buf;
-	memcpy(buf, &vfield, sizeof vfield);
-	pointer += sizeof vfield;
-	memcpy(pointer, enc_version, actuallen);
-	free(enc_version);
+	vfield->length = htons(vfield->length);
 
-	/* Send OS field over network */
-	ret = nussl_write(session->nussl, buf, vfield_length);
+	/* Send Client version field over network */
+	ret = nussl_write(session->nussl, buf, ntohs(vfield->length));
 	if (ret < 0) {
 		if (session->verbose)
 			printf("Error sending tls data: ...");
@@ -483,9 +445,6 @@ int send_client(nuauth_session_t * session, nuclient_error_t * err)
 		return 0;
 	}
 
-#ifndef LINUX
-	free(buf);
-#endif
 	return 1;
 }
 
@@ -498,46 +457,31 @@ int send_client(nuauth_session_t * session, nuclient_error_t * err)
  */
 int send_capa(nuauth_session_t * session, nuclient_error_t * err)
 {
-	struct nu_authfield vfield;
-	char *enc_capa;
-	char *pointer;
-	char *buf;
+	char buf[1024];
+	struct nu_authfield *vfield = (struct nu_authfield *) buf;
+	char *enc_capa = buf + sizeof(struct nu_authfield);
 	unsigned stringlen = sizeof(NU_CAPABILITIES);
 	unsigned actuallen;
-	int vfield_length;
 	int ret;
-
-	enc_capa = calloc(4 * sizeof(NU_CAPABILITIES), sizeof(char));
 
 	if (sasl_encode64
 	    (NU_CAPABILITIES, strlen(NU_CAPABILITIES), enc_capa, 4 * stringlen,
 	     &actuallen) == SASL_BUFOVER) {
-		enc_capa = realloc(enc_capa, actuallen);
-		sasl_encode64(NU_CAPABILITIES, strlen(NU_CAPABILITIES), enc_capa, actuallen,
-			      &actuallen);
+		SET_ERROR(err, SASL_ERROR, SASL_BUFOVER);
+		/* TODO set explicit string message */
+		return 0;
 	}
 
 	/* build packet header */
-	vfield.type = CAPA_FIELD;
-	vfield.option = CLIENT_SRV;
-	vfield.length = sizeof(vfield) + actuallen;
+	vfield->type = CAPA_FIELD;
+	vfield->option = CLIENT_SRV;
+	vfield->length = sizeof(vfield) + actuallen;
 
 	/* add packet body */
-#ifdef LINUX
-	buf = alloca(vfield.length);
-#else
-	buf = calloc(vfield.length, sizeof(char));
-#endif
-	vfield_length = vfield.length;
-	vfield.length = htons(vfield.length);
-	pointer = buf;
-	memcpy(buf, &vfield, sizeof vfield);
-	pointer += sizeof vfield;
-	memcpy(pointer, enc_capa, actuallen);
-	free(enc_capa);
+	vfield->length = htons(vfield->length);
 
-	/* Send OS field over network */
-	ret = nussl_write(session->nussl, buf, vfield_length);
+	/* Send capabilities field over network */
+	ret = nussl_write(session->nussl, buf, ntohs(vfield->length));
 	if (ret < 0) {
 		if (session->verbose)
 			printf("Error sending tls data: ...");
@@ -545,10 +489,6 @@ int send_capa(nuauth_session_t * session, nuclient_error_t * err)
 		return 0;
 	}
 
-
-#ifndef LINUX
-	free(buf);
-#endif
 	return 1;
 }
 
