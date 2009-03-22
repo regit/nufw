@@ -184,6 +184,21 @@ int nussl_ssl_context_trustcert(nussl_ssl_context * ctx,
 		1) ? NUSSL_OK : NUSSL_ERROR;
 }
 
+int nussl_ssl_context_trustdir(nussl_ssl_context * ctx,
+				const char *capath)
+{
+	X509_STORE *store = SSL_CTX_get_cert_store(ctx->ctx);
+	X509_LOOKUP *lookup;
+	int ret;
+
+	if (store == NULL)
+		return NUSSL_ERROR;
+
+	lookup = X509_STORE_add_lookup(store, X509_LOOKUP_hash_dir());
+	ret = X509_LOOKUP_add_dir(lookup, capath, X509_FILETYPE_PEM);
+	return (ret > 0) ? NUSSL_OK : NUSSL_ERROR;
+}
+
 /* Server mode: Set DH parameters */
 int nussl_ssl_context_set_dh_bits(nussl_ssl_context * ctx,
 				  unsigned int dh_bits)

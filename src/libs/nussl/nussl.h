@@ -83,6 +83,10 @@ extern "C" {
 	int nussl_ssl_trust_cert_file(nussl_session * sess,
 				      const char *cert_file);
 
+/* Add directory of trusted certificates */
+	int nussl_ssl_trust_dir(nussl_session * sess,
+				      const char *dir);
+
 /* TODO: factorize those functions */
 /* Returns a string containing informations about the certificate */
 	char *nussl_get_cert_info(nussl_session * sess);

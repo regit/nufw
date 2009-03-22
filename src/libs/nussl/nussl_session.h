@@ -278,6 +278,9 @@ int nussl_ssl_set_pkcs12_keypair(nussl_session * session,
 /* Indicate that the certificate 'cert' is trusted */
 int nussl_ssl_trust_cert_file(nussl_session * sess, const char *cert_file);
 
+/* Add directory of trusted certificates */
+int nussl_ssl_trust_dir(nussl_session * sess, const char *dir);
+
 nussl_ssl_client_cert *nussl_ssl_import_keypair(const char *cert_file,
 						const char *key_file);
 

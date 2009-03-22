@@ -185,6 +185,10 @@ nussl_ssl_context *nussl_ssl_context_create(int mode);
 int nussl_ssl_context_trustcert(nussl_ssl_context * ctx,
 				const nussl_ssl_certificate * cert);
 
+/* Add directory of trusted certificates */
+int nussl_ssl_context_trustdir(nussl_ssl_context * ctx,
+				const char *capath);
+
 /* Set the client certificate */
 int nussl_ssl_context_keypair_from_data(nussl_ssl_context * ctx,
 					nussl_ssl_client_cert * cert);

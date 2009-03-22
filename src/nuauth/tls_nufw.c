@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2004-2008 INL
+ ** Copyright(C) 2004-2009 INL
  ** Written by  Eric Leblond <regit@inl.fr>
  **             Vincent Deffontaines <gryzor@inl.fr>
  **             Pierre Chifflier <chifflier@inl.fr>
@@ -628,6 +628,16 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 			    "Failed to load nufw certificate authority (nuauth_tls_cacert): %s",
 			    nussl_get_error(context->server));
 		exit(EXIT_FAILURE);
+	}
+
+	if (nuauth_tls.capath) {
+		ret = nussl_ssl_trust_dir(context->server, nuauth_tls.capath);
+		if ( ret != NUSSL_OK ) {
+			log_message(FATAL, DEBUG_AREA_MAIN,
+					"Failed to load user certificate authority directory: %s",
+					nussl_get_error(context->server));
+			exit(EXIT_FAILURE);
+		}
 	}
 
 	if (nuauth_tls.crl_file) {

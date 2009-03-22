@@ -431,6 +431,22 @@ int nussl_ssl_trust_cert_file(nussl_session * sess, const char *cert_file)
 	return ret;
 }
 
+int nussl_ssl_trust_dir(nussl_session * sess, const char *dir)
+{
+	int ret;
+
+	if (!sess)
+		return NUSSL_ERROR;
+
+	ret = nussl_ssl_context_trustdir(sess->ssl_context, dir);
+
+	if (ret == NUSSL_OK)
+		sess->check_peer_cert = 1;
+
+
+	return ret;
+}
+
 void nussl_ssl_cert_validity(const nussl_ssl_certificate * cert,
 			     char *from, char *until)
 {

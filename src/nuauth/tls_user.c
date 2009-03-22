@@ -782,6 +782,16 @@ int tls_user_init(struct tls_user_context_t *context)
 		exit(EXIT_FAILURE);
 	}
 
+	if (nuauth_tls.capath) {
+		ret = nussl_ssl_trust_dir(context->nussl, nuauth_tls.capath);
+		if ( ret != NUSSL_OK ) {
+			log_message(FATAL, DEBUG_AREA_MAIN,
+					"Failed to load user certificate authority directory: %s",
+					nussl_get_error(context->nussl));
+			exit(EXIT_FAILURE);
+		}
+	}
+
 	if (nuauth_tls.crl_file) {
 		ret = nussl_ssl_set_crl_file(context->nussl, nuauth_tls.crl_file, nuauth_tls.ca);
 		if ( ret != NUSSL_OK ) {

@@ -1,5 +1,5 @@
 /*
- ** Copyright (C) 2007-2008 INL
+ ** Copyright (C) 2007-2009 INL
  ** Written by S.Tricaud <stricaud@inl.fr>
  **            L.Defert <ldefert@inl.fr>
  ** INL http://www.inl.fr/
@@ -53,6 +53,8 @@
 #include <stdlib.h>
 #include <errno.h>
 
+#include <dirent.h>
+
 #include <gnutls/gnutls.h>
 #include <gnutls/pkcs12.h>
 
@@ -72,7 +74,6 @@
 #include "nussl_private.h"
 #include "nussl_privssl.h"
 #include "nussl_utils.h"
-
 
 
 nussl_ssl_context *nussl_ssl_context_create(int flags)
@@ -100,8 +101,7 @@ int nussl_ssl_context_keypair_from_data(nussl_ssl_context * ctx,
 					nussl_ssl_client_cert * cert)
 {
 	int ret;
-	ret =
-	    gnutls_certificate_set_x509_key(ctx->cred, &cert->cert.subject,
+	ret = gnutls_certificate_set_x509_key(ctx->cred, &cert->cert.subject,
 					    1, cert->pkey);
 	if (ret != 0)
 		return NUSSL_ERROR;
@@ -168,6 +168,46 @@ int nussl_ssl_context_trustcert(nussl_ssl_context * ctx,
 	gnutls_x509_crt certs = cert->subject;
 	return (gnutls_certificate_set_x509_trust(ctx->cred, &certs, 1) ==
 		0) ? NUSSL_OK : NUSSL_ERROR;
+}
+
+/* Note: adding all CA here will cause the server to send the
+ * complete list to the client when requesting cert, unless
+ * gnutls_certificate_send_x509_rdn_sequence() is used.
+ */
+
+int nussl_ssl_context_trustdir(nussl_ssl_context * ctx,
+				const char *capath)
+{
+	DIR *dirca = NULL;
+	struct dirent *file;
+	char path_fd[PATH_MAX];
+
+	dirca = opendir(capath);
+	if (dirca == NULL)
+		return NUSSL_ERROR;
+
+	while ((file = readdir(dirca)) != NULL) {
+#ifdef HAVE_STRUCT_DIRENT_D_TYPE
+		if (!(file->d_type == DT_REG ||
+		      file->d_type == DT_LNK))
+			continue;
+#endif
+
+		if (!nussl_snprintf(path_fd, sizeof(path_fd), "%s/%s",
+					capath, file->d_name))
+			continue;
+
+		if (gnutls_certificate_set_x509_trust_file(ctx->cred, path_fd, GNUTLS_X509_FMT_PEM) < 0) {
+			NUSSL_DEBUG(NUSSL_DBG_SSL,
+					"Ignoring CA file %s\n",
+					path_fd);
+			continue;
+		}
+	}
+
+	closedir(dirca);
+
+ return NUSSL_OK;
 }
 
 #endif				/* HAVE_GNUTLS */
