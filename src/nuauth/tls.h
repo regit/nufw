@@ -138,6 +138,7 @@ struct nuauth_tls_t {
 	char *key; /* nuauth_tls_key */
 	char *cert; /* nuauth_tls_cert */
 	char *ca; /* nuauth_tls_cacert */
+	char *capath; /* nuauth_tls_ca_path */
 	char *crl_file; /* nuauth_tls_crl */
 	int crl_refresh; /* nuauth_tls_crl_refresh */
 	char *key_password; /* nuauth_tls_key_passwd */
