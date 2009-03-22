@@ -1,5 +1,5 @@
 /*
- ** Copyright (C) 2008 INL
+ ** Copyright (C) 2009 INL
  ** Written by S.Tricaud <stricaud@inl.fr>
  **            L.Defert <ldefert@inl.fr>
  **            Pierre Chifflier <p.chifflier@inl.fr>
@@ -91,15 +91,13 @@ static int oid_find_highest_index(gnutls_x509_crt cert, int subject,
 		size_t len = 0;
 
 		if (subject)
-			ret =
-			    gnutls_x509_crt_get_dn_by_oid(cert, oid, ++idx,
-							  0, NULL, &len);
+			ret = gnutls_x509_crt_get_dn_by_oid(cert, oid, ++idx,
+							    0, NULL, &len);
 		else
-			ret =
-			    gnutls_x509_crt_get_issuer_dn_by_oid(cert, oid,
-								 ++idx, 0,
-								 NULL,
-								 &len);
+			ret = gnutls_x509_crt_get_issuer_dn_by_oid(cert, oid,
+								   ++idx, 0,
+								   NULL,
+								   &len);
 	} while (ret == GNUTLS_E_SHORT_MEMORY_BUFFER);
 
 	return idx - 1;
@@ -209,8 +207,7 @@ char *nussl_ssl_readable_dname(const nussl_ssl_dname * name)
 		/* Iterate through all AVAs for multivalued AVAs; better than
 		 * nussl_openssl can do! */
 		do {
-			ret =
-			    gnutls_x509_dn_get_rdn_ava(dn, rdn, ava, &val);
+			ret = gnutls_x509_dn_get_rdn_ava(dn, rdn, ava, &val);
 
 			/* If the *only* attribute to append is the common name or
 			 * email address, use it; otherwise skip those
@@ -250,15 +247,13 @@ static void append_rdn(nussl_buffer * buf, gnutls_x509_crt x5, int subject,
 		size_t rdnlen = sizeof rdn;
 
 		if (subject)
-			ret =
-			    gnutls_x509_crt_get_dn_by_oid(x5, oid, idx, 0,
-							  rdn, &rdnlen);
+			ret = gnutls_x509_crt_get_dn_by_oid(x5, oid, idx, 0,
+							    rdn, &rdnlen);
 		else
-			ret =
-			    gnutls_x509_crt_get_issuer_dn_by_oid(x5, oid,
-								 idx, 0,
-								 rdn,
-								 &rdnlen);
+			ret = gnutls_x509_crt_get_issuer_dn_by_oid(x5, oid,
+								   idx, 0,
+								   rdn,
+								   &rdnlen);
 
 		if (ret < 0)
 			return;
@@ -441,9 +436,8 @@ static gnutls_x509_crt x509_crt_copy(gnutls_x509_crt src)
 				   &size);
 	if (ret == 0) {
 		tmp.size = size;
-		ret =
-		    gnutls_x509_crt_import(dest, &tmp,
-					   GNUTLS_X509_FMT_DER);
+		ret = gnutls_x509_crt_import(dest, &tmp,
+					     GNUTLS_X509_FMT_DER);
 	}
 
 	if (ret) {

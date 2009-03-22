@@ -328,8 +328,7 @@ int nu_client_load_key(nuauth_session_t * session,
 	}
 
 	if (certfile != NULL || keyfile != NULL) {
-		ret =
-		    nussl_ssl_set_keypair(session->nussl, certfile, keyfile);
+		ret = nussl_ssl_set_keypair(session->nussl, certfile, keyfile);
 
 		if (ret != NUSSL_OK) {
 			if (exit_on_error) {

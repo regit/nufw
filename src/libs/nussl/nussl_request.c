@@ -139,8 +139,7 @@ static int do_connect(nussl_session * sess, struct host_info *host,
 						      sizeof buf));
 		}
 #endif
-		ret =
-		    nussl_sock_connect(sess->socket, host->current,
+		ret = nussl_sock_connect(sess->socket, host->current,
 				       host->port);
 	} while (ret &&		/* try the next address... */
 		 (host->current = resolve_next(sess, host)) != NULL);
