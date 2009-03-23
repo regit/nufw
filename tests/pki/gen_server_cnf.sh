@@ -38,7 +38,7 @@ basicConstraints                = critical,CA:false
 subjectKeyIdentifier            = hash
 # do *not* include email address in subject name (CN field)
 #subjectAltName                  = email:move
-subjectAltName                   = DNS:blah1,DNS:blah2
+subjectAltName                   = DNS:$1,DNS:blah1,DNS:blah2
 #subjectAltName                  = @alt_names
 #[alt_names]
 #DNS.1   = lance.eng.networktest.com
