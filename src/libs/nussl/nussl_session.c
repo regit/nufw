@@ -411,11 +411,12 @@ void nussl_ssl_provide_clicert(nussl_session * sess,
 int nussl_ssl_trust_cert_file(nussl_session * sess, const char *cert_file)
 {
 	int ret;
+	nussl_ssl_certificate *ca;
 
 	if (!sess)
 		return NUSSL_ERROR;
 
-	nussl_ssl_certificate *ca = nussl_ssl_cert_read(cert_file);
+	ca = nussl_ssl_cert_read(cert_file);
 	if (ca == NULL) {
 		nussl_set_error(sess,
 				_("Unable to load trust certificate"));
@@ -708,6 +709,7 @@ int nussl_ssl_set_pkcs12_keypair(nussl_session * session,
 {
 	struct stat key_stat;
 	int ret = NUSSL_OK;
+	nussl_ssl_client_cert *cert;
 
 	if (!session)
 		return NUSSL_ERROR;
@@ -728,7 +730,7 @@ int nussl_ssl_set_pkcs12_keypair(nussl_session * session,
 		return NUSSL_ERROR;
 	}
 
-	nussl_ssl_client_cert *cert = nussl_ssl_clicert_read(pkcs12_file);
+	cert = nussl_ssl_clicert_read(pkcs12_file);
 
 	if (cert == NULL) {
 		nussl_set_error(session,
